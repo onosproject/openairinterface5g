@@ -297,7 +297,7 @@ void do_OFDM_mod_symbol(LTE_eNB_COMMON *eNB_common_vars, int eNB_id, uint16_t ne
   slot_offsetF = (next_slot)*(frame_parms->ofdm_symbol_size)*((frame_parms->Ncp==EXTENDED) ? 6 : 7);
   //printf("Thread %d starting ... aa %d (%llu)\n",omp_get_thread_num(),aa,rdtsc());
   for (l=0; l<frame_parms->symbols_per_tti>>1; l++) {
-    if (PHY_vars_eNB_g[0][0]->proc.frame_tx==0) LOG_I(PHY,"Generating symbol %d for slot %d\n",l,next_slot);
+    //if (PHY_vars_eNB_g[0][0]->proc.frame_tx==0) LOG_I(PHY,"Generating symbol %d for slot %d\n",l,next_slot);
     for (aa=0; aa<frame_parms->nb_antennas_tx; aa++) {
 
       //printf("do_OFDM_mod_l, slot=%d, l=%d, NUMBER_OF_OFDM_CARRIERS=%d,OFDM_SYMBOL_SIZE_COMPLEX_SAMPLES=%d\n",next_slot, l,NUMBER_OF_OFDM_CARRIERS,OFDM_SYMBOL_SIZE_COMPLEX_SAMPLES);

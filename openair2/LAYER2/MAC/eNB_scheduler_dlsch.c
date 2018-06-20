@@ -1196,6 +1196,8 @@ schedule_ue_spec(
 	      } else {
 		tpc = 1; //0
 	      }
+	    //if (tpc != 1)
+	    T(T_ENB_TPC_DLSCH, T_INT(frameP), T_INT(subframeP), T_INT(rnti), T_INT(tpc), T_INT(tpc_accumulated), T_INT(normalized_rx_power), T_INT(target_rx_power));
 	      /*	      
 	      LOG_I(MAC,"[eNB %d] DLSCH scheduler: frame %d, subframe %d, harq_pid %d, tpc %d, accumulated %d, normalized/target rx power %d/%d\n",
 		    module_idP,frameP, subframeP,harq_pid,tpc,

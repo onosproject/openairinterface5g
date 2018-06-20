@@ -2852,6 +2852,17 @@ int dump_dci(LTE_DL_FRAME_PARMS *frame_parms, DCI_ALLOC_t *dci)
         break;
 
       case 25:
+          /*printf("DCI format0 (TDD1-6, 5MHz), rnti %x (%x): hopping %d, rb_alloc %x, mcs %d, ndi %d, TPC %d, cshift %d, dai %d, cqi_req %d\n",
+                dci->rnti,
+                ((uint32_t*)&dci->dci_pdu[0])[0],
+                ((DCI0_5MHz_TDD_1_6_t *)&dci->dci_pdu[0])->hopping,
+                ((DCI0_5MHz_TDD_1_6_t *)&dci->dci_pdu[0])->rballoc,
+                ((DCI0_5MHz_TDD_1_6_t *)&dci->dci_pdu[0])->mcs,
+                ((DCI0_5MHz_TDD_1_6_t *)&dci->dci_pdu[0])->ndi,
+                ((DCI0_5MHz_TDD_1_6_t *)&dci->dci_pdu[0])->TPC,
+                ((DCI0_5MHz_TDD_1_6_t *)&dci->dci_pdu[0])->cshift,
+                ((DCI0_5MHz_TDD_1_6_t *)&dci->dci_pdu[0])->dai,
+                ((DCI0_5MHz_TDD_1_6_t *)&dci->dci_pdu[0])->cqi_req);*/
         LOG_D(PHY,"DCI format0 (TDD1-6, 5MHz), rnti %x (%x): hopping %d, rb_alloc %x, mcs %d, ndi %d, TPC %d, cshift %d, dai %d, cqi_req %d\n",
               dci->rnti,
               ((uint32_t*)&dci->dci_pdu[0])[0],

@@ -188,11 +188,15 @@ typedef struct {
 } PHY_VARS_RN;
 
 /// Context data structure for RX/TX portion of subframe processing
-typedef struct {
+typedef struct eNB_rxtx_proc_t_s{
   /// Component Carrier index
   uint8_t              CC_id;
   /// timestamp transmitted to HW
   openair0_timestamp timestamp_tx;
+  //Now timestamp_rx is stored in proc, before it was a common variable in eNB struct
+  openair0_timestamp timestamp_rx;
+  //Now offset is stored in proc, before it was a common variable in eNB struct
+  openair0_timestamp   ts_offset;
   /// subframe to act upon for transmission
   int subframe_tx;
   /// subframe to act upon for reception
@@ -215,6 +219,11 @@ typedef struct {
   /// scheduling parameters for RXn-TXnp4 thread
   struct sched_param sched_param_rxtx;
 } eNB_rxtx_proc_t;
+
+typedef struct {
+  struct eNB_proc_t_s *argeNBProc;
+  struct eNB_rxtx_proc_t_s *argeNBproc_rxtx;
+} enB_thread_params;
 
 typedef struct {
   struct PHY_VARS_eNB_s *eNB;
@@ -240,6 +249,8 @@ typedef struct eNB_proc_t_s {
   openair0_timestamp timestamp_rx;
   /// timestamp to send to "slave rru"
   openair0_timestamp timestamp_tx;
+  //Now offset is stored in proc, before it was a common variable in eNB struct
+  openair0_timestamp   ts_offset;
   /// subframe to act upon for reception
   int subframe_rx;
   /// subframe to act upon for transmission
@@ -278,6 +289,9 @@ typedef struct eNB_proc_t_s {
   pthread_t pthread_FH;
   /// pthread structure for eNB single processing thread
   pthread_t pthread_single;
+  /// pthread structure for eNB two threads
+  pthread_t pthread_odd;
+  pthread_t pthread_even;
   /// pthread structure for asychronous RX/TX processing thread
   pthread_t pthread_asynch_rxtx;
   /// flag to indicate first RX acquisition
@@ -342,6 +356,10 @@ typedef struct eNB_proc_t_s {
   pthread_cond_t cond_asynch_rxtx;
   /// mutex for parallel fep thread
   pthread_mutex_t mutex_fep;
+  /// Mutex locks for rf read, enb RX func, Tx process+write
+  pthread_mutex_t mutex_rxRf;
+  pthread_mutex_t mutex_rxnew;
+  pthread_mutex_t mutex_txnew;
   /// mutex for parallel turbo-decoder thread
   pthread_mutex_t mutex_td;
   /// mutex for parallel turbo-encoder thread
@@ -436,6 +454,7 @@ typedef struct PHY_VARS_eNB_s {
   module_id_t          Mod_id;
   uint8_t              CC_id;
   eNB_proc_t           proc;
+  eNB_proc_t  proc_new[2];
   eNB_func_t           node_function;
   eNB_timing_t         node_timing;
   eth_params_t         *eth_params;

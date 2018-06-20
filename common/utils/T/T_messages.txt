@@ -111,6 +111,20 @@ ID = ENB_MAC_UE_DL_PDU_WITH_DATA
     DESC = MAC downlink PDU for an UE
     GROUP = ALL:MAC:ENB
     FORMAT = int,eNB_ID : int,CC_id : int,rnti : int,frame : int,subframe : int,harq_pid : buffer,data
+ID = ENB_TPC_DLSCH
+    DESC = MAC TPC PUCCH command
+    GROUP = ALL:MAC:ENB
+    FORMAT = int,frame : int,subframe : int,rnti : int,tpc : int,tpc_accumulated : int,normalized_rx_power : int,target_rx_power
+    
+ ID = ENB_TPC_ULSCH
+    DESC = MAC TPC PUSCH command
+    GROUP = ALL:MAC:ENB
+    FORMAT = int,frame : int,subframe : int,rnti : int,tpc : int,tpc_accumulated : int,normalized_rx_power : int,target_rx_power
+    
+    ID = ENB_TPC_ULSCH_PHR
+    DESC = MAC PHR Report
+    GROUP = ALL:MAC:ENB
+    FORMAT = int,UE_id : int,PHR
 
 #RLC logs
 ID = ENB_RLC_DL
@@ -253,6 +267,11 @@ ID = ENB_RRC_UNKNOW_MESSAGE
     DESC = RRC unknown message
     GROUP = ALL:RRC:ENB
     FORMAT = int,eNB_ID : int,frame : int,subframe : int,rnti
+    
+ ID = ENB_RRC_RSRP
+    DESC = RSRP Measurements
+    GROUP = ALL:RRC:ENB
+    FORMAT = int,rnti : int,RSRP
 
 #legacy logs
 ID = LEGACY_MAC_INFO

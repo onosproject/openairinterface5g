@@ -1344,7 +1344,7 @@ void init_openair0() {
       openair0_cfg[card].autocal[i] = 1;
       openair0_cfg[card].tx_gain[i] = tx_gain[0][i];
       if (UE_flag == 0) {
-	openair0_cfg[card].rx_gain[i] = PHY_vars_eNB_g[0][0]->rx_total_gain_dB;
+	openair0_cfg[card].rx_gain[i] = PHY_vars_eNB_g[0][0]->rx_total_gain_dB- rx_gain_off;
       }
       else {
 	openair0_cfg[card].rx_gain[i] = PHY_vars_UE_g[0][0]->rx_total_gain_dB - rx_gain_off;
@@ -1661,7 +1661,7 @@ int main( int argc, char **argv ) {
                               PHY_vars_eNB_g[0][CC_id]->X_u);
 
 
-            PHY_vars_eNB_g[0][CC_id]->rx_total_gain_dB = (int)rx_gain[CC_id][0];
+            PHY_vars_eNB_g[0][CC_id]->rx_total_gain_dB = (int)rx_gain[CC_id][0]+ rx_gain_off;
 
             if (frame_parms[CC_id]->frame_type==FDD) {
                 PHY_vars_eNB_g[0][CC_id]->N_TA_offset = 0;

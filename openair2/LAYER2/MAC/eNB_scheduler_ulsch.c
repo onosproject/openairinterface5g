@@ -139,6 +139,10 @@ void rx_sdu(const module_id_t enb_mod_idP,
         UE_list->UE_template[CC_idP][UE_id].phr_info =  (payload_ptr[0] & 0x3f) - PHR_MAPPING_OFFSET;
         LOG_D(MAC, "[eNB %d] CC_id %d MAC CE_LCID %d : Received PHR PH = %d (db)\n",
               enb_mod_idP, CC_idP, rx_ces[i], UE_list->UE_template[CC_idP][UE_id].phr_info);
+
+	    T(T_ENB_TPC_ULSCH_PHR, T_INT(UE_id), T_INT(UE_list->UE_template[CC_idP][UE_id].phr_info));
+
+
         UE_list->UE_template[CC_idP][UE_id].phr_info_configured=1;
 	UE_list->UE_sched_ctrl[UE_id].phr_received = 1;
       }
@@ -726,6 +730,8 @@ void schedule_ulsch_rnti(module_id_t   module_idP,
 
   //  LOG_I(MAC,"entering ulsch preprocesor\n");
 
+//if (subframeP == 0) return;
+
   ulsch_scheduler_pre_processor(module_idP,
                                 frameP,
                                 subframeP,
@@ -871,6 +877,10 @@ abort();
 		  module_idP,frameP,subframeP,harq_pid,tpc,
 		  tpc_accumulated,normalized_rx_power,target_rx_power);
 	  }
+	  //if (tpc != 1)
+	 	    T(T_ENB_TPC_ULSCH, T_INT(frameP), T_INT(subframeP), T_INT(rnti), T_INT(tpc), T_INT(tpc_accumulated), T_INT(normalized_rx_power), T_INT(target_rx_power));
+
+
 
           // new transmission
           if (round==0) {
@@ -884,7 +894,7 @@ abort();
             if (UE_template->pre_allocated_rb_table_index_ul >=0) {
               rb_table_index=UE_template->pre_allocated_rb_table_index_ul;
             } else {
-	      mcs=10;//cmin (10, openair_daq_vars.target_ue_ul_mcs);
+	      mcs=4;//cmin (10, openair_daq_vars.target_ue_ul_mcs);
               rb_table_index=5; // for PHR
 	    }
 

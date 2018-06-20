@@ -1304,9 +1304,9 @@ void assign_max_mcs_min_rb(module_id_t module_idP,int frameP, sub_frame_t subfra
       continue;
 
     if (UE_list->UE_sched_ctrl[i].phr_received == 1)
-      mcs = 20; // if we've received the power headroom information the UE, we can go to maximum mcs
+      mcs = 20; //20 before // if we've received the power headroom information the UE, we can go to maximum mcs
     else
-      mcs = 10; // otherwise, limit to QPSK PUSCH
+      mcs = 10; //10 before // otherwise, limit to QPSK PUSCH
 
     UE_id = i;
 
@@ -1339,7 +1339,7 @@ void assign_max_mcs_min_rb(module_id_t module_idP,int frameP, sub_frame_t subfra
         // fixme: set use_srs flag
         tx_power= mac_xface->estimate_ue_tx_power(tbs,rb_table[rb_table_index],0,frame_parms->Ncp,0);
 
-        while ((((UE_template->phr_info - tx_power) < 0 ) || (tbs > UE_template->ul_total_buffer))&&
+        while ((((UE_template->phr_info - tx_power) < -5 ) || (tbs > UE_template->ul_total_buffer))&&
                (mcs > 3)) {
           // LOG_I(MAC,"UE_template->phr_info %d tx_power %d mcs %d\n", UE_template->phr_info,tx_power, mcs);
           mcs--;
@@ -1372,6 +1372,12 @@ void assign_max_mcs_min_rb(module_id_t module_idP,int frameP, sub_frame_t subfra
         UE_template->pre_allocated_rb_table_index_ul=rb_table_index;
         UE_template->pre_allocated_nb_rb_ul= rb_table[rb_table_index];
         LOG_D(MAC,"[eNB %d] frame %d subframe %d: for UE %d CC %d: pre-assigned mcs %d, pre-allocated rb_table[%d]=%d RBs (phr %d, tx power %d)\n",
+              module_idP, frameP, subframeP, UE_id, CC_id,
+              UE_template->pre_assigned_mcs_ul,
+              UE_template->pre_allocated_rb_table_index_ul,
+              UE_template->pre_allocated_nb_rb_ul,
+              UE_template->phr_info,tx_power);
+        printf("[eNB %d] frame %d subframe %d: for UE %d CC %d: pre-assigned mcs %d, pre-allocated rb_table[%d]=%d RBs (phr %d, tx power %d)\n",
               module_idP, frameP, subframeP, UE_id, CC_id,
               UE_template->pre_assigned_mcs_ul,
               UE_template->pre_allocated_rb_table_index_ul,

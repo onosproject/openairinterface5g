@@ -42,6 +42,8 @@
 #include "common_lib.h"
 #include "assertions.h"
 
+#include <uhd/types/tune_request.hpp>
+
 #ifdef __SSE4_1__
 #  include <smmintrin.h>
 #endif
@@ -78,6 +80,9 @@ typedef struct {
     //! USRP RX Metadata
     uhd::rx_metadata_t rx_md;
 
+    uhd::tune_request_t tu_req;
+
+
     //! Sampling rate
     double sample_rate;
 
@@ -106,16 +111,33 @@ static int trx_usrp_start(openair0_device *device) {
 
     usrp_state_t *s = (usrp_state_t*)device->priv;
 
+    //uint8_t mask=0x0f;
+//    uint8_t ddr=0x07;
+//    uint8_t ctrlm=0x07;
+//    uint8_t atr_r=0x03;
+//    uint8_t atr_t=0x04;
+//
+//    s->usrp->set_gpio_attr("FP0", "DDR", ddr, 0x1f);
+//    s->usrp->set_gpio_attr("FP0", "CTRL", ctrlm,0x1f);
+//    s->usrp->set_gpio_attr("FP0", "ATR_RX", atr_r, 0x1f);
+//    s->usrp->set_gpio_attr("FP0", "ATR_XX", atr_t, 0x1f);
+
+
+
 
   // setup GPIO for TDD, GPIO(4) = ATR_RX
   //set data direction register (DDR) to output
     s->usrp->set_gpio_attr("FP0", "DDR", 0x1f, 0x1f);
-  
+
   //set control register to ATR
     s->usrp->set_gpio_attr("FP0", "CTRL", 0x1f,0x1f);
-  
+
   //set ATR register
-    s->usrp->set_gpio_attr("FP0", "ATR_RX", 1<<4, 0x1f);
+    s->usrp->set_gpio_attr("FP0", "ATR_RX", (1<<4), 0x1f);
+
+
+
+
 
     // init recv and send streaming
     uhd::stream_cmd_t cmd(uhd::stream_cmd_t::STREAM_MODE_START_CONTINUOUS);
@@ -156,7 +178,20 @@ static void trx_usrp_end(openair0_device *device) {
       @param flags flags must be set to TRUE if timestamp parameter needs to be applied
 */
 static int trx_usrp_write(openair0_device *device, openair0_timestamp timestamp, void **buff, int nsamps, int cc, int flags) {
-    int ret=0;
+    int ret=0,nsamps2;
+
+	#if defined(__x86_64) || defined(__i386__)
+	#ifdef __AVX2__
+		nsamps2 = (nsamps+7)>>3;
+	#else
+		nsamps2 = (nsamps+3)>>2;
+	#endif
+	#elif defined(__arm__)
+		nsamps2 = (nsamps+3)>>2;
+	#endif
+
+	uint32_t tx_buff[nsamps] __attribute__ ((aligned(32)));
+
     usrp_state_t *s = (usrp_state_t*)device->priv;
 
     s->tx_md.time_spec = uhd::time_spec_t::from_ticks(timestamp, s->sample_rate);
@@ -182,13 +217,28 @@ static int trx_usrp_write(openair0_device *device, openair0_timestamp timestamp,
         s->tx_md.end_of_burst = false;
     }
 
+    // bring RX data into 12 MSBs for USRP::Shift by 4 bits to left
+    for (int i=0; i<cc; i++) {
+        for (int j=0; j<nsamps2; j++) {
+#if defined(__x86_64__) || defined(__i386__)
+#ifdef __AVX2__
+            ((__m256i *)tx_buff)[j] = _mm256_slli_epi16(((__m256i *)buff[i])[j],4);
+#else
+            ((__m128i *)tx_buff)[j] = _mm_slli_epi16(((__m128i *)buff[i])[j],4);
+#endif
+#elif defined(__arm__)
+            ((int16x8_t*)tx_buff)[j] = vshrq_n_s16(buff[i][j],4);
+#endif
+        }
+    }
+
     if (cc>1) {
         std::vector<void *> buff_ptrs;
         for (int i=0; i<cc; i++)
-            buff_ptrs.push_back(buff[i]);
+            buff_ptrs.push_back(tx_buff);
         ret = (int)s->tx_stream->send(buff_ptrs, nsamps, s->tx_md,1e-3);
     } else
-        ret = (int)s->tx_stream->send(buff[0], nsamps, s->tx_md,1e-3);
+        ret = (int)s->tx_stream->send(tx_buff, nsamps, s->tx_md,1e-3);
 
 
 
@@ -292,9 +342,17 @@ void *freq_thread(void *arg) {
 
     openair0_device *device=(openair0_device *)arg;
     usrp_state_t *s = (usrp_state_t*)device->priv;
+    printf("Setting USRP TX Freq %f, RX Freq %f\n",device->openair0_cfg[0].tx_freq[0],device->openair0_cfg[0].rx_freq[0]);
 
     s->usrp->set_tx_freq(device->openair0_cfg[0].tx_freq[0]);
-    s->usrp->set_rx_freq(device->openair0_cfg[0].rx_freq[0]);
+     s->usrp->set_rx_freq(device->openair0_cfg[0].rx_freq[0]);
+     // change to advanced lo offset from above line
+     //uhd::tune_request_t rx_tune_req(device->openair0_cfg[0].rx_freq[0],(double)20000000);
+     //rx_tune_req.rf_freq_policy=uhd::tune_request_t::POLICY_MANUAL;
+     //rx_tune_req.rf_freq=device->openair0_cfg[0].rx_freq[0]-(double)20000000;
+     //s->usrp->set_rx_freq(rx_tune_req);
+     //printf("Actual USRP  RX Freq %f\n",s->usrp->get_rx_freq(0));
+
 }
 /*! \brief Set frequencies (TX/RX). Spawns a thread to handle the frequency change to not block the calling thread
  * \param device the hardware to use
@@ -315,6 +373,12 @@ int trx_usrp_set_freq(openair0_device* device, openair0_config_t *openair0_cfg, 
     else {
         s->usrp->set_tx_freq(device->openair0_cfg[0].tx_freq[0]);
         s->usrp->set_rx_freq(device->openair0_cfg[0].rx_freq[0]);
+        // change to advanced lo offset from above line
+        //uhd::tune_request_t rx_tune_req(device->openair0_cfg[0].rx_freq[0],(double)20000000);
+        //rx_tune_req.rf_freq_policy=uhd::tune_request_t::POLICY_MANUAL;
+        //rx_tune_req.rf_freq=device->openair0_cfg[0].rx_freq[0]-(double)20000000;
+        //s->usrp->set_rx_freq(rx_tune_req);
+        //printf("Actual USRP  RX Freq %f\n",s->usrp->get_rx_freq(0));
     }
 
     return(0);
@@ -331,14 +395,15 @@ int openair0_set_rx_frequencies(openair0_device* device, openair0_config_t *open
     usrp_state_t *s = (usrp_state_t*)device->priv;
     static int first_call=1;
     static double rf_freq,diff;
+    printf("Setting USRP TX  RX Freq %f\n",openair0_cfg[0].rx_freq[0]);
 
-    uhd::tune_request_t rx_tune_req(openair0_cfg[0].rx_freq[0]);
+    uhd::tune_request_t rx_tune_req(device->openair0_cfg[0].rx_freq[0],(double)20000000);
 
     rx_tune_req.rf_freq_policy = uhd::tune_request_t::POLICY_MANUAL;
-    rx_tune_req.rf_freq = openair0_cfg[0].rx_freq[0];
-    rf_freq=openair0_cfg[0].rx_freq[0];
+    //rx_tune_req.rf_freq = openair0_cfg[0].rx_freq[0];
+    //rf_freq=openair0_cfg[0].rx_freq[0];
     s->usrp->set_rx_freq(rx_tune_req);
-
+    printf("Actual USRP  RX Freq %f\n",s->usrp->get_rx_freq(0));
     return(0);
 
 }
@@ -638,7 +703,16 @@ extern "C" {
         for(int i=0; i<s->usrp->get_rx_num_channels(); i++) {
             if (i<openair0_cfg[0].rx_num_channels) {
                 s->usrp->set_rx_rate(openair0_cfg[0].sample_rate,i);
+
                 s->usrp->set_rx_freq(openair0_cfg[0].rx_freq[i],i);
+               // uhd::tune_request_t rx_tune_req(openair0_cfg[0].rx_freq[0],(double)12000000);
+                //rx_tune_req.rf_freq_policy=uhd::tune_request_t::POLICY_MANUAL;
+                //rx_tune_req.rf_freq=device->openair0_cfg[0].rx_freq[0]-(double)20000000;
+                //s->usrp->set_rx_freq(rx_tune_req);
+                //printf("\n*****\n Desired USRP  RX Freq %f\n",openair0_cfg[0].rx_freq[0]);
+                //printf("\n*****\n Actual USRP  RX Freq %f\n",s->usrp->get_rx_freq(0));
+
+
                 set_rx_gain_offset(&openair0_cfg[0],i,bw_gain_adjust);
 
                 ::uhd::gain_range_t gain_range = s->usrp->get_rx_gain_range(i);

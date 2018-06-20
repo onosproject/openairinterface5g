@@ -2149,6 +2149,7 @@ uint8_t generate_dci_top(uint8_t num_ue_spec_dci,
               dci_alloc[i].dci_pdu);
         dump_dci(frame_parms,&dci_alloc[i]);
 #endif
+        dump_dci(frame_parms,&dci_alloc[i]);
 
         if (dci_alloc[i].firstCCE >= 0) {
           e_ptr = generate_dci0(dci_alloc[i].dci_pdu,

@@ -914,8 +914,9 @@ unsigned int  ulsch_decoding(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,
   G = nb_rb * (12 * Q_m) * ulsch_harq->Nsymb_pusch;
 
 
-#ifdef DEBUG_ULSCH_DECODING
-  printf("ulsch_decoding (Nid_cell %d, rnti %x, x2 %x): round %d, RV %d, mcs %d, O_RI %d, O_ACK %d, G %d, subframe %d\n",
+//#ifdef DEBUG_ULSCH_DECODING
+  if(ulsch_harq->mcs > 4)
+  printf("ulsch_decoding (Nid_cell %d, rnti %x, x2 %x): round %d, RV %d, mcs %d, O_RI %d, O_ACK %d, G %d, %d.%d harq %d Or1 %d nb_rb %d\n",
       frame_parms->Nid_cell,ulsch->rnti,x2,
       ulsch_harq->round,
       ulsch_harq->rvidx,
@@ -923,8 +924,8 @@ unsigned int  ulsch_decoding(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,
       ulsch_harq->O_RI,
       ulsch_harq->O_ACK,
       G,
-      subframe);
-#endif
+      proc->frame_rx, subframe, harq_pid, ulsch_harq->Or1, nb_rb);
+//#endif
 
   if (ulsch_harq->round == 0) {
     // This is a new packet, so compute quantities regarding segmentation

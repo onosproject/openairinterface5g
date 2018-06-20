@@ -497,7 +497,7 @@ void common_signal_procedures (PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc) {
   // generate Cell-Specific Reference Signals for both slots
   if (eNB->abstraction_flag==0) {
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_ENB_RS_TX,1);
-    if (frame==0) LOG_I(PHY,"Generating RS for slot %d\n",subframe<<1);
+    //if (frame==0) LOG_I(PHY,"Generating RS for slot %d\n",subframe<<1);
     generate_pilots_slot(eNB,
 			 txdataF,
 			 AMP,
@@ -599,7 +599,7 @@ void common_signal_procedures (PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc) {
     
     if ((fp->frame_type == TDD)&&
 	(eNB->abstraction_flag==0)){
-      if (frame==0) LOG_I(PHY,"Generating SSS for slot %d\n",1+(subframe<<1));
+      //if (frame==0) LOG_I(PHY,"Generating SSS for slot %d\n",1+(subframe<<1));
       generate_sss(txdataF,
 		   AMP,
 		   fp,
@@ -626,7 +626,7 @@ void common_signal_procedures (PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc) {
   else if ((subframe == 1) &&
 	   (fp->frame_type == TDD)&&
 	   (eNB->abstraction_flag==0)) {
-    if (frame==0) LOG_I(PHY,"Generating PSS for slot %d\n",subframe<<1);
+    //if (frame==0) LOG_I(PHY,"Generating PSS for slot %d\n",subframe<<1);
     generate_pss(txdataF,
 		 AMP,
 		 fp,
@@ -1360,9 +1360,9 @@ void phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
       
       if (UE_id<0) { // should not happen, log an error and exit, this is a fatal error
 	LOG_E(PHY,"[eNB %"PRIu8"] Frame %d: Unknown UE_id for rnti %"PRIx16"\n",eNB->Mod_id,frame,dci_alloc->rnti);
-	mac_xface->macphy_exit("FATAL\n"); 
+	//mac_xface->macphy_exit("FATAL\n");
       }
-      generate_eNB_ulsch_params(eNB,proc,dci_alloc,UE_id);
+      if (UE_id >= 0) generate_eNB_ulsch_params(eNB,proc,dci_alloc,UE_id);
     }
   }
 
@@ -1386,7 +1386,7 @@ void phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
 	LOG_D(PHY,"[eNB %"PRIu8"] Frame %d, subframe %d: Calling generate_dci_top (pdcch) (common %"PRIu8",ue_spec %"PRIu8")\n",eNB->Mod_id,frame, subframe,
 	      DCI_pdu->Num_common_dci,DCI_pdu->Num_ue_spec_dci);
       }
-      if (frame==0) LOG_I(PHY,"Generating PDCCCH/PCFICH for slot %d\n",subframe<<1);
+     // if (frame==0) LOG_I(PHY,"Generating PDCCCH/PCFICH for slot %d\n",subframe<<1);
       num_pdcch_symbols = generate_dci_top(DCI_pdu->Num_ue_spec_dci,
 					   DCI_pdu->Num_common_dci,
 					   DCI_pdu->dci_alloc,
@@ -2869,6 +2869,7 @@ void phy_procedures_eNB_common_RX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc){
 }
 
 
+static char subframe_null[7680*4*4];
 void phy_procedures_eNB_uespec_RX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,const relaying_type_t r_type)
 {
   //RX processing for ue-specific resources (i
@@ -2891,6 +2892,13 @@ void phy_procedures_eNB_uespec_RX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,const 
   uint16_t is_srs_pos=0;
 
   T(T_ENB_PHY_UL_TICK, T_INT(eNB->Mod_id), T_INT(frame), T_INT(subframe));
+
+ /* if ((fp->frame_type == TDD) && (subframe_select(fp,subframe)!=SF_UL)) {
+	 T(T_ENB_PHY_INPUT_SIGNAL, T_INT(eNB->Mod_id), T_INT(frame), T_INT(subframe), T_INT(0),
+	    T_BUFFER(subframe_null,
+	             eNB->frame_parms.samples_per_tti * 4));
+	return;
+  }*/
 
   T(T_ENB_PHY_INPUT_SIGNAL, T_INT(eNB->Mod_id), T_INT(frame), T_INT(subframe), T_INT(0),
     T_BUFFER(&eNB->common_vars.rxdata[0][0][subframe*eNB->frame_parms.samples_per_tti],
@@ -2941,8 +2949,10 @@ void phy_procedures_eNB_uespec_RX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,const 
 				     &eNB->soundingrs_ul_config_dedicated[i],
 				     subframe,
 				     0/*eNB_id*/)) {
-	LOG_E(PHY,"problem processing SRS\n");
+    	  LOG_E(PHY,"problem processing SRS\n");
       }
+      lte_eNB_srs_measurements(eNB,0/*eNB_id*/,i,0/*init_averaging*/);
+
     }
 
     // Do PUCCH processing 
@@ -3083,6 +3093,19 @@ void phy_procedures_eNB_uespec_RX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,const 
             eNB->ulsch[i]->harq_processes[harq_pid]->o_ACK[0],
             eNB->ulsch[i]->harq_processes[harq_pid]->o_ACK[1],
             ret);
+      /*printf("[eNB %d][PUSCH %d] frame %d subframe %d RNTI %x RX power (%d,%d) RSSI (%d,%d) N0 (%d,%d) dB ACK (%d,%d), decoding iter %d\n",
+            eNB->Mod_id,harq_pid,
+            frame,subframe,
+            eNB->ulsch[i]->rnti,
+            dB_fixed(eNB->pusch_vars[i]->ulsch_power[0]),
+            dB_fixed(eNB->pusch_vars[i]->ulsch_power[1]),
+            eNB->UE_stats[i].UL_rssi[0],
+            eNB->UE_stats[i].UL_rssi[1],
+            eNB->measurements->n0_power_dB[0],
+            eNB->measurements->n0_power_dB[1],
+            eNB->ulsch[i]->harq_processes[harq_pid]->o_ACK[0],
+            eNB->ulsch[i]->harq_processes[harq_pid]->o_ACK[1],
+            ret);*/
 
       //compute the expected ULSCH RX power (for the stats)
       eNB->ulsch[(uint32_t)i]->harq_processes[harq_pid]->delta_TF =
@@ -3474,7 +3497,7 @@ void phy_procedures_eNB_uespec_RX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,const 
 			    0,
 			    eNB->first_run_I0_measurements);
     eNB->first_run_I0_measurements = 0;
-  }
+   }
 
 #ifdef PHY_ABSTRACTION
   else {

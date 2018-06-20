@@ -120,7 +120,7 @@ void lte_eNB_srs_measurements(PHY_VARS_eNB *eNB,
   PHY_MEASUREMENTS_eNB *measurements = &eNB->measurements[eNB_id];
   LTE_eNB_SRS *srs_vars = &eNB->srs_vars[UE_id];
 
-  int32_t aarx,rx_power_correction;
+  int32_t aarx,rx_power_correction=1;
   int32_t rx_power;
   uint32_t rb;
   int32_t *ul_ch;
@@ -132,13 +132,13 @@ void lte_eNB_srs_measurements(PHY_VARS_eNB *eNB,
 
   rx_power = 0;
 
-
+/*
   if ( (frame_parms->ofdm_symbol_size == 128) ||
        (frame_parms->ofdm_symbol_size == 512) )
     rx_power_correction = 2;
   else
     rx_power_correction = 1;
-
+*/
 
 
   for (aarx=0; aarx<frame_parms->nb_antennas_rx; aarx++) {
@@ -157,7 +157,7 @@ void lte_eNB_srs_measurements(PHY_VARS_eNB *eNB,
 
     measurements->wideband_cqi[UE_id][aarx] = measurements->rx_spatial_power[UE_id][0][aarx];
 
-
+    //LOG_I(PHY,"lte_eNB_srs_measurements: UE %d, ant %d, CQI %d dB\n",UE_id,aarx,measurements->wideband_cqi[UE_id][aarx]);
 
     //      measurements->rx_power[UE_id][aarx]/=frame_parms->nb_antennas_tx;
     measurements->wideband_cqi_dB[UE_id][aarx] = (unsigned short) dB_fixed(measurements->wideband_cqi[UE_id][aarx]);
