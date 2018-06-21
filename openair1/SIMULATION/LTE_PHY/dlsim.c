@@ -1278,6 +1278,16 @@ int main(int argc, char **argv)
   double snr_step=1,input_snr_step=1, snr_int=30;
 
   LTE_DL_FRAME_PARMS *frame_parms;
+
+  //frequency domain
+  double s_re0_f[2048*14],s_im0_f[2048*14],r_re0_f[2048*14],r_im0_f[2048*14];
+  double s_re1_f[2048*14],s_im1_f[2048*14],r_re1_f[2048*14],r_im1_f[2048*14];
+  double *s_re_f[2]={s_re0_f,s_re1_f};
+  double *s_im_f[2]={s_im0_f,s_im1_f};
+  double *r_re_f[2]={r_re0_f,r_re1_f};
+  double *r_im_f[2]={r_im0_f,r_im1_f};
+
+  //time domain
   double s_re0[30720*2],s_im0[30720*2],r_re0[30720*2],r_im0[30720*2];
   double s_re1[30720*2],s_im1[30720*2],r_re1[30720*2],r_im1[30720*2];
   double *s_re[2]={s_re0,s_re1};

@@ -153,19 +153,28 @@ static __m128i cmplt_option0_128 __attribute__((aligned(16)));
 static __m256i cmplt_option0_256 __attribute__((aligned(32)));
 static int count99=0;
 static int count0=0;
+static int option=0;
+static int flag=0;
 static int nfix_first_run=0;
 static __m128 x __attribute__((aligned(16)));
 static __m256 x256 __attribute__((aligned(32)));
 
 #define SHR3_SSE (jsr_128=_mm_loadu_si128((__m128i *)jsr4),jz_128=jsr_128, jsr_128=_mm_xor_si128(_mm_slli_epi32(jsr_128,13),jsr_128),jsr_128=_mm_xor_si128(_mm_srli_epi32(jsr_128,17),jsr_128),jsr_128=_mm_xor_si128(_mm_slli_epi32(jsr_128,5),jsr_128),_mm_storeu_si128((__m128i *)jsr4,jsr_128),_mm_add_epi32(jz_128,jsr_128))
+
 #define UNI_SSE (_mm_add_ps(_mm_mul_ps(_mm_set1_ps(0.2328306e-9),_mm_cvtepi32_ps(SHR3_SSE)),_mm_set1_ps(0.5)))
-#define NOR_SSE (hz_128=SHR3_SSE,_mm_storeu_si128((__m128i *)hz4,hz_128),iz_128=_mm_and_si128(hz_128,_mm_set1_epi32(127)),_mm_storeu_si128((__m128i *)iz4,iz_128),abs_hz_128=_mm_and_si128(hz_128, _mm_set1_epi32(~0x80000000)),cmplt_option0_128 = _mm_cmplt_epi32(abs_hz_128,_mm_setr_epi32(kn[iz4[0]],kn[iz4[1]],kn[iz4[2]],kn[iz4[3]])),count99=(count99>99)?0:count99+4,nfix_first_run=(count99>99)?0:1,(_mm_testc_si128(cmplt_option0_128,_mm_setr_epi32(0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF)))?_mm_mul_ps(_mm_cvtepi32_ps(hz_128),_mm_setr_ps(wn[iz4[0]],wn[iz4[1]],wn[iz4[2]],wn[iz4[3]])):nfix_SSE(iz_128))
+
+#define NOR_SSE (hz_128=SHR3_SSE,_mm_storeu_si128((__m128i *)hz4,hz_128),iz_128=_mm_and_si128(hz_128,_mm_set1_epi32(127)),_mm_storeu_si128((__m128i *)iz4,iz_128),abs_hz_128=_mm_and_si128(hz_128, _mm_set1_epi32(~0x80000000)),cmplt_option0_128 = _mm_cmplt_epi32(abs_hz_128,_mm_setr_epi32(kn[iz4[0]],kn[iz4[1]],kn[iz4[2]],kn[iz4[3]])),count99=(count99>99)?0:count99+4,nfix_first_run=(count99>99)?0:nfix_first_run,(_mm_testc_si128(cmplt_option0_128,_mm_setr_epi32(0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF)))?_mm_mul_ps(_mm_cvtepi32_ps(hz_128),_mm_setr_ps(wn[iz4[0]],wn[iz4[1]],wn[iz4[2]],wn[iz4[3]])):nfix_SSE(iz_128))
+
+/*#define SHR3 (jz=jsr, jsr^=(jsr<<13),jsr^=(jsr>>17),jsr^=(jsr<<5),jz+jsr)
+#define UNI (0.5+(signed) SHR3 * 0.2328306e-9)
+#define NOR (hz=SHR3,iz=(hz&127),(abs(hz)<kn[iz])? hz*wn[iz] : nfix())*/
+
 
 #define SHR3_AVX (jsr_256=_mm256_loadu_si256((__m256i *)jsr8),jz_256=jsr_256, jsr_256=_mm256_xor_si256(_mm256_slli_epi32(jsr_256,13),jsr_256),jsr_256=_mm256_xor_si256(_mm256_srli_epi32(jsr_256,17),jsr_256),jsr_256=_mm256_xor_si256(_mm256_slli_epi32(jsr_256,5),jsr_256),_mm256_storeu_si256((__m256i *)jsr8,jsr_256),_mm256_add_epi32(jz_256,jsr_256))
 
 #define UNI_AVX (_mm256_add_ps(_mm256_mul_ps(_mm256_set1_ps(0.2328306e-9),_mm256_cvtepi32_ps(SHR3_AVX)),_mm256_set1_ps(0.5)))
 
-#define NOR_AVX (hz_256=SHR3_AVX,_mm256_storeu_si256((__m256i *)hz8,hz_256),iz_256=_mm256_and_si256(hz_256,_mm256_set1_epi32(127)),_mm256_storeu_si256((__m256i *)iz8,iz_256),abs_hz_256=_mm256_and_si256(hz_256, _mm256_set1_epi32(~0x80000000)),cmplt_option0_256 = _mm256_cmpgt_epi32(_mm256_setr_epi32(kn[iz8[0]],kn[iz8[1]],kn[iz8[2]],kn[iz8[3]],kn[iz8[4]],kn[iz8[5]],kn[iz8[6]],kn[iz8[7]]),abs_hz_256),count99=(count99>99)?0:count99+8,nfix_first_run=(count99>99)?0:1,(_mm256_testc_si256(cmplt_option0_256,_mm256_setr_epi32(0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF)))?_mm256_mul_ps(_mm256_cvtepi32_ps(hz_256),_mm256_setr_ps(wn[iz4[0]],wn[iz4[1]],wn[iz8[2]],wn[iz8[3]],wn[iz8[4]],wn[iz8[5]],wn[iz8[6]],wn[iz8[7]])):nfix_AVX(iz_256))
+#define NOR_AVX (hz_256=SHR3_AVX,_mm256_storeu_si256((__m256i *)hz8,hz_256),iz_256=_mm256_and_si256(hz_256,_mm256_set1_epi32(127)),_mm256_storeu_si256((__m256i *)iz8,iz_256),abs_hz_256=_mm256_and_si256(hz_256, _mm256_set1_epi32(~0x80000000)),cmplt_option0_256 = _mm256_cmpgt_epi32(_mm256_setr_epi32(kn[iz8[0]],kn[iz8[1]],kn[iz8[2]],kn[iz8[3]],kn[iz8[4]],kn[iz8[5]],kn[iz8[6]],kn[iz8[7]]),abs_hz_256),count99=(count99>99)?0:count99+8,nfix_first_run=(count99>99)?0:nfix_first_run,(_mm256_testc_si256(cmplt_option0_256,_mm256_setr_epi32(0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF)))?_mm256_mul_ps(_mm256_cvtepi32_ps(hz_256),_mm256_setr_ps(wn[iz8[0]],wn[iz8[1]],wn[iz8[2]],wn[iz8[3]],wn[iz8[4]],wn[iz8[5]],wn[iz8[6]],wn[iz8[7]])):nfix_AVX(iz_256))
 
 
 __m256 nfix_AVX(__m256i iz)
@@ -184,21 +193,20 @@ __m256 nfix_AVX(__m256i iz)
   uint32_t iz8_i[8] __attribute__((aligned(16))) ;
 
     //x=hz *  wn[iz];
-    _mm256_storeu_si256((__m256i *)iz8_i,iz_256);
-    _mm256_storeu_si256((__m256i *)cmplt_option0,cmplt_option0_256);
-    _mm256_storeu_ps(x8_option0,_mm256_mul_ps(_mm256_cvtepi32_ps(hz_256),_mm256_setr_ps(wn[iz4[0]],wn[iz4[1]],wn[iz4[2]],wn[iz4[3]],wn[iz4[4]],wn[iz4[5]],wn[iz4[6]],wn[iz4[7]])));
+    _mm256_storeu_ps(x8_option0,_mm256_mul_ps(_mm256_cvtepi32_ps(hz_256),_mm256_setr_ps(wn[iz8[0]],wn[iz8[1]],wn[iz8[2]],wn[iz8[3]],wn[iz8[4]],wn[iz8[5]],wn[iz8[6]],wn[iz8[7]])));
     count0=0;
     for (i=0;i<8;i++)
     {
-	    if (cmplt_option0[i]==0xFFFFFFFF)
+	    if ((int)cmplt_option0_256[i]==0xFFFFFFFF)
 	    {
-		output[count0]=hz8[i]*wn[iz8_i[i]];
+		output[count0]=hz8[i]*wn[iz8[i]];
 		count0++;
 	    }  
     }
-    if ((iz8_i[0]==0||iz8_i[1]==0||iz8_i[2]==0||iz8_i[3]==0||iz8_i[4]==0||iz8_i[5]==0||iz8_i[6]==0||iz8_i[7]==0)&&nfix_first_run==0&&count0>0)
+    if ((iz8[0]==0||iz8[1]==0||iz8[2]==0||iz8[3]==0||iz8[4]==0||iz8[5]==0||iz8[6]==0||iz8[7]==0)&&nfix_first_run==0&&count0>0&&flag==1)
     {
 		nfix_first_run=1;
+		option=1;
 		do
 		{
 		    //x = - 0.2904764 * log (UNI);
@@ -219,12 +227,14 @@ __m256 nfix_AVX(__m256i iz)
 		    }
 		}
 		while (cmplt_option1[0]!=0x80000000 && cmplt_option1[1]!=0x80000000 && cmplt_option1[2]!=0x80000000 && cmplt_option1[3]!=0x80000000 && cmplt_option1[4]!=0x80000000 && cmplt_option1[5]!=0x80000000 && cmplt_option1[6]!=0x80000000 && cmplt_option1[7]!=0x80000000);
-		//return _mm_setr_ps(output[0],output[1],output[2],output[3]);	   
+		//return _mm_setr_ps(output[0],output[1],output[2],output[3]);	
+		flag=2;   
     }
-    else if (iz8_i[0]>0&&iz8_i[1]>0&&iz8_i[2]>0&&iz8_i[3]>0&&iz8_i[4]>0&&iz8_i[5]>0&&iz8_i[6]>0&&iz8_i[7]>0&&nfix_first_run==0&&count0>0)
+    else if (iz8[0]>0&&iz8[1]>0&&iz8[2]>0&&iz8[3]>0&&iz8[4]>0&&iz8[5]>0&&iz8[6]>0&&iz8[7]>0&&nfix_first_run==0&&count0>0&&flag==2)
     {
         nfix_first_run=1;
-	cmplt_option2_256 = _mm256_cvtps_epi32(_mm256_cmp_ps(_mm256_add_ps(_mm256_setr_ps(fn[iz8_i[0]],fn[iz8_i[1]],fn[iz8_i[2]],fn[iz8_i[3]],fn[iz8_i[4]],fn[iz8_i[5]],fn[iz8_i[6]],fn[iz8_i[7]]),_mm256_mul_ps(UNI_AVX,_mm256_sub_ps(_mm256_setr_ps(fn[iz8_i[0]-1],fn[iz8_i[1]-1],fn[iz8_i[2]-1],fn[iz8_i[3]-1],fn[iz8_i[4]-1],fn[iz8_i[5]-1],fn[iz8_i[6]-1],fn[iz8_i[7]-1]),_mm256_setr_ps(fn[iz8_i[0]],fn[iz8_i[1]],fn[iz8_i[2]],fn[iz8_i[3]],fn[iz8_i[4]],fn[iz8_i[5]],fn[iz8_i[6]],fn[iz8_i[7]])))),exp256_ps(_mm256_mul_ps(_mm256_mul_ps(x256,x256),_mm256_set1_ps(-0.5f))),_CMP_LT_OS));
+	option=1;
+	cmplt_option2_256 = _mm256_cvtps_epi32(_mm256_cmp_ps(_mm256_add_ps(_mm256_setr_ps(fn[iz8[0]],fn[iz8[1]],fn[iz8[2]],fn[iz8[3]],fn[iz8[4]],fn[iz8[5]],fn[iz8[6]],fn[iz8[7]]),_mm256_mul_ps(UNI_AVX,_mm256_sub_ps(_mm256_setr_ps(fn[iz8[0]-1],fn[iz8[1]-1],fn[iz8[2]-1],fn[iz8[3]-1],fn[iz8[4]-1],fn[iz8[5]-1],fn[iz8[6]-1],fn[iz8[7]-1]),_mm256_setr_ps(fn[iz8[0]],fn[iz8[1]],fn[iz8[2]],fn[iz8[3]],fn[iz8[4]],fn[iz8[5]],fn[iz8[6]],fn[iz8[7]])))),exp256_ps(_mm256_mul_ps(_mm256_mul_ps(x256,x256),_mm256_set1_ps(-0.5f))),_CMP_LT_OS));
 	_mm256_storeu_si256((__m256i *)cmplt_option2,cmplt_option2_256);
 	for (i=0;i<8;i++)
 	{
@@ -235,33 +245,30 @@ __m256 nfix_AVX(__m256i iz)
 		} 
 	}
 	//return _mm_setr_ps(output[0],output[1],output[2],output[3]);
+	flag=1;
     }
-    if (count0==3)
-    {
-	return _mm256_setr_ps(output[0],output[1],output[2],output[3],output[4],output[5],output[6],output[7]);	
-    }
-    else
-    {
+    do      {
 	    hz_256=SHR3_AVX;
     	    _mm256_storeu_si256((__m256i *)hz8,hz_256);
     	    iz_256=_mm256_and_si256(hz_256,_mm256_set1_epi32(127));
     	    _mm256_storeu_si256((__m256i *)iz8,iz_256);
 	    abs_hz_256=_mm256_and_si256(hz_256, _mm256_set1_epi32(~0x80000000));
-	    _mm256_storeu_si256((__m256i *)iz8_i,iz_256);
-    	    _mm256_storeu_si256((__m256i *)cmplt_option0,_mm256_cmpgt_epi32(_mm256_setr_epi32(kn[iz8_i[0]],kn[iz8_i[1]],kn[iz8_i[2]],kn[iz8_i[3]],kn[iz8_i[4]],kn[iz8_i[5]],kn[iz8_i[6]],kn[iz8_i[7]]),abs_hz_256));
-	    for (i=count0;i<7;i++)
+    	    _mm256_storeu_si256((__m256i *)cmplt_option0,_mm256_cmpgt_epi32(_mm256_setr_epi32(kn[iz8[0]],kn[iz8[1]],kn[iz8[2]],kn[iz8[3]],kn[iz8[4]],kn[iz8[5]],kn[iz8[6]],kn[iz8[7]]),abs_hz_256));
+	    for (i=0;i<7-option;i++)
 	    {
-		    if (cmplt_option0[i]==0xFFFFFFFF)
+		    if ((int)cmplt_option0_256[i]==0xFFFFFFFF)
 		    {
-			output[count0]=hz8[i]*wn[iz8_i[i]];
+			output[count0]=hz8[i]*wn[iz8[i]];
 			count0++;
 		    }  
 	    }  
+	    }while( count0 < 8 ); 
+	    option=0;
 	    return _mm256_setr_ps(output[0],output[1],output[2],output[3],output[4],output[5],output[6],output[7]);
-    }
 }
 __m128 nfix_SSE(__m128i iz)
 {
+  //printf("nfix_SSE count99 = %d\n",count99);
   __m128 y __attribute__((aligned(16)));
   __m128i cmplt_option1_128 __attribute__((aligned(16)));
   __m128i cmplt_option2_128 __attribute__((aligned(16)));
@@ -273,23 +280,28 @@ __m128 nfix_SSE(__m128i iz)
   float x4[4] __attribute__((aligned(16)));
   int i;
   static float r = 3.442620; 
-  uint32_t iz4_i[4] __attribute__((aligned(16))) ;
-
+  /*for (i=0;i<4;i++)
+  {
+    printf("cmplt_option[%d] %x\n",i,(int)cmplt_option0_128[i]);
+  }*/
     //x=hz *  wn[iz];
-    _mm_storeu_si128((__m128i *)iz4_i,iz_128);
-    _mm_storeu_si128((__m128i *)cmplt_option0,cmplt_option0_128);
+    //_mm_storeu_si128((__m128i *)cmplt_option0,cmplt_option0_128);
     _mm_storeu_ps(x4_option0,_mm_mul_ps(_mm_cvtepi32_ps(hz_128),_mm_setr_ps(wn[iz4[0]],wn[iz4[1]],wn[iz4[2]],wn[iz4[3]])));
     count0=0;
     for (i=0;i<4;i++)
     {
-	    if (cmplt_option0[i]==0xFFFFFFFF)
+	    if ((int)cmplt_option0_128[i]==0xFFFFFFFF)
 	    {
-		output[count0]=hz4[i]*wn[iz4_i[i]];
+		output[count0]=hz4[i]*wn[iz4[i]];
 		count0++;
+		//printf("count0 %d\n",count0);
 	    }  
     }
-    if ((iz4_i[0]==0||iz4_i[1]==0||iz4_i[2]==0||iz4_i[3]==0)&&nfix_first_run==0&&count0>0)
+    
+    if ((iz4[0]==0||iz4[1]==0||iz4[2]==0||iz4[3]==0)&&nfix_first_run==0&&count0>0&&flag==2)
     {
+		//printf("option 1\n");
+		option=1;
 		nfix_first_run=1;
 		do
 		{
@@ -311,13 +323,17 @@ __m128 nfix_SSE(__m128i iz)
 		    }
 		}
 		while (cmplt_option1[0]!=0x80000000 && cmplt_option1[1]!=0x80000000 && cmplt_option1[2]!=0x80000000 && cmplt_option1[3]!=0x80000000);
-		//return _mm_setr_ps(output[0],output[1],output[2],output[3]);	   
+		//return _mm_setr_ps(output[0],output[1],output[2],output[3]);	 
+		flag=1;  
     }
-    else if (iz4_i[0]>0&&iz4_i[1]>0&&iz4_i[2]>0&&iz4_i[3]>0&&nfix_first_run==0&&count0>0)
+    else if (iz4[0]>0&&iz4[1]>0&&iz4[2]>0&&iz4[3]>0&&nfix_first_run==0&&count0>0&&flag==1)
     {
+	//printf("option 2\n");
+	option=1;
         nfix_first_run=1;
-	cmplt_option2_128 = _mm_cvtps_epi32(_mm_cmplt_ps(_mm_add_ps(_mm_setr_ps(fn[iz4_i[0]],fn[iz4_i[1]],fn[iz4_i[2]],fn[iz4_i[3]]),_mm_mul_ps(UNI_SSE,_mm_sub_ps(_mm_setr_ps(fn[iz4_i[0]-1],fn[iz4_i[1]-1],fn[iz4_i[2]-1],fn[iz4_i[3]-1]),_mm_setr_ps(fn[iz4_i[0]],fn[iz4_i[1]],fn[iz4_i[2]],fn[iz4_i[3]])))),exp_ps(_mm_mul_ps(_mm_mul_ps(x,x),_mm_set1_ps(-0.5f)))));
+	cmplt_option2_128 = _mm_cvtps_epi32(_mm_cmplt_ps(_mm_add_ps(_mm_setr_ps(fn[iz4[0]],fn[iz4[1]],fn[iz4[2]],fn[iz4[3]]),_mm_mul_ps(UNI_SSE,_mm_sub_ps(_mm_setr_ps(fn[iz4[0]-1],fn[iz4[1]-1],fn[iz4[2]-1],fn[iz4[3]-1]),_mm_setr_ps(fn[iz4[0]],fn[iz4[1]],fn[iz4[2]],fn[iz4[3]])))),exp_ps(_mm_mul_ps(_mm_mul_ps(x,x),_mm_set1_ps(-0.5f)))));
 	_mm_storeu_si128((__m128i *)cmplt_option2,cmplt_option2_128);
+
 	for (i=0;i<4;i++)
 	{
 		if (cmplt_option2[i]==0x80000000)
@@ -327,30 +343,36 @@ __m128 nfix_SSE(__m128i iz)
 		} 
 	}
 	//return _mm_setr_ps(output[0],output[1],output[2],output[3]);
+	flag=2;
     }
-    if (count0==3)
-    {
-	return _mm_setr_ps(output[0],output[1],output[2],output[3]);	
-    }
-    else
-    {
-	    hz_128=SHR3_SSE;
-    	    _mm_storeu_si128((__m128i *)hz4,hz_128);
-    	    iz_128=_mm_and_si128(hz_128,_mm_set1_epi32(127));
-    	    _mm_storeu_si128((__m128i *)iz4,iz_128);
-	    abs_hz_128=_mm_and_si128(hz_128, _mm_set1_epi32(~0x80000000));
-	    _mm_storeu_si128((__m128i *)iz4_i,iz_128);
-    	    _mm_storeu_si128((__m128i *)cmplt_option0,_mm_cmplt_epi32(abs_hz_128,_mm_setr_epi32(kn[iz4_i[0]],kn[iz4_i[1]],kn[iz4_i[2]],kn[iz4_i[3]])));
-	    for (i=count0;i<3;i++)
-	    {
-		    if (cmplt_option0[i]==0xFFFFFFFF)
+    do {
+/*#define NOR_SSE (hz_128=SHR3_SSE,_mm_storeu_si128((__m128i *)hz4,hz_128),iz_128=_mm_and_si128(hz_128,_mm_set1_epi32(127)),_mm_storeu_si128((__m128i *)iz4,iz_128),abs_hz_128=_mm_and_si128(hz_128, _mm_set1_epi32(~0x80000000)),cmplt_option0_128 = _mm_cmplt_epi32(abs_hz_128,_mm_setr_epi32(kn[iz4[0]],kn[iz4[1]],kn[iz4[2]],kn[iz4[3]])),count99=(count99>99)?0:count99+4,nfix_first_run=(count99>99)?0:1,printf("test FFF = %d\n",(_mm_testc_si128(cmplt_option0_128,_mm_setr_epi32(0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF)))),(_mm_testc_si128(cmplt_option0_128,_mm_setr_epi32(0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF)))?_mm_mul_ps(_mm_cvtepi32_ps(hz_128),_mm_setr_ps(wn[iz4[0]],wn[iz4[1]],wn[iz4[2]],wn[iz4[3]])):nfix_SSE(iz_128))*/
+
+	  //printf("filling remaining\n");
+	  hz_128=SHR3_SSE;
+    	  _mm_storeu_si128((__m128i *)hz4,hz_128);
+    	  iz_128=_mm_and_si128(hz_128,_mm_set1_epi32(127));
+    	  _mm_storeu_si128((__m128i *)iz4,iz_128);
+	  abs_hz_128=_mm_and_si128(hz_128, _mm_set1_epi32(~0x80000000));
+    	  cmplt_option0_128 = _mm_cmplt_epi32(abs_hz_128,_mm_setr_epi32(kn[iz4[0]],kn[iz4[1]],kn[iz4[2]],kn[iz4[3]]));
+
+	  /*for (i=0;i<4;i++)
+	  { 
+	      printf("cmplt_option filling[%d] %x\n",i,(int)cmplt_option0_128[i]);
+	  }*/
+	  //printf("\n");
+	  for (i=0;i<4-option;i++)
+	  {
+		    if ((int)cmplt_option0_128[i]==0xFFFFFFFF)
 		    {
-			output[count0]=hz4[i]*wn[iz4_i[i]];
-			count0++;
+				output[count0]=hz4[i]*wn[iz4[i]];
+				count0++;
+				//printf("count00 %d\n",count0);
 		    }  
-	    }  
-	    return _mm_setr_ps(output[0],output[1],output[2],output[3]);
-    }
+	  }
+	  }while( count0 < 4 );  
+	  option=0;
+	  return _mm_setr_ps(output[0],output[1],output[2],output[3]);
 }
 
 /*!\Procedure to create tables for normal distribution kn,wn and fn. */
