@@ -988,6 +988,9 @@ void common_signal_procedures (PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc) {
             }
           }
 
+          proc->flag_DCI_msg4 ==1 ;
+          proc->counter_DCI_msg4=4;
+
       }  // NPUSH decode end 
     proc->counter_msg3--;
 
@@ -1008,26 +1011,60 @@ if(proc->flag_msg4 == 1 && proc->counter_msg4 > 0)
 
         if(frame == proc->frame_msg4 && subframe == proc->subframe_msg4)
         {
-                NB_IoT_DL_eNB_RAR_t  *rar  =  &eNB->ndlsch_rar.content_rar;
+                 NB_IoT_DL_eNB_RAR_t  *rar  =  &eNB->ndlsch_rar.content_rar;
                 uint8_t   tab_rar[15];
+                //uint8_t   tab_rar[7];
                 uint8_t *nas_id = &eNB->msg3_pdu[0];
                 //uint8_t   *NAS_tab = &eNB->tab_nas;
                 // avoid subframe 9 and subframe 0 of next frame
                 tab_rar[0]=63;
                 tab_rar[1]=60;
                 tab_rar[2]=0;
-                tab_rar[3]=nas_id[0];  // NAS part 1 
-                tab_rar[4]=nas_id[1];  // NAS part 2
-                tab_rar[5]=nas_id[2]; // NAS part 3 
-                tab_rar[6]=nas_id[3];  // NAS part 4
-                tab_rar[7]=nas_id[4];   // NAS part 5
-                tab_rar[8]=nas_id[5];   // NAS part 6
+                tab_rar[3]=0;  // NAS part 1 
+                tab_rar[4]=nas_id[0];  // NAS part 2
+                tab_rar[5]=nas_id[1]; // NAS part 3 
+                tab_rar[6]=nas_id[2];  // NAS part 4
+                tab_rar[7]=nas_id[3];   // NAS part 5
+                tab_rar[8]=nas_id[4];   // NAS part 6
                 tab_rar[9]=30;
                 tab_rar[10]=3;
                 tab_rar[11]=0;
                 tab_rar[12]=18;  
                 tab_rar[13]=91;
                 tab_rar[14]=8;
+
+    /*tab_rar[0]=28;
+                tab_rar[1]=0; // NAS part 1 
+                tab_rar[2]=nas_id[0]; // NAS part 2
+                tab_rar[3]=nas_id[1];  // NAS part 3 
+                tab_rar[4]=nas_id[2];  // NAS part 4
+                tab_rar[5]=nas_id[3]; // NAS part 5 
+                tab_rar[6]=nas_id[4];  // NAS part 6*/
+
+    /*tab_rar[0]=28;
+                tab_rar[1]=nas_id[0]; // NAS part 2
+                tab_rar[2]=nas_id[1];  // NAS part 3 
+                tab_rar[3]=nas_id[2];  // NAS part 4
+                tab_rar[4]=nas_id[3]; // NAS part 5 
+                tab_rar[5]=nas_id[4];  // NAS part 6
+                tab_rar[6]=0;*/
+
+    /*tab_rar[0]=28;
+                tab_rar[1]=nas_id[4]; // NAS part 2
+                tab_rar[2]=nas_id[3];  // NAS part 3 
+                tab_rar[3]=nas_id[2];  // NAS part 4
+                tab_rar[4]=nas_id[1]; // NAS part 5 
+                tab_rar[5]=nas_id[0];  // NAS part 6
+                tab_rar[6]=0;*/
+        
+
+
+    printf("ms4pdu[0] = %d \n",nas_id[0]);
+          printf("ms4pdu[1] = %d \n",nas_id[1]);
+          printf("ms4pdu[2] = %d \n",nas_id[2]);
+          printf("ms4pdu[3] = %d \n",nas_id[3]);
+        printf("ms4pdu[2] = %d \n",nas_id[4]);
+       
 
                 if(proc->flag_scrambling ==0)
                 {
@@ -1076,30 +1113,42 @@ if(proc->flag_DCI_msg4 ==1 && proc->counter_DCI_msg4>0)
 
      NB_IoT_eNB_NPDCCH_temp_t   *npdcch_struct_x = &eNB->npdcch_tmp;
 
-     if(proc->SP2 == 1)
+    if(proc->SP2 == 1)
      {
           if(proc->subframe_DCI_msg4==subframe && frame == proc->frame_DCI_msg4)
-          {
-              printf("\n xxxxxxxxxxxxxxxx DCI 2 for msg4 xxxxxxxxxxxxx frame %d, subframe %d", frame, subframe);
-              dci_modulation_NB_IoT(txdataF,AMP,fp,3,npdcch_struct_x->npdcch_e[0],1,2,22,subframe);
-              proc->counter_DCI_msg4--;
-              if(subframe==9)                             /// tester le cas ou subframe==4 && 5
-              {
-                proc->subframe_DCI_msg4 =1;
-                proc->frame_DCI_msg4=frame+1;
+          { 
+              if(subframe==9)
+              { 
+                  proc->subframe_DCI_msg4 =1;
+                  proc->frame_DCI_msg4=frame+1;
               } else {
-                proc->subframe_DCI_msg4 =subframe+1;
-              } 
+                  printf("\n xxxxxxxxxxxxxxxx DCI 2 for msg4 xxxxxxxxxxxxx frame %d, subframe %d", frame, subframe);
+                  dci_modulation_NB_IoT(txdataF,AMP,fp,3,npdcch_struct_x->npdcch_e[0],1,2,22,subframe);
+                  proc->counter_DCI_msg4--;
+                  if(subframe==9)                             /// tester le cas ou subframe==4 && 5
+                  {
+                       proc->subframe_DCI_msg4 =1;
+                       proc->frame_DCI_msg4=frame+1;
+                  } else {
+                      proc->subframe_DCI_msg4 =subframe+1;
+                  } 
 
-              if(proc->counter_DCI_msg4 == 0)
-              {
-                  proc->flag_msg4=1;
-                  proc->counter_msg4=4;
-                  proc->subframe_msg4= subframe+5;
-                  proc->frame_msg4= frame;
+                  if(proc->counter_DCI_msg4 == 0)
+                  {
+                       proc->flag_msg4=1;
+                       proc->counter_msg4=4;
+                      if(subframe+5>9)                 
+                      {
+                         proc->subframe_msg4 = (subframe+5)-10;
+                         proc->frame_msg4= frame+1;
 
-              } 
-          }
+                      } else {
+                            proc->subframe_msg4= subframe+5;
+                            proc->frame_msg4= frame;
+                      }
+                  }
+            }
+        }
      }
 
      if(((10*frame +subframe) % 8)==2 && subframe != 0 && subframe != 5 && proc->SP2 !=1 && proc->guard==0)
