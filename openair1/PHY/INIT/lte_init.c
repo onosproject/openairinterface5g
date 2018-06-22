@@ -18,6 +18,20 @@
  * For more information about the OpenAirInterface (OAI) Software Alliance:
  *      contact@openairinterface.org
  */
+/*! \file phy_procedures_lte_eNB.c
+ * \brief Implementation of eNB procedures from 36.213 LTE specifications
+ * \author R. Knopp, F. Kaltenberger, N. Nikaein, X. Foukas
+ * \date 2011
+ * \version 0.1
+ * \company Eurecom
+ * \email: knopp@eurecom.fr,florian.kaltenberger@eurecom.fr,navid.nikaein@eurecom.fr, x.foukas@sms.ed.ac.uk
+ * last changes: M. Kanj, V. Savaux
+ * date: 2018
+ * company: b<>com
+ * \email: matthieu.kanj@b-com.com, vincent.savaux@b-com.com
+ * \note
+ * \warning
+ */
 
 #include "defs.h"
 #include "SCHED/defs.h"
@@ -1675,6 +1689,7 @@ void phy_init_lte_top_NB_IoT(NB_IoT_DL_FRAME_PARMS *frame_parms)
 
   //generate_ul_ref_sigs();
   //generate_ul_ref_sigs_rx();
+  generate_ul_ref_sigs_rx_NB_IoT();
 
  // generate_64qam_table();
   //generate_16qam_table();

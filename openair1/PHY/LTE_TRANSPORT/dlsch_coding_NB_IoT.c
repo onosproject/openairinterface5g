@@ -172,7 +172,7 @@ int dlsch_encoding_rar_NB_IoT(unsigned char      			*a,
 
 	dlsch->length_e = G;									// G*Nsf (number_of_subframes) = total number of bits to transmit G=236
 
-	int32_t numbits = A+24;
+	
 
 if(option ==1)
 {  
@@ -189,7 +189,7 @@ if(option ==1)
 	}
 }
     
-     
+     int32_t numbits = A+24;
 
 
 	if(option==1)
@@ -218,14 +218,14 @@ if(option ==1)
 	    crc = crc24a_NB_IoT(npbch_a_x,A)>>8;
 		
 
-	    for (int j=0; j<7; j++) 												
+	    for (int j=0; j<15; j++) 												
 		{	
 			npbch_a_crc_x[j] = npbch_a_x[j];    
 		}
 
-	    npbch_a_crc_x[7] = ((uint8_t*)&crc)[2];
-	    npbch_a_crc_x[8] = ((uint8_t*)&crc)[1];
-		npbch_a_crc_x[9] = ((uint8_t*)&crc)[0];
+	    npbch_a_crc_x[15] = ((uint8_t*)&crc)[2];
+	    npbch_a_crc_x[16] = ((uint8_t*)&crc)[1];
+		npbch_a_crc_x[17] = ((uint8_t*)&crc)[0];
 		
 			dlsch->B = numbits;			// The length of table b in bits
 			//memcpy(dlsch->b,a,numbits/8);        // comment if option 2 

@@ -31,6 +31,10 @@ void lte_gold_NB_IoT(LTE_DL_FRAME_PARMS     *frame_parms,
 					 uint32_t 				lte_gold_table_NB_IoT[20][2][14],
 					 uint16_t 				Nid_cell);
 
+
+
+unsigned int lte_gold_generic_NB_IoT(unsigned int *x1, unsigned int *x2, unsigned char reset);
+
 /*! \brief This function generates the Narrowband reference signal (NRS) sequence (36-211, Sec 6.10.1.1)
 @param phy_vars_eNB Pointer to eNB variables
 @param output Output vector for OFDM symbol (Frequency Domain)

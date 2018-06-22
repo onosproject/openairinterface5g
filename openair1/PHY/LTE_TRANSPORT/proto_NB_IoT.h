@@ -26,6 +26,10 @@
  * \version 0.1
  * \company Eurecom
  * \email: knopp@eurecom.fr
+ * \last changes: M. Kanj, V. Savaux
+ * \date: 2018
+ * \company: b<>com
+ * \email: matthieu.kanj@b-com.com, vincent.savaux@b-com.com
  * \note
  * \warning
  */
@@ -321,16 +325,16 @@ void rx_ulsch_NB_IoT(PHY_VARS_eNB      *phy_vars_eNB,
                      NB_IoT_eNB_NULSCH_t      **ulsch,
                      uint8_t                  cooperation_flag);
 
-void ulsch_extract_rbs_single_NB_IoT(int32_t                **rxdataF,
-                                     int32_t                **rxdataF_ext,
-                                     // uint32_t               first_rb, 
-                                     uint16_t               UL_RB_ID_NB_IoT, // index of UL NB_IoT resource block 
-                                     uint8_t                N_sc_RU, // number of subcarriers in UL
-				                             // uint32_t               I_sc, // subcarrier indication field
-                                     uint32_t               nb_rb,
-                                     uint8_t                l,
-                                     uint8_t                Ns,
-                                     LTE_DL_FRAME_PARMS  *frame_parms);
+void ulsch_extract_rbs_single_NB_IoT(int32_t **rxdataF,
+                                     int32_t **rxdataF_ext,
+                                     // uint32_t first_rb, 
+                                     uint16_t UL_RB_ID_NB_IoT, // index of UL NB_IoT resource block !!! may be defined twice : in frame_parms and in NB_IoT_UL_eNB_HARQ_t
+                                     uint8_t N_sc_RU, // number of subcarriers in UL 
+                                     uint8_t subframe,// uint32_t I_sc, // NB_IoT: subcarrier indication field: must be defined in higher layer
+                                     uint32_t nb_rb,
+                                     uint8_t l,
+                                     uint8_t Ns,
+                                     LTE_DL_FRAME_PARMS *frame_parms);
 
 void ulsch_channel_level_NB_IoT(int32_t **drs_ch_estimates_ext,
                                 LTE_DL_FRAME_PARMS *frame_parms,
@@ -380,6 +384,7 @@ void rotate_single_carrier_NB_IoT(PHY_VARS_eNB *eNB,
                                   int32_t **rxdataF_comp, 
                                   uint8_t UE_id,
                                   uint8_t symbol, 
+                                  uint8_t counter_msg3,
                                   uint8_t Qm); 
 
 void fill_rbs_zeros_NB_IoT(PHY_VARS_eNB *eNB, 
@@ -402,7 +407,7 @@ int32_t ulsch_qpsk_llr_NB_IoT(PHY_VARS_eNB *eNB,
                               int16_t *ulsch_llr, 
                               uint8_t symbol, 
                               uint8_t UE_id, 
-                              int16_t **llrp); 
+                              int16_t *llrp);
 
 void rotate_bpsk_NB_IoT(PHY_VARS_eNB *eNB, 
                         LTE_DL_FRAME_PARMS *frame_parms,
@@ -466,6 +471,27 @@ int dlsch_qpsk_llr_NB_IoT(NB_IoT_DL_FRAME_PARMS *frame_parms,
                            int16_t **llr32p,
                            uint8_t beamforming_mode); 
 
+/// Vincent: temporary functions 
+
+int ul_chest_tmp_NB_IoT(int32_t **rxdataF_ext,
+      int32_t **ul_ch_estimates,
+      uint8_t l, //symbol within slot 
+      uint8_t Ns,
+      uint8_t counter_msg3,
+      LTE_DL_FRAME_PARMS *frame_parms); 
+
+void rotate_channel_sc_tmp_NB_IoT(int16_t *estimated_channel,
+          uint8_t l, 
+          uint8_t Qm, 
+          uint8_t counter_msg3); 
+
+int ul_chequal_tmp_NB_IoT(int32_t **rxdataF_ext,
+      int32_t **rxdataF_comp,
+      int32_t **ul_ch_estimates,
+      uint8_t l, //symbol within slot 
+      uint8_t Ns,
+      LTE_DL_FRAME_PARMS *frame_parms);
+///
 
 ////////////////////////////NB-IoT testing ///////////////////////////////
 void clean_eNb_ulsch_NB_IoT(NB_IoT_eNB_NULSCH_t *ulsch);

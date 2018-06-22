@@ -450,7 +450,7 @@ int32_t ulsch_bpsk_llr_NB_IoT(PHY_VARS_eNB *eNB,
 {
 
   int16_t *rxF; 
-  uint32_t I_sc = eNB->ulsch_NB_IoT[UE_id]->harq_process->I_sc;  // NB_IoT: subcarrier indication field: must be defined in higher layer
+  uint32_t I_sc = 11;//eNB->ulsch_NB_IoT[UE_id]->harq_process->I_sc;  // NB_IoT: subcarrier indication field: must be defined in higher layer
   uint16_t ul_sc_start; // subcarrier start index into UL RB 
   // int i; 
 
@@ -510,16 +510,17 @@ int32_t ulsch_qpsk_llr_NB_IoT(PHY_VARS_eNB *eNB,
                               int16_t *ulsch_llr, 
                               uint8_t symbol, 
                               uint8_t UE_id, 
-                              int16_t **llrp)
+                              int16_t *llrp)
 {
 
   int32_t *rxF; 
-  int32_t **llrp32 = (int32_t **)llrp; 
-  uint32_t I_sc = eNB->ulsch_NB_IoT[UE_id]->harq_process->I_sc;  // NB_IoT: subcarrier indication field: must be defined in higher layer
+  int32_t *llrp32; // = (int32_t *)llrp; 
+  uint32_t I_sc = 11;//eNB->ulsch_NB_IoT[UE_id]->harq_process->I_sc;  // NB_IoT: subcarrier indication field: must be defined in higher layer
   uint16_t ul_sc_start; // subcarrier start index into UL RB 
-  uint8_t Nsc_RU = eNB->ulsch_NB_IoT[UE_id]->harq_process->N_sc_RU; // Vincent: number of sc 1,3,6,12 
+  uint8_t Nsc_RU = 1;//eNB->ulsch_NB_IoT[UE_id]->harq_process->N_sc_RU; // Vincent: number of sc 1,3,6,12 
   int i; 
-
+  
+  llrp32 = (int32_t *)&llrp[0];
   ul_sc_start = get_UL_sc_start_NB_IoT(I_sc); // NB-IoT: get the used subcarrier in RB
   rxF = (int32_t *)&rxdataF_comp[0][(symbol*frame_parms->N_RB_DL*12) + ul_sc_start]; 
 
@@ -527,9 +528,12 @@ int32_t ulsch_qpsk_llr_NB_IoT(PHY_VARS_eNB *eNB,
 
   for (i=0; i<Nsc_RU; i++) {
     //printf("%d,%d,%d,%d,%d,%d,%d,%d\n",((int16_t *)rxF)[0],((int16_t *)rxF)[1],((int16_t *)rxF)[2],((int16_t *)rxF)[3],((int16_t *)rxF)[4],((int16_t *)rxF)[5],((int16_t *)rxF)[6],((int16_t *)rxF)[7]);
-    *(*llrp32) = *rxF;
+    /**(*llrp32) = *rxF;
     rxF++;
-    (*llrp32)++;
+    (*llrp32)++;*/
+    llrp32[i] = rxF[i]; 
+  /*printf("\nin llr_%d === %d",ul_sc_start,(int32_t)llrp[i]); 
+  printf("\n  in llr_%d === %d",ul_sc_start,llrp32[i]);*/
   }
 
   return(0);
@@ -606,7 +610,7 @@ void ulsch_extract_rbs_single_NB_IoT(int32_t **rxdataF,
                                      // uint32_t first_rb, 
                                      uint16_t UL_RB_ID_NB_IoT, // index of UL NB_IoT resource block !!! may be defined twice : in frame_parms and in NB_IoT_UL_eNB_HARQ_t
                                      uint8_t N_sc_RU, // number of subcarriers in UL 
-                                     // uint32_t I_sc, // NB_IoT: subcarrier indication field: must be defined in higher layer
+                                     uint8_t subframe,// uint32_t I_sc, // NB_IoT: subcarrier indication field: must be defined in higher layer
                                      uint32_t nb_rb,
                                      uint8_t l,
                                      uint8_t Ns,
@@ -637,7 +641,8 @@ void ulsch_extract_rbs_single_NB_IoT(int32_t **rxdataF,
         // Note that FFT splits the RBs 
         // !!! Note that frame_parms->N_RB_UL is the number of RB in LTE
         // rxdataF_ext[aarx][symbol*frame_parms->N_RB_UL*12 + n] = rxdataF[aarx][UL_RB_ID_NB_IoT*12 + ul_sc_start + frame_parms->first_carrier_offset + symbol*frame_parms->ofdm_symbol_size + n];
-        rxdataF_ext[aarx][symbol*frame_parms->N_RB_UL*12 + n] = rxdataF[aarx][UL_RB_ID_NB_IoT*12 + frame_parms->first_carrier_offset + symbol*frame_parms->ofdm_symbol_size + n];
+        rxdataF_ext[aarx][symbol*frame_parms->N_RB_UL*12 + n] = rxdataF[aarx][UL_RB_ID_NB_IoT*12 + frame_parms->first_carrier_offset + (symbol)*frame_parms->ofdm_symbol_size + n]; 
+        //rxdataF_ext[aarx][symbol*12 + n] = rxdataF[aarx][UL_RB_ID_NB_IoT*12 + frame_parms->first_carrier_offset + symbol*frame_parms->ofdm_symbol_size + n];
       
       }
 
@@ -656,14 +661,15 @@ void ulsch_extract_rbs_single_NB_IoT(int32_t **rxdataF,
       // }
     } else { // RB NB-IoT is in the second half 
 
+     
       for (n=0;n<12;n++){ // extract whole RB of 12 subcarriers
         // Note that FFT splits the RBs 
         // rxdataF_ext[aarx][symbol*frame_parms->N_RB_UL*12 + n] = rxdataF[aarx][6*(2*UL_RB_ID_NB_IoT - frame_parms->N_RB_UL) +  ul_sc_start + symbol*frame_parms->ofdm_symbol_size + n]; 
-        rxdataF_ext[aarx][symbol*frame_parms->N_RB_UL*12 + n] = rxdataF[aarx][6*(2*UL_RB_ID_NB_IoT - frame_parms->N_RB_UL) + symbol*frame_parms->ofdm_symbol_size + n];
-
-      
+        rxdataF_ext[aarx][symbol*frame_parms->N_RB_UL*12 + n] = rxdataF[aarx][6*(2*UL_RB_ID_NB_IoT - frame_parms->N_RB_UL) + (symbol)*frame_parms->ofdm_symbol_size + n]; 
+        //printf("   rx_22_%d = %d   ",n,rxdataF[aarx][6*(2*UL_RB_ID_NB_IoT - frame_parms->N_RB_UL) + (subframe*14+symbol)*frame_parms->ofdm_symbol_size + n]); 
+        //printf("   rx_20_%d = %d   ",n,rxdataF[aarx][6*(2*(UL_RB_ID_NB_IoT-7) - frame_parms->N_RB_UL) + (subframe*14+symbol)*frame_parms->ofdm_symbol_size + n]);
+        //rxdataF_ext[aarx][symbol*12 + n] = rxdataF[aarx][6*(2*UL_RB_ID_NB_IoT - frame_parms->N_RB_UL) + symbol*frame_parms->ofdm_symbol_size + n];
       }
-
       //#ifdef OFDMA_ULSCH
       //      rxF = &rxdataF[aarx][(1 + 6*(2*first_rb - frame_parms->N_RB_UL) + symbol*frame_parms->ofdm_symbol_size)*2];
       //#else
@@ -1340,16 +1346,22 @@ void fill_rbs_zeros_NB_IoT(PHY_VARS_eNB *eNB,
 
 
 }
-
+//for (m=0;m<12;m++)
+    //{ // 12 is the number of subcarriers per RB
+ 
+  //printf("  rxdataF_comp32_%d = %d",m,rxdataF_comp32[m]); 
+      
+  //}
 void rotate_single_carrier_NB_IoT(PHY_VARS_eNB *eNB, 
                                   LTE_DL_FRAME_PARMS *frame_parms,
                                   int32_t **rxdataF_comp, 
                                   uint8_t UE_id,
-                                  uint8_t symbol, 
+                                  uint8_t symbol,
+                                  uint8_t counter_msg3, 
                                   uint8_t Qm)
 {
 
-  uint32_t I_sc = eNB->ulsch_NB_IoT[UE_id]->harq_process->I_sc;  // NB_IoT: subcarrier indication field: must be defined in higher layer
+  uint32_t I_sc = 11;//eNB->ulsch_NB_IoT[UE_id]->harq_process->I_sc;   // NB_IoT: subcarrier indication field: must be defined in higher layer
   uint16_t ul_sc_start; // subcarrier start index into UL RB 
   int16_t pi_2_re[2] = {32767 , 0}; 
   int16_t pi_2_im[2] = {0 , 32768}; 
@@ -1378,6 +1390,11 @@ void rotate_single_carrier_NB_IoT(PHY_VARS_eNB *eNB,
 
 
 }
+
+/*int ooo; 
+  for (ooo=0;ooo<12;ooo++){
+  printf("   rx_data_%d = %d    ",ooo,rxdataF_comp[0][symbol*frame_parms->N_RB_DL*12 + ooo]);
+  }*/
 
 void rotate_bpsk_NB_IoT(PHY_VARS_eNB *eNB, 
                         LTE_DL_FRAME_PARMS *frame_parms,
@@ -1619,7 +1636,7 @@ void rx_ulsch_NB_IoT(PHY_VARS_eNB     *eNB,
                                     // ulsch[UE_id]->harq_process->first_rb, 
                                     22, //ulsch[UE_id]->harq_process->UL_RB_ID_NB_IoT, // index of UL NB_IoT resource block 
                                     ulsch[UE_id]->harq_process->N_sc_RU, // number of subcarriers in UL
-                                    // ulsch[UE_id]->harq_process->I_sc, // subcarrier indication field
+                                    0,// ulsch[UE_id]->harq_process->I_sc, // subcarrier indication field
                                     ulsch[UE_id]->harq_process->nb_rb,
                                     l%(frame_parms->symbols_per_tti/2),
                                     l/(frame_parms->symbols_per_tti/2),
@@ -1889,7 +1906,8 @@ void rx_ulsch_NB_IoT(PHY_VARS_eNB     *eNB,
                                     frame_parms, 
                                     pusch_vars->rxdataF_comp[eNB_id], 
                                     UE_id,
-                                    l, 
+                                    l,
+                                    0, 
                                     Qm); 
 
       }
@@ -1906,7 +1924,8 @@ void rx_ulsch_NB_IoT(PHY_VARS_eNB     *eNB,
                                     frame_parms, 
                                     pusch_vars->rxdataF_comp[eNB_id], 
                                     UE_id,
-                                    l, 
+                                    l,
+                                    0, 
                                     Qm); 
 
       

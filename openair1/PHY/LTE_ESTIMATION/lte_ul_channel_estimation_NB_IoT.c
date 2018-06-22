@@ -93,6 +93,181 @@ void rotate_channel_single_carrier_NB_IoT(int16_t *estimated_channel,unsigned ch
 
 } 
 
+
+/////////////////////////////////////////// temporary functions for channel estimation and rotation
+
+void rotate_channel_sc_tmp_NB_IoT(int16_t *estimated_channel,
+          uint8_t l, 
+          uint8_t Qm, 
+          uint8_t counter_msg3)
+{
+  int16_t e_phi_re[120] = {32767, 24811, 4807, -17531, -31357, -29956, -14010, 0, 21402, 32412, 27683, 9511, -13279, -29622, -32767, -24812, -4808, 17530, 31356, 29955, 14009, 0, -21403, -32413,  -27684, -9512, 13278, 29621, 32767, 24811, 4807, -17531, -31357, -29956, -14010, 0, 21402, 32412, 27683, 9511, -13279, -29622, -32767, -24812, -4808, 17530, 31356, 29955, 14009, -1, -21403, -32413,     -27684, -9512, 13278, 29621, 32767, 24811, 4807, -17531, -31357, -29956, -14010, 0, 21402, 32412, 27683, 9511, -13279, -29622, -32767, -24812, -4808, 17530, 31356, 29955, 14009, 0, -21403, -32413,    -27684, -9512, 13278, 29621, 32767, 24811, 4807, -17531, -31357, -29956, -14010, -1, 21402, 32412, 27683, 9511, -13279, -29622, -32767, -24812, -4808, 17530, 31356, 29955, 14009, 0, -21403,     -32413,   -27684, -9512, 13278, 29621}; 
+    int16_t e_phi_im[120] = {0, -21403, -32413, -27684, -9512, 13278, 29621, 32767, 24811, 4807, -17531, -31357, -29956, -14010, -1, 21402, 32412, 27683, 9511, -13279, -29622, -32767, -24812, -4808,    17530, 31356, 29955, 14009, 0, -21403, -32413, -27684, -9512, 13278, 29621, 32767, 24811, 4807, -17531, -31357, -29956, -14010, 0, 21402, 32412, 27683, 9511, -13279, -29622, -32767, -24812, -4808,    17530, 31356, 29955, 14009, -1, -21403, -32413, -27684, -9512, 13278, 29621, 32767, 24811, 4807, -17531, -31357, -29956, -14010, 0, 21402, 32412, 27683, 9511, -13279, -29622, -32767, -24812,    -4808,  17530, 31356, 29955, 14009, 0, -21403, -32413, -27684, -9512, 13278, 29621, 32767, 24811, 4807, -17531, -31357, -29956, -14010, -1, 21402, 32412, 27683, 9511, -13279, -29622, -32767,    -24812, -4808,  17530, 31356, 29955, 14009};
+  int16_t pi_2_re[2] = {32767 , 0}; 
+  int16_t pi_2_im[2] = {0 , 32768}; 
+  //int16_t pi_4_re[2] = {32767 , 25735}; 
+  //int16_t pi_4_im[2] = {0 , 25736}; 
+  int16_t pi_4_re[2] = {32767 , 23170}; 
+  int16_t pi_4_im[2] = {0 , 23170}; 
+  int k; 
+  int16_t est_channel_re, est_channel_im, est_channel_re2, est_channel_im2;    
+
+  for (k=0;k<12;k++)
+  {
+        est_channel_re = estimated_channel[k<<1]; 
+        est_channel_im = estimated_channel[(k<<1)+1]; 
+
+        if (Qm == 1)
+    {
+            est_channel_re2 = (int16_t)(((int32_t)pi_2_re[l%2] * (int32_t)est_channel_re + 
+                          (int32_t)pi_2_im[l%2] * (int32_t)est_channel_im)>>15); 
+            est_channel_im2 = (int16_t)(((int32_t)pi_2_re[l%2] * (int32_t)est_channel_im - 
+                          (int32_t)pi_2_im[l%2] * (int32_t)est_channel_re)>>15); 
+        }
+        if(Qm == 2)
+    {
+            est_channel_re2 = (int16_t)(((int32_t)pi_4_re[l%2] * (int32_t)est_channel_re + 
+                          (int32_t)pi_4_im[l%2] * (int32_t)est_channel_im)>>15); 
+            est_channel_im2 = (int16_t)(((int32_t)pi_4_re[l%2] * (int32_t)est_channel_im - 
+                          (int32_t)pi_4_im[l%2] * (int32_t)est_channel_re)>>15); 
+        }
+
+      estimated_channel[k<<1] = (int16_t)(((int32_t)e_phi_re[14*(8-counter_msg3) + l] * (int32_t)est_channel_re2 + 
+                        (int32_t)e_phi_im[14*(8-counter_msg3) + l] * (int32_t)est_channel_im2)>>15); 
+      estimated_channel[(k<<1)+1] = (int16_t)(((int32_t)e_phi_re[14*(8-counter_msg3) + l] * (int32_t)est_channel_im2 - 
+                        (int32_t)e_phi_im[14*(8-counter_msg3) + l] * (int32_t)est_channel_re2)>>15); 
+  }
+}
+
+
+
+int ul_chest_tmp_NB_IoT(int32_t **rxdataF_ext,
+      int32_t **ul_ch_estimates,
+      uint8_t l, //symbol within slot 
+      uint8_t Ns,
+      uint8_t counter_msg3,
+      LTE_DL_FRAME_PARMS *frame_parms)
+{
+
+  int pilot_pos1 = 3, pilot_pos2 = 10; // holds for npusch format 1, and 15 kHz subcarrier bandwidth
+  uint16_t ul_sc_start; // subcarrier start index into UL RB
+  uint8_t Qm = 2; // needed to rotate the estimated channel
+  uint32_t u; //for group hopping
+  uint32_t I_sc = 11;
+  int symbol_offset; 
+  uint16_t aa,k,n;
+  //int32_t **ul_ch_estimates=pusch_vars->drs_ch_estimates[eNB_id];
+  int16_t *received_data, *estimated_channel, *pilot_sig; // pointers to
+  unsigned int index_Nsc_RU=0; 
+  uint8_t symbol; //symbol within subframe
+    int16_t average_channel[24]; // average channel over a RB and 2 slots
+  int32_t *p_average_channel = (int32_t *)&average_channel; 
+  int16_t *ul_ch1, *ul_ch2;
+
+  u=0; //Ncell_ID%16;
+  ul_sc_start = get_UL_sc_start_NB_IoT(I_sc); // NB-IoT: get the used subcarrier in RB
+  symbol = l + 7*(Ns&1);
+  if (l == pilot_pos1) 
+  {
+    symbol_offset = frame_parms->N_RB_UL*12*(l+(7*(Ns&1)));
+    for (aa=0; aa<frame_parms->nb_antennas_rx; aa++) 
+    {
+              received_data = (int16_t *)&rxdataF_ext[aa][symbol_offset];
+              estimated_channel = (int16_t *)&ul_ch_estimates[aa][symbol_offset]; 
+      pilot_sig  = &ul_ref_sigs_rx_NB_IoT[u][index_Nsc_RU][24 + 24*((8-counter_msg3)*2+Ns)-(ul_sc_start<<1)]; // pilot values depends on the slots
+
+              for (k=0;k<12;k++)
+      {
+                  // Multiplication by the complex conjugate of the pilot
+                  estimated_channel[k<<1] = (int16_t)(((int32_t)received_data[k<<1]*(int32_t)pilot_sig[k<<1] + 
+                          (int32_t)received_data[(k<<1)+1]*(int32_t)pilot_sig[(k<<1)+1])>>15); //real part of estimated channel 
+                  estimated_channel[(k<<1)+1] = (int16_t)(((int32_t)received_data[(k<<1)+1]*(int32_t)pilot_sig[k<<1] - 
+                          (int32_t)received_data[k<<1]*(int32_t)pilot_sig[(k<<1)+1])>>15); //imaginary part of estimated channel 
+              }
+
+      rotate_channel_sc_tmp_NB_IoT(estimated_channel,symbol,Qm,counter_msg3); 
+      //printf("\n");
+              /*for (k=11;k<12;k++)
+      {
+        printf("   re_chest = %d im_chest = %d  pilot_sig_re =%d   pilot_sig_im =%d received_data_re =%d   received_data_im=%d ",estimated_channel[k<<1],estimated_channel[(k<<1)+1],pilot_sig[k<<1],pilot_sig[(k<<1)+1],received_data[k<<1],received_data[(k<<1)+1]);
+              }
+      printf("\n"); 
+      for (k=0;k<40;k++)
+      {
+        printf("  pilot_sig_re =%d   pilot_sig_im =%d  ",pilot_sig[k<<1],pilot_sig[(k<<1)+1]);
+              }
+      printf("\n");*/
+      if (Ns&1) //we are in the second slot of the sub-frame, so do the interpolation
+      {
+                  ul_ch1 = (int16_t *)&ul_ch_estimates[aa][frame_parms->N_RB_UL*12*pilot_pos1];
+                  ul_ch2 = (int16_t *)&ul_ch_estimates[aa][frame_parms->N_RB_UL*12*pilot_pos2]; 
+
+                  // Here, the channel is supposed to be quasi-static during one subframe
+                  // Then, an average over 2 pilot symbols is performed to increase the SNR
+                  // This part may be improved
+                  for (k=0;k<12;k++)
+        {
+                      average_channel[k<<1] = (int16_t)(((int32_t)ul_ch1[k<<1] + (int32_t)ul_ch2[k<<1])/2); 
+                      average_channel[1+(k<<1)] = (int16_t)(((int32_t)ul_ch1[1+(k<<1)] + (int32_t)ul_ch2[1+(k<<1)])/2);
+                  }
+
+                  for (n=0; n<frame_parms->symbols_per_tti; n++) 
+        {
+                        for (k=0;k<12;k++)
+            {
+                            ul_ch_estimates[aa][frame_parms->N_RB_UL*12*n + k] = p_average_channel[k]; 
+                        }
+                  }
+        /*for (k=11;k<12;k++)
+        {
+          printf("   re_chest_av = %d im_chest_av = %d ",ul_ch2[k<<1],ul_ch2[1+(k<<1)]);
+                }
+        printf("\n");*/
+
+              }
+    }
+
+            
+
+  }
+  return(0);
+}
+
+int ul_chequal_tmp_NB_IoT(int32_t **rxdataF_ext,
+      int32_t **rxdataF_comp,
+      int32_t **ul_ch_estimates,
+      uint8_t l, //symbol within slot 
+      uint8_t Ns,
+      LTE_DL_FRAME_PARMS *frame_parms)
+{
+  int symbol_offset;
+  uint16_t aa,k;
+  int16_t *received_data, *estimated_channel, *equal_data; 
+
+  symbol_offset = frame_parms->N_RB_UL*12*(l+(7*(Ns&1)));
+  for (aa=0; aa<frame_parms->nb_antennas_rx; aa++) 
+  { 
+            received_data = (int16_t *)&rxdataF_ext[aa][symbol_offset];
+            estimated_channel = (int16_t *)&ul_ch_estimates[aa][symbol_offset]; 
+    equal_data = (int16_t *)&rxdataF_comp[aa][symbol_offset]; 
+
+            for (k=0;k<12;k++)
+    {
+                // Multiplication by the complex conjugate of the channel
+      //printf("\nkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk %d",k);
+                equal_data[k<<1] = (int16_t)(((int32_t)received_data[k<<1]*(int32_t)estimated_channel[k<<1] + 
+                        (int32_t)received_data[(k<<1)+1]*(int32_t)estimated_channel[(k<<1)+1])>>15); //real part of estimated channel 
+                equal_data[(k<<1)+1] = (int16_t)(((int32_t)received_data[(k<<1)+1]*(int32_t)estimated_channel[k<<1] - 
+                        (int32_t)received_data[k<<1]*(int32_t)estimated_channel[(k<<1)+1])>>15); //imaginary part of estimated channel 
+            }
+
+  }
+
+  return(0);
+}
+
+/////////////////////////////////////////////////////////////////////////////
+
 int32_t ul_channel_estimation_NB_IoT(PHY_VARS_eNB     *eNB,
                                          eNB_rxtx_proc_t   *proc,
                                          uint8_t                  eNB_id,

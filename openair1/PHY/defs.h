@@ -521,7 +521,7 @@ NB_IoT_eNB_NULSCH_t       *ulsch_NB_IoT[NUMBER_OF_UE_MAX+1];
 
 IF_Module_NB_IoT_t          *if_inst; 
 UL_IND_NB_IoT_t             UL_INFO;
-
+uint8_t                     msg3_pdu[6];
 //////////////////// END /////////////////////////////////
 
 

@@ -1256,6 +1256,8 @@ unsigned char phy_threegpplte_turbo_decoder16(short *y,
 
   switch (crc_type) {
   case CRC24_A:
+crc_len=3;
+break;
   case CRC24_B:
     crc_len=3;
     break;

@@ -26,6 +26,9 @@
  * \version 0.1
  * \company Eurecom
  * \email: knopp@eurecom.fr,florian.kaltenberger@eurecom.fr,navid.nikaein@eurecom.fr, x.foukas@sms.ed.ac.uk
+ * \last changes: M. Kanj, V. Savaux
+ * \date: 2018
+ * \company: b<>com
  * \email: matthieu.kanj@b-com.com, vincent.savaux@b-com.com
  * \note
  * \warning
@@ -37,8 +40,8 @@
 #include "SCHED/extern.h"
 
 ///////// NB-IoT testing /////////////////////
-#include "PHY/extern_NB_IoT.h"
-//#include "PHY/defs_NB_IoT.h"
+#include "PHY/defs_NB_IoT.h"
+#include "PHY/vars_NB_IoT.h"
 /////////////////////////////////////////////
 #include "PHY/LTE_TRANSPORT/if4_tools.h"
 #include "PHY/LTE_TRANSPORT/if5_tools.h"
@@ -123,34 +126,6 @@ extern uint8_t smbv_frame_cnt;
 extern int rx_sig_fifo;
 #endif
 
-
-static inline unsigned int lte_gold_unscram_NB_IoT(unsigned int *x1, unsigned int *x2, unsigned char reset) __attribute__((always_inline));
-static inline unsigned int lte_gold_unscram_NB_IoT(unsigned int *x1, unsigned int *x2, unsigned char reset)
-{
-  int n;
-
-  if (reset) {
-    *x1 = 1+ (1<<31);
-    *x2=*x2 ^ ((*x2 ^ (*x2>>1) ^ (*x2>>2) ^ (*x2>>3))<<31);
-
-    // skip first 50 double words (1600 bits)
-    //      printf("n=0 : x1 %x, x2 %x\n",x1,x2);
-    for (n=1; n<50; n++) {
-      *x1 = (*x1>>1) ^ (*x1>>4);
-      *x1 = *x1 ^ (*x1<<31) ^ (*x1<<28);
-      *x2 = (*x2>>1) ^ (*x2>>2) ^ (*x2>>3) ^ (*x2>>4);
-      *x2 = *x2 ^ (*x2<<31) ^ (*x2<<30) ^ (*x2<<29) ^ (*x2<<28);
-    }
-  }
-
-  *x1 = (*x1>>1) ^ (*x1>>4);
-  *x1 = *x1 ^ (*x1<<31) ^ (*x1<<28);
-  *x2 = (*x2>>1) ^ (*x2>>2) ^ (*x2>>3) ^ (*x2>>4);
-  *x2 = *x2 ^ (*x2<<31) ^ (*x2<<30) ^ (*x2<<29) ^ (*x2<<28);
-  return(*x1^*x2);
-  //  printf("n=%d : c %x\n",n,x1^x2);
-
-}
 
 uint8_t is_SR_subframe(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,uint8_t UE_id)
 {
@@ -526,6 +501,9 @@ void pmch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,PHY_VARS_RN *rn,rel
 #endif
 }
 
+int16_t buffer_npusch[153600];
+int16_t buffer_npusch_ext[153600];
+
 void common_signal_procedures (PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc) {
 
   LTE_DL_FRAME_PARMS *fp=&eNB->frame_parms;
@@ -535,24 +513,61 @@ void common_signal_procedures (PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc) {
   int frame = proc->frame_tx;
   RA_TEMPLATE *RA_template = (RA_TEMPLATE *)&eNB_mac_inst[eNB->Mod_id].common_channels[eNB->CC_id].RA_template[0];
   //int                     With_NSSS=0;
+  int framerx = proc->frame_rx; 
+  int subframerx = proc->subframe_rx;
+  //int                     With_NSSS=0; 
+  //printf("\n in eNB_fep_full in frame_tx = %d \n",frame);
+
+  /*if (proc->flag_msg3==1 && framerx==proc->frame_msg3 && subframerx==9)
+  {
+  printf("\n\n\n\n in writing in frame %d \n\n\n\n",frame);
+    int16_t *Rx_buffer;
+    FILE *fich = fopen("xyzabc.txt","w"); 
+  
+  Rx_buffer = &eNB->common_vars.rxdata[0][0][0]; // get the whole frame 
+  memcpy(&buffer_npusch[0],&Rx_buffer[0],307200); 
+
+    int pp; 
+    for (pp=0;pp<153600;pp++)
+  {
+    fprintf(fich," %d ",buffer_npusch[pp]);
+    }
+  fclose(fich);
+  exit(0); 
+  }*/
+
   /////////////////////////////////////////////////////////////////////////////
   ///////////////////////////////////////////////////  RX NPUSH  //////////////////////////////////////
 
-  if(subframe>0 && proc->flag_msg3==1 && frame==proc->frame_msg3 &&  proc->counter_msg3>0) ///&& frame == ????
+  if(subframe==proc->subframe_real && proc->flag_msg3==1 && frame==proc->frame_msg3 &&  proc->counter_msg3>0) ///&& frame == ????
   {
+       proc->subframe_real++;
+      if(proc->subframe_real==10) ///&& frame == ????
+      {
+          proc->subframe_real=0;
+          proc->frame_msg3++;
+      }
+      if (proc->counter_msg3 ==8)
+      {
+        proc->frame_dscr_msg3 = framerx; 
+        proc->subframe_dscr_msg3 = subframerx;
+      }
+      //printf("frame %d in demod NPUSCH = \n",frame);
       ///////////////////////////////////////////////////  NPUSH DEMOD ////////////////////////////////////
       // LTE_eNB_COMMON      *common_vars  =  &eNB->common_vars;
       LTE_eNB_PUSCH       *pusch_vars   =  eNB->pusch_vars[0];
       //NB_IoT_DL_FRAME_PARMS  *frame_parms  =  &eNB->frame_parms; 
-      NB_IoT_eNB_NULSCH_t    **ulsch_NB_IoT   =  &eNB->ulsch_NB_IoT[0][0]; 
-      int l,i;
-      int32_t avgU[2]; 
-      int32_t    avgs;
-      uint8_t    log2_maxh = 0;
+      NB_IoT_eNB_NULSCH_t    **ulsch_NB_IoT   =  &eNB->ulsch_NB_IoT;//[0][0]; 
+      int l; //i;
+      //int32_t avgU[2]; 
+      //int32_t    avgs;
+      //uint8_t    log2_maxh = 0;
       uint8_t pilot_pos1 = 3, pilot_pos2 = 10; // holds for npusch format 1, and 15 kHz subcarrier bandwidth
       int16_t    *llrp;
       uint8_t nb_rb=1;       //ulsch_NB_IoT[0]->harq_process->nb_rb,  //////////////// high level parameter
+
       //buffer_npusch = common_vars->rxdataF[0]; 
+      //printf("\n\n frame_msg3=%d  subframe = %d\n",frame,proc->subframe_real); 
 
       for (l=0; l<fp->symbols_per_tti; l++)
       { 
@@ -562,104 +577,89 @@ void common_signal_procedures (PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc) {
                                           // ulsch[UE_id]->harq_process->first_rb, 
                                           22,    //ulsch[UE_id]->harq_process->UL_RB_ID_NB_IoT, // index of UL NB_IoT resource block 
                                           1, //ulsch_NB_IoT[0]->harq_process->N_sc_RU, // number of subcarriers in UL  //////////////// high level parameter
-                                          // ulsch[UE_id]->harq_process->I_sc, // subcarrier indication field
+                                          (uint8_t)proc->subframe_delay,//subframe,// ulsch[UE_id]->harq_process->I_sc, // subcarrier indication field
                                           nb_rb, 
                                           l%(fp->symbols_per_tti/2),
                                           l/(fp->symbols_per_tti/2),
                                           fp);
-         /* ul_channel_estimation_NB_IoT(eNB,proc,
-                                       0,
-                                       0,
-                                       l%(fp->symbols_per_tti/2),
-                                       l/(fp->symbols_per_tti/2),
-                                       1,  // N_sc_RU
-                                       0);*/
+            /// Channel Estimation
+    ul_chest_tmp_NB_IoT(pusch_vars->rxdataF_ext[0],
+      pusch_vars->drs_ch_estimates[0],
+      l%(fp->symbols_per_tti/2), //symbol within slot 
+      l/(fp->symbols_per_tti/2),
+      proc->counter_msg3,
+      fp); 
+
       }
-
-      /*for (i=0; i<fp->nb_antennas_rx; i++)
-      {
-          pusch_vars->ulsch_power[i] = signal_energy_nodc(pusch_vars->drs_ch_estimates[0][i], 12);   
-      }
-    
-      ulsch_channel_level_NB_IoT(pusch_vars->drs_ch_estimates[0],
-                                 fp,
-                                 avgU,
-                                 nb_rb); */
-
-      /*avgs = 0;
-
-      for (i=0; i<fp->nb_antennas_rx; i++)
+      for (l=0; l<fp->symbols_per_tti; l++)
       { 
-          avgs = cmax(avgs,avgU[(i<<1)]);
+
+    /// Equalization
+    ul_chequal_tmp_NB_IoT(pusch_vars->rxdataF_ext[0],
+      pusch_vars->rxdataF_comp[0],
+      pusch_vars->drs_ch_estimates[0],
+      l%(fp->symbols_per_tti/2), //symbol within slot 
+      l/(fp->symbols_per_tti/2),
+      fp);
+
+      }
+      for (l=0; l<fp->symbols_per_tti; l++)
+      { 
+
+         /// In case of 1 subcarrier: BPSK and QPSK should be rotated by pi/2 and pi/4, respectively 
+          rotate_single_carrier_NB_IoT(eNB, 
+                                       fp, 
+                                       pusch_vars->rxdataF_comp[0], 
+                                       0, // UE ID
+                                       l, 
+               proc->counter_msg3,
+                                       2); // Qm
+
       }
 
-      log2_maxh = (log2_approx(avgs)/2)+ log2_approx(fp->nb_antennas_rx-1)+4;*/
-
-      for (l=0; l<fp->symbols_per_tti; l++) {
-
-          if (l==pilot_pos1 || l==pilot_pos2)   // skip pilots
-          {
-              l++;
-          }
-    
-         /* ulsch_channel_compensation_NB_IoT(pusch_vars->rxdataF_ext[0],
-                                            pusch_vars->drs_ch_estimates[0],
-                                            pusch_vars->ul_ch_mag[0],
-                                            pusch_vars->ul_ch_magb[0],
-                                            pusch_vars->rxdataF_comp[0],
-                                            fp,
-                                            l,
-                                            2, //Qm
-                                            nb_rb,
-                                            log2_maxh); // log2_maxh+I0_shift
-
-          freq_equalization_NB_IoT(fp,
-                                   pusch_vars->rxdataF_comp[0],
-                                   pusch_vars->ul_ch_mag[0],
-                                   pusch_vars->ul_ch_magb[0],
-                                   l,
-                                   12, //NscRU: keep 12, even if the actual number of sc is not 12
-                                   2); // Qm*/
-
-          fill_rbs_zeros_NB_IoT(eNB, 
-                                fp, 
-                                pusch_vars->rxdataF_comp[0], 
-                                0, // UE ID
-                                l);
+        proc->subframe_delay++;
+  if(proc->subframe_delay==10) ///&& frame == ????
+      {
+  proc->subframe_delay=0; 
       }
+  proc->subframe_delay++; 
+
+
+
 
       ///////// IDFT inverse precoding is done over the whole subframe of 14 - 2 (pilots) symbols
-      lte_idft_NB_IoT(fp,
-                      (uint32_t*)pusch_vars->rxdataF_comp[0][0],
-                      12);  // IDFT size
+      //lte_idft_NB_IoT(fp,
+      //                (uint32_t*)pusch_vars->rxdataF_ext[0][0],
+      //                12);  // IDFT size 
 
-      llrp = (int16_t*)&pusch_vars->llr[0]; 
-
+      llrp = (int16_t*)&pusch_vars->llr[0+ (8-proc->counter_msg3)*24]; 
+  int ii=0;
       for (l=0; l<fp->symbols_per_tti; l++)
       {
           if (l==pilot_pos1 || l==pilot_pos2)   // skip pilots
           {
               l++;
           }
-          // In case of 1 subcarrier: BPSK and QPSK should be rotated by pi/2 and pi/4, respectively 
-          //if (Nsc_RU == 1){ 
-          rotate_single_carrier_NB_IoT(eNB, 
-                                       fp, 
-                                       pusch_vars->rxdataF_comp[0], 
-                                       0, // UE ID
-                                       l, 
-                                       2); // Qm
+ 
           ulsch_qpsk_llr_NB_IoT(eNB, 
                                 fp,
                                 pusch_vars->rxdataF_comp[0],
                                 pusch_vars->llr,
-                                l,
+                                l, 
                                 0, // UE ID
-                                &llrp); //// !!! Pensez à créer un buffer de longueur 8 subframes
+                                &llrp[ii*2]); //// !!! Pensez à créer un buffer de longueur 8 subframes 
+  ii++;
+  
       }
+  /*printf("\n");
+  for (l=0;l<24;l++){
+    printf("  llr = %d  ",pusch_vars->llr[(8-proc->counter_msg3)*24+l]);  
+  }*/
+  
       ///////////////////////////////////////////////////  NPUSH DECOD ////////////////////////////////////
       if(proc->counter_msg3==1)
       {
+  //printf("\nframe %d in decod NPUSCH = \n",frame);
           int16_t                 *ulsch_llr    = eNB->pusch_vars[0]->llr;  //UE_id=0
           //NB_IoT_DL_FRAME_PARMS   *frame_parms  = &eNB->frame_parms;
           //NB_IoT_eNB_NULSCH_t     *ulsch        = eNB->ulsch[0];
@@ -668,30 +668,47 @@ void common_signal_procedures (PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc) {
           //uint8_t         harq_pid;
           unsigned int    A;
           uint8_t         Q_m;
-          unsigned int    i2,j,j2;
+          unsigned int    j,j2; //i2,
           int             iprime;
           //unsigned int    ret = 0;
           int             r,Kr;
           unsigned int    sumKr=0;
           unsigned int    G,H,Hprime,Hpp,Cmux,Rmux_prime;     // Q_CQI,Q_RI=0
           uint32_t        x1, x2, s=0;
-          int16_t           c;
+          //int16_t           c;
           int16_t         y[6*14*1200] __attribute__((aligned(32)));
           uint8_t         ytag[14*1200];
-          int16_t         cseq[6*14*1200];
-          uint32_t         subframe = 1;        // first subframe of Msg3 received   // required for scrambling
+          //int16_t         cseq[6*14*1200];
+          //uint32_t         subframe = 1;        // first subframe of Msg3 received   // required for scrambling
           uint32_t     rnti_tmp= 65522; // true rnti should be used
+    uint8_t      reset; 
+
+    /*int16_t *Rx_buffer;
+    FILE *fich = fopen("xyzabc.txt","w"); 
+  
+  Rx_buffer = &ulsch_llr[0]; // get the whole frame 
+  memcpy(&buffer_npusch[0],&Rx_buffer[0],2*2*8*12); 
+
+    int pp; 
+    for (pp=0;pp<2*8*12;pp++)
+  {
+    fprintf(fich," %d ",buffer_npusch[pp]);
+    }
+  fclose(fich);
+  exit(0); */
+
           // NB-IoT ///////////////////////////////////////////////
           // x1 is set in lte_gold_generic
           // x2 should not reinitialized each subframe
           // x2 should be reinitialized according to 36.211 Sections 10.1.3.1 and 10.1.3.6
-          x2         =  (rnti_tmp<<14) + ((uint32_t)subframe<<9) + ((proc->frame_msg3%2)<<13) + fp->Nid_cell; //this is c_init in 36.211 Sec 10.1.3.1
+          x2         =  (rnti_tmp<<14) + (proc->subframe_dscr_msg3<<9) + ((proc->frame_dscr_msg3%2)<<13) + fp->Nid_cell; //this is c_init in 36.211 Sec 10.1.3.1
           //ulsch_harq =  ulsch[0]->harq_process;
           A     =    88; // ulsch_harq->TBS;
           Q_m   = get_Qm_ul_NB_IoT(2,1);            ///// ulsch_harq->mcs,ulsch_harq->N_sc_RU
           G     = (1 * Q_m) * 6 * 16; // Vincent : see 36.212, Section 5.1.4.1.2   
           //G = ulsch_harq->N_sc_RU * Q_m) * ulsch_harq->Nsymb_UL * ulsch_harq->Nslot_UL;   (= number of RE * 2 - pilots)
-
+  
+  //printf("ulsch_harq->round = %d",ulsch_harq->round);
           if (ulsch_harq->round == 0)
           {
               // This is a new packet, so compute quantities regarding segmentation
@@ -706,6 +723,7 @@ void common_signal_procedures (PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc) {
                                       &ulsch_harq->Kminus,
                                       &ulsch_harq->F);
               //  CLEAR LLR's HERE for first packet in process
+    //printf("\nin segmentation\n");
           }
 
           sumKr = 0;
@@ -733,66 +751,43 @@ void common_signal_procedures (PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc) {
           Rmux_prime = Hpp/Cmux;
           // Clear "tag" interleaving matrix to allow for CQI/DATA identification
           memset(ytag,0,Cmux*Rmux_prime);
-          i = 0;
           memset(y,LTE_NULL_NB_IoT,Q_m*Hpp);
           // read in buffer and unscramble llrs for everything but placeholder bits
           // llrs stored per symbol correspond to columns of interleaving matrix
 
-          s  = lte_gold_unscram_NB_IoT(&x1, &x2, 1);
-          i2 = 0;
-
-          for (i=0; i<((Hpp*Q_m)>>5); i++)
-          {
-              #if defined(__x86_64__) || defined(__i386__)
-              #ifndef __AVX2__
-                  ((__m128i*)cseq)[i2++] = ((__m128i*)unscrambling_lut_NB_IoT)[(s&65535)<<1];
-                  ((__m128i*)cseq)[i2++] = ((__m128i*)unscrambling_lut_NB_IoT)[1+((s&65535)<<1)];
-                  s>>=16;
-                  ((__m128i*)cseq)[i2++] = ((__m128i*)unscrambling_lut_NB_IoT)[(s&65535)<<1];
-                  ((__m128i*)cseq)[i2++] = ((__m128i*)unscrambling_lut_NB_IoT)[1+((s&65535)<<1)];
-              #else
-                  ((__m256i*)cseq)[i2++] = ((__m256i*)unscrambling_lut_NB_IoT)[s&65535];
-                  ((__m256i*)cseq)[i2++] = ((__m256i*)unscrambling_lut_NB_IoT)[(s>>16)&65535];
-              #endif
-              #elif defined(__arm__)
-                  ((int16x8_t*)cseq)[i2++] = ((int16x8_t*)unscrambling_lut_NB_IoT)[(s&65535)<<1];
-                  ((int16x8_t*)cseq)[i2++] = ((int16x8_t*)unscrambling_lut_NB_IoT)[1+((s&65535)<<1)];
-                  s>>=16;
-                  ((int16x8_t*)cseq)[i2++] = ((int16x8_t*)unscrambling_lut_NB_IoT)[(s&65535)<<1];
-                  ((int16x8_t*)cseq)[i2++] = ((int16x8_t*)unscrambling_lut_NB_IoT)[1+((s&65535)<<1)];
-              #endif
-              s = lte_gold_unscram_NB_IoT(&x1, &x2, 0);
-          }
-
-          i = 0;
-
+    reset = 1; 
           switch (Q_m)
           {
               case 1: 
                   for (j=0; j<Cmux; j++)
                   { 
-                      y[j] = cseq[j]*ulsch_llr[j];
+                      //y[j] = cseq[j]*ulsch_llr[j]; /// To be defined for bpsk
                   }
               break; 
               case 2:
-                  for (j=0; j<Cmux; j++)
+                  for (j=0; j<Cmux*2; j++)
                   {
-                      i2 = j<<1;
-                      for (r=0; r<Rmux_prime; r++)
-                      {
-                          c = cseq[i];
-                          //  printf("ulsch %d: %d * ",i,c);
-                          y[i2++] = c*ulsch_llr[i++];
-                          //  printf("%d\n",ulsch_llr[i-1]);
-                          c = cseq[i];
-                          //  printf("ulsch %d: %d * ",i,c);
-                          y[i2]  = c*ulsch_llr[i++];
-                          //  printf("%d\n",ulsch_llr[i-1]);
-                          i2 =  (i2+(Cmux<<1)-1);
-                      }
+
+            if (j%32==0) 
+      {
+              s = lte_gold_generic(&x1, &x2, reset);
+              //      printf("lte_gold[%d]=%x\n",i,s);
+              reset = 0;
+          }
+      if (((s>>(j%32))&1)==0)
+      {
+              y[j] = -ulsch_llr[j];
+          }else
+      {
+        y[j] = ulsch_llr[j];
+      }
                   }
               break;
           }
+  printf("\n \n");
+         /*for (j=0;j<140;j++){
+    printf(" y = %d    ",y[j]); 
+  }*/
           // CQI and Data bits
           j  = 0;
           j2 = 0;
@@ -808,9 +803,14 @@ void common_signal_procedures (PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc) {
                ep[6] = yp[6];
                ep[7] = yp[7];
           }
+
+      /*printf("\n \n");
+            for (j=0;j<140;j++){
+        printf(" e = %d    ",ulsch_harq->e[j]); 
+      }*/
+
           // Do ULSCH Decoding for data portion
-          // uint8_t                 llr8_flag=0; // ? to be verified
-          // ret = eNB->td(eNB,0,harq_pid,llr8_flag);
+
           r=0;
           Kr=0;
           unsigned int r_offset=0,Kr_bytes,iind;
@@ -886,7 +886,7 @@ void common_signal_procedures (PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc) {
                                              1, //////////////////////////////// not used
                                              0,   //Uplink
                                              1,
-                                             1,//ulsch_harq->rvidx,
+                                             0,//ulsch_harq->rvidx,
                                              (ulsch_harq->round==0)?1:0,  // clear
                                              2,//get_Qm_ul(ulsch_harq->mcs),
                                              1,
@@ -896,11 +896,21 @@ void common_signal_procedures (PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc) {
                   LOG_E(PHY,"ulsch_decoding.c: Problem in rate matching\n");
                   //return(-1);
               }
-              r_offset += E;
+              r_offset += E; 
+
+      /*printf("\n \n");
+            for (j=0;j<140;j++){
+        printf(" w = %d    ",ulsch_harq->w[r][j]);  
+      }*/   
   
               sub_block_deinterleaving_turbo(4+Kr,
                                              &ulsch_harq->d[r][96],
-                                             ulsch_harq->w[r]);
+                                             ulsch_harq->w[r]); 
+
+      /*printf("\n \n");
+            for (j=0;j<140;j++){
+        printf(" d = %d    ",ulsch_harq->d[r][96+j]); 
+      }*/
 
               if (ulsch_harq->C == 1)
               { 
@@ -908,7 +918,7 @@ void common_signal_procedures (PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc) {
               }else{
                   crc_type = CRC24_B;
               }
-
+    // turbo decoding and CRC 
               ret = tc(&ulsch_harq->d[r][96],
                        ulsch_harq->c[r],
                        Kr,
@@ -925,8 +935,10 @@ void common_signal_procedures (PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc) {
                        &eNB->ulsch_tc_intl1_stats,
                        &eNB->ulsch_tc_intl2_stats); 
 
-              if (ret != (1+ulsch_NB_IoT[0]->max_turbo_iterations))
-              {
+
+             if (ret != (1+ulsch_NB_IoT[0]->max_turbo_iterations))
+             {   
+    //printf("\n                      in last cdn \n");
                   if (r<ulsch_harq->Cminus)
                   {
                       Kr = ulsch_harq->Kminus;
@@ -947,21 +959,34 @@ void common_signal_procedures (PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc) {
                              offset += (Kr_bytes- ((ulsch_harq->C>1)?3:0));
                   }  
               } else {
-
+      //printf("\n                      in last cdn  break \n");
                     break;
               }
           } //  r loop end
 
-          printf("pdu[0] = %d",ulsch_harq->b[0]);
-          printf("pdu[1] = %d",ulsch_harq->b[1]);
-          printf("pdu[2] = %d",ulsch_harq->b[2]);
-          printf("pdu[3] = %d",ulsch_harq->b[3]);
-          //printf("pdu[4] = %d",ulsch_harq->b[4]);
+          uint8_t *msg3 = &eNB->msg3_pdu[0];
+          printf("pdu[0] = %d \n",ulsch_harq->b[0]);
+          printf("pdu[1] = %d \n",ulsch_harq->b[1]);
+          printf("pdu[2] = %d \n",ulsch_harq->b[2]);
+          printf("pdu[3] = %d \n",ulsch_harq->b[3]);
+    printf("pdu[2] = %d \n",ulsch_harq->b[4]);
+          printf("pdu[3] = %d \n",ulsch_harq->b[5]);
+    printf("pdu[3] = %d \n",ulsch_harq->b[6]);
+          printf("pdu[3] = %d \n",ulsch_harq->b[7]);
+    printf("pdu[2] = %d \n",ulsch_harq->b[8]);
+          printf("pdu[3] = %d \n",ulsch_harq->b[9]);
 
-          ///////////////////////// scheduling of msg 4 DCI //////////////////////////
-          proc->flag_DCI_msg4=1;
-          proc->counter_DCI_msg4=4;
-          ////////////////////////////////////////////////////////////////////////////
+          uint8_t xo = 128;
+          int m =0;
+          for(m=0; m<6;m++)
+          { 
+            if((ulsch_harq->b[2+m]<<7) == 128)
+            {
+                msg3[m]= (ulsch_harq->b[3+m]>>1) ^ xo;
+            } else {
+                msg3[m]= (ulsch_harq->b[3+m]>>1);
+            }
+          }
 
       }  // NPUSH decode end 
     proc->counter_msg3--;
@@ -985,17 +1010,18 @@ if(proc->flag_msg4 == 1 && proc->counter_msg4 > 0)
         {
                 NB_IoT_DL_eNB_RAR_t  *rar  =  &eNB->ndlsch_rar.content_rar;
                 uint8_t   tab_rar[15];
+                uint8_t *nas_id = &eNB->msg3_pdu[0];
                 //uint8_t   *NAS_tab = &eNB->tab_nas;
                 // avoid subframe 9 and subframe 0 of next frame
                 tab_rar[0]=63;
                 tab_rar[1]=60;
                 tab_rar[2]=0;
-                tab_rar[3]=99;  // NAS part 1 
-                tab_rar[4]=64;  // NAS part 2
-                tab_rar[5]=255; // NAS part 3 
-                tab_rar[6]=242;  // NAS part 4
-                tab_rar[7]=64;   // NAS part 5
-                tab_rar[8]=0;   // NAS part 6
+                tab_rar[3]=nas_id[0];  // NAS part 1 
+                tab_rar[4]=nas_id[1];  // NAS part 2
+                tab_rar[5]=nas_id[2]; // NAS part 3 
+                tab_rar[6]=nas_id[3];  // NAS part 4
+                tab_rar[7]=nas_id[4];   // NAS part 5
+                tab_rar[8]=nas_id[5];   // NAS part 6
                 tab_rar[9]=30;
                 tab_rar[10]=3;
                 tab_rar[11]=0;
@@ -1140,6 +1166,10 @@ if(proc->flag_DCI_msg4 ==1 && proc->counter_DCI_msg4>0)
         proc->frame_msg3=0;
         proc->counter_msg3=0;
         proc->flag_scrambling =0;
+
+        proc->subframe_real=-1;
+        proc->subframe_delay=-1;
+
         proc->flag_msg4 =0;
         proc->subframe_SP2 =0;
         proc->subframe_SP =0;
@@ -1462,7 +1492,7 @@ if(subframe !=5 && subframe !=0)
       tab_rar[0]=64 + RA_template[0].preamble_index;
       tab_rar[1]=0;
       tab_rar[2]=9;
-      tab_rar[3]=99;
+      tab_rar[3]=96;
       tab_rar[4]=64;
       tab_rar[5]=255; // 16
       tab_rar[6]=242;     // 5*/
@@ -1522,6 +1552,8 @@ if(subframe !=5 && subframe !=0)
                                 proc->flag_msg3 =1;
                                 proc->frame_msg3=frame+1;
                                 proc->counter_msg3 = 8;
+                                proc->subframe_real=9;
+                                proc->subframe_delay=5;
                              }
                           }
                   
@@ -1569,6 +1601,8 @@ if(subframe !=5 && subframe !=0)
                                 proc->flag_msg3 =1;
                                 proc->frame_msg3=frame+1;
                                 proc->counter_msg3 = 8;
+                                proc->subframe_delay=5;
+                                proc->subframe_real=9;
                              }
                         }
 
