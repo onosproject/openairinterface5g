@@ -72,8 +72,7 @@
 int number_rb_ul;
 int first_rbUL ;
 
-#define SSE_float
-#ifdef    SSE_float
+#ifdef    __AVX2__
 float r_re_DL[NUMBER_OF_UE_MAX][2][30720];
 float r_im_DL[NUMBER_OF_UE_MAX][2][30720];
 float r_re_UL[NUMBER_OF_eNB_MAX][2][30720];
@@ -412,7 +411,7 @@ void do_DL_sig_freq(channel_desc_t *eNB2UE[NUMBER_OF_eNB_MAX][NUMBER_OF_UE_MAX][
   int32_t **txdataF,**rxdataF;
 
   uint8_t eNB_id=0;
-#ifdef    SSE_float
+#ifdef    __AVX2__
   float tx_pwr;
 #else
   double tx_pwr;
@@ -426,7 +425,7 @@ void do_DL_sig_freq(channel_desc_t *eNB2UE[NUMBER_OF_eNB_MAX][NUMBER_OF_UE_MAX][
   uint8_t hold_channel=0;
   uint8_t nb_antennas_rx = eNB2UE[0][0][CC_id]->nb_rx; // number of rx antennas at UE
   uint8_t nb_antennas_tx = eNB2UE[0][0][CC_id]->nb_tx; // number of tx antennas at eNB
-#ifdef    SSE_float
+#ifdef    __AVX2__
   float s_re0_f[2048*14];//ofdm_symbol_size*symbols_per_tti;
   float s_re1_f[2048*14];//ofdm_symbol_size*symbols_per_tti;
   float *s_re_f[2];
@@ -498,7 +497,7 @@ void do_DL_sig_freq(channel_desc_t *eNB2UE[NUMBER_OF_eNB_MAX][NUMBER_OF_UE_MAX][
               //for (int idx=0;idx<10;idx++) printf("dumping DL raw subframe %d: txdataF[%d] = (%d,%d)\n", subframe, idx, ((short*)&txdataF[0][sf_offset+idx])[0], ((short*)&txdataF[0][sf_offset+idx])[1]);
               
 	      
-#ifdef    SSE_float
+#ifdef    __AVX2__
 	      start_meas(&eNB2UE[eNB_id][UE_id][CC_id]->DL_dac_fixed_gain);
 	      tx_pwr = dac_fixed_gain_AVX_float(s_re_f,
 		                      s_im_f,
@@ -545,7 +544,7 @@ void do_DL_sig_freq(channel_desc_t *eNB2UE[NUMBER_OF_eNB_MAX][NUMBER_OF_UE_MAX][
       		//eNB2UE[eNB_id][UE_id]->path_loss_dB = 0;
                 //clock_t start=clock();
 
-#ifdef    SSE_float
+#ifdef    __AVX2__
 		start_meas(&eNB2UE[eNB_id][UE_id][CC_id]->DL_multipath_channel_freq);
       		multipath_channel_freq_AVX_float(eNB2UE[eNB_id][UE_id][CC_id],s_re_f,s_im_f,r_re0_f,r_im0_f,
                         frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti,hold_channel,eNB_id,UE_id,CC_id,subframe&0x1);
@@ -590,7 +589,7 @@ void do_DL_sig_freq(channel_desc_t *eNB2UE[NUMBER_OF_eNB_MAX][NUMBER_OF_UE_MAX][
             eNB2UE[eNB_id][UE_id][CC_id]->path_loss_dB);
 
 #ifdef DEBUG_SIM
-#ifdef    SSE_float
+#ifdef    __AVX2__
       		rx_pwr = signal_energy_fp_AVX_float(r_re0_f,r_im0_f,nb_antennas_rx,
                                 frame_parms->ofdm_symbol_size,
                                 sf_offset)/(12.0*frame_parms->N_RB_DL);
@@ -621,7 +620,7 @@ void do_DL_sig_freq(channel_desc_t *eNB2UE[NUMBER_OF_eNB_MAX][NUMBER_OF_UE_MAX][
 		/*count++;
 		clock_t start=clock();*/
 
-#ifdef    SSE_float
+#ifdef    __AVX2__
 		start_meas(&eNB2UE[eNB_id][UE_id][CC_id]->DL_rf_rx_simple_freq);
       		rf_rx_simple_freq_AVX_float(r_re0_f,
                    		r_im0_f,
@@ -657,7 +656,7 @@ void do_DL_sig_freq(channel_desc_t *eNB2UE[NUMBER_OF_eNB_MAX][NUMBER_OF_UE_MAX][
 			fprintf(file1,"%d\t%e\t%e\n",x,r_re0_f[0][x],r_im0_f[0][x]);
 		}*/
 #ifdef DEBUG_SIM
-#ifdef    SSE_float
+#ifdef    __AVX2__
       		rx_pwr = signal_energy_fp_AVX_float((r_re0_f,r_im0_f,
                                 nb_antennas_rx,
                                 frame_parms->ofdm_symbol_size,//?
@@ -685,7 +684,7 @@ void do_DL_sig_freq(channel_desc_t *eNB2UE[NUMBER_OF_eNB_MAX][NUMBER_OF_UE_MAX][
       eNB_output_mask[UE_id] |= (1<<eNB_id);
       if (eNB_output_mask[UE_id] == (1<<NB_eNB_INST)-1) {
 	eNB_output_mask[UE_id]=0;
-#ifdef    SSE_float
+#ifdef    __AVX2__
 	float *r_re_p_f[2] = {r_re_DL_f[UE_id][0],r_re_DL_f[UE_id][1]};
 	float *r_im_p_f[2] = {r_im_DL_f[UE_id][0],r_im_DL_f[UE_id][1]};
 #else      
@@ -705,7 +704,7 @@ void do_DL_sig_freq(channel_desc_t *eNB2UE[NUMBER_OF_eNB_MAX][NUMBER_OF_UE_MAX][
 		
 		//printf("[ch_sim] sf_offset %d\n",sf_offset);
 
-#ifdef    SSE_float
+#ifdef    __AVX2__
 		start_meas(&eNB2UE[eNB_id][UE_id][CC_id]->DL_adc);
 	        adc_AVX_float(r_re_p_f,
 		    r_im_p_f,
@@ -973,7 +972,7 @@ void do_UL_sig_freq(channel_desc_t *UE2eNB[NUMBER_OF_UE_MAX][NUMBER_OF_eNB_MAX][
 
   uint8_t nb_antennas_rx = UE2eNB[0][0][CC_id]->nb_rx; // number of rx antennas at eNB
   uint8_t nb_antennas_tx = UE2eNB[0][0][CC_id]->nb_tx; // number of tx antennas at UE
-#ifdef    SSE_float
+#ifdef    __AVX2__
   float tx_pwr, rx_pwr;
 #else
   double tx_pwr, rx_pwr;
@@ -994,7 +993,7 @@ void do_UL_sig_freq(channel_desc_t *UE2eNB[NUMBER_OF_UE_MAX][NUMBER_OF_eNB_MAX][
   int ulfrrb2 ;
   uint8_t harq_pid;
 #endif
-#ifdef    SSE_float
+#ifdef    __AVX2__
   float s_re0_f[2048*14];//ofdm_symbol_size*symbols_per_tti;
   float s_re1_f[2048*14];//ofdm_symbol_size*symbols_per_tti;
   float *s_re_f[2];
@@ -1106,7 +1105,7 @@ void do_UL_sig_freq(channel_desc_t *UE2eNB[NUMBER_OF_UE_MAX][NUMBER_OF_eNB_MAX][
 	//   UE2eNB[UE_id][eNB_id][CC_id]->path_loss_dB));	
       } else {
 
-#ifdef    SSE_float
+#ifdef    __AVX2__
 		start_meas(&UE2eNB[UE_id][eNB_id][CC_id]->UL_dac_fixed_gain);
 		tx_pwr = dac_fixed_gain_AVX_float((float**)s_re_f,
 					(float**)s_im_f,
@@ -1149,7 +1148,7 @@ void do_UL_sig_freq(channel_desc_t *UE2eNB[NUMBER_OF_UE_MAX][NUMBER_OF_eNB_MAX][
 		      subframe,sf_offset);
 		//write_output("chsim_s_re_f_UL.m","chsm_sref_UL", s_re_f,10*frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti,1,16);
 
-#ifdef    SSE_float
+#ifdef    __AVX2__
 		start_meas(&UE2eNB[UE_id][eNB_id][CC_id]->UL_multipath_channel_freq);
 	      	multipath_channel_freq_AVX_float(UE2eNB[UE_id][eNB_id][CC_id],s_re_f,s_im_f,r_re0_f,r_im0_f,
 			  frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti,hold_channel,eNB_id,UE_id,CC_id,subframe&0x1);//ue timer subframe&0x1
@@ -1184,7 +1183,7 @@ void do_UL_sig_freq(channel_desc_t *UE2eNB[NUMBER_OF_UE_MAX][NUMBER_OF_eNB_MAX][
 		LOG_D(OCM,"[SIM][UL] subframe %d Channel UE %d => eNB %d : %f dB (hold %d,length %d, PL %f)\n",subframe,UE_id,eNB_id,10*log10(rx_pwr),
 	     	 hold_channel,12*frame_parms->N_RB_DL+1,
 	      	 UE2eNB[UE_id][eNB_id][CC_id]->path_loss_dB);
-#ifdef    SSE_float 
+#ifdef    __AVX2__ 
 		rx_pwr = signal_energy_fp_SSE_float(r_re0_f,r_im0_f,nb_antennas_rx,frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti,0);
 #else
 		rx_pwr = signal_energy_fp(r_re0_f,r_im0_f,nb_antennas_rx,frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti,0);
@@ -1207,7 +1206,7 @@ void do_UL_sig_freq(channel_desc_t *UE2eNB[NUMBER_OF_UE_MAX][NUMBER_OF_eNB_MAX][
 	pthread_mutex_unlock(&UE_output_mutex[eNB_id]);
       }
     } //UE_id
-#ifdef    SSE_float    
+#ifdef    __AVX2__    
     float *r_re_p_f[2] = {r_re_UL_f[eNB_id][0],r_re_UL_f[eNB_id][1]};
     float *r_im_p_f[2] = {r_im_UL_f[eNB_id][0],r_im_UL_f[eNB_id][1]};
 #else
@@ -1215,7 +1214,7 @@ void do_UL_sig_freq(channel_desc_t *UE2eNB[NUMBER_OF_UE_MAX][NUMBER_OF_eNB_MAX][
     double *r_im_p_f[2] = {r_im_UL_f[eNB_id][0],r_im_UL_f[eNB_id][1]};
 #endif
 
-#ifdef    SSE_float 
+#ifdef    __AVX2__ 
 	start_meas(&UE2eNB[0][eNB_id][CC_id]->UL_rf_rx_simple_freq); 
     	rf_rx_simple_freq_AVX_float(r_re_p_f,
 		 r_im_p_f,
@@ -1254,7 +1253,7 @@ void do_UL_sig_freq(channel_desc_t *UE2eNB[NUMBER_OF_UE_MAX][NUMBER_OF_eNB_MAX][
 	    rxdataF = PHY_vars_eNB_g[eNB_id][CC_id]->common_vars.rxdataF[0];
 	    sf_offset = 0;//subframe*frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti;
 
-#ifdef    SSE_float
+#ifdef    __AVX2__
 		start_meas(&UE2eNB[0][eNB_id][CC_id]->UL_adc);
 	        adc_AVX_float(r_re_p_f,
 		r_im_p_f,
@@ -1324,7 +1323,7 @@ void do_UL_sig_freq_prach(channel_desc_t *UE2eNB[NUMBER_OF_UE_MAX][NUMBER_OF_eNB
   int16_t *tx_prachF;
   uint8_t nb_antennas_rx = UE2eNB[0][0][CC_id]->nb_rx; // number of rx antennas at eNB
   uint8_t nb_antennas_tx = UE2eNB[0][0][CC_id]->nb_tx; // number of tx antennas at UE
-#ifdef    SSE_float
+#ifdef    __AVX2__
   float tx_pwr, rx_pwr;
 #else
   double tx_pwr, rx_pwr;
@@ -1344,7 +1343,7 @@ void do_UL_sig_freq_prach(channel_desc_t *UE2eNB[NUMBER_OF_UE_MAX][NUMBER_OF_eNB
   int ulfrrb2 ;
   uint8_t harq_pid;
 #endif
-#ifdef    SSE_float
+#ifdef    __AVX2__
   float s_re0_f_prach[2048*14*12];//ofdm_symbol_size*symbols_per_tti;
   float s_re1_f_prach[2048*14*12];//ofdm_symbol_size*symbols_per_tti;
   float *s_re_f_prach[2];
@@ -1437,7 +1436,7 @@ void do_UL_sig_freq_prach(channel_desc_t *UE2eNB[NUMBER_OF_UE_MAX][NUMBER_OF_eNB
 	   //UE2eNB[UE_id][eNB_id][CC_id]->path_loss_dB));	
       } else {
 	     
-#ifdef    SSE_float
+#ifdef    __AVX2__
 	     start_meas(&UE2eNB[0][eNB_id][CC_id]->dac_fixed_gain_PRACH);
 	     tx_pwr = dac_fixed_gain_prach_AVX_float((float**)s_re_f_prach,
 					(float**)s_im_f_prach,
@@ -1482,7 +1481,7 @@ void do_UL_sig_freq_prach(channel_desc_t *UE2eNB[NUMBER_OF_UE_MAX][NUMBER_OF_eNB
 
 	    // write_output("s_re_f_prach.m","s_re_f_prach_txF", s_re_f_prach,frame_parms->ofdm_symbol_size*12,1,1);
 	    
-#ifdef    SSE_float
+#ifdef    __AVX2__
 	    start_meas(&UE2eNB[UE_id][eNB_id][CC_id]->multipath_channel_freq_PRACH);
 	    multipath_channel_prach_AVX_float(UE2eNB[UE_id][eNB_id][CC_id],s_re_f_prach,s_im_f_prach,r_re0_f_prach,r_im0_f_prach,&PHY_vars_UE_g[UE_id][CC_id]->frame_parms,
 			  (prach_fmt<4)?13+839+12:3+139+2,hold_channel,eNB_id,prach_fmt,n_ra_prb);
@@ -1501,7 +1500,7 @@ void do_UL_sig_freq_prach(channel_desc_t *UE2eNB[NUMBER_OF_UE_MAX][NUMBER_OF_eNB
 	     /*LOG_D(OCM,"[SIM][UL] subframe %d Channel UE %d => eNB %d : %f dB (hold %d,length %d, PL %f)\n",subframe,UE_id,eNB_id,10*log10(rx_pwr),
 	     hold_channel,12*frame_parms->N_RB_DL+1,
 	     UE2eNB[UE_id][eNB_id][CC_id]->path_loss_dB);*/
-#ifdef    SSE_float 
+#ifdef    __AVX2__ 
 	     rx_pwr = signal_energy_fp_AVX_float(r_re0_f_prach,r_im0_f_prach,nb_antennas_rx,frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti*12,0);
 #else
 	     rx_pwr = signal_energy_fp(r_re0_f_prach,r_im0_f_prach,nb_antennas_rx,frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti*12,0);
@@ -1522,7 +1521,7 @@ void do_UL_sig_freq_prach(channel_desc_t *UE2eNB[NUMBER_OF_UE_MAX][NUMBER_OF_eNB
 	
 	__m256 r_re0_f_prach_256,r_im0_f_prach_256,r_re_UL_f_prach_256,r_im_UL_f_prach_256;
 	pthread_mutex_lock(&UE_output_mutex[eNB_id]);
-#ifdef    SSE_float
+#ifdef    __AVX2__
 	for (aa=0; aa<nb_antennas_rx; aa++) {
 		for (i=0; i<(frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti)>>3; i++) {
 		    //r_re_UL_f_prach[eNB_id][aa][i]+=r_re0_f_prach[aa][i];
@@ -1551,7 +1550,7 @@ void do_UL_sig_freq_prach(channel_desc_t *UE2eNB[NUMBER_OF_UE_MAX][NUMBER_OF_eNB
 	pthread_mutex_unlock(&UE_output_mutex[eNB_id]);
       }
     } //UE_id
-#ifdef    SSE_float    
+#ifdef    __AVX2__    
     float *r_re_p_f_prach[2] = {r_re_UL_f_prach[eNB_id][0],r_re_UL_f_prach[eNB_id][1]};
     float *r_im_p_f_prach[2] = {r_im_UL_f_prach[eNB_id][0],r_im_UL_f_prach[eNB_id][1]};
 #else
@@ -1561,7 +1560,7 @@ void do_UL_sig_freq_prach(channel_desc_t *UE2eNB[NUMBER_OF_UE_MAX][NUMBER_OF_eNB
     /*for (int idx=0;idx<10;idx++) printf("dumping raw PRACH UL tx subframe (output) %d: r_re_im_p_f_prach[%d] = (%d,%d)\n", subframe, idx, (short)(r_re_p_f_prach[0][idx]),(short)(r_im_p_f_prach[0][idx]));
     for (int idx=829;idx<839;idx++) printf("dumping raw PRACH UL tx subframe (output) %d: r_re_im_p_f_prach[%d] = (%d,%d)\n", subframe, idx, (short)(r_re_p_f_prach[0][idx]),(short)(r_im_p_f_prach[0][idx]));*/
 		//clock_t start=clock();
-#ifdef    SSE_float  
+#ifdef    __AVX2__  
     start_meas(&UE2eNB[0][eNB_id][CC_id]->rf_rx_simple_freq_PRACH);
     rf_rx_simple_freq_AVX_float(r_re_p_f_prach,
 		 r_im_p_f_prach,
@@ -1600,7 +1599,7 @@ void do_UL_sig_freq_prach(channel_desc_t *UE2eNB[NUMBER_OF_UE_MAX][NUMBER_OF_eNB
      rx_prachF = PHY_vars_eNB_g[eNB_id][CC_id]->prach_vars.rxsigF;
      sf_offset = pointer_firstvalue_PRACH;
 
-#ifdef    SSE_float 
+#ifdef    __AVX2__ 
      start_meas(&UE2eNB[0][eNB_id][CC_id]->adc_PRACH);
      adc_prach_AVX_float(r_re_p_f_prach,
 		r_im_p_f_prach,
