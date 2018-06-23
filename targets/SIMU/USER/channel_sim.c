@@ -72,12 +72,12 @@
 int number_rb_ul;
 int first_rbUL ;
 
-#ifdef    __AVX2__
-float r_re_DL[NUMBER_OF_UE_MAX][2][30720];
-float r_im_DL[NUMBER_OF_UE_MAX][2][30720];
-float r_re_UL[NUMBER_OF_eNB_MAX][2][30720];
-float r_im_UL[NUMBER_OF_eNB_MAX][2][30720];
+double r_re_DL[NUMBER_OF_UE_MAX][2][30720];
+double r_im_DL[NUMBER_OF_UE_MAX][2][30720];
+double r_re_UL[NUMBER_OF_eNB_MAX][2][30720];
+double r_im_UL[NUMBER_OF_eNB_MAX][2][30720];
 
+#ifdef    __AVX2__
 float r_re_DL_f[NUMBER_OF_UE_MAX][2][2048*14];
 float r_im_DL_f[NUMBER_OF_UE_MAX][2][2048*14];
 float r_re_UL_f[NUMBER_OF_eNB_MAX][2][2048*14];
@@ -85,11 +85,6 @@ float r_im_UL_f[NUMBER_OF_eNB_MAX][2][2048*14];
 float r_re_UL_f_prach[NUMBER_OF_eNB_MAX][2][2048*14];
 float r_im_UL_f_prach[NUMBER_OF_eNB_MAX][2][2048*14];
 #else
-double r_re_DL[NUMBER_OF_UE_MAX][2][30720];
-double r_im_DL[NUMBER_OF_UE_MAX][2][30720];
-double r_re_UL[NUMBER_OF_eNB_MAX][2][30720];
-double r_im_UL[NUMBER_OF_eNB_MAX][2][30720];
-
 double r_re_DL_f[NUMBER_OF_UE_MAX][2][2048*14];
 double r_im_DL_f[NUMBER_OF_UE_MAX][2][2048*14];
 double r_re_UL_f[NUMBER_OF_eNB_MAX][2][2048*14];
@@ -547,7 +542,7 @@ void do_DL_sig_freq(channel_desc_t *eNB2UE[NUMBER_OF_eNB_MAX][NUMBER_OF_UE_MAX][
 #ifdef    __AVX2__
 		start_meas(&eNB2UE[eNB_id][UE_id][CC_id]->DL_multipath_channel_freq);
       		multipath_channel_freq_AVX_float(eNB2UE[eNB_id][UE_id][CC_id],s_re_f,s_im_f,r_re0_f,r_im0_f,
-                        frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti,hold_channel,eNB_id,UE_id,CC_id,subframe&0x1);
+                        frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti,hold_channel,eNB_id,UE_id,CC_id,subframe&0x1,frame_parms->N_RB_DL,frame_parms->N_RB_DL*12+1,frame_parms->ofdm_symbol_size,frame_parms->symbols_per_tti);
 		stop_meas(&eNB2UE[eNB_id][UE_id][CC_id]->DL_multipath_channel_freq);
 #else
 		start_meas(&eNB2UE[eNB_id][UE_id][CC_id]->DL_multipath_channel_freq);
@@ -1151,7 +1146,7 @@ void do_UL_sig_freq(channel_desc_t *UE2eNB[NUMBER_OF_UE_MAX][NUMBER_OF_eNB_MAX][
 #ifdef    __AVX2__
 		start_meas(&UE2eNB[UE_id][eNB_id][CC_id]->UL_multipath_channel_freq);
 	      	multipath_channel_freq_AVX_float(UE2eNB[UE_id][eNB_id][CC_id],s_re_f,s_im_f,r_re0_f,r_im0_f,
-			  frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti,hold_channel,eNB_id,UE_id,CC_id,subframe&0x1);//ue timer subframe&0x1
+			  frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti,hold_channel,eNB_id,UE_id,CC_id,subframe&0x1,frame_parms->N_RB_DL,frame_parms->N_RB_DL*12+1,frame_parms->ofdm_symbol_size,frame_parms->symbols_per_tti);//ue timer subframe&0x1
 		stop_meas(&UE2eNB[UE_id][eNB_id][CC_id]->UL_multipath_channel_freq);
 #else
 		start_meas(&UE2eNB[UE_id][eNB_id][CC_id]->UL_multipath_channel_freq);

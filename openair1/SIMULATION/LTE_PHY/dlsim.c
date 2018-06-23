@@ -293,16 +293,16 @@ void DL_channel_freq(PHY_VARS_eNB *eNB,PHY_VARS_UE *UE,int subframe,int awgn_fla
       }
     }
   }
-  printf("subframe %d\n",subframe);
+  /*printf("subframe %d\n",subframe);
   write_output("tx_data.m","txdata", &eNB->common_vars.txdata[0][0],UE->frame_parms.samples_per_tti,1,1);
   write_output("tx_data_F.m","txdataF", &eNB->common_vars.txdataF[0][0],(UE->frame_parms.ofdm_symbol_size*UE->frame_parms.symbols_per_tti),1,1);
   write_output("r_re_f.m","rref", &r_re_f[0],(UE->frame_parms.ofdm_symbol_size*UE->frame_parms.symbols_per_tti),1,1);
-  write_output("r_im_f.m","rimf", &r_im_f[0],(UE->frame_parms.ofdm_symbol_size*UE->frame_parms.symbols_per_tti),1,1);
+  write_output("r_im_f.m","rimf", &r_im_f[0],(UE->frame_parms.ofdm_symbol_size*UE->frame_parms.symbols_per_tti),1,1);*/
   // Multipath channel
   if (awgn_flag == 0) {
 
     multipath_channel_freq_AVX_float(eNB2UE[round],s_re_f,s_im_f,r_re_f,r_im_f,
-                        2*UE->frame_parms.ofdm_symbol_size*UE->frame_parms.symbols_per_tti,hold_channel,0,0,0,subframe&0x1);
+                        2*UE->frame_parms.ofdm_symbol_size*UE->frame_parms.symbols_per_tti,hold_channel,0,0,0,subframe&0x1,UE->frame_parms.N_RB_DL,UE->frame_parms.N_RB_DL*12+1,UE->frame_parms.ofdm_symbol_size,UE->frame_parms.symbols_per_tti);
 
     //      printf("amc: ****************** eNB2UE[%d]->n_rx = %d,dd %d\n",round,eNB2UE[round]->nb_rx,eNB2UE[round]->channel_offset);
     if(abstx==1 && num_rounds>1)
@@ -2491,7 +2491,7 @@ int main(int argc, char **argv)
       eNB_rxtx_proc_t *proc_eNB = &eNB->proc.proc_rxtx[UE->current_thread_id[subframe]];
 
       for (trials = 0; trials<n_frames; trials++) {
-	printf("Trial %d\n",trials);
+	//printf("Trial %d\n",trials);
         fflush(stdout);
         round=0;
 

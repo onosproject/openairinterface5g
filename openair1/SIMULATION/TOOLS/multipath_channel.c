@@ -625,7 +625,11 @@ void multipath_channel_freq_AVX_float(channel_desc_t *desc,
 		       uint8_t eNB_id,
 		       uint8_t UE_id,
 		       uint8_t CC_id,
-		       uint8_t th_id)
+		       uint8_t th_id,
+		       uint32_t nb_rb,
+		       uint32_t n_samples,
+		       uint32_t ofdm_symbol_size,
+		       uint32_t symbols_per_tti)
 {
   int ii,j,f;
   __m256 rx_tmp256_re_f,rx_tmp256_im_f,rx_tmp256_re,rx_tmp256_im, rx_tmp256_1,rx_tmp256_2,rx_tmp256_3,rx_tmp256_4,tx256_re,tx256_im,chF256_x,chF256_y,pathloss256;
@@ -634,11 +638,11 @@ void multipath_channel_freq_AVX_float(channel_desc_t *desc,
   float path_loss = pow(10,desc->path_loss_dB/20);
   pathloss256 = _mm256_set1_ps(path_loss);
 
-  int nb_rb, n_samples, ofdm_symbol_size, symbols_per_tti;
-  nb_rb=PHY_vars_UE_g[UE_id][CC_id]->frame_parms.N_RB_DL;
-  n_samples=PHY_vars_UE_g[UE_id][CC_id]->frame_parms.N_RB_DL*12+1;
-  ofdm_symbol_size=length/PHY_vars_UE_g[UE_id][CC_id]->frame_parms.symbols_per_tti;
-  symbols_per_tti=length/PHY_vars_UE_g[UE_id][CC_id]->frame_parms.ofdm_symbol_size;
+  //int nb_rb, n_samples, ofdm_symbol_size, symbols_per_tti;
+  //nb_rb=PHY_vars_UE_g[UE_id][CC_id]->frame_parms.N_RB_DL;
+  //n_samples=PHY_vars_UE_g[UE_id][CC_id]->frame_parms.N_RB_DL*12+1;
+  //ofdm_symbol_size=length/PHY_vars_UE_g[UE_id][CC_id]->frame_parms.symbols_per_tti;
+  //symbols_per_tti=length/PHY_vars_UE_g[UE_id][CC_id]->frame_parms.ofdm_symbol_size;
 
 
 #ifdef DEBUG_CH

@@ -323,7 +323,12 @@ void multipath_channel_freq_AVX_float(channel_desc_t *desc,
 		       uint8_t eNB_id,
 		       uint8_t UE_id,
 		       uint8_t CC_id,
-		       uint8_t th_id);
+		       uint8_t th_id,
+		       uint32_t nb_rb,
+		       uint32_t n_samples,
+		       uint32_t ofdm_symbol_size,
+		       uint32_t symbols_per_tti);
+
 /**\fn void multipath_channel_prach(channel_desc_t *desc,
            double tx_sig_re[2],
            double tx_sig_im[2],
