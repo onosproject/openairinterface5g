@@ -259,32 +259,48 @@ void DL_channel_freq(PHY_VARS_eNB *eNB,PHY_VARS_UE *UE,int subframe,int awgn_fla
   double channelx,channely;
   double sigma2_dB,sigma2;
   double iqim=0.0;
+  float tx_pwr;
+  
+  /*tx_pwr = dac_fixed_gain_AVX_float(s_re_f,
+		                      s_im_f,
+		                      eNB->common_vars.txdataF[0],
+		                      subframe*UE->frame_parms.ofdm_symbol_size*UE->frame_parms.symbols_per_tti,
+		                      eNB2UE[0]->nb_tx,
+		                      UE->frame_parms.ofdm_symbol_size*UE->frame_parms.symbols_per_tti,
+		                      subframe*UE->frame_parms.ofdm_symbol_size*UE->frame_parms.symbols_per_tti,
+		                      UE->frame_parms.ofdm_symbol_size,
+		                      14,
+		                      UE->frame_parms.pdsch_config_common.referenceSignalPower, // dBm/RE
+		                      UE->frame_parms.N_RB_DL*12);*/
 
   //    printf("Copying tx ..., nsymb %d (n_tx %d), awgn %d\n",nsymb,eNB->frame_parms.nb_antennas_tx,awgn_flag);
-  for (i=0; i<2*UE->frame_parms.samples_per_tti; i++) {
+  for (i=0; i<2*(UE->frame_parms.ofdm_symbol_size*UE->frame_parms.symbols_per_tti); i++) {
     for (aa=0; aa<eNB->frame_parms.nb_antennas_tx; aa++) {
       if (awgn_flag == 0) {
-	s_re_f[aa][i] = ((double)(((short *)eNB->common_vars.txdataF[0][aa]))[(2*subframe*(UE->frame_parms.ofdm_symbol_size*UE->frame_parms.symbols_per_tti)) + (i<<1)]);
-	s_im_f[aa][i] = ((double)(((short *)eNB->common_vars.txdataF[0][aa]))[(2*subframe*(UE->frame_parms.ofdm_symbol_size*UE->frame_parms.symbols_per_tti)) +(i<<1)+1]);	
+	s_re_f[aa][i] = ((float)(((short *)eNB->common_vars.txdataF[0][aa]))[(2*subframe*(UE->frame_parms.ofdm_symbol_size*UE->frame_parms.symbols_per_tti)) + (i<<1)]);
+	s_im_f[aa][i] = ((float)(((short *)eNB->common_vars.txdataF[0][aa]))[(2*subframe*(UE->frame_parms.ofdm_symbol_size*UE->frame_parms.symbols_per_tti)) +(i<<1)+1]);	
       } else {
 	for (aarx=0; aarx<UE->frame_parms.nb_antennas_rx; aarx++) {
 	  if (aa==0) {
-	    r_re_f[aarx][i] = ((double)(((short *)eNB->common_vars.txdataF[0][aa]))[(2*subframe*(UE->frame_parms.ofdm_symbol_size*UE->frame_parms.symbols_per_tti)) +(i<<1)]);
-	    r_im_f[aarx][i] = ((double)(((short *)eNB->common_vars.txdataF[0][aa]))[(2*subframe*(UE->frame_parms.ofdm_symbol_size*UE->frame_parms.symbols_per_tti)) +(i<<1)+1]);
+	    r_re_f[aarx][i] = ((float)(((short *)eNB->common_vars.txdataF[0][aa]))[(2*subframe*(UE->frame_parms.ofdm_symbol_size*UE->frame_parms.symbols_per_tti)) +(i<<1)]);
+	    r_im_f[aarx][i] = ((float)(((short *)eNB->common_vars.txdataF[0][aa]))[(2*subframe*(UE->frame_parms.ofdm_symbol_size*UE->frame_parms.symbols_per_tti)) +(i<<1)+1]);
 	  } else {
-	    r_re_f[aarx][i] += ((double)(((short *)eNB->common_vars.txdataF[0][aa]))[(2*subframe*(UE->frame_parms.ofdm_symbol_size*UE->frame_parms.symbols_per_tti)) +(i<<1)]);
-	    r_im_f[aarx][i] += ((double)(((short *)eNB->common_vars.txdataF[0][aa]))[(2*subframe*(UE->frame_parms.ofdm_symbol_size*UE->frame_parms.symbols_per_tti)) +(i<<1)+1]);
+	    r_re_f[aarx][i] += ((float)(((short *)eNB->common_vars.txdataF[0][aa]))[(2*subframe*(UE->frame_parms.ofdm_symbol_size*UE->frame_parms.symbols_per_tti)) +(i<<1)]);
+	    r_im_f[aarx][i] += ((float)(((short *)eNB->common_vars.txdataF[0][aa]))[(2*subframe*(UE->frame_parms.ofdm_symbol_size*UE->frame_parms.symbols_per_tti)) +(i<<1)+1]);
 	  }
 
 	}
       }
     }
   }
-
+  printf("subframe %d\n",subframe);
+  write_output("tx_data.m","txdata", &eNB->common_vars.txdata[0][0],UE->frame_parms.samples_per_tti,1,1);
+  write_output("tx_data_F.m","txdataF", &eNB->common_vars.txdataF[0][0],(UE->frame_parms.ofdm_symbol_size*UE->frame_parms.symbols_per_tti),1,1);
+  write_output("r_re_f.m","rref", &r_re_f[0],(UE->frame_parms.ofdm_symbol_size*UE->frame_parms.symbols_per_tti),1,1);
+  write_output("r_im_f.m","rimf", &r_im_f[0],(UE->frame_parms.ofdm_symbol_size*UE->frame_parms.symbols_per_tti),1,1);
   // Multipath channel
   if (awgn_flag == 0) {
-    /*multipath_channel(eNB2UE[round],s_re,s_im,r_re,r_im,
-		      2*UE->frame_parms.samples_per_tti,hold_channel);*/
+
     multipath_channel_freq_AVX_float(eNB2UE[round],s_re_f,s_im_f,r_re_f,r_im_f,
                         2*UE->frame_parms.ofdm_symbol_size*UE->frame_parms.symbols_per_tti,hold_channel,0,0,0,subframe&0x1);
 
@@ -310,15 +326,15 @@ void DL_channel_freq(PHY_VARS_eNB *eNB,PHY_VARS_UE *UE,int subframe,int awgn_fla
   if(abstx) {
     if (trials==0 && round==0) {
       // calculate freq domain representation to compute SINR
-      freq_channel(eNB2UE[0], eNB->frame_parms.N_RB_DL,2*eNB->frame_parms.N_RB_DL + 1);
+      freq_channel_AVX_float(eNB2UE[0], eNB->frame_parms.N_RB_DL,2*eNB->frame_parms.N_RB_DL + 1);
       // snr=pow(10.0,.1*SNR);
       fprintf(csv_fd,"%f,",SNR);
 
       for (u=0; u<2*eNB->frame_parms.N_RB_DL; u++) {
 	for (aarx=0; aarx<eNB2UE[0]->nb_rx; aarx++) {
 	  for (aatx=0; aatx<eNB2UE[0]->nb_tx; aatx++) {
-	    channelx = eNB2UE[0]->chF[aarx+(aatx*eNB2UE[0]->nb_rx)][u].x;
-	    channely = eNB2UE[0]->chF[aarx+(aatx*eNB2UE[0]->nb_rx)][u].y;
+	    channelx = eNB2UE[0]->chFf[aarx+(aatx*eNB2UE[0]->nb_rx)].x[u];
+	    channely = eNB2UE[0]->chFf[aarx+(aatx*eNB2UE[0]->nb_rx)].y[u];
 	    fprintf(csv_fd,"%e+i*(%e),",channelx,channely);
 	  }
 	}
@@ -330,8 +346,8 @@ void DL_channel_freq(PHY_VARS_eNB *eNB,PHY_VARS_UE *UE,int subframe,int awgn_fla
 	for (u=0; u<2*eNB->frame_parms.N_RB_DL; u++) {
 	  for (aarx=0; aarx<eNB2UE[1]->nb_rx; aarx++) {
 	    for (aatx=0; aatx<eNB2UE[1]->nb_tx; aatx++) {
-	      channelx = eNB2UE[1]->chF[aarx+(aatx*eNB2UE[1]->nb_rx)][u].x;
-	      channely = eNB2UE[1]->chF[aarx+(aatx*eNB2UE[1]->nb_rx)][u].y;
+	      channelx = eNB2UE[1]->chFf[aarx+(aatx*eNB2UE[1]->nb_rx)].x[u];
+	      channely = eNB2UE[1]->chFf[aarx+(aatx*eNB2UE[1]->nb_rx)].y[u];
 	      fprintf(csv_fd,"%e+i*(%e),",channelx,channely);
 	    }
 	  }
@@ -342,8 +358,8 @@ void DL_channel_freq(PHY_VARS_eNB *eNB,PHY_VARS_UE *UE,int subframe,int awgn_fla
 	for (u=0; u<2*eNB->frame_parms.N_RB_DL; u++) {
 	  for (aarx=0; aarx<eNB2UE[2]->nb_rx; aarx++) {
 	    for (aatx=0; aatx<eNB2UE[2]->nb_tx; aatx++) {
-	      channelx = eNB2UE[2]->chF[aarx+(aatx*eNB2UE[2]->nb_rx)][u].x;
-	      channely = eNB2UE[2]->chF[aarx+(aatx*eNB2UE[2]->nb_rx)][u].y;
+	      channelx = eNB2UE[2]->chFf[aarx+(aatx*eNB2UE[2]->nb_rx)].x[u];
+	      channely = eNB2UE[2]->chFf[aarx+(aatx*eNB2UE[2]->nb_rx)].y[u];
 	      fprintf(csv_fd,"%e+i*(%e),",channelx,channely);
 	    }
 	  }
@@ -354,8 +370,8 @@ void DL_channel_freq(PHY_VARS_eNB *eNB,PHY_VARS_UE *UE,int subframe,int awgn_fla
 	for (u=0; u<2*eNB->frame_parms.N_RB_DL; u++) {
 	  for (aarx=0; aarx<eNB2UE[3]->nb_rx; aarx++) {
 	    for (aatx=0; aatx<eNB2UE[3]->nb_tx; aatx++) {
-	      channelx = eNB2UE[3]->chF[aarx+(aatx*eNB2UE[3]->nb_rx)][u].x;
-	      channely = eNB2UE[3]->chF[aarx+(aatx*eNB2UE[3]->nb_rx)][u].y;
+	      channelx = eNB2UE[3]->chFf[aarx+(aatx*eNB2UE[3]->nb_rx)].x[u];
+	      channely = eNB2UE[3]->chFf[aarx+(aatx*eNB2UE[3]->nb_rx)].y[u];
 	      fprintf(csv_fd,"%e+i*(%e),",channelx,channely);
 	    }
 	  }
@@ -374,9 +390,9 @@ void DL_channel_freq(PHY_VARS_eNB *eNB,PHY_VARS_UE *UE,int subframe,int awgn_fla
     for (aa=0; aa<eNB->frame_parms.nb_antennas_rx; aa++) {
       //printf("s_re[0][%d]=> %f , r_re[0][%d]=> %f\n",i,s_re[aa][i],i,r_re[aa][i]);
       ((short*) UE->common_vars.common_vars_rx_data_per_thread[subframe&0x1].rxdataF[aa])[(2*subframe*(UE->frame_parms.ofdm_symbol_size*UE->frame_parms.symbols_per_tti))+2*i] =
-	(short) (r_re_f[aa][i] + sqrt(sigma2/2)*ziggurat(0.0,1.0));
+	(short) (r_re_f[aa][i] + sqrt(sigma2/2)*gaussdouble(0.0,1.0));
       ((short*) UE->common_vars.common_vars_rx_data_per_thread[subframe&0x1].rxdataF[aa])[(2*subframe*(UE->frame_parms.ofdm_symbol_size*UE->frame_parms.symbols_per_tti))+2*i+1] =
-	(short) (r_im_f[aa][i] + (iqim*r_re_f[aa][i]) + sqrt(sigma2/2)*ziggurat(0.0,1.0));
+	(short) (r_im_f[aa][i] + (iqim*r_re_f[aa][i]) + sqrt(sigma2/2)*gaussdouble(0.0,1.0));
     }
   }
 }
@@ -1448,6 +1464,7 @@ int main(int argc, char **argv)
   //int re_allocated;
   char fname[32],vname[32];
   FILE *bler_fd;
+  //FILE *chFf;
   char bler_fname[256];
   FILE *time_meas_fd;
   char time_meas_fname[256];
@@ -2474,7 +2491,7 @@ int main(int argc, char **argv)
       eNB_rxtx_proc_t *proc_eNB = &eNB->proc.proc_rxtx[UE->current_thread_id[subframe]];
 
       for (trials = 0; trials<n_frames; trials++) {
-	//printf("Trial %d\n",trials);
+	printf("Trial %d\n",trials);
         fflush(stdout);
         round=0;
 
@@ -2650,7 +2667,7 @@ int main(int argc, char **argv)
             if (n_frames==1) {
               printf("tx_lev = %d (%d dB)\n",tx_lev,tx_lev_dB);
 	     if (!UE->do_ofdm_mod)
-              write_output("txsig0.m","txs0", &eNB->common_vars.txdataF[eNB_id][0][subframe*(eNB->frame_parms.ofdm_symbol_size*eNB->frame_parms.symbols_per_tti)], (eNB->frame_parms.ofdm_symbol_size*eNB->frame_parms.symbols_per_tti),1,1);
+              write_output("txsig0.m","txs0", &eNB->common_vars.txdata[eNB_id][0][subframe*eNB->frame_parms.samples_per_tti],eNB->frame_parms.samples_per_tti,1,1);
 
               if (transmission_mode<7) {
 	        write_output("txsigF0.m","txsF0", &eNB->common_vars.txdataF[eNB_id][0][subframe*nsymb*eNB->frame_parms.ofdm_symbol_size],nsymb*eNB->frame_parms.ofdm_symbol_size,1,1);
@@ -2749,10 +2766,10 @@ int main(int argc, char **argv)
 	  if ((test_perf ==0 ) && (n_frames==1)) {
 	   if (UE->do_ofdm_mod)
 	   {
-	    write_output_chFf("ch0_f.m","ch0_f",eNB2UE[0]->chFf[0].x,eNB2UE[0]->chFf[0].y,eNB2UE[0]->channel_length,1,8);
+	    write_output_chFf("ch0_f.m","ch0_f",eNB2UE[0]->chFf[0].x,eNB2UE[0]->chFf[0].y,eNB2UE[0]->channel_length,1);
 
 	    if (eNB->frame_parms.nb_antennas_tx>1)
-	      write_output_chFf("ch1_f.m","ch1_f",eNB2UE[0]->chFf[eNB->frame_parms.nb_antennas_rx].x,eNB2UE[0]->chFf[eNB->frame_parms.nb_antennas_rx].y,eNB2UE[0]->channel_length,1,8);
+	      write_output_chFf("ch1_f.m","ch1_f",eNB2UE[0]->chFf[eNB->frame_parms.nb_antennas_rx].x,eNB2UE[0]->chFf[eNB->frame_parms.nb_antennas_rx].y,eNB2UE[0]->channel_length,1);
 	   }
 	   else
 	   {

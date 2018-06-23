@@ -297,7 +297,7 @@ void bit8_rxdemux(int32_t length,int32_t offset);
 @param format data format (0 = real 16-bit, 1 = complex 16-bit,2 real 32-bit, 3 complex 32-bit,4 = real 8-bit, 5 = complex 8-bit)
 */
 int32_t write_output(const char *fname, const char *vname, void *data, int length, int dec, char format);
-int32_t write_output_chFf(const char *fname, const char *vname, float *data1, float *data2, int length, int dec, char format);
+int32_t write_output_chFf(const char *fname, const char *vname, float data1[1200], float data2[1200], int length, int dec);
 #endif
 
 void Zero_Buffer(void *,uint32_t);

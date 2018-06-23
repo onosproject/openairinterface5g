@@ -190,19 +190,16 @@ int write_output(const char *fname,const char *vname,void *data,int length,int d
   return 0;
 }
 
-int write_output_chFf(const char *fname,const char *vname,float *data1,float *data2,int length,int dec)
+int write_output_chFf(const char *fname,const char *vname,float data1[1200],float data2[1200],int length,int dec)
 {
 
   FILE *fp=NULL;
+  fp = fopen(fname,"a+");
   int i;
 
 
   printf("Writing %d to %s\n",length,fname);
 
-  if (fp== NULL) {
-    printf("[OPENAIR][FILE OUTPUT] Cannot open file %s\n",fname);
-    return(-1);
-  }
     for (i=0; i<length; i++) {
       fprintf(fp,"%g + j*(%g)\n",data1[i],data2[i]);
     }
