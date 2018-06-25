@@ -204,8 +204,13 @@ void dump_dlsch_SI(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,uint8_t s
 unsigned int get_tx_amp(int power_dBm, int power_max_dBm, int N_RB_UL, int nb_rb)
 {
 
-  int gain_dB = power_dBm - power_max_dBm;
+  int gain_dB;
   double gain_lin;
+
+  if (power_dBm<=power_max_dBm)
+    gain_dB = power_dBm - power_max_dBm;
+  else
+    gain_dB = 0;
 
   gain_lin = pow(10,.1*gain_dB);
   AssertFatal((nb_rb >0) && (nb_rb <= N_RB_UL),"Illegal nb_rb/N_RB_UL combination (%d/%d)\n",nb_rb,N_RB_UL);
@@ -252,7 +257,7 @@ void dump_dlsch_ra(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,uint8_t s
   write_output("dlsch_mag2.m","dlschmag2",ue->pdsch_vars_ra[0]->dl_ch_magb0,300*nsymb,1,1);
 }
 
-void phy_reset_ue(uint8_t Mod_id,uint8_t CC_id,uint8_t eNB_index)
+void phy_reset_ue(module_id_t Mod_id,uint8_t CC_id,uint8_t eNB_index)
 {
 
   // This flushes ALL DLSCH and ULSCH harq buffers of ALL connected eNBs...add the eNB_index later
@@ -352,7 +357,7 @@ void process_timing_advance_rar(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint16_t ti
 
 }
 
-void process_timing_advance(uint8_t Mod_id,uint8_t CC_id,int16_t timing_advance)
+void process_timing_advance(module_id_t Mod_id,uint8_t CC_id,int16_t timing_advance)
 {
 
   //  uint32_t frame = PHY_vars_UE_g[Mod_id]->frame;
@@ -507,7 +512,6 @@ void ue_compute_srs_occasion(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id
                   {
                       int Mod_id = ue->Mod_id;
                       int CC_id = ue->CC_id;
-                      // Panos: Substitute call to ue_get_SR() with the filled ue_SR_config->SR_payload (0, or 1).
                       SR_payload = ue_get_SR(Mod_id,
 					     CC_id,
 					     frame_tx,
@@ -2748,7 +2752,6 @@ void ue_pbch_procedures(uint8_t eNB_id,PHY_VARS_UE *ue,UE_rxtx_proc_t *proc, uin
     ue->pbch_vars[eNB_id]->pdu_errors_conseq++;
     ue->pbch_vars[eNB_id]->pdu_errors++;
 
-		// Panos: Substitute call to rrc_out_of_sync_ind() with fill_bch_incication(sync=0).
     if (ue->mac_enabled == 1) rrc_out_of_sync_ind(ue->Mod_id,frame_rx,eNB_id);
     else AssertFatal(ue->pbch_vars[eNB_id]->pdu_errors_conseq<100,
 		     "More that 100 consecutive PBCH errors! Exiting!\n");
@@ -3423,7 +3426,6 @@ void process_rar(PHY_VARS_UE *ue, UE_rxtx_proc_t *proc, int eNB_id, runmode_t mo
 	    subframe_rx,
 	    ue->prach_resources[eNB_id]->ra_PreambleIndex);
       
-      // Panos: Substitute call to ue_process_rar() with call to fill_dlsch_rar_indication()
       timing_advance = ue_process_rar(ue->Mod_id,
 				      ue->CC_id,
 				      frame_rx,
@@ -3754,7 +3756,6 @@ void ue_dlsch_procedures(PHY_VARS_UE *ue,
 	
 	switch (pdsch) {
 	case PDSCH:
-		// Panos: Substitute call to ue_send_sdu() with call to fill_dlsch_indication()
 	  ue_send_sdu(ue->Mod_id,
 		      CC_id,
 		      frame_rx,
@@ -3764,7 +3765,6 @@ void ue_dlsch_procedures(PHY_VARS_UE *ue,
 		      eNB_id);
 	  break;
 	case SI_PDSCH:
-		// Panos: Substitute call with call to fill_dlsch_indication()
 	  ue_decode_si(ue->Mod_id,
 		       CC_id,
 		       frame_rx,
@@ -3773,7 +3773,6 @@ void ue_dlsch_procedures(PHY_VARS_UE *ue,
 		       ue->dlsch_SI[eNB_id]->harq_processes[0]->TBS>>3);
 	  break;
 	case P_PDSCH:
-		// Panos: Substitute call with call to fill_dlsch_indication()
 		ue_decode_p(ue->Mod_id,
 		      CC_id,
 		      frame_rx,
@@ -3782,7 +3781,6 @@ void ue_dlsch_procedures(PHY_VARS_UE *ue,
 		      ue->dlsch_SI[eNB_id]->harq_processes[0]->TBS>>3);
 	  break;
 	case RA_PDSCH:
-		// Panos: Substitute with call to fill_dlsch_rar_indication()
 	  process_rar(ue,proc,eNB_id,mode,abstraction_flag);
 	  break;
 	case PDSCH1:

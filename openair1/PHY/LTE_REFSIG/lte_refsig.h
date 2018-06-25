@@ -36,7 +36,7 @@
 \param reset resets the generator
 \return 32 bits of the gold sequence
 */
-unsigned int lte_gold_generic(unsigned int *x1, unsigned int *x2, unsigned char reset);
+uint32_t lte_gold_generic(uint32_t *x1, uint32_t *x2, uint8_t reset);
 
 
 /*!\brief This function generates the LTE Gold sequence (36-211, Sec 7.2), specifically for DL reference signals.

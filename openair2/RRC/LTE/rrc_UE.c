@@ -85,7 +85,7 @@
 
 #include "openair2/LAYER2/MAC/mac_extern.h"
 
-#ifdef Rel14
+#if (RRC_VERSION >= MAKE_VERSION(14, 0, 0))
 #include "SL-Preconfiguration-r12.h"
 
 //for D2D
@@ -138,7 +138,7 @@ static void rrc_ue_generate_RRCConnectionReconfigurationComplete( const protocol
 static void rrc_ue_generate_MeasurementReport(protocol_ctxt_t* const ctxt_pP, uint8_t eNB_index );
 
 static uint8_t check_trigger_meas_event(
-  uint8_t module_idP,
+  module_id_t module_idP,
   frame_t frameP,
   uint8_t eNB_index,
   uint8_t ue_cnx_index,
@@ -454,7 +454,7 @@ void init_SL_preconfig(UE_RRC_INST *UE, const uint8_t eNB_index )
 			   UE->DRB_configList,
 			   (DRB_ToReleaseList_t*) NULL,
 			   0xff, NULL, NULL, NULL
-#if defined(Rel10) || defined(Rel14)
+#if (RRC_VERSION >= MAKE_VERSION(10, 0, 0))
                            , (PMCH_InfoList_r9_t *) NULL
 #endif
                            ,NULL);
@@ -463,7 +463,7 @@ void init_SL_preconfig(UE_RRC_INST *UE, const uint8_t eNB_index )
 			  (SRB_ToAddModList_t*)NULL,
 			  UE->DRB_configList,
 			  (DRB_ToReleaseList_t*)NULL
-#if defined(Rel10) || defined(Rel14)
+#if (RRC_VERSION >= MAKE_VERSION(10, 0, 0))
 			  ,(PMCH_InfoList_r9_t *)NULL
 #endif
 			  );
@@ -786,7 +786,6 @@ int rrc_ue_decode_ccch( const protocol_ctxt_t* const ctxt_pP, const SRB_INFO* co
     char        message_string[10000];
     size_t      message_string_size;
 
-    //LOG_I(RRC, "Panos-D: rrc_ue_decode_ccch, Before xer_sprint() \n");
     if ((message_string_size = xer_sprint(message_string, sizeof(message_string), &asn_DEF_DL_CCCH_Message, (void *)dl_ccch_msg)) > 0) {
       MessageDef *msg_p;
 
@@ -1094,7 +1093,7 @@ rrc_ue_process_measConfig(
 			  0,
 			  0
 #endif
-#if defined(Rel14)
+#if (RRC_VERSION >= MAKE_VERSION(14, 0, 0))
            ,
            0,
            NULL,
@@ -1613,7 +1612,7 @@ rrc_ue_process_radioResourceConfigDedicated(
 				0,
 				0
 #endif
-#if defined(Rel14)
+#if (RRC_VERSION >= MAKE_VERSION(14, 0, 0))
            ,
            0,
            NULL,
@@ -1678,7 +1677,7 @@ rrc_ue_process_radioResourceConfigDedicated(
 				0,
 				0
 #endif
-#if defined(Rel14)
+#if (RRC_VERSION >= MAKE_VERSION(14, 0, 0))
            ,
            0,
            NULL,
@@ -1792,7 +1791,7 @@ rrc_ue_process_radioResourceConfigDedicated(
 			      UE_rrc_inst[ue_mod_idP].num_active_cba_groups, //
 			      UE_rrc_inst[ue_mod_idP].cba_rnti[0]
 #endif
-#if defined(Rel14)
+#if (RRC_VERSION >= MAKE_VERSION(14, 0, 0))
            ,
            0,
            NULL,
@@ -1977,7 +1976,6 @@ rrc_ue_process_securityModeCommand(
       char        message_string[20000];
       size_t      message_string_size;
       
-      //LOG_I(RRC, "Panos-D: rrc_ue_process_securityModeCommand, Before xer_sprint() \n");
       if ((message_string_size = xer_sprint(message_string, sizeof(message_string), &asn_DEF_UL_DCCH_Message, (void *) &ul_dcch_msg)) > 0) {
 	MessageDef *msg_p;
 	
@@ -2089,7 +2087,6 @@ rrc_ue_process_ueCapabilityEnquiry(
 	char        message_string[20000];
 	size_t      message_string_size;
 	
-	//LOG_I(RRC, "Panos-D: rrc_ue_process_ueCapabilityEnquiry, Before xer_sprint() \n");
 	if ((message_string_size = xer_sprint(message_string, sizeof(message_string), &asn_DEF_UL_DCCH_Message, (void *) &ul_dcch_msg)) > 0) {
 	  MessageDef *msg_p;
 	  
@@ -2394,7 +2391,7 @@ rrc_ue_process_mobilityControlInfo(
 			,0,
 			0
 #endif
-#if defined(Rel14)
+#if (RRC_VERSION >= MAKE_VERSION(14, 0, 0))
            ,
            0,
            NULL,
@@ -2484,7 +2481,6 @@ rrc_ue_decode_dcch(
     char        message_string[30000];
     size_t      message_string_size;
 
-    //LOG_I(RRC, "Panos-D: rrc_ue_decode_dcch, Before xer_sprint() \n");
     if ((message_string_size = xer_sprint(message_string, sizeof(message_string), &asn_DEF_DL_DCCH_Message, (void *)dl_dcch_msg)) > 0) {
       msg_p = itti_alloc_new_message_sized (TASK_RRC_UE, RRC_DL_DCCH, message_string_size + sizeof (IttiMsgText));
       msg_p->ittiMsg.rrc_dl_dcch.size = message_string_size;
@@ -3020,7 +3016,6 @@ int decode_BCCH_DLSCH_Message(
     char        message_string[15000];
     size_t      message_string_size;
 
-    //LOG_I(RRC, "Panos-D: decode_BCCH_DLSCH_Message, Before xer_sprint() \n");
     if ((message_string_size = xer_sprint(message_string, sizeof(message_string), &asn_DEF_BCCH_DL_SCH_Message, (void *)bcch_message)) > 0) {
       MessageDef *msg_p;
 
@@ -3046,8 +3041,6 @@ int decode_BCCH_DLSCH_Message(
                   sizeof(SystemInformationBlockType1_t) );
           LOG_D( RRC, "[UE %"PRIu8"] Decoding First SIB1\n", ctxt_pP->module_id );
 
-          //LOG_I( RRC, "Panos-D: decode_BCCH_DLSCH_Message1 BEFORE decode_SIB1");
-          //printf("Panos-D: decode_BCCH_DLSCH_Message1 BEFORE decode_SIB1");
           decode_SIB1( ctxt_pP, eNB_index, rsrq, rsrp );
         }
       }
@@ -3066,8 +3059,6 @@ int decode_BCCH_DLSCH_Message(
         LOG_D( RRC, "[UE %"PRIu8"] Decoding SI for frameP %"PRIu32"\n",
                ctxt_pP->module_id,
                ctxt_pP->frame );
-        //LOG_I( RRC, "Panos-D: decode_BCCH_DLSCH_Message1 BEFORE OTHER decode_SI");
-        //printf("Panos-D: decode_BCCH_DLSCH_Message1 BEFORE OTHER decode_SI");
         decode_SI( ctxt_pP, eNB_index );
         //if (nfapi_mode == 3)
         	UE_mac_inst[ctxt_pP->module_id].SI_Decoded = 1;
@@ -3282,7 +3273,7 @@ int decode_SIB1( const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_index, 
 			0,
 			0
 #endif
-#if defined(Rel14)
+#if (RRC_VERSION >= MAKE_VERSION(14, 0, 0))
            ,
            0,
            NULL,
@@ -3915,12 +3906,10 @@ uint64_t arfcn_to_freq(long arfcn) {
 //-----------------------------------------------------------------------------
  int decode_SI( const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_index )
 {
-  //LOG_D( RRC, "Panos-D: decode_SI 1 \n");
   SystemInformation_t** si = &UE_rrc_inst[ctxt_pP->module_id].si[eNB_index];
   int new_sib = 0;
   SystemInformationBlockType1_t* sib1 = UE_rrc_inst[ctxt_pP->module_id].sib1[eNB_index];
 
-  //LOG_D( RRC, "Panos-D: decode_SI 2 \n");
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_RRC_UE_DECODE_SI, VCD_FUNCTION_IN );
 
   // Dump contents
@@ -3929,20 +3918,16 @@ uint64_t arfcn_to_freq(long arfcn) {
     LOG_D( RRC, "[UE] (*si)->criticalExtensions.choice.systemInformation_r8.sib_TypeAndInfo.list.count %d\n",
            (*si)->criticalExtensions.choice.systemInformation_r8.sib_TypeAndInfo.list.count );
   } else {
-	  //LOG_D( RRC, "Panos-D: decode_SI 2.3 \n");
     LOG_D( RRC, "[UE] Unknown criticalExtension version (not Rel8)\n" );
     return -1;
   }
 
-  LOG_D( RRC, "Panos-D: decode_SI 3 \n");
   for (int i=0; i<(*si)->criticalExtensions.choice.systemInformation_r8.sib_TypeAndInfo.list.count; i++) {
-    //LOG_I( RRC, "Panos-D: SI count %d\n", i );
     struct SystemInformation_r8_IEs__sib_TypeAndInfo__Member *typeandinfo;
     typeandinfo = (*si)->criticalExtensions.choice.systemInformation_r8.sib_TypeAndInfo.list.array[i];
 
     switch(typeandinfo->present) {
     case SystemInformation_r8_IEs__sib_TypeAndInfo__Member_PR_sib2:
-    	//LOG_D( RRC, "Panos-D: decode_SI 4 \n");
       if ((UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIStatus&2) == 0) {
 	UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIStatus|=2;
 	new_sib=1;
@@ -3981,7 +3966,7 @@ uint64_t arfcn_to_freq(long arfcn) {
 			      ,0,
 			      0
 #endif
-#if defined(Rel14)
+#if (RRC_VERSION >= MAKE_VERSION(14, 0, 0))
            ,
            0,
            NULL,
@@ -4032,7 +4017,6 @@ uint64_t arfcn_to_freq(long arfcn) {
       break; // case SystemInformation_r8_IEs__sib_TypeAndInfo__Member_PR_sib2
 
     case SystemInformation_r8_IEs__sib_TypeAndInfo__Member_PR_sib3:
-    	//LOG_D( RRC, "Panos-D: decode_SI 5 \n");
       if ((UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIStatus&4) == 0) {
 	UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIStatus|=4;
 	new_sib=1;
@@ -4167,7 +4151,7 @@ uint64_t arfcn_to_freq(long arfcn) {
 			      ,0,
 			      0
 #endif
-#if defined(Rel14)
+#if (RRC_VERSION >= MAKE_VERSION(14, 0, 0))
            ,
            0,
            NULL,
@@ -4178,7 +4162,7 @@ uint64_t arfcn_to_freq(long arfcn) {
       }
 #endif
 
-#if defined(Rel10) || defined(Rel14)
+#if (RRC_VERSION >= MAKE_VERSION(10, 0, 0))
       //SIB18
     case SystemInformation_r8_IEs__sib_TypeAndInfo__Member_PR_sib18_v1250:
        if ((UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIStatus&8192) == 0) {
@@ -4398,7 +4382,7 @@ void ue_meas_filtering( const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_
         LOG_I(RRC, "[UE %d] Frame %d : Generating Measurement Report for eNB %d\n",
               ctxt_pP->module_id, ctxt_pP->frame, eNB_index);
         result = pdcp_data_req(ctxt_pP,  SRB_FLAG_YES, DCCH, rrc_mui++, 0, size, buffer, PDCP_TRANSMISSION_MODE_DATA
-#ifdef Rel14
+#if (RRC_VERSION >= MAKE_VERSION(14, 0, 0))
                                ,NULL, NULL
 #endif
                                );
@@ -4694,7 +4678,7 @@ int decode_MCCH_Message( const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB
 			0,
 			0
 #endif
-#if defined(Rel14)
+#if (RRC_VERSION >= MAKE_VERSION(14, 0, 0))
            ,
            0,
            NULL,
@@ -5270,7 +5254,7 @@ openair_rrc_top_init_ue(
 
 #endif
 
-#ifdef Rel14
+#if (RRC_VERSION >= MAKE_VERSION(14, 0, 0))
   /* TODO: this is disabled for the moment because the standard UE
    * crashes when calling this function.
    */
@@ -5516,7 +5500,7 @@ rrc_ue_process_sidelink_radioResourceConfig(
    }
 }
 
-#ifdef Rel14
+#if (RRC_VERSION >= MAKE_VERSION(14, 0, 0))
 //-----------------------------------------------------------
 void
 rrc_control_socket_init(){
@@ -5748,7 +5732,7 @@ void *rrc_control_socket_thread_fct(void *arg)
                UE->DRB_configList,
                (DRB_ToReleaseList_t*) NULL,
                0xff, NULL, NULL, NULL
-#if defined(Rel10) || defined(Rel14)
+#if (RRC_VERSION >= MAKE_VERSION(10, 0, 0))
                , (PMCH_InfoList_r9_t *) NULL
 #endif
                ,NULL);
@@ -5758,7 +5742,7 @@ void *rrc_control_socket_thread_fct(void *arg)
                (SRB_ToAddModList_t*)NULL,
                UE->DRB_configList,
                (DRB_ToReleaseList_t*)NULL
-#if defined(Rel10) || defined(Rel14)
+#if (RRC_VERSION >= MAKE_VERSION(10, 0, 0))
                ,(PMCH_InfoList_r9_t *)NULL
                , 0, 0
 #endif
@@ -5768,7 +5752,7 @@ void *rrc_control_socket_thread_fct(void *arg)
                (SRB_ToAddModList_t*)NULL,
                UE->DRB_configList,
                (DRB_ToReleaseList_t*)NULL
-#ifdef Rel14
+#if (RRC_VERSION >= MAKE_VERSION(14, 0, 0))
                ,(PMCH_InfoList_r9_t *)NULL
                , sourceL2Id, groupL2Id
 #endif
@@ -5779,7 +5763,7 @@ void *rrc_control_socket_thread_fct(void *arg)
          rrc_mac_config_req_ue(module_id,0,0, //eNB_index =0
                (RadioResourceConfigCommonSIB_t *)NULL,
                (struct PhysicalConfigDedicated *)NULL,
-#if defined(Rel10) || defined(Rel14)
+#if (RRC_VERSION >= MAKE_VERSION(10, 0, 0))
                (SCellToAddMod_r10_t *)NULL,
                //struct PhysicalConfigDedicatedSCell_r10 *physicalConfigDedicatedSCell_r10,
 #endif
@@ -5796,7 +5780,7 @@ void *rrc_control_socket_thread_fct(void *arg)
                NULL,
                NULL,
                NULL
-#if defined(Rel10) || defined(Rel14)
+#if (RRC_VERSION >= MAKE_VERSION(10, 0, 0))
                ,0,
                (MBSFN_AreaInfoList_r9_t *)NULL,
                (PMCH_InfoList_r9_t *)NULL
@@ -5807,7 +5791,7 @@ void *rrc_control_socket_thread_fct(void *arg)
                0,
                0
 #endif
-#if defined(Rel10) || defined(Rel14)
+#if (RRC_VERSION >= MAKE_VERSION(10, 0, 0))
                ,CONFIG_ACTION_ADD,
                &sourceL2Id,
                &groupL2Id
@@ -5851,7 +5835,7 @@ void *rrc_control_socket_thread_fct(void *arg)
          rrc_mac_config_req_ue(module_id,0,0, //eNB_index =0
                     (RadioResourceConfigCommonSIB_t *)NULL,
                     (struct PhysicalConfigDedicated *)NULL,
-         #if defined(Rel10) || defined(Rel14)
+         #if (RRC_VERSION >= MAKE_VERSION(10, 0, 0))
                     (SCellToAddMod_r10_t *)NULL,
                     //struct PhysicalConfigDedicatedSCell_r10 *physicalConfigDedicatedSCell_r10,
          #endif
@@ -5868,7 +5852,7 @@ void *rrc_control_socket_thread_fct(void *arg)
                     NULL,
                     NULL,
                     NULL
-         #if defined(Rel10) || defined(Rel14)
+         #if (RRC_VERSION >= MAKE_VERSION(10, 0, 0))
                     ,0,
                     (MBSFN_AreaInfoList_r9_t *)NULL,
                     (PMCH_InfoList_r9_t *)NULL
@@ -5879,7 +5863,7 @@ void *rrc_control_socket_thread_fct(void *arg)
                     0,
                     0
          #endif
-         #if defined(Rel10) || defined(Rel14)
+         #if (RRC_VERSION >= MAKE_VERSION(10, 0, 0))
                     ,CONFIG_ACTION_REMOVE,
                     &sourceL2Id,
                     &destinationL2Id
@@ -5996,7 +5980,7 @@ void *rrc_control_socket_thread_fct(void *arg)
                UE->DRB_configList,
                (DRB_ToReleaseList_t*) NULL,
                0xff, NULL, NULL, NULL
-#if defined(Rel10) || defined(Rel14)
+#if (RRC_VERSION >= MAKE_VERSION(10, 0, 0))
                , (PMCH_InfoList_r9_t *) NULL
 #endif
                ,NULL);
@@ -6006,7 +5990,7 @@ void *rrc_control_socket_thread_fct(void *arg)
                (SRB_ToAddModList_t*)NULL,
                UE->DRB_configList,
                (DRB_ToReleaseList_t*)NULL
-#if defined(Rel10) || defined(Rel14)
+#if (RRC_VERSION >= MAKE_VERSION(10, 0, 0))
                ,(PMCH_InfoList_r9_t *)NULL
                , 0, 0
 #endif
@@ -6016,7 +6000,7 @@ void *rrc_control_socket_thread_fct(void *arg)
                (SRB_ToAddModList_t*)NULL,
                UE->DRB_configList,
                (DRB_ToReleaseList_t*)NULL
-#ifdef Rel14
+#if (RRC_VERSION >= MAKE_VERSION(14, 0, 0))
                ,(PMCH_InfoList_r9_t *)NULL
                , sourceL2Id, destinationL2Id
 #endif
@@ -6027,7 +6011,7 @@ void *rrc_control_socket_thread_fct(void *arg)
          rrc_mac_config_req_ue(module_id,0,0, //eNB_index =0
                (RadioResourceConfigCommonSIB_t *)NULL,
                (struct PhysicalConfigDedicated *)NULL,
-#if defined(Rel10) || defined(Rel14)
+#if (RRC_VERSION >= MAKE_VERSION(10, 0, 0))
                (SCellToAddMod_r10_t *)NULL,
                //struct PhysicalConfigDedicatedSCell_r10 *physicalConfigDedicatedSCell_r10,
 #endif
@@ -6044,7 +6028,7 @@ void *rrc_control_socket_thread_fct(void *arg)
                NULL,
                NULL,
                NULL
-#if defined(Rel10) || defined(Rel14)
+#if (RRC_VERSION >= MAKE_VERSION(10, 0, 0))
                ,0,
                (MBSFN_AreaInfoList_r9_t *)NULL,
                (PMCH_InfoList_r9_t *)NULL
@@ -6055,7 +6039,7 @@ void *rrc_control_socket_thread_fct(void *arg)
                0,
                0
 #endif
-#if defined(Rel10) || defined(Rel14)
+#if (RRC_VERSION >= MAKE_VERSION(10, 0, 0))
                ,CONFIG_ACTION_ADD,
                &sourceL2Id,
                &destinationL2Id
@@ -6180,7 +6164,7 @@ void *rrc_control_socket_thread_fct(void *arg)
                UE->DRB_configList,
                (DRB_ToReleaseList_t*) NULL,
                0xff, NULL, NULL, NULL
-#if defined(Rel10) || defined(Rel14)
+#if (RRC_VERSION >= MAKE_VERSION(10, 0, 0))
                , (PMCH_InfoList_r9_t *) NULL
 #endif
                ,NULL);
@@ -6190,7 +6174,7 @@ void *rrc_control_socket_thread_fct(void *arg)
                (SRB_ToAddModList_t*)NULL,
                UE->DRB_configList,
                (DRB_ToReleaseList_t*)NULL
-#if defined(Rel10) || defined(Rel14)
+#if (RRC_VERSION >= MAKE_VERSION(10, 0, 0))
                ,(PMCH_InfoList_r9_t *)NULL
                , 0, 0
 #endif
@@ -6202,7 +6186,7 @@ void *rrc_control_socket_thread_fct(void *arg)
                   (SRB_ToAddModList_t*)NULL,
                   UE->DRB_configList,
                   (DRB_ToReleaseList_t*)NULL
-#ifdef Rel14
+#if (RRC_VERSION >= MAKE_VERSION(14, 0, 0))
                   ,(PMCH_InfoList_r9_t *)NULL
                   , sourceL2Id, destinationL2Id
 #endif
@@ -6212,7 +6196,7 @@ void *rrc_control_socket_thread_fct(void *arg)
             rrc_mac_config_req_ue(module_id,0,0, //eNB_index =0
                   (RadioResourceConfigCommonSIB_t *)NULL,
                   (struct PhysicalConfigDedicated *)NULL,
-#if defined(Rel10) || defined(Rel14)
+#if (RRC_VERSION >= MAKE_VERSION(10, 0, 0))
                   (SCellToAddMod_r10_t *)NULL,
                   //struct PhysicalConfigDedicatedSCell_r10 *physicalConfigDedicatedSCell_r10,
 #endif
@@ -6229,7 +6213,7 @@ void *rrc_control_socket_thread_fct(void *arg)
                   NULL,
                   NULL,
                   NULL
-#if defined(Rel10) || defined(Rel14)
+#if (RRC_VERSION >= MAKE_VERSION(10, 0, 0))
                   ,0,
                   (MBSFN_AreaInfoList_r9_t *)NULL,
                   (PMCH_InfoList_r9_t *)NULL
@@ -6240,7 +6224,7 @@ void *rrc_control_socket_thread_fct(void *arg)
                   0,
                   0
 #endif
-#if defined(Rel10) || defined(Rel14)
+#if (RRC_VERSION >= MAKE_VERSION(10, 0, 0))
                   ,CONFIG_ACTION_ADD,
                   &sourceL2Id,
                   &destinationL2Id
@@ -6251,7 +6235,7 @@ void *rrc_control_socket_thread_fct(void *arg)
             rrc_mac_config_req_ue(module_id,0,0, //eNB_index =0
                   (RadioResourceConfigCommonSIB_t *)NULL,
                   (struct PhysicalConfigDedicated *)NULL,
-#if defined(Rel10) || defined(Rel14)
+#if (RRC_VERSION >= MAKE_VERSION(10, 0, 0))
                   (SCellToAddMod_r10_t *)NULL,
                   //struct PhysicalConfigDedicatedSCell_r10 *physicalConfigDedicatedSCell_r10,
 #endif
@@ -6268,7 +6252,7 @@ void *rrc_control_socket_thread_fct(void *arg)
                   NULL,
                   NULL,
                   NULL
-#if defined(Rel10) || defined(Rel14)
+#if (RRC_VERSION >= MAKE_VERSION(10, 0, 0))
                   ,0,
                   (MBSFN_AreaInfoList_r9_t *)NULL,
                   (PMCH_InfoList_r9_t *)NULL
@@ -6279,7 +6263,7 @@ void *rrc_control_socket_thread_fct(void *arg)
                   0,
                   0
 #endif
-#if defined(Rel10) || defined(Rel14)
+#if (RRC_VERSION >= MAKE_VERSION(10, 0, 0))
                   ,CONFIG_ACTION_ADD,
                   &sourceL2Id,
                   NULL

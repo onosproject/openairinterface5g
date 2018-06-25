@@ -471,6 +471,7 @@ void *l2l1_task(void *arg) {
 extern int16_t dlsch_demod_shift;
 
 static void get_options(void) {
+  char logmem_filename[1024] = {0};
   int CC_id;
   int tddflag, nonbiotflag;
   char *loopfile=NULL;
@@ -826,7 +827,7 @@ int main( int argc, char **argv )
 
   printf("NFAPI_MODE value: %d \n", nfapi_mode);
 
-  // Panos: Not sure if the following is needed here
+  // Not sure if the following is needed here
   /*if (CONFIG_ISFLAGSET(CONFIG_ABORT)) {
       if (UE_flag == 0) {
         fprintf(stderr,"Getting configuration failed\n");
@@ -903,7 +904,7 @@ int main( int argc, char **argv )
 #endif
 
 //TTN for D2D
-#ifdef Rel14
+#if (RRC_VERSION >= MAKE_VERSION(14, 0, 0))
   printf ("RRC control socket\n");
   rrc_control_socket_init();
   printf ("PDCP PC5S socket\n");
@@ -935,29 +936,6 @@ int main( int argc, char **argv )
 
 
   printf("Before CC \n");
-
-
-
-  // Panos: From old version
-  /*if (UE_flag==1) {
-	  PHY_vars_UE_g = malloc(sizeof(PHY_VARS_UE**)*NB_UE_INST);
-	  for (int i=0; i<NB_UE_INST; i++) {
-		  for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
-
-			  PHY_vars_UE_g[i] = malloc(sizeof(PHY_VARS_UE*)*MAX_NUM_CCs);
-			  PHY_vars_UE_g[i][CC_id] = init_ue_vars(frame_parms[CC_id], i,abstraction_flag);
-
-			  UE[CC_id] = PHY_vars_UE_g[i][CC_id];
-			  printf("PHY_vars_UE_g[inst][%d] = %p\n",CC_id,UE[CC_id]);
-
-			  if (phy_test==1)
-				  UE[CC_id]->mac_enabled = 0;
-			  else
-				  UE[CC_id]->mac_enabled = 1;
-		  }
-	  }
-  }*/
-
 
 
   //NB_UE_INST=1;
@@ -1092,7 +1070,7 @@ int main( int argc, char **argv )
       printf("cannot create ITTI tasks\n");
       exit(-1); // need a softer mode
     }
-    if(nfapi_mode==3){ //Panos: Here we should add another nfapi_mode for the case of Supervised LTE-D2D
+    if(nfapi_mode==3){ // Here we should add another nfapi_mode for the case of Supervised LTE-D2D
     	UE_config_stub_pnf();
     }
     printf("ITTI tasks created\n");
@@ -1100,47 +1078,13 @@ int main( int argc, char **argv )
 
   // init UE_PF_PO and mutex lock
   pthread_mutex_init(&ue_pf_po_mutex, NULL);
-  memset (&UE_PF_PO[0][0], 0, sizeof(UE_PF_PO_t)*NUMBER_OF_UE_MAX*MAX_NUM_CCs);
+  memset (&UE_PF_PO[0][0], 0, sizeof(UE_PF_PO_t)*MAX_MOBILES_PER_ENB*MAX_NUM_CCs);
   
   mlockall(MCL_CURRENT | MCL_FUTURE);
   
   pthread_cond_init(&sync_cond,NULL);
   pthread_mutex_init(&sync_mutex, NULL);
-  
-#ifdef XFORMS
-  int UE_id;
-  
-  printf("XFORMS\n");
-
-  if (do_forms==1) {
-    fl_initialize (&argc, argv, NULL, 0, 0);
-    
-      form_stats = create_form_stats_form();
-      fl_show_form (form_stats->stats_form, FL_PLACE_HOTSPOT, FL_FULLBORDER, "stats");
-      UE_id = 0;
-      form_ue[UE_id] = create_lte_phy_scope_ue();
-      sprintf (title, "LTE DL SCOPE UE");
-      fl_show_form (form_ue[UE_id]->lte_phy_scope_ue, FL_PLACE_HOTSPOT, FL_FULLBORDER, title);
-      
-      /*
-	if (openair_daq_vars.use_ia_receiver) {
-	fl_set_button(form_ue[UE_id]->button_0,1);
-	fl_set_object_label(form_ue[UE_id]->button_0, "IA Receiver ON");
-	} else {
-	fl_set_button(form_ue[UE_id]->button_0,0);
-	fl_set_object_label(form_ue[UE_id]->button_0, "IA Receiver OFF");
-	}*/
-      fl_set_button(form_ue[UE_id]->button_0,0);
-      fl_set_object_label(form_ue[UE_id]->button_0, "IA Receiver OFF");
-    ret = pthread_create(&forms_thread, NULL, scope_thread, NULL);
-    
-    if (ret == 0)
-      pthread_setname_np( forms_thread, "xforms" );
-    
-    printf("Scope thread created, ret=%d\n",ret);
-  }
-  
-#endif
+ 
   
   rt_sleep_ns(10*100000000ULL);
 
@@ -1177,7 +1121,7 @@ int main( int argc, char **argv )
     {
     	config_sync_var=0;
     	wait_nfapi_init("main?");
-    	//Panos: Temporarily we will be using single set of threads for multiple UEs.
+    	// Temporarily we will be using single set of threads for multiple UEs.
     	//init_UE_stub(1,eMBMS_active,uecap_xer_in,emul_iface);
     	init_UE_stub_single_thread(NB_UE_INST,eMBMS_active,uecap_xer_in,emul_iface);
     }
@@ -1231,6 +1175,41 @@ int main( int argc, char **argv )
 	printf("error reading from file\n");
     }
     //p_exmimo_config->framing.tdd_config = TXRXSWITCH_TESTRX;
+
+#ifdef XFORMS
+  int UE_id;
+  
+  printf("XFORMS\n");
+
+  if (do_forms==1) {
+    fl_initialize (&argc, argv, NULL, 0, 0);
+    
+      form_stats = create_form_stats_form();
+      fl_show_form (form_stats->stats_form, FL_PLACE_HOTSPOT, FL_FULLBORDER, "stats");
+      UE_id = 0;
+      form_ue[UE_id] = create_lte_phy_scope_ue();
+      sprintf (title, "LTE DL SCOPE UE");
+      fl_show_form (form_ue[UE_id]->lte_phy_scope_ue, FL_PLACE_HOTSPOT, FL_FULLBORDER, title);
+      
+      /*
+	if (openair_daq_vars.use_ia_receiver) {
+	fl_set_button(form_ue[UE_id]->button_0,1);
+	fl_set_object_label(form_ue[UE_id]->button_0, "IA Receiver ON");
+	} else {
+	fl_set_button(form_ue[UE_id]->button_0,0);
+	fl_set_object_label(form_ue[UE_id]->button_0, "IA Receiver OFF");
+	}*/
+      fl_set_button(form_ue[UE_id]->button_0,0);
+      fl_set_object_label(form_ue[UE_id]->button_0, "IA Receiver OFF");
+    ret = pthread_create(&forms_thread, NULL, scope_thread, NULL);
+    
+    if (ret == 0)
+      pthread_setname_np( forms_thread, "xforms" );
+    
+    printf("Scope thread created, ret=%d\n",ret);
+  }
+  
+#endif
   
   printf("Sending sync to all threads\n");
   
