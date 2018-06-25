@@ -1041,29 +1041,17 @@ if(proc->flag_msg4 == 1 && proc->counter_msg4 > 0)
                 tab_rar[13]=91;
                 tab_rar[14]=8;
 
-    /*tab_rar[0]=28;
-                tab_rar[1]=0; // NAS part 1 
-                tab_rar[2]=nas_id[0]; // NAS part 2
-                tab_rar[3]=nas_id[1];  // NAS part 3 
-                tab_rar[4]=nas_id[2];  // NAS part 4
-                tab_rar[5]=nas_id[3]; // NAS part 5 
-                tab_rar[6]=nas_id[4];  // NAS part 6*/
 
-    /*tab_rar[0]=28;
-                tab_rar[1]=nas_id[0]; // NAS part 2
-                tab_rar[2]=nas_id[1];  // NAS part 3 
-                tab_rar[3]=nas_id[2];  // NAS part 4
-                tab_rar[4]=nas_id[3]; // NAS part 5 
-                tab_rar[5]=nas_id[4];  // NAS part 6
-                tab_rar[6]=0;*/
+                /*
+                tab_rar[0]=28;
+                tab_rar[1]=nas_id[0]; // NAS part 1
+                tab_rar[2]=nas_id[1];  // NAS part 2 
+                tab_rar[3]=nas_id[2];  // NAS part 3
+                tab_rar[4]=nas_id[3]; // NAS part 4 
+                tab_rar[5]=nas_id[4];  // NAS part 5
+                tab_rar[6]=0; // NAS part 5   
+                */ 
 
-    /*tab_rar[0]=28;
-                tab_rar[1]=nas_id[4]; // NAS part 2
-                tab_rar[2]=nas_id[3];  // NAS part 3 
-                tab_rar[3]=nas_id[2];  // NAS part 4
-                tab_rar[4]=nas_id[1]; // NAS part 5 
-                tab_rar[5]=nas_id[0];  // NAS part 6
-                tab_rar[6]=0;*/
         
 
 
