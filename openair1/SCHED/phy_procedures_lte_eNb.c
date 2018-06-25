@@ -976,7 +976,7 @@ void common_signal_procedures (PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc) {
     printf("pdu[2] = %d \n",ulsch_harq->b[8]);
           printf("pdu[3] = %d \n",ulsch_harq->b[9]);
 
-          uint8_t xo = 128;
+          /*uint8_t xo = 128;
           int m =0;
           for(m=0; m<6;m++)
           { 
@@ -986,9 +986,17 @@ void common_signal_procedures (PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc) {
             } else {
                 msg3[m]= (ulsch_harq->b[3+m]>>1);
             }
+          }*/
+          int m =0;
+          for(m=0; m<6;m++)
+          { 
+            
+                //msg3[m]=ulsch_harq->b[2+m];
+                msg3[m]=ulsch_harq->b[2+m];
+        
           }
 
-          proc->flag_DCI_msg4 ==1 ;
+          proc->flag_DCI_msg4 =1 ;
           proc->counter_DCI_msg4=4;
 
       }  // NPUSH decode end 
