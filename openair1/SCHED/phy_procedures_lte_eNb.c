@@ -1025,7 +1025,7 @@ if(proc->flag_msg4 == 1 && proc->counter_msg4 > 0)
                 uint8_t *nas_id = &eNB->msg3_pdu[0];
                 //uint8_t   *NAS_tab = &eNB->tab_nas;
                 // avoid subframe 9 and subframe 0 of next frame
-                tab_rar[0]=63;
+                /*tab_rar[0]=63;
                 tab_rar[1]=60;
                 tab_rar[2]=0;
                 tab_rar[3]=nas_id[0];  // NAS part 1 
@@ -1039,18 +1039,18 @@ if(proc->flag_msg4 == 1 && proc->counter_msg4 > 0)
                 tab_rar[11]=0;
                 tab_rar[12]=24;  
                 tab_rar[13]=145;
-                tab_rar[14]=8;
+                tab_rar[14]=8;*/
 
 
-                /*
+                
                 tab_rar[0]=28;
                 tab_rar[1]=nas_id[0]; // NAS part 1
                 tab_rar[2]=nas_id[1];  // NAS part 2 
                 tab_rar[3]=nas_id[2];  // NAS part 3
                 tab_rar[4]=nas_id[3]; // NAS part 4 
                 tab_rar[5]=nas_id[4];  // NAS part 5
-                tab_rar[6]=0; // NAS part 5   
-                */ 
+                tab_rar[6]=nas_id[5]; // NAS part 5   
+                 
 
         
 
@@ -1069,7 +1069,7 @@ if(proc->flag_msg4 == 1 && proc->counter_msg4 > 0)
                                                 rar,
                                                 8,                      ///// number_of_subframes_required
                                                 236,
-                                                2);                   //////////// G*2   // option =2 for msg4
+                                                1);                   //////////// G*2   // option =2 for msg4
 
 
                        dlsch_sib_scrambling_rar_NB_IoT(fp,
