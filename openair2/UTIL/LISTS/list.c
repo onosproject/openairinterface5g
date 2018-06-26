@@ -32,6 +32,7 @@
 
 #include "list.h"
 #include <string.h>
+#include <malloc.h>
 
 //-----------------------------------------------------------------------------
 /*
@@ -277,14 +278,16 @@ list_display (list_t * listP)
 void
 push_front(struct list* z, double val)
 {
-
-  struct node* p = (struct node*) malloc(sizeof(struct node));
-
+  //printf("val %e, ",val);
+  struct node* p ;
+  //p = (struct node*) malloc(sizeof(struct node));
+  //printf("ok ");
   p->next = z->head;
   p->val = val;
   z->head = p;
 
   z->size++;
+  //printf("z size %d",z->size);
 
   return;
 

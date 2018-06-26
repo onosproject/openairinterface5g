@@ -2092,7 +2092,10 @@ int main(int argc, char **argv)
       exit(-1);
     }
   }
-
+  if (UE->do_ofdm_mod)
+    printf("dlsim in the frequency domain\n");	
+  else
+    printf("dlsim in the time domain\n");	
   /*
   //sprintf(tikz_fname, "second_bler_tx%d_u2=%d_mcs%d_chan%d_nsimus%d.tex",transmission_mode,dual_stream_UE,mcs,channel_model,n_frames);
   sprintf(tikz_fname, "second_bler_tx%d_u2%d_mcs%d_chan%d_nsimus%d",transmission_mode,dual_stream_UE,mcs,channel_model,n_frames);
@@ -2420,6 +2423,7 @@ int main(int argc, char **argv)
 
   uncoded_ber_bit = (short*) malloc(sizeof(short)*coded_bits_per_codeword);
   printf("uncoded_ber_bit=%p\n",uncoded_ber_bit);
+  //("uncoded_ber_bit=%d\n",uncoded_ber_bit); 
 
   snr_step = input_snr_step;
   UE->high_speed_flag = 1;
@@ -2709,14 +2713,14 @@ int main(int argc, char **argv)
 
 	  // first symbol has to be done separately in one-shot mode
 	  if (UE->do_ofdm_mod)
-	  slot_fep_freq(UE,
+	    slot_fep_freq(UE,
 		   0,
 		   (proc->subframe_rx<<1),
 		   UE->rx_offset,
 		   0,
 		   0);
 	  else
-	  slot_fep(UE,
+	    slot_fep(UE,
 		   0,
 		   (proc->subframe_rx<<1),
 		   UE->rx_offset,
@@ -3001,6 +3005,7 @@ int main(int argc, char **argv)
         double t_rx_fft = (double)UE->ofdm_demod_stats.p_time/cpu_freq_GHz/1000.0;
         double t_rx_demod = (double)UE->dlsch_rx_pdcch_stats.p_time/cpu_freq_GHz/1000.0;
         double t_rx_dec = (double)UE->dlsch_decoding_stats[UE->current_thread_id[subframe]].p_time/cpu_freq_GHz/1000.0;
+ 	//printf("t_rx_dec %e\n",t_rx_dec);
 
         if (t_tx > t_tx_max)
           t_tx_max = t_tx;
@@ -3021,14 +3026,22 @@ int main(int argc, char **argv)
           n_rx_dropped++;
 
         push_front(&time_vector_tx, t_tx);
+	//printf("t_tx\n");
         push_front(&time_vector_tx_ifft, t_tx_ifft);
+	//printf("t_tx_ifft\n");
         push_front(&time_vector_tx_mod, t_tx_mod);
+	//printf("t_tx_mod\n");
         push_front(&time_vector_tx_enc, t_tx_enc);
+	//printf("t_tx_enc\n");
 
         push_front(&time_vector_rx, t_rx);
+	//printf("t_rx\n");
         push_front(&time_vector_rx_fft, t_rx_fft);
+	//printf("t_rx_fft\n");
         push_front(&time_vector_rx_demod, t_rx_demod);
+	//printf("t_rx_demod\n");
         push_front(&time_vector_rx_dec, t_rx_dec);
+	//printf("t_rx_dec\n");
 
 
       }   //trials
@@ -3495,9 +3508,14 @@ int main(int argc, char **argv)
     fprintf(csv_fd,"];");
     fclose(csv_fd);
   }
-
-  if (uncoded_ber_bit)
-    free(uncoded_ber_bit);
+  if (!UE->do_ofdm_mod)
+  {
+	  if (uncoded_ber_bit)
+	  {
+	    printf("uncoded_ber_bit is 1\n");
+	    free(uncoded_ber_bit);
+	  }
+  }
 
   uncoded_ber_bit = NULL;
 
