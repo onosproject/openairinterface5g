@@ -1034,11 +1034,11 @@ if(proc->flag_msg4 == 1 && proc->counter_msg4 > 0)
                 tab_rar[6]=nas_id[3];  // NAS part 4
                 tab_rar[7]=nas_id[4];   // NAS part 5
                 tab_rar[8]=nas_id[5];   // NAS part 6
-                tab_rar[9]=30;
+                tab_rar[9]=48;
                 tab_rar[10]=3;
                 tab_rar[11]=0;
-                tab_rar[12]=18;  
-                tab_rar[13]=91;
+                tab_rar[12]=24;  
+                tab_rar[13]=145;
                 tab_rar[14]=8;
 
 
