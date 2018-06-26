@@ -350,7 +350,7 @@ void fill_DCI(PHY_VARS_eNB *eNB,
 	      int frame,
 	      int subframe,
 	      Sched_Rsp_t *sched_resp,
-	      uint8_t input_buffer[NUMBER_OF_UE_MAX][20000],
+	      uint8_t input_buffer[NUMBER_OF_UE_MAX][2][20000],
 	      int n_rnti,
 	      int n_users,
 	      int transmission_mode,
@@ -445,14 +445,94 @@ void fill_DCI(PHY_VARS_eNB *eNB,
 		    (frame * 10) + subframe,
 		    get_TBS_DL(mcs1,NB_RB),
 		    0,
-		    input_buffer[k]);
+		    input_buffer[k][0]);
       }
       else {
-
+	printf("common DCI not implemented\n");
+	exit(-1);
       }
 
       break;
 
+    case 8:
+      if (common_flag == 0) {
+
+	dl_config_pdu = &dl_req->dl_config_pdu_list[dl_req->number_pdu];
+	memset((void *) dl_config_pdu, 0,
+	       sizeof(nfapi_dl_config_request_pdu_t));
+	dl_config_pdu->pdu_type = NFAPI_DL_CONFIG_DCI_DL_PDU_TYPE;
+	dl_config_pdu->pdu_size = (uint8_t) (2 + sizeof(nfapi_dl_config_dci_dl_pdu));
+	dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.dci_format = NFAPI_DL_DCI_FORMAT_2B;
+	dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.aggregation_level = 4;
+	dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.tl.tag = NFAPI_DL_CONFIG_REQUEST_DCI_DL_PDU_REL9_TAG;
+	dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.rnti = n_rnti+k;
+	dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.rnti_type = 1;	// CRNTI : see Table 4-10 from SCF082 - nFAPI specifications
+	dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.transmission_power = 6000;	// equal to RS power
+
+	dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.harq_process = 0;
+	dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.tpc = TPC;	// dont adjust power when retransmitting
+	dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.new_data_indicator_1 = ndi;
+	dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.mcs_1 = mcs1;
+	dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.redundancy_version_1 = rv;
+	dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.new_data_indicator_2 = ndi;
+	dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.mcs_2 = mcs2;
+	dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.redundancy_version_2 = rv;
+
+	dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.resource_block_coding = DLSCH_RB_ALLOC;
+	dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.downlink_assignment_index = 0;
+	dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.cce_idx = 0;
+
+	dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel9.scrambling_identity = 0;
+
+	dl_req->number_dci++;
+	dl_req->number_pdu++;
+	dl_req->tl.tag = NFAPI_DL_CONFIG_REQUEST_BODY_TAG;
+
+
+	fill_dlsch_config(dl_req,
+			  get_TBS_DL(mcs1,NB_RB),
+			  (retrans > 0) ? -1 : 0, /* retransmission, no pdu_index */
+			  n_rnti,
+			  0,	// type 0 allocation from 7.1.6 in 36.213
+			  0,	// virtual_resource_block_assignment_flag, unused here
+			  DLSCH_RB_ALLOC,	// resource_block_coding,
+			  get_Qm(mcs1),
+			  rv,	// redundancy version
+			  2,	// transport blocks
+			  0,	// transport block to codeword swap flag
+			  8,    // DUAL_LAYER_TX_PORT_7_AND_8,	// transmission_scheme
+			  2,	// number of layers
+			  1,	// number of subbands
+				//                      uint8_t codebook_index,
+			  4,	// UE category capacity
+			  pa,    // pa
+			  0,	// delta_power_offset for TM5
+			  0,	// ngap
+			  0,	// nprb
+			  transmission_mode,
+			  0,	//number of PRBs treated as one subband, not used here
+			  0	// number of beamforming vectors, not used here
+			  );
+	fill_tx_req(TX_req,
+		    (frame * 10) + subframe,
+		    get_TBS_DL(mcs1,NB_RB),
+		    0,
+		    input_buffer[k][0]);
+	fill_tx_req(TX_req,
+		    (frame * 10) + subframe,
+		    get_TBS_DL(mcs1,NB_RB),
+		    0, //the pdu_index should correspond to the DCI pdu_index, so it should be the same for both transport blocks???
+		    input_buffer[k][1]);
+      }
+      else {
+	printf("common DCI not implemented\n");
+	exit(-1);
+      }
+
+      break;
+
+
+      /*
     case 3:
       if (common_flag == 0) {
 
@@ -496,6 +576,7 @@ void fill_DCI(PHY_VARS_eNB *eNB,
       case 6:
 
         break;
+      */
 
     default:
       printf("Unsupported Transmission Mode %d!!!\n",transmission_mode);
@@ -943,12 +1024,13 @@ int main(int argc, char **argv)
           (transmission_mode!=4) &&
           (transmission_mode!=5) &&
           (transmission_mode!=6) &&
-          (transmission_mode!=7)) {
+          (transmission_mode!=7) &&
+          (transmission_mode!=8)) {
         printf("Unsupported transmission mode %d\n",transmission_mode);
         exit(-1);
       }
 
-      if (transmission_mode>1 && transmission_mode<7) {
+      if ((transmission_mode>1 && transmission_mode<7) || (transmission_mode ==8)) {
         n_tx_port = 2;
       }
 
@@ -1156,10 +1238,12 @@ int main(int argc, char **argv)
   snr1 = snr0+snr_int;
   printf("SNR0 %f, SNR1 %f\n",snr0,snr1);
 
-  uint8_t input_buffer[NUMBER_OF_UE_MAX][20000];
+  uint8_t input_buffer[NUMBER_OF_UE_MAX][2][20000];
 
-  for (i=0;i<n_users;i++)
-    for (j=0;j<20000;j++) input_buffer[i][j] = (uint8_t)((taus())&255);
+  for (k=0;k<n_users;k++)
+    for (i=0;i<2;i++)
+      for (j=0;j<20000;j++) 
+	input_buffer[k][i][j] = (uint8_t)((taus())&255);
 
   frame_parms = &eNB->frame_parms;
 
@@ -1662,16 +1746,25 @@ int main(int argc, char **argv)
             if (n_frames==1) {
               printf("tx_lev = %d (%d dB)\n",tx_lev,tx_lev_dB);
 
-              write_output("txsig0.m","txs0", &ru->common.txdata[0][subframe* eNB->frame_parms.samples_per_tti], eNB->frame_parms.samples_per_tti,1,1);
+	      write_output("txsigF0.m","txsF0", &eNB->common_vars.txdataF[0][subframe*nsymb*eNB->frame_parms.ofdm_symbol_size],nsymb*eNB->frame_parms.ofdm_symbol_size,1,1);
+	      if (eNB->frame_parms.nb_antenna_ports_eNB>1) 
+		write_output("txsigF1.m","txsF1", &eNB->common_vars.txdataF[1][subframe*nsymb*eNB->frame_parms.ofdm_symbol_size],nsymb*eNB->frame_parms.ofdm_symbol_size,1,1);
+              if (transmission_mode == 7) {
+                write_output("txsigF5.m","txsF5", &eNB->common_vars.txdataF[5][subframe*nsymb*eNB->frame_parms.ofdm_symbol_size],nsymb*eNB->frame_parms.ofdm_symbol_size,1,1);
+              } else if (transmission_mode == 8) {
+                write_output("txsigF7.m","txsF7", &eNB->common_vars.txdataF[7][subframe*nsymb*eNB->frame_parms.ofdm_symbol_size],nsymb*eNB->frame_parms.ofdm_symbol_size,1,1);
+                write_output("txsigF8.m","txsF8", &eNB->common_vars.txdataF[8][subframe*nsymb*eNB->frame_parms.ofdm_symbol_size],nsymb*eNB->frame_parms.ofdm_symbol_size,1,1);
+	      }
 
-              if (transmission_mode<7) {
-	        write_output("txsigF0.m","txsF0x", &ru->common.txdataF_BF[0][subframe*nsymb*eNB->frame_parms.ofdm_symbol_size],nsymb*eNB->frame_parms.ofdm_symbol_size,1,1);
-              } else if (transmission_mode == 7) {
-                write_output("txsigF0.m","txsF0", &ru->common.txdataF_BF[5][subframe*nsymb*eNB->frame_parms.ofdm_symbol_size],nsymb*eNB->frame_parms.ofdm_symbol_size,1,1);
-                write_output("txsigF0_BF.m","txsF0_BF", &ru->common.txdataF_BF[0][0],eNB->frame_parms.ofdm_symbol_size,1,1);
-              }
+	      write_output("txsigF_BF0.m","txsF_BF0", &ru->common.txdataF_BF[0][0],nsymb*eNB->frame_parms.ofdm_symbol_size,1,1);
+	      write_output("txsig0.m","txs0", &ru->common.txdata[0][subframe* eNB->frame_parms.samples_per_tti], eNB->frame_parms.samples_per_tti,1,1);
+	      if (eNB->frame_parms.nb_antennas_tx>1) {
+		write_output("txsigF_BF1.m","txsF_BF1", &ru->common.txdataF_BF[1][0],nsymb*eNB->frame_parms.ofdm_symbol_size,1,1);
+		write_output("txsig1.m","txs1", &ru->common.txdata[1][subframe* eNB->frame_parms.samples_per_tti], eNB->frame_parms.samples_per_tti,1,1);
+	      }
             }
 	  }
+
 
 	  DL_channel(ru,UE,subframe,awgn_flag,SNR,tx_lev,hold_channel,abstx,num_rounds,trials,round,eNB2UE,s_re,s_im,r_re,r_im,csv_fd);
 

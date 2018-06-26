@@ -1182,7 +1182,7 @@ void fill_dci_and_dlsch(PHY_VARS_eNB *eNB,int frame,int subframe,eNB_rxtx_proc_t
 
     }
 
-    AssertFatal(rel8->harq_process>=8, "Format 2_2A: harq_pid=%d >= 8\n", rel8->harq_process);
+    AssertFatal(rel8->harq_process<8, "Format 2_2A: harq_pid=%d >= 8\n", rel8->harq_process);
 
 
     // Flip the TB to codeword mapping as described in 5.3.3.1.5 of 36-212 V11.3.0
@@ -1577,7 +1577,7 @@ void fill_dci_and_dlsch(PHY_VARS_eNB *eNB,int frame,int subframe,eNB_rxtx_proc_t
 
     }
 
-    AssertFatal(rel8->harq_process>=8, "ERROR: Format 2B: harq_pid=%d >= 8\n", rel8->harq_process);
+    AssertFatal(rel8->harq_process<8, "ERROR: Format 2B: harq_pid=%d >= 8\n", rel8->harq_process);
 
       /*
       If both transport blocks are enabled, the number of layers equals two; transport block 1 is mapped to codeword 0; and transport block 2 is mapped to codeword 1. Antenna ports 7 and 8 are used for spatial multiplexing.

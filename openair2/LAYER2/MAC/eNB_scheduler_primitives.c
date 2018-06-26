@@ -2279,7 +2279,7 @@ uint8_t get_tmode(module_id_t module_idP, int CC_idP, int UE_idP)
     if (physicalConfigDedicated->antennaInfo->present ==
 	PhysicalConfigDedicated__antennaInfo_PR_explicitValue) {
       return (physicalConfigDedicated->antennaInfo->
-	      choice.explicitValue.transmissionMode);
+	      choice.explicitValue.transmissionMode+1); 
     } else if (physicalConfigDedicated->antennaInfo->present ==
 	       PhysicalConfigDedicated__antennaInfo_PR_defaultValue) {
       AssertFatal(cc->p_eNB <= 2, "p_eNB is %d, should be <2\n",

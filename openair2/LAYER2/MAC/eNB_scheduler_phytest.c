@@ -81,6 +81,8 @@ schedule_ue_spec_phy_test(
   nfapi_dl_config_request_body_t *dl_req;
   nfapi_dl_config_request_pdu_t  *dl_config_pdu;
 
+  uint8_t transmission_mode, transmission_scheme, transport_blocks=1;
+
   N_RB_DL         = to_prb(cc->mib->message.dl_Bandwidth);
 
   for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
@@ -91,17 +93,47 @@ schedule_ue_spec_phy_test(
     if (mbsfn_flag[CC_id]>0)
       continue;
 
+    transmission_mode = get_tmode(module_idP, CC_id, UE_id);
+    if (transmission_mode==8) 
+      transmission_scheme =  8;    // DUAL_LAYER_TX_PORT_7_AND_8,	
+    else
+      transmission_scheme = transmission_mode-1;
+
+    /* transmission scheme:
+      0: SINGLE_ANTENNA_PORT_0,
+      1: TX_DIVERSITY,
+      2: LARGE_DELAY_CDD,
+      3: CLOSED_LOOP_SPATIAL_MULTIPLEXING,
+      4: MULTI_USER_MIMO,
+      5: CLOSED_LOOP_RANK_1_PRECODING,
+      6: SINGLE_ANTENNA_PORT_5.
+      7: SINGLE_ANTENNA_PORT_7, added in Release 9
+      8: SINGLE_ANTENNA_PORT_8, added in Release 9
+      9: DUAL_LAYER_TX_PORT_7_AND_8, added in Release 9
+      10: UP_TO_8_LAYER_TX, added in Release 10
+      11: SINGLE_ANTENNA_PORT_11, added in Release 13
+      12: SINGLE_ANTENNA_PORT_13, added in Release 13
+      13: DUAL_LAYER_TX_PORT_11_AND_13, added in Release 13
+    */
+
     nb_rb = conv_nprb(0,rb_alloc,N_RB_DL);
-    //printf("////////////////////////////////////*************************nb_rb = %d\n",nb_rb);
+
     TBS = get_TBS_DL(mcs,nb_rb);
 
-    LOG_D(PHY,"schedule_ue_spec_phy_test: subframe %d/%d: nb_rb=%d, TBS=%d, mcs=%d (rb_alloc=%x, N_RB_DL=%d)\n",frameP,subframeP,nb_rb,TBS,mcs,rb_alloc,N_RB_DL);
+    LOG_D(PHY,"schedule_ue_spec_phy_test: subframe %d/%d: nb_rb=%d, TM=%d, TBS=%d, mcs=%d (rb_alloc=%x, N_RB_DL=%d)\n",frameP,subframeP,transmission_mode,nb_rb,TBS,mcs,rb_alloc,N_RB_DL);
 
     dl_config_pdu                                                         = &dl_req->dl_config_pdu_list[dl_req->number_pdu]; 
     memset((void*)dl_config_pdu,0,sizeof(nfapi_dl_config_request_pdu_t));
     dl_config_pdu->pdu_type                                               = NFAPI_DL_CONFIG_DCI_DL_PDU_TYPE; 
     dl_config_pdu->pdu_size                                               = (uint8_t)(2+sizeof(nfapi_dl_config_dci_dl_pdu));
-    dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.dci_format                  = NFAPI_DL_DCI_FORMAT_1;
+
+    if (transmission_mode==3)
+      dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.dci_format                  = NFAPI_DL_DCI_FORMAT_2A;
+    if (transmission_mode==8) 
+      dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.dci_format                  = NFAPI_DL_DCI_FORMAT_2B;
+    else
+      dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.dci_format                  = NFAPI_DL_DCI_FORMAT_1;
+
     dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.aggregation_level           = get_aggregation(get_bw_index(module_idP,CC_id),cqi,format1);
     dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.resource_allocation_type    = 0;
     dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.virtual_resource_block_assignment_flag = 0;
@@ -116,10 +148,23 @@ schedule_ue_spec_phy_test(
     dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.new_data_indicator_1        = ndi;
     dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.mcs_1                       = mcs;
     dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.redundancy_version_1        = 0;
-    //deactivate second codeword
-    dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.mcs_2                       = 0;
-    dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.redundancy_version_2        = 1;
-    
+
+    if (transmission_mode==3 || transmission_mode==8) {
+      transport_blocks = 2;
+      dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.new_data_indicator_2        = ndi;
+      dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.mcs_2                       = mcs;
+      dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.redundancy_version_2        = 0;
+      if (transmission_mode==8)
+	dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel9.scrambling_identity = 0;
+
+    }
+    else {
+      //deactivate second codeword
+      transport_blocks = 1;
+      dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.mcs_2                       = 0;
+      dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.redundancy_version_2        = 1;
+    }
+
     if (cc[CC_id].tdd_Config != NULL) { //TDD
       dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.downlink_assignment_index = dai;
       LOG_D(MAC,"[eNB %d] Initial transmission CC_id %d : harq_pid %d, dai %d, mcs %d\n",
@@ -155,17 +200,17 @@ schedule_ue_spec_phy_test(
       fill_nfapi_dlsch_config(eNB,
 			      dl_req,
 			      TBS,
-			      eNB->pdu_index[CC_id],
+			      0,
 			      rnti,
 			      0, // type 0 allocation from 7.1.6 in 36.213
 			      0, // virtual_resource_block_assignment_flag
 			      rb_alloc, // resource_block_coding
 			      getQm(mcs),
 			      0, // redundancy version
-			      1, // transport blocks
+			      transport_blocks,
 			      0, // transport block to codeword swap flag
-			      cc[CC_id].p_eNB == 1 ? 0 : 1, // transmission_scheme
-			      1, // number of layers
+			      transmission_scheme,
+			      transport_blocks, // number of layers
 			      1, // number of subbands
 			      //			     uint8_t codebook_index,
 			      4, // UE category capacity
@@ -173,7 +218,7 @@ schedule_ue_spec_phy_test(
 			      0, // delta_power_offset for TM5
 			      0, // ngap
 			      0, // nprb
-			      cc[CC_id].p_eNB == 1 ? 1 : 2, // transmission mode
+			      transmission_mode,
 			      0, //number of PRBs treated as one subband, not used here
 			      0 // number of beamforming vectors, not used here
 			      );  
@@ -181,8 +226,16 @@ schedule_ue_spec_phy_test(
       eNB->TX_req[CC_id].sfn_sf = fill_nfapi_tx_req(&eNB->TX_req[CC_id].tx_request_body,
 						    (frameP*10)+subframeP,
 						    TBS,
-						    eNB->pdu_index[CC_id],
+						    0,
 						    eNB->UE_list.DLSCH_pdu[CC_id][0][(unsigned char)UE_id].payload[0]);
+
+      if (transmission_mode==3 || transmission_mode==8) {
+	eNB->TX_req[CC_id].sfn_sf = fill_nfapi_tx_req(&eNB->TX_req[CC_id].tx_request_body,
+						      (frameP*10)+subframeP,
+						      TBS,
+						      0,
+						      eNB->UE_list.DLSCH_pdu[CC_id][1][(unsigned char)UE_id].payload[0]);
+      }
     }
     else {
       LOG_W(MAC,"[eNB_scheduler_phytest] DCI allocation infeasible!\n");

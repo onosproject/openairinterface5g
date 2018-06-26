@@ -763,38 +763,43 @@ void schedule_response(Sched_Rsp_t *Sched_INFO)
     case NFAPI_DL_CONFIG_DLSCH_PDU_TYPE:
       {
         nfapi_dl_config_dlsch_pdu_rel8_t *dlsch_pdu_rel8 = &dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8;
-        uint16_t pdu_index = dlsch_pdu_rel8->pdu_index;
+        //uint16_t pdu_index = dlsch_pdu_rel8->pdu_index;  
+	//FK: this pdu_index indices elements of the DL_req structure, not in the TX_req that is needed here.
         uint16_t tx_pdus = TX_req->tx_request_body.number_of_pdus;
-        uint16_t invalid_pdu = pdu_index == -1;
-        uint8_t *sdu = invalid_pdu ? NULL : pdu_index >= tx_pdus ? NULL : TX_req->tx_request_body.tx_pdu_list[pdu_index].segments[0].segment_data;
 
-        LOG_D(PHY,"%s() [PDU:%d] NFAPI_DL_CONFIG_DLSCH_PDU_TYPE SFN/SF:%04d%d TX:%d/%d RX:%d/%d transport_blocks:%d pdu_index:%d sdu:%p\n", 
-            __FUNCTION__, i, 
-            NFAPI_SFNSF2SFN(DL_req->sfn_sf),NFAPI_SFNSF2SF(DL_req->sfn_sf),
-            proc->frame_tx, proc->subframe_tx, 
-            proc->frame_rx, proc->subframe_rx, 
-            dlsch_pdu_rel8->transport_blocks, pdu_index, sdu);
+	AssertFatal(dlsch_pdu_rel8->transport_blocks==TX_req->tx_request_body.number_of_pdus,
+		    "dlsch_pdu_rel8.transport_blocks!=TX_req->number_of_pdus (%d!=%d)\n",
+		    dlsch_pdu_rel8->transport_blocks,
+		    TX_req->tx_request_body.number_of_pdus);
 
-      /*
-      AssertFatal(dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.pdu_index<TX_req->tx_request_body.number_of_pdus,
-                  "dlsch_pdu_rel8.pdu_index>=TX_req->number_of_pdus (%d>%d)\n",
-                  dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.pdu_index,
-                  TX_req->tx_request_body.number_of_pdus);
-      */
-      AssertFatal((dlsch_pdu_rel8->transport_blocks<3) &&
-                  (dlsch_pdu_rel8->transport_blocks>0),
-                  "dlsch_pdu_rel8->transport_blocks = %d not in [1,2]\n",
-                  dlsch_pdu_rel8->transport_blocks);
-      if (1)//sdu != NULL)
-      {
-        handle_nfapi_dlsch_pdu(eNB,NFAPI_SFNSF2SFN(DL_req->sfn_sf),NFAPI_SFNSF2SF(DL_req->sfn_sf),proc,dl_config_pdu, dlsch_pdu_rel8->transport_blocks-1, sdu);
-      }
-      else
-      {
-        dont_send=1;
+	AssertFatal((dlsch_pdu_rel8->transport_blocks<3) &&
+		    (dlsch_pdu_rel8->transport_blocks>0),
+		    "dlsch_pdu_rel8->transport_blocks = %d not in [1,2]\n",
+		    dlsch_pdu_rel8->transport_blocks);
 
-        LOG_E(MAC,"%s() NFAPI_DL_CONFIG_DLSCH_PDU_TYPE sdu is NULL DL_CFG:SFN/SF:%d:pdu_index:%d TX_REQ:SFN/SF:%d:pdus:%d\n", __FUNCTION__, NFAPI_SFNSF2DEC(DL_req->sfn_sf), pdu_index, NFAPI_SFNSF2DEC(TX_req->sfn_sf), tx_pdus);
-      }
+	for (uint16_t pdu_index=0; pdu_index<tx_pdus; pdu_index++) {
+	  //uint16_t invalid_pdu = pdu_index == -1;
+	  //uint8_t *sdu = invalid_pdu ? NULL : pdu_index >= tx_pdus ? NULL : TX_req->tx_request_body.tx_pdu_list[pdu_index].segments[0].segment_data;
+	  uint8_t *sdu = TX_req->tx_request_body.tx_pdu_list[pdu_index].segments[0].segment_data;
+	  
+	  LOG_I(PHY,"%s() [PDU:%d] NFAPI_DL_CONFIG_DLSCH_PDU_TYPE SFN/SF:%04d%d TX:%d/%d RX:%d/%d transport_blocks:%d pdu_index:%d sdu:%p\n", 
+		__FUNCTION__, i, 
+		NFAPI_SFNSF2SFN(DL_req->sfn_sf),NFAPI_SFNSF2SF(DL_req->sfn_sf),
+		proc->frame_tx, proc->subframe_tx, 
+		proc->frame_rx, proc->subframe_rx, 
+		dlsch_pdu_rel8->transport_blocks, pdu_index, sdu);
+	  
+	  if (sdu != NULL)
+	    {
+	      handle_nfapi_dlsch_pdu(eNB,NFAPI_SFNSF2SFN(DL_req->sfn_sf),NFAPI_SFNSF2SF(DL_req->sfn_sf),proc,dl_config_pdu, pdu_index, sdu);
+	    }
+	  else
+	    {
+	      dont_send=1;
+
+	      LOG_E(MAC,"%s() NFAPI_DL_CONFIG_DLSCH_PDU_TYPE sdu is NULL DL_CFG:SFN/SF:%d:pdu_index:%d TX_REQ:SFN/SF:%d:pdus:%d\n", __FUNCTION__, NFAPI_SFNSF2DEC(DL_req->sfn_sf), pdu_index, NFAPI_SFNSF2DEC(TX_req->sfn_sf), tx_pdus);
+	    }
+	}
 
       // Send the data first so that the DL_CONFIG can just pluck it out of the buffer
       // DJP - OAI was here - moved to bottom
@@ -809,7 +814,8 @@ void schedule_response(Sched_Rsp_t *Sched_INFO)
                                            frame,
                                            subframe);
 
-                                           }        */
+      }        
+      */
       }
       break;
     case NFAPI_DL_CONFIG_PCH_PDU_TYPE:
