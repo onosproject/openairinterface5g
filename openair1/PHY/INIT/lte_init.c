@@ -1119,9 +1119,15 @@ int phy_init_lte_ue(PHY_VARS_UE *ue,
   int do_ofdm_mod = ue->do_ofdm_mod=1;
 
   if (do_ofdm_mod==0)
+  {
 	LOG_D(PHY,"Frequency domain deactivated. do_ofdm_mod flag is initialized in  %d.\n",ue->do_ofdm_mod);
+        printf("Frequency domain deactivated. do_ofdm_mod flag is initialized in  %d.\n",ue->do_ofdm_mod);
+  }
   else
+  {
   	LOG_D(PHY,"Frequency domain activated. do_ofdm_mod flag is initialized in  %d.\n ",ue->do_ofdm_mod);
+  	printf("Frequency domain activated. do_ofdm_mod flag is initialized in  %d.\n ",ue->do_ofdm_mod);
+  }
 
   // init phy_vars_ue
 

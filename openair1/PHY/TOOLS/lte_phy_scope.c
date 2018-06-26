@@ -502,9 +502,12 @@ void phy_scope_UE(FD_lte_phy_scope_ue *form,
   int num_pdcch_symbols=3;
   float *llr, *bit, *chest_f_abs, llr_pbch[1920], bit_pbch[1920], *llr_pdcch, *bit_pdcch;
   float *I, *Q;
-  float rxsig_t_dB[nb_antennas_rx][FRAME_LENGTH_COMPLEX_SAMPLES];
+  int time_freq;
+  time_freq=(phy_vars_ue->do_ofdm_mod)?FRAME_LENGTH_COMPLEX_SAMPLES_NO_PREFIX:FRAME_LENGTH_COMPLEX_SAMPLES;
+  //printf("time_freq %d",time_freq);
+  float rxsig_t_dB[nb_antennas_rx][time_freq];
   float **chest_t_abs;
-  float time[FRAME_LENGTH_COMPLEX_SAMPLES];
+  float time[time_freq];
   float freq[nsymb_ce*nb_antennas_rx*nb_antennas_tx];
   int frame = phy_vars_ue->proc.proc_rxtx[0].frame_rx;
   uint32_t total_dlsch_bitrate = phy_vars_ue->bitrate[eNB_id];
@@ -576,25 +579,26 @@ void phy_scope_UE(FD_lte_phy_scope_ue *form,
   //    pdsch_llr = (int16_t*) phy_vars_ue->lte_ue_pdsch_vars_SI[eNB_id]->llr[0]; // stream 0
   pdsch_comp = (int16_t*) phy_vars_ue->pdsch_vars[phy_vars_ue->current_thread_id[subframe]][eNB_id]->rxdataF_comp0[0];
   pdsch_mag = (int16_t*) phy_vars_ue->pdsch_vars[phy_vars_ue->current_thread_id[subframe]][eNB_id]->dl_ch_mag0[0];
-
+  //printf("FRAME_LENGTH_COMPLEX_SAMPLES is %d\n",FRAME_LENGTH_COMPLEX_SAMPLES);
   // Received signal in time domain of receive antenna 0
   if (rxsig_t != NULL) {
     if (rxsig_t[0] != NULL) {
-      for (i=0; i<FRAME_LENGTH_COMPLEX_SAMPLES; i++) {
+      for (i=0; i<time_freq; i++) {
         rxsig_t_dB[0][i] = 10*log10(1.0+(float) ((rxsig_t[0][2*i])*(rxsig_t[0][2*i])+(rxsig_t[0][2*i+1])*(rxsig_t[0][2*i+1])));
         time[i] = (float) i;
+	//printf("time is %e\n",time[i]);
       }
 
-      fl_set_xyplot_data(form->rxsig_t,time,rxsig_t_dB[0],FRAME_LENGTH_COMPLEX_SAMPLES,"","","");
+      fl_set_xyplot_data(form->rxsig_t,time,rxsig_t_dB[0],time_freq,"","","");
     }
 
     for (arx=1; arx<nb_antennas_rx; arx++) {
       if (rxsig_t[arx] != NULL) {
-        for (i=0; i<FRAME_LENGTH_COMPLEX_SAMPLES; i++) {
+        for (i=0; i<time_freq; i++) {
           rxsig_t_dB[arx][i] = 10*log10(1.0+(float) ((rxsig_t[arx][2*i])*(rxsig_t[arx][2*i])+(rxsig_t[arx][2*i+1])*(rxsig_t[arx][2*i+1])));
         }
 
-        fl_add_xyplot_overlay(form->rxsig_t,arx,time,rxsig_t_dB[arx],FRAME_LENGTH_COMPLEX_SAMPLES,rx_antenna_colors[arx]);
+        fl_add_xyplot_overlay(form->rxsig_t,arx,time,rxsig_t_dB[arx],time_freq,rx_antenna_colors[arx]);
       }
     }
   }

@@ -46,6 +46,7 @@ void multipath_channel(channel_desc_t *desc,
                        uint32_t length,
                        uint8_t keep_channel)
 {
+  //printf("multipath_channel SSE\n");
   int i,ii,j,l;
   int length1, length2, tail;
   __m128d rx_tmp128_re_f,rx_tmp128_im_f,rx_tmp128_re,rx_tmp128_im, rx_tmp128_1,rx_tmp128_2,rx_tmp128_3,rx_tmp128_4,tx128_re,tx128_im,ch128_x,ch128_y,pathloss128;
@@ -127,11 +128,11 @@ void multipath_channel(channel_desc_t *desc,
       rx_tmp128_im_f = _mm_mul_pd(rx_tmp128_im_f,pathloss128);
       _mm_storeu_pd(&rx_sig_re[ii][2*i+dd],rx_tmp128_re_f); // max index: length-dd -1 + dd = length -1
       _mm_storeu_pd(&rx_sig_im[ii][2*i+dd],rx_tmp128_im_f);
-      /*
-      if ((ii==0)&&((i%32)==0)) {
-      printf("%p %p %f,%f => %e,%e\n",rx_sig_re[ii],rx_sig_im[ii],rx_tmp.x,rx_tmp.y,rx_sig_re[ii][i-dd],rx_sig_im[ii][i-dd]);
-      }
-      */
+      
+      //if ((ii==0)&&((i%32)==0)) {
+      //printf("%p %p %f,%f => %e,%e\n",rx_sig_re[ii],rx_sig_im[ii],rx_tmp.x,rx_tmp.y,rx_sig_re[ii][i-dd],rx_sig_im[ii][i-dd]);
+      //}
+      
       //rx_sig_re[ii][i] = sqrt(.5)*(tx_sig_re[0][i] + tx_sig_re[1][i]);
       //rx_sig_im[ii][i] = sqrt(.5)*(tx_sig_im[0][i] + tx_sig_im[1][i]);
 
@@ -162,7 +163,7 @@ void multipath_channel(channel_desc_t *desc,
   } 
   count++;
   clock_t start=clock();*/
-
+  //printf("multipath_channel normal\n");
   int i,ii,j,l;
   struct complex rx_tmp,tx;
 
@@ -528,7 +529,7 @@ void multipath_channel_freq_SSE_float(channel_desc_t *desc,
   	// do nothing - keep channel
   } else {
         random_channel_freq(desc,0);
-  	freq_channel_AVX_float(desc,nb_rb,n_samples);//Find desc->chF
+  	freq_channel_SSE_float(desc,nb_rb,n_samples);//Find desc->chF
   }
 	/*for (j=0;j<(ofdm_symbol_size>>2);j++){
 		for (ii=0; ii<desc->nb_rx; ii++) {
