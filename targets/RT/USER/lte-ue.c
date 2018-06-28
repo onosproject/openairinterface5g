@@ -94,14 +94,18 @@ typedef struct band_info_s {
 
 band_info_t bands_to_scan;
 
+
+
+
+
 static const eutra_band_t eutra_bands[] = {
     { 1, 1920    * MHz, 1980    * MHz, 2110    * MHz, 2170    * MHz, FDD},
     { 2, 1850    * MHz, 1910    * MHz, 1930    * MHz, 1990    * MHz, FDD},
     { 3, 1710    * MHz, 1785    * MHz, 1805    * MHz, 1880    * MHz, FDD},
     { 4, 1710    * MHz, 1755    * MHz, 2110    * MHz, 2155    * MHz, FDD},
-//Band 28 inserted by BL
+    //Band 28 inserted by BL
     {28,  703    * MHz, 748     * MHz,  758    * MHz,  803    * MHz, FDD},
-//
+    //
     { 5,  824    * MHz,  849    * MHz,  869    * MHz,  894    * MHz, FDD},
     { 6,  830    * MHz,  840    * MHz,  875    * MHz,  885    * MHz, FDD},
     { 7, 2500    * MHz, 2570    * MHz, 2620    * MHz, 2690    * MHz, FDD},
@@ -115,6 +119,11 @@ static const eutra_band_t eutra_bands[] = {
     {17,  704    * MHz,  716    * MHz,  734    * MHz,  746    * MHz, FDD},
     {20,  832    * MHz,  862    * MHz,  791    * MHz,  821    * MHz, FDD},
     {22, 3510    * MHz, 3590    * MHz, 3410    * MHz, 3490    * MHz, FDD},
+    //Band 28 inserted by BL
+    //{28,  703    * MHz, 748     * MHz,  758    * MHz,  803    * MHz, FDD},
+    //for testing without Uplink set it to 0
+    //{28,  0    * MHz, 0     * MHz,  758    * MHz,  803    * MHz, FDD},
+    //
     {33, 1900    * MHz, 1920    * MHz, 1900    * MHz, 1920    * MHz, TDD},
     {34, 2010    * MHz, 2025    * MHz, 2010    * MHz, 2025    * MHz, TDD},
     {35, 1850    * MHz, 1910    * MHz, 1850    * MHz, 1910    * MHz, TDD},
@@ -266,6 +275,9 @@ static void *UE_thread_synch(void *arg)
   static int UE_thread_synch_retval;
   int i, hw_slot_offset;
   PHY_VARS_UE *UE = (PHY_VARS_UE*) arg;
+  //IRTBL_start setting fembms hard coded to 2
+  UE->SF_count = 0; //counting subframes because we need the 40 ms frame-structure.
+  //IRTBL_end
   int current_band = 0;
   int current_offset = 0;
   sync_mode_t sync_mode = pbch;
@@ -291,6 +303,16 @@ static void *UE_thread_synch(void *arg)
   found = 0;
 
 
+
+
+//(IRTBL_start) just debugging tests
+        printf("\x1B[32m");
+        printf("[IRTBL] lte-ue.c\n");
+        printf("UE->UE_scan: %d\n", UE->UE_scan);
+        printf("Bei scan = 0 wird gescannt\n");
+        printf("\x1B[0m");
+        //system("sudo killall lte-uesoftmodem-nos1");
+//(IRTBL_end) just debugging tests
   if (UE->UE_scan == 0) {
     do  {
       current_band = eutra_bands[ind].band;
@@ -407,6 +429,10 @@ static void *UE_thread_synch(void *arg)
                        downlink_frequency[0][0]+freq_offset,
                        downlink_frequency[0][0]+uplink_frequency_offset[0][0]+freq_offset,
                        UE->UE_scan_carrier );
+		       printf("\x1B[32m");
+		       printf("[IRTBL] UE_scan_carrier\n");
+		       printf("\x1B[0m");
+
 
 
                     // rerun with new cell parameters and frequency-offset
@@ -495,9 +521,19 @@ static void *UE_thread_synch(void *arg)
                 }
             } else {
                 // initial sync failed
+                printf("\x1B[32m");
+                printf("[IRTBL] initial sync failed \n");
+		printf("[IRTBL] freq_offset = %i\n",freq_offset);
+   	        printf("\x1B[0m");
+
                 // calculate new offset and try again
                 if (UE->UE_scan_carrier == 1) {
-                    if (freq_offset >= 0)
+                  
+  printf("\x1B[32m");
+    printf("[IRTBL] UE_scan_carrier = 1\n");
+printf("\x1B[0m");
+
+		    if (freq_offset >= 0)
                         freq_offset += 100;
                     freq_offset *= -1;
 
@@ -773,13 +809,17 @@ void *UE_thread(void *arg) {
 	//printf("\n\n\n\n[IRTBL] rxp size = %d\n",sizeof(rxp[i]));
         //printf("\x1B[0m");
 
-                if (UE->mode != loop_through_memory)
+                if (UE->mode != loop_through_memory){
+				printf("\x1B[32m");
+                                printf("Writing Samples to Buffer - Wakeup Sync\n");
+                                printf("\x1B[0m");
+
                     AssertFatal( UE->frame_parms.samples_per_tti*10 ==
                                  UE->rfdevice.trx_read_func(&UE->rfdevice,
                                                             &timestamp,
                                                             rxp,
                                                             UE->frame_parms.samples_per_tti*10,
-                                                            UE->frame_parms.nb_antennas_rx), "");
+                                                            UE->frame_parms.nb_antennas_rx), "");}
 		AssertFatal ( 0== pthread_mutex_lock(&UE->proc.mutex_synch), "");
                 instance_cnt_synch = ++UE->proc.instance_cnt_synch;
                 if (instance_cnt_synch == 0) {
@@ -802,13 +842,27 @@ void *UE_thread(void *arg) {
                 if (UE->mode != loop_through_memory) {
                     for (int i=0; i<UE->frame_parms.nb_antennas_rx; i++)
                         rxp[i] = (void*)&dummy_rx[i][0];
-                    for (int sf=0; sf<10; sf++)
+                    for (int sf=0; sf<40; sf++){
+				printf("\x1B[32m");
+				//printf("Size of RXP: %d\n",sizeof(rxp));
+				//printf("Value of samples_per_tti (which is samples per subframe!): %d\n",UE->frame_parms.samples_per_tti);
+				//printf("Number of RX Antennas: %d\n",UE->frame_parms.nb_antennas_rx);
+				printf("Writing Samples to Buffer\n");
+				printf("\x1B[0m");
+				//IRTBL
+	                        //UE->SF_count++; //increase SF counter every time, but reset it if it has reached 40  (40 ms frame). counting from 0 to 39.
+				//if (UE->SF_count == 40){UE->SF_count = 0;} //reset
+			        //printf("\x1B[32m");
+			        //printf("[IRTBL] FeMBMS Subframe Count: %i\n",UE->SF_count);
+			        //printf("\x1B[0m");
+				//
                         //	    printf("Reading dummy sf %d\n",sf);
                           UE->rfdevice.trx_read_func(&UE->rfdevice,
                                               &timestamp,
-                                              rxp,
-                                              UE->frame_parms.samples_per_tti,
-                                              UE->frame_parms.nb_antennas_rx);
+                                              rxp,//buffer
+                                              UE->frame_parms.samples_per_tti,//sambples
+                                              UE->frame_parms.nb_antennas_rx);//antenna
+			}
                 }
 #endif
             }
@@ -1048,6 +1102,14 @@ void fill_ue_band_info(void) {
     for (i=0; i<bands_to_scan.nbands; i++) {
 
         for (j=0; j<sizeof (eutra_bands) / sizeof (eutra_bands[0]); j++)
+
+ //(IRTBL_start) just debugging tests
+ printf("\x1B[32m");
+ printf("[IRTBL] i: %d\n",i);
+ printf("[IRTBL] j: %d\n",j);
+ printf("\x1B[0m");
+ //(IRTBL_stop) debugging tests
+
             if (eutra_bands[j].band == UE_EUTRA_Capability->rf_Parameters.supportedBandListEUTRA.list.array[i]->bandEUTRA) {
                 memcpy(&bands_to_scan.band_info[i],
                        &eutra_bands[j],
@@ -1061,6 +1123,14 @@ void fill_ue_band_info(void) {
                        bands_to_scan.band_info[i].ul_min,
                        bands_to_scan.band_info[i].ul_max,
                        (bands_to_scan.band_info[i].frame_type==FDD) ? "FDD" : "TDD");
+        //(IRTBL_start) just debugging tests
+        printf("\x1B[32m");
+        printf("[IRTBL] lte-ue.c\n");
+        printf("[IRTBL] this funcion was added by BL\n");
+        printf("[IRTBL] frame_type seems to be TDD? Remember: in slot_fep_mbsfn its said that 0 = FDD and 1 = TDD\n");
+        printf("[IRTBL] frame_type is: %d\n",bands_to_scan.band_info[i].frame_type);
+        printf("\x1B[0m");
+        //(IRTBL_stop) debugging tests
                 break;
             }
     }

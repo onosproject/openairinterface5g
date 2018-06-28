@@ -1028,6 +1028,11 @@ int main( int argc, char **argv )
 
   // start the main threads
     int eMBMS_active = 0;
+    
+    //IRTBL_start hard coded fembms active for testing
+    //int FeMBMS_active = 2; 
+    //IRTBL_end
+    
     init_UE(1,eMBMS_active,uecap_xer_in,0);
 
     if (phy_test==0) {

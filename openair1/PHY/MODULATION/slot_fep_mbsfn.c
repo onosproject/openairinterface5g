@@ -91,6 +91,7 @@ int slot_fep_mbsfn(PHY_VARS_UE *ue,
     return(-1);
   }
 
+
   if (((subframe == 0) || (subframe == 5) ||    // SFn 0,4,5,9;
        (subframe == 4) || (subframe == 9))
       && (frame_type==FDD) )    {   //check for valid MBSFN subframe
@@ -204,11 +205,19 @@ int slot_fep_mbsfn(PHY_VARS_UE *ue,
 }
 
 
+
+
 int slot_fep_mbsfn125(PHY_VARS_UE *ue,
 		      int subframe,
 		      int sample_offset)
 {
  
+	printf("\x1B[32m");
+        printf("[IRTBL] Entering slot_fep_mbsfn125\n");
+        printf("\x1B[0m");
+
+
+
   LTE_DL_FRAME_PARMS *frame_parms = &ue->frame_parms;
   LTE_UE_COMMON *common_vars   = &ue->common_vars;
   uint8_t eNB_id = 0;//ue_common_vars->eNb_id;
@@ -221,9 +230,15 @@ int slot_fep_mbsfn125(PHY_VARS_UE *ue,
 
   //   int i;
   unsigned int frame_length_samples = frame_parms->samples_per_tti * 10;
-  void (*dft)(int16_t *,int16_t *, int);
+//unsigned int frame_length_samples = frame_parms->samples_per_tti * 10 * 4; //40 ms frame? IRTBL
+  
+void (*dft)(int16_t *,int16_t *, int);
 
-  AssertFatal(ue->FeMBMS_active ==1, "This is not an FeMBMS UE!\n");
+//IRTBL
+//ue->FeMBMS_active = 1;
+//frame_parms->frame_type = FDD;
+//END
+  AssertFatal(ue->FeMBMS_active ==2, "This is not an FeMBMS UE!\n"); //changed from 1 to 2 IRTBL
   AssertFatal(frame_parms->frame_type == FDD, "Frame is TDD!\n");
   
   switch (frame_parms->ofdm_symbol_size) {
@@ -269,9 +284,26 @@ int slot_fep_mbsfn125(PHY_VARS_UE *ue,
     break;
   }
   
+
+        printf("\x1B[32m");
+        //printf("[IRTBL] selected LTE OFDM Symbol Size: %i\n",frame_parms->ofdm_symbol_size); 
+	//printf("[IRTBL] selected FeMBMS DFT Size: %i\n",dft6144); //more complex, not only a single value
+	//printf("[IRTBL] selected NB Prefix Samples: %i\n",nb_prefix_samples);
+	//printf("[IRTBL] selected FeMBMS OFDM Symbol Size: %i\n",ofdm_symbol_size);
+        printf("\x1B[0m");
+
+
   subframe_offset = frame_parms->samples_per_tti * subframe;
   
-  //  AssertFatal(subframe > 0 || (frame&3) > 0, "This is a regular LTE subframe in FeMBMS\n");
+        printf("\x1B[32m");
+        printf("[IRTBL] Subframe: %i\n",subframe);
+        //printf("[IRTBL] Subframe * 10: %i\n",subframe*10);
+	//printf("[IRTBL] Subframe * 10 bit-und 3: %i\n",(subframe*10)&3);
+	//printf("[IRTBL] Subframe * 10 modulo 4: %i\n",(subframe*10)%4);
+	printf("\x1B[0m");
+
+   //AssertFatal((subframe > 0) || ((frame&3) > 0), "This is a regular LTE subframe in FeMBMS\n");
+   //AssertFatal((subframe > 0) || (((subframe*10)&3) > 0), "This is a regular LTE subframe in FeMBMS\n");
   
   
 #ifdef DEBUG_FEP
@@ -326,5 +358,11 @@ int slot_fep_mbsfn125(PHY_VARS_UE *ue,
 #ifdef DEBUG_FEP
   LOG_D(PHY,"slot_fep_mbsfn: done\n");
 #endif
+
+        printf("\x1B[32m");
+        printf("[IRTBL] Leaving slot_fep_mbsfn125\n");
+        printf("\x1B[0m");
+
+
   return(0);
     }

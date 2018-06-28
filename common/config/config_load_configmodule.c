@@ -173,8 +173,11 @@ int i;
 
    
    printf("[CONFIG] get parameters from %s ",cfgmode);
+
+
+		
    for (i=0;i<cfgptr->num_cfgP; i++) {
-        printf("%s ",cfgptr->cfgP[i]); 
+   printf("%s ",cfgptr->cfgP[i]); 
    }
    printf("\n");
 
@@ -189,8 +192,18 @@ int i;
       config_get(Config_Params,CONFIG_PARAMLENGTH(Config_Params), CONFIG_SECTIONNAME ); 
    }
 
-  
-
+	/*
+	//(IRTBL_start) just debugging tests
+	printf("\x1B[32m");
+	printf("\n\n\n[IRTBL] Function called *load_configmodule in config_load_configmodule.c\n\n\n");
+	printf("\x1B[0m");
+	//getchar();
+	printf("[IRTBL] Trying to terminate oaisim\n");
+	system("sudo killall oaisim_nos1");
+	//(IRTBL_end) just debugging tests
+        */
+   
+   
    if (modeparams != NULL) free(modeparams);
    if (cfgmode != NULL) free(cfgmode);
    if (CONFIG_ISFLAGSET(CONFIG_ABORT)) config_printhelp(Config_Params,CONFIG_PARAMLENGTH(Config_Params));
@@ -235,6 +248,9 @@ void free_configmodule(void)
   free(cfgptr);
   cfgptr=NULL;
   }
+   
+
+   
 }
 
 
