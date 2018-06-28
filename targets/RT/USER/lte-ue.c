@@ -99,6 +99,9 @@ static const eutra_band_t eutra_bands[] = {
     { 2, 1850    * MHz, 1910    * MHz, 1930    * MHz, 1990    * MHz, FDD},
     { 3, 1710    * MHz, 1785    * MHz, 1805    * MHz, 1880    * MHz, FDD},
     { 4, 1710    * MHz, 1755    * MHz, 2110    * MHz, 2155    * MHz, FDD},
+//Band 28 inserted by BL
+    {28,  703    * MHz, 748     * MHz,  758    * MHz,  803    * MHz, FDD},
+//
     { 5,  824    * MHz,  849    * MHz,  869    * MHz,  894    * MHz, FDD},
     { 6,  830    * MHz,  840    * MHz,  875    * MHz,  885    * MHz, FDD},
     { 7, 2500    * MHz, 2570    * MHz, 2620    * MHz, 2690    * MHz, FDD},
@@ -750,11 +753,25 @@ void *UE_thread(void *arg) {
         int is_synchronized    = UE->is_synchronized;
         AssertFatal ( 0== pthread_mutex_unlock(&UE->proc.mutex_synch), "");
 
+
+	//printf("\x1B[32m");
+        //printf("\n\n\n\n[IRTBL] is_synchronized = %d\n",is_synchronized);
+        //printf("\x1B[0m");
+
         if (is_synchronized == 0) {
             if (instance_cnt_synch < 0) {  // we can invoke the synch
+//	 printf("\x1B[32m");
+//       printf("\n\n\n\n[IRTBL] instance_cnt_synch = %d\n",instance_cnt_synch);
+//       printf("\x1B[0m");
+
                 // grab 10 ms of signal and wakeup synch thread
                 for (int i=0; i<UE->frame_parms.nb_antennas_rx; i++)
                     rxp[i] = (void*)&UE->common_vars.rxdata[i][0];
+	
+	//printf("\x1B[32m");
+        //printf("\n\n\n\n[IRTBL] UE->common_vars.rxdata = %d\n",sizeof(&UE->common_vars.rxdata[i][0]));
+	//printf("\n\n\n\n[IRTBL] rxp size = %d\n",sizeof(rxp[i]));
+        //printf("\x1B[0m");
 
                 if (UE->mode != loop_through_memory)
                     AssertFatal( UE->frame_parms.samples_per_tti*10 ==
@@ -777,6 +794,10 @@ void *UE_thread(void *arg) {
               (void)dummy_rx; /* avoid gcc warnings */
               usleep(500);
 #else
+//	printf("\x1B[32m");
+//      printf("\n\n\n\n[IRTBL] instance_cnt_synch = %d\n",instance_cnt_synch);
+//      printf("\x1B[0m");
+
                 // grab 10 ms of signal into dummy buffer
                 if (UE->mode != loop_through_memory) {
                     for (int i=0; i<UE->frame_parms.nb_antennas_rx; i++)

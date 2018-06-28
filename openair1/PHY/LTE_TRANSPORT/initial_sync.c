@@ -41,7 +41,7 @@
 #include "common_lib.h"
 extern openair0_config_t openair0_cfg[];
 
-#define DEBUG_INITIAL_SYNCH
+#define DEBUG_INITIAL_SYNCH 
 
 int pbch_detection(PHY_VARS_UE *ue, runmode_t mode)
 {
@@ -49,6 +49,7 @@ int pbch_detection(PHY_VARS_UE *ue, runmode_t mode)
   uint8_t l,pbch_decoded,frame_mod4,pbch_tx_ant,dummy;
   LTE_DL_FRAME_PARMS *frame_parms=&ue->frame_parms;
   char phich_resource[6];
+
 
 #ifdef DEBUG_INITIAL_SYNCH
   LOG_I(PHY,"[UE%d] Initial sync: starting PBCH detection (rx_offset %d)\n",ue->Mod_id,
@@ -123,33 +124,56 @@ int pbch_detection(PHY_VARS_UE *ue, runmode_t mode)
 
   pbch_decoded = 0;
 
+// [IRTGS 20180613] branch included for non-FeMBMS / dedicated FeMBMS mode
   for (frame_mod4=0; frame_mod4<4; frame_mod4++) {
-    pbch_tx_ant = rx_pbch(&ue->common_vars,
-                          ue->pbch_vars[0],
-                          frame_parms,
-                          0,
-                          SISO,
-                          ue->high_speed_flag,
-                          frame_mod4);
+    if (ue->FeMBMS_active == 0) //non - dedicated FeMBMS mode
+    {  pbch_tx_ant = rx_pbch(&ue->common_vars,
+                            ue->pbch_vars[0],
+                            frame_parms,
+                            0,
+                            SISO,
+                            ue->high_speed_flag,
+                            frame_mod4);
+    } else // FeMBMS
+    {  pbch_tx_ant = rx_pbch_125(&ue->common_vars,
+                                 ue->pbch_vars[0],
+                                 frame_parms,
+                                 0,
+                                 SISO,
+                                 ue->high_speed_flag,
+                                 frame_mod4);
+       printf("\x1B[1;34m[IRTGS]: \x1B[0m"); // blue
+       printf("\x1B[32m%s%d%s%d\x1B[0m\n","[pbch_detection] frame_mod4 = ",frame_mod4,"  pbch_tx_ant = ",pbch_tx_ant);
+    }
 
     if ((pbch_tx_ant>0) && (pbch_tx_ant<=2)) {
       pbch_decoded = 1;
       break;
     }
 
-    pbch_tx_ant = rx_pbch(&ue->common_vars,
-                          ue->pbch_vars[0],
-                          frame_parms,
-                          0,
-                          ALAMOUTI,
-                          ue->high_speed_flag,
-                          frame_mod4);
+    if (ue->FeMBMS_active == 0) //non - dedicated FeMBMS mode
+    { pbch_tx_ant = rx_pbch(&ue->common_vars,
+                            ue->pbch_vars[0],
+                            frame_parms,
+                            0,
+                            ALAMOUTI,
+                            ue->high_speed_flag,
+                            frame_mod4);
+    } else // FeMBMS
+    { pbch_tx_ant = rx_pbch_125(&ue->common_vars,
+                                ue->pbch_vars[0],
+                                frame_parms,
+                                0,
+                                ALAMOUTI,
+                                ue->high_speed_flag,
+                                frame_mod4);
+    }
 
     if ((pbch_tx_ant>0) && (pbch_tx_ant<=2)) {
       pbch_decoded = 1;
       break;
     }
-  }
+}
 
 
   if (pbch_decoded) {
@@ -262,7 +286,6 @@ char prefix_string[2][9] = {"NORMAL","EXTENDED"};
 
 int initial_sync(PHY_VARS_UE *ue, runmode_t mode)
 {
-
   int32_t sync_pos,sync_pos2,sync_pos_slot;
   int32_t metric_fdd_ncp=0,metric_fdd_ecp=0,metric_tdd_ncp=0,metric_tdd_ecp=0;
   uint8_t phase_fdd_ncp,phase_fdd_ecp,phase_tdd_ncp,phase_tdd_ecp;
@@ -280,6 +303,9 @@ int initial_sync(PHY_VARS_UE *ue, runmode_t mode)
   frame_parms->frame_type=FDD;
   frame_parms->nb_antenna_ports_eNB = 2;
 
+  // [IRTGS 20180612]: assume, that system is not in FeMBMS mode (used in pbch_detection)
+  ue->FeMBMS_active = 0;
+
   init_frame_parms(frame_parms,1);
   /*
   write_output("rxdata0.m","rxd0",ue->common_vars.rxdata[0],10*frame_parms->samples_per_tti,1,1);
@@ -288,6 +314,16 @@ int initial_sync(PHY_VARS_UE *ue, runmode_t mode)
   sync_pos = lte_sync_time(ue->common_vars.rxdata,
                            frame_parms,
                            (int *)&ue->common_vars.eNb_id);
+
+// [IRTGS 20180619]
+// sync_pos == -1 means either memory alloc was not possible or sync_pulse is not high enough...
+  printf("\x1B[1;34m[IRTGS]: \x1B[0m"); // blue
+  if (sync_pos == -1)
+  { printf("\x1B[1;31m%s\x1B[0m\n","[initial_sync]: Sync peak not high enough...");
+    return(-1);
+  } else
+  {  printf("\x1B[32m%s\x1B[0m\n","[initial_sync]: Sync peak ok...");
+  }  
 
   //  write_output("rxdata1.m","rxd1",ue->common_vars.rxdata[0],10*frame_parms->samples_per_tti,1,1);
   if (sync_pos >= frame_parms->nb_prefix_samples)
@@ -335,6 +371,11 @@ int initial_sync(PHY_VARS_UE *ue, runmode_t mode)
 #endif
   }
 
+  // [IRTGS 20180612]:
+  //if (ret)
+  { printf("\x1B[1;34m[IRTGS]: \x1B[0m"); // blue
+    printf("\x1B[32m%s%d\x1B[0m\n","[initial_sync] FDD normal: ret = ",ret);
+  } 
 
   if (ret==-1) {
 
@@ -375,11 +416,47 @@ int initial_sync(PHY_VARS_UE *ue, runmode_t mode)
       LOG_I(PHY,"FDD Extended prefix: CellId %d metric %d, phase %d, flip %d, pbch %d\n",
             frame_parms->Nid_cell,metric_fdd_ecp,phase_fdd_ecp,flip_fdd_ecp,ret);
 #endif
+
+//      if (ret)
+      { printf("\x1B[1;34m[IRTGS]: \x1B[0m"); // blue
+        printf("\x1B[32m%s%d\x1B[0m\n","[initial_sync] FDD extended: ret = ", ret);
+      }
+
+      // [IRTGS 20180612]
+      // note: FeMBMS is also possible with normal CP, but it is more reasonable to use extended CP.
+      // so, for the moment we only consider FDD extended for FeMBMS dedicated
+      if (ret==-1)
+      { // use FeMBMS_active to branch in pbch_detection between rx_pbch() and rx_pbch_125() 
+        ue->FeMBMS_active = 1; //  try if signal is FeMBMS dedicated
+        ret = pbch_detection(ue,mode);
+      //     write_output("rxdata3.m","rxd3",ue->common_vars.rxdata[0],10*frame_parms->samples_per_tti,1,1);
+ 
+      if (ret==-1) // FeMBMS not successfull
+      { ue->FeMBMS_active = 0; // reset to non FeMBMS mode...
+      }
+
+//      if (ret)
+      { printf("\x1B[1;34m[IRTGS]: \x1B[0m"); // blue
+        printf("\x1B[32m%s%d\x1B[0m\n","[initial_sync] FeMBMS FDD extended: ret = ", ret);
+      } 
+
+      // [IRTGS 20180612]:
+      if (ret>=0)
+      { printf("\x1B[1;34m[IRTGS]: \x1B[0m"); // blue
+        printf("\x1B[32m%s\x1B[0m\n","[initial_sync] FDD extended successfull");
+      } 
+
+#ifdef DEBUG_INITIAL_SYNCH
+      LOG_I(PHY,"FeMBMS dedicated: FDD Extended prefix: CellId %d metric %d, phase %d, flip %d, pbch %d\n",
+            frame_parms->Nid_cell,metric_fdd_ecp,phase_fdd_ecp,flip_fdd_ecp,ret);
+#endif
+      }
     } else {
 #ifdef DEBUG_INITIAL_SYNCH
       LOG_I(PHY,"FDD Extended prefix: SSS error condition: sync_pos %d, sync_pos_slot %d\n", sync_pos, sync_pos_slot);
 #endif
     }
+
 
     if (ret==-1) {
       // Now TDD normal prefix
@@ -420,6 +497,12 @@ int initial_sync(PHY_VARS_UE *ue, runmode_t mode)
             frame_parms->Nid_cell,metric_tdd_ncp,phase_tdd_ncp,flip_tdd_ncp,ret);
 #endif
 
+  // [IRTGS 20180612]:
+//  if (ret)
+  { printf("\x1B[1;34m[IRTGS]: \x1B[0m"); // blue
+    printf("\x1B[32m%s%d\x1B[0m\n","[initial_sync] TDD normal: ret = ", ret);
+  } 
+
       if (ret==-1) {
         // Now TDD extended prefix
         frame_parms->Ncp=EXTENDED;
@@ -455,6 +538,12 @@ int initial_sync(PHY_VARS_UE *ue, runmode_t mode)
         LOG_I(PHY,"TDD Extended prefix: CellId %d metric %d, phase %d, flip %d, pbch %d\n",
               frame_parms->Nid_cell,metric_tdd_ecp,phase_tdd_ecp,flip_tdd_ecp,ret);
 #endif
+        
+        // [IRTGS 20180612]:
+//        if (ret)
+        { printf("\x1B[1;34m[IRTGS]: \x1B[0m"); // blue
+          printf("\x1B[32m%s%d\x1B[0m\n","[initial_sync] TDD extended: ret = ", ret);
+        } 
       }
     }
   }
@@ -462,13 +551,22 @@ int initial_sync(PHY_VARS_UE *ue, runmode_t mode)
   /* Consider this is a false detection if the offset is > 1000 Hz */
   if( (abs(ue->common_vars.freq_offset) > 150) && (ret == 0) )
   {
-	  ret=-1;
+	//[IRTBL] hard coded deactivated, because leads to sync problems  
+	//ret=-1;
 #if DISABLE_LOG_X
 	  printf("Ignore MIB with high freq offset [%d Hz] estimation \n",ue->common_vars.freq_offset);
 #else
 	  LOG_E(HW, "Ignore MIB with high freq offset [%d Hz] estimation \n",ue->common_vars.freq_offset);
 #endif
   }
+
+
+    // [IRTGS 20180611] ************************************************
+    if (ret ==-1)
+    { printf("\x1B[1;34m[IRTGS]: \x1B[0m"); // blue
+      printf("\x1B[1;31m%s\x1B[0m\n","[initial_sync] FDD/TDD normal/extended: none of them fits!");
+    }
+
 
   if (ret==0) {  // PBCH found so indicate sync to higher layers and configure frame parameters
 

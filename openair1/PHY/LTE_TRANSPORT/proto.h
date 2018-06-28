@@ -1423,7 +1423,14 @@ uint16_t rx_pbch(LTE_UE_COMMON *lte_ue_common_vars,
                  MIMO_mode_t mimo_mode,
                  uint32_t high_speed_flag,
                  uint8_t frame_mod4);
-
+// [IRTGS 20180613] same for FeMBMS
+uint16_t rx_pbch_125(LTE_UE_COMMON *lte_ue_common_vars,
+                 LTE_UE_PBCH *lte_ue_pbch_vars,
+                 LTE_DL_FRAME_PARMS *frame_parms,
+                 uint8_t eNB_id,
+                 MIMO_mode_t mimo_mode,
+                 uint32_t high_speed_flag,
+                 uint8_t frame_mod4);
 uint16_t rx_pbch_emul(PHY_VARS_UE *phy_vars_ue,
                       uint8_t eNB_id,
                       uint8_t pbch_phase);
@@ -1443,6 +1450,11 @@ void pbch_scrambling(LTE_DL_FRAME_PARMS *frame_parms,
   \param length Length of the sequence
   \param frame_mod4 Frame number modulo 4*/
 void pbch_unscrambling(LTE_DL_FRAME_PARMS *frame_parms,
+                       int8_t* llr,
+                       uint32_t length,
+                       uint8_t frame_mod4);
+// [IRTGS 20180613] same for FeMBMS (uses different cinit)
+void pbch_unscrambling_125(LTE_DL_FRAME_PARMS *frame_parms,
                        int8_t* llr,
                        uint32_t length,
                        uint8_t frame_mod4);

@@ -355,6 +355,11 @@ int lte_sync_time(int **rxdata, ///rx data in time domain
   int tmp[3] = {0,0,0};
   int length =   LTE_NUMBER_OF_SUBFRAMES_PER_FRAME*frame_parms->samples_per_tti>>1;
 
+// [IRTGS 20180615] variables for determining a qualtiy indicator
+  unsigned int QI;
+  unsigned long cnt=0, cum_sum[3];
+  for (int ii=0;ii<=2;cum_sum[ii++] = 0);
+
   //LOG_D(PHY,"[SYNC TIME] Calling sync_time.\n");
   if (sync_corr_ue0 == NULL) {
     LOG_E(PHY,"[SYNC TIME] sync_corr_ue0 not yet allocated! Exiting.\n");
@@ -374,6 +379,12 @@ int lte_sync_time(int **rxdata, ///rx data in time domain
   peak_val = 0;
   peak_pos = 0;
   sync_source = 0;
+
+        //printf("\x1B[32m");
+        //printf("\n\n\n\n[IRTBL] \n\n\n");
+        //printf("peak_pos = %d\n sync_source = %d\n should be a value\n",peak_pos,sync_source);
+        //printf("\x1B[0m");
+
 
 
   for (n=0; n<length; n+=4) {
@@ -448,8 +459,14 @@ int lte_sync_time(int **rxdata, ///rx data in time domain
     sync_corr_ue2[n] = abs32(sync_corr_ue2[n]);
     sync_corr_ue2[n+length] = abs32(sync_corr_ue2[n+length]);
 
+// [IRTGS 20180615] quality indicator
+    cnt++;
+
     for (s=0; s<3; s++) {
       tmp[s] = (abs32(sync_out[s])>>1) + (abs32(sync_out2[s])>>1);
+
+// [IRTGS 20180615] quality indicator
+      cum_sum[s] += tmp[s];
 
       if (tmp[s]>peak_val) {
         peak_val = tmp[s];
@@ -463,6 +480,18 @@ int lte_sync_time(int **rxdata, ///rx data in time domain
     }
   }
 
+// [IRTGS 20180618] quality indicator
+  printf("\x1B[1;34m[IRTGS]: \x1B[0m"); // blue
+  // let's assume that the peak_value should be at least 5 times the average value...
+  QI = (5*cum_sum[sync_source]<cnt*peak_val) ? 1:0; 
+  if (QI == 1)
+    printf("\x1B[32m%s \x1B[0m","lte_sync_time(): QI: ok  ");
+  else
+    printf("\x1B[1;31m%s \x1B[0m","lte_sync_time(): QI: not ok  ");
+
+  printf("\x1B[32m%s%ld %s%ld\x1B[0m\n","cnt*peak_val = ",cnt*peak_val,"  cum_sum = ",cum_sum[sync_source]);
+  if (QI==0) return -1; // indicates here, that sync peak is not high enough...
+  
   *eNB_id = sync_source;
 
   LOG_I(PHY,"[UE] lte_sync_time: Sync source = %d, Peak found at pos %d, val = %d (%d dB)\n",sync_source,peak_pos,peak_val,dB_fixed(peak_val)/2);
@@ -482,7 +511,14 @@ int lte_sync_time(int **rxdata, ///rx data in time domain
 
 #endif
 
-
+	//printf("\x1B[32m");
+	//printf("\n\n\n\n[IRTBL] \n\n\n");
+	//printf("sync_source = %d    peak_pos = %d\n",sync_source, peak_pos);        
+	//printf("peak_pos  = %d\n",peak_pos);
+        //printf("eNB_id = %d\n",*eNB_id);
+        //printf("\x1B[0m");
+//printf("[IRTBL] Trying to terminate oai\n");
+//system("sudo killall lte-uesoftmodem-nos1");
   return(peak_pos);
 
 }

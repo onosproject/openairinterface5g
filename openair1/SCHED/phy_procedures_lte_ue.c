@@ -2587,6 +2587,9 @@ void ue_pbch_procedures(uint8_t eNB_id,PHY_VARS_UE *ue,UE_rxtx_proc_t *proc, uin
   //  AssertFatal(frame_rx&3 == 0, "ue_pbch_procedures called in frame that is not a multiple of 4\n");
   //  pbch_phase_FeMBMS = (frame_rx/4)&3;
  
+  // [IRTGS 20180622] *********************************************************************
+  // pbch_phase=((frame_rx<<2)%4);
+
   pbch_phase=(frame_rx%4);
 
   if (pbch_phase>=4)
@@ -2596,14 +2599,33 @@ void ue_pbch_procedures(uint8_t eNB_id,PHY_VARS_UE *ue,UE_rxtx_proc_t *proc, uin
     //for (pbch_phase=0;pbch_phase<4;pbch_phase++) {
     //LOG_I(PHY,"[UE  %d] Frame %d, Trying PBCH %d (NidCell %d, eNB_id %d)\n",ue->Mod_id,frame_rx,pbch_phase,ue->frame_parms.Nid_cell,eNB_id);
 
-    pbch_tx_ant = rx_pbch(&ue->common_vars,
+// [IRTGS 20180622] Testweise rx_pbch_125 genommen...**************************************
+//printf("\x1B[1;34m[IRTGS]: \x1B[0m"); // blue
+//printf("\x1B[32m%s\x1B[0m\n","[ue_pbch_procedures]: calling rx_pbch_125");
+
+    if (ue->FeMBMS_active == 1)
+    { pbch_tx_ant = rx_pbch_125(&ue->common_vars,
 			  ue->pbch_vars[eNB_id],
 			  &ue->frame_parms,
 			  eNB_id,
 			  ue->frame_parms.nb_antenna_ports_eNB==1?SISO:ALAMOUTI,
 			  ue->high_speed_flag,
 			  pbch_phase);
+    } else
+    { pbch_tx_ant = rx_pbch(&ue->common_vars,
+			  ue->pbch_vars[eNB_id],
+			  &ue->frame_parms,
+			  eNB_id,
+			  ue->frame_parms.nb_antenna_ports_eNB==1?SISO:ALAMOUTI,
+			  ue->high_speed_flag,
+			  pbch_phase);
+    }    
+
     
+printf("\x1B[1;34m[IRTGS]: \x1B[0m"); // blue
+printf("\x1B[32m%s%d%s%d\x1B[0m","[ue_pbch_procedures]: frame_rx = ",frame_rx,"  pbch_phase = ", pbch_phase);
+printf("\x1B[32m%s%X\x1B[0m\n","  pbch_tx_ant = 0x",pbch_tx_ant);
+
     if ((pbch_tx_ant>0) && (pbch_tx_ant<=4)) {
       break;
     }
@@ -2715,8 +2737,7 @@ void ue_pbch_procedures(uint8_t eNB_id,PHY_VARS_UE *ue,UE_rxtx_proc_t *proc, uin
     /*
     LOG_E(PHY,"[UE %d] frame %d, subframe %d, Error decoding PBCH!\n",
     ue->Mod_id,frame_rx, subframe_rx);
-
-    LOG_I(PHY,"[UE %d] rx_offset %d\n",ue->Mod_id,ue->rx_offset);
+    OG_I(PHY,"[UE %d] rx_offset %d\n",ue->Mod_id,ue->rx_offset);
 
 
     write_output("rxsig0.m","rxs0", ue->common_vars.rxdata[0],ue->frame_parms.samples_per_tti,1,1);

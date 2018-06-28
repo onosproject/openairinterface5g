@@ -115,6 +115,10 @@ void lte_adjust_synch(LTE_DL_FRAME_PARMS *frame_parms,
       if ( ue->rx_offset >= FRAME_LENGTH_COMPLEX_SAMPLES )
           ue->rx_offset -= FRAME_LENGTH_COMPLEX_SAMPLES;
 
+// [IRTGS 20180614] just for testing...
+// printf("\x1B[1;34m[IRTGS]: \x1B[0m"); // blue
+// printf("\x1B[32m%s %d\x1B[0m\n","lte_adjust_sync(): ue->rx_offset = ",ue->rx_offset);
+
 
 
       #ifdef DEBUG_PHY
