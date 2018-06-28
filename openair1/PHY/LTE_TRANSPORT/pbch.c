@@ -765,7 +765,9 @@ void pbch_unscrambling(LTE_DL_FRAME_PARMS *frame_parms,
 
   reset = 1;
   // x1 is set in first call to lte_gold_generic
-  x2 = frame_parms->Nid_cell; //this is c_init in 36.211 Sec 6.6.1
+  //x2 = frame_parms->Nid_cell; //this is c_init in 36.211 Sec 6.6.1
+  //[IRTBL] unscrambling for FeMBMS
+  x2 = frame_parms->Nid_cell+(1<<9); //this is c_init in 36.211 Sec 6.6.1
   //  msg("pbch_unscrambling: Nid_cell = %d\n",x2);
 
   for (i=0; i<length; i++) {
