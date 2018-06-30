@@ -180,14 +180,24 @@ int main(int argc, char **argv)
   double blerr;
 
   int **txdata;
+  int **txdataF;
 
   LTE_DL_FRAME_PARMS *frame_parms;
+  
   double s_re0[30720],s_im0[30720],r_re0[30720],r_im0[30720];
   double s_re1[30720],s_im1[30720],r_re1[30720],r_im1[30720];
   double *s_re[2]={s_re0,s_re1};
   double *s_im[2]={s_im0,s_im1};
   double *r_re[2]={r_re0,r_re1};
   double *r_im[2]={r_im0,r_im1};
+
+  float s_re0f[14*2048],s_im0f[14*2048],r_re0f[14*2048],r_im0f[14*2048];
+  float s_re1f[14*2048],s_im1f[14*2048],r_re1f[14*2048],r_im1f[14*2048];
+  float *s_ref[2]={s_re0f,s_re1f};
+  float *s_imf[2]={s_im0f,s_im1f};
+  float *r_ref[2]={r_re0f,r_re1f};
+  float *r_imf[2]={r_im0f,r_im1f};
+
   double forgetting_factor=0.0; //in [0,1] 0 means a new channel every time, 1 means keep the same channel
   double iqim=0.0;
   uint8_t extended_prefix_flag=0;
@@ -597,6 +607,7 @@ int main(int argc, char **argv)
   frame_parms = &eNB->frame_parms;
 
   txdata = UE->common_vars.txdata;
+  txdataF= UE->common_vars.txdataF;
 
   nsymb = (eNB->frame_parms.Ncp == NORMAL) ? 14 : 12;
 
@@ -848,7 +859,7 @@ int main(int argc, char **argv)
 
       //randominit(0);
 
-
+      printf("FRAME_LENGTH_SAMPLES %d, OFDM_SYMBOL_SIZE_COMPLEX_SAMPLES %d, FRAME_LENGTH_COMPLEX_SAMPLES_NO_PREFIX %d\n",FRAME_LENGTH_SAMPLES,OFDM_SYMBOL_SIZE_COMPLEX_SAMPLES,FRAME_LENGTH_COMPLEX_SAMPLES_NO_PREFIX);
       harq_pid = subframe2harq_pid(&UE->frame_parms,proc_rxtx_ue->frame_tx,subframe);
       input_buffer_length = UE->ulsch[0]->harq_processes[harq_pid]->TBS/8;
       input_buffer = (unsigned char *)memalign(32,input_buffer_length+64);
@@ -884,19 +895,35 @@ int main(int argc, char **argv)
             ((short*)txdata[0])[(i/2)+1] = (short)((1<<15)*strtod(input_val_str2,NULL));
 
             if ((i/4)<100)
-              printf("sample %d => %e + j%e (%d +j%d)\n",i/4,strtod(input_val_str,NULL),strtod(input_val_str2,NULL),((short*)txdata[0])[i/4],((short*)txdata[0])[(i/4)+1]);//1,input_val2,);
+	    {	
+	      if (UE->do_ofdm_mod)
+              	printf("sample %d => %e + j%e (%d +j%d)\n",i/4,strtod(input_val_str,NULL),strtod(input_val_str2,NULL),((short*)txdataF[0])[i/4],((short*)txdataF[0])[(i/4)+1]);//1,input_val2,);
+	      else
+              	printf("sample %d => %e + j%e (%d +j%d)\n",i/4,strtod(input_val_str,NULL),strtod(input_val_str2,NULL),((short*)txdata[0])[i/4],((short*)txdata[0])[(i/4)+1]);//1,input_val2,);
+	
+	    }
           }
 
           i++;
-
-          if (i>(FRAME_LENGTH_SAMPLES))
-            break;
+	  if (UE->do_ofdm_mod)
+	  {
+		  if (i>(FRAME_LENGTH_COMPLEX_SAMPLES_NO_PREFIX))
+				    break;
+	  }
+	  else
+	  {
+		  if (i>(FRAME_LENGTH_SAMPLES))
+		    break;
+	  }
         }
-
         printf("Read in %d samples\n",i/4);
         //      write_output("txsig0UL.m","txs0", txdata[0],2*frame_parms->samples_per_tti,1,1);
         //    write_output("txsig1.m","txs1", txdata[1],FRAME_LENGTH_COMPLEX_SAMPLES,1,1);
-        tx_lev = signal_energy(&txdata[0][0],
+        if (UE->do_ofdm_mod)
+        	tx_lev = signal_energy(&txdataF[0][0],
+                               UE->frame_parms.ofdm_symbol_size);
+	else
+        	tx_lev = signal_energy(&txdata[0][0],
                                OFDM_SYMBOL_SIZE_COMPLEX_SAMPLES);
         tx_lev_dB = (unsigned int) dB_fixed(tx_lev);
 
@@ -1091,7 +1118,10 @@ int main(int argc, char **argv)
               apply_7_5_kHz(UE,UE->common_vars.txdata[aa],1+(subframe<<1));
 
 */
-
+	    if (UE->do_ofdm_mod)
+	    tx_lev = signal_energy(&UE->common_vars.txdataF[0][eNB->frame_parms.ofdm_symbol_size*eNB->frame_parms.symbols_per_tti*subframe],
+				   eNB->frame_parms.ofdm_symbol_size*eNB->frame_parms.symbols_per_tti);	
+	    else
 	    tx_lev = signal_energy(&UE->common_vars.txdata[0][eNB->frame_parms.samples_per_tti*subframe],
 				   eNB->frame_parms.samples_per_tti);
 	    
@@ -1107,7 +1137,10 @@ int main(int argc, char **argv)
           tx_lev_dB = (unsigned int) dB_fixed_times10(tx_lev);
 
           if (n_frames==1) {
-            write_output("txsig0UL.m","txs0", &txdata[0][eNB->frame_parms.samples_per_tti*subframe],2*frame_parms->samples_per_tti,1,1);
+	    if (UE->do_ofdm_mod)
+            	write_output("txsig0ULF.m","txs0F", &txdataF[0][eNB->frame_parms.ofdm_symbol_size*eNB->frame_parms.symbols_per_tti*subframe],2*eNB->frame_parms.ofdm_symbol_size*eNB->frame_parms.symbols_per_tti,1,1);	    
+	    else
+            	write_output("txsig0UL.m","txs0", &txdata[0][eNB->frame_parms.samples_per_tti*subframe],2*frame_parms->samples_per_tti,1,1);
             //        write_output("txsig1UL.m","txs1", &txdata[1][eNB->frame_parms.samples_per_tti*subframe],2*frame_parms->samples_per_tti,1,1);
           }
 
@@ -1125,26 +1158,53 @@ int main(int argc, char **argv)
 
 
           // fill measurement symbol (19) with noise
-          for (i=0; i<OFDM_SYMBOL_SIZE_COMPLEX_SAMPLES; i++) {
-            for (aa=0; aa<eNB->frame_parms.nb_antennas_rx; aa++) {
+	  if (UE->do_ofdm_mod)
+	  {
+		  for (i=0; i<UE->frame_parms.ofdm_symbol_size; i++) {
+		    for (aa=0; aa<eNB->frame_parms.nb_antennas_rx; aa++) {
 
-              ((short*) &eNB->common_vars.rxdata[0][aa][(frame_parms->samples_per_tti<<1) -frame_parms->ofdm_symbol_size])[2*i] = (short) ((sqrt(sigma2/2)*gaussdouble(0.0,1.0)));
-              ((short*) &eNB->common_vars.rxdata[0][aa][(frame_parms->samples_per_tti<<1) -frame_parms->ofdm_symbol_size])[2*i+1] = (short) ((sqrt(sigma2/2)*gaussdouble(0.0,1.0)));
-            }
-          }
+		      ((short*) &eNB->common_vars.rxdataF[0][aa][((frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti)<<1) -frame_parms->ofdm_symbol_size])[2*i] = (short) ((sqrt(sigma2/2)*gaussdouble(0.0,1.0)));
+		      ((short*) &eNB->common_vars.rxdataF[0][aa][(frame_parms->samples_per_tti<<1) -frame_parms->ofdm_symbol_size])[2*i+1] = (short) ((sqrt(sigma2/2)*gaussdouble(0.0,1.0)));
+		    }
+		  }
+	  }
+	  else
+	  {
+		  for (i=0; i<OFDM_SYMBOL_SIZE_COMPLEX_SAMPLES; i++) {
+		    for (aa=0; aa<eNB->frame_parms.nb_antennas_rx; aa++) {
 
+		      ((short*) &eNB->common_vars.rxdata[0][aa][(frame_parms->samples_per_tti<<1) -frame_parms->ofdm_symbol_size])[2*i] = (short) ((sqrt(sigma2/2)*gaussdouble(0.0,1.0)));
+		      ((short*) &eNB->common_vars.rxdata[0][aa][(frame_parms->samples_per_tti<<1) -frame_parms->ofdm_symbol_size])[2*i+1] = (short) ((sqrt(sigma2/2)*gaussdouble(0.0,1.0)));
+		    }
+		  }
+	  }
           // multipath channel
-
-          for (i=0; i<eNB->frame_parms.samples_per_tti; i++) {
-            for (aa=0; aa<1; aa++) {
-              s_re[aa][i] = ((double)(((short *)&UE->common_vars.txdata[aa][eNB->frame_parms.samples_per_tti*subframe]))[(i<<1)]);
-              s_im[aa][i] = ((double)(((short *)&UE->common_vars.txdata[aa][eNB->frame_parms.samples_per_tti*subframe]))[(i<<1)+1]);
-            }
-          }
+	  if (UE->do_ofdm_mod)
+	  {
+  		  for (i=0; i<eNB->frame_parms.ofdm_symbol_size*eNB->frame_parms.symbols_per_tti; i++) {
+		    for (aa=0; aa<1; aa++) {
+		      s_ref[aa][i] = ((float)(((short *)&UE->common_vars.txdataF[aa][eNB->frame_parms.ofdm_symbol_size*eNB->frame_parms.symbols_per_tti*subframe]))[(i<<1)]);
+		      s_imf[aa][i] = ((float)(((short *)&UE->common_vars.txdataF[aa][eNB->frame_parms.ofdm_symbol_size*eNB->frame_parms.symbols_per_tti*subframe]))[(i<<1)+1]);
+		    }
+		  }
+ 	  }
+	  else
+ 	  {
+		  for (i=0; i<eNB->frame_parms.samples_per_tti; i++) {
+		    for (aa=0; aa<1; aa++) {
+		      s_re[aa][i] = ((double)(((short *)&UE->common_vars.txdata[aa][eNB->frame_parms.samples_per_tti*subframe]))[(i<<1)]);
+		      s_im[aa][i] = ((double)(((short *)&UE->common_vars.txdata[aa][eNB->frame_parms.samples_per_tti*subframe]))[(i<<1)+1]);
+		    }
+		  }
+	  }
 
           if (awgn_flag == 0) {
             if (UE2eNB->max_Doppler == 0) {
-              multipath_channel(UE2eNB,s_re,s_im,r_re,r_im,
+	      if (UE->do_ofdm_mod)
+              	multipath_channel_freq_AVX_float(UE2eNB,s_ref,s_imf,r_ref,r_imf,
+                                eNB->frame_parms.ofdm_symbol_size*eNB->frame_parms.symbols_per_tti,hold_channel,0,0,0,subframe&0x1,UE->frame_parms.N_RB_DL,UE->frame_parms.N_RB_DL*12+1,UE->frame_parms.ofdm_symbol_size,UE->frame_parms.symbols_per_tti);		
+	      else
+              	multipath_channel(UE2eNB,s_re,s_im,r_re,r_im,
                                 eNB->frame_parms.samples_per_tti,hold_channel);
             } else {
               multipath_tv_channel(UE2eNB,s_re,s_im,r_re,r_im,
@@ -1183,23 +1243,50 @@ int main(int argc, char **argv)
 
           if (n_frames==1)
             printf("Sigma2 %f (sigma2_dB %f), tx_gain %f (%f dB)\n",sigma2,sigma2_dB,tx_gain,20*log10(tx_gain));
-
-          for (i=0; i<eNB->frame_parms.samples_per_tti; i++) {
-            for (aa=0; aa<eNB->frame_parms.nb_antennas_rx; aa++) {
-              ((short*) &eNB->common_vars.rxdata[0][aa][eNB->frame_parms.samples_per_tti*subframe])[2*i] = (short) ((tx_gain*r_re[aa][i]) + sqrt(sigma2/2)*gaussdouble(0.0,1.0));
-              ((short*) &eNB->common_vars.rxdata[0][aa][eNB->frame_parms.samples_per_tti*subframe])[2*i+1] = (short) ((tx_gain*r_im[aa][i]) + (iqim*tx_gain*r_re[aa][i]) + sqrt(
-                    sigma2/2)*gaussdouble(0.0,1.0));
-            }
-          }
+	  if (UE->do_ofdm_mod)
+	  {
+  		  for (i=0; i<eNB->frame_parms.ofdm_symbol_size*eNB->frame_parms.symbols_per_tti; i++) {
+		    for (aa=0; aa<eNB->frame_parms.nb_antennas_rx; aa++) {
+		      ((short*) &eNB->common_vars.rxdataF[0][aa][eNB->frame_parms.ofdm_symbol_size*eNB->frame_parms.symbols_per_tti*subframe])[2*i] = (short) ((tx_gain*r_re[aa][i]) + sqrt(sigma2/2)*gaussdouble(0.0,1.0));
+		      ((short*) &eNB->common_vars.rxdataF[0][aa][eNB->frame_parms.ofdm_symbol_size*eNB->frame_parms.symbols_per_tti*subframe])[2*i+1] = (short) ((tx_gain*r_im[aa][i]) + (iqim*tx_gain*r_re[aa][i]) + sqrt(
+		            sigma2/2)*gaussdouble(0.0,1.0));
+		    }
+		  }
+	  }
+	  else
+	  {
+		  for (i=0; i<eNB->frame_parms.samples_per_tti; i++) {
+		    for (aa=0; aa<eNB->frame_parms.nb_antennas_rx; aa++) {
+		      ((short*) &eNB->common_vars.rxdata[0][aa][eNB->frame_parms.samples_per_tti*subframe])[2*i] = (short) ((tx_gain*r_re[aa][i]) + sqrt(sigma2/2)*gaussdouble(0.0,1.0));
+		      ((short*) &eNB->common_vars.rxdata[0][aa][eNB->frame_parms.samples_per_tti*subframe])[2*i+1] = (short) ((tx_gain*r_im[aa][i]) + (iqim*tx_gain*r_re[aa][i]) + sqrt(
+		            sigma2/2)*gaussdouble(0.0,1.0));
+		    }
+		  }
+	  }
 
           if (n_frames==1) {
-            printf("rx_level Null symbol %f\n",10*log10((double)signal_energy((int*)
-                   &eNB->common_vars.rxdata[0][0][(eNB->frame_parms.samples_per_tti<<1) -eNB->frame_parms.ofdm_symbol_size],OFDM_SYMBOL_SIZE_COMPLEX_SAMPLES/2)));
-            printf("rx_level data symbol %f\n",10*log10(signal_energy((int*)&eNB->common_vars.rxdata[0][0][160+(eNB->frame_parms.samples_per_tti*subframe)],
-                   OFDM_SYMBOL_SIZE_COMPLEX_SAMPLES/2)));
+	    if (UE->do_ofdm_mod)
+	    {
+		    printf("rx_level Null symbol %f\n",10*log10((double)signal_energy((int*)
+		           &eNB->common_vars.rxdataF[0][0][((eNB->frame_parms.ofdm_symbol_size*eNB->frame_parms.symbols_per_tti)<<1) -eNB->frame_parms.ofdm_symbol_size],eNB->frame_parms.ofdm_symbol_size/2)));
+		    printf("rx_level data symbol %f\n",10*log10(signal_energy((int*)&eNB->common_vars.rxdataF[0][0][160+(eNB->frame_parms.ofdm_symbol_size*eNB->frame_parms.symbols_per_tti*subframe)],
+		           eNB->frame_parms.ofdm_symbol_size/2)));
+	    }
+	    else
+	    {
+		    printf("rx_level Null symbol %f\n",10*log10((double)signal_energy((int*)
+		           &eNB->common_vars.rxdata[0][0][(eNB->frame_parms.samples_per_tti<<1) -eNB->frame_parms.ofdm_symbol_size],OFDM_SYMBOL_SIZE_COMPLEX_SAMPLES/2)));
+		    printf("rx_level data symbol %f\n",10*log10(signal_energy((int*)&eNB->common_vars.rxdata[0][0][160+(eNB->frame_parms.samples_per_tti*subframe)],
+		           OFDM_SYMBOL_SIZE_COMPLEX_SAMPLES/2)));
+	    }
           }
-
-          SNRmeas = 10*log10(((double)signal_energy((int*)&eNB->common_vars.rxdata[0][0][160+(eNB->frame_parms.samples_per_tti*subframe)],
+	  if (UE->do_ofdm_mod)
+          	SNRmeas = 10*log10(((double)signal_energy((int*)&eNB->common_vars.rxdataF[0][0][160+(eNB->frame_parms.ofdm_symbol_size*eNB->frame_parms.symbols_per_tti*subframe)],
+                              eNB->frame_parms.ofdm_symbol_size/2))/((double)signal_energy((int*)
+                                  &eNB->common_vars.rxdataF[0][0][((eNB->frame_parms.ofdm_symbol_size*eNB->frame_parms.symbols_per_tti)<<1) -eNB->frame_parms.ofdm_symbol_size],
+                                  eNB->frame_parms.ofdm_symbol_size/2)) - 1)+10*log10(eNB->frame_parms.N_RB_UL/nb_rb);
+	  else
+          	SNRmeas = 10*log10(((double)signal_energy((int*)&eNB->common_vars.rxdata[0][0][160+(eNB->frame_parms.samples_per_tti*subframe)],
                               OFDM_SYMBOL_SIZE_COMPLEX_SAMPLES/2))/((double)signal_energy((int*)
                                   &eNB->common_vars.rxdata[0][0][(eNB->frame_parms.samples_per_tti<<1) -eNB->frame_parms.ofdm_symbol_size],
                                   OFDM_SYMBOL_SIZE_COMPLEX_SAMPLES/2)) - 1)+10*log10(eNB->frame_parms.N_RB_UL/nb_rb);
@@ -1211,8 +1298,10 @@ int main(int argc, char **argv)
             //write_output("rxsig1UL.m","rxs1", &eNB->common_vars.rxdata[0][0][eNB->frame_parms.samples_per_tti*subframe],eNB->frame_parms.samples_per_tti,1,1);
           }
 
-
-	  eNB->fep = (parallel_flag == 1) ? eNB_fep_full_2thread        : eNB_fep_full;
+	  if (!UE->do_ofdm_mod)
+	  {
+	  	eNB->fep = (parallel_flag == 1) ? eNB_fep_full_2thread        : eNB_fep_full;
+	  }
 	  eNB->td  = (parallel_flag == 1) ? ulsch_decoding_data_2thread : ulsch_decoding_data;
 	  eNB->do_prach = NULL;
 

@@ -240,8 +240,8 @@ void rf_rx_simple(double *r_re[2],
       // Amplify by receiver gain and apply 3rd order non-linearity
 /*count++;
 clock_t start=clock();*/
-      r_re[a][i] = rx_gain_lin*(r_re[a][i] + sqrt(.5*N0W)*ziggurat(0.0,1.0));
-      r_im[a][i] = rx_gain_lin*(r_im[a][i] + sqrt(.5*N0W)*ziggurat(0.0,1.0));
+      r_re[a][i] = rx_gain_lin*(r_re[a][i] + sqrt(.5*N0W)*gaussdouble(0.0,1.0));
+      r_im[a][i] = rx_gain_lin*(r_im[a][i] + sqrt(.5*N0W)*gaussdouble(0.0,1.0));
 /*clock_t stop=clock();
 printf("do_DL_sig time is %f s, AVERAGE time is %f s, count %d, sum %e\n",(float) (stop-start)/CLOCKS_PER_SEC,(float) (sum+stop-start)/(count*CLOCKS_PER_SEC),count,sum+stop-start);
 sum=(sum+stop-start);*/
@@ -249,7 +249,7 @@ sum=(sum+stop-start);*/
   }
 
 }
-#define RF_RX_SSE
+//#define RF_RX_SSE
 #ifdef  RF_RX_SSE
 void rf_rx_simple_freq(double *r_re[2],
                   double *r_im[2],

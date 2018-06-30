@@ -1127,7 +1127,7 @@ int eNB_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void *
 		{
 			//clock_t start=clock();
 			printf("subframe UL PRACH: %d\n",subframe);
-			start_meas(&UE2eNB[UE_id][eNB_id][CC_id]->UL_PRACH_channel);
+			start_meas(&UE2eNB[UE_id][eNB_id][CC_id]->UL_PRACH_channel_freq);
 			do_UL_sig_freq_prach(UE2eNB,
 				enb_data,
 				ue_data,
@@ -1137,7 +1137,7 @@ int eNB_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void *
 				0,  // frame is only used for abstraction
 				eNB_id,
 				CC_id);
-		        stop_meas(&UE2eNB[UE_id][eNB_id][CC_id]->UL_PRACH_channel);
+		        stop_meas(&UE2eNB[UE_id][eNB_id][CC_id]->UL_PRACH_channel_freq);
   			//clock_t stop=clock();
   			/*printf("do_DL_sig time_prach is %f s, AVERAGE time is %f s, count %d, sum %e\n",(float) (stop-start)/CLOCKS_PER_SEC,(float) (sum+stop-start)/(count1*CLOCKS_PER_SEC),count1,sum+stop-start);
   			sum=(sum+stop-start);
@@ -1146,7 +1146,7 @@ int eNB_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void *
 			break;
 		}
 	}
-	start_meas(&UE2eNB[0][eNB_id][CC_id]->UL_channel);
+	start_meas(&UE2eNB[0][eNB_id][CC_id]->UL_channel_freq);
         do_UL_sig_freq(UE2eNB,
                 enb_data,
                 ue_data,
@@ -1156,10 +1156,11 @@ int eNB_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void *
                 0,  // frame is only used for abstraction
                 eNB_id,
                 CC_id);
-	stop_meas(&UE2eNB[0][eNB_id][CC_id]->UL_channel);
+	stop_meas(&UE2eNB[0][eNB_id][CC_id]->UL_channel_freq);
       }
       else
       {
+	start_meas(&UE2eNB[0][eNB_id][CC_id]->UL_channel);
         do_UL_sig(UE2eNB,
                 enb_data,
                 ue_data,
@@ -1169,6 +1170,7 @@ int eNB_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void *
                 0,  // frame is only used for abstraction
                 eNB_id,
                 CC_id);
+	stop_meas(&UE2eNB[0][eNB_id][CC_id]->UL_channel);
       }
 
       last_eNB_rx_timestamp[eNB_id][CC_id] = last;
@@ -1248,7 +1250,7 @@ int UE_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void **
             (unsigned long long)current_UE_rx_timestamp[UE_id][CC_id]);
       if (do_ofdm_mod)
       {
-	start_meas(&eNB2UE[0][UE_id][CC_id]->DL_channel);
+	start_meas(&eNB2UE[0][UE_id][CC_id]->DL_channel_freq);
         //clock_t start=clock();
       	do_DL_sig_freq(eNB2UE,
                 enb_data,
@@ -1258,7 +1260,7 @@ int UE_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void **
                 &PHY_vars_UE_g[UE_id][CC_id]->frame_parms,
                 UE_id,
                 CC_id);
-        stop_meas(&eNB2UE[0][UE_id][CC_id]->DL_channel);
+        stop_meas(&eNB2UE[0][UE_id][CC_id]->DL_channel_freq);
   	/*clock_t stop=clock();
   	printf("do_DL_sig time is %f s, AVERAGE time is %f s, count %d, sum %e\n",(float) (stop-start)/CLOCKS_PER_SEC,(float) (sum+stop-start)/(count*CLOCKS_PER_SEC),count,sum+stop-start);
   	sum=(sum+stop-start);
@@ -1269,6 +1271,7 @@ int UE_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void **
       else
       {
       //clock_t start=clock();
+      start_meas(&eNB2UE[0][UE_id][CC_id]->DL_channel);
       do_DL_sig(eNB2UE,
                 enb_data,
                 ue_data,
@@ -1277,6 +1280,7 @@ int UE_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void **
                 &PHY_vars_UE_g[UE_id][CC_id]->frame_parms,
                 UE_id,
                 CC_id);
+      stop_meas(&eNB2UE[0][UE_id][CC_id]->DL_channel);
       /*clock_t stop=clock();
       printf("do_DL_sig time is %f s, AVERAGE time is %f s, count %d, sum %e\n",(float) (stop-start)/CLOCKS_PER_SEC,(float) (sum+stop-start)/(count*CLOCKS_PER_SEC),count,sum+stop-start);
       sum=(sum+stop-start);

@@ -1486,26 +1486,38 @@ reset_opp_meas_oaisim (void)
       reset_meas (&UE2eNB[UE_id][eNB_id][0]->convolution);
       reset_meas (&UE2eNB[UE_id][eNB_id][0]->ziggurat);
       reset_meas (&UE2eNB[UE_id][eNB_id][0]->ziggurat_PRACH);
+      reset_meas (&eNB2UE[eNB_id][UE_id][0]->DL_multipath_channel);
+      reset_meas (&UE2eNB[UE_id][eNB_id][0]->UL_multipath_channel);
+      reset_meas (&eNB2UE[eNB_id][UE_id][0]->DL_dac_fixed_gain);
+      reset_meas (&UE2eNB[UE_id][eNB_id][0]->UL_dac_fixed_gain);
+      reset_meas (&eNB2UE[eNB_id][UE_id][0]->DL_rf_rx_simple);
+      reset_meas (&UE2eNB[UE_id][eNB_id][0]->UL_rf_rx_simple);
+      reset_meas (&eNB2UE[eNB_id][UE_id][0]->DL_dac_fixed_gain);
+      reset_meas (&UE2eNB[UE_id][eNB_id][0]->UL_dac_fixed_gain);
+
+      reset_meas (&eNB2UE[eNB_id][UE_id][0]->DL_channel);
+      reset_meas (&UE2eNB[UE_id][eNB_id][0]->UL_channel);
+
       //Time consuming in Frequency analysis
       //Downlink
       reset_meas (&eNB2UE[eNB_id][UE_id][0]->DL_multipath_channel_freq);
-      reset_meas (&eNB2UE[eNB_id][UE_id][0]->DL_dac_fixed_gain);
+      reset_meas (&eNB2UE[eNB_id][UE_id][0]->DL_dac_fixed_gain_freq);
       reset_meas (&eNB2UE[eNB_id][UE_id][0]->DL_rf_rx_simple_freq);
-      reset_meas (&eNB2UE[eNB_id][UE_id][0]->DL_adc);
+      reset_meas (&eNB2UE[eNB_id][UE_id][0]->DL_adc_freq);
       //Uplink
       reset_meas (&UE2eNB[UE_id][eNB_id][0]->UL_multipath_channel_freq);
-      reset_meas (&UE2eNB[UE_id][eNB_id][0]->UL_dac_fixed_gain);
+      reset_meas (&UE2eNB[UE_id][eNB_id][0]->UL_dac_fixed_gain_freq);
       reset_meas (&UE2eNB[UE_id][eNB_id][0]->UL_rf_rx_simple_freq);
-      reset_meas (&UE2eNB[UE_id][eNB_id][0]->UL_adc);
+      reset_meas (&UE2eNB[UE_id][eNB_id][0]->UL_adc_freq);
       //PRACH
       reset_meas (&UE2eNB[UE_id][eNB_id][0]->multipath_channel_freq_PRACH);
       reset_meas (&UE2eNB[UE_id][eNB_id][0]->dac_fixed_gain_PRACH);
       reset_meas (&UE2eNB[UE_id][eNB_id][0]->rf_rx_simple_freq_PRACH);
       reset_meas (&UE2eNB[UE_id][eNB_id][0]->adc_PRACH);
       //DL-UL Frequency Channel
-      reset_meas (&eNB2UE[eNB_id][UE_id][0]->DL_channel);
-      reset_meas (&UE2eNB[UE_id][eNB_id][0]->UL_channel);
-      reset_meas (&UE2eNB[UE_id][eNB_id][0]->UL_PRACH_channel);
+      reset_meas (&eNB2UE[eNB_id][UE_id][0]->DL_channel_freq);
+      reset_meas (&UE2eNB[UE_id][eNB_id][0]->UL_channel_freq);
+      reset_meas (&UE2eNB[UE_id][eNB_id][0]->UL_PRACH_channel_freq);
     }
 
     reset_meas (&PHY_vars_eNB_g[eNB_id][0]->phy_proc);
@@ -1611,43 +1623,64 @@ print_opp_meas_oaisim (void)
                   "[UL][ziggurat]", &oaisim_stats, &oaisim_stats_f);
       print_meas (&UE2eNB[UE_id][eNB_id][0]->ziggurat_PRACH,
                   "[UL][ziggurat]", &oaisim_stats, &oaisim_stats_f);
+      print_meas (&eNB2UE[eNB_id][UE_id][0]->DL_multipath_channel,
+                  "[DL][multipath_channel]", &oaisim_stats, &oaisim_stats_f);
+      print_meas (&UE2eNB[UE_id][eNB_id][0]->UL_multipath_channel,
+                  "[UL][multipath_channel]", &oaisim_stats, &oaisim_stats_f);
+      print_meas (&eNB2UE[eNB_id][UE_id][0]->DL_dac_fixed_gain,
+                  "[DL][dac_fixed_gain]", &oaisim_stats, &oaisim_stats_f);
+      print_meas (&UE2eNB[UE_id][eNB_id][0]->UL_dac_fixed_gain,
+                  "[UL][dac_fixed_gain]", &oaisim_stats, &oaisim_stats_f);
+      print_meas (&eNB2UE[eNB_id][UE_id][0]->DL_rf_rx_simple,
+                  "[DL][rf_rx_simple]", &oaisim_stats, &oaisim_stats_f);
+      print_meas (&UE2eNB[UE_id][eNB_id][0]->UL_rf_rx_simple,
+                  "[UL][rf_rx_simple]", &oaisim_stats, &oaisim_stats_f);
+      print_meas (&eNB2UE[eNB_id][UE_id][0]->DL_adc,
+                  "[DL][adc]", &oaisim_stats, &oaisim_stats_f);
+      print_meas (&UE2eNB[UE_id][eNB_id][0]->UL_adc,
+                  "[UL][adc]", &oaisim_stats, &oaisim_stats_f);
+
+      print_meas (&UE2eNB[UE_id][eNB_id][0]->UL_channel,
+                  "[UL_channel]", &oaisim_stats, &oaisim_stats_f);
+      print_meas (&eNB2UE[eNB_id][UE_id][0]->DL_channel,
+                  "[DL_channel]", &oaisim_stats, &oaisim_stats_f);
 
       //Time consuming in Frequency analysis
       //Downlink
       print_meas (&eNB2UE[eNB_id][UE_id][0]->DL_multipath_channel_freq,
                   "[DL][multipath_channel_freq]", &oaisim_stats, &oaisim_stats_f);
-      print_meas (&eNB2UE[eNB_id][UE_id][0]->DL_dac_fixed_gain,
-                  "[DL][dac_fixed_gain]", &oaisim_stats, &oaisim_stats_f);
+      print_meas (&eNB2UE[eNB_id][UE_id][0]->DL_dac_fixed_gain_freq,
+                  "[DL][dac_fixed_gain_freq]", &oaisim_stats, &oaisim_stats_f);
       print_meas (&eNB2UE[eNB_id][UE_id][0]->DL_rf_rx_simple_freq,
                   "[DL][rf_rx_simple_freq]", &oaisim_stats, &oaisim_stats_f);
-      print_meas (&eNB2UE[eNB_id][UE_id][0]->DL_adc,
-                  "[DL][adc]", &oaisim_stats, &oaisim_stats_f);
+      print_meas (&eNB2UE[eNB_id][UE_id][0]->DL_adc_freq,
+                  "[DL][adc_freq]", &oaisim_stats, &oaisim_stats_f);
       //Uplink
       print_meas (&UE2eNB[UE_id][eNB_id][0]->UL_multipath_channel_freq,
                   "[UL][multipath_channel_freq]", &oaisim_stats, &oaisim_stats_f);
-      print_meas (&UE2eNB[UE_id][eNB_id][0]->UL_dac_fixed_gain,
-                  "[UL][dac_fixed_gain]", &oaisim_stats, &oaisim_stats_f);
+      print_meas (&UE2eNB[UE_id][eNB_id][0]->UL_dac_fixed_gain_freq,
+                  "[UL][dac_fixed_gain_freq]", &oaisim_stats, &oaisim_stats_f);
       print_meas (&UE2eNB[UE_id][eNB_id][0]->UL_rf_rx_simple_freq,
                   "[UL][rf_rx_simple_freq]", &oaisim_stats, &oaisim_stats_f);
-      print_meas (&UE2eNB[UE_id][eNB_id][0]->UL_adc,
-                  "[UL][adc]", &oaisim_stats, &oaisim_stats_f);
+      print_meas (&UE2eNB[UE_id][eNB_id][0]->UL_adc_freq,
+                  "[UL][adc_freq]", &oaisim_stats, &oaisim_stats_f);
       //PRACH
       print_meas (&UE2eNB[UE_id][eNB_id][0]->multipath_channel_freq_PRACH,
                   "[UL_PRACH][multipath_channel_freq]", &oaisim_stats, &oaisim_stats_f);
       print_meas (&UE2eNB[UE_id][eNB_id][0]->dac_fixed_gain_PRACH,
-                  "[UL_PRACH][dac_fixed_gain]", &oaisim_stats, &oaisim_stats_f);
+                  "[UL_PRACH][dac_fixed_gain_freq]", &oaisim_stats, &oaisim_stats_f);
       print_meas (&UE2eNB[UE_id][eNB_id][0]->rf_rx_simple_freq_PRACH,
                   "[UL_PRACH][rf_rx_simple_freq]", &oaisim_stats, &oaisim_stats_f);
       print_meas (&UE2eNB[UE_id][eNB_id][0]->adc_PRACH,
-                  "[UL_PRACH][adc]", &oaisim_stats, &oaisim_stats_f);
+                  "[UL_PRACH][adc_freq]", &oaisim_stats, &oaisim_stats_f);
 
       //Dl/UL Frequency Channel
-      print_meas (&UE2eNB[UE_id][eNB_id][0]->UL_channel,
-                  "[UL_channel]", &oaisim_stats, &oaisim_stats_f);
-      print_meas (&UE2eNB[UE_id][eNB_id][0]->UL_PRACH_channel,
-                  "[UL_PRACH_channel]", &oaisim_stats, &oaisim_stats_f);
-      print_meas (&eNB2UE[eNB_id][UE_id][0]->DL_channel,
-                  "[DL_channel]", &oaisim_stats, &oaisim_stats_f);
+      print_meas (&UE2eNB[UE_id][eNB_id][0]->UL_channel_freq,
+                  "[UL_channel_freq]", &oaisim_stats, &oaisim_stats_f);
+      print_meas (&UE2eNB[UE_id][eNB_id][0]->UL_PRACH_channel_freq,
+                  "[UL_PRACH_channel_freq]", &oaisim_stats, &oaisim_stats_f);
+      print_meas (&eNB2UE[eNB_id][UE_id][0]->DL_channel_freq,
+                  "[DL_channel_freq]", &oaisim_stats, &oaisim_stats_f);
     }
   }
 

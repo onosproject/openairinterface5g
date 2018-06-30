@@ -1919,7 +1919,7 @@ int main(int argc, char **argv)
       printf("-B bandwidth configuration (in number of ressource blocks): 6, 25, 50, 100\n");
       printf("-r ressource block allocation (see  section 7.1.6.3 in 36.213\n");
       printf("-g [A:M] Use 3GPP 25.814 SCM-A/B/C/D('A','B','C','D') or 36-101 EPA('E'), EVA ('F'),ETU('G') models (ignores delay spread and Ricean factor), Rayghleigh8 ('H'), Rayleigh1('I'), Rayleigh1_corr('J'), Rayleigh1_anticorr ('K'), Rice8('L'), Rice1('M')\n");
-      printf("-F forgetting factor (0 new channel every trial, 1 channel constant\n");
+      printf("-F forgetting factor (0 new channel every trial, 1 channel constant)\n");
       printf("-x Transmission mode (1,2,6,7 for the moment)\n");
       printf("-X Xforms\n");
       printf("-q Number of TX antennas ports used in eNB\n");
@@ -1929,7 +1929,7 @@ int main(int argc, char **argv)
       printf("-R Number of HARQ rounds (fixed)\n");
       printf("-A Turns on calibration mode for abstraction.\n");
       printf("-N Determines the number of Channel Realizations in Abstraction mode. Default value is 1. \n");
-      printf("-O Set the percenatge of effective rate to testbench the modem performance (typically 30 and 70, range 1-100) \n");
+      printf("-O Set the percentage of effective rate to testbench the modem performance (typically 30 and 70, range 1-100) \n");
       printf("-I Input filename for TrCH data (binary)\n");
       printf("-u Enables the Interference Aware Receiver for TM5 (default is normal receiver)\n");
       exit(1);
@@ -2537,7 +2537,7 @@ int main(int argc, char **argv)
 
           //  printf("Trial %d : Round %d, pmi_feedback %d \n",trials,round,pmi_feedback);
           for (aa=0; aa<eNB->frame_parms.nb_antennas_tx; aa++) {
-            memset(&eNB->common_vars.txdataF[eNB_id][aa][0],0,FRAME_LENGTH_COMPLEX_SAMPLES_NO_PREFIX*sizeof(int32_t));
+            	memset(&eNB->common_vars.txdata[eNB_id][aa][0],0,FRAME_LENGTH_COMPLEX_SAMPLES_NO_PREFIX*sizeof(int32_t));
           }
 	  //printf("FRAME_LENGTH_COMPLEX_SAMPLES_NO_PREFIX %d\n",FRAME_LENGTH_COMPLEX_SAMPLES_NO_PREFIX);
           if (input_fd==NULL) {

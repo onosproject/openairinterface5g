@@ -79,7 +79,7 @@ void dac(double *s_re[2],
     }
   }
 }
-#define dac_SSE
+//#define dac_SSE
 #ifdef  dac_SSE
 double dac_fixed_gain(double *s_re[2],
                       double *s_im[2],

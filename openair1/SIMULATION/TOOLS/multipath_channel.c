@@ -35,7 +35,7 @@ uint8_t multipath_channel_nosigconv(channel_desc_t *desc)
   return(1);
 }
 
-#define CHANNEL_SSE
+//#define CHANNEL_SSE
 //#define __AVX2__
 #ifdef CHANNEL_SSE
 void multipath_channel(channel_desc_t *desc,
@@ -417,8 +417,8 @@ void multipath_channel_freq(channel_desc_t *desc,
   ofdm_symbol_size=length/PHY_vars_UE_g[UE_id][CC_id]->frame_parms.symbols_per_tti;
   symbols_per_tti=length/PHY_vars_UE_g[UE_id][CC_id]->frame_parms.ofdm_symbol_size;
 
-  FILE *file;
-  file = fopen("multipath.txt","w");
+  //FILE *file;
+  //file = fopen("multipath.txt","w");
 
 #ifdef DEBUG_CH
   printf("[CHANNEL_FREQ] keep = %d : path_loss = %g (%f), nb_rx %d, nb_tx %d, dd %d, len %d \n",keep_channel,path_loss,desc->path_loss_dB,desc->nb_rx,desc->nb_tx,dd,desc->channel_length);
@@ -741,7 +741,7 @@ void multipath_channel_freq_AVX_float(channel_desc_t *desc,
 	} // f,f2,f3
   //}//k
 }
-#ifdef CHANNEL_SSE
+//#ifdef CHANNEL_SSE
 void multipath_channel_prach(channel_desc_t *desc,
                        double *tx_sig_re[2],
                        double *tx_sig_im[2],
@@ -809,8 +809,8 @@ void multipath_channel_prach(channel_desc_t *desc,
 				} // ii
 			} // f
 }
-#else
-void multipath_channel_prach(channel_desc_t *desc,
+//#else
+/*void multipath_channel_prach(channel_desc_t *desc,
                        double *tx_sig_re[2],
                        double *tx_sig_im[2],
                        double *rx_sig_re[2],
@@ -858,7 +858,7 @@ void multipath_channel_prach(channel_desc_t *desc,
 				} // ii
 			} // f
 }
-#endif
+#endif*/
 void multipath_channel_prach_SSE_float(channel_desc_t *desc,
                        float *tx_sig_re[2],
                        float *tx_sig_im[2],

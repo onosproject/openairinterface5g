@@ -98,25 +98,35 @@ typedef struct {
   time_stats_t convolution;
   time_stats_t ziggurat;
   time_stats_t ziggurat_PRACH;
+  time_stats_t DL_multipath_channel;
+  time_stats_t UL_multipath_channel;
+  time_stats_t DL_dac_fixed_gain;
+  time_stats_t UL_dac_fixed_gain;
+  time_stats_t DL_rf_rx_simple;
+  time_stats_t UL_rf_rx_simple;
+  time_stats_t DL_adc;
+  time_stats_t UL_adc;
   /// frequency measurements
   time_stats_t DL_multipath_channel_freq;
-  time_stats_t DL_dac_fixed_gain;
+  time_stats_t DL_dac_fixed_gain_freq;
   time_stats_t DL_rf_rx_simple_freq;
-  time_stats_t DL_adc;
+  time_stats_t DL_adc_freq;
 
   time_stats_t UL_multipath_channel_freq;
-  time_stats_t UL_dac_fixed_gain;
+  time_stats_t UL_dac_fixed_gain_freq;
   time_stats_t UL_rf_rx_simple_freq;
-  time_stats_t UL_adc;
+  time_stats_t UL_adc_freq;
 
   time_stats_t multipath_channel_freq_PRACH;
   time_stats_t dac_fixed_gain_PRACH;
   time_stats_t rf_rx_simple_freq_PRACH;
   time_stats_t adc_PRACH;
 
-  time_stats_t UL_PRACH_channel;
   time_stats_t UL_channel;
   time_stats_t DL_channel;
+  time_stats_t UL_PRACH_channel_freq;
+  time_stats_t UL_channel_freq;
+  time_stats_t DL_channel_freq;
 
 } channel_desc_t;
 
