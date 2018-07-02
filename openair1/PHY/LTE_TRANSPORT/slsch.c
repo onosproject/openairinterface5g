@@ -1118,12 +1118,12 @@ void rx_slcch(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subframe_rx)
   //AssertFatal(slsch->n_pscch < (M_RB_PSCCH_RP>>1)*LPSCCH,"n_pscch not in 0..%d\n",
   //	      ((M_RB_PSCCH_RP>>1)*LPSCCH)-1);
 
-  for (slsch->n_pscch = 0; slsch->npscch <  ((M_RB_PSCCH_RP>>1)*LPSCCH) ; slsch->n_pscch++) {
+  for (int n_pscch = 0; n_pscch <  ((M_RB_PSCCH_RP>>1)*LPSCCH) ; n_pscch++) {
     // hard-coded to transmission mode one for now (Section 14.2.1.1 from 36.213 Rel14.3)
-    uint32_t a1=slsch->n_pscch/LPSCCH;
-    uint32_t a2=a1+slsch->n_pscch/LPSCCH+(M_RB_PSCCH_RP>>1);
-    uint32_t b1=slsch->n_pscch%LPSCCH;
-    uint32_t b2=(slsch->n_pscch + 1 + (a1%(LPSCCH-1)))%LPSCCH;
+    uint32_t a1=n_pscch/LPSCCH;
+    uint32_t a2=a1+n_pscch/LPSCCH+(M_RB_PSCCH_RP>>1);
+    uint32_t b1=n_pscch%LPSCCH;
+    uint32_t b2=(n_pscch + 1 + (a1%(LPSCCH-1)))%LPSCCH;
     
     if (absSF_modP == b1)      pscch_decoding(ue,proc,frame_rx,subframe_rx,a1,0);	
     else if (absSF_modP == b2) pscch_decoding(ue,proc,frame_rx,subframe_rx,a2,1);
