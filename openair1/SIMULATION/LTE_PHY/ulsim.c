@@ -181,22 +181,35 @@ int main(int argc, char **argv)
 
   int **txdata;
   int **txdataF;
+  int *tx_prachF;
+  uint8_t prach_ConfigIndex;
+  uint8_t prach_fmt=0;
+  int pointer_firstvalue_PRACH=0;
+  int n_ra_prb;
 
   LTE_DL_FRAME_PARMS *frame_parms;
-  
+  //Time domain
   double s_re0[30720],s_im0[30720],r_re0[30720],r_im0[30720];
   double s_re1[30720],s_im1[30720],r_re1[30720],r_im1[30720];
   double *s_re[2]={s_re0,s_re1};
   double *s_im[2]={s_im0,s_im1};
   double *r_re[2]={r_re0,r_re1};
   double *r_im[2]={r_im0,r_im1};
-
+  //Frequency domain
   float s_re0f[14*2048],s_im0f[14*2048],r_re0f[14*2048],r_im0f[14*2048];
   float s_re1f[14*2048],s_im1f[14*2048],r_re1f[14*2048],r_im1f[14*2048];
   float *s_ref[2]={s_re0f,s_re1f};
   float *s_imf[2]={s_im0f,s_im1f};
   float *r_ref[2]={r_re0f,r_re1f};
   float *r_imf[2]={r_im0f,r_im1f};
+  //PRACH
+  float s_re0_f_prach[14*2048],s_im0_f_prach[14*2048],r_re00_f_prach[14*2048],r_im00_f_prach[14*2048];
+  float s_re1_f_prach[14*2048],s_im1_f_prach[14*2048],r_re01_f_prach[14*2048],r_im01_f_prach[14*2048];
+  float *s_re_f_prach[2] ={s_re0_f_prach,s_re1_f_prach};
+  float *s_im_f_prach[2] ={s_im0_f_prach,s_im1_f_prach};
+  float *r_re0_f_prach[2]={r_re00_f_prach,r_re01_f_prach};
+  float *r_im0_f_prach[2]={r_im00_f_prach,r_im01_f_prach};
+
 
   double forgetting_factor=0.0; //in [0,1] 0 means a new channel every time, 1 means keep the same channel
   double iqim=0.0;
@@ -637,6 +650,10 @@ int main(int argc, char **argv)
       exit(-1);
     }
   }
+  if (abstx) 
+	printf("abstraction enabled\n");
+  else
+	printf("abstraction disabled\n");
 
   if(abstx) {
     // CSV file
@@ -823,6 +840,7 @@ int main(int argc, char **argv)
   printf("Rate = %f (mod %d), coded bits %d\n",rate,get_Qm_ul(mcs),coded_bits_per_codeword);
 
 
+  printf("FRAME_LENGTH_SAMPLES %d, OFDM_SYMBOL_SIZE_COMPLEX_SAMPLES %d, FRAME_LENGTH_COMPLEX_SAMPLES_NO_PREFIX %d\n",FRAME_LENGTH_SAMPLES,OFDM_SYMBOL_SIZE_COMPLEX_SAMPLES,FRAME_LENGTH_COMPLEX_SAMPLES_NO_PREFIX);
 
   for (ch_realization=0; ch_realization<n_ch_rlz; ch_realization++) {
 
@@ -859,7 +877,6 @@ int main(int argc, char **argv)
 
       //randominit(0);
 
-      printf("FRAME_LENGTH_SAMPLES %d, OFDM_SYMBOL_SIZE_COMPLEX_SAMPLES %d, FRAME_LENGTH_COMPLEX_SAMPLES_NO_PREFIX %d\n",FRAME_LENGTH_SAMPLES,OFDM_SYMBOL_SIZE_COMPLEX_SAMPLES,FRAME_LENGTH_COMPLEX_SAMPLES_NO_PREFIX);
       harq_pid = subframe2harq_pid(&UE->frame_parms,proc_rxtx_ue->frame_tx,subframe);
       input_buffer_length = UE->ulsch[0]->harq_processes[harq_pid]->TBS/8;
       input_buffer = (unsigned char *)memalign(32,input_buffer_length+64);
@@ -888,26 +905,39 @@ int main(int argc, char **argv)
 
         while (!feof(input_fdUL)) {
           ret=fscanf(input_fdUL,"%s %s",input_val_str,input_val_str2);//&input_val1,&input_val2);
+	  printf("ret = %d\n",ret);
           if (ret != 2) printf("ERROR: error reading file\n");
 
           if ((i%4)==0) {
-            ((short*)txdata[0])[i/2] = (short)((1<<15)*strtod(input_val_str,NULL));
-            ((short*)txdata[0])[(i/2)+1] = (short)((1<<15)*strtod(input_val_str2,NULL));
-
+	    if (UE->do_ofdm_mod)
+	    {
+            	((short*)txdataF[0])[i/2] = (short)((1<<15)*strtod(input_val_str,NULL));
+            	((short*)txdataF[0])[(i/2)+1] = (short)((1<<15)*strtod(input_val_str2,NULL));
+	       	printf("txdataF %d\n",(short)((1<<15)*strtod(input_val_str,NULL)));
+	    }
+	    else
+	    {
+            	((short*)txdata[0])[i/2] = (short)((1<<15)*strtod(input_val_str,NULL));
+            	((short*)txdata[0])[(i/2)+1] = (short)((1<<15)*strtod(input_val_str2,NULL));
+	    }
             if ((i/4)<100)
 	    {	
 	      if (UE->do_ofdm_mod)
+	      {
               	printf("sample %d => %e + j%e (%d +j%d)\n",i/4,strtod(input_val_str,NULL),strtod(input_val_str2,NULL),((short*)txdataF[0])[i/4],((short*)txdataF[0])[(i/4)+1]);//1,input_val2,);
+	      }
 	      else
+	      {
               	printf("sample %d => %e + j%e (%d +j%d)\n",i/4,strtod(input_val_str,NULL),strtod(input_val_str2,NULL),((short*)txdata[0])[i/4],((short*)txdata[0])[(i/4)+1]);//1,input_val2,);
-	
+	      }
 	    }
           }
 
           i++;
+	  printf("i = %d\n",i);
 	  if (UE->do_ofdm_mod)
 	  {
-		  if (i>(FRAME_LENGTH_COMPLEX_SAMPLES_NO_PREFIX))
+		  if (i>(eNB->frame_parms.ofdm_symbol_size*eNB->frame_parms.symbols_per_tti))
 				    break;
 	  }
 	  else
@@ -921,7 +951,7 @@ int main(int argc, char **argv)
         //    write_output("txsig1.m","txs1", txdata[1],FRAME_LENGTH_COMPLEX_SAMPLES,1,1);
         if (UE->do_ofdm_mod)
         	tx_lev = signal_energy(&txdataF[0][0],
-                               UE->frame_parms.ofdm_symbol_size);
+                              eNB->frame_parms.ofdm_symbol_size);
 	else
         	tx_lev = signal_energy(&txdata[0][0],
                                OFDM_SYMBOL_SIZE_COMPLEX_SAMPLES);
@@ -1119,13 +1149,13 @@ int main(int argc, char **argv)
 
 */
 	    if (UE->do_ofdm_mod)
-	    tx_lev = signal_energy(&UE->common_vars.txdataF[0][eNB->frame_parms.ofdm_symbol_size*eNB->frame_parms.symbols_per_tti*subframe],
+	    	tx_lev = signal_energy(&UE->common_vars.txdataF[0][eNB->frame_parms.ofdm_symbol_size*eNB->frame_parms.symbols_per_tti*subframe],
 				   eNB->frame_parms.ofdm_symbol_size*eNB->frame_parms.symbols_per_tti);	
 	    else
-	    tx_lev = signal_energy(&UE->common_vars.txdata[0][eNB->frame_parms.samples_per_tti*subframe],
+	    	tx_lev = signal_energy(&UE->common_vars.txdata[0][eNB->frame_parms.samples_per_tti*subframe],
 				   eNB->frame_parms.samples_per_tti);
 	    
-	    
+	    //printf("subframe %d\n",subframe);
             if (n_frames==1) {
               write_output("txsigF0UL.m","txsF0", &UE->common_vars.txdataF[0][eNB->frame_parms.ofdm_symbol_size*nsymb*subframe],eNB->frame_parms.ofdm_symbol_size*nsymb,1,
                            1);
@@ -1160,11 +1190,11 @@ int main(int argc, char **argv)
           // fill measurement symbol (19) with noise
 	  if (UE->do_ofdm_mod)
 	  {
-		  for (i=0; i<UE->frame_parms.ofdm_symbol_size; i++) {
+		  for (i=0; i<eNB->frame_parms.ofdm_symbol_size; i++) {
 		    for (aa=0; aa<eNB->frame_parms.nb_antennas_rx; aa++) {
 
 		      ((short*) &eNB->common_vars.rxdataF[0][aa][((frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti)<<1) -frame_parms->ofdm_symbol_size])[2*i] = (short) ((sqrt(sigma2/2)*gaussdouble(0.0,1.0)));
-		      ((short*) &eNB->common_vars.rxdataF[0][aa][(frame_parms->samples_per_tti<<1) -frame_parms->ofdm_symbol_size])[2*i+1] = (short) ((sqrt(sigma2/2)*gaussdouble(0.0,1.0)));
+		      ((short*) &eNB->common_vars.rxdataF[0][aa][((frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti)<<1) -frame_parms->ofdm_symbol_size])[2*i+1] = (short) ((sqrt(sigma2/2)*gaussdouble(0.0,1.0)));
 		    }
 		  }
 	  }
@@ -1181,10 +1211,24 @@ int main(int argc, char **argv)
           // multipath channel
 	  if (UE->do_ofdm_mod)
 	  {
-  		  for (i=0; i<eNB->frame_parms.ofdm_symbol_size*eNB->frame_parms.symbols_per_tti; i++) {
+  		  for (i=0; i<frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti; i++) {
 		    for (aa=0; aa<1; aa++) {
 		      s_ref[aa][i] = ((float)(((short *)&UE->common_vars.txdataF[aa][eNB->frame_parms.ofdm_symbol_size*eNB->frame_parms.symbols_per_tti*subframe]))[(i<<1)]);
 		      s_imf[aa][i] = ((float)(((short *)&UE->common_vars.txdataF[aa][eNB->frame_parms.ofdm_symbol_size*eNB->frame_parms.symbols_per_tti*subframe]))[(i<<1)+1]);
+		    }
+		  }
+
+		  lte_frame_type_t frame_type = UE->frame_parms.frame_type;
+		  prach_ConfigIndex   = UE->frame_parms.prach_config_common.prach_ConfigInfo.prach_ConfigIndex;
+		  prach_fmt = get_prach_fmt(prach_ConfigIndex,frame_type);
+		  n_ra_prb = UE->frame_parms.N_RB_UL/2;//get_prach_prb_offset(frame_parms, UE->prach_resources[0]->ra_TDD_map_index,proc_rxtx_ue->frame_tx);
+		  pointer_firstvalue_PRACH=((12*n_ra_prb) - 6*UE->frame_parms.N_RB_UL<0)?(((12*n_ra_prb) - 6*UE->frame_parms.N_RB_UL+UE->frame_parms.ofdm_symbol_size)*12+13)*2:(((12*n_ra_prb) - 6*UE->frame_parms.N_RB_UL)*12+13)*2;
+		  printf("pointer_firstvalue_PRACH %d, prach_fmt %d, if %d,UE->frame_parms.N_RB_UL %d, n_ra_prb %d\n",pointer_firstvalue_PRACH,prach_fmt,12*n_ra_prb - 6*UE->frame_parms.N_RB_UL,UE->frame_parms.N_RB_UL,n_ra_prb);
+
+  		  for (i=0; i<839*2; i+=2) {
+		    for (aa=0; aa<1; aa++) {
+		      s_re_f_prach[aa][i/2] = ((float)(((short *)&UE->prach_vars[0]->prachF[aa]))[((i+pointer_firstvalue_PRACH)<<1)]);
+		      s_im_f_prach[aa][i/2] = ((float)(((short *)&UE->prach_vars[0]->prachF[aa]))[((i+pointer_firstvalue_PRACH)<<1)+1]);
 		    }
 		  }
  	  }
@@ -1201,12 +1245,20 @@ int main(int argc, char **argv)
           if (awgn_flag == 0) {
             if (UE2eNB->max_Doppler == 0) {
 	      if (UE->do_ofdm_mod)
+	      {
+		//printf("do_ofdm_mod = %d\n",UE->do_ofdm_mod);
               	multipath_channel_freq_AVX_float(UE2eNB,s_ref,s_imf,r_ref,r_imf,
-                                eNB->frame_parms.ofdm_symbol_size*eNB->frame_parms.symbols_per_tti,hold_channel,0,0,0,subframe&0x1,UE->frame_parms.N_RB_DL,UE->frame_parms.N_RB_DL*12+1,UE->frame_parms.ofdm_symbol_size,UE->frame_parms.symbols_per_tti);		
+                                eNB->frame_parms.ofdm_symbol_size*eNB->frame_parms.symbols_per_tti,hold_channel,0,0,0,subframe&0x1,UE->frame_parms.N_RB_DL,UE->frame_parms.N_RB_DL*12+1,UE->frame_parms.ofdm_symbol_size,UE->frame_parms.symbols_per_tti);
+
+		n_ra_prb = UE->frame_parms.N_RB_UL/2;
+	   	multipath_channel_prach_AVX_float(UE2eNB,s_re_f_prach,s_im_f_prach,r_re0_f_prach,r_im0_f_prach,&UE->frame_parms,
+			  (prach_fmt<4)?13+839+12:3+139+2,hold_channel,eNB_id,prach_fmt,n_ra_prb);		
+	      }
 	      else
               	multipath_channel(UE2eNB,s_re,s_im,r_re,r_im,
                                 eNB->frame_parms.samples_per_tti,hold_channel);
             } else {
+	      printf("multipath_tv_channel\n");
               multipath_tv_channel(UE2eNB,s_re,s_im,r_re,r_im,
                                    2*eNB->frame_parms.samples_per_tti,hold_channel);
             }
@@ -1216,7 +1268,10 @@ int main(int argc, char **argv)
             if(saving_bler==0)
               if (trials==0 && round==0) {
                 // calculate freq domain representation to compute SINR
-                freq_channel(UE2eNB, N_RB_DL,12*N_RB_DL + 1);
+		if (UE->do_ofdm_mod)
+			freq_channel_AVX_float(UE2eNB, N_RB_DL,12*N_RB_DL + 1);
+		else
+                	freq_channel(UE2eNB, N_RB_DL,12*N_RB_DL + 1);
 
                 // snr=pow(10.0,.1*SNR);
                 fprintf(csv_fdUL,"%f,%d,%d,%f,%f,%f,",SNR,tx_lev,tx_lev_dB,sigma2_dB,tx_gain,SNR2);
@@ -1226,8 +1281,16 @@ int main(int argc, char **argv)
                   for (aarx=0; aarx<UE2eNB->nb_rx; aarx++) {
                     for (aatx=0; aatx<UE2eNB->nb_tx; aatx++) {
                       // abs_channel = (eNB2UE->chF[aarx+(aatx*eNB2UE->nb_rx)][u].x*eNB2UE->chF[aarx+(aatx*eNB2UE->nb_rx)][u].x + eNB2UE->chF[aarx+(aatx*eNB2UE->nb_rx)][u].y*eNB2UE->chF[aarx+(aatx*eNB2UE->nb_rx)][u].y);
-                      channelx = UE2eNB->chF[aarx+(aatx*UE2eNB->nb_rx)][u].x;
-                      channely = UE2eNB->chF[aarx+(aatx*UE2eNB->nb_rx)][u].y;
+		      if (UE->do_ofdm_mod)
+		      {
+                      	channelx = UE2eNB->chFf[aarx+(aatx*UE2eNB->nb_rx)].x[u];
+                      	channely = UE2eNB->chFf[aarx+(aatx*UE2eNB->nb_rx)].y[u];
+		      }
+		      else
+		      {
+                      	channelx = UE2eNB->chF[aarx+(aatx*UE2eNB->nb_rx)][u].x;
+                      	channely = UE2eNB->chF[aarx+(aatx*UE2eNB->nb_rx)][u].y;
+		      }
                       // if(transmission_mode==5){
                       fprintf(csv_fdUL,"%e+i*(%e),",channelx,channely);
                       // }
@@ -1247,9 +1310,16 @@ int main(int argc, char **argv)
 	  {
   		  for (i=0; i<eNB->frame_parms.ofdm_symbol_size*eNB->frame_parms.symbols_per_tti; i++) {
 		    for (aa=0; aa<eNB->frame_parms.nb_antennas_rx; aa++) {
-		      ((short*) &eNB->common_vars.rxdataF[0][aa][eNB->frame_parms.ofdm_symbol_size*eNB->frame_parms.symbols_per_tti*subframe])[2*i] = (short) ((tx_gain*r_re[aa][i]) + sqrt(sigma2/2)*gaussdouble(0.0,1.0));
-		      ((short*) &eNB->common_vars.rxdataF[0][aa][eNB->frame_parms.ofdm_symbol_size*eNB->frame_parms.symbols_per_tti*subframe])[2*i+1] = (short) ((tx_gain*r_im[aa][i]) + (iqim*tx_gain*r_re[aa][i]) + sqrt(
+		      ((short*) &eNB->common_vars.rxdataF[0][aa][eNB->frame_parms.ofdm_symbol_size*eNB->frame_parms.symbols_per_tti*subframe])[2*i] = (short) ((tx_gain*r_ref[aa][i]) + sqrt(sigma2/2)*gaussdouble(0.0,1.0));
+		      ((short*) &eNB->common_vars.rxdataF[0][aa][eNB->frame_parms.ofdm_symbol_size*eNB->frame_parms.symbols_per_tti*subframe])[2*i+1] = (short) ((tx_gain*r_imf[aa][i]) + (iqim*tx_gain*r_ref[aa][i]) + sqrt(
 		            sigma2/2)*gaussdouble(0.0,1.0));
+		    }
+		  }
+
+  		  for (i=0; i<839; i++) {
+		    for (aa=0; aa<eNB->frame_parms.nb_antennas_rx; aa++) {
+		      ((short*) &eNB->prach_vars.rxsigF[aa])[(i+pointer_firstvalue_PRACH/2)<<1] = (short) ((tx_gain*r_re0_f_prach[aa][i]) + sqrt(sigma2/2)*gaussdouble(0.0,1.0));
+		      ((short*) &eNB->prach_vars.rxsigF[aa])[1+(i+pointer_firstvalue_PRACH/2)<<1] = (short) ((tx_gain*r_im0_f_prach[aa][i]) + (iqim*tx_gain*r_re0_f_prach[aa][i]) + sqrt(sigma2/2)*gaussdouble(0.0,1.0));
 		    }
 		  }
 	  }
