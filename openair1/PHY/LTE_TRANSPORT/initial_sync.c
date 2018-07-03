@@ -56,34 +56,9 @@ int pbch_detection(PHY_VARS_UE *ue, runmode_t mode)
         ue->rx_offset);
 #endif
 
-//ue->frame_parms.frame_type = FDD; //hard-coded for testing FeMBMS
-ue->FeMBMS_active = 0;
 
-if (ue->FeMBMS_active == 0){ //no eMBMS and no FeMBMS
-
-        //(IRTBL_start) just debugging tests
-        printf("\x1B[32m");
-        printf("[IRTBL] initial_sync.c\n");
-        printf("slot_fep is called with different parameters\n");
-        printf("\x1B[0m");
-        //getchar();
-        //(IRTBL_end) just debugging tests
-
-
-        //(IRTBL_start) just debugging tests
-        printf("\x1B[32m");
-        printf("[IRTBL] slot_fep(ue,i,0,ue->rx_offset,0,1)\n");
-        printf("\x1B[0m");
-	//(IRTBL_end) just debugging tests
-
-
-  for (l=0; l<frame_parms->symbols_per_tti/2; l++) {
-        //(IRTBL_start) just debugging tests
-        printf("\x1B[32m");
-        printf("[IRTBL] i = %i\n",l);
-        printf("\x1B[0m");
-        //getchar();
-        //(IRTBL_end) just debugging tests
+  for (l=0; l<frame_parms->symbols_per_tti/2; l++) 
+  {
     slot_fep(ue,
 	     l,
 	     0,
@@ -93,21 +68,8 @@ if (ue->FeMBMS_active == 0){ //no eMBMS and no FeMBMS
   }
 
 
-	//(IRTBL_start) just debugging tests
-        printf("\x1B[32m");
-        printf("[IRTBL] slot_fep(ue,i,1,ue->rx_offset,0,1)\n");
-        printf("\x1B[0m");
-        //(IRTBL_end) just debugging tests
-
-
-  for (l=0; l<frame_parms->symbols_per_tti/2; l++) {
-        //(IRTBL_start) just debugging tests
-        printf("\x1B[32m");
-        printf("[IRTBL] i = %i\n",l);
-        printf("\x1B[0m");
-        //getchar();
-        //(IRTBL_end) just debugging tests
-
+  for (l=0; l<frame_parms->symbols_per_tti/2; l++) 
+  {
     slot_fep(ue,
 	     l,
 	     1,
@@ -116,92 +78,12 @@ if (ue->FeMBMS_active == 0){ //no eMBMS and no FeMBMS
 	     1);
   }
 
-        //(IRTBL_start) just debugging tests
-        printf("\x1B[32m");
-        printf("[IRTBL] now calling slot_fep once without loop with parameters: (ue,0,2,ue->rx_offset,0,1)\n");
-        printf("\x1B[0m");
-        //getchar();
-        //(IRTBL_end) just debugging tests
-
-
   slot_fep(ue,
 	   0,
 	   2,
 	   ue->rx_offset,
 	   0,
 	   1);
-
-}
-
-
-
-
-
-
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-        //(IRTBL_start) just debugging tests
-        
-	//ue->frame_parms.frame_type = FDD;
-	//ue->FeMBMS_active = 1;
-
-
-if (ue->FeMBMS_active != 0){
-
-	printf("\x1B[32m");
-        printf("[IRTBL] slot_fep_mbsfn125(ue,0,ue->rx_offset)\n");
-	printf("[IRTBL] this funcion was added by BL\n");
-        //printf("[IRTBL] frame_type seems to be TDD? Remember: in slot_fep_mbsfn its said that 0 = FDD and 1 = TDD\n");
-        printf("[IRTBL] frame_type is: %d\n",ue->frame_parms.frame_type);
-        printf("\x1B[0m");
-
-//symbols? only one symbol!!
-/*
-  for (l=0; l<frame_parms->symbols_per_tti/2; l++) {
-        printf("\x1B[32m");
-        printf("[IRTBL] i = %i\n",l);
-        printf("\x1B[0m");
-	slot_fep_mbsfn125(ue,
-             0,
-             ue->rx_offset );
-  }
-*/
-
-
-	slot_fep_mbsfn125(ue,
-             0,
-             ue->rx_offset );
-
-
-//not needed, only subframe = 0 needed. this is subframe = 1
-/*
-for (l=0; l<frame_parms->symbols_per_tti/2; l++) {
-        printf("\x1B[32m");
-        printf("[IRTBL] i = %i\n",l);
-        printf("\x1B[0m");
-	slot_fep_mbsfn125(ue,
-             1,
-             ue->rx_offset );
-  }
-*/
-
-}
-
- //(IRTBL_end) just debugging tests
-
-//////////////////////////////////////////////////////////////////////////////////
-
-
-
-
-
-        //(IRTBL_start) just debugging tests
-        //printf("[IRTBL] Trying to terminate oai\n");
-        //system("sudo killall lte-uesoftmodem-nos1");
-        //(IRTBL_end) just debugging tests
-
 
   lte_ue_measurements(ue,
 		      ue->rx_offset,
@@ -247,8 +129,8 @@ for (l=0; l<frame_parms->symbols_per_tti/2; l++) {
   pbch_decoded = 0;
 
 // [IRTGS 20180613] branch included for non-FeMBMS / dedicated FeMBMS mode
-  for (frame_mod4=0; frame_mod4<4; frame_mod4++) {
-    if (ue->FeMBMS_active == 0) //non - dedicated FeMBMS mode
+  for (frame_mod4=0; frame_mod4<4; frame_mod4++) 
+  { if (ue->FeMBMS_active == 0) //non - dedicated FeMBMS mode
     {  pbch_tx_ant = rx_pbch(&ue->common_vars,
                             ue->pbch_vars[0],
                             frame_parms,

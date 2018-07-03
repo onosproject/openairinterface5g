@@ -810,9 +810,9 @@ void *UE_thread(void *arg) {
         //printf("\x1B[0m");
 
                 if (UE->mode != loop_through_memory){
-				printf("\x1B[32m");
-                                printf("Writing Samples to Buffer - Wakeup Sync\n");
-                                printf("\x1B[0m");
+//				printf("\x1B[32m");
+//                                printf("Writing Samples to Buffer - Wakeup Sync\n");
+//                                printf("\x1B[0m");
 
                     AssertFatal( UE->frame_parms.samples_per_tti*10 ==
                                  UE->rfdevice.trx_read_func(&UE->rfdevice,
@@ -842,13 +842,14 @@ void *UE_thread(void *arg) {
                 if (UE->mode != loop_through_memory) {
                     for (int i=0; i<UE->frame_parms.nb_antennas_rx; i++)
                         rxp[i] = (void*)&dummy_rx[i][0];
-                    for (int sf=0; sf<40; sf++){
-				printf("\x1B[32m");
+//                    for (int sf=0; sf<40; sf++){ // vermutl. Benni eingefügt...
+                    for (int sf=0; sf<10; sf++){
+//				printf("\x1B[32m");
 				//printf("Size of RXP: %d\n",sizeof(rxp));
 				//printf("Value of samples_per_tti (which is samples per subframe!): %d\n",UE->frame_parms.samples_per_tti);
 				//printf("Number of RX Antennas: %d\n",UE->frame_parms.nb_antennas_rx);
-				printf("Writing Samples to Buffer\n");
-				printf("\x1B[0m");
+//				printf("Writing Samples to Buffer\n");
+//				printf("\x1B[0m");
 				//IRTBL
 	                        //UE->SF_count++; //increase SF counter every time, but reset it if it has reached 40  (40 ms frame). counting from 0 to 39.
 				//if (UE->SF_count == 40){UE->SF_count = 0;} //reset

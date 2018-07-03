@@ -2588,7 +2588,9 @@ void ue_pbch_procedures(uint8_t eNB_id,PHY_VARS_UE *ue,UE_rxtx_proc_t *proc, uin
   //  pbch_phase_FeMBMS = (frame_rx/4)&3;
  
   // [IRTGS 20180622] *********************************************************************
-  // pbch_phase=((frame_rx<<2)%4);
+  // pbch_phase=((frame_rx>>2)&3);
+  // printf("\x1B[1;34m[IRTGS]: \x1B[0m"); // blue
+  // printf("\x1B[32m%s%d\x1B[0m\n","[ue_pbch_procedures]: pbch_phase = ", pbch_phase);
 
   pbch_phase=(frame_rx%4);
 
@@ -2635,8 +2637,6 @@ printf("\x1B[32m%s%X\x1B[0m\n","  pbch_tx_ant = 0x",pbch_tx_ant);
     if (pbch_phase>=4)
       pbch_phase=0;
   }
-
-
 
   if ((pbch_tx_ant>0) && (pbch_tx_ant<=4)) {
 
