@@ -4796,6 +4796,8 @@ void phy_procedures_UE_SL_RX(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc) {
                                                 ue->slbch_errors,ue->slbch_rxops);
   if (frame_rx==0 && subframe_rx==0)
     for (int i=0;i<MAX_SLDCH;i++) if (ue->sldch_rxcnt[i]>0) LOG_I(PHY,"n_psdch %d RX count %d\n",i,ue->sldch_rxcnt[i]);
+
+  rx_slcch(ue,proc,frame_rx,subframe_rx);
 }
 
 int phy_procedures_UE_RX(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,

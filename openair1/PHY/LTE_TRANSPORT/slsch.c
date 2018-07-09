@@ -810,6 +810,7 @@ void pscch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
   if (amod<(slsch->N_SL_RB_SC>>1)) nprb = slsch->prb_Start_SC + amod;
   else                             nprb = slsch->prb_End_SC-(slsch->N_SL_RB_SC>>1)+amod;
 
+  if (frame_rx < 100) LOG_I(PHY,"%d.%d: Running pscch decoding slot %d, nprb %d, a %d, amod %d,N_SL_RB_SC %d\n",frame_rx,subframe_rx,slot,nprb,a,amod,slsch->N_SL_RB_SC); 
   // slot FEP
   if (proc->sl_fep_done == 0) {
     RU_t ru_tmp;
@@ -1004,9 +1005,6 @@ void pscch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
 
   // extract SCI bit fields
   int RAbits = length-32;
-#ifdef DEBUG_SCI_DECODING
-  printf("sci %lx (%d bits) CRC res %d\n",sci_rx_flip,length,res);
-#endif
 
   if (res==0) {
     ue->slsch_rx.freq_hopping_flag         = (sci_rx_flip>>63)&1;
@@ -1124,7 +1122,9 @@ void rx_slcch(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subframe_rx)
     uint32_t a2=a1+n_pscch/LPSCCH+(M_RB_PSCCH_RP>>1);
     uint32_t b1=n_pscch%LPSCCH;
     uint32_t b2=(n_pscch + 1 + (a1%(LPSCCH-1)))%LPSCCH;
-    
+  
+    if (frame_rx < 100) LOG_I(PHY,"%d.%d: Checking n_pscch %d => a1 %d, a2 %d, b1 %d, b2 %d (LPSCCH %d, M_RB_PSCCH_RP %d)\n",
+                                frame_rx,subframe_rx,n_pscch,a1,a2,b1,b2,LPSCCH,M_RB_PSCCH_RP); 
     if (absSF_modP == b1)      pscch_decoding(ue,proc,frame_rx,subframe_rx,a1,0);	
     else if (absSF_modP == b2) pscch_decoding(ue,proc,frame_rx,subframe_rx,a2,1);
     else continue;
