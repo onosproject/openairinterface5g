@@ -3422,7 +3422,7 @@ SLSCH_t *ue_get_slsch(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_
 
 extern const int trp8[TRP8_MAX+1][8];
 
-SLSCH_t *ue_get_slsch(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_t subframeP) {
+SLSCH_t *ue_get_slsch(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_t subframeP,int slsch_test) {
 
    mac_rlc_status_resp_t rlc_status, rlc_status_data;
    uint32_t absSF = (frameP*10)+subframeP;
@@ -3473,7 +3473,10 @@ SLSCH_t *ue_get_slsch(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_
                         rlc_status = mac_rlc_status_ind(module_idP, 0x1234,0,frameP,subframeP,ENB_FLAG_NO,MBMS_FLAG_NO, 
                               ue->sl_info[i].LCID, 0xFFFF, ue->sourceL2Id, ue->sl_info[i].groupL2Id);
                         LOG_I(MAC,"Checking status (%d,Group %d) => LCID %d => %d bytes\n",ue->sourceL2Id,ue->sl_info[i].destinationL2Id);
-                        if (rlc_status.bytes_in_buffer > 2){
+                        if (rlc_status.bytes_in_buffer > 2 || slsch_test == 1){
+
+                           if (slsch_test == 1 && rlc_status.bytes_in_buffer <= 2) rlc_status.bytes_in_buffer = 300;
+
                            LOG_I(MAC,"SFN.SF %d.%d: Scheduling for %d bytes in Sidelink buffer\n",frameP,subframeP,rlc_status.bytes_in_buffer);
                            // Fill in group id for off-network communications
                            ue->sltx_active = 1;

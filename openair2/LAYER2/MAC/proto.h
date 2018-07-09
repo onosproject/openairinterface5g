@@ -588,7 +588,7 @@ SLDCH_t *ue_get_sldch(module_id_t module_idP, int CC_id,frame_t frameP, sub_fram
 @param subframe_tx TX subframe index
 @returns pointer to SLSCH_t descriptor
 */
-SLSCH_t *ue_get_slsch(module_id_t module_idP, int CC_id,frame_t frameP, sub_frame_t subframe);
+SLSCH_t *ue_get_slsch(module_id_t module_idP, int CC_id,frame_t frameP, sub_frame_t subframe, int slsch_test);
 
 /* \brief Function called by PHY to retrieve information to be transmitted using the RA procedure.  If the UE is not in PUSCH mode for a particular eNB index, this is assumed to be an Msg3 and MAC attempts to retrieves the CCCH message from RRC. If the UE is in PUSCH mode for a particular eNB index and PUCCH format 0 (Scheduling Request) is not activated, the MAC may use this resource for random-access to transmit a BSR along with the C-RNTI control element (see 5.1.4 from 36.321)
 @param Mod_id Index of UE instance

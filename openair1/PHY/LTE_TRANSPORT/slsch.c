@@ -1,4 +1,4 @@
-
+/*
  * Licensed to the OpenAirInterface (OAI) Software Alliance under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -727,9 +727,10 @@ void check_and_generate_pscch(PHY_VARS_UE *ue,int frame_tx,int subframe_tx) {
 	      ((M_RB_PSCCH_RP>>1)*LPSCCH)-1);
   // hard-coded to transmission mode one for now (Section 14.2.1.1 from 36.213 Rel14.3)
   uint32_t a1=slsch->n_pscch/LPSCCH;
-  uint32_t a2=a1+slsch->n_pscch/LPSCCH+(M_RB_PSCCH_RP>>1);
+  uint32_t a2=a1+(M_RB_PSCCH_RP>>1);
   uint32_t b1=slsch->n_pscch%LPSCCH;
   uint32_t b2=(slsch->n_pscch + 1 + (a1%(LPSCCH-1)))%LPSCCH;
+
 
   LOG_I(PHY,"Checking pscch for absSF %d (N_SL_RB_SC %d, LPSCCH %d, M_RB_PSCCH_RP %d, a1 %d, a2 %d, b1 %d, b2 %d) pscch_coded %d\n",
 	absSF, slsch->N_SL_RB_SC,LPSCCH, M_RB_PSCCH_RP,a1,a2,b1,b2,ue->pscch_coded);
@@ -1116,14 +1117,14 @@ void rx_slcch(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subframe_rx)
   //AssertFatal(slsch->n_pscch < (M_RB_PSCCH_RP>>1)*LPSCCH,"n_pscch not in 0..%d\n",
   //	      ((M_RB_PSCCH_RP>>1)*LPSCCH)-1);
 
-  for (int n_pscch = 0; n_pscch <  (M_RB_PSCCH_RP>>1) ; n_pscch++) {
+  for (int n_pscch = 0; n_pscch <  (M_RB_PSCCH_RP>>1)*LPSCCH ; n_pscch++) {
     // hard-coded to transmission mode one for now (Section 14.2.1.1 from 36.213 Rel14.3)
     uint32_t a1=n_pscch/LPSCCH;
-    uint32_t a2=a1+n_pscch/LPSCCH+(M_RB_PSCCH_RP>>1);
+    uint32_t a2=a1+(M_RB_PSCCH_RP>>1);
     uint32_t b1=n_pscch%LPSCCH;
     uint32_t b2=(n_pscch + 1 + (a1%(LPSCCH-1)))%LPSCCH;
   
-    if (frame_rx < 100) LOG_I(PHY,"%d.%d: Checking n_pscch %d => a1 %d, a2 %d, b1 %d, b2 %d (LPSCCH %d, M_RB_PSCCH_RP %d)\n",
+    if (frame_rx < 100) LOG_D(PHY,"%d.%d: Checking n_pscch %d => a1 %d, a2 %d, b1 %d, b2 %d (LPSCCH %d, M_RB_PSCCH_RP %d)\n",
                                 frame_rx,subframe_rx,n_pscch,a1,a2,b1,b2,LPSCCH,M_RB_PSCCH_RP); 
     if (absSF_modP == b1)      pscch_decoding(ue,proc,frame_rx,subframe_rx,a1,0);	
     else if (absSF_modP == b2) pscch_decoding(ue,proc,frame_rx,subframe_rx,a2,1);
