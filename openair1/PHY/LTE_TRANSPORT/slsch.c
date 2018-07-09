@@ -1,4 +1,4 @@
-/*
+
  * Licensed to the OpenAirInterface (OAI) Software Alliance under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -722,7 +722,7 @@ void check_and_generate_pscch(PHY_VARS_UE *ue,int frame_tx,int subframe_tx) {
 
  
   // number of resources blocks per slot times 2 slots
-  uint32_t M_RB_PSCCH_RP = slsch->N_SL_RB_SC*LPSCCH<<1;
+  uint32_t M_RB_PSCCH_RP = slsch->N_SL_RB_SC;
   AssertFatal(slsch->n_pscch < (M_RB_PSCCH_RP>>1)*LPSCCH,"n_pscch not in 0..%d\n",
 	      ((M_RB_PSCCH_RP>>1)*LPSCCH)-1);
   // hard-coded to transmission mode one for now (Section 14.2.1.1 from 36.213 Rel14.3)
@@ -1112,13 +1112,13 @@ void rx_slcch(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subframe_rx)
   // LPSCCH has the number of PSCCH subframes
 
   // 2 SLSCH/SLCCH resource block regions subframe times number of resources blocks per slot times 2 slots
-  uint32_t M_RB_PSCCH_RP = slsch->N_SL_RB_SC*LPSCCH<<1;
+  uint32_t M_RB_PSCCH_RP = slsch->N_SL_RB_SC;
 
 
   //AssertFatal(slsch->n_pscch < (M_RB_PSCCH_RP>>1)*LPSCCH,"n_pscch not in 0..%d\n",
   //	      ((M_RB_PSCCH_RP>>1)*LPSCCH)-1);
 
-  for (int n_pscch = 0; n_pscch <  ((M_RB_PSCCH_RP>>1)*LPSCCH) ; n_pscch++) {
+  for (int n_pscch = 0; n_pscch <  (M_RB_PSCCH_RP>>1) ; n_pscch++) {
     // hard-coded to transmission mode one for now (Section 14.2.1.1 from 36.213 Rel14.3)
     uint32_t a1=n_pscch/LPSCCH;
     uint32_t a2=a1+n_pscch/LPSCCH+(M_RB_PSCCH_RP>>1);
