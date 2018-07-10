@@ -102,7 +102,8 @@ uint64_t sci_mapping(PHY_VARS_UE *ue) {
   
   AssertFatal(slsch->group_destination_id<256,"slsch->group_destination_id %d >= 256\n",slsch->group_destination_id);
   uint64_t group_destination_id = (uint64_t)slsch->group_destination_id;
-  
+ 
+  LOG_I(PHY,"SCI : RAbits %d\n",RAbits); 
   // map bitfields
   // frequency-hopping 1-bit
   return( (freq_hopping_flag <<63) | 
@@ -358,9 +359,16 @@ void pscch_codingmodulation(PHY_VARS_UE *ue,int frame_tx,int subframe_tx,uint32_
 
     LOG_D(PHY,"pscch_coding\n");
     sci = sci_mapping(ue);
-    LOG_I(PHY,"sci %lx\n",sci);
 
     int length = log2_approx(slsch->N_SL_RB_SC*((ue->slsch_rx.N_SL_RB_SC+1)>>1))+32;
+
+    LOG_I(PHY,"sci %lx (%d bits): freq_hopping_flag %d,resource_block_coding %d,time_resource_pattern %d,mcs %d,timing_advance_indication %d, group_destination_id %d\n",sci,length, 
+           slsch->freq_hopping_flag, 
+           slsch->resource_block_coding,
+           slsch->time_resource_pattern,
+           slsch->mcs,
+           slsch->timing_advance_indication,
+           slsch->group_destination_id);
 
     //   for (int i=0;i<(length+7)/8;i++) printf("sci[%d] %x\n",i,((uint8_t *)&sci)[i]);
     uint8_t sci_flip[8];
@@ -460,6 +468,7 @@ void pscch_codingmodulation(PHY_VARS_UE *ue,int frame_tx,int subframe_tx,uint32_
   int32_t *txptr;
 
   if (ue->generate_ul_signal[subframe_tx][0] == 0) 
+    LOG_I(PHY,"%d.%d: clearing ul_signal\n",frame_tx,subframe_tx);
     for (int aa=0; aa<ue->frame_parms.nb_antennas_tx; aa++) {
       memset(&ue->common_vars.txdataF[aa][subframe_tx*ue->frame_parms.ofdm_symbol_size*ue->frame_parms.symbols_per_tti],
 	     0,
@@ -498,7 +507,7 @@ void pscch_codingmodulation(PHY_VARS_UE *ue,int frame_tx,int subframe_tx,uint32_
                        0);
 
   ue->pscch_generated |= (1+slot);
-  ue->generate_ul_signal[subframe_tx][0] = 0;
+  ue->generate_ul_signal[subframe_tx][0] = 1;
 
 
 }
@@ -516,7 +525,7 @@ void slsch_codingmodulation(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_tx,in
   AssertFatal(ue->slsch_sdu_active > 0,"ue->slsch_sdu_active isn't active\n");
 
   LOG_D(PHY,"Generating SLSCH for rvidx %d, group_id %d, mcs %d, resource first rb %d, L_crbs %d\n",
-	slsch->rvidx,slsch->group_destination_id,slsch->mcs,slsch->RB_start,slsch->L_CRBs);
+	slsch->rvidx,slsch->group_destination_id,slsch->mcs,slsch->RB_start+slsch->prb_Start_SC,slsch->L_CRBs);
 
   
 
@@ -576,16 +585,18 @@ void slsch_codingmodulation(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_tx,in
   uint32_t cinit=510+(((uint32_t)slsch->group_destination_id)<<14)+(ljmod10<<9);
   
   ulsch->harq_processes[0]->nb_rb       = slsch->L_CRBs;
-  ulsch->harq_processes[0]->first_rb    = slsch->RB_start;
+  ulsch->harq_processes[0]->first_rb    = slsch->RB_start + slsch->prb_Start_SC;
   ulsch->harq_processes[0]->mcs         = slsch->mcs;
   ulsch->Nsymb_pusch                    = ((Nsymb-1)<<1);
+
+  LOG_I(PHY,"%d.%d : SLSCH nbrb %d, first rb %d\n",frame_tx,subframe_tx,slsch->L_CRBs,slsch->RB_start+slsch->prb_Start_SC);
 
   ue->sl_chan = PSSCH_12;
 
   // Fill in power control later
   //  pssch_power_cntl(ue,proc,eNB_id,1, abstraction_flag);
   //  ue->tx_power_dBm[subframe_tx] = ue->slcch[eNB_id]->Po_PUSCH;
-  ue->tx_power_dBm[subframe_tx] = dB_fixed(slsch->L_CRBs);
+  ue->tx_power_dBm[subframe_tx] = 0;
   ue->tx_total_RE[subframe_tx] = slsch->L_CRBs*12;
 #if defined(EXMIMO) || defined(OAI_USRP) || defined(OAI_BLADERF) || defined(OAI_LMSSDR)
   tx_amp = get_tx_amp(ue->tx_power_dBm[subframe_tx],
@@ -616,14 +627,14 @@ void slsch_codingmodulation(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_tx,in
 		     0,
 		     tx_amp,
 		     subframe_tx,
-		     slsch->RB_start,
+		     slsch->RB_start+slsch->prb_Start_SC,
 		     slsch->L_CRBs,
                      0,
                      ue->gh[1+slsch->group_destination_id],
                      ljmod10);
 
   ue->pssch_generated = 1;
-  ue->generate_ul_signal[subframe_tx][0] = 0;
+  ue->generate_ul_signal[subframe_tx][0] = 1;
 
 }
 
@@ -1182,7 +1193,7 @@ void slsch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
    for (int l=0; l<Nsymb; l++) {
     ulsch_extract_rbs_single((int32_t**)rxdataF,
 			     (int32_t**)rxdataF_ext,
-			     slsch->RB_start,
+			     slsch->RB_start+slsch->prb_Start_SC,
 			     slsch->L_CRBs,
 			     l,
 			     (subframe_rx<<1),
@@ -1191,7 +1202,7 @@ void slsch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
     if (l<Nsymb-1) { // skip last symbol in second slot
       ulsch_extract_rbs_single((int32_t**)rxdataF,
 			       (int32_t**)rxdataF_ext,
-			       slsch->RB_start,
+			       slsch->RB_start+slsch->prb_Start_SC,
 			       slsch->L_CRBs,
 			       l,
 			       (subframe_rx<<1)+1,

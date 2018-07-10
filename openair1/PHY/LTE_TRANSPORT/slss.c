@@ -77,6 +77,7 @@ void check_and_generate_slss(PHY_VARS_UE *ue,int frame_tx,int subframe_tx) {
 
   if (ue->generate_ul_signal[subframe_tx][0] == 0) 
     for (int aa=0; aa<ue->frame_parms.nb_antennas_tx; aa++) {
+      LOG_I(PHY,"%d.%d: clearing ul signal\n",frame_tx,subframe_tx);
       memset(&ue->common_vars.txdataF[aa][subframe_tx*ue->frame_parms.ofdm_symbol_size*ue->frame_parms.symbols_per_tti],
 	     0,
 	     ue->frame_parms.ofdm_symbol_size*ue->frame_parms.symbols_per_tti*sizeof(int32_t));
@@ -131,7 +132,9 @@ void check_and_generate_slss(PHY_VARS_UE *ue,int frame_tx,int subframe_tx) {
                      NULL,
                      0);
   
-  
+ 
+  LOG_I(PHY,"%d.%d : SLSS nbrb %d, first rb %d\n",frame_tx,subframe_tx,6,(ue->frame_parms.N_RB_UL/2)-3);
+ 
   ue->generate_ul_signal[subframe_tx][0] = 1;
   ue->slss_generated = 1;
   
