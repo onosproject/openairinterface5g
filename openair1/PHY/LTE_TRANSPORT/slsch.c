@@ -1033,8 +1033,8 @@ void pscch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
     ue->slcch_received                     = 1;
     ue->slsch_decoded                      = 0;
 #ifdef DEBUG_SCI_DECODING
-    printf("sci %lx (%d bits) : freq_hop %d, resource_block_coding %d, time_resource_pattern %d, mcs %d, timing_advance_indication %d, group_destination_id %d (gid shift %d result %lx => %lx\n",
-	   sci_rx_flip,length,
+    printf("sci %lx (%d bits,RAbits %d) : freq_hop %d, resource_block_coding %d, time_resource_pattern %d, mcs %d, timing_advance_indication %d, group_destination_id %d (gid shift %d result %lx => %lx\n",
+	   sci_rx_flip,length,RAbits,
 	   ue->slsch_rx.freq_hopping_flag,
 	   ue->slsch_rx.resource_block_coding,
 	   ue->slsch_rx.time_resource_pattern,
