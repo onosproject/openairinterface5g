@@ -13,7 +13,7 @@ SLSS_t *ue_get_slss(module_id_t module_idP, int CC_id,frame_t frameP, sub_frame_
 
 SLDCH_t *ue_get_sldch(module_id_t module_idP, int CC_id,frame_t frameP, sub_frame_t subframe) {return(NULL);};
 
-SLSCH_t *ue_get_slsch(module_id_t module_idP, int CC_id,frame_t frameP, sub_frame_t subframe) {return(NULL);};
+SLSCH_t *ue_get_slsch(module_id_t module_idP, int CC_id,frame_t frameP, sub_frame_t subframe, int SLSCHtest) {return(NULL);};
 
 void Msg1_transmitted(module_id_t module_idP, uint8_t CC_id,
 		      frame_t frameP, uint8_t eNB_id){}

@@ -413,7 +413,7 @@ void pscch_codingmodulation(PHY_VARS_UE *ue,int frame_tx,int subframe_tx,uint32_
   if (amod<(slsch->N_SL_RB_SC>>1)) nprb = slsch->prb_Start_SC + amod;
   else                             nprb = slsch->prb_End_SC-(slsch->N_SL_RB_SC>>1)+amod;
 
-
+  LOG_I(PHY,"%d.%d: nprb %d, slot %d\n",frame_tx,subframe_tx,nprb,slot);
   // Fill in power control later
   //  pssch_power_cntl(ue,proc,eNB_id,1, abstraction_flag);
   //  ue->tx_power_dBm[subframe_tx] = ue->slcch[eNB_id]->Po_PUSCH;
@@ -515,7 +515,7 @@ void slsch_codingmodulation(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_tx,in
   
   AssertFatal(ue->slsch_sdu_active > 0,"ue->slsch_sdu_active isn't active\n");
 
-  LOG_I(PHY,"Generating SLSCH for rvidx %d, group_id %d, mcs %d, resource first rb %d, L_crbs %d\n",
+  LOG_D(PHY,"Generating SLSCH for rvidx %d, group_id %d, mcs %d, resource first rb %d, L_crbs %d\n",
 	slsch->rvidx,slsch->group_destination_id,slsch->mcs,slsch->RB_start,slsch->L_CRBs);
 
   
@@ -642,7 +642,7 @@ void check_and_generate_pssch(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_tx,
 
   absSF_offset = absSF-O;
 
-  LOG_I(PHY,"Checking pssch for absSF %d (slsch_active %d)\n",
+  LOG_D(PHY,"Checking pssch for absSF %d (slsch_active %d)\n",
 	absSF, ue->slsch_active);
   
   if (ue->slsch_active == 0) return;
@@ -651,10 +651,15 @@ void check_and_generate_pssch(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_tx,
 
   absSF_modP = absSF_offset%P;
 
-  LOG_I(PHY,"Checking pssch for absSF_mod P %d, SubframeBitmapSL_length %d\n", absSF_modP, slsch->SubframeBitmapSL_length);
+  LOG_D(PHY,"Checking pssch for absSF_mod P %d, SubframeBitmapSL_length %d\n", absSF_modP, slsch->SubframeBitmapSL_length);
   // This is the condition for short SCCH bitmap (slsch->SubframeBitmapSL_length bits), check that the current subframe is for SLSCH
   if (absSF_modP < slsch->SubframeBitmapSL_length) return;
-  
+ 
+  if (absSF_modP == slsch->SubframeBitmapSL_length) {
+    ue->pscch_coded =0;
+    ue->pscch_generated=0;
+  }
+ 
   absSF_modP-=slsch->SubframeBitmapSL_length;
 
 
@@ -662,7 +667,7 @@ void check_and_generate_pssch(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_tx,
 	      "received Itrp %d: TRP8 is used with Itrp in 0...%d\n",
 	      slsch->time_resource_pattern,TRP8_MAX);
 
-  LOG_I(PHY,"Checking pssch for absSF %d (trp mask %d, rv %d)\n",
+  LOG_D(PHY,"Checking pssch for absSF %d (trp mask %d, rv %d)\n",
 	absSF, trp8[slsch->time_resource_pattern][absSF_modP&7],
 	slsch->rvidx);
   // Note : this assumes Ntrp=8 for now
@@ -687,8 +692,7 @@ void check_and_generate_pscch(PHY_VARS_UE *ue,int frame_tx,int subframe_tx) {
   uint32_t absSF = (frame_tx*10)+subframe_tx;
   uint32_t absSF_offset,absSF_modP;
 
-  LOG_D(PHY,"Checking pscch for absSF %d\n",absSF);
-  if (ue->pscch_generated == 3) return;
+  LOG_D(PHY,"Checking pscch for absSF %d (pscch_generate = %d)\n",absSF,ue->pscch_generated);
 
 
   
@@ -732,8 +736,8 @@ void check_and_generate_pscch(PHY_VARS_UE *ue,int frame_tx,int subframe_tx) {
   uint32_t b2=(slsch->n_pscch + 1 + (a1%(LPSCCH-1)))%LPSCCH;
 
 
-  LOG_I(PHY,"Checking pscch for absSF %d (N_SL_RB_SC %d, LPSCCH %d, M_RB_PSCCH_RP %d, a1 %d, a2 %d, b1 %d, b2 %d) pscch_coded %d\n",
-	absSF, slsch->N_SL_RB_SC,LPSCCH, M_RB_PSCCH_RP,a1,a2,b1,b2,ue->pscch_coded);
+  LOG_I(PHY,"Checking pscch for absSF %d / n_pscch %d (N_SL_RB_SC %d, LPSCCH %d, M_RB_PSCCH_RP %d, a1 %d, a2 %d, b1 %d, b2 %d) pscch_coded %d\n",
+	absSF, slsch->n_pscch,slsch->N_SL_RB_SC,LPSCCH, M_RB_PSCCH_RP,a1,a2,b1,b2,ue->pscch_coded);
 
   ue->slsch_sdu_active = 1;
 
@@ -883,6 +887,7 @@ void pscch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
   
   log2_maxh = (log2_approx(avgs)/2)+ log2_approx(ue->frame_parms.nb_antennas_rx-1)+4;
 
+  LOG_I(PHY,"%d.%d: nprb %d slot %d, pssch log2_maxh %d\n",frame_rx,subframe_rx,nprb,slot,log2_maxh);
   for (int l=0; l<(ue->frame_parms.symbols_per_tti>>1)-slot; l++) {
   
     int l2 = l + slot*(ue->frame_parms.symbols_per_tti>>1);

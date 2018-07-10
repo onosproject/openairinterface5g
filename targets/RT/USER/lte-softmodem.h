@@ -78,6 +78,7 @@
 #define CONFIG_HLP_SIML1         "Turn on simulation interface for L1"
 #define CONFIG_HLP_ENABLESL      "Enable SL functionality"
 #define CONFIG_HLP_SLONLY        "Use SL only (i.e. wire UE to off-network state)"
+#define CONFIG_HLP_SLSCHTEST     "Activate dummy transmission of SCI/SLSCH for testing"
 #define CONFIG_HLP_SYNCHREF      "Hard-wire UE as SynchRef UE for SL"
 #define CONFIG_HLP_SLSYNCONLY    "Run UE with only searching procedure for SynchREF"
 #define CONFIG_HLP_MSLOTS        "Skip the missed slots/subframes \n"    
@@ -139,7 +140,7 @@
 {"sim-L1",                     CONFIG_HLP_SIML1,      0,                iptr:&simL1,                        defintval:0,    TYPE_INT,      0}, \
 {"ue-enable-sl",               CONFIG_HLP_ENABLESL,   PARAMFLAG_BOOL,   iptr:&sidelink_active,              defintval:0,    TYPE_INT,      0}, \
 {"ue-sl-only",                 CONFIG_HLP_SLONLY,     PARAMFLAG_BOOL,   iptr:&SLonly,                       defintval:0,    TYPE_INT,      0}, \
-{"ue-slsch-test",              CONFIG_HLP_SLSCHTEST,  PARAMBLAG_BOOL,   iptr:&SLSCHtest,                    defintval:0,    TYPE_INT,      0}, \
+{"ue-slsch-test",              CONFIG_HLP_SLSCHTEST,  PARAMFLAG_BOOL,   iptr:&SLSCHtest,                    defintval:0,    TYPE_INT,      0}, \
 {"ue-synchref",                CONFIG_HLP_SYNCHREF,   PARAMFLAG_BOOL,   iptr:&synchRef,                     defintval:0,    TYPE_INT,      0}, \
 {"ue-slsync-only",             CONFIG_HLP_SLSYNCONLY, PARAMFLAG_BOOL,   iptr:&slsynconly,                   defintval:0,    TYPE_INT,      0}, \
 {"r"  ,                        CONFIG_HLP_PRB,        0,                u8ptr:&(frame_parms[0]->N_RB_DL),   defintval:25,   TYPE_UINT8,    0},     \

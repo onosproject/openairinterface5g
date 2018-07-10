@@ -49,6 +49,8 @@
 
 #include "LAYER2/MAC/extern.h"
 #include "LAYER2/MAC/defs.h"
+#include "LAYER2/MAC/proto.h"
+
 #include "UTIL/LOG/log.h"
 
 #include "UTIL/LOG/vcd_signal_dumper.h"
@@ -2376,7 +2378,8 @@ void phy_procedures_UE_SL_TX(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc) {
     
   // check for SLSCH
   AssertFatal(0==pthread_mutex_lock(&ue->slsch_mutex),"");
-  if (ue->SLSCHtest == 1) || (ue->slsch = ue_get_slsch(ue->Mod_id,ue->CC_id,frame_tx,subframe_tx,ue->SLSCHtest)) != NULL)  {
+
+  if ((ue->slsch = ue_get_slsch(ue->Mod_id,ue->CC_id,frame_tx,subframe_tx,ue->SLSCHtest)) != NULL)  {
       check_and_generate_pscch(ue,frame_tx,subframe_tx);
       check_and_generate_pssch(ue,proc,frame_tx,subframe_tx);
   }
