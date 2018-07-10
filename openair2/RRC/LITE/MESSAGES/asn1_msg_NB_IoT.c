@@ -939,7 +939,6 @@ uint8_t do_SIB23_NB_IoT(uint8_t Mod_id,
 
 /*do_RRCConnectionSetup_NB_IoT--> the aim is to establish SRB1 and SRB1bis(implicitly), based on configuration setting up Msg 4*/
 uint8_t do_RRCConnectionSetup_NB_IoT(
-  const protocol_ctxt_t*     const ctxt_pP,
   rrc_eNB_ue_context_NB_IoT_t*      const ue_context_pP,
   int                              CC_id,
   uint8_t*                   const buffer, //Srb0.Tx_buffer.Payload
@@ -956,6 +955,7 @@ uint8_t do_RRCConnectionSetup_NB_IoT(
   BOOLEAN_t* logicalChannelSR_Prohibit = NULL; //pag 605
   BOOLEAN_t* npusch_AllSymbols = NULL;
   long* npusch_repetitions = NULL;
+  long* group_hopping_disabled = NULL;
 
   // At the first moment of MSG4 testing we set NULL to those optional
 
@@ -1033,7 +1033,7 @@ uint8_t do_RRCConnectionSetup_NB_IoT(
 	SRB1bis_rlc_config_NB_IoT->choice.explicitValue.present=RLC_Config_NB_r13_PR_am;//MP: the only possible RLC config in NB_IoT
 
   // Set from ourself not configuration files
-	SRB1bis_rlc_config_NB_IoT->choice.explicitValue.choice.am.ul_AM_RLC_r13.t_PollRetransmit_r13 = T_PollRetransmit_NB_r13_ms25000;
+	SRB1bis_rlc_config_NB_IoT->choice.explicitValue.choice.am.ul_AM_RLC_r13.t_PollRetransmit_r13 = T_PollRetransmit_NB_r13_ms250;
 	SRB1bis_rlc_config_NB_IoT->choice.explicitValue.choice.am.ul_AM_RLC_r13.maxRetxThreshold_r13 = UL_AM_RLC_NB_r13__maxRetxThreshold_r13_t8;
 	//musT be disabled--> SRB1 config pag 640 specs 
 	SRB1bis_rlc_config_NB_IoT->choice.explicitValue.choice.am.dl_AM_RLC_r13.enableStatusReportSN_Gap_r13 =NULL;
@@ -1041,15 +1041,15 @@ uint8_t do_RRCConnectionSetup_NB_IoT(
 	SRB1bis_lchan_config_NB_IoT = CALLOC(1,sizeof(*SRB1bis_lchan_config_NB_IoT));
 	SRB1bis_config_NB_IoT->logicalChannelConfig_r13  = SRB1bis_lchan_config_NB_IoT;
 
-  SRB1bis_lchan_config_NB_IoT->present = SRB_ToAddMod_NB_r13__logicalChannelConfig_r13_PR_explicitValue;
+  SRB1bis_lchan_config_NB_IoT->present = SRB_ToAddMod_NB_r13__logicalChannelConfig_r13_PR_defaultValue;
 
-	prioritySRB1bis = CALLOC(1, sizeof(long));
-	*prioritySRB1bis = 1; //same as SRB1?
-	SRB1bis_lchan_config_NB_IoT->choice.explicitValue.priority_r13 = prioritySRB1bis;
+	//prioritySRB1bis = CALLOC(1, sizeof(long));
+	//*prioritySRB1bis = 1; //same as SRB1?
+	//SRB1bis_lchan_config_NB_IoT->choice.explicitValue.priority_r13 = prioritySRB1bis;
 
-	logicalChannelSR_Prohibit = CALLOC(1, sizeof(BOOLEAN_t));
-	*logicalChannelSR_Prohibit = 1; //should be set to TRUE (specs pag 641)
-	SRB1bis_lchan_config_NB_IoT->choice.explicitValue.logicalChannelSR_Prohibit_r13 = logicalChannelSR_Prohibit;
+	//logicalChannelSR_Prohibit = CALLOC(1, sizeof(BOOLEAN_t));
+	//*logicalChannelSR_Prohibit = 1; //should be set to TRUE (specs pag 641)
+	//SRB1bis_lchan_config_NB_IoT->choice.defaultValue = 0;
 
 	//ADD SRB1bis
 	//MP: SRB_ToAddModList_NB_r13_t size = 1
@@ -1065,8 +1065,8 @@ uint8_t do_RRCConnectionSetup_NB_IoT(
   //physicalConfigDedicated2_NB_IoT->carrierConfigDedicated_r13= CALLOC(1, sizeof(*physicalConfigDedicated2_NB_IoT->carrierConfigDedicated_r13));
   physicalConfigDedicated2_NB_IoT->npdcch_ConfigDedicated_r13 = CALLOC(1,sizeof(*physicalConfigDedicated2_NB_IoT->npdcch_ConfigDedicated_r13));
   physicalConfigDedicated2_NB_IoT->npusch_ConfigDedicated_r13 = CALLOC(1,sizeof(*physicalConfigDedicated2_NB_IoT->npusch_ConfigDedicated_r13));
-  physicalConfigDedicated2_NB_IoT->uplinkPowerControlDedicated_r13 = NULL;
-  //physicalConfigDedicated2_NB_IoT->uplinkPowerControlDedicated_r13 = CALLOC(1,sizeof(*physicalConfigDedicated2_NB_IoT->uplinkPowerControlDedicated_r13));
+  //physicalConfigDedicated2_NB_IoT->uplinkPowerControlDedicated_r13 = NULL;
+  physicalConfigDedicated2_NB_IoT->uplinkPowerControlDedicated_r13 = CALLOC(1,sizeof(*physicalConfigDedicated2_NB_IoT->uplinkPowerControlDedicated_r13));
 
 #if 0  
   // Carrier config dedicated set to NULL at this moment
@@ -1080,21 +1080,23 @@ uint8_t do_RRCConnectionSetup_NB_IoT(
 #endif
 
  // NPDCCH
- physicalConfigDedicated2_NB_IoT->npdcch_ConfigDedicated_r13->npdcch_NumRepetitions_r13 =NPDCCH_ConfigDedicated_NB_r13__npdcch_NumRepetitions_r13_r4;
+ physicalConfigDedicated2_NB_IoT->npdcch_ConfigDedicated_r13->npdcch_NumRepetitions_r13 =NPDCCH_ConfigDedicated_NB_r13__npdcch_NumRepetitions_r13_r256;
  physicalConfigDedicated2_NB_IoT->npdcch_ConfigDedicated_r13->npdcch_Offset_USS_r13 =NPDCCH_ConfigDedicated_NB_r13__npdcch_Offset_USS_r13_zero;
- physicalConfigDedicated2_NB_IoT->npdcch_ConfigDedicated_r13->npdcch_StartSF_USS_r13=NPDCCH_ConfigDedicated_NB_r13__npdcch_StartSF_USS_r13_v4;
+ physicalConfigDedicated2_NB_IoT->npdcch_ConfigDedicated_r13->npdcch_StartSF_USS_r13=NPDCCH_ConfigDedicated_NB_r13__npdcch_StartSF_USS_r13_v1dot5;
 
  // NPUSCH
  npusch_repetitions = CALLOC(1, sizeof(long));
- *npusch_repetitions = ACK_NACK_NumRepetitions_NB_r13_r2;
- physicalConfigDedicated2_NB_IoT->npusch_ConfigDedicated_r13->ack_NACK_NumRepetitions_r13= NULL;
+ *npusch_repetitions = ACK_NACK_NumRepetitions_NB_r13_r8;
+ physicalConfigDedicated2_NB_IoT->npusch_ConfigDedicated_r13->ack_NACK_NumRepetitions_r13= npusch_repetitions;
  npusch_AllSymbols= CALLOC(1, sizeof(BOOLEAN_t));
  *npusch_AllSymbols= 1; //TRUE
- physicalConfigDedicated2_NB_IoT->npusch_ConfigDedicated_r13->npusch_AllSymbols_r13= NULL;
- physicalConfigDedicated2_NB_IoT->npusch_ConfigDedicated_r13->groupHoppingDisabled_r13=NULL;
+ physicalConfigDedicated2_NB_IoT->npusch_ConfigDedicated_r13->npusch_AllSymbols_r13= npusch_AllSymbols;
+ group_hopping_disabled = CALLOC(1,sizeof(long));
+ *group_hopping_disabled= NPUSCH_ConfigDedicated_NB_r13__groupHoppingDisabled_r13_true;
+ physicalConfigDedicated2_NB_IoT->npusch_ConfigDedicated_r13->groupHoppingDisabled_r13=group_hopping_disabled;
 
  // UplinkPowerControlDedicated
- physicalConfigDedicated2_NB_IoT->uplinkPowerControlDedicated_r13->p0_UE_NPUSCH_r13 = NULL;
+ physicalConfigDedicated2_NB_IoT->uplinkPowerControlDedicated_r13->p0_UE_NPUSCH_r13 = 0;
 
  //Fill the rrcConnectionSetup-NB message
  rrcConnectionSetup_NB_IoT->rrc_TransactionIdentifier = Transaction_id; //input value
