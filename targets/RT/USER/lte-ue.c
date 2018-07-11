@@ -270,11 +270,12 @@ void init_UE(int nb_inst,int eMBMS_active, int uecap_xer_in, int timing_correcti
 				      &UE->proc.attr_ue,
 				      UE_thread,
 				      (void*)UE), "");
-    if (UE->sidelink_active == 1)
+    if (UE->sidelink_active == 1) 
       AssertFatal(0 == pthread_create(&UE->proc.pthread_ueSL,
 				      &UE->proc.attr_ueSL,
 				      UE_threadSL,
 				      (void*)UE), "");
+
   }
 
   printf("UE threads created by %ld\n", gettid());

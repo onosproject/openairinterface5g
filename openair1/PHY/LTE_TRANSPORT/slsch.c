@@ -1046,8 +1046,8 @@ void pscch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
     (sci_rx_flip>>(63-1-7-5-11-8-RAbits+1))&255
     );
 #endif
-    // check group_id here
-    if (ue->slsch_rx.group_destination_id==0) ue->slsch_rx_sdu_active=1;
+    // check group_id here (not done yet)
+    ue->slsch_rx_sdu_active=1;
     /*
     write_output("rxsig0_input.m","rxs0_in",&ue->common_vars.rxdata[0][((subframe_rx<<1)+slot)*ue->frame_parms.samples_per_tti>>1],ue->frame_parms.samples_per_tti>>1,1,1);
     write_output("rxsig0_7_5kHz.m","rxs0_7_5kHz",rxdata_7_5kHz[0],ue->frame_parms.samples_per_tti,1,1);
@@ -1105,7 +1105,10 @@ void rx_slcch(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subframe_rx)
 
   absSF_modP = absSF_offset%P;
 
-  if (absSF_modP == 0) ue->slcch_received=0;
+  if (absSF_modP == 0) {
+     ue->slcch_received=0;
+     ue->slsch_rx_sdu_active = 0;
+  }
 
   // This is the condition for short SCCH bitmap (slsch->SubframeBitmapSL_length bits), check that the current subframe is for SCCH
 
@@ -1477,6 +1480,8 @@ void rx_slsch(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc, int frame_rx,int subframe_rx
 
   if (ue->slcch_received == 0) return;
 
+  if (ue->slsch_rx_sdu_active == 0) return;
+
   absSF_offset = absSF-O;
 
   if (absSF < O) return;
@@ -1486,9 +1491,10 @@ void rx_slsch(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc, int frame_rx,int subframe_rx
   // This is the condition for short SCCH bitmap (slsch->SubframeBitmapSL_length bits), check that the current subframe is for SCCH
   if (absSF_modP < slsch->SubframeBitmapSL_length) return;
 
-  LOG_I(PHY,"Checking pssch for absSF %d (trp mask %d, rv %d)\n",
+  LOG_I(PHY,"Checking pssch for absSF %d (trp mask %d, rv %d, slsch_decoded %d)\n",
 	absSF, trp8[slsch->time_resource_pattern][absSF_modP&7],
-	slsch->rvidx);
+	slsch->rvidx,
+        ue->slsch_decoded);
   // Note : this assumes Ntrp=8 for now
   if (trp8[slsch->time_resource_pattern][absSF_modP&7]==0) return;
   // we have an opportunity in this subframe
@@ -1508,7 +1514,7 @@ void rx_slsch(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc, int frame_rx,int subframe_rx
     else if (slsch->rvidx == 1) slsch->rvidx = 0;
     else                        AssertFatal(1==0,"rvidx %d isn't possible\n",slsch->rvidx);
   }
-
+  LOG_I(PHY,"%d.%d : returning\n",frame_rx,subframe_rx);
 
 }
 
