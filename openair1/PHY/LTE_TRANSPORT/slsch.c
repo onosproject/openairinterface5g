@@ -360,7 +360,7 @@ void pscch_codingmodulation(PHY_VARS_UE *ue,int frame_tx,int subframe_tx,uint32_
     LOG_D(PHY,"pscch_coding\n");
     sci = sci_mapping(ue);
 
-    int length = log2_approx(slsch->N_SL_RB_SC*((ue->slsch_rx.N_SL_RB_SC+1)>>1))+32;
+    int length = log2_approx(slsch->N_SL_RB_data*((ue->slsch_rx.N_SL_RB_data+1)>>1))+32;
 
     LOG_I(PHY,"sci %lx (%d bits): freq_hopping_flag %d,resource_block_coding %d,time_resource_pattern %d,mcs %d,timing_advance_indication %d, group_destination_id %d\n",sci,length, 
            slsch->freq_hopping_flag, 
@@ -525,7 +525,7 @@ void slsch_codingmodulation(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_tx,in
   AssertFatal(ue->slsch_sdu_active > 0,"ue->slsch_sdu_active isn't active\n");
 
   LOG_D(PHY,"Generating SLSCH for rvidx %d, group_id %d, mcs %d, resource first rb %d, L_crbs %d\n",
-	slsch->rvidx,slsch->group_destination_id,slsch->mcs,slsch->RB_start+slsch->prb_Start_SC,slsch->L_CRBs);
+	slsch->rvidx,slsch->group_destination_id,slsch->mcs,slsch->RB_start+slsch->prb_Start_data,slsch->L_CRBs);
 
   
 
@@ -585,11 +585,11 @@ void slsch_codingmodulation(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_tx,in
   uint32_t cinit=510+(((uint32_t)slsch->group_destination_id)<<14)+(ljmod10<<9);
   
   ulsch->harq_processes[0]->nb_rb       = slsch->L_CRBs;
-  ulsch->harq_processes[0]->first_rb    = slsch->RB_start + slsch->prb_Start_SC;
+  ulsch->harq_processes[0]->first_rb    = slsch->RB_start + slsch->prb_Start_data;
   ulsch->harq_processes[0]->mcs         = slsch->mcs;
   ulsch->Nsymb_pusch                    = ((Nsymb-1)<<1);
 
-  LOG_I(PHY,"%d.%d : SLSCH nbrb %d, first rb %d\n",frame_tx,subframe_tx,slsch->L_CRBs,slsch->RB_start+slsch->prb_Start_SC);
+  LOG_I(PHY,"%d.%d : SLSCH nbrb %d, first rb %d\n",frame_tx,subframe_tx,slsch->L_CRBs,slsch->RB_start+slsch->prb_Start_data);
 
   ue->sl_chan = PSSCH_12;
 
@@ -627,7 +627,7 @@ void slsch_codingmodulation(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_tx,in
 		     0,
 		     tx_amp,
 		     subframe_tx,
-		     slsch->RB_start+slsch->prb_Start_SC,
+		     slsch->RB_start+slsch->prb_Start_data,
 		     slsch->L_CRBs,
                      0,
                      ue->gh[1+slsch->group_destination_id],
@@ -1129,7 +1129,6 @@ void rx_slcch(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subframe_rx)
   // sf_index now contains the SF index in 0...LPSCCH-1
   // LPSCCH has the number of PSCCH subframes
 
-  // 2 SLSCH/SLCCH resource block regions subframe times number of resources blocks per slot times 2 slots
   uint32_t M_RB_PSCCH_RP = slsch->N_SL_RB_SC;
 
 
@@ -1196,7 +1195,7 @@ void slsch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
    for (int l=0; l<Nsymb; l++) {
     ulsch_extract_rbs_single((int32_t**)rxdataF,
 			     (int32_t**)rxdataF_ext,
-			     slsch->RB_start+slsch->prb_Start_SC,
+			     slsch->RB_start+slsch->prb_Start_data,
 			     slsch->L_CRBs,
 			     l,
 			     (subframe_rx<<1),
@@ -1205,7 +1204,7 @@ void slsch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
     if (l<Nsymb-1) { // skip last symbol in second slot
       ulsch_extract_rbs_single((int32_t**)rxdataF,
 			       (int32_t**)rxdataF_ext,
-			       slsch->RB_start+slsch->prb_Start_SC,
+			       slsch->RB_start+slsch->prb_Start_data,
 			       slsch->L_CRBs,
 			       l,
 			       (subframe_rx<<1)+1,
@@ -1221,6 +1220,8 @@ void slsch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
   write_output("slsch_rxF_ext.m","slschrxF_ext",rxdataF_ext[0],14*12*ue->frame_parms.N_RB_DL,1,1);
 #endif
 
+  AssertFatal(ue->slsch->group_destination_id < 256,"Illegal group_destination_id %d\n",ue>slsch->group_destination_id);
+  
   uint32_t u = ue->gh[1+ue->slsch->group_destination_id][ljmod10<<1];
   uint32_t v = 0;
   uint32_t cyclic_shift=(ue->slsch->group_destination_id>>1)&7;
