@@ -3420,6 +3420,15 @@ SLSCH_t *ue_get_slsch(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_
 }
 */
 
+const int prblist[6]={6,15,25,50,75,100};
+
+int to_prb(long sl_Bandwidth_r12) {
+
+  AssertFatal(sl_Bandwidth<6, "illegal bandwidth index %d\n",sl_Bandwdith_r12);
+
+  return(prblist[sl_Bandwdith_r12]);
+
+}
 extern const int trp8[TRP8_MAX+1][8];
 
 SLSCH_t *ue_get_slsch(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_t subframeP,int slsch_test) {
@@ -3503,7 +3512,7 @@ SLSCH_t *ue_get_slsch(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_
      slsch->n_pscch                   = ue->sourceL2Id;  
      slsch->format                    = 0;
      slsch->freq_hopping_flag         = 0;
-     slsch->resource_block_coding     = computeRIV(slsch->N_SL_RB_data,RB_start,L_CRBs);
+     slsch->resource_block_coding     = computeRIV(to_prb(ue->sl_Bandwidth_r12),RB_start,L_CRBs);
      slsch->time_resource_pattern     = 106; // all subframes for Nrp=8
      slsch->mcs                       = mcs;
      slsch->timing_advance_indication = 0;

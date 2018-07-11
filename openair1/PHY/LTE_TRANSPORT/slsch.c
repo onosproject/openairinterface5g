@@ -1026,6 +1026,9 @@ void pscch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
   if (res==0) {
     ue->slsch_rx.freq_hopping_flag         = (sci_rx_flip>>63)&1;
     ue->slsch_rx.resource_block_coding     = (sci_rx_flip>>(63-1-RAbits+1))&((1<<RAbits)-1);
+    conv_RIV(ue->frame_parms.N_RB_DL,
+             ue->slsch_rx.resource_block_coding,
+	     &ue->slsch_rx.L_CRBs,&ue->slsch_rx.RB_start);
     ue->slsch_rx.time_resource_pattern     = (sci_rx_flip>>(63-1-7-RAbits+1))&127;
     ue->slsch_rx.mcs                       = (sci_rx_flip>>(63-1-7-5-RAbits+1))&31;
     ue->slsch_rx.timing_advance_indication = (sci_rx_flip>>(63-1-7-5-11-RAbits+1))&2047;
@@ -1220,11 +1223,11 @@ void slsch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
   write_output("slsch_rxF_ext.m","slschrxF_ext",rxdataF_ext[0],14*12*ue->frame_parms.N_RB_DL,1,1);
 #endif
 
-  AssertFatal(ue->slsch->group_destination_id < 256,"Illegal group_destination_id %d\n",ue>slsch->group_destination_id);
+  AssertFatal(slsch->group_destination_id < 256,"Illegal group_destination_id %d\n",ue>slsch->group_destination_id);
   
-  uint32_t u = ue->gh[1+ue->slsch->group_destination_id][ljmod10<<1];
+  uint32_t u = ue->gh[1+slsch->group_destination_id][ljmod10<<1];
   uint32_t v = 0;
-  uint32_t cyclic_shift=(ue->slsch->group_destination_id>>1)&7;
+  uint32_t cyclic_shift=(slsch->group_destination_id>>1)&7;
 
   lte_ul_channel_estimation(&ue->frame_parms,
 			    (int32_t**)drs_ch_estimates,
@@ -1239,7 +1242,7 @@ void slsch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
 			    3,
 			    1, // interpolation
 			    0);
-  u = ue->gh[1+ue->slsch->group_destination_id][1+(ljmod10<<1)];
+  u = ue->gh[1+slsch->group_destination_id][1+(ljmod10<<1)];
   lte_ul_channel_estimation(&ue->frame_parms,
 			    (int32_t**)drs_ch_estimates,
 			    (int32_t**)NULL,

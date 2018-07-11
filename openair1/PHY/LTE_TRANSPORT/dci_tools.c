@@ -7223,6 +7223,30 @@ uint32_t pmi_extend(LTE_DL_FRAME_PARMS *frame_parms,uint8_t wideband_pmi, uint8_
   return(pmi_ex);
 }
 
+void conv_RIV(int N_RB_UL, int RIV, int *L_CRBs, int *RB_start) {
+
+  switch (N_RB_UL) {
+    case 6:
+      *L_CRBs    = RIV2nb_rb_LUT6[RIV];
+      *RB_start  = RIV2first_rb_LUT6[RIV]; 
+      break;
+    case 25:
+      *L_CRBs    = RIV2nb_rb_LUT25[RIV];
+      *RB_start  = RIV2first_rb_LUT25[RIV]; 
+      break;
+    case 50:
+      *L_CRBs    = RIV2nb_rb_LUT50[RIV];
+      *RB_start  = RIV2first_rb_LUT50[RIV]; 
+      break;
+    case 100:
+      *L_CRBs    = RIV2nb_rb_LUT100[RIV];
+      *RB_start  = RIV2first_rb_LUT100[RIV];
+      break;
+    default:
+      AssertFatal(1==0,"unsupported N_RB_UL %d\n",N_RB_UL);
+      break;
+    }
+}
 
 int generate_ue_ulsch_params_from_dci(void *dci_pdu,
                                       uint16_t rnti,
