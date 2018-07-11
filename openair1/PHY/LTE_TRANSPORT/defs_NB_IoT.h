@@ -188,19 +188,18 @@ typedef struct {
   uint8_t               d[96+(3*(24+56))];  // new parameter
   /// Sub-block interleaver outputs
   uint8_t               w[3*3*(56+24)];      // new parameter
-
   /////////////////////////////////
   uint16_t              si_rnti_x;
   /// Concatenated "e"-sequences (for definition see 36-212 V8.6 2009-03, p.17-18)
-  uint8_t               e_x[236];
+  uint8_t               e_x[472];
   /// data after scrambling
-  uint8_t               s_e_x[236];
+  uint8_t               s_e_x[472];
   //length of the table e
   uint16_t              length_e_x;                // new parameter
   /// Tail-biting convolutional coding outputs
-  uint8_t               d_x[96+(3*(24+120))];  // new parameter
+  uint8_t               d_x[96+(3*(24+256))];  // new parameter
   /// Sub-block interleaver outputs
-  uint8_t               w_x[3*3*(120+24)];      // new parameter
+  uint8_t               w_x[3*3*(256+24)];      // new parameter
   ////////////////////////////////
 
   /// Status Flag indicating for this DLSCH (idle,active,disabled)

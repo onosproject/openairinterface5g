@@ -79,6 +79,9 @@ typedef struct {
   uint32_t frame_dscr_msg3;
   uint32_t subframe_dscr_msg3;
 
+  uint32_t frame_msg5;
+  uint32_t subframe_msg5;
+
   uint8_t rar_to_transmit;
   uint8_t     subframe_SP;
   uint8_t     subframe_SP2;
@@ -108,10 +111,12 @@ typedef struct {
   uint32_t subframe_msg4;
 
    uint8_t  guard;
-
+ uint8_t counter_msg5;
   uint8_t remaining_dci;
 
   uint8_t remaining_rar;
+
+  uint8_t flag_msg5;
 
 } eNB_rxtx_proc_t;
 

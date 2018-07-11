@@ -303,7 +303,8 @@ int dlsch_modulation_rar_NB_IoT(int32_t         **txdataF,
               int           G,              // number of bits per subframe
               unsigned int        npdsch_data_subframe,     // subframe index of the data table of npdsch channel (G*Nsf)  , values are between 0..Nsf        
               unsigned int        subframe,
-              unsigned short      NB_IoT_RB_ID);
+              unsigned short      NB_IoT_RB_ID,
+              uint8_t             option);
 
 int32_t dlsch_encoding_NB_IoT(unsigned char              *a,
                               NB_IoT_DL_eNB_SIB_t        *dlsch, // NB_IoT_eNB_NDLSCH_t

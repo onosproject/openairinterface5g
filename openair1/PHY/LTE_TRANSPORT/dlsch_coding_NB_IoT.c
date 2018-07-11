@@ -163,14 +163,19 @@ int dlsch_encoding_rar_NB_IoT(unsigned char      			*a,
 	bzero(npbch_a,7); 
 	bzero(npbch_a_crc,10);
 
-	uint8_t       npbch_a_x[15];
+	/*uint8_t       npbch_a_x[15];
     uint8_t       npbch_a_crc_x[18];
 	bzero(npbch_a_x,15); 
-	bzero(npbch_a_crc_x,18);
+	bzero(npbch_a_crc_x,18);*/
+
+	uint8_t       npbch_a_x[32];
+    uint8_t       npbch_a_crc_x[35];
+	bzero(npbch_a_x,32); 
+	bzero(npbch_a_crc_x,35);
   
 	 
 
-	dlsch->length_e = G;									// G*Nsf (number_of_subframes) = total number of bits to transmit G=236
+	dlsch->length_e = G*Nsf;									// G*Nsf (number_of_subframes) = total number of bits to transmit G=236
 
 	
 
@@ -182,8 +187,8 @@ if(option ==1)
 		npbch_a[i] = a[i];    
 	}
 } else {
-	A 							 = 120;
-	for (int i=0; i<15; i++) 												
+	A 							 = 256;
+	for (int i=0; i<32; i++) 												
 	{	
 		npbch_a_x[i] = a[i];    
 	}
@@ -218,14 +223,14 @@ if(option ==1)
 	    crc = crc24a_NB_IoT(npbch_a_x,A)>>8;
 		
 
-	    for (int j=0; j<15; j++) 												
+	    for (int j=0; j<32; j++) 												
 		{	
 			npbch_a_crc_x[j] = npbch_a_x[j];    
 		}
 
-	    npbch_a_crc_x[15] = ((uint8_t*)&crc)[2];
-	    npbch_a_crc_x[16] = ((uint8_t*)&crc)[1];
-		npbch_a_crc_x[17] = ((uint8_t*)&crc)[0];
+	    npbch_a_crc_x[32] = ((uint8_t*)&crc)[2];
+	    npbch_a_crc_x[33] = ((uint8_t*)&crc)[1];
+		npbch_a_crc_x[34] = ((uint8_t*)&crc)[0];
 		
 			dlsch->B = numbits;			// The length of table b in bits
 			//memcpy(dlsch->b,a,numbits/8);        // comment if option 2 

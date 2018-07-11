@@ -207,7 +207,8 @@ int dlsch_modulation_rar_NB_IoT(int32_t 				**txdataF,
 							int 					G,						  // number of bits per subframe
 							unsigned int				npdsch_data_subframe,     // subframe index of the data table of npdsch channel (G*Nsf)  , values are between 0..Nsf  			
 							unsigned int				subframe,
-							unsigned short 			NB_IoT_RB_ID)
+							unsigned short 			NB_IoT_RB_ID,
+							uint8_t option)
 {
     //uint8_t harq_pid = dlsch0->current_harq_pid;
     //NB_IoT_DL_eNB_HARQ_t *dlsch0_harq = dlsch0->harq_processes[harq_pid];
@@ -245,8 +246,20 @@ int dlsch_modulation_rar_NB_IoT(int32_t 				**txdataF,
 		}
 		symbol_offset = (14*subframe*frame_parms->ofdm_symbol_size) + frame_parms->ofdm_symbol_size*l + NB_IoT_start;  						// symbol_offset = 512 * L + NB_IOT_RB start
 
-
-		allocate_REs_in_RB_NB_IoT(frame_parms,
+		if(option ==2)
+		{
+			allocate_REs_in_RB_NB_IoT(frame_parms,
+								  txdataF,
+								  &jj,
+								  symbol_offset,
+								  &dlsch0->s_e[236],
+								  pilots,
+								  amp,
+								  id_offset,
+								  pilot_shift,
+								  &re_allocated);
+		} else {
+		      allocate_REs_in_RB_NB_IoT(frame_parms,
 								  txdataF,
 								  &jj,
 								  symbol_offset,
@@ -256,6 +269,7 @@ int dlsch_modulation_rar_NB_IoT(int32_t 				**txdataF,
 								  id_offset,
 								  pilot_shift,
 								  &re_allocated);
+	    }
 	}
 	
  // VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_ENB_DLSCH_MODULATION, VCD_FUNCTION_OUT);
