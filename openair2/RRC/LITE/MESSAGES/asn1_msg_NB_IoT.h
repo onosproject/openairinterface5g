@@ -159,7 +159,6 @@ PhysicalConfigDedicated-NB IEs.
 @returns Size of encoded bit stream in bytes*/
 
 uint8_t do_RRCConnectionSetup_NB_IoT(
-  const protocol_ctxt_t*     const ctxt_pP,
   rrc_eNB_ue_context_NB_IoT_t*      const ue_context_pP,
   int                              CC_id,
   uint8_t*                   const buffer, //carrier[CC_id].Srb0.Tx_buffer.Payload
