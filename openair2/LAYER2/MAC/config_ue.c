@@ -728,6 +728,7 @@ rrc_mac_config_req_ue(module_id_t Mod_idP,
 
     LOG_I(MAC,"Getting SL parameters\n");
 
+    UE_mac_inst[Mod_idP].SL_Preconfiguration = SL_Preconfiguration_r12;
     // SLSS
 
     UE_mac_inst[Mod_idP].slss.SL_OffsetIndicator   = SL_Preconfiguration_r12->preconfigSync_r12.syncOffsetIndicator1_r12;
