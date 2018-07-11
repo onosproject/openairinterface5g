@@ -351,6 +351,25 @@ uint32_t conv_nprb(uint8_t ra_header,uint32_t rb_alloc,int N_RB_DL)
   return(nprb);
 }
 
+
+void RIV2_alloc(uint16_t N_RB_DL,uint16_t RIV, int *Lcrbs, int *RBstart) {
+
+   int A = RIV/N_RB_DL;
+   int B = RIV%N_RB_DL;
+
+   *Lcrbs = A+1; 
+   // check condition RBstart <= N_RB_DL + 1 - Lcrbs 
+   if (A <= N_RB_DL - B) {
+    *Lcrbs = A+1;
+    *RBstart = B;
+   }
+   else {
+     *Lcrbs =  N_RB_DL+1-A;
+     *RBstart = N_RB_DL-1-B;
+   }
+
+}
+
 uint16_t computeRIV(uint16_t N_RB_DL,uint16_t RBstart,uint16_t Lcrbs)
 {
 
