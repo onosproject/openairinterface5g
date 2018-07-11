@@ -3512,7 +3512,7 @@ SLSCH_t *ue_get_slsch(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_
      slsch->n_pscch                   = ue->sourceL2Id;  
      slsch->format                    = 0;
      slsch->freq_hopping_flag         = 0;
-     slsch->resource_block_coding     = computeRIV(to_prb((int)ue->SL_Preconfiguration->preconfigGeneral_r12.sl_bandwidth_r12),RB_start,L_CRBs);
+     slsch->resource_block_coding     = computeRIV(slsch->N_SL_RB_data,RB_start,L_CRBs);
      slsch->time_resource_pattern     = 106; // all subframes for Nrp=8
      slsch->mcs                       = mcs;
      slsch->timing_advance_indication = 0;

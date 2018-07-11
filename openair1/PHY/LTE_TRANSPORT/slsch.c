@@ -1026,9 +1026,9 @@ void pscch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
   if (res==0) {
     ue->slsch_rx.freq_hopping_flag         = (sci_rx_flip>>63)&1;
     ue->slsch_rx.resource_block_coding     = (sci_rx_flip>>(63-1-RAbits+1))&((1<<RAbits)-1);
-    conv_RIV(ue->frame_parms.N_RB_DL,
-             ue->slsch_rx.resource_block_coding,
-	     &ue->slsch_rx.L_CRBs,&ue->slsch_rx.RB_start);
+    RIV2_alloc(slsch_rx.N_RB_SL_data,
+               ue->slsch_rx.resource_block_coding,
+	       &ue->slsch_rx.L_CRBs,&ue->slsch_rx.RB_start);
     ue->slsch_rx.time_resource_pattern     = (sci_rx_flip>>(63-1-7-RAbits+1))&127;
     ue->slsch_rx.mcs                       = (sci_rx_flip>>(63-1-7-5-RAbits+1))&31;
     ue->slsch_rx.timing_advance_indication = (sci_rx_flip>>(63-1-7-5-11-RAbits+1))&2047;
