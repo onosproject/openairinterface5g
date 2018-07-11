@@ -1007,7 +1007,7 @@ void pscch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
   uint16_t res;
   uint64_t sci_rx=0,sci_rx_flip=0;
   //decoding
-  int length = log2_approx(slsch->N_SL_RB_data*((ue->slsch_rx.N_SL_RB_data+1)>>1))+32;
+  int length = log2_approx(slsch->N_SL_RB_data*(slsch->N_SL_RB_data+1)>>1)+32;
   dci_decoding(length,E,f,(uint8_t*)&sci_rx);
   ((uint8_t *)&sci_rx_flip)[0] = ((uint8_t *)&sci_rx)[7];
   ((uint8_t *)&sci_rx_flip)[1] = ((uint8_t *)&sci_rx)[6];
@@ -1024,26 +1024,26 @@ void pscch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
   int RAbits = length-32;
 
   if (res==0) {
-    ue->slsch_rx.freq_hopping_flag         = (sci_rx_flip>>63)&1;
-    ue->slsch_rx.resource_block_coding     = (sci_rx_flip>>(63-1-RAbits+1))&((1<<RAbits)-1);
-    RIV2_alloc(slsch_rx.N_RB_SL_data,
-               ue->slsch_rx.resource_block_coding,
-	       &ue->slsch_rx.L_CRBs,&ue->slsch_rx.RB_start);
-    ue->slsch_rx.time_resource_pattern     = (sci_rx_flip>>(63-1-7-RAbits+1))&127;
-    ue->slsch_rx.mcs                       = (sci_rx_flip>>(63-1-7-5-RAbits+1))&31;
-    ue->slsch_rx.timing_advance_indication = (sci_rx_flip>>(63-1-7-5-11-RAbits+1))&2047;
-    ue->slsch_rx.group_destination_id      = (sci_rx_flip>>(63-1-7-5-11-8-RAbits+1))&255;
+    slsch->freq_hopping_flag         = (sci_rx_flip>>63)&1;
+    slsch->resource_block_coding     = (sci_rx_flip>>(63-1-RAbits+1))&((1<<RAbits)-1);
+    RIV2_alloc(slsch->N_SL_RB_data,
+               slsch->resource_block_coding,
+	       &slsch->L_CRBs,&slsch->RB_start);
+    slsch->time_resource_pattern     = (sci_rx_flip>>(63-1-7-RAbits+1))&127;
+    slsch->mcs                       = (sci_rx_flip>>(63-1-7-5-RAbits+1))&31;
+    slsch->timing_advance_indication = (sci_rx_flip>>(63-1-7-5-11-RAbits+1))&2047;
+    slsch->group_destination_id      = (sci_rx_flip>>(63-1-7-5-11-8-RAbits+1))&255;
     ue->slcch_received                     = 1;
     ue->slsch_decoded                      = 0;
 #ifdef DEBUG_SCI_DECODING
     printf("sci %lx (%d bits,RAbits %d) : freq_hop %d, resource_block_coding %d, time_resource_pattern %d, mcs %d, timing_advance_indication %d, group_destination_id %d (gid shift %d result %lx => %lx\n",
 	   sci_rx_flip,length,RAbits,
-	   ue->slsch_rx.freq_hopping_flag,
-	   ue->slsch_rx.resource_block_coding,
-	   ue->slsch_rx.time_resource_pattern,
-	   ue->slsch_rx.mcs,
-	   ue->slsch_rx.timing_advance_indication,
-    ue->slsch_rx.group_destination_id,
+	   slsch->freq_hopping_flag,
+	   slsch->resource_block_coding,
+	   slsch->time_resource_pattern,
+	   slsch->mcs,
+	   slsch->timing_advance_indication,
+    slsch->group_destination_id,
     63-1-7-5-11-8-RAbits+1,
     (sci_rx_flip>>(63-1-7-5-11-8-RAbits+1)),
     (sci_rx_flip>>(63-1-7-5-11-8-RAbits+1))&255
