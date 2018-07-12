@@ -167,9 +167,11 @@ int generate_drs_pusch(PHY_VARS_UE *ue,
        l += linc,u=u1,v=v1,cyclic_shift=cyclic_shift1) {
 
     drs_offset = 0;
-#ifdef DEBUG_DRS
+
+    //#ifdef DEBUG_DRS
     LOG_I(PHY,"drs_modulation: l %d Msc_RS = %d, Msc_RS_idx = %d, u=%d,v=%d, cyclic shift %d,ljmo10 %d\n",l,Msc_RS, Msc_RS_idx,u,v,cyclic_shift,ljmod10);
-#endif
+    //#endif
+
 
 
     re_offset = frame_parms->first_carrier_offset;

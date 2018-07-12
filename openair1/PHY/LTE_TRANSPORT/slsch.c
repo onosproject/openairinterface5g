@@ -583,7 +583,8 @@ void slsch_codingmodulation(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_tx,in
   
   // scrambling
   uint32_t cinit=510+(((uint32_t)slsch->group_destination_id)<<14)+(ljmod10<<9);
-  
+ 
+  LOG_I(PHY,"SLSCH cinit %x (%d,%d)\n",cinit,slsch->group_destination_id,ljmod10); 
   ulsch->harq_processes[0]->nb_rb       = slsch->L_CRBs;
   ulsch->harq_processes[0]->first_rb    = slsch->RB_start + slsch->prb_Start_data;
   ulsch->harq_processes[0]->mcs         = slsch->mcs;
@@ -1465,8 +1466,10 @@ void slsch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
   }
   else if (ue->dlsch_rx_slsch->harq_processes[0]->rvidx == 1 &&
 	   ret==ue->dlsch_rx_slsch->max_turbo_iterations) {
-    LOG_I(PHY,"sLSCH received in error for group_id %d (L_CRBs %d, mcs %d)\n",
-	  slsch->group_destination_id,slsch->L_CRBs,slsch->mcs);
+    LOG_I(PHY,"sLSCH received in error for group_id %d (L_CRBs %d, mcs %d) power (%d,%d)\n",
+	  slsch->group_destination_id,slsch->L_CRBs,slsch->mcs,
+	  dB_fixed(ue->pusch_slsch->ulsch_power[0]),
+	  dB_fixed(ue->pusch_slsch->ulsch_power[1]));
     ue->slsch_errors++;
   }
   else LOG_I(PHY,"sLSCH received in error for rvidx %d round %d (L_CRBs %d, mcs %d)\n",
