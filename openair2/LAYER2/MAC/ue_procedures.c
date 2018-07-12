@@ -3504,7 +3504,7 @@ SLSCH_t *ue_get_slsch(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_
             }
      if (ue->sltx_active == 0) return((SLSCH_t*)NULL);
 
-     slsch->ljmod10 = 0;
+     slsch->ljmod10 = 10; // note this will cause ljmod10 to be reset for first transmission of SLSCH
      slsch->rvidx   = 1;
      slsch->RB_start = RB_start;
      slsch->L_CRBs   = L_CRBs;
