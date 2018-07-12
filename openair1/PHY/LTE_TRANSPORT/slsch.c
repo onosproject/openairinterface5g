@@ -1230,7 +1230,7 @@ void slsch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
   uint32_t v = 0;
   uint32_t cyclic_shift=(slsch->group_destination_id>>1)&7;
 
-  LOG_I(PHY,"SLSCH, u0 %d, cyclic_shift %d\n",u,cyclic_shift);
+  LOG_I(PHY,"SLSCH, u0 %d, cyclic_shift %d (ljmod10 %d)\n",u,cyclic_shift,ljmod10);
   lte_ul_channel_estimation(&ue->frame_parms,
 			    (int32_t**)drs_ch_estimates,
 			    (int32_t**)NULL,
