@@ -1195,6 +1195,7 @@ void slsch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
     }
     LOG_I(PHY,"SLSCH Slot FEP %d.%d\n",frame_rx,subframe_rx);
   }
+  LOG_I(PHY,"SLSCH RBstart %d, L_CRBs %d\n",slsch->RB_start+slsch->prb_Start_data,slsch->L_CRBs);
   // extract symbols from slot 
    for (int l=0; l<Nsymb; l++) {
     ulsch_extract_rbs_single((int32_t**)rxdataF,
@@ -1230,6 +1231,7 @@ void slsch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
   uint32_t v = 0;
   uint32_t cyclic_shift=(slsch->group_destination_id>>1)&7;
 
+  LOG_I(PHY,"SLSCH, u0 %d, cyclic_shift %d\n",u,cyclic_shift);
   lte_ul_channel_estimation(&ue->frame_parms,
 			    (int32_t**)drs_ch_estimates,
 			    (int32_t**)NULL,
@@ -1244,6 +1246,8 @@ void slsch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
 			    1, // interpolation
 			    0);
   u = ue->gh[1+slsch->group_destination_id][1+(ljmod10<<1)];
+  LOG_I(PHY,"SLSCH, u1 %d\n",u);
+
   lte_ul_channel_estimation(&ue->frame_parms,
 			    (int32_t**)drs_ch_estimates,
 			    (int32_t**)NULL,
