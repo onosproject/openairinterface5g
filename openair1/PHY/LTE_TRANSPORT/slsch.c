@@ -103,7 +103,7 @@ uint64_t sci_mapping(PHY_VARS_UE *ue) {
   AssertFatal(slsch->group_destination_id<256,"slsch->group_destination_id %d >= 256\n",slsch->group_destination_id);
   uint64_t group_destination_id = (uint64_t)slsch->group_destination_id;
  
-  LOG_I(PHY,"SCI : RAbits %d\n",RAbits); 
+  LOG_D(PHY,"SCI : RAbits %d\n",RAbits); 
   // map bitfields
   // frequency-hopping 1-bit
   return( (freq_hopping_flag <<63) | 
@@ -362,7 +362,7 @@ void pscch_codingmodulation(PHY_VARS_UE *ue,int frame_tx,int subframe_tx,uint32_
 
     int length = log2_approx(slsch->N_SL_RB_data*((ue->slsch_rx.N_SL_RB_data+1)>>1))+32;
 
-    LOG_I(PHY,"sci %lx (%d bits): freq_hopping_flag %d,resource_block_coding %d,time_resource_pattern %d,mcs %d,timing_advance_indication %d, group_destination_id %d\n",sci,length, 
+    LOG_D(PHY,"sci %lx (%d bits): freq_hopping_flag %d,resource_block_coding %d,time_resource_pattern %d,mcs %d,timing_advance_indication %d, group_destination_id %d\n",sci,length, 
            slsch->freq_hopping_flag, 
            slsch->resource_block_coding,
            slsch->time_resource_pattern,
@@ -421,7 +421,7 @@ void pscch_codingmodulation(PHY_VARS_UE *ue,int frame_tx,int subframe_tx,uint32_
   if (amod<(slsch->N_SL_RB_SC>>1)) nprb = slsch->prb_Start_SC + amod;
   else                             nprb = slsch->prb_End_SC-(slsch->N_SL_RB_SC>>1)+amod;
 
-  LOG_I(PHY,"%d.%d: nprb %d, slot %d\n",frame_tx,subframe_tx,nprb,slot);
+  LOG_D(PHY,"%d.%d: nprb %d, slot %d\n",frame_tx,subframe_tx,nprb,slot);
   // Fill in power control later
   //  pssch_power_cntl(ue,proc,eNB_id,1, abstraction_flag);
   //  ue->tx_power_dBm[subframe_tx] = ue->slcch[eNB_id]->Po_PUSCH;
@@ -468,7 +468,7 @@ void pscch_codingmodulation(PHY_VARS_UE *ue,int frame_tx,int subframe_tx,uint32_
   int32_t *txptr;
 
   if (ue->generate_ul_signal[subframe_tx][0] == 0) 
-    LOG_I(PHY,"%d.%d: clearing ul_signal\n",frame_tx,subframe_tx);
+    LOG_D(PHY,"%d.%d: clearing ul_signal\n",frame_tx,subframe_tx);
     for (int aa=0; aa<ue->frame_parms.nb_antennas_tx; aa++) {
       memset(&ue->common_vars.txdataF[aa][subframe_tx*ue->frame_parms.ofdm_symbol_size*ue->frame_parms.symbols_per_tti],
 	     0,
@@ -584,13 +584,13 @@ void slsch_codingmodulation(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_tx,in
   // scrambling
   uint32_t cinit=510+(((uint32_t)slsch->group_destination_id)<<14)+(ljmod10<<9);
  
-  LOG_I(PHY,"SLSCH cinit %x (%d,%d)\n",cinit,slsch->group_destination_id,ljmod10); 
+  LOG_D(PHY,"SLSCH cinit %x (%d,%d)\n",cinit,slsch->group_destination_id,ljmod10); 
   ulsch->harq_processes[0]->nb_rb       = slsch->L_CRBs;
   ulsch->harq_processes[0]->first_rb    = slsch->RB_start + slsch->prb_Start_data;
   ulsch->harq_processes[0]->mcs         = slsch->mcs;
   ulsch->Nsymb_pusch                    = ((Nsymb-1)<<1);
 
-  LOG_I(PHY,"%d.%d : SLSCH nbrb %d, first rb %d\n",frame_tx,subframe_tx,slsch->L_CRBs,slsch->RB_start+slsch->prb_Start_data);
+  LOG_D(PHY,"%d.%d : SLSCH nbrb %d, first rb %d\n",frame_tx,subframe_tx,slsch->L_CRBs,slsch->RB_start+slsch->prb_Start_data);
 
   ue->sl_chan = PSSCH_12;
 
@@ -748,7 +748,7 @@ void check_and_generate_pscch(PHY_VARS_UE *ue,int frame_tx,int subframe_tx) {
   uint32_t b2=(slsch->n_pscch + 1 + (a1%(LPSCCH-1)))%LPSCCH;
 
 
-  LOG_I(PHY,"Checking pscch for absSF %d / n_pscch %d (N_SL_RB_SC %d, LPSCCH %d, M_RB_PSCCH_RP %d, a1 %d, a2 %d, b1 %d, b2 %d) pscch_coded %d\n",
+  LOG_D(PHY,"Checking pscch for absSF %d / n_pscch %d (N_SL_RB_SC %d, LPSCCH %d, M_RB_PSCCH_RP %d, a1 %d, a2 %d, b1 %d, b2 %d) pscch_coded %d\n",
 	absSF, slsch->n_pscch,slsch->N_SL_RB_SC,LPSCCH, M_RB_PSCCH_RP,a1,a2,b1,b2,ue->pscch_coded);
 
   ue->slsch_sdu_active = 1;
@@ -779,7 +779,7 @@ void generate_slsch(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,SLSCH_t *slsch,int fram
 	     (void*)slsch->payload,
 	     slsch->payload_length);
       
-      LOG_I(PHY,"SLSCH configuration %lu bytes, TBS payload %d bytes => %lu bytes\n",
+      LOG_D(PHY,"SLSCH configuration %lu bytes, TBS payload %d bytes => %lu bytes\n",
 	    sizeof(SLSCH_t)-sizeof(uint8_t*),
 	    slsch->payload_length,
 	    slsch_header_len+sizeof(SLSCH_t)-sizeof(uint8_t*)+slsch->payload_length);
@@ -795,10 +795,10 @@ void generate_slsch(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,SLSCH_t *slsch,int fram
     ue->slsch           = slsch;
   }
   // check and flll SCI portion
-  LOG_I(PHY,"pscch: SFN.SF %d.%d\n",frame_tx,subframe_tx); 
+  LOG_D(PHY,"pscch: SFN.SF %d.%d\n",frame_tx,subframe_tx); 
   check_and_generate_pscch(ue,frame_tx,subframe_tx);
   // check and flll SLSCH portion
-  LOG_I(PHY,"pssch: SFN.SF %d.%d\n",frame_tx,subframe_tx); 
+  LOG_D(PHY,"pssch: SFN.SF %d.%d\n",frame_tx,subframe_tx); 
   check_and_generate_pssch(ue,proc,frame_tx,subframe_tx);
 }
 
@@ -827,7 +827,7 @@ void pscch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
   if (amod<(slsch->N_SL_RB_SC>>1)) nprb = slsch->prb_Start_SC + amod;
   else                             nprb = slsch->prb_End_SC-(slsch->N_SL_RB_SC>>1)+amod;
 
-  if (frame_rx < 100) LOG_I(PHY,"%d.%d: Running pscch decoding slot %d, nprb %d, a %d, amod %d,N_SL_RB_SC %d\n",frame_rx,subframe_rx,slot,nprb,a,amod,slsch->N_SL_RB_SC); 
+  if (frame_rx < 100) LOG_D(PHY,"%d.%d: Running pscch decoding slot %d, nprb %d, a %d, amod %d,N_SL_RB_SC %d\n",frame_rx,subframe_rx,slot,nprb,a,amod,slsch->N_SL_RB_SC); 
   // slot FEP
   if (proc->sl_fep_done == 0) {
     RU_t ru_tmp;
@@ -899,7 +899,7 @@ void pscch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
   
   log2_maxh = (log2_approx(avgs)/2)+ log2_approx(ue->frame_parms.nb_antennas_rx-1)+4;
 
-  LOG_I(PHY,"%d.%d: nprb %d slot %d, pssch log2_maxh %d\n",frame_rx,subframe_rx,nprb,slot,log2_maxh);
+  LOG_D(PHY,"%d.%d: nprb %d slot %d, pssch log2_maxh %d\n",frame_rx,subframe_rx,nprb,slot,log2_maxh);
   for (int l=0; l<(ue->frame_parms.symbols_per_tti>>1)-slot; l++) {
   
     int l2 = l + slot*(ue->frame_parms.symbols_per_tti>>1);
@@ -1170,7 +1170,7 @@ void slsch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
   int32_t avgU[2];
 
 
-  LOG_I(PHY,"slsch_decoding %d.%d => lmod10 %d\n",frame_rx,subframe_rx,ljmod10);
+  LOG_D(PHY,"slsch_decoding %d.%d => lmod10 %d\n",frame_rx,subframe_rx,ljmod10);
 
   // slot FEP
   if (proc->sl_fep_done == 0) {
@@ -1193,9 +1193,9 @@ void slsch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
       if (l<Nsymb-1)  // skip last symbol in second slot
 	slot_fep_ul(&ru_tmp,l,(subframe_rx<<1)+1,0);
     }
-    LOG_I(PHY,"SLSCH Slot FEP %d.%d\n",frame_rx,subframe_rx);
+    LOG_D(PHY,"SLSCH Slot FEP %d.%d\n",frame_rx,subframe_rx);
   }
-  LOG_I(PHY,"SLSCH RBstart %d, L_CRBs %d\n",slsch->RB_start+slsch->prb_Start_data,slsch->L_CRBs);
+  LOG_D(PHY,"SLSCH RBstart %d, L_CRBs %d\n",slsch->RB_start+slsch->prb_Start_data,slsch->L_CRBs);
   // extract symbols from slot 
    for (int l=0; l<Nsymb; l++) {
     ulsch_extract_rbs_single((int32_t**)rxdataF,
@@ -1231,7 +1231,7 @@ void slsch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
   uint32_t v = 0;
   uint32_t cyclic_shift=(slsch->group_destination_id>>1)&7;
 
-  LOG_I(PHY,"SLSCH, u0 %d, cyclic_shift %d\n",u,cyclic_shift);
+  LOG_D(PHY,"SLSCH, u0 %d, cyclic_shift %d (ljmod10 %d)\n",u,cyclic_shift,ljmod10);
   lte_ul_channel_estimation(&ue->frame_parms,
 			    (int32_t**)drs_ch_estimates,
 			    (int32_t**)NULL,
@@ -1243,10 +1243,10 @@ void slsch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
 			    v,
 			    cyclic_shift,
 			    3,
-			    1, // interpolation
+			    0, // interpolation
 			    0);
   u = ue->gh[1+slsch->group_destination_id][1+(ljmod10<<1)];
-  LOG_I(PHY,"SLSCH, u1 %d\n",u);
+  LOG_D(PHY,"SLSCH, u1 %d\n",u);
 
   lte_ul_channel_estimation(&ue->frame_parms,
 			    (int32_t**)drs_ch_estimates,
@@ -1259,7 +1259,7 @@ void slsch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
 			    v,
 			    cyclic_shift,
 			    10,
-			    1, // interpolation
+			    0, // interpolation
 			    0);
 
   ulsch_channel_level(drs_ch_estimates,
@@ -1383,7 +1383,7 @@ void slsch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
   // unscrambling
 
   uint32_t x1,x2=510+(((uint32_t)slsch->group_destination_id)<<14)+(ljmod10<<9);
-  LOG_I(PHY,"Setting seed (unscrambling) for SL to %x (%x,%d)\n",x2,slsch->group_destination_id,ljmod10);
+  LOG_D(PHY,"Setting seed (unscrambling) for SL to %x (%x,%d)\n",x2,slsch->group_destination_id,ljmod10);
 
   uint32_t s = lte_gold_generic(&x1, &x2, 1);
   int k=0;
@@ -1452,7 +1452,9 @@ void slsch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
 		 0,
 		 1);
 
-//  printf("slsch decoding round %d ret %d\n",ue->dlsch_rx_slsch->harq_processes[0]->round,ret);
+  LOG_D(PHY,"slsch decoding round %d ret %d (%d,%d)\n",(ue->dlsch_rx_slsch->harq_processes[0]->round+3)&3,ret,
+	dB_fixed(ue->pusch_slsch->ulsch_power[0]),
+	dB_fixed(ue->pusch_slsch->ulsch_power[1]));
   if (ret<ue->dlsch_rx_slsch->max_turbo_iterations) {
     ue->slsch_decoded=1;
     LOG_D(PHY,"SLSCH received for group_id %d (L_CRBs %d, mcs %d,rvidx %d, iter %d)\n",
@@ -1472,8 +1474,19 @@ void slsch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
 	  dB_fixed(ue->pusch_slsch->ulsch_power[1]));
     ue->slsch_errors++;
   }
-  else LOG_I(PHY,"sLSCH received in error for rvidx %d round %d (L_CRBs %d, mcs %d)\n",
-    slsch->rvidx,(ue->dlsch_rx_slsch->harq_processes[0]->round+3)&3,slsch->L_CRBs,slsch->mcs);
+  else {
+     LOG_D(PHY,"sLSCH received in error for rvidx %d round %d (L_CRBs %d, mcs %d)\n",
+           slsch->rvidx,(ue->dlsch_rx_slsch->harq_processes[0]->round+3)&3,slsch->L_CRBs,slsch->mcs);
+/*
+     if (slsch->rvidx == 0) {
+        write_output("slsch_rxF_comp.m","slschrxF_comp",rxdataF_comp[0],ue->frame_parms.N_RB_UL*12*14,1,1);
+	write_output("slsch_rxF_ext.m","slschrxF_ext",rxdataF_ext[0],14*12*ue->frame_parms.N_RB_DL,1,1);
+	write_output("drs_ext0.m","drsest0",drs_ch_estimates[0],ue->frame_parms.N_RB_UL*12*14,1,1);
+	exit(-1);
+
+     }
+*/
+  }
 
 
 }
@@ -1502,7 +1515,7 @@ void rx_slsch(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc, int frame_rx,int subframe_rx
   // This is the condition for short SCCH bitmap (slsch->SubframeBitmapSL_length bits), check that the current subframe is for SCCH
   if (absSF_modP < slsch->SubframeBitmapSL_length) return;
 
-  LOG_I(PHY,"Checking pssch for absSF %d (trp mask %d, rv %d, slsch_decoded %d)\n",
+  LOG_D(PHY,"Checking pssch for absSF %d (trp mask %d, rv %d, slsch_decoded %d)\n",
 	absSF, trp8[slsch->time_resource_pattern][absSF_modP&7],
 	slsch->rvidx,
         ue->slsch_decoded);
@@ -1525,7 +1538,7 @@ void rx_slsch(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc, int frame_rx,int subframe_rx
     else if (slsch->rvidx == 1) slsch->rvidx = 0;
     else                        AssertFatal(1==0,"rvidx %d isn't possible\n",slsch->rvidx);
   }
-  LOG_I(PHY,"%d.%d : returning\n",frame_rx,subframe_rx);
+  LOG_D(PHY,"%d.%d : returning\n",frame_rx,subframe_rx);
 
 }
 
