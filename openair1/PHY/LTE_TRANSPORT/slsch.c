@@ -1461,6 +1461,14 @@ void slsch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
 	  slsch->group_destination_id,slsch->L_CRBs,slsch->mcs,
 	  slsch->rvidx,ret);
 
+    ue_send_sl_sdu(0,
+                   0,
+                   frame_rx,subframe_rx,
+                   ue->dlsch_rx_slsch->harq_processes[0]->b,
+                   ue->dlsch_rx_slsch->harq_processes[0]->TBS>>3,
+                   0,
+                   SL_DISCOVERY_FLAG_NO);
+
     if      (slsch->rvidx == 0 ) ue->slsch_rxcnt[0]++;
     else if (slsch->rvidx == 2 ) ue->slsch_rxcnt[1]++;
     else if (slsch->rvidx == 3 ) ue->slsch_rxcnt[2]++;

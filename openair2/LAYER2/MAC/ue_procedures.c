@@ -896,11 +896,12 @@ void ue_send_sl_sdu(module_id_t module_idP,
 
       //match the destinationL2Id with UE L2Id or groupL2ID
       if (!(((destinationL2Id == UE_mac_inst[module_idP].sourceL2Id) && (j < MAX_NUM_LCID)) | ((destinationL2Id == UE_mac_inst[module_idP].sourceL2Id) && (longh->LCID >= MAX_NUM_LCID_DATA)) | (i < MAX_NUM_LCID))){
-         LOG_I( MAC, "[Destination Id is neither matched with Source Id nor with Group Id, drop the packet!!! \n");
+         LOG_W( MAC, "[Destination Id %d is neither matched with Source Id %d nor with Group Id, drop the packet!!! \n",
+                destinationL2Id,UE_mac_inst[module_idP].sourceL2Id);
          return;
       }
       if (lcid == 0) {
-         LOG_I( MAC, "[Destination Id is neither matched with Source Id nor with Group Id, drop the packet!!! \n");
+         LOG_W( MAC, "lcid = 0 drop the packet!!! \n");
          return;
       }
 
