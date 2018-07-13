@@ -33,7 +33,7 @@
 #include "pssch.h"
 
 //#define PSSCH_DEBUG 1
-#define DEBUG_SCI_DECODING 1
+//#define DEBUG_SCI_DECODING 1
 
 void generate_sl_grouphop(PHY_VARS_UE *ue)
 {
