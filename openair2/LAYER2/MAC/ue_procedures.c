@@ -3439,7 +3439,7 @@ SLSCH_t *ue_get_slsch(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_
    int sdu_length;
    //uint8_t sl_lcids[2] = {3, 10}; //list of lcids for SL - hardcoded
    int i = 0;
-   int mcs=19;
+   int mcs=10;
    int L_CRBs=10;
    int RB_start=0;
    // Note: this is hard-coded for now for the default SL configuration (4 SF PSCCH, 36 SF PSSCH)
@@ -3464,17 +3464,17 @@ SLSCH_t *ue_get_slsch(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_
                      if ((ue->sourceL2Id > 0) && (ue->sl_info[i].destinationL2Id >0) ){
                         rlc_status = mac_rlc_status_ind(module_idP, 0x1234,0,frameP,subframeP,ENB_FLAG_NO,MBMS_FLAG_NO,
                               ue->sl_info[i].LCID, 0xFFFF, ue->sourceL2Id, ue->sl_info[i].destinationL2Id );
-                        LOG_I(MAC,"absSF_offset %d (test %d): Checking status (%d,Dest %d) => LCID %d => %d bytes\n",absSF_offset,slsch_test,ue->sourceL2Id,ue->sl_info[i].destinationL2Id,ue->sl_info[i].LCID,rlc_status.bytes_in_buffer);
+                        LOG_D(MAC,"absSF_offset %d (test %d): Checking status (%d,Dest %d) => LCID %d => %d bytes\n",absSF_offset,slsch_test,ue->sourceL2Id,ue->sl_info[i].destinationL2Id,ue->sl_info[i].LCID,rlc_status.bytes_in_buffer);
                         if (rlc_status.bytes_in_buffer > 2 || slsch_test == 1){
                            if (slsch_test == 1 && rlc_status.bytes_in_buffer <= 2) rlc_status.bytes_in_buffer = 300;
-                           LOG_I(MAC,"SFN.SF %d.%d: Scheduling for %d bytes in Sidelink buffer \n",frameP,subframeP,rlc_status.bytes_in_buffer);
+                           LOG_D(MAC,"SFN.SF %d.%d: Scheduling for %d bytes in Sidelink buffer \n",frameP,subframeP,rlc_status.bytes_in_buffer);
 
                            // Fill in group id for off-network communications
                            ue->sltx_active = 1;
                            //store LCID, destinationL2Id
                            ue->slsch_lcid =  ue->sl_info[i].LCID;
                            ue->destinationL2Id = ue->sl_info[i].destinationL2Id;
-                           LOG_I(MAC,"LCID %d, source L2ID  0x%08x, destinationL2Id: 0x%08x \n",ue->slsch_lcid, ue->sourceL2Id, ue->destinationL2Id);
+                           LOG_D(MAC,"LCID %d, source L2ID  0x%08x, destinationL2Id: 0x%08x \n",ue->slsch_lcid, ue->sourceL2Id, ue->destinationL2Id);
                            break;
                         }
                      }
@@ -3482,18 +3482,18 @@ SLSCH_t *ue_get_slsch(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_
                      if ((ue->sourceL2Id > 0) && (ue->sl_info[i].groupL2Id >0) ){
                         rlc_status = mac_rlc_status_ind(module_idP, 0x1234,0,frameP,subframeP,ENB_FLAG_NO,MBMS_FLAG_NO, 
                               ue->sl_info[i].LCID, 0xFFFF, ue->sourceL2Id, ue->sl_info[i].groupL2Id);
-                        LOG_I(MAC,"Checking status (%d,Group %d) => LCID %d => %d bytes\n",ue->sourceL2Id,ue->sl_info[i].destinationL2Id);
+                        LOG_D(MAC,"Checking status (%d,Group %d) => LCID %d => %d bytes\n",ue->sourceL2Id,ue->sl_info[i].destinationL2Id);
                         if (rlc_status.bytes_in_buffer > 2 || slsch_test == 1){
 
                            if (slsch_test == 1 && rlc_status.bytes_in_buffer <= 2) rlc_status.bytes_in_buffer = 300;
 
-                           LOG_I(MAC,"SFN.SF %d.%d: Scheduling for %d bytes in Sidelink buffer\n",frameP,subframeP,rlc_status.bytes_in_buffer);
+                           LOG_D(MAC,"SFN.SF %d.%d: Scheduling for %d bytes in Sidelink buffer\n",frameP,subframeP,rlc_status.bytes_in_buffer);
                            // Fill in group id for off-network communications
                            ue->sltx_active = 1;
                            //store LCID, destinationL2Id
                            ue->slsch_lcid =  ue->sl_info[i].LCID;
                            ue->destinationL2Id = ue->sl_info[i].groupL2Id;
-                           LOG_I(MAC,"LCID %d, source L2ID  0x%08x, groupL2Id: 0x%08x \n",ue->slsch_lcid, ue->sourceL2Id, ue->destinationL2Id);
+                           LOG_D(MAC,"LCID %d, source L2ID  0x%08x, groupL2Id: 0x%08x \n",ue->slsch_lcid, ue->sourceL2Id, ue->destinationL2Id);
                            break;
                         }
                      }
@@ -3504,7 +3504,7 @@ SLSCH_t *ue_get_slsch(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_
             }
      if (ue->sltx_active == 0) return((SLSCH_t*)NULL);
 
-     slsch->ljmod10 = 10; // note this will cause ljmod10 to be reset for first transmission of SLSCH
+     slsch->ljmod10 = 9; // note this will cause ljmod10 to be reset for first transmission of SLSCH
      slsch->rvidx   = 1;
      slsch->RB_start = RB_start;
      slsch->L_CRBs   = L_CRBs;
@@ -3518,7 +3518,7 @@ SLSCH_t *ue_get_slsch(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_
      slsch->timing_advance_indication = 0;
      slsch->group_destination_id      = ue->destinationL2Id&0xff;
 
-     LOG_I(MAC,"Configured SCI with n_pscch %d, RBC %x, TRP %d, mcs %d, groupid %x\n",slsch->n_pscch,slsch->resource_block_coding,slsch->time_resource_pattern,mcs,slsch->group_destination_id);
+     LOG_D(MAC,"Configured SCI with n_pscch %d, RBC %x, TRP %d, mcs %d, groupid %x\n",slsch->n_pscch,slsch->resource_block_coding,slsch->time_resource_pattern,mcs,slsch->group_destination_id);
      return(slsch);
    } // we're in the first subframe of the SCI period
    else if (ue->sltx_active == 1 &&
@@ -3531,7 +3531,7 @@ SLSCH_t *ue_get_slsch(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_
        // Note : this assumes Ntrp=8 for now
       if (trp8[slsch->time_resource_pattern][absSF_modP&7]==0) return ((SLSCH_t*)NULL);
   // we have an opportunity in this subframe
-      if (slsch->ljmod10 == 10) slsch->ljmod10 = 0;
+      if (slsch->ljmod10 == 9) slsch->ljmod10 = 0;
       else slsch->ljmod10++;
 
       if (slsch->rvidx==1) slsch->rvidx = 0;
@@ -3626,7 +3626,7 @@ SLSCH_t *ue_get_slsch(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_
 
    }
    else if (ue->sltx_active == 1 && absSF_modP < slsch->SubframeBitmapSL_length) {
-      LOG_I(MAC,"absSF_mod P %d in SLSCH period\n",absSF_modP);
+      LOG_D(MAC,"absSF_mod P %d in SLSCH period\n",absSF_modP);
       return(slsch); // we're in the SCI period
    }
   return(NULL);
