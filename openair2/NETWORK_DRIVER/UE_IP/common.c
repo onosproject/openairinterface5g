@@ -57,7 +57,7 @@
         ntohs((addr)->s6_addr16[7])
 
 
-#define OAI_DRV_DEBUG_SEND
+//#define OAI_DRV_DEBUG_SEND
 //#define OAI_DRV_DEBUG_RECEIVE
 
 void
