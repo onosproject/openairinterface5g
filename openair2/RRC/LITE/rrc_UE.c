@@ -5641,6 +5641,7 @@ void *rrc_control_socket_thread_fct(void *arg)
          //get available rbid for this communication and store (LCID, G)
          if (groupL2Id > 0){
             for (i=0; i< MAX_NUM_LCID_DATA; i++) {
+               LOG_I(RRC,"[GroupCommunicationEstablishReq] checking lcid %d, sl_info[%d].groupL2Id %d\n",i,i,UE_rrc_inst[module_id].sl_info[i].groupL2Id);
                if ((UE_rrc_inst[module_id].sl_info[i].LCID == 0) && (UE_rrc_inst[module_id].sl_info[i].groupL2Id == 0) && (UE_rrc_inst[module_id].sl_info[i].destinationL2Id == 0)&& (j == 0)) j = i+1;
                if (UE_rrc_inst[module_id].sl_info[i].groupL2Id == groupL2Id) {
                   if (UE_rrc_inst[module_id].sl_info[i].LCID >0 ){
@@ -5649,7 +5650,7 @@ void *rrc_control_socket_thread_fct(void *arg)
                      UE_rrc_inst[module_id].sl_info[i].LCID = i + 3;
                      group_comm_rbid =  UE_rrc_inst[module_id].sl_info[i].LCID;
                   }
-                  LOG_I(RRC,"[GroupCommunicationEstablishReq] rbid %d for group Id: 0x%08x\n already exists",group_comm_rbid, UE_rrc_inst[module_id].sl_info[i].groupL2Id );
+                  LOG_I(RRC,"[GroupCommunicationEstablishReq] rbid %d for group Id: 0x%08x already exists",group_comm_rbid, UE_rrc_inst[module_id].sl_info[i].groupL2Id );
                   break; //(LCID, G) already exists!
                }
             }
