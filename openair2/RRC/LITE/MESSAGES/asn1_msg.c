@@ -286,8 +286,8 @@ uint8_t do_MIB_SL(const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_index,
    uint8_t subframe = absSF%10;
    uint32_t reserved = 0;
    UE_RRC_INST *UE = &UE_rrc_inst[ctxt_pP->module_id];
-   SBCCH_SL_BCH_Message_t *sl_mib = &UE->SL_mib[eNB_index];
-
+   SBCCH_SL_BCH_Message_t *sl_mib = &UE->SL_mib_tx;
+ 
    AssertFatal(eNB_index==0,"eNB_index needs to be 0\n");
 
 
