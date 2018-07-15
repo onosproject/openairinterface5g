@@ -3510,6 +3510,7 @@ SLSCH_t *ue_get_slsch(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_
      slsch->mcs                       = mcs;
      slsch->timing_advance_indication = 0;
      slsch->group_destination_id      = ue->destinationL2Id&0xff;
+     slsch->payload_length                = 0;
 
      LOG_D(MAC,"Configured SCI with n_pscch %d, RBC %x, TRP %d, mcs %d, groupid %x\n",slsch->n_pscch,slsch->resource_block_coding,slsch->time_resource_pattern,mcs,slsch->group_destination_id);
      return(slsch);
@@ -3532,7 +3533,7 @@ SLSCH_t *ue_get_slsch(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_
       else if (slsch->rvidx==2) slsch->rvidx=3;
       else if (slsch->rvidx==3) slsch->rvidx=1;
     
-      if (slsch->rvidx>0) {
+      if (slsch->rvidx>0 && slsch->payload_length>0) {
          LOG_D(MAC,"absSF %d SLSCH TXoP rvidx %d\n",absSF,slsch->rvidx);
          return slsch;
       }
