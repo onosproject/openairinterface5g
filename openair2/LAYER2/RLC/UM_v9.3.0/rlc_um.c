@@ -845,7 +845,7 @@ rlc_um_data_req (const protocol_ctxt_t* const ctxt_pP, void *rlc_pP, mem_block_t
                              PROTOCOL_RLC_AM_MSC_ARGS(ctxt_pP,rlc_pP), rlc_p->buffer_occupancy);
   }
 #else
-  LOG_W(RLC, PROTOCOL_RLC_UM_CTXT_FMT" BO %d , NB SDU %d\n",
+  LOG_D(RLC, PROTOCOL_RLC_UM_CTXT_FMT" BO %d , NB SDU %d\n",
         PROTOCOL_RLC_UM_CTXT_ARGS(ctxt_pP,rlc_p),
         rlc_p->buffer_occupancy,
         rlc_p->input_sdus.nb_elements);
