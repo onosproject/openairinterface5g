@@ -867,18 +867,21 @@ void ue_send_sl_sdu(module_id_t module_idP,
       for (j = 0; j< MAX_NUM_LCID; j++){
          if ((longh->LCID < MAX_NUM_LCID_DATA) && (j < MAX_NUM_LCID_DATA)){
             if ((UE_mac_inst[module_idP].sl_info[j].destinationL2Id == sourceL2Id) && (UE_mac_inst[module_idP].sl_info[j].sourceL2Id == destinationL2Id)) {
-               lcid = UE_mac_inst[module_idP].sl_info[j].LCID;
+               lcid = longh->LCID; //UE_mac_inst[module_idP].sl_info[j].LCID;
                break;
             }
          }
          if ((longh->LCID >= MAX_NUM_LCID_DATA) && (j >= MAX_NUM_LCID_DATA)){
             //PC5-S (receive message after transmitting, e.g, security-command...)
             if ((UE_mac_inst[module_idP].sl_info[j].sourceL2Id == destinationL2Id) && (UE_mac_inst[module_idP].sl_info[j].destinationL2Id == 0)) {
-               if (UE_mac_inst[module_idP].sl_info[j].LCID > 0) lcid = UE_mac_inst[module_idP].sl_info[j].LCID;
+               if (UE_mac_inst[module_idP].sl_info[j].LCID > 0) lcid = longh->LCID;//UE_mac_inst[module_idP].sl_info[j].LCID;
+
                break;
             }
          }
       }
+
+ 
       /*
   int k = 0;
   if (j == MAX_NUM_LCID) {
@@ -892,7 +895,6 @@ void ue_send_sl_sdu(module_id_t module_idP,
      }
   }
 
-       */
 
       //match the destinationL2Id with UE L2Id or groupL2ID
       if (!(((destinationL2Id == UE_mac_inst[module_idP].sourceL2Id) && (j < MAX_NUM_LCID)) | ((destinationL2Id == UE_mac_inst[module_idP].sourceL2Id) && (longh->LCID >= MAX_NUM_LCID_DATA)) | (i < MAX_NUM_LCID))){
@@ -905,7 +907,10 @@ void ue_send_sl_sdu(module_id_t module_idP,
          return;
       }
 
-      LOG_I( MAC, "DestinationL2Id:  0x%08x, sl_rbid %d, longh->LCID %d  \n", destinationL2Id, lcid, longh->LCID );
+*/
+      lcid = longh->LCID;
+
+//      LOG_I( MAC, "DestinationL2Id:  0x%08x, sl_rbid %d, longh->LCID %d  \n", destinationL2Id, lcid, longh->LCID );
 
 
       if (longh->F==1) {
@@ -930,10 +935,12 @@ void ue_send_sl_sdu(module_id_t module_idP,
          }
       }
       if (reset_flag == SL_RESET_RLC_FLAG_YES){
-         LOG_I(MAC, "SL_RESET_RLC_FLAG_YES\n");
+         LOG_D(MAC, "SL_RESET_RLC_FLAG_YES\n");
       } else {
-         LOG_I(MAC, "SL_RESET_RLC_FLAG_NO\n");
+         LOG_D(MAC, "SL_RESET_RLC_FLAG_NO\n");
       }
+
+      LOG_D(MAC,"%d.%d sending sdu of size %d, lcid %d to RLC\n",frameP,subframeP,rlc_sdu_len,lcid);
 
       mac_rlc_data_ind(
             module_idP,

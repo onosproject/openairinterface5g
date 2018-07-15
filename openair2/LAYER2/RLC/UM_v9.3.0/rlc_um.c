@@ -205,7 +205,7 @@ rlc_um_rx (const protocol_ctxt_t* const ctxt_pP, void *argP, struct mac_data_ind
     // establishment, the RLC entity:
     //   - is created; and
     //   - enters the DATA_TRANSFER_READY state.
-    LOG_N(RLC, PROTOCOL_RLC_UM_CTXT_FMT" ERROR MAC_DATA_IND IN RLC_NULL_STATE\n",
+    LOG_W(RLC, PROTOCOL_RLC_UM_CTXT_FMT" ERROR MAC_DATA_IND IN RLC_NULL_STATE\n",
           PROTOCOL_RLC_UM_CTXT_ARGS(ctxt_pP,l_rlc_p));
 #if MESSAGE_CHART_GENERATOR
 
@@ -396,7 +396,7 @@ rlc_um_rx (const protocol_ctxt_t* const ctxt_pP, void *argP, struct mac_data_ind
        sn = pdu_mem_pP->b1 & 0x1F;
     }
 
-    LOG_I(RLC, "[rlc_um_rx]DEBUG SN %d, rlc_pP->vr_uh %d rlc_pP->vr_ur %d, l_rlc_p->vr_ux %d \n", sn, l_rlc_p->vr_uh, l_rlc_p->vr_ur, l_rlc_p->vr_ux);
+    LOG_D(RLC, "[rlc_um_rx]DEBUG SN %d, rlc_pP->vr_uh %d rlc_pP->vr_ur %d, l_rlc_p->vr_ux %d \n", sn, l_rlc_p->vr_uh, l_rlc_p->vr_ur, l_rlc_p->vr_ux);
 
     l_rlc_p->vr_ur = sn;
     l_rlc_p->vr_uh = sn;
@@ -821,7 +821,7 @@ rlc_um_data_req (const protocol_ctxt_t* const ctxt_pP, void *rlc_pP, mem_block_t
   }
 
   message_string_size += sprintf(&message_string[message_string_size], " |\n");
-
+/*
 #   if ENABLE_ITTI
   msg_p = itti_alloc_new_message_sized (ctxt_pP->enb_flag > 0 ? TASK_RLC_ENB:TASK_RLC_UE , RLC_UM_SDU_REQ, message_string_size + sizeof (IttiMsgText));
   msg_p->ittiMsg.rlc_um_sdu_req.size = message_string_size;
@@ -831,6 +831,7 @@ rlc_um_data_req (const protocol_ctxt_t* const ctxt_pP, void *rlc_pP, mem_block_t
 #else
   LOG_T(RLC, "%s", message_string);
 #endif
+*/
 #   endif
   RLC_UM_MUTEX_LOCK(&rlc_p->lock_input_sdus, ctxt_pP, rlc_p);
   rlc_p->buffer_occupancy += ((struct rlc_um_tx_sdu_management *) (sdu_pP->data))->sdu_size;
