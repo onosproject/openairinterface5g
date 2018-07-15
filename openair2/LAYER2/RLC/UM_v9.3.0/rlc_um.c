@@ -268,7 +268,7 @@ rlc_um_rx (const protocol_ctxt_t* const ctxt_pP, void *argP, struct mac_data_ind
 #if TRACE_RLC_UM_PDU || MESSAGE_CHART_GENERATOR
 
     if (data_indP.data.nb_elements > 0) {
-      LOG_I(RLC, PROTOCOL_RLC_UM_CTXT_FMT" MAC_DATA_IND %d TBs\n",
+      LOG_D(RLC, PROTOCOL_RLC_UM_CTXT_FMT" MAC_DATA_IND %d TBs\n",
             PROTOCOL_RLC_UM_CTXT_ARGS(ctxt_pP,l_rlc_p),
             data_indP.data.nb_elements);
 
@@ -396,7 +396,7 @@ rlc_um_rx (const protocol_ctxt_t* const ctxt_pP, void *argP, struct mac_data_ind
        sn = pdu_mem_pP->b1 & 0x1F;
     }
 
-    LOG_I(RLC, "[rlc_um_rx]DEBUG SN %d, rlc_pP->vr_uh %d rlc_pP->vr_ur %d, l_rlc_p->vr_ux %d \n", sn, l_rlc_p->vr_uh, l_rlc_p->vr_ur, l_rlc_p->vr_ux);
+    LOG_D(RLC, "[rlc_um_rx]DEBUG SN %d, rlc_pP->vr_uh %d rlc_pP->vr_ur %d, l_rlc_p->vr_ux %d \n", sn, l_rlc_p->vr_uh, l_rlc_p->vr_ur, l_rlc_p->vr_ux);
 
     l_rlc_p->vr_ur = sn;
     l_rlc_p->vr_uh = sn;
@@ -749,7 +749,7 @@ rlc_um_data_req (const protocol_ctxt_t* const ctxt_pP, void *rlc_pP, mem_block_t
   char                 message_string[7000];
 #endif
 
-  LOG_I(RLC, PROTOCOL_RLC_UM_CTXT_FMT" RLC_UM_DATA_REQ size %d Bytes, BO %d , NB SDU %d\n",
+  LOG_D(RLC, PROTOCOL_RLC_UM_CTXT_FMT" RLC_UM_DATA_REQ size %d Bytes, BO %d , NB SDU %d\n",
         PROTOCOL_RLC_UM_CTXT_ARGS(ctxt_pP,rlc_p),
         ((struct rlc_um_data_req *) (sdu_pP->data))->data_size,
         rlc_p->buffer_occupancy,
@@ -832,7 +832,6 @@ rlc_um_data_req (const protocol_ctxt_t* const ctxt_pP, void *rlc_pP, mem_block_t
   LOG_T(RLC, "%s", message_string);
 #endif
 */
-LOG_I(RLC,"%s",message_string);
 #   endif
   RLC_UM_MUTEX_LOCK(&rlc_p->lock_input_sdus, ctxt_pP, rlc_p);
   rlc_p->buffer_occupancy += ((struct rlc_um_tx_sdu_management *) (sdu_pP->data))->sdu_size;

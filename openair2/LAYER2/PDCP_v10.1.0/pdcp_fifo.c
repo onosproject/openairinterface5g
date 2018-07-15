@@ -30,7 +30,7 @@
  */
 
 #define PDCP_FIFO_C
-#define PDCP_DEBUG 1
+//#define PDCP_DEBUG 1
 //#define DEBUG_PDCP_FIFO_FLUSH_SDU
 
 extern int otg_enabled;
@@ -189,7 +189,7 @@ int pdcp_fifo_flush_sdus(const protocol_ctxt_t* const  ctxt_pP)
 
 #endif /* defined(ENABLE_USE_MME) */
 #ifdef PDCP_DEBUG
-      LOG_D(PDCP, "PDCP->IP TTI %d INST %d: Preparing %d Bytes of data from rab %d to Nas_mesh\n",
+      LOG_I(PDCP, "PDCP->IP TTI %d INST %d: Preparing %d Bytes of data from rab %d to Nas_mesh\n",
             ctxt_pP->frame, ((pdcp_data_ind_header_t *)(sdu_p->data))->inst,
             ((pdcp_data_ind_header_t *)(sdu_p->data))->data_size, ((pdcp_data_ind_header_t *)(sdu_p->data))->rb_id);
 #endif //PDCP_DEBUG
@@ -250,7 +250,7 @@ int pdcp_fifo_flush_sdus(const protocol_ctxt_t* const  ctxt_pP)
 #endif //PDCP_USE_RT_FIFO
 
 #ifdef PDCP_DEBUG
-         LOG_D(PDCP, "Frame %d Sent %d Bytes of header to Nas_mesh\n",
+         LOG_I(PDCP, "Frame %d Sent %d Bytes of header to Nas_mesh\n",
                ctxt_pP->frame,
                bytes_wrote);
 #endif //PDCP_DEBUG
@@ -307,7 +307,7 @@ int pdcp_fifo_flush_sdus(const protocol_ctxt_t* const  ctxt_pP)
 #endif // PDCP_USE_RT_FIFO
 
 #ifdef PDCP_DEBUG
-               LOG_D(PDCP, "PDCP->IP Frame %d INST %d: Sent %d Bytes of data from rab %d to higher layers\n",
+               LOG_I(PDCP, "PDCP->IP Frame %d INST %d: Sent %d Bytes of data from rab %d to higher layers\n",
                      ctxt_pP->frame,
                      ((pdcp_data_ind_header_t *)(sdu_p->data))->inst,
                      bytes_wrote,
@@ -338,6 +338,7 @@ int pdcp_fifo_flush_sdus(const protocol_ctxt_t* const  ctxt_pP)
                   }
                } else {
                   LOG_W(PDCP, "2: RADIO->IP SEND SDU CONGESTION!\n");
+                  AssertFatal(1==0,"congestion, aborting\n");
                }
             } else {
                LOG_W(PDCP, "3: RADIO->IP SEND SDU CONGESTION!\n");

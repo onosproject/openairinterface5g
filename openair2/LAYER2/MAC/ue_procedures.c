@@ -867,19 +867,21 @@ void ue_send_sl_sdu(module_id_t module_idP,
       for (j = 0; j< MAX_NUM_LCID; j++){
          if ((longh->LCID < MAX_NUM_LCID_DATA) && (j < MAX_NUM_LCID_DATA)){
             if ((UE_mac_inst[module_idP].sl_info[j].destinationL2Id == sourceL2Id) && (UE_mac_inst[module_idP].sl_info[j].sourceL2Id == destinationL2Id)) {
-               lcid = UE_mac_inst[module_idP].sl_info[j].LCID;
+               lcid = longh->LCID; //UE_mac_inst[module_idP].sl_info[j].LCID;
                break;
             }
          }
          if ((longh->LCID >= MAX_NUM_LCID_DATA) && (j >= MAX_NUM_LCID_DATA)){
             //PC5-S (receive message after transmitting, e.g, security-command...)
             if ((UE_mac_inst[module_idP].sl_info[j].sourceL2Id == destinationL2Id) && (UE_mac_inst[module_idP].sl_info[j].destinationL2Id == 0)) {
-               if (UE_mac_inst[module_idP].sl_info[j].LCID > 0) lcid = UE_mac_inst[module_idP].sl_info[j].LCID;
+               if (UE_mac_inst[module_idP].sl_info[j].LCID > 0) lcid = longh->LCID;//UE_mac_inst[module_idP].sl_info[j].LCID;
+
                break;
             }
          }
       }
 
+ 
       /*
   int k = 0;
   if (j == MAX_NUM_LCID) {
@@ -938,7 +940,7 @@ void ue_send_sl_sdu(module_id_t module_idP,
          LOG_D(MAC, "SL_RESET_RLC_FLAG_NO\n");
       }
 
-      LOG_I(MAC,"sending sdu of size %d, lcid %d to RLC\n",rlc_sdu_len,lcid);
+      LOG_D(MAC,"%d.%d sending sdu of size %d, lcid %d to RLC\n",frameP,subframeP,rlc_sdu_len,lcid);
 
       mac_rlc_data_ind(
             module_idP,
