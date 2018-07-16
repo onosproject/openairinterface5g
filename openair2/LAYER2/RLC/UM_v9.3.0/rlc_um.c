@@ -21,6 +21,8 @@
 
 #define RLC_UM_MODULE 1
 #define RLC_UM_C 1
+#define TRACE_RLC_UM_TX_STATUS 1
+#define TRACE_RLC_UM_PDU 1
 //#define TRACE_RLC_UM_PDU 1
 //-----------------------------------------------------------------------------
 //#include "rtos_header.h"
@@ -371,6 +373,7 @@ rlc_um_rx (const protocol_ctxt_t* const ctxt_pP, void *argP, struct mac_data_ind
 # else
         LOG_T(RLC, "%s", message_string);
 # endif // ENABLE_ITTI
+    LOG_D(RLC,"%s", message_string);
 #endif // TRACE_RLC_UM_PDU
 
         tb_p = tb_p->next;
@@ -534,19 +537,19 @@ rlc_um_mac_status_indication (const protocol_ctxt_t* const ctxt_pP, void *rlc_pP
 
     if ((((rlc_um_entity_t *) rlc_pP)->rb_id > 0) && (status_resp.buffer_occupancy_in_bytes > 0)) {
       LOG_D(RLC, PROTOCOL_RLC_UM_CTXT_FMT" MAC_STATUS_INDICATION (DATA) %d bytes requested -> %d bytes available\n",
-            PROTOCOL_RLC_UM_CTXT_ARGS(ctxt_pP,rlc_pP),
+            PROTOCOL_RLC_UM_CTXT_ARGS(ctxt_pP,((rlc_um_entity_t *)rlc_pP)),
             tbs_sizeP,
             status_resp.buffer_occupancy_in_bytes);
 
       if ((tx_statusP.tx_status == MAC_TX_STATUS_SUCCESSFUL) && (tx_statusP.no_pdu)) {
         LOG_D(RLC, PROTOCOL_RLC_UM_CTXT_FMT" MAC_STATUS_INDICATION  TX STATUS   SUCCESSFUL %d PDUs\n",
-              PROTOCOL_RLC_UM_CTXT_ARGS(ctxt_pP,rlc_pP),
+              PROTOCOL_RLC_UM_CTXT_ARGS(ctxt_pP,((rlc_um_entity_t *)rlc_pP)),
               tx_statusP.no_pdu);
       }
 
       if ((tx_statusP.tx_status == MAC_TX_STATUS_UNSUCCESSFUL) && (tx_statusP.no_pdu)) {
         LOG_D(RLC, PROTOCOL_RLC_UM_CTXT_FMT" MAC_STATUS_INDICATION  TX STATUS UNSUCCESSFUL %d PDUs\n",
-              PROTOCOL_RLC_UM_CTXT_ARGS(ctxt_pP,rlc_pP),
+              PROTOCOL_RLC_UM_CTXT_ARGS(ctxt_pP,((rlc_um_entity_t *)rlc_pP)),
               tx_statusP.no_pdu);
       }
     }
@@ -833,6 +836,7 @@ rlc_um_data_req (const protocol_ctxt_t* const ctxt_pP, void *rlc_pP, mem_block_t
 #endif
 */
 #   endif
+  
   RLC_UM_MUTEX_LOCK(&rlc_p->lock_input_sdus, ctxt_pP, rlc_p);
   rlc_p->buffer_occupancy += ((struct rlc_um_tx_sdu_management *) (sdu_pP->data))->sdu_size;
   list_add_tail_eurecom(sdu_pP, &rlc_p->input_sdus);

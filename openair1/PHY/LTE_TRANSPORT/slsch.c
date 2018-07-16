@@ -1036,7 +1036,7 @@ void pscch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
     slsch->group_destination_id      = (sci_rx_flip>>(63-1-7-5-11-8-RAbits+1))&255;
     ue->slcch_received                     = 1;
     ue->slsch_decoded                      = 0;
-//#ifdef DEBUG_SCI_DECODING
+#ifdef DEBUG_SCI_DECODING
     printf("sci %lx (%d bits,RAbits %d) : freq_hop %d, resource_block_coding %d, time_resource_pattern %d, mcs %d, timing_advance_indication %d, group_destination_id %d (gid shift %d result %lx => %lx\n",
 	   sci_rx_flip,length,RAbits,
 	   slsch->freq_hopping_flag,
@@ -1049,7 +1049,7 @@ void pscch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
     (sci_rx_flip>>(63-1-7-5-11-8-RAbits+1)),
     (sci_rx_flip>>(63-1-7-5-11-8-RAbits+1))&255
     );
-//#endif
+#endif
     // check group_id here (not done yet)
     ue->slsch_rx_sdu_active=1;
     /*

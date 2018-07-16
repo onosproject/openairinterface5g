@@ -3443,7 +3443,7 @@ SLSCH_t *ue_get_slsch(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_
    int sdu_length;
    //uint8_t sl_lcids[2] = {3, 10}; //list of lcids for SL - hardcoded
    int i = 0;
-   int mcs=10;
+   int mcs=16;
    int L_CRBs=10;
    int RB_start=0;
    // Note: this is hard-coded for now for the default SL configuration (4 SF PSCCH, 36 SF PSSCH)
@@ -3561,8 +3561,9 @@ SLSCH_t *ue_get_slsch(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_
 
       if (slsch_test == 1 && rlc_status.bytes_in_buffer < 2) rlc_status.bytes_in_buffer = 300;
 
-      if (TBS <= rlc_status.bytes_in_buffer) req = TBS;
-      else req = rlc_status.bytes_in_buffer;
+       // + 2 to account for the fact that RLC doesn't add the header in the status indication for UE (BSR usage, must be different for SL, to be validated)
+      if (TBS <= rlc_status.bytes_in_buffer+2) req = TBS;
+      else req = rlc_status.bytes_in_buffer+2;
 
       if (req>0) {
          sdu_length = mac_rlc_data_req(module_idP,
