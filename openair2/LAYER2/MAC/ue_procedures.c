@@ -855,6 +855,10 @@ void ue_send_sl_sdu(module_id_t module_idP,
       destinationL2Id = (longh->DST07<<16) | (longh->DST815 <<8) | (longh->DST1623);
       sourceL2Id = (longh->SRC07<<16) | (longh->SRC815 <<8) | (longh->SRC1623);
 
+
+      // check if L1 has sent up a reception of its own transmission
+      if (sourceL2Id == UE_mac_inst[module_idP].sourceL2Id) return;
+
       //in case of 1-n communication, verify that UE belongs to that group
       int i = 0;
       int j = 0;
@@ -940,7 +944,8 @@ void ue_send_sl_sdu(module_id_t module_idP,
          LOG_D(MAC, "SL_RESET_RLC_FLAG_NO\n");
       }
 
-      LOG_D(MAC,"%d.%d sending sdu of size %d, lcid %d to RLC\n",frameP,subframeP,rlc_sdu_len,lcid);
+   
+      LOG_I(MAC,"%d.%d myL2Id %d sending sdu of size %d, sourceL2Id %d, lcid %d to RLC\n",frameP,subframeP,UE_mac_inst[module_idP].sourceL2Id,rlc_sdu_len,sourceL2Id,lcid);
 
       mac_rlc_data_ind(
             module_idP,
