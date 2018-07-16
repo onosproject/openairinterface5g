@@ -1809,10 +1809,13 @@ void *UE_threadSL(void *arg) {
         UE->slbch_rxops=0;
 	if (UE->no_timing_correction==0) {
 	  LOG_I(PHY,"Resynchronizing RX by %d samples (mode = %d), subframe_delay %d\n",UE->rx_offsetSL,UE->mode,subframe_delay);
+          for (int i=0; i<UE->frame_parms.nb_antennas_rx; i++)
+            rxp[i] = (void*)&UE->common_vars.rxdata_syncSL[i][0];
+
 	  AssertFatal(UE->rx_offsetSL ==
 		      UE->rfdevice.trx_read_func(&UE->rfdevice,
 						 &timestamp,
-						 (void**)UE->common_vars.rxdata,
+						 rxp,
 						 UE->rx_offsetSL,
 						 UE->frame_parms.nb_antennas_rx),"");
 	}
