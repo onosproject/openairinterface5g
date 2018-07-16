@@ -1639,6 +1639,7 @@ void init_UE_threads(int inst) {
     pthread_mutex_init(&UE->slss_mutex,NULL);
     pthread_mutex_init(&UE->sldch_mutex,NULL);
     pthread_mutex_init(&UE->slsch_mutex,NULL);
+    pthread_mutex_init(&UE->slsch_rx_mutex,NULL);
     pthread_create(&UE->proc.pthread_synchSL,NULL,UE_thread_synchSL,(void*)UE);
   }
 }

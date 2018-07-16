@@ -1341,6 +1341,7 @@ typedef struct {
   pthread_mutex_t  slss_mutex;
   pthread_mutex_t  sldch_mutex;
   pthread_mutex_t  slsch_mutex;
+  pthread_mutex_t  slsch_rx_mutex;
   int              slbch_errors;
   int              slbch_rxops;
   //Paging parameters

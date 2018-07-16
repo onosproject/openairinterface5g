@@ -4801,9 +4801,12 @@ void phy_procedures_UE_SL_RX(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc) {
   if (ue->is_SynchRef == 0 && frame_rx==0 && subframe_rx==0) LOG_I(PHY,"Connected with SyncRef UE (slbch errors %d/%d)\n",
                                                 ue->slbch_errors,ue->slbch_rxops);
 
+  AssertFatal(0==pthread_mutex_lock(&ue->slsch_rx_mutex),"");
   rx_slcch(ue,proc,frame_rx,subframe_rx);
 
   rx_slsch(ue,proc,frame_rx,subframe_rx);
+
+  AssertFatal(0==pthread_mutex_unlock(&ue->slsch_rx_mutex),"");
 
   if (frame_rx==0 && subframe_rx==0) {
     for (int i=0;i<MAX_SLDCH;i++) if (ue->sldch_rxcnt[i]>0) LOG_I(PHY,"n_psdch %d RX count %d\n",i,ue->sldch_rxcnt[i]);
