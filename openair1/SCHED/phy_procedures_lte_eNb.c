@@ -2136,11 +2136,11 @@ void pucch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,int UE_id,int harq
   PUCCH_FMT_t format;
   const int subframe = proc->subframe_rx;
   const int frame = proc->frame_rx;
-
+  //printf("eNb-<dlsch[0][0] %d,eNB->dlsch[UE_id][0]->rnti %d, eNB->ulsch[UE_id]->harq_processes[harq_pid]->subframe_scheduling_flag %d\n",eNB->dlsch[0][0],eNB->dlsch[0][0]->rnti,eNB->ulsch[0]->harq_processes[harq_pid]->subframe_scheduling_flag);
   if ((eNB->dlsch[UE_id][0]) &&
       (eNB->dlsch[UE_id][0]->rnti>0) &&
       (eNB->ulsch[UE_id]->harq_processes[harq_pid]->subframe_scheduling_flag==0)) {
-
+    printf("if\n");
     // check SR availability
     do_SR = is_SR_subframe(eNB,proc,UE_id);
     //      do_SR = 0;
@@ -2164,7 +2164,7 @@ void pucch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,int UE_id,int harq
     if ((n1_pucch0==-1) && (n1_pucch1==-1) && (do_SR==0)) {  // no TX PDSCH that have to be checked and no SR for this UE_id
     } else {
       // otherwise we have some PUCCH detection to do
-
+      printf("else\n");
       // Null out PUCCH PRBs for noise measurement
       switch(fp->N_RB_UL) {
       case 6:
@@ -2930,10 +2930,15 @@ void phy_procedures_eNB_uespec_RX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,const 
   uint16_t srsOffset;
   uint16_t do_srs=0;
   uint16_t is_srs_pos=0;
+  int do_ofdm_mod = PHY_vars_UE_g[0][0]->do_ofdm_mod;
 
   T(T_ENB_PHY_UL_TICK, T_INT(eNB->Mod_id), T_INT(frame), T_INT(subframe));
-
-  T(T_ENB_PHY_INPUT_SIGNAL, T_INT(eNB->Mod_id), T_INT(frame), T_INT(subframe), T_INT(0),
+  if (do_ofdm_mod)
+  	T(T_ENB_PHY_INPUT_SIGNAL, T_INT(eNB->Mod_id), T_INT(frame), T_INT(subframe), T_INT(0),
+    T_BUFFER(&eNB->common_vars.rxdataF[0][0][subframe*eNB->frame_parms.ofdm_symbol_size*eNB->frame_parms.symbols_per_tti],
+             NB->frame_parms.ofdm_symbol_size*eNB->frame_parms.symbols_per_tti * 4));
+  else
+  	T(T_ENB_PHY_INPUT_SIGNAL, T_INT(eNB->Mod_id), T_INT(frame), T_INT(subframe), T_INT(0),
     T_BUFFER(&eNB->common_vars.rxdata[0][0][subframe*eNB->frame_parms.samples_per_tti],
              eNB->frame_parms.samples_per_tti * 4));
 

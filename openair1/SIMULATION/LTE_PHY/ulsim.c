@@ -740,11 +740,13 @@ int main(int argc, char **argv)
   // Create transport channel structures for 2 transport blocks (MIMO)
   for (i=0; i<2; i++) {
     eNB->dlsch[0][i] = new_eNB_dlsch(1,8,1827072,N_RB_DL,0,&eNB->frame_parms);
+    printf("eNB->dlsch[0][%d] %d\n",i,eNB->dlsch[0][i]);
     if (!eNB->dlsch[0][i]) {
       printf("Can't get eNB dlsch structures\n");
       exit(-1);
     }
     eNB->dlsch[0][i]->rnti = 14;
+    printf("eNB->dlsch[0][%d]->rnti %d\n",i,eNB->dlsch[0][i]->rnti);
   }
   /* allocate memory for both subframes (only one is really used
    * but there is now "copy_harq_proc_struct" which needs both
@@ -937,7 +939,7 @@ int main(int argc, char **argv)
 	  printf("i = %d\n",i);
 	  if (UE->do_ofdm_mod)
 	  {
-		  if (i>(eNB->frame_parms.ofdm_symbol_size*eNB->frame_parms.symbols_per_tti))
+		  if (i>(10*eNB->frame_parms.ofdm_symbol_size*eNB->frame_parms.symbols_per_tti))
 				    break;
 	  }
 	  else
@@ -1149,11 +1151,10 @@ int main(int argc, char **argv)
 
 */
 	    if (UE->do_ofdm_mod)
-	    	tx_lev = signal_energy(&UE->common_vars.txdataF[0][eNB->frame_parms.ofdm_symbol_size*eNB->frame_parms.symbols_per_tti*subframe],
-				   eNB->frame_parms.ofdm_symbol_size*eNB->frame_parms.symbols_per_tti);	
+	    	tx_lev = signal_energy(&UE->common_vars.txdataF[0][eNB->frame_parms.ofdm_symbol_size*eNB->frame_parms.symbols_per_tti*subframe],eNB->frame_parms.ofdm_symbol_size*eNB->frame_parms.symbols_per_tti);	
 	    else
 	    	tx_lev = signal_energy(&UE->common_vars.txdata[0][eNB->frame_parms.samples_per_tti*subframe],
-				   eNB->frame_parms.samples_per_tti);
+		eNB->frame_parms.samples_per_tti);
 	    
 	    //printf("subframe %d\n",subframe);
             if (n_frames==1) {
@@ -1221,7 +1222,7 @@ int main(int argc, char **argv)
 		  lte_frame_type_t frame_type = UE->frame_parms.frame_type;
 		  prach_ConfigIndex   = UE->frame_parms.prach_config_common.prach_ConfigInfo.prach_ConfigIndex;
 		  prach_fmt = get_prach_fmt(prach_ConfigIndex,frame_type);
-		  n_ra_prb = UE->frame_parms.N_RB_UL/2;//get_prach_prb_offset(frame_parms, UE->prach_resources[0]->ra_TDD_map_index,proc_rxtx_ue->frame_tx);
+		  n_ra_prb = nb_rb/2;//get_prach_prb_offset(frame_parms, UE->prach_resources[0]->ra_TDD_map_index,proc_rxtx_ue->frame_tx);
 		  pointer_firstvalue_PRACH=((12*n_ra_prb) - 6*UE->frame_parms.N_RB_UL<0)?(((12*n_ra_prb) - 6*UE->frame_parms.N_RB_UL+UE->frame_parms.ofdm_symbol_size)*12+13)*2:(((12*n_ra_prb) - 6*UE->frame_parms.N_RB_UL)*12+13)*2;
 		  printf("pointer_firstvalue_PRACH %d, prach_fmt %d, if %d,UE->frame_parms.N_RB_UL %d, n_ra_prb %d\n",pointer_firstvalue_PRACH,prach_fmt,12*n_ra_prb - 6*UE->frame_parms.N_RB_UL,UE->frame_parms.N_RB_UL,n_ra_prb);
 
@@ -1319,7 +1320,7 @@ int main(int argc, char **argv)
   		  for (i=0; i<839; i++) {
 		    for (aa=0; aa<eNB->frame_parms.nb_antennas_rx; aa++) {
 		      ((short*) &eNB->prach_vars.rxsigF[aa])[(i+pointer_firstvalue_PRACH/2)<<1] = (short) ((tx_gain*r_re0_f_prach[aa][i]) + sqrt(sigma2/2)*gaussdouble(0.0,1.0));
-		      ((short*) &eNB->prach_vars.rxsigF[aa])[1+(i+pointer_firstvalue_PRACH/2)<<1] = (short) ((tx_gain*r_im0_f_prach[aa][i]) + (iqim*tx_gain*r_re0_f_prach[aa][i]) + sqrt(sigma2/2)*gaussdouble(0.0,1.0));
+		      ((short*) &eNB->prach_vars.rxsigF[aa])[1+((i+pointer_firstvalue_PRACH/2)<<1)] = (short) ((tx_gain*r_im0_f_prach[aa][i]) + (iqim*tx_gain*r_re0_f_prach[aa][i]) + sqrt(sigma2/2)*gaussdouble(0.0,1.0));
 		    }
 		  }
 	  }
@@ -1375,6 +1376,10 @@ int main(int argc, char **argv)
 	  eNB->td  = (parallel_flag == 1) ? ulsch_decoding_data_2thread : ulsch_decoding_data;
 	  eNB->do_prach = NULL;
 
+	  printf("eNb-<dlsch[0][0] %d\n",eNB->dlsch[0][0]);
+	  printf("harq_pid %d\n",harq_pid);
+	  printf("eNB->dlsch[0][0]->rnti %d\n",eNB->dlsch[0][0]->rnti);
+	  printf("eNB->ulsch[0]->harq_processes[harq_pid]->subframe_scheduling_flag %d\n",eNB->ulsch[0]->harq_processes[harq_pid]->subframe_scheduling_flag);
 	  phy_procedures_eNB_common_RX(eNB,proc_rxtx);
 	  phy_procedures_eNB_uespec_RX(eNB,proc_rxtx,no_relay);
 
