@@ -21,7 +21,7 @@
 
 /*! \file PHY/LTE_TRANSPORT/lte_mcs_NB_IoT.c
 * \brief Some support routines for subcarrier start into UL RB for ULSCH
-* \author V. Savaux
+* \author V. Savaux, M. KANJ
 * \date 2017
 * \version 0.1
 * \company b<>com
@@ -38,23 +38,29 @@
 uint16_t get_UL_sc_start_NB_IoT(uint16_t I_sc)
 {
 
-	if (0<=I_sc && I_sc<=11){
-		return I_sc; 
-	}
-	if (12<=I_sc && I_sc<=15){
+	if (0<=I_sc && I_sc<=11)
+	{
+		return I_sc;
+
+	} else if (12<=I_sc && I_sc<=15) {
+
 		return 3*(I_sc-12); 
-	}
-	if (16<=I_sc && I_sc<=17){
-		return 6*(I_sc-16); 
-	}
-	if (I_sc==18){
+
+	}  else if (16<=I_sc && I_sc<=17) {
+
+		return 6*(I_sc-16);
+
+	} else if (I_sc==18){
+
 		return 0; 
-	}
-	if (I_sc>18){
-		return -1; 
+
+	} else if (I_sc>18 || I_sc<0){
+
+		return -1;   /// error msg is needed for this case
+
 	} else {
 
-		return -1;   // this was added to remove warning since it is not a void function
+		return -1;   /// error msg is needed for this case
 	}
 
 }

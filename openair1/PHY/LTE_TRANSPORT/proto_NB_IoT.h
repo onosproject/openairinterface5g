@@ -326,13 +326,30 @@ void rx_ulsch_NB_IoT(PHY_VARS_eNB      *phy_vars_eNB,
                      NB_IoT_eNB_NULSCH_t      **ulsch,
                      uint8_t                  cooperation_flag);
 
+
+void rx_ulsch_Gen_NB_IoT(PHY_VARS_eNB            *eNB,
+                         eNB_rxtx_proc_t         *proc,
+                         uint8_t                 eNB_id,  // this is the effective sector id
+                         uint8_t                 UE_id,
+                         NB_IoT_eNB_NULSCH_t     **ulsch,
+                         uint8_t                 npusch_format,         // 1, 2  
+                         uint16_t                UL_RB_ID_NB_IoT,  // 22 , to be included in // to be replaced by NB_IoT_start ??
+                         uint8_t                 subcarrier_spacing,  // 0 (3.75 KHz) or 1 (15 KHz)
+                         uint32_t                rnti_tmp, //= 65522
+                         uint8_t                 scrambling_subframe_msg3,
+                         uint32_t                scrambling_frame_msg3,
+                         uint16_t                nb_slot,   // total number of occupied slots
+                         uint16_t                I_sc,
+                         uint16_t                Nsc_RU,
+                         uint16_t                Mcs,
+                         unsigned int            A);
+
 void ulsch_extract_rbs_single_NB_IoT(int32_t **rxdataF,
                                      int32_t **rxdataF_ext,
                                      // uint32_t first_rb, 
                                      uint16_t UL_RB_ID_NB_IoT, // index of UL NB_IoT resource block !!! may be defined twice : in frame_parms and in NB_IoT_UL_eNB_HARQ_t
                                      uint8_t N_sc_RU, // number of subcarriers in UL 
                                      uint8_t subframe,// uint32_t I_sc, // NB_IoT: subcarrier indication field: must be defined in higher layer
-                                     uint32_t nb_rb,
                                      uint8_t l,
                                      uint8_t Ns,
                                      LTE_DL_FRAME_PARMS *frame_parms);
@@ -386,6 +403,7 @@ void rotate_single_carrier_NB_IoT(PHY_VARS_eNB *eNB,
                                   uint8_t UE_id,
                                   uint8_t symbol, 
                                   uint8_t counter_msg3,
+                                  uint32_t    I_sc,
                                   uint8_t Qm); 
 
 void fill_rbs_zeros_NB_IoT(PHY_VARS_eNB *eNB, 
@@ -407,7 +425,9 @@ int32_t ulsch_qpsk_llr_NB_IoT(PHY_VARS_eNB *eNB,
                               int32_t **rxdataF_comp,
                               int16_t *ulsch_llr, 
                               uint8_t symbol, 
-                              uint8_t UE_id, 
+                              uint8_t UE_id,
+                              uint32_t I_sc,
+                              uint8_t Nsc_RU, 
                               int16_t *llrp);
 
 void rotate_bpsk_NB_IoT(PHY_VARS_eNB *eNB, 
@@ -474,17 +494,21 @@ int dlsch_qpsk_llr_NB_IoT(NB_IoT_DL_FRAME_PARMS *frame_parms,
 
 /// Vincent: temporary functions 
 
-int ul_chest_tmp_NB_IoT(int32_t **rxdataF_ext,
-      int32_t **ul_ch_estimates,
-      uint8_t l, //symbol within slot 
-      uint8_t Ns,
-      uint8_t counter_msg3,
-      LTE_DL_FRAME_PARMS *frame_parms); 
+int ul_chest_tmp_NB_IoT(int32_t             **rxdataF_ext,
+                        int32_t             **ul_ch_estimates,
+                        uint8_t             l, //symbol within slot 
+                        uint8_t             Ns,
+                        uint8_t             counter_msg3,
+                        uint8_t             pilot_pos1,
+                        uint8_t             pilot_pos2,
+                        uint32_t            I_sc,
+                        uint8_t             Qm,
+                        LTE_DL_FRAME_PARMS  *frame_parms); 
 
 void rotate_channel_sc_tmp_NB_IoT(int16_t *estimated_channel,
-          uint8_t l, 
-          uint8_t Qm, 
-          uint8_t counter_msg3); 
+                                  uint8_t l, 
+                                  uint8_t Qm, 
+                                  uint8_t counter_msg3); 
 
 int ul_chequal_tmp_NB_IoT(int32_t **rxdataF_ext,
       int32_t **rxdataF_comp,

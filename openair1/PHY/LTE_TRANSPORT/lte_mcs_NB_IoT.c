@@ -21,7 +21,7 @@
 
 /*! \file PHY/LTE_TRANSPORT/lte_mcs_NB_IoT.c
 * \brief Some support routines for MCS computations
-* \author V. Savaux
+* \author V. Savaux , M. KANJ
 * \date 2017
 * \version 0.1
 * \company b<>com
@@ -33,25 +33,18 @@
 //#include "PHY/defs.h"
 //#include "PHY/extern.h"
 #include "PHY/LTE_TRANSPORT/proto_NB_IoT.h"
-
-// 36213 Section 16.5.1.2, Table 
+ 
 unsigned char get_Qm_ul_NB_IoT(unsigned char I_MCS, uint8_t N_sc_RU)
 {
+	// N_sc_RU  = 1, 3, 6, 12
 
-	if (N_sc_RU)
+	if (N_sc_RU > 1)
 		return(2);
-	else
+	else				// case N_sc_RU = 1  , see table 16.5.1.2-1  , TS 36213 
 		if (I_MCS<2)
 			return(1); 
 		else
 			return(2);
-		
-  // if (I_MCS < 11)
-  //   return(2);
-  // else if (I_MCS < 21)
-  //   return(4);
-  // else
-  //   return(6);
-
+	
 }
 

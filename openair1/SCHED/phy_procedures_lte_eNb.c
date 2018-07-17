@@ -561,7 +561,25 @@ void common_signal_procedures (PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc) {
       //printf("frame %d in demod NPUSCH = \n",frame);
       ///////////////////////////////////////////////////  NPUSH DEMOD ////////////////////////////////////
       // LTE_eNB_COMMON      *common_vars  =  &eNB->common_vars;
-      LTE_eNB_PUSCH       *pusch_vars   =  eNB->pusch_vars[0];
+      NB_IoT_eNB_NULSCH_t    **ulsch_NB_IoT   =  &eNB->ulsch_NB_IoT;//[0][0];
+
+      rx_ulsch_Gen_NB_IoT(eNB,
+                          proc,
+                          0,//eNB_id,                    // this is the effective sector id
+                          0,//UE_id,
+                          ulsch_NB_IoT,
+                          1,//npusch_format,             // 1, 2  
+                          22,//UL_RB_ID_NB_IoT,           // 22 , to be included in // to be replaced by NB_IoT_start ??
+                          1,//subcarrier_spacing,        // 0 (3.75 KHz) or 1 (15 KHz)
+                          65522,//rnti_tmp,                  //= 65522
+                          proc->subframe_dscr_msg3,//subframerx,//scrambling_subframe_msg3,  // first received subframe 
+                          proc->frame_dscr_msg3,//framerx,// scrambling_frame_msg3,     // first received frame
+                          16,//nb_slot,                   //  total number of occupied slots
+                          11, // I_sc
+                          1,  // Nsc_RU
+                          2,  // Mcs
+                          88); //  A = TBS
+  /*    LTE_eNB_PUSCH       *pusch_vars   =  eNB->pusch_vars[0];
       //NB_IoT_DL_FRAME_PARMS  *frame_parms  =  &eNB->frame_parms; 
       NB_IoT_eNB_NULSCH_t    **ulsch_NB_IoT   =  &eNB->ulsch_NB_IoT;//[0][0]; 
       int l; //i;
@@ -583,18 +601,21 @@ void common_signal_procedures (PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc) {
                                           // ulsch[UE_id]->harq_process->first_rb, 
                                           22,    //ulsch[UE_id]->harq_process->UL_RB_ID_NB_IoT, // index of UL NB_IoT resource block 
                                           1, //ulsch_NB_IoT[0]->harq_process->N_sc_RU, // number of subcarriers in UL  //////////////// high level parameter
-                                          (uint8_t)proc->subframe_delay,//subframe,// ulsch[UE_id]->harq_process->I_sc, // subcarrier indication field
-                                          nb_rb, 
+                                          I_sc,//subframe,// ulsch[UE_id]->harq_process->I_sc, // subcarrier indication field
                                           l%(fp->symbols_per_tti/2),
                                           l/(fp->symbols_per_tti/2),
                                           fp);
-            /// Channel Estimation
+          /// Channel Estimation
           ul_chest_tmp_NB_IoT(pusch_vars->rxdataF_ext[0],
-                              pusch_vars->drs_ch_estimates[0],
-                              l%(fp->symbols_per_tti/2), //symbol within slot 
-                              l/(fp->symbols_per_tti/2),
-                              proc->counter_msg3,
-                              fp); 
+                                        pusch_vars->drs_ch_estimates[0],
+                                        l%(fp->symbols_per_tti/2),          //symbol within slot 
+                                        l/(fp->symbols_per_tti/2),
+                                        proc->counter_msg3,
+                                        pilot_pos1,
+                                        pilot_pos2,
+                                        I_sc,
+                                        Qm,
+                                        fp); 
 
       }
 
@@ -618,22 +639,13 @@ void common_signal_procedures (PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc) {
                   rotate_single_carrier_NB_IoT(eNB, 
                                                fp, 
                                                pusch_vars->rxdataF_comp[0], 
-                                               0, // UE ID
+                                               UE_id, // UE ID
                                                l, 
                                                proc->counter_msg3,
-                                               2); // Qm
+                                               I_sc,
+                                               Qm); // Qm
 
       }
-
-      proc->subframe_delay++;
-
-      if(proc->subframe_delay==10) ///&& frame == ????
-      {
-          proc->subframe_delay=0; 
-      }
-      
-      proc->subframe_delay++; 
-
 
       ///////// IDFT inverse precoding is done over the whole subframe of 14 - 2 (pilots) symbols
       //lte_idft_NB_IoT(fp,
@@ -654,20 +666,23 @@ void common_signal_procedures (PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc) {
                                 pusch_vars->rxdataF_comp[0],
                                 pusch_vars->llr,
                                 l, 
-                                0, // UE ID
+                                UE_id, // UE ID
+                                I_sc,
+                                Nsc_RU,  // uint8_t Nsc_RU=1
                                 &llrp[ii*2]); //// !!! Pensez à créer un buffer de longueur 8 subframes 
           ii++;
   
       }
-  /*printf("\n");
-  for (l=0;l<24;l++){
-    printf("  llr = %d  ",pusch_vars->llr[(8-proc->counter_msg3)*24+l]);  
-  }*/
-  
+    //    printf("\n");
+      //  for (l=0;l<24;l++){
+      //    printf("  llr = %d  ",pusch_vars->llr[(8-proc->counter_msg3)*24+l]);  
+      //  }
+  */
+      /*
       ///////////////////////////////////////////////////  NPUSH DECOD ////////////////////////////////////
       if(proc->counter_msg3==1)
       {
-  //printf("\nframe %d in decod NPUSCH = \n",frame);
+          //printf("\nframe %d in decod NPUSCH = \n",frame);
           int16_t                 *ulsch_llr    = eNB->pusch_vars[0]->llr;  //UE_id=0
           //NB_IoT_DL_FRAME_PARMS   *frame_parms  = &eNB->frame_parms;
           //NB_IoT_eNB_NULSCH_t     *ulsch        = eNB->ulsch[0];
@@ -689,21 +704,7 @@ void common_signal_procedures (PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc) {
           //int16_t         cseq[6*14*1200];
           //uint32_t         subframe = 1;        // first subframe of Msg3 received   // required for scrambling
           uint32_t     rnti_tmp= 65522; // true rnti should be used
-    uint8_t      reset; 
-
-    /*int16_t *Rx_buffer;
-    FILE *fich = fopen("xyzabc.txt","w"); 
-  
-  Rx_buffer = &ulsch_llr[0]; // get the whole frame 
-  memcpy(&buffer_npusch[0],&Rx_buffer[0],2*2*8*12); 
-
-    int pp; 
-    for (pp=0;pp<2*8*12;pp++)
-  {
-    fprintf(fich," %d ",buffer_npusch[pp]);
-    }
-  fclose(fich);
-  exit(0); */
+          uint8_t      reset; 
 
           // NB-IoT ///////////////////////////////////////////////
           // x1 is set in lte_gold_generic
@@ -792,10 +793,10 @@ void common_signal_procedures (PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc) {
                   }
               break;
           }
-  printf("\n \n");
-         /*for (j=0;j<140;j++){
-    printf(" y = %d    ",y[j]); 
-  }*/
+ // printf("\n \n");
+  //  for (j=0;j<140;j++){
+ //   printf(" y = %d    ",y[j]); 
+ // }
           // CQI and Data bits
           j  = 0;
           j2 = 0;
@@ -812,10 +813,7 @@ void common_signal_procedures (PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc) {
                ep[7] = yp[7];
           }
 
-      /*printf("\n \n");
-            for (j=0;j<140;j++){
-        printf(" e = %d    ",ulsch_harq->e[j]); 
-      }*/
+     
 
           // Do ULSCH Decoding for data portion
 
@@ -906,19 +904,13 @@ void common_signal_procedures (PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc) {
               }
               r_offset += E; 
 
-      /*printf("\n \n");
-            for (j=0;j<140;j++){
-        printf(" w = %d    ",ulsch_harq->w[r][j]);  
-      }*/   
+     
   
               sub_block_deinterleaving_turbo(4+Kr,
                                              &ulsch_harq->d[r][96],
                                              ulsch_harq->w[r]); 
 
-      /*printf("\n \n");
-            for (j=0;j<140;j++){
-        printf(" d = %d    ",ulsch_harq->d[r][96+j]); 
-      }*/
+    
 
               if (ulsch_harq->C == 1)
               { 
@@ -984,17 +976,7 @@ void common_signal_procedures (PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc) {
     printf("pdu[2] = %d \n",ulsch_harq->b[8]);
           printf("pdu[3] = %d \n",ulsch_harq->b[9]);
 
-          /*uint8_t xo = 128;
-          int m =0;
-          for(m=0; m<6;m++)
-          { 
-            if((ulsch_harq->b[2+m]<<7) == 128)
-            {
-                msg3[m]= (ulsch_harq->b[3+m]>>1) ^ xo;
-            } else {
-                msg3[m]= (ulsch_harq->b[3+m]>>1);
-            }
-          }*/
+       
           int m =0;
           for(m=0; m<6;m++)
           { 
@@ -1007,7 +989,7 @@ void common_signal_procedures (PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc) {
           proc->flag_DCI_msg4 =1 ;
           proc->counter_DCI_msg4=4;
 
-      }  // NPUSH decode end 
+      }  // NPUSH decode end */
     proc->counter_msg3--;
 
   }
@@ -1086,7 +1068,7 @@ if(proc->flag_msg4 == 1 && proc->counter_msg4 > 0)
 
                       dlsch_encoding_rar_NB_IoT(tab_rar,
                                                 rar,
-                                                2,                      ///// number_of_subframes_required
+                                                1,                      ///// number_of_subframes_required
                                                 236,
                                                 1);                   //////////// G*2   // option =2 for msg4
 
@@ -1215,16 +1197,16 @@ if(proc->flag_DCI_msg4 ==1 && proc->counter_DCI_msg4>0)
              uint8_t    agr_level = 2;
              //  uint8_t    dci_number=1; 
              uint8_t   tab_a[3];
-            /* tab_a[0]= 128;
+             tab_a[0]= 128;
              tab_a[1]= 66;
              tab_a[2]= 4;
-            */
+            
 
              // TBS =120
-             tab_a[0]= 129;
+            /* tab_a[0]= 129;
              tab_a[1]= 130;
              tab_a[2]= 2;
-             
+             */
 
              /* // TBS =144
              tab_a[0]= 128;

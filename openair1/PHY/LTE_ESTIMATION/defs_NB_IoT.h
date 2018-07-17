@@ -53,13 +53,15 @@ int NB_IoT_est_timing_advance_pusch(PHY_VARS_eNB_NB_IoT* phy_vars_eNB,module_id_
 ////////// Vincent: NB-IoT specific adapted function for channel estimation ////////////////////
 
 int ul_channel_estimation_NB_IoT(PHY_VARS_eNB      *eNB,
-                                         eNB_rxtx_proc_t   *proc,
-                                         uint8_t                  eNB_id,
-                                         uint8_t                  UE_id,
-                                         unsigned char            l,
-                                         unsigned char            Ns,
-                                         uint8_t                N_sc_RU,
-                                         uint8_t                  cooperation_flag); 
+                                 eNB_rxtx_proc_t   *proc,
+                                 uint8_t           eNB_id,
+                                 uint8_t           UE_id,
+                                 unsigned char     l,
+                                 unsigned char     Ns,
+                                 uint8_t           N_sc_RU,
+                                 uint8_t           pilot_pos1,
+                                 uint8_t           pilot_pos2,
+                                 uint8_t           cooperation_flag); 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
 int16_t lte_ul_freq_offset_estimation_NB_IoT(NB_IoT_DL_FRAME_PARMS *frame_parms,
