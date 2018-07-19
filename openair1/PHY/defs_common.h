@@ -118,6 +118,9 @@ typedef struct {
 
   uint8_t flag_msg5;
 
+  uint32_t frame_dscr_msg5;
+  uint32_t subframe_dscr_msg5;
+
 } eNB_rxtx_proc_t;
 
 /// Context data structure for eNB subframe processing

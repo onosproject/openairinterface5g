@@ -342,7 +342,8 @@ void rx_ulsch_Gen_NB_IoT(PHY_VARS_eNB            *eNB,
                          uint16_t                I_sc,
                          uint16_t                Nsc_RU,
                          uint16_t                Mcs,
-                         unsigned int            A);
+                         unsigned int            A,
+                         uint8_t                 option);
 
 void ulsch_extract_rbs_single_NB_IoT(int32_t **rxdataF,
                                      int32_t **rxdataF_ext,
@@ -397,14 +398,15 @@ void generate_grouphop_NB_IoT(LTE_DL_FRAME_PARMS *frame_parms);
 
 void init_ul_hopping_NB_IoT(NB_IoT_DL_FRAME_PARMS *frame_parms); 
 
-void rotate_single_carrier_NB_IoT(PHY_VARS_eNB *eNB, 
-                                  LTE_DL_FRAME_PARMS *frame_parms,
-                                  int32_t **rxdataF_comp, 
-                                  uint8_t UE_id,
-                                  uint8_t symbol, 
-                                  uint8_t counter_msg3,
-                                  uint32_t    I_sc,
-                                  uint8_t Qm); 
+void rotate_single_carrier_NB_IoT(PHY_VARS_eNB          *eNB, 
+                                  LTE_DL_FRAME_PARMS    *frame_parms,
+                                  int32_t               **rxdataF_comp, 
+                                  uint8_t               UE_id,
+                                  uint8_t               symbol, 
+                                  uint8_t               counter_msg3,
+                                  uint32_t              I_sc,
+                                  uint8_t               Qm,
+                                  uint8_t               option); 
 
 void fill_rbs_zeros_NB_IoT(PHY_VARS_eNB *eNB, 
                                   LTE_DL_FRAME_PARMS *frame_parms,
@@ -505,10 +507,23 @@ int ul_chest_tmp_NB_IoT(int32_t             **rxdataF_ext,
                         uint8_t             Qm,
                         LTE_DL_FRAME_PARMS  *frame_parms); 
 
+/// Channel estimation for NPUSCH format 2
+int ul_chest_tmp_f2_NB_IoT(int32_t **rxdataF_ext,
+                           int32_t **ul_ch_estimates,
+                           uint8_t l, //symbol within slot 
+                           uint8_t Ns,
+                           uint8_t counter_msg3,
+                           uint8_t flag,
+                           uint8_t subframerx,
+                           uint8_t Qm, 
+                           uint32_t I_sc,
+                           LTE_DL_FRAME_PARMS *frame_parms);
+
 void rotate_channel_sc_tmp_NB_IoT(int16_t *estimated_channel,
                                   uint8_t l, 
                                   uint8_t Qm, 
-                                  uint8_t counter_msg3); 
+                                  uint8_t counter_msg3,
+                                  uint8_t flag); 
 
 int ul_chequal_tmp_NB_IoT(int32_t **rxdataF_ext,
       int32_t **rxdataF_comp,

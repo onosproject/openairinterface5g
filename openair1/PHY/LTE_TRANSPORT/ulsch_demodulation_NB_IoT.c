@@ -1355,20 +1355,23 @@ void fill_rbs_zeros_NB_IoT(PHY_VARS_eNB *eNB,
 
 
 }
+
 //for (m=0;m<12;m++)
     //{ // 12 is the number of subcarriers per RB
  
   //printf("  rxdataF_comp32_%d = %d",m,rxdataF_comp32[m]); 
       
   //}
+
 void rotate_single_carrier_NB_IoT(PHY_VARS_eNB          *eNB, 
                                   LTE_DL_FRAME_PARMS    *frame_parms,
                                   int32_t               **rxdataF_comp, 
-                                  uint8_t               UE_id,                // to be removed ??? since not used
-                                  uint8_t               l, //symbol within subframe
-                                  uint8_t               counter_msg3,    ///  to be replaced by the number of received part
+                                  uint8_t               eNB_id,                // to be removed ??? since not used
+                                  uint8_t               l,                     //symbol within subframe
+                                  uint8_t               counter_msg3,          ///  to be replaced by the number of received part
                                   uint32_t              I_sc,
-                                  uint8_t               Qm)
+                                  uint8_t               Qm,
+                                  uint8_t               option)  // 0 for data and 1 for ACK
 {
 
   //uint32_t I_sc = 11;//eNB->ulsch_NB_IoT[UE_id]->harq_process->I_sc;  // NB_IoT: subcarrier indication field: must be defined in higher layer
@@ -1381,11 +1384,13 @@ void rotate_single_carrier_NB_IoT(PHY_VARS_eNB          *eNB,
   int16_t pi_4_im[2] = {0 , 23170}; 
   int16_t e_phi_re[120] = {32767, 24811, 4807, -17531, -31357, -29956, -14010, 0, 21402, 32412, 27683, 9511, -13279, -29622, -32767, -24812, -4808, 17530, 31356, 29955, 14009, 0, -21403, -32413, -27684, -9512, 13278, 29621, 32767, 24811, 4807, -17531, -31357, -29956, -14010, 0, 21402, 32412, 27683, 9511, -13279, -29622, -32767, -24812, -4808, 17530, 31356, 29955, 14009, -1, -21403, -32413, -27684, -9512, 13278, 29621, 32767, 24811, 4807, -17531, -31357, -29956, -14010, 0, 21402, 32412, 27683, 9511, -13279, -29622, -32767, -24812, -4808, 17530, 31356, 29955, 14009, 0, -21403, -32413, -27684, -9512, 13278, 29621, 32767, 24811, 4807, -17531, -31357, -29956, -14010, -1, 21402, 32412, 27683, 9511, -13279, -29622, -32767, -24812, -4808, 17530, 31356, 29955, 14009, 0, -21403, -32413, -27684, -9512, 13278, 29621}; 
   int16_t e_phi_im[120] = {0, -21403, -32413, -27684, -9512, 13278, 29621, 32767, 24811, 4807, -17531, -31357, -29956, -14010, -1, 21402, 32412, 27683, 9511, -13279, -29622, -32767, -24812, -4808, 17530, 31356, 29955, 14009, 0, -21403, -32413, -27684, -9512, 13278, 29621, 32767, 24811, 4807, -17531, -31357, -29956, -14010, 0, 21402, 32412, 27683, 9511, -13279, -29622, -32767, -24812, -4808, 17530, 31356, 29955, 14009, -1, -21403, -32413, -27684, -9512, 13278, 29621, 32767, 24811, 4807, -17531, -31357, -29956, -14010, 0, 21402, 32412, 27683, 9511, -13279, -29622, -32767, -24812, -4808, 17530, 31356, 29955, 14009, 0, -21403, -32413, -27684, -9512, 13278, 29621, 32767, 24811, 4807, -17531, -31357, -29956, -14010, -1, 21402, 32412, 27683, 9511, -13279, -29622, -32767, -24812, -4808, 17530, 31356, 29955, 14009}; 
+  int16_t e_phi_re_m6[120] = {32767, 24811, 4807, -17531, -31357, -29956, -14010, 0, 21402, 32412, 27683, 9511, -13279, -29622, -32767, -24812, -4808, 17530, 31356, 29955, 14009, 0, -21403, -32413, -27684, -9512, 13278, 29621, 32767, 24811, 4807, -17531, -31357, -29956, -14010, 0, 21402, 32412, 27683, 9511, -13279, -29622, -32767, -24812, -4808, 17530, 31356, 29955, 14009, -1, -21403, -32413, -27684, -9512, 13278, 29621, 32767, 24811, 4807, -17531, -31357, -29956, -14010, 0, 21402, 32412, 27683, 9511, -13279, -29622, -32767, -24812, -4808, 17530, 31356, 29955, 14009, 0, -21403, -32413, -27684, -9512, 13278, 29621, 32767, 24811, 4807, -17531, -31357, -29956, -14010, -1, 21402, 32412, 27683, 9511, -13279, -29622, -32767, -24812, -4808, 17530, 31356, 29955, 14009, 0, -21403, -32413, -27684, -9512, 13278, 29621};
+  int16_t e_phi_im_m6[120] = {0, 21402, 32412, 27683, 9511, -13279, -29622, -32767, -24812, -4808, 17530, 31356, 29955, 14009, 0, -21403, -32413, -27684, -9512, 13278, 29621, 32767, 24811, 4807, -17531, -31357, -29956, -14010, -1, 21402, 32412, 27683, 9511, -13279, -29622, -32767, -24812, -4808, 17530, 31356, 29955, 14009, -1, -21403, -32413, -27684, -9512, 13278, 29621, 32767, 24811, 4807, -17531, -31357, -29956, -14010, 0, 21402, 32412, 27683, 9511, -13279, -29622, -32767, -24812, -4808, 17530, 31356, 29955, 14009, -1, -21403, -32413, -27684, -9512, 13278, 29621, 32767, 24811, 4807, -17531, -31357, -29956, -14010, -1, 21402, 32412, 27683, 9511, -13279, -29622, -32767, -24812, -4808, 17530, 31356, 29955, 14009, 0, -21403, -32413, -27684, -9512, 13278, 29621, 32767, 24811, 4807, -17531, -31357, -29956, -14010};
   int16_t *rxdataF_comp16; 
   int16_t rxdataF_comp16_re, rxdataF_comp16_im,rxdataF_comp16_re_2,rxdataF_comp16_im_2;    
 
   ul_sc_start = get_UL_sc_start_NB_IoT(I_sc); // NB-IoT: get the used subcarrier in RB
-  rxdataF_comp16   = (int16_t *)&rxdataF_comp[0][l*frame_parms->N_RB_DL*12 + ul_sc_start]; 
+  rxdataF_comp16   = (int16_t *)&rxdataF_comp[eNB_id][l*frame_parms->N_RB_DL*12 + ul_sc_start]; 
   rxdataF_comp16_re = rxdataF_comp16[0]; 
   rxdataF_comp16_im = rxdataF_comp16[1]; 
   rxdataF_comp16_re_2 = rxdataF_comp16_re; 
@@ -1404,14 +1409,22 @@ void rotate_single_carrier_NB_IoT(PHY_VARS_eNB          *eNB,
                         (int32_t)pi_4_im[l%2] * (int32_t)rxdataF_comp16_re)>>15); 
   }
 
-  rxdataF_comp16[0] = (int16_t)(((int32_t)e_phi_re[14*(8-counter_msg3) + l] * (int32_t)rxdataF_comp16_re_2 + 
-                        (int32_t)e_phi_im[14*(8-counter_msg3) + l] * (int32_t)rxdataF_comp16_im_2)>>15); 
-  rxdataF_comp16[1] = (int16_t)(((int32_t)e_phi_re[14*(8-counter_msg3) + l] * (int32_t)rxdataF_comp16_im_2 - 
-                        (int32_t)e_phi_im[14*(8-counter_msg3) + l] * (int32_t)rxdataF_comp16_re_2)>>15); 
-  /*rxdataF_comp16[0] = (int16_t)(((int32_t)e_phi_re[0] * (int32_t)rxdataF_comp16_re_2 + 
-                        (int32_t)e_phi_im[0] * (int32_t)rxdataF_comp16_im_2)>>15); 
-  rxdataF_comp16[1] = (int16_t)(((int32_t)e_phi_re[0] * (int32_t)rxdataF_comp16_im_2 - 
-                        (int32_t)e_phi_im[0] * (int32_t)rxdataF_comp16_re_2)>>15); */
+  if (option ==0)
+  {
+        rxdataF_comp16[0] = (int16_t)(((int32_t)e_phi_re[14*(8-counter_msg3) + l] * (int32_t)rxdataF_comp16_re_2 + 
+                              (int32_t)e_phi_im[14*(8-counter_msg3) + l] * (int32_t)rxdataF_comp16_im_2)>>15); 
+        rxdataF_comp16[1] = (int16_t)(((int32_t)e_phi_re[14*(8-counter_msg3) + l] * (int32_t)rxdataF_comp16_im_2 - 
+                              (int32_t)e_phi_im[14*(8-counter_msg3) + l] * (int32_t)rxdataF_comp16_re_2)>>15); 
+  } else {
+        /*rxdataF_comp16[0] = (int16_t)(((int32_t)e_phi_re[0] * (int32_t)rxdataF_comp16_re_2 + 
+                              (int32_t)e_phi_im[0] * (int32_t)rxdataF_comp16_im_2)>>15); 
+        rxdataF_comp16[1] = (int16_t)(((int32_t)e_phi_re[0] * (int32_t)rxdataF_comp16_im_2 - 
+                              (int32_t)e_phi_im[0] * (int32_t)rxdataF_comp16_re_2)>>15); */
+          rxdataF_comp16[0] = (int16_t)(((int32_t)e_phi_re_m6[14*(2-counter_msg3) + l] * (int32_t)rxdataF_comp16_re_2 + 
+                              (int32_t)e_phi_im_m6[14*(2-counter_msg3) + l] * (int32_t)rxdataF_comp16_im_2)>>15); 
+          rxdataF_comp16[1] = (int16_t)(((int32_t)e_phi_re_m6[14*(2-counter_msg3) + l] * (int32_t)rxdataF_comp16_im_2 - 
+                              (int32_t)e_phi_im_m6[14*(2-counter_msg3) + l] * (int32_t)rxdataF_comp16_re_2)>>15); 
+  }
   /*printf("\n");
   printf("  re_eq_data = %d  im_eq_data = %d   ",rxdataF_comp16[0],rxdataF_comp16[1]);
   printf("\n");*/
@@ -1948,7 +1961,8 @@ void rx_ulsch_NB_IoT(PHY_VARS_eNB     *eNB,
                                     l, 
                                     1,
                                     0,
-                                    Qm); 
+                                    Qm,
+                                    0); 
          /* rotate_single_carrier_NB_IoT(PHY_VARS_eNB *eNB, 
                                   LTE_DL_FRAME_PARMS *frame_parms,
                                   int32_t **rxdataF_comp, 
@@ -1975,7 +1989,8 @@ void rx_ulsch_NB_IoT(PHY_VARS_eNB     *eNB,
                                     l, 
                                     1,
                                     0,
-                                    Qm); 
+                                    Qm,
+                                    0); 
 
 
       
@@ -2050,8 +2065,9 @@ void rx_ulsch_Gen_NB_IoT(PHY_VARS_eNB            *eNB,
                          uint16_t                nb_slot, //  total number of occupied slots
                          uint16_t                I_sc,
                          uint16_t                Nsc_RU,
-                         uint16_t                Mcs,
-                         unsigned int            A)
+                         uint16_t                Mcs, 
+                         unsigned int            A,       //  A = TBS
+                         uint8_t                 option)  // data (0) or control (1)
 {
       //LTE_eNB_PUSCH       *pusch_vars   =  eNB->pusch_vars[UE_id];
       LTE_eNB_PUSCH       *pusch_vars   =  eNB->pusch_vars[UE_id];
@@ -2162,7 +2178,8 @@ void rx_ulsch_Gen_NB_IoT(PHY_VARS_eNB            *eNB,
                                                l, 
                                                proc->counter_msg3,
                                                I_sc,
-                                               Qm); // Qm
+                                               Qm,
+                                               0); // Qm
 
       }
 

@@ -503,6 +503,8 @@ void pmch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,PHY_VARS_RN *rn,rel
 
 int16_t buffer_npusch[153600];
 int16_t buffer_npusch_ext[153600];
+int32_t llr_msg5[16]; 
+int32_t y_msg5[16];
 
 void common_signal_procedures (PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc) {
 
@@ -515,6 +517,9 @@ void common_signal_procedures (PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc) {
   //int                     With_NSSS=0;
   int framerx = proc->frame_rx; 
   int subframerx = proc->subframe_rx;
+  /////////////////////////////////////////////////ACK ///////////////////////////////////////
+  
+  ////////////////////////////////////////////////////////////////////////////////////////////////
   //int                     With_NSSS=0; 
   //printf("\n in eNB_fep_full in frame_tx = %d \n",frame);
 
@@ -536,11 +541,157 @@ void common_signal_procedures (PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc) {
   exit(0); 
   }*/
 
-  /////////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////// Decoding ACK ////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////////////////
   if(subframe==proc->subframe_msg5 && frame==proc->frame_msg5 && proc->flag_msg5==1 &&  proc->counter_msg5>0)
   {
-    int x=0;
+            LTE_eNB_PUSCH       *pusch_vars   =  eNB->pusch_vars[0];
+            NB_IoT_eNB_NULSCH_t    **ulsch_NB_IoT   =  &eNB->ulsch_NB_IoT;//[0][0]; 
+            int l,ii=0; //i;
+            uint8_t nb_rb=1;       //ulsch_NB_IoT[0]->harq_process->nb_rb,  //////////////// high level parameter 
+            int16_t    *llrp, *llrp2;
+            uint32_t     rnti_tmp= 65522; // true rnti should be used
+            uint32_t        x1_msg5, x2_msg5, s_msg5=0;
+            uint8_t      reset;
+            uint8_t      counter_ack; // ack counter for decision ack/nack
+            int32_t      counter_ack_soft;
+            printf("\n\n msg5 received in frame %d subframe %d \n\n",framerx,subframerx);
+
+              if (proc->counter_msg5 ==2)
+              {
+                proc->frame_dscr_msg5 = framerx; 
+                proc->subframe_dscr_msg5 = subframerx;
+              }
+              for (l=0; l<fp->symbols_per_tti; l++)
+              { 
+
+                  ulsch_extract_rbs_single_NB_IoT(common_vars->rxdataF[eNB_id],
+                                                     pusch_vars->rxdataF_ext[eNB_id],
+                                                     UL_RB_ID_NB_IoT,      //ulsch[UE_id]->harq_process->UL_RB_ID_NB_IoT, // index of UL NB_IoT resource block 
+                                                     Nsc_RU, //1, //ulsch_NB_IoT[0]->harq_process->N_sc_RU, // number of subcarriers in UL  //////////////// high level parameter
+                                                     I_sc, //used???????   // ulsch[UE_id]->harq_process->I_sc, // subcarrier indication field 
+                                                     l%(fp->symbols_per_tti/2),           // (0..13)
+                                                     l/(fp->symbols_per_tti/2),           // (0,1)
+                                                     fp);
+          /// Channel Estimation (NPUSCH format 2)
+              ul_chest_tmp_f2_NB_IoT(pusch_vars->rxdataF_ext[0],
+                                      pusch_vars->drs_ch_estimates[0],
+                                      l%(fp->symbols_per_tti/2), //symbol within slot 
+                                      l/(fp->symbols_per_tti/2), 
+                                      proc->counter_msg5, 
+                                      proc->flag_msg5,  // =1
+                                      subframerx,
+                                      Qm, // =1
+                                      I_sc, // = 0   
+                                      fp); 
+              }  
+              for (l=0; l<fp->symbols_per_tti; l++)
+              {       /// Channel Equalization
+          ul_chequal_tmp_NB_IoT(pusch_vars->rxdataF_ext[0],
+                                pusch_vars->rxdataF_comp[0],
+                                pusch_vars->drs_ch_estimates[0],
+                                l%(fp->symbols_per_tti/2), //symbol within slot 
+                                l/(fp->symbols_per_tti/2),
+                                fp); 
+        //}
+              //for (l=0; l<fp->symbols_per_tti; l++)
+              //{ 
+                /// In case of 1 subcarrier: BPSK and QPSK should be rotated by pi/2 and pi/4, respectively 
+                  rotate_single_carrier_NB_IoT(eNB, 
+                                             fp, 
+                                             pusch_vars->rxdataF_comp[eNB_id], 
+                                             eNB_id, // eNB_ID ID
+                                             l, 
+                                             proc->counter_msg5, 
+                                             I_sc,  // carrier 0  
+                                             1, // Qm
+                                             1); // for ACK 
+
+              }
+
+        llrp = (int16_t*)&pusch_vars->llr[0+ (2-proc->counter_msg5)*16]; 
+        ii = 0; 
+              for (l=0; l<fp->symbols_per_tti; l++)
+              {
+                  if (l==2 ||  l==9  )   // skip pilots: 3 per slots
+                  {
+                        l=l+3;
+                  }
+                  ulsch_qpsk_llr_NB_IoT(eNB, 
+                                      fp,
+                                      pusch_vars->rxdataF_comp[eNB_id],
+                                      pusch_vars->llr,
+                                      l, 
+                                      UE_id, // UE ID, 
+                                      I_sc, // carrier number 0 for the ACK
+                                      Nsc_RU, // = 1
+                                      &llrp[ii*2]); //// !!! Pensez à créer un buffer de longueur 8 subframes 
+                  ii++;
+              }
+        
+        if (proc->counter_msg5==1)
+        {
+          llrp2 = (int16_t*)&pusch_vars->llr[0]; 
+          for (l=0;l<16;l++) /// Add real and imaginary parts of BPSK constellation
+          {
+            llr_msg5[l] = llrp2[l<<1] + llrp2[(l<<1)+1];
+          }
+          /*printf("\n\n");
+           for (l=0;l<16;l++){
+              printf("  llr_msg5 = %d  ",llr_msg5[l]);  
+          }*/
+
+          /// Descrambling
+          x2_msg5         =  (rnti_tmp<<14) + (proc->subframe_dscr_msg5<<9) + ((proc->frame_dscr_msg5%2)<<13) + fp->Nid_cell; 
+          reset = 1;  
+          s_msg5 = lte_gold_generic(&x1_msg5, &x2_msg5, reset);
+                      reset = 0;
+          counter_ack = 0; 
+          for (l=0;l<16;l++)
+                      {
+            //printf("\n s = %d \n",(s_msg5>>(l%32))&1);
+                  if (((s_msg5>>(l%32))&1)==1) //xor
+                  {
+                          y_msg5[l] = -llr_msg5[l];
+                    }else
+                  {
+                    y_msg5[l] = llr_msg5[l];
+                  }
+            counter_ack += (y_msg5[l]>>31)&1; 
+                      }
+         
+          /// Decision ACK/NACK
+          printf("\n\n\n");
+          if (counter_ack>8) //hard decision
+          {
+                printf("  decoded msg5: ACK  ");  
+            }else if (counter_ack<8) //hard decision
+          {
+                printf("  decoded msg5: NACK  ");  
+            }else //when equality (8 bits 0 vs 8 bits 1), soft decision
+          {
+            counter_ack_soft=0; 
+            for (l=0;l<16;l++)
+            {
+                  counter_ack_soft += y_msg5[l];   
+              }
+            if (counter_ack_soft>=0) 
+            {
+                  printf("  decoded msg5 (soft): ACK  ");  
+              }else 
+            {
+                  printf("  decoded msg5 (soft): NACK  ");  
+              }
+          }
+          printf("\n\n\n");
+
+        }
+          
+            proc->subframe_msg5++; 
+            proc->counter_msg5--;
+        ///if (proc->counter_msg5==0) exit(0);
+
   }
   ////////////////////////////////////////////////////////////////////////////////////
   ///////////////////////////////////////////////////  RX NPUSH  //////////////////////////////////////
@@ -578,7 +729,8 @@ void common_signal_procedures (PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc) {
                           11, // I_sc
                           1,  // Nsc_RU
                           2,  // Mcs
-                          88); //  A = TBS
+                          88, //  A = TBS
+                          0); // data (0) or control (1)
   /*    LTE_eNB_PUSCH       *pusch_vars   =  eNB->pusch_vars[0];
       //NB_IoT_DL_FRAME_PARMS  *frame_parms  =  &eNB->frame_parms; 
       NB_IoT_eNB_NULSCH_t    **ulsch_NB_IoT   =  &eNB->ulsch_NB_IoT;//[0][0]; 
