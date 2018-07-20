@@ -35,7 +35,7 @@ extern int8_t wACK_RX_NB_IoT[5][4];
 
 extern short conjugate[8],conjugate2[8];
 extern short *ul_ref_sigs_rx_NB_IoT[30][4]; // NB-IoT: format 1 pilots
-// extern short *ul_ref_sigs_rx_format2[30][3]; // NB-IoT: format 2 pilots
+extern short *ul_ref_sigs_f2_rx_NB_IoT[16]; // NB-IoT: format 2 pilots
 extern unsigned short dftsizes[33];
 
 #endif

@@ -159,7 +159,7 @@ int ul_chest_tmp_f2_NB_IoT(int32_t **rxdataF_ext,
       int32_t **ul_ch_estimates,
       uint8_t l, //symbol within slot 
       uint8_t Ns,
-      uint8_t counter_msg3,
+      uint8_t counter_msg5,
       uint8_t flag,
       uint8_t subframerx,
       uint8_t Qm, 
