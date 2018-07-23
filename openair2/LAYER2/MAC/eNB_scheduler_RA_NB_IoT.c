@@ -18,12 +18,11 @@
  * For more information about the OpenAirInterface (OAI) Software Alliance:
  *      contact@openairinterface.org
  */
-
 /*! \file eNB_scheduler_RA_NB_IoT.c
  * \brief functions used in Random access scheduling 
- * \author  NTUST BMW Lab./
- * \date 2017
- * \email: 
+ * \author  NTUST BMW Lab./Calvin HSU
+ * \date 2017 - 2018
+ * \email: kai-hsiang.hsu@eurecom.fr
  * \version 1.0
  *
  */
