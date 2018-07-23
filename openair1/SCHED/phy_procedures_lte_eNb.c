@@ -558,13 +558,13 @@ void common_signal_procedures (PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc) {
             //uint8_t      reset;
             //uint8_t      counter_ack; // ack counter for decision ack/nack
             //int32_t      counter_ack_soft;
-            printf("\n\n msg5 received in frame %d subframe %d \n\n",framerx,subframerx);
+          printf("\n\n msg5 received in frame %d subframe %d \n\n",framerx,subframerx);
 
-              if (proc->counter_msg5 ==2)
-              {
-                proc->frame_dscr_msg5 = framerx; 
-                proc->subframe_dscr_msg5 = subframerx;
-              }
+          if (proc->counter_msg5 ==2)
+          {
+            proc->frame_dscr_msg5 = framerx; 
+            proc->subframe_dscr_msg5 = subframerx;
+          }
 
           rx_ulsch_Gen_NB_IoT(eNB,
                           proc,
@@ -575,8 +575,8 @@ void common_signal_procedures (PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc) {
                           22,//UL_RB_ID_NB_IoT,           // 22 , to be included in // to be replaced by NB_IoT_start ??
                           1,//subcarrier_spacing,        // 0 (3.75 KHz) or 1 (15 KHz)
                           65522,//rnti_tmp,                  //= 65522
-                          proc->subframe_dscr_msg3,//subframerx,//scrambling_subframe_msg3,  // first received subframe 
-                          proc->frame_dscr_msg3,//framerx,// scrambling_frame_msg3,     // first received frame
+                          proc->subframe_dscr_msg5,//subframerx,//scrambling_subframe_msg3,  // first received subframe 
+                          proc->frame_dscr_msg5,//framerx,// scrambling_frame_msg3,     // first received frame
                           4,//nb_slot,                   //  total number of occupied slots
                           0, // I_sc
                           1,  // Nsc_RU
@@ -588,8 +588,8 @@ void common_signal_procedures (PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc) {
              
 
 
-            proc->subframe_msg5++; 
-            proc->counter_msg5--;
+          proc->subframe_msg5++; 
+          proc->counter_msg5--;
         ///if (proc->counter_msg5==0) exit(0);
 
   }

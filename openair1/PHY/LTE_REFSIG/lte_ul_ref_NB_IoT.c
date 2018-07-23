@@ -271,17 +271,16 @@ void generate_ul_ref_sigs_rx_NB_IoT(void)
 
                     ul_ref_sigs_rx_NB_IoT[u][index_Nsc_RU][12*(n<<1)+24]    = ref_sigs_sc1[n<<1]; // ul_ref_sigs_rx_NB_IoT is filled every 12 RE, real part
                     ul_ref_sigs_rx_NB_IoT[u][index_Nsc_RU][1+12*(n<<1)+24]= ref_sigs_sc1[1+(n<<1)]; // ul_ref_sigs_rx_NB_IoT is filled every 12 RE, imaginary part    
-                
-                for (n=0; n<4; n++) 
-                {
-                    for (m=0; m<3; m++) 
-                    {
-                          ul_ref_sigs_f2_rx_NB_IoT[u][12*((3*n+m)<<1)+24] = ref_sigs_sc1[n<<1]; // ul_ref_sigs_rx_NB_IoT is filled every 12 RE, real part
-                          ul_ref_sigs_f2_rx_NB_IoT[u][1+12*((3*n+m)<<1)+24] = ref_sigs_sc1[1+(n<<1)]; // ul_ref_sigs_rx_NB_IoT is filled every 12 RE, imaginary part    
-                    }  
-                }
-
             }
+            for (n=0; n<4; n++) 
+            {
+                for (m=0; m<3; m++) 
+                {
+                      ul_ref_sigs_f2_rx_NB_IoT[u][12*((3*n+m)<<1)+24] = ref_sigs_sc1[n<<1]; // ul_ref_sigs_rx_NB_IoT is filled every 12 RE, real part
+                      ul_ref_sigs_f2_rx_NB_IoT[u][1+12*((3*n+m)<<1)+24] = ref_sigs_sc1[1+(n<<1)]; // ul_ref_sigs_rx_NB_IoT is filled every 12 RE, imaginary part    
+                }  
+            }
+
           break;
       }
     }
