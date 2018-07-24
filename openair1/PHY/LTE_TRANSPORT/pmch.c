@@ -98,7 +98,7 @@ int is_pmch_subframe(uint32_t frame, int subframe, LTE_DL_FRAME_PARMS *frame_par
   //  LOG_D(PHY,"is_pmch_subframe: frame %d, subframe %d, num_MBSFN_config %d\n",
   //  frame,subframe,frame_parms->num_MBSFN_config);
   //
-  //  if ((FeMBMS_active == 1) && ((frame&3 != 0) || (subframe > 0))) return(1);
+  //  if ((FeMBMS_active == 1) && ((frame&3 != 0) || (subframe > 0))) return(1); // FeMBMS_active == 2
 
   for (i=0; i<frame_parms->num_MBSFN_config; i++) {  // we have at least one MBSFN configuration
     period = 1<<frame_parms->MBSFN_config[i].radioframeAllocationPeriod;
@@ -408,12 +408,18 @@ void mch_extract_rbs125(int **rxdataF,
 
   offset = 3*(subframe&1);
 
+// [IRTGS 20180717] values for 1.4 MHz and 3 MHz semm to be not correct
+// see PHY/INIT(lte_parms.c -> init_frame_parms(): 90x12 = 1080; 36x12 = 432
+
+
   switch (frame_parms->N_RB_DL) {
   case 6:
-    first_carrier_offset=1536-450;
+    //first_carrier_offset=1536-450;
+    first_carrier_offset=1536-432;
     break;
   case 15:
-    first_carrier_offset=3072-900;
+    //first_carrier_offset=3072-900;
+    first_carrier_offset=3072-1080;
     break;
   case 25:
     first_carrier_offset=6144-1800;
@@ -1058,7 +1064,7 @@ int rx_pmch(PHY_VARS_UE *ue,
 
   //printf("*********************mch: symbol %d\n",symbol);
 
-  AssertFatal(((ue->FeMBMS_active == 1) && (symbol == 0)) || (ue->FeMBMS_active == 0),
+  AssertFatal(((ue->FeMBMS_active == 2) && (symbol == 0)) || (ue->FeMBMS_active == 0), // FeMBMS_active == 1 check!
 	      "Illegal symbol %d (FeMBMS_active = %d)\n",symbol,ue->FeMBMS_active);
 
   if (ue->FeMBMS_active == 0) 
@@ -1069,7 +1075,7 @@ int rx_pmch(PHY_VARS_UE *ue,
 		    symbol,
 		    subframe,
 		    frame_parms);
-  else if (ue->FeMBMS_active == 2) 
+  else if (ue->FeMBMS_active == 2)  // FeMBMS dedicated
     mch_extract_rbs125(common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].rxdataF,
 		       common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].dl_ch_estimates[eNB_id],
 		       pdsch_vars[eNB_id]->rxdataF_ext,
@@ -1079,7 +1085,7 @@ int rx_pmch(PHY_VARS_UE *ue,
 
   else AssertFatal(1==0,"Illegal FeMBMS_active %d\n",ue->FeMBMS_active);
 
-  if (((ue->FeMBMS_active == 0) && (symbol == 2)) || (ue->FeMBMS_active == 1))  
+  if (((ue->FeMBMS_active == 0) && (symbol == 2)) || (ue->FeMBMS_active == 1)) // FeMBMS_active == 2 ? check! 
     mch_channel_level(pdsch_vars[eNB_id]->dl_ch_estimates_ext,
                       frame_parms,
                       avg_pmch,

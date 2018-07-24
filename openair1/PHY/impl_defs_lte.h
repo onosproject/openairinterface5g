@@ -638,6 +638,9 @@ typedef struct {
 
   struct MBSFN_SubframeConfig *mbsfn_SubframeConfig[MAX_MBSFN_AREA];
 
+  // [IRTGS 20180705] additional field in PBCH for MBSFN dedicated ETSI TS 136.321 ch. 6.2.2 r14
+  unsigned int AddNonMBSFN_SF;
+
 } LTE_DL_FRAME_PARMS;
 
 typedef enum {

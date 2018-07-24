@@ -103,8 +103,11 @@ void lte_gold_mbsfn125(LTE_DL_FRAME_PARMS *frame_parms,uint32_t lte_gold_mbsfn12
 
   for (sfn=0; sfn<10; sfn++) {
 
-    x2 = (Nid_mbsfn) + (((1+(Nid_mbsfn<<1))*(1 + 2 + (7*(1+(sfn>>1)))))<<9); //cinit
-
+    
+// [IRTGS 16.05.2018]: sfn>>1 removed, "+2" removed as l=0 for 1.25 kHz SCS
+// TS 136.211 ch. 7.2 and ch. 6.10.2.1.2 (1.25 kHz SCS)
+    x2 = (Nid_mbsfn) + (((1+(Nid_mbsfn<<1))*(1 + (7*(1+sfn))))<<9); //cinit
+    //x2 = (Nid_mbsfn) + (((1+(Nid_mbsfn<<1))*(1 + 2 + (7*(1+(sfn>>1)))))<<9); //cinit
 
 
     x1 = 1+ (1<<31);

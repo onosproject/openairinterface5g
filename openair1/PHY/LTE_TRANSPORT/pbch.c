@@ -37,7 +37,7 @@
 #include "PHY/extern.h"
 #include "PHY/sse_intrin.h"
 
-#define DEBUG_PBCH 1
+//#define DEBUG_PBCH 1 // [IRTGS 20180709]: commented out
 //#define DEBUG_PBCH_ENCODING
 //#define INTERFERENCE_MITIGATION 1
 
@@ -787,6 +787,8 @@ void pbch_unscrambling(LTE_DL_FRAME_PARMS *frame_parms,
 }
 
 // [IRTGS 20180612] ******************************
+// Note _125 here does NOT mean that it is used for 1.25 kHz SCS, instead for 
+// FeMBMS dedicated we do have another c_init, therefore another unscrambling... 
 void pbch_unscrambling_125(LTE_DL_FRAME_PARMS *frame_parms,
                        int8_t* llr,
                        uint32_t length,
@@ -1217,8 +1219,8 @@ uint16_t rx_pbch_125(LTE_UE_COMMON *lte_ue_common_vars,
         (((uint16_t)pbch_a[PBCH_A>>3]<<8)+pbch_a[(PBCH_A>>3)+1]);
 
   // [IRTGS 20180620]
-  printf("\x1B[1;34m[IRTGS]: \x1B[0m"); // blue
-  printf("\x1B[32m%s%d%s%X\x1B[0m\n","frame_mod4 = ", frame_mod4, ";   CRC = ",crc);
+  // printf("\x1B[1;34m[IRTGS]: \x1B[0m"); // blue
+  // printf("\x1B[32m%s%d%s%X\x1B[0m\n","frame_mod4 = ", frame_mod4, ";   CRC = ",crc);
 
   if (crc == 0x0000)
     return(1);

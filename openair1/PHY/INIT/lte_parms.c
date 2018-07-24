@@ -53,18 +53,18 @@ int init_frame_parms(LTE_DL_FRAME_PARMS *frame_parms,uint8_t osf)
 */
   if (frame_parms->Ncp==EXTENDED) {
         //(IRTBL_start) just debugging tests
-        printf("\x1B[32m");
-        printf("[IRTBL] EXTENDED CP detected\n");
-        printf("\x1B[0m");
+        //printf("\x1B[32m");
+        //printf("[IRTBL] EXTENDED CP detected\n");
+        //printf("\x1B[0m");
         //(IRTBL_end) just debugging tests
     frame_parms->nb_prefix_samples0=512;
     frame_parms->nb_prefix_samples = 512;
     frame_parms->symbols_per_tti = 12;
   } else {
         //(IRTBL_start) just debugging tests
-        printf("\x1B[32m");
-        printf("[IRTBL] NORMAL CP detected\n");
-        printf("\x1B[0m");
+        //printf("\x1B[32m");
+        //printf("[IRTBL] NORMAL CP detected\n");
+        //printf("\x1B[0m");
         //(IRTBL_end) just debugging tests
     frame_parms->nb_prefix_samples0 = 160;
     frame_parms->nb_prefix_samples = 144;
