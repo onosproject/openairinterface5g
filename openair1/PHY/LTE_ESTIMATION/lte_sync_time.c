@@ -483,7 +483,7 @@ int lte_sync_time(int **rxdata, ///rx data in time domain
 // [IRTGS 20180618] quality indicator
   printf("\x1B[1;34m[IRTGS]: \x1B[0m"); // blue
   // let's assume that the peak_value should be at least 5 times the average value...
-  QI = (5*cum_sum[sync_source]<cnt*peak_val) ? 1:0; 
+  QI = (8*cum_sum[sync_source]<cnt*peak_val) ? 1:0;  
   if (QI == 1)
     printf("\x1B[32m%s \x1B[0m","lte_sync_time(): QI: ok  ");
   else

@@ -459,6 +459,11 @@ int rx_sss(PHY_VARS_UE *ue,int32_t *tot_metric,uint8_t *flip_max,uint8_t *phase_
     }
   }
 
+// [IRTGS 20180724] Ausgabe Cell ID
+//printf("\x1B[1;34m[IRTGS]: \x1B[0m"); // blue
+//printf("\x1B[32m%s\x1B[0m","Cell ID = ");
+//printf("\x1B[1;31m%d\x1B[0m\n",ue->frame_parms.Nid_cell);
+
   return(0);
 }
 

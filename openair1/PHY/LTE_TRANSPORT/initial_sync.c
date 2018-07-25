@@ -477,12 +477,21 @@ int initial_sync(PHY_VARS_UE *ue, runmode_t mode)
 //      if (ret)
       { printf("\x1B[1;34m[IRTGS]: \x1B[0m"); // blue
         printf("\x1B[32m%s%d\x1B[0m\n","[initial_sync] FeMBMS FDD extended: ret = ", ret);
+
+        // [IRTGS 20180724] print Cell ID
+        printf("\x1B[1;34m[IRTGS]: \x1B[0m"); // blue
+        printf("\x1B[32m%s\x1B[0m","[initial_sync] Cell ID = ");
+        printf("\x1B[1;31m%d\x1B[0m\n",ue->frame_parms.Nid_cell);
+
       } 
 
       // [IRTGS 20180612]:
       if (ret>=0)
       { printf("\x1B[1;34m[IRTGS]: \x1B[0m"); // blue
         printf("\x1B[32m%s\x1B[0m\n","[initial_sync] FDD extended successfull");
+      } else // [IRTGS] nur temporär für tests #######################################################
+      { printf("\x1B[1;34m[IRTGS]: \x1B[0m"); // blue
+        printf("\x1B[1;31m%s\x1B[0m\n","[initial_sync] FDD extended failed");
       } 
 
 #ifdef DEBUG_INITIAL_SYNCH
