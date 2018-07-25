@@ -1602,7 +1602,11 @@ static void* eNB_thread_prach( void* param ) {
 
     if (wait_on_condition(&proc->mutex_prach,&proc->cond_prach,&proc->instance_cnt_prach,"eNB_prach_thread") < 0) break;
     
-    prach_procedures(eNB);
+    //prach_procedures(eNB);
+    
+    ////// NB_IoT testing ///////
+    prach_procedures_NB_IoT(eNB);
+    /////////////////////////////
     
     if (release_thread(&proc->mutex_prach,&proc->instance_cnt_prach,"eNB_prach_thread") < 0) break;
   }

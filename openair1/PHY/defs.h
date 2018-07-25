@@ -507,7 +507,6 @@ typedef struct PHY_VARS_eNB_s {
   /// Pointer for ifdevice buffer struct
   if_buffer_t ifbuffer;
 
-
 /////////////// NB-IoT testing ////////////////////////////
 volatile uint16_t preamble_index_NB_IoT;
 NB_IoT_eNB_NPBCH_t        npbch;
@@ -519,12 +518,15 @@ NB_IoT_eNB_NPDCCH_temp_t  npdcch_tmp;
 NB_IoT_eNB_NULSCH_t       *ulsch_NB_IoT[NUMBER_OF_UE_MAX+1]; 
 ////////////// For IF Module /////////////////////////////
 
-IF_Module_NB_IoT_t          *if_inst; 
-UL_IND_NB_IoT_t             UL_INFO;
+IF_Module_NB_IoT_t          *if_inst;           // should be replaced by if_inst_NB_IoT;  to avoid conflict during the merge with develop branch
+UL_IND_NB_IoT_t             UL_INFO;            // should be replaced by UL_INFO_NB_IoT;
+pthread_mutex_t      UL_INFO_mutex;
+/// NFAPI NPRACH information 
+//nfapi_preamble_pdu_t preamble_list_NB_IoT[MAX_NUM_RX_PRACH_PREAMBLES];   // MAX_NUM_RX_PRACH_PREAMBLES in PHY/defs_eNB.h
+//nfapi_preamble_pdu_t preamble_list_NB_IoT[4];
+
 uint8_t                     msg3_pdu[6];
 //////////////////// END /////////////////////////////////
-
-
 } PHY_VARS_eNB;
 
 #define debug_msg if (((mac_xface->frame%100) == 0) || (mac_xface->frame < 50)) msg

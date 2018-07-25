@@ -203,6 +203,11 @@ void phy_procedures_eNB_S_RX(PHY_VARS_eNB *phy_vars_eNB,eNB_rxtx_proc_t *proc,re
 */
 void prach_procedures(PHY_VARS_eNB *eNB);
 
+
+///////// NB_IoT testing ///////////////////////////
+void prach_procedures_NB_IoT(PHY_VARS_eNB *eNB);
+///////////////////////////////////////////////////
+
 /*! \brief Function to compute subframe type as a function of Frame type and TDD Configuration (implements Table 4.2.2 from 36.211, p.11 from version 8.6) and subframe index.
   @param frame_parms Pointer to DL frame parameter descriptor
   @param subframe Subframe index

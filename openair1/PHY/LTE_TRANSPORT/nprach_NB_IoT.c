@@ -405,7 +405,7 @@ void filtering_signal(int16_t *input_buffer, int16_t *filtered_buffer, uint32_t 
 
 }
 
-uint32_t RX_NPRACH_NB_IoT(PHY_VARS_eNB *eNB, int frame){ 
+uint32_t process_nprach_NB_IoT(PHY_VARS_eNB *eNB, int frame){ 
 
 
 	//uint32_t estimated_TA_coarse=0;  
@@ -443,12 +443,12 @@ uint32_t RX_NPRACH_NB_IoT(PHY_VARS_eNB *eNB, int frame){
 	if (NPRACH_detection_NB_IoT(Rx_sub_sampled_buffer_128,*length_ouput)){
 		
 		
-		/*estimated_TA_coarse = TA_estimation_NB_IoT(eNB, 
-												   Rx_sub_sampled_buffer_128, 
-												   sub_sampling_rate, 
-												   FRAME_LENGTH_COMPLEX_SUB_SAMPLES, 
-												   estimated_TA_coarse, 
-												   coarse); 
+		/*  estimated_TA_coarse = TA_estimation_NB_IoT(eNB, 
+													   Rx_sub_sampled_buffer_128, 
+													   sub_sampling_rate, 
+													   FRAME_LENGTH_COMPLEX_SUB_SAMPLES, 
+													   estimated_TA_coarse, 
+													   coarse); 
 
 
 		// 2. Fine TA estimation using sub sampling rate = 16, i.e. fs = 1.92 MHz  
