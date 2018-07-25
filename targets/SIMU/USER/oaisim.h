@@ -84,6 +84,10 @@ void do_OFDM_mod(int32_t **txdataF, int32_t **txdata, frame_t frame, uint16_t ne
 void reset_opp_meas(void);
 void print_opp_meas(void);
 
+void reset_opp_meas_oaisim (void);
+void print_opp_meas_oaisim (void);
+
+
 #ifdef OPENAIR2
 int omv_write (int pfd,  node_list* enb_node_list, node_list* ue_node_list, Data_Flow_Unit omv_data);
 void omv_end (int pfd, Data_Flow_Unit omv_data);

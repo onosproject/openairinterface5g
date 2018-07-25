@@ -1390,7 +1390,6 @@ int phy_init_lte_eNB(PHY_VARS_eNB *eNB,
                      unsigned char is_secondary_eNB,
                      unsigned char abstraction_flag)
 {
-
   // shortcuts
   LTE_DL_FRAME_PARMS* const fp      = &eNB->frame_parms;
   LTE_eNB_COMMON* const common_vars = &eNB->common_vars;

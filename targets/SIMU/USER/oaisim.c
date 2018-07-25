@@ -1412,6 +1412,9 @@ reset_opp_meas_oaisim (void)
   reset_meas (&dl_chan_stats);
   reset_meas (&ul_chan_stats);
 
+  // init time stats here (UE and eNB RX-TX)
+  
+
   for (UE_id = 0; UE_id < NB_UE_INST; UE_id++) {
     reset_meas (&PHY_vars_UE_g[UE_id][0]->phy_proc[0]);
     reset_meas (&PHY_vars_UE_g[UE_id][0]->phy_proc[1]);
@@ -1694,6 +1697,8 @@ print_opp_meas_oaisim (void)
                 "[UE][total_phy_proc_rx[0]]", &oaisim_stats, &oaisim_stats_f);
     print_meas (&PHY_vars_UE_g[UE_id][0]->phy_proc_rx[1],
                 "[UE][total_phy_proc_rx[1]]", &oaisim_stats, &oaisim_stats_f);
+    print_meas (&PHY_vars_UE_g[UE_id][0]->phy_proc_tx,
+                "[UE][total_phy_proc_tx]", &oaisim_stats, &oaisim_stats_f);
     print_meas (&PHY_vars_UE_g[UE_id][0]->ofdm_demod_stats,
                 "[UE][ofdm_demod]", &oaisim_stats, &oaisim_stats_f);
     print_meas (&PHY_vars_UE_g[UE_id][0]->rx_dft_stats, "[UE][rx_dft]",
@@ -1773,8 +1778,8 @@ print_opp_meas_oaisim (void)
     print_meas (&PHY_vars_eNB_g[eNB_id][0]->dlsch_turbo_encoding_stats,
                 "[eNB][|_turbo_encoding]", &oaisim_stats, &oaisim_stats_f);
 
-    print_meas (&PHY_vars_eNB_g[eNB_id][0]->phy_proc_rx,
-                "[eNB][total_phy_proc_rx]", &oaisim_stats, &oaisim_stats_f);
+    //print_meas (&PHY_vars_eNB_g[eNB_id][0]->phy_proc_rx,
+    //            "[eNB][total_phy_proc_rx]", &oaisim_stats, &oaisim_stats_f);
     print_meas (&PHY_vars_eNB_g[eNB_id][0]->ofdm_demod_stats,
                 "[eNB][ofdm_demod]", &oaisim_stats, &oaisim_stats_f);
     //print_meas(&PHY_vars_eNB_g[eNB_id][0]->ulsch_channel_estimation_stats,"[eNB][channel_est]");

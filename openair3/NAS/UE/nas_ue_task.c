@@ -36,7 +36,7 @@
 #include "nas_user.h"
 
 // FIXME make command line option for NAS_UE_AUTOSTART
-# define NAS_UE_AUTOSTART 1
+# define NAS_UE_AUTOSTART 0
 
 // FIXME review these externs
 extern unsigned char NB_eNB_INST;
@@ -167,6 +167,11 @@ void *nas_ue_task(void *args_p)
 
           nas_user_receive_and_process (user, user_data);
         }
+#else
+	{
+	  //nas_user_receive_and_process (user, "AT+CPIN=0000\r");
+	  nas_proc_enable_s1_mode(user);
+	}
 #endif
         break;
 

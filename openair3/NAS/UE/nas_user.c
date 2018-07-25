@@ -278,6 +278,25 @@ int nas_user_receive_and_process(nas_user_t *user, char *message)
 
 /****************************************************************************
  **                                                                        **
+ ** Name:        nas_user_receive_and_process_oaisim()                     **
+ **                                                                        **
+ ** Description: Receives and process messages from user application       **
+ **                                                                        **
+ ** Inputs:      fd:            File descriptor of the connection endpoint **
+ **                             from which data have been received         **
+ **              Others:        None                                       **
+ **                                                                        **
+ ** Outputs:     Return:        FALSE, TRUE                                **
+ **                                                                        **
+ ***************************************************************************/
+int nas_user_receive_and_process_oaisim(void)
+{
+  LOG_FUNC_IN;
+  LOG_FUNC_RETURN(FALSE);
+}
+
+/****************************************************************************
+ **                                                                        **
  ** Name:    nas_user_process_data()                                   **
  **                                                                        **
  ** Description: Executes AT command operations received from the user and **
@@ -698,7 +717,6 @@ static int _nas_user_proc_cfun(nas_user_t *user, const at_command_t *data)
       /* Set to the selected parameter value */
       fun = data->command.cfun.fun;
     }
-
     switch (fun) {
     case AT_CFUN_MIN:
       /* TODO: Shutdown ??? */
@@ -1270,6 +1288,7 @@ static int _nas_user_proc_cgatt(nas_user_t *user, const at_command_t *data)
       }
 
       if (ret_code != RETURNok) {
+	printf ("ret_code = %d\n",ret_code);
         LOG_TRACE(ERROR, "USR-MAIN  - Failed to attach/detach "
                   "to/from EPS service (<state>=%d)",
                   data->command.cgatt.state);

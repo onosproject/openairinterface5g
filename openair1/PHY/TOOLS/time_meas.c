@@ -63,6 +63,8 @@ void print_meas_now(time_stats_t *ts, const char* name, FILE* file_name){
 void print_meas(time_stats_t *ts, const char* name, time_stats_t * total_exec_time, time_stats_t * sf_exec_time)
 {
   //printf("ts->trials is %d\n",ts->trials);
+  //printf("opp_enabled %d\n",opp_enabled);
+  //printf("ts->trials %d, ts->diff %d,cpu_freq_GHz %e,sf_exec_time->trials %d, sf_exec_time->diff %d, total_exec_time->diff %d\n",ts->trials,ts->diff,cpu_freq_GHz,sf_exec_time->trials,sf_exec_time->diff,total_exec_time->diff);
   if (opp_enabled) {
 
     static int first_time = 0;
@@ -90,15 +92,6 @@ void print_meas(time_stats_t *ts, const char* name, time_stats_t * total_exec_ti
                 (ts->diff/ts->trials/cpu_freq_GHz/1000.0),
                 ts->trials);
       } else {
-	if (PHY_vars_UE_g[0][0]->do_ofdm_mod)
-           fprintf(stderr, "%25s:  %15.3f us (%5.2f%%); %15.3f us (%5.2f%%); %15d;\n",
-                name,
-                (ts->diff_now/cpu_freq_GHz/1000.0),
-                ((ts->diff_now/cpu_freq_GHz/1000.0)/(total_exec_time->diff/cpu_freq_GHz/1000.0))*100,  // percentage
-                (ts->diff/ts->trials/cpu_freq_GHz/1000.0),
-                ((ts->diff/ts->trials/cpu_freq_GHz/1000.0)/(sf_exec_time->diff/sf_exec_time->trials/cpu_freq_GHz/1000.0))*100,  // percentage
-                ts->trials);
-	else
            fprintf(stderr, "%25s:  %15.3f ms (%5.2f%%); %15.3f us (%5.2f%%); %15d;\n",
                 name,
                 (ts->diff/cpu_freq_GHz/1000000.0),

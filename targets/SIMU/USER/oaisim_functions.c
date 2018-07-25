@@ -1005,6 +1005,7 @@ openair0_timestamp current_UE_rx_timestamp[NUMBER_OF_UE_MAX][MAX_NUM_CCs];
 openair0_timestamp last_eNB_rx_timestamp[NUMBER_OF_eNB_MAX][MAX_NUM_CCs];
 openair0_timestamp last_UE_rx_timestamp[NUMBER_OF_UE_MAX][MAX_NUM_CCs];
 static int first_run=0;
+  static int count=0;
 int eNB_trx_start(openair0_device *device) {
   return(0);
 }
@@ -1043,11 +1044,9 @@ extern int subframe_eNB_mask,subframe_UE_mask;
 
 int eNB_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void **buff, int nsamps, int cc)
 {
-  static int count;
   if (!first_run)
   {
      first_run=1;
-     count=0;
   } 
   if (count==500)
   {

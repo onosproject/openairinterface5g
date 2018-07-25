@@ -414,6 +414,7 @@ void do_DL_sig_freq(channel_desc_t *eNB2UE[NUMBER_OF_eNB_MAX][NUMBER_OF_UE_MAX][
   uint8_t eNB_id=0;
 #ifdef    __AVX2__
   float tx_pwr;
+  //printf ("AVX2 instruction set activated\n");
 #else
   double tx_pwr;
 #endif

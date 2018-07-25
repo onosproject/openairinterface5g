@@ -2430,7 +2430,7 @@ void phy_procedures_UE_TX(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,ui
 
   uint8_t next1_thread_id = current_thread_id[proc->subframe_rx]== (RX_NB_TH-1) ? 0:(current_thread_id[proc->subframe_rx]+1);
   uint8_t next2_thread_id = next1_thread_id== (RX_NB_TH-1) ? 0:(next1_thread_id+1);
-
+  start_meas(&ue->phy_proc_tx);
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_UE_TX,VCD_FUNCTION_IN);
 
   LOG_D(PHY,"****** start TX-Chain for AbsSubframe %d.%d ******\n", frame_tx, subframe_tx);
@@ -2599,6 +2599,7 @@ void phy_procedures_UE_TX(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,ui
       /*clock_t stop=clock();
       printf("UE_TX time is %f s, AVERAGE UE_TX time is %f s, frame %d, subframe %d, count %d, sum %e\n",(float) (stop-start)/CLOCKS_PER_SEC,(float) (sum+stop-start)/(count*CLOCKS_PER_SEC),frame_tx,subframe_tx,count,sum+stop-start);
       sum=(sum+stop-start);*/
+  stop_meas(&ue->phy_proc_tx);
 }
 
 void phy_procedures_UE_S_TX(PHY_VARS_UE *ue,uint8_t eNB_id,uint8_t abstraction_flag,relaying_type_t r_type)
@@ -5122,10 +5123,10 @@ int phy_procedures_UE_RX(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,
   int pmch_flag=0;
   int frame_rx = proc->frame_rx;
   int subframe_rx = proc->subframe_rx;
-
+  
   uint8_t next1_thread_id = ue->current_thread_id[subframe_rx]== (RX_NB_TH-1) ? 0:(ue->current_thread_id[subframe_rx]+1);
   uint8_t next2_thread_id = next1_thread_id== (RX_NB_TH-1) ? 0:(next1_thread_id+1);
-
+  start_meas(&ue->phy_proc_rx[ue->current_thread_id[subframe_rx]]);
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_UE_RX, VCD_FUNCTION_IN);
 
 #if T_TRACER
@@ -5275,6 +5276,7 @@ else
 
   // first slot has been processed (FFTs + Channel Estimation, PCFICH/PHICH/PDCCH)
 #if UE_TIMING_TRACE
+  printf("ue timing trace is activated\n")
   stop_meas(&ue->generic_stat);
 #if DISABLE_LOG_X
   printf("[SFN %d] Slot0: FFT + Channel Estimate + PCFICH/PHICH/PDCCH %5.2f \n",subframe_rx,ue->generic_stat.p_time/(cpuf*1000.0));
@@ -5631,7 +5633,7 @@ else
       /*clock_t stop=clock();
       printf("UE_RX time is %f s, AVERAGE UE_RX time is %f s, frame %d, subframe %d, count %d, sum %e\n",(float) (stop-start)/CLOCKS_PER_SEC,(float) (sum+stop-start)/(count*CLOCKS_PER_SEC),frame_rx,subframe_rx,count,sum+stop-start);
       sum=(sum+stop-start);*/
-
+  stop_meas(&ue->phy_proc_rx[ue->current_thread_id[subframe_rx]]);
   return (0);
 }
 

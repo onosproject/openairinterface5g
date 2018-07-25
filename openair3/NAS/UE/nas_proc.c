@@ -573,7 +573,7 @@ int nas_proc_detach(nas_user_t *user, int switch_off)
 
   emm_sap_t emm_sap;
   int rc = RETURNok;
-
+  printf("detaching UE\n");
   if ( emm_main_is_attached(user->emm_data) ) {
     /* Initiate an Detach procedure */
     emm_sap.primitive = EMMREG_DETACH_INIT;
@@ -604,7 +604,7 @@ int nas_proc_attach(nas_user_t *user)
 
   emm_sap_t emm_sap;
   int rc = RETURNok;
-
+  printf("attaching UE\n");
   if ( !emm_main_is_attached(user->emm_data) ) {
     /* Initiate an Attach procedure */
     emm_sap.primitive = EMMREG_ATTACH_INIT;

@@ -106,7 +106,7 @@ int emm_sap_send(nas_user_t *user, emm_sap_t *msg)
   emm_primitive_t primitive = msg->primitive;
 
   LOG_FUNC_IN;
-
+  //printf("emm_sap_send\n");
   /* Check the EMM-SAP primitive */
   if ( (primitive > (emm_primitive_t)EMMREG_PRIMITIVE_MIN) &&
        (primitive < (emm_primitive_t)EMMREG_PRIMITIVE_MAX) ) {
