@@ -2883,67 +2883,67 @@ void get_n1_pucch_eNB(PHY_VARS_eNB *eNB,
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////// NB-IoT ////////////////////////////////////////////////////////
+////////////////////////////////////////////////////// NB-IoT testing ////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 void prach_procedures_NB_IoT(PHY_VARS_eNB *eNB) {
-
  // LTE_DL_FRAME_PARMS *fp=&eNB->frame_parms;
  // uint16_t preamble_energy_list[64],preamble_delay_list[64];
  // uint16_t preamble_max,preamble_energy_max;
   // uint16_t preamble_max=0;
  // uint16_t i;
  // int8_t UE_id;
-  int subframe = eNB->proc.subframe_prach;
+   uint16_t rnti[4],preamble_index[4],timing_advance_preamble[4];
+ //  uint16_t i;
+ //  int frame,subframe;
+
+  uint8_t subframe = eNB->proc.subframe_prach;
   int frame = eNB->proc.frame_prach;
  // uint8_t CC_id = eNB->CC_id;
-
   uint32_t detection=0;
-  uint16_t estimated_TA=2;
+  //uint16_t estimated_TA=2;
 
   if (eNB->abstraction_flag == 0) {
-    /*LOG_D(PHY,"[eNB %d][RAPROC] Frame %d, Subframe %d : PRACH RX Signal Power : %d dBm\n",eNB->Mod_id, 
-          frame,subframe,dB_fixed(signal_energy(&eNB->common_vars.rxdata[0][0][subframe*fp->samples_per_tti],512)) - eNB->rx_total_gain_dB);
-
-    rx_prach(eNB,
-             preamble_energy_list,
-             preamble_delay_list,
-             frame,
-             0);*/
-  //usleep(100);
-   detection = rx_nprach_NB_IoT(eNB);
- /* } else {
-    for (UE_id=0; UE_id<NB_UE_INST; UE_id++) {
-
-      LOG_D(PHY,"[RAPROC] UE_id %d (%p), generate_prach %d, UE RSI %d, eNB RSI %d preamble index %d\n",
-            UE_id,PHY_vars_UE_g[UE_id][CC_id],PHY_vars_UE_g[UE_id][CC_id]->generate_prach,
-            PHY_vars_UE_g[UE_id][CC_id]->frame_parms.prach_config_common.rootSequenceIndex,
-            fp->prach_config_common.rootSequenceIndex,
-            PHY_vars_UE_g[UE_id][CC_id]->prach_PreambleIndex);
-
-      if ((PHY_vars_UE_g[UE_id][CC_id]->generate_prach==1) &&
-          (PHY_vars_UE_g[UE_id][CC_id]->frame_parms.prach_config_common.rootSequenceIndex ==
-           fp->prach_config_common.rootSequenceIndex) ) {
-        preamble_energy_list[PHY_vars_UE_g[UE_id][CC_id]->prach_PreambleIndex] = 800;
-        preamble_delay_list[PHY_vars_UE_g[UE_id][CC_id]->prach_PreambleIndex] = 5;
-
-      }
-    } */
+         /* rx_prach(eNB,
+                     preamble_energy_list,
+                     preamble_delay_list,
+                     frame,
+                     0);*/
+      detection = rx_nprach_NB_IoT(eNB,frame,subframe,rnti,preamble_index,timing_advance_preamble);
   }
 
- if(detection == 1)
+ if(detection == 1)    ////////////////////////// to be moved to handle_rach_NB_IoT
   {
-    mac_xface->initiate_ra_proc(eNB->Mod_id,
-            eNB->CC_id,
-            frame,
-            eNB->preamble_index_NB_IoT,
-            estimated_TA,
-            0,subframe,0);      
+    /*  initiate_ra_proc(UL_info->module_id,
+                       UL_info->CC_id,
+                       NFAPI_SFNSF2SFN(UL_info->rach_ind.sfn_sf),
+                       NFAPI_SFNSF2SF(UL_info->rach_ind.sfn_sf),
+                       UL_info->rach_ind.rach_indication_body.preamble_list[0].preamble_rel8.preamble,
+                       UL_info->rach_ind.rach_indication_body.preamble_list[0].preamble_rel8.timing_advance,
+                       UL_info->rach_ind.rach_indication_body.preamble_list[0].preamble_rel8.rnti);*/
 
+      pthread_mutex_lock(&eNB->UL_INFO_mutex);
+      
+      eNB->UL_INFO.nrach_ind.number_of_initial_scs_detected  = 1;               // should be set to zero in every call of UL_indication 
+      eNB->UL_INFO.nrach_ind.nrach_pdu_list[0].nrach_indication_rel13.rnti             = rnti[0];
+      eNB->UL_INFO.nrach_ind.nrach_pdu_list[0].nrach_indication_rel13.initial_sc       = preamble_index[0];
+      eNB->UL_INFO.nrach_ind.nrach_pdu_list[0].nrach_indication_rel13.timing_advance   = timing_advance_preamble[0];
+      eNB->UL_INFO.nrach_ind.nrach_pdu_list[0].nrach_indication_rel13.nrach_ce_level   = 2;
+
+      eNB->UL_INFO.frame = frame;
+      eNB->UL_INFO.subframe = subframe;
+      //eNB->UL_INFO.hypersfn = ;
+
+      pthread_mutex_unlock(&eNB->UL_INFO_mutex);
+    
+
+      mac_xface->initiate_ra_proc(eNB->Mod_id,
+                                  eNB->CC_id,
+                                  frame,
+                                  preamble_index[0],
+                                  (int16_t) timing_advance_preamble[0],
+                                  0,subframe,0);      
   }
-
 }
-
 //////////////////////////////////////////////////////////// END ///////////////////////////////////////////////////////////
 
 void prach_procedures(PHY_VARS_eNB *eNB) {
@@ -2976,7 +2976,10 @@ void prach_procedures(PHY_VARS_eNB *eNB) {
              frame,
              0);*/
   //usleep(100);
-   detection = rx_nprach_NB_IoT(eNB);
+
+   //detection = rx_nprach_NB_IoT(eNB);
+  //  detection = rx_nprach_NB_IoT(eNB,frame,subframe,rnti,preamble_index,timing_advance_preamble);
+
  /* } else {
     for (UE_id=0; UE_id<NB_UE_INST; UE_id++) {
 

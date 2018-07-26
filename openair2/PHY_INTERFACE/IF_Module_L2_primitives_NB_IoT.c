@@ -13,19 +13,19 @@ void UL_indication_NB_IoT(UL_IND_NB_IoT_t *UL_INFO)
     /* Disable uplink RX function for now
 
       //If there is a preamble, do the initiate RA procedure
-      if(UL_INFO->NRACH.number_of_initial_scs_detected>0)
+      if(UL_INFO->nrach_ind.number_of_initial_scs_detected>0)
         {
-          for(i=0;i<UL_INFO->NRACH.number_of_initial_scs_detected;i++)
+          for(i=0;i<UL_INFO->nrach_ind.number_of_initial_scs_detected;i++)
             {
               // initiate_ra here, some useful inforamtion : 
-              //(UL_INFO->NRACH.nrach_pdu_list+i)->nrach_indication_rel13.initial_sc
-              //(UL_INFO->NRACH.nrach_pdu_list+i)->nrach_indication_rel13.timing_advance
+              //(UL_INFO->nrach_ind.nrach_pdu_list+i)->nrach_indication_rel13.initial_sc
+              //(UL_INFO->nrach_ind.nrach_pdu_list+i)->nrach_indication_rel13.timing_advance
               init_RA_NB_IoT(mac_inst,
-                             (UL_INFO->NRACH.nrach_pdu_list+i)->nrach_indication_rel13.initial_sc,
-                             (UL_INFO->NRACH.nrach_pdu_list+i)->nrach_indication_rel13.nrach_ce_level,
+                             (UL_INFO->nrach_ind.nrach_pdu_list+i)->nrach_indication_rel13.initial_sc,
+                             (UL_INFO->nrach_ind.nrach_pdu_list+i)->nrach_indication_rel13.nrach_ce_level,
                              UL_INFO->frame,
                              //timing_offset = Timing_advance * 16
-                             (UL_INFO->NRACH.nrach_pdu_list+i)->nrach_indication_rel13.timing_advance*16
+                             (UL_INFO->nrach_ind.nrach_pdu_list+i)->nrach_indication_rel13.timing_advance*16
                              );
 
 

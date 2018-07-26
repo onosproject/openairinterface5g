@@ -405,7 +405,7 @@ void filtering_signal(int16_t *input_buffer, int16_t *filtered_buffer, uint32_t 
 
 }
 
-uint32_t process_nprach_NB_IoT(PHY_VARS_eNB *eNB, int frame){ 
+uint32_t process_nprach_NB_IoT(PHY_VARS_eNB *eNB, int frame, uint8_t subframe, uint32_t *rnti, uint16_t *preamble_index, uint16_t *timing_advance){ 
 
 
 	//uint32_t estimated_TA_coarse=0;  
@@ -476,7 +476,10 @@ uint32_t process_nprach_NB_IoT(PHY_VARS_eNB *eNB, int frame){
 		//}*/
 
 		printf("\ndetection !!!   at frame %i \n",frame);
-		eNB->preamble_index_NB_IoT = subcarrier_estimation(Rx_sub_sampled_buffer_128);    // c'est un uint16_t 
+		//eNB->preamble_index_NB_IoT = subcarrier_estimation(Rx_sub_sampled_buffer_128);    // c'est un uint16_t
+		*preamble_index = subcarrier_estimation(Rx_sub_sampled_buffer_128);
+		*timing_advance = 0;
+		*rnti = 1 + frame/4;
 		printf("estimated subaccier = %i\n",eNB->preamble_index_NB_IoT);
 		return 1;//estimated_TA;
 	}else{

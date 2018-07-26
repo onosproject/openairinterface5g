@@ -48,7 +48,7 @@ uint32_t is_SIB1_NB_IoT(const frame_t          frameP,
                         NB_IoT_eNB_NDLSCH_t   *ndlsch_SIB1
                         );
 
-uint32_t rx_nprach_NB_IoT(PHY_VARS_eNB *eNB);
+uint32_t rx_nprach_NB_IoT(PHY_VARS_eNB *eNB,int frame, uint8_t subframe, uint16_t *rnti, uint16_t *preamble_index, uint16_t *timing_advance);
 
 #endif
 

@@ -136,8 +136,10 @@ typedef struct{
  	uint32_t hypersfn;
 
  	/*preamble part*/
+                         /// RACH indication list
+    //nfapi_rach_indication_t rach_ind; ?????
 
- 	nfapi_nrach_indication_body_t NRACH;
+ 	nfapi_nrach_indication_body_t nrach_ind;
 
  	/*Uplink data part*/
 
