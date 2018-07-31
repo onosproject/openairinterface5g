@@ -691,6 +691,19 @@ void dlsch_detection_mrc(LTE_DL_FRAME_PARMS *frame_parms,
                          uint16_t nb_rb,
                          uint8_t dual_stream_UE);
 
+void dlsch_detection_mrc_core(int **rxdataF_comp,
+                              int **rxdataF_comp_i,
+                              int **rho,
+                              int **rho_i,
+                              int **dl_ch_mag,
+                              int **dl_ch_magb,
+                              int **dl_ch_mag_i,
+                              int **dl_ch_magb_i,
+                              unsigned char n_tx,
+                              unsigned char n_rx,
+                              int length,
+                              int start_point);
+
 void dlsch_detection_mrc_TM34(LTE_DL_FRAME_PARMS *frame_parms,
                               LTE_UE_PDSCH *lte_ue_pdsch_vars,
                               int harq_pid,
@@ -852,6 +865,15 @@ void dlsch_dual_stream_correlation(LTE_DL_FRAME_PARMS *frame_parms,
                                    int **dl_ch_estimates_ext_i,
                                    int **dl_ch_rho_ext,
                                    unsigned char output_shift);
+
+void dlsch_dual_stream_correlation_core(int **dl_ch_estimates_ext,
+                                        int **dl_ch_estimates_ext_i,
+                                        int **dl_ch_rho_ext,
+                                        unsigned char n_tx,
+                                        unsigned char n_rx,
+                                        unsigned char output_shift,
+                                        int length,
+                                        int start_point);
 
 void dlsch_dual_stream_correlationTM34(LTE_DL_FRAME_PARMS *frame_parms,
                                    unsigned char symbol,

@@ -3355,6 +3355,93 @@ void dlsch_dual_stream_correlation(LTE_DL_FRAME_PARMS *frame_parms,
 #endif
 }
 
+void dlsch_dual_stream_correlation_core(int **dl_ch_estimates_ext,
+                                        int **dl_ch_estimates_ext_i,
+                                        int **dl_ch_rho_ext,
+                                        unsigned char n_tx,
+                                        unsigned char n_rx,
+                                        unsigned char output_shift,
+                                        int length,
+                                        int start_point)
+{
+#if defined(__x86_64__)||defined(__i386__)
+
+  unsigned short rb;
+  __m128i *dl_ch128,*dl_ch128i,*dl_ch_rho128,mmtmpD0,mmtmpD1,mmtmpD2,mmtmpD3;
+  unsigned char aarx;
+  int ii, length2, length_mod8;
+
+
+  for (aarx=0; aarx<n_rx; aarx++) {
+
+    dl_ch128          = (__m128i *)&dl_ch_estimates_ext[aarx][start_point];
+
+    if (dl_ch_estimates_ext_i == NULL)
+      dl_ch128i         = (__m128i *)&dl_ch_estimates_ext[aarx + n_rx][start_point];
+    else
+      dl_ch128i         = (__m128i *)&dl_ch_estimates_ext_i[aarx][start_point];
+
+    dl_ch_rho128      = (__m128i *)&dl_ch_rho_ext[aarx][start_point];
+
+    length_mod8 = length&7;
+
+    if (length_mod8 == 0){
+      length2 = length>>3;
+
+      for (ii=0; ii<length2; ++ii) {
+      // multiply by conjugated channel
+        mmtmpD0 = _mm_madd_epi16(dl_ch128[0],dl_ch128i[0]);
+        //      print_ints("re",&mmtmpD0);
+        // mmtmpD0 contains real part of 4 consecutive outputs (32-bit)
+        mmtmpD1 = _mm_shufflelo_epi16(dl_ch128[0],_MM_SHUFFLE(2,3,0,1));
+        mmtmpD1 = _mm_shufflehi_epi16(mmtmpD1,_MM_SHUFFLE(2,3,0,1));
+        mmtmpD1 = _mm_sign_epi16(mmtmpD1,*(__m128i*)&conjugate[0]);
+        mmtmpD1 = _mm_madd_epi16(mmtmpD1,dl_ch128i[0]);
+        //      print_ints("im",&mmtmpD1);
+        // mmtmpD1 contains imag part of 4 consecutive outputs (32-bit)
+        mmtmpD0 = _mm_srai_epi32(mmtmpD0,output_shift);
+        //      print_ints("re(shift)",&mmtmpD0);
+        mmtmpD1 = _mm_srai_epi32(mmtmpD1,output_shift);
+        //      print_ints("im(shift)",&mmtmpD1);
+        mmtmpD2 = _mm_unpacklo_epi32(mmtmpD0,mmtmpD1);
+        mmtmpD3 = _mm_unpackhi_epi32(mmtmpD0,mmtmpD1);
+        //      print_ints("c0",&mmtmpD2);
+        //      print_ints("c1",&mmtmpD3);
+        dl_ch_rho128[0] = _mm_packs_epi32(mmtmpD2,mmtmpD3);
+      // print_shorts("rho 0:",dl_ch_rho128);
+        // multiply by conjugated channel
+        mmtmpD0 = _mm_madd_epi16(dl_ch128[1],dl_ch128i[1]);
+        // mmtmpD0 contains real part of 4 consecutive outputs (32-bit)
+        mmtmpD1 = _mm_shufflelo_epi16(dl_ch128[1],_MM_SHUFFLE(2,3,0,1));
+        mmtmpD1 = _mm_shufflehi_epi16(mmtmpD1,_MM_SHUFFLE(2,3,0,1));
+        mmtmpD1 = _mm_sign_epi16(mmtmpD1,*(__m128i*)conjugate);
+        mmtmpD1 = _mm_madd_epi16(mmtmpD1,dl_ch128i[1]);
+        // mmtmpD1 contains imag part of 4 consecutive outputs (32-bit)
+        mmtmpD0 = _mm_srai_epi32(mmtmpD0,output_shift);
+        mmtmpD1 = _mm_srai_epi32(mmtmpD1,output_shift);
+        mmtmpD2 = _mm_unpacklo_epi32(mmtmpD0,mmtmpD1);
+        mmtmpD3 = _mm_unpackhi_epi32(mmtmpD0,mmtmpD1);
+        dl_ch_rho128[1] =_mm_packs_epi32(mmtmpD2,mmtmpD3);
+
+        dl_ch128+=2;
+        dl_ch128i+=2;
+        dl_ch_rho128+=2;
+      }
+
+    }else {
+        printf ("Channel Correlarion: Received number of subcarriers is not multiple of 8, \n"
+                 "need to adapt the code!\n");
+      }
+
+  }
+
+  _mm_empty();
+  _m_empty();
+
+#elif defined(__arm__)
+
+#endif
+}
 
 void dlsch_detection_mrc(LTE_DL_FRAME_PARMS *frame_parms,
                          int **rxdataF_comp,
@@ -3491,6 +3578,144 @@ void dlsch_detection_mrc(LTE_DL_FRAME_PARMS *frame_parms,
         dl_ch_mag128_i0b[i]   = vhaddq_s16(dl_ch_mag128_i0b[i],dl_ch_mag128_i1b[i]);
       }
     }
+  }
+
+#endif
+}
+
+void dlsch_detection_mrc_core(int **rxdataF_comp,
+                              int **rxdataF_comp_i,
+                              int **rho,
+                              int **rho_i,
+                              int **dl_ch_mag,
+                              int **dl_ch_magb,
+                              int **dl_ch_mag_i,
+                              int **dl_ch_magb_i,
+                              unsigned char n_tx,
+                              unsigned char n_rx,
+                              int length,
+                              int start_point)
+{
+
+#if defined(__x86_64__)||defined(__i386__)
+
+  unsigned char aatx;
+  int i;
+  __m128i *rxdataF_comp128_0,*rxdataF_comp128_1,*rxdataF_comp128_i0,*rxdataF_comp128_i1,*dl_ch_mag128_0,*dl_ch_mag128_1,*dl_ch_mag128_0b,*dl_ch_mag128_1b,*rho128_0,*rho128_1,*rho128_i0,*rho128_i1,
+    *dl_ch_mag128_i0,*dl_ch_mag128_i1,*dl_ch_mag128_i0b,*dl_ch_mag128_i1b;
+  int length_mod4 = 0;
+  int length2;
+
+  if (n_rx>1) {
+
+    for (aatx=0; aatx<n_tx; aatx++) {
+
+      rxdataF_comp128_0   = (__m128i *)&rxdataF_comp[(aatx<<1)][start_point];
+      rxdataF_comp128_1   = (__m128i *)&rxdataF_comp[(aatx<<1)+1][start_point];
+      dl_ch_mag128_0      = (__m128i *)&dl_ch_mag[(aatx<<1)][start_point];
+      dl_ch_mag128_1      = (__m128i *)&dl_ch_mag[(aatx<<1)+1][start_point];
+      dl_ch_mag128_0b     = (__m128i *)&dl_ch_magb[(aatx<<1)][start_point];
+      dl_ch_mag128_1b     = (__m128i *)&dl_ch_magb[(aatx<<1)+1][start_point];
+
+      if (length_mod4 == 0){
+        length2 = length>>2;
+
+        for (i=0; i<length2; ++i) {
+          rxdataF_comp128_0[i] = _mm_adds_epi16(_mm_srai_epi16(rxdataF_comp128_0[i],1),_mm_srai_epi16(rxdataF_comp128_1[i],1));
+          dl_ch_mag128_0[i]    = _mm_adds_epi16(_mm_srai_epi16(dl_ch_mag128_0[i],1),_mm_srai_epi16(dl_ch_mag128_1[i],1));
+          dl_ch_mag128_0b[i]   = _mm_adds_epi16(_mm_srai_epi16(dl_ch_mag128_0b[i],1),_mm_srai_epi16(dl_ch_mag128_1b[i],1));
+        }
+      }
+    }
+
+    if (rho) {
+      rho128_0 = (__m128i *) &rho[0][start_point];
+      rho128_1 = (__m128i *) &rho[1][start_point];
+
+      if (length_mod4 == 0){
+        length2 = length>>2;
+
+        for (i=0; i<length2; ++i) {
+          rho128_0[i] = _mm_adds_epi16(_mm_srai_epi16(rho128_0[i],1),_mm_srai_epi16(rho128_1[i],1));
+
+        }
+      }
+    }
+
+    if (rho_i){
+      rho128_i0 = (__m128i *) &rho_i[0][start_point];
+      rho128_i1 = (__m128i *) &rho_i[1][start_point];
+
+      if (length_mod4 == 0){
+        length2 = length>>2;
+
+        for (i=0; i<length2; ++i)
+          rho128_i0[i] = _mm_adds_epi16(_mm_srai_epi16(rho128_i0[i],1),_mm_srai_epi16(rho128_i1[i],1));
+      }
+    }
+  }
+
+  _mm_empty();
+  _m_empty();
+
+#elif defined(__arm__)
+
+  unsigned char aatx;
+  int i;
+  int16x8_t *rxdataF_comp128_0,*rxdataF_comp128_1,*rxdataF_comp128_i0,*rxdataF_comp128_i1,*dl_ch_mag128_0,*dl_ch_mag128_1,*dl_ch_mag128_0b,*dl_ch_mag128_1b,*rho128_0,*rho128_1,*rho128_i0,*rho128_i1,*dl_ch_mag128_i0,*dl_ch_mag128_i1,*dl_ch_mag128_i0b,*dl_ch_mag128_i1b;
+  int length_mod4 = 0;
+  int length2;
+  int ii=0;
+
+  if (n_rx>1) {
+
+    for (aatx=0; aatx<n_tx; aatx++) {
+
+      rxdataF_comp128_0   = (int16x8_t *)&rxdataF_comp[(aatx<<1)][start_point];
+      rxdataF_comp128_1   = (int16x8_t *)&rxdataF_comp[(aatx<<1)+1][start_point];
+      dl_ch_mag128_0      = (int16x8_t *)&dl_ch_mag[(aatx<<1)][start_point];
+      dl_ch_mag128_1      = (int16x8_t *)&dl_ch_mag[(aatx<<1)+1][start_point];
+      dl_ch_mag128_0b     = (int16x8_t *)&dl_ch_magb[(aatx<<1)][start_point];
+      dl_ch_mag128_1b     = (int16x8_t *)&dl_ch_magb[(aatx<<1)+1][start_point];
+
+      if (length_mod4 == 0){
+        length2 = length>>2;
+
+        for (i=0; i<length2; ++ii) {
+          rxdataF_comp128_0[i] = vhaddq_s16(rxdataF_comp128_0[i],rxdataF_comp128_1[i]);
+          dl_ch_mag128_0[i]    = vhaddq_s16(dl_ch_mag128_0[i],dl_ch_mag128_1[i]);
+          dl_ch_mag128_0b[i]   = vhaddq_s16(dl_ch_mag128_0b[i],dl_ch_mag128_1b[i]);
+        }
+      }
+
+    if (rho) {
+      rho128_0 = (int16x8_t *) &rho[0][start_point];
+      rho128_1 = (int16x8_t *) &rho[1][start_point];
+
+      if (length_mod4 == 0){
+        length2 = length>>2;
+
+        for (i=0; i<length2; ++i) {
+          rho128_0[i] = vhaddq_s16(rho128_0[i],rho128_1[i]);
+        }
+      }
+    }
+
+    if (rho_i){
+
+      rho128_i0 = (__m128i *) &rho_i[0][start_point];
+      rho128_i1 = (__m128i *) &rho_i[1][start_point];
+
+      if (length_mod4 == 0){
+        length2 = length>>2;
+
+        for (i=0; i<length2; ++i)
+          rho128_i0[i] = vhaddq_s16(rho128_i0[i],rho128_i1[i]);
+
+      }
+    }
+  }
+
   }
 
 #endif
