@@ -1015,6 +1015,9 @@ typedef struct PHY_VARS_eNB_s {
   /// mbsfn reference symbols
   uint32_t         lte_gold_mbsfn_table[10][3][42];
 
+  /// [IRTGS 20180731] mbsfn reference symbols for df = 1.25 kHz
+  uint32_t         lte_gold_mbsfn125_table[10][150];
+
   uint32_t X_u[64][839];
 #ifdef Rel14
   uint32_t X_u_br[4][64][839];
@@ -1269,6 +1272,9 @@ typedef struct {
 
   /// mbsfn reference symbols
   uint32_t lte_gold_mbsfn_table[10][3][42];
+
+  /// [IRTGS 20180731] mbsfn reference symbols for df = 1.25 kHz 
+  uint32_t lte_gold_mbsfn125_table[10][150];
 
   uint32_t X_u[64][839];
 
