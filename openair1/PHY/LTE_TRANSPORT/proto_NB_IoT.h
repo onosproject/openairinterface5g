@@ -327,7 +327,7 @@ void rx_ulsch_NB_IoT(PHY_VARS_eNB      *phy_vars_eNB,
                      uint8_t                  cooperation_flag);
 
 
-void rx_ulsch_Gen_NB_IoT(PHY_VARS_eNB            *eNB,
+uint8_t rx_ulsch_Gen_NB_IoT(PHY_VARS_eNB            *eNB,
                          eNB_rxtx_proc_t         *proc,
                          uint8_t                 eNB_id,  // this is the effective sector id
                          uint8_t                 UE_id,

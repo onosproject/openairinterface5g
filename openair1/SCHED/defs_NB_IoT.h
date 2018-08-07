@@ -22,7 +22,7 @@ void process_schedule_rsp_NB_IoT(Sched_Rsp_NB_IoT_t *sched_rsp,
                           		 eNB_rxtx_proc_t *proc);
 
 /*Processing the ue-specific resources for uplink in NB-IoT*/
-void phy_procedures_eNB_uespec_RX_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_t *proc, UL_IND_NB_IoT_t *UL_INFO);
+void phy_procedures_eNB_uespec_RX_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc); // UL_IND_NB_IoT_t *UL_INFO);
 
 /* For NB-IoT, we put NPBCH in later part, since it would be scheduled by MAC scheduler,this generates NRS/NPSS/NSSS*/
 void common_signal_procedures_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc); 
@@ -49,6 +49,11 @@ uint32_t is_SIB1_NB_IoT(const frame_t          frameP,
                         );
 
 uint32_t rx_nprach_NB_IoT(PHY_VARS_eNB *eNB,int frame, uint8_t subframe, uint16_t *rnti, uint16_t *preamble_index, uint16_t *timing_advance);
+
+void npusch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,uint8_t data_or_control);
+
+////////////////// NB-IoT testing ////////////////////
+void fill_rx_indication_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,uint8_t data_or_control);
 
 #endif
 

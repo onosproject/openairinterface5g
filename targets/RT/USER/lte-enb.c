@@ -649,19 +649,14 @@ static inline int rxtx(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc, char *thread_nam
   // UE-specific RX processing for subframe n
   ///////////////////////////////////// for NB-IoT testing  ////////////////////////
   // for NB-IoT testing  // activating only TX part
-  /// if (eNB->proc_uespec_rx) eNB->proc_uespec_rx(eNB, proc, no_relay );
+  if (eNB->proc_uespec_rx) eNB->proc_uespec_rx(eNB, proc, no_relay );
    ////////////////////////////////////END///////////////////////
 
+  //npusch_procedures(eNB,proc,data_or_control);
+  //fill_rx_indication(eNB,i,frame,subframe);
   //////////////////////////////////// for IF Module/scheduler testing
+ 
 
-  //LOG_I(PHY,"Before UL_indication\n");
-  eNB->UL_INFO.frame     = proc->frame_rx;
-  eNB->UL_INFO.subframe  = proc->subframe_rx;
-  eNB->UL_INFO.module_id = eNB->Mod_id;
-  eNB->UL_INFO.CC_id     = eNB->CC_id;
-
-  //eNB->if_inst->UL_indication(&eNB->UL_INFO);
-  
   //LOG_I(PHY,"After UL_indication\n");
   // *****************************************
   // TX processing for subframe n+4
@@ -2212,7 +2207,10 @@ void init_eNB(eNB_func_t node_function[], eNB_timing_t node_timing[],int nb_inst
 	eNB->fep                  = eNB_fep_full;//(single_thread_flag==1) ? eNB_fep_full_2thread : eNB_fep_full;
 	eNB->td                   = ulsch_decoding_data;//(single_thread_flag==1) ? ulsch_decoding_data_2thread : ulsch_decoding_data;
 	eNB->te                   = dlsch_encoding;//(single_thread_flag==1) ? dlsch_encoding_2threads : dlsch_encoding;
-	eNB->proc_uespec_rx       = phy_procedures_eNB_uespec_RX;
+	////////////////////// NB-IoT testing ////////////////////
+  //eNB->proc_uespec_rx       = phy_procedures_eNB_uespec_RX;
+  eNB->proc_uespec_rx       = phy_procedures_eNB_uespec_RX_NB_IoT;
+
 	eNB->proc_tx              = proc_tx_full;
 	eNB->tx_fh                = NULL;
 	eNB->rx_fh                = rx_rf;

@@ -408,10 +408,42 @@ void common_signal_procedures_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
   
 }
 
-void phy_procedures_eNB_uespec_RX_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_t *proc,UL_IND_NB_IoT_t *UL_INFO)
+void phy_procedures_eNB_uespec_RX_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc) //UL_IND_NB_IoT_t *UL_INFO)
 {
   //RX processing for ue-specific resources (i
+  //NB_IoT_DL_FRAME_PARMS     *fp=&eNB->frame_parms_NB_IoT;
 
+  const int subframe    =   proc->subframe_rx;
+  const int frame       =   proc->frame_rx;
+/*
+  ///////////////////// do we need this part for NB-IoT ///////////////////////////////////
+  //check if any RB using in this UL subframe
+  eNB->rb_mask_ul[0] = 0;
+  eNB->rb_mask_ul[1] = 0;
+  eNB->rb_mask_ul[2] = 0;
+  eNB->rb_mask_ul[3] = 0;
+  ////////////////////////////////////////////////////////////////////////////////////////
+  */
+  uint8_t data_or_control=0;
+
+  pthread_mutex_lock(&eNB->UL_INFO_mutex);
+
+  // Fix me here, these should be locked
+  eNB->UL_INFO.RX_NPUSCH.number_of_pdus  = 0;
+  eNB->UL_INFO.crc_ind.number_of_crcs = 0;
+
+  pthread_mutex_unlock(&eNB->UL_INFO_mutex);
+ // if (nfapi_mode == 0 || nfapi_mode == 1) { // If PNF or monolithic
+      npusch_procedures(eNB,proc,data_or_control);
+  //}          
+
+     
+}
+
+/////////////////////////////////////////////////////////// backup ////////////////////////////////////////////////////////
+/*void phy_procedures_eNB_uespec_RX_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_t *proc, UL_IND_NB_IoT_t *UL_INFO)
+{
+  //RX processing for ue-specific resources (i
   uint32_t                  ret=0,i,j,k;
   uint32_t                  harq_pid;   // round;
   int                       sync_pos;
@@ -424,7 +456,7 @@ void phy_procedures_eNB_uespec_RX_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_
 
   // add hyper subframe here
   
-  /*NB-IoT IF module Common setting*/
+  //NB-IoT IF module Common setting//
 
   UL_INFO->module_id    = eNB->Mod_id;
   UL_INFO->CC_id        = eNB->CC_id;
@@ -450,7 +482,7 @@ void phy_procedures_eNB_uespec_RX_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_
   harq_pid = subframe2harq_pid_NB_IoT(fp,frame,subframe);
   // delete the cba
   // delete the srs
-  /*Loop over the UE, i is the UE ID */
+  //Loop over the UE, i is the UE ID //
   for (i=0; i<NUMBER_OF_UE_MAX_NB_IoT; i++) 
     {
 
@@ -461,7 +493,7 @@ void phy_procedures_eNB_uespec_RX_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_
         {
           if (eNB->UE_stats[i].mode == RA_RESPONSE_NB_IoT) 
             {
-               /*Process Msg3 TODO*/
+               ///Process Msg3 TODO///
               //process_Msg3(eNB,proc,i,harq_pid);
             }
         }
@@ -470,23 +502,23 @@ void phy_procedures_eNB_uespec_RX_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_
       eNB->pusch_stats_round[i][(frame*10)+subframe] = 0;
       eNB->pusch_stats_mcs[i][(frame*10)+subframe]   = -63;
 
-      /*Check if this UE is has ULSCH scheduling*/
+      //Check if this UE is has ULSCH scheduling///
       if ((eNB->nulsch[i]) &&
           (eNB->nulsch[i]->rnti>0) &&
           (eNB->nulsch[i]->harq_process->subframe_scheduling_flag==1)) 
         {
           // UE is has ULSCH scheduling
           //////////////////////////////////////round = eNB->nulsch[i]->harq_process->round; //commented to remove warning, to be added if round is used
-          /*NB-IoT The nb_rb always set to 1 */
+          //NB-IoT The nb_rb always set to 1 //
           for (int rb=0;rb<=eNB->nulsch[i]->harq_process->nb_rb;rb++) 
             {
                int rb2 = rb+eNB->nulsch[i]->harq_process->first_rb;
                eNB->rb_mask_ul[rb2>>5] |= (1<<(rb2&31));
             }
 
-          /*Log for what kind of the ULSCH Reception*/
+          //Log for what kind of the ULSCH Reception//
 
-          /*Calculate for LTE C-RS*/
+          //Calculate for LTE C-RS//
           //nPRS = fp->pusch_config_common.ul_ReferenceSignalsPUSCH.nPRS[subframe<<1];
 
           //eNB->ulsch[i]->cyclicShift = (eNB->ulsch[i]->harq_processes[harq_pid]->n_DMRS2 + fp->pusch_config_common.ul_ReferenceSignalsPUSCH.cyclicShift +nPRS)%12;
@@ -494,7 +526,7 @@ void phy_procedures_eNB_uespec_RX_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_
           if (fp->frame_type == FDD_NB_IoT ) 
             {
               int sf = (subframe<4) ? (subframe+6) : (subframe-4);
-              /*After Downlink Data transmission, simply have a notice to received ACK from PUCCH, I think it's not use for now */
+              //After Downlink Data transmission, simply have a notice to received ACK from PUCCH, I think it's not use for now //
               if (eNB->ndlsch[i]->subframe_tx[sf]>0) // we have downlink transmission
                 { 
                   eNB->nulsch[i]->harq_process->O_ACK = 1;
@@ -558,18 +590,18 @@ void phy_procedures_eNB_uespec_RX_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_
 
           if (eNB->nulsch[i]->Msg3_flag == 1) 
           {
-               /*dump_ulsch(eNB,proc,i);
-               exit(-1);*/
+               ///dump_ulsch(eNB,proc,i);
+               //exit(-1);//
 
-               /*In NB-IoT MSG3 */
+               //In NB-IoT MSG3 //
                 // activate retransmission for Msg3 (signalled to UE PHY by DCI
                 eNB->nulsch[(uint32_t)i]->Msg3_active = 1;
-                /* Need to check the procedure for NB-IoT (MSG3) retransmission
-                get_Msg3_alloc_ret(fp,subframe,frame,&eNB->ulsch[i]->Msg3_frame,&eNB->ulsch[i]->Msg3_subframe);
-                mac_xface->set_msg3_subframe(eNB->Mod_id, eNB->CC_id, frame, subframe, eNB->ulsch[i]->rnti,eNB->ulsch[i]->Msg3_frame, eNB->ulsch[i]->Msg3_subframe);
-                */
+                // Need to check the procedure for NB-IoT (MSG3) retransmission
+               // get_Msg3_alloc_ret(fp,subframe,frame,&eNB->ulsch[i]->Msg3_frame,&eNB->ulsch[i]->Msg3_subframe);
+                //mac_xface->set_msg3_subframe(eNB->Mod_id, eNB->CC_id, frame, subframe, eNB->ulsch[i]->rnti,eNB->ulsch[i]->Msg3_frame, eNB->ulsch[i]->Msg3_subframe);
+                
                 T(T_ENB_PHY_MSG3_ALLOCATION, T_INT(eNB->Mod_id), T_INT(frame), T_INT(subframe),
-                  T_INT(i), T_INT(eNB->nulsch[i]->rnti), T_INT(0 /* 0 is for retransmission*/),
+                  T_INT(i), T_INT(eNB->nulsch[i]->rnti), T_INT(0),
                   T_INT(eNB->nulsch[i]->Msg3_frame), T_INT(eNB->nulsch[i]->Msg3_subframe));     
           } // This is Msg3 error
           else 
@@ -580,10 +612,10 @@ void phy_procedures_eNB_uespec_RX_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_
                   eNB->nulsch[i]->harq_process->phich_active=0;
                   eNB->UE_stats[i].ulsch_errors[harq_pid]++;
                   eNB->UE_stats[i].ulsch_consecutive_errors++; 
-                  /*if (eNB->ulsch[i]->harq_processes[harq_pid]->nb_rb > 20) {
-                    dump_ulsch(eNB,proc,i);
-                  exit(-1);
-                  }*/
+                  //if (eNB->ulsch[i]->harq_processes[harq_pid]->nb_rb > 20) {
+                 //   dump_ulsch(eNB,proc,i);
+                 // exit(-1);
+                  //}
                   // indicate error to MAC
                   if (eNB->mac_enabled == 1)
                     {
@@ -613,8 +645,8 @@ void phy_procedures_eNB_uespec_RX_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_
             hundred_times_log10_NPRB_NB_IoT[eNB->nulsch[i]->harq_process->nb_rb-1]/100 -
             get_hundred_times_delta_IF_eNB_NB_IoT(eNB,i,harq_pid, 0)/100;
           //for NB-IoT PHICH not work
-          /*eNB->ulsch[i]->harq_processes[harq_pid]->phich_active = 1;
-          eNB->ulsch[i]->harq_processes[harq_pid]->phich_ACK = 1;*/
+          //eNB->ulsch[i]->harq_processes[harq_pid]->phich_active = 1;
+          //eNB->ulsch[i]->harq_processes[harq_pid]->phich_ACK = 1;//
           eNB->nulsch[i]->harq_process->round = 0;
           eNB->UE_stats[i].ulsch_consecutive_errors = 0;
 
@@ -636,17 +668,17 @@ void phy_procedures_eNB_uespec_RX_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_
                       UL_INFO->RX_NPUSCH.number_of_pdus++;
                     }
 
-                  /* Need check if this needed in NB-IoT
+                  // Need check if this needed in NB-IoT
                   // one-shot msg3 detection by MAC: empty PDU (e.g. CRNTI)
-                  if (eNB->ulsch[i]->Msg3_flag == 0 ) {
-                 eNB->UE_stats[i].mode = PRACH;
-                 mac_xface->cancel_ra_proc(eNB->Mod_id,
-                 eNB->CC_id,
-                 frame,
-                 eNB->UE_stats[i].crnti);
-                 mac_phy_remove_ue(eNB->Mod_id,eNB->UE_stats[i].crnti);
-                 eNB->ulsch[(uint32_t)i]->Msg3_active = 0;
-                 } // Msg3_flag == 0*/
+               //   if (eNB->ulsch[i]->Msg3_flag == 0 ) {
+              //   eNB->UE_stats[i].mode = PRACH;
+              //   mac_xface->cancel_ra_proc(eNB->Mod_id,
+              //   eNB->CC_id,
+             //    frame,
+            //     eNB->UE_stats[i].crnti);
+            //     mac_phy_remove_ue(eNB->Mod_id,eNB->UE_stats[i].crnti);
+          //       eNB->ulsch[(uint32_t)i]->Msg3_active = 0;
+           //      } // Msg3_flag == 0///
       
               } // mac_enabled==1
 
@@ -655,7 +687,7 @@ void phy_procedures_eNB_uespec_RX_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_
 
             LOG_D(PHY,"[eNB %d][RAPROC] Frame %d : RX Subframe %d Setting UE %d mode to PUSCH\n",eNB->Mod_id,frame,subframe,i);
 
-            /*Init HARQ parameters, need to check*/
+            //Init HARQ parameters, need to check//
             for (k=0; k<8; k++) 
               { //harq_processes
                 for (j=0; j<eNB->ndlsch[i]->Mlimit; j++) 
@@ -706,12 +738,12 @@ void phy_procedures_eNB_uespec_RX_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_
 
 
       // Process HARQ only in NPUSCH
-      /*process_HARQ_feedback(i,
-                            eNB,proc,
-                            1, // pusch_flag
-                            0,
-                            0,
-                            0);*/
+      //process_HARQ_feedback(i,
+      //                      eNB,proc,
+       //                     1, // pusch_flag
+        //                    0,
+         //                   0,
+          //                  0);/
 
 
       
@@ -727,10 +759,12 @@ void phy_procedures_eNB_uespec_RX_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_
   } // loop i=0 ... NUMBER_OF_UE_MAX-1
 
 }
+////////////////////////////////////////////////////////////////end backup ////////////////////////////////////////////////
 
 #undef DEBUG_PHY_PROC
 
-/*Generate eNB ndlsch params for NB-IoT from the NPDCCH PDU of the DCI, modify the input to the Sched Rsp variable*/
+/////Generate eNB ndlsch params for NB-IoT from the NPDCCH PDU of the DCI, modify the input to the Sched Rsp variable////
+*/
 
 void generate_eNB_dlsch_params_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_t * proc,nfapi_dl_config_request_pdu_t *dl_config_pdu) 
 {
@@ -1520,8 +1554,6 @@ uint32_t rx_nprach_NB_IoT(PHY_VARS_eNB *eNB, int frame, uint8_t subframe, uint16
 
   uint32_t estimated_TA; 
   //int frame,frame_mod;    // subframe,
-
-  
  // subframe = eNB->proc.subframe_prach; 
  // frame = eNB->proc.frame_prach;
 
@@ -1534,4 +1566,116 @@ uint32_t rx_nprach_NB_IoT(PHY_VARS_eNB *eNB, int frame, uint8_t subframe, uint16
     //printf("estim = %i\n",estimated_TA);
  // }
   return estimated_TA;
+}
+
+
+void fill_crc_indication_NB_IoT(PHY_VARS_eNB *eNB,int UE_id,int frame,int subframe,uint8_t crc_flag) {
+
+  pthread_mutex_lock(&eNB->UL_INFO_mutex);
+  // nfapi_crc_indication_pdu_t* crc_pdu_list
+  nfapi_crc_indication_pdu_t *pdu =   &eNB->UL_INFO.crc_ind.crc_pdu_list[0]; //[eNB->UL_INFO.crc_ind.crc_indication_body.number_of_crcs];
+
+  ///eNB->UL_INFO.crc_ind.sfn_sf                         = frame<<4 | subframe;
+  //eNB->UL_INFO.crc_ind.header.message_id              = NFAPI_CRC_INDICATION;
+  //eNB->UL_INFO.crc_ind.crc_indication_body.tl.tag     = NFAPI_CRC_INDICATION_BODY_TAG;
+
+  //pdu->instance_length                                = 0; // don't know what to do with this
+  //  pdu->rx_ue_information.handle                       = handle;
+  pdu->rx_ue_information.tl.tag                       = NFAPI_RX_UE_INFORMATION_TAG;
+  pdu->rx_ue_information.rnti                         = eNB->ulsch[UE_id]->rnti;
+  pdu->crc_indication_rel8.tl.tag                     = NFAPI_CRC_INDICATION_REL8_TAG;
+  pdu->crc_indication_rel8.crc_flag                   = crc_flag;
+
+  eNB->UL_INFO.crc_ind.number_of_crcs++;
+
+  //LOG_D(PHY, "%s() rnti:%04x crcs:%d crc_flag:%d\n", __FUNCTION__, pdu->rx_ue_information.rnti, eNB->UL_INFO.crc_ind.crc_indication_body.number_of_crcs, crc_flag);
+
+  pthread_mutex_unlock(&eNB->UL_INFO_mutex);
+}
+
+
+void npusch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,uint8_t data_or_control)
+{
+  
+  uint32_t i;
+  LTE_DL_FRAME_PARMS *fp=&eNB->frame_parms;
+  NB_IoT_eNB_NULSCH_t *ulsch_NB_IoT;
+  NB_IoT_UL_eNB_HARQ_t *ulsch_harq;
+
+  const int subframerx = proc->subframe_rx;
+  const int framerx    = proc->frame_rx;
+
+  for (i=0; i<NUMBER_OF_UE_MAX; i++)
+  {
+      ulsch_NB_IoT = eNB->ulsch_NB_IoT[i];
+      ulsch_harq = ulsch_NB_IoT->harq_process;
+
+      // if eNB is ready to receive UL data 
+      // define a flag to trigger on or off the decoding process
+      //if ((ulsch) && (ulsch->rnti>0) && (ulsch_harq->status == ACTIVE) && (ulsch_harq->frame == frame) && (ulsch_harq->subframe == subframe) && (ulsch_harq->handled == 0))
+      if ((ulsch_NB_IoT) && (ulsch_NB_IoT->rnti>0)) // && (ulsch_harq->frame == framerx) && (ulsch_harq->subframe == subframerx))  
+      {
+                     /*
+                     // UE has ULSCH scheduling
+                     for (int rb=0; rb<=ulsch_harq->nb_rb; rb++)
+                     {
+                          int rb2 = rb+ulsch_harq->first_rb;
+                          eNB->rb_mask_ul[rb2>>5] |= (1<<(rb2&31));
+                     }
+                     */
+                    //rx_ulsch(eNB,proc, i);
+                    /*ret = ulsch_decoding(eNB,proc,
+                                        i,
+                                        0, // control_only_flag
+                                        ulsch_harq->V_UL_DAI,
+                                        ulsch_harq->nb_rb>20 ? 1 : 0);*/
+                    // fill_ulsch_cqi_indication(eNB,frame,subframe,ulsch_harq,ulsch->rnti);
+
+                  ////// nulsch_config should be provided before calling the rx_ulsch function
+                     /*typedef struct {
+                              nfapi_tl_t tl;  
+                              uint8_t nulsch_format;         --> this parameter is needed 
+                              uint32_t handle;
+                              uint16_t size;
+                              uint16_t rnti;                 --> this parameter is needed 
+                              uint8_t subcarrier_indication; --> this parameter is needed 
+                              uint8_t resource_assignment;
+                              uint8_t mcs;                    --> this parameter is needed 
+                              uint8_t redudancy_version;     
+                              uint8_t repetition_number;     --> this parameter is needed 
+                              uint8_t new_data_indication;
+                              uint8_t n_srs;
+                              uint16_t scrambling_sequence_initialization_cinit;   --> this parameter is needed 
+                              uint16_t sf_idx;                                     
+                              nfapi_ul_config_ue_information ue_information;
+                              nfapi_ul_config_nb_harq_information nb_harq_information;
+                            } nfapi_ul_config_nulsch_pdu_rel13_t;
+                            #define NFAPI_UL_CONFIG_REQUEST_NULSCH_PDU_REL13_TAG 0x205F
+                      */
+                    rx_ulsch_Gen_NB_IoT(eNB,
+                                         proc,
+                                         0,                         // this is the effective sector id
+                                         0,
+                                         ulsch_NB_IoT,
+                                         1,                         //npusch_format,             // 1, 2  
+                                         22,                        // 22 , to be included in // to be replaced by NB_IoT_start ??
+                                         1,                         // 0 (3.75 KHz) or 1 (15 KHz)
+                                         65522,                     //= 65522
+                                         proc->subframe_dscr_msg3,  // first received subframe 
+                                         proc->frame_dscr_msg3,     // first received frame
+                                         16,                        //  total number of occupied slots
+                                         11,
+                                         1,
+                                         2, 
+                                         88,                        //  A = TBS
+                                         proc->counter_msg3,                          // proc->counter_msg3
+                                         subframerx, 
+                                         data_or_control);                        // data (0) or control (1)
+
+         }
+
+                
+                
+   }  // for UE loop
+
 }

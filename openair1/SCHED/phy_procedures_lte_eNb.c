@@ -613,7 +613,6 @@ void common_signal_procedures (PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc) {
       ///////////////////////////////////////////////////  NPUSH DEMOD ////////////////////////////////////
       // LTE_eNB_COMMON      *common_vars  =  &eNB->common_vars;
       
-
       rx_ulsch_Gen_NB_IoT(eNB,
                           proc,
                           0,//eNB_id,                    // this is the effective sector id
@@ -2922,8 +2921,8 @@ void prach_procedures_NB_IoT(PHY_VARS_eNB *eNB) {
                        UL_info->rach_ind.rach_indication_body.preamble_list[0].preamble_rel8.rnti);*/
 
       pthread_mutex_lock(&eNB->UL_INFO_mutex);
-      
-      eNB->UL_INFO.nrach_ind.number_of_initial_scs_detected  = 1;               // should be set to zero in every call of UL_indication 
+                                                                                 //////////////////////////////////////////////////////////       
+      eNB->UL_INFO.nrach_ind.number_of_initial_scs_detected  = 1;            //!!!!!!!!!!!!!   // should be set to zero in every call of UL_indication !!!!!!!!!!!!!!!!!!!!!!!
       eNB->UL_INFO.nrach_ind.nrach_pdu_list[0].nrach_indication_rel13.rnti             = rnti[0];
       eNB->UL_INFO.nrach_ind.nrach_pdu_list[0].nrach_indication_rel13.initial_sc       = preamble_index[0];
       eNB->UL_INFO.nrach_ind.nrach_pdu_list[0].nrach_indication_rel13.timing_advance   = timing_advance_preamble[0];
@@ -2931,7 +2930,7 @@ void prach_procedures_NB_IoT(PHY_VARS_eNB *eNB) {
 
       eNB->UL_INFO.frame = frame;
       eNB->UL_INFO.subframe = subframe;
-      //eNB->UL_INFO.hypersfn = ;
+      //eNB->UL_INFO.hypersfn = ; 
 
       pthread_mutex_unlock(&eNB->UL_INFO_mutex);
     
@@ -2945,7 +2944,7 @@ void prach_procedures_NB_IoT(PHY_VARS_eNB *eNB) {
   }
 }
 //////////////////////////////////////////////////////////// END ///////////////////////////////////////////////////////////
-
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void prach_procedures(PHY_VARS_eNB *eNB) {
 
  // LTE_DL_FRAME_PARMS *fp=&eNB->frame_parms;
@@ -3874,6 +3873,33 @@ void phy_procedures_eNB_common_RX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc){
   if (eNB->fep) eNB->fep(eNB,proc);
 
   ///VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_ENB_RX_COMMON+offset, 0 );
+}
+
+void fill_rx_indication_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,uint8_t data_or_control)
+{
+      nfapi_rx_indication_pdu_t *pdu;
+
+      pthread_mutex_lock(&eNB->UL_INFO_mutex);
+
+      eNB->UL_INFO.RX_NPUSCH.number_of_pdus  = 1;
+      //eNB->UL_INFO.RX_NPUSCH.rx_pdu_list.rx_ue_information.tl.tag = NFAPI_RX_INDICATION_BODY_TAG;   // do we need this ?? 
+      //eNB->UL_INFO.RX_NPUSCH.rx_pdu_list.rx_ue_information.rnti = rnti;  // rnti should be got from eNB structure
+      //pdu                                    = &eNB->UL_INFO.RX_NPUSCH.rx_pdu_list[eNB->UL_INFO.rx_ind.rx_indication_body.number_of_pdus];
+      pdu                                    = &eNB->UL_INFO.RX_NPUSCH.rx_pdu_list[0];
+      //  pdu->rx_ue_information.handle          = eNB->ulsch[UE_id]->handle;
+      // pdu->rx_ue_information.tl.tag          = NFAPI_RX_UE_INFORMATION_TAG;
+      //pdu->rx_indication_rel8.tl.tag         = NFAPI_RX_INDICATION_REL8_TAG;
+      pdu->rx_ue_information.rnti            = eNB->ulsch_NB_IoT[0]->rnti;
+      pdu->rx_indication_rel8.length         = eNB->ulsch_NB_IoT[0]->harq_process->TBS>>3;
+      pdu->data                              = eNB->ulsch_NB_IoT[0]->harq_process->b;
+      //pdu->data                              = eNB->ulsch_NB_IoT[UE_id]->harq_processes[harq_pid]->b;   
+      //eNB->UL_INFO.rx_ind.rx_indication_body.number_of_pdus++;
+      //eNB->UL_INFO.rx_ind.sfn_sf = frame<<4 | subframe;
+
+      // do we need to transmit timing ?? however, the nfapi structure does not include timing paramters !!!!!
+
+      pthread_mutex_unlock(&eNB->UL_INFO_mutex);
+
 }
 
 

@@ -2053,7 +2053,7 @@ void rx_ulsch_NB_IoT(PHY_VARS_eNB     *eNB,
 int32_t llr_msg5[16]; 
 int32_t y_msg5[16];
 
-void rx_ulsch_Gen_NB_IoT(PHY_VARS_eNB            *eNB,
+uint8_t rx_ulsch_Gen_NB_IoT(PHY_VARS_eNB            *eNB,
                          eNB_rxtx_proc_t         *proc,
                          uint8_t                 eNB_id,                    // this is the effective sector id
                          uint8_t                 UE_id,
@@ -2089,7 +2089,8 @@ void rx_ulsch_Gen_NB_IoT(PHY_VARS_eNB            *eNB,
      // uint8_t    log2_maxh = 0,aarx;
       //uint8_t    harq_pid;
       uint8_t    Qm;
-      //int        subframe = proc->subframe_rx; 
+      int        subframe = proc->subframe_rx;
+      int        frame = proc->frame_rx;  
       //uint8_t    npusch_format = 1; // NB-IoT: format 1 (data), or 2: ack. Should be defined in higher layer 
       //uint8_t subcarrier_spacing = frame_parms->subcarrier_spacing; // 15 kHz or 3.75 kHz 
       uint8_t        pilot_pos1_format1_15k = 3, pilot_pos2_format1_15k = 10; // holds for npusch format 1, and 15 kHz subcarrier bandwidth
@@ -2492,7 +2493,7 @@ void rx_ulsch_Gen_NB_IoT(PHY_VARS_eNB            *eNB,
                            &eNB->ulsch_tc_intl1_stats,
                            &eNB->ulsch_tc_intl2_stats); 
 
-                  if (ret != (1+ulsch_NB_IoT[UE_id]->max_turbo_iterations))
+                  if (ret != (1+ulsch_NB_IoT[UE_id]->max_turbo_iterations)) 
                  {   
                       //printf("\n                      in last cdn \n");
                       if (r<ulsch_harq->Cminus)
@@ -2513,11 +2514,18 @@ void rx_ulsch_Gen_NB_IoT(PHY_VARS_eNB            *eNB,
                                  ulsch_harq->c[r],
                                  Kr_bytes - ((ulsch_harq->C>1)?3:0));
                                  offset += (Kr_bytes- ((ulsch_harq->C>1)?3:0));
-                      } 
+                      }
+                      
+                      fill_crc_indication_NB_IoT(eNB,0,frame,subframe,0); // indicate ACK to MAC
+                      //fill_rx_indication_NB_IoT(eNB,i,frame,subframe);  // indicate SDU to MAC
+                      fill_rx_indication_NB_IoT(eNB,proc,option);
 
                   } else {
-                                  //printf("\n                      in last cdn  break \n");
-                        break;
+                      
+                      fill_crc_indication_NB_IoT(eNB,0,frame,subframe,1);   // indicate NAK to MAC
+                      //fill_rx_indication_NB_IoT(eNB,i,frame,subframe);      // indicate SDU to MAC 
+                      fill_rx_indication_NB_IoT(eNB,proc,option);
+                      break;
                   }
                 } //  r loop end
 
@@ -2564,10 +2572,16 @@ void rx_ulsch_Gen_NB_IoT(PHY_VARS_eNB            *eNB,
                 if (counter_ack>8) //hard decision
                 {
                       printf("  decoded msg5: ACK  ");
+                      fill_crc_indication_NB_IoT(eNB,0,frame,subframe,0); // indicate ACK to MAC
+                      //fill_rx_indication_NB_IoT(eNB,i,frame,subframe);  // indicate SDU to MAC
+                      fill_rx_indication_NB_IoT(eNB,proc,option);
 
                 } else if (counter_ack<8) { //hard decision
 
                       printf("  decoded msg5: NACK  "); 
+                      fill_crc_indication_NB_IoT(eNB,0,frame,subframe,1);   // indicate NAK to MAC
+                      //fill_rx_indication_NB_IoT(eNB,i,frame,subframe);      // indicate SDU to MAC 
+                      fill_rx_indication_NB_IoT(eNB,proc,option);
 
                 } else  {  //when equality (8 bits 0 vs 8 bits 1), soft decision
                
@@ -2581,10 +2595,16 @@ void rx_ulsch_Gen_NB_IoT(PHY_VARS_eNB            *eNB,
                       {
 
                         printf("  decoded msg5 (soft): ACK  ");
+                        fill_crc_indication_NB_IoT(eNB,0,frame,subframe,0); // indicate ACK to MAC
+                        //fill_rx_indication_NB_IoT(eNB,i,frame,subframe);  // indicate SDU to MAC
+                        fill_rx_indication_NB_IoT(eNB,proc,option);
 
                       } else {
 
-                        printf("  decoded msg5 (soft): NACK ");  
+                        printf("  decoded msg5 (soft): NACK "); 
+                        fill_crc_indication_NB_IoT(eNB,0,frame,subframe,1);   // indicate NAK to MAC
+                        //fill_rx_indication_NB_IoT(eNB,i,frame,subframe);      // indicate SDU to MAC 
+                        fill_rx_indication_NB_IoT(eNB,proc,option); 
                       }
                 }
                 printf("\n\n\n");
