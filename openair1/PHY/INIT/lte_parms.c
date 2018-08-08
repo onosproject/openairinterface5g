@@ -19,7 +19,7 @@
  *      contact@openairinterface.org
  */
 
-#include "defs.h"
+#include "phy_init.h"
 #include "log.h"
 
 uint16_t dl_S_table_normal[10]={3,9,10,11,12,3,9,10,11,6};
@@ -111,6 +111,7 @@ int init_frame_parms(LTE_DL_FRAME_PARMS *frame_parms,uint8_t osf)
       frame_parms->first_carrier_offset = 1536-600;
       frame_parms->nb_prefix_samples=(frame_parms->nb_prefix_samples*3)>>2;
       frame_parms->nb_prefix_samples0=(frame_parms->nb_prefix_samples0*3)>>2;
+
     }
     else {
       frame_parms->ofdm_symbol_size = 2048;
@@ -159,7 +160,6 @@ int init_frame_parms(LTE_DL_FRAME_PARMS *frame_parms,uint8_t osf)
     frame_parms->N_RBGS = 2;
     frame_parms->N_RBG = 13;
 
-
     break;
 
   case 15:
@@ -170,6 +170,7 @@ int init_frame_parms(LTE_DL_FRAME_PARMS *frame_parms,uint8_t osf)
     frame_parms->nb_prefix_samples0>>=(3-log2_osf);
     frame_parms->N_RBGS = 2;
     frame_parms->N_RBG = 8;
+
     break;
 
   case 6:
@@ -180,6 +181,7 @@ int init_frame_parms(LTE_DL_FRAME_PARMS *frame_parms,uint8_t osf)
     frame_parms->nb_prefix_samples0>>=(4-log2_osf);
     frame_parms->N_RBGS = 1;
     frame_parms->N_RBG = 6;
+
     break;
 
   default:

@@ -24,16 +24,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-// [IRTGS 20180731] The following includes are probably from the new structure version...
-/* #include "lte_refsig.h"
+#include "lte_refsig.h"
 #include "PHY/defs_eNB.h"
 #include "PHY/defs_UE.h"
 #include "PHY/impl_defs_top.h"
-*/
-
-// [IRTGS] this two lines should be the former ones:
-#include "defs.h"
-#include "PHY/defs.h"
 
 
 //extern unsigned int lte_gold_table[10][3][42];
@@ -190,45 +184,46 @@ int lte_dl_mbsfn125(PHY_VARS_eNB *eNB, int32_t *output,
   mprime = 3*(110 - eNB->frame_parms.N_RB_DL);
 
   for (m=0; m<eNB->frame_parms.N_RB_DL*24; m++) // m = 0:24*N_RB_DL-1
- { if (subframe&0x1==0) // n_sf mod 2 == 0: even 
-      k = 6*m;
-    else 
-      k = 6*m + 3;
-    
-
-    k+=eNB->frame_parms.first_carrier_offset;
-
-    mprime_dword     = mprime>>4;
-    mprime_qpsk_symb = mprime&0xf;
-
-    if (k >= eNB->frame_parms.ofdm_symbol_size) {
-      k++;  // skip DC carrier
-      k-=eNB->frame_parms.ofdm_symbol_size;
+    { 
+      if ((subframe&0x1)==0) // n_sf mod 2 == 0: even 
+	k = 6*m;
+      else 
+	k = 6*m + 3;
+      
+      
+      k+=eNB->frame_parms.first_carrier_offset;
+      
+      mprime_dword     = mprime>>4;
+      mprime_qpsk_symb = mprime&0xf;
+      
+      if (k >= eNB->frame_parms.ofdm_symbol_size) {
+	k++;  // skip DC carrier
+	k-=eNB->frame_parms.ofdm_symbol_size;
+      }
+      
+      // lte_gold_mbsfn125_table needs to be generated.
+      // for MBMS this is done in openair1/PHY/INIT/lte_init.c → phy_config_sib13_eNB():  
+      // lte_gold_mbsfn(fp,RC.eNB[Mod_id][CC_id]->lte_gold_mbsfn_table,fp->Nid_cell_mbsfn);
+      output[k] = qpsk[(eNB->lte_gold_mbsfn125_table[subframe][mprime_dword]>>(2*mprime_qpsk_symb))&3];
+      
+      //output[k] = qpsk[(eNB->lte_gold_mbsfn_table[subframe][l][mprime_dword]>>(2*mprime_qpsk_symb))&3];
+      
+#ifdef DEBUG_DL_MBSFN
+      LOG_D(PHY,"subframe %d, (l=0,) m %d, mprime %d, mprime_dword %d, mprime_qpsk_symbol %d\n",
+	    subframe,m,mprime,mprime_dword,mprime_qpsk_symb);
+      LOG_D(PHY,"index = %d (k %d)(%x)\n",(eNB->lte_gold_mbsfn125_table[subframe][mprime_dword]>>(2*mprime_qpsk_symb))&3,k,eNB->lte_gold_mbsfn125_table[subframe][mprime_dword]);
+#endif
+      mprime++;
+      
+#ifdef DEBUG_DL_MBSFN
+      
+      if (m<18)
+	printf("subframe %d, (l=0) output[%d] = (%d,%d)\n",subframe,k,((short *)&output[k])[0],((short *)&output[k])[1]);
+      
+#endif
+      
     }
-
-    // lte_gold_mbsfn125_table needs to be generated.
-    // for MBMS this is done in openair1/PHY/INIT/lte_init.c → phy_config_sib13_eNB():  
-    // lte_gold_mbsfn(fp,RC.eNB[Mod_id][CC_id]->lte_gold_mbsfn_table,fp->Nid_cell_mbsfn);
-    output[k] = qpsk[(eNB->lte_gold_mbsfn125_table[subframe][mprime_dword]>>(2*mprime_qpsk_symb))&3];
-
-    //output[k] = qpsk[(eNB->lte_gold_mbsfn_table[subframe][l][mprime_dword]>>(2*mprime_qpsk_symb))&3];
-
-#ifdef DEBUG_DL_MBSFN
-    LOG_D(PHY,"subframe %d, (l=0,) m %d, mprime %d, mprime_dword %d, mprime_qpsk_symbol %d\n",
-        subframe,m,mprime,mprime_dword,mprime_qpsk_symb);
-    LOG_D(PHY,"index = %d (k %d)(%x)\n",(eNB->lte_gold_mbsfn125_table[subframe][mprime_dword]>>(2*mprime_qpsk_symb))&3,k,eNB->lte_gold_mbsfn125_table[subframe][mprime_dword]);
-#endif
-    mprime++;
-
-#ifdef DEBUG_DL_MBSFN
-
-    if (m<18)
-      printf("subframe %d, (l=0) output[%d] = (%d,%d)\n",subframe,k,((short *)&output[k])[0],((short *)&output[k])[1]);
-
-#endif
-
-  }
-
+  
   return(0);
 }
 
