@@ -125,7 +125,7 @@ skb_p->mark = rb_idP;
   skb_p->ip_summed = CHECKSUM_UNNECESSARY;
 
 
-  ipv_p = (struct ipversion*)((void*)&(skb_p->data[hard_header_len]));
+  ipv_p = (ipversion_t *)((void*)&(skb_p->data[hard_header_len]));
 
   switch (ipv_p->version) {
 

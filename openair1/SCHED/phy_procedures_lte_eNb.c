@@ -2017,7 +2017,7 @@ void prach_procedures(PHY_VARS_eNB *eNB) {
       eNB->UE_stats[(uint32_t)UE_id].UE_timing_offset = preamble_delay_list[preamble_max]&0x1FFF; //limit to 13 (=11+2) bits
 
       eNB->UE_stats[(uint32_t)UE_id].sector = 0;
-      LOG_I(PHY,"[eNB %d/%d][RAPROC] Frame %d, subframe %d Initiating RA procedure (UE_id %d) with preamble %d, energy %d.%d dB, delay %d\n",
+      LOG_D(PHY,"[eNB %d/%d][RAPROC] Frame %d, subframe %d Initiating RA procedure (UE_id %d) with preamble %d, energy %d.%d dB, delay %d\n",
             eNB->Mod_id,
             eNB->CC_id,
             frame,
@@ -3042,7 +3042,7 @@ void phy_procedures_eNB_uespec_RX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,const 
 #endif
       stop_meas(&eNB->ulsch_decoding_stats);
 
-      LOG_G(PHY,"[eNB %d][PUSCH %d] frame %d subframe %d RNTI %x RX power (%d,%d) RSSI (%d,%d) N0 (%d,%d) dB ACK (%d,%d), decoding iter %d\n",
+      LOG_D(PHY,"[eNB %d][PUSCH %d] frame %d subframe %d RNTI %x RX power (%d,%d) RSSI (%d,%d) N0 (%d,%d) dB ACK (%d,%d), decoding iter %d\n",
             eNB->Mod_id,harq_pid,
             frame,subframe,
             eNB->ulsch[i]->rnti,
