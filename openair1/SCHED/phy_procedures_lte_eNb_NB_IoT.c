@@ -289,10 +289,13 @@ void common_signal_procedures_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
                           RB_IoT_ID);
     }
 
-  uint8_t      *npbch_pdu =  get_NB_IoT_MIB();
-  uint8_t      *sib1_pdu = get_NB_IoT_SIB1();
-  uint8_t      *sib23_pdu = get_NB_IoT_SIB23();
-   
+  //uint8_t      *npbch_pdu =  get_NB_IoT_MIB();
+  uint8_t      *npbch_pdu =  broadcast_str->pdu;
+  //uint8_t      *sib1_pdu = get_NB_IoT_SIB1();
+  uint8_t      *sib1_pdu  = sib1->pdu;
+  //uint8_t      *sib23_pdu =  get_NB_IoT_SIB23();
+  uint8_t      *sib23_pdu = sib23->pdu;
+  
 
     if(subframe == 0)
     {

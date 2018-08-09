@@ -1,28 +1,9 @@
-/*
- * Licensed to the OpenAirInterface (OAI) Software Alliance under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.0  (the "License"); you may not use this file
- * except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.openairinterface.org/?page_id=698
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *-------------------------------------------------------------------------------
- * For more information about the OpenAirInterface (OAI) Software Alliance:
- *      contact@openairinterface.org
- */
+
 /*! \file eNB_scheduler_bch_NB_IoT.c
  * \brief schedule functions for SIBs transmission in NB-IoT
- * \author  NTUST BMW Lab./Calvin HSU
- * \date 2017 - 2018
- * \email: kai-hsiang.hsu@eurecom.fr
+ * \author  NTUST BMW Lab./
+ * \date 2017
+ * \email: 
  * \version 1.0
  *
  */
@@ -30,7 +11,7 @@
 #include "defs_NB_IoT.h"
 #include "proto_NB_IoT.h"
 #include "extern_NB_IoT.h"
-
+#include "openair2/RRC/LITE/proto_NB_IoT.h"
 
 char str[6][7] = { "SIBs_1", "SIBs_2", "SIBs_3", "SIBs_4", "SIBs_5", "SIBs_6" };
 
@@ -46,6 +27,8 @@ void schedule_sibs(eNB_MAC_INST_NB_IoT *mac_inst, uint32_t sibs_order, int start
 	schedule_result_t *new_node;	
 	DCIFormatN1_t *sibs_dci;
 	uint32_t j, i, k;
+	uint8_t SIB23_size = 0;
+	uint8_t *SIB23_pdu = get_NB_IoT_SIB23();
 	int residual_subframe, num_subframe, last_subframe;
 	num_subframe = mac_inst->rrc_config.sibs_NB_IoT_sched[sibs_order].si_tb;
 	
@@ -96,9 +79,11 @@ LOG_D(MAC,"for1 k=%d j=%d i=%d rep=%d\n", k, j, i, si_repetition_pattern[mac_ins
 				if((available_resource_DL_t *)0 != pt[k]){
 					new_node = (schedule_result_t *)malloc(sizeof(schedule_result_t));
 					//	fill new node
+					SIB23_size = get_NB_IoT_SIB23_size();
 					new_node->output_subframe = first_subframe[k];
 					new_node->end_subframe = (j==i)?last_subframe:j+9;
-					new_node->sdu_length = 0;
+					new_node->sdu_length = SIB23_size;
+					new_node->DLSCH_pdu = SIB23_pdu;
 					new_node->direction = DL;	
 					new_node->DCI_release = (j==i);
 					new_node->channel = NPDSCH;

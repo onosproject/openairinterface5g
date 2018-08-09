@@ -9,13 +9,14 @@
 #include "PHY/defs_NB_IoT.h"
 //#include "PHY/extern.h"
 #include "PHY/extern_NB_IoT.h"
+#include "PHY/extern.h"
 //#include "PHY/vars.h"
 
 #include "PHY/INIT/defs_NB_IoT.h"
 
 
-void handle_nfapi_dlsch_pdu_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,
-						  		   eNB_rxtx_proc_NB_IoT_t *proc,
+void handle_nfapi_dlsch_pdu_NB_IoT(PHY_VARS_eNB *eNB,
+						  		   eNB_rxtx_proc_t *proc,
 		       	   	   	           nfapi_dl_config_request_pdu_t *dl_config_pdu,
 						   		   uint8_t *sdu)
 {
@@ -24,7 +25,13 @@ void handle_nfapi_dlsch_pdu_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,
 	NB_IoT_DL_eNB_HARQ_t *ndlsch_harq;
 	nfapi_dl_config_ndlsch_pdu_rel13_t *rel13 = &dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13;
 	int UE_id= -1;
+	int flag_malloc = 0;
+	ndlsch= &eNB->ndlsch_SIB;
+	
+	if(flag_malloc) free (ndlsch->harq_process);
 
+	ndlsch->harq_process = (NB_IoT_DL_eNB_HARQ_t*) malloc (sizeof(NB_IoT_DL_eNB_HARQ_t));
+	flag_malloc = 1 ;
   //Check for SI PDU since in NB-IoT there is no DCI for that
   //SIB1 (type 0), other DLSCH data (type 1) (include the SI messages) based on our ASSUMPTIONs
 
@@ -44,26 +51,32 @@ void handle_nfapi_dlsch_pdu_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,
 	   * From spec. TS 36.321 v14.2.o pag 31 --> there is an HARQ process for all the broadcast (so we consider it also for SIB1-NB)
 	   *
 	   */
-
-	  	ndlsch= eNB->ndlsch_SIB1;
+  		//LOG_I(PHY,"B NB-handle_nfapi_dlsch_pdu_NB_IoT SIB1\n");
 	  	ndlsch->ndlsch_type = SIB1;
-
+	  	
 		ndlsch->npdsch_start_symbol = rel13->start_symbol; //start symbol for the ndlsch transmission
 		ndlsch_harq = ndlsch->harq_process;
-		ndlsch_harq->pdu = sdu;
+		
+		//ndlsch_harq->pdu = sdu;
+		//LOG_I(PHY,"B content_sib1:%d\n",sdu);
+		ndlsch->content_sib1.pdu = sdu;
+		//LOG_I(PHY,"A content_sib1:%d\n",ndlsch->content_sib1.pdu);
+		
 		//should be from 1 to 8
+		
 		ndlsch_harq->resource_assignment = rel13->number_of_subframes_for_resource_assignment;//maybe we don't care about it since a fixed schedule
 		ndlsch_harq->repetition_number = rel13->repetition_number; //is the schedulingInfoSIB1 (value 1-15) of MIB that is mapped into value 4-8-16 (see NDLSCH fapi specs Table 4-47)
 		ndlsch_harq->modulation = rel13->modulation;
 		ndlsch_harq->status = ACTIVE_NB_IoT;
-
+		
 		//SI information in reality have no feedback (so there is no retransmission from the HARQ view point since no ack and nack)
 //        ndlsch_harq->frame = frame;
 //        ndlsch_harq->subframe = subframe;
-
+		
         ndlsch->nrs_antenna_ports = rel13->nrs_antenna_ports_assumed_by_the_ue;
         ndlsch->scrambling_sequence_intialization = rel13->scrambling_sequence_initialization_cinit;
-
+		
+        //LOG_I(PHY,"A NB-handle_nfapi_dlsch_pdu_NB_IoT SIB1\n");
 
 
 
@@ -85,21 +98,22 @@ void handle_nfapi_dlsch_pdu_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,
 	   * anyway, the PHY layer if have finished the transmission it will not transmit anything and will generate the error
 	   *
 	   */
-
-	  	ndlsch= eNB->ndlsch_SI;
+  		//LOG_I(PHY,"B NB-handle_nfapi_dlsch_pdu_NB_IoT SIB23\n");
 	  	ndlsch_harq = ndlsch->harq_process;
 
 		//new SI starting transmission (should enter here only the first time for a new transmission)
 		if(sdu != NULL)
 		{
-
+			
 		  	ndlsch->ndlsch_type = SI_Message;
 			ndlsch->npdsch_start_symbol = rel13->start_symbol; //start OFDM symbol for the ndlsch transmission
-			ndlsch_harq->pdu = sdu;
+			//ndlsch_harq->pdu = sdu;
+			//LOG_I(PHY,"B content_sib23:%d\n",sdu);
+			ndlsch->content_sib23.pdu = sdu;
 			ndlsch_harq->resource_assignment = rel13->number_of_subframes_for_resource_assignment;//value 2 or 8
 			ndlsch_harq->repetition_number = rel13->repetition_number;//should be always fix to 0 to be mapped in 1
 			ndlsch_harq->modulation = rel13->modulation;
-
+			//LOG_I(PHY,"A content_sib23:%d\n",sdu);
 
 			//SI information in reality have no feedback (so there is no retransmission from the HARQ view point since no sck and nack)
 	//        ndlsch_harq->frame = frame;
@@ -112,12 +126,17 @@ void handle_nfapi_dlsch_pdu_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,
 		{
 			//continue the remaining transmission of the previous SI at PHY if any (otherwise nothing)
 			//there is no need of repeating the configuration on the ndlsch
-			ndlsch_harq->pdu = NULL;
+			//ndlsch_harq->pdu = NULL;
+			//LOG_I(PHY,"sib23=NULL\n");
+			ndlsch->content_sib23.pdu = NULL;
+			
+
 		}
 
 		//Independently if we have the PDU or not (first transmission or repetition) the process is activated for triggering the ndlsch_procedure
+	  	//LOG_I(PHY,"ACTIVE_NB_IoT\n");
 	  	ndlsch_harq->status = ACTIVE_NB_IoT;
-
+	  	//LOG_I(PHY,"A NB-handle_nfapi_dlsch_pdu_NB_IoT SIB23\n");
 
   }
   //ue specific data or RAR (we already have received the DCI for this)
@@ -158,6 +177,7 @@ void handle_nfapi_dlsch_pdu_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,
 	  LOG_E(PHY, "handle_nfapi_dlsch_pdu_NB_IoT: Unknown type of data (rnti type %d, rnti %d)\n", rel13->rnti_type, rel13->rnti);
   }
 
+
 }
 
 
@@ -171,10 +191,10 @@ void handle_nfapi_dlsch_pdu_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,
 // do the schedule response and trigger the TX
 void schedule_response_NB_IoT(Sched_Rsp_NB_IoT_t *Sched_INFO)
 {
-
+  //LOG_I(PHY,"schedule_response_NB_IoT\n");
   //XXX check if correct to take eNB like this
-  PHY_VARS_eNB_NB_IoT 		*eNB     = PHY_vars_eNB_NB_IoT_g[0][Sched_INFO->CC_id];
-  eNB_rxtx_proc_NB_IoT_t 	*proc 	 = &eNB->proc.proc_rxtx[0];
+  PHY_VARS_eNB 		*eNB     = PHY_vars_eNB_g[0][Sched_INFO->CC_id];
+  eNB_rxtx_proc_t 	*proc 	 = &eNB->proc.proc_rxtx[0];
   NB_IoT_eNB_NPBCH_t 		*npbch;
   ///
   int 						i;
@@ -189,13 +209,20 @@ void schedule_response_NB_IoT(Sched_Rsp_NB_IoT_t *Sched_INFO)
   //frame_t                      frame     		= Sched_INFO->frame;       // unused for instance
   sub_frame_t                    subframe  		= Sched_INFO->subframe;	 
 
+
   // implicite declaration of AssertFatal
   //AsserFatal(proc->subframe_tx != subframe, "Current subframe %d != NFAPI subframe %d\n",proc->subframe_tx,subframe);
   //AsserFatal(proc->frame_tx != frame, "Current sframe %d != NFAPI frame %d\n", proc->frame_tx,frame );
+  
 
   uint8_t number_dl_pdu             = DL_req->dl_config_request_body.number_pdu;
   uint8_t number_ul_pdu				= UL_req->ul_config_request_body.number_of_pdus;
   uint8_t number_ul_dci             = HI_DCI0_req->hi_dci0_request_body.number_of_dci;
+  
+  /*
+  if(number_dl_pdu>=5) number_dl_pdu=0;
+  if(number_ul_dci>=5) number_ul_dci=0;
+  */
   //uint8_t number_pdsch_rnti         = DL_req->number_pdsch_rnti; // for the moment not used
   // at most 2 pdus (DCI) in the case of NPDCCH
   nfapi_dl_config_request_pdu_t 	*dl_config_pdu;
@@ -226,20 +253,24 @@ void schedule_response_NB_IoT(Sched_Rsp_NB_IoT_t *Sched_INFO)
   for (i=0;i<number_dl_pdu;i++) //in principle this should be at most 2 (in case of DCI)
   {
     dl_config_pdu = &DL_req->dl_config_request_body.dl_config_pdu_list[i];
+    //LOG_I(PHY, "number_dl_pdu: %d ,dl_config_pdu type: %d\n",number_dl_pdu,dl_config_pdu->pdu_type);
     switch (dl_config_pdu->pdu_type) 
     {
     	case NFAPI_DL_CONFIG_NPDCCH_PDU_TYPE:
     		//Remember: there is no DCI for SI information
     		//TODO: separate the ndlsch structure configuration from the DCI (here we will encode only the DCI)
-      		generate_eNB_dlsch_params_NB_IoT(eNB,proc,dl_config_pdu);
+      		//generate_eNB_dlsch_params_NB_IoT(eNB,proc,dl_config_pdu);
 
       		break;
     	case NFAPI_DL_CONFIG_NBCH_PDU_TYPE:
 
     		// for the moment we don't care about the n-bch pdu content since we need only the sdu if tx.request
-    		npbch = eNB->npbch; //in the main of the lte-softmodem they should allocate this memory of PHY_vars
+    		npbch = &eNB->npbch; //in the main of the lte-softmodem they should allocate this memory of PHY_vars
     		npbch->h_sfn_lsb = dl_config_pdu->nbch_pdu.nbch_pdu_rel13.hyper_sfn_2_lsbs;
-
+    		//LOG_I(PHY,"npbch->pdu\n");
+    		dl_config_pdu->nbch_pdu.nbch_pdu_rel13.pdu_index = 1;
+			
+			
     		if(TX_req->tx_request_body.tx_pdu_list[dl_config_pdu->nbch_pdu.nbch_pdu_rel13.pdu_index].segments[0].segment_data != NULL)
     			npbch->pdu = TX_req->tx_request_body.tx_pdu_list[dl_config_pdu->nbch_pdu.nbch_pdu_rel13.pdu_index].segments[0].segment_data;
     		else
@@ -258,28 +289,30 @@ void schedule_response_NB_IoT(Sched_Rsp_NB_IoT_t *Sched_INFO)
     		 * -for this reason the activation of the ndslch structure is done only when we receive the NDLSCH pdu (here) such the in the TX procedure only 1 ue-specific pdu
     		 * 	result active from the loop before calling the ndlsch_procedure
     		 */
-
+    		dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13.pdu_index = 1;
     		handle_nfapi_dlsch_pdu_NB_IoT(eNB, proc,dl_config_pdu,TX_req->tx_request_body.tx_pdu_list[dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13.pdu_index].segments[0].segment_data);
-
+    		
     		break;
     	default:
-    		LOG_E(PHY, "dl_config_pdu type not for NB_IoT\n");
+    		LOG_D(PHY, "dl_config_pdu type not for NB_IoT\n");
     		break;
    }
   }
   
+  
   for (i=0;i<number_ul_dci;i++) 
   {
     hi_dci0_pdu = &HI_DCI0_req->hi_dci0_request_body.hi_dci0_pdu_list[i];
+    LOG_D(PHY, "number_ul_dci:%d ,hi_dci0_pdu->pdu_type: %d\n",number_ul_dci,hi_dci0_pdu->pdu_type);
     switch (hi_dci0_pdu->pdu_type) 
     {
     	case NFAPI_HI_DCI0_NPDCCH_DCI_PDU_TYPE:
 
-      		generate_eNB_ulsch_params_NB_IoT(eNB,proc,hi_dci0_pdu);
+      		//generate_eNB_ulsch_params_NB_IoT(eNB,proc,hi_dci0_pdu);
 
       		break;
     	default:
-    		LOG_E(PHY, "dl_config_pdu type not for NB_IoT\n");
+    		LOG_E(PHY, "hi_dci0_pdu type not for NB_IoT\n");
     		break;
 
   	}
@@ -312,12 +345,13 @@ void schedule_response_NB_IoT(Sched_Rsp_NB_IoT_t *Sched_INFO)
   //XXX problem: although we may have nothing to transmit this function should be always triggered in order to allow the PHY layer to complete the repetitions
   //of previous Transport Blocks
   //phy_procedures_eNB_TX_NB_IoT(eNB,proc,NULL);
-  phy_procedures_eNB_TX_NB_IoT(eNB,proc,0); // check if 0 or NULL ?!
-
+  
+  //phy_procedures_eNB_TX_NB_IoT(eNB,proc,0); // check if 0 or NULL ?!
+  LOG_D(PHY,"Schedule response has been done\n");
 }
 
 void PHY_config_req_NB_IoT(PHY_Config_NB_IoT_t* config_INFO){
-	LOG_I(PHY,"[NB-IoT] PHY CONFIG REQ NB-IoT In\n");
+	LOG_D(PHY,"[NB-IoT] PHY CONFIG REQ NB-IoT In\n");
 
 
 	if(config_INFO->get_MIB != 0){
@@ -361,6 +395,6 @@ void PHY_config_req_NB_IoT(PHY_Config_NB_IoT_t* config_INFO){
 
 	}
 
-	LOG_I(PHY,"IF Module for PHY Configuration has been done\n");
+	LOG_D(PHY,"IF Module for PHY Configuration has been done\n");
 }
 
