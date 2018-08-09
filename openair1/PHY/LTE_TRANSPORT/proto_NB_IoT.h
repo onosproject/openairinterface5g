@@ -345,6 +345,7 @@ uint8_t rx_ulsch_Gen_NB_IoT(PHY_VARS_eNB            *eNB,
                          unsigned int            A,
                          uint16_t                counter_msg,
                          uint8_t                 subframerx,
+                         uint8_t                 rvdx,
                          uint8_t                 option);
 
 void ulsch_extract_rbs_single_NB_IoT(int32_t **rxdataF,

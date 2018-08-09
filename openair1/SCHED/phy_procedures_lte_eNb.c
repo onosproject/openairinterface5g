@@ -584,6 +584,7 @@ void common_signal_procedures (PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc) {
                           88, //  A = TBS
                           proc->counter_msg5,
                           subframerx,            //current_rx_subframe,
+                          0,
                           1); // data (0) or control (1)
              
 
@@ -631,6 +632,7 @@ void common_signal_procedures (PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc) {
                           88, //  A = TBS
                           proc->counter_msg3,
                           subframerx,
+                          0,
                           0); // data (0) or control (1)
   
     proc->counter_msg3--;

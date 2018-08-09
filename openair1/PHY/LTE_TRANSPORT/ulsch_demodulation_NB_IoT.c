@@ -2070,7 +2070,8 @@ uint8_t rx_ulsch_Gen_NB_IoT(PHY_VARS_eNB            *eNB,
                          uint16_t                Mcs, 
                          unsigned int            A,                         //  A = TBS
                          uint16_t                counter_msg,
-                         uint8_t                 subframerx, 
+                         uint8_t                 subframerx,
+                         uint8_t                 rvdx, 
                          uint8_t                 option)                    // data (0) or control (1)
 {
       //LTE_eNB_PUSCH       *pusch_vars   =  eNB->pusch_vars[UE_id];

@@ -1669,7 +1669,8 @@ void npusch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,uint8_t data_or_c
                                          2, 
                                          88,                        //  A = TBS
                                          proc->counter_msg3,                          // proc->counter_msg3
-                                         subframerx, 
+                                         subframerx,
+                                         0, 
                                          data_or_control);                        // data (0) or control (1)
 
          }
