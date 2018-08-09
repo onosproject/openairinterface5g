@@ -676,6 +676,10 @@ typedef struct {
   uint16_t phich_reg[MAX_NUM_PHICH_GROUPS][3];
 
   struct MBSFN_SubframeConfig *mbsfn_SubframeConfig[MAX_MBSFN_AREA];
+
+  // [IRTGS 20180705] additional field in PBCH for MBSFN dedicated ETSI TS 136.321 ch. 6.2.2 r14
+  unsigned int AddNonMBSFN_SF;
+
   /// for fair RR scheduler
   uint32_t ue_multiple_max;
 } LTE_DL_FRAME_PARMS;

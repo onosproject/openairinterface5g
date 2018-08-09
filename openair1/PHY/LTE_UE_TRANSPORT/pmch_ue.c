@@ -255,7 +255,7 @@ void mch_channel_level(int **dl_ch_estimates_ext,
                        LTE_DL_FRAME_PARMS *frame_parms,
                        int *avg,
                        uint8_t symbol,
-		       int FeMBMS_flag);
+		       int FeMBMS_flag)
 {
 
   int i,aarx,nre;
@@ -629,7 +629,7 @@ void mch_16qam_llr(LTE_DL_FRAME_PARMS *frame_parms,
       len = frame_parms->N_RB_DL*12;
     }
   }
-  else if (FeBMS_flag ==2 ) len = frame_parms->N_RB_DL*120;
+  else if (FeMBMS_flag ==2 ) len = frame_parms->N_RB_DL*120;
   else AssertFatal(1==0,"Illegal FeMBMS_flag %d\n",FeMBMS_flag);
 
 
@@ -742,7 +742,7 @@ void mch_64qam_llr(LTE_DL_FRAME_PARMS *frame_parms,
       len = frame_parms->N_RB_DL*12;
     }
   }
-  else if (FeBMS_flag ==2 ) len = frame_parms->N_RB_DL*120;
+  else if (FeMBMS_flag ==2 ) len = frame_parms->N_RB_DL*120;
   else AssertFatal(1==0,"Illegal FeMBMS_flag %d\n",FeMBMS_flag);
 
   llr2 = llr;
@@ -849,7 +849,8 @@ void mch_64qam_llr(LTE_DL_FRAME_PARMS *frame_parms,
 #endif
 }
 
-int avg_pmch[4];
+
+
 int rx_pmch(PHY_VARS_UE *ue,
             unsigned char eNB_id,
             uint8_t subframe,
@@ -861,11 +862,9 @@ int rx_pmch(PHY_VARS_UE *ue,
   LTE_DL_FRAME_PARMS *frame_parms    = &ue->frame_parms;
   LTE_UE_DLSCH_t   **dlsch        = &ue->dlsch_MCH[eNB_id];
   int avgs,aarx;
+  int avg_pmch[4];
 
   //printf("*********************mch: symbol %d\n",symbol);
-
-  AssertFatal(((ue->FeMBMS_active == 2) && (symbol == 0)) || (ue->FeMBMS_active == 0), // FeMBMS_active == 1 check!
-	      "Illegal symbol %d (FeMBMS_active = %d)\n",symbol,ue->FeMBMS_active);
 
   if (ue->FeMBMS_active == 0) 
     mch_extract_rbs(common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].rxdataF,
@@ -885,13 +884,15 @@ int rx_pmch(PHY_VARS_UE *ue,
 
   else AssertFatal(1==0,"Illegal FeMBMS_active %d\n",ue->FeMBMS_active);
 
-  if (((ue->FeMBMS_active == 0) && (symbol == 2)) || (ue->FeMBMS_active == 1)) // FeMBMS_active == 2 ? check! 
+
+  if (symbol == 2) {
     mch_channel_level(pdsch_vars[eNB_id]->dl_ch_estimates_ext,
                       frame_parms,
                       avg_pmch,
                       symbol,
-                      ue->FeMBMS_active == 0 ? 0 : 2);
-  
+                      ue->FeMBMS_active == 0 ? 0 : 2
+		      );
+  }
 
   avgs = 0;
 
@@ -952,93 +953,6 @@ int rx_pmch(PHY_VARS_UE *ue,
                   symbol,
                   pdsch_vars[eNB_id]->llr128,
 		  ue->FeMBMS_active == 0 ? 0 : 2);
-    break;
-  }
-
-int rx_pmch(PHY_VARS_UE *ue,
-            unsigned char eNB_id,
-            uint8_t subframe,
-            unsigned char symbol)
-{
-
-  LTE_UE_COMMON *common_vars  = &ue->common_vars;
-  LTE_UE_PDSCH **pdsch_vars   = &ue->pdsch_vars_MCH[eNB_id];
-  LTE_DL_FRAME_PARMS *frame_parms    = &ue->frame_parms;
-  LTE_UE_DLSCH_t   **dlsch        = &ue->dlsch_MCH[eNB_id];
-  int avgs,aarx;
-
-  //printf("*********************mch: symbol %d\n",symbol);
-
-  mch_extract_rbs(common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].rxdataF,
-                  common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].dl_ch_estimates[eNB_id],
-                  pdsch_vars[eNB_id]->rxdataF_ext,
-                  pdsch_vars[eNB_id]->dl_ch_estimates_ext,
-                  symbol,
-                  subframe,
-                  frame_parms);
-
-  if (symbol == 2) {
-    mch_channel_level(pdsch_vars[eNB_id]->dl_ch_estimates_ext,
-                      frame_parms,
-                      avg_pmch,
-                      symbol,
-                      frame_parms->N_RB_DL);
-  }
-
-  avgs = 0;
-
-  for (aarx=0; aarx<frame_parms->nb_antennas_rx; aarx++)
-    avgs = cmax(avgs,avg_pmch[aarx]);
-
-  if (get_Qm(dlsch[0]->harq_processes[0]->mcs)==2)
-    pdsch_vars[eNB_id]->log2_maxh = (log2_approx(avgs)/2) ;// + 2
-  else
-    pdsch_vars[eNB_id]->log2_maxh = (log2_approx(avgs)/2); // + 5;// + 2
-
-  mch_channel_compensation(pdsch_vars[eNB_id]->rxdataF_ext,
-                           pdsch_vars[eNB_id]->dl_ch_estimates_ext,
-                           pdsch_vars[eNB_id]->dl_ch_mag0,
-                           pdsch_vars[eNB_id]->dl_ch_magb0,
-                           pdsch_vars[eNB_id]->rxdataF_comp0,
-                           frame_parms,
-                           symbol,
-                           get_Qm(dlsch[0]->harq_processes[0]->mcs),
-                           pdsch_vars[eNB_id]->log2_maxh);
-
-
-  if (frame_parms->nb_antennas_rx > 1)
-    mch_detection_mrc(frame_parms,
-                      pdsch_vars[eNB_id]->rxdataF_comp0,
-                      pdsch_vars[eNB_id]->dl_ch_mag0,
-                      pdsch_vars[eNB_id]->dl_ch_magb0,
-                      symbol);
-
-  switch (get_Qm(dlsch[0]->harq_processes[0]->mcs)) {
-  case 2 :
-    mch_qpsk_llr(frame_parms,
-                 pdsch_vars[eNB_id]->rxdataF_comp0,
-                 pdsch_vars[eNB_id]->llr[0],
-                 symbol,
-                 pdsch_vars[eNB_id]->llr128);
-    break;
-
-  case 4:
-    mch_16qam_llr(frame_parms,
-                  pdsch_vars[eNB_id]->rxdataF_comp0,
-                  pdsch_vars[eNB_id]->llr[0],
-                  pdsch_vars[eNB_id]->dl_ch_mag0,
-                  symbol,
-                  pdsch_vars[eNB_id]->llr128);
-    break;
-
-  case 6:
-    mch_64qam_llr(frame_parms,
-                  pdsch_vars[eNB_id]->rxdataF_comp0,
-                  pdsch_vars[eNB_id]->llr[0],
-                  pdsch_vars[eNB_id]->dl_ch_mag0,
-                  pdsch_vars[eNB_id]->dl_ch_magb0,
-                  symbol,
-                  pdsch_vars[eNB_id]->llr128);
     break;
   }
 
