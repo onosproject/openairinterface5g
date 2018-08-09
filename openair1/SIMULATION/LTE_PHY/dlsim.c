@@ -141,7 +141,8 @@ void do_OFDM_mod_l(int32_t **txdataF, int32_t **txdata, uint16_t next_slot, LTE_
 
 }
 
-void DL_channel(RU_t *ru,PHY_VARS_UE *UE,uint subframe,int awgn_flag,double SNR, int tx_lev,int hold_channel,int abstx, int num_rounds, int trials, int round, channel_desc_t *eNB2UE[4],
+void DL_channel(RU_t *ru,PHY_VARS_UE *UE,uint subframe,int awgn_flag,double SNR, int tx_lev,int hold_channel,int abstx, int num_rounds, int
+ trials, int round, channel_desc_t *eNB2UE[4],
 		double *s_re[2],double *s_im[2],double *r_re[2],double *r_im[2],FILE *csv_fd) {
 
   int i,u;
@@ -156,6 +157,8 @@ void DL_channel(RU_t *ru,PHY_VARS_UE *UE,uint subframe,int awgn_flag,double SNR,
       if (awgn_flag == 0) {
 	s_re[aa][i] = ((double)(((short *)ru->common.txdata[aa]))[(2*subframe*UE->frame_parms.samples_per_tti) + (i<<1)]);
 	s_im[aa][i] = ((double)(((short *)ru->common.txdata[aa]))[(2*subframe*UE->frame_parms.samples_per_tti) +(i<<1)+1]);
+
+
       } else {
 	for (aarx=0; aarx<UE->frame_parms.nb_antennas_rx; aarx++) {
 	  if (aa==0) {
@@ -515,7 +518,7 @@ int n_users = 1;
 sub_frame_t subframe=7;
 int num_common_dci=0,num_ue_spec_dci=0,num_dci=0,num_pdcch_symbols=1;
 uint16_t n_rnti=0x1234;
-  int nfapi_mode=0;
+int nfapi_mode=0;
 
 int main(int argc, char **argv)
 {

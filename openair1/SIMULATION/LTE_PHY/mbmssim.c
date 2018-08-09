@@ -26,14 +26,25 @@
 #include <sys/ioctl.h>
 #include <sys/mman.h>
 
-#include "SIMULATION/TOOLS/defs.h"
-#include "SIMULATION/RF/defs.h"
+#include "SIMULATION/TOOLS/sim.h"
+#include "SIMULATION/RF/rf.h"
 #include "PHY/types.h"
-#include "PHY/defs.h"
-#include "PHY/vars.h"
-#include "SCHED/defs.h"
-#include "SCHED/vars.h"
-#include "LAYER2/MAC/vars.h"
+#include "PHY/defs_eNB.h"
+#include "PHY/defs_UE.h"
+#include "PHY/phy_vars.h"
+#include "PHY/phy_vars_ue.h"
+#include "SCHED/sched_common_vars.h"
+#include "LAYER2/MAC/mac_vars.h"
+
+#include "PHY/MODULATION/modulation_common.h"
+#include "PHY/MODULATION/modulation_eNB.h"
+#include "PHY/MODULATION/modulation_UE.h"
+#include "PHY/LTE_TRANSPORT/transport_proto.h"
+#include "PHY/LTE_UE_TRANSPORT/transport_proto_ue.h"
+#include "SCHED/sched_eNB.h"
+#include "SCHED_UE/sched_UE.h"
+#include "common/config/config_load_configmodule.h"
+#include "PHY/INIT/phy_init.h"
 
 #ifdef XFORMS
 #include "PHY/TOOLS/lte_phy_scope.h"
@@ -42,16 +53,85 @@
 
 #include "OCG_vars.h"
 #include "unitary_defs.h"
+#include "dummy_functions.c"
 
 
-PHY_VARS_eNB *eNB;
-PHY_VARS_UE *UE;
+
+void feptx_ofdm(RU_t *ru);
+void feptx_prec(RU_t *ru);
 
 double cpuf;
 
-DCI1E_5MHz_2A_M10PRB_TDD_t  DLSCH_alloc_pdu2_1E[2];
-#define UL_RB_ALLOC 0x1ff;
-#define CCCH_RB_ALLOC computeRIV(eNB->frame_parms.N_RB_UL,0,2)
+
+
+int nfapi_mode=0;
+int codingw = 0;
+int emulate_rf = 0;
+
+void DL_channel(RU_t *ru,PHY_VARS_UE *UE,uint subframe,int awgn_flag,double SNR, int tx_lev,int hold_channel,int trials, 
+		  channel_desc_t *eNB2UE,
+		  double *s_re[2],double *s_im[2],double *r_re[2],double *r_im[2]) {
+
+  int i,u;
+  int aa,aarx,aatx;
+  double channelx,channely;
+  double sigma2_dB,sigma2;
+  double iqim=0.0;
+
+  //    printf("Copying tx ..., nsymb %d (n_tx %d), awgn %d\n",nsymb,eNB->frame_parms.nb_antennas_tx,awgn_flag);
+  for (i=0; i<2*UE->frame_parms.samples_per_tti; i++) {
+    for (aa=0; aa<ru->frame_parms.nb_antennas_tx; aa++) {
+      if (awgn_flag == 0) {
+	s_re[aa][i] = ((double)(((short *)ru->common.txdata[aa]))[(2*subframe*UE->frame_parms.samples_per_tti) + (i<<1)]);
+	s_im[aa][i] = ((double)(((short *)ru->common.txdata[aa]))[(2*subframe*UE->frame_parms.samples_per_tti) +(i<<1)+1]);
+
+
+      } else {
+	for (aarx=0; aarx<UE->frame_parms.nb_antennas_rx; aarx++) {
+	  if (aa==0) {
+	    r_re[aarx][i] = ((double)(((short *)ru->common.txdata[aa]))[(2*subframe*UE->frame_parms.samples_per_tti) +(i<<1)]);
+	    r_im[aarx][i] = ((double)(((short *)ru->common.txdata[aa]))[(2*subframe*UE->frame_parms.samples_per_tti) +(i<<1)+1]);
+	  } else {
+	    r_re[aarx][i] += ((double)(((short *)ru->common.txdata[aa]))[(2*subframe*UE->frame_parms.samples_per_tti) +(i<<1)]);
+	    r_im[aarx][i] += ((double)(((short *)ru->common.txdata[aa]))[(2*subframe*UE->frame_parms.samples_per_tti) +(i<<1)+1]);
+	  }
+
+	}
+      }
+    }
+  }
+
+  // Multipath channel
+  if (awgn_flag == 0) {
+    multipath_channel(eNB2UE,s_re,s_im,r_re,r_im,
+		      2*UE->frame_parms.samples_per_tti,hold_channel);
+
+
+
+    if (UE->perfect_ce==1) {
+      // fill in perfect channel estimates
+      freq_channel(eNB2UE,UE->frame_parms.N_RB_DL,12*UE->frame_parms.N_RB_DL + 1);
+    }
+  }
+
+
+  //AWGN
+  // tx_lev is the average energy over the whole subframe
+  // but SNR should be better defined wrt the energy in the reference symbols
+  sigma2_dB = 10*log10((double)tx_lev) +10*log10((double)ru->frame_parms.ofdm_symbol_size/(double)(ru->frame_parms.N_RB_DL*12)) - SNR;
+  sigma2 = pow(10,sigma2_dB/10);
+
+  for (i=0; i<2*UE->frame_parms.samples_per_tti; i++) {
+    for (aa=0; aa<UE->frame_parms.nb_antennas_rx; aa++) {
+      //printf("s_re[0][%d]=> %f , r_re[0][%d]=> %f\n",i,s_re[aa][i],i,r_re[aa][i]);
+      ((short*) UE->common_vars.rxdata[aa])[(2*subframe*UE->frame_parms.samples_per_tti)+2*i] =
+	(short) (r_re[aa][i] + sqrt(sigma2/2)*gaussdouble(0.0,1.0));
+      ((short*) UE->common_vars.rxdata[aa])[(2*subframe*UE->frame_parms.samples_per_tti)+2*i+1] =
+	(short) (r_im[aa][i] + (iqim*r_re[aa][i]) + sqrt(sigma2/2)*gaussdouble(0.0,1.0));
+    }
+  }
+}
+
 int main(int argc, char **argv)
 {
 
@@ -89,13 +169,23 @@ int main(int argc, char **argv)
   int tdd_config=3;
 
   SCM_t channel_model=MBSFN;
+  PHY_VARS_eNB *eNB;
+  RU_t *ru;
+  PHY_VARS_UE *UE;
 
+  nfapi_dl_config_request_t DL_req;
+  nfapi_ul_config_request_t UL_req;
+  nfapi_hi_dci0_request_t HI_DCI0_req;
+  nfapi_dl_config_request_pdu_t dl_config_pdu_list[MAX_NUM_DL_PDU];
+  nfapi_tx_request_pdu_t tx_pdu_list[MAX_NUM_TX_REQUEST_PDU];
+  nfapi_tx_request_t TX_req;
+  Sched_Rsp_t sched_resp;
 
   unsigned char *input_buffer;
   unsigned short input_buffer_length;
   unsigned int ret;
 
-  unsigned int trials,errs[4]= {0,0,0,0}; //,round_trials[4]={0,0,0,0};
+  unsigned int trials;
 
   uint8_t N_RB_DL=25,osf=1;
   uint32_t perfect_ce = 0;
@@ -288,7 +378,6 @@ int main(int argc, char **argv)
 
   fflush(fd);
 
-  txdata = eNB->common_vars.txdata[0];
 
   nsymb = 12;
 
@@ -325,8 +414,10 @@ int main(int argc, char **argv)
   UE->frame_parms.MBSFN_config[0].fourFrames_flag = 0;
   UE->frame_parms.MBSFN_config[0].mbsfn_SubframeConfig=0xff; // activate all possible subframes
 
-  fill_eNB_dlsch_MCH(eNB,mcs,1,0);
+  //  fill_eNB_dlsch_MCH(eNB,mcs,1,0);
   fill_UE_dlsch_MCH(UE,mcs,1,0,0);
+
+  eNB_rxtx_proc_t *proc_eNB = &eNB->proc.proc_rxtx[0];//UE->current_thread_id[subframe]];
 
   if (is_pmch_subframe(0,subframe,&eNB->frame_parms)==0) {
     printf("eNB is not configured for MBSFN in subframe %d\n",subframe);
@@ -350,18 +441,12 @@ int main(int argc, char **argv)
 
   for (SNR=snr0; SNR<snr1; SNR+=snr_step) {
     UE->proc.proc_rxtx[0].frame_tx=0;
+    UE->proc.proc_rxtx[UE->current_thread_id[subframe]].frame_rx=0;
     eNB->proc.proc_rxtx[0].frame_tx=0;
     eNB->proc.proc_rxtx[0].subframe_tx=subframe;
 
-    errs[0]=0;
-    errs[1]=0;
-    errs[2]=0;
-    errs[3]=0;
-    /*
-    round_trials[0] = 0;
-    round_trials[1] = 0;
-    round_trials[2] = 0;
-    round_trials[3] = 0;*/
+    UE->dlsch_mtch_errors[0][0]=0;
+
     printf("********************** SNR %f (step %f)\n",SNR,snr_step);
 
     for (trials = 0; trials<n_frames; trials++) {
@@ -369,22 +454,27 @@ int main(int argc, char **argv)
       fflush(stdout);
       round=0;
 
-      //if (trials%100==0)
-      //eNB2UE[0]->first_run = 1;
-      eNB2UE->first_run = 1;
-      memset(&eNB->common_vars.txdataF[0][0][0],0,FRAME_LENGTH_COMPLEX_SAMPLES_NO_PREFIX*sizeof(int32_t));
-      generate_mch(eNB,&eNB->proc.proc_rxtx[0],input_buffer);
+      DL_req.sfn_sf = (proc_eNB->frame_tx<<4)+subframe;
+      TX_req.sfn_sf = (proc_eNB->frame_tx<<4)+subframe;
 
-
-      PHY_ofdm_mod(eNB->common_vars.txdataF[0][0],        // input,
-                   txdata[0],         // output
-                   frame_parms->ofdm_symbol_size,
-                   LTE_NUMBER_OF_SUBFRAMES_PER_FRAME*nsymb,                 // number of symbols
-                   frame_parms->nb_prefix_samples,               // number of prefix samples
-                   CYCLIC_PREFIX);
-
+      proc_eNB->subframe_tx = subframe;
+      sched_resp.subframe=subframe;
+      sched_resp.frame=proc_eNB->frame_tx;
+      
+      eNB->abstraction_flag=0;
+      schedule_response(&sched_resp);
+      phy_procedures_eNB_TX(eNB,proc_eNB,1);
+      
+      ru->proc.subframe_tx=(subframe+1)%10;
+      feptx_prec(ru);
+      feptx_ofdm(ru);
+      
+      
+      proc_eNB->frame_tx++;
+      
+      
       if (n_frames==1) {
-        LOG_M("txsigF0.m","txsF0", &eNB->common_vars.txdataF[0][0][subframe*nsymb*eNB->frame_parms.ofdm_symbol_size],
+        LOG_M("txsigF0.m","txsF0", &eNB->common_vars.txdataF[0][subframe*nsymb*eNB->frame_parms.ofdm_symbol_size],
                      nsymb*eNB->frame_parms.ofdm_symbol_size,1,1);
         //if (eNB->frame_parms.nb_antennas_tx>1)
         //LOG_M("txsigF1.m","txsF1", &eNB->lte_eNB_common_vars.txdataF[eNB_id][1][subframe*nsymb*eNB->frame_parms.ofdm_symbol_size],nsymb*eNB->frame_parms.ofdm_symbol_size,1,1);
@@ -393,10 +483,11 @@ int main(int argc, char **argv)
       tx_lev = 0;
 
       for (aa=0; aa<eNB->frame_parms.nb_antennas_tx; aa++) {
-        tx_lev += signal_energy(&eNB->common_vars.txdata[eNB_id][aa]
+        tx_lev += signal_energy(&ru->common.txdata[aa]
                                 [subframe*eNB->frame_parms.samples_per_tti],
                                 eNB->frame_parms.samples_per_tti);
       }
+
 
       tx_lev_dB = (unsigned int) dB_fixed(tx_lev);
 
@@ -407,124 +498,44 @@ int main(int argc, char **argv)
         //     eNB->frame_parms.samples_per_tti,1,1);
       }
 
+      DL_channel(ru,UE,subframe,awgn_flag,SNR,tx_lev,hold_channel,trials,eNB2UE,s_re,s_im,r_re,r_im);
+      
+      
+      UE_rxtx_proc_t *proc = &UE->proc.proc_rxtx[UE->current_thread_id[subframe]];
+      proc->subframe_rx = subframe;
+      UE->UE_mode[0] = PUSCH;
+      
+      slot_fep_mbsfn(UE,
+		     0,
+		     proc->subframe_rx,
+		     UE->rx_offset,
+		     0);
 
-      for (i=0; i<2*frame_parms->samples_per_tti; i++) {
-        for (aa=0; aa<eNB->frame_parms.nb_antennas_tx; aa++) {
-          s_re[aa][i] = ((double)(((short *)eNB->common_vars.txdata[0][aa]))[(2*subframe*UE->frame_parms.samples_per_tti) + (i<<1)]);
-          s_im[aa][i] = ((double)(((short *)eNB->common_vars.txdata[0][aa]))[(2*subframe*UE->frame_parms.samples_per_tti) +(i<<1)+1]);
-        }
-      }
+      if (n_frames==1) printf("Running phy_procedures_UE_RX\n");
+      phy_procedures_UE_RX(UE,proc,0,0,0,normal_txrx);
 
-      //Multipath channel
-      multipath_channel(eNB2UE,s_re,s_im,r_re,r_im,
-                        2*frame_parms->samples_per_tti,hold_channel);
-
-      //AWGN
-      sigma2_dB = 10*log10((double)tx_lev) +10*log10((double)eNB->frame_parms.ofdm_symbol_size/(NB_RB*12)) - SNR;
-      sigma2 = pow(10,sigma2_dB/10);
-
-      if (n_frames==1)
-        printf("Sigma2 %f (sigma2_dB %f)\n",sigma2,sigma2_dB);
-
-      for (i=0; i<2*frame_parms->samples_per_tti; i++) {
-        for (aa=0; aa<eNB->frame_parms.nb_antennas_rx; aa++) {
-          //printf("s_re[0][%d]=> %f , r_re[0][%d]=> %f\n",i,s_re[aa][i],i,r_re[aa][i]);
-          ((short*) UE->common_vars.rxdata[aa])[(2*subframe*UE->frame_parms.samples_per_tti)+2*i] =
-            (short) (r_re[aa][i] + sqrt(sigma2/2)*gaussdouble(0.0,1.0));
-          ((short*) UE->common_vars.rxdata[aa])[(2*subframe*UE->frame_parms.samples_per_tti)+2*i+1] =
-            (short) (r_im[aa][i] + (iqim*r_re[aa][i]) + sqrt(sigma2/2)*gaussdouble(0.0,1.0));
-        }
-      }
-
-      for (l=2; l<12; l++) {
-
-        slot_fep_mbsfn(UE,
-                       l,
-                       subframe%10,
-                       0,
-                       0);
-	if (UE->perfect_ce==1) {
-	  // fill in perfect channel estimates
-	  freq_channel(eNB2UE,UE->frame_parms.N_RB_DL,12*UE->frame_parms.N_RB_DL + 1);
-	  for(k=0; k<NUMBER_OF_eNB_MAX; k++) {
-	    for(aa=0; aa<frame_parms->nb_antennas_tx; aa++) {
-	      for (aarx=0; aarx<frame_parms->nb_antennas_rx; aarx++) {
-		for (i=0; i<frame_parms->N_RB_DL*12; i++) {
-		  ((int16_t *) UE->common_vars.common_vars_rx_data_per_thread[subframe&0x1].dl_ch_estimates[k][(aa<<1)+aarx])[2*i+(l*frame_parms->ofdm_symbol_size+LTE_CE_FILTER_LENGTH)*2]=(int16_t)(eNB2UE->chF[aarx+(aa*frame_parms->nb_antennas_rx)][i].x*AMP);
-		  ((int16_t *) UE->common_vars.common_vars_rx_data_per_thread[subframe&0x1].dl_ch_estimates[k][(aa<<1)+aarx])[2*i+1+(l*frame_parms->ofdm_symbol_size+LTE_CE_FILTER_LENGTH)*2]=(int16_t)(eNB2UE->chF[aarx+(aa*frame_parms->nb_antennas_rx)][i].y*AMP);
-		}
-	      }
-	    }
-	  }
-	}
-
-	if (l==6)
-          for (l2=2;l2<7;l2++)
-	    rx_pmch(UE,
-		    0,
-		    subframe%10,
-		    l2);
-	if (l==6)
-          for (l2=2;l2<7;l2++)
-	    rx_pmch(UE,
-		    0,
-		    subframe%10,
-		    l2);
-	if (l==11)
-          for (l2=7;l2<12;l2++)
-	    rx_pmch(UE,
-		    0,
-		    subframe%10,
-		    l2);
-      }
-
-      UE->dlsch_MCH[0]->harq_processes[0]->G = get_G(&UE->frame_parms,
-						     UE->dlsch_MCH[0]->harq_processes[0]->nb_rb,
-						     UE->dlsch_MCH[0]->harq_processes[0]->rb_alloc_even,
-						     get_Qm(UE->dlsch_MCH[0]->harq_processes[0]->mcs),
-						     1,2,
-						     UE->proc.proc_rxtx[0].frame_tx,subframe,0);
-      UE->dlsch_MCH[0]->harq_processes[0]->Qm = get_Qm(UE->dlsch_MCH[0]->harq_processes[0]->mcs);
-
-      dlsch_unscrambling(&UE->frame_parms,1,UE->dlsch_MCH[0],
-                         UE->dlsch_MCH[0]->harq_processes[0]->G,
-                         UE->pdsch_vars_MCH[0]->llr[0],0,subframe<<1);
-
-      ret = dlsch_decoding(UE,
-                           UE->pdsch_vars_MCH[0]->llr[0],
-                           &UE->frame_parms,
-                           UE->dlsch_MCH[0],
-                           UE->dlsch_MCH[0]->harq_processes[0],
-                           trials,
-                           subframe,
-                           0,0,0);
-
-      if (n_frames==1)
-        printf("MCH decoding returns %d\n",ret);
-
-      if (ret == (1+UE->dlsch_MCH[0]->max_turbo_iterations))
-        errs[0]++;
 
       UE->proc.proc_rxtx[0].frame_tx++;
       eNB->proc.proc_rxtx[0].frame_tx++;
+
     }
 
-    printf("errors %d/%d (Pe %e)\n",errs[round],trials,(double)errs[round]/trials);
+    printf("errors %d/%d (Pe %e)\n",UE->dlsch_mtch_errors[0][0],trials,(double)UE->dlsch_mtch_errors[0][0]/trials);
 
     if (awgn_flag==0)
       fprintf(fd,"SNR_%d_%d = [SNR_%d_%d %f]; errs_mch_%d_%d =[errs_mch_%d_%d  %d]; mch_trials_%d_%d =[mch_trials_%d_%d  %d];\n",
               mcs,N_RB_DL,mcs,N_RB_DL,SNR,
-              mcs,N_RB_DL,mcs,N_RB_DL,errs[0],
+              mcs,N_RB_DL,mcs,N_RB_DL,UE->dlsch_mtch_errors[0][0],
               mcs,N_RB_DL,mcs,N_RB_DL,trials);
     else
       fprintf(fd,"SNR_awgn_%d = [SNR_awgn_%d %f]; errs_mch_awgn_%d =[errs_mch_awgn_%d  %d]; mch_trials_awgn_%d =[mch_trials_awgn_%d %d];\n",
               N_RB_DL,N_RB_DL,SNR,
-              N_RB_DL,N_RB_DL,errs[0],
+              N_RB_DL,N_RB_DL,UE->dlsch_mtch_errors[0][0],
               N_RB_DL,N_RB_DL,trials);
 
     fflush(fd);
 
-    if (errs[0] == 0)
+    if (UE->dlsch_mtch_errors[0][0] == 0)
       break;
   }
 
