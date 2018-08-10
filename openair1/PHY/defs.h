@@ -511,7 +511,8 @@ typedef struct PHY_VARS_eNB_s {
 volatile uint16_t preamble_index_NB_IoT;
 NB_IoT_eNB_NPBCH_t        npbch;
 NB_IoT_eNB_NDLSCH_t       *ndlsch[NUMBER_OF_UE_MAX];
-NB_IoT_eNB_NDLSCH_t       ndlsch_SIB;
+NB_IoT_eNB_NULSCH_t       *nulsch[NUMBER_OF_UE_MAX+1]; //nulsch[0] contains the RAR
+NB_IoT_eNB_NDLSCH_t       ndlsch_SIB,*ndlsch_ra;
 NB_IoT_eNB_NDLSCH_t       ndlsch_rar;
 NB_IoT_eNB_NPDCCH_temp_t  npdcch_tmp;
 

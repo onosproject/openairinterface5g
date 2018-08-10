@@ -39,9 +39,15 @@
 
 uint8_t *get_NB_IoT_MIB(void);
 
+uint8_t *get_NB_IoT_MIB_size(void);
+
 uint8_t *get_NB_IoT_SIB1(void);
 
+uint8_t *get_NB_IoT_SIB1_size(void);
+
 uint8_t *get_NB_IoT_SIB23(void);
+
+uint8_t *get_NB_IoT_SIB23_size(void);
 
 long *get_NB_IoT_SIB1_eutracontrolregionsize(void);
 
