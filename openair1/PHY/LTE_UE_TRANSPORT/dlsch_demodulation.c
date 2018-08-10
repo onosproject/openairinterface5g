@@ -46,7 +46,7 @@
 #include "linear_preprocessing_rec.h"
 
 #define NOCYGWIN_STATIC
-//#define DEBUG_MMSE
+//#define DEBUG_FRONT_END
 
 
 /* dynamic shift for LLR computation for TM3/4
@@ -1771,17 +1771,18 @@ void dlsch_channel_compensation_core(int **rxdataF_ext,
 
     for (aarx=0; aarx<n_rx; aarx++) {
 
-    dl_ch128          = (__m128i *)&dl_ch_estimates_ext[aatx*n_rx + aarx][start_point];
-    dl_ch_mag128      = (__m128i *)&dl_ch_mag[aatx*n_rx + aarx][start_point];
-    dl_ch_mag128b     = (__m128i *)&dl_ch_magb[aatx*n_rx + aarx][start_point];
-    rxdataF128        = (__m128i *)&rxdataF_ext[aarx][start_point];
-    rxdataF_comp128   = (__m128i *)&rxdataF_comp[aatx*n_rx + aarx][start_point];
+      dl_ch128          = (__m128i *)&dl_ch_estimates_ext[aatx*n_rx + aarx][start_point];
+      dl_ch_mag128      = (__m128i *)&dl_ch_mag[aatx*n_rx + aarx][start_point];
+      dl_ch_mag128b     = (__m128i *)&dl_ch_magb[aatx*n_rx + aarx][start_point];
+      rxdataF128        = (__m128i *)&rxdataF_ext[aarx][start_point];
+      rxdataF_comp128   = (__m128i *)&rxdataF_comp[aatx*n_rx + aarx][start_point];
 
       length_mod8 = length&7;
       if (length_mod8 == 0){
         length2 = length>>3;
 
         for (ii=0; ii<length2; ++ii) {
+
           if (mod_order>2) {
             // get channel amplitude if not QPSK
 
@@ -3366,7 +3367,6 @@ void dlsch_dual_stream_correlation_core(int **dl_ch_estimates_ext,
 {
 #if defined(__x86_64__)||defined(__i386__)
 
-  unsigned short rb;
   __m128i *dl_ch128,*dl_ch128i,*dl_ch_rho128,mmtmpD0,mmtmpD1,mmtmpD2,mmtmpD3;
   unsigned char aarx;
   int ii, length2, length_mod8;
@@ -3601,8 +3601,11 @@ void dlsch_detection_mrc_core(int **rxdataF_comp,
 
   unsigned char aatx;
   int i;
-  __m128i *rxdataF_comp128_0,*rxdataF_comp128_1,*rxdataF_comp128_i0,*rxdataF_comp128_i1,*dl_ch_mag128_0,*dl_ch_mag128_1,*dl_ch_mag128_0b,*dl_ch_mag128_1b,*rho128_0,*rho128_1,*rho128_i0,*rho128_i1,
-    *dl_ch_mag128_i0,*dl_ch_mag128_i1,*dl_ch_mag128_i0b,*dl_ch_mag128_i1b;
+  __m128i *rxdataF_comp128_0, *rxdataF_comp128_1, *rxdataF_comp128_2, *rxdataF_comp128_3;
+  __m128i *dl_ch_mag128_0, *dl_ch_mag128_1, *dl_ch_mag128_2, *dl_ch_mag128_3;
+  __m128i *dl_ch_mag128_0b, *dl_ch_mag128_1b,  *dl_ch_mag128_2b,  *dl_ch_mag128_3b;
+  __m128i *rho128_0, *rho128_1, *rho128_2, *rho128_3;
+  __m128i *rho128_i0, *rho128_i1, *rho128_i2, *rho128_i3;
   int length_mod4 = 0;
   int length2;
 
@@ -3622,22 +3625,25 @@ void dlsch_detection_mrc_core(int **rxdataF_comp,
 
         for (i=0; i<length2; ++i) {
           rxdataF_comp128_0[i] = _mm_adds_epi16(_mm_srai_epi16(rxdataF_comp128_0[i],1),_mm_srai_epi16(rxdataF_comp128_1[i],1));
-          dl_ch_mag128_0[i]    = _mm_adds_epi16(_mm_srai_epi16(dl_ch_mag128_0[i],1),_mm_srai_epi16(dl_ch_mag128_1[i],1));
-          dl_ch_mag128_0b[i]   = _mm_adds_epi16(_mm_srai_epi16(dl_ch_mag128_0b[i],1),_mm_srai_epi16(dl_ch_mag128_1b[i],1));
+          dl_ch_mag128_0[i] = _mm_adds_epi16(_mm_srai_epi16(dl_ch_mag128_0[i],1),_mm_srai_epi16(dl_ch_mag128_1[i],1));
+          dl_ch_mag128_0b[i] = _mm_adds_epi16(_mm_srai_epi16(dl_ch_mag128_0b[i],1),_mm_srai_epi16(dl_ch_mag128_1b[i],1));
         }
       }
     }
 
+
     if (rho) {
       rho128_0 = (__m128i *) &rho[0][start_point];
       rho128_1 = (__m128i *) &rho[1][start_point];
+      rho128_2 = (__m128i *) &rho[2][start_point];
+      rho128_3 = (__m128i *) &rho[3][start_point];
 
       if (length_mod4 == 0){
         length2 = length>>2;
 
         for (i=0; i<length2; ++i) {
           rho128_0[i] = _mm_adds_epi16(_mm_srai_epi16(rho128_0[i],1),_mm_srai_epi16(rho128_1[i],1));
-
+          rho128_2[i] = _mm_adds_epi16(_mm_srai_epi16(rho128_2[i],1),_mm_srai_epi16(rho128_3[i],1));
         }
       }
     }
@@ -3645,14 +3651,63 @@ void dlsch_detection_mrc_core(int **rxdataF_comp,
     if (rho_i){
       rho128_i0 = (__m128i *) &rho_i[0][start_point];
       rho128_i1 = (__m128i *) &rho_i[1][start_point];
+      rho128_i2 = (__m128i *) &rho_i[2][start_point];
+      rho128_i3 = (__m128i *) &rho_i[3][start_point];
 
       if (length_mod4 == 0){
         length2 = length>>2;
 
         for (i=0; i<length2; ++i)
           rho128_i0[i] = _mm_adds_epi16(_mm_srai_epi16(rho128_i0[i],1),_mm_srai_epi16(rho128_i1[i],1));
+          rho128_i2[i] = _mm_adds_epi16(_mm_srai_epi16(rho128_i2[i],1),_mm_srai_epi16(rho128_i3[i],1));
       }
     }
+
+      if (n_tx == 4){
+
+      rxdataF_comp128_0 = (__m128i *)&rxdataF_comp[0][start_point];
+      rxdataF_comp128_1 = (__m128i *)&rxdataF_comp[2][start_point];
+      rxdataF_comp128_2 = (__m128i *)&rxdataF_comp[4][start_point];
+      rxdataF_comp128_3 = (__m128i *)&rxdataF_comp[6][start_point];
+
+      dl_ch_mag128_0 = (__m128i *)&dl_ch_mag[0][start_point];
+      dl_ch_mag128_1 = (__m128i *)&dl_ch_mag[2][start_point];
+      dl_ch_mag128_2 = (__m128i *)&dl_ch_mag[4][start_point];
+      dl_ch_mag128_3 = (__m128i *)&dl_ch_mag[6][start_point];
+
+      dl_ch_mag128_0b = (__m128i *)&dl_ch_magb[0][start_point];
+      dl_ch_mag128_1b = (__m128i *)&dl_ch_magb[2][start_point];
+      dl_ch_mag128_2b = (__m128i *)&dl_ch_magb[4][start_point];
+      dl_ch_mag128_3b = (__m128i *)&dl_ch_magb[6][start_point];
+
+      rho128_0 = (__m128i *)&rho[0][start_point];
+      rho128_1 = (__m128i *)&rho[2][start_point];
+
+      rho128_i0 = (__m128i *)&rho_i[0][start_point];
+      rho128_i1 = (__m128i *)&rho_i[2][start_point];
+
+
+      if (length_mod4 == 0){
+
+        length2 = length>>2;
+
+        for (i=0; i<length2; ++i) {
+          rxdataF_comp128_0[i] = _mm_adds_epi16(_mm_srai_epi16(rxdataF_comp128_0[i],1),_mm_srai_epi16(rxdataF_comp128_1[i],1));
+          rxdataF_comp128_2[i] = _mm_adds_epi16(_mm_srai_epi16(rxdataF_comp128_2[i],1),_mm_srai_epi16(rxdataF_comp128_3[i],1));
+
+          dl_ch_mag128_0[i] = _mm_adds_epi16(_mm_srai_epi16(dl_ch_mag128_0[i],1),_mm_srai_epi16(dl_ch_mag128_1[i],1));
+          dl_ch_mag128_2[i] = _mm_adds_epi16(_mm_srai_epi16(dl_ch_mag128_2[i],1),_mm_srai_epi16(dl_ch_mag128_3[i],1));
+
+          dl_ch_mag128_0b[i] = _mm_adds_epi16(_mm_srai_epi16(dl_ch_mag128_0b[i],1),_mm_srai_epi16(dl_ch_mag128_1b[i],1));
+          dl_ch_mag128_2b[i] = _mm_adds_epi16(_mm_srai_epi16(dl_ch_mag128_2b[i],1),_mm_srai_epi16(dl_ch_mag128_3b[i],1));
+
+          rho128_0[i] = _mm_adds_epi16(_mm_srai_epi16(rho128_0[i],1),_mm_srai_epi16(rho128_1[i],1));
+
+          rho128_i0[i] = _mm_adds_epi16(_mm_srai_epi16(rho128_i0[i],1),_mm_srai_epi16(rho128_i1[i],1));
+        }
+    }
+  }
+
   }
 
   _mm_empty();
@@ -3662,7 +3717,7 @@ void dlsch_detection_mrc_core(int **rxdataF_comp,
 
   unsigned char aatx;
   int i;
-  int16x8_t *rxdataF_comp128_0,*rxdataF_comp128_1,*rxdataF_comp128_i0,*rxdataF_comp128_i1,*dl_ch_mag128_0,*dl_ch_mag128_1,*dl_ch_mag128_0b,*dl_ch_mag128_1b,*rho128_0,*rho128_1,*rho128_i0,*rho128_i1,*dl_ch_mag128_i0,*dl_ch_mag128_i1,*dl_ch_mag128_i0b,*dl_ch_mag128_i1b;
+  int16x8_t *rxdataF_comp128_0,*rxdataF_comp128_1,*dl_ch_mag128_0,*dl_ch_mag128_1,*dl_ch_mag128_0b,*dl_ch_mag128_1b,*rho128_0,*rho128_1,*rho128_i0,*rho128_i1;
   int length_mod4 = 0;
   int length2;
   int ii=0;
@@ -4174,14 +4229,12 @@ void dlsch_channel_level_median(int **dl_ch_estimates_ext,
 
   short ii;
   int aatx,aarx;
-  int length_mod4;
+  int length_mod8;
   int length2;
   int max = 0, min=0;
   int norm_pack;
   __m128i *dl_ch128, norm128D;
 
-  int16_t x = factor2(length);
-  int16_t y = (length)>>x;
 
   for (aatx=0; aatx<n_tx; aatx++){
     for (aarx=0; aarx<n_rx; aarx++) {
@@ -4191,32 +4244,34 @@ void dlsch_channel_level_median(int **dl_ch_estimates_ext,
 
       dl_ch128=(__m128i *)&dl_ch_estimates_ext[aatx*2 + aarx][start_point];
 
-      length_mod4=length&3;
+      length_mod8=length&3;
 
-      length2 = length>>2;
+      if (length_mod8 == 0){
 
-      for (ii=0;ii<length2;ii++) {
-        norm128D = _mm_srai_epi32( _mm_madd_epi16(dl_ch128[0],dl_ch128[0]), 1);
+        length2 = length>>2;
+
+        for (ii=0;ii<length2;ii++) {
+          norm128D = _mm_srai_epi32( _mm_madd_epi16(dl_ch128[0],dl_ch128[0]), 1);
           //print_ints("norm128D",&norm128D[0]);
+          norm_pack = ((int32_t*)&norm128D)[0] +
+                      ((int32_t*)&norm128D)[1] +
+                      ((int32_t*)&norm128D)[2] +
+                      ((int32_t*)&norm128D)[3];
 
-        norm_pack = ((int32_t*)&norm128D)[0] +
-                    ((int32_t*)&norm128D)[1] +
-                    ((int32_t*)&norm128D)[2] +
-                    ((int32_t*)&norm128D)[3];
-
-        if (norm_pack > max)
-          max = norm_pack;
-        if (norm_pack < min)
-          min = norm_pack;
-
+          if (norm_pack > max)
+            max = norm_pack;
+          if (norm_pack < min)
+            min = norm_pack;
           dl_ch128+=1;
-      }
-
+        }
         median[aatx*n_rx + aarx]  = (max+min)>>1;
-
-     // printf("Channel level  median [%d]: %d\n",aatx*n_rx + aarx, median[aatx*n_rx + aarx]);
+      }else {
+        printf ("channel_level_median: Received number of subcarriers is not multiple of 8, \n"
+                 "need to adapt the code!\n");
       }
+     // printf("Channel level  median [%d]: %d\n",aatx*n_rx + aarx, median[aatx*n_rx + aarx]);
     }
+  }
 
   _mm_empty();
   _m_empty();
@@ -4224,12 +4279,14 @@ void dlsch_channel_level_median(int **dl_ch_estimates_ext,
 #elif defined(__arm__)
 
   short rb;
-  unsigned char aatx,aarx,nre=12,symbol_mod;
+  unsigned char aatx,aarx;
+  int length_mod8;
+  int length2;
   int32x4_t norm128D;
   int16x4_t *dl_ch128;
 
-  for (aatx=0; aatx<frame_parms->nb_antenna_ports_eNB; aatx++){
-    for (aarx=0; aarx<frame_parms->nb_antennas_rx; aarx++) {
+  for (aatx=0; aatx<n_tx; aatx++){
+    for (aarx=0; aarx<n_rx; aarx++) {
       max = 0;
       min = 0;
       norm128D = vdupq_n_s32(0);
@@ -4237,28 +4294,34 @@ void dlsch_channel_level_median(int **dl_ch_estimates_ext,
       dl_ch128=(int16x4_t *)&dl_ch_estimates_ext[aatx*n_rx + aarx][start_point];
 
       length_mod8=length&3;
-      length2 = length>>2;
+      if (length_mod8 == 0){
 
-      for (ii=0;ii<length2;ii++) {
-        norm128D = vshrq_n_u32(vmull_s16(dl_ch128[0],dl_ch128[0]), 1);
-        norm_pack = ((int32_t*)&norm128D)[0] +
-                    ((int32_t*)&norm128D)[1] +
-                    ((int32_t*)&norm128D)[2] +
-                    ((int32_t*)&norm128D)[3];
+        length2 = length>>2;
 
-        if (norm_pack > max)
-          max = norm_pack;
-        if (norm_pack < min)
-          min = norm_pack;
+        for (ii=0;ii<length2;ii++) {
+          norm128D = vshrq_n_u32(vmull_s16(dl_ch128[0],dl_ch128[0]), 1);
+          norm_pack = ((int32_t*)&norm128D)[0] +
+                      ((int32_t*)&norm128D)[1] +
+                      ((int32_t*)&norm128D)[2] +
+                      ((int32_t*)&norm128D)[3];
 
-          dl_ch128+=1;
-      }
+          if (norm_pack > max)
+            max = norm_pack;
+          if (norm_pack < min)
+            min = norm_pack;
+
+            dl_ch128+=1;
+        }
 
         median[aatx*n_rx + aarx]  = (max+min)>>1;
+      }else {
+        printf ("channel_level_median: Received number of subcarriers is not multiple of 8, \n"
+                 "need to adapt the code!\n");
+      }
 
       //printf("Channel level  median [%d]: %d\n",aatx*n_rx + aarx, median[aatx*n_rx + aarx]);
-      }
     }
+  }
 #endif
 
 }
@@ -4346,26 +4409,36 @@ void mmse_processing_core(int32_t **rxdataF_ext,
   float real;
 
 
-  float complex **W_MMSE= malloc(n_tx*n_rx*sizeof(float complex*));
+  float complex **W_MMSE = malloc(n_tx*n_rx*sizeof(float complex*));
    for (int j=0; j<n_tx*n_rx; j++) {
      W_MMSE[j] = malloc(sizeof(float complex)*length);
   }
 
-  float complex *H=  malloc(n_tx*n_rx*sizeof(float complex));
+  float complex *H =  malloc(n_tx*n_rx*sizeof(float complex));
   float complex *W_MMSE_re=  malloc(n_tx*n_rx*sizeof(float complex));
 
-  float complex** dl_ch_estimates_ext_flcpx = malloc(n_tx*n_rx*sizeof(float complex*));
+  float complex** dl_ch_estimates_ext_flp = malloc(n_tx*n_rx*sizeof(float complex*));
   for (int j=0; j<n_tx*n_rx; j++) {
-    dl_ch_estimates_ext_flcpx[j] = malloc(sizeof(float complex)*length);
+    dl_ch_estimates_ext_flp[j] = malloc(sizeof(float complex)*length);
   }
 
-  float complex** rxdataF_ext_flcpx = malloc(n_rx*sizeof(float complex*));
+  float complex** dl_ch_estimates_ext_eff_flp = malloc(n_tx*n_rx*sizeof(float complex*));
+  for (int j=0; j<n_tx*n_rx; j++) {
+    dl_ch_estimates_ext_eff_flp[j] = malloc(sizeof(float complex)*length);
+  }
+
+  float complex** rxdataF_ext_flp = malloc(n_rx*sizeof(float complex*));
   for (int j=0; j<n_rx; j++) {
-    rxdataF_ext_flcpx[j] = malloc(sizeof(float complex)*length);
+    rxdataF_ext_flp[j] = malloc(sizeof(float complex)*length);
+  }
+
+  float complex** rxdataF_ext_mmse_flp = malloc(n_rx*sizeof(float complex*));
+  for (int j=0; j<n_rx; j++) {
+    rxdataF_ext_mmse_flp[j] = malloc(sizeof(float complex)*length);
   }
 
   chan_est_to_float(dl_ch_estimates_ext,
-                    dl_ch_estimates_ext_flcpx,
+                    dl_ch_estimates_ext_flp,
                     n_tx,
                     n_rx,
                     length,
@@ -4374,8 +4447,8 @@ void mmse_processing_core(int32_t **rxdataF_ext,
   for (re=0; re<length; re++){
     for (aatx=0; aatx<n_tx; aatx++){
       for (aarx=0; aarx<n_rx; aarx++) {
-        imag = cimag(dl_ch_estimates_ext_flcpx[aatx*n_rx + aarx][re]);
-        real = creal(dl_ch_estimates_ext_flcpx[aatx*n_rx + aarx][re]);
+        imag = cimag(dl_ch_estimates_ext_flp[aatx*n_rx + aarx][re]);
+        real = creal(dl_ch_estimates_ext_flp[aatx*n_rx + aarx][re]);
         H[aatx*n_rx + aarx] = real+ I*imag;
       }
     }
@@ -4388,37 +4461,40 @@ void mmse_processing_core(int32_t **rxdataF_ext,
   }
 
   rxdataF_to_float(rxdataF_ext,
-                   rxdataF_ext_flcpx,
+                   rxdataF_ext_flp,
                    n_rx,
                    length,
                    start_point);
 
-  mult_mmse_rxdataF(W_MMSE,
-                    rxdataF_ext_flcpx,
-                    n_tx,
-                    n_rx,
-                    length,
-                    start_point);
-
-
-  mult_mmse_chan_est(W_MMSE,
-                     dl_ch_estimates_ext_flcpx,
+  mult_filter_rxdataF(W_MMSE,
+                     rxdataF_ext_flp,
+                     rxdataF_ext_mmse_flp,
                      n_tx,
                      n_rx,
                      length,
                      start_point);
 
 
-  float_to_rxdataF(rxdataF_ext,
-                   rxdataF_ext_flcpx,
+  mult_filter_chan_est(W_MMSE,
+                      dl_ch_estimates_ext_flp,
+                      dl_ch_estimates_ext_eff_flp,
+                      n_tx,
+                      n_rx,
+                      n_tx,
+                      length,
+                      start_point);
+
+
+  float_to_rxdataF(rxdataF_ext_mmse_flp,
+                   rxdataF_ext,
                    n_tx,
                    n_rx,
                    length,
                    start_point);
 
 
-  float_to_chan_est(dl_ch_estimates_ext,
-                    dl_ch_estimates_ext_flcpx,
+  float_to_chan_est(dl_ch_estimates_ext_eff_flp,
+                    dl_ch_estimates_ext,
                     n_tx,
                     n_rx,
                     length,
@@ -4427,48 +4503,253 @@ void mmse_processing_core(int32_t **rxdataF_ext,
 free(W_MMSE);
 free(H);
 free(W_MMSE_re);
-free(dl_ch_estimates_ext_flcpx);
-free(rxdataF_ext_flcpx);
+free(dl_ch_estimates_ext_flp);
+free(dl_ch_estimates_ext_eff_flp);
+free(rxdataF_ext_flp);
+free(rxdataF_ext_mmse_flp);
+}
+
+
+/*THIS FUNCTION TAKES FLOAT_POINT INPUT. SHOULD NOT BE USED WITH OAI*/
+void whitening_processing_core_flp(float complex **rxdataF_flp,
+                                   float complex **chan_est_flp_0,
+                                   float complex **chan_est_flp_1,
+                                   int32_t **rxdataF_filt_fp_0,
+                                   int32_t **rxdataF_filt_fp_1,
+                                   int32_t **chan_est_eff_fp_0,
+                                   int32_t **chan_est_eff_fp_1,
+                                   float sigma2,
+                                   uint8_t n_tx,
+                                   uint8_t n_rx,
+                                   int32_t length,
+                                   int32_t start_point)
+{
+  uint8_t aatx, aarx;
+  float max_0 = 0.0;
+  float max_1 = 0.0;
+  float one_over_max_0 = 0.0;
+  float one_over_max_1 = 0.0;
+  int32_t i, re;
+  float complex *W_Wh_0_vec, *W_Wh_1_vec;
+  float complex *rxdataF_filt_flp_0_vec, *rxdataF_filt_flp_1_vec;
+  float complex *chan_est_eff_flp_0_vec, *chan_est_eff_flp_1_vec;
+  float complex *W_Wh_0[n_tx*n_rx], *W_Wh_1[n_tx*n_rx];
+  float complex *rxdataF_filt_flp_0[n_rx], *rxdataF_filt_flp_1[n_rx];
+  float complex *chan_est_eff_flp_0[n_rx*(n_tx>>1)], *chan_est_eff_flp_1[n_rx*(n_tx>>1)];
+  float complex *W_Wh_0_re, *W_Wh_1_re;
+  float complex *chan_est_flp_re_0, *chan_est_flp_re_1;
+
+  W_Wh_0_vec = (float complex*)calloc(n_tx*n_rx*length, sizeof(float complex*));
+  W_Wh_1_vec = (float complex*)calloc(n_tx*n_rx*length, sizeof(float complex*));
+
+  for (i = 0; i < n_tx*n_rx; ++i) {
+    W_Wh_0[i] = &W_Wh_0_vec[i*length];
+    W_Wh_1[i] = &W_Wh_1_vec[i*length];
+  }
+
+  rxdataF_filt_flp_0_vec = (float complex*)calloc(n_rx*length,sizeof(float complex*));
+  rxdataF_filt_flp_1_vec = (float complex*)calloc(n_rx*length,sizeof(float complex*));
+
+  for (i = 0; i < n_rx; ++i) {
+    // Received signal after W_wh on branch 0 and branch 1
+    rxdataF_filt_flp_0[i] = &rxdataF_filt_flp_0_vec[i*length];
+    rxdataF_filt_flp_1[i] = &rxdataF_filt_flp_1_vec[i*length];
+  }
+
+  chan_est_eff_flp_0_vec = (float complex*)calloc(n_rx*(n_tx>>1)*length, sizeof(float complex*));
+  chan_est_eff_flp_1_vec = (float complex*)calloc(n_rx*(n_tx>>1)*length, sizeof(float complex*));
+
+  for (i = 0; i < n_rx*(n_tx>>1); ++i) {
+    // Received signal after W_wh on branch 0 and branch 1
+    chan_est_eff_flp_0[i] = &chan_est_eff_flp_0_vec[i*length];
+    chan_est_eff_flp_1[i] = &chan_est_eff_flp_1_vec[i*length];
+  }
+
+  W_Wh_0_re = (float complex*)calloc(n_tx*n_rx, sizeof(float complex));
+  W_Wh_1_re = (float complex*)calloc(n_tx*n_rx, sizeof(float complex));
+
+  chan_est_flp_re_0 = (float complex*)calloc(n_rx*(n_tx>>1), sizeof(float complex));
+  chan_est_flp_re_1 = (float complex*)calloc(n_rx*(n_tx>>1), sizeof(float complex));
+
+  for (re = 0; re < length; ++re){
+    for (aatx = 0; aatx < n_tx/2; ++aatx){
+      for (aarx = 0; aarx < n_rx; ++aarx) {
+        chan_est_flp_re_0[aatx*n_rx + aarx] = chan_est_flp_0[aatx*n_rx + aarx][re];
+        chan_est_flp_re_1[aatx*n_rx + aarx] = chan_est_flp_1[aatx*n_rx + aarx][re];
+     }
+   }
+
+  compute_white_filter(chan_est_flp_re_0, chan_est_flp_re_1, sigma2, n_tx, n_rx, W_Wh_0_re, W_Wh_1_re);
+
+  for (aatx = 0; aatx < n_tx; ++aatx){
+    for (aarx = 0; aarx < n_rx; ++aarx) {
+      W_Wh_0[aatx*n_rx + aarx][re] = W_Wh_0_re[aatx*n_rx + aarx];
+      W_Wh_1[aatx*n_rx + aarx][re] = W_Wh_1_re[aatx*n_rx + aarx];
+
+      if (fabs(creal(W_Wh_0_re[aatx*n_rx + aarx])) > max_0)
+        max_0 = fabs(creal(W_Wh_0_re[aatx*n_rx + aarx]));
+      if (fabs(cimag(W_Wh_0_re[aatx*n_rx + aarx])) > max_0)
+        max_0 = fabs(cimag(W_Wh_0_re[aatx*n_rx + aarx]));
+
+      if (fabs(creal(W_Wh_1_re[aatx*n_rx + aarx])) > max_1)
+        max_1 = fabs(creal(W_Wh_1_re[aatx*n_rx + aarx]));
+      if (fabs(cimag(W_Wh_1_re[aatx*n_rx + aarx])) > max_1)
+        max_1 = fabs(cimag(W_Wh_1_re[aatx*n_rx + aarx]));
+      }
+    }
+  }
+
+// Not convinced normalization is needed.
+#if 0
+  one_over_max_0 = 1.0;///max_0;
+  one_over_max_1 = 1.0;//max_1;
+
+  for (re=0; re<length; re++){
+    for (aatx=0; aatx<n_tx; aatx++){
+      for (aarx=0; aarx<n_rx; aarx++){
+#ifdef DEBUG_FRONT_END
+        if (re == 0){
+          printf("whitening_processing_core_flp: W_Wh_0[%d] = (%f + i%f)\n", aatx*n_rx + aarx, creal(W_Wh_0[aatx*n_rx + aarx][re]), cimag(W_Wh_0[aatx*n_rx + aarx][re]));
+          printf("whitening_processing_core_flp: W_Wh_1[%d] = (%f + i%f)\n", aatx*n_rx + aarx, creal(W_Wh_1[aatx*n_rx + aarx][re]), cimag(W_Wh_1[aatx*n_rx + aarx][re]));
+        }
+#endif
+        W_Wh_0[aatx*n_rx + aarx][re] = one_over_max_0*W_Wh_0[aatx*n_rx + aarx][re];
+        W_Wh_1[aatx*n_rx + aarx][re] = one_over_max_1*W_Wh_1[aatx*n_rx + aarx][re];
+
+#ifdef DEBUG_FRONT_END
+        if (re == 0)
+          printf("whitening_processing_core_flp: AFTER NORM W_Wh_0[%d] = (%f + i%f), max_0 = %f \n", aatx*n_rx + aarx, creal(W_Wh_0[aatx*n_rx + aarx][re]), cimag(W_Wh_0[aatx*n_rx + aarx][re]), max_0);
+          printf("whitening_processing_core_flp: AFTER NORM W_Wh_1[%d] = (%f + i%f), max_1 = %f \n", aatx*n_rx + aarx, creal(W_Wh_1[aatx*n_rx + aarx][re]), cimag(W_Wh_1[aatx*n_rx + aarx][re]), max_1);
+#endif
+      }
+    }
+  }
+#endif
+
+  // Branch 0
+  mult_filter_rxdataF(W_Wh_0,
+                      rxdataF_flp,
+                      rxdataF_filt_flp_0,
+                      n_tx,
+                      n_rx,
+                      length,
+                      start_point);
+
+  mult_filter_chan_est(W_Wh_0,
+                       chan_est_flp_0,
+                       chan_est_eff_flp_0,
+                       n_tx,
+                       n_rx,
+                       (n_tx>>1),
+                       length,
+                       start_point);
+
+  float_to_rxdataF(rxdataF_filt_flp_0,
+                   rxdataF_filt_fp_0,
+                   n_tx,
+                   n_rx,
+                   length,
+                   start_point);
+
+  float_to_chan_est(chan_est_eff_flp_0,
+                    chan_est_eff_fp_0,
+                    (n_tx>>1),
+                    n_rx,
+                    length,
+                    start_point);
+  // Branch 1
+  mult_filter_rxdataF(W_Wh_1,
+                      rxdataF_flp,
+                      rxdataF_filt_flp_1,
+                      n_tx,
+                      n_rx,
+                      length,
+                      start_point);
+
+  mult_filter_chan_est(W_Wh_1,
+                       chan_est_flp_1,
+                       chan_est_eff_flp_1,
+                       n_tx,
+                       n_rx,
+                       (n_tx>>1),
+                       length,
+                       start_point);
+
+  float_to_rxdataF(rxdataF_filt_flp_1,
+                   rxdataF_filt_fp_1,
+                   n_tx,
+                   n_rx,
+                   length,
+                   start_point);
+
+  float_to_chan_est(chan_est_eff_flp_1,
+                    chan_est_eff_fp_1,
+                    (n_tx>>1),
+                    n_rx,
+                    length,
+                    start_point);
+
+  free(W_Wh_0_vec);
+  free(W_Wh_1_vec);
+  free(rxdataF_filt_flp_0_vec);
+  free(rxdataF_filt_flp_1_vec);
+  free(chan_est_eff_flp_0_vec);
+  free(chan_est_eff_flp_1_vec);
+  free(W_Wh_0_re);
+  free(W_Wh_1_re);
+  free(chan_est_flp_re_0);
+  free(chan_est_flp_re_1);
 
 }
 
 
 /*THIS FUNCTION TAKES FLOAT_POINT INPUT. SHOULD NOT BE USED WITH OAI*/
-void mmse_processing_core_flp(float complex** rxdataF_ext_flcpx,
-                              float complex **H,
-                              int32_t **rxdataF_ext,
-                              int32_t **dl_ch_estimates_ext,
+void mmse_processing_core_flp(float complex** rxdataF_flp,
+                              float complex **chan_est_flp,
+                              int32_t **rxdataF_filt_fp,
+                              int32_t **chan_est_eff_fp,
                               float noise_power,
-                              int n_tx,
-                              int n_rx,
-                              int length,
-                              int start_point){
+                              uint8_t n_tx,
+                              uint8_t n_rx,
+                              int32_t length,
+                              int32_t start_point){
 
-  int aatx, aarx, re;
+  uint8_t aatx, aarx;
   float max = 0;
   float one_over_max = 0;
+  int32_t i, re;
+  float complex *W_MMSE_vec, *rxdataF_filt_flp_vec, *chan_est_eff_flp_vec;
+  float complex *W_MMSE[n_tx*n_rx], *rxdataF_filt_flp[n_rx], *chan_est_eff_flp[n_tx*n_rx];
 
-  float complex **W_MMSE= malloc(n_tx*n_rx*sizeof(float complex*));
-   for (int j=0; j<n_tx*n_rx; j++) {
-     W_MMSE[j] = malloc(sizeof(float complex)*length);
+  W_MMSE_vec = (float complex*)calloc(n_tx*n_rx*length, sizeof(float complex*));
+  for (i = 0; i < n_tx*n_rx; ++i) {
+    W_MMSE[i] = &W_MMSE_vec[i*length];
   }
 
-  float complex *H_re=  malloc(n_tx*n_rx*sizeof(float complex));
-  float complex *W_MMSE_re=  malloc(n_tx*n_rx*sizeof(float complex));
+  rxdataF_filt_flp_vec = (float complex*)calloc(n_rx*length, sizeof(float complex*));
+  for (i = 0; i < n_rx; ++i) {
+    rxdataF_filt_flp[i] = &rxdataF_filt_flp_vec[i*length];
+  }
 
-  for (re=0; re<length; re++){
-    for (aatx=0; aatx<n_tx; aatx++){
-      for (aarx=0; aarx<n_rx; aarx++) {
-        H_re[aatx*n_rx + aarx] = H[aatx*n_rx + aarx][re];
-#ifdef DEBUG_MMSE
-        if (re == 0)
-        printf(" H_re[%d]= (%f + i%f)\n", aatx*n_rx + aarx, creal(H_re[aatx*n_rx + aarx]), cimag(H_re[aatx*n_rx + aarx]));
-#endif
+  chan_est_eff_flp_vec = (float complex*)calloc(n_tx*n_rx*length, sizeof(float complex*));
+  for (i = 0; i < n_tx*n_rx; ++i) {
+    chan_est_eff_flp[i] = &chan_est_eff_flp_vec[i*length];
+  }
+
+  float complex *chan_est_flp_re = calloc(n_tx*n_rx, sizeof(float complex));
+  float complex *W_MMSE_re = calloc(n_tx*n_rx, sizeof(float complex));
+
+  for (re = 0; re < length; ++re){
+    for (aatx = 0; aatx < n_tx; ++aatx){
+      for (aarx = 0; aarx < n_rx; ++aarx) {
+        chan_est_flp_re[aatx*n_rx + aarx] = chan_est_flp[aatx*n_rx + aarx][re];
       }
     }
-    compute_MMSE(H_re, n_tx, noise_power, W_MMSE_re);
-    for (aatx=0; aatx<n_tx; aatx++){
-      for (aarx=0; aarx<n_rx; aarx++) {
+
+    compute_MMSE(chan_est_flp_re, n_tx, noise_power, W_MMSE_re);
+
+    for (aatx = 0; aatx < n_tx; ++aatx){
+      for (aarx = 0; aarx < n_rx; ++aarx) {
         W_MMSE[aatx*n_rx + aarx][re] = W_MMSE_re[aatx*n_rx + aarx];
         if (fabs(creal(W_MMSE_re[aatx*n_rx + aarx])) > max)
           max = fabs(creal(W_MMSE_re[aatx*n_rx + aarx]));
@@ -4477,54 +4758,67 @@ void mmse_processing_core_flp(float complex** rxdataF_ext_flcpx,
       }
     }
   }
+
   one_over_max = 1.0/max;
 
-  for (re=0; re<length; re++)
-    for (aatx=0; aatx<n_tx; aatx++)
-      for (aarx=0; aarx<n_rx; aarx++){
-#ifdef DEBUG_MMSE
-        if (re == 0)
-          printf(" W_MMSE[%d] = (%f + i%f)\n", aatx*n_rx + aarx, creal(W_MMSE[aatx*n_rx + aarx][re]), cimag(W_MMSE[aatx*n_rx + aarx][re]));
+  for (re = 0; re < length; ++re){
+    for (aatx = 0; aatx < n_tx; ++aatx){
+      for (aarx = 0; aarx < n_rx; ++aarx){
+
+#ifdef DEBUG_FRONT_END
+        if (re == 0){
+          printf("mmse_processing_core_flp: W_MMSE[%d] = (%f + i%f)\n", aatx*n_rx + aarx, creal(W_MMSE[aatx*n_rx + aarx][re]), cimag(W_MMSE[aatx*n_rx + aarx][re]));
+        }
 #endif
+
         W_MMSE[aatx*n_rx + aarx][re] = one_over_max*W_MMSE[aatx*n_rx + aarx][re];
-#ifdef DEBUG_MMSE
-        if (re == 0)
-          printf(" AFTER NORM W_MMSE[%d] = (%f + i%f), max = %f \n", aatx*n_rx + aarx, creal(W_MMSE[aatx*n_rx + aarx][re]), cimag(W_MMSE[aatx*n_rx + aarx][re]), max);
+
+#ifdef DEBUG_FRONT_END
+        if (re == 0){
+          printf("mmse_processing_core_flp: AFTER NORM W_MMSE[%d] = (%f + i%f), max = %f \n", aatx*n_rx + aarx, creal(W_MMSE[aatx*n_rx + aarx][re]), cimag(W_MMSE[aatx*n_rx + aarx][re]), max);
+        }
 #endif
+
       }
+    }
+  }
 
+  mult_filter_rxdataF(W_MMSE,
+                      rxdataF_flp,
+                      rxdataF_filt_flp,
+                      n_tx,
+                      n_rx,
+                      length,
+                      start_point);
 
-  mult_mmse_rxdataF(W_MMSE,
-                    rxdataF_ext_flcpx,
-                    n_tx,
-                    n_rx,
-                    length,
-                    start_point);
+  mult_filter_chan_est(W_MMSE,
+                       chan_est_flp,
+                       chan_est_eff_flp,
+                       n_tx,
+                       n_rx,
+                       n_tx,
+                       length,
+                       start_point);
 
-  mult_mmse_chan_est(W_MMSE,
-                     H,
-                     n_tx,
-                     n_rx,
-                     length,
-                     start_point);
-
-  float_to_rxdataF(rxdataF_ext,
-                   rxdataF_ext_flcpx,
+  float_to_rxdataF(rxdataF_filt_flp,
+                   rxdataF_filt_fp,
                    n_tx,
                    n_rx,
                    length,
                    start_point);
 
-  float_to_chan_est(dl_ch_estimates_ext,
-                    H,
+  float_to_chan_est(chan_est_eff_flp,
+                    chan_est_eff_fp,
                     n_tx,
                     n_rx,
                     length,
                     start_point);
-  free(H_re);
-  free(W_MMSE);
-  free(W_MMSE_re);
 
+  free(W_MMSE_vec);
+  free(W_MMSE_re);
+  free(rxdataF_filt_flp_vec);
+  free(chan_est_eff_flp_vec);
+  free(chan_est_flp_re);
 }
 
 
@@ -4636,7 +4930,7 @@ void rxdataF_to_float(int32_t **rxdataF_ext,
       imag = (int16_t) (rxdataF_ext[aarx][start_point + re] >> 16);
       real = (int16_t) (rxdataF_ext[aarx][start_point + re] & 0xffff);
       rxdataF_f[aarx][re] = (float)(real/(32768.0)) + I*(float)(imag/(32768.0));
-#ifdef DEBUG_MMSE
+#ifdef DEBUG_FRONT_END
         if (re==0){
           printf("rxdataF_to_float: aarx = %d, real= %d, imag = %d\n", aarx, real, imag);
           //printf("rxdataF_to_float: rxdataF_ext[%d][%d] = %d\n", aarx, start_point + re, rxdataF_ext[aarx][start_point + re]);
@@ -4651,26 +4945,26 @@ void rxdataF_to_float(int32_t **rxdataF_ext,
 
 void chan_est_to_float(int32_t **dl_ch_estimates_ext,
                        float complex **dl_ch_estimates_ext_f,
-                       int n_tx,
-                       int n_rx,
-                       int length,
-                       int start_point)
+                       uint8_t n_tx,
+                       uint8_t n_rx,
+                       int32_t length,
+                       int32_t start_point)
 {
-  short re;
-  int aatx,aarx;
+  int32_t re;
+  uint8_t aatx,aarx;
   int16_t imag;
   int16_t real;
 
-  for (aatx=0; aatx<n_tx; aatx++){
-    for (aarx=0; aarx<n_rx; aarx++) {
-      for (re=0; re<length; re++){
+  for (aatx = 0; aatx < n_tx; ++aatx){
+    for (aarx = 0; aarx < n_rx; ++aarx) {
+      for (re = 0; re < length; ++re){
         imag = (int16_t) (dl_ch_estimates_ext[aatx*n_rx + aarx][start_point + re] >> 16);
         real = (int16_t) (dl_ch_estimates_ext[aatx*n_rx + aarx][start_point+ re] & 0xffff);
         dl_ch_estimates_ext_f[aatx*n_rx + aarx][re] = (float)(real/(32768.0)) + I*(float)(imag/(32768.0));
-#ifdef DEBUG_MMSE
-        if (re==0){
-          printf("ant %d, re = %d, real = %d, imag = %d \n", aatx*n_rx + aarx, re, real, imag);
-          printf("ant %d, re = %d, real = %f, imag = %f \n", aatx*n_rx + aarx, re, creal(dl_ch_estimates_ext_f[aatx*n_rx + aarx][re]), cimag(dl_ch_estimates_ext_f[aatx*n_rx + aarx][re]));
+#ifdef DEBUG_FRONT_END
+        if (re == 0){
+          printf("chan_est_to_float: ant %d, re = %d, real = %d, imag = %d \n", aatx*n_rx + aarx, re, real, imag);
+          printf("chan_est_to_float: ant %d, re = %d, real = %f, imag = %f \n", aatx*n_rx + aarx, re, creal(dl_ch_estimates_ext_f[aatx*n_rx + aarx][re]), cimag(dl_ch_estimates_ext_f[aatx*n_rx + aarx][re]));
         }
 #endif
      }
@@ -4678,91 +4972,8 @@ void chan_est_to_float(int32_t **dl_ch_estimates_ext,
   }
 }
 
-void float_to_chan_est(int32_t **dl_ch_estimates_ext,
-                      float complex **dl_ch_estimates_ext_f,
-                      int n_tx,
-                      int n_rx,
-                      int length,
-                      int start_point)
-{
-
-  short re;
-  int aarx, aatx;
-  int16_t imag;
-  int16_t real;
-
-  for (aatx=0; aatx<n_tx; aatx++){
-    for (aarx=0; aarx<n_rx; aarx++) {
-      for (re=0; re<length; re++){
-        if (cimag(dl_ch_estimates_ext_f[aatx*n_rx + aarx][re])<-1)
-           imag = 0x8000;
-         else if (cimag(dl_ch_estimates_ext_f[aatx*n_rx + aarx][re])>=1)
-           imag = 0x7FFF;
-         else
-          imag = cimag(dl_ch_estimates_ext_f[aatx*n_rx + aarx][re])*32768;
-         if (creal(dl_ch_estimates_ext_f[aatx*n_rx + aarx][re])<-1)
-           real = 0x8000;
-         else if (creal(dl_ch_estimates_ext_f[aatx*n_rx + aarx][re])>=1)
-           real = 0x7FFF;
-         else
-           real = creal(dl_ch_estimates_ext_f[aatx*n_rx + aarx][re])*32768;
-
-         dl_ch_estimates_ext[aatx*n_rx + aarx][start_point + re] = (((int32_t)imag)<<16)|((int32_t)real & 0xffff);
-#ifdef DEBUG_MMSE
-        if (re==0){
-          printf(" float_to_chan_est: chan est real = %f, chan est imag = %f\n",creal(dl_ch_estimates_ext_f[aatx*n_rx + aarx][re]), cimag(dl_ch_estimates_ext_f[aatx*n_rx + aarx][re]));
-          printf("float_to_chan_est: real fixed = %d, imag fixed = %d\n", real, imag);
-          printf("float_to_chan_est: ant %d, re = %d, dl_ch_estimates_ext = %d \n", aatx*n_rx + aarx, re,  dl_ch_estimates_ext[aatx*n_rx + aarx][start_point + re]);
-        }
-#endif
-      }
-    }
-  }
-}
-
-
-void float_to_rxdataF(int32_t **rxdataF_ext,
-                      float complex **rxdataF_f,
-                      int n_tx,
-                      int n_rx,
-                      int length,
-                      int start_point)
-{
-
-  short re;
-  int aarx;
-  int16_t imag;
-  int16_t real;
-
-  for (aarx=0; aarx<n_rx; aarx++) {
-    for (re=0; re<length; re++){
-      if (cimag(rxdataF_f[aarx][re])<-1)
-        imag = 0x8000;
-      else if (cimag(rxdataF_f[aarx][re])>=1)
-        imag = 0x7FFF;
-      else
-        imag = cimag(rxdataF_f[aarx][re])*32768;
-      if (creal(rxdataF_f[aarx][re])<-1)
-        real = 0x8000;
-      else if (creal(rxdataF_f[aarx][re])>=1)
-        real = 0x7FFF;
-      else
-        real = creal(rxdataF_f[aarx][re])*32768;
-      rxdataF_ext[aarx][start_point + re] = (((int32_t)imag)<<16)|(((int32_t)real) & 0xffff);
-#ifdef DEBUG_MMSE
-        if (re==0){
-          printf(" float_to_rxdataF: real = %f, imag = %f\n",creal(rxdataF_f[aarx][re]), cimag(rxdataF_f[aarx][re]));
-          printf("float_to_rxdataF: real fixed = %d, imag fixed = %d\n", real, imag);
-          printf("float_to_rxdataF: ant %d, re = %d, rxdataF_ext = %d \n", aarx, re,  rxdataF_ext[aarx][start_point + re]);
-        }
-#endif
-      }
-    }
-}
-
-
-void mult_mmse_rxdataF(float complex** Wmmse,
-                       float complex** rxdataF_ext_f,
+void float_to_chan_est(float complex **chan_est_flp,
+                       int32_t **result,
                        int n_tx,
                        int n_rx,
                        int length,
@@ -4770,83 +4981,183 @@ void mult_mmse_rxdataF(float complex** Wmmse,
 {
   short re;
   int aarx, aatx;
+  int16_t imag;
+  int16_t real;
 
+  for (aatx = 0; aatx < n_tx; ++aatx){
+    for (aarx = 0; aarx < n_rx; ++aarx) {
+      for (re = 0; re < length; ++re){
+        if (cimag(chan_est_flp[aatx*n_rx + aarx][re]) < -1)
+           imag = 0x8000;
+         else if (cimag(chan_est_flp[aatx*n_rx + aarx][re]) >= 1)
+           imag = 0x7FFF;
+         else
+          imag = cimag(chan_est_flp[aatx*n_rx + aarx][re]) * 32768;
+         if (creal(chan_est_flp[aatx*n_rx + aarx][re]) < -1)
+           real = 0x8000;
+         else if (creal(chan_est_flp[aatx*n_rx + aarx][re]) >= 1)
+           real = 0x7FFF;
+         else
+           real = creal(chan_est_flp[aatx*n_rx + aarx][re]) * 32768;
 
-  float complex* rxdata_re =  malloc(n_rx*sizeof(float complex));
-  float complex* rxdata_mmse_re =  malloc(n_rx*sizeof(float complex));
-  float complex* Wmmse_re =  malloc(n_tx*n_rx*sizeof(float complex));
+         result[aatx*n_rx + aarx][start_point + re] = (((int32_t)imag)<<16)|((int32_t)real & 0xffff);
 
-  for (re=0;re<length; re++){
-    for (aarx=0; aarx<n_rx; aarx++){
-      rxdata_re[aarx] = rxdataF_ext_f[aarx][re];
-#ifdef DEBUG_MMSE
-      if (re==0)
-        printf("mult_mmse_rxdataF before: rxdata_re[%d] = (%f, %f)\n", aarx, creal(rxdata_re[aarx]), cimag(rxdata_re[aarx]));
+#ifdef DEBUG_FRONT_END
+        if (re == 0){
+          printf(" float_to_chan_est: chan est real = %f, chan est imag = %f\n",creal(chan_est_flp[aatx*n_rx + aarx][re]), cimag(chan_est_flp[aatx*n_rx + aarx][re]));
+          printf("float_to_chan_est: real fixed = %d, imag fixed = %d\n", real, imag);
+          printf("float_to_chan_est: ant %d, re = %d, result = %d \n", aatx*n_rx + aarx, re, result[aatx*n_rx + aarx][start_point + re]);
+        }
 #endif
-     }
-    for (aatx=0; aatx<n_tx; aatx++){
-      for (aarx=0; aarx<n_rx; aarx++){
-        Wmmse_re[aatx*n_rx + aarx] = Wmmse[aatx*n_rx + aarx][re];
+
       }
     }
-    mutl_matrix_matrix_col_based(Wmmse_re, rxdata_re, n_rx, n_tx, n_rx, 1, rxdata_mmse_re);
+  }
+}
 
-    for (aarx=0; aarx<n_rx; aarx++){
-      rxdataF_ext_f[aarx][re] = rxdata_mmse_re[aarx];
-#ifdef DEBUG_MMSE
-       if (re==0)
-        printf("mult_mmse_rxdataF after: rxdataF_ext_f[%d] = (%f, %f)\n", aarx, creal(rxdataF_ext_f[aarx][re]), cimag(rxdataF_ext_f[aarx][re]));
+
+void float_to_rxdataF(float complex **rxdataF_flp,
+                      int32_t **result,
+                      uint8_t n_tx,
+                      uint8_t n_rx,
+                      int32_t length,
+                      int32_t start_point)
+{
+  int32_t re;
+  uint8_t aarx;
+  int16_t imag;
+  int16_t real;
+
+  for (aarx = 0; aarx < n_rx; ++aarx) {
+    for (re = 0; re < length; ++re){
+      if (cimag(rxdataF_flp[aarx][re]) < -1)
+        imag = 0x8000;
+      else if (cimag(rxdataF_flp[aarx][re]) >= 1)
+        imag = 0x7FFF;
+      else
+        imag = cimag(rxdataF_flp[aarx][re]) * 32768;
+      if (creal(rxdataF_flp[aarx][re]) < -1)
+        real = 0x8000;
+      else if (creal(rxdataF_flp[aarx][re]) >= 1)
+        real = 0x7FFF;
+      else
+        real = creal(rxdataF_flp[aarx][re]) * 32768;
+
+      result[aarx][start_point + re] = (((int32_t)imag)<<16)|(((int32_t)real) & 0xffff);
+
+#ifdef DEBUG_FRONT_END
+        if (re == 0){
+          printf(" float_to_rxdataF: real = %f, imag = %f\n",creal(rxdataF_flp[aarx][re]), cimag(rxdataF_flp[aarx][re]));
+          printf("float_to_rxdataF: real fixed = %d, imag fixed = %d\n", real, imag);
+          printf("float_to_rxdataF: ant %d, re = %d, result = %d \n", aarx, re,  result[aarx][start_point + re]);
+        }
 #endif
+      }
+    }
+}
+
+
+void mult_filter_rxdataF(float complex **W,
+                         float complex **rxdataF_flp,
+                         float complex **result,
+                         uint8_t n_tx,
+                         uint8_t n_rx,
+                         int32_t length,
+                         int32_t start_point)
+{
+  int32_t re;
+  uint8_t aarx, aatx;
+
+  float complex *rxdata_re = malloc(n_rx*sizeof(float complex));
+  float complex *result_re = malloc(n_rx*sizeof(float complex));
+  float complex *W_re = malloc(n_tx*n_rx*sizeof(float complex));
+
+  for (re = 0;re < length; ++re){
+    for (aarx = 0; aarx < n_rx; ++aarx){
+      rxdata_re[aarx] = rxdataF_flp[aarx][re];
+
+#ifdef DEBUG_FRONT_END
+      if (re == 0)
+        printf("mult_filter_rxdataF before: rxdata_re[%d] = (%f, %f)\n", aarx, creal(rxdata_re[aarx]), cimag(rxdata_re[aarx]));
+#endif
+
+     }
+
+    for (aatx = 0; aatx < n_tx; ++aatx){
+      for (aarx = 0; aarx < n_rx; ++aarx){
+        W_re[aatx*n_rx + aarx] = W[aatx*n_rx + aarx][re];
+      }
+    }
+
+    mutl_matrix_matrix_col_based(W_re, rxdata_re, n_rx, n_tx, n_rx, 1, result_re);
+
+    for (aarx = 0; aarx < n_rx; ++aarx){
+      result[aarx][re] = result_re[aarx];
+
+#ifdef DEBUG_FRONT_END
+       if (re == 0)
+        printf("mult_filter_rxdataF after: result[%d] = (%f, %f)\n", aarx, creal(result[aarx][re]), cimag(result[aarx][re]));
+#endif
+
     }
   }
 
   free(rxdata_re);
-  free(rxdata_mmse_re);
-  free(Wmmse_re);
+  free(result_re);
+  free(W_re);
 }
 
-void mult_mmse_chan_est(float complex** Wmmse,
-                        float complex** dl_ch_estimates_ext_f,
-                        int n_tx,
-                        int n_rx,
-                        int length,
-                        int start_point)
+void mult_filter_chan_est(float complex **W,
+                          float complex **chan_est_flp,
+                          float complex **result,
+                          uint8_t n_tx,
+                          uint8_t n_rx,
+                          int32_t n_col_chan_est_flp,
+                          int32_t length,
+                          int32_t start_point)
 {
-  short re;
-  int aarx, aatx;
+  int32_t re;
+  uint8_t aarx, aatx;
 
-  float complex* chan_est_re =  malloc(n_tx*n_rx*sizeof(float complex));
-  float complex* chan_est_mmse_re =  malloc(n_tx*n_rx*sizeof(float complex));
-  float complex* Wmmse_re =  malloc(n_tx*n_rx*sizeof(float complex));
+  float complex* chan_est_re = malloc(n_col_chan_est_flp*n_rx*sizeof(float complex));
+  float complex* result_re = malloc(n_col_chan_est_flp*n_rx*sizeof(float complex));
+  float complex* W_re =  malloc(n_tx*n_rx*sizeof(float complex));
 
-  for (re=0;re<length; re++){
-    for (aatx=0; aatx<n_tx; aatx++){
-      for (aarx=0; aarx<n_rx; aarx++){
-        chan_est_re[aatx*n_rx + aarx] = dl_ch_estimates_ext_f[aatx*n_rx + aarx][re];
-        Wmmse_re[aatx*n_rx + aarx] = Wmmse[aatx*n_rx + aarx][re];
-#ifdef DEBUG_MMSE
+  for (re = 0;re < length; ++re){
+    for (aatx = 0; aatx < n_tx; ++aatx){
+      for (aarx = 0; aarx < n_rx; ++aarx){
+        W_re[aatx*n_rx + aarx] = W[aatx*n_rx + aarx][re];
+      }
+    }
+    for (aatx = 0; aatx < n_col_chan_est_flp; ++aatx){
+      for (aarx = 0; aarx < n_rx; ++aarx){
+        chan_est_re[aatx*n_rx + aarx] = chan_est_flp[aatx*n_rx + aarx][re];
+
+#ifdef DEBUG_FRONT_END
         if (re==0)
-        printf("mult_mmse_chan_est: chan_est_re[%d] = (%f, %f)\n", aatx*n_rx + aarx, creal(chan_est_re[aatx*n_rx + aarx]), cimag(chan_est_re[aatx*n_rx + aarx]));
+        printf("mult_filter_chan_est: chan_est_re[%d] = (%f, %f)\n", aatx*n_rx + aarx, creal(chan_est_re[aatx*n_rx + aarx]), cimag(chan_est_re[aatx*n_rx + aarx]));
+#endif
+
+      }
+    }
+
+    mutl_matrix_matrix_col_based(W_re, chan_est_re, n_rx, n_tx, n_rx, n_col_chan_est_flp, result_re);
+
+    for (aatx = 0; aatx < n_col_chan_est_flp; ++aatx){
+      for (aarx = 0; aarx < n_rx; ++aarx){
+        result[aatx*n_rx + aarx][re] = result_re[aatx*n_rx + aarx];
+#ifdef DEBUG_FRONT_END
+        if (re==0){
+          printf("mult_filter_chan_est: result[%d][%d] = (%f, %f)\n", aatx*n_rx + aarx, re, creal(result[aatx*n_rx + aarx][re]), cimag(result[aatx*n_rx + aarx][re]));
+        }
 #endif
       }
     }
-      mutl_matrix_matrix_col_based(Wmmse_re, chan_est_re, n_rx, n_tx, n_rx, n_tx, chan_est_mmse_re);
-      for (aatx=0; aatx<n_tx; aatx++){
-        for (aarx=0; aarx<n_rx; aarx++){
-          dl_ch_estimates_ext_f[aatx*n_rx + aarx][re] = chan_est_mmse_re[aatx*n_rx + aarx];
-#ifdef DEBUG_MMSE
-          if (re==0)
-          printf("mult_mmse_chan_est: dl_ch_estimates_ext_f[%d][%d] = (%f, %f)\n", aatx*n_rx + aarx, re, creal(dl_ch_estimates_ext_f[aatx*n_rx + aarx][re]), cimag(dl_ch_estimates_ext_f[aatx*n_rx + aarx][re]));
-#endif
-        }
-      }
-   }
-   free(Wmmse_re);
-   free(chan_est_re);
-   free(chan_est_mmse_re);
+  }
+  free(W_re);
+  free(chan_est_re);
+  free(result_re);
 }
-
-
 
 
 

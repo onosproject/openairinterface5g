@@ -9,7 +9,7 @@
 /* FUNCTIONS FOR LINEAR PREPROCESSING: MMSE, WHITENNING, etc*/
 void transpose(int N, float complex *A, float complex *Result);
 
-void conjugate_transpose(int N, float complex *A, float complex *Result);
+void conjugate_transpose (int rows_A, int col_A, float complex *A, float complex *Result);
 
 void H_hermH_plus_sigma2I(int N, int M, float complex *A, float sigma2, float complex *Result);
 
@@ -26,9 +26,19 @@ void mutl_matrix_matrix_row_based(float complex* M0, float complex* M1, int rows
 /* mutl_matrix_matrix_col_based performs multiplications matrix is column-oriented H[0], H[2]; H[1], H[3]*/
 void mutl_matrix_matrix_col_based(float complex* M0, float complex* M1, int rows_M0, int col_M0, int rows_M1, int col_M1, float complex* Result );
 
+void mutl_scal_matrix_matrix_col_based(float complex* M0, float complex* M1, float complex alpha, int rows_M0, int col_M0, int rows_M1, int col_M1, float complex* Result);
+
 void compute_MMSE(float complex* H, int order_H, float sigma2, float complex* W_MMSE);
 
-void compute_white_filter(float complex* H, int order_H, float sigma2, float complex* U_1, float complex* D_1);
+float sqrt_float(float x);
+
+void compute_white_filter(float complex* H0_re,
+                          float complex* H1_re,
+                          float sigma2,
+                          int n_rx,
+                          int n_tx,
+                          float complex* W_Wh_0_re,
+                          float complex* W_Wh_1_re);
 
 void mmse_processing_oai(LTE_UE_PDSCH *pdsch_vars,
                          LTE_DL_FRAME_PARMS *frame_parms,
@@ -57,65 +67,71 @@ void rxdataF_to_float(int32_t **rxdataF_ext,
 
 void chan_est_to_float(int32_t **dl_ch_estimates_ext,
                        float complex **dl_ch_estimates_ext_f,
+                       uint8_t n_tx,
+                       uint8_t n_rx,
+                       int32_t length,
+                       int32_t start_point);
+
+void float_to_chan_est(float complex **chan_est_flp,
+                       int32_t **result,
                        int n_tx,
                        int n_rx,
                        int length,
                        int start_point);
 
-void float_to_chan_est(int32_t **dl_ch_estimates_ext,
-                      float complex **dl_ch_estimates_ext_f,
-                      int n_tx,
-                      int n_rx,
-                      int length,
-                      int start_point);
+void float_to_rxdataF(float complex **rxdataF_flp,
+                      int32_t **result,
+                      uint8_t n_tx,
+                      uint8_t n_rx,
+                      int32_t length,
+                      int32_t start_point);
 
-void float_to_rxdataF(int32_t **rxdataF_ext,
-                      float complex **rxdataF_f,
-                      int n_tx,
-                      int n_rx,
-                      int length,
-                      int start_point);
+void mult_filter_chan_est(float complex **W,
+                          float complex **chan_est_flp,
+                          float complex **result,
+                          uint8_t n_tx,
+                          uint8_t n_rx,
+                          int32_t n_col_chan_est_flp,
+                          int32_t length,
+                          int32_t start_point);
 
-void mult_mmse_rxdataF(float complex** Wmmse,
-                       float complex** rxdataF_ext_f,
-                       int n_tx,
-                       int n_rx,
-                       int length,
-                       int start_point);
+void mult_filter_rxdataF(float complex **W,
+                         float complex **rxdataF_flp,
+                         float complex **result,
+                         uint8_t n_tx,
+                         uint8_t n_rx,
+                         int32_t length,
+                         int32_t start_point);
 
-void mult_mmse_chan_est(float complex** Wmmse,
-                        float complex** dl_ch_estimates_ext_f,
-                        int n_tx,
-                        int n_rx,
-                        int length,
-                        int start_point);
+void mmse_processing_core(int32_t **rxdataF_ext,
+                          int32_t **dl_ch_estimates_ext,
+                          int sigma2,
+                          int n_tx,
+                          int n_rx,
+                          int length,
+                          int start_point);
 
-void  mmse_processing_core(int32_t **rxdataF_ext,
-                           int32_t **dl_ch_estimates_ext,
-                           int sigma2,
-                           int n_tx,
-                           int n_rx,
-                           int length,
-                           int start_point);
+void mmse_processing_core_flp(float complex** rxdataF_flp,
+                              float complex **chan_est_flp,
+                              int32_t **rxdataF_filt_fp,
+                              int32_t **chan_est_eff_fp,
+                              float noise_power,
+                              uint8_t n_tx,
+                              uint8_t n_rx,
+                              int32_t length,
+                              int32_t start_point);
 
-void mmse_processing_core_flp(float complex** rxdataF_ext_flcpx,
-                              float complex **H,
-                              int32_t **rxdataF_ext,
-                              int32_t **dl_ch_estimates_ext,
-                              float sigma2,
-                              int n_tx,
-                              int n_rx,
-                              int length,
-                              int start_point);
-
-void whitening_processing_core_flp(float complex** rxdataF_ext_flcpx,
-                                   float complex **H,
-                                   int32_t **rxdataF_ext,
-                                   int32_t **dl_ch_estimates_ext,
+void whitening_processing_core_flp(float complex **rxdataF_flp,
+                                   float complex **chan_est_flp_0,
+                                   float complex **chan_est_flp_1,
+                                   int32_t **rxdataF_filt_fp_0,
+                                   int32_t **rxdataF_filt_fp_1,
+                                   int32_t **chan_est_eff_fp_0,
+                                   int32_t **chan_est_eff_fp_1,
                                    float sigma2,
-                                   int n_tx,
-                                   int n_rx,
-                                   int length,
-                                   int start_point);
+                                   uint8_t n_tx,
+                                   uint8_t n_rx,
+                                   int32_t length,
+                                   int32_t start_point);
 
-float sqrt_float(float x, float sqrt_x);
+
