@@ -1004,8 +1004,7 @@ openair0_timestamp current_eNB_rx_timestamp[NUMBER_OF_eNB_MAX][MAX_NUM_CCs];
 openair0_timestamp current_UE_rx_timestamp[NUMBER_OF_UE_MAX][MAX_NUM_CCs];
 openair0_timestamp last_eNB_rx_timestamp[NUMBER_OF_eNB_MAX][MAX_NUM_CCs];
 openair0_timestamp last_UE_rx_timestamp[NUMBER_OF_UE_MAX][MAX_NUM_CCs];
-static int first_run=0;
-  static int count=0;
+
 int eNB_trx_start(openair0_device *device) {
   return(0);
 }
@@ -1041,22 +1040,24 @@ int UE_trx_set_gains(openair0_device *device, openair0_config_t *openair0_cfg) {
 
 extern pthread_mutex_t subframe_mutex;
 extern int subframe_eNB_mask,subframe_UE_mask;
-
+static int first_run=0;
+//static int count=0;
+//static int sum=0;
 int eNB_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void **buff, int nsamps, int cc)
 {
-  if (!first_run)
-  {
-     first_run=1;
-  } 
-  if (count==500)
-  {
+  //if (!first_run)
+  //{
+  //   first_run=1;
+  //} 
+  //if (count==1000)
+  //{
      //Use ./oaisim -q option to enable the oai performance profiler.
-     count=0;
-     print_opp_meas_oaisim ();
-     reset_opp_meas_oaisim ();
-  }
-  count++;
-
+     //count=0;
+     //sum=0;
+     //print_opp_meas_oaisim ();
+     //reset_opp_meas_oaisim ();
+  //}
+  //count++;
   int ret = nsamps;
   int eNB_id = device->Mod_id;
   int CC_id  = device->CC_id;
@@ -1125,7 +1126,7 @@ int eNB_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void *
 		if (is_prach_subframe(&PHY_vars_UE_g[UE_id][CC_id]->frame_parms,frame,subframe) && PHY_vars_UE_g[UE_id][CC_id]->generate_prach)
 		{
 			//clock_t start=clock();
-			printf("subframe UL PRACH: %d\n",subframe);
+			//printf("subframe UL PRACH: %d\n",subframe);
 			start_meas(&UE2eNB[UE_id][eNB_id][CC_id]->UL_PRACH_channel_freq);
 			do_UL_sig_freq_prach(UE2eNB,
 				enb_data,
@@ -1146,6 +1147,7 @@ int eNB_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void *
 		}
 	}
 	start_meas(&UE2eNB[0][eNB_id][CC_id]->UL_channel_freq);
+	//clock_t start=clock();
         do_UL_sig_freq(UE2eNB,
                 enb_data,
                 ue_data,
@@ -1156,6 +1158,9 @@ int eNB_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void *
                 eNB_id,
                 CC_id);
 	stop_meas(&UE2eNB[0][eNB_id][CC_id]->UL_channel_freq);
+        /*clock_t stop=clock();
+  	printf("do_UL_sig time is %f s, AVERAGE time is %f s, count %d, sum %d, start %d, stop %d\n",(float) (stop-start)/CLOCKS_PER_SEC,(float) (sum+stop-start)/(count*CLOCKS_PER_SEC),count,sum+stop-start,start,stop);
+  	sum=(sum+stop-start);*/
       }
       else
       {
@@ -1177,13 +1182,11 @@ int eNB_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void *
   }
   
   last_eNB_rx_timestamp[eNB_id][CC_id] = last;
-
   return ret;
 }
 
 int UE_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void **buff, int nsamps, int cc)
 {
-
   int ret = nsamps;
   int UE_id = device->Mod_id;
   int CC_id  = device->CC_id;
@@ -1247,6 +1250,7 @@ int UE_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void **
       LOG_D(PHY,"UE_trx_read generating DL subframe %d (Ts %llu, current TS %llu)\n",
             subframe,(unsigned long long)*ptimestamp,
             (unsigned long long)current_UE_rx_timestamp[UE_id][CC_id]);
+
       if (do_ofdm_mod)
       {
 	start_meas(&eNB2UE[0][UE_id][CC_id]->DL_channel_freq);
@@ -1260,10 +1264,10 @@ int UE_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void **
                 UE_id,
                 CC_id);
         stop_meas(&eNB2UE[0][UE_id][CC_id]->DL_channel_freq);
-  	/*clock_t stop=clock();
-  	printf("do_DL_sig time is %f s, AVERAGE time is %f s, count %d, sum %e\n",(float) (stop-start)/CLOCKS_PER_SEC,(float) (sum+stop-start)/(count*CLOCKS_PER_SEC),count,sum+stop-start);
-  	sum=(sum+stop-start);
-        count++;*/
+        /*clock_t stop=clock();
+  	printf("do_DL_sig time is %f s, AVERAGE time is %f s, count %d, sum %e\n",(float) (stop-start)/CLOCKS_PER_SEC,(float) (sum+stop-start)/(count_d*CLOCKS_PER_SEC),count_d,sum_d+stop-start);
+  	sum_d=(sum_d+stop-start);
+        count_d++;*/
 	//stop_meas(&dl_chan_stats_f);
 	//print_meas(&dl_chan_stats_f,"DL_Channel Stats Frequency Domain",&dl_chan_stats_f,&dl_chan_stats_f);
       }

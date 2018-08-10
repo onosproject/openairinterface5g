@@ -632,7 +632,7 @@ l2l1_task (void *args_p)
   }
   
   start_meas (&oaisim_stats);
-
+  //printf("start meas oaisim_stats\n");
   for (frame = 0;
        (l2l1_state != L2L1_TERMINATED) && 
 	 ((oai_emulation.info.n_frames_flag == 0) ||
@@ -713,8 +713,9 @@ l2l1_task (void *args_p)
     update_ocm ();
 
     for (sf = 0; sf < 10; sf++) {
-      LOG_D(EMU,"************************* Subframe %d\n",sf);
 
+      LOG_D(EMU,"************************* Subframe %d\n",sf);
+      //printf("start meas oaisim_stats_f\n");
       start_meas (&oaisim_stats_f);
 
       wait_for_slot_isr ();
@@ -1070,8 +1071,9 @@ l2l1_task (void *args_p)
 			(frame_parms[0]->Ncp == 0) ? 1920 : 1728, 1,
 			4);
 	}
-    
+        //printf("oaisim_stats_f is %e us\n",get_time_meas_us(&oaisim_stats_f));
 	stop_meas (&oaisim_stats_f);
+        //printf("stop meas oaisim_stats_f\n");
       } // SUBFRAME INNER PART
 
 
@@ -1156,8 +1158,9 @@ l2l1_task (void *args_p)
 #endif
     
   } // frame loop
-
+  //printf("oaisim_stats is %e us\n",get_time_meas_us(&oaisim_stats));
   stop_meas (&oaisim_stats);
+  //printf("stop meas oaisim_stats\n");
   oai_shutdown ();
   
 #ifdef PRINT_STATS
