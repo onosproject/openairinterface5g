@@ -16,7 +16,7 @@ data storage. */
 #include <lapacke_utils.h>
 #include <lapacke.h>
 
-//#define DEBUG_PREPROC
+#define DEBUG_PREPROC
 
 
 void transpose (int N, float complex *A, float complex *Result)
@@ -241,15 +241,15 @@ void mutl_scal_matrix_matrix_col_based(float *M0, float complex *M1, float alpha
   float complex beta = 0.0;
   int i;
 
+  // Convert float M0 into complex float D_0_complex required by cblas_cgemm
   float complex *D_0_complex = calloc(rows_M0*col_M0, sizeof(float complex));
-  for(i = 0; i < rows_M0*col_M0; ++i){
+  for(i = 0; i < rows_M0*col_M0; ++i)
+  {
     D_0_complex[i] = M0[i] + I*0.00001;
 #ifdef DEBUG_PREPROC
     printf("mutl_scal_matrix_matrix_col_based: D_0_complex[%d] = (%f, %f)\n", i , creal(D_0_complex[i]), cimag(D_0_complex[i]));
 #endif
-
   }
-
 
 #ifdef DEBUG_PREPROC
   printf("mutl_scal_matrix_matrix_col_based: alpha = %f\n", alpha);
@@ -268,6 +268,8 @@ void mutl_scal_matrix_matrix_col_based(float *M0, float complex *M1, float alpha
   for(i = 0; i < rows_M0*col_M1; ++i)
     printf("mutl_scal_matrix_matrix_col_based: result[%d] = (%f + i%f)\n", i , creal(Result[i]), cimag(Result[i]));
 #endif
+
+  free(D_0_complex);
 }
 
 
@@ -333,6 +335,11 @@ void compute_white_filter(float complex* H0_re,
   float *D_0_re_inv_sqrt = calloc(n_rx*n_tx, sizeof(float));
   float *D_1_re_inv_sqrt = calloc(n_rx*n_tx, sizeof(float));
 
+  // Whitening filter can be computed using the following algorithm:
+  // 1. Compute covariance of the colored noise: R = HH' + sigma2I.
+  // 2. Compute eigen value decomposition of R = UDU'.
+  // 3. W_wh = sigma sqrt(inv(D))U'.
+  // 4. This function computes W_wh for both branches.
 
 #ifdef DEBUG_PREPROC
   printf("compute_white_filter: sigma2 = %f\n", sigma2);
@@ -342,6 +349,8 @@ void compute_white_filter(float complex* H0_re,
 }
 #endif
 
+
+  // 1. Compute covariance of the colored noise: R = HH' + sigma2I.
   HH_herm_plus_sigma2I(n_rx, n_tx/2, H1_re, sigma2, R_corr_col_n_0_re);
   HH_herm_plus_sigma2I(n_rx, n_tx/2, H0_re, sigma2, R_corr_col_n_1_re);
 
@@ -352,22 +361,24 @@ void compute_white_filter(float complex* H0_re,
   }
 
 #endif
-
+  // 2. Compute eigen value decomposition of R = UDU'.
   eigen_vectors_values(n_rx, R_corr_col_n_0_re, U_0_re, D_0_re);
   eigen_vectors_values(n_rx, R_corr_col_n_1_re, U_1_re, D_1_re);
 
-  #ifdef DEBUG_PREPROC
+#ifdef DEBUG_PREPROC
   for(i=0;i<n_rx*n_tx;i++){
     printf("compute_white_filter: U_0_re[%d] = (%f + i%f)\n", i , creal(U_0_re[i]), cimag(U_0_re[i]));
     printf("compute_white_filter: D_0_re[%d] = (%f + i%f)\n", i , creal(D_0_re[i]), cimag(D_0_re[i]));
 }
 #endif
 
+  // 3. Compute eigen value decomposition of R = UDU'.
+
   conjugate_transpose(n_rx, n_tx, U_0_re, U_0_herm_re);
   conjugate_transpose(n_rx, n_tx, U_1_re, U_1_herm_re);
 
 
-    #ifdef DEBUG_PREPROC
+#ifdef DEBUG_PREPROC
   for(i = 0;i < n_rx*n_tx; i++){
     printf("compute_white_filter: U_0_herm_re[%d] = (%f + i%f)\n", i , creal(U_0_herm_re[i]), cimag(U_0_herm_re[i]));
   }
@@ -375,22 +386,20 @@ void compute_white_filter(float complex* H0_re,
 
 
   sigma = (float)(sqrt((double)(sigma2)));
-  if (sigma <= 0.00001){
-      sigma = 0.00001;
+  if (sigma <= 0.0001){
+      sigma = 0.0001;
     }
 
-    //The inverse of a diagonal matrix is obtained by replacing each element in the diagonal with //its reciprocal.
-    //A square root of a diagonal matrix is given by the diagonal matrix, whose diagonal entries are //just the square
-    //roots of the original matrix.
-    //printf ("This linear preprocessing is line %d.\n", __LINE__);
+  //The inverse of a diagonal matrix is obtained by replacing each element in the diagonal with //its reciprocal. A square root of a diagonal matrix is given by the diagonal matrix, whose //diagonal entries are just the square roots of the original matrix. However, if SNR is high,
+  //the diagonal elements of D are very small, and inverse is not always possible. We thus appy a threshold to avoid too low values.
 
   for (i = 0; i < n_rx*n_tx; i += (n_rx + 1)){
 
-    if (D_0_re[i] <= 0.00001){
-      D_0_re[i] = 0.00001;
+    if (D_0_re[i] <= 0.0001){
+      D_0_re[i] = 0.0001;
     }
-    if (D_1_re[i] <= 0.00001){
-      D_1_re[i] = 0.00001;
+    if (D_1_re[i] <= 0.0001){
+      D_1_re[i] = 0.0001;
     }
 
     D_0_re_inv_sqrt[i] = sqrt_float(1/D_0_re[i]);
