@@ -1,66 +1,12 @@
-/*
- * Licensed to the OpenAirInterface (OAI) Software Alliance under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.0  (the "License"); you may not use this file
- * except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.openairinterface.org/?page_id=698
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *-------------------------------------------------------------------------------
- * For more information about the OpenAirInterface (OAI) Software Alliance:
- *      contact@openairinterface.org
- */
+
 /*! \file eNB_scheduler_RA_NB_IoT.c
  * \brief functions used in Random access scheduling 
- * \author  NTUST BMW Lab./Calvin HSU
- * \date 2017 - 2018
- * \email: kai-hsiang.hsu@eurecom.fr
+ * \author  NTUST BMW Lab./
+ * \date 2017
+ * \email: 
  * \version 1.0
  *
  */
-
-
-#include "assertions.h"
-#include "platform_types.h"
-#include "PHY/defs.h"
-#include "PHY/extern.h"
-#include "msc.h"
-
-#include "SCHED/defs.h"
-#include "SCHED/extern.h"
-
-#include "LAYER2/MAC/defs.h"
-#include "LAYER2/MAC/extern.h"
-
-#include "LAYER2/MAC/proto.h"
-#include "UTIL/LOG/log.h"
-#include "UTIL/LOG/vcd_signal_dumper.h"
-#include "UTIL/OPT/opt.h"
-#include "OCG.h"
-#include "OCG_extern.h"
-
-#include "RRC/LITE/extern.h"
-#include "RRC/L2_INTERFACE/openair_rrc_L2_interface.h"
-
-//#include "LAYER2/MAC/pre_processor.c"
-#include "pdcp.h"
-
-#if defined(ENABLE_ITTI)
-# include "intertask_interface.h"
-#endif
-
-#include "SIMULATION/TOOLS/defs.h" // for taus
-
-#include "T.h"
-///////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "defs_NB_IoT.h"
 #include "proto_NB_IoT.h"
@@ -146,7 +92,6 @@ uint16_t find_suit_i_delay(uint32_t rmax, uint32_t r, uint32_t dci_candidate){
 
 
 void schedule_rar_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, int abs_subframe){
-//    printf_FUNCTION_IN("schedule rar");
 	RA_TEMPLATE_NB_IoT *msg2_nodes = mac_inst->RA_msg2_list.head;
 	//RA_TEMPLATE_NB_IoT *msg3_list_tail = mac_inst->RA_msg3_list.tail;
 	RA_TEMPLATE_NB_IoT *migrate_node;
@@ -282,11 +227,6 @@ void schedule_rar_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, int abs_subframe){
 		    dci_result->R_harq = 0;
 		    dci_result->next = (schedule_result_t *)0;
 		    dci_result->DCI_pdu = (void *)dci_n1_rar;
-		    //dci_result->printf_str = &str1[0];
-		    //dci_result->dl_sdly = msg2_subframe - dci_end_subframe;
-			//dci_result->ul_sdly = msg3_subframe - msg2_end_subframe;
-			//dci_result->num_sf = msg2_end_subframe - msg2_subframe+1;
-			
 			//	for msg2
 		    msg2_result->output_subframe = msg2_first_subframe;//msg2_subframe;
 		    msg2_result->end_subframe = msg2_end_subframe;
@@ -301,10 +241,7 @@ void schedule_rar_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, int abs_subframe){
 		    msg2_result->R_harq = 0;
 		    msg2_result->next = (schedule_result_t *)0;
 		    msg2_result->DCI_pdu = (void *)dci_n1_rar;
-			//msg2_result->printf_str = str2;
 			msg2_result->rar_buffer = msg2_nodes->rar_buffer;
-			//msg2_result->dl_sdly = -1;
-			//msg2_result->ul_sdly = -1;
 
 			//	for msg3(fake DCI N0)
 			dci_n0->type = 0;
@@ -374,8 +311,6 @@ void schedule_rar_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, int abs_subframe){
 	if(flag==1)
 		LOG_D(MAC,"[%04d][RA scheduler][MSG2] failed number: %d\n", abs_subframe-1, fail_num);
 	
-	
-	//printf_FUNCTION_OUT("schedule rar");
 	return ;
 }
 
@@ -607,13 +542,6 @@ void schedule_msg3_retransimission_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, int abs
 			    dci_result->R_harq = 0;
 			    dci_result->next = (schedule_result_t *)0;
 			    dci_result->DCI_pdu = (void *)dci_n0_msg3;
-//		        dci_result->printf_str = str6;
-	           // dci_result->dl_sdly = msg3_subframe - dci_end_subframe + 1;
-			//	dci_result->ul_sdly = -1;
-				//dci_result->num_sf = -1;
-				//dci_result->harq_round = msg3_nodes->msg3_retransmit_count;
-				
-       		    //simulate_rx(&simulate_rx_msg3_list, msg3_nodes->ue_rnti, npusch_info.sf_start);
 
 			    //	fill dci resource
 			    fill_resource_DL(mac_inst, dci_node, dci_first_subframe, dci_end_subframe, dci_result);
@@ -699,7 +627,6 @@ void receive_msg4_ack_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, rnti_t rnti){
 
 //	msg4 scheduling: both first time or retransmit would be scheduled in this function(msg4_list).
 void schedule_msg4_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, int abs_subframe){
-    //printf_FUNCTION_IN("[SCHEDULER RA MSG4]");
 	RA_TEMPLATE_NB_IoT *msg4_nodes = mac_inst->RA_msg4_list.head;//, *migrate_node;
 
 	available_resource_DL_t *dci_node, *msg4_node;
@@ -761,8 +688,6 @@ void schedule_msg4_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, int abs_subframe){
 
 		if(msg4_nodes->wait_msg4_ack == 0){
 			fail=0;
-			
-			//printf_FUNCTION_IN("[SCHEDULER RA MSG4 DCI]");
 			//	check dci resource
 			rmax = mac_inst->rrc_config.mac_NPRACH_ConfigSIB[msg4_nodes->ce_level].mac_npdcch_NumRepetitions_RA_NB_IoT;//32;
     	    num_candidate = 8;//rmax / r;
@@ -790,9 +715,6 @@ void schedule_msg4_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, int abs_subframe){
 				//failed
 				fail|=1;
 			}
-			//printf_FUNCTION_OUT("[SCHEDULER RA MSG4 DCI]");
-			
-			//printf_FUNCTION_IN("[SCHEDULER RA MSG4 PAYLOAD]");
 			//	check msg4 resource
 			rep = dl_rep[msg4_nodes->ce_level];
 			num_msg4_subframe = 1*rep;   //  8 subframes
@@ -810,9 +732,7 @@ void schedule_msg4_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, int abs_subframe){
 				//failed
 				fail|=2;
 			}
-            //printf_FUNCTION_OUT("[SCHEDULER RA MSG4 PAYLOAD]");
-            
-            //printf_FUNCTION_IN("[SCHEDULER RA MSG4 HARQ]");
+
             rep = mac_inst->rrc_config.mac_NPRACH_ConfigSIB[msg4_nodes->ce_level].mac_numRepetitionsPerPreambleAttempt_NB_IoT;
 			for(HARQ_delay=0;HARQ_delay<4;++HARQ_delay){
 	            end_flagHARQ=Check_UL_resource(msg4_end_subframe+get_HARQ_delay(1, HARQ_delay), rep, &HARQ_info, 0, 1);	//	RA_template->R
@@ -826,7 +746,6 @@ void schedule_msg4_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, int abs_subframe){
 			if(4 == HARQ_delay){
 				fail |= 4;
 			}
-			//printf_FUNCTION_OUT("[SCHEDULER RA MSG4 HARQ]");
 
 			if(0==fail){
 			    LOG_D(MAC,"[%04d][RA scheduler][MSG4][CE%d] rnti: %d scheduling success\n", abs_subframe-1, msg4_nodes->ce_level, msg4_nodes->ue_rnti);
@@ -857,10 +776,6 @@ void schedule_msg4_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, int abs_subframe){
 				dci_result->R_harq = 0;
 				dci_result->next = (schedule_result_t *)0;
 				dci_result->DCI_pdu = (void *)dci_n1_msg4;
-				//dci_result->dl_sdly = msg4_subframe - dci_end_subframe;
-				//dci_result->ul_sdly = harq_subframe - msg4_end_subframe;
-				//dci_result->num_sf = msg4_end_subframe - msg4_subframe+1;
-				//dci_result->harq_round = msg4_nodes->msg4_retransmit_count;
 				
 				//	for msg4
 				msg4_result = (schedule_result_t *)malloc(sizeof(schedule_result_t));
@@ -876,7 +791,6 @@ void schedule_msg4_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, int abs_subframe){
 		    	msg4_result->R_harq = 0;
 				msg4_result->next = (schedule_result_t *)0;
 				msg4_result->DCI_pdu = (void *)dci_n1_msg4;
-				//msg4_result->harq_round = msg4_nodes->msg4_retransmit_count;
 
 				harq_result = (schedule_result_t *)malloc(sizeof(schedule_result_t));
 				harq_result->rnti = msg4_nodes->ue_rnti;
@@ -890,18 +804,6 @@ void schedule_msg4_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, int abs_subframe){
 			    harq_result->DCI_release = 1;
 			    harq_result->channel = NPUSCH;
 			    harq_result->next = (schedule_result_t *)0;
-				
-				/*if(msg4_nodes->msg4_retransmit_count==0){
-			        dci_result->printf_str = str3;
-			        msg4_result->printf_str = str4;
-			        harq_result->printf_str = str5;
-                }else{
-                    dci_result->printf_str = str8;
-			        msg4_result->printf_str = str9;
-			        harq_result->printf_str = str10;
-                }*/
-				
-				//simulate_rx(&simulate_rx_msg4_list, msg4_nodes->ue_rnti, harq_subframe);
 				
 				LOG_D(MAC,"[%04d][RA scheduler][MSG4] UE:%x MSG4DCI %d-%d MSG4 %d-%d HARQ %d-%d\n", abs_subframe-1, msg4_nodes->ue_rnti, dci_first_subframe, dci_end_subframe, msg4_first_subframe, msg4_end_subframe, HARQ_info.sf_start, HARQ_info.sf_end);
 	            LOG_D(MAC,"[%04d][RA scheduler][MSG4][CE%d] MSG4 DCI %d-%d MSG4 %d-%d HARQ %d-%d\n", abs_subframe-1, msg4_nodes->ce_level, dci_first_subframe, dci_end_subframe, msg4_first_subframe, msg4_end_subframe, HARQ_info.sf_start, HARQ_info.sf_end);
@@ -933,12 +835,10 @@ void schedule_msg4_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, int abs_subframe){
         msg4_nodes = msg4_nodes->next;
 	}
 	
-	//printf_FUNCTION_OUT("[SCHEDULER RA MSG4]");
 	return ;
 }
 
 void schedule_RA_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst){
-    //printf_FUNCTION_IN("[SCHEDULER RA]");
     uint32_t schedule_subframe = mac_inst->current_subframe + 1;
     schedule_subframe = schedule_subframe % 1048576;    //  20 bits, 10 bits + 10 bits
     
@@ -947,7 +847,6 @@ void schedule_RA_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst){
     schedule_rar_NB_IoT(mac_inst, schedule_subframe);
 	schedule_msg4_NB_IoT(mac_inst, schedule_subframe);
 
-    //printf_FUNCTION_OUT("[SCHEDULER RA]");
 	return ;
 }
 
@@ -1000,55 +899,5 @@ void fill_rar_NB_IoT(
 	rar[5] = (uint8_t)(ra_template->ue_rnti&0xff);
 }
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////// NB-IoT testing /////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////
-
-void initiate_ra_proc_NB_IoT(module_id_t module_idP, int CC_id,frame_t frameP, uint16_t preamble_index,int16_t timing_offset,uint8_t sect_id,sub_frame_t subframeP,
-                      uint8_t f_id)
-{
-
-  uint8_t i;
-  RA_TEMPLATE *RA_template = (RA_TEMPLATE *)&eNB_mac_inst[module_idP].common_channels[CC_id].RA_template[0];
-
-  printf("xxxxxxxxxxxxxxxx NB-IoT xxxxxxxxxxxxxx");
-  for (i=0; i<NB_RA_PROC_MAX; i++) {
-    if (RA_template[i].RA_active==FALSE &&
-        RA_template[i].wait_ack_Msg4 == 0) {
-     // int loop = 0;
-      RA_template[i].RA_active=TRUE;
-      RA_template[i].generate_rar=1;
-      RA_template[i].generate_Msg4=0;
-      RA_template[i].wait_ack_Msg4=0;
-      RA_template[i].timing_offset=timing_offset;
-      RA_template[i].RA_rnti = 1 + (frameP/4);
-      RA_template[i].preamble_index = preamble_index;
-      /* TODO: find better procedure to allocate RNTI */
-    /*  do {
-        RA_template[i].rnti = taus();
-        loop++;
-      } while (loop != 100 &&
-               // TODO: this is not correct, the rnti may be in use without
-               // being in the MAC yet. To be refined.
-                //
-      ///         !(find_UE_id(module_idP, RA_template[i].rnti) == -1 &&
-                 // 1024 and 60000 arbirarily chosen, not coming from standard //
-   //              RA_template[i].rnti >= 1024 && RA_template[i].rnti < 60000));
-      if (loop == 100) {
-       printf("%s:%d:%s: FATAL ERROR! contact the authors\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
-
-      RA_template[i].RA_rnti = 1 + (frameP/4);
-      RA_template[i].preamble_index = preamble_index;   /// preamble_index=000000;
-
-      LOG_D(MAC,"[eNB %d][RAPROC] CC_id %d Frame %d Activating RAR generation for process %d, rnti %x, RA_active %d\n",
-            module_idP,CC_id,frameP,i,RA_template[i].rnti,
-            RA_template[i].RA_active);*/
-
-      return;
-    }
-  }
-
-  LOG_E(MAC,"[eNB %d][RAPROC] FAILURE: CC_id %d Frame %d Initiating RA procedure for preamble index %d\n",module_idP,CC_id,frameP,preamble_index);
-}
 
 

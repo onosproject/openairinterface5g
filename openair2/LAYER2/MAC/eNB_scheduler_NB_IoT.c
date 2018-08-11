@@ -1,28 +1,9 @@
-/*
- * Licensed to the OpenAirInterface (OAI) Software Alliance under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.0  (the "License"); you may not use this file
- * except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.openairinterface.org/?page_id=698
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *-------------------------------------------------------------------------------
- * For more information about the OpenAirInterface (OAI) Software Alliance:
- *      contact@openairinterface.org
- */
+
 /*! \file eNB_scheduler_NB_IoT.c
  * \brief top level of the scheduler, it scheduled in pdcch period based.
- * \author  NTUST BMW Lab./Nick HO, Xavier LIU, Calvin HSU
- * \date 2017 - 2018
- * \email: nick133371@gmail.com, sephiroth7277@gmail.com , kai-hsiang.hsu@eurecom.fr
+ * \author  NTUST BMW Lab./
+ * \date 2017
+ * \email: 
  * \version 1.0
  *
  */
@@ -37,27 +18,12 @@
 #define flag_css_type2 0x2
 #define flag_uss_v	   0x4
 
-#if 0	//	disable now
-#define flag_css_type1_ce0 0x1
-#define flag_css_type1_ce1 0x2
-#define flag_css_type1_ce2 0x4
-
-#define flag_css_type2_ce0 0x8
-#define flag_css_type2_ce1 0x10
-#define flag_css_type2_ce2 0x20
-
-#define flag_uss_v	   0x40
-#endif
 
 //	common
 #define flag_mib      0x1
 #define flag_sib1     0x2
 #define flag_npss     0x4
 #define flag_nsss     0x8
-
-
-#define num_flags 2
-//	type2 css, type1 css
 
 
 //extern BCCH_DL_SCH_Message_NB_IoT_t SIB;
@@ -70,6 +36,7 @@ void eNB_scheduler_computing_flag_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, uint32_t
     
     //NPRACH_Parameters_NB_IoT_r13_t **type2_css_info = SIB.message.choice.c1.choice.systemInformation_r13.criticalExtensions.choice.systemInformation_r13.sib_TypeAndInfo_r13.choice.sib2_r13.radioResourceConfigCommon_r13.nprach_Config_r13.nprach_ParametersList_r13.list.array;
     
+    //	fixed scheduling part (e.g. MIB, NPSS, NSSS, SIB1)
 	if(subframe == 0){
 		*common_flags |= flag_mib;
 	}else if(subframe == 5){
@@ -81,7 +48,7 @@ void eNB_scheduler_computing_flag_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, uint32_t
 	}
 
 /*	uint32_t type2_css_pp[3] = { 	type2_css_info[0]->npdcch_NumRepetitions_RA_r13*type2_css_info[0]->npdcch_StartSF_CSS_RA_r13,		type2_css_info[1]->npdcch_NumRepetitions_RA_r13*type2_css_info[1]->npdcch_StartSF_CSS_RA_r13,		type2_css_info[2]->npdcch_NumRepetitions_RA_r13*type2_css_info[2]->npdcch_StartSF_CSS_RA_r13	};*/
-	uint32_t type2_css_pp[3] = {256, 256, 256};
+	uint32_t type2_css_pp[3] = {256, 256, 256};	//	TODO RRC config should get from structure
 	uint32_t start_subframe;
 	for(i=0; i<1; ++i){	//	only CE0
 		start_subframe = 0;						
@@ -119,7 +86,7 @@ void eNB_scheduler_computing_flag_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, uint32_t
 		}
 	}
 	
-	*max_subframe = max;
+	*max_subframe = max;	//	the maximum subframe to be extend
 }
 
 /*function description:
@@ -129,16 +96,13 @@ void eNB_scheduler_computing_flag_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, uint32_t
 void eNB_dlsch_ulsch_scheduler_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, uint32_t abs_subframe){
 	
 	int i;
-	uint8_t MIB_flag,SIB1_flag ;
+	uint8_t tx_mib=0, tx_sib1=0;
 	uint32_t scheduler_flags, max_subframe, common_flags;
 	/*Check this subframe should schedule something, set the flag*/
 	scheduler_flags = 0;
 	common_flags = 0;
-	MIB_flag = 0;
-	SIB1_flag = 0;
 
 	uint32_t h,f,sf;
-	int a;
 	eNB_scheduler_computing_flag_NB_IoT(mac_inst, abs_subframe, &scheduler_flags, &common_flags, &max_subframe);
 
 	if(scheduler_flags > 0){
@@ -147,7 +111,7 @@ void eNB_dlsch_ulsch_scheduler_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, uint32_t ab
 	
 	maintain_available_resource(mac_inst);
 
-	if((abs_subframe % rachperiod[4]) == rachstart[0]){
+	if((abs_subframe % rachperiod[4]) == rachstart[0]){	//TODO, configuration should be pass by configuration module
 		add_UL_Resource();
 	}
 
@@ -159,6 +123,7 @@ void eNB_dlsch_ulsch_scheduler_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, uint32_t ab
 
 	//Check if type1 searching space scheduling
 	if((scheduler_flags&flag_css_type1)>0){
+		//	paging, direct indication
 		scheduler_flags &= ~(flag_css_type1);
  	}
  	//The scheduling time is current subframe + 1
@@ -175,22 +140,22 @@ void eNB_dlsch_ulsch_scheduler_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, uint32_t ab
 		}
 	}
 	
-	if(common_flags ==  flag_mib)
-		MIB_flag = 1;
-	if(common_flags == flag_sib1)
-		SIB1_flag = 1;
+	if(common_flags&flag_mib){
+		tx_mib = 1;
+	}
+	if(common_flags&flag_sib1){
+		tx_sib1 = 1;
+	}
+
 	convert_system_number(abs_subframe, &h, &f, &sf);
 
-	a = output_handler(mac_inst, (module_id_t)0, 0, h, f, sf, MIB_flag, SIB1_flag, abs_subframe);
-
-	if(a != 0){
+	if(0 != output_handler(mac_inst, (module_id_t)0, 0, h, f, sf, tx_mib, tx_sib1, abs_subframe)){
 		LOG_D(MAC,"output handler error\n");
 	}
 }
 
 void schedule_uss_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_inst, uint32_t subframe, uint32_t frame, uint32_t hypersfn, int index_ss)
 {
-//	printf_FUNCTION_IN("[USS]");
 
 	//SCHEDULE_NB_IoT_t *scheduler =  &eNB->scheduler;
 	mac_inst->scheduling_flag.flag_uss[0]=1;
@@ -245,6 +210,5 @@ void schedule_uss_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_inst, u
 
     	UE_ID = UE_template_temp->next;
   	}
-//  	printf_FUNCTION_OUT("[USS]");
 }
 

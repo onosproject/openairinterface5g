@@ -1,30 +1,10 @@
-/*
- * Licensed to the OpenAirInterface (OAI) Software Alliance under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.0  (the "License"); you may not use this file
- * except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.openairinterface.org/?page_id=698
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *-------------------------------------------------------------------------------
- * For more information about the OpenAirInterface (OAI) Software Alliance:
- *      contact@openairinterface.org
- */
+
 /*! \file main_NB_IoT.c
  * \brief top init of Layer 2
- * \author  NTUST BMW Lab./Nick HO, Xavier LIU, Calvin HSU
- * \date 2017 - 2018
- * \email: nick133371@gmail.com, sephiroth7277@gmail.com , kai-hsiang.hsu@eurecom.fr
+ * \author  NTUST BMW LAB./
+ * \date 2017
  * \version 1.0
- *
+ * \email: 
  */
 
 
@@ -71,6 +51,7 @@ void init_mac_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst)
 
   LOG_I(MAC,"[NB-IoT] MAC start initialization\n");
   
+  mac_inst->current_subframe = 0;
   for(i=0;i<64;++i)
   {
     mac_inst->sib1_flag[i] = 0;
@@ -119,6 +100,7 @@ void init_mac_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst)
 
   mac_inst->rrc_config.si_window_length = ms160;
   mac_inst->rrc_config.sibs_NB_IoT_sched[0].si_periodicity = rf64;
+  mac_inst->rrc_config.si_radio_frame_offset = 1;
 
   for(i=0;i<256;++i){
     mac_inst->sibs_table[i] = -1;
@@ -183,45 +165,14 @@ void init_mac_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst)
     
     LOG_I(MAC,"[NB-IoT] List_number %d R_max %d G %.1f a_offset %.1f T %d SS_start %d\n", i, (mac_inst->UE_list_spec+i)->NPDCCH_config_dedicated.R_max, (mac_inst->UE_list_spec+i)->NPDCCH_config_dedicated.G, (mac_inst->UE_list_spec+i)->NPDCCH_config_dedicated.a_offset, (mac_inst->UE_list_spec+i)->NPDCCH_config_dedicated.T, (mac_inst->UE_list_spec+i)->NPDCCH_config_dedicated.ss_start_uss);
   }
-
-/*
-  //Initial one UE template
-  //UE_TEMPLATE_NB_IoT *UE_info=(UE_TEMPLATE_NB_IoT*)malloc(USER_NUM_USS*sizeof(UE_TEMPLATE_NB_IoT));
-
-  mac_inst->UE_list_spec->head=0;
-  mac_inst->UE_list_spec->tail=0;
-
-  for(i=0;i<USER_NUM_USS;++i)
-  {
-    UE_info_setting(mac_inst->UE_list_spec->UE_template_NB_IoT+i);
-
-    if(i==0)
-    {
-      (mac_inst->UE_list_spec->UE_template_NB_IoT+i)->prev=-1;
-      (mac_inst->UE_list_spec->UE_template_NB_IoT+i)->next=1;
-      //mac_inst->UE_list_spec->next[i]=-1;
-    }
-    else if(i>=USER_NUM_USS-1)
-    {
-      (mac_inst->UE_list_spec->UE_template_NB_IoT+i)->prev=i-1;
-      (mac_inst->UE_list_spec->UE_template_NB_IoT+i)->next=-1;
-    }
-    else
-    {
-      (mac_inst->UE_list_spec->UE_template_NB_IoT+i)->prev=i-1;
-      (mac_inst->UE_list_spec->UE_template_NB_IoT+i)->next=i+1;
-    }
-    //mac_inst->UE_list_spec->UE_template_NB_IoT[i]=UE_info[i];
-    mac_inst->UE_list_spec->tail=i;
-  }
-*/
+  
   //UL initial
   //Setting nprach configuration
   setting_nprach();
   //Initialize uplink resource from nprach configuration
   Initialize_Resource();
   //add_UL_Resource(mac_inst);    
-  extend_available_resource_DL(mac_inst, mac_inst->current_subframe + 1 + 160);  
+  extend_available_resource_DL(mac_inst, mac_inst->current_subframe + 1 + mac_inst->rrc_config.si_window_length);  
 
 }
 

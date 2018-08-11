@@ -223,8 +223,10 @@ void common_signal_procedures_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
   LTE_DL_FRAME_PARMS   *fp       =  &eNB->frame_parms;
   NB_IoT_eNB_NPBCH_t   *broadcast_str = &eNB->npbch;
   //NB_IoT_eNB_NDLSCH_t  *sib1          = &eNB->ndlsch_SIB;
-  NB_IoT_DL_eNB_SIB_t  *sib1          = &eNB->ndlsch_SIB.content_sib1;
-  NB_IoT_DL_eNB_SIB_t  *sib23          = &eNB->ndlsch_SIB.content_sib23;
+ NB_IoT_eNB_NDLSCH_t  *ndlsch        = &eNB->ndlsch_SIB;
+   NB_IoT_DL_eNB_SIB_t  *sib1          = &ndlsch->content_sib1;
+   NB_IoT_DL_eNB_SIB_t  *sib23         = &ndlsch->content_sib23;
+
   int                     **txdataF =  eNB->common_vars.txdataF[0];
   int                     subframe  =  proc->subframe_tx;
   uint32_t                frame     =  proc->frame_tx;
@@ -299,6 +301,10 @@ void common_signal_procedures_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
 
     if(subframe == 0)
     {
+      LOG_I(PHY,"MIB NB-IoT content:\n");
+           for(int i = 0; i<6;i++)
+           printf("%02X",broadcast_str->pdu[i]);
+           printf("\n");
 
       generate_npbch(broadcast_str,
                      txdataF,
@@ -313,6 +319,12 @@ void common_signal_procedures_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
       ///////////////////////////////////////////////////////// SIB1 ////////////////////////////////////
     if((subframe == 4)  && (frame%2==0) && (frame%32<16) )   ////if((subframe != 0)  && (subframe != 4) && (subframe != 9) ) 
     {
+        LOG_I(PHY,"SIB1 NB-IoT content:\n");
+        for(int i = 0; i<6;i++)
+        printf("%02X",sib1->pdu[i]);
+        printf("\n");
+        
+
         if( frame%32 == 0 )
         {
             dlsch_encoding_NB_IoT(sib1_pdu,
@@ -345,6 +357,11 @@ void common_signal_procedures_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
   //////////////////////////////////////////////////// SIB23 ////////////////////////////////////////////////////////////////////////
   if( (subframe >0) && (subframe !=5) && (With_NSSS == 0) && (frame%2==1) && (frame%64<16) )   ////if((subframe != 0)  && (subframe != 4) && (subframe != 9) ) 
   {
+        LOG_I(PHY,"SIB2 NB-IoT content:\n");
+        for(int i = 0; i<6;i++)
+        printf("%02X",sib23->pdu[i]);
+        printf("\n");
+
         if( subframe == 1 )
         {
             dlsch_encoding_NB_IoT(sib23_pdu,
