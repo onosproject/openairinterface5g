@@ -16,7 +16,7 @@ data storage. */
 #include <lapacke_utils.h>
 #include <lapacke.h>
 
-#define DEBUG_PREPROC
+//#define DEBUG_PREPROC
 
 
 void transpose (int N, float complex *A, float complex *Result)
