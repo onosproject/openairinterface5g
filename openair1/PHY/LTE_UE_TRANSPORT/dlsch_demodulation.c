@@ -46,7 +46,7 @@
 #include "linear_preprocessing_rec.h"
 
 #define NOCYGWIN_STATIC
-//#define DEBUG_FRONT_END
+#define DEBUG_FRONT_END
 
 
 /* dynamic shift for LLR computation for TM3/4
@@ -3635,15 +3635,19 @@ void dlsch_detection_mrc_core(int **rxdataF_comp,
     if (rho) {
       rho128_0 = (__m128i *) &rho[0][start_point];
       rho128_1 = (__m128i *) &rho[1][start_point];
-      rho128_2 = (__m128i *) &rho[2][start_point];
-      rho128_3 = (__m128i *) &rho[3][start_point];
 
-      if (length_mod4 == 0){
-        length2 = length>>2;
+      if (n_tx == 4){
+        rho128_2 = (__m128i *) &rho[2][start_point];
+        rho128_3 = (__m128i *) &rho[3][start_point];
+      }
+        if (length_mod4 == 0){
+          length2 = length>>2;
 
-        for (i=0; i<length2; ++i) {
-          rho128_0[i] = _mm_adds_epi16(_mm_srai_epi16(rho128_0[i],1),_mm_srai_epi16(rho128_1[i],1));
-          rho128_2[i] = _mm_adds_epi16(_mm_srai_epi16(rho128_2[i],1),_mm_srai_epi16(rho128_3[i],1));
+          for (i=0; i<length2; ++i) {
+            rho128_0[i] = _mm_adds_epi16(_mm_srai_epi16(rho128_0[i],1),_mm_srai_epi16(rho128_1[i],1));
+          if (n_tx == 4){
+            rho128_2[i] = _mm_adds_epi16(_mm_srai_epi16(rho128_2[i],1),_mm_srai_epi16(rho128_3[i],1));
+          }
         }
       }
     }
@@ -3651,15 +3655,19 @@ void dlsch_detection_mrc_core(int **rxdataF_comp,
     if (rho_i){
       rho128_i0 = (__m128i *) &rho_i[0][start_point];
       rho128_i1 = (__m128i *) &rho_i[1][start_point];
-      rho128_i2 = (__m128i *) &rho_i[2][start_point];
-      rho128_i3 = (__m128i *) &rho_i[3][start_point];
-
+      if (n_tx == 4){
+        rho128_i2 = (__m128i *) &rho_i[2][start_point];
+        rho128_i3 = (__m128i *) &rho_i[3][start_point];
+      }
       if (length_mod4 == 0){
         length2 = length>>2;
 
-        for (i=0; i<length2; ++i)
+        for (i=0; i<length2; ++i){
           rho128_i0[i] = _mm_adds_epi16(_mm_srai_epi16(rho128_i0[i],1),_mm_srai_epi16(rho128_i1[i],1));
-          rho128_i2[i] = _mm_adds_epi16(_mm_srai_epi16(rho128_i2[i],1),_mm_srai_epi16(rho128_i3[i],1));
+          if (n_tx == 4){
+            rho128_i2[i] = _mm_adds_epi16(_mm_srai_epi16(rho128_i2[i],1),_mm_srai_epi16(rho128_i3[i],1));
+          }
+        }
       }
     }
 
@@ -4585,6 +4593,11 @@ void whitening_processing_core_flp(float complex **rxdataF_flp,
     for (aarx = 0; aarx < n_rx; ++aarx) {
       W_Wh_0[aatx*n_rx + aarx][re] = W_Wh_0_re[aatx*n_rx + aarx];
       W_Wh_1[aatx*n_rx + aarx][re] = W_Wh_1_re[aatx*n_rx + aarx];
+
+      if (re == 0){
+          printf("whitening_processing_core_flp: W_Wh_0[%d] = (%f + i%f)\n", aatx*n_rx + aarx, creal(W_Wh_0[aatx*n_rx + aarx][re]), cimag(W_Wh_0[aatx*n_rx + aarx][re]));
+          printf("whitening_processing_core_flp: W_Wh_1[%d] = (%f + i%f)\n", aatx*n_rx + aarx, creal(W_Wh_1[aatx*n_rx + aarx][re]), cimag(W_Wh_1[aatx*n_rx + aarx][re]));
+        }
 
       if (fabs(creal(W_Wh_0_re[aatx*n_rx + aarx])) > max_0)
         max_0 = fabs(creal(W_Wh_0_re[aatx*n_rx + aarx]));
