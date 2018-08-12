@@ -46,7 +46,7 @@
 #include "linear_preprocessing_rec.h"
 
 #define NOCYGWIN_STATIC
-#define DEBUG_FRONT_END
+//#define DEBUG_FRONT_END
 
 
 /* dynamic shift for LLR computation for TM3/4
@@ -4594,11 +4594,12 @@ void whitening_processing_core_flp(float complex **rxdataF_flp,
       W_Wh_0[aatx*n_rx + aarx][re] = W_Wh_0_re[aatx*n_rx + aarx];
       W_Wh_1[aatx*n_rx + aarx][re] = W_Wh_1_re[aatx*n_rx + aarx];
 
+#ifdef DEBUG_FRONT_END
       if (re == 0){
           printf("whitening_processing_core_flp: W_Wh_0[%d] = (%f + i%f)\n", aatx*n_rx + aarx, creal(W_Wh_0[aatx*n_rx + aarx][re]), cimag(W_Wh_0[aatx*n_rx + aarx][re]));
           printf("whitening_processing_core_flp: W_Wh_1[%d] = (%f + i%f)\n", aatx*n_rx + aarx, creal(W_Wh_1[aatx*n_rx + aarx][re]), cimag(W_Wh_1[aatx*n_rx + aarx][re]));
         }
-
+#endif
       if (fabs(creal(W_Wh_0_re[aatx*n_rx + aarx])) > max_0)
         max_0 = fabs(creal(W_Wh_0_re[aatx*n_rx + aarx]));
       if (fabs(cimag(W_Wh_0_re[aatx*n_rx + aarx])) > max_0)

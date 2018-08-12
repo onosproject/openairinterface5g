@@ -1220,6 +1220,7 @@ set(PHY_MEX_UE
   ${OPENAIR_DIR}/common/config/config_cmdline.c
   ${OPENAIR_DIR}/common/config/config_userapi.c
   ${OPENAIR_DIR}/common/config/config_load_configmodule.c
+  ${OPENAIR1_DIR}/PHY/TOOLS/time_meas.c
   )
 add_library(PHY_MEX ${PHY_MEX_UE})
 
