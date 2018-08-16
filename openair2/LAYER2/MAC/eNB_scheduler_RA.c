@@ -40,8 +40,8 @@
 #include "LAYER2/MAC/mac_extern.h"
 
 #include "LAYER2/MAC/mac_proto.h"
-#include "UTIL/LOG/log.h"
-#include "UTIL/LOG/vcd_signal_dumper.h"
+#include "common/utils/LOG/log.h"
+#include "common/utils/LOG/vcd_signal_dumper.h"
 #include "UTIL/OPT/opt.h"
 #include "OCG.h"
 #include "OCG_extern.h"
@@ -50,6 +50,7 @@
 #include "RRC/LTE/rrc_extern.h"
 #include "RRC/L2_INTERFACE/openair_rrc_L2_interface.h"
 
+#include "SCHED/sched_common.h"
 //#include "LAYER2/MAC/pre_processor.c"
 #include "pdcp.h"
 
@@ -62,6 +63,7 @@
 #include "T.h"
 
 #include "common/ran_context.h"
+#include "LAYER2/MAC/eNB_scheduler_fairRR.h"
 
 extern RAN_CONTEXT_t RC;
 

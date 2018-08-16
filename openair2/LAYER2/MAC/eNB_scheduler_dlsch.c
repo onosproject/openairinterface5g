@@ -33,8 +33,8 @@
 #include "LAYER2/MAC/mac.h"
 #include "LAYER2/MAC/mac_proto.h"
 #include "LAYER2/MAC/mac_extern.h"
-#include "UTIL/LOG/log.h"
-#include "UTIL/LOG/vcd_signal_dumper.h"
+#include "common/utils/LOG/log.h"
+#include "common/utils/LOG/vcd_signal_dumper.h"
 #include "UTIL/OPT/opt.h"
 #include "OCG.h"
 #include "OCG_extern.h"
@@ -474,7 +474,7 @@ schedule_dlsch(module_id_t module_idP,
       slice_sched_dl[i] = dlsym(NULL, dl_scheduler_type[i]);
       update_dl_scheduler[i] = 0 ;
       update_dl_scheduler_current[i] = 0;
-      LOG_N(MAC,"update dl scheduler slice %d\n", i);
+      LOG_I(MAC,"update dl scheduler slice %d\n", i);
     }
 
     if (total_slice_percentage <= 1.0){ // the new total RB share is within the range
@@ -482,7 +482,7 @@ schedule_dlsch(module_id_t module_idP,
       // check if the number of slices has changed, and log
       if (n_active_slices_current != n_active_slices ){
 	if ((n_active_slices > 0) && (n_active_slices <= MAX_NUM_SLICES)) {
-	  LOG_N(MAC,"[eNB %d]frame %d subframe %d: number of active DL slices has changed: %d-->%d\n",
+	  LOG_I(MAC,"[eNB %d]frame %d subframe %d: number of active DL slices has changed: %d-->%d\n",
 		module_idP, frameP, subframeP, n_active_slices_current, n_active_slices);
 
 	  n_active_slices_current = n_active_slices;
@@ -495,7 +495,7 @@ schedule_dlsch(module_id_t module_idP,
 
       // check if the slice rb share has changed, and log the console
       if (slice_percentage_current[i] != slice_percentage[i]){ // new slice percentage
-	LOG_N(MAC,"[eNB %d][SLICE %d][DL] frame %d subframe %d: total percentage %f-->%f, slice RB percentage has changed: %f-->%f\n",
+	LOG_I(MAC,"[eNB %d][SLICE %d][DL] frame %d subframe %d: total percentage %f-->%f, slice RB percentage has changed: %f-->%f\n",
 	      module_idP, i, frameP, subframeP, total_slice_percentage_current, total_slice_percentage, slice_percentage_current[i], slice_percentage[i]);
 	total_slice_percentage_current= total_slice_percentage;
 	slice_percentage_current[i] = slice_percentage[i];
@@ -505,7 +505,7 @@ schedule_dlsch(module_id_t module_idP,
       // check if the slice max MCS, and log the console
       if (slice_maxmcs_current[i] != slice_maxmcs[i]){
 	if ((slice_maxmcs[i] >= 0) && (slice_maxmcs[i] < 29)){
-	  LOG_N(MAC,"[eNB %d][SLICE %d][DL] frame %d subframe %d: slice MAX MCS has changed: %d-->%d\n",
+	  LOG_I(MAC,"[eNB %d][SLICE %d][DL] frame %d subframe %d: slice MAX MCS has changed: %d-->%d\n",
 		module_idP, i, frameP, subframeP, slice_maxmcs_current[i], slice_maxmcs[i]);
 	  slice_maxmcs_current[i] = slice_maxmcs[i];
 	} else {
@@ -516,7 +516,7 @@ schedule_dlsch(module_id_t module_idP,
 
       // check if a new scheduler, and log the console
       if (update_dl_scheduler_current[i] != update_dl_scheduler[i]){
-	LOG_N(MAC,"[eNB %d][SLICE %d][DL] frame %d subframe %d: DL scheduler for this slice is updated: %s \n",
+	LOG_I(MAC,"[eNB %d][SLICE %d][DL] frame %d subframe %d: DL scheduler for this slice is updated: %s \n",
 	      module_idP, i, frameP, subframeP, dl_scheduler_type[i]);
 	update_dl_scheduler_current[i] = update_dl_scheduler[i];
       }
@@ -542,7 +542,7 @@ schedule_dlsch(module_id_t module_idP,
 
     // Check for new sorting policy
     if (sorting_policy_current[i] != sorting_policy[i]) {
-      LOG_N(MAC,"[eNB %d][SLICE %d][DL] frame %d subframe %d: UE sorting policy has changed (%x-->%x)\n",
+      LOG_I(MAC,"[eNB %d][SLICE %d][DL] frame %d subframe %d: UE sorting policy has changed (%x-->%x)\n",
             module_idP, i, frameP, subframeP, sorting_policy_current[i], sorting_policy[i]);
       sorting_policy_current[i] = sorting_policy[i];
     }
@@ -596,12 +596,6 @@ schedule_ue_spec(module_id_t module_idP,slice_id_t slice_idP,
   int ta_update;
   int header_length_last;
   int header_length_total;
-
-#if 0
-  if (UE_list->head == -1) {
-    return;
-  }
-#endif
 
   start_meas(&eNB->schedule_dlsch);
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME
@@ -761,14 +755,6 @@ schedule_ue_spec(module_id_t module_idP,slice_id_t slice_idP,
 			  CC_id, UE_id, subframeP, S_DL_NONE);
 	continue;
       }
-#warning RK->CR This old API call has to be revisited for FAPI, or logic must be changed
-#if 0
-      /* add "fake" DCI to have CCE_allocation_infeasible work properly for next allocations */
-      /* if we don't add it, next allocations may succeed but overall allocations may fail */
-      /* will be removed at the end of this function */
-      add_ue_spec_dci(&eNB->common_channels[CC_id].DCI_pdu, &(char[]) {
-	  0}, rnti, 1, aggregation, 1, format1, 0);
-#endif
 
       nb_available_rb = ue_sched_ctl->pre_nb_available_rbs[CC_id];
 
@@ -1363,12 +1349,6 @@ schedule_ue_spec(module_id_t module_idP,slice_id_t slice_idP,
 		 dlsch_buffer, sdu_length_total);
 	  // memcpy(RC.mac[0].DLSCH_pdu[0][0].payload[0][offset],dcch_buffer,sdu_lengths[0]);
 
-#if 0
-	  // fill remainder of DLSCH with random data
-	  for (j = 0; j < (TBS - sdu_length_total - offset); j++) {
-	    UE_list->DLSCH_pdu[CC_id][0][UE_id].payload[0][offset + sdu_length_total + j] = (char) (taus() & 0xff);
-	  }
-#endif
 	  // fill remainder of DLSCH with 0
 	  for (j = 0; j < (TBS - sdu_length_total - offset); j++) {
 	    UE_list->DLSCH_pdu[CC_id][0][UE_id].payload[0][offset + sdu_length_total + j] = 0;
@@ -1794,7 +1774,7 @@ set_ue_dai(sub_frame_t subframeP,
 
   default:
     UE_list->UE_template[CC_id][UE_id].DAI = 0;
-    LOG_N(MAC, "unknow TDD config %d\n", tdd_config);
+    LOG_I(MAC, "unknow TDD config %d\n", tdd_config);
     break;
   }
 }
@@ -1862,18 +1842,6 @@ void schedule_PCH(module_id_t module_idP,frame_t frameP,sub_frame_t subframeP)
 	if ((subframeP == 0 || subframeP == 1 || subframeP == 2 || subframeP == 4 || subframeP == 6 || subframeP == 9) ||
 	    (subframeP == 5 && ((frameP % 2) != 0 && (frameP % 8) != 1))) {
 	  switch (n_rb_dl) {
-#if 0
-	  case 6:
-	    n_gap = n_rb_dl/2;  /* expect: 3 */
-	    n_vrb_dl = 2*((n_gap < (n_rb_dl - n_gap)) ? n_gap : (n_rb_dl - n_gap));;  /* expect: 6 */
-	    first_rb = 0;
-	    break;
-	  case 15:
-	    n_gap = GAP_MAP[2][0];  /* expect: 8 */
-	    n_vrb_dl = 2*((n_gap < (n_rb_dl - n_gap)) ? n_gap : (n_rb_dl - n_gap));  /* expect: 14 */
-	    first_rb = 6;
-	    break;
-#endif
 	  case 25:
 	    n_gap = GAP_MAP[3][0];  /* expect: 12 */
 	    n_vrb_dl = 2*((n_gap < (n_rb_dl - n_gap)) ? n_gap : (n_rb_dl - n_gap));  /* expect: 24 */
@@ -1900,18 +1868,6 @@ void schedule_PCH(module_id_t module_idP,frame_t frameP,sub_frame_t subframeP)
 	  }
 	} else if (subframeP == 5 && ((frameP % 2) == 0 || (frameP % 8) == 1)) {  // SIB + paging
 	  switch (n_rb_dl) {
-#if 0
-	  case 6:
-	    n_gap = n_rb_dl/2;  /* expect: 3 */
-	    n_vrb_dl = 2*((n_gap < (n_rb_dl - n_gap)) ? n_gap : (n_rb_dl - n_gap));;  /* expect: 6 */
-	    first_rb = 0;
-	    break;
-	  case 15:
-	    n_gap = GAP_MAP[2][0];  /* expect: 8 */
-	    n_vrb_dl = 2*((n_gap < (n_rb_dl - n_gap)) ? n_gap : (n_rb_dl - n_gap));  /* expect: 14 */
-	    first_rb = 10;
-	    break;
-#endif
 	  case 25:
 	    n_gap = GAP_MAP[3][0];  /* expect: 12 */
 	    n_vrb_dl = 2*((n_gap < (n_rb_dl - n_gap)) ? n_gap : (n_rb_dl - n_gap));  /* expect: 24 */

@@ -31,7 +31,7 @@
 #include "RadioResourceConfigDedicated.h"
 #include "TDD-Config.h"
 #include "MBSFN-SubframeConfigList.h"
-#include "UTIL/LOG/vcd_signal_dumper.h"
+#include "common/utils/LOG/vcd_signal_dumper.h"
 #include "assertions.h"
 #include <math.h>
 
@@ -255,12 +255,7 @@ void phy_config_request(PHY_Config_t *phy_config) {
 	      "prach_starting_subframe_periodicity[0] %d < prach_numPetitionPerPreambleAttempt[0] %d\n",
 	      fp->prach_emtc_config_common.prach_ConfigInfo.prach_starting_subframe_periodicity[0],
 	      fp->prach_emtc_config_common.prach_ConfigInfo.prach_numRepetitionPerPreambleAttempt[0]);
-#if 0
-  AssertFatal(fp->prach_emtc_config_common.prach_ConfigInfo.prach_numRepetitionPerPreambleAttempt[0] > 0,
-	      "prach_emtc_config_common.prach_ConfigInfo.prach_numRepetitionPerPreambleAttempt[0]==0\n");
-#else
-  LOG_D(PHY,"***DJP*** removed assert on preamble fp->prach_emtc_config_common.prach_ConfigInfo.prach_numRepetitionPerPreambleAttempt[0]:%d expecting >0 %s:%d\n\n\n", fp->prach_emtc_config_common.prach_ConfigInfo.prach_numRepetitionPerPreambleAttempt[0], __FILE__, __LINE__);
-#endif
+
   fp->prach_emtc_config_common.prach_ConfigInfo.prach_ConfigIndex[0]                     = cfg->emtc_config.prach_ce_level_0_configuration_index.value;
   fp->prach_emtc_config_common.prach_ConfigInfo.prach_FreqOffset[0]                      = cfg->emtc_config.prach_ce_level_0_frequency_offset.value;
   fp->prach_emtc_config_common.prach_ConfigInfo.prach_hopping_enable[0]                = cfg->emtc_config.prach_ce_level_0_hopping_enable.value;
@@ -482,7 +477,7 @@ void phy_config_sib13_eNB(module_id_t Mod_id,int CC_id,int mbsfn_Area_idx,
 
   if (mbsfn_Area_idx == 0) {
     fp->Nid_cell_mbsfn = (uint16_t)mbsfn_AreaId_r9;
-    LOG_N(PHY,"Fix me: only called when mbsfn_Area_idx == 0)\n");
+    LOG_I(PHY,"Fix me: only called when mbsfn_Area_idx == 0)\n");
   }
 
   lte_gold_mbsfn(fp,RC.eNB[Mod_id][CC_id]->lte_gold_mbsfn_table,fp->Nid_cell_mbsfn);

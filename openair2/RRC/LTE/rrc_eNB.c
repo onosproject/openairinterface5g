@@ -29,16 +29,19 @@
  */
 #define RRC_ENB
 #define RRC_ENB_C
-
+#include <asn_application.h>
+#include <asn_internal.h> /* for _ASN_DEFAULT_STACK_MAX */
+#include <per_encoder.h>
 #include "rrc_defs.h"
 #include "rrc_extern.h"
 #include "assertions.h"
 #include "common/ran_context.h"
 #include "asn1_conversions.h"
+#include "asn_internal.h"
 #include "RRC/L2_INTERFACE/openair_rrc_L2_interface.h"
 #include "LAYER2/RLC/rlc.h"
 #include "LAYER2/MAC/mac_proto.h"
-#include "UTIL/LOG/log.h"
+#include "common/utils/LOG/log.h"
 #include "COMMON/mac_rrc_primitives.h"
 #include "RRC/LTE/MESSAGES/asn1_msg.h"
 #include "RRCConnectionRequest.h"
@@ -58,7 +61,7 @@
 #include "SL-CommConfig-r12.h"
 #include "PeriodicBSR-Timer-r12.h"
 #include "RetxBSR-Timer-r12.h"
-#include "UTIL/LOG/vcd_signal_dumper.h"
+#include "common/utils/LOG/vcd_signal_dumper.h"
 
 #include "T.h"
 
@@ -697,54 +700,6 @@ rrc_eNB_get_next_free_ue_context(
     return NULL;
   }
 }
-
-#if 0 //!defined(ENABLE_USE_MME)
-void rrc_eNB_emulation_notify_ue_module_id(
-  const module_id_t ue_module_idP,
-  const rnti_t      rntiP,
-  const uint8_t     cell_identity_byte0P,
-  const uint8_t     cell_identity_byte1P,
-  const uint8_t     cell_identity_byte2P,
-  const uint8_t     cell_identity_byte3P)
-{
-  module_id_t                         enb_module_id;
-  struct rrc_eNB_ue_context_s*        ue_context_p = NULL;
-  int                                 CC_id;
-
-  // find enb_module_id
-  for (enb_module_id = 0; enb_module_id < NUMBER_OF_eNB_MAX; enb_module_id++) {
-    if(enb_module_id>0){ /*FIX LATER*/
-      return;
-    }
-    for (CC_id = 0; CC_id < MAX_NUM_CCs; CC_id++) {
-      if (&RC.rrc[enb_module_id]->carrier[CC_id].sib1 != NULL) {
-        if (
-          (&RC.rrc[enb_module_id]->carrier[CC_id].sib1->cellAccessRelatedInfo.cellIdentity.buf[0] == cell_identity_byte0P) &&
-          (&RC.rrc[enb_module_id]->carrier[CC_id].sib1->cellAccessRelatedInfo.cellIdentity.buf[1] == cell_identity_byte1P) &&
-          (&RC.rrc[enb_module_id]->carrier[CC_id].sib1->cellAccessRelatedInfo.cellIdentity.buf[2] == cell_identity_byte2P) &&
-          (&RC.rrc[enb_module_id]->carrier[CC_id].sib1->cellAccessRelatedInfo.cellIdentity.buf[3] == cell_identity_byte3P)
-        ) {
-          ue_context_p = rrc_eNB_get_ue_context(
-                           RC.rrc[enb_module_id],
-                           rntiP
-                         );
-
-          if (NULL != ue_context_p) {
-            oai_emulation.info.eNB_ue_local_uid_to_ue_module_id[enb_module_id][ue_context_p->local_uid] = ue_module_idP;
-          }
-
-          //return;
-        }
-      }
-    }
-    oai_emulation.info.eNB_ue_module_id_to_rnti[enb_module_id][ue_module_idP] = rntiP;
-  }
-
-  AssertFatal(enb_module_id == NUMBER_OF_eNB_MAX,
-              "Cell identity not found for ue module id %u rnti %x",
-              ue_module_idP, rntiP);
-}
-#endif
 
 //-----------------------------------------------------------------------------
 void
@@ -4432,7 +4387,7 @@ rrc_eNB_generate_HandoverPreparationInformation(
       ue_context_target_p = rrc_eNB_allocate_new_UE_context(RC.rrc[ctxt_pP->module_id]);
       ue_context_target_p->ue_id_rnti      = ue_context_pP->ue_context.rnti;             // LG: should not be the same
       ue_context_target_p->ue_context.rnti = ue_context_target_p->ue_id_rnti; // idem
-      LOG_N(RRC,
+      LOG_I(RRC,
             "[eNB %d] Frame %d : Emulate sending HandoverPreparationInformation msg from eNB source %d to eNB target %ld: source UE_id %x target UE_id %x source_modId: %d target_modId: %d\n",
             ctxt_pP->module_id,
             ctxt_pP->frame,
@@ -4568,7 +4523,6 @@ rrc_eNB_generate_RRCConnectionReconfiguration_handover(
 
 
   uint8_t                             buffer[RRC_BUF_SIZE];
-  uint16_t                            size;
   int                                 i;
   uint8_t                             rv[2];
   uint16_t                            Idx;
@@ -5379,7 +5333,7 @@ rrc_eNB_generate_RRCConnectionReconfiguration_handover(
   //  rrcConnectionReconfiguration->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r8.measConfig->reportConfigToAddModList = ReportConfig_list;
   memset(buffer, 0, RRC_BUF_SIZE);
 
-  size = do_RRCConnectionReconfiguration(
+ int size=do_RRCConnectionReconfiguration(
            ctxt_pP,
            buffer,
            rrc_eNB_get_next_transaction_identifier(ctxt_pP->module_id),   //Transaction_id,
@@ -5405,7 +5359,11 @@ rrc_eNB_generate_RRCConnectionReconfiguration_handover(
            , NULL   // SCellToAddMod_r10_t
 #endif
          );
-
+ if (size <= 0)
+  LOG_E(RRC,
+        "[eNB %d] Frame %d, Logical Channel DL-DCCH, Generate RRCConnectionReconfiguration for handover (bytes %d, UE rnti %x) failed\n",
+        ctxt_pP->module_id, ctxt_pP->frame, size, ue_context_pP->ue_context.rnti);
+ else
   LOG_I(RRC,
         "[eNB %d] Frame %d, Logical Channel DL-DCCH, Generate RRCConnectionReconfiguration for handover (bytes %d, UE rnti %x)\n",
         ctxt_pP->module_id, ctxt_pP->frame, size, ue_context_pP->ue_context.rnti);
@@ -6460,8 +6418,8 @@ rrc_eNB_decode_ccch(
           if (InitialUE_Identity_PR_randomValue == rrcConnectionRequest->ue_Identity.present) {
           if(rrcConnectionRequest->ue_Identity.choice.randomValue.size != 5)
           {
-            LOG_I(RRC, "wrong InitialUE-Identity randomValue size, expected 5, provided %d",
-                         rrcConnectionRequest->ue_Identity.choice.randomValue.size);
+            LOG_I(RRC, "wrong InitialUE-Identity randomValue size, expected 5, provided %lu",
+                         (long unsigned int)rrcConnectionRequest->ue_Identity.choice.randomValue.size);
             return -1;
           }
             memcpy(((uint8_t*) & random_value) + 3,
@@ -7237,8 +7195,8 @@ if (ue_context_p->ue_context.nb_of_modify_e_rabs > 0) {
       LOG_I(RRC, "got UE capabilities for UE %x\n", ctxt_pP->rnti);
       if (ue_context_p->ue_context.UE_Capability) {
         LOG_I(RRC, "freeing old UE capabilities for UE %x\n", ctxt_pP->rnti);
-        asn_DEF_UE_EUTRA_Capability.free_struct(&asn_DEF_UE_EUTRA_Capability,
-              ue_context_p->ue_context.UE_Capability, 0);
+        ASN_STRUCT_FREE(asn_DEF_UE_EUTRA_Capability,
+                        ue_context_p->ue_context.UE_Capability);
         ue_context_p->ue_context.UE_Capability = 0;
       }
       dec_rval = uper_decode(NULL,
@@ -7258,8 +7216,8 @@ if (ue_context_p->ue_context.nb_of_modify_e_rabs > 0) {
         LOG_E(RRC, PROTOCOL_RRC_CTXT_UE_FMT" Failed to decode UE capabilities (%zu bytes)\n",
               PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP),
               dec_rval.consumed);
-        asn_DEF_UE_EUTRA_Capability.free_struct(&asn_DEF_UE_EUTRA_Capability,
-              ue_context_p->ue_context.UE_Capability, 0);
+        ASN_STRUCT_FREE(asn_DEF_UE_EUTRA_Capability,
+                        ue_context_p->ue_context.UE_Capability);
         ue_context_p->ue_context.UE_Capability = 0;
       }
       /*
@@ -7728,7 +7686,6 @@ rrc_eNB_process_SidelinkUEInformation(
 {
    SL_DestinationInfoList_r12_t  *destinationInfoList;
    int n_destinations = 0;
-   int ue_type = 0;
    int n_discoveryMessages = 0;
 
    LOG_I(RRC,
@@ -7776,7 +7733,6 @@ rrc_eNB_process_SidelinkUEInformation(
          if ((sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension != NULL) &&(sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13->commTxResourceReqRelayUC_r13 != NULL)) {
             if (sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13->commTxResourceReqRelayUC_r13->destinationInfoList_r12.list.count > 0) {
                n_destinations = sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13->commTxResourceReqRelayUC_r13->destinationInfoList_r12.list.count;
-               ue_type = sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13->ue_Type_r13;
                destinationInfoList = CALLOC(1, sizeof(SL_DestinationInfoList_r12_t));
                for (int i=0; i< n_destinations; i++ ){
                   //sl_DestinationIdentityList[i] = *(sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13->commTxResourceReqRelayUC_r13->destinationInfoList_r12.list.array[i]);
@@ -7792,7 +7748,6 @@ rrc_eNB_process_SidelinkUEInformation(
          if ((sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension != NULL) && (sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13 != NULL)) {
             if (sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13->commTxResourceReqRelay_r13->destinationInfoList_r12.list.count > 0){
                n_destinations = sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13->commTxResourceReqRelay_r13->destinationInfoList_r12.list.count;
-               ue_type = sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13->ue_Type_r13;
                destinationInfoList = CALLOC(1, sizeof(SL_DestinationInfoList_r12_t));
                for (int i=0; i< n_destinations; i++ ){
                   //sl_DestinationIdentityList[i] = *(sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13->commTxResourceReqRelay_r13->destinationInfoList_r12.list.array[i]);
@@ -8050,44 +8005,6 @@ rrc_rx_tx(
 #if defined(ENABLE_USE_MME)
 #if defined(ENABLE_ITTI)
           rrc_eNB_generate_RRCConnectionRelease(ctxt_pP, ue_context_p);
-#if 0
-          {
-            int      e_rab;
-            MessageDef *msg_delete_tunnels_p = NULL;
-            uint32_t eNB_ue_s1ap_id = ue_context_p->ue_context.eNB_ue_s1ap_id;
-            MSC_LOG_TX_MESSAGE(MSC_RRC_ENB, MSC_GTPU_ENB, NULL,0, "0 GTPV1U_ENB_DELETE_TUNNEL_REQ rnti %x ", eNB_ue_s1ap_id);
-            msg_delete_tunnels_p = itti_alloc_new_message(TASK_RRC_ENB, GTPV1U_ENB_DELETE_TUNNEL_REQ);
-            memset(&GTPV1U_ENB_DELETE_TUNNEL_REQ(msg_delete_tunnels_p), 0, sizeof(GTPV1U_ENB_DELETE_TUNNEL_REQ(msg_delete_tunnels_p)));
-            // do not wait response
-            GTPV1U_ENB_DELETE_TUNNEL_REQ(msg_delete_tunnels_p).rnti = ue_context_p->ue_context.rnti;
-            for (e_rab = 0; e_rab < ue_context_p->ue_context.nb_of_e_rabs; e_rab++) {
-              GTPV1U_ENB_DELETE_TUNNEL_REQ(msg_delete_tunnels_p).eps_bearer_id[GTPV1U_ENB_DELETE_TUNNEL_REQ(msg_delete_tunnels_p).num_erab++] =
-                ue_context_p->ue_context.enb_gtp_ebi[e_rab];
-              // erase data
-              ue_context_p->ue_context.enb_gtp_teid[e_rab] = 0;
-              memset(&ue_context_p->ue_context.enb_gtp_addrs[e_rab], 0, sizeof(ue_context_p->ue_context.enb_gtp_addrs[e_rab]));
-              ue_context_p->ue_context.enb_gtp_ebi[e_rab]  = 0;
-            }
-            itti_send_msg_to_task(TASK_GTPV1_U, ctxt_pP->module_id, msg_delete_tunnels_p);
-            MSC_LOG_TX_MESSAGE(
-                    MSC_RRC_ENB,
-                    MSC_S1AP_ENB,
-                    NULL,0,
-                    "0 S1AP_UE_CONTEXT_RELEASE_COMPLETE eNB_ue_s1ap_id 0x%06"PRIX32" ",
-                    eNB_ue_s1ap_id);
-
-            struct rrc_ue_s1ap_ids_s    *rrc_ue_s1ap_ids = NULL;
-            rrc_ue_s1ap_ids = rrc_eNB_S1AP_get_ue_ids(
-                    RC.rrc[ctxt_pP->module_id],
-                    0,
-                    eNB_ue_s1ap_id);
-            if (NULL != rrc_ue_s1ap_ids) {
-              rrc_eNB_S1AP_remove_ue_ids(
-                         RC.rrc[ctxt_pP->module_id],
-                         rrc_ue_s1ap_ids);
-            }
-          }
-#endif
 #endif
 #else
           ue_to_be_removed = ue_context_p;

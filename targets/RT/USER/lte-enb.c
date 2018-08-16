@@ -68,11 +68,11 @@
 #include "LAYER2/MAC/mac_proto.h"
 #include "RRC/LTE/rrc_extern.h"
 #include "PHY_INTERFACE/phy_interface.h"
-#include "UTIL/LOG/log_extern.h"
+#include "common/utils/LOG/log.h"
 #include "UTIL/OTG/otg_tx.h"
 #include "UTIL/OTG/otg_externs.h"
 #include "UTIL/MATH/oml.h"
-#include "UTIL/LOG/vcd_signal_dumper.h"
+#include "common/utils/LOG/vcd_signal_dumper.h"
 #include "UTIL/OPT/opt.h"
 #include "enb_config.h"
 
@@ -225,7 +225,7 @@ static inline int rxtx(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc, char *thread_nam
   }
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_ENB_DLSCH_ULSCH_SCHEDULER , 1 );
 
-  if(get_nprocs() >= 8){
+  if(!eNB->single_thread_flag && get_nprocs() >= 8){
     if(wait_on_condition(&proc[1].mutex_rxtx,&proc[1].cond_rxtx,&proc[1].pipe_ready,"wakeup_tx")<0) {
       LOG_E(PHY,"Frame %d, subframe %d: TX1 not ready\n",proc[1].frame_rx,proc[1].subframe_rx);
       return(-1);
@@ -243,36 +243,11 @@ static inline int rxtx(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc, char *thread_nam
   eNB->if_inst->UL_indication(&eNB->UL_INFO);
 
   pthread_mutex_unlock(&eNB->UL_INFO_mutex);
-#if 0
-/* TODO: find a correct solution for this conflict */
-<<<<<<< HEAD
-
-  // *****************************************
-  // TX processing for subframe n+sf_ahead
-  // run PHY TX procedures the one after the other for all CCs to avoid race conditions
-  // (may be relaxed in the future for performance reasons)
-  // *****************************************
-  //if (wait_CCs(proc)<0) return(-1);
-  
-  if (oai_exit) return(-1);
-#ifndef PHY_TX_THREAD
-  phy_procedures_eNB_TX(eNB, proc, no_relay, NULL, 1);
-#endif
-  if (release_thread(&proc->mutex_rxtx,&proc->instance_cnt_rxtx,thread_name)<0) return(-1);
-=======
-  
-  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_ENB_DLSCH_ULSCH_SCHEDULER , 0 );
-  if(oai_exit) return(-1);
-  if(get_nprocs() <= 4){
-    phy_procedures_eNB_TX(eNB, proc, 1);
-  }
->>>>>>> origin/develop
-#endif /* #if 0 */
   /* this conflict resolution may be totally wrong, to be tested */
   /* CONFLICT RESOLUTION: BEGIN */
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_ENB_DLSCH_ULSCH_SCHEDULER , 0 );
   if(oai_exit) return(-1);
-  if(get_nprocs() <= 4){
+  if(eNB->single_thread_flag || get_nprocs() <= 4){
 #ifndef PHY_TX_THREAD
     phy_procedures_eNB_TX(eNB, proc, 1);
 #endif
@@ -285,15 +260,14 @@ static inline int rxtx(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc, char *thread_nam
 
   LOG_D(PHY,"%s() Exit proc[rx:%d%d tx:%d%d]\n", __FUNCTION__, proc->frame_rx, proc->subframe_rx, proc->frame_tx, proc->subframe_tx);
 
-#if 0
   LOG_D(PHY, "rxtx:%lld nfapi:%lld phy:%lld tx:%lld rx:%lld prach:%lld ofdm:%lld ",
       softmodem_stats_rxtx_sf.diff_now, nfapi_meas.diff_now,
       TICK_TO_US(eNB->phy_proc),
       TICK_TO_US(eNB->phy_proc_tx),
       TICK_TO_US(eNB->phy_proc_rx),
       TICK_TO_US(eNB->rx_prach),
-      TICK_TO_US(eNB->ofdm_mod_stats),
-      softmodem_stats_rxtx_sf.diff_now, nfapi_meas.diff_now);
+      TICK_TO_US(eNB->ofdm_mod_stats)
+      );
   LOG_D(PHY,
     "dlsch[enc:%lld mod:%lld scr:%lld rm:%lld t:%lld i:%lld] rx_dft:%lld ",
       TICK_TO_US(eNB->dlsch_encoding_stats),
@@ -325,7 +299,6 @@ static inline int rxtx(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc, char *thread_nam
       TICK_TO_US(eNB->ulsch_tc_intl1_stats),
       TICK_TO_US(eNB->ulsch_tc_intl2_stats)
       );
-#endif
   
   return(0);
 }
@@ -468,30 +441,6 @@ static void* eNB_thread_rxtx( void* param ) {
   return &eNB_thread_rxtx_status;
 }
 
-
-#if 0 //defined(ENABLE_ITTI) && defined(ENABLE_USE_MME)
-// Wait for eNB application initialization to be complete (eNB registration to MME)
-static void wait_system_ready (char *message, volatile int *start_flag) {
-  
-  static char *indicator[] = {".    ", "..   ", "...  ", ".... ", ".....",
-			      " ....", "  ...", "   ..", "    .", "     "};
-  int i = 0;
-  
-  while ((!oai_exit) && (*start_flag == 0)) {
-    LOG_N(EMU, message, indicator[i]);
-    fflush(stdout);
-    i = (i + 1) % (sizeof(indicator) / sizeof(indicator[0]));
-    usleep(200000);
-  }
-  
-  LOG_D(EMU,"\n");
-}
-#endif
-
-
-
-
-
 void eNB_top(PHY_VARS_eNB *eNB, int frame_rx, int subframe_rx, char *string,RU_t *ru)
 {
   eNB_proc_t *proc           = &eNB->proc;
@@ -611,7 +560,7 @@ int wakeup_rxtx(PHY_VARS_eNB *eNB,RU_t *ru) {
   eNB_proc_t *proc=&eNB->proc;
   RU_proc_t *ru_proc=&ru->proc;
 
-  eNB_rxtx_proc_t *proc_rxtx0=&proc->proc_rxtx[0];//*proc_rxtx=&proc->proc_rxtx[proc->frame_rx&1];
+  eNB_rxtx_proc_t *proc_rxtx0=&proc->proc_rxtx[0];
   //eNB_rxtx_proc_t *proc_rxtx1=&proc->proc_rxtx[1];
   
 
@@ -900,7 +849,6 @@ extern void init_td_thread(PHY_VARS_eNB *);
 extern void init_te_thread(PHY_VARS_eNB *);
 extern void kill_td_thread(PHY_VARS_eNB *);
 extern void kill_te_thread(PHY_VARS_eNB *);
-//////////////////////////////////////need to modified////////////////*****
 
 static void* process_stats_thread(void* param) {
 
@@ -909,20 +857,23 @@ static void* process_stats_thread(void* param) {
   wait_sync("process_stats_thread");
 
   while (!oai_exit) {
-     sleep(1);
-     if (opp_enabled == 1) {
-       if (eNB->td) print_meas(&eNB->ulsch_decoding_stats,"ulsch_decoding",NULL,NULL);
-       if (eNB->te)
-       {
-         print_meas(&eNB->dlsch_turbo_encoding_preperation_stats,"dlsch_coding_crc",NULL,NULL);
-         print_meas(&eNB->dlsch_turbo_encoding_segmentation_stats,"dlsch_segmentation",NULL,NULL);
-         print_meas(&eNB->dlsch_encoding_stats,"dlsch_encoding",NULL,NULL);
-         print_meas(&eNB->dlsch_turbo_encoding_signal_stats,"coding_signal",NULL,NULL);
-         print_meas(&eNB->dlsch_turbo_encoding_main_stats,"coding_main",NULL,NULL);
-         print_meas(&eNB->dlsch_turbo_encoding_waiting_stats,"coding_wait",NULL,NULL);
-         print_meas(&eNB->dlsch_turbo_encoding_wakeup_stats0,"coding_worker_0",NULL,NULL);
-         print_meas(&eNB->dlsch_turbo_encoding_wakeup_stats1,"coding_worker_1",NULL,NULL);
-	   }
+    sleep(1);
+      if (opp_enabled == 1) {
+        if (eNB->td) print_meas(&eNB->ulsch_decoding_stats,"ulsch_decoding",NULL,NULL);
+        if (eNB->te)
+        {
+          print_meas(&eNB->dlsch_turbo_encoding_preperation_stats,"dlsch_coding_crc",NULL,NULL);
+          print_meas(&eNB->dlsch_turbo_encoding_segmentation_stats,"dlsch_segmentation",NULL,NULL);
+          print_meas(&eNB->dlsch_encoding_stats,"dlsch_encoding",NULL,NULL);
+          print_meas(&eNB->dlsch_turbo_encoding_signal_stats,"coding_signal",NULL,NULL);
+          print_meas(&eNB->dlsch_turbo_encoding_main_stats,"coding_main",NULL,NULL);
+          print_meas(&eNB->dlsch_turbo_encoding_stats,"turbo_encoding",NULL,NULL);
+          print_meas(&eNB->dlsch_interleaving_stats,"turbo_interleaving",NULL,NULL);
+          print_meas(&eNB->dlsch_rate_matching_stats,"turbo_rate_matching",NULL,NULL);
+          print_meas(&eNB->dlsch_turbo_encoding_waiting_stats,"coding_wait",NULL,NULL);
+          print_meas(&eNB->dlsch_turbo_encoding_wakeup_stats0,"coding_worker_0",NULL,NULL);
+          print_meas(&eNB->dlsch_turbo_encoding_wakeup_stats1,"coding_worker_1",NULL,NULL);
+       }
        print_meas(&eNB->dlsch_modulation_stats,"dlsch_modulation",NULL,NULL);
      }
   }
@@ -1003,30 +954,19 @@ void init_eNB_proc(int inst) {
     //    attr_td     = &proc->attr_td;
     //    attr_te     = &proc->attr_te; 
 #endif
-    //////////////////////////////////////need to modified////////////////*****
+
     if(get_nprocs() > 2 && codingw)
     {
       init_te_thread(eNB);
       init_td_thread(eNB);
     }
-    //////////////////////////////////////need to modified////////////////*****
-	//pthread_create( &proc_rxtx[0].pthread_rxtx, attr0, eNB_thread_rxtx, proc );
-
-	//pthread_create( &proc_rxtx[0].pthread_rxtx, attr0, eNB_thread_rxtx, proc_rxtx );
-
-
-    //Should we also include here the case where single_thread_flag = 1 ?
-	if(nfapi_mode!=2){
-		pthread_create( &proc_rxtx[0].pthread_rxtx, attr0, eNB_thread_rxtx, proc );
-		pthread_create( &proc_rxtx[1].pthread_rxtx, attr1, tx_thread, proc);
-	}
 
 
     LOG_I(PHY,"eNB->single_thread_flag:%d\n", eNB->single_thread_flag);
 
-    if (eNB->single_thread_flag==0) {
-      pthread_create( &proc_rxtx[0].pthread_rxtx, attr0, eNB_thread_rxtx, &proc_rxtx[0] );
-      pthread_create( &proc_rxtx[1].pthread_rxtx, attr1, eNB_thread_rxtx, &proc_rxtx[1] );
+    if (eNB->single_thread_flag==0 && nfapi_mode!=2) {
+      pthread_create( &proc_rxtx[0].pthread_rxtx, attr0, eNB_thread_rxtx, proc );
+      pthread_create( &proc_rxtx[1].pthread_rxtx, attr1, tx_thread, proc);
     }
     pthread_create( &proc->pthread_prach, attr_prach, eNB_thread_prach, eNB );
 #if (RRC_VERSION >= MAKE_VERSION(14, 0, 0))

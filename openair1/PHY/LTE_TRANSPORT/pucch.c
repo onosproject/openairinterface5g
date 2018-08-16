@@ -34,10 +34,9 @@
 #include "LAYER2/MAC/mac.h"
 #include "PHY/LTE_REFSIG/lte_refsig.h"
 
-#include "UTIL/LOG/log.h"
-#include "UTIL/LOG/vcd_signal_dumper.h"
+#include "common/utils/LOG/log.h"
+#include "common/utils/LOG/vcd_signal_dumper.h"
 
-#include "T.h"
 
 //uint8_t ncs_cell[20][7];
 //#define DEBUG_PUCCH_TXS
@@ -1089,7 +1088,7 @@ uint32_t rx_pucch(PHY_VARS_eNB *eNB,
 #endif
 
 #ifdef DEBUG_PUCCH_RX
-    LOG_D(PHY,"[eNB] PUCCH fmt1:  stat_max : %d, sigma2_dB %d (%d, %d), phase_max : %d\n",dB_fixed(stat_max),sigma2_dB,eNB->measurements.n0_subband_power_tot_dBm[6],pucch1_thres,phase_max);
+    LOG_I(PHY,"[eNB] PUCCH fmt1:  stat_max : %d, sigma2_dB %d (%d, %d), phase_max : %d\n",dB_fixed(stat_max),sigma2_dB,eNB->measurements.n0_subband_power_tot_dBm[6],pucch1_thres,phase_max);
 #endif
 
     
@@ -1102,7 +1101,7 @@ uint32_t rx_pucch(PHY_VARS_eNB *eNB,
 
     /*
     if (eNB->pucch1_stats_cnt[UE_id][subframe] == 0) {
-      write_output("pucch_debug.m","pucch_energy",
+      LOG_M("pucch_debug.m","pucch_energy",
 		   &eNB->pucch1_stats[UE_id][(subframe<<10)],
 		   1024,1,2);
       AssertFatal(0,"Exiting for PUCCH 1 debug\n");
@@ -1353,7 +1352,7 @@ uint32_t rx_pucch(PHY_VARS_eNB *eNB,
 
       LOG_D(PHY,"PUCCH 1a/b: subframe %d : stat %d,%d (pos %d)\n",subframe,stat_re,stat_im,
 	    (subframe<<10) + (eNB->pucch1ab_stats_cnt[UE_id][subframe]));
-      LOG_D(PHY,"PUCCH 1a/b: subframe %d : sigma2_dB %d, stat_max %d, pucch1_thres %d\n",subframe,sigma2_dB,dB_fixed(stat_max),pucch1_thres);      
+      LOG_D(PHY,"PUCCH 1a/b: subframe %d : sigma2_dB %d, stat_max %d, pucch1_thres %d\n",subframe,sigma2_dB,dB_fixed(stat_max),pucch1_thres);
       
       eNB->pucch1ab_stats[UE_id][(subframe<<11) + 2*(eNB->pucch1ab_stats_cnt[UE_id][subframe])] = (stat_re);
       eNB->pucch1ab_stats[UE_id][(subframe<<11) + 1+2*(eNB->pucch1ab_stats_cnt[UE_id][subframe])] = (stat_im);

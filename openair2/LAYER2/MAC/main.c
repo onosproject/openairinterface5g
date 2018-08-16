@@ -38,7 +38,7 @@
 //#include "SCHED/sched_eNB.h"
 #include "LAYER2/PDCP_v10.1.0/pdcp.h"
 #include "RRC/LTE/rrc_defs.h"
-#include "UTIL/LOG/log.h"
+#include "common/utils/LOG/log.h"
 #include "RRC/L2_INTERFACE/openair_rrc_L2_interface.h"
 
 #include "common/ran_context.h"
@@ -62,6 +62,7 @@ void mac_top_init_eNB(void)
 		RC.mac =
 			(eNB_MAC_INST **) malloc16(RC.nb_macrlc_inst *
 						   sizeof(eNB_MAC_INST *));
+                bzero(RC.mac, RC.nb_macrlc_inst * sizeof(eNB_MAC_INST *));
         }
 	AssertFatal(RC.mac != NULL,
 		    "can't ALLOCATE %zu Bytes for %d eNB_MAC_INST with size %zu \n",

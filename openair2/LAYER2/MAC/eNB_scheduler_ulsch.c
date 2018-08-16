@@ -36,8 +36,8 @@
 #include "LAYER2/MAC/mac.h"
 #include "LAYER2/MAC/mac_proto.h"
 #include "LAYER2/MAC/mac_extern.h"
-#include "UTIL/LOG/log.h"
-#include "UTIL/LOG/vcd_signal_dumper.h"
+#include "common/utils/LOG/log.h"
+#include "common/utils/LOG/vcd_signal_dumper.h"
 #include "UTIL/OPT/opt.h"
 #include "OCG.h"
 #include "OCG_extern.h"
@@ -158,8 +158,8 @@ rx_sdu(const module_id_t enb_mod_idP,
 
   if (UE_id != -1) {
     LOG_D(MAC,
-	  "[eNB %d][PUSCH %d] CC_id %d Received ULSCH sdu round %d from PHY (rnti %x, UE_id %d) ul_cqi %d\n",
-	  enb_mod_idP, harq_pid, CC_idP,
+	  "[eNB %d][PUSCH %d] CC_id %d %d.%d Received ULSCH sdu round %d from PHY (rnti %x, UE_id %d) ul_cqi %d\n",
+	  enb_mod_idP, harq_pid, CC_idP,frameP,subframeP,
 	  UE_list->UE_sched_ctrl[UE_id].round_UL[CC_idP][harq_pid],
 	  current_rnti, UE_id, ul_cqi);
 
@@ -191,9 +191,9 @@ rx_sdu(const module_id_t enb_mod_idP,
       if (UE_list->UE_template[CC_idP][UE_id].scheduled_ul_bytes < 0)
         UE_list->UE_template[CC_idP][UE_id].scheduled_ul_bytes = 0;
     } else {		// we've got an error
-      LOG_D(MAC,
-	    "[eNB %d][PUSCH %d] CC_id %d ULSCH in error in round %d, ul_cqi %d\n",
-	    enb_mod_idP, harq_pid, CC_idP,
+      LOG_I(MAC,
+	    "[eNB %d][PUSCH %d] CC_id %d %d.%d ULSCH in error in round %d, ul_cqi %d\n",
+	    enb_mod_idP, harq_pid, CC_idP,frameP,subframeP,
 	    UE_list->UE_sched_ctrl[UE_id].round_UL[CC_idP][harq_pid],
 	    ul_cqi);
 
@@ -800,7 +800,7 @@ rx_sdu(const module_id_t enb_mod_idP,
     /*
       if (msg3_flagP != NULL) {
       if( *msg3_flagP == 1 ) {
-      LOG_N(MAC,"[eNB %d] CC_id %d frame %d : false msg3 detection: signal phy to canceling RA and remove the UE\n", enb_mod_idP, CC_idP, frameP);
+      LOG_I(MAC,"[eNB %d] CC_id %d frame %d : false msg3 detection: signal phy to canceling RA and remove the UE\n", enb_mod_idP, CC_idP, frameP);
       *msg3_flagP=0;
       }
       } */
@@ -1095,7 +1095,7 @@ schedule_ulsch(module_id_t module_idP, frame_t frameP,
       //total_slice_percentage_current_uplink+=slice_percentage_uplink[i];
       //if (total_slice_percentage_current_uplink> 1)
       //total_slice_percentage_current_uplink=1;
-      LOG_N(MAC,"update ul scheduler slice %d\n", i);
+      LOG_I(MAC,"update ul scheduler slice %d\n", i);
     }
     // the new total RB share is within the range
     if (total_slice_percentage_uplink <= 1.0){
@@ -1103,7 +1103,7 @@ schedule_ulsch(module_id_t module_idP, frame_t frameP,
       // check if the number of slices has changed, and log
       if (n_active_slices_current_uplink != n_active_slices_uplink ){
         if ((n_active_slices_uplink > 0) && (n_active_slices_uplink <= MAX_NUM_SLICES)) {
-          LOG_N(MAC,"[eNB %d]frame %d subframe %d: number of active UL slices has changed: %d-->%d\n",
+          LOG_I(MAC,"[eNB %d]frame %d subframe %d: number of active UL slices has changed: %d-->%d\n",
                 module_idP, frameP, subframeP, n_active_slices_current_uplink, n_active_slices_uplink);
           n_active_slices_current_uplink = n_active_slices_uplink;
         } else {
@@ -1115,7 +1115,7 @@ schedule_ulsch(module_id_t module_idP, frame_t frameP,
 
       // check if the slice rb share has changed, and log the console
       if (slice_percentage_current_uplink[i] != slice_percentage_uplink[i]){
-        LOG_N(MAC,"[eNB %d][SLICE %d][UL] frame %d subframe %d: total percentage %f-->%f, slice RB percentage has changed: %f-->%f\n",
+        LOG_I(MAC,"[eNB %d][SLICE %d][UL] frame %d subframe %d: total percentage %f-->%f, slice RB percentage has changed: %f-->%f\n",
               module_idP, i, frameP, subframeP, total_slice_percentage_current_uplink,
               total_slice_percentage_uplink, slice_percentage_current_uplink[i], slice_percentage_uplink[i]);
         total_slice_percentage_current_uplink = total_slice_percentage_uplink;
@@ -1125,7 +1125,7 @@ schedule_ulsch(module_id_t module_idP, frame_t frameP,
       // check if the slice max MCS, and log the console
       if (slice_maxmcs_current_uplink[i] != slice_maxmcs_uplink[i]){
         if ((slice_maxmcs_uplink[i] >= 0) && (slice_maxmcs_uplink[i] <= 16)){
-          LOG_N(MAC,"[eNB %d][SLICE %d][UL] frame %d subframe %d: slice MAX MCS has changed: %d-->%d\n",
+          LOG_I(MAC,"[eNB %d][SLICE %d][UL] frame %d subframe %d: slice MAX MCS has changed: %d-->%d\n",
                 module_idP, i, frameP, subframeP, slice_maxmcs_current_uplink[i], slice_maxmcs_uplink[i]);
           slice_maxmcs_current_uplink[i] = slice_maxmcs_uplink[i];
         } else {
@@ -1137,7 +1137,7 @@ schedule_ulsch(module_id_t module_idP, frame_t frameP,
 
       // check if a new scheduler, and log the console
       if (update_ul_scheduler_current[i] != update_ul_scheduler[i]){
-        LOG_N(MAC,"[eNB %d][SLICE %d][UL] frame %d subframe %d: UL scheduler for this slice is updated: %s \n",
+        LOG_I(MAC,"[eNB %d][SLICE %d][UL] frame %d subframe %d: UL scheduler for this slice is updated: %s \n",
               module_idP, i, frameP, subframeP, ul_scheduler_type[i]);
         update_ul_scheduler_current[i] = update_ul_scheduler[i];
       }
@@ -1332,18 +1332,23 @@ schedule_ulsch_rnti(module_id_t module_idP,
 	  // reset the scheduling request
 	  UE_template->ul_SR = 0;
 	  status = mac_eNB_get_rrc_status(module_idP, rnti);
-	  if (status < RRC_CONNECTED)
-	    cqi_req = 0;
-	  else if (UE_sched_ctrl->cqi_req_timer > 30) {
-	    if (nfapi_mode) {
-	      cqi_req = 0;
-	    } else {
-	      cqi_req = 1;
-              UE_sched_ctrl->cqi_req_flag |= 1 << sched_subframeP;
+	  cqi_req = 0;
+
+	  if (status >= RRC_CONNECTED && UE_sched_ctrl->cqi_req_timer > 30) { 
+	    if (UE_sched_ctrl->cqi_received == 0) {
+	      if (nfapi_mode) {
+		cqi_req = 0;
+	      } else {
+		cqi_req = 1;
+		UE_sched_ctrl->cqi_req_flag |= 1 << sched_subframeP;
+	      }
 	    }
-	    UE_sched_ctrl->cqi_req_timer = 0;
-	  } else
-	    cqi_req = 0;
+	    else if (UE_sched_ctrl->cqi_received == 1) {
+	      UE_sched_ctrl->cqi_req_flag = 0;
+	      UE_sched_ctrl->cqi_received = 0;
+	      UE_sched_ctrl->cqi_req_timer = 0;
+	    }
+	  }
 
 	  //power control
 	  //compute the expected ULSCH RX power (for the stats)
@@ -1562,7 +1567,7 @@ schedule_ulsch_rnti(module_id_t module_idP,
 			      CC_id, UE_id, subframeP,
 			      S_UL_SCHEDULED);
 
-	    //LOG_D(MAC, "[eNB %d] CC_id %d Frame %d, subframeP %d: Generated ULSCH DCI for next UE_id %d, format 0\n", module_idP, CC_id, frameP, subframeP, UE_id);
+	    LOG_D(MAC, "[eNB %d] CC_id %d Frame %d, subframeP %d: Generated ULSCH DCI for next UE_id %d, format 0\n", module_idP, CC_id, frameP, subframeP, UE_id);
 	    LOG_D(MAC,"[PUSCH %d] SFN/SF:%04d%d UL_CFG:SFN/SF:%04d%d CQI:%d for UE %d/%x\n", harq_pid,frameP,subframeP,ul_sched_frame,ul_sched_subframeP,cqi_req,UE_id,rnti);
 
 	    // increment first rb for next UE allocation
@@ -1575,34 +1580,6 @@ schedule_ulsch_rnti(module_id_t module_idP,
 	      T_INT(first_rb[CC_id]),
 	      T_INT(rb_table[rb_table_index]), T_INT(round));
 
-#if 0
-            /* This is done in rx_sdu, as it has to.
-             * Since the code is a bit different, let's keep this version here for review, in case of problem.
-             */
-	    // fill in NAK information
-
-	    hi_dci0_pdu = &hi_dci0_req_body->hi_dci0_pdu_list[hi_dci0_req_body->number_of_dci + hi_dci0_req_body->number_of_hi];
-	    memset((void *) hi_dci0_pdu, 0,
-		   sizeof(nfapi_hi_dci0_request_pdu_t));
-	    hi_dci0_pdu->pdu_type = NFAPI_HI_DCI0_HI_PDU_TYPE;
-	    hi_dci0_pdu->pdu_size = 2 + sizeof(nfapi_hi_dci0_hi_pdu);
-	    hi_dci0_pdu->hi_pdu.hi_pdu_rel8.tl.tag = NFAPI_HI_DCI0_REQUEST_HI_PDU_REL8_TAG;
-	    hi_dci0_pdu->hi_pdu.hi_pdu_rel8.resource_block_start = UE_template->first_rb_ul[harq_pid];
-	    hi_dci0_pdu->hi_pdu.hi_pdu_rel8.cyclic_shift_2_for_drms = UE_template->cshift[harq_pid];
-	    hi_dci0_pdu->hi_pdu.hi_pdu_rel8.hi_value = 0;
-	    hi_dci0_req_body->number_of_hi++;
-	    hi_dci0_req_body->sfnsf = sfnsf_add_subframe(sched_frame, sched_subframeP, 0);
-	    hi_dci0_req->sfn_sf = frameP<<4|subframeP;
-	    hi_dci0_req->header.message_id = NFAPI_HI_DCI0_REQUEST;
-
-	    LOG_D(MAC,
-		  "[eNB %d][PUSCH %d/%x] CC_id %d Frame %d subframeP %d Scheduled (PHICH) UE %d (mcs %d, first rb %d, nb_rb %d, TBS %d, round %d)\n",
-		  module_idP, harq_pid, rnti, CC_id, frameP,
-		  subframeP, UE_id, UE_template->mcs_UL[harq_pid],
-		  UE_template->first_rb_ul[harq_pid],
-		  UE_template->nb_rb_ul[harq_pid],
-		  UE_template->TBS_UL[harq_pid], round);
-#endif
 	    // Add UL_config PDUs
 	    LOG_D(MAC,
 		  "[PUSCH %d] Frame %d, Subframe %d: Adding UL CONFIG.Request for UE %d/%x, ulsch_frame %d, ulsch_subframe %d\n",

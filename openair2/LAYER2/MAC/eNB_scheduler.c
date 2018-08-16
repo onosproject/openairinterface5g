@@ -35,8 +35,8 @@
 #include "LAYER2/MAC/mac_extern.h"
 
 #include "LAYER2/MAC/mac_proto.h"
-#include "UTIL/LOG/log.h"
-#include "UTIL/LOG/vcd_signal_dumper.h"
+#include "common/utils/LOG/log.h"
+#include "common/utils/LOG/vcd_signal_dumper.h"
 #include "UTIL/OPT/opt.h"
 #include "OCG.h"
 #include "OCG_extern.h"
@@ -423,16 +423,6 @@ check_ul_failure(module_id_t module_idP, int CC_id, int UE_id,
       }
     }
   }				// ul_failure_timer>0
-
-#if 0
-  /* U-plane inactivity timer is disabled. Uncomment to re-enable. */
-  UE_list->UE_sched_ctrl[UE_id].uplane_inactivity_timer++;
-  if(UE_list->UE_sched_ctrl[UE_id].uplane_inactivity_timer > (U_PLANE_INACTIVITY_VALUE*subframe_num(&RC.eNB[module_idP][CC_id]->frame_parms))){
-    LOG_D(MAC,"UE %d rnti %x: U-Plane Failure after repeated PDCCH orders: Triggering RRC \n",UE_id,rnti); 
-    mac_eNB_rrc_uplane_failure(module_idP,CC_id,frameP,subframeP,rnti);
-    UE_list->UE_sched_ctrl[UE_id].uplane_inactivity_timer  = 0;
-  }// time > 60s
-#endif
 }
 
 void
@@ -651,8 +641,8 @@ eNB_dlsch_ulsch_scheduler(module_id_t module_idP, frame_t frameP,
 #endif
 
   static int debug_flag=0;
-  void (*schedule_ulsch_p)(module_id_t module_idP, frame_t frameP, sub_frame_t subframe);
-  void (*schedule_ue_spec_p)(module_id_t module_idP, frame_t frameP, sub_frame_t subframe, int *mbsfn_flag);
+  void (*schedule_ulsch_p)(module_id_t module_idP, frame_t frameP, sub_frame_t subframe)=NULL;
+  void (*schedule_ue_spec_p)(module_id_t module_idP, frame_t frameP, sub_frame_t subframe, int *mbsfn_flag)=NULL;
   if(RC.mac[module_idP]->scheduler_mode == SCHED_MODE_DEFAULT){
     schedule_ulsch_p = schedule_ulsch;
     schedule_ue_spec_p = schedule_dlsch;
@@ -682,13 +672,22 @@ eNB_dlsch_ulsch_scheduler(module_id_t module_idP, frame_t frameP,
     // This schedules SRS in subframeP
     schedule_SRS(module_idP, frameP, subframeP);
     // This schedules ULSCH in subframeP (dci0)
-    schedule_ulsch_p(module_idP, frameP, subframeP);
+    if (schedule_ulsch_p != NULL) {
+       schedule_ulsch_p(module_idP, frameP, subframeP);
+    } else {
+       LOG_E(MAC," %s %d: schedule_ulsch_p is NULL, function not called\n",__FILE__,__LINE__); 
+    }
     // This schedules UCI_SR in subframeP
     schedule_SR(module_idP, frameP, subframeP);
     // This schedules UCI_CSI in subframeP
     schedule_CSI(module_idP, frameP, subframeP);
     // This schedules DLSCH in subframeP
-    schedule_ue_spec_p(module_idP, frameP, subframeP, mbsfn_status);
+    if (schedule_ue_spec_p != NULL) {
+       schedule_ue_spec_p(module_idP, frameP, subframeP, mbsfn_status);
+    } else {
+       LOG_E(MAC," %s %d: schedule_ue_spec_p is NULL, function not called\n",__FILE__,__LINE__); 
+    }
+
   }
   else{
     schedule_ulsch_phy_test(module_idP,frameP,subframeP);

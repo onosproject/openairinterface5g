@@ -130,11 +130,7 @@
 /*!\brief Maximum number od control elemenets */
 #define MAX_NUM_CE 5
 /*!\brief Maximum number of random access process */
-#if 0 // #if defined(USRP_REC_PLAY)
-#define NB_RA_PROC_MAX 1
-#else
 #define NB_RA_PROC_MAX 4
-#endif
 /*!\brief size of buffer status report table */
 #define BSR_TABLE_SIZE 64
 /*!\brief The power headroom reporting range is from -23 ...+40 dB and beyond, with step 1 */
@@ -963,7 +959,10 @@ typedef struct {
     int16_t ta_update;
     uint16_t ul_consecutive_errors;
     int32_t context_active_timer;
+    /// timer for regular CQI request on PUSCH
     int32_t cqi_req_timer;
+    /// indicator that CQI was received on PUSCH when requested
+    int32_t cqi_received;
     int32_t ul_inactivity_timer;
     int32_t ul_failure_timer;
     uint32_t ue_reestablishment_reject_timer;
