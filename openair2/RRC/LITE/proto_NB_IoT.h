@@ -37,12 +37,26 @@
 #include "LAYER2/MAC/defs_NB_IoT.h"
 /*NOTE: no static function should be declared in this header file (e.g. init_SI_NB)*/
 
-uint8_t *get_NB_IoT_MIB(void);
+uint8_t *get_NB_IoT_MIB(
+    rrc_eNB_carrier_data_NB_IoT_t *carrier,
+    uint16_t N_RB_DL,//may not needed--> for NB_IoT only 1 PRB is used
+    uint32_t subframe,
+    uint32_t frame,
+    uint32_t hyper_frame);
 
 uint8_t *get_NB_IoT_MIB_size(void);
 
-uint8_t *get_NB_IoT_SIB1(void);
-
+uint8_t *get_NB_IoT_SIB1(uint8_t Mod_id, int CC_id,
+        rrc_eNB_carrier_data_NB_IoT_t *carrier,
+        uint16_t mcc, //208
+        uint16_t mnc, //92
+        uint16_t tac, //1
+        uint32_t cell_identity, //3584
+        uint16_t band,  // 7
+        uint16_t mnc_digit_length,
+        uint32_t subframe,
+        uint32_t frame,
+        uint32_t hyper_frame);
 uint8_t *get_NB_IoT_SIB1_size(void);
 
 uint8_t *get_NB_IoT_SIB23(void);

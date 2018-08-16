@@ -119,8 +119,23 @@ extern uint16_t                     two_tier_hexagonal_cellIds[7];
 
 mui_t                               rrc_eNB_mui = 0;
 
-uint8_t *get_NB_IoT_MIB(void)
+uint8_t *get_NB_IoT_MIB(
+    rrc_eNB_carrier_data_NB_IoT_t *carrier,
+    uint16_t N_RB_DL,//may not needed--> for NB_IoT only 1 PRB is used
+    uint32_t subframe,
+    uint32_t frame,
+    uint32_t hyper_frame)
 {
+
+   if(frame%64==0 && subframe ==0)
+      {//printf("dooooo MIB");
+
+     
+       do_MIB_NB_IoT(carrier,N_RB_DL,frame,hyper_frame);
+       /* for(int i = 0; i<5;i++)
+         printf("%02X ",eNB_rrc_inst_NB_IoT->carrier[0].MIB_NB_IoT[i]);
+        printf("\n");*/
+      }
   // CC_ID=0
   return eNB_rrc_inst_NB_IoT->carrier[0].MIB_NB_IoT;
 }
@@ -132,8 +147,27 @@ uint8_t *get_NB_IoT_MIB_size(void)
   return eNB_rrc_inst_NB_IoT->carrier[0].sizeof_MIB_NB_IoT;
 }
 
-uint8_t *get_NB_IoT_SIB1(void)
+uint8_t *get_NB_IoT_SIB1(uint8_t Mod_id, int CC_id,
+        rrc_eNB_carrier_data_NB_IoT_t *carrier,
+        uint16_t mcc, //208
+        uint16_t mnc, //92
+        uint16_t tac, //1
+        uint32_t cell_identity, //3584
+        uint16_t band,  // 7
+        uint16_t mnc_digit_length,
+        uint32_t subframe,
+        uint32_t frame,
+        uint32_t hyper_frame)
 {
+
+  
+  if(frame%64==1 && subframe ==0)
+      {     
+       do_SIB1_NB_IoT_x(Mod_id,CC_id,carrier,mcc,mnc,tac,cell_identity,band,mnc_digit_length,hyper_frame);
+      }
+
+      
+
   return eNB_rrc_inst_NB_IoT->carrier[0].SIB1_NB_IoT;
 }
 

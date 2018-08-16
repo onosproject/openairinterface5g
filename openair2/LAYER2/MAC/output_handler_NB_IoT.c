@@ -17,8 +17,9 @@
 int output_handler(eNB_MAC_INST_NB_IoT *mac_inst, module_id_t module_id, int CC_id, uint32_t hypersfn, uint32_t frame, uint32_t subframe, uint8_t MIB_flag, uint8_t SIB1_flag, uint32_t current_time){
 	uint8_t MIB_size = 0;
 	uint8_t SIB1_size = 0, i = 0;
-	uint8_t *MIB_pdu = get_NB_IoT_MIB();
-	uint8_t *SIB1_pdu = get_NB_IoT_SIB1();
+	rrc_eNB_carrier_data_NB_IoT_t *carrier = &eNB_rrc_inst_NB_IoT->carrier[0];
+	uint8_t *MIB_pdu = get_NB_IoT_MIB(carrier,1,subframe,frame,hypersfn);
+	uint8_t *SIB1_pdu = get_NB_IoT_SIB1(0,0,carrier,208,92,1,3584,28,2,subframe,frame,hypersfn);
 	
 	Sched_Rsp_NB_IoT_t *SCHED_info = &mac_inst->Sched_INFO;
 	
