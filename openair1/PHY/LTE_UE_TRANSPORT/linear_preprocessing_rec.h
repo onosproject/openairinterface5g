@@ -11,7 +11,7 @@ void transpose(int N, float complex *A, float complex *Result);
 
 void conjugate_transpose (int rows_A, int col_A, float complex *A, float complex *Result);
 
-void H_hermH_plus_sigma2I (int rows_A, int col_A, float complex *A, float sigma2, float complex *Result);
+void H_hermH_plus_sigma2I (int row_A, int col_A, float complex *A, float sigma2, float complex *Result);
 
 void HH_herm_plus_sigma2I (int rows_A, int col_A, float complex *A, float sigma2, float complex *Result);
 

@@ -1753,7 +1753,7 @@ void dlsch_channel_compensation_core(int **rxdataF_ext,
 {
 
   unsigned short ii;
-  int length_mod8 = 0;
+  int length_mod4 = 0;
   int length2;
   __m128i *dl_ch128,*dl_ch_mag128,*dl_ch_mag128b, *dl_ch128_2, *rxdataF128,*rxdataF_comp128,*rho128;
   __m128i mmtmpD0,mmtmpD1,mmtmpD2,mmtmpD3,QAM_amp128,QAM_amp128b;
@@ -1777,42 +1777,25 @@ void dlsch_channel_compensation_core(int **rxdataF_ext,
       rxdataF128        = (__m128i *)&rxdataF_ext[aarx][start_point];
       rxdataF_comp128   = (__m128i *)&rxdataF_comp[aatx*n_rx + aarx][start_point];
 
-      length_mod8 = length&7;
-      if (length_mod8 == 0){
-        length2 = length>>3;
+      length_mod4 = length&3;
+
+      if (length_mod4 == 0){
+
+        length2 = length>>2;
 
         for (ii=0; ii<length2; ++ii) {
 
           if (mod_order>2) {
-            // get channel amplitude if not QPSK
 
             mmtmpD0 = _mm_madd_epi16(dl_ch128[0],dl_ch128[0]);
             mmtmpD0 = _mm_srai_epi32(mmtmpD0,output_shift);
+            mmtmpD1 = _mm_packs_epi32(mmtmpD0,mmtmpD0);
 
-            mmtmpD1 = _mm_madd_epi16(dl_ch128[1],dl_ch128[1]);
-            mmtmpD1 = _mm_srai_epi32(mmtmpD1,output_shift);
-
-            mmtmpD0 = _mm_packs_epi32(mmtmpD0,mmtmpD1);
-
-            // store channel magnitude here in a new field of dlsch
-
-            dl_ch_mag128[0] = _mm_unpacklo_epi16(mmtmpD0,mmtmpD0);
+            dl_ch_mag128[0] = _mm_unpacklo_epi16(mmtmpD1,mmtmpD1);
             dl_ch_mag128b[0] = dl_ch_mag128[0];
+
             dl_ch_mag128[0] = _mm_mulhi_epi16(dl_ch_mag128[0],QAM_amp128);
             dl_ch_mag128[0] = _mm_slli_epi16(dl_ch_mag128[0],1);
-            //print_ints("Re(ch):",(int16_t*)&mmtmpD0);
-            //print_shorts("QAM_amp:",(int16_t*)&QAM_amp128);
-            //print_shorts("mag:",(int16_t*)&dl_ch_mag128[0]);
-            dl_ch_mag128[1] = _mm_unpackhi_epi16(mmtmpD0,mmtmpD0);
-            dl_ch_mag128b[1] = dl_ch_mag128[1];
-            dl_ch_mag128[1] = _mm_mulhi_epi16(dl_ch_mag128[1],QAM_amp128);
-            dl_ch_mag128[1] = _mm_slli_epi16(dl_ch_mag128[1],1);
-
-            dl_ch_mag128b[0] = _mm_mulhi_epi16(dl_ch_mag128b[0],QAM_amp128b);
-            dl_ch_mag128b[0] = _mm_slli_epi16(dl_ch_mag128b[0],1);
-
-            dl_ch_mag128b[1] = _mm_mulhi_epi16(dl_ch_mag128b[1],QAM_amp128b);
-            dl_ch_mag128b[1] = _mm_slli_epi16(dl_ch_mag128b[1],1);
 
           }
 
@@ -1839,29 +1822,11 @@ void dlsch_channel_compensation_core(int **rxdataF_ext,
           //  print_shorts("ch:",dl_ch128);
           //  print_shorts("pack:",rxdataF_comp128);
 
-          // multiply by conjugated channel
-          mmtmpD0 = _mm_madd_epi16(dl_ch128[1],rxdataF128[1]);
-          // mmtmpD0 contains real part of 4 consecutive outputs (32-bit)
-          mmtmpD1 = _mm_shufflelo_epi16(dl_ch128[1],_MM_SHUFFLE(2,3,0,1));
-          mmtmpD1 = _mm_shufflehi_epi16(mmtmpD1,_MM_SHUFFLE(2,3,0,1));
-          mmtmpD1 = _mm_sign_epi16(mmtmpD1,*(__m128i*)conjugate);
-          mmtmpD1 = _mm_madd_epi16(mmtmpD1,rxdataF128[1]);
-          // mmtmpD1 contains imag part of 4 consecutive outputs (32-bit)
-          mmtmpD0 = _mm_srai_epi32(mmtmpD0,output_shift);
-          mmtmpD1 = _mm_srai_epi32(mmtmpD1,output_shift);
-          mmtmpD2 = _mm_unpacklo_epi32(mmtmpD0,mmtmpD1);
-          mmtmpD3 = _mm_unpackhi_epi32(mmtmpD0,mmtmpD1);
-
-          rxdataF_comp128[1] = _mm_packs_epi32(mmtmpD2,mmtmpD3);
-          //  print_shorts("rx:",rxdataF128+1);
-          //  print_shorts("ch:",dl_ch128+1);
-          //print_shorts("pack:",rxdataF_comp128+1);
-
-          dl_ch128+=2;
-          dl_ch_mag128+=2;
-          dl_ch_mag128b+=2;
-          rxdataF128+=2;
-          rxdataF_comp128+=2;
+          dl_ch128+=1;
+          dl_ch_mag128+=1;
+          dl_ch_mag128b+=1;
+          rxdataF128+=1;
+          rxdataF_comp128+=1;
         }
       }else {
         printf ("Channel Compensation: Received number of subcarriers is not multiple of 8, \n"
@@ -1879,8 +1844,8 @@ void dlsch_channel_compensation_core(int **rxdataF_ext,
       dl_ch128      = (__m128i *)&dl_ch_estimates_ext[aarx][start_point];
       dl_ch128_2    = (__m128i *)&dl_ch_estimates_ext[2+aarx][start_point];
 
-      if (length_mod8 == 0){
-        length2 = length>>3;
+      if (length_mod4 == 0){
+        length2 = length>>2;
 
         for (ii=0; ii<length2; ++ii) {
           // multiply by conjugated channel
@@ -1908,26 +1873,12 @@ void dlsch_channel_compensation_core(int **rxdataF_ext,
           //print_shorts("ch:",dl_ch128);
           //print_shorts("pack:",rho128);
 
-          // multiply by conjugated channel
-          mmtmpD0 = _mm_madd_epi16(dl_ch128[1],dl_ch128_2[1]);
-          // mmtmpD0 contains real part of 4 consecutive outputs (32-bit)
-          mmtmpD1 = _mm_shufflelo_epi16(dl_ch128[1],_MM_SHUFFLE(2,3,0,1));
-          mmtmpD1 = _mm_shufflehi_epi16(mmtmpD1,_MM_SHUFFLE(2,3,0,1));
-          mmtmpD1 = _mm_sign_epi16(mmtmpD1,*(__m128i*)conjugate);
-          mmtmpD1 = _mm_madd_epi16(mmtmpD1,dl_ch128_2[1]);
-          // mmtmpD1 contains imag part of 4 consecutive outputs (32-bit)
-          mmtmpD0 = _mm_srai_epi32(mmtmpD0,output_shift);
-          mmtmpD1 = _mm_srai_epi32(mmtmpD1,output_shift);
-          mmtmpD2 = _mm_unpacklo_epi32(mmtmpD0,mmtmpD1);
-          mmtmpD3 = _mm_unpackhi_epi32(mmtmpD0,mmtmpD1);
-
-          rho128[1] =_mm_packs_epi32(mmtmpD2,mmtmpD3);
-          dl_ch128+=2;
-          dl_ch128_2+=2;
-          rho128+=2;
+          dl_ch128+=1;
+          dl_ch128_2+=1;
+          rho128+=1;
         }
       }else {
-        printf ("Channel Compensation: Received number of subcarriers is not multiple of 8, \n"
+        printf ("Channel Compensation: Received number of subcarriers is not multiple of 4, \n"
                  "need to adapt the code!\n");
       }
     }
@@ -4727,7 +4678,6 @@ void mmse_processing_core_flp(float complex** rxdataF_flp,
                               uint8_t n_rx,
                               int32_t length,
                               int32_t start_point){
-
   uint8_t aatx, aarx;
   float max = 0;
   float one_over_max = 0;
