@@ -35,6 +35,10 @@
 #include "enb_config.h"
 #include "UTIL/OTG/otg.h"
 #include "UTIL/OTG/otg_externs.h"
+#if defined(OAI_EMU)
+# include "OCG.h"
+# include "OCG_extern.h"
+#endif
 #if defined(ENABLE_ITTI)
 # include "intertask_interface.h"
 # if defined(ENABLE_USE_MME)
@@ -247,11 +251,13 @@ void RCconfig_L1(void) {
     for (j = 0; j < RC.nb_L1_inst; j++) {
       RC.nb_L1_CC[j] = *(L1_ParamList.paramarray[j][L1_CC_IDX].uptr);
 
+
       if (RC.eNB[j] == NULL) {
 	RC.eNB[j]                       = (PHY_VARS_eNB **)malloc((1+MAX_NUM_CCs)*sizeof(PHY_VARS_eNB*));
 	LOG_I(PHY,"RC.eNB[%d] = %p\n",j,RC.eNB[j]);
 	memset(RC.eNB[j],0,(1+MAX_NUM_CCs)*sizeof(PHY_VARS_eNB*));
       }
+
 
       for (i=0;i<RC.nb_L1_CC[j];i++) {
         if (RC.eNB[j][i] == NULL) {
@@ -295,6 +301,7 @@ void RCconfig_L1(void) {
 
         configure_nfapi_pnf(RC.eNB[j][0]->eth_params_n.remote_addr, RC.eNB[j][0]->eth_params_n.remote_portc, RC.eNB[j][0]->eth_params_n.my_addr, RC.eNB[j][0]->eth_params_n.my_portd, RC.eNB[j][0]->eth_params_n     .remote_portd);
       }
+      
       else { // other midhaul
       }	
     }// j=0..num_inst
@@ -338,6 +345,7 @@ void RCconfig_macrlc() {
 
   config_getlist( &MacRLC_ParamList,MacRLC_Params,sizeof(MacRLC_Params)/sizeof(paramdef_t), NULL);    
   
+
   if ( MacRLC_ParamList.numelt > 0) {
 
     RC.nb_macrlc_inst=MacRLC_ParamList.numelt; 
@@ -550,6 +558,10 @@ int RCconfig_RRC(MessageDef *msg_p, uint32_t i, eNB_RRC_INST *rrc) {
 
   
 /* 
+  char*             flexran_agent_interface_name      = NULL;
+  char*             flexran_agent_ipv4_address        = NULL;
+  int32_t     flexran_agent_port                = 0;
+  char*             flexran_agent_cache               = NULL;
   int32_t     otg_ue_id                     = 0;
   char*             otg_app_type                  = NULL;
   char*             otg_bg_traffic                = NULL;
@@ -2140,6 +2152,35 @@ int RCconfig_RRC(MessageDef *msg_p, uint32_t i, eNB_RRC_INST *rrc) {
 	      rrc->srb1_poll_byte             = PollByte_kBinfinity;
 	      rrc->srb1_max_retx_threshold    = UL_AM_RLC__maxRetxThreshold_t8;
 	    }
+	    /*
+	    // Network Controller 
+	    subsetting = config_setting_get_member (setting_enb, ENB_CONFIG_STRING_NETWORK_CONTROLLER_CONFIG);
+
+	    if (subsetting != NULL) {
+	      if (  (
+		     config_setting_lookup_string( subsetting, ENB_CONFIG_STRING_FLEXRAN_AGENT_INTERFACE_NAME,
+						   (const char **)&flexran_agent_interface_name)
+		     && config_setting_lookup_string( subsetting, ENB_CONFIG_STRING_FLEXRAN_AGENT_IPV4_ADDRESS,
+						      (const char **)&flexran_agent_ipv4_address)
+		     && config_setting_lookup_int(subsetting, ENB_CONFIG_STRING_FLEXRAN_AGENT_PORT,
+						  &flexran_agent_port)
+		     && config_setting_lookup_string( subsetting, ENB_CONFIG_STRING_FLEXRAN_AGENT_CACHE,
+						      (const char **)&flexran_agent_cache)
+		     )
+		    ) {
+		enb_properties_loc.properties[enb_properties_loc_index]->flexran_agent_interface_name = strdup(flexran_agent_interface_name);
+		cidr = flexran_agent_ipv4_address;
+		address = strtok(cidr, "/");
+		//enb_properties_loc.properties[enb_properties_loc_index]->flexran_agent_ipv4_address = strdup(address);
+		if (address) {
+		  IPV4_STR_ADDR_TO_INT_NWBO (address, enb_properties_loc.properties[enb_properties_loc_index]->flexran_agent_ipv4_address, "BAD IP ADDRESS FORMAT FOR eNB Agent !\n" );
+		}
+
+		enb_properties_loc.properties[enb_properties_loc_index]->flexran_agent_port = flexran_agent_port;
+		enb_properties_loc.properties[enb_properties_loc_index]->flexran_agent_cache = strdup(flexran_agent_cache);
+	      }
+	    }
+	    */	  
 
 	    /*
 	    // Network Controller 

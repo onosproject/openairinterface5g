@@ -1126,7 +1126,7 @@ set(PHY_SRC
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/uci_tools.c
   ${OPENAIR1_DIR}/PHY/LTE_ESTIMATION/freq_equalization.c
   ${OPENAIR1_DIR}/PHY/LTE_ESTIMATION/lte_adjust_sync_eNB.c
-  ${OPENAIR1_DIR}/PHY/LTE_ESTIMATION/lte_ul_channel_estimation.c
+#  ${OPENAIR1_DIR}/PHY/LTE_ESTIMATION/lte_ul_channel_estimation.c
   ${OPENAIR1_DIR}/PHY/LTE_ESTIMATION/lte_eNB_measurements.c
   ${OPENAIR1_DIR}/PHY/INIT/lte_init.c
   )
@@ -1135,6 +1135,8 @@ set(PHY_SRC_RU
   # actual source
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/if4_tools.c
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/if5_tools.c
+  ${OPENAIR1_DIR}/PHY/LTE_UE_TRANSPORT/drs_modulation.c
+  ${OPENAIR1_DIR}/PHY/LTE_ESTIMATION/lte_ul_channel_estimation.c
   ${OPENAIR1_DIR}/PHY/MODULATION/slot_fep_ul.c
   ${OPENAIR1_DIR}/PHY/MODULATION/ul_7_5_kHz.c
   ${OPENAIR1_DIR}/PHY/MODULATION/beamforming.c
@@ -1880,9 +1882,13 @@ endif (${T_TRACER})
 #This rule and the following deal with it.
 add_custom_command (
   OUTPUT ${OPENAIR_DIR}/common/utils/T/T_IDs.h
-  COMMAND make
+  COMMAND $(MAKE) clean
+  COMMAND $(MAKE)
+  COMMAND $(MAKE) check_vcd
   WORKING_DIRECTORY ${OPENAIR_DIR}/common/utils/T
   DEPENDS ${OPENAIR_DIR}/common/utils/T/T_messages.txt
+          ${OPENAIR_DIR}/common/utils/LOG/vcd_signal_dumper.c
+          ${OPENAIR_DIR}/common/utils/LOG/vcd_signal_dumper.h
   )
 
 #This rule is specifically needed to generate T files
@@ -1912,6 +1918,7 @@ add_executable(lte-softmodem
   ${OPENAIR_TARGETS}/RT/USER/rt_wrapper.c
   ${OPENAIR_TARGETS}/RT/USER/lte-enb.c
   ${OPENAIR_TARGETS}/RT/USER/lte-ru.c
+  ${OPENAIR_TARGETS}/RT/USER/ru_control.c
   ${OPENAIR_TARGETS}/RT/USER/lte-softmodem.c
   ${OPENAIR2_DIR}/ENB_APP/NB_IoT_interface.c
   ${OPENAIR1_DIR}/SIMULATION/TOOLS/taus.c
@@ -1951,6 +1958,7 @@ add_executable(lte-softmodem-nos1
   ${OPENAIR_TARGETS}/RT/USER/rt_wrapper.c
   ${OPENAIR_TARGETS}/RT/USER/lte-enb.c
   ${OPENAIR_TARGETS}/RT/USER/lte-ru.c
+  ${OPENAIR_TARGETS}/RT/USER/ru_control.c
   ${OPENAIR_TARGETS}/RT/USER/lte-softmodem.c
   ${OPENAIR2_DIR}/ENB_APP/NB_IoT_interface.c
   ${OPENAIR1_DIR}/SIMULATION/TOOLS/taus.c
@@ -1990,6 +1998,7 @@ add_executable(lte-uesoftmodem
   ${OPENAIR_TARGETS}/RT/USER/lte-ue.c
   ${OPENAIR_TARGETS}/RT/USER/lte-uesoftmodem.c
   ${OPENAIR_TARGETS}/RT/USER/lte-ru.c
+  ${OPENAIR_TARGETS}/RT/USER/ru_control.c
   ${OPENAIR_TARGETS}/RT/USER/rfsim.c
   ${OPENAIR1_DIR}/SIMULATION/TOOLS/taus.c
   ${OPENAIR_TARGETS}/COMMON/create_tasks_ue.c
@@ -2028,6 +2037,7 @@ add_executable(lte-uesoftmodem-nos1
   ${OPENAIR_TARGETS}/RT/USER/lte-ue.c
   ${OPENAIR_TARGETS}/RT/USER/lte-uesoftmodem.c
   ${OPENAIR_TARGETS}/RT/USER/lte-ru.c
+  ${OPENAIR_TARGETS}/RT/USER/ru_control.c
   ${OPENAIR_TARGETS}/RT/USER/rfsim.c
   ${OPENAIR1_DIR}/SIMULATION/TOOLS/taus.c
   ${OPENAIR_TARGETS}/COMMON/create_tasks_ue.c
@@ -2187,7 +2197,8 @@ if (${T_TRACER})
         oai_eth_transpro
         FLPT_MSG ASYNC_IF FLEXRAN_AGENT HASHTABLE MSC UTIL OMG_SUMO SECU_OSA
         SECU_CN SCHED_LIB PHY L2 default_sched remote_sched RAL CN_UTILS
-        GTPV1U SCTP_CLIENT UDP LIB_NAS_UE LFDS LFDS7 SIMU OPENAIR0_LIB PHY_MEX)
+        GTPV1U SCTP_CLIENT UDP LIB_NAS_UE LFDS LFDS7 SIMU OPENAIR0_LIB PHY_MEX
+        coding)
     if (TARGET ${i})
       add_dependencies(${i} generate_T)
     endif()
@@ -2230,7 +2241,7 @@ function(make_driver name dir)
   endforeach()
   CONFIGURE_FILE(${OPENAIR_CMAKE}/tools/Kbuild.cmake ${OPENAIR_BIN_DIR}/${name}/Kbuild)
   add_custom_command(OUTPUT ${name}.ko
-    COMMAND make -C ${module_build_path} M=${OPENAIR_BIN_DIR}/${name}
+    COMMAND $(MAKE) -C ${module_build_path} M=${OPENAIR_BIN_DIR}/${name}
     WORKING_DIRECTORY ${OPENAIR_BIN_DIR}/${name}
     COMMENT "building ${module}.ko"
     VERBATIM

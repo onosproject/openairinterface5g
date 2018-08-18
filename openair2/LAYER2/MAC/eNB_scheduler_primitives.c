@@ -309,6 +309,34 @@ get_Msg3allocret(COMMON_channels_t * cc,
   }
 }
 
+uint8_t pusch_sf_to_phich_sfoffset(COMMON_channels_t * cc, sub_frame_t subframe) {
+
+   if (cc->tdd_Config == NULL) return(4);
+   else 
+     switch (cc->tdd_Config->subframeAssignment) {
+       case 0:
+         if (subframe==2 || subframe==7) return(4);
+         else if (subframe==3 || subframe==8) return(7);
+         else if (subframe==4 || subframe==9) return(6);
+         break;
+       case 1:
+         if (subframe==2 || subframe==7) return(4);
+         else return(6);
+         break;
+       case 2:
+       case 3:
+       case 4:
+       case 5:
+	return (6);
+    	break;
+       case 6:
+         if (subframe==2 || subframe==7) return(4);
+         else if (subframe==3 || subframe==4) return(6);
+         else if (subframe==8) return(7);
+         break;
+      }
+}
+
 uint8_t
 subframe2harqpid(COMMON_channels_t * cc, frame_t frame,
 		 sub_frame_t subframe)
@@ -317,9 +345,9 @@ subframe2harqpid(COMMON_channels_t * cc, frame_t frame,
 
   AssertFatal(cc != NULL, "cc is null\n");
 
-  if (cc->tdd_Config == NULL) {	// FDD
+//  if (cc->tdd_Config == NULL) {	// FDD
     ret = (((frame << 1) + subframe) & 7);
-  } else {
+ /* } else {
     switch (cc->tdd_Config->subframeAssignment) {
     case 1:
       if ((subframe == 2) ||
@@ -382,6 +410,7 @@ subframe2harqpid(COMMON_channels_t * cc, frame_t frame,
 		  (int) cc->tdd_Config->subframeAssignment);
     }
   }
+*/
   return ret;
 }
 
@@ -1445,7 +1474,7 @@ fill_nfapi_uci_acknak(module_id_t module_idP,
 			      rntiP,
 			      absSFP,
 			      &ul_config_pdu->uci_harq_pdu.harq_information, cce_idxP);
-  LOG_D(MAC,
+  LOG_I(MAC,
 	"Filled in UCI HARQ request for rnti %x SF %d.%d acknakSF %d.%d, cce_idxP %d-> n1_pucch %d\n",
 	rntiP, absSFP / 10, absSFP % 10, ackNAK_absSF / 10,
 	ackNAK_absSF % 10, cce_idxP,
@@ -3601,13 +3630,14 @@ extract_harq(module_id_t mod_idP, int CC_idP, int UE_id,
        }
       }
       break;
-    case 1:		// Channel Selection
+    case 2:		// Format 2
+      AssertFatal(1==0,"Can't do Format 2 yet in TDD\n");
       break;
-    case 2:		// Format 3
-      break;
-    case 3:		// Format 4
+    case 3:		// Format 3
+      AssertFatal(1==0,"Can't do Format 3 yet in TDD\n");
       break;
     case 4:		// Format 5
+      AssertFatal(1==0,"Can't do Format 4 yet in TDD\n");
       break;
     }
   } else {
@@ -3617,7 +3647,7 @@ extract_harq(module_id_t mod_idP, int CC_idP, int UE_id,
 
     harq_pid = ((10 * frameP) + subframeP + 10236) & 7;
 
-    LOG_D(MAC,"frame %d subframe %d harq_pid %d mode %d tmode[0] %d num_ack_nak %d round %d\n",frameP,subframeP,harq_pid,harq_indication_fdd->mode,tmode[0],num_ack_nak,sched_ctl->round[CC_idP][harq_pid]);
+    LOG_I(MAC,"frame %d subframe %d harq_pid %d mode %d tmode[0] %d num_ack_nak %d round %d\n",frameP,subframeP,harq_pid,harq_indication_fdd->mode,tmode[0],num_ack_nak,sched_ctl->round[CC_idP][harq_pid]);
 
     switch (harq_indication_fdd->mode) {
     case 0:		// Format 1a/b (10.1.2.1)
@@ -4516,7 +4546,7 @@ harq_indication(module_id_t mod_idP, int CC_idP, frame_t frameP,
   UE_sched_ctrl *sched_ctl = &UE_list->UE_sched_ctrl[UE_id];
   COMMON_channels_t *cc = &RC.mac[mod_idP]->common_channels[CC_idP];
   // extract HARQ Information
-  LOG_D(MAC,
+  LOG_I(MAC,
 	"Frame %d, subframe %d: Received harq indication (%d) from UE %d/%x, ul_cqi %d\n",
 	frameP, subframeP, channel, UE_id, rnti, ul_cqi);
   if (cc->tdd_Config)

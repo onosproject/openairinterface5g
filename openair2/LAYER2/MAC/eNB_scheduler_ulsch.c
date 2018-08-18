@@ -158,8 +158,8 @@ rx_sdu(const module_id_t enb_mod_idP,
 
   if (UE_id != -1) {
     LOG_D(MAC,
-	  "[eNB %d][PUSCH %d] CC_id %d %d.%d Received ULSCH sdu round %d from PHY (rnti %x, UE_id %d) ul_cqi %d\n",
-	  enb_mod_idP, harq_pid, CC_idP,frameP,subframeP,
+	  "[eNB %d][PUSCH %d] SFN.SF %d.%d : CC_id %d Received ULSCH sdu round %d from PHY (rnti %x, UE_id %d) ul_cqi %d\n",
+	  enb_mod_idP, harq_pid, frameP,subframeP, CC_idP,
 	  UE_list->UE_sched_ctrl[UE_id].round_UL[CC_idP][harq_pid],
 	  current_rnti, UE_id, ul_cqi);
 
@@ -255,15 +255,15 @@ rx_sdu(const module_id_t enb_mod_idP,
 		radioResourceConfigCommon->rach_ConfigCommon.
 		maxHARQ_Msg3Tx);
 
-    LOG_D(MAC,
-	  "[eNB %d][PUSCH %d] CC_id %d [RAPROC Msg3] Received ULSCH sdu round %d from PHY (rnti %x, RA_id %d) ul_cqi %d\n",
-	  enb_mod_idP, harq_pid, CC_idP, ra[RA_id].msg3_round,
+    LOG_I(MAC,
+	  "[eNB %d][PUSCH %d] SFN.SF %d.%d CC_id %d [RAPROC Msg3] : Received ULSCH sdu round %d from PHY (rnti %x, RA_id %d) ul_cqi %d\n",
+	  enb_mod_idP, harq_pid, frameP,subframeP,CC_idP, ra[RA_id].msg3_round,
 	  current_rnti, RA_id, ul_cqi);
 
     first_rb = ra->msg3_first_rb;
 
     if (sduP == NULL) {	// we've got an error on Msg3
-      LOG_D(MAC,
+      LOG_I(MAC,
 	    "[eNB %d] CC_id %d, RA %d ULSCH in error in round %d/%d\n",
 	    enb_mod_idP, CC_idP, RA_id,
 	    ra[RA_id].msg3_round,
@@ -777,7 +777,8 @@ rx_sdu(const module_id_t enb_mod_idP,
   uint8_t sf_ahead_dl = ul_subframe2_k_phich(&mac->common_channels[CC_idP] , subframeP);
   hi_dci0_req = &mac->HI_DCI0_req[CC_idP][(subframeP+sf_ahead_dl)%10];
 
-  nfapi_hi_dci0_request_body_t *hi_dci0_req_body = &hi_dci0_req->hi_dci0_request_body;
+  
+nfapi_hi_dci0_request_body_t *hi_dci0_req_body = &hi_dci0_req->hi_dci0_request_body;
   nfapi_hi_dci0_request_pdu_t *hi_dci0_pdu =
     &hi_dci0_req_body->hi_dci0_pdu_list[hi_dci0_req_body->number_of_dci + hi_dci0_req_body->number_of_hi];
   memset((void *) hi_dci0_pdu, 0, sizeof(nfapi_hi_dci0_request_pdu_t));

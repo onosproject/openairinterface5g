@@ -681,7 +681,6 @@ function main() {
   fi
 
 
-
   # Telnet server compilation
   #####################
   if [ "$BUILD_TELNETSRV" = "1" ] ; then

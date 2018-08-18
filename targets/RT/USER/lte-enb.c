@@ -29,6 +29,18 @@
  * \note
  * \warning
  */
+ 
+/*! \function wakeup_txfh
+ * \brief Implementation of creating multiple RU threads for beamforming emulation
+ * \author TH Wang(Judy), TY Hsu, SY Yeh(fdragon)
+ * \date 2018
+ * \version 0.1
+ * \company Eurecom and ISIP@NCTU
+ * \email: Tsu-Han.Wang@eurecom.fr,tyhsu@cs.nctu.edu.tw,fdragon.cs96g@g2.nctu.edu.tw
+ * \note
+ * \warning
+ */
+
 
 #define _GNU_SOURCE
 #include <pthread.h>
@@ -148,7 +160,7 @@ void init_eNB(int,int);
 void stop_eNB(int nb_inst);
 
 int wakeup_tx(PHY_VARS_eNB *eNB,RU_proc_t *ru_proc);
-int wakeup_txfh(eNB_rxtx_proc_t *proc,RU_proc_t *ru_proc);
+int wakeup_txfh(eNB_rxtx_proc_t *proc,PHY_VARS_eNB *eNB);
 void wakeup_prach_eNB(PHY_VARS_eNB *eNB,RU_t *ru,int frame,int subframe);
 #if (RRC_VERSION >= MAKE_VERSION(14, 0, 0))
 void wakeup_prach_eNB_br(PHY_VARS_eNB *eNB,RU_t *ru,int frame,int subframe);
@@ -243,8 +255,10 @@ static inline int rxtx(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc, char *thread_nam
   eNB->if_inst->UL_indication(&eNB->UL_INFO);
 
   pthread_mutex_unlock(&eNB->UL_INFO_mutex);
+
   /* this conflict resolution may be totally wrong, to be tested */
   /* CONFLICT RESOLUTION: BEGIN */
+
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_ENB_DLSCH_ULSCH_SCHEDULER , 0 );
   if(oai_exit) return(-1);
   if(eNB->single_thread_flag || get_nprocs() <= 4){
@@ -306,9 +320,10 @@ static inline int rxtx(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc, char *thread_nam
 
 static void* tx_thread(void* param) {
 
-  eNB_proc_t *eNB_proc  = (eNB_proc_t*)param;
+  PHY_VARS_eNB *eNB = (PHY_VARS_eNB *)param;
+  eNB_proc_t *eNB_proc  = &eNB->proc;
   eNB_rxtx_proc_t *proc = &eNB_proc->proc_rxtx[1];
-  PHY_VARS_eNB *eNB = RC.eNB[0][proc->CC_id];
+  //PHY_VARS_eNB *eNB = RC.eNB[0][proc->CC_id];
   
   char thread_name[100];
   sprintf(thread_name,"TXnp4_%d\n",&eNB->proc.proc_rxtx[0] == proc ? 0 : 1);
@@ -342,7 +357,7 @@ static void* tx_thread(void* param) {
       exit_fun( "ERROR pthread_cond_signal" );
     }
     pthread_mutex_unlock( &proc->mutex_rxtx );
-    wakeup_txfh(proc,eNB_proc->ru_proc);
+    wakeup_txfh(proc,eNB);
   }
 
   return 0;
@@ -365,7 +380,8 @@ static void* eNB_thread_rxtx( void* param ) {
 	  proc = (eNB_rxtx_proc_t*)param;
   }
   else{
-	  eNB_proc_t *eNB_proc  = (eNB_proc_t*)param;
+    PHY_VARS_eNB *eNB = (PHY_VARS_eNB *)param;
+	  eNB_proc_t *eNB_proc  = &eNB->proc;
 	  proc = &eNB_proc->proc_rxtx[0];
   }
 
@@ -406,6 +422,8 @@ static void* eNB_thread_rxtx( void* param ) {
     VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME(VCD_SIGNAL_DUMPER_VARIABLES_FRAME_NUMBER_RX0_ENB,proc->frame_rx);
  
 
+    
+  
     if (oai_exit) break;
 
     if (eNB->CC_id==0)
@@ -427,7 +445,7 @@ static void* eNB_thread_rxtx( void* param ) {
     	else
     	{
     		phy_procedures_eNB_TX(eNB, proc, 1);
-    		wakeup_txfh(proc,eNB->proc.ru_proc);
+    		wakeup_txfh(proc,eNB);
     	}
     }
 
@@ -460,6 +478,8 @@ void eNB_top(PHY_VARS_eNB *eNB, int frame_rx, int subframe_rx, char *string,RU_t
     proc_rxtx->frame_tx     = (proc_rxtx->subframe_rx > (9-sf_ahead)) ? (proc_rxtx->frame_rx+1)&1023 : proc_rxtx->frame_rx;
     proc_rxtx->subframe_tx  = (proc_rxtx->subframe_rx + sf_ahead)%10;
 
+    LOG_D(PHY,"RXTX for TX: %d.%d, RX: %d.%d\n",proc_rxtx->frame_tx,proc_rxtx->subframe_tx,proc_rxtx->frame_rx,proc_rxtx->subframe_rx);
+
     if (rxtx(eNB,proc_rxtx,string) < 0) LOG_E(PHY,"eNB %d CC_id %d failed during execution\n",eNB->Mod_id,eNB->CC_id);
     ru_proc->timestamp_tx = proc_rxtx->timestamp_tx;
     ru_proc->subframe_tx  = proc_rxtx->subframe_tx;
@@ -467,45 +487,47 @@ void eNB_top(PHY_VARS_eNB *eNB, int frame_rx, int subframe_rx, char *string,RU_t
   }
 }
 
-int wakeup_txfh(eNB_rxtx_proc_t *proc,RU_proc_t *ru_proc) {
+int wakeup_txfh(eNB_rxtx_proc_t *proc,PHY_VARS_eNB *eNB) {
   
-	if(ru_proc == NULL)
-		return(0);
+  RU_proc_t *ru_proc;
   struct timespec wait;
   wait.tv_sec=0;
   wait.tv_nsec=5000000L;
 
-  
-  if(wait_on_condition(&ru_proc->mutex_eNBs,&ru_proc->cond_eNBs,&ru_proc->ru_tx_ready,"wakeup_txfh")<0) {
-    LOG_E(PHY,"Frame %d, subframe %d: TX FH not ready\n", ru_proc->frame_tx, ru_proc->subframe_tx);
-    return(-1);
-  }
-  if (release_thread(&ru_proc->mutex_eNBs,&ru_proc->ru_tx_ready,"wakeup_txfh")<0) return(-1);
-  
-  if (ru_proc->instance_cnt_eNBs == 0) {
-    LOG_E(PHY,"Frame %d, subframe %d: TX FH thread busy, dropping Frame %d, subframe %d\n", ru_proc->frame_tx, ru_proc->subframe_tx, proc->frame_rx, proc->subframe_rx);
-    return(-1);
-  }
-  if (pthread_mutex_timedlock(&ru_proc->mutex_eNBs,&wait) != 0) {
-    LOG_E( PHY, "[eNB] ERROR pthread_mutex_lock for eNB TX1 thread %d (IC %d)\n", ru_proc->subframe_rx&1,ru_proc->instance_cnt_eNBs );
-    exit_fun( "error locking mutex_eNB" );
-    return(-1);
-  }
+  for(int ru_id=0; ru_id<eNB->num_RU; ru_id++){
+    ru_proc = &eNB->RU_list[ru_id]->proc;
+    if(ru_proc == NULL)
+		return(0);
+    if(wait_on_condition(&ru_proc->mutex_eNBs,&ru_proc->cond_eNBs,&ru_proc->ru_tx_ready,"wakeup_txfh")<0) {
+      LOG_E(PHY,"Frame %d, subframe %d: TX FH not ready\n", ru_proc->frame_tx, ru_proc->subframe_tx);
+      return(-1);
+    }
+    if (release_thread(&ru_proc->mutex_eNBs,&ru_proc->ru_tx_ready,"wakeup_txfh")<0) return(-1);
+    
+    if (ru_proc->instance_cnt_eNBs == 0) {
+      LOG_E(PHY,"Frame %d, subframe %d: TX FH thread busy, dropping Frame %d, subframe %d\n", ru_proc->frame_tx, ru_proc->subframe_tx, proc->frame_rx, proc->subframe_rx);
+      return(-1);
+    }
+    if (pthread_mutex_timedlock(&ru_proc->mutex_eNBs,&wait) != 0) {
+      LOG_E( PHY, "[eNB] ERROR pthread_mutex_lock for eNB TX1 thread %d (IC %d)\n", ru_proc->subframe_rx&1,ru_proc->instance_cnt_eNBs );
+      exit_fun( "error locking mutex_eNB" );
+      return(-1);
+    }
 
-    ++ru_proc->instance_cnt_eNBs;
-    ru_proc->timestamp_tx = proc->timestamp_tx;
-    ru_proc->subframe_tx  = proc->subframe_tx;
-    ru_proc->frame_tx     = proc->frame_tx;
-  
-  // the thread can now be woken up
-  if (pthread_cond_signal(&ru_proc->cond_eNBs) != 0) {
-    LOG_E( PHY, "[eNB] ERROR pthread_cond_signal for eNB TXnp4 thread\n");
-    exit_fun( "ERROR pthread_cond_signal" );
-    return(-1);
+      ++ru_proc->instance_cnt_eNBs;
+      ru_proc->timestamp_tx = proc->timestamp_tx;
+      ru_proc->subframe_tx  = proc->subframe_tx;
+      ru_proc->frame_tx     = proc->frame_tx;
+    
+    // the thread can now be woken up
+    if (pthread_cond_signal(&ru_proc->cond_eNBs) != 0) {
+      LOG_E( PHY, "[eNB] ERROR pthread_cond_signal for eNB TXnp4 thread\n");
+      exit_fun( "ERROR pthread_cond_signal" );
+      return(-1);
+    }
+    
+    pthread_mutex_unlock( &ru_proc->mutex_eNBs );
   }
-  
-  pthread_mutex_unlock( &ru_proc->mutex_eNBs );
-
   return(0);
 }
 
@@ -572,19 +594,21 @@ int wakeup_rxtx(PHY_VARS_eNB *eNB,RU_t *ru) {
   pthread_mutex_lock(&proc->mutex_RU);
   for (i=0;i<eNB->num_RU;i++) {
     if (ru == eNB->RU_list[i]) {
-      if ((proc->RU_mask&(1<<i)) > 0)
+      if ((proc->RU_mask[ru->proc.subframe_rx]&(1<<i)) > 0)
 	LOG_E(PHY,"eNB %d frame %d, subframe %d : previous information from RU %d (num_RU %d,mask %x) has not been served yet!\n",
-	      eNB->Mod_id,proc->frame_rx,proc->subframe_rx,ru->idx,eNB->num_RU,proc->RU_mask);
-      proc->RU_mask |= (1<<i);
-    }
+	      eNB->Mod_id,proc->frame_rx,proc->subframe_rx,ru->idx,eNB->num_RU,proc->RU_mask[ru->proc.subframe_rx]);
+      proc->RU_mask[ru->proc.subframe_rx] |= (1<<i);
+    }else if (eNB->RU_list[i]->state == RU_SYNC){
+        proc->RU_mask[ru->proc.subframe_rx] |= (1<<i);
+     }
   }
-  if (proc->RU_mask != (1<<eNB->num_RU)-1) {  // not all RUs have provided their information so return
+  if (proc->RU_mask[ru->proc.subframe_rx] != (1<<eNB->num_RU)-1) {  // not all RUs have provided their information so return
     LOG_E(PHY,"Not all RUs have provided their info\n");
     pthread_mutex_unlock(&proc->mutex_RU);
     return(0);
   }
   else { // all RUs have provided their information so continue on and wakeup eNB processing
-    proc->RU_mask = 0;
+    proc->RU_mask[ru->proc.subframe_rx] = 0;
     pthread_mutex_unlock(&proc->mutex_RU);
   }
 
@@ -652,11 +676,13 @@ void wakeup_prach_eNB(PHY_VARS_eNB *eNB,RU_t *ru,int frame,int subframe) {
     for (i=0;i<eNB->num_RU;i++) {
       if (ru == eNB->RU_list[i]) {
 	LOG_D(PHY,"frame %d, subframe %d: RU %d for eNB %d signals PRACH (mask %x, num_RU %d)\n",frame,subframe,i,eNB->Mod_id,proc->RU_mask_prach,eNB->num_RU);
-	if ((proc->RU_mask_prach&(1<<i)) > 0)
-	  LOG_E(PHY,"eNB %d frame %d, subframe %d : previous information (PRACH) from RU %d (num_RU %d, mask %x) has not been served yet!\n",
-		eNB->Mod_id,frame,subframe,ru->idx,eNB->num_RU,proc->RU_mask_prach);
+	//if ((proc->RU_mask_prach&(1<<i)) > 0)
+	//  LOG_E(PHY,"eNB %d frame %d, subframe %d : previous information (PRACH) from RU %d (num_RU %d, mask %x) has not been served yet!\n",
+	//	eNB->Mod_id,frame,subframe,ru->idx,eNB->num_RU,proc->RU_mask_prach);
 	proc->RU_mask_prach |= (1<<i);
-      }
+      }else if (eNB->RU_list[i]->state == RU_SYNC || eNB->RU_list[i]->wait_cnt > 0){
+        proc->RU_mask_prach |= (1<<i);
+     }
     }
     if (proc->RU_mask_prach != (1<<eNB->num_RU)-1) {  // not all RUs have provided their information so return
       pthread_mutex_unlock(&proc->mutex_RU_PRACH);
@@ -711,12 +737,15 @@ void wakeup_prach_eNB_br(PHY_VARS_eNB *eNB,RU_t *ru,int frame,int subframe) {
     pthread_mutex_lock(&proc->mutex_RU_PRACH_br);
     for (i=0;i<eNB->num_RU;i++) {
       if (ru == eNB->RU_list[i]) {
-	LOG_D(PHY,"frame %d, subframe %d: RU %d for eNB %d signals PRACH BR (mask %x, num_RU %d)\n",frame,subframe,i,eNB->Mod_id,proc->RU_mask_prach_br,eNB->num_RU);
+	//LOG_D(PHY,"frame %d, subframe %d: RU %d for eNB %d signals PRACH BR (mask %x, num_RU %d)\n",frame,subframe,i,eNB->Mod_id,proc->RU_mask_prach_br,eNB->num_RU);
 	if ((proc->RU_mask_prach_br&(1<<i)) > 0)
 	  LOG_E(PHY,"eNB %d frame %d, subframe %d : previous information (PRACH BR) from RU %d (num_RU %d, mask %x) has not been served yet!\n",
 		eNB->Mod_id,frame,subframe,ru->idx,eNB->num_RU,proc->RU_mask_prach_br);
 	proc->RU_mask_prach_br |= (1<<i);
-      }
+      }else if (eNB->RU_list[i]->state == RU_SYNC || eNB->RU_list[i]->wait_cnt > 0){
+        proc->RU_mask_prach_br |= (1<<i);
+     }
+
     }
     if (proc->RU_mask_prach_br != (1<<eNB->num_RU)-1) {  // not all RUs have provided their information so return
       pthread_mutex_unlock(&proc->mutex_RU_PRACH_br);
@@ -914,7 +943,7 @@ void init_eNB_proc(int inst) {
 
     proc->first_rx=1;
     proc->first_tx=1;
-    proc->RU_mask=0;
+    for (i=0;i<10;i++) proc->RU_mask[i]=0;
     proc->RU_mask_prach=0;
 
     pthread_mutex_init( &eNB->UL_INFO_mutex, NULL);
@@ -965,8 +994,8 @@ void init_eNB_proc(int inst) {
     LOG_I(PHY,"eNB->single_thread_flag:%d\n", eNB->single_thread_flag);
 
     if (eNB->single_thread_flag==0 && nfapi_mode!=2) {
-      pthread_create( &proc_rxtx[0].pthread_rxtx, attr0, eNB_thread_rxtx, proc );
-      pthread_create( &proc_rxtx[1].pthread_rxtx, attr1, tx_thread, proc);
+      pthread_create( &proc_rxtx[0].pthread_rxtx, attr0, eNB_thread_rxtx, eNB );
+      pthread_create( &proc_rxtx[1].pthread_rxtx, attr1, tx_thread, eNB);
     }
     pthread_create( &proc->pthread_prach, attr_prach, eNB_thread_prach, eNB );
 #if (RRC_VERSION >= MAKE_VERSION(14, 0, 0))
@@ -1030,6 +1059,7 @@ void kill_eNB_proc(int inst) {
     
     proc = &eNB->proc;
     proc_rxtx = &proc->proc_rxtx[0];
+    
 
     kill_td_thread(eNB);
     kill_te_thread(eNB);
@@ -1131,6 +1161,7 @@ void init_transport(PHY_VARS_eNB *eNB) {
 	LOG_E(PHY,"Can't get eNB dlsch structures for UE %d \n", i);
 	exit(-1);
       } else {
+	LOG_D(PHY,"dlsch[%d][%d] => %p\n",i,j,eNB->dlsch[i][j]);
 	eNB->dlsch[i][j]->rnti=0;
 	LOG_D(PHY,"dlsch[%d][%d] => %p rnti:%d\n",i,j,eNB->dlsch[i][j], eNB->dlsch[i][j]->rnti);
       }
@@ -1234,7 +1265,7 @@ void init_eNB_afterRU(void) {
 	}
       }
 
-
+      eNB->frame_parms.nb_antennas_rx = 1;
 
       /* TODO: review this code, there is something wrong.
        * In monolithic mode, we come here with nb_antennas_rx == 0
@@ -1244,10 +1275,6 @@ void init_eNB_afterRU(void) {
       {
         LOG_I(PHY, "%s() ************* DJP ***** eNB->frame_parms.nb_antennas_rx:%d - GOING TO HARD CODE TO 1", __FUNCTION__, eNB->frame_parms.nb_antennas_rx);
         eNB->frame_parms.nb_antennas_rx = 1;
-      }
-      else
-      {
-        //LOG_I(PHY," Delete code\n");
       }
 
       if (eNB->frame_parms.nb_antennas_tx < 1)
@@ -1333,7 +1360,11 @@ void init_eNB(int single_thread_flag,int wait_for_sync) {
 
   }
 
+
   LOG_I(PHY,"[lte-softmodem.c] eNB structure allocated\n");
+  
+
+
 }
 
 

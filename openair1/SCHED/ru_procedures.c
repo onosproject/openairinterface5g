@@ -29,6 +29,18 @@
  * \note
  * \warning
  */
+ 
+/*! \function feptx_prec
+ * \brief Implementation of precoding for beamforming in one eNB
+ * \author TY Hsu, SY Yeh(fdragon), TH Wang(Judy)
+ * \date 2018
+ * \version 0.1
+ * \company ISIP@NCTU and Eurecom
+ * \email: tyhsu@cs.nctu.edu.tw,fdragon.cs96g@g2.nctu.edu.tw,Tsu-Han.Wang@eurecom.fr
+ * \note
+ * \warning
+ */
+
 
 #include "PHY/defs_eNB.h"
 #include "PHY/phy_extern.h"
@@ -50,11 +62,14 @@
 
 #include "targets/RT/USER/rt_wrapper.h"
 
+// Note: this is needed for prototype of generate_drs_pusch, which is used as a reference signal for OTA synchronization
+#include "PHY/LTE_UE_TRANSPORT/transport_proto_ue.h"
 // RU OFDM Modulator, used in IF4p5 RRU, RCC/RAU with IF5, eNodeB
 
 extern openair0_config_t openair0_cfg[MAX_CARDS];
 
 extern int oai_exit;
+
 
 
 void feptx0(RU_t *ru,int slot) {
@@ -68,7 +83,7 @@ void feptx0(RU_t *ru,int slot) {
   int subframe = ru->proc.subframe_tx;
 
 
-  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_RU_FEPTX_OFDM+slot , 1 );
+  //VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_RU_FEPTX_OFDM+slot , 1 );
 
   slot_offset = subframe*fp->samples_per_tti + (slot*(fp->samples_per_tti>>1));
 
@@ -81,11 +96,28 @@ void feptx0(RU_t *ru,int slot) {
 					                      6,
 					                      fp->nb_prefix_samples,
 					                      CYCLIC_PREFIX);
-    else                     normal_prefix_mod(&ru->common.txdataF_BF[aa][slot*slot_sizeF],
-					                           (int*)&ru->common.txdata[aa][slot_offset],
-					                           7,
-					                           fp);
-    
+    else {
+      AssertFatal(ru->generate_dmrs_sync==1 && (fp->frame_type != TDD || ru->is_slave == 1),
+		  "ru->generate_dmrs_sync should not be set, frame_type %d, is_slave %d\n",
+		  fp->frame_type,ru->is_slave);
+
+      if (ru->generate_dmrs_sync == 1 && slot == 0 && subframe == 1 && aa==0) {
+	generate_drs_pusch((PHY_VARS_UE *)NULL,
+			   (UE_rxtx_proc_t*)NULL,
+			   fp,
+			   ru->common.txdataF_BF,
+			   0,
+			   AMP,
+			   1,
+			   0,
+			   fp->N_RB_DL,
+			   aa);
+      }
+      normal_prefix_mod(&ru->common.txdataF_BF[aa][slot*slot_sizeF],
+			(int*)&ru->common.txdata[aa][slot_offset],
+			7,
+			fp);
+    }
    /* 
     len = fp->samples_per_tti>>1;
 
@@ -128,7 +160,7 @@ void feptx0(RU_t *ru,int slot) {
       }
     }*/
   }
-  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_RU_FEPTX_OFDM+slot , 0);
+  //VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_RU_FEPTX_OFDM+slot , 0);
 }
 
 static void *feptx_thread(void *param) {
@@ -180,12 +212,12 @@ void feptx_ofdm_2thread(RU_t *ru) {
 
   wait.tv_sec=0;
   wait.tv_nsec=5000000L;
-  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_RU_FEPTX_OFDM , 1 );
+  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_RU_FEPTX_OFDM+ru->idx , 1 );
   start_meas(&ru->ofdm_mod_stats);
 
   if (subframe_select(fp,subframe) == SF_UL) return;
 
-  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_RU_FEPTX_OFDM , 1 );
+  //VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_RU_FEPTX_OFDM , 1 );
 
   if (subframe_select(fp,subframe)==SF_DL) {
     // If this is not an S-subframe
@@ -225,10 +257,10 @@ void feptx_ofdm_2thread(RU_t *ru) {
     printf("delay in feptx wait on codition in frame_rx: %d  subframe_rx: %d \n",proc->frame_tx,proc->subframe_tx);
   }*/
 
-  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_RU_FEPTX_OFDM , 0 );
+  //VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_RU_FEPTX_OFDM , 0 );
 
   stop_meas(&ru->ofdm_mod_stats);
-  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_RU_FEPTX_OFDM , 0 );
+  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_RU_FEPTX_OFDM+ru->idx , 0 );
 
 }
 
@@ -247,7 +279,7 @@ void feptx_ofdm(RU_t *ru) {
 
 //  int CC_id = ru->proc.CC_id;
 
-  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_RU_FEPTX_OFDM , 1 );
+  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_RU_FEPTX_OFDM+ru->idx , 1 );
   slot_offset_F = 0;
 
   slot_offset = subframe*fp->samples_per_tti;
@@ -369,31 +401,113 @@ void feptx_ofdm(RU_t *ru) {
 	   dB_fixed(signal_energy_nodc(ru->common.txdataF_BF[aa],2*slot_sizeF)));
     }
   }
-  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_RU_FEPTX_OFDM , 0 );
+  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_RU_FEPTX_OFDM+ru->idx , 0 );
 }
 
 void feptx_prec(RU_t *ru) {
+	
+  // Theoni's
+  int l,i,aa,rb,p;
+  int subframe = ru->proc.subframe_tx;
+  PHY_VARS_eNB **eNB_list = ru->eNB_list,*eNB; 
+  LTE_DL_FRAME_PARMS *fp;
+  int32_t ***bw;
+  RU_proc_t *proc  = &ru->proc;
 
+  /* fdragon
   int l,i,aa;
   PHY_VARS_eNB **eNB_list = ru->eNB_list,*eNB;
   LTE_DL_FRAME_PARMS *fp;
   int32_t ***bw;
   int subframe = ru->proc.subframe_tx;
+  */
+
+  if (ru->idx != 0) return;
 
   if (ru->num_eNB == 1) {
+
     eNB = eNB_list[0];
     fp  = &eNB->frame_parms;
+    LTE_eNB_PDCCH *pdcch_vars = &eNB->pdcch_vars[subframe&1]; 
     
-    VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_RU_FEPTX_PREC , 1);
+    VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_RU_FEPTX_PREC+ru->idx , 1);
 
-    for (aa=0;aa<ru->nb_tx;aa++)
-      memcpy((void*)ru->common.txdataF_BF[aa],
-	     (void*)&eNB->common_vars.txdataF[aa][subframe*fp->symbols_per_tti*fp->ofdm_symbol_size],
-	     fp->symbols_per_tti*fp->ofdm_symbol_size*sizeof(int32_t));
+    for (aa=0;aa<ru->nb_tx;aa++) {
+      memset(ru->common.txdataF_BF[aa],0,sizeof(int32_t)*fp->ofdm_symbol_size*fp->symbols_per_tti);
+      for (p=0;p<NB_ANTENNA_PORTS_ENB;p++) {
 
-    VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_RU_FEPTX_PREC , 0);
+#ifdef NO_PRECODING	
+	memcpy((void*)ru->common.txdataF_BF[aa],
+	       (void*)&eNB->common_vars.txdataF[aa][subframe*fp->symbols_per_tti*fp->ofdm_symbol_size],
+	       sizeof(int32_t)*fp->ofdm_symbol_size*fp->symbols_per_tti);
+#else
+	
+	if (p<fp->nb_antenna_ports_eNB) {				
+	  // pdcch region, copy entire signal from txdataF->txdataF_BF (bf_mask = 1)
+	  // else do beamforming for pdcch according to beam_weights
+	  // to be updated for eMBMS (p=4)
+	  // For the moment this does nothing different than below.	     
+	  for (l=0;l<pdcch_vars->num_pdcch_symbols;l++)
+	    beam_precoding(eNB->common_vars.txdataF,
+			   ru->common.txdataF_BF,
+			   subframe,
+			   fp,
+			   ru->beam_weights,
+			   l,
+			   aa,
+			   p);
+	} //if (p<fp->nb_antenna_ports_eNB)
+	
+	  // PDSCH region
+	if (p<fp->nb_antenna_ports_eNB || p==5 || p==7 || p==8) {
+	  for (l=pdcch_vars->num_pdcch_symbols;l<fp->symbols_per_tti;l++) {
+	    beam_precoding(eNB->common_vars.txdataF,
+			   ru->common.txdataF_BF,
+			   subframe,
+			   fp,
+			   ru->beam_weights,
+			   l,
+			   aa,
+			   p);			
+	  } // for (l=pdcch_vars ....)
+	} // if (p<fp->nb_antenna_ports_eNB) ...
+#endif //NO_PRECODING
+	
+      } // for (p=0...)
+    } // for (aa=0 ...)
+    
+    if(ru->idx<2)
+      VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_RU_FEPTX_PREC+ru->idx , 0);
+    // VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_RU_FEPTX_PREC+ru->idx,0);
+    
+	///////////////////////////////////////////////////	  
+	  
+	  
+	  /* fdragon
+    eNB = eNB_list[0];
+	bw  = ru->beam_weights[0];
+    fp  = &eNB->frame_parms;
+	int nb_antenna_ports=15;
+    
+    VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_RU_FEPTX_PREC+ru->idx , 1);
+
+	
+	beam_precoding_one_eNB(eNB->common_vars.txdataF,
+                           ru->common.txdataF_BF,
+						   bw,
+						   subframe,
+						   nb_antenna_ports,
+						   ru->nb_tx,
+						   fp);
+
+    VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_RU_FEPTX_PREC+ru->idx , 0);
+	
+	
+	*/
+    VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_RU_FEPTX_PREC+ru->idx , 0);
   }
   else {
+    AssertFatal(1==0,"Handling of multi-L1 case not ready yet\n");
     for (i=0;i<ru->num_eNB;i++) {
       eNB = eNB_list[i];
       fp  = &eNB->frame_parms;
@@ -403,6 +517,7 @@ void feptx_prec(RU_t *ru) {
 	for (aa=0;aa<ru->nb_tx;aa++) {
 	  beam_precoding(eNB->common_vars.txdataF,
 			 ru->common.txdataF_BF,
+			 subframe,
 			 fp,
 			 bw,
 			 subframe<<1,
@@ -422,7 +537,7 @@ void fep0(RU_t *ru,int slot) {
 
   //  printf("fep0: slot %d\n",slot);
 
-  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_RU_FEPRX+slot, 1);
+  //VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_RU_FEPRX+slot, 1);
 
   remove_7_5_kHz(ru,(slot&1)+(proc->subframe_rx<<1));
   for (l=0; l<fp->symbols_per_tti/2; l++) {
@@ -432,7 +547,7 @@ void fep0(RU_t *ru,int slot) {
 		0
 		);
   }
-  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_RU_FEPRX+slot, 0);
+  //VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_RU_FEPRX+slot, 0);
 }
 
 
@@ -457,9 +572,9 @@ static void *fep_thread(void *param) {
     if (wait_on_condition(&proc->mutex_fep,&proc->cond_fep,&proc->instance_cnt_fep,"fep thread")<0) break; 
     if (oai_exit) break;
 	//stop_meas(&ru->ofdm_demod_wakeup_stats);
-	VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_RU_FEPRX1, 1 ); 
+	//VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_RU_FEPRX1, 1 ); 
     fep0(ru,0);
-	VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_RU_FEPRX1, 0 ); 
+	//VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_RU_FEPRX1, 0 ); 
     if (release_thread(&proc->mutex_fep,&proc->instance_cnt_fep,"fep thread")<0) break;
 
     if (pthread_cond_signal(&proc->cond_fep) != 0) {
@@ -543,12 +658,12 @@ void ru_fep_full_2thread(RU_t *ru) {
   if ((fp->frame_type == TDD) &&
      (subframe_select(fp,proc->subframe_rx) != SF_UL)) return;
 
-  if (ru->idx == 0) VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_RU_FEPRX, 1 );
+  //if (ru->idx == 0) VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_RU_FEPRX, 1 );
 
   wait.tv_sec=0;
   wait.tv_nsec=5000000L;
 
-  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_RU_FEPRX, 1 );
+  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_RU_FEPRX+ru->idx, 1 );
   start_meas(&ru->ofdm_demod_stats);
 
   if (pthread_mutex_timedlock(&proc->mutex_fep,&wait) != 0) {
@@ -588,7 +703,7 @@ void ru_fep_full_2thread(RU_t *ru) {
   }
 
   stop_meas(&ru->ofdm_demod_stats);
-  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_RU_FEPRX, 0 );
+  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_RU_FEPRX+ru->idx, 0 );
 }
 
 
@@ -603,7 +718,7 @@ void fep_full(RU_t *ru) {
      (subframe_select(fp,proc->subframe_rx) != SF_UL)) return;
 
   start_meas(&ru->ofdm_demod_stats);
-  if (ru->idx == 0) VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_RU_FEPRX, 1 );
+  if (ru->idx == 0) VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_RU_FEPRX+ru->idx, 1 );
 
   remove_7_5_kHz(ru,proc->subframe_rx<<1);
   remove_7_5_kHz(ru,1+(proc->subframe_rx<<1));
@@ -620,7 +735,7 @@ void fep_full(RU_t *ru) {
 		0
 		);
   }
-  if (ru->idx == 0) VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_RU_FEPRX, 0 );
+  if (ru->idx == 0) VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_RU_FEPRX+ru->idx, 0 );
   stop_meas(&ru->ofdm_demod_stats);
   
   

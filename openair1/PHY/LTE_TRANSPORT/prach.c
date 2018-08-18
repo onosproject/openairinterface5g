@@ -99,8 +99,6 @@ void rx_prach0(PHY_VARS_eNB *eNB,
 #if (RRC_VERSION >= MAKE_VERSION(14, 0, 0))
   int prach_ifft_cnt=0;
 #endif
-
-
   if (ru) { 
     fp    = &ru->frame_parms;
     nb_rx = ru->nb_rx;
@@ -146,6 +144,10 @@ void rx_prach0(PHY_VARS_eNB *eNB,
   int16_t *prach[nb_rx];
   uint8_t prach_fmt = get_prach_fmt(prach_ConfigIndex,frame_type);
   uint16_t N_ZC = (prach_fmt <4)?839:139;
+
+#ifdef PRACH_DEBUG
+  int en;
+#endif
   
   if (eNB) {
 #if (RRC_VERSION >= MAKE_VERSION(14, 0, 0))
@@ -436,7 +438,7 @@ LOG_DEBUG_END
     else
 #endif
       send_IF4p5(ru, ru->proc.frame_prach, ru->proc.subframe_prach, IF4p5_PRACH);
-    
+    LOG_D(PHY,"SFN/SF %d.%d: Sending PRACH over IF4p5\n",ru->proc.frame_prach,ru->proc.subframe_prach);
     return;
   } else if (eNB!=NULL) {
 
@@ -737,4 +739,6 @@ void rx_prach(PHY_VARS_eNB *eNB,
   }
 }
 
+
 #endif /* #if (RRC_VERSION >= MAKE_VERSION(14, 0, 0)) */
+

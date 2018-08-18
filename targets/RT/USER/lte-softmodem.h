@@ -66,6 +66,8 @@
 #define CONFIG_HLP_PHYTST        "test UE phy layer, mac disabled\n"
 #define CONFIG_HLP_DMAMAP        "sets flag for improved EXMIMO UE performance\n"  
 #define CONFIG_HLP_EXCCLK        "tells hardware to use an external clock reference\n"
+#define CONFIG_HLP_EXTS          "tells hardware to use an external timing reference\n"
+#define CONFIG_HLP_DMRSSYNC      "tells RU to insert DMRS in subframe 1 slot 0"
 #define CONFIG_HLP_USIM          "use XOR autentication algo in case of test usim mode\n" 
 #define CONFIG_HLP_NOSNGLT       "Disables single-thread mode in lte-softmodem\n" 
 #define CONFIG_HLP_TADV          "Set timing_advance\n"
@@ -162,6 +164,7 @@
 {"usim-test",               CONFIG_HLP_USIM,        PARAMFLAG_BOOL,         u8ptr:&usim_test,                   defintval:0,                    TYPE_UINT8,     0},                     \
 {"mmapped-dma",             CONFIG_HLP_DMAMAP,      PARAMFLAG_BOOL,         uptr:&mmapped_dma,                  defintval:0,                    TYPE_INT,       0},                     \
 {"external-clock",          CONFIG_HLP_EXCCLK,      PARAMFLAG_BOOL,         uptr:&clock_source,                 defintval:0,                    TYPE_INT,       0},                     \
+{"external-timesource",     CONFIG_HLP_EXTS,        PARAMFLAG_BOOL,         uptr:&time_source,                  defintval:0,                    TYPE_INT,       0},                   \
 {"wait-for-sync",           NULL,                   PARAMFLAG_BOOL,         iptr:&wait_for_sync,                defintval:0,                    TYPE_INT,       0},                     \
 {"single-thread-enable",    CONFIG_HLP_NOSNGLT,     PARAMFLAG_BOOL,         iptr:&single_thread_flag,           defintval:0,                    TYPE_INT,       0},                     \
 {"threadIQ",                NULL,                   0,                      iptr:&(threads.iq),                 defintval:1,                    TYPE_INT,       0},                     \
@@ -247,8 +250,9 @@ extern void stop_eNB(int);
 extern void kill_eNB_proc(int inst);
 
 // In lte-ru.c
-extern void init_RU(const char*);
-extern void stop_ru(RU_t *ru);
+
+extern void init_RU(const char*,clock_source_t clock_source,clock_source_t time_source,int send_dmrssync);
+//extern void stop_ru(RU_t *ru);
 extern void init_RU_proc(RU_t *ru);
 extern void stop_RU(int nb_ru);
 extern void kill_RU_proc(int inst);

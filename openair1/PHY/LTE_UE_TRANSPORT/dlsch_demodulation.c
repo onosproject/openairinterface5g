@@ -275,7 +275,7 @@ int rx_pdsch(PHY_VARS_UE *ue,
 
   if (frame_parms->nb_antenna_ports_eNB>1 && beamforming_mode==0) {
 #ifdef DEBUG_DLSCH_MOD
-    LOG_I(PHY,"dlsch: using pmi %x (%p), rb_alloc %x\n",pmi2hex_2Ar1(dlsch0_harq->pmi_alloc),dlsch[0],dlsch0_harq->rb_alloc_even[0]);
+    LOG_D(PHY,"dlsch: using pmi %x (%p), rb_alloc %x\n",pmi2hex_2Ar1(dlsch0_harq->pmi_alloc),dlsch[0],dlsch0_harq->rb_alloc_even[0]);
 #endif
 
 #if UE_TIMING_TRACE
@@ -395,7 +395,7 @@ int rx_pdsch(PHY_VARS_UE *ue,
     printf("[AbsSFN %d.%d] Slot%d Symbol %d Flag %d type %d: Pilot/Data extraction %5.2f \n",frame,subframe,slot,
             symbol,ue->high_speed_flag,type,symbol,ue->generic_stat_bis[ue->current_thread_id[subframe]][slot].p_time/(cpuf*1000.0));
 #else
-    LOG_I(PHY, "[AbsSFN %d.%d] Slot%d Symbol %d Flag %d type %d: Pilot/Data extraction  %5.2f \n",frame,subframe,slot,symbol,
+    LOG_D(PHY, "[AbsSFN %d.%d] Slot%d Symbol %d Flag %d type %d: Pilot/Data extraction  %5.2f \n",frame,subframe,slot,symbol,
             ue->high_speed_flag,type,ue->generic_stat_bis[ue->current_thread_id[subframe]][slot].p_time/(cpuf*1000.0));
 #endif
 #endif
@@ -431,7 +431,7 @@ int rx_pdsch(PHY_VARS_UE *ue,
 #if DISABLE_LOG_X
     printf("[AbsSFN %d.%d] Slot%d Symbol %d: Channel Scale %5.2f \n",frame,subframe,slot,symbol,ue->generic_stat_bis[ue->current_thread_id[subframe]][slot].p_time/(cpuf*1000.0));
 #else
-    LOG_I(PHY, "[AbsSFN %d.%d] Slot%d Symbol %d: Channel Scale  %5.2f \n",frame,subframe,slot,symbol,ue->generic_stat_bis[ue->current_thread_id[subframe]][slot].p_time/(cpuf*1000.0));
+    LOG_D(PHY, "[AbsSFN %d.%d] Slot%d Symbol %d: Channel Scale  %5.2f \n",frame,subframe,slot,symbol,ue->generic_stat_bis[ue->current_thread_id[subframe]][slot].p_time/(cpuf*1000.0));
 #endif
 #endif
 
@@ -556,7 +556,7 @@ int rx_pdsch(PHY_VARS_UE *ue,
 #if DISABLE_LOG_X
     printf("[AbsSFN %d.%d] Slot%d Symbol %d first_symbol_flag %d: Channel Level %5.2f \n",frame,subframe,slot,symbol,first_symbol_flag,ue->generic_stat_bis[ue->current_thread_id[subframe]][slot].p_time/(cpuf*1000.0));
 #else
-    LOG_I(PHY, "[AbsSFN %d.%d] Slot%d Symbol %d first_symbol_flag %d: Channel Level  %5.2f \n",frame,subframe,slot,symbol,first_symbol_flag,ue->generic_stat_bis[ue->current_thread_id[subframe]][slot].p_time/(cpuf*1000.0));
+    LOG_D(PHY, "[AbsSFN %d.%d] Slot%d Symbol %d first_symbol_flag %d: Channel Level  %5.2f \n",frame,subframe,slot,symbol,first_symbol_flag,ue->generic_stat_bis[ue->current_thread_id[subframe]][slot].p_time/(cpuf*1000.0));
 #endif
 #endif
 
@@ -782,7 +782,7 @@ int rx_pdsch(PHY_VARS_UE *ue,
 #if DISABLE_LOG_X
     printf("[AbsSFN %d.%d] Slot%d Symbol %d log2_maxh %d channel_level %d: Channel Comp %5.2f \n",frame,subframe,slot,symbol,pdsch_vars[eNB_id]->log2_maxh,proc->channel_level,ue->generic_stat_bis[ue->current_thread_id[subframe]][slot].p_time/(cpuf*1000.0));
 #else
-    LOG_I(PHY, "[AbsSFN %d.%d] Slot%d Symbol %d log2_maxh %d channel_level %d: Channel Comp  %5.2f \n",frame,subframe,slot,symbol,pdsch_vars[eNB_id]->log2_maxh,proc->channel_level,ue->generic_stat_bis[ue->current_thread_id[subframe]][slot].p_time/(cpuf*1000.0));
+    LOG_D(PHY, "[AbsSFN %d.%d] Slot%d Symbol %d log2_maxh %d channel_level %d: Channel Comp  %5.2f \n",frame,subframe,slot,symbol,pdsch_vars[eNB_id]->log2_maxh,proc->channel_level,ue->generic_stat_bis[ue->current_thread_id[subframe]][slot].p_time/(cpuf*1000.0));
 #endif
 #endif
 // MRC
@@ -861,7 +861,7 @@ int rx_pdsch(PHY_VARS_UE *ue,
 #if DISABLE_LOG_X
     printf("[AbsSFN %d.%d] Slot%d Symbol %d: Channel Combine %5.2f \n",frame,subframe,slot,symbol,ue->generic_stat_bis[ue->current_thread_id[subframe]][slot].p_time/(cpuf*1000.0));
 #else
-    LOG_I(PHY, "[AbsSFN %d.%d] Slot%d Symbol %d: Channel Combine  %5.2f \n",frame,subframe,slot,symbol,ue->generic_stat_bis[ue->current_thread_id[subframe]][slot].p_time/(cpuf*1000.0));
+    LOG_D(PHY, "[AbsSFN %d.%d] Slot%d Symbol %d: Channel Combine  %5.2f \n",frame,subframe,slot,symbol,ue->generic_stat_bis[ue->current_thread_id[subframe]][slot].p_time/(cpuf*1000.0));
 #endif
 #endif
 
@@ -879,15 +879,15 @@ int rx_pdsch(PHY_VARS_UE *ue,
   pllr_symbol_cw1  = (int8_t*)pdsch_vars[eNB_id]->llr[1];
   pllr_symbol_cw0 += llr_offset_symbol;
   pllr_symbol_cw1 += llr_offset_symbol;
-  /*
-  LOG_I(PHY,"compute LLRs [AbsSubframe %d.%d-%d] NbRB %d Qm %d LLRs-Length %d LLR-Offset %d @LLR Buff %p @LLR Buff(symb) %p\n",
+
+  LOG_D(PHY,"compute LLRs [AbsSubframe %d.%d-%d] NbRB %d Qm %d LLRs-Length %d LLR-Offset %d @LLR Buff %p @LLR Buff(symb) %p\n",
              frame, subframe,symbol,
              nb_rb,dlsch0_harq->Qm,
              pdsch_vars[eNB_id]->llr_length[symbol],
              pdsch_vars[eNB_id]->llr_offset[symbol],
              (int16_t*)pdsch_vars[eNB_id]->llr[0],
              pllr_symbol_cw0);
-  */
+  
   switch (dlsch0_harq->Qm) {
   case 2 :
     if ((rx_type==rx_standard) || (codeword_TB1 == -1)) {

@@ -136,7 +136,8 @@ volatile int             start_UE = 0;
 #endif
 volatile int             oai_exit = 0;
 
-static clock_source_t clock_source = internal;
+static clock_source_t clock_source = internal,time_source=internal;
+
 static int wait_for_sync = 0;
 
 unsigned int                    mmapped_dma=0;
@@ -474,7 +475,7 @@ static void get_options(void) {
   int CC_id;
   int tddflag, nonbiotflag;
   char *loopfile=NULL;
-  int dumpframe;
+  int dumpframe=0;
   uint32_t online_log_messages;
   uint32_t glog_level;
   uint32_t start_telnetsrv;

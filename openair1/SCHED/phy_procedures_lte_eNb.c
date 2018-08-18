@@ -800,7 +800,7 @@ void uci_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
 	  /* cancel SR detection if reception on n1_pucch0 is better than on SR PUCCH resource index, otherwise send it up to MAC */
 	  if (uci->type==HARQ_SR && metric[0] > metric_SR) SR_payload = 0;
 	  else if (SR_payload == 1) fill_sr_indication(eNB,uci->rnti,frame,subframe,metric_SR);
- 
+	  
 	  if (uci->type==HARQ_SR && metric[0] <= metric_SR) {
 	    /* when transmitting ACK/NACK on SR PUCCH resource index, SR payload is always 1 */
 	    SR_payload = 1;
@@ -823,7 +823,6 @@ void uci_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
 		uci->rnti,
 		frame,subframe,
 		pucch_b0b1[0][0],metric[0]);
-
 	  uci->stat = metric[0]; 	  
 	  fill_uci_harq_indication(eNB,uci,frame,subframe,pucch_b0b1[0],0,0xffff);
 
@@ -864,12 +863,12 @@ void uci_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
 #else
 	  // if SR was detected, use the n1_pucch from SR
 	  if (SR_payload==1) {
-#ifdef DEBUG_PHY_PROC
-	    LOG_D(PHY,"[eNB %d][PDSCH %x] Frame %d subframe %d Checking ACK/NAK (%d,%d,%d,%d) format %d with SR\n",eNB->Mod_id,
-		  eNB->dlsch[UE_id][0]->rnti,
+
+	    LOG_D(PHY,"[eNB %d][PDSCH %x] Frame %d subframe %d Checking ACK/NAK format %d with SR\n",eNB->Mod_id,
+		  uci->rnti,
 		  frame,subframe,
-		  n1_pucch0,n1_pucch1,n1_pucch2,n1_pucch3,format);
-#endif
+		  uci->pucch_fmt);
+
 	    
 	    metric[0] = rx_pucch(eNB,
 				 pucch_format1b,
@@ -882,18 +881,18 @@ void uci_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
 				 subframe,
 				 PUCCH1a_THRES);
 	  } else { //using assigned pucch resources
-#ifdef DEBUG_PHY_PROC
-	    LOG_D(PHY,"[eNB %d][PDSCH %x] Frame %d subframe %d Checking ACK/NAK M=%d (%d,%d,%d,%d) format %d\n",eNB->Mod_id,
-		  eNB->dlsch[UE_id][0]->rnti,
+
+	    LOG_I(PHY,"[eNB %d][PDSCH %x] Frame %d subframe %d Checking ACK/NAK M=%d (%d,%d,%d,%d) format %d\n",eNB->Mod_id,
+		  uci->rnti,
 		  frame,subframe,
 		  uci->num_pucch_resources,
-		  uci->n_pucch_1[res][0],
-		  uci->n_pucch_1[res][1],
-		  uci->n_pucch_1[res][2],
-		  uci->n_pucch_1[res][3],
+		  uci->n_pucch_1[0][0],
+		  uci->n_pucch_1[0][1],
+		  uci->n_pucch_1[0][2],
+		  uci->n_pucch_1[0][3],
 		  uci->pucch_fmt);
-#endif
-	    for (res=0;res<uci->num_pucch_resources;res++)
+
+	    for (int res=0;res<uci->num_pucch_resources;res++)
 	      metric[res] = rx_pucch(eNB,
 				     uci->pucch_fmt,
 				     i,
@@ -1201,12 +1200,12 @@ void uci_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
 	    fill_uci_harq_indication(eNB,uci,frame,subframe,harq_ack,0,0xffff); // special_bundling mode
 	  }
 	  
-#ifdef DEBUG_PHY_PROC
-	  LOG_D(PHY,"[eNB %d][PDSCH %x] Frame %d subframe %d ACK/NAK metric 0 %d, metric 1 %d, (%d,%d)\n",eNB->Mod_id,
-		eNB->dlsch[UE_id][0]->rnti,
+
+	  LOG_I(PHY,"[eNB %d][PDSCH %x] Frame %d subframe %d ACK/NAK metric 0 %d, metric 1 %d, (%d,%d)\n",eNB->Mod_id,
+		uci->rnti,
 		frame,subframe,
-		metric0,metric1,pucch_b0b1[0],pucch_b0b1[1]);
-#endif
+		metric[0],metric[1],pucch_b0b1[0][0],pucch_b0b1[0][1]);
+
 	}
 	break;
       default:
@@ -1245,6 +1244,7 @@ void pusch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
   
   harq_pid = subframe2harq_pid(&eNB->frame_parms,frame,subframe);
 
+  LOG_D(PHY,"Running eNB pusch procedures in %d.%d, harq_pid %d\n",frame,subframe,harq_pid);
   for (i=0; i<NUMBER_OF_UE_MAX; i++) {
     ulsch = eNB->ulsch[i];
     ulsch_harq = ulsch->harq_processes[harq_pid];
@@ -1989,7 +1989,7 @@ void fill_uci_harq_indication(PHY_VARS_eNB *eNB,
 
 
   eNB->UL_INFO.harq_ind.harq_indication_body.number_of_harqs++;
-  LOG_D(PHY,"Incremented eNB->UL_INFO.harq_ind.harq_indication_body.number_of_harqs:%d\n", eNB->UL_INFO.harq_ind.harq_indication_body.number_of_harqs);
+  LOG_I(PHY,"Incremented eNB->UL_INFO.harq_ind.harq_indication_body.number_of_harqs:%d\n", eNB->UL_INFO.harq_ind.harq_indication_body.number_of_harqs);
   pthread_mutex_unlock(&eNB->UL_INFO_mutex);  
 
 }

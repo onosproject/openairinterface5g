@@ -35,6 +35,8 @@
 #include "RRC/LTE/rrc_extern.h"
 #include "PHY_INTERFACE/phy_interface.h"
 
+// Note: this is for prototype of generate_drs_pusch (OTA synchronization of RRUs)
+#include "PHY/LTE_UE_TRANSPORT/transport_proto_ue.h"
 
 int* sync_corr_ue0 = NULL;
 int* sync_corr_ue1 = NULL;
@@ -353,20 +355,12 @@ int lte_sync_time(int **rxdata, ///rx data in time domain
   for (int ii=0;ii<=2;cum_sum[ii++] = 0);
 
   //LOG_D(PHY,"[SYNC TIME] Calling sync_time.\n");
-  if (sync_corr_ue0 == NULL) {
-    LOG_E(PHY,"[SYNC TIME] sync_corr_ue0 not yet allocated! Exiting.\n");
-    return(-1);
-  }
-
-  if (sync_corr_ue1 == NULL) {
-    LOG_E(PHY,"[SYNC TIME] sync_corr_ue1 not yet allocated! Exiting.\n");
-    return(-1);
-  }
-
-  if (sync_corr_ue2 == NULL) {
-    LOG_E(PHY,"[SYNC TIME] sync_corr_ue2 not yet allocated! Exiting.\n");
-    return(-1);
-  }
+  AssertFatal(sync_corr_ue0 != NULL,
+             "sync_corr_ue0 not yet allocated! Exiting.\n");
+  AssertFatal(sync_corr_ue1 != NULL,
+             "sync_corr_ue0 not yet allocated! Exiting.\n");
+  AssertFatal(sync_corr_ue2 != NULL,
+             "sync_corr_ue0 not yet allocated! Exiting.\n");
 
   peak_val = 0;
   peak_pos = 0;
@@ -514,6 +508,68 @@ LOG_M_END
 
 }
 
+
+
+int ru_sync_time_init(RU_t *ru)   // LTE_UE_COMMON *common_vars
+{
+
+  int16_t dmrs[2048];
+  int16_t *dmrsp[2] = {dmrs,NULL};
+
+  ru->dmrssync = (int16_t*)malloc16_clear(ru->frame_parms.N_RB_DL*2*sizeof(int16_t)); 
+  generate_drs_pusch(NULL,NULL,
+		     &ru->frame_parms,
+		     (int32_t**)dmrsp,
+		     0,
+		     AMP,
+		     0,
+		     0,
+		     ru->frame_parms.N_RB_DL,
+		     0);
+
+  switch (ru->frame_parms.N_RB_DL) {
+  case 6:
+    idft128(dmrs,          /// complex input
+	    ru->dmrssync, /// complex output
+	    1);
+    break;
+  case 25:
+    idft512(dmrs,
+	    ru->dmrssync, /// complex output
+	    1);
+    break;
+  case 50:
+    idft1024(dmrs,
+	    ru->dmrssync, /// complex output
+	    1);
+    break;
+    
+  case 75:
+    idft1536(dmrs,
+	     ru->dmrssync,
+	     1); /// complex output
+    break;
+  case 100:
+    idft2048(dmrs,
+	     ru->dmrssync, /// complex output
+	     1);
+    break;
+  default:
+    AssertFatal(1==0,"Unsupported N_RB_DL %d\n",ru->frame_parms.N_RB_DL);
+    break;
+  }
+
+  return(0);
+}
+
+void ru_sync_time_free(RU_t *ru) {
+
+  AssertFatal(ru->dmrssync!=NULL,"ru->dmrssync is NULL\n");
+  free(ru->dmrssync);
+}
+
+//#define DEBUG_PHY
+
 int lte_sync_time_eNB(int32_t **rxdata, ///rx data in time domain
                       LTE_DL_FRAME_PARMS *frame_parms,
                       uint32_t length,
@@ -594,15 +650,73 @@ int lte_sync_time_eNB(int32_t **rxdata, ///rx data in time domain
   *peak_val_out = peak_val;
 
   if (peak_val <= (40*(uint32_t)mean_val)) {
-    LOG_D(PHY,"[SYNC TIME] No peak found (%u,%u,%"PRIu64",%"PRIu64")\n",peak_pos,peak_val,mean_val,40*mean_val);
+    LOG_I(PHY,"[SYNC TIME] No peak found (%u,%u,%"PRIu64",%"PRIu64")\n",peak_pos,peak_val,mean_val,40*mean_val);
     return(-1);
   } else {
-    LOG_D(PHY,"[SYNC TIME] Peak found at pos %u, val = %u, mean_val = %"PRIu64"\n",peak_pos,peak_val,mean_val);
+    LOG_I(PHY,"[SYNC TIME] Peak found at pos %u, val = %u, mean_val = %"PRIu64"\n",peak_pos,peak_val,mean_val);
     return(peak_pos);
   }
 
 }
 
 
+int ru_sync_time(RU_t *ru,
+		 int64_t *lev,
+		 int64_t *avg)
+{
 
+
+  LTE_DL_FRAME_PARMS *frame_parms = &ru->frame_parms;
+		      
+  // perform a time domain correlation using the oversampled sync sequence
+
+  int length =   LTE_NUMBER_OF_SUBFRAMES_PER_FRAME*frame_parms->samples_per_tti;
+  
+
+  // circular copy of beginning to end of rxdata buffer. Note: buffer should be big enough upon calling this function
+  for (int ar=0;ar<ru->nb_rx;ar++) memcpy((void*)&ru->common.rxdata[ar][2*length],
+					  (void*)&ru->common.rxdata[ar][0],
+					  frame_parms->ofdm_symbol_size);
+  
+  int32_t tmp0;
+  int32_t magtmp0,maxlev0=0;
+  int     maxpos0=0;
+  int64_t avg0=0;
+  int32_t result;
+
+
+  for (int n=0; n<length; n+=4) {
+
+    tmp0 = 0;
+
+    //calculate dot product of primary_synch0_time and rxdata[ar][n] (ar=0..nb_ant_rx) and store the sum in temp[n];
+    for (int ar=0; ar<ru->nb_rx; ar++) {
+      
+      result  = dot_product(ru->dmrssync,
+			    (int16_t*) &ru->common.rxdata[ar][n],
+			    frame_parms->ofdm_symbol_size,
+			    11);     
+      ((int16_t*)&tmp0)[0] += ((int16_t*) &result)[0];
+      ((int16_t*)&tmp0)[1] += ((int16_t*) &result)[1];
+    }
+
+    // tmpi holds <synchi,rx0>+<synci,rx1>+...+<synchi,rx_{nbrx-1}>
+
+    magtmp0 = abs32(tmp0);
+
+    // this does max |tmp0(n)|^2  and argmax |tmp0(n)|^2 
+      
+    if (magtmp0>maxlev0) { maxlev0 = magtmp0; maxpos0 = n; }
+    avg0 += magtmp0;
+  }
+  avg0/=(length/4);
+
+  int dmrsoffset = 2*(frame_parms->ofdm_symbol_size+frame_parms->nb_prefix_samples) + frame_parms->nb_prefix_samples0;
+  
+  if ((int64_t)maxlev0 > (5*avg0)) {*lev = maxlev0; *avg=avg0; return((length+maxpos0-dmrsoffset)%length);}
+
+  return(-1);
+
+
+}
 
