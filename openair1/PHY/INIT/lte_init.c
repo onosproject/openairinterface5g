@@ -784,7 +784,7 @@ int phy_init_lte_eNB(PHY_VARS_eNB *eNB,
   LOG_D(PHY,"[INIT] NB_ANTENNA_PORTS_ENB:%d fp->nb_antenna_ports_eNB:%d\n", NB_ANTENNA_PORTS_ENB, fp->nb_antenna_ports_eNB);
 
   for (i=0; i<NB_ANTENNA_PORTS_ENB; i++) {
-    if (i<fp->nb_antenna_ports_eNB || i==5) {
+    if (i<fp->nb_antenna_ports_eNB || i==4 || i==5) {
       common_vars->txdataF[i] = (int32_t*)malloc16_clear(fp->ofdm_symbol_size*fp->symbols_per_tti*10*sizeof(int32_t) );
       
       LOG_D(PHY,"[INIT] common_vars->txdataF[%d] = %p (%lu bytes)\n",

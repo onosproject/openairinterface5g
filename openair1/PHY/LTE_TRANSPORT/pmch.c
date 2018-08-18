@@ -44,19 +44,20 @@
 
 
 
-void fill_eNB_dlsch_MCH(PHY_VARS_eNB *eNB,int mcs,int ndi,int rvidx)
+void fill_eNB_dlsch_MCH(PHY_VARS_eNB *eNB,int Qm,int TBS)
 {
+
 
   LTE_eNB_DLSCH_t *dlsch = eNB->dlsch_MCH;
   LTE_DL_FRAME_PARMS *frame_parms=&eNB->frame_parms;
 
   //  dlsch->rnti   = M_RNTI;
-  dlsch->harq_processes[0]->mcs   = mcs;
-  //  dlsch->harq_processes[0]->Ndi   = ndi;
-  dlsch->harq_processes[0]->rvidx = rvidx;
+
+  dlsch->active=1;
   dlsch->harq_processes[0]->Nl    = 1;
-  dlsch->harq_processes[0]->TBS   = TBStable[get_I_TBS(dlsch->harq_processes[0]->mcs)][frame_parms->N_RB_DL-1];
-  //  dlsch->harq_ids[subframe]       = 0;
+  dlsch->harq_processes[0]->TBS   = TBS;
+  AssertFatal(Qm >= 0 && Qm < 3, "Illegal value for Qm %d\n",Qm);
+  dlsch->harq_processes[0]->Qm    = Qm;
   dlsch->harq_processes[0]->nb_rb = frame_parms->N_RB_DL;
 
   switch(frame_parms->N_RB_DL) {
@@ -84,7 +85,7 @@ void fill_eNB_dlsch_MCH(PHY_VARS_eNB *eNB,int mcs,int ndi,int rvidx)
 }
 
 
-void generate_mch(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,uint8_t *a)
+void generate_mch(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
 {
 
   int G;
@@ -95,16 +96,19 @@ void generate_mch(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,uint8_t *a)
   G = get_G(&eNB->frame_parms,
 	    eNB->frame_parms.N_RB_DL,
 	    eNB->dlsch_MCH->harq_processes[0]->rb_alloc,
-	    get_Qm(eNB->dlsch_MCH->harq_processes[0]->mcs),1,
+	    eNB->dlsch_MCH->harq_processes[0]->Qm,1,
 	    2,proc->frame_tx,subframe,0);
-  
+
+  LOG_D(PHY,"MCH G %d, Qm %d, rb_alloc[0] %x\n",
+	G,eNB->dlsch_MCH->harq_processes[0]->Qm,eNB->dlsch_MCH->harq_processes[0]->rb_alloc[0]);
+
   generate_mbsfn_pilot(eNB,proc,
 		       eNB->common_vars.txdataF,
 		       AMP);
   
-  
+  eNB->dlsch_MCH->harq_ids[proc->frame_tx&2][subframe]=0;
   AssertFatal(dlsch_encoding(eNB,
-			     a,
+			     eNB->dlsch_MCH->harq_processes[0]->pdu,
 			     1,
 			     eNB->dlsch_MCH,
 			     proc->frame_tx,

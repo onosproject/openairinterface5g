@@ -706,11 +706,9 @@ int lte_rate_matching_turbo_rx(uint32_t RTC,
   int nulled=0;
 #endif
 
-  if (Kmimo==0 || C==0 || Qm==0 || Nl==0) {
-    printf("lte_rate_matching.c: invalid parameters (Kmimo %d, Mdlharq %d, C %d, Qm %d, Nl %d\n",
-        Kmimo,Mdlharq,C,Qm,Nl);
-    return(-1);
-  }
+  AssertFatal(Kmimo>0 && C>0 && Qm>1 && Qm<3 && Nl>0 && Mdlharq>=0, 
+	      "invalid parameters (Kmimo %d, Mdlharq %d, C %d, Qm %d, Nl %d\n",
+	      Kmimo,Mdlharq,C,Qm,Nl);
 
   if (Mdlharq>0) { // Downlink
     Nir = Nsoft/Kmimo/cmin(8,Mdlharq);
@@ -721,8 +719,6 @@ int lte_rate_matching_turbo_rx(uint32_t RTC,
     Ncb = 3*(RTC<<5);
   }
 
-  AssertFatal(Nl>0,"Nl is 0\n");
-  AssertFatal(Qm>0,"Qm is 0\n");
   Gp = G/Nl/Qm;
   GpmodC = Gp%C;
 

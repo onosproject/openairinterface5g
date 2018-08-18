@@ -43,7 +43,7 @@
 #include <syscall.h>
 #include "targets/RT/USER/rt_wrapper.h"
 
-//#define DEBUG_DLSCH_CODING
+#define DEBUG_DLSCH_CODING
 //#define DEBUG_DLSCH_FREE 1
 
 /*
@@ -702,10 +702,8 @@ int dlsch_encoding(PHY_VARS_eNB *eNB,
 
   LTE_DL_FRAME_PARMS *frame_parms = &eNB->frame_parms;
   unsigned char harq_pid = dlsch->harq_ids[frame%2][subframe];
-  if(harq_pid >= dlsch->Mdlharq) {
-    LOG_E(PHY,"dlsch_encoding illegal harq_pid %d\n", harq_pid);
-    return(-1);
-  }
+  AssertFatal(harq_pid< dlsch->Mdlharq,
+	      "dlsch_encoding illegal harq_pid %d\n", harq_pid);
   unsigned short nb_rb = dlsch->harq_processes[harq_pid]->nb_rb;
   unsigned int A;
   unsigned char mod_order;
@@ -742,6 +740,7 @@ int dlsch_encoding(PHY_VARS_eNB *eNB,
     */
     // Add 24-bit crc (polynomial A) to payload
 
+    
     crc = crc24a(a,
                  A)>>8;
     a[A>>3] = ((uint8_t*)&crc)[2];

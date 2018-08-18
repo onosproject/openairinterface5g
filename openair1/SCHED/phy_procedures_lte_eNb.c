@@ -136,14 +136,8 @@ lte_subframe_t get_subframe_direction(uint8_t Mod_id,uint8_t CC_id,uint8_t subfr
 void pmch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc) {
 
 
-#if (RRC_VERSION >= MAKE_VERSION(10, 0, 0))
-  MCH_PDU *mch_pduP=NULL;
-  //  uint8_t sync_area=255;
-#endif
-
   int subframe = proc->subframe_tx;
 
-  AssertFatal(1==0,"pmch not tested for the moment, exiting\n");
 
   // This is DL-Cell spec pilots in Control region
   generate_pilots_slot(eNB,
@@ -153,29 +147,12 @@ void pmch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc) {
 
   
 #if (RRC_VERSION >= MAKE_VERSION(10, 0, 0))
-  // if mcch is active, send regardless of the node type: eNB or RN
-  // when mcch is active, MAC sched does not allow MCCH and MTCH multiplexing
-  /*
-  mch_pduP = mac_xface->get_mch_sdu(eNB->Mod_id,
-				    eNB->CC_id,
-				    proc->frame_tx,
-				    subframe);
-  */
-  if ((mch_pduP->Pdu_size > 0) && (mch_pduP->sync_area == 0)) // TEST: only transmit mcch for sync area 0
-    LOG_D(PHY,"[eNB%"PRIu8"] Frame %d subframe %d : Got MCH pdu for MBSFN (MCS %"PRIu8", TBS %d) \n",
-	  eNB->Mod_id,proc->frame_tx,subframe,mch_pduP->mcs,
-	  eNB->dlsch_MCH->harq_processes[0]->TBS>>3);
-  else {
-    LOG_D(PHY,"[DeNB %"PRIu8"] Frame %d subframe %d : Do not transmit MCH pdu for MBSFN sync area %"PRIu8" (%s)\n",
-	  eNB->Mod_id,proc->frame_tx,subframe,mch_pduP->sync_area,
-	  (mch_pduP->Pdu_size == 0)? "Empty MCH PDU":"Let RN transmit for the moment");
-    mch_pduP = NULL;
-  }
-    
-  if (mch_pduP) {
-    fill_eNB_dlsch_MCH(eNB,mch_pduP->mcs,1,0);
+
+  if (eNB->dlsch_MCH->active==1) {
+    AssertFatal(eNB->dlsch_MCH->harq_processes[0]->pdu != NULL,
+		"pdu is null\n");
     // Generate PMCH
-    generate_mch(eNB,proc,(uint8_t*)mch_pduP->payload);
+    generate_mch(eNB,proc);
   } else {
     LOG_D(PHY,"[eNB/RN] Frame %d subframe %d: MCH not generated \n",proc->frame_tx,subframe);
   }

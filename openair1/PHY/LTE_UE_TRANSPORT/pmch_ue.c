@@ -100,7 +100,7 @@ void fill_UE_dlsch_MCH(PHY_VARS_UE *ue,int mcs,int ndi,int rvidx,int eNB_id)
   dlsch->harq_processes[0]->TBS = TBStable[get_I_TBS(dlsch->harq_processes[0]->mcs)][frame_parms->N_RB_DL-1];
   dlsch->current_harq_pid = 0;
   dlsch->harq_processes[0]->nb_rb = frame_parms->N_RB_DL;
-
+  dlsch->harq_processes[0]->Qm    = get_Qm(mcs);
   switch(frame_parms->N_RB_DL) {
   case 6:
     dlsch->harq_processes[0]->rb_alloc_even[0] = 0x3f;

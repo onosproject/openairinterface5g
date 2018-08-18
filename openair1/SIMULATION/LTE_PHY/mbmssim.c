@@ -64,6 +64,7 @@ double cpuf;
 
 
 
+uint16_t m_rnti=0x1234;
 int nfapi_mode=0;
 int codingw = 0;
 int emulate_rf = 0;
@@ -132,6 +133,76 @@ void DL_channel(RU_t *ru,PHY_VARS_UE *UE,uint subframe,int awgn_flag,double SNR,
   }
 }
 
+
+uint16_t
+fill_tx_req(nfapi_tx_request_body_t *tx_req_body,
+	    uint16_t                absSF,
+	    uint16_t                pdu_length,
+	    uint16_t                pdu_index,
+	    uint8_t                 *pdu)
+{
+  nfapi_tx_request_pdu_t *TX_req = &tx_req_body->tx_pdu_list[tx_req_body->number_of_pdus];
+  LOG_D(MAC, "Filling TX_req %d for pdu length %d\n",
+	tx_req_body->number_of_pdus, pdu_length);
+
+  TX_req->pdu_length                 = pdu_length;
+  TX_req->pdu_index                  = pdu_index;
+  TX_req->num_segments               = 1;
+  TX_req->segments[0].segment_length = pdu_length;
+  TX_req->segments[0].segment_data   = pdu;
+  tx_req_body->tl.tag                = NFAPI_TX_REQUEST_BODY_TAG;
+  tx_req_body->number_of_pdus++;
+
+  return (((absSF / 10) << 4) + (absSF % 10));
+}
+
+void fill_MCH_config(PHY_VARS_eNB *eNB,
+		     int frame,
+		     int subframe,
+		     Sched_Rsp_t *sched_resp,
+		     uint8_t input_buffer[20000],
+		     int mcs,
+		     int mbsfn_id,
+		     int m_rnti,
+		     int NB_RB,
+		     int MCH_RB_ALLOC) {
+
+
+  nfapi_dl_config_request_body_t *dl_req=&sched_resp->DL_req->dl_config_request_body;
+  nfapi_tx_request_body_t        *TX_req=&sched_resp->TX_req->tx_request_body;
+
+  dl_req->number_dci=0;
+  dl_req->number_pdu=0;
+  TX_req->number_of_pdus=0;
+  dl_req->tl.tag = NFAPI_DL_CONFIG_REQUEST_BODY_TAG;
+
+  nfapi_dl_config_request_pdu_t *dl_config_pdu = &dl_req->dl_config_pdu_list[dl_req->number_pdu];
+
+  memset((void *) dl_config_pdu, 0,
+	 sizeof(nfapi_dl_config_request_pdu_t));
+
+  dl_config_pdu->pdu_type                                                    = NFAPI_DL_CONFIG_MCH_PDU_TYPE;
+  dl_config_pdu->pdu_size                                                    = (uint8_t) (2 + sizeof(nfapi_dl_config_mch_pdu));
+
+  dl_config_pdu->mch_pdu.mch_pdu_rel8.tl.tag                                 = NFAPI_DL_CONFIG_REQUEST_MCH_PDU_REL8_TAG;
+  dl_config_pdu->mch_pdu.mch_pdu_rel8.length                                 = get_TBS_DL(mcs,NB_RB);
+  dl_config_pdu->mch_pdu.mch_pdu_rel8.pdu_index                              = 0;
+  dl_config_pdu->mch_pdu.mch_pdu_rel8.rnti                                   = m_rnti;
+  dl_config_pdu->mch_pdu.mch_pdu_rel8.resource_allocation_type               = 0;
+  dl_config_pdu->mch_pdu.mch_pdu_rel8.resource_block_coding                  = MCH_RB_ALLOC;
+  dl_config_pdu->mch_pdu.mch_pdu_rel8.modulation                             = get_Qm(mcs);
+  dl_config_pdu->mch_pdu.mch_pdu_rel8.mbsfn_area_id                          = mbsfn_id;
+  dl_req->number_pdu++;
+  fill_tx_req(TX_req,
+	      (frame * 10) + subframe,
+	      get_TBS_DL(mcs,NB_RB),
+	      0,
+	      input_buffer);
+ 
+  eNB->frame_parms.Nid_cell_mbsfn = mbsfn_id;
+}
+
+
 int main(int argc, char **argv)
 {
 
@@ -150,6 +221,7 @@ int main(int argc, char **argv)
   char fname[40];//, vname[40];
   uint8_t transmission_mode = 1,n_tx=1,n_rx=2;
   uint16_t Nid_cell=0;
+  uint16_t mbsfn_id=0;
 
   FILE *fd;
 
@@ -165,6 +237,7 @@ int main(int argc, char **argv)
 
 
   uint16_t NB_RB=25;
+  int MCH_RB_ALLOC = 0;
 
   int tdd_config=3;
 
@@ -194,8 +267,30 @@ int main(int argc, char **argv)
 
   uint32_t Nsoft = 1827072;
 
+  switch (N_RB_DL) {
+  case 6:
+    MCH_RB_ALLOC = 0x3f;
+
+    break;
+    
+  case 25:
+    MCH_RB_ALLOC = 0x1fff;
+    break;
+    
+  case 50:
+    MCH_RB_ALLOC = 0x1ffff;
+    break;
+    
+  case 100:
+    MCH_RB_ALLOC = 0x1ffffff;
+    break;
+  }
+  
+  NB_RB=conv_nprb(0,MCH_RB_ALLOC,N_RB_DL);
+  
+
   /*
-#ifdef XFORMS
+    #ifdef XFORMS
   FD_lte_phy_scope_ue *form_ue;
   char title[255];
 
@@ -208,8 +303,19 @@ int main(int argc, char **argv)
 
   cpuf = get_cpu_freq_GHz();
 
-  logInit();
-  number_of_cards = 1;
+  memset((void*)&sched_resp,0,sizeof(sched_resp));
+  sched_resp.DL_req = &DL_req;
+  sched_resp.UL_req = &UL_req;
+  sched_resp.HI_DCI0_req = &HI_DCI0_req;
+  sched_resp.TX_req = &TX_req;
+  memset((void*)&DL_req,0,sizeof(DL_req));
+  memset((void*)&UL_req,0,sizeof(UL_req));
+  memset((void*)&HI_DCI0_req,0,sizeof(HI_DCI0_req));
+  memset((void*)&TX_req,0,sizeof(TX_req));
+
+  DL_req.dl_config_request_body.dl_config_pdu_list = dl_config_pdu_list;
+  TX_req.tx_request_body.tx_pdu_list = tx_pdu_list;
+
 
   while ((c = getopt (argc, argv, "ahA:Cp:n:s:S:t:x:y:z:N:F:R:O:dm:i:Y")) != -1) {
     switch (c) {
@@ -327,6 +433,14 @@ int main(int argc, char **argv)
   if (transmission_mode==2)
     n_tx=2;
 
+  AssertFatal(load_configmodule(argc,argv) != NULL,
+	      "cannot load configuration module, exiting\n");
+  logInit();
+  set_glog(LOG_INFO);
+
+  RC.nb_L1_inst = 1;
+  RC.nb_RU = 1;
+
   lte_param_init(&eNB,&UE,&ru,
 		 n_tx,
                  n_tx,
@@ -342,6 +456,12 @@ int main(int argc, char **argv)
 		 0,
 		 osf,
 		 perfect_ce);
+
+  RC.eNB = (PHY_VARS_eNB ***)malloc(sizeof(PHY_VARS_eNB **));
+  RC.eNB[0] = (PHY_VARS_eNB **)malloc(sizeof(PHY_VARS_eNB *));
+  RC.ru = (RU_t **)malloc(sizeof(RC.ru));
+  RC.eNB[0][0] = eNB;
+  RC.ru[0] = ru;
 
   if (snr1set==0) {
     if (n_frames==1)
@@ -416,6 +536,7 @@ int main(int argc, char **argv)
 
   //  fill_eNB_dlsch_MCH(eNB,mcs,1,0);
   fill_UE_dlsch_MCH(UE,mcs,1,0,0);
+  UE->frame_parms.Nid_cell_mbsfn = mbsfn_id;
 
   eNB_rxtx_proc_t *proc_eNB = &eNB->proc.proc_rxtx[0];//UE->current_thread_id[subframe]];
 
@@ -437,6 +558,8 @@ int main(int argc, char **argv)
   }
 
 
+  fill_MCH_config(eNB,0,1,&sched_resp,input_buffer,mcs,mbsfn_id,m_rnti,NB_RB,MCH_RB_ALLOC);
+
   snr_step = input_snr_step;
 
   for (SNR=snr0; SNR<snr1; SNR+=snr_step) {
@@ -453,6 +576,7 @@ int main(int argc, char **argv)
       //        printf("Trial %d\n",trials);
       fflush(stdout);
       round=0;
+
 
       DL_req.sfn_sf = (proc_eNB->frame_tx<<4)+subframe;
       TX_req.sfn_sf = (proc_eNB->frame_tx<<4)+subframe;

@@ -195,22 +195,24 @@ void handle_nfapi_dlsch_pdu(PHY_VARS_eNB *eNB,int frame,int subframe,eNB_rxtx_pr
   eNB->pdsch_config_dedicated[UE_id].p_a = rel8->pa;
 
 #ifdef PHY_TX_THREAD
-  if (dlsch0->active[proc->subframe_tx]){
+  if (dlsch0->active[proc->subframe_tx])
 # else
-  if (dlsch0->active){
+  if (dlsch0->active)
 #endif
-    computeRhoA_eNB(rel8->pa, dlsch0,dlsch0_harq->dl_power_off, eNB->frame_parms.nb_antenna_ports_eNB);
-    computeRhoB_eNB(rel8->pa,eNB->frame_parms.pdsch_config_common.p_b,eNB->frame_parms.nb_antenna_ports_eNB,dlsch0,dlsch0_harq->dl_power_off);
-  }
+    {
+      computeRhoA_eNB(rel8->pa, dlsch0,dlsch0_harq->dl_power_off, eNB->frame_parms.nb_antenna_ports_eNB);
+      computeRhoB_eNB(rel8->pa,eNB->frame_parms.pdsch_config_common.p_b,eNB->frame_parms.nb_antenna_ports_eNB,dlsch0,dlsch0_harq->dl_power_off);
+    }
 #ifdef PHY_TX_THREAD
-  if (dlsch1->active[proc->subframe_tx]){
+  if (dlsch1->active[proc->subframe_tx])
 #else
-  if (dlsch1->active){
+  if (dlsch1->active)
 #endif
-    computeRhoA_eNB(rel8->pa, dlsch1,dlsch1_harq->dl_power_off, eNB->frame_parms.nb_antenna_ports_eNB);
-    computeRhoB_eNB(rel8->pa,eNB->frame_parms.pdsch_config_common.p_b,eNB->frame_parms.nb_antenna_ports_eNB,dlsch1,dlsch1_harq->dl_power_off);
-  }
-
+    {
+      computeRhoA_eNB(rel8->pa, dlsch1,dlsch1_harq->dl_power_off, eNB->frame_parms.nb_antenna_ports_eNB);
+      computeRhoB_eNB(rel8->pa,eNB->frame_parms.pdsch_config_common.p_b,eNB->frame_parms.nb_antenna_ports_eNB,dlsch1,dlsch1_harq->dl_power_off);
+    }
+    
   dlsch0_harq->pdsch_start = eNB->pdcch_vars[subframe & 1].num_pdcch_symbols;
 
   if (dlsch0_harq->round==0) {  //get pointer to SDU if this a new SDU
@@ -324,6 +326,20 @@ void handle_nfapi_dlsch_pdu(PHY_VARS_eNB *eNB,int frame,int subframe,eNB_rxtx_pr
       );
 #endif
 }
+
+    
+void handle_nfapi_mch_dl_pdu(PHY_VARS_eNB *eNB,int frame,int subframe,eNB_rxtx_proc_t *proc,
+			     nfapi_dl_config_request_pdu_t *dl_config_pdu,
+			     uint8_t *sdu) {
+  
+  nfapi_dl_config_mch_pdu_rel8_t *rel8 = &dl_config_pdu->mch_pdu.mch_pdu_rel8;
+
+  AssertFatal(sdu != NULL, "sdu is null\n");
+  fill_eNB_dlsch_MCH(eNB,rel8->modulation,rel8->length<<3);
+  eNB->dlsch_MCH->harq_processes[0]->pdu                    = sdu;
+		     
+}
+  
 
 uint16_t to_beta_offset_harqack[16]={16,20,25,32,40,50,64,80,101,127,160,248,400,640,1008,8};
 
@@ -692,12 +708,21 @@ void schedule_response(Sched_Rsp_t *Sched_INFO)
   nfapi_hi_dci0_request_pdu_t   *hi_dci0_req_pdu;
   nfapi_ul_config_request_pdu_t *ul_config_pdu;
 
+  nfapi_dl_config_dlsch_pdu_rel8_t *dlsch_pdu_rel8;
+  nfapi_dl_config_mch_pdu_rel8_t *mch_pdu_rel8;
+  uint16_t pdu_index;
+  uint16_t tx_pdus;
+  uint16_t invalid_pdu;
+  uint8_t *sdu;
+
+
   int i;
 
   eNB->pdcch_vars[subframe&1].num_pdcch_symbols = number_pdcch_ofdm_symbols;
   eNB->pdcch_vars[subframe&1].num_dci           = 0;
   eNB->phich_vars[subframe&1].num_hi            = 0;
 
+  eNB->dlsch_MCH->active                        = 0;
   LOG_D(PHY,"NFAPI: Sched_INFO:SFN/SF:%04d%d DL_req:SFN/SF:%04d%d:dl_pdu:%d tx_req:SFN/SF:%04d%d:pdus:%d\n",
        frame,subframe,
        NFAPI_SFNSF2SFN(DL_req->sfn_sf),NFAPI_SFNSF2SF(DL_req->sfn_sf),number_dl_pdu,
@@ -757,15 +782,25 @@ void schedule_response(Sched_Rsp_t *Sched_INFO)
                            TX_req->tx_request_body.tx_pdu_list[dl_config_pdu->bch_pdu.bch_pdu_rel8.pdu_index].segments[0].segment_data);
       break;
     case NFAPI_DL_CONFIG_MCH_PDU_TYPE:
-      //      handle_nfapi_mch_dl_pdu(eNB,dl_config_pdu);
+      
+        mch_pdu_rel8 = &dl_config_pdu->mch_pdu.mch_pdu_rel8;
+        pdu_index = mch_pdu_rel8->pdu_index;
+        tx_pdus = TX_req->tx_request_body.number_of_pdus;
+        sdu = (pdu_index!=0)?NULL : TX_req->tx_request_body.tx_pdu_list[pdu_index].segments[0].segment_data;
+	handle_nfapi_mch_dl_pdu(eNB,NFAPI_SFNSF2SFN(DL_req->sfn_sf),NFAPI_SFNSF2SF(DL_req->sfn_sf),proc,dl_config_pdu, sdu);
+        LOG_I(PHY,"%s() [PDU:%d] NFAPI_DL_CONFIG_MCH_PDU_TYPE SFN/SF:%04d%d TX:%d/%d RX:%d/%d pdu_index:%d sdu:%p\n", 
+            __FUNCTION__, i, 
+            NFAPI_SFNSF2SFN(DL_req->sfn_sf),NFAPI_SFNSF2SF(DL_req->sfn_sf),
+            proc->frame_tx, proc->subframe_tx, 
+            proc->frame_rx, proc->subframe_rx, 
+            pdu_index, sdu);
       break;
     case NFAPI_DL_CONFIG_DLSCH_PDU_TYPE:
-      {
-        nfapi_dl_config_dlsch_pdu_rel8_t *dlsch_pdu_rel8 = &dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8;
-        uint16_t pdu_index = dlsch_pdu_rel8->pdu_index;
-        uint16_t tx_pdus = TX_req->tx_request_body.number_of_pdus;
-        uint16_t invalid_pdu = pdu_index == -1;
-        uint8_t *sdu = invalid_pdu ? NULL : pdu_index >= tx_pdus ? NULL : TX_req->tx_request_body.tx_pdu_list[pdu_index].segments[0].segment_data;
+        dlsch_pdu_rel8 = &dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8;
+        pdu_index = dlsch_pdu_rel8->pdu_index;
+        tx_pdus = TX_req->tx_request_body.number_of_pdus;
+        invalid_pdu = pdu_index == -1;
+        sdu = invalid_pdu ? NULL : pdu_index >= tx_pdus ? NULL : TX_req->tx_request_body.tx_pdu_list[pdu_index].segments[0].segment_data;
 
         LOG_D(PHY,"%s() [PDU:%d] NFAPI_DL_CONFIG_DLSCH_PDU_TYPE SFN/SF:%04d%d TX:%d/%d RX:%d/%d transport_blocks:%d pdu_index:%d sdu:%p\n", 
             __FUNCTION__, i, 
@@ -809,7 +844,6 @@ void schedule_response(Sched_Rsp_t *Sched_INFO)
                                            subframe);
 
                                            }        */
-      }
       break;
     case NFAPI_DL_CONFIG_PCH_PDU_TYPE:
       //      handle_nfapi_pch_pdu(eNB,dl_config_pdu);

@@ -341,6 +341,8 @@ uint8_t generate_dci_top(uint8_t num_pdcch_symbols,
                   txdataF,
                   subframe);
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_GENERATE_PCFICH,0);
+  if (num_pdcch_symbols==0) return 0;
+
   wbar[0] = &wbar0[0];
   wbar[1] = &wbar1[0];
   y[0] = &yseq0[0];

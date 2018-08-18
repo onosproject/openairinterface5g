@@ -269,20 +269,15 @@ int mch_modulation(int32_t **txdataF,
 
 /** \brief Top-level generation function for eNB TX of MBSFN
     @param phy_vars_eNB Pointer to eNB variables
-    @param a Pointer to transport block
-    @param abstraction_flag
-
 */
-void generate_mch(PHY_VARS_eNB *phy_vars_eNB,eNB_rxtx_proc_t *proc,uint8_t *a);
+void generate_mch(PHY_VARS_eNB *phy_vars_eNB,eNB_rxtx_proc_t *proc);
 
-/** \brief This function generates the frequency-domain pilots (cell-specific downlink reference signals)
+/** \brief This function fills the DLSCH structure for MCH
     @param phy_vars_eNB Pointer to eNB variables
-    @param proc Pointer to RXn-TXnp4 proc information
-    @param mcs MCS for MBSFN
-    @param ndi new data indicator
-    @param rdvix
+    @param Qm modulation order
+    @param TBS Transport-block size
 */
-void fill_eNB_dlsch_MCH(PHY_VARS_eNB *phy_vars_eNB,int mcs,int ndi,int rvidx);
+void fill_eNB_dlsch_MCH(PHY_VARS_eNB *phy_vars_eNB,int Qm,int TBS);
 
 /** \brief This function generates the frequency-domain pilots (cell-specific downlink reference signals)
     @param phy_vars_ue Pointer to UE variables
