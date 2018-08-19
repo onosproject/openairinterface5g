@@ -86,19 +86,6 @@ uint32_t sub_block_interleaving_turbo(uint32_t D, uint8_t *d,uint8_t *w)
       w[Kpi+1+k2]     =  d3[index3];//d[index3-ND3+5];
 
 
-#ifdef RM_DEBUG
-      printf("row %d, index %d, index-Nd %d index-Nd+1 %d (k,Kpi+2k,Kpi+2k+1) (%d,%d,%d) w(%d,%d,%d)\n",row,index,index-ND,((index+1)%Kpi)-ND,k,Kpi+(k<<1),Kpi+(k<<1)+1,w[k],w[Kpi+(k<<1)],w[Kpi+1+(k<<1)]);
-
-      if (w[k]== LTE_NULL)
-        nulled++;
-
-      if (w[Kpi+(k<<1)] ==LTE_NULL)
-        nulled++;
-
-      if (w[Kpi+1+(k<<1)] ==LTE_NULL)
-        nulled++;
-
-#endif
       index3+=96;
       k++;k2+=2;
     }
@@ -706,7 +693,7 @@ int lte_rate_matching_turbo_rx(uint32_t RTC,
   int nulled=0;
 #endif
 
-  AssertFatal(Kmimo>0 && C>0 && Qm>1 && Qm<3 && Nl>0 && Mdlharq>=0, 
+  AssertFatal(Kmimo>0 && C>0 && (Qm==2 || Qm==4 || Qm==6) && Nl>0 && Mdlharq>=0, 
 	      "invalid parameters (Kmimo %d, Mdlharq %d, C %d, Qm %d, Nl %d\n",
 	      Kmimo,Mdlharq,C,Qm,Nl);
 

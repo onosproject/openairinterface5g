@@ -68,14 +68,14 @@ uint16_t m_rnti=0x1234;
 int nfapi_mode=0;
 int codingw = 0;
 int emulate_rf = 0;
+extern int mch_mcs;
 
 void DL_channel(RU_t *ru,PHY_VARS_UE *UE,uint subframe,int awgn_flag,double SNR, int tx_lev,int hold_channel,int trials, 
 		  channel_desc_t *eNB2UE,
 		  double *s_re[2],double *s_im[2],double *r_re[2],double *r_im[2]) {
 
-  int i,u;
-  int aa,aarx,aatx;
-  double channelx,channely;
+  int i;
+  int aa,aarx;
   double sigma2_dB,sigma2;
   double iqim=0.0;
 
@@ -208,15 +208,13 @@ int main(int argc, char **argv)
 
   char c;
 
-  int i,l,l2,aa,aarx,k;
-  double sigma2, sigma2_dB=0,SNR,snr0=-2.0,snr1=0.0;
+  int i,aa;
+  double SNR,snr0=-2.0,snr1=0.0;
   uint8_t snr1set=0;
   double snr_step=1,input_snr_step=1;
-  int **txdata;
   double s_re0[2*30720],s_im0[2*30720],s_re1[2*30720],s_im1[2*30720];
   double r_re0[2*30720],r_im0[2*30720],r_re1[2*30720],r_im1[2*30720];
   double *s_re[2]={s_re0,s_re1},*s_im[2]={s_im0,s_im1},*r_re[2]={r_re0,r_re1},*r_im[2]={r_im0,r_im1};
-  double iqim = 0.0;
   int subframe=1;
   char fname[40];//, vname[40];
   uint8_t transmission_mode = 1,n_tx=1,n_rx=2;
@@ -225,13 +223,11 @@ int main(int argc, char **argv)
 
   FILE *fd;
 
-  int eNB_id = 0;
-  unsigned char mcs=0,awgn_flag=0,round;
+  unsigned char mcs=0,awgn_flag=0;
 
   int n_frames=1;
   channel_desc_t *eNB2UE;
   uint32_t nsymb,tx_lev,tx_lev_dB;
-  uint8_t extended_prefix_flag=1;
   LTE_DL_FRAME_PARMS *frame_parms;
   int hold_channel=0;
 
@@ -256,7 +252,6 @@ int main(int argc, char **argv)
 
   unsigned char *input_buffer;
   unsigned short input_buffer_length;
-  unsigned int ret;
 
   unsigned int trials;
 
@@ -267,27 +262,7 @@ int main(int argc, char **argv)
 
   uint32_t Nsoft = 1827072;
 
-  switch (N_RB_DL) {
-  case 6:
-    MCH_RB_ALLOC = 0x3f;
 
-    break;
-    
-  case 25:
-    MCH_RB_ALLOC = 0x1fff;
-    break;
-    
-  case 50:
-    MCH_RB_ALLOC = 0x1ffff;
-    break;
-    
-  case 100:
-    MCH_RB_ALLOC = 0x1ffffff;
-    break;
-  }
-  
-  NB_RB=conv_nprb(0,MCH_RB_ALLOC,N_RB_DL);
-  
 
   /*
     #ifdef XFORMS
@@ -420,6 +395,29 @@ int main(int argc, char **argv)
   if (awgn_flag == 1)
     channel_model = AWGN;
 
+  mch_mcs = mcs;
+
+  switch (N_RB_DL) {
+  case 6:
+    MCH_RB_ALLOC = 0x3f;
+
+    break;
+    
+  case 25:
+    MCH_RB_ALLOC = 0x1fff;
+    break;
+    
+  case 50:
+    MCH_RB_ALLOC = 0x1ffff;
+    break;
+    
+  case 100:
+    MCH_RB_ALLOC = 0x1ffffff;
+    break;
+  }
+  
+  NB_RB=conv_nprb(0,MCH_RB_ALLOC,N_RB_DL);
+  
   // check that subframe is legal for eMBMS
 
   if ((subframe == 0) || (subframe == 5) ||    // TDD and FDD SFn 0,5;
@@ -575,7 +573,6 @@ int main(int argc, char **argv)
     for (trials = 0; trials<n_frames; trials++) {
       //        printf("Trial %d\n",trials);
       fflush(stdout);
-      round=0;
 
 
       DL_req.sfn_sf = (proc_eNB->frame_tx<<4)+subframe;
@@ -589,7 +586,9 @@ int main(int argc, char **argv)
       schedule_response(&sched_resp);
       phy_procedures_eNB_TX(eNB,proc_eNB,1);
       
-      ru->proc.subframe_tx=(subframe+1)%10;
+      ru->proc.subframe_tx=subframe;
+      ru->do_precoding=1;
+
       feptx_prec(ru);
       feptx_ofdm(ru);
       
@@ -599,6 +598,10 @@ int main(int argc, char **argv)
       
       if (n_frames==1) {
         LOG_M("txsigF0.m","txsF0", &eNB->common_vars.txdataF[0][subframe*nsymb*eNB->frame_parms.ofdm_symbol_size],
+                     nsymb*eNB->frame_parms.ofdm_symbol_size,1,1);
+        LOG_M("txsigF4.m","txsF4", &eNB->common_vars.txdataF[4][subframe*nsymb*eNB->frame_parms.ofdm_symbol_size],
+                     nsymb*eNB->frame_parms.ofdm_symbol_size,1,1);
+        LOG_M("txsigF_BF.m","txsF_BF", &ru->common.txdataF_BF[0][0],
                      nsymb*eNB->frame_parms.ofdm_symbol_size,1,1);
         //if (eNB->frame_parms.nb_antennas_tx>1)
         //LOG_M("txsigF1.m","txsF1", &eNB->lte_eNB_common_vars.txdataF[eNB_id][1][subframe*nsymb*eNB->frame_parms.ofdm_symbol_size],nsymb*eNB->frame_parms.ofdm_symbol_size,1,1);

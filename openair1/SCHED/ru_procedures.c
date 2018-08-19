@@ -459,7 +459,7 @@ void feptx_prec(RU_t *ru) {
 	} //if (p<fp->nb_antenna_ports_eNB)
 	
 	  // PDSCH region
-	if (p<fp->nb_antenna_ports_eNB || p==5 || p==7 || p==8) {
+	if (p<fp->nb_antenna_ports_eNB || p==4 || p==5 || p==7 || p==8) {
 	  for (l=pdcch_vars->num_pdcch_symbols;l<fp->symbols_per_tti;l++) {
 	    beam_precoding(eNB->common_vars.txdataF,
 			   ru->common.txdataF_BF,

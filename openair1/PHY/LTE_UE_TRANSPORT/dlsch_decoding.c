@@ -38,8 +38,7 @@
 #include "common/utils/LOG/vcd_signal_dumper.h"
 #include "PHY/LTE_UE_TRANSPORT/transport_proto_ue.h"
 //#define DEBUG_DLSCH_DECODING
-#define UE_DEBUG_TRACE 1
-
+//#define UE_DEBUG_TRACE 1
 
 void free_ue_dlsch(LTE_UE_DLSCH_t *dlsch)
 {
@@ -359,32 +358,26 @@ decoder_if_t *tc;
 #ifdef DEBUG_DLSCH_DECODING
     printf(" in decoding dlsch->harq_processes[harq_pid]->rvidx = %d\n", dlsch->harq_processes[harq_pid]->rvidx);
 #endif
-    if (lte_rate_matching_turbo_rx(harq_process->RTC[r],
-                                   G,
-                                   harq_process->w[r],
-                                   (uint8_t*)&dummy_w[r][0],
-                                   dlsch_llr+r_offset,
-                                   harq_process->C,
-                                   dlsch->Nsoft,
-                                   dlsch->Mdlharq,
-                                   dlsch->Kmimo,
-                                   harq_process->rvidx,
-                                   (harq_process->round==0)?1:0,
-                                   harq_process->Qm,
-                                   harq_process->Nl,
-                                   r,
-                                   &E)==-1) {
+    AssertFatal(lte_rate_matching_turbo_rx(harq_process->RTC[r],
+					   G,
+					   harq_process->w[r],
+					   (uint8_t*)&dummy_w[r][0],
+					   dlsch_llr+r_offset,
+					   harq_process->C,
+					   dlsch->Nsoft,
+					   dlsch->Mdlharq,
+					   dlsch->Kmimo,
+					   harq_process->rvidx,
+					   (harq_process->round==0)?1:0,
+					   harq_process->Qm,
+					   harq_process->Nl,
+					   r,
+					   &E)!=-1, 
+		"Problem in rate_matching\n");
 #if UE_TIMING_TRACE
-      stop_meas(dlsch_rate_unmatching_stats);
+    stop_meas(dlsch_rate_unmatching_stats);
 #endif
-      LOG_E(PHY,"dlsch_decoding.c: Problem in rate_matching\n");
-      return(dlsch->max_turbo_iterations);
-    } else
-    {
-#if UE_TIMING_TRACE
-      stop_meas(dlsch_rate_unmatching_stats);
-#endif
-    }
+    
     r_offset += E;
 
     /*
@@ -402,39 +395,14 @@ decoder_if_t *tc;
 #if UE_TIMING_TRACE
     stop_meas(dlsch_deinterleaving_stats);
 #endif
-#ifdef DEBUG_DLSCH_DECODING
-    /*
-    if (r==0) {
-              LOG_M("decoder_llr.m","decllr",dlsch_llr,G,1,0);
-              LOG_M("decoder_in.m","dec",&harq_process->d[0][96],(3*8*Kr_bytes)+12,1,0);
-    }
 
-    printf("decoder input(segment %d) :",r);
-    int i; for (i=0;i<(3*8*Kr_bytes)+12;i++)
-      printf("%d : %d\n",i,harq_process->d[r][96+i]);
-      printf("\n");*/
-#endif
-
-
-    //    printf("Clearing c, %p\n",harq_process->c[r]);
     memset(harq_process->c[r],0,Kr_bytes);
 
-    //    printf("done\n");
     if (harq_process->C == 1)
       crc_type = CRC24_A;
     else
       crc_type = CRC24_B;
 
-    /*
-    printf("decoder input(segment %d)\n",r);
-    for (i=0;i<(3*8*Kr_bytes)+12;i++)
-      if ((harq_process->d[r][96+i]>7) ||
-    (harq_process->d[r][96+i] < -8))
-    printf("%d : %d\n",i,harq_process->d[r][96+i]);
-    printf("\n");
-    */
-
-    //#ifndef __AVX2__
 #if 1
     if (err_flag == 0) {
 /*
@@ -442,12 +410,12 @@ decoder_if_t *tc;
                             Kr,r,harq_process->C,harq_process->nb_rb,crc_type,A,harq_process->TBS,
                             harq_process->B,harq_process->mcs,harq_process->Qm,harq_process->rvidx,harq_process->round,dlsch->max_turbo_iterations);
 */
-    	if (llr8_flag) {
-    		AssertFatal (Kr >= 256, "turbo algo issue Kr=%d cb_cnt=%d C=%d nbRB=%d TBSInput=%d TBSHarq=%d TBSplus24=%d mcs=%d Qm=%d RIV=%d round=%d\n",
-    				Kr,r,harq_process->C,harq_process->nb_rb,A,harq_process->TBS,harq_process->B,harq_process->mcs,harq_process->Qm,harq_process->rvidx,harq_process->round);
-    	}
+      if (llr8_flag) {
+	AssertFatal (Kr >= 256, "turbo algo issue Kr=%d cb_cnt=%d C=%d nbRB=%d TBSInput=%d TBSHarq=%d TBSplus24=%d mcs=%d Qm=%d RIV=%d round=%d\n",
+		     Kr,r,harq_process->C,harq_process->nb_rb,A,harq_process->TBS,harq_process->B,harq_process->mcs,harq_process->Qm,harq_process->rvidx,harq_process->round);
+      }
 #if UE_TIMING_TRACE
-        start_meas(dlsch_turbo_decoding_stats);
+      start_meas(dlsch_turbo_decoding_stats);
 #endif
       LOG_D(PHY,"AbsSubframe %d.%d Start turbo segment %d/%d \n",frame%1024,subframe,r,harq_process->C-1);
       ret = tc

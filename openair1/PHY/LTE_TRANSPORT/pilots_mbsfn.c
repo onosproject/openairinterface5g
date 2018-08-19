@@ -60,7 +60,7 @@ int generate_mbsfn_pilot(PHY_VARS_eNB *eNB,
 
   //antenna 4 symbol 2 Slot 0
   lte_dl_mbsfn(eNB,
-               &txdataF[0][subframe_offset+(2*samples_per_symbol)],
+               &txdataF[4][subframe_offset+(2*samples_per_symbol)],
                amp,
                subframe,
                0);
@@ -69,14 +69,14 @@ int generate_mbsfn_pilot(PHY_VARS_eNB *eNB,
 
   //antenna 4 symbol 0 slot 1
   lte_dl_mbsfn(eNB,
-               &txdataF[0][subframe_offset+(6*samples_per_symbol)],
+               &txdataF[4][subframe_offset+(6*samples_per_symbol)],
                amp,
                subframe,
                1);
 
   //antenna 4 symbol 4 slot 1
   lte_dl_mbsfn(eNB,
-               &txdataF[0][subframe_offset+(10*samples_per_symbol)],
+               &txdataF[4][subframe_offset+(10*samples_per_symbol)],
                amp,
                subframe,
                2);

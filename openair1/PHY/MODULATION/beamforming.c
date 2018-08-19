@@ -61,7 +61,7 @@ int beam_precoding(int32_t **txdataF,
 		   int aa,
 		   int p)
 {
-  LOG_D(PHY,"Starting precoding for symbol %d, physical antenna %d, logical port %d\n",symbol,aa,p);
+  //  LOG_D(PHY,"Starting precoding for symbol %d, physical antenna %d, logical port %d\n",symbol,aa,p);
   int rb_offset_neg0 = frame_parms->ofdm_symbol_size - (6*frame_parms->N_RB_DL);
   int rb_offset_neg  = (subframe*frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti) + rb_offset_neg0;
   int rb_offset_pos  = (subframe*frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti);
@@ -79,7 +79,7 @@ int beam_precoding(int32_t **txdataF,
                      7*frame_parms->N_RB_DL, // to allow for extra RE at the end, 12 useless multipy-adds (first one at DC and 11 at end)
                      15);
 
-      return 0;
+  return 0;
 }
 
 

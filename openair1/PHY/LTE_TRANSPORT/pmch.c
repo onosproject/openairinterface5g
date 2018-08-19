@@ -56,7 +56,7 @@ void fill_eNB_dlsch_MCH(PHY_VARS_eNB *eNB,int Qm,int TBS)
   dlsch->active=1;
   dlsch->harq_processes[0]->Nl    = 1;
   dlsch->harq_processes[0]->TBS   = TBS;
-  AssertFatal(Qm >= 0 && Qm < 3, "Illegal value for Qm %d\n",Qm);
+  AssertFatal(Qm == 2 || Qm == 4 || Qm == 6, "Illegal value for Qm %d\n",Qm);
   dlsch->harq_processes[0]->Qm    = Qm;
   dlsch->harq_processes[0]->nb_rb = frame_parms->N_RB_DL;
 

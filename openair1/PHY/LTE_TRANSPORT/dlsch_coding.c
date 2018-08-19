@@ -43,7 +43,7 @@
 #include <syscall.h>
 #include "targets/RT/USER/rt_wrapper.h"
 
-#define DEBUG_DLSCH_CODING
+//#define DEBUG_DLSCH_CODING
 //#define DEBUG_DLSCH_FREE 1
 
 /*
