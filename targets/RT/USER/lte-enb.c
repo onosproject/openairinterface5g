@@ -830,13 +830,39 @@ static void* eNB_thread_asynch_rxtx( void* param ) {
 
 
 void rx_rf(PHY_VARS_eNB *eNB,int *frame,int *subframe) {
-
+  //printf("rx_rf ... \n");
   eNB_proc_t *proc = &eNB->proc;
   LTE_DL_FRAME_PARMS *fp = &eNB->frame_parms;
   void *rxp[fp->nb_antennas_rx],*txp[fp->nb_antennas_tx]; 
-  unsigned int rxs,txs;
-  int i;
+  unsigned int rxs,txs; 
+  int i; 
   int tx_sfoffset = 3;//(eNB->single_thread_flag == 1) ? 3 : 3;
+       
+#ifdef ISIP_HW
+	for (i=0; i<fp->nb_antennas_tx; i++)
+      txp[i] = (void*)&eNB->common_vars.txdata[0][i][((proc->subframe_rx+tx_sfoffset)%10)*fp->samples_per_tti];
+    
+	VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_WRITE, 1 );
+    txs = trx_ISIP_HW_write(txp,fp->samples_per_tti,fp->nb_antennas_tx);  
+	if (txs !=  fp->samples_per_tti) {
+      LOG_E(PHY,"TX : Timeout (sent %d/%d)\n",txs, fp->samples_per_tti);
+      exit_fun( "problem transmitting samples" );
+    } 
+	VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_WRITE, 0 );
+
+	
+	for (i=0; i<fp->nb_antennas_rx; i++)
+		rxp[i] = (void*)&eNB->common_vars.rxdata[0][i][*subframe*fp->samples_per_tti];
+	
+	VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_READ, 1 );
+	rxs = trx_ISIP_HW_read(rxp,fp->samples_per_tti,fp->nb_antennas_rx);
+	if (proc->first_rx)    
+		proc->timestamp_rx = 0;
+	else
+		proc->timestamp_rx += fp->samples_per_tti;//get_usrp_time(&eNB->rfdevice); 
+	VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_READ, 0 );
+
+#else 
   if (proc->first_rx==0) {
     
     // Transmit TX buffer based on timestamp from RX
@@ -847,43 +873,55 @@ void rx_rf(PHY_VARS_eNB *eNB,int *frame,int *subframe) {
 	
     for (i=0; i<fp->nb_antennas_tx; i++)
       txp[i] = (void*)&eNB->common_vars.txdata[0][i][((proc->subframe_rx+tx_sfoffset)%10)*fp->samples_per_tti];
-    
+	//txs = trx_ISIP_HW_write(txp,fp->samples_per_tti,fp->nb_antennas_tx);    
+	
     txs = eNB->rfdevice.trx_write_func(&eNB->rfdevice,
 				       proc->timestamp_rx+(tx_sfoffset*fp->samples_per_tti)-openair0_cfg[0].tx_sample_advance,
 				       txp,
-				       fp->samples_per_tti,
+				       fp->samples_per_tti, 
 				       fp->nb_antennas_tx,
-				       1);
-    
+				       1); 
+        
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_WRITE, 0 );
     
-    
+     
     
     if (txs !=  fp->samples_per_tti) {
       LOG_E(PHY,"TX : Timeout (sent %d/%d)\n",txs, fp->samples_per_tti);
       exit_fun( "problem transmitting samples" );
-    }	
+    } 
   }
+  
   
   for (i=0; i<fp->nb_antennas_rx; i++)
     rxp[i] = (void*)&eNB->common_vars.rxdata[0][i][*subframe*fp->samples_per_tti];
   
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_READ, 1 );
-
   rxs = eNB->rfdevice.trx_read_func(&eNB->rfdevice,
 				    &(proc->timestamp_rx),
 				    rxp,
 				    fp->samples_per_tti,
 				    fp->nb_antennas_rx);
-
+ /*
+  txs = trx_ISIP_HW_write(txp,fp->samples_per_tti,fp->nb_antennas_tx); 
+  rxs = trx_ISIP_HW_read(rxp,fp->samples_per_tti,fp->nb_antennas_rx);
+  */
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_READ, 0 );
-  
+#endif 
+ 
+#ifdef ISIP_HW 
   proc->frame_rx    = (proc->timestamp_rx / (fp->samples_per_tti*10))&1023;
-  proc->subframe_rx = (proc->timestamp_rx / fp->samples_per_tti)%10;
-  proc->timestamp_tx = proc->timestamp_rx+(4*fp->samples_per_tti);
+  proc->subframe_rx = (proc->timestamp_rx / fp->samples_per_tti)%10;  
+  proc->timestamp_tx = proc->timestamp_rx+(3*fp->samples_per_tti);//proc->timestamp_rx+(4*fp->samples_per_tti);
+  //printf("\033[35m[ISIP_DEBUG] proc->timestamp_rx = %llu, proc->subframe_rx = %d\033[0m\n",proc->timestamp_rx,proc->subframe_rx);
   //  printf("trx_read <- USRP TS %llu (sf %d, first_rx %d)\n", proc->timestamp_rx,proc->subframe_rx,proc->first_rx);  
+#else 
+  proc->frame_rx    = (proc->timestamp_rx / (fp->samples_per_tti*10))&1023;
+  proc->subframe_rx = (proc->timestamp_rx / fp->samples_per_tti)%10;  
+  proc->timestamp_tx = proc->timestamp_rx+(4*fp->samples_per_tti);//proc->timestamp_rx+(4*fp->samples_per_tti);	
+#endif 
   
-  if (proc->first_rx == 0) {
+  if (proc->first_rx == 0) {	  
     if (proc->subframe_rx != *subframe){
       LOG_E(PHY,"Received Timestamp doesn't correspond to the time we think it is (proc->subframe_rx %d, subframe %d)\n",proc->subframe_rx,*subframe);
       exit_fun("Exiting");
@@ -1240,7 +1278,7 @@ static void* eNB_thread_single( void* param ) {
   if (eNB->node_function < NGFI_RRU_IF5)
     wait_system_ready ("Waiting for eNB application to be ready %s\r", &start_eNB);
 #endif 
-
+#ifndef ISIP_HW
   // Start IF device if any
   if (eNB->start_if) 
     if (eNB->start_if(eNB) != 0)
@@ -1250,7 +1288,7 @@ static void* eNB_thread_single( void* param ) {
   if (eNB->start_rf)
     if (eNB->start_rf(eNB) != 0)
       LOG_E(HW,"Could not start the RF device\n");
-
+#endif  
   // wakeup asnych_rxtx thread because the devices are ready at this point
   pthread_mutex_lock(&proc->mutex_asynch_rxtx);
   proc->instance_cnt_asynch_rxtx=0;
