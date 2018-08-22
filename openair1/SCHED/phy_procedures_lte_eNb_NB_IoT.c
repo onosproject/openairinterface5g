@@ -249,7 +249,7 @@ void common_signal_procedures_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
 
      if(frame%64==1 && subframe ==0)
       {     
-       do_SIB1_NB_IoT_x(0,0,carrier,208,92,1,3584,28,2,hyper_frame);
+         do_SIB1_NB_IoT_x(0,0,carrier,208,92,1,3584,28,2,hyper_frame);
       }
     */  
 /////////////////////////////////////////////////////////////////////////////////

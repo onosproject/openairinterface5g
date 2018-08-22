@@ -71,7 +71,7 @@
 //
 //// for NB-IoT
 #define MAX_NUM_CHANNEL_BITS_NB_IoT 3360 			//14 symbols * 12 sub-carriers * 10 SF * 2bits/RE  // to check during real tests
-#define MAX_DL_SIZE_BITS_NB_IoT 680 				// in release 13 // in release 14 = 2048      // ??? **** not sure
+#define MAX_TBS_DL_SIZE_BITS_NB_IoT 680         // in release 13 // in release 14 = 2048      // ??? **** not sure
 ////#define MAX_NUM_CHANNEL_BITS_NB_IOT 3*680  			/// ??? ****not sure
 //
 //// to be created LTE_eNB_DLSCH_t --> is duplicated for each number of UE and then indexed in the table
@@ -154,9 +154,9 @@ typedef struct {
   //length of the table e
   uint16_t              length_e;                // new parameter
   /// Tail-biting convolutional coding outputs
-  uint8_t               d[96+(3*(24+680))];  // new parameter
+  uint8_t               d[96+(3*(24+MAX_TBS_DL_SIZE_BITS_NB_IoT))];  // new parameter
   /// Sub-block interleaver outputs
-  uint8_t               w[3*3*(680+24)];      // new parameter
+  uint8_t               w[3*3*(MAX_TBS_DL_SIZE_BITS_NB_IoT+24)];      // new parameter
 
   /// Status Flag indicating for this DLSCH (idle,active,disabled)
   //SCH_status_t status;
@@ -242,9 +242,9 @@ typedef struct {
   //length of the table e
   uint16_t              length_e;                // new parameter
   /// Tail-biting convolutional coding outputs
-  uint8_t               d[96+(3*(24+MAX_DL_SIZE_BITS_NB_IoT))];  // new parameter
+  uint8_t               d[96+(3*(24+MAX_TBS_DL_SIZE_BITS_NB_IoT))];  // new parameter
   /// Sub-block interleaver outputs
-  uint8_t               w[3*3*(MAX_DL_SIZE_BITS_NB_IoT+24)];      // new parameter
+  uint8_t               w[3*3*(MAX_TBS_DL_SIZE_BITS_NB_IoT+24)];      // new parameter
 
   /// Status Flag indicating for this DLSCH (idle,active,disabled)
   //SCH_status_t status;
