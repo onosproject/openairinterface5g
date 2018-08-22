@@ -34,9 +34,7 @@ def doRedHatBuild = false
 def FDD_Band7_B210_Status
 
 pipeline {
-    agent {
-        label 'bellatrix'
-    }
+    agent any
     options {
         disableConcurrentBuilds()
         timestamps()

@@ -315,6 +315,8 @@ else
     echo "cd cmake_targets/" >> $VM_CMDS
     echo "mkdir log" >> $VM_CMDS
     echo "cp /home/ubuntu/zip-install.txt log" >> $VM_CMDS
+    echo "declare -x http_proxy=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" >> $VM_CMDS
+    echo "declare -x https_proxy=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" >> $VM_CMDS
     echo "echo \"./build_oai -I $BUILD_OPTIONS \"" >> $VM_CMDS
     echo "./build_oai -I $BUILD_OPTIONS > log/install-build.txt 2>&1" >> $VM_CMDS
 fi
