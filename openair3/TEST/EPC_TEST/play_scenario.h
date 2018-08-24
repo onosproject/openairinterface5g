@@ -157,7 +157,7 @@ typedef struct Enb_properties_s {
 } Enb_properties_t;
 
 typedef struct Enb_properties_array_s {
-  int                  number;
+  int                 number;
   Enb_properties_t    *properties[MAX_ENB];
 } Enb_properties_array_t;
 

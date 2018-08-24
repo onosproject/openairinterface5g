@@ -2341,6 +2341,7 @@ void init_eNB(eNB_func_t node_function[], eNB_timing_t node_timing[],int nb_inst
 	eNB->fh_asynch            = fh_if4p5_asynch_DL;
 	eNB->start_rf             = start_rf;
 	eNB->start_if             = start_if;
+	printf("oaisim_flag %d, eNB %d\n",oaisim_flag,eNB->Mod_id);
 	if (oaisim_flag == 0) {
 	  ret = openair0_device_load(&eNB->rfdevice, &openair0_cfg[CC_id]);
 	  if (ret<0) {

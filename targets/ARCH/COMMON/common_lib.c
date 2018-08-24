@@ -93,7 +93,7 @@ int load_lib(openair0_device *device, openair0_config_t *openair0_cfg, eth_param
   oai_device_initfunc_t dp ;
   oai_transport_initfunc_t tp ;
   int ret=0;
-
+  printf("transport_init device->device->Mod_id %d\n",device->Mod_id);
   if (flag == BBU_LOCAL_RADIO_HEAD) {
       lib_handle = dlopen(OAI_RF_LIBNAME, RTLD_LAZY);
       if (!lib_handle) {

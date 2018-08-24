@@ -2936,7 +2936,7 @@ void phy_procedures_eNB_uespec_RX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,const 
   if (do_ofdm_mod)
   	T(T_ENB_PHY_INPUT_SIGNAL, T_INT(eNB->Mod_id), T_INT(frame), T_INT(subframe), T_INT(0),
     T_BUFFER(&eNB->common_vars.rxdataF[0][0][subframe*eNB->frame_parms.ofdm_symbol_size*eNB->frame_parms.symbols_per_tti],
-             NB->frame_parms.ofdm_symbol_size*eNB->frame_parms.symbols_per_tti * 4));
+             eNB->frame_parms.ofdm_symbol_size*eNB->frame_parms.symbols_per_tti * 4));
   else
   	T(T_ENB_PHY_INPUT_SIGNAL, T_INT(eNB->Mod_id), T_INT(frame), T_INT(subframe), T_INT(0),
     T_BUFFER(&eNB->common_vars.rxdata[0][0][subframe*eNB->frame_parms.samples_per_tti],

@@ -67,7 +67,8 @@ int eth_socket_init_udp(openair0_device *device) {
   int sock_type=0;
   int sock_proto=0;
   int enable=1;
-
+  printf("RRH %d\n",device->Mod_id);
+  printf("local %s, remote %s\n",device->openair0_cfg->my_addr,device->openair0_cfg->remote_addr);
   if (device->host_type == RRH_HOST ) {
     local_ip   = device->openair0_cfg->my_addr;   
     local_port = device->openair0_cfg->my_port;

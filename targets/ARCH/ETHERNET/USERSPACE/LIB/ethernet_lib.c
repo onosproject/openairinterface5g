@@ -392,8 +392,8 @@ int transport_init(openair0_device *device, openair0_config_t *openair0_cfg, eth
     eth->compression = ALAW_COMPRESS;
   }
   
-  printf("[ETHERNET]: Initializing openair0_device for %s ...\n", ((device->host_type == BBU_HOST) ? "BBU": "RRH"));
-  device->Mod_id           = 0;//num_devices_eth++;
+  printf("[ETHERNET]: Initializing openair0_device for %s%d ...\n", ((device->host_type == BBU_HOST) ? "BBU": "RRH"),num_devices_eth);
+  device->Mod_id           = 0;//+num_devices_eth++;
   device->transp_type      = ETHERNET_TP;
   device->trx_start_func   = trx_eth_start;
   device->trx_request_func = trx_eth_request;
@@ -404,7 +404,7 @@ int transport_init(openair0_device *device, openair0_config_t *openair0_cfg, eth
   device->trx_stop_func        = trx_eth_stop;
   device->trx_set_freq_func = trx_eth_set_freq;
   device->trx_set_gains_func = trx_eth_set_gains;
-  
+  printf("Device->Mod_id %d\n",device->Mod_id);
   if (eth->flags == ETH_RAW_MODE) {
     device->trx_write_func   = trx_eth_write_raw;
     device->trx_read_func    = trx_eth_read_raw;     

@@ -313,7 +313,7 @@ void enb_config_display(void)
     } else {
       printf( "\tMNC:                \t%02"PRIu16":\n",enb_properties.properties[i]->mnc);
     }
-    
+    printf("Number of RRH %d\n",enb_properties.properties[i]->nb_rrh_gw);
     for (j=0; j< enb_properties.properties[i]->nb_rrh_gw; j++) {
       if (enb_properties.properties[i]->rrh_gw_config[j].active == 1 ){
 	printf( "\n\tRRH GW %d config for eNB %u:\n\n", j, i);
@@ -2336,6 +2336,7 @@ const Enb_properties_array_t *enb_config_init(char* lib_config_file_name_pP)
 	    enb_properties.properties[enb_properties_index]->nb_rrh_gw = 0;
 
 	    for (j = 0; j < num_rrh_gw; j++) {
+	      printf("num_rrh_gw is %d\n",num_rrh_gw);
 	      setting_rrh_gw = config_setting_get_elem(setting_rrh_gws, j);
 	      
 	      if (  !(
@@ -2360,7 +2361,7 @@ const Enb_properties_array_t *enb_config_init(char* lib_config_file_name_pP)
 	      }
 	      
 	      enb_properties.properties[enb_properties_index]->nb_rrh_gw += 1;
-	      
+	      printf("nb_rrh_gw is %d\n",enb_properties.properties[enb_properties_index]->nb_rrh_gw);
 	      enb_properties.properties[enb_properties_index]->rrh_gw_config[j].rrh_gw_if_name = strdup(if_name);
 	      enb_properties.properties[enb_properties_index]->rrh_gw_config[j].local_address  = strdup(ipv4);
 	      enb_properties.properties[enb_properties_index]->rrh_gw_config[j].remote_address = strdup(ipv4_remote);
@@ -2800,7 +2801,8 @@ const Enb_properties_array_t *enb_config_init(char* lib_config_file_name_pP)
   }
 
   enb_properties.number = num_enb_properties;
-
+  printf("num_enb_properties %d\n",num_enb_properties);
+  printf("enb_properties.number %d\n",enb_properties.number);
   AssertFatal (enb_properties_index == num_enb_properties,
                "Failed to parse eNB configuration file %s, mismatch between %u active eNBs and %u corresponding defined eNBs !\n",
                lib_config_file_name_pP, num_enb_properties, enb_properties_index);
