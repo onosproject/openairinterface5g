@@ -393,7 +393,7 @@ int transport_init(openair0_device *device, openair0_config_t *openair0_cfg, eth
   }
   
   printf("[ETHERNET]: Initializing openair0_device for %s%d ...\n", ((device->host_type == BBU_HOST) ? "BBU": "RRH"),num_devices_eth);
-  device->Mod_id           = 0;//+num_devices_eth++;
+  device->Mod_id           = +num_devices_eth++;
   device->transp_type      = ETHERNET_TP;
   device->trx_start_func   = trx_eth_start;
   device->trx_request_func = trx_eth_request;

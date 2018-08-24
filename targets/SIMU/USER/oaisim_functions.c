@@ -1438,25 +1438,26 @@ void init_openair1(void)
 
   // change the nb_connected_eNB
   for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
+   for (int i=0;i<enb_properties->number;i++) {
     init_lte_vars (&frame_parms[CC_id],
 		   oai_emulation.info.frame_type[CC_id],
 		   oai_emulation.info.tdd_config[CC_id],
 		   oai_emulation.info.tdd_config_S[CC_id],
 		   oai_emulation.info.extended_prefix_flag[CC_id],
                    oai_emulation.info.N_RB_DL[CC_id], 
-		   enb_properties->properties[0]->Nid_cell[CC_id], 
+		   enb_properties->properties[i]->Nid_cell[CC_id], 
 		   cooperation_flag, 
-		   enb_properties->properties[0]->nb_antenna_ports[CC_id], 
+		   enb_properties->properties[i]->nb_antenna_ports[CC_id], 
 		   abstraction_flag,
-		   enb_properties->properties[0]->nb_antennas_rx[CC_id],
-		   enb_properties->properties[0]->nb_antennas_tx[CC_id],
+		   enb_properties->properties[i]->nb_antennas_rx[CC_id],
+		   enb_properties->properties[i]->nb_antennas_tx[CC_id],
 		   nb_antennas_rx_ue,
 		   oai_emulation.info.eMBMS_active_state);
 
     // This is for IF4p5 RRU, gets done by RRC configuration of eNB
-    PHY_vars_eNB_g[eNB_id][CC_id]->frame_parms.prach_config_common.prach_ConfigInfo.prach_ConfigIndex = enb_properties->properties[0]->prach_config_index[CC_id];
-    PHY_vars_eNB_g[eNB_id][CC_id]->frame_parms.prach_config_common.prach_ConfigInfo.prach_FreqOffset  = enb_properties->properties[0]->prach_freq_offset[CC_id];
-
+    PHY_vars_eNB_g[eNB_id][CC_id]->frame_parms.prach_config_common.prach_ConfigInfo.prach_ConfigIndex = enb_properties->properties[i]->prach_config_index[CC_id];
+    PHY_vars_eNB_g[eNB_id][CC_id]->frame_parms.prach_config_common.prach_ConfigInfo.prach_FreqOffset  = enb_properties->properties[i]->prach_freq_offset[CC_id];
+   }
   }
 
   for (eNB_id=0; eNB_id<NB_eNB_INST; eNB_id++) {
