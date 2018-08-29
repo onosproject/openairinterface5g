@@ -245,7 +245,7 @@ static inline int rxtx(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc, char *thread_nam
   /* CONFLICT RESOLUTION: BEGIN */
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_ENB_DLSCH_ULSCH_SCHEDULER , 0 );
   if(oai_exit) return(-1);
-  if(eNB->single_thread_flag || get_nprocs() <= 4){
+  if((eNB->single_thread_flag || get_nprocs() <= 4) && nfapi_mode != 2){
 #ifndef PHY_TX_THREAD
     phy_procedures_eNB_TX(eNB, proc, 1);
 #endif
