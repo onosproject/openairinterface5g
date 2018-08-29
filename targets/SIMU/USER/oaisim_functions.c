@@ -178,7 +178,7 @@ extern int xforms;
 extern uint32_t          downlink_frequency[MAX_NUM_CCs][4];
 extern int32_t           uplink_frequency_offset[MAX_NUM_CCs][4];
 
-eth_params_t *eth_params;
+ eth_params_t *eth_params;
 
 void init_eNB(eNB_func_t node_function[], eNB_timing_t node_timing[],int nb_inst,eth_params_t *,int,int);
 void stop_eNB(int nb_inst);
@@ -794,49 +794,51 @@ void get_simulation_options(int argc, char *argv[])
   if ((oai_emulation.info.nb_enb_local > 0) && (conf_config_file_name != NULL)) {
     /* Read eNB configuration file */
     enb_properties = enb_config_init(conf_config_file_name);
-    printf("Read eNB configuration file. enb_properties->number %d\n",(int)(*enb_properties).number);
+    printf("OAISIM reads eNB configuration file for %d eNBs\n",(int)(*enb_properties).number);
     AssertFatal (oai_emulation.info.nb_enb_local <= enb_properties->number,
                  "Number of eNB is greater than eNB defined in configuration file %s (%d/%d)!",
                  conf_config_file_name, oai_emulation.info.nb_enb_local, enb_properties->number);
-   for (int i = 0; i < enb_properties->number; i++) {
-    eth_params = (eth_params_t*)malloc(enb_properties->properties[i]->nb_rrh_gw * sizeof(eth_params_t));
-    memset(eth_params, 0, enb_properties->properties[i]->nb_rrh_gw * sizeof(eth_params_t));
-    
+    //printf("Read eNB configuration file. enb_properties->number_i %d\n",i);
+    eth_params = (eth_params_t*)malloc(enb_properties->number * sizeof(eth_params_t));
+    memset(eth_params, 0, enb_properties->number * sizeof(eth_params_t));
+    /*For each eNB*/
+   for (int i = 0; i < enb_properties->number; i++) {   
     for (int j=0; j<enb_properties->properties[i]->nb_rrh_gw; j++) {
       
       if (enb_properties->properties[i]->rrh_gw_config[j].active == 1 ) {
 	//	local_remote_radio = BBU_REMOTE_RADIO_HEAD;
-	(eth_params+j)->local_if_name             = enb_properties->properties[i]->rrh_gw_config[j].rrh_gw_if_name;
-	(eth_params+j)->my_addr                   = enb_properties->properties[i]->rrh_gw_config[j].local_address;
-	(eth_params+j)->my_port                   = enb_properties->properties[i]->rrh_gw_config[j].local_port;
-	(eth_params+j)->remote_addr               = enb_properties->properties[i]->rrh_gw_config[j].remote_address;
-	(eth_params+j)->remote_port               = enb_properties->properties[i]->rrh_gw_config[j].remote_port;
-        
+	(eth_params+i+j)->local_if_name             = enb_properties->properties[i]->rrh_gw_config[j].rrh_gw_if_name;
+	(eth_params+i+j)->my_addr                   = enb_properties->properties[i]->rrh_gw_config[j].local_address;
+	(eth_params+i+j)->my_port                   = enb_properties->properties[i]->rrh_gw_config[j].local_port;
+	(eth_params+i+j)->remote_addr               = enb_properties->properties[i]->rrh_gw_config[j].remote_address;
+	(eth_params+i+j)->remote_port               = enb_properties->properties[i]->rrh_gw_config[j].remote_port;
+        printf("%d RRH associated to eNB %d and local ip %s, (i,j)(%d,%d)\n",enb_properties->properties[i]->nb_rrh_gw,enb_properties->properties[i]->rrh_gw_config[j].eNB,(eth_params+i+j)->my_addr,i,j);
 	if (enb_properties->properties[i]->rrh_gw_config[j].raw == 1) {
-	  (eth_params+j)->transp_preference       = ETH_RAW_MODE; 
+	  (eth_params+i+j)->transp_preference       = ETH_RAW_MODE; 
 	} else if (enb_properties->properties[i]->rrh_gw_config[j].rawif4p5 == 1) {
-	  (eth_params+j)->transp_preference       = ETH_RAW_IF4p5_MODE;             
+	  (eth_params+i+j)->transp_preference       = ETH_RAW_IF4p5_MODE;             
 	} else if (enb_properties->properties[i]->rrh_gw_config[j].udpif4p5 == 1) {
-	  (eth_params+j)->transp_preference       = ETH_UDP_IF4p5_MODE;             
+	  //printf("enb_properties->properties[%d]->rrh_gw_config[%d].udpif4p5 == %d\n",i,j,enb_properties->properties[i]->rrh_gw_config[j].udpif4p5);
+	  (eth_params+i+j)->transp_preference       = ETH_UDP_IF4p5_MODE;             
 	} else if (enb_properties->properties[i]->rrh_gw_config[j].rawif5_mobipass == 1) {
-	  (eth_params+j)->transp_preference       = ETH_RAW_IF5_MOBIPASS;             
+	  (eth_params+i+j)->transp_preference       = ETH_RAW_IF5_MOBIPASS;             
 	} else {
-	  (eth_params+j)->transp_preference       = ETH_UDP_MODE;	 
+	  (eth_params+i+j)->transp_preference       = ETH_UDP_MODE;	 
 	}
       }
     }
+   }
     /* Update some simulation parameters */
-    oai_emulation.info.frame_type[0]           = enb_properties->properties[i]->frame_type[0];
-    oai_emulation.info.tdd_config[0]           = enb_properties->properties[i]->tdd_config[0];
-    oai_emulation.info.tdd_config_S[0]         = enb_properties->properties[i]->tdd_config_s[0];
-    oai_emulation.info.extended_prefix_flag[0] = enb_properties->properties[i]->prefix_type[0];
+    oai_emulation.info.frame_type[0]           = enb_properties->properties[0]->frame_type[0];
+    oai_emulation.info.tdd_config[0]           = enb_properties->properties[0]->tdd_config[0];
+    oai_emulation.info.tdd_config_S[0]         = enb_properties->properties[0]->tdd_config_s[0];
+    oai_emulation.info.extended_prefix_flag[0] = enb_properties->properties[0]->prefix_type[0];
 
-    oai_emulation.info.node_function[0]        = enb_properties->properties[i]->cc_node_function[0];
-    oai_emulation.info.node_timing[0]          = enb_properties->properties[i]->cc_node_timing[0];
-    downlink_frequency[0][0]                   = enb_properties->properties[i]->downlink_frequency[0];
-    uplink_frequency_offset[0][0]              = enb_properties->properties[i]->uplink_frequency_offset[0];
-    oai_emulation.info.N_RB_DL[0]              = enb_properties->properties[i]->N_RB_DL[0];
-  }
+    oai_emulation.info.node_function[0]        = enb_properties->properties[0]->cc_node_function[0];
+    oai_emulation.info.node_timing[0]          = enb_properties->properties[0]->cc_node_timing[0];
+    downlink_frequency[0][0]                   = enb_properties->properties[0]->downlink_frequency[0];
+    uplink_frequency_offset[0][0]              = enb_properties->properties[0]->uplink_frequency_offset[0];
+    oai_emulation.info.N_RB_DL[0]              = enb_properties->properties[0]->N_RB_DL[0];
  }
   free(conf_config_file_name);
   conf_config_file_name = 0;
@@ -1315,7 +1317,7 @@ void init_openair0() {
 
   int card;
   int i;
-
+  printf("init_openair0 MAX_CARDS %d\n",MAX_CARDS);
   for (card=0; card<MAX_CARDS; card++) {
 
     openair0_cfg[card].configFilename = NULL;
@@ -1388,7 +1390,8 @@ void init_openair0() {
 
 void init_devices(void){
 
-  module_id_t UE_id, eNB_id;
+  module_id_t UE_id;
+  uint8_t  eNB_id;
   uint8_t CC_id;
 
   for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
@@ -1408,6 +1411,12 @@ void init_devices(void){
       	current_eNB_rx_timestamp[eNB_id][CC_id] = PHY_vars_eNB_g[eNB_id][CC_id]->frame_parms.samples_per_tti;
       last_eNB_rx_timestamp[eNB_id][CC_id] = 0;
     }
+
+    for (eNB_id=0;eNB_id<NB_eNB_INST;eNB_id++) {
+      PHY_vars_eNB_g[eNB_id][CC_id]->ifdevice.Mod_id             = eNB_id;
+      PHY_vars_eNB_g[eNB_id][CC_id]->ifdevice.CC_id              = CC_id;
+    }
+
     for (UE_id=0;UE_id<NB_UE_INST;UE_id++) {
       PHY_vars_UE_g[UE_id][CC_id]->rfdevice.Mod_id               = UE_id;
       PHY_vars_UE_g[UE_id][CC_id]->rfdevice.CC_id                = CC_id;
@@ -1430,7 +1439,8 @@ void init_devices(void){
 
 void init_openair1(void)
 {
-  module_id_t UE_id, eNB_id = 0;
+  module_id_t UE_id;
+  uint8_t  eNB_id = 0;
   uint8_t CC_id;
 #if ENABLE_RAL
   int list_index;
@@ -1438,25 +1448,25 @@ void init_openair1(void)
 
   // change the nb_connected_eNB
   for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
-   for (int i=0;i<enb_properties->number;i++) {
+   for (eNB_id=0;eNB_id<enb_properties->number;eNB_id++) {
     init_lte_vars (&frame_parms[CC_id],
 		   oai_emulation.info.frame_type[CC_id],
 		   oai_emulation.info.tdd_config[CC_id],
 		   oai_emulation.info.tdd_config_S[CC_id],
 		   oai_emulation.info.extended_prefix_flag[CC_id],
                    oai_emulation.info.N_RB_DL[CC_id], 
-		   enb_properties->properties[i]->Nid_cell[CC_id], 
+		   enb_properties->properties[eNB_id]->Nid_cell[CC_id], 
 		   cooperation_flag, 
-		   enb_properties->properties[i]->nb_antenna_ports[CC_id], 
+		   enb_properties->properties[eNB_id]->nb_antenna_ports[CC_id], 
 		   abstraction_flag,
-		   enb_properties->properties[i]->nb_antennas_rx[CC_id],
-		   enb_properties->properties[i]->nb_antennas_tx[CC_id],
+		   enb_properties->properties[eNB_id]->nb_antennas_rx[CC_id],
+		   enb_properties->properties[eNB_id]->nb_antennas_tx[CC_id],
 		   nb_antennas_rx_ue,
 		   oai_emulation.info.eMBMS_active_state);
 
     // This is for IF4p5 RRU, gets done by RRC configuration of eNB
-    PHY_vars_eNB_g[eNB_id][CC_id]->frame_parms.prach_config_common.prach_ConfigInfo.prach_ConfigIndex = enb_properties->properties[i]->prach_config_index[CC_id];
-    PHY_vars_eNB_g[eNB_id][CC_id]->frame_parms.prach_config_common.prach_ConfigInfo.prach_FreqOffset  = enb_properties->properties[i]->prach_freq_offset[CC_id];
+    PHY_vars_eNB_g[eNB_id][CC_id]->frame_parms.prach_config_common.prach_ConfigInfo.prach_ConfigIndex = enb_properties->properties[eNB_id]->prach_config_index[CC_id];
+    PHY_vars_eNB_g[eNB_id][CC_id]->frame_parms.prach_config_common.prach_ConfigInfo.prach_FreqOffset  = enb_properties->properties[eNB_id]->prach_freq_offset[CC_id];
    }
   }
 
@@ -1598,15 +1608,17 @@ void init_openair2(void)
 {
 #ifdef OPENAIR2
   int CC_id;
+  //int eNB_id;
 //#warning "eNB index is hard coded to zero"
-
+ //for (eNB_id=0; 1/*eNB_id<NB_eNB_INST*/; eNB_id++)
+ //{
   for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++)
     l2_init (&PHY_vars_eNB_g[0][CC_id]->frame_parms,
              oai_emulation.info.eMBMS_active_state,
              NULL,
              oai_emulation.info.cba_group_active,
              oai_emulation.info.handover_active);
-
+ //}
   mac_xface->macphy_exit = exit_fun;
 
 #endif

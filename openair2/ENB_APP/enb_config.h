@@ -93,7 +93,8 @@ typedef struct rrh_gw_config_s {
   unsigned  usrp_b200:1;
   unsigned  usrp_x300:1;
   unsigned  bladerf:1; 
-  unsigned  lmssdr:1;  
+  unsigned  lmssdr:1; 
+  uint8_t   eNB; 
 } rrh_gw_config_t;
 
 typedef struct Enb_properties_s {

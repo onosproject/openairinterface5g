@@ -1356,7 +1356,7 @@ main (int argc, char **argv)
   //oai_emulation.info.oeh_enabled = 1;
   if (oai_emulation.info.oeh_enabled == 1)
     schedule_events ();
-
+  printf("schedule events\n");
   // oai performance profiler is enabled
   if (oai_emulation.info.opp_enabled == 1)
     reset_opp_meas_oaisim ();

@@ -620,12 +620,15 @@ static inline int rxtx(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc, char *thread_nam
  * \param param is a \ref eNB_proc_t structure which contains the info what to process.
  * \returns a pointer to an int. The storage is not on the heap and must not be freed.
  */
-static void* eNB_thread_rxtx( void* param ) {
+static void* eNB_thread_rxtx_0( void* param ) {
 
   static int eNB_thread_rxtx_status;
-
-  eNB_rxtx_proc_t *proc = (eNB_rxtx_proc_t*)param;
-  PHY_VARS_eNB *eNB = PHY_vars_eNB_g[0][proc->CC_id];
+  PHY_VARS_eNB *eNB= (PHY_VARS_eNB *)param;
+  //eNB_proc_t *eNB_proc = &eNB->proc;
+  eNB_rxtx_proc_t *proc = &eNB->proc.proc_rxtx[0];
+  //int eNB_id=0;
+  //eNB_rxtx_proc_t *proc = (eNB_rxtx_proc_t*)param;
+  //PHY_VARS_eNB *eNB = PHY_vars_eNB_g[0][proc->CC_id];
 
   char thread_name[100];
 
@@ -660,7 +663,49 @@ static void* eNB_thread_rxtx( void* param ) {
   eNB_thread_rxtx_status = 0;
   return &eNB_thread_rxtx_status;
 }
+static void* eNB_thread_rxtx_1( void* param ) {
 
+  static int eNB_thread_rxtx_status;
+  PHY_VARS_eNB *eNB= (PHY_VARS_eNB *)param;
+  //eNB_proc_t *eNB_proc = &eNB->proc;
+  eNB_rxtx_proc_t *proc = &eNB->proc.proc_rxtx[1];
+  //int eNB_id=0;
+  //eNB_rxtx_proc_t *proc = (eNB_rxtx_proc_t*)param;
+  //PHY_VARS_eNB *eNB = PHY_vars_eNB_g[0][proc->CC_id];
+
+  char thread_name[100];
+
+
+  // set default return value
+  eNB_thread_rxtx_status = 0;
+
+
+  sprintf(thread_name,"RXn_TXnp4_%d\n",&eNB->proc.proc_rxtx[1] == proc ? 0 : 1);
+  thread_top_init(thread_name,1,850000L,1000000L,2000000L);
+
+  while (!oai_exit) {
+    VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_eNB_PROC_RXTX0+(proc->subframe_rx&1), 0 );
+
+    if (wait_on_condition(&proc->mutex_rxtx,&proc->cond_rxtx,&proc->instance_cnt_rxtx,thread_name)<0) break;
+
+    VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_eNB_PROC_RXTX0+(proc->subframe_rx&1), 1 );
+
+    
+  
+    if (oai_exit) break;
+
+    if (eNB->CC_id==0)
+      if (rxtx(eNB,proc,thread_name) < 0) break;
+
+  } // while !oai_exit
+
+  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_eNB_PROC_RXTX0+(proc->subframe_rx&1), 0 );
+
+  printf( "Exiting eNB thread RXn_TXnp4\n");
+
+  eNB_thread_rxtx_status = 0;
+  return &eNB_thread_rxtx_status;
+}
 #if defined(ENABLE_ITTI) && defined(ENABLE_USE_MME)
 /* Wait for eNB application initialization to be complete (eNB registration to MME) */
 static void wait_system_ready (char *message, volatile int *start_flag) {
@@ -880,9 +925,10 @@ void fh_if4p5_asynch_DL(PHY_VARS_eNB *eNB,int *frame,int *subframe) {
 static void* eNB_thread_asynch_rxtx( void* param ) {
 
   static int eNB_thread_asynch_rxtx_status;
-
-  eNB_proc_t *proc = (eNB_proc_t*)param;
-  PHY_VARS_eNB *eNB = PHY_vars_eNB_g[0][proc->CC_id];
+  PHY_VARS_eNB *eNB= (PHY_VARS_eNB *)param;
+  eNB_proc_t *proc = &eNB->proc;
+  //eNB_proc_t *proc = (eNB_proc_t*)param;
+  //PHY_VARS_eNB *eNB = PHY_vars_eNB_g[0][proc->CC_id];
 
 
 
@@ -1349,7 +1395,7 @@ void rx_fh_if4p5(PHY_VARS_eNB *eNB,int *frame,int *subframe) {
     if (eNB->CC_id==0)
       proc->frame_offset = 0;
     else
-      proc->frame_offset = PHY_vars_eNB_g[0][0]->proc.frame_rx;
+      proc->frame_offset = PHY_vars_eNB_g[eNB->Mod_id][eNB->CC_id]->proc.frame_rx;
 
     *frame = proc->frame_rx;//(proc->frame_rx + proc->frame_offset)&1023;
     *subframe = proc->subframe_rx;        
@@ -1602,9 +1648,11 @@ int wakeup_synch(PHY_VARS_eNB *eNB){
 static void* eNB_thread_FH( void* param ) {
   
   static int eNB_thread_FH_status;
+  PHY_VARS_eNB *eNB= (PHY_VARS_eNB *)param;
+  eNB_proc_t *proc = &eNB->proc;
 
-  eNB_proc_t *proc = (eNB_proc_t*)param;
-  PHY_VARS_eNB *eNB = PHY_vars_eNB_g[0][proc->CC_id];
+  //eNB_proc_t *proc = (eNB_proc_t*)param;
+  //PHY_VARS_eNB *eNB = PHY_vars_eNB_g[0][proc->CC_id];
   LTE_DL_FRAME_PARMS *fp = &eNB->frame_parms;
 
   int subframe=0, frame=0; 
@@ -1685,9 +1733,8 @@ static void* eNB_thread_FH( void* param ) {
  */
 static void* eNB_thread_prach( void* param ) {
   static int eNB_thread_prach_status;
-
-  eNB_proc_t *proc = (eNB_proc_t*)param;
-  PHY_VARS_eNB *eNB= PHY_vars_eNB_g[0][proc->CC_id];
+  PHY_VARS_eNB *eNB= (PHY_VARS_eNB *)param;
+  eNB_proc_t *proc = &eNB->proc;
 
   // set default return value
   eNB_thread_prach_status = 0;
@@ -1716,13 +1763,15 @@ static void* eNB_thread_prach( void* param ) {
 static void* eNB_thread_single( void* param ) {
 
   static int eNB_thread_single_status;
-
-  eNB_proc_t *proc = (eNB_proc_t*)param;
+  PHY_VARS_eNB *eNB= (PHY_VARS_eNB *)param;
+  eNB_proc_t *proc = &eNB->proc;
   eNB_rxtx_proc_t *proc_rxtx = &proc->proc_rxtx[0];
-  PHY_VARS_eNB *eNB = PHY_vars_eNB_g[0][proc->CC_id];
+
+  //printf("eNB_thread_single eNB_id = %d\n",eNB_id);
+  //PHY_VARS_eNB *eNB = PHY_vars_eNB_g[eNB_id][proc->CC_id];
   LTE_DL_FRAME_PARMS *fp = &eNB->frame_parms;
   eNB->CC_id =  proc->CC_id;
-  int do_ofdm_mod = PHY_vars_UE_g[0][0]->do_ofdm_mod;
+  int do_ofdm_mod = PHY_vars_UE_g[0][eNB->CC_id]->do_ofdm_mod;
 
   void *rxp[2],*rxp2[2];
   void *rxp_freq[2],*rxp2_freq[2];
@@ -1925,7 +1974,7 @@ static void* eNB_thread_single( void* param ) {
   
 
   printf( "Exiting eNB_single thread \n");
- 
+
   eNB_thread_single_status = 0;
   return &eNB_thread_single_status;
 
@@ -2004,24 +2053,24 @@ void init_eNB_proc(int inst) {
 #endif
 
     if (eNB->single_thread_flag==0) {
-      pthread_create( &proc_rxtx[0].pthread_rxtx, attr0, eNB_thread_rxtx, &proc_rxtx[0] );
-      pthread_create( &proc_rxtx[1].pthread_rxtx, attr1, eNB_thread_rxtx, &proc_rxtx[1] );
-      pthread_create( &proc->pthread_FH, attr_FH, eNB_thread_FH, &eNB->proc );
+      pthread_create( &proc_rxtx[0].pthread_rxtx, attr0, eNB_thread_rxtx_0, eNB );
+      pthread_create( &proc_rxtx[1].pthread_rxtx, attr1, eNB_thread_rxtx_1, eNB );
+      pthread_create( &proc->pthread_FH, attr_FH, eNB_thread_FH, eNB );
     }
     else {
-      pthread_create(&proc->pthread_single, attr_single, eNB_thread_single, &eNB->proc);
+      pthread_create(&proc->pthread_single, attr_single, eNB_thread_single, eNB);
       init_fep_thread(eNB,attr_fep);
       init_td_thread(eNB,attr_td);
       init_te_thread(eNB,attr_te);
     }
-    pthread_create( &proc->pthread_prach, attr_prach, eNB_thread_prach, &eNB->proc );
+    pthread_create( &proc->pthread_prach, attr_prach, eNB_thread_prach, eNB );
     pthread_create( &proc->pthread_synch, attr_synch, eNB_thread_synch, eNB);
     if ((eNB->node_timing == synch_to_other) ||
 	(eNB->node_function == NGFI_RRU_IF5) ||
 	(eNB->node_function == NGFI_RRU_IF4p5))
 
 
-      pthread_create( &proc->pthread_asynch_rxtx, attr_asynch, eNB_thread_asynch_rxtx, &eNB->proc );
+      pthread_create( &proc->pthread_asynch_rxtx, attr_asynch, eNB_thread_asynch_rxtx, eNB );
 
     char name[16];
     if (eNB->single_thread_flag == 0) {
@@ -2145,7 +2194,7 @@ int setup_eNB_buffers(PHY_VARS_eNB **phy_vars_eNB, openair0_config_t *openair0_c
 
     if (openair0_cfg[CC_id].mmapped_dma == 1) {
     // replace RX signal buffers with mmaped HW versions
-if (PHY_vars_UE_g[0][0]->do_ofdm_mod){
+if (PHY_vars_UE_g[0][CC_id]->do_ofdm_mod){
 	      for (i=0; i<frame_parms->nb_antennas_rx; i++) {
 		card = i/4;
 		ant = i%4;
@@ -2279,13 +2328,13 @@ void init_eNB(eNB_func_t node_function[], eNB_timing_t node_timing[],int nb_inst
   int inst;
   PHY_VARS_eNB *eNB;
   int ret;
-
   for (inst=0;inst<nb_inst;inst++) {
     for (CC_id=0;CC_id<MAX_NUM_CCs;CC_id++) {
+      printf("Number of inst %d, eNB %d, rfdevice %d, ifdevice %d, addr %s\n",inst,PHY_vars_eNB_g[inst][CC_id]->Mod_id,PHY_vars_eNB_g[inst][CC_id]->rfdevice.Mod_id,PHY_vars_eNB_g[inst][CC_id]->ifdevice.Mod_id,(eth_params+inst+CC_id)->my_addr);
       eNB = PHY_vars_eNB_g[inst][CC_id]; 
       eNB->node_function      = node_function[CC_id];
       eNB->node_timing        = node_timing[CC_id];
-      eNB->eth_params         = eth_params+CC_id;
+      eNB->eth_params         = (eth_params+CC_id+inst);
       eNB->abstraction_flag   = 0;
       eNB->single_thread_flag = single_thread_flag;
       eNB->ts_offset          = 0;
@@ -2307,7 +2356,7 @@ void init_eNB(eNB_func_t node_function[], eNB_timing_t node_timing[],int nb_inst
 	eNB->proc_uespec_rx       = NULL;
 	eNB->proc_tx              = NULL;
 	eNB->tx_fh                = NULL;
-	eNB->rx_fh                = (PHY_vars_UE_g[0][0]->do_ofdm_mod)?rx_rf_freq:rx_rf;
+	eNB->rx_fh                = (PHY_vars_UE_g[0][CC_id]->do_ofdm_mod)?rx_rf_freq:rx_rf;
 	eNB->start_rf             = start_rf;
 	eNB->start_if             = start_if;
 	eNB->fh_asynch            = fh_if5_asynch_DL;
@@ -2320,7 +2369,7 @@ void init_eNB(eNB_func_t node_function[], eNB_timing_t node_timing[],int nb_inst
 	}
 	eNB->rfdevice.host_type   = RRH_HOST;
 	eNB->ifdevice.host_type   = RRH_HOST;
-        ret = openair0_transport_load(&eNB->ifdevice, &openair0_cfg[CC_id], eNB->eth_params);
+        ret = openair0_transport_load(&eNB->ifdevice, &openair0_cfg[CC_id], eNB->eth_params,eNB->Mod_id);
 	printf("openair0_transport_init returns %d for CC_id %d\n",ret,CC_id);
         if (ret<0) {
           printf("Exiting, cannot initialize transport protocol\n");
@@ -2337,11 +2386,11 @@ void init_eNB(eNB_func_t node_function[], eNB_timing_t node_timing[],int nb_inst
 	eNB->proc_uespec_rx       = NULL;
 	eNB->proc_tx              = NULL;//proc_tx_rru_if4p5;
 	eNB->tx_fh                = NULL;
-	eNB->rx_fh                = (PHY_vars_UE_g[0][0]->do_ofdm_mod)?rx_rf_freq:rx_rf;
+	eNB->rx_fh                = (PHY_vars_UE_g[0][CC_id]->do_ofdm_mod)?rx_rf_freq:rx_rf;
 	eNB->fh_asynch            = fh_if4p5_asynch_DL;
 	eNB->start_rf             = start_rf;
 	eNB->start_if             = start_if;
-	printf("oaisim_flag %d, eNB %d\n",oaisim_flag,eNB->Mod_id);
+	printf("oaisim_flag %d, eNB %d, rfdevice %d, ifdevice %d, addr %s\n",oaisim_flag,eNB->Mod_id,eNB->rfdevice.Mod_id,eNB->ifdevice.Mod_id,eNB->eth_params->my_addr);
 	if (oaisim_flag == 0) {
 	  ret = openair0_device_load(&eNB->rfdevice, &openair0_cfg[CC_id]);
 	  if (ret<0) {
@@ -2351,8 +2400,8 @@ void init_eNB(eNB_func_t node_function[], eNB_timing_t node_timing[],int nb_inst
 	}
 	eNB->rfdevice.host_type   = RRH_HOST;
 	eNB->ifdevice.host_type   = RRH_HOST;
-	printf("loading transport interface ...\n");
-        ret = openair0_transport_load(&eNB->ifdevice, &openair0_cfg[CC_id], eNB->eth_params);
+	printf("loading transport interface eNB %d, rfdevice %d, ifdevice %d, addr (ifdevice) ...\n",eNB->Mod_id,eNB->rfdevice.Mod_id,eNB->ifdevice.Mod_id);
+        ret = openair0_transport_load(&eNB->ifdevice, &openair0_cfg[CC_id+inst], eNB->eth_params,eNB->Mod_id);
 	printf("openair0_transport_init returns %d for CC_id %d\n",ret,CC_id);
         if (ret<0) {
           printf("Exiting, cannot initialize transport protocol\n");
@@ -2371,7 +2420,7 @@ void init_eNB(eNB_func_t node_function[], eNB_timing_t node_timing[],int nb_inst
 	eNB->proc_uespec_rx       = phy_procedures_eNB_uespec_RX;
 	eNB->proc_tx              = proc_tx_full;
 	eNB->tx_fh                = NULL;
-	eNB->rx_fh                = (PHY_vars_UE_g[0][0]->do_ofdm_mod)?rx_rf_freq:rx_rf;
+	eNB->rx_fh                = (PHY_vars_UE_g[0][CC_id]->do_ofdm_mod)?rx_rf_freq:rx_rf;
 	eNB->start_rf             = start_rf;
 	eNB->start_if             = NULL;
         eNB->fh_asynch            = NULL;
@@ -2416,7 +2465,7 @@ void init_eNB(eNB_func_t node_function[], eNB_timing_t node_timing[],int nb_inst
 
 	eNB->ifdevice.host_type   = BBU_HOST;
 
-        ret = openair0_transport_load(&eNB->ifdevice, &openair0_cfg[CC_id], eNB->eth_params);
+        ret = openair0_transport_load(&eNB->ifdevice, &openair0_cfg[CC_id], eNB->eth_params,eNB->Mod_id);
         printf("openair0_transport_init returns %d for CC_id %d\n",ret,CC_id);
         if (ret<0) {
           printf("Exiting, cannot initialize transport protocol\n");
@@ -2439,7 +2488,7 @@ void init_eNB(eNB_func_t node_function[], eNB_timing_t node_timing[],int nb_inst
         eNB->fh_asynch            = (eNB->node_timing == synch_to_other) ? fh_if4p5_asynch_UL : NULL;
 	eNB->rfdevice.host_type   = BBU_HOST;
 	eNB->ifdevice.host_type   = BBU_HOST;
-        ret = openair0_transport_load(&eNB->ifdevice, &openair0_cfg[CC_id], eNB->eth_params);
+        ret = openair0_transport_load(&eNB->ifdevice, &openair0_cfg[CC_id], eNB->eth_params,eNB->Mod_id);
         printf("openair0_transport_init returns %d for CC_id %d\n",ret,CC_id);
         if (ret<0) {
           printf("Exiting, cannot initialize transport protocol\n");
@@ -2465,7 +2514,7 @@ void init_eNB(eNB_func_t node_function[], eNB_timing_t node_timing[],int nb_inst
 
 	eNB->rfdevice.host_type   = BBU_HOST;
 	eNB->ifdevice.host_type   = BBU_HOST;
-        ret = openair0_transport_load(&eNB->ifdevice, &openair0_cfg[CC_id], eNB->eth_params);
+        ret = openair0_transport_load(&eNB->ifdevice, &openair0_cfg[CC_id], eNB->eth_params,eNB->Mod_id);
         printf("openair0_transport_init returns %d for CC_id %d\n",ret,CC_id);
         if (ret<0) {
           printf("Exiting, cannot initialize transport protocol\n");

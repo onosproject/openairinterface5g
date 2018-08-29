@@ -313,7 +313,7 @@ void enb_config_display(void)
     } else {
       printf( "\tMNC:                \t%02"PRIu16":\n",enb_properties.properties[i]->mnc);
     }
-    printf("Number of RRH %d\n",enb_properties.properties[i]->nb_rrh_gw);
+    //printf("Number of RRH %d\n",enb_properties.properties[i]->nb_rrh_gw);
     for (j=0; j< enb_properties.properties[i]->nb_rrh_gw; j++) {
       if (enb_properties.properties[i]->rrh_gw_config[j].active == 1 ){
 	printf( "\n\tRRH GW %d config for eNB %u:\n\n", j, i);
@@ -325,6 +325,7 @@ void enb_config_display(void)
 	printf( "\ttx_scheduling_advance :\t%d:\n",enb_properties.properties[i]->rrh_gw_config[j].tx_scheduling_advance);
 	printf( "\ttx_sample_advance :    \t%d:\n",enb_properties.properties[i]->rrh_gw_config[j].tx_sample_advance);
 	printf( "\tiq_txshift :           \t%d:\n",enb_properties.properties[i]->rrh_gw_config[j].iq_txshift);
+	printf( "\tRRH associated to eNB :           \t%d:\n",enb_properties.properties[i]->rrh_gw_config[j].eNB);
 	printf( "\ttransport  :           \t%s Ethernet:\n",(enb_properties.properties[i]->rrh_gw_config[j].raw == 1)? "RAW" : (enb_properties.properties[i]->rrh_gw_config[j].rawif4p5 == 1)? "RAW_IF4p5" : (enb_properties.properties[i]->rrh_gw_config[j].udpif4p5 == 1)? "UDP_IF4p5" : (enb_properties.properties[i]->rrh_gw_config[j].rawif5_mobipass == 1)? "RAW_IF5_MOBIPASS" : "UDP");
 	if (enb_properties.properties[i]->rrh_gw_config[j].exmimo == 1) {
 	  printf( "\tRF target  :           \tEXMIMO:\n");
@@ -2368,6 +2369,7 @@ const Enb_properties_array_t *enb_config_init(char* lib_config_file_name_pP)
 	      enb_properties.properties[enb_properties_index]->rrh_gw_config[j].local_port = local_port;
 	      enb_properties.properties[enb_properties_index]->rrh_gw_config[j].remote_port = remote_port;
 	      enb_properties.properties[enb_properties_index]->rrh_gw_config[j].iq_txshift = iq_txshift;
+	      enb_properties.properties[enb_properties_index]->rrh_gw_config[j].eNB = enb_properties_index;
 	      enb_properties.properties[enb_properties_index]->rrh_gw_config[j].tx_sample_advance = tx_sample_advance;
 	      enb_properties.properties[enb_properties_index]->rrh_gw_config[j].tx_scheduling_advance= tx_scheduling_advance;
 	      

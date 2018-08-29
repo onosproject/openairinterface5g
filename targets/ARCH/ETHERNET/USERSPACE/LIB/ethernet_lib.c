@@ -56,7 +56,7 @@ int dest_addr_len[MAX_INST];
 int trx_eth_start(openair0_device *device) {
 
   eth_state_t *eth = (eth_state_t*)device->priv;
-  
+  printf("trx_eth_start device->Mod_id %d\n",device->Mod_id);
   /* initialize socket */
   if (eth->flags == ETH_RAW_MODE) {     
     printf("Setting ETHERNET to ETH_RAW_IF5_MODE\n");
@@ -89,7 +89,7 @@ int trx_eth_start(openair0_device *device) {
 
     if(ethernet_tune (device,RCV_TIMEOUT,999999)!=0)  return -1;
   } else if (eth->flags == ETH_UDP_IF4p5_MODE) {
-    printf("Setting ETHERNET to UDP_IF4p5_MODE\n");
+    printf("Setting ETHERNET to UDP_IF4p5_MODE, ifdevice %d, local_if_name %s\n",device->Mod_id,eth->if_name);
     if (eth_socket_init_udp(device)!=0)   return -1; 
     if (device->host_type == BBU_HOST) {
       if(eth_set_dev_conf_udp(device)!=0)  return -1;
@@ -150,7 +150,7 @@ int trx_eth_request(openair0_device *device, void *msg, ssize_t msg_len) {
   eth_state_t *eth = (eth_state_t*)device->priv;
  
   /* BBU sends a message to RRH */
-  
+  printf("trx_eth_request device->Mod_id %d\n",device->Mod_id);
   if (sendto(eth->sockfd,msg,msg_len,0,(struct sockaddr *)&eth->dest_addr,eth->addr_len)==-1) {
     perror("ETHERNET: ");
     exit(0);
@@ -391,9 +391,12 @@ int transport_init(openair0_device *device, openair0_config_t *openair0_cfg, eth
     printf("transport_init: Unknown compression scheme %d - default to ALAW", eth_params->if_compress);
     eth->compression = ALAW_COMPRESS;
   }
-  
-  printf("[ETHERNET]: Initializing openair0_device for %s%d ...\n", ((device->host_type == BBU_HOST) ? "BBU": "RRH"),num_devices_eth);
-  device->Mod_id           = +num_devices_eth++;
+  openair0_cfg[0].my_addr = eth_params->my_addr;
+  device->openair0_cfg=&openair0_cfg[0];
+  printf("[ETHERNET]: Initializing openair0_device for %s of eNB %d ...\n", ((device->host_type == BBU_HOST) ? "BBU": "RRH"),num_devices_eth);
+  device->Mod_id           = num_devices_eth;
+  printf("num_devices_eth %d, device->Mod_id %d, addr %s, local_if_name %s, addr(ifdevice) %s\n",num_devices_eth,device->Mod_id,eth_params->my_addr,eth_params->local_if_name,openair0_cfg->my_addr);
+  num_devices_eth++;
   device->transp_type      = ETHERNET_TP;
   device->trx_start_func   = trx_eth_start;
   device->trx_request_func = trx_eth_request;
@@ -404,7 +407,7 @@ int transport_init(openair0_device *device, openair0_config_t *openair0_cfg, eth
   device->trx_stop_func        = trx_eth_stop;
   device->trx_set_freq_func = trx_eth_set_freq;
   device->trx_set_gains_func = trx_eth_set_gains;
-  printf("Device->Mod_id %d\n",device->Mod_id);
+  //printf("Device->Mod_id %d\n",device->Mod_id);
   if (eth->flags == ETH_RAW_MODE) {
     device->trx_write_func   = trx_eth_write_raw;
     device->trx_read_func    = trx_eth_read_raw;     
@@ -432,7 +435,7 @@ int transport_init(openair0_device *device, openair0_config_t *openair0_cfg, eth
   openair0_cfg[0].iq_rxrescale = 15;//rescale iqs
   openair0_cfg[0].iq_txshift = eth_params->iq_txshift;// shift
   openair0_cfg[0].tx_sample_advance = eth_params->tx_sample_advance;
-
+  //openair0_cfg[1].my_addr = eth_params->my_addr;
   /* RRH does not have any information to make this configuration atm */
   if (device->host_type == BBU_HOST) {
     /*Note scheduling advance values valid only for case 7680000 */    
