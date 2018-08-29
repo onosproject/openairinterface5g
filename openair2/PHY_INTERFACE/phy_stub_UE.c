@@ -158,7 +158,7 @@ void fill_rach_indication_UE_MAC(int Mod_id,int frame,int subframe, UL_IND_t *UL
 
 	LOG_D(MAC, "fill_rach_indication_UE_MAC 1 \n");
 	pthread_mutex_lock(&UE_mac_inst[Mod_id].UL_INFO_mutex);
-	UL_INFO = (UL_IND_t*)malloc(sizeof(UL_IND_t));
+//	UL_INFO = (UL_IND_t*)malloc(sizeof(UL_IND_t));
 
 	    UL_INFO->rach_ind.rach_indication_body.number_of_preambles                 = 1;
 
@@ -195,7 +195,7 @@ void fill_rach_indication_UE_MAC(int Mod_id,int frame,int subframe, UL_IND_t *UL
 	          // with that branch.
 	          oai_nfapi_rach_ind(&UL_INFO->rach_ind);
 	          free(UL_INFO->rach_ind.rach_indication_body.preamble_list);
-	          free(UL_INFO);
+//	          free(UL_INFO);
 
 	        //}
 	      pthread_mutex_unlock(&UE_mac_inst[Mod_id].UL_INFO_mutex);
@@ -311,6 +311,7 @@ void fill_uci_harq_indication_UE_MAC(int Mod_id,
   else if (SNRtimes10 >  635) pdu->ul_cqi_information.ul_cqi=255;
   else                        pdu->ul_cqi_information.ul_cqi=(640+SNRtimes10)/5;
   pdu->ul_cqi_information.channel = 0;
+  if(harq_information->harq_information_rel9_fdd.tl.tag == NFAPI_UL_CONFIG_REQUEST_HARQ_INFORMATION_REL9_FDD_TAG){
       if ((harq_information->harq_information_rel9_fdd.ack_nack_mode == 0) &&
           (harq_information->harq_information_rel9_fdd.harq_size == 1)) {
 
@@ -332,7 +333,24 @@ void fill_uci_harq_indication_UE_MAC(int Mod_id,
       pdu->harq_indication_fdd_rel13.harq_tb_n[1] = 1; // Assuming always an ACK (No NACK or DTX)
 
     }
-    else AssertFatal(1==0,"only format 1a/b for now, received \n");
+  }else if(harq_information->harq_information_rel10_tdd.tl.tag == NFAPI_UL_CONFIG_REQUEST_HARQ_INFORMATION_REL10_TDD_TAG ){
+      if ((harq_information->harq_information_rel10_tdd.ack_nack_mode == 0) &&
+          (harq_information->harq_information_rel10_tdd.harq_size == 1)) {
+        pdu->harq_indication_tdd_rel13.tl.tag = NFAPI_HARQ_INDICATION_TDD_REL13_TAG;
+        pdu->harq_indication_tdd_rel13.mode = 0;
+        pdu->harq_indication_tdd_rel13.number_of_ack_nack = 1;
+        pdu->harq_indication_tdd_rel13.harq_data[0].bundling.value_0 = 1;
+
+      }  else if ((harq_information->harq_information_rel10_tdd.ack_nack_mode == 1) &&
+                  (harq_information->harq_information_rel10_tdd.harq_size == 2)) {
+        pdu->harq_indication_tdd_rel13.tl.tag = NFAPI_HARQ_INDICATION_TDD_REL13_TAG;
+        pdu->harq_indication_tdd_rel13.mode = 0;
+        pdu->harq_indication_tdd_rel13.number_of_ack_nack = 1;
+        pdu->harq_indication_tdd_rel13.harq_data[0].bundling.value_0 = 1;
+        pdu->harq_indication_tdd_rel13.harq_data[1].bundling.value_0 = 1;
+
+      }
+  } else AssertFatal(1==0,"only format 1a/b for now, received \n");
 
 
   UL_INFO->harq_ind.harq_indication_body.number_of_harqs++;
@@ -622,7 +640,7 @@ int dl_config_req_UE_MAC(nfapi_dl_config_request_t* req, module_id_t Mod_id) //,
 				//if(tx_request_pdu_list[dl_config_pdu_tmp->dlsch_pdu.dlsch_pdu_rel8.pdu_index].segments[0].segment_data!= NULL && tx_request_pdu_list[dl_config_pdu_tmp->dlsch_pdu.dlsch_pdu_rel8.pdu_index].segments[0].segment_length >0){
 				*/
 
-				if(dl_config_pdu_tmp->dlsch_pdu.dlsch_pdu_rel8.pdu_index <= tx_req_num_elems -1){
+				if((dl_config_pdu_tmp->dlsch_pdu.dlsch_pdu_rel8.pdu_index >= 0) &&(dl_config_pdu_tmp->dlsch_pdu.dlsch_pdu_rel8.pdu_index <= tx_req_num_elems -1)){
 				//if(tx_request_pdu_list + dl_config_pdu_tmp->dlsch_pdu.dlsch_pdu_rel8.pdu_index!= NULL){
 
 					LOG_E(MAC, "dl_config_req_UE_MAC 2 Received data: sfn/sf:%d PDU[%d] size:%d, TX_PDU index: %d, tx_req_num_elems: %d \n", NFAPI_SFNSF2DEC(req->sfn_sf), i, dl_config_pdu_list[i].pdu_size, dl_config_pdu_tmp->dlsch_pdu.dlsch_pdu_rel8.pdu_index, tx_req_num_elems);

@@ -49,7 +49,7 @@
 #include "platform_constants.h"
 #include "common/utils/LOG/vcd_signal_dumper.h"
 #include "msc.h"
-
+#include "targets/COMMON/openairinterface5g_limits.h"
 #if defined(ENABLE_SECURITY)
 # include "UTIL/OSA/osa_defs.h"
 #endif
@@ -79,6 +79,7 @@ extern RAN_CONTEXT_t RC;
 static int mbms_socket = -1;
 #endif
 
+hash_table_t  *pdcp_coll_p = NULL;
 //-----------------------------------------------------------------------------
 /*
  * If PDCP_UNIT_TEST is set here then data flow between PDCP and RLC is broken
@@ -368,8 +369,10 @@ boolean_t pdcp_data_req(
 
     rlc_status = rlc_data_req(ctxt_pP, srb_flagP, MBMS_FLAG_NO, rb_idP, muiP, confirmP, pdcp_pdu_size, pdcp_pdu_p
 #if (RRC_VERSION >= MAKE_VERSION(14, 0, 0))
-                             ,sourceL2Id
-                             ,destinationL2Id
+                             //,sourceL2Id
+                             //,destinationL2Id
+                             ,NULL
+                             ,NULL
 #endif
                              );
 
@@ -800,7 +803,8 @@ pdcp_data_ind(
       } else {
         ((pdcp_data_ind_header_t*) new_sdu_p->data)->rb_id = rb_id + (ctxt_pP->module_id * maxDRB);
       }
-      ((pdcp_data_ind_header_t*) new_sdu_p->data)->inst  = ctxt_pP->module_id;
+
+      //((pdcp_data_ind_header_t*) new_sdu_p->data)->inst  = ctxt_pP->module_id;
 
 #ifdef DEBUG_PDCP_FIFO_FLUSH_SDU
       static uint32_t pdcp_inst = 0;
@@ -2014,7 +2018,7 @@ void pdcp_layer_init(void)
    * Initialize SDU list
    */
   list_init(&pdcp_sdu_list, NULL);
-  pdcp_coll_p = hashtable_create ((maxDRB + 2) * 16, NULL, pdcp_free);
+  pdcp_coll_p = hashtable_create ((maxDRB + 2)*NUMBER_OF_UE_MAX, NULL, pdcp_free);
   AssertFatal(pdcp_coll_p != NULL, "UNRECOVERABLE error, PDCP hashtable_create failed");
 
   for (instance = 0; instance < MAX_MOBILES_PER_ENB; instance++) {

@@ -70,6 +70,8 @@ extern uint8_t usim_test;
 extern UL_IND_t *UL_INFO;
 
 extern uint8_t  nfapi_mode;
+extern int next_ra_frame;
+extern module_id_t next_Mod_id;
 
 /*
  *
