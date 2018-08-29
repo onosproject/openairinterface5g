@@ -1154,7 +1154,10 @@ static void *UE_phy_stub_single_thread_rxn_txnp4(void *arg) {
     	  //LOG_D(PHY,"UL_info->rx_ind.number_of_pdus:%d RX_IND:SFN/SF:%d\n", UL_info->rx_ind.rx_indication_body.number_of_pdus, NFAPI_SFNSF2DEC(UL_info->rx_ind.sfn_sf));
     	  //LOG_I(MAC, "ul_config_req_UE_MAC 2.3, SFN/SF of PNF counter:%d.%d, number_of_pdus: %d \n", timer_frame, timer_subframe, UL_INFO->rx_ind.rx_indication_body.number_of_pdus);
     	  oai_nfapi_rx_ind(&UL_INFO->rx_ind);
-    	  //LOG_I(MAC, "ul_config_req_UE_MAC 2.31 \n");
+          for(uint8_t num_pdu = 0;num_pdu < UL_INFO->rx_ind.rx_indication_body.number_of_pdus;num_pdu++){
+            free(UL_INFO->rx_ind.rx_indication_body.rx_pdu_list[num_pdu].data);
+          }
+	  //LOG_I(MAC, "ul_config_req_UE_MAC 2.31 \n");
     	  UL_INFO->rx_ind.rx_indication_body.number_of_pdus = 0;
       }
       if(UL_INFO->harq_ind.harq_indication_body.number_of_harqs>0)
