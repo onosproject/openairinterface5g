@@ -801,7 +801,7 @@ int main( int argc, char **argv )
 
 
   printf("Running with %d UE instances\n",NB_UE_INST);
-  if (NB_UE_INST > 1 && simL1flag != 1) {
+  if (NB_UE_INST > 1 && simL1flag != 1 && nfapi_mode != 3) {
     printf("Running with more than 1 UE instance and simL1 is not active, this will result in undefined behaviour for now, exiting.\n");
     abort();
   }
