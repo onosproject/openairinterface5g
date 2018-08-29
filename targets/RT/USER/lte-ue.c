@@ -102,9 +102,11 @@ void ue_stub_rx_handler(unsigned int, char *);
 int32_t **rxdata;
 int32_t **txdata;
 
-int timer_subframe;
-int timer_frame;
-SF_ticking *phy_stub_ticking;
+int timer_subframe = 0;
+int timer_frame = 0;
+SF_ticking *phy_stub_ticking = NULL;
+int next_ra_frame = 0;
+module_id_t next_Mod_id = 0;
 
 #define KHz (1000UL)
 #define MHz (1000*KHz)
@@ -1028,7 +1030,9 @@ static void *UE_phy_stub_single_thread_rxn_txnp4(void *arg) {
     	UL_INFO->sr_ind.sr_indication_body.sr_pdu_list = (nfapi_sr_indication_pdu_t*)malloc(NB_UE_INST*sizeof(nfapi_sr_indication_pdu_t));
     	UL_INFO->sr_ind.sr_indication_body.number_of_srs = 0;
 
-
+        UL_INFO->cqi_ind.cqi_pdu_list =  (nfapi_cqi_indication_pdu_t*)malloc(NB_UE_INST*sizeof(nfapi_cqi_indication_pdu_t));
+        UL_INFO->cqi_ind.cqi_raw_pdu_list = (nfapi_cqi_indication_raw_pdu_t*)malloc(NB_UE_INST*sizeof(nfapi_cqi_indication_raw_pdu_t));
+        UL_INFO->cqi_ind.number_of_cqis = 0;
 
 
     for (Mod_id=0; Mod_id<NB_UE_INST; Mod_id++) {
@@ -1104,8 +1108,9 @@ static void *UE_phy_stub_single_thread_rxn_txnp4(void *arg) {
 
     // We make the start of RA between consecutive UEs differ by 20 frames
 	//if ((UE_mac_inst[Mod_id].UE_mode[0] == PRACH  && Mod_id == 0) || (UE_mac_inst[Mod_id].UE_mode[0] == PRACH && Mod_id>0 && proc->frame_rx >= UE_mac_inst[Mod_id-1].ra_frame + 20) ) {
-	if (UE_mac_inst[Mod_id].UE_mode[0] == PRACH  && Mod_id == next_Mod_id && proc->frame_rx >= next_ra_frame) {
-
+	if (UE_mac_inst[Mod_id].UE_mode[0] == PRACH  && Mod_id == next_Mod_id) {
+          next_ra_frame++;
+          if(next_ra_frame > 200){
 	  // check if we have PRACH opportunity
 
 	  if (is_prach_subframe(&UE->frame_parms,proc->frame_tx, proc->subframe_tx) &&  UE_mac_inst[Mod_id].SI_Decoded == 1) {
@@ -1116,16 +1121,18 @@ static void *UE_phy_stub_single_thread_rxn_txnp4(void *arg) {
 	    PRACH_RESOURCES_t *prach_resources = ue_get_rach(Mod_id, 0, proc->frame_tx, 0, proc->subframe_tx);
 	    if(prach_resources!=NULL ) {
 	    	UE_mac_inst[Mod_id].ra_frame = proc->frame_rx;
-	      LOG_D(MAC, "UE_phy_stub_thread_rxn_txnp4 before RACH, Mod_id: %d \n", Mod_id );
+	      LOG_D(MAC, "UE_phy_stub_thread_rxn_txnp4 before RACH, Mod_id: %d frame %d subframe %d\n", Mod_id ,proc->frame_tx, proc->subframe_tx);
 	      fill_rach_indication_UE_MAC(Mod_id, proc->frame_tx ,proc->subframe_tx, UL_INFO, prach_resources->ra_PreambleIndex, prach_resources->ra_RNTI);
 	      Msg1_transmitted(Mod_id, 0, proc->frame_tx, 0);
 	      UE_mac_inst[Mod_id].UE_mode[0] = RA_RESPONSE;
 	      next_Mod_id = Mod_id + 1;
-	      next_ra_frame = (proc->frame_rx + 20)%1000;
+	      //next_ra_frame = (proc->frame_rx + 20)%1000;
+              next_ra_frame = 0;
 	    }
 
 	    //ue_prach_procedures(ue,proc,eNB_id,abstraction_flag,mode);
 	  }
+          }
 	} // mode is PRACH
 	// Substitute call to phy_procedures Tx with call to phy_stub functions in order to trigger
 	// UE Tx procedures directly at the MAC layer, based on the received ul_config requests from the vnf (eNB).
@@ -1190,7 +1197,10 @@ static void *UE_phy_stub_single_thread_rxn_txnp4(void *arg) {
     	  free(UL_INFO->sr_ind.sr_indication_body.sr_pdu_list);
     	  UL_INFO->sr_ind.sr_indication_body.sr_pdu_list = NULL;
       //}
-
+      free(UL_INFO->cqi_ind.cqi_pdu_list);
+      UL_INFO->cqi_ind.cqi_pdu_list = NULL;
+      free(UL_INFO->cqi_ind.cqi_raw_pdu_list);
+      UL_INFO->cqi_ind.cqi_raw_pdu_list = NULL;
       free(UL_INFO);
       UL_INFO = NULL;
 
@@ -1768,6 +1778,13 @@ void init_UE_single_thread_stub(int nb_inst) {
 	  AssertFatal(PHY_vars_UE_g!=NULL,"PHY_vars_UE_g is NULL\n");
 	  AssertFatal(PHY_vars_UE_g[i]!=NULL,"PHY_vars_UE_g[inst] is NULL\n");
 	  AssertFatal(PHY_vars_UE_g[i][0]!=NULL,"PHY_vars_UE_g[inst][0] is NULL\n");
+	  if(nfapi_mode == 3){
+#ifdef NAS_UE
+          MessageDef *message_p;
+          message_p = itti_alloc_new_message(TASK_NAS_UE, INITIALIZE_MESSAGE);
+         itti_send_msg_to_task (TASK_NAS_UE, i + NB_eNB_INST, message_p);
+#endif
+	  }
   }
   UE = PHY_vars_UE_g[0][0];
 

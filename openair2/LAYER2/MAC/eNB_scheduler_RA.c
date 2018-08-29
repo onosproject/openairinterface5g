@@ -501,7 +501,7 @@ generate_Msg2(module_id_t module_idP, int CC_idP, frame_t frameP,
 #endif
     {
 
-	if ((ra->Msg2_frame == frameP) && (ra->Msg2_subframe == subframeP)) {
+	if (((ra->Msg2_frame == frameP) && (ra->Msg2_subframe == subframeP)) || (nfapi_mode == 2)) {
 	    LOG_D(MAC,
 		  "[eNB %d] CC_id %d Frame %d, subframeP %d: Generating RAR DCI, state %d\n",
 		  module_idP, CC_idP, frameP, subframeP, ra->state);

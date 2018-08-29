@@ -28,8 +28,8 @@ nfapi_hi_dci0_request_t* hi_dci0_req;
 
 int	tx_req_num_elems;
 
-int next_ra_frame;
-module_id_t next_Mod_id;
+//int next_ra_frame;
+//module_id_t next_Mod_id;
 eth_params_t         stub_eth_params;
 
 

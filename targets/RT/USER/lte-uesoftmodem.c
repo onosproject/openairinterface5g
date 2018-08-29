@@ -1017,7 +1017,7 @@ int main( int argc, char **argv )
   
   
 #if defined(ENABLE_ITTI)
-    if (create_tasks_ue(1) < 0) {
+    if (create_tasks_ue(NB_UE_INST) < 0) {
       printf("cannot create ITTI tasks\n");
       exit(-1); // need a softer mode
     }

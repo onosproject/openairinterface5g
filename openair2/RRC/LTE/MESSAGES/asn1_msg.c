@@ -2093,7 +2093,7 @@ do_RRCConnectionSetup(
 
   physicalConfigDedicated2->schedulingRequestConfig->present = SchedulingRequestConfig_PR_setup;
   if (carrier->sib1->tdd_Config == NULL) {
-    physicalConfigDedicated2->schedulingRequestConfig->choice.setup.sr_PUCCH_ResourceIndex = 71 - ue_context_pP->local_uid/10;//ue_context_pP->local_uid;
+    physicalConfigDedicated2->schedulingRequestConfig->choice.setup.sr_PUCCH_ResourceIndex = 31 - ue_context_pP->local_uid/10;//ue_context_pP->local_uid;
   } else {
       switch (carrier->sib1->tdd_Config->subframeAssignment) {
       case 1:

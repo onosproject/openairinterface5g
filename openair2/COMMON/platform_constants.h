@@ -73,14 +73,14 @@
 #    define MAX_MOBILES_PER_ENB_NB_IoT  128
 #    define MAX_eNB                      2
 # else
-#    define MAX_MOBILES_PER_ENB         16
-#    define MAX_MOBILES_PER_ENB_NB_IoT  16
-#    define MAX_eNB                      2
+#    define MAX_MOBILES_PER_ENB         64
+#    define MAX_MOBILES_PER_ENB_NB_IoT  64
+#    define MAX_eNB                      1
 # endif
 #else
 #    define MAX_MOBILES_PER_ENB 256
 #    define MAX_MOBILES_PER_ENB_NB_IoT 256
-#    define MAX_eNB                      2
+#    define MAX_eNB                      1
 #endif
 
 
