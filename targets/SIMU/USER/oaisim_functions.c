@@ -189,6 +189,8 @@ int oaisim_flag=1;
 void get_simulation_options(int argc, char *argv[])
 {
   int                           option;
+  int CC_id;
+  int k;
   char  *conf_config_file_name = NULL;
   enum long_option_e {
     LONG_OPTION_START = 0x100, /* Start after regular single char options */
@@ -827,18 +829,22 @@ void get_simulation_options(int argc, char *argv[])
 	}
       }
     }
-   }
     /* Update some simulation parameters */
-    oai_emulation.info.frame_type[0]           = enb_properties->properties[0]->frame_type[0];
-    oai_emulation.info.tdd_config[0]           = enb_properties->properties[0]->tdd_config[0];
-    oai_emulation.info.tdd_config_S[0]         = enb_properties->properties[0]->tdd_config_s[0];
-    oai_emulation.info.extended_prefix_flag[0] = enb_properties->properties[0]->prefix_type[0];
+    for (CC_id=0;CC_id<MAX_NUM_CCs;CC_id++){
+	    oai_emulation.info.frame_type[CC_id]           = enb_properties->properties[i]->frame_type[CC_id];
+	    oai_emulation.info.tdd_config[CC_id]           = enb_properties->properties[i]->tdd_config[CC_id];
+	    oai_emulation.info.tdd_config_S[CC_id]         = enb_properties->properties[i]->tdd_config_s[CC_id];
+	    oai_emulation.info.extended_prefix_flag[CC_id] = enb_properties->properties[i]->prefix_type[CC_id];
+	    oai_emulation.info.N_RB_DL[CC_id]              = enb_properties->properties[i]->N_RB_DL[CC_id];
 
-    oai_emulation.info.node_function[0]        = enb_properties->properties[0]->cc_node_function[0];
-    oai_emulation.info.node_timing[0]          = enb_properties->properties[0]->cc_node_timing[0];
-    downlink_frequency[0][0]                   = enb_properties->properties[0]->downlink_frequency[0];
-    uplink_frequency_offset[0][0]              = enb_properties->properties[0]->uplink_frequency_offset[0];
-    oai_emulation.info.N_RB_DL[0]              = enb_properties->properties[0]->N_RB_DL[0];
+	    oai_emulation.info.node_function[CC_id]        = enb_properties->properties[i]->cc_node_function[CC_id];
+	    oai_emulation.info.node_timing[CC_id]          = enb_properties->properties[i]->cc_node_timing[CC_id];
+	for (k=0;k<4;k++){
+	    downlink_frequency[CC_id][0]                   = enb_properties->properties[i]->downlink_frequency[CC_id];
+	    uplink_frequency_offset[CC_id][0]              = enb_properties->properties[i]->uplink_frequency_offset[CC_id];
+	}
+    }
+   }
  }
   free(conf_config_file_name);
   conf_config_file_name = 0;

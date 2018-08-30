@@ -93,7 +93,7 @@ int load_lib(openair0_device *device, openair0_config_t *openair0_cfg, eth_param
   oai_device_initfunc_t dp ;
   oai_transport_initfunc_t tp ;
   int ret=0;
-  printf("transport_init device->Mod_id %d, addr %s, addr(ifdevice) %s\n",device->Mod_id,cfg->my_addr,openair0_cfg->my_addr);
+  //printf("transport_init device->Mod_id %d, addr %s, addr(ifdevice) %s\n",device->Mod_id,cfg->my_addr,openair0_cfg->my_addr);
   if (flag == BBU_LOCAL_RADIO_HEAD) {
       lib_handle = dlopen(OAI_RF_LIBNAME, RTLD_LAZY);
       if (!lib_handle) {
@@ -124,7 +124,7 @@ int load_lib(openair0_device *device, openair0_config_t *openair0_cfg, eth_param
       tp = dlsym(lib_handle,"transport_init");
       
       if (tp != NULL ) {
-  	printf("device->device->Mod_id %d, cfg->addr %s\n",device->Mod_id,cfg->my_addr);
+  	//printf("device->device->Mod_id %d, cfg->addr %s\n",device->Mod_id,cfg->my_addr);
 	tp(device,openair0_cfg,cfg);
       } else {
 	fprintf(stderr, "%s %d:oai device intializing function not found %s\n", __FILE__, __LINE__, dlerror());
@@ -150,10 +150,10 @@ int openair0_device_load(openair0_device *device, openair0_config_t *openair0_cf
   return rc;
 }
 
-int openair0_transport_load(openair0_device *device, openair0_config_t *openair0_cfg, eth_params_t * eth_params, int eNB) {
+int openair0_transport_load(openair0_device *device, openair0_config_t *openair0_cfg, eth_params_t * eth_params) {
   int rc;
-  printf("eNB %d\n",eNB);
-  printf("device eNB %d, addr %s\n",device->Mod_id,eth_params->my_addr);
+  //printf("eNB %d\n",eNB);
+  //printf("device eNB %d, addr %s\n",device->Mod_id,eth_params->my_addr);
   rc=load_lib(device, openair0_cfg, eth_params, BBU_REMOTE_RADIO_HEAD);
   if ( rc >= 0) {       
     if ( set_transport(device) < 0) {

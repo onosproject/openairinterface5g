@@ -67,20 +67,20 @@ int eth_socket_init_udp(openair0_device *device) {
   int sock_type=0;
   int sock_proto=0;
   int enable=1;
-  printf("RRH %d\n",device->Mod_id);
+  //printf("RRH %d\n",device->Mod_id);
   printf("local %s, remote %s\n",device->openair0_cfg->my_addr,device->openair0_cfg->remote_addr);
   if (device->host_type == RRH_HOST ) {
     local_ip   = device->openair0_cfg->my_addr;   
     local_port = device->openair0_cfg->my_port;
     remote_ip   = "0.0.0.0";   
     remote_port =  0;   
-    printf("[%s] local ip addr %s port %d\n", "RRH %d", local_ip, local_port,device->Mod_id);    
+    printf("[%s] local ip addr %s port %d\n", "RRH", local_ip, local_port,device->Mod_id);    
   } else {
     local_ip   = device->openair0_cfg->my_addr;   
     local_port = device->openair0_cfg->my_port;
     remote_ip   = device->openair0_cfg->remote_addr;
     remote_port = device->openair0_cfg->remote_port;  
-    printf("[%s] local ip addr %s port %d\n","BBU %d", local_ip, local_port,device->Mod_id);    
+    printf("[%s] local ip addr %s port %d\n","BBU", local_ip, local_port,device->Mod_id);    
   }
   
   /* Open socket to send on */
