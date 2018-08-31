@@ -532,6 +532,15 @@ set(TPLIB_ETHERNET_SOURCE
   )
 add_library(oai_eth_transpro MODULE ${TPLIB_ETHERNET_SOURCE} )
 
+include_directories("${OPENAIR_TARGETS}/ARCH/IRIS/USERSPACE/LIB/")
+set(option_HWIRISLIB_lib "-l SoapySDR")
+set(HWLIB_IRIS_SOURCE
+        ${OPENAIR_TARGETS}/ARCH/IRIS/USERSPACE/LIB/iris_lib.cpp
+        )
+add_library(oai_irisdevif MODULE ${HWLIB_IRIS_SOURCE})
+target_include_directories(oai_irisdevif PRIVATE /usr/local/lib/SoapySDR/modules0.6/)
+target_link_libraries(oai_irisdevif SoapySDR)
+
 include_directories("${OPENAIR_TARGETS}/ARCH/mobipass/")
 set(TPLIB_MOBIPASS_SOURCE
   ${OPENAIR_TARGETS}/ARCH/mobipass/interface.c
@@ -1611,6 +1620,15 @@ include_directories(${CRYPTO_INCLUDE_DIRS})
 if (${RF_BOARD} STREQUAL "OAI_USRP")
   find_package(Boost REQUIRED)
   include_directories(${LIBBOOST_INCLUDE_DIR})
+
+elseif (${RF_BOARD} STREQUAL "OAI_IRIS")
+    include_directories("${OPENAIR_TARGETS}/ARCH/IRIS/USERSPACE/LIB/")
+    include_directories("/usr/local/include/")
+    set(HW_SOURCE ${HW_SOURCE}
+            ${OPENAIR_TARGETS}/ARCH/IRIS/USERSPACE/LIB/iris_lib.cpp)
+    LINK_DIRECTORIES("/usr/local/lib")
+    set(option_HW_lib "-lSoapySDR -rdynamic -ldl")
+
 endif (${RF_BOARD} STREQUAL "OAI_USRP")
 
 pkg_search_module(OPENPGM openpgm-5.1 openpgm-5.2)
@@ -1654,7 +1672,7 @@ if(EXISTS "/usr/include/atlas/cblas.h" OR EXISTS "/usr/include/cblas.h")
   include_directories("/usr/include/atlas")
   LINK_DIRECTORIES("/usr/lib64")
   LINK_DIRECTORIES("/usr/lib64/atlas") #Added because atlas libraries in CentOS 7 are here!
-  
+
   if(EXISTS "/usr/lib64/libblas.so" OR EXISTS "/usr/lib/libblas.so") #Case for CentOS7
      list(APPEND ATLAS_LIBRARIES blas)
   else() # Case for Ubuntu
@@ -1878,7 +1896,7 @@ target_link_libraries (oaisim
   -Wl,--end-group )
 
 target_link_libraries (oaisim ${LIBXML2_LIBRARIES} ${LAPACK_LIBRARIES})
-target_link_libraries (oaisim pthread m ${CONFIG_LIBRARIES} rt crypt ${CRYPTO_LIBRARIES} ${OPENSSL_LIBRARIES}  ${NETTLE_LIBRARIES} sctp 
+target_link_libraries (oaisim pthread m ${CONFIG_LIBRARIES} rt crypt ${CRYPTO_LIBRARIES} ${OPENSSL_LIBRARIES}  ${NETTLE_LIBRARIES} sctp
   ${ATLAS_LIBRARIES} ${XFORMS_LIBRARIES} ${OPENPGM_LIBRARIES})
 #Force link with forms, regardless XFORMS option
 target_link_libraries (oaisim forms)
@@ -1919,7 +1937,7 @@ target_link_libraries (oaisim_nos1
   -Wl,--end-group )
 
 target_link_libraries (oaisim_nos1 ${LIBXML2_LIBRARIES} ${LAPACK_LIBRARIES})
-target_link_libraries (oaisim_nos1 pthread m ${CONFIG_LIBRARIES} rt crypt ${CRYPTO_LIBRARIES} ${OPENSSL_LIBRARIES}  ${NETTLE_LIBRARIES}  
+target_link_libraries (oaisim_nos1 pthread m ${CONFIG_LIBRARIES} rt crypt ${CRYPTO_LIBRARIES} ${OPENSSL_LIBRARIES}  ${NETTLE_LIBRARIES}
   ${ATLAS_LIBRARIES} ${XFORMS_LIBRARIES} ${OPENPGM_LIBRARIES} ${PROTOBUF_LIB} ${CMAKE_DL_LIBS} ${LIBYAML_LIBRARIES})
 #Force link with forms, regardless XFORMS option
 target_link_libraries (oaisim_nos1 forms)

@@ -344,9 +344,9 @@ int lte_dl_bf_channel_estimation(PHY_VARS_UE *phy_vars_ue,
 
                     ch[0] = (short)(((int)pil[0]*rxF[16] - (int)pil[1]*rxF[17])>>15);
                     ch[1] = (short)(((int)pil[0]*rxF[17] + (int)pil[1]*rxF[16])>>15);
-                    multadd_real_vector_complex_scalar(f1,ch,dl_bf_ch,16); 
+                    multadd_real_vector_complex_scalar(f1,ch,dl_bf_ch,16);
                     pil+=2;
-                    
+
                   } else {
 
                     ch[0] = (short)(((int)pil[0]*rxF[8] - (int)pil[1]*rxF[9])>>15);
@@ -356,7 +356,7 @@ int lte_dl_bf_channel_estimation(PHY_VARS_UE *phy_vars_ue,
 
                     ch[0] = (short)(((int)pil[0]*rxF[16] - (int)pil[1]*rxF[17])>>15);
                     ch[1] = (short)(((int)pil[0]*rxF[17] + (int)pil[1]*rxF[16])>>15);
-                    multadd_real_vector_complex_scalar(f2r,ch,dl_bf_ch,16); 
+                    multadd_real_vector_complex_scalar(f2r,ch,dl_bf_ch,16);
                     pil+=2;
 
                   }
@@ -369,7 +369,7 @@ int lte_dl_bf_channel_estimation(PHY_VARS_UE *phy_vars_ue,
                   printf("symbol=%d,rxF[0]=(%d,%d),pil=(%d,%d),ch=(%d,%d)\n",symbol,rxF[0],rxF[1],pil[0],pil[1],ch[0],ch[1]);
 #endif
                   pil+=2;
-                  
+
                   ch[0] = (short)(((int)pil[0]*rxF[8] - (int)pil[1]*rxF[9])>>15);
                   ch[1] = (short)(((int)pil[0]*rxF[9] + (int)pil[1]*rxF[8])>>15);
                   multadd_real_vector_complex_scalar(fm,ch,dl_bf_ch,16);
@@ -449,7 +449,7 @@ int lte_dl_bf_channel_estimation(PHY_VARS_UE *phy_vars_ue,
           //printf("symbol=%d,rxF[0]=(%d,%d),pil=(%d,%d),ch=(%d,%d)\n",symbol,rxF[0],rxF[1],pil[0],pil[1],ch[0],ch[1]);
 #endif
           pil+=2;;
-                  
+
           ch[0] = (short)(((int)pil[0]*rxF[8] - (int)pil[1]*rxF[9])>>15);
           ch[1] = (short)(((int)pil[0]*rxF[9] + (int)pil[1]*rxF[8])>>15);
           multadd_real_vector_complex_scalar(fm_dc,ch,dl_bf_ch,16);
@@ -475,7 +475,7 @@ int lte_dl_bf_channel_estimation(PHY_VARS_UE *phy_vars_ue,
           //printf("symbol=%d,rxF[0]=(%d,%d),pil=(%d,%d),ch=(%d,%d)\n",symbol,rxF[0],rxF[1],pil[0],pil[1],ch[0],ch[1]);
 #endif
           pil+=2;;
-                  
+
           rxF   = (short *)&rxdataF[aarx][symbol*(frame_parms->ofdm_symbol_size)];
 
           ch[0] = (short)(((int)pil[0]*rxF[2] - (int)pil[1]*rxF[3])>>15);
@@ -572,14 +572,14 @@ int lte_dl_bf_channel_estimation(PHY_VARS_UE *phy_vars_ue,
 
                     ch[0] = (short)(((int)pil[0]*rxF[0] - (int)pil[1]*rxF[1])>>15);
                     ch[1] = (short)(((int)pil[0]*rxF[1] + (int)pil[1]*rxF[0])>>15);
-                    multadd_real_vector_complex_scalar(f2l,ch,dl_bf_ch,16); 
+                    multadd_real_vector_complex_scalar(f2l,ch,dl_bf_ch,16);
                     pil+=2;
-                    
+
                     ch[0] = (short)(((int)pil[0]*rxF[8] - (int)pil[1]*rxF[9])>>15);
                     ch[1] = (short)(((int)pil[0]*rxF[9] + (int)pil[1]*rxF[8])>>15);
-                    multadd_real_vector_complex_scalar(f2r,ch,dl_bf_ch,16); 
+                    multadd_real_vector_complex_scalar(f2r,ch,dl_bf_ch,16);
                     pil+=2;
-          
+
 
                   } else {
 
@@ -618,7 +618,7 @@ int lte_dl_bf_channel_estimation(PHY_VARS_UE *phy_vars_ue,
                   printf("symbol=%d,rxF[0]=(%d,%d),pil=(%d,%d),ch=(%d,%d)\n",symbol,rxF[0],rxF[1],pil[0],pil[1],ch[0],ch[1]);
 #endif
                   pil+=2;
-                  
+
                   ch[0] = (short)(((int)pil[0]*rxF[8] - (int)pil[1]*rxF[9])>>15);
                   ch[1] = (short)(((int)pil[0]*rxF[9] + (int)pil[1]*rxF[8])>>15);
                   multadd_real_vector_complex_scalar(fm,ch,dl_bf_ch,16);

@@ -41,7 +41,7 @@ int8_t get_Po_NOMINAL_PUSCH(module_id_t module_idP,uint8_t CC_id)
   if (CC_id>0) {
     LOG_E(MAC,"Transmission on secondary CCs is not supported yet\n");
     //mac_xface->macphy_exit("MAC FATAL  CC_id>0");
-    return 0; 
+    return 0;
   }
 
   if (UE_mac_inst[module_idP].radioResourceConfigCommon) {

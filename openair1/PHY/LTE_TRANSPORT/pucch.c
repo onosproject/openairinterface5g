@@ -1263,7 +1263,8 @@ uint16_t pucchfmt3_ChannelEstimation( int16_t SubCarrierDeMapData[NB_ANTENNAS_RX
     int32_t         IP_CsData_allsfavg[NB_ANTENNAS_RX][14][4][2];
     int32_t         IP_allavg[D_NPUCCH_SF5];
     //int16_t         temp_ch[2];
-	int16_t         m[NUMBER_OF_UE_MAX], m_self, same_m_number;
+	int16_t         m[NUMBER_OF_UE_MAX], same_m_number;
+	int16_t         m_self=0;
 	uint16_t        n3_pucch_sameRB[NUMBER_OF_UE_MAX];
 	int16_t         n_oc0[NUMBER_OF_UE_MAX];
 	int16_t         n_oc1[NUMBER_OF_UE_MAX];
