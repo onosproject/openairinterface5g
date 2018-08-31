@@ -946,6 +946,7 @@ pdcp_run (
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PDCP_RUN, VCD_FUNCTION_IN);
 
 #if defined(ENABLE_ITTI)
+  if(ctxt_pP->module_id == 0){
   MessageDef   *msg_p;
   int           result;
   protocol_ctxt_t  ctxt;
@@ -1048,7 +1049,7 @@ pdcp_run (
   } else {
     stop_meas(&UE_pdcp_stats[ctxt_pP->module_id].pdcp_ip);
   }
-
+  }
   if (ctxt_pP->enb_flag) {
     stop_meas(&eNB_pdcp_stats[ctxt_pP->module_id].pdcp_run);
   } else {

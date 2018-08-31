@@ -775,7 +775,7 @@ int main( int argc, char **argv )
   // Default value for the number of UEs. It will hold,
   // if not changed from the command line option --num-ues
   NB_UE_INST=1;
-
+  NB_THREAD_INST=1;
 #if defined (XFORMS)
   int ret;
 #endif
@@ -808,7 +808,14 @@ int main( int argc, char **argv )
   }
 
   printf("NFAPI_MODE value: %d \n", nfapi_mode);
-
+  if(NB_THREAD_INST < 1){
+    printf("Running with 0 UE rxtx thread, exiting.\n");
+    abort();
+  }
+  if(NB_UE_INST <NB_THREAD_INST ){
+    printf("Number of UEs < number of UE rxtx threads, exiting.\n");
+    abort();
+  }
   // Not sure if the following is needed here
   /*if (CONFIG_ISFLAGSET(CONFIG_ABORT)) {
       if (UE_flag == 0) {
@@ -1136,12 +1143,14 @@ int main( int argc, char **argv )
   }
   
 #endif
-  
+  while(sync_var == -1){
+    usleep(1000);
+  }
   printf("Sending sync to all threads (%p,%p,%p)\n",&sync_var,&sync_cond,&sync_mutex);
 
   
   pthread_mutex_lock(&sync_mutex);
-  sync_var=0;
+//  sync_var=0;
   pthread_cond_broadcast(&sync_cond);
   pthread_mutex_unlock(&sync_mutex);
 

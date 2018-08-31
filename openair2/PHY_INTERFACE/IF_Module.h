@@ -128,6 +128,15 @@ typedef struct IF_Module_s{
   pthread_mutex_t if_mutex;
 }IF_Module_t;
 
+typedef struct {
+  pthread_mutex_t rx_mutex;
+  pthread_mutex_t crc_mutex;
+  pthread_mutex_t sr_mutex;
+  pthread_mutex_t harq_mutex;
+  pthread_mutex_t cqi_mutex;
+  pthread_mutex_t rach_mutex;
+}FILL_UL_INFO_MUTEX;
+
 /*Initial */
 IF_Module_t *IF_Module_init(int Mod_id);
 void IF_Module_kill(int Mod_id);

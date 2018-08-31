@@ -949,31 +949,51 @@ static void *UE_phy_stub_single_thread_rxn_txnp4(void *arg) {
 
 	thread_top_init("UE_phy_stub_thread_rxn_txnp4",1,870000L,1000000L,1000000L);
 
-	module_id_t Mod_id = 0;
+	//module_id_t Mod_id = 0;
 	//int init_ra_UE = -1; // This counter is used to initiate the RA of each UE in different SFrames
   static __thread int UE_thread_rxtx_retval;
   struct rx_tx_thread_data *rtd = arg;
   UE_rxtx_proc_t *proc = rtd->proc;
 
-  // Initializations for nfapi-L2-emulator mode
-  dl_config_req = NULL;
-  ul_config_req = NULL;
-  hi_dci0_req	= NULL;
-  tx_request_pdu_list = NULL;
+  module_id_t thread_id = rtd->thread_id;
+
+  uint16_t     ue_index = 0;
+  uint16_t     ue_num = NB_UE_INST/NB_THREAD_INST+((NB_UE_INST%NB_THREAD_INST > thread_id) ? 1 :0);
+  module_id_t ue_Mod_id;
 
   PHY_VARS_UE    *UE;   //= rtd->UE;
   int ret;
 
+  uint8_t   end_flag;
+  proc = &PHY_vars_UE_g[0][0]->proc.proc_rxtx[0];
+  phy_stub_ticking->num_single_thread[thread_id] = -1;
 
-  phy_stub_ticking->ticking_var = -1;
-  proc->subframe_rx=proc->sub_frame_start;
+  if(thread_id == 0){
+    phy_stub_ticking->ticking_var = -1;
+    proc->subframe_rx=proc->sub_frame_start;
+    // Initializations for nfapi-L2-emulator mode
+    dl_config_req = NULL;
+    ul_config_req = NULL;
+    hi_dci0_req        = NULL;
+    tx_request_pdu_list = NULL;
 
+    do{
+      end_flag = 0;
+      for(uint16_t i = 0;i< NB_THREAD_INST;i++){
+        if(phy_stub_ticking->num_single_thread[i] == 0){
+          end_flag = 1;
+        }
+      }
+   }while(end_flag == 1);
+
+    sync_var=0;
+  }
 
   //PANOS: CAREFUL HERE!
   wait_sync("UE_phy_stub_single_thread_rxn_txnp4");
 
   while (!oai_exit) {
-
+    if(thread_id == 0){
     if (pthread_mutex_lock(&phy_stub_ticking->mutex_ticking) != 0) {
       LOG_E( MAC, "[SCHED][UE] error locking mutex for UE RXTX\n" );
       exit_fun("nothing to add");
@@ -1021,16 +1041,47 @@ static void *UE_phy_stub_single_thread_rxn_txnp4(void *arg) {
     	UL_INFO->harq_ind.harq_indication_body.number_of_harqs = 0;
 
     	UL_INFO->sr_ind.sr_indication_body.sr_pdu_list = (nfapi_sr_indication_pdu_t*)malloc(NB_UE_INST*sizeof(nfapi_sr_indication_pdu_t));
-    	UL_INFO->sr_ind.sr_indication_body.number_of_srs = 0;
-
+     	UL_INFO->sr_ind.sr_indication_body.number_of_srs = 0;
+        UL_INFO->cqi_ind.cqi_pdu_list =  (nfapi_cqi_indication_pdu_t*)malloc(NB_UE_INST*sizeof(nfapi_cqi_indication_pdu_t));
+        UL_INFO->cqi_ind.cqi_raw_pdu_list = (nfapi_cqi_indication_raw_pdu_t*)malloc(NB_UE_INST*sizeof(nfapi_cqi_indication_raw_pdu_t));
+        UL_INFO->cqi_ind.number_of_cqis = 0;
         UL_INFO->cqi_ind.cqi_pdu_list =  (nfapi_cqi_indication_pdu_t*)malloc(NB_UE_INST*sizeof(nfapi_cqi_indication_pdu_t));
         UL_INFO->cqi_ind.cqi_raw_pdu_list = (nfapi_cqi_indication_raw_pdu_t*)malloc(NB_UE_INST*sizeof(nfapi_cqi_indication_raw_pdu_t));
         UL_INFO->cqi_ind.number_of_cqis = 0;
 
+        if (pthread_mutex_lock(&phy_stub_ticking->mutex_single_thread) != 0) {
+          LOG_E( MAC, "[SCHED][UE] error locking mutex for thread_id %d (mutex_single_thread)\n",thread_id);
+          exit_fun("nothing to add");
+        }
+        memset(&phy_stub_ticking->num_single_thread[0],0,sizeof(int)*NB_THREAD_INST);
+        pthread_cond_broadcast(&phy_stub_ticking->cond_single_thread);
 
-    for (Mod_id=0; Mod_id<NB_UE_INST; Mod_id++) {
+        if (pthread_mutex_unlock(&phy_stub_ticking->mutex_single_thread) != 0) {
+          LOG_E( MAC, "[SCHED][UE] error unlocking mutex for thread_id %d (mutex_single_thread)\n",thread_id);
+          exit_fun("nothing to add");
+        }
+    }else{
+        if (pthread_mutex_lock(&phy_stub_ticking->mutex_single_thread) != 0) {
+          LOG_E( MAC, "[SCHED][UE] error locking mutex for thread_id %d (mutex_single_thread)\n",thread_id);
+           exit_fun("nothing to add");
+        }
+        while (phy_stub_ticking->num_single_thread[thread_id] < 0) {
+          // most of the time, the thread is waiting here
+          LOG_D(MAC,"Waiting for single_thread (thread_id %d)\n",thread_id);
+          pthread_cond_wait( &phy_stub_ticking->cond_single_thread, &phy_stub_ticking->mutex_single_thread);
+        }
+        if (pthread_mutex_unlock(&phy_stub_ticking->mutex_single_thread) != 0) {
+          LOG_E( MAC, "[SCHED][UE] error unlocking mutex for thread_id %d (mutex_single_thread)\n",thread_id);
+          exit_fun("nothing to add");
+        }
+    }
+
+    //for (Mod_id=0; Mod_id<NB_UE_INST; Mod_id++) {
+    for (ue_index=0; ue_index < ue_num; ue_index++) {
+    ue_Mod_id = thread_id + NB_THREAD_INST*ue_index;
+    UE = PHY_vars_UE_g[ue_Mod_id][0];
     	//LOG_D(MAC, "UE_phy_stub_single_thread_rxn_txnp4, NB_UE_INST:%d, Mod_id:%d \n", NB_UE_INST, Mod_id);
-    	UE = PHY_vars_UE_g[Mod_id][0];
+    	//UE = PHY_vars_UE_g[Mod_id][0];
     lte_subframe_t sf_type = subframe_select( &UE->frame_parms, proc->subframe_rx);
     if ((sf_type == SF_DL) ||
 	(UE->frame_parms.frame_type == FDD) ||
@@ -1056,12 +1107,12 @@ static void *UE_phy_stub_single_thread_rxn_txnp4(void *arg) {
 
       if (dl_config_req!=NULL && tx_request_pdu_list!=NULL){
     	  //if(dl_config_req!= NULL) {
-    	  dl_config_req_UE_MAC(dl_config_req, Mod_id);
+    	  dl_config_req_UE_MAC(dl_config_req, ue_Mod_id);
 
       }
 
       if (hi_dci0_req!=NULL && hi_dci0_req->hi_dci0_request_body.hi_dci0_pdu_list!=NULL){
-    	  hi_dci0_req_UE_MAC(hi_dci0_req, Mod_id);
+    	  hi_dci0_req_UE_MAC(hi_dci0_req, ue_Mod_id);
       }
 
       if(nfapi_mode!=3)
@@ -1075,7 +1126,7 @@ static void *UE_phy_stub_single_thread_rxn_txnp4(void *arg) {
 
     if (UE->mac_enabled==1) {
 
-      ret = ue_scheduler(UE->Mod_id,
+      ret = ue_scheduler(ue_Mod_id,
 			 proc->frame_rx,
 			 proc->subframe_rx,
 			 proc->frame_tx,
@@ -1101,24 +1152,24 @@ static void *UE_phy_stub_single_thread_rxn_txnp4(void *arg) {
 
     // We make the start of RA between consecutive UEs differ by 20 frames
 	//if ((UE_mac_inst[Mod_id].UE_mode[0] == PRACH  && Mod_id == 0) || (UE_mac_inst[Mod_id].UE_mode[0] == PRACH && Mod_id>0 && proc->frame_rx >= UE_mac_inst[Mod_id-1].ra_frame + 20) ) {
-	if (UE_mac_inst[Mod_id].UE_mode[0] == PRACH  && Mod_id == next_Mod_id) {
+	if (UE_mac_inst[ue_Mod_id].UE_mode[0] == PRACH  && ue_Mod_id == next_Mod_id) {
           next_ra_frame++;
           if(next_ra_frame > 200){
 	  // check if we have PRACH opportunity
 
-	  if (is_prach_subframe(&UE->frame_parms,proc->frame_tx, proc->subframe_tx) &&  UE_mac_inst[Mod_id].SI_Decoded == 1) {
+	  if (is_prach_subframe(&UE->frame_parms,proc->frame_tx, proc->subframe_tx) &&  UE_mac_inst[ue_Mod_id].SI_Decoded == 1) {
 
 	  // The one working strangely...
       //if (is_prach_subframe(&UE->frame_parms,proc->frame_tx, proc->subframe_tx && Mod_id == (module_id_t) init_ra_UE) ) {
 
-	    PRACH_RESOURCES_t *prach_resources = ue_get_rach(Mod_id, 0, proc->frame_tx, 0, proc->subframe_tx);
+	    PRACH_RESOURCES_t *prach_resources = ue_get_rach(ue_Mod_id, 0, proc->frame_tx, 0, proc->subframe_tx);
 	    if(prach_resources!=NULL ) {
-	    	UE_mac_inst[Mod_id].ra_frame = proc->frame_rx;
-	      LOG_D(MAC, "UE_phy_stub_thread_rxn_txnp4 before RACH, Mod_id: %d frame %d subframe %d\n", Mod_id ,proc->frame_tx, proc->subframe_tx);
-	      fill_rach_indication_UE_MAC(Mod_id, proc->frame_tx ,proc->subframe_tx, UL_INFO, prach_resources->ra_PreambleIndex, prach_resources->ra_RNTI);
-	      Msg1_transmitted(Mod_id, 0, proc->frame_tx, 0);
-	      UE_mac_inst[Mod_id].UE_mode[0] = RA_RESPONSE;
-	      next_Mod_id = Mod_id + 1;
+	    	UE_mac_inst[ue_Mod_id].ra_frame = proc->frame_rx;
+	      LOG_D(MAC, "UE_phy_stub_thread_rxn_txnp4 before RACH, Mod_id: %d frame %d subframe %d\n", ue_Mod_id ,proc->frame_tx, proc->subframe_tx);
+	      fill_rach_indication_UE_MAC(ue_Mod_id, proc->frame_tx ,proc->subframe_tx, UL_INFO, prach_resources->ra_PreambleIndex, prach_resources->ra_RNTI);
+	      Msg1_transmitted(ue_Mod_id, 0, proc->frame_tx, 0);
+	      UE_mac_inst[ue_Mod_id].UE_mode[0] = RA_RESPONSE;
+	      next_Mod_id = ue_Mod_id + 1;
 	      //next_ra_frame = (proc->frame_rx + 20)%1000;
               next_ra_frame = 0;
 	    }
@@ -1131,7 +1182,7 @@ static void *UE_phy_stub_single_thread_rxn_txnp4(void *arg) {
 	// UE Tx procedures directly at the MAC layer, based on the received ul_config requests from the vnf (eNB).
 	// Generate UL_indications which correspond to UL traffic.
 	if(ul_config_req!=NULL){ //&& UE_mac_inst[Mod_id].ul_config_req->ul_config_request_body.ul_config_pdu_list != NULL){
-		ul_config_req_UE_MAC(ul_config_req, timer_frame, timer_subframe, Mod_id);
+		ul_config_req_UE_MAC(ul_config_req, timer_frame, timer_subframe, ue_Mod_id);
 	}
       }
 
@@ -1140,6 +1191,17 @@ static void *UE_phy_stub_single_thread_rxn_txnp4(void *arg) {
 
     } //for (Mod_id=0; Mod_id<NB_UE_INST; Mod_id++)
 
+    phy_stub_ticking->num_single_thread[thread_id] = -1;
+
+    if(thread_id == 0){
+      do{
+        end_flag = 0;
+        for(uint16_t i = 0;i< NB_THREAD_INST;i++){
+          if(phy_stub_ticking->num_single_thread[i] == 0){
+             end_flag = 1;
+          }
+        }
+      }while(end_flag == 1);
 
     if (UL_INFO->crc_ind.crc_indication_body.number_of_crcs>0)
       {
@@ -1202,8 +1264,10 @@ static void *UE_phy_stub_single_thread_rxn_txnp4(void *arg) {
 
       // De-allocate memory of nfapi requests copies before next subframe round
       if(dl_config_req!=NULL){
-    	  if(dl_config_req->vendor_extension)
-    		  free(dl_config_req->vendor_extension);
+    	  if(dl_config_req->vendor_extension!=NULL){
+            free(dl_config_req->vendor_extension);
+            dl_config_req->vendor_extension = NULL;
+          }
     	  if(dl_config_req->dl_config_request_body.dl_config_pdu_list!=NULL){
     		  free(dl_config_req->dl_config_request_body.dl_config_pdu_list);
     		  dl_config_req->dl_config_request_body.dl_config_pdu_list = NULL;
@@ -1233,7 +1297,7 @@ static void *UE_phy_stub_single_thread_rxn_txnp4(void *arg) {
     	  hi_dci0_req = NULL;
       }
 
-
+    }
 
   }
   // thread finished
@@ -1798,19 +1862,22 @@ void init_UE_single_thread_stub(int nb_inst) {
   // In phy_stub_UE mode due to less heavy processing operations we don't need two threads
   //int nb_threads=RX_NB_TH;
   int nb_threads=1;
-  for (int i=0; i<nb_threads; i++) {
-    rtd = calloc(1, sizeof(struct rx_tx_thread_data));
-    if (rtd == NULL) abort();
-    rtd->UE = UE;
-    rtd->proc = &UE->proc.proc_rxtx[i];
+  for(uint16_t thread_id = 0;thread_id < NB_THREAD_INST;thread_id++){
+    UE = PHY_vars_UE_g[thread_id][0];
+    for (int i=0; i<nb_threads; i++) {
+      rtd = calloc(1, sizeof(struct rx_tx_thread_data));
+      if (rtd == NULL) abort();
+      rtd->UE = UE;
+      rtd->proc = &UE->proc.proc_rxtx[i];
+      rtd->thread_id = thread_id;
 
-    pthread_mutex_init(&UE->proc.proc_rxtx[i].mutex_rxtx,NULL);
-    pthread_cond_init(&UE->proc.proc_rxtx[i].cond_rxtx,NULL);
-    UE->proc.proc_rxtx[i].sub_frame_start=i;
-    UE->proc.proc_rxtx[i].sub_frame_step=nb_threads;
-    printf("Init_UE_threads rtd %d proc %d nb_threads %d i %d\n",rtd->proc->sub_frame_start, UE->proc.proc_rxtx[i].sub_frame_start,nb_threads, i);
-    pthread_create(&UE->proc.proc_rxtx[i].pthread_rxtx, NULL, UE_phy_stub_single_thread_rxn_txnp4, rtd);
-
+      pthread_mutex_init(&UE->proc.proc_rxtx[i].mutex_rxtx,NULL);
+      pthread_cond_init(&UE->proc.proc_rxtx[i].cond_rxtx,NULL);
+      UE->proc.proc_rxtx[i].sub_frame_start=i;
+      UE->proc.proc_rxtx[i].sub_frame_step=nb_threads;
+      printf("Init_UE_threads rtd %d proc %d nb_threads %d i %d\n",rtd->proc->sub_frame_start, UE->proc.proc_rxtx[i].sub_frame_start,nb_threads, i);
+      pthread_create(&UE->proc.proc_rxtx[i].pthread_rxtx, NULL, UE_phy_stub_single_thread_rxn_txnp4, rtd);
+    }
   }
   // Remove thread for UE_sync in phy_stub_UE mode.
   //pthread_create(&UE->proc.pthread_synch,NULL,UE_thread_synch,(void*)UE);
@@ -2080,8 +2147,11 @@ int init_timer_thread(void) {
   pthread_mutex_init(&UE->timer_mutex,NULL);
   pthread_cond_init(&UE->timer_cond,NULL);
   UE->instance_cnt_timer = -1;
+  memset(&phy_stub_ticking->num_single_thread[0],0,sizeof(int)*NB_THREAD_INST);
   pthread_mutex_init(&phy_stub_ticking->mutex_ticking,NULL);
   pthread_cond_init(&phy_stub_ticking->cond_ticking,NULL);
+  pthread_mutex_init(&phy_stub_ticking->mutex_single_thread,NULL);
+  pthread_cond_init(&phy_stub_ticking->cond_single_thread,NULL);
   pthread_create(&phy_stub_ticking->pthread_timer, NULL, &timer_thread, NULL);
   return 0;
 }

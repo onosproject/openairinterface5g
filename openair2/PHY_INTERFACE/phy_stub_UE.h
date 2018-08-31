@@ -18,7 +18,7 @@
 //#include "openair1/PHY/LTE_TRANSPORT/defs.h"
 
 UL_IND_t *UL_INFO;
-
+FILL_UL_INFO_MUTEX fill_ul_mutex;
 nfapi_tx_request_pdu_t* tx_request_pdu_list;
 // New
 /// Pointers to config_request types. Used from nfapi callback functions.
