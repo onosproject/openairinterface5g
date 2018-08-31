@@ -24,8 +24,9 @@
    author: raymond.knopp@eurecom.fr
    date: 21.10.2009
 */
-#include "PHY/defs.h"
-#include "SCHED/extern.h"
+#include "PHY/defs_eNB.h"
+#include "PHY/LTE_TRANSPORT/transport_common.h"
+#include "PHY/CODING/coding_defs.h"
 
 //#define DEBUG_SEGMENTATION
 
@@ -106,7 +107,7 @@ int lte_segmentation(unsigned char *input_buffer,
 #endif
     *Kminus = (*Kplus - 64);
   } else {
-    msg("lte_segmentation.c: Illegal codeword size !!!\n");
+    printf("lte_segmentation.c: Illegal codeword size !!!\n");
     return(-1);
   }
 
@@ -123,6 +124,9 @@ int lte_segmentation(unsigned char *input_buffer,
   }
 
 
+  AssertFatal(Bprime <= (*Cplus)*(*Kplus) + (*Cminus)*(*Kminus),
+	      "Bprime %d <  (*Cplus %d)*(*Kplus %d) + (*Cminus %d)*(*Kminus %d)\n",
+	      Bprime,*Cplus,*Kplus,*Cminus,*Kminus);
 
   *F = ((*Cplus)*(*Kplus) + (*Cminus)*(*Kminus) - (Bprime));
 #ifdef DEBUG_SEGMENTATION

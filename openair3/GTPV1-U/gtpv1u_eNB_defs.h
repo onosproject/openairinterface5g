@@ -28,10 +28,12 @@
  */
 
 #include "hashtable.h"
-#include "asn1_constants.h"
+#include "asn_constant.h"
 
 #ifndef GTPV1U_ENB_DEFS_H_
 #define GTPV1U_ENB_DEFS_H_
+
+#include "NwGtpv1u.h"
 
 #define GTPV1U_UDP_PORT (2152)
 #define GTPV1U_BEARER_OFFSET 3

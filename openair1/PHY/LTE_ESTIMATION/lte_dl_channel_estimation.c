@@ -19,18 +19,17 @@
  *      contact@openairinterface.org
  */
 
-#ifdef USER_MODE
 #include <string.h>
-#endif
-#include "defs.h"
-#include "SCHED/defs.h"
-#include "PHY/defs.h"
+#include "PHY/defs_UE.h"
 #include "filt96_32.h"
 #include "T.h"
 //#define DEBUG_CH
+#include "PHY/LTE_UE_TRANSPORT/transport_proto_ue.h"
+#include "PHY/LTE_REFSIG/lte_refsig.h"
+#include "SCHED_UE/sched_UE.h"
 
 int lte_dl_channel_estimation(PHY_VARS_UE *ue,
-                              uint8_t eNB_id,
+                              module_id_t eNB_id,
                               uint8_t eNB_offset,
                               unsigned char Ns,
                               unsigned char p,
@@ -78,7 +77,7 @@ int lte_dl_channel_estimation(PHY_VARS_UE *ue,
   else if ((p==1) && (l>0))
     nu = 0;
   else {
-    msg("lte_dl_channel_estimation: p %d, l %d -> ERROR\n",p,l);
+    LOG_E(PHY,"lte_dl_channel_estimation: p %d, l %d -> ERROR\n",p,l);
     return(-1);
   }
 
@@ -170,7 +169,7 @@ int lte_dl_channel_estimation(PHY_VARS_UE *ue,
     break;
 
   default:
-    msg("lte_dl_channel_estimation: k=%d -> ERROR\n",k);
+    LOG_E(PHY,"lte_dl_channel_estimation: k=%d -> ERROR\n",k);
     return(-1);
     break;
   }
@@ -625,7 +624,7 @@ int lte_dl_channel_estimation(PHY_VARS_UE *ue,
 
       }
     } else {
-      msg("channel estimation not implemented for ue->frame_parms.N_RB_DL = %d\n",ue->frame_parms.N_RB_DL);
+      LOG_E(PHY,"channel estimation not implemented for ue->frame_parms.N_RB_DL = %d\n",ue->frame_parms.N_RB_DL);
     }
 
 
@@ -811,11 +810,10 @@ int lte_dl_channel_estimation(PHY_VARS_UE *ue,
               }
           }
   }
-#if T_TRACER
-        T(T_UE_PHY_DL_CHANNEL_ESTIMATE, T_INT(eNB_id), T_INT(ue->Mod_id),
-          T_INT(ue->proc.proc_rxtx[ue->current_thread_id[Ns>>1]].frame_rx%1024), T_INT(ue->proc.proc_rxtx[ue->current_thread_id[Ns>>1]].subframe_rx),
-          T_INT(0), T_BUFFER(&ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[Ns>>1]].dl_ch_estimates_time[eNB_offset][0][0], 512  * 4));
-#endif
+
+  T(T_UE_PHY_DL_CHANNEL_ESTIMATE, T_INT(eNB_id),
+    T_INT(ue->proc.proc_rxtx[ue->current_thread_id[Ns>>1]].frame_rx%1024), T_INT(ue->proc.proc_rxtx[ue->current_thread_id[Ns>>1]].subframe_rx),
+    T_INT(0), T_BUFFER(&ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[Ns>>1]].dl_ch_estimates_time[eNB_offset][0][0], 512  * 4));
 
   return(0);
 }
