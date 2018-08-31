@@ -268,6 +268,9 @@ struct openair0_device_t {
 
   /*!brief Component Carrier ID of this device */
   int CC_id;
+
+  /*!brief eth interfaces number of this device */
+  int nb_eth;
   
   /*!brief Type of this device */
   dev_type_t type;

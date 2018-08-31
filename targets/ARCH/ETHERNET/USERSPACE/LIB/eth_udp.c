@@ -58,6 +58,8 @@ uint16_t pck_seq_num_prev=0;
 
 int eth_socket_init_udp(openair0_device *device) {
 
+  int i;
+  printf("eth_udp: Number of eths is %d\n",device->nb_eth);
   eth_state_t *eth = (eth_state_t*)device->priv;
   char str_local[INET_ADDRSTRLEN];
   char str_remote[INET_ADDRSTRLEN];
@@ -69,17 +71,21 @@ int eth_socket_init_udp(openair0_device *device) {
   int enable=1;
 
   if (device->host_type == RRH_HOST ) {
-    local_ip   = device->openair0_cfg->my_addr;   
-    local_port = device->openair0_cfg->my_port;
+   for (i=0;i<device->nb_eth;i++){
+    local_ip   = device->openair0_cfg[i].my_addr;   
+    local_port = device->openair0_cfg[i].my_port;
     remote_ip   = "0.0.0.0";   
     remote_port =  0;   
-    printf("[%s] local ip addr %s port %d\n", "RRH", local_ip, local_port);    
+    printf("[%s] local ip addr %s port %d\n", "RRH", local_ip, local_port); 
+   }   
   } else {
-    local_ip   = device->openair0_cfg->my_addr;   
-    local_port = device->openair0_cfg->my_port;
-    remote_ip   = device->openair0_cfg->remote_addr;
-    remote_port = device->openair0_cfg->remote_port;  
+   for (i=0;i<device->nb_eth;i++){
+    local_ip   = device->openair0_cfg[i].my_addr;   
+    local_port = device->openair0_cfg[i].my_port;
+    remote_ip   = device->openair0_cfg[i].remote_addr;
+    remote_port = device->openair0_cfg[i].remote_port;  
     printf("[%s] local ip addr %s port %d\n","BBU", local_ip, local_port);    
+   }
   }
   
   /* Open socket to send on */
@@ -87,44 +93,46 @@ int eth_socket_init_udp(openair0_device *device) {
   sock_type=SOCK_DGRAM;
   sock_proto=IPPROTO_UDP;
   
-  if ((eth->sockfd = socket(sock_dom, sock_type, sock_proto)) == -1) {
-    perror("ETHERNET: Error opening socket");
-    exit(0);
-  }
-  
-  /* initialize addresses */
-  bzero((void *)&(eth->dest_addr), sizeof(eth->dest_addr));
-  bzero((void *)&(eth->local_addr), sizeof(eth->local_addr));
-  
+  for (i=0;i<device->nb_eth;i++){
+	  printf("i = %d\n",i);
+	  if ((eth[i].sockfd = socket(sock_dom, sock_type, sock_proto)) == -1) {
+	    perror("ETHERNET: Error opening socket");
+	    exit(0);
+	  }
+	  
+	  /* initialize addresses */
+	  bzero((void *)&(eth[i].dest_addr), sizeof(eth[i].dest_addr));
+	  bzero((void *)&(eth[i].local_addr), sizeof(eth[i].local_addr));
+	  
 
-  eth->addr_len = sizeof(struct sockaddr_in);
+	  eth[i].addr_len = sizeof(struct sockaddr_in);
 
-  eth->dest_addr.sin_family = AF_INET;
-  inet_pton(AF_INET,remote_ip,&(eth->dest_addr.sin_addr.s_addr));
-  eth->dest_addr.sin_port=htons(remote_port);
-  inet_ntop(AF_INET, &(eth->dest_addr.sin_addr), str_remote, INET_ADDRSTRLEN);
+	  eth[i].dest_addr.sin_family = AF_INET;
+	  inet_pton(AF_INET,remote_ip,&(eth[i].dest_addr.sin_addr.s_addr));
+	  eth[i].dest_addr.sin_port=htons(remote_port);
+	  inet_ntop(AF_INET, &(eth[i].dest_addr.sin_addr), str_remote, INET_ADDRSTRLEN);
 
 
-  eth->local_addr.sin_family = AF_INET;
-  inet_pton(AF_INET,local_ip,&(eth->local_addr.sin_addr.s_addr));
-  eth->local_addr.sin_port=htons(local_port);
-  inet_ntop(AF_INET, &(eth->local_addr.sin_addr), str_local, INET_ADDRSTRLEN);
+	  eth[i].local_addr.sin_family = AF_INET;
+	  inet_pton(AF_INET,local_ip,&(eth[i].local_addr.sin_addr.s_addr));
+	  eth[i].local_addr.sin_port=htons(local_port);
+	  inet_ntop(AF_INET, &(eth[i].local_addr.sin_addr), str_local, INET_ADDRSTRLEN);
 
-  
-  /* set reuse address flag */
-  if (setsockopt(eth->sockfd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int))) {
-    perror("ETHERNET: Cannot set SO_REUSEADDR option on socket");
-    exit(0);
-  }
-  
-  /* want to receive -> so bind */   
-    if (bind(eth->sockfd,(struct sockaddr *)&eth->local_addr,eth->addr_len)<0) {
-      perror("ETHERNET: Cannot bind to socket");
-      exit(0);
-    } else {
-      printf("[%s] binding to %s:%d\n","RRH",str_local,ntohs(eth->local_addr.sin_port));
-    }
- 
+	  
+	  /* set reuse address flag */
+	  if (setsockopt(eth[i].sockfd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int))) {
+	    perror("ETHERNET: Cannot set SO_REUSEADDR option on socket");
+	    exit(0);
+	  }
+	  
+	  /* want to receive -> so bind */   
+	    if (bind(eth[i].sockfd,(struct sockaddr *)&eth[i].local_addr,eth[i].addr_len)<0) {
+	      perror("ETHERNET: Cannot bind to socket");
+	      exit(0);
+	    } else {
+	      printf("[%s] binding to %s:%d\n","RRH",str_local,ntohs(eth[i].local_addr.sin_port));
+	    }
+  } 
   return 0;
 }
 

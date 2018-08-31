@@ -364,9 +364,10 @@ int ethernet_tune(openair0_device *device, unsigned int option, int value) {
 
 
 int transport_init(openair0_device *device, openair0_config_t *openair0_cfg, eth_params_t * eth_params ) {
-
-  eth_state_t *eth = (eth_state_t*)malloc(sizeof(eth_state_t));
+  printf("ethernet_lib.c: Number of eths is %d\n",device->nb_eth);
+  eth_state_t *eth = (eth_state_t*)malloc(device->nb_eth*sizeof(eth_state_t));
   memset(eth, 0, sizeof(eth_state_t));
+  int i;
   
   if (eth_params->transp_preference == 1) {
     eth->flags = ETH_RAW_MODE;
@@ -393,7 +394,7 @@ int transport_init(openair0_device *device, openair0_config_t *openair0_cfg, eth
   }
   
   printf("[ETHERNET]: Initializing openair0_device for %s ...\n", ((device->host_type == BBU_HOST) ? "BBU": "RRH"));
-  device->Mod_id           = 0;//num_devices_eth++;
+  device->Mod_id           = num_devices_eth++;
   device->transp_type      = ETHERNET_TP;
   device->trx_start_func   = trx_eth_start;
   device->trx_request_func = trx_eth_request;
@@ -425,40 +426,45 @@ int transport_init(openair0_device *device, openair0_config_t *openair0_cfg, eth
     //device->trx_read_func    = trx_eth_read_udp_IF4p5;     
   }
   
-  eth->if_name = eth_params->local_if_name;
+  for (i=0;i<device->nb_eth;i++){
+  	printf("eth %d: local_if_name %s\n",i,(eth_params+i)->local_if_name);
+  	printf("eth %d: local ip %s\n",i,(eth_params+i)->my_addr);
+	eth[i].if_name = (eth_params+i)->local_if_name;
+  }
   device->priv = eth;
  	
-  /* device specific */
-  openair0_cfg[0].iq_rxrescale = 15;//rescale iqs
-  openair0_cfg[0].iq_txshift = eth_params->iq_txshift;// shift
-  openair0_cfg[0].tx_sample_advance = eth_params->tx_sample_advance;
-
-  /* RRH does not have any information to make this configuration atm */
-  if (device->host_type == BBU_HOST) {
-    /*Note scheduling advance values valid only for case 7680000 */    
-    switch ((int)openair0_cfg[0].sample_rate) {
-    case 30720000:
-      openair0_cfg[0].samples_per_packet    = 3840;     
-      break;
-    case 23040000:     
-      openair0_cfg[0].samples_per_packet    = 2880;
-      break;
-    case 15360000:
-      openair0_cfg[0].samples_per_packet    = 1920;      
-      break;
-    case 7680000:
-      openair0_cfg[0].samples_per_packet    = 960;     
-      break;
-    case 1920000:
-      openair0_cfg[0].samples_per_packet    = 240;     
-      break;
-    default:
-      printf("Error: unknown sampling rate %f\n",openair0_cfg[0].sample_rate);
-      exit(-1);
-      break;
-    }
+  for (i=0;i<device->nb_eth;i++){
+  	  /* device specific */
+  	  openair0_cfg[i].iq_rxrescale = 15;//rescale iqs
+  	  openair0_cfg[i].iq_txshift = (eth_params+i)->iq_txshift;// shift
+  	  openair0_cfg[i].tx_sample_advance = (eth_params+i)->tx_sample_advance;
+	  /* RRH does not have any information to make this configuration atm */
+	  if (device->host_type == BBU_HOST) {
+	    /*Note scheduling advance values valid only for case 7680000 */    
+	    switch ((int)openair0_cfg[i].sample_rate) {
+	    case 30720000:
+	      openair0_cfg[i].samples_per_packet    = 3840;     
+	      break;
+	    case 23040000:     
+	      openair0_cfg[i].samples_per_packet    = 2880;
+	      break;
+	    case 15360000:
+	      openair0_cfg[i].samples_per_packet    = 1920;      
+	      break;
+	    case 7680000:
+	      openair0_cfg[i].samples_per_packet    = 960;     
+	      break;
+	    case 1920000:
+	      openair0_cfg[i].samples_per_packet    = 240;     
+	      break;
+	    default:
+	      printf("Error: unknown sampling rate %f\n",openair0_cfg[i].sample_rate);
+	      exit(-1);
+	      break;
+	    }
+	  }
   }
-  device->openair0_cfg=&openair0_cfg[0];
+  device->openair0_cfg=openair0_cfg;
   return 0;
 }
 

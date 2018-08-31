@@ -79,6 +79,8 @@ unsigned short config_frames[4] = {2,9,11,13};
 #ifdef XFORMS
 #include "PHY/TOOLS/lte_phy_scope.h"
 #include "stats.h"
+
+static const Enb_properties_array_t *enb_properties;
 // current status is that every UE has a DL scope for a SINGLE eNB (eNB_id=0)
 // at eNB 0, an UL scope for every UE
 FD_lte_phy_scope_ue  *form_ue[NUMBER_OF_UE_MAX];
@@ -376,8 +378,10 @@ void exit_fun(const char* s) {
         if (UE_flag == 0) {
             if (PHY_vars_eNB_g[0][CC_id]->rfdevice.trx_end_func)
                 PHY_vars_eNB_g[0][CC_id]->rfdevice.trx_end_func(&PHY_vars_eNB_g[0][CC_id]->rfdevice);
-            if (PHY_vars_eNB_g[0][CC_id]->ifdevice.trx_end_func)
+            if (PHY_vars_eNB_g[0][CC_id]->ifdevice.trx_end_func){
                 PHY_vars_eNB_g[0][CC_id]->ifdevice.trx_end_func(&PHY_vars_eNB_g[0][CC_id]->ifdevice);
+		PHY_vars_eNB_g[0][CC_id]->ifdevice.nb_eth = enb_properties->properties[0]->nb_rrh_gw;
+	    }
         } else {
             if (PHY_vars_UE_g[0][CC_id]->rfdevice.trx_end_func)
                 PHY_vars_UE_g[0][CC_id]->rfdevice.trx_end_func(&PHY_vars_UE_g[0][CC_id]->rfdevice);
@@ -611,7 +615,7 @@ static void get_options (int argc, char **argv) {
     int CC_id;
 
 
-  const Enb_properties_array_t *enb_properties;
+  //const Enb_properties_array_t *enb_properties;
 
     enum long_option_e {
         LONG_OPTION_START = 0x100, /* Start after regular single char options */
@@ -1066,15 +1070,16 @@ static void get_options (int argc, char **argv) {
                      conf_config_file_name, NB_eNB_INST, enb_properties->number);
 
         /* Update some simulation parameters */
+	printf("lte-softmodem reads RCC configuration file for %d RCCs\n",enb_properties->number);
         for (i=0; i < enb_properties->number; i++) {
             AssertFatal (MAX_NUM_CCs == enb_properties->properties[i]->nb_cc,
                          "lte-softmodem compiled with MAX_NUM_CCs=%d, but only %d CCs configured for eNB %d!",
                          MAX_NUM_CCs, enb_properties->properties[i]->nb_cc, i);
             eth_params = (eth_params_t*)malloc(enb_properties->properties[i]->nb_rrh_gw * sizeof(eth_params_t));
             memset(eth_params, 0, enb_properties->properties[i]->nb_rrh_gw * sizeof(eth_params_t));
-
+	    printf("RCC %d has %d RRH gws:\n",i+1,enb_properties->properties[i]->nb_rrh_gw);
             for (j=0; j<enb_properties->properties[i]->nb_rrh_gw; j++) {
-
+		printf("\tRRH gw %d has the local ip %s\n",j,enb_properties->properties[i]->rrh_gw_config[j].local_address);		
                 if (enb_properties->properties[i]->rrh_gw_config[j].active == 1 ) {
                     local_remote_radio = BBU_REMOTE_RADIO_HEAD;
                     (eth_params+j)->local_if_name             = enb_properties->properties[i]->rrh_gw_config[j].rrh_gw_if_name;
@@ -1421,8 +1426,6 @@ int main( int argc, char **argv ) {
 
 
 
-
-
 #if T_TRACER
     T_init(T_port, T_wait, T_dont_fork);
 #endif
@@ -1648,6 +1651,7 @@ int main( int argc, char **argv ) {
         //this is eNB
         PHY_vars_eNB_g = malloc(sizeof(PHY_VARS_eNB**));
         PHY_vars_eNB_g[0] = malloc(sizeof(PHY_VARS_eNB*));
+        printf("The eth interfaces number is %d\n",enb_properties->properties[0]->nb_rrh_gw);
 
         for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
             PHY_vars_eNB_g[0][CC_id] = init_lte_eNB(frame_parms[CC_id],0,frame_parms[CC_id]->Nid_cell,node_function[CC_id],abstraction_flag);
@@ -1993,7 +1997,6 @@ int main( int argc, char **argv ) {
     pthread_cond_destroy(&sync_cond);
     pthread_mutex_destroy(&sync_mutex);
 
-
     // *** Handle per CC_id openair0
     if (UE_flag==1) {
         if (PHY_vars_UE_g[0][0]->rfdevice.trx_end_func)
@@ -2002,8 +2005,10 @@ int main( int argc, char **argv ) {
         for(CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
             if (PHY_vars_eNB_g[0][CC_id]->rfdevice.trx_end_func)
                 PHY_vars_eNB_g[0][CC_id]->rfdevice.trx_end_func(&PHY_vars_eNB_g[0][CC_id]->rfdevice);
-            if (PHY_vars_eNB_g[0][CC_id]->ifdevice.trx_end_func)
+            if (PHY_vars_eNB_g[0][CC_id]->ifdevice.trx_end_func){
                 PHY_vars_eNB_g[0][CC_id]->ifdevice.trx_end_func(&PHY_vars_eNB_g[0][CC_id]->ifdevice);
+                PHY_vars_eNB_g[0][CC_id]->ifdevice.nb_eth = enb_properties->properties[0]->nb_rrh_gw;
+	    }
         }
     }
     if (ouput_vcd)
