@@ -2312,7 +2312,7 @@ ue_scheduler(const module_id_t module_idP,
 				   UE_mac_inst[module_idP].crnti, txFrameP,
 				   txSubframeP, eNB_indexP);
 #if defined(ENABLE_ITTI)
-
+    if(module_idP == 0){
     do {
 	// Checks if a message has been sent to MAC sub-task
 	itti_poll_msg(TASK_MAC_UE, &msg_p);
@@ -2342,7 +2342,7 @@ ue_scheduler(const module_id_t module_idP,
 	}
     }
     while (msg_p != NULL);
-
+    }
 #endif
 
     //Mac_rlc_xface->frameP=frameP;

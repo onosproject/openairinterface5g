@@ -3635,6 +3635,7 @@ extract_harq(module_id_t mod_idP, int CC_idP, int UE_id,
 //		    "Got ACK/NAK for inactive harq_pid %d for UE %d/%x\n",
 //		    harq_pid, UE_id, rnti);
 	 if(sched_ctl->round[CC_idP][harq_pid] == 8){
+           LOG_E(MAC,"Got ACK/NAK for inactive harq_pid %d for UE %d/%x\n",harq_pid, UE_id, rnti);
 	   return;
 	 }
 

@@ -1009,7 +1009,7 @@ generate_Msg4(module_id_t module_idP, int CC_idP, frame_t frameP,
     {
     // This is normal LTE case
 	LOG_D(MAC, "generate_Msg4 1 ra->Msg4_frame SFN/SF: %d.%d,  frameP SFN/SF: %d.%d FOR eNB_Mod: %d \n", ra->Msg4_frame, ra->Msg4_subframe, frameP, subframeP, module_idP);
-    	if ((ra->Msg4_frame == frameP) && (ra->Msg4_subframe == subframeP)) {
+    	if (((ra->Msg4_frame == frameP) && (ra->Msg4_subframe == subframeP))||((nfapi_mode == 2)&&(cc->tdd_Config == NULL))) {
 
     	    // Get RRCConnectionSetup for Piggyback
     	    /*rrc_sdu_length = mac_rrc_data_req(module_idP, CC_idP, frameP, CCCH, 1,	// 1 transport block
@@ -1419,7 +1419,8 @@ schedule_RA(module_id_t module_idP, frame_t frameP, sub_frame_t subframeP)
 
 	    if (ra->state == MSG2)
 		generate_Msg2(module_idP, CC_id, frameP, subframeP, ra);
-	    else if (ra->state == MSG4 && ra->Msg4_frame == frameP && ra->Msg4_subframe == subframeP )
+	    //else if (ra->state == MSG4 && ra->Msg4_frame == frameP && ra->Msg4_subframe == subframeP )
+            else if (ra->state == MSG4)
 		generate_Msg4(module_idP, CC_id, frameP, subframeP, ra);
 	    else if (ra->state == WAITMSG4ACK)
 		check_Msg4_retransmission(module_idP, CC_id, frameP,
