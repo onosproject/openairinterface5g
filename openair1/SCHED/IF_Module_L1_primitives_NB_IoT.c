@@ -26,11 +26,11 @@ void handle_nfapi_dlsch_pdu_NB_IoT(PHY_VARS_eNB *eNB,
 	nfapi_dl_config_ndlsch_pdu_rel13_t *rel13 = &dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13;
 	int UE_id= -1;
 	int flag_malloc = 0;
-	ndlsch= &eNB->ndlsch_SIB;
+	ndlsch= eNB->ndlsch_SIB1;
 	
-	if(flag_malloc) free (ndlsch->harq_process);
+//	if(flag_malloc) free (ndlsch->harq_process);
 
-	ndlsch->harq_process = (NB_IoT_DL_eNB_HARQ_t*) malloc (sizeof(NB_IoT_DL_eNB_HARQ_t));
+//	ndlsch->harq_process = (NB_IoT_DL_eNB_HARQ_t*) malloc (sizeof(NB_IoT_DL_eNB_HARQ_t));
 	flag_malloc = 1 ;
   //Check for SI PDU since in NB-IoT there is no DCI for that
   //SIB1 (type 0), other DLSCH data (type 1) (include the SI messages) based on our ASSUMPTIONs
@@ -59,7 +59,8 @@ void handle_nfapi_dlsch_pdu_NB_IoT(PHY_VARS_eNB *eNB,
 		
 		//ndlsch_harq->pdu = sdu;
 		//LOG_I(PHY,"B content_sib1:%d\n",sdu);
-		ndlsch->content_sib1.pdu = sdu;
+		/////ndlsch->content_sib1.pdu = sdu;
+		ndlsch_harq->pdu = sdu;
 		//LOG_I(PHY,"A content_sib1:%d\n",ndlsch->content_sib1.pdu);
 		
 		//should be from 1 to 8
@@ -109,7 +110,7 @@ void handle_nfapi_dlsch_pdu_NB_IoT(PHY_VARS_eNB *eNB,
 			ndlsch->npdsch_start_symbol = rel13->start_symbol; //start OFDM symbol for the ndlsch transmission
 			//ndlsch_harq->pdu = sdu;
 			//LOG_I(PHY,"B content_sib23:%d\n",sdu);
-			ndlsch->content_sib23.pdu = sdu;
+			ndlsch_harq->pdu = sdu;
 			ndlsch_harq->resource_assignment = rel13->number_of_subframes_for_resource_assignment;//value 2 or 8
 			ndlsch_harq->repetition_number = rel13->repetition_number;//should be always fix to 0 to be mapped in 1
 			ndlsch_harq->modulation = rel13->modulation;
@@ -128,7 +129,7 @@ void handle_nfapi_dlsch_pdu_NB_IoT(PHY_VARS_eNB *eNB,
 			//there is no need of repeating the configuration on the ndlsch
 			//ndlsch_harq->pdu = NULL;
 			//LOG_I(PHY,"sib23=NULL\n");
-			ndlsch->content_sib23.pdu = NULL;
+			ndlsch_harq->pdu = NULL;
 			
 
 		}
@@ -144,11 +145,11 @@ void handle_nfapi_dlsch_pdu_NB_IoT(PHY_VARS_eNB *eNB,
   {
 
 	  //check if the PDU is for RAR
-	  if(eNB->ndlsch_ra != NULL && rel13->rnti == eNB->ndlsch_ra->rnti) //rnti for the RAR should have been set priviously by the DCI
+	  if(eNB->ndlsch_RAR != NULL && rel13->rnti == eNB->ndlsch_RAR->rnti) //rnti for the RAR should have been set priviously by the DCI
 	  {
-		  eNB->ndlsch_ra->harq_process->pdu = sdu;
-		  eNB->ndlsch_ra->npdsch_start_symbol = rel13->start_symbol;
-		  eNB->ndlsch_ra->active = 1;
+		  eNB->ndlsch_RAR->harq_process->pdu = sdu;
+		  eNB->ndlsch_RAR->npdsch_start_symbol = rel13->start_symbol;
+		  eNB->ndlsch_RAR->active = 1;
 	  }
 	  else
 	  { //this for ue data

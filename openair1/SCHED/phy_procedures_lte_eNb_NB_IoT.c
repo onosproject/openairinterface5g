@@ -223,9 +223,9 @@ void common_signal_procedures_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
   LTE_DL_FRAME_PARMS   *fp       =  &eNB->frame_parms;
   NB_IoT_eNB_NPBCH_t   *broadcast_str = &eNB->npbch;
   //NB_IoT_eNB_NDLSCH_t  *sib1          = &eNB->ndlsch_SIB;
- NB_IoT_eNB_NDLSCH_t  *ndlsch        = &eNB->ndlsch_SIB;
-   NB_IoT_DL_eNB_SIB_t  *sib1          = &ndlsch->content_sib1;
-   NB_IoT_DL_eNB_SIB_t  *sib23         = &ndlsch->content_sib23;
+  //NB_IoT_eNB_NDLSCH_t  *ndlsch        = &eNB->ndlsch_SIB1;
+  NB_IoT_DL_eNB_HARQ_t *sib1          = eNB->ndlsch_SIB1->harq_process;
+  NB_IoT_DL_eNB_HARQ_t  *sib23         = eNB->ndlsch_SIB23->harq_process;
 
   int                     **txdataF =  eNB->common_vars.txdataF[0];
   int                     subframe  =  proc->subframe_tx;
@@ -236,7 +236,7 @@ void common_signal_procedures_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
 
  
   uint32_t                hyper_frame=proc->HFN;
-////////////////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////////////
   /*
   rrc_eNB_carrier_data_NB_IoT_t *carrier = &eNB_rrc_inst_NB_IoT->carrier[0];
       if(frame%64==0 && subframe ==0)
@@ -252,7 +252,7 @@ void common_signal_procedures_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
          do_SIB1_NB_IoT_x(0,0,carrier,208,92,1,3584,28,2,hyper_frame);
       }
     */  
-/////////////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////////
   //uint8_t      *control_region_size = get_NB_IoT_SIB1_eutracontrolregionsize();
   //int           G=0;
   
@@ -316,6 +316,11 @@ void common_signal_procedures_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
 
 
       ///////////////////////////////////////////////////////// SIB1 ////////////////////////////////////
+    // we need two parameter, NB-IoT cell_id  and scheduling info for sib1 (can be found in the MIB)
+    // using scheduling_info parameter we can get the TBS size.
+    // cell_id help to find the start subframe for sib1.
+    // MAC_TBStable_NB_IoT_SIB1 to be used to get TBS value.
+    //
     if((subframe == 4)  && (frame%2==0) && (frame%32<16) )   ////if((subframe != 0)  && (subframe != 4) && (subframe != 9) ) 
     {
         LOG_I(PHY,"SIB1 NB-IoT content:\n");
@@ -329,7 +334,7 @@ void common_signal_procedures_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
             dlsch_encoding_NB_IoT(sib1_pdu,
                                   sib1,
                                   8,                      ///// number_of_subframes_required
-                                  236,
+                                  get_G_NB_IoT(fp),
                                   1);                   //////////// G*2
         
         

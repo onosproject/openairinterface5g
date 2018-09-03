@@ -54,8 +54,8 @@ PHY_VARS_eNB* init_lte_eNB(LTE_DL_FRAME_PARMS *frame_parms,
   PHY_vars_eNB->frame_parms.Nid_cell =  Nid_cell;                                             ///////((Nid_cell/3)*3)+((eNB_id+Nid_cell)%3);
   PHY_vars_eNB->frame_parms.nushift = PHY_vars_eNB->frame_parms.Nid_cell%6;
 // for NB-IoT testing
-  PHY_vars_eNB->ndlsch_SIB.content_sib1.si_rnti = 0xffff;
-  PHY_vars_eNB->ndlsch_SIB.content_sib23.si_rnti = 0xffff;
+//  PHY_vars_eNB->ndlsch_SIB.content_sib1.si_rnti = 0xffff;
+//  PHY_vars_eNB->ndlsch_SIB.content_sib23.si_rnti = 0xffff;
 ////////////////////////////
   phy_init_lte_eNB(PHY_vars_eNB,0,abstraction_flag);
 
@@ -141,8 +141,14 @@ PHY_VARS_eNB* init_lte_eNB(LTE_DL_FRAME_PARMS *frame_parms,
   LOG_D(PHY,"eNB %d : RA %p\n",eNB_id,PHY_vars_eNB->dlsch_ra);
   PHY_vars_eNB->dlsch_MCH = new_eNB_dlsch(1,8,NSOFT,frame_parms->N_RB_DL, 0, frame_parms);
   LOG_D(PHY,"eNB %d : MCH %p\n",eNB_id,PHY_vars_eNB->dlsch_MCH);
-  
-  
+
+  ///// NB-IoT ////////////
+  PHY_vars_eNB->ndlsch_SIB1  = new_eNB_dlsch_NB_IoT(1,frame_parms);   // frame_parms is not used , to be removed is not used in futur
+  PHY_vars_eNB->ndlsch_SIB23  = new_eNB_dlsch_NB_IoT(1,frame_parms);
+  PHY_vars_eNB->ndlsch_RAR  = new_eNB_dlsch_NB_IoT(1,frame_parms);
+ 
+
+ 
   PHY_vars_eNB->rx_total_gain_dB=130;
   
   for(i=0; i<NUMBER_OF_UE_MAX; i++)
@@ -176,10 +182,17 @@ PHY_VARS_eNB_NB_IoT* init_lte_eNB_NB_IoT(NB_IoT_DL_FRAME_PARMS *frame_parms,
   PHY_vars_eNB->Mod_id=eNB_id;
   PHY_vars_eNB->cooperation_flag=0;//cooperation_flag;
   memcpy(&(PHY_vars_eNB->frame_parms), frame_parms, sizeof(NB_IoT_DL_FRAME_PARMS));
-  PHY_vars_eNB->frame_parms.Nid_cell = ((Nid_cell/3)*3)+((eNB_id+Nid_cell)%3);
+  //PHY_vars_eNB->frame_parms.Nid_cell = ((Nid_cell/3)*3)+((eNB_id+Nid_cell)%3);
+  //PHY_vars_eNB->frame_parms.nushift = PHY_vars_eNB->frame_parms.Nid_cell%6;
+  PHY_vars_eNB->frame_parms.Nid_cell =  Nid_cell;                                             ///////((Nid_cell/3)*3)+((eNB_id+Nid_cell)%3);
   PHY_vars_eNB->frame_parms.nushift = PHY_vars_eNB->frame_parms.Nid_cell%6;
   phy_init_lte_eNB_NB_IoT(PHY_vars_eNB,0,abstraction_flag);
 
+// for NB-IoT testing
+//  PHY_vars_eNB->ndlsch_SIB.content_sib1.si_rnti = 0xffff;
+//  PHY_vars_eNB->ndlsch_SIB.content_sib23.si_rnti = 0xffff;
+////////////////////////////
+  
   /*LOG_I(PHY,"init eNB: Node Function %d\n",node_function);
   LOG_I(PHY,"init eNB: Nid_cell %d\n", frame_parms->Nid_cell);
   LOG_I(PHY,"init eNB: frame_type %d,tdd_config %d\n", frame_parms->frame_type,frame_parms->tdd_config);

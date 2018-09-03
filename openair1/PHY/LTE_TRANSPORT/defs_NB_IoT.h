@@ -42,6 +42,8 @@
 //
 #define MAX_NUM_DLSCH_SEGMENTS_NB_IoT 16
 #define MAX_NUM_ULSCH_SEGMENTS_NB_IoT MAX_NUM_DLSCH_SEGMENTS_NB_IoT
+ 
+#define MAX_NUM_BITS_IN_DL_PER_SF_NB_IoT 284   // case one NB-IoT antenna && one LTE antenna
 //#define MAX_DLSCH_PAYLOAD_BYTES (MAX_NUM_DLSCH_SEGMENTS*768)
 //#define MAX_ULSCH_PAYLOAD_BYTES (MAX_NUM_ULSCH_SEGMENTS*768)
 //
@@ -71,6 +73,8 @@
 //
 //// for NB-IoT
 #define MAX_NUM_CHANNEL_BITS_NB_IoT 3360 			//14 symbols * 12 sub-carriers * 10 SF * 2bits/RE  // to check during real tests
+
+#define MAX_NUM_DL_CHANNEL_BITS_NB_IoT 2840      //284* 10 SF // case In-band operation mode witn 1 NB-IoT antenna && 1 LTE antenna //
 #define MAX_TBS_DL_SIZE_BITS_NB_IoT 680         // in release 13 // in release 14 = 2048      // ??? **** not sure
 ////#define MAX_NUM_CHANNEL_BITS_NB_IOT 3*680  			/// ??? ****not sure
 //
@@ -148,16 +152,15 @@ typedef enum {
 typedef struct {
  uint16_t              si_rnti;
   /// Concatenated "e"-sequences (for definition see 36-212 V8.6 2009-03, p.17-18)
-  uint8_t               e[1888];
+  uint8_t               e[MAX_NUM_DL_CHANNEL_BITS_NB_IoT];
   /// data after scrambling
-  uint8_t               s_e[1888];
+  uint8_t               s_e[MAX_NUM_DL_CHANNEL_BITS_NB_IoT];
   //length of the table e
   uint16_t              length_e;                // new parameter
   /// Tail-biting convolutional coding outputs
   uint8_t               d[96+(3*(24+MAX_TBS_DL_SIZE_BITS_NB_IoT))];  // new parameter
   /// Sub-block interleaver outputs
   uint8_t               w[3*3*(MAX_TBS_DL_SIZE_BITS_NB_IoT+24)];      // new parameter
-
   /// Status Flag indicating for this DLSCH (idle,active,disabled)
   //SCH_status_t status;
   /// Transport block size
@@ -179,29 +182,28 @@ typedef struct {
 typedef struct {
  uint16_t              si_rnti;
   /// Concatenated "e"-sequences (for definition see 36-212 V8.6 2009-03, p.17-18)
-  uint8_t               e[236];
+  uint8_t               e[MAX_NUM_DL_CHANNEL_BITS_NB_IoT];
   /// data after scrambling
-  uint8_t               s_e[236];
+  uint8_t               s_e[MAX_NUM_DL_CHANNEL_BITS_NB_IoT];
   //length of the table e
   uint16_t              length_e;                // new parameter
   /// Tail-biting convolutional coding outputs
-  uint8_t               d[96+(3*(24+56))];  // new parameter
+  uint8_t               d[96+(3*(24+MAX_TBS_DL_SIZE_BITS_NB_IoT))];  // new parameter
   /// Sub-block interleaver outputs
-  uint8_t               w[3*3*(56+24)];      // new parameter
+  uint8_t               w[3*3*(MAX_TBS_DL_SIZE_BITS_NB_IoT+24)];      // new parameter
   /////////////////////////////////
   uint16_t              si_rnti_x;
   /// Concatenated "e"-sequences (for definition see 36-212 V8.6 2009-03, p.17-18)
-  uint8_t               e_x[472];
+  uint8_t               e_x[MAX_NUM_DL_CHANNEL_BITS_NB_IoT];
   /// data after scrambling
-  uint8_t               s_e_x[472];
+  uint8_t               s_e_x[MAX_NUM_DL_CHANNEL_BITS_NB_IoT];
   //length of the table e
   uint16_t              length_e_x;                // new parameter
   /// Tail-biting convolutional coding outputs
-  uint8_t               d_x[96+(3*(24+256))];  // new parameter
+  uint8_t               d_x[96+(3*(24+MAX_TBS_DL_SIZE_BITS_NB_IoT))];  // new parameter
   /// Sub-block interleaver outputs
-  uint8_t               w_x[3*3*(256+24)];      // new parameter
+  uint8_t               w_x[3*3*(MAX_TBS_DL_SIZE_BITS_NB_IoT+24)];      // new parameter
   ////////////////////////////////
-
   /// Status Flag indicating for this DLSCH (idle,active,disabled)
   //SCH_status_t status;
   /// Transport block size
@@ -236,16 +238,15 @@ typedef struct {
   /// modulation always QPSK Qm = 2 
   uint8_t               modulation;
   /// Concatenated "e"-sequences (for definition see 36-212 V8.6 2009-03, p.17-18)
-  uint8_t               e[MAX_NUM_CHANNEL_BITS_NB_IoT];
+  uint8_t               e[MAX_NUM_DL_CHANNEL_BITS_NB_IoT];
   /// data after scrambling
-  uint8_t               s_e[MAX_NUM_CHANNEL_BITS_NB_IoT];
+  uint8_t               s_e[MAX_NUM_DL_CHANNEL_BITS_NB_IoT];
   //length of the table e
   uint16_t              length_e;                // new parameter
   /// Tail-biting convolutional coding outputs
   uint8_t               d[96+(3*(24+MAX_TBS_DL_SIZE_BITS_NB_IoT))];  // new parameter
   /// Sub-block interleaver outputs
   uint8_t               w[3*3*(MAX_TBS_DL_SIZE_BITS_NB_IoT+24)];      // new parameter
-
   /// Status Flag indicating for this DLSCH (idle,active,disabled)
   //SCH_status_t status;
   /// Transport block size
@@ -611,10 +612,7 @@ typedef struct {
 
 
 typedef struct {
-  /// TX buffers for UE-spec transmission (antenna ports 5 or 7..14, prior to precoding)
-  int32_t                 *txdataF[8];
-  /// dl channel estimates (estimated from ul channel estimates)
-  int32_t                 **calib_dl_ch_estimates;
+  
   /// Allocated RNTI (0 means DLSCH_t is not currently used)
   uint16_t                rnti;
   /// Active flag for baseband transmitter processing
@@ -631,21 +629,16 @@ typedef struct {
 
   SCH_status_NB_IoT_t   status;
 
-  //////////////////////////////////////////////////////////////////////
+ /* //////////////////////////////////////////////////////////////////////
   NB_IoT_DL_eNB_SIB_t    content_sib1;
   NB_IoT_DL_eNB_SIB_t    content_sib23;
   NB_IoT_DL_eNB_RAR_t    content_rar;
 
+*/ //////////////////////////////////////////////////////////////////////
+  
   /// Number of soft channel bits
   uint32_t                G;
-  /// Maximum number of HARQ rounds
-  uint8_t                 Mlimit;
-  /// Nsoft parameter related to UE Category
-  uint32_t                Nsoft;
-  /// amplitude of PDSCH (compared to RS) in symbols without pilots
-  int16_t                 sqrt_rho_a;
-  /// amplitude of PDSCH (compared to RS) in symbols containing pilots
-  int16_t                 sqrt_rho_b;
+  
   ///NB-IoT
   /// may use in the npdsch_procedures
   uint16_t                scrambling_sequence_intialization;

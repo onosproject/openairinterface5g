@@ -18,8 +18,6 @@ int output_handler(eNB_MAC_INST_NB_IoT *mac_inst, module_id_t module_id, int CC_
 	uint8_t MIB_size = 0;
 	uint8_t SIB1_size = 0, i = 0;
 	rrc_eNB_carrier_data_NB_IoT_t *carrier = &eNB_rrc_inst_NB_IoT->carrier[0];
-	uint8_t *MIB_pdu = get_NB_IoT_MIB(carrier,1,subframe,frame,hypersfn);
-	uint8_t *SIB1_pdu = get_NB_IoT_SIB1(0,0,carrier,208,92,1,3584,28,2,subframe,frame,hypersfn);
 	
 	Sched_Rsp_NB_IoT_t *SCHED_info = &mac_inst->Sched_INFO;
 	
@@ -30,7 +28,6 @@ int output_handler(eNB_MAC_INST_NB_IoT *mac_inst, module_id_t module_id, int CC_
 	int DL_empty = 0, UL_empty = 0; 
 	int flag_malloc = 0 ;
 	// filled common part of schedule_resoponse
-
 	
 	SCHED_info->module_id = module_id;
 	SCHED_info->hypersfn = hypersfn;
@@ -69,6 +66,7 @@ int output_handler(eNB_MAC_INST_NB_IoT *mac_inst, module_id_t module_id, int CC_
   	//	process downlink data transmission, there will only be single DL_REQ in one subframe (e.g. 1ms), check common signal first
 	if(subframe == 0 /*MIB_flag == 1*/)	//	TODO back to MIB_flag
 	{
+		uint8_t *MIB_pdu = get_NB_IoT_MIB(carrier,1,subframe,frame,hypersfn);
 		//LOG_D(MAC,"[%d]MIB\n",current_time);
 		//MIB_size = mac_rrc_data_req_eNB_NB_IoT(*MIB);
 		//SCHED_info->DL_req = (nfapi_dl_config_request_t*) malloc (sizeof(nfapi_dl_config_request_t));
@@ -98,6 +96,7 @@ int output_handler(eNB_MAC_INST_NB_IoT *mac_inst, module_id_t module_id, int CC_
 	}
 	else if((subframe == 4)  && (frame%2==0) && (frame%32<16) /*SIB1_flag == 1*/)	//	TODO back to SIB1_flag
 	{
+		uint8_t *SIB1_pdu = get_NB_IoT_SIB1(0,0,carrier,208,92,1,3584,28,2,subframe,frame,hypersfn);
 		//SIB1_size = mac_rrc_data_req_eNB_NB_IoT(*SIB1);
 		//SCHED_info->DL_req = (nfapi_dl_config_request_t*) malloc (sizeof(nfapi_dl_config_request_t));
 		//SCHED_info->DL_req->dl_config_request_body.number_pdu = 0;

@@ -126,7 +126,7 @@ const uint32_t MAC_TBStable_NB_IoT[14][8] ={ //[ITBS][ISF]
 
 //TBS table for the case containing S1B1-NB_IoT, Table 16.4.1.5.2-1 in TS 36.213 v14.2 (Itbs = 12 ~ 15 is reserved field
 //mapping ITBS to SIB1-NB_IoT
-const unsigned int MAC_TBStable_NB_IoT_SIB1[16] = {208,208,208,328,328,328,440,440,440,680,680,680};
+const unsigned int MAC_TBStable_NB_IoT_SIB1[16] = {208,208,208,328,328,328,440,440,440,680,680,680,0,0,0,0};
 
 const int DV_table[16]={0,10,14,19,26,36,49,67,91,125,171,234,321,768,1500,1500};
 

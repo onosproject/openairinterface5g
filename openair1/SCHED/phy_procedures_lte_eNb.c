@@ -541,7 +541,7 @@ void common_signal_procedures (PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc) {
   fclose(fich);
   exit(0); 
   }*/
-  NB_IoT_eNB_NULSCH_t    **ulsch_NB_IoT   =  &eNB->ulsch_NB_IoT;//[0][0];
+  NB_IoT_eNB_NULSCH_t    **ulsch_NB_IoT   =  &eNB->ulsch_NB_IoT[0];//[0][0];
 
   ////////////////////////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////// Decoding ACK ////////////////////////////////
@@ -647,7 +647,7 @@ if(proc->flag_msg4 == 1 && proc->counter_msg4 > 0)
 
         if(frame == proc->frame_msg4 && subframe == proc->subframe_msg4)
         {
-                 NB_IoT_DL_eNB_RAR_t  *rar  =  &eNB->ndlsch_rar.content_rar;
+                 NB_IoT_DL_eNB_HARQ_t  *rar  =  eNB->ndlsch_RAR->harq_process;
                 //uint8_t   tab_rar[15];
                 //uint8_t   tab_rar[18];
                 uint8_t   tab_rar[7];
@@ -711,7 +711,7 @@ if(proc->flag_msg4 == 1 && proc->counter_msg4 > 0)
                 if(proc->flag_scrambling ==0)
                 {
 
-                      dlsch_encoding_rar_NB_IoT(tab_rar,
+                      dlsch_encoding_NB_IoT(tab_rar,
                                                 rar,
                                                 1,                      ///// number_of_subframes_required
                                                 236,
@@ -740,7 +740,7 @@ if(proc->flag_msg4 == 1 && proc->counter_msg4 > 0)
                                             22,
                                             2);
                 } else {*/
-                   dlsch_modulation_rar_NB_IoT(txdataF,
+                   dlsch_modulation_NB_IoT(txdataF,
                                             AMP,
                                             fp,
                                             3,                          // control region size for LTE , values between 0..3, (0 for stand-alone / 1, 2 or 3 for in-band)
@@ -748,8 +748,7 @@ if(proc->flag_msg4 == 1 && proc->counter_msg4 > 0)
                                             236,                       // number of bits per subframe
                                             frame,  // unrequired
                                             subframe,       
-                                            22,
-                                            0);
+                                            22);
                // }
 
                  proc->counter_msg4--;
@@ -1229,7 +1228,7 @@ if(subframe !=5 && subframe !=0)
   {
  if(proc->rar_to_transmit ==1 && proc->remaining_rar >0)
  {
-    NB_IoT_DL_eNB_RAR_t  *rar          = &eNB->ndlsch_rar.content_rar;
+    NB_IoT_DL_eNB_HARQ_t  *rar  =  &eNB->ndlsch_RAR->harq_process;
     uint8_t   tab_rar[7];
     // printf("xxxxx index verif %d XXXXXX",RA_template[0].preamble_index);
       tab_rar[0]=64 + RA_template[0].preamble_index;
@@ -1262,7 +1261,7 @@ if(subframe !=5 && subframe !=0)
                              if(proc->flag_scrambling ==0)
                              {
 
-                                dlsch_encoding_rar_NB_IoT(tab_rar,
+                                dlsch_encoding_NB_IoT(tab_rar,
                                         rar,
                                        8,                      ///// number_of_subframes_required
                                         236,
@@ -1278,7 +1277,7 @@ if(subframe !=5 && subframe !=0)
                             }
                             proc->flag_scrambling =1;
                             printf("\n RAR sentttttt frame %d, subframe %d", frame, subframe);
-                            dlsch_modulation_rar_NB_IoT(txdataF,
+                            dlsch_modulation_NB_IoT(txdataF,
                                           AMP,
                                          fp,
                                          3,                          // control region size for LTE , values between 0..3, (0 for stand-alone / 1, 2 or 3 for in-band)
@@ -1286,8 +1285,7 @@ if(subframe !=5 && subframe !=0)
                                          236,                       // number of bits per subframe
                                         frame,  // unrequired
                                         subframe,       
-                                        22,
-                                        0);
+                                        22);
 
                              proc->remaining_rar--;
                              proc->next_subframe_tx =subframe+2;
@@ -1311,7 +1309,7 @@ if(subframe !=5 && subframe !=0)
                                  if(proc->flag_scrambling ==0)
                                   {
 
-                                      dlsch_encoding_rar_NB_IoT(tab_rar,
+                                      dlsch_encoding_NB_IoT(tab_rar,
                                                            rar,
                                                              8,                      ///// number_of_subframes_required
                                                           236,
@@ -1328,7 +1326,7 @@ if(subframe !=5 && subframe !=0)
                                proc->flag_scrambling =1;
 
                               printf("\n RAR sentttttt frame %d, subframe %d", frame, subframe);
-                              dlsch_modulation_rar_NB_IoT(txdataF,
+                              dlsch_modulation_NB_IoT(txdataF,
                                       AMP,
                                       fp,
                                       3,                          // control region size for LTE , values between 0..3, (0 for stand-alone / 1, 2 or 3 for in-band)
@@ -1336,8 +1334,7 @@ if(subframe !=5 && subframe !=0)
                                       236,                       // number of bits per subframe
                                      frame,  // unrequired
                                      subframe,       
-                                     22,
-                                     0);
+                                     22);
 
                               proc->remaining_rar--;
                               proc->next_subframe_tx =subframe+1;

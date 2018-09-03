@@ -77,7 +77,7 @@ void dlsch_sib_scrambling_NB_IoT(LTE_DL_FRAME_PARMS     *frame_parms,
 }
 
 void dlsch_sib_scrambling_rar_NB_IoT(LTE_DL_FRAME_PARMS     *frame_parms,
-                                  NB_IoT_DL_eNB_RAR_t    *dlsch,
+                                  NB_IoT_DL_eNB_HARQ_t    *dlsch,
                                   int                    tot_bits,                // total number of bits to transmit
                                   uint16_t                Nf,              // Nf is the frame number (0..9)
                                   uint8_t                Ns,
@@ -105,6 +105,37 @@ void dlsch_sib_scrambling_rar_NB_IoT(LTE_DL_FRAME_PARMS     *frame_parms,
   }
 
 }
+
+void dlsch_scrambling_Gen_NB_IoT(LTE_DL_FRAME_PARMS         *frame_parms,
+                                  NB_IoT_eNB_NDLSCH_t       *dlsch,
+                                  int                       tot_bits,            // total number of bits to transmit
+                                  uint16_t                  Nf,                  // Nf is the frame number (0..9)
+                                  uint8_t                   Ns,
+                                  uint32_t                  rnti)  
+{
+  int         i,j,k=0;
+  uint32_t    x1,x2, s=0;
+  uint8_t     *e = dlsch->harq_process->e;                              //uint8_t *e=dlsch->harq_processes[dlsch->current_harq_pid]->e;
+
+   //x2 = (dlsch->si_rnti<<15) + (frame_parms->Nid_cell + 1) * ( (Nf % 61) + 1 ) ;
+  x2 = (rnti<<14) + ((Nf%2)<<13) + ((Ns>>1)<<9) + frame_parms->Nid_cell;
+  // for NPDSCH not carriying SIBs
+  //x2 = (dlsch->harq_process_sib1.rnti<<14) + ((Nf%2)<<13) + ((Ns>>1)<<9) + frame_parms->Nid_cell;   //this is c_init in 36.211 Sec 10.2.3.1
+  
+  s = lte_gold_generic_NB_IoT(&x1, &x2, 1);
+
+  for (i=0; i<(1+(tot_bits>>5)); i++) {
+
+    for (j=0; j<32; j++,k++) {
+
+      dlsch->harq_process->s_e[k] = (e[k]&1) ^ ((s>>j)&1);
+
+    }
+    s = lte_gold_generic_NB_IoT(&x1, &x2, 0);
+  }
+
+}
+
 
 
 void init_unscrambling_lut_NB_IoT() {

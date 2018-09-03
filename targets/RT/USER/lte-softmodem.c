@@ -1173,9 +1173,12 @@ static void get_options (int argc, char **argv) {
                 frame_parms[CC_id]->mode1_flag         = (frame_parms[CC_id]->nb_antenna_ports_eNB == 1) ? 1 : 0;
                 frame_parms[CC_id]->threequarter_fs    = threequarter_fs;
 
-
                 frame_parms_NB_IoT[CC_id]->threequarter_fs    = threequarter_fs;
 
+
+
+                frame_parms[CC_id]->nb_antennas_tx_NB_IoT      =  enb_properties->properties[i]->nb_antennas_tx[CC_id];
+                frame_parms[CC_id]->control_region_size        =  3;
                 //} // j
             }
 
@@ -1297,6 +1300,9 @@ void set_default_frame_parms(LTE_DL_FRAME_PARMS *frame_parms[MAX_NUM_CCs]) {
         frame_parms[CC_id]->prach_config_common.prach_ConfigInfo.prach_ConfigIndex=0;
         frame_parms[CC_id]->prach_config_common.prach_ConfigInfo.highSpeedFlag=0;
         frame_parms[CC_id]->prach_config_common.prach_ConfigInfo.prach_FreqOffset=0;
+
+        frame_parms[CC_id]->nb_antennas_tx_NB_IoT      =  enb_properties->properties[i]->nb_antennas_tx[CC_id];
+        frame_parms[CC_id]->control_region_size        =  3;
 
         downlink_frequency[CC_id][0] = 2680000000; // Use float to avoid issue with frequency over 2^31.
         downlink_frequency[CC_id][1] = downlink_frequency[CC_id][0];

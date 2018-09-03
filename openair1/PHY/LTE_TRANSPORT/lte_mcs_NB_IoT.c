@@ -32,8 +32,10 @@
 
 //#include "PHY/defs.h"
 //#include "PHY/extern.h"
+
 #include "PHY/LTE_TRANSPORT/proto_NB_IoT.h"
- 
+#include "PHY/LTE_TRANSPORT/extern_NB_IoT.h"
+
 unsigned char get_Qm_ul_NB_IoT(unsigned char I_MCS, uint8_t N_sc_RU)
 {
 	// N_sc_RU  = 1, 3, 6, 12
@@ -47,4 +49,51 @@ unsigned char get_Qm_ul_NB_IoT(unsigned char I_MCS, uint8_t N_sc_RU)
 			return(2);
 	
 }
+
+int get_G_NB_IoT(LTE_DL_FRAME_PARMS *frame_parms)
+{
+  
+	uint16_t num_ctrl_symbols = frame_parms->control_region_size;
+
+    uint8_t nb_antennas_tx_LTE = frame_parms->nb_antennas_tx;
+    uint8_t nb_antennas_tx_NB_IoT = frame_parms->nb_antennas_tx_NB_IoT;
+
+    int G_value=0;
+
+    switch (nb_antennas_tx_NB_IoT + (2*nb_antennas_tx_LTE)) {
+
+		case 10 :
+			G_value = G_tab[(1*3)-num_ctrl_symbols];	
+		break;
+
+		case 6:
+			G_value = G_tab[(2*3)-num_ctrl_symbols];
+		break;
+
+		case 4 :
+			G_value = G_tab[(3*3)-num_ctrl_symbols];
+		break;
+
+		case 9 :
+			G_value = G_tab[(4*3)-num_ctrl_symbols];	
+		break;
+
+		case 5:
+			G_value = G_tab[(5*3)-num_ctrl_symbols];
+		break;
+
+		case 3 :
+			G_value = G_tab[(6*3)-num_ctrl_symbols];
+		break;
+
+		default: 
+
+			printf("Error getting G");
+
+	}
+  
+    return(G_value);
+  
+}
+
 

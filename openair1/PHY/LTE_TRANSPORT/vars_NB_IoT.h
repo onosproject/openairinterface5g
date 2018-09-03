@@ -30,6 +30,7 @@ unsigned char cs_ri_extended_NB_IoT[4]  = {0,3,5,8};
 unsigned char cs_ack_normal_NB_IoT[4]   = {2,3,8,9};
 unsigned char cs_ack_extended_NB_IoT[4] = {1,2,6,7};
 
+int G_tab[18] = {200,224,240,208,232,256,220,244,268,216,240,256,224,248,264,236,260,284}; 
 
 int8_t wACK_RX_NB_IoT[5][4] = {{-1,-1,-1,-1},{-1,1,-1,1},{-1,-1,1,1},{-1,1,1,-1},{1,1,1,1}};
 

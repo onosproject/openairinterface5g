@@ -642,6 +642,10 @@ typedef struct {
   ////////////////////////// NB-IoT testing //////////////////////////////
   uint8_t subcarrier_spacing;
 
+  uint16_t control_region_size;
+
+  uint8_t nb_antennas_tx_NB_IoT; // to replace with NB_IoT_frame_params
+
   NPUSCH_CONFIG_COMMONx npusch_config_common;
   ///////////////////////////////////////////////////////////////////// 
 

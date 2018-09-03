@@ -190,7 +190,7 @@ NB_IoT_eNB_NULSCH_t *new_eNB_ulsch_NB_IoT(uint8_t max_turbo_iterations,uint8_t N
 void clean_eNb_ulsch_NB_IoT(NB_IoT_eNB_NULSCH_t *ulsch)
 {
 
-  unsigned char i;
+ // unsigned char i;
 
   //ulsch = (LTE_eNB_ULSCH_t *)malloc16(sizeof(LTE_eNB_ULSCH_t));
   if (ulsch) {

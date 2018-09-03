@@ -137,7 +137,7 @@ int dlsch_modulation_NB_IoT(int32_t 				**txdataF,
 							int16_t 				amp,
 							LTE_DL_FRAME_PARMS 	    *frame_parms,
 							uint8_t 				control_region_size,      // control region size for LTE , values between 0..3, (0 for stand-alone / 1, 2 or 3 for in-band)
-							NB_IoT_DL_eNB_SIB_t      *dlsch0, //NB_IoT_eNB_NDLSCH_t
+							NB_IoT_DL_eNB_HARQ_t      *dlsch0, //NB_IoT_eNB_NDLSCH_t
 							int 					G,						  // number of bits per subframe
 							unsigned int				npdsch_data_subframe,     // subframe index of the data table of npdsch channel (G*Nsf)  , values are between 0..Nsf  			
 							unsigned int				subframe,
@@ -196,82 +196,3 @@ int dlsch_modulation_NB_IoT(int32_t 				**txdataF,
   return (re_allocated);
 }
 
-////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////
-////////////////////////////tmp functions /////////////////////////////////
-int dlsch_modulation_rar_NB_IoT(int32_t 				**txdataF,
-							int16_t 				amp,
-							LTE_DL_FRAME_PARMS 	    *frame_parms,
-							uint8_t 				control_region_size,      // control region size for LTE , values between 0..3, (0 for stand-alone / 1, 2 or 3 for in-band)
-							NB_IoT_DL_eNB_RAR_t      *dlsch0, //NB_IoT_eNB_NDLSCH_t
-							int 					G,						  // number of bits per subframe
-							unsigned int				npdsch_data_subframe,     // subframe index of the data table of npdsch channel (G*Nsf)  , values are between 0..Nsf  			
-							unsigned int				subframe,
-							unsigned short 			NB_IoT_RB_ID,
-							uint8_t option)
-{
-    //uint8_t harq_pid = dlsch0->current_harq_pid;
-    //NB_IoT_DL_eNB_HARQ_t *dlsch0_harq = dlsch0->harq_processes[harq_pid];
-    uint32_t 		jj = 0;
-	uint32_t 		re_allocated,symbol_offset;
-    uint16_t 		l;
-    uint8_t 		id_offset,pilot_shift,pilots = 0; 
-	unsigned short 	bandwidth_even_odd;
-    unsigned short 	NB_IoT_start, RB_IoT_ID;
-
-    re_allocated = 0;
-	id_offset    = 0;
-	pilot_shift  = 0;
-	// testing if the total number of RBs is even or odd 
-	bandwidth_even_odd  =  frame_parms->N_RB_DL % 2; 	 	// 0 even, 1 odd
-	RB_IoT_ID 			=  NB_IoT_RB_ID;
-	// step  5, 6, 7   									 	// modulation and mapping (slot 1, symbols 0..3)
-	for (l=control_region_size; l<14; l++) { 								 	// loop on OFDM symbols	
-		if((l>=4 && l<=7) || (l>=11 && l<=13))
-		{
-			pilots = 1;
-			if(l==4 || l==6 || l==11 || l==13)
-			{
-				pilot_shift  = 1;
-			}
-		} else {
-			pilots = 0;
-		}
-		id_offset = frame_parms->Nid_cell % 6;    			// Cell_ID_NB_IoT % 6
-		if(RB_IoT_ID < (frame_parms->N_RB_DL/2))
-		{
-			NB_IoT_start = frame_parms->ofdm_symbol_size - 12*(frame_parms->N_RB_DL/2) - (bandwidth_even_odd*6) + 12*(RB_IoT_ID % (int)(ceil(frame_parms->N_RB_DL/(float)2)));
-		} else {
-			NB_IoT_start = 1 + (bandwidth_even_odd*6) + 12*(RB_IoT_ID % (int)(ceil(frame_parms->N_RB_DL/(float)2)));
-		}
-		symbol_offset = (14*subframe*frame_parms->ofdm_symbol_size) + frame_parms->ofdm_symbol_size*l + NB_IoT_start;  						// symbol_offset = 512 * L + NB_IOT_RB start
-
-		if(option ==2)
-		{
-			allocate_REs_in_RB_NB_IoT(frame_parms,
-								  txdataF,
-								  &jj,
-								  symbol_offset,
-								  &dlsch0->s_e[236],
-								  pilots,
-								  amp,
-								  id_offset,
-								  pilot_shift,
-								  &re_allocated);
-		} else {
-		      allocate_REs_in_RB_NB_IoT(frame_parms,
-								  txdataF,
-								  &jj,
-								  symbol_offset,
-								  &dlsch0->s_e[0],
-								  pilots,
-								  amp,
-								  id_offset,
-								  pilot_shift,
-								  &re_allocated);
-	    }
-	}
-	
- // VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_ENB_DLSCH_MODULATION, VCD_FUNCTION_OUT);
-  return (re_allocated);
-}

@@ -141,7 +141,7 @@ uint8_t *get_NB_IoT_MIB(
 }
 
 
-uint8_t *get_NB_IoT_MIB_size(void)
+uint8_t get_NB_IoT_MIB_size(void)
 {
   // CC_ID=0
   return eNB_rrc_inst_NB_IoT->carrier[0].sizeof_MIB_NB_IoT;
@@ -171,7 +171,7 @@ uint8_t *get_NB_IoT_SIB1(uint8_t Mod_id, int CC_id,
   return eNB_rrc_inst_NB_IoT->carrier[0].SIB1_NB_IoT;
 }
 
-uint8_t *get_NB_IoT_SIB1_size(void)
+uint8_t get_NB_IoT_SIB1_size(void)
 {
   return eNB_rrc_inst_NB_IoT->carrier[0].sizeof_SIB1_NB_IoT;
 }
@@ -181,7 +181,7 @@ uint8_t *get_NB_IoT_SIB23(void)
   return eNB_rrc_inst_NB_IoT->carrier[0].SIB23_NB_IoT;
 }
 
-uint8_t *get_NB_IoT_SIB23_size(void)
+uint8_t get_NB_IoT_SIB23_size(void)
 {
   return eNB_rrc_inst_NB_IoT->carrier[0].sizeof_SIB23_NB_IoT;
 }

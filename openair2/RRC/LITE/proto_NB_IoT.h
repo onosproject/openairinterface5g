@@ -44,7 +44,7 @@ uint8_t *get_NB_IoT_MIB(
     uint32_t frame,
     uint32_t hyper_frame);
 
-uint8_t *get_NB_IoT_MIB_size(void);
+uint8_t get_NB_IoT_MIB_size(void);
 
 uint8_t *get_NB_IoT_SIB1(uint8_t Mod_id, int CC_id,
         rrc_eNB_carrier_data_NB_IoT_t *carrier,
@@ -57,11 +57,11 @@ uint8_t *get_NB_IoT_SIB1(uint8_t Mod_id, int CC_id,
         uint32_t subframe,
         uint32_t frame,
         uint32_t hyper_frame);
-uint8_t *get_NB_IoT_SIB1_size(void);
+uint8_t get_NB_IoT_SIB1_size(void);
 
 uint8_t *get_NB_IoT_SIB23(void);
 
-uint8_t *get_NB_IoT_SIB23_size(void);
+uint8_t get_NB_IoT_SIB23_size(void);
 
 long *get_NB_IoT_SIB1_eutracontrolregionsize(void);
 

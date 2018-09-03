@@ -31,6 +31,7 @@ extern unsigned char cs_ri_extended_NB_IoT[4];
 extern unsigned char cs_ack_normal_NB_IoT[4];
 extern unsigned char cs_ack_extended_NB_IoT[4];
 extern int8_t wACK_RX_NB_IoT[5][4];
+extern int G_tab[18];
 
 
 extern short conjugate[8],conjugate2[8];
