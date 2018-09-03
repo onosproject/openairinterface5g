@@ -81,21 +81,32 @@ void conjugate_transpose (int rows_A, int col_A, float complex *A, float complex
   free(B);
  }
 
-void H_hermH_plus_sigma2I (int row_A, int col_A, float complex *A, float sigma2, float complex *Result)
+void H_hermH_plus_sigma2I (int N, int M, float complex *A, float sigma2, float complex *Result)
 {
   //C := alpha*op(A)*op(B) + beta*C,
   enum CBLAS_TRANSPOSE transa = CblasConjTrans;
   enum CBLAS_TRANSPOSE transb = CblasNoTrans;
+  int rows_opA = N; // number of rows in op(A) and in C
+  int col_opB = N; //number of columns of op(B) and in C
+  int col_opA = N; //number of columns in op(A) and rows in op(B)
+  int col_C = N; //number of columns in B
   float complex alpha = 1.0+I*0;
+  int lda  = col_opA;
   float complex beta = 1.0 + I*0;
+  int ldc = col_opA;
   int i;
 
-  for (i = 0; i < row_A*col_A; i += row_A+1)
-    Result[i]=sigma2*(1.0+I*0);
+  float complex* C = (float complex*)calloc(ldc*col_opB, sizeof(float complex));
 
-  cblas_cgemm(CblasColMajor, transa, transb, col_A, col_A, row_A, &alpha, A, row_A, A, row_A, &beta, Result, col_A);
+  for (i=0; i<lda*col_C; i+=N+1)
+    C[i]=sigma2*(1.0+I*0);
 
+  cblas_cgemm(CblasRowMajor, transa, transb, rows_opA, col_opB, col_opA, &alpha, A, lda, A, lda, &beta, C, ldc);
+
+  memcpy(Result, C, N*M*sizeof(float complex));
+  free(C);
  }
+
 
  void HH_herm_plus_sigma2I (int rows_A, int col_A, float complex *A, float sigma2, float complex *Result)
 {
