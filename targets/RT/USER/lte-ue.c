@@ -1042,9 +1042,7 @@ static void *UE_phy_stub_single_thread_rxn_txnp4(void *arg) {
 
     	UL_INFO->sr_ind.sr_indication_body.sr_pdu_list = (nfapi_sr_indication_pdu_t*)malloc(NB_UE_INST*sizeof(nfapi_sr_indication_pdu_t));
      	UL_INFO->sr_ind.sr_indication_body.number_of_srs = 0;
-        UL_INFO->cqi_ind.cqi_pdu_list =  (nfapi_cqi_indication_pdu_t*)malloc(NB_UE_INST*sizeof(nfapi_cqi_indication_pdu_t));
-        UL_INFO->cqi_ind.cqi_raw_pdu_list = (nfapi_cqi_indication_raw_pdu_t*)malloc(NB_UE_INST*sizeof(nfapi_cqi_indication_raw_pdu_t));
-        UL_INFO->cqi_ind.number_of_cqis = 0;
+
         UL_INFO->cqi_ind.cqi_pdu_list =  (nfapi_cqi_indication_pdu_t*)malloc(NB_UE_INST*sizeof(nfapi_cqi_indication_pdu_t));
         UL_INFO->cqi_ind.cqi_raw_pdu_list = (nfapi_cqi_indication_raw_pdu_t*)malloc(NB_UE_INST*sizeof(nfapi_cqi_indication_raw_pdu_t));
         UL_INFO->cqi_ind.number_of_cqis = 0;
