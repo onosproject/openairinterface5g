@@ -718,7 +718,7 @@ if(proc->flag_msg4 == 1 && proc->counter_msg4 > 0)
                                                 1);                   //////////// G*2   // option =2 for msg4
 
 
-                       dlsch_sib_scrambling_rar_NB_IoT(fp,
+                       dlsch_scrambling_Gen_NB_IoT(fp,
                                                        rar,
                                                        236,
                                                        frame,
@@ -1268,7 +1268,7 @@ if(subframe !=5 && subframe !=0)
                                        1);                   //////////// G*2
         
         
-                                   dlsch_sib_scrambling_rar_NB_IoT(fp,
+                                   dlsch_scrambling_Gen_NB_IoT(fp,
                                          rar,
                                          236,
                                          frame,
@@ -1316,7 +1316,7 @@ if(subframe !=5 && subframe !=0)
                                                           1);                   //////////// G*2
         
         
-                                        dlsch_sib_scrambling_rar_NB_IoT(fp,
+                                        dlsch_scrambling_Gen_NB_IoT(fp,
                                                               rar,
                                                                 236,
                                                               frame,

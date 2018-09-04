@@ -120,18 +120,6 @@ void npbch_scrambling(LTE_DL_FRAME_PARMS  *frame_parms,
                       uint8_t                *npbch_e,
                       uint32_t               length);
 
-void dlsch_sib_scrambling_NB_IoT(LTE_DL_FRAME_PARMS     *frame_parms,
-                                  NB_IoT_DL_eNB_SIB_t    *dlsch,  //NB_IoT_eNB_NDLSCH_t
-                                  int                    tot_bits,                
-                                  uint16_t                Nf,
-                                  uint8_t                Ns); 
-
-void dlsch_sib_scrambling_rar_NB_IoT(LTE_DL_FRAME_PARMS     *frame_parms,
-                                  NB_IoT_DL_eNB_HARQ_t    *dlsch,
-                                  int                    tot_bits,                // total number of bits to transmit
-                                  uint16_t                Nf,              // Nf is the frame number (0..9)
-                                  uint8_t                Ns,
-                                  uint32_t               rnti); 
 
 void dlsch_scrambling_Gen_NB_IoT(LTE_DL_FRAME_PARMS         *frame_parms,
                                   NB_IoT_eNB_NDLSCH_t       *dlsch,
@@ -306,7 +294,7 @@ int dlsch_modulation_NB_IoT(int32_t               **txdataF,
                             unsigned int            npdsch_data_subframe,     // subframe index of the data table of npdsch channel (G*Nsf)  , values are between 0..Nsf        
                             unsigned int            subframe,
                             unsigned short        NB_IoT_RB_ID);
-
+/*
 int dlsch_modulation_rar_NB_IoT(int32_t         **txdataF,
                                 int16_t         amp,
                                 LTE_DL_FRAME_PARMS      *frame_parms,
@@ -317,7 +305,7 @@ int dlsch_modulation_rar_NB_IoT(int32_t         **txdataF,
                                 unsigned int        subframe,
                                 unsigned short      NB_IoT_RB_ID,
                                 uint8_t             option);
-
+*/
 int32_t dlsch_encoding_NB_IoT(unsigned char              *a,
                               NB_IoT_DL_eNB_HARQ_t        *dlsch, // NB_IoT_eNB_NDLSCH_t
                               uint8_t                    Nsf,        // number of subframes required for npdsch pdu transmission calculated from Isf (3GPP spec table)

@@ -614,7 +614,7 @@ typedef struct {
 typedef struct {
   
   /// Allocated RNTI (0 means DLSCH_t is not currently used)
-  uint16_t                rnti;
+  uint32_t                rnti;
   /// Active flag for baseband transmitter processing
   uint8_t                 active;
   /// Indicator of TX activation per subframe.  Used during PUCCH detection for ACK/NAK.

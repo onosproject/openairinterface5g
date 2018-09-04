@@ -338,11 +338,12 @@ void common_signal_procedures_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
                                   1);                   //////////// G*2
         
         
-             dlsch_sib_scrambling_NB_IoT(fp,
+             dlsch_scrambling_Gen_NB_IoT(fp,
                                          sib1,
                                          1888,
                                          frame,
-                                         subframe*2);
+                                         subframe*2,
+                                         eNB->ndlsch_SIB1->rnti);
         }
 
         dlsch_modulation_NB_IoT(txdataF,
@@ -375,11 +376,12 @@ void common_signal_procedures_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
                                   2);                   //////////// G*2
         
         
-            dlsch_sib_scrambling_NB_IoT(fp,                    // is called only in subframe 4
+            dlsch_scrambling_Gen_NB_IoT(fp,                    // is called only in subframe 4
                                          sib23,
                                          1888,            //////   total_bits
                                          frame,
-                                         subframe*2);
+                                         subframe*2,
+                                         eNB->ndlsch_SIB23->rnti);
         }
 
         if( subframe < 5 )
