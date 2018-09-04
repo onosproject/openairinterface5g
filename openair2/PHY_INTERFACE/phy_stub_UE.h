@@ -17,14 +17,14 @@
 //#include "openair1/PHY/defs.h"
 //#include "openair1/PHY/LTE_TRANSPORT/defs.h"
 
-UL_IND_t *UL_INFO;
 FILL_UL_INFO_MUTEX fill_ul_mutex;
-nfapi_tx_request_pdu_t* tx_request_pdu_list;
+extern UL_IND_t *UL_INFO;
+extern nfapi_tx_request_pdu_t* tx_request_pdu_list;
 // New
 /// Pointers to config_request types. Used from nfapi callback functions.
-nfapi_dl_config_request_t* dl_config_req;
-nfapi_ul_config_request_t* ul_config_req;
-nfapi_hi_dci0_request_t* hi_dci0_req;
+extern nfapi_dl_config_request_t* dl_config_req;
+extern nfapi_ul_config_request_t* ul_config_req;
+extern nfapi_hi_dci0_request_t* hi_dci0_req;
 
 int	tx_req_num_elems;
 
