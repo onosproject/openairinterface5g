@@ -2224,7 +2224,8 @@ void init_eNB(eNB_func_t node_function[], eNB_timing_t node_timing[],int nb_inst
         eNB->fh_asynch            = (eNB->node_timing == synch_to_other) ? fh_if4p5_asynch_UL : NULL;
 	eNB->rfdevice.host_type   = BBU_HOST;
 	eNB->ifdevice.host_type   = BBU_HOST;
-  	eNB->ifdevice.nb_eth = 1;
+  	eNB->ifdevice.nb_eth = NB_RRH_GW_INST;
+        printf("NB_RRH_GW_INST is %d\n",NB_RRH_GW_INST);
         ret = openair0_transport_load(&eNB->ifdevice, openair0_cfg, eth_params);
         printf("openair0_transport_init returns %d for CC_id %d\n",ret,CC_id);
         if (ret<0) {

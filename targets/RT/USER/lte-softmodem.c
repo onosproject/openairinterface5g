@@ -1071,6 +1071,7 @@ static void get_options (int argc, char **argv) {
 
         /* Update some simulation parameters */
 	printf("lte-softmodem reads RCC configuration file for %d RCCs\n",enb_properties->number);
+	NB_RRH_GW_INST+=enb_properties->properties[0]->nb_rrh_gw;
         for (i=0; i < enb_properties->number; i++) {
             AssertFatal (MAX_NUM_CCs == enb_properties->properties[i]->nb_cc,
                          "lte-softmodem compiled with MAX_NUM_CCs=%d, but only %d CCs configured for eNB %d!",

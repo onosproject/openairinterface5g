@@ -81,6 +81,7 @@ extern unsigned char NB_eNB_INST;
 extern unsigned char NB_UE_INST;
 extern unsigned char NB_RN_INST;
 #endif
+extern unsigned char NB_RRH_GW_INST;
 
 extern unsigned int ULSCH_max_consecutive_errors;
 extern int flag_LA;

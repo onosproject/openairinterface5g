@@ -313,7 +313,7 @@ struct openair0_device_t {
       @param timestamp The timestamp at whicch the first sample MUST be sent 
       @param buff Buffer which holds the samples
       @param nsamps number of samples to be sent
-      @param antenna_id index of the antenna if the device has multiple anteannas
+      @param antenna_id index of the antenna if the device has multiple antennas
       @param flags flags must be set to TRUE if timestamp parameter needs to be applied
   */   
   int (*trx_write_func)(openair0_device *device, openair0_timestamp timestamp, void **buff, int nsamps,int antenna_id, int flags);

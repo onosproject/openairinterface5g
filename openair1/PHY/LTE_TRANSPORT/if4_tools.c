@@ -61,7 +61,7 @@ void send_IF4p5(PHY_VARS_eNB *eNB, int frame, int subframe, uint16_t packet_type
   IF4p5_header_t *packet_header=NULL;
   eth_state_t *eth = (eth_state_t*) (eNB->ifdevice.priv);
   int nsym = fp->symbols_per_tti;
-  
+  //printf("eNB %d: from %s to %s (frame %d,subframe %d)\n",eNB->Mod_id,eNB->eth_params->my_addr,eNB->eth_params->remote_addr, frame,subframe);
   if (eNB->CC_id==0) VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_SEND_IF4, 1 );   
 
   if (packet_type == IF4p5_PDLFFT) {
@@ -73,8 +73,8 @@ void send_IF4p5(PHY_VARS_eNB *eNB, int frame, int subframe, uint16_t packet_type
     slotoffsetF = (subframe)*(fp->ofdm_symbol_size)*((fp->Ncp==1) ? 12 : 14) + 1;
     blockoffsetF = slotoffsetF + fp->ofdm_symbol_size - db_halflength - 1; 
 
-
-    if (eth->flags == ETH_RAW_IF4p5_MODE) {
+ 
+    if (eth[0].flags == ETH_RAW_IF4p5_MODE) {
       packet_header = (IF4p5_header_t *)(tx_buffer + MAC_HEADER_SIZE_BYTES);
       data_block = (uint16_t*)(tx_buffer + MAC_HEADER_SIZE_BYTES + sizeof_IF4p5_header_t);
     } else {
@@ -124,7 +124,7 @@ void send_IF4p5(PHY_VARS_eNB *eNB, int frame, int subframe, uint16_t packet_type
       blockoffsetF += (fp->ofdm_symbol_size*(fp->symbols_per_tti-nsym));
     }
 
-    if (eth->flags == ETH_RAW_IF4p5_MODE) {
+    if (eth[0].flags == ETH_RAW_IF4p5_MODE) {
       packet_header = (IF4p5_header_t *)(tx_buffer + MAC_HEADER_SIZE_BYTES);
       data_block = (uint16_t*)(tx_buffer + MAC_HEADER_SIZE_BYTES + sizeof_IF4p5_header_t);
     } else {
@@ -188,7 +188,7 @@ void send_IF4p5(PHY_VARS_eNB *eNB, int frame, int subframe, uint16_t packet_type
     }  
     gen_IF4p5_prach_header(packet_header, frame, subframe);
 
-    if (eth->flags == ETH_RAW_IF4p5_MODE) {
+    if (eth[0].flags == ETH_RAW_IF4p5_MODE) {
       memcpy((int16_t*)(tx_buffer_prach + MAC_HEADER_SIZE_BYTES + sizeof_IF4p5_header_t),
              (&rxsigF[0][k]), 
              PRACH_BLOCK_SIZE_BYTES);
@@ -225,9 +225,11 @@ void recv_IF4p5(PHY_VARS_eNB *eNB, int *frame, int *subframe, uint16_t *packet_t
 
   uint16_t element_id;
   uint16_t db_fulllength, db_halflength; 
-  int slotoffsetF=0, blockoffsetF=0; 
+  int slotoffsetF=0, blockoffsetF=0;
+  int k;
+ 
   eth_state_t *eth = (eth_state_t*) (eNB->ifdevice.priv);
-
+// for (k=0;k<eNB->ifdevice.nb_eth;k++){
   if (eNB->CC_id==0) VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_RECV_IF4, 1 );   
   
   if (eNB->node_function == NGFI_RRU_IF4p5) {
@@ -249,7 +251,7 @@ void recv_IF4p5(PHY_VARS_eNB *eNB, int *frame, int *subframe, uint16_t *packet_t
     perror("ETHERNET read");
   }
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_READ_IF, 0 );
-  if (eth->flags == ETH_RAW_IF4p5_MODE) {
+  if (eth[k].flags == ETH_RAW_IF4p5_MODE) {
     packet_header = (IF4p5_header_t*) (rx_buffer+MAC_HEADER_SIZE_BYTES);
     data_block = (uint16_t*) (rx_buffer+MAC_HEADER_SIZE_BYTES+sizeof_IF4p5_header_t);
   } else {
@@ -310,7 +312,7 @@ void recv_IF4p5(PHY_VARS_eNB *eNB, int *frame, int *subframe, uint16_t *packet_t
     // FIX: hard coded prach samples length
     db_fulllength = PRACH_HARD_CODED_NUM_SAMPLES;
 
-    if (eth->flags == ETH_RAW_IF4p5_MODE) {		
+    if (eth[k].flags == ETH_RAW_IF4p5_MODE) {		
       memcpy((&rxsigF[0][0]), 
              (int16_t*) (rx_buffer+MAC_HEADER_SIZE_BYTES+sizeof_IF4p5_header_t), 
              PRACH_BLOCK_SIZE_BYTES);
@@ -325,7 +327,8 @@ void recv_IF4p5(PHY_VARS_eNB *eNB, int *frame, int *subframe, uint16_t *packet_t
     AssertFatal(1==0, "recv_IF4p5 - Unknown packet_type %x", *packet_type);            
   }
 
-  if (eNB->CC_id==0) VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_RECV_IF4, 0 );     
+  if (eNB->CC_id==0) VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_RECV_IF4, 0 );
+ //}     
   return;   
 }
 
@@ -375,7 +378,7 @@ void malloc_IF4p5_buffer(PHY_VARS_eNB *eNB) {
   eth_state_t *eth = (eth_state_t*) (eNB->ifdevice.priv);
   int i;
 
-  if (eth->flags == ETH_RAW_IF4p5_MODE) {
+  if (eth[0].flags == ETH_RAW_IF4p5_MODE) {
     for (i=0;i<10;i++)
       eNB->ifbuffer.tx[i]       = malloc(RAW_IF4p5_PRACH_SIZE_BYTES);
     eNB->ifbuffer.tx_prach = malloc(RAW_IF4p5_PRACH_SIZE_BYTES);
