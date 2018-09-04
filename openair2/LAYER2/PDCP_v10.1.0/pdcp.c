@@ -369,10 +369,8 @@ boolean_t pdcp_data_req(
 
     rlc_status = rlc_data_req(ctxt_pP, srb_flagP, MBMS_FLAG_NO, rb_idP, muiP, confirmP, pdcp_pdu_size, pdcp_pdu_p
 #if (RRC_VERSION >= MAKE_VERSION(14, 0, 0))
-                             //,sourceL2Id
-                             //,destinationL2Id
-                             ,NULL
-                             ,NULL
+                             ,sourceL2Id
+                             ,destinationL2Id
 #endif
                              );
 
