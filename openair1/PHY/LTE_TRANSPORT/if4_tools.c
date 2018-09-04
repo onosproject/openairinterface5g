@@ -65,6 +65,7 @@ void send_IF4p5(PHY_VARS_eNB *eNB, int frame, int subframe, uint16_t packet_type
   IF4p5_header_t *packet_header=NULL;
   eth_state_t *eth = (eth_state_t*) (eNB->ifdevice.priv);
   int nsym = fp->symbols_per_tti;
+ // printf("eNB %d: send_if4p5 from %s to %s (frame %d, subframe %d)\n",eNB->Mod_id,eNB->eth_params->my_addr,eNB->eth_params->remote_addr,frame,subframe);
   
   if (eNB->CC_id==0) VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_SEND_IF4, 1 );   
 

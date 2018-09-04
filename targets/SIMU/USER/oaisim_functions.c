@@ -1094,6 +1094,7 @@ int eNB_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void *
   // if we're at a subframe boundary generate UL signals for this eNB
 
   while (nsamps) {
+    //printf("nsamps %d, eNB %d\n",nsamps,PHY_vars_eNB_g[eNB_id][CC_id]->Mod_id);
     while (current_eNB_rx_timestamp[eNB_id][CC_id] == last) {
       //LOG_D(EMU,"eNB: current TS %"PRId64", last TS %"PRId64", sleeping\n",current_eNB_rx_timestamp[eNB_id][CC_id],last_eNB_rx_timestamp[eNB_id][CC_id]);
       usleep(500);
@@ -1188,6 +1189,7 @@ int eNB_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void *
   }
   
   last_eNB_rx_timestamp[eNB_id][CC_id] = last;
+  //printf("end of enb_trx_read function\n");
   return ret;
 }
 
