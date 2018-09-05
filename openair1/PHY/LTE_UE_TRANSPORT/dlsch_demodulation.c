@@ -1797,6 +1797,9 @@ void dlsch_channel_compensation_core(int **rxdataF_ext,
             dl_ch_mag128[0] = _mm_mulhi_epi16(dl_ch_mag128[0],QAM_amp128);
             dl_ch_mag128[0] = _mm_slli_epi16(dl_ch_mag128[0],1);
 
+            dl_ch_mag128b[0] = _mm_mulhi_epi16(dl_ch_mag128b[0],QAM_amp128b);
+            dl_ch_mag128b[0] = _mm_slli_epi16(dl_ch_mag128b[0],1);
+
           }
 
           // multiply by conjugated channel
