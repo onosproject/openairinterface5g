@@ -1217,7 +1217,7 @@ void rx_fh_if4p5(PHY_VARS_eNB *eNB,int *frame,int *subframe) {
     if (eNB->CC_id==0)
       proc->frame_offset = 0;
     else
-      proc->frame_offset = PHY_vars_eNB_g[0][0]->proc.frame_rx;
+      proc->frame_offset = PHY_vars_eNB_g[0][eNB->CC_id]->proc.frame_rx;
 
     *frame = proc->frame_rx;//(proc->frame_rx + proc->frame_offset)&1023;
     *subframe = proc->subframe_rx;        
@@ -2065,7 +2065,8 @@ void init_eNB(eNB_func_t node_function[], eNB_timing_t node_timing[],int nb_inst
   int inst;
   PHY_VARS_eNB *eNB;
   int ret;
-
+  
+  printf("lte-enb: MAX_NUM_CCs = %d\n",MAX_NUM_CCs);
   for (inst=0;inst<nb_inst;inst++) {
     for (CC_id=0;CC_id<MAX_NUM_CCs;CC_id++) {
       eNB = PHY_vars_eNB_g[inst][CC_id]; 
@@ -2225,8 +2226,7 @@ void init_eNB(eNB_func_t node_function[], eNB_timing_t node_timing[],int nb_inst
 	eNB->rfdevice.host_type   = BBU_HOST;
 	eNB->ifdevice.host_type   = BBU_HOST;
   	eNB->ifdevice.nb_eth = NB_RRH_GW_INST;
-        printf("NB_RRH_GW_INST is %d\n",NB_RRH_GW_INST);
-        ret = openair0_transport_load(&eNB->ifdevice, openair0_cfg, eth_params);
+        ret = openair0_transport_load(&eNB->ifdevice, &openair0_cfg[CC_id]/*openair0_cfg*/, eNB->eth_params);
         printf("openair0_transport_init returns %d for CC_id %d\n",ret,CC_id);
         if (ret<0) {
           printf("Exiting, cannot initialize transport protocol\n");
@@ -2239,7 +2239,6 @@ void init_eNB(eNB_func_t node_function[], eNB_timing_t node_timing[],int nb_inst
 	eNB->do_precoding   = 0;
 	eNB->do_prach       = do_prach;
 	eNB->fep            = NULL;
-
 	eNB->td             = ulsch_decoding_data;//(single_thread_flag==1) ? ulsch_decoding_data_2thread : ulsch_decoding_data;
 	eNB->te             = dlsch_encoding;//(single_thread_flag==1) ? dlsch_encoding_2threads : dlsch_encoding;
 	eNB->proc_uespec_rx = phy_procedures_eNB_uespec_RX;

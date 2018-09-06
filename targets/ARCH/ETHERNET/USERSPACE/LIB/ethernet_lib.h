@@ -209,7 +209,7 @@ void dump_iqs(char * buff, int iq_cnt);
 * \note
 * @ingroup  _oai
 */
-int ethernet_tune(openair0_device *device, unsigned int option, int value, int eth_index);
+int ethernet_tune(openair0_device *device, unsigned int option, int value);
 
 
 
@@ -221,12 +221,12 @@ int ethernet_tune(openair0_device *device, unsigned int option, int value, int e
 * \note
 * @ingroup  _oai
 */
-int eth_socket_init_udp(openair0_device *device, int eth_index);
+int eth_socket_init_udp(openair0_device *device);
 int trx_eth_write_udp(openair0_device *device, openair0_timestamp timestamp, void **buff, int nsamps,int cc, int flags);
 int trx_eth_read_udp(openair0_device *device, openair0_timestamp *timestamp, void **buff, int nsamps, int cc);
 //int trx_eth_write_udp_IF4(openair0_device *device, openair0_timestamp timestamp, void **buff, int nsamps,int cc, int flags);
 //int trx_eth_read_udp_IF4(openair0_device *device, openair0_timestamp *timestamp, void **buff, int nsamps, int cc);
-int eth_get_dev_conf_udp(openair0_device *device, int eth_index);
+int eth_get_dev_conf_udp(openair0_device *device);
 
 /*! \fn static int eth_set_dev_conf_udp(openair0_device *device)
 * \brief
@@ -236,7 +236,7 @@ int eth_get_dev_conf_udp(openair0_device *device, int eth_index);
 * \note
 * @ingroup  _oai
 */
-int eth_set_dev_conf_udp(openair0_device *device, int eth_index);
+int eth_set_dev_conf_udp(openair0_device *device);
 int eth_socket_init_raw(openair0_device *device);
 int trx_eth_write_raw(openair0_device *device, openair0_timestamp timestamp, void **buff, int nsamps,int cc, int flags);
 int trx_eth_read_raw(openair0_device *device, openair0_timestamp *timestamp, void **buff, int nsamps, int cc);

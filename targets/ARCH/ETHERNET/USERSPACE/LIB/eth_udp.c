@@ -56,9 +56,9 @@ uint16_t pck_seq_num = 1;
 uint16_t pck_seq_num_cur=0;
 uint16_t pck_seq_num_prev=0;
 
-int eth_socket_init_udp(openair0_device *device, int eth_index) {
+int eth_socket_init_udp(openair0_device *device) {
 
-  printf("eth_udp: Number of eths is %d\n",device->nb_eth);
+  //printf("eth_udp: Number of eths is %d\n",device->nb_eth);
   eth_state_t *eth = (eth_state_t*)device->priv;
   char str_local[INET_ADDRSTRLEN];
   char str_remote[INET_ADDRSTRLEN];
@@ -70,16 +70,16 @@ int eth_socket_init_udp(openair0_device *device, int eth_index) {
   int enable=1;
 
   if (device->host_type == RRH_HOST ) {
-    local_ip   = device->openair0_cfg[eth_index].my_addr;   
-    local_port = device->openair0_cfg[eth_index].my_port;
+    local_ip   = device->openair0_cfg->my_addr;   
+    local_port = device->openair0_cfg->my_port;
     remote_ip   = "0.0.0.0";   
     remote_port =  0;   
     printf("[%s] local ip addr %s port %d\n", "RRH", local_ip, local_port);    
   } else {
-    local_ip   = device->openair0_cfg[eth_index].my_addr;   
-    local_port = device->openair0_cfg[eth_index].my_port;
-    remote_ip   = device->openair0_cfg[eth_index].remote_addr;
-    remote_port = device->openair0_cfg[eth_index].remote_port;  
+    local_ip   = device->openair0_cfg->my_addr;   
+    local_port = device->openair0_cfg->my_port;
+    remote_ip   = device->openair0_cfg->remote_addr;
+    remote_port = device->openair0_cfg->remote_port;  
     printf("[%s] local ip addr %s port %d\n","BBU", local_ip, local_port);    
   }
   
@@ -88,43 +88,43 @@ int eth_socket_init_udp(openair0_device *device, int eth_index) {
   sock_type=SOCK_DGRAM;
   sock_proto=IPPROTO_UDP;
   
-  printf("i = %d\n",eth_index);
-  if ((eth[eth_index].sockfd = socket(sock_dom, sock_type, sock_proto)) == -1) {
+  //printf("i = %d\n",eth_index);
+  if ((eth->sockfd = socket(sock_dom, sock_type, sock_proto)) == -1) {
 	perror("ETHERNET: Error opening socket");
 	exit(0);
   }
 	  
   /* initialize addresses */
-  bzero((void *)&(eth[eth_index].dest_addr), sizeof(eth[eth_index].dest_addr));
-  bzero((void *)&(eth[eth_index].local_addr), sizeof(eth[eth_index].local_addr));
+  bzero((void *)&(eth->dest_addr), sizeof(eth->dest_addr));
+  bzero((void *)&(eth->local_addr), sizeof(eth->local_addr));
 	  
 
-  eth[eth_index].addr_len = sizeof(struct sockaddr_in);
+  eth->addr_len = sizeof(struct sockaddr_in);
 
-  eth[eth_index].dest_addr.sin_family = AF_INET;
-  inet_pton(AF_INET,remote_ip,&(eth[eth_index].dest_addr.sin_addr.s_addr));
-  eth[eth_index].dest_addr.sin_port=htons(remote_port);
-  inet_ntop(AF_INET, &(eth[eth_index].dest_addr.sin_addr), str_remote, INET_ADDRSTRLEN);
+  eth->dest_addr.sin_family = AF_INET;
+  inet_pton(AF_INET,remote_ip,&(eth->dest_addr.sin_addr.s_addr));
+  eth->dest_addr.sin_port=htons(remote_port);
+  inet_ntop(AF_INET, &(eth->dest_addr.sin_addr), str_remote, INET_ADDRSTRLEN);
 
 
-  eth[eth_index].local_addr.sin_family = AF_INET;
-  inet_pton(AF_INET,local_ip,&(eth[eth_index].local_addr.sin_addr.s_addr));
-  eth[eth_index].local_addr.sin_port=htons(local_port);
-  inet_ntop(AF_INET, &(eth[eth_index].local_addr.sin_addr), str_local, INET_ADDRSTRLEN);
+  eth->local_addr.sin_family = AF_INET;
+  inet_pton(AF_INET,local_ip,&(eth->local_addr.sin_addr.s_addr));
+  eth->local_addr.sin_port=htons(local_port);
+  inet_ntop(AF_INET, &(eth->local_addr.sin_addr), str_local, INET_ADDRSTRLEN);
 
 	  
   /* set reuse address flag */
-  if (setsockopt(eth[eth_index].sockfd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int))) {
+  if (setsockopt(eth->sockfd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int))) {
 	perror("ETHERNET: Cannot set SO_REUSEADDR option on socket");
 	exit(0);
   }
 	  
   /* want to receive -> so bind */   
-  if (bind(eth[eth_index].sockfd,(struct sockaddr *)&eth[eth_index].local_addr,eth[eth_index].addr_len)<0) {
+  if (bind(eth->sockfd,(struct sockaddr *)&eth->local_addr,eth->addr_len)<0) {
 	  perror("ETHERNET: Cannot bind to socket");
 	  exit(0);
   } else {
-	  printf("[%s] binding to %s:%d\n","RRH",str_local,ntohs(eth[eth_index].local_addr.sin_port));
+	  printf("[%s] binding to %s:%d\n","RRH",str_local,ntohs(eth->local_addr.sin_port));
 	 }
 
   return 0;
@@ -141,20 +141,20 @@ int trx_eth_read_udp_IF4p5(openair0_device *device, openair0_timestamp *timestam
   IF4p5_header_t *test_header = (IF4p5_header_t*)(buff[0]);
   
   int block_cnt=0; 
-  int i;
+  //int i;
   //int again_cnt=0;
   packet_size = max(UDP_IF4p5_PRACH_SIZE_BYTES, max(UDP_IF4p5_PULFFT_SIZE_BYTES(nblocks), UDP_IF4p5_PDLFFT_SIZE_BYTES(nblocks)));
-  for (i=0;i<device->nb_eth;i++){
+  //for (i=0;i<device->nb_eth;i++){
 	  while(bytes_received == -1) {
 	  again:
-	    bytes_received = recvfrom(eth[i].sockfd,
+	    bytes_received = recvfrom(eth->sockfd,
 		                      buff[0],
 		                      packet_size,
 		                      0,
-		                      (struct sockaddr *)&eth[i].dest_addr,
-		                      (socklen_t *)&eth[i].addr_len);
+		                      (struct sockaddr *)&eth->dest_addr,
+		                      (socklen_t *)&eth->addr_len);
 	    if (bytes_received ==-1) {
-	      eth[i].num_rx_errors++;
+	      eth->num_rx_errors++;
 	      if (errno == EAGAIN) {
 		/*
 		again_cnt++;
@@ -167,7 +167,7 @@ int trx_eth_read_udp_IF4p5(openair0_device *device, openair0_timestamp *timestam
 		  goto again;
 		}
 		*/
-		printf("Lost IF4p5 connection with %s\n", inet_ntoa(eth[i].dest_addr.sin_addr));
+		printf("Lost IF4p5 connection with %s\n", inet_ntoa(eth->dest_addr.sin_addr));
 		exit(-1);
 	      } else if (errno == EWOULDBLOCK) {
 		block_cnt++;
@@ -186,14 +186,14 @@ int trx_eth_read_udp_IF4p5(openair0_device *device, openair0_timestamp *timestam
 	      }
 	    } else {
 	      *timestamp = test_header->sub_type;
-	      eth[i].rx_actual_nsamps = bytes_received>>1;
-	      eth[i].rx_count++;
+	      eth->rx_actual_nsamps = bytes_received>>1;
+	      eth->rx_count++;
 	    }
 	  }
 	  //printf("size of third %d subtype %d frame %d subframe %d symbol %d \n", bytes_received, test_header->sub_type, ((test_header->frame_status)>>6)&0xffff, ((test_header->frame_status)>>22)&0x000f, ((test_header->frame_status)>>26)&0x000f) ;
 
-	  eth[i].rx_nsamps = nsamps; 
-  } 
+	  eth->rx_nsamps = nsamps; 
+  //} 
   return(bytes_received);
 }
 
@@ -201,7 +201,7 @@ int trx_eth_write_udp_IF4p5(openair0_device *device, openair0_timestamp timestam
 
   int nblocks = nsamps;  
   int bytes_sent = 0;
-  int i;
+  //int i;
 
   eth_state_t *eth = (eth_state_t*)device->priv;
   
@@ -219,24 +219,24 @@ int trx_eth_write_udp_IF4p5(openair0_device *device, openair0_timestamp timestam
     printf("trx_eth_write_udp_IF4p5: unknown flags %d\n",flags);
     return(-1);
   }
-  for (i=0;i<device->nb_eth;i++){
-	  eth[i].tx_nsamps = nblocks;
-	  bytes_sent = sendto(eth[i].sockfd,
+  //for (i=0;i<device->nb_eth;i++){
+	  eth->tx_nsamps = nblocks;
+	  bytes_sent = sendto(eth->sockfd,
 				      buff[0], 
 				      packet_size,
 				      0,
-				      (struct sockaddr*)&eth[i].dest_addr,
-				      eth[i].addr_len);
+				      (struct sockaddr*)&eth->dest_addr,
+				      eth->addr_len);
 		  
 	  if (bytes_sent == -1) {
-		eth[i].num_tx_errors++;
+		eth->num_tx_errors++;
 		perror("ETHERNET WRITE: ");
 		exit(-1);
 	  } else {
-		eth[i].tx_actual_nsamps = bytes_sent>>1;
-		eth[i].tx_count++;
+		eth->tx_actual_nsamps = bytes_sent>>1;
+		eth->tx_count++;
 	  }
-  }
+  //}
   return (bytes_sent);  	  
 }
 
@@ -435,7 +435,7 @@ int trx_eth_read_udp(openair0_device *device, openair0_timestamp *timestamp, voi
 
 
 
-int eth_set_dev_conf_udp(openair0_device *device, int eth_index) {
+int eth_set_dev_conf_udp(openair0_device *device) {
 
   eth_state_t *eth = (eth_state_t*)device->priv;
   void 	      *msg;
@@ -448,15 +448,15 @@ int eth_set_dev_conf_udp(openair0_device *device, int eth_index) {
   msg=malloc(sizeof(openair0_config_t));
   msg_len=sizeof(openair0_config_t);	
   memcpy(msg,(void*)device->openair0_cfg,msg_len);
-	  if (sendto(eth[eth_index].sockfd,msg,msg_len,0,(struct sockaddr *)&eth[eth_index].dest_addr,eth[eth_index].addr_len)==-1) {
+	  if (sendto(eth->sockfd,msg,msg_len,0,(struct sockaddr *)&eth->dest_addr,eth->addr_len)==-1) {
 	    perror("ETHERNET: sendto conf_udp");
-	    printf("addr_len : %d, msg_len %zd\n",eth[eth_index].addr_len,msg_len);
+	    printf("addr_len : %d, msg_len %zd\n",eth->addr_len,msg_len);
 	    exit(0);
 	  }
   return 0;
 }
 
-int eth_get_dev_conf_udp(openair0_device *device, int eth_index) {
+int eth_get_dev_conf_udp(openair0_device *device) {
 
   eth_state_t   *eth = (eth_state_t*)device->priv;
   char 		str1[INET_ADDRSTRLEN],str[INET_ADDRSTRLEN];
@@ -465,20 +465,20 @@ int eth_get_dev_conf_udp(openair0_device *device, int eth_index) {
   
   msg=malloc(sizeof(openair0_config_t));
   msg_len=sizeof(openair0_config_t);
-  inet_ntop(AF_INET, &(eth[eth_index].local_addr.sin_addr), str, INET_ADDRSTRLEN);
-  inet_ntop(AF_INET, &(eth[eth_index].dest_addr.sin_addr), str1, INET_ADDRSTRLEN);
+  inet_ntop(AF_INET, &(eth->local_addr.sin_addr), str, INET_ADDRSTRLEN);
+  inet_ntop(AF_INET, &(eth->dest_addr.sin_addr), str1, INET_ADDRSTRLEN);
 
   /* RRH receives from BBU openair0_config_t */
-  if (recvfrom(eth[eth_index].sockfd,
+  if (recvfrom(eth->sockfd,
 		       msg,
 		       msg_len,
 		       0,
-		       (struct sockaddr *)&eth[eth_index].dest_addr,
-		       (socklen_t *)&eth[eth_index].addr_len)==-1) {
+		       (struct sockaddr *)&eth->dest_addr,
+		       (socklen_t *)&eth->addr_len)==-1) {
 	    perror("ETHERNET: recv_from conf_udp");
 	    exit(0);
   }
-    device->openair0_cfg[eth_index]=*((openair0_config_t *)msg);
+    device->openair0_cfg=(openair0_config_t *)msg;
    /* get remote ip address and port */
    /* inet_ntop(AF_INET, &(eth->dest_addr.sin_addr), str1, INET_ADDRSTRLEN); */
    /* device->openair0_cfg->remote_port =ntohs(eth->dest_addr.sin_port); */

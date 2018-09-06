@@ -1072,6 +1072,7 @@ static void get_options (int argc, char **argv) {
         /* Update some simulation parameters */
 	printf("lte-softmodem reads RCC configuration file for %d RCCs\n",enb_properties->number);
 	NB_RRH_GW_INST+=enb_properties->properties[0]->nb_rrh_gw;
+        printf("NB_RRH_GW_INST is %d\n",NB_RRH_GW_INST);
         for (i=0; i < enb_properties->number; i++) {
             AssertFatal (MAX_NUM_CCs == enb_properties->properties[i]->nb_cc,
                          "lte-softmodem compiled with MAX_NUM_CCs=%d, but only %d CCs configured for eNB %d!",
@@ -1652,7 +1653,7 @@ int main( int argc, char **argv ) {
         //this is eNB
         PHY_vars_eNB_g = malloc(sizeof(PHY_VARS_eNB**));
         PHY_vars_eNB_g[0] = malloc(sizeof(PHY_VARS_eNB*));
-        printf("The eth interfaces number is %d\n",enb_properties->properties[0]->nb_rrh_gw);
+        //printf("The eth interfaces number is %d\n",enb_properties->properties[0]->nb_rrh_gw);
 
         for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
             PHY_vars_eNB_g[0][CC_id] = init_lte_eNB(frame_parms[CC_id],0,frame_parms[CC_id]->Nid_cell,node_function[CC_id],abstraction_flag);

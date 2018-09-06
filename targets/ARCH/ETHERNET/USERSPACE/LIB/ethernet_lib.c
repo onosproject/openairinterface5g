@@ -56,10 +56,10 @@ int dest_addr_len[MAX_INST];
 int trx_eth_start(openair0_device *device) {
 
   eth_state_t *eth = (eth_state_t*)device->priv;
-  int i;
+  //int i;
   /* initialize socket */
- for (i=0;i<device->nb_eth;i++){
-  if (eth[i].flags == ETH_RAW_MODE) {     
+ //for (i=0;i<device->nb_eth;i++){
+  if (eth->flags == ETH_RAW_MODE) {     
     printf("Setting ETHERNET to ETH_RAW_IF5_MODE\n");
     if (eth_socket_init_raw(device)!=0)   return -1;
     /* RRH gets openair0 device configuration - BBU sets openair0 device configuration*/
@@ -69,13 +69,13 @@ int trx_eth_start(openair0_device *device) {
       if(eth_get_dev_conf_raw(device)!=0)  return -1;
     }
     /* adjust MTU wrt number of samples per packet */
-    if(eth[i].compression == ALAW_COMPRESS) {
-      if(ethernet_tune (device,MTU_SIZE,RAW_PACKET_SIZE_BYTES_ALAW(device->openair0_cfg->samples_per_packet),i)!=0)  return -1;
+    if(eth->compression == ALAW_COMPRESS) {
+      if(ethernet_tune (device,MTU_SIZE,RAW_PACKET_SIZE_BYTES_ALAW(device->openair0_cfg->samples_per_packet))!=0)  return -1;
     } else {
-      if(ethernet_tune (device,MTU_SIZE,RAW_PACKET_SIZE_BYTES(device->openair0_cfg->samples_per_packet),i)!=0)  return -1;
+      if(ethernet_tune (device,MTU_SIZE,RAW_PACKET_SIZE_BYTES(device->openair0_cfg->samples_per_packet))!=0)  return -1;
     }
-    if(ethernet_tune (device,RCV_TIMEOUT,999999,i)!=0)  return -1;
-  } else if (eth[i].flags == ETH_RAW_IF4p5_MODE) {
+    if(ethernet_tune (device,RCV_TIMEOUT,999999)!=0)  return -1;
+  } else if (eth->flags == ETH_RAW_IF4p5_MODE) {
 
     printf("Setting ETHERNET to ETH_RAW_IF4p5_MODE\n");
     if (eth_socket_init_raw(device)!=0)   return -1;
@@ -86,16 +86,16 @@ int trx_eth_start(openair0_device *device) {
       if(eth_get_dev_conf_raw_IF4p5(device)!=0)  return -1;
     }
     /* adjust MTU wrt number of samples per packet */
-    if(ethernet_tune (device,MTU_SIZE,RAW_IF4p5_PRACH_SIZE_BYTES,i)!=0)  return -1;
+    if(ethernet_tune (device,MTU_SIZE,RAW_IF4p5_PRACH_SIZE_BYTES)!=0)  return -1;
 
-    if(ethernet_tune (device,RCV_TIMEOUT,999999,i)!=0)  return -1;
-  } else if (eth[i].flags == ETH_UDP_IF4p5_MODE) {
+    if(ethernet_tune (device,RCV_TIMEOUT,999999)!=0)  return -1;
+  } else if (eth->flags == ETH_UDP_IF4p5_MODE) {
     printf("Setting ETHERNET to UDP_IF4p5_MODE\n");
-    if (eth_socket_init_udp(device,i)!=0)   return -1; 
+    if (eth_socket_init_udp(device)!=0)   return -1; 
     if (device->host_type == BBU_HOST) {
-      if(eth_set_dev_conf_udp(device,i)!=0)  return -1;
+      if(eth_set_dev_conf_udp(device)!=0)  return -1;
     } else {
-      if(eth_get_dev_conf_udp(device,i)!=0)  return -1;
+      if(eth_get_dev_conf_udp(device)!=0)  return -1;
     }
 
     /* adjust MTU wrt number of samples per packet */
@@ -103,62 +103,62 @@ int trx_eth_start(openair0_device *device) {
     
     if(ethernet_tune (device,RCV_TIMEOUT,999999)!=0)  return -1;*/
 
-  } else if (eth[i].flags == ETH_RAW_IF5_MOBIPASS) {
+  } else if (eth->flags == ETH_RAW_IF5_MOBIPASS) {
     printf("Setting ETHERNET to RAW_IF5_MODE\n");
     if (eth_socket_init_raw(device)!=0)   return -1;
-    if(ethernet_tune (device,RCV_TIMEOUT,999999,i)!=0)  return -1;
+    if(ethernet_tune (device,RCV_TIMEOUT,999999)!=0)  return -1;
 
   } else {
     printf("Setting ETHERNET to UDP_IF5_MODE\n");
-    if (eth_socket_init_udp(device,i)!=0)   return -1;
+    if (eth_socket_init_udp(device)!=0)   return -1;
     /* RRH gets openair0 device configuration - BBU sets openair0 device configuration*/
     if (device->host_type == BBU_HOST) {
-      if(eth_set_dev_conf_udp(device,i)!=0)  return -1;
+      if(eth_set_dev_conf_udp(device)!=0)  return -1;
     } else {
-      if(eth_get_dev_conf_udp(device,i)!=0)  return -1;
+      if(eth_get_dev_conf_udp(device)!=0)  return -1;
     }
 
     /* adjust MTU wrt number of samples per packet */
-    if(ethernet_tune (device,MTU_SIZE,UDP_IF4p5_PRACH_SIZE_BYTES,i)!=0)  return -1;
+    if(ethernet_tune (device,MTU_SIZE,UDP_IF4p5_PRACH_SIZE_BYTES)!=0)  return -1;
     
-    if(ethernet_tune (device,RCV_TIMEOUT,999999,i)!=0)  return -1;
+    if(ethernet_tune (device,RCV_TIMEOUT,999999)!=0)  return -1;
   }
   /* apply additional configuration */
-  if(ethernet_tune (device, SND_BUF_SIZE,2000000000,i)!=0)  return -1;
-  if(ethernet_tune (device, RCV_BUF_SIZE,2000000000,i)!=0)  return -1;
-  if(ethernet_tune (device, KERNEL_SND_BUF_MAX_SIZE, 200000000,i)!=0)  return -1;
-  if(ethernet_tune (device, KERNEL_RCV_BUF_MAX_SIZE, 200000000,i)!=0)  return -1;
- }
+  if(ethernet_tune (device, SND_BUF_SIZE,2000000000)!=0)  return -1;
+  if(ethernet_tune (device, RCV_BUF_SIZE,2000000000)!=0)  return -1;
+  if(ethernet_tune (device, KERNEL_SND_BUF_MAX_SIZE, 200000000)!=0)  return -1;
+  if(ethernet_tune (device, KERNEL_RCV_BUF_MAX_SIZE, 200000000)!=0)  return -1;
+ //}
   return 0;
 }
 
 
 void trx_eth_end(openair0_device *device) {
-  int i;
+  //int i;
   eth_state_t *eth = (eth_state_t*)device->priv;
   /* destroys socket only for the processes that call the eth_end fuction-- shutdown() for beaking the pipe */
- for (i=0;i<device->nb_eth;i++) { 
-  if ( close(eth[i].sockfd) <0 ) {
+ //for (i=0;i<device->nb_eth;i++) { 
+  if ( close(eth->sockfd) <0 ) {
     perror("ETHERNET: Failed to close socket");
     exit(0);
    } else {
     printf("[%s] socket has been successfully closed.\n",(device->host_type == BBU_HOST)? "BBU":"RRH");
    }
- }
+ //}
 }
 
 
 int trx_eth_request(openair0_device *device, void *msg, ssize_t msg_len) {
 
   eth_state_t *eth = (eth_state_t*)device->priv;
-  int i;
+  //int i;
   /* BBU sends a message to RRH */
- for (i=0;i<device->nb_eth;i++) { 
-  if (sendto(eth[i].sockfd,msg,msg_len,0,(struct sockaddr *)&eth[i].dest_addr,eth[i].addr_len)==-1) {
+ //for (i=0;i<device->nb_eth;i++) { 
+  if (sendto(eth->sockfd,msg,msg_len,0,(struct sockaddr *)&eth->dest_addr,eth->addr_len)==-1) {
     perror("ETHERNET: ");
     exit(0);
   }
- }
+ //}
   return 0;
 }
 
@@ -166,19 +166,19 @@ int trx_eth_request(openair0_device *device, void *msg, ssize_t msg_len) {
 int trx_eth_reply(openair0_device *device, void *msg, ssize_t msg_len) {
 
   eth_state_t   *eth = (eth_state_t*)device->priv;
-  int i;
+  //int i;
   /* RRH receives from BBU a message */
- for (i=0;i<device->nb_eth;i++) { 
-  if (recvfrom(eth[i].sockfd,
+ //for (i=0;i<device->nb_eth;i++) { 
+  if (recvfrom(eth->sockfd,
 	       msg,
 	       msg_len,
 	       0,
-	       (struct sockaddr *)&eth[i].dest_addr,
-	       (socklen_t *)&eth[i].addr_len)==-1) {
+	       (struct sockaddr *)&eth->dest_addr,
+	       (socklen_t *)&eth->addr_len)==-1) {
     perror("ETHERNET: recv_from in trx_eth_reply ");
     exit(0);	
   }
- }
+ //}
    return 0;
 }
 
@@ -205,7 +205,7 @@ int trx_eth_reset_stats(openair0_device* device) {
 }
 
 
-int ethernet_tune(openair0_device *device, unsigned int option, int value, int eth_index) {
+int ethernet_tune(openair0_device *device, unsigned int option, int value) {
   
   eth_state_t *eth = (eth_state_t*)device->priv;
   struct timeval timeout;
@@ -222,7 +222,7 @@ int ethernet_tune(openair0_device *device, unsigned int option, int value, int e
   /****************** socket level options ************************/  
   switch(option) {
   case SND_BUF_SIZE:  /* transmit socket buffer size */   
-    if (setsockopt(eth[eth_index].sockfd,  
+    if (setsockopt(eth->sockfd,  
 		   SOL_SOCKET,  
 		   SO_SNDBUF,  
 		   &value,sizeof(value))) {
@@ -233,7 +233,7 @@ int ethernet_tune(openair0_device *device, unsigned int option, int value, int e
     break;
     
   case RCV_BUF_SIZE:   /* receive socket buffer size */   
-    if (setsockopt(eth[eth_index].sockfd,  
+    if (setsockopt(eth->sockfd,  
 		   SOL_SOCKET,  
 		   SO_RCVBUF,  
 		   &value,sizeof(value))) {
@@ -246,7 +246,7 @@ int ethernet_tune(openair0_device *device, unsigned int option, int value, int e
   case RCV_TIMEOUT:
     timeout.tv_sec = value/1000000;
     timeout.tv_usec = value%1000000;//less than rt_period?
-    if (setsockopt(eth[eth_index].sockfd,  
+    if (setsockopt(eth->sockfd,  
 		   SOL_SOCKET,  
 		   SO_RCVTIMEO,  
 		   (char *)&timeout,sizeof(timeout))) {
@@ -259,7 +259,7 @@ int ethernet_tune(openair0_device *device, unsigned int option, int value, int e
   case SND_TIMEOUT:
     timeout.tv_sec = value/1000000000;
     timeout.tv_usec = value%1000000000;//less than rt_period?
-    if (setsockopt(eth[eth_index].sockfd,  
+    if (setsockopt(eth->sockfd,  
 		   SOL_SOCKET,  
 		   SO_SNDTIMEO,  
 		   (char *)&timeout,sizeof(timeout))) {
@@ -273,27 +273,27 @@ int ethernet_tune(openair0_device *device, unsigned int option, int value, int e
     /******************* interface level options  *************************/
   case MTU_SIZE: /* change  MTU of the eth interface */ 
     ifr.ifr_addr.sa_family = AF_INET;
-    strncpy(ifr.ifr_name,eth[eth_index].if_name, sizeof(ifr.ifr_name));
+    strncpy(ifr.ifr_name,eth->if_name, sizeof(ifr.ifr_name));
     ifr.ifr_mtu =value;
-    if (ioctl(eth[eth_index].sockfd,SIOCSIFMTU,(caddr_t)&ifr) < 0 )
+    if (ioctl(eth->sockfd,SIOCSIFMTU,(caddr_t)&ifr) < 0 )
       perror ("[ETHERNET] Can't set the MTU");
     else 
-      printf("[ETHERNET] %s MTU size has changed to %d\n",eth[eth_index].if_name,ifr.ifr_mtu);
+      printf("[ETHERNET] %s MTU size has changed to %d\n",eth->if_name,ifr.ifr_mtu);
     break;
     
   case TX_Q_LEN:  /* change TX queue length of eth interface */ 
     ifr.ifr_addr.sa_family = AF_INET;
-    strncpy(ifr.ifr_name,eth[eth_index].if_name, sizeof(ifr.ifr_name));
+    strncpy(ifr.ifr_name,eth->if_name, sizeof(ifr.ifr_name));
     ifr.ifr_qlen =value;
-    if (ioctl(eth[eth_index].sockfd,SIOCSIFTXQLEN,(caddr_t)&ifr) < 0 )
+    if (ioctl(eth->sockfd,SIOCSIFTXQLEN,(caddr_t)&ifr) < 0 )
       perror ("[ETHERNET] Can't set the txqueuelen");
     else 
-      printf("[ETHERNET] %s txqueuelen size has changed to %d\n",eth[eth_index].if_name,ifr.ifr_qlen);
+      printf("[ETHERNET] %s txqueuelen size has changed to %d\n",eth->if_name,ifr.ifr_qlen);
     break;
     
     /******************* device level options  *************************/
   case COALESCE_PAR:
-    ret=snprintf(system_cmd,sizeof(system_cmd),"ethtool -C %s rx-usecs %d",eth[eth_index].if_name,value);
+    ret=snprintf(system_cmd,sizeof(system_cmd),"ethtool -C %s rx-usecs %d",eth->if_name,value);
     if (ret > 0) {
       ret=system(system_cmd);
       if (ret == -1) {
@@ -308,8 +308,8 @@ int ethernet_tune(openair0_device *device, unsigned int option, int value, int e
     break;
     
   case PAUSE_PAR:
-    if (value==1) ret=snprintf(system_cmd,sizeof(system_cmd),"ethtool -A %s autoneg off rx off tx off",eth[eth_index].if_name);
-    else if (value==0) ret=snprintf(system_cmd,sizeof(system_cmd),"ethtool -A %s autoneg on rx on tx on",eth[eth_index].if_name);
+    if (value==1) ret=snprintf(system_cmd,sizeof(system_cmd),"ethtool -A %s autoneg off rx off tx off",eth->if_name);
+    else if (value==0) ret=snprintf(system_cmd,sizeof(system_cmd),"ethtool -A %s autoneg on rx on tx on",eth->if_name);
     else break;
     if (ret > 0) {
       ret=system(system_cmd);
@@ -325,7 +325,7 @@ int ethernet_tune(openair0_device *device, unsigned int option, int value, int e
     break;
     
   case RING_PAR:
-    ret=snprintf(system_cmd,sizeof(system_cmd),"ethtool -G %s val %d",eth[eth_index].if_name,value);
+    ret=snprintf(system_cmd,sizeof(system_cmd),"ethtool -G %s val %d",eth->if_name,value);
     if (ret > 0) {
       ret=system(system_cmd);
       if (ret == -1) {
@@ -366,35 +366,35 @@ int ethernet_tune(openair0_device *device, unsigned int option, int value, int e
 
 int transport_init(openair0_device *device, openair0_config_t *openair0_cfg, eth_params_t * eth_params ) {
   //printf("ethernet_lib.c: Number of eths is %d\n",device->nb_eth);
-  eth_state_t *eth = (eth_state_t*)malloc(device->nb_eth*sizeof(eth_state_t));
+  eth_state_t *eth = (eth_state_t*)malloc(/*device->nb_eth*/sizeof(eth_state_t));
   memset(eth, 0, sizeof(eth_state_t));
-  int i;
+  //int i;
 
-  for (i=0;i<device->nb_eth;i++){
-	  if ((eth_params+i)->transp_preference == 1) {
-	    eth[i].flags = ETH_RAW_MODE;
-	  } else if ((eth_params+i)->transp_preference == 0) {
-	    eth[i].flags = ETH_UDP_MODE;
-	  } else if ((eth_params+i)->transp_preference == 3) {
-	    eth[i].flags = ETH_RAW_IF4p5_MODE;
-	  } else if ((eth_params+i)->transp_preference == 2) {
-	    eth[i].flags = ETH_UDP_IF4p5_MODE;
-	  } else if ((eth_params+i)->transp_preference == 4) {
-	    eth[i].flags = ETH_RAW_IF5_MOBIPASS;
+  //for (i=0;i<device->nb_eth;i++){
+	  if (eth_params->transp_preference == 1) {
+	    eth->flags = ETH_RAW_MODE;
+	  } else if (eth_params->transp_preference == 0) {
+	    eth->flags = ETH_UDP_MODE;
+	  } else if (eth_params->transp_preference == 3) {
+	    eth->flags = ETH_RAW_IF4p5_MODE;
+	  } else if (eth_params->transp_preference == 2) {
+	    eth->flags = ETH_UDP_IF4p5_MODE;
+	  } else if (eth_params->transp_preference == 4) {
+	    eth->flags = ETH_RAW_IF5_MOBIPASS;
 	  } else {
-	    printf("transport_init: Unknown transport preference %d - default to RAW", (eth_params+i)->transp_preference);
-	    eth[i].flags = ETH_RAW_MODE;
+	    printf("transport_init: Unknown transport preference %d - default to RAW", eth_params->transp_preference);
+	    eth->flags = ETH_RAW_MODE;
 	  }
 
-	  if ((eth_params+i)->if_compress == 0) {
-	    eth[i].compression = NO_COMPRESS;
-	  } else if ((eth_params+i)->if_compress == 1) {
-	    eth[i].compression = ALAW_COMPRESS;
+	  if (eth_params->if_compress == 0) {
+	    eth->compression = NO_COMPRESS;
+	  } else if (eth_params->if_compress == 1) {
+	    eth->compression = ALAW_COMPRESS;
 	  } else {
-	    printf("transport_init: Unknown compression scheme %d - default to ALAW", (eth_params+i)->if_compress);
-	    eth[i].compression = ALAW_COMPRESS;
+	    printf("transport_init: Unknown compression scheme %d - default to ALAW", eth_params->if_compress);
+	    eth->compression = ALAW_COMPRESS;
 	  }
-  }
+  //}
 	  printf("[ETHERNET]: Initializing openair0_device for %s ...\n", ((device->host_type == BBU_HOST) ? "BBU": "RRH"));
 	  device->Mod_id           = num_devices_eth++;
 	  device->transp_type      = ETHERNET_TP;
@@ -408,63 +408,63 @@ int transport_init(openair0_device *device, openair0_config_t *openair0_cfg, eth
 	  device->trx_set_freq_func = trx_eth_set_freq;
 	  device->trx_set_gains_func = trx_eth_set_gains;
 
-  for (i=0;i<device->nb_eth;i++){		  
-	  if (eth[i].flags == ETH_RAW_MODE) {
+  //for (i=0;i<device->nb_eth;i++){		  
+	  if (eth->flags == ETH_RAW_MODE) {
 		 device->trx_write_func   = trx_eth_write_raw;
 		 device->trx_read_func    = trx_eth_read_raw;     
-	  } else if (eth[i].flags == ETH_UDP_MODE) {
+	  } else if (eth->flags == ETH_UDP_MODE) {
 		 device->trx_write_func   = trx_eth_write_udp;
 		 device->trx_read_func    = trx_eth_read_udp;     
-	  } else if (eth[i].flags == ETH_RAW_IF4p5_MODE) {
+	  } else if (eth->flags == ETH_RAW_IF4p5_MODE) {
 		 device->trx_write_func   = trx_eth_write_raw_IF4p5;
 		 device->trx_read_func    = trx_eth_read_raw_IF4p5;     
-	  } else if (eth[i].flags == ETH_UDP_IF4p5_MODE) {
+	  } else if (eth->flags == ETH_UDP_IF4p5_MODE) {
 		 device->trx_write_func   = trx_eth_write_udp_IF4p5;
 		 device->trx_read_func    = trx_eth_read_udp_IF4p5;     
-	  } else if (eth[i].flags == ETH_RAW_IF5_MOBIPASS) {
+	  } else if (eth->flags == ETH_RAW_IF5_MOBIPASS) {
 		 device->trx_write_func   = trx_eth_write_raw_IF4p5;
 		 device->trx_read_func    = trx_eth_read_raw_IF5_mobipass;   
 	  } else {
 		    //device->trx_write_func   = trx_eth_write_udp_IF4p5;
 		    //device->trx_read_func    = trx_eth_read_udp_IF4p5;     
 	  }
-  	  printf("eth %d: local_if_name %s, local ip %s\n",i,(eth_params+i)->local_if_name,(eth_params+i)->my_addr);
-	  eth[i].if_name = (eth_params+i)->local_if_name;
-  }
+  	  printf("eth: local_if_name %s, local ip %s\n",eth_params->local_if_name,eth_params->my_addr);
+	  eth->if_name = eth_params->local_if_name;
+  //}
   device->priv = eth;
  	
-  for (i=0;i<device->nb_eth;i++){
+  //for (i=0;i<device->nb_eth;i++){
   	  /* device specific */
-  	  openair0_cfg[i].iq_rxrescale = 15;//rescale iqs
-  	  openair0_cfg[i].iq_txshift = (eth_params+i)->iq_txshift;// shift
-  	  openair0_cfg[i].tx_sample_advance = (eth_params+i)->tx_sample_advance;
+  	  openair0_cfg[0].iq_rxrescale = 15;//rescale iqs
+  	  openair0_cfg[0].iq_txshift = eth_params->iq_txshift;// shift
+  	  openair0_cfg[0].tx_sample_advance = eth_params->tx_sample_advance;
 	  /* RRH does not have any information to make this configuration atm */
 	  if (device->host_type == BBU_HOST) {
 	    /*Note scheduling advance values valid only for case 7680000 */    
-	    switch ((int)openair0_cfg[i].sample_rate) {
+	    switch ((int)openair0_cfg[0].sample_rate) {
 	    case 30720000:
-	      openair0_cfg[i].samples_per_packet    = 3840;     
+	      openair0_cfg[0].samples_per_packet    = 3840;     
 	      break;
 	    case 23040000:     
-	      openair0_cfg[i].samples_per_packet    = 2880;
+	      openair0_cfg[0].samples_per_packet    = 2880;
 	      break;
 	    case 15360000:
-	      openair0_cfg[i].samples_per_packet    = 1920;      
+	      openair0_cfg[0].samples_per_packet    = 1920;      
 	      break;
 	    case 7680000:
-	      openair0_cfg[i].samples_per_packet    = 960;     
+	      openair0_cfg[0].samples_per_packet    = 960;     
 	      break;
 	    case 1920000:
-	      openair0_cfg[i].samples_per_packet    = 240;     
+	      openair0_cfg[0].samples_per_packet    = 240;     
 	      break;
 	    default:
-	      printf("Error: unknown sampling rate %f\n",openair0_cfg[i].sample_rate);
+	      printf("Error: unknown sampling rate %f\n",openair0_cfg[0].sample_rate);
 	      exit(-1);
 	      break;
 	    }
 	  }
-  }
-  device->openair0_cfg=openair0_cfg;
+  //}
+  device->openair0_cfg=&openair0_cfg[0];
   return 0;
 }
 
@@ -499,8 +499,8 @@ unsigned short calc_csum (unsigned short *buf, int nwords) {
 void dump_dev(openair0_device *device) {
 
     eth_state_t *eth = (eth_state_t*)device->priv;
-    int i;
-  for (i=0;i<device->nb_eth;i++){
+    //int i;
+  //for (i=0;i<device->nb_eth;i++){
     printf("Ethernet device interface %i configuration:\n" ,device->openair0_cfg->Mod_id);
     printf("       Log level is %i :\n" ,device->openair0_cfg->log_level);
     printf("       RB number: %i, sample rate: %lf \n" ,
@@ -508,58 +508,58 @@ void dump_dev(openair0_device *device) {
     printf("       BBU configured for %i tx/%i rx channels)\n",
            device->openair0_cfg->tx_num_channels,device->openair0_cfg->rx_num_channels);
     printf("       Running flags: %s %s (\n",
-           ((eth[i].flags & ETH_RAW_MODE)  ? "RAW socket mode - ":""),
-           ((eth[i].flags & ETH_UDP_MODE)  ? "UDP socket mode - ":""));
-    printf("       Number of iqs dumped when displaying packets: %i\n\n",eth[i].iqdumpcnt);
-  }
+           ((eth->flags & ETH_RAW_MODE)  ? "RAW socket mode - ":""),
+           ((eth->flags & ETH_UDP_MODE)  ? "UDP socket mode - ":""));
+    printf("       Number of iqs dumped when displaying packets: %i\n\n",eth->iqdumpcnt);
+  //}
 }
 
 void inline dump_txcounters(openair0_device *device) {
     eth_state_t *eth = (eth_state_t*)device->priv;
-    int i;
-  for (i=0;i<device->nb_eth;i++){
+    //int i;
+  //for (i=0;i<device->nb_eth;i++){
     printf("   Ethernet device interface %i, tx counters:\n" ,device->openair0_cfg->Mod_id);
-    printf("   Sent packets: %llu send errors: %i\n",   (long long unsigned int)eth[i].tx_count, eth[i].num_tx_errors);
-  }
+    printf("   Sent packets: %llu send errors: %i\n",   (long long unsigned int)eth->tx_count, eth->num_tx_errors);
+  //}
 }
 
 void inline dump_rxcounters(openair0_device *device) {
-    int i;
+    //int i;
     eth_state_t *eth = (eth_state_t*)device->priv;
-  for (i=0;i<device->nb_eth;i++){
+  //for (i=0;i<device->nb_eth;i++){
     printf("   Ethernet device interface %i rx counters:\n" ,device->openair0_cfg->Mod_id);
-    printf("   Received packets: %llu missed packets errors: %i\n", (long long unsigned int)eth[i].rx_count, eth[i].num_underflows);
-  }
+    printf("   Received packets: %llu missed packets errors: %i\n", (long long unsigned int)eth->rx_count, eth->num_underflows);
+  //}
 }
 
 void inline dump_buff(openair0_device *device, char *buff,unsigned int tx_rx_flag, int nsamps) {
 
     char *strptr;
-    int i;
+    //int i;
     eth_state_t *eth = (eth_state_t*)device->priv;
     /*need to add ts number of iqs in printf need to fix dump iqs call */
-  for (i=0;i<device->nb_eth;i++){
+  //for (i=0;i<device->nb_eth;i++){
     strptr = (( tx_rx_flag == TX_FLAG) ? "TX" : "RX");
     printf("\n %s, nsamps=%i \n" ,strptr,nsamps);
 
     if (tx_rx_flag == 1) {
         dump_txcounters(device);
-        printf("  First %i iqs of TX buffer\n",eth[i].iqdumpcnt);
-        dump_iqs(buff,eth[i].iqdumpcnt);
+        printf("  First %i iqs of TX buffer\n",eth->iqdumpcnt);
+        dump_iqs(buff,eth->iqdumpcnt);
     } else {
         dump_rxcounters(device);
-        printf("  First %i iqs of RX buffer\n",eth[i].iqdumpcnt);
-        dump_iqs(buff,eth[i].iqdumpcnt);
+        printf("  First %i iqs of RX buffer\n",eth->iqdumpcnt);
+        dump_iqs(buff,eth->iqdumpcnt);
     }
-  }
+ // }
 }
 
 void dump_iqs(char * buff, int iq_cnt) {
     int i;
     for (i=0; i<iq_cnt; i++) {
         printf("s%02i: Q=%+ij I=%+i%s",i,
-               ((iqoai_t *)(buff))[i].q,
-               ((iqoai_t *)(buff))[i].i,
+               ((iqoai_t *)(buff))->q,
+               ((iqoai_t *)(buff))->i,
                ((i+1)%3 == 0) ? "\n" : "  ");
     }
 }
