@@ -1,30 +1,30 @@
 /*
- * Licensed to the OpenAirInterface (OAI) Software Alliance under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.1  (the "License"); you may not use this file
- * except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.openairinterface.org/?page_id=698
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *-------------------------------------------------------------------------------
- * For more information about the OpenAirInterface (OAI) Software Alliance:
- *      contact@openairinterface.org
- */ 
+   Licensed to the OpenAirInterface (OAI) Software Alliance under one or more
+   contributor license agreements.  See the NOTICE file distributed with
+   this work for additional information regarding copyright ownership.
+   The OpenAirInterface Software Alliance licenses this file to You under
+   the OAI Public License, Version 1.1  (the "License"); you may not use this file
+   except in compliance with the License.
+   You may obtain a copy of the License at
+
+        http://www.openairinterface.org/?page_id=698
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+  -------------------------------------------------------------------------------
+   For more information about the OpenAirInterface (OAI) Software Alliance:
+        contact@openairinterface.org
+*/
 
 /*! \file flexran_agent_common.h
- * \brief common message primitves and utilities 
- * \author Xenofon Foukas, Mohamed Kassem and Navid Nikaein and shahab SHARIAT BAGHERI
- * \date 2017
- * \version 0.1
- */
+   \brief common message primitves and utilities
+   \author Xenofon Foukas, Mohamed Kassem and Navid Nikaein and shahab SHARIAT BAGHERI
+   \date 2017
+   \version 0.1
+*/
 
 
 
@@ -50,17 +50,17 @@
 #define FLEXRAN_VERSION 0
 
 typedef int (*flexran_agent_message_decoded_callback)(
-	mid_t mod_id,
-       	const void *params,
-	Protocol__FlexranMessage **msg
+  mid_t mod_id,
+  const void *params,
+  Protocol__FlexranMessage **msg
 );
 
 typedef int (*flexran_agent_message_destruction_callback)(
-	Protocol__FlexranMessage *msg
+  Protocol__FlexranMessage *msg
 );
 
 typedef struct {
- 
+
   uint8_t is_initialized;
   volatile uint8_t cont_update;
   xid_t xid;
@@ -73,8 +73,8 @@ typedef struct {
 stats_updates_context_t stats_context[NUM_MAX_ENB];
 
 /**********************************
- * FlexRAN protocol messages helper 
- * functions and generic handlers
+   FlexRAN protocol messages helper
+   functions and generic handlers
  **********************************/
 
 /* Helper functions for message (de)serialization */
@@ -83,8 +83,8 @@ int flexran_agent_deserialize_message(void *data, int size, Protocol__FlexranMes
 
 /* Serialize message and then destroy the input flexran msg. Should be called when protocol
    message is created dynamically */
-void * flexran_agent_pack_message(Protocol__FlexranMessage *msg, 
-			      int * size);
+void *flexran_agent_pack_message(Protocol__FlexranMessage *msg,
+                                 int *size);
 
 /* Calls destructor of the given message */
 err_code_t flexran_agent_destroy_flexran_message(Protocol__FlexranMessage *msg);
@@ -117,7 +117,7 @@ int flexran_agent_lc_config_reply(mid_t mod_id, const void *params, Protocol__Fl
 int flexran_agent_destroy_lc_config_reply(Protocol__FlexranMessage *msg);
 
 /* eNodeB configuration request message constructor and destructor */
-int flexran_agent_enb_config_request(mid_t mod_id, const void* params, Protocol__FlexranMessage **msg);
+int flexran_agent_enb_config_request(mid_t mod_id, const void *params, Protocol__FlexranMessage **msg);
 int flexran_agent_destroy_enb_config_request(Protocol__FlexranMessage *msg);
 
 /* UE configuration request message constructor */
@@ -142,9 +142,9 @@ int flexran_agent_destroy_rrc_measurement(Protocol__FlexranMessage *msg);
 
 
 /* FlexRAN protocol message dispatcher function */
-Protocol__FlexranMessage* flexran_agent_handle_message (mid_t mod_id, 
-						    uint8_t *data, 
-						    uint32_t size);
+Protocol__FlexranMessage *flexran_agent_handle_message (mid_t mod_id,
+    uint8_t *data,
+    uint32_t size);
 
 /* Function to be used to send a message to a dispatcher once the appropriate event is triggered. */
 Protocol__FlexranMessage *flexran_agent_handle_timed_task(void *args);

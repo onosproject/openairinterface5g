@@ -1,23 +1,23 @@
 /*
- * Licensed to the OpenAirInterface (OAI) Software Alliance under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.1  (the "License"); you may not use this file
- * except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.openairinterface.org/?page_id=698
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *-------------------------------------------------------------------------------
- * For more information about the OpenAirInterface (OAI) Software Alliance:
- *      contact@openairinterface.org
- */
+   Licensed to the OpenAirInterface (OAI) Software Alliance under one or more
+   contributor license agreements.  See the NOTICE file distributed with
+   this work for additional information regarding copyright ownership.
+   The OpenAirInterface Software Alliance licenses this file to You under
+   the OAI Public License, Version 1.1  (the "License"); you may not use this file
+   except in compliance with the License.
+   You may obtain a copy of the License at
+
+        http://www.openairinterface.org/?page_id=698
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+  -------------------------------------------------------------------------------
+   For more information about the OpenAirInterface (OAI) Software Alliance:
+        contact@openairinterface.org
+*/
 
 #include <stdio.h>
 #include <stdint.h>
@@ -41,8 +41,7 @@
 #include "sgw_lite_defs.h"
 #include "ipv4_defs.h"
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
   int i = 0;
   int prio = 0;
   mme_config_t mme_config;
@@ -50,7 +49,6 @@ int main(int argc, char *argv[])
   struct sched_param param = {
     .sched_priority = 10,
   };
-
   config_parse_opt_line(argc, argv, &mme_config);
   fprintf(stdout, "Starting %s ITTI test\n", PACKAGE_STRING);
 
@@ -74,9 +72,7 @@ int main(int argc, char *argv[])
   s1ap_mme_init(&mme_config);
   gtpv1u_init(&mme_config);
   ipv4_init(&mme_config);
-
   sgw_lite_init(&mme_config);
-
   message_p = itti_alloc_new_message(TASK_S1AP, MESSAGE_TEST);
 
   while(i < (1 << 15)) {
@@ -88,6 +84,5 @@ int main(int argc, char *argv[])
   }
 
   fprintf(stderr, "Successfully sent %lu messages", get_current_message_number());
-
   return 0;
 }

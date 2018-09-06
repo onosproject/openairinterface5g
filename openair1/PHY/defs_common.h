@@ -1,40 +1,40 @@
 /*
- * Licensed to the OpenAirInterface (OAI) Software Alliance under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.1  (the "License"); you may not use this file
- * except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.openairinterface.org/?page_id=698
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *-------------------------------------------------------------------------------
- * For more information about the OpenAirInterface (OAI) Software Alliance:
- *      contact@openairinterface.org
- */
+   Licensed to the OpenAirInterface (OAI) Software Alliance under one or more
+   contributor license agreements.  See the NOTICE file distributed with
+   this work for additional information regarding copyright ownership.
+   The OpenAirInterface Software Alliance licenses this file to You under
+   the OAI Public License, Version 1.1  (the "License"); you may not use this file
+   except in compliance with the License.
+   You may obtain a copy of the License at
+
+        http://www.openairinterface.org/?page_id=698
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+  -------------------------------------------------------------------------------
+   For more information about the OpenAirInterface (OAI) Software Alliance:
+        contact@openairinterface.org
+*/
 
 /*! \file PHY/defs.h
- \brief Top-level defines and structure definitions
- \author R. Knopp, F. Kaltenberger
- \date 2011
- \version 0.1
- \company Eurecom
- \email: knopp@eurecom.fr,florian.kaltenberger@eurecom.fr
- \note
- \warning
+  \brief Top-level defines and structure definitions
+  \author R. Knopp, F. Kaltenberger
+  \date 2011
+  \version 0.1
+  \company Eurecom
+  \email: knopp@eurecom.fr,florian.kaltenberger@eurecom.fr
+  \note
+  \warning
 */
 #ifndef __PHY_DEFS_COMMON_H__
 #define __PHY_DEFS_COMMON_H__
 
 
 #ifndef _GNU_SOURCE
-#define _GNU_SOURCE
+  #define _GNU_SOURCE
 #endif
 #include <sched.h>
 #include <stdio.h>
@@ -70,7 +70,7 @@
 
 #include "PHY/TOOLS/time_meas.h"
 #include "platform_types.h"
-#define MAX_NUM_RU_PER_eNB 64 
+#define MAX_NUM_RU_PER_eNB 64
 
 #include <pthread.h>
 
@@ -165,7 +165,7 @@ typedef struct {
 typedef struct {
   /// Parameter: High-speed-flag, see TS 36.211 (5.7.2). \vr{[0..1]} 1 corresponds to Restricted set and 0 to Unrestricted set.
   uint8_t highSpeedFlag;
-/// Parameter: \f$N_\text{CS}\f$, see TS 36.211 (5.7.2). \vr{[0..15]}\n Refer to table 5.7.2-2 for preamble format 0..3 and to table 5.7.2-3 for preamble format 4.
+  /// Parameter: \f$N_\text{CS}\f$, see TS 36.211 (5.7.2). \vr{[0..15]}\n Refer to table 5.7.2-2 for preamble format 0..3 and to table 5.7.2-3 for preamble format 4.
   uint8_t zeroCorrelationZoneConfig;
   /// Parameter: prach-FrequencyOffset, see TS 36.211 (5.7.1). \vr{[0..94]}\n For TDD the value range is dependent on the value of \ref prach_ConfigIndex.
 
@@ -177,7 +177,7 @@ typedef struct {
   uint8_t prach_ConfigIndex[4];
   /// indicator for CE level activation
   uint8_t prach_CElevel_enable[4];
-  /// prach frequency offset for each CE level 
+  /// prach frequency offset for each CE level
   uint8_t prach_FreqOffset[4];
   /// indicator for CE level hopping activation
   uint8_t prach_hopping_enable[4];
@@ -194,7 +194,7 @@ typedef struct {
   /// PRACH Configuration Information
 #if (RRC_VERSION >= MAKE_VERSION(14, 0, 0))
   PRACH_eMTC_CONFIG_INFO prach_ConfigInfo;
-#endif  
+#endif
 } PRACH_eMTC_CONFIG_COMMON;
 
 #endif
@@ -728,8 +728,8 @@ typedef enum {format0,
               format2C,
               format2D,
               format3,
-	      format3A,
-	      format4,
+              format3A,
+              format4,
               format5,
               format6_0A,
               format6_0B,
@@ -772,7 +772,7 @@ typedef struct {
   rnti_t rnti;
   /// Format
   DCI_format_t format;
-  /// epdcch resource assignment (0=localized,1=distributed) 
+  /// epdcch resource assignment (0=localized,1=distributed)
   uint8_t epdcch_resource_assignment_flag;
   /// epdcch index
   uint16_t epdcch_id;
@@ -781,7 +781,7 @@ typedef struct {
   /// epdcch number of PRBs in set
   uint8_t epdcch_num_prb;
   /// vector of prb ids for set
-  uint8_t epdcch_prb_index[MAX_EPDCCH_PRB];  
+  uint8_t epdcch_prb_index[MAX_EPDCCH_PRB];
   /// LBT parameter for frame configuration
   uint8_t dwpts_symbols;
   /// LBT parameter for frame configuration
@@ -789,7 +789,7 @@ typedef struct {
   /// DCI pdu
   uint8_t dci_pdu[8];
 } eDCI_ALLOC_t;
- 
+
 typedef struct {
   /// Length of DCI in bits
   uint8_t dci_length;
@@ -811,7 +811,7 @@ typedef struct {
   uint8_t number_of_prb_pairs;
   /// mpdcch resource assignment (combinatorial index r)
   uint8_t resource_block_assignment;
-  /// transmission type (0=localized,1=distributed) 
+  /// transmission type (0=localized,1=distributed)
   uint8_t transmission_type;
   /// mpdcch start symbol
   uint8_t start_symbol;
@@ -903,14 +903,15 @@ typedef enum {
   ZEROS,
   NONE
 } Extension_t;
-	
+
 enum transmission_access_mode {
   NO_ACCESS=0,
   POSTPONED_ACCESS,
   CANCELED_ACCESS,
   UNKNOWN_ACCESS,
   SCHEDULED_ACCESS,
-  CBA_ACCESS};
+  CBA_ACCESS
+};
 
 typedef enum  {
   eNodeB_3GPP=0,   // classical eNodeB function
@@ -959,49 +960,47 @@ extern int sync_var;
 
 
 typedef uint8_t(decoder_if_t)(int16_t *y,
-                               int16_t *y2,
-    		               uint8_t *decoded_bytes,
-    		               uint8_t *decoded_bytes2,
-	   		       uint16_t n,
-	   		       uint8_t max_iterations,
-	   		       uint8_t crc_type,
-	   		       uint8_t F,
-	   		       time_stats_t *init_stats,
-	   		       time_stats_t *alpha_stats,
-	   		       time_stats_t *beta_stats,
-	   		       time_stats_t *gamma_stats,
-	   		       time_stats_t *ext_stats,
-	   		       time_stats_t *intl1_stats,
-                               time_stats_t *intl2_stats);
+                              int16_t *y2,
+                              uint8_t *decoded_bytes,
+                              uint8_t *decoded_bytes2,
+                              uint16_t n,
+                              uint8_t max_iterations,
+                              uint8_t crc_type,
+                              uint8_t F,
+                              time_stats_t *init_stats,
+                              time_stats_t *alpha_stats,
+                              time_stats_t *beta_stats,
+                              time_stats_t *gamma_stats,
+                              time_stats_t *ext_stats,
+                              time_stats_t *intl1_stats,
+                              time_stats_t *intl2_stats);
 
 typedef uint8_t(encoder_if_t)(uint8_t *input,
-                               uint16_t input_length_bytes,
-                               uint8_t *output,
-                               uint8_t F);
+                              uint16_t input_length_bytes,
+                              uint8_t *output,
+                              uint8_t F);
 
 
 static inline void wait_sync(char *thread_name) {
-
   printf( "waiting for sync (%s,%d/%p,%p,%p)\n",thread_name,sync_var,&sync_var,&sync_cond,&sync_mutex);
   pthread_mutex_lock( &sync_mutex );
-  
+
   while (sync_var<0)
     pthread_cond_wait( &sync_cond, &sync_mutex );
-  
-  pthread_mutex_unlock(&sync_mutex);
-  
-  printf( "got sync (%s)\n", thread_name);
 
+  pthread_mutex_unlock(&sync_mutex);
+  printf( "got sync (%s)\n", thread_name);
 }
 
 static inline int wakeup_thread(pthread_mutex_t *mutex,pthread_cond_t *cond,int *instance_cnt,char *name) {
-
   if (pthread_mutex_lock(mutex) != 0) {
     LOG_E( PHY, "error locking mutex for %s\n",name);
     exit_fun("nothing to add");
     return(-1);
   }
+
   *instance_cnt = *instance_cnt + 1;
+
   // the thread can now be woken up
   if (pthread_cond_signal(cond) != 0) {
     LOG_E( PHY, "ERROR pthread_cond_signal\n");
@@ -1031,11 +1030,11 @@ static inline int wait_on_condition(pthread_mutex_t *mutex,pthread_cond_t *cond,
     exit_fun("nothing to add");
     return(-1);
   }
+
   return(0);
 }
 
 static inline int wait_on_busy_condition(pthread_mutex_t *mutex,pthread_cond_t *cond,int *instance_cnt,char *name) {
-
   if (pthread_mutex_lock(mutex) != 0) {
     LOG_E( PHY, "[SCHED][eNB] error locking mutex for %s\n",name);
     exit_fun("nothing to add");
@@ -1053,11 +1052,11 @@ static inline int wait_on_busy_condition(pthread_mutex_t *mutex,pthread_cond_t *
     exit_fun("nothing to add");
     return(-1);
   }
+
   return(0);
 }
 
 static inline int release_thread(pthread_mutex_t *mutex,int *instance_cnt,char *name) {
-
   if (pthread_mutex_lock(mutex) != 0) {
     LOG_E( PHY, "[SCHED][eNB] error locking mutex for %s\n",name);
     exit_fun("nothing to add");
@@ -1071,6 +1070,7 @@ static inline int release_thread(pthread_mutex_t *mutex,int *instance_cnt,char *
     exit_fun("nothing to add");
     return(-1);
   }
+
   return(0);
 }
 
