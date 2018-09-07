@@ -15,7 +15,7 @@
 #        define NUMBER_OF_eNB_MAX 7
 #        define NUMBER_OF_RU_MAX 32
 #        ifndef UE_EXPANSION
-#                define NUMBER_OF_UE_MAX 64
+#                define NUMBER_OF_UE_MAX 16
 #                define NUMBER_OF_CONNECTED_eNB_MAX 1
 #        else
 #                define NUMBER_OF_UE_MAX 256
