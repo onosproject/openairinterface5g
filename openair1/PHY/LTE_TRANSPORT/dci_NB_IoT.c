@@ -54,51 +54,35 @@
 // BCOM code functions npdcch start
 // (TODO solve some error in compilation)
 //------------------------------------------------
-static uint8_t d[2][3*(MAX_DCI_SIZE_BITS_NB_IoT + 16) + 96];
-static uint8_t w[2][3*3*(MAX_DCI_SIZE_BITS_NB_IoT+16)];
+//static uint8_t d[2][3*(MAX_DCI_SIZE_BITS_NB_IoT + 16) + 96];
+//static uint8_t w[2][3*3*(MAX_DCI_SIZE_BITS_NB_IoT+16)];
 
 
 
-void dci_encoding_NB_IoT(uint8_t    *a[2],				// Array of two DCI pdus, even if one DCI is to transmit , the number of DCI is indicated in dci_number
-						 uint8_t    A,					// Length of array a (in number of bytes)(es 4 bytes = 32 bits) is a parameter fixed
-						 uint16_t   E,					// E should equals to G (number of available bits in one RB)
-						 uint8_t    *e[2],				// *e should be e[2][G]
-						 uint16_t   rnti[2],			// RNTI for UE specific or common search space
-						 uint8_t    dci_number,			// This variable should takes the 1 or 2 (1 for in case of one DCI, 2 in case of two DCI)
-						 uint8_t    agr_level)			// Aggregation level
+void dci_encoding_NB_IoT(uint8_t                  *a,				         // Array of two DCI pdus, even if one DCI is to transmit , the number of DCI is indicated in dci_number
+						 NB_IoT_eNB_NPDCCH_t      *dlcch,                  ////uint8_t    *e[2],				// *e should be e[2][G]
+						 uint8_t                  A,
+						 uint16_t                 G,
+						 uint16_t                 rnti,			         // RNTI for UE specific or common search space
+						 uint8_t 			      ncce_index,
+						 uint8_t                  agr_level)			         // Aggregation level
 {
 	uint8_t  D = (A + 16);
 	uint32_t RCC;
 	uint8_t  occupation_size=1;
-	// encode dci
-	if(dci_number == 1)
-	{
-		if(agr_level == 2)
+	
+		if(agr_level == 2 && ncce_index == 1)
 		{
 			occupation_size=1;
 		}else{
 			occupation_size=2;
 		}
-		memset((void *)d[0],LTE_NULL_NB_IoT,96);
+		memset((void *)dlcch->npdcch_d[ncce_index-1],LTE_NULL_NB_IoT,96);
 
-		ccode_encode_NB_IoT(A,2,a[0],d[0]+96,rnti[0]);    					// CRC attachement & Tail-biting convolutional coding
-		RCC = sub_block_interleaving_cc_NB_IoT(D,d[0]+96,w[0]);				// Interleaving
-		lte_rate_matching_cc_NB_IoT(RCC,(E/occupation_size),w[0],e[0]);		// Rate Matching
+		ccode_encode_NB_IoT(A,2,a,dlcch->npdcch_d[ncce_index-1]+96,rnti);    					// CRC attachement & Tail-biting convolutional coding
+		RCC = sub_block_interleaving_cc_NB_IoT(D,dlcch->npdcch_d[ncce_index-1]+96,dlcch->npdcch_w[ncce_index-1]);				// Interleaving
+		lte_rate_matching_cc_NB_IoT(RCC,(G/occupation_size),dlcch->npdcch_w[ncce_index-1],dlcch->npdcch_e[ncce_index-1]);		// Rate Matching
 
-	}else if (dci_number == 2) {
-
-		memset((void *)d[0],LTE_NULL_NB_IoT,96);
-		memset((void *)d[1],LTE_NULL_NB_IoT,96);
-		// first DCI encoding
-		ccode_encode_NB_IoT(A,2,a[0],d[0]+96,rnti[0]);    					// CRC attachement & Tail-biting convolutional coding
-		RCC = sub_block_interleaving_cc_NB_IoT(D,d[0]+96,w[0]);				// interleaving
-		lte_rate_matching_cc_NB_IoT(RCC,E/2,w[0],e[0]);						// Rate Matching , E/2 ,  NCCE0
-		// second DCI encoding
-		ccode_encode_NB_IoT(A,2,a[1],d[1]+96,rnti[1]);    					// CRC attachement & Tail-biting convolutional coding
-		RCC = sub_block_interleaving_cc_NB_IoT(D,d[1]+96,w[1]);				// Interleaving
-		lte_rate_matching_cc_NB_IoT(RCC,E/2,w[1],e[1]);						// Rate Matching, E/2 , NCCE1
-
-	}
 }
 
 ///The scrambling sequence shall be initialised at the start of the search space and after every 4th NPDCCH subframes.
@@ -183,10 +167,9 @@ int dci_allocate_REs_in_RB_NB_IoT(LTE_DL_FRAME_PARMS 	*frame_parms,
                                   uint8_t                   pilot_shift,
                                   int16_t 					amp,
 						  	      unsigned short 			id_offset,
-                                  uint32_t 					*re_allocated, 	//  not used variable ??!!
-								  uint8_t 					dci_number,		// This variable should takes the 1 or 2 (1 for in case of one DCI, 2 in case of two DCI)
 								  uint8_t 					ncce_index,
-								  uint8_t 					agr_level)
+								  uint8_t 					agr_level,
+								  uint32_t 					*re_allocated)
 {
   MIMO_mode_t 	mimo_mode = (frame_parms->mode1_flag==1)? SISO:ALAMOUTI;
 
@@ -348,16 +331,14 @@ int dci_modulation_NB_IoT(int32_t 				  **txdataF,
 						  int16_t 				  amp,
 						  LTE_DL_FRAME_PARMS 	  *frame_parms,
 						  uint8_t 				  control_region_size,      // control region size for LTE , values between 0..3, (0 for stand-alone / 1, 2 or 3 for in-band)
-						  NB_IoT_eNB_NDLSCH_t    *dlsch0,                  //NB_IoT_eNB_NDLSCH_t
-						  int 					  G,						// number of bits per subframe
+						  NB_IoT_eNB_NPDCCH_t    *dlcch,
 						  unsigned int		      npdsch_data_subframe,     // subframe index of the data table of npdsch channel (G*Nsf)  , values are between 0..Nsf  			
-						  uint8_t 				  dci_number,				// This variable should takes the 1 or 2 (1 for in case of one DCI, 2 in case of two DCI)
 						  uint8_t 				  agr_level,
+						  uint8_t 				  ncce_index,
 						  unsigned int		      subframe,
-						  unsigned short 		  NB_IoT_RB_ID)
+						  unsigned short 		  NB_IoT_RB_ID)            /// NB_IoT_RB_ID should be initialized in the LTE_DL_FRAME_PARMS
 {
-    //uint8_t harq_pid = dlsch0->current_harq_pid;
-    //NB_IoT_DL_eNB_HARQ_t *dlsch0_harq = dlsch0->harq_processes[harq_pid];
+    
     uint32_t 		jj = 0;
 	uint32_t 		re_allocated,symbol_offset;
     uint16_t 		l;
@@ -372,7 +353,8 @@ int dci_modulation_NB_IoT(int32_t 				  **txdataF,
 	bandwidth_even_odd  =  frame_parms->N_RB_DL % 2; 	 	// 0 even, 1 odd
 	RB_IoT_ID 			=  NB_IoT_RB_ID;
 	// step  5, 6, 7   									 	// modulation and mapping (slot 1, symbols 0..3)
-	for (l=control_region_size; l<14; l++) { 								 	// loop on OFDM symbols	
+	for (l=control_region_size; l<14; l++) {                  // loop on OFDM symbols	
+
 		if((l>=4 && l<=7) || (l>=11 && l<=13))
 		{
 			pilots = 1;
@@ -393,26 +375,39 @@ int dci_modulation_NB_IoT(int32_t 				  **txdataF,
 		symbol_offset = (14*subframe*frame_parms->ofdm_symbol_size) + frame_parms->ofdm_symbol_size*l + NB_IoT_start;  						// symbol_offset = 512 * L + NB_IOT_RB start
 
 
-		allocate_REs_in_RB_NB_IoT(frame_parms,
-								  txdataF,
-								  &jj,
-								  symbol_offset,
-								  &dlsch0->harq_process->s_e[G*npdsch_data_subframe],
-								  pilots,
-								  amp,
-								  id_offset,
-								  pilot_shift,
-								  &re_allocated);
+		if(agr_level == 2)
+		{
+				dci_allocate_REs_in_RB_NB_IoT(frame_parms,
+											  txdataF,
+											  &jj,
+											  symbol_offset,
+											  &dlcch->npdcch_e[0],
+											  pilots,
+											  pilot_shift,
+											  amp,
+											  id_offset,
+											  ncce_index,
+								              agr_level,
+											  &re_allocated);
+	    } else {
+	    		dci_allocate_REs_in_RB_NB_IoT(frame_parms,
+											  txdataF,
+											  &jj,
+											  symbol_offset,
+											  &dlcch->npdcch_e[ncce_index-1],
+											  pilots,
+											  pilot_shift,
+											  amp,
+											  id_offset,
+											  ncce_index,
+								              agr_level,
+											  &re_allocated);
+	    }
+
 	}
-	
- // VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_ENB_DLSCH_MODULATION, VCD_FUNCTION_OUT);
+
   return (re_allocated);
 }
-
-
-
-
-
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
