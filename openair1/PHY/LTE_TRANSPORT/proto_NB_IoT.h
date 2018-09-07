@@ -290,11 +290,11 @@ void dci_encoding_NB_IoT(uint8_t                  *a,
 
 
 void npdcch_scrambling_NB_IoT(LTE_DL_FRAME_PARMS     *frame_parms,
-                              uint8_t                *e,     
-                              int                    length,          
-                              uint8_t                Ns,
-                              uint8_t                dci_number,    
-                              uint8_t                agr_level);   
+                              NB_IoT_eNB_NPDCCH_t     *dlcch,     // Input data
+                              int                     G,          // Total number of bits to transmit in one subframe(case of DCI = G)
+                              uint8_t                 Ns,       //XXX we pass the subframe  // Slot number (0..19)
+                              uint8_t                 ncce_index,
+                              uint8_t                 agr_level); 
 
 
 int dlsch_modulation_NB_IoT(int32_t               **txdataF,

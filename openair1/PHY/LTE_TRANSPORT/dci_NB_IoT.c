@@ -49,15 +49,10 @@
 //#include "assertions.h" 
 //#include "T.h"
 
+/////////////////////////////////////////////////////////////////////
 
-//------------------------------------------------
-// BCOM code functions npdcch start
-// (TODO solve some error in compilation)
-//------------------------------------------------
 //static uint8_t d[2][3*(MAX_DCI_SIZE_BITS_NB_IoT + 16) + 96];
 //static uint8_t w[2][3*3*(MAX_DCI_SIZE_BITS_NB_IoT+16)];
-
-
 
 void dci_encoding_NB_IoT(uint8_t                  *a,				         // Array of two DCI pdus, even if one DCI is to transmit , the number of DCI is indicated in dci_number
 						 NB_IoT_eNB_NPDCCH_t      *dlcch,                  ////uint8_t    *e[2],				// *e should be e[2][G]
@@ -85,16 +80,16 @@ void dci_encoding_NB_IoT(uint8_t                  *a,				         // Array of tw
 
 }
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///The scrambling sequence shall be initialised at the start of the search space and after every 4th NPDCCH subframes.
-///
-///
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void npdcch_scrambling_NB_IoT(LTE_DL_FRAME_PARMS     *frame_parms,
-							  uint8_t                  *e,			// Input data
-							  int                      length,        	// Total number of bits to transmit in one subframe(case of DCI = G)
-							  uint8_t 				   Ns,				//XXX we pass the subframe	// Slot number (0..19)
-							  uint8_t 				   dci_number,		// This variable should takes the 1 or 2 (1 for in case of one DCI, 2 in case of two DCI)
-							  uint8_t 				   agr_level)		// Aggregation level
+							  NB_IoT_eNB_NPDCCH_t     *dlcch,			// Input data
+							  int                     G,        	// Total number of bits to transmit in one subframe(case of DCI = G)
+							  uint8_t 				  Ns,				//XXX we pass the subframe	// Slot number (0..19)
+							  uint8_t 			      ncce_index,
+							  uint8_t 				  agr_level)		// Aggregation level
 {
 	int 	  i;
 	uint32_t  x1, x2, s=0;
@@ -103,61 +98,28 @@ void npdcch_scrambling_NB_IoT(LTE_DL_FRAME_PARMS     *frame_parms,
 
 	reset = 1;
 
-	if(agr_level == 2)
+	if(agr_level == 2 && ncce_index == 1)
 	{
 		occupation_size=1;
 	}else{
 		occupation_size=2;
 	}
 
-	if(dci_number == 1)														// Case of one DCI
-	{
 		x2 = ((Ns>>1)<<9) + frame_parms->Nid_cell;                          // This is c_init in 36.211 Sec 10.2.3.1
 
-		for (i=0; i<length/occupation_size; i++) {
+		for (i=0; i<G/occupation_size; i++) {
 			if ((i&0x1f)==0) {
 				s = lte_gold_generic_NB_IoT(&x1, &x2, reset);
 				reset = 0;
 			}
-			e[i] = (e[i]&1) ^ ((s>>(i&0x1f))&1);
+			dlcch->npdcch_e[ncce_index-1][i] = (dlcch->npdcch_e[ncce_index-1][i]&1) ^ ((s>>(i&0x1f))&1);
 		}
 
-	}else if(dci_number == 2 && occupation_size == 2) {						// Case of two DCI
-
-		// Scrambling the first DCI
-		//
-		x2 = ((Ns>>1)<<9) + frame_parms->Nid_cell;                          // This is c_init in 36.211 Sec 10.2.3.1
-
-		for (i=0; i<length/occupation_size; i++) {
-			if ((i&0x1f)==0) {
-				s = lte_gold_generic_NB_IoT(&x1, &x2, reset);
-				reset = 0;
-			}
-			e[i] = (e[i]&1) ^ ((s>>(i&0x1f))&1);
-		}
-		// reset of the scrambling function
-		reset = 1;
-		// Scrambling the second DCI
-		//
-		x2 = ((Ns>>1)<<9) + frame_parms->Nid_cell;                          //this is c_init in 36.211 Sec 10.2.3.1
-
-		for (i=0; i<length/occupation_size; i++) {
-			if ((i&0x1f)==0) {
-				s = lte_gold_generic_NB_IoT(&x1, &x2, reset);
-				reset = 0;
-			}
-			e[i] = (e[i]&1) ^ ((s>>(i&0x1f))&1);
-		}
-	}
+	
 }
 
-
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 int dci_allocate_REs_in_RB_NB_IoT(LTE_DL_FRAME_PARMS 	*frame_parms,
                                   int32_t 					**txdataF,
                                   uint32_t 					*jj,
@@ -321,10 +283,7 @@ int dci_allocate_REs_in_RB_NB_IoT(LTE_DL_FRAME_PARMS 	*frame_parms,
 
   return(0);
 }
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 int dci_modulation_NB_IoT(int32_t 				  **txdataF,
