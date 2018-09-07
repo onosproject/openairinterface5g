@@ -878,10 +878,10 @@ void generate_eNB_dlsch_params_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_t *
               //set the NPDCCH UE-specific structure  (calculate R)
               npdcch=eNB->npdcch[(uint8_t)UE_id];
               AssertFatal(npdcch != NULL, "NPDCCH structure for UE specific is not exist\n");
-              npdcch->repetition_idx = 0; //this is used for the encoding mechanism to understand that is the first transmission
+              npdcch->repetition_idx[(uint8_t)UE_id] = 0; //this is used for the encoding mechanism to understand that is the first transmission
 
               if(dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.aggregation_level) //whenever aggregation level is =1 we have only 1 repetition for USS
-              npdcch->repetition_number = 1;
+              npdcch->repetition_number[(uint8_t)UE_id] = 1;
               else
               {
                 //see TS 36.213 Table 16.1-1
@@ -1532,7 +1532,7 @@ void phy_procedures_eNB_TX_NB_IoT(PHY_VARS_eNB_NB_IoT     *eNB,
 
       for(UE_id = 0 ; UE_id < NUMBER_OF_UE_MAX_NB_IoT; UE_id++)
       {
-        if(eNB->npdcch[(uint8_t)UE_id] != NULL && eNB->npdcch[(uint8_t)UE_id]->rnti == dci_pdu->dci_alloc->rnti && (eNB->ndlsch_SIB1->harq_process->status != ACTIVE_NB_IoT || subframe != 4))
+        if(eNB->npdcch[(uint8_t)UE_id] != NULL && eNB->npdcch[(uint8_t)UE_id]->rnti[(uint8_t)UE_id] == dci_pdu->dci_alloc->rnti && (eNB->ndlsch_SIB1->harq_process->status != ACTIVE_NB_IoT || subframe != 4))
         {
             if(frame%2 == 0)//condition on NSSS (subframe 9 not available)
               {
@@ -1547,7 +1547,7 @@ void phy_procedures_eNB_TX_NB_IoT(PHY_VARS_eNB_NB_IoT     *eNB,
                                           eNB->common_vars.txdataF[0],
                                           subframe,
                                           dci_pdu->npdcch_start_symbol); //this parameter depends by eutraControlRegionSize (see TS36.213 16.6.1)
-                                          eNB->npdcch[(uint8_t)UE_id]->repetition_idx++; //can do also inside also the management
+                                          eNB->npdcch[(uint8_t)UE_id]->repetition_idx[(uint8_t)UE_id]++; //can do also inside also the management
 
                   break;
                  }
@@ -1565,7 +1565,7 @@ void phy_procedures_eNB_TX_NB_IoT(PHY_VARS_eNB_NB_IoT     *eNB,
                                         subframe,
                                         dci_pdu->npdcch_start_symbol); //this parameter depends by eutraControlRegionSize (see TS36.213 16.6.1)
                 
-                eNB->npdcch[(uint8_t)UE_id]->repetition_idx++; //can do also inside also the management
+                eNB->npdcch[(uint8_t)UE_id]->repetition_idx[(uint8_t)UE_id]++; //can do also inside also the management
 
               break;
               }

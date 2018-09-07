@@ -384,12 +384,12 @@ void phy_config_dedicated_eNB_NB_IoT(uint8_t 			Mod_id,
 
 	if (eNB->npdcch[UE_id]) {
 		npdcch = eNB->npdcch[UE_id];
-		npdcch->rnti = rnti;
-		npdcch->npdcch_NumRepetitions = extra_parms->npdcch_NumRepetitions; //Rmax maybe is the only one needed
+		npdcch->rnti[0] = rnti;
+		npdcch->npdcch_NumRepetitions[0] = extra_parms->npdcch_NumRepetitions; //Rmax maybe is the only one needed
 		//npdcch->npdcch_Offset_USS = extra_parms->npdcch_Offset_USS;
 		//npdcch->npdcch_StartSF_USS = extra_parms->npdcch_StartSF_USS;
 
-		LOG_I(PHY,"phy_config_dedicated_eNB_NB_IoT: npdcch_NumRepetitions = %d\n",npdcch->npdcch_NumRepetitions);
+		LOG_I(PHY,"phy_config_dedicated_eNB_NB_IoT: npdcch_NumRepetitions = %d\n",npdcch->npdcch_NumRepetitions[0]);
 	
 	} else {
 		LOG_E(PHY,"[eNB %d] Received NULL radioResourceConfigDedicated from eNB %d\n",Mod_id, UE_id);

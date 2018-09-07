@@ -255,41 +255,45 @@ unsigned char get_Qm_ul_NB_IoT(unsigned char I_MCS, uint8_t N_sc_RU);
     @returns status
 */
 
-int dci_modulation_NB_IoT(int32_t           **txdataF,
-              int16_t           amp,
-              LTE_DL_FRAME_PARMS   *frame_parms,
-              uint8_t           control_region_size,    //XXX we pass the npdcch_start_symbol // control region size for LTE , values between 0..3, (0 for stand-alone / 1, 2 or 3 for in-band)
-              uint8_t           *e,          // Input data
-              uint8_t           dci_number,       // This variable should takes the 1 or 2 (1 for in case of one DCI, 2 in case of two DCI)
-              uint8_t           agr_level,
-              int               RB_index,
-              int               subframe);   
+int dci_modulation_NB_IoT(int32_t               **txdataF,
+                          int16_t               amp,
+                          LTE_DL_FRAME_PARMS    *frame_parms,
+                          uint8_t               control_region_size,      // control region size for LTE , values between 0..3, (0 for stand-alone / 1, 2 or 3 for in-band)
+                          NB_IoT_eNB_NDLSCH_t  *dlsch0,                  //NB_IoT_eNB_NDLSCH_t
+                          int                   G,            // number of bits per subframe
+                          unsigned int          npdsch_data_subframe,     // subframe index of the data table of npdsch channel (G*Nsf)  , values are between 0..Nsf        
+                          uint8_t               dci_number,       // This variable should takes the 1 or 2 (1 for in case of one DCI, 2 in case of two DCI)
+                          uint8_t               agr_level,
+                          unsigned int          subframe,
+                          unsigned short        NB_IoT_RB_ID);  
 
 int dci_allocate_REs_in_RB_NB_IoT(LTE_DL_FRAME_PARMS  *frame_parms,
-                                  int32_t           **txdataF,
-                                  uint32_t          *jj,
-                                  uint32_t          symbol_offset,
-                                  uint8_t           *x0[2],
-                                  uint8_t           pilots,
-                                  int16_t           amp,
+                                  int32_t             **txdataF,
+                                  uint32_t            *jj,
+                                  uint32_t            symbol_offset,
+                                  uint8_t             *x0,
+                                  uint8_t             pilots,
+                                  uint8_t             pilot_shift,
+                                  int16_t             amp,
                                   unsigned short      id_offset,
-                                  uint32_t          *re_allocated,  //  not used variable ??!!
-                                  uint8_t           dci_number,   // This variable should takes the 1 or 2 (1 for in case of one DCI, 2 in case of two DCI)
-                                  uint8_t           agr_level);
+                                  uint32_t            *re_allocated,  //  not used variable ??!!
+                                  uint8_t             dci_number,   // This variable should takes the 1 or 2 (1 for in case of one DCI, 2 in case of two DCI)
+                                  uint8_t             ncce_index,
+                                  uint8_t             agr_level);
 
 void npdcch_scrambling_NB_IoT(LTE_DL_FRAME_PARMS     *frame_parms,
-                uint8_t                  *e,     
-                int                      length,          
-                uint8_t            Ns,
-                uint8_t            dci_number,    
-                uint8_t            agr_level);   
+                              uint8_t                *e,     
+                              int                    length,          
+                              uint8_t                Ns,
+                              uint8_t                dci_number,    
+                              uint8_t                agr_level);   
 
 
 int dlsch_modulation_NB_IoT(int32_t               **txdataF,
                             int16_t               amp,
                             LTE_DL_FRAME_PARMS      *frame_parms,
                             uint8_t               control_region_size,      // control region size for LTE , values between 0..3, (0 for stand-alone / 1, 2 or 3 for in-band)
-                            NB_IoT_DL_eNB_HARQ_t    *dlsch0,  //NB_IoT_eNB_NDLSCH_t
+                            NB_IoT_eNB_NDLSCH_t    *dlsch0,  //NB_IoT_eNB_NDLSCH_t
                             int                   G,              // number of bits per subframe
                             unsigned int            npdsch_data_subframe,     // subframe index of the data table of npdsch channel (G*Nsf)  , values are between 0..Nsf        
                             unsigned int            subframe,
@@ -307,7 +311,7 @@ int dlsch_modulation_rar_NB_IoT(int32_t         **txdataF,
                                 uint8_t             option);
 */
 int32_t dlsch_encoding_NB_IoT(unsigned char              *a,
-                              NB_IoT_DL_eNB_HARQ_t        *dlsch, // NB_IoT_eNB_NDLSCH_t
+                              NB_IoT_eNB_NDLSCH_t        *dlsch, // NB_IoT_eNB_NDLSCH_t
                               uint8_t                    Nsf,        // number of subframes required for npdsch pdu transmission calculated from Isf (3GPP spec table)
                               unsigned int               G,
                               uint8_t                    option);         // G (number of available RE) is implicitly multiplied by 2 (since only QPSK modulation)

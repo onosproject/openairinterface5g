@@ -546,27 +546,6 @@ typedef enum
 
 
 
-typedef struct {
-  rnti_t          rnti;
-  //array containing the pdus of DCI
-  uint8_t         *a[2];
-  //Array containing encoded DCI data
-  uint8_t         *e[2];
-
-  //UE specific parameters
-  uint16_t        npdcch_NumRepetitions;
-
-  uint16_t        repetition_number;
-  //indicate the corresponding subframe within the repetition (set to 0 when a new NPDCCH pdu is received)
-  uint16_t        repetition_idx;
-
-  //  uint16_t npdcch_Offset_USS;
-  //  uint16_t npdcch_StartSF_USS;
-
-
-}NB_IoT_eNB_NPDCCH_t;
-
-
 typedef struct{
 
   //Number of repetitions (R) for common search space (RAR and PAGING)
@@ -871,18 +850,28 @@ typedef struct {
 } NB_IoT_eNB_NPBCH_t;
 
 #define NPDCCH_A 23
+#define MAX_BITS_IN_SF 284   // maximum number of bits over one subframe
 
 typedef struct {
   //the 2 LSB of the hsfn (the MSB are indicated by the SIB1-NB)
+  rnti_t          rnti[2];
+
+  //UE specific parameters
+  uint16_t        npdcch_NumRepetitions[2];
+
+  uint16_t        repetition_number[2];
+  //indicate the corresponding subframe within the repetition (set to 0 when a new NPDCCH pdu is received)
+  uint16_t        repetition_idx[2];
+
   uint16_t  h_sfn_lsb;
 
   uint8_t   npdcch_d[2][96+(3*(16+NPDCCH_A))];
   uint8_t   npdcch_w[2][3*3*(16+NPDCCH_A)];
-  uint8_t   npdcch_e[2][236];
+  uint8_t   npdcch_e[2][MAX_BITS_IN_SF];
   ///pdu of the npbch message
   uint8_t   pdu[2][3];
 
-} NB_IoT_eNB_NPDCCH_temp_t;
+} NB_IoT_eNB_NPDCCH_t;
 
 
 #endif

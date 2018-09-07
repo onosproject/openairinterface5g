@@ -167,199 +167,76 @@ void npdcch_scrambling_NB_IoT(LTE_DL_FRAME_PARMS     *frame_parms,
 	}
 }
 
-//// correction is needed to this function
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 int dci_allocate_REs_in_RB_NB_IoT(LTE_DL_FRAME_PARMS 	*frame_parms,
                                   int32_t 					**txdataF,
                                   uint32_t 					*jj,
                                   uint32_t 					symbol_offset,
-                                  uint8_t 					*x0[2],
+                                  uint8_t 					*x0,
                                   uint8_t 					pilots,
+                                  uint8_t                   pilot_shift,
                                   int16_t 					amp,
 						  	      unsigned short 			id_offset,
                                   uint32_t 					*re_allocated, 	//  not used variable ??!!
 								  uint8_t 					dci_number,		// This variable should takes the 1 or 2 (1 for in case of one DCI, 2 in case of two DCI)
+								  uint8_t 					ncce_index,
 								  uint8_t 					agr_level)
 {
-	MIMO_mode_NB_IoT_t mimo_mode = (frame_parms->mode1_flag==1)?SISO_NB_IoT:ALAMOUTI_NB_IoT;
+  MIMO_mode_t 	mimo_mode = (frame_parms->mode1_flag==1)? SISO:ALAMOUTI;
 
-	uint32_t  tti_offset,aa;
-	uint8_t   re;
-	int16_t   gain_lin_QPSK;
-	uint8_t   first_re,last_re;
-	int32_t   tmp_sample1,tmp_sample2,tmp_sample3,tmp_sample4;
+  uint32_t  tti_offset,aa;
+  uint8_t   re;
+  int16_t   gain_lin_QPSK;
+  uint8_t   first_re,last_re;
+  int32_t   tmp_sample1,tmp_sample2;
 
-	gain_lin_QPSK = (int16_t)((amp*ONE_OVER_SQRT2_Q15_NB_IoT)>>15);
-	first_re=0;
-	last_re=12;
+  gain_lin_QPSK = (int16_t)((amp*ONE_OVER_SQRT2_Q15_NB_IoT)>>15);
+  first_re      = 0;
+  last_re       = 12;
 
-	if(agr_level == 2 && dci_number == 1)
-	{
-		for (re=first_re; re<last_re; re++) {      	// re varies between 0 and 12 sub-carriers
 
-			tti_offset = symbol_offset + re;				// symbol_offset = 512 * L ,  re_offset = 512 - 3*12  , re
+   if(ncce_index == 1 && agr_level == 2)
+   {
 
-			if (pilots != 1 || re%3 != id_offset)  			// if re is not a pilot
-			{
-															//	diff_re = re%3 - id_offset;
-				if (mimo_mode == SISO_NB_IoT) {  					//SISO mapping
-					*re_allocated = *re_allocated + 1;				// variable incremented but never used
+		  for (re=first_re; re<last_re; re++) {      		// re varies between 0 and 12 sub-carriers
 
-					for (aa=0; aa<frame_parms->nb_antennas_tx; aa++) {
-						((int16_t*)&txdataF[aa][tti_offset])[0] += (x0[0][*jj]==1) ? (-gain_lin_QPSK) : gain_lin_QPSK; //I //b_i
-					}
-					*jj = *jj + 1;
-					for (aa=0; aa<frame_parms->nb_antennas_tx; aa++) {
-						((int16_t*)&txdataF[aa][tti_offset])[1] += (x0[0][*jj]==1) ? (-gain_lin_QPSK) : gain_lin_QPSK; //Q //b_{i+1}
-					}
-					*jj = *jj + 1;
-
-				} else if (mimo_mode == ALAMOUTI_NB_IoT) {
-
-					*re_allocated = *re_allocated + 1;
-
-					((int16_t*)&tmp_sample1)[0] = (x0[0][*jj]==1) ? (-gain_lin_QPSK) : gain_lin_QPSK;
-					*jj=*jj+1;
-					((int16_t*)&tmp_sample1)[1] = (x0[0][*jj]==1) ? (-gain_lin_QPSK) : gain_lin_QPSK;
-					*jj=*jj+1;
-
-					// second antenna position n -> -x1*
-
-					((int16_t*)&tmp_sample2)[0] = (x0[0][*jj]==1) ? (gain_lin_QPSK) : -gain_lin_QPSK;
-					*jj=*jj+1;
-					((int16_t*)&tmp_sample2)[1] = (x0[0][*jj]==1) ? (-gain_lin_QPSK) : gain_lin_QPSK;
-					*jj=*jj+1;
-
-					// normalization for 2 tx antennas
-					((int16_t*)&txdataF[0][tti_offset])[0] += (int16_t)((((int16_t*)&tmp_sample1)[0]*ONE_OVER_SQRT2_Q15_NB_IoT)>>15);
-					((int16_t*)&txdataF[0][tti_offset])[1] += (int16_t)((((int16_t*)&tmp_sample1)[1]*ONE_OVER_SQRT2_Q15_NB_IoT)>>15);
-					((int16_t*)&txdataF[1][tti_offset])[0] += (int16_t)((((int16_t*)&tmp_sample2)[0]*ONE_OVER_SQRT2_Q15_NB_IoT)>>15);
-					((int16_t*)&txdataF[1][tti_offset])[1] += (int16_t)((((int16_t*)&tmp_sample2)[1]*ONE_OVER_SQRT2_Q15_NB_IoT)>>15);
-
-					// fill in the rest of the ALAMOUTI precoding
-					if ( pilots != 1 || (re+1)%3 != id_offset) {
-						((int16_t *)&txdataF[0][tti_offset+1])[0] += -((int16_t *)&txdataF[1][tti_offset])[0]; //x1
-						((int16_t *)&txdataF[0][tti_offset+1])[1] += ((int16_t *)&txdataF[1][tti_offset])[1];
-						((int16_t *)&txdataF[1][tti_offset+1])[0] += ((int16_t *)&txdataF[0][tti_offset])[0];  //x0*
-						((int16_t *)&txdataF[1][tti_offset+1])[1] += -((int16_t *)&txdataF[0][tti_offset])[1];
-					} else {
-						((int16_t *)&txdataF[0][tti_offset+2])[0] += -((int16_t *)&txdataF[1][tti_offset])[0]; //x1
-						((int16_t *)&txdataF[0][tti_offset+2])[1] += ((int16_t *)&txdataF[1][tti_offset])[1];
-						((int16_t *)&txdataF[1][tti_offset+2])[0] += ((int16_t *)&txdataF[0][tti_offset])[0];  //x0*
-						((int16_t *)&txdataF[1][tti_offset+2])[1] += -((int16_t *)&txdataF[0][tti_offset])[1];
-
-						re++;														// skip pilots
-						*re_allocated = *re_allocated + 1;
-					}
-					re++;  															// adjacent carriers are taken care of by precoding
-					*re_allocated = *re_allocated + 1;   							// incremented variable but never used
-				}
-			}
-		}
-  	}else if(agr_level == 1 && dci_number == 1){
-
-		for (re=first_re; re<6; re++) {      		// re varies between 0 and 6 sub-carriers
-
-    		tti_offset = symbol_offset + re;				// symbol_offset = 512 * L ,  re_offset = 512 - 3*12  , re
-
-			if (pilots != 1 || re%3 != id_offset)  			// if re is not a pilot
-			{
-													//	diff_re = re%3 - id_offset;
-				if (mimo_mode == SISO_NB_IoT) {  								//SISO mapping
-					*re_allocated = *re_allocated + 1;						// variable incremented but never used
-
-					for (aa=0; aa<frame_parms->nb_antennas_tx; aa++) {
-						((int16_t*)&txdataF[aa][tti_offset])[0] += (x0[0][*jj]==1) ? (-gain_lin_QPSK) : gain_lin_QPSK; //I //b_i
-					}
-					*jj = *jj + 1;
-					for (aa=0; aa<frame_parms->nb_antennas_tx; aa++) {
-						((int16_t*)&txdataF[aa][tti_offset])[1] += (x0[0][*jj]==1) ? (-gain_lin_QPSK) : gain_lin_QPSK; //Q //b_{i+1}
-					}
-					*jj = *jj + 1;
-
-				} else if (mimo_mode == ALAMOUTI_NB_IoT) {
-
-					*re_allocated = *re_allocated + 1;
-
-					((int16_t*)&tmp_sample1)[0] = (x0[0][*jj]==1) ? (-gain_lin_QPSK) : gain_lin_QPSK;
-					*jj=*jj+1;
-					((int16_t*)&tmp_sample1)[1] = (x0[0][*jj]==1) ? (-gain_lin_QPSK) : gain_lin_QPSK;
-					*jj=*jj+1;
-
-					// second antenna position n -> -x1*
-
-					((int16_t*)&tmp_sample2)[0] = (x0[0][*jj]==1) ? (gain_lin_QPSK) : -gain_lin_QPSK;
-					*jj=*jj+1;
-					((int16_t*)&tmp_sample2)[1] = (x0[0][*jj]==1) ? (-gain_lin_QPSK) : gain_lin_QPSK;
-					*jj=*jj+1;
-
-					// normalization for 2 tx antennas
-					((int16_t*)&txdataF[0][tti_offset])[0] += (int16_t)((((int16_t*)&tmp_sample1)[0]*ONE_OVER_SQRT2_Q15_NB_IoT)>>15);
-					((int16_t*)&txdataF[0][tti_offset])[1] += (int16_t)((((int16_t*)&tmp_sample1)[1]*ONE_OVER_SQRT2_Q15_NB_IoT)>>15);
-					((int16_t*)&txdataF[1][tti_offset])[0] += (int16_t)((((int16_t*)&tmp_sample2)[0]*ONE_OVER_SQRT2_Q15_NB_IoT)>>15);
-					((int16_t*)&txdataF[1][tti_offset])[1] += (int16_t)((((int16_t*)&tmp_sample2)[1]*ONE_OVER_SQRT2_Q15_NB_IoT)>>15);
-
-					// fill in the rest of the ALAMOUTI precoding
-					if ( pilots != 1 || (re+1)%3 != id_offset) {
-						((int16_t *)&txdataF[0][tti_offset+1])[0] += -((int16_t *)&txdataF[1][tti_offset])[0]; //x1
-						((int16_t *)&txdataF[0][tti_offset+1])[1] += ((int16_t *)&txdataF[1][tti_offset])[1];
-						((int16_t *)&txdataF[1][tti_offset+1])[0] += ((int16_t *)&txdataF[0][tti_offset])[0];  //x0*
-						((int16_t *)&txdataF[1][tti_offset+1])[1] += -((int16_t *)&txdataF[0][tti_offset])[1];
-					} else {
-						((int16_t *)&txdataF[0][tti_offset+2])[0] += -((int16_t *)&txdataF[1][tti_offset])[0]; //x1
-						((int16_t *)&txdataF[0][tti_offset+2])[1] += ((int16_t *)&txdataF[1][tti_offset])[1];
-						((int16_t *)&txdataF[1][tti_offset+2])[0] += ((int16_t *)&txdataF[0][tti_offset])[0];  //x0*
-						((int16_t *)&txdataF[1][tti_offset+2])[1] += -((int16_t *)&txdataF[0][tti_offset])[1];
-
-						re++;														// skip pilots
-						*re_allocated = *re_allocated + 1;
-					}
-					re++;  															// adjacent carriers are taken care of by precoding
-					*re_allocated = *re_allocated + 1;   							// incremented variable but never used
-		 		}
-     		}
-   		}
- 	} else {
-
-		// allocate first DCI
-		for (re=first_re; re<6; re++) {      		// re varies between 0 and 12 sub-carriers
-
-    		tti_offset = symbol_offset + re;				// symbol_offset = 512 * L ,  re_offset = 512 - 3*12  , re
-
-			if (pilots != 1 || re%3 != id_offset) { 			// if re is not a pilot
+		    tti_offset = symbol_offset + re;				// symbol_offset = 512 * L ,  re_offset = 512 - 3*12  , re
 			
-													//	diff_re = re%3 - id_offset;
-     			if (mimo_mode == SISO_NB_IoT) {  								//SISO mapping
+			if (pilots != 1 || (re%6 != ((id_offset + 3*pilot_shift) % 6) ) )  			// if re is not a pilot
+			{
+															 
+		      if (mimo_mode == SISO) {  								//SISO mapping
 					*re_allocated = *re_allocated + 1;						// variable incremented but never used
-
+					
 					for (aa=0; aa<frame_parms->nb_antennas_tx; aa++) {
-						((int16_t*)&txdataF[aa][tti_offset])[0] += (x0[0][*jj]==1) ? (-gain_lin_QPSK) : gain_lin_QPSK; //I //b_i
-						((int16_t*)&txdataF[aa][tti_offset+6])[0] += (x0[1][*jj]==1) ? (-gain_lin_QPSK) : gain_lin_QPSK; //I //b_i
+							((int16_t*)&txdataF[aa][tti_offset])[0] += (x0[*jj]==1) ? (-gain_lin_QPSK) : gain_lin_QPSK; //I //b_i
 					}
 					*jj = *jj + 1;
 					for (aa=0; aa<frame_parms->nb_antennas_tx; aa++) {
-						((int16_t*)&txdataF[aa][tti_offset])[1] += (x0[0][*jj]==1) ? (-gain_lin_QPSK) : gain_lin_QPSK; //Q //b_{i+1}
-						((int16_t*)&txdataF[aa][tti_offset+6])[1] += (x0[1][*jj]==1) ? (-gain_lin_QPSK) : gain_lin_QPSK; //Q //b_{i+1}
+							((int16_t*)&txdataF[aa][tti_offset])[1] += (x0[*jj]==1) ? (-gain_lin_QPSK) : gain_lin_QPSK; //Q //b_{i+1}
 					}
-					*jj = *jj + 1;
-
-     			} else if (mimo_mode == ALAMOUTI_NB_IoT) {
-
+					*jj = *jj + 1;	
+					
+		      } else if (mimo_mode == ALAMOUTI) {
+			  
 					*re_allocated = *re_allocated + 1;
 
-					((int16_t*)&tmp_sample1)[0] = (x0[0][*jj]==1) ? (-gain_lin_QPSK) : gain_lin_QPSK;
-					((int16_t*)&tmp_sample3)[0] = (x0[1][*jj]==1) ? (-gain_lin_QPSK) : gain_lin_QPSK;
+					((int16_t*)&tmp_sample1)[0] = (x0[*jj]==1) ? (-gain_lin_QPSK) : gain_lin_QPSK;
 					*jj=*jj+1;
-					((int16_t*)&tmp_sample1)[1] = (x0[0][*jj]==1) ? (-gain_lin_QPSK) : gain_lin_QPSK;
-					((int16_t*)&tmp_sample3)[1] = (x0[1][*jj]==1) ? (-gain_lin_QPSK) : gain_lin_QPSK;
+					((int16_t*)&tmp_sample1)[1] = (x0[*jj]==1) ? (-gain_lin_QPSK) : gain_lin_QPSK;
 					*jj=*jj+1;
 
 					// second antenna position n -> -x1*
 
-					((int16_t*)&tmp_sample2)[0] = (x0[0][*jj]==1) ? (gain_lin_QPSK) : -gain_lin_QPSK;
-					((int16_t*)&tmp_sample4)[0] = (x0[1][*jj]==1) ? (gain_lin_QPSK) : -gain_lin_QPSK;
+					((int16_t*)&tmp_sample2)[0] = (x0[*jj]==1) ? (gain_lin_QPSK) : -gain_lin_QPSK;
 					*jj=*jj+1;
-					((int16_t*)&tmp_sample2)[1] = (x0[0][*jj]==1) ? (-gain_lin_QPSK) : gain_lin_QPSK;
-					((int16_t*)&tmp_sample4)[1] = (x0[1][*jj]==1) ? (-gain_lin_QPSK) : gain_lin_QPSK;
+					((int16_t*)&tmp_sample2)[1] = (x0[*jj]==1) ? (-gain_lin_QPSK) : gain_lin_QPSK;
 					*jj=*jj+1;
 
 					// normalization for 2 tx antennas
@@ -368,69 +245,132 @@ int dci_allocate_REs_in_RB_NB_IoT(LTE_DL_FRAME_PARMS 	*frame_parms,
 					((int16_t*)&txdataF[1][tti_offset])[0] += (int16_t)((((int16_t*)&tmp_sample2)[0]*ONE_OVER_SQRT2_Q15_NB_IoT)>>15);
 					((int16_t*)&txdataF[1][tti_offset])[1] += (int16_t)((((int16_t*)&tmp_sample2)[1]*ONE_OVER_SQRT2_Q15_NB_IoT)>>15);
 
-					((int16_t*)&txdataF[0][tti_offset+6])[0] += (int16_t)((((int16_t*)&tmp_sample3)[0]*ONE_OVER_SQRT2_Q15_NB_IoT)>>15);
-					((int16_t*)&txdataF[0][tti_offset+6])[1] += (int16_t)((((int16_t*)&tmp_sample3)[1]*ONE_OVER_SQRT2_Q15_NB_IoT)>>15);
-					((int16_t*)&txdataF[1][tti_offset+6])[0] += (int16_t)((((int16_t*)&tmp_sample4)[0]*ONE_OVER_SQRT2_Q15_NB_IoT)>>15);
-					((int16_t*)&txdataF[1][tti_offset+6])[1] += (int16_t)((((int16_t*)&tmp_sample4)[1]*ONE_OVER_SQRT2_Q15_NB_IoT)>>15);
-
 					// fill in the rest of the ALAMOUTI precoding
 					if ( pilots != 1 || (re+1)%3 != id_offset) {
 						((int16_t *)&txdataF[0][tti_offset+1])[0] += -((int16_t *)&txdataF[1][tti_offset])[0]; //x1
 						((int16_t *)&txdataF[0][tti_offset+1])[1] += ((int16_t *)&txdataF[1][tti_offset])[1];
 						((int16_t *)&txdataF[1][tti_offset+1])[0] += ((int16_t *)&txdataF[0][tti_offset])[0];  //x0*
 						((int16_t *)&txdataF[1][tti_offset+1])[1] += -((int16_t *)&txdataF[0][tti_offset])[1];
-
-						((int16_t *)&txdataF[0][tti_offset+6+1])[0] += -((int16_t *)&txdataF[1][tti_offset+6])[0]; //x1
-						((int16_t *)&txdataF[0][tti_offset+6+1])[1] += ((int16_t *)&txdataF[1][tti_offset+6])[1];
-						((int16_t *)&txdataF[1][tti_offset+6+1])[0] += ((int16_t *)&txdataF[0][tti_offset+6])[0];  //x0*
-						((int16_t *)&txdataF[1][tti_offset+6+1])[1] += -((int16_t *)&txdataF[0][tti_offset+6])[1];
 					} else {
 						((int16_t *)&txdataF[0][tti_offset+2])[0] += -((int16_t *)&txdataF[1][tti_offset])[0]; //x1
 						((int16_t *)&txdataF[0][tti_offset+2])[1] += ((int16_t *)&txdataF[1][tti_offset])[1];
 						((int16_t *)&txdataF[1][tti_offset+2])[0] += ((int16_t *)&txdataF[0][tti_offset])[0];  //x0*
 						((int16_t *)&txdataF[1][tti_offset+2])[1] += -((int16_t *)&txdataF[0][tti_offset])[1];
-
-						((int16_t *)&txdataF[0][tti_offset+6+2])[0] += -((int16_t *)&txdataF[1][tti_offset+6])[0]; //x1
-						((int16_t *)&txdataF[0][tti_offset+6+2])[1] += ((int16_t *)&txdataF[1][tti_offset+6])[1];
-						((int16_t *)&txdataF[1][tti_offset+6+2])[0] += ((int16_t *)&txdataF[0][tti_offset+6])[0];  //x0*
-						((int16_t *)&txdataF[1][tti_offset+6+2])[1] += -((int16_t *)&txdataF[0][tti_offset+6])[1];
-
+				
 						re++;														// skip pilots
 						*re_allocated = *re_allocated + 1;
 					}
 					re++;  															// adjacent carriers are taken care of by precoding
 					*re_allocated = *re_allocated + 1;   							// incremented variable but never used
 				}
-      		}
-    	}
-  	}
-  	return(0);
+		    }
+		  }
+
+   } else if(agr_level == 1) {
+
+	   		for (re=(first_re + (ncce_index/2)*6); re<(6+((ncce_index/2)*6)); re++) {      		// re varies between 0 and 6 or 6 and 12 sub-carriers
+
+			    tti_offset = symbol_offset + re;				// symbol_offset = 512 * L ,  re_offset = 512 - 3*12  , re
+				
+				if (pilots != 1 || (re%6 != ((id_offset + 3*pilot_shift) % 6) ) )  			// if re is not a pilot
+				{
+																 
+			      if (mimo_mode == SISO) {  								//SISO mapping
+						*re_allocated = *re_allocated + 1;						// variable incremented but never used
+						
+						for (aa=0; aa<frame_parms->nb_antennas_tx; aa++) {
+								((int16_t*)&txdataF[aa][tti_offset])[0] += (x0[*jj]==1) ? (-gain_lin_QPSK) : gain_lin_QPSK; //I //b_i
+						}
+						*jj = *jj + 1;
+						for (aa=0; aa<frame_parms->nb_antennas_tx; aa++) {
+								((int16_t*)&txdataF[aa][tti_offset])[1] += (x0[*jj]==1) ? (-gain_lin_QPSK) : gain_lin_QPSK; //Q //b_{i+1}
+						}
+						*jj = *jj + 1;	
+						
+			      } else if (mimo_mode == ALAMOUTI) {
+				  
+						*re_allocated = *re_allocated + 1;
+
+						((int16_t*)&tmp_sample1)[0] = (x0[*jj]==1) ? (-gain_lin_QPSK) : gain_lin_QPSK;
+						*jj=*jj+1;
+						((int16_t*)&tmp_sample1)[1] = (x0[*jj]==1) ? (-gain_lin_QPSK) : gain_lin_QPSK;
+						*jj=*jj+1;
+
+						// second antenna position n -> -x1*
+
+						((int16_t*)&tmp_sample2)[0] = (x0[*jj]==1) ? (gain_lin_QPSK) : -gain_lin_QPSK;
+						*jj=*jj+1;
+						((int16_t*)&tmp_sample2)[1] = (x0[*jj]==1) ? (-gain_lin_QPSK) : gain_lin_QPSK;
+						*jj=*jj+1;
+
+						// normalization for 2 tx antennas
+						((int16_t*)&txdataF[0][tti_offset])[0] += (int16_t)((((int16_t*)&tmp_sample1)[0]*ONE_OVER_SQRT2_Q15_NB_IoT)>>15);
+						((int16_t*)&txdataF[0][tti_offset])[1] += (int16_t)((((int16_t*)&tmp_sample1)[1]*ONE_OVER_SQRT2_Q15_NB_IoT)>>15);
+						((int16_t*)&txdataF[1][tti_offset])[0] += (int16_t)((((int16_t*)&tmp_sample2)[0]*ONE_OVER_SQRT2_Q15_NB_IoT)>>15);
+						((int16_t*)&txdataF[1][tti_offset])[1] += (int16_t)((((int16_t*)&tmp_sample2)[1]*ONE_OVER_SQRT2_Q15_NB_IoT)>>15);
+
+						// fill in the rest of the ALAMOUTI precoding
+						if ( pilots != 1 || (re+1)%3 != id_offset) {
+							((int16_t *)&txdataF[0][tti_offset+1])[0] += -((int16_t *)&txdataF[1][tti_offset])[0]; //x1
+							((int16_t *)&txdataF[0][tti_offset+1])[1] += ((int16_t *)&txdataF[1][tti_offset])[1];
+							((int16_t *)&txdataF[1][tti_offset+1])[0] += ((int16_t *)&txdataF[0][tti_offset])[0];  //x0*
+							((int16_t *)&txdataF[1][tti_offset+1])[1] += -((int16_t *)&txdataF[0][tti_offset])[1];
+						} else {
+							((int16_t *)&txdataF[0][tti_offset+2])[0] += -((int16_t *)&txdataF[1][tti_offset])[0]; //x1
+							((int16_t *)&txdataF[0][tti_offset+2])[1] += ((int16_t *)&txdataF[1][tti_offset])[1];
+							((int16_t *)&txdataF[1][tti_offset+2])[0] += ((int16_t *)&txdataF[0][tti_offset])[0];  //x0*
+							((int16_t *)&txdataF[1][tti_offset+2])[1] += -((int16_t *)&txdataF[0][tti_offset])[1];
+					
+							re++;														// skip pilots
+							*re_allocated = *re_allocated + 1;
+						}
+						re++;  															// adjacent carriers are taken care of by precoding
+						*re_allocated = *re_allocated + 1;   							// incremented variable but never used
+					}
+			    }
+			  }
+
+   } else {
+
+   		printf("Error in allocate RE of DCI NB_IoT");
+
+   }
+
+  return(0);
 }
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
-int dci_modulation_NB_IoT(int32_t 					**txdataF,
-						  int16_t 					amp,
-						  LTE_DL_FRAME_PARMS 	*frame_parms,
-						  uint8_t 					control_region_size,    //XXX we pass the npdcch_start_symbol // control region size for LTE , values between 0..3, (0 for stand-alone / 1, 2 or 3 for in-band)
-						  uint8_t 					*e,					// Input data
-						  uint8_t 					dci_number,				// This variable should takes the 1 or 2 (1 for in case of one DCI, 2 in case of two DCI)
-						  uint8_t 					agr_level,
-						  int 						RB_index,
-						  int                       subframe)				// Aggregation level
+int dci_modulation_NB_IoT(int32_t 				  **txdataF,
+						  int16_t 				  amp,
+						  LTE_DL_FRAME_PARMS 	  *frame_parms,
+						  uint8_t 				  control_region_size,      // control region size for LTE , values between 0..3, (0 for stand-alone / 1, 2 or 3 for in-band)
+						  NB_IoT_eNB_NDLSCH_t    *dlsch0,                  //NB_IoT_eNB_NDLSCH_t
+						  int 					  G,						// number of bits per subframe
+						  unsigned int		      npdsch_data_subframe,     // subframe index of the data table of npdsch channel (G*Nsf)  , values are between 0..Nsf  			
+						  uint8_t 				  dci_number,				// This variable should takes the 1 or 2 (1 for in case of one DCI, 2 in case of two DCI)
+						  uint8_t 				  agr_level,
+						  unsigned int		      subframe,
+						  unsigned short 		  NB_IoT_RB_ID)
 {
-    uint32_t 		jj=0;
+    //uint8_t harq_pid = dlsch0->current_harq_pid;
+    //NB_IoT_DL_eNB_HARQ_t *dlsch0_harq = dlsch0->harq_processes[harq_pid];
+    uint32_t 		jj = 0;
 	uint32_t 		re_allocated,symbol_offset;
     uint16_t 		l;
-    uint8_t 		id_offset,pilot_shift,pilots=0;
-	unsigned short  bandwidth_even_odd;
-    unsigned short  NB_IoT_start, RB_IoT_ID;
+    uint8_t 		id_offset,pilot_shift,pilots = 0; 
+	unsigned short 	bandwidth_even_odd;
+    unsigned short 	NB_IoT_start, RB_IoT_ID;
 
-    re_allocated=0;
-	id_offset=0;
-	// testing if the total number of RBs is even or odd
-	bandwidth_even_odd = frame_parms->N_RB_DL % 2; 	 		// 0 even, 1 odd
-	//RB_IoT_ID = frame_parms->NB_IoT_RB_ID;
-	RB_IoT_ID = RB_index;
+    re_allocated = 0;
+	id_offset    = 0;
+	pilot_shift  = 0;
+	// testing if the total number of RBs is even or odd 
+	bandwidth_even_odd  =  frame_parms->N_RB_DL % 2; 	 	// 0 even, 1 odd
+	RB_IoT_ID 			=  NB_IoT_RB_ID;
 	// step  5, 6, 7   									 	// modulation and mapping (slot 1, symbols 0..3)
 	for (l=control_region_size; l<14; l++) { 								 	// loop on OFDM symbols	
 		if((l>=4 && l<=7) || (l>=11 && l<=13))
@@ -457,34 +397,28 @@ int dci_modulation_NB_IoT(int32_t 					**txdataF,
 								  txdataF,
 								  &jj,
 								  symbol_offset,
-								  &e[0],
+								  &dlsch0->harq_process->s_e[G*npdsch_data_subframe],
 								  pilots,
 								  amp,
 								  id_offset,
 								  pilot_shift,
 								  &re_allocated);
 	}
-
-    // VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_ENB_DLSCH_MODULATION, VCD_FUNCTION_OUT);
+	
+ // VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_ENB_DLSCH_MODULATION, VCD_FUNCTION_OUT);
   return (re_allocated);
 }
 
-//------------------------------------------------
-// BCOM code functions npdcch end
-//------------------------------------------------
-/*dci_allocate_REs_in_RB_NB_IoT(frame_parms,
-								      txdataF,
-							    	  &jj,
-									  symbol_offset,
-									  e,
-									  pilots,
-									  amp,
-									  id_offset,
-									  &re_allocated,
-									  dci_number,
-									  agr_level);
 
-*/
+
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 
 uint8_t generate_dci_top_NB_IoT(NB_IoT_eNB_NPDCCH_t		*npdcch,
 						 		uint8_t 				Num_dci,
@@ -529,7 +463,7 @@ uint8_t generate_dci_top_NB_IoT(NB_IoT_eNB_NPDCCH_t		*npdcch,
   //First take all the DCI pdu and their corrispondent rnti
   for(i = 0; i<Num_dci;i++)
   {
-	  npdcch->a[i]=dci_alloc[i].dci_pdu;
+	  npdcch->pdu[i][0]=dci_alloc[i].dci_pdu;
 	  rnti[i]=dci_alloc[i].rnti;
 	  L = dci_alloc[i].L;
 

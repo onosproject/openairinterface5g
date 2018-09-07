@@ -137,10 +137,10 @@ int dlsch_modulation_NB_IoT(int32_t 				**txdataF,
 							int16_t 				amp,
 							LTE_DL_FRAME_PARMS 	    *frame_parms,
 							uint8_t 				control_region_size,      // control region size for LTE , values between 0..3, (0 for stand-alone / 1, 2 or 3 for in-band)
-							NB_IoT_DL_eNB_HARQ_t      *dlsch0, //NB_IoT_eNB_NDLSCH_t
+							NB_IoT_eNB_NDLSCH_t    *dlsch0, //NB_IoT_eNB_NDLSCH_t
 							int 					G,						  // number of bits per subframe
-							unsigned int				npdsch_data_subframe,     // subframe index of the data table of npdsch channel (G*Nsf)  , values are between 0..Nsf  			
-							unsigned int				subframe,
+							unsigned int		    npdsch_data_subframe,     // subframe index of the data table of npdsch channel (G*Nsf)  , values are between 0..Nsf  			
+							unsigned int			subframe,
 							unsigned short 			NB_IoT_RB_ID)
 {
     //uint8_t harq_pid = dlsch0->current_harq_pid;
@@ -184,7 +184,7 @@ int dlsch_modulation_NB_IoT(int32_t 				**txdataF,
 								  txdataF,
 								  &jj,
 								  symbol_offset,
-								  &dlsch0->s_e[G*npdsch_data_subframe],
+								  &dlsch0->harq_process->s_e[G*npdsch_data_subframe],
 								  pilots,
 								  amp,
 								  id_offset,

@@ -516,7 +516,7 @@ NB_IoT_eNB_NDLSCH_t       *ndlsch_SIB1;
 NB_IoT_eNB_NDLSCH_t       *ndlsch_SIB23;
 NB_IoT_eNB_NDLSCH_t       *ndlsch_RAR;
 //NB_IoT_eNB_NDLSCH_t       ndlsch_rar;
-NB_IoT_eNB_NPDCCH_temp_t  npdcch_tmp;
+NB_IoT_eNB_NPDCCH_t       npdcch_DCI;
 
 NB_IoT_eNB_NULSCH_t       *ulsch_NB_IoT[NUMBER_OF_UE_MAX+1]; 
 ////////////// For IF Module /////////////////////////////
