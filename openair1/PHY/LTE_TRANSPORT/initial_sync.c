@@ -716,7 +716,7 @@ int initial_sync(PHY_VARS_UE *ue, runmode_t mode)
       if (ue->mac_enabled==1) {
 	LOG_I(PHY,"[UE%d] Sending synch status to higher layers\n",ue->Mod_id);
 	//mac_resynch();
-	mac_xface->dl_phy_sync_success(ue->Mod_id,ue->proc.proc_rxtx[0].frame_rx,0,1);//ue->common_vars.eNb_id);
+	mac_xface->dl_phy_sync_success(ue->Mod_id,ue->proc.proc_rxtx[0].frame_rx,ue->common_vars.eNb_id,1);//ue->common_vars.eNb_id);
 	ue->UE_mode[0] = PRACH;
       }
       else {
@@ -896,9 +896,9 @@ int initial_sync_freq(PHY_VARS_UE *ue, runmode_t mode)
   // First try FDD normal prefix
   //frame_parms->Ncp=NORMAL;
   //frame_parms->frame_type=FDD;
-  frame_parms->Ncp=PHY_vars_eNB_g[0][0]->frame_parms.Ncp;
-  frame_parms->frame_type=PHY_vars_eNB_g[0][0]->frame_parms.frame_type;
-  frame_parms->N_RB_DL=PHY_vars_eNB_g[0][0]->frame_parms.N_RB_DL;
+  frame_parms->Ncp=PHY_vars_eNB_g[ue->common_vars.eNb_id][0]->frame_parms.Ncp;
+  frame_parms->frame_type=PHY_vars_eNB_g[ue->common_vars.eNb_id][0]->frame_parms.frame_type;
+  frame_parms->N_RB_DL=PHY_vars_eNB_g[ue->common_vars.eNb_id][0]->frame_parms.N_RB_DL;
   init_frame_parms(frame_parms,1);
 
 // cellid
@@ -915,9 +915,9 @@ int initial_sync_freq(PHY_VARS_UE *ue, runmode_t mode)
   //printf("dumping ue frame params\n");
   //dump_frame_parms(frame_parms);
   if (ret==-1) { 
-      frame_parms->Ncp=PHY_vars_eNB_g[0][0]->frame_parms.Ncp;
-      frame_parms->frame_type=PHY_vars_eNB_g[0][0]->frame_parms.frame_type;
-      frame_parms->N_RB_DL=PHY_vars_eNB_g[0][0]->frame_parms.N_RB_DL;
+      frame_parms->Ncp=PHY_vars_eNB_g[ue->common_vars.eNb_id][0]->frame_parms.Ncp;
+      frame_parms->frame_type=PHY_vars_eNB_g[ue->common_vars.eNb_id][0]->frame_parms.frame_type;
+      frame_parms->N_RB_DL=PHY_vars_eNB_g[ue->common_vars.eNb_id][0]->frame_parms.N_RB_DL;
       init_frame_parms(frame_parms,1);
       frame_parms->nushift  = frame_parms->Nid_cell%6;
       lte_gold(frame_parms,ue->lte_gold_table[0],frame_parms->Nid_cell);
@@ -949,7 +949,7 @@ int initial_sync_freq(PHY_VARS_UE *ue, runmode_t mode)
       if (ue->mac_enabled==1) {
 	LOG_I(PHY,"[UE%d] Sending synch status to higher layers\n",ue->Mod_id);
 	//mac_resynch();
-	mac_xface->dl_phy_sync_success(ue->Mod_id,ue->proc.proc_rxtx[0].frame_rx,0,1);//ue->common_vars.eNb_id);
+	mac_xface->dl_phy_sync_success(ue->Mod_id,ue->proc.proc_rxtx[0].frame_rx,ue->common_vars.eNb_id,1);//ue->common_vars.eNb_id);
 	ue->UE_mode[0] = PRACH;
       }
       else {
@@ -986,16 +986,16 @@ int initial_sync_freq(PHY_VARS_UE *ue, runmode_t mode)
 	  phich_string[ue->frame_parms.phich_config_common.phich_resource],
 	  ue->frame_parms.nb_antenna_ports_eNB);
     LOG_I(PHY,"[eNB %d] Frame %d subframe %d MIB Information => %s, %s, NidCell %d, N_RB_DL %d, PHICH DURATION %d, PHICH RESOURCE %s, TX_ANT %d\n",
-	  PHY_vars_eNB_g[0][0]->Mod_id,
-	  PHY_vars_eNB_g[0][0]->proc.proc_rxtx[0].frame_rx,
-	  PHY_vars_eNB_g[0][0]->proc.proc_rxtx[0].subframe_rx,
-	  duplex_string[PHY_vars_eNB_g[0][0]->frame_parms.frame_type],
-	  prefix_string[PHY_vars_eNB_g[0][0]->frame_parms.Ncp],
-	  PHY_vars_eNB_g[0][0]->frame_parms.Nid_cell,
-	  PHY_vars_eNB_g[0][0]->frame_parms.N_RB_DL,
-	  PHY_vars_eNB_g[0][0]->frame_parms.phich_config_common.phich_duration,
-	  phich_string[PHY_vars_eNB_g[0][0]->frame_parms.phich_config_common.phich_resource],
-	  PHY_vars_eNB_g[0][0]->frame_parms.nb_antenna_ports_eNB);
+	  PHY_vars_eNB_g[ue->common_vars.eNb_id][0]->Mod_id,
+	  PHY_vars_eNB_g[ue->common_vars.eNb_id][0]->proc.proc_rxtx[0].frame_rx,
+	  PHY_vars_eNB_g[ue->common_vars.eNb_id][0]->proc.proc_rxtx[0].subframe_rx,
+	  duplex_string[PHY_vars_eNB_g[ue->common_vars.eNb_id][0]->frame_parms.frame_type],
+	  prefix_string[PHY_vars_eNB_g[ue->common_vars.eNb_id][0]->frame_parms.Ncp],
+	  PHY_vars_eNB_g[ue->common_vars.eNb_id][0]->frame_parms.Nid_cell,
+	  PHY_vars_eNB_g[ue->common_vars.eNb_id][0]->frame_parms.N_RB_DL,
+	  PHY_vars_eNB_g[ue->common_vars.eNb_id][0]->frame_parms.phich_config_common.phich_duration,
+	  phich_string[PHY_vars_eNB_g[ue->common_vars.eNb_id][0]->frame_parms.phich_config_common.phich_resource],
+	  PHY_vars_eNB_g[ue->common_vars.eNb_id][0]->frame_parms.nb_antenna_ports_eNB);
 
 #if defined(OAI_USRP) || defined(EXMIMO) || defined(OAI_BLADERF) || defined(OAI_LMSSDR)
     LOG_I(PHY,"[UE %d] Frame %d Measured Carrier Frequency %.0f Hz (offset %d Hz)\n",

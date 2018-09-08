@@ -1811,9 +1811,12 @@ void update_ocm()
 {
   module_id_t UE_id, eNB_id;
   int CC_id;
+  double pathloss[NB_UE_INST];
 
-  for (eNB_id = 0; eNB_id < NB_eNB_INST; eNB_id++)
+  for (eNB_id = 0; eNB_id < NB_eNB_INST; eNB_id++){
     enb_data[eNB_id]->tx_power_dBm = PHY_vars_eNB_g[eNB_id][0]->frame_parms.pdsch_config_common.referenceSignalPower;
+    pathloss[eNB_id]=-200.0;
+  }
 
   for (UE_id = 0; UE_id < NB_UE_INST; UE_id++)
     ue_data[UE_id]->tx_power_dBm = PHY_vars_UE_g[UE_id][0]->tx_power_dBm[0];
@@ -1834,8 +1837,8 @@ void update_ocm()
        LOG_N(OCM,"Path loss for TTI %d : \n", frame);
     */
     for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
-      for (eNB_id = 0; eNB_id < NB_eNB_INST; eNB_id++) {
-        for (UE_id = 0; UE_id < NB_UE_INST; UE_id++) {
+      for (UE_id = 0; UE_id < NB_UE_INST; UE_id++) {
+        for (eNB_id = 0; eNB_id < NB_eNB_INST; eNB_id++) {
           calc_path_loss (enb_data[eNB_id], ue_data[UE_id], eNB2UE[eNB_id][UE_id][CC_id], oai_emulation.environment_system_config,ShaF);
           //calc_path_loss (enb_data[eNB_id], ue_data[UE_id], eNB2UE[eNB_id][UE_id], oai_emulation.environment_system_config,0);
           UE2eNB[UE_id][eNB_id][CC_id]->path_loss_dB = eNB2UE[eNB_id][UE_id][CC_id]->path_loss_dB;
@@ -1843,6 +1846,10 @@ void update_ocm()
           LOG_D(OCM,"Path loss (CCid %d) between eNB %d at (%f,%f) and UE %d at (%f,%f) is %f, angle %f\n",
                 CC_id,eNB_id,enb_data[eNB_id]->x,enb_data[eNB_id]->y,UE_id,ue_data[UE_id]->x,ue_data[UE_id]->y,
                 eNB2UE[eNB_id][UE_id][CC_id]->path_loss_dB, eNB2UE[eNB_id][UE_id][CC_id]->aoa);
+	  if (eNB2UE[eNB_id][UE_id][CC_id]->path_loss_dB>pathloss[UE_id]){
+		pathloss[UE_id] = eNB2UE[eNB_id][UE_id][CC_id]->path_loss_dB;
+		PHY_vars_UE_g[UE_id][CC_id]->common_vars.eNb_id = eNB_id;
+	  }
           //double dx, dy, distance;
           //dx = enb_data[eNB_id]->x - ue_data[UE_id]->x;
           //dy = enb_data[eNB_id]->y - ue_data[UE_id]->y;
@@ -1852,6 +1859,7 @@ void update_ocm()
                   UE_id, ue_data[UE_id]->x,ue_data[UE_id]->y,
                   distance);*/
         }
+      printf("UE %d is associated to eNB %d based on pathloss\n",UE_id,PHY_vars_UE_g[UE_id][CC_id]->common_vars.eNb_id);
       }
     }
   }

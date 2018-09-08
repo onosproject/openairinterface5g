@@ -4445,7 +4445,7 @@ void *UE_thread_slot1_dl_processing(void *arg) {
 
         if ( (subframe_rx == 0) && (ue->decode_MIB == 1))
         {
-            ue_pbch_procedures(0,ue,proc,0);
+            ue_pbch_procedures(ue->common_vars.eNb_id,ue,proc,0);
         }
 
         proc->chan_est_slot1_available = 1;
@@ -5420,7 +5420,7 @@ else
 
   if ( (subframe_rx == 0) && (ue->decode_MIB == 1))
   {
-    //printf("[ue_pbch_procedures] subframe_rx %d ,ue->decode_MIB %d, UE %d\n",subframe_rx,ue->decode_MIB,ue->Mod_id);
+    printf("[ue_pbch_procedures] subframe_rx %d ,ue->decode_MIB %d, UE %d, eNB %d\n",subframe_rx,ue->decode_MIB,ue->Mod_id,ue->common_vars.eNb_id);
     ue_pbch_procedures(eNB_id,ue,proc,abstraction_flag);
   }
 

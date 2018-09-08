@@ -1093,7 +1093,7 @@ void rx_phich(PHY_VARS_UE *ue,
   uint8_t reset = 1;
   int16_t cs[12];
   uint32_t i,i2,i3,phich_quad;
-  int32_t **rxdataF_comp = pdcch_vars[eNB_id]->rxdataF_comp;
+  int32_t **rxdataF_comp = pdcch_vars[0]->rxdataF_comp;
   uint8_t Ngroup_PHICH,ngroup_PHICH,nseq_PHICH;
   uint8_t NSF_PHICH = 4;
   uint8_t pusch_subframe;

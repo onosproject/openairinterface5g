@@ -159,7 +159,7 @@ PHY_VARS_UE* init_lte_UE(LTE_DL_FRAME_PARMS *frame_parms,
   memset(PHY_vars_UE,0,sizeof(PHY_VARS_UE));
   PHY_vars_UE->Mod_id=UE_id;
   memcpy(&(PHY_vars_UE->frame_parms), frame_parms, sizeof(LTE_DL_FRAME_PARMS));
-  phy_init_lte_ue(PHY_vars_UE,1,abstraction_flag);
+  phy_init_lte_ue(PHY_vars_UE,NB_eNB_INST,abstraction_flag);
 
   for (i=0; i<NUMBER_OF_CONNECTED_eNB_MAX; i++) {
       for (j=0; j<2; j++) { // 2CWs

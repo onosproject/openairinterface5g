@@ -848,7 +848,7 @@ static void *UE_thread_rxn_txnp4(void *arg) {
                                           proc->frame_tx,
                                           proc->subframe_tx,
                                           subframe_select(&UE->frame_parms,proc->subframe_tx),
-                                          0,
+                                          UE->common_vars.eNb_id,
                                           0/*FIXME CC_id*/);
             if ( ret != CONNECTION_OK) {
                 char *txt;
@@ -878,13 +878,13 @@ static void *UE_thread_rxn_txnp4(void *arg) {
         if ((subframe_select( &UE->frame_parms, proc->subframe_tx) == SF_UL) ||
                 (UE->frame_parms.frame_type == FDD) )
             if (UE->mode != loop_through_memory)
-                phy_procedures_UE_TX(UE,proc,0,0,UE->mode,no_relay);
+                phy_procedures_UE_TX(UE,proc,UE->common_vars.eNb_id,0,UE->mode,no_relay);
 
 
         if ((subframe_select( &UE->frame_parms, proc->subframe_tx) == SF_S) &&
                 (UE->frame_parms.frame_type == TDD))
             if (UE->mode != loop_through_memory)
-                phy_procedures_UE_S_TX(UE,0,0,no_relay);
+                phy_procedures_UE_S_TX(UE,UE->common_vars.eNb_id,0,no_relay);
         updateTimes(current, &t3, 10000, "Delay to process sub-frame (case 3)");
 
         if (pthread_mutex_lock(&proc->mutex_rxtx) != 0) {
