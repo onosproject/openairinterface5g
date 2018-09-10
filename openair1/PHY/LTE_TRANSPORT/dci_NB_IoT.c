@@ -19,7 +19,7 @@
  *      contact@openairinterface.org
  */
 
-/*! \file PHY/LTE_TRANSPORT/dci.c
+/*! \file PHY/LTE_TRANSPORT/dci_NB_IoT.c
 * \brief Implements PDCCH physical channel TX/RX procedures (36.211) and DCI encoding/decoding (36.212/36.213). Current LTE compliance V8.6 2009-03.
 * \author R. Knopp
 * \date 2011
@@ -29,6 +29,7 @@
 * \note
 * \warning
 */
+
 #ifdef USER_MODE
 #include <stdio.h>
 #include <stdlib.h>
@@ -45,10 +46,8 @@
 /////////////////////////////#include "SCHED/defs_nb_iot.h"
 //#include "SIMULATION/TOOLS/defs.h" // for taus 
 //#include "PHY/sse_intrin.h"
-
 //#include "assertions.h" 
 //#include "T.h"
-
 /////////////////////////////////////////////////////////////////////
 
 //static uint8_t d[2][3*(MAX_DCI_SIZE_BITS_NB_IoT + 16) + 96];
@@ -66,17 +65,17 @@ void dci_encoding_NB_IoT(uint8_t                  *a,				         // Array of tw
 	uint32_t RCC;
 	uint8_t  occupation_size=1;
 	
-		if(agr_level == 2 && ncce_index == 1)
+		if(agr_level == 2 && ncce_index == 0)
 		{
 			occupation_size=1;
 		}else{
 			occupation_size=2;
 		}
-		memset((void *)dlcch->npdcch_d[ncce_index-1],LTE_NULL_NB_IoT,96);
+		memset((void *)dlcch->npdcch_d[ncce_index],LTE_NULL_NB_IoT,96);
 
-		ccode_encode_NB_IoT(A,2,a,dlcch->npdcch_d[ncce_index-1]+96,rnti);    					// CRC attachement & Tail-biting convolutional coding
-		RCC = sub_block_interleaving_cc_NB_IoT(D,dlcch->npdcch_d[ncce_index-1]+96,dlcch->npdcch_w[ncce_index-1]);				// Interleaving
-		lte_rate_matching_cc_NB_IoT(RCC,(G/occupation_size),dlcch->npdcch_w[ncce_index-1],dlcch->npdcch_e[ncce_index-1]);		// Rate Matching
+		ccode_encode_NB_IoT(A,2,a,dlcch->npdcch_d[ncce_index]+96,rnti);    					// CRC attachement & Tail-biting convolutional coding
+		RCC = sub_block_interleaving_cc_NB_IoT(D,dlcch->npdcch_d[ncce_index]+96,dlcch->npdcch_w[ncce_index]);				// Interleaving
+		lte_rate_matching_cc_NB_IoT(RCC,(G/occupation_size),dlcch->npdcch_w[ncce_index],dlcch->npdcch_e[ncce_index]);		// Rate Matching
 
 }
 
@@ -98,7 +97,7 @@ void npdcch_scrambling_NB_IoT(LTE_DL_FRAME_PARMS     *frame_parms,
 
 	reset = 1;
 
-	if(agr_level == 2 && ncce_index == 1)
+	if(agr_level == 2 && ncce_index == 0)
 	{
 		occupation_size=1;
 	}else{
@@ -112,9 +111,8 @@ void npdcch_scrambling_NB_IoT(LTE_DL_FRAME_PARMS     *frame_parms,
 				s = lte_gold_generic_NB_IoT(&x1, &x2, reset);
 				reset = 0;
 			}
-			dlcch->npdcch_e[ncce_index-1][i] = (dlcch->npdcch_e[ncce_index-1][i]&1) ^ ((s>>(i&0x1f))&1);
+			dlcch->npdcch_e[ncce_index][i] = (dlcch->npdcch_e[ncce_index][i]&1) ^ ((s>>(i&0x1f))&1);
 		}
-
 	
 }
 
@@ -146,7 +144,7 @@ int dci_allocate_REs_in_RB_NB_IoT(LTE_DL_FRAME_PARMS 	*frame_parms,
   last_re       = 12;
 
 
-   if(ncce_index == 1 && agr_level == 2)
+   if(ncce_index == 0 && agr_level == 2)
    {
 
 		  for (re=first_re; re<last_re; re++) {      		// re varies between 0 and 12 sub-carriers
@@ -213,7 +211,7 @@ int dci_allocate_REs_in_RB_NB_IoT(LTE_DL_FRAME_PARMS 	*frame_parms,
 
    } else if(agr_level == 1) {
 
-	   		for (re=(first_re + (ncce_index/2)*6); re<(6+((ncce_index/2)*6)); re++) {      		// re varies between 0 and 6 or 6 and 12 sub-carriers
+	   		for (re=(first_re + ncce_index*6); re<(6 + ncce_index*6); re++) {      		// re varies between 0 and 6 or 6 and 12 sub-carriers
 
 			    tti_offset = symbol_offset + re;				// symbol_offset = 512 * L ,  re_offset = 512 - 3*12  , re
 				
@@ -353,7 +351,7 @@ int dci_modulation_NB_IoT(int32_t 				  **txdataF,
 											  txdataF,
 											  &jj,
 											  symbol_offset,
-											  &dlcch->npdcch_e[ncce_index-1],
+											  &dlcch->npdcch_e[ncce_index],
 											  pilots,
 											  pilot_shift,
 											  amp,

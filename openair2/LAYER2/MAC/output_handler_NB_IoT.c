@@ -1,4 +1,25 @@
 
+/*
+ * Licensed to the OpenAirInterface (OAI) Software Alliance under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The OpenAirInterface Software Alliance licenses this file to You under
+ * the OAI Public License, Version 1.0  (the "License"); you may not use this file
+ * except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.openairinterface.org/?page_id=698
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *-------------------------------------------------------------------------------
+ * For more information about the OpenAirInterface (OAI) Software Alliance:
+ *      contact@openairinterface.org
+ */
+
 /*! \file output_handler_NB_IoT.c
  * \brief Convert MAC scheduler result and output the FAPI structure by subframe based
  * \author  NTUST BMW Lab./
@@ -202,27 +223,27 @@ int output_handler(eNB_MAC_INST_NB_IoT *mac_inst, module_id_t module_id, int CC_
 					}
 					break;
 				case NPDSCH:
-					LOG_D(MAC,"NB-IoT fill DL Data\n");
-					//LOG_I(MAC,"NB-IoT fill DL Data\n");
-					//SCHED_info->DL_req = (nfapi_dl_config_request_t*) malloc (sizeof(nfapi_dl_config_request_t));
-					//SCHED_info->DL_req->dl_config_request_body.number_pdu = 0;
-					//SCHED_info->DL_req->dl_config_request_body.dl_config_pdu_list = (nfapi_dl_config_request_pdu_t*)malloc(sizeof(nfapi_dl_config_request_pdu_t));
-	
-					dl_config_pdu = SCHED_info->DL_req->dl_config_request_body.dl_config_pdu_list;
-				    DCI_pdu = schedule_result_list_DL-> DCI_pdu;
-					SCHED_info->DL_req->dl_config_request_body.number_pdu = 1;
-					dl_config_pdu->pdu_type                                           = NFAPI_DL_CONFIG_NDLSCH_PDU_TYPE;
-					dl_config_pdu->pdu_size                                           = 2+sizeof(nfapi_dl_config_ndlsch_pdu_rel13_t);
-					dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13.length                 = schedule_result_list_DL->sdu_length;
-					dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13.pdu_index			  = 1;
-					dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13.rnti_type              = 1;
-					dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13.rnti                   = schedule_result_list_DL->rnti; // C-RNTI
-					dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13.resource_assignment    = ((DCIFormatN1_t *)DCI_pdu)->ResAssign;
-					dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13.repetition_number      = ((DCIFormatN1_t *)DCI_pdu)->RepNum;
-					dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13.modulation             = 2;
-					dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13.number_of_subframes_for_resource_assignment = get_num_sf(dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13.resource_assignment);
-					SCHED_info->TX_req->tx_request_body.tx_pdu_list[dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13.pdu_index].segments[0].segment_data = schedule_result_list_DL->DLSCH_pdu;
-					//LOG_D(MAC,"A NB-IoT fill DL Data pdu : %d \n",schedule_result_list_DL->DLSCH_pdu);
+						LOG_D(MAC,"NB-IoT fill DL Data\n");
+						//LOG_I(MAC,"NB-IoT fill DL Data\n");
+						//SCHED_info->DL_req = (nfapi_dl_config_request_t*) malloc (sizeof(nfapi_dl_config_request_t));
+						//SCHED_info->DL_req->dl_config_request_body.number_pdu = 0;
+						//SCHED_info->DL_req->dl_config_request_body.dl_config_pdu_list = (nfapi_dl_config_request_pdu_t*)malloc(sizeof(nfapi_dl_config_request_pdu_t));
+		
+						dl_config_pdu = SCHED_info->DL_req->dl_config_request_body.dl_config_pdu_list;
+					    DCI_pdu = schedule_result_list_DL-> DCI_pdu;
+						SCHED_info->DL_req->dl_config_request_body.number_pdu = 1;
+						dl_config_pdu->pdu_type                                           = NFAPI_DL_CONFIG_NDLSCH_PDU_TYPE;
+						dl_config_pdu->pdu_size                                           = 2+sizeof(nfapi_dl_config_ndlsch_pdu_rel13_t);
+						dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13.length                 = schedule_result_list_DL->sdu_length;
+						dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13.pdu_index			  = 1;
+						dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13.rnti_type              = 1;
+						dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13.rnti                   = schedule_result_list_DL->rnti; // C-RNTI
+						dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13.resource_assignment    = ((DCIFormatN1_t *)DCI_pdu)->ResAssign;
+						dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13.repetition_number      = ((DCIFormatN1_t *)DCI_pdu)->RepNum;
+						dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13.modulation             = 2;
+						dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13.number_of_subframes_for_resource_assignment = get_num_sf(dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13.resource_assignment);
+						SCHED_info->TX_req->tx_request_body.tx_pdu_list[dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13.pdu_index].segments[0].segment_data = schedule_result_list_DL->DLSCH_pdu;
+						//LOG_D(MAC,"A NB-IoT fill DL Data pdu : %d \n",schedule_result_list_DL->DLSCH_pdu);
 					break;
 				default:
 					break;

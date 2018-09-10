@@ -753,12 +753,6 @@ if(proc->flag_msg4 == 1 && proc->counter_msg4 > 0)
   common_signal_procedures_NB_IoT(eNB,proc);
 
 
-  
-
-
-  
- 
-
 
 /////////////////////////// END ///////////////////////////////////////  
 
@@ -1506,7 +1500,6 @@ void phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
 
   }
 
-
   // Get scheduling info for next subframe
   // This is called only for the CC_id = 0 and triggers scheduling for all CC_id's
  /* if (eNB->mac_enabled==1) {
@@ -1523,7 +1516,6 @@ void phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
     }
   }
 
-
 ///////////////////////////////////////////////////////////////////////////////////
 // test if  there is detection, 
   //if yes proceed to setting flag to indicate that there is something to transmit 
@@ -1532,9 +1524,6 @@ void phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
   // store the PDU of DCI
   // add two variable for frame and subframe , in order to know next transmission
   // varible to indicate the remaining repetition to transmit
-  
-
-
 
   /////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -1684,8 +1673,6 @@ void phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
 
 */
 
-
-
   // if we have DCI to generate do it now
   if ((DCI_pdu->Num_common_dci + DCI_pdu->Num_ue_spec_dci)>0) {
 
@@ -1777,23 +1764,21 @@ void phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
     eNB->ulsch[(uint32_t)UE_id]->Msg3_frame,
     eNB->ulsch[(uint32_t)UE_id]->Msg3_subframe);
     
-   // pdsch_procedures(eNB,proc,eNB->dlsch_ra,(LTE_eNB_DLSCH_t*)NULL,(LTE_eNB_UE_stats*)NULL,1,num_pdcch_symbols);
-    
+   // pdsch_procedures(eNB,proc,eNB->dlsch_ra,(LTE_eNB_DLSCH_t*)NULL,(LTE_eNB_UE_stats*)NULL,1,num_pdcch_symbols);    
     
     eNB->dlsch_ra->active = 0;
   }
 
   // Now scan UE specific DLSCH
   for (UE_id=0; UE_id<NUMBER_OF_UE_MAX; UE_id++)
-    {
+  {
       if ((eNB->dlsch[(uint8_t)UE_id][0])&&
-    (eNB->dlsch[(uint8_t)UE_id][0]->rnti>0)&&
-    (eNB->dlsch[(uint8_t)UE_id][0]->active == 1)) {
+           (eNB->dlsch[(uint8_t)UE_id][0]->rnti>0)&&
+             (eNB->dlsch[(uint8_t)UE_id][0]->active == 1)) {
 
-  //pdsch_procedures(eNB,proc,eNB->dlsch[(uint8_t)UE_id][0],eNB->dlsch[(uint8_t)UE_id][1],&eNB->UE_stats[(uint32_t)UE_id],0,num_pdcch_symbols);
+     //pdsch_procedures(eNB,proc,eNB->dlsch[(uint8_t)UE_id][0],eNB->dlsch[(uint8_t)UE_id][1],&eNB->UE_stats[(uint32_t)UE_id],0,num_pdcch_symbols);
 
-
-      }
+  }
 
       else if ((eNB->dlsch[(uint8_t)UE_id][0])&&
          (eNB->dlsch[(uint8_t)UE_id][0]->rnti>0)&&
@@ -1803,8 +1788,6 @@ void phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
   //eNB->dlsch[(uint8_t)UE_id][0]->subframe_tx[subframe]=0;
       }
     }
-
-
 
   // if we have PHICH to generate
 

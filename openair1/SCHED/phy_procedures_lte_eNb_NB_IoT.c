@@ -256,7 +256,6 @@ void common_signal_procedures_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
   //uint8_t      *control_region_size = get_NB_IoT_SIB1_eutracontrolregionsize();
   //int           G=0;
   
-
  //NSSS only happened in the even frame
   if(frame%2==0)
     {
@@ -314,8 +313,7 @@ void common_signal_procedures_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
                      RB_IoT_ID);
     }
 
-
-      ///////////////////////////////////////////////////////// SIB1 ////////////////////////////////////
+    ///////////////////////////////////////////////////////// SIB1 ////////////////////////////////////
     // we need two parameter, NB-IoT cell_id  and scheduling info for sib1 (can be found in the MIB)
     // using scheduling_info parameter we can get the TBS size.
     // cell_id help to find the start subframe for sib1.
@@ -326,8 +324,7 @@ void common_signal_procedures_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
         LOG_I(PHY,"SIB1 NB-IoT content:\n");
         for(int i = 0; i<6;i++)
         printf("%02X",sib1->pdu[i]);
-        printf("\n");
-        
+        printf("\n"); 
 
         if( frame%32 == 0 )
         {
@@ -336,7 +333,6 @@ void common_signal_procedures_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
                                   8,                      ///// number_of_subframes_required
                                   get_G_NB_IoT(fp),
                                   1);                   //////////// G*2
-        
         
              dlsch_scrambling_Gen_NB_IoT(fp,
                                          sib1,
@@ -357,7 +353,7 @@ void common_signal_procedures_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
                                 RB_IoT_ID);
         
         }
-        ///////////////////////////////////////////////////////// END ////////////////////////////////////////////////////////
+  ///////////////////////////////////////////////////////// END ////////////////////////////////////////////////////////
         
   //////////////////////////////////////////////////// SIB23 ////////////////////////////////////////////////////////////////////////
   if( (subframe >0) && (subframe !=5) && (With_NSSS == 0) && (frame%2==1) && (frame%64<16) )   ////if((subframe != 0)  && (subframe != 4) && (subframe != 9) ) 
@@ -374,7 +370,6 @@ void common_signal_procedures_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
                                   8,                      ///// number_of_subframes_required
                                   236,
                                   2);                   //////////// G*2
-        
         
             dlsch_scrambling_Gen_NB_IoT(fp,                    // is called only in subframe 4
                                          sib23,
@@ -420,15 +415,15 @@ void common_signal_procedures_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
                            RB_IoT_ID,
                            With_NSSS);
 
-   if(frame==1023 && subframe==9)
+  if(frame==1023 && subframe==9)
   {
-  //printf("%d",hyper_frame);
-  if(proc->HFN==1023)
-        {             
-    proc->HFN=0;
-  }else{ 
-    proc->HFN++;
-  }
+      //printf("%d",hyper_frame);
+      if(proc->HFN==1023)
+      {             
+           proc->HFN=0;
+      }else{ 
+           proc->HFN++;
+      }
   }
 
   

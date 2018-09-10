@@ -80,64 +80,6 @@
 //
 //// to be created LTE_eNB_DLSCH_t --> is duplicated for each number of UE and then indexed in the table
 //
-//typedef struct {                              // LTE_DL_eNB_HARQ_t
-//  /// Status Flag indicating for this DLSCH (idle,active,disabled)
-//  SCH_status_t status;
-//  /// Transport block size
-//  uint32_t TBS;
-//  /// The payload + CRC size in bits, "B" from 36-212
-//  uint32_t B;        // keep this parameter
-//  /// Pointer to the payload
-//  uint8_t *b;   // keep this parameter
-//  /// Pointers to transport block segments
-//  //uint8_t *c[MAX_NUM_DLSCH_SEGMENTS];
-//  /// RTC values for each segment (for definition see 36-212 V8.6 2009-03, p.15)
-// // uint32_t RTC[MAX_NUM_DLSCH_SEGMENTS];
-//  /// Frame where current HARQ round was sent
-//  uint32_t frame;
-//  /// Subframe where current HARQ round was sent
-//  uint32_t subframe;
-//  /// Index of current HARQ round for this DLSCH
-//  uint8_t round;
-//  /// MCS format for this DLSCH
-//  uint8_t mcs;
-//  /// Redundancy-version of the current sub-frame
-//  uint8_t rvidx;
-//  /// MIMO mode for this DLSCH
-//  MIMO_mode_t mimo_mode;
-//  /// Current RB allocation
-//  uint32_t rb_alloc[4];
-//  /// distributed/localized flag
-//  vrb_t vrb_type;
-//  /// Current subband PMI allocation
-//  uint16_t pmi_alloc;
-//  /// Current subband RI allocation
-//  uint32_t ri_alloc;
-//  /// Current subband CQI1 allocation
-//  uint32_t cqi_alloc1;
-//  /// Current subband CQI2 allocation
-//  uint32_t cqi_alloc2;
-//  /// Current Number of RBs
-//  uint16_t nb_rb;
-//  /// downlink power offset field
-//  uint8_t dl_power_off;
-//  /// Concatenated "e"-sequences (for definition see 36-212 V8.6 2009-03, p.17-18)
-//  uint8_t e[MAX_NUM_CHANNEL_BITS_NB_IOT];
-//  /// data after scrambling
-//  uint8_t s_e[MAX_NUM_CHANNEL_BITS_NB_IOT];
-//  /// length of the table e
-//  uint16_t length_e                 // new parameter
-//  /// Tail-biting convolutional coding outputs
-//  uint8_t d[96+(3*(24+MAX_DL_SIZE_BITS_NB_IOT))];  // new parameter
-//  /// Sub-block interleaver outputs
-//  uint8_t w[3*3*(MAX_DL_SIZE_BITS_NB_IOT+24)];      // new parameter
-//  /// Number of MIMO layers (streams) (for definition see 36-212 V8.6 2009-03, p.17, TM3-4)
-//  uint8_t Nl;
-//  /// Number of layers for this PDSCH transmission (TM8-10)
-//  uint8_t Nlayers;
-//  /// First layer for this PSCH transmission
-//  uint8_t first_layer;
-//} NB_IoT_DL_eNB_HARQ_t;
 
 typedef enum {
 
@@ -148,79 +90,6 @@ typedef enum {
 
 } SCH_status_NB_IoT_t;
 
-
-typedef struct {
- uint16_t              si_rnti;
-  /// Concatenated "e"-sequences (for definition see 36-212 V8.6 2009-03, p.17-18)
-  uint8_t               e[MAX_NUM_DL_CHANNEL_BITS_NB_IoT];
-  /// data after scrambling
-  uint8_t               s_e[MAX_NUM_DL_CHANNEL_BITS_NB_IoT];
-  //length of the table e
-  uint16_t              length_e;                // new parameter
-  /// Tail-biting convolutional coding outputs
-  uint8_t               d[96+(3*(24+MAX_TBS_DL_SIZE_BITS_NB_IoT))];  // new parameter
-  /// Sub-block interleaver outputs
-  uint8_t               w[3*3*(MAX_TBS_DL_SIZE_BITS_NB_IoT+24)];      // new parameter
-  /// Status Flag indicating for this DLSCH (idle,active,disabled)
-  //SCH_status_t status;
-  /// Transport block size
-  uint32_t              TBS;
-  /// The payload + CRC size in bits, "B" from 36-212
-  uint32_t              B;
-  /// Pointer to the payload
-  uint8_t               *b;
-  ///pdu of the ndlsch message
-  uint8_t               *pdu;
-  /// Frame where current HARQ round was sent
-  uint32_t              frame;
-  /// Subframe where current HARQ round was sent
-  uint32_t              subframe;
-   uint8_t               pdu_buffer_index;
-
-} NB_IoT_DL_eNB_SIB_t;
-
-typedef struct {
- uint16_t              si_rnti;
-  /// Concatenated "e"-sequences (for definition see 36-212 V8.6 2009-03, p.17-18)
-  uint8_t               e[MAX_NUM_DL_CHANNEL_BITS_NB_IoT];
-  /// data after scrambling
-  uint8_t               s_e[MAX_NUM_DL_CHANNEL_BITS_NB_IoT];
-  //length of the table e
-  uint16_t              length_e;                // new parameter
-  /// Tail-biting convolutional coding outputs
-  uint8_t               d[96+(3*(24+MAX_TBS_DL_SIZE_BITS_NB_IoT))];  // new parameter
-  /// Sub-block interleaver outputs
-  uint8_t               w[3*3*(MAX_TBS_DL_SIZE_BITS_NB_IoT+24)];      // new parameter
-  /////////////////////////////////
-  uint16_t              si_rnti_x;
-  /// Concatenated "e"-sequences (for definition see 36-212 V8.6 2009-03, p.17-18)
-  uint8_t               e_x[MAX_NUM_DL_CHANNEL_BITS_NB_IoT];
-  /// data after scrambling
-  uint8_t               s_e_x[MAX_NUM_DL_CHANNEL_BITS_NB_IoT];
-  //length of the table e
-  uint16_t              length_e_x;                // new parameter
-  /// Tail-biting convolutional coding outputs
-  uint8_t               d_x[96+(3*(24+MAX_TBS_DL_SIZE_BITS_NB_IoT))];  // new parameter
-  /// Sub-block interleaver outputs
-  uint8_t               w_x[3*3*(MAX_TBS_DL_SIZE_BITS_NB_IoT+24)];      // new parameter
-  ////////////////////////////////
-  /// Status Flag indicating for this DLSCH (idle,active,disabled)
-  //SCH_status_t status;
-  /// Transport block size
-  uint32_t              TBS;
-  /// The payload + CRC size in bits, "B" from 36-212
-  uint32_t              B;
-  /// Pointer to the payload
-  uint8_t               *b;
-  ///pdu of the ndlsch message
-  uint8_t               *pdu;
-  /// Frame where current HARQ round was sent
-  uint32_t              frame;
-  /// Subframe where current HARQ round was sent
-  uint32_t              subframe;
-   uint8_t               pdu_buffer_index;
-
-} NB_IoT_DL_eNB_RAR_t;
 
 typedef struct {
   /// NB-IoT
@@ -271,58 +140,6 @@ typedef struct {
    uint8_t               pdu_buffer_index;
 
 } NB_IoT_DL_eNB_HARQ_t;
-
-/*
-typedef struct {                                        // LTE_eNB_DLSCH_t
- /// TX buffers for UE-spec transmission (antenna ports 5 or 7..14, prior to precoding)
- uint32_t               *txdataF[8];
- /// Allocated RNTI (0 means DLSCH_t is not currently used)
- uint16_t               rnti;
- /// Active flag for baseband transmitter processing
- uint8_t                active;
- /// Indicator of TX activation per subframe.  Used during PUCCH detection for ACK/NAK.
- uint8_t                subframe_tx[10];
- /// First CCE of last PDSCH scheduling per subframe.  Again used during PUCCH detection for ACK/NAK.
- uint8_t                nCCE[10];
- /// Current HARQ process id
- uint8_t                current_harq_pid;
- /// Process ID's per subframe.  Used to associate received ACKs on PUSCH/PUCCH to DLSCH harq process ids
- uint8_t                harq_ids[10];
- /// Window size (in outgoing transport blocks) for fine-grain rate adaptation
- uint8_t                ra_window_size;
- /// First-round error threshold for fine-grain rate adaptation
- uint8_t                error_threshold;
- /// Pointers to 8 HARQ processes for the DLSCH
- NB_IoT_DL_eNB_HARQ_t   harq_process2;
-
- NB_IoT_DL_eNB_SIB1_t   harq_process;
- /// circular list of free harq PIDs (the oldest come first)
- /// (10 is arbitrary value, must be > to max number of DL HARQ processes in LTE)
- int                    harq_pid_freelist[10];
- /// the head position of the free list (if list is free then head=tail)
- int                    head_freelist;
- /// the tail position of the free list
- int                    tail_freelist;
- /// Number of soft channel bits
- uint32_t               G;
- /// Codebook index for this dlsch (0,1,2,3)
- uint8_t                codebook_index;
- /// Maximum number of HARQ processes (for definition see 36-212 V8.6 2009-03, p.17)
- uint8_t                Mdlharq;
- /// Maximum number of HARQ rounds
- uint8_t                Mlimit;
- /// MIMO transmission mode indicator for this sub-frame (for definition see 36-212 V8.6 2009-03, p.17)
- uint8_t                Kmimo;
- /// Nsoft parameter related to UE Category
- uint32_t               Nsoft;
- /// amplitude of PDSCH (compared to RS) in symbols without pilots
- int16_t                sqrt_rho_a;
- /// amplitude of PDSCH (compared to RS) in symbols containing pilots
- int16_t                sqrt_rho_b;
-
-} NB_IoT_eNB_DLSCH_t; 
-*/
-
 
 typedef struct {
   /// HARQ process id
@@ -608,13 +425,6 @@ typedef struct {
 
   SCH_status_NB_IoT_t   status;
 
- /* //////////////////////////////////////////////////////////////////////
-  NB_IoT_DL_eNB_SIB_t    content_sib1;
-  NB_IoT_DL_eNB_SIB_t    content_sib23;
-  NB_IoT_DL_eNB_RAR_t    content_rar;
-
-*/ //////////////////////////////////////////////////////////////////////
-  
   /// Number of soft channel bits
   uint32_t                G;
   
