@@ -85,8 +85,11 @@ int create_tasks(uint32_t enb_nb)
             return -1;
           }
         }
-
+#if NOS1
+        if (itti_create_task (TASK_GTPV1_U, &noS1_eNB_task, NULL) < 0) {
+#else
         if (itti_create_task (TASK_GTPV1_U, &gtpv1u_eNB_task, NULL) < 0) {
+#endif
           LOG_E(GTPU, "Create task for GTPV1U failed\n");
           return -1;
         }

@@ -952,9 +952,6 @@ int main( int argc, char **argv )
 #ifdef PDCP_USE_NETLINK
   printf("PDCP netlink\n");
   netlink_init();
-#if defined(PDCP_USE_NETLINK_QUEUES)
-  pdcp_netlink_init();
-#endif
 #endif
 
 #if !defined(ENABLE_ITTI)

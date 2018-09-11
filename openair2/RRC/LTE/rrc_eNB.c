@@ -1457,7 +1457,11 @@ rrc_eNB_process_RRCConnectionReestablishmentComplete(
     create_tunnel_req.rnti       = ctxt_pP->rnti; // warning put zero above
     create_tunnel_req.num_tunnels    = j;
 
+#if NOS1
+    noS1_update_s1u_tunnel(
+#else
     gtpv1u_update_s1u_tunnel(
+#endif
               ctxt_pP->instance,
               &create_tunnel_req,
               reestablish_rnti);

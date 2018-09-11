@@ -115,11 +115,8 @@ int pdcp_fifo_flush_sdus(const protocol_ctxt_t* const  ctxt_pP)
 {
    //-----------------------------------------------------------------------------
 
-   //#if defined(PDCP_USE_NETLINK) && defined(LINUX)
-   int ret = 0;
-   //#endif
-
-#ifdef DEBUG_PDCP_FIFO_FLUSH_SDU
+    int ret = 0;
+ #ifdef DEBUG_PDCP_FIFO_FLUSH_SDU
 #define THREAD_NAME_LEN 16
    static char threadname[THREAD_NAME_LEN];
    ret = pthread_getname_np(pthread_self(), threadname, THREAD_NAME_LEN);
@@ -238,22 +235,13 @@ int pdcp_fifo_flush_sdus(const protocol_ctxt_t* const  ctxt_pP)
             pdcp_output_header_bytes_to_write = sizeof (pdcp_data_ind_header_t);
          }
 
-#ifdef PDCP_USE_RT_FIFO
-         bytes_wrote = rtf_put (PDCP2PDCP_USE_RT_FIFO,
-               &(((uint8_t *) sdu->data)[sizeof (pdcp_data_ind_header_t) - pdcp_output_header_bytes_to_write]),
-               pdcp_output_header_bytes_to_write);
-
-#else
 #ifdef PDCP_USE_NETLINK
-#ifdef LINUX
          memcpy(NLMSG_DATA(nas_nlh_tx), &(((uint8_t *) sdu_p->data)[sizeof (pdcp_data_ind_header_t) - pdcp_output_header_bytes_to_write]),
                pdcp_output_header_bytes_to_write);
          nas_nlh_tx->nlmsg_len = pdcp_output_header_bytes_to_write;
-#endif //LINUX
 #endif //PDCP_USE_NETLINK
 
          bytes_wrote = pdcp_output_header_bytes_to_write;
-#endif //PDCP_USE_RT_FIFO
 
 #ifdef PDCP_DEBUG
          LOG_D(PDCP, "Frame %d Sent %d Bytes of header to Nas_mesh\n",
@@ -268,9 +256,6 @@ int pdcp_fifo_flush_sdus(const protocol_ctxt_t* const  ctxt_pP)
                pdcp_output_sdu_bytes_to_write = ((pdcp_data_ind_header_t *) sdu_p->data)->data_size;
                AssertFatal(pdcp_output_sdu_bytes_to_write >= 0, "invalid data_size!");
 
-#ifdef PDCP_USE_RT_FIFO
-               bytes_wrote = rtf_put (PDCP2PDCP_USE_RT_FIFO, &(sdu->data[sizeof (pdcp_data_ind_header_t)]), pdcp_output_sdu_bytes_to_write);
-#else
 
 #ifdef PDCP_USE_NETLINK
 #ifdef LINUX
@@ -314,7 +299,6 @@ int pdcp_fifo_flush_sdus(const protocol_ctxt_t* const  ctxt_pP)
 #endif // LINUX
 #endif //PDCP_USE_NETLINK
                bytes_wrote= pdcp_output_sdu_bytes_to_write;
-#endif // PDCP_USE_RT_FIFO
 
 #ifdef PDCP_DEBUG
                LOG_D(PDCP, "PDCP->IP Frame %d INST %d: Sent %d Bytes of data from rab %d to higher layers\n",
@@ -357,13 +341,7 @@ int pdcp_fifo_flush_sdus(const protocol_ctxt_t* const  ctxt_pP)
          }
       } else {
          // continue writing sdu
-#ifdef PDCP_USE_RT_FIFO
-         bytes_wrote = rtf_put (PDCP2PDCP_USE_RT_FIFO,
-               (uint8_t *) (&(sdu_p->data[sizeof (pdcp_data_ind_header_t) + ((pdcp_data_ind_header_t *) sdu_p->data)->data_size - pdcp_output_sdu_bytes_to_write])),
-               pdcp_output_sdu_bytes_to_write);
-#else  // PDCP_USE_RT_FIFO
          bytes_wrote = pdcp_output_sdu_bytes_to_write;
-#endif  // PDCP_USE_RT_FIFO
          LOG_D(PDCP, "THINH 2 bytes_wrote = %d\n", bytes_wrote);
 
          if (bytes_wrote > 0) {
@@ -387,24 +365,6 @@ int pdcp_fifo_flush_sdus(const protocol_ctxt_t* const  ctxt_pP)
    }
    VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_PDCP_FIFO_FLUSH, 0 );
 
-#ifdef PDCP_USE_RT_FIFO
-
-   if ((pdcp_nb_sdu_sent)) {
-      if ((pdcp_2_nas_irq > 0)) {
-#ifdef PDCP_DEBUG
-         LOG_D(PDCP, "Frame %d : Trigger NAS RX interrupt\n",
-               ctxt_pP->frame);
-#endif //PDCP_DEBUG
-         rt_pend_linux_srq (pdcp_2_nas_irq);
-
-      } else {
-         LOG_E(PDCP, "Frame %d: ERROR IF IP STACK WANTED : NOTIF PACKET(S) pdcp_2_nas_irq not initialized : %d\n",
-               ctxt_pP->frame,
-               pdcp_2_nas_irq);
-      }
-   }
-
-#endif  //PDCP_USE_RT_FIFO
 
 #ifdef PDCP_SDU_FLUSH_LOCK
    if (pthread_mutex_unlock(&mtex)) exit_fun("PDCP_SDU_FLUSH_LOCK unlock error!");
@@ -501,130 +461,6 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
    pc5s_header_t *pc5s_header;
 #endif
 
-# if defined(PDCP_USE_NETLINK_QUEUES)
-   rb_id_t                        rab_id    = 0;
-
-   pdcp_transmission_mode_t       pdcp_mode = PDCP_TRANSMISSION_MODE_UNKNOWN;
-
-
-   while (pdcp_netlink_dequeue_element(ctxt_pP, &data_p) != 0) {
-      DevAssert(data_p != NULL);
-      rab_id = data_p->pdcp_read_header.rb_id % maxDRB;
-      // ctxt_pP->rnti is NOT_A_RNTI
-      ctxt_cpy.rnti = pdcp_module_id_to_rnti[ctxt_cpy.module_id][data_p->pdcp_read_header.inst];
-      key = PDCP_COLL_KEY_VALUE(ctxt_pP->module_id, ctxt_cpy.rnti, ctxt_pP->enb_flag, rab_id, SRB_FLAG_NO);
-      h_rc = hashtable_get(pdcp_coll_p, key, (void**)&pdcp_p);
-
-      if (h_rc != HASH_TABLE_OK) {
-         LOG_W(PDCP, PROTOCOL_CTXT_FMT" Dropped IP PACKET cause no PDCP instanciated\n",
-               PROTOCOL_CTXT_ARGS(ctxt_pP));
-         free(data_p->data);
-         free(data_p);
-         data_p = NULL;
-         continue;
-      }
-
-      CHECK_CTXT_ARGS(&ctxt_cpy);
-
-      AssertFatal (rab_id    < maxDRB,                       "RB id is too high (%u/%d)!\n", rab_id, maxDRB);
-
-      if (rab_id != 0) {
-         LOG_D(PDCP, "[FRAME %05d][%s][IP][INSTANCE %u][RB %u][--- PDCP_DATA_REQ "
-               "/ %d Bytes --->][PDCP][MOD %u][RB %u]\n",
-               ctxt_cpy.frame,
-               (ctxt_cpy.enb_flag) ? "eNB" : "UE",
-                     data_p->pdcp_read_header.inst,
-                     data_p->pdcp_read_header.rb_id,
-                     data_p->pdcp_read_header.data_size,
-                     ctxt_cpy.module_id,
-                     rab_id);
-#ifdef  OAI_NW_DRIVER_TYPE_ETHERNET
-
-         if ((data_p->pdcp_read_header.traffic_type == TRAFFIC_IPV6_TYPE_MULTICAST) /*TRAFFIC_IPV6_TYPE_MULTICAST */ ||
-               (data_p->pdcp_read_header.traffic_type == TRAFFIC_IPV4_TYPE_MULTICAST) /*TRAFFIC_IPV4_TYPE_MULTICAST */ ||
-               (data_p->pdcp_read_header.traffic_type == TRAFFIC_IPV4_TYPE_BROADCAST) /*TRAFFIC_IPV4_TYPE_BROADCAST */ ) {
-#if (RRC_VERSION >= MAKE_VERSION(10, 0, 0))
-            PDCP_TRANSMISSION_MODE_TRANSPARENT;
-#else
-            pdcp_mode= PDCP_TRANSMISSION_MODE_DATA;
-#endif
-         } else if ((data_p->pdcp_read_header.traffic_type == TRAFFIC_IPV6_TYPE_UNICAST) /* TRAFFIC_IPV6_TYPE_UNICAST */ ||
-               (data_p->pdcp_read_header.traffic_type == TRAFFIC_IPV4_TYPE_UNICAST) /*TRAFFIC_IPV4_TYPE_UNICAST*/ ) {
-            pdcp_mode=  PDCP_TRANSMISSION_MODE_DATA;
-         } else {
-            pdcp_mode= PDCP_TRANSMISSION_MODE_DATA;
-            LOG_W(PDCP,"unknown IP traffic type \n");
-         }
-
-#else // OAI_NW_DRIVER_TYPE_ETHERNET NASMESH driver does not curreenlty support multicast traffic
-         pdcp_mode = PDCP_TRANSMISSION_MODE_DATA;
-#endif
-         pdcp_data_req(&ctxt_cpy,
-               SRB_FLAG_NO,
-               rab_id % maxDRB,
-               RLC_MUI_UNDEFINED,
-               RLC_SDU_CONFIRM_NO,
-               data_p->pdcp_read_header.data_size,
-               data_p->data,
-               pdcp_mode
-#if (RRC_VERSION >= MAKE_VERSION(14, 0, 0))
-               ,NULL, NULL
-#endif
-               );
-      } else if (ctxt_cpy.enb_flag) {
-         /* rb_id = 0, thus interpreated as broadcast and transported as
-          * multiple unicast is a broadcast packet, we have to send this
-          * packet on all default RABS of all connected UEs
-          */
-         LOG_D(PDCP, "eNB Try Forcing send on DEFAULT_RAB_ID first_ue_local %u nb_ue_local %u\n", oai_emulation.info.first_ue_local, oai_emulation.info.nb_ue_local);
-
-         for (ue_id = 0; ue_id < NB_UE_INST; ue_id++) {
-            if (pdcp_module_id_to_rnti[ctxt_cpy.module_id][ue_id] != NOT_A_RNTI) {
-               LOG_D(PDCP, "eNB Try Forcing send on DEFAULT_RAB_ID UE %d\n", ue_id);
-               ctxt.module_id     = ctxt_cpy.module_id;
-               ctxt.rnti          = ctxt_cpy.pdcp_module_id_to_rnti[ctxt_cpy.module_id][ue_id];
-               ctxt.frame         = ctxt_cpy.frame;
-               ctxt.enb_flag      = ctxt_cpy.enb_flag;
-
-               pdcp_data_req(
-                     &ctxt,
-                     SRB_FLAG_NO,
-                     DEFAULT_RAB_ID,
-                     RLC_MUI_UNDEFINED,
-                     RLC_SDU_CONFIRM_NO,
-                     data_p->pdcp_read_header.data_size,
-                     data_p->data,
-                     PDCP_TRANSMISSION_MODE_DATA
-#if (RRC_VERSION >= MAKE_VERSION(14, 0, 0))
-                     ,NULL, NULL
-#endif
-                     );
-            }
-         }
-      } else {
-         LOG_D(PDCP, "Forcing send on DEFAULT_RAB_ID\n");
-         pdcp_data_req(
-               &ctxt_cpy,
-               SRB_FLAG_NO,
-               DEFAULT_RAB_ID,
-               RLC_MUI_UNDEFINED,
-               RLC_SDU_CONFIRM_NO,
-               data_p->pdcp_read_header.data_size,
-               data_p->data,
-               PDCP_TRANSMISSION_MODE_DATA
-#if (RRC_VERSION >= MAKE_VERSION(14, 0, 0))
-               ,NULL, NULL
-#endif
-               );
-      }
-
-      free(data_p->data);
-      free(data_p);
-      data_p = NULL;
-   }
-
-   return 0;
-# else /* PDCP_USE_NETLINK_QUEUES*/
    int              len = 1;
    int  msg_len;
    rb_id_t          rab_id  = 0;
@@ -1156,7 +992,6 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
 
 
    return len;
-# endif
 #else // neither PDCP_USE_NETLINK nor PDCP_USE_RT_FIFO
    return 0;
 #endif // PDCP_USE_NETLINK
