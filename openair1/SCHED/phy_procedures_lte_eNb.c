@@ -683,8 +683,7 @@ if(proc->flag_msg4 == 1 && proc->counter_msg4 > 0)
                       dlsch_encoding_NB_IoT(tab_rar,
                                                 rar,
                                                 1,                      ///// number_of_subframes_required
-                                                236,
-                                                1);                   //////////// G*2   // option =2 for msg4
+                                                236);                   //////////// G*2   // option =2 for msg4
 
 
                        dlsch_scrambling_Gen_NB_IoT(fp,

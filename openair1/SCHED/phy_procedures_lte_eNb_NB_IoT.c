@@ -331,8 +331,7 @@ void common_signal_procedures_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
             dlsch_encoding_NB_IoT(sib1_pdu,
                                   sib1,
                                   8,                      ///// number_of_subframes_required
-                                  get_G_NB_IoT(fp),
-                                  1);                   //////////// G*2
+                                  get_G_NB_IoT(fp));                   //////////// G*2
         
              dlsch_scrambling_Gen_NB_IoT(fp,
                                          sib1,
@@ -352,7 +351,7 @@ void common_signal_procedures_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
                                4,       
                                 RB_IoT_ID);
         
-        }
+    }
   ///////////////////////////////////////////////////////// END ////////////////////////////////////////////////////////
         
   //////////////////////////////////////////////////// SIB23 ////////////////////////////////////////////////////////////////////////
@@ -368,8 +367,7 @@ void common_signal_procedures_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
             dlsch_encoding_NB_IoT(sib23_pdu,
                                   sib23,
                                   8,                      ///// number_of_subframes_required
-                                  236,
-                                  2);                   //////////// G*2
+                                  236);                   //////////// G*2
         
             dlsch_scrambling_Gen_NB_IoT(fp,                    // is called only in subframe 4
                                          sib23,

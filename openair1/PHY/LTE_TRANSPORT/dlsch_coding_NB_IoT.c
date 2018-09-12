@@ -124,11 +124,10 @@ void ccode_encode_npdsch_NB_IoT (int32_t   numbits,
 
 ///////////////////////////////////////////////////////////////////////////////
 
-int dlsch_encoding_NB_IoT(unsigned char      			*a,
-			              NB_IoT_eNB_NDLSCH_t 			*dlsch, //NB_IoT_eNB_NDLSCH_t
-			              uint8_t 			 	Nsf,       // number of subframes required for npdsch pdu transmission calculated from Isf (3GPP spec table)
-			              unsigned int 		 		G,
-			              uint8_t option) 		    // G (number of available RE) is implicitly multiplied by 2 (since only QPSK modulation)
+int dlsch_encoding_NB_IoT(unsigned char      	  *a,
+			              NB_IoT_eNB_NDLSCH_t 	  *dlsch,    //NB_IoT_eNB_NDLSCH_t
+			              uint8_t 			 	  Nsf,       // number of subframes required for npdsch pdu transmission calculated from Isf (3GPP spec table)
+			              unsigned int 		 	  G) 		    // G (number of available RE) is implicitly multiplied by 2 (since only QPSK modulation)
 {
 	uint32_t  crc = 1;
 	//unsigned char harq_pid = dlsch->current_harq_pid;  			// to check during implementation if harq_pid is required in the NB_IoT_eNB_DLSCH_t structure  in defs_NB_IoT.h
