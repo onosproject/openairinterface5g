@@ -67,6 +67,7 @@ extern int otg_enabled;
 
 #include "common/ran_context.h"
 extern RAN_CONTEXT_t RC;
+hash_table_t  *pdcp_coll_p = NULL;
 
 #ifdef MBMS_MULTICAST_OUT
 # include <sys/types.h>
@@ -79,7 +80,6 @@ extern RAN_CONTEXT_t RC;
 static int mbms_socket = -1;
 #endif
 
-hash_table_t  *pdcp_coll_p = NULL;
 //-----------------------------------------------------------------------------
 /*
  * If PDCP_UNIT_TEST is set here then data flow between PDCP and RLC is broken
@@ -413,9 +413,9 @@ boolean_t pdcp_data_req(
    * Control arrives here only if rlc_data_req() returns RLC_OP_STATUS_OK
    * so we return TRUE afterwards
    */
-
+  
   for (pdcp_uid=0; pdcp_uid< MAX_MOBILES_PER_ENB;pdcp_uid++){
-    if (pdcp_enb[ctxt_pP->module_id].rnti[pdcp_uid] == ctxt_pP->rnti )
+    if (pdcp_enb[ctxt_pP->module_id].rnti[pdcp_uid] == ctxt_pP->rnti ) 
       break;
   }
 
