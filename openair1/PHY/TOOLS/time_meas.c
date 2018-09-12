@@ -37,8 +37,8 @@ double get_cpu_freq_GHz(void) {
   sleep(1);
   ts.diff = (rdtsc_oai()-ts.in);
   cpu_freq_GHz = (double)ts.diff/1000000000;
-  printf("CPU Freq is %f \n", cpu_freq_GHz);
-  return cpu_freq_GHz; 
+  //printf("CPU Freq is %f \n", cpu_freq_GHz);
+  return cpu_freq_GHz;
 }
 
 void print_meas_now(time_stats_t *ts, const char* name, FILE* file_name){
@@ -54,7 +54,7 @@ void print_meas_now(time_stats_t *ts, const char* name, FILE* file_name){
 
       //fprintf(file_name,"Name %25s: Processing %15.3f ms for SF %d, diff_now %15.3f \n", name,(ts->diff_now/(cpu_freq_GHz*1000000.0)),subframe,ts->diff_now);
       fprintf(file_name,"%15.3f us, diff_now %15.3f \n",(ts->diff_now/(cpu_freq_GHz*1000.0)),(double)ts->diff_now);
-      
+
     }
   }
 }
