@@ -1143,14 +1143,12 @@ int main( int argc, char **argv )
   }
   
 #endif
-  while(sync_var == -1){
-    usleep(1000);
-  }
+
   printf("Sending sync to all threads (%p,%p,%p)\n",&sync_var,&sync_cond,&sync_mutex);
 
   
   pthread_mutex_lock(&sync_mutex);
-//  sync_var=0;
+  sync_var=0;
   pthread_cond_broadcast(&sync_cond);
   pthread_mutex_unlock(&sync_mutex);
 
