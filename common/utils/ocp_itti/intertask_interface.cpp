@@ -29,7 +29,12 @@ typedef struct task_list_s {
   int nb_events=0;
   int epoll_fd=-1;
   int sem_fd=-1;
+  int created = 0;
+  volatile int ready = 0;
 } task_list_t;
+
+static volatile int init_done = 0;
+static volatile int all_created = 0;
 
 int timer_expired(int fd);
 task_list_t tasks[TASK_MAX];
@@ -273,7 +278,13 @@ extern "C" {
   }
 
   int itti_create_task(task_id_t task_id, void *(*start_routine)(void *), void *args_p) {
+    if (all_created) {
+      printf("ITTI: task %d cannot be created at this point\n", task_id);
+      abort();
+    }
     task_list_t *t=&tasks[task_id];
+    printf("ITTI: thread %d created\n", task_id);
+    t->created = 1;
     AssertFatal ( pthread_create (&t->thread, NULL, start_routine, args_p) ==0,
                   "Thread creation for task %d failed!\n", task_id);
     pthread_setname_np( t->thread, itti_get_task_name(task_id) );
@@ -385,12 +396,25 @@ extern "C" {
 
   void itti_update_lte_time(uint32_t frame, uint8_t slot) {}
   void itti_set_task_real_time(task_id_t task_id) {}
+
   void itti_mark_task_ready(task_id_t task_id) {
-    // Function meaning is clear, but legacy implementation is wrong
-    // keep it void is fine: today implementation accepts messages in the queue before task is ready
+    tasks[task_id].ready = 1;
+    while (init_done == 0) usleep(1000);
   }
+
   void itti_wait_ready(int wait_tasks) {
-    // Stupid function, kept for compatibility (the parameter is meaningless!!!)
+    int i;
+    if (wait_tasks) return;
+    all_created = 1;
+    for (i = 0; i < TASK_MAX; i++) {
+      if (!tasks[i].created) continue;
+      printf("ITTI: task %d created, wait for it to be ready\n", i);
+      while (!tasks[i].ready) usleep(1000);
+      printf("ITTI: task %d is ready\n", i);
+    }
+    init_done = 1;
+    printf("ITTI: all tasks should be created from now on\n");
   }
+
   int signal_mask(void) { return 0;}
 }
