@@ -476,6 +476,11 @@ int initial_sync(PHY_VARS_UE *ue, runmode_t mode)
 
   if (ret==0) {  // PBCH found so indicate sync to higher layers and configure frame parameters
 
+#if BASIC_SIMULATOR
+    /* a hack without which the UE does not connect (to be fixed somehow) */
+    ue->rx_offset = 0;
+#endif
+
     //#ifdef DEBUG_INITIAL_SYNCH
 #if DISABLE_LOG_X
     printf("[UE%d] In synch, rx_offset %d samples\n",ue->Mod_id, ue->rx_offset);
