@@ -312,9 +312,9 @@ static void *UE_thread_synch(void *arg) {
         case pbch:
 
 #if DISABLE_LOG_X
-            printf("[UE thread Synch] Running Initial Synch (mode %d)\n",UE->mode);
+            printf("[UE%d thread Synch] Running Initial Synch (mode %d)\n",UE->Mod_id,UE->mode);
 #else
-            LOG_I(PHY, "[UE thread Synch] Running Initial Synch (mode %d)\n",UE->mode);
+            LOG_I(PHY, "[UE%d thread Synch] Running Initial Synch (mode %d)\n",UE->Mod_id,UE->mode);
 #endif
             if (initial_sync( UE, UE->mode ) == 0) {
 

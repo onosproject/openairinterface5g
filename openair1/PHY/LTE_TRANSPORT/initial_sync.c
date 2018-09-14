@@ -125,9 +125,9 @@ int pbch_detection(PHY_VARS_UE *ue, runmode_t mode)
 
   for (frame_mod4=0; frame_mod4<4; frame_mod4++) {
     pbch_tx_ant = rx_pbch(&ue->common_vars,
-                          ue->pbch_vars[0],
+                          ue->pbch_vars[ue->common_vars.eNb_id],
                           frame_parms,
-                          0,
+                          ue->common_vars.eNb_id,
                           SISO,
                           ue->high_speed_flag,
                           frame_mod4);
@@ -138,9 +138,9 @@ int pbch_detection(PHY_VARS_UE *ue, runmode_t mode)
     }
 
     pbch_tx_ant = rx_pbch(&ue->common_vars,
-                          ue->pbch_vars[0],
+                          ue->pbch_vars[ue->common_vars.eNb_id],
                           frame_parms,
-                          0,
+                          ue->common_vars.eNb_id,
                           ALAMOUTI,
                           ue->high_speed_flag,
                           frame_mod4);
@@ -167,7 +167,7 @@ int pbch_detection(PHY_VARS_UE *ue, runmode_t mode)
     //    ue->pbch_vars[0]->decoded_output[2] = dummy;
 
     // now check for Bandwidth of Cell
-    dummy = (ue->pbch_vars[0]->decoded_output[2]>>5)&7;
+    dummy = (ue->pbch_vars[ue->common_vars.eNb_id]->decoded_output[2]>>5)&7;
 
     switch (dummy) {
 
@@ -203,8 +203,8 @@ int pbch_detection(PHY_VARS_UE *ue, runmode_t mode)
 
 
     // now check for PHICH parameters
-    frame_parms->phich_config_common.phich_duration = (PHICH_DURATION_t)((ue->pbch_vars[0]->decoded_output[2]>>4)&1);
-    dummy = (ue->pbch_vars[0]->decoded_output[2]>>2)&3;
+    frame_parms->phich_config_common.phich_duration = (PHICH_DURATION_t)((ue->pbch_vars[ue->common_vars.eNb_id]->decoded_output[2]>>4)&1);
+    dummy = (ue->pbch_vars[ue->common_vars.eNb_id]->decoded_output[2]>>2)&3;
 
     switch (dummy) {
     case 0:
@@ -235,8 +235,8 @@ int pbch_detection(PHY_VARS_UE *ue, runmode_t mode)
 
     for(int i=0; i<RX_NB_TH;i++)
     {
-        ue->proc.proc_rxtx[i].frame_rx =   (((ue->pbch_vars[0]->decoded_output[2]&3)<<6) + (ue->pbch_vars[0]->decoded_output[1]>>2))<<2;
-        ue->proc.proc_rxtx[i].frame_rx =   (((ue->pbch_vars[0]->decoded_output[2]&3)<<6) + (ue->pbch_vars[0]->decoded_output[1]>>2))<<2;
+        ue->proc.proc_rxtx[i].frame_rx =   (((ue->pbch_vars[ue->common_vars.eNb_id]->decoded_output[2]&3)<<6) + (ue->pbch_vars[ue->common_vars.eNb_id]->decoded_output[1]>>2))<<2;
+        ue->proc.proc_rxtx[i].frame_rx =   (((ue->pbch_vars[ue->common_vars.eNb_id]->decoded_output[2]&3)<<6) + (ue->pbch_vars[ue->common_vars.eNb_id]->decoded_output[1]>>2))<<2;
 
 #ifndef USER_MODE
         // one frame delay
@@ -343,9 +343,9 @@ int pbch_detection_freq(PHY_VARS_UE *ue, runmode_t mode)
 
   for (frame_mod4=0; frame_mod4<4; frame_mod4++) {
     pbch_tx_ant = rx_pbch(&ue->common_vars,
-                          ue->pbch_vars[0],
+                          ue->pbch_vars[ue->common_vars.eNb_id],
                           frame_parms,
-                          0,
+                          ue->common_vars.eNb_id,
                           SISO,
                           ue->high_speed_flag,
                           frame_mod4);
@@ -356,9 +356,9 @@ int pbch_detection_freq(PHY_VARS_UE *ue, runmode_t mode)
     }
 
     pbch_tx_ant = rx_pbch(&ue->common_vars,
-                          ue->pbch_vars[0],
+                          ue->pbch_vars[ue->common_vars.eNb_id],
                           frame_parms,
-                          0,
+                          ue->common_vars.eNb_id,
                           ALAMOUTI,
                           ue->high_speed_flag,
                           frame_mod4);
@@ -385,7 +385,7 @@ int pbch_detection_freq(PHY_VARS_UE *ue, runmode_t mode)
     //    ue->pbch_vars[0]->decoded_output[2] = dummy;
 
     // now check for Bandwidth of Cell
-    dummy = (ue->pbch_vars[0]->decoded_output[2]>>5)&7;
+    dummy = (ue->pbch_vars[ue->common_vars.eNb_id]->decoded_output[2]>>5)&7;
 
     switch (dummy) {
 
@@ -421,8 +421,8 @@ int pbch_detection_freq(PHY_VARS_UE *ue, runmode_t mode)
 
 
     // now check for PHICH parameters
-    frame_parms->phich_config_common.phich_duration = (PHICH_DURATION_t)((ue->pbch_vars[0]->decoded_output[2]>>4)&1);
-    dummy = (ue->pbch_vars[0]->decoded_output[2]>>2)&3;
+    frame_parms->phich_config_common.phich_duration = (PHICH_DURATION_t)((ue->pbch_vars[ue->common_vars.eNb_id]->decoded_output[2]>>4)&1);
+    dummy = (ue->pbch_vars[ue->common_vars.eNb_id]->decoded_output[2]>>2)&3;
 
     switch (dummy) {
     case 0:
@@ -453,8 +453,8 @@ int pbch_detection_freq(PHY_VARS_UE *ue, runmode_t mode)
 
     for(int i=0; i<RX_NB_TH;i++)
     {
-        ue->proc.proc_rxtx[i].frame_rx =   (((ue->pbch_vars[0]->decoded_output[2]&3)<<6) + (ue->pbch_vars[0]->decoded_output[1]>>2))<<2;
-        ue->proc.proc_rxtx[i].frame_rx =   (((ue->pbch_vars[0]->decoded_output[2]&3)<<6) + (ue->pbch_vars[0]->decoded_output[1]>>2))<<2;
+        ue->proc.proc_rxtx[i].frame_rx =   (((ue->pbch_vars[ue->common_vars.eNb_id]->decoded_output[2]&3)<<6) + (ue->pbch_vars[ue->common_vars.eNb_id]->decoded_output[1]>>2))<<2;
+        ue->proc.proc_rxtx[i].frame_rx =   (((ue->pbch_vars[ue->common_vars.eNb_id]->decoded_output[2]&3)<<6) + (ue->pbch_vars[ue->common_vars.eNb_id]->decoded_output[1]>>2))<<2;
 
 #ifndef USER_MODE
         // one frame delay
@@ -506,10 +506,11 @@ int initial_sync(PHY_VARS_UE *ue, runmode_t mode)
   write_output("rxdata0.m","rxd0",ue->common_vars.rxdata[0],10*frame_parms->samples_per_tti,1,1);
   exit(-1);
   */
+  printf("before lte_sync_time, ue->common_vars.eNb_id %d\n",ue->common_vars.eNb_id);
   sync_pos = lte_sync_time(ue->common_vars.rxdata,
                            frame_parms,
                            (int *)&ue->common_vars.eNb_id);
-
+  printf("after lte_sync_time, ue->common_vars.eNb_id %d\n",ue->common_vars.eNb_id);
   //  write_output("rxdata1.m","rxd1",ue->common_vars.rxdata[0],10*frame_parms->samples_per_tti,1,1);
   if (sync_pos >= frame_parms->nb_prefix_samples)
     sync_pos2 = sync_pos - frame_parms->nb_prefix_samples;
@@ -717,10 +718,10 @@ int initial_sync(PHY_VARS_UE *ue, runmode_t mode)
 	LOG_I(PHY,"[UE%d] Sending synch status to higher layers\n",ue->Mod_id);
 	//mac_resynch();
 	mac_xface->dl_phy_sync_success(ue->Mod_id,ue->proc.proc_rxtx[0].frame_rx,ue->common_vars.eNb_id,1);//ue->common_vars.eNb_id);
-	ue->UE_mode[0] = PRACH;
+	ue->UE_mode[ue->common_vars.eNb_id] = PRACH;
       }
       else {
-	ue->UE_mode[0] = PUSCH;
+	ue->UE_mode[ue->common_vars.eNb_id] = PUSCH;
       }
 #endif
 
@@ -728,7 +729,7 @@ int initial_sync(PHY_VARS_UE *ue, runmode_t mode)
       generate_phich_reg_mapping(frame_parms);
 
 
-      ue->pbch_vars[0]->pdu_errors_conseq=0;
+      ue->pbch_vars[ue->common_vars.eNb_id]->pdu_errors_conseq=0;
 
     }
 
@@ -778,16 +779,16 @@ int initial_sync(PHY_VARS_UE *ue, runmode_t mode)
 	  phich_string[ue->frame_parms.phich_config_common.phich_resource],
 	  ue->frame_parms.nb_antenna_ports_eNB);
     LOG_I(PHY,"[eNB %d] Frame %d subframe %d MIB Information => %s, %s, NidCell %d, N_RB_DL %d, PHICH DURATION %d, PHICH RESOURCE %s, TX_ANT %d\n",
-	  PHY_vars_eNB_g[0][0]->Mod_id,
-	  PHY_vars_eNB_g[0][0]->proc.proc_rxtx[0].frame_rx,
-	  PHY_vars_eNB_g[0][0]->proc.proc_rxtx[0].subframe_rx,
-	  duplex_string[PHY_vars_eNB_g[0][0]->frame_parms.frame_type],
-	  prefix_string[PHY_vars_eNB_g[0][0]->frame_parms.Ncp],
-	  PHY_vars_eNB_g[0][0]->frame_parms.Nid_cell,
-	  PHY_vars_eNB_g[0][0]->frame_parms.N_RB_DL,
-	  PHY_vars_eNB_g[0][0]->frame_parms.phich_config_common.phich_duration,
-	  phich_string[PHY_vars_eNB_g[0][0]->frame_parms.phich_config_common.phich_resource],
-	  PHY_vars_eNB_g[0][0]->frame_parms.nb_antenna_ports_eNB);
+	  PHY_vars_eNB_g[ue->common_vars.eNb_id][0]->Mod_id,
+	  PHY_vars_eNB_g[ue->common_vars.eNb_id][0]->proc.proc_rxtx[0].frame_rx,
+	  PHY_vars_eNB_g[ue->common_vars.eNb_id][0]->proc.proc_rxtx[0].subframe_rx,
+	  duplex_string[PHY_vars_eNB_g[ue->common_vars.eNb_id][0]->frame_parms.frame_type],
+	  prefix_string[PHY_vars_eNB_g[ue->common_vars.eNb_id][0]->frame_parms.Ncp],
+	  PHY_vars_eNB_g[ue->common_vars.eNb_id][0]->frame_parms.Nid_cell,
+	  PHY_vars_eNB_g[ue->common_vars.eNb_id][0]->frame_parms.N_RB_DL,
+	  PHY_vars_eNB_g[ue->common_vars.eNb_id][0]->frame_parms.phich_config_common.phich_duration,
+	  phich_string[PHY_vars_eNB_g[ue->common_vars.eNb_id][0]->frame_parms.phich_config_common.phich_resource],
+	  PHY_vars_eNB_g[ue->common_vars.eNb_id][0]->frame_parms.nb_antenna_ports_eNB);
 #endif
 
 #if defined(OAI_USRP) || defined(EXMIMO) || defined(OAI_BLADERF) || defined(OAI_LMSSDR)
@@ -818,11 +819,11 @@ int initial_sync(PHY_VARS_UE *ue, runmode_t mode)
     LOG_I(PHY,"[UE%d] Initial sync : Estimated Nid_cell %d, Frame_type %d\n",ue->Mod_id,
           frame_parms->Nid_cell,frame_parms->frame_type);
 #endif
-
-    ue->UE_mode[0] = NOT_SYNCHED;
-    ue->pbch_vars[0]->pdu_errors_last=ue->pbch_vars[0]->pdu_errors;
-    ue->pbch_vars[0]->pdu_errors++;
-    ue->pbch_vars[0]->pdu_errors_conseq++;
+    printf("initial_synch; ue->common_vars.eNb_id %d\n",ue->common_vars.eNb_id);
+    ue->UE_mode[ue->common_vars.eNb_id] = NOT_SYNCHED;
+    ue->pbch_vars[ue->common_vars.eNb_id]->pdu_errors_last=ue->pbch_vars[ue->common_vars.eNb_id]->pdu_errors;
+    ue->pbch_vars[ue->common_vars.eNb_id]->pdu_errors++;
+    ue->pbch_vars[ue->common_vars.eNb_id]->pdu_errors_conseq++;
 
   }
 
@@ -843,18 +844,18 @@ int initial_sync(PHY_VARS_UE *ue, runmode_t mode)
     */
 
     // we might add a low-pass filter here later
-    ue->measurements.rx_power_avg[0] = rx_power/frame_parms->nb_antennas_rx;
+    ue->measurements.rx_power_avg[ue->common_vars.eNb_id] = rx_power/frame_parms->nb_antennas_rx;
 
-    ue->measurements.rx_power_avg_dB[0] = dB_fixed(ue->measurements.rx_power_avg[0]);
+    ue->measurements.rx_power_avg_dB[ue->common_vars.eNb_id] = dB_fixed(ue->measurements.rx_power_avg[ue->common_vars.eNb_id]);
 
 #ifdef DEBUG_INITIAL_SYNCH
-  LOG_I(PHY,"[UE%d] Initial sync : Estimated power: %d dB\n",ue->Mod_id,ue->measurements.rx_power_avg_dB[0] );
+  LOG_I(PHY,"[UE%d] Initial sync : Estimated power: %d dB\n",ue->Mod_id,ue->measurements.rx_power_avg_dB[ue->common_vars.eNb_id] );
 #endif
 
 #ifndef OAI_USRP
 #ifndef OAI_BLADERF
 #ifndef OAI_LMSSDR
-  phy_adjust_gain(ue,ue->measurements.rx_power_avg_dB[0],0);
+  phy_adjust_gain(ue,ue->measurements.rx_power_avg_dB[ue->common_vars.eNb_id],ue->common_vars.eNb_id);
   printf("adjust gain 1\n");
 #endif
 #endif
@@ -866,7 +867,7 @@ int initial_sync(PHY_VARS_UE *ue, runmode_t mode)
 #ifndef OAI_USRP
 #ifndef OAI_BLADERF
 #ifndef OAI_LMSSDR
-  phy_adjust_gain(ue,dB_fixed(ue->measurements.rssi),0);
+  phy_adjust_gain(ue,dB_fixed(ue->measurements.rssi),ue->common_vars.eNb_id);
   printf("adjust gain 2\n");
 #endif
 #endif
@@ -950,17 +951,17 @@ int initial_sync_freq(PHY_VARS_UE *ue, runmode_t mode)
 	LOG_I(PHY,"[UE%d] Sending synch status to higher layers\n",ue->Mod_id);
 	//mac_resynch();
 	mac_xface->dl_phy_sync_success(ue->Mod_id,ue->proc.proc_rxtx[0].frame_rx,ue->common_vars.eNb_id,1);//ue->common_vars.eNb_id);
-	ue->UE_mode[0] = PRACH;
+	ue->UE_mode[ue->common_vars.eNb_id] = PRACH;
       }
       else {
-	ue->UE_mode[0] = PUSCH;
+	ue->UE_mode[ue->common_vars.eNb_id] = PUSCH;
       }
 
       generate_pcfich_reg_mapping(frame_parms);
       generate_phich_reg_mapping(frame_parms);
 
 
-      ue->pbch_vars[0]->pdu_errors_conseq=0;
+      ue->pbch_vars[ue->common_vars.eNb_id]->pdu_errors_conseq=0;
 
     }
 
@@ -1018,10 +1019,10 @@ int initial_sync_freq(PHY_VARS_UE *ue, runmode_t mode)
           frame_parms->Nid_cell,frame_parms->frame_type);
 #endif
 
-    ue->UE_mode[0] = NOT_SYNCHED;
-    ue->pbch_vars[0]->pdu_errors_last=ue->pbch_vars[0]->pdu_errors;
-    ue->pbch_vars[0]->pdu_errors++;
-    ue->pbch_vars[0]->pdu_errors_conseq++;
+    ue->UE_mode[ue->common_vars.eNb_id] = NOT_SYNCHED;
+    ue->pbch_vars[ue->common_vars.eNb_id]->pdu_errors_last=ue->pbch_vars[ue->common_vars.eNb_id]->pdu_errors;
+    ue->pbch_vars[ue->common_vars.eNb_id]->pdu_errors++;
+    ue->pbch_vars[ue->common_vars.eNb_id]->pdu_errors_conseq++;
 
   }
   // gain control
@@ -1042,18 +1043,18 @@ int initial_sync_freq(PHY_VARS_UE *ue, runmode_t mode)
     */
 
     // we might add a low-pass filter here later
-    ue->measurements.rx_power_avg[0] = rx_power/frame_parms->nb_antennas_rx;
+    ue->measurements.rx_power_avg[ue->common_vars.eNb_id] = rx_power/frame_parms->nb_antennas_rx;
 
-    ue->measurements.rx_power_avg_dB[0] = dB_fixed(ue->measurements.rx_power_avg[0]);
+    ue->measurements.rx_power_avg_dB[ue->common_vars.eNb_id] = dB_fixed(ue->measurements.rx_power_avg[ue->common_vars.eNb_id]);
 
 #ifdef DEBUG_INITIAL_SYNCH
-  LOG_I(PHY,"[UE%d] Initial sync : Estimated power: %d dB\n",ue->Mod_id,ue->measurements.rx_power_avg_dB[0] );
+  LOG_I(PHY,"[UE%d] Initial sync : Estimated power: %d dB\n",ue->Mod_id,ue->measurements.rx_power_avg_dB[ue->common_vars.eNb_id] );
 #endif
 
 #ifndef OAI_USRP
 #ifndef OAI_BLADERF
 #ifndef OAI_LMSSDR
-  phy_adjust_gain(ue,ue->measurements.rx_power_avg_dB[0],0);
+  phy_adjust_gain(ue,ue->measurements.rx_power_avg_dB[ue->common_vars.eNb_id],ue->common_vars.eNb_id);
   //printf("adjust gain freq 1\n");
 #endif
 #endif
@@ -1065,7 +1066,7 @@ int initial_sync_freq(PHY_VARS_UE *ue, runmode_t mode)
 #ifndef OAI_USRP
 #ifndef OAI_BLADERF
 #ifndef OAI_LMSSDR
-  phy_adjust_gain(ue,dB_fixed(ue->measurements.rssi),0);
+  phy_adjust_gain(ue,dB_fixed(ue->measurements.rssi),ue->common_vars.eNb_id);
   //printf("adjust gain freq 2\n");
 #endif
 #endif

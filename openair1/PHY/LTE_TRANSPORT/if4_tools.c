@@ -46,7 +46,7 @@ const uint16_t alaw2lin_if4p5[256] = {60032, 60288, 59520, 59776, 61056, 61312, 
 
 void send_IF4p5(PHY_VARS_eNB *eNB, int frame, int subframe, uint16_t packet_type, int k) {
   LTE_DL_FRAME_PARMS *fp = &eNB->frame_parms;
-  int32_t **txdataF      = (eNB->CC_id==0) ? eNB->common_vars.txdataF[0] : PHY_vars_eNB_g[0][0]->common_vars.txdataF[0];
+  int32_t **txdataF      = (eNB->CC_id==0) ? eNB->common_vars.txdataF[0] : PHY_vars_eNB_g[eNB->Mod_id][0]->common_vars.txdataF[0];
   int32_t **rxdataF      = eNB->common_vars.rxdataF[0];
   int16_t **rxsigF       = eNB->prach_vars.rxsigF;  
   void *tx_buffer        = eNB->ifbuffer.tx[subframe&1];
@@ -144,10 +144,10 @@ void send_IF4p5(PHY_VARS_eNB *eNB, int frame, int subframe, uint16_t packet_type
       VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_COMPR_IF, 1 );
 	LOG_D(PHY,"IF4p5_PULFFT: frame %d, subframe %d, symbol %d\n",frame,subframe,symbol_id);
 	for (element_id=0; element_id<db_halflength; element_id++) {
-	  i = (uint16_t*) &rxdataF[0][blockoffsetF+element_id];
+	  i = (uint16_t*) &rxdataF[eNB->CC_id][blockoffsetF+element_id];
 	  data_block[element_id] = ((uint16_t) lin2alaw_if4p5[*i]) | ((uint16_t)(lin2alaw_if4p5[*(i+1)]<<8));
 	  
-	  i = (uint16_t*) &rxdataF[0][slotoffsetF+element_id];
+	  i = (uint16_t*) &rxdataF[eNB->CC_id][slotoffsetF+element_id];
 	  data_block[element_id+db_halflength] = ((uint16_t) lin2alaw_if4p5[*i]) | ((uint16_t)(lin2alaw_if4p5[*(i+1)]<<8));
 	  //if (element_id==0) LOG_I(PHY,"send_if4p5: symbol %d rxdata0 = (%d,%d)\n",symbol_id,*i,*(i+1));
 		

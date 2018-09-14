@@ -1456,7 +1456,7 @@ void init_openair1(void)
 
   // change the nb_connected_eNB
   for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
-   for (eNB_id=0;eNB_id<enb_properties->number;eNB_id++) {
+
     init_lte_vars (&frame_parms[CC_id],
 		   oai_emulation.info.frame_type[CC_id],
 		   oai_emulation.info.tdd_config[CC_id],
@@ -1471,7 +1471,7 @@ void init_openair1(void)
 		   enb_properties->properties[eNB_id]->nb_antennas_tx[CC_id],
 		   nb_antennas_rx_ue,
 		   oai_emulation.info.eMBMS_active_state);
-
+   for (eNB_id=0;eNB_id<enb_properties->number;eNB_id++) {
     // This is for IF4p5 RRU, gets done by RRC configuration of eNB
     PHY_vars_eNB_g[eNB_id][CC_id]->frame_parms.prach_config_common.prach_ConfigInfo.prach_ConfigIndex = enb_properties->properties[eNB_id]->prach_config_index[CC_id];
     PHY_vars_eNB_g[eNB_id][CC_id]->frame_parms.prach_config_common.prach_ConfigInfo.prach_FreqOffset  = enb_properties->properties[eNB_id]->prach_freq_offset[CC_id];
@@ -1571,28 +1571,30 @@ void init_openair1(void)
       PHY_vars_UE_g[UE_id][CC_id]->rx_total_gain_dB=100;
 
       // update UE_mode for each eNB_id not just 0
-      if (abstraction_flag == 0) {
-	if (phy_test==0) PHY_vars_UE_g[UE_id][CC_id]->UE_mode[0] = NOT_SYNCHED;
-	else PHY_vars_UE_g[UE_id][CC_id]->UE_mode[0] = PUSCH;
-      } else {
-        // 0 is the index of the connected eNB
-        PHY_vars_UE_g[UE_id][CC_id]->UE_mode[0] = PRACH;
+      for (eNB_id=0; eNB_id<NB_eNB_INST; eNB_id++){
+	      if (abstraction_flag == 0) {
+		if (phy_test==0) PHY_vars_UE_g[UE_id][CC_id]->UE_mode[eNB_id] = NOT_SYNCHED;
+		else PHY_vars_UE_g[UE_id][CC_id]->UE_mode[eNB_id] = PUSCH;
+	      } else {
+		// 0 is the index of the connected eNB
+		PHY_vars_UE_g[UE_id][CC_id]->UE_mode[eNB_id] = PRACH;
+	      }
       }
-
       if (phy_test==1)
 	PHY_vars_UE_g[UE_id][CC_id]->mac_enabled=0;
       else
 	PHY_vars_UE_g[UE_id][CC_id]->mac_enabled=1;
+      for (eNB_id=0; eNB_id<NB_eNB_INST; eNB_id++){
+      	PHY_vars_UE_g[UE_id][CC_id]->pdcch_vars[0][eNB_id]->crnti = 0x1235 + UE_id;
 
-      PHY_vars_UE_g[UE_id][CC_id]->pdcch_vars[0][0]->crnti = 0x1235 + UE_id;
+      	for (uint8_t i=0; i<RX_NB_TH_MAX; i++) {
+          PHY_vars_UE_g[UE_id][CC_id]->pdcch_vars[i][eNB_id]->dciFormat      = 0;
+          PHY_vars_UE_g[UE_id][CC_id]->pdcch_vars[i][eNB_id]->agregationLevel      = 0xFF;
+      	}
+      	PHY_vars_UE_g[UE_id][CC_id]->current_dlsch_cqi[eNB_id] = 10;
 
-      for (uint8_t i=0; i<RX_NB_TH_MAX; i++) {
-          PHY_vars_UE_g[UE_id][CC_id]->pdcch_vars[i][0]->dciFormat      = 0;
-          PHY_vars_UE_g[UE_id][CC_id]->pdcch_vars[i][0]->agregationLevel      = 0xFF;
+      	LOG_I(EMU, "UE %d mode is initialized to %d\n", UE_id, PHY_vars_UE_g[UE_id][CC_id]->UE_mode[eNB_id] );
       }
-      PHY_vars_UE_g[UE_id][CC_id]->current_dlsch_cqi[0] = 10;
-
-      LOG_I(EMU, "UE %d mode is initialized to %d\n", UE_id, PHY_vars_UE_g[UE_id][CC_id]->UE_mode[0] );
 #if ENABLE_RAL
       PHY_vars_UE_g[UE_id][CC_id]->ral_thresholds_timed = hashtable_create (64, NULL, NULL);
 

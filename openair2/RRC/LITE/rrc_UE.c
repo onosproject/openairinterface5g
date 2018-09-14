@@ -87,7 +87,7 @@
 #endif
 
 #include "SIMULATION/TOOLS/defs.h" // for taus
-
+#include "PHY/extern.h"
 
 #ifdef PHY_EMUL
 extern EMULATION_VARS *Emul_vars;
@@ -4317,6 +4317,8 @@ NAS_KENB_REFRESH_REQ,NAS_CELL_SELECTION_REQ,RRC_STATE_INACTIVE,RRC_STATE_IDLE,RR
       break;
 
     case RRC_MAC_BCCH_DATA_IND:
+      printf("rrc_ue_task:[UE %d] Received %s: frameP %d, eNB %d\n", ue_mod_id, msg_name,
+            RRC_MAC_BCCH_DATA_IND (msg_p).frame, RRC_MAC_BCCH_DATA_IND (msg_p).enb_index);
       LOG_D(RRC, "[UE %d] Received %s: frameP %d, eNB %d\n", ue_mod_id, msg_name,
             RRC_MAC_BCCH_DATA_IND (msg_p).frame, RRC_MAC_BCCH_DATA_IND (msg_p).enb_index);
 
@@ -4441,7 +4443,8 @@ NAS_KENB_REFRESH_REQ,NAS_CELL_SELECTION_REQ,RRC_STATE_INACTIVE,RRC_STATE_IDLE,RR
 
       if (rrc_get_state(ue_mod_id) == RRC_STATE_INACTIVE) {
         // have a look at MAC/main.c void dl_phy_sync_success(...)
-        openair_rrc_ue_init(ue_mod_id,0);
+	printf("openair_rrc_ue_init: UE %d\n",ue_mod_id);
+        openair_rrc_ue_init(ue_mod_id,PHY_vars_UE_g[ue_mod_id][0]->common_vars.eNb_id);
       }
 
       /* Save cell selection criterion */
