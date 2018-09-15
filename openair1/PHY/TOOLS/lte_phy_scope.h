@@ -68,6 +68,8 @@ FD_lte_phy_scope_ue * create_lte_phy_scope_ue( void );
 
 void phy_scope_eNB(FD_lte_phy_scope_enb *form,
                    PHY_VARS_eNB *phy_vars_enb,
+                   PHY_VARS_UE *phy_vars_ue,
+                   int eNB_id,
                    int UE_id);
 
 void phy_scope_UE(FD_lte_phy_scope_ue *form,

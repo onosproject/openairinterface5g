@@ -903,7 +903,7 @@ int initial_sync_freq(PHY_VARS_UE *ue, runmode_t mode)
   init_frame_parms(frame_parms,1);
 
 // cellid
-  frame_parms->Nid_cell=PHY_vars_eNB_g[0][0]->frame_parms.Nid_cell;
+  frame_parms->Nid_cell=PHY_vars_eNB_g[ue->common_vars.eNb_id][0]->frame_parms.Nid_cell;
 // nushift
   //rx_sss(ue,&metric_fdd_ncp,&flip_fdd_ncp,&phase_fdd_ncp);
   frame_parms->nushift  = frame_parms->Nid_cell%6;

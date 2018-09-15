@@ -173,9 +173,6 @@ PHY_VARS_UE* init_lte_UE(LTE_DL_FRAME_PARMS *frame_parms,
                   LOG_D(PHY,"dlsch[%d][%d] => %p\n",UE_id,i,PHY_vars_UE->dlsch[l][i][j]);
           }
       }
-
-
-
       PHY_vars_UE->ulsch[i]  = new_ue_ulsch(frame_parms->N_RB_UL, abstraction_flag);
 
       if (!PHY_vars_UE->ulsch[i]) {
@@ -187,11 +184,10 @@ PHY_VARS_UE* init_lte_UE(LTE_DL_FRAME_PARMS *frame_parms,
       PHY_vars_UE->dlsch_ra[i]  = new_ue_dlsch(1,1,NSOFT,MAX_TURBO_ITERATIONS,frame_parms->N_RB_DL, abstraction_flag);
 
       PHY_vars_UE->transmission_mode[i] = frame_parms->nb_antenna_ports_eNB==1 ? 1 : 2;
+      PHY_vars_UE->dlsch_MCH[i]  = new_ue_dlsch(1,NUMBER_OF_HARQ_PID_MAX,NSOFT,MAX_TURBO_ITERATIONS_MBSFN,frame_parms->N_RB_DL,0);
   }
 
   PHY_vars_UE->frame_parms.pucch_config_common.deltaPUCCH_Shift = 1;
-
-  PHY_vars_UE->dlsch_MCH[0]  = new_ue_dlsch(1,NUMBER_OF_HARQ_PID_MAX,NSOFT,MAX_TURBO_ITERATIONS_MBSFN,frame_parms->N_RB_DL,0);
 
   return (PHY_vars_UE);
 }

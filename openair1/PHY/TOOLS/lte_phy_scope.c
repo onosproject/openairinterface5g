@@ -150,9 +150,11 @@ FD_lte_phy_scope_enb *create_lte_phy_scope_enb( void )
 
 void phy_scope_eNB(FD_lte_phy_scope_enb *form,
                    PHY_VARS_eNB *phy_vars_enb,
+                   PHY_VARS_UE *phy_vars_ue,
+                   int eNB_id,
                    int UE_id)
 {
-  int eNB_id = 0;
+  //int eNB_id = 0;
   int i,i2,arx,atx,ind,k;
   LTE_DL_FRAME_PARMS *frame_parms = &phy_vars_enb->frame_parms;
   int nsymb_ce = 12*frame_parms->N_RB_UL*frame_parms->symbols_per_tti;

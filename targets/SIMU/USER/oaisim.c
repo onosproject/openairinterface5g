@@ -1142,6 +1142,8 @@ l2l1_task (void *args_p)
 
 	phy_scope_eNB(form_enb[UE_inst],
 		      PHY_vars_eNB_g[eNB_inst][0],
+		      PHY_vars_UE_g[0][0],
+		      0,
 		      UE_inst);
 	
       }
