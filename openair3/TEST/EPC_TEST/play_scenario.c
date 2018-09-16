@@ -46,6 +46,8 @@
 #include <pthread.h>
 
 
+#include "intertask_interface_init.h"
+#include "timer.h"
 #include "assertions.h"
 #include "s1ap_common.h"
 #include "intertask_interface.h"

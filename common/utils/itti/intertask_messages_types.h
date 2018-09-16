@@ -19,15 +19,22 @@
  *      contact@openairinterface.org
  */
 
-#ifndef X2AP_ENB_HANDLERS_H_
-#define X2AP_ENB_HANDLERS_H_
+/*
+ * intertask_messages_types.h
+ *
+ *  Created on: Jan 14, 2014
+ *      Author: laurent winckel
+ */
 
-#include "x2ap_eNB_defs.h"
+#ifndef INTERTASK_MESSAGES_TYPES_H_
+#define INTERTASK_MESSAGES_TYPES_H_
 
-void x2ap_handle_x2_setup_message(x2ap_eNB_data_t *mme_desc_p, int sctp_shutdown);
+typedef struct IttiMsgEmpty_s {
+} IttiMsgEmpty;
 
-//int x2ap_eNB_handle_message(uint32_t assoc_id, int32_t stream,
-  //                          const uint8_t * const data, const uint32_t data_length);
+typedef struct IttiMsgText_s {
+  uint32_t  size;
+  char      text[];
+} IttiMsgText;
 
-#endif /* X2AP_ENB_HANDLERS_H_ */
-
+#endif /* INTERTASK_MESSAGES_TYPES_H_ */

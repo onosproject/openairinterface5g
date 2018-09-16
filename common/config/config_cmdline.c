@@ -35,11 +35,10 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <errno.h>
-#include <platform_types.h>
 #include "config_userapi.h"
 
 
-int parse_stringlist(paramdef_t *cfgoptions, char *val)
+void parse_stringlist(paramdef_t *cfgoptions, char *val)
 {
 char *atoken;
 char *tokctx;
@@ -64,7 +63,7 @@ int   numelt=0;
       printf_params("[LIBCONFIG] %s[%i]: %s\n", cfgoptions->optname,i,cfgoptions->strlistptr[i]);
       atoken=strtok_r(NULL, ",",&tokctx);
    }
-   return (cfgoptions->numelt > 0); 
+   cfgoptions->numelt=numelt; 
 }
  
 int processoption(paramdef_t *cfgoptions, char *value)
@@ -96,7 +95,7 @@ char defbool[2]="1";
         break;
 	
         case TYPE_STRINGLIST:
-           optisset=parse_stringlist(cfgoptions,tmpval); 
+           parse_stringlist(cfgoptions,tmpval); 
         break;
         case TYPE_UINT32:
        	case TYPE_INT32:
@@ -142,16 +141,25 @@ char defbool[2]="1";
 
 int config_process_cmdline(paramdef_t *cfgoptions,int numoptions, char *prefix)
 {
-  int c = config_get_if()->argc;
-  int i,j;
-  char *pp;
-  char cfgpath[512]; /* 512 should be enough for the sprintf below */
+
+
+int c = config_get_if()->argc;
+int i,j;
+char *pp;
+char *cfgpath; 
  
+  j = (prefix ==NULL) ? 0 : strlen(prefix); 
+  cfgpath = malloc( j + MAX_OPTNAME_SIZE +1);
+  if (cfgpath == NULL) {
+     fprintf(stderr,"[CONFIG] %s %i malloc error,  %s\n", __FILE__, __LINE__,strerror(errno));
+     return -1;
+  }
+
   j = 0;
   i = 0;
     while (c > 0 ) {
         char *oneargv = strdup(config_get_if()->argv[i]);          /* we use strtok_r which modifies its string paramater, and we don't want argv to be modified */
-        /* first check help options, either --help, -h or --help_<section> */
+/* first check help options, either --help, -h or --help_<section> */
         if (strncmp(oneargv, "-h",2) == 0 || strncmp(oneargv, "--help",6) == 0 ) {
             char *tokctx;
             pp=strtok_r(oneargv, "_",&tokctx);
@@ -174,7 +182,7 @@ int config_process_cmdline(paramdef_t *cfgoptions,int numoptions, char *prefix)
             } 
         }
 
-        /* now, check for non help options */
+/* now, check for non help options */
         if (oneargv[0] == '-') {        
     	    for(int n=0;n<numoptions;n++) {
     		if ( ( cfgoptions[n].paramflags & PARAMFLAG_DISABLECMDLINE) != 0) {
@@ -215,5 +223,9 @@ int config_process_cmdline(paramdef_t *cfgoptions,int numoptions, char *prefix)
          c--;  
     }   /* fin du while */
   printf_cmdl("[CONFIG] %s %i options set from command line\n",((prefix == NULL) ? "(root)":prefix),j);
+  free(cfgpath);
   return j;            
 }  /* parse_cmdline*/
+
+
+

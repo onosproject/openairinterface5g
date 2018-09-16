@@ -195,6 +195,7 @@ void nas_mesh_init(int inst   //!< Instance ID
 
                   );
 
+void nas_mesh_timer(unsigned long data);
 
 int  nas_mesh_DC_receive(struct cx_entity *cx,struct nas_priv *gpriv);
 int  nas_mesh_GC_receive(struct nas_priv *gpriv);

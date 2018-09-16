@@ -91,6 +91,7 @@
 #define msg printf
 #endif
 
+//#define XER_PRINT
 
 typedef struct xer_sprint_string_s {
   char *string;
@@ -1352,9 +1353,9 @@ uint8_t do_SIB23(uint8_t Mod_id,
   }
 #endif
 
-  if ( LOG_DEBUGFLAG(DEBUG_ASN1) ) {
-     xer_fprint(stdout, &asn_DEF_BCCH_DL_SCH_Message, (void*)bcch_message);
-  }
+#ifdef XER_PRINT
+  xer_fprint(stdout, &asn_DEF_BCCH_DL_SCH_Message, (void*)bcch_message);
+#endif
   enc_rval = uper_encode_to_buffer(&asn_DEF_BCCH_DL_SCH_Message,
                                    NULL,
                                    (void*)bcch_message,
@@ -1606,9 +1607,9 @@ uint8_t do_SidelinkUEInformation(uint8_t Mod_id, uint8_t *buffer,  SL_Destinatio
       break;
    }
 
-   if ( LOG_DEBUGFLAG(DEBUG_ASN1) ) {
-      xer_fprint(stdout, &asn_DEF_UL_DCCH_Message, (void*)&ul_dcch_msg);
-   }
+#ifdef XER_PRINT
+  xer_fprint(stdout, &asn_DEF_UL_DCCH_Message, (void*)&ul_dcch_msg);
+#endif
 
 
    enc_rval = uper_encode_to_buffer(&asn_DEF_UL_DCCH_Message,
@@ -2164,9 +2165,9 @@ do_RRCConnectionSetup(
 #endif
 
 
-  if ( LOG_DEBUGFLAG(DEBUG_ASN1) ) {
-     xer_fprint(stdout, &asn_DEF_DL_CCCH_Message, (void*)&dl_ccch_msg);
-  }
+#ifdef XER_PRINT
+  xer_fprint(stdout, &asn_DEF_DL_CCCH_Message, (void*)&dl_ccch_msg);
+#endif
   enc_rval = uper_encode_to_buffer(&asn_DEF_DL_CCCH_Message,
                                    NULL,
                                    (void*)&dl_ccch_msg,
@@ -2239,9 +2240,9 @@ do_SecurityModeCommand(
   dl_dcch_msg.message.choice.c1.choice.securityModeCommand.criticalExtensions.choice.c1.choice.securityModeCommand_r8.securityConfigSMC.securityAlgorithmConfig.integrityProtAlgorithm
     = (e_SecurityAlgorithmConfig__integrityProtAlgorithm)integrityProtAlgorithm;
 
-  if ( LOG_DEBUGFLAG(DEBUG_ASN1) ) {
-     xer_fprint(stdout, &asn_DEF_DL_DCCH_Message, (void*)&dl_dcch_msg);
-  }
+#ifdef XER_PRINT
+  xer_fprint(stdout, &asn_DEF_DL_DCCH_Message, (void*)&dl_dcch_msg);
+#endif
   enc_rval = uper_encode_to_buffer(&asn_DEF_DL_DCCH_Message,
                                    NULL,
                                    (void*)&dl_dcch_msg,
@@ -2319,9 +2320,9 @@ do_UECapabilityEnquiry(
   ASN_SEQUENCE_ADD(&dl_dcch_msg.message.choice.c1.choice.ueCapabilityEnquiry.criticalExtensions.choice.c1.choice.ueCapabilityEnquiry_r8.ue_CapabilityRequest.list,
                    &rat);
 
-  if ( LOG_DEBUGFLAG(DEBUG_ASN1) ) {
-     xer_fprint(stdout, &asn_DEF_DL_DCCH_Message, (void*)&dl_dcch_msg);
-  }
+#ifdef XER_PRINT
+  xer_fprint(stdout, &asn_DEF_DL_DCCH_Message, (void*)&dl_dcch_msg);
+#endif
   enc_rval = uper_encode_to_buffer(&asn_DEF_DL_DCCH_Message,
                                    NULL,
                                    (void*)&dl_dcch_msg,
@@ -2538,9 +2539,9 @@ do_RRCConnectionReconfiguration(
            enc_rval.failed_type->name, enc_rval.encoded);
      return -1;
   }
-  if ( LOG_DEBUGFLAG(DEBUG_ASN1) ) {
-     xer_fprint(stdout,&asn_DEF_DL_DCCH_Message,(void*)&dl_dcch_msg);
-  }
+#ifdef XER_PRINT
+  xer_fprint(stdout,&asn_DEF_DL_DCCH_Message,(void*)&dl_dcch_msg);
+#endif
 
 #if defined(ENABLE_ITTI)
 # if !defined(DISABLE_XER_SPRINT)
@@ -2741,9 +2742,9 @@ do_RRCConnectionReestablishment(
 
   rrcConnectionReestablishment->criticalExtensions.choice.c1.choice.rrcConnectionReestablishment_r8.nonCriticalExtension = NULL;
 
-  if ( LOG_DEBUGFLAG(DEBUG_ASN1) ) {
-     xer_fprint(stdout, &asn_DEF_DL_CCCH_Message, (void*)&dl_ccch_msg);
-  }
+#ifdef XER_PRINT
+  xer_fprint(stdout, &asn_DEF_DL_CCCH_Message, (void*)&dl_ccch_msg);
+#endif
   enc_rval = uper_encode_to_buffer(&asn_DEF_DL_CCCH_Message,
                                    NULL,
                                    (void*)&dl_ccch_msg,
@@ -2803,9 +2804,9 @@ do_RRCConnectionReestablishmentReject(
   // RRCConnectionReestablishmentReject
   rrcConnectionReestablishmentReject->criticalExtensions.present = RRCConnectionReestablishmentReject__criticalExtensions_PR_rrcConnectionReestablishmentReject_r8;
 
-  if ( LOG_DEBUGFLAG(DEBUG_ASN1) ) {
-     xer_fprint(stdout, &asn_DEF_DL_CCCH_Message, (void*)&dl_ccch_msg);
-  }
+#ifdef XER_PRINT
+  xer_fprint(stdout, &asn_DEF_DL_CCCH_Message, (void*)&dl_ccch_msg);
+#endif
   enc_rval = uper_encode_to_buffer(&asn_DEF_DL_CCCH_Message,
                                    NULL,
                                    (void*)&dl_ccch_msg,
@@ -2866,9 +2867,9 @@ do_RRCConnectionReject(
   /* let's put a wait time of 1s for the moment */
   rrcConnectionReject->criticalExtensions.choice.c1.choice.rrcConnectionReject_r8.waitTime = 1;
 
-  if ( LOG_DEBUGFLAG(DEBUG_ASN1) ) {
-     xer_fprint(stdout, &asn_DEF_DL_CCCH_Message, (void*)&dl_ccch_msg);
-  }
+#ifdef XER_PRINT
+  xer_fprint(stdout, &asn_DEF_DL_CCCH_Message, (void*)&dl_ccch_msg);
+#endif
   enc_rval = uper_encode_to_buffer(&asn_DEF_DL_CCCH_Message,
                                    NULL,
                                    (void*)&dl_ccch_msg,
@@ -3060,9 +3061,9 @@ uint8_t do_MBSFNAreaConfig(uint8_t Mod_id,
   */
   ASN_SEQUENCE_ADD(&(*mbsfnAreaConfiguration)->pmch_InfoList_r9.list,pmch_Info_1);
 
-  if ( LOG_DEBUGFLAG(DEBUG_ASN1) ) {
-     xer_fprint(stdout,&asn_DEF_MCCH_Message,(void*)mcch_message);
-  }
+#ifdef XER_PRINT
+  xer_fprint(stdout,&asn_DEF_MCCH_Message,(void*)mcch_message);
+#endif
   enc_rval = uper_encode_to_buffer(&asn_DEF_MCCH_Message,
                                    NULL,
                                    (void*)mcch_message,
@@ -3313,7 +3314,6 @@ uint8_t do_Paging(uint8_t Mod_id, uint8_t *buffer, ue_paging_identity_t ue_pagin
                              &paging_record_p->ue_Identity.choice.s_TMSI.m_TMSI);
     paging_record_p->ue_Identity.choice.s_TMSI.m_TMSI.bits_unused = 0;
   } else if (ue_paging_identity.presenceMask == UE_PAGING_IDENTITY_imsi) {
-    paging_record_p->ue_Identity.present = PagingUE_Identity_PR_imsi;
     IMSI_Digit_t imsi_digit[21];
     for (j = 0; j< ue_paging_identity.choice.imsi.length; j++) {  /* IMSI size */
       imsi_digit[j] = (IMSI_Digit_t)ue_paging_identity.choice.imsi.buffer[j];
@@ -3339,9 +3339,9 @@ uint8_t do_Paging(uint8_t Mod_id, uint8_t *buffer, ue_paging_identity_t ue_pagin
            enc_rval.failed_type->name, enc_rval.encoded);
      return -1;
   }
-  if ( LOG_DEBUGFLAG(DEBUG_ASN1) ) {
-     xer_fprint(stdout, &asn_DEF_PCCH_Message, (void*)&pcch_msg);
-  }
+#ifdef XER_PRINT
+  xer_fprint(stdout, &asn_DEF_PCCH_Message, (void*)&pcch_msg);
+#endif
 
   return((enc_rval.encoded+7)/8);
 }
@@ -3504,9 +3504,9 @@ OAI_UECapability_t *fill_ue_capability(char *UE_EUTRA_Capability_xer_fname)
   }
 
   UECapability.UE_EUTRA_Capability = UE_EUTRA_Capability;
-  if ( LOG_DEBUGFLAG(DEBUG_ASN1) ) {
-     xer_fprint(stdout,&asn_DEF_UE_EUTRA_Capability,(void *)UE_EUTRA_Capability);
-  }
+#ifdef XER_PRINT
+  xer_fprint(stdout,&asn_DEF_UE_EUTRA_Capability,(void *)UE_EUTRA_Capability);
+#endif
   enc_rval = uper_encode_to_buffer(&asn_DEF_UE_EUTRA_Capability,
                                    NULL,
                                    (void*)UE_EUTRA_Capability,

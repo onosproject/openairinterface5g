@@ -199,29 +199,28 @@ int proccmd_show(char *buf, int debug, telnet_printfunc_t prnt)
        print_threads(buf,debug,prnt);
    }
    if (strcasestr(buf,"loglvl") != NULL) {
-       prnt("\n               component level  enabled   output\n");
+       prnt("               component level  enabled\n");
        for (int i=MIN_LOG_COMPONENTS; i < MAX_LOG_COMPONENTS; i++) {
             if (g_log->log_component[i].name != NULL) {
-               prnt("%02i %17.17s:%10.10s    %s      %s\n",i ,g_log->log_component[i].name, 
-	             map_int_to_str(log_level_names,(g_log->log_component[i].level>=0)?g_log->log_component[i].level:g_log->log_component[i].savedlevel),
-                     ((g_log->log_component[i].level>=0)?"Y":"N"),
-                     ((g_log->log_component[i].filelog>0)?g_log->log_component[i].filelog_name:"stdout"));
+               prnt("%02i %17.17s:%10.10s  %s\n",i ,g_log->log_component[i].name, 
+	             map_int_to_str(log_level_names,g_log->log_component[i].level),
+                     ((g_log->log_component[i].interval>0)?"Y":"N") );
            }
        }
    }
    if (strcasestr(buf,"logopt") != NULL) {
-       prnt("\n               option      enabled\n");
+       prnt("               option      enabled\n");
        for (int i=0; log_options[i].name != NULL; i++) {
                prnt("%02i %17.17s %10.10s \n",i ,log_options[i].name, 
                      ((g_log->flag & log_options[i].value)?"Y":"N") );
        }
    }
    if (strcasestr(buf,"dbgopt") != NULL) {
-       prnt("\n               module  debug dumpfile\n");
+       prnt("               option  debug matlab\n");
        for (int i=0; log_maskmap[i].name != NULL ; i++) {
-               prnt("%02i %17.17s %5.5s   %5.5s\n",i ,log_maskmap[i].name, 
+               prnt("%02i %17.17s %5.5s %5.5s\n",i ,log_maskmap[i].name, 
 	             ((g_log->debug_mask &  log_maskmap[i].value)?"Y":"N"),
-                     ((g_log->dump_mask & log_maskmap[i].value)?"Y":"N") );
+                     ((g_log->matlab_mask & log_maskmap[i].value)?"Y":"N") );
        }
    }
    if (strcasestr(buf,"config") != NULL) {
@@ -303,6 +302,8 @@ char sv1[64];
 } 
 int proccmd_exit(char *buf, int debug, telnet_printfunc_t prnt)
 {
+extern void exit_fun(const char* s);   
+   
    if (debug > 0)
        prnt("process module received %s\n",buf);
 
@@ -336,15 +337,15 @@ int s = sscanf(buf,"%ms %i-%i\n",&logsubcmd, &idx1,&idx2);
           prnt("Available log levels: \n   ");
           for (int i=0; log_level_names[i].name != NULL; i++)
              prnt("%s ",log_level_names[i].name);
-          prnt("\n\n");
+          prnt("\n");
           prnt("Available display options: \n   ");
           for (int i=0; log_options[i].name != NULL; i++)
              prnt("%s ",log_options[i].name);
-          prnt("\n\n");
-          prnt("Available debug and dump options: \n   ");
+          prnt("\n");
+          prnt("Available debug or matlab options: \n   ");
           for (int i=0; log_maskmap[i].name != NULL; i++)
              prnt("%s ",log_maskmap[i].name);
-          prnt("\n\n");
+          prnt("\n");
    	  proccmd_show("loglvl",debug,prnt);
    	  proccmd_show("logopt",debug,prnt);
    	  proccmd_show("dbgopt",debug,prnt);
@@ -376,7 +377,7 @@ int s = sscanf(buf,"%ms %i-%i\n",&logsubcmd, &idx1,&idx2);
       else if (l == 2 && strcmp(logparam,"debug") == 0){
          optbit=map_str_to_int(log_maskmap,opt);
          if (optbit < 0) {
-            prnt("module %s unknown\n",opt);
+            prnt("debug flag %s unknown\n",opt);
          } else {
             if (idx1 > 0)    
                 SET_LOG_DEBUG(optbit);
@@ -385,51 +386,42 @@ int s = sscanf(buf,"%ms %i-%i\n",&logsubcmd, &idx1,&idx2);
             proccmd_show("dbgopt",debug,prnt);
          }
       }  
-       else if (l == 2 && strcmp(logparam,"dump") == 0){
+       else if (l == 2 && strcmp(logparam,"matlab") == 0){
          optbit=map_str_to_int(log_maskmap,opt);
          if (optbit < 0) {
-            prnt("module %s unknown\n",opt);
+            prnt("matlab flag %s unknown\n",opt);
          } else {
             if (idx1 > 0)    
-                SET_LOG_DUMP(optbit);
+                SET_LOG_MATLAB(optbit);
             else
-                CLEAR_LOG_DUMP(optbit);
+                CLEAR_LOG_MATLAB(optbit);
             proccmd_show("dbgopt",debug,prnt);
          }
       }       
       if (logparam != NULL) free(logparam);
       if (opt != NULL)      free(opt); 
    } else if ( s == 3 && logsubcmd != NULL) {
-      int level, enable,filelog;
+      int level, interval;
       char *tmpstr=NULL;
       char *logparam=NULL;
       int l;
 
-      level = OAILOG_DISABLE - 1;
-      filelog = -1;
-      enable=-1; 
+      level = interval = -1;
       l=sscanf(logsubcmd,"%m[^'_']_%m[^'_']",&logparam,&tmpstr);
       if (debug > 0)
           prnt("l=%i, %s %s\n",l,((logparam==NULL)?"\"\"":logparam), ((tmpstr==NULL)?"\"\"":tmpstr));
       if (l ==2 ) {
          if (strcmp(logparam,"level") == 0) {
              level=map_str_to_int(log_level_names,tmpstr);
-             if (level < 0) {
-                 prnt("level %s unknown\n",tmpstr);
-                 level=OAILOG_DISABLE - 1;
-              }
+             if (level < 0)  prnt("level %s unknown\n",tmpstr);
          } else {
              prnt("%s%s unknown log sub command \n",logparam, tmpstr);
          }
       } else if (l ==1 ) {
          if (strcmp(logparam,"enable") == 0) {
-            enable=1;
+              interval = 1;
          } else if (strcmp(logparam,"disable") == 0) {
-             level=OAILOG_DISABLE;
-         } else if (strcmp(logparam,"file") == 0) {
-             filelog = 1 ;
-         } else if (strcmp(logparam,"nofile") == 0) {
-             filelog = 0 ;
+              interval = 0;
          } else {
              prnt("%s%s unknown log sub command \n",logparam, tmpstr);
          }
@@ -439,18 +431,20 @@ int s = sscanf(buf,"%ms %i-%i\n",&logsubcmd, &idx1,&idx2);
       if (logparam != NULL) free(logparam);
       if (tmpstr != NULL)   free(tmpstr);
       for (int i=idx1; i<=idx2 ; i++) {
-        if (level >= OAILOG_DISABLE)
-           set_log(i, level);
-        else if ( enable == 1)
-           set_log(i,g_log->log_component[i].savedlevel);
-        else if ( filelog == 1 ) {
-           set_component_filelog(i);
-        } else if ( filelog == 0 ) {
-           close_component_filelog(i);
-        } 
-          
-      }
-     proccmd_show("loglvl",debug,prnt);
+          if (level < 0) {
+              level=g_log->log_component[i].level;
+           }
+          if (interval < 0) {
+              interval=g_log->log_component[i].interval;
+           }
+          set_log(i, level, interval);
+          prnt("log level  comp %i %s set to %s (%s)\n",
+                i,((g_log->log_component[i].name==NULL)?"":g_log->log_component[i].name),
+                map_int_to_str(log_level_names,g_log->log_component[i].level),
+                ((g_log->log_component[i].interval>0)?"enabled":"disabled"));
+
+        
+      }     
    } else {
        prnt("%s: wrong log command...\n",buf);
    }

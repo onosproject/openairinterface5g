@@ -42,6 +42,7 @@
 #endif
 
 //#define RRC_DATA_REQ_DEBUG
+//#define DEBUG_RRC 1
 
 
 
@@ -60,7 +61,10 @@ mac_rrc_data_req_ue(
 //--------------------------------------------------------------------------
 {
 
-  LOG_D(RRC,"[eNB %d] mac_rrc_data_req to SRB ID=%d\n",Mod_idP,Srb_id);
+#ifdef DEBUG_RRC
+  int i;
+  LOG_I(RRC,"[eNB %d] mac_rrc_data_req to SRB ID=%d\n",Mod_idP,Srb_id);
+#endif
 
 
 #if (RRC_VERSION >= MAKE_VERSION(14, 0, 0))

@@ -467,20 +467,43 @@ rrc_pdcp_config_security(
                      &kRRCint);
 
 #if !defined(USRP_REC_PLAY)
-  SET_LOG_DUMP(DEBUG_SECURITY) ;
+#define DEBUG_SECURITY 1
 #endif
   
+#if defined (DEBUG_SECURITY)
+#undef msg
+#define msg printf
 
-  if ( LOG_DUMPFLAG( DEBUG_SECURITY ) ) {
-    if (print_keys ==1 ) {
-      print_keys =0;
+  if (print_keys ==1 ) {
+    print_keys =0;
+    int i;
+    msg("\nKeNB:");
 
-      LOG_DUMPMSG(RRC, DEBUG_SECURITY, ue_context_pP->ue_context.kenb, 32,"\nKeNB:" );
-      LOG_DUMPMSG(RRC, DEBUG_SECURITY, kRRCenc, 32,"\nKRRCenc:" );
-      LOG_DUMPMSG(RRC, DEBUG_SECURITY, kRRCint, 32,"\nKRRCint:" );
+    for(i = 0; i < 32; i++) {
+      msg("%02x", ue_context_pP->ue_context.kenb[i]);
     }
+
+    msg("\n");
+
+    msg("\nKRRCenc:");
+
+    for(i = 0; i < 32; i++) {
+      msg("%02x", kRRCenc[i]);
+    }
+
+    msg("\n");
+
+    msg("\nKRRCint:");
+
+    for(i = 0; i < 32; i++) {
+      msg("%02x", kRRCint[i]);
+    }
+
+    msg("\n");
+
   }
 
+#endif //DEBUG_SECURITY
   key = PDCP_COLL_KEY_VALUE(ctxt_pP->module_id, ctxt_pP->rnti, ctxt_pP->enb_flag, DCCH, SRB_FLAG_YES);
   h_rc = hashtable_get(pdcp_coll_p, key, (void**)&pdcp_p);
 
@@ -922,8 +945,16 @@ rrc_eNB_process_S1AP_DOWNLINK_NAS(
                S1AP_DOWNLINK_NAS (msg_p).nas_pdu.length,
                S1AP_DOWNLINK_NAS (msg_p).nas_pdu.buffer);
 
-    LOG_DUMPMSG(RRC,DEBUG_RRC,buffer,length,"[MSG] RRC DL Information Transfer\n");
+#ifdef RRC_MSG_PRINT
+    int i=0;
+    LOG_F(RRC,"[MSG] RRC DL Information Transfer\n");
 
+    for (i = 0; i < length; i++) {
+      LOG_F(RRC,"%02x ", ((uint8_t*)buffer)[i]);
+    }
+
+    LOG_F(RRC,"\n");
+#endif
     /* 
      * switch UL or DL NAS message without RRC piggybacked to SRB2 if active. 
      */

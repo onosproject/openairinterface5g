@@ -83,6 +83,7 @@ unsigned short config_frames[4] = {2,9,11,13};
 #endif
 
 #if defined(ENABLE_ITTI)
+#include "intertask_interface_init.h"
 #include "create_tasks.h"
 #endif
 
@@ -106,10 +107,6 @@ char title[255];
 unsigned char                   scope_enb_num_ue = 2;
 static pthread_t                forms_thread; //xforms
 #endif //XFORMS
-
-#ifndef ENABLE_USE_MME
-#define EPC_MODE_ENABLED 0
-#endif
 
 pthread_cond_t nfapi_sync_cond;
 pthread_mutex_t nfapi_sync_mutex;
@@ -323,13 +320,13 @@ void signal_handler(int sig) {
 
 
 
-void exit_function(const char* file, const char* function, const int line, const char* s)
+void exit_fun(const char* s)
 {
 
   int ru_id;
 
   if (s != NULL) {
-    printf("%s:%d %s() Exiting OAI softmodem: %s\n",file,line, function, s);
+    printf("%s %s() Exiting OAI softmodem: %s\n",__FILE__, __FUNCTION__, s);
   }
 
   oai_exit = 1;
@@ -349,11 +346,11 @@ void exit_function(const char* file, const char* function, const int line, const
     }
 
 
-    sleep(1); //allow lte-softmodem threads to exit first
 #if defined(ENABLE_ITTI)
+    sleep(1); //allow lte-softmodem threads to exit first
     itti_terminate_tasks (TASK_UNKNOWN);
 #endif
-   exit(1);
+
 
 }
 
@@ -448,22 +445,46 @@ void *l2l1_task(void *arg) {
   itti_set_task_real_time(TASK_L2L1);
   itti_mark_task_ready(TASK_L2L1);
 
-  /* Wait for the initialize message */
-  printf("Wait for the ITTI initialize message\n");
-  while (1) {
+    /* Wait for the initialize message */
+    printf("Wait for the ITTI initialize message\n");
+    do {
+      if (message_p != NULL) {
+	result = itti_free (ITTI_MSG_ORIGIN_ID(message_p), message_p);
+	AssertFatal (result == EXIT_SUCCESS, "Failed to free memory (%d)!\n", result);
+      }
+
+      itti_receive_msg (TASK_L2L1, &message_p);
+
+      switch (ITTI_MSG_ID(message_p)) {
+      case INITIALIZE_MESSAGE:
+	/* Start eNB thread */
+	printf("L2L1 TASK received %s\n", ITTI_MSG_NAME(message_p));
+	start_eNB = 1;
+	break;
+
+      case TERMINATE_MESSAGE:
+	printf("received terminate message\n");
+	oai_exit=1;
+        start_eNB = 0;
+	itti_exit_task ();
+	break;
+
+      default:
+	printf("Received unexpected message %s\n", ITTI_MSG_NAME(message_p));
+	break;
+      }
+    } while (ITTI_MSG_ID(message_p) != INITIALIZE_MESSAGE);
+
+    result = itti_free (ITTI_MSG_ORIGIN_ID(message_p), message_p);
+    AssertFatal (result == EXIT_SUCCESS, "Failed to free memory (%d)!\n", result);
+/* ???? no else but seems to be UE only ??? 
+  do {
+    // Wait for a message
     itti_receive_msg (TASK_L2L1, &message_p);
 
     switch (ITTI_MSG_ID(message_p)) {
-    case INITIALIZE_MESSAGE:
-      /* Start eNB thread */
-      LOG_D(PHY, "L2L1 TASK received %s\n", ITTI_MSG_NAME(message_p));
-      start_eNB = 1;
-      break;
-
     case TERMINATE_MESSAGE:
-      LOG_W(PHY, " *** Exiting L2L1 thread\n");
       oai_exit=1;
-      start_eNB = 0;
       itti_exit_task ();
       break;
 
@@ -486,15 +507,14 @@ void *l2l1_task(void *arg) {
 
     result = itti_free (ITTI_MSG_ORIGIN_ID(message_p), message_p);
     AssertFatal (result == EXIT_SUCCESS, "Failed to free memory (%d)!\n", result);
-    message_p = NULL;
-  };
-
+  } while(!oai_exit);
+*/
   return NULL;
 }
 #endif
 
 
-static void get_options(unsigned int *start_msc) {
+static void get_options(void) {
  
   int tddflag, nonbiotflag;
  
@@ -528,8 +548,10 @@ static void get_options(unsigned int *start_msc) {
       set_glog(glog_level);
   }
   if (start_telnetsrv) {
-     load_module_shlib("telnetsrv",NULL,0,NULL);
+     load_module_shlib("telnetsrv",NULL,0);
   }
+
+
 
   if ( !(CONFIG_ISFLAGSET(CONFIG_ABORT)) ) {
       memset((void*)&RC,0,sizeof(RC));
@@ -749,13 +771,12 @@ void wait_eNBs(void) {
 /*
  * helper function to terminate a certain ITTI task
  */
-void terminate_task(module_id_t mod_id, task_id_t from, task_id_t to)
+void terminate_task(task_id_t task_id, module_id_t mod_id)
 {
-  LOG_I(ENB_APP, "sending TERMINATE_MESSAGE from task %s (%d) to task %s (%d)\n",
-      itti_get_task_name(from), from, itti_get_task_name(to), to);
+  LOG_I(ENB_APP, "sending TERMINATE_MESSAGE to task %s (%d)\n", itti_get_task_name(task_id), task_id);
   MessageDef *msg;
-  msg = itti_alloc_new_message (from, TERMINATE_MESSAGE);
-  itti_send_msg_to_task (to, ENB_MODULE_ID_TO_INSTANCE(mod_id), msg);
+  msg = itti_alloc_new_message (ENB_APP, TERMINATE_MESSAGE);
+  itti_send_msg_to_task (task_id, ENB_MODULE_ID_TO_INSTANCE(mod_id), msg);
 }
 
 extern void  free_transport(PHY_VARS_eNB *);
@@ -764,20 +785,39 @@ extern void  phy_free_RU(RU_t*);
 int stop_L1L2(module_id_t enb_id)
 {
   LOG_W(ENB_APP, "stopping lte-softmodem\n");
+  oai_exit = 1;
 
   if (!RC.ru) {
-    LOG_UI(ENB_APP, "no RU configured\n");
+    LOG_F(ENB_APP, "no RU configured\n");
+    return -1;
+  }
+
+  /* stop trx devices, multiple carrier currently not supported by RU */
+  if (RC.ru[enb_id]) {
+    if (RC.ru[enb_id]->rfdevice.trx_stop_func) {
+      RC.ru[enb_id]->rfdevice.trx_stop_func(&RC.ru[enb_id]->rfdevice);
+      LOG_I(ENB_APP, "turned off RU rfdevice\n");
+    } else {
+      LOG_W(ENB_APP, "can not turn off rfdevice due to missing trx_stop_func callback, proceding anyway!\n");
+    }
+    if (RC.ru[enb_id]->ifdevice.trx_stop_func) {
+      RC.ru[enb_id]->ifdevice.trx_stop_func(&RC.ru[enb_id]->ifdevice);
+      LOG_I(ENB_APP, "turned off RU ifdevice\n");
+    } else {
+      LOG_W(ENB_APP, "can not turn off ifdevice due to missing trx_stop_func callback, proceding anyway!\n");
+    }
+  } else {
+    LOG_W(ENB_APP, "no RU found for index %d\n", enb_id);
     return -1;
   }
 
   /* these tasks need to pick up new configuration */
-  terminate_task(enb_id, TASK_ENB_APP, TASK_RRC_ENB);
-  terminate_task(enb_id, TASK_ENB_APP, TASK_L2L1);
-  oai_exit = 1;
-  LOG_I(ENB_APP, "calling kill_RU_proc() for instance %d\n", enb_id);
-  kill_RU_proc(RC.ru[enb_id]);
+  terminate_task(TASK_RRC_ENB, enb_id);
+  terminate_task(TASK_L2L1, enb_id);
   LOG_I(ENB_APP, "calling kill_eNB_proc() for instance %d\n", enb_id);
   kill_eNB_proc(enb_id);
+  LOG_I(ENB_APP, "calling kill_RU_proc() for instance %d\n", enb_id);
+  kill_RU_proc(enb_id);
   oai_exit = 0;
   for (int cc_id = 0; cc_id < RC.nb_CC[enb_id]; cc_id++) {
     free_transport(RC.eNB[enb_id][cc_id]);
@@ -800,9 +840,7 @@ int restart_L1L2(module_id_t enb_id)
   LOG_W(ENB_APP, "restarting lte-softmodem\n");
 
   /* block threads */
-  pthread_mutex_lock(&sync_mutex);
   sync_var = -1;
-  pthread_mutex_unlock(&sync_mutex);
 
   for (cc_id = 0; cc_id < RC.nb_L1_CC[enb_id]; cc_id++) {
     RC.eNB[enb_id][cc_id]->configured = 0;
@@ -813,9 +851,6 @@ int restart_L1L2(module_id_t enb_id)
   /* TODO this should be done for all RUs associated to this eNB */
   memcpy(&ru->frame_parms, &RC.eNB[enb_id][0]->frame_parms, sizeof(LTE_DL_FRAME_PARMS));
   set_function_spec_param(RC.ru[enb_id]);
-  /* reset the list of connected UEs in the MAC, since in this process with
-   * loose all UEs (have to reconnect) */
-  init_UE_list(&RC.mac[enb_id]->UE_list);
 
   LOG_I(ENB_APP, "attempting to create ITTI tasks\n");
   if (itti_create_task (TASK_RRC_ENB, rrc_enb_task, NULL) < 0) {
@@ -890,7 +925,6 @@ int main( int argc, char **argv )
 #if defined (XFORMS)
   int ret;
 #endif
-  unsigned int start_msc=0;
 
   if ( load_configmodule(argc,argv) == NULL) {
     exit_fun("[SOFTMODEM] Error, configuration module init failed\n");
@@ -908,7 +942,7 @@ int main( int argc, char **argv )
 
   printf("Reading in command-line options\n");
 
-  get_options (&start_msc);
+  get_options ();
   if (CONFIG_ISFLAGSET(CONFIG_ABORT) ) {
       fprintf(stderr,"Getting configuration failed\n");
       exit(-1);
@@ -933,19 +967,22 @@ int main( int argc, char **argv )
 
 #if defined(ENABLE_ITTI)
 
-  printf("ITTI init, useMME: %i\n" ,EPC_MODE_ENABLED);
-
+  printf("ITTI init\n");
   itti_init(TASK_MAX, THREAD_MAX, MESSAGES_ID_MAX, tasks_info, messages_info);
 
   // initialize mscgen log after ITTI
-  if (start_msc) {
-     load_module_shlib("msc",NULL,0,&msc_interface);
-  }
   MSC_INIT(MSC_E_UTRAN, THREAD_MAX+TASK_MAX);
 #endif
 
   if (opt_type != OPT_NONE) {
-    if (init_opt(in_path, in_ip) == -1)
+    radio_type_t radio_type;
+
+    if (frame_parms[0]->frame_type == FDD)
+      radio_type = RADIO_TYPE_FDD;
+    else
+      radio_type = RADIO_TYPE_TDD;
+
+    if (init_opt(in_path, in_ip, NULL, radio_type) == -1)
       LOG_E(OPT,"failed to run OPT \n");
   }
 
@@ -1227,20 +1264,25 @@ int main( int argc, char **argv )
 
   printf("stopping MODEM threads\n");
 
-  stop_eNB(NB_eNB_INST);
-  stop_RU(RC.nb_RU);
-  /* release memory used by the RU/eNB threads (incomplete), after all
-   * threads have been stopped (they partially use the same memory) */
-  for (int inst = 0; inst < NB_eNB_INST; inst++) {
-    for (int cc_id = 0; cc_id < RC.nb_CC[inst]; cc_id++) {
-      free_transport(RC.eNB[inst][cc_id]);
-      phy_free_lte_eNB(RC.eNB[inst][cc_id]);
+  // cleanup
+  for (ru_id=0;ru_id<RC.nb_RU;ru_id++) {
+    stop_ru(RC.ru[ru_id]);
+  }
+
+    stop_eNB(NB_eNB_INST);
+    stop_RU(RC.nb_RU);
+    /* release memory used by the RU/eNB threads (incomplete), after all
+     * threads have been stopped (they partially use the same memory) */
+    for (int inst = 0; inst < NB_eNB_INST; inst++) {
+      for (int cc_id = 0; cc_id < RC.nb_CC[inst]; cc_id++) {
+        free_transport(RC.eNB[inst][cc_id]);
+        phy_free_lte_eNB(RC.eNB[inst][cc_id]);
+      }
     }
-  }
-  for (int inst = 0; inst < RC.nb_RU; inst++) {
-    phy_free_RU(RC.ru[inst]);
-  }
-  free_lte_top();
+    for (int inst = 0; inst < RC.nb_RU; inst++) {
+      phy_free_RU(RC.ru[inst]);
+    }
+    free_lte_top();
 
   printf("About to call end_configmodule() from %s() %s:%d\n", __FUNCTION__, __FILE__, __LINE__);
   end_configmodule();

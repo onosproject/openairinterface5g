@@ -91,6 +91,8 @@ int read_intarray(paramdef_t *cfgoptions,config_setting_t *setting, char *cfgpat
 
 int config_libconfig_get(paramdef_t *cfgoptions,int numoptions, char *prefix )
 {
+
+
   config_setting_t *setting;
   char *str;
   int i,u;
@@ -101,9 +103,15 @@ int config_libconfig_get(paramdef_t *cfgoptions,int numoptions, char *prefix )
   int notfound;
   int defval;
   int fatalerror=0;
+  char *cfgpath; /* listname.[listindex].paramname */
   int numdefvals=0;
-  char cfgpath[512];  /* 512 should be enough for the sprintf below */
-
+  
+  i = (prefix ==NULL) ? 0 : strlen(prefix); 
+  cfgpath = malloc( i+ MAX_OPTNAME_SIZE +1);
+  if (cfgpath == NULL) {
+     fprintf(stderr,"[LIBCONFIG] %s %i malloc error,  %s\n", __FILE__, __LINE__,strerror(errno));
+     return -1;
+  }
   for(i=0;i<numoptions;i++) {
 
      if (prefix != NULL) {
@@ -245,6 +253,7 @@ int config_libconfig_get(paramdef_t *cfgoptions,int numoptions, char *prefix )
       config_libconfig_end();
       end_configmodule();
   }
+  free(cfgpath);
   return status;
 }
 

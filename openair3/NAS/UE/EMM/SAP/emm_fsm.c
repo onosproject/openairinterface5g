@@ -208,7 +208,8 @@ emm_fsm_state_t emm_fsm_initialize()
 {
   LOG_FUNC_IN;
 
-  LOG_FUNC_RETURN(EMM_NULL);
+  LOG_FUNC_OUT;
+  return EMM_NULL;
 }
 
 /****************************************************************************

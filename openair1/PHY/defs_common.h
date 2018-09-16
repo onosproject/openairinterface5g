@@ -33,9 +33,7 @@
 #define __PHY_DEFS_COMMON_H__
 
 
-#ifndef _GNU_SOURCE
 #define _GNU_SOURCE
-#endif
 #include <sched.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -930,6 +928,7 @@ typedef enum {
 #endif
 
 
+void exit_fun(const char* s);
 
 #include "common/utils/LOG/log_extern.h"
 extern pthread_cond_t sync_cond;
@@ -995,10 +994,9 @@ static inline void wait_sync(char *thread_name) {
 }
 
 static inline int wakeup_thread(pthread_mutex_t *mutex,pthread_cond_t *cond,int *instance_cnt,char *name) {
-  int rc;
-  if ((rc = pthread_mutex_lock(mutex)) != 0) {
-    LOG_E(PHY, "wakeup_thread(): error locking mutex for %s (%d %s, %p)\n",
-        name, rc, strerror(rc), (void *)mutex);
+
+  if (pthread_mutex_lock(mutex) != 0) {
+    LOG_E( PHY, "error locking mutex for %s\n",name);
     exit_fun("nothing to add");
     return(-1);
   }
@@ -1015,10 +1013,8 @@ static inline int wakeup_thread(pthread_mutex_t *mutex,pthread_cond_t *cond,int 
 }
 
 static inline int wait_on_condition(pthread_mutex_t *mutex,pthread_cond_t *cond,int *instance_cnt,char *name) {
-  int rc;
-  if ((rc = pthread_mutex_lock(mutex)) != 0) {
-    LOG_E(PHY, "[SCHED][eNB] wait_on_condition(): error locking mutex for %s (%d %s, %p)\n",
-        name, rc, strerror(rc), (void *)mutex);
+  if (pthread_mutex_lock(mutex) != 0) {
+    LOG_E( PHY, "[SCHED][eNB] error locking mutex for %s\n",name);
     exit_fun("nothing to add");
     return(-1);
   }
@@ -1038,10 +1034,9 @@ static inline int wait_on_condition(pthread_mutex_t *mutex,pthread_cond_t *cond,
 }
 
 static inline int wait_on_busy_condition(pthread_mutex_t *mutex,pthread_cond_t *cond,int *instance_cnt,char *name) {
-  int rc;
-  if ((rc = pthread_mutex_lock(mutex)) != 0) {
-    LOG_E(PHY, "[SCHED][eNB] wait_on_busy_condition(): error locking mutex for %s (%d %s, %p)\n",
-        name, rc, strerror(rc), (void *)mutex);
+
+  if (pthread_mutex_lock(mutex) != 0) {
+    LOG_E( PHY, "[SCHED][eNB] error locking mutex for %s\n",name);
     exit_fun("nothing to add");
     return(-1);
   }
@@ -1061,10 +1056,9 @@ static inline int wait_on_busy_condition(pthread_mutex_t *mutex,pthread_cond_t *
 }
 
 static inline int release_thread(pthread_mutex_t *mutex,int *instance_cnt,char *name) {
-  int rc;
-  if ((rc = pthread_mutex_lock(mutex)) != 0) {
-    LOG_E(PHY, "[SCHED][eNB] release_thread(): error locking mutex for %s (%d %s, %p)\n",
-        name, rc, strerror(rc), (void *)mutex);
+
+  if (pthread_mutex_lock(mutex) != 0) {
+    LOG_E( PHY, "[SCHED][eNB] error locking mutex for %s\n",name);
     exit_fun("nothing to add");
     return(-1);
   }

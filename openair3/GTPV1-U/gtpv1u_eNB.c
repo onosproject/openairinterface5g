@@ -33,6 +33,7 @@
 
 #include "assertions.h"
 #include "intertask_interface.h"
+#include "timer.h"
 #include "msc.h"
 
 #include "gtpv1u.h"

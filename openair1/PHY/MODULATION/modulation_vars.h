@@ -19,6 +19,7 @@
  *      contact@openairinterface.org
  */
 
+#include "kHz_7_5.h"
 
 short conjugate75[8]__attribute__((aligned(16))) = {-1,1,-1,1,-1,1,-1,1} ;
 short conjugate75_2[8]__attribute__((aligned(16))) = {1,-1,1,-1,1,-1,1,-1} ;
