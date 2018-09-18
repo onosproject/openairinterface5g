@@ -2892,7 +2892,7 @@ void phy_procedures_eNB_common_RX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc){
 
     if (eNB->node_function == NGFI_RRU_IF4p5) {
       /// **** in TDD during DL send_IF4 of ULTICK to RCC **** ///
-      LOG_D(PHY,"send_IF4p5 (phy_procedures_eNB_common_RX): frame %d, subframe %d\n",proc->frame_rx,proc->subframe_rx);
+      LOG_D(PHY,"send_IF4p5 (phy_procedures_eNB_common_RX): frame %d, subframe %d, eNB %d\n",proc->frame_rx,proc->subframe_rx,eNB->Mod_id);
       send_IF4p5(eNB, proc->frame_rx, proc->subframe_rx, IF4p5_PULTICK, 0);
     }    
     return;

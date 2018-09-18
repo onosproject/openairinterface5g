@@ -507,26 +507,28 @@ l2l1_task (void *args_p)
     xargv[0] = xname;
     fl_initialize (&xargc, xargv, NULL, 0, 0);
     eNB_inst = 0;
-    for (UE_inst = 0; UE_inst < NB_UE_INST; UE_inst++) {
-      for (CC_id=0;CC_id<MAX_NUM_CCs;CC_id++) {
-	// DL scope at UEs
-	form_ue[CC_id][UE_inst] = create_lte_phy_scope_ue();
-	sprintf (title, "LTE DL SCOPE eNB %d to UE %d CC_id %d", eNB_inst, UE_inst, CC_id);
-	fl_show_form (form_ue[CC_id][UE_inst]->lte_phy_scope_ue, FL_PLACE_HOTSPOT, FL_FULLBORDER, title);
+	  for (eNB_inst = 0; eNB_inst < NB_eNB_INST; eNB_inst++) {
+	    for (UE_inst = 0; UE_inst < NB_UE_INST; UE_inst++) {
+	      for (CC_id=0;CC_id<MAX_NUM_CCs;CC_id++) {
+		// DL scope at UEs
+		form_ue[CC_id][UE_inst] = create_lte_phy_scope_ue();
+		sprintf (title, "LTE DL SCOPE eNB %d to UE %d CC_id %d", eNB_inst, UE_inst, CC_id);
+		fl_show_form (form_ue[CC_id][UE_inst]->lte_phy_scope_ue, FL_PLACE_HOTSPOT, FL_FULLBORDER, title);
 
-	if (PHY_vars_UE_g[UE_inst][CC_id]->use_ia_receiver == 1) {
-	  fl_set_button(form_ue[CC_id][UE_inst]->button_0,1);
-	  fl_set_object_label(form_ue[CC_id][UE_inst]->button_0, "IA Receiver ON");
-	  fl_set_object_color(form_ue[CC_id][UE_inst]->button_0, FL_GREEN, FL_GREEN);
-	}
+		if (PHY_vars_UE_g[UE_inst][CC_id]->use_ia_receiver == 1) {
+		  fl_set_button(form_ue[CC_id][UE_inst]->button_0,1);
+		  fl_set_object_label(form_ue[CC_id][UE_inst]->button_0, "IA Receiver ON");
+		  fl_set_object_color(form_ue[CC_id][UE_inst]->button_0, FL_GREEN, FL_GREEN);
+		}
 	
-      }
-      // UL scope at eNB 0
-      form_enb[UE_inst] = create_lte_phy_scope_enb();
-      sprintf (title, "LTE UL SCOPE UE %d to eNB %d", UE_inst, eNB_inst);
-      fl_show_form (form_enb[UE_inst]->lte_phy_scope_enb, FL_PLACE_HOTSPOT, FL_FULLBORDER, title);
-      
-    }
+	      }
+	      // UL scope at eNB 0
+	      form_enb[UE_inst] = create_lte_phy_scope_enb();
+	      sprintf (title, "LTE UL SCOPE UE %d to eNB %d", UE_inst, eNB_inst);
+	      fl_show_form (form_enb[UE_inst]->lte_phy_scope_enb, FL_PLACE_HOTSPOT, FL_FULLBORDER, title);
+	      
+	    }
+	  }
   }
 
 
@@ -1130,7 +1132,7 @@ l2l1_task (void *args_p)
     //#ifdef XFORMS
     if (xforms==1) {
       eNB_inst = 0;
-      
+     for (eNB_inst = 0; eNB_inst < NB_eNB_INST; eNB_inst++) { 
       for (UE_inst = 0; UE_inst < NB_UE_INST; UE_inst++) {
 	for (CC_id=0;CC_id<MAX_NUM_CCs;CC_id++) {
 	  phy_scope_UE(form_ue[CC_id][UE_inst],
@@ -1147,6 +1149,7 @@ l2l1_task (void *args_p)
 		      UE_inst);
 	
       }
+     }
     }
     //#endif
     

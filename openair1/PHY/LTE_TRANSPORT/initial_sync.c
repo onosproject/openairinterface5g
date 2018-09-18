@@ -454,7 +454,7 @@ int pbch_detection_freq(PHY_VARS_UE *ue, runmode_t mode)
     for(int i=0; i<RX_NB_TH;i++)
     {
         ue->proc.proc_rxtx[i].frame_rx =   (((ue->pbch_vars[ue->common_vars.eNb_id]->decoded_output[2]&3)<<6) + (ue->pbch_vars[ue->common_vars.eNb_id]->decoded_output[1]>>2))<<2;
-        ue->proc.proc_rxtx[i].frame_rx =   (((ue->pbch_vars[ue->common_vars.eNb_id]->decoded_output[2]&3)<<6) + (ue->pbch_vars[ue->common_vars.eNb_id]->decoded_output[1]>>2))<<2;
+        //ue->proc.proc_rxtx[i].frame_rx =   (((ue->pbch_vars[ue->common_vars.eNb_id]->decoded_output[2]&3)<<6) + (ue->pbch_vars[ue->common_vars.eNb_id]->decoded_output[1]>>2))<<2;
 
 #ifndef USER_MODE
         // one frame delay
@@ -888,7 +888,7 @@ int initial_sync_freq(PHY_VARS_UE *ue, runmode_t mode)
   LTE_DL_FRAME_PARMS *frame_parms = &ue->frame_parms;
   int ret=-1;
   int aarx,rx_power=0;
-  printf("initial_synch_freq: id %d\n",ue->Mod_id);
+  printf("initial_synch_freq: UE %d, eNB %d\n",ue->Mod_id,ue->common_vars.eNb_id);
   /*#ifdef OAI_USRP
   __m128i *rxdata128;
   #endif*/
@@ -909,7 +909,9 @@ int initial_sync_freq(PHY_VARS_UE *ue, runmode_t mode)
   frame_parms->nushift  = frame_parms->Nid_cell%6;
   // lte-gold
   lte_gold(frame_parms,ue->lte_gold_table[0],frame_parms->Nid_cell);
+  printf("binitial_synch [UE%d]->[eNB%d]: pbch_detection_freq returns %d\n",ue->Mod_id,ue->common_vars.eNb_id,ret);
   ret=pbch_detection_freq(ue,mode);
+  printf("ainitial_synch [UE%d]->[eNB%d]: pbch_detection_freq returns %d\n",ue->Mod_id,ue->common_vars.eNb_id,ret);
   //init_frame_parms(frame_parms,1);
   //printf("dumping enb frame params\n");
   //dump_frame_parms(&PHY_vars_eNB_g[0][0]->frame_parms);
@@ -920,9 +922,12 @@ int initial_sync_freq(PHY_VARS_UE *ue, runmode_t mode)
       frame_parms->frame_type=PHY_vars_eNB_g[ue->common_vars.eNb_id][0]->frame_parms.frame_type;
       frame_parms->N_RB_DL=PHY_vars_eNB_g[ue->common_vars.eNb_id][0]->frame_parms.N_RB_DL;
       init_frame_parms(frame_parms,1);
+      frame_parms->Nid_cell=PHY_vars_eNB_g[ue->common_vars.eNb_id][0]->frame_parms.Nid_cell;
       frame_parms->nushift  = frame_parms->Nid_cell%6;
       lte_gold(frame_parms,ue->lte_gold_table[0],frame_parms->Nid_cell);
+      printf("binitial_synch, second chance[UE%d]->[eNB%d]: pbch_detection_freq returns %d\n",ue->Mod_id,ue->common_vars.eNb_id,ret);
       ret = pbch_detection_freq(ue,mode);
+      printf("ainitial_synch, second chance[UE%d]->[eNB%d]: pbch_detection_freq returns %d\n",ue->Mod_id,ue->common_vars.eNb_id,ret);
 
   }
   if (ret==0) {  // fake first PBCH found so indicate sync to higher layers and configure frame parameters

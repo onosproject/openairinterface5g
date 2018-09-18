@@ -224,7 +224,7 @@ int slot_fep(PHY_VARS_UE *ue,
           start_meas(&ue->dlsch_freq_offset_estimation_stats);
 #endif
 
-        lte_est_freq_offset(common_vars->common_vars_rx_data_per_thread[current_thread_id[Ns>>1]].dl_ch_estimates[0],
+        lte_est_freq_offset(common_vars->common_vars_rx_data_per_thread[current_thread_id[Ns>>1]].dl_ch_estimates[eNB_id],
                             frame_parms,
                             l,
                             &common_vars->freq_offset,
@@ -440,7 +440,7 @@ int slot_fep_freq(PHY_VARS_UE *ue,
           start_meas(&ue->dlsch_freq_offset_estimation_stats);
 #endif
 
-        lte_est_freq_offset(common_vars->common_vars_rx_data_per_thread[(Ns>>1)&0x1].dl_ch_estimates[0],
+        lte_est_freq_offset(common_vars->common_vars_rx_data_per_thread[current_thread_id[Ns>>1]].dl_ch_estimates[eNB_id],
                             frame_parms,
                             l,
                             &common_vars->freq_offset,
@@ -662,7 +662,7 @@ int front_end_chanEst(PHY_VARS_UE *ue,
 
       if (l==(4-frame_parms->Ncp)) {
         start_meas(&ue->dlsch_freq_offset_estimation_stats);
-        lte_est_freq_offset(common_vars->common_vars_rx_data_per_thread[(Ns>>1)&0x1].dl_ch_estimates[0],
+        lte_est_freq_offset(common_vars->common_vars_rx_data_per_thread[(Ns>>1)&0x1].dl_ch_estimates[eNB_id],
                             frame_parms,
                             l,
                             &common_vars->freq_offset,

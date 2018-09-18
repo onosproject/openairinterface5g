@@ -840,24 +840,26 @@ void lte_ue_measurements(PHY_VARS_UE *ue,
   } //eNB_id
 
   eNB_id=0;
-  if (ue->transmission_mode[0]==4 || ue->transmission_mode[0]==3){
+  for (eNB_id = 0; eNB_id < ue->n_connected_eNB; eNB_id++){
+   if (ue->transmission_mode[eNB_id]==4 || ue->transmission_mode[eNB_id]==3){
     if (rank_adaptation == 1)
-      rank_tm3_tm4 = rank_estimation_tm3_tm4(&ue->common_vars.common_vars_rx_data_per_thread[subframe&0x1].dl_ch_estimates[eNB_id][0][4],
-                                             &ue->common_vars.common_vars_rx_data_per_thread[subframe&0x1].dl_ch_estimates[eNB_id][2][4],
-                                             &ue->common_vars.common_vars_rx_data_per_thread[subframe&0x1].dl_ch_estimates[eNB_id][1][4],
-                                             &ue->common_vars.common_vars_rx_data_per_thread[subframe&0x1].dl_ch_estimates[eNB_id][3][4],
+      rank_tm3_tm4 = rank_estimation_tm3_tm4(&ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].dl_ch_estimates[eNB_id][0][4],
+                                             &ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].dl_ch_estimates[eNB_id][2][4],
+                                             &ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].dl_ch_estimates[eNB_id][1][4],
+                                             &ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].dl_ch_estimates[eNB_id][3][4],
                                              N_RB_DL);
     else
       rank_tm3_tm4=1;
 #ifdef DEBUG_RANK_EST
-  printf("rank tm3 or tm4 %d\n", rank_tm3_tm4);
+   printf("rank tm3 or tm4 %d\n", rank_tm3_tm4);
 #endif
-  }
+   }
 
-  if (ue->transmission_mode[eNB_id]!=4 && ue->transmission_mode[eNB_id]!=3)
+   if (ue->transmission_mode[eNB_id]!=4 && ue->transmission_mode[eNB_id]!=3)
     ue->measurements.rank[eNB_id] = 0;
-  else
+   else
     ue->measurements.rank[eNB_id] = rank_tm3_tm4;
+  }
   //  printf ("tx mode %d\n", ue->transmission_mode[eNB_id]);
   //  printf ("rank %d\n", ue->PHY_measurements.rank[eNB_id]);
 
@@ -1179,11 +1181,12 @@ void lte_ue_measurements_freq(PHY_VARS_UE *ue,
   }
 
   // signal measurements
+  printf("lte_ue_measurements_freq: ue->n_connected_eNB %d\n",ue->n_connected_eNB);
   for (eNB_id=0; eNB_id<ue->n_connected_eNB; eNB_id++) {
     for (aarx=0; aarx<frame_parms->nb_antennas_rx; aarx++) {
       for (aatx=0; aatx<frame_parms->nb_antenna_ports_eNB; aatx++) {
         ue->measurements.rx_spatial_power[eNB_id][aatx][aarx] =
-          (signal_energy_nodc(&ue->common_vars.common_vars_rx_data_per_thread[subframe&0x1].dl_ch_estimates[eNB_id][(aatx<<1) + aarx][0],
+          (signal_energy_nodc(&ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].dl_ch_estimates[eNB_id][(aatx<<1) + aarx][0],
                               (N_RB_DL*12)));
         //- ue->measurements.n0_power[aarx];
 
@@ -1211,19 +1214,20 @@ void lte_ue_measurements_freq(PHY_VARS_UE *ue,
   } //eNB_id
 
   eNB_id=0;
-  if (ue->transmission_mode[0]==4 || ue->transmission_mode[0]==3){
+  for (eNB_id = 0; eNB_id < ue->n_connected_eNB; eNB_id++){
+   if (ue->transmission_mode[eNB_id]==4 || ue->transmission_mode[eNB_id]==3){
     if (rank_adaptation == 1)
-      rank_tm3_tm4 = rank_estimation_tm3_tm4(&ue->common_vars.common_vars_rx_data_per_thread[subframe&0x1].dl_ch_estimates[eNB_id][0][4],
-                                             &ue->common_vars.common_vars_rx_data_per_thread[subframe&0x1].dl_ch_estimates[eNB_id][2][4],
-                                             &ue->common_vars.common_vars_rx_data_per_thread[subframe&0x1].dl_ch_estimates[eNB_id][1][4],
-                                             &ue->common_vars.common_vars_rx_data_per_thread[subframe&0x1].dl_ch_estimates[eNB_id][3][4],
+      rank_tm3_tm4 = rank_estimation_tm3_tm4(&ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].dl_ch_estimates[eNB_id][0][4],
+                                             &ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].dl_ch_estimates[eNB_id][2][4],
+                                             &ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].dl_ch_estimates[eNB_id][1][4],
+                                             &ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].dl_ch_estimates[eNB_id][3][4],
                                              N_RB_DL);
     else
       rank_tm3_tm4=1;
 #ifdef DEBUG_RANK_EST
-  printf("rank tm3 or tm4 %d\n", rank_tm3_tm4);
+   printf("rank tm3 or tm4 %d\n", rank_tm3_tm4);
 #endif
-  }
+   }
 
   if (ue->transmission_mode[eNB_id]!=4 && ue->transmission_mode[eNB_id]!=3)
     ue->measurements.rank[eNB_id] = 0;
@@ -1231,7 +1235,7 @@ void lte_ue_measurements_freq(PHY_VARS_UE *ue,
     ue->measurements.rank[eNB_id] = rank_tm3_tm4;
   //  printf ("tx mode %d\n", ue->transmission_mode[eNB_id]);
   //  printf ("rank %d\n", ue->PHY_measurements.rank[eNB_id]);
-
+  }
   // filter to remove jitter
   if (ue->init_averaging == 0) {
     for (eNB_id = 0; eNB_id < ue->n_connected_eNB; eNB_id++)
@@ -1276,8 +1280,8 @@ void lte_ue_measurements_freq(PHY_VARS_UE *ue,
       // cqi/pmi information
 
       for (aarx=0; aarx<frame_parms->nb_antennas_rx; aarx++) {
-        dl_ch0    = &ue->common_vars.common_vars_rx_data_per_thread[subframe&0x1].dl_ch_estimates[eNB_id][aarx][4];
-        dl_ch1    = &ue->common_vars.common_vars_rx_data_per_thread[subframe&0x1].dl_ch_estimates[eNB_id][2+aarx][4];
+        dl_ch0    = &ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].dl_ch_estimates[eNB_id][aarx][4];
+        dl_ch1    = &ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].dl_ch_estimates[eNB_id][2+aarx][4];
 
         for (subband=0; subband<nb_subbands; subband++) {
 
@@ -1332,13 +1336,13 @@ void lte_ue_measurements_freq(PHY_VARS_UE *ue,
 #if defined(__x86_64__) || defined(__i386__)
        __m128i pmi128_re,pmi128_im,mmtmpPMI0,mmtmpPMI1 /* ,mmtmpPMI2,mmtmpPMI3 */ ;
 
-        dl_ch0_128    = (__m128i *)&ue->common_vars.common_vars_rx_data_per_thread[subframe&0x1].dl_ch_estimates[eNB_id][aarx][4];
-        dl_ch1_128    = (__m128i *)&ue->common_vars.common_vars_rx_data_per_thread[subframe&0x1].dl_ch_estimates[eNB_id][2+aarx][4];
+        dl_ch0_128    = (__m128i *)&ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].dl_ch_estimates[eNB_id][aarx][4];
+        dl_ch1_128    = (__m128i *)&ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].dl_ch_estimates[eNB_id][2+aarx][4];
 #elif defined(__arm__)
         int32x4_t pmi128_re,pmi128_im,mmtmpPMI0,mmtmpPMI1,mmtmpPMI0b,mmtmpPMI1b;
 
-        dl_ch0_128    = (int16x8_t *)&ue->common_vars.common_vars_rx_data_per_thread[subframe&0x1].dl_ch_estimates[eNB_id][aarx][4];
-        dl_ch1_128    = (int16x8_t *)&ue->common_vars.common_vars_rx_data_per_thread[subframe&0x1].dl_ch_estimates[eNB_id][2+aarx][4];
+        dl_ch0_128    = (int16x8_t *)&ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].dl_ch_estimates[eNB_id][aarx][4];
+        dl_ch1_128    = (int16x8_t *)&ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].dl_ch_estimates[eNB_id][2+aarx][4];
 
 #endif
         for (subband=0; subband<nb_subbands; subband++) {
@@ -1432,7 +1436,7 @@ void lte_ue_measurements_freq(PHY_VARS_UE *ue,
     else {
       // cqi information only for mode 1
       for (aarx=0; aarx<frame_parms->nb_antennas_rx; aarx++) {
-        dl_ch0    = &ue->common_vars.common_vars_rx_data_per_thread[subframe&0x1].dl_ch_estimates[eNB_id][aarx][4];
+        dl_ch0    = &ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].dl_ch_estimates[eNB_id][aarx][4];
 
         for (subband=0; subband<7; subband++) {
 

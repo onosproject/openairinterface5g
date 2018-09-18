@@ -4451,8 +4451,9 @@ NAS_KENB_REFRESH_REQ,NAS_CELL_SELECTION_REQ,RRC_STATE_INACTIVE,RRC_STATE_IDLE,RR
       {
         UE_rrc_inst[ue_mod_id].plmnID = NAS_CELL_SELECTION_REQ (msg_p).plmnID;
         UE_rrc_inst[ue_mod_id].rat = NAS_CELL_SELECTION_REQ (msg_p).rat;
-        LOG_D(RRC, "[UE %d] Save cell selection criterion MCC %X%X%X MNC %X%X%X\n",
+        LOG_D(RRC, "[UE %d][eNB %d] Save cell selection criterion MCC %X%X%X MNC %X%X%X\n",
               ue_mod_id,
+	      PHY_vars_UE_g[ue_mod_id][0]->common_vars.eNb_id,
               UE_rrc_inst[ue_mod_id].plmnID.MCCdigit1,
               UE_rrc_inst[ue_mod_id].plmnID.MCCdigit2,
               UE_rrc_inst[ue_mod_id].plmnID.MCCdigit3,

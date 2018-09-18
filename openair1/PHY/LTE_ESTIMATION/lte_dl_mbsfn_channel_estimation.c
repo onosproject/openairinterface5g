@@ -45,7 +45,7 @@ int lte_dl_mbsfn_channel_estimation(PHY_VARS_UE *ue,
   //  unsigned int n;
   //  int i;
 
-  int **dl_ch_estimates=ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].dl_ch_estimates[0];
+  int **dl_ch_estimates=ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].dl_ch_estimates[eNB_id];
   int **rxdataF=ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].rxdataF;
 
   ch_offset     = (l*(ue->frame_parms.ofdm_symbol_size));
@@ -788,7 +788,7 @@ int lte_dl_mbsfn_channel_estimation_freq(PHY_VARS_UE *ue,
   //  unsigned int n;
   //  int i;
 
-  int **dl_ch_estimates=ue->common_vars.common_vars_rx_data_per_thread[subframe&0x1].dl_ch_estimates[0];
+  int **dl_ch_estimates=ue->common_vars.common_vars_rx_data_per_thread[subframe&0x1].dl_ch_estimates[eNB_id];
   int **rxdataF=ue->common_vars.common_vars_rx_data_per_thread[subframe&0x1].rxdataF;
 
   ch_offset     = (l*(ue->frame_parms.ofdm_symbol_size));

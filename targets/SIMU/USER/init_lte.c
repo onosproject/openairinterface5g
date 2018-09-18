@@ -275,9 +275,9 @@ void init_lte_vars(LTE_DL_FRAME_PARMS *frame_parms[MAX_NUM_CCs],
     PHY_vars_eNB_g[eNB_id] = (PHY_VARS_eNB**) malloc(MAX_NUM_CCs*sizeof(PHY_VARS_eNB*));
 
     for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
-      PHY_vars_eNB_g[eNB_id][CC_id] = init_lte_eNB(frame_parms[CC_id],eNB_id,Nid_cell,eNodeB_3GPP,abstraction_flag);
       PHY_vars_eNB_g[eNB_id][CC_id]->Mod_id=eNB_id;
       PHY_vars_eNB_g[eNB_id][CC_id]->CC_id=CC_id;
+      PHY_vars_eNB_g[eNB_id][CC_id] = init_lte_eNB(frame_parms[CC_id],eNB_id,Nid_cell,eNodeB_3GPP,abstraction_flag);
     }
   }
 
