@@ -133,6 +133,9 @@ int output_handler(eNB_MAC_INST_NB_IoT *mac_inst, module_id_t module_id, int CC_
 		dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13.rnti_type                      = 0;
 		dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13.rnti                           = 0xFFFF; // SI-rnti
 		dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13.modulation                     = 2;
+		dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13.repetition_number              = 10; //value between 0-15, should be get from MIB // to fix later !!!!!!!!!!!!
+
+		dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13.number_of_subframes_for_resource_assignment     = 8;
 		//SIB1_pdu = get_NB_IoT_SIB1();
 		//LOG_D(MAC,"A NB-IoT SIB1 pdu : %d \n",SIB1_pdu);
 		

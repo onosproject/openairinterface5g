@@ -573,7 +573,6 @@ uint8_t do_SIB1_NB_IoT_x(uint8_t Mod_id, int CC_id,
     5; //if not configured we use band 5 (UL: 824 MHz - 849MHz / DL: 869 MHz - 894 MHz  FDD mode)
 #endif
 
-
   // Now, follow the scheduler SIB configuration
   // There is only one sib2+sib3 common setting
 
@@ -581,7 +580,6 @@ uint8_t do_SIB1_NB_IoT_x(uint8_t Mod_id, int CC_id,
   schedulingInfo_NB_IoT.si_RepetitionPattern_r13=  SchedulingInfo_NB_r13__si_RepetitionPattern_r13_every2ndRF; //This Indicates the starting radio frames within the SI window used for SI message transmission.
   schedulingInfo_NB_IoT.si_TB_r13= SchedulingInfo_NB_r13__si_TB_r13_b680;//208 bits
   
-
   // This is for SIB2/3
   /*SIB3 --> There is no mapping information of SIB2 since it is always present
     *  in the first SystemInformation message

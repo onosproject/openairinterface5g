@@ -51,6 +51,6 @@ unsigned int TBStable_NB_IoT[14][8] ={ //[ITBS][ISF]
 
 //TBS table for the case containing S1B1-NB, Table 16.4.1.5.2-1 in TS 36.213 v14.2 (Itbs = 12 ~ 15 is reserved field
 //mapping ITBS to SIB1-NB
-unsigned int TBStable_NB_IoT_SIB1[16] = {208,208,208,328,328,328,440,440,440,680,680,680};
+unsigned int TBStable_NB_IoT_SIB1[16] = {208,208,208,328,328,328,440,440,440,680,680,680,0,0,0,0};
 
 #endif

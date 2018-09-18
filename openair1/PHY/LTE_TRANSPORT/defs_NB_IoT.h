@@ -421,11 +421,25 @@ typedef struct {
   /// The only HARQ process for the DLSCH
   NB_IoT_DL_eNB_HARQ_t    *harq_process;
 
- // NB_IoT_DL_eNB_SIB1_t    harq_process_sib1;
+  // NB_IoT_DL_eNB_SIB1_t    harq_process_sib1;
 
-  SCH_status_NB_IoT_t   status;
+  SCH_status_NB_IoT_t     status;
 
-  /// Number of soft channel bits
+  ///////////////////////////////////
+  uint32_t                rnti_type;
+  uint32_t                resource_assignment;    // for NDLSCH // this value point to -->  number of subframes needed
+  uint32_t                repetition_number;
+  uint32_t                modulation;
+  uint32_t                number_of_subframes_for_resource_assignment; // for NDLSCH //table 16.4.1.3-1 // TS 36.213
+
+
+  uint32_t                counter_repetition_number;
+  uint32_t                counter_current_sf_repetition;
+  uint32_t                pointer_to_subframe;
+  ///////////////////////////////////
+  uint32_t                repetition_number_SIB1;    //4 8 16
+  uint32_t                resource_assignment_SIB1;   // always 8
+  /// Number of soft channel bits 
   uint32_t                G;
   
   ///NB-IoT
@@ -665,14 +679,34 @@ typedef struct {
 typedef struct {
   //the 2 LSB of the hsfn (the MSB are indicated by the SIB1-NB)
   rnti_t          rnti[2];
-
+  ////////////////////////////////////////////////////////
+  
+  uint32_t length[2];                        
+  uint32_t ncce_index[2];        
+  uint32_t aggregation_level[2];
+  uint32_t rnti_type[2];
+  uint32_t dci_format[2];
+  uint32_t scheduling_delay[2];
+  uint32_t resource_assignment[2];
+ // uint32_t repetition_number[2];
+  uint32_t mcs[2];
+  uint32_t new_data_indicator[2];
+  uint32_t harq_ack_resource[2];
+  uint32_t npdcch_order_indication[2];
+  uint32_t dci_subframe_repetition_number[2];
+  ////////////////////////////////////////////////////////
   //UE specific parameters
-  uint16_t        npdcch_NumRepetitions[2];
+  uint16_t   npdcch_NumRepetitions[2];
 
-  uint16_t        repetition_number[2];
+  uint16_t   repetition_number[2];
   //indicate the corresponding subframe within the repetition (set to 0 when a new NPDCCH pdu is received)
-  uint16_t        repetition_idx[2];
+  uint16_t   repetition_idx[2];
 
+  //////////////////////////////////////
+  uint32_t   counter_repetition_number[2];
+//  uint32_t   counter_current_sf_repetition[2];
+//  uint32_t   pointer_to_subframe[2];
+  //////////////////////////////////////
   uint16_t  h_sfn_lsb;
 
   uint8_t   npdcch_d[2][96+(3*(16+NPDCCH_A))];

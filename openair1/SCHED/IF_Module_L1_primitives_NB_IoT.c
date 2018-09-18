@@ -29,6 +29,8 @@
  */
 
 
+//#include "PHY/LTE_TRANSPORT/dlsch_tbs_full_NB_IoT.h"
+
 #include "openair2/PHY_INTERFACE/IF_Module_NB_IoT.h"
 #include "../SCHED/IF_Module_L1_primitives_NB_IoT.h"
 //#include "../SCHED/defs.h"
@@ -39,6 +41,7 @@
 //#include "PHY/extern.h"
 #include "PHY/extern_NB_IoT.h"
 #include "PHY/extern.h"
+
 //#include "PHY/vars.h"
 
 #include "PHY/INIT/defs_NB_IoT.h"
@@ -67,7 +70,7 @@ void handle_nfapi_dlsch_pdu_NB_IoT(PHY_VARS_eNB *eNB,
 	//is SIB1-NB
   if(rel13->rnti_type == 0 && rel13->rnti == 65535)
   {
-
+  		
 	  /*
 	   * the configuration of the NDLSCH PDU for the SIB1-NB shoudl be the following:
 	   * -RNTI type = 0; (BCCH)
@@ -81,10 +84,12 @@ void handle_nfapi_dlsch_pdu_NB_IoT(PHY_VARS_eNB *eNB,
 	   *
 	   */
   		//LOG_I(PHY,"B NB-handle_nfapi_dlsch_pdu_NB_IoT SIB1\n");
+  		ndlsch_harq = ndlsch->harq_process;
+
 	  	ndlsch->ndlsch_type = SIB1;
 	  	
 		ndlsch->npdsch_start_symbol = rel13->start_symbol; //start symbol for the ndlsch transmission
-		ndlsch_harq = ndlsch->harq_process;
+		
 		
 		//ndlsch_harq->pdu = sdu;
 		//LOG_I(PHY,"B content_sib1:%d\n",sdu);
@@ -94,10 +99,12 @@ void handle_nfapi_dlsch_pdu_NB_IoT(PHY_VARS_eNB *eNB,
 		
 		//should be from 1 to 8
 		
-		ndlsch_harq->resource_assignment = rel13->number_of_subframes_for_resource_assignment;//maybe we don't care about it since a fixed schedule
-		ndlsch_harq->repetition_number = rel13->repetition_number; //is the schedulingInfoSIB1 (value 1-15) of MIB that is mapped into value 4-8-16 (see NDLSCH fapi specs Table 4-47)
-		ndlsch_harq->modulation = rel13->modulation;
-		ndlsch_harq->status = ACTIVE_NB_IoT;
+		ndlsch->resource_assignment_SIB1 = rel13->number_of_subframes_for_resource_assignment;//maybe we don't care about it since a fixed schedule
+		ndlsch->repetition_number_SIB1 = rel13->repetition_number; //is the schedulingInfoSIB1 (value 1-15) of MIB that is mapped into value 4-8-16 (see NDLSCH fapi specs Table 4-47)
+		ndlsch->modulation = rel13->modulation;
+		ndlsch->status = ACTIVE_NB_IoT;
+
+		//ndlsch->
 		
 		//SI information in reality have no feedback (so there is no retransmission from the HARQ view point since no ack and nack)
 //        ndlsch_harq->frame = frame;
@@ -107,6 +114,7 @@ void handle_nfapi_dlsch_pdu_NB_IoT(PHY_VARS_eNB *eNB,
         ndlsch->scrambling_sequence_intialization = rel13->scrambling_sequence_initialization_cinit;
 		
         //LOG_I(PHY,"A NB-handle_nfapi_dlsch_pdu_NB_IoT SIB1\n");
+        ndlsch_harq->TBS = TBStable_NB_IoT_SIB1[rel13->repetition_number];
 
 
 
@@ -176,9 +184,23 @@ void handle_nfapi_dlsch_pdu_NB_IoT(PHY_VARS_eNB *eNB,
 	  //check if the PDU is for RAR
 	  if(eNB->ndlsch_RAR != NULL && rel13->rnti == eNB->ndlsch_RAR->rnti) //rnti for the RAR should have been set priviously by the DCI
 	  {
-		  eNB->ndlsch_RAR->harq_process->pdu = sdu;
-		  eNB->ndlsch_RAR->npdsch_start_symbol = rel13->start_symbol;
-		  eNB->ndlsch_RAR->active = 1;
+		  eNB->ndlsch_RAR->harq_process->pdu 		= sdu;
+		  eNB->ndlsch_RAR->npdsch_start_symbol 		= rel13->start_symbol;
+		  eNB->ndlsch_RAR->active 					= 1;
+
+		  eNB->ndlsch_RAR->rnti 					= rel13->rnti;  // how this value is tested in line 177 ???? i am missing something ????
+
+		  eNB->ndlsch_RAR->rnti_type 				= rel13->rnti_type;   
+  		  eNB->ndlsch_RAR->resource_assignment 		= rel13->resource_assignment ;    // for NDLSCH // this value point to -->  number of subframes needed
+          eNB->ndlsch_RAR->repetition_number 		= rel13->repetition_number;
+  		  eNB->ndlsch_RAR->modulation 				= rel13->modulation;
+
+  		  eNB->ndlsch_RAR->number_of_subframes_for_resource_assignment   = rel13->number_of_subframes_for_resource_assignment; // for NDLSCH //table 16.4.1.3-1 // TS 36.213
+
+		  eNB->ndlsch_RAR->counter_repetition_number       = rel13->repetition_number;
+		  eNB->ndlsch_RAR->counter_current_sf_repetition   = 0;
+		  eNB->ndlsch_RAR->pointer_to_subframe             = 0;
+
 	  }
 	  else
 	  { //this for ue data
@@ -197,6 +219,19 @@ void handle_nfapi_dlsch_pdu_NB_IoT(PHY_VARS_eNB *eNB,
 	  	  ndlsch->npdsch_start_symbol = rel13->start_symbol;
 	  	  ndlsch_harq->pdu  = sdu;
 	  	  ndlsch->active = 1;
+
+	  	  eNB->ndlsch_RAR->rnti 					= rel13->rnti;  // how this value is tested in line 177 ???? i am missing something ????
+
+		  eNB->ndlsch_RAR->rnti_type 				= rel13->rnti_type;   
+  		  eNB->ndlsch_RAR->resource_assignment 		= rel13->resource_assignment ;    // for NDLSCH // this value point to -->  number of subframes needed
+          eNB->ndlsch_RAR->repetition_number 		= rel13->repetition_number;
+  		  eNB->ndlsch_RAR->modulation 				= rel13->modulation;
+
+  		  eNB->ndlsch_RAR->number_of_subframes_for_resource_assignment   = rel13->number_of_subframes_for_resource_assignment; // for NDLSCH //table 16.4.1.3-1 // TS 36.213
+
+		  eNB->ndlsch_RAR->counter_repetition_number       = rel13->repetition_number;
+		  eNB->ndlsch_RAR->counter_current_sf_repetition   = 0;
+		  eNB->ndlsch_RAR->pointer_to_subframe             = 0;
 
 	  }
 
@@ -289,7 +324,7 @@ void schedule_response_NB_IoT(Sched_Rsp_NB_IoT_t *Sched_INFO)
     	case NFAPI_DL_CONFIG_NPDCCH_PDU_TYPE:
     		//Remember: there is no DCI for SI information
     		//TODO: separate the ndlsch structure configuration from the DCI (here we will encode only the DCI)
-      		//generate_eNB_dlsch_params_NB_IoT(eNB,proc,dl_config_pdu);
+      		generate_eNB_dlsch_params_NB_IoT(eNB,proc,dl_config_pdu);
 
       		break;
     	case NFAPI_DL_CONFIG_NBCH_PDU_TYPE:

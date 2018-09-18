@@ -647,6 +647,8 @@ typedef struct {
   uint8_t nb_antennas_tx_NB_IoT; // to replace with NB_IoT_frame_params
 
   NPUSCH_CONFIG_COMMONx npusch_config_common;
+
+  uint8_t RB_ID_NB_IoT;   // to be used
   ///////////////////////////////////////////////////////////////////// 
 
 } LTE_DL_FRAME_PARMS;

@@ -695,19 +695,7 @@ if(proc->flag_msg4 == 1 && proc->counter_msg4 > 0)
                 }
                 proc->flag_scrambling =1;
                 printf("\n RAR sentttttt frame %d, subframe %d", frame, subframe);
-           /*     if(proc->counter_msg4 == 3 || proc->counter_msg4 ==1)
-                {
-                    dlsch_modulation_rar_NB_IoT(txdataF,
-                                            AMP,
-                                            fp,
-                                            3,                          // control region size for LTE , values between 0..3, (0 for stand-alone / 1, 2 or 3 for in-band)
-                                            rar,
-                                            236,                       // number of bits per subframe
-                                            frame,  // unrequired
-                                            subframe,       
-                                            22,
-                                            2);
-                } else {*/
+          
                    dlsch_modulation_NB_IoT(txdataF,
                                             AMP,
                                             fp,
@@ -717,7 +705,6 @@ if(proc->flag_msg4 == 1 && proc->counter_msg4 > 0)
                                             frame,  // unrequired
                                             subframe,       
                                             22);
-               // }
 
                  proc->counter_msg4--;
                  proc->subframe_msg4 =subframe+1;

@@ -224,8 +224,8 @@ void common_signal_procedures_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
   NB_IoT_eNB_NPBCH_t   *broadcast_str = &eNB->npbch;
   //NB_IoT_eNB_NDLSCH_t  *sib1          = &eNB->ndlsch_SIB;
   //NB_IoT_eNB_NDLSCH_t  *ndlsch        = &eNB->ndlsch_SIB1;
-  NB_IoT_DL_eNB_HARQ_t *sib1          = eNB->ndlsch_SIB1->harq_process;
-  NB_IoT_DL_eNB_HARQ_t  *sib23         = eNB->ndlsch_SIB23->harq_process;
+  NB_IoT_eNB_NDLSCH_t *sib1          = eNB->ndlsch_SIB1;
+  NB_IoT_eNB_NDLSCH_t  *sib23         = eNB->ndlsch_SIB23;
 
   int                     **txdataF =  eNB->common_vars.txdataF[0];
   int                     subframe  =  proc->subframe_tx;
@@ -292,17 +292,17 @@ void common_signal_procedures_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
   //uint8_t      *npbch_pdu =  get_NB_IoT_MIB();
   uint8_t      *npbch_pdu =  broadcast_str->pdu;
   //uint8_t      *sib1_pdu = get_NB_IoT_SIB1();
-  uint8_t      *sib1_pdu  = sib1->pdu;
+  uint8_t      *sib1_pdu  = sib1->harq_process->pdu;
   //uint8_t      *sib23_pdu =  get_NB_IoT_SIB23();
-  uint8_t      *sib23_pdu = sib23->pdu;
+  uint8_t      *sib23_pdu = sib23->harq_process->pdu;
   
 
     if(subframe == 0)
     {
       LOG_I(PHY,"MIB NB-IoT content:\n");
-           for(int i = 0; i<6;i++)
+          /* for(int i = 0; i<6;i++)
            printf("%02X",broadcast_str->pdu[i]);
-           printf("\n");
+           printf("\n");*/
 
       generate_npbch(broadcast_str,
                      txdataF,
@@ -319,12 +319,16 @@ void common_signal_procedures_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
     // cell_id help to find the start subframe for sib1.
     // MAC_TBStable_NB_IoT_SIB1 to be used to get TBS value.
     //
+    // sib1->repetition_number_SIB1;    //0-15      sib1->resource_assignment_SIB1;   // always 8
+    // fp->Nid_cell
+    // TBStable_NB_IoT_SIB1[repetition_number_SIB1]   /// TBS
+    //
     if((subframe == 4)  && (frame%2==0) && (frame%32<16) )   ////if((subframe != 0)  && (subframe != 4) && (subframe != 9) ) 
     {
         LOG_I(PHY,"SIB1 NB-IoT content:\n");
-        for(int i = 0; i<6;i++)
+        /*for(int i = 0; i<6;i++)
         printf("%02X",sib1->pdu[i]);
-        printf("\n"); 
+        printf("\n"); */
 
         if( frame%32 == 0 )
         {
@@ -358,9 +362,9 @@ void common_signal_procedures_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
   if( (subframe >0) && (subframe !=5) && (With_NSSS == 0) && (frame%2==1) && (frame%64<16) )   ////if((subframe != 0)  && (subframe != 4) && (subframe != 9) ) 
   {
         LOG_I(PHY,"SIB2 NB-IoT content:\n");
-        for(int i = 0; i<6;i++)
+       /* for(int i = 0; i<6;i++)
         printf("%02X",sib23->pdu[i]);
-        printf("\n");
+        printf("\n");*/
 
         if( subframe == 1 )
         {

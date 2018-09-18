@@ -25,6 +25,7 @@
 
 
 extern unsigned int TBStable_NB_IoT[14][8];
+extern unsigned int TBStable_NB_IoT_SIB1[16];
 
 extern unsigned char cs_ri_normal_NB_IoT[4];
 extern unsigned char cs_ri_extended_NB_IoT[4];
