@@ -53,7 +53,7 @@ unsigned char get_Qm_ul_NB_IoT(unsigned char I_MCS, uint8_t N_sc_RU)
 int get_G_NB_IoT(LTE_DL_FRAME_PARMS *frame_parms)
 {
   
-	uint16_t num_ctrl_symbols = frame_parms->control_region_size;
+	uint16_t num_ctrl_symbols = frame_parms->control_region_size;  // eutra_control_region_size values are 0,1,2
 
     uint8_t nb_antennas_tx_LTE = frame_parms->nb_antennas_tx;
     uint8_t nb_antennas_tx_NB_IoT = frame_parms->nb_antennas_tx_NB_IoT;
@@ -62,28 +62,28 @@ int get_G_NB_IoT(LTE_DL_FRAME_PARMS *frame_parms)
 
     switch (nb_antennas_tx_NB_IoT + (2*nb_antennas_tx_LTE)) {
 
-		case 10 :
-			G_value = G_tab[(1*3)-num_ctrl_symbols];	
+		case 10:
+			G_value = G_tab[(1*3)-num_ctrl_symbols-1];	
 		break;
 
 		case 6:
-			G_value = G_tab[(2*3)-num_ctrl_symbols];
+			G_value = G_tab[(2*3)-num_ctrl_symbols-1];
 		break;
 
 		case 4 :
-			G_value = G_tab[(3*3)-num_ctrl_symbols];
+			G_value = G_tab[(3*3)-num_ctrl_symbols-1];
 		break;
 
 		case 9 :
-			G_value = G_tab[(4*3)-num_ctrl_symbols];	
+			G_value = G_tab[(4*3)-num_ctrl_symbols-1];	
 		break;
 
 		case 5:
-			G_value = G_tab[(5*3)-num_ctrl_symbols];
+			G_value = G_tab[(5*3)-num_ctrl_symbols-1];
 		break;
 
 		case 3 :
-			G_value = G_tab[(6*3)-num_ctrl_symbols];
+			G_value = G_tab[(6*3)-num_ctrl_symbols-1];
 		break;
 
 		default: 
@@ -96,4 +96,147 @@ int get_G_NB_IoT(LTE_DL_FRAME_PARMS *frame_parms)
   
 }
 
+int get_G_SIB1_NB_IoT(LTE_DL_FRAME_PARMS *frame_parms, uint8_t operation_mode_info)
+{
+  
+    uint16_t num_ctrl_symbols = 0;  // eutra_control_region_size values are 0,1,2
+    if(operation_mode_info<2)                                         /// operation_mode_info, in-band, stand-alone, guard band
+    {
+
+        num_ctrl_symbols = 2;
+    }
+    uint8_t nb_antennas_tx_LTE = frame_parms->nb_antennas_tx;
+    uint8_t nb_antennas_tx_NB_IoT = frame_parms->nb_antennas_tx_NB_IoT;
+
+    int G_value=0;
+
+    switch (nb_antennas_tx_NB_IoT + (2*nb_antennas_tx_LTE)) {
+
+        case 10:
+            G_value = G_tab[(1*3)-num_ctrl_symbols-1];  
+        break;
+
+        case 6:
+            G_value = G_tab[(2*3)-num_ctrl_symbols-1];
+        break;
+
+        case 4 :
+            G_value = G_tab[(3*3)-num_ctrl_symbols-1];
+        break;
+
+        case 9 :
+            G_value = G_tab[(4*3)-num_ctrl_symbols-1];  
+        break;
+
+        case 5:
+            G_value = G_tab[(5*3)-num_ctrl_symbols-1];
+        break;
+
+        case 3 :
+            G_value = G_tab[(6*3)-num_ctrl_symbols-1];
+        break;
+
+        default: 
+
+            printf("Error getting G");
+
+    }
+  
+    return(G_value);
+  
+}
+
+int get_rep_num_SIB1_NB_IoT(uint8_t scheduling_info_sib1)
+{
+
+    int value=0;
+
+    if(scheduling_info_sib1 >11)
+    {
+        printf("value not allowed for schedulinginfo for sib1");
+
+    } else {
+   
+        switch(scheduling_info_sib1 % 3)
+        {
+            case 0:
+                value =4;
+            break;
+
+            case 1:
+                value =8;
+            break;
+
+            case 2:
+                value =16;
+            break;
+        }
+   }
+   
+    return(value);
+  
+}
+
+int get_start_frame_SIB1_NB_IoT(LTE_DL_FRAME_PARMS *frame_parms,uint8_t repetition)
+{
+
+    int value=0;
+
+    uint16_t cell_id = frame_parms->Nid_cell ;
+
+    if(repetition == 4)
+    {
+    	switch(cell_id %4)
+    	{
+    		case 0:
+    			value =0;
+    		break;
+
+    		case 1:
+    			value =16;
+    		break;
+
+    		case 2:
+    			value =32;
+    		break;
+
+    		case 3:
+    			value =48;
+    		break;
+    	}
+
+    } else if(repetition == 8) {
+
+    	switch(cell_id %2)
+    	{
+    		case 0:
+    			value =0;
+    		break;
+
+    		case 1:
+    			value =16;
+    		break;
+    	}
+
+    } else if(repetition == 16) {
+
+    	switch(cell_id %2)
+    	{
+    		case 0:
+    			value =0;
+    		break;
+
+    		case 1:
+    			value =1;
+    		break;
+    	}
+
+
+    } else {
+    	printf("Error in getting the starting frame of SIB1 ");
+    }
+  
+    return(value);
+  
+}
 

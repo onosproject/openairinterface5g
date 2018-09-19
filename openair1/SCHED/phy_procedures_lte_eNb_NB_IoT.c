@@ -228,10 +228,10 @@ void common_signal_procedures_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
   NB_IoT_eNB_NDLSCH_t  *sib23         = eNB->ndlsch_SIB23;
 
   int                     **txdataF =  eNB->common_vars.txdataF[0];
-  int                     subframe  =  proc->subframe_tx;
+  uint32_t                subframe  =  proc->subframe_tx;
   uint32_t                frame     =  proc->frame_tx;
   //uint16_t                Ntti      =  10;                      //ntti = 10
-  int                     RB_IoT_ID=22 ;                          // XXX should be initialized (RB reserved for NB-IoT, PRB index)
+  int                     RB_IoT_ID=22;                          // XXX should be initialized (RB reserved for NB-IoT, PRB index)
   int                     With_NSSS=0;                            // With_NSSS = 1; if the frame include a sub-Frame with NSSS signal
 
  
@@ -257,16 +257,14 @@ void common_signal_procedures_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
   //int           G=0;
   
  //NSSS only happened in the even frame
+
   if(frame%2==0)
-    {
+  {
       With_NSSS = 1;
-    }
-  else
-    {
+  } else {
       With_NSSS = 0;
-    }
-   
-    
+  }
+     
   if(subframe == 5)
     {
 
@@ -292,7 +290,7 @@ void common_signal_procedures_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
   //uint8_t      *npbch_pdu =  get_NB_IoT_MIB();
   uint8_t      *npbch_pdu =  broadcast_str->pdu;
   //uint8_t      *sib1_pdu = get_NB_IoT_SIB1();
-  uint8_t      *sib1_pdu  = sib1->harq_process->pdu;
+  
   //uint8_t      *sib23_pdu =  get_NB_IoT_SIB23();
   uint8_t      *sib23_pdu = sib23->harq_process->pdu;
   
@@ -313,7 +311,7 @@ void common_signal_procedures_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
                      RB_IoT_ID);
     }
 
-    ///////////////////////////////////////////////////////// SIB1 ////////////////////////////////////
+    //////////////////////////////////////////// SIB1 ////////////////////////////////////
     // we need two parameter, NB-IoT cell_id  and scheduling info for sib1 (can be found in the MIB)
     // using scheduling_info parameter we can get the TBS size.
     // cell_id help to find the start subframe for sib1.
@@ -323,39 +321,20 @@ void common_signal_procedures_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
     // fp->Nid_cell
     // TBStable_NB_IoT_SIB1[repetition_number_SIB1]   /// TBS
     //
-    if((subframe == 4)  && (frame%2==0) && (frame%32<16) )   ////if((subframe != 0)  && (subframe != 4) && (subframe != 9) ) 
-    {
-        LOG_I(PHY,"SIB1 NB-IoT content:\n");
-        /*for(int i = 0; i<6;i++)
-        printf("%02X",sib1->pdu[i]);
-        printf("\n"); */
+    // rep_val = 4 , 8, 16
+    //  if( (subframe ==4) && (frame%2 == var_0_1) &&  (born_inf<= frame % rep_val)  (frame % rep_val <= 16 + start_frame ))
+    //
+    // ndlsch->repetition_number_SIB1 -> 10 , should call get_rep_num_SIB1_NB_IoT(repetition_number_SIB1) -> value 4,8,16
+    //get_start_frame_SIB1_NB_IoT(lte_frame, get_rep_num_SIB1_NB_IoT(repetition_number_SIB1));
 
-        if( frame%32 == 0 )
-        {
-            dlsch_encoding_NB_IoT(sib1_pdu,
-                                  sib1,
-                                  8,                      ///// number_of_subframes_required
-                                  get_G_NB_IoT(fp));                   //////////// G*2
-        
-             dlsch_scrambling_Gen_NB_IoT(fp,
-                                         sib1,
-                                         1888,
-                                         frame,
-                                         subframe*2,
-                                         eNB->ndlsch_SIB1->rnti);
-        }
-
-        dlsch_modulation_NB_IoT(txdataF,
-                                AMP,
-                                fp,
-                                3,                          // control region size for LTE , values between 0..3, (0 for stand-alone / 1, 2 or 3 for in-band)
-                                sib1,
-                                236,                       // number of bits per subframe
-                               ((frame%32)/2),
-                               4,       
-                                RB_IoT_ID);
-        
-    }
+    //if((subframe == 4)  && (frame%2==0) && (frame%32<16) )   ////if((subframe != 0)  && (subframe != 4) && (subframe != 9) )
+  generate_SIB1(sib1,
+                txdataF,
+                AMP,
+                fp,
+                frame,
+                subframe,
+                RB_IoT_ID);
   ///////////////////////////////////////////////////////// END ////////////////////////////////////////////////////////
         
   //////////////////////////////////////////////////// SIB23 ////////////////////////////////////////////////////////////////////////

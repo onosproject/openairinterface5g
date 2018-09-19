@@ -106,6 +106,13 @@ int allocate_REs_in_RB_NB_IoT(LTE_DL_FRAME_PARMS    *frame_parms,
                               uint8_t               pilot_shift,
                               uint32_t              *re_allocated); 
 
+int generate_SIB1(NB_IoT_eNB_NDLSCH_t     *sib1_struct,
+                   int32_t                **txdataF,
+                   int16_t                amp,
+                   LTE_DL_FRAME_PARMS     *frame_parms,
+                   uint32_t               frame,
+                   uint32_t               subframe,
+                   int                    RB_IoT_ID);
 
 int generate_npbch(NB_IoT_eNB_NPBCH_t     *eNB_npbch,
                    int32_t                **txdataF,
@@ -543,6 +550,12 @@ int ul_chequal_tmp_NB_IoT(int32_t **rxdataF_ext,
 void clean_eNb_ulsch_NB_IoT(NB_IoT_eNB_NULSCH_t *ulsch);
 
 int get_G_NB_IoT(LTE_DL_FRAME_PARMS *frame_parms);
+
+int get_G_SIB1_NB_IoT(LTE_DL_FRAME_PARMS *frame_parms, uint8_t operation_mode_info);
+
+int get_rep_num_SIB1_NB_IoT(uint8_t scheduling_info_sib1);
+
+int get_start_frame_SIB1_NB_IoT(LTE_DL_FRAME_PARMS *frame_parms,uint8_t repetition);
 
 NB_IoT_eNB_NULSCH_t *new_eNB_ulsch_NB_IoT(uint8_t max_turbo_iterations,uint8_t N_RB_UL, uint8_t abstraction_flag);
 
