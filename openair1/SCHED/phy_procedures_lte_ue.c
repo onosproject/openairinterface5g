@@ -3556,7 +3556,7 @@ void ue_pmch_procedures(PHY_VARS_UE *ue, UE_rxtx_proc_t *proc,int eNB_id,int abs
 
     if (pmch_mcs>=0) {
       LOG_D(PHY,"[UE %d] Frame %d, subframe %d: Programming PMCH demodulation for mcs %d\n",ue->Mod_id,frame_rx,subframe_rx,pmch_mcs);
-      fill_UE_dlsch_MCH(ue,pmch_mcs,1,0,0);
+      fill_UE_dlsch_MCH(ue,pmch_mcs,1,0,eNB_id);
 
       if (abstraction_flag == 0 ) {
   for (l=2; l<12; l++) {
@@ -3574,31 +3574,31 @@ void ue_pmch_procedures(PHY_VARS_UE *ue, UE_rxtx_proc_t *proc,int eNB_id,int abs
 
   for (l=2; l<12; l++) {
     rx_pmch(ue,
-      0,
+      eNB_id,
       subframe_rx,
       l);
   }
 
 
-  ue->dlsch_MCH[0]->harq_processes[0]->G = get_G(&ue->frame_parms,
-                   ue->dlsch_MCH[0]->harq_processes[0]->nb_rb,
-                   ue->dlsch_MCH[0]->harq_processes[0]->rb_alloc_even,
-                   ue->dlsch_MCH[0]->harq_processes[0]->Qm,
+  ue->dlsch_MCH[eNB_id]->harq_processes[0]->G = get_G(&ue->frame_parms,
+                   ue->dlsch_MCH[eNB_id]->harq_processes[0]->nb_rb,
+                   ue->dlsch_MCH[eNB_id]->harq_processes[0]->rb_alloc_even,
+                   ue->dlsch_MCH[eNB_id]->harq_processes[0]->Qm,
                    1,
                    2,
                    frame_rx,
                    subframe_rx,
                    0);
 
-  dlsch_unscrambling(&ue->frame_parms,1,ue->dlsch_MCH[0],
-         ue->dlsch_MCH[0]->harq_processes[0]->G,
-         ue->pdsch_vars_MCH[0]->llr[0],0,subframe_rx<<1);
+  dlsch_unscrambling(&ue->frame_parms,1,ue->dlsch_MCH[eNB_id],
+         ue->dlsch_MCH[eNB_id]->harq_processes[0]->G,
+         ue->pdsch_vars_MCH[eNB_id]->llr[0],0,subframe_rx<<1);
 
   ret = dlsch_decoding(ue,
-           ue->pdsch_vars_MCH[0]->llr[0],
+           ue->pdsch_vars_MCH[eNB_id]->llr[0],
            &ue->frame_parms,
-           ue->dlsch_MCH[0],
-           ue->dlsch_MCH[0]->harq_processes[0],
+           ue->dlsch_MCH[eNB_id],
+           ue->dlsch_MCH[eNB_id]->harq_processes[0],
            frame_rx,
            subframe_rx,
            0,
@@ -3613,29 +3613,29 @@ void ue_pmch_procedures(PHY_VARS_UE *ue, UE_rxtx_proc_t *proc,int eNB_id,int abs
       }
 
       if (mcch_active == 1)
-  ue->dlsch_mcch_trials[sync_area][0]++;
+  ue->dlsch_mcch_trials[sync_area][eNB_id]++;
       else
-  ue->dlsch_mtch_trials[sync_area][0]++;
+  ue->dlsch_mtch_trials[sync_area][eNB_id]++;
 
-      if (ret == (1+ue->dlsch_MCH[0]->max_turbo_iterations)) {
+      if (ret == (1+ue->dlsch_MCH[eNB_id]->max_turbo_iterations)) {
   if (mcch_active == 1)
-    ue->dlsch_mcch_errors[sync_area][0]++;
+    ue->dlsch_mcch_errors[sync_area][eNB_id]++;
   else
-    ue->dlsch_mtch_errors[sync_area][0]++;
+    ue->dlsch_mtch_errors[sync_area][eNB_id]++;
 
   LOG_D(PHY,"[UE %d] Frame %d, subframe %d: PMCH in error (%d,%d), not passing to L2 (TBS %d, iter %d,G %d)\n",
         ue->Mod_id,
               frame_rx,subframe_rx,
-        ue->dlsch_mcch_errors[sync_area][0],
-        ue->dlsch_mtch_errors[sync_area][0],
-        ue->dlsch_MCH[0]->harq_processes[0]->TBS>>3,
-        ue->dlsch_MCH[0]->max_turbo_iterations,
-        ue->dlsch_MCH[0]->harq_processes[0]->G);
-  dump_mch(ue,0,ue->dlsch_MCH[0]->harq_processes[0]->G,subframe_rx);
+        ue->dlsch_mcch_errors[sync_area][eNB_id],
+        ue->dlsch_mtch_errors[sync_area][eNB_id],
+        ue->dlsch_MCH[eNB_id]->harq_processes[0]->TBS>>3,
+        ue->dlsch_MCH[eNB_id]->max_turbo_iterations,
+        ue->dlsch_MCH[eNB_id]->harq_processes[0]->G);
+  dump_mch(ue,eNB_id,ue->dlsch_MCH[eNB_id]->harq_processes[0]->G,subframe_rx);
 #ifdef DEBUG_DLSCH
 
-  for (int i=0; i<ue->dlsch_MCH[0]->harq_processes[0]->TBS>>3; i++) {
-    LOG_T(PHY,"%02x.",ue->dlsch_MCH[0]->harq_processes[0]->c[0][i]);
+  for (int i=0; i<ue->dlsch_MCH[eNB_id]->harq_processes[0]->TBS>>3; i++) {
+    LOG_T(PHY,"%02x.",ue->dlsch_MCH[eNB_id]->harq_processes[0]->c[0][i]);
   }
 
   LOG_T(PHY,"\n");
@@ -3650,18 +3650,18 @@ void ue_pmch_procedures(PHY_VARS_UE *ue, UE_rxtx_proc_t *proc,int eNB_id,int abs
     mac_xface->ue_send_mch_sdu(ue->Mod_id,
              CC_id,
              frame_rx,
-             ue->dlsch_MCH[0]->harq_processes[0]->b,
-             ue->dlsch_MCH[0]->harq_processes[0]->TBS>>3,
+             ue->dlsch_MCH[eNB_id]->harq_processes[0]->b,
+             ue->dlsch_MCH[eNB_id]->harq_processes[0]->TBS>>3,
              eNB_id,// not relevant in eMBMS context
              sync_area);
-    ue->dlsch_mcch_received[sync_area][0]++;
+    ue->dlsch_mcch_received[sync_area][eNB_id]++;
 
 
-    if (ue->dlsch_mch_received_sf[subframe_rx%5][0] == 1 ) {
-      ue->dlsch_mch_received_sf[subframe_rx%5][0]=0;
+    if (ue->dlsch_mch_received_sf[subframe_rx%5][eNB_id] == 1 ) {
+      ue->dlsch_mch_received_sf[subframe_rx%5][eNB_id]=0;
     } else {
-      ue->dlsch_mch_received[0]+=1;
-      ue->dlsch_mch_received_sf[subframe_rx][0]=1;
+      ue->dlsch_mch_received[eNB_id]+=1;
+      ue->dlsch_mch_received_sf[subframe_rx][eNB_id]=1;
     }
 
 

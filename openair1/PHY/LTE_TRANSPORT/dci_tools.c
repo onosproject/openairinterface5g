@@ -7355,7 +7355,7 @@ int generate_ue_ulsch_params_from_dci(void *dci_pdu,
   uint8_t transmission_mode = ue->transmission_mode[eNB_id];
   ANFBmode_t AckNackFBMode;
   LTE_UE_ULSCH_t *ulsch = ue->ulsch[eNB_id];
-  LTE_UE_DLSCH_t **dlsch = ue->dlsch[ue->current_thread_id[subframe]][0];
+  LTE_UE_DLSCH_t **dlsch = ue->dlsch[ue->current_thread_id[subframe]][eNB_id];
   PHY_MEASUREMENTS *meas = &ue->measurements;
   LTE_DL_FRAME_PARMS *frame_parms = &ue->frame_parms;
   //  uint32_t current_dlsch_cqi = ue->current_dlsch_cqi[eNB_id];

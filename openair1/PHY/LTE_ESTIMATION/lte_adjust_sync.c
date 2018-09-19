@@ -102,10 +102,10 @@ void lte_adjust_synch(LTE_DL_FRAME_PARMS *frame_parms,
               LOG_I(PHY,"[UE%d] Sending synch status to higher layers\n",ue->Mod_id);
               //mac_resynch();
               mac_xface->dl_phy_sync_success(ue->Mod_id,ue->proc.proc_rxtx[0].frame_rx,ue->common_vars.eNb_id,1);//ue->common_vars.eNb_id);
-              ue->UE_mode[0] = PRACH;
+              ue->UE_mode[eNB_id] = PRACH;
           }
           else {
-              ue->UE_mode[0] = PUSCH;
+              ue->UE_mode[eNB_id] = PUSCH;
           }
       }
 

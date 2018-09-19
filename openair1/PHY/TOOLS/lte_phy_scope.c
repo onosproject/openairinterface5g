@@ -155,6 +155,7 @@ void phy_scope_eNB(FD_lte_phy_scope_enb *form,
                    int UE_id)
 {
   //int eNB_id = 0;
+  printf("phy_scope_eNB: eNB_id %d, UE %d\n",eNB_id, UE_id);
   int i,i2,arx,atx,ind,k;
   LTE_DL_FRAME_PARMS *frame_parms = &phy_vars_enb->frame_parms;
   int nsymb_ce = 12*frame_parms->N_RB_UL*frame_parms->symbols_per_tti;
@@ -487,6 +488,7 @@ void phy_scope_UE(FD_lte_phy_scope_ue *form,
                   int UE_id,
                   uint8_t subframe)
 {
+  printf("phy_scope_UE: eNB_id %d, UE %d\n",eNB_id, UE_id);
   int i,arx,atx,ind,k;
   LTE_DL_FRAME_PARMS *frame_parms = &phy_vars_ue->frame_parms;
   int nsymb_ce = frame_parms->ofdm_symbol_size;//*frame_parms->symbols_per_tti;
