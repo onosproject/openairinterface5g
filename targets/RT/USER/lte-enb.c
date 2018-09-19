@@ -164,6 +164,13 @@ extern void add_subframe(uint16_t *frameP, uint16_t *subframeP, int offset);
 static inline int rxtx(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc, char *thread_name) {
   start_meas(&softmodem_stats_rxtx_sf);
 
+#if BASIC_SIMULATOR
+  {
+    eNB_proc_t *proc = &eNB->proc;
+    while (proc->instance_cnt_prach >= 0) usleep(500);
+  }
+#endif
+
   // *******************************************************************
 
   if (nfapi_mode == 1) {
