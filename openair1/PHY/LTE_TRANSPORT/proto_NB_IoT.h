@@ -112,7 +112,8 @@ int generate_SIB1(NB_IoT_eNB_NDLSCH_t     *sib1_struct,
                    LTE_DL_FRAME_PARMS     *frame_parms,
                    uint32_t               frame,
                    uint32_t               subframe,
-                   int                    RB_IoT_ID);
+                   int                    RB_IoT_ID,
+                   uint8_t                operation_mode);
 
 int generate_npbch(NB_IoT_eNB_NPBCH_t     *eNB_npbch,
                    int32_t                **txdataF,

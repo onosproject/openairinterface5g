@@ -100,9 +100,8 @@ int get_G_SIB1_NB_IoT(LTE_DL_FRAME_PARMS *frame_parms, uint8_t operation_mode_in
 {
   
     uint16_t num_ctrl_symbols = 0;  // eutra_control_region_size values are 0,1,2
-    if(operation_mode_info<2)                                         /// operation_mode_info, in-band, stand-alone, guard band
+    if(operation_mode_info<2)        /// operation_mode_info, in-band (two value 0,1), stand-alone(3), guard band (2)
     {
-
         num_ctrl_symbols = 2;
     }
     uint8_t nb_antennas_tx_LTE = frame_parms->nb_antennas_tx;

@@ -46,11 +46,16 @@ int generate_SIB1(NB_IoT_eNB_NDLSCH_t 		*sib1_struct,
                    LTE_DL_FRAME_PARMS 	    *frame_parms,
                    uint32_t 				frame,
                    uint32_t 				subframe,
-                   int                      RB_IoT_ID)
+                   int                      RB_IoT_ID,
+                   uint8_t                  operation_mode)
 {
  	int done=0;
  	uint8_t *sib1_pdu  = sib1_struct->harq_process->pdu;
-
+ 	uint8_t opr_mode = 3;
+ 	if(operation_mode>=2)
+ 	{
+ 		opr_mode =0;
+ 	}
 	uint8_t tmp =0;
     uint8_t rep_val = 0;
     uint8_t start_frame = get_start_frame_SIB1_NB_IoT(frame_parms, get_rep_num_SIB1_NB_IoT(sib1_struct->repetition_number_SIB1));
@@ -91,17 +96,18 @@ int generate_SIB1(NB_IoT_eNB_NDLSCH_t 		*sib1_struct,
 
     if((subframe == 4)  && (frame%2 == var) && (born_inf<= frame % rep_val) && (frame % rep_val < born_sup ))
     {
+    	int G = get_G_SIB1_NB_IoT(frame_parms,operation_mode);
 
         if( frame % rep_val == var )
         {
             dlsch_encoding_NB_IoT(sib1_pdu,
                                   sib1_struct,
                                   8,             ///// number_of_subframes_required
-                                  236);         //// this vallue is fixed, should take into account in future the case of stand-alone & guard-band 
+                                  G);         //// this vallue is fixed, should take into account in future the case of stand-alone & guard-band 
         
              dlsch_scrambling_Gen_NB_IoT(frame_parms,
                                          sib1_struct,
-                                         1888,
+                                         8*G,
                                          frame, 
                                          subframe*2,
                                          sib1_struct->rnti);
@@ -110,9 +116,9 @@ int generate_SIB1(NB_IoT_eNB_NDLSCH_t 		*sib1_struct,
         dlsch_modulation_NB_IoT(txdataF,
                                 amp,
                                 frame_parms,
-                                3,                          // control region size for LTE , values between 0..3, (0 for stand-alone / 1, 2 or 3 for in-band)
+                                opr_mode,                          // control region size for LTE , values between 0..3, (0 for stand-alone / 1, 2 or 3 for in-band)
                                 sib1_struct,
-                                236,                       // number of bits per subframe
+                                G,                       // number of bits per subframe
                                 ((frame%16)/2),
                                 4,       
                                 RB_IoT_ID);
