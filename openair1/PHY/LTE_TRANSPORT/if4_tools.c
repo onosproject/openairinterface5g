@@ -46,7 +46,7 @@ const uint16_t alaw2lin_if4p5[256] = {60032, 60288, 59520, 59776, 61056, 61312, 
 
 void send_IF4p5(PHY_VARS_eNB *eNB, int frame, int subframe, uint16_t packet_type, int k) {
   LTE_DL_FRAME_PARMS *fp = &eNB->frame_parms;
-  int32_t **txdataF      = /*(eNB->CC_id==0) ?*/ eNB->common_vars.txdataF[0];// : PHY_vars_eNB_g[0][eNB->CC_id]->common_vars.txdataF[0];
+  int32_t **txdataF      = (eNB->CC_id==0) ? eNB->common_vars.txdataF[0] : PHY_vars_eNB_g[eNB->Mod_id][eNB->CC_id]->common_vars.txdataF[0];
   int32_t **rxdataF      = eNB->common_vars.rxdataF[0];
   int16_t **rxsigF       = eNB->prach_vars.rxsigF;  
   void *tx_buffer        = eNB->ifbuffer.tx[subframe&1];
@@ -57,7 +57,14 @@ void send_IF4p5(PHY_VARS_eNB *eNB, int frame, int subframe, uint16_t packet_type
   int slotoffsetF=0, blockoffsetF=0; 
 
   uint16_t *data_block=NULL, *i=NULL;
-
+  if ((eNB->CC_id==0) && (subframe&5 ==0)){
+	write_output("txdataF0.m","txF0",txdataF[0],10*fp->ofdm_symbol_size*fp->symbols_per_tti,0,16);
+	//write_output("prachF0.m","prachF0",rxsigF[0],839,1,1);
+  } 
+  else if ((eNB->CC_id==1) && (subframe&5 ==0)){
+       write_output("txdataF1.m","txF1",txdataF[0],10*fp->ofdm_symbol_size*fp->symbols_per_tti,0,16);
+       // write_output("prachF1.m","prachF1",rxsigF[0],839,1,1);
+  }
   IF4p5_header_t *packet_header=NULL;
   eth_state_t *eth = (eth_state_t*) (eNB->ifdevice.priv);
   int nsym = fp->symbols_per_tti;
@@ -85,7 +92,7 @@ void send_IF4p5(PHY_VARS_eNB *eNB, int frame, int subframe, uint16_t packet_type
 		    
     for (symbol_id=0; symbol_id<nsym; symbol_id++) {
       VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_COMPR_IF, 1 );
-      if (eNB->CC_id==1) LOG_I(PHY,"DL_IF4p5: CC_id %d : frame %d, subframe %d, symbol %d\n",eNB->CC_id,frame,subframe,symbol_id);
+      //if (eNB->CC_id==1) LOG_I(PHY,"DL_IF4p5: CC_id %d : frame %d, subframe %d, symbol %d\n",eNB->CC_id,frame,subframe,symbol_id);
       
       for (element_id=0; element_id<db_halflength; element_id++) {
         i = (uint16_t*) &txdataF[0][blockoffsetF+element_id];
@@ -207,6 +214,15 @@ void send_IF4p5(PHY_VARS_eNB *eNB, int frame, int subframe, uint16_t packet_type
       perror("ETHERNET write for IF4p5_PRACH\n");
     }
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_WRITE_IF, 0 );      
+ /* if (eNB->CC_id==0){
+        //write_output("txdataF0.m","txF0",txdataF[0],10*fp->ofdm_symbol_size*fp->symbols_per_tti,1,1);
+        write_output("prachF0.m","prF0",rxsigF[0],839,k,16);
+  } 
+  else if (eNB->CC_id==1){
+        //write_output("txdataF1","txF1",txdataF[0],10*fp->ofdm_symbol_size*fp->symbols_per_tti,1,1);
+        write_output("prachF1.m","prF1",rxsigF[0],839,k,16);
+  }*/
+
   } else {    
     AssertFatal(1==0, "send_IF4p5 - Unknown packet_type %x", packet_type);     
   }
@@ -308,6 +324,14 @@ void recv_IF4p5(PHY_VARS_eNB *eNB, int *frame, int *subframe, uint16_t *packet_t
   } else if (*packet_type == IF4p5_PRACH) {  
      LOG_D(PHY,"PRACH_IF4p5: CC_id %d : frame %d, subframe %d\n",eNB->CC_id,*frame,*subframe);
     if (eNB->CC_id==1) LOG_I(PHY,"PRACH_IF4p5: CC_id %d : frame %d, subframe %d\n",eNB->CC_id,*frame,*subframe);
+    if (eNB->CC_id==0 && subframe==0){
+        //write_output("txdataF0.m","txF0",txdataF[0],10*fp->ofdm_symbol_size*fp->symbols_per_tti,1,1);
+        write_output("prachF0.m","prF0",rxsigF[0],839,0,16);
+    } 
+    else if (eNB->CC_id==1 && subframe==0){
+        //write_output("txdataF1","txF1",txdataF[0],10*fp->ofdm_symbol_size*fp->symbols_per_tti,1,1);
+        write_output("prachF1.m","prF1",rxsigF[0],839,0,16);
+    }
 
     // FIX: hard coded prach samples length
     db_fulllength = PRACH_HARD_CODED_NUM_SAMPLES;
@@ -329,6 +353,15 @@ void recv_IF4p5(PHY_VARS_eNB *eNB, int *frame, int *subframe, uint16_t *packet_t
 
   if (eNB->CC_id==0) VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_RECV_IF4, 0 );
  //}     
+  /*if (eNB->CC_id==0){
+        //write_output("txdataF0.m","txF0",txdataF[0],10*fp->ofdm_symbol_size*fp->symbols_per_tti,1,1);
+        write_output("prachF0.m","prF0",rxsigF[0],839,0,16);
+  } 
+  else if (eNB->CC_id==1){
+        //write_output("txdataF1","txF1",txdataF[0],10*fp->ofdm_symbol_size*fp->symbols_per_tti,1,1);
+        write_output("prachF1.m","prF1",rxsigF[0],839,0,16);
+  }*/
+
   return;   
 }
 

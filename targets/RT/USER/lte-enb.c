@@ -1163,7 +1163,7 @@ void rx_fh_if4p5(PHY_VARS_eNB *eNB,int *frame,int *subframe) {
   else 
     symbol_mask_full = (1<<fp->symbols_per_tti)-1;
 
-  if (eNB->CC_id==1) LOG_I(PHY,"rx_fh_if4p5: frame %d, subframe %d\n",*frame,*subframe);
+  //if (eNB->CC_id==1) LOG_I(PHY,"rx_fh_if4p5: frame %d, subframe %d\n",*frame,*subframe);
   do {   // Blocking, we need a timeout on this !!!!!!!!!!!!!!!!!!!!!!!
     recv_IF4p5(eNB, &f, &sf, &packet_type, &symbol_number);
 
@@ -1185,7 +1185,7 @@ void rx_fh_if4p5(PHY_VARS_eNB *eNB,int *frame,int *subframe) {
       if (eNB->do_prach) eNB->do_prach(eNB,f,sf);
     }
 
-    if (eNB->CC_id==1) LOG_I(PHY,"rx_fh_if4p5: symbol_mask[%d] %x\n",*subframe,proc->symbol_mask[*subframe]);
+    //if (eNB->CC_id==1) LOG_I(PHY,"rx_fh_if4p5: symbol_mask[%d] %x\n",*subframe,proc->symbol_mask[*subframe]);
 
   } while(proc->symbol_mask[*subframe] != symbol_mask_full);    
 
@@ -1195,7 +1195,7 @@ void rx_fh_if4p5(PHY_VARS_eNB *eNB,int *frame,int *subframe) {
   proc->symbol_mask[*subframe] = 0;
   proc->symbol_mask[(9+*subframe)%10]= 0; // to handle a resynchronization event
 
-  if (eNB->CC_id==1) LOG_I(PHY,"Clearing symbol_mask[%d]\n",*subframe);
+  //if (eNB->CC_id==1) LOG_I(PHY,"Clearing symbol_mask[%d]\n",*subframe);
 
   //caculate timestamp_rx, timestamp_tx based on frame and subframe
   proc->timestamp_rx = ((proc->frame_rx * 10)  + proc->subframe_rx ) * fp->samples_per_tti ;

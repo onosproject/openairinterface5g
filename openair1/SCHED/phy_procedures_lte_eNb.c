@@ -1174,6 +1174,7 @@ void phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
 			   int do_meas,
 			   int do_pdcch_flag)
 {
+  printf("phy_procedures_eNB_TX: CC_id %d\n",eNB->CC_id);
   UNUSED(rn);
   int frame=proc->frame_tx;
   int subframe=proc->subframe_tx;
