@@ -39,6 +39,7 @@
 #   include "RRC/LTE/rrc_defs.h"
 # endif
 # include "enb_app.h"
+# include "pdcp.h"
 
 int create_tasks_ue(uint32_t ue_nb)
 {
@@ -47,6 +48,11 @@ int create_tasks_ue(uint32_t ue_nb)
   itti_wait_ready(1);
   if (itti_create_task (TASK_L2L1, l2l1_task, NULL) < 0) {
     LOG_E(PDCP, "Create task for L2L1 failed\n");
+    return -1;
+  }
+  int is_enb = 0;
+  if (itti_create_task (TASK_PDCP, pdcp_task, &is_enb) < 0) {
+    LOG_E(PDCP, "Create task for PDCP failed\n");
     return -1;
   }
 

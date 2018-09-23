@@ -1006,13 +1006,15 @@ void pdcp_update_stats(const protocol_ctxt_t* const  ctxt_pP){
 
 #if defined(ENABLE_ITTI)
 //-----------------------------------------------------------------------------
-void
+void *
 pdcp_task(void *arg)
 {
 //-----------------------------------------------------------------------------
   MessageDef      *msg_p;
   int              result;
   instance_t       instance;
+  /* mark in context whether it is an UE or eNodeB */
+  ctxt.enb_flag = *(int *)arg;
 
   LOG_I(PDCP, "Starting PDCP task\n");
   itti_mark_task_ready(TASK_PDCP);

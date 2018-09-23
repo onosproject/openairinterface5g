@@ -366,14 +366,14 @@ boolean_t pdcp_remove_UE(
 */
 //void rrc_pdcp_config_release ( const protocol_ctxt_t* const  ctxt_pP, rb_id_t);
 
-/*! \fn void pdcp_task(void *args)
+/*! \fn void *pdcp_task(void *args)
 * \brief Runs PDCP task to let it handle incoming/outgoing SDUs
 * \param[in]  args initial args
 * \return none
 * \note None
 * @ingroup _pdcp
 */
-void pdcp_task(void *args);
+void *pdcp_task(void *args);
 int pdcp_module_init     (void);
 void pdcp_module_cleanup (void);
 void pdcp_layer_init     (void);

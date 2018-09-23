@@ -40,6 +40,7 @@
 # include "f1ap_cu_task.h"
 # include "f1ap_du_task.h"
 # include "enb_app.h"
+# include "pdcp.h"
 
 extern RAN_CONTEXT_t RC;
 extern int emulate_rf;
@@ -85,10 +86,9 @@ int create_tasks(uint32_t enb_nb)
     if (enb_nb > 0) {
       rc = itti_create_task(TASK_CU_F1, F1AP_CU_task, NULL);
       AssertFatal(rc >= 0, "Create task for CU F1AP failed\n");
-      //RS/BK: Fix me!
-      rc = itti_create_task (TASK_L2L1, l2l1_task, NULL);
-      AssertFatal(rc >= 0, "Create task for L2L1 failed\n");
-
+      int is_enb = 1;
+      rc = itti_create_task (TASK_PDCP, pdcp_task, &is_enb);
+      AssertFatal(rc >= 0, "Create task for PDCP failed\n");
     }
     /* fall through */
   case ngran_eNB:
