@@ -126,10 +126,10 @@
     <TASK_TIMER enabled="1"/>
     <TASK_L2L1 enabled="1"/>
     <TASK_BM enabled="1"/>
+    <TASK_PDCP enabled="1"/>
     <TASK_PHY_ENB enabled="1"/>
     <TASK_MAC_ENB enabled="1"/>
     <TASK_RLC_ENB enabled="1"/>
-    <TASK_PDCP_ENB enabled="1"/>
     <TASK_RRC_ENB enabled="1"/>
     <TASK_RAL_ENB enabled="1"/>
     <TASK_S1AP enabled="1"/>
@@ -139,7 +139,6 @@
     <TASK_PHY_UE enabled="1"/>
     <TASK_MAC_UE enabled="1"/>
     <TASK_RLC_UE enabled="1"/>
-    <TASK_PDCP_UE enabled="1"/>
     <TASK_RRC_UE enabled="1"/>
     <TASK_NAS_UE enabled="1"/>
     <TASK_RAL_UE enabled="1"/>
@@ -149,10 +148,10 @@
     <TASK_TIMER enabled="1"/>
     <TASK_L2L1 enabled="1"/>
     <TASK_BM enabled="1"/>
+    <TASK_PDCP enabled="1"/>
     <TASK_PHY_ENB enabled="1"/>
     <TASK_MAC_ENB enabled="1"/>
     <TASK_RLC_ENB enabled="1"/>
-    <TASK_PDCP_ENB enabled="1"/>
     <TASK_RRC_ENB enabled="1"/>
     <TASK_RAL_ENB enabled="1"/>
     <TASK_S1AP enabled="1"/>
@@ -162,7 +161,6 @@
     <TASK_PHY_UE enabled="1"/>
     <TASK_MAC_UE enabled="1"/>
     <TASK_RLC_UE enabled="1"/>
-    <TASK_PDCP_UE enabled="1"/>
     <TASK_RRC_UE enabled="1"/>
     <TASK_NAS_UE enabled="1"/>
     <TASK_RAL_UE enabled="1"/>

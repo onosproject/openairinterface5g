@@ -34,6 +34,7 @@
 #define RRC_DCCH_DATA_REQ(mSGpTR)               (mSGpTR)->ittiMsg.rrc_dcch_data_req
 #define RRC_DCCH_DATA_IND(mSGpTR)               (mSGpTR)->ittiMsg.rrc_dcch_data_ind
 #define RRC_PCCH_DATA_REQ(mSGpTR)               (mSGpTR)->ittiMsg.rrc_pcch_data_req
+#define PDCP_UPDATE_STATS(mSGpTR)               (mSGpTR)->ittiMsg.pdcp_update_stats
 
 //-------------------------------------------------------------------------------------------//
 // Messages between RRC and PDCP layers

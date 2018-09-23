@@ -2485,10 +2485,9 @@ ue_get_sdu(module_id_t module_idP, int CC_id, frame_t frameP,
 //------------------------------------------------------------------------------
 // called at each subframe
 // Performs :
-// 1. Trigger PDCP every 5ms
-// 2. Call RRC for link status return to PHY
-// 3. Perform SR/BSR procedures for scheduling feedback
-// 4. Perform PHR procedures
+// 1. Call RRC for link status return to PHY
+// 2. Perform SR/BSR procedures for scheduling feedback
+// 3. Perform PHR procedures
 
 UE_L2_STATE_t
 ue_scheduler(const module_id_t module_idP,
@@ -2561,7 +2560,7 @@ ue_scheduler(const module_id_t module_idP,
     //Rrc_xface->Frame_index=Mac_rlc_xface->frameP;
     //if (subframe%5 == 0)
     //LG#ifdef EXMIMO
-    pdcp_run(&ctxt);
+    //pdcp_run(&ctxt);
     //#endif
     UE_mac_inst[module_idP].txFrame = txFrameP;
     UE_mac_inst[module_idP].txSubframe = txSubframeP;

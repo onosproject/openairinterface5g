@@ -420,8 +420,8 @@ boolean_t pdcp_data_req(
         (RC.rrc[ctxt_pP->module_id]->node_type   == ngran_gNB_CU)  ) {
         // DL transfer
         MessageDef                            *message_p;
-        // Note: the acyual task must be TASK_PDCP_ENB, but this task is not created
-        message_p = itti_alloc_new_message (TASK_PDCP_ENB, F1AP_DL_RRC_MESSAGE);
+        // Note: the acyual task must be TASK_PDCP, but this task is not created
+        message_p = itti_alloc_new_message (TASK_PDCP, F1AP_DL_RRC_MESSAGE);
         F1AP_DL_RRC_MESSAGE (message_p).rrc_container =  &pdcp_pdu_p->data[0] ;
         F1AP_DL_RRC_MESSAGE (message_p).rrc_container_length = pdcp_pdu_size;
         F1AP_DL_RRC_MESSAGE (message_p).gNB_CU_ue_id  = 0;  
@@ -815,11 +815,11 @@ pdcp_data_ind(
     		rb_id + 4,
     		sdu_buffer_sizeP - payload_offset);
     //LOG_T(PDCP,"Sending to GTPV1U %d bytes\n", sdu_buffer_sizeP - payload_offset);
-    gtpu_buffer_p = itti_malloc(TASK_PDCP_ENB, TASK_GTPV1_U,
+    gtpu_buffer_p = itti_malloc(TASK_PDCP, TASK_GTPV1_U,
                                 sdu_buffer_sizeP - payload_offset + GTPU_HEADER_OVERHEAD_MAX);
     AssertFatal(gtpu_buffer_p != NULL, "OUT OF MEMORY");
     memcpy(&gtpu_buffer_p[GTPU_HEADER_OVERHEAD_MAX], &sdu_buffer_pP->data[payload_offset], sdu_buffer_sizeP - payload_offset);
-    message_p = itti_alloc_new_message(TASK_PDCP_ENB, GTPV1U_ENB_TUNNEL_DATA_REQ);
+    message_p = itti_alloc_new_message(TASK_PDCP, GTPV1U_ENB_TUNNEL_DATA_REQ);
     AssertFatal(message_p != NULL, "OUT OF MEMORY");
     GTPV1U_ENB_TUNNEL_DATA_REQ(message_p).buffer       = gtpu_buffer_p;
     GTPV1U_ENB_TUNNEL_DATA_REQ(message_p).length       = sdu_buffer_sizeP - payload_offset;
@@ -999,109 +999,10 @@ void pdcp_update_stats(const protocol_ctxt_t* const  ctxt_pP){
   }
 }
 
-
-//-----------------------------------------------------------------------------
-void
-pdcp_run (
-  const protocol_ctxt_t* const  ctxt_pP
+void pdcp_process_fifo(
+  const protocol_ctxt_t* const ctxt_pP
 )
-//-----------------------------------------------------------------------------
 {
-  
-  if (ctxt_pP->enb_flag) {
-    start_meas(&eNB_pdcp_stats[ctxt_pP->module_id].pdcp_run);
-  } else {
-    start_meas(&UE_pdcp_stats[ctxt_pP->module_id].pdcp_run);
-  }
-
-  pdcp_enb[ctxt_pP->module_id].sfn++; // range: 0 to 18,446,744,073,709,551,615
-  pdcp_enb[ctxt_pP->module_id].frame=ctxt_pP->frame; // 1023 
-  pdcp_enb[ctxt_pP->module_id].subframe= ctxt_pP->subframe;
-  pdcp_update_stats(ctxt_pP);
-   
-  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PDCP_RUN, VCD_FUNCTION_IN);
-
-#if defined(ENABLE_ITTI)
-  MessageDef   *msg_p;
-  int           result;
-  protocol_ctxt_t  ctxt;
-
-  do {
-    // Checks if a message has been sent to PDCP sub-task
-    itti_poll_msg (ctxt_pP->enb_flag ? TASK_PDCP_ENB : TASK_PDCP_UE, &msg_p);
-
-    if (msg_p != NULL) {
-
-      switch (ITTI_MSG_ID(msg_p)) {
-      case RRC_DCCH_DATA_REQ:
-	PROTOCOL_CTXT_SET_BY_MODULE_ID(
-          &ctxt,
-          RRC_DCCH_DATA_REQ (msg_p).module_id,
-          RRC_DCCH_DATA_REQ (msg_p).enb_flag,
-          RRC_DCCH_DATA_REQ (msg_p).rnti,
-          RRC_DCCH_DATA_REQ (msg_p).frame, 
-	  0,
-	  RRC_DCCH_DATA_REQ (msg_p).eNB_index);
-
-        LOG_I(PDCP, PROTOCOL_CTXT_FMT"Received %s from %s: instance %d, rb_id %d, muiP %d, confirmP %d, mode %d\n",
-              PROTOCOL_CTXT_ARGS(&ctxt),
-              ITTI_MSG_NAME (msg_p),
-              ITTI_MSG_ORIGIN_NAME(msg_p),
-              ITTI_MSG_INSTANCE (msg_p),
-              RRC_DCCH_DATA_REQ (msg_p).rb_id,
-              RRC_DCCH_DATA_REQ (msg_p).muip,
-              RRC_DCCH_DATA_REQ (msg_p).confirmp,
-              RRC_DCCH_DATA_REQ (msg_p).mode);
-
-        log_dump(PDCP, RRC_DCCH_DATA_REQ (msg_p).sdu_p, RRC_DCCH_DATA_REQ (msg_p).sdu_size, LOG_DUMP_CHAR,"[MSG] pdcp run\n");
-
-        result = pdcp_data_req (&ctxt,
-                                SRB_FLAG_YES,
-                                RRC_DCCH_DATA_REQ (msg_p).rb_id,
-                                RRC_DCCH_DATA_REQ (msg_p).muip,
-                                RRC_DCCH_DATA_REQ (msg_p).confirmp,
-                                RRC_DCCH_DATA_REQ (msg_p).sdu_size,
-                                RRC_DCCH_DATA_REQ (msg_p).sdu_p,
-                                RRC_DCCH_DATA_REQ (msg_p).mode
-#if (RRC_VERSION >= MAKE_VERSION(14, 0, 0))
-                                , NULL, NULL
-#endif
-                                );
-        if (result != TRUE)
-          LOG_E(PDCP, "PDCP data request failed!\n");
-
-        // Message buffer has been processed, free it now.
-        result = itti_free (ITTI_MSG_ORIGIN_ID(msg_p), RRC_DCCH_DATA_REQ (msg_p).sdu_p);
-        AssertFatal (result == EXIT_SUCCESS, "Failed to free memory (%d)!\n", result);
-        break;
-
-      case RRC_PCCH_DATA_REQ:
-      {
-        sdu_size_t     sdu_buffer_sizeP;
-        sdu_buffer_sizeP = RRC_PCCH_DATA_REQ(msg_p).sdu_size;
-        uint8_t CC_id = RRC_PCCH_DATA_REQ(msg_p).CC_id;
-        uint8_t ue_index = RRC_PCCH_DATA_REQ(msg_p).ue_index;
-        RC.rrc[ctxt_pP->module_id]->carrier[CC_id].sizeof_paging[ue_index] = sdu_buffer_sizeP;
-        if (sdu_buffer_sizeP > 0) {
-        	memcpy(RC.rrc[ctxt_pP->module_id]->carrier[CC_id].paging[ue_index], RRC_PCCH_DATA_REQ(msg_p).sdu_p, sdu_buffer_sizeP);
-        }
-        //paging pdcp log
-        LOG_D(PDCP, "PDCP Received RRC_PCCH_DATA_REQ CC_id %d length %d \n", CC_id, sdu_buffer_sizeP);
-      }
-      break;
-
-      default:
-        LOG_E(PDCP, "Received unexpected message %s\n", ITTI_MSG_NAME (msg_p));
-        break;
-      }
-
-      result = itti_free (ITTI_MSG_ORIGIN_ID(msg_p), msg_p);
-      AssertFatal (result == EXIT_SUCCESS, "Failed to free memory (%d)!\n", result);
-    }
-  } while(msg_p != NULL);
-
-#endif
-
   // IP/NAS -> PDCP traffic : TX, read the pkt from the upper layer buffer
 #if defined(LINK_ENB_PDCP_TO_GTPV1U)
 
@@ -1127,14 +1028,108 @@ pdcp_run (
   } else {
     stop_meas(&UE_pdcp_stats[ctxt_pP->module_id].pdcp_ip);
   }
-
-  if (ctxt_pP->enb_flag) {
-    stop_meas(&eNB_pdcp_stats[ctxt_pP->module_id].pdcp_run);
-  } else {
-    stop_meas(&UE_pdcp_stats[ctxt_pP->module_id].pdcp_run);
-  }
-  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PDCP_RUN, VCD_FUNCTION_OUT);
 }
+
+#if defined(ENABLE_ITTI)
+//-----------------------------------------------------------------------------
+void
+pdcp_task(void *arg)
+{
+//-----------------------------------------------------------------------------
+  MessageDef      *msg_p;
+  int              result;
+  protocol_ctxt_t  ctxt;
+  instance_t       instance;
+
+  LOG_I(PDCP, "Starting PDCP task\n");
+  itti_mark_task_ready(TASK_PDCP);
+
+  while (1) {
+    itti_receive_msg(TASK_PDCP, &msg_p);
+    instance = ITTI_MSG_INSTANCE(msg_p);
+
+    switch (ITTI_MSG_ID(msg_p)) {
+    case RRC_DCCH_DATA_REQ:
+      PROTOCOL_CTXT_SET_BY_MODULE_ID(
+        &ctxt,
+        RRC_DCCH_DATA_REQ (msg_p).module_id,
+        RRC_DCCH_DATA_REQ (msg_p).enb_flag,
+        RRC_DCCH_DATA_REQ (msg_p).rnti,
+        RRC_DCCH_DATA_REQ (msg_p).frame,
+        0,
+        RRC_DCCH_DATA_REQ (msg_p).eNB_index);
+
+      LOG_I(PDCP, PROTOCOL_CTXT_FMT"Received %s from %s: instance %d, rb_id %d, muiP %d, confirmP %d, mode %d\n",
+            PROTOCOL_CTXT_ARGS(&ctxt),
+            ITTI_MSG_NAME (msg_p),
+            ITTI_MSG_ORIGIN_NAME(msg_p),
+            ITTI_MSG_INSTANCE (msg_p),
+            RRC_DCCH_DATA_REQ (msg_p).rb_id,
+            RRC_DCCH_DATA_REQ (msg_p).muip,
+            RRC_DCCH_DATA_REQ (msg_p).confirmp,
+            RRC_DCCH_DATA_REQ (msg_p).mode);
+
+      log_dump(PDCP, RRC_DCCH_DATA_REQ (msg_p).sdu_p, RRC_DCCH_DATA_REQ (msg_p).sdu_size, LOG_DUMP_CHAR,"[MSG] pdcp run\n");
+
+      result = pdcp_data_req (&ctxt,
+                              SRB_FLAG_YES,
+                              RRC_DCCH_DATA_REQ (msg_p).rb_id,
+                              RRC_DCCH_DATA_REQ (msg_p).muip,
+                              RRC_DCCH_DATA_REQ (msg_p).confirmp,
+                              RRC_DCCH_DATA_REQ (msg_p).sdu_size,
+                              RRC_DCCH_DATA_REQ (msg_p).sdu_p,
+                              RRC_DCCH_DATA_REQ (msg_p).mode
+#if (RRC_VERSION >= MAKE_VERSION(14, 0, 0))
+                              , NULL, NULL
+#endif
+                              );
+      if (result != TRUE)
+        LOG_E(PDCP, "PDCP data request failed!\n");
+
+      break;
+
+    case RRC_PCCH_DATA_REQ:
+      {
+        sdu_size_t     sdu_buffer_sizeP;
+        sdu_buffer_sizeP = RRC_PCCH_DATA_REQ(msg_p).sdu_size;
+        uint8_t CC_id = RRC_PCCH_DATA_REQ(msg_p).CC_id;
+        uint8_t ue_index = RRC_PCCH_DATA_REQ(msg_p).ue_index;
+        RC.rrc[instance]->carrier[CC_id].sizeof_paging[ue_index] = sdu_buffer_sizeP;
+        if (sdu_buffer_sizeP > 0)
+          memcpy(RC.rrc[instance]->carrier[CC_id].paging[ue_index],
+                 RRC_PCCH_DATA_REQ(msg_p).sdu_p, sdu_buffer_sizeP);
+        LOG_D(PDCP, "PDCP Received RRC_PCCH_DATA_REQ CC_id %d length %d \n", CC_id, sdu_buffer_sizeP);
+      }
+      break;
+
+    case PDCP_UPDATE_STATS:
+      //pdcp_process_fifo(ctxt_pP);
+
+      //pdcp_enb[ctxt_pP->module_id].sfn++; // range: 0 to 18,446,744,073,709,551,615
+      //pdcp_enb[ctxt_pP->module_id].frame=ctxt_pP->frame; // 1023
+      //pdcp_enb[ctxt_pP->module_id].subframe= ctxt_pP->subframe;
+      //pdcp_update_stats(ctxt_pP);
+      break;
+
+    case TERMINATE_MESSAGE:
+      LOG_W(PDCP, " *** Exiting PDCP task\n");
+      itti_exit_task();
+      break;
+
+    default:
+      LOG_E(PDCP, "Received unexpected message %s (%d)\n", ITTI_MSG_NAME(msg_p), ITTI_MSG_ID(msg_p));
+      break;
+    }
+
+    // Message buffer has been processed, free it now.
+    result = itti_free (ITTI_MSG_ORIGIN_ID(msg_p), msg_p);
+    AssertFatal (result == EXIT_SUCCESS, "Failed to free memory (%d)!\n", result);
+    msg_p = NULL;
+
+  } // while
+
+}
+#endif
 
 void pdcp_add_UE(const protocol_ctxt_t* const  ctxt_pP){
   int i, ue_flag=1; //, ret=-1; to be decied later

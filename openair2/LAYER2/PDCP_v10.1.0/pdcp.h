@@ -116,7 +116,6 @@ typedef struct pdcp_enb_s {
 pdcp_enb_t pdcp_enb[MAX_NUM_CCs];
 
 typedef struct pdcp_stats_s {
-  time_stats_t pdcp_run;
   time_stats_t data_req;
   time_stats_t data_ind;
   time_stats_t apply_security; //
@@ -367,15 +366,14 @@ boolean_t pdcp_remove_UE(
 */
 //void rrc_pdcp_config_release ( const protocol_ctxt_t* const  ctxt_pP, rb_id_t);
 
-/*! \fn void pdcp_run(const protocol_ctxt_t* const  ctxt_pP)
-* \brief Runs PDCP entity to let it handle incoming/outgoing SDUs
-* \param[in]  ctxt_pP           Running context.
+/*! \fn void pdcp_task(void *args)
+* \brief Runs PDCP task to let it handle incoming/outgoing SDUs
+* \param[in]  args initial args
 * \return none
 * \note None
 * @ingroup _pdcp
 */
-void pdcp_run            (
-              const protocol_ctxt_t* const  ctxt_pP);
+void pdcp_task(void *args);
 int pdcp_module_init     (void);
 void pdcp_module_cleanup (void);
 void pdcp_layer_init     (void);

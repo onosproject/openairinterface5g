@@ -36,7 +36,6 @@ TASK_DEF(TASK_BM,       TASK_PRIORITY_MED,          200)
 SUB_TASK_DEF(TASK_L2L1,     TASK_PHY_ENB,               200)
 SUB_TASK_DEF(TASK_L2L1,     TASK_MAC_ENB,               200)
 SUB_TASK_DEF(TASK_L2L1,     TASK_RLC_ENB,               200)
-SUB_TASK_DEF(TASK_L2L1,     TASK_PDCP_ENB,              200)
 
 ///   Radio Resource Control task
 TASK_DEF(TASK_RRC_ENB,  TASK_PRIORITY_MED,          200)
@@ -48,6 +47,8 @@ TASK_DEF(TASK_RRC_ENB_NB_IoT,  TASK_PRIORITY_MED,          200)
 /// RAL task for ENB
 TASK_DEF(TASK_RAL_ENB, TASK_PRIORITY_MED, 200)
 
+///   common eNB and UE PDCP task
+TASK_DEF(TASK_PDCP,     TASK_PRIORITY_MED,          200)
 // UDP TASK
 TASK_DEF(TASK_UDP,      TASK_PRIORITY_MED,          1000)
 // GTP_V1U task
@@ -63,13 +64,11 @@ TASK_DEF(TASK_SCTP,     TASK_PRIORITY_MED,          200)
 TASK_DEF(TASK_ENB_APP,  TASK_PRIORITY_MED,          200)
 ///   eNB Agent task
 TASK_DEF(TASK_FLEXRAN_AGENT,  TASK_PRIORITY_MED,          200)
-TASK_DEF(TASK_PROTO_AGENT,  TASK_PRIORITY_MED,          200)
 // UE tasks and sub-tasks:
 //// Layer 2 and Layer 1 sub-tasks
 SUB_TASK_DEF(TASK_L2L1,     TASK_PHY_UE,                200)
 SUB_TASK_DEF(TASK_L2L1,     TASK_MAC_UE,                200)
 SUB_TASK_DEF(TASK_L2L1,     TASK_RLC_UE,                200)
-SUB_TASK_DEF(TASK_L2L1,     TASK_PDCP_UE,               200)
 
 ///   Radio Resource Control task
 TASK_DEF(TASK_RRC_UE,   TASK_PRIORITY_MED,          200)

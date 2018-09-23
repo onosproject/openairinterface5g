@@ -292,8 +292,7 @@ rrc_data_req_ue(
 
     message_buffer = itti_malloc (
                        ctxt_pP->enb_flag ? TASK_RRC_ENB : TASK_RRC_UE,
-                       ctxt_pP->enb_flag ? TASK_PDCP_ENB : TASK_PDCP_UE,
-                       sdu_sizeP);
+                       TASK_PDCP, sdu_sizeP);
 
     memcpy (message_buffer, buffer_pP, sdu_sizeP);
 
@@ -310,10 +309,7 @@ rrc_data_req_ue(
     RRC_DCCH_DATA_REQ (message_p).rnti      = ctxt_pP->rnti;
     RRC_DCCH_DATA_REQ (message_p).eNB_index = ctxt_pP->eNB_index;
 
-    itti_send_msg_to_task (
-      TASK_PDCP_UE,
-      ctxt_pP->instance,
-      message_p);
+    itti_send_msg_to_task (TASK_PDCP, ctxt_pP->instance, message_p);
     return TRUE; // TODO should be changed to a CNF message later, currently RRC lite does not used the returned value anyway.
 
   }
@@ -355,10 +351,10 @@ rrc_data_ind_ue(
     // Uses a new buffer to avoid issue with PDCP buffer content that could be changed by PDCP (asynchronous message handling).
     uint8_t *message_buffer;
 
-    message_buffer = itti_malloc (ctxt_pP->enb_flag ? TASK_PDCP_ENB : TASK_PDCP_UE, ctxt_pP->enb_flag ? TASK_RRC_ENB : TASK_RRC_UE, sdu_sizeP);
+    message_buffer = itti_malloc(TASK_PDCP, ctxt_pP->enb_flag ? TASK_RRC_ENB : TASK_RRC_UE, sdu_sizeP);
     memcpy (message_buffer, buffer_pP, sdu_sizeP);
 
-    message_p = itti_alloc_new_message (ctxt_pP->enb_flag ? TASK_PDCP_ENB : TASK_PDCP_UE, RRC_DCCH_DATA_IND);
+    message_p = itti_alloc_new_message(TASK_PDCP, RRC_DCCH_DATA_IND);
     RRC_DCCH_DATA_IND (message_p).frame      = ctxt_pP->frame;
     RRC_DCCH_DATA_IND (message_p).dcch_index = DCCH_index;
     RRC_DCCH_DATA_IND (message_p).sdu_size   = sdu_sizeP;

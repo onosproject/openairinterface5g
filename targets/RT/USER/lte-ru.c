@@ -1928,7 +1928,7 @@ void* pre_scd_thread( void* param ){
         pthread_mutex_unlock(&ru->proc.mutex_pre_scd);
         PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, Mod_id, ENB_FLAG_YES,
                  NOT_A_RNTI, frame, subframe,Mod_id);
-        pdcp_run(&ctxt);
+        //pdcp_run(&ctxt);
 
         for (CC_id = 0; CC_id < MAX_NUM_CCs; CC_id++) {
 

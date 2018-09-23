@@ -343,7 +343,6 @@ typedef struct {
   MAC_MEAS_REQ_ENTRY* (*mac_meas_req)(uint8_t ,  MAC_MEAS_REQ*);
   void (*mac_out_of_sync_ind)(uint8_t,uint32_t,unsigned short);
   //RLC_INTERFACE_FUNCTIONS
-  void (*pdcp_run)(void);
   void (*pdcp_data_req)(module_id_t, rb_id_t, sdu_size_t, char*);
   signed int (*rrc_rlc_config_req)(unsigned int, unsigned int, unsigned int, unsigned int, rlc_info_t );
   int (*rrc_mac_config_req)(uint8_t Mod_id,uint8_t eNB_flag,uint8_t UE_id,uint8_t eNB_index,

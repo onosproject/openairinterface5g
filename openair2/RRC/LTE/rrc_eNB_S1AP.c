@@ -1979,7 +1979,7 @@ int rrc_eNB_process_PAGING_IND(MessageDef *msg_p, const char *msg_name, instance
                 LOG_I(RRC, "do_Paging error");
                 return -1;
               }
-              message_buffer = itti_malloc (TASK_RRC_ENB, TASK_PDCP_ENB, length);
+              message_buffer = itti_malloc (TASK_RRC_ENB, TASK_PDCP, length);
               /* Uses a new buffer to avoid issue with PDCP buffer content that could be changed by PDCP (asynchronous message handling). */
               memcpy (message_buffer, buffer, length);
               RRC_PCCH_DATA_REQ (message_p).sdu_size  = length;
@@ -1989,7 +1989,7 @@ int rrc_eNB_process_PAGING_IND(MessageDef *msg_p, const char *msg_name, instance
               RRC_PCCH_DATA_REQ (message_p).ue_index  = i;
               RRC_PCCH_DATA_REQ (message_p).CC_id  = CC_id;
               LOG_D(RRC, "[eNB %d] CC_id %d In S1AP_PAGING_IND: send encdoed buffer to PDCP buffer_size %d\n", instance, CC_id, length);
-              itti_send_msg_to_task (TASK_PDCP_ENB, instance, message_p);
+              itti_send_msg_to_task (TASK_PDCP, instance, message_p);
           }
       }
   }

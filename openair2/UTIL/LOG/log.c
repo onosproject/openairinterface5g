@@ -734,18 +734,7 @@ void nfapi_log(char *file, char *func, int line, int comp, int level, const char
       break;
 
     case PDCP:
-      switch (log_instance_type) {
-      case LOG_INSTANCE_ENB:
-        origin_task_id = TASK_PDCP_ENB;
-        break;
-
-      case LOG_INSTANCE_UE:
-        origin_task_id = TASK_PDCP_UE;
-
-      default:
-        break;
-      }
-
+      origin_task_id = TASK_PDCP;
       break;
 
     default:
@@ -1224,18 +1213,7 @@ void logRecord_mt(const char *file, const char *func, int line, int comp,
       break;
 
     case PDCP:
-      switch (log_instance_type) {
-      case LOG_INSTANCE_ENB:
-        origin_task_id = TASK_PDCP_ENB;
-        break;
-
-      case LOG_INSTANCE_UE:
-        origin_task_id = TASK_PDCP_UE;
-
-      default:
-        break;
-      }
-
+      origin_task_id = TASK_PDCP;
       break;
 
     default:
@@ -1500,18 +1478,7 @@ void logRecord_mt(const char *file, const char *func, int line, int comp,
       break;
 
     case PDCP:
-      switch (log_instance_type) {
-      case LOG_INSTANCE_ENB:
-        origin_task_id = TASK_PDCP_ENB;
-        break;
-
-      case LOG_INSTANCE_UE:
-        origin_task_id = TASK_PDCP_UE;
-
-      default:
-        break;
-      }
-
+      origin_task_id = TASK_PDCP;
       break;
 
     default:
