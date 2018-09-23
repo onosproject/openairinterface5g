@@ -72,6 +72,9 @@ extern int otg_enabled;
 #include "common/ran_context.h"
 extern RAN_CONTEXT_t RC;
 
+/* global PDCP protocol context for this */
+protocol_ctxt_t ctxt;
+
 #ifdef MBMS_MULTICAST_OUT
 # include <sys/types.h>
 # include <sys/socket.h>
@@ -890,6 +893,8 @@ pdcp_data_ind(
              &sdu_buffer_pP->data[payload_offset], \
              sdu_buffer_sizeP - payload_offset);
       list_add_tail_eurecom (new_sdu_p, sdu_list_p);
+      /* directly send -> this is a hack, send single packet directly */
+      pdcp_fifo_flush_sdus(ctxt_pP);
 
       
       
@@ -999,37 +1004,6 @@ void pdcp_update_stats(const protocol_ctxt_t* const  ctxt_pP){
   }
 }
 
-void pdcp_process_fifo(
-  const protocol_ctxt_t* const ctxt_pP
-)
-{
-  // IP/NAS -> PDCP traffic : TX, read the pkt from the upper layer buffer
-#if defined(LINK_ENB_PDCP_TO_GTPV1U)
-
-  if (ctxt_pP->enb_flag == ENB_FLAG_NO)
-#endif
-  {
-    pdcp_fifo_read_input_sdus(ctxt_pP);
-  }
-
-  // PDCP -> NAS/IP traffic: RX
-  if (ctxt_pP->enb_flag) {
-    start_meas(&eNB_pdcp_stats[ctxt_pP->module_id].pdcp_ip);
-  }
-
-  else {
-    start_meas(&UE_pdcp_stats[ctxt_pP->module_id].pdcp_ip);
-  }
-
-  pdcp_fifo_flush_sdus(ctxt_pP);
-
-  if (ctxt_pP->enb_flag) {
-    stop_meas(&eNB_pdcp_stats[ctxt_pP->module_id].pdcp_ip);
-  } else {
-    stop_meas(&UE_pdcp_stats[ctxt_pP->module_id].pdcp_ip);
-  }
-}
-
 #if defined(ENABLE_ITTI)
 //-----------------------------------------------------------------------------
 void
@@ -1038,7 +1012,6 @@ pdcp_task(void *arg)
 //-----------------------------------------------------------------------------
   MessageDef      *msg_p;
   int              result;
-  protocol_ctxt_t  ctxt;
   instance_t       instance;
 
   LOG_I(PDCP, "Starting PDCP task\n");
@@ -1103,6 +1076,14 @@ pdcp_task(void *arg)
       break;
 
     case PDCP_UPDATE_STATS:
+      // IP/NAS -> PDCP traffic : TX, read the pkt from the upper layer buffer
+#if defined(LINK_ENB_PDCP_TO_GTPV1U)
+      if (ctxt.enb_flag == ENB_FLAG_NO)
+#endif
+      {
+        pdcp_fifo_read_input_sdus(&ctxt);
+      }
+
       //pdcp_process_fifo(ctxt_pP);
 
       //pdcp_enb[ctxt_pP->module_id].sfn++; // range: 0 to 18,446,744,073,709,551,615
