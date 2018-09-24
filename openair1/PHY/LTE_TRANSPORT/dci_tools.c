@@ -37,7 +37,8 @@
 #endif
 #include "assertions.h"
 
-
+//SFN
+#include "sudas_tm4.h"
 //#define DEBUG_HARQ
 
 #include "LAYER2/MAC/extern.h"
@@ -7072,9 +7073,10 @@ void fill_CQI(LTE_UE_ULSCH_t *ulsch,PHY_MEASUREMENTS *meas,uint8_t eNB_id,uint8_
   else
     sinr_tmp = (double) meas->wideband_cqi_avg[eNB_id];
 
-
-
-  //LOG_I(PHY,"[UE][UCI] Filling CQI format %d for eNB %d N_RB_DL %d\n",uci_format,eNB_id,N_RB_DL);
+  //LOG_I(PHY,"[UE][UCI--->PUSCH] Filling CQI format %d for eNB %d N_RB_DL %d\n",uci_format,eNB_id,N_RB_DL);
+  //SFN
+  //sudas_LOG_PHY(debug_sudas_LOG_PHY,"[UE][UCI--->PUSCH] meas->rank[eNB_id] %d Filling CQI format %d for eNB %d N_RB_DL %d flag_LA %d\n",meas->rank[eNB_id],uci_format,eNB_id,N_RB_DL,flag_LA);
+  //fflush(debug_sudas_LOG_PHY);
 
   switch (N_RB_DL) {
 
@@ -7146,6 +7148,9 @@ void fill_CQI(LTE_UE_ULSCH_t *ulsch,PHY_MEASUREMENTS *meas,uint8_t eNB_id,uint8_
       break;
 
     case HLC_subband_cqi_nopmi:
+    	//SFN
+    	//sudas_LOG_PHY(debug_sudas_LOG_PHY,"[UE][UCI--->PUSCH] HLC_subband_cqi_nopmi\n");
+    	//fflush(debug_sudas_LOG_PHY);
       ((HLC_subband_cqi_nopmi_5MHz *)o)->cqi1     = sinr2cqi(sinr_tmp,trans_mode);
       ((HLC_subband_cqi_nopmi_5MHz *)o)->diffcqi1 = fill_subband_cqi(meas,eNB_id,trans_mode,7);
       break;
@@ -7654,6 +7659,7 @@ int generate_ue_ulsch_params_from_dci(void *dci_pdu,
     //    ulsch->harq_processes[harq_pid]->status = ACTIVE;
 
 
+
     if (cqi_req == 1) {
 
       if( (AntennaInfoDedicated__transmissionMode_tm3 == transmission_mode) || (AntennaInfoDedicated__transmissionMode_tm4 == transmission_mode) )
@@ -7664,6 +7670,8 @@ int generate_ue_ulsch_params_from_dci(void *dci_pdu,
       {
           ulsch->O_RI = 0;
       }
+      //sudas_LOG_PHY(debug_sudas_LOG_PHY,"[UE][UCI--->PUSCH] transmission_mode %d ulsch->O_RI %d\n",transmission_mode,ulsch->O_RI);
+      //fflush(debug_sudas_LOG_PHY);
       //ulsch->O_RI = 0; //we only support 2 antenna ports, so this is always 1 according to 3GPP 36.213 Table
 
       switch(transmission_mode) {

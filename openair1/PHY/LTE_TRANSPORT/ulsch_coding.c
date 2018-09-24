@@ -41,7 +41,8 @@
 #include "extern.h"
 #include "SIMULATION/ETH_TRANSPORT/extern.h"
 #include "UTIL/LOG/vcd_signal_dumper.h"
-
+//SFN
+#include "sudas_tm4.h"
 //#define DEBUG_ULSCH_CODING
 //#define DEBUG_ULSCH_FREE 1
 
@@ -207,7 +208,7 @@ uint32_t ulsch_encoding(uint8_t *a,
                         uint8_t control_only_flag,
                         uint8_t Nbundled)
 {
-
+// PHY statistics for RRC decisions
   time_stats_t *seg_stats=&ue->ulsch_segmentation_stats;
   time_stats_t *rm_stats=&ue->ulsch_rate_matching_stats;
   time_stats_t *te_stats=&ue->ulsch_turbo_encoding_stats;
@@ -220,7 +221,7 @@ uint32_t ulsch_encoding(uint8_t *a,
   uint32_t A;
   uint8_t Q_m=0;
   uint32_t Kr=0,Kr_bytes,r,r_offset=0;
-  uint8_t y[6*14*1200],*yptr;;
+  uint8_t y[6*14*1200],*yptr;// y matrix max(Q_m)*14 symbols*12*100
   uint8_t *columnset;
   uint32_t sumKr=0;
   uint32_t Qprime,L,G,Q_CQI=0,Q_RI=0,Q_ACK=0,H=0,Hprime=0,Hpp=0,Cmux=0,Rmux=0,Rmux_prime=0;
@@ -263,8 +264,11 @@ uint32_t ulsch_encoding(uint8_t *a,
   if (ulsch->O>0) {
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_UE_ULSCH_ENCODING_FILL_CQI, VCD_FUNCTION_IN);
     rnti = ue->pdcch_vars[ue->current_thread_id[subframe_rx]][eNB_id]->crnti;
+    
+//sfn target function : we start here CQI/PMI for tm_4 CQI1 and CQI2
     fill_CQI(ulsch,meas,0,harq_pid,ue->frame_parms.N_RB_DL,rnti, tmode,ue->sinr_eff);
-
+    //sudas_LOG_PHY(debug_sudas_LOG_PHY,"[UE][UCI--->PUSCH] harq_pid %d subframe_Tx %d, CQI ON, RI ON \n",harq_pid,(subframe_rx+4)%10);
+    //fflush(debug_sudas_LOG_PHY);
     LOG_D(PHY,"ULSCH Encoding rnti %x \n", rnti);
     print_CQI(ulsch->o,ulsch->uci_format,0,ue->frame_parms.N_RB_DL);
 
@@ -619,8 +623,14 @@ uint32_t ulsch_encoding(uint8_t *a,
 
   i=0;
 
+
+
+
+	//SFN
   //  Do RI coding
   if (ulsch->O_RI == 1) {
+	  //sudas_LOG_PHY(debug_sudas_LOG_PHY,"[UE][UCI--->PUSCH]  ulsch->O_RI= %d, ulsch->o_RI[0]=%d meas->rank[eNB_id]%d\n", ulsch->O_RI, ulsch->o_RI[0],meas->rank[0]);
+	  //fflush(debug_sudas_LOG_PHY);
     switch (Q_m) {
     case 2:
       ulsch->q_RI[0] = ulsch->o_RI[0];
@@ -756,15 +766,18 @@ uint32_t ulsch_encoding(uint8_t *a,
   // channel multiplexing/interleaving
 
   start_meas(m_stats);
-  Hpp = Hprime + Q_RI;
+  Qprime_RI  = Q_RI / Q_m;
+  Qprime_ACK = Q_ACK / Q_m;
+  Qprime_CQI = Q_CQI / Q_m;
+
+  //fix Hpp SFN
+  Hpp = Hprime + Qprime_RI;
 
   Cmux       = ulsch->Nsymb_pusch;
   Rmux       = Hpp*Q_m/Cmux;
   Rmux_prime = Rmux/Q_m;
 
-  Qprime_RI  = Q_RI / Q_m;
-  Qprime_ACK = Q_ACK / Q_m;
-  Qprime_CQI = Q_CQI / Q_m;
+
 
   //  printf("Qprime_CQI = %d\n",Qprime_CQI);
   // RI BITS

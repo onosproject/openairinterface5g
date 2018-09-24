@@ -75,6 +75,8 @@ unsigned short config_frames[4] = {2,9,11,13};
 #endif
 
 #include "system.h"
+//SFN
+#include "sudas_tm4.h"
 
 #ifdef XFORMS
 #include "PHY/TOOLS/lte_phy_scope.h"
@@ -125,7 +127,9 @@ int UE_scan_carrier = 0;
 runmode_t mode = normal_txrx;
 
 FILE *input_fd=NULL;
-
+//sfn
+FILE *debug_sudas_LOG_PHY;
+FILE *debug_sudas_LOG_MAC;
 
 #if MAX_NUM_CCs == 1
 rx_gain_t                rx_gain_mode[MAX_NUM_CCs][4] = {{max_gain,max_gain,max_gain,max_gain}};
@@ -1382,6 +1386,15 @@ void init_openair0() {
 
 int main( int argc, char **argv ) {
     int i,j,k,aa,re;
+
+	debug_sudas_LOG_PHY  = fopen("debug_sudas_LOG_PHY.txt", "w");
+    	debug_sudas_LOG_MAC  = fopen("debug_sudas_LOG_MAC.txt", "w");
+
+    	sudas_LOG_PHY(debug_sudas_LOG_PHY,"main();\n");
+    	fflush(debug_sudas_LOG_PHY);
+
+
+
 #if defined (XFORMS)
     void *status;
 #endif
@@ -2013,6 +2026,7 @@ int main( int argc, char **argv ) {
         terminate_opt();
 
     logClean();
-
+     fclose(debug_sudas_LOG_PHY);
+     fclose(debug_sudas_LOG_MAC);
     return 0;
 }

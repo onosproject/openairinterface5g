@@ -1,0 +1,9 @@
+*.cproject
+*.project
+*.c~
+cmake_targets/*.txt
+cmake_targets/log/*
+cmake_targets/lte_noS1_build_oai/*.txt
+cmake_targets/lte_noS1_build_oai/build/*
+cmake_targets/rxsig_frame0.dat
+targets/bin/*

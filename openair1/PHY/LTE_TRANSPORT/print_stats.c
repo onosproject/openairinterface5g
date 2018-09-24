@@ -35,6 +35,8 @@
 #include "PHY/defs.h"
 #include "PHY/extern.h"
 #include "SCHED/extern.h"
+//sfn add display math.c
+#include <math.h>
 
 #ifdef OPENAIR2
 #include "../openair2/LAYER2/MAC/proto.h"
@@ -59,15 +61,15 @@ int dump_ue_stats(PHY_VARS_UE *ue, UE_rxtx_proc_t *proc,char* buffer, int length
     return 0;
 
   if ((mode == normal_txrx) || (mode == no_L2_connect)) {
-    len += sprintf(&buffer[len], "[UE_PROC] UE %d, RNTI %x\n",ue->Mod_id, ue->pdcch_vars[0][0]->crnti);
-     len += sprintf(&buffer[len],"[UE PROC] RSRP[0] %.2f dBm/RE, RSSI %.2f dBm, RSRQ[0] %.2f dB, N0 %d dBm/RE (NF %.1f dB)\n",
-		    10*log10(ue->measurements.rsrp[0])-ue->rx_total_gain_dB,
-		    10*log10(ue->measurements.rssi)-ue->rx_total_gain_dB, 
-		    10*log10(ue->measurements.rsrq[0]),
-		    ue->measurements.n0_power_tot_dBm,
-		    (double)ue->measurements.n0_power_tot_dBm+132.24);
+    len += sprintf(&buffer[len], "[UE_PROC] UE %d, RNTI %x UE Rx Gain in dB %d\n",ue->Mod_id, ue->pdcch_vars[0][0]->crnti,ue->rx_total_gain_dB);
+     len += sprintf(&buffer[len],"[UE PROC] RSRP[0] %.2f dBm/RE, RSSI %.2f dBm, RSRQ[0] %.2f dB, NoisePower/RE %f dBm (Measured Noise Figure %.1f dB)\n",
+		    10*log10(ue->measurements.rsrp[0])-ue->rx_total_gain_dB+30-10*log10(1<<15),
+		    10*log10(ue->measurements.rssi)-ue->rx_total_gain_dB+30-10*log10(1<<15),
+		    10*log10(ue->measurements.rsrq[0])-10*log10(1<<15),
+		    (double)ue->measurements.n0_power_tot_dBm+30-10*log10(1<<15),
+		    (double)ue->measurements.n0_power_tot_dBm+30-10*log10(1<<15)-(-174+10*log10(15000)));//(-174+10*log10(15000))=132.24 dBm
 
-    /*
+    /*/*- ue->rx_total_gain_dB+30-10*dB_fixed(1<<15)*/
     len += sprintf(&buffer[len],
                    "[UE PROC] Frame count: %d\neNB0 RSSI %d dBm/RE (%d dB, %d dB)\neNB1 RSSI %d dBm/RE (%d dB, %d dB)neNB2 RSSI %d dBm/RE (%d dB, %d dB)\nN0 %d dBm/RE, %f dBm/%dPRB (%d dB, %d dB)\n",
                    proc->frame_rx,
@@ -85,7 +87,7 @@ int dump_ue_stats(PHY_VARS_UE *ue, UE_rxtx_proc_t *proc,char* buffer, int length
                    ue->frame_parms.N_RB_DL,
                    ue->measurements.n0_power_dB[0],
                    ue->measurements.n0_power_dB[1]);
-    */
+
 
 #ifdef EXMIMO
     len += sprintf(&buffer[len], "[UE PROC] RX Gain %d dB (LNA %d, vga %d dB)\n",ue->rx_total_gain_dB, openair0_cfg[0].rxg_mode[0],(int)openair0_cfg[0].rx_gain[0]);
@@ -113,12 +115,25 @@ int dump_ue_stats(PHY_VARS_UE *ue, UE_rxtx_proc_t *proc,char* buffer, int length
     }
     //for (eNB=0;eNB<NUMBER_OF_eNB_MAX;eNB++) {
     for (eNB=0; eNB<1; eNB++) {
-      len += sprintf(&buffer[len], "[UE PROC] RX spatial power eNB%d: [%d %d; %d %d] dB\n",
+    	len += sprintf(&buffer[len], "/////////////////////****RX spatial power****////////////////////\n");
+    	len += sprintf(&buffer[len], "[UE PROC] MIMO Channel FRank Indicator :) %d \n",ue->measurements.rank[eNB]);
+    	len += sprintf(&buffer[len], "[UE PROC] RX spatial power eNB%d at Rx N_Power=%.2f dBm/Re : P11=%.2f dBm/RE, P21=%.2f dBm/RE, P12=%.2f dBm/RE, and P22=%.2f dBm/RE\n",
                      eNB,
-                     ue->measurements.rx_spatial_power_dB[eNB][0][0],
-                     ue->measurements.rx_spatial_power_dB[eNB][0][1],
-                     ue->measurements.rx_spatial_power_dB[eNB][1][0],
-                     ue->measurements.rx_spatial_power_dB[eNB][1][1]);
+                     (double)ue->measurements.n0_power_tot_dBm-20*log10(1<<15)+30+ue->rx_total_gain_dB,
+                     (double)ue->measurements.rx_spatial_power_dB[eNB][0][0]-20*log10(1<<15)-10*log10(512)+30,
+                     (double)ue->measurements.rx_spatial_power_dB[eNB][0][1]-20*log10(1<<15)-10*log10(512)+30,
+                     (double)ue->measurements.rx_spatial_power_dB[eNB][1][0]-20*log10(1<<15)-10*log10(512)+30,
+                     (double)ue->measurements.rx_spatial_power_dB[eNB][1][1]-20*log10(1<<15)-10*log10(512)+30);
+
+    	len += sprintf(&buffer[len], "[UE PROC] RX spatial power eNB: \n"
+    			"                     Tx1  ----- P11=%.2f dBm/RE -----> Rx1\n"
+    			"                                P21=%.2f dBm/RE           \n"
+    			"                                P12=%.2f dBm/RE           \n"
+    			"                     Tx2  ----- P22=%.2f dBm/RE -----> Rx2\n",
+    			(double)ue->measurements.rx_spatial_power_dB[eNB][0][0]-20*log10(1<<15)-10*log10(512)+30,
+                (double)ue->measurements.rx_spatial_power_dB[eNB][0][1]-20*log10(1<<15)-10*log10(512)+30,
+                (double)ue->measurements.rx_spatial_power_dB[eNB][1][0]-20*log10(1<<15)-10*log10(512)+30,
+                (double)ue->measurements.rx_spatial_power_dB[eNB][1][1]-20*log10(1<<15)-10*log10(512)+30);
 
       len += sprintf(&buffer[len], "[UE PROC] RX total power eNB%d: %d dB, avg: %d dB\n",eNB,ue->measurements.rx_power_tot_dB[eNB],ue->measurements.rx_power_avg_dB[eNB]);
       len += sprintf(&buffer[len], "[UE PROC] RX total power lin: %d, avg: %d, RX total noise lin: %d, avg: %d\n",ue->measurements.rx_power_tot[eNB],
@@ -128,7 +143,7 @@ int dump_ue_stats(PHY_VARS_UE *ue, UE_rxtx_proc_t *proc,char* buffer, int length
 
       switch (ue->frame_parms.N_RB_DL) {
       case 6:
-        len += sprintf(&buffer[len], "[UE PROC] Subband CQI eNB%d (Ant 0): [%d %d %d %d %d %d] dB\n",
+        len += sprintf(&buffer[len], "[UE PROC] Subband CQI eNB%d (RX Ant 0): [%d %d %d %d %d %d] dB\n",
                        eNB,
                        ue->measurements.subband_cqi_dB[eNB][0][0],
                        ue->measurements.subband_cqi_dB[eNB][0][1],
@@ -138,7 +153,7 @@ int dump_ue_stats(PHY_VARS_UE *ue, UE_rxtx_proc_t *proc,char* buffer, int length
                        ue->measurements.subband_cqi_dB[eNB][0][5]);
 
 
-        len += sprintf(&buffer[len], "[UE PROC] Subband CQI eNB%d (Ant 1): [%d %d %d %d %d %d] dB\n",
+        len += sprintf(&buffer[len], "[UE PROC] Subband CQI eNB%d (Rx Ant 1): [%d %d %d %d %d %d] dB\n",
                        eNB,
                        ue->measurements.subband_cqi_dB[eNB][1][0],
                        ue->measurements.subband_cqi_dB[eNB][1][1],
@@ -178,6 +193,9 @@ int dump_ue_stats(PHY_VARS_UE *ue, UE_rxtx_proc_t *proc,char* buffer, int length
                        ue->measurements.subband_pmi_re[eNB][5][1],
                        ue->measurements.subband_pmi_im[eNB][5][1]);
 
+
+
+
         len += sprintf(&buffer[len], "[UE PROC] PMI Antenna selection eNB%d : [%d %d %d %d %d %d]\n",
                        eNB,
                        ue->measurements.selected_rx_antennas[eNB][0],
@@ -215,39 +233,58 @@ int dump_ue_stats(PHY_VARS_UE *ue, UE_rxtx_proc_t *proc,char* buffer, int length
                        ue->measurements.subband_cqi_dB[eNB][1][6]);
 
 
-        len += sprintf(&buffer[len], "[UE PROC] Subband PMI eNB%d (Ant 0): [(%d %d) (%d %d) (%d %d) (%d %d) (%d %d) (%d %d) (%d %d)]\n",
+        len += sprintf(&buffer[len], "[UE PROC] Subband PMI eNB%d (Ant 0): [(%f +j%f) (%f +j%f) (%f +j%f) (%f +j%f) (%f +j%f) (%f +j%f) (%f +j%f)]\n",
                        eNB,
-                       ue->measurements.subband_pmi_re[eNB][0][0],
-                       ue->measurements.subband_pmi_im[eNB][0][0],
-                       ue->measurements.subband_pmi_re[eNB][1][0],
-                       ue->measurements.subband_pmi_im[eNB][1][0],
-                       ue->measurements.subband_pmi_re[eNB][2][0],
-                       ue->measurements.subband_pmi_im[eNB][2][0],
-                       ue->measurements.subband_pmi_re[eNB][3][0],
-                       ue->measurements.subband_pmi_im[eNB][3][0],
-                       ue->measurements.subband_pmi_re[eNB][4][0],
-                       ue->measurements.subband_pmi_im[eNB][4][0],
-                       ue->measurements.subband_pmi_re[eNB][5][0],
-                       ue->measurements.subband_pmi_im[eNB][5][0],
-                       ue->measurements.subband_pmi_re[eNB][6][0],
-                       ue->measurements.subband_pmi_im[eNB][6][0]);
+                       (double)ue->measurements.subband_pmi_re[eNB][0][0]/32768,
+                       (double)ue->measurements.subband_pmi_im[eNB][0][0]/32768,
+                       (double)ue->measurements.subband_pmi_re[eNB][1][0]/32768,
+                       (double)ue->measurements.subband_pmi_im[eNB][1][0]/32768,
+                       (double)ue->measurements.subband_pmi_re[eNB][2][0]/32768,
+                       (double)ue->measurements.subband_pmi_im[eNB][2][0]/32768,
+                       (double)ue->measurements.subband_pmi_re[eNB][3][0]/32768,
+                       (double)ue->measurements.subband_pmi_im[eNB][3][0]/32768,
+                       (double)ue->measurements.subband_pmi_re[eNB][4][0]/32768,
+                       (double)ue->measurements.subband_pmi_im[eNB][4][0]/32768,
+                       (double)ue->measurements.subband_pmi_re[eNB][5][0]/32768,
+                       (double)ue->measurements.subband_pmi_im[eNB][5][0]/32768,
+                       (double)ue->measurements.subband_pmi_re[eNB][6][0]/32768,
+                       (double)ue->measurements.subband_pmi_im[eNB][6][0]/32768);
+        len += sprintf(&buffer[len], "[UE PROC] Phase diff PMI eNB%d (Rx Ant 0): [(%.2f) (%.2f) (%.2f) (%.2f) (%.2f) (%.2f)]\n",
+                       eNB,
+                       atan((double)ue->measurements.subband_pmi_im[eNB][0][0]/ue->measurements.subband_pmi_re[eNB][0][0]),
+                       atan((double)ue->measurements.subband_pmi_im[eNB][1][0]/ue->measurements.subband_pmi_re[eNB][1][0]),
+                       atan((double)ue->measurements.subband_pmi_im[eNB][2][0]/ue->measurements.subband_pmi_re[eNB][2][0]),
+                       atan((double)ue->measurements.subband_pmi_im[eNB][3][0]/ue->measurements.subband_pmi_re[eNB][3][0]),
+                       atan((double)ue->measurements.subband_pmi_im[eNB][4][0]/ue->measurements.subband_pmi_re[eNB][4][0]),
+                       atan((double)ue->measurements.subband_pmi_im[eNB][5][0]/ue->measurements.subband_pmi_re[eNB][5][0]));
 
-        len += sprintf(&buffer[len], "[UE PROC] Subband PMI eNB%d (Ant 1): [(%d %d) (%d %d) (%d %d) (%d %d) (%d %d) (%d %d) (%d %d)]\n",
+
+        len += sprintf(&buffer[len], "[UE PROC] Subband PMI eNB%d (Ant 1): [(%f +j%f) (%f +j%f) (%f +j%f) (%f +j%f) (%f +j%f) (%f +j%f) (%f +j%f)]\n",
                        eNB,
-                       ue->measurements.subband_pmi_re[eNB][0][1],
-                       ue->measurements.subband_pmi_im[eNB][0][1],
-                       ue->measurements.subband_pmi_re[eNB][1][1],
-                       ue->measurements.subband_pmi_im[eNB][1][1],
-                       ue->measurements.subband_pmi_re[eNB][2][1],
-                       ue->measurements.subband_pmi_im[eNB][2][1],
-                       ue->measurements.subband_pmi_re[eNB][3][1],
-                       ue->measurements.subband_pmi_im[eNB][3][1],
-                       ue->measurements.subband_pmi_re[eNB][4][1],
-                       ue->measurements.subband_pmi_im[eNB][4][1],
-                       ue->measurements.subband_pmi_re[eNB][5][1],
-                       ue->measurements.subband_pmi_im[eNB][5][1],
-                       ue->measurements.subband_pmi_re[eNB][6][1],
-                       ue->measurements.subband_pmi_im[eNB][6][1]);
+                       (double)ue->measurements.subband_pmi_re[eNB][0][1]/32768,
+                       (double)ue->measurements.subband_pmi_im[eNB][0][1]/32768,
+                       (double)ue->measurements.subband_pmi_re[eNB][1][1]/32768,
+                       (double)ue->measurements.subband_pmi_im[eNB][1][1]/32768,
+                       (double)ue->measurements.subband_pmi_re[eNB][2][1]/32768,
+                       (double)ue->measurements.subband_pmi_im[eNB][2][1]/32768,
+                       (double)ue->measurements.subband_pmi_re[eNB][3][1]/32768,
+                       (double)ue->measurements.subband_pmi_im[eNB][3][1]/32768,
+                       (double)ue->measurements.subband_pmi_re[eNB][4][1]/32768,
+                       (double)ue->measurements.subband_pmi_im[eNB][4][1]/32768,
+                       (double)ue->measurements.subband_pmi_re[eNB][5][1]/32768,
+                       (double)ue->measurements.subband_pmi_im[eNB][5][1]/32768,
+                       (double)ue->measurements.subband_pmi_re[eNB][6][1]/32768,
+                       (double)ue->measurements.subband_pmi_im[eNB][6][1]/32768);
+
+        len += sprintf(&buffer[len], "[UE PROC] Phase diff PMI eNB%d (Rx Ant 1): [(%.2f) (%.2f) (%.2f) (%.2f) (%.2f) (%.2f)]\n",
+                       eNB,
+                       atan((double)ue->measurements.subband_pmi_im[eNB][0][1]/ue->measurements.subband_pmi_re[eNB][0][1]),
+                       atan((double)ue->measurements.subband_pmi_im[eNB][1][1]/ue->measurements.subband_pmi_re[eNB][1][1]),
+                       atan((double)ue->measurements.subband_pmi_im[eNB][2][1]/ue->measurements.subband_pmi_re[eNB][2][1]),
+                       atan((double)ue->measurements.subband_pmi_im[eNB][3][1]/ue->measurements.subband_pmi_re[eNB][3][1]),
+                       atan((double)ue->measurements.subband_pmi_im[eNB][4][1]/ue->measurements.subband_pmi_re[eNB][4][1]),
+                       atan((double)ue->measurements.subband_pmi_im[eNB][5][1]/ue->measurements.subband_pmi_re[eNB][5][1]));
+
 
         len += sprintf(&buffer[len], "[UE PROC] PMI Antenna selection eNB%d : [%d %d %d %d %d %d %d]\n",
                        eNB,

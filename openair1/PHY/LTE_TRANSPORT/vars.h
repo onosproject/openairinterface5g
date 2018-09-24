@@ -62,6 +62,11 @@ unsigned char ue_power_offsets[25] = {14,11,9,8,7,6,6,5,4,4,4,3,3,3,2,2,2,1,1,1,
 short conjugate[8]__attribute__((aligned(16))) = {-1,1,-1,1,-1,1,-1,1};
 short conjugate2[8]__attribute__((aligned(16))) = {1,-1,1,-1,1,-1,1,-1};
 
+short mmvariable[8]__attribute__((aligned(16))) = {23170,23170,23170,23170,23170,23170,23170,23170};//45
+short mmvariable1[8]__attribute__((aligned(16))) = {23170,-23170,23170,-23170,23170,-23170,23170,-23170};//-45
+short mmvariable2[8]__attribute__((aligned(16))) = {0,23170,0,23170,0,23170,0,23170};//90
+short mmvariable3[8]__attribute__((aligned(16))) = {23170,0,23170,0,23170,0,23170,0};//0
+
 int qam64_table[8],qam16_table[4];
 
 unsigned char cs_ri_normal[4]    = {1,4,7,10};

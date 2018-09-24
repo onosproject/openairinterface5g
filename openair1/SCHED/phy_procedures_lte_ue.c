@@ -54,7 +54,8 @@
 #include "LAYER2/MAC/extern.h"
 #include "LAYER2/MAC/defs.h"
 #include "UTIL/LOG/log.h"
-
+//SFN
+#include "sudas_tm4.h"
 #ifdef EMOS
 fifo_dump_emos_UE emos_dump_UE;
 #endif
@@ -411,8 +412,10 @@ uint8_t is_cqi_TXOp(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id)
 {
   int subframe = proc->subframe_tx;
   int frame    = proc->frame_tx;
-  CQI_REPORTPERIODIC *cqirep = &ue->cqi_report_config[eNB_id].CQI_ReportPeriodic;
 
+  CQI_REPORTPERIODIC *cqirep = &ue->cqi_report_config[eNB_id].CQI_ReportPeriodic;
+  //sudas_LOG_PHY(debug_sudas_LOG_PHY,"[UE][UCI--->PUSCH] CQI_ReportPeriodic cqirep->Npd %d cqirep->N_OFFSET_CQI %d \n",cqirep->Npd,cqirep->N_OFFSET_CQI);
+  //fflush(debug_sudas_LOG_PHY);
   //LOG_I(PHY,"[UE %d][CRNTI %x] AbsSubFrame %d.%d Checking for CQI TXOp (cqi_ConfigIndex %d) isCQIOp %d\n",
   //      ue->Mod_id,ue->pdcch_vars[eNB_id]->crnti,frame,subframe,
   //      cqirep->cqi_PMI_ConfigIndex,
@@ -1527,6 +1530,8 @@ void ue_prach_procedures(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,uin
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_UE_TX_PRACH, VCD_FUNCTION_OUT);
 }
 
+
+// UL UE Procedure for Shared Channel
 void ue_ulsch_uespec_procedures(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,uint8_t abstraction_flag) {
 
   int harq_pid;
@@ -1534,20 +1539,22 @@ void ue_ulsch_uespec_procedures(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB
   int subframe_tx=proc->subframe_tx;
   int Mod_id = ue->Mod_id;
   int CC_id = ue->CC_id;
-  uint8_t Msg3_flag=0;
-  uint16_t first_rb, nb_rb;
+  uint8_t Msg3_flag=0;//schedule RRC request
+  uint16_t first_rb, nb_rb;//indicate the first RB in the virtual RB array
   unsigned int input_buffer_length;
   int i;
   int aa;
   int tx_amp;
-  uint8_t ulsch_input_buffer[5477] __attribute__ ((aligned(32)));
-  uint8_t access_mode;
+  uint8_t ulsch_input_buffer[5477] __attribute__ ((aligned(32)));//32 bytes aligned for SIMD operation
+  uint8_t access_mode;//indicate PUSCH or PUCCH
   uint8_t Nbundled=0;
   uint8_t NbundledCw1=0;
   uint8_t ack_status_cw0=0;
   uint8_t ack_status_cw1=0;
   uint8_t cqi_status = 0;
   uint8_t ri_status  = 0;
+
+
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_UE_TX_ULSCH_UESPEC,VCD_FUNCTION_IN);
 
   // get harq_pid from subframe relationship
@@ -1591,9 +1598,9 @@ void ue_ulsch_uespec_procedures(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB
       Msg3_flag=0;
     }
   }
-
+// Check and test if the schedulig ifo are valid for PUSCH channel
+// it uses isBad to test the validation of the parms first_rb, nb_rb, and RV index
   if (ue->ulsch[eNB_id]->harq_processes[harq_pid]->subframe_scheduling_flag == 1) {
-
     uint8_t isBad = 0;
     if (ue->frame_parms.N_RB_UL <= ue->ulsch[eNB_id]->harq_processes[harq_pid]->first_rb) {
       LOG_D(PHY,"Invalid PUSCH first_RB=%d for N_RB_UL=%d\n",
@@ -1635,6 +1642,7 @@ void ue_ulsch_uespec_procedures(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB
       ue->ulsch[eNB_id]->harq_processes[harq_pid]->subframe_scheduling_flag = 0;
     }
   }
+
   if (ue->ulsch[eNB_id]->harq_processes[harq_pid]->subframe_scheduling_flag == 1) {
 
     ue->generate_ul_signal[eNB_id] = 1;
@@ -1642,13 +1650,14 @@ void ue_ulsch_uespec_procedures(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB
     // deactivate service request
     // ue->ulsch[eNB_id]->harq_processes[harq_pid]->subframe_scheduling_flag = 0;
     LOG_D(PHY,"Generating PUSCH (Abssubframe: %d.%d): harq-Id: %d, round: %d, MaxReTrans: %d \n",frame_tx,subframe_tx,harq_pid,ue->ulsch[eNB_id]->harq_processes[harq_pid]->round,ue->ulsch[eNB_id]->Mlimit);
+// Control HARQ process round=0,...,Mlimit - 1, where Mlimit = 4
     if (ue->ulsch[eNB_id]->harq_processes[harq_pid]->round >= (ue->ulsch[eNB_id]->Mlimit - 1))
     {
         LOG_D(PHY,"PUSCH MAX Retransmission achieved ==> send last pusch\n");
         ue->ulsch[eNB_id]->harq_processes[harq_pid]->subframe_scheduling_flag = 0;
         ue->ulsch[eNB_id]->harq_processes[harq_pid]->round  = 0;
     }
-
+// Get ack status for cw0 for antenna 0 for PDSCH
     ack_status_cw0 = reset_ack(&ue->frame_parms,
             ue->dlsch[ue->current_thread_id[proc->subframe_rx]][eNB_id][0]->harq_ack,
             subframe_tx,
@@ -1656,6 +1665,7 @@ void ue_ulsch_uespec_procedures(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB
             ue->ulsch[eNB_id]->o_ACK,
             &Nbundled,
             0);
+// Reset ack status for cw1 for antenna 1 for PDSCH ()
     ack_status_cw1 = reset_ack(&ue->frame_parms,
             ue->dlsch[ue->current_thread_id[proc->subframe_rx]][eNB_id][1]->harq_ack,
             subframe_tx,
