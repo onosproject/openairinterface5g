@@ -2701,7 +2701,7 @@ void ue_measurement_procedures(
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_UE_RRC_MEASUREMENTS, VCD_FUNCTION_OUT);
 
     if (abstraction_flag==1)
-      ue->sinr_eff =  sinr_eff_cqi_calc(ue, 0, subframe_rx);
+      ue->sinr_eff =  sinr_eff_cqi_calc(ue, ue->common_vars.eNb_id, subframe_rx);
 
   }
 
@@ -2715,7 +2715,7 @@ void ue_measurement_procedures(
 #ifndef OAI_USRP
 #ifndef OAI_BLADERF
 #ifndef OAI_LMSSDR
-    phy_adjust_gain (ue,dB_fixed(ue->measurements.rssi),0);
+    phy_adjust_gain (ue,dB_fixed(ue->measurements.rssi),ue->common_vars.eNb_id);
     //printf("phy_adjust_gain phy_proc_ue\n");
 #endif
 #endif
@@ -2723,7 +2723,7 @@ void ue_measurement_procedures(
 
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_UE_GAIN_CONTROL, VCD_FUNCTION_OUT);
 
-    eNB_id = 0;
+    eNB_id = ue->common_vars.eNb_id;
 
     if (abstraction_flag == 0) {
       if (ue->no_timing_correction==0)
@@ -2909,6 +2909,7 @@ void ue_pbch_procedures(uint8_t eNB_id,PHY_VARS_UE *ue,UE_rxtx_proc_t *proc, uin
 
   int frame_rx = proc->frame_rx;
   int subframe_rx = proc->subframe_rx;
+
   //printf("pbch0_before. ue->proc->frame_rx %d, ue->subframe_rx %d, enb->proc->frame_tx %d, enb->subframe_tx %d\n",ue->proc.proc_rxtx[0].frame_rx,ue->proc.proc_rxtx[0].subframe_rx,PHY_vars_eNB_g[eNB_id][0]->proc.proc_rxtx[0].frame_tx,PHY_vars_eNB_g[eNB_id][0]->proc.proc_rxtx[0].subframe_tx);
   //printf("pbch1_before. ue->proc->frame_rx %d, ue->subframe_rx %d, enb->proc->frame_tx %d, enb->subframe_tx %d\n",ue->proc.proc_rxtx[1].frame_rx,ue->proc.proc_rxtx[1].subframe_rx,PHY_vars_eNB_g[eNB_id][0]->proc.proc_rxtx[1].frame_tx,PHY_vars_eNB_g[eNB_id][0]->proc.proc_rxtx[1].subframe_tx);
 
@@ -2921,7 +2922,7 @@ void ue_pbch_procedures(uint8_t eNB_id,PHY_VARS_UE *ue,UE_rxtx_proc_t *proc, uin
 
   for (pbch_trials=0; pbch_trials<4; pbch_trials++) {
     //for (pbch_phase=0;pbch_phase<4;pbch_phase++) {
-    //LOG_I(PHY,"[UE  %d] Frame %d, Trying PBCH %d (NidCell %d, eNB_id %d)\n",ue->Mod_id,frame_rx,pbch_phase,ue->frame_parms.Nid_cell,eNB_id);
+    printf("[UE  %d] Frame %d, Trying PBCH %d (NidCell %d, eNB_id %d)\n",ue->Mod_id,frame_rx,pbch_phase,ue->frame_parms.Nid_cell,eNB_id);
     if (abstraction_flag == 0) {
       pbch_tx_ant = rx_pbch(&ue->common_vars,
           ue->pbch_vars[eNB_id],
@@ -4436,7 +4437,7 @@ void *UE_thread_slot1_dl_processing(void *arg) {
                     l,
                     slot1,
                     0);
-            ue_measurement_procedures(l-1,ue,proc,0,1+(subframe_rx<<1),0,ue->mode);
+            ue_measurement_procedures(l-1,ue,proc,ue->common_vars.eNb_id,1+(subframe_rx<<1),0,ue->mode);
         }
         //printf("AbsSubframe %d.%d ChanEst slot %d, symbol %d\n", frame_rx,subframe_rx,next_subframe_slot0,pilot0);
         front_end_chanEst(ue,

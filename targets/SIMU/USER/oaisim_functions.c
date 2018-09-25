@@ -1449,15 +1449,68 @@ void init_openair1(void)
 {
   module_id_t UE_id;
   uint8_t  eNB_id = 0;
+  uint8_t  RN_id = 0;
   uint8_t CC_id;
 #if ENABLE_RAL
   int list_index;
 #endif
 
   // change the nb_connected_eNB
-  for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
+  mac_xface = malloc(sizeof(MAC_xface));
+  memset(mac_xface, 0, sizeof(MAC_xface));
+  PHY_vars_eNB_g = (PHY_VARS_eNB***)malloc(NB_eNB_INST*sizeof(PHY_VARS_eNB**));
+    for (eNB_id=0; eNB_id<NB_eNB_INST; eNB_id++) {
+      PHY_vars_eNB_g[eNB_id] = (PHY_VARS_eNB**) malloc(MAX_NUM_CCs*sizeof(PHY_VARS_eNB*));
+      for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
+        LOG_I(PHY,"init lte parms: Nid_cell %d, Frame type %d, N_RB_DL %d, nushift %d\n",enb_properties->properties[eNB_id]->Nid_cell[CC_id],oai_emulation.info.frame_type[CC_id],oai_emulation.info.N_RB_DL[CC_id],((enb_properties->properties[eNB_id]->Nid_cell[CC_id])%6));
+    	frame_parms[CC_id] = calloc(1, sizeof(LTE_DL_FRAME_PARMS));
+    	(frame_parms[CC_id])->frame_type         = oai_emulation.info.frame_type[CC_id];
+    	(frame_parms[CC_id])->tdd_config         = oai_emulation.info.tdd_config_S[CC_id];
+    	(frame_parms[CC_id])->tdd_config_S       = oai_emulation.info.tdd_config_S[CC_id];
+    	(frame_parms[CC_id])->N_RB_DL            = oai_emulation.info.N_RB_DL[CC_id];
+   	(frame_parms[CC_id])->N_RB_UL            = (frame_parms[CC_id])->N_RB_DL;
+    	(frame_parms[CC_id])->phich_config_common.phich_resource = oneSixth;
+    	(frame_parms[CC_id])->phich_config_common.phich_duration = normal;
+    	(frame_parms[CC_id])->Ncp                = oai_emulation.info.extended_prefix_flag[CC_id];
+    	(frame_parms[CC_id])->Ncp_UL             = oai_emulation.info.extended_prefix_flag[CC_id]; 
+    	(frame_parms[CC_id])->Nid_cell           = enb_properties->properties[eNB_id]->Nid_cell[CC_id];
+    	(frame_parms[CC_id])->nushift            = ((enb_properties->properties[eNB_id]->Nid_cell[CC_id])%6);
+    	(frame_parms[CC_id])->nb_antennas_tx     = enb_properties->properties[eNB_id]->nb_antennas_tx[CC_id];
+    	(frame_parms[CC_id])->nb_antennas_rx     = enb_properties->properties[eNB_id]->nb_antennas_rx[CC_id];
+    	(frame_parms[CC_id])->nb_antenna_ports_eNB = enb_properties->properties[eNB_id]->nb_antenna_ports[CC_id];
+    	(frame_parms[CC_id])->mode1_flag           = (frame_parms[CC_id])->nb_antenna_ports_eNB==1 ? 1 : 0;
 
-    init_lte_vars (&frame_parms[CC_id],
+    	init_frame_parms(frame_parms[CC_id],1);
+
+    	(frame_parms[CC_id])->pusch_config_common.ul_ReferenceSignalsPUSCH.cyclicShift = 0;//n_DMRS1 set to 0
+    	(frame_parms[CC_id])->pusch_config_common.ul_ReferenceSignalsPUSCH.groupHoppingEnabled = 1;
+    	(frame_parms[CC_id])->pusch_config_common.ul_ReferenceSignalsPUSCH.sequenceHoppingEnabled = 0;
+    	(frame_parms[CC_id])->pusch_config_common.ul_ReferenceSignalsPUSCH.groupAssignmentPUSCH = 0;
+    	init_ul_hopping(frame_parms[CC_id]);
+        phy_init_lte_top(frame_parms[CC_id]);
+        PHY_vars_eNB_g[eNB_id][CC_id] = init_lte_eNB(frame_parms[CC_id],eNB_id,enb_properties->properties[eNB_id]->Nid_cell[CC_id],eNodeB_3GPP,abstraction_flag);
+        PHY_vars_eNB_g[eNB_id][CC_id]->Mod_id=eNB_id;
+        PHY_vars_eNB_g[eNB_id][CC_id]->CC_id=CC_id;
+      }
+    }
+  PHY_vars_UE_g = (PHY_VARS_UE***)malloc(NB_UE_INST*sizeof(PHY_VARS_UE**));
+  for (UE_id=0; UE_id<NB_UE_INST; UE_id++) {
+    PHY_vars_UE_g[UE_id] = (PHY_VARS_UE**) malloc(MAX_NUM_CCs*sizeof(PHY_VARS_UE*));
+    for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
+      (frame_parms[CC_id])->nb_antennas_tx     = 1;
+      (frame_parms[CC_id])->nb_antennas_rx     = nb_antennas_rx_ue;
+      PHY_vars_UE_g[UE_id][CC_id] = init_lte_UE(frame_parms[CC_id], UE_id,abstraction_flag);
+      PHY_vars_UE_g[UE_id][CC_id]->Mod_id=UE_id;
+      PHY_vars_UE_g[UE_id][CC_id]->CC_id=CC_id;
+    }
+  }
+  if (NB_RN_INST > 0) {
+    PHY_vars_RN_g = malloc(NB_RN_INST*sizeof(PHY_VARS_RN*));
+    for (RN_id=0; RN_id<NB_RN_INST; RN_id++) {
+      PHY_vars_RN_g[RN_id] = init_lte_RN(*frame_parms,RN_id,oai_emulation.info.eMBMS_active_state);
+    }
+  }
+    /*init_lte_vars (&frame_parms[CC_id],
 		   oai_emulation.info.frame_type[CC_id],
 		   oai_emulation.info.tdd_config[CC_id],
 		   oai_emulation.info.tdd_config_S[CC_id],
@@ -1470,7 +1523,8 @@ void init_openair1(void)
 		   enb_properties->properties[eNB_id]->nb_antennas_rx[CC_id],
 		   enb_properties->properties[eNB_id]->nb_antennas_tx[CC_id],
 		   nb_antennas_rx_ue,
-		   oai_emulation.info.eMBMS_active_state);
+		   oai_emulation.info.eMBMS_active_state);*/
+  for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
    for (eNB_id=0;eNB_id<enb_properties->number;eNB_id++) {
     // This is for IF4p5 RRU, gets done by RRC configuration of eNB
     PHY_vars_eNB_g[eNB_id][CC_id]->frame_parms.prach_config_common.prach_ConfigInfo.prach_ConfigIndex = enb_properties->properties[eNB_id]->prach_config_index[CC_id];

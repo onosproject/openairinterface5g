@@ -198,9 +198,9 @@ void phy_scope_eNB(FD_lte_phy_scope_enb *form,
   llr = (float*) calloc(coded_bits_per_codeword,sizeof(float)); // init to zero
   bit = malloc(coded_bits_per_codeword*sizeof(float));
   if (phy_vars_ue->do_ofdm_mod)
-    rxsig_t = (int16_t**) phy_vars_enb->common_vars.rxdataF[eNB_id];
+    rxsig_t = (int16_t**) phy_vars_enb->common_vars.rxdataF[0];
   else
-    rxsig_t = (int16_t**) phy_vars_enb->common_vars.rxdata[eNB_id];
+    rxsig_t = (int16_t**) phy_vars_enb->common_vars.rxdata[0];
   //chest_t = (int16_t**) phy_vars_enb->pusch_vars[UE_id]->drs_ch_estimates_time[eNB_id];
   chest_t = (int16_t**) phy_vars_enb->srs_vars[UE_id].srs_ch_estimates[eNB_id];
   chest_f = (int16_t**) phy_vars_enb->pusch_vars[UE_id]->drs_ch_estimates[eNB_id];

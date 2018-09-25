@@ -194,7 +194,7 @@ int write_output_chFf(const char *fname,const char *vname,float data1[1200],floa
 {
 
   FILE *fp=NULL;
-  fp = fopen(fname,"a+");
+  fp = fopen(fname,"w+");
   int i;
 
 

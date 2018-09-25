@@ -36,7 +36,7 @@
 #include "SCHED/extern.h"
 #include "defs.h"
 #include "extern.h"
-
+#include "LAYER2/MAC/extern.h"
 
 #include "common_lib.h"
 extern openair0_config_t openair0_cfg[];
@@ -493,6 +493,7 @@ int initial_sync(PHY_VARS_UE *ue, runmode_t mode)
   //  uint16_t Nid_cell_fdd_ncp=0,Nid_cell_fdd_ecp=0,Nid_cell_tdd_ncp=0,Nid_cell_tdd_ecp=0;
   LTE_DL_FRAME_PARMS *frame_parms = &ue->frame_parms;
   int ret=-1;
+  int i;
   int aarx,rx_power=0;
   /*#ifdef OAI_USRP
   __m128i *rxdata128;
@@ -543,7 +544,9 @@ int initial_sync(PHY_VARS_UE *ue, runmode_t mode)
       ue->rx_offset += (FRAME_LENGTH_COMPLEX_SAMPLES>>1);
 
     init_frame_parms(&ue->frame_parms,1);
-    lte_gold(frame_parms,ue->lte_gold_table[0],frame_parms->Nid_cell);
+    for (i=0; i<NB_eNB_INST; i++)
+  	lte_gold(frame_parms,ue->lte_gold_table[i],i);
+    //lte_gold(frame_parms,ue->lte_gold_table[ue->common_vars.eNb_id],frame_parms->Nid_cell);
     ret = pbch_detection(ue,mode);
     //   write_output("rxdata2.m","rxd2",ue->common_vars.rxdata[0],10*frame_parms->samples_per_tti,1,1);
 
@@ -590,7 +593,9 @@ int initial_sync(PHY_VARS_UE *ue, runmode_t mode)
         ue->rx_offset += (FRAME_LENGTH_COMPLEX_SAMPLES>>1);
 
       init_frame_parms(&ue->frame_parms,1);
-      lte_gold(frame_parms,ue->lte_gold_table[0],frame_parms->Nid_cell);
+      for (i=0; i<NB_eNB_INST; i++)
+  	lte_gold(frame_parms,ue->lte_gold_table[i],i);
+      //lte_gold(frame_parms,ue->lte_gold_table[ue->common_vars.eNb_id],frame_parms->Nid_cell);
       ret = pbch_detection(ue,mode);
       //     write_output("rxdata3.m","rxd3",ue->common_vars.rxdata[0],10*frame_parms->samples_per_tti,1,1);
 #ifdef DEBUG_INITIAL_SYNCH
@@ -633,7 +638,9 @@ int initial_sync(PHY_VARS_UE *ue, runmode_t mode)
       frame_parms->nushift  = frame_parms->Nid_cell%6;
       init_frame_parms(&ue->frame_parms,1);
 
-      lte_gold(frame_parms,ue->lte_gold_table[0],frame_parms->Nid_cell);
+      for (i=0; i<NB_eNB_INST; i++)
+  	lte_gold(frame_parms,ue->lte_gold_table[i],i);
+      //lte_gold(frame_parms,ue->lte_gold_table[ue->common_vars.eNb_id],frame_parms->Nid_cell);
       ret = pbch_detection(ue,mode);
       //      write_output("rxdata4.m","rxd4",ue->common_vars.rxdata[0],10*frame_parms->samples_per_tti,1,1);
 
@@ -669,7 +676,9 @@ int initial_sync(PHY_VARS_UE *ue, runmode_t mode)
           ue->rx_offset += (FRAME_LENGTH_COMPLEX_SAMPLES>>1);
 
         init_frame_parms(&ue->frame_parms,1);
-        lte_gold(frame_parms,ue->lte_gold_table[0],frame_parms->Nid_cell);
+        for (i=0; i<NB_eNB_INST; i++)
+  	  lte_gold(frame_parms,ue->lte_gold_table[i],i);
+        //lte_gold(frame_parms,ue->lte_gold_table[ue->common_vars.eNb_id],frame_parms->Nid_cell);
         ret = pbch_detection(ue,mode);
 
 	//	write_output("rxdata5.m","rxd5",ue->common_vars.rxdata[0],10*frame_parms->samples_per_tti,1,1);
@@ -887,8 +896,9 @@ int initial_sync_freq(PHY_VARS_UE *ue, runmode_t mode)
   //  uint16_t Nid_cell_fdd_ncp=0,Nid_cell_fdd_ecp=0,Nid_cell_tdd_ncp=0,Nid_cell_tdd_ecp=0;
   LTE_DL_FRAME_PARMS *frame_parms = &ue->frame_parms;
   int ret=-1;
+  int i;
   int aarx,rx_power=0;
-  printf("initial_synch_freq: UE %d, eNB %d\n",ue->Mod_id,ue->common_vars.eNb_id);
+  printf("initial_synch_freq: UE %d, eNB %d, NB_eNB_INST %d, eNB->Nid_cell %d\n",ue->Mod_id,ue->common_vars.eNb_id, NB_eNB_INST,PHY_vars_eNB_g[ue->common_vars.eNb_id][0]->frame_parms.Nid_cell);
   /*#ifdef OAI_USRP
   __m128i *rxdata128;
   #endif*/
@@ -908,10 +918,12 @@ int initial_sync_freq(PHY_VARS_UE *ue, runmode_t mode)
   //rx_sss(ue,&metric_fdd_ncp,&flip_fdd_ncp,&phase_fdd_ncp);
   frame_parms->nushift  = frame_parms->Nid_cell%6;
   // lte-gold
-  lte_gold(frame_parms,ue->lte_gold_table[0],frame_parms->Nid_cell);
-  printf("binitial_synch [UE%d]->[eNB%d]: pbch_detection_freq returns %d\n",ue->Mod_id,ue->common_vars.eNb_id,ret);
+  for (i=0; i<NB_eNB_INST; i++)
+  	lte_gold(frame_parms,ue->lte_gold_table[i],i);
+
+  printf("binitial_synch [UE%d]->[eNB%d]: pbch_detection_freq returns %d, Nid_cell %d\n",ue->Mod_id,ue->common_vars.eNb_id,ret,frame_parms->Nid_cell);
   ret=pbch_detection_freq(ue,mode);
-  printf("ainitial_synch [UE%d]->[eNB%d]: pbch_detection_freq returns %d\n",ue->Mod_id,ue->common_vars.eNb_id,ret);
+  printf("ainitial_synch [UE%d]->[eNB%d]: pbch_detection_freq returns %d, Nid_cell %d\n",ue->Mod_id,ue->common_vars.eNb_id,ret,frame_parms->Nid_cell);
   //init_frame_parms(frame_parms,1);
   //printf("dumping enb frame params\n");
   //dump_frame_parms(&PHY_vars_eNB_g[0][0]->frame_parms);
@@ -924,10 +936,13 @@ int initial_sync_freq(PHY_VARS_UE *ue, runmode_t mode)
       init_frame_parms(frame_parms,1);
       frame_parms->Nid_cell=PHY_vars_eNB_g[ue->common_vars.eNb_id][0]->frame_parms.Nid_cell;
       frame_parms->nushift  = frame_parms->Nid_cell%6;
-      lte_gold(frame_parms,ue->lte_gold_table[0],frame_parms->Nid_cell);
-      printf("binitial_synch, second chance[UE%d]->[eNB%d]: pbch_detection_freq returns %d\n",ue->Mod_id,ue->common_vars.eNb_id,ret);
+
+      for (i=0; i<NB_eNB_INST; i++)
+      	lte_gold(frame_parms,ue->lte_gold_table[i],i);
+
+      printf("binitial_synch, second chance[UE%d]->[eNB%d]: pbch_detection_freq returns %d, Nid_cell %d\n\n",ue->Mod_id,ue->common_vars.eNb_id,ret,frame_parms->Nid_cell);
       ret = pbch_detection_freq(ue,mode);
-      printf("ainitial_synch, second chance[UE%d]->[eNB%d]: pbch_detection_freq returns %d\n",ue->Mod_id,ue->common_vars.eNb_id,ret);
+      printf("ainitial_synch, second chance[UE%d]->[eNB%d]: pbch_detection_freq returns %d, Nid_cell %d\n\n",ue->Mod_id,ue->common_vars.eNb_id,ret,frame_parms->Nid_cell);
 
   }
   if (ret==0) {  // fake first PBCH found so indicate sync to higher layers and configure frame parameters
@@ -1038,7 +1053,7 @@ int initial_sync_freq(PHY_VARS_UE *ue, runmode_t mode)
     for (aarx=0; aarx<frame_parms->nb_antennas_rx; aarx++)
       rx_power+= signal_energy((int*)&ue->common_vars.common_vars_rx_data_per_thread[0].rxdataF[aarx][6*frame_parms->ofdm_symbol_size],
 				frame_parms->ofdm_symbol_size);
-   printf("rx_power %d\n",rx_power);
+   printf("UE%d: rx_power %d\n",ue->Mod_id,rx_power);
 
     /*common_vars.common_vars_rx_data_per_thread[0].rxdataF
     // do a measurement on the full frame
