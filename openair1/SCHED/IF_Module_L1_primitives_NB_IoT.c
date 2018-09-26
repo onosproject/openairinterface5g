@@ -54,11 +54,15 @@ void handle_nfapi_dlsch_pdu_NB_IoT(PHY_VARS_eNB *eNB,
 {
 
 	NB_IoT_eNB_NDLSCH_t *ndlsch;
+	NB_IoT_eNB_NDLSCH_t *ndlsch23;
+
 	NB_IoT_DL_eNB_HARQ_t *ndlsch_harq;
+	NB_IoT_DL_eNB_HARQ_t *ndlsch_harq23;
 	nfapi_dl_config_ndlsch_pdu_rel13_t *rel13 = &dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13;
 	int UE_id= -1;
 	int flag_malloc = 0;
 	ndlsch= eNB->ndlsch_SIB1;
+	ndlsch23= eNB->ndlsch_SIB23;
 	
 //	if(flag_malloc) free (ndlsch->harq_process);
 
@@ -137,28 +141,31 @@ void handle_nfapi_dlsch_pdu_NB_IoT(PHY_VARS_eNB *eNB,
 	   *
 	   */
   		//LOG_I(PHY,"B NB-handle_nfapi_dlsch_pdu_NB_IoT SIB23\n");
-	  	ndlsch_harq = ndlsch->harq_process;
+	  	ndlsch_harq23 = ndlsch23->harq_process;
 
 		//new SI starting transmission (should enter here only the first time for a new transmission)
 		if(sdu != NULL)
 		{
-			
-		  	ndlsch->ndlsch_type = SI_Message;
-			ndlsch->npdsch_start_symbol = rel13->start_symbol; //start OFDM symbol for the ndlsch transmission
+
+			ndlsch23->active = 1;
+		  	ndlsch23->ndlsch_type = SI_Message;
+			ndlsch23->npdsch_start_symbol = rel13->start_symbol; //start OFDM symbol for the ndlsch transmission
 			//ndlsch_harq->pdu = sdu;
 			//LOG_I(PHY,"B content_sib23:%d\n",sdu);
-			ndlsch_harq->pdu = sdu;
-			ndlsch_harq->resource_assignment = rel13->number_of_subframes_for_resource_assignment;//value 2 or 8
-			ndlsch_harq->repetition_number = rel13->repetition_number;//should be always fix to 0 to be mapped in 1
-			ndlsch_harq->modulation = rel13->modulation;
+			ndlsch_harq23->pdu = sdu;
+			ndlsch_harq23->resource_assignment = rel13->number_of_subframes_for_resource_assignment;//value 2 or 8
+			ndlsch_harq23->repetition_number = rel13->repetition_number;//should be always fix to 0 to be mapped in 1
+			ndlsch_harq23->modulation = rel13->modulation;
 			//LOG_I(PHY,"A content_sib23:%d\n",sdu);
-
+			ndlsch23->counter_repetition_number = rel13->number_of_subframes_for_resource_assignment;
+            ndlsch23->counter_current_sf_repetition   = 0;
+		    ndlsch23->pointer_to_subframe             = 0;
 			//SI information in reality have no feedback (so there is no retransmission from the HARQ view point since no sck and nack)
-	//        ndlsch_harq->frame = frame;
-	//        ndlsch_harq->subframe = subframe;
+	        //  ndlsch_harq->frame = frame;
+	        //  ndlsch_harq->subframe = subframe;
 
-			ndlsch->nrs_antenna_ports = rel13->nrs_antenna_ports_assumed_by_the_ue;
-			ndlsch->scrambling_sequence_intialization = rel13->scrambling_sequence_initialization_cinit;
+			ndlsch23->nrs_antenna_ports = rel13->nrs_antenna_ports_assumed_by_the_ue;
+			ndlsch23->scrambling_sequence_intialization = rel13->scrambling_sequence_initialization_cinit;
 		}
 		else
 		{
@@ -166,14 +173,14 @@ void handle_nfapi_dlsch_pdu_NB_IoT(PHY_VARS_eNB *eNB,
 			//there is no need of repeating the configuration on the ndlsch
 			//ndlsch_harq->pdu = NULL;
 			//LOG_I(PHY,"sib23=NULL\n");
-			ndlsch_harq->pdu = NULL;
+			ndlsch_harq23->pdu = NULL;
 			
 
 		}
 
 		//Independently if we have the PDU or not (first transmission or repetition) the process is activated for triggering the ndlsch_procedure
 	  	//LOG_I(PHY,"ACTIVE_NB_IoT\n");
-	  	ndlsch_harq->status = ACTIVE_NB_IoT;
+	  	ndlsch_harq23->status = ACTIVE_NB_IoT;
 	  	//LOG_I(PHY,"A NB-handle_nfapi_dlsch_pdu_NB_IoT SIB23\n");
 
   }
@@ -188,10 +195,10 @@ void handle_nfapi_dlsch_pdu_NB_IoT(PHY_VARS_eNB *eNB,
 		  eNB->ndlsch_RAR->npdsch_start_symbol 		= rel13->start_symbol;
 		  eNB->ndlsch_RAR->active 					= 1;
 
-		  eNB->ndlsch_RAR->rnti 					= rel13->rnti;  // how this value is tested in line 177 ???? i am missing something ????
+		  eNB->ndlsch_RAR->rnti 					= rel13->rnti;  
 
-		  eNB->ndlsch_RAR->rnti_type 				= rel13->rnti_type;   
-  		  eNB->ndlsch_RAR->resource_assignment 		= rel13->resource_assignment ;    // for NDLSCH // this value point to -->  number of subframes needed
+		  eNB->ndlsch_RAR->rnti_type 				= rel13->rnti_type;
+  		  eNB->ndlsch_RAR->resource_assignment 		= rel13->resource_assignment;    // for NDLSCH // this value point to -->  number of subframes needed
           eNB->ndlsch_RAR->repetition_number 		= rel13->repetition_number;
   		  eNB->ndlsch_RAR->modulation 				= rel13->modulation;
 

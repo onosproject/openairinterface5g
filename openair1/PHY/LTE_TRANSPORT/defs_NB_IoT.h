@@ -432,7 +432,6 @@ typedef struct {
   uint32_t                modulation;
   uint32_t                number_of_subframes_for_resource_assignment; // for NDLSCH //table 16.4.1.3-1 // TS 36.213
 
-
   uint32_t                counter_repetition_number;
   uint32_t                counter_current_sf_repetition;
   uint32_t                pointer_to_subframe;

@@ -135,17 +135,351 @@ int generate_SIB1(NB_IoT_eNB_NDLSCH_t 		*sib1_struct,
 /////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////
 
-/*int generate_SIB23(NB_IoT_eNB_NPBCH_t 		*eNB_npbch,
-                   int32_t 					**txdataF,
-                   int 						amp,
-                   LTE_DL_FRAME_PARMS 	    *frame_parms,
-                   uint8_t 					*npbch_pdu,
-                   uint8_t 					frame_mod64,
-				   unsigned short 			NB_IoT_RB_ID)
+int generate_SIB23(NB_IoT_eNB_NDLSCH_t 	      *SIB23,
+	                 int32_t 				  **txdataF,
+	                 int16_t                  amp,
+	                 LTE_DL_FRAME_PARMS 	  *frame_parms,
+	                 uint32_t 			      frame,
+	                 uint32_t 			      subframe,
+	                 int                      RB_IoT_ID)
 {
- 
- return(0);
+    int done=0;
+
+ 	uint8_t *SIB23_pdu  = SIB23->harq_process->pdu;
+ 	uint32_t rep =  SIB23->resource_assignment;
+ 	uint8_t eutro_control_region = 3;
+
+    uint32_t counter_rep    =  SIB23->counter_repetition_number;
+    uint32_t pointer_to_sf  =  SIB23->pointer_to_subframe;             /// to identify wich encoded subframe to transmit 
+
+    if( SIB23->active == 1 )
+    {
+    	int G = get_G_NB_IoT(frame_parms);
+    	uint8_t Nsf = SIB23->resource_assignment;   //value 2 or 8
+
+        if(counter_rep == rep)
+        {
+            dlsch_encoding_NB_IoT(SIB23_pdu,
+                                  SIB23,
+                                  Nsf,             ///// number_of_subframes_required
+                                  G);              //// this vallue is fixed, should take into account in future the case of stand-alone & guard-band 
+        
+             dlsch_scrambling_Gen_NB_IoT(frame_parms,
+                                         SIB23,
+                                         Nsf*G,
+                                         frame, 
+                                         subframe*2,
+                                         SIB23->rnti);
+        }
+
+        dlsch_modulation_NB_IoT(txdataF,
+                                amp,
+                                frame_parms,
+                                eutro_control_region,     //should be replace by start_symbole   // control region size for LTE , values between 0..3, (0 for stand-alone / 1, 2 or 3 for in-band)
+                                SIB23,
+                                G,                  // number of bits per subframe
+                                pointer_to_sf,
+                                subframe,       
+                                RB_IoT_ID);
+
+        SIB23->counter_repetition_number--;
+        SIB23->pointer_to_subframe++;
+
+        if(SIB23->counter_repetition_number == 0)
+        {
+        	SIB23->active = 0;
+        	done =1;
+        }
+
+    }
+
+ return(done);
+
 }
-*/
+
 ////////////////////////////////////////////////////////////////////////
 
+
+int generate_NDLSCH_NB_IoT(NB_IoT_eNB_NDLSCH_t 	  *RAR,
+		                   int32_t 				  **txdataF,
+		                   int16_t                amp,
+		                   LTE_DL_FRAME_PARMS 	  *frame_parms,
+		                   uint32_t 			  frame,
+		                   uint32_t 			  subframe,
+		                   int                    RB_IoT_ID)
+{
+    int done = 0;
+
+ 	uint8_t *RAR_pdu  = RAR->harq_process->pdu;
+ 	uint32_t rep =  RAR->repetition_number;
+ 	uint8_t eutro_control_region = 3;
+
+    uint32_t counter_rep    =  RAR->counter_repetition_number;
+    uint32_t counter_sf_rep =  RAR->counter_current_sf_repetition;   /// for identifiying when to trigger new scrambling
+    uint32_t pointer_to_sf  =  RAR->pointer_to_subframe;             /// to identify wich encoded subframe to transmit 
+
+    if( RAR->active == 1 )
+    {
+    	int G = get_G_NB_IoT(frame_parms);
+    	uint8_t Nsf = RAR->number_of_subframes_for_resource_assignment;
+
+        if( (counter_rep == rep) && (counter_sf_rep == 0) && (pointer_to_sf == 0) )
+        {
+        	
+
+            dlsch_encoding_NB_IoT(RAR_pdu,
+                                  RAR,
+                                  Nsf,             ///// number_of_subframes_required
+                                  G);              //// this vallue is fixed, should take into account in future the case of stand-alone & guard-band 
+        
+             dlsch_scrambling_Gen_NB_IoT(frame_parms,
+                                         RAR,
+                                         Nsf*G,
+                                         frame, 
+                                         subframe*2,
+                                         RAR->rnti);
+        }
+
+		if( (counter_rep != rep) && (counter_sf_rep == 0) && (pointer_to_sf == 0) )
+		{
+			dlsch_scrambling_Gen_NB_IoT(frame_parms,
+                                         RAR,
+                                         Nsf*G,
+                                         frame, 
+                                         subframe*2,
+                                         RAR->rnti);
+		}
+
+        if( rep > 4)
+        {
+
+		        RAR->counter_current_sf_repetition++;
+
+		        dlsch_modulation_NB_IoT(txdataF,
+		                                amp,
+		                                frame_parms,
+		                                eutro_control_region,     //should be replace by start_symbole   // control region size for LTE , values between 0..3, (0 for stand-alone / 1, 2 or 3 for in-band)
+		                                RAR,
+		                                G,                  // number of bits per subframe
+		                                pointer_to_sf,
+		                                subframe,       
+		                                RB_IoT_ID);
+
+		        if(RAR->counter_current_sf_repetition == 4)
+		        {
+		        	RAR->pointer_to_subframe++;
+		        	RAR->counter_current_sf_repetition =0;
+
+		        	if (Nsf == RAR->pointer_to_subframe && (RAR->counter_repetition_number > 4))
+		        	{
+		        		RAR->counter_repetition_number = RAR->counter_repetition_number-4;
+		        		RAR->pointer_to_subframe =0;
+		        		RAR->counter_current_sf_repetition =0;
+
+		        	} else {
+
+		        		RAR->active = 0;
+		        		done =1;
+		        	}
+
+		        }
+
+        } else {
+
+        		RAR->counter_current_sf_repetition++;
+
+		        dlsch_modulation_NB_IoT(txdataF,
+		                                amp,
+		                                frame_parms,
+		                                eutro_control_region,     //should be replace by start_symbole   // control region size for LTE , values between 0..3, (0 for stand-alone / 1, 2 or 3 for in-band)
+		                                RAR,
+		                                G,                  // number of bits per subframe
+		                                pointer_to_sf,
+		                                subframe,       
+		                                RB_IoT_ID);
+
+		        if(RAR->counter_current_sf_repetition == rep)
+		        {
+		        	RAR->pointer_to_subframe++;
+
+		        	if (Nsf == RAR->pointer_to_subframe)
+		        	{
+		        		RAR->active = 0;
+		        		done =1;
+		        	}
+
+		        }
+        }   
+    }
+
+	return(done);
+}
+/////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////
+/*int generate_NDCCH_NB_IoT(NB_IoT_eNB_NDLSCH_t 	  *RAR,
+		                   int32_t 				  **txdataF,
+		                   int16_t                amp,
+		                   LTE_DL_FRAME_PARMS 	  *frame_parms,
+		                   uint32_t 			  frame,
+		                   uint32_t 			  subframe,
+		                   int                    RB_IoT_ID)
+{
+    int done=0;
+
+ 	uint8_t *RAR_pdu  = RAR->harq_process->pdu;
+ 	uint32_t rep =  RAR->repetition_number;
+ 	uint8_t eutro_control_region = 3;
+
+    uint32_t counter_rep    =  RAR->counter_repetition_number;
+    uint32_t counter_sf_rep =  RAR->counter_current_sf_repetition;   /// for identifiying when to trigger new scrambling
+    uint32_t pointer_to_sf  =  RAR->pointer_to_subframe;             /// to identify wich encoded subframe to transmit 
+
+    if( RAR->active == 1 )
+    {
+    	int G = get_G_NB_IoT(frame_parms);
+    	uint8_t Nsf = RAR->number_of_subframes_for_resource_assignment;
+
+        if( (counter_rep == rep) && (counter_sf_rep == 0) && (pointer_to_sf == 0) )
+        {
+        	
+
+            dlsch_encoding_NB_IoT(RAR_pdu,
+                                  RAR,
+                                  Nsf,             ///// number_of_subframes_required
+                                  G);              //// this vallue is fixed, should take into account in future the case of stand-alone & guard-band 
+        
+             dlsch_scrambling_Gen_NB_IoT(frame_parms,
+                                         RAR,
+                                         Nsf*G,
+                                         frame, 
+                                         subframe*2,
+                                         RAR->rnti);
+        }
+
+		if( (counter_rep != rep) && (counter_sf_rep == 0) && (pointer_to_sf == 0) )
+		{
+			dlsch_scrambling_Gen_NB_IoT(frame_parms,
+                                         RAR,
+                                         Nsf*G,
+                                         frame, 
+                                         subframe*2,
+                                         RAR->rnti);
+		}
+
+        if( rep > 4)
+        {
+
+		        RAR->counter_current_sf_repetition++;
+
+		        dlsch_modulation_NB_IoT(txdataF,
+		                                amp,
+		                                frame_parms,
+		                                eutro_control_region,     //should be replace by start_symbole   // control region size for LTE , values between 0..3, (0 for stand-alone / 1, 2 or 3 for in-band)
+		                                RAR,
+		                                G,                  // number of bits per subframe
+		                                pointer_to_sf,
+		                                subframe,       
+		                                RB_IoT_ID);
+
+		        if(RAR->counter_current_sf_repetition == 4)
+		        {
+		        	RAR->pointer_to_subframe++;
+		        	RAR->counter_current_sf_repetition =0;
+
+		        	if (Nsf == RAR->pointer_to_subframe && (RAR->counter_repetition_number > 4))
+		        	{
+		        		RAR->counter_repetition_number = RAR->counter_repetition_number-4;
+		        		RAR->pointer_to_subframe =0;
+		        		RAR->counter_current_sf_repetition =0;
+
+		        	} else {
+
+		        		RAR->active = 0;
+		        		done =1;
+		        	}
+
+		        }
+
+        } else {
+
+        		RAR->counter_current_sf_repetition++;
+
+		        dlsch_modulation_NB_IoT(txdataF,
+		                                amp,
+		                                frame_parms,
+		                                eutro_control_region,     //should be replace by start_symbole   // control region size for LTE , values between 0..3, (0 for stand-alone / 1, 2 or 3 for in-band)
+		                                RAR,
+		                                G,                  // number of bits per subframe
+		                                pointer_to_sf,
+		                                subframe,       
+		                                RB_IoT_ID);
+
+		        if(RAR->counter_current_sf_repetition == rep)
+		        {
+		        	RAR->pointer_to_subframe++;
+
+		        	if (Nsf == RAR->pointer_to_subframe)
+		        	{
+		        		RAR->active = 0;
+		        		done =1;
+		        	}
+
+		        }
+        }   
+    }
+
+	return(done);
+}
+*/
+
+
+
+////////////////////////////////////////////////// backup ///////////////////////////
+ //////////////////////////////////////////////////// SIB23 ////////////////////////////////////////////////////////////////////////
+ /* if( (subframe >0) && (subframe !=5) && (With_NSSS == 0) && (frame%2==1) && (frame%64<16) )   ////if((subframe != 0)  && (subframe != 4) && (subframe != 9) ) 
+  {
+        
+
+        if( subframe == 1 )
+        {
+            dlsch_encoding_NB_IoT(sib23_pdu,
+                                  sib23,
+                                  8,                      ///// number_of_subframes_required
+                                  236);                   //////////// G*2
+        
+            dlsch_scrambling_Gen_NB_IoT(fp,                    // is called only in subframe 4
+                                         sib23,
+                                         1888,            //////   total_bits
+                                         frame,
+                                         subframe*2,
+                                         eNB->ndlsch_SIB23->rnti);
+        }
+
+        if( subframe < 5 )
+        {
+
+        dlsch_modulation_NB_IoT(txdataF,
+                                AMP,
+                                fp,
+                                3,                          // control region size for LTE , values between 0..3, (0 for stand-alone / 1, 2 or 3 for in-band)
+                                sib23,
+                                236,                       // number of bits per subframe
+                                (subframe-1),   ///npdsch_data_subframe, data per subframe//subframe index of the data table of npdsch channel (G*Nsf) ((frame%32)/2),values are between 0..Nsf        
+                                subframe,
+                                RB_IoT_ID);
+       } else {
+
+         dlsch_modulation_NB_IoT(txdataF,
+                                AMP,
+                                fp,
+                                3,                          // control region size for LTE , values between 0..3, (0 for stand-alone / 1, 2 or 3 for in-band)
+                                sib23,
+                                236,                       // number of bits per subframe
+                                (subframe-2),///npdsch_data_subframe, data per subframe//subframe index of the data table of npdsch channel (G*Nsf) ((frame%32)/2),values are between 0..Nsf        
+                                subframe,
+                                RB_IoT_ID);
+
+       }
+        
+  }
+*/

@@ -1301,7 +1301,7 @@ void set_default_frame_parms(LTE_DL_FRAME_PARMS *frame_parms[MAX_NUM_CCs]) {
         frame_parms[CC_id]->prach_config_common.prach_ConfigInfo.highSpeedFlag=0;
         frame_parms[CC_id]->prach_config_common.prach_ConfigInfo.prach_FreqOffset=0;
 
-        frame_parms[CC_id]->nb_antennas_tx_NB_IoT      =  enb_properties->properties[i]->nb_antennas_tx[CC_id];
+        frame_parms[CC_id]->nb_antennas_tx_NB_IoT      =  1;
         frame_parms[CC_id]->control_region_size        =  3;
 
         downlink_frequency[CC_id][0] = 2680000000; // Use float to avoid issue with frequency over 2^31.
