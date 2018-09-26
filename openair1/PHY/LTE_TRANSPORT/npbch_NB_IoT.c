@@ -232,6 +232,7 @@ int generate_npbch(NB_IoT_eNB_NPBCH_t 		*eNB_npbch,
   uint32_t 		  symbol_offset;
   uint16_t 		  amask=0;
 
+  frame_parms->flag_free_sf =1;
   /*
    uint32_t 		  ii=0;
    uint8_t            reset=1; 

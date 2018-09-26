@@ -50,6 +50,8 @@ int generate_npss_NB_IoT(int32_t 				**txdataF,
    unsigned short  NB_IoT_start; 			// Index of the first RE in the RB dedicated for NB-IoT
    unsigned short  bandwidth_even_odd;
 
+   frame_parms->flag_free_sf =1;
+
    slot_id 		= slot_offset;  					// The id(0..19) of the slot including the NPSS signal // For NB-IoT, slod_id should be 10 (SF5)
    primary_sync = primary_synch_NB_IoT;     		// primary_synch_NB_IoT[264] of primary_synch_NB_IoT.h
 

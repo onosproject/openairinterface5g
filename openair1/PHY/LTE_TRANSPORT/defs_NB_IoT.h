@@ -677,32 +677,35 @@ typedef struct {
 
 typedef struct {
   //the 2 LSB of the hsfn (the MSB are indicated by the SIB1-NB)
-  rnti_t          rnti[2];
+  rnti_t      rnti[2];
   ////////////////////////////////////////////////////////
   
-  uint32_t length[2];                        
-  uint32_t ncce_index[2];        
-  uint32_t aggregation_level[2];
-  uint32_t rnti_type[2];
-  uint32_t dci_format[2];
-  uint32_t scheduling_delay[2];
-  uint32_t resource_assignment[2];
+  /// Active flag for baseband transmitter processing
+  uint8_t     active[2];
+
+  uint32_t    length[2];                        
+  uint32_t    ncce_index[2];        
+  uint32_t    aggregation_level[2];
+  uint32_t    rnti_type[2];
+  uint32_t    dci_format[2];
+  uint32_t    scheduling_delay[2];
+  uint32_t    resource_assignment[2];
  // uint32_t repetition_number[2];
-  uint32_t mcs[2];
-  uint32_t new_data_indicator[2];
-  uint32_t harq_ack_resource[2];
-  uint32_t npdcch_order_indication[2];
-  uint32_t dci_subframe_repetition_number[2];
+  uint32_t    mcs[2];
+  uint32_t    new_data_indicator[2];
+  uint32_t    harq_ack_resource[2];
+  uint32_t    npdcch_order_indication[2];
+  uint32_t    dci_subframe_repetition_number[2];
   ////////////////////////////////////////////////////////
   //UE specific parameters
-  uint16_t   npdcch_NumRepetitions[2];
+  uint16_t    npdcch_NumRepetitions[2];
 
-  uint16_t   repetition_number[2];
+  uint16_t    repetition_number[2];
   //indicate the corresponding subframe within the repetition (set to 0 when a new NPDCCH pdu is received)
-  uint16_t   repetition_idx[2];
+  uint16_t    repetition_idx[2];
 
   //////////////////////////////////////
-  uint32_t   counter_repetition_number[2];
+  uint32_t    counter_repetition_number[2];
 //  uint32_t   counter_current_sf_repetition[2];
 //  uint32_t   pointer_to_subframe[2];
   //////////////////////////////////////

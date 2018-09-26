@@ -54,7 +54,9 @@ int generate_sss_NB_IoT(int32_t 				**txdataF,
 	uint16_t 		slot_id;  						// slot_id = 17 in NB_IoT
 	unsigned short  bandwidth_even_odd;
 	unsigned short  NB_IoT_start;
-  
+
+    frame_parms->flag_free_sf =1;
+    
 	n_f 	   = frame_number;
 	Nid_NB_IoT = frame_parms->Nid_cell;     // supposing Cell_Id of LTE = Cell_Id of NB-IoT  // if different , NB_IOT_DL_FRAME_PARMS should be includes as attribute
   

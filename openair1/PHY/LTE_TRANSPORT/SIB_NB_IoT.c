@@ -123,6 +123,7 @@ int generate_SIB1(NB_IoT_eNB_NDLSCH_t 		*sib1_struct,
                                 4,       
                                 RB_IoT_ID);
         done =1;
+        frame_parms->flag_free_sf =1;
         
     }
 
@@ -145,15 +146,15 @@ int generate_SIB23(NB_IoT_eNB_NDLSCH_t 	      *SIB23,
 {
     int done=0;
 
- 	uint8_t *SIB23_pdu  = SIB23->harq_process->pdu;
- 	uint32_t rep =  SIB23->resource_assignment;
- 	uint8_t eutro_control_region = 3;
-
-    uint32_t counter_rep    =  SIB23->counter_repetition_number;
-    uint32_t pointer_to_sf  =  SIB23->pointer_to_subframe;             /// to identify wich encoded subframe to transmit 
-
     if( SIB23->active == 1 )
     {
+    	uint8_t *SIB23_pdu  = SIB23->harq_process->pdu;
+	 	uint32_t rep =  SIB23->resource_assignment;
+	 	uint8_t eutro_control_region = 3;
+
+	    uint32_t counter_rep    =  SIB23->counter_repetition_number;
+	    uint32_t pointer_to_sf  =  SIB23->pointer_to_subframe;             /// to identify wich encoded subframe to transmit 
+
     	int G = get_G_NB_IoT(frame_parms);
     	uint8_t Nsf = SIB23->resource_assignment;   //value 2 or 8
 
@@ -184,6 +185,8 @@ int generate_SIB23(NB_IoT_eNB_NDLSCH_t 	      *SIB23,
 
         SIB23->counter_repetition_number--;
         SIB23->pointer_to_subframe++;
+        
+        frame_parms->flag_free_sf =1;
 
         if(SIB23->counter_repetition_number == 0)
         {
@@ -210,16 +213,16 @@ int generate_NDLSCH_NB_IoT(NB_IoT_eNB_NDLSCH_t 	  *RAR,
 {
     int done = 0;
 
- 	uint8_t *RAR_pdu  = RAR->harq_process->pdu;
- 	uint32_t rep =  RAR->repetition_number;
- 	uint8_t eutro_control_region = 3;
-
-    uint32_t counter_rep    =  RAR->counter_repetition_number;
-    uint32_t counter_sf_rep =  RAR->counter_current_sf_repetition;   /// for identifiying when to trigger new scrambling
-    uint32_t pointer_to_sf  =  RAR->pointer_to_subframe;             /// to identify wich encoded subframe to transmit 
-
-    if( RAR->active == 1 )
+    if( (RAR->active == 1)  && (frame_parms->flag_free_sf == 0))
     {
+    	uint8_t *RAR_pdu  = RAR->harq_process->pdu;
+	 	uint32_t rep =  RAR->repetition_number;
+	 	uint8_t eutro_control_region = 3;
+
+	    uint32_t counter_rep    =  RAR->counter_repetition_number;
+	    uint32_t counter_sf_rep =  RAR->counter_current_sf_repetition;   /// for identifiying when to trigger new scrambling
+	    uint32_t pointer_to_sf  =  RAR->pointer_to_subframe;             /// to identify wich encoded subframe to transmit 
+
     	int G = get_G_NB_IoT(frame_parms);
     	uint8_t Nsf = RAR->number_of_subframes_for_resource_assignment;
 
@@ -316,7 +319,7 @@ int generate_NDLSCH_NB_IoT(NB_IoT_eNB_NDLSCH_t 	  *RAR,
 }
 /////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////
-/*int generate_NDCCH_NB_IoT(NB_IoT_eNB_NDLSCH_t 	  *RAR,
+/*int generate_NDCCH_NB_IoT(NB_IoT_eNB_NPDCCH_t 	  *DCI,
 		                   int32_t 				  **txdataF,
 		                   int16_t                amp,
 		                   LTE_DL_FRAME_PARMS 	  *frame_parms,
@@ -326,9 +329,9 @@ int generate_NDLSCH_NB_IoT(NB_IoT_eNB_NDLSCH_t 	  *RAR,
 {
     int done=0;
 
- 	uint8_t *RAR_pdu  = RAR->harq_process->pdu;
+ 	uint8_t  *DCI  = RAR->harq_process->pdu;
  	uint32_t rep =  RAR->repetition_number;
- 	uint8_t eutro_control_region = 3;
+ 	uint8_t  eutro_control_region = 3;
 
     uint32_t counter_rep    =  RAR->counter_repetition_number;
     uint32_t counter_sf_rep =  RAR->counter_current_sf_repetition;   /// for identifiying when to trigger new scrambling
@@ -430,8 +433,8 @@ int generate_NDLSCH_NB_IoT(NB_IoT_eNB_NDLSCH_t 	  *RAR,
 
 	return(done);
 }
-*/
 
+*/
 
 
 ////////////////////////////////////////////////// backup ///////////////////////////

@@ -232,6 +232,8 @@ void common_signal_procedures_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
   int                     With_NSSS=0;                            // With_NSSS = 1; if the frame include a sub-Frame with NSSS signal
 
   uint32_t                hyper_frame=proc->HFN;
+
+  //fp->flag_free_sf =0;
   ////////////////////////////////////////////////////////////////////////////////////
   /*
   rrc_eNB_carrier_data_NB_IoT_t *carrier = &eNB_rrc_inst_NB_IoT->carrier[0];

@@ -649,6 +649,8 @@ typedef struct {
   NPUSCH_CONFIG_COMMONx npusch_config_common;
 
   uint8_t RB_ID_NB_IoT;   // to be used
+
+  uint8_t flag_free_sf;  // flag to indicate for NPDSCH and NPDCCH process if the current SF already used
   ///////////////////////////////////////////////////////////////////// 
 
 } LTE_DL_FRAME_PARMS;
