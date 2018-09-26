@@ -317,9 +317,10 @@ int generate_NDLSCH_NB_IoT(NB_IoT_eNB_NDLSCH_t 	  *RAR,
 
 	return(done);
 }
+
 /////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////
-/*int generate_NDCCH_NB_IoT(NB_IoT_eNB_NPDCCH_t 	  *DCI,
+/*int generate_NPDCCH_NB_IoT(NB_IoT_eNB_NPDCCH_t 	  *DCI,
 		                   int32_t 				  **txdataF,
 		                   int16_t                amp,
 		                   LTE_DL_FRAME_PARMS 	  *frame_parms,
@@ -329,116 +330,80 @@ int generate_NDLSCH_NB_IoT(NB_IoT_eNB_NDLSCH_t 	  *RAR,
 {
     int done=0;
 
- 	uint8_t  *DCI  = RAR->harq_process->pdu;
- 	uint32_t rep =  RAR->repetition_number;
+ 	uint8_t  *DCI_pdu  = DCI->pdu;
+ 	uint32_t rep =  DCI->repetition_number;
  	uint8_t  eutro_control_region = 3;
 
-    uint32_t counter_rep    =  RAR->counter_repetition_number;
-    uint32_t counter_sf_rep =  RAR->counter_current_sf_repetition;   /// for identifiying when to trigger new scrambling
-    uint32_t pointer_to_sf  =  RAR->pointer_to_subframe;             /// to identify wich encoded subframe to transmit 
+    uint32_t counter_rep    =  DCI->counter_repetition_number;
+    uint32_t counter_sf_rep =  DCI->counter_current_sf_repetition;   /// for identifiying when to trigger new scrambling
+    uint32_t pointer_to_sf  =  DCI->pointer_to_subframe;             /// to identify wich encoded subframe to transmit 
 
-    if( RAR->active == 1 )
+    if( DCI->active == 1 )
     {
     	int G = get_G_NB_IoT(frame_parms);
-    	uint8_t Nsf = RAR->number_of_subframes_for_resource_assignment;
+    	uint8_t Nsf = DCI->number_of_subframes_for_resource_assignment;
 
         if( (counter_rep == rep) && (counter_sf_rep == 0) && (pointer_to_sf == 0) )
         {
         	
 
-            dlsch_encoding_NB_IoT(RAR_pdu,
-                                  RAR,
+            dlsch_encoding_NB_IoT(DCI_pdu,
+                                  DCI,
                                   Nsf,             ///// number_of_subframes_required
                                   G);              //// this vallue is fixed, should take into account in future the case of stand-alone & guard-band 
         
              dlsch_scrambling_Gen_NB_IoT(frame_parms,
-                                         RAR,
+                                         DCI,
                                          Nsf*G,
                                          frame, 
                                          subframe*2,
-                                         RAR->rnti);
+                                         DCI->rnti);
         }
 
 		if( (counter_rep != rep) && (counter_sf_rep == 0) && (pointer_to_sf == 0) )
 		{
 			dlsch_scrambling_Gen_NB_IoT(frame_parms,
-                                         RAR,
+                                         DCI,
                                          Nsf*G,
                                          frame, 
                                          subframe*2,
-                                         RAR->rnti);
+                                         DCI->rnti);
 		}
 
-        if( rep > 4)
+      
+
+		DCI->counter_current_sf_repetition++;
+
+        dlsch_modulation_NB_IoT(txdataF,
+                                amp,
+                                frame_parms,
+                                eutro_control_region,     //should be replace by start_symbole   // control region size for LTE , values between 0..3, (0 for stand-alone / 1, 2 or 3 for in-band)
+                                DCI,
+                                G,                  // number of bits per subframe
+                                pointer_to_sf,
+                                subframe,       
+                                RB_IoT_ID);
+
+        if(DCI->counter_current_sf_repetition == rep)
         {
+        	DCI->pointer_to_subframe++;
 
-		        RAR->counter_current_sf_repetition++;
+        	if (Nsf == DCI->pointer_to_subframe)
+        	{
+        		DCI->active = 0;
+        		done =1;
+        	}
 
-		        dlsch_modulation_NB_IoT(txdataF,
-		                                amp,
-		                                frame_parms,
-		                                eutro_control_region,     //should be replace by start_symbole   // control region size for LTE , values between 0..3, (0 for stand-alone / 1, 2 or 3 for in-band)
-		                                RAR,
-		                                G,                  // number of bits per subframe
-		                                pointer_to_sf,
-		                                subframe,       
-		                                RB_IoT_ID);
-
-		        if(RAR->counter_current_sf_repetition == 4)
-		        {
-		        	RAR->pointer_to_subframe++;
-		        	RAR->counter_current_sf_repetition =0;
-
-		        	if (Nsf == RAR->pointer_to_subframe && (RAR->counter_repetition_number > 4))
-		        	{
-		        		RAR->counter_repetition_number = RAR->counter_repetition_number-4;
-		        		RAR->pointer_to_subframe =0;
-		        		RAR->counter_current_sf_repetition =0;
-
-		        	} else {
-
-		        		RAR->active = 0;
-		        		done =1;
-		        	}
-
-		        }
-
-        } else {
-
-        		RAR->counter_current_sf_repetition++;
-
-		        dlsch_modulation_NB_IoT(txdataF,
-		                                amp,
-		                                frame_parms,
-		                                eutro_control_region,     //should be replace by start_symbole   // control region size for LTE , values between 0..3, (0 for stand-alone / 1, 2 or 3 for in-band)
-		                                RAR,
-		                                G,                  // number of bits per subframe
-		                                pointer_to_sf,
-		                                subframe,       
-		                                RB_IoT_ID);
-
-		        if(RAR->counter_current_sf_repetition == rep)
-		        {
-		        	RAR->pointer_to_subframe++;
-
-		        	if (Nsf == RAR->pointer_to_subframe)
-		        	{
-		        		RAR->active = 0;
-		        		done =1;
-		        	}
-
-		        }
-        }   
+        }
+          
     }
 
 	return(done);
 }
 
 */
-
-
 ////////////////////////////////////////////////// backup ///////////////////////////
- //////////////////////////////////////////////////// SIB23 ////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////// SIB23 ////////////////////////////////////////////////////////////////////////
  /* if( (subframe >0) && (subframe !=5) && (With_NSSS == 0) && (frame%2==1) && (frame%64<16) )   ////if((subframe != 0)  && (subframe != 4) && (subframe != 9) ) 
   {
         

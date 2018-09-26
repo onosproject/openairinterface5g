@@ -88,6 +88,10 @@ void handle_nfapi_dlsch_pdu_NB_IoT(PHY_VARS_eNB *eNB,
 	   *
 	   */
   		//LOG_I(PHY,"B NB-handle_nfapi_dlsch_pdu_NB_IoT SIB1\n");
+  		ndlsch->active = 1;
+
+  		ndlsch->rnti = 65535;
+
   		ndlsch_harq = ndlsch->harq_process;
 
 	  	ndlsch->ndlsch_type = SIB1;
@@ -149,6 +153,7 @@ void handle_nfapi_dlsch_pdu_NB_IoT(PHY_VARS_eNB *eNB,
 
 			ndlsch23->active = 1;
 		  	ndlsch23->ndlsch_type = SI_Message;
+		  	ndlsch23->rnti = 65535;
 			ndlsch23->npdsch_start_symbol = rel13->start_symbol; //start OFDM symbol for the ndlsch transmission
 			//ndlsch_harq->pdu = sdu;
 			//LOG_I(PHY,"B content_sib23:%d\n",sdu);

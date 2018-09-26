@@ -161,8 +161,6 @@ int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB_NB_IoT      *eNB,
 
   eNB->DCI_pdu = (DCI_PDU_NB_IoT*) malloc(sizeof(DCI_PDU_NB_IoT));
 
-
-
   //N1 parameters
 
   /// type = 0 => DCI Format N0, type = 1 => DCI Format N1, 1 bits
