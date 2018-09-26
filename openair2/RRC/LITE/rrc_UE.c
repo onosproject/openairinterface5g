@@ -4444,7 +4444,7 @@ NAS_KENB_REFRESH_REQ,NAS_CELL_SELECTION_REQ,RRC_STATE_INACTIVE,RRC_STATE_IDLE,RR
       if (rrc_get_state(ue_mod_id) == RRC_STATE_INACTIVE) {
         // have a look at MAC/main.c void dl_phy_sync_success(...)
 	printf("openair_rrc_ue_init: UE %d\n",ue_mod_id);
-        openair_rrc_ue_init(ue_mod_id,PHY_vars_UE_g[ue_mod_id][0]->common_vars.eNb_id);
+        openair_rrc_ue_init(ue_mod_id,0/*PHY_vars_UE_g[ue_mod_id][0]->common_vars.eNb_id*/);
       }
 
       /* Save cell selection criterion */

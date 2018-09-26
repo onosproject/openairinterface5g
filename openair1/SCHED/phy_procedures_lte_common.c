@@ -717,6 +717,7 @@ lte_subframe_t subframe_select(LTE_DL_FRAME_PARMS *frame_parms,unsigned char sub
 {
 
   // if FDD return dummy value
+  //printf("subframe_select: frame_type %s \n",(frame_parms->frame_type == FDD)?"FDD":"TDD");
   if (frame_parms->frame_type == FDD)
     return(SF_DL);
 

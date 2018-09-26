@@ -575,16 +575,16 @@ void phy_scope_UE(FD_lte_phy_scope_ue *form,
   	rxsig_t = (int16_t**) phy_vars_ue->common_vars.common_vars_rx_data_per_thread[subframe&0x1].rxdataF;
   else	
   	rxsig_t = (int16_t**) phy_vars_ue->common_vars.rxdata;
-  chest_t = (int16_t**) phy_vars_ue->common_vars.common_vars_rx_data_per_thread[phy_vars_ue->current_thread_id[subframe]].dl_ch_estimates_time[eNB_id];
-  chest_f = (int16_t**) phy_vars_ue->common_vars.common_vars_rx_data_per_thread[phy_vars_ue->current_thread_id[subframe]].dl_ch_estimates[eNB_id];
-  pbch_llr = (int8_t*) phy_vars_ue->pbch_vars[eNB_id]->llr;
-  pbch_comp = (int16_t*) phy_vars_ue->pbch_vars[eNB_id]->rxdataF_comp[0];
-  pdcch_llr = (int8_t*) phy_vars_ue->pdcch_vars[phy_vars_ue->current_thread_id[subframe]][eNB_id]->llr;
-  pdcch_comp = (int16_t*) phy_vars_ue->pdcch_vars[phy_vars_ue->current_thread_id[subframe]][eNB_id]->rxdataF_comp[0];
-  pdsch_llr = (int16_t*) phy_vars_ue->pdsch_vars[phy_vars_ue->current_thread_id[subframe]][eNB_id]->llr[0]; // stream 0
+  chest_t = (int16_t**) phy_vars_ue->common_vars.common_vars_rx_data_per_thread[phy_vars_ue->current_thread_id[subframe]].dl_ch_estimates_time[0];
+  chest_f = (int16_t**) phy_vars_ue->common_vars.common_vars_rx_data_per_thread[phy_vars_ue->current_thread_id[subframe]].dl_ch_estimates[0];
+  pbch_llr = (int8_t*) phy_vars_ue->pbch_vars[0]->llr;
+  pbch_comp = (int16_t*) phy_vars_ue->pbch_vars[0]->rxdataF_comp[0];
+  pdcch_llr = (int8_t*) phy_vars_ue->pdcch_vars[phy_vars_ue->current_thread_id[subframe]][0]->llr;
+  pdcch_comp = (int16_t*) phy_vars_ue->pdcch_vars[phy_vars_ue->current_thread_id[subframe]][0]->rxdataF_comp[0];
+  pdsch_llr = (int16_t*) phy_vars_ue->pdsch_vars[phy_vars_ue->current_thread_id[subframe]][0]->llr[0]; // stream 0
   //    pdsch_llr = (int16_t*) phy_vars_ue->lte_ue_pdsch_vars_SI[eNB_id]->llr[0]; // stream 0
-  pdsch_comp = (int16_t*) phy_vars_ue->pdsch_vars[phy_vars_ue->current_thread_id[subframe]][eNB_id]->rxdataF_comp0[0];
-  pdsch_mag = (int16_t*) phy_vars_ue->pdsch_vars[phy_vars_ue->current_thread_id[subframe]][eNB_id]->dl_ch_mag0[0];
+  pdsch_comp = (int16_t*) phy_vars_ue->pdsch_vars[phy_vars_ue->current_thread_id[subframe]][0]->rxdataF_comp0[0];
+  pdsch_mag = (int16_t*) phy_vars_ue->pdsch_vars[phy_vars_ue->current_thread_id[subframe]][0]->dl_ch_mag0[0];
   //printf("FRAME_LENGTH_COMPLEX_SAMPLES is %d\n",FRAME_LENGTH_COMPLEX_SAMPLES);
   // Received signal in time domain of receive antenna 0
   if (rxsig_t != NULL) {

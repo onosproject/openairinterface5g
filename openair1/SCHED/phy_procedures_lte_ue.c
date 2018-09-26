@@ -2457,7 +2457,7 @@ void phy_procedures_UE_TX(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,ui
     }
   }
 
-  if (ue->UE_mode[eNB_id] != PRACH) {
+  if (ue->UE_mode[0] != PRACH) {
     // check cell srs subframe and ue srs subframe. This has an impact on pusch encoding
     isSubframeSRS = is_srs_occasion_common(&ue->frame_parms,proc->frame_tx,proc->subframe_tx);
 
@@ -2467,7 +2467,7 @@ void phy_procedures_UE_TX(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,ui
 
   }
 
-  if (ue->UE_mode[eNB_id] == PUSCH) {
+  if (ue->UE_mode[0] == PUSCH) {
       // check if we need to use PUCCH 1a/1b
       ue_pucch_procedures(ue,proc,eNB_id,abstraction_flag);
       // check if we need to use SRS
@@ -2539,7 +2539,7 @@ void phy_procedures_UE_TX(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,ui
   } // mode != PRACH
 
 
-  if ((ue->UE_mode[eNB_id] == PRACH) &&
+  if ((ue->UE_mode[0] == PRACH) &&
       (ue->frame_parms.prach_config_common.prach_Config_enabled==1)) {
 
     // check if we have PRACH opportunity
@@ -2715,7 +2715,7 @@ void ue_measurement_procedures(
 #ifndef OAI_USRP
 #ifndef OAI_BLADERF
 #ifndef OAI_LMSSDR
-    phy_adjust_gain (ue,dB_fixed(ue->measurements.rssi),ue->common_vars.eNb_id);
+    phy_adjust_gain (ue,dB_fixed(ue->measurements.rssi),0);
     //printf("phy_adjust_gain phy_proc_ue\n");
 #endif
 #endif
@@ -2782,7 +2782,7 @@ void phy_procedures_emos_UE_RX(PHY_VARS_UE *ue,uint8_t last_slot,uint8_t eNB_id)
   if (last_slot==0) {
     emos_dump_UE.timestamp = rt_get_time_ns();
     emos_dump_UE.frame_rx = proc->frame_rx;
-    emos_dump_UE.UE_mode = ue->UE_mode[eNB_id];
+    emos_dump_UE.UE_mode = ue->UE_mode[0];
     emos_dump_UE.mimo_mode = ue->transmission_mode[eNB_id];
     emos_dump_UE.freq_offset = ue->common_vars.freq_offset;
     emos_dump_UE.timing_advance = ue->timing_advance;
@@ -2840,9 +2840,9 @@ void restart_phy(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc, uint8_t eNB_id,uint8_t ab
   //   first_run = 1;
 
   if (abstraction_flag ==0 ) {
-    ue->UE_mode[eNB_id] = NOT_SYNCHED;
+    ue->UE_mode[0] = NOT_SYNCHED;
   } else {
-    ue->UE_mode[eNB_id] = PRACH;
+    ue->UE_mode[0] = PRACH;
     ue->prach_resources[eNB_id]=NULL;
   }
 
@@ -2983,9 +2983,9 @@ void ue_pbch_procedures(uint8_t eNB_id,PHY_VARS_UE *ue,UE_rxtx_proc_t *proc, uin
     frame_tx += pbch_phase;
 
     if (ue->mac_enabled==1) {
-      printf("[UE%d] if mac_enabled? then dl_phy_sync_success. UE_mode %s\n",ue->Mod_id,ue->UE_mode[eNB_id]==NOT_SYNCHED?"NOT_SYNCHED":ue->UE_mode[eNB_id]==NOT_SYNCHED?"SYNCHED":"OTHER CHOICE");
+      printf("[UE%d] if mac_enabled? then dl_phy_sync_success. UE_mode %s\n",ue->Mod_id,ue->UE_mode[0]==NOT_SYNCHED?"NOT_SYNCHED":ue->UE_mode[0]==NOT_SYNCHED?"SYNCHED":"OTHER CHOICE");
       mac_xface->dl_phy_sync_success(ue->Mod_id,frame_rx,eNB_id,
-             ue->UE_mode[eNB_id]==NOT_SYNCHED ? 1 : 0);
+             ue->UE_mode[0]==NOT_SYNCHED ? 1 : 0);
     }
 
 #ifdef EMOS
@@ -3822,11 +3822,11 @@ void process_rar(PHY_VARS_UE *ue, UE_rxtx_proc_t *proc, int eNB_id, runmode_t mo
   LOG_D(PHY,"[UE  %d][RAPROC] Frame %d subframe %d Received RAR  mode %d\n",
   ue->Mod_id,
   frame_rx,
-  subframe_rx, ue->UE_mode[eNB_id]);
+  subframe_rx, ue->UE_mode[0]);
 
 
   if (ue->mac_enabled == 1) {
-    if ((ue->UE_mode[eNB_id] != PUSCH) &&
+    if ((ue->UE_mode[0] != PUSCH) &&
   (ue->prach_resources[eNB_id]->Msg3!=NULL)) {
       LOG_D(PHY,"[UE  %d][RAPROC] Frame %d subframe %d Invoking MAC for RAR (current preamble %d)\n",
 	    ue->Mod_id,frame_rx,
@@ -3880,7 +3880,7 @@ void process_rar(PHY_VARS_UE *ue, UE_rxtx_proc_t *proc, int eNB_id, runmode_t mo
 				       ue->ulsch_Msg3_subframe[eNB_id]);
 	  ue->ulsch[eNB_id]->harq_processes[harq_pid]->round = 0;
 	  
-	  ue->UE_mode[eNB_id] = RA_RESPONSE;
+	  ue->UE_mode[0] = RA_RESPONSE;
 	  //      ue->Msg3_timer[eNB_id] = 10;
 	  ue->ulsch[eNB_id]->power_offset = 6;
 	  ue->ulsch_no_allocation_counter[eNB_id] = 0;
@@ -4447,7 +4447,7 @@ void *UE_thread_slot1_dl_processing(void *arg) {
 
         if ( (subframe_rx == 0) && (ue->decode_MIB == 1))
         {
-            ue_pbch_procedures(ue->common_vars.eNb_id,ue,proc,0);
+            ue_pbch_procedures(0,ue,proc,0);
         }
 
         proc->chan_est_slot1_available = 1;
@@ -5690,7 +5690,7 @@ void phy_procedures_UE_lte(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,u
   int slot;
 
   if (ue->mac_enabled == 0) {
-    ue->UE_mode[eNB_id]=PUSCH;
+    ue->UE_mode[0]=PUSCH;
   }
 
 

@@ -4134,7 +4134,7 @@ uint16_t dci_decoding_procedure(PHY_VARS_UE *ue,
     //printf("[dci]4 dci_cnt %d, CCEmap0 %x\n",dci_cnt,CCEmap0);
   }
 
-  if (ue->UE_mode[eNB_id] <= PRACH)
+  if (ue->UE_mode[0] <= PRACH)
     return(dci_cnt);
 
   if (ue->prach_resources[eNB_id])

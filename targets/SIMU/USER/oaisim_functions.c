@@ -1462,7 +1462,7 @@ void init_openair1(void)
     for (eNB_id=0; eNB_id<NB_eNB_INST; eNB_id++) {
       PHY_vars_eNB_g[eNB_id] = (PHY_VARS_eNB**) malloc(MAX_NUM_CCs*sizeof(PHY_VARS_eNB*));
       for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
-        LOG_I(PHY,"init lte parms: Nid_cell %d, Frame type %d, N_RB_DL %d, nushift %d\n",enb_properties->properties[eNB_id]->Nid_cell[CC_id],oai_emulation.info.frame_type[CC_id],oai_emulation.info.N_RB_DL[CC_id],((enb_properties->properties[eNB_id]->Nid_cell[CC_id])%6));
+        LOG_I(PHY,"init lte parms: Nid_cell %d, Frame type %s, N_RB_DL %d, nushift %d\n",enb_properties->properties[eNB_id]->Nid_cell[CC_id],(oai_emulation.info.frame_type[CC_id]== FDD)?"FDD":"TDD",oai_emulation.info.N_RB_DL[CC_id],((enb_properties->properties[eNB_id]->Nid_cell[CC_id])%6));
     	frame_parms[CC_id] = calloc(1, sizeof(LTE_DL_FRAME_PARMS));
     	(frame_parms[CC_id])->frame_type         = oai_emulation.info.frame_type[CC_id];
     	(frame_parms[CC_id])->tdd_config         = oai_emulation.info.tdd_config_S[CC_id];
@@ -1492,13 +1492,14 @@ void init_openair1(void)
         PHY_vars_eNB_g[eNB_id][CC_id]->Mod_id=eNB_id;
         PHY_vars_eNB_g[eNB_id][CC_id]->CC_id=CC_id;
       }
-    }
+  }
   PHY_vars_UE_g = (PHY_VARS_UE***)malloc(NB_UE_INST*sizeof(PHY_VARS_UE**));
   for (UE_id=0; UE_id<NB_UE_INST; UE_id++) {
     PHY_vars_UE_g[UE_id] = (PHY_VARS_UE**) malloc(MAX_NUM_CCs*sizeof(PHY_VARS_UE*));
     for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
       (frame_parms[CC_id])->nb_antennas_tx     = 1;
       (frame_parms[CC_id])->nb_antennas_rx     = nb_antennas_rx_ue;
+      (frame_parms[CC_id])->frame_type         = oai_emulation.info.frame_type[CC_id];
       PHY_vars_UE_g[UE_id][CC_id] = init_lte_UE(frame_parms[CC_id], UE_id,abstraction_flag);
       PHY_vars_UE_g[UE_id][CC_id]->Mod_id=UE_id;
       PHY_vars_UE_g[UE_id][CC_id]->CC_id=CC_id;
@@ -1524,6 +1525,7 @@ void init_openair1(void)
 		   enb_properties->properties[eNB_id]->nb_antennas_tx[CC_id],
 		   nb_antennas_rx_ue,
 		   oai_emulation.info.eMBMS_active_state);*/
+
   for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
    for (eNB_id=0;eNB_id<enb_properties->number;eNB_id++) {
     // This is for IF4p5 RRU, gets done by RRC configuration of eNB
@@ -1547,12 +1549,12 @@ void init_openair1(void)
       }
     }
   }
-
-  printf ("AFTER init: MAX_NUM_CCs %d, Nid_cell %d frame_type %d,tdd_config %d\n",
+  for (eNB_id=0; eNB_id<NB_eNB_INST; eNB_id++)
+  	printf ("AFTER init: MAX_NUM_CCs %d, Nid_cell %d frame_type %d,tdd_config %d\n",
           MAX_NUM_CCs,
-          PHY_vars_eNB_g[0][0]->frame_parms.Nid_cell,
-          PHY_vars_eNB_g[0][0]->frame_parms.frame_type,
-          PHY_vars_eNB_g[0][0]->frame_parms.tdd_config);
+          PHY_vars_eNB_g[eNB_id][0]->frame_parms.Nid_cell,
+          PHY_vars_eNB_g[eNB_id][0]->frame_parms.frame_type,
+          PHY_vars_eNB_g[eNB_id][0]->frame_parms.tdd_config);
 
   number_of_cards = 1;
 
@@ -1627,11 +1629,11 @@ void init_openair1(void)
       // update UE_mode for each eNB_id not just 0
       for (eNB_id=0; eNB_id<NB_eNB_INST; eNB_id++){
 	      if (abstraction_flag == 0) {
-		if (phy_test==0) PHY_vars_UE_g[UE_id][CC_id]->UE_mode[eNB_id] = NOT_SYNCHED;
-		else PHY_vars_UE_g[UE_id][CC_id]->UE_mode[eNB_id] = PUSCH;
+		if (phy_test==0) PHY_vars_UE_g[UE_id][CC_id]->UE_mode[0] = NOT_SYNCHED;
+		else PHY_vars_UE_g[UE_id][CC_id]->UE_mode[0] = PUSCH;
 	      } else {
 		// 0 is the index of the connected eNB
-		PHY_vars_UE_g[UE_id][CC_id]->UE_mode[eNB_id] = PRACH;
+		PHY_vars_UE_g[UE_id][CC_id]->UE_mode[0] = PRACH;
 	      }
       }
       if (phy_test==1)
@@ -1647,7 +1649,7 @@ void init_openair1(void)
       	}
       	PHY_vars_UE_g[UE_id][CC_id]->current_dlsch_cqi[eNB_id] = 10;
 
-      	LOG_I(EMU, "UE %d mode is initialized to %d\n", UE_id, PHY_vars_UE_g[UE_id][CC_id]->UE_mode[eNB_id] );
+      	LOG_I(EMU, "eNB_id %d, UE %d, CC %d, mode is initialized to %d\n", eNB_id, UE_id, CC_id, PHY_vars_UE_g[UE_id][CC_id]->UE_mode[0] );
       }
 #if ENABLE_RAL
       PHY_vars_UE_g[UE_id][CC_id]->ral_thresholds_timed = hashtable_create (64, NULL, NULL);

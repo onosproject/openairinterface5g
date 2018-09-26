@@ -409,7 +409,7 @@ int slot_fep_freq(PHY_VARS_UE *ue,
 #if UE_TIMING_TRACE
         start_meas(&ue->dlsch_channel_estimation_stats);
 #endif
-        lte_dl_channel_estimation_freq(ue,eNB_id,0,
+        lte_dl_channel_estimation_freq(ue,0,0,
                                   Ns,
                                   aa,
                                   l,
@@ -419,7 +419,7 @@ int slot_fep_freq(PHY_VARS_UE *ue,
 #endif
 
         for (i=0; i<ue->measurements.n_adj_cells; i++) {
-          lte_dl_channel_estimation_freq(ue,eNB_id,i+1,
+          lte_dl_channel_estimation_freq(ue,0,i+1,
                                     Ns,
                                     aa,
                                     l,
@@ -440,7 +440,7 @@ int slot_fep_freq(PHY_VARS_UE *ue,
           start_meas(&ue->dlsch_freq_offset_estimation_stats);
 #endif
 
-        lte_est_freq_offset(common_vars->common_vars_rx_data_per_thread[current_thread_id[Ns>>1]].dl_ch_estimates[eNB_id],
+        lte_est_freq_offset(common_vars->common_vars_rx_data_per_thread[current_thread_id[Ns>>1]].dl_ch_estimates[0],
                             frame_parms,
                             l,
                             &common_vars->freq_offset,

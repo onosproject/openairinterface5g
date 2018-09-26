@@ -422,7 +422,7 @@ void ue_rrc_measurements(PHY_VARS_UE *ue,
       //printf("after ue->measurements.rssi %d\n",ue->measurements.rssi);
       //((200*ue->measurements.rsrq[eNB_offset]) + ((1024-200)*100*ue->measurements.rsrp[eNB_offset]*ue->frame_parms.N_RB_DL/ue->measurements.rssi))>>10;
     } else { // Do abstraction of RSRP and RSRQ
-      ue->measurements.rssi = ue->measurements.rx_power_avg[ue->common_vars.eNb_id];
+      ue->measurements.rssi = ue->measurements.rx_power_avg[0];
       // dummay value for the moment
       ue->measurements.rsrp[eNB_offset] = -93 ;
       ue->measurements.rsrq[eNB_offset] = 3;
@@ -489,14 +489,6 @@ void ue_rrc_measurements_freq(PHY_VARS_UE *ue,
   //printf("before ue->measurements.rssi %d\n",ue->measurements.rssi);
   //printf("[UE %d] ue->current_thread_id[%d] %d, subframe %d\n",ue->Mod_id,subframe,ue->current_thread_id[subframe], subframe);
   //printf("previous_thread_id %d\n",previous_thread_id);
-  /*if (ue->Mod_id==0 && ue->common_vars.eNb_id==0)
-  	write_output("rxsigF00.m","rxF00", ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].rxdataF[0],10*ue->frame_parms.ofdm_symbol_size*ue->frame_parms.symbols_per_tti,1,16);
-  else if (ue->Mod_id==0 && ue->common_vars.eNb_id==1)
-  	write_output("rxsigF10.m","rxF10", ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].rxdataF[0],10*ue->frame_parms.ofdm_symbol_size*ue->frame_parms.symbols_per_tti,1,16);
-  else if (ue->Mod_id==1 && ue->common_vars.eNb_id==1)
-  	write_output("rxsigF11.m","rxF11", ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].rxdataF[0],10*ue->frame_parms.ofdm_symbol_size*ue->frame_parms.symbols_per_tti,1,16);
-  else if (ue->Mod_id==1 && ue->common_vars.eNb_id==0)
-  	write_output("rxsigF01.m","rxF01", ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].rxdataF[0],10*ue->frame_parms.ofdm_symbol_size*ue->frame_parms.symbols_per_tti,1,16);*/
 
   for (eNB_offset = 0; eNB_offset<1+ue->measurements.n_adj_cells; eNB_offset++) {
     printf("ue_rrc_measurements_freq: UE%d, eNB_offset %d,n_adj_cells %d, ofdm_symbol_size %d, symbols_per_tti %d\n",ue->Mod_id,eNB_offset,ue->measurements.n_adj_cells,ue->frame_parms.ofdm_symbol_size,ue->frame_parms.symbols_per_tti);
@@ -732,7 +724,7 @@ void ue_rrc_measurements_freq(PHY_VARS_UE *ue,
       //printf("after ue->measurements.rssi %d\n",ue->measurements.rssi);
       //((200*ue->measurements.rsrq[eNB_offset]) + ((1024-200)*100*ue->measurements.rsrp[eNB_offset]*ue->frame_parms.N_RB_DL/ue->measurements.rssi))>>10;
     } else { // Do abstraction of RSRP and RSRQ
-      ue->measurements.rssi = ue->measurements.rx_power_avg[ue->common_vars.eNb_id];
+      ue->measurements.rssi = ue->measurements.rx_power_avg[0];
       // dummay value for the moment
       ue->measurements.rsrp[eNB_offset] = -93 ;
       ue->measurements.rsrq[eNB_offset] = 3;
@@ -829,7 +821,7 @@ void lte_ue_measurements(PHY_VARS_UE *ue,
   }
 
   // signal measurements
-  for (eNB_id=0; eNB_id<ue->n_connected_eNB; eNB_id++) {
+  for (eNB_id=0; eNB_id<1/*ue->n_connected_eNB*/; eNB_id++) {
     for (aarx=0; aarx<frame_parms->nb_antennas_rx; aarx++) {
       for (aatx=0; aatx<frame_parms->nb_antenna_ports_eNB; aatx++) {
         ue->measurements.rx_spatial_power[eNB_id][aatx][aarx] =
@@ -861,8 +853,7 @@ void lte_ue_measurements(PHY_VARS_UE *ue,
   } //eNB_id
 
   eNB_id=0;
-  for (eNB_id = 0; eNB_id < ue->n_connected_eNB; eNB_id++){
-   if (ue->transmission_mode[eNB_id]==4 || ue->transmission_mode[eNB_id]==3){
+  if (ue->transmission_mode[eNB_id]==4 || ue->transmission_mode[eNB_id]==3){
     if (rank_adaptation == 1)
       rank_tm3_tm4 = rank_estimation_tm3_tm4(&ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].dl_ch_estimates[eNB_id][0][4],
                                              &ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].dl_ch_estimates[eNB_id][2][4],
@@ -874,7 +865,6 @@ void lte_ue_measurements(PHY_VARS_UE *ue,
 #ifdef DEBUG_RANK_EST
    printf("rank tm3 or tm4 %d\n", rank_tm3_tm4);
 #endif
-   }
 
    if (ue->transmission_mode[eNB_id]!=4 && ue->transmission_mode[eNB_id]!=3)
     ue->measurements.rank[eNB_id] = 0;
@@ -886,7 +876,7 @@ void lte_ue_measurements(PHY_VARS_UE *ue,
 
   // filter to remove jitter
   if (ue->init_averaging == 0) {
-    for (eNB_id = 0; eNB_id < ue->n_connected_eNB; eNB_id++)
+    for (eNB_id = 0; eNB_id < 1/*ue->n_connected_eNB*/; eNB_id++)
       ue->measurements.rx_power_avg[eNB_id] = (int)
           (((k1*((long long int)(ue->measurements.rx_power_avg[eNB_id]))) +
             (k2*((long long int)(ue->measurements.rx_power_tot[eNB_id]))))>>10);
@@ -897,14 +887,14 @@ void lte_ue_measurements(PHY_VARS_UE *ue,
         (((k1*((long long int) (ue->measurements.n0_power_avg))) +
           (k2*((long long int) (ue->measurements.n0_power_tot))))>>10);
   } else {
-    for (eNB_id = 0; eNB_id < ue->n_connected_eNB; eNB_id++)
+    for (eNB_id = 0; eNB_id < 1/*ue->n_connected_eNB*/; eNB_id++)
       ue->measurements.rx_power_avg[eNB_id] = ue->measurements.rx_power_tot[eNB_id];
 
     ue->measurements.n0_power_avg = ue->measurements.n0_power_tot;
     ue->init_averaging = 0;
   }
   //printf("[UE %d] UE %d connected to eNB %d\n",ue->Mod_id,ue->n_connected_eNB,eNB_id);
-  for (eNB_id = 0; eNB_id < ue->n_connected_eNB; eNB_id++) {
+  for (eNB_id = 0; eNB_id < 1/*ue->n_connected_eNB*/; eNB_id++) {
     ue->measurements.rx_power_avg_dB[eNB_id] = dB_fixed( ue->measurements.rx_power_avg[eNB_id]);
     ue->measurements.wideband_cqi_tot[eNB_id] = dB_fixed2(ue->measurements.rx_power_tot[eNB_id],ue->measurements.n0_power_tot);
     ue->measurements.wideband_cqi_avg[eNB_id] = dB_fixed2(ue->measurements.rx_power_avg[eNB_id],ue->measurements.n0_power_avg);
@@ -923,7 +913,7 @@ void lte_ue_measurements(PHY_VARS_UE *ue,
 
   ue->measurements.n0_power_avg_dB = dB_fixed( ue->measurements.n0_power_avg);
 
-  for (eNB_id = 0; eNB_id < ue->n_connected_eNB; eNB_id++) {
+  for (eNB_id = 0; eNB_id < 1/*ue->n_connected_eNB*/; eNB_id++) {
     if (frame_parms->mode1_flag==0) {
       // cqi/pmi information
 
@@ -1203,7 +1193,7 @@ void lte_ue_measurements_freq(PHY_VARS_UE *ue,
 
   // signal measurements
   printf("lte_ue_measurements_freq: ue->n_connected_eNB %d\n",ue->n_connected_eNB);
-  for (eNB_id=0; eNB_id<ue->n_connected_eNB; eNB_id++) {
+  for (eNB_id=0; eNB_id<1/*ue->n_connected_eNB*/; eNB_id++) {
     for (aarx=0; aarx<frame_parms->nb_antennas_rx; aarx++) {
       for (aatx=0; aatx<frame_parms->nb_antenna_ports_eNB; aatx++) {
         ue->measurements.rx_spatial_power[eNB_id][aatx][aarx] =
@@ -1235,8 +1225,7 @@ void lte_ue_measurements_freq(PHY_VARS_UE *ue,
   } //eNB_id
 
   eNB_id=0;
-  for (eNB_id = 0; eNB_id < ue->n_connected_eNB; eNB_id++){
-   if (ue->transmission_mode[eNB_id]==4 || ue->transmission_mode[eNB_id]==3){
+  if (ue->transmission_mode[eNB_id]==4 || ue->transmission_mode[eNB_id]==3){
     if (rank_adaptation == 1)
       rank_tm3_tm4 = rank_estimation_tm3_tm4(&ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].dl_ch_estimates[eNB_id][0][4],
                                              &ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].dl_ch_estimates[eNB_id][2][4],
@@ -1248,7 +1237,6 @@ void lte_ue_measurements_freq(PHY_VARS_UE *ue,
 #ifdef DEBUG_RANK_EST
    printf("rank tm3 or tm4 %d\n", rank_tm3_tm4);
 #endif
-   }
 
   if (ue->transmission_mode[eNB_id]!=4 && ue->transmission_mode[eNB_id]!=3)
     ue->measurements.rank[eNB_id] = 0;
@@ -1259,7 +1247,7 @@ void lte_ue_measurements_freq(PHY_VARS_UE *ue,
   }
   // filter to remove jitter
   if (ue->init_averaging == 0) {
-    for (eNB_id = 0; eNB_id < ue->n_connected_eNB; eNB_id++)
+    for (eNB_id = 0; eNB_id < 1/*ue->n_connected_eNB*/; eNB_id++)
       ue->measurements.rx_power_avg[eNB_id] = (int)
           (((k1*((long long int)(ue->measurements.rx_power_avg[eNB_id]))) +
             (k2*((long long int)(ue->measurements.rx_power_tot[eNB_id]))))>>10);
@@ -1270,14 +1258,14 @@ void lte_ue_measurements_freq(PHY_VARS_UE *ue,
         (((k1*((long long int) (ue->measurements.n0_power_avg))) +
           (k2*((long long int) (ue->measurements.n0_power_tot))))>>10);
   } else {
-    for (eNB_id = 0; eNB_id < ue->n_connected_eNB; eNB_id++)
+    for (eNB_id = 0; eNB_id < 1/*ue->n_connected_eNB*/; eNB_id++)
       ue->measurements.rx_power_avg[eNB_id] = ue->measurements.rx_power_tot[eNB_id];
 
     ue->measurements.n0_power_avg = ue->measurements.n0_power_tot;
     ue->init_averaging = 0;
   }
   //printf("[UE %d] UE %d connected to eNB %d\n",ue->Mod_id,ue->n_connected_eNB,eNB_id);
-  for (eNB_id = 0; eNB_id < ue->n_connected_eNB; eNB_id++) {
+  for (eNB_id = 0; eNB_id < 1/*ue->n_connected_eNB*/; eNB_id++) {
     ue->measurements.rx_power_avg_dB[eNB_id] = dB_fixed( ue->measurements.rx_power_avg[eNB_id]);
     ue->measurements.wideband_cqi_tot[eNB_id] = dB_fixed2(ue->measurements.rx_power_tot[eNB_id],ue->measurements.n0_power_tot);
     ue->measurements.wideband_cqi_avg[eNB_id] = dB_fixed2(ue->measurements.rx_power_avg[eNB_id],ue->measurements.n0_power_avg);
@@ -1296,7 +1284,7 @@ void lte_ue_measurements_freq(PHY_VARS_UE *ue,
 
   ue->measurements.n0_power_avg_dB = dB_fixed( ue->measurements.n0_power_avg);
 
-  for (eNB_id = 0; eNB_id < ue->n_connected_eNB; eNB_id++) {
+  for (eNB_id = 0; eNB_id < 1/*ue->n_connected_eNB*/; eNB_id++) {
     if (frame_parms->mode1_flag==0) {
       // cqi/pmi information
 
