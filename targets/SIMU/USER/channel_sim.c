@@ -237,7 +237,7 @@ void do_DL_sig(channel_desc_t *eNB2UE[NUMBER_OF_eNB_MAX][NUMBER_OF_UE_MAX][MAX_N
     } // hold channel
   }
   else { //abstraction_flag
-    eNB_id = PHY_vars_UE_g[UE_id][CC_id]->common_vars.eNb_id;
+    //eNB_id = PHY_vars_UE_g[UE_id][CC_id]->common_vars.eNb_id;
     pthread_mutex_lock(&eNB_output_mutex[UE_id]);
  
     if (eNB_output_mask[UE_id] == 0) {  //  This is the first eNodeB for this UE, clear the buffer
@@ -249,7 +249,7 @@ void do_DL_sig(channel_desc_t *eNB2UE[NUMBER_OF_eNB_MAX][NUMBER_OF_UE_MAX][MAX_N
     }
     pthread_mutex_unlock(&eNB_output_mutex[UE_id]);
 
-    //for (eNB_id=0; eNB_id<NB_eNB_INST; eNB_id++) {
+    for (eNB_id=0; eNB_id<NB_eNB_INST; eNB_id++) {
       txdata = PHY_vars_eNB_g[eNB_id][CC_id]->common_vars.txdata[0];
       sf_offset = subframe*frame_parms->samples_per_tti;
       //for (int idx=0;idx<10;idx++) printf("dumping DL raw subframe %d, eNB_id %d: txdata[%d] = (%d,%d)\n", subframe,eNB_id, idx, ((short*)&txdata[0][sf_offset+idx])[0], ((short*)&txdata[0][sf_offset+idx])[1]);
@@ -386,7 +386,7 @@ void do_DL_sig(channel_desc_t *eNB2UE[NUMBER_OF_eNB_MAX][NUMBER_OF_UE_MAX][MAX_N
 		
       } // eNB_output_mask
       pthread_mutex_unlock(&eNB_output_mutex[UE_id]);      
-    //} // eNB_id
+    } // eNB_id
 
   }
 }
@@ -480,7 +480,7 @@ void do_DL_sig_freq(channel_desc_t *eNB2UE[NUMBER_OF_eNB_MAX][NUMBER_OF_UE_MAX][
   }
   else { //abstraction_flag = 0
 
-    printf("UE association: (UE%d->eNB%d)\n",UE_id,PHY_vars_UE_g[UE_id][CC_id]->common_vars.eNb_id);
+    //printf("UE association: (UE%d->eNB%d)\n",UE_id,PHY_vars_UE_g[UE_id][CC_id]->common_vars.eNb_id);
     eNB_id = PHY_vars_UE_g[UE_id][CC_id]->common_vars.eNb_id;
     pthread_mutex_lock(&eNB_output_mutex[UE_id]);
     //printf("eNB_output_mask[UE_id] is %d\n",eNB_output_mask[UE_id]);
@@ -535,10 +535,10 @@ void do_DL_sig_freq(channel_desc_t *eNB2UE[NUMBER_OF_eNB_MAX][NUMBER_OF_UE_MAX][
 			//for (x=0;x<frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti;x++){
 			//	fprintf(file1,"%d\t%e\t%e\n",x,s_re_f[0][x],s_im_f[0][x]);
 			//}
-		if (eNB_id==0 && subframe ==9)
+		/*if (eNB_id==0 && subframe ==9)
 	      		write_output("txsigF0.m","txF0", PHY_vars_eNB_g[eNB_id][CC_id]->common_vars.txdataF[0][0],10*frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti,1,16);
 		else if (eNB_id==1 && subframe ==9)
-	      		write_output("txsigF1.m","txF1", PHY_vars_eNB_g[eNB_id][CC_id]->common_vars.txdataF[0][0],10*frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti,1,16);
+	      		write_output("txsigF1.m","txF1", PHY_vars_eNB_g[eNB_id][CC_id]->common_vars.txdataF[0][0],10*frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti,1,16);*/
 #ifdef DEBUG_SIM
       		LOG_D(OCM,"[SIM][DL] eNB %d (CCid %d): tx_pwr %.1f dBm/RE (target %d dBm/RE), for subframe %d\n",
             	eNB_id,CC_id,
@@ -579,16 +579,16 @@ void do_DL_sig_freq(channel_desc_t *eNB2UE[NUMBER_OF_eNB_MAX][NUMBER_OF_UE_MAX][
 
       		rx_pwr = signal_energy_fp2(eNB2UE[eNB_id][UE_id][CC_id]->chF[0],
                                  frame_parms->N_RB_DL*12+1)*(frame_parms->N_RB_DL*12+1);
-      		printf("[SIM][DL] Channel eNB %d => UE %d (CCid %d): Channel gain %f dB (%f)\n",eNB_id,UE_id,CC_id,10*log10(rx_pwr),rx_pwr);
+      		//printf("[SIM][DL] Channel eNB %d => UE %d (CCid %d): Channel gain %f dB (%f)\n",eNB_id,UE_id,CC_id,10*log10(rx_pwr),rx_pwr);
 //#ifdef DEBUG_SIM
-		if (eNB_id==0 && UE_id ==0 && subframe ==9)
+		/*if (eNB_id==0 && UE_id ==0 && subframe ==9)
 	      		write_output_chFf("channelF00.m","chF00", eNB2UE[eNB_id][UE_id][CC_id]->chFf[0].x,eNB2UE[eNB_id][UE_id][CC_id]->chFf[0].y,frame_parms->ofdm_symbol_size,1);
 		else if (eNB_id==1 && UE_id ==0 && subframe ==9)
 	      		write_output_chFf("channelF10.m","chF10", eNB2UE[eNB_id][UE_id][CC_id]->chFf[0].x,eNB2UE[eNB_id][UE_id][CC_id]->chFf[0].y,frame_parms->ofdm_symbol_size,1);
 		else if (eNB_id==0 && UE_id ==1 && subframe ==9)
 	      		write_output_chFf("channelF01.m","chF01", eNB2UE[eNB_id][UE_id][CC_id]->chFf[0].x,eNB2UE[eNB_id][UE_id][CC_id]->chFf[0].y,frame_parms->ofdm_symbol_size,1);
 		else if (eNB_id==1 && UE_id ==1 && subframe ==9)
-	      		write_output_chFf("channelF11.m","chF11", eNB2UE[eNB_id][UE_id][CC_id]->chFf[0].x,eNB2UE[eNB_id][UE_id][CC_id]->chFf[0].y,frame_parms->ofdm_symbol_size,1);
+	      		write_output_chFf("channelF11.m","chF11", eNB2UE[eNB_id][UE_id][CC_id]->chFf[0].x,eNB2UE[eNB_id][UE_id][CC_id]->chFf[0].y,frame_parms->ofdm_symbol_size,1);*/
       		/*for (i=0; i<frame_parms->N_RB_DL*12; i++){
         		printf("do_DL_sig channel(eNB%d,UE%d)[%d] : (%f,%f)\n",eNB_id,UE_id,i,[i],eNB2UE[eNB_id][UE_id][CC_id]->chFf[0].y[i]);
 		}*/
@@ -736,7 +736,7 @@ void do_DL_sig_freq(channel_desc_t *eNB2UE[NUMBER_OF_eNB_MAX][NUMBER_OF_UE_MAX][
 		    	12);
 			stop_meas(&eNB2UE[eNB_id][UE_id][CC_id]->DL_adc_freq);
 #endif
-    			if (eNB_id==0 && subframe ==9){
+    			/*if (eNB_id==0 && subframe ==9){
 				if (UE_id==0)
     				   write_output("rxsigF00.m","rxF00", PHY_vars_UE_g[UE_id][CC_id]->common_vars.common_vars_rx_data_per_thread[subframe&0x1].rxdataF[0],10*frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti,1,16);
 				else if (UE_id==1)
@@ -747,7 +747,7 @@ void do_DL_sig_freq(channel_desc_t *eNB2UE[NUMBER_OF_eNB_MAX][NUMBER_OF_UE_MAX][
 				  write_output("rxsigF10.m","rxF10", PHY_vars_UE_g[UE_id][CC_id]->common_vars.common_vars_rx_data_per_thread[subframe&0x1].rxdataF[0],10*frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti,1,16);
 				else if (UE_id==1)
 				  write_output("rxsigF11.m","rxF11", PHY_vars_UE_g[UE_id][CC_id]->common_vars.common_vars_rx_data_per_thread[subframe&0x1].rxdataF[0],10*frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti,1,16);
-			}
+			}*/
 	      		//for (int idx=0;idx<10;idx++) printf("dumping DL raw subframe %d: r_re_p_f[%d] = (%e,%e)\n", subframe, idx, r_re_p_f[0][idx], r_im_p_f[0][idx]);
               		//for (int idx=0;idx<10;idx++) printf("dumping DL raw subframe %d,UE %d, eNB_id %d: rxdataF0[%d] = (%d,%d)\n", subframe,UE_id,eNB_id, idx, ((short*)&rxdataF[0][sf_offset+idx])[0], ((short*)&rxdataF[0][sf_offset+idx])[1]);
       	        	//print_meas (&eNB2UE[eNB_id][UE_id][CC_id]->DL_adc,"[DL][adc]", &eNB2UE[eNB_id][UE_id][CC_id]->DL_adc, &eNB2UE[eNB_id][UE_id][CC_id]->DL_adc);
@@ -873,8 +873,8 @@ void do_UL_sig(channel_desc_t *UE2eNB[NUMBER_OF_UE_MAX][NUMBER_OF_eNB_MAX][MAX_N
     // Compute RX signal for eNB = eNB_id
     for (UE_id=0; UE_id<NB_UE_INST; UE_id++) {
       //printf("ue->generate_ul_signal[%d] %d\n",eNB_id,PHY_vars_UE_g[UE_id][CC_id]->generate_ul_signal[eNB_id]);
-      if (PHY_vars_UE_g[UE_id][CC_id]->common_vars.eNb_id != eNB_id)
-		continue;
+      //if (PHY_vars_UE_g[UE_id][CC_id]->common_vars.eNb_id != eNB_id)
+	//	continue;
       //printf("[channel_sim_UL_time] subframe %d\n",subframe);
       txdata = PHY_vars_UE_g[UE_id][CC_id]->common_vars.txdata;
       sf_offset = subframe*frame_parms->samples_per_tti;

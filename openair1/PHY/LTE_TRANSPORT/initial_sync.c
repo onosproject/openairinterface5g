@@ -127,7 +127,7 @@ int pbch_detection(PHY_VARS_UE *ue, runmode_t mode)
     pbch_tx_ant = rx_pbch(&ue->common_vars,
                           ue->pbch_vars[0],
                           frame_parms,
-                          ue->common_vars.eNb_id,
+                          0,
                           SISO,
                           ue->high_speed_flag,
                           frame_mod4);
@@ -140,7 +140,7 @@ int pbch_detection(PHY_VARS_UE *ue, runmode_t mode)
     pbch_tx_ant = rx_pbch(&ue->common_vars,
                           ue->pbch_vars[0],
                           frame_parms,
-                          ue->common_vars.eNb_id,
+                          0,
                           ALAMOUTI,
                           ue->high_speed_flag,
                           frame_mod4);
@@ -236,7 +236,7 @@ int pbch_detection(PHY_VARS_UE *ue, runmode_t mode)
     for(int i=0; i<RX_NB_TH;i++)
     {
         ue->proc.proc_rxtx[i].frame_rx =   (((ue->pbch_vars[0]->decoded_output[2]&3)<<6) + (ue->pbch_vars[0]->decoded_output[1]>>2))<<2;
-      //ue->proc.proc_rxtx[i].frame_rx =   (((ue->pbch_vars[0]->decoded_output[2]&3)<<6) + (ue->pbch_vars[0]->decoded_output[1]>>2))<<2;
+        ue->proc.proc_rxtx[i].frame_rx =   (((ue->pbch_vars[0]->decoded_output[2]&3)<<6) + (ue->pbch_vars[0]->decoded_output[1]>>2))<<2;
 
 #ifndef USER_MODE
         // one frame delay
@@ -504,6 +504,7 @@ int initial_sync(PHY_VARS_UE *ue, runmode_t mode)
   frame_parms->frame_type=FDD;
   printf("Inside initial_sync: FDD\n");
   init_frame_parms(frame_parms,1);
+  int *tmp;
   /*
   write_output("rxdata0.m","rxd0",ue->common_vars.rxdata[0],10*frame_parms->samples_per_tti,1,1);
   exit(-1);
@@ -511,7 +512,7 @@ int initial_sync(PHY_VARS_UE *ue, runmode_t mode)
   printf("before lte_sync_time, ue->common_vars.eNb_id %d\n",ue->common_vars.eNb_id);
   sync_pos = lte_sync_time(ue->common_vars.rxdata,
                            frame_parms,
-                           (int *)&ue->common_vars.eNb_id);
+                           (int *)&tmp);
   printf("after lte_sync_time, ue->common_vars.eNb_id %d\n",ue->common_vars.eNb_id);
   //  write_output("rxdata1.m","rxd1",ue->common_vars.rxdata[0],10*frame_parms->samples_per_tti,1,1);
   if (sync_pos >= frame_parms->nb_prefix_samples)
@@ -522,7 +523,7 @@ int initial_sync(PHY_VARS_UE *ue, runmode_t mode)
 #ifdef DEBUG_INITIAL_SYNCH
   LOG_I(PHY,"[UE%d] Initial sync : Estimated PSS position %d, Nid2 %d\n",ue->Mod_id,sync_pos,ue->common_vars.eNb_id);
 #endif
-
+  printf("[UE%d] Initial sync : Estimated PSS position %d, Nid2(eNB_id) %d\n",ue->Mod_id,sync_pos,ue->common_vars.eNb_id);
   // SSS detection
 
   // PSS is hypothesized in last symbol of first slot in Frame

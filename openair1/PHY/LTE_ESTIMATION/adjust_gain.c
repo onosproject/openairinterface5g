@@ -33,12 +33,12 @@ phy_adjust_gain (PHY_VARS_UE *ue, uint32_t rx_power_fil_dB, uint8_t eNB_id)
 	ue->measurements.rssi,
 	ue->measurements.rx_power_avg_dB[eNB_id]
         );
-  printf("[UE %d] Gain control: rssi %d (%d,%d)\n",
+  /*printf("[UE %d] Gain control: rssi %d (%d,%d)\n",
 	ue->Mod_id,
 	rx_power_fil_dB,
 	ue->measurements.rssi,
 	ue->measurements.rx_power_avg_dB[eNB_id]
-        );
+        );*/
   // Gain control with hysterisis
   // Adjust gain in ue->rx_vars[0].rx_total_gain_dB
 

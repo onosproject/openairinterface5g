@@ -507,11 +507,11 @@ l2l1_task (void *args_p)
     xargv[0] = xname;
     fl_initialize (&xargc, xargv, NULL, 0, 0);
     //eNB_inst = 0;
-	  for (eNB_inst = 0; eNB_inst < NB_eNB_INST; eNB_inst++) {
+	  for (eNB_inst = 0; eNB_inst < 1/*NB_eNB_INST*/; eNB_inst++) {
 	    for (UE_inst = 0; UE_inst < NB_UE_INST; UE_inst++) {
 	      for (CC_id=0;CC_id<MAX_NUM_CCs;CC_id++) {
 		// DL scope at UEs
-	 	printf("Creating form_ue and form_enb: xforms = %d, eNB (%d,%d), UE (%d,%d)\n",xforms,eNB_inst,PHY_vars_eNB_g[eNB_inst][0]->Mod_id,UE_inst,PHY_vars_UE_g[UE_inst][0]->Mod_id);
+	 	//printf("Creating form_ue and form_enb: xforms = %d, eNB (%d,%d), UE (%d,%d)\n",xforms,eNB_inst,PHY_vars_eNB_g[eNB_inst][0]->Mod_id,UE_inst,PHY_vars_UE_g[UE_inst][0]->Mod_id);
 		form_ue[CC_id][UE_inst] = create_lte_phy_scope_ue();
 		sprintf (title, "LTE DL SCOPE eNB %d to UE %d CC_id %d", eNB_inst, UE_inst, CC_id);
 		fl_show_form (form_ue[CC_id][UE_inst]->lte_phy_scope_ue, FL_PLACE_HOTSPOT, FL_FULLBORDER, title);
@@ -1133,10 +1133,10 @@ l2l1_task (void *args_p)
     //#ifdef XFORMS
     if (xforms==1) {
       //eNB_inst = 0;
-     for (eNB_inst = 0; eNB_inst < NB_eNB_INST; eNB_inst++) { 
+     for (eNB_inst = 0; eNB_inst < 1/*NB_eNB_INST*/; eNB_inst++) { 
       for (UE_inst = 0; UE_inst < NB_UE_INST; UE_inst++) {
 	//for (CC_id=0;CC_id<MAX_NUM_CCs;CC_id++) {
- 	  printf("Using phy_scope_UE_and_eNB: xforms = %d, eNB (%d,%d), UE (%d,%d)\n",xforms,eNB_inst,PHY_vars_eNB_g[eNB_inst][0]->Mod_id,UE_inst,PHY_vars_UE_g[UE_inst][0]->Mod_id);
+ 	  //printf("Using phy_scope_UE_and_eNB: xforms = %d, eNB (%d,%d), UE (%d,%d)\n",xforms,eNB_inst,PHY_vars_eNB_g[eNB_inst][0]->Mod_id,UE_inst,PHY_vars_UE_g[UE_inst][0]->Mod_id);
 	  phy_scope_UE(form_ue[0][UE_inst],
 		   PHY_vars_UE_g[UE_inst][0],
 		   eNB_inst,

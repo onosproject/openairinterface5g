@@ -1138,7 +1138,7 @@ int phy_init_lte_ue(PHY_VARS_UE *ue,
   }
 
   ue->n_connected_eNB = nb_connected_eNB;
-  printf("lte_init: n_connected_eNB = %d,%d\n",ue->n_connected_eNB,nb_connected_eNB);
+  //printf("lte_init: n_connected_eNB = %d,%d\n",ue->n_connected_eNB,nb_connected_eNB);
   for(eNB_id = 0; eNB_id < ue->n_connected_eNB; eNB_id++) {
     ue->total_TBS[eNB_id] = 0;
     ue->total_TBS_last[eNB_id] = 0;

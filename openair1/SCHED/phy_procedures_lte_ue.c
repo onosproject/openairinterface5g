@@ -2457,7 +2457,7 @@ void phy_procedures_UE_TX(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,ui
     }
   }
 
-  if (ue->UE_mode[0] != PRACH) {
+  if (ue->UE_mode[eNB_id] != PRACH) {
     // check cell srs subframe and ue srs subframe. This has an impact on pusch encoding
     isSubframeSRS = is_srs_occasion_common(&ue->frame_parms,proc->frame_tx,proc->subframe_tx);
 
@@ -2467,7 +2467,7 @@ void phy_procedures_UE_TX(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,ui
 
   }
 
-  if (ue->UE_mode[0] == PUSCH) {
+  if (ue->UE_mode[eNB_id] == PUSCH) {
       // check if we need to use PUCCH 1a/1b
       ue_pucch_procedures(ue,proc,eNB_id,abstraction_flag);
       // check if we need to use SRS
@@ -2539,7 +2539,7 @@ void phy_procedures_UE_TX(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,ui
   } // mode != PRACH
 
 
-  if ((ue->UE_mode[0] == PRACH) &&
+  if ((ue->UE_mode[eNB_id] == PRACH) &&
       (ue->frame_parms.prach_config_common.prach_Config_enabled==1)) {
 
     // check if we have PRACH opportunity
@@ -2782,7 +2782,7 @@ void phy_procedures_emos_UE_RX(PHY_VARS_UE *ue,uint8_t last_slot,uint8_t eNB_id)
   if (last_slot==0) {
     emos_dump_UE.timestamp = rt_get_time_ns();
     emos_dump_UE.frame_rx = proc->frame_rx;
-    emos_dump_UE.UE_mode = ue->UE_mode[0];
+    emos_dump_UE.UE_mode = ue->UE_mode[eNB_id];
     emos_dump_UE.mimo_mode = ue->transmission_mode[eNB_id];
     emos_dump_UE.freq_offset = ue->common_vars.freq_offset;
     emos_dump_UE.timing_advance = ue->timing_advance;
@@ -2840,9 +2840,9 @@ void restart_phy(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc, uint8_t eNB_id,uint8_t ab
   //   first_run = 1;
 
   if (abstraction_flag ==0 ) {
-    ue->UE_mode[0] = NOT_SYNCHED;
+    ue->UE_mode[eNB_id] = NOT_SYNCHED;
   } else {
-    ue->UE_mode[0] = PRACH;
+    ue->UE_mode[eNB_id] = PRACH;
     ue->prach_resources[eNB_id]=NULL;
   }
 
@@ -2983,9 +2983,9 @@ void ue_pbch_procedures(uint8_t eNB_id,PHY_VARS_UE *ue,UE_rxtx_proc_t *proc, uin
     frame_tx += pbch_phase;
 
     if (ue->mac_enabled==1) {
-      printf("[UE%d] if mac_enabled? then dl_phy_sync_success. UE_mode %s\n",ue->Mod_id,ue->UE_mode[0]==NOT_SYNCHED?"NOT_SYNCHED":ue->UE_mode[0]==NOT_SYNCHED?"SYNCHED":"OTHER CHOICE");
+      //printf("[UE%d] if mac_enabled? then dl_phy_sync_success. UE_mode %s\n",ue->Mod_id,ue->UE_mode[eNB_id]==NOT_SYNCHED?"NOT_SYNCHED":ue->UE_mode[eNB_id]==NOT_SYNCHED?"SYNCHED":"OTHER CHOICE");
       mac_xface->dl_phy_sync_success(ue->Mod_id,frame_rx,eNB_id,
-             ue->UE_mode[0]==NOT_SYNCHED ? 1 : 0);
+             ue->UE_mode[eNB_id]==NOT_SYNCHED ? 1 : 0);
     }
 
 #ifdef EMOS
@@ -3575,31 +3575,31 @@ void ue_pmch_procedures(PHY_VARS_UE *ue, UE_rxtx_proc_t *proc,int eNB_id,int abs
 
   for (l=2; l<12; l++) {
     rx_pmch(ue,
-      eNB_id,
+      0,
       subframe_rx,
       l);
   }
 
 
-  ue->dlsch_MCH[eNB_id]->harq_processes[0]->G = get_G(&ue->frame_parms,
-                   ue->dlsch_MCH[eNB_id]->harq_processes[0]->nb_rb,
-                   ue->dlsch_MCH[eNB_id]->harq_processes[0]->rb_alloc_even,
-                   ue->dlsch_MCH[eNB_id]->harq_processes[0]->Qm,
+  ue->dlsch_MCH[0]->harq_processes[0]->G = get_G(&ue->frame_parms,
+                   ue->dlsch_MCH[0]->harq_processes[0]->nb_rb,
+                   ue->dlsch_MCH[0]->harq_processes[0]->rb_alloc_even,
+                   ue->dlsch_MCH[0]->harq_processes[0]->Qm,
                    1,
                    2,
                    frame_rx,
                    subframe_rx,
                    0);
 
-  dlsch_unscrambling(&ue->frame_parms,1,ue->dlsch_MCH[eNB_id],
-         ue->dlsch_MCH[eNB_id]->harq_processes[0]->G,
-         ue->pdsch_vars_MCH[eNB_id]->llr[0],0,subframe_rx<<1);
+  dlsch_unscrambling(&ue->frame_parms,1,ue->dlsch_MCH[0],
+         ue->dlsch_MCH[0]->harq_processes[0]->G,
+         ue->pdsch_vars_MCH[0]->llr[0],0,subframe_rx<<1);
 
   ret = dlsch_decoding(ue,
-           ue->pdsch_vars_MCH[eNB_id]->llr[0],
+           ue->pdsch_vars_MCH[0]->llr[0],
            &ue->frame_parms,
-           ue->dlsch_MCH[eNB_id],
-           ue->dlsch_MCH[eNB_id]->harq_processes[0],
+           ue->dlsch_MCH[0],
+           ue->dlsch_MCH[0]->harq_processes[0],
            frame_rx,
            subframe_rx,
            0,
@@ -3614,29 +3614,29 @@ void ue_pmch_procedures(PHY_VARS_UE *ue, UE_rxtx_proc_t *proc,int eNB_id,int abs
       }
 
       if (mcch_active == 1)
-  ue->dlsch_mcch_trials[sync_area][eNB_id]++;
+  ue->dlsch_mcch_trials[sync_area][0]++;
       else
-  ue->dlsch_mtch_trials[sync_area][eNB_id]++;
+  ue->dlsch_mtch_trials[sync_area][0]++;
 
-      if (ret == (1+ue->dlsch_MCH[eNB_id]->max_turbo_iterations)) {
+      if (ret == (1+ue->dlsch_MCH[0]->max_turbo_iterations)) {
   if (mcch_active == 1)
-    ue->dlsch_mcch_errors[sync_area][eNB_id]++;
+    ue->dlsch_mcch_errors[sync_area][0]++;
   else
-    ue->dlsch_mtch_errors[sync_area][eNB_id]++;
+    ue->dlsch_mtch_errors[sync_area][0]++;
 
   LOG_D(PHY,"[UE %d] Frame %d, subframe %d: PMCH in error (%d,%d), not passing to L2 (TBS %d, iter %d,G %d)\n",
         ue->Mod_id,
               frame_rx,subframe_rx,
-        ue->dlsch_mcch_errors[sync_area][eNB_id],
-        ue->dlsch_mtch_errors[sync_area][eNB_id],
-        ue->dlsch_MCH[eNB_id]->harq_processes[0]->TBS>>3,
-        ue->dlsch_MCH[eNB_id]->max_turbo_iterations,
-        ue->dlsch_MCH[eNB_id]->harq_processes[0]->G);
-  dump_mch(ue,eNB_id,ue->dlsch_MCH[eNB_id]->harq_processes[0]->G,subframe_rx);
+        ue->dlsch_mcch_errors[sync_area][0],
+        ue->dlsch_mtch_errors[sync_area][0],
+        ue->dlsch_MCH[0]->harq_processes[0]->TBS>>3,
+        ue->dlsch_MCH[0]->max_turbo_iterations,
+        ue->dlsch_MCH[0]->harq_processes[0]->G);
+  dump_mch(ue,eNB_id,ue->dlsch_MCH[0]->harq_processes[0]->G,subframe_rx);
 #ifdef DEBUG_DLSCH
 
-  for (int i=0; i<ue->dlsch_MCH[eNB_id]->harq_processes[0]->TBS>>3; i++) {
-    LOG_T(PHY,"%02x.",ue->dlsch_MCH[eNB_id]->harq_processes[0]->c[0][i]);
+  for (int i=0; i<ue->dlsch_MCH[0]->harq_processes[0]->TBS>>3; i++) {
+    LOG_T(PHY,"%02x.",ue->dlsch_MCH[0]->harq_processes[0]->c[0][i]);
   }
 
   LOG_T(PHY,"\n");
@@ -3651,18 +3651,18 @@ void ue_pmch_procedures(PHY_VARS_UE *ue, UE_rxtx_proc_t *proc,int eNB_id,int abs
     mac_xface->ue_send_mch_sdu(ue->Mod_id,
              CC_id,
              frame_rx,
-             ue->dlsch_MCH[eNB_id]->harq_processes[0]->b,
-             ue->dlsch_MCH[eNB_id]->harq_processes[0]->TBS>>3,
+             ue->dlsch_MCH[0]->harq_processes[0]->b,
+             ue->dlsch_MCH[0]->harq_processes[0]->TBS>>3,
              eNB_id,// not relevant in eMBMS context
              sync_area);
-    ue->dlsch_mcch_received[sync_area][eNB_id]++;
+    ue->dlsch_mcch_received[sync_area][0]++;
 
 
-    if (ue->dlsch_mch_received_sf[subframe_rx%5][eNB_id] == 1 ) {
-      ue->dlsch_mch_received_sf[subframe_rx%5][eNB_id]=0;
+    if (ue->dlsch_mch_received_sf[subframe_rx%5][0] == 1 ) {
+      ue->dlsch_mch_received_sf[subframe_rx%5][0]=0;
     } else {
-      ue->dlsch_mch_received[eNB_id]+=1;
-      ue->dlsch_mch_received_sf[subframe_rx][eNB_id]=1;
+      ue->dlsch_mch_received[0]+=1;
+      ue->dlsch_mch_received_sf[subframe_rx][0]=1;
     }
 
 
@@ -3822,11 +3822,11 @@ void process_rar(PHY_VARS_UE *ue, UE_rxtx_proc_t *proc, int eNB_id, runmode_t mo
   LOG_D(PHY,"[UE  %d][RAPROC] Frame %d subframe %d Received RAR  mode %d\n",
   ue->Mod_id,
   frame_rx,
-  subframe_rx, ue->UE_mode[0]);
+  subframe_rx, ue->UE_mode[eNB_id]);
 
 
   if (ue->mac_enabled == 1) {
-    if ((ue->UE_mode[0] != PUSCH) &&
+    if ((ue->UE_mode[eNB_id] != PUSCH) &&
   (ue->prach_resources[eNB_id]->Msg3!=NULL)) {
       LOG_D(PHY,"[UE  %d][RAPROC] Frame %d subframe %d Invoking MAC for RAR (current preamble %d)\n",
 	    ue->Mod_id,frame_rx,
@@ -3880,7 +3880,7 @@ void process_rar(PHY_VARS_UE *ue, UE_rxtx_proc_t *proc, int eNB_id, runmode_t mo
 				       ue->ulsch_Msg3_subframe[eNB_id]);
 	  ue->ulsch[eNB_id]->harq_processes[harq_pid]->round = 0;
 	  
-	  ue->UE_mode[0] = RA_RESPONSE;
+	  ue->UE_mode[eNB_id] = RA_RESPONSE;
 	  //      ue->Msg3_timer[eNB_id] = 10;
 	  ue->ulsch[eNB_id]->power_offset = 6;
 	  ue->ulsch_no_allocation_counter[eNB_id] = 0;
@@ -4185,7 +4185,7 @@ void ue_dlsch_procedures(PHY_VARS_UE *ue,
     mac_xface->ue_decode_si(ue->Mod_id,
           CC_id,
           frame_rx,
-          eNB_id,
+          ue->common_vars.eNb_id,
           ue->dlsch_SI[eNB_id]->harq_processes[0]->b,
           ue->dlsch_SI[eNB_id]->harq_processes[0]->TBS>>3);
     break;
@@ -5690,7 +5690,7 @@ void phy_procedures_UE_lte(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,u
   int slot;
 
   if (ue->mac_enabled == 0) {
-    ue->UE_mode[0]=PUSCH;
+    ue->UE_mode[eNB_id]=PUSCH;
   }
 
 

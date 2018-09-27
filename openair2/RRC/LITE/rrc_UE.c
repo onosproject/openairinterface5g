@@ -4324,7 +4324,7 @@ NAS_KENB_REFRESH_REQ,NAS_CELL_SELECTION_REQ,RRC_STATE_INACTIVE,RRC_STATE_IDLE,RR
 
       //      PROTOCOL_CTXT_SET_BY_INSTANCE(&ctxt, instance, ENB_FLAG_NO, NOT_A_RNTI, RRC_MAC_BCCH_DATA_IND (msg_p).frame, 0);
       PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, ue_mod_id, ENB_FLAG_NO, NOT_A_RNTI, RRC_MAC_BCCH_DATA_IND (msg_p).frame, 0,RRC_MAC_BCCH_DATA_IND (msg_p).enb_index);
-      //printf("decode_BCCH_DLSCH_Message for ue %d \n",ue_mod_id);
+      printf("decode_BCCH_DLSCH_Message for ue %d, enb %d \n",ue_mod_id,RRC_MAC_BCCH_DATA_IND (msg_p).enb_index);
       decode_BCCH_DLSCH_Message (&ctxt,
                                  RRC_MAC_BCCH_DATA_IND (msg_p).enb_index,
                                  RRC_MAC_BCCH_DATA_IND (msg_p).sdu,
@@ -4444,7 +4444,7 @@ NAS_KENB_REFRESH_REQ,NAS_CELL_SELECTION_REQ,RRC_STATE_INACTIVE,RRC_STATE_IDLE,RR
       if (rrc_get_state(ue_mod_id) == RRC_STATE_INACTIVE) {
         // have a look at MAC/main.c void dl_phy_sync_success(...)
 	printf("openair_rrc_ue_init: UE %d\n",ue_mod_id);
-        openair_rrc_ue_init(ue_mod_id,0/*PHY_vars_UE_g[ue_mod_id][0]->common_vars.eNb_id*/);
+        openair_rrc_ue_init(ue_mod_id,PHY_vars_UE_g[ue_mod_id][0]->common_vars.eNb_id);
       }
 
       /* Save cell selection criterion */

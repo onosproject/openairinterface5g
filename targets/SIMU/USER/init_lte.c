@@ -51,17 +51,17 @@ PHY_VARS_eNB* init_lte_eNB(LTE_DL_FRAME_PARMS *frame_parms,
   PHY_vars_eNB->Mod_id=eNB_id;
   PHY_vars_eNB->cooperation_flag=0;//cooperation_flag;
   memcpy(&(PHY_vars_eNB->frame_parms), frame_parms, sizeof(LTE_DL_FRAME_PARMS));
-  //PHY_vars_eNB->frame_parms.Nid_cell = Nid_cell;
-  //PHY_vars_eNB->frame_parms.nushift = PHY_vars_eNB->frame_parms.Nid_cell%6;
+  PHY_vars_eNB->frame_parms.Nid_cell = Nid_cell;
+  PHY_vars_eNB->frame_parms.nushift = PHY_vars_eNB->frame_parms.Nid_cell%6;
   phy_init_lte_eNB(PHY_vars_eNB,0,abstraction_flag);
 
-  LOG_I(PHY,"init eNB: Node Function %d\n",node_function);
-  LOG_I(PHY,"init eNB: Nid_cell %d\n", frame_parms->Nid_cell);
-  LOG_I(PHY,"init eNB: frame_type %d,tdd_config %d\n", frame_parms->frame_type,frame_parms->tdd_config);
-  LOG_I(PHY,"init eNB: number of ue max %d number of enb max %d number of harq pid max %d\n",
+  LOG_I(PHY,"init eNB%d: Node Function %d\n",eNB_id,node_function);
+  LOG_I(PHY,"init eNB%d: Nid_cell %d\n",eNB_id, frame_parms->Nid_cell);
+  LOG_I(PHY,"init eNB%d: frame_type %d,tdd_config %d\n",eNB_id, frame_parms->frame_type,frame_parms->tdd_config);
+  LOG_I(PHY,"init eNB%d: number of ue max %d number of enb max %d number of harq pid max %d\n",eNB_id,
         NUMBER_OF_UE_MAX, NUMBER_OF_eNB_MAX, NUMBER_OF_HARQ_PID_MAX);
-  LOG_I(PHY,"init eNB: N_RB_DL %d\n", frame_parms->N_RB_DL);
-  LOG_I(PHY,"init eNB: prach_config_index %d\n", frame_parms->prach_config_common.prach_ConfigInfo.prach_ConfigIndex);
+  LOG_I(PHY,"init eNB%d: N_RB_DL %d\n",eNB_id, frame_parms->N_RB_DL);
+  LOG_I(PHY,"init eNB%d: prach_config_index %d\n",eNB_id, frame_parms->prach_config_common.prach_ConfigInfo.prach_ConfigIndex);
 
   if (node_function >= NGFI_RRU_IF5)
     // For RRU, don't allocate DLSCH/ULSCH Transport channel buffers
@@ -235,49 +235,43 @@ void init_lte_vars(LTE_DL_FRAME_PARMS *frame_parms[MAX_NUM_CCs],
 
   memset(mac_xface, 0, sizeof(MAC_xface));
 
-  LOG_I(PHY,"init lte parms: Nid_cell %d, Frame type %d, N_RB_DL %d\n",Nid_cell,frame_type,N_RB_DL);
-
-  for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
-    frame_parms[CC_id] = calloc(1, sizeof(LTE_DL_FRAME_PARMS));
-    (frame_parms[CC_id])->frame_type         = frame_type;
-    (frame_parms[CC_id])->tdd_config         = tdd_config;
-    (frame_parms[CC_id])->tdd_config_S       = tdd_config_S;
-    (frame_parms[CC_id])->N_RB_DL            = N_RB_DL;
-    (frame_parms[CC_id])->N_RB_UL            = (frame_parms[CC_id])->N_RB_DL;
-    (frame_parms[CC_id])->phich_config_common.phich_resource = oneSixth;
-    (frame_parms[CC_id])->phich_config_common.phich_duration = normal;
-    (frame_parms[CC_id])->Ncp                = extended_prefix_flag;
-    (frame_parms[CC_id])->Ncp_UL             = extended_prefix_flag; 
-    (frame_parms[CC_id])->Nid_cell           = Nid_cell;
-    (frame_parms[CC_id])->nushift            = (Nid_cell%6);
-    (frame_parms[CC_id])->nb_antennas_tx     = nb_antennas_tx;
-    (frame_parms[CC_id])->nb_antennas_rx     = nb_antennas_rx;
-    (frame_parms[CC_id])->nb_antenna_ports_eNB = nb_antenna_ports;
-    (frame_parms[CC_id])->mode1_flag           = (frame_parms[CC_id])->nb_antenna_ports_eNB==1 ? 1 : 0;
-
-    init_frame_parms(frame_parms[CC_id],1);
-
-    (frame_parms[CC_id])->pusch_config_common.ul_ReferenceSignalsPUSCH.cyclicShift = 0;//n_DMRS1 set to 0
-    (frame_parms[CC_id])->pusch_config_common.ul_ReferenceSignalsPUSCH.groupHoppingEnabled = 1;
-    (frame_parms[CC_id])->pusch_config_common.ul_ReferenceSignalsPUSCH.sequenceHoppingEnabled = 0;
-    (frame_parms[CC_id])->pusch_config_common.ul_ReferenceSignalsPUSCH.groupAssignmentPUSCH = 0;
-    init_ul_hopping(frame_parms[CC_id]);
-  }
-
 
   //  phy_init_top(frame_parms[0]);
-
-  phy_init_lte_top(frame_parms[0]);
 
   PHY_vars_eNB_g = (PHY_VARS_eNB***)malloc(NB_eNB_INST*sizeof(PHY_VARS_eNB**));
 
   for (eNB_id=0; eNB_id<NB_eNB_INST; eNB_id++) {
     PHY_vars_eNB_g[eNB_id] = (PHY_VARS_eNB**) malloc(MAX_NUM_CCs*sizeof(PHY_VARS_eNB*));
-
     for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
+      frame_parms[CC_id] = calloc(1, sizeof(LTE_DL_FRAME_PARMS));
+      (frame_parms[CC_id])->frame_type         = frame_type;
+      (frame_parms[CC_id])->tdd_config         = tdd_config;
+      (frame_parms[CC_id])->tdd_config_S       = tdd_config_S;
+      (frame_parms[CC_id])->N_RB_DL            = N_RB_DL;
+      (frame_parms[CC_id])->N_RB_UL            = (frame_parms[CC_id])->N_RB_DL;
+      (frame_parms[CC_id])->phich_config_common.phich_resource = oneSixth;
+      (frame_parms[CC_id])->phich_config_common.phich_duration = normal;
+      (frame_parms[CC_id])->Ncp                = extended_prefix_flag;
+      (frame_parms[CC_id])->Ncp_UL             = extended_prefix_flag; 
+      (frame_parms[CC_id])->Nid_cell           = Nid_cell+eNB_id;
+      (frame_parms[CC_id])->nushift            = ((Nid_cell+eNB_id)%6);
+      (frame_parms[CC_id])->nb_antennas_tx     = nb_antennas_tx;
+      (frame_parms[CC_id])->nb_antennas_rx     = nb_antennas_rx;
+      (frame_parms[CC_id])->nb_antenna_ports_eNB = nb_antenna_ports;
+      (frame_parms[CC_id])->mode1_flag           = (frame_parms[CC_id])->nb_antenna_ports_eNB==1 ? 1 : 0;
+
+      init_frame_parms(frame_parms[CC_id],1);
+
+      (frame_parms[CC_id])->pusch_config_common.ul_ReferenceSignalsPUSCH.cyclicShift = 0;//n_DMRS1 set to 0
+      (frame_parms[CC_id])->pusch_config_common.ul_ReferenceSignalsPUSCH.groupHoppingEnabled = 1;
+      (frame_parms[CC_id])->pusch_config_common.ul_ReferenceSignalsPUSCH.sequenceHoppingEnabled = 0;
+      (frame_parms[CC_id])->pusch_config_common.ul_ReferenceSignalsPUSCH.groupAssignmentPUSCH = 0;
+      init_ul_hopping(frame_parms[CC_id]);
+      phy_init_lte_top(frame_parms[CC_id]);
+      LOG_I(PHY,"init lte parms: Nid_cell %d, Frame type %d, N_RB_DL %d, nushift %d\n",(frame_parms[CC_id])->Nid_cell,(frame_parms[CC_id])->frame_type,(frame_parms[CC_id])->N_RB_DL,(frame_parms[CC_id])->nushift);
+      PHY_vars_eNB_g[eNB_id][CC_id] = init_lte_eNB(frame_parms[CC_id],eNB_id,Nid_cell+eNB_id,eNodeB_3GPP,abstraction_flag);
       PHY_vars_eNB_g[eNB_id][CC_id]->Mod_id=eNB_id;
       PHY_vars_eNB_g[eNB_id][CC_id]->CC_id=CC_id;
-      PHY_vars_eNB_g[eNB_id][CC_id] = init_lte_eNB(frame_parms[CC_id],eNB_id,Nid_cell,eNodeB_3GPP,abstraction_flag);
     }
   }
 

@@ -1456,7 +1456,7 @@ void init_openair1(void)
 #endif
 
   // change the nb_connected_eNB
-  mac_xface = malloc(sizeof(MAC_xface));
+  /*mac_xface = malloc(sizeof(MAC_xface));
   memset(mac_xface, 0, sizeof(MAC_xface));
   PHY_vars_eNB_g = (PHY_VARS_eNB***)malloc(NB_eNB_INST*sizeof(PHY_VARS_eNB**));
     for (eNB_id=0; eNB_id<NB_eNB_INST; eNB_id++) {
@@ -1510,8 +1510,8 @@ void init_openair1(void)
     for (RN_id=0; RN_id<NB_RN_INST; RN_id++) {
       PHY_vars_RN_g[RN_id] = init_lte_RN(*frame_parms,RN_id,oai_emulation.info.eMBMS_active_state);
     }
-  }
-    /*init_lte_vars (&frame_parms[CC_id],
+  }*/
+    init_lte_vars (&frame_parms[CC_id],
 		   oai_emulation.info.frame_type[CC_id],
 		   oai_emulation.info.tdd_config[CC_id],
 		   oai_emulation.info.tdd_config_S[CC_id],
@@ -1524,7 +1524,7 @@ void init_openair1(void)
 		   enb_properties->properties[eNB_id]->nb_antennas_rx[CC_id],
 		   enb_properties->properties[eNB_id]->nb_antennas_tx[CC_id],
 		   nb_antennas_rx_ue,
-		   oai_emulation.info.eMBMS_active_state);*/
+		   oai_emulation.info.eMBMS_active_state);
 
   for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
    for (eNB_id=0;eNB_id<enb_properties->number;eNB_id++) {
@@ -1917,7 +1917,7 @@ void update_ocm()
                   UE_id, ue_data[UE_id]->x,ue_data[UE_id]->y,
                   distance);*/
         }
-      printf("UE %d is associated to eNB %d based on pathloss\n",UE_id,PHY_vars_UE_g[UE_id][CC_id]->common_vars.eNb_id);
+      printf("UE %d is associated to eNB %d based on pathloss (%s domain)\n",UE_id,PHY_vars_UE_g[UE_id][CC_id]->common_vars.eNb_id,(PHY_vars_UE_g[UE_id][CC_id]->do_ofdm_mod)?"Frequency":"Time");
       }
     }
   }

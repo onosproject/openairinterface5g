@@ -347,7 +347,7 @@ mac_rrc_data_ind(
   SRB_INFO *Srb_info;
   protocol_ctxt_t ctxt;
   sdu_size_t      sdu_size = 0;
-
+  printf("mac_rrc_data_ind\n");
   /* for no gcc warnings */
   (void)sdu_size;
 

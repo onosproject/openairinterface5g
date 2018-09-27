@@ -451,6 +451,7 @@ ue_send_sdu(
 
       LOG_T(MAC,"\n");
 #endif
+      //printf("ue_send_sdu\n");
       mac_rrc_data_ind(module_idP,
                        CC_id,
                        frameP,subframeP,
