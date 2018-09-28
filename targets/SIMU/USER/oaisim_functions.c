@@ -1130,10 +1130,13 @@ int eNB_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void *
       if (do_ofdm_mod)
       {
 	for (UE_id=0; UE_id<NB_UE_INST; UE_id++){
+	     if (eNB_id!=PHY_vars_UE_g[UE_id][CC_id]->common_vars.eNb_id)
+		continue;
 		if (is_prach_subframe(&PHY_vars_UE_g[UE_id][CC_id]->frame_parms,frame,subframe) && PHY_vars_UE_g[UE_id][CC_id]->generate_prach)
 		{
 			//clock_t start=clock();
 			//printf("subframe UL PRACH: %d\n",subframe);
+			printf("prach is generated for UE %d, eNB %d\n",UE_id,eNB_id);
 			start_meas(&UE2eNB[UE_id][eNB_id][CC_id]->UL_PRACH_channel_freq);
 			do_UL_sig_freq_prach(UE2eNB,
 				enb_data,

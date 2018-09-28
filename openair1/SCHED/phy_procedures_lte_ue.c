@@ -1402,7 +1402,7 @@ void ulsch_common_procedures(PHY_VARS_UE *ue, UE_rxtx_proc_t *proc, uint8_t empt
 }
 
 void ue_prach_procedures(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,uint8_t abstraction_flag,runmode_t mode) {
-
+  printf("ue_prach_procedures: eNB_id %d, ue->common_vars.eNb.id %d, mac enabled %d\n",eNB_id,ue->common_vars.eNb_id,ue->mac_enabled==1);
   int frame_tx = proc->frame_tx;
   int subframe_tx = proc->subframe_tx;
   int prach_power;
@@ -1420,6 +1420,7 @@ void ue_prach_procedures(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,uin
 
   if (ue->mac_enabled==1){
     // ask L2 for RACH transport
+    printf("ue_prach_procedures: ask L2 for RACH transport: %d,%d,%d\n",mode != rx_calib_ue,mode != rx_calib_ue_med,mode != no_L2_connect);
     if ((mode != rx_calib_ue) && (mode != rx_calib_ue_med) && (mode != rx_calib_ue_byp) && (mode != no_L2_connect) ) {
       LOG_D(PHY,"Getting PRACH resources\n");
       ue->prach_resources[eNB_id] = mac_xface->ue_get_rach(ue->Mod_id,
@@ -1429,6 +1430,8 @@ void ue_prach_procedures(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,uin
                  subframe_tx);
       LOG_D(PHY,"Got prach_resources for eNB %d address %p, RRCCommon %p\n",eNB_id,ue->prach_resources[eNB_id],UE_mac_inst[ue->Mod_id].radioResourceConfigCommon);
       LOG_D(PHY,"Prach resources %p\n",ue->prach_resources[eNB_id]);
+      printf("Got prach_resources for eNB %d address %p, RRCCommon %p\n",ue->common_vars.eNb_id,ue->prach_resources[eNB_id],UE_mac_inst[ue->Mod_id].radioResourceConfigCommon);
+      printf("Prach resources %p\n",ue->prach_resources[eNB_id]);
     }
   }
 
@@ -1508,11 +1511,11 @@ void ue_prach_procedures(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,uin
       mac_xface->Msg1_transmitted(ue->Mod_id,
           ue->CC_id,
           frame_tx,
-          eNB_id);
+          ue->common_vars.eNb_id);
     }
 
-    LOG_I(PHY,"[UE  %d][RAPROC] Frame %d, subframe %d: Generating PRACH (eNB %d) preamble index %d for UL, TX power %d dBm (PL %d dB), l3msg \n",
-    ue->Mod_id,frame_tx,subframe_tx,eNB_id,
+    LOG_I(PHY,"[UE  %d][RAPROC] Frame %d, subframe %d: Generating PRACH (eNB %d (ue->common_vars.eNb_id %d)) preamble index %d for UL, TX power %d dBm (PL %d dB), l3msg \n",
+    ue->Mod_id,frame_tx,subframe_tx,eNB_id,ue->common_vars.eNb_id,
     ue->prach_resources[eNB_id]->ra_PreambleIndex,
     ue->prach_resources[eNB_id]->ra_PREAMBLE_RECEIVED_TARGET_POWER+get_PL(ue->Mod_id,ue->CC_id,eNB_id),
     get_PL(ue->Mod_id,ue->CC_id,eNB_id));
@@ -2448,7 +2451,6 @@ void phy_procedures_UE_TX(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,ui
 #endif
 
   ue->tx_power_dBm[subframe_tx]=-127;
-
   if (abstraction_flag==0) {
     for (aa=0; aa<frame_parms->nb_antennas_tx; aa++) {
       memset(&ue->common_vars.txdataF[aa][subframe_tx*frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti],
@@ -2495,7 +2497,7 @@ void phy_procedures_UE_TX(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,ui
         CC_id,
         frame_tx,
         subframe_tx,
-        eNB_id,
+        ue->common_vars.eNb_id,
         ulsch_input_buffer,
         input_buffer_length,
         &access_mode);
@@ -2538,14 +2540,14 @@ void phy_procedures_UE_TX(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,ui
     ulsch_common_procedures(ue,proc, (ue->generate_ul_signal[eNB_id] == 0));
   } // mode != PRACH
 
-
+  printf("phy_procedures_UE_TX: ue->UE_mode[eNB_id] == PRACH? %d,%d\n",ue->UE_mode[eNB_id] == PRACH,ue->frame_parms.prach_config_common.prach_Config_enabled==1);
   if ((ue->UE_mode[eNB_id] == PRACH) &&
       (ue->frame_parms.prach_config_common.prach_Config_enabled==1)) {
 
     // check if we have PRACH opportunity
 
     if (is_prach_subframe(&ue->frame_parms,frame_tx,subframe_tx)) {
-
+      printf("is there a PRACH opportunity? %d\n",is_prach_subframe(&ue->frame_parms,frame_tx,subframe_tx));
       ue_prach_procedures(ue,proc,eNB_id,abstraction_flag,mode);
     }
   } // mode is PRACH
@@ -2899,6 +2901,7 @@ void ue_pbch_procedures(uint8_t eNB_id,PHY_VARS_UE *ue,UE_rxtx_proc_t *proc, uin
 {
   //printf("PBCH: id %d\n",ue->Mod_id);
   //  int i;
+  printf("ue_pbch_procedures: eNB_id %d, ue->common_vars.eNb.id %d\n",eNB_id,ue->common_vars.eNb_id);
   int pbch_tx_ant=0;
   uint8_t pbch_phase;
   uint16_t frame_tx;
@@ -2922,7 +2925,7 @@ void ue_pbch_procedures(uint8_t eNB_id,PHY_VARS_UE *ue,UE_rxtx_proc_t *proc, uin
 
   for (pbch_trials=0; pbch_trials<4; pbch_trials++) {
     //for (pbch_phase=0;pbch_phase<4;pbch_phase++) {
-    printf("[UE  %d] Frame %d, Trying PBCH %d (NidCell %d, eNB_id %d)\n",ue->Mod_id,frame_rx,pbch_phase,ue->frame_parms.Nid_cell,eNB_id);
+    printf("[UE  %d] Frame %d, Trying PBCH %d (NidCell %d, eNB_id %d)\n",ue->Mod_id,frame_rx,pbch_phase,ue->frame_parms.Nid_cell,ue->common_vars.eNb_id);
     if (abstraction_flag == 0) {
       pbch_tx_ant = rx_pbch(&ue->common_vars,
           ue->pbch_vars[eNB_id],
@@ -2984,7 +2987,7 @@ void ue_pbch_procedures(uint8_t eNB_id,PHY_VARS_UE *ue,UE_rxtx_proc_t *proc, uin
 
     if (ue->mac_enabled==1) {
       //printf("[UE%d] if mac_enabled? then dl_phy_sync_success. UE_mode %s\n",ue->Mod_id,ue->UE_mode[eNB_id]==NOT_SYNCHED?"NOT_SYNCHED":ue->UE_mode[eNB_id]==NOT_SYNCHED?"SYNCHED":"OTHER CHOICE");
-      mac_xface->dl_phy_sync_success(ue->Mod_id,frame_rx,eNB_id,
+      mac_xface->dl_phy_sync_success(ue->Mod_id,frame_rx,ue->common_vars.eNb_id,
              ue->UE_mode[eNB_id]==NOT_SYNCHED ? 1 : 0);
     }
 
@@ -3103,7 +3106,7 @@ void ue_pbch_procedures(uint8_t eNB_id,PHY_VARS_UE *ue,UE_rxtx_proc_t *proc, uin
 
 int ue_pdcch_procedures(uint8_t eNB_id,PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t abstraction_flag)
 {
-
+  printf("ue_pdcch_procedures: eNB_id %d, ue->common_vars.eNb.id %d\n",eNB_id,ue->common_vars.eNb_id);
   unsigned int dci_cnt=0, i;
 
   int frame_rx = proc->frame_rx;
@@ -3722,7 +3725,7 @@ void ue_pdsch_procedures(PHY_VARS_UE *ue, UE_rxtx_proc_t *proc, int eNB_id, PDSC
   int harq_pid;
   int i_mod,eNB_id_i,dual_stream_UE;
   int first_symbol_flag=0;
-
+  printf("ue_pdsch_procedures: eNB_id %d, ue->common_vars.eNb.id %d\n",eNB_id,ue->common_vars.eNb_id);
   if (dlsch0->active == 0)
     return;
 
@@ -5767,7 +5770,7 @@ void phy_procedures_UE_lte(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,u
             frame_tx,
             subframe_tx,
             subframe_select(&ue->frame_parms,subframe_tx),
-            eNB_id,
+            ue->common_vars.eNb_id,
             0/*FIXME CC_id*/);
 
   if (ret == CONNECTION_LOST) {

@@ -513,7 +513,7 @@ void do_DL_sig_freq(channel_desc_t *eNB2UE[NUMBER_OF_eNB_MAX][NUMBER_OF_UE_MAX][
 		                      frame_parms->pdsch_config_common.referenceSignalPower, // dBm/RE
 		                      frame_parms->N_RB_DL*12);
 	      	stop_meas(&eNB2UE[eNB_id][UE_id][CC_id]->DL_dac_fixed_gain_freq);
-		printf("UE%d,eNB%d: dac_fixed_gain: referenceSignalPower %d\n",UE_id,eNB_id,frame_parms->pdsch_config_common.referenceSignalPower);
+		//printf("UE%d,eNB%d: dac_fixed_gain: referenceSignalPower %d\n",UE_id,eNB_id,frame_parms->pdsch_config_common.referenceSignalPower);
 #else
 	      	start_meas(&eNB2UE[eNB_id][UE_id][CC_id]->DL_dac_fixed_gain_freq);
 	      	tx_pwr = dac_fixed_gain(s_re_f,
@@ -1430,15 +1430,13 @@ void do_UL_sig_freq_prach(channel_desc_t *UE2eNB[NUMBER_OF_UE_MAX][NUMBER_OF_eNB
 
     //for (int i=0;i<NB_UE_INST;i++)
     // Compute RX signal for eNB = eNB_id
-    for (UE_id=0; UE_id<NB_UE_INST; UE_id++) {
-	if (PHY_vars_UE_g[UE_id][CC_id]->common_vars.eNb_id != eNB_id)
-		continue;      
+    for (UE_id=0; UE_id<NB_UE_INST; UE_id++) {    
         lte_frame_type_t frame_type = PHY_vars_UE_g[UE_id][CC_id]->frame_parms.frame_type;
         prach_ConfigIndex   = PHY_vars_UE_g[UE_id][CC_id]->frame_parms.prach_config_common.prach_ConfigInfo.prach_ConfigIndex;
         prach_fmt = get_prach_fmt(prach_ConfigIndex,frame_type);
-        n_ra_prb = get_prach_prb_offset(frame_parms, PHY_vars_UE_g[UE_id][CC_id]->prach_resources[eNB_id]->ra_TDD_map_index, PHY_vars_UE_g[UE_id][CC_id]->proc.proc_rxtx[subframe&0x1].frame_tx);
+        n_ra_prb = get_prach_prb_offset(frame_parms, PHY_vars_UE_g[UE_id][CC_id]->prach_resources[0]->ra_TDD_map_index, PHY_vars_UE_g[UE_id][CC_id]->proc.proc_rxtx[subframe&0x1].frame_tx);
 
-	tx_prachF = PHY_vars_UE_g[UE_id][CC_id]->prach_vars[eNB_id]->prachF;
+	tx_prachF = PHY_vars_UE_g[UE_id][CC_id]->prach_vars[0]->prachF;
 	//write_output("txprachF.m","prach_txF", PHY_vars_UE_g[0][0]->prach_vars[0]->prachF,frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti*12,1,1);
       	
         //for (int idx=0;idx<10;idx++) printf("dumping DL raw subframe %d: txdataF[%d] = (%d,%d)\n", subframe, idx, ((short*)&txdataF[0][sf_offset+idx])[0], ((short*)&txdataF[0][sf_offset+idx])[1]);

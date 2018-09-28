@@ -48,7 +48,7 @@
 #endif
 
 #include "SIMULATION/TOOLS/defs.h" // for taus
-
+#include "PHY/extern.h"
 int8_t get_DELTA_PREAMBLE(module_id_t module_idP,int CC_id)
 {
 
@@ -324,7 +324,7 @@ PRACH_RESOURCES_t *ue_get_rach(module_id_t module_idP,int CC_id,frame_t frameP, 
     mac_xface->macphy_exit("MAC FATAL  CC_id>0");
     return 0; // not reached
   }
-
+  printf("ue_get_rach:UE_mode == PRACH? %d\n",UE_mode == PRACH);
   if (UE_mode == PRACH) {
     if (UE_mac_inst[module_idP].radioResourceConfigCommon) {
       rach_ConfigCommon = &UE_mac_inst[module_idP].radioResourceConfigCommon->rach_ConfigCommon;
@@ -333,7 +333,7 @@ PRACH_RESOURCES_t *ue_get_rach(module_id_t module_idP,int CC_id,frame_t frameP, 
     }
 
     if (Is_rrc_registered == 1) {
-
+      printf("ue_get_rach:Is_rrc_registered? %d\n",Is_rrc_registered == 1);
       if (UE_mac_inst[module_idP].RA_active == 0) {
         LOG_D(MAC,"RA not active\n");
         // check if RRC is ready to initiate the RA procedure
@@ -342,10 +342,10 @@ PRACH_RESOURCES_t *ue_get_rach(module_id_t module_idP,int CC_id,frame_t frameP, 
                                 frameP,
                                 CCCH,1,
                                 &UE_mac_inst[module_idP].CCCH_pdu.payload[sizeof(SCH_SUBHEADER_SHORT)+1],0,
-                                eNB_indexP,
+                                PHY_vars_UE_g[module_idP][0]->common_vars.eNb_id,
                                 0);
         Size16 = (uint16_t)Size;
-
+        printf("ue_get_rach:Size16 %d\n",Size16);
         //  LOG_D(MAC,"[UE %d] Frame %d: Requested RRCConnectionRequest, got %d bytes\n",module_idP,frameP,Size);
         LOG_D(RRC, "[MSC_MSG][FRAME %05d][RRC_UE][MOD %02d][][--- MAC_DATA_REQ (RRCConnectionRequest eNB %d) --->][MAC_UE][MOD %02d][]\n",
               frameP, module_idP, eNB_indexP, module_idP);
@@ -394,7 +394,7 @@ PRACH_RESOURCES_t *ue_get_rach(module_id_t module_idP,int CC_id,frame_t frameP, 
         } else if (UE_mac_inst[module_idP].scheduling_info.BSR_bytes[UE_mac_inst[module_idP].scheduling_info.LCGID[DCCH]] > 0) {
           // This is for triggering a transmission on DCCH using PRACH (during handover, or sending SR for example)
           dcch_header_len = 2 + 2;  /// SHORT Subheader + C-RNTI control element
-          rlc_status = mac_rlc_status_ind(module_idP,UE_mac_inst[module_idP].crnti, eNB_indexP,frameP,subframeP,ENB_FLAG_NO,MBMS_FLAG_NO,
+          rlc_status = mac_rlc_status_ind(module_idP,UE_mac_inst[module_idP].crnti, /*eNB_indexP*/PHY_vars_UE_g[module_idP][0]->common_vars.eNb_id,frameP,subframeP,ENB_FLAG_NO,MBMS_FLAG_NO,
                                           DCCH,
                                           6);
 
@@ -407,9 +407,9 @@ PRACH_RESOURCES_t *ue_get_rach(module_id_t module_idP,int CC_id,frame_t frameP, 
                   module_idP,frameP, rlc_status.bytes_in_buffer,dcch_header_len);
 
           sdu_lengths[0] = mac_rlc_data_req(module_idP, UE_mac_inst[module_idP].crnti,
-                                            eNB_indexP, frameP,ENB_FLAG_NO, MBMS_FLAG_NO,
+                                            /*eNB_indexP*/PHY_vars_UE_g[module_idP][0]->common_vars.eNb_id, frameP,ENB_FLAG_NO, MBMS_FLAG_NO,
                                             DCCH,
-											6,	//not used
+					    6,	//not used
                                             (char *)&ulsch_buff[0]);
 
           LOG_D(MAC,"[UE %d] TX Got %d bytes for DCCH\n",module_idP,sdu_lengths[0]);
@@ -443,7 +443,7 @@ PRACH_RESOURCES_t *ue_get_rach(module_id_t module_idP,int CC_id,frame_t frameP, 
           UE_mac_inst[module_idP].RA_backoff_frame    = frameP;
           UE_mac_inst[module_idP].RA_backoff_subframe = subframeP;
           // Fill in preamble and PRACH resource
-          get_prach_resources(module_idP,CC_id,eNB_indexP,subframeP,1,NULL);
+          get_prach_resources(module_idP,CC_id,eNB_indexP,subframeP,1,NULL);//not necessary change eNB_indexP by PHY_vars_UE_g[module_idP][0]->common_vars.eNb_id
           generate_ulsch_header((uint8_t*)ulsch_buff,  // mac header
                                 1,      // num sdus
                                 0,            // short pading
@@ -546,7 +546,7 @@ PRACH_RESOURCES_t *ue_get_rach(module_id_t module_idP,int CC_id,frame_t frameP, 
           UE_mac_inst[module_idP].RA_backoff_cnt                   = 0;
 
           // Fill in preamble and PRACH resource
-          get_prach_resources(module_idP,CC_id,eNB_indexP,subframeP,0,NULL);
+          get_prach_resources(module_idP,CC_id,eNB_indexP,subframeP,0,NULL);//not necessary change eNB_indexP by PHY_vars_UE_g[module_idP][0]->common_vars.eNb_id
           return(&UE_mac_inst[module_idP].RA_prach_resources);
         }
       }

@@ -68,7 +68,7 @@ phy_adjust_gain (PHY_VARS_UE *ue, uint32_t rx_power_fil_dB, uint8_t eNB_id)
   }
 
   LOG_D(PHY,"[UE %d] Gain control: rx_total_gain_dB = %d (max %d,rxpf %d)\n",ue->Mod_id,ue->rx_total_gain_dB,MAX_RF_GAIN,rx_power_fil_dB);
-  printf("[UE %d] Gain control: rx_total_gain_dB = %d (max %d,rxpf %d)\n",ue->Mod_id,ue->rx_total_gain_dB,MAX_RF_GAIN,rx_power_fil_dB);
+  //printf("[UE %d] Gain control: rx_total_gain_dB = %d (max %d,rxpf %d)\n",ue->Mod_id,ue->rx_total_gain_dB,MAX_RF_GAIN,rx_power_fil_dB);
 #ifdef DEBUG_PHY
   /*  if ((ue->frame%100==0) || (ue->frame < 10))
   msg("[PHY][ADJUST_GAIN] frame %d,  rx_power = %d, rx_power_fil = %d, rx_power_fil_dB = %d, coef=%d, ncoef=%d, rx_total_gain_dB = %d (%d,%d,%d)\n",

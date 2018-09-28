@@ -2752,7 +2752,7 @@ int decode_BCCH_DLSCH_Message(
       && (UE_rrc_inst[ctxt_pP->module_id].initialNasMsg.data != NULL)
 #endif
      ) {
-    rrc_ue_generate_RRCConnectionRequest(ctxt_pP, 0);
+    rrc_ue_generate_RRCConnectionRequest(ctxt_pP, eNB_index);
     rrc_set_sub_state( ctxt_pP->module_id, RRC_SUB_STATE_IDLE_CONNECTING );
   }
 
