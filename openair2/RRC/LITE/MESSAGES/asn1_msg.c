@@ -409,7 +409,7 @@ uint8_t do_SIB1(uint8_t Mod_id, int CC_id,
 #endif
                )
 {
-
+  printf("do_SIB1\n");
   //  SystemInformation_t systemInformation;
   PLMN_IdentityInfo_t PLMN_identity_info;
   MCC_MNC_Digit_t dummy_mcc[3],dummy_mnc[3];

@@ -517,7 +517,7 @@ void ue_compute_srs_occasion(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id
                   {
                       int Mod_id = ue->Mod_id;
                       int CC_id = ue->CC_id;
-                      SR_payload = mac_xface->ue_get_SR(Mod_id,
+                      SR_payload = mac_xface->ue_get_SR(Mod_id,//not necessary to change
                               CC_id,
                               frame_tx,
                               eNB_id,
@@ -1511,7 +1511,7 @@ void ue_prach_procedures(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,uin
       mac_xface->Msg1_transmitted(ue->Mod_id,
           ue->CC_id,
           frame_tx,
-          ue->common_vars.eNb_id);
+          eNB_id);//not necessary to change
     }
 
     LOG_I(PHY,"[UE  %d][RAPROC] Frame %d, subframe %d: Generating PRACH (eNB %d (ue->common_vars.eNb_id %d)) preamble index %d for UL, TX power %d dBm (PL %d dB), l3msg \n",
@@ -1575,7 +1575,7 @@ void ue_ulsch_uespec_procedures(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB
       ue->ulsch[eNB_id]->harq_processes[harq_pid]->subframe_scheduling_flag = 1;
 
       if (ue->ulsch[eNB_id]->harq_processes[harq_pid]->round==0)
-  generate_ue_ulsch_params_from_rar(ue,
+  generate_ue_ulsch_params_from_rar(ue,//not necessary to change
             proc,
             eNB_id);
 
@@ -1775,7 +1775,7 @@ void ue_ulsch_uespec_procedures(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB
 #endif
 
       if (abstraction_flag==0) {
-	if (ulsch_encoding(ue->prach_resources[eNB_id]->Msg3,
+	if (ulsch_encoding(ue->prach_resources[eNB_id]->Msg3,//not necessary to change
 			   ue,
 			   harq_pid,
 			   eNB_id,
@@ -1804,7 +1804,7 @@ void ue_ulsch_uespec_procedures(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB
 #endif
       if (ue->mac_enabled == 1) {
   // signal MAC that Msg3 was sent
-  mac_xface->Msg3_transmitted(Mod_id,
+  mac_xface->Msg3_transmitted(Mod_id,//not necessary to change
             CC_id,
             frame_tx,
             eNB_id);
@@ -1822,7 +1822,7 @@ void ue_ulsch_uespec_procedures(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB
         CC_id,
         frame_tx,
         subframe_tx,
-        eNB_id,
+        ue->common_vars.eNb_id,//changed
         ulsch_input_buffer,
         input_buffer_length,
         &access_mode);
@@ -1852,7 +1852,7 @@ void ue_ulsch_uespec_procedures(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB
 #endif
       if (abstraction_flag==0) {
 
-	if (ulsch_encoding(ulsch_input_buffer,
+	if (ulsch_encoding(ulsch_input_buffer,//not necessary to change
 			   ue,
 			   harq_pid,
 			   eNB_id,
@@ -1881,7 +1881,7 @@ void ue_ulsch_uespec_procedures(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB
 
     if (abstraction_flag == 0) {
       if (ue->mac_enabled==1) {
-  pusch_power_cntl(ue,proc,eNB_id,1, abstraction_flag);
+  pusch_power_cntl(ue,proc,eNB_id,1, abstraction_flag);//not necessary to change
   ue->tx_power_dBm[subframe_tx] = ue->ulsch[eNB_id]->Po_PUSCH;
       }
       else {
@@ -1917,7 +1917,7 @@ void ue_ulsch_uespec_procedures(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB
            &ue->frame_parms,
            ue->ulsch[eNB_id]);
       for (aa=0; aa<1/*frame_parms->nb_antennas_tx*/; aa++){
-	generate_drs_pusch(ue,
+	generate_drs_pusch(ue,//not necessary to change
 			   proc,
 			   eNB_id,
 			   tx_amp,
@@ -2493,7 +2493,7 @@ void phy_procedures_UE_TX(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,ui
     Mod_id,frame_tx,subframe_tx,
     ue->ulsch[eNB_id]->num_cba_dci[subframe_tx]);
 
-    mac_xface->ue_get_sdu(Mod_id,
+    mac_xface->ue_get_sdu(Mod_id,// changed
         CC_id,
         frame_tx,
         subframe_tx,
@@ -2703,7 +2703,7 @@ void ue_measurement_procedures(
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_UE_RRC_MEASUREMENTS, VCD_FUNCTION_OUT);
 
     if (abstraction_flag==1)
-      ue->sinr_eff =  sinr_eff_cqi_calc(ue, ue->common_vars.eNb_id, subframe_rx);
+      ue->sinr_eff =  sinr_eff_cqi_calc(ue, 0, subframe_rx);
 
   }
 
@@ -2725,7 +2725,7 @@ void ue_measurement_procedures(
 
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_UE_GAIN_CONTROL, VCD_FUNCTION_OUT);
 
-    eNB_id = ue->common_vars.eNb_id;
+    eNB_id = 0;
 
     if (abstraction_flag == 0) {
       if (ue->no_timing_correction==0)
@@ -3912,7 +3912,7 @@ void ue_dlsch_procedures(PHY_VARS_UE *ue,
        int *dlsch_errors,
        runmode_t mode,
        int abstraction_flag) {
-
+  printf("ue_dlsch_procedures: eNB_id %d, ue->common_vars.eNb.id %d, mac enabled %d\n",eNB_id,ue->common_vars.eNb_id,ue->mac_enabled==1);
   int harq_pid;
   int frame_rx = proc->frame_rx;
   int subframe_rx = proc->subframe_rx;

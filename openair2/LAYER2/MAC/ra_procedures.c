@@ -376,7 +376,7 @@ PRACH_RESOURCES_t *ue_get_rach(module_id_t module_idP,int CC_id,frame_t frameP, 
           UE_mac_inst[module_idP].RA_backoff_frame    = frameP;
           UE_mac_inst[module_idP].RA_backoff_subframe = subframeP;
           // Fill in preamble and PRACH resource
-          get_prach_resources(module_idP,CC_id,eNB_indexP,subframeP,1,NULL);
+          get_prach_resources(module_idP,CC_id,eNB_indexP,subframeP,1,NULL);//not necessary change eNB_indexP by PHY_vars_UE_g[module_idP][0]->common_vars.eNb_id
 
           generate_ulsch_header((uint8_t*)&UE_mac_inst[module_idP].CCCH_pdu.payload[0],  // mac header
                                 1,      // num sdus

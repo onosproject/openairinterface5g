@@ -2705,7 +2705,7 @@ int decode_BCCH_DLSCH_Message(
 # endif
 #endif
   if (bcch_message->message.present == BCCH_DL_SCH_MessageType_PR_c1) {
-    printf("Before SIB1: bcch_message->message.choice.c1.present %d, BCCH_DL_SCH_MessageType__c1_PR_systemInformationBlockType1 %d, BCCH_DL_SCH_MessageType__c1_PR_systemInformation %d, id %d, frame %d, CASE %s\n",bcch_message->message.choice.c1.present,BCCH_DL_SCH_MessageType__c1_PR_systemInformationBlockType1,BCCH_DL_SCH_MessageType__c1_PR_systemInformation,ctxt_pP->module_id,ctxt_pP->frame, ((ctxt_pP->frame % 2) == 0&&((UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIStatus&1) == 0) )?"SIB1":((UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIStatus&1) == 1)?"SIB2":"Other case");
+    printf("Before SIB1: bcch_message->message.choice.c1.present %d, BCCH_DL_SCH_MessageType__c1_PR_systemInformationBlockType1 %d, BCCH_DL_SCH_MessageType__c1_PR_systemInformation %d, id %d, frame %d, CASE %s, eNB_index %d\n",bcch_message->message.choice.c1.present,BCCH_DL_SCH_MessageType__c1_PR_systemInformationBlockType1,BCCH_DL_SCH_MessageType__c1_PR_systemInformation,ctxt_pP->module_id,ctxt_pP->frame, ((ctxt_pP->frame % 2) == 0&&((UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIStatus&1) == 0) )?"SIB1":((UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIStatus&1) == 1)?"SIB2":"Other case",eNB_index);
     switch (bcch_message->message.choice.c1.present) {
     case BCCH_DL_SCH_MessageType__c1_PR_systemInformationBlockType1:
       if ((ctxt_pP->frame % 2) == 0) {
@@ -2801,7 +2801,7 @@ static int decode_SIB1( const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_
   SystemInformationBlockType1_t* sib1 = UE_rrc_inst[ctxt_pP->module_id].sib1[eNB_index];
 
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_RRC_UE_DECODE_SIB1, VCD_FUNCTION_IN );
-
+  printf("Dumping sib1: eNB_index %d\n",eNB_index);
   LOG_I( RRC, "[UE %d] : Dumping SIB 1\n", ctxt_pP->module_id );
 
   PLMN_Identity_t *PLMN_identity = &sib1->cellAccessRelatedInfo.plmn_IdentityList.list.array[0]->plmn_Identity;

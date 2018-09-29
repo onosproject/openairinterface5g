@@ -66,7 +66,7 @@
 #include "assertions.h"
 
 #include "SIMULATION/TOOLS/defs.h" // for taus
-
+#include "PHY/extern.h"
 #define DEBUG_HEADER_PARSING 1
 #define ENABLE_MAC_PAYLOAD_DEBUG 1
 
@@ -460,7 +460,7 @@ ue_send_sdu(
                        (uint8_t*)payload_ptr,
                        rx_lengths[i],
                        ENB_FLAG_NO,
-                       eNB_index,
+                       /*eNB_index*/PHY_vars_UE_g[module_idP][0]->common_vars.eNb_id,//changed
                        0);
 	//printf("1\n");
 
@@ -468,7 +468,7 @@ ue_send_sdu(
       LOG_D(MAC,"[UE %d] Frame %d : DLSCH -> DL-DCCH%d, RRC message (eNB %d, %d bytes)\n", module_idP, frameP, rx_lcids[i],eNB_index,rx_lengths[i]);
       mac_rlc_data_ind(module_idP,
                        UE_mac_inst[module_idP].crnti,
-		       eNB_index,
+		       /*eNB_index*/PHY_vars_UE_g[module_idP][0]->common_vars.eNb_id,//changed
                        frameP,
                        ENB_FLAG_NO,
                        MBMS_FLAG_NO,
@@ -490,7 +490,7 @@ ue_send_sdu(
 #endif
       mac_rlc_data_ind(module_idP,
 		       UE_mac_inst[module_idP].crnti,
-		       eNB_index,
+		       /*eNB_index*/PHY_vars_UE_g[module_idP][0]->common_vars.eNb_id,//changed
 		       frameP,
 		       ENB_FLAG_NO,
 		       MBMS_FLAG_NO,
