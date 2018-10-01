@@ -118,6 +118,7 @@ static uint32_t eNB_app_register(uint32_t enb_id_start, uint32_t enb_id_end)//, 
   MessageDef      *msg_p;
   uint32_t         register_enb_pending = 0;
 
+printf("~~~~~~~~~~~~~~~~~~~~~~~~ enb_id_start = %d, enb_id_end = %d", enb_id_start, enb_id_end);
   for (enb_id = enb_id_start; (enb_id < enb_id_end) ; enb_id++) {
     {
       /* note:  there is an implicit relationship between the data structure and the message name */
@@ -215,6 +216,12 @@ void *eNB_app_task(void *args_p)
     memset((void *)RC.rrc[enb_id],0,sizeof(eNB_RRC_INST));
     configure_rrc(enb_id);
   }
+
+  /* Start the agent. If it is turned off in the configuration, it won't start */
+  /*RCconfig_flexran();
+  for (i = 0; i < RC.nb_L1_inst; i++) {
+    flexran_agent_start(i);
+  }*/
 
 # if defined(ENABLE_USE_MME)
   /* Try to register each eNB */

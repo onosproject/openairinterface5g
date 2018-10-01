@@ -151,6 +151,13 @@ void RCconfig_flexran() {
   paramdef_t ENBSParams[] = ENBSPARAMS_DESC;
   config_get(ENBSParams, sizeof(ENBSParams)/sizeof(paramdef_t), NULL);
   num_enbs = ENBSParams[ENB_ACTIVE_ENBS_IDX].numelt;
+
+/*~~~~~~~~~~~~~~~~~~ what's being added for test ~~~~~~~~~~~~~~~~~~*/
+  paramlist_def_t L1ParamList = {CONFIG_STRING_L1_LIST,NULL,0};
+  config_getlist( &L1ParamList,NULL,0, NULL);
+  int nb_L1_inst = L1ParamList.numelt;
+/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+
   /* for eNB ID */
   paramdef_t ENBParams[]  = ENBPARAMS_DESC;
   paramlist_def_t ENBParamList = {ENB_CONFIG_STRING_ENB_LIST, NULL, 0};
@@ -176,6 +183,7 @@ void RCconfig_flexran() {
   }
 
   for (i = 0; i < num_enbs; i++) {
+  //for (i = 0; i < nb_L1_inst; i++){
     RC.flexran[i] = calloc(1, sizeof(flexran_agent_info_t));
     AssertFatal(RC.flexran[i],
                 "can't ALLOCATE %zu Bytes for flexran agent info (iteration %d/%d)\n",
@@ -2291,6 +2299,8 @@ int RCconfig_X2(MessageDef *msg_p, uint32_t i) {
 
     if (ENBParamList.numelt > 0) {
       for (k = 0; k < ENBParamList.numelt; k++) {
+        if (k != i) continue;
+
         if (ENBParamList.paramarray[k][ENB_ENB_ID_IDX].uptr == NULL) {
           // Calculate a default eNB ID
 # if defined(ENABLE_USE_MME)
