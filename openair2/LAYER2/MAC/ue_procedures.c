@@ -947,6 +947,7 @@ void ue_send_sl_sdu(module_id_t module_idP,
          LOG_I(MAC, "SL_RESET_RLC_FLAG_NO\n");
       }
 
+      if(UE_rrc_inst[0].Info[0].rnti == 0){
       mac_rlc_data_ind(
             module_idP,
             0x1234,
@@ -963,6 +964,25 @@ void ue_send_sl_sdu(module_id_t module_idP,
             ,reset_flag
 #endif
       );
+      }
+      else{
+    	  mac_rlc_data_ind(
+    	              module_idP,
+    	              UE_rrc_inst[0].Info[0].rnti,
+    	              eNB_index,
+    	              frameP,
+    	              ENB_FLAG_NO,
+    	              MBMS_FLAG_NO,
+    	              lcid, //3/10
+    	              rlc_sdu,
+    	              rlc_sdu_len,
+    	              1,
+    	              NULL
+    	  #ifdef Rel14
+    	              ,reset_flag
+    	  #endif
+    	        );
+      }
    } else { //SL_DISCOVERY
       uint16_t len = sdu_len;
       LOG_D( MAC, "SL DISCOVERY \n");
@@ -3333,49 +3353,18 @@ SLSCH_t *ue_get_slsch(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_
    LOG_D(MAC,"Checking SLSCH for absSF %d\n",absSF);
    if ((absSF%40) == 0) { // fill PSCCH data later in first subframe of SL period
       ue->sltx_active = 0;
-/*
-      for (i = 0; i < MAX_NUM_LCID; i++){
-         if (ue->SL_LCID[i] > 0) {
-            for (int j = 0; j < ue->numCommFlows; j++){
-               if ((ue->sourceL2Id > 0) && (ue->destinationList[j] >0) ){
-                  rlc_status = mac_rlc_status_ind(module_idP, 0x1234,0,frameP,subframeP,ENB_FLAG_NO,MBMS_FLAG_NO,
-                        ue->SL_LCID[i], 0xFFFF, ue->sourceL2Id, ue->destinationList[j]);
-                  if (rlc_status.bytes_in_buffer > 2){
-                     LOG_I(MAC,"SFN.SF %d.%d: Scheduling for %d bytes in Sidelink buffer\n",frameP,subframeP,rlc_status.bytes_in_buffer);
-                     // Fill in group id for off-network communications
-                     ue->sltx_active = 1;
-                     //store LCID, destinationL2Id
-                     ue->slsch_lcid =  ue->SL_LCID[i];
-                     ue->destinationL2Id = ue->destinationList[j];
-                     break;
-                  }
-               }
-
-               if ((ue->sourceL2Id > 0) && (ue->groupList[j] >0) ){
-                  rlc_status = mac_rlc_status_ind(module_idP, 0x1234,0,frameP,subframeP,ENB_FLAG_NO,MBMS_FLAG_NO,
-                        ue->SL_LCID[i], 0xFFFF, ue->sourceL2Id, ue->groupList[j]);
-                  if (rlc_status.bytes_in_buffer > 2){
-                     LOG_I(MAC,"SFN.SF %d.%d: Scheduling for %d bytes in Sidelink buffer\n",frameP,subframeP,rlc_status.bytes_in_buffer);
-                     // Fill in group id for off-network communications
-                     ue->sltx_active = 1;
-                     //store LCID, destinationL2Id
-                     ue->slsch_lcid =  ue->SL_LCID[i];
-                     ue->destinationL2Id = ue->groupList[j];
-                     break;
-                  }
-               }
-
-            }
-         }
-         if ( ue->sltx_active == 1) break;
-      }
-      */
       for (i = 0; i < MAX_NUM_LCID; i++){
                if (ue->sl_info[i].LCID > 0) {
                  // for (int j = 0; j < ue->numCommFlows; j++){
                      if ((ue->sourceL2Id > 0) && (ue->sl_info[i].destinationL2Id >0) ){
+                    	 if(UE_rrc_inst[0].Info[0].rnti == 0){
                         rlc_status = mac_rlc_status_ind(module_idP, 0x1234,0,frameP,subframeP,ENB_FLAG_NO,MBMS_FLAG_NO,
                               ue->sl_info[i].LCID, 0xFFFF, ue->sourceL2Id, ue->sl_info[i].destinationL2Id );
+                    	 }
+                    	 else{
+                    		 rlc_status = mac_rlc_status_ind(module_idP, UE_rrc_inst[0].Info[0].rnti,0,frameP,subframeP,ENB_FLAG_NO,MBMS_FLAG_NO,
+                    				 ue->sl_info[i].LCID, 0xFFFF, ue->sourceL2Id, ue->sl_info[i].destinationL2Id );
+                    	 }
                         if (rlc_status.bytes_in_buffer > 2){
                            LOG_I(MAC,"SFN.SF %d.%d: Scheduling for %d bytes in Sidelink buffer \n",frameP,subframeP,rlc_status.bytes_in_buffer);
 
@@ -3390,8 +3379,15 @@ SLSCH_t *ue_get_slsch(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_
                      }
 
                      if ((ue->sourceL2Id > 0) && (ue->sl_info[i].groupL2Id >0) ){
-                        rlc_status = mac_rlc_status_ind(module_idP, 0x1234,0,frameP,subframeP,ENB_FLAG_NO,MBMS_FLAG_NO,
-                              ue->sl_info[i].LCID, 0xFFFF, ue->sourceL2Id, ue->sl_info[i].groupL2Id);
+                    	 if(UE_rrc_inst[0].Info[0].rnti == 0){
+                    		 rlc_status = mac_rlc_status_ind(module_idP, 0x1234,0,frameP,subframeP,ENB_FLAG_NO,MBMS_FLAG_NO,
+                    				 ue->sl_info[i].LCID, 0xFFFF, ue->sourceL2Id, ue->sl_info[i].groupL2Id);
+                    	 }
+                    	 else{
+                    		 rlc_status = mac_rlc_status_ind(module_idP, UE_rrc_inst[0].Info[0].rnti,0,frameP,subframeP,ENB_FLAG_NO,MBMS_FLAG_NO,
+                    				 ue->sl_info[i].LCID, 0xFFFF, ue->sourceL2Id, ue->sl_info[i].groupL2Id);
+                    	 }
+
                         if (rlc_status.bytes_in_buffer > 2){
                            LOG_I(MAC,"SFN.SF %d.%d: Scheduling for %d bytes in Sidelink buffer\n",frameP,subframeP,rlc_status.bytes_in_buffer);
                            // Fill in group id for off-network communications
@@ -3420,6 +3416,7 @@ SLSCH_t *ue_get_slsch(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_
       else req = rlc_status.bytes_in_buffer;
 
       if (req>0) {
+    	  if(UE_rrc_inst[0].Info[0].rnti == 0){
          sdu_length = mac_rlc_data_req(module_idP,
                0x1234,
                0,
@@ -3434,6 +3431,23 @@ SLSCH_t *ue_get_slsch(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_
                ue->destinationL2Id
 #endif
          );
+    	  }
+    	  else{
+    		  sdu_length = mac_rlc_data_req(module_idP,
+    				  UE_rrc_inst[0].Info[0].rnti,
+    		                 0,
+    		                 frameP,
+    		                 ENB_FLAG_NO,
+    		                 MBMS_FLAG_NO,
+    		                 ue->slsch_lcid,
+    		                 req,
+    		                 (char*)(ue->slsch_pdu.payload + sizeof(SLSCH_SUBHEADER_24_Bit_DST_LONG))
+    		  #ifdef Rel14
+    		                 ,ue->sourceL2Id,
+    		                 ue->destinationL2Id
+    		  #endif
+    		                 );
+    	  }
 
          // Notes: 1. hard-coded to 24-bit destination format for now
          if (sdu_length > 0) {

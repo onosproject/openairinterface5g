@@ -1334,6 +1334,7 @@ rrc_pdcp_config_asn1_req (
 
       DevCheck4(drb_id < maxDRB, drb_id, maxDRB, ctxt_pP->module_id, ctxt_pP->rnti);
       key = PDCP_COLL_KEY_VALUE(ctxt_pP->module_id, ctxt_pP->rnti, ctxt_pP->enb_flag, drb_id, SRB_FLAG_NO);
+      LOG_I(PDCP, "rnti value: %d, DRB_ID: %d \n", ctxt_pP->rnti, drb_id);
       h_rc = hashtable_get(pdcp_coll_p, key, (void**)&pdcp_p);
 
       if (h_rc == HASH_TABLE_OK) {
