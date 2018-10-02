@@ -173,10 +173,10 @@ add_msg3(module_id_t module_idP, int CC_id, RA_t * ra, frame_t frameP,
 	      module_idP, frameP, subframeP, CC_id, ra->Msg3_frame,
 	      ra->Msg3_subframe);
 
-	LOG_D(MAC,
-	      "Frame %d, Subframe %d Adding Msg3 UL Config Request for (%d,%d) : (%d,%d,%d)\n",
+	LOG_I(MAC,
+	      "Frame %d, Subframe %d Adding Msg3 UL Config Request for (%d,%d) : (%d,%d,%d) for rnti: %d\n",
 	      frameP, subframeP, ra->Msg3_frame, ra->Msg3_subframe,
-	      ra->msg3_nb_rb, ra->msg3_first_rb, ra->msg3_round);
+	      ra->msg3_nb_rb, ra->msg3_first_rb, ra->msg3_round, ra->rnti);
 
 	ul_config_pdu = &ul_req_body->ul_config_pdu_list[ul_req_body->number_of_pdus];
 
@@ -492,7 +492,6 @@ generate_Msg2(module_id_t module_idP, int CC_idP, frame_t frameP,
     } else
 #endif
     {
-      LOG_E(MAC,"%s() Compare SFN/SF:%04d%d Msg2:%04d%d\n", __FUNCTION__,frameP,subframeP,ra->Msg2_frame,ra->Msg2_subframe);
 
 	if ((ra->Msg2_frame == frameP) && (ra->Msg2_subframe == subframeP)) {
 	    LOG_D(MAC,
@@ -575,7 +574,7 @@ generate_Msg2(module_id_t module_idP, int CC_idP, frame_t frameP,
 		fill_rar(module_idP, CC_idP, ra, frameP, cc[CC_idP].RAR_pdu.payload, N_RB_DL, 7);
 		add_msg3(module_idP, CC_idP, ra, frameP, subframeP);
 		ra->state = WAITMSG3;
-                LOG_D(MAC,"[eNB %d][RAPROC] Frame %d, Subframe %d: state:WAITMSG3\n", module_idP, frameP, subframeP);
+                LOG_I(MAC,"[eNB %d][RAPROC] Frame %d, Subframe %d: state:WAITMSG3\n", module_idP, frameP, subframeP);
 
 		// DL request
 		mac->TX_req[CC_idP].sfn_sf = (frameP << 4) + subframeP;
@@ -699,7 +698,7 @@ generate_Msg4(module_id_t module_idP, int CC_idP, frame_t frameP,
     else
 	ra->harq_pid = ((frameP * 10) + subframeP) & 7;
 
-    // Get RRCConnectionSetup for Piggyback
+   /* // Get RRCConnectionSetup for Piggyback
     rrc_sdu_length = mac_rrc_data_req(module_idP, CC_idP, frameP, CCCH, 1,	// 1 transport block
 				      &cc[CC_idP].CCCH_pdu.payload[0], 0);	// not used in this case
 
@@ -709,7 +708,7 @@ generate_Msg4(module_id_t module_idP, int CC_idP, frame_t frameP,
 
     LOG_D(MAC,
 	  "[eNB %d][RAPROC] CC_id %d Frame %d, subframeP %d: UE_id %d, rrc_sdu_length %d\n",
-	  module_idP, CC_idP, frameP, subframeP, UE_id, rrc_sdu_length);
+	  module_idP, CC_idP, frameP, subframeP, UE_id, rrc_sdu_length);*/
 
 
 #ifdef Rel14
@@ -818,6 +817,20 @@ generate_Msg4(module_id_t module_idP, int CC_idP, frame_t frameP,
 
 		// Program PDSCH
 
+	        // Get RRCConnectionSetup for Piggyback
+	        /*rrc_sdu_length = mac_rrc_data_req(module_idP, CC_idP, frameP, CCCH, 1,	// 1 transport block
+	    				      &cc[CC_idP].CCCH_pdu.payload[0], ENB_FLAG_YES, module_idP, 0);	// not used in this case*/
+
+	    	rrc_sdu_length = mac_rrc_data_req(module_idP, CC_idP, frameP, CCCH, 1,	// 1 transport block
+	    					      &cc[CC_idP].CCCH_pdu.payload[0], 0);	// not used in this case
+
+	        LOG_D(MAC,
+	        	  "[eNB %d][RAPROC] CC_id %d Frame %d, subframeP %d: UE_id %d, rrc_sdu_length %d\n",
+	        	  module_idP, CC_idP, frameP, subframeP, UE_id, rrc_sdu_length);
+
+	        AssertFatal(rrc_sdu_length > 0,
+	    		"[MAC][eNB Scheduler] CCCH not allocated\n");
+
 		LOG_D(MAC,
 		      "[eNB %d][RAPROC] CC_id %d Frame %d, subframeP %d: Generating Msg4 BR with RRC Piggyback (ce_level %d RNTI %x)\n",
 		      module_idP, CC_idP, frameP, subframeP,
@@ -868,7 +881,7 @@ generate_Msg4(module_id_t module_idP, int CC_idP, frame_t frameP,
                 mac->DL_req[CC_idP].header.message_id = NFAPI_DL_CONFIG_REQUEST;
 	
 		ra->state = WAITMSG4ACK;
-                LOG_D(MAC,"[eNB %d][RAPROC] Frame %d, Subframe %d: state:WAITMSG4ACK\n", module_idP, frameP, subframeP);
+                LOG_I(MAC,"[eNB %d][RAPROC] Frame %d, Subframe %d: state:WAITMSG4ACK\n", module_idP, frameP, subframeP);
 
 		lcid = 0;
 
@@ -979,8 +992,25 @@ generate_Msg4(module_id_t module_idP, int CC_idP, frame_t frameP,
     }				// rach_resource_type > 0 
     else
 #endif
-    {				// This is normal LTE case
-	if ((ra->Msg4_frame == frameP) && (ra->Msg4_subframe == subframeP)) {
+    {
+    // This is normal LTE case
+	LOG_I(MAC, "Generate_Msg4 1 ra->Msg4_frame SFN/SF: %d.%d,  frameP SFN/SF: %d.%d FOR eNB_Mod: %d \n", ra->Msg4_frame, ra->Msg4_subframe, frameP, subframeP, module_idP);
+    	if ((ra->Msg4_frame == frameP) && (ra->Msg4_subframe == subframeP)) {
+
+    	    // Get RRCConnectionSetup for Piggyback
+    	    /*rrc_sdu_length = mac_rrc_data_req(module_idP, CC_idP, frameP, CCCH, 1,	// 1 transport block
+    					      &cc[CC_idP].CCCH_pdu.payload[0], ENB_FLAG_YES, module_idP, 0);	// not used in this case*/
+
+    		rrc_sdu_length = mac_rrc_data_req(module_idP, CC_idP, frameP, CCCH, 1,	// 1 transport block
+    						      &cc[CC_idP].CCCH_pdu.payload[0], 0);	// not used in this case
+
+    	    LOG_D(MAC,
+    	    	  "[eNB %d][RAPROC] CC_id %d Frame %d, subframeP %d: UE_id %d, rrc_sdu_length %d\n",
+    	    	  module_idP, CC_idP, frameP, subframeP, UE_id, rrc_sdu_length);
+
+    	    AssertFatal(rrc_sdu_length > 0,
+    			"[MAC][eNB Scheduler] CCCH not allocated, rrc_sdu_length: %d\n", rrc_sdu_length);
+
 	    LOG_D(MAC,
 		  "[eNB %d][RAPROC] CC_id %d Frame %d, subframeP %d: Generating Msg4 with RRC Piggyback (RNTI %x)\n",
 		  module_idP, CC_idP, frameP, subframeP, ra->rnti);
@@ -1047,7 +1077,7 @@ generate_Msg4(module_id_t module_idP, int CC_idP, frame_t frameP,
 		dl_req_body->number_pdu++;
 
 		ra->state = WAITMSG4ACK;
-                LOG_D(MAC,"[eNB %d][RAPROC] Frame %d, Subframe %d: state:WAITMSG4ACK\n", module_idP, frameP, subframeP);
+                LOG_I(MAC,"[eNB %d][RAPROC] Frame %d, Subframe %d: state:WAITMSG4ACK\n", module_idP, frameP, subframeP);
 
 		// increment Absolute subframe by 8 for Msg4 retransmission
 		LOG_D(MAC,
@@ -1233,9 +1263,9 @@ check_Msg4_retransmission(module_id_t module_idP, int CC_idP,
     dl_config_pdu = &dl_req_body->dl_config_pdu_list[dl_req_body->number_pdu];
     N_RB_DL = to_prb(cc[CC_idP].mib->message.dl_Bandwidth);
 
-    LOG_D(MAC,
-	  "[eNB %d][RAPROC] CC_id %d Frame %d, subframeP %d: Checking if Msg4 for harq_pid %d was acknowledged (round %d)\n",
-	  module_idP, CC_idP, frameP, subframeP, ra->harq_pid, round);
+    LOG_I(MAC,
+	  "[eNB %d][RAPROC] CC_id %d Frame %d, subframeP %d: Checking if Msg4 for harq_pid %d was acknowledged (round %d), UE_id: %d \n",
+	  module_idP, CC_idP, frameP, subframeP, ra->harq_pid, round, UE_id);
 
     if (round != 8) {
 
@@ -1284,6 +1314,7 @@ check_Msg4_retransmission(module_id_t module_idP, int CC_idP,
 			  ra->rnti, round, frameP, subframeP);
 		    // DLSCH Config
                     //DJP - fix this pdu_index = -1
+		    LOG_I(MAC, "Panos:D: check_Msg4_retransmission() before fill_nfapi_dlsch_config() with pdu_index = -1 \n");
 		    fill_nfapi_dlsch_config(mac, dl_req_body, ra->msg4_TBsize,
 					    -1
 					    /* retransmission, no pdu_index */
@@ -1335,11 +1366,11 @@ check_Msg4_retransmission(module_id_t module_idP, int CC_idP,
 	    }			// Msg4 frame/subframe
 	}			// regular LTE case
     } else {
-	LOG_D(MAC,
+	LOG_I(MAC,
 	      "[eNB %d][RAPROC] CC_id %d Frame %d, subframeP %d : Msg4 acknowledged\n",
 	      module_idP, CC_idP, frameP, subframeP);
 	ra->state = IDLE;
-        LOG_D(MAC,"[eNB %d][RAPROC] Frame %d, Subframe %d: state:IDLE\n", module_idP, frameP, subframeP);
+        LOG_I(MAC,"[eNB %d][RAPROC] Frame %d, Subframe %d: state:IDLE\n", module_idP, frameP, subframeP);
 	UE_id = find_UE_id(module_idP, ra->rnti);
 	DevAssert(UE_id != -1);
 	mac->UE_list.UE_template[UE_PCCID(module_idP, UE_id)][UE_id].configured = TRUE;

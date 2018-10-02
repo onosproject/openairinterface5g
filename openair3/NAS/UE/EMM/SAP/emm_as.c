@@ -1371,6 +1371,7 @@ static int _emm_as_security_res(const emm_data_t *emm_data, const emm_as_securit
 static int _emm_as_establish_req(const emm_data_t *emm_data, const emm_as_establish_t *msg,
                                  nas_establish_req_t *as_msg)
 {
+
   LOG_FUNC_IN;
 
   int size = 0;
@@ -1428,7 +1429,7 @@ static int _emm_as_establish_req(const emm_data_t *emm_data, const emm_as_establ
 
   if (size > 0) {
     /* Encode the initial NAS information message */
-    int bytes = _emm_as_encode(
+	  int bytes = _emm_as_encode(
                   &as_msg->initialNasMsg,
                   &nas_msg,
                   size,

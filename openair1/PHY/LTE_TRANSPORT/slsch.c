@@ -35,6 +35,11 @@
 //#define PSSCH_DEBUG 1
 //#define DEBUG_SCI_DECODING 1
 
+extern int
+multicast_link_write_sock(int groupP, char *dataP, uint32_t sizeP);
+extern uint8_t D2D_en;
+
+
 void generate_sl_grouphop(PHY_VARS_UE *ue)
 {
 
@@ -690,7 +695,12 @@ void check_and_generate_pssch(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_tx,
   else slsch->ljmod10++;
 */	 
 
-  slsch_codingmodulation(ue,proc,frame_tx,subframe_tx,slsch->ljmod10);
+  if(D2D_en){
+	  generate_slsch(ue,proc,slsch,frame_tx,subframe_tx);
+  }
+  else{
+	  slsch_codingmodulation(ue,proc,frame_tx,subframe_tx,slsch->ljmod10);
+  }
 }
 
 void check_and_generate_pscch(PHY_VARS_UE *ue,int frame_tx,int subframe_tx) {
@@ -753,9 +763,11 @@ void check_and_generate_pscch(PHY_VARS_UE *ue,int frame_tx,int subframe_tx) {
 
   ue->slsch_sdu_active = 1;
 
-  if (absSF_modP == b1)      pscch_codingmodulation(ue,frame_tx,subframe_tx,a1,0);	
-  else if (absSF_modP == b2) pscch_codingmodulation(ue,frame_tx,subframe_tx,a2,1);
-  else return;
+  if(!D2D_en) {
+	  if (absSF_modP == b1)      pscch_codingmodulation(ue,frame_tx,subframe_tx,a1,0);
+	  else if (absSF_modP == b2) pscch_codingmodulation(ue,frame_tx,subframe_tx,a2,1);
+	  else return;
+  }
 
 }
 
@@ -790,7 +802,8 @@ void generate_slsch(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,SLSCH_t *slsch,int fram
   
     }
   } // sidelink_emulation=1
-  else if (ue->sidelink_active==0){ // This is first indication of sidelink in this period
+  //Panos: Remove this part as generate_slsch() will be called only for emulation mode now.
+  /*else if (ue->sidelink_active==0){ // This is first indication of sidelink in this period
     ue->sidelink_active = 1;
     ue->slsch           = slsch;
   }
@@ -799,7 +812,7 @@ void generate_slsch(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,SLSCH_t *slsch,int fram
   check_and_generate_pscch(ue,frame_tx,subframe_tx);
   // check and flll SLSCH portion
   LOG_D(PHY,"pssch: SFN.SF %d.%d\n",frame_tx,subframe_tx); 
-  check_and_generate_pssch(ue,proc,frame_tx,subframe_tx);
+  check_and_generate_pssch(ue,proc,frame_tx,subframe_tx);*/
 }
 
 

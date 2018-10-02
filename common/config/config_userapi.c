@@ -150,12 +150,13 @@ void config_printhelp(paramdef_t *params,int numparams)
 int config_execcheck(paramdef_t *params,int numparams, char *prefix)
 {
 int st=0;
-
    for (int i=0 ; i<numparams ; i++) {
        if ( params[i].chkPptr == NULL) {
            continue;
        }
+       //printf("Panos-D: config_execcheck, current parameter: %s, number: %d \n \n", params[i].optname, i);
        if (params[i].chkPptr->s4.f4 != NULL) {
+    	   //LOG_I(MAC, "config_execcheck()")
          st += params[i].chkPptr->s4.f4(&(params[i]));
        }
    }
@@ -172,7 +173,6 @@ int config_get(paramdef_t *params,int numparams, char *prefix)
 {
 int ret= -1;
 
-printf("numparams:%d prefix:%s\n", numparams, prefix);
 if (CONFIG_ISFLAGSET(CONFIG_ABORT)) {
     fprintf(stderr,"[CONFIG] config_get skipped, config module not properly initialized\n");
     return ret;

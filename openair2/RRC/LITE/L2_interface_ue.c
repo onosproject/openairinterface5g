@@ -81,6 +81,25 @@ mac_rrc_data_req_ue(
   AssertFatal(Srb_idP==MIBCH || Srb_idP==CCCH || Srb_idP==SL_DISCOVERY,"SRB_id %d is not possible should be (MIBCH %d or CCCH %d or SL_DISCOVERY %d)\n",
 	      Srb_idP,MIBCH,CCCH,SL_DISCOVERY);
 
+#ifdef Rel14
+     LOG_D(RRC,"[UE %d] Frame %d Filling SL DISCOVERY SRB_ID %d\n",Mod_idP,frameP,Srb_idP);
+     LOG_D(RRC,"[UE %d] Frame %d buffer_pP status %d,\n",Mod_idP,frameP, UE_rrc_inst[Mod_idP].SL_Discovery[eNB_indexP].Tx_buffer.payload_size);
+
+   //TTN (for D2D)
+     //if (Srb_id  == SL_DISCOVERY && UE_rrc_inst[Mod_idP].SL_Discovery[eNB_index].Tx_buffer.payload_size > 0){
+     if (Srb_idP  == SL_DISCOVERY){
+    	 if (UE_rrc_inst[Mod_idP].SL_Discovery[eNB_indexP].Tx_buffer.payload_size > 0){
+    		 memcpy(&buffer_pP[0],&UE_rrc_inst[Mod_idP].SL_Discovery[eNB_indexP].Tx_buffer.Payload[0],UE_rrc_inst[Mod_idP].SL_Discovery[eNB_indexP].Tx_buffer.payload_size);
+    		 uint8_t Ret_size=UE_rrc_inst[Mod_idP].SL_Discovery[eNB_indexP].Tx_buffer.payload_size;
+    		 LOG_I(RRC,"[UE %d] Sending SL_Discovery, size %d bytes\n",Mod_idP,Ret_size);
+    		 UE_rrc_inst[Mod_idP].SL_Discovery[eNB_indexP].Tx_buffer.payload_size = 0;
+    		 return(Ret_size);
+    	 }
+    	 else
+    		 return 0;
+     }
+#endif
+
   if( Srb_idP == CCCH && UE_rrc_inst[Mod_idP].Srb0[eNB_indexP].Tx_buffer.payload_size > 0 ) {
 
     // Note the bottom code is not used
@@ -179,6 +198,7 @@ mac_rrc_data_ind_ue(
 
 #if defined(ENABLE_ITTI)
       {
+    	  //LOG_I(RRC, "Panos-D: In mac_rrc_data_ind_ue() ITTI \n \n");
         MessageDef *message_p;
         int msg_sdu_size = sizeof(RRC_MAC_BCCH_DATA_IND (message_p).sdu);
 
@@ -202,6 +222,7 @@ mac_rrc_data_ind_ue(
         itti_send_msg_to_task (TASK_RRC_UE, ctxt.instance, message_p);
       }
 #else
+      //LOG_I(RRC, "Panos-D: In mac_rrc_data_ind_ue() outside ITTI \n \n");
       decode_BCCH_DLSCH_Message(&ctxt,eNB_indexP,(uint8_t*)sduP,sdu_lenP, 0, 0);
 #endif
     }
@@ -275,6 +296,11 @@ mac_rrc_data_ind_ue(
 #else
       decode_MCCH_Message(&ctxt, eNB_indexP, sduP, sdu_lenP, mbsfn_sync_areaP);
 #endif
+    }
+    //TTN (for D2D)
+    if(srb_idP == SL_DISCOVERY) {
+    	LOG_I(RRC,"[UE %d] Received SDU (%d bytes) for SL_DISCOVERY on SRB %d from eNB %d\n",module_idP, sdu_lenP, srb_idP,eNB_indexP);
+    	decode_SL_Discovery_Message(&ctxt, eNB_indexP, sduP, sdu_lenP);
     }
 
 #endif // Rel10 || Rel14
@@ -365,7 +391,11 @@ rrc_data_req_ue(
            confirmP,
            sdu_sizeP,
            buffer_pP,
-           modeP);
+           modeP
+#ifdef Rel14
+           ,NULL, NULL
+#endif
+           );
 #endif
 }
 
@@ -422,6 +452,7 @@ void rrc_in_sync_ind(module_id_t Mod_idP, frame_t frameP, uint16_t eNB_index)
   //-------------------------------------------------------------------------------------------//
 #if defined(ENABLE_ITTI)
   {
+	  LOG_I(RRC, "Panos-D: rrc_in_sync_ind 0 \n");
     MessageDef *message_p;
     //LOG_I(RRC,"sending a message to task_mac_ue\n");
     message_p = itti_alloc_new_message (TASK_MAC_UE, RRC_MAC_IN_SYNC_IND);
@@ -432,7 +463,7 @@ void rrc_in_sync_ind(module_id_t Mod_idP, frame_t frameP, uint16_t eNB_index)
   }
 #else
   UE_rrc_inst[Mod_idP].Info[eNB_index].N310_cnt=0;
-
+  LOG_I(RRC, "Panos-D: rrc_in_sync_ind 1 \n");
   if (UE_rrc_inst[Mod_idP].Info[eNB_index].T310_active==1) {
     UE_rrc_inst[Mod_idP].Info[eNB_index].N311_cnt++;
   }

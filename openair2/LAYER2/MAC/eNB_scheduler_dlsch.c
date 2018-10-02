@@ -703,7 +703,6 @@ schedule_ue_spec(module_id_t module_idP,slice_id_t slice_idP,
       eNB_UE_stats = &UE_list->eNB_UE_stats[CC_id][UE_id];
       ue_sched_ctl = &UE_list->UE_sched_ctrl[UE_id];
 
-      //LOG_D(MAC,"%s() rnti:%x, eNB_UE_stats:%p, ue_sched_ctl:%p tmode:%d\n", __FUNCTION__, rnti, eNB_UE_stats, ue_sched_ctl, get_tmode(module_idP,CC_id,UE_id));
 
       if (rnti == NOT_A_RNTI) {
 	LOG_D(MAC, "Cannot find rnti for UE_id %d (num_UEs %d)\n",
@@ -1009,11 +1008,11 @@ schedule_ue_spec(module_id_t module_idP,slice_id_t slice_idP,
 	if (TBS - ta_len - header_length_total - sdu_length_total - 3 > 0) {
 	  rlc_status = mac_rlc_status_ind(module_idP, rnti, module_idP, frameP, subframeP, ENB_FLAG_YES, MBMS_FLAG_NO, DCCH,
                                           TBS - ta_len - header_length_total - sdu_length_total - 3
-#ifdef Rel14
-					  ,0,0
-#endif
-					  );
-					  
+
+                                          #ifdef Rel14
+                                          	  ,0, 0
+                                          #endif
+                          );
 	  sdu_lengths[0] = 0;
 
 	  if (rlc_status.bytes_in_buffer > 0) {
@@ -1025,9 +1024,9 @@ schedule_ue_spec(module_id_t module_idP,slice_id_t slice_idP,
                                               TBS, //not used
 					      (char *)&dlsch_buffer[0]
 #ifdef Rel14
-					      ,0,0
+                          ,0, 0
 #endif
-					      );
+                          );
 
 	    T(T_ENB_MAC_UE_DL_SDU, T_INT(module_idP),
 	      T_INT(CC_id), T_INT(rnti), T_INT(frameP),
@@ -1067,10 +1066,10 @@ schedule_ue_spec(module_id_t module_idP,slice_id_t slice_idP,
 	if (TBS - ta_len - header_length_total - sdu_length_total - 3 > 0) {
 	  rlc_status = mac_rlc_status_ind(module_idP, rnti, module_idP, frameP, subframeP, ENB_FLAG_YES, MBMS_FLAG_NO, DCCH + 1,
                                           TBS - ta_len - header_length_total - sdu_length_total - 3
-#ifdef Rel14
-					  ,0,0
-#endif
-);
+                                          #ifdef Rel14
+                                          	  ,0, 0
+										  #endif
+	  	  	  	  	  	  	  	  	  	  );
 
 	  // DCCH SDU
 	  sdu_lengths[num_sdus] = 0;
@@ -1084,9 +1083,9 @@ schedule_ue_spec(module_id_t module_idP,slice_id_t slice_idP,
                                                       TBS, //not used
 						      (char *)&dlsch_buffer[sdu_length_total]
 #ifdef Rel14
-						      ,0,0
+                          ,0, 0
 #endif
-						      );
+	    );
 
 	    T(T_ENB_MAC_UE_DL_SDU, T_INT(module_idP),
 	      T_INT(CC_id), T_INT(rnti), T_INT(frameP),
@@ -1116,6 +1115,7 @@ schedule_ue_spec(module_id_t module_idP,slice_id_t slice_idP,
 
 	    LOG_T(MAC, "\n");
 #endif
+
 	  }
 	}
 
@@ -1137,10 +1137,10 @@ schedule_ue_spec(module_id_t module_idP,slice_id_t slice_idP,
 					    MBMS_FLAG_NO,
 					    lcid,
 					    TBS - ta_len - header_length_total - sdu_length_total - 3
-#ifdef Rel14
-					    ,0,0
-#endif
-					    );
+						#ifdef Rel14
+					    	,0, 0
+						#endif
+	    				);
 
 
 
@@ -1156,9 +1156,9 @@ schedule_ue_spec(module_id_t module_idP,slice_id_t slice_idP,
                                                        TBS, //not used
 						       (char *)&dlsch_buffer[sdu_length_total]
 #ifdef Rel14
-						       ,0,0
+                          ,0, 0
 #endif
-						       );
+	      );
 
 	      T(T_ENB_MAC_UE_DL_SDU, T_INT(module_idP),
 		T_INT(CC_id), T_INT(rnti), T_INT(frameP),
@@ -1528,8 +1528,6 @@ schedule_ue_spec(module_id_t module_idP,slice_id_t slice_idP,
 
     }			// UE_id loop
   }				// CC_id loop
-
-
 
   fill_DLSCH_dci(module_idP, frameP, subframeP, mbsfn_flag);
 

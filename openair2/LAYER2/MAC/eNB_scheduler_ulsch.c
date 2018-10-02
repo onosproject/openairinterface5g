@@ -156,6 +156,7 @@ rx_sdu(const module_id_t enb_mod_idP,
     LOG_D(OPT, "[eNB %d][ULSCH] Frame %d  rnti %x  with size %d\n",
 	  enb_mod_idP, frameP, current_rnti, sdu_lenP);
   }
+
   if (UE_id != -1) {
     LOG_D(MAC,
 	  "[eNB %d][PUSCH %d] CC_id %d Received ULSCH sdu round %d from PHY (rnti %x, UE_id %d) ul_cqi %d\n",
@@ -588,6 +589,8 @@ rx_sdu(const module_id_t enb_mod_idP,
 	  // Program Msg4 PDCCH+DLSCH/MPDCCH transmission 4 subframes from now, // Check if this is ok for BL/CE, or if the rule is different
 	  ra->Msg4_frame = frameP + ((subframeP > 5) ? 1 : 0);
 	  ra->Msg4_subframe = (subframeP + 4) % 10;
+	  LOG_D(MAC, " Received Msg4, SFN/SF:%d.%d \n", ra->Msg4_frame, ra->Msg4_subframe);
+
 
 	}		// if process is active
       }			// loop on RA processes
@@ -597,7 +600,7 @@ rx_sdu(const module_id_t enb_mod_idP,
     case DCCH:
     case DCCH1:
       //      if(eNB_mac_inst[module_idP][CC_idP].Dcch_lchan[UE_id].Active==1){
-      
+
 
 #if defined(ENABLE_MAC_PAYLOAD_DEBUG)
       LOG_T(MAC, "offset: %d\n",
@@ -629,11 +632,11 @@ rx_sdu(const module_id_t enb_mod_idP,
 	      enb_mod_idP, CC_idP, frameP, rx_lengths[i], UE_id,
 	      rx_lcids[i]);
 
-	mac_rlc_data_ind(enb_mod_idP, current_rnti, enb_mod_idP, frameP, ENB_FLAG_YES, MBMS_FLAG_NO, rx_lcids[i], (char *) payload_ptr, rx_lengths[i], 1, NULL,
+	mac_rlc_data_ind(enb_mod_idP, current_rnti, enb_mod_idP, frameP, ENB_FLAG_YES, MBMS_FLAG_NO, rx_lcids[i], (char *) payload_ptr, rx_lengths[i], 1, NULL
 #ifdef Rel14
   ,SL_RESET_RLC_FLAG_NO
 #endif
-                        );	//(unsigned int*)crc_status);
+  );	//(unsigned int*)crc_status);
 	UE_list->eNB_UE_stats[CC_idP][UE_id].num_pdu_rx[rx_lcids[i]] += 1;
 	UE_list->eNB_UE_stats[CC_idP][UE_id].num_bytes_rx[rx_lcids[i]] += rx_lengths[i];
 
@@ -693,7 +696,7 @@ rx_sdu(const module_id_t enb_mod_idP,
 #ifdef Rel14
   ,SL_RESET_RLC_FLAG_NO
 #endif
-                            );	//(unsigned int*)crc_status);
+	    );	//(unsigned int*)crc_status);
 
 	    UE_list->eNB_UE_stats[CC_idP][UE_id].num_pdu_rx[rx_lcids[i]] += 1;
 	    UE_list->eNB_UE_stats[CC_idP][UE_id].num_bytes_rx[rx_lcids[i]] += rx_lengths[i];
@@ -1179,7 +1182,7 @@ schedule_ulsch_rnti(module_id_t module_idP,
 
     drop_ue = 0;
     /* let's drop the UE if get_eNB_UE_stats returns NULL when calling it with any of the UE's active UL CCs */
-    /* TODO: refine? 
+    /* TODO: refine?
 
        for (n=0; n<UE_list->numactiveULCCs[UE_id]; n++) {
        CC_id = UE_list->ordered_ULCCids[n][UE_id];

@@ -631,7 +631,6 @@ typedef struct {
 } eNB_STATS;
 /*! \brief eNB statistics for the connected UEs*/
 typedef struct {
-
     /// CRNTI of UE
     rnti_t crnti;		///user id (rnti) of connected UEs
     // rrc status
@@ -1180,6 +1179,8 @@ typedef struct eNB_MAC_INST_s {
     COMMON_channels_t common_channels[MAX_NUM_CCs];
     /// current PDU index (BCH,MCH,DLSCH)
     uint16_t pdu_index[MAX_NUM_CCs];
+    /// flag to enable phy-test (disables the scheduler)
+    uint16_t phy_test;
 
     /// NFAPI Config Request Structure
     nfapi_config_request_t config[MAX_NUM_CCs];
@@ -1325,6 +1326,8 @@ typedef struct {
     int16_t bucket_size[MAX_NUM_LCID];
 } UE_SCHEDULING_INFO;
 
+/*!\brief Top level UE MAC structure */
+
 typedef struct {
    //SL source L2Id
    uint32_t sourceL2Id;
@@ -1336,7 +1339,7 @@ typedef struct {
    uint32_t  LCID;
 } SL_INFO;
 
-/*!\brief Top level UE MAC structure */
+
 typedef struct {
   uint16_t Node_id;
   /// RX frame counter
@@ -1517,15 +1520,11 @@ typedef struct {
   /// Panos: Phy_stub mode: Boolean variable to distinguish whether a Msg3 or a regular ULSCH data pdu should be generated
   /// after the reception of NFAPI_UL_CONFIG_ULSCH_PDU_TYPE.
   uint8_t first_ULSCH_Tx;
-
-  /// Panos: Pointers to config_request types. Used from nfapi callback functions.
-  nfapi_dl_config_request_t* dl_config_req;
-  nfapi_ul_config_request_t* ul_config_req;
-  nfapi_hi_dci0_request_t* hi_dci0_req;
-  nfapi_tx_request_t* tx_req;
+  uint8_t SI_Decoded;
+  int ra_frame; 	// This variable keeps the frame in which the RA started for the specific UE. It is used in order
+                    // to make sure that different UEs RA starts within a number of frames difference.
 
   eth_params_t         eth_params_n;
-
 
 } UE_MAC_INST;
 /*! \brief ID of the neighboring cells used for HO*/

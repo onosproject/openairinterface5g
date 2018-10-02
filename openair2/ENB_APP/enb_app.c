@@ -164,7 +164,7 @@ void *eNB_app_task(void *args_p)
   LOG_I(PHY, "%s() Task ready initialise structures\n", __FUNCTION__);
 
   RCconfig_L1();
-  //}
+
 
   RCconfig_macrlc();
 

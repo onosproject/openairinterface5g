@@ -637,9 +637,10 @@ schedule_MBMS(module_id_t module_idP, uint8_t CC_id, frame_t frameP,
 			       TBS - header_len_mcch - header_len_msi -
 			       sdu_length_total - header_len_mtch
 #ifdef Rel14
-			       ,0,0
+                                    ,0, 0
 #endif
-			       );
+                                    );
+
 	LOG_D(MAC,
 	      "e-MBMS log channel %u frameP %d, subframeP %d,  rlc_status.bytes_in_buffer is %d\n",
 	      MTCH, frameP, subframeP, rlc_status.bytes_in_buffer);
@@ -653,12 +654,13 @@ schedule_MBMS(module_id_t module_idP, uint8_t CC_id, frame_t frameP,
 
 	    sdu_lengths[num_sdus] = mac_rlc_data_req(module_idP, 0, module_idP, frameP, ENB_FLAG_YES, MBMS_FLAG_YES, MTCH, 0,	//not used
 						     (char *)
-						     &mch_buffer
-						     [sdu_length_total]
+						     &mch_buffer[sdu_length_total]
 #ifdef Rel14
-						     ,0,0
+                                ,0,
+                                 0
 #endif
-						     );
+                                 );
+
 	    //sdu_lengths[num_sdus] = mac_rlc_data_req(module_idP,frameP, MBMS_FLAG_NO,  MTCH+(MAX_NUM_RB*(NUMBER_OF_UE_MAX+1)), (char*)&mch_buffer[sdu_length_total]);
 	    LOG_I(MAC,
 		  "[eNB %d][MBMS USER-PLANE] CC_id %d Got %d bytes for MTCH %d\n",

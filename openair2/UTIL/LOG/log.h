@@ -271,6 +271,12 @@ extern log_t *g_log;
 int  logInit (void);
 void logRecord_mt(const char *file, const char *func, int line, int comp, int level, const char *format, ...) __attribute__ ((format (printf, 6, 7)));
 void logRecord(const char *file, const char *func, int line,int comp, int level, const char *format, ...) __attribute__ ((format (printf, 6, 7)));
+/*=======
+//void logRecord_mt(const char *file, const char *func, int line,pthread_t thread_id, int comp, int level, const char *format, ...) __attribute__ ((format (printf, 7, 8)));
+
+void logRecord_mt(const char *file, const char *func, int line,int comp, int level, const char *format, ...) __attribute__ ((format (printf, 6, 7)));
+void logRecord(const char *file, const char *func, int line, pthread_t thread_id, int comp, int level, const char *format, ...) __attribute__ ((format (printf, 7, 8)));
+>>>>>>> origin/on-off-integration*/
 int  set_comp_log(int component, int level, int verbosity, int interval);
 int  set_log(int component, int level, int interval);
 void set_glog(int level, int verbosity);
@@ -294,6 +300,7 @@ void *log_thread_function(void * list);
 #else //default
 #define logIt(component, level, format, args...) (g_log->log_component[component].interval?logRecord(__FILE__, __FUNCTION__, __LINE__, component, level, format, ##args):(void)0)
 #endif
+
 /* @}*/
 
 /*----------------macro definitions for reading log configuration from the config module */

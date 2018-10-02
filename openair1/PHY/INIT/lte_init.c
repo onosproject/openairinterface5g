@@ -40,10 +40,7 @@ extern uint16_t prach_root_sequence_map4[138];
 extern uint8_t nfapi_mode;
 
 
-
 int N_RB_DL_array[6] = {6,15,25,50,75,100};
-
-
 
 /*
 void phy_config_sib2_eNB(uint8_t Mod_id,
@@ -122,6 +119,10 @@ void phy_config_sib2_eNB(uint8_t Mod_id,
   fp->soundingrs_ul_config_common.enabled_flag                        = 0;
 
   if (radioResourceConfigCommon->soundingRS_UL_ConfigCommon.present==SoundingRS_UL_ConfigCommon_PR_setup) {
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/on-off-integration
     fp->soundingrs_ul_config_common.enabled_flag                        = 1;
     fp->soundingrs_ul_config_common.srs_BandwidthConfig                 = radioResourceConfigCommon->soundingRS_UL_ConfigCommon.choice.setup.srs_BandwidthConfig;
     fp->soundingrs_ul_config_common.srs_SubframeConfig                  = radioResourceConfigCommon->soundingRS_UL_ConfigCommon.choice.setup.srs_SubframeConfig;
@@ -332,7 +333,10 @@ void phy_config_dedicated_eNB(uint8_t Mod_id,
                               uint16_t rnti,
                               struct PhysicalConfigDedicated *physicalConfigDedicated)
 {
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/on-off-integration
   PHY_VARS_eNB *eNB = RC.eNB[Mod_id][CC_id];
   int8_t UE_id = find_ue(rnti,eNB);
   int i;
@@ -385,7 +389,6 @@ void phy_config_dedicated_eNB(uint8_t Mod_id,
     LOG_E(PHY,"[eNB %d] Received NULL radioResourceConfigDedicated from eNB %d\n",Mod_id, UE_id);
     return;
   }
-
 }
 */
 
@@ -395,7 +398,10 @@ void phy_config_dedicated_scell_eNB(uint8_t Mod_id,
                                     SCellToAddMod_r10_t *sCellToAddMod_r10,
                                     int CC_id)
 {
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/on-off-integration
   uint8_t UE_id = find_ue(rnti,RC.eNB[Mod_id][0]);
   struct PhysicalConfigDedicatedSCell_r10 *physicalConfigDedicatedSCell_r10 = sCellToAddMod_r10->radioResourceConfigDedicatedSCell_r10->physicalConfigDedicatedSCell_r10;
   //struct RadioResourceConfigCommonSCell_r10 *physicalConfigCommonSCell_r10 = sCellToAddMod_r10->radioResourceConfigCommonSCell_r10;
@@ -436,8 +442,6 @@ void phy_config_dedicated_scell_eNB(uint8_t Mod_id,
 
 }
 */
-
-
 
 void  phy_config_cba_rnti (module_id_t Mod_id,int CC_id,eNB_flag_t eNB_flag, uint8_t index, rnti_t cba_rnti, uint8_t cba_group_id, uint8_t num_active_cba_groups)
 {

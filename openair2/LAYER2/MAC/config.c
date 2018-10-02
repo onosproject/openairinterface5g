@@ -466,6 +466,7 @@ config_sib2(int Mod_idP,
     PRACH_ParametersListCE_r13_t *prach_ParametersListCE_r13 = &ext4_prach->prach_ParametersListCE_r13;
 
     PRACH_ParametersCE_r13_t *p;
+
     cfg->emtc_config.prach_ce_level_0_enable.value = 0;
     cfg->emtc_config.prach_ce_level_0_enable.tl.tag=NFAPI_EMTC_CONFIG_PRACH_CE_LEVEL_0_ENABLE_TAG;
     cfg->num_tlv++;
@@ -498,6 +499,7 @@ config_sib2(int Mod_idP,
       cfg->num_tlv++;
 
       cfg->emtc_config.prach_ce_level_3_number_of_repetitions_per_attempt.value = p->numRepetitionPerPreambleAttempt_r13;
+
       cfg->emtc_config.prach_ce_level_3_number_of_repetitions_per_attempt.tl.tag = NFAPI_EMTC_CONFIG_PRACH_CE_LEVEL_3_NUMBER_OF_REPETITIONS_PER_ATTEMPT_TAG;
       cfg->num_tlv++;
 
@@ -562,6 +564,7 @@ config_sib2(int Mod_idP,
       cfg->num_tlv++;
 
       cfg->emtc_config.prach_ce_level_1_number_of_repetitions_per_attempt.value = p->numRepetitionPerPreambleAttempt_r13;
+
       cfg->emtc_config.prach_ce_level_1_number_of_repetitions_per_attempt.tl.tag = NFAPI_EMTC_CONFIG_PRACH_CE_LEVEL_1_NUMBER_OF_REPETITIONS_PER_ATTEMPT_TAG;
       cfg->num_tlv++;
 
@@ -576,6 +579,7 @@ config_sib2(int Mod_idP,
       cfg->num_tlv++;
 
       cfg->emtc_config.prach_ce_level_1_hopping_offset.value                    = cfg->rf_config.ul_channel_bandwidth.value - 6;
+
       cfg->emtc_config.prach_ce_level_1_hopping_offset.tl.tag = NFAPI_EMTC_CONFIG_PRACH_CE_LEVEL_1_HOPPING_OFFSET_TAG;
       cfg->num_tlv++;
 
@@ -733,11 +737,13 @@ rrc_mac_config_req_eNB(module_id_t Mod_idP,
     if (RC.mac == NULL)
       l2_init_eNB();
 
-    LOG_E(MAC, "%s() %s:%d\n", __FUNCTION__, __FILE__, __LINE__);
     mac_top_init_eNB();
-    LOG_E(MAC, "%s() %s:%d\n", __FUNCTION__, __FILE__, __LINE__);
+
+    //LOG_E(MAC, "%s() %s:%d\n", __FUNCTION__, __FILE__, __LINE__);
 
 
+
+    RC.mac[Mod_idP]->common_channels[CC_idP].mib = mib;
     RC.mac[Mod_idP]->common_channels[CC_idP].physCellId = physCellId;
     RC.mac[Mod_idP]->common_channels[CC_idP].p_eNB = p_eNB;
     RC.mac[Mod_idP]->common_channels[CC_idP].Ncp = Ncp;
@@ -771,7 +777,7 @@ rrc_mac_config_req_eNB(module_id_t Mod_idP,
 	       );
 
     mac_init_cell_params(Mod_idP,CC_idP);
-    
+
     if (schedulingInfoList!=NULL)  {
       RC.mac[Mod_idP]->common_channels[CC_idP].tdd_Config         = tdd_Config;    
       RC.mac[Mod_idP]->common_channels[CC_idP].schedulingInfoList = schedulingInfoList;    
@@ -845,7 +851,7 @@ rrc_mac_config_req_eNB(module_id_t Mod_idP,
 
     }
   } // mib != NULL
-  
+
   // SRB2_lchan_config->choice.explicitValue.ul_SpecificParameters->logicalChannelGroup
   if (logicalChannelConfig != NULL) {	// check for eMTC specific things
     UE_id = find_UE_id(Mod_idP, rntiP);
@@ -981,87 +987,19 @@ rrc_mac_config_req_eNB(module_id_t Mod_idP,
     }
   }
 
-  PHY_Config_t phycfg;
-  phycfg.Mod_id = Mod_idP;
-  phycfg.CC_id  = CC_idP;
-  phycfg.cfg    = &RC.mac[Mod_idP]->config[CC_idP];
+  if (radioResourceConfigCommon != NULL) {
+	  PHY_Config_t phycfg;
+	  phycfg.Mod_id = Mod_idP;
+	  phycfg.CC_id  = CC_idP;
+	  phycfg.cfg    = &RC.mac[Mod_idP]->config[CC_idP];
 
-  LOG_E(MAC, "%s() %s:%d\n", __FUNCTION__, __FILE__, __LINE__);
-  if (RC.mac[Mod_idP]->if_inst->PHY_config_req) RC.mac[Mod_idP]->if_inst->PHY_config_req(&phycfg); 
-  LOG_E(MAC, "%s() %s:%d\n", __FUNCTION__, __FILE__, __LINE__);
+	  LOG_E(MAC, "%s() %s:%d\n", __FUNCTION__, __FILE__, __LINE__);
+	  if (RC.mac[Mod_idP]->if_inst->PHY_config_req) RC.mac[Mod_idP]->if_inst->PHY_config_req(&phycfg);
+	  LOG_E(MAC, "%s() %s:%d\n", __FUNCTION__, __FILE__, __LINE__);
 
-  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_RRC_MAC_CONFIG, VCD_FUNCTION_OUT);
+	  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_RRC_MAC_CONFIG, VCD_FUNCTION_OUT);
+  }
 
   return(0);			   
 
-}
-
-/*
-// P: New function supporting the MAC interface
-void config_sib1_ue()
-{
-
-}
-
-// P: New function supporting the MAC interface
-void config_sib2_ue()
-{
-
-}
-
-// P: New function supporting the MAC interface
-void config_meas_ue()
-{
-
-}
-
-// P: New function supporting the MAC interface
-// to substitute call to phy_config_afterHO_ue().
-void config_afterHO_ue()
-{
-
-}
-
-// P: New function supporting the MAC interface
-void config_sib13_ue()
-{
-
-}
-
-
-// P: New function supporting the MAC interface
-void config_dedicated_ue()
-{
-
-}
-*/
-
-#endif
-    
-    LOG_E(MAC, "%s() %s:%d RC.mac[Mod_idP]->if_inst->PHY_config_req:%p\n", __FUNCTION__, __FILE__, __LINE__, RC.mac[Mod_idP]->if_inst->PHY_config_req);
-
-    // if in nFAPI mode 
-    if (
-        (nfapi_mode == 1 || nfapi_mode == 2) &&
-        (RC.mac[Mod_idP]->if_inst->PHY_config_req == NULL)
-       ) {
-      while(RC.mac[Mod_idP]->if_inst->PHY_config_req == NULL) {
-        // DJP AssertFatal(RC.mac[Mod_idP]->if_inst->PHY_config_req != NULL,"if_inst->phy_config_request is null\n");
-        usleep(100 * 1000);
-        printf("Waiting for PHY_config_req\n");
-      }
-    }
-
-    if (radioResourceConfigCommon != NULL) {
-      PHY_Config_t phycfg;
-      phycfg.Mod_id = Mod_idP;
-      phycfg.CC_id  = CC_idP;
-      phycfg.cfg    = &RC.mac[Mod_idP]->config[CC_idP];
-      
-      if (RC.mac[Mod_idP]->if_inst->PHY_config_req) RC.mac[Mod_idP]->if_inst->PHY_config_req(&phycfg); 
-      
-      VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_RRC_MAC_CONFIG, VCD_FUNCTION_OUT);
-    }
-    
-    return(0);			   
 }

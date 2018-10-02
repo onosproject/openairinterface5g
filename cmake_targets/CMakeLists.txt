@@ -242,6 +242,7 @@ add_boolean_option(UE_DEBUG_TRACE      False "Activate UE debug trace")
 add_boolean_option(UE_TIMING_TRACE     False "Activate UE timing trace")
 add_boolean_option(DISABLE_LOG_X       False "Deactivate all LOG_* macros")
 add_boolean_option(USRP_REC_PLAY       False "Enable USRP record playback mode")
+add_boolean_option(UE_NAS_USE_TUN      False "Enable UE NAS TUN device instead of ue_ip.ko")
 
 add_boolean_option(DEBUG_CONSOLE False "makes debugging easier, disables stdout/stderr buffering")
 
@@ -280,7 +281,7 @@ set(protobuf_generated_dir ${OPENAIR_BIN_DIR})
 
 # RRC
 ######
-add_list2_option(RRC_ASN1_VERSION "Rel10" "ASN.1 version of RRC interface" "Rel8" "Rel10" "CBA")
+add_list2_option(RRC_ASN1_VERSION "Rel14" "ASN.1 version of RRC interface" "Rel8" "Rel10" "Rel14" "CBA")
 
 if (${RRC_ASN1_VERSION} STREQUAL "Rel8")
   set (RRC_GRAMMAR ${OPENAIR2_DIR}/RRC/LITE/MESSAGES/asn1c/ASN1_files/EUTRA-RRC-Definitions-86.asn)
@@ -1391,6 +1392,7 @@ set (MAC_SRC
   ${MAC_DIR}/eNB_scheduler_bch.c
   ${MAC_DIR}/eNB_scheduler_primitives.c
   ${MAC_DIR}/eNB_scheduler_RA.c
+  ${MAC_DIR}/eNB_scheduler_phytest.c
   ${MAC_DIR}/pre_processor.c
   ${MAC_DIR}/config.c
   ${MAC_DIR}/config_ue.c
@@ -1413,7 +1415,7 @@ set (ENB_APP_SRC
   ${OPENAIR2_DIR}/ENB_APP/enb_config.c
   ${OPENAIR2_DIR}/ENB_APP/RRC_config_tools.c
   )
-
+  
 add_library(L2
   ${L2_SRC}
   ${MAC_SRC}
@@ -2019,6 +2021,8 @@ add_executable(lte-softmodem
   ${OPENAIR_TARGETS}/COMMON/create_tasks.c
   ${OPENAIR_TARGETS}/ARCH/COMMON/common_lib.c
   ${OPENAIR1_DIR}/SIMULATION/ETH_TRANSPORT/netlink_init.c
+  ${OPENAIR1_DIR}/SIMULATION/ETH_TRANSPORT/multicast_link.c
+  ${OPENAIR1_DIR}/SIMULATION/ETH_TRANSPORT/socket.c
   ${OPENAIR3_DIR}/NAS/UE/nas_ue_task.c
   ${OPENAIR_DIR}/common/utils/utils.c
   ${OPENAIR_DIR}/common/utils/system.c
@@ -2062,6 +2066,8 @@ add_executable(lte-softmodem-nos1
   ${OPENAIR2_DIR}/RRC/NAS/nas_config.c
   ${OPENAIR2_DIR}/RRC/NAS/rb_config.c
   ${OPENAIR1_DIR}/SIMULATION/ETH_TRANSPORT/netlink_init.c
+  ${OPENAIR1_DIR}/SIMULATION/ETH_TRANSPORT/multicast_link.c
+  ${OPENAIR1_DIR}/SIMULATION/ETH_TRANSPORT/socket.c
   ${OPENAIR_DIR}/common/utils/system.c
   ${XFORMS_SOURCE}
   ${XFORMS_SOURCE_SOFTMODEM}
@@ -2077,9 +2083,10 @@ target_link_libraries (lte-softmodem-nos1
   -Wl,--end-group z dl )
 
 target_link_libraries (lte-softmodem-nos1 ${LIBXML2_LIBRARIES})
-target_link_libraries (lte-softmodem-nos1 pthread m ${CONFIG_LIBRARIES} rt crypt ${CRYPTO_LIBRARIES} ${OPENSSL_LIBRARIES} ${NETTLE_LIBRARIES} sctp  ${XFORMS_LIBRARIES} ${PROTOBUF_LIB} ${CMAKE_DL_LIBS} ${LIBYAML_LIBRARIES})
+target_link_libraries (lte-softmodem-nos1 pthread m ${CONFIG_LIBRARIES} rt crypt ${CRYPTO_LIBRARIES} ${OPENSSL_LIBRARIES} ${NETTLE_LIBRARIES} sctp ${XFORMS_LIBRARIES} ${PROTOBUF_LIB} ${CMAKE_DL_LIBS} ${LIBYAML_LIBRARIES})
 target_link_libraries (lte-softmodem-nos1  ${LIB_LMS_LIBRARIES})
 target_link_libraries (lte-softmodem-nos1 ${T_LIB})
+
 
 # lte-uesoftmodem is  UE implementation
 #######################################
@@ -2090,7 +2097,6 @@ add_executable(lte-uesoftmodem
   ${OPENAIR_BIN_DIR}/messages_xml.h
   ${OPENAIR_TARGETS}/RT/USER/rt_wrapper.c
   ${OPENAIR_TARGETS}/RT/USER/lte-ue.c
-#  ${OPENAIR_TARGETS}/RT/USER/lte-enb.c
   ${OPENAIR_TARGETS}/RT/USER/lte-uesoftmodem.c
   ${OPENAIR1_DIR}/SIMULATION/TOOLS/taus.c
   ${OPENAIR_TARGETS}/SIMU/USER/init_lte.c
@@ -2121,7 +2127,8 @@ target_link_libraries (lte-uesoftmodem pthread m ${CONFIG_LIBRARIES} rt crypt ${
 target_link_libraries (lte-uesoftmodem ${LIB_LMS_LIBRARIES})
 target_link_libraries (lte-uesoftmodem ${T_LIB})
 
-# lte-softmodem-nos1 is both eNB and UE implementation
+
+# lte-uesoftmodem-nos1 is UE implementation
 ###################################################
 add_executable(lte-uesoftmodem-nos1
   ${rrc_h}
@@ -2137,6 +2144,9 @@ add_executable(lte-uesoftmodem-nos1
   ${OPENAIR2_DIR}/RRC/NAS/nas_config.c
   ${OPENAIR2_DIR}/RRC/NAS/rb_config.c
   ${OPENAIR1_DIR}/SIMULATION/ETH_TRANSPORT/netlink_init.c
+  ${OPENAIR1_DIR}/SIMULATION/ETH_TRANSPORT/multicast_link.c
+  ${OPENAIR1_DIR}/SIMULATION/ETH_TRANSPORT/socket.c
+  ${OPENAIR_DIR}/common/utils/utils.c
   ${OPENAIR_DIR}/common/utils/system.c
   ${XFORMS_SOURCE}
   ${XFORMS_SOURCE_SOFTMODEM}
@@ -2144,16 +2154,20 @@ add_executable(lte-uesoftmodem-nos1
   ${CONFIG_SOURCES}
   ${SHLIB_LOADER_SOURCES}
   )
+
 target_link_libraries (lte-uesoftmodem-nos1
   -Wl,--start-group
   RRC_LIB SECU_CN SECU_OSA UTIL HASHTABLE SCHED_UE_LIB PHY_UE LFDS L2_UE ${MSC_LIB} ${RAL_LIB} ${ITTI_LIB} 
   ${MIH_LIB} ${FLPT_MSG_LIB} ${ASYNC_IF_LIB} LFDS7
+  NFAPI_COMMON_LIB NFAPI_LIB NFAPI_PNF_LIB NFAPI_USER_LIB 
   -Wl,--end-group z dl )
 
 target_link_libraries (lte-uesoftmodem-nos1 ${LIBXML2_LIBRARIES})
 target_link_libraries (lte-uesoftmodem-nos1 pthread m ${CONFIG_LIBRARIES} rt crypt ${CRYPTO_LIBRARIES} ${OPENSSL_LIBRARIES} ${NETTLE_LIBRARIES} sctp  ${XFORMS_LIBRARIES} ${PROTOBUF_LIB} ${CMAKE_DL_LIBS} ${LIBYAML_LIBRARIES})
 target_link_libraries (lte-uesoftmodem-nos1  ${LIB_LMS_LIBRARIES})
 target_link_libraries (lte-uesoftmodem-nos1 ${T_LIB})
+
+
 
 # USIM process
 #################

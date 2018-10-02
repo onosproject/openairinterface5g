@@ -176,7 +176,6 @@ extern pthread_mutex_t slrb_mutex;
 void *send_UE_status_notification(void *);
 
 
-
 #include "SystemInformationBlockType1.h"
 #include "SystemInformation.h"
 #include "RRCConnectionReconfiguration.h"
@@ -769,6 +768,7 @@ typedef struct UE_RRC_INST_s {
   //SIB18
   SystemInformationBlockType18_r12_t *sib18[NB_CNX_UE];
   SystemInformationBlockType19_r12_t *sib19[NB_CNX_UE];
+  SystemInformationBlockType21_r14_t *sib21[NB_CNX_UE];
 
   SBCCH_SL_BCH_Message_t   SL_mib_tx;
   SBCCH_SL_BCH_Message_t   *SL_mib[NB_CNX_UE];

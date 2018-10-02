@@ -93,7 +93,6 @@ typedef struct ru_config_s {
   uint8_t   if_compress;
 } ru_config_t;
 
-eth_params_t         stub_eth_params;
 
 extern void RCconfig_RU(void);
 extern void RCconfig_flexran(void);

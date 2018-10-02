@@ -181,12 +181,12 @@ void handle_ulsch(UL_IND_t *UL_info) {
       for (i=0;i<UL_info->rx_ind.rx_indication_body.number_of_pdus;i++) {
         for (j=0;j<UL_info->crc_ind.crc_indication_body.number_of_crcs;j++) {
           // find crc_indication j corresponding rx_indication i
-          LOG_D(PHY,"UL_info->crc_ind.crc_indication_body.crc_pdu_list[%d].rx_ue_information.rnti:%04x UL_info->rx_ind.rx_indication_body.rx_pdu_list[%d].rx_ue_information.rnti:%04x\n", j, UL_info->crc_ind.crc_indication_body.crc_pdu_list[j].rx_ue_information.rnti, i, UL_info->rx_ind.rx_indication_body.rx_pdu_list[i].rx_ue_information.rnti);
+          //LOG_I(MAC,"Panos-D: UL_info->crc_ind.crc_indication_body.crc_pdu_list[%d].rx_ue_information.rnti:%04x UL_info->rx_ind.rx_indication_body.rx_pdu_list[%d].rx_ue_information.rnti:%04x\n", j, UL_info->crc_ind.crc_indication_body.crc_pdu_list[j].rx_ue_information.rnti, i, UL_info->rx_ind.rx_indication_body.rx_pdu_list[i].rx_ue_information.rnti);
           if (UL_info->crc_ind.crc_indication_body.crc_pdu_list[j].rx_ue_information.rnti ==
               UL_info->rx_ind.rx_indication_body.rx_pdu_list[i].rx_ue_information.rnti) {
-            LOG_D(PHY, "UL_info->crc_ind.crc_indication_body.crc_pdu_list[%d].crc_indication_rel8.crc_flag:%d\n", j, UL_info->crc_ind.crc_indication_body.crc_pdu_list[j].crc_indication_rel8.crc_flag);
+            //LOG_I(MAC, "Panos-D: UL_info->crc_ind.crc_indication_body.crc_pdu_list[%d].crc_indication_rel8.crc_flag:%d\n", j, UL_info->crc_ind.crc_indication_body.crc_pdu_list[j].crc_indication_rel8.crc_flag);
             if (UL_info->crc_ind.crc_indication_body.crc_pdu_list[j].crc_indication_rel8.crc_flag == 1) { // CRC error indication
-              LOG_D(MAC,"Frame %d, Subframe %d Calling rx_sdu (CRC error) \n",UL_info->frame,UL_info->subframe);
+              LOG_I(MAC,"Frame %d, Subframe %d Calling rx_sdu (CRC error) \n",UL_info->frame,UL_info->subframe);
               rx_sdu(UL_info->module_id,
                   UL_info->CC_id,
                   NFAPI_SFNSF2SFN(UL_info->rx_ind.sfn_sf), //UL_info->frame,
@@ -198,7 +198,7 @@ void handle_ulsch(UL_IND_t *UL_info) {
                   UL_info->rx_ind.rx_indication_body.rx_pdu_list[i].rx_indication_rel8.ul_cqi);
             }
             else {
-              LOG_D(MAC,"Frame %d, Subframe %d Calling rx_sdu (CRC ok) \n",UL_info->frame,UL_info->subframe);
+              //LOG_I(MAC,"Frame %d, Subframe %d Calling rx_sdu (CRC ok) \n",UL_info->frame,UL_info->subframe);
               rx_sdu(UL_info->module_id,
                   UL_info->CC_id,
                   NFAPI_SFNSF2SFN(UL_info->rx_ind.sfn_sf), //UL_info->frame,
@@ -217,7 +217,9 @@ void handle_ulsch(UL_IND_t *UL_info) {
       UL_info->crc_ind.crc_indication_body.number_of_crcs=0;
       UL_info->rx_ind.rx_indication_body.number_of_pdus = 0;
     } // UL_info->rx_ind.rx_indication_body.number_of_pdus>0 && UL_info->subframe && UL_info->crc_ind.crc_indication_body.number_of_crcs>0
-    else if (UL_info->rx_ind.rx_indication_body.number_of_pdus!=0 || UL_info->crc_ind.crc_indication_body.number_of_crcs!=0) {
+
+
+      else if (UL_info->rx_ind.rx_indication_body.number_of_pdus!=0 || UL_info->crc_ind.crc_indication_body.number_of_crcs!=0) {
       LOG_E(PHY,"hoping not to have mis-match between CRC ind and RX ind - hopefully the missing message is coming shortly rx_ind:%d(SFN/SF:%05d) crc_ind:%d(SFN/SF:%05d) UL_info(SFN/SF):%04d%d\n",
           UL_info->rx_ind.rx_indication_body.number_of_pdus, NFAPI_SFNSF2DEC(UL_info->rx_ind.sfn_sf),
           UL_info->crc_ind.crc_indication_body.number_of_crcs, NFAPI_SFNSF2DEC(UL_info->crc_ind.sfn_sf),
@@ -559,7 +561,6 @@ void UL_indication(UL_IND_t *UL_info)
     }
     ifi->CC_mask |= (1<<CC_id);
   }
-
   // clear DL/UL info for new scheduling round
   clear_nfapi_information(RC.mac[module_id],CC_id,
 			  UL_info->frame,UL_info->subframe);

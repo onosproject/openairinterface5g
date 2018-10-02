@@ -49,7 +49,11 @@
 
 #include "SIMULATION/TOOLS/defs.h"	// for taus
 
-int8_t get_DELTA_PREAMBLE(module_id_t module_idP, int CC_id)
+extern uint8_t  nfapi_mode;
+extern UE_MODE_t get_ue_mode(uint8_t Mod_id,uint8_t CC_id,uint8_t eNB_index);
+
+
+int8_t get_DELTA_PREAMBLE(module_id_t module_idP,int CC_id)
 {
 
     AssertFatal(CC_id == 0,
@@ -105,8 +109,6 @@ get_prach_resources(module_id_t module_idP,
 		    uint8_t first_Msg3,
 		    RACH_ConfigDedicated_t * rach_ConfigDedicated)
 {
-	LOG_I(MAC, "Panos-D: get_prach_resources 1");
-
     uint8_t Msg3_size = UE_mac_inst[module_idP].RA_Msg3_size;
     PRACH_RESOURCES_t *prach_resources =
 	&UE_mac_inst[module_idP].RA_prach_resources;
@@ -219,13 +221,13 @@ get_prach_resources(module_id_t module_idP,
 	} else if ((Msg3_size < messageSizeGroupA) ||
 		   (get_PL(module_idP, 0, eNB_index) > PLThreshold)) {
 	    // use Group A procedure
-	    UE_mac_inst[module_idP].RA_prach_resources.ra_PreambleIndex =
+		UE_mac_inst[module_idP].RA_prach_resources.ra_PreambleIndex =
 		(taus()) % sizeOfRA_PreamblesGroupA;
 	    UE_mac_inst[module_idP].RA_prach_resources.ra_RACH_MaskIndex =
 		0;
 	    UE_mac_inst[module_idP].RA_usedGroupA = 1;
 	} else {		// use Group B
-	    UE_mac_inst[module_idP].RA_prach_resources.ra_PreambleIndex =
+		UE_mac_inst[module_idP].RA_prach_resources.ra_PreambleIndex =
 		sizeOfRA_PreamblesGroupA +
 		(taus()) % (numberOfRA_Preambles -
 			    sizeOfRA_PreamblesGroupA);
@@ -318,7 +320,7 @@ Msg3_transmitted(module_id_t module_idP, uint8_t CC_id,
 		"Transmission on secondary CCs is not supported yet\n");
 
     // start contention resolution timer
-    LOG_D(MAC,
+    LOG_I(MAC,
 	  "[UE %d][RAPROC] Frame %d : Msg3_tx: Setting contention resolution timer\n",
 	  module_idP, frameP);
     UE_mac_inst[module_idP].RA_contention_resolution_cnt = 0;
@@ -340,14 +342,23 @@ Msg3_transmitted(module_id_t module_idP, uint8_t CC_id,
 }
 
 
+
 PRACH_RESOURCES_t *ue_get_rach(module_id_t module_idP, int CC_id,
 			       frame_t frameP, uint8_t eNB_indexP,
 			       sub_frame_t subframeP)
 {
-
-
     uint8_t Size = 0;
-    UE_MODE_t UE_mode = get_ue_mode(module_idP, 0, eNB_indexP);
+    UE_MODE_t UE_mode;
+    // Panos: Modification for phy_stub_ue operation
+    if(nfapi_mode == 3) { // Panos: phy_stub_ue mode
+    	  UE_mode = UE_mac_inst[module_idP].UE_mode[0];
+    	  LOG_D(MAC, "ue_get_rach , UE_mode: %d", UE_mode);
+    }
+    else { // Full stack mode
+    	  UE_mode = get_ue_mode(module_idP,0,eNB_indexP);
+    }
+
+
     uint8_t lcid = CCCH;
     uint16_t Size16;
     struct RACH_ConfigCommon *rach_ConfigCommon =
@@ -362,6 +373,7 @@ PRACH_RESOURCES_t *ue_get_rach(module_id_t module_idP, int CC_id,
 		"Transmission on secondary CCs is not supported yet\n");
 
     if (UE_mode == PRACH) {
+    	LOG_D(MAC, "ue_get_rach 3, RA_active value: %d", UE_mac_inst[module_idP].RA_active);
 	if (UE_mac_inst[module_idP].radioResourceConfigCommon) {
 	    rach_ConfigCommon =
 		&UE_mac_inst[module_idP].
@@ -393,7 +405,6 @@ PRACH_RESOURCES_t *ue_get_rach(module_id_t module_idP, int CC_id,
 		  module_idP, frameP, Size);
 
 	    if (Size > 0) {
-
 		UE_mac_inst[module_idP].RA_active = 1;
 		UE_mac_inst[module_idP].RA_PREAMBLE_TRANSMISSION_COUNTER =
 		    1;
@@ -450,9 +461,9 @@ PRACH_RESOURCES_t *ue_get_rach(module_id_t module_idP, int CC_id,
 				       eNB_indexP, frameP, subframeP,
 				       ENB_FLAG_NO, MBMS_FLAG_NO, DCCH, 6
 #ifdef Rel14
-				       ,0,0
+               ,0, 0
 #endif
-);
+               );
 
 		if (UE_mac_inst[module_idP].crnti_before_ho)
 		    LOG_D(MAC,
@@ -471,9 +482,8 @@ PRACH_RESOURCES_t *ue_get_rach(module_id_t module_idP, int CC_id,
 						  (char *) &ulsch_buff[0]
 #ifdef Rel14
 						  ,0,0
-#endif						  
-						  );
-
+#endif
+                  	  	 );
 		LOG_D(MAC, "[UE %d] TX Got %d bytes for DCCH\n",
 		      module_idP, sdu_lengths[0]);
 		update_bsr(module_idP, frameP, subframeP, eNB_indexP);
@@ -657,3 +667,7 @@ PRACH_RESOURCES_t *ue_get_rach(module_id_t module_idP, int CC_id,
 
     return (NULL);
 }
+
+
+
+

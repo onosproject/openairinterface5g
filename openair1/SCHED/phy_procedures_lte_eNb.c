@@ -347,14 +347,24 @@ void pdsch_procedures(PHY_VARS_eNB *eNB,
     start_meas(&eNB->dlsch_encoding_stats);
 
     eNB->te(eNB,
-        dlsch_harq->pdu,
-        dlsch_harq->pdsch_start,
-        dlsch,
-        frame,subframe,
-        &eNB->dlsch_rate_matching_stats,
-        &eNB->dlsch_turbo_encoding_stats,
-        &eNB->dlsch_interleaving_stats);
+	  dlsch_harq->pdu,
+	  dlsch_harq->pdsch_start,
+	  dlsch,
+	  frame,
+	  subframe,
+	  &eNB->dlsch_rate_matching_stats,
+	  &eNB->dlsch_turbo_encoding_stats,
+	  &eNB->dlsch_turbo_encoding_waiting_stats,
+      &eNB->dlsch_turbo_encoding_main_stats,
+      &eNB->dlsch_turbo_encoding_wakeup_stats0,
+      &eNB->dlsch_turbo_encoding_wakeup_stats1,
+	  &eNB->dlsch_interleaving_stats);
     stop_meas(&eNB->dlsch_encoding_stats);
+  //////////////////////////////////////////////////*******************************************
+  if(eNB->dlsch_encoding_stats.diff_now>500*3000 && opp_enabled == 1)
+  {
+    print_meas_now(&eNB->dlsch_encoding_stats,"total coding",stderr);
+  }
   // 36-211
     start_meas(&eNB->dlsch_scrambling_stats);
     dlsch_scrambling(fp,
@@ -547,6 +557,7 @@ void phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
         else
         {
           // generate pdsch
+
           pdsch_procedures(eNB,
               proc,
               harq_pid,
@@ -1154,8 +1165,8 @@ void pusch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
   LTE_DL_FRAME_PARMS *fp=&eNB->frame_parms;
   LTE_eNB_ULSCH_t *ulsch;
   LTE_UL_eNB_HARQ_t *ulsch_harq;
-  struct timespec t_decode, t_crc,t_rx_ind,t_rx_ind_b,t_harq_a,t_harq_b,t_end;
-
+  struct timespec t_harq_a,t_harq_b;
+  //struct timespec t_decode, t_crc,t_rx_ind,t_rx_ind_b, t_end;
   const int subframe = proc->subframe_rx;
   const int frame    = proc->frame_rx;
   
@@ -1183,7 +1194,6 @@ void pusch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
 	int rb2 = rb+ulsch_harq->first_rb;
 	eNB->rb_mask_ul[rb2>>5] |= (1<<(rb2&31));
       }
-
       LOG_D(PHY,"[eNB %d] frame %d, subframe %d: Scheduling ULSCH Reception for UE %d \n", eNB->Mod_id, frame, subframe, i);
 
       nPRS = fp->pusch_config_common.ul_ReferenceSignalsPUSCH.nPRS[subframe<<1];
@@ -1363,36 +1373,62 @@ extern int oai_exit;
 
 extern void *td_thread(void*);
 
-void init_td_thread(PHY_VARS_eNB *eNB,pthread_attr_t *attr_td) {
+void init_td_thread(PHY_VARS_eNB *eNB) {
 
   eNB_proc_t *proc = &eNB->proc;
 
   proc->tdp.eNB = eNB;
   proc->instance_cnt_td         = -1;
-    
+  
+  pthread_attr_init( &proc->attr_td);  
   pthread_mutex_init( &proc->mutex_td, NULL);
   pthread_cond_init( &proc->cond_td, NULL);
+  
+  pthread_create(&proc->pthread_td, &proc->attr_td, td_thread, (void*)&proc->tdp);
 
-  pthread_create(&proc->pthread_td, attr_td, td_thread, (void*)&proc->tdp);
+}
+void kill_td_thread(PHY_VARS_eNB *eNB) {
 
+  eNB_proc_t *proc = &eNB->proc;
+  proc->instance_cnt_td         = 0;
+  pthread_cond_signal(&proc->cond_td);
+  
+  pthread_join(proc->pthread_td, NULL);
+  pthread_mutex_destroy( &proc->mutex_td );
+  pthread_cond_destroy( &proc->cond_td );
 }
 
 extern void *te_thread(void*);
 
-void init_te_thread(PHY_VARS_eNB *eNB,pthread_attr_t *attr_te) {
+void init_te_thread(PHY_VARS_eNB *eNB) {
 
   eNB_proc_t *proc = &eNB->proc;
 
-  proc->tep.eNB = eNB;
-  proc->instance_cnt_te         = -1;
+  for(int i=0; i<3 ;i++){
+    proc->tep[i].eNB = eNB;
+    proc->tep[i].instance_cnt_te         = -1;
+      
+    pthread_mutex_init( &proc->tep[i].mutex_te, NULL);
+    pthread_cond_init( &proc->tep[i].cond_te, NULL);
+    pthread_attr_init( &proc->tep[i].attr_te);
     
-  pthread_mutex_init( &proc->mutex_te, NULL);
-  pthread_cond_init( &proc->cond_te, NULL);
-
-  printf("Creating te_thread\n");
-  pthread_create(&proc->pthread_te, attr_te, te_thread, (void*)&proc->tep);
-
+    printf("Creating te_thread 0\n");
+    pthread_create(&proc->tep[i].pthread_te, &proc->tep[i].attr_te, te_thread, (void*)&proc->tep[i]);
+  }
 }
+void kill_te_thread(PHY_VARS_eNB *eNB) {
+
+  eNB_proc_t *proc = &eNB->proc;
+
+  for(int i=0; i<3 ;i++){
+    proc->tep[i].instance_cnt_te         = 0;
+    pthread_cond_signal(&proc->tep[i].cond_te);
+    pthread_join(proc->tep[i].pthread_te, NULL);
+    pthread_mutex_destroy( &proc->tep[i].mutex_te);
+    pthread_cond_destroy( &proc->tep[i].cond_te);
+  }
+}
+
 
 void fill_rx_indication(PHY_VARS_eNB *eNB,int UE_id,int frame,int subframe)
 {
@@ -1583,7 +1619,6 @@ void fill_ulsch_cqi_indication(PHY_VARS_eNB *eNB,uint16_t frame,uint8_t subframe
   memcpy((void*)raw_pdu->pdu,ulsch_harq->o,pdu->cqi_indication_rel9.length);
   eNB->UL_INFO.cqi_ind.number_of_cqis++;
   LOG_D(PHY,"eNB->UL_INFO.cqi_ind.number_of_cqis:%d\n", eNB->UL_INFO.cqi_ind.number_of_cqis);
-
   pthread_mutex_unlock(&eNB->UL_INFO_mutex);
 
 }
@@ -1610,7 +1645,6 @@ void fill_ulsch_harq_indication(PHY_VARS_eNB *eNB,LTE_UL_eNB_HARQ_t *ulsch_harq,
 
   eNB->UL_INFO.harq_ind.header.message_id = NFAPI_HARQ_INDICATION;
   eNB->UL_INFO.harq_ind.sfn_sf = frame<<4|subframe;
-
   eNB->UL_INFO.harq_ind.harq_indication_body.tl.tag = NFAPI_HARQ_INDICATION_BODY_TAG;
 
   pdu->instance_length                                = 0; // don't know what to do with this
@@ -1629,6 +1663,7 @@ void fill_ulsch_harq_indication(PHY_VARS_eNB *eNB,LTE_UL_eNB_HARQ_t *ulsch_harq,
       pdu->harq_indication_fdd_rel13.harq_tb_n[i] = 2-ulsch_harq->o_ACK[i];
       // release DLSCH if needed
       release_harq(eNB,UE_id,i,frame,subframe,0xffff, ulsch_harq->o_ACK[i] == 1);
+
 
 #if T_TRACER
       /* TODO: get correct harq pid */
@@ -1727,6 +1762,7 @@ void fill_uci_harq_indication(PHY_VARS_eNB *eNB,
       pdu->harq_indication_fdd_rel13.harq_tb_n[0] = harq_ack[0];
       // release DLSCH if needed
       release_harq(eNB,UE_id,0,frame,subframe,0xffff, harq_ack[0] == 1);
+
 
 #if T_TRACER
       if (harq_ack[0] != 1)
@@ -1910,7 +1946,6 @@ void phy_procedures_eNB_uespec_RX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,const 
   eNB->rb_mask_ul[1]=0;
   eNB->rb_mask_ul[2]=0;
   eNB->rb_mask_ul[3]=0;
-
   // Fix me here, these should be locked
   eNB->UL_INFO.rx_ind.rx_indication_body.number_of_pdus  = 0;
   eNB->UL_INFO.crc_ind.crc_indication_body.number_of_crcs = 0;

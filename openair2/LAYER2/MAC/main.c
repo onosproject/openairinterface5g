@@ -135,7 +135,6 @@ void mac_top_init_eNB(void)
 
 }
 
-
 void mac_init_cell_params(int Mod_idP, int CC_idP)
 {
 

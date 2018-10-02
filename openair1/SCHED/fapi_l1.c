@@ -35,6 +35,7 @@
 #include "SCHED/defs.h"
 #include "SCHED/extern.h"
 #include "nfapi_interface.h"
+#include "nfapi_pnf_interface.h"
 #include "fapi_l1.h"
 
 int oai_nfapi_dl_config_req(nfapi_dl_config_request_t *dl_config_req);
@@ -490,6 +491,7 @@ void handle_nfapi_dlsch_pdu(PHY_VARS_eNB *eNB,int frame,int subframe,eNB_rxtx_pr
                 dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.pdu_index,dlsch0_harq->round,dlsch0_harq->frame,dlsch0_harq->subframe,dlsch0_harq->pdu,dlsch0_harq->mcs,dlsch0_harq->ndi,dlsch0_harq->pdsch_start);
     if (rel8->rnti != 0xFFFF) LOG_D(PHY,"NFAPI: SFN/SF:%04d%d proc:TX:[frame %d, subframe %d]: programming dlsch for round 0, rnti %x, UE_id %d, harq_pid %d\n",
                                     frame,subframe,proc->frame_tx,proc->subframe_tx,rel8->rnti,UE_id,harq_pid);
+
     if (codeword_index == 0) dlsch0_harq->pdu                    = sdu;
     else                     dlsch1_harq->pdu                    = sdu;
   }
@@ -1104,7 +1106,7 @@ void schedule_response(Sched_Rsp_t *Sched_INFO)
   if (nfapi_mode) {
     if (number_ul_pdu>0)
     {
-      //LOG_D(PHY, "UL_CONFIG to send to PNF\n");
+      //LOG_I(PHY, "UL_CONFIG to send to PNF\n");
       oai_nfapi_ul_config_req(UL_req);
       UL_req->ul_config_request_body.number_of_pdus=0;
       number_ul_pdu=0;
@@ -1127,3 +1129,29 @@ void schedule_response(Sched_Rsp_t *Sched_INFO)
     }
   }
 }
+
+/*Dummy functions*/
+
+int memcpy_dl_config_req (nfapi_pnf_p7_config_t* pnf_p7, nfapi_dl_config_request_t* req)
+{
+	return 0;
+}
+
+int memcpy_ul_config_req (nfapi_pnf_p7_config_t* pnf_p7, nfapi_ul_config_request_t* req)
+{
+	return 0;
+}
+
+int memcpy_hi_dci0_req (nfapi_pnf_p7_config_t* pnf_p7, nfapi_hi_dci0_request_t* req)
+{
+	return 0;
+}
+
+int memcpy_tx_req (nfapi_pnf_p7_config_t* pnf_p7, nfapi_tx_request_t* req)
+{
+	return 0;
+}
+
+
+
+

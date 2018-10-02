@@ -62,6 +62,7 @@ extern boolean_t pdcp_data_req(
   const confirm_t      confirmP,
   const sdu_size_t     sdu_buffer_sizeP,
   unsigned char *const sdu_buffer_pP,
+  const pdcp_transmission_mode_t modeP
 #ifdef Rel14
     ,const uint32_t * const sourceL2Id
     ,const uint32_t * const destinationL2Id
@@ -296,6 +297,7 @@ NwGtpv1uRcT gtpv1u_eNB_process_stack_req(
   hashtable_rc_t      hash_rc            = HASH_TABLE_KEY_NOT_EXISTS;
   gtpv1u_teid_data_t *gtpv1u_teid_data_p = NULL;
   protocol_ctxt_t     ctxt;
+  NwGtpv1uRcT         rc;
 
   switch(pUlpApi->apiType) {
     /* Here there are two type of messages handled:
@@ -319,6 +321,12 @@ NwGtpv1uRcT gtpv1u_eNB_process_stack_req(
 #if defined(GTP_DUMP_SOCKET) && GTP_DUMP_SOCKET > 0
     gtpv1u_eNB_write_dump_socket(buffer,buffer_len);
 #endif
+
+    rc = nwGtpv1uMsgDelete(RC.gtpv1u_data_g->gtpv1u_stack,
+                           pUlpApi->apiInfo.recvMsgInfo.hMsg);
+    if (rc != NW_GTPV1U_OK) {
+      LOG_E(GTPU, "nwGtpv1uMsgDelete failed: 0x%x\n", rc);
+    }
 
     //-----------------------
     // GTPV1U->PDCP mapping

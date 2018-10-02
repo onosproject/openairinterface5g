@@ -58,7 +58,8 @@ char defbool[2]="1";
               config_check_valptr(cfgoptions, cfgoptions->strptr, strlen(tmpval)+1);
               sprintf(*(cfgoptions->strptr), "%s",tmpval);
             } else {
-              sprintf( (char *)(cfgoptions->strptr), "%s",tmpval);              
+            	sprintf( (char *)(cfgoptions->strptr), "%s",tmpval);
+            	//sprintf( &emul_iface, "%s",tmpval);
            }
            printf_cmdl("[CONFIG] %s set to  %s from command line\n", cfgoptions->optname, tmpval);
 	   optisset=1;
@@ -138,6 +139,7 @@ char *cfgpath;
     		if ( ( cfgoptions[i].paramflags & PARAMFLAG_DISABLECMDLINE) != 0) {
     		  continue;
     		 }
+    		//printf("config_process_cmdline Current option: %s \n \n", cfgoptions[i].optname);
     		if (prefix != NULL) {
     		   sprintf(cfgpath,"%s.%s",prefix,cfgoptions[i].optname);
     		} else {

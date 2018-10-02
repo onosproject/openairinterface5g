@@ -201,8 +201,8 @@ void oai_create_enb(void) {
   eNB->CC_id   = bodge_counter;
   eNB->abstraction_flag   = 0;
   eNB->single_thread_flag = 0;//single_thread_flag;
-  eNB->td                   = ulsch_decoding_data;//(single_thread_flag==1) ? ulsch_decoding_data_2thread : ulsch_decoding_data;
-  eNB->te                   = dlsch_encoding;//(single_thread_flag==1) ? dlsch_encoding_2threads : dlsch_encoding;
+  eNB->td                   = ulsch_decoding_data_all;//(single_thread_flag==1) ? ulsch_decoding_data_2thread : ulsch_decoding_data;
+  eNB->te                   = dlsch_encoding_all;//(single_thread_flag==1) ? dlsch_encoding_2threads : dlsch_encoding;
 
   RC.nb_CC[bodge_counter] = 1;
 
@@ -409,6 +409,7 @@ int wake_eNB_rxtx(PHY_VARS_eNB *eNB, uint16_t sfn, uint16_t sf) {
   //LOG_D(PHY, "sfn/sf:%d%d proc[rx:%d%d] proc_rxtx[instance_cnt_rxtx:%d rx:%d%d] About to wake rxtx thread\n\n", sfn, sf, proc->frame_rx, proc->subframe_rx, proc_rxtx->instance_cnt_rxtx, proc_rxtx->frame_rx, proc_rxtx->subframe_rx);
 
   // the thread can now be woken up
+  //LOG_I(PHY, "Panos-D: NFAPI_VNF:: wake_eNB_rxtx() before waking up thread based on CV proc_rxtx->cond_rxtx \n");
   if (pthread_cond_signal(&proc_rxtx->cond_rxtx) != 0) {
     LOG_E( PHY, "[eNB] ERROR pthread_cond_signal for eNB RXn-TXnp4 thread\n");
     exit_fun( "ERROR pthread_cond_signal" );
@@ -1199,6 +1200,7 @@ int oai_nfapi_hi_dci0_req(nfapi_hi_dci0_request_t *hi_dci0_req) {
 
 int oai_nfapi_ul_config_req(nfapi_ul_config_request_t *ul_config_req) {
 
+	//LOG_I(MAC, "Panos-D: oai_nfapi_ul_config_req 1 \n");
   nfapi_vnf_p7_config_t *p7_config = vnf.p7_vnfs[0].config;
 
   ul_config_req->header.phy_id = 1; // DJP HACK TODO FIXME - need to pass this around!!!!
@@ -1219,3 +1221,8 @@ int oai_nfapi_ul_config_req(nfapi_ul_config_request_t *ul_config_req) {
   }
   return retval;
 }
+
+
+
+
+

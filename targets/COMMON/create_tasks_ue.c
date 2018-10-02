@@ -65,6 +65,7 @@ int create_tasks_ue(uint32_t ue_nb)
 #      endif
 
     if (ue_nb > 0) {
+    	//LOG_I(RRC, "Panos-D: create_tasks_ue() before initiating rrc_ue_task \n");
       if (itti_create_task (TASK_RRC_UE, rrc_ue_task, NULL) < 0) {
         LOG_E(RRC, "Create task for RRC UE failed\n");
         return -1;

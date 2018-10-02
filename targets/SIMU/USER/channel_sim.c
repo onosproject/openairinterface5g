@@ -60,6 +60,7 @@
 #include "oaisim.h"
 
 #define RF
+//#define DEBUG_SIM
 
 //#define DEBUG_SIM
 /*
@@ -176,7 +177,7 @@ void do_DL_sig(channel_desc_t *RU2UE[NUMBER_OF_RU_MAX][NUMBER_OF_UE_MAX][MAX_NUM
 			      0,
 			      &ru_amp[ru_id],
 			      frame_parms->N_RB_DL*12);
-      
+
     }
     else {
       tx_pwr = dac_fixed_gain(s_re,
@@ -289,7 +290,6 @@ void do_DL_sig(channel_desc_t *RU2UE[NUMBER_OF_RU_MAX][NUMBER_OF_UE_MAX][MAX_NUM
 	  UE_id,ru_id,
 	  10*log10(rx_pwr),subframe);
 #endif
-    
     pthread_mutex_lock(&RU_output_mutex[UE_id]);
     for (i=0; i<frame_parms->samples_per_tti; i++) {
       for (aa=0; aa<nb_antennas_rx; aa++) {
@@ -310,7 +310,6 @@ void do_DL_sig(channel_desc_t *RU2UE[NUMBER_OF_RU_MAX][NUMBER_OF_UE_MAX][MAX_NUM
       rx_pwr = signal_energy_fp(r_re_p,r_im_p,nb_antennas_rx,length<length_meas?length:length_meas,0)/(12.0*frame_parms->N_RB_DL);
       LOG_D(OCM,"[SIM][DL] UE %d : ADC in %f dBm/RE for subframe %d\n",UE_id,10*log10(rx_pwr),subframe);
 #endif
-      
       rxdata = PHY_vars_UE_g[UE_id][CC_id]->common_vars.rxdata;
       sf_offset = (subframe*frame_parms->samples_per_tti)+offset;
       

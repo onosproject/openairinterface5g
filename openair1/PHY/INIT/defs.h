@@ -381,8 +381,6 @@ void phy_cleanup(void);
 
 void phy_config_request(PHY_Config_t *phy_config);
 
-void phy_config_request_ue(UE_PHY_Config_t* UE_config_INFO);
-
 int init_frame_parms(LTE_DL_FRAME_PARMS *frame_parms,uint8_t osf);
 void dump_frame_parms(LTE_DL_FRAME_PARMS *frame_parms);
 

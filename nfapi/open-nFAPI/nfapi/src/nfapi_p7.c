@@ -1831,8 +1831,9 @@ static uint8_t pack_crc_indication_body_value(void* tlv, uint8_t **ppWritePacked
 {
 	nfapi_crc_indication_body_t* value = (nfapi_crc_indication_body_t*)tlv;
 	
-	if(push16(value->number_of_crcs, ppWritePackedMsg, end) == 0)
+	if(push16(value->number_of_crcs, ppWritePackedMsg, end) == 0){
 		return 0;
+	}
 
 	uint16_t i = 0;
 	uint16_t total_number_of_pdus = value->number_of_crcs;
@@ -1841,12 +1842,14 @@ static uint8_t pack_crc_indication_body_value(void* tlv, uint8_t **ppWritePacked
 		nfapi_crc_indication_pdu_t* pdu = &(value->crc_pdu_list[i]);
 		
 		uint8_t* instance_length_p = *ppWritePackedMsg;
-		if(!push16(pdu->instance_length, ppWritePackedMsg, end))
+		if(!push16(pdu->instance_length, ppWritePackedMsg, end)){
 			return 0;
+		}
 		
 		if(!(pack_tlv(NFAPI_RX_UE_INFORMATION_TAG, &pdu->rx_ue_information, ppWritePackedMsg, end, pack_rx_ue_information_value) &&
-			 pack_tlv(NFAPI_CRC_INDICATION_REL8_TAG, &pdu->crc_indication_rel8, ppWritePackedMsg, end, pack_crc_indication_rel8_body)))
+			 pack_tlv(NFAPI_CRC_INDICATION_REL8_TAG, &pdu->crc_indication_rel8, ppWritePackedMsg, end, pack_crc_indication_rel8_body))){
 			return 0;
+		}
 
 		// calculate the instance length subtracting the size of the instance
 		// length feild
@@ -1887,8 +1890,10 @@ static uint8_t pack_rx_ulsch_indication_body_value(void *tlv, uint8_t **ppWriteP
 
         //printf("RX ULSCH BODY\n");
 
-	if( push16(value->number_of_pdus, ppWritePackedMsg, end) == 0)
+	if( push16(value->number_of_pdus, ppWritePackedMsg, end) == 0){
+		//printf("Panos-D: pack_rx_ulsch_indication_body_value 0 \n");
 		return 0;
+	}
 
 	// need to calculate the data offset's. 
 	uint16_t i = 0;
@@ -1939,8 +1944,10 @@ static uint8_t pack_rx_ulsch_indication_body_value(void *tlv, uint8_t **ppWriteP
 		nfapi_rx_indication_pdu_t* pdu = &(value->rx_pdu_list[i]);
 		if(!(pack_tlv(NFAPI_RX_UE_INFORMATION_TAG, &pdu->rx_ue_information, ppWritePackedMsg, end, pack_rx_ue_information_value) &&
 			 pack_tlv(NFAPI_RX_INDICATION_REL8_TAG, &pdu->rx_indication_rel8, ppWritePackedMsg, end, pack_rx_indication_rel8_value) &&
-			 pack_tlv(NFAPI_RX_INDICATION_REL9_TAG, &pdu->rx_indication_rel9, ppWritePackedMsg, end, pack_rx_indication_rel9_value)))
+			 pack_tlv(NFAPI_RX_INDICATION_REL9_TAG, &pdu->rx_indication_rel9, ppWritePackedMsg, end, pack_rx_indication_rel9_value))) {
+			//printf("Panos-D: pack_rx_ulsch_indication_body_value() 1 about to return error because of failure in packing tlv tags \n");
 			return 0;
+		}
 	}
 
 	// Write out the pdu data
@@ -1954,8 +1961,9 @@ static uint8_t pack_rx_ulsch_indication_body_value(void *tlv, uint8_t **ppWriteP
 			length = pdu->rx_indication_rel8.length;
 		}
 
-		if( pusharray8(value->rx_pdu_list[i].data, length, length, ppWritePackedMsg, end) == 0)
+		if( pusharray8(value->rx_pdu_list[i].data, length, length, ppWritePackedMsg, end) == 0){
 			return 0;
+		}
 	}
 	return 1;
 }
@@ -2624,6 +2632,7 @@ int nfapi_p7_message_pack(void *pMessageBuf, void *pPackedBuf, uint32_t packedBu
 
 	if (pMessageBuf == NULL || pPackedBuf == NULL)
 	{
+		//printf("Panos-D: P7 Pack supplied pointers are null\n");
 		NFAPI_TRACE(NFAPI_TRACE_ERROR, "P7 Pack supplied pointers are null\n");
 		return -1;
 	}
@@ -2636,6 +2645,7 @@ int nfapi_p7_message_pack(void *pMessageBuf, void *pPackedBuf, uint32_t packedBu
 		 push32(0/*pMessageHeader->checksum*/, &pWritePackedMessage, end) &&
 		 push32(pMessageHeader->transmit_timestamp, &pWritePackedMessage, end)))
 	{
+		//printf("Panos-D: P7 Pack header failed\n");
 		NFAPI_TRACE(NFAPI_TRACE_ERROR, "P7 Pack header failed\n");
 		return -1;
 	}
@@ -2734,11 +2744,13 @@ int nfapi_p7_message_pack(void *pMessageBuf, void *pPackedBuf, uint32_t packedBu
 					}
 					else
 					{
+						//printf("Panos-D: %s VE NFAPI message ID %d. No ve ecoder provided\n", __FUNCTION__, pMessageHeader->message_id);
 						NFAPI_TRACE(NFAPI_TRACE_ERROR, "%s VE NFAPI message ID %d. No ve ecoder provided\n", __FUNCTION__, pMessageHeader->message_id);
 					}
 				}
 				else
 				{
+					//printf("Panos-D: %s NFAPI Unknown message ID %d\n", __FUNCTION__, pMessageHeader->message_id);
 					NFAPI_TRACE(NFAPI_TRACE_ERROR, "%s NFAPI Unknown message ID %d\n", __FUNCTION__, pMessageHeader->message_id);
 				}
 			}
@@ -2747,6 +2759,7 @@ int nfapi_p7_message_pack(void *pMessageBuf, void *pPackedBuf, uint32_t packedBu
 
 	if(result == 0)
 	{
+		//printf( "Panos-D: P7 Pack failed to pack message\n");
 		NFAPI_TRACE(NFAPI_TRACE_ERROR, "P7 Pack failed to pack message\n");
 		return -1;
 	}
@@ -2758,6 +2771,7 @@ int nfapi_p7_message_pack(void *pMessageBuf, void *pPackedBuf, uint32_t packedBu
 	uint16_t packedMsgLen16;
 	if (packedMsgLen > 0xFFFF || packedMsgLen > packedBufLen)
 	{
+		//printf("Panos-D: Packed message length error %d, buffer supplied %d\n", packedMsgLen, packedBufLen);
 		NFAPI_TRACE(NFAPI_TRACE_ERROR, "Packed message length error %d, buffer supplied %d\n", packedMsgLen, packedBufLen);
 		return -1;
 	}
@@ -2769,14 +2783,17 @@ int nfapi_p7_message_pack(void *pMessageBuf, void *pPackedBuf, uint32_t packedBu
 	// Update the message length in the header
 	pMessageHeader->message_length = packedMsgLen16;
 	
-	if(!push16(packedMsgLen16, &pPackedLengthField, end))
+	if(!push16(packedMsgLen16, &pPackedLengthField, end)){
+		//printf("Panos-D: Pack function failed. Returning... \n");
 		return -1;
+	}
 		
 	if(1)
 	{
 		//quick test
 		if(pMessageHeader->message_length != packedMsgLen)
 		{
+			//printf("Panos-D: nfapi packedMsgLen(%d) != message_length(%d) id %d\n", packedMsgLen, pMessageHeader->message_length, pMessageHeader->message_id);
 			NFAPI_TRACE(NFAPI_TRACE_ERROR, "nfapi packedMsgLen(%d) != message_length(%d) id %d\n", packedMsgLen, pMessageHeader->message_length, pMessageHeader->message_id);
 		}
 	}

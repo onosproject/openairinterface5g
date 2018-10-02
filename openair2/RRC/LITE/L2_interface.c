@@ -96,6 +96,7 @@ mac_rrc_data_req(
 
     if((Srb_id & RAB_OFFSET) == BCCH) {
       if(RC.rrc[Mod_idP]->carrier[CC_id].SI.Active==0) {
+    	  //LOG_D(RRC, "Panos-D: mac_rrc_data_req() 1, BCCH case, RC.rrc[Mod_idP]->carrier[CC_id].SI.Active==0 \n");
         return 0;
       }
 
@@ -185,6 +186,7 @@ mac_rrc_data_req(
 #endif
         return(RC.rrc[Mod_idP]->carrier[CC_id].sizeof_SIB23);
       } else {
+    	  //LOG_D(RRC, "Panos-D: mac_rrc_data_req() 2 \n");
         return(0);
       }
     }
@@ -245,6 +247,7 @@ mac_rrc_data_req(
         Srb_info->Tx_buffer.payload_size=0;
       }
 
+      LOG_D(RRC, "mac_rrc_data_req(), Sdu_size: %d \n", Sdu_size);
       return (Sdu_size);
     }
 

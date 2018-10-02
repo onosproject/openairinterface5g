@@ -204,6 +204,9 @@
 
 // QAM amplitude definitions
 
+/// Amplitude for QPSK (\f$ 2^15 \times 1/\sqrt{2}\f$)
+#define QPSK 23170
+
 /// First Amplitude for QAM16 (\f$ 2^{15} \times 2/\sqrt{10}\f$)
 #define QAM16_n1 20724
 /// Second Amplitude for QAM16 (\f$ 2^{15} \times 1/\sqrt{10}\f$)
@@ -270,7 +273,7 @@ typedef struct {
 
 /// Measurement Variables
 
-#define NUMBER_OF_SUBBANDS_MAX 13
+//#define NUMBER_OF_SUBBANDS_MAX 13
 #define NUMBER_OF_HARQ_PID_MAX 8
 
 #define MAX_FRAME_NUMBER 0x400

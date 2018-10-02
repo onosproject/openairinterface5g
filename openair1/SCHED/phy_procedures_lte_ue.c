@@ -41,7 +41,7 @@
 #include <sched.h>
 #include "targets/RT/USER/lte-softmodem.h"
 
-#define DEBUG_PHY_PROC
+//#define DEBUG_PHY_PROC
 
 #ifndef PUCCH
 #define PUCCH
@@ -83,7 +83,7 @@ extern uint32_t downlink_frequency[MAX_NUM_CCs][4];
 #endif
 
 
-#define UE_DEBUG_TRACE 1
+//#define UE_DEBUG_TRACE 1
 
 void dump_dlsch(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,uint8_t subframe,uint8_t harq_pid)
 {
@@ -1448,8 +1448,6 @@ void ue_prach_procedures(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,uin
 	  ue->tx_power_dBm[subframe_tx],
 	  dB_fixed(prach_power),
 	  ue->prach_vars[eNB_id]->amp);
-
-
     if (ue->mac_enabled==1){
       Msg1_transmitted(ue->Mod_id,
 		       ue->CC_id,
@@ -2338,8 +2336,6 @@ void phy_procedures_UE_SL_TX(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc) {
 
   int subframe_tx = proc->subframe_tx;
   int frame_tx = proc->frame_tx;
-
-
     
   AssertFatal(frame_tx>=0 && frame_tx < 1024, "frame_tx %d is not in 0...1023\n",frame_tx);
   AssertFatal(subframe_tx>=0 && subframe_tx < 10, "frame_tx %d is not in 0...9\n",subframe_tx);
@@ -2368,6 +2364,12 @@ void phy_procedures_UE_SL_TX(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc) {
   }
 
   // check for SLDCH
+/*<<<<<<< HEAD
+=======
+  // Panos: Temporarily out for the On-net scenario as there is some implication with the traffic targeting the network
+  // and is treated as SL discovery instead.
+  if ((sldch = ue_get_sldch(ue->Mod_id,ue->CC_id,frame_tx,subframe_tx)) != NULL) generate_sldch(ue,sldch,frame_tx,subframe_tx);
+>>>>>>> origin/on-off-integration*/
 
   AssertFatal(0==pthread_mutex_lock(&ue->sldch_mutex),"");
   if ((ue->sldch_active ==0) && (ue->sldch = ue_get_sldch(ue->Mod_id,ue->CC_id,frame_tx,subframe_tx)) != NULL) ue->sldch_active = 1;
@@ -2821,53 +2823,6 @@ void ue_pbch_procedures(uint8_t eNB_id,PHY_VARS_UE *ue,UE_rxtx_proc_t *proc, uin
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_UE_PBCH_PROCEDURES, VCD_FUNCTION_OUT);
 }
 
-// Panos: New function supporting the MAC interface
-void fill_bch_indication(module_id_t   module_idP,
-		frame_t frameP,
-		unsigned char eNB_index,
-		uint8_t first_sync,
-		uint8_t sync)
-{
-
-}
-
-// Panos: New function supporting the MAC interface
-void fill_dlsch_indication(module_id_t module_idP,
-	    uint8_t CC_id,
-	    frame_t frameP,
-        sub_frame_t subframeP,
-	    uint8_t* sdu,
-	    uint16_t sdu_len,
-	    uint8_t eNB_index)
-{
-
-}
-
-// Panos: New function supporting the MAC interface
-void fill_dlsch_rar_indication(module_id_t module_idP,
-		  int CC_id,
-		  frame_t frameP,
-		  rnti_t ra_rnti,
-		  uint8_t* dlsch_buffer,
-		  rnti_t* t_crnti,
-		  uint8_t preamble_index,
-		  uint8_t* selected_rar_buffer)
-{
-
-}
-
-// PANOS: New function supporting the MAC interface
-
-void fill_Tx_indication(module_id_t module_idP,uint8_t CC_id,frame_t frameP, uint8_t eNB_id, uint8_t Tx_ind_type)
-{
-	switch (Tx_ind_type)
-	{
-	case UE_MAC_Tx_IND_Msg1_TYPE:
-		break;
-	case UE_MAC_Tx_IND_Msg3_TYPE:
-		break;
-	}
-}
 
 
 int ue_pdcch_procedures(uint8_t eNB_id,PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t abstraction_flag)

@@ -33,6 +33,7 @@
 #define __LTE_TRANSPORT_SLSS__C__
 #include "PHY/defs.h"
 #include "PHY/LTE_TRANSPORT/proto.h"
+extern uint8_t D2D_en;
 
 //#define PSDCH_DEBUG 1
 
@@ -385,6 +386,8 @@ void rx_sldch(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc, int frame_rx,int subframe_rx
   }
 }
 
+extern int multicast_link_write_sock(int groupP, char *dataP, uint32_t sizeP);
+
 void generate_sldch(PHY_VARS_UE *ue,SLDCH_t *sldch,int frame_tx,int subframe_tx) {
 
   UE_tport_t pdu;
@@ -602,7 +605,12 @@ void check_and_generate_psdch(PHY_VARS_UE *ue,int frame_tx,int subframe_tx) {
   if (nprb <(sldch->N_SL_RB>>1)) nprb+=sldch->prb_Start;
   else                           nprb+=(sldch->prb_End-(sldch->N_SL_RB>>1));
 
-  sldch_codingmodulation(ue,frame_tx,subframe_tx,nprb,rvidx);
+  if (D2D_en){ // Flag for D2D operation in emulation mode
+	  generate_sldch(ue,sldch,frame_tx,subframe_tx);
+  }
+  else{ // D2D in full PHY (RF mode)
+	  sldch_codingmodulation(ue,frame_tx,subframe_tx,nprb,rvidx);
+  }
   ue->psdch_generated=1;
   sldch->j++;
   sldch->j&=3;

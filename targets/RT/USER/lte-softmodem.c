@@ -117,8 +117,12 @@ pthread_mutex_t nfapi_sync_mutex;
 int nfapi_sync_var=-1; //!< protected by mutex \ref nfapi_sync_mutex
 
 int simL1=0;
-char emul_iface[100];
 uint8_t nfapi_mode = 0; // Default to monolithic mode
+//uint8_t nfapi_mode = 2;
+
+uint16_t sf_ahead=4;
+
+char emul_iface[100];
 
 pthread_cond_t sync_cond;
 pthread_mutex_t sync_mutex;
@@ -214,11 +218,16 @@ extern void print_opp_meas(void);
 
 extern PHY_VARS_UE* init_ue_vars(LTE_DL_FRAME_PARMS *frame_parms,
 			  uint8_t UE_id,
-			  uint8_t abstraction_flag);
+			  uint8_t abstraction_flag,
+			  int sidelink_active);
 
 extern void init_eNB_afterRU(void);
 
 int transmission_mode=1;
+int emulate_rf = 0;
+int numerology = 0;
+int codingw = 0;
+int fepw = 0;
 
 
 
@@ -230,6 +239,7 @@ openair0_config_t openair0_cfg[MAX_CARDS];
 double cpuf;
 
 extern char uecap_xer[1024];
+uint8_t D2D_en = 0; // Normally this should be out if we remove any source files dependencies related to sidelink from the eNB based on CMakelists.txt
 char uecap_xer_in=0;
 
 int oaisim_flag=0;
@@ -635,6 +645,7 @@ void init_openair0(void) {
 
   int card;
   int i;
+  
 
   for (card=0; card<MAX_CARDS; card++) {
 
@@ -642,6 +653,8 @@ void init_openair0(void) {
     openair0_cfg[card].configFilename = NULL;
 
     if(frame_parms[0]->N_RB_DL == 100) {
+	  if(numerology == 0)
+	  {
       if (frame_parms[0]->threequarter_fs) {
 	openair0_cfg[card].sample_rate=23.04e6;
 	openair0_cfg[card].samples_per_frame = 230400;
@@ -653,6 +666,22 @@ void init_openair0(void) {
 	openair0_cfg[card].tx_bw = 10e6;
 	openair0_cfg[card].rx_bw = 10e6;
       }
+	  }else if(numerology == 1)
+	  {
+		openair0_cfg[card].sample_rate=61.44e6;
+		openair0_cfg[card].samples_per_frame = 307200;
+		openair0_cfg[card].tx_bw = 20e6;
+		openair0_cfg[card].rx_bw = 20e6;
+	  }else if(numerology == 2)
+	  {
+		openair0_cfg[card].sample_rate=122.88e6;
+		openair0_cfg[card].samples_per_frame = 307200;
+		openair0_cfg[card].tx_bw = 20e6;
+		openair0_cfg[card].rx_bw = 20e6;
+	  }else
+	  {
+	    printf("Un supported numerology\n");
+	  }
     } else if(frame_parms[0]->N_RB_DL == 50) {
       openair0_cfg[card].sample_rate=15.36e6;
       openair0_cfg[card].samples_per_frame = 153600;
@@ -907,7 +936,6 @@ int main( int argc, char **argv )
   int ret;
 #endif
 
-  start_background_system();
   if ( load_configmodule(argc,argv) == NULL) {
     exit_fun("[SOFTMODEM] Error, configuration module init failed\n");
   } 
@@ -977,7 +1005,8 @@ int main( int argc, char **argv )
     if (init_opt(in_path, in_ip, NULL, radio_type) == -1)
       LOG_E(OPT,"failed to run OPT \n");
   }
-
+//TTN temporary solution, disable netlink at eNB when eNB and UE are running on the same machine
+  /*
 #ifdef PDCP_USE_NETLINK
   printf("PDCP netlink\n");
   netlink_init();
@@ -985,6 +1014,7 @@ int main( int argc, char **argv )
   pdcp_netlink_init();
 #endif
 #endif
+*/
 
 #if !defined(ENABLE_ITTI)
   // to make a graceful exit when ctrl-c is pressed
@@ -1211,9 +1241,6 @@ int main( int argc, char **argv )
   sync_var=0;
   pthread_cond_broadcast(&sync_cond);
   pthread_mutex_unlock(&sync_mutex);
-  printf("About to call end_configmodule() from %s() %s:%d\n", __FUNCTION__, __FILE__, __LINE__);
-  end_configmodule();
-  printf("Called end_configmodule() from %s() %s:%d\n", __FUNCTION__, __FILE__, __LINE__);
 
   // wait for end of program
   printf("TYPE <CTRL-C> TO TERMINATE\n");
@@ -1273,6 +1300,9 @@ int main( int argc, char **argv )
     }
     free_lte_top();
 
+  printf("About to call end_configmodule() from %s() %s:%d\n", __FUNCTION__, __FILE__, __LINE__);
+  end_configmodule();
+  printf("Called end_configmodule() from %s() %s:%d\n", __FUNCTION__, __FILE__, __LINE__);
 
   pthread_cond_destroy(&sync_cond);
   pthread_mutex_destroy(&sync_mutex);

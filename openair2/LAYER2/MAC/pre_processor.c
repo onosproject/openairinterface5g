@@ -136,9 +136,10 @@ store_dlsch_buffer(module_id_t Mod_id, slice_id_t slice_id, frame_t frameP,
 		mac_rlc_status_ind(Mod_id, rnti, Mod_id, frameP, subframeP,
 				   ENB_FLAG_YES, MBMS_FLAG_NO, i, 0
 #ifdef Rel14
-				   ,0,0
+                   ,0, 0
 #endif
-				   );
+                   );
+
 	    UE_template->dl_buffer_info[i] = rlc_status.bytes_in_buffer;	//storing the dlsch buffer for each logical channel
 	    UE_template->dl_pdus_in_buffer[i] = rlc_status.pdus_in_buffer;
 	    UE_template->dl_buffer_head_sdu_creation_time[i] =
@@ -169,7 +170,6 @@ store_dlsch_buffer(module_id_t Mod_id, slice_id_t slice_id, frame_t frameP,
 		      UE_template->
 		      dl_buffer_head_sdu_remaining_size_to_send[i],
 		      UE_template->dl_buffer_head_sdu_is_segmented[i]);
-
 
 #endif
 
@@ -216,7 +216,6 @@ assign_rbs_required(module_id_t Mod_id,
 
 	//update CQI information across component carriers
 	for (n = 0; n < UE_list->numactiveCCs[UE_id]; n++) {
-
 	    CC_id = UE_list->ordered_CCids[n][UE_id];
 	    eNB_UE_stats = &UE_list->eNB_UE_stats[CC_id][UE_id];
 
@@ -688,7 +687,7 @@ void dlsch_scheduler_pre_processor_accounting(module_id_t Mod_id,
       /*
        * If schedule is enabled and if the priority of the UEs is modified
        * The average rbs per logical channel per user will depend on the level of
-       * priority. Concerning the hypothetical assignment, we should assign more
+       * priority. Concerning the hypothetical assignement, we should assign more
        * rbs to prioritized users. Maybe, we can do a mapping between the
        * average rbs per user and the level of priority or multiply the average rbs
        * per user by a coefficient which represents the degree of priority.
@@ -1179,7 +1178,6 @@ dlsch_scheduler_pre_processor_reset(int module_idP,
 
 
   LOG_D(MAC, "Running preprocessor for UE %d (%x)\n", UE_id, rnti);
-
   // initialize harq_pid and round
 
   if (ue_sched_ctl->ta_timer)
@@ -1197,7 +1195,6 @@ dlsch_scheduler_pre_processor_reset(int module_idP,
        &ue_sched_ctl->harq_pid[CC_id],
        &ue_sched_ctl->round[CC_id],
        openair_harq_DL);
-
 
        if (ue_sched_ctl->ta_timer == 0) {
 
@@ -1500,6 +1497,7 @@ ulsch_scheduler_pre_processor(module_id_t module_idP,
            max_num_ue_to_be_scheduled+=1;
            } */
 
+
         N_RB_UL = to_prb(RC.mac[module_idP]->common_channels[CC_id].ul_Bandwidth);
         ue_sched_ctl = &UE_list->UE_sched_ctrl[UE_id];
         ue_sched_ctl->max_rbs_allowed_slice_uplink[CC_id][slice_id] = flexran_nb_rbs_allowed_slice(slice_percentage_uplink[slice_id],N_RB_UL);
@@ -1647,8 +1645,6 @@ assign_max_mcs_min_rb(module_id_t module_idP, int slice_id, int frameP,
   int Ncp;
   int N_RB_UL;
 
-  //LOG_D(MAC, "%s() Enter\n", __FUNCTION__);
-
   for (i = 0; i < NUMBER_OF_UE_MAX; i++) {
     if (UE_list->active[i] != TRUE)
       continue;
@@ -1745,8 +1741,6 @@ assign_max_mcs_min_rb(module_id_t module_idP, int slice_id, int frameP,
               UE_template->pre_allocated_nb_rb_ul[slice_id],
               UE_template->phr_info, tx_power);
       } else {
-        //LOG_E(MAC,"no ul buffer");
-
         /* if UE has pending scheduling request then pre-allocate 3 RBs */
         //if (UE_template->ul_active == 1 && UE_template->ul_SR == 1) {
         if (UE_is_to_be_scheduled(module_idP, CC_id, i)) {

@@ -1209,7 +1209,6 @@ fill_nfapi_ulsch_harq_information(module_id_t                            module_
       if (UE_list->UE_template[CC_idP][UE_id].physicalConfigDedicated->ext5) puschConfigDedicated_v1250 =  UE_list->UE_template[CC_idP][UE_id].physicalConfigDedicated->ext5->pusch_ConfigDedicated_v1250;
   */
 #endif
-  harq_information->harq_information_rel10.tl.tag = NFAPI_UL_CONFIG_REQUEST_ULSCH_HARQ_INFORMATION_REL10_TAG;
   harq_information->harq_information_rel10.delta_offset_harq = puschConfigDedicated->betaOffset_ACK_Index;
   AssertFatal(UE_list->UE_template[CC_idP][UE_id].physicalConfigDedicated->pucch_ConfigDedicated != NULL,
 	      "pucch_ConfigDedicated is null!\n");
@@ -1367,6 +1366,7 @@ fill_nfapi_uci_acknak(module_id_t module_idP,
   return (((ackNAK_absSF / 10) << 4) + (ackNAK_absSF % 10));
 }
 
+
 void
 fill_nfapi_dlsch_config(eNB_MAC_INST * eNB,
 			nfapi_dl_config_request_body_t * dl_req,
@@ -1425,9 +1425,6 @@ fill_nfapi_dlsch_config(eNB_MAC_INST * eNB,
   dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.num_bf_prb_per_subband                 = num_bf_prb_per_subband;
   dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.num_bf_vector                          = num_bf_vector;
   dl_req->number_pdu++;
-  dl_req->tl.tag=NFAPI_DL_CONFIG_REQUEST_BODY_TAG;
-
-  //LOG_D(MAC,"Filled DL_CONFIG_PDU - DLSCH - dl_req->number_pdu:%d pdu_index:%d\n", dl_req->number_pdu, pdu_index);
 }
 
 uint16_t
@@ -1498,29 +1495,6 @@ fill_nfapi_ulsch_config_request_rel8(nfapi_ul_config_request_pdu_t *ul_config_pd
   ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.size                               = size;
 
   if (cqi_req == 1) {
-
-    ul_config_pdu->pdu_type                                                                         = NFAPI_UL_CONFIG_ULSCH_CQI_RI_PDU_TYPE;
-    ul_config_pdu->pdu_size                                                                         = (uint8_t)(2+sizeof(nfapi_ul_config_ulsch_cqi_ri_pdu));
-
-    ul_config_pdu->ulsch_cqi_ri_pdu.ulsch_pdu.ulsch_pdu_rel8.tl.tag                                 = NFAPI_UL_CONFIG_REQUEST_ULSCH_PDU_REL8_TAG;
-    ul_config_pdu->ulsch_cqi_ri_pdu.ulsch_pdu.ulsch_pdu_rel8.handle                                 = handle;
-    ul_config_pdu->ulsch_cqi_ri_pdu.ulsch_pdu.ulsch_pdu_rel8.rnti                                   = rnti;
-    ul_config_pdu->ulsch_cqi_ri_pdu.ulsch_pdu.ulsch_pdu_rel8.resource_block_start                   = resource_block_start;
-    ul_config_pdu->ulsch_cqi_ri_pdu.ulsch_pdu.ulsch_pdu_rel8.number_of_resource_blocks              = number_of_resource_blocks;
-    if      (mcs<11) ul_config_pdu->ulsch_cqi_ri_pdu.ulsch_pdu.ulsch_pdu_rel8.modulation_type       = 2;
-    else if (mcs<21) ul_config_pdu->ulsch_cqi_ri_pdu.ulsch_pdu.ulsch_pdu_rel8.modulation_type       = 4;
-    else             ul_config_pdu->ulsch_cqi_ri_pdu.ulsch_pdu.ulsch_pdu_rel8.modulation_type       = 6;
-    ul_config_pdu->ulsch_cqi_ri_pdu.ulsch_pdu.ulsch_pdu_rel8.cyclic_shift_2_for_drms                = cyclic_shift_2_for_drms;
-    ul_config_pdu->ulsch_cqi_ri_pdu.ulsch_pdu.ulsch_pdu_rel8.frequency_hopping_enabled_flag         = frequency_hopping_enabled_flag;
-    ul_config_pdu->ulsch_cqi_ri_pdu.ulsch_pdu.ulsch_pdu_rel8.frequency_hopping_bits                 = frequency_hopping_bits;
-    ul_config_pdu->ulsch_cqi_ri_pdu.ulsch_pdu.ulsch_pdu_rel8.new_data_indication                    = new_data_indication;
-    ul_config_pdu->ulsch_cqi_ri_pdu.ulsch_pdu.ulsch_pdu_rel8.redundancy_version                     = redundancy_version;
-    ul_config_pdu->ulsch_cqi_ri_pdu.ulsch_pdu.ulsch_pdu_rel8.harq_process_number                    = harq_process_number;
-    ul_config_pdu->ulsch_cqi_ri_pdu.ulsch_pdu.ulsch_pdu_rel8.ul_tx_mode                             = ul_tx_mode;
-    ul_config_pdu->ulsch_cqi_ri_pdu.ulsch_pdu.ulsch_pdu_rel8.current_tx_nb                          = current_tx_nb;
-    ul_config_pdu->ulsch_cqi_ri_pdu.ulsch_pdu.ulsch_pdu_rel8.n_srs                                  = n_srs;
-    ul_config_pdu->ulsch_cqi_ri_pdu.ulsch_pdu.ulsch_pdu_rel8.size                                   = size;
-
     // Add CQI portion
     ul_config_pdu->pdu_type = NFAPI_UL_CONFIG_ULSCH_CQI_RI_PDU_TYPE;
     ul_config_pdu->pdu_size = (uint8_t) (2 + sizeof(nfapi_ul_config_ulsch_cqi_ri_pdu));
@@ -1550,19 +1524,21 @@ fill_nfapi_ulsch_config_request_rel8(nfapi_ul_config_request_pdu_t *ul_config_pd
 }
 
 #ifdef Rel14
-void fill_nfapi_ulsch_config_request_emtc(nfapi_ul_config_request_pdu_t  *ul_config_pdu,
-    uint8_t ue_type,
-    uint16_t total_number_of_repetitions,
-    uint16_t repetition_number,
-    uint16_t initial_transmission_sf_io)
+void
+fill_nfapi_ulsch_config_request_emtc(nfapi_ul_config_request_pdu_t *
+				     ul_config_pdu, uint8_t ue_type,
+				     uint16_t
+				     total_number_of_repetitions,
+				     uint16_t repetition_number,
+				     uint16_t initial_transmission_sf_io)
 {
   // Re13 fields
 
-  ul_config_pdu->ulsch_pdu.ulsch_pdu_rel13.tl.tag                                = NFAPI_UL_CONFIG_REQUEST_ULSCH_PDU_REL13_TAG;
-  ul_config_pdu->ulsch_pdu.ulsch_pdu_rel13.ue_type                               = ue_type;
-  ul_config_pdu->ulsch_pdu.ulsch_pdu_rel13.total_number_of_repetitions           = total_number_of_repetitions;
-  ul_config_pdu->ulsch_pdu.ulsch_pdu_rel13.repetition_number                     = repetition_number;
-  ul_config_pdu->ulsch_pdu.ulsch_pdu_rel13.initial_transmission_sf_io            = initial_transmission_sf_io;
+  ul_config_pdu->ulsch_pdu.ulsch_pdu_rel13.tl.tag                      = NFAPI_UL_CONFIG_REQUEST_ULSCH_PDU_REL13_TAG;
+  ul_config_pdu->ulsch_pdu.ulsch_pdu_rel13.ue_type                     = ue_type;
+  ul_config_pdu->ulsch_pdu.ulsch_pdu_rel13.total_number_of_repetitions = total_number_of_repetitions;
+  ul_config_pdu->ulsch_pdu.ulsch_pdu_rel13.repetition_number           = repetition_number;
+  ul_config_pdu->ulsch_pdu.ulsch_pdu_rel13.initial_transmission_sf_io  = initial_transmission_sf_io;
 }
 
 int get_numnarrowbands(long dl_Bandwidth)
@@ -2155,6 +2131,7 @@ void swap_UEs(UE_list_t * listP, int nodeiP, int nodejP, int ul_flag)
 uint8_t
 UE_is_to_be_scheduled(module_id_t module_idP, int CC_id, uint8_t UE_id)
 {
+
   UE_TEMPLATE *UE_template =
     &RC.mac[module_idP]->UE_list.UE_template[CC_id][UE_id];
   UE_sched_ctrl *UE_sched_ctl =
@@ -3172,7 +3149,6 @@ CCE_allocation_infeasible(int module_idP,
     } else {
       dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.tl.tag            = NFAPI_DL_CONFIG_REQUEST_DCI_DL_PDU_REL8_TAG;
       dl_config_pdu->pdu_type                                     = NFAPI_DL_CONFIG_DCI_DL_PDU_TYPE;
-      dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.tl.tag            = NFAPI_DL_CONFIG_REQUEST_DCI_DL_PDU_REL8_TAG;
       dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.rnti              = rnti;
       dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.rnti_type         = (format_flag == 0) ? 2 : 1;
       dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.aggregation_level = aggregation;

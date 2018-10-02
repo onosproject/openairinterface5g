@@ -1381,16 +1381,13 @@ void logRecord_mt(const char *file, const char *func, int line,
       if (len > MAX_LOG_TOTAL) len = MAX_LOG_TOTAL;
     }
 
-    //len += snprintf(&log_buffer[len], MAX_LOG_TOTAL - len, "[%08lx]", thread_id);
-    //if (len > MAX_LOG_TOTAL) len = MAX_LOG_TOTAL;
-
     len += vsnprintf(&log_buffer[len], MAX_LOG_TOTAL - len, format, args);
     if (len > MAX_LOG_TOTAL) len = MAX_LOG_TOTAL;
     log_end = log_buffer + len;
 
     if ( (g_log->flag & FLAG_COLOR) || (c->flag & FLAG_COLOR) ) {
       len += snprintf(&log_buffer[len], MAX_LOG_TOTAL - len, "%s",
-          log_level_highlight_end[level]);
+                      log_level_highlight_end[level]);
       if (len > MAX_LOG_TOTAL) len = MAX_LOG_TOTAL;
     }
   }
@@ -1561,6 +1558,7 @@ void logRecord_mt(const char *file, const char *func, int line,
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_LOG_RECORD,
                                           VCD_FUNCTION_OUT);
 }
+
 
 int set_log(int component, int level, int interval)
 {

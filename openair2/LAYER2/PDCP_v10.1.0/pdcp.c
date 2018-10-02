@@ -375,22 +375,22 @@ boolean_t pdcp_data_req(
     break;
 
   case RLC_OP_STATUS_BAD_PARAMETER:
-    LOG_W(PDCP, "Data sending request over RLC failed with 'Bad Parameter' reason!\n");
+    LOG_D(PDCP, "Data sending request over RLC failed with 'Bad Parameter' reason!\n");
     ret= FALSE;
     break;
 
   case RLC_OP_STATUS_INTERNAL_ERROR:
-    LOG_W(PDCP, "Data sending request over RLC failed with 'Internal Error' reason!\n");
+    LOG_D(PDCP, "Data sending request over RLC failed with 'Internal Error' reason!\n");
     ret= FALSE;
     break;
 
   case RLC_OP_STATUS_OUT_OF_RESSOURCES:
-    LOG_W(PDCP, "Data sending request over RLC failed with 'Out of Resources' reason!\n");
+    LOG_D(PDCP, "Data sending request over RLC failed with 'Out of Resources' reason!\n");
     ret= FALSE;
     break;
 
   default:
-    LOG_W(PDCP, "RLC returned an unknown status code after PDCP placed the order to send some data (Status Code:%d)\n", rlc_status);
+    LOG_D(PDCP, "RLC returned an unknown status code after PDCP placed the order to send some data (Status Code:%d)\n", rlc_status);
     ret= FALSE;
     break;
   }
@@ -440,6 +440,7 @@ pdcp_data_ind(
 )
 //-----------------------------------------------------------------------------
 {
+	//LOG_I(RLC, "Panos-D: pdcp_data_ind() 1 \n");
   pdcp_t      *pdcp_p          = NULL;
   list_t      *sdu_list_p      = NULL;
   mem_block_t *new_sdu_p       = NULL;
@@ -788,7 +789,19 @@ pdcp_data_ind(
          * for the UE compiled in noS1 mode, we need 0
          * TODO: be sure of this
          */
-        ((pdcp_data_ind_header_t*) new_sdu_p->data)->inst  = 1;
+
+#ifdef Rel14
+        //TTN (29/05/18) should check value of INST since 0 is for OIP0 (UE-UE), 1 is for OIP1 (UE-eNB) [even with S1 mode]
+        //for the  moment, based on rb_id, we distinguish between the traffic from eNB and from other UE
+        //if traffic from other UE
+        if ( ((pdcp_data_ind_header_t*) new_sdu_p->data)->rb_id >= 4 ) {
+           ((pdcp_data_ind_header_t*) new_sdu_p->data)->inst  = 0;
+        } else
+#endif
+        { //traffic from eNB
+           ((pdcp_data_ind_header_t*) new_sdu_p->data)->inst  = 1;
+        }
+
 #endif
       } else {
         ((pdcp_data_ind_header_t*) new_sdu_p->data)->rb_id = rb_id + (ctxt_pP->module_id * maxDRB);
@@ -796,8 +809,8 @@ pdcp_data_ind(
       ((pdcp_data_ind_header_t*) new_sdu_p->data)->inst  = ctxt_pP->module_id;
 
 #ifdef DEBUG_PDCP_FIFO_FLUSH_SDU
-      static uint32_t pdcp_inst = 0;
-      ((pdcp_data_ind_header_t*) new_sdu_p->data)->inst = pdcp_inst++;
+    //  static uint32_t pdcp_inst = 0;
+    //  ((pdcp_data_ind_header_t*) new_sdu_p->data)->inst = pdcp_inst++; //TTN again should verify the value of INST (incoming packets)
       LOG_D(PDCP, "inst=%d size=%d\n", ((pdcp_data_ind_header_t*) new_sdu_p->data)->inst, ((pdcp_data_ind_header_t *) new_sdu_p->data)->data_size);
 #endif
 
@@ -812,7 +825,7 @@ pdcp_data_ind(
   }
 
   /* Print octets of incoming data in hexadecimal form */
-  LOG_D(PDCP, "Following content has been received from RLC (%d,%d)(PDCP header has already been removed):\n",
+  LOG_I(PDCP, "Following content has been received from RLC (%d,%d)(PDCP header has already been removed):\n",
 	sdu_buffer_sizeP  - payload_offset + (int)sizeof(pdcp_data_ind_header_t),
 	sdu_buffer_sizeP  - payload_offset);
   //util_print_hex_octets(PDCP, &new_sdu_p->data[sizeof (pdcp_data_ind_header_t)], sdu_buffer_sizeP - payload_offset);
@@ -874,7 +887,8 @@ void pdcp_update_stats(const protocol_ctxt_t* const  ctxt_pP){
     for (pdcp_uid=0; pdcp_uid< NUMBER_OF_UE_MAX;pdcp_uid++){
       //printf("frame %d and subframe %d \n", pdcp_enb[ctxt_pP->module_id].frame, pdcp_enb[ctxt_pP->module_id].subframe);
       // tx stats
-      if (pdcp_enb[ctxt_pP->module_id].sfn % Pdcp_stats_tx_window_ms[ctxt_pP->module_id][pdcp_uid] == 0){
+      if (Pdcp_stats_tx_window_ms[ctxt_pP->module_id][pdcp_uid] > 0 &&
+          pdcp_enb[ctxt_pP->module_id].sfn % Pdcp_stats_tx_window_ms[ctxt_pP->module_id][pdcp_uid] == 0){
 	// unit: bit/s
 	Pdcp_stats_tx_throughput_w[ctxt_pP->module_id][pdcp_uid][rb_id]=Pdcp_stats_tx_bytes_tmp_w[ctxt_pP->module_id][pdcp_uid][rb_id]*8;
 	Pdcp_stats_tx_w[ctxt_pP->module_id][pdcp_uid][rb_id]= Pdcp_stats_tx_tmp_w[ctxt_pP->module_id][pdcp_uid][rb_id];
@@ -890,7 +904,8 @@ void pdcp_update_stats(const protocol_ctxt_t* const  ctxt_pP){
 	Pdcp_stats_tx_aiat_tmp_w[ctxt_pP->module_id][pdcp_uid][rb_id]=0;
 	
       }
-      if (pdcp_enb[ctxt_pP->module_id].sfn % Pdcp_stats_rx_window_ms[ctxt_pP->module_id][pdcp_uid] == 0){
+      if (Pdcp_stats_rx_window_ms[ctxt_pP->module_id][pdcp_uid] > 0 &&
+          pdcp_enb[ctxt_pP->module_id].sfn % Pdcp_stats_rx_window_ms[ctxt_pP->module_id][pdcp_uid] == 0){
 	// rx stats
 	Pdcp_stats_rx_goodput_w[ctxt_pP->module_id][pdcp_uid][rb_id]=Pdcp_stats_rx_bytes_tmp_w[ctxt_pP->module_id][pdcp_uid][rb_id]*8;
 	Pdcp_stats_rx_w[ctxt_pP->module_id][pdcp_uid][rb_id]= 	Pdcp_stats_rx_tmp_w[ctxt_pP->module_id][pdcp_uid][rb_id];

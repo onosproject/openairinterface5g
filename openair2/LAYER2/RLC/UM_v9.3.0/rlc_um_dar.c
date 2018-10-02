@@ -221,6 +221,9 @@ rlc_um_try_reassembly(
   int                 i                      = 0;
   int                 reassembly_start_index = 0;
 
+
+  //LOG_I(RLC, "Panos-D: rlc_um_try_reassembly() 1 \n");
+
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_RLC_UM_TRY_REASSEMBLY,VCD_FUNCTION_IN);
 
   if (end_snP < 0)   {
