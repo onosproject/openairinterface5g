@@ -564,6 +564,7 @@ rrc_data_req(
       ctxt_pP->enb_flag ? TASK_PDCP_ENB : TASK_PDCP_UE,
       ctxt_pP->instance,
       message_p);
+    printf("rrc_data_req: eNB_index %d, rnti %d\n",RRC_DCCH_DATA_REQ (message_p).eNB_index,RRC_DCCH_DATA_REQ (message_p).rnti);
     return TRUE; // TODO should be changed to a CNF message later, currently RRC lite does not used the returned value anyway.
 
   }
@@ -606,6 +607,7 @@ rrc_data_ind(
   }
 
 #if defined(ENABLE_ITTI)
+  printf("rrc_data_ind: enable_itti\n");
   {
     MessageDef *message_p;
     // Uses a new buffer to avoid issue with PDCP buffer content that could be changed by PDCP (asynchronous message handling).

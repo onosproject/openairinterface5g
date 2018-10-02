@@ -1894,6 +1894,7 @@ ue_scheduler(
   //Rrc_xface->Frame_index=Mac_rlc_xface->frameP;
   //if (subframe%5 == 0)
   //LG#ifdef EXMIMO
+  printf("before pdcp_run: eNB_index %d, rnti %x\n",ctxt.eNB_index,ctxt.rnti);
   pdcp_run(&ctxt);
   //#endif
   UE_mac_inst[module_idP].txFrame    = txFrameP;
@@ -2027,7 +2028,7 @@ ue_scheduler(
     }
 
   //Check whether Regular BSR is triggered
-  if (update_bsr(module_idP,txFrameP, txSubframeP,eNB_indexP) == TRUE) {
+  if (update_bsr(module_idP,txFrameP, txSubframeP,eNB_indexP) == TRUE) {//eNB_indexP change inside the function, so it is not necessary to change
   // call SR procedure to generate pending SR and BSR for next PUCCH/PUSCH TxOp.  This should implement the procedures
   // outlined in Sections 5.4.4 an 5.4.5 of 36.321
     UE_mac_inst[module_idP].scheduling_info.SR_pending= 1;

@@ -1736,6 +1736,7 @@ rrc_ue_process_securityModeCommand(
       }
 
       LOG_T(RRC, "\n");
+      printf("rrc_data_req: eNB_index %d\n",ctxt_pP->eNB_index);
       rrc_data_req (
 		    ctxt_pP,
 		    DCCH,
@@ -3521,7 +3522,7 @@ static void dump_sib13( SystemInformationBlockType13_r9_t *sib13 )
 //-----------------------------------------------------------------------------
 static int decode_SI( const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_index )
 {
-
+  printf("decode_SI: eNB_index %d\n",eNB_index);
   SystemInformation_t** si = &UE_rrc_inst[ctxt_pP->module_id].si[eNB_index];
   int new_sib = 0;
   SystemInformationBlockType1_t* sib1 = UE_rrc_inst[ctxt_pP->module_id].sib1[eNB_index];
@@ -4266,6 +4267,7 @@ EXPORT_SYMBOL(Rlc_info_am_config);
 //-----------------------------------------------------------------------------
 void *rrc_ue_task( void *args_p )
 {
+  printf("rrc_ue_task\n");
   MessageDef   *msg_p;
   const char   *msg_name;
   instance_t    instance;
@@ -4549,15 +4551,16 @@ NAS_KENB_REFRESH_REQ,NAS_CELL_SELECTION_REQ,RRC_STATE_INACTIVE,RRC_STATE_IDLE,RR
       uint8_t *buffer;
 
       LOG_D(RRC, "[UE %d] Received %s: UEid %d\n", ue_mod_id, msg_name, NAS_UPLINK_DATA_REQ (msg_p).UEid);
-
+      printf("[UE %d] Received %s: UEid %d\n", ue_mod_id, msg_name, NAS_UPLINK_DATA_REQ (msg_p).UEid);
       /* Create message for PDCP (ULInformationTransfer_t) */
       length = do_ULInformationTransfer(&buffer, NAS_UPLINK_DATA_REQ (msg_p).nasMsg.length, NAS_UPLINK_DATA_REQ (msg_p).nasMsg.data);
 
       /* Transfer data to PDCP */
-      PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, ue_mod_id, ENB_FLAG_NO, UE_rrc_inst[ue_mod_id].Info[0].rnti, 0, 0,PHY_vars_UE_g[ue_mod_id][0]->common_vars.eNb_id);
+      PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, ue_mod_id, ENB_FLAG_NO, UE_rrc_inst[ue_mod_id].Info[PHY_vars_UE_g[ue_mod_id][0]->common_vars.eNb_id].rnti, 0, 0,PHY_vars_UE_g[ue_mod_id][0]->common_vars.eNb_id);
 
       // check if SRB2 is created, if yes request data_req on DCCH1 (SRB2) 
-      if(UE_rrc_inst[ue_mod_id].SRB2_config[0] == NULL)
+      printf("check if SRB2 is created, if yes request data_req on DCCH1: eNB_index %d, rnti %d, UE_rrc_inst[ue_mod_id].SRB2_config[PHY_vars_UE_g[ue_mod_id][0]->common_vars.eNb_id] == NULL %d\n",ctxt.eNB_index, ctxt.rnti,UE_rrc_inst[ue_mod_id].SRB2_config[PHY_vars_UE_g[ue_mod_id][0]->common_vars.eNb_id] == NULL);
+      if(UE_rrc_inst[ue_mod_id].SRB2_config[PHY_vars_UE_g[ue_mod_id][0]->common_vars.eNb_id] == NULL)
       {
           rrc_data_req (&ctxt,
                   DCCH,
@@ -4709,7 +4712,7 @@ NAS_KENB_REFRESH_REQ,NAS_CELL_SELECTION_REQ,RRC_STATE_INACTIVE,RRC_STATE_IDLE,RR
       switch (rrc_get_state(ue_mod_id)) {
       case RRC_STATE_IDLE: {
         if (rrc_get_sub_state(ue_mod_id) == RRC_SUB_STATE_IDLE_SIB_COMPLETE) {
-          PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, ue_mod_id, ENB_FLAG_NO, UE_rrc_inst[ue_mod_id].Info[0].rnti, 0, 0, PHY_vars_UE_g[ue_mod_id][0]->common_vars.eNb_id);
+          PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, ue_mod_id, ENB_FLAG_NO, UE_rrc_inst[ue_mod_id].Info[PHY_vars_UE_g[ue_mod_id][0]->common_vars.eNb_id].rnti, 0, 0, PHY_vars_UE_g[ue_mod_id][0]->common_vars.eNb_id);
           rrc_ue_generate_RRCConnectionRequest(&ctxt, 0);
           LOG_D(RRC, "not sending connection request\n");
           rrc_set_sub_state (ue_mod_id, RRC_SUB_STATE_IDLE_CONNECTING);

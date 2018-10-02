@@ -121,7 +121,7 @@ rrc_mac_config_req(
 #endif
                       )
 {
-
+  printf("rrc_mac_config_reg: eNB_index %d\n",eNB_index);
   int i;
 
   int UE_id = -1;
@@ -147,9 +147,9 @@ rrc_mac_config_req(
 
   if (tdd_Config && SIwindowsize && SIperiod) {
     if (eNB_flagP == ENB_FLAG_YES) {
-      mac_xface->phy_config_sib1_eNB(Mod_idP, CC_idP, tdd_Config, *SIwindowsize, *SIperiod);
+      mac_xface->phy_config_sib1_eNB(Mod_idP, CC_idP, tdd_Config, *SIwindowsize, *SIperiod);//not necessary to change
     } else {
-      mac_xface->phy_config_sib1_ue(Mod_idP,0,eNB_index,tdd_Config,*SIwindowsize,*SIperiod);
+      mac_xface->phy_config_sib1_ue(Mod_idP,0,eNB_index,tdd_Config,*SIwindowsize,*SIperiod);//not necessary to change
     }
   }
 
@@ -167,7 +167,7 @@ rrc_mac_config_req(
       mac_xface->phy_config_sib2_eNB(Mod_idP, CC_idP, radioResourceConfigCommon, ul_CarrierFreq, ul_Bandwidth, additionalSpectrumEmission, mbsfn_SubframeConfigList);
     } else {
       UE_mac_inst[Mod_idP].radioResourceConfigCommon = radioResourceConfigCommon;
-      mac_xface->phy_config_sib2_ue(Mod_idP,0,eNB_index,radioResourceConfigCommon,ul_CarrierFreq,ul_Bandwidth,additionalSpectrumEmission,mbsfn_SubframeConfigList);
+      mac_xface->phy_config_sib2_ue(Mod_idP,0,eNB_index,radioResourceConfigCommon,ul_CarrierFreq,ul_Bandwidth,additionalSpectrumEmission,mbsfn_SubframeConfigList);//not necessary to change
     }
   }
 
@@ -225,7 +225,7 @@ rrc_mac_config_req(
         } else {
           UE_mac_inst[Mod_idP].scheduling_info.maxHARQ_Tx     = (uint16_t) MAC_MainConfig__ul_SCH_Config__maxHARQ_Tx_n5;
         }
-        mac_xface->phy_config_harq_ue(Mod_idP,0,eNB_index,UE_mac_inst[Mod_idP].scheduling_info.maxHARQ_Tx);
+        mac_xface->phy_config_harq_ue(Mod_idP,0,/*eNB_index*/0,UE_mac_inst[Mod_idP].scheduling_info.maxHARQ_Tx);
 
         if (mac_MainConfig->ul_SCH_Config->retxBSR_Timer) {
           UE_mac_inst[Mod_idP].scheduling_info.retxBSR_Timer     = (uint16_t) mac_MainConfig->ul_SCH_Config->retxBSR_Timer;
@@ -305,7 +305,7 @@ rrc_mac_config_req(
       else
         mac_xface->phy_config_dedicated_eNB(Mod_idP, CC_idP, UE_RNTI(Mod_idP, UE_id), physicalConfigDedicated);
     } else {
-      mac_xface->phy_config_dedicated_ue(Mod_idP,0,eNB_index,physicalConfigDedicated);
+      mac_xface->phy_config_dedicated_ue(Mod_idP,0,/*eNB_index*/0,physicalConfigDedicated);
       UE_mac_inst[Mod_idP].physicalConfigDedicated=physicalConfigDedicated; // for SR proc
     }
   }
@@ -322,7 +322,7 @@ rrc_mac_config_req(
     } else {
 
 	//#warning "phy_config_dedicated_scell_ue is empty"
-      mac_xface->phy_config_dedicated_scell_ue(Mod_idP,eNB_index,sCellToAddMod_r10,1);
+      mac_xface->phy_config_dedicated_scell_ue(Mod_idP,eNB_index,sCellToAddMod_r10,1);//not necessary to change
       UE_mac_inst[Mod_idP].physicalConfigDedicatedSCell_r10 = sCellToAddMod_r10->radioResourceConfigDedicatedSCell_r10->physicalConfigDedicatedSCell_r10; // using SCell index 0
     }
   }
@@ -341,7 +341,7 @@ rrc_mac_config_req(
             LOG_D(MAC,"Cell %d : Nid_cell %d\n",i,UE_mac_inst[Mod_idP].adj_cell_id[i]);
           }
 
-          mac_xface->phy_config_meas_ue(Mod_idP,0,eNB_index,UE_mac_inst[Mod_idP].n_adj_cells,UE_mac_inst[Mod_idP].adj_cell_id);
+          mac_xface->phy_config_meas_ue(Mod_idP,0,eNB_index,UE_mac_inst[Mod_idP].n_adj_cells,UE_mac_inst[Mod_idP].adj_cell_id);//not necessary to change
           }
       }
 
@@ -436,7 +436,7 @@ rrc_mac_config_req(
                sizeof(*mobilityControlInfo->rach_ConfigDedicated));
       }
 
-      mac_xface->phy_config_afterHO_ue(Mod_idP,0,eNB_index,mobilityControlInfo,0);
+      mac_xface->phy_config_afterHO_ue(Mod_idP,0,/*eNB_index*/0,mobilityControlInfo,0);
     }
   }
 
@@ -489,7 +489,7 @@ rrc_mac_config_req(
         UE_mac_inst[Mod_idP].mbsfn_AreaInfo[i] = mbsfn_AreaInfoList->list.array[i];
         LOG_I(MAC,"[UE %d] MBSFN_AreaInfo[%d]: MCCH Repetition Period = %ld\n",Mod_idP, i,
               UE_mac_inst[Mod_idP].mbsfn_AreaInfo[i]->mcch_Config_r9.mcch_RepetitionPeriod_r9);
-        mac_xface->phy_config_sib13_ue(Mod_idP,0,eNB_index,i,UE_mac_inst[Mod_idP].mbsfn_AreaInfo[i]->mbsfn_AreaId_r9);
+        mac_xface->phy_config_sib13_ue(Mod_idP,0,eNB_index,i,UE_mac_inst[Mod_idP].mbsfn_AreaInfo[i]->mbsfn_AreaId_r9);//not necessary to change
       }
     }
   }
@@ -538,7 +538,7 @@ rrc_mac_config_req(
       UE_mac_inst[Mod_idP].cba_rnti[num_active_cba_groups-1] = cba_rnti;
       LOG_D(MAC,"[UE %d] configure CBA group %d RNTI %x for eNB %d (total active cba group %d)\n",
             Mod_idP,Mod_idP%num_active_cba_groups, cba_rnti,eNB_index,num_active_cba_groups);
-      mac_xface->phy_config_cba_rnti(Mod_idP,CC_idP,eNB_flagP,eNB_index,cba_rnti,num_active_cba_groups-1, num_active_cba_groups);
+      mac_xface->phy_config_cba_rnti(Mod_idP,CC_idP,eNB_flagP,/*eNB_index*/0,cba_rnti,num_active_cba_groups-1, num_active_cba_groups);
     }
   } else {
     if (cba_rnti) {

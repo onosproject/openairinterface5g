@@ -2987,7 +2987,7 @@ void ue_pbch_procedures(uint8_t eNB_id,PHY_VARS_UE *ue,UE_rxtx_proc_t *proc, uin
 
     if (ue->mac_enabled==1) {
       //printf("[UE%d] if mac_enabled? then dl_phy_sync_success. UE_mode %s\n",ue->Mod_id,ue->UE_mode[eNB_id]==NOT_SYNCHED?"NOT_SYNCHED":ue->UE_mode[eNB_id]==NOT_SYNCHED?"SYNCHED":"OTHER CHOICE");
-      mac_xface->dl_phy_sync_success(ue->Mod_id,frame_rx,0,
+      mac_xface->dl_phy_sync_success(ue->Mod_id,frame_rx,eNB_id,
              ue->UE_mode[eNB_id]==NOT_SYNCHED ? 1 : 0);
     }
 
