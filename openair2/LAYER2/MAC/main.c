@@ -62,6 +62,7 @@
 #endif //PHY_EMUL
 
 #include "SCHED/defs.h"
+#include "PHY/extern.h"
 /* TODO: this abstraction_flag here is very hackish - find a proper solution */
 extern uint8_t abstraction_flag;
 void dl_phy_sync_success(module_id_t   module_idP,
@@ -69,7 +70,7 @@ void dl_phy_sync_success(module_id_t   module_idP,
                          unsigned char eNB_index,
                          uint8_t            first_sync)   //init as MR
 {
-  LOG_D(MAC,"[UE %d] Frame %d: PHY Sync to eNB_index %d successful \n", module_idP, frameP, eNB_index);
+  LOG_D(MAC,"[UE %d] Frame %d: PHY Sync to eNB_index %d successful \n", module_idP, frameP, /*eNB_index*/PHY_vars_UE_g[module_idP][0]->common_vars.eNb_id);
 #if defined(ENABLE_USE_MME)
   int mme_enabled=1;
 #else
@@ -78,10 +79,10 @@ void dl_phy_sync_success(module_id_t   module_idP,
 
   if (first_sync==1 && !(mme_enabled==1 && abstraction_flag==0)) {
     layer2_init_UE(module_idP);
-    openair_rrc_ue_init(module_idP,eNB_index);
+    openair_rrc_ue_init(module_idP,PHY_vars_UE_g[module_idP][0]->common_vars.eNb_id);
   } else
   {
-    rrc_in_sync_ind(module_idP,frameP,eNB_index);
+    rrc_in_sync_ind(module_idP,frameP,PHY_vars_UE_g[module_idP][0]->common_vars.eNb_id);
   }
 }
 

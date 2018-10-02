@@ -363,7 +363,7 @@ ue_send_sdu(
 
 #ifdef DEBUG_HEADER_PARSING
   LOG_D(MAC,"[UE %d] ue_send_sdu : Frame %d eNB_index %d : num_ce %d num_sdu %d\n",module_idP,
-        frameP,eNB_index,num_ce,num_sdu);
+        frameP,/*eNB_index*/PHY_vars_UE_g[module_idP][0]->common_vars.eNb_id,num_ce,num_sdu);
 #endif
 
 #if defined(ENABLE_MAC_PAYLOAD_DEBUG)
@@ -397,7 +397,7 @@ ue_send_sdu(
         for (i=0; i<6; i++)
           if (tx_sdu[i] != payload_ptr[i]) {
             LOG_E(MAC,"[UE %d][RAPROC] Contention detected, RA failed\n",module_idP);
-            mac_xface->ra_failed(module_idP,CC_id,eNB_index);
+            mac_xface->ra_failed(module_idP,CC_id,eNB_index);/*eNB_index=0*/
             UE_mac_inst[module_idP].RA_contention_resolution_timer_active = 0;
             VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_UE_SEND_SDU, VCD_FUNCTION_OUT);
             return;
@@ -405,7 +405,7 @@ ue_send_sdu(
 
         LOG_I(MAC,"[UE %d][RAPROC] Frame %d : Clearing contention resolution timer\n", module_idP, frameP);
         UE_mac_inst[module_idP].RA_contention_resolution_timer_active = 0;
-        mac_xface->ra_succeeded(module_idP,CC_id,eNB_index);
+        mac_xface->ra_succeeded(module_idP,CC_id,eNB_index);/*eNB_index=0*/
       }
 
       payload_ptr+=6;
@@ -439,7 +439,7 @@ ue_send_sdu(
             module_idP,
             UE_mac_inst[module_idP].crnti,
             frameP,
-            eNB_index,
+            /*eNB_index*/PHY_vars_UE_g[module_idP][0]->common_vars.eNb_id,
             rx_lengths[i]);
 
 #if defined(ENABLE_MAC_PAYLOAD_DEBUG)
@@ -529,7 +529,7 @@ void ue_decode_si(module_id_t module_idP,int CC_id,frame_t frameP, uint8_t eNB_i
                    (uint8_t *)pdu,
                    len,
                    ENB_FLAG_NO,
-                   eNB_index,
+                   /*eNB_index*/PHY_vars_UE_g[module_idP][0]->common_vars.eNb_id,
                    0);
 //printf("2\n");
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_UE_DECODE_SI, VCD_FUNCTION_OUT);
@@ -569,7 +569,7 @@ void ue_decode_p(module_id_t module_idP,int CC_id,frame_t frameP, uint8_t eNB_in
                    (uint8_t *)pdu,
                    len,
                    ENB_FLAG_NO,
-                   eNB_index,
+                   /*eNB_index*/PHY_vars_UE_g[module_idP][0]->common_vars.eNb_id,
                    0);
 //printf("3\n");
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_UE_DECODE_PCCH, VCD_FUNCTION_OUT);
@@ -1281,7 +1281,7 @@ unsigned char generate_ulsch_header(uint8_t *mac_header,
 
 }
 
-void ue_get_sdu(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_t subframe, uint8_t eNB_index,uint8_t *ulsch_buffer,uint16_t buflen, uint8_t *access_mode)
+void ue_get_sdu(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_t subframe, uint8_t eNB_index,uint8_t *ulsch_buffer,uint16_t buflen, uint8_t *access_mode)/*eNB_index=0*/
 {
 
   uint8_t total_rlc_pdu_header_len=0, rlc_pdu_header_len_last=0 ;
@@ -1333,7 +1333,7 @@ void ue_get_sdu(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_t subf
           module_idP, frameP, subframe);
 
     //if (UE_mac_inst[module_idP].scheduling_info.LCID_status[DTCH] == LCID_EMPTY)
-    if (cba_access(module_idP,frameP,subframe,eNB_index,buflen)==0) {
+    if (cba_access(module_idP,frameP,subframe,eNB_index,buflen)==0) {/*eNB_index not used*/
       *access_mode=POSTPONED_ACCESS;
       VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_UE_GET_SDU, VCD_FUNCTION_OUT);
       return;
@@ -1429,7 +1429,7 @@ for (lcid=DCCH; (lcid < MAX_NUM_LCID) && (is_all_lcid_processed == FALSE) ; lcid
       is_lcid_processed	= FALSE;
       lcid_buffer_occupancy_old = mac_rlc_get_buffer_occupancy_ind(module_idP,
               	  	  	  	  	  	  	  	  	  	  	  	  	  UE_mac_inst[module_idP].crnti,
-																  eNB_index,
+																  /*eNB_index*/PHY_vars_UE_g[module_idP][0]->common_vars.eNb_id,
 																  frameP,
 																  subframe,
 																  ENB_FLAG_NO,
@@ -1465,7 +1465,7 @@ for (lcid=DCCH; (lcid < MAX_NUM_LCID) && (is_all_lcid_processed == FALSE) ; lcid
 
 		  sdu_lengths[num_sdus] = mac_rlc_data_req(module_idP,
 							 UE_mac_inst[module_idP].crnti,
-							 eNB_index,
+							 /*eNB_index*/PHY_vars_UE_g[module_idP][0]->common_vars.eNb_id,
 							 frameP,
 							 ENB_FLAG_NO,
 							 MBMS_FLAG_NO,
@@ -1519,7 +1519,7 @@ for (lcid=DCCH; (lcid < MAX_NUM_LCID) && (is_all_lcid_processed == FALSE) ; lcid
           /* Get updated BO after multiplexing this PDU */
           lcid_buffer_occupancy_new = mac_rlc_get_buffer_occupancy_ind(module_idP,
                         	  	  	  	  	  	  	  	  	  	  	  	  	  UE_mac_inst[module_idP].crnti,
-          																  eNB_index,
+          																  /*eNB_index*/PHY_vars_UE_g[module_idP][0]->common_vars.eNb_id,
           																  frameP,
           																  subframe,
           																  ENB_FLAG_NO,
@@ -1591,10 +1591,10 @@ for (lcid=DCCH; (lcid < MAX_NUM_LCID) && (is_all_lcid_processed == FALSE) ; lcid
 
   // build PHR and update the timers
   if (phr_ce_len == sizeof(POWER_HEADROOM_CMD)) {
-    phr_p->PH = get_phr_mapping(module_idP,CC_id,eNB_index);
+    phr_p->PH = get_phr_mapping(module_idP,CC_id,eNB_index);/*eNB_index=0*/
     phr_p->R  = 0;
     LOG_D(MAC,"[UE %d] Frame %d report PHR with mapping (%d->%d) for LCID %d\n",
-          module_idP,frameP, mac_xface->get_PHR(module_idP,CC_id,eNB_index), phr_p->PH,POWER_HEADROOM);
+          module_idP,frameP, mac_xface->get_PHR(module_idP,CC_id,eNB_index), phr_p->PH,POWER_HEADROOM);/*eNB_index=0*/
     update_phr(module_idP,CC_id);
   } else {
     phr_p=NULL;
@@ -1836,6 +1836,7 @@ ue_scheduler(
   const int            CC_id)
 //------------------------------------------------------------------------------
 {
+  printf("ue_scheduler: eNB_indexp %d, PHY_vars_UE_g[module_idP][0]->common_vars.eNb_id %d \n",eNB_indexP,PHY_vars_UE_g[module_idP][0]->common_vars.eNb_id);
   int lcid; // lcid index
   int TTI= 1;
   int bucketsizeduration = -1;
@@ -1856,7 +1857,7 @@ ue_scheduler(
 #endif
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_UE_SCHEDULER, VCD_FUNCTION_IN);
 
-  PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, module_idP, ENB_FLAG_NO, UE_mac_inst[module_idP].crnti, txFrameP, txSubframeP,eNB_indexP);
+  PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, module_idP, ENB_FLAG_NO, UE_mac_inst[module_idP].crnti, txFrameP, txSubframeP,/*eNB_indexP*/PHY_vars_UE_g[module_idP][0]->common_vars.eNb_id);
 #if defined(ENABLE_ITTI)
 
   do {
@@ -1901,11 +1902,11 @@ ue_scheduler(
   UE_mac_inst[module_idP].rxSubframe = rxSubframeP;
 
 #ifdef CELLULAR
-  rrc_rx_tx(module_idP, txFrameP, 0, eNB_indexP);
+  rrc_rx_tx(module_idP, txFrameP, 0, /*eNB_indexP*/PHY_vars_UE_g[module_idP][0]->common_vars.eNb_id);
 #else
 
   switch (rrc_rx_tx(&ctxt,
-                    eNB_indexP,
+                    /*eNB_indexP*/PHY_vars_UE_g[module_idP][0]->common_vars.eNb_id,
                     CC_id)) {
   case RRC_OK:
     break;
@@ -1930,7 +1931,7 @@ ue_scheduler(
   case RRC_Handover_failed:
     LOG_N(MAC,"Handover failure for UE %d eNB_index %d\n",module_idP,eNB_indexP);
     //Invalid...need to add another MAC UE state for re-connection procedure
-    mac_xface->phy_config_afterHO_ue(module_idP,0,eNB_indexP,(MobilityControlInfo_t *)NULL,1);
+    mac_xface->phy_config_afterHO_ue(module_idP,0,eNB_indexP,(MobilityControlInfo_t *)NULL,1);//eNB_indexP=0
     //return(3);
     break;
 
@@ -1974,7 +1975,7 @@ ue_scheduler(
       UE_mac_inst[module_idP].RA_contention_resolution_timer_active = 0;
       // Signal PHY to quit RA procedure
       LOG_E(MAC,"Module id %u Contention resolution timer expired, RA failed\n", module_idP);
-      mac_xface->ra_failed(module_idP,0,eNB_indexP);
+      mac_xface->ra_failed(module_idP,0,eNB_indexP);//eNB_indexP=0
     }
   }
 
@@ -2070,8 +2071,8 @@ ue_scheduler(
     } else {
       //LOG_D(MAC,"PHR normal operation %d active %d \n", UE_mac_inst[module_idP].scheduling_info.periodicPHR_SF, UE_mac_inst[module_idP].PHR_reporting_active);
       if ((UE_mac_inst[module_idP].scheduling_info.prohibitPHR_SF <= 0) &&
-          ((mac_xface->get_PL(module_idP,0,eNB_indexP) <  UE_mac_inst[module_idP].scheduling_info.PathlossChange_db) ||
-           (UE_mac_inst[module_idP].power_backoff_db[eNB_indexP] > UE_mac_inst[module_idP].scheduling_info.PathlossChange_db)))
+          ((mac_xface->get_PL(module_idP,0,eNB_indexP) <  UE_mac_inst[module_idP].scheduling_info.PathlossChange_db) ||/*eNB_indexP=0*/
+           (UE_mac_inst[module_idP].power_backoff_db[/*eNB_indexP*/PHY_vars_UE_g[module_idP][0]->common_vars.eNb_id] > UE_mac_inst[module_idP].scheduling_info.PathlossChange_db)))
         // trigger PHR and reset the timer later when the PHR report is sent
       {
         UE_mac_inst[module_idP].PHR_reporting_active = 1;
@@ -2299,7 +2300,7 @@ boolean_t  update_bsr(module_id_t module_idP, frame_t frameP, sub_frame_t subfra
 			  	lcgid_buffer_remain[lcgid] += UE_mac_inst[module_idP].scheduling_info.LCID_buffer_remain[lcid];
 		  	}
 
-		    rlc_status = mac_rlc_status_ind(module_idP, UE_mac_inst[module_idP].crnti,eNB_index,frameP,subframeP,ENB_FLAG_NO,MBMS_FLAG_NO,
+		    rlc_status = mac_rlc_status_ind(module_idP, UE_mac_inst[module_idP].crnti,/*eNB_index*/PHY_vars_UE_g[module_idP][0]->common_vars.eNb_id,frameP,subframeP,ENB_FLAG_NO,MBMS_FLAG_NO,
 		                                    lcid,
 		                                    0xFFFF); //TBS is not used in RLC at this step, set a special value for debug
 
@@ -2577,7 +2578,7 @@ void update_phr(module_id_t module_idP,int CC_id)
   UE_mac_inst[module_idP].scheduling_info.prohibitPHR_SF =  get_sf_prohibitPHR_Timer(UE_mac_inst[module_idP].scheduling_info.prohibitPHR_Timer);
   // LOG_D(MAC,"phr %d %d\n ",UE_mac_inst[module_idP].scheduling_info.periodicPHR_SF, UE_mac_inst[module_idP].scheduling_info.prohibitPHR_SF);
 }
-uint8_t get_phr_mapping (module_id_t module_idP, int CC_id, uint8_t eNB_index)
+uint8_t get_phr_mapping (module_id_t module_idP, int CC_id, uint8_t eNB_index)/*eNB_index=0*/
 {
 
   if (CC_id>0) {

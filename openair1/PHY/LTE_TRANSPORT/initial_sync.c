@@ -721,7 +721,7 @@ int initial_sync(PHY_VARS_UE *ue, runmode_t mode)
       if (ue->mac_enabled==1) {
 	LOG_I(PHY,"[UE%d] Sending synch status to higher layers\n",ue->Mod_id);
 	//mac_resynch();
-	mac_xface->dl_phy_sync_success(ue->Mod_id,ue->proc.proc_rxtx[0].frame_rx,ue->common_vars.eNb_id,1);//ue->common_vars.eNb_id);
+	mac_xface->dl_phy_sync_success(ue->Mod_id,ue->proc.proc_rxtx[0].frame_rx,0,1);//ue->common_vars.eNb_id);
 	ue->UE_mode[0] = PRACH;
       }
       else {
@@ -963,7 +963,7 @@ int initial_sync_freq(PHY_VARS_UE *ue, runmode_t mode)
       if (ue->mac_enabled==1) {
 	LOG_I(PHY,"[UE%d] Sending synch status to higher layers\n",ue->Mod_id);
 	//mac_resynch();
-	mac_xface->dl_phy_sync_success(ue->Mod_id,ue->proc.proc_rxtx[0].frame_rx,ue->common_vars.eNb_id,1);//ue->common_vars.eNb_id);
+	mac_xface->dl_phy_sync_success(ue->Mod_id,ue->proc.proc_rxtx[0].frame_rx,0,1);//ue->common_vars.eNb_id);
 	ue->UE_mode[0] = PRACH;
       }
       else {

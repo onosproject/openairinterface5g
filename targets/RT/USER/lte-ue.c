@@ -848,7 +848,7 @@ static void *UE_thread_rxn_txnp4(void *arg) {
                                           proc->frame_tx,
                                           proc->subframe_tx,
                                           subframe_select(&UE->frame_parms,proc->subframe_tx),
-                                          UE->common_vars.eNb_id,
+                                          0,
                                           0/*FIXME CC_id*/);
             if ( ret != CONNECTION_OK) {
                 char *txt;

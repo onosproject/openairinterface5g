@@ -210,7 +210,7 @@ void get_prach_resources(module_id_t module_idP,
       UE_mac_inst[module_idP].RA_prach_resources.ra_RACH_MaskIndex = 0;
       UE_mac_inst[module_idP].RA_usedGroupA = 1;
     } else if ((Msg3_size <messageSizeGroupA) ||
-               (mac_xface->get_PL(module_idP,0,eNB_index) > PLThreshold)) {
+               (mac_xface->get_PL(module_idP,0,eNB_index) > PLThreshold)) {//not necessary to change
       // use Group A procedure
       UE_mac_inst[module_idP].RA_prach_resources.ra_PreambleIndex  = (taus())%sizeOfRA_PreamblesGroupA;
       UE_mac_inst[module_idP].RA_prach_resources.ra_RACH_MaskIndex = 0;
@@ -348,7 +348,7 @@ PRACH_RESOURCES_t *ue_get_rach(module_id_t module_idP,int CC_id,frame_t frameP, 
         printf("ue_get_rach:Size16 %d\n",Size16);
         //  LOG_D(MAC,"[UE %d] Frame %d: Requested RRCConnectionRequest, got %d bytes\n",module_idP,frameP,Size);
         LOG_D(RRC, "[MSC_MSG][FRAME %05d][RRC_UE][MOD %02d][][--- MAC_DATA_REQ (RRCConnectionRequest eNB %d) --->][MAC_UE][MOD %02d][]\n",
-              frameP, module_idP, eNB_indexP, module_idP);
+              frameP, module_idP, /*eNB_indexP*/PHY_vars_UE_g[module_idP][0]->common_vars.eNb_id, module_idP);
         LOG_D(MAC,"[UE %d] Frame %d: Requested RRCConnectionRequest, got %d bytes\n",module_idP,frameP,Size);
 
         if (Size>0) {

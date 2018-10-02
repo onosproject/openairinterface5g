@@ -2850,9 +2850,8 @@ static int decode_SIB1( const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_
   if (plmn_data[plmn_ind].mcc < 0) {
     LOG_I( RRC, "Found Unknown operator (no entry in internal table)\n" );
   }
-
   LOG_I( RRC, "cellAccessRelatedInfo.cellIdentity         : raw:%"PRIu32" decoded:%02x.%02x.%02x.%02x\n",
-         BIT_STRING_to_uint32( &sib1->cellAccessRelatedInfo.cellIdentity ),
+         BIT_STRING_to_uint32( &sib1->cellAccessRelatedInfo.cellIdentity)+eNB_index,
          sib1->cellAccessRelatedInfo.cellIdentity.buf[0],
          sib1->cellAccessRelatedInfo.cellIdentity.buf[1],
          sib1->cellAccessRelatedInfo.cellIdentity.buf[2],
@@ -2995,7 +2994,7 @@ static int decode_SIB1( const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_
 
           msg_p = itti_alloc_new_message(TASK_RRC_UE, NAS_CELL_SELECTION_CNF);
           NAS_CELL_SELECTION_CNF (msg_p).errCode = AS_SUCCESS;
-          NAS_CELL_SELECTION_CNF (msg_p).cellID = BIT_STRING_to_uint32(&sib1->cellAccessRelatedInfo.cellIdentity);
+          NAS_CELL_SELECTION_CNF (msg_p).cellID = BIT_STRING_to_uint32(&sib1->cellAccessRelatedInfo.cellIdentity)+eNB_index;
           NAS_CELL_SELECTION_CNF (msg_p).tac = BIT_STRING_to_uint16(&sib1->cellAccessRelatedInfo.trackingAreaCode);
           NAS_CELL_SELECTION_CNF (msg_p).rat = 0xFF;
           NAS_CELL_SELECTION_CNF (msg_p).rsrq = rsrq;
@@ -4516,7 +4515,7 @@ NAS_KENB_REFRESH_REQ,NAS_CELL_SELECTION_REQ,RRC_STATE_INACTIVE,RRC_STATE_IDLE,RR
             NAS_CONN_ESTABLI_REQ (msg_p).plmnID.MNCdigit3);
 
       //PROTOCOL_CTXT_SET_BY_INSTANCE(&ctxt, instance, ENB_FLAG_NO, NOT_A_RNTI, 0, 0);
-      PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, ue_mod_id, ENB_FLAG_NO, NOT_A_RNTI, 0, 0, 0);
+      PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, ue_mod_id, ENB_FLAG_NO, NOT_A_RNTI, 0, 0, PHY_vars_UE_g[ue_mod_id][0]->common_vars.eNb_id);
 
       UE_rrc_inst[ue_mod_id].initialNasMsg = NAS_CONN_ESTABLI_REQ (msg_p).initialNasMsg;
 
@@ -4555,7 +4554,7 @@ NAS_KENB_REFRESH_REQ,NAS_CELL_SELECTION_REQ,RRC_STATE_INACTIVE,RRC_STATE_IDLE,RR
       length = do_ULInformationTransfer(&buffer, NAS_UPLINK_DATA_REQ (msg_p).nasMsg.length, NAS_UPLINK_DATA_REQ (msg_p).nasMsg.data);
 
       /* Transfer data to PDCP */
-      PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, ue_mod_id, ENB_FLAG_NO, UE_rrc_inst[ue_mod_id].Info[0].rnti, 0, 0,0);
+      PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, ue_mod_id, ENB_FLAG_NO, UE_rrc_inst[ue_mod_id].Info[0].rnti, 0, 0,PHY_vars_UE_g[ue_mod_id][0]->common_vars.eNb_id);
 
       // check if SRB2 is created, if yes request data_req on DCCH1 (SRB2) 
       if(UE_rrc_inst[ue_mod_id].SRB2_config[0] == NULL)
@@ -4710,7 +4709,7 @@ NAS_KENB_REFRESH_REQ,NAS_CELL_SELECTION_REQ,RRC_STATE_INACTIVE,RRC_STATE_IDLE,RR
       switch (rrc_get_state(ue_mod_id)) {
       case RRC_STATE_IDLE: {
         if (rrc_get_sub_state(ue_mod_id) == RRC_SUB_STATE_IDLE_SIB_COMPLETE) {
-          PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, ue_mod_id, ENB_FLAG_NO, UE_rrc_inst[ue_mod_id].Info[0].rnti, 0, 0, 0);
+          PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, ue_mod_id, ENB_FLAG_NO, UE_rrc_inst[ue_mod_id].Info[0].rnti, 0, 0, PHY_vars_UE_g[ue_mod_id][0]->common_vars.eNb_id);
           rrc_ue_generate_RRCConnectionRequest(&ctxt, 0);
           LOG_D(RRC, "not sending connection request\n");
           rrc_set_sub_state (ue_mod_id, RRC_SUB_STATE_IDLE_CONNECTING);

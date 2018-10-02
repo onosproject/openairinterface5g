@@ -927,6 +927,7 @@ pdcp_run (
           RRC_DCCH_DATA_REQ (msg_p).frame, 
 	  0,
 	  RRC_DCCH_DATA_REQ (msg_p).eNB_index);
+        printf("pdcp_run:RRC_DCCH_DATA_REQ: eNB %d, rnti %d\n",RRC_DCCH_DATA_REQ (msg_p).eNB_index,RRC_DCCH_DATA_REQ (msg_p).rnti);
         LOG_I(PDCP, PROTOCOL_CTXT_FMT"Received %s from %s: instance %d, rb_id %d, muiP %d, confirmP %d, mode %d\n",
               PROTOCOL_CTXT_ARGS(&ctxt),
               msg_name,

@@ -1822,7 +1822,7 @@ void ue_ulsch_uespec_procedures(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB
         CC_id,
         frame_tx,
         subframe_tx,
-        ue->common_vars.eNb_id,//changed
+        eNB_id,
         ulsch_input_buffer,
         input_buffer_length,
         &access_mode);
@@ -2052,7 +2052,7 @@ void get_pucch_param(PHY_VARS_UE    *ue,
     case pucch_format1a:
     case pucch_format1b:
     {
-        pucch_resource[0] = get_n1_pucch(ue,
+        pucch_resource[0] = get_n1_pucch(ue,/*not necessary to change*/
                                          proc,
                                          ue->dlsch[current_thread_id[proc->subframe_rx]][eNB_id][0]->harq_ack,
                                          eNB_id,
@@ -2069,12 +2069,12 @@ void get_pucch_param(PHY_VARS_UE    *ue,
         pucch_resource[0]    = ue->cqi_report_config[eNB_id].CQI_ReportPeriodic.cqi_PUCCH_ResourceIndex;
         if(cqi_report)
         {
-            pucch_payload[0] = get_pucch2_cqi(ue,eNB_id,(int*)plength);
+            pucch_payload[0] = get_pucch2_cqi(ue,eNB_id,(int*)plength);/*not necessary to change*/
         }
         else
         {
             *plength = 1;
-            pucch_payload[0] = get_pucch2_ri(ue,eNB_id);
+            pucch_payload[0] = get_pucch2_ri(ue,eNB_id);/*not necessary to change*/
         }
     }
     break;
@@ -2473,7 +2473,7 @@ void phy_procedures_UE_TX(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,ui
       // check if we need to use PUCCH 1a/1b
       ue_pucch_procedures(ue,proc,eNB_id,abstraction_flag);
       // check if we need to use SRS
-      ue_srs_procedures(ue,proc,eNB_id,abstraction_flag);
+      ue_srs_procedures(ue,proc,eNB_id,abstraction_flag);//not necessary to change
   } // UE_mode==PUSCH
 
 
@@ -2493,11 +2493,11 @@ void phy_procedures_UE_TX(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,ui
     Mod_id,frame_tx,subframe_tx,
     ue->ulsch[eNB_id]->num_cba_dci[subframe_tx]);
 
-    mac_xface->ue_get_sdu(Mod_id,// changed
+    mac_xface->ue_get_sdu(Mod_id,
         CC_id,
         frame_tx,
         subframe_tx,
-        ue->common_vars.eNb_id,
+        eNB_id,
         ulsch_input_buffer,
         input_buffer_length,
         &access_mode);
@@ -2507,7 +2507,7 @@ void phy_procedures_UE_TX(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,ui
     if (access_mode > UNKNOWN_ACCESS) {
 
       if (abstraction_flag==0) {
-        if (ulsch_encoding(ulsch_input_buffer,
+        if (ulsch_encoding(ulsch_input_buffer,//not necessary to change
                            ue,
                            harq_pid,
                            eNB_id,
@@ -2987,7 +2987,7 @@ void ue_pbch_procedures(uint8_t eNB_id,PHY_VARS_UE *ue,UE_rxtx_proc_t *proc, uin
 
     if (ue->mac_enabled==1) {
       //printf("[UE%d] if mac_enabled? then dl_phy_sync_success. UE_mode %s\n",ue->Mod_id,ue->UE_mode[eNB_id]==NOT_SYNCHED?"NOT_SYNCHED":ue->UE_mode[eNB_id]==NOT_SYNCHED?"SYNCHED":"OTHER CHOICE");
-      mac_xface->dl_phy_sync_success(ue->Mod_id,frame_rx,ue->common_vars.eNb_id,
+      mac_xface->dl_phy_sync_success(ue->Mod_id,frame_rx,0,
              ue->UE_mode[eNB_id]==NOT_SYNCHED ? 1 : 0);
     }
 
@@ -4188,7 +4188,7 @@ void ue_dlsch_procedures(PHY_VARS_UE *ue,
     mac_xface->ue_decode_si(ue->Mod_id,
           CC_id,
           frame_rx,
-          ue->common_vars.eNb_id,
+          eNB_id,
           ue->dlsch_SI[eNB_id]->harq_processes[0]->b,
           ue->dlsch_SI[eNB_id]->harq_processes[0]->TBS>>3);
     break;
@@ -4440,7 +4440,7 @@ void *UE_thread_slot1_dl_processing(void *arg) {
                     l,
                     slot1,
                     0);
-            ue_measurement_procedures(l-1,ue,proc,ue->common_vars.eNb_id,1+(subframe_rx<<1),0,ue->mode);
+            ue_measurement_procedures(l-1,ue,proc,0,1+(subframe_rx<<1),0,ue->mode);
         }
         //printf("AbsSubframe %d.%d ChanEst slot %d, symbol %d\n", frame_rx,subframe_rx,next_subframe_slot0,pilot0);
         front_end_chanEst(ue,
@@ -5235,7 +5235,7 @@ else
 #endif
     }
 
-    ue_measurement_procedures(l-1,ue,proc,eNB_id,(subframe_rx<<1),abstraction_flag,mode);
+    ue_measurement_procedures(l-1,ue,proc,eNB_id,(subframe_rx<<1),abstraction_flag,mode);/*eNB_id=0*/
 
     if (do_pdcch_flag) {
       if ((l==pilot1) ||
@@ -5243,7 +5243,7 @@ else
 	LOG_D(PHY,"[UE  %d] Frame %d: Calling pdcch procedures (eNB %d)\n",ue->Mod_id,frame_rx,eNB_id);
 
 	//start_meas(&ue->rx_pdcch_stats[ue->current_thread_id[subframe_rx]]);
-	if (ue_pdcch_procedures(eNB_id,ue,proc,abstraction_flag) == -1) {
+	if (ue_pdcch_procedures(eNB_id,ue,proc,abstraction_flag) == -1) {/*eNB_id=0*/
 	  LOG_E(PHY,"[UE  %d] Frame %d, subframe %d: Error in pdcch procedures\n",ue->Mod_id,frame_rx,subframe_rx);
 	  return(-1);
 	}
@@ -5770,7 +5770,7 @@ void phy_procedures_UE_lte(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,u
             frame_tx,
             subframe_tx,
             subframe_select(&ue->frame_parms,subframe_tx),
-            ue->common_vars.eNb_id,
+            eNB_id,
             0/*FIXME CC_id*/);
 
   if (ret == CONNECTION_LOST) {
