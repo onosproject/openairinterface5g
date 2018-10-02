@@ -57,14 +57,14 @@ void send_IF4p5(PHY_VARS_eNB *eNB, int frame, int subframe, uint16_t packet_type
   int slotoffsetF=0, blockoffsetF=0; 
 
   uint16_t *data_block=NULL, *i=NULL;
-  if ((eNB->CC_id==0) && (subframe&5 ==0)){
+  /* if ((eNB->CC_id==0) && (subframe ==9)){
 	write_output("txdataF0.m","txF0",txdataF[0],10*fp->ofdm_symbol_size*fp->symbols_per_tti,0,16);
-	//write_output("prachF0.m","prachF0",rxsigF[0],839,1,1);
+        write_output("rxdataF0.m","rxF0",rxdataF[0],10*fp->ofdm_symbol_size*fp->symbols_per_tti,0,16);
   } 
-  else if ((eNB->CC_id==1) && (subframe&5 ==0)){
+  else if ((eNB->CC_id==1) && (subframe ==9)){
        write_output("txdataF1.m","txF1",txdataF[0],10*fp->ofdm_symbol_size*fp->symbols_per_tti,0,16);
-       // write_output("prachF1.m","prachF1",rxsigF[0],839,1,1);
-  }
+       write_output("rxdataF1.m","rxF1",rxdataF[0],10*fp->ofdm_symbol_size*fp->symbols_per_tti,0,16);
+  }*/
   IF4p5_header_t *packet_header=NULL;
   eth_state_t *eth = (eth_state_t*) (eNB->ifdevice.priv);
   int nsym = fp->symbols_per_tti;
@@ -243,7 +243,6 @@ void recv_IF4p5(PHY_VARS_eNB *eNB, int *frame, int *subframe, uint16_t *packet_t
   uint16_t db_fulllength, db_halflength; 
   int slotoffsetF=0, blockoffsetF=0;
   //int k;
- 
   eth_state_t *eth = (eth_state_t*) (eNB->ifdevice.priv);
 // for (k=0;k<eNB->ifdevice.nb_eth;k++){
   if (eNB->CC_id==0) VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_RECV_IF4, 1 );   
@@ -324,14 +323,12 @@ void recv_IF4p5(PHY_VARS_eNB *eNB, int *frame, int *subframe, uint16_t *packet_t
   } else if (*packet_type == IF4p5_PRACH) {  
      LOG_D(PHY,"PRACH_IF4p5: CC_id %d : frame %d, subframe %d\n",eNB->CC_id,*frame,*subframe);
     if (eNB->CC_id==1) LOG_I(PHY,"PRACH_IF4p5: CC_id %d : frame %d, subframe %d\n",eNB->CC_id,*frame,*subframe);
-    if (eNB->CC_id==0 && subframe==0){
-        //write_output("txdataF0.m","txF0",txdataF[0],10*fp->ofdm_symbol_size*fp->symbols_per_tti,1,1);
+    /*if (eNB->CC_id==0 && subframe==0){
         write_output("prachF0.m","prF0",rxsigF[0],839,0,16);
     } 
     else if (eNB->CC_id==1 && subframe==0){
-        //write_output("txdataF1","txF1",txdataF[0],10*fp->ofdm_symbol_size*fp->symbols_per_tti,1,1);
         write_output("prachF1.m","prF1",rxsigF[0],839,0,16);
-    }
+    }*/
 
     // FIX: hard coded prach samples length
     db_fulllength = PRACH_HARD_CODED_NUM_SAMPLES;
