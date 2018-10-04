@@ -1450,7 +1450,7 @@ void slsch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
 		 subframe_rx,
 		 0,
 		 0,
-		 1);
+		 ue->dlsch_rx_slsch->harq_processes[0]->TBS>256?1:0);
 
   LOG_D(PHY,"slsch decoding round %d ret %d (%d,%d)\n",(ue->dlsch_rx_slsch->harq_processes[0]->round+3)&3,ret,
 	dB_fixed(ue->pusch_slsch->ulsch_power[0]),
