@@ -40,7 +40,7 @@
 //#define DEBUG_MEAS_UE
 //#define DEBUG_RANK_EST
 
-int16_t cond_num_threshold = 5;
+int16_t cond_num_threshold = 5;//change threshold to 5 dB
 
 #ifdef USER_MODE
 void print_shorts(char *s,short *x)
@@ -181,7 +181,8 @@ void ue_rrc_measurements(PHY_VARS_UE *ue,
   int aarx,rb;
   uint8_t pss_symb;
   uint8_t sss_symb;
-
+  uint8_t rx_power_correction=2;
+  int gain_offset=49;
   int32_t **rxdataF;
   int16_t *rxF,*rxF_pss,*rxF_sss;
 
@@ -190,230 +191,211 @@ void ue_rrc_measurements(PHY_VARS_UE *ue,
   uint16_t off;
   uint8_t previous_thread_id = ue->current_thread_id[subframe]==0 ? (RX_NB_TH-1):(ue->current_thread_id[subframe]-1);
 
-   //uint8_t isPss; // indicate if this is a slot for extracting PSS
-  //uint8_t isSss; // indicate if this is a slot for extracting SSS
-  //int32_t pss_ext[4][72]; // contain the extracted 6*12 REs for mapping the PSS
-  //int32_t sss_ext[4][72]; // contain the extracted 6*12 REs for mapping the SSS
-  //int32_t (*xss_ext)[72]; // point to either pss_ext or sss_ext for common calculation
-  //int16_t *re,*im; // real and imag part of each 32-bit xss_ext[][] value
-
+   
   //LOG_I(PHY,"UE RRC MEAS Start Subframe %d Frame Type %d slot %d \n",subframe,ue->frame_parms.frame_type,slot);
   for (eNB_offset = 0; eNB_offset<1+ue->measurements.n_adj_cells; eNB_offset++) {
+	  if (eNB_offset==0)
+	  {
+		  ue->measurements.rssi = 0;
+		  //ue->measurements.n0_power_tot = 0;
+		  if (abstraction_flag == 0)
+		  {
+			  if (((ue->frame_parms.frame_type == FDD) && ((subframe == 0) || (subframe == 5))) ||
+				  ((ue->frame_parms.frame_type == TDD) && ((subframe == 1) || (subframe == 6))))
+			  {// FDD PSS/SSS, compute noise in DTX REs (Null REs)
+				  ue->measurements.n0_power_tot = 0;//clear to avoid accuma
 
-    if (eNB_offset==0) {
-      ue->measurements.rssi = 0;
-      //ue->measurements.n0_power_tot = 0;
+				  if (ue->frame_parms.Ncp==NORMAL)
+				  {
+					  for (aarx=0; aarx<ue->frame_parms.nb_antennas_rx; aarx++)
+					  {
+						  if(ue->frame_parms.frame_type == FDD)
+						  {
+							  /*SFN:
+							   * +ve spectrum
+							   * rxF_sss points to OFDM symbol l=5*N, thus the +ve subcarrier starts from rxF_sss[0]:dc rxF_sss[1] ... rxF_sss[150]
+							   * rxF_pss points to OFDM symbol l=6*N, thus the +ve subcarrier starts from rxF_pss[0]:dc rxF_pss[1] ... rxF_pss[150]
+							   * */
+							  rxF_sss = (int16_t *)&ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].rxdataF[aarx][(5*ue->frame_parms.ofdm_symbol_size)];
+							  rxF_pss = (int16_t *)&ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].rxdataF[aarx][(6*ue->frame_parms.ofdm_symbol_size)];
 
-      if (abstraction_flag == 0) {
-        if ( ((ue->frame_parms.frame_type == FDD) && ((subframe == 0) || (subframe == 5))) ||
-             ((ue->frame_parms.frame_type == TDD) && ((subframe == 1) || (subframe == 6)))
-                )
-        {  // FDD PSS/SSS, compute noise in DTX REs
-          ue->measurements.n0_power_tot = 0;//clear to avoid accum
+						  }
+						  else
+						  {
+							  rxF_sss = (int16_t *)&ue->common_vars.common_vars_rx_data_per_thread[previous_thread_id].rxdataF[aarx][(13*ue->frame_parms.ofdm_symbol_size)];
+							  rxF_pss = (int16_t *)&ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].rxdataF[aarx][(2*ue->frame_parms.ofdm_symbol_size)];
+						  }
+						  /*SFN:
+						   * * +ve spectrum
+						   * k=0 (dc component)
+						   * k=1,2,...,31 for sss/pss +ve portion
+						   * k=32 33 34 35 36 are null REs --> int16_t index is (2k 2k+1)
+						   * */
+						  ue->measurements.n0_power[aarx] = (int32_t)(rxF_sss[66]*rxF_sss[66])+(int32_t)(rxF_sss[67]*rxF_sss[67]);//k=33 ->(66 67)
+						  ue->measurements.n0_power[aarx] += (int32_t)(rxF_sss[68]*rxF_sss[68])+(int32_t)(rxF_sss[69]*rxF_sss[69]);//k=34 ->(68 69)
+						  ue->measurements.n0_power[aarx] += (int32_t)(rxF_sss[70]*rxF_sss[70])+(int32_t)(rxF_sss[71]*rxF_sss[71]);//k=35 ->(70 71)
 
-          if (ue->frame_parms.Ncp==NORMAL) {
-            for (aarx=0; aarx<ue->frame_parms.nb_antennas_rx; aarx++) {
+						  ue->measurements.n0_power[aarx] += (int32_t)(rxF_pss[66]*rxF_pss[66])+(int32_t)(rxF_pss[67]*rxF_pss[67]);
+						  ue->measurements.n0_power[aarx] += (int32_t)(rxF_pss[68]*rxF_pss[68])+(int32_t)(rxF_pss[69]*rxF_pss[69]);
+						  ue->measurements.n0_power[aarx] += (int32_t)(rxF_pss[70]*rxF_pss[70])+(int32_t)(rxF_pss[71]*rxF_pss[71]);
 
-          if(ue->frame_parms.frame_type == FDD)
-          {
-          //rxF_sss points to OFDM symbol 5*N, thus the +ve subcarrier starts from rxF_sss[0]:dc rxF_sss[1] ... rxF_sss[150]
-          //rxF_sss points to OFDM symbol 6*N, thus the +ve subcarrier starts from rxF_pss[0]:dc rxF_pss[1] ... rxF_pss[150]
-          rxF_sss = (int16_t *)&ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].rxdataF[aarx][(5*ue->frame_parms.ofdm_symbol_size)];
-	      rxF_pss = (int16_t *)&ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].rxdataF[aarx][(6*ue->frame_parms.ofdm_symbol_size)];
-          }
-          else
-          {
-              rxF_sss = (int16_t *)&ue->common_vars.common_vars_rx_data_per_thread[previous_thread_id].rxdataF[aarx][(13*ue->frame_parms.ofdm_symbol_size)];
-              rxF_pss = (int16_t *)&ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].rxdataF[aarx][(2*ue->frame_parms.ofdm_symbol_size)];
-          }
+						  if(ue->frame_parms.frame_type == FDD)
+						  {
+							  /*SFN:
+							   * * -ve spectrum
+							   * rxF_sss points to OFDM symbol l=6*N. Thus, the -ve subcarrier of sss starts from rxF_sss[-1] ... rxF_sss[-150]
+							   * rxF_sss points to OFDM symbol l=7*N. Thus, the -ve subcarrier of pss starts from rxF_pss[-1] ... rxF_pss[-150]
+							   * */
+							  rxF_sss = (int16_t *)&ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].rxdataF[aarx][(6*ue->frame_parms.ofdm_symbol_size)];
+							  rxF_pss = (int16_t *)&ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].rxdataF[aarx][(7*ue->frame_parms.ofdm_symbol_size)];
+						  }
+						  else
+						  {
+							  rxF_sss = (int16_t *)&ue->common_vars.common_vars_rx_data_per_thread[previous_thread_id].rxdataF[aarx][(14*ue->frame_parms.ofdm_symbol_size)];
+							  rxF_pss = (int16_t *)&ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].rxdataF[aarx][(3*ue->frame_parms.ofdm_symbol_size)];
+						  }
+						  /*SFN:
+						   * * +ve spectrum
+						   * k=-1,-2,...,-31 for sss/pss -ve portion
+						   * k=-32 -33 -34 -35 -36 are null REs --> int16_t index is (2k+1 2k)
+						   * */
+						  ue->measurements.n0_power[aarx] += (int32_t)(rxF_pss[-70]*rxF_pss[-70])+(int32_t)(rxF_pss[-69]*rxF_pss[-69]);//k=-35 ->(-69 -70)
+						  ue->measurements.n0_power[aarx] += (int32_t)(rxF_pss[-68]*rxF_pss[-68])+(int32_t)(rxF_pss[-67]*rxF_pss[-67]);//k=-34 ->(-67 -68)
+						  ue->measurements.n0_power[aarx] += (int32_t)(rxF_pss[-66]*rxF_pss[-66])+(int32_t)(rxF_pss[-65]*rxF_pss[-65]);//k=-33 ->(-65 -66)
 
+						  ue->measurements.n0_power[aarx] += (int32_t)(rxF_sss[-70]*rxF_sss[-70])+(int32_t)(rxF_sss[-69]*rxF_sss[-69]);
+						  ue->measurements.n0_power[aarx] += (int32_t)(rxF_sss[-68]*rxF_sss[-68])+(int32_t)(rxF_sss[-67]*rxF_sss[-67]);
+						  ue->measurements.n0_power[aarx] += (int32_t)(rxF_sss[-66]*rxF_sss[-66])+(int32_t)(rxF_sss[-65]*rxF_sss[-65]);
 
-          //+ve spectrum from SSS//0 dc 1:1:31 sss (2k 2k+1): k=32 33 34 35 36 are null signal
-          ue->measurements.n0_power[aarx] = (int32_t)(rxF_sss[66]*rxF_sss[66])+(int32_t)(rxF_sss[67]*rxF_sss[67]);//k=33 ->(66 67)
-          ue->measurements.n0_power[aarx] += (int32_t)(rxF_sss[68]*rxF_sss[68])+(int32_t)(rxF_sss[69]*rxF_sss[69]);//k=34 ->(68 69)
-          ue->measurements.n0_power[aarx] += (int32_t)(rxF_sss[70]*rxF_sss[70])+(int32_t)(rxF_sss[71]*rxF_sss[71]);//k=35 ->(70 71)
+						  //results: multiply by cos2pifct-->(0.5)*nb_antennas_rx*(Noise_floor)*N*df
+						  ue->measurements.n0_power[aarx]=rx_power_correction*(ue->measurements.n0_power[aarx])/12;//12 is the number of REs
+						  ue->measurements.n0_power_dB[aarx] = (unsigned short) dB_fixed(ue->measurements.n0_power[aarx]);//
+						  ue->measurements.n0_power_tot += ue->measurements.n0_power[aarx];//total Noise power from nb_antennas_rx
+					  }
+					  //LOG_I(PHY,"Subframe %d RRC UE MEAS Noise Level %d \n", subframe, ue->measurements.n0_power_tot);
 
-
-           //+ve spectrum from PSS//0 dc 1:1:31 sss (2k 2k+1): k=32 33 34 35 36 37
-          ue->measurements.n0_power[aarx] += (int32_t)(rxF_pss[66]*rxF_pss[66])+(int32_t)(rxF_pss[67]*rxF_pss[67]);
-          ue->measurements.n0_power[aarx] += (int32_t)(rxF_pss[68]*rxF_pss[68])+(int32_t)(rxF_pss[69]*rxF_pss[69]);
-          ue->measurements.n0_power[aarx] += (int32_t)(rxF_pss[70]*rxF_pss[70])+(int32_t)(rxF_pss[71]*rxF_pss[71]);//>>15
-          if(ue->frame_parms.frame_type == FDD)
-              {
-        	  //rxF_sss points to OFDM symbol 6*N, thus the -ve subcarrier of sss starts from rxF_sss[-1] ... rxF_sss[-150]
-        	  //rxF_sss points to OFDM symbol 7*N, thus the -ve subcarrier of pss starts from rxF_pss[-1] ... rxF_pss[-150]
-                  rxF_sss = (int16_t *)&ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].rxdataF[aarx][(6*ue->frame_parms.ofdm_symbol_size)];
-                  rxF_pss = (int16_t *)&ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].rxdataF[aarx][(7*ue->frame_parms.ofdm_symbol_size)];
-              }
-              else
-              {
-                  rxF_sss = (int16_t *)&ue->common_vars.common_vars_rx_data_per_thread[previous_thread_id].rxdataF[aarx][(14*ue->frame_parms.ofdm_symbol_size)];
-                  rxF_pss = (int16_t *)&ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].rxdataF[aarx][(3*ue->frame_parms.ofdm_symbol_size)];
-              }
-
-              //-ve spectrum from SSS// -1:-1:-31 sss (2k+1 2k): k=-32 -33 -34 -35 -36 -37 are null signal
-              ue->measurements.n0_power[aarx] += (int32_t)(rxF_pss[-70]*rxF_pss[-70])+(int32_t)(rxF_pss[-69]*rxF_pss[-69]);//k=-35 ->(-69 -70)
-              ue->measurements.n0_power[aarx] += (int32_t)(rxF_pss[-68]*rxF_pss[-68])+(int32_t)(rxF_pss[-67]*rxF_pss[-67]);//k=-34 ->(-67 -68)
-              ue->measurements.n0_power[aarx] += (int32_t)(rxF_pss[-66]*rxF_pss[-66])+(int32_t)(rxF_pss[-65]*rxF_pss[-65]);//k=-33 ->(-65 -66)
-
-              ue->measurements.n0_power[aarx] += (int32_t)(rxF_sss[-70]*rxF_sss[-70])+(int32_t)(rxF_sss[-69]*rxF_sss[-69]);
-              ue->measurements.n0_power[aarx] += (int32_t)(rxF_sss[-68]*rxF_sss[-68])+(int32_t)(rxF_sss[-67]*rxF_sss[-67]);
-              ue->measurements.n0_power[aarx] += (int32_t)(rxF_sss[-66]*rxF_sss[-66])+(int32_t)(rxF_sss[-65]*rxF_sss[-65]);
-
-              ue->measurements.n0_power[aarx]=(ue->measurements.n0_power[aarx])/12;//per one antenna
-              ue->measurements.n0_power_dB[aarx] = (unsigned short) dB_fixed(ue->measurements.n0_power[aarx]);
-              ue->measurements.n0_power_tot += ue->measurements.n0_power[aarx];//per two antenna
-        }
-
-            //LOG_I(PHY,"Subframe %d RRC UE MEAS Noise Level %d \n", subframe, ue->measurements.n0_power_tot);
-            ue->measurements.n0_power_tot_dB = (unsigned short) dB_fixed(ue->measurements.n0_power_tot/aarx);//(unsigned short) dB_fixed(ue->measurements.n0_power_tot/aarx);
-            ue->measurements.n0_power_tot_dBm = ue->measurements.n0_power_tot_dB - ue->rx_total_gain_dB - dB_fixed(ue->frame_parms.ofdm_symbol_size);
-
-
-        } else {
-            LOG_E(PHY, "Not yet implemented: noise power calculation when prefix length = EXTENDED\n");
-        }
-        }
-        else if ((ue->frame_parms.frame_type == TDD) &&
-                 ((subframe == 1) || (subframe == 6))) {  // TDD PSS/SSS, compute noise in DTX REs // 2016-09-29 wilson fix incorrect noise power calculation
-
-
-          pss_symb = 2;
-          sss_symb = ue->frame_parms.symbols_per_tti-1;
-          if (ue->frame_parms.Ncp==NORMAL) {
-            for (aarx=0; aarx<ue->frame_parms.nb_antennas_rx; aarx++) {
-
-                rxdataF  =  ue->common_vars.common_vars_rx_data_per_thread[(ue->current_thread_id[subframe])].rxdataF;
-                rxF_pss  = (int16_t *) &rxdataF[aarx][((pss_symb*(ue->frame_parms.ofdm_symbol_size)))];
-
-                rxdataF  =  ue->common_vars.common_vars_rx_data_per_thread[previous_thread_id].rxdataF;
-                rxF_sss  = (int16_t *) &rxdataF[aarx][((sss_symb*(ue->frame_parms.ofdm_symbol_size)))];
-
-                //-ve spectrum from SSS
-            //          printf("slot %d: SSS DTX: %d,%d, non-DTX %d,%d\n",slot,rxF_pss[-72],rxF_pss[-71],rxF_pss[-36],rxF_pss[-35]);
-
-            //              ue->measurements.n0_power[aarx] = (((int32_t)rxF_pss[-72]*rxF_pss[-72])+((int32_t)rxF_pss[-71]*rxF_pss[-71]));
-            //          printf("sssn36 %d\n",ue->measurements.n0_power[aarx]);
-                ue->measurements.n0_power[aarx] = (((int32_t)rxF_pss[-70]*rxF_pss[-70])+((int32_t)rxF_pss[-69]*rxF_pss[-69]));
-                ue->measurements.n0_power[aarx] += (((int32_t)rxF_pss[-68]*rxF_pss[-68])+((int32_t)rxF_pss[-67]*rxF_pss[-67]));
-                ue->measurements.n0_power[aarx] += (((int32_t)rxF_pss[-66]*rxF_pss[-66])+((int32_t)rxF_pss[-65]*rxF_pss[-65]));
-            //              ue->measurements.n0_power[aarx] += (((int32_t)rxF_pss[-64]*rxF_pss[-64])+((int32_t)rxF_pss[-63]*rxF_pss[-63]));
-            //          printf("sssm32 %d\n",ue->measurements.n0_power[aarx]);
-                //+ve spectrum from SSS
-            ue->measurements.n0_power[aarx] += (((int32_t)rxF_sss[2+70]*rxF_sss[2+70])+((int32_t)rxF_sss[2+69]*rxF_sss[2+69]));
-                ue->measurements.n0_power[aarx] += (((int32_t)rxF_sss[2+68]*rxF_sss[2+68])+((int32_t)rxF_sss[2+67]*rxF_sss[2+67]));
-                ue->measurements.n0_power[aarx] += (((int32_t)rxF_sss[2+66]*rxF_sss[2+66])+((int32_t)rxF_sss[2+65]*rxF_sss[2+65]));
-            //          ue->measurements.n0_power[aarx] += (((int32_t)rxF_sss[2+64]*rxF_sss[2+64])+((int32_t)rxF_sss[2+63]*rxF_sss[2+63]));
-            //          printf("sssp32 %d\n",ue->measurements.n0_power[aarx]);
-                //+ve spectrum from PSS n0_power
-                ue->measurements.n0_power[aarx] += (((int32_t)rxF_pss[2+70]*rxF_pss[2+70])+((int32_t)rxF_pss[2+69]*rxF_pss[2+69]));
-                ue->measurements.n0_power[aarx] += (((int32_t)rxF_pss[2+68]*rxF_pss[2+68])+((int32_t)rxF_pss[2+67]*rxF_pss[2+67]));
-                ue->measurements.n0_power[aarx] += (((int32_t)rxF_pss[2+66]*rxF_pss[2+66])+((int32_t)rxF_pss[2+65]*rxF_pss[2+65]));
-            //              ue->measurements.n0_power[aarx] += (((int32_t)rxF_pss[2+64]*rxF_pss[2+64])+((int32_t)rxF_pss[2+63]*rxF_pss[2+63]));
-            //          printf("pss32 %d\n",ue->measurements.n0_power[aarx]);              //-ve spectrum from PSS
-                rxF_pss = (int16_t *)&ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].rxdataF[aarx][(7*ue->frame_parms.ofdm_symbol_size)];
-            //              ue->measurements.n0_power[aarx] += (((int32_t)rxF_pss[-72]*rxF_pss[-72])+((int32_t)rxF_pss[-71]*rxF_pss[-71]));
-            //          printf("pssm36 %d\n",ue->measurements.n0_power[aarx]);
-                ue->measurements.n0_power[aarx] += (((int32_t)rxF_pss[-70]*rxF_pss[-70])+((int32_t)rxF_pss[-69]*rxF_pss[-69]));
-                ue->measurements.n0_power[aarx] += (((int32_t)rxF_pss[-68]*rxF_pss[-68])+((int32_t)rxF_pss[-67]*rxF_pss[-67]));
-                ue->measurements.n0_power[aarx] += (((int32_t)rxF_pss[-66]*rxF_pss[-66])+((int32_t)rxF_pss[-65]*rxF_pss[-65]));
-            //              ue->measurements.n0_power[aarx] += (((int32_t)rxF_pss[-64]*rxF_pss[-64])+((int32_t)rxF_pss[-63]*rxF_pss[-63]));
-            //          printf("pssm32 %d\n",ue->measurements.n0_power[aarx]);
-                ue->measurements.n0_power_dB[aarx] = (unsigned short) dB_fixed(ue->measurements.n0_power[aarx]/12);
-                ue->measurements.n0_power_tot /*+=*/ = ue->measurements.n0_power[aarx];
-        }
-
-        ue->measurements.n0_power_tot_dB = (unsigned short) dB_fixed(ue->measurements.n0_power_tot/(aarx));
-        ue->measurements.n0_power_tot_dBm = ue->measurements.n0_power_tot_dB - ue->rx_total_gain_dB - dB_fixed(ue->frame_parms.ofdm_symbol_size);
-
-        //LOG_I(PHY,"Subframe %d RRC UE MEAS Noise Level %d \n", subframe, ue->measurements.n0_power_tot);
-
-          }
-        }
-      }
-    }
+					  /*SFN:
+					   * * ue->measurements.n0_power_tot denotes the total Rx power from the Rx antenna
+					   * ue->measurements.n0_power_tot= (1/2).*sum_nbRx(N_F*N_sc*df)./nbRx watt, where N_F is the noise floor W/Hz
+					   * Hence, to compute the Noise floor at the Rx frontend, we should subtract USRP_Rx_Gain not ue->rx_total_gain_dB
+					   * Since ue->rx_total_gain_dB=USRP_Rx_Gain+Gain_offest
+					   * The gain offset can be obtained from URSP driver which is 49 dB
+					   * The max gain of the AD936x is 76 dB for Rx chain and 89 dB for Tx chain.
+					   * hese ranges will be printed out when you run 'uhd_usrp_probe' for any USRP
+					   * */
+					  ue->measurements.n0_power_tot/=ue->frame_parms.nb_antennas_rx;
+					  ue->measurements.n0_power_tot_dB = (unsigned short) dB_fixed(ue->measurements.n0_power_tot);
+					  /*SFN:
+					   * we correct n0_power_tot_dBm, but still for the correct result we should subtract the fixed point gain
+					   * Fixed_point_Gain=20log10(2^15)=(15)*6 dB=90 dB
+					   * */
+					  ue->measurements.n0_power_tot_dBm = ue->measurements.n0_power_tot_dB - (ue->rx_total_gain_dB-gain_offset) - dB_fixed(ue->frame_parms.ofdm_symbol_size)+30;//
+					} else {
+						LOG_E(PHY, "Not yet implemented: noise power calculation when prefix length = EXTENDED\n");
+					}
+				}
+				else if ((ue->frame_parms.frame_type == TDD) &&((subframe == 1) || (subframe == 6)))
+				{  // TDD PSS/SSS, compute noise in DTX REs // 2016-09-29 wilson fix incorrect noise power calculation
+					pss_symb = 2;
+					sss_symb = ue->frame_parms.symbols_per_tti-1;
+					if (ue->frame_parms.Ncp==NORMAL) {
+						for (aarx=0; aarx<ue->frame_parms.nb_antennas_rx; aarx++)
+						{
+							rxdataF  =  ue->common_vars.common_vars_rx_data_per_thread[(ue->current_thread_id[subframe])].rxdataF;
+							rxF_pss  = (int16_t *) &rxdataF[aarx][((pss_symb*(ue->frame_parms.ofdm_symbol_size)))];
+							rxdataF  =  ue->common_vars.common_vars_rx_data_per_thread[previous_thread_id].rxdataF;
+							rxF_sss  = (int16_t *) &rxdataF[aarx][((sss_symb*(ue->frame_parms.ofdm_symbol_size)))];
+							//-ve spectrum from SSS
+							// printf("slot %d: SSS DTX: %d,%d, non-DTX %d,%d\n",slot,rxF_pss[-72],rxF_pss[-71],rxF_pss[-36],rxF_pss[-35]);
+							// ue->measurements.n0_power[aarx] = (((int32_t)rxF_pss[-72]*rxF_pss[-72])+((int32_t)rxF_pss[-71]*rxF_pss[-71]));
+							// printf("sssn36 %d\n",ue->measurements.n0_power[aarx]);
+							ue->measurements.n0_power[aarx] = (((int32_t)rxF_pss[-70]*rxF_pss[-70])+((int32_t)rxF_pss[-69]*rxF_pss[-69]));
+							ue->measurements.n0_power[aarx] += (((int32_t)rxF_pss[-68]*rxF_pss[-68])+((int32_t)rxF_pss[-67]*rxF_pss[-67]));
+							ue->measurements.n0_power[aarx] += (((int32_t)rxF_pss[-66]*rxF_pss[-66])+((int32_t)rxF_pss[-65]*rxF_pss[-65]));
+							//ue->measurements.n0_power[aarx] += (((int32_t)rxF_pss[-64]*rxF_pss[-64])+((int32_t)rxF_pss[-63]*rxF_pss[-63]));
+							//printf("sssm32 %d\n",ue->measurements.n0_power[aarx]);
+							//+ve spectrum from SSS
+							ue->measurements.n0_power[aarx] += (((int32_t)rxF_sss[2+70]*rxF_sss[2+70])+((int32_t)rxF_sss[2+69]*rxF_sss[2+69]));
+							ue->measurements.n0_power[aarx] += (((int32_t)rxF_sss[2+68]*rxF_sss[2+68])+((int32_t)rxF_sss[2+67]*rxF_sss[2+67]));
+							ue->measurements.n0_power[aarx] += (((int32_t)rxF_sss[2+66]*rxF_sss[2+66])+((int32_t)rxF_sss[2+65]*rxF_sss[2+65]));
+							//ue->measurements.n0_power[aarx] += (((int32_t)rxF_sss[2+64]*rxF_sss[2+64])+((int32_t)rxF_sss[2+63]*rxF_sss[2+63]));
+							//printf("sssp32 %d\n",ue->measurements.n0_power[aarx]);
+                			//+ve spectrum from PSS n0_power
+                			ue->measurements.n0_power[aarx] += (((int32_t)rxF_pss[2+70]*rxF_pss[2+70])+((int32_t)rxF_pss[2+69]*rxF_pss[2+69]));
+                			ue->measurements.n0_power[aarx] += (((int32_t)rxF_pss[2+68]*rxF_pss[2+68])+((int32_t)rxF_pss[2+67]*rxF_pss[2+67]));
+                			ue->measurements.n0_power[aarx] += (((int32_t)rxF_pss[2+66]*rxF_pss[2+66])+((int32_t)rxF_pss[2+65]*rxF_pss[2+65]));
+            				//ue->measurements.n0_power[aarx] += (((int32_t)rxF_pss[2+64]*rxF_pss[2+64])+((int32_t)rxF_pss[2+63]*rxF_pss[2+63]));
+            				//printf("pss32 %d\n",ue->measurements.n0_power[aarx]);              //-ve spectrum from PSS
+                			rxF_pss = (int16_t *)&ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].rxdataF[aarx][(7*ue->frame_parms.ofdm_symbol_size)];
+            				//ue->measurements.n0_power[aarx] += (((int32_t)rxF_pss[-72]*rxF_pss[-72])+((int32_t)rxF_pss[-71]*rxF_pss[-71]));
+            				//printf("pssm36 %d\n",ue->measurements.n0_power[aarx]);
+                			ue->measurements.n0_power[aarx] += (((int32_t)rxF_pss[-70]*rxF_pss[-70])+((int32_t)rxF_pss[-69]*rxF_pss[-69]));
+                			ue->measurements.n0_power[aarx] += (((int32_t)rxF_pss[-68]*rxF_pss[-68])+((int32_t)rxF_pss[-67]*rxF_pss[-67]));
+                			ue->measurements.n0_power[aarx] += (((int32_t)rxF_pss[-66]*rxF_pss[-66])+((int32_t)rxF_pss[-65]*rxF_pss[-65]));
+            				//ue->measurements.n0_power[aarx] += (((int32_t)rxF_pss[-64]*rxF_pss[-64])+((int32_t)rxF_pss[-63]*rxF_pss[-63]));
+            				//printf("pssm32 %d\n",ue->measurements.n0_power[aarx]);
+                			ue->measurements.n0_power_dB[aarx] = (unsigned short) dB_fixed(ue->measurements.n0_power[aarx]/12);
+                			ue->measurements.n0_power_tot /*+=*/ = ue->measurements.n0_power[aarx];
+						}
+						ue->measurements.n0_power_tot_dB = (unsigned short) dB_fixed(ue->measurements.n0_power_tot/(aarx));
+						ue->measurements.n0_power_tot_dBm = ue->measurements.n0_power_tot_dB - ue->rx_total_gain_dB - dB_fixed(ue->frame_parms.ofdm_symbol_size);
+						//LOG_I(PHY,"Subframe %d RRC UE MEAS Noise Level %d \n", subframe, ue->measurements.n0_power_tot);
+						}
+				}
+		  }
+	  }
     // recompute nushift with eNB_offset corresponding to adjacent eNB on which to perform channel estimation
     //    printf("[PHY][UE %d] Frame %d slot %d Doing ue_rrc_measurements rsrp/rssi (Nid_cell %d, Nid2 %d, nushift %d, eNB_offset %d)\n",ue->Mod_id,ue->frame,slot,Nid_cell,Nid2,nushift,eNB_offset);
     if (eNB_offset > 0)
-      Nid_cell = ue->measurements.adj_cell_id[eNB_offset-1];
+    	Nid_cell = ue->measurements.adj_cell_id[eNB_offset-1];
 
     nushift =  Nid_cell%6;
     ue->measurements.rsrp[eNB_offset] = 0;
 
-///////////////////////we are here
-    if (abstraction_flag == 0) {
-
-      // compute RSRP using symbols 0 and 4-frame_parms->Ncp
-      for (l=0,nu=0; l<=(4-ue->frame_parms.Ncp); l+=(4-ue->frame_parms.Ncp),nu=3) {
+    if (abstraction_flag == 0)
+    {
+    	/*SFN: compute RSRP using symbols 0 and 4-frame_parms->Ncp
+    	 * RSRP: Reference Signal Rx power (dBm/RE)
+    	 * we use Rx RS from symbol l=0 and l=4
+    	 * After Normalized FFT, the Rx signal on Reference SC is X_k=A_rx.*sqrt(N), where k=0,6df, .....
+    	 * The power on each RE is |X_k|^2/N
+    	 * Still to get RSRP we should subtract USRP_Gain=(ue->rx_total_gain_dB-49)
+    	 * */
+    	for (l=0,nu=0; l<=(4-ue->frame_parms.Ncp); l+=(4-ue->frame_parms.Ncp),nu=3)
+    	{
         k = (nu + nushift)%6;
 #ifdef DEBUG_MEAS_RRC
         LOG_I(PHY,"[UE %d] Frame %d subframe %d Doing ue_rrc_measurements rsrp/rssi (Nid_cell %d, nushift %d, eNB_offset %d, k %d, l %d)\n",ue->Mod_id,ue->proc.proc_rxtx[subframe&1].frame_rx,subframe,Nid_cell,nushift,
               eNB_offset,k,l);
 #endif
-
-        for (aarx=0; aarx<ue->frame_parms.nb_antennas_rx; aarx++) {
+        for (aarx=0; aarx<ue->frame_parms.nb_antennas_rx; aarx++)
+        {
           rxF = (int16_t *)&ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].rxdataF[aarx][(l*ue->frame_parms.ofdm_symbol_size)];
           off  = (ue->frame_parms.first_carrier_offset+k)<<1;
 
-          if (l==(4-ue->frame_parms.Ncp)) { // compute RSRP using symbols 4-frame_parms->Ncp
-            for (rb=0; rb<ue->frame_parms.N_RB_DL; rb++) {
+          if (l==(4-ue->frame_parms.Ncp))
+          { // compute RSRP using symbols 4-frame_parms->Ncp
+            for (rb=0; rb<ue->frame_parms.N_RB_DL; rb++)
+            {
                 //starts RB0 two pilots at off and off+12
-            	ue->measurements.rsrp[eNB_offset] += (((int32_t)(rxF[off])*rxF[off])+((int32_t)(rxF[off+1])*rxF[off+1]));//pilot symbol at reference signal +ve
+            	ue->measurements.rsrp[eNB_offset] += (((int32_t)(rxF[off])*rxF[off])+((int32_t)(rxF[off+1])*rxF[off+1]));//pilot symbol at reference signal -ve
             	off+=12;//2 pilot per RB (2*6=12)
-            	ue->measurements.rsrp[eNB_offset] += (((int32_t)(rxF[off])*rxF[off])+((int32_t)(rxF[off+1])*rxF[off+1]));//pilot symbol at reference signal +ve
+            	ue->measurements.rsrp[eNB_offset] += (((int32_t)(rxF[off])*rxF[off])+((int32_t)(rxF[off+1])*rxF[off+1]));//pilot symbol at reference signal -ve
             	off+=12;//2 pilot per RB (2*6=12)
             	if (off>=(ue->frame_parms.ofdm_symbol_size<<1))
             	{
-            		off = (1+k)<<1;//start second half of the spectrum
+            		off = (1+k)<<1;//start the +ve spectrum RS
             	}
-            	//off+=12;//one pilot per RB
-               //check for +ve freq portion
-              //if (off>=(ue->frame_parms.ofdm_symbol_size<<1))
-              //{
-              //  off = (1+k)<<1;
-              // ue->measurements.rsrp[eNB_offset] += (((int32_t)(rxF[off])*rxF[off])+((int32_t)(rxF[off+1])*rxF[off+1]));
-              //    printf("rb %d, off %d : %d\n",rb,off,(((int32_t)(rxF[off])*rxF[off])+((int32_t)(rxF[off+1])*rxF[off+1])));
-              /*
-                if ((ue->frame_rx&0x3ff) == 0)
-                printf("rb %d, off %d : %d\n",rb,off,((rxF[off]*rxF[off])+(rxF[off+1]*rxF[off+1])));
-              */
-              //off+=12;
-              //}
-              //else//we start with -ve spectrum starts from off to
-              //{
-            	//  ue->measurements.rsrp[eNB_offset] += (((int32_t)(rxF[off])*rxF[off])+((int32_t)(rxF[off+1])*rxF[off+1]));//pilot symbol at reference signal +ve
-            	//  off+=12;//2 pilot per RB (2*6=12)
-              //}
-
-
-
-
             }
-
-            /*
-            if ((eNB_offset==0)&&(l==0)) {
-            for (i=0;i<6;i++,off2+=4)
-            ue->measurements.rssi += ((rxF[off2]*rxF[off2])+(rxF[off2+1]*rxF[off2+1]));
-            if (off2==(ue->frame_parms.ofdm_symbol_size<<2))
-            off2=4;
-            for (i=0;i<6;i++,off2+=4)
-            ue->measurements.rssi += ((rxF[off2]*rxF[off2])+(rxF[off2+1]*rxF[off2+1]));
-            }
-            */
-            //    printf("slot %d, rb %d => rsrp %d, rssi %d\n",slot,rb,ue->measurements.rsrp[eNB_offset],ue->measurements.rssi);
           }
         }
       }
-
-      // 2 RE per PRB l=4 only
-      //I am here
-      //      ue->measurements.rsrp[eNB_offset]/=(ue->frame_parms.N_RB_DL);
-      ue->measurements.rsrp[eNB_offset]/=(2*ue->frame_parms.N_RB_DL*ue->frame_parms.ofdm_symbol_size);//we read
-      //      LOG_I(PHY,"eNB: %d, RSRP: %d \n",eNB_offset,ue->measurements.rsrp[eNB_offset]);
+    	/*SFN:
+    	 * Since 2 RE per PRB, the Number of RS per l=4 can be given as 2*N_RB_DL
+    	 * */
+      ue->measurements.rsrp[eNB_offset]/=(ue->frame_parms.nb_antennas_rx*(2*ue->frame_parms.N_RB_DL)*ue->frame_parms.ofdm_symbol_size);//we read
+      ue->measurements.rsrp[eNB_offset]*=rx_power_correction;
       if (eNB_offset == 0) {
-        //  ue->measurements.rssi/=(24*ue->frame_parms.N_RB_DL);
-        //  ue->measurements.rssi*=rx_power_correction;
-        //  ue->measurements.rssi=ue->measurements.rsrp[0]*24/2;
         ue->measurements.rssi=ue->measurements.rsrp[0]*(12*ue->frame_parms.N_RB_DL);//watt
       }
 
@@ -421,20 +403,14 @@ void ue_rrc_measurements(PHY_VARS_UE *ue,
         ue->measurements.rsrq[eNB_offset] = 100*ue->measurements.rsrp[eNB_offset]*ue->frame_parms.N_RB_DL/ue->measurements.rssi;
       else
         ue->measurements.rsrq[eNB_offset] = -12000;
-
-      //((200*ue->measurements.rsrq[eNB_offset]) + ((1024-200)*100*ue->measurements.rsrp[eNB_offset]*ue->frame_parms.N_RB_DL/ue->measurements.rssi))>>10;
     } else { // Do abstraction of RSRP and RSRQ
       ue->measurements.rssi = ue->measurements.rx_power_avg[0];
       // dummay value for the moment
       ue->measurements.rsrp[eNB_offset] = -93 ;
       ue->measurements.rsrq[eNB_offset] = 3;
-
     }
 
 #ifdef DEBUG_MEAS_RRC
-
-    //    if (slot == 0) {
-
       if (eNB_offset == 0)
        LOG_I(PHY,"[UE %d] Frame %d, subframe %d RRC Measurements => rssi %3.1f dBm (digital: %3.1f dB, gain %d), N0 %d dBm\n",ue->Mod_id,
               ue->proc.proc_rxtx[subframe&1].frame_rx,subframe,10*log10(ue->measurements.rssi)-ue->rx_total_gain_dB,
@@ -449,17 +425,8 @@ void ue_rrc_measurements(PHY_VARS_UE *ue,
             10*log10(ue->measurements.rsrp[eNB_offset])-ue->rx_total_gain_dB,
             ue->measurements.rsrp[eNB_offset],
             (10*log10(ue->measurements.rsrq[eNB_offset])));
-      //LOG_D(PHY,"RSRP_total_dB: %3.2f \n",(dB_fixed_times10(ue->measurements.rsrp[eNB_offset])/10.0)-ue->rx_total_gain_dB-dB_fixed(ue->frame_parms.N_RB_DL*12));
-
-      //LOG_D(PHY,"RSRP_dB: %3.2f \n",(dB_fixed_times10(ue->measurements.rsrp[eNB_offset])/10.0));
-      //LOG_D(PHY,"gain_loss_dB: %d \n",ue->rx_total_gain_dB);
-      //LOG_D(PHY,"gain_fixed_dB: %d \n",dB_fixed(ue->frame_parms.N_RB_DL*12));
-
-      //    }
-
 #endif
-  }
-
+      }
 }
 
 void lte_ue_measurements(PHY_VARS_UE *ue,
@@ -471,8 +438,8 @@ void lte_ue_measurements(PHY_VARS_UE *ue,
 {
 
 
-  int aarx,aatx,eNB_id=0; //,gain_offset=0;
-  //int rx_power[NUMBER_OF_CONNECTED_eNB_MAX];
+  int aarx,aatx,eNB_id=0;
+  int gain_offset=49;
   int i;
   unsigned int limit,subband;
 #if defined(__x86_64__) || defined(__i386__)
@@ -486,23 +453,12 @@ void lte_ue_measurements(PHY_VARS_UE *ue,
   int nb_subbands,subband_size,last_subband_size;
   int N_RB_DL = frame_parms->N_RB_DL;
 
-#ifdef FHG_TM4_LOG
- static int rx_spatial_power_UE_I=0;
- static int rx_ri_UE_I=0;
-#endif 
-#ifdef FHG_TM4_LOG_CQI
- static int rx_cqi_UE_I=0;
-#endif
+ int rank_tm3_tm4=0;
+ ue->measurements.nb_antennas_rx = frame_parms->nb_antennas_rx;
 
-
-int rank_tm3_tm4=0;
-
-
-  ue->measurements.nb_antennas_rx = frame_parms->nb_antennas_rx;
-
-
-  switch (N_RB_DL) {
-  case 6:
+ switch (N_RB_DL)
+ {
+ case 6:
     nb_subbands = 6;
     subband_size = 12;
     last_subband_size = 0;
@@ -528,17 +484,43 @@ int rank_tm3_tm4=0;
     break;
   }
 
-  // signal measurements
-  for (eNB_id=0; eNB_id<ue->n_connected_eNB; eNB_id++) {
-    for (aarx=0; aarx<frame_parms->nb_antennas_rx; aarx++) {
-      for (aatx=0; aatx<frame_parms->nb_antenna_ports_eNB; aatx++) {
-    	  ue->measurements.rx_spatial_power[eNB_id][aatx][aarx] =
-          (signal_energy_nodc(&ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].dl_ch_estimates[eNB_id][(aatx<<1) + aarx][0],
-                              (N_RB_DL*12)));//signal power is NE{|A_k|^2}--> should divide by 2^15 back to fixed point due to mult
-        if (ue->measurements.rx_spatial_power[eNB_id][aatx][aarx]<0)
-          ue->measurements.rx_spatial_power[eNB_id][aatx][aarx] = 0; //ue->measurements.n0_power[aarx];
+ /*SFN:
+  * Channel Index [(aatx<<1) + aarx]
+  *
+  *         Tx0 --------H[0]------> Rx0
+  *                            H[2]
+  *
+  *                            H[1]
+  *         Tx1 --------H[3]------> Rx1
+  *
+  * */
+ /*SFN:
+  * Rx Power Calc from (aatx, aaRx) MIMO Channel:
+  * ue->measurements.rx_spatial_power[eNB_id][aatx][aarx]=E{|H_k[(aatx<<1) + aarx]|^2}, aatx=0, 1 and aarx=0, 1
+  *                                                      =E{A_k^2[(aatx<<1) + aarx]}.*N
+  *Hence, we obtain
+  *ue->measurements.rx_power[eNB_id][0]= E{|H[0]|^2} + E{|H[2]|^2},  at Rx0
+  *ue->measurements.rx_power[eNB_id][1]= E{|H[3]|^2} + E{|H[1]|^2},  at Rx1
+  *
+  *Total Rx power:
+  *ue->measurements.rx_power_tot[eNB_id]= ue->measurements.rx_power[eNB_id][0]+ue->measurements.rx_power[eNB_id][1]
 
-        ue->measurements.rx_spatial_power_dB[eNB_id][aatx][aarx] = (unsigned short) dB_fixed(ue->measurements.rx_spatial_power[eNB_id][aatx][aarx]);
+ */
+
+  for (eNB_id=0; eNB_id<ue->n_connected_eNB; eNB_id++)
+  {
+    for (aarx=0; aarx<frame_parms->nb_antennas_rx; aarx++)
+    {
+      for (aatx=0; aatx<frame_parms->nb_antenna_ports_eNB; aatx++)
+      {
+    	  ue->measurements.rx_spatial_power[eNB_id][aatx][aarx] =
+    			  (signal_energy_nodc(&ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].dl_ch_estimates[eNB_id][(aatx<<1) + aarx][0],
+    			  (N_RB_DL*12)));
+
+    	  if (ue->measurements.rx_spatial_power[eNB_id][aatx][aarx]<0)
+          ue->measurements.rx_spatial_power[eNB_id][aatx][aarx] = 0;
+
+    	  ue->measurements.rx_spatial_power_dB[eNB_id][aatx][aarx] = (unsigned short) dB_fixed(ue->measurements.rx_spatial_power[eNB_id][aatx][aarx]);
 
         if (aatx==0)
           ue->measurements.rx_power[eNB_id][aarx] = ue->measurements.rx_spatial_power[eNB_id][aatx][aarx];
@@ -554,69 +536,60 @@ int rank_tm3_tm4=0;
         ue->measurements.rx_power_tot[eNB_id] += ue->measurements.rx_power[eNB_id][aarx];
     } //aarx
 
+    //SFN: Correction Rx should be divided by frame_parms->nb_antenna_ports_eNB
+    ue->measurements.rx_power_tot[eNB_id] /= frame_parms->nb_antenna_ports_eNB;
     ue->measurements.rx_power_tot_dB[eNB_id] = (unsigned short) dB_fixed(ue->measurements.rx_power_tot[eNB_id]);
-
-
 
   } //eNB_id
 
-
-
-
   eNB_id=0;
 
-  //sfn: I shall enable rank estimation first
-  //Then, I can read the rank value.
-  //hardcoded
-  //if (ue->transmission_mode[0]==4 || ue->transmission_mode[0]==3){
-  //if (rank_adaptation == 1)
-
- 
+  /*SFN:
+   * Rank Estimation:
+   * We shall control the function according to ue->transmission_mode[eNB_id]
+   * where ue->transmission_mode[eNB_id]=3 or 4 for TM3/TM4
+   *
+   * */
 #ifdef FHG_TM4
-
   rank_tm3_tm4 = rank_estimation_tm3_tm4(&ue->common_vars.common_vars_rx_data_per_thread[subframe&0x1].dl_ch_estimates[eNB_id][0][4],
                                              &ue->common_vars.common_vars_rx_data_per_thread[subframe&0x1].dl_ch_estimates[eNB_id][2][4],//2
                                              &ue->common_vars.common_vars_rx_data_per_thread[subframe&0x1].dl_ch_estimates[eNB_id][1][4],//1
                                              &ue->common_vars.common_vars_rx_data_per_thread[subframe&0x1].dl_ch_estimates[eNB_id][3][4],//3
                                              N_RB_DL);
-
 #endif
-//sfn:
-//else
-//      rank_tm3_tm4=1;
-//#ifdef DEBUG_RANK_EST
-//  printf("rank tm3 or tm4 %d\n", rank_tm3_tm4);
-//#endif
-//  }
 
-// if (ue->transmission_mode[eNB_id]!=4 && ue->transmission_mode[eNB_id]!=3)
-//    ue->measurements.rank[eNB_id] = 0;
-//  else
-#ifdef FHG_TM4_LOG
-  rx_ri_UE_I++;
-  if (rx_ri_UE_I>6000)
-      		  {
-	  			rx_ri_UE_I=0;
-      			 LOG_I(PHY,"[UE][UCI--->PUSCH] meas->rank %d\n",rank_tm3_tm4);
-      		  }
-#endif
-	ue->measurements.rank[eNB_id] = rank_tm3_tm4;
-  //  printf ("tx mode %d\n", ue->transmission_mode[eNB_id]);
-  //  printf ("rank %d\n", ue->PHY_measurements.rank[eNB_id]);
+  ue->measurements.rank[eNB_id] = rank_tm3_tm4;
 
-  // filter to remove jitter
-  if (ue->init_averaging == 0) {
+  /*SFN:
+    * IIR low pass average filter:
+    *
+    * y[n]=(k1/2^10)*y[n-1] + (k2/2^10)*x[n]
+    *
+    * IIR=Y[z]/X[z]= az/(z-b),
+    * where b = k1/2^10 and a = k2/2^10 --> (k1=1000, k2=24)
+    *       b = 32,000/2^15=(0.9765*2^15)/2^15
+    *       a = 768/2^15
+    * Zero: z=0
+    * Pole: z=0.9765
+    *
+    * Fixed Point Units:
+    * x[n] is given by (2^15)(2^15*q[n])
+    * y[n] can also be expressed as (2^15)(2^15*r[n])
+    * */
+  // Rx Power Computation
+  if (ue->init_averaging == 0)
+  {
     for (eNB_id = 0; eNB_id < ue->n_connected_eNB; eNB_id++)
       ue->measurements.rx_power_avg[eNB_id] = (int)
           (((k1*((long long int)(ue->measurements.rx_power_avg[eNB_id]))) +
             (k2*((long long int)(ue->measurements.rx_power_tot[eNB_id]))))>>10);
 
-    //LOG_I(PHY,"Noise Power Computation: k1 %d k2 %d n0 avg %d n0 tot %d\n", k1, k2, ue->measurements.n0_power_avg,
-    //    ue->measurements.n0_power_tot);
+    // Noise Power Computation
     ue->measurements.n0_power_avg = (int)
         (((k1*((long long int) (ue->measurements.n0_power_avg))) +
           (k2*((long long int) (ue->measurements.n0_power_tot))))>>10);
-  } else {
+  }
+  else {
     for (eNB_id = 0; eNB_id < ue->n_connected_eNB; eNB_id++)
       ue->measurements.rx_power_avg[eNB_id] = ue->measurements.rx_power_tot[eNB_id];
 
@@ -624,52 +597,45 @@ int rank_tm3_tm4=0;
     ue->init_averaging = 0;
   }
 
+
+
   for (eNB_id = 0; eNB_id < ue->n_connected_eNB; eNB_id++) {
-    ue->measurements.rx_power_avg_dB[eNB_id] = dB_fixed(ue->measurements.rx_power_avg[eNB_id])-45 -3;//we subtract correction factor since channel estimation add 3 dB to signal power
-    ue->measurements.wideband_cqi_tot[eNB_id] = dB_fixed2(ue->measurements.rx_power_tot[eNB_id],ue->measurements.n0_power_tot)-3-3;//we subtract correction factor since channel estimation add 3 dB to signal power. Furthermore, we subtract 3 dB since rx power is collected from 2 antennas
-    ue->measurements.wideband_cqi_avg[eNB_id] =dB_fixed2(ue->measurements.rx_power_avg[eNB_id],ue->measurements.n0_power_avg)-3-3;
-    ue->measurements.rx_rssi_dBm[eNB_id] = ue->measurements.rx_power_avg_dB[eNB_id]-ue->rx_total_gain_dB+30-2;//-2.3: correction factor 10log10(300/512)
+    ue->measurements.rx_power_avg_dB[eNB_id] = dB_fixed(ue->measurements.rx_power_avg[eNB_id]);//  -90
+    ue->measurements.wideband_cqi_tot[eNB_id] = dB_fixed2(ue->measurements.rx_power_tot[eNB_id],ue->measurements.n0_power_tot);
+    ue->measurements.wideband_cqi_avg[eNB_id] =dB_fixed2(ue->measurements.rx_power_avg[eNB_id],ue->measurements.n0_power_avg);
+    //SFN:-2.3 dB : correction factor 10log10(300/512)
+    ue->measurements.rx_rssi_dBm[eNB_id] = ue->measurements.rx_power_avg_dB[eNB_id]-(ue->rx_total_gain_dB-gain_offset)+30 -2;// dB_fixed(ue->frame_parms.ofdm_symbol_size) + dB_fixed(12*frame_parms->N_RB_DL);
+
+
+
+
 #ifdef DEBUG_MEAS_UE
-      LOG_I(PHY,"Subframe %d, RSSI %d dBm, RSSI (digital) %d dB, WBandCQI %d dB, rxPwrAvg %d, n0PwrAvg %d\n",
+      LOG_I(PHY,"Subframe %d, RSSI %d dBm, %d dB, WBandCQI %d dB, rxPwrAvg %d, n0PwrAvg %d\n",
             subframe,
-            ue->measurements.rx_rssi_dBm[eNB_id],
-            ue->measurements.rx_power_avg_dB[eNB_id],
+            ue->measurements.rx_rssi_dBm[eNB_id]-90,
             ue->measurements.wideband_cqi_avg[eNB_id],
             ue->measurements.rx_power_avg[eNB_id],
             ue->measurements.n0_power_tot);
 #endif
 
-
-
-#ifdef FHG_TM4_LOG_CQI
-  rx_cqi_UE_I++;
-  if (rx_cqi_UE_I>6000)
-      		  {
-	  rx_cqi_UE_I=0;
-      LOG_I(PHY,"rx1_p %d, rx2_p %d, rxtot_p %d rxtot_p %d dB\n",
-    		  ue->measurements.rx_power[eNB_id][0],
-    		  ue->measurements.rx_power[eNB_id][1],
-    		  ue->measurements.rx_power_tot[eNB_id],
-    		  ue->measurements.rx_power_tot_dB[eNB_id]);
-      LOG_I(PHY,"rx_p_avg %d, n0PwrAvg %d, rx_p_tot %d n0Pwrtot %d\n",
-    		  ue->measurements.rx_power_avg[eNB_id],
-    		  ue->measurements.n0_power_avg,
-    		  ue->measurements.rx_power_tot[eNB_id],
-    		  ue->measurements.n0_power_tot);
-      LOG_I(PHY,"rx_p_avg/n0Pwravg %d dB, rx_p_tot/n0Pwrtot %d dB\n",
-    		  ue->measurements.wideband_cqi_avg[eNB_id],
-    		  ue->measurements.wideband_cqi_tot[eNB_id]
-    		                                    );
-      LOG_I(PHY,"RSSI (digital) %d dB RSSI %d dBm\n",
-    		  ue->measurements.rx_power_avg_dB[eNB_id],
-    		  ue->measurements.rx_rssi_dBm[eNB_id]
-    		                                    );
-      		  }
-#endif
-
   }
   ue->measurements.n0_power_avg_dB = dB_fixed( ue->measurements.n0_power_avg);
 
+  /*SFN:
+    * For CQI reporting
+    *         Tx0 --------H[0]------> Rx0
+    *                            H[2]
+    *
+    *                            H[1]
+    *         Tx1 --------H[3]------> Rx1
+    *
+    * ue->measurements.subband_cqi[eNB_id][0][subband] = E{|H[0]|^2} + E{|H2]|^2}
+    *
+    * ue->measurements.subband_cqi[eNB_id][1][subband] = E{|H[3]|^2} + E{|H1]|^2}
+    *
+    * ue->measurements.subband_cqi_tot[eNB_id][subband] =   ue->measurements.subband_cqi[eNB_id][0][subband]
+    *                                                     + ue->measurements.subband_cqi[eNB_id][1][subband]
+    * */
   for (eNB_id = 0; eNB_id < ue->n_connected_eNB; eNB_id++) {
     if (frame_parms->mode1_flag==0) {
       // cqi/pmi information
@@ -684,23 +650,32 @@ int rank_tm3_tm4=0;
           if (aarx==0)
             ue->measurements.subband_cqi_tot[eNB_id][subband]=0;
 
-          if ((subband<(nb_subbands-1))||(N_RB_DL==6)) {
-
+          if ((subband<(nb_subbands-1))||(N_RB_DL==6))
+          {
             ue->measurements.subband_cqi[eNB_id][aarx][subband] =
-              (signal_energy_nodc(dl_ch0,subband_size) + signal_energy_nodc(dl_ch1,subband_size))>>1;//divide by to correct sqrt(2)
+              (signal_energy_nodc(dl_ch0,subband_size) + signal_energy_nodc(dl_ch1,subband_size));
 
             if ( ue->measurements.subband_cqi[eNB_id][aarx][subband] < 0)
               ue->measurements.subband_cqi[eNB_id][aarx][subband]=0;
 
             ue->measurements.subband_cqi_tot[eNB_id][subband] += ue->measurements.subband_cqi[eNB_id][aarx][subband];
+            if (aarx==(frame_parms->nb_antennas_rx-1))
+            	ue->measurements.subband_cqi_tot[eNB_id][subband] /=frame_parms->nb_antennas_rx;
+
             ue->measurements.subband_cqi_dB[eNB_id][aarx][subband] = dB_fixed2(ue->measurements.subband_cqi[eNB_id][aarx][subband],
                 ue->measurements.n0_power[aarx]);
-          } else { // this is for the last subband which is smaller in size
+          }
+          else
+          { // this is for the last subband which is smaller in size
             ue->measurements.subband_cqi[eNB_id][aarx][subband] = (signal_energy_nodc(dl_ch0,last_subband_size) +
-                signal_energy_nodc(dl_ch1,last_subband_size))>>1;
+                signal_energy_nodc(dl_ch1,last_subband_size));
             if ( ue->measurements.subband_cqi[eNB_id][aarx][subband] < 0)
                           ue->measurements.subband_cqi[eNB_id][aarx][subband]=0;
+
             ue->measurements.subband_cqi_tot[eNB_id][subband] += ue->measurements.subband_cqi[eNB_id][aarx][subband];
+            if (aarx==(frame_parms->nb_antennas_rx-1))
+            	ue->measurements.subband_cqi_tot[eNB_id][subband] /=frame_parms->nb_antennas_rx;
+
             ue->measurements.subband_cqi_dB[eNB_id][aarx][subband] = dB_fixed2(ue->measurements.subband_cqi[eNB_id][aarx][subband],
                 ue->measurements.n0_power[aarx]);
           }
@@ -708,14 +683,16 @@ int rank_tm3_tm4=0;
           dl_ch1+=subband_size;
           dl_ch0+=subband_size;
           //    msg("subband_cqi[%d][%d][%d] => %d (%d dB)\n",eNB_id,aarx,subband,ue->measurements.subband_cqi[eNB_id][aarx][subband],ue->measurements.subband_cqi_dB[eNB_id][aarx][subband]);
-        }
+        }//subband
 
-      }
+      }//aarx
+
 
       for (subband=0; subband<nb_subbands; subband++) {
         ue->measurements.subband_cqi_tot_dB[eNB_id][subband] = dB_fixed2(ue->measurements.subband_cqi_tot[eNB_id][subband],ue->measurements.n0_power_tot);
         //    msg("subband_cqi_tot[%d][%d] => %d dB (n0 %d)\n",eNB_id,subband,ue->measurements.subband_cqi_tot_dB[eNB_id][subband],ue->measurements.n0_power_tot);
       }
+
 
       for (aarx=0; aarx<frame_parms->nb_antennas_rx; aarx++) {
         //printf("aarx=%d", aarx);
@@ -779,11 +756,11 @@ int rank_tm3_tm4=0;
                //   print_ints("mm_madd_epi16",&mmtmpPMI1);
             // mmtmpPMI1 contains imag part of 4 consecutive outputs (32-bit)
             //sfn avoid overflow due to summing up
-           //sfn: mmtmpPMI0=_mm_srai_epi32(mmtmpPMI0, 15);//fixed point handling
+            mmtmpPMI0=_mm_srai_epi32(mmtmpPMI0, 15);//fixed point handling
             pmi128_re = _mm_add_epi32(pmi128_re,mmtmpPMI0);
              //   print_ints(" pmi128_re 0",&pmi128_re);
             //sfn avoid overflow due to summing up
-            //sfn: mmtmpPMI1=_mm_srai_epi32(mmtmpPMI1, 15);//fixed point handling
+            mmtmpPMI1=_mm_srai_epi32(mmtmpPMI1, 15);//fixed point handling
             pmi128_im = _mm_add_epi32(pmi128_im,mmtmpPMI1);
                //   print_ints(" pmi128_im 0 ",&pmi128_im);
 
@@ -831,8 +808,14 @@ int rank_tm3_tm4=0;
         ue->measurements.wideband_pmi_re[eNB_id][aarx]=ue->measurements.wideband_pmi_re[eNB_id][aarx]/((int )nb_subbands);
         ue->measurements.wideband_pmi_im[eNB_id][aarx]=ue->measurements.wideband_pmi_im[eNB_id][aarx]/((int )nb_subbands);
       } // rx antenna loop
+
+     /*pmi2hex_2Ar1(quantize_subband_pmi(&ue->measurements,eNB,25));//should be 25
+     pmi2hex_2Ar1(quantize_subband_pmi2(&ue->measurements,eNB,0,7)),
+     pmi2hex_2Ar1(quantize_subband_pmi2(&ue->measurements,eNB,1,7));*/
+
     }  // if frame_parms->mode1_flag == 0
-    else {
+    else //SFN: we need still to fix here for SISO
+    {
       // cqi information only for mode 1
       for (aarx=0; aarx<frame_parms->nb_antennas_rx; aarx++) {
         dl_ch0    = &ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].dl_ch_estimates[eNB_id][aarx][4];

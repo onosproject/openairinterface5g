@@ -36,6 +36,8 @@
 #include "LAYER2/MAC/defs.h"
 #include "SCHED/defs.h"
 #include "UTIL/LOG/vcd_signal_dumper.h"
+//SFN
+#include "sudas_tm4.h"
 
 #include "assertions.h"
 
@@ -269,16 +271,28 @@ int generate_ue_ulsch_params_from_rar(PHY_VARS_UE *ue,
     ulsch->O_RI                                  = 1;
 
     if (meas->rank[eNB_id] == 1) {
+//SFN
+//    	sudas_LOG_PHY(debug_sudas_LOG_PHY,"Rank 2, format wideband_cqi_rank2_2A\n");
+//    	fflush(debug_sudas_LOG_PHY);
+
       ulsch->uci_format                          = wideband_cqi_rank2_2A;
       ulsch->O                                   = sizeof_wideband_cqi_rank2_2A_5MHz;
       ulsch->o_RI[0]                             = 1;
     } else {
+//SFN
+//    	sudas_LOG_PHY(debug_sudas_LOG_PHY,"Rank 1, format wideband_cqi_rank1_2A\n");
+//    	fflush(debug_sudas_LOG_PHY);
+
       ulsch->uci_format                          = wideband_cqi_rank1_2A;
       ulsch->O                                   = sizeof_wideband_cqi_rank1_2A_5MHz;
       ulsch->o_RI[0]                             = 0;
     }
 
     ulsch->uci_format = HLC_subband_cqi_nopmi;
+//sfn
+//	sudas_LOG_PHY(debug_sudas_LOG_PHY,"default, format HLC_subband_cqi_nopmi\n");
+//   fflush(debug_sudas_LOG_PHY);
+
     fill_CQI(ulsch,meas,eNB_id,0,ue->frame_parms.N_RB_DL,0, transmission_mode,ue->sinr_eff);
 
     if (((proc->frame_tx % 100) == 0) || (proc->frame_tx < 10))

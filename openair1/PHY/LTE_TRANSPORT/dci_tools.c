@@ -6792,7 +6792,7 @@ uint16_t quantize_subband_pmi(PHY_MEASUREMENTS *meas,uint8_t eNB_id,int nb_rb)
   int i, aarx;
   uint16_t pmiq=0;
   uint32_t pmivect = 0;
-  uint8_t rank = meas->rank[eNB_id];
+  uint8_t rank = meas->rank[eNB_id];//sfn: rank is 1
   int pmi_re,pmi_im;
   int  nb_subbands=0;
 
@@ -6828,13 +6828,13 @@ uint16_t quantize_subband_pmi(PHY_MEASUREMENTS *meas,uint8_t eNB_id,int nb_rb)
       //  pmi_im = meas->subband_pmi_im[eNB_id][i][meas->selected_rx_antennas[eNB_id][i]];
 
       //      printf("pmi => (%d,%d)\n",pmi_re,pmi_im);
-      if ((pmi_re > pmi_im) && (pmi_re > -pmi_im))
+      if ((pmi_re > pmi_im) && (pmi_re > -pmi_im))//angle -45 to 45
         pmiq = PMI_2A_11;
-      else if ((pmi_re < pmi_im) && (pmi_re > -pmi_im))
+      else if ((pmi_re < pmi_im) && (pmi_re > -pmi_im))//angle 45 to 135
         pmiq = PMI_2A_1j;
-      else if ((pmi_re < pmi_im) && (pmi_re < -pmi_im))
+      else if ((pmi_re < pmi_im) && (pmi_re < -pmi_im))//angle 135 to 225
         pmiq = PMI_2A_1m1;
-      else if ((pmi_re > pmi_im) && (pmi_re < -pmi_im))
+      else if ((pmi_re > pmi_im) && (pmi_re < -pmi_im))//angle 225 to 315
         pmiq = PMI_2A_1mj;
 
       //      printf("subband %d, pmi%d \n",i,pmiq);
@@ -6898,9 +6898,16 @@ uint16_t quantize_subband_pmi2(PHY_MEASUREMENTS *meas,uint8_t eNB_id,uint8_t a_i
         pmiq = PMI_2A_1mj;
 
       pmivect |= (pmiq<<(2*i));
-    } else {
-      // This needs to be done properly!!!
-      pmivect = 0;
+    } else if (rank==1)
+    {
+    	pmi_re = meas->subband_pmi_re[eNB_id][i][a_id];
+    	pmi_im = meas->subband_pmi_im[eNB_id][i][a_id];
+    	if (pmi_re >= pmi_im)
+    		pmiq = PMI_2A_R1_11;
+    	else
+    	    pmiq = PMI_2A_R1_1j;
+
+    	pmivect |= ((pmiq-1)<<(i)); //shift 1 since only one bit
     }
   }
 
@@ -7138,13 +7145,13 @@ void fill_CQI(LTE_UE_ULSCH_t *ulsch,PHY_MEASUREMENTS *meas,uint8_t eNB_id,uint8_
     switch (uci_format) {
     case wideband_cqi_rank1_2A:
       ((wideband_cqi_rank1_2A_5MHz *)o)->cqi1 = sinr2cqi(sinr_tmp,trans_mode);
-      ((wideband_cqi_rank1_2A_5MHz *)o)->pmi  = quantize_subband_pmi(meas,eNB_id,7);
+      ((wideband_cqi_rank1_2A_5MHz *)o)->pmi  = quantize_subband_pmi(meas,eNB_id,25);
       break;
 
     case wideband_cqi_rank2_2A:
       ((wideband_cqi_rank2_2A_5MHz *)o)->cqi1 = sinr2cqi(sinr_tmp,trans_mode); //FIXME: calculate rank2 cqi
       ((wideband_cqi_rank2_2A_5MHz *)o)->cqi2 = sinr2cqi(sinr_tmp,trans_mode); //FIXME: calculate rank2 cqi
-      ((wideband_cqi_rank2_2A_5MHz *)o)->pmi  = quantize_subband_pmi(meas,eNB_id,7);
+      ((wideband_cqi_rank2_2A_5MHz *)o)->pmi  = quantize_subband_pmi(meas,eNB_id,25);
       break;
 
     case HLC_subband_cqi_nopmi:

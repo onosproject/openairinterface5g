@@ -721,7 +721,7 @@ static void check_dev_config( rrh_module_t *mod_enb) {
 	mod_enb->devs->openair0_cfg->rx_freq[3],
 	mod_enb->devs->openair0_cfg->tx_freq[3],
 	mod_enb->devs->openair0_cfg->rxg_mode[0],
-	mod_enb->devs->openair0_cfg->tx_gain[0],
+	mod_enb->devs->openair0_cfg->rx_gain[0],
 	mod_enb->devs->openair0_cfg->tx_gain[0],
 	mod_enb->devs->openair0_cfg->rx_gain[1],
 	mod_enb->devs->openair0_cfg->tx_gain[1],

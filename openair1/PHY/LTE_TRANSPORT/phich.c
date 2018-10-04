@@ -37,6 +37,8 @@
 
 #include "LAYER2/MAC/extern.h"
 #include "LAYER2/MAC/defs.h"
+//SFN
+#include "sudas_tm4.h"
 
 #ifndef USER_MODE
 #include "ARCH/CBMIMO1/DEVICE_DRIVER/extern.h"
@@ -1431,6 +1433,9 @@ void rx_phich(PHY_VARS_UE *ue,
           ulsch->O_RI = 0;
           ulsch->O    = 0;
           ulsch->uci_format = HLC_subband_cqi_nopmi;
+//sfn
+          //sudas_LOG_PHY(debug_sudas_LOG_PHY,"last ret: format HLC_subband_cqi_nopmi\n");
+          //    	fflush(debug_sudas_LOG_PHY);
 
           // disable phich decoding since it is the last retransmission
           ulsch->harq_processes[harq_pid]->status = IDLE;
@@ -1443,6 +1448,10 @@ void rx_phich(PHY_VARS_UE *ue,
       }
       else
       {
+    	//sfn	  
+		//sudas_LOG_PHY(debug_sudas_LOG_PHY,"ret: format HLC_subband_cqi_nopmi\n");
+    	//            	fflush(debug_sudas_LOG_PHY);
+
           // ulsch->harq_processes[harq_pid]->subframe_scheduling_flag = 1;
           ulsch->harq_processes[harq_pid]->rvidx = rv_table[ulsch->harq_processes[harq_pid]->round&3];
           ulsch->O_RI = 0;
@@ -1609,6 +1618,10 @@ void generate_phich_top(PHY_VARS_eNB *eNB,
             ulsch[UE_id]->harq_processes[harq_pid]->Or2                                   = 0;
             ulsch[UE_id]->harq_processes[harq_pid]->Or1                                   = 0;
             ulsch[UE_id]->harq_processes[harq_pid]->uci_format                            = HLC_subband_cqi_nopmi;
+
+			//sfn            
+			//sudas_LOG_PHY(debug_sudas_LOG_PHY,"ACK : format HLC_subband_cqi_nopmi\n");
+            //              	fflush(debug_sudas_LOG_PHY);
 
           } else {
             LOG_D(PHY,"[eNB %d][PUSCH %d] frame %d subframe %d PHICH ACK (no format0 DCI) Clearing subframe_scheduling_flag, setting round to 0\n",

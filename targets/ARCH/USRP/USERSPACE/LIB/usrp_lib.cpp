@@ -541,7 +541,7 @@ int trx_usrp_set_gains(openair0_device* device,
     ::uhd::gain_range_t gain_range = s->usrp->get_rx_gain_range(0);
     // limit to maximum gain
     if (openair0_cfg[0].rx_gain[0]-openair0_cfg[0].rx_gain_offset[0] > gain_range.stop()) {
-        LOG_E(PHY,"RX Gain 0 too high, reduce by %f dB\n",
+        LOG_E(PHY,"RX Gain 0 too high, reduce by %f dB\n",openair0_cfg[0].rx_gain_offset[0],
               openair0_cfg[0].rx_gain[0]-openair0_cfg[0].rx_gain_offset[0] - gain_range.stop());
         exit(-1);
     }
