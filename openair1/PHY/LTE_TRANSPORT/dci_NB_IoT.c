@@ -57,7 +57,6 @@ void dci_encoding_NB_IoT(uint8_t                  *a,				         // Array of tw
 						 NB_IoT_eNB_NPDCCH_t      *dlcch,                  ////uint8_t    *e[2],				// *e should be e[2][G]
 						 uint8_t                  A,
 						 uint16_t                 G,
-						 uint16_t                 rnti,			         // RNTI for UE specific or common search space
 						 uint8_t 			      ncce_index,
 						 uint8_t                  agr_level)			         // Aggregation level
 {
@@ -73,7 +72,7 @@ void dci_encoding_NB_IoT(uint8_t                  *a,				         // Array of tw
 		}
 		memset((void *)dlcch->npdcch_d[ncce_index],LTE_NULL_NB_IoT,96);
 
-		ccode_encode_NB_IoT(A,2,a,dlcch->npdcch_d[ncce_index]+96,rnti);    					// CRC attachement & Tail-biting convolutional coding
+		ccode_encode_NB_IoT(A,2,a,dlcch->npdcch_d[ncce_index]+96,dlcch->rnti[ncce_index]);    					// CRC attachement & Tail-biting convolutional coding
 		RCC = sub_block_interleaving_cc_NB_IoT(D,dlcch->npdcch_d[ncce_index]+96,dlcch->npdcch_w[ncce_index]);				// Interleaving
 		lte_rate_matching_cc_NB_IoT(RCC,(G/occupation_size),dlcch->npdcch_w[ncce_index],dlcch->npdcch_e[ncce_index]);		// Rate Matching
 

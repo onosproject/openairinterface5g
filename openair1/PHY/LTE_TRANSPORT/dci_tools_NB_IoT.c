@@ -150,18 +150,19 @@ int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB_NB_IoT      *eNB,
                                               DCI_CONTENT              *DCI_Content,
                                               uint16_t                 rnti,
                                               DCI_format_NB_IoT_t      dci_format,
-                                              NB_IoT_eNB_NDLSCH_t      *ndlsch,
+                                              NB_IoT_eNB_NPDCCH_t      *ndlcch,
                                               NB_IoT_DL_FRAME_PARMS    *frame_parms,
-                                              uint8_t                  aggregation,
+                                              uint8_t                  aggregation,         //////????? maybe add the ncce index ??????????
 									                            uint8_t                  npdcch_start_symbol)
 {
 
-  NB_IoT_DL_eNB_HARQ_t  *ndlsch_harq      = ndlsch->harq_process;
+ // NB_IoT_eNB_NPDCCH_t  *ndlcch     = ;
   void                  *DLSCH_DCI_NB_IoT = NULL;
 
   eNB->DCI_pdu = (DCI_PDU_NB_IoT*) malloc(sizeof(DCI_PDU_NB_IoT));
 
   //N1 parameters
+  uint8_t ncce_index = 0;
 
   /// type = 0 => DCI Format N0, type = 1 => DCI Format N1, 1 bits
   uint8_t type = 0;
@@ -229,20 +230,25 @@ int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB_NB_IoT      *eNB,
 
     /*Now configure the ndlsch structure*/
 
-    ndlsch->subframe_tx[subframe] = 1; // check if it's OK
-    ndlsch->rnti = rnti; //we store the RNTI (e.g. for RNTI will be used later)
-    ndlsch->active = 0; //will be activated by the corresponding NDSLCH pdu
+   // ndlcch->ncce_index          =   NCCE_index;
+   // ndlcch->aggregation_level   =   aggregation;
+
+    ndlcch->A[ncce_index]               = sizeof(DCIN1_RAR_t); // number of bits in DCI
+
+    //ndlcch->subframe_tx[subframe] = 1; // check if it's OK
+    ndlcch->rnti[ncce_index] = rnti; //we store the RNTI (e.g. for RNTI will be used later)
+    ndlcch->active[ncce_index] = 0; //will be activated by the corresponding NDSLCH pdu
 
     // use this value to configure PHY both harq_processes and resource mapping.
-    ndlsch_harq->scheduling_delay         = Sched_delay;
-    ndlsch_harq->resource_assignment      = resource_to_subframe[ResAssign];  //from Isf of DCI to the number of subframe
-    ndlsch_harq->repetition_number        = RepNum;
-    ndlsch_harq->dci_subframe_repetitions = DCIRep;
-    ndlsch_harq->modulation               = 2; //QPSK
-    if(ndlsch_harq->round == 0) //this should be set from initialization (init-lte)
+    ndlcch->scheduling_delay[ncce_index]         = Sched_delay;
+    ndlcch->resource_assignment[ncce_index]      = resource_to_subframe[ResAssign];  //from Isf of DCI to the number of subframe
+    ndlcch->repetition_number[ncce_index]        = RepNum;                             // repetition number for NPDSCH
+    ndlcch->dci_repetitions[ncce_index]          = DCIRep;        ////??????? should be repalce by the value in spec table 16.6-3, check also Rmax
+    ndlcch->modulation[ncce_index]               = 2; //QPSK
+    //// ////////////////////////////////////////////////if(ndlcch->round == 0) //this should be set from initialization (init-lte)
 
-    	ndlsch_harq->status = ACTIVE_NB_IoT;
-      ndlsch_harq->mcs    = mcs;
+    //ndlcch->status[ncce_index] = ACTIVE_NB_IoT;
+    ndlcch->mcs[ncce_index]    = mcs;
 
     /*
      * TS 36.213 ch 16.4.1.5
@@ -250,9 +256,9 @@ int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB_NB_IoT      *eNB,
      * ISF = ResAssign
      */
 
-      ndlsch_harq->TBS      = TBStable_NB_IoT[mcs][ResAssign];
-      ndlsch_harq->subframe = subframe;
-
+    ndlcch->TBS[ncce_index]      = TBStable_NB_IoT[mcs][ResAssign];
+    //ndlcch->subframe[ncce_index] = subframe;
+    ndlcch->counter_repetition_number[ncce_index] = DCIRep;          ////??????? should be repalce by the value in spec table 16.6-3, check also Rmax
     //ndlsch_harq->B; we don-t have now my is given when we receive the dlsch data
     //ndlsch->error_treshold
     //ndlsch->G??
@@ -298,27 +304,32 @@ int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB_NB_IoT      *eNB,
     add_dci_NB_IoT(eNB->DCI_pdu,DLSCH_DCI_NB_IoT,rnti,sizeof(DCIN1_t),aggregation,sizeof_DCIN1_t,DCIFormatN1,npdcch_start_symbol);
 
     /*Now configure the ndlsch structure*/
+    ndlcch->A[ncce_index]               = sizeof(DCIN1_t); // number of bits in DCI
 
-    ndlsch->subframe_tx[subframe] = 1; // check if it's OK
-    ndlsch->rnti                  = rnti; //we store the RNTI (e.g. for RNTI will be used later)
-    ndlsch->active                = 0;//will be activated by the corresponding NDSLCH pdu
+    // ndlcch->ncce_index          =   NCCE_index;
+    // ndlcch->aggregation_level   =   aggregation;
+
+    //ndlcch->subframe_tx[subframe] = 1; // check if it's OK
+    ndlcch->rnti[ncce_index]                  = rnti; //we store the RNTI (e.g. for RNTI will be used later)
+    ndlcch->active[ncce_index]                = 0;//will be activated by the corresponding NDSLCH pdu
 
     // use this value to configure PHY both harq_processes and resource mapping.
-        ndlsch_harq->scheduling_delay         = Sched_delay;
-        ndlsch_harq->resource_assignment      = resource_to_subframe[ResAssign]; //from Isf of DCI to the number of subframe
-        ndlsch_harq->repetition_number        = RepNum;
-        ndlsch_harq->dci_subframe_repetitions = DCIRep;
-        ndlsch_harq->modulation               = 2; //QPSK
-        if(ndlsch_harq->round == 0){ //this should be set from initialization (init-lte)
+    ndlcch->scheduling_delay[ncce_index]         = Sched_delay;
+    ndlcch->resource_assignment[ncce_index]      = resource_to_subframe[ResAssign]; //from Isf of DCI to the number of subframe
+    ndlcch->repetition_number[ncce_index]        = RepNum;
+    ndlcch->dci_repetitions[ncce_index]          = DCIRep;             // ????????????? mapping with the table in spec, take into account Rmax
+    ndlcch->modulation[ncce_index]               = 2; //QPSK
+    //if(ndlcch->round == 0){ //this should be set from initialization (init-lte)
 
-        	ndlsch_harq->status  = ACTIVE_NB_IoT;
-        	ndlsch_harq->mcs     = mcs;
-        	ndlsch_harq->TBS     = TBStable_NB_IoT[mcs][ResAssign]; // this table should be rewritten for nb-iot
-        }
-        ndlsch_harq->frame    = frame;
-        ndlsch_harq->subframe = subframe;
+  	//ndlcch->status[ncce_index]  = ACTIVE_NB_IoT;
+  	ndlcch->mcs[ncce_index]     = mcs;
+  	ndlcch->TBS[ncce_index]     = TBStable_NB_IoT[mcs][ResAssign]; // this table should be rewritten for nb-iot
 
 
+    ndlcch->counter_repetition_number[ncce_index] = DCIRep;          ////??????? should be repalce by the value in spec table 16.6-3, check also Rmax
+    //}
+    //ndlcch->frame[ncce_index]    = frame;
+    //ndlcch->subframe[ncce_index] = subframe;
 
     break;
 

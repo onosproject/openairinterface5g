@@ -206,7 +206,7 @@ int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB_NB_IoT    *eNB,
                                               DCI_CONTENT            *DCI_Content,
                                               uint16_t               rnti,
                                               DCI_format_NB_IoT_t    dci_format,
-                                              NB_IoT_eNB_NDLSCH_t    *ndlsch,
+                                              NB_IoT_eNB_NPDCCH_t      *ndlcch,
                                               NB_IoT_DL_FRAME_PARMS  *frame_parms,
                                               uint8_t                aggregation,
 									                            uint8_t                npdcch_start_symbol);
@@ -307,8 +307,7 @@ int dci_allocate_REs_in_RB_NB_IoT(LTE_DL_FRAME_PARMS  *frame_parms,
 void dci_encoding_NB_IoT(uint8_t                  *a,
                          NB_IoT_eNB_NPDCCH_t      *dlcch,                  
                          uint8_t                  A,
-                         uint16_t                 G,
-                         uint16_t                 rnti,              
+                         uint16_t                 G,              
                          uint8_t                  ncce_index,
                          uint8_t                  agr_level);
 
