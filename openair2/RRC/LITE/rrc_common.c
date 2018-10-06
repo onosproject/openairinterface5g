@@ -408,7 +408,7 @@ rrc_rx_tx(
 //-----------------------------------------------------------------------------
 {
   //uint8_t        UE_id;
-  printf("rrc_rx_tx: enb_indexP %d\n",enb_indexP);
+  //printf("rrc_rx_tx: enb_indexP %d\n",enb_indexP);
   int32_t        current_timestamp_ms, ref_timestamp_ms;
   struct timeval ts;
   struct rrc_eNB_ue_context_s   *ue_context_p = NULL,*ue_to_be_removed = NULL;

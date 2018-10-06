@@ -1836,7 +1836,7 @@ ue_scheduler(
   const int            CC_id)
 //------------------------------------------------------------------------------
 {
-  printf("ue_scheduler: eNB_indexp %d, PHY_vars_UE_g[module_idP][0]->common_vars.eNb_id %d \n",eNB_indexP,PHY_vars_UE_g[module_idP][0]->common_vars.eNb_id);
+  //printf("ue_scheduler: eNB_indexp %d, PHY_vars_UE_g[module_idP][0]->common_vars.eNb_id %d \n",eNB_indexP,PHY_vars_UE_g[module_idP][0]->common_vars.eNb_id);
   int lcid; // lcid index
   int TTI= 1;
   int bucketsizeduration = -1;
@@ -1894,7 +1894,7 @@ ue_scheduler(
   //Rrc_xface->Frame_index=Mac_rlc_xface->frameP;
   //if (subframe%5 == 0)
   //LG#ifdef EXMIMO
-  printf("before pdcp_run: eNB_index %d, rnti %x\n",ctxt.eNB_index,ctxt.rnti);
+  //printf("before pdcp_run: eNB_index %d, rnti %x\n",ctxt.eNB_index,ctxt.rnti);
   pdcp_run(&ctxt);
   //#endif
   UE_mac_inst[module_idP].txFrame    = txFrameP;

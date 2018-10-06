@@ -502,18 +502,18 @@ int initial_sync(PHY_VARS_UE *ue, runmode_t mode)
   // First try FDD normal prefix
   frame_parms->Ncp=NORMAL;
   frame_parms->frame_type=FDD;
-  printf("Inside initial_sync: FDD\n");
+  //printf("Inside initial_sync: FDD\n");
   init_frame_parms(frame_parms,1);
   int *tmp;
   /*
   write_output("rxdata0.m","rxd0",ue->common_vars.rxdata[0],10*frame_parms->samples_per_tti,1,1);
   exit(-1);
   */
-  printf("before lte_sync_time, ue->common_vars.eNb_id %d\n",ue->common_vars.eNb_id);
+  //printf("before lte_sync_time, ue->common_vars.eNb_id %d\n",ue->common_vars.eNb_id);
   sync_pos = lte_sync_time(ue->common_vars.rxdata,
                            frame_parms,
                            (int *)&tmp);
-  printf("after lte_sync_time, ue->common_vars.eNb_id %d\n",ue->common_vars.eNb_id);
+  //printf("after lte_sync_time, ue->common_vars.eNb_id %d\n",ue->common_vars.eNb_id);
   //  write_output("rxdata1.m","rxd1",ue->common_vars.rxdata[0],10*frame_parms->samples_per_tti,1,1);
   if (sync_pos >= frame_parms->nb_prefix_samples)
     sync_pos2 = sync_pos - frame_parms->nb_prefix_samples;
@@ -523,7 +523,7 @@ int initial_sync(PHY_VARS_UE *ue, runmode_t mode)
 #ifdef DEBUG_INITIAL_SYNCH
   LOG_I(PHY,"[UE%d] Initial sync : Estimated PSS position %d, Nid2 %d\n",ue->Mod_id,sync_pos,ue->common_vars.eNb_id);
 #endif
-  printf("[UE%d] Initial sync : Estimated PSS position %d, Nid2(eNB_id) %d\n",ue->Mod_id,sync_pos,ue->common_vars.eNb_id);
+  //printf("[UE%d] Initial sync : Estimated PSS position %d, Nid2(eNB_id) %d\n",ue->Mod_id,sync_pos,ue->common_vars.eNb_id);
   // SSS detection
 
   // PSS is hypothesized in last symbol of first slot in Frame
@@ -608,7 +608,7 @@ int initial_sync(PHY_VARS_UE *ue, runmode_t mode)
 
     if (ret==-1) {
       // Now TDD normal prefix
-      printf("Inside initial_sync: TDD\n");
+      //printf("Inside initial_sync: TDD\n");
       frame_parms->Ncp=NORMAL;
       frame_parms->frame_type=TDD;
       init_frame_parms(frame_parms,1);
@@ -834,12 +834,12 @@ int initial_sync(PHY_VARS_UE *ue, runmode_t mode)
   // gain control
   if (ret!=0) { //we are not synched, so we cannot use rssi measurement (which is based on channel estimates)
     rx_power = 0;
-    printf("Point start PSS: %d\n",sync_pos2);
+    //printf("Point start PSS: %d\n",sync_pos2);
     // do a measurement on the best guess of the PSS
     for (aarx=0; aarx<frame_parms->nb_antennas_rx; aarx++)
       rx_power += signal_energy(&ue->common_vars.rxdata[aarx][sync_pos2],
 				frame_parms->ofdm_symbol_size+frame_parms->nb_prefix_samples);
-    printf("rx_power %d\n",rx_power);
+    //printf("rx_power %d\n",rx_power);
     /*
     // do a measurement on the full frame
     for (aarx=0; aarx<frame_parms->nb_antennas_rx; aarx++)
@@ -860,7 +860,7 @@ int initial_sync(PHY_VARS_UE *ue, runmode_t mode)
 #ifndef OAI_BLADERF
 #ifndef OAI_LMSSDR
   phy_adjust_gain(ue,ue->measurements.rx_power_avg_dB[0],0);
-  printf("adjust gain 1\n");
+  //printf("adjust gain 1\n");
 #endif
 #endif
 #endif
@@ -872,7 +872,7 @@ int initial_sync(PHY_VARS_UE *ue, runmode_t mode)
 #ifndef OAI_BLADERF
 #ifndef OAI_LMSSDR
   phy_adjust_gain(ue,dB_fixed(ue->measurements.rssi),0);
-  printf("adjust gain 2\n");
+  //printf("adjust gain 2\n");
 #endif
 #endif
 #endif
@@ -893,7 +893,7 @@ int initial_sync_freq(PHY_VARS_UE *ue, runmode_t mode)
   int ret=-1;
   int i;
   int aarx,rx_power=0;
-  printf("initial_synch_freq: UE %d, eNB %d, NB_eNB_INST %d, eNB->Nid_cell %d\n",ue->Mod_id,ue->common_vars.eNb_id, NB_eNB_INST,PHY_vars_eNB_g[ue->common_vars.eNb_id][0]->frame_parms.Nid_cell);
+  //printf("initial_synch_freq: UE %d, eNB %d, NB_eNB_INST %d, eNB->Nid_cell %d\n",ue->Mod_id,ue->common_vars.eNb_id, NB_eNB_INST,PHY_vars_eNB_g[ue->common_vars.eNb_id][0]->frame_parms.Nid_cell);
   /*#ifdef OAI_USRP
   __m128i *rxdata128;
   #endif*/
@@ -915,9 +915,9 @@ int initial_sync_freq(PHY_VARS_UE *ue, runmode_t mode)
   // lte-gold
   lte_gold(frame_parms,ue->lte_gold_table[0],frame_parms->Nid_cell);
 
-  printf("binitial_synch [UE%d]->[eNB%d]: pbch_detection_freq returns %d, Nid_cell %d\n",ue->Mod_id,ue->common_vars.eNb_id,ret,frame_parms->Nid_cell);
+  //printf("binitial_synch [UE%d]->[eNB%d]: pbch_detection_freq returns %d, Nid_cell %d\n",ue->Mod_id,ue->common_vars.eNb_id,ret,frame_parms->Nid_cell);
   ret=pbch_detection_freq(ue,mode);
-  printf("ainitial_synch [UE%d]->[eNB%d]: pbch_detection_freq returns %d, Nid_cell %d\n",ue->Mod_id,ue->common_vars.eNb_id,ret,frame_parms->Nid_cell);
+  //printf("ainitial_synch [UE%d]->[eNB%d]: pbch_detection_freq returns %d, Nid_cell %d\n",ue->Mod_id,ue->common_vars.eNb_id,ret,frame_parms->Nid_cell);
   //init_frame_parms(frame_parms,1);
   //printf("dumping enb frame params\n");
   //dump_frame_parms(&PHY_vars_eNB_g[0][0]->frame_parms);
@@ -933,9 +933,9 @@ int initial_sync_freq(PHY_VARS_UE *ue, runmode_t mode)
 
       lte_gold(frame_parms,ue->lte_gold_table[0],frame_parms->Nid_cell);
 
-      printf("binitial_synch, second chance[UE%d]->[eNB%d]: pbch_detection_freq returns %d, Nid_cell %d\n\n",ue->Mod_id,ue->common_vars.eNb_id,ret,frame_parms->Nid_cell);
+      //printf("binitial_synch, second chance[UE%d]->[eNB%d]: pbch_detection_freq returns %d, Nid_cell %d\n\n",ue->Mod_id,ue->common_vars.eNb_id,ret,frame_parms->Nid_cell);
       ret = pbch_detection_freq(ue,mode);
-      printf("ainitial_synch, second chance[UE%d]->[eNB%d]: pbch_detection_freq returns %d, Nid_cell %d\n\n",ue->Mod_id,ue->common_vars.eNb_id,ret,frame_parms->Nid_cell);
+      //printf("ainitial_synch, second chance[UE%d]->[eNB%d]: pbch_detection_freq returns %d, Nid_cell %d\n\n",ue->Mod_id,ue->common_vars.eNb_id,ret,frame_parms->Nid_cell);
 
   }
   if (ret==0) {  // fake first PBCH found so indicate sync to higher layers and configure frame parameters
@@ -944,7 +944,7 @@ int initial_sync_freq(PHY_VARS_UE *ue, runmode_t mode)
     //#ifdef DEBUG_INITIAL_SYNCH
     LOG_I(PHY,"[UE%d] In synch, rx_offset %d samples\n",ue->Mod_id, ue->rx_offset);
     //#endif
-    printf("[UE%d] In synch, rx_offset %d samples\n",ue->Mod_id, ue->rx_offset);
+    //printf("[UE%d] In synch, rx_offset %d samples\n",ue->Mod_id, ue->rx_offset);
     if (ue->UE_scan_carrier == 0) {
 
     #if UE_AUTOTEST_TRACE
@@ -1041,12 +1041,12 @@ int initial_sync_freq(PHY_VARS_UE *ue, runmode_t mode)
   // gain control
   if (ret!=0) { //we are not synched, so we cannot use rssi measurement (which is based on channel estimates)
     rx_power = 0;
-    printf("(6144?) Point start PSS: %d\n",6*frame_parms->ofdm_symbol_size);
+    //printf("(6144?) Point start PSS: %d\n",6*frame_parms->ofdm_symbol_size);
     // do a measurement on the best guess of the PSS
     for (aarx=0; aarx<frame_parms->nb_antennas_rx; aarx++)
       rx_power+= signal_energy((int*)&ue->common_vars.common_vars_rx_data_per_thread[0].rxdataF[aarx][6*frame_parms->ofdm_symbol_size],
 				frame_parms->ofdm_symbol_size);
-   printf("UE%d: rx_power %d\n",ue->Mod_id,rx_power);
+   //printf("UE%d: rx_power %d\n",ue->Mod_id,rx_power);
 
     /*common_vars.common_vars_rx_data_per_thread[0].rxdataF
     // do a measurement on the full frame

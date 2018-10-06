@@ -1920,7 +1920,7 @@ void update_ocm()
                   UE_id, ue_data[UE_id]->x,ue_data[UE_id]->y,
                   distance);*/
         }
-      printf("UE %d is associated to eNB %d based on pathloss (%s domain)\n",UE_id,PHY_vars_UE_g[UE_id][CC_id]->common_vars.eNb_id,(PHY_vars_UE_g[UE_id][CC_id]->do_ofdm_mod)?"Frequency":"Time");
+      //printf("UE %d is associated to eNB %d based on pathloss (%s domain)\n",UE_id,PHY_vars_UE_g[UE_id][CC_id]->common_vars.eNb_id,(PHY_vars_UE_g[UE_id][CC_id]->do_ofdm_mod)?"Frequency":"Time");
       }
     }
   }

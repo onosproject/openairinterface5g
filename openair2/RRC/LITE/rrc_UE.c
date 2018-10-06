@@ -1736,7 +1736,7 @@ rrc_ue_process_securityModeCommand(
       }
 
       LOG_T(RRC, "\n");
-      printf("rrc_data_req: eNB_index %d\n",ctxt_pP->eNB_index);
+      //printf("rrc_data_req: eNB_index %d\n",ctxt_pP->eNB_index);
       rrc_data_req (
 		    ctxt_pP,
 		    DCCH,
@@ -2706,7 +2706,7 @@ int decode_BCCH_DLSCH_Message(
 # endif
 #endif
   if (bcch_message->message.present == BCCH_DL_SCH_MessageType_PR_c1) {
-    printf("Before SIB1: bcch_message->message.choice.c1.present %d, BCCH_DL_SCH_MessageType__c1_PR_systemInformationBlockType1 %d, BCCH_DL_SCH_MessageType__c1_PR_systemInformation %d, id %d, frame %d, CASE %s, eNB_index %d\n",bcch_message->message.choice.c1.present,BCCH_DL_SCH_MessageType__c1_PR_systemInformationBlockType1,BCCH_DL_SCH_MessageType__c1_PR_systemInformation,ctxt_pP->module_id,ctxt_pP->frame, ((ctxt_pP->frame % 2) == 0&&((UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIStatus&1) == 0) )?"SIB1":((UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIStatus&1) == 1)?"SIB2":"Other case",eNB_index);
+    //printf("Before SIB1: bcch_message->message.choice.c1.present %d, BCCH_DL_SCH_MessageType__c1_PR_systemInformationBlockType1 %d, BCCH_DL_SCH_MessageType__c1_PR_systemInformation %d, id %d, frame %d, CASE %s, eNB_index %d\n",bcch_message->message.choice.c1.present,BCCH_DL_SCH_MessageType__c1_PR_systemInformationBlockType1,BCCH_DL_SCH_MessageType__c1_PR_systemInformation,ctxt_pP->module_id,ctxt_pP->frame, ((ctxt_pP->frame % 2) == 0&&((UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIStatus&1) == 0) )?"SIB1":((UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIStatus&1) == 1)?"SIB2":"Other case",eNB_index);
     switch (bcch_message->message.choice.c1.present) {
     case BCCH_DL_SCH_MessageType__c1_PR_systemInformationBlockType1:
       if ((ctxt_pP->frame % 2) == 0) {
@@ -4267,7 +4267,7 @@ EXPORT_SYMBOL(Rlc_info_am_config);
 //-----------------------------------------------------------------------------
 void *rrc_ue_task( void *args_p )
 {
-  printf("rrc_ue_task\n");
+  //printf("rrc_ue_task\n");
   MessageDef   *msg_p;
   const char   *msg_name;
   instance_t    instance;
@@ -4318,14 +4318,14 @@ NAS_KENB_REFRESH_REQ,NAS_CELL_SELECTION_REQ,RRC_STATE_INACTIVE,RRC_STATE_IDLE,RR
       break;
 
     case RRC_MAC_BCCH_DATA_IND:
-      printf("rrc_ue_task:[UE %d] Received %s: frameP %d, eNB %d\n", ue_mod_id, msg_name,
-            RRC_MAC_BCCH_DATA_IND (msg_p).frame, RRC_MAC_BCCH_DATA_IND (msg_p).enb_index);
+      //printf("rrc_ue_task:[UE %d] Received %s: frameP %d, eNB %d\n", ue_mod_id, msg_name,
+      //      RRC_MAC_BCCH_DATA_IND (msg_p).frame, RRC_MAC_BCCH_DATA_IND (msg_p).enb_index);
       LOG_D(RRC, "[UE %d] Received %s: frameP %d, eNB %d\n", ue_mod_id, msg_name,
             RRC_MAC_BCCH_DATA_IND (msg_p).frame, RRC_MAC_BCCH_DATA_IND (msg_p).enb_index);
 
       //      PROTOCOL_CTXT_SET_BY_INSTANCE(&ctxt, instance, ENB_FLAG_NO, NOT_A_RNTI, RRC_MAC_BCCH_DATA_IND (msg_p).frame, 0);
       PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, ue_mod_id, ENB_FLAG_NO, NOT_A_RNTI, RRC_MAC_BCCH_DATA_IND (msg_p).frame, 0,RRC_MAC_BCCH_DATA_IND (msg_p).enb_index);
-      printf("decode_BCCH_DLSCH_Message for ue %d, enb %d \n",ue_mod_id,RRC_MAC_BCCH_DATA_IND (msg_p).enb_index);
+      //printf("decode_BCCH_DLSCH_Message for ue %d, enb %d \n",ue_mod_id,RRC_MAC_BCCH_DATA_IND (msg_p).enb_index);
       decode_BCCH_DLSCH_Message (&ctxt,
                                  RRC_MAC_BCCH_DATA_IND (msg_p).enb_index,
                                  RRC_MAC_BCCH_DATA_IND (msg_p).sdu,
@@ -4444,7 +4444,7 @@ NAS_KENB_REFRESH_REQ,NAS_CELL_SELECTION_REQ,RRC_STATE_INACTIVE,RRC_STATE_IDLE,RR
 
       if (rrc_get_state(ue_mod_id) == RRC_STATE_INACTIVE) {
         // have a look at MAC/main.c void dl_phy_sync_success(...)
-	printf("openair_rrc_ue_init: UE %d\n",ue_mod_id);
+	//printf("openair_rrc_ue_init: UE %d\n",ue_mod_id);
         openair_rrc_ue_init(ue_mod_id,PHY_vars_UE_g[ue_mod_id][0]->common_vars.eNb_id);
       }
 
@@ -4551,7 +4551,7 @@ NAS_KENB_REFRESH_REQ,NAS_CELL_SELECTION_REQ,RRC_STATE_INACTIVE,RRC_STATE_IDLE,RR
       uint8_t *buffer;
 
       LOG_D(RRC, "[UE %d] Received %s: UEid %d\n", ue_mod_id, msg_name, NAS_UPLINK_DATA_REQ (msg_p).UEid);
-      printf("[UE %d] Received %s: UEid %d\n", ue_mod_id, msg_name, NAS_UPLINK_DATA_REQ (msg_p).UEid);
+      //printf("[UE %d] Received %s: UEid %d\n", ue_mod_id, msg_name, NAS_UPLINK_DATA_REQ (msg_p).UEid);
       /* Create message for PDCP (ULInformationTransfer_t) */
       length = do_ULInformationTransfer(&buffer, NAS_UPLINK_DATA_REQ (msg_p).nasMsg.length, NAS_UPLINK_DATA_REQ (msg_p).nasMsg.data);
 
@@ -4559,7 +4559,7 @@ NAS_KENB_REFRESH_REQ,NAS_CELL_SELECTION_REQ,RRC_STATE_INACTIVE,RRC_STATE_IDLE,RR
       PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, ue_mod_id, ENB_FLAG_NO, UE_rrc_inst[ue_mod_id].Info[PHY_vars_UE_g[ue_mod_id][0]->common_vars.eNb_id].rnti, 0, 0,PHY_vars_UE_g[ue_mod_id][0]->common_vars.eNb_id);
 
       // check if SRB2 is created, if yes request data_req on DCCH1 (SRB2) 
-      printf("check if SRB2 is created, if yes request data_req on DCCH1: eNB_index %d, rnti %d, UE_rrc_inst[ue_mod_id].SRB2_config[PHY_vars_UE_g[ue_mod_id][0]->common_vars.eNb_id] == NULL %d\n",ctxt.eNB_index, ctxt.rnti,UE_rrc_inst[ue_mod_id].SRB2_config[PHY_vars_UE_g[ue_mod_id][0]->common_vars.eNb_id] == NULL);
+      //printf("check if SRB2 is created, if yes request data_req on DCCH1: eNB_index %d, rnti %d, UE_rrc_inst[ue_mod_id].SRB2_config[PHY_vars_UE_g[ue_mod_id][0]->common_vars.eNb_id] == NULL %d\n",ctxt.eNB_index, ctxt.rnti,UE_rrc_inst[ue_mod_id].SRB2_config[PHY_vars_UE_g[ue_mod_id][0]->common_vars.eNb_id] == NULL);
       if(UE_rrc_inst[ue_mod_id].SRB2_config[PHY_vars_UE_g[ue_mod_id][0]->common_vars.eNb_id] == NULL)
       {
           rrc_data_req (&ctxt,

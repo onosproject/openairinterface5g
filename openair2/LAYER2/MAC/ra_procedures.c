@@ -324,7 +324,7 @@ PRACH_RESOURCES_t *ue_get_rach(module_id_t module_idP,int CC_id,frame_t frameP, 
     mac_xface->macphy_exit("MAC FATAL  CC_id>0");
     return 0; // not reached
   }
-  printf("ue_get_rach:UE_mode == PRACH? %d\n",UE_mode == PRACH);
+  //printf("ue_get_rach:UE_mode == PRACH? %d\n",UE_mode == PRACH);
   if (UE_mode == PRACH) {
     if (UE_mac_inst[module_idP].radioResourceConfigCommon) {
       rach_ConfigCommon = &UE_mac_inst[module_idP].radioResourceConfigCommon->rach_ConfigCommon;
@@ -333,7 +333,7 @@ PRACH_RESOURCES_t *ue_get_rach(module_id_t module_idP,int CC_id,frame_t frameP, 
     }
 
     if (Is_rrc_registered == 1) {
-      printf("ue_get_rach:Is_rrc_registered? %d\n",Is_rrc_registered == 1);
+      //printf("ue_get_rach:Is_rrc_registered? %d\n",Is_rrc_registered == 1);
       if (UE_mac_inst[module_idP].RA_active == 0) {
         LOG_D(MAC,"RA not active\n");
         // check if RRC is ready to initiate the RA procedure
@@ -345,7 +345,7 @@ PRACH_RESOURCES_t *ue_get_rach(module_id_t module_idP,int CC_id,frame_t frameP, 
                                 PHY_vars_UE_g[module_idP][0]->common_vars.eNb_id,
                                 0);
         Size16 = (uint16_t)Size;
-        printf("ue_get_rach:Size16 %d\n",Size16);
+        //printf("ue_get_rach:Size16 %d\n",Size16);
         //  LOG_D(MAC,"[UE %d] Frame %d: Requested RRCConnectionRequest, got %d bytes\n",module_idP,frameP,Size);
         LOG_D(RRC, "[MSC_MSG][FRAME %05d][RRC_UE][MOD %02d][][--- MAC_DATA_REQ (RRCConnectionRequest eNB %d) --->][MAC_UE][MOD %02d][]\n",
               frameP, module_idP, /*eNB_indexP*/PHY_vars_UE_g[module_idP][0]->common_vars.eNb_id, module_idP);
