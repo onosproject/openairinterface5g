@@ -152,7 +152,7 @@ int dlsch_encoding_NB_IoT(unsigned char      	  *a,
     
     int32_t numbits = (A*8)+24;
 
-		crc = crc24a_NB_IoT(npbch_a,A)>>8;
+		crc = crc24a_NB_IoT(npbch_a,A*8)>>8;
 	
 
     	for (int j=0; j<A; j++) 												
