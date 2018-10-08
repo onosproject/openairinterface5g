@@ -1214,6 +1214,11 @@ static void get_options (int argc, char **argv) {
         //this is needed for phy-test option
         transmission_mode = enb_properties->properties[0]->ue_TransmissionMode[0]+1;
 
+        //SFN: Transmission Mode
+        //sudas_LOG_PHY(debug_sudas_LOG_PHY,"[get_optrian()]: ue_TransmissionMode %d transmission_mode %d\n",enb_properties->properties[0]->ue_TransmissionMode[0],transmission_mode);
+        //fflush(debug_sudas_LOG_PHY);
+
+
     } else if (UE_flag == 1) {
         if (conf_config_file_name != NULL) {
 
@@ -1388,10 +1393,10 @@ int main( int argc, char **argv ) {
     int i,j,k,aa,re;
 
 	debug_sudas_LOG_PHY  = fopen("debug_sudas_LOG_PHY.txt", "w");
-    	debug_sudas_LOG_MAC  = fopen("debug_sudas_LOG_MAC.txt", "w");
+    debug_sudas_LOG_MAC  = fopen("debug_sudas_LOG_MAC.txt", "w");
 
-    	sudas_LOG_PHY(debug_sudas_LOG_PHY,"main();\n");
-    	fflush(debug_sudas_LOG_PHY);
+	sudas_LOG_PHY(debug_sudas_LOG_PHY,"main();\n");
+	fflush(debug_sudas_LOG_PHY);
 
 
 
@@ -1671,6 +1676,9 @@ int main( int argc, char **argv ) {
             // initialization for phy-test
             for (k=0; k<NUMBER_OF_UE_MAX; k++) {
                 PHY_vars_eNB_g[0][CC_id]->transmission_mode[k] = transmission_mode;
+                //SFN
+                //sudas_LOG_PHY(debug_sudas_LOG_PHY,"[init eNB]: PHY_vars_eNB_g[0][%d]->transmission_mode[%d]= %d\n",CC_id,k,transmission_mode);
+                //fflush(debug_sudas_LOG_PHY);
                 if (transmission_mode==7)
                     lte_gold_ue_spec_port5(PHY_vars_eNB_g[0][CC_id]->lte_gold_uespec_port5_table[k],frame_parms[CC_id]->Nid_cell,0x1235+k);
             }

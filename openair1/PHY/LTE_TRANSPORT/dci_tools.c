@@ -8486,10 +8486,12 @@ int generate_eNB_ulsch_params_from_dci(PHY_VARS_eNB *eNB,
        * TODO: deal with TM 8&9 correctly when they are implemented.
        * TODO: deal with periodic reporting if we implement it.
        */
-      if (transmission_mode == 3 || transmission_mode == 4)
+      //SFN FIX:
+      // O_RI: 1 bit for RI
+      //if (transmission_mode == 3 || transmission_mode == 4)
         ulsch->harq_processes[harq_pid]->O_RI = 1; //we only support 2 antenna ports, so this is always 1 according to 3GPP 36.213 Table
-      else
-        ulsch->harq_processes[harq_pid]->O_RI = 0;
+      //else
+        //ulsch->harq_processes[harq_pid]->O_RI = 0;
 
       switch(transmission_mode) {
         // The aperiodic CQI reporting mode is fixed for every transmission mode instead of being configured by higher layer signaling
@@ -8566,27 +8568,41 @@ int generate_eNB_ulsch_params_from_dci(PHY_VARS_eNB *eNB,
 
           ulsch->harq_processes[harq_pid]->uci_format                            = HLC_subband_cqi_mcs_CBA;
         } else {
-          ulsch->harq_processes[harq_pid]->Or2                                   = 0;
 
           switch (frame_parms->N_RB_DL) {
           case 6:
+        	ulsch->harq_processes[harq_pid]->Or2                                   = 0;
             ulsch->harq_processes[harq_pid]->Or1                                   = sizeof_HLC_subband_cqi_nopmi_1_5MHz;
             break;
 
           case 25:
-            ulsch->harq_processes[harq_pid]->Or1                                   = sizeof_HLC_subband_cqi_nopmi_5MHz;
+        	//SFN:
+        	/*To support PMI reporting for transmission mode 2,
+        	 * Hardcoded only for 25 RBs to test TM4 feedback
+        	 * we add TM4 uci_format as follows:
+        	 * */
+        	//ulsch->harq_processes[harq_pid]->Or2                                   = 0;
+            //ulsch->harq_processes[harq_pid]->Or1                                   = sizeof_HLC_subband_cqi_nopmi_5MHz;
+
+        	ulsch->harq_processes[harq_pid]->Or2                                 = sizeof_wideband_cqi_rank2_2A_5MHz;
+        	ulsch->harq_processes[harq_pid]->Or1                                 = sizeof_wideband_cqi_rank1_2A_5MHz;
+
             break;
 
           case 50:
+        	ulsch->harq_processes[harq_pid]->Or2                                   = 0;
             ulsch->harq_processes[harq_pid]->Or1                                   = sizeof_HLC_subband_cqi_nopmi_10MHz;
             break;
 
           case 100:
+        	ulsch->harq_processes[harq_pid]->Or2                                   = 0;
             ulsch->harq_processes[harq_pid]->Or1                                   = sizeof_HLC_subband_cqi_nopmi_20MHz;
             break;
           }
-
-          ulsch->harq_processes[harq_pid]->uci_format                            = HLC_subband_cqi_nopmi;
+          /*SFN
+           * add uci_format wideband_cqi_rank1_2A into TM2*/
+          //ulsch->harq_processes[harq_pid]->uci_format                            = HLC_subband_cqi_nopmi;
+          ulsch->harq_processes[harq_pid]->uci_format                          = wideband_cqi_rank1_2A;
         }
 
         break;

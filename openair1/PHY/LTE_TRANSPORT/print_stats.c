@@ -700,12 +700,19 @@ int dump_eNB_stats(PHY_VARS_eNB *eNB, char* buffer, int length)
 	
 	len += sprintf(&buffer[len],"\n");
 	*/
-
-
-	len += sprintf(&buffer[len],"DL TM %d,DL_cqi %d, DL_pmi_single %jx ",
+	len += sprintf(&buffer[len],"////////////////////////CQI/PMI Reporting /////////////////////////////\n");
+	len += sprintf(&buffer[len],"DL TM %d, DL_cqi %d, Rank Indicator %d, DL_pmi_single %jx\n",
 		       eNB->transmission_mode[UE_id],
 		       eNB->UE_stats[UE_id].DL_cqi[0],
-		       pmi2hex_2Ar1(eNB->UE_stats[UE_id].DL_pmi_single));
+		       eNB->UE_stats[UE_id].rank,
+		       eNB->UE_stats[UE_id].rank? pmi2hex_2Ar2(eNB->UE_stats[UE_id].DL_pmi_single) : pmi2hex_2Ar1(eNB->UE_stats[UE_id].DL_pmi_single));
+
+	len += sprintf(&buffer[len],"eNB can schedule TM %d\n",eNB->UE_stats[UE_id].rank?4:2);
+
+	len += sprintf(&buffer[len],"////////////////////////******************/////////////////////////////\n");
+
+
+
 
 	len += sprintf(&buffer[len],"Timing advance %d samples (%d 16Ts), update %d ",
 		       eNB->UE_stats[UE_id].UE_timing_offset,

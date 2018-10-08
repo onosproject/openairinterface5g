@@ -57,6 +57,11 @@
 
 #include <time.h>
 
+//SFN
+#include "sudas_tm4.h"
+
+
+
 #if defined(ENABLE_ITTI)
 #   include "intertask_interface.h"
 #endif
@@ -3114,6 +3119,11 @@ void phy_procedures_eNB_uespec_RX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,const 
             eNB->Mod_id,harq_pid,frame,subframe,i,harq_pid);
 #endif
       eNB->ulsch[i]->harq_processes[harq_pid]->subframe_scheduling_flag=0;
+
+      /* sfn: CQI/PMI Extract
+       *
+       *
+       * */
 
       if (eNB->ulsch[i]->harq_processes[harq_pid]->cqi_crc_status == 1) {
 #ifdef DEBUG_PHY_PROC

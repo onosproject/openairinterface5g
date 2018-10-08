@@ -256,9 +256,12 @@ void extract_CQI(void *o,UCI_format_t uci_format,LTE_eNB_UE_stats *stats, uint8_
 
     switch(uci_format) {
     case wideband_cqi_rank1_2A:
+    	/*sfn: we are here
+    	 *
+    	 * */
       stats->DL_cqi[0]     = (((wideband_cqi_rank1_2A_5MHz *)o)->cqi1);
 
-      if (stats->DL_cqi[0] > 24)
+      if (stats->DL_cqi[0] > 24)//limit CQI
         stats->DL_cqi[0] = 24;
 
       stats->DL_pmi_single = ((wideband_cqi_rank1_2A_5MHz *)o)->pmi;
@@ -284,6 +287,8 @@ void extract_CQI(void *o,UCI_format_t uci_format,LTE_eNB_UE_stats *stats, uint8_
       break;
 
     case HLC_subband_cqi_nopmi:
+
+    	//sfn debug here
       stats->DL_cqi[0]     = (((HLC_subband_cqi_nopmi_5MHz *)o)->cqi1);
 
       if (stats->DL_cqi[0] > 24)
