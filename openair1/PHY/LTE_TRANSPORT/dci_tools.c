@@ -7144,6 +7144,7 @@ void fill_CQI(LTE_UE_ULSCH_t *ulsch,PHY_MEASUREMENTS *meas,uint8_t eNB_id,uint8_
   case 25:
     switch (uci_format) {
     case wideband_cqi_rank1_2A:
+    	//sfn: we enable this
       ((wideband_cqi_rank1_2A_5MHz *)o)->cqi1 = sinr2cqi(sinr_tmp,trans_mode);
       ((wideband_cqi_rank1_2A_5MHz *)o)->pmi  = quantize_subband_pmi(meas,eNB_id,25);
       break;
@@ -7666,17 +7667,20 @@ int generate_ue_ulsch_params_from_dci(void *dci_pdu,
     //    ulsch->harq_processes[harq_pid]->status = ACTIVE;
 
 
-
     if (cqi_req == 1) {
 
-      if( (AntennaInfoDedicated__transmissionMode_tm3 == transmission_mode) || (AntennaInfoDedicated__transmissionMode_tm4 == transmission_mode) )
-      {
+    	/*SFN: enable PMI feedback and remove dependency on transmission_mode flag
+         * Hardcode for testing TM4
+         *
+         * */
+      //if( (AntennaInfoDedicated__transmissionMode_tm3 == transmission_mode) || (AntennaInfoDedicated__transmissionMode_tm4 == transmission_mode) )
+      //{
           ulsch->O_RI = 1;
-      }
-      else
-      {
-          ulsch->O_RI = 0;
-      }
+      //}
+      //else
+      //{
+      //    ulsch->O_RI = 0;
+      //}
       //sudas_LOG_PHY(debug_sudas_LOG_PHY,"[UE][UCI--->PUSCH] transmission_mode %d ulsch->O_RI %d\n",transmission_mode,ulsch->O_RI);
       //fflush(debug_sudas_LOG_PHY);
       //ulsch->O_RI = 0; //we only support 2 antenna ports, so this is always 1 according to 3GPP 36.213 Table
@@ -7773,28 +7777,35 @@ int generate_ue_ulsch_params_from_dci(void *dci_pdu,
 
           ulsch->uci_format                          = HLC_subband_cqi_mcs_CBA;
           ulsch->o_RI[0]                             = 0;
-        } else if(meas->rank[eNB_id] == 0) {
-          switch (ue->frame_parms.N_RB_DL) {
-          case 6:
-            ulsch->O                                   = sizeof_HLC_subband_cqi_nopmi_1_5MHz;
-            break;
+        } else //if(meas->rank[eNB_id] == 0)
+        {
+        /*Enable PMI reporting for TM2
+         * remove dependency on RI
+         *
+         * */
+        	switch (ue->frame_parms.N_RB_DL) {
+        	case 6:
+        		ulsch->O                                   = sizeof_HLC_subband_cqi_nopmi_1_5MHz;
+        		break;
+            case 25:
 
-          case 25:
-            ulsch->O                                   = sizeof_HLC_subband_cqi_nopmi_5MHz;
-            break;
-
-          case 50:
-            ulsch->O                                   = sizeof_HLC_subband_cqi_nopmi_10MHz;
-            break;
-
-          case 100:
-            ulsch->O                                   = sizeof_HLC_subband_cqi_nopmi_20MHz;
-            break;
-          }
-
-          ulsch->uci_format                          = HLC_subband_cqi_nopmi;
-          ulsch->o_RI[0]                             = 0;
-        } else {
+            	//ulsch->O                                   = sizeof_HLC_subband_cqi_nopmi_5MHz;
+            	ulsch->O                                   = sizeof_wideband_cqi_rank1_2A_5MHz;
+            	break;
+        	case 50:
+        		ulsch->O                                   = sizeof_HLC_subband_cqi_nopmi_10MHz;
+        	    break;
+        	case 100:
+        		ulsch->O                                   = sizeof_HLC_subband_cqi_nopmi_20MHz;
+        	    break;
+        	          }
+        	//ulsch->uci_format                          = HLC_subband_cqi_nopmi;
+        	//ulsch->o_RI[0]= 0;
+            ulsch->uci_format                          = wideband_cqi_rank1_2A;
+            if(meas->rank[eNB_id] == 0) ulsch->o_RI[0] = 0;
+            else ulsch->o_RI[0] = 1;
+        }
+        /*else {
           switch (ue->frame_parms.N_RB_DL) {
           case 6:
             ulsch->O                                   = sizeof_HLC_subband_cqi_nopmi_1_5MHz;
@@ -7815,7 +7826,7 @@ int generate_ue_ulsch_params_from_dci(void *dci_pdu,
 
           ulsch->uci_format                          = HLC_subband_cqi_nopmi;
           ulsch->o_RI[0]                             = 1;
-        }
+        }*/
 
         break;
 

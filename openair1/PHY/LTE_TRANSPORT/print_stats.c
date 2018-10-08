@@ -242,6 +242,9 @@ int dump_ue_stats(PHY_VARS_UE *ue, UE_rxtx_proc_t *proc,char* buffer, int length
                        ue->measurements.subband_cqi_dB[eNB][1][6]);
 
 //we are here sfn
+
+        len += sprintf(&buffer[len], "[UE PROC] Quantized CQI %d*********************************************\n",
+        		sinr2cqi((double) ue->measurements.wideband_cqi_avg[eNB],2));
         len += sprintf(&buffer[len], "[UE PROC] Subband PMI eNB%d (Ant 0): [(%f +j%f) (%f +j%f) (%f +j%f) (%f +j%f) (%f +j%f) (%f +j%f) (%f +j%f)]\n",
                        eNB,
                        (double)ue->measurements.subband_pmi_re[eNB][0][0],
@@ -698,7 +701,8 @@ int dump_eNB_stats(PHY_VARS_eNB *eNB, char* buffer, int length)
 	len += sprintf(&buffer[len],"\n");
 	*/
 
-	len += sprintf(&buffer[len],"DL TM %d, DL_cqi %d, DL_pmi_single %jx ",
+
+	len += sprintf(&buffer[len],"DL TM %d,DL_cqi %d, DL_pmi_single %jx ",
 		       eNB->transmission_mode[UE_id],
 		       eNB->UE_stats[UE_id].DL_cqi[0],
 		       pmi2hex_2Ar1(eNB->UE_stats[UE_id].DL_pmi_single));

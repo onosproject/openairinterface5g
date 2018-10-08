@@ -268,30 +268,28 @@ int generate_ue_ulsch_params_from_rar(PHY_VARS_UE *ue,
     ulsch->harq_processes[harq_pid]->status = ACTIVE;
 
   if (cqireq==1) {
-    ulsch->O_RI                                  = 1;
+    /*SFN: enable PMI reporting
+     * remove dependency on RI
+     * */
+	ulsch->O_RI                                = 1;
 
-    if (meas->rank[eNB_id] == 1) {
-//SFN
-//    	sudas_LOG_PHY(debug_sudas_LOG_PHY,"Rank 2, format wideband_cqi_rank2_2A\n");
-//    	fflush(debug_sudas_LOG_PHY);
+	ulsch->uci_format                          = wideband_cqi_rank1_2A;
+    ulsch->O                                   = sizeof_wideband_cqi_rank1_2A_5MHz;
+    if (meas->rank[eNB_id] == 0) ulsch->o_RI[0]  = 0;
+    else ulsch->o_RI[0]  = 1;
 
+    ulsch->uci_format                          = wideband_cqi_rank1_2A;
+    /*if (meas->rank[eNB_id] == 1){
       ulsch->uci_format                          = wideband_cqi_rank2_2A;
       ulsch->O                                   = sizeof_wideband_cqi_rank2_2A_5MHz;
       ulsch->o_RI[0]                             = 1;
     } else {
-//SFN
-//    	sudas_LOG_PHY(debug_sudas_LOG_PHY,"Rank 1, format wideband_cqi_rank1_2A\n");
-//    	fflush(debug_sudas_LOG_PHY);
-
       ulsch->uci_format                          = wideband_cqi_rank1_2A;
       ulsch->O                                   = sizeof_wideband_cqi_rank1_2A_5MHz;
       ulsch->o_RI[0]                             = 0;
-    }
+    }*/
 
-    ulsch->uci_format = HLC_subband_cqi_nopmi;
-//sfn
-//	sudas_LOG_PHY(debug_sudas_LOG_PHY,"default, format HLC_subband_cqi_nopmi\n");
-//   fflush(debug_sudas_LOG_PHY);
+    //ulsch->uci_format = HLC_subband_cqi_nopmi;
 
     fill_CQI(ulsch,meas,eNB_id,0,ue->frame_parms.N_RB_DL,0, transmission_mode,ue->sinr_eff);
 

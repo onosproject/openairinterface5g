@@ -623,14 +623,12 @@ uint32_t ulsch_encoding(uint8_t *a,
 
   i=0;
 
-
-
-
-	//SFN
+  /*SFN: Enable ulsch->O_RI = 1 in dci_tools
+   *DO RI coding
+   *PUSCH_y: means repeat ucoded bit
+   * */
   //  Do RI coding
   if (ulsch->O_RI == 1) {
-	  //sudas_LOG_PHY(debug_sudas_LOG_PHY,"[UE][UCI--->PUSCH]  ulsch->O_RI= %d, ulsch->o_RI[0]=%d meas->rank[eNB_id]%d\n", ulsch->O_RI, ulsch->o_RI[0],meas->rank[0]);
-	  //fflush(debug_sudas_LOG_PHY);
     switch (Q_m) {
     case 2:
       ulsch->q_RI[0] = ulsch->o_RI[0];
@@ -780,6 +778,7 @@ uint32_t ulsch_encoding(uint8_t *a,
 
 
   //  printf("Qprime_CQI = %d\n",Qprime_CQI);
+
   // RI BITS
 
   memset(y,LTE_NULL,Q_m*Hpp);
@@ -806,26 +805,6 @@ uint32_t ulsch_encoding(uint8_t *a,
 
   // CQI and Data bits
   j=0;
-  /*
-  for (i=0,iprime=-Qprime_CQI;i<Hprime;i++,iprime++) {
-
-    while (y[Q_m*j] != LTE_NULL) j++;
-
-    if (i<Qprime_CQI) {
-      for (q=0;q<Q_m;q++) {
-  y[q+(Q_m*j)] = ulsch->q[q+(Q_m*i)];
-  //printf("cqi[%d] %d => y[%d]\n",q+(Q_m*i),ulsch->q[q+(Q_m*i)],q+(Q_m*j));
-      }
-    }
-    else {
-      for (q=0;q<Q_m;q++) {
-  y[q+(Q_m*j)] = ulsch->e[q+(Q_m*iprime)];
-  //  printf("e[%d] %d => y[%d]\n",q+(Q_m*iprime),ulsch->e[q+(Q_m*iprime)],q+(Q_m*j));
-      }
-    }
-    j++;
-  }
-  */
 
   for (i=0; i<Qprime_CQI; i++) {
 
