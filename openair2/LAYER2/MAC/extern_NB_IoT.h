@@ -105,6 +105,11 @@ extern const int rachstart[8];
 extern const int rachrepeat[8];
 extern const int rachscofst[7];
 extern const int rachnumsc[4];
+extern const int rmax[12];
+
+extern const double gvalue[8];
+
+extern const double pdcchoffset[4];
 
 extern const uint32_t RU_table[8];
 

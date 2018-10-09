@@ -113,9 +113,7 @@ void schedule_rar_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, int abs_subframe){
     int fail_num = 0;
     int flag=0;
 	while((RA_TEMPLATE_NB_IoT *)0 != msg2_nodes){
-		if(flag==0)
-			flag=1;
-		fail=0;
+			fail=0;
 		rmax = mac_inst->rrc_config.mac_NPRACH_ConfigSIB[msg2_nodes->ce_level].mac_npdcch_NumRepetitions_RA_NB_IoT;//32;
 		num_candidate = 8;//rmax / r;
 		r = rmax/num_candidate;
@@ -227,6 +225,11 @@ void schedule_rar_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, int abs_subframe){
 		    dci_result->R_harq = 0;
 		    dci_result->next = (schedule_result_t *)0;
 		    dci_result->DCI_pdu = (void *)dci_n1_rar;
+		    //----------clare
+		    dci_result->dl_sdly = msg2_subframe - dci_end_subframe;
+			dci_result->ul_sdly = msg3_subframe - msg2_end_subframe;
+			dci_result->num_sf = msg2_end_subframe - msg2_subframe+1;
+			//----------clare
 			//	for msg2
 		    msg2_result->output_subframe = msg2_first_subframe;//msg2_subframe;
 		    msg2_result->end_subframe = msg2_end_subframe;
@@ -242,6 +245,10 @@ void schedule_rar_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, int abs_subframe){
 		    msg2_result->next = (schedule_result_t *)0;
 		    msg2_result->DCI_pdu = (void *)dci_n1_rar;
 			msg2_result->rar_buffer = msg2_nodes->rar_buffer;
+			//----------clare
+			msg2_result->dl_sdly = -1;
+			msg2_result->ul_sdly = -1;
+			//----------clare
 
 			//	for msg3(fake DCI N0)
 			dci_n0->type = 0;
@@ -542,6 +549,12 @@ void schedule_msg3_retransimission_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, int abs
 			    dci_result->R_harq = 0;
 			    dci_result->next = (schedule_result_t *)0;
 			    dci_result->DCI_pdu = (void *)dci_n0_msg3;
+			    //----------clare
+			    dci_result->dl_sdly = msg3_subframe - dci_end_subframe + 1;
+				dci_result->ul_sdly = -1;
+				dci_result->num_sf = -1;
+				dci_result->harq_round = msg3_nodes->msg3_retransmit_count;
+				//----------clare
 
 			    //	fill dci resource
 			    fill_resource_DL(mac_inst, dci_node, dci_first_subframe, dci_end_subframe, dci_result);
@@ -632,7 +645,7 @@ void schedule_msg4_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, int abs_subframe){
 	available_resource_DL_t *dci_node, *msg4_node;
 	int rmax, fail, r;
 	int dci_subframe, dci_end_subframe, dci_first_subframe, num_dci_subframe;
-	int msg4_subframe, msg4_end_subframe, msg4_first_subframe, num_msg4_subframe;
+	int msg4_subframe = 0, msg4_end_subframe, msg4_first_subframe, num_msg4_subframe;
 	int harq_subframe, harq_end_subframe;
 
 	int dci_candidate, num_candidate;
@@ -776,6 +789,12 @@ void schedule_msg4_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, int abs_subframe){
 				dci_result->R_harq = 0;
 				dci_result->next = (schedule_result_t *)0;
 				dci_result->DCI_pdu = (void *)dci_n1_msg4;
+				//-------clare
+				dci_result->dl_sdly = msg4_subframe - dci_end_subframe;
+				dci_result->ul_sdly = harq_subframe - msg4_end_subframe;
+				dci_result->num_sf = msg4_end_subframe - msg4_subframe+1;
+				dci_result->harq_round = msg4_nodes->msg4_retransmit_count;
+				//-------clare
 				
 				//	for msg4
 				msg4_result = (schedule_result_t *)malloc(sizeof(schedule_result_t));
@@ -804,7 +823,8 @@ void schedule_msg4_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, int abs_subframe){
 			    harq_result->DCI_release = 1;
 			    harq_result->channel = NPUSCH;
 			    harq_result->next = (schedule_result_t *)0;
-				
+
+			    				
 				LOG_D(MAC,"[%04d][RA scheduler][MSG4] UE:%x MSG4DCI %d-%d MSG4 %d-%d HARQ %d-%d\n", abs_subframe-1, msg4_nodes->ue_rnti, dci_first_subframe, dci_end_subframe, msg4_first_subframe, msg4_end_subframe, HARQ_info.sf_start, HARQ_info.sf_end);
 	            LOG_D(MAC,"[%04d][RA scheduler][MSG4][CE%d] MSG4 DCI %d-%d MSG4 %d-%d HARQ %d-%d\n", abs_subframe-1, msg4_nodes->ce_level, dci_first_subframe, dci_end_subframe, msg4_first_subframe, msg4_end_subframe, HARQ_info.sf_start, HARQ_info.sf_end);
 	            msg4_nodes->msg4_retransmit_count++;

@@ -165,7 +165,8 @@ void Initialize_Resource_node(available_resource_UL_t *tone_head, available_reso
 
 /*when there is SIB-2 configuration coming to MAC, filled the uplink resource grid*/
 void Initialize_Resource(void){
-
+    int i;
+    available_resource_UL_t *new_node;
     ///memory allocate to Head
     available_resource_UL = (available_resource_tones_UL_t*)malloc(sizeof(available_resource_tones_UL_t));
 
@@ -180,7 +181,54 @@ void Initialize_Resource(void){
     available_resource_UL->singletone1_end_subframe = 0;
     available_resource_UL->singletone2_end_subframe = 0;
     available_resource_UL->singletone3_end_subframe = 0;
-    
+    //initialize first node
+    if((nprach_list+2)->nprach_StartTime!=0)
+    {
+        new_node = (available_resource_UL_t *)malloc(sizeof(available_resource_UL_t));
+        new_node->next = (available_resource_UL_t *)0;
+        new_node->prev = (available_resource_UL_t *)0;
+        new_node->start_subframe = 0;
+        new_node->end_subframe = (nprach_list+2)->nprach_StartTime-1;
+
+        if( (available_resource_UL_t *)0 == available_resource_UL->sixtone_Head){
+            available_resource_UL->sixtone_Head = new_node;
+            new_node->prev = (available_resource_UL_t *)0;
+        }
+    }
+    if((nprach_list+1)->nprach_StartTime!=0)
+    {
+        new_node = (available_resource_UL_t *)malloc(sizeof(available_resource_UL_t));
+        new_node->next = (available_resource_UL_t *)0;
+        new_node->prev = (available_resource_UL_t *)0;
+        new_node->start_subframe = 0;
+        new_node->end_subframe = (nprach_list+1)->nprach_StartTime-1;
+
+        if( (available_resource_UL_t *)0 == available_resource_UL->threetone_Head){
+            available_resource_UL->threetone_Head = new_node;
+            new_node->prev = (available_resource_UL_t *)0;
+        }
+    }
+    for(i=0;i<3;++i)
+    {
+        if(nprach_list->nprach_StartTime!=0)
+        {
+            new_node = (available_resource_UL_t *)malloc(sizeof(available_resource_UL_t));
+            new_node->next = (available_resource_UL_t *)0;
+            new_node->prev = (available_resource_UL_t *)0;
+            new_node->start_subframe = 0;
+            new_node->end_subframe = nprach_list->nprach_StartTime-1;
+
+            if( (available_resource_UL_t *)0 == available_resource_UL->threetone_Head){
+                if(i==0)
+                    available_resource_UL->singletone1_Head = new_node;
+                else if(i==1)
+                    available_resource_UL->singletone2_Head = new_node;
+                else
+                    available_resource_UL->singletone3_Head = new_node;
+                new_node->prev = (available_resource_UL_t *)0;
+            }
+        }
+    }
     add_UL_Resource();
     add_UL_Resource();
     
@@ -932,7 +980,7 @@ void init_dl_list(eNB_MAC_INST_NB_IoT *mac_inst){
     //schedule_sibs(mac_inst, 0, 0);    //  TODO, check init
 }
 
-
+#if 0
 //  extend subframe align to si-period
 void extend_available_resource_DL(eNB_MAC_INST_NB_IoT *mac_inst, int max_subframe){
 
@@ -976,21 +1024,76 @@ void extend_available_resource_DL(eNB_MAC_INST_NB_IoT *mac_inst, int max_subfram
         mac_inst->schedule_subframe_DL = max_subframe;
     }
 }
+#endif
+#if 1
+//  extend subframe align to si-period
+void extend_available_resource_DL(eNB_MAC_INST_NB_IoT *mac_inst, int max_subframe){ //  assume max_subframe is found.
+    
 
+    available_resource_DL_t *new_node;
+    //int temp;
+    uint32_t i, i_div_si_window;
+    //uint32_t si_period_div_window;
+    //pt = available_resource_DL;
+    
+    LOG_D(MAC,"[extend DL] max_subframe: %d, current schedule subframe: %d\n", max_subframe, mac_inst->schedule_subframe_DL);
+    print_available_resource_DL(mac_inst);
+    
+    if(max_subframe > mac_inst->schedule_subframe_DL){
+        //  align to si-period
+
+        max_subframe = ((max_subframe%mac_inst->rrc_config.si_window_length)==0)? max_subframe : (((max_subframe/mac_inst->rrc_config.si_window_length)+1)*mac_inst->rrc_config.si_window_length);
+        
+        if(mac_inst->schedule_subframe_DL == available_resource_DL_last->end_subframe){
+            LOG_D(MAC,"[extend DL] last node is align to schedule_sf_dl\n");
+
+            available_resource_DL_last->end_subframe = max_subframe;
+        }else{
+            
+            LOG_D(MAC,"[extend DL] add new node !\n");
+            new_node = (available_resource_DL_t *)malloc(sizeof(available_resource_DL_t));
+
+            available_resource_DL_last->next = new_node;
+            new_node->start_subframe = mac_inst->schedule_subframe_DL+1;
+            new_node->end_subframe = max_subframe;
+            new_node->next = (available_resource_DL_t *)0;
+            available_resource_DL_last = new_node;
+        }
+        
+        LOG_I(MAC,"sf_dl:%d max:%d siw:%d\n",mac_inst->schedule_subframe_DL,max_subframe,mac_inst->rrc_config.si_window_length);
+
+        //  do schedule sibs after extend.
+        for(i=mac_inst->schedule_subframe_DL;i<max_subframe;i+=mac_inst->rrc_config.si_window_length){
+            
+            i_div_si_window = (i / mac_inst->rrc_config.si_window_length)%256;
+                LOG_D(MAC,"[sibs out:%d] schedule_DL:%d i_div_si_window:%d\n", mac_inst->sibs_table[i_div_si_window], i, i_div_si_window);
+            if(-1 != mac_inst->sibs_table[i_div_si_window]){
+                LOG_D(MAC,"[sibs%d] %d\n", mac_inst->sibs_table[i_div_si_window], i);
+                schedule_sibs(mac_inst, mac_inst->sibs_table[i_div_si_window], i);
+            }
+        }
+
+        mac_inst->schedule_subframe_DL = max_subframe;
+    }
+    
+    return ;
+}
+#endif
 void maintain_available_resource(eNB_MAC_INST_NB_IoT *mac_inst){
+
     available_resource_DL_t *pfree, *iterator;
     available_resource_UL_t *pfree2, *iterator2;
     schedule_result_t *iterator1;
     if(available_resource_DL != (available_resource_DL_t *)0){
-        if(mac_inst->current_subframe >= available_resource_DL->end_subframe){
+    if(mac_inst->current_subframe >= available_resource_DL->end_subframe){
         pfree = available_resource_DL;
 
         if(available_resource_DL->next == (available_resource_DL_t *)0){
-            LOG_D(MAC,"[maintain_available_resource]=====t:%d=====dl resource list next is NULL %d\n", mac_inst->current_subframe, available_resource_DL->end_subframe);
+            //DEBUG("[maintain_available_resource]=====t:%d=====dl resource list next is NULL %d\n", mac_inst->current_subframe, available_resource_DL->end_subframe);
             
             available_resource_DL = (available_resource_DL_t *)0;
         }else{
-            LOG_D(MAC,"[maintain_available_resource]=====t:%d=====dl resource list remove next:%d-%d\n", mac_inst->current_subframe, available_resource_DL->next->start_subframe, available_resource_DL->next->end_subframe);
+            //DEBUG("[maintain_available_resource]=====t:%d=====dl resource list remove next:%d-%d\n", mac_inst->current_subframe, available_resource_DL->next->start_subframe, available_resource_DL->next->end_subframe);
             available_resource_DL = available_resource_DL->next;
             available_resource_DL->prev = (available_resource_DL_t *)0;
         }
@@ -999,11 +1102,11 @@ void maintain_available_resource(eNB_MAC_INST_NB_IoT *mac_inst){
     }else{
         available_resource_DL->start_subframe = mac_inst->current_subframe;
     }
-    
+}
     //  UL 
     iterator2 = available_resource_UL->singletone1_Head;
     if(iterator2 != (available_resource_UL_t *)0){
-    if(mac_inst->current_subframe >= iterator2->end_subframe){
+    if(mac_inst->current_subframe > iterator2->end_subframe){
         pfree2 = iterator2;
 
         available_resource_UL->singletone1_Head = iterator2->next;
@@ -1012,12 +1115,13 @@ void maintain_available_resource(eNB_MAC_INST_NB_IoT *mac_inst){
         free((available_resource_UL_t *)pfree2);
         
     }else{
+        if(iterator2->start_subframe<mac_inst->current_subframe)
         iterator2->start_subframe = mac_inst->current_subframe;
     }
 }
     iterator2 = available_resource_UL->singletone2_Head;
     if(iterator2 != (available_resource_UL_t *)0){
-    if(mac_inst->current_subframe >= iterator2->end_subframe){
+    if(mac_inst->current_subframe > iterator2->end_subframe){
         pfree2 = iterator2;
 
         available_resource_UL->singletone2_Head = iterator2->next;
@@ -1026,12 +1130,13 @@ void maintain_available_resource(eNB_MAC_INST_NB_IoT *mac_inst){
         free((available_resource_UL_t *)pfree2);
         
     }else{
+        if(iterator2->start_subframe<mac_inst->current_subframe)
         iterator2->start_subframe = mac_inst->current_subframe;
     }
 }
     iterator2 = available_resource_UL->singletone3_Head;
     if(iterator2 != (available_resource_UL_t *)0){
-    if(mac_inst->current_subframe >= iterator2->end_subframe){
+    if(mac_inst->current_subframe > iterator2->end_subframe){
         pfree2 = iterator2;
 
         available_resource_UL->singletone3_Head = iterator2->next;
@@ -1040,12 +1145,13 @@ void maintain_available_resource(eNB_MAC_INST_NB_IoT *mac_inst){
         free((available_resource_UL_t *)pfree2);
         
     }else{
+        if(iterator2->start_subframe<mac_inst->current_subframe)
         iterator2->start_subframe = mac_inst->current_subframe;
     }
 }
     iterator2 = available_resource_UL->sixtone_Head;
     if(iterator2 != (available_resource_UL_t *)0){
-    if(mac_inst->current_subframe >= iterator2->end_subframe){
+    if(mac_inst->current_subframe > iterator2->end_subframe){
         pfree2 = iterator2;
 
         available_resource_UL->sixtone_Head = iterator2->next;
@@ -1053,13 +1159,15 @@ void maintain_available_resource(eNB_MAC_INST_NB_IoT *mac_inst){
         
         free((available_resource_UL_t *)pfree2);
         
-    }else{
+    }
+    else{
+        if(iterator2->start_subframe<mac_inst->current_subframe)
         iterator2->start_subframe = mac_inst->current_subframe;
     }
 }
     iterator2 = available_resource_UL->threetone_Head;
     if(iterator2 != (available_resource_UL_t *)0){
-    if(mac_inst->current_subframe >= iterator2->end_subframe){
+    if(mac_inst->current_subframe > iterator2->end_subframe){
         pfree2 = iterator2;
 
         available_resource_UL->threetone_Head = iterator2->next;
@@ -1068,10 +1176,10 @@ void maintain_available_resource(eNB_MAC_INST_NB_IoT *mac_inst){
         free((available_resource_UL_t *)pfree2);
         
     }else{
+        if(iterator2->start_subframe<mac_inst->current_subframe)
         iterator2->start_subframe = mac_inst->current_subframe;
     }
-}
-    
+ }   
     if(mac_inst->current_subframe == 0){
         //  DL available cross zero
         iterator = available_resource_DL;
@@ -1155,10 +1263,8 @@ void maintain_available_resource(eNB_MAC_INST_NB_IoT *mac_inst){
             iterator1 = iterator1->next;
         }
     }
-    }
     
     
-    //printf_FUNCTION_OUT("[MAINTAIN]");
     return ;
 }
 
@@ -1505,7 +1611,7 @@ uint32_t get_scheduling_delay(uint32_t I_delay, uint32_t R_max)
     }
 }
 
-#if 0
+/*
 uint8_t *parse_ulsch_header( uint8_t *mac_header,
                              uint8_t *num_ce,
                              uint8_t *num_sdu,
@@ -1520,11 +1626,11 @@ uint16_t length, ce_len=0;
 
     while(not_done==1){
 
-        if(((SCH_SUBHEADER_FIXED*)mac_header_ptr)->E == 0){
+        if(((SCH_SUBHEADER_FIXED_NB_IoT*)mac_header_ptr)->E == 0){
             not_done = 0;
         }
 
-        lcid = ((SCH_SUBHEADER_FIXED *)mac_header_ptr)->LCID;
+        lcid = ((SCH_SUBHEADER_FIXED_NB_IoT *)mac_header_ptr)->LCID;
 
         if(lcid < EXTENDED_POWER_HEADROOM){
             if (not_done==0) { // last MAC SDU, length is implicit
@@ -1535,11 +1641,11 @@ uint16_t length, ce_len=0;
                     length -= rx_lengths[num_sdu_cnt];
                 }
             }else{
-                if(((SCH_SUBHEADER_SHORT *)mac_header_ptr)->F == 0){
-                    length = ((SCH_SUBHEADER_SHORT *)mac_header_ptr)->L;
-                    mac_header_ptr += 2;//sizeof(SCH_SUBHEADER_SHORT);
+                if(((SCH_SUBHEADER_SHORT_NB_IoT *)mac_header_ptr)->F == 0){
+                    length = ((SCH_SUBHEADER_SHORT_NB_IoT *)mac_header_ptr)->L;
+                    mac_header_ptr += 2;//sizeof(SCH_SUBHEADER_SHORT_NB_IoT);
                 }else{ // F = 1
-                    length = ((((SCH_SUBHEADER_LONG *)mac_header_ptr)->L_MSB & 0x7f ) << 8 ) | (((SCH_SUBHEADER_LONG *)mac_header_ptr)->L_LSB & 0xff);
+                    length = ((((SCH_SUBHEADER_LONG_NB_IoT *)mac_header_ptr)->L_MSB & 0x7f ) << 8 ) | (((SCH_SUBHEADER_LONG_NB_IoT *)mac_header_ptr)->L_LSB & 0xff);
                     mac_header_ptr += 3;//sizeof(SCH_SUBHEADER_LONG);
                 }
             }
@@ -1573,7 +1679,7 @@ uint16_t length, ce_len=0;
 
     return(mac_header_ptr);
 }
-#endif
+*/
 
 //  calvin
 //  maybe we can try to use hash table to enhance searching time.

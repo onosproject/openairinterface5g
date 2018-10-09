@@ -428,17 +428,21 @@ void rrc_mac_config_req_NB_IoT(
 
 
 
-        mac_config->sib1_NB_IoT_sched_config.starting_rf = *(sib1_NB_IoT->si_RadioFrameOffset_r13);
-        mac_config->si_window_length = sib1_NB_IoT->si_WindowLength_r13;
+        //mac_config->sib1_NB_IoT_sched_config.starting_rf = *(sib1_NB_IoT->si_RadioFrameOffset_r13);
+        mac_config->sib1_NB_IoT_sched_config.starting_rf = 2;
+        mac_config->si_window_length = ms160;
 
 
         ///OAI only supports SIB2/3-NB for the sibs
 
-            mac_config->sibs_NB_IoT_sched[0].si_periodicity =   si_Periodicity_rf4096 ;
+            mac_config->sibs_NB_IoT_sched[0].si_periodicity =   si_Periodicity_rf64 ;
             mac_config->sibs_NB_IoT_sched[0].si_repetition_pattern =  si_RepetitionPattern_every2ndRF;
      
             mac_config->sibs_NB_IoT_sched[0].sib_mapping_info =   sib3_v;
             mac_config->sibs_NB_IoT_sched[0].si_tb =      si_TB_680;
+
+         LOG_I(MAC,"si_periodicity:%d, siw: %d, start rf: %d\n",mac_config->sibs_NB_IoT_sched[0].si_periodicity, mac_config->si_window_length,mac_config->sib1_NB_IoT_sched_config.starting_rf); 
+
         /*
         /// Thiese value is setting for different SIB set
        if ( sib1_NB_IoT->schedulingInfoList_r13.list.array[1] != NULL) {
@@ -500,6 +504,10 @@ void rrc_mac_config_req_NB_IoT(
         mac_config->mac_NPRACH_ConfigSIB[0].mac_npdcch_NumRepetitions_RA_NB_IoT         = nprach_parameter->npdcch_NumRepetitions_RA_r13;
         mac_config->mac_NPRACH_ConfigSIB[0].mac_npdcch_StartSF_CSS_RA_NB_IoT            = nprach_parameter->npdcch_StartSF_CSS_RA_r13;
         mac_config->mac_NPRACH_ConfigSIB[0].mac_npdcch_Offset_RA_NB_IoT                 = nprach_parameter->npdcch_Offset_RA_r13;
+        mac_inst->npdcch_config_common[0].R_max                                         = rmax[nprach_parameter->npdcch_NumRepetitions_RA_r13];
+        mac_inst->npdcch_config_common[0].G                                             = gvalue[nprach_parameter->npdcch_StartSF_CSS_RA_r13];
+        mac_inst->npdcch_config_common[0].a_offset                                      = pdcchoffset[nprach_parameter->npdcch_Offset_RA_r13];
+        LOG_I(MAC,"NPRACH 0 setting: Rmax: %ld G: %lf a: %lf\n",mac_inst->npdcch_config_common[0].R_max,mac_inst->npdcch_config_common[0].G,mac_inst->npdcch_config_common[0].a_offset);
         }
         ///CE level 1
 
@@ -510,6 +518,10 @@ void rrc_mac_config_req_NB_IoT(
         mac_config->mac_NPRACH_ConfigSIB[1].mac_npdcch_NumRepetitions_RA_NB_IoT         = nprach_parameter->npdcch_NumRepetitions_RA_r13;
         mac_config->mac_NPRACH_ConfigSIB[1].mac_npdcch_StartSF_CSS_RA_NB_IoT            = nprach_parameter->npdcch_StartSF_CSS_RA_r13;
         mac_config->mac_NPRACH_ConfigSIB[1].mac_npdcch_Offset_RA_NB_IoT                 = nprach_parameter->npdcch_Offset_RA_r13;
+        mac_inst->npdcch_config_common[1].R_max                                         = rmax[nprach_parameter->npdcch_NumRepetitions_RA_r13];
+        mac_inst->npdcch_config_common[1].G                                             = gvalue[nprach_parameter->npdcch_StartSF_CSS_RA_r13];
+        mac_inst->npdcch_config_common[1].a_offset                                      = pdcchoffset[nprach_parameter->npdcch_Offset_RA_r13];
+        LOG_I(MAC,"NPRACH 1 setting: Rmax: %ld G: %lf a: %lf\n",mac_inst->npdcch_config_common[1].R_max,mac_inst->npdcch_config_common[1].G,mac_inst->npdcch_config_common[1].a_offset);
         }
         ///CE level 2
         if ( radioResourceConfigCommon->nprach_Config_r13.nprach_ParametersList_r13.list.array[2] != NULL) {
@@ -519,6 +531,10 @@ void rrc_mac_config_req_NB_IoT(
         mac_config->mac_NPRACH_ConfigSIB[2].mac_npdcch_NumRepetitions_RA_NB_IoT         = nprach_parameter->npdcch_NumRepetitions_RA_r13;
         mac_config->mac_NPRACH_ConfigSIB[2].mac_npdcch_StartSF_CSS_RA_NB_IoT            = nprach_parameter->npdcch_StartSF_CSS_RA_r13;
         mac_config->mac_NPRACH_ConfigSIB[2].mac_npdcch_Offset_RA_NB_IoT                 = nprach_parameter->npdcch_Offset_RA_r13;
+        mac_inst->npdcch_config_common[2].R_max                                         = rmax[nprach_parameter->npdcch_NumRepetitions_RA_r13];
+        mac_inst->npdcch_config_common[2].G                                             = gvalue[nprach_parameter->npdcch_StartSF_CSS_RA_r13];
+        mac_inst->npdcch_config_common[2].a_offset                                      = pdcchoffset[nprach_parameter->npdcch_Offset_RA_r13];
+        LOG_I(MAC,"NPRACH 2 setting: Rmax: %ld G: %lf a: %lf\n",mac_inst->npdcch_config_common[2].R_max,mac_inst->npdcch_config_common[2].G,mac_inst->npdcch_config_common[2].a_offset);
         }
 
 
@@ -584,16 +600,17 @@ void rrc_mac_config_req_NB_IoT(
 
       LOG_I(MAC,"[NB-IoT] Init_MAC done\n");
 
-      
+/*
       //for sacheduler testing
-      /*for(int i =0;i<30;i++)
+      for(int i =0;i<30;i++)
       {
         LOG_I(MAC,"[NB-IoT] scheduler testing start %d\n",i);
 
-        eNB_dlsch_ulsch_scheduler_NB_IoT(RC.nb_iot_mac[Mod_idP], i);
+        eNB_dlsch_ulsch_scheduler_NB_IoT(mac_inst, i);
 
         LOG_I(MAC,"[NB-IoT] scheduler testing done %d\n",i);
-      }*/
+      }
+*/
 
 //      RC.L1_NB_IoT[Mod_idP]->configured=1;
 

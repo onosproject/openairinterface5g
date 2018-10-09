@@ -464,7 +464,7 @@ int8_t mac_rrc_data_req_NB_IoT(
 
       return (Sdu_size);
     }
-
+/*
 #if defined(Rel10) || defined(Rel14)
 
     if((Srb_id & RAB_OFFSET) == MCCH_NB_IoT) {
@@ -520,6 +520,8 @@ int8_t mac_rrc_data_req_NB_IoT(
     }
 
 #endif //Rel10 || Rel14
+
+*/
   } else {  //This is an UE
 
     LOG_D(RRC,"[UE %d] Frame %d Filling CCCH SRB_ID %d\n",Mod_idP,frameP,Srb_id);

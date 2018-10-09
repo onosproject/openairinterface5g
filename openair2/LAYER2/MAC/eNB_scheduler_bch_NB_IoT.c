@@ -27,8 +27,10 @@ void schedule_sibs(eNB_MAC_INST_NB_IoT *mac_inst, uint32_t sibs_order, int start
 	schedule_result_t *new_node;	
 	DCIFormatN1_t *sibs_dci;
 	uint32_t j, i, k;
-	uint8_t SIB23_size = 0;
-	uint8_t *SIB23_pdu = get_NB_IoT_SIB23();
+	//------clare
+	//uint8_t SIB23_size = 0;
+	//uint8_t *SIB23_pdu = get_NB_IoT_SIB23();
+	//------clare
 	int residual_subframe, num_subframe, last_subframe;
 	num_subframe = mac_inst->rrc_config.sibs_NB_IoT_sched[sibs_order].si_tb;
 	
@@ -75,15 +77,17 @@ void schedule_sibs(eNB_MAC_INST_NB_IoT *mac_inst, uint32_t sibs_order, int start
 			sibs_dci->DCIRep = 0;
 			
 			for(k=0, j=start_subframe1;j<=i;++k, j+=si_repetition_pattern[mac_inst->rrc_config.sibs_NB_IoT_sched[sibs_order].si_repetition_pattern]){	
-LOG_D(MAC,"for1 k=%d j=%d i=%d rep=%d\n", k, j, i, si_repetition_pattern[mac_inst->rrc_config.sibs_NB_IoT_sched[sibs_order].si_repetition_pattern]);
+				LOG_D(MAC,"for1 k=%d j=%d i=%d rep=%d\n", k, j, i, si_repetition_pattern[mac_inst->rrc_config.sibs_NB_IoT_sched[sibs_order].si_repetition_pattern]);
 				if((available_resource_DL_t *)0 != pt[k]){
 					new_node = (schedule_result_t *)malloc(sizeof(schedule_result_t));
 					//	fill new node
-					SIB23_size = get_NB_IoT_SIB23_size();
+					//SIB23_size = get_NB_IoT_SIB23_size();
 					new_node->output_subframe = first_subframe[k];
 					new_node->end_subframe = (j==i)?last_subframe:j+9;
-					new_node->sdu_length = SIB23_size;
-					new_node->DLSCH_pdu = SIB23_pdu;
+					//------clare
+					new_node->sdu_length = 0;
+					//new_node->DLSCH_pdu = SIB23_pdu;
+					//------clare
 					new_node->direction = DL;	
 					new_node->DCI_release = (j==i);
 					new_node->channel = NPDSCH;
@@ -94,11 +98,11 @@ LOG_D(MAC,"for1 k=%d j=%d i=%d rep=%d\n", k, j, i, si_repetition_pattern[mac_ins
 					new_node->next = (schedule_result_t *)0;
 					new_node->DCI_pdu = (void *)sibs_dci;
 					//new_node->debug_str = str[sibs_order];
-LOG_D(MAC,"for*1 %d %d %d %p\n", pt[k]->start_subframe, first_subframe[k], (j==i)?last_subframe:j+9, new_node);
+					LOG_D(MAC,"for*1 %d %d %d %p\n", pt[k]->start_subframe, first_subframe[k], (j==i)?last_subframe:j+9, new_node);
 					fill_resource_DL(mac_inst, pt[k], first_subframe[k], (j==i)?last_subframe:j+9, new_node);
-LOG_D(MAC,"for*2\n");
+					LOG_D(MAC,"for*2\n");
 				}
-LOG_D(MAC,"for2\n");
+				LOG_D(MAC,"for2\n");
 			}
 
 			return ;

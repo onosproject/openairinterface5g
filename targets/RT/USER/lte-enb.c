@@ -662,6 +662,7 @@ static inline int rxtx(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc, char *thread_nam
   eNB->UL_INFO.subframe  = proc->subframe_rx;
   eNB->UL_INFO.module_id = eNB->Mod_id;
   eNB->UL_INFO.CC_id     = eNB->CC_id;
+  eNB->UL_INFO.hypersfn  = proc->HFN;
 
   eNB->if_inst->UL_indication(&eNB->UL_INFO);
 

@@ -115,7 +115,8 @@ int output_handler(eNB_MAC_INST_NB_IoT *mac_inst, module_id_t module_id, int CC_
   		//LOG_I(MAC,"NB-IoT fill MIB\n");
   		//dl_scheduled(mac_inst->current_subframe, _NPBCH, 0, "MIB");
 	}
-	else if((subframe == 4)  && (frame%2==0) && (frame%32<16) /*SIB1_flag == 1*/)	//	TODO back to SIB1_flag
+	else if(SIB1_flag==1)
+	//else if((subframe == 4)  && (frame%2==0) && (frame%32<16) /*SIB1_flag == 1*/)	//	TODO back to SIB1_flag
 	{
 		uint8_t *SIB1_pdu = get_NB_IoT_SIB1(0,0,carrier,208,92,1,3584,28,2,subframe,frame,hypersfn);
 		//SIB1_size = mac_rrc_data_req_eNB_NB_IoT(*SIB1);
@@ -140,7 +141,7 @@ int output_handler(eNB_MAC_INST_NB_IoT *mac_inst, module_id_t module_id, int CC_
 		//LOG_D(MAC,"A NB-IoT SIB1 pdu : %d \n",SIB1_pdu);
 		
 		SCHED_info->TX_req->tx_request_body.tx_pdu_list[dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13.pdu_index].segments[0].segment_data = SIB1_pdu;
-		LOG_D(MAC,"NB-IoT fill SIB1\n");
+		LOG_I(MAC,"NB-IoT fill SIB1\n");
 		//LOG_I(MAC,"NB-IoT fill SIB1\n");
 		//start symbol, Resource assignment, Repetition number, Number of subframe Resource assignment lost for now
 		//dl_scheduled(mac_inst->current_subframe, _NPDSCH, SI_RNTI, "SIB1");
@@ -227,6 +228,8 @@ int output_handler(eNB_MAC_INST_NB_IoT *mac_inst, module_id_t module_id, int CC_
 					break;
 				case NPDSCH:
 						LOG_D(MAC,"NB-IoT fill DL Data\n");
+						if(schedule_result_list_DL->rnti==SI_RNTI)
+							LOG_I(MAC,"NB-IoT fill SIB23\n");
 						//LOG_I(MAC,"NB-IoT fill DL Data\n");
 						//SCHED_info->DL_req = (nfapi_dl_config_request_t*) malloc (sizeof(nfapi_dl_config_request_t));
 						//SCHED_info->DL_req->dl_config_request_body.number_pdu = 0;
