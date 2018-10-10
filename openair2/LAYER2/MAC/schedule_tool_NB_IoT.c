@@ -1060,7 +1060,7 @@ void extend_available_resource_DL(eNB_MAC_INST_NB_IoT *mac_inst, int max_subfram
             available_resource_DL_last = new_node;
         }
         
-        LOG_I(MAC,"sf_dl:%d max:%d siw:%d\n",mac_inst->schedule_subframe_DL,max_subframe,mac_inst->rrc_config.si_window_length);
+        LOG_D(MAC,"sf_dl:%d max:%d siw:%d\n",mac_inst->schedule_subframe_DL,max_subframe,mac_inst->rrc_config.si_window_length);
 
         //  do schedule sibs after extend.
         for(i=mac_inst->schedule_subframe_DL;i<max_subframe;i+=mac_inst->rrc_config.si_window_length){

@@ -338,7 +338,7 @@ void common_signal_procedures_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
                            RB_IoT_ID,
                            With_NSSS);
 
-  if(frame==1023 && subframe==9)
+  if(proc->frame_rx==1023 && proc->subframe_rx==9)
   {
       //printf("%d",hyper_frame);
       if(proc->HFN==1023)
@@ -346,6 +346,7 @@ void common_signal_procedures_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
            proc->HFN=0;
       }else{ 
            proc->HFN++;
+           //printf("Update HFN:%d when frame:%d subframe:%d\n",proc->HFN,proc->frame_rx,proc->subframe_rx);
       }
   }
 
