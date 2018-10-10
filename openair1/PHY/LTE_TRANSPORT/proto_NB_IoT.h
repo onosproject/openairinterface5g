@@ -190,7 +190,7 @@ void add_dci_NB_IoT(DCI_PDU_NB_IoT    *DCI_pdu,
 
 /*Use the UL DCI Information to configure PHY and also Pack the DCI*/
 int generate_eNB_ulsch_params_from_dci_NB_IoT(PHY_VARS_eNB_NB_IoT     *eNB,
-                                              eNB_rxtx_proc_NB_IoT_t  *proc,
+                                              eNB_rxtx_proc_t         *proc,
                                               DCI_CONTENT             *DCI_Content,
                                               uint16_t                rnti,
                                               DCI_format_NB_IoT_t     dci_format,

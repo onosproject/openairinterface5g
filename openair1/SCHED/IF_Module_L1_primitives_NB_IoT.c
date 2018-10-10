@@ -158,10 +158,11 @@ void handle_nfapi_dlsch_pdu_NB_IoT(PHY_VARS_eNB *eNB,
 			//ndlsch_harq->pdu = sdu;
 			//LOG_I(PHY,"B content_sib23:%d\n",sdu);
 			ndlsch_harq23->pdu = sdu;
-			ndlsch_harq23->resource_assignment = rel13->number_of_subframes_for_resource_assignment;//value 2 or 8
+			
 			ndlsch_harq23->repetition_number = rel13->repetition_number;//should be always fix to 0 to be mapped in 1
 			ndlsch_harq23->modulation = rel13->modulation;
 			//LOG_I(PHY,"A content_sib23:%d\n",sdu);
+			ndlsch23->resource_assignment = rel13->number_of_subframes_for_resource_assignment;//value 2 or 8
 			ndlsch23->counter_repetition_number = rel13->number_of_subframes_for_resource_assignment;
             ndlsch23->counter_current_sf_repetition   = 0;
 		    ndlsch23->pointer_to_subframe             = 0;
