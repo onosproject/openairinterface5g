@@ -104,7 +104,7 @@ void init_mac_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst)
   }
   mac_inst->rrc_config.si_window_length = ms160;
   mac_inst->rrc_config.sibs_NB_IoT_sched[0].si_periodicity = rf64;
-//  mac_inst->rrc_config.si_radio_frame_offset = 1;
+  mac_inst->rrc_config.si_radio_frame_offset = 1;
 
   for(j=0;j<6;++j){
     if(0x0 != mac_inst->rrc_config.sibs_NB_IoT_sched[j].sib_mapping_info){
