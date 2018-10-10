@@ -67,7 +67,7 @@ void schedule_sibs(eNB_MAC_INST_NB_IoT *mac_inst, uint32_t sibs_order, int start
 			sibs_dci->type = 1;
 			sibs_dci->orderIndicator = 0;
 			sibs_dci->Scheddly = 0;
-			sibs_dci->ResAssign = mac_inst->rrc_config.sibs_NB_IoT_sched[sibs_order].si_tb;
+			sibs_dci->ResAssign = 8;
 			sibs_dci->mcs = 2;
 			sibs_dci->RepNum = 0;
 			sibs_dci->ndi = 0;
