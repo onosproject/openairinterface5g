@@ -27,10 +27,8 @@ void schedule_sibs(eNB_MAC_INST_NB_IoT *mac_inst, uint32_t sibs_order, int start
 	schedule_result_t *new_node;	
 	DCIFormatN1_t *sibs_dci;
 	uint32_t j, i, k;
-	//------clare
-	//uint8_t SIB23_size = 0;
-	//uint8_t *SIB23_pdu = get_NB_IoT_SIB23();
-	//------clare
+	uint8_t SIB23_size = 0;
+	uint8_t *SIB23_pdu = get_NB_IoT_SIB23();
 	int residual_subframe, num_subframe, last_subframe;
 	num_subframe = mac_inst->rrc_config.sibs_NB_IoT_sched[sibs_order].si_tb;
 	
@@ -81,13 +79,11 @@ void schedule_sibs(eNB_MAC_INST_NB_IoT *mac_inst, uint32_t sibs_order, int start
 				if((available_resource_DL_t *)0 != pt[k]){
 					new_node = (schedule_result_t *)malloc(sizeof(schedule_result_t));
 					//	fill new node
-					//SIB23_size = get_NB_IoT_SIB23_size();
+					SIB23_size = get_NB_IoT_SIB23_size();
 					new_node->output_subframe = first_subframe[k];
 					new_node->end_subframe = (j==i)?last_subframe:j+9;
-					//------clare
-					new_node->sdu_length = 0;
-					//new_node->DLSCH_pdu = SIB23_pdu;
-					//------clare
+					new_node->sdu_length = SIB23_size;
+					new_node->DLSCH_pdu = SIB23_pdu;
 					new_node->direction = DL;	
 					new_node->DCI_release = (j==i);
 					new_node->channel = NPDSCH;

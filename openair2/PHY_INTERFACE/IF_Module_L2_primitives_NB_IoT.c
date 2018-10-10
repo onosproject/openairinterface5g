@@ -70,6 +70,7 @@ void UL_indication_NB_IoT(UL_IND_NB_IoT_t *UL_INFO)
 
           */
     //LOG_I(MAC,"IF L2 frame: %d ,subframe: %d \n",UL_INFO->frame,UL_INFO->subframe);
+    //abs_subframe = UL_INFO->frame*10240+UL_INFO->frame*10+UL_INFO->subframe +4;
     abs_subframe = UL_INFO->frame*10+UL_INFO->subframe +4;
 
     //LOG_I(MAC,"Enter scheduler in subframe %d\n",abs_subframe);
