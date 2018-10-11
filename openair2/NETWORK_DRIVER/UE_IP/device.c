@@ -99,20 +99,43 @@ void *ue_ip_interrupt(void)
 }
 #endif //NETLINK
 //---------------------------------------------------------------------------
+
+
+
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 15, 0))
+void ue_ip_timer(struct timer_list *t)
+#else
 void ue_ip_timer(unsigned long dataP)
+#endif
 {
   //---------------------------------------------------------------------------
-  ue_ip_priv_t *priv_p=(ue_ip_priv_t *)dataP;
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 15, 0))
+  ue_ip_priv_t *priv_p = from_timer(priv_p, t, timer);
+#else
+  ue_ip_priv_t *priv_p = (ue_ip_priv_t *)dataP;
+#endif
+
   spin_lock(&priv_p->lock);
-  (priv_p->timer).function=ue_ip_timer;
-  (priv_p->timer).expires=jiffies+UE_IP_TIMER_TICK;
-  (priv_p->timer).data=dataP;
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 15, 0))
+  mod_timer(&priv_p->timer, jiffies + UE_IP_TIMER_TICK);
+#else
+  (priv_p->timer).function = ue_ip_timer;
+  (priv_p->timer).expires = jiffies + UE_IP_TIMER_TICK;
+  (priv_p->timer).data = dataP;
   add_timer(&priv_p->timer);
+#endif
+
   spin_unlock(&priv_p->lock);
   return;
   //  add_timer(&gpriv->timer);
   //  spin_unlock(&gpriv->lock);
 }
+
+
+
+
+
+
 
 //---------------------------------------------------------------------------
 // Called by ifconfig when the device is activated by ifconfig
@@ -137,15 +160,21 @@ int ue_ip_open(struct net_device *dev_pP)
     netif_wake_queue(dev_pP);
   }
 
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 15, 0))
+  timer_setup(&(priv_p->timer), ue_ip_timer, 0);
+  (priv_p->timer).expires   = jiffies+UE_IP_TIMER_TICK;
+#else
   init_timer(&priv_p->timer);
   (priv_p->timer).expires   = jiffies+UE_IP_TIMER_TICK;
   (priv_p->timer).data      = (unsigned long)priv_p;
   (priv_p->timer).function  = ue_ip_timer;
+#endif
   //add_timer(&priv_p->timer);
 
   printk("[UE_IP_DRV][%s] name = %s\n", __FUNCTION__, dev_pP->name);
   return 0;
 }
+ 
 
 //---------------------------------------------------------------------------
 // Called by ifconfig when the device is desactivated
@@ -236,7 +265,7 @@ int ue_ip_hard_start_xmit(struct sk_buff *skb_pP, struct net_device *dev_pP)
 
     // End debug information
     netif_stop_queue(dev_pP);
-#if  LINUX_VERSION_CODE >= KERNEL_VERSION(4,7,0) || RHEL_RELEASE_CODE >= 1796
+#if  (LINUX_VERSION_CODE >= KERNEL_VERSION(4,7,0) || defined RHEL_RELEASE_CODE && RHEL_RELEASE_CODE >= 1796)
     netif_trans_update(dev_pP);
 #else
     dev_pP->trans_start = jiffies;
@@ -275,9 +304,9 @@ struct net_device_stats *ue_ip_get_stats(struct net_device *dev_pP)
 int ue_ip_set_mac_address(struct net_device *dev_pP, void *mac_pP)
 {
   //---------------------------------------------------------------------------
-  //struct sockaddr *addr = mac_pP;
+  struct sockaddr *addr = mac_pP;
   printk("[UE_IP_DRV][%s] CHANGE MAC ADDRESS UNSUPPORTED\n", __FUNCTION__);
-  //memcpy(dev_pP->dev_addr, addr->sa_data, dev_pP->addr_len);
+  memcpy(dev_pP->dev_addr, addr->sa_data, dev_pP->addr_len);
   return 0;
 }
 //---------------------------------------------------------------------------
@@ -312,7 +341,7 @@ void ue_ip_tx_timeout(struct net_device *dev_pP)
   printk("[UE_IP_DRV][%s] begin\n", __FUNCTION__);
   //  (ue_ip_priv_t *)(dev_pP->priv_p)->stats.tx_errors++;
   (priv_p->stats).tx_errors++;
-#if  LINUX_VERSION_CODE >= KERNEL_VERSION(4,7,0) || RHEL_RELEASE_CODE >= 1796
+#if  LINUX_VERSION_CODE >= KERNEL_VERSION(4,7,0) || (defined RHEL_RELEASE_CODE && RHEL_RELEASE_CODE >= 1796)
   netif_trans_update(dev_pP);
 #else
   dev_pP->trans_start = jiffies;
@@ -348,11 +377,13 @@ void ue_ip_init(struct net_device *dev_pP)
     memset(priv_p, 0, sizeof(ue_ip_priv_t));
     spin_lock_init(&priv_p->lock);
     dev_pP->netdev_ops = &ue_ip_netdev_ops;
-    dev_pP->hard_header_len = 0;
+/*  dev_pP->hard_header_len = 0;
     dev_pP->addr_len = UE_IP_ADDR_LEN;
     dev_pP->flags = IFF_BROADCAST|IFF_MULTICAST|IFF_NOARP;
     dev_pP->tx_queue_len = UE_IP_TX_QUEUE_LEN;
     dev_pP->mtu = UE_IP_MTU;
+*/
+    ether_setup(dev_pP);
   } else {
     printk("[UE_IP_DRV][%s] ERROR, Device is NULL!!\n", __FUNCTION__);
     return;
@@ -364,7 +395,6 @@ int init_module (void)
   //---------------------------------------------------------------------------
   int err,inst;
   char devicename[100];
-
 
   // Initialize parameters shared with RRC
   printk("[UE_IP_DRV][%s] Starting OAI IP driver", __FUNCTION__);

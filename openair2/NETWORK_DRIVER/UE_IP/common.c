@@ -279,6 +279,7 @@ ue_ip_common_ip2wireless(
 
   if (skb_pP->mark) {
     pdcph.rb_id      = skb_pP->mark;
+    printk("[UE_IP_DRV_PROSE] skb_pP->mark %d\n",skb_pP->mark);
   } else {
     pdcph.rb_id      = UE_IP_DEFAULT_RAB_ID;
   }
@@ -305,11 +306,22 @@ ue_ip_common_ip2wireless(
       printk("[UE_IP_DRV][%s] Dest %d.%d.%d.%d\n",__FUNCTION__, dst_addr[0],dst_addr[1],dst_addr[2],dst_addr[3]);
     }
 
+    //get source/destination MAC addresses
+    struct ethhdr *mh = eth_hdr(skb_pP);
+#ifdef OAI_DRV_DEBUG_SEND
+    printk("[UE_IP_DRV] source MAC %x.%x.%x.%x.%x.%x\n", mh->h_source[0],mh->h_source[1],mh->h_source[2],mh->h_source[3],mh->h_source[4],mh->h_source[5]);
+    printk("[UE_IP_DRV] dest MAC %x.%x.%x.%x.%x.%x\n", mh->h_dest[0],mh->h_dest[1],mh->h_dest[2],mh->h_dest[3],mh->h_dest[4],mh->h_dest[5]);
+#endif
+    //assign source/destL2Id from the 4 lower bytes of MAC addresses
+    pdcph.sourceL2Id = ((uint8_t)mh->h_source[5] & 0x000000FF) | (((uint8_t)mh->h_source[4] << 8) & 0x0000FF00) | (((uint8_t)mh->h_source[3] << 16) & 0x00FF0000) | (((uint8_t)mh->h_source[2] << 24) & 0xFF000000);
+    pdcph.destinationL2Id = ((uint8_t)mh->h_dest[5] & 0x000000FF) | (((uint8_t)mh->h_dest[4] << 8) & 0x0000FF00) | (((uint8_t)mh->h_dest[3] << 16) & 0x00FF0000) | (((uint8_t)mh->h_dest[2] << 24) & 0xFF000000);
+
+
     //get Ipv4 address and pass to PCDP header
+    //pdcph.sourceL2Id = ntohl( ((struct iphdr *)&skb_pP->data[hard_header_len])->saddr) & 0x00FFFFFF;
+    //pdcph.destinationL2Id = ntohl( ((struct iphdr *)&skb_pP->data[hard_header_len])->daddr) & 0x00FFFFFF;
     printk("[UE_IP_DRV] source Id: 0x%08x\n",pdcph.sourceL2Id );
     printk("[UE_IP_DRV] destinationL2Id Id: 0x%08x\n",pdcph.destinationL2Id );
-    pdcph.sourceL2Id = ntohl( ((struct iphdr *)&skb_pP->data[hard_header_len])->saddr) & 0x00FFFFFF;
-    pdcph.destinationL2Id = ntohl( ((struct iphdr *)&skb_pP->data[hard_header_len])->daddr) & 0x00FFFFFF;
     break;
 
   default:
