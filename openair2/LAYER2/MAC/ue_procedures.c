@@ -864,21 +864,28 @@ void ue_send_sl_sdu(module_id_t module_idP,
       int j = 0;
       for (i=0; i< MAX_NUM_LCID; i++)
          if ((UE_mac_inst[module_idP].sl_info[i].groupL2Id == destinationL2Id) && (UE_mac_inst[module_idP].sl_info[i].sourceL2Id != sourceL2Id)) {
-            lcid = UE_mac_inst[module_idP].sl_info[i].LCID;
+	    lcid = UE_mac_inst[module_idP].sl_info[i].LCID;
+            LOG_I(MAC, "Found corresponding receiver LCID for group communication: %d \n", lcid);
             break;
          }
 
       for (j = 0; j< MAX_NUM_LCID; j++){
          if ((longh->LCID < MAX_NUM_LCID_DATA) && (j < MAX_NUM_LCID_DATA)){
             if ((UE_mac_inst[module_idP].sl_info[j].destinationL2Id == sourceL2Id) && (UE_mac_inst[module_idP].sl_info[j].sourceL2Id == destinationL2Id)) {
-               lcid = longh->LCID; //UE_mac_inst[module_idP].sl_info[j].LCID;
+               //lcid = longh->LCID; 
+	       lcid = UE_mac_inst[module_idP].sl_info[j].LCID;
+               LOG_I(MAC, "Found corresponding receiver LCID for DATA direct communication: %d \n", lcid);
                break;
             }
          }
          if ((longh->LCID >= MAX_NUM_LCID_DATA) && (j >= MAX_NUM_LCID_DATA)){
             //PC5-S (receive message after transmitting, e.g, security-command...)
             if ((UE_mac_inst[module_idP].sl_info[j].sourceL2Id == destinationL2Id) && (UE_mac_inst[module_idP].sl_info[j].destinationL2Id == 0)) {
-               if (UE_mac_inst[module_idP].sl_info[j].LCID > 0) lcid = longh->LCID;//UE_mac_inst[module_idP].sl_info[j].LCID;
+                LOG_I(MAC, "Received a PC5-S message, Tx LCID: %d Rx LCID: %d \n \n", longh->LCID, UE_mac_inst[module_idP].sl_info[j].LCID);
+		if (UE_mac_inst[module_idP].sl_info[j].LCID > 0) {
+		    lcid = UE_mac_inst[module_idP].sl_info[j].LCID;  //lcid = longh->LCID;
+		    LOG_I(MAC, "Found corresponding receiver LCID for SIGNALING direct communication: %d \n", lcid);
+                }
 
                break;
             }
@@ -912,7 +919,9 @@ void ue_send_sl_sdu(module_id_t module_idP,
       }
 
 */
-      lcid = longh->LCID;
+      
+      //lcid = longh->LCID;
+      //LOG_I(MAC, "Actually assigned receiver bearer: %d \n", lcid);
 
 //      LOG_I( MAC, "DestinationL2Id:  0x%08x, sl_rbid %d, longh->LCID %d  \n", destinationL2Id, lcid, longh->LCID );
 
@@ -945,7 +954,7 @@ void ue_send_sl_sdu(module_id_t module_idP,
       }
 
    
-      LOG_D(MAC,"%d.%d myL2Id %d sending sdu of size %d, sourceL2Id %d, lcid %d to RLC\n",frameP,subframeP,UE_mac_inst[module_idP].sourceL2Id,rlc_sdu_len,sourceL2Id,lcid);
+      LOG_I(MAC,"%d.%d myL2Id %d sending sdu of size %d, sourceL2Id %d, lcid %d to RLC\n",frameP,subframeP,UE_mac_inst[module_idP].sourceL2Id,rlc_sdu_len,sourceL2Id,lcid);
 
       mac_rlc_data_ind(
             module_idP,
@@ -3586,9 +3595,9 @@ SLSCH_t *ue_get_slsch(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_
          // Notes: 1. hard-coded to 24-bit destination format for now
          if (sdu_length > 0) {
 
-            LOG_D(MAC,"SFN.SF %d.%d : got %d bytes from Sidelink buffer (%d requested)\n",frameP,subframeP,sdu_length,req);
-            LOG_D(MAC,"sourceL2Id: 0x%08x \n",ue->sourceL2Id);
-            LOG_D(MAC,"groupL2Id/destinationL2Id: 0x%08x \n",ue->destinationL2Id);
+            LOG_I(MAC,"SFN.SF %d.%d : got %d bytes from Sidelink buffer (%d requested)\n",frameP,subframeP,sdu_length,req);
+            LOG_I(MAC,"sourceL2Id: 0x%08x \n",ue->sourceL2Id);
+            LOG_I(MAC,"groupL2Id/destinationL2Id: 0x%08x \n",ue->destinationL2Id);
 
             slsch->payload = (unsigned char*)ue->slsch_pdu.payload;
             if (sdu_length < 128) {

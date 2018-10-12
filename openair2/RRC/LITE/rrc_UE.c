@@ -5756,7 +5756,7 @@ void *rrc_control_socket_thread_fct(void *arg)
 
 
          //configure MAC with sourceL2Id/groupL2ID
-         LOG_I(PHY,"Configuration MAC for sourceL2Id/GroupL2ID %d/%d\n",sourceL2Id,groupL2Id);
+         LOG_I(PHY,"Configuration MAC for sourceL2Id/GroupL2ID, %d/%d, UE->DRB_config[0][0]->drb_Identity: %d, group_comm_rbid: %d \n",sourceL2Id,groupL2Id,UE->DRB_config[0][0]->drb_Identity, group_comm_rbid);
          rrc_mac_config_req_ue(module_id,0,0, //eNB_index =0
 			       (RadioResourceConfigCommonSIB_t *)NULL,
 			       (struct PhysicalConfigDedicated *)NULL,
@@ -5791,8 +5791,8 @@ void *rrc_control_socket_thread_fct(void *arg)
 #if defined(Rel10) || defined(Rel14)
 			       ,CONFIG_ACTION_ADD,
 			       &sourceL2Id,
-			       &groupL2Id,
 			       NULL,
+			       &groupL2Id,
 			       NULL,
 			       1025, // indicates that there is no  update in the frame number
 			       11,   // /indicates that there isno update in the subframe number
@@ -6387,7 +6387,8 @@ void *rrc_control_socket_thread_fct(void *arg)
 #endif
 				  (MeasObjectToAddMod_t **)NULL,
 				  (MAC_MainConfig_t *)NULL,
-				  10, //LCID
+				  //10, //LCID
+				  pc5s_rbid, //LCID
 				  (struct LogicalChannelConfig *)NULL,
 				  (MeasGapConfig_t *)NULL,
 				  (TDD_Config_t *)NULL,
