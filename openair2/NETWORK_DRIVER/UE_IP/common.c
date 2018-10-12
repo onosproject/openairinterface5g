@@ -312,9 +312,9 @@ ue_ip_common_ip2wireless(
     printk("[UE_IP_DRV] source MAC %x.%x.%x.%x.%x.%x\n", mh->h_source[0],mh->h_source[1],mh->h_source[2],mh->h_source[3],mh->h_source[4],mh->h_source[5]);
     printk("[UE_IP_DRV] dest MAC %x.%x.%x.%x.%x.%x\n", mh->h_dest[0],mh->h_dest[1],mh->h_dest[2],mh->h_dest[3],mh->h_dest[4],mh->h_dest[5]);
 #endif
-    //assign source/destL2Id from the 4 lower bytes of MAC addresses
-    pdcph.sourceL2Id = ((uint8_t)mh->h_source[5] & 0x000000FF) | (((uint8_t)mh->h_source[4] << 8) & 0x0000FF00) | (((uint8_t)mh->h_source[3] << 16) & 0x00FF0000) | (((uint8_t)mh->h_source[2] << 24) & 0xFF000000);
-    pdcph.destinationL2Id = ((uint8_t)mh->h_dest[5] & 0x000000FF) | (((uint8_t)mh->h_dest[4] << 8) & 0x0000FF00) | (((uint8_t)mh->h_dest[3] << 16) & 0x00FF0000) | (((uint8_t)mh->h_dest[2] << 24) & 0xFF000000);
+    //assign source/destL2Id from the last 24 bits of MAC addresses
+    pdcph.sourceL2Id = ((uint8_t)mh->h_source[5] & 0x000000FF) | (((uint8_t)mh->h_source[4] << 8) & 0x0000FF00) | (((uint8_t)mh->h_source[3] << 16) & 0x00FF0000) ;
+    pdcph.destinationL2Id = ((uint8_t)mh->h_dest[5] & 0x000000FF) | (((uint8_t)mh->h_dest[4] << 8) & 0x0000FF00) | (((uint8_t)mh->h_dest[3] << 16) & 0x00FF0000);
 
 
     //get Ipv4 address and pass to PCDP header
