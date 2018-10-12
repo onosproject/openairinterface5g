@@ -43,9 +43,15 @@ Get and build vencore_app from d2d-l3-stub (branch: l3_stub)
 UE1: 
  - sudo ifconfig oip0 10.0.0.1
  - (if necessary) sudo route add default gw 10.10.10.1 eth0
+ - sudo ifconfig oip0 hw ether 00:00:00:00:00:01
+ - (optional, in case ARP fails to work with oip interface): ip neigh add 10.0.0.2 lladdr 00:00:00:00:00:02  dev oip0  nud permanent 
+   
 UE2:
  - sudo ifconfig oip0 10.0.0.2
  - (if necessary) sudo route add default gw 10.10.10.1 eno1
+ - sudo ifconfig oip0 hw ether 00:00:00:00:00:02
+ - (optional, in case ARP fails to work with oip interface): ip neigh add 10.0.0.1 lladdr 00:00:00:00:00:01  dev oip0  nud permanent 
+ 
  
  For the moment, we suppose that L2Ids of UE1, UE2 are Ox01, 0x02 respectively. GroupL2Id is set to 0x03.
   
@@ -92,9 +98,14 @@ TEST PC5-S (UE1 - sender, UE2 - receiver) and PC5-U for ONE-TO-ONE scenario (and
 Configure UE1/UE2
 UE1: 
  - sudo ifconfig oip0 10.0.0.1
+ - sudo ifconfig oip0 hw ether 00:00:00:00:00:01
+ - (optional, in case ARP fails to work with oip interface): ip neigh add 10.0.0.2 lladdr 00:00:00:00:00:02  dev oip0  nud permanent 
  - sudo route add default gw 10.10.10.1 eth0
+ 
 UE2:
  - sudo ifconfig oip0 10.0.0.2
+ - sudo ifconfig oip0 hw ether 00:00:00:00:00:02
+ - (optional, in case ARP fails to work with oip interface): ip neigh add 10.0.0.1 lladdr 00:00:00:00:00:01  dev oip0  nud permanent 
  - sudo route add default gw 10.10.10.1 eno1
  
 step 1:
@@ -157,15 +168,27 @@ TEST PC5-U for ONE-TO-ONE scenario (UE1 - sender, UE2/3 - receiver) and PC5-U fo
 - configure UE1, UE2, UE3 as mentioned in the previous section
 UE1: 
  - sudo ifconfig oip0 10.0.0.1
+ - sudo ifconfig oip0 hw ether 00:00:00:00:00:01
+ - (optional, in case ARP fails to work with oip interface): 
+   ip neigh add 10.0.0.2 lladdr 00:00:00:00:00:02  dev oip0  nud permanent 
+   ip neigh add 10.0.0.4 lladdr 00:00:00:00:00:04  dev oip0  nud permanent 
  - sudo route add default gw 10.10.10.1 eth0
 
 UE2:
  - sudo ifconfig oip0 10.0.0.2
+ - sudo ifconfig oip0 hw ether 00:00:00:00:00:02
+ - (optional, in case ARP fails to work with oip interface): 
+   ip neigh add 10.0.0.1 lladdr 00:00:00:00:00:01  dev oip0  nud permanent
+   ip neigh add 10.0.0.4 lladdr 00:00:00:00:00:04  dev oip0  nud permanent  
  - sudo route add default gw 10.10.10.1 eno1
 
 - configure UE3
 UE3: 
  - sudo ifconfig oip0 10.0.0.4
+ - sudo ifconfig oip0 hw ether 00:00:00:00:00:04
+ - (optional, in case ARP fails to work with oip interface): 
+    ip neigh add 10.0.0.2 lladdr 00:00:00:00:00:02  dev oip0  nud permanent
+    ip neigh add 10.0.0.1 lladdr 00:00:00:00:00:01  dev oip0  nud permanent 
  - sudo route add default gw 10.10.10.1 eno1
 
 Step 1:
