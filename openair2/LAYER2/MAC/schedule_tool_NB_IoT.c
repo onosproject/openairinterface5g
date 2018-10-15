@@ -980,7 +980,7 @@ void init_dl_list(eNB_MAC_INST_NB_IoT *mac_inst){
     //schedule_sibs(mac_inst, 0, 0);    //  TODO, check init
 }
 
-#if 0
+#if 1
 //  extend subframe align to si-period
 void extend_available_resource_DL(eNB_MAC_INST_NB_IoT *mac_inst, int max_subframe){
 
@@ -1025,7 +1025,7 @@ void extend_available_resource_DL(eNB_MAC_INST_NB_IoT *mac_inst, int max_subfram
     }
 }
 #endif
-#if 1
+#if 0
 //  extend subframe align to si-period
 void extend_available_resource_DL(eNB_MAC_INST_NB_IoT *mac_inst, int max_subframe){ //  assume max_subframe is found.
     
