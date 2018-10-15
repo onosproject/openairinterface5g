@@ -1,4 +1,4 @@
-﻿-- **************************************************************
+-- **************************************************************
 --
 -- Elementary Procedure definitions
 --
@@ -114,8 +114,7 @@ FROM S1AP-CommonDataTypes
 	RetrieveUEInformation,
 	UEInformationTransfer,
 	ENBCPRelocationIndication,
-	MMECPRelocationIndication,
-	SecondaryRATDataUsageReport
+	MMECPRelocationIndication
 
 
 FROM S1AP-PDU-Contents
@@ -181,8 +180,7 @@ FROM S1AP-PDU-Contents
 	id-RetrieveUEInformation,
 	id-UEInformationTransfer,
 	id-eNBCPRelocationIndication,
-	id-MMECPRelocationIndication,
-	id-SecondaryRATDataUsageReport
+	id-MMECPRelocationIndication
 
 
 FROM S1AP-Constants;
@@ -320,8 +318,7 @@ S1AP-ELEMENTARY-PROCEDURES-CLASS-2 S1AP-ELEMENTARY-PROCEDURE ::= {
 	retrieveUEInformation			|
 	uEInformationTransfer			|
 	eNBCPRelocationIndication					|
-	mMECPRelocationIndication		|
-	secondaryRATDataUsageReport
+	mMECPRelocationIndication
 }
 
 -- **************************************************************
@@ -730,12 +727,6 @@ mMECPRelocationIndication S1AP-ELEMENTARY-PROCEDURE ::= {
 	CRITICALITY				reject
 }
 
-secondaryRATDataUsageReport S1AP-ELEMENTARY-PROCEDURE ::= {
-	INITIATING MESSAGE		SecondaryRATDataUsageReport
-	PROCEDURE CODE			id-SecondaryRATDataUsageReport
-	CRITICALITY			ignore
-}
-
 
 END
 
@@ -904,22 +895,7 @@ IMPORTS
 	Coverage-Level,
 	EnhancedCoverageRestricted,
 	DL-CP-SecurityInformation,
-	UL-CP-SecurityInformation,
-	SecondaryRATDataUsageRequest,
-	SecondaryRATDataUsageReportList,
-	HandoverFlag,
-	NRUESecurityCapabilities,
-	UE-Application-Layer-Measurement-Capability,
-	CE-ModeBRestricted,
-	Packet-LossRate,
- 	UECapabilityInfoRequest,
-	SourceNgRanNode-ToTargetNgRanNode-TransparentContainer,
-	TargetNgRanNode-ToSourceNgRanNode-TransparentContainer,
-	EndIndication,
-	EDT-Session,
-	LTE-M-Indication,
-	AerialUEsubscriptionInformation
-
+	UL-CP-SecurityInformation
 
 
 
@@ -940,7 +916,6 @@ FROM S1AP-Containers
 
 
 	id-AssistanceDataForPaging,
-	id-AerialUEsubscriptionInformation,
 	id-uEaggregateMaximumBitrate,
 	id-BearerType,
 	id-Cause,
@@ -1154,20 +1129,7 @@ FROM S1AP-Containers
 	id-EnhancedCoverageRestricted,
 	id-UE-Level-QoS-Parameters,
 	id-DL-CP-SecurityInformation,
-	id-UL-CP-SecurityInformation,
-	id-SecondaryRATDataUsageRequest,
-	id-SecondaryRATDataUsageReportList,
-	id-HandoverFlag,
-	id-NRUESecurityCapabilities,
-	id-UE-Application-Layer-Measurement-Capability,
-	id-CE-ModeBRestricted,
-	id-DownlinkPacketLossRate,
-	id-UplinkPacketLossRate,
-	id-UECapabilityInfoRequest,
-	id-EndIndication,
-	id-EDT-Session,
-	id-LTE-M-Indication
-
+	id-UL-CP-SecurityInformation
 
 
 FROM S1AP-Constants;
@@ -1329,10 +1291,7 @@ HandoverRequestIEs S1AP-PROTOCOL-IES ::= {
 	{ ID id-UEUserPlaneCIoTSupportIndicator			CRITICALITY ignore	TYPE UEUserPlaneCIoTSupportIndicator 		PRESENCE optional}|
 	{ ID id-V2XServicesAuthorized					CRITICALITY ignore	TYPE V2XServicesAuthorized			PRESENCE optional}|
 	{ ID id-UESidelinkAggregateMaximumBitrate		CRITICALITY ignore	TYPE UESidelinkAggregateMaximumBitrate		PRESENCE optional}|
-	{ ID id-EnhancedCoverageRestricted				CRITICALITY ignore	TYPE EnhancedCoverageRestricted			PRESENCE optional}|
-	{ ID id-NRUESecurityCapabilities				CRITICALITY ignore	TYPE NRUESecurityCapabilities			PRESENCE optional}|
-	{ ID id-CE-ModeBRestricted						CRITICALITY ignore	TYPE CE-ModeBRestricted					PRESENCE optional}|
-	{ ID id-AerialUEsubscriptionInformation			CRITICALITY ignore	TYPE AerialUEsubscriptionInformation				PRESENCE optional},
+	{ ID id-EnhancedCoverageRestricted				CRITICALITY ignore	TYPE EnhancedCoverageRestricted			PRESENCE optional},
 	...
 }
 
@@ -1501,8 +1460,7 @@ PathSwitchRequestIEs S1AP-PROTOCOL-IES ::= {
 -- Extension for Release 11 to support BBAI --
 	{ ID id-Tunnel-Information-for-BBF		CRITICALITY ignore	TYPE TunnelInformation			PRESENCE optional}|
 	{ ID id-LHN-ID							CRITICALITY ignore	TYPE LHN-ID						PRESENCE optional}|
-	{ ID id-RRC-Resume-Cause				CRITICALITY ignore	TYPE RRC-Establishment-Cause	PRESENCE optional }|
-	{ ID id-NRUESecurityCapabilities				CRITICALITY ignore	TYPE NRUESecurityCapabilities			PRESENCE optional},
+	{ ID id-RRC-Resume-Cause				CRITICALITY ignore	TYPE RRC-Establishment-Cause	PRESENCE optional },
 	...
 }
 
@@ -1550,10 +1508,7 @@ PathSwitchRequestAcknowledgeIEs S1AP-PROTOCOL-IES ::= {
 	{ ID id-UEUserPlaneCIoTSupportIndicator	CRITICALITY ignore	TYPE UEUserPlaneCIoTSupportIndicator	PRESENCE optional}|
 	{ ID id-V2XServicesAuthorized			CRITICALITY ignore	TYPE V2XServicesAuthorized				PRESENCE optional}|
 	{ ID id-UESidelinkAggregateMaximumBitrate		CRITICALITY ignore	TYPE UESidelinkAggregateMaximumBitrate	PRESENCE optional}|
-	{ ID id-EnhancedCoverageRestricted		CRITICALITY ignore	TYPE EnhancedCoverageRestricted			PRESENCE optional}|
-	{ ID id-NRUESecurityCapabilities				CRITICALITY ignore	TYPE NRUESecurityCapabilities			PRESENCE optional}|
-	{ ID id-CE-ModeBRestricted				CRITICALITY ignore	TYPE CE-ModeBRestricted			PRESENCE optional}|
-	{ ID id-AerialUEsubscriptionInformation			CRITICALITY ignore	TYPE AerialUEsubscriptionInformation				PRESENCE optional},
+	{ ID id-EnhancedCoverageRestricted		CRITICALITY ignore	TYPE EnhancedCoverageRestricted			PRESENCE optional},
 	...
 }
 
@@ -1753,8 +1708,7 @@ E-RABModifyRequestIEs S1AP-PROTOCOL-IES ::= {
 	{ ID id-MME-UE-S1AP-ID						CRITICALITY reject	TYPE MME-UE-S1AP-ID							PRESENCE mandatory	}|
 	{ ID id-eNB-UE-S1AP-ID						CRITICALITY reject	TYPE ENB-UE-S1AP-ID							PRESENCE mandatory	}|
 	{ ID id-uEaggregateMaximumBitrate			CRITICALITY reject	TYPE UEAggregateMaximumBitrate			PRESENCE optional	}|
-	{ ID id-E-RABToBeModifiedListBearerModReq	CRITICALITY reject	TYPE E-RABToBeModifiedListBearerModReq		PRESENCE mandatory	}|
-	{ ID id-SecondaryRATDataUsageRequest		CRITICALITY ignore	TYPE SecondaryRATDataUsageRequest		PRESENCE optional	},
+	{ ID id-E-RABToBeModifiedListBearerModReq	CRITICALITY reject	TYPE E-RABToBeModifiedListBearerModReq		PRESENCE mandatory	},
 	...
 }
 
@@ -1797,8 +1751,7 @@ E-RABModifyResponseIEs S1AP-PROTOCOL-IES ::= {
 	{ ID id-eNB-UE-S1AP-ID					CRITICALITY ignore	TYPE ENB-UE-S1AP-ID						PRESENCE mandatory	}|
 	{ ID id-E-RABModifyListBearerModRes		CRITICALITY ignore	TYPE E-RABModifyListBearerModRes		PRESENCE optional	}|
 	{ ID id-E-RABFailedToModifyList			CRITICALITY ignore	TYPE E-RABList							PRESENCE optional	}|
-	{ ID id-CriticalityDiagnostics			CRITICALITY ignore	TYPE CriticalityDiagnostics				PRESENCE optional	}|
-	{ ID id-SecondaryRATDataUsageReportList		CRITICALITY ignore	TYPE SecondaryRATDataUsageReportList			PRESENCE optional	},
+	{ ID id-CriticalityDiagnostics			CRITICALITY ignore	TYPE CriticalityDiagnostics				PRESENCE optional	},
 	...
 }
 
@@ -1869,8 +1822,7 @@ E-RABReleaseResponseIEs S1AP-PROTOCOL-IES ::= {
 	{ ID id-E-RABFailedToReleaseList		CRITICALITY ignore	TYPE E-RABList							PRESENCE optional	}|
 	{ ID id-CriticalityDiagnostics			CRITICALITY ignore	TYPE CriticalityDiagnostics				PRESENCE optional	}|
 -- Extension for Release 12 to support User Location Information --
-	{ ID id-UserLocationInformation			CRITICALITY ignore	TYPE UserLocationInformation			PRESENCE optional	}|
-	{ ID id-SecondaryRATDataUsageReportList		CRITICALITY ignore	TYPE SecondaryRATDataUsageReportList			PRESENCE optional	},
+	{ ID id-UserLocationInformation			CRITICALITY ignore	TYPE UserLocationInformation			PRESENCE optional	},
 	...
 }
 
@@ -1917,8 +1869,7 @@ E-RABReleaseIndicationIEs S1AP-PROTOCOL-IES ::= {
 	{ ID id-eNB-UE-S1AP-ID					CRITICALITY reject	TYPE ENB-UE-S1AP-ID					PRESENCE mandatory	}|
 	{ ID id-E-RABReleasedList				CRITICALITY ignore	TYPE E-RABList						PRESENCE mandatory	}|
 -- Extension for Release 12 to support User Location Information --
-	{ ID id-UserLocationInformation			CRITICALITY ignore	TYPE UserLocationInformation		PRESENCE optional	}|
-	{ ID id-SecondaryRATDataUsageReportList		CRITICALITY ignore	TYPE SecondaryRATDataUsageReportList		PRESENCE optional	},
+	{ ID id-UserLocationInformation			CRITICALITY ignore	TYPE UserLocationInformation		PRESENCE optional	},
 	...
 }
 -- **************************************************************
@@ -1964,10 +1915,7 @@ InitialContextSetupRequestIEs S1AP-PROTOCOL-IES ::= {
 	{ ID id-UEUserPlaneCIoTSupportIndicator	CRITICALITY ignore	TYPE UEUserPlaneCIoTSupportIndicator	PRESENCE optional}|
 	{ ID id-V2XServicesAuthorized			CRITICALITY ignore	TYPE V2XServicesAuthorized				PRESENCE optional}|
 	{ ID id-UESidelinkAggregateMaximumBitrate		CRITICALITY ignore	TYPE UESidelinkAggregateMaximumBitrate	PRESENCE optional}|
-	{ ID id-EnhancedCoverageRestricted		CRITICALITY ignore	TYPE EnhancedCoverageRestricted			PRESENCE optional}|
-	{ ID id-NRUESecurityCapabilities				CRITICALITY ignore	TYPE NRUESecurityCapabilities			PRESENCE optional}|
-	{ ID id-CE-ModeBRestricted				CRITICALITY ignore	TYPE CE-ModeBRestricted			PRESENCE optional}|
-	{ ID id-AerialUEsubscriptionInformation	CRITICALITY ignore	TYPE AerialUEsubscriptionInformation				PRESENCE optional},
+	{ ID id-EnhancedCoverageRestricted		CRITICALITY ignore	TYPE EnhancedCoverageRestricted			PRESENCE optional},
 	...
 }
 
@@ -2093,9 +2041,7 @@ PagingIEs S1AP-PROTOCOL-IES ::= {
 	{ ID id-Paging-eDRXInformation			CRITICALITY ignore	TYPE Paging-eDRXInformation				PRESENCE optional}|
 	{ ID id-extended-UEIdentityIndexValue	CRITICALITY ignore	TYPE Extended-UEIdentityIndexValue	PRESENCE optional}|
 	{ ID id-NB-IoT-Paging-eDRXInformation	CRITICALITY ignore	TYPE NB-IoT-Paging-eDRXInformation	PRESENCE optional}|
-	{ ID id-NB-IoT-UEIdentityIndexValue		CRITICALITY ignore	TYPE NB-IoT-UEIdentityIndexValue		PRESENCE optional}|
-	{ ID id-EnhancedCoverageRestricted		CRITICALITY ignore	TYPE EnhancedCoverageRestricted			PRESENCE optional}|
-	{ ID id-CE-ModeBRestricted				CRITICALITY ignore	TYPE CE-ModeBRestricted			PRESENCE optional},
+	{ ID id-NB-IoT-UEIdentityIndexValue		CRITICALITY ignore	TYPE NB-IoT-UEIdentityIndexValue		PRESENCE optional},
 	...
 }
 
@@ -2135,11 +2081,10 @@ UEContextReleaseRequest ::= SEQUENCE {
 }
 
 UEContextReleaseRequest-IEs S1AP-PROTOCOL-IES ::= {
-	{ ID id-MME-UE-S1AP-ID					CRITICALITY reject	TYPE MME-UE-S1AP-ID					PRESENCE mandatory	}|
-	{ ID id-eNB-UE-S1AP-ID					CRITICALITY reject	TYPE ENB-UE-S1AP-ID					PRESENCE mandatory	}|
-	{ ID id-Cause							CRITICALITY ignore	TYPE Cause								PRESENCE mandatory	}|
-	{ ID id-GWContextReleaseIndication		CRITICALITY reject	TYPE GWContextReleaseIndication		PRESENCE optional	}|
-	{ ID id-SecondaryRATDataUsageReportList	CRITICALITY ignore	TYPE SecondaryRATDataUsageReportList	PRESENCE optional },
+	{ ID id-MME-UE-S1AP-ID				CRITICALITY reject	TYPE MME-UE-S1AP-ID					PRESENCE mandatory	}|
+	{ ID id-eNB-UE-S1AP-ID				CRITICALITY reject	TYPE ENB-UE-S1AP-ID					PRESENCE mandatory	}|
+	{ ID id-Cause						CRITICALITY ignore	TYPE Cause							PRESENCE mandatory	}|
+	{ ID id-GWContextReleaseIndication	CRITICALITY reject	TYPE GWContextReleaseIndication		PRESENCE optional	},
 	...
 }
 
@@ -2180,8 +2125,7 @@ UEContextReleaseComplete-IEs S1AP-PROTOCOL-IES ::= {
 -- Extension for Release 13 to support Paging Optimisation
 	{ ID id-InformationOnRecommendedCellsAndENBsForPaging	CRITICALITY ignore	TYPE InformationOnRecommendedCellsAndENBsForPaging		PRESENCE optional}|
 -- Extension for Release 13 to support coverage enhancement paging –
-	{ ID id-CellIdentifierAndCELevelForCECapableUEs		CRITICALITY ignore	TYPE CellIdentifierAndCELevelForCECapableUEs	PRESENCE optional}|
-	{ ID id-SecondaryRATDataUsageReportList				CRITICALITY ignore	TYPE SecondaryRATDataUsageReportList		PRESENCE optional },
+	{ ID id-CellIdentifierAndCELevelForCECapableUEs		CRITICALITY ignore	TYPE CellIdentifierAndCELevelForCECapableUEs	PRESENCE optional},
 	...
 }
 
@@ -2218,9 +2162,7 @@ UEContextModificationRequestIEs S1AP-PROTOCOL-IES ::= {
 	{ ID id-SRVCCOperationPossible			CRITICALITY ignore	TYPE SRVCCOperationPossible				PRESENCE optional}|
 	{ ID id-SRVCCOperationNotPossible		CRITICALITY ignore	TYPE SRVCCOperationNotPossible			PRESENCE optional}|
 	{ ID id-V2XServicesAuthorized			CRITICALITY ignore	TYPE V2XServicesAuthorized				PRESENCE optional}|
-	{ ID id-UESidelinkAggregateMaximumBitrate		CRITICALITY ignore	TYPE UESidelinkAggregateMaximumBitrate	PRESENCE optional}|
-	{ ID id-NRUESecurityCapabilities				CRITICALITY ignore	TYPE NRUESecurityCapabilities			PRESENCE optional}|
-	{ ID id-AerialUEsubscriptionInformation	CRITICALITY ignore	TYPE AerialUEsubscriptionInformation				PRESENCE optional},
+	{ ID id-UESidelinkAggregateMaximumBitrate		CRITICALITY ignore	TYPE UESidelinkAggregateMaximumBitrate	PRESENCE optional},
 	...
 }
 -- **************************************************************
@@ -2328,11 +2270,7 @@ DownlinkNASTransport-IEs S1AP-PROTOCOL-IES ::= {
 	{ ID id-SRVCCOperationPossible		CRITICALITY ignore	TYPE SRVCCOperationPossible			PRESENCE optional}|
 	{ ID id-UERadioCapability			CRITICALITY ignore	TYPE UERadioCapability				PRESENCE optional}|
 	{ ID id-DLNASPDUDeliveryAckRequest	CRITICALITY ignore	TYPE DLNASPDUDeliveryAckRequest	PRESENCE optional}|
-	{ ID id-EnhancedCoverageRestricted	CRITICALITY ignore	TYPE EnhancedCoverageRestricted		PRESENCE optional}|
-	{ ID id-NRUESecurityCapabilities	CRITICALITY ignore	TYPE NRUESecurityCapabilities		PRESENCE optional}|
-	{ ID id-CE-ModeBRestricted			CRITICALITY ignore	TYPE CE-ModeBRestricted				PRESENCE optional}|
-	{ ID id-UECapabilityInfoRequest		CRITICALITY ignore	TYPE UECapabilityInfoRequest	PRESENCE optional}|
-	{ ID id-EndIndication				CRITICALITY ignore	TYPE EndIndication					PRESENCE optional},
+	{ ID id-EnhancedCoverageRestricted	CRITICALITY ignore	TYPE EnhancedCoverageRestricted			PRESENCE optional},
 	...
 }
 
@@ -2369,9 +2307,7 @@ InitialUEMessage-IEs S1AP-PROTOCOL-IES ::= {
 	{ ID id-UE-Usage-Type				CRITICALITY ignore	TYPE UE-Usage-Type					PRESENCE optional}|
 	{ ID id-CE-mode-B-SupportIndicator	CRITICALITY ignore	TYPE CE-mode-B-SupportIndicator		PRESENCE optional}|
 	{ ID id-DCN-ID						CRITICALITY ignore	TYPE DCN-ID							PRESENCE optional}|
-	{ ID id-Coverage-Level           	CRITICALITY ignore	TYPE Coverage-Level				PRESENCE optional}|
-	{ ID id-UE-Application-Layer-Measurement-Capability		CRITICALITY ignore	TYPE UE-Application-Layer-Measurement-Capability							PRESENCE optional}|
-	{ ID id-EDT-Session		           	CRITICALITY ignore	TYPE EDT-Session					PRESENCE optional},
+	{ ID id-Coverage-Level           	CRITICALITY ignore	TYPE Coverage-Level				PRESENCE optional},
 
 	...
 }
@@ -2452,8 +2388,6 @@ NASDeliveryIndication ::= SEQUENCE {
 }
 
 NASDeliveryIndicationIEs S1AP-PROTOCOL-IES ::= {
-	{ ID id-MME-UE-S1AP-ID							CRITICALITY reject	TYPE MME-UE-S1AP-ID						PRESENCE mandatory}|
-	{ ID id-eNB-UE-S1AP-ID							CRITICALITY reject	TYPE ENB-UE-S1AP-ID						PRESENCE mandatory},
 	...
 }
 
@@ -2821,9 +2755,7 @@ UECapabilityInfoIndicationIEs S1AP-PROTOCOL-IES ::= {
 	{ ID id-MME-UE-S1AP-ID				CRITICALITY reject	TYPE MME-UE-S1AP-ID					PRESENCE mandatory}|
 	{ ID id-eNB-UE-S1AP-ID				CRITICALITY reject	TYPE ENB-UE-S1AP-ID					PRESENCE mandatory}|
 	{ ID id-UERadioCapability			CRITICALITY ignore	TYPE UERadioCapability				PRESENCE mandatory}|
-	{ ID id-UERadioCapabilityForPaging	CRITICALITY ignore	TYPE UERadioCapabilityForPaging		PRESENCE optional}|
-	{ ID id-UE-Application-Layer-Measurement-Capability		CRITICALITY ignore	TYPE UE-Application-Layer-Measurement-Capability							PRESENCE optional}|
-	{ ID id-LTE-M-Indication				CRITICALITY ignore	TYPE LTE-M-Indication				PRESENCE optional},
+	{ ID id-UERadioCapabilityForPaging	CRITICALITY ignore	TYPE UERadioCapabilityForPaging		PRESENCE optional},
 	...
 }
 
@@ -3424,8 +3356,7 @@ E-RABModificationIndicationIEs S1AP-PROTOCOL-IES ::= {
 	{ ID id-E-RABNotToBeModifiedListBearerModInd	CRITICALITY reject	TYPE E-RABNotToBeModifiedListBearerModInd	PRESENCE optional}|
 	{ ID id-CSGMembershipInfo						CRITICALITY reject	TYPE CSGMembershipInfo					PRESENCE optional}|
 -- Extension for Release 11 to support BBAI --
-	{ ID id-Tunnel-Information-for-BBF				CRITICALITY ignore	TYPE TunnelInformation					PRESENCE optional}|
-	{ ID id-SecondaryRATDataUsageReportList			CRITICALITY ignore	TYPE SecondaryRATDataUsageReportList		PRESENCE optional },
+	{ ID id-Tunnel-Information-for-BBF				CRITICALITY ignore	TYPE TunnelInformation					PRESENCE optional},
 	...
 }
 
@@ -3586,8 +3517,7 @@ UEContextSuspendRequestIEs S1AP-PROTOCOL-IES ::= {
 	{ ID id-MME-UE-S1AP-ID									CRITICALITY reject	TYPE MME-UE-S1AP-ID				PRESENCE mandatory}|
 	{ ID id-eNB-UE-S1AP-ID									CRITICALITY reject	TYPE ENB-UE-S1AP-ID				PRESENCE mandatory}|
 	{ ID id-InformationOnRecommendedCellsAndENBsForPaging	CRITICALITY ignore	TYPE InformationOnRecommendedCellsAndENBsForPaging PRESENCE optional}|
-	{ ID id-CellIdentifierAndCELevelForCECapableUEs			CRITICALITY ignore	TYPE CellIdentifierAndCELevelForCECapableUEs	PRESENCE optional}|
-	{ ID id-SecondaryRATDataUsageReportList				CRITICALITY ignore	TYPE SecondaryRATDataUsageReportList		PRESENCE optional },
+	{ ID id-CellIdentifierAndCELevelForCECapableUEs			CRITICALITY ignore	TYPE CellIdentifierAndCELevelForCECapableUEs	PRESENCE optional},
 	...
 }
 
@@ -3726,9 +3656,7 @@ ConnectionEstablishmentIndicationIEs S1AP-PROTOCOL-IES ::= {
 	{ ID id-eNB-UE-S1AP-ID				CRITICALITY ignore	TYPE ENB-UE-S1AP-ID				PRESENCE mandatory}|
 	{ ID id-UERadioCapability			CRITICALITY ignore	TYPE UERadioCapability			PRESENCE optional }|
 	{ ID id-EnhancedCoverageRestricted	CRITICALITY ignore	TYPE EnhancedCoverageRestricted	PRESENCE optional }|
-	{ ID id-DL-CP-SecurityInformation	CRITICALITY ignore	TYPE DL-CP-SecurityInformation	PRESENCE optional }|
-	{ ID id-CE-ModeBRestricted			CRITICALITY ignore	TYPE CE-ModeBRestricted			PRESENCE optional}|
-	{ ID id-EndIndication				CRITICALITY ignore	TYPE EndIndication				PRESENCE optional},
+	{ ID id-DL-CP-SecurityInformation	CRITICALITY ignore	TYPE DL-CP-SecurityInformation	PRESENCE optional },
 	...
 }
 
@@ -3806,26 +3734,6 @@ MMECPRelocationIndicationIEs S1AP-PROTOCOL-IES ::= {
 	...
 }
 
-
--- **************************************************************
---
--- Secondary RAT Data Usage Report
---
--- **************************************************************
-
-SecondaryRATDataUsageReport ::= SEQUENCE {
-	protocolIEs			ProtocolIE-Container       { { SecondaryRATDataUsageReportIEs} },
-	...
-}
-
-SecondaryRATDataUsageReportIEs S1AP-PROTOCOL-IES ::= {
-	{ ID id-MME-UE-S1AP-ID							CRITICALITY ignore	TYPE MME-UE-S1AP-ID				PRESENCE mandatory}|
-	{ ID id-eNB-UE-S1AP-ID						CRITICALITY ignore	TYPE ENB-UE-S1AP-ID				PRESENCE mandatory}|
-	{ ID id-SecondaryRATDataUsageReportList			CRITICALITY ignore	TYPE SecondaryRATDataUsageReportList	PRESENCE optional}|
-	{ ID id-HandoverFlag							CRITICALITY ignore	TYPE HandoverFlag					PRESENCE optional},
-	...
-}
-
 END
 
 
@@ -3866,7 +3774,6 @@ IMPORTS
 	id-eNBIndirectX2TransportLayerAddresses,
 	id-Muting-Availability-Indication,
 	id-Muting-Pattern-Information,
-	id-NRrestriction,
 	id-Synchronisation-Information,
 	id-uE-HistoryInformationFromTheUE,
 	id-LoggedMBSFNMDT,
@@ -3880,19 +3787,6 @@ IMPORTS
 	id-M6Configuration,
 	id-M7Configuration,
 	id-RAT-Type,
-	id-extended-e-RAB-MaximumBitrateDL,
-	id-extended-e-RAB-MaximumBitrateUL,
-	id-extended-e-RAB-GuaranteedBitrateDL,
-	id-extended-e-RAB-GuaranteedBitrateUL,
-	id-extended-uEaggregateMaximumBitRateDL,
-	id-extended-uEaggregateMaximumBitRateUL,
-	id-SecondaryRATDataUsageReportItem,
-	id-E-RABUsageReportItem,
-	id-UEAppLayerMeasConfig,
-	id-serviceType,
-	id-UnlicensedSpectrumRestriction,
-	id-CNTypeRestrictions,	id-DownlinkPacketLossRate,
-	id-UplinkPacketLossRate,
 	maxnoofCSGs,
 	maxnoofE-RABs,
 	maxnoofErrors,
@@ -3926,11 +3820,7 @@ IMPORTS
 	maxEARFCN,
 	maxnoofCellsineNB,
 	maxnoofRecommendedCells,
-	maxnoofRecommendedENBs,
-	maxnooftimeperiods,
-	maxnoofCellIDforQMC,
-	maxnoofTAforQMC,
-	maxnoofPLMNforQMC
+	maxnoofRecommendedENBs
 
 
 
@@ -3962,27 +3852,12 @@ Additional-GUTI-ExtIEs S1AP-PROTOCOL-EXTENSION ::= {
 	...
 }
 
-AerialUEsubscriptionInformation ::= ENUMERATED {
-	allowed,
-	not-allowed,
-	...
-}
-
 AreaScopeOfMDT ::= CHOICE {
 	cellBased					CellBasedMDT,
 	tABased						TABasedMDT,
 	pLMNWide					NULL,
 	...,
 	tAIBased					TAIBasedMDT
-}
-
-
-AreaScopeOfQMC ::= CHOICE {
-	cellBased					CellBasedQMC,
-	tABased						TABasedQMC,
-	tAIBased						TAIBasedQMC,
-	pLMNAreaBased				PLMNAreaBasedQMC,
-	...
 }
 
 AllocationAndRetentionPriority ::= SEQUENCE {
@@ -4262,18 +4137,6 @@ CellBasedMDT-ExtIEs S1AP-PROTOCOL-EXTENSION ::= {
 
 CellIdListforMDT ::= SEQUENCE (SIZE(1..maxnoofCellIDforMDT)) OF EUTRAN-CGI
 
-CellBasedQMC::= SEQUENCE {
-	cellIdListforQMC		CellIdListforQMC,
-	iE-Extensions		ProtocolExtensionContainer { {CellBasedQMC-ExtIEs} } OPTIONAL,
-	...
-}
-
-CellBasedQMC-ExtIEs S1AP-PROTOCOL-EXTENSION ::= {
-	...
-}
-
-CellIdListforQMC ::= SEQUENCE (SIZE(1..maxnoofCellIDforQMC)) OF EUTRAN-CGI
-
 Cdma2000PDU	::= OCTET STRING
 
 Cdma2000RATType ::= ENUMERATED {
@@ -4346,24 +4209,6 @@ CI					::= OCTET STRING (SIZE (2))
 CNDomain ::= ENUMERATED {
 	ps,
 	cs
-}
-
-CNTypeRestrictions::= SEQUENCE (SIZE(1.. maxnoofEPLMNsPlusOne)) OF CNTypeRestrictions-Item
-
-CNTypeRestrictions-Item ::= SEQUENCE {
-	pLMN-Identity		PLMNidentity,
-	cNType				CNType,
-	iE-Extensions		ProtocolExtensionContainer { { CNTypeRestrictions-Item-ExtIEs} } OPTIONAL,
-	...
-}
-
-CNTypeRestrictions-Item-ExtIEs S1AP-PROTOCOL-EXTENSION ::= {
-	...
-}
-
-CNType ::= ENUMERATED {
-	fiveGCForbiddden,
-	...
 }
 
 ConcurrentWarningMessageIndicator ::= ENUMERATED {
@@ -4529,11 +4374,6 @@ ECGIList ::= SEQUENCE (SIZE(1..maxnoofCellID)) OF EUTRAN-CGI
 
 PWSfailedECGIList ::= SEQUENCE (SIZE(1..maxnoofCellsineNB)) OF EUTRAN-CGI
 
-EDT-Session ::= ENUMERATED {
-	true,
-	...
-}
-
 EmergencyAreaIDList ::= SEQUENCE (SIZE(1..maxnoofEmergencyAreaID)) OF EmergencyAreaID
 
 EmergencyAreaID ::= OCTET STRING (SIZE (3))
@@ -4631,20 +4471,8 @@ ENBX2TLAs ::= SEQUENCE (SIZE(1.. maxnoofeNBX2TLAs)) OF TransportLayerAddress
 
 EncryptionAlgorithms ::= BIT STRING (SIZE (16,...))
 
-EndIndication ::= ENUMERATED {
-	no-further-data,
-	further-data-exists,
-	...
-}
-
 EnhancedCoverageRestricted ::= ENUMERATED {
 	restricted,
-	...
-}
-
-CE-ModeBRestricted ::= ENUMERATED {
-	restricted,
-	not-restricted,
 	...
 }
 
@@ -4703,30 +4531,7 @@ E-RABLevelQoSParameters ::= SEQUENCE {
 	...
 }
 
-E-RABUsageReportList ::= SEQUENCE (SIZE(1..maxnooftimeperiods)) OF ProtocolIE-SingleContainer { {E-RABUsageReportItemIEs} }
-
-E-RABUsageReportItemIEs 	S1AP-PROTOCOL-IES ::= {
-	{ ID id-E-RABUsageReportItem	 CRITICALITY ignore 	TYPE E-RABUsageReportItem 	PRESENCE mandatory },
-	...
-}
-
-E-RABUsageReportItem ::= SEQUENCE {
-	startTimestamp					OCTET STRING (SIZE(4)),
-	endTimestamp					OCTET STRING (SIZE(4)),
-	usageCountUL					INTEGER (0..18446744073709551615),
-	usageCountDL					INTEGER (0..18446744073709551615),
-	iE-Extensions				ProtocolExtensionContainer { { E-RABUsageReportItem-ExtIEs} } OPTIONAL,
-	...
-}
-
-E-RABUsageReportItem-ExtIEs S1AP-PROTOCOL-EXTENSION ::= {
-	...
-}
-
 E-RABQoSParameters-ExtIEs S1AP-PROTOCOL-EXTENSION ::= {
--- Extended for introduction of downlink and uplink packet loss rate for enhanced Voice performance –-
-	{ ID id-DownlinkPacketLossRate		CRITICALITY ignore	EXTENSION Packet-LossRate		PRESENCE optional}|
-	{ ID id-UplinkPacketLossRate			CRITICALITY ignore	EXTENSION Packet-LossRate		PRESENCE optional},
 	...
 }
 
@@ -4782,8 +4587,6 @@ ExpectedHOInterval ::= ENUMERATED {
 	...
 }
 
-ExtendedBitRate	::= INTEGER (10000000001..4000000000000, ...)
-
 ExtendedRNC-ID					::= INTEGER (4096..65535)
 
 ExtendedRepetitionPeriod ::= INTEGER (4096..131071)
@@ -4791,19 +4594,6 @@ ExtendedRepetitionPeriod ::= INTEGER (4096..131071)
 Extended-UEIdentityIndexValue ::= BIT STRING (SIZE (14))
 
 -- F
-
-FiveGSTAC ::= OCTET STRING (SIZE (3))
-
-FiveGSTAI ::= SEQUENCE {
-	pLMNidentity			PLMNidentity,
-	fiveGSTAC				FiveGSTAC,
-	iE-Extensions			ProtocolExtensionContainer { {FiveGSTAI-ExtIEs} } OPTIONAL,
-	...
-}
-
-FiveGSTAI-ExtIEs S1AP-PROTOCOL-EXTENSION ::= {
-	...
-}
 
 ForbiddenInterRATs ::= ENUMERATED {
 	all,
@@ -4858,12 +4648,8 @@ GBR-QosInformation ::= SEQUENCE {
 }
 
 GBR-QosInformation-ExtIEs S1AP-PROTOCOL-EXTENSION ::= {
--- Extension for maximum bitrate > 10G bps --
-	{ ID id-extended-e-RAB-MaximumBitrateDL	CRITICALITY ignore	EXTENSION ExtendedBitRate	PRESENCE optional}|
-	{ ID id-extended-e-RAB-MaximumBitrateUL	CRITICALITY ignore	EXTENSION ExtendedBitRate	PRESENCE optional}|
-	{ ID id-extended-e-RAB-GuaranteedBitrateDL	CRITICALITY ignore	EXTENSION ExtendedBitRate	PRESENCE optional}|
-	{ ID id-extended-e-RAB-GuaranteedBitrateUL	CRITICALITY ignore	EXTENSION ExtendedBitRate	PRESENCE optional},
-	...}
+	...
+}
 
 
 GTP-TEID					::= OCTET STRING (SIZE (4))
@@ -4893,12 +4679,6 @@ GWContextReleaseIndication ::= ENUMERATED {
 
 -- H
 
-HandoverFlag ::= ENUMERATED {
-	handoverPreparation,
-	...
-}
-
-
 HandoverRestrictionList ::= SEQUENCE {
 	servingPLMN					PLMNidentity,
 	equivalentPLMNs				EPLMNs					OPTIONAL,
@@ -4910,9 +4690,6 @@ HandoverRestrictionList ::= SEQUENCE {
 }
 
 HandoverRestrictionList-ExtIEs S1AP-PROTOCOL-EXTENSION ::= {
-	{ ID id-NRrestriction		CRITICALITY ignore	EXTENSION NRrestriction	PRESENCE optional}|
-	{ ID id-UnlicensedSpectrumRestriction		CRITICALITY ignore	EXTENSION UnlicensedSpectrumRestriction	PRESENCE optional}|
-	{ ID id-CNTypeRestrictions		CRITICALITY ignore	EXTENSION CNTypeRestrictions	PRESENCE optional},
 	...
 }
 
@@ -4921,9 +4698,8 @@ HandoverType ::= ENUMERATED {
 	ltetoutran,
 	ltetogeran,
 	utrantolte,
-	gerantolte,	...,
-	ltetonr,
-	nrtolte
+	gerantolte,
+	...
 }
 
 HFN ::= INTEGER (0..1048575)
@@ -5072,8 +4848,6 @@ LoggedMBSFNMDT-ExtIEs S1AP-PROTOCOL-EXTENSION ::= {
 	...
 }
 
-LTE-M-Indication ::= ENUMERATED {lte-m, ... }
-
 -- M
 
 M3Configuration ::= SEQUENCE {
@@ -5086,7 +4860,7 @@ M3Configuration-ExtIEs S1AP-PROTOCOL-EXTENSION ::= {
 	...
 }
 
-M3period ::= ENUMERATED {ms100, ms1000, ms10000, ...,ms1024, ms1280, ms2048, ms2560, ms5120, ms10240, min1 }
+M3period ::= ENUMERATED {ms100, ms1000, ms10000, ... }
 
 M4Configuration ::= SEQUENCE {
 	m4period			M4period,
@@ -5291,25 +5065,6 @@ NextPagingAreaScope ::= ENUMERATED {
 	...
 }
 
-NRencryptionAlgorithms ::= BIT STRING (SIZE (16,...))
-NRintegrityProtectionAlgorithms ::= BIT STRING (SIZE (16,...))
-
-NRrestriction ::= ENUMERATED {
-	nRrestricted,
-	...
-}
-
-NRUESecurityCapabilities ::= SEQUENCE {
-	nRencryptionAlgorithms				NRencryptionAlgorithms,
-	nRintegrityProtectionAlgorithms		NRintegrityProtectionAlgorithms,
-	iE-Extensions						ProtocolExtensionContainer { { NRUESecurityCapabilities-ExtIEs} }	OPTIONAL,
-...
-}
-
-NRUESecurityCapabilities-ExtIEs S1AP-PROTOCOL-EXTENSION ::= {
-	...
-}
-
 NumberofBroadcastRequest ::= INTEGER (0..65535)
 
 NumberOfBroadcasts ::= INTEGER (0..65535)
@@ -5337,8 +5092,6 @@ OverloadResponse ::= CHOICE {
 
 
 -- P
-
-Packet-LossRate	::= INTEGER(0..1000)
 
 PagingAttemptInformation ::= SEQUENCE {
 	pagingAttemptCount					PagingAttemptCount,
@@ -5407,18 +5160,6 @@ M1PeriodicReporting-ExtIEs S1AP-PROTOCOL-EXTENSION ::= {
 }
 
 PLMNidentity 				::= TBCD-STRING
-
-PLMNAreaBasedQMC ::= SEQUENCE {
-	plmnListforQMC		PLMNListforQMC,
-	iE-Extensions		ProtocolExtensionContainer { {PLMNAreaBasedQMC-ExtIEs} } OPTIONAL,
-	...
-}
-
-PLMNAreaBasedQMC-ExtIEs S1AP-PROTOCOL-EXTENSION ::= {
-	...
-}
-
-PLMNListforQMC ::= SEQUENCE (SIZE(1..maxnoofPLMNforQMC)) OF PLMNidentity
 
 Port-Number		::= OCTET STRING (SIZE (2))
 
@@ -5650,44 +5391,7 @@ SecurityContext-ExtIEs S1AP-PROTOCOL-EXTENSION ::= {
 	...
 }
 
-SecondaryRATType ::= ENUMERATED {
-	nR,
-	...,
-	unlicensed
-}
-
-
-SecondaryRATDataUsageRequest ::= ENUMERATED {
-	requested,
-	...
-}
-
-SecondaryRATDataUsageReportList ::= SEQUENCE (SIZE(1.. maxnoofE-RABs)) OF ProtocolIE-SingleContainer { {SecondaryRATDataUsageReportItemIEs} }
-
-SecondaryRATDataUsageReportItemIEs 	S1AP-PROTOCOL-IES ::= {
-	{ ID id-SecondaryRATDataUsageReportItem	 CRITICALITY ignore 	TYPE SecondaryRATDataUsageReportItem 	PRESENCE mandatory },
-	...
-}
-
-SecondaryRATDataUsageReportItem ::= SEQUENCE {
-	e-RAB-ID					E-RAB-ID,
-	secondaryRATType			SecondaryRATType,
-	e-RABUsageReportList		E-RABUsageReportList,
-	iE-Extensions				ProtocolExtensionContainer { { SecondaryRATDataUsageReportItem-ExtIEs} } OPTIONAL,
-	...
-}
-
-SecondaryRATDataUsageReportItem-ExtIEs S1AP-PROTOCOL-EXTENSION ::= {
-	...
-}
-
 SerialNumber ::= BIT STRING (SIZE (16))
-
-ServiceType ::= ENUMERATED{
-	qMC-for-streaming-service,
-	qMC-for-MTSI-service,
-	...
-}
 
 SONInformation ::= CHOICE{
 	sONInformationRequest		SONInformationRequest,
@@ -5813,8 +5517,6 @@ SourceeNB-ToTargeteNB-TransparentContainer-ExtIEs S1AP-PROTOCOL-EXTENSION ::= {
 SourceRNC-ToTargetRNC-TransparentContainer		::= OCTET STRING
 -- This is a dummy IE used only as a reference to the actual definition in relevant specification.
 
-SourceNgRanNode-ToTargetNgRanNode-TransparentContainer		::= OCTET STRING
--- This is a dummy IE used only as a reference to the actual definition in relevant specification.
 
 ServedGUMMEIs ::= SEQUENCE (SIZE (1.. maxnoofRATs)) OF ServedGUMMEIsItem
 
@@ -5947,30 +5649,6 @@ TABasedMDT-ExtIEs S1AP-PROTOCOL-EXTENSION ::= {
 
 TAListforMDT ::= SEQUENCE (SIZE(1..maxnoofTAforMDT)) OF TAC
 
-TABasedQMC ::= SEQUENCE {
-	tAListforQMC		TAListforQMC,
-	iE-Extensions		ProtocolExtensionContainer { {TABasedQMC-ExtIEs} } OPTIONAL,
-	...
-}
-
-TABasedQMC-ExtIEs S1AP-PROTOCOL-EXTENSION ::= {
-	...
-}
-
-TAListforQMC ::= SEQUENCE (SIZE(1..maxnoofTAforQMC)) OF TAC
-
-TAIBasedQMC ::= SEQUENCE {
-	tAIListforQMC		TAIListforQMC,
-	iE-Extensions		ProtocolExtensionContainer { {TAIBasedQMC-ExtIEs} } OPTIONAL,
-	...
-}
-
-TAIBasedQMC-ExtIEs S1AP-PROTOCOL-EXTENSION ::= {
-	...
-}
-
-TAIListforQMC ::= SEQUENCE (SIZE(1..maxnoofTAforQMC)) OF TAI
-
 CompletedCellinTAI ::= SEQUENCE (SIZE(1..maxnoofCellinTAI)) OF CompletedCellinTAI-Item
 
 CompletedCellinTAI-Item ::= SEQUENCE{
@@ -5989,8 +5667,6 @@ TargetID ::= CHOICE {
 	targeteNB-ID		TargeteNB-ID,
 	targetRNC-ID		TargetRNC-ID,
 	cGI					CGI,
-	targetgNgRanNode-ID		TargetNgRanNode-ID,
-
 	...
 }
 
@@ -6019,60 +5695,6 @@ TargetRNC-ID-ExtIEs S1AP-PROTOCOL-EXTENSION ::= {
 	...
 }
 
-TargetNgRanNode-ID ::= SEQUENCE {
-	global-RAN-NODE-ID		Global-RAN-NODE-ID,
-	selected-TAI		FiveGSTAI,
-	iE-Extensions		ProtocolExtensionContainer { { TargetNgRanNode-ID-ExtIEs} } OPTIONAL,
-	...
-}
-
-TargetNgRanNode-ID-ExtIEs S1AP-PROTOCOL-EXTENSION ::= {
-	...
-}
-
-Global-RAN-NODE-ID::= CHOICE {
-	gNB		GNB,
-	ng-eNB		NG-eNB,
-	...
-}
-
-GNB ::= SEQUENCE {
-	global-gNB-ID		Global-GNB-ID,
-	iE-Extensions		ProtocolExtensionContainer { {GNB-ExtIEs} } OPTIONAL,
-	...
-}
-
-GNB-ExtIEs S1AP-PROTOCOL-EXTENSION ::= {
-	...
-}
-
-Global-GNB-ID ::= SEQUENCE {
-	pLMN-Identity		PLMNidentity,
-	gNB-ID				GNB-Identity,
-	iE-Extensions		ProtocolExtensionContainer { { Global-GNB-ID-ExtIEs} } OPTIONAL,
-	...
-}
-
-Global-GNB-ID-ExtIEs S1AP-PROTOCOL-EXTENSION ::= {
-	...
-}
-
-GNB-Identity ::= CHOICE {
-	gNB-ID		GNB-ID,
-	...
-}
-
-NG-eNB ::= SEQUENCE {
-	global-ng-eNB-ID		Global-ENB-ID,
-	iE-Extensions		ProtocolExtensionContainer { { NG-eNB-ExtIEs} } OPTIONAL,
-	...
-}
-
-NG-eNB-ExtIEs S1AP-PROTOCOL-EXTENSION ::= {
-	...
-}
-
-GNB-ID ::= BIT STRING (SIZE(22..32))
 
 TargeteNB-ToSourceeNB-TransparentContainer		::= SEQUENCE {
 	rRC-Container		RRC-Container,
@@ -6092,9 +5714,6 @@ TargetRNC-ToSourceRNC-TransparentContainer		::= OCTET STRING
 -- This is a dummy IE used only as a reference to the actual definition in relevant specification.
 
 TargetBSS-ToSourceBSS-TransparentContainer		::= OCTET STRING
--- This is a dummy IE used only as a reference to the actual definition in relevant specification.
-
-TargetNgRanNode-ToSourceNgRanNode-TransparentContainer		::= OCTET STRING
 -- This is a dummy IE used only as a reference to the actual definition in relevant specification.
 
 M1ThresholdEventA2 ::= SEQUENCE {
@@ -6136,9 +5755,7 @@ TraceActivation ::= SEQUENCE {
 
 TraceActivation-ExtIEs S1AP-PROTOCOL-EXTENSION ::= {
 -- Extension for Rel-10 to support MDT --
-	{ ID id-MDTConfiguration	CRITICALITY ignore	EXTENSION MDT-Configuration		PRESENCE optional }|
--- Extension for Rel-15 to support QMC –
-	{ ID id-UEAppLayerMeasConfig	CRITICALITY ignore	EXTENSION UEAppLayerMeasConfig		PRESENCE optional },
+	{ ID id-MDTConfiguration	CRITICALITY ignore	EXTENSION MDT-Configuration		PRESENCE optional },
 	...
 }
 
@@ -6185,26 +5802,6 @@ UEAggregateMaximumBitrate ::= SEQUENCE {
 }
 
 UEAggregate-MaximumBitrates-ExtIEs S1AP-PROTOCOL-EXTENSION ::= {
--- Extension for maximum bitrate > 10G bps --
-	{ ID id-extended-uEaggregateMaximumBitRateDL 	CRITICALITY ignore	EXTENSION ExtendedBitRate	PRESENCE optional}|
-	{ ID id-extended-uEaggregateMaximumBitRateUL		CRITICALITY ignore	EXTENSION ExtendedBitRate	PRESENCE optional},
-	...
-}
-
-UEAppLayerMeasConfig ::= SEQUENCE {
-	containerForAppLayerMeasConfig			OCTET STRING (SIZE(1..1000)),
-	areaScopeOfQMC		AreaScopeOfQMC,
-	iE-Extensions		ProtocolExtensionContainer { {UEAppLayerMeasConfig-ExtIEs} } OPTIONAL,
-	...
-}
-
-UEAppLayerMeasConfig-ExtIEs S1AP-PROTOCOL-EXTENSION ::= {
-	{ID id-serviceType	CRITICALITY ignore	EXTENSION ServiceType	PRESENCE optional},
-	...
-}
-
-UECapabilityInfoRequest ::= ENUMERATED {
-	requested,
 	...
 }
 
@@ -6302,11 +5899,6 @@ UL-NAS-MAC ::= BIT STRING (SIZE (16))
 
 UL-NAS-Count ::= BIT STRING (SIZE (5))
 
-UnlicensedSpectrumRestriction ::= ENUMERATED {
-	unlicensed-restricted,
-	...
-}
-
 
 UserLocationInformation ::= SEQUENCE {
 	eutran-cgi 				EUTRAN-CGI,
@@ -6323,13 +5915,6 @@ UEUserPlaneCIoTSupportIndicator ::= ENUMERATED {
 	supported,
 	...
 }
-
-UE-Application-Layer-Measurement-Capability ::= BIT STRING (SIZE (8))
-
--- First bit: QoE Measurement for streaming service
--- Second bit: QoE Measurement for MTSI service
-
--- Note that undefined bits are considered as a spare bit and spare bits shall be set to 0 by the transmitter and shall be ignored by the receiver.
 
 -- V
 
@@ -6550,7 +6135,6 @@ id-RetrieveUEInformation					ProcedureCode ::= 58
 id-UEInformationTransfer					ProcedureCode ::= 59
 id-eNBCPRelocationIndication				ProcedureCode ::= 60
 id-MMECPRelocationIndication				ProcedureCode ::= 61
-id-SecondaryRATDataUsageReport				ProcedureCode ::= 62
 
 -- **************************************************************
 --
@@ -6603,12 +6187,6 @@ maxEARFCN								INTEGER ::= 262143
 maxnoofMBSFNAreaMDT						INTEGER ::= 8
 maxnoofRecommendedCells					INTEGER ::= 16
 maxnoofRecommendedENBs					INTEGER ::= 16
-maxnooftimeperiods						INTEGER ::= 2
-maxnoofCellIDforQMC						INTEGER ::= 32
-maxnoofTAforQMC							INTEGER ::= 8
-maxnoofPLMNforQMC						INTEGER ::= 16
-
-
 
 -- **************************************************************
 --
@@ -6748,7 +6326,7 @@ id-CellAccessMode									ProtocolIE-ID ::= 145
 id-CSGMembershipStatus 								ProtocolIE-ID ::= 146
 id-LPPa-PDU											ProtocolIE-ID ::= 147
 id-Routing-ID										ProtocolIE-ID ::= 148
-id-Time-Synchronisation-Info							ProtocolIE-ID ::= 149
+id-Time-Synchronisation-Info						ProtocolIE-ID ::= 149
 id-PS-ServiceNotAvailable							ProtocolIE-ID ::= 150
 id-PagingPriority									ProtocolIE-ID ::= 151
 id-x2TNLConfigurationInfo							ProtocolIE-ID ::= 152
@@ -6853,34 +6431,9 @@ id-EnhancedCoverageRestricted						ProtocolIE-ID ::= 251
 id-UE-Level-QoS-Parameters							ProtocolIE-ID ::= 252
 id-DL-CP-SecurityInformation						ProtocolIE-ID ::= 253
 id-UL-CP-SecurityInformation						ProtocolIE-ID ::= 254
-id-extended-e-RAB-MaximumBitrateDL					ProtocolIE-ID ::= 255
-id-extended-e-RAB-MaximumBitrateUL					ProtocolIE-ID ::= 256
-id-extended-e-RAB-GuaranteedBitrateDL				ProtocolIE-ID ::= 257
-id-extended-e-RAB-GuaranteedBitrateUL				ProtocolIE-ID ::= 258
-id-extended-uEaggregateMaximumBitRateDL				ProtocolIE-ID ::= 259
-id-extended-uEaggregateMaximumBitRateUL				ProtocolIE-ID ::= 260
-id-NRrestriction									ProtocolIE-ID ::= 261
-id-UEAppLayerMeasConfig								ProtocolIE-ID ::= 262
-id-UE-Application-Layer-Measurement-Capability		ProtocolIE-ID ::= 263
-id-SecondaryRATDataUsageReportList					ProtocolIE-ID ::= 264
-id-SecondaryRATDataUsageReportItem					ProtocolIE-ID ::= 265
-id-HandoverFlag										ProtocolIE-ID ::= 266
-id-E-RABUsageReportItem								ProtocolIE-ID ::= 267
-id-SecondaryRATDataUsageRequest						ProtocolIE-ID ::= 268
-id-NRUESecurityCapabilities							ProtocolIE-ID ::= 269
-id-UnlicensedSpectrumRestriction					ProtocolIE-ID ::= 270
-id-CE-ModeBRestricted								ProtocolIE-ID ::= 271
-id-LTE-M-Indication									ProtocolIE-ID ::= 272
-id-DownlinkPacketLossRate							ProtocolIE-ID ::= 273
-id-UplinkPacketLossRate								ProtocolIE-ID ::= 274
-id-UECapabilityInfoRequest							ProtocolIE-ID ::= 275
-id-serviceType										ProtocolIE-ID ::= 276
-id-AerialUEsubscriptionInformation					ProtocolIE-ID ::= 277
-id-EndIndication										ProtocolIE-ID ::=  280
-id-EDT-Session										ProtocolIE-ID ::= 281
-id-CNTypeRestrictions								ProtocolIE-ID ::= 282
 
 END
+
 
 -- **************************************************************
 --
@@ -7412,3 +6965,4 @@ maxnoofcandidateCells						INTEGER ::= 16
 maxnoofCellineNB							INTEGER ::= 256
 
 END
+
