@@ -232,7 +232,7 @@ int rrc_mac_config_req_gNB(module_id_t Mod_idP,
                mib->message.choice.mib->subCarrierSpacingCommon,
                mib->message.choice.mib->ssb_SubcarrierOffset,
                mib->message.choice.mib->dmrs_TypeA_Position,
-               mib->message.choice.mib->pdcch_ConfigSIB1,
+               mib->message.choice.mib->pdcch_ConfigSIB1.controlResourceSetZero * 16 + mib->message.choice.mib->pdcch_ConfigSIB1.searchSpaceZero,
                mib->message.choice.mib->cellBarred,
                mib->message.choice.mib->intraFreqReselection
                );

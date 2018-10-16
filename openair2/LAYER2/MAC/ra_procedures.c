@@ -408,7 +408,7 @@ PRACH_RESOURCES_t *ue_get_rach(module_id_t module_idP, int CC_id,
 				       UE_mac_inst[module_idP].crnti,
 				       eNB_indexP, frameP, subframeP,
 				       ENB_FLAG_NO, MBMS_FLAG_NO, DCCH, 6
-#if (RRC_VERSION >= MAKE_VERSION(14, 0, 0))
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
                ,0, 0
 #endif
                );
@@ -428,7 +428,7 @@ PRACH_RESOURCES_t *ue_get_rach(module_id_t module_idP, int CC_id,
 
 		sdu_lengths = mac_rlc_data_req(module_idP, UE_mac_inst[module_idP].crnti, eNB_indexP, frameP, ENB_FLAG_NO, MBMS_FLAG_NO, DCCH, 6,	//not used
 						  (char *) &ulsch_buff[0]
-#if (RRC_VERSION >= MAKE_VERSION(14, 0, 0))
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
 						  ,0,
 						  0
 #endif

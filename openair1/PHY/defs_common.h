@@ -152,7 +152,7 @@ typedef struct {
   PRACH_CONFIG_INFO prach_ConfigInfo;
 } PRACH_CONFIG_COMMON;
 
-#if (RRC_VERSION >= MAKE_VERSION(14, 0, 0))
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
 
 /// PRACH-eMTC-Config from 36.331 RRC spec
 typedef struct {
@@ -185,7 +185,7 @@ typedef struct {
   /// prach_Config_enabled=1 means enabled. \vr{[0..1]}
   uint8_t prach_Config_enabled;
   /// PRACH Configuration Information
-#if (RRC_VERSION >= MAKE_VERSION(14, 0, 0))
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
   PRACH_eMTC_CONFIG_INFO prach_ConfigInfo;
 #endif  
 } PRACH_eMTC_CONFIG_COMMON;
@@ -637,7 +637,7 @@ typedef struct LTE_DL_FRAME_PARMS {
   uint8_t nb_antenna_ports_eNB;
   /// PRACH_CONFIG
   PRACH_CONFIG_COMMON prach_config_common;
-#if (RRC_VERSION >= MAKE_VERSION(14, 0, 0))
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
   /// PRACH_eMTC_CONFIG
   PRACH_eMTC_CONFIG_COMMON prach_emtc_config_common;
 #endif

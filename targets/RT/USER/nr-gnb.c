@@ -547,7 +547,7 @@ static void* gNB_thread_prach( void* param ) {
 
     LOG_D(PHY,"Running gNB prach procedures\n");
     prach_procedures(gNB
-#if (RRC_VERSION >= MAKE_VERSION(14, 0, 0))
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
 		     ,0
 #endif
 		     );

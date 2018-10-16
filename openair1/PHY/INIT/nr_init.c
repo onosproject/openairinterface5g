@@ -24,11 +24,11 @@
 #include "PHY/NR_REFSIG/nr_refsig.h"
 #include "PHY/INIT/phy_init.h"
 #include "PHY/CODING/nrPolar_tools/nr_polar_pbch_defs.h"
-#include "RadioResourceConfigCommonSIB.h"
-#include "RadioResourceConfigDedicated.h"
-#include "TDD-Config.h"
+// #include "NR_RadioResourceConfigCommonSIB.h"
+// #include "NR_RadioResourceConfigDedicated.h"
+// #include "NR_TDD-Config.h"
 #include "LAYER2/MAC/mac_extern.h"
-#include "MBSFN-SubframeConfigList.h"
+//#include "NR_MBSFN-SubframeConfigList.h"
 #include "assertions.h"
 #include <math.h>
 

@@ -346,7 +346,7 @@ int is_prach_subframe(NR_DL_FRAME_PARMS *frame_parms,uint32_t frame, uint8_t sub
   uint8_t prach_ConfigIndex  = frame_parms->prach_config_common.prach_ConfigInfo.prach_ConfigIndex;
   int prach_mask             = is_prach_subframe0(frame_parms,prach_ConfigIndex,frame,subframe);
 
-#if (RRC_VERSION >= MAKE_VERSION(14, 0, 0))
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
   int i;
 
   for (i=0;i<4;i++) {

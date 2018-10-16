@@ -70,8 +70,8 @@ typedef struct {
     int eutra_band;
     uint32_t dl_CarrierFreq;
     NR_BCCH_BCH_Message_t *mib;
-    TDD_Config_t *tdd_Config;
-    ARFCN_ValueEUTRA_t ul_CarrierFreq;
+    NR_TDD_UL_DL_ConfigCommon_t *tdd_Config;
+    NR_ARFCN_ValueEUTRA_t ul_CarrierFreq;
     long ul_Bandwidth;
     /// Outgoing MIB PDU for PHY
     MIB_PDU MIB_pdu;

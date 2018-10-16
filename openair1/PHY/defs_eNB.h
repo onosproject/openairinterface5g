@@ -210,7 +210,7 @@ typedef struct {
   int32_t **prach_ifft[4];
 
   /// repetition number
-#if (RRC_VERSION >= MAKE_VERSION(14, 0, 0))
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
   /// indicator of first frame in a group of PRACH repetitions
   int first_frame[4];
   /// current repetition for each CE level
@@ -297,7 +297,7 @@ typedef struct eNB_proc_t_s {
   int subframe_rx;
   /// subframe to act upon for PRACH
   int subframe_prach;
-#if (RRC_VERSION >= MAKE_VERSION(14, 0, 0))
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
   /// subframe to act upon for reception of prach BL/CE UEs
   int subframe_prach_br;
 #endif
@@ -307,7 +307,7 @@ typedef struct eNB_proc_t_s {
   int frame_tx;
   /// frame to act upon for PRACH
   int frame_prach;
-#if (RRC_VERSION >= MAKE_VERSION(14, 0, 0))
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
   /// frame to act upon for PRACH BL/CE UEs
   int frame_prach_br;
 #endif
@@ -317,7 +317,7 @@ typedef struct eNB_proc_t_s {
   int instance_cnt_te;
   /// \internal This variable is protected by \ref mutex_prach.
   int instance_cnt_prach;
-#if (RRC_VERSION >= MAKE_VERSION(14, 0, 0))
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
   /// \internal This variable is protected by \ref mutex_prach for BL/CE UEs.
   int instance_cnt_prach_br;
 #endif
@@ -339,7 +339,7 @@ typedef struct eNB_proc_t_s {
   pthread_attr_t attr_single;
   /// pthread attributes for prach processing thread
   pthread_attr_t attr_prach;
-#if (RRC_VERSION >= MAKE_VERSION(14, 0, 0))
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
   /// pthread attributes for prach processing thread BL/CE UEs
   pthread_attr_t attr_prach_br;
 #endif
@@ -353,7 +353,7 @@ typedef struct eNB_proc_t_s {
   struct sched_param sched_param_single;
   /// scheduling parameters for prach thread
   struct sched_param sched_param_prach;
-#if (RRC_VERSION >= MAKE_VERSION(14, 0, 0))
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
   /// scheduling parameters for prach thread
   struct sched_param sched_param_prach_br;
 #endif
@@ -365,7 +365,7 @@ typedef struct eNB_proc_t_s {
   pthread_t pthread_te;
   /// pthread structure for PRACH thread
   pthread_t pthread_prach;
-#if (RRC_VERSION >= MAKE_VERSION(14, 0, 0))
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
   /// pthread structure for PRACH thread BL/CE UEs
   pthread_t pthread_prach_br;
 #endif
@@ -375,7 +375,7 @@ typedef struct eNB_proc_t_s {
   pthread_cond_t cond_te;
   /// condition variable for PRACH processing thread;
   pthread_cond_t cond_prach;
-#if (RRC_VERSION >= MAKE_VERSION(14, 0, 0))
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
   /// condition variable for PRACH processing thread BL/CE UEs;
   pthread_cond_t cond_prach_br;
 #endif
@@ -387,7 +387,7 @@ typedef struct eNB_proc_t_s {
   pthread_mutex_t mutex_te;
   /// mutex for PRACH thread
   pthread_mutex_t mutex_prach;
-#if (RRC_VERSION >= MAKE_VERSION(14, 0, 0))
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
   /// mutex for PRACH thread for BL/CE UEs
   pthread_mutex_t mutex_prach_br;
 #endif
@@ -403,7 +403,7 @@ typedef struct eNB_proc_t_s {
   int RU_mask;
   /// mask for RUs serving eNB (PRACH)
   int RU_mask_prach;
-#if (RRC_VERSION >= MAKE_VERSION(14, 0, 0))
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
   /// mask for RUs serving eNB (PRACH)
   int RU_mask_prach_br;
 #endif
@@ -514,14 +514,14 @@ typedef struct PHY_VARS_eNB_s {
   nfapi_cqi_indication_raw_pdu_t cqi_raw_pdu_list[NFAPI_CQI_IND_MAX_PDU];
   /// NFAPI PRACH information
   nfapi_preamble_pdu_t preamble_list[MAX_NUM_RX_PRACH_PREAMBLES];
-#if (RRC_VERSION >= MAKE_VERSION(14, 0, 0))
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
   /// NFAPI PRACH information BL/CE UEs
   nfapi_preamble_pdu_t preamble_list_br[MAX_NUM_RX_PRACH_PREAMBLES];
 #endif
   Sched_Rsp_t          Sched_INFO;
   LTE_eNB_PDCCH        pdcch_vars[2];
   LTE_eNB_PHICH        phich_vars[2];
-#if (RRC_VERSION >= MAKE_VERSION(14, 0, 0))
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
   LTE_eNB_EPDCCH       epdcch_vars[2];
   LTE_eNB_MPDCCH       mpdcch_vars[2];
   LTE_eNB_PRACH        prach_vars_br;
@@ -553,7 +553,7 @@ typedef struct PHY_VARS_eNB_s {
   uint32_t         lte_gold_mbsfn_table[10][3][42];
 
   uint32_t X_u[64][839];
-#if (RRC_VERSION >= MAKE_VERSION(14, 0, 0))
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
   uint32_t X_u_br[4][64][839];
 #endif
   uint8_t pbch_configured;
@@ -624,7 +624,7 @@ typedef struct PHY_VARS_eNB_s {
   uint8_t cba_last_reception[4];
 
   // Pointers for active physicalConfigDedicated to be applied in current subframe
-  struct PhysicalConfigDedicated *physicalConfigDedicated[NUMBER_OF_UE_MAX];
+  struct LTE_PhysicalConfigDedicated *physicalConfigDedicated[NUMBER_OF_UE_MAX];
 
 
   uint32_t rb_mask_ul[4];

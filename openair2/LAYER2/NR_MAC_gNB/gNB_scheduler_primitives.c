@@ -70,6 +70,7 @@ int is_nr_UL_sf(NR_COMMON_channels_t * ccP, sub_frame_t subframeP){
   if (ccP->tdd_Config == NULL)
     return (0);
 
+#if 0 /* TBD */
   switch (ccP->tdd_Config->subframeAssignment) {
   case 1:
     switch (subframeP) {
@@ -120,4 +121,5 @@ int is_nr_UL_sf(NR_COMMON_channels_t * ccP, sub_frame_t subframeP){
     subframeP, (int) ccP->tdd_Config->subframeAssignment);
     break;
   }
+#endif
 }
