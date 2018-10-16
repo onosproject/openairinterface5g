@@ -235,10 +235,9 @@ int output_handler(eNB_MAC_INST_NB_IoT *mac_inst, module_id_t module_id, int CC_
 		
 						dl_config_pdu = SCHED_info->DL_req->dl_config_request_body.dl_config_pdu_list;
 					    DCI_pdu = schedule_result_list_DL-> DCI_pdu;
-                                                if(schedule_result_list_DL->rnti==SI_RNTI)
-                                                        LOG_I(MAC,"frame:%d, subframe:%d NB-IoT fill SIB23 ResAssign: %d\n",frame,subframe,((DCIFormatN1_t *)DCI_pdu)->ResAssign);
-	
-                                               SCHED_info->DL_req->dl_config_request_body.number_pdu = 1;
+                        if(schedule_result_list_DL->rnti==SI_RNTI)
+                            LOG_I(MAC,"frame:%d, subframe:%d NB-IoT fill SIB23 ResAssign: %d\n",frame,subframe,((DCIFormatN1_t *)DCI_pdu)->ResAssign);
+                        SCHED_info->DL_req->dl_config_request_body.number_pdu = 1;
 						dl_config_pdu->pdu_type                                           = NFAPI_DL_CONFIG_NDLSCH_PDU_TYPE;
 						dl_config_pdu->pdu_size                                           = 2+sizeof(nfapi_dl_config_ndlsch_pdu_rel13_t);
 						dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13.length                 = schedule_result_list_DL->sdu_length;
@@ -250,6 +249,9 @@ int output_handler(eNB_MAC_INST_NB_IoT *mac_inst, module_id_t module_id, int CC_
 						dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13.modulation             = 2;
 						dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13.number_of_subframes_for_resource_assignment = get_num_sf(dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13.resource_assignment);
 						SCHED_info->TX_req->tx_request_body.tx_pdu_list[dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13.pdu_index].segments[0].segment_data = schedule_result_list_DL->DLSCH_pdu;
+						if(schedule_result_list_DL->rnti==SI_RNTI)
+							dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13.number_of_subframes_for_resource_assignment =((DCIFormatN1_t *)DCI_pdu)->ResAssign;
+
 						//LOG_D(MAC,"A NB-IoT fill DL Data pdu : %d \n",schedule_result_list_DL->DLSCH_pdu);
 					break;
 				default:
