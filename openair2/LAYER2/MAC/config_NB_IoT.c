@@ -422,14 +422,11 @@ void rrc_mac_config_req_NB_IoT(
 
     if(sib1_NB_IoT != NULL)
     {
-        mac_config->sib1_NB_IoT_sched_config.repetitions = 4;
+        mac_config->sib1_NB_IoT_sched_config.repetitions = 8;
 
         //printf("[ASN Debug] SI P: %ld\n",sib1_NB_IoT->schedulingInfoList_r13.list.array[0]->si_Periodicity_r13);
 
-
-
-        //mac_config->sib1_NB_IoT_sched_config.starting_rf = *(sib1_NB_IoT->si_RadioFrameOffset_r13);
-        mac_config->sib1_NB_IoT_sched_config.starting_rf = 1;
+        mac_config->sib1_NB_IoT_sched_config.starting_rf = 0;
         mac_config->si_window_length = ms160;
 
 

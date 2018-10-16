@@ -161,10 +161,10 @@ uint8_t *get_NB_IoT_SIB1(uint8_t Mod_id, int CC_id,
 {
 
   
-  if(frame%64==1 && subframe ==0)
-      {     
+  //if(frame%64==1 && subframe ==0)
+      //{     
        do_SIB1_NB_IoT_x(Mod_id,CC_id,carrier,mcc,mnc,tac,cell_identity,band,mnc_digit_length,hyper_frame);
-      }
+      //}
 
       
 

@@ -30,7 +30,7 @@ void schedule_sibs(eNB_MAC_INST_NB_IoT *mac_inst, uint32_t sibs_order, int start
 	uint8_t SIB23_size = 0;
 	uint8_t *SIB23_pdu = get_NB_IoT_SIB23();
 	int residual_subframe, num_subframe, last_subframe;
-	num_subframe = mac_inst->rrc_config.sibs_NB_IoT_sched[sibs_order].si_tb;
+	num_subframe = (mac_inst->rrc_config.sibs_NB_IoT_sched[sibs_order].si_tb)*8;
 	
 	int rmax = mac_inst->rrc_config.mac_NPRACH_ConfigSIB[0].mac_npdcch_NumRepetitions_RA_NB_IoT;
 	rmax = (rmax * 10) >> 3;	//	x1.25
@@ -87,14 +87,14 @@ void schedule_sibs(eNB_MAC_INST_NB_IoT *mac_inst, uint32_t sibs_order, int start
 					new_node->direction = DL;	
 					new_node->DCI_release = (j==i);
 					new_node->channel = NPDSCH;
-					new_node->rnti = SI_RNTI;
-					new_node->rnti_type = 3;
+					new_node->rnti = 65535;
+					new_node->rnti_type = 1;
 					new_node->npusch_format = 0;	//	useless
 					new_node->R_harq = 0;		//	useless
 					new_node->next = (schedule_result_t *)0;
 					new_node->DCI_pdu = (void *)sibs_dci;
 					//new_node->debug_str = str[sibs_order];
-					LOG_D(MAC,"for*1 %d %d %d %p\n", pt[k]->start_subframe, first_subframe[k], (j==i)?last_subframe:j+9, new_node);
+					LOG_D(MAC,"debug: pt[k]->start_subframe:%d output_subframe:%d end_subframe:%d rep:%d\n", pt[k]->start_subframe, first_subframe[k], (j==i)?last_subframe:j+9,si_repetition_pattern[mac_inst->rrc_config.sibs_NB_IoT_sched[sibs_order].si_repetition_pattern]);
 					fill_resource_DL(mac_inst, pt[k], first_subframe[k], (j==i)?last_subframe:j+9, new_node);
 					LOG_D(MAC,"for*2\n");
 				}
