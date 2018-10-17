@@ -385,7 +385,7 @@ int8_t nr_rrc_ue_decode_NR_DL_DCCH_Message(
                         break;
 
                     case NR_DL_DCCH_MessageType__c1_PR_NOTHING:
-#if (LTE_RRC_VERSION >= MAKE_VERSION(15, 3, 0))
+#if (NR_RRC_VERSION >= MAKE_VERSION(15, 3, 0))
                     case NR_DL_DCCH_MessageType__c1_PR_rrcResume:
                     case NR_DL_DCCH_MessageType__c1_PR_rrcRelease:
                     case NR_DL_DCCH_MessageType__c1_PR_rrcReestablishment:

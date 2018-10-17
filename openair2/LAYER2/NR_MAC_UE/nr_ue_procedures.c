@@ -114,7 +114,7 @@ int8_t nr_ue_decode_mib(
 	    
         uint32_t is_condition_A = (ssb_subcarrier_offset == 0);   //  38.213 ch.13
         frequency_range_t frequency_range = FR1;
-#if (LTE_RRC_VERSION >= MAKE_VERSION(15, 3, 0))
+#if (NR_RRC_VERSION >= MAKE_VERSION(15, 3, 0))
         uint32_t index_4msb = (mac->mib->pdcch_ConfigSIB1.controlResourceSetZero);
         uint32_t index_4lsb = (mac->mib->pdcch_ConfigSIB1.searchSpaceZero);
 #else
@@ -434,7 +434,7 @@ int8_t nr_ue_decode_mib(
 	    mac->phy_config.config_req.pbch_config.ssb_subcarrier_offset = ssb_subcarrier_offset;  //  after calculation
 	    mac->phy_config.config_req.pbch_config.dmrs_type_a_position = mac->mib->dmrs_TypeA_Position;
 
-#if (LTE_RRC_VERSION >= MAKE_VERSION(15, 3, 0))
+#if (NR_RRC_VERSION >= MAKE_VERSION(15, 3, 0))
 	    mac->phy_config.config_req.pbch_config.pdcch_config_sib1 = (mac->mib->pdcch_ConfigSIB1.controlResourceSetZero) * 16 + (mac->mib->pdcch_ConfigSIB1.searchSpaceZero);
 #else
 	    mac->phy_config.config_req.pbch_config.pdcch_config_sib1 = mac->mib->pdcch_ConfigSIB1;
