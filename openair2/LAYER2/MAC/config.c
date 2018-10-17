@@ -422,7 +422,7 @@ config_sib2(int Mod_idP,
 
 
   // how to enable/disable SRS?
-  if (radioResourceConfigCommonP->soundingRS_UL_ConfigCommon.present==LTE_SoundingRS_UL_ConfigCommon_PR_setup) {
+  if (radioResourceConfigCommonP->soundingRS_UL_ConfigCommon.present == LTE_SoundingRS_UL_ConfigCommon_PR_setup) {
     cfg->srs_config.bandwidth_configuration.value                       = radioResourceConfigCommonP->soundingRS_UL_ConfigCommon.choice.setup.srs_BandwidthConfig;
     cfg->srs_config.bandwidth_configuration.tl.tag = NFAPI_SRS_CONFIG_BANDWIDTH_CONFIGURATION_TAG;
     cfg->num_tlv++;

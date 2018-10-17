@@ -1312,93 +1312,93 @@ int RCconfig_RRC(MessageDef *msg_p, uint32_t i, eNB_RRC_INST *rrc) {
 		switch (rach_preambleTransMax) {
 #if (LTE_RRC_VERSION < MAKE_VERSION(14, 0, 0))
 		case 3:
-		  RRC_CONFIGURATION_REQ (msg_p).rach_preambleTransMax[j] =  LTE_RACH_ConfigCommon__ra_SupervisionInfo__preambleTransMax_n3;
+		  RRC_CONFIGURATION_REQ (msg_p).rach_preambleTransMax[j] = LTE_RACH_ConfigCommon__ra_SupervisionInfo__preambleTransMax_n3;
 		  break;
 
 		case 4:
-		  RRC_CONFIGURATION_REQ (msg_p).rach_preambleTransMax[j] =  LTE_RACH_ConfigCommon__ra_SupervisionInfo__preambleTransMax_n4;
+		  RRC_CONFIGURATION_REQ (msg_p).rach_preambleTransMax[j] = LTE_RACH_ConfigCommon__ra_SupervisionInfo__preambleTransMax_n4;
 		  break;
 
 		case 5:
-		  RRC_CONFIGURATION_REQ (msg_p).rach_preambleTransMax[j] =  LTE_RACH_ConfigCommon__ra_SupervisionInfo__preambleTransMax_n5;
+		  RRC_CONFIGURATION_REQ (msg_p).rach_preambleTransMax[j] = LTE_RACH_ConfigCommon__ra_SupervisionInfo__preambleTransMax_n5;
 		  break;
 
 		case 6:
-		  RRC_CONFIGURATION_REQ (msg_p).rach_preambleTransMax[j] =  LTE_RACH_ConfigCommon__ra_SupervisionInfo__preambleTransMax_n6;
+		  RRC_CONFIGURATION_REQ (msg_p).rach_preambleTransMax[j] = LTE_RACH_ConfigCommon__ra_SupervisionInfo__preambleTransMax_n6;
 		  break;
 
 		case 7:
-		  RRC_CONFIGURATION_REQ (msg_p).rach_preambleTransMax[j] =  LTE_RACH_ConfigCommon__ra_SupervisionInfo__preambleTransMax_n7;
+		  RRC_CONFIGURATION_REQ (msg_p).rach_preambleTransMax[j] = LTE_RACH_ConfigCommon__ra_SupervisionInfo__preambleTransMax_n7;
 		  break;
 
 		case 8:
-		  RRC_CONFIGURATION_REQ (msg_p).rach_preambleTransMax[j] =  LTE_RACH_ConfigCommon__ra_SupervisionInfo__preambleTransMax_n8;
+		  RRC_CONFIGURATION_REQ (msg_p).rach_preambleTransMax[j] = LTE_RACH_ConfigCommon__ra_SupervisionInfo__preambleTransMax_n8;
 		  break;
 
 		case 10:
-		  RRC_CONFIGURATION_REQ (msg_p).rach_preambleTransMax[j] =  LTE_RACH_ConfigCommon__ra_SupervisionInfo__preambleTransMax_n10;
+		  RRC_CONFIGURATION_REQ (msg_p).rach_preambleTransMax[j] = LTE_RACH_ConfigCommon__ra_SupervisionInfo__preambleTransMax_n10;
 		  break;
 
 		case 20:
-		  RRC_CONFIGURATION_REQ (msg_p).rach_preambleTransMax[j] =  LTE_RACH_ConfigCommon__ra_SupervisionInfo__preambleTransMax_n20;
+		  RRC_CONFIGURATION_REQ (msg_p).rach_preambleTransMax[j] = LTE_RACH_ConfigCommon__ra_SupervisionInfo__preambleTransMax_n20;
 		  break;
 
 		case 50:
-		  RRC_CONFIGURATION_REQ (msg_p).rach_preambleTransMax[j] =  LTE_RACH_ConfigCommon__ra_SupervisionInfo__preambleTransMax_n50;
+		  RRC_CONFIGURATION_REQ (msg_p).rach_preambleTransMax[j] = LTE_RACH_ConfigCommon__ra_SupervisionInfo__preambleTransMax_n50;
 		  break;
 
 		case 100:
-		  RRC_CONFIGURATION_REQ (msg_p).rach_preambleTransMax[j] =  LTE_RACH_ConfigCommon__ra_SupervisionInfo__preambleTransMax_n100;
+		  RRC_CONFIGURATION_REQ (msg_p).rach_preambleTransMax[j] = LTE_RACH_ConfigCommon__ra_SupervisionInfo__preambleTransMax_n100;
 		  break;
 
 		case 200:
-		  RRC_CONFIGURATION_REQ (msg_p).rach_preambleTransMax[j] =  LTE_RACH_ConfigCommon__ra_SupervisionInfo__preambleTransMax_n200;
+		  RRC_CONFIGURATION_REQ (msg_p).rach_preambleTransMax[j] = LTE_RACH_ConfigCommon__ra_SupervisionInfo__preambleTransMax_n200;
 		  break;
 
 #else
 
 		case 3:
-		  RRC_CONFIGURATION_REQ (msg_p).rach_preambleTransMax[j] =  LTE_PreambleTransMax_n3;
+		  RRC_CONFIGURATION_REQ (msg_p).rach_preambleTransMax[j] = LTE_PreambleTransMax_n3;
 		  break;
 
 		case 4:
-		  RRC_CONFIGURATION_REQ (msg_p).rach_preambleTransMax[j] =  LTE_PreambleTransMax_n4;
+		  RRC_CONFIGURATION_REQ (msg_p).rach_preambleTransMax[j] = LTE_PreambleTransMax_n4;
 		  break;
 
 		case 5:
-		  RRC_CONFIGURATION_REQ (msg_p).rach_preambleTransMax[j] =  LTE_PreambleTransMax_n5;
+		  RRC_CONFIGURATION_REQ (msg_p).rach_preambleTransMax[j] = LTE_PreambleTransMax_n5;
 		  break;
 
 		case 6:
-		  RRC_CONFIGURATION_REQ (msg_p).rach_preambleTransMax[j] =  LTE_PreambleTransMax_n6;
+		  RRC_CONFIGURATION_REQ (msg_p).rach_preambleTransMax[j] = LTE_PreambleTransMax_n6;
 		  break;
 
 		case 7:
-		  RRC_CONFIGURATION_REQ (msg_p).rach_preambleTransMax[j] =  LTE_PreambleTransMax_n7;
+		  RRC_CONFIGURATION_REQ (msg_p).rach_preambleTransMax[j] = LTE_PreambleTransMax_n7;
 		  break;
 
 		case 8:
-		  RRC_CONFIGURATION_REQ (msg_p).rach_preambleTransMax[j] =  LTE_PreambleTransMax_n8;
+		  RRC_CONFIGURATION_REQ (msg_p).rach_preambleTransMax[j] = LTE_PreambleTransMax_n8;
 		  break;
 
 		case 10:
-		  RRC_CONFIGURATION_REQ (msg_p).rach_preambleTransMax[j] =  LTE_PreambleTransMax_n10;
+		  RRC_CONFIGURATION_REQ (msg_p).rach_preambleTransMax[j] = LTE_PreambleTransMax_n10;
 		  break;
 
 		case 20:
-		  RRC_CONFIGURATION_REQ (msg_p).rach_preambleTransMax[j] =  LTE_PreambleTransMax_n20;
+		  RRC_CONFIGURATION_REQ (msg_p).rach_preambleTransMax[j] = LTE_PreambleTransMax_n20;
 		  break;
 
 		case 50:
-		  RRC_CONFIGURATION_REQ (msg_p).rach_preambleTransMax[j] =  LTE_PreambleTransMax_n50;
+		  RRC_CONFIGURATION_REQ (msg_p).rach_preambleTransMax[j] = LTE_PreambleTransMax_n50;
 		  break;
 
 		case 100:
-		  RRC_CONFIGURATION_REQ (msg_p).rach_preambleTransMax[j] =  LTE_PreambleTransMax_n100;
+		  RRC_CONFIGURATION_REQ (msg_p).rach_preambleTransMax[j] = LTE_PreambleTransMax_n100;
 		  break;
 
 		case 200:
-		  RRC_CONFIGURATION_REQ (msg_p).rach_preambleTransMax[j] =  LTE_PreambleTransMax_n200;
+		  RRC_CONFIGURATION_REQ (msg_p).rach_preambleTransMax[j] = LTE_PreambleTransMax_n200;
 		  break;
 #endif
 

@@ -2953,11 +2953,11 @@ rrc_eNB_generate_defaultRRCConnectionReconfiguration(const protocol_ctxt_t* cons
 #ifdef RRC_DEFAULT_RAB_IS_AM
   DRB_rlc_config->present = LTE_RLC_Config_PR_am;
   DRB_rlc_config->choice.am.ul_AM_RLC.t_PollRetransmit = LTE_T_PollRetransmit_ms50;
-  DRB_rlc_config->choice.am.ul_AM_RLC.pollPDU =  LTE_ LTE_PollPDU_p16;
+  DRB_rlc_config->choice.am.ul_AM_RLC.pollPDU = LTE_PollPDU_p16;
   DRB_rlc_config->choice.am.ul_AM_RLC.pollByte = LTE_PollByte_kBinfinity;
   DRB_rlc_config->choice.am.ul_AM_RLC.maxRetxThreshold = LTE_UL_AM_RLC__maxRetxThreshold_t8;
   DRB_rlc_config->choice.am.dl_AM_RLC.t_Reordering = LTE_T_Reordering_ms35;
-  DRB_rlc_config->choice.am.dl_AM_RLC.t_StatusProhibit =  LTE_ LTE_T_StatusProhibit_ms25;
+  DRB_rlc_config->choice.am.dl_AM_RLC.t_StatusProhibit = LTE_T_StatusProhibit_ms25;
 #else
   DRB_rlc_config->present = LTE_RLC_Config_PR_um_Bi_Directional;
   DRB_rlc_config->choice.um_Bi_Directional.ul_UM_RLC.sn_FieldLength = LTE_SN_FieldLength_size10;
@@ -3054,7 +3054,7 @@ rrc_eNB_generate_defaultRRCConnectionReconfiguration(const protocol_ctxt_t* cons
     if ((*physicalConfigDedicated)->antennaInfo) {
       (*physicalConfigDedicated)->antennaInfo->choice.explicitValue.transmissionMode = rrc_inst->configuration.ue_TransmissionMode[0];
       LOG_D(RRC,"Setting transmission mode to %ld+1\n",rrc_inst->configuration.ue_TransmissionMode[0]);
-      if (rrc_inst->configuration.ue_TransmissionMode[0]==LTE_AntennaInfoDedicated__transmissionMode_tm3) {
+      if (rrc_inst->configuration.ue_TransmissionMode[0] == LTE_AntennaInfoDedicated__transmissionMode_tm3) {
 	(*physicalConfigDedicated)->antennaInfo->choice.explicitValue.codebookSubsetRestriction=     
 	  CALLOC(1,sizeof(LTE_AntennaInfoDedicated__codebookSubsetRestriction_PR));
 	(*physicalConfigDedicated)->antennaInfo->choice.explicitValue.codebookSubsetRestriction->present =
@@ -3064,7 +3064,7 @@ rrc_eNB_generate_defaultRRCConnectionReconfiguration(const protocol_ctxt_t* cons
 	(*physicalConfigDedicated)->antennaInfo->choice.explicitValue.codebookSubsetRestriction->choice.n2TxAntenna_tm3.size=1;
 	(*physicalConfigDedicated)->antennaInfo->choice.explicitValue.codebookSubsetRestriction->choice.n2TxAntenna_tm3.bits_unused=6;
       }
-      else if (rrc_inst->configuration.ue_TransmissionMode[0]==LTE_AntennaInfoDedicated__transmissionMode_tm4) {
+      else if (rrc_inst->configuration.ue_TransmissionMode[0] == LTE_AntennaInfoDedicated__transmissionMode_tm4) {
 	(*physicalConfigDedicated)->antennaInfo->choice.explicitValue.codebookSubsetRestriction=     
 	  CALLOC(1,sizeof(LTE_AntennaInfoDedicated__codebookSubsetRestriction_PR));
 	(*physicalConfigDedicated)->antennaInfo->choice.explicitValue.codebookSubsetRestriction->present =
@@ -3075,7 +3075,7 @@ rrc_eNB_generate_defaultRRCConnectionReconfiguration(const protocol_ctxt_t* cons
 	(*physicalConfigDedicated)->antennaInfo->choice.explicitValue.codebookSubsetRestriction->choice.n2TxAntenna_tm4.bits_unused=2;
 
       }
-      else if (rrc_inst->configuration.ue_TransmissionMode[0]==LTE_AntennaInfoDedicated__transmissionMode_tm5) {
+      else if (rrc_inst->configuration.ue_TransmissionMode[0] == LTE_AntennaInfoDedicated__transmissionMode_tm5) {
 	(*physicalConfigDedicated)->antennaInfo->choice.explicitValue.codebookSubsetRestriction=     
 	  CALLOC(1,sizeof(LTE_AntennaInfoDedicated__codebookSubsetRestriction_PR));
 	(*physicalConfigDedicated)->antennaInfo->choice.explicitValue.codebookSubsetRestriction->present =
@@ -3085,7 +3085,7 @@ rrc_eNB_generate_defaultRRCConnectionReconfiguration(const protocol_ctxt_t* cons
 	(*physicalConfigDedicated)->antennaInfo->choice.explicitValue.codebookSubsetRestriction->choice.n2TxAntenna_tm5.size=1;
 	(*physicalConfigDedicated)->antennaInfo->choice.explicitValue.codebookSubsetRestriction->choice.n2TxAntenna_tm5.bits_unused=4;
       }
-      else if (rrc_inst->configuration.ue_TransmissionMode[0]==LTE_AntennaInfoDedicated__transmissionMode_tm6) {
+      else if (rrc_inst->configuration.ue_TransmissionMode[0] == LTE_AntennaInfoDedicated__transmissionMode_tm6) {
 	(*physicalConfigDedicated)->antennaInfo->choice.explicitValue.codebookSubsetRestriction=     
 	  CALLOC(1,sizeof(LTE_AntennaInfoDedicated__codebookSubsetRestriction_PR));
 	(*physicalConfigDedicated)->antennaInfo->choice.explicitValue.codebookSubsetRestriction->present =
@@ -3100,9 +3100,9 @@ rrc_eNB_generate_defaultRRCConnectionReconfiguration(const protocol_ctxt_t* cons
       LOG_E(RRC,"antenna_info not present in physical_config_dedicated. Not reconfiguring!\n");
     }
     if ((*physicalConfigDedicated)->cqi_ReportConfig) {
-      if ((rrc_inst->configuration.ue_TransmissionMode[0]==LTE_AntennaInfoDedicated__transmissionMode_tm4) ||
-	  (rrc_inst->configuration.ue_TransmissionMode[0]==LTE_AntennaInfoDedicated__transmissionMode_tm5) ||
-	  (rrc_inst->configuration.ue_TransmissionMode[0]==LTE_AntennaInfoDedicated__transmissionMode_tm6)) {
+      if ((rrc_inst->configuration.ue_TransmissionMode[0] == LTE_AntennaInfoDedicated__transmissionMode_tm4) ||
+	  (rrc_inst->configuration.ue_TransmissionMode[0] == LTE_AntennaInfoDedicated__transmissionMode_tm5) ||
+	  (rrc_inst->configuration.ue_TransmissionMode[0] == LTE_AntennaInfoDedicated__transmissionMode_tm6)) {
 	//feedback mode needs to be set as well
 	//TODO: I think this is taken into account in the PHY automatically based on the transmission mode variable
 	printf("setting cqi reporting mode to rm31\n");
@@ -3787,7 +3787,7 @@ flexran_rrc_eNB_generate_defaultRRCConnectionReconfiguration(const protocol_ctxt
     if ((*physicalConfigDedicated)->antennaInfo) {
       (*physicalConfigDedicated)->antennaInfo->choice.explicitValue.transmissionMode = rrc_inst->configuration.ue_TransmissionMode[0];
       LOG_D(RRC,"Setting transmission mode to %ld+1\n",rrc_inst->configuration.ue_TransmissionMode[0]);
-      if (rrc_inst->configuration.ue_TransmissionMode[0]==LTE_AntennaInfoDedicated__transmissionMode_tm3) {
+      if (rrc_inst->configuration.ue_TransmissionMode[0] == LTE_AntennaInfoDedicated__transmissionMode_tm3) {
   (*physicalConfigDedicated)->antennaInfo->choice.explicitValue.codebookSubsetRestriction=     
     CALLOC(1,sizeof(LTE_AntennaInfoDedicated__codebookSubsetRestriction_PR));
   (*physicalConfigDedicated)->antennaInfo->choice.explicitValue.codebookSubsetRestriction->present =
@@ -3797,7 +3797,7 @@ flexran_rrc_eNB_generate_defaultRRCConnectionReconfiguration(const protocol_ctxt
   (*physicalConfigDedicated)->antennaInfo->choice.explicitValue.codebookSubsetRestriction->choice.n2TxAntenna_tm3.size=1;
   (*physicalConfigDedicated)->antennaInfo->choice.explicitValue.codebookSubsetRestriction->choice.n2TxAntenna_tm3.bits_unused=6;
       }
-      else if (rrc_inst->configuration.ue_TransmissionMode[0]==LTE_AntennaInfoDedicated__transmissionMode_tm4) {
+      else if (rrc_inst->configuration.ue_TransmissionMode[0] == LTE_AntennaInfoDedicated__transmissionMode_tm4) {
   (*physicalConfigDedicated)->antennaInfo->choice.explicitValue.codebookSubsetRestriction=     
     CALLOC(1,sizeof(LTE_AntennaInfoDedicated__codebookSubsetRestriction_PR));
   (*physicalConfigDedicated)->antennaInfo->choice.explicitValue.codebookSubsetRestriction->present =
@@ -3808,7 +3808,7 @@ flexran_rrc_eNB_generate_defaultRRCConnectionReconfiguration(const protocol_ctxt
   (*physicalConfigDedicated)->antennaInfo->choice.explicitValue.codebookSubsetRestriction->choice.n2TxAntenna_tm4.bits_unused=2;
 
       }
-      else if (rrc_inst->configuration.ue_TransmissionMode[0]==LTE_AntennaInfoDedicated__transmissionMode_tm5) {
+      else if (rrc_inst->configuration.ue_TransmissionMode[0] == LTE_AntennaInfoDedicated__transmissionMode_tm5) {
   (*physicalConfigDedicated)->antennaInfo->choice.explicitValue.codebookSubsetRestriction=     
     CALLOC(1,sizeof(LTE_AntennaInfoDedicated__codebookSubsetRestriction_PR));
   (*physicalConfigDedicated)->antennaInfo->choice.explicitValue.codebookSubsetRestriction->present =
@@ -3818,7 +3818,7 @@ flexran_rrc_eNB_generate_defaultRRCConnectionReconfiguration(const protocol_ctxt
   (*physicalConfigDedicated)->antennaInfo->choice.explicitValue.codebookSubsetRestriction->choice.n2TxAntenna_tm5.size=1;
   (*physicalConfigDedicated)->antennaInfo->choice.explicitValue.codebookSubsetRestriction->choice.n2TxAntenna_tm5.bits_unused=4;
       }
-      else if (rrc_inst->configuration.ue_TransmissionMode[0]==LTE_AntennaInfoDedicated__transmissionMode_tm6) {
+      else if (rrc_inst->configuration.ue_TransmissionMode[0] == LTE_AntennaInfoDedicated__transmissionMode_tm6) {
   (*physicalConfigDedicated)->antennaInfo->choice.explicitValue.codebookSubsetRestriction=     
     CALLOC(1,sizeof(LTE_AntennaInfoDedicated__codebookSubsetRestriction_PR));
   (*physicalConfigDedicated)->antennaInfo->choice.explicitValue.codebookSubsetRestriction->present =
@@ -3833,9 +3833,9 @@ flexran_rrc_eNB_generate_defaultRRCConnectionReconfiguration(const protocol_ctxt
       LOG_E(RRC,"antenna_info not present in physical_config_dedicated. Not reconfiguring!\n");
     }
     if ((*physicalConfigDedicated)->cqi_ReportConfig) {
-      if ((rrc_inst->configuration.ue_TransmissionMode[0]==LTE_AntennaInfoDedicated__transmissionMode_tm4) ||
-    (rrc_inst->configuration.ue_TransmissionMode[0]==LTE_AntennaInfoDedicated__transmissionMode_tm5) ||
-    (rrc_inst->configuration.ue_TransmissionMode[0]==LTE_AntennaInfoDedicated__transmissionMode_tm6)) {
+      if ((rrc_inst->configuration.ue_TransmissionMode[0] == LTE_AntennaInfoDedicated__transmissionMode_tm4) ||
+    (rrc_inst->configuration.ue_TransmissionMode[0] == LTE_AntennaInfoDedicated__transmissionMode_tm5) ||
+    (rrc_inst->configuration.ue_TransmissionMode[0] == LTE_AntennaInfoDedicated__transmissionMode_tm6)) {
   //feedback mode needs to be set as well
   //TODO: I think this is taken into account in the PHY automatically based on the transmission mode variable
   printf("setting cqi reporting mode to rm31\n");

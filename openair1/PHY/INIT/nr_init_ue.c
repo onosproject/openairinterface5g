@@ -23,10 +23,10 @@
 #include "SCHED_UE/sched_UE.h"
 #include "PHY/phy_extern_nr_ue.h"
 //#include "SIMULATION/TOOLS/sim.h"
-#include "RadioResourceConfigCommonSIB.h"
-#include "RadioResourceConfigDedicated.h"
-#include "TDD-Config.h"
-#include "MBSFN-SubframeConfigList.h"
+//#include "NR_RadioResourceConfigCommonSIB.h"
+//#include "NR_RadioResourceConfigDedicated.h"
+//#include "NR_TDD-Config.h"
+//#include "NR_MBSFN-SubframeConfigList.h"
 #include "common/utils/LOG/vcd_signal_dumper.h"
 #include "assertions.h"
 #include <math.h>
@@ -347,10 +347,10 @@ void phy_config_meas_ue(uint8_t Mod_id,uint8_t CC_id,uint8_t eNB_index,uint8_t n
 }
 */
 
-#if defined(Rel10) || defined(Rel14)
+#if (LTE_RRC_VERSION > MAKE_VERSION(10, 0, 0))
 void phy_config_dedicated_scell_ue(uint8_t Mod_id,
                                    uint8_t eNB_index,
-                                   SCellToAddMod_r10_t *sCellToAddMod_r10,
+                                   LTE_SCellToAddMod_r10_t *sCellToAddMod_r10,
                                    int CC_id)
 {
 

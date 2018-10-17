@@ -1105,7 +1105,7 @@ uint8_t do_SIB23(uint8_t Mod_id,
 
   //dataHoppingConfig_r12
   SL_CommResourcePool->dataHoppingConfig_r12.hoppingParameter_r12 = 0;
-  SL_CommResourcePool->dataHoppingConfig_r12.numSubbands_r12  =  LTE_SL_HoppingConfigComm_r12__numSubbands_r12_ns1;
+  SL_CommResourcePool->dataHoppingConfig_r12.numSubbands_r12  = LTE_SL_HoppingConfigComm_r12__numSubbands_r12_ns1;
   SL_CommResourcePool->dataHoppingConfig_r12.rb_Offset_r12 = 0;
 
   //ue_SelectedResourceConfig_r12
@@ -1490,7 +1490,7 @@ uint8_t do_SidelinkUEInformation(uint8_t Mod_id, uint8_t *buffer,  LTE_SL_Destin
    memset((void *)&ul_dcch_msg,0,sizeof(LTE_UL_DCCH_Message_t));
    ul_dcch_msg.message.present = LTE_UL_DCCH_MessageType_PR_messageClassExtension;
    ul_dcch_msg.message.choice.messageClassExtension.present  = LTE_UL_DCCH_MessageType__messageClassExtension_PR_c2;
-   ul_dcch_msg.message.choice.messageClassExtension.choice.c2.present =  LTE_UL_DCCH_MessageType__messageClassExtension__c2_PR_sidelinkUEInformation_r12;
+   ul_dcch_msg.message.choice.messageClassExtension.choice.c2.present = LTE_UL_DCCH_MessageType__messageClassExtension__c2_PR_sidelinkUEInformation_r12;
    sidelinkUEInformation            = &ul_dcch_msg.message.choice.messageClassExtension.choice.c2.choice.sidelinkUEInformation_r12;
 
    //3GPP TS 36.331 (Section 5.10.2.3)
@@ -1980,7 +1980,7 @@ do_RRCConnectionSetup(
   //physicalConfigDedicated2->cqi_ReportConfig->cqi_ReportPeriodic=NULL;
   
   physicalConfigDedicated2->cqi_ReportConfig->cqi_ReportPeriodic=CALLOC(1,sizeof(*physicalConfigDedicated2->cqi_ReportConfig->cqi_ReportPeriodic));
-  physicalConfigDedicated2->cqi_ReportConfig->cqi_ReportPeriodic->present =  LTE_CQI_ReportPeriodic_PR_release;
+  physicalConfigDedicated2->cqi_ReportConfig->cqi_ReportPeriodic->present = LTE_CQI_ReportPeriodic_PR_release;
     /*
     physicalConfigDedicated2->cqi_ReportConfig->cqi_ReportPeriodic->present =  CQI_ReportPeriodic_PR_setup;
     physicalConfigDedicated2->cqi_ReportConfig->cqi_ReportPeriodic->choice.setup.cqi_PUCCH_ResourceIndex = 0;  // n2_pucch

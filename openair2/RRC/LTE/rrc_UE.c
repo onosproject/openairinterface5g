@@ -4382,7 +4382,7 @@ void ue_measurement_report_triggering(protocol_ctxt_t* const ctxt_pP, const uint
              * defined within the VarMeasConfig for this measId */
             //    LOG_I(RRC,"event %d %d %p \n", measObjId,reportConfigId, UE_rrc_inst[ctxt_pP->module_id].ReportConfig[i][reportConfigId-1]);
             if((UE_rrc_inst[ctxt_pP->module_id].ReportConfig[i][reportConfigId-1] != NULL) &&
-                (UE_rrc_inst[ctxt_pP->module_id].ReportConfig[i][reportConfigId-1]->reportConfig.present==LTE_ReportConfigToAddMod__reportConfig_PR_reportConfigEUTRA) &&
+                (UE_rrc_inst[ctxt_pP->module_id].ReportConfig[i][reportConfigId-1]->reportConfig.present == LTE_ReportConfigToAddMod__reportConfig_PR_reportConfigEUTRA) &&
                 (UE_rrc_inst[ctxt_pP->module_id].ReportConfig[i][reportConfigId-1]->reportConfig.choice.reportConfigEUTRA.triggerType.present ==
                  LTE_ReportConfigEUTRA__triggerType_PR_event)) {
               hys = UE_rrc_inst[ctxt_pP->module_id].ReportConfig[i][reportConfigId-1]->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.hysteresis;
