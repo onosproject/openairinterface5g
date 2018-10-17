@@ -377,8 +377,8 @@ void ue_ip_init(struct net_device *dev_pP)
     memset(priv_p, 0, sizeof(ue_ip_priv_t));
     spin_lock_init(&priv_p->lock);
     dev_pP->netdev_ops = &ue_ip_netdev_ops;
-/*  dev_pP->hard_header_len = 0;
-    dev_pP->addr_len = UE_IP_ADDR_LEN;
+   /* dev_pP->hard_header_len = 0;
+    dev_pP->addr_len = ETH_ALEN;
     dev_pP->flags = IFF_BROADCAST|IFF_MULTICAST|IFF_NOARP;
     dev_pP->tx_queue_len = UE_IP_TX_QUEUE_LEN;
     dev_pP->mtu = UE_IP_MTU;

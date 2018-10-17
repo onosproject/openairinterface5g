@@ -34,8 +34,8 @@
 #include "rtai_fifos.h"
 #endif
 
-
 #include <linux/inetdevice.h>
+#include <linux/etherdevice.h>
 
 #include <net/tcp.h>
 #include <net/udp.h>
@@ -58,7 +58,7 @@
 
 
 //#define OAI_DRV_DEBUG_SEND
-//#define OAI_DRV_DEBUG_RECEIVE
+#define OAI_DRV_DEBUG_RECEIVE
 
 void
 ue_ip_common_class_wireless2ip(
@@ -114,11 +114,6 @@ skb_p->mark = rb_idP;
 
   printk("\n");
 #endif
-#ifdef OAI_DRV_DEBUG_RECEIVE
-  printk("[UE_IP_DRV][%s] skb_p->data           @ %p\n",__FUNCTION__,  skb_p->data);
-  printk("[UE_IP_DRV][%s] skb_p->mac_header     @ %p\n",__FUNCTION__,  skb_p->mac_header);
-#endif
-
 
 
   // LG TEST skb_p->ip_summed = CHECKSUM_NONE;
@@ -163,6 +158,14 @@ skb_p->mark = rb_idP;
     }
 
     printk("[UE_IP_DRV][%s] protocol  %d\n",__FUNCTION__, ((struct iphdr *)&skb_p->data[hard_header_len])->protocol);
+
+    //get source/destination MAC addresses
+    struct ethhdr *mh = eth_hdr(skb_p);
+#ifdef OAI_DRV_DEBUG_SEND
+    printk("[UE_IP_DRV] source MAC %x.%x.%x.%x.%x.%x\n", mh->h_source[0],mh->h_source[1],mh->h_source[2],mh->h_source[3],mh->h_source[4],mh->h_source[5]);
+    printk("[UE_IP_DRV] dest MAC %x.%x.%x.%x.%x.%x\n", mh->h_dest[0],mh->h_dest[1],mh->h_dest[2],mh->h_dest[3],mh->h_dest[4],mh->h_dest[5]);
+#endif
+
 #endif
 
     skb_set_network_header(skb_p, hard_header_len);
@@ -200,13 +203,16 @@ skb_p->mark = rb_idP;
 #endif
 
     if (hard_header_len == 0) {
-      skb_p->protocol = htons(ETH_P_IP);
+    	skb_p->protocol = htons(ETH_P_IP);
+    }else{
+    	skb_p->protocol = eth_type_trans(skb_p, ue_ip_dev[instP]);
     }
 
     //printk("[UE_IP_DRV][COMMON] Writing packet with protocol %x\n",ntohs(skb_p->protocol));
     break;
 
   default:
+	skb_p->protocol = eth_type_trans(skb_p, ue_ip_dev[instP]);
     printk("[UE_IP_DRV][%s] begin RB %d Inst %d Length %d bytes\n",__FUNCTION__,rb_idP,instP,data_lenP);
     printk("[UE_IP_DRV][%s] Inst %d: receive unknown message (version=%d)\n",__FUNCTION__,instP,ipv_p->version);
   }
@@ -235,6 +241,7 @@ void ue_ip_common_ip2wireless_drop(struct sk_buff *skb_pP,  int instP)
   //---------------------------------------------------------------------------
   ue_ip_priv_t *priv_p=netdev_priv(ue_ip_dev[instP]);
   ++priv_p->stats.tx_dropped;
+  printk("[UE_IP_DRV]Packet has been dropped\n");
 }
 
 //---------------------------------------------------------------------------
