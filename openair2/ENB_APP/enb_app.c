@@ -218,10 +218,11 @@ void *eNB_app_task(void *args_p)
   }
 
   /* Start the agent. If it is turned off in the configuration, it won't start */
-  /*RCconfig_flexran();
+  RCconfig_flexran();
+  int i;
   for (i = 0; i < RC.nb_L1_inst; i++) {
     flexran_agent_start(i);
-  }*/
+  }
 
 # if defined(ENABLE_USE_MME)
   /* Try to register each eNB */

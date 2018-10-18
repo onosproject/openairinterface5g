@@ -7225,6 +7225,7 @@ void *rrc_enb_process_itti_msg(void *notUsed) {
     msg_name_p = ITTI_MSG_NAME(msg_p);
     instance = ITTI_MSG_INSTANCE(msg_p);
     LOG_I(RRC,"Received message %s\n",msg_name_p);
+printf("~~~~~~~~~~~~instance = %d \n", instance);
 
     switch (ITTI_MSG_ID(msg_p)) {
     case TERMINATE_MESSAGE:
@@ -7347,6 +7348,7 @@ void *rrc_enb_process_itti_msg(void *notUsed) {
       /* Messages from eNB app */
     case RRC_CONFIGURATION_REQ:
       LOG_I(RRC, "[eNB %d] Received %s : %p\n", instance, msg_name_p,&RRC_CONFIGURATION_REQ(msg_p));
+printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~for %d L1\n", ENB_INSTANCE_TO_MODULE_ID(instance));
       openair_rrc_eNB_configuration(ENB_INSTANCE_TO_MODULE_ID(instance), &RRC_CONFIGURATION_REQ(msg_p));
       break;
 

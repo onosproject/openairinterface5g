@@ -1033,16 +1033,20 @@ rrc_mac_config_req_eNB(module_id_t Mod_idP,
         printf("Waiting for PHY_config_req\n");
       }
     }
+printf("~~~~~~~~~~~~~~configured in rrc_mac_config_req_eNB with module_ID = %d \n", Mod_idP);
 
     if (radioResourceConfigCommon != NULL) {
-      PHY_Config_t phycfg;
-      phycfg.Mod_id = Mod_idP;
-      phycfg.CC_id  = CC_idP;
-      phycfg.cfg    = &RC.mac[Mod_idP]->config[CC_idP];
+      for(i=0;i<RC.nb_L1_inst;i++)
+      {
+        PHY_Config_t phycfg;
+        phycfg.Mod_id = i;//Mod_idP;
+        phycfg.CC_id  = CC_idP;
+        phycfg.cfg    = &RC.mac[Mod_idP]->config[CC_idP];
       
-      if (RC.mac[Mod_idP]->if_inst->PHY_config_req) RC.mac[Mod_idP]->if_inst->PHY_config_req(&phycfg); 
+        if (RC.mac[Mod_idP]->if_inst->PHY_config_req) RC.mac[Mod_idP]->if_inst->PHY_config_req(&phycfg); 
       
-      VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_RRC_MAC_CONFIG, VCD_FUNCTION_OUT);
+        VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_RRC_MAC_CONFIG, VCD_FUNCTION_OUT);
+      }
     }
     RC.mac[Mod_idP]->scheduler_mode = global_scheduler_mode;
 

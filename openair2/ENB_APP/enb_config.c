@@ -182,8 +182,8 @@ void RCconfig_flexran() {
                 num_enbs, sizeof(flexran_agent_info_t *));
   }
 
-  for (i = 0; i < num_enbs; i++) {
-  //for (i = 0; i < nb_L1_inst; i++){
+  //for (i = 0; i < num_enbs; i++) {
+  for (i = 0; i < nb_L1_inst; i++){
     RC.flexran[i] = calloc(1, sizeof(flexran_agent_info_t));
     AssertFatal(RC.flexran[i],
                 "can't ALLOCATE %zu Bytes for flexran agent info (iteration %d/%d)\n",

@@ -2837,6 +2837,7 @@ void RCconfig_RU(void) {
         RC.ru[j]->num_eNB                           = RUParamList.paramarray[j][RU_ENB_LIST_IDX].numelt;
       else
 	    RC.ru[j]->num_eNB                           = 0;
+printf("~~~~~~~~~~~~~~~~~~~~ RC.ru[%d]->num_eNB = %d\n", j, RC.ru[j]->num_eNB);
       for (i=0;i<RC.ru[j]->num_eNB;i++) RC.ru[j]->eNB_list[i] = RC.eNB[RUParamList.paramarray[j][RU_ENB_LIST_IDX].iptr[i]][0];     
 
       if (config_isparamset(RUParamList.paramarray[j], RU_SDR_ADDRS)) {
