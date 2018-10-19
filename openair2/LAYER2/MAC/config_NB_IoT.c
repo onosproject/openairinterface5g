@@ -364,6 +364,8 @@ void rrc_mac_config_req_NB_IoT(
 
     mac_config = &mac_inst->rrc_config;
 
+    long schedulingInfoSIB1 = carrier->mib_NB_IoT.message.schedulingInfoSIB1_r13;
+
     if(ded_flag==0)
     {
     }else
@@ -422,11 +424,29 @@ void rrc_mac_config_req_NB_IoT(
 
     if(sib1_NB_IoT != NULL)
     {
-        mac_config->sib1_NB_IoT_sched_config.repetitions = 8;
-
+        if(schedulingInfoSIB1 <=11)
+        {  
+          // the value come from table 16.4.1.3-3 from TS 36.213
+          switch(schedulingInfoSIB1%3)
+          {
+            case 0:
+              mac_config->sib1_NB_IoT_sched_config.repetitions = 4;
+              // the value come from table 16.4.1.3-4 from TS 36.213
+              mac_config->sib1_NB_IoT_sched_config.starting_rf = (carrier->physCellId % 4) * 16;
+              break;
+            case 1:
+              mac_config->sib1_NB_IoT_sched_config.repetitions = 8;
+              mac_config->sib1_NB_IoT_sched_config.starting_rf = (carrier->physCellId % 2) * 16;
+              break;
+            case 2:
+              mac_config->sib1_NB_IoT_sched_config.repetitions = 16;
+              mac_config->sib1_NB_IoT_sched_config.starting_rf = carrier->physCellId % 2;
+              break;
+          }
+        }else
+            LOG_E(MAC,"SchedulinginfoSIB1 value not available!\n");
         //printf("[ASN Debug] SI P: %ld\n",sib1_NB_IoT->schedulingInfoList_r13.list.array[0]->si_Periodicity_r13);
 
-        mac_config->sib1_NB_IoT_sched_config.starting_rf = 0;
         mac_config->si_window_length = ms160;
 
 
