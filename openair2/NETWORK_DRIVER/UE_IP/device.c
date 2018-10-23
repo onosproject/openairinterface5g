@@ -377,6 +377,31 @@ void ue_ip_init(struct net_device *dev_pP)
     memset(priv_p, 0, sizeof(ue_ip_priv_t));
     spin_lock_init(&priv_p->lock);
     dev_pP->netdev_ops = &ue_ip_netdev_ops;
+    dev_pP->hard_header_len = 0;
+    dev_pP->addr_len = ETH_ALEN;
+    dev_pP->flags = IFF_BROADCAST|IFF_MULTICAST|IFF_NOARP;
+    dev_pP->tx_queue_len = UE_IP_TX_QUEUE_LEN;
+    dev_pP->mtu = UE_IP_MTU;
+
+    //ether_setup(dev_pP);
+  } else {
+    printk("[UE_IP_DRV][%s] ERROR, Device is NULL!!\n", __FUNCTION__);
+    return;
+  }
+}
+
+//---------------------------------------------------------------------------
+// Initialisation of the network device
+void ue_ip_init_sidelink(struct net_device *dev_pP)
+{
+  //---------------------------------------------------------------------------
+  ue_ip_priv_t *priv_p = NULL;
+
+  if (dev_pP) {
+    priv_p = netdev_priv(dev_pP);
+    memset(priv_p, 0, sizeof(ue_ip_priv_t));
+    spin_lock_init(&priv_p->lock);
+    dev_pP->netdev_ops = &ue_ip_netdev_ops;
    /* dev_pP->hard_header_len = 0;
     dev_pP->addr_len = ETH_ALEN;
     dev_pP->flags = IFF_BROADCAST|IFF_MULTICAST|IFF_NOARP;
@@ -389,6 +414,7 @@ void ue_ip_init(struct net_device *dev_pP)
     return;
   }
 }
+
 //---------------------------------------------------------------------------
 int init_module (void)
 {
@@ -405,7 +431,10 @@ int init_module (void)
 #if LINUX_VERSION_CODE < KERNEL_VERSION(3, 17, 0)
     ue_ip_dev[inst]  = alloc_netdev(sizeof(ue_ip_priv_t),devicename, ue_ip_init);
 #else
-    ue_ip_dev[inst]  = alloc_netdev(sizeof(ue_ip_priv_t),devicename, NET_NAME_PREDICTABLE,ue_ip_init);
+    if(inst ==0)
+    	ue_ip_dev[inst]  = alloc_netdev(sizeof(ue_ip_priv_t),devicename, NET_NAME_PREDICTABLE,ue_ip_init_sidelink);
+    else
+    	ue_ip_dev[inst]  = alloc_netdev(sizeof(ue_ip_priv_t),devicename, NET_NAME_PREDICTABLE,ue_ip_init);
 #endif
 
     //netif_stop_queue(ue_ip_dev[inst]);
@@ -462,5 +491,4 @@ void cleanup_module(void)
 #define DRV_DESCRIPTION "OPENAIR UE IP Device Driver"
 #define DRV_COPYRIGHT   "-Copyright(c) GNU GPL Eurecom 2013"
 #define DRV_AUTHOR      "Lionel GAUTHIER: <firstname.name@eurecom.fr>"DRV_COPYRIGHT
-
 
