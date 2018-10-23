@@ -47,7 +47,8 @@
 
 #include "RRC/LITE/extern.h"
 #include "RRC/L2_INTERFACE/openair_rrc_L2_interface.h"
-
+//SFN
+#include "sudas_tm4.h"
 //#include "LAYER2/MAC/pre_processor.c"
 #include "pdcp.h"
 
@@ -524,21 +525,28 @@ schedule_ue_spec(
         //  mac_xface->macphy_exit("[MAC][eNB] Cannot find eNB_UE_stats\n");
         continue_flag=1;
       }
+/* SFN:
+*Add TM4 aggregation level
+*/
 
       if (continue_flag != 1){
         switch(mac_xface->get_transmission_mode(module_idP,CC_id,rnti)){
         case 1:
         case 2:
         case 7:
-	  aggregation = get_aggregation(get_bw_index(module_idP,CC_id), 
+	    aggregation = get_aggregation(get_bw_index(module_idP,CC_id),
 				      eNB_UE_stats->DL_cqi[0],
 				      format1);
-	  break;
+	    break;
         case 3:
-	  aggregation = get_aggregation(get_bw_index(module_idP,CC_id), 
+	    aggregation = get_aggregation(get_bw_index(module_idP,CC_id),
 				      eNB_UE_stats->DL_cqi[0],
 				      format2A);
-	  break;
+        case 4:
+        aggregation = get_aggregation(get_bw_index(module_idP,CC_id),
+      				      eNB_UE_stats->DL_cqi[0],
+      				      format2);
+	    break;
         default:
 	  LOG_W(MAC,"Unsupported transmission mode %d\n", mac_xface->get_transmission_mode(module_idP,CC_id,rnti));
 	  aggregation = 2;
@@ -578,15 +586,53 @@ schedule_ue_spec(
       /* add "fake" DCI to have CCE_allocation_infeasible work properly for next allocations */
       /* if we don't add it, next allocations may succeed but overall allocations may fail */
       /* will be removed at the end of this function */
-      add_ue_spec_dci(&eNB->common_channels[CC_id].DCI_pdu,
-                      &(char[]){0},
-                      rnti,
-                      1,
-                      aggregation,
-                      1,
-                      format1,
-                      0);
 
+      /* SFN:
+       * Add UE spec DCI to UEs DCI (update Num_DCI)
+       * Support format1, format2A, and format2
+       */
+      switch(mac_xface->get_transmission_mode(module_idP,CC_id,rnti)){
+              case 1:
+              case 2:
+              case 7:
+            	  add_ue_spec_dci(&eNB->common_channels[CC_id].DCI_pdu,
+            	                      &(char[]){0},
+            	                      rnti,
+            	                      1,
+            	                      aggregation,
+            	                      1,
+            	                      format1,
+            	                      0);
+            	  break;
+              case 3:
+            	  add_ue_spec_dci(&eNB->common_channels[CC_id].DCI_pdu,
+            	                      &(char[]){0},
+            	                      rnti,
+            	                      1,
+            	                      aggregation,
+            	                      1,
+            	                      format2A,
+            	                      0);
+              case 4:
+            	  add_ue_spec_dci(&eNB->common_channels[CC_id].DCI_pdu,
+            	                      &(char[]){0},
+            	                      rnti,
+            	                      1,
+            	                      aggregation,
+            	                      1,
+            	                      format2,
+            	                      0);
+            	  break;
+              default:
+            	  add_ue_spec_dci(&eNB->common_channels[CC_id].DCI_pdu,
+            	              	                      &(char[]){0},
+            	              	                      rnti,
+            	              	                      1,
+            	              	                      aggregation,
+            	              	                      1,
+            	              	                      format1,
+            	              	                      0);
+              }
       nb_available_rb = ue_sched_ctl->pre_nb_available_rbs[CC_id];
       harq_pid = ue_sched_ctl->harq_pid[CC_id];
       round = ue_sched_ctl->round[CC_id];
@@ -603,13 +649,15 @@ schedule_ue_spec(
       eNB_UE_stats->DL_cqi[0], MIN_CQI_VALUE, MAX_CQI_VALUE);
       */
       eNB_UE_stats->dlsch_mcs1 = cqi_to_mcs[eNB_UE_stats->DL_cqi[0]];
-      eNB_UE_stats->dlsch_mcs1 = eNB_UE_stats->dlsch_mcs1;//cmin(eNB_UE_stats->dlsch_mcs1, openair_daq_vars.target_ue_dl_mcs);
+      //eNB_UE_stats->dlsch_mcs1 = eNB_UE_stats->dlsch_mcs1;//cmin(eNB_UE_stats->dlsch_mcs1, openair_daq_vars.target_ue_dl_mcs);
 
 
       // store stats
       UE_list->eNB_UE_stats[CC_id][UE_id].dl_cqi= eNB_UE_stats->DL_cqi[0];
 
-      // initializing the rb allocation indicator for each UE
+      
+
+     // initializing the rb allocation indicator for each UE
       for(j=0; j<frame_parms[CC_id]->N_RBG; j++) {
         UE_list->UE_template[CC_id][UE_id].rballoc_subband[harq_pid][j] = 0;
       }
@@ -714,6 +762,15 @@ schedule_ue_spec(
                 LOG_D(MAC,"[eNB %d] Retransmission CC_id %d : harq_pid %d, round %d, mcs %d\n",
                       module_idP,CC_id,harq_pid,round,((DCI1_5MHz_FDD_t*)DLSCH_dci)->mcs);
 
+
+
+ sudas_LOG_MAC(debug_sudas_LOG_MAC,"UE %d Frame %d Subframe %d schedule Retransmission Format 1\n",UE_id, frameP, subframeP);                
+sudas_LOG_MAC(debug_sudas_LOG_MAC,"[eNB %d] Retransmission CC_id %d : harq_pid %d, round %d, NDI %d\n",
+                        module_idP,CC_id,harq_pid,round,((DCI1_5MHz_FDD_t*)DLSCH_dci)->ndi);
+#ifdef FHG_LOG
+fflush(debug_sudas_LOG_MAC);
+#endif
+
               }
 
               break;
@@ -760,46 +817,26 @@ schedule_ue_spec(
             }
 
             break;
-	    /* 
-	    // this code is disabled for now - needs to be done properly
+
+	    // this code is to enable TM4 DCI
           case 4:
-            //    if (nb_rb>10) {
-            ((DCI2_5MHz_2A_TDD_t*)DLSCH_dci)->ndi1 = 0;
-            ((DCI2_5MHz_2A_TDD_t*)DLSCH_dci)->harq_pid = harq_pid;
-            ((DCI2_5MHz_2A_TDD_t*)DLSCH_dci)->dai = (UE_list->UE_template[CC_id][UE_id].DAI-1)&3;
-            // }
-            //else {
-            //  ((DCI2_5MHz_2A_L10PRB_TDD_t*)DLSCH_dci)->ndi1 = 0;
-            // ((DCI2_5MHz_2A_L10PRB_TDD_t*)DLSCH_dci)->harq_pid = harq_pid;
-            // ((DCI2_5MHz_2A_L10PRB_TDD_t*)DLSCH_dci)->rv1 = round&3;
-            // ((DCI2_5MHz_2A_L10PRB_TDD_t*)DLSCH_dci)->dai = (UE_list->UE_template[CC_id][UE_id].DAI-1)&3;
-            // }
+        	  ((DCI2A_5MHz_2A_FDD_t*)DLSCH_dci)->harq_pid = harq_pid;
+        	  ((DCI2A_5MHz_2A_FDD_t*)DLSCH_dci)->rv1       = round&3;
+        	   LOG_D(MAC,"[eNB %d] Retransmission CC_id %d : harq_pid %d, round %d, mcs %d\n",
+        	                        module_idP,CC_id,harq_pid,round,((DCI2A_5MHz_2A_FDD_t*)DLSCH_dci)->mcs1);
+
+               sudas_LOG_MAC(debug_sudas_LOG_MAC,"UE %d Frame %d Subframe %d schedule Retransmission Format 2\n",UE_id, frameP, subframeP);
+        	   sudas_LOG_MAC(debug_sudas_LOG_MAC,"[eNB %d] Retransmission CC_id %d : harq_pid %d, round %d, ndi %d\n",
+                       module_idP,CC_id,harq_pid,round,((DCI2A_5MHz_2A_FDD_t*)DLSCH_dci)->ndi1);
+#ifdef FHG_LOG
+        	   fflush(debug_sudas_LOG_MAC);
+#endif
+        	   //LOG_I(MAC,"[eNB %d] Retransmission CC_id %d : harq_pid %d, round %d, mcs %d\n",
+        	   //                       module_idP,CC_id,harq_pid,round,((DCI2A_5MHz_2A_FDD_t*)DLSCH_dci)->mcs1);
+        	   //LOG_I(MAC,"UE %d Frame %d Subframe %d schedule Retransmission Format 2\n",UE_id, frameP, subframeP);
+
             break;
 
-          case 5:
-            // if(nb_rb>10){
-            //((DCI1E_5MHz_2A_M10PRB_TDD_t*)DLSCH_dci)->mcs = eNB_UE_stats->DL_cqi[0]<<1;
-            ((DCI1E_5MHz_2A_M10PRB_TDD_t*)DLSCH_dci)->ndi = 0;
-            ((DCI1E_5MHz_2A_M10PRB_TDD_t*)DLSCH_dci)->harq_pid = harq_pid;
-            ((DCI1E_5MHz_2A_M10PRB_TDD_t*)DLSCH_dci)->rv = round&3;
-            ((DCI1E_5MHz_2A_M10PRB_TDD_t*)DLSCH_dci)->dai = (UE_list->UE_template[CC_id][UE_id].DAI-1)&3;
-
-            if(ue_sched_ctl->dl_pow_off[CC_id] == 2) {
-              ue_sched_ctl->dl_pow_off[CC_id] = 1;
-            }
-
-            ((DCI1E_5MHz_2A_M10PRB_TDD_t*)DLSCH_dci)->dl_power_off = ue_sched_ctl->dl_pow_off[CC_id];
-            // }
-            break;
-
-          case 6:
-            ((DCI1E_5MHz_2A_M10PRB_TDD_t*)DLSCH_dci)->ndi = 0;
-            ((DCI1E_5MHz_2A_M10PRB_TDD_t*)DLSCH_dci)->harq_pid = harq_pid;
-            ((DCI1E_5MHz_2A_M10PRB_TDD_t*)DLSCH_dci)->rv = round&3;
-            ((DCI1E_5MHz_2A_M10PRB_TDD_t*)DLSCH_dci)->dai = (UE_list->UE_template[CC_id][UE_id].DAI-1)&3;
-            ((DCI1E_5MHz_2A_M10PRB_TDD_t*)DLSCH_dci)->dl_power_off = 1;//dl_pow_off[UE_id];
-            break;
-	    */
           }
 
           add_ue_dlsch_info(module_idP,
@@ -1022,6 +1059,22 @@ schedule_ue_spec(
             nb_rb=min_rb_unit[CC_id];
           }
 
+          char N_layer=1;
+          switch(mac_xface->get_transmission_mode(module_idP,CC_id,rnti)){
+          		        case 1:
+          		        case 2:
+          		        case 7:
+          		        	N_layer=1;
+          			    break;
+          		        case 4:
+          		        	N_layer=1;
+          		        break;
+          		        default:
+          		        	N_layer=1;
+          		        }
+
+
+
           TBS = mac_xface->get_TBS_DL(mcs,nb_rb);
 
           while (TBS < (sdu_length_total + header_len_dcch + header_len_dtch + ta_len))  {
@@ -1037,6 +1090,7 @@ schedule_ue_spec(
             TBS = mac_xface->get_TBS_DL(eNB_UE_stats->dlsch_mcs1,nb_rb);
           }
 
+          nb_rb/=N_layer;
           if(nb_rb == ue_sched_ctl->pre_nb_available_rbs[CC_id]) {
             for(j=0; j<frame_parms[CC_id]->N_RBG; j++) { // for indicating the rballoc for each sub-band
               UE_list->UE_template[CC_id][UE_id].rballoc_subband[harq_pid][j] = ue_sched_ctl->rballoc_sub_UE[CC_id][j];
@@ -1073,14 +1127,14 @@ schedule_ue_spec(
           // decrease mcs until TBS falls below required length
           while ((TBS > (sdu_length_total + header_len_dcch + header_len_dtch + ta_len)) && (mcs>0)) {
             mcs--;
-            TBS = mac_xface->get_TBS_DL(mcs,nb_rb);
+            TBS = mac_xface->get_TBS_DL(mcs,N_layer*nb_rb);
           }
 
           // if we have decreased too much or we don't have enough RBs, increase MCS
           while ((TBS < (sdu_length_total + header_len_dcch + header_len_dtch + ta_len)) && ((( ue_sched_ctl->dl_pow_off[CC_id]>0) && (mcs<28))
                  || ( (ue_sched_ctl->dl_pow_off[CC_id]==0) && (mcs<=15)))) {
             mcs++;
-            TBS = mac_xface->get_TBS_DL(mcs,nb_rb);
+            TBS = mac_xface->get_TBS_DL(mcs,N_layer*nb_rb);
           }
 
           LOG_D(MAC,"dlsch_mcs before and after the rate matching = (%d, %d)\n",eNB_UE_stats->dlsch_mcs1, mcs);
@@ -1294,6 +1348,16 @@ schedule_ue_spec(
                 ((DCI1_5MHz_FDD_t*)DLSCH_dci)->ndi = 1-UE_list->UE_template[CC_id][UE_id].oldNDI[harq_pid];
                 ((DCI1_5MHz_FDD_t*)DLSCH_dci)->rv = 0;
                 ((DCI1_5MHz_FDD_t*)DLSCH_dci)->TPC = tpc;
+sudas_LOG_MAC(debug_sudas_LOG_MAC,"############################################################\n");                
+sudas_LOG_MAC(debug_sudas_LOG_MAC,"UE %d Frame %d Subframe %d schedule New transmission Format 1\n",UE_id, frameP, subframeP);                
+sudas_LOG_MAC(debug_sudas_LOG_MAC,"[eNB %d] New transmission CC_id %d harq_pid %d ndi %d\n",module_idP,CC_id, harq_pid,((DCI1_5MHz_FDD_t*)DLSCH_dci)->ndi);
+#ifdef FHG_LOG
+fflush(debug_sudas_LOG_MAC);
+#endif
+              //  LOG_I(MAC,"[eNB %d] New transmission CC_id %d NDI %d\n",module_idP,CC_id,((DCI1_5MHz_FDD_t*)DLSCH_dci)->ndi);
+              //  LOG_I(MAC,"UE %d Frame %d Subframe %d schedule New transmission Format 1\n",UE_id, frameP, subframeP);
+
+
                 break;
 
               case 50:
@@ -1460,6 +1524,30 @@ schedule_ue_spec(
 
             break;
 
+          case 4:
+        	  ((DCI2_5MHz_2A_FDD_t*)DLSCH_dci)->tpmi = 0;//ALAMOUTI
+        	  ((DCI2_5MHz_2A_FDD_t*)DLSCH_dci)->mcs1 = mcs;
+        	  ((DCI2_5MHz_2A_FDD_t*)DLSCH_dci)->harq_pid = harq_pid;
+        	  ((DCI2_5MHz_2A_FDD_t*)DLSCH_dci)->ndi1 = 1-UE_list->UE_template[CC_id][UE_id].oldNDI[harq_pid];
+        	  ((DCI2_5MHz_2A_FDD_t*)DLSCH_dci)->rv1 = 0;
+        	  ((DCI2_5MHz_2A_FDD_t*)DLSCH_dci)->TPC = tpc;
+                // deactivate TB2
+        	  ((DCI2_5MHz_2A_FDD_t*)DLSCH_dci)->mcs2 = 0;
+        	  ((DCI2_5MHz_2A_FDD_t*)DLSCH_dci)->rv2 = 1;
+              
+sudas_LOG_MAC(debug_sudas_LOG_MAC,"############################################################\n");                
+sudas_LOG_MAC(debug_sudas_LOG_MAC,"UE %d Frame %d Subframe %d schedule New transmission Format 2\n",UE_id, frameP, subframeP);                
+sudas_LOG_MAC(debug_sudas_LOG_MAC,"[eNB %d] New transmission CC_id %d harq_pid %d NDI1 %d\n",module_idP,CC_id,harq_pid,((DCI2_5MHz_2A_FDD_t*)DLSCH_dci)->ndi1);
+#ifdef FHG_LOG
+fflush(debug_sudas_LOG_MAC);
+#endif
+//LOG_I(MAC,"Format2 DCI: harq_pid %d, ndi %d\n",harq_pid,((DCI2_5MHz_2A_FDD_t*)DLSCH_dci)->ndi1);
+
+//LOG_I(MAC,"Format2 DCI: harq_pid %d, ndi %d\n",harq_pid,((DCI2_5MHz_2A_FDD_t*)DLSCH_dci)->ndi1);
+//LOG_I(MAC,"UE %d Frame %d Subframe %d schedule New transmission Format 2\n",UE_id, frameP, subframeP);
+
+
+              break;
 	    /*
 	    // disabled for now as this needs to be done properly
           case 4:
@@ -1739,7 +1827,6 @@ fill_DLSCH_dci(
         }
 
         switch(mac_xface->get_transmission_mode(module_idP,CC_id,rnti)) {
-        default:
 
         case 1:
 
@@ -1933,22 +2020,26 @@ fill_DLSCH_dci(
 
           break;
 
-	  /*
+
         case 4:
 
-          // DCI format 2_2A
-          ((DCI2_5MHz_2A_TDD_t*)DLSCH_dci)->rballoc = allocate_prbs_sub(nb_rb,rballoc_sub);
-          ((DCI2_5MHz_2A_TDD_t*)DLSCH_dci)->rah = 0;
-          add_ue_spec_dci(DCI_pdu,
-                          DLSCH_dci,
-                          rnti,
-                          sizeof(DCI2_5MHz_2A_TDD_t),
-                          process_ue_cqi (module_idP,UE_id),//aggregation,
-                          sizeof_DCI2_5MHz_2A_TDD_t,
-                          format2,
-                          0);
-          break;
+          // sfnDCI format 2_2A
+          ((DCI2_5MHz_2A_FDD_t*)DLSCH_dci)->rballoc = allocate_prbs_sub(nb_rb,rballoc_sub);
+          ((DCI2_5MHz_2A_FDD_t*)DLSCH_dci)->rah = 0;
 
+          add_ue_spec_dci(DCI_pdu,
+                                   DLSCH_dci,
+                                   rnti,
+                                   sizeof(DCI2_5MHz_2A_FDD_t),
+         			  get_aggregation(get_bw_index(module_idP,CC_id),eNB_UE_stats->DL_cqi[0],format2),
+         			 sizeof_DCI2_5MHz_2A_FDD_t,
+                                   format2,
+                                   0);
+
+
+
+          break;
+/*
         case 5:
           ((DCI1E_5MHz_2A_M10PRB_TDD_t*)DLSCH_dci)->rballoc = allocate_prbs_sub(nb_rb,rballoc_sub);
           ((DCI1E_5MHz_2A_M10PRB_TDD_t*)DLSCH_dci)->rah = 0;

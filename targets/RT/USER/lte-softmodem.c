@@ -1395,9 +1395,10 @@ int main( int argc, char **argv ) {
 	debug_sudas_LOG_PHY  = fopen("debug_sudas_LOG_PHY.txt", "w");
     debug_sudas_LOG_MAC  = fopen("debug_sudas_LOG_MAC.txt", "w");
 
-	sudas_LOG_PHY(debug_sudas_LOG_PHY,"main();\n");
-	fflush(debug_sudas_LOG_PHY);
-
+	sudas_LOG_MAC(debug_sudas_LOG_MAC,"main();\n");
+#ifdef FHG_LOG
+	fflush(debug_sudas_LOG_MAC);
+#endif
 
 
 #if defined (XFORMS)

@@ -38,6 +38,8 @@
 
 #include "T.h"
 
+//SFN
+#include "sudas_tm4.h"
 //uint8_t ncs_cell[20][7];
 //#define DEBUG_PUCCH_TX
 //#define DEBUG_PUCCH_RX
@@ -1786,7 +1788,7 @@ uint32_t rx_pucch(PHY_VARS_eNB *eNB,
   LTE_eNB_COMMON *common_vars                = &eNB->common_vars;
   LTE_DL_FRAME_PARMS *frame_parms                    = &eNB->frame_parms;
   //  PUCCH_CONFIG_DEDICATED *pucch_config_dedicated = &eNB->pucch_config_dedicated[UE_id];
-  int8_t sigma2_dB                                   = eNB->measurements[0].n0_subband_power_tot_dB[0]-10;
+  int8_t sigma2_dB                                   = eNB->measurements[0].n0_subband_power_tot_dB[0];//-10;
   uint32_t *Po_PUCCH                                  = &(eNB->UE_stats[UE_id].Po_PUCCH);
   int32_t *Po_PUCCH_dBm                              = &(eNB->UE_stats[UE_id].Po_PUCCH_dBm);
   uint32_t *Po_PUCCH1_below                           = &(eNB->UE_stats[UE_id].Po_PUCCH1_below);
@@ -1812,7 +1814,7 @@ uint32_t rx_pucch(PHY_VARS_eNB *eNB,
 
   uint8_t deltaPUCCH_Shift          = frame_parms->pucch_config_common.deltaPUCCH_Shift;
   uint8_t NRB2                      = frame_parms->pucch_config_common.nRB_CQI;
-  uint8_t Ncs1_div_deltaPUCCH_Shift = frame_parms->pucch_config_common.nCS_AN;
+  uint8_t Ncs1_div_deltaPUCCH_Shift = (frame_parms->pucch_config_common.nCS_AN)/deltaPUCCH_Shift;
 
   uint32_t u0 = (frame_parms->Nid_cell + frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.grouphop[subframe<<1]) % 30;
   uint32_t u1 = (frame_parms->Nid_cell + frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.grouphop[1+(subframe<<1)]) % 30;
@@ -2020,12 +2022,12 @@ uint32_t rx_pucch(PHY_VARS_eNB *eNB,
       for (n=0; n<12; n++) {
 
         // this is r_uv^alpha(n)
-        tmp_re = (int16_t)(((int32_t)alpha_re[alpha_ind] * ul_ref_sigs[u][v][0][n<<1] - (int32_t)alpha_im[alpha_ind] * ul_ref_sigs[u][v][0][1+(n<<1)])>>15);
-        tmp_im = (int16_t)(((int32_t)alpha_re[alpha_ind] * ul_ref_sigs[u][v][0][1+(n<<1)] + (int32_t)alpha_im[alpha_ind] * ul_ref_sigs[u][v][0][n<<1])>>15);
+        tmp_re = (int16_t)((((int32_t)(alpha_re[alpha_ind] * ul_ref_sigs[u][v][0][n<<1]) - (int32_t)(alpha_im[alpha_ind] * ul_ref_sigs[u][v][0][1+(n<<1)])))>>15);
+        tmp_im = (int16_t)((((int32_t)(alpha_re[alpha_ind] * ul_ref_sigs[u][v][0][1+(n<<1)]) + (int32_t)(alpha_im[alpha_ind] * ul_ref_sigs[u][v][0][n<<1])))>>15);
 
         // this is S(ns)*w_noc(m)*r_uv^alpha(n)
-        zptr[n<<1] = (tmp_re*W_re - tmp_im*W_im)>>15;
-        zptr[1+(n<<1)] = -(tmp_re*W_im + tmp_im*W_re)>>15;
+        zptr[n<<1] = (int16_t)(((int32_t)(tmp_re*W_re) - (int32_t)(tmp_im*W_im))>>15);
+        zptr[1+(n<<1)] = (int16_t)(((int32_t)(-tmp_re*W_im) + (int32_t)(-tmp_im*W_re))>>15);
 
 #ifdef DEBUG_PUCCH_RX
         printf("[eNB] PUCCH subframe %d z(%d,%d) => %d,%d, alpha(%d) => %d,%d\n",subframe,l,n,zptr[n<<1],zptr[(n<<1)+1],
@@ -2042,9 +2044,14 @@ uint32_t rx_pucch(PHY_VARS_eNB *eNB,
     n_oc  =n_oc1;
   } // ns
 
-  rem = ((((deltaPUCCH_Shift*Ncs1_div_deltaPUCCH_Shift)>>3)&7)>0) ? 1 : 0;
+  rem = ((((deltaPUCCH_Shift*Ncs1_div_deltaPUCCH_Shift))&7)>0) ? 1 : 0;
 
   m = (n1_pucch < thres) ? NRB2 : (((n1_pucch-thres)/(12*c/deltaPUCCH_Shift))+NRB2+((deltaPUCCH_Shift*Ncs1_div_deltaPUCCH_Shift)>>3)+rem);
+
+  sudas_LOG_MAC(debug_sudas_LOG_MAC,"format %d DemAllocat PUCCH m %d nprime0 %d nprime1 %d n_oc0 %d n_oc1 %d\n",fmt,m,nprime0,nprime1,n_oc0,n_oc1);
+#ifdef FHG_LOG
+  fflush(debug_sudas_LOG_MAC);
+#endif
 
 #ifdef DEBUG_PUCCH_RX
   printf("[eNB] PUCCH: m %d\n",m);
@@ -2077,8 +2084,8 @@ uint32_t rx_pucch(PHY_VARS_eNB *eNB,
         if (re_offset==frame_parms->ofdm_symbol_size)
           re_offset = 0;
 
-        rxcomp[aa][j]   = (int16_t)((rxptr[re_offset<<1]*(int32_t)zptr[j])>>15)   - ((rxptr[1+(re_offset<<1)]*(int32_t)zptr[1+j])>>15);
-        rxcomp[aa][1+j] = (int16_t)((rxptr[re_offset<<1]*(int32_t)zptr[1+j])>>15) + ((rxptr[1+(re_offset<<1)]*(int32_t)zptr[j])>>15);
+        rxcomp[aa][j]   = (int16_t)((int32_t)(rxptr[re_offset<<1]*zptr[j])>>15)- (int16_t)((int32_t)(rxptr[1+(re_offset<<1)]*zptr[1+j])>>15);
+        rxcomp[aa][1+j] = (int16_t)((int32_t)(rxptr[re_offset<<1]*zptr[1+j])>>15) + (int16_t)((int32_t)(rxptr[1+(re_offset<<1)]*zptr[j])>>15);
 
 #ifdef DEBUG_PUCCH_RX
         printf("[eNB] PUCCH subframe %d (%d,%d,%d,%d,%d) => (%d,%d) x (%d,%d) : (%d,%d)\n",subframe,l,i,re_offset,m,j,
@@ -2113,8 +2120,8 @@ uint32_t rx_pucch(PHY_VARS_eNB *eNB,
           cfo =  (frame_parms->Ncp==0) ? &cfo_pucch_np[14*phase] : &cfo_pucch_ep[12*phase];
 
           for (l=0; l<(nsymb>>1); l++) {
-            stat_re += (((rxcomp[aa][off]*(int32_t)cfo[l<<1])>>15)     - ((rxcomp[aa][1+off]*(int32_t)cfo[1+(l<<1)])>>15))/nsymb;
-            stat_im += (((rxcomp[aa][off]*(int32_t)cfo[1+(l<<1)])>>15) + ((rxcomp[aa][1+off]*(int32_t)cfo[(l<<1)])>>15))/nsymb;
+            stat_re += ((int16_t)((int32_t)(rxcomp[aa][off]*cfo[l<<1])>>15)     - (int16_t)((int32_t)(rxcomp[aa][1+off]*cfo[1+(l<<1)])>>15));
+            stat_im += ((int16_t)((int32_t)(rxcomp[aa][off]*cfo[1+(l<<1)])>>15) + (int16_t)((int32_t)(rxcomp[aa][1+off]*cfo[(l<<1)])>>15));
             off+=2;
 
 		    
@@ -2127,8 +2134,8 @@ uint32_t rx_pucch(PHY_VARS_eNB *eNB,
           }
 
           for (l2=0,l=(nsymb>>1); l<(nsymb-1); l++,l2++) {
-            stat_re += (((rxcomp[aa][off]*(int32_t)cfo[l2<<1])>>15)     - ((rxcomp[aa][1+off]*(int32_t)cfo[1+(l2<<1)])>>15))/nsymb;
-            stat_im += (((rxcomp[aa][off]*(int32_t)cfo[1+(l2<<1)])>>15) + ((rxcomp[aa][1+off]*(int32_t)cfo[(l2<<1)])>>15))/nsymb;
+            stat_re += ((int16_t)((int32_t)(rxcomp[aa][off]*cfo[l2<<1])>>15)     - (int16_t)((int32_t)(rxcomp[aa][1+off]*cfo[1+(l2<<1)])>>15));
+            stat_im += ((int16_t)((int32_t)(rxcomp[aa][off]*cfo[1+(l2<<1)])>>15) + (int16_t)((int32_t)(rxcomp[aa][1+off]*cfo[(l2<<1)])>>15));
             off+=2;
 
 #ifdef DEBUG_PUCCH_RX
@@ -2140,7 +2147,7 @@ uint32_t rx_pucch(PHY_VARS_eNB *eNB,
 
 
           }
-	  stat += ((stat_re*stat_re) + (stat_im*stat_im));
+	  stat += ((stat_re*stat_re) + (stat_im*stat_im))/nsymb;
 
        } //re
       } // aa
@@ -2155,7 +2162,7 @@ uint32_t rx_pucch(PHY_VARS_eNB *eNB,
 
 //    stat_max *= nsymb;  // normalize to energy per symbol
 //    stat_max /= (frame_parms->N_RB_UL*12); // 
-    stat_max /= (nsymb*12);
+    stat_max /= (12);
 #ifdef DEBUG_PUCCH_RX
     printf("[eNB] PUCCH: stat %d, stat_max %d, phase_max %d\n", stat,stat_max,phase_max);
 #endif
@@ -2180,9 +2187,25 @@ uint32_t rx_pucch(PHY_VARS_eNB *eNB,
 
     }
     */
-
+    sudas_LOG_MAC(debug_sudas_LOG_MAC,"dB_fixed(stat_max) %d  pucch1_thres %d sigma2_dB %d\n",dB_fixed(stat_max),pucch1_thres,sigma2_dB);
+#ifdef FHG_LOG
+    fflush(debug_sudas_LOG_MAC);
+#endif
     // This is a moving average of the PUCCH1 statistics conditioned on being above or below the threshold
-    if (sigma2_dB<(dB_fixed(stat_max)-pucch1_thres))  {
+    /*SFN:
+     *
+     sigma2_dB= eNB->measurements[0].n0_subband_power_tot_dB[0]-10; where
+     measurements->n0_power_tot +=  measurements->n0_power[aarx];
+     is not correct.
+     n0_power_tot denotes received noise variance for two antennas measured by sounding reference signal.
+     n0_power_tot=N_aarx*[(N_0*df)*N_FFT]*N_F*Rx_Gain*(2^15)^2 which computed in time domain
+     In the absence of PUCCH signal, stat_max will hold the received power of noise computed in frequency after DFT
+     stat_max=N_aarx*[(N_0*df)*N_FFT]*N_F*Rx_Gain*(2^15)^2
+     In the presence of PUCCH signal
+     stat_max=H_rx^2*N_FFT*(2^15)^2+N_aarx*[(N_0*df)*N_FFT]*N_F*Rx_Gain*(2^15)^2
+     */
+
+    if ((dB_fixed(stat_max)-10)>sigma2_dB){//pucch1_thres
       *payload = 1;
       *Po_PUCCH1_above = ((*Po_PUCCH1_above<<9) + (stat_max<<9)+1024)>>10;
       //LOG_I(PHY,"[eNB] PUCCH fmt1:  stat_max : %d, sigma2_dB %d (%d, %d), phase_max : %d\n",dB_fixed(stat_max),sigma2_dB,eNB->PHY_measurements_eNB[0].n0_power_tot_dBm,pucch1_thres,phase_max);
@@ -2296,6 +2319,11 @@ uint32_t rx_pucch(PHY_VARS_eNB *eNB,
 	   dB_fixed(*Po_PUCCH));
     */
     // Do detection now
+
+    sudas_LOG_MAC(debug_sudas_LOG_MAC,"dB_fixed(stat_max) %d  pucch1_thres %d sigma2_dB %d\n",dB_fixed(stat_max),pucch1_thres,sigma2_dB);
+#ifdef FHG_LOG
+    fflush(debug_sudas_LOG_MAC);
+#endif
     if (sigma2_dB<(dB_fixed(stat_max)-pucch1_thres))  {//
 
 
@@ -2309,11 +2337,11 @@ uint32_t rx_pucch(PHY_VARS_eNB *eNB,
           chest_im=0;
           cfo =  (frame_parms->Ncp==0) ? &cfo_pucch_np[14*phase_max] : &cfo_pucch_ep[12*phase_max];
 
-          // channel estimate for first slot
+          // channel estimate for first slot select DMRS SCs
           for (l=2; l<(nsymb>>1)-2; l++) {
             off=(re<<1) + (24*l);
             chest_re += (((rxcomp[aa][off]*(int32_t)cfo[l<<1])>>15)     - ((rxcomp[aa][1+off]*(int32_t)cfo[1+(l<<1)])>>15))/chL;
-	    chest_im += (((rxcomp[aa][off]*(int32_t)cfo[1+(l<<1)])>>15) + ((rxcomp[aa][1+off]*(int32_t)cfo[(l<<1)])>>15))/chL;
+	        chest_im += (((rxcomp[aa][off]*(int32_t)cfo[1+(l<<1)])>>15) + ((rxcomp[aa][1+off]*(int32_t)cfo[(l<<1)])>>15))/chL;
           }
 
 #ifdef DEBUG_PUCCH_RX

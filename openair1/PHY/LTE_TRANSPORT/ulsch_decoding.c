@@ -1585,12 +1585,12 @@ static int ri_disply_cntr=0;
   //  printf("before cqi c[%d] = %p\n",0,ulsch_harq->c[0]);
   ulsch_harq->cqi_crc_status = 0;
   if (Q_CQI>0) {
-	  ri_disply_cntr++;
+	  /*ri_disply_cntr++;
 	  if (ri_disply_cntr>10){
 		  ri_disply_cntr=0;
 	  //show log
 	  LOG_I(PHY,"Qprime_RI %d [SFN CQI reports %d] O_RI %d o_RI[0]%d\n",Qprime_RI,ri_disply_cntr,ulsch_harq->O_RI,ulsch_harq->o_RI[0]);
-	  }
+	  }*/
 	  //sudas_LOG_PHY(debug_sudas_LOG_PHY,"[SFN]ulsch_harq->O_RI %d ulsch_harq->o_RI[0]%d\n",ulsch_harq->O_RI,ulsch_harq->o_RI[0]);
 	  //        	fflush(debug_sudas_LOG_PHY);
     memset((void *)&dummy_w_cc[0],0,3*(ulsch_harq->Or1+8+32));

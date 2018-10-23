@@ -885,6 +885,7 @@ int generate_eNB_dlsch_params_from_dci(int frame,
   uint8_t rv=0,rv1=0,rv2=0;
   uint8_t rah=0;
   uint8_t TPC=0;
+  uint8_t Nl_layer=1;//sfn
   uint8_t TB0_active=0,TB1_active=0;
   LTE_DL_eNB_HARQ_t *dlsch0_harq=NULL,*dlsch1_harq=NULL;
 
@@ -1553,9 +1554,15 @@ int generate_eNB_dlsch_params_from_dci(int frame,
       dlsch0=dlsch[0];
       dlsch0->active = 1;
       dlsch0_harq = dlsch0->harq_processes[harq_pid];
-      dlsch0_harq->mcs = mcs1;
+
       dlsch0_harq->rvidx = rv1;
-      dlsch0_harq->status = ACTIVE;
+      /*sfn:
+       * TBS size, mcs, and Harq status are the same for 4 rounds
+       */
+      if (dlsch0_harq->round == 0) {
+          dlsch0_harq->status = ACTIVE;
+          dlsch0_harq->mcs = mcs1;
+        }
       dlsch0_harq->codeword = 0;
       dlsch1=NULL;
       dlsch1_harq = NULL;
@@ -1660,7 +1667,12 @@ int generate_eNB_dlsch_params_from_dci(int frame,
         }
       } else if ((dlsch0 != NULL) && (dlsch1 == NULL))  { // only CW 0 active
         dlsch0_harq->dl_power_off = 1;
-        dlsch0_harq->TBS= TBStable[get_I_TBS(dlsch0_harq->mcs)][dlsch0_harq->nb_rb-1];
+        
+        if (dlsch0_harq->round == 0) {
+            // MCS and TBS don't change across HARQ rounds
+        	dlsch0_harq->TBS= TBStable[get_I_TBS(dlsch0_harq->mcs)][(Nl_layer*dlsch0_harq->nb_rb)-1];
+          }
+
         switch (tpmi) {
         case 0 :
           dlsch0_harq->mimo_mode   = ALAMOUTI;

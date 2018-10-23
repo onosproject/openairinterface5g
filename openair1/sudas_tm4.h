@@ -20,7 +20,7 @@
 //#define	FHG_TM4_LOG
 
 #define	FHG_TM4_LOG_CQI
-#define FHG_LOG
+//#define FHG_LOG
 
 
 

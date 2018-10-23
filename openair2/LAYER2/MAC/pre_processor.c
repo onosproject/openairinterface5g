@@ -50,7 +50,7 @@
 #include "RRC/LITE/extern.h"
 #include "RRC/L2_INTERFACE/openair_rrc_L2_interface.h"
 #include "rlc.h"
-
+#include "sudas_tm4.h"
 
 
 #define DEBUG_eNB_SCHEDULER 1
@@ -178,6 +178,7 @@ void assign_rbs_required (module_id_t Mod_id,
 
   rnti_t           rnti;
   uint16_t         TBS = 0;
+  int16_t         N_layer=1;
   LTE_eNB_UE_stats *eNB_UE_stats[MAX_NUM_CCs];
   int              UE_id,n,i,j,CC_id,pCCid,tmp;
   UE_list_t        *UE_list = &eNB_mac_inst[Mod_id].UE_list;
@@ -207,7 +208,7 @@ void assign_rbs_required (module_id_t Mod_id,
       */
       eNB_UE_stats[CC_id]->dlsch_mcs1=cqi_to_mcs[eNB_UE_stats[CC_id]->DL_cqi[0]];
 
-      eNB_UE_stats[CC_id]->dlsch_mcs1 = eNB_UE_stats[CC_id]->dlsch_mcs1;//cmin(eNB_UE_stats[CC_id]->dlsch_mcs1,openair_daq_vars.target_ue_dl_mcs);
+      //eNB_UE_stats[CC_id]->dlsch_mcs1 = eNB_UE_stats[CC_id]->dlsch_mcs1;//cmin(eNB_UE_stats[CC_id]->dlsch_mcs1,openair_daq_vars.target_ue_dl_mcs);
 
     }
 
@@ -243,6 +244,26 @@ void assign_rbs_required (module_id_t Mod_id,
         frame_parms[CC_id] = mac_xface->get_lte_frame_parms(Mod_id,CC_id);
         eNB_UE_stats[CC_id] = mac_xface->get_eNB_UE_stats(Mod_id,CC_id,rnti);
 
+
+        /*sfn:
+         * TM4
+         *sudas_LOG_MAC(debug_sudas_LOG_MAC,"TM %d, DL_cqi %d, rank %d;\n",PHY_vars_eNB_g[Mod_id][CC_id]->transmission_mode[UE_id],eNB_UE_stats[CC_id]->DL_cqi[0],eNB_UE_stats[CC_id]->rank);
+         * fflush(debug_sudas_LOG_MAC);
+         *sudas_LOG_MAC(debug_sudas_LOG_MAC,"TM
+         * */
+		 switch(mac_xface->get_transmission_mode(Mod_id,CC_id,rnti)){
+		        case 1:
+		        case 2:
+		        case 7:
+			    N_layer=1;
+			    break;
+		        case 4:
+		        N_layer=1;
+			  break;
+		        default:
+		        N_layer=1;
+		        }
+
         if (eNB_UE_stats[CC_id]->dlsch_mcs1==0) {
           nb_rbs_required[CC_id][UE_id] = 4;  // don't let the TBS get too small
         } else {
@@ -267,6 +288,7 @@ void assign_rbs_required (module_id_t Mod_id,
 
           TBS = mac_xface->get_TBS_DL(eNB_UE_stats[CC_id]->dlsch_mcs1,nb_rbs_required[CC_id][UE_id]);
         } // end of while
+        nb_rbs_required[CC_id][UE_id]/=N_layer;
 
         LOG_D(MAC,"[eNB %d] Frame %d: UE %d on CC %d: RB unit %d,  nb_required RB %d (TBS %d, mcs %d)\n",
               Mod_id, frameP,UE_id, CC_id,  min_rb_unit[CC_id], nb_rbs_required[CC_id][UE_id], TBS, eNB_UE_stats[CC_id]->dlsch_mcs1);
@@ -539,6 +561,7 @@ void dlsch_scheduler_pre_processor (module_id_t   Mod_id,
   UE_sched_ctrl *ue_sched_ctl;
   //  int rrc_status           = RRC_IDLE;
 
+  LTE_eNB_UE_stats *eNB_UE_stats[MAX_NUM_CCs];
 #ifdef TM5
   int harq_pid1=0,harq_pid2=0;
   int round1=0,round2=0;
@@ -578,6 +601,32 @@ void dlsch_scheduler_pre_processor (module_id_t   Mod_id,
         nb_rbs_required_remaining,
         rballoc_sub,
         MIMO_mode_indicator);
+
+      //
+      ue_sched_ctl = &UE_list->UE_sched_ctrl[UE_id];
+      harq_pid = ue_sched_ctl->harq_pid[CC_id];
+      round    = ue_sched_ctl->round[CC_id];
+      rnti = UE_RNTI(Mod_id,i);
+      eNB_UE_stats[CC_id] = mac_xface->get_eNB_UE_stats(Mod_id,CC_id,rnti);
+/*
+      PHY_vars_eNB_g[Mod_id][CC_id]->UE_stats[UE_id].rank = eNB_UE_stats[CC_id]->rank;
+      if (round==0)
+      {
+      //set the mode of the tranmission mode
+    	  if (eNB_UE_stats[CC_id]->rank)
+    	  {
+           PHY_vars_eNB_g[Mod_id][CC_id]->transmission_mode[UE_id]=4;
+           UE_list->UE_template[CC_id][UE_id].Trans_Mode[harq_pid][CC_id]=4;
+    	  }else
+    	  {
+
+    		  PHY_vars_eNB_g[Mod_id][CC_id]->transmission_mode[UE_id]=2;
+    		  UE_list->UE_template[CC_id][UE_id].Trans_Mode[harq_pid][CC_id]=2;
+    	  }
+      }else{
+    	  PHY_vars_eNB_g[Mod_id][CC_id]->transmission_mode[UE_id]=UE_list->UE_template[CC_id][UE_id].Trans_Mode[harq_pid][CC_id];;
+      }
+      */
 
     }
   }

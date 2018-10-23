@@ -2153,10 +2153,24 @@ void pucch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,int UE_id,int harq
           n1_pucch0,n1_pucch1,n1_pucch2,n1_pucch3,do_SR);
 
     if ((n1_pucch0==-1) && (n1_pucch1==-1) && (do_SR==0)) {  // no TX PDSCH that have to be checked and no SR for this UE_id
+
+        sudas_LOG_MAC(debug_sudas_LOG_MAC,"[eNB %d][PDSCH %x] Frame %d, subframe %d No Checking for PUCCH (%d,%d,%d,%d) SR %d\n",
+                eNB->Mod_id,eNB->dlsch[UE_id][0]->rnti,
+                frame,subframe,
+                n1_pucch0,n1_pucch1,n1_pucch2,n1_pucch3,do_SR);
+#ifdef FHG_LOG
+        fflush(debug_sudas_LOG_MAC);
+#endif
     } else {
       // otherwise we have some PUCCH detection to do
-
-      // Null out PUCCH PRBs for noise measurement
+    	 sudas_LOG_MAC(debug_sudas_LOG_MAC,"[eNB %d][PDSCH %x] Frame %d, subframe %d start Checking for PUCCH (%d,%d,%d,%d) SR %d\n",
+    	                eNB->Mod_id,eNB->dlsch[UE_id][0]->rnti,
+    	                frame,subframe,
+    	                n1_pucch0,n1_pucch1,n1_pucch2,n1_pucch3,do_SR);
+#ifdef FHG_LOG
+    	 fflush(debug_sudas_LOG_MAC);
+#endif
+    	 // Null out PUCCH PRBs for noise measurement
       switch(fp->N_RB_UL) {
       case 6:
         eNB->rb_mask_ul[0] |= (0x1 | (1<<5)); //position 5
@@ -2206,6 +2220,15 @@ void pucch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,int UE_id,int harq
                 subframe,
                 SR_payload,
                 eNB->scheduling_request_config[UE_id].sr_PUCCH_ResourceIndex);
+     	    sudas_LOG_MAC(debug_sudas_LOG_MAC,"Demodulating PUCCH for SR: RNTI %x Frame %d subframe %d Checking SR is %d (SR n1pucch is %d)\n",
+                eNB->ulsch[UE_id]->rnti,
+                frame,
+                subframe,
+                SR_payload,
+                eNB->scheduling_request_config[UE_id].sr_PUCCH_ResourceIndex);
+#ifdef FHG_LOG
+          fflush(debug_sudas_LOG_MAC);
+#endif
         }
 #ifdef PHY_ABSTRACTION
         else {
@@ -2221,13 +2244,18 @@ void pucch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,int UE_id,int harq
 #endif
       }// do_SR==1
 
-      if ((n1_pucch0==-1) && (n1_pucch1==-1)) { // just check for SR
-      } else if (fp->frame_type==FDD) { // FDD
+      if ((n1_pucch0==-1) && (n1_pucch1==-1))
+      { // just check for SR
+      }
+      else if (fp->frame_type==FDD) { // FDD
         // if SR was detected, use the n1_pucch from SR, else use n1_pucch0
         //          n1_pucch0 = (SR_payload==1) ? eNB->scheduling_request_config[UE_id].sr_PUCCH_ResourceIndex:n1_pucch0;
 
         LOG_D(PHY,"Demodulating PUCCH for ACK/NAK: n1_pucch0 %d (%d), SR_payload %d\n",n1_pucch0,eNB->scheduling_request_config[UE_id].sr_PUCCH_ResourceIndex,SR_payload);
-
+   	    sudas_LOG_MAC(debug_sudas_LOG_MAC,"Demodulating PUCCH for ACK/NAK: n1_pucch0 %d (%d), SR_payload %d\n",n1_pucch0,eNB->scheduling_request_config[UE_id].sr_PUCCH_ResourceIndex,SR_payload);
+#ifdef FHG_LOG
+   	    fflush(debug_sudas_LOG_MAC);
+#endif
         if (eNB->abstraction_flag == 0) {
           metric0 = rx_pucch(eNB,
                              pucch_format1a,
@@ -2239,6 +2267,10 @@ void pucch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,int UE_id,int harq
                              frame,
                              subframe,
                              PUCCH1a_THRES);
+          sudas_LOG_MAC(debug_sudas_LOG_MAC,"Demodulating metric0 %d metric0_SR %d ack %d do_SR %d\n",metric0,metric0_SR,pucch_payload0[0],do_SR);
+#ifdef FHG_LOG
+          fflush(debug_sudas_LOG_MAC);
+#endif
         }
 #ifdef PHY_ABSTRACTION
         else {
@@ -2252,11 +2284,14 @@ void pucch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,int UE_id,int harq
 #endif
 
         /* cancel SR detection if reception on n1_pucch0 is better than on SR PUCCH resource index */
-        if (do_SR && metric0 > metric0_SR) SR_payload = 0;
+        //if (do_SR && (metric0 > metric0_SR)) SR_payload = 0;
 
-        if (do_SR && metric0 <= metric0_SR) {
-          /* when transmitting ACK/NACK on SR PUCCH resource index, SR payload is always 1 */
-          SR_payload = 1;
+        /*
+         if (do_SR && (metric0 <= metric0_SR)) {
+        // when transmitting ACK/NACK on SR PUCCH resource index, SR payload is always 1
+        //  SR_payload = 1;
+          sudas_LOG_MAC(debug_sudas_LOG_MAC,"Demodulating pucch_format1a shortneed %d\n",do_srs);
+           fflush(debug_sudas_LOG_MAC);
 
           if (eNB->abstraction_flag == 0) {
             metric0=rx_pucch(eNB,
@@ -2270,6 +2305,8 @@ void pucch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,int UE_id,int harq
                              subframe,
                              PUCCH1a_THRES);
           }
+          sudas_LOG_MAC(debug_sudas_LOG_MAC,"Demodulating pucch_format1a ACK/NACK %d\n",pucch_payload0[0]);
+                     fflush(debug_sudas_LOG_MAC);
 #ifdef PHY_ABSTRACTION
           else {
             metric0 = rx_pucch_emul(eNB,
@@ -2289,7 +2326,7 @@ void pucch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,int UE_id,int harq
             frame,subframe,
             pucch_payload0[0],metric0);
 #endif
-
+*/
         process_HARQ_feedback(UE_id,eNB,proc,
                             0,// pusch_flag
                             pucch_payload0,
