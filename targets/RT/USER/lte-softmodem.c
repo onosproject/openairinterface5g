@@ -1392,12 +1392,12 @@ void init_openair0() {
 int main( int argc, char **argv ) {
     int i,j,k,aa,re;
 
-	debug_sudas_LOG_PHY  = fopen("debug_sudas_LOG_PHY.txt", "w");
+    debug_sudas_LOG_PHY  = fopen("debug_sudas_LOG_PHY.txt", "w");
     debug_sudas_LOG_MAC  = fopen("debug_sudas_LOG_MAC.txt", "w");
 
-	sudas_LOG_MAC(debug_sudas_LOG_MAC,"main();\n");
+    sudas_LOG_PHY(debug_sudas_LOG_PHY,"main();\n");
 #ifdef FHG_LOG
-	fflush(debug_sudas_LOG_MAC);
+    fflush(debug_sudas_LOG_PHY);
 #endif
 
 

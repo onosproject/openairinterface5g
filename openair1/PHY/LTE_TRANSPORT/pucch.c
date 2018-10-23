@@ -35,6 +35,8 @@
 
 #include "UTIL/LOG/log.h"
 #include "UTIL/LOG/vcd_signal_dumper.h"
+//SFN
+#include "sudas_tm4.h"
 
 #include "T.h"
 
@@ -306,7 +308,8 @@ void generate_pucch1x(int32_t **txdataF,
 {
 
   uint32_t u,v,n;
-  uint32_t z[12*14],*zptr;
+  uint32_t z[12*14];
+  int16_t *zptr;
   int16_t d0;
   uint8_t ns,N_UL_symb,nsymb,n_oc,n_oc0,n_oc1;
   uint8_t c = (frame_parms->Ncp==0) ? 3 : 2;
@@ -342,7 +345,7 @@ void generate_pucch1x(int32_t **txdataF,
     return;
   }
 
-  zptr = z;
+  zptr = (int16_t *)z;
   thres = (c*Ncs1_div_deltaPUCCH_Shift);
   Nprime_div_deltaPUCCH_Shift = (n1_pucch < thres) ? Ncs1_div_deltaPUCCH_Shift : (12/deltaPUCCH_Shift);
   Nprime = Nprime_div_deltaPUCCH_Shift * deltaPUCCH_Shift;
@@ -473,38 +476,39 @@ void generate_pucch1x(int32_t **txdataF,
         tmp_im = (int16_t)(((int32_t)alpha_re[alpha_ind] * ul_ref_sigs[u][v][0][1+(n<<1)] + (int32_t)alpha_im[alpha_ind] * ul_ref_sigs[u][v][0][n<<1])>>15);
 
         // this is S(ns)*w_noc(m)*r_uv^alpha(n)
-        ref_re = (tmp_re*W_re - tmp_im*W_im)>>15;
-        ref_im = (tmp_re*W_im + tmp_im*W_re)>>15;
+        ref_re = (int16_t)(((int32_t)tmp_re*W_re - (int32_t)tmp_im*W_im)>>15);
+        ref_im = (int16_t)(((int32_t)tmp_re*W_im + (int32_t)tmp_im*W_re)>>15);
+
 
         if ((l<2)||(l>=(N_UL_symb-2))) { //these are PUCCH data symbols
           switch (fmt) {
           case pucch_format1:   //OOK 1-bit
 
-            ((int16_t *)&zptr[n])[0] = ((int32_t)amp*ref_re)>>15;
-            ((int16_t *)&zptr[n])[1] = ((int32_t)amp*ref_im)>>15;
+            zptr[n<<1] =(int16_t)(((int32_t)amp*ref_re));//amp is not fixed point
+            zptr[1+(n<<1)] =(int16_t)(((int32_t)amp*ref_im));
 
             break;
 
           case pucch_format1a:  //BPSK 1-bit
             d0 = (payload[0]&1)==0 ? amp : -amp;
-            ((int16_t *)&zptr[n])[0] = ((int32_t)d0*ref_re)>>15;
-            ((int16_t *)&zptr[n])[1] = ((int32_t)d0*ref_im)>>15;
+            zptr[n<<1] = (int16_t)(((int32_t)d0*ref_re));
+            zptr[1+(n<<1)] = (int16_t)(((int32_t)d0*ref_im));
             //      printf("d0 %d\n",d0);
             break;
 
           case pucch_format1b:  //QPSK 2-bits (Table 5.4.1-1 from 36.211, pg. 18)
             if (((payload[0]&1)==0) && ((payload[1]&1)==0))  {// 1
-              ((int16_t *)&zptr[n])[0] = ((int32_t)amp*ref_re)>>15;
-              ((int16_t *)&zptr[n])[1] = ((int32_t)amp*ref_im)>>15;
+            	zptr[n<<1] = ((int32_t)amp*ref_re);
+            	zptr[1+(n<<1)] = ((int32_t)amp*ref_im);
             } else if (((payload[0]&1)==0) && ((payload[1]&1)==1))  { // -j
-              ((int16_t *)&zptr[n])[0] = ((int32_t)amp*ref_im)>>15;
-              ((int16_t *)&zptr[n])[1] = (-(int32_t)amp*ref_re)>>15;
+            	zptr[n<<1] = ((int32_t)amp*ref_im);
+              zptr[1+(n<<1)] = (-(int32_t)amp*ref_re);
             } else if (((payload[0]&1)==1) && ((payload[1]&1)==0))  { // j
-              ((int16_t *)&zptr[n])[0] = (-(int32_t)amp*ref_im)>>15;
-              ((int16_t *)&zptr[n])[1] = ((int32_t)amp*ref_re)>>15;
+            	zptr[n<<1] = (-(int32_t)amp*ref_im);
+              zptr[1+(n<<1)]= ((int32_t)amp*ref_re);
             } else  { // -1
-              ((int16_t *)&zptr[n])[0] = (-(int32_t)amp*ref_re)>>15;
-              ((int16_t *)&zptr[n])[1] = (-(int32_t)amp*ref_im)>>15;
+            	zptr[n<<1] = (-(int32_t)amp*ref_re);
+              zptr[1+(n<<1)] = (-(int32_t)amp*ref_im);
             }
 
             break;
@@ -521,8 +525,8 @@ void generate_pucch1x(int32_t **txdataF,
           } // switch fmt
         } else { // These are PUCCH reference symbols
 
-          ((int16_t *)&zptr[n])[0] = ((int32_t)amp*ref_re)>>15;
-          ((int16_t *)&zptr[n])[1] = ((int32_t)amp*ref_im)>>15;
+        	zptr[n<<1] = (int16_t)(((int32_t)amp*ref_re));//amp is not fixed point
+        	zptr[1+(n<<1)] =(int16_t)(((int32_t)amp*ref_im));
           //    printf("ref\n");
         }
 
@@ -533,17 +537,28 @@ void generate_pucch1x(int32_t **txdataF,
         alpha_ind = (alpha_ind + n_cs)%12;
       } // n
 
-      zptr+=12;
+      zptr+=24;
     } // l
 
     nprime=nprime1;
     n_oc  =n_oc1;
   } // ns
+  zptr = (int16_t *)z;
+ /* sudas_LOG_PHY(debug_sudas_LOG_PHY,"Allocat z[12*14] sequence matrix\n");
+  int n_sfn=0;
+  for (n_sfn=0;n_sfn<(12*14);n_sfn++)
+  {
+	  sudas_LOG_PHY(debug_sudas_LOG_PHY," z[%d]_Re= %d z[%d]_Im= %d\n",n_sfn,zptr[n_sfn<<1],n_sfn,zptr[1+(n_sfn<<1)]);
+  }*/
 
-  rem = ((((12*Ncs1_div_deltaPUCCH_Shift)>>3)&7)>0) ? 1 : 0;
+ rem = (((deltaPUCCH_Shift*Ncs1_div_deltaPUCCH_Shift)&7)>0) ? 1 : 0;
 
-  m = (n1_pucch < thres) ? NRB2 : (((n1_pucch-thres)/(12*c/deltaPUCCH_Shift))+NRB2+((deltaPUCCH_Shift*Ncs1_div_deltaPUCCH_Shift)>>3)+rem);
+ m = (n1_pucch < thres) ? NRB2 : (((n1_pucch-thres)/(12*c/deltaPUCCH_Shift))+NRB2+((deltaPUCCH_Shift*Ncs1_div_deltaPUCCH_Shift)>>3)+rem);
 
+  sudas_LOG_PHY(debug_sudas_LOG_PHY,"Allocat PUCCH amp %d m %d nprime0 %d nprime1 %d n_oc0 %d n_oc1 %d \n",amp,m,nprime0,nprime1,n_oc0,n_oc1);
+#ifdef FHG_LOG
+  fflush(debug_sudas_LOG_PHY);
+#endif
 #ifdef DEBUG_PUCCH_TX
   printf("[PHY] PUCCH: m %d\n",m);
 #endif

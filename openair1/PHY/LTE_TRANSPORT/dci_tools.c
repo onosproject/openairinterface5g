@@ -5049,13 +5049,16 @@ int check_dci_format2_2a_coherency(DCI_format_t dci_format,
       }
     }
 
+/*SFN: remove channel 2 from the test
+*
+*/
     if( mcs2 > 28)
     {
-      if(pdlsch1_harq->round == 0)
+    /*  if(pdlsch1_harq->round == 0)
       {
           LOG_I(PHY,"bad mcs2\n");
           return(0);
-      }
+      }*/
 
     }
 
@@ -5067,12 +5070,12 @@ int check_dci_format2_2a_coherency(DCI_format_t dci_format,
       return(0);
     }
 
-    if((pdlsch1_harq->round == 0) && (rv2 > 0) && (mcs2 != 0))
+   /* if((pdlsch1_harq->round == 0) && (rv2 > 0) && (mcs2 != 0))
     {
       // DCI false detection
         LOG_I(PHY,"bad rv2\n");
       return(0);
-    }
+    }*/
 
 
     switch (N_RB_DL) {
@@ -5772,6 +5775,99 @@ void prepare_dl_decoding_format2_2A(DCI_format_t dci_format,
     uint8_t  ndi1     = pdci_info_extarcted->ndi1;
     uint8_t  ndi2     = pdci_info_extarcted->ndi2;
 
+    uint8_t  NPRB    = 0;
+    uint8_t  nb_rb_alloc = 0;
+    NPRB = conv_nprb(rah, rballoc, 25);
+    nb_rb_alloc = NPRB;
+
+pdlsch0->current_harq_pid = harq_pid;
+pdlsch0->active           = 1;
+pdlsch0->rnti             = rnti;
+
+/*if (rnti == tc_rnti) {
+		//fix for standalone Contention Resolution Id
+		dlsch0_harq->DCINdi = (uint8_t)-1;
+		 LOG_D(PHY,"UE (%x/%d): Format1A DCI: C-RNTI is temporary. Set NDI = %d and to be ignored\n",
+			 rnti,harq_pid,dlsch0_harq->DCINdi);
+}*/
+
+// NDI has been toggled or this is the first transmission
+if ((ndi1!=dlsch0_harq->DCINdi) || (dlsch0_harq->first_tx==1))
+    {
+        dlsch0_harq->round    = 0;
+        dlsch0_harq->first_tx = 0;
+        dlsch0_harq->status   = ACTIVE;
+
+    }
+//NDI has not been toggled but rv was increased by eNB: retransmission
+else if (rv1  != 0)
+    {
+        if (dlsch0_harq->status == SCH_IDLE)
+            //packet was actually decoded in previous transmission (ACK was missed by eNB)
+            //However, the round is not a good check as it might have been decoded in a retransmission prior to this one.
+        {
+            LOG_D(PHY,"skip pdsch decoding and report ack\n");
+            // skip pdsch decoding and report ack
+            //pdlsch0_harq->status   = SCH_IDLE;
+            pdlsch0->active       = 0;
+            pdlsch0->harq_ack[subframe].ack = 1;
+            pdlsch0->harq_ack[subframe].harq_id = harq_pid;
+            pdlsch0->harq_ack[subframe].send_harq_status = 1;
+
+            //pdlsch0_harq->first_tx = 0;
+        }
+        else  //normal retransmission
+        {
+            // nothing special to do
+        }
+    }
+    else
+    {
+        dlsch0_harq->status   = ACTIVE;
+    }
+
+
+dlsch0_harq->DCINdi = ndi1;
+dlsch0_harq->mcs    = mcs1;
+dlsch0_harq->rvidx  = rv1;
+dlsch0_harq->nb_rb  = NPRB;
+
+dlsch0_harq->codeword     = 0;
+dlsch0_harq->Nl           = 1;
+dlsch0_harq->mimo_mode    = frame_parms->mode1_flag == 1 ?SISO : ALAMOUTI;
+dlsch0_harq->dl_power_off = 1; //no power offset
+dlsch0_harq->delta_PUCCH  = delta_PUCCH_lut[TPC &3];
+
+
+
+    conv_rballoc(rah,rballoc,frame_parms->N_RB_DL,dlsch0_harq->rb_alloc_even);
+    dlsch0_harq->rb_alloc_odd[0]= dlsch0_harq->rb_alloc_even[0];
+    dlsch0_harq->rb_alloc_odd[1]= dlsch0_harq->rb_alloc_even[1];
+    dlsch0_harq->rb_alloc_odd[2]= dlsch0_harq->rb_alloc_even[2];
+    dlsch0_harq->rb_alloc_odd[3]= dlsch0_harq->rb_alloc_even[3];
+
+
+
+    if(mcs1 < 29)
+    {
+        dlsch0_harq->TBS = TBStable[get_I_TBS(mcs1)][NPRB-1];
+        dlsch0_harq->Qm  = get_Qm(mcs1);
+    }
+
+
+compute_llr_offset(frame_parms,
+                   pdcch_vars,
+                   pdsch_vars,
+                   dlsch0_harq,
+                   nb_rb_alloc,
+                   subframe);
+
+
+
+
+
+#ifdef SFN_Disable
+
     uint8_t TB0_active = 1;
     uint8_t TB1_active = 1;
 
@@ -6040,6 +6136,7 @@ void prepare_dl_decoding_format2_2A(DCI_format_t dci_format,
       else if (dlsch0 != NULL && dlsch1 == NULL)
         printf("[DCI UE] dlsch1_harq NULL dlsch0_harq status = %d\n", dlsch0_harq->status);
   #endif*/
+#endif
 }
 
 int generate_ue_dlsch_params_from_dci(int frame,
@@ -6240,8 +6337,13 @@ int generate_ue_dlsch_params_from_dci(int frame,
           printf("bad DCI 1 !!! \n");
           return(-1);
       }
-
-
+sudas_LOG_PHY(debug_sudas_LOG_PHY,"/////////////////////////\n");
+sudas_LOG_PHY(debug_sudas_LOG_PHY,"Frame %d Subframe %d\n",frame%1024,subframe);
+sudas_LOG_PHY(debug_sudas_LOG_PHY,"Detect DCI format 1\n");
+sudas_LOG_PHY(debug_sudas_LOG_PHY,"harq_pid %d NDI1 %d\n",dci_info_extarcted.harq_pid,dci_info_extarcted.ndi1);
+#ifdef FHG_LOG
+fflush(debug_sudas_LOG_PHY);
+#endif
       // dci is correct ==> update internal structure and prepare dl decoding
 #ifdef DEBUG_DCI
       LOG_I(PHY,"[DCI-FORMAT-1] AbsSubframe %d.%d prepare dl decoding \n", frame, subframe);
@@ -6275,14 +6377,14 @@ int generate_ue_dlsch_params_from_dci(int frame,
 
 
         // check dci content
-        dlsch[0]->active = 1;
-        dlsch[1]->active = 1;
+        dlsch[0]->active = 0;
+        //dlsch[1]->active = 1;
 
             dlsch0 = dlsch[0];
-            dlsch1 = dlsch[1];
+       //    dlsch1 = dlsch[1];
 
     dlsch0_harq = dlsch0->harq_processes[dci_info_extarcted.harq_pid];
-    dlsch1_harq = dlsch1->harq_processes[dci_info_extarcted.harq_pid];
+    //dlsch1_harq = dlsch1->harq_processes[dci_info_extarcted.harq_pid];
    // printf("before coherency dlsch[1]->pmi_alloc %d\n",dlsch[1]->pmi_alloc);
    // printf("before coherency dlsch1->pmi_alloc %d\n",dlsch1->pmi_alloc);
    // printf("before coherency dlsch1_harq->pmi_alloc %d\n",dlsch1_harq->pmi_alloc);
@@ -6296,10 +6398,21 @@ int generate_ue_dlsch_params_from_dci(int frame,
                 ra_rnti,
                 p_rnti,
                 dlsch0_harq,
-                dlsch1_harq);
-        if(status == 0)
-            return(-1);
+                dlsch0_harq);//dlsch0_harq
+         if(status == 0)
+         {
+             printf("bad DCI 2 !!! \n");
+             LOG_I(PHY,"[DCI-format2] frame.subframe %d.%d bad dci infomation \n", frame, subframe);
+             return(-1);
+         }
 
+sudas_LOG_PHY(debug_sudas_LOG_PHY,"/////////////////////////\n");
+sudas_LOG_PHY(debug_sudas_LOG_PHY,"Frame %d Subframe %d\n",frame%1024,subframe);
+sudas_LOG_PHY(debug_sudas_LOG_PHY,"Detect DCI format 2\n");
+sudas_LOG_PHY(debug_sudas_LOG_PHY,"harq_pid %d NDI1 %d\n",dci_info_extarcted.harq_pid,dci_info_extarcted.ndi1);
+#ifdef FHG_LOG
+fflush(debug_sudas_LOG_PHY);
+#endif
 
         // dci is correct ==> update internal structure and prepare dl decoding
         //LOG_I(PHY,"[DCI-format2] update internal structure and prepare dl decoding \n");
@@ -6311,9 +6424,9 @@ int generate_ue_dlsch_params_from_dci(int frame,
                 rnti,
                 subframe,
                 dlsch0_harq,
-                dlsch1_harq,
+                dlsch0_harq,// dlsch1_harq
                 dlsch0,
-                dlsch1);
+                dlsch0);//dlsch1
     }
     break;
 
