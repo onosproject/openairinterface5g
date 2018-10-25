@@ -159,8 +159,6 @@ int generate_SIB23(NB_IoT_eNB_NDLSCH_t 	      *SIB23,
     	int G = get_G_NB_IoT(frame_parms);
     	uint8_t Nsf = SIB23->resource_assignment;   //value 2 or 8
 
-        LOG_D(PHY,"[%3d][%2d] Generating SIB23\n",frame,subframe);
-
         if(counter_rep == rep)
         {
             dlsch_encoding_NB_IoT(SIB23_pdu,
@@ -193,11 +191,10 @@ int generate_SIB23(NB_IoT_eNB_NDLSCH_t 	      *SIB23,
 
         if(SIB23->counter_repetition_number == 0)
         {
-            //printf("[%3d][%2d] Generate SIB23 done\n",frame,subframe);
         	SIB23->active = 0;
-        	done =1;
+        	
         }
-
+        done =1;
     }
 
  return(done);

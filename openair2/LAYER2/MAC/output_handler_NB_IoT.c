@@ -235,8 +235,8 @@ int output_handler(eNB_MAC_INST_NB_IoT *mac_inst, module_id_t module_id, int CC_
 		
 						dl_config_pdu = SCHED_info->DL_req->dl_config_request_body.dl_config_pdu_list;
 					    DCI_pdu = schedule_result_list_DL-> DCI_pdu;
-                        if(schedule_result_list_DL->rnti==SI_RNTI)
-                            LOG_D(MAC,"frame:%d, subframe:%d NB-IoT fill SIB23 ResAssign: %d\n",frame,subframe,((DCIFormatN1_t *)DCI_pdu)->ResAssign);
+                        //if(schedule_result_list_DL->rnti==SI_RNTI)
+                        //    LOG_D(MAC,"frame:%d, subframe:%d NB-IoT fill SIB23 ResAssign: %d\n",frame,subframe,((DCIFormatN1_t *)DCI_pdu)->ResAssign);
                         SCHED_info->DL_req->dl_config_request_body.number_pdu = 1;
 						dl_config_pdu->pdu_type                                           = NFAPI_DL_CONFIG_NDLSCH_PDU_TYPE;
 						dl_config_pdu->pdu_size                                           = 2+sizeof(nfapi_dl_config_ndlsch_pdu_rel13_t);
