@@ -51,14 +51,14 @@ typedef enum sib_MappingInfo{
 }sib_MappingInfo_NB_IoT;
 
 typedef enum si_TB{
-    si_TB_56=2,
-    si_TB_120=2,
-    si_TB_208=8,
-    si_TB_256=8,
-    si_TB_328=8,
-    si_TB_440=8,
-    si_TB_552=8,
-    si_TB_680=8
+    si_TB_56=0,
+    si_TB_120,
+    si_TB_208,
+    si_TB_256,
+    si_TB_328,
+    si_TB_440,
+    si_TB_552,
+    si_TB_680
 }si_TB_NB_IoT;
 
 ///RACH_ConfigCommon configuration
@@ -215,14 +215,14 @@ typedef enum si_repetition_pattern_e{
 }si_repetition_pattern_t;
 
 typedef enum si_tb_e{
-    b56=2,
-    b120=2,
-    b208=8,
-    b256=8,
-    b328=8,
-    b440=8,
-    b552=8,
-    b680=8
+    b56=0,
+    b120,
+    b208,
+    b256,
+    b328,
+    b440,
+    b552,
+    b680
 }si_tb_t;
 
 
@@ -230,8 +230,7 @@ typedef struct sibs_NB_IoT_sched_s{
     si_periodicity_t si_periodicity;
     si_repetition_pattern_t si_repetition_pattern;
     sib_MappingInfo_NB_IoT sib_mapping_info;   //bit vector
-    si_tb_t si_tb;
-
+    si_TB_NB_IoT si_tb;
 }sibs_NB_IoT_sched_t;
 
 

@@ -524,7 +524,7 @@ void rrc_mac_config_req_NB_IoT(
         mac_inst->npdcch_config_common[0].R_max                                         = rmax[nprach_parameter->npdcch_NumRepetitions_RA_r13];
         mac_inst->npdcch_config_common[0].G                                             = gvalue[nprach_parameter->npdcch_StartSF_CSS_RA_r13];
         mac_inst->npdcch_config_common[0].a_offset                                      = pdcchoffset[nprach_parameter->npdcch_Offset_RA_r13];
-        LOG_I(MAC,"NPRACH 0 setting: Rmax: %ld G: %lf a: %lf\n",mac_inst->npdcch_config_common[0].R_max,mac_inst->npdcch_config_common[0].G,mac_inst->npdcch_config_common[0].a_offset);
+        LOG_I(MAC,"NPRACH 0 setting: Rmax: %lu G: %lf a: %lf\n",mac_inst->npdcch_config_common[0].R_max,mac_inst->npdcch_config_common[0].G,mac_inst->npdcch_config_common[0].a_offset);
         }
         ///CE level 1
 
@@ -538,7 +538,7 @@ void rrc_mac_config_req_NB_IoT(
         mac_inst->npdcch_config_common[1].R_max                                         = rmax[nprach_parameter->npdcch_NumRepetitions_RA_r13];
         mac_inst->npdcch_config_common[1].G                                             = gvalue[nprach_parameter->npdcch_StartSF_CSS_RA_r13];
         mac_inst->npdcch_config_common[1].a_offset                                      = pdcchoffset[nprach_parameter->npdcch_Offset_RA_r13];
-        LOG_I(MAC,"NPRACH 1 setting: Rmax: %ld G: %lf a: %lf\n",mac_inst->npdcch_config_common[1].R_max,mac_inst->npdcch_config_common[1].G,mac_inst->npdcch_config_common[1].a_offset);
+        LOG_I(MAC,"NPRACH 1 setting: Rmax: %lu G: %lf a: %lf\n",mac_inst->npdcch_config_common[1].R_max,mac_inst->npdcch_config_common[1].G,mac_inst->npdcch_config_common[1].a_offset);
         }
         ///CE level 2
         if ( radioResourceConfigCommon->nprach_Config_r13.nprach_ParametersList_r13.list.array[2] != NULL) {
@@ -551,7 +551,7 @@ void rrc_mac_config_req_NB_IoT(
         mac_inst->npdcch_config_common[2].R_max                                         = rmax[nprach_parameter->npdcch_NumRepetitions_RA_r13];
         mac_inst->npdcch_config_common[2].G                                             = gvalue[nprach_parameter->npdcch_StartSF_CSS_RA_r13];
         mac_inst->npdcch_config_common[2].a_offset                                      = pdcchoffset[nprach_parameter->npdcch_Offset_RA_r13];
-        LOG_I(MAC,"NPRACH 2 setting: Rmax: %ld G: %lf a: %lf\n",mac_inst->npdcch_config_common[2].R_max,mac_inst->npdcch_config_common[2].G,mac_inst->npdcch_config_common[2].a_offset);
+        LOG_I(MAC,"NPRACH 2 setting: Rmax: %lu G: %lf a: %lf\n",mac_inst->npdcch_config_common[2].R_max,mac_inst->npdcch_config_common[2].G,mac_inst->npdcch_config_common[2].a_offset);
         }
 
 

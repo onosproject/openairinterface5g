@@ -19,10 +19,11 @@ char str[6][7] = { "SIBs_1", "SIBs_2", "SIBs_3", "SIBs_4", "SIBs_5", "SIBs_6" };
 extern int extend_space[num_flags];
 extern int extend_alpha_offset[num_flags];
 
-uint8_t get_SIB23_size(void)
+uint32_t get_SIB23_size(void)
 {
   rrc_config_NB_IoT_t     *mac_config = &mac_inst->rrc_config;
-  uint8_t size_SIB23_in_MAC = 0;
+  uint32_t size_SIB23_in_MAC = 0;
+
   switch(mac_config->sibs_NB_IoT_sched[0].si_tb)
   {
   	case si_TB_56:
@@ -43,17 +44,18 @@ uint8_t get_SIB23_size(void)
   	case si_TB_440:
   		size_SIB23_in_MAC = 440;
   		break;
-  	case si_TB_556:
-  		size_SIB23_in_MAC = 556;
+  	case si_TB_552:
+  		size_SIB23_in_MAC = 552;
   		break;
-  	case SI_TB_680:
+  	case si_TB_680:
   		size_SIB23_in_MAC = 680;
   		break;
   	default:
   		LOG_E(MAC,"No index for SIB23 size from SIB1!\n");
   		break;
-  	return size_SIB23_in_MAC;
   }
+    return size_SIB23_in_MAC;
+
 }
 
 void schedule_sibs(eNB_MAC_INST_NB_IoT *mac_inst, uint32_t sibs_order, int start_subframe1){
@@ -64,10 +66,18 @@ void schedule_sibs(eNB_MAC_INST_NB_IoT *mac_inst, uint32_t sibs_order, int start
 	schedule_result_t *new_node;	
 	DCIFormatN1_t *sibs_dci;
 	uint32_t j, i, k;
-	uint8_t SIB23_size = 0;
+	uint32_t SIB23_size = 0;
 	uint8_t *SIB23_pdu = get_NB_IoT_SIB23();
 	int residual_subframe, num_subframe, last_subframe;
-	num_subframe = (mac_inst->rrc_config.sibs_NB_IoT_sched[sibs_order].si_tb)*8;
+	uint8_t num_subframe_per_SIB = 0;
+	SIB23_size = get_SIB23_size();
+	if(SIB23_size > 0 && SIB23_size <= 120)
+		num_subframe_per_SIB = 2;
+	else if(SIB23_size > 120 && SIB23_size <= 680)
+		num_subframe_per_SIB = 8;
+	else
+		LOG_E(MAC,"Invalid SIB size\n");
+	num_subframe = num_subframe_per_SIB *8;
 	
 	int rmax = mac_inst->rrc_config.mac_NPRACH_ConfigSIB[0].mac_npdcch_NumRepetitions_RA_NB_IoT;
 	rmax = (rmax * 10) >> 3;	//	x1.25
@@ -116,7 +126,6 @@ void schedule_sibs(eNB_MAC_INST_NB_IoT *mac_inst, uint32_t sibs_order, int start
 				if((available_resource_DL_t *)0 != pt[k]){
 					new_node = (schedule_result_t *)malloc(sizeof(schedule_result_t));
 					//	fill new node
-					SIB23_size = get_SIB23_size();
 					new_node->output_subframe = first_subframe[k];
 					new_node->end_subframe = (j==i)?last_subframe:j+9;
 					new_node->sdu_length = SIB23_size;
