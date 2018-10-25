@@ -77,7 +77,7 @@ void rrc_mac_config_req_NB_IoT(
     uint8_t                                 ded_flag,
     uint8_t                                 ue_list_ded_num);
 
-
+uint8_t get_SIB23_size(void);
 
 
 ///system

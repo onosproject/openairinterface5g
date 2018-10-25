@@ -19,6 +19,43 @@ char str[6][7] = { "SIBs_1", "SIBs_2", "SIBs_3", "SIBs_4", "SIBs_5", "SIBs_6" };
 extern int extend_space[num_flags];
 extern int extend_alpha_offset[num_flags];
 
+uint8_t get_SIB23_size(void)
+{
+  rrc_config_NB_IoT_t     *mac_config = &mac_inst->rrc_config;
+  uint8_t size_SIB23_in_MAC = 0;
+  switch(mac_config->sibs_NB_IoT_sched[0].si_tb)
+  {
+  	case si_TB_56:
+  		size_SIB23_in_MAC = 56;
+  		break;
+  	case si_TB_120:
+  		size_SIB23_in_MAC = 120;
+  		break;
+  	case si_TB_208:
+  		size_SIB23_in_MAC = 208;
+  		break;
+  	case si_TB_256:
+  		size_SIB23_in_MAC = 256;
+  		break;
+  	case si_TB_328:
+  		size_SIB23_in_MAC = 328;
+  		break; 
+  	case si_TB_440:
+  		size_SIB23_in_MAC = 440;
+  		break;
+  	case si_TB_556:
+  		size_SIB23_in_MAC = 556;
+  		break;
+  	case SI_TB_680:
+  		size_SIB23_in_MAC = 680;
+  		break;
+  	default:
+  		LOG_E(MAC,"No index for SIB23 size from SIB1!\n");
+  		break;
+  	return size_SIB23_in_MAC;
+  }
+}
+
 void schedule_sibs(eNB_MAC_INST_NB_IoT *mac_inst, uint32_t sibs_order, int start_subframe1){
 	
 	available_resource_DL_t *pt[8] = { (available_resource_DL_t *)0 };
@@ -79,10 +116,9 @@ void schedule_sibs(eNB_MAC_INST_NB_IoT *mac_inst, uint32_t sibs_order, int start
 				if((available_resource_DL_t *)0 != pt[k]){
 					new_node = (schedule_result_t *)malloc(sizeof(schedule_result_t));
 					//	fill new node
-					SIB23_size = get_NB_IoT_SIB23_size();
+					SIB23_size = get_SIB23_size();
 					new_node->output_subframe = first_subframe[k];
 					new_node->end_subframe = (j==i)?last_subframe:j+9;
-					SIB23_size = 680; // For SIBs setting, from TS 36.331, we should use either 256 or 680 byte to pack it
 					new_node->sdu_length = SIB23_size;
 					new_node->DLSCH_pdu = SIB23_pdu;
 					new_node->direction = DL;	
