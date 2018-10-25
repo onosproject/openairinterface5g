@@ -82,6 +82,7 @@ void schedule_sibs(eNB_MAC_INST_NB_IoT *mac_inst, uint32_t sibs_order, int start
 					SIB23_size = get_NB_IoT_SIB23_size();
 					new_node->output_subframe = first_subframe[k];
 					new_node->end_subframe = (j==i)?last_subframe:j+9;
+					SIB23_size = 680; // For SIBs setting, from TS 36.331, we should use either 256 or 680 byte to pack it
 					new_node->sdu_length = SIB23_size;
 					new_node->DLSCH_pdu = SIB23_pdu;
 					new_node->direction = DL;	
