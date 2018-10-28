@@ -2280,15 +2280,9 @@ void prach_procedures_NB_IoT(PHY_VARS_eNB *eNB) {
       detection = rx_nprach_NB_IoT(eNB,frame,subframe,rnti,preamble_index,timing_advance_preamble);
   }
  
- /*if(detection == 1)    ////////////////////////// to be moved to handle_rach_NB_IoT
+ if(detection == 1)    ////////////////////////// to be moved to handle_rach_NB_IoT
   {
-    **  initiate_ra_proc(UL_info->module_id,
-                       UL_info->CC_id,
-                       NFAPI_SFNSF2SFN(UL_info->rach_ind.sfn_sf),
-                       NFAPI_SFNSF2SF(UL_info->rach_ind.sfn_sf),
-                       UL_info->rach_ind.rach_indication_body.preamble_list[0].preamble_rel8.preamble,
-                       UL_info->rach_ind.rach_indication_body.preamble_list[0].preamble_rel8.timing_advance,
-                       UL_info->rach_ind.rach_indication_body.preamble_list[0].preamble_rel8.rnti); **
+      
 
       pthread_mutex_lock(&eNB->UL_INFO_mutex);
                                                                                  //////////////////////////////////////////////////////////       
@@ -2300,10 +2294,17 @@ void prach_procedures_NB_IoT(PHY_VARS_eNB *eNB) {
 
       eNB->UL_INFO.frame = frame;
       eNB->UL_INFO.subframe = subframe;
-      //eNB->UL_INFO.hypersfn = ; 
+      eNB->UL_INFO.hypersfn = eNB->proc.proc_rxtx[0].HFN; 
 
       pthread_mutex_unlock(&eNB->UL_INFO_mutex);
-    
+      
+      /*initiate_ra_proc(UL_info->module_id,
+                       UL_info->CC_id,
+                       NFAPI_SFNSF2SFN(UL_info->rach_ind.sfn_sf),
+                       NFAPI_SFNSF2SF(UL_info->rach_ind.sfn_sf),
+                       UL_info->rach_ind.rach_indication_body.preamble_list[0].preamble_rel8.preamble,
+                       UL_info->rach_ind.rach_indication_body.preamble_list[0].preamble_rel8.timing_advance,
+                       UL_info->rach_ind.rach_indication_body.preamble_list[0].preamble_rel8.rnti); */
 
       mac_xface->initiate_ra_proc(eNB->Mod_id,
                                   eNB->CC_id,
@@ -2311,7 +2312,7 @@ void prach_procedures_NB_IoT(PHY_VARS_eNB *eNB) {
                                   preamble_index[0],
                                   (int16_t) timing_advance_preamble[0],
                                   0,subframe,0);      
-  }*/
+  }
   
 }
 //////////////////////////////////////////////////////////// END ///////////////////////////////////////////////////////////

@@ -146,6 +146,8 @@ PHY_VARS_eNB* init_lte_eNB(LTE_DL_FRAME_PARMS *frame_parms,
   PHY_vars_eNB->ndlsch_SIB1  = new_eNB_dlsch_NB_IoT(1,frame_parms);   // frame_parms is not used , to be removed is not used in futur
   PHY_vars_eNB->ndlsch_SIB23  = new_eNB_dlsch_NB_IoT(1,frame_parms);
   PHY_vars_eNB->ndlsch_RAR  = new_eNB_dlsch_NB_IoT(1,frame_parms);
+
+  PHY_vars_eNB->UL_INFO.nrach_ind.nrach_pdu_list  = (nfapi_nrach_indication_pdu_t *)malloc16(sizeof(nfapi_nrach_indication_pdu_t));
  
   PHY_vars_eNB->ndlsch_SIB1->rnti = 0xffff;
   PHY_vars_eNB->ndlsch_SIB23->rnti = 0xffff;
