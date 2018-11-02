@@ -2316,7 +2316,7 @@ ue_get_sdu(module_id_t module_idP, int CC_id, frame_t frameP,
 	  buflen - sdu_length_total - payload_offset);
     // cycle through SDUs and place in ulsch_buffer
     if (sdu_length_total) {
-    	//LOG_I(MAC, "Panos-D: [UE %d] ue_get_sdu() 2 before copying to ulsch_buffer, SFN/SF: %d/%d \n \n \n", module_idP, frameP, subframe);
+    	//LOG_I(MAC, "[UE %d] ue_get_sdu() 2 before copying to ulsch_buffer, SFN/SF: %d/%d \n \n \n", module_idP, frameP, subframe);
 	memcpy(&ulsch_buffer[payload_offset], ulsch_buff,
 	       sdu_length_total);
     }

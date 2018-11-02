@@ -284,9 +284,9 @@ ue_ip_common_ip2wireless(
 
   pdcph.data_size  = skb_pP->len;
 
-  if (skb_pP->mark) {
+  if (skb_pP->mark && instP == 0) {
     pdcph.rb_id      = skb_pP->mark;
-    printk("[UE_IP_DRV_PROSE] skb_pP->mark %d\n",skb_pP->mark);
+    printk("[UE_IP_DRV_PROSE] skb_pP->mark %d, oip instance: %d\n",skb_pP->mark, instP);
   } else {
     pdcph.rb_id      = UE_IP_DEFAULT_RAB_ID;
   }
