@@ -185,6 +185,9 @@ void assign_rbs_required (module_id_t Mod_id,
   //  UE_TEMPLATE           *UE_template;
   LTE_DL_FRAME_PARMS   *frame_parms[MAX_NUM_CCs];
 
+  //sfn for TM4 testing
+  eNB_MAC_INST         *eNB      = &eNB_mac_inst[Mod_id];
+
   // clear rb allocations across all CC_ids
   for (UE_id = 0; UE_id < NUMBER_OF_UE_MAX; UE_id++) {
     if (UE_list->active[UE_id] != TRUE) continue;
@@ -258,7 +261,7 @@ void assign_rbs_required (module_id_t Mod_id,
 			    N_layer=1;
 			    break;
 		        case 4:
-		        N_layer=1;
+		        N_layer=2;
 			  break;
 		        default:
 		        N_layer=1;
@@ -270,7 +273,7 @@ void assign_rbs_required (module_id_t Mod_id,
           nb_rbs_required[CC_id][UE_id] = min_rb_unit[CC_id];
         }
 
-        TBS = mac_xface->get_TBS_DL(eNB_UE_stats[CC_id]->dlsch_mcs1,nb_rbs_required[CC_id][UE_id]);
+        TBS = mac_xface->get_TBS_DL(eNB_UE_stats[CC_id]->dlsch_mcs1,N_layer*nb_rbs_required[CC_id][UE_id]);
 
         LOG_D(MAC,"[preprocessor] start RB assignement for UE %d CC_id %d dl buffer %d (RB unit %d, MCS %d, TBS %d) \n",
               UE_id, CC_id, UE_list->UE_template[pCCid][UE_id].dl_buffer_total,
@@ -280,15 +283,15 @@ void assign_rbs_required (module_id_t Mod_id,
         while (TBS < UE_list->UE_template[pCCid][UE_id].dl_buffer_total)  {
           nb_rbs_required[CC_id][UE_id] += min_rb_unit[CC_id];
 
-          if (nb_rbs_required[CC_id][UE_id] > frame_parms[CC_id]->N_RB_DL) {
-            TBS = mac_xface->get_TBS_DL(eNB_UE_stats[CC_id]->dlsch_mcs1,frame_parms[CC_id]->N_RB_DL);
-            nb_rbs_required[CC_id][UE_id] = frame_parms[CC_id]->N_RB_DL;
+          if (nb_rbs_required[CC_id][UE_id] > eNB->eNB_stats[CC_id].available_prbs) {//sfn: replace frame_parms[CC_id]->N_RB_DL
+            nb_rbs_required[CC_id][UE_id] = min_rb_unit[CC_id]*(eNB->eNB_stats[CC_id].available_prbs/min_rb_unit[CC_id]);
+            TBS = mac_xface->get_TBS_DL(eNB_UE_stats[CC_id]->dlsch_mcs1,N_layer*nb_rbs_required[CC_id][UE_id]);
             break;
           }
 
-          TBS = mac_xface->get_TBS_DL(eNB_UE_stats[CC_id]->dlsch_mcs1,nb_rbs_required[CC_id][UE_id]);
+          TBS = mac_xface->get_TBS_DL(eNB_UE_stats[CC_id]->dlsch_mcs1,N_layer*nb_rbs_required[CC_id][UE_id]);
         } // end of while
-        nb_rbs_required[CC_id][UE_id]/=N_layer;
+
 
         LOG_D(MAC,"[eNB %d] Frame %d: UE %d on CC %d: RB unit %d,  nb_required RB %d (TBS %d, mcs %d)\n",
               Mod_id, frameP,UE_id, CC_id,  min_rb_unit[CC_id], nb_rbs_required[CC_id][UE_id], TBS, eNB_UE_stats[CC_id]->dlsch_mcs1);
@@ -560,7 +563,8 @@ void dlsch_scheduler_pre_processor (module_id_t   Mod_id,
   int transmission_mode = 0;
   UE_sched_ctrl *ue_sched_ctl;
   //  int rrc_status           = RRC_IDLE;
-
+  //sfn
+  eNB_MAC_INST *eNB      = &eNB_mac_inst[Mod_id];
   LTE_eNB_UE_stats *eNB_UE_stats[MAX_NUM_CCs];
 #ifdef TM5
   int harq_pid1=0,harq_pid2=0;
@@ -608,26 +612,29 @@ void dlsch_scheduler_pre_processor (module_id_t   Mod_id,
       round    = ue_sched_ctl->round[CC_id];
       rnti = UE_RNTI(Mod_id,i);
       eNB_UE_stats[CC_id] = mac_xface->get_eNB_UE_stats(Mod_id,CC_id,rnti);
-/*
+
       PHY_vars_eNB_g[Mod_id][CC_id]->UE_stats[UE_id].rank = eNB_UE_stats[CC_id]->rank;
       if (round==0)
       {
-      //set the mode of the tranmission mode
+      /* SFN: Enable Format2 scheduling
+       * select TM according to rank
+       *
+       */
     	  if (eNB_UE_stats[CC_id]->rank)
     	  {
-           PHY_vars_eNB_g[Mod_id][CC_id]->transmission_mode[UE_id]=4;
-           UE_list->UE_template[CC_id][UE_id].Trans_Mode[harq_pid][CC_id]=4;
-    	  }else
+    		  PHY_vars_eNB_g[Mod_id][CC_id]->transmission_mode[UE_id]=4;
+    		  UE_list->UE_template[CC_id][UE_id].Trans_Mode[harq_pid][CC_id]=4;
+    	  }
+    	  else
     	  {
-
     		  PHY_vars_eNB_g[Mod_id][CC_id]->transmission_mode[UE_id]=2;
     		  UE_list->UE_template[CC_id][UE_id].Trans_Mode[harq_pid][CC_id]=2;
     	  }
-      }else{
+      }
+      else//Retransmission
+      {
     	  PHY_vars_eNB_g[Mod_id][CC_id]->transmission_mode[UE_id]=UE_list->UE_template[CC_id][UE_id].Trans_Mode[harq_pid][CC_id];;
       }
-      */
-
     }
   }
 
@@ -699,8 +706,9 @@ void dlsch_scheduler_pre_processor (module_id_t   Mod_id,
 
       if (total_ue_count == 0) {
         average_rbs_per_user[CC_id] = 0;
-      } else if( (min_rb_unit[CC_id] * total_ue_count) <= (frame_parms[CC_id]->N_RB_DL) ) {
-        average_rbs_per_user[CC_id] = (uint16_t) floor(frame_parms[CC_id]->N_RB_DL/total_ue_count);
+      } else if(total_ue_count <= (eNB->eNB_stats[CC_id].available_prbs/min_rb_unit[CC_id]) ) {
+        average_rbs_per_user[CC_id] = min_rb_unit[CC_id]*((uint16_t)floor(eNB->eNB_stats[CC_id].available_prbs/total_ue_count)/min_rb_unit[CC_id]);//sfn: replace frame_parms[CC_id]->N_RB_DL
+
       } else {
         average_rbs_per_user[CC_id] = min_rb_unit[CC_id]; // consider the total number of use that can be scheduled UE
       }

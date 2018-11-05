@@ -21,13 +21,20 @@
 
 #define	FHG_TM4_LOG_CQI
 //#define FHG_LOG
-
+#define FHG_LOG_TM4
 
 
 
 // [sfn]
 extern FILE *debug_sudas_LOG_PHY;
 extern FILE *debug_sudas_LOG_MAC;
+
+#ifdef FHG_LOG_TM4
+	#define sudas_LOG_TM(c,...) fprintf(c,__VA_ARGS__)
+#else
+	#define sudas_LOG_TM(c,...)
+#endif
+
 
 #ifdef FHG_LOG
 

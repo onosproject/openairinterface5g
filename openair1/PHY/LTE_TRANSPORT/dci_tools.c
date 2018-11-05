@@ -1628,7 +1628,7 @@ int generate_eNB_dlsch_params_from_dci(int frame,
 
     // assume both TBs are active
     if (dlsch0_harq != NULL)
-      dlsch0_harq->Nl        = 1;
+      dlsch0_harq->Nl        = 1;//SFN: 2 TM4 test
     if (dlsch1_harq != NULL)
       dlsch1_harq->Nl        = 1;
 
@@ -1668,14 +1668,10 @@ int generate_eNB_dlsch_params_from_dci(int frame,
       } else if ((dlsch0 != NULL) && (dlsch1 == NULL))  { // only CW 0 active
         dlsch0_harq->dl_power_off = 1;
         
-        if (dlsch0_harq->round == 0) {
-            // MCS and TBS don't change across HARQ rounds
-        	dlsch0_harq->TBS= TBStable[get_I_TBS(dlsch0_harq->mcs)][(Nl_layer*dlsch0_harq->nb_rb)-1];
-          }
-
         switch (tpmi) {
         case 0 :
           dlsch0_harq->mimo_mode   = ALAMOUTI;
+          dlsch0_harq->Nl        = 1;
           break;
         case 1:
           dlsch0_harq->mimo_mode   = UNIFORM_PRECODING11;
@@ -1701,6 +1697,15 @@ int generate_eNB_dlsch_params_from_dci(int frame,
           dlsch0_harq->mimo_mode   = PUSCH_PRECODING1;
           dlsch0_harq->pmi_alloc   = DL_pmi_single;
           break;
+        case 7://SFN:
+          dlsch0_harq->mimo_mode   = TM4_NO_PRECODING;
+          dlsch0_harq->Nl        = 2;
+          break;
+        }
+        if (dlsch0_harq->round == 0)
+        {
+        	// MCS and TBS don't change across HARQ rounds
+        	dlsch0_harq->TBS= TBStable[get_I_TBS(dlsch0_harq->mcs)][(dlsch0_harq->Nl*dlsch0_harq->nb_rb)-1];
         }
       } else if ((dlsch0 == NULL) && (dlsch1 != NULL))  {
           dlsch1_harq->dl_power_off = 1;

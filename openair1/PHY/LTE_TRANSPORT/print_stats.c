@@ -712,8 +712,15 @@ int dump_eNB_stats(PHY_VARS_eNB *eNB, char* buffer, int length)
 
 	len += sprintf(&buffer[len],"////////////////////////******************/////////////////////////////\n");
 
+	for (i=0; i<8; i++){
 
+		len+= sprintf(&buffer[len],"DL TM %d, DL Nl %d, rb %d, TBS %d, \n",
+					      eNB->dlsch[(uint8_t)UE_id][0]->harq_processes[i]->mimo_mode==15?4 : 2,
+					      eNB->dlsch[(uint8_t)UE_id][0]->harq_processes[i]->Nl,
+					      eNB->dlsch[(uint8_t)UE_id][0]->harq_processes[i]->nb_rb,
+					      eNB->dlsch[(uint8_t)UE_id][0]->harq_processes[i]->TBS);
 
+	}
 
 	len += sprintf(&buffer[len],"Timing advance %d samples (%d 16Ts), update %d ",
 		       eNB->UE_stats[UE_id].UE_timing_offset,

@@ -615,7 +615,8 @@ typedef enum {
   TM7=12,
   TM8=13,
   TM9_10=14,
-  ////sfn: test TM4
+  /*: Khodr Saaifan (Fraunhofer IIS): 
+   *Test TM4 2 layers*/
   TM4_NO_PRECODING=15
 } MIMO_mode_t;
 

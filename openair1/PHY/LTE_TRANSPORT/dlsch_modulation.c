@@ -628,10 +628,10 @@ int allocate_REs_in_RB(PHY_VARS_eNB* phy_vars_eNB,
   ((int16_t *)&qpsk[0])[0] = gain_lin_QPSK;
   ((int16_t *)&qpsk[0])[1] = gain_lin_QPSK;
   ((int16_t *)&qpsk[1])[0] = -gain_lin_QPSK;
-  ((int16_t *)&qpsk[1])[1] = gain_lin_QPSK;;
-  ((int16_t *)&qpsk[2])[0] = gain_lin_QPSK;;
-  ((int16_t *)&qpsk[2])[1] = -gain_lin_QPSK;;
-  ((int16_t *)&qpsk[3])[0] = -gain_lin_QPSK;;
+  ((int16_t *)&qpsk[1])[1] = gain_lin_QPSK;
+  ((int16_t *)&qpsk[2])[0] = gain_lin_QPSK;
+  ((int16_t *)&qpsk[2])[1] = -gain_lin_QPSK;
+  ((int16_t *)&qpsk[3])[0] = -gain_lin_QPSK;
   ((int16_t *)&qpsk[3])[1] = -gain_lin_QPSK;
 
   if ((dlsch0_harq != NULL) && (dlsch1_harq != NULL)) { //this is for TM3, TM4
@@ -957,6 +957,128 @@ int allocate_REs_in_RB(PHY_VARS_eNB* phy_vars_eNB,
           ((int16_t *)&txdataF[1][tti_offset+2])[0] += ((int16_t *)&txdataF[0][tti_offset])[0];  //x0*
           ((int16_t *)&txdataF[1][tti_offset+2])[1] += -((int16_t *)&txdataF[0][tti_offset])[1];
         }
+      }
+      /*Author: Khodr Saaifan (Fraunhofer IIs)
+       * RE mapping for TM4
+       */
+      else if (mimo_mode == TM4_NO_PRECODING){
+          *re_allocated = *re_allocated + 1;
+          amp = (int16_t)(((int32_t)tmp_amp*ONE_OVER_SQRT2_Q15)>>15);
+          switch (mod_order0) {
+          // This implements TM4 without Precoding for 2 TX antennas
+           // -  -        -    -  -         -  -     -  -  -       -              -
+           //| y0 |      | 1  0 || x0 |     | x0 |
+           //| y1 | =    | 0  1 || x1 | =   | x1 |
+           // -  -        -    -  -         -  -     -  -  -       -
+          case 2:  //QPSK
+            // first layer symbol n -> x0
+            ((int16_t*)&tmp_sample1)[0] = (x0[*jj]==1) ? (-gain_lin_QPSK) : gain_lin_QPSK;
+            *jj=*jj+1;
+            ((int16_t*)&tmp_sample1)[1] = (x0[*jj]==1) ? (-gain_lin_QPSK) : gain_lin_QPSK;
+            *jj=*jj+1;
+
+            // second layer symbol n -> x1
+            ((int16_t*)&tmp_sample2)[0] = (x0[*jj]==1) ? (-gain_lin_QPSK) : gain_lin_QPSK;
+            *jj=*jj+1;
+            ((int16_t*)&tmp_sample2)[1] = (x0[*jj]==1) ? (-gain_lin_QPSK) : gain_lin_QPSK;
+            *jj=*jj+1;
+            //No precoding
+            //Map x0 to the first antenna
+            ((int16_t*)&txdataF[0][tti_offset])[0] += (int16_t)((((int16_t*)&tmp_sample1)[0]));
+            ((int16_t*)&txdataF[0][tti_offset])[1] += (int16_t)((((int16_t*)&tmp_sample1)[1]));
+            //Map x1 to the second antenna
+            ((int16_t*)&txdataF[1][tti_offset])[0] += (int16_t)((((int16_t*)&tmp_sample2)[0]));
+            ((int16_t*)&txdataF[1][tti_offset])[1] += (int16_t)((((int16_t*)&tmp_sample2)[1]));
+          break;
+
+          case 4:  //16QAM
+        	//Antenna 0: first layer symbol n -> x0
+            qam16_table_offset_re = 0;
+            qam16_table_offset_im = 0;
+            if (x0[*jj] == 1)
+              qam16_table_offset_re+=2;
+            *jj=*jj+1;
+            if (x0[*jj] == 1)
+              qam16_table_offset_im+=2;
+            *jj=*jj+1;
+            if (x0[*jj] == 1)
+              qam16_table_offset_re+=1;
+            *jj=*jj+1;
+            if (x0[*jj] == 1)
+              qam16_table_offset_im+=1;
+            *jj=*jj+1;
+            ((int16_t *)&txdataF[0][tti_offset])[0]+=(qam_table_s0[qam16_table_offset_re]);
+            ((int16_t *)&txdataF[0][tti_offset])[1]+=(qam_table_s0[qam16_table_offset_im]);
+
+            // Antenna 1: second layer symbol n -> x1
+            qam16_table_offset_re = 0;
+            qam16_table_offset_im = 0;
+            if (x0[*jj] == 1)
+              qam16_table_offset_re+=2;
+            *jj=*jj+1;
+            if (x0[*jj] == 1)
+              qam16_table_offset_im+=2;
+            *jj=*jj+1;
+            if (x0[*jj] == 1)
+              qam16_table_offset_re+=1;
+            *jj=*jj+1;
+            if (x0[*jj] == 1)
+              qam16_table_offset_im+=1;
+            *jj=*jj+1;
+            ((int16_t *)&txdataF[1][tti_offset])[0]+=(qam_table_s0[qam16_table_offset_re]);
+            ((int16_t *)&txdataF[1][tti_offset])[1]+=(qam_table_s0[qam16_table_offset_im]);
+            break;
+
+          case 6:   // 64-QAM
+            // Antenna 0
+            qam64_table_offset_re = 0;
+            qam64_table_offset_im = 0;
+            if (x0[*jj] == 1)
+              qam64_table_offset_re+=4;
+            *jj=*jj+1;
+            if (x0[*jj] == 1)
+              qam64_table_offset_im+=4;
+            *jj=*jj+1;
+            if (x0[*jj] == 1)
+              qam64_table_offset_re+=2;
+            *jj=*jj+1;
+            if (x0[*jj] == 1)
+              qam64_table_offset_im+=2;
+            *jj=*jj+1;
+            if (x0[*jj] == 1)
+              qam64_table_offset_re+=1;
+            *jj=*jj+1;
+            if (x0[*jj] == 1)
+              qam64_table_offset_im+=1;
+            *jj=*jj+1;
+            ((int16_t *)&txdataF[0][tti_offset])[0]+=(qam_table_s0[qam64_table_offset_re]);
+            ((int16_t *)&txdataF[0][tti_offset])[1]+=(qam_table_s0[qam64_table_offset_im]);
+
+            // Antenna 1 => x1
+            qam64_table_offset_re = 0;
+            qam64_table_offset_im = 0;
+            if (x0[*jj] == 1)
+              qam64_table_offset_re+=4;
+            *jj=*jj+1;
+            if (x0[*jj] == 1)
+              qam64_table_offset_im+=4;
+            *jj=*jj+1;
+            if (x0[*jj] == 1)
+              qam64_table_offset_re+=2;
+            *jj=*jj+1;
+            if (x0[*jj] == 1)
+              qam64_table_offset_im+=2;
+            *jj=*jj+1;
+            if (x0[*jj] == 1)
+              qam64_table_offset_re+=1;
+            *jj=*jj+1;
+            if (x0[*jj] == 1)
+              qam64_table_offset_im+=1;
+            *jj=*jj+1;
+            ((int16_t *)&txdataF[1][tti_offset])[0]+=(qam_table_s0[qam64_table_offset_re]);
+            ((int16_t *)&txdataF[1][tti_offset])[1]+=(qam_table_s0[qam64_table_offset_im]);
+            break;
+          }
       }
       else if (mimo_mode == LARGE_CDD) {
 
@@ -1556,7 +1678,7 @@ int allocate_REs_in_RB(PHY_VARS_eNB* phy_vars_eNB,
 
         }
 
-      } else if (mimo_mode >= TM8) { //TM8,TM9,TM10
+      } else if ((mimo_mode >= TM8) && (mimo_mode < TM9_10)) { //TM8,TM9,TM10
         //uint8_t is_not_UEspecRS(int8_t lprime, uint8_t re, uint8_t nushift, uint8_t Ncp, uint8_t beamforming_mode)
 
         if (is_not_UEspecRS(lprime,re,frame_parms->nushift,frame_parms->Ncp,8)) {
@@ -1650,7 +1772,7 @@ int allocate_REs_in_RB(PHY_VARS_eNB* phy_vars_eNB,
 
           }
         }
-      } else if (mimo_mode>=TM9_10) {
+      } else if (mimo_mode==TM9_10) {
         printf("allocate_REs_in_RB() [dlsch.c] : ERROR, unknown mimo_mode %d\n",mimo_mode);
         return(-1);
       }

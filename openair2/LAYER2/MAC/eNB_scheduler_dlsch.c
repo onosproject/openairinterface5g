@@ -543,9 +543,9 @@ schedule_ue_spec(
 				      eNB_UE_stats->DL_cqi[0],
 				      format2A);
         case 4:
-        aggregation = get_aggregation(get_bw_index(module_idP,CC_id),
+        aggregation = 3;/*get_aggregation(get_bw_index(module_idP,CC_id),
       				      eNB_UE_stats->DL_cqi[0],
-      				      format2);
+      				      format2);*/
 	    break;
         default:
 	  LOG_W(MAC,"Unsupported transmission mode %d\n", mac_xface->get_transmission_mode(module_idP,CC_id,rnti));
@@ -852,8 +852,8 @@ fflush(debug_sudas_LOG_MAC);
           UE_list->eNB_UE_stats[CC_id][UE_id].dlsch_mcs1=eNB_UE_stats->dlsch_mcs1;
           UE_list->eNB_UE_stats[CC_id][UE_id].dlsch_mcs2=eNB_UE_stats->dlsch_mcs1;
         } else {
-          LOG_E(MAC,"[eNB %d] Frame %d CC_id %d : don't schedule UE %d, its retransmission takes more resources than we have\n",
-                module_idP, frameP, CC_id, UE_id);
+          LOG_E(MAC,"[eNB %d] Frame %d subframeP %d CC_id %d : don't schedule UE %d, its retransmission takes nb_rb %d more resources than we have nb_available_rb %d\n",
+                module_idP, frameP, subframeP,CC_id, UE_id,nb_rb,nb_available_rb);
         }
       } else { /* This is a potentially new SDU opportunity */
 
@@ -1059,7 +1059,7 @@ fflush(debug_sudas_LOG_MAC);
             nb_rb=min_rb_unit[CC_id];
           }
 
-          char N_layer=1;
+          int N_layer=1;
           switch(mac_xface->get_transmission_mode(module_idP,CC_id,rnti)){
           		        case 1:
           		        case 2:
@@ -1067,7 +1067,7 @@ fflush(debug_sudas_LOG_MAC);
           		        	N_layer=1;
           			    break;
           		        case 4:
-          		        	N_layer=1;
+          		        	N_layer=2;
           		        break;
           		        default:
           		        	N_layer=1;
@@ -1075,22 +1075,22 @@ fflush(debug_sudas_LOG_MAC);
 
 
 
-          TBS = mac_xface->get_TBS_DL(mcs,nb_rb);
+          TBS = mac_xface->get_TBS_DL(mcs,N_layer*nb_rb);
 
           while (TBS < (sdu_length_total + header_len_dcch + header_len_dtch + ta_len))  {
             nb_rb += min_rb_unit[CC_id];  //
 
             if (nb_rb>nb_available_rb) { // if we've gone beyond the maximum number of RBs
               // (can happen if N_RB_DL is odd)
-              TBS = mac_xface->get_TBS_DL(eNB_UE_stats->dlsch_mcs1,nb_available_rb);
+              TBS = mac_xface->get_TBS_DL(eNB_UE_stats->dlsch_mcs1,N_layer*nb_available_rb);
               nb_rb = nb_available_rb;
               break;
             }
 
-            TBS = mac_xface->get_TBS_DL(eNB_UE_stats->dlsch_mcs1,nb_rb);
+            TBS = mac_xface->get_TBS_DL(eNB_UE_stats->dlsch_mcs1,N_layer*nb_rb);
           }
 
-          nb_rb/=N_layer;
+
           if(nb_rb == ue_sched_ctl->pre_nb_available_rbs[CC_id]) {
             for(j=0; j<frame_parms[CC_id]->N_RBG; j++) { // for indicating the rballoc for each sub-band
               UE_list->UE_template[CC_id][UE_id].rballoc_subband[harq_pid][j] = ue_sched_ctl->rballoc_sub_UE[CC_id][j];
@@ -1411,7 +1411,7 @@ fflush(debug_sudas_LOG_MAC);
                 ((DCI2A_5MHz_2A_TDD_t*)DLSCH_dci)->ndi1 = 1-UE_list->UE_template[CC_id][UE_id].oldNDI[harq_pid];
                 ((DCI2A_5MHz_2A_TDD_t*)DLSCH_dci)->rv1 = 0;
                 ((DCI2A_5MHz_2A_TDD_t*)DLSCH_dci)->dai      = (UE_list->UE_template[CC_id][UE_id].DAI-1)&3;
-		((DCI2A_5MHz_2A_TDD_t*)DLSCH_dci)->TPC = tpc;
+		        ((DCI2A_5MHz_2A_TDD_t*)DLSCH_dci)->TPC = tpc;
 
                 // deactivate TB2
                 ((DCI2A_5MHz_2A_TDD_t*)DLSCH_dci)->mcs2 = 0;
@@ -1525,7 +1525,7 @@ fflush(debug_sudas_LOG_MAC);
             break;
 
           case 4:
-        	  ((DCI2_5MHz_2A_FDD_t*)DLSCH_dci)->tpmi = 0;//ALAMOUTI
+        	  ((DCI2_5MHz_2A_FDD_t*)DLSCH_dci)->tpmi = 7;//0: ALAMOUTI/7: test TM4_NO_precoding
         	  ((DCI2_5MHz_2A_FDD_t*)DLSCH_dci)->mcs1 = mcs;
         	  ((DCI2_5MHz_2A_FDD_t*)DLSCH_dci)->harq_pid = harq_pid;
         	  ((DCI2_5MHz_2A_FDD_t*)DLSCH_dci)->ndi1 = 1-UE_list->UE_template[CC_id][UE_id].oldNDI[harq_pid];
@@ -2023,7 +2023,7 @@ fill_DLSCH_dci(
 
         case 4:
 
-          // sfnDCI format 2_2A
+          /* sfn: DCI format 2*/
           ((DCI2_5MHz_2A_FDD_t*)DLSCH_dci)->rballoc = allocate_prbs_sub(nb_rb,rballoc_sub);
           ((DCI2_5MHz_2A_FDD_t*)DLSCH_dci)->rah = 0;
 
@@ -2031,7 +2031,7 @@ fill_DLSCH_dci(
                                    DLSCH_dci,
                                    rnti,
                                    sizeof(DCI2_5MHz_2A_FDD_t),
-         			  get_aggregation(get_bw_index(module_idP,CC_id),eNB_UE_stats->DL_cqi[0],format2),
+         			  3,//get_aggregation(get_bw_index(module_idP,CC_id),eNB_UE_stats->DL_cqi[0],format2)
          			 sizeof_DCI2_5MHz_2A_FDD_t,
                                    format2,
                                    0);
