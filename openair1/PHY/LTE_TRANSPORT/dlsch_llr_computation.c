@@ -660,7 +660,7 @@ int dlsch_qpsk_llr(LTE_DL_FRAME_PARMS *frame_parms,
 
   if ((symbol_mod==0) || (symbol_mod==(4-frame_parms->Ncp))) {
     if (frame_parms->mode1_flag==0)
-      len = (nb_rb*8) - (2*pbch_pss_sss_adjust/3);
+      len = (nb_rb*8) - (2*pbch_pss_sss_adjust/3);// In the case of TM4 Nl=2, len should be multiplied by N_l
     else
       len = (nb_rb*10) - (5*pbch_pss_sss_adjust/6);
   } else if((beamforming_mode==7) && (frame_parms->Ncp==0) && (symbol==3 || symbol==6 || symbol==9 || symbol==12)){
@@ -668,7 +668,7 @@ int dlsch_qpsk_llr(LTE_DL_FRAME_PARMS *frame_parms,
   } else if((beamforming_mode==7) && (frame_parms->Ncp==1) && (symbol==4 || symbol==7 || symbol==10)){
       len = (nb_rb*8) - (2*pbch_pss_sss_adjust/3);
   } else {
-    len = (nb_rb*12) - pbch_pss_sss_adjust;
+    len = (nb_rb*12) - pbch_pss_sss_adjust;// In the case of TM4 Nl=2, len should be multiplied by N_l
   }
 
 
@@ -689,6 +689,50 @@ int dlsch_qpsk_llr(LTE_DL_FRAME_PARMS *frame_parms,
   }
 
   //*llr32p = (int16_t *)llr32;
+
+  return(0);
+}
+
+int dlsch_qpsk_llr_tm4(LTE_DL_FRAME_PARMS *frame_parms,
+                   int32_t **rxdataF_comp,
+                   int16_t *dlsch_llr,
+                   uint8_t symbol,
+                   uint8_t first_symbol_flag,
+                   uint16_t nb_rb,
+                   uint16_t pbch_pss_sss_adjust,
+                   uint8_t beamforming_mode,
+                   uint8_t Nl)
+{
+
+  uint32_t *rxF = (uint32_t*)&rxdataF_comp[0][((int32_t)symbol*frame_parms->N_RB_DL*12*Nl)];
+  uint32_t *llr32;
+  int i,len;
+  uint8_t symbol_mod = (symbol >= (7-frame_parms->Ncp))? (symbol-(7-frame_parms->Ncp)) : symbol;
+
+  llr32 = (uint32_t*)dlsch_llr;
+  if (!llr32) {
+    msg("dlsch_qpsk_llr: llr is null, symbol %d, llr32=%p\n",symbol, llr32);
+    return(-1);
+  }
+
+  if ((symbol_mod==0) || (symbol_mod==(4-frame_parms->Ncp))) {
+    if (frame_parms->mode1_flag==0)
+      len = Nl*((nb_rb*8) - (2*pbch_pss_sss_adjust/3));// In the case of TM4 Nl=2, len should be multiplied by N_l
+    else
+      len = (nb_rb*10) - (5*pbch_pss_sss_adjust/6);
+  } else if((beamforming_mode==7) && (frame_parms->Ncp==0) && (symbol==3 || symbol==6 || symbol==9 || symbol==12)){
+      len = (nb_rb*9) - (3*pbch_pss_sss_adjust/4);
+  } else if((beamforming_mode==7) && (frame_parms->Ncp==1) && (symbol==4 || symbol==7 || symbol==10)){
+      len = (nb_rb*8) - (2*pbch_pss_sss_adjust/3);
+  } else {
+    len = Nl*((nb_rb*12) - pbch_pss_sss_adjust);// In the case of TM4 Nl=2, len should be multiplied by N_l
+  }
+
+  for (i=0; i<len; i++) {
+    *llr32 = *rxF;
+    rxF++;
+    llr32++;
+  }
 
   return(0);
 }
@@ -930,6 +974,91 @@ void dlsch_16qam_llr(LTE_DL_FRAME_PARMS *frame_parms,
   _m_empty();
 #endif
 }
+//KhodrSaaifan
+void dlsch_16qam_llr_tm4(LTE_DL_FRAME_PARMS *frame_parms,
+                     int32_t **rxdataF_comp,
+                     int16_t *dlsch_llr,
+                     int32_t **dl_ch_mag,
+                     uint8_t symbol,
+                     uint8_t first_symbol_flag,
+                     uint16_t nb_rb,
+                     uint16_t pbch_pss_sss_adjust,
+                     int16_t **llr32p,
+                     uint8_t beamforming_mode,
+                     uint8_t Nl)
+{
+
+#if defined(__x86_64__) || defined(__i386__)
+  __m128i *rxF = (__m128i*)&rxdataF_comp[0][(symbol*frame_parms->N_RB_DL*12*Nl)];
+  __m128i *ch_mag;
+  __m128i llr128[2];//Array of 128bit variable
+  uint32_t *llr32;
+
+  int i,len;
+  unsigned char symbol_mod,len_mod4=0;
+
+  if (first_symbol_flag==1) {
+    llr32 = (uint32_t*)dlsch_llr;//point to LLR[0]
+  } else {
+    llr32 = (uint32_t*)*llr32p;//update LLR pointer according to previous
+  }
+
+
+  symbol_mod = (symbol>=(7-frame_parms->Ncp)) ? symbol-(7-frame_parms->Ncp) : symbol;
+
+  ch_mag = (__m128i*)&dl_ch_mag[0][(symbol*frame_parms->N_RB_DL*12*Nl)];
+
+  if ((symbol_mod==0) || (symbol_mod==(4-frame_parms->Ncp))) {
+    if (frame_parms->mode1_flag==0)
+      len = ((nb_rb*8) - (2*pbch_pss_sss_adjust/3))*Nl;
+    else
+      len = (nb_rb*10) - (5*pbch_pss_sss_adjust/6);
+  } else if((beamforming_mode==7) && (frame_parms->Ncp==0) && (symbol==3 || symbol==6 || symbol==9 || symbol==12)){
+      len = (nb_rb*9) - (3*pbch_pss_sss_adjust/4);
+  } else if((beamforming_mode==7) && (frame_parms->Ncp==1) && (symbol==4 || symbol==7 || symbol==10)){
+      len = (nb_rb*8) - (2*pbch_pss_sss_adjust/3);
+  } else {
+    len = ((nb_rb*12) - pbch_pss_sss_adjust)*Nl;
+  }
+
+  // update output pointer according to number of REs in this symbol (<<2 because 4 bits per RE)
+  if (first_symbol_flag == 1)
+    *llr32p = dlsch_llr + (len<<2);//Update for next time with Qm 4 bits
+  else
+    *llr32p += (len<<2);
+
+ // printf("len=%d\n", len);
+  len_mod4 = len&3;//in REs
+ // printf("len_mod4=%d\n", len_mod4);
+  len>>=2;  // length in quad words (4 REs)
+ // printf("len>>=2=%d\n", len);
+  len+=(len_mod4==0 ? 0 : 1);
+ // printf("len+=%d\n", len);
+  for (i=0; i<len; i++) {//Number of REs/4
+
+    xmm0 = _mm_abs_epi16(rxF[i]);//|I0| |Q0| |I1| |Q1| |I2| |Q2| |I3| |Q3|
+    xmm0 = _mm_subs_epi16(ch_mag[i],xmm0);//|h|^2-|I0| |h|^2-|Q0| |h|^2-|I1| |h|^2-|Q1| |h|^2-|I2| |h|^2-|Q2| |h|^2-|I3| |h|^2-|Q3|
+
+    // lambda_1=y_R, lambda_2=|y_R|-|h|^2, lamda_3=y_I, lambda_4=|y_I|-|h|^2
+    llr128[0] = _mm_unpacklo_epi32(rxF[i],xmm0);//upacking low 64 bits
+    llr128[1] = _mm_unpackhi_epi32(rxF[i],xmm0);//upacking high 64 bits
+    //////////////////////////////////////////////////////
+    llr32[0] = _mm_extract_epi32(llr128[0],0); //((uint32_t *)&llr128[0])[0];
+    llr32[1] = _mm_extract_epi32(llr128[0],1); //((uint32_t *)&llr128[0])[1];
+    llr32[2] = _mm_extract_epi32(llr128[0],2); //((uint32_t *)&llr128[0])[2];
+    llr32[3] = _mm_extract_epi32(llr128[0],3); //((uint32_t *)&llr128[0])[3];
+    llr32[4] = _mm_extract_epi32(llr128[1],0); //((uint32_t *)&llr128[1])[0];
+    llr32[5] = _mm_extract_epi32(llr128[1],1); //((uint32_t *)&llr128[1])[1];
+    llr32[6] = _mm_extract_epi32(llr128[1],2); //((uint32_t *)&llr128[1])[2];
+    llr32[7] = _mm_extract_epi32(llr128[1],3); //((uint32_t *)&llr128[1])[3];
+    llr32+=8;
+  }
+
+  _mm_empty();
+  _m_empty();
+#endif
+}
+
 
 void dlsch_16qam_llr_SIC (LTE_DL_FRAME_PARMS *frame_parms,
                           int32_t **rxdataF_comp,
@@ -1206,7 +1335,114 @@ void dlsch_64qam_llr(LTE_DL_FRAME_PARMS *frame_parms,
   _m_empty();
 #endif
 }
+//KhodrSaaifan
+void dlsch_64qam_llr_tm4(LTE_DL_FRAME_PARMS *frame_parms,
+                     int32_t **rxdataF_comp,
+                     int16_t *dlsch_llr,
+                     int32_t **dl_ch_mag,
+                     int32_t **dl_ch_magb,
+                     uint8_t symbol,
+                     uint8_t first_symbol_flag,
+                     uint16_t nb_rb,
+                     uint16_t pbch_pss_sss_adjust,
+                     //int16_t **llr_save,
+                     uint32_t llr_offset,
+                     uint8_t beamforming_mode,uint8_t Nl)
+{
+#if defined(__x86_64__) || defined(__i386__)
+  __m128i *rxF = (__m128i*)&rxdataF_comp[0][(symbol*frame_parms->N_RB_DL*12*Nl)];
+  __m128i *ch_mag,*ch_magb;
 
+  int i,len,len2;
+  unsigned char symbol_mod,len_mod4;
+  short *llr;
+  int16_t *llr2;
+
+
+
+  llr = dlsch_llr;
+
+
+  symbol_mod = (symbol>=(7-frame_parms->Ncp)) ? symbol-(7-frame_parms->Ncp) : symbol;
+
+
+  ch_mag = (__m128i*)&dl_ch_mag[0][(symbol*frame_parms->N_RB_DL*12*Nl)];
+  ch_magb = (__m128i*)&dl_ch_magb[0][(symbol*frame_parms->N_RB_DL*12*Nl)];
+
+  if ((symbol_mod==0) || (symbol_mod==(4-frame_parms->Ncp))) {
+    if (frame_parms->mode1_flag==0)
+      len = ((nb_rb*8) - (2*pbch_pss_sss_adjust/3))*Nl;
+    else
+      len = (nb_rb*10) - (5*pbch_pss_sss_adjust/6);
+  } else if((beamforming_mode==7) && (frame_parms->Ncp==0) && (symbol==3 || symbol==6 || symbol==9 || symbol==12)){
+      len = (nb_rb*9) - (3*pbch_pss_sss_adjust/4);
+  } else if((beamforming_mode==7) && (frame_parms->Ncp==1) && (symbol==4 || symbol==7 || symbol==10)){
+      len = (nb_rb*8) - (2*pbch_pss_sss_adjust/3);
+  } else {
+    len = ((nb_rb*12) - pbch_pss_sss_adjust)*Nl;
+  }
+
+
+
+  llr2 = llr;
+  llr += (len*6);
+
+  len_mod4 =len&3;
+  len2=len>>2;  // length in quad words (4 REs)
+  len2+=((len_mod4==0)?0:1);
+
+  for (i=0; i<len2; i++) {
+    xmm1 = _mm_abs_epi16(rxF[i]);
+    xmm1 = _mm_subs_epi16(ch_mag[i],xmm1);
+    xmm2 = _mm_abs_epi16(xmm1);
+    xmm2 = _mm_subs_epi16(ch_magb[i],xmm2);
+
+
+    llr2[0] = ((short *)&rxF[i])[0];
+    llr2[1] = ((short *)&rxF[i])[1];
+
+    llr2[2] = _mm_extract_epi16(xmm1,0);
+    llr2[3] = _mm_extract_epi16(xmm1,1);//((short *)&xmm1)[j+1];
+    llr2[4] = _mm_extract_epi16(xmm2,0);//((short *)&xmm2)[j];
+    llr2[5] = _mm_extract_epi16(xmm2,1);//((short *)&xmm2)[j+1];
+
+
+    llr2+=6;
+    llr2[0] = ((short *)&rxF[i])[2];
+    llr2[1] = ((short *)&rxF[i])[3];
+
+    llr2[2] = _mm_extract_epi16(xmm1,2);
+    llr2[3] = _mm_extract_epi16(xmm1,3);//((short *)&xmm1)[j+1];
+    llr2[4] = _mm_extract_epi16(xmm2,2);//((short *)&xmm2)[j];
+    llr2[5] = _mm_extract_epi16(xmm2,3);//((short *)&xmm2)[j+1];
+
+
+    llr2+=6;
+    llr2[0] = ((short *)&rxF[i])[4];
+    llr2[1] = ((short *)&rxF[i])[5];
+
+    llr2[2] = _mm_extract_epi16(xmm1,4);
+    llr2[3] = _mm_extract_epi16(xmm1,5);//((short *)&xmm1)[j+1];
+    llr2[4] = _mm_extract_epi16(xmm2,4);//((short *)&xmm2)[j];
+    llr2[5] = _mm_extract_epi16(xmm2,5);//((short *)&xmm2)[j+1];
+
+    llr2+=6;
+    llr2[0] = ((short *)&rxF[i])[6];
+    llr2[1] = ((short *)&rxF[i])[7];
+
+    llr2[2] = _mm_extract_epi16(xmm1,6);
+    llr2[3] = _mm_extract_epi16(xmm1,7);//((short *)&xmm1)[j+1];
+    llr2[4] = _mm_extract_epi16(xmm2,6);//((short *)&xmm2)[j];
+    llr2[5] = _mm_extract_epi16(xmm2,7);//((short *)&xmm2)[j+1];
+
+    llr2+=6;
+
+  }
+
+  _mm_empty();
+  _m_empty();
+#endif
+}
 //#if 0
 void dlsch_64qam_llr_SIC(LTE_DL_FRAME_PARMS *frame_parms,
                          int32_t **rxdataF_comp,

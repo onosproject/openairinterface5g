@@ -1046,6 +1046,7 @@ void phy_init_lte_ue__PDSCH( LTE_UE_PDSCH* const pdsch, const LTE_DL_FRAME_PARMS
   pdsch->rxdataF_ext            = (int32_t**)malloc16_clear( 8*sizeof(int32_t*) );
   pdsch->rxdataF_uespec_pilots  = (int32_t**)malloc16_clear( 8*sizeof(int32_t*) );
   pdsch->rxdataF_comp0          = (int32_t**)malloc16_clear( 8*sizeof(int32_t*) );
+  pdsch->rxdataF_comp0_tm4      = (int32_t**)malloc16_clear( 8*sizeof(int32_t*) );
   pdsch->rho                    = (int32_t**)malloc16_clear( fp->nb_antennas_rx*sizeof(int32_t*) );
   pdsch->dl_ch_estimates_ext    = (int32_t**)malloc16_clear( 8*sizeof(int32_t*) );
   pdsch->dl_bf_ch_estimates     = (int32_t**)malloc16_clear( 8*sizeof(int32_t*) );
@@ -1054,6 +1055,8 @@ void phy_init_lte_ue__PDSCH( LTE_UE_PDSCH* const pdsch, const LTE_DL_FRAME_PARMS
   //pdsch->dl_ch_rho2_ext         = (int32_t**)malloc16_clear( 8*sizeof(int32_t*) );
   pdsch->dl_ch_mag0             = (int32_t**)malloc16_clear( 8*sizeof(int32_t*) );
   pdsch->dl_ch_magb0            = (int32_t**)malloc16_clear( 8*sizeof(int32_t*) );
+  pdsch->dl_ch_mag0_tm4             = (int32_t**)malloc16_clear( 8*sizeof(int32_t*) );
+  pdsch->dl_ch_magb0_tm4            = (int32_t**)malloc16_clear( 8*sizeof(int32_t*) );
 
 
   // the allocated memory size is fixed:
@@ -1068,6 +1071,9 @@ void phy_init_lte_ue__PDSCH( LTE_UE_PDSCH* const pdsch, const LTE_DL_FRAME_PARMS
       pdsch->rxdataF_ext[idx]             = (int32_t*)malloc16_clear( sizeof(int32_t) * num );
       pdsch->rxdataF_uespec_pilots[idx]   = (int32_t*)malloc16_clear( sizeof(int32_t) * fp->N_RB_DL*12);
       pdsch->rxdataF_comp0[idx]           = (int32_t*)malloc16_clear( sizeof(int32_t) * num );
+      pdsch->rxdataF_comp0_tm4[idx] =(int32_t*)malloc16_clear( sizeof(int32_t) * 2 *num );
+      pdsch->dl_ch_mag0_tm4[idx]   =(int32_t*)malloc16_clear( sizeof(int32_t) * 2 *num );
+      pdsch->dl_ch_magb0_tm4[idx]  =(int32_t*)malloc16_clear( sizeof(int32_t) * 2 *num );
       pdsch->dl_ch_estimates_ext[idx]     = (int32_t*)malloc16_clear( sizeof(int32_t) * num );
       pdsch->dl_bf_ch_estimates[idx]      = (int32_t*)malloc16_clear( sizeof(int32_t) * fp->ofdm_symbol_size*7*2);
       pdsch->dl_bf_ch_estimates_ext[idx]  = (int32_t*)malloc16_clear( sizeof(int32_t) * num );

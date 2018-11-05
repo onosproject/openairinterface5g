@@ -544,19 +544,17 @@ void lte_ue_measurements(PHY_VARS_UE *ue,
 
   eNB_id=0;
 
-  /*SFN:
+  /*Khodr Saaifan:
    * Rank Estimation:
-   * We shall control the function according to ue->transmission_mode[eNB_id]
-   * where ue->transmission_mode[eNB_id]=3 or 4 for TM3/TM4
+   * We activate it as a feature for 2X2 MIMO
    *
    * */
-#ifdef FHG_TM4
+  if ((frame_parms->nb_antennas_rx>1) && (frame_parms->nb_antenna_ports_eNB>1))
   rank_tm3_tm4 = rank_estimation_tm3_tm4(&ue->common_vars.common_vars_rx_data_per_thread[subframe&0x1].dl_ch_estimates[eNB_id][0][4],
                                              &ue->common_vars.common_vars_rx_data_per_thread[subframe&0x1].dl_ch_estimates[eNB_id][2][4],//2
                                              &ue->common_vars.common_vars_rx_data_per_thread[subframe&0x1].dl_ch_estimates[eNB_id][1][4],//1
                                              &ue->common_vars.common_vars_rx_data_per_thread[subframe&0x1].dl_ch_estimates[eNB_id][3][4],//3
                                              N_RB_DL);
-#endif
 
   ue->measurements.rank[eNB_id] = rank_tm3_tm4;
 
@@ -814,7 +812,7 @@ void lte_ue_measurements(PHY_VARS_UE *ue,
      pmi2hex_2Ar1(quantize_subband_pmi2(&ue->measurements,eNB,1,7));*/
 
     }  // if frame_parms->mode1_flag == 0
-    else //SFN: we need still to fix here for SISO
+    else //SFN: we fix SISO measurements
     {
       // cqi information only for mode 1
       for (aarx=0; aarx<frame_parms->nb_antennas_rx; aarx++) {
@@ -829,23 +827,27 @@ void lte_ue_measurements(PHY_VARS_UE *ue,
           if (subband<6) {
             //      for (i=0;i<48;i++)
             //        printf("subband %d (%d) : %d,%d\n",subband,i,((short *)dl_ch0)[2*i],((short *)dl_ch0)[1+(2*i)]);
-            ue->measurements.subband_cqi[eNB_id][aarx][subband] =
-              (signal_energy_nodc(dl_ch0,48)) - ue->measurements.n0_power[aarx];
-
-
+            ue->measurements.subband_cqi[eNB_id][aarx][subband] = (signal_energy_nodc(dl_ch0,48));
             if (ue->measurements.subband_cqi[eNB_id][aarx][subband]<0)
             	ue->measurements.subband_cqi[eNB_id][aarx][subband] =0;
 
             ue->measurements.subband_cqi_tot[eNB_id][subband] += ue->measurements.subband_cqi[eNB_id][aarx][subband];
-            ue->measurements.subband_cqi_dB[eNB_id][aarx][subband] = dB_fixed2(ue->measurements.subband_cqi[eNB_id][aarx][subband],
-                ue->measurements.n0_power[aarx]);
+            if (aarx==(frame_parms->nb_antennas_rx-1))
+            ue->measurements.subband_cqi_tot[eNB_id][subband] /=frame_parms->nb_antennas_rx;
+
+                  ue->measurements.subband_cqi_dB[eNB_id][aarx][subband] = dB_fixed2(ue->measurements.subband_cqi[eNB_id][aarx][subband],
+                      ue->measurements.n0_power[aarx]);
+
           } else {
             //      for (i=0;i<12;i++)
             //        printf("subband %d (%d) : %d,%d\n",subband,i,((short *)dl_ch0)[2*i],((short *)dl_ch0)[1+(2*i)]);
-            ue->measurements.subband_cqi[eNB_id][aarx][subband] = (signal_energy_nodc(dl_ch0,12) ) - ue->measurements.n0_power[aarx];
+            ue->measurements.subband_cqi[eNB_id][aarx][subband] = (signal_energy_nodc(dl_ch0,12) );
             if (ue->measurements.subband_cqi[eNB_id][aarx][subband]<0)
             	ue->measurements.subband_cqi[eNB_id][aarx][subband] =0;
             ue->measurements.subband_cqi_tot[eNB_id][subband] += ue->measurements.subband_cqi[eNB_id][aarx][subband];
+            if (aarx==(frame_parms->nb_antennas_rx-1))
+                 ue->measurements.subband_cqi_tot[eNB_id][subband] /=frame_parms->nb_antennas_rx;
+
             ue->measurements.subband_cqi_dB[eNB_id][aarx][subband] = dB_fixed2(ue->measurements.subband_cqi[eNB_id][aarx][subband],
                 ue->measurements.n0_power[aarx]);
           }
@@ -856,8 +858,9 @@ void lte_ue_measurements(PHY_VARS_UE *ue,
       }
 
       for (subband=0; subband<nb_subbands; subband++) {
-        ue->measurements.subband_cqi_tot_dB[eNB_id][subband] = dB_fixed2(ue->measurements.subband_cqi_tot[eNB_id][subband],ue->measurements.n0_power_tot);
-      }
+          ue->measurements.subband_cqi_tot_dB[eNB_id][subband] = dB_fixed2(ue->measurements.subband_cqi_tot[eNB_id][subband],ue->measurements.n0_power_tot);
+          //    msg("subband_cqi_tot[%d][%d] => %d dB (n0 %d)\n",eNB_id,subband,ue->measurements.subband_cqi_tot_dB[eNB_id][subband],ue->measurements.n0_power_tot);
+        }
     }
 
     //ue->measurements.rank[eNB_id] = 0;

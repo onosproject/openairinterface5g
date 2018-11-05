@@ -529,9 +529,10 @@ int dump_ue_stats(PHY_VARS_UE *ue, UE_rxtx_proc_t *proc,char* buffer, int length
 
       if (ue->transmission_mode[eNB] == 6)
         len += sprintf(&buffer[len], "[UE PROC] Mode 6 Wideband CQI eNB %d : %d dB\n",eNB,ue->measurements.precoded_cqi_dB[eNB][0]);
-
-      for (harq_pid=0;harq_pid<8;harq_pid++) {
-	len+=sprintf(&buffer[len],"[UE PROC] eNB %d: CW 0 harq_pid %d, mcs %d:",eNB,harq_pid,ue->dlsch[0][0][0]->harq_processes[harq_pid]->mcs);
+ 	 len += sprintf(&buffer[len], "/***************/\n");
+    for (harq_pid=0;harq_pid<8;harq_pid++) {
+	len+=sprintf(&buffer[len],"[UE PROC] eNB %d: CW 0 harq_pid %d, mcs %d:\n",eNB,harq_pid,ue->dlsch[0][0][0]->harq_processes[harq_pid]->mcs);
+	 len += sprintf(&buffer[len], "eNB %d: MIMO Mode = %d, Nl = %d, nb_rb = %d TBS = %d\n",eNB,ue->dlsch[0][0][0]->harq_processes[harq_pid]->mimo_mode==15? 4 : 2,ue->dlsch[0][0][0]->harq_processes[harq_pid]->Nl,ue->dlsch[0][0][0]->harq_processes[harq_pid]->nb_rb,ue->dlsch[0][0][0]->harq_processes[harq_pid]->TBS);
 	for (round=0;round<8;round++)
 	  len+=sprintf(&buffer[len],"%d/%d ",
 		       ue->dlsch[0][0][0]->harq_processes[harq_pid]->errors[round],
@@ -543,7 +544,7 @@ int dump_ue_stats(PHY_VARS_UE *ue, UE_rxtx_proc_t *proc,char* buffer, int length
 
         len += sprintf(&buffer[len], "[UE PROC] eNB %d: dl_power_off = %d\n",eNB,ue->dlsch[0][0][0]->harq_processes[0]->dl_power_off);
 
-	for (harq_pid=0;harq_pid<8;harq_pid++) {
+     for (harq_pid=0;harq_pid<8;harq_pid++) {
 	  len+=sprintf(&buffer[len],"[UE PROC] eNB %d: CW 1 harq_pid %d, mcs %d:",eNB,harq_pid,ue->dlsch[0][0][1]->harq_processes[0]->mcs);
 	  for (round=0;round<8;round++)
 	    len+=sprintf(&buffer[len],"%d/%d ",

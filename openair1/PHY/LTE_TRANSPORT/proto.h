@@ -826,7 +826,16 @@ int32_t dlsch_qpsk_llr(LTE_DL_FRAME_PARMS *frame_parms,
                        uint16_t pbch_pss_sss_adj,
                        //int16_t **llr128p,
                        uint8_t beamforming_mode);
-
+//KhodrSaaifan
+int dlsch_qpsk_llr_tm4(LTE_DL_FRAME_PARMS *frame_parms,
+                   int32_t **rxdataF_comp,
+                   int16_t *dlsch_llr,
+                   uint8_t symbol,
+                   uint8_t first_symbol_flag,
+                   uint16_t nb_rb,
+                   uint16_t pbch_pss_sss_adjust,
+                   uint8_t beamforming_mode,
+                   uint8_t Nl);
 /**
    \brief This function generates log-likelihood ratios (decoder input) for single-stream 16QAM received waveforms
    @param frame_parms Frame descriptor structure
@@ -862,6 +871,18 @@ void dlsch_16qam_llr(LTE_DL_FRAME_PARMS *frame_parms,
                      uint16_t pbch_pss_sss_adjust,
                      int16_t **llr128p,
                      uint8_t beamforming_mode);
+//KhodrSaaifan
+void dlsch_16qam_llr_tm4(LTE_DL_FRAME_PARMS *frame_parms,
+                     int32_t **rxdataF_comp,
+                     int16_t *dlsch_llr,
+                     int32_t **dl_ch_mag,
+                     uint8_t symbol,
+                     uint8_t first_symbol_flag,
+                     uint16_t nb_rb,
+                     uint16_t pbch_pss_sss_adjust,
+                     int16_t **llr128p,
+                     uint8_t beamforming_mode,
+                     uint8_t Nl);
 /**
    \brief This function generates log-likelihood ratios (decoder input) for single-stream 16QAM received waveforms
    @param frame_parms Frame descriptor structure
@@ -914,6 +935,21 @@ void dlsch_64qam_llr(LTE_DL_FRAME_PARMS *frame_parms,
                      uint32_t llr_offset,
                      uint8_t beamforming_mode);
 
+//KhodrSaaifan
+void dlsch_64qam_llr_tm4(LTE_DL_FRAME_PARMS *frame_parms,
+		             int32_t **rxdataF_comp,
+                     int16_t *dlsch_llr,
+                     int32_t **dl_ch_mag,
+                     int32_t **dl_ch_magb,
+                     uint8_t symbol,
+                     uint8_t first_symbol_flag,
+                     uint16_t nb_rb,
+                     uint16_t pbch_pss_sss_adjust,
+                     //int16_t **llr_save,
+                     uint32_t llr_offset,
+                     uint8_t beamforming_mode,
+                     uint8_t Nl);
+
 
 /** \fn dlsch_siso(LTE_DL_FRAME_PARMS *frame_parms,
     int32_t **rxdataF_comp,
@@ -954,6 +990,30 @@ void dlsch_alamouti(LTE_DL_FRAME_PARMS *frame_parms,
                     int32_t **dl_ch_magb,
                     uint8_t symbol,
                     uint16_t nb_rb);
+
+/** \fn KhodrSaaifan: dlsch_postcoding_tm4(LTE_DL_FRAME_PARMS *frame_parms,
+    int32_t **rxdataF_comp,
+    int32_t **dl_ch_mag,
+    int32_t **dl_ch_magb,
+    uint8_t symbol,
+    uint16_t nb_rb)
+    \brief This function does Alamouti combining on RX and prepares LLR inputs by skipping pilots, PBCH and primary/secondary synchronization signals.
+    @param frame_parms Frame descriptor structure
+    @param rxdataF_comp Compensated channel output
+    @param dl_ch_mag First squared-magnitude of channel (16QAM and 64QAM) for LLR computation.  Alamouti combining should be performed on this as well. Result is stored in first antenna position
+    @param dl_ch_magb Second squared-magnitude of channel (64QAM only) for LLR computation.  Alamouti combining should be performed on this as well. Result is stored in first antenna position
+    @param symbol Symbol in sub-frame
+    @param nb_rb Number of RBs in this allocation
+*/
+void dlsch_postcoding_tm4(LTE_DL_FRAME_PARMS *frame_parms,
+                    int **rxdataF_comp,
+                    int **dl_ch_mag,
+                    int **dl_ch_magb,
+                    int **rxdataF_comp_tm4,
+                    int **dl_ch_mag_tm4,
+                    int **dl_ch_magb_tm4,
+                    uint8_t symbol,
+                    uint16_t nb_rb, uint8_t N_l);
 
 /** \fn dlsch_antcyc(LTE_DL_FRAME_PARMS *frame_parms,
     int32_t **rxdataF_comp,

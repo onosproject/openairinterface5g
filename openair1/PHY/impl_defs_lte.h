@@ -614,7 +614,9 @@ typedef enum {
   DUALSTREAM_PUSCH_PRECODING=11,
   TM7=12,
   TM8=13,
-  TM9_10=14
+  TM9_10=14,
+  ////sfn: test TM4
+  TM4_NO_PRECODING=15
 } MIMO_mode_t;
 
 typedef enum {
@@ -850,6 +852,10 @@ typedef struct {
   /// - first index: ? [0..7] (hard coded) FIXME! accessed via \c nb_antennas_rx
   /// - second index: ? [0..168*N_RB_DL[
   int32_t **rxdataF_comp0;
+  /// \brief Received frequency-domain signal after extraction and channel compensation.
+  /// - first index: ? [0..7] (hard coded) FIXME! accessed via \c nb_antennas_rx
+  /// - second index: ? [0..N_l*168*N_RB_DL[
+  int32_t **rxdataF_comp0_tm4;
   /// \brief Received frequency-domain signal after extraction and channel compensation for the second stream. For the SIC receiver we need to store the history of this for each harq process and round
   /// - first index: ? [0..7] (hard coded) accessed via \c harq_pid
   /// - second index: ? [0..7] (hard coded) accessed via \c round
@@ -887,12 +893,20 @@ typedef struct {
   int32_t **dl_ch_mag0;
   /// \brief Magnitude of Downlink Channel second layer (16QAM level/First 64QAM level).
   /// - first index: ? [0..7] (hard coded) FIXME! accessed via \c nb_antennas_rx
-  /// - second index: ? [0..168*N_RB_DL[
+  /// - second index: ? [0..N_l*168*N_RB_DL[
+  int32_t **dl_ch_mag0_tm4;
+    /// \brief Magnitude of Downlink Channel second layer (16QAM level/First 64QAM level).
+    /// - first index: ? [0..7] (hard coded) FIXME! accessed via \c nb_antennas_rx
+    /// - second index: ? [0..168*N_RB_DL[
   int32_t **dl_ch_mag1[8][8];
   /// \brief Magnitude of Downlink Channel, first layer (2nd 64QAM level).
   /// - first index: ? [0..7] (hard coded) FIXME! accessed via \c nb_antennas_rx
   /// - second index: ? [0..168*N_RB_DL[
   int32_t **dl_ch_magb0;
+  /// \brief Magnitude of Downlink Channel second layer (2nd 64QAM level).
+  /// - first index: ? [0..7] (hard coded) FIXME! accessed via \c nb_antennas_rx
+  /// - second index: ? [0..N_l*168*N_RB_DL[
+  int32_t **dl_ch_magb0_tm4;
   /// \brief Magnitude of Downlink Channel second layer (2nd 64QAM level).
   /// - first index: ? [0..7] (hard coded) FIXME! accessed via \c nb_antennas_rx
   /// - second index: ? [0..168*N_RB_DL[

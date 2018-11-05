@@ -3592,7 +3592,7 @@ uint16_t dci_decoding_procedure(PHY_VARS_UE *ue,
     ra_rnti = ue->prach_resources[eNB_id]->ra_RNTI;
 
   // Now check UE_SPEC format0/1A ue_spec search spaces at aggregation 8
-  //  printf("[DCI search] Format 0/1A aggregation 8\n");
+  //  printf("[DCI search] Format 0/1A aggregation 1\n");
   dci_decoding_procedure0(pdcch_vars,0,mode,
                           subframe,
                           dci_alloc,
@@ -3694,7 +3694,7 @@ uint16_t dci_decoding_procedure(PHY_VARS_UE *ue,
 
   if (dci_cnt == 0)
   {
-  // Now check UE_SPEC format 0 search spaces at aggregation 1
+  // Now check UE_SPEC format 0 search spaces at aggregation 8
   dci_decoding_procedure0(pdcch_vars,0,mode,
                           subframe,
                           dci_alloc,
@@ -3726,7 +3726,7 @@ uint16_t dci_decoding_procedure(PHY_VARS_UE *ue,
   //printf("[DCI search] Format 0 aggregation 8 dci_cnt %d\n",dci_cnt);
 
   }
-  // These are for CRNTI based on transmission mode
+  // These are for CRNTI based on transmission mode //KhodrSaaifan
   if ((tmode < 3) || (tmode == 7)) {
     // Now check UE_SPEC format 1 search spaces at aggregation 1
     old_dci_cnt=dci_cnt;
@@ -3754,12 +3754,12 @@ uint16_t dci_decoding_procedure(PHY_VARS_UE *ue,
                             &CCEmap2);
     //printf("[DCI search] Format 1 aggregation 1 dci_cnt %d\n",dci_cnt);
 
-    if ((CCEmap0==0xffff) ||
+   /* if ((CCEmap0==0xffff) ||
         (format_c_found==1))
       return(dci_cnt);
 
     if (dci_cnt>old_dci_cnt)
-      return(dci_cnt);
+      return(dci_cnt);*/
 
     // Now check UE_SPEC format 1 search spaces at aggregation 2
     old_dci_cnt=dci_cnt;
@@ -3787,12 +3787,11 @@ uint16_t dci_decoding_procedure(PHY_VARS_UE *ue,
                             &CCEmap2);
     //printf("[DCI search] Format 1 aggregation 2 dci_cnt %d\n",dci_cnt);
 
-    if ((CCEmap0==0xffff)||
+    /*if ((CCEmap0==0xffff)||
         (format_c_found==1))
       return(dci_cnt);
-
     if (dci_cnt>old_dci_cnt)
-      return(dci_cnt);
+      return(dci_cnt);*/
 
     // Now check UE_SPEC format 1 search spaces at aggregation 4
     old_dci_cnt=dci_cnt;
@@ -3820,12 +3819,11 @@ uint16_t dci_decoding_procedure(PHY_VARS_UE *ue,
                             &CCEmap2);
     //printf("[DCI search] Format 1 aggregation 4 dci_cnt %d\n",dci_cnt);
 
-    if ((CCEmap0==0xffff)||
+    /*if ((CCEmap0==0xffff)||
         ((format0_found==1)&&(format_c_found==1)))
       return(dci_cnt);
-
     if (dci_cnt>old_dci_cnt)
-      return(dci_cnt);
+      return(dci_cnt);*/
 
     //#ifdef ALL_AGGREGATION
     // Now check UE_SPEC format 1 search spaces at aggregation 8
@@ -3854,12 +3852,11 @@ uint16_t dci_decoding_procedure(PHY_VARS_UE *ue,
                             &CCEmap2);
     //printf("[DCI search] Format 1 aggregation 8 dci_cnt %d\n",dci_cnt);
 
-    if ((CCEmap0==0xffff)||
+    /*if ((CCEmap0==0xffff)||
         ((format0_found==1)&&(format_c_found==1)))
       return(dci_cnt);
-
     if (dci_cnt>old_dci_cnt)
-      return(dci_cnt);
+      return(dci_cnt);*/
 
     //#endif //ALL_AGGREGATION
 /* sfn: Enable Format2 seaching in UE space
@@ -3877,7 +3874,7 @@ uint16_t dci_decoding_procedure(PHY_VARS_UE *ue,
                             ((ue->decode_SIB == 1) ? SI_RNTI : 0),
                             ra_rnti,
 			    P_RNTI,
-                            0,
+                            3,
                             format1A,
                             format1A,
                             format1A,
@@ -3910,7 +3907,7 @@ uint16_t dci_decoding_procedure(PHY_VARS_UE *ue,
                             ((ue->decode_SIB == 1) ? SI_RNTI : 0),
                             ra_rnti,
 			    P_RNTI,
-                            1,
+                            2,
                             format1A,
                             format1A,
                             format1A,
@@ -3943,7 +3940,7 @@ uint16_t dci_decoding_procedure(PHY_VARS_UE *ue,
                             ((ue->decode_SIB == 1) ? SI_RNTI : 0),
                             ra_rnti,
 			    P_RNTI,
-                            2,
+                            1,
                             format1A,
                             format1A,
                             format1A,
@@ -3977,7 +3974,7 @@ uint16_t dci_decoding_procedure(PHY_VARS_UE *ue,
                             ((ue->decode_SIB == 1) ? SI_RNTI : 0),
                             ra_rnti,
 			    P_RNTI,
-                            3,
+                            0,
                             format1A,
                             format1A,
                             format1A,
