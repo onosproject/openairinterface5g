@@ -517,10 +517,10 @@ void rrc_mac_config_req_NB_IoT(
         
         nprach_parameter = radioResourceConfigCommon->nprach_Config_r13.nprach_ParametersList_r13.list.array[0];
         LOG_I(MAC,"NPRACH 0 setting: NumRepetiion: %ld Period: %ld size of list %d\n",nprach_parameter->numRepetitionsPerPreambleAttempt_r13,nprach_parameter->nprach_Periodicity_r13,radioResourceConfigCommon->nprach_Config_r13.nprach_ParametersList_r13.list.size);
-        mac_config->mac_NPRACH_ConfigSIB[0].mac_numRepetitionsPerPreambleAttempt_NB_IoT = nprach_parameter->numRepetitionsPerPreambleAttempt_r13;
-        mac_config->mac_NPRACH_ConfigSIB[0].mac_npdcch_NumRepetitions_RA_NB_IoT         = nprach_parameter->npdcch_NumRepetitions_RA_r13;
-        mac_config->mac_NPRACH_ConfigSIB[0].mac_npdcch_StartSF_CSS_RA_NB_IoT            = nprach_parameter->npdcch_StartSF_CSS_RA_r13;
-        mac_config->mac_NPRACH_ConfigSIB[0].mac_npdcch_Offset_RA_NB_IoT                 = nprach_parameter->npdcch_Offset_RA_r13;
+        mac_config->mac_NPRACH_ConfigSIB[0].mac_numRepetitionsPerPreambleAttempt_NB_IoT = rachrepeat[nprach_parameter->numRepetitionsPerPreambleAttempt_r13];
+        mac_config->mac_NPRACH_ConfigSIB[0].mac_npdcch_NumRepetitions_RA_NB_IoT         = rmax[nprach_parameter->npdcch_NumRepetitions_RA_r13];
+        mac_config->mac_NPRACH_ConfigSIB[0].mac_npdcch_StartSF_CSS_RA_NB_IoT            = gvalue[nprach_parameter->npdcch_StartSF_CSS_RA_r13];
+        mac_config->mac_NPRACH_ConfigSIB[0].mac_npdcch_Offset_RA_NB_IoT                 = pdcchoffset[nprach_parameter->npdcch_Offset_RA_r13];
         mac_inst->npdcch_config_common[0].R_max                                         = rmax[nprach_parameter->npdcch_NumRepetitions_RA_r13];
         mac_inst->npdcch_config_common[0].G                                             = gvalue[nprach_parameter->npdcch_StartSF_CSS_RA_r13];
         mac_inst->npdcch_config_common[0].a_offset                                      = pdcchoffset[nprach_parameter->npdcch_Offset_RA_r13];
@@ -531,10 +531,10 @@ void rrc_mac_config_req_NB_IoT(
         if ( radioResourceConfigCommon->nprach_Config_r13.nprach_ParametersList_r13.list.array[1] != NULL) {
         nprach_parameter = radioResourceConfigCommon->nprach_Config_r13.nprach_ParametersList_r13.list.array[1];
         LOG_I(MAC,"NPRACH 1 setting: NumRepetiion: %ld size of list %d\n",nprach_parameter->numRepetitionsPerPreambleAttempt_r13,radioResourceConfigCommon->nprach_Config_r13.nprach_ParametersList_r13.list.size);
-        mac_config->mac_NPRACH_ConfigSIB[1].mac_numRepetitionsPerPreambleAttempt_NB_IoT = nprach_parameter->numRepetitionsPerPreambleAttempt_r13;
-        mac_config->mac_NPRACH_ConfigSIB[1].mac_npdcch_NumRepetitions_RA_NB_IoT         = nprach_parameter->npdcch_NumRepetitions_RA_r13;
-        mac_config->mac_NPRACH_ConfigSIB[1].mac_npdcch_StartSF_CSS_RA_NB_IoT            = nprach_parameter->npdcch_StartSF_CSS_RA_r13;
-        mac_config->mac_NPRACH_ConfigSIB[1].mac_npdcch_Offset_RA_NB_IoT                 = nprach_parameter->npdcch_Offset_RA_r13;
+        mac_config->mac_NPRACH_ConfigSIB[1].mac_numRepetitionsPerPreambleAttempt_NB_IoT = rachrepeat[nprach_parameter->numRepetitionsPerPreambleAttempt_r13];
+        mac_config->mac_NPRACH_ConfigSIB[1].mac_npdcch_NumRepetitions_RA_NB_IoT         = rmax[nprach_parameter->npdcch_NumRepetitions_RA_r13];
+        mac_config->mac_NPRACH_ConfigSIB[1].mac_npdcch_StartSF_CSS_RA_NB_IoT            = gvalue[nprach_parameter->npdcch_StartSF_CSS_RA_r13];
+        mac_config->mac_NPRACH_ConfigSIB[1].mac_npdcch_Offset_RA_NB_IoT                 = pdcchoffset[nprach_parameter->npdcch_Offset_RA_r13];
         mac_inst->npdcch_config_common[1].R_max                                         = rmax[nprach_parameter->npdcch_NumRepetitions_RA_r13];
         mac_inst->npdcch_config_common[1].G                                             = gvalue[nprach_parameter->npdcch_StartSF_CSS_RA_r13];
         mac_inst->npdcch_config_common[1].a_offset                                      = pdcchoffset[nprach_parameter->npdcch_Offset_RA_r13];
@@ -544,10 +544,10 @@ void rrc_mac_config_req_NB_IoT(
         if ( radioResourceConfigCommon->nprach_Config_r13.nprach_ParametersList_r13.list.array[2] != NULL) {
         nprach_parameter = radioResourceConfigCommon->nprach_Config_r13.nprach_ParametersList_r13.list.array[2];
         LOG_I(MAC,"NPRACH 2 setting: NumRepetiion: %ld size of list %d\n",nprach_parameter->numRepetitionsPerPreambleAttempt_r13,radioResourceConfigCommon->nprach_Config_r13.nprach_ParametersList_r13.list.size);
-        mac_config->mac_NPRACH_ConfigSIB[2].mac_numRepetitionsPerPreambleAttempt_NB_IoT = nprach_parameter->numRepetitionsPerPreambleAttempt_r13;
-        mac_config->mac_NPRACH_ConfigSIB[2].mac_npdcch_NumRepetitions_RA_NB_IoT         = nprach_parameter->npdcch_NumRepetitions_RA_r13;
-        mac_config->mac_NPRACH_ConfigSIB[2].mac_npdcch_StartSF_CSS_RA_NB_IoT            = nprach_parameter->npdcch_StartSF_CSS_RA_r13;
-        mac_config->mac_NPRACH_ConfigSIB[2].mac_npdcch_Offset_RA_NB_IoT                 = nprach_parameter->npdcch_Offset_RA_r13;
+        mac_config->mac_NPRACH_ConfigSIB[2].mac_numRepetitionsPerPreambleAttempt_NB_IoT = rachrepeat[nprach_parameter->numRepetitionsPerPreambleAttempt_r13];
+        mac_config->mac_NPRACH_ConfigSIB[2].mac_npdcch_NumRepetitions_RA_NB_IoT         = rmax[nprach_parameter->npdcch_NumRepetitions_RA_r13];
+        mac_config->mac_NPRACH_ConfigSIB[2].mac_npdcch_StartSF_CSS_RA_NB_IoT            = gvalue[nprach_parameter->npdcch_StartSF_CSS_RA_r13];
+        mac_config->mac_NPRACH_ConfigSIB[2].mac_npdcch_Offset_RA_NB_IoT                 = pdcchoffset[nprach_parameter->npdcch_Offset_RA_r13];
         mac_inst->npdcch_config_common[2].R_max                                         = rmax[nprach_parameter->npdcch_NumRepetitions_RA_r13];
         mac_inst->npdcch_config_common[2].G                                             = gvalue[nprach_parameter->npdcch_StartSF_CSS_RA_r13];
         mac_inst->npdcch_config_common[2].a_offset                                      = pdcchoffset[nprach_parameter->npdcch_Offset_RA_r13];

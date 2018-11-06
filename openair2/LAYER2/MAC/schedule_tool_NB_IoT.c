@@ -1381,6 +1381,8 @@ available_resource_DL_t *check_resource_DL(eNB_MAC_INST_NB_IoT *mac_inst, int ch
         if(num_subframes <= calculate_DLSF(mac_inst, check_subframe, pt->end_subframe)){
 
             diff_gap = num_subframes - calculate_DLSF(mac_inst, check_subframe, end_subframe);
+            
+            LOG_D(MAC,"Diff_gap : %d num_subframes : %d \n",diff_gap,num_subframes);
 
             while(diff_gap){
                 ++end_subframe;
@@ -1388,6 +1390,7 @@ available_resource_DL_t *check_resource_DL(eNB_MAC_INST_NB_IoT *mac_inst, int ch
                     --diff_gap;
                 }
             }
+
             *out_last_subframe = end_subframe;
             while(!is_dlsf(mac_inst, check_subframe)){
                 ++check_subframe;

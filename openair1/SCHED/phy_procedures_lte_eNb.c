@@ -2304,14 +2304,13 @@ void prach_procedures_NB_IoT(PHY_VARS_eNB *eNB) {
                        NFAPI_SFNSF2SF(UL_info->rach_ind.sfn_sf),
                        UL_info->rach_ind.rach_indication_body.preamble_list[0].preamble_rel8.preamble,
                        UL_info->rach_ind.rach_indication_body.preamble_list[0].preamble_rel8.timing_advance,
-                       UL_info->rach_ind.rach_indication_body.preamble_list[0].preamble_rel8.rnti); */
-
+                       UL_info->rach_ind.rach_indication_body.preamble_list[0].preamble_rel8.rnti); 
       mac_xface->initiate_ra_proc(eNB->Mod_id,
                                   eNB->CC_id,
                                   frame,
                                   preamble_index[0],
                                   (int16_t) timing_advance_preamble[0],
-                                  0,subframe,0);      
+                                  0,subframe,0);*/      
   }
   
 }

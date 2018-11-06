@@ -194,7 +194,7 @@ void handle_nfapi_dlsch_pdu_NB_IoT(PHY_VARS_eNB *eNB,
   //ue specific data or RAR (we already have received the DCI for this)
   else if(rel13->rnti != 65535 && rel13->rnti_type == 1)
   {
-
+  	  printf("rel13->rnti: %d, eNB->ndlsch_RAR->rnti: %d\n",rel13->rnti,eNB->ndlsch_RAR->rnti);
 	  //check if the PDU is for RAR
 	  if(eNB->ndlsch_RAR != NULL && rel13->rnti == eNB->ndlsch_RAR->rnti) //rnti for the RAR should have been set priviously by the DCI
 	  {
@@ -337,6 +337,7 @@ void schedule_response_NB_IoT(Sched_Rsp_NB_IoT_t *Sched_INFO)
     {
     	case NFAPI_DL_CONFIG_NPDCCH_PDU_TYPE:
     		//Remember: there is no DCI for SI information
+    		LOG_I(PHY."Generate DL PDU information from scheduelr\n");
     		//TODO: separate the ndlsch structure configuration from the DCI (here we will encode only the DCI)
       		generate_eNB_dlsch_params_NB_IoT(eNB,proc,dl_config_pdu);
 

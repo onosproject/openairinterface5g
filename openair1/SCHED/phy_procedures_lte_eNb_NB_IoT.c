@@ -756,7 +756,7 @@ void generate_eNB_dlsch_params_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_t *
           ndlsch               =  eNB->ndlsch_ra;
           ndlsch->ndlsch_type  =  RAR;
 
-          LOG_D(PHY,"Generating dlsch params for RA_RNTI and packing DCI\n");
+          LOG_I(PHY,"Generating dlsch params for RA_RNTI and packing DCI\n");
           generate_eNB_dlsch_params_from_dci_NB_IoT(eNB,
                                                     frame,
                                                     subframe,
@@ -814,7 +814,7 @@ void generate_eNB_dlsch_params_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_t *
 
               //parameters we don't consider pdsch config dedicated since not calling the phy config dedicated step2
 
-            LOG_D(PHY,"Generating dlsch params for DCIN1 data and packing DCI\n");
+            LOG_I(PHY,"Generating dlsch params for DCIN1 data and packing DCI\n");
             generate_eNB_dlsch_params_from_dci_NB_IoT(eNB,
                                                       frame,
                                                       subframe,

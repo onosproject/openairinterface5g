@@ -112,18 +112,27 @@ void schedule_rar_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, int abs_subframe){
 	sched_temp_UL_NB_IoT_t npusch_info;
     int fail_num = 0;
     int flag=0;
+
 	while((RA_TEMPLATE_NB_IoT *)0 != msg2_nodes){
+
 			fail=0;
 		rmax = mac_inst->rrc_config.mac_NPRACH_ConfigSIB[msg2_nodes->ce_level].mac_npdcch_NumRepetitions_RA_NB_IoT;//32;
 		num_candidate = 8;//rmax / r;
 		r = rmax/num_candidate;
 		num_dci_subframe = r;
 		dci_subframe = abs_subframe;//mac_inst->current_subframe;
+
+		LOG_D(MAC,"rmax : %d, num_dci_subframe : %d, dci_subframe: %d\n",rmax,r,dci_subframe);
+
 		for(dci_candidate=0; dci_candidate<num_candidate; ++dci_candidate){
+
             while(!is_dlsf(mac_inst, dci_subframe)){
                 ++dci_subframe;
             }
+
 			dci_node = (available_resource_DL_t *)check_resource_DL(mac_inst, dci_subframe, num_dci_subframe, &dci_end_subframe, &dci_first_subframe);
+
+
 			if((available_resource_DL_t *)0 != dci_node){
 				//dci_subframe += dci_candidate*num_dci_subframe;
 				break;
@@ -147,6 +156,7 @@ void schedule_rar_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, int abs_subframe){
 		TBS = get_tbs(7, I_tbs, &I_sf);   //  rar 7 bytes
 		Nrep = dl_rep[msg2_nodes->ce_level];
 		num_msg2_subframe = get_num_sf(I_sf) * Nrep;
+
 		
 		//num_msg2_subframe = 8;
 		msg2_i_delay = find_suit_i_delay(rmax, r, dci_candidate);
@@ -192,7 +202,7 @@ void schedule_rar_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, int abs_subframe){
 		    LOG_D(MAC,"[%04d][RA scheduler][MSG2][CE%d] rnti: %d preamble: %d fail vector %d\n", abs_subframe-1, msg2_nodes->ce_level, msg2_nodes->ra_rnti, msg2_nodes->preamble_index, fail);
 		    msg2_nodes = msg2_nodes->next;
 		}else{
-		    LOG_D(MAC,"[%04d][RA scheduler][MSG2][CE%d] rnti: %d preamble: %d scheduling success\n", abs_subframe-1, msg2_nodes->ce_level, msg2_nodes->ra_rnti, msg2_nodes->preamble_index);
+		    LOG_I(MAC,"[%04d][RA scheduler][MSG2][CE%d] rnti: %d preamble: %d scheduling success\n", abs_subframe-1, msg2_nodes->ce_level, msg2_nodes->ra_rnti, msg2_nodes->preamble_index);
 		    dci_result = (schedule_result_t *)calloc(1, sizeof(schedule_result_t));
 		    msg2_result = (schedule_result_t *)calloc(1, sizeof(schedule_result_t));
 		    dci_n0 = (DCIFormatN0_t *)malloc(sizeof(DCIFormatN0_t));
@@ -263,9 +273,9 @@ void schedule_rar_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, int abs_subframe){
 			
 			msg2_nodes->ue_rnti = tc_rnti;
 			
-			LOG_D(MAC,"[%04d][RA scheduler][MSG2] RARDCI %d-%d RAR %d-%d MSG3 %d-%d\n", abs_subframe-1, dci_first_subframe, dci_end_subframe, msg2_first_subframe, msg2_end_subframe, npusch_info.sf_start, npusch_info.sf_end);
-			LOG_D(MAC,"[%04d][RA scheduler][MSG2][CE%d] Change RA-RNTI %d->T-CRNTI %d\n", abs_subframe-1, msg2_nodes->ce_level, msg2_nodes->ra_rnti, msg2_nodes->ue_rnti);
-			LOG_D(MAC,"[%04d][RA scheduler][MSG2][CE%d] RAR DCI %d-%d RAR %d-%d MSG3 %d-%d\n", abs_subframe-1, msg2_nodes->ce_level, dci_first_subframe, dci_end_subframe, msg2_first_subframe, msg2_end_subframe, npusch_info.sf_start, npusch_info.sf_end);
+			LOG_I(MAC,"[%04d][RA scheduler][MSG2] RARDCI %d-%d RAR %d-%d MSG3 %d-%d\n", abs_subframe-1, dci_first_subframe, dci_end_subframe, msg2_first_subframe, msg2_end_subframe, npusch_info.sf_start, npusch_info.sf_end);
+			LOG_I(MAC,"[%04d][RA scheduler][MSG2][CE%d] Change RA-RNTI %d->T-CRNTI %d\n", abs_subframe-1, msg2_nodes->ce_level, msg2_nodes->ra_rnti, msg2_nodes->ue_rnti);
+			LOG_I(MAC,"[%04d][RA scheduler][MSG2][CE%d] RAR DCI %d-%d RAR %d-%d MSG3 %d-%d\n", abs_subframe-1, msg2_nodes->ce_level, dci_first_subframe, dci_end_subframe, msg2_first_subframe, msg2_end_subframe, npusch_info.sf_start, npusch_info.sf_end);
             
             //	fill dci resource
 			fill_resource_DL(mac_inst, dci_node, dci_first_subframe, dci_end_subframe, dci_result);
@@ -313,6 +323,8 @@ void schedule_rar_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, int abs_subframe){
 			mac_inst->RA_msg3_list.tail = migrate_node;
 
 		}
+			LOG_I(MAC,"RAR schedule Done\n");
+
 		
 	}
 	if(flag==1)
@@ -863,10 +875,10 @@ void schedule_RA_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst){
     schedule_subframe = schedule_subframe % 1048576;    //  20 bits, 10 bits + 10 bits
     
     //	this is the priority order in current stage.
+
     schedule_msg3_retransimission_NB_IoT(mac_inst, schedule_subframe);
     schedule_rar_NB_IoT(mac_inst, schedule_subframe);
 	schedule_msg4_NB_IoT(mac_inst, schedule_subframe);
-
 	return ;
 }
 

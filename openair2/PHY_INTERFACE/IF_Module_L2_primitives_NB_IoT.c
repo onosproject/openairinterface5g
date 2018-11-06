@@ -11,27 +11,31 @@ void UL_indication_NB_IoT(UL_IND_NB_IoT_t *UL_INFO)
     Sched_Rsp_NB_IoT_t *SCHED_info = &mac_inst->Sched_INFO;;
     //UE_TEMPLATE_NB_IoT *UE_info;
 
-    /* Disable uplink RX function for now
-
       //If there is a preamble, do the initiate RA procedure
-      if(UL_INFO->NRACH.number_of_initial_scs_detected>0)
+      if(UL_INFO->nrach_ind.number_of_initial_scs_detected>0)
         {
-          for(i=0;i<UL_INFO->NRACH.number_of_initial_scs_detected;i++)
+          for(i=0;i<UL_INFO->nrach_ind.number_of_initial_scs_detected;i++)
             {
               // initiate_ra here, some useful inforamtion : 
               //(UL_INFO->NRACH.nrach_pdu_list+i)->nrach_indication_rel13.initial_sc
               //(UL_INFO->NRACH.nrach_pdu_list+i)->nrach_indication_rel13.timing_advance
+              LOG_I(MAC,"Init_RA_NB_IoT in\n");
               init_RA_NB_IoT(mac_inst,
-                             (UL_INFO->NRACH.nrach_pdu_list+i)->nrach_indication_rel13.initial_sc,
-                             (UL_INFO->NRACH.nrach_pdu_list+i)->nrach_indication_rel13.nrach_ce_level,
+                             (UL_INFO->nrach_ind.nrach_pdu_list+i)->nrach_indication_rel13.initial_sc,
+                             (UL_INFO->nrach_ind.nrach_pdu_list+i)->nrach_indication_rel13.nrach_ce_level,
                              UL_INFO->frame,
                              //timing_offset = Timing_advance * 16
-                             (UL_INFO->NRACH.nrach_pdu_list+i)->nrach_indication_rel13.timing_advance*16
+                             (UL_INFO->nrach_ind.nrach_pdu_list+i)->nrach_indication_rel13.timing_advance*16
                              );
-
-
+              LOG_I(MAC,"Init_RA_NB_IoT Out\n");
             }
         }
+
+                  UL_INFO->nrach_ind.number_of_initial_scs_detected = 0;
+
+
+    /* Disable uplink RX function for now
+
 
         // crc indication if there is error for this round UL transmission
 
@@ -84,6 +88,8 @@ void UL_indication_NB_IoT(UL_IND_NB_IoT_t *UL_INFO)
     
     eNB_dlsch_ulsch_scheduler_NB_IoT(mac_inst,abs_subframe);
     mac_inst->if_inst_NB_IoT->schedule_response(&mac_inst->Sched_INFO);
+
+    LOG_D(MAC,"After scheduler & schedule response\n");
 
     /*
     free(SCHED_info->TX_req->tx_request_body.tx_pdu_list);
