@@ -337,7 +337,7 @@ void schedule_response_NB_IoT(Sched_Rsp_NB_IoT_t *Sched_INFO)
     {
     	case NFAPI_DL_CONFIG_NPDCCH_PDU_TYPE:
     		//Remember: there is no DCI for SI information
-    		LOG_I(PHY."Generate DL PDU information from scheduelr\n");
+    		LOG_I(PHY,"Generate DL PDU information from scheduelr\n");
     		//TODO: separate the ndlsch structure configuration from the DCI (here we will encode only the DCI)
       		generate_eNB_dlsch_params_NB_IoT(eNB,proc,dl_config_pdu);
 
