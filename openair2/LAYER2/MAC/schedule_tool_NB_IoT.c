@@ -1003,7 +1003,7 @@ void extend_available_resource_DL(eNB_MAC_INST_NB_IoT *mac_inst, int max_subfram
             
             LOG_D(MAC,"[extend DL] add new node !\n");
             new_node = (available_resource_DL_t *)malloc(sizeof(available_resource_DL_t));
-
+            new_node->prev= available_resource_DL_last;
             available_resource_DL_last->next = new_node;
             new_node->start_subframe = mac_inst->schedule_subframe_DL+1;
             new_node->end_subframe = max_subframe;
@@ -1285,9 +1285,10 @@ void fill_resource_DL(eNB_MAC_INST_NB_IoT *mac_inst, available_resource_DL_t *no
             //  divided into two node, always insert before original node, so won't happen that temp is the last node of the list.
             //  A | node | B
             //  A | temp | node | B
+            LOG_D(MAC,"Case 0 [b], node : %p node_prev : %p\n",node,node->prev);
             temp = (available_resource_DL_t *)malloc(sizeof(available_resource_DL_t));
-            
             if(node->prev){
+                //LOG_I(MAC,"start_subframe : %d\n",node->prev->start_subframe);
                 node->prev->next = temp;
             }else{
                 available_resource_DL = temp;
@@ -1301,9 +1302,10 @@ void fill_resource_DL(eNB_MAC_INST_NB_IoT *mac_inst, available_resource_DL_t *no
             temp->end_subframe = start_subframe - 1;
 
             node->start_subframe = end_subframe + 1;
-
+            LOG_D(MAC,"Case 0 [a], node : %p node_prev : %p\n",node,node->prev);
             break;
         case 1:
+            LOG_D(MAC,"Case 1, node : %p node_prev : %p\n",node,node->prev);
             //  keep one node
             if(align_left){
                 node->start_subframe = end_subframe + 1 ;
@@ -1313,6 +1315,7 @@ void fill_resource_DL(eNB_MAC_INST_NB_IoT *mac_inst, available_resource_DL_t *no
 
             break;
         case 2:
+            LOG_D(MAC,"Case 2 [b], node : %p node_prev : %p\n",node,node->prev);
             //  delete
             if(node->next){
                 node->next->prev = node->prev;
@@ -1325,6 +1328,7 @@ void fill_resource_DL(eNB_MAC_INST_NB_IoT *mac_inst, available_resource_DL_t *no
             }else{
                 available_resource_DL = node->next;
             }
+            LOG_D(MAC,"Case 2 [a], node : %p node_prev : %p\n",node,node->prev);
 
             free(node);
             break;
@@ -1468,7 +1472,7 @@ void print_available_resource_DL(eNB_MAC_INST_NB_IoT *mac_inst){
     int i=0;
     LOG_D(MAC,"=== print available resource === t=%d\nsched subframe: %d, list end: %d-%d\n", mac_inst->current_subframe, mac_inst->schedule_subframe_DL, available_resource_DL_last->start_subframe, available_resource_DL_last->end_subframe);
     while(pt){
-        LOG_D(MAC,"[%2d] %p %3d-%3d\n", i, pt, pt->start_subframe, pt->end_subframe);
+        LOG_D(MAC,"[%2d] %p %3d-%3d prev:%p\n", i, pt, pt->start_subframe, pt->end_subframe, pt->prev);
         pt = pt->next;
     }
     LOG_D(MAC,"\n");

@@ -175,7 +175,7 @@ int output_handler(eNB_MAC_INST_NB_IoT *mac_inst, module_id_t module_id, int CC_
 
 					if(schedule_result_list_DL->direction == DL)
 					{
-						LOG_I(MAC,"[hypersfn:%2d][frame:%2d][subframe:%2d]NB-IoT fill DL_DCI\n",hypersfn,frame,subframe);
+						LOG_D(MAC,"[hypersfn:%2d][frame:%2d][subframe:%2d]NB-IoT fill DL_DCI\n",hypersfn,frame,subframe);
 						//LOG_D(MAC,"Sched Info DL DCI here\n");
 						//SCHED_info->DL_req = (nfapi_dl_config_request_t*) malloc (sizeof(nfapi_dl_config_request_t));
 						//SCHED_info->DL_req->dl_config_request_body.number_pdu = 0;
@@ -183,6 +183,7 @@ int output_handler(eNB_MAC_INST_NB_IoT *mac_inst, module_id_t module_id, int CC_
 	
 						dl_config_pdu = SCHED_info->DL_req->dl_config_request_body.dl_config_pdu_list;
 						SCHED_info->DL_req->dl_config_request_body.number_dci = 1;
+                        SCHED_info->DL_req->dl_config_request_body.number_pdu = 1;
 						DCI_pdu = schedule_result_list_DL->DCI_pdu;
 						// not consider the case transmitting 2 DCIs for the moment also not consider N2 now
 						dl_config_pdu->pdu_type                                                          = NFAPI_DL_CONFIG_NPDCCH_PDU_TYPE;
@@ -204,7 +205,7 @@ int output_handler(eNB_MAC_INST_NB_IoT *mac_inst, module_id_t module_id, int CC_
 						dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.dci_subframe_repetition_number        = ((DCIFormatN1_t *)DCI_pdu)->DCIRep;
 					}else if(schedule_result_list_DL->direction == UL)
 					{
-						LOG_I(MAC,"[hypersfn:%2d][frame:%2d][subframe:%2d]NB-IoT fill DL_DCI\n",hypersfn,frame,subframe);
+						LOG_D(MAC,"[hypersfn:%2d][frame:%2d][subframe:%2d]NB-IoT fill DL_DCI\n",hypersfn,frame,subframe);
 						//SCHED_info->HI_DCI0_req = (nfapi_hi_dci0_request_t*)malloc(sizeof(nfapi_hi_dci0_request_t));
 						//SCHED_info->HI_DCI0_req->hi_dci0_request_body.number_of_dci = 0;
 						//SCHED_info->HI_DCI0_req->hi_dci0_request_body.hi_dci0_pdu_list = (nfapi_hi_dci0_request_pdu_t*)malloc(sizeof(nfapi_hi_dci0_request_pdu_t));
@@ -227,7 +228,7 @@ int output_handler(eNB_MAC_INST_NB_IoT *mac_inst, module_id_t module_id, int CC_
 					}
 					break;
 				case NPDSCH:
-						LOG_I(MAC,"[hypersfn:%2d][frame:%2d][subframe:%2d]NB-IoT fill DL Data\n",hypersfn,frame,subframe);
+						LOG_D(MAC,"[hypersfn:%2d][frame:%2d][subframe:%2d]NB-IoT fill DL Data\n",hypersfn,frame,subframe);
 												//LOG_I(MAC,"NB-IoT fill DL Data\n");
 						//SCHED_info->DL_req = (nfapi_dl_config_request_t*) malloc (sizeof(nfapi_dl_config_request_t));
 						//SCHED_info->DL_req->dl_config_request_body.number_pdu = 0;

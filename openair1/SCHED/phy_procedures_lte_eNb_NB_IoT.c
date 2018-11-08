@@ -32,6 +32,7 @@
 
 #include "PHY/defs.h"
 #include "PHY/defs_NB_IoT.h"
+#include "PHY/extern.h"
 #include "PHY/LTE_ESTIMATION/defs_NB_IoT.h"
 #include "PHY/LTE_TRANSPORT/defs_NB_IoT.h"
 #include "PHY/LTE_TRANSPORT/proto_NB_IoT.h"
@@ -722,7 +723,7 @@ void generate_eNB_dlsch_params_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_t *
   NB_IoT_eNB_NDLSCH_t      *ndlsch;
   NB_IoT_eNB_NPDCCH_t      *npdcch;
 
-
+  eNB->DCI_pdu = (DCI_PDU_NB_IoT*)malloc(sizeof(DCI_PDU_NB_IoT));
 
   DCI_Content = (DCI_CONTENT*) malloc(sizeof(DCI_CONTENT));
 
@@ -753,10 +754,10 @@ void generate_eNB_dlsch_params_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_t *
 
           // fill the dlsch_ra_NB structure for RAR, and packed the DCI PDU
 
-          ndlsch               =  eNB->ndlsch_ra;
+          ndlsch               =  PHY_vars_eNB_g[0][0]->ndlsch_RAR;
           ndlsch->ndlsch_type  =  RAR;
 
-          LOG_I(PHY,"Generating dlsch params for RA_RNTI and packing DCI\n");
+          //LOG_I(PHY,"Generating dlsch params for RA_RNTI and packing DCI\n");
           generate_eNB_dlsch_params_from_dci_NB_IoT(eNB,
                                                     frame,
                                                     subframe,
@@ -768,6 +769,7 @@ void generate_eNB_dlsch_params_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_t *
                                                     dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.aggregation_level,
                                                     dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.start_symbol);
 
+        //printf("PHY_vars_eNB_g[0][0]->ndlsch_RAR->rnti = %d\n",PHY_vars_eNB_g[0][0]->ndlsch_RAR->rnti);
           //eNB->dlsch_ra_NB->nCCE[subframe] = eNB->DCI_pdu->dci_alloc.firstCCE;
         }
       else

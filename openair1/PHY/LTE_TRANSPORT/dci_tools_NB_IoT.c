@@ -54,7 +54,7 @@
 void add_dci_NB_IoT(DCI_PDU_NB_IoT *DCI_pdu,void *pdu,rnti_t rnti,unsigned char dci_size_bytes,unsigned char aggregation,unsigned char dci_size_bits,unsigned char dci_fmt, uint8_t npdcch_start_symbol)
 {
 	//put the pdu
-  memcpy(&DCI_pdu->dci_alloc[DCI_pdu->Num_dci].dci_pdu[0],pdu,dci_size_bytes);
+  memcpy(&DCI_pdu->dci_alloc[0].dci_pdu[0],pdu,dci_size_bytes);
   //configure the dci alloc
   DCI_pdu->dci_alloc[DCI_pdu->Num_dci].dci_length      = dci_size_bits;
   DCI_pdu->dci_alloc[DCI_pdu->Num_dci].L               = aggregation;
@@ -159,7 +159,7 @@ int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB_NB_IoT      *eNB,
  // NB_IoT_eNB_NPDCCH_t  *ndlcch     = ;
   void                  *DLSCH_DCI_NB_IoT = NULL;
 
-  eNB->DCI_pdu = (DCI_PDU_NB_IoT*) malloc(sizeof(DCI_PDU_NB_IoT));
+  //eNB->DCI_pdu = (DCI_PDU_NB_IoT*) malloc(sizeof(DCI_PDU_NB_IoT));
 
   //N1 parameters
   uint8_t ncce_index = 0;
@@ -213,6 +213,8 @@ int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB_NB_IoT      *eNB,
     HARQackRes         = DCI_Content->DCIN1_RAR.HARQackRes; 
     DCIRep             = DCI_Content->DCIN1_RAR.DCIRep;
     
+    DLSCH_DCI_NB_IoT = (DCIN1_RAR_t *)malloc(sizeof(DCIN1_RAR_t));
+
     //DCI pdu content
     ((DCIN1_RAR_t *)DLSCH_DCI_NB_IoT)->type           =type;
     ((DCIN1_RAR_t *)DLSCH_DCI_NB_IoT)->orderIndicator =orderIndicator;
@@ -266,6 +268,8 @@ int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB_NB_IoT      *eNB,
     //ndlsch-> sqrt_rho_a?? set in dlsch_modulation
     //ndlsch-> sqrt_rho_b??? set in dlsch_modulation
 
+    LOG_D(PHY,"DCI packing for N1RAR done \n");
+
     //set in new_eNB_dlsch (initialization)
     /*
      * Mlimit
@@ -288,7 +292,8 @@ int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB_NB_IoT      *eNB,
     ndi                = DCI_Content->DCIN1.ndi;
     HARQackRes         = DCI_Content->DCIN1.HARQackRes; 
     DCIRep             = DCI_Content->DCIN1.DCIRep;
-    
+
+    DLSCH_DCI_NB_IoT = (DCIN1_t *)malloc(sizeof(DCIN1_t));
     /*Packed DCI here*/
     ((DCIN1_t *)DLSCH_DCI_NB_IoT)->type           =type;
     ((DCIN1_t *)DLSCH_DCI_NB_IoT)->orderIndicator =orderIndicator;
@@ -339,6 +344,7 @@ int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB_NB_IoT      *eNB,
     directIndInf       = DCI_Content->DCIN2_Ind.directIndInf; 
     resInfoBits        = DCI_Content->DCIN2_Ind.resInfoBits; 
 
+    DLSCH_DCI_NB_IoT = (DCIN2_Ind_t *)malloc(sizeof(DCIN2_Ind_t));
     /*Packed DCI here*/
     ((DCIN2_Ind_t *)DLSCH_DCI_NB_IoT)->type           =type;
     ((DCIN2_Ind_t *)DLSCH_DCI_NB_IoT)->directIndInf   =directIndInf;
@@ -359,6 +365,7 @@ int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB_NB_IoT      *eNB,
     RepNum             = DCI_Content->DCIN2_Pag.RepNum; 
     DCIRep             = DCI_Content->DCIN2_Pag.DCIRep; 
 
+    DLSCH_DCI_NB_IoT = (DCIN2_Pag_t *)malloc(sizeof(DCIN2_Pag_t));
     /*Packed DCI here*/
     ((DCIN2_Pag_t *)DLSCH_DCI_NB_IoT)->type      =type;
     ((DCIN2_Pag_t *)DLSCH_DCI_NB_IoT)->ResAssign =ResAssign;
@@ -381,7 +388,7 @@ int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB_NB_IoT      *eNB,
 
   // compute DL power control parameters
 
-
+  free(DLSCH_DCI_NB_IoT);
 
   return(0);
 }
