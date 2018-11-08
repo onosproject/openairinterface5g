@@ -30,7 +30,7 @@
  */
 
 #define PDCP_FIFO_C
-//#define PDCP_DEBUG 1
+#define PDCP_DEBUG 1
 //#define DEBUG_PDCP_FIFO_FLUSH_SDU
 
 extern int otg_enabled;
@@ -226,12 +226,12 @@ int pdcp_fifo_flush_sdus(const protocol_ctxt_t* const  ctxt_pP)
 #ifdef PDCP_DEBUG
          sl_pc5s_msg_recv = calloc(1, sizeof(sidelink_pc5s_element));
          memcpy((void*)sl_pc5s_msg_recv, (void*)(sdu_p->data+sizeof(pdcp_data_ind_header_t)), sizeof(sidelink_pc5s_element));
-         LOG_D(PDCP,"Received PC5S message, header traffic_type: %d)\n", sl_pc5s_msg_recv->pc5s_header.traffic_type);
-         LOG_D(PDCP,"Received PC5S message, header rb_id: %d)\n", sl_pc5s_msg_recv->pc5s_header.rb_id);
-         LOG_D(PDCP,"Received PC5S message, header data_size: %d)\n", sl_pc5s_msg_recv->pc5s_header.data_size);
-         LOG_D(PDCP,"Received PC5S message, header inst: %d)\n", sl_pc5s_msg_recv->pc5s_header.inst);
-         LOG_D(PDCP,"Received PC5-S message, sourceL2Id: 0x%08x\n)\n", sl_pc5s_msg_recv->pc5s_header.sourceL2Id);
-         LOG_D(PDCP,"Received PC5-S message, destinationL1Id: 0x%08x\n)\n", sl_pc5s_msg_recv->pc5s_header.destinationL2Id);
+         LOG_I(PDCP,"Received PC5S message, header traffic_type: %d)\n", sl_pc5s_msg_recv->pc5s_header.traffic_type);
+         LOG_I(PDCP,"Received PC5S message, header rb_id: %d)\n", sl_pc5s_msg_recv->pc5s_header.rb_id);
+         LOG_I(PDCP,"Received PC5S message, header data_size: %d)\n", sl_pc5s_msg_recv->pc5s_header.data_size);
+         LOG_I(PDCP,"Received PC5S message, header inst: %d)\n", sl_pc5s_msg_recv->pc5s_header.inst);
+         LOG_I(PDCP,"Received PC5-S message, sourceL2Id: 0x%08x\n)\n", sl_pc5s_msg_recv->pc5s_header.sourceL2Id);
+         LOG_I(PDCP,"Received PC5-S message, destinationL1Id: 0x%08x\n)\n", sl_pc5s_msg_recv->pc5s_header.destinationL2Id);
          free(sl_pc5s_msg_recv);
 #endif
          memset(send_buf, 0, BUFSIZE);
@@ -684,14 +684,14 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
             exit(EXIT_FAILURE);
          }
       } else if (pc5s_header->traffic_type == TRAFFIC_PC5S_SIGNALLING) { //if containing PC5-S message -> send to other UE
-         LOG_D(PDCP,"Received PC5-S message ... send to the other UE\n");
+         LOG_I(PDCP,"Received PC5-S message ... send to the other UE\n");
 #ifdef PDCP_DEBUG
-         LOG_D(PDCP,"Received PC5-S message, traffic_type: %d)\n", pc5s_header->traffic_type);
-         LOG_D(PDCP,"Received PC5-S message, rbid: %d)\n", pc5s_header->rb_id);
-         LOG_D(PDCP,"Received PC5-S message, data_size: %d)\n", pc5s_header->data_size);
-         LOG_D(PDCP,"Received PC5-S message, inst: %d)\n", pc5s_header->inst);
-         LOG_D(PDCP,"Received PC5-S message,sourceL2Id: 0x%08x\n)\n", pc5s_header->sourceL2Id);
-         LOG_D(PDCP,"Received PC5-S message,destinationL1Id: 0x%08x\n)\n", pc5s_header->destinationL2Id);
+         LOG_I(PDCP,"Received PC5-S message, traffic_type: %d)\n", pc5s_header->traffic_type);
+         LOG_I(PDCP,"Received PC5-S message, rbid: %d)\n", pc5s_header->rb_id);
+         LOG_I(PDCP,"Received PC5-S message, data_size: %d)\n", pc5s_header->data_size);
+         LOG_I(PDCP,"Received PC5-S message, inst: %d)\n", pc5s_header->inst);
+         LOG_I(PDCP,"Received PC5-S message,sourceL2Id: 0x%08x\n)\n", pc5s_header->sourceL2Id);
+         LOG_I(PDCP,"Received PC5-S message,destinationL1Id: 0x%08x\n)\n", pc5s_header->destinationL2Id);
 
 #endif
 
