@@ -54,7 +54,7 @@
 void add_dci_NB_IoT(DCI_PDU_NB_IoT *DCI_pdu,void *pdu,rnti_t rnti,unsigned char dci_size_bytes,unsigned char aggregation,unsigned char dci_size_bits,unsigned char dci_fmt, uint8_t npdcch_start_symbol)
 {
 	//put the pdu
-  memcpy(&DCI_pdu->dci_alloc[0].dci_pdu[0],pdu,dci_size_bytes);
+  memcpy(&DCI_pdu->dci_alloc[DCI_pdu->Num_dci].dci_pdu[0],pdu,dci_size_bytes);
   //configure the dci alloc
   DCI_pdu->dci_alloc[DCI_pdu->Num_dci].dci_length      = dci_size_bits;
   DCI_pdu->dci_alloc[DCI_pdu->Num_dci].L               = aggregation;
@@ -68,7 +68,7 @@ void add_dci_NB_IoT(DCI_PDU_NB_IoT *DCI_pdu,void *pdu,rnti_t rnti,unsigned char 
 }
 
 
-int generate_eNB_ulsch_params_from_dci_NB_IoT(PHY_VARS_eNB_NB_IoT        *eNB,
+int generate_eNB_ulsch_params_from_dci_NB_IoT(PHY_VARS_eNB        *eNB,
                                               eNB_rxtx_proc_t            *proc,
                                               DCI_CONTENT                *DCI_Content,
                                               uint16_t                   rnti,
@@ -144,14 +144,14 @@ int generate_eNB_ulsch_params_from_dci_NB_IoT(PHY_VARS_eNB_NB_IoT        *eNB,
 //map the Isf (DCI param) to the number of subframes (Nsf)
 int resource_to_subframe[8] = {1,2,3,4,5,6,8,10};
 
-int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB_NB_IoT      *eNB,
+int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB      *eNB,
                                               int                      frame,
                                               uint8_t                  subframe,
                                               DCI_CONTENT              *DCI_Content,
                                               uint16_t                 rnti,
                                               DCI_format_NB_IoT_t      dci_format,
                                               NB_IoT_eNB_NPDCCH_t      *ndlcch,
-                                              NB_IoT_DL_FRAME_PARMS    *frame_parms,
+                                              LTE_DL_FRAME_PARMS    *frame_parms,
                                               uint8_t                  aggregation,         //////????? maybe add the ncce index ??????????
 									                            uint8_t                  npdcch_start_symbol)
 {

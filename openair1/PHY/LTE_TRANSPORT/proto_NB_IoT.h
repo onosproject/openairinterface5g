@@ -189,7 +189,7 @@ void add_dci_NB_IoT(DCI_PDU_NB_IoT    *DCI_pdu,
 
 
 /*Use the UL DCI Information to configure PHY and also Pack the DCI*/
-int generate_eNB_ulsch_params_from_dci_NB_IoT(PHY_VARS_eNB_NB_IoT     *eNB,
+int generate_eNB_ulsch_params_from_dci_NB_IoT(PHY_VARS_eNB     *eNB,
                                               eNB_rxtx_proc_t         *proc,
                                               DCI_CONTENT             *DCI_Content,
                                               uint16_t                rnti,
@@ -200,14 +200,14 @@ int generate_eNB_ulsch_params_from_dci_NB_IoT(PHY_VARS_eNB_NB_IoT     *eNB,
 
 
 /*Use the DL DCI Information to configure PHY and also Pack the DCI*/
-int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB_NB_IoT    *eNB,
+int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB    *eNB,
                                               int                    frame,
                                               uint8_t                subframe,
                                               DCI_CONTENT            *DCI_Content,
                                               uint16_t               rnti,
                                               DCI_format_NB_IoT_t    dci_format,
                                               NB_IoT_eNB_NPDCCH_t      *ndlcch,
-                                              NB_IoT_DL_FRAME_PARMS  *frame_parms,
+                                              LTE_DL_FRAME_PARMS  *frame_parms,
                                               uint8_t                aggregation,
 									                            uint8_t                npdcch_start_symbol);
 

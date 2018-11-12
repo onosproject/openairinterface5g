@@ -712,10 +712,10 @@ void phy_procedures_eNB_uespec_RX_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc
 /////Generate eNB ndlsch params for NB-IoT from the NPDCCH PDU of the DCI, modify the input to the Sched Rsp variable////
 */
 
-void generate_eNB_dlsch_params_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_t * proc,nfapi_dl_config_request_pdu_t *dl_config_pdu) 
+void generate_eNB_dlsch_params_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t * proc,nfapi_dl_config_request_pdu_t *dl_config_pdu) 
 {
   int                      UE_id         =  -1;
-  NB_IoT_DL_FRAME_PARMS    *fp           =  &eNB->frame_parms_NB_IoT;
+  LTE_DL_FRAME_PARMS    *fp           =  &eNB->frame_parms;
   int                      frame         =  proc->frame_tx;
   int                      subframe      =  proc->subframe_tx;
   DCI_CONTENT              *DCI_Content; 
@@ -754,7 +754,7 @@ void generate_eNB_dlsch_params_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_t *
 
           // fill the dlsch_ra_NB structure for RAR, and packed the DCI PDU
 
-          ndlsch               =  PHY_vars_eNB_g[0][0]->ndlsch_RAR;
+          ndlsch               =  eNB->ndlsch_RAR;
           ndlsch->ndlsch_type  =  RAR;
 
           //LOG_I(PHY,"Generating dlsch params for RA_RNTI and packing DCI\n");
@@ -846,7 +846,7 @@ void generate_eNB_dlsch_params_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_t *
 
 
 
-void generate_eNB_ulsch_params_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_t *proc,nfapi_hi_dci0_request_pdu_t *hi_dci0_pdu) {
+void generate_eNB_ulsch_params_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,nfapi_hi_dci0_request_pdu_t *hi_dci0_pdu) {
 
   int UE_id = -1;
   //int harq_pid = 0;

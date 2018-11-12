@@ -80,7 +80,7 @@ uint8_t NPRACH_detection_NB_IoT(int16_t *input_buffer,uint32_t input_length){
 	}
 
 	 //printf("energies = %ld %ld\n",energy_signal,energy_noise);
-	if ((uint64_t)(((uint64_t) energy_signal))<(uint64_t)energy_noise>>2){
+	if ((uint64_t)(((uint64_t) energy_signal))<(uint64_t)energy_noise>>4){
 			
 		return 1;
 	}else{

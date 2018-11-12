@@ -515,6 +515,7 @@ NB_IoT_eNB_NULSCH_t       *nulsch[NUMBER_OF_UE_MAX+1]; //nulsch[0] contains the 
 NB_IoT_eNB_NDLSCH_t       *ndlsch_SIB1;
 NB_IoT_eNB_NDLSCH_t       *ndlsch_SIB23;
 NB_IoT_eNB_NDLSCH_t       *ndlsch_RAR;
+NB_IoT_eNB_NPDCCH_t       *npdcch[NUMBER_OF_UE_MAX_NB_IoT];
 //NB_IoT_eNB_NDLSCH_t       ndlsch_rar;
 NB_IoT_eNB_NPDCCH_t       npdcch_DCI;
 
@@ -529,6 +530,7 @@ pthread_mutex_t             UL_INFO_mutex;
 //nfapi_preamble_pdu_t preamble_list_NB_IoT[4];
 
 uint8_t                     msg3_pdu[6];
+DCI_PDU_NB_IoT              *DCI_pdu;
 //////////////////// END /////////////////////////////////
 } PHY_VARS_eNB;
 
