@@ -2262,6 +2262,10 @@ sudas_LOG_PHY(debug_sudas_LOG_PHY,"PUCCH Format:: %d SR %d ACK_status %d CQI_sta
               ue->tx_power_max_dBm,
               ue->frame_parms.N_RB_UL,
               1);
+      /*KhodrSaaifan: Fraunhofer iis
+       * Fix 0 amp bug which kill the Tx signal
+       * */
+      if (tx_amp <= 0) tx_amp=2;
 #else
       tx_amp = AMP;
 #endif
