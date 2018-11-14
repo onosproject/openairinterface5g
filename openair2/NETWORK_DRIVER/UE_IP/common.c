@@ -34,8 +34,8 @@
 #include "rtai_fifos.h"
 #endif
 
-
 #include <linux/inetdevice.h>
+#include <linux/etherdevice.h>
 
 #include <net/tcp.h>
 #include <net/udp.h>
@@ -57,8 +57,8 @@
         ntohs((addr)->s6_addr16[7])
 
 
-//#define OAI_DRV_DEBUG_SEND
-//#define OAI_DRV_DEBUG_RECEIVE
+#define OAI_DRV_DEBUG_SEND
+#define OAI_DRV_DEBUG_RECEIVE
 
 void
 ue_ip_common_class_wireless2ip(
@@ -114,11 +114,6 @@ skb_p->mark = rb_idP;
 
   printk("\n");
 #endif
-#ifdef OAI_DRV_DEBUG_RECEIVE
-  printk("[UE_IP_DRV][%s] skb_p->data           @ %p\n",__FUNCTION__,  skb_p->data);
-  printk("[UE_IP_DRV][%s] skb_p->mac_header     @ %p\n",__FUNCTION__,  skb_p->mac_header);
-#endif
-
 
 
   // LG TEST skb_p->ip_summed = CHECKSUM_NONE;
@@ -163,6 +158,14 @@ skb_p->mark = rb_idP;
     }
 
     printk("[UE_IP_DRV][%s] protocol  %d\n",__FUNCTION__, ((struct iphdr *)&skb_p->data[hard_header_len])->protocol);
+
+    //get source/destination MAC addresses
+    struct ethhdr *mh = eth_hdr(skb_p);
+#ifdef OAI_DRV_DEBUG_SEND
+    printk("[UE_IP_DRV] source MAC %x.%x.%x.%x.%x.%x\n", mh->h_source[0],mh->h_source[1],mh->h_source[2],mh->h_source[3],mh->h_source[4],mh->h_source[5]);
+    printk("[UE_IP_DRV] dest MAC %x.%x.%x.%x.%x.%x\n", mh->h_dest[0],mh->h_dest[1],mh->h_dest[2],mh->h_dest[3],mh->h_dest[4],mh->h_dest[5]);
+#endif
+
 #endif
 
     skb_set_network_header(skb_p, hard_header_len);
@@ -200,13 +203,16 @@ skb_p->mark = rb_idP;
 #endif
 
     if (hard_header_len == 0) {
-      skb_p->protocol = htons(ETH_P_IP);
+    	skb_p->protocol = htons(ETH_P_IP);
+    }else{
+    	skb_p->protocol = eth_type_trans(skb_p, ue_ip_dev[instP]);
     }
 
     //printk("[UE_IP_DRV][COMMON] Writing packet with protocol %x\n",ntohs(skb_p->protocol));
     break;
 
   default:
+	skb_p->protocol = eth_type_trans(skb_p, ue_ip_dev[instP]);
     printk("[UE_IP_DRV][%s] begin RB %d Inst %d Length %d bytes\n",__FUNCTION__,rb_idP,instP,data_lenP);
     printk("[UE_IP_DRV][%s] Inst %d: receive unknown message (version=%d)\n",__FUNCTION__,instP,ipv_p->version);
   }
@@ -235,6 +241,7 @@ void ue_ip_common_ip2wireless_drop(struct sk_buff *skb_pP,  int instP)
   //---------------------------------------------------------------------------
   ue_ip_priv_t *priv_p=netdev_priv(ue_ip_dev[instP]);
   ++priv_p->stats.tx_dropped;
+  printk("[UE_IP_DRV]Packet has been dropped\n");
 }
 
 //---------------------------------------------------------------------------
@@ -277,8 +284,9 @@ ue_ip_common_ip2wireless(
 
   pdcph.data_size  = skb_pP->len;
 
-  if (skb_pP->mark) {
+  if (skb_pP->mark && instP == 0) {
     pdcph.rb_id      = skb_pP->mark;
+    printk("[UE_IP_DRV_PROSE] skb_pP->mark %d, oip instance: %d\n",skb_pP->mark, instP);
   } else {
     pdcph.rb_id      = UE_IP_DEFAULT_RAB_ID;
   }
@@ -308,13 +316,24 @@ ue_ip_common_ip2wireless(
     }
     printk("[UE_IP_DRV][%s] slrb_id %d\n",__FUNCTION__, pdcph.rb_id);
 #endif
-    //get Ipv4 address and pass to PCDP header
-    pdcph.sourceL2Id = ntohl( ((struct iphdr *)&skb_pP->data[hard_header_len])->saddr) & 0x00FFFFFF;
-    pdcph.destinationL2Id = ntohl( ((struct iphdr *)&skb_pP->data[hard_header_len])->daddr) & 0x00FFFFFF;
+
+
+    //get source/destination MAC addresses
+    struct ethhdr *mh = eth_hdr(skb_pP);
 #ifdef OAI_DRV_DEBUG_SEND
+    printk("[UE_IP_DRV] source MAC %x.%x.%x.%x.%x.%x\n", mh->h_source[0],mh->h_source[1],mh->h_source[2],mh->h_source[3],mh->h_source[4],mh->h_source[5]);
+    printk("[UE_IP_DRV] dest MAC %x.%x.%x.%x.%x.%x\n", mh->h_dest[0],mh->h_dest[1],mh->h_dest[2],mh->h_dest[3],mh->h_dest[4],mh->h_dest[5]);
+#endif
+    //assign source/destL2Id from the last 24 bits of MAC addresses
+    pdcph.sourceL2Id = ((uint8_t)mh->h_source[5] & 0x000000FF) | (((uint8_t)mh->h_source[4] << 8) & 0x0000FF00) | (((uint8_t)mh->h_source[3] << 16) & 0x00FF0000) ;
+    pdcph.destinationL2Id = ((uint8_t)mh->h_dest[5] & 0x000000FF) | (((uint8_t)mh->h_dest[4] << 8) & 0x0000FF00) | (((uint8_t)mh->h_dest[3] << 16) & 0x00FF0000);
+
+
+    //get Ipv4 address and pass to PCDP header
+    //pdcph.sourceL2Id = ntohl( ((struct iphdr *)&skb_pP->data[hard_header_len])->saddr) & 0x00FFFFFF;
+    //pdcph.destinationL2Id = ntohl( ((struct iphdr *)&skb_pP->data[hard_header_len])->daddr) & 0x00FFFFFF;
     printk("[UE_IP_DRV] source Id: 0x%08x\n",pdcph.sourceL2Id );
     printk("[UE_IP_DRV] destinationL2Id Id: 0x%08x\n",pdcph.destinationL2Id );
-#endif
     break;
 
   default:

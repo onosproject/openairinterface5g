@@ -5772,8 +5772,12 @@ void *rrc_control_socket_thread_fct(void *arg)
          //Establish a new RBID/LCID for this communication
          // Establish a SLRB (using DRB 4 for now)
          UE  = &UE_rrc_inst[module_id];
-         PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, 0, ENB_FLAG_NO, 0x1234, 0, 0,0);
-
+         if(UE->Info[0].rnti == 0){
+        	 PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, 0, ENB_FLAG_NO, 0x1234, 0, 0,0);
+         }
+         else{
+        	 PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, 0, ENB_FLAG_NO, UE_rrc_inst[0].Info[0].rnti, 0, 0,0);
+         }
          UE->DRB_config[0][0] = CALLOC(1,sizeof(struct DRB_ToAddMod));
          UE->DRB_config[0][0]->eps_BearerIdentity = CALLOC(1, sizeof(long));
          UE->DRB_config[0][0]->drb_Identity =  group_comm_rbid;
@@ -5825,7 +5829,10 @@ void *rrc_control_socket_thread_fct(void *arg)
          *logicalchannelgroup_drb = 1;
          DRB_ul_SpecificParameters->logicalChannelGroup = logicalchannelgroup_drb;
 
-         UE->DRB_configList = CALLOC(1,sizeof(DRB_ToAddModList_t));
+
+         //if(UE->DRB_configList == NULL){
+        	UE->DRB_configList = CALLOC(1,sizeof(DRB_ToAddModList_t));
+         //}
          ASN_SEQUENCE_ADD(&UE->DRB_configList->list,UE->DRB_config[0][0]);
 
          rrc_pdcp_config_asn1_req(&ctxt,
@@ -6058,7 +6065,16 @@ void *rrc_control_socket_thread_fct(void *arg)
          //Establish a new RBID/LCID for this communication
          // Establish a SLRB
          UE = &UE_rrc_inst[module_id];
-         PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, 0, ENB_FLAG_NO, 0x1234, 0, 0,0);
+
+         if(UE->Info[0].rnti == 0){
+        	 PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, 0, ENB_FLAG_NO, 0x1234, 0, 0,0);
+         }
+         else{
+        	 PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, 0, ENB_FLAG_NO, UE_rrc_inst[0].Info[0].rnti, 0, 0,0);
+         }
+
+
+         //PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, 0, ENB_FLAG_NO, 0x1234, 0, 0,0);
 
          UE->DRB_config[0][0] = CALLOC(1,sizeof(struct DRB_ToAddMod));
          UE->DRB_config[0][0]->eps_BearerIdentity = CALLOC(1, sizeof(long));
@@ -6392,7 +6408,15 @@ void *rrc_control_socket_thread_fct(void *arg)
          //Establish a new RBID/LCID for this communication
          // Establish a SLRB (starting from 8 for now)
          UE  = &UE_rrc_inst[module_id];
-         PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, 0, ENB_FLAG_NO, 0x1234, 0, 0,0);
+
+         if(UE->Info[0].rnti == 0){
+        	 PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, 0, ENB_FLAG_NO, 0x1234, 0, 0,0);
+         }
+         else{
+        	 PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, 0, ENB_FLAG_NO, UE_rrc_inst[0].Info[0].rnti, 0, 0,0);
+         }
+
+         //PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, 0, ENB_FLAG_NO, 0x1234, 0, 0,0);
 
          UE->DRB_config[0][0] = CALLOC(1,sizeof(struct DRB_ToAddMod));
          UE->DRB_config[0][0]->eps_BearerIdentity = CALLOC(1, sizeof(long));

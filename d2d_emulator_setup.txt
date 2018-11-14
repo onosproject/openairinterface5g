@@ -43,21 +43,33 @@ Get and build vencore_app from d2d-l3-stub (branch: l3_stub)
 UE1: 
  - sudo ifconfig oip0 10.0.0.1
  - (if necessary) sudo route add default gw 10.10.10.1 eth0
+ - sudo ifconfig oip0 hw ether 00:00:00:00:00:01
+ - (optional, in case ARP fails to work with oip interface): 
+    sudo ip neigh add 10.0.0.2 lladdr 00:00:00:00:00:02 dev oip0 nud permanent 
+    or
+    sudo ip neigh change 10.0.0.2 lladdr 00:00:00:00:00:02 dev oip0 nud permanent 
+ 
+   
 UE2:
  - sudo ifconfig oip0 10.0.0.2
  - (if necessary) sudo route add default gw 10.10.10.1 eno1
- 
+ - sudo ifconfig oip0 hw ether 00:00:00:00:00:02
+ - (optional, in case ARP fails to work with oip interface): 
+   sudo ip neigh add 10.0.0.1 lladdr 00:00:00:00:00:01 dev oip0 nud permanent 
+   or
+   sudo ip neigh add 10.0.0.1 lladdr 00:00:00:00:00:01 dev oip0 nud permanent 
+  
  For the moment, we suppose that L2Ids of UE1, UE2 are Ox01, 0x02 respectively. GroupL2Id is set to 0x03.
   
 --------------------------------
 TEST ONE-TO-MANY
 Run UE1 then UE2, for example:
- - UE1: sudo ./lte-softmodem-stub -U --emul-iface eth0
+ - UE1: sudo ./lte-uesoftmodem -U --D2D-emul 1 --emul-iface eth0
  - UE1 ./vencore_app -g 0x01 0x03  #0x01 - UE1-L2Id, 0x03-groupL2Id
  # a SLRB will be established for this communication (check SLRB_ID from vencore_app's screen)
  - sudo iptables -A POSTROUTING  -t mangle -o oip0 -d 224.0.0.3 -j MARK --set-mark XXX #XXX is SLRB_ID
 
- - UE2: sudo ./lte-softmodem-stub -U --emul-iface eno1
+ - UE2: sudo ./lte-uesoftmodem -U --D2D-emul 1 --emul-iface eno1
  - UE2 ./vencore_app -g 0x02 0x03  #0x02 - UE2-L2Id, 0x03-groupL2Id
   # a SLRB will be established for this communication (check SLRB_ID from vencore_app's screen)
  - sudo iptables -A POSTROUTING  -t mangle -o oip0 -d 224.0.0.3 -j MARK --set-mark XXX #XXX is SLRB_ID
@@ -73,14 +85,14 @@ Test with Iperf
 Filter the incomming packets according to GroupL2Id: receiver (one-to-many) can discard the packets if it doesn't belong to this group. 
 
 UE1 (sender)
- - sudo ./lte-softmodem-stub -U --emul-iface eth0
+ - sudo sudo ./lte-uesoftmodem -U --D2D-emul 1 --emul-iface eth0
  - ./vencore_app -g 0x01 0x03  #0x01 - UE1's L2Id, 0x03-groupL2Id
    # a SLRB will be established for this communication (check SLRB_ID from vencore_app's screen)
  - sudo iptables -A POSTROUTING  -t mangle -o oip0 -d 224.0.0.3 -j MARK --set-mark XXX #XXX is SLRB_ID
  - ping -I oip0 224.0.0.3
 
 UE2(receiver)
-  - sudo ./lte-softmodem-stub -U --emul-iface eno1 
+  - sudo ./lte-uesoftmodem -U --D2D-emul 1 --emul-iface eno1 
  #we can see the incomming packets from OAI log, however, cannot see from Wireshark -> they are discarded at MAC layer
   -./vencore_app -g 0x02 0x03  #0x02 - UE2-L2Id, 0x03-groupL2Id  
  # a SLRB will be established for this communication (check SLRB_ID from vencore_app's screen)
@@ -92,15 +104,26 @@ TEST PC5-S (UE1 - sender, UE2 - receiver) and PC5-U for ONE-TO-ONE scenario (and
 Configure UE1/UE2
 UE1: 
  - sudo ifconfig oip0 10.0.0.1
+ - sudo ifconfig oip0 hw ether 00:00:00:00:00:01
+ - (optional, in case ARP fails to work with oip interface):   
+    sudo ip neigh add 10.0.0.2 lladdr 00:00:00:00:00:02 dev oip0 nud permanent 
+    or 
+    sudo ip neigh change 10.0.0.2 lladdr 00:00:00:00:00:02 dev oip0 nud permanent
  - sudo route add default gw 10.10.10.1 eth0
+ 
 UE2:
  - sudo ifconfig oip0 10.0.0.2
+ - sudo ifconfig oip0 hw ether 00:00:00:00:00:02
+ - (optional, in case ARP fails to work with oip interface): 
+   sudo ip neigh add 10.0.0.1 lladdr 00:00:00:00:00:01 dev oip0 nud permanent
+   or
+   sudo ip neigh change 10.0.0.1 lladdr 00:00:00:00:00:01 dev oip0 nud permanent 
  - sudo route add default gw 10.10.10.1 eno1
  
 step 1:
- - UE1: sudo ./lte-softmodem-stub -U --emul-iface eth0
+ - UE1: sudo ./lte-uesoftmodem -U --D2D-emul 1 --emul-iface eth0
 step 2:
- - UE2: sudo ./lte-softmodem-stub -U --emul-iface eno1
+ - UE2: sudo ./lte-uesoftmodem -U --D2D-emul 1 --emul-iface eno1
  - UE2: ./vencore_app -r 0x02 0x01  #listen to incomming PC5-S message and incomming PC5-U packet from UE1, 0x02 - UE2-L2Id, 0x01 - UE1-L2Id 
  # mark the packets with the corresponding SLRB (since UE2 is receiver, we should mark only the unicast flow)
  # 2 SLRBs will be established: 1 for unicast communication and 1 for multicast (check SLRB_ID from vencore_app's screen)
@@ -123,10 +146,10 @@ Generate multicast traffic
   --------------------------------------
 TEST PC5-D
 step 1:
-- UE1: sudo ./lte-softmodem-stub -U --emul-iface eth0
+- UE1: sudo ./lte-uesoftmodem -U --D2D-emul 1 --emul-iface eth0
 - UE1: ./vencore_app -d #send a PC5-Discovery-Announcement via PC5D
 step 2:
-- UE2: sudo ./lte-softmodem-stub -U --emul-iface eno1
+- UE2: sudo ./lte-uesoftmodem -U --D2D-emul 1 --emul-iface eno1
 - UE2: ./vencore_app -d #send a PC5-Discovery-Announcement via PC5D
 
 
@@ -157,22 +180,40 @@ TEST PC5-U for ONE-TO-ONE scenario (UE1 - sender, UE2/3 - receiver) and PC5-U fo
 - configure UE1, UE2, UE3 as mentioned in the previous section
 UE1: 
  - sudo ifconfig oip0 10.0.0.1
+ - sudo ifconfig oip0 hw ether 00:00:00:00:00:01
+ - (optional, in case ARP fails to work with oip interface): 
+   sudo ip neigh add 10.0.0.2 lladdr 00:00:00:00:00:02  dev oip0  nud permanent
+   (sudo ip neigh change 10.0.0.2 lladdr 00:00:00:00:00:02  dev oip0  nud permanent)
+   sudo ip neigh add 10.0.0.4 lladdr 00:00:00:00:00:04  dev oip0  nud permanent 
+   (sudo ip neigh change 10.0.0.4 lladdr 00:00:00:00:00:04  dev oip0  nud permanent)
  - sudo route add default gw 10.10.10.1 eth0
 
 UE2:
  - sudo ifconfig oip0 10.0.0.2
+ - sudo ifconfig oip0 hw ether 00:00:00:00:00:02
+ - (optional, in case ARP fails to work with oip interface): 
+   sudo ip neigh add 10.0.0.1 lladdr 00:00:00:00:00:01 dev oip0 nud permanent
+   (ip neigh change 10.0.0.1 lladdr 00:00:00:00:00:01 dev oip0 nud permanent)
+   sudo ip neigh add 10.0.0.4 lladdr 00:00:00:00:00:04 dev oip0 nud permanent  
+   (sudo ip neigh change 10.0.0.1 lladdr 00:00:00:00:00:04 dev oip0 nud permanent)
  - sudo route add default gw 10.10.10.1 eno1
 
 - configure UE3
 UE3: 
  - sudo ifconfig oip0 10.0.0.4
+ - sudo ifconfig oip0 hw ether 00:00:00:00:00:04
+ - (optional, in case ARP fails to work with oip interface): 
+    sudo ip neigh add 10.0.0.2 lladdr 00:00:00:00:00:02 dev oip0 nud permanent
+    (sudo ip neigh change 10.0.0.2 lladdr 00:00:00:00:00:02 dev oip0 nud permanent)
+    sudo ip neigh add 10.0.0.1 lladdr 00:00:00:00:00:01 dev oip0 nud permanent
+    (sudo ip neigh change 10.0.0.1 lladdr 00:00:00:00:00:01 dev oip0 nud permanent ) 
  - sudo route add default gw 10.10.10.1 eno1
 
 Step 1:
- - UE1: sudo ./lte-softmodem-stub -U --emul-iface eth0
+ - UE1: sudo ./lte-uesoftmodem -U --D2D-emul 1 --emul-iface eth0
  
 Step 2:
- - UE2: sudo ./lte-softmodem-stub -U --emul-iface eno1
+ - UE2: ssudo ./lte-uesoftmodem -U --D2D-emul 1 --emul-iface eno1
  - UE2: ./vencore_app -r 0x02 0x01 # listen to incomming PC5-S message and incomming PC5-U packet from UE1, 0x02 - UE2-L2Id, 0x01 - UE1-L2Id
                                    # groupL2Id is hardcoded for the moment (0x03, Ox05)
  # mark the packets with the corresponding SLRB 
@@ -180,7 +221,7 @@ Step 2:
  # since UE2 is receiver, we should mark only the unicast flow
   - sudo iptables -A POSTROUTING  -t mangle -o oip0 -d 10.0.0.1 -j MARK --set-mark XXX  #XXX is SLRB_ID for unicast communication                                
 
- - UE3: sudo ./lte-softmodem-stub -U --emul-iface eno1
+ - UE3: sudo ./lte-uesoftmodem -U --D2D-emul 1 --emul-iface eno1
  - UE3: ./vencore_app -r 0x04 0x01 #  listen to incomming PC5-S message and incomming PC5-U packet from UE1, 0x04 - UE3-L2Id, 0x01 - UE1-L2Id
                                    # groupL2Id is hardcoded for the moment (0x03, Ox05)
  # mark the packets with the corresponding SLRB 
