@@ -214,7 +214,7 @@ int generate_NDLSCH_NB_IoT(NB_IoT_eNB_NDLSCH_t 	  *RAR,
 {
     int done = 0;
 
-    if( (RAR->active == 1)  && (frame_parms->flag_free_sf == 0))
+    if( RAR->active == 1 )
     {
     	uint8_t *RAR_pdu  = RAR->harq_process->pdu;
 	 	uint32_t rep =  RAR->repetition_number;
@@ -337,7 +337,7 @@ int generate_NPDCCH_NB_IoT(NB_IoT_eNB_NPDCCH_t 	  *DCI,
     	uint8_t ncce_index = 0;   /// = DCI->ncce_index[i];
  	    uint8_t agr_level = 2;	  /// = DCI->aggregation_level[i];
 
-		    if( (DCI->active[i] == 1)  && (frame_parms->flag_free_sf == 0))
+		    if( DCI->active[i] == 1)
 		    {
 
 		    	uint8_t  *DCI_pdu  = DCI->pdu[i];

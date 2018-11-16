@@ -84,6 +84,19 @@ void free_eNB_dlsch_NB_IoT(NB_IoT_eNB_NDLSCH_t *dlsch)
 
 }
 
+void free_eNB_dlcch_NB_IoT(NB_IoT_eNB_NPDCCH_t *dlcch)
+{
+  
+  if (dlcch) {
+
+
+
+    free16(dlcch,sizeof(NB_IoT_eNB_NPDCCH_t));
+    dlcch = NULL;
+    }
+
+}
+
 
 void ccode_encode_npdsch_NB_IoT (int32_t   numbits,
 								 uint8_t   *inPtr,
@@ -202,23 +215,7 @@ NB_IoT_eNB_NDLSCH_t *new_eNB_dlsch_NB_IoT(uint8_t type, LTE_DL_FRAME_PARMS* fram
 		      exit_flag=1;
 		    }
 
-		 //   if (abstraction_flag==0) {
-		    	
-		        // account for filler in first segment and CRCs for multiple segment case
-		     //   dlsch->harq_process->c[0] = (uint8_t*)malloc16(3*3*(MAX_TBS_DL_SIZE_BITS_NB_IoT+24));
-		    //    dlsch->harq_process->d[0] = (uint8_t*)malloc(96+(3*(24+MAX_TBS_DL_SIZE_BITS_NB_IoT)));
-		    ///    dlsch->harq_process->e[0] = (uint8_t*)malloc(MAX_NUM_DL_CHANNEL_BITS_NB_IoT);
-		     //   dlsch->harq_process->s_e[0] = (uint8_t*)malloc(MAX_NUM_DL_CHANNEL_BITS_NB_IoT);
 
-		   /*     if (dlsch->harq_process->c[0]) {
-
-		          bzero(dlsch->harq_process->c[0],3*3*(MAX_TBS_DL_SIZE_BITS_NB_IoT+24));
-		        } else {
-
-		          printf("Can't get c\n");
-		          exit_flag=2;
-		        }
-		    */
 
 		        if (dlsch->harq_process->d) {
 		          bzero((void *)dlsch->harq_process->d,96+(3*(24+MAX_TBS_DL_SIZE_BITS_NB_IoT)));
@@ -259,6 +256,31 @@ NB_IoT_eNB_NDLSCH_t *new_eNB_dlsch_NB_IoT(uint8_t type, LTE_DL_FRAME_PARMS* fram
 }
 
 
+///////////////////////////////////////////////////////////////////////////
+NB_IoT_eNB_NPDCCH_t *new_eNB_dlcch_NB_IoT(LTE_DL_FRAME_PARMS* frame_parms)
+{
+
+  NB_IoT_eNB_NPDCCH_t *dlcch;
+
+  dlcch = (NB_IoT_eNB_NPDCCH_t *)malloc16(sizeof(NB_IoT_eNB_NPDCCH_t));
+
+  if (dlcch) {
+
+       bzero(dlcch,sizeof(NB_IoT_eNB_NPDCCH_t));
+
+
+
+	    return(dlcch);
+	    
+  }
+
+ /// LOG_D(PHY,"new_eNB_dlsch exit flag %d, size of  %ld\n",
+//	exit_flag, sizeof(NB_IoT_eNB_NDLSCH_t));
+  free_eNB_dlcch_NB_IoT(dlcch);
+  return(NULL);
+
+
+}
 
 /*************************************************************************
 

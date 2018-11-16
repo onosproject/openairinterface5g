@@ -43,6 +43,7 @@
 
 //NPSS
 void free_eNB_dlsch_NB_IoT(NB_IoT_eNB_NDLSCH_t *dlsch);
+void free_eNB_dlcch_NB_IoT(NB_IoT_eNB_NPDCCH_t *dlcch);
 
 void init_unscrambling_lut_NB_IoT(void);
 
@@ -153,6 +154,8 @@ void dlsch_scrambling_Gen_NB_IoT(LTE_DL_FRAME_PARMS         *frame_parms,
                                   uint32_t                  rnti); 
 
 NB_IoT_eNB_NDLSCH_t *new_eNB_dlsch_NB_IoT(uint8_t length, LTE_DL_FRAME_PARMS* frame_parms);
+
+NB_IoT_eNB_NPDCCH_t *new_eNB_dlcch_NB_IoT(LTE_DL_FRAME_PARMS* frame_parms);
 
 /*void dlsch_scrambling_Gen_NB_IoT(LTE_DL_FRAME_PARMS      *frame_parms,
                                   NB_IoT_eNB_NDLSCH_t    *dlsch,

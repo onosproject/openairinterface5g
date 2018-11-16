@@ -199,6 +199,10 @@ void handle_nfapi_dlsch_pdu_NB_IoT(PHY_VARS_eNB *eNB,
 	  //check if the PDU is for RAR
 	  if(eNB->ndlsch_RAR != NULL && rel13->rnti == eNB->ndlsch_RAR->rnti) //rnti for the RAR should have been set priviously by the DCI
 	  {
+		  
+	  	  eNB->ndlsch_RAR->active = 1;
+	  	  eNB->ndlsch_RAR->harq_process->TBS = rel13->length;
+
 		  eNB->ndlsch_RAR->harq_process->pdu 		= sdu;
 		  eNB->ndlsch_RAR->npdsch_start_symbol 		= rel13->start_symbol;
 		  eNB->ndlsch_RAR->active 					= 1;
