@@ -140,13 +140,17 @@ time_stats_t softmodem_stats_mt; // main thread
 time_stats_t softmodem_stats_hw; //  hw acquisition
 time_stats_t softmodem_stats_rxtx_sf; // total tx time
 time_stats_t softmodem_stats_rx_sf; // total rx time
+time_stats_t softmodem_stats_rx_rf; // total rx time
+time_stats_t softmodem_stats_rx_rf_freq; // total rx frequency
+time_stats_t softmodem_stats_tx_fh_if4p5; // total rx frequency
+time_stats_t softmodem_stats_rx_fh_if4p5; // total rx frequency
 //int32_t **rxdata;
 //int32_t **txdata;
 
 uint8_t seqno; //sequence number
 
 static int                      time_offset[4] = {0,0,0,0};
-
+static int temp_f = 0;
 /* mutex, cond and variable to serialize phy proc TX calls
  * (this mechanism may be relaxed in the future for better
  * performances)
@@ -442,10 +446,12 @@ void tx_fh_if5_mobipass_standalone(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc) {
 }
 
 void tx_fh_if4p5(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc) {
+  start_meas (&softmodem_stats_tx_fh_if4p5);
   if ((eNB->frame_parms.frame_type==FDD) ||
       ((eNB->frame_parms.frame_type==TDD) &&
        (subframe_select(&eNB->frame_parms,proc->subframe_tx) != SF_UL)))    
     send_IF4p5(eNB,proc->frame_tx,proc->subframe_tx, IF4p5_PDLFFT, 0);
+  stop_meas (&softmodem_stats_tx_fh_if4p5);
 }
 
 void proc_tx_high0(PHY_VARS_eNB *eNB,
@@ -974,7 +980,7 @@ static void* eNB_thread_asynch_rxtx( void* param ) {
 
 
 void rx_rf(PHY_VARS_eNB *eNB,int *frame,int *subframe) {
-
+  start_meas(&softmodem_stats_rx_rf);
   eNB_proc_t *proc = &eNB->proc;
   LTE_DL_FRAME_PARMS *fp = &eNB->frame_parms;
   void *rxp[fp->nb_antennas_rx],*txp[fp->nb_antennas_tx]; 
@@ -1119,10 +1125,11 @@ void rx_rf(PHY_VARS_eNB *eNB,int *frame,int *subframe) {
     exit_fun( "problem receiving samples" );
   
 
-  
+  stop_meas(&softmodem_stats_rx_rf);
+  if (proc->frame_rx==1020) print_meas(&softmodem_stats_rx_rf,"softmodem_stats_rx_rf",NULL,NULL);
 }
 void rx_rf_freq(PHY_VARS_eNB *eNB,int *frame,int *subframe) {
-
+  start_meas(&softmodem_stats_rx_rf_freq);
   eNB_proc_t *proc = &eNB->proc;
   LTE_DL_FRAME_PARMS *fp = &eNB->frame_parms;
   void *rxp_freq[fp->nb_antennas_rx],*txp_freq[fp->nb_antennas_tx];
@@ -1258,6 +1265,8 @@ void rx_rf_freq(PHY_VARS_eNB *eNB,int *frame,int *subframe) {
   VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME( VCD_SIGNAL_DUMPER_VARIABLES_TRX_TS, proc->timestamp_rx&0xffffffff );
 	  if (rxs_freq != fp->ofdm_symbol_size*fp->symbols_per_tti)
 	    exit_fun( "problem receiving samples in frequency" );
+  stop_meas(&softmodem_stats_rx_rf_freq);
+  //if (proc->frame_rx==1020) 
 }
 void rx_fh_if5(PHY_VARS_eNB *eNB,int *frame, int *subframe) {
 
@@ -1327,7 +1336,7 @@ void rx_fh_if5_mobipass_standalone(PHY_VARS_eNB *eNB,int *frame, int *subframe)
 }
 
 void rx_fh_if4p5(PHY_VARS_eNB *eNB,int *frame,int *subframe) {
-
+  start_meas (&softmodem_stats_rx_fh_if4p5);
   LTE_DL_FRAME_PARMS *fp = &eNB->frame_parms;
   eNB_proc_t *proc = &eNB->proc;
   int f,sf;
@@ -1404,7 +1413,7 @@ void rx_fh_if4p5(PHY_VARS_eNB *eNB,int *frame,int *subframe) {
 
 
   if (eNB->CC_id==0) VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME( VCD_SIGNAL_DUMPER_VARIABLES_TRX_TS, proc->timestamp_rx&0xffffffff );
-  
+  stop_meas (&softmodem_stats_rx_fh_if4p5);
 }
 
 void rx_fh_slave(PHY_VARS_eNB *eNB,int *frame,int *subframe) {
@@ -1759,7 +1768,7 @@ static void* eNB_thread_prach( void* param ) {
 }
 
 
-
+void print_opp_meas(void);
 static void* eNB_thread_single( void* param ) {
 
   static int eNB_thread_single_status;
@@ -1935,13 +1944,15 @@ static void* eNB_thread_single( void* param ) {
 
   // This is a forever while loop, it loops over subframes which are scheduled by incoming samples from HW devices
   while (!oai_exit) {
-
+    start_meas(&softmodem_stats_hw);
+    start_meas(&softmodem_stats_rx_sf);
     // these are local subframe/frame counters to check that we are in synch with the fronthaul timing.
     // They are set on the first rx/tx in the underly FH routines.
     if (subframe==9) { 
       subframe=0;
       frame++;
       frame&=1023;
+      temp_f++;
     } else {
       subframe++;
     }      
@@ -1967,15 +1978,21 @@ static void* eNB_thread_single( void* param ) {
     //printf("[lte-enb] frame offset %d\n",proc->frame_offset);
     // At this point, all information for subframe has been received on FH interface
     // If this proc is to provide synchronization, do so
+    stop_meas(&softmodem_stats_rx_sf);
     wakeup_slaves(proc);
 
     if (rxtx(eNB,proc_rxtx,"eNB_thread_single") < 0) break;
+    stop_meas(&softmodem_stats_hw);
+    if (temp_f==3000) {
+	print_opp_meas();
+    }
   }
   
 
   printf( "Exiting eNB_single thread \n");
 
   eNB_thread_single_status = 0;
+  
   return &eNB_thread_single_status;
 
 }
@@ -2290,7 +2307,7 @@ void reset_opp_meas(void) {
   reset_meas(&softmodem_stats_mt);
   reset_meas(&softmodem_stats_hw);
   
-  for (sfn=0; sfn < 10; sfn++) {
+  for (sfn=0; sfn < 1; sfn++) {
     reset_meas(&softmodem_stats_rxtx_sf);
     reset_meas(&softmodem_stats_rx_sf);
   }
@@ -2303,9 +2320,19 @@ void print_opp_meas(void) {
   print_meas(&softmodem_stats_mt, "Main ENB Thread", NULL, NULL);
   print_meas(&softmodem_stats_hw, "HW Acquisation", NULL, NULL);
   
-  for (sfn=0; sfn < 10; sfn++) {
+  for (sfn=0; sfn < 1; sfn++) {
     print_meas(&softmodem_stats_rxtx_sf,"[eNB][total_phy_proc_rxtx]",NULL, NULL);
     print_meas(&softmodem_stats_rx_sf,"[eNB][total_phy_proc_rx]",NULL,NULL);
+  }
+  print_meas(&softmodem_stats_rx_rf,"softmodem_stats_rx_rf",NULL,NULL);
+  print_meas(&softmodem_stats_rx_rf_freq,"softmodem_stats_rx_rf_freq",NULL,NULL);
+  print_meas(&PHY_vars_eNB_g[0][0]->phy_proc_tx,"phy_proc_tx",NULL,NULL);
+  print_meas(&PHY_vars_eNB_g[0][0]->phy_proc_rx,"phy_proc_rx",NULL,NULL);
+  print_meas(&softmodem_stats_rx_fh_if4p5,"rx_fh_if4p5",NULL,NULL);
+  print_meas(&softmodem_stats_tx_fh_if4p5,"tx_fh_if4p5",NULL,NULL);
+  if (NB_eNB_INST>1){
+  	print_meas(&PHY_vars_eNB_g[1][0]->phy_proc_tx,"phy_proc_tx1",NULL,NULL);
+  	print_meas(&PHY_vars_eNB_g[1][0]->phy_proc_rx,"phy_proc_rx1",NULL,NULL);
   }
 }
  
@@ -2331,6 +2358,10 @@ void init_eNB(eNB_func_t node_function[], eNB_timing_t node_timing[],int nb_inst
   for (inst=0;inst<nb_inst;inst++) {
     for (CC_id=0;CC_id<MAX_NUM_CCs;CC_id++) {
       //printf("Number of inst %d, eNB %d, rfdevice %d, ifdevice %d, addr %s\n",inst,PHY_vars_eNB_g[inst][CC_id]->Mod_id,PHY_vars_eNB_g[inst][CC_id]->rfdevice.Mod_id,PHY_vars_eNB_g[inst][CC_id]->ifdevice.Mod_id,(eth_params+inst+CC_id)->my_addr);
+      reset_meas(&PHY_vars_eNB_g[inst][CC_id]->phy_proc_tx);
+      reset_meas(&PHY_vars_eNB_g[inst][CC_id]->phy_proc_rx);
+      reset_meas (&softmodem_stats_rx_fh_if4p5);
+      reset_meas (&softmodem_stats_tx_fh_if4p5);
       eNB = PHY_vars_eNB_g[inst][CC_id]; 
       eNB->node_function      = node_function[CC_id];
       eNB->node_timing        = node_timing[CC_id];
@@ -2540,9 +2571,7 @@ void init_eNB(eNB_func_t node_function[], eNB_timing_t node_timing[],int nb_inst
 
 }
 
-
 void stop_eNB(int nb_inst) {
-
   for (int inst=0;inst<nb_inst;inst++) {
     printf("Killing eNB %d processing threads\n",inst);
     kill_eNB_proc(inst);

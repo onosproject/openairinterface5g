@@ -1190,7 +1190,7 @@ void ulsch_scheduler_pre_processor(module_id_t module_idP,
 	}*/
 
       max_num_ue_to_be_scheduled+=1;
-
+      printf("ulsch_scheduler_pre_processor:max num ue to be scheduled %d\n",max_num_ue_to_be_scheduled);
       if (total_ue_count == 0) {
         average_rbs_per_user[CC_id] = 0;
       } else if (total_ue_count == 1 ) { // increase the available RBs, special case,

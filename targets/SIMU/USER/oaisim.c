@@ -1145,8 +1145,6 @@ l2l1_task (void *args_p)
 		   7);
 	  phy_scope_eNB(form_enb[UE_inst],
 		      PHY_vars_eNB_g[eNB_inst][0],
-		      PHY_vars_UE_g[UE_inst][0],
-		      eNB_inst,
 		      UE_inst);
 	//}	
       }
@@ -1745,8 +1743,6 @@ print_opp_meas_oaisim (void)
     print_meas (&PHY_vars_UE_g[UE_id][0]->dlsch_tc_intl2_stats,
                 "[UE][ |_tc_intl2]", &oaisim_stats, &oaisim_stats_f);
 
-    print_meas (&PHY_vars_UE_g[UE_id][0]->phy_proc_tx,
-                "[UE][total_phy_proc_tx]", &oaisim_stats, &oaisim_stats_f);
     print_meas (&PHY_vars_UE_g[UE_id][0]->ofdm_mod_stats, "[UE][ofdm_mod]",
                 &oaisim_stats, &oaisim_stats_f);
     print_meas (&PHY_vars_UE_g[UE_id][0]->ulsch_modulation_stats,
@@ -1772,6 +1768,8 @@ print_opp_meas_oaisim (void)
 
     print_meas (&PHY_vars_eNB_g[eNB_id][0]->phy_proc_tx,
                 "[eNB][total_phy_proc_tx]", &oaisim_stats, &oaisim_stats_f);
+    print_meas (&PHY_vars_eNB_g[eNB_id][0]->phy_proc_rx,
+                "[eNB][total_phy_proc_rx]", &oaisim_stats, &oaisim_stats_f);
     print_meas (&PHY_vars_eNB_g[eNB_id][0]->ofdm_mod_stats,
                 "[eNB][ofdm_mod]", &oaisim_stats, &oaisim_stats_f);
     print_meas (&PHY_vars_eNB_g[eNB_id][0]->dlsch_modulation_stats,
@@ -1787,8 +1785,6 @@ print_opp_meas_oaisim (void)
     print_meas (&PHY_vars_eNB_g[eNB_id][0]->dlsch_turbo_encoding_stats,
                 "[eNB][|_turbo_encoding]", &oaisim_stats, &oaisim_stats_f);
 
-    //print_meas (&PHY_vars_eNB_g[eNB_id][0]->phy_proc_rx,
-    //            "[eNB][total_phy_proc_rx]", &oaisim_stats, &oaisim_stats_f);
     print_meas (&PHY_vars_eNB_g[eNB_id][0]->ofdm_demod_stats,
                 "[eNB][ofdm_demod]", &oaisim_stats, &oaisim_stats_f);
     //print_meas(&PHY_vars_eNB_g[eNB_id][0]->ulsch_channel_estimation_stats,"[eNB][channel_est]");

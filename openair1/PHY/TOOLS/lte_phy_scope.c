@@ -23,7 +23,6 @@
 
 #include <stdlib.h>
 #include "lte_phy_scope.h"
-
 #define TPUT_WINDOW_LENGTH 100
 int otg_enabled;
 
@@ -150,11 +149,9 @@ FD_lte_phy_scope_enb *create_lte_phy_scope_enb( void )
 
 void phy_scope_eNB(FD_lte_phy_scope_enb *form,
                    PHY_VARS_eNB *phy_vars_enb,
-                   PHY_VARS_UE *phy_vars_ue,
-                   int eNB_id,
                    int UE_id)
 {
-  //int eNB_id = 0;
+  int eNB_id = 0;
   //printf("phy_scope_eNB: eNB_id %d, UE %d\n",eNB_id, UE_id);
   int i,i2,arx,atx,ind,k;
   LTE_DL_FRAME_PARMS *frame_parms = &phy_vars_enb->frame_parms;
@@ -197,9 +194,9 @@ void phy_scope_eNB(FD_lte_phy_scope_enb *form,
   chest_f_abs = (float*) calloc(nsymb_ce*nb_antennas_rx*nb_antennas_tx,sizeof(float));
   llr = (float*) calloc(coded_bits_per_codeword,sizeof(float)); // init to zero
   bit = malloc(coded_bits_per_codeword*sizeof(float));
-  if (phy_vars_ue->do_ofdm_mod)
+  /*if (PHY_VARS_UE_g[0][0]->do_ofdm_mod)
     rxsig_t = (int16_t**) phy_vars_enb->common_vars.rxdataF[0];
-  else
+  else*/
     rxsig_t = (int16_t**) phy_vars_enb->common_vars.rxdata[0];
   //chest_t = (int16_t**) phy_vars_enb->pusch_vars[UE_id]->drs_ch_estimates_time[eNB_id];
   chest_t = (int16_t**) phy_vars_enb->srs_vars[UE_id].srs_ch_estimates[eNB_id];
