@@ -270,7 +270,7 @@ int add_new_ue(module_id_t mod_idP, int cc_idP, rnti_t rntiP,int harq_pidP)
 
   UE_list_t *UE_list = &eNB_mac_inst[mod_idP].UE_list;
 
-  LOG_D(MAC,"[eNB %d, CC_id %d] Adding UE with rnti %x (next avail %d, num_UEs %d)\n",mod_idP,cc_idP,rntiP,UE_list->avail,UE_list->num_UEs);
+  LOG_D(MAC,"[eNB %d, CC_id %d] Adding UE with rnti %x (next avail %d, num_UEs %d)\n",mod_idP,cc_idP,rntiP,UE_list->avail,UE_list->num_UEs[cc_idP]);
   dump_ue_list(UE_list,0);
 
   for (i = 0; i < NUMBER_OF_UE_MAX; i++) {
@@ -284,7 +284,7 @@ printf("MAC: new UE id %d rnti %x\n", i, rntiP);
     UE_list->pCC_id[UE_id]                         = cc_idP;
     UE_list->ordered_CCids[0][UE_id]               = cc_idP;
     UE_list->ordered_ULCCids[0][UE_id]             = cc_idP;
-    UE_list->num_UEs++;
+    UE_list->num_UEs[cc_idP]++;
     UE_list->active[UE_id]                         = TRUE;
     memset((void*)&UE_list->UE_sched_ctrl[UE_id],0,sizeof(UE_sched_ctrl));
 
@@ -329,7 +329,7 @@ printf("MAC: remove UE %d rnti %x\n", UE_id, rntiP);
   dump_ue_list(UE_list,0);
 
   UE_list->active[UE_id] = FALSE;
-  UE_list->num_UEs--;
+  UE_list->num_UEs[pCC_id]--;
 
   // clear all remaining pending transmissions
   UE_list->UE_template[pCC_id][UE_id].bsr_info[LCGID0]  = 0;

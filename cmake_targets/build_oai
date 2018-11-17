@@ -459,6 +459,7 @@ function main() {
       echo_info "installing packages for USRP support"
       check_install_usrp_uhd_driver
       if [ ! "$DISABLE_HARDWARE_DEPENDENCY" == "True" ]; then
+	echo_info "install here: $UHD_IMAGES_DIR"
         install_usrp_uhd_driver $UHD_IMAGES_DIR
       fi
     fi 

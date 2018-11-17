@@ -37,7 +37,7 @@
 #include "PHY/LTE_TRANSPORT/defs.h"
 #include "defs.h"
 #include "UTIL/LOG/vcd_signal_dumper.h"
-
+#include "RRC/LITE/extern.h"
 //#define DEBUG_DLSCH_MODULATION
 
 //#define is_not_pilot(pilots,re,nushift,use2ndpilots) ((pilots==0) || ((re!=nushift) && (re!=nushift+6)&&((re!=nushift+3)||(use2ndpilots==1))&&((re!=nushift+9)||(use2ndpilots==1)))?1:0)
@@ -669,10 +669,12 @@ int allocate_REs_in_RB(PHY_VARS_eNB* phy_vars_eNB,
     #ifdef DEBUG_DLSCH_MODULATION
       printf("allocate_re (mod %d): symbol_offset %d re_offset %d (%d,%d), jj %d -> %d,%d\n",mod_order0,symbol_offset,re_offset,skip_dc,skip_half,*jj, x0[*jj], x0[1+*jj]);
     #endif
+      //printf("allocate_re (mod %d): symbol_offset %d re_offset %d (%d,%d), jj %d -> %d,%d\n",mod_order0,symbol_offset,re_offset,skip_dc,skip_half,*jj, x0[*jj], x0[1+*jj]);
   } else{
     #ifdef DEBUG_DLSCH_MODULATION
       printf("allocate_re (mod %d): symbol_offset %d re_offset %d (%d,%d), jj %d -> %d,%d\n",mod_order0,symbol_offset,re_offset,skip_dc,skip_half,*jj, x0[*jj], x0[1+*jj]);
     #endif
+      //printf("allocate_re (mod %d): symbol_offset %d re_offset %d (%d,%d), jj %d -> %d,%d\n",mod_order0,symbol_offset,re_offset,skip_dc,skip_half,*jj, x0[*jj], x0[1+*jj]);
   }
 
   first_re=0;
@@ -685,7 +687,7 @@ int allocate_REs_in_RB(PHY_VARS_eNB* phy_vars_eNB,
 
 
   for (re=first_re; re<last_re; re++) {
-  // printf("element %d precoder_index for allocation %d\n",re, precoder_index );
+   //printf("element %d precoder_index for allocation %d\n",re, precoder_index );
 
     if ((skip_dc == 1) && (re==6))
       re_off=re_off - frame_parms->ofdm_symbol_size+1;
@@ -2329,6 +2331,7 @@ int dlsch_modulation(PHY_VARS_eNB* phy_vars_eNB,
     //for (aa=0;aa<frame_parms->nb_antennas_tx;aa++)
     //memset(&txdataF[aa][symbol_offset],0,frame_parms->ofdm_symbol_size<<2);
     //printf("symbol_offset %d,subframe offset %d : pilots %d\n",symbol_offset,subframe_offset,pilots);
+    printf("subframe %d, CC_id %d, num_UEs %d | \t",subframe_offset,phy_vars_eNB->CC_id,eNB_mac_inst[0].UE_list.num_UEs[phy_vars_eNB->CC_id]);
     for (rb=0; rb<frame_parms->N_RB_DL; rb++) {
 
       if (rb < 32)
@@ -2380,7 +2383,7 @@ int dlsch_modulation(PHY_VARS_eNB* phy_vars_eNB,
                                dlsch1->harq_processes[harq_pid]->pmi_alloc,
                                rb);
 
-
+      printf("%d\t",rb);
       allocate_REs_in_RB(phy_vars_eNB,
                          txdataF,
                          &jj,
@@ -2420,6 +2423,7 @@ int dlsch_modulation(PHY_VARS_eNB* phy_vars_eNB,
           re_offset=7;  // odd number of RBs
       }
     }
+    printf("\n");
   }
 
 #ifdef DEBUG_DLSCH_MODULATION
@@ -2431,7 +2435,7 @@ int dlsch_modulation(PHY_VARS_eNB* phy_vars_eNB,
 #endif
 
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_ENB_DLSCH_MODULATION, VCD_FUNCTION_OUT);
-
+  printf("\n");
   return (re_allocated);
 }
 

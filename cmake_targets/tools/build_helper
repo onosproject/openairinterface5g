@@ -264,7 +264,7 @@ check_install_usrp_uhd_driver(){
     if [[ "$OS_DISTRO" == "ubuntu" ]]; then
         #first we remove old installation
         $SUDO apt-get remove -y uhd || true
-        $SUDO apt-get remove libuhd-dev libuhd003 uhd-host -y
+        $SUDO apt-get remove libuhd-dev libuhd003 -y uhd-host -y
         v=$(lsb_release -cs)
         $SUDO apt-add-repository --remove "deb http://files.ettus.com/binaries/uhd/repo/uhd/ubuntu/$v $v main"
         #The new USRP repository
@@ -291,9 +291,10 @@ install_usrp_uhd_driver() {
         $SUDO apt-get -y install uhd-host
     fi
     if [ -z $1 ]; then
-      $SUDO uhd_images_downloader
+      $SUDO cp /usr/lib/uhd/utils/uhd_images_downloader1.py /usr/lib/uhd/utils/uhd_images_downloader.py
+      $SUDO python /usr/lib/uhd/utils/uhd_images_downloader.py
     else
-      $SUDO uhd_images_downloader -i $1
+      $SUDO python /usr/lib/uhd/utils/uhd_images_downloader.py -i $1
     fi
 }
 

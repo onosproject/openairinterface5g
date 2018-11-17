@@ -867,7 +867,7 @@ typedef struct {
   int next_ul[NUMBER_OF_UE_MAX];
   int head_ul;
   int avail;
-  int num_UEs;
+  int num_UEs[MAX_NUM_CCs];
   boolean_t active[NUMBER_OF_UE_MAX];
 } UE_list_t;
 

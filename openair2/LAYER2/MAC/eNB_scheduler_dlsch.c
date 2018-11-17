@@ -482,7 +482,7 @@ schedule_ue_spec(
     N_RBG[CC_id] = frame_parms[CC_id]->N_RBG;
 
     // store the global enb stats:
-    eNB->eNB_stats[CC_id].num_dlactive_UEs =  UE_list->num_UEs;
+    eNB->eNB_stats[CC_id].num_dlactive_UEs =  UE_list->num_UEs[CC_id];//This was false. But now, We consider CC_id.
     eNB->eNB_stats[CC_id].available_prbs =  total_nb_available_rb[CC_id];
     eNB->eNB_stats[CC_id].total_available_prbs +=  total_nb_available_rb[CC_id];
     eNB->eNB_stats[CC_id].dlsch_bytes_tx=0;
@@ -510,11 +510,12 @@ schedule_ue_spec(
     for (UE_id=UE_list->head; UE_id>=0; UE_id=UE_list->next[UE_id]) {
       continue_flag=0; // reset the flag to allow allocation for the remaining UEs
       rnti = UE_RNTI(module_idP,UE_id);
+      //printf("schedule_ue_spec: ue_rnti %x, UE_id %d, eNB %d, CC_id %d\n",rnti,UE_id,module_idP,CC_id);
       eNB_UE_stats = mac_xface->get_eNB_UE_stats(module_idP,CC_id,rnti);
       ue_sched_ctl = &UE_list->UE_sched_ctrl[UE_id];
 
       if (rnti==NOT_A_RNTI) {
-        LOG_D(MAC,"Cannot find rnti for UE_id %d (num_UEs %d)\n",UE_id,UE_list->num_UEs);
+        LOG_D(MAC,"Cannot find rnti for UE_id %d (num_UEs %d)\n",UE_id,UE_list->num_UEs[CC_id]);
         // mac_xface->macphy_exit("Cannot find rnti for UE_id");
         continue_flag=1;
       }

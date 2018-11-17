@@ -165,7 +165,9 @@ int mac_top_init(int eMBMS_active, char *uecap_xer, uint8_t cba_group_active, ui
   for(Mod_id=0; Mod_id<NB_eNB_INST; Mod_id++) {
     UE_list = &eNB_mac_inst[Mod_id].UE_list;
 
-    UE_list->num_UEs=0;
+    for(CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) 
+      UE_list->num_UEs[CC_id]=0;
+
     UE_list->head=-1;
     UE_list->head_ul=-1;
     UE_list->avail=0;

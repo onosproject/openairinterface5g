@@ -1294,7 +1294,7 @@ void schedule_ulsch_cba_rnti(module_id_t module_idP, unsigned char cooperation_f
   int8_t available_rbs=0;
   uint8_t remaining_rbs=0;
   uint8_t allocated_rbs=0;
-  uint8_t total_UEs=UE_list->num_UEs;
+  uint8_t total_UEs;
   uint8_t active_UEs[NUM_MAX_CBA_GROUP];
   uint8_t total_groups=eNB_mac_inst[module_idP].common_channels[CC_id].num_active_cba_groups;
   int     min_rb_unit=2;
@@ -1320,7 +1320,7 @@ void schedule_ulsch_cba_rnti(module_id_t module_idP, unsigned char cooperation_f
   //LOG_D(MAC, "[eNB ] CBA granted ues are %d\n",granted_UEs );
 
   for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
-
+    total_UEs=UE_list->num_UEs[CC_id]
     frame_parms=mac_xface->get_lte_frame_parms(module_idP,CC_id);
     available_rbs=frame_parms->N_RB_DL-1-first_rb[CC_id];
     remaining_rbs=available_rbs;
