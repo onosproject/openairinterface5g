@@ -41,13 +41,13 @@
 #include "PHY/defs_eNB.h"
 #include "s1ap_messages_types.h"
 #ifdef CMAKER
-#include "SystemInformationBlockType2.h"
+#include "LTE_SystemInformationBlockType2.h"
 #include "rrc_messages_types.h"
 #else
-#include "RRC/LTE/MESSAGES/SystemInformationBlockType2.h"
+#include "RRC/LTE/MESSAGES/LTE_SystemInformationBlockType2.h"
 #endif
-#include "intertask_interface_types.h"
 #include "RRC/LTE/rrc_defs.h"
+#include <intertask_interface.h>
 
 #define IPV4_STR_ADDR_TO_INT_NWBO(AdDr_StR,NwBo,MeSsAgE ) do {\
             struct in_addr inp;\
@@ -106,6 +106,7 @@ void                          ru_config_display(void);
 
 int RCconfig_RRC(MessageDef *msg_p, uint32_t i, eNB_RRC_INST *rrc);
 int RCconfig_S1(MessageDef *msg_p, uint32_t i);
+int RCconfig_X2(MessageDef *msg_p, uint32_t i);
 
 #endif /* ENB_CONFIG_H_ */
 /** @} */

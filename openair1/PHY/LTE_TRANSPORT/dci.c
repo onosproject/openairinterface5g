@@ -121,7 +121,7 @@ uint8_t *generate_dci0(uint8_t *dci,
 	      (aggregation_level==2) ||
 	      (aggregation_level==4) ||
 	      (aggregation_level==8)
-#if (RRC_VERSION >= MAKE_VERSION(14, 0, 0)) // Added for EPDCCH/MPDCCH
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0)) // Added for EPDCCH/MPDCCH
 	      ||
 	      (aggregation_level==16) ||
 	      (aggregation_level==24) ||
@@ -346,6 +346,13 @@ uint8_t generate_dci_top(uint8_t num_pdcch_symbols,
   y[0] = &yseq0[0];
   y[1] = &yseq1[0];
 
+#if BASIC_SIMULATOR
+  /* this should be the normal case
+   * but it has to be validated for all the various cases
+   * so let's just do it for the basic simulator
+   */
+  memset(e, 2, DCI_BITS_MAX);
+#else
 #if 1
   // reset all bits to <NIL>, here we set <NIL> elements as 2
   // memset(e, 2, DCI_BITS_MAX);
@@ -358,6 +365,7 @@ uint8_t generate_dci_top(uint8_t num_pdcch_symbols,
    * (not sure about this, to be checked somehow)
    */
   //memset(e, 0, DCI_BITS_MAX);
+#endif /* BASIC_SIMULATOR */
 
   e_ptr = e;
 

@@ -42,7 +42,6 @@
 #endif
 
 //#define RRC_DATA_REQ_DEBUG
-//#define DEBUG_RRC 1
 
 
 
@@ -61,13 +60,10 @@ mac_rrc_data_req_ue(
 //--------------------------------------------------------------------------
 {
 
-#ifdef DEBUG_RRC
-  int i;
-  LOG_I(RRC,"[eNB %d] mac_rrc_data_req to SRB ID=%d\n",Mod_idP,Srb_id);
-#endif
+  LOG_D(RRC,"[eNB %d] mac_rrc_data_req to SRB ID=%d\n",Mod_idP,Srb_id);
 
 
-#if (RRC_VERSION >= MAKE_VERSION(14, 0, 0))
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
      LOG_D(RRC,"[UE %d] Frame %d Filling SL DISCOVERY SRB_ID %d\n",Mod_idP,frameP,Srb_id);
      LOG_D(RRC,"[UE %d] Frame %d buffer_pP status %d,\n",Mod_idP,frameP, UE_rrc_inst[Mod_idP].SL_Discovery[eNB_index].Tx_buffer.payload_size);
 
@@ -221,7 +217,7 @@ mac_rrc_data_ind_ue(
       }
     }
 
-#if (RRC_VERSION >= MAKE_VERSION(10, 0, 0))
+#if (LTE_RRC_VERSION >= MAKE_VERSION(10, 0, 0))
 
     if ((srb_idP & RAB_OFFSET) == MCCH) {
       LOG_T(RRC,"[UE %d] Frame %d: Received SDU on MBSFN sync area %d for MCCH on SRB %d from eNB %d\n",
@@ -257,7 +253,7 @@ mac_rrc_data_ind_ue(
     	decode_SL_Discovery_Message(&ctxt, eNB_indexP, sduP, sdu_lenP);
     }
 
-#endif // #if (RRC_VERSION >= MAKE_VERSION(10, 0, 0))
+#endif // #if (LTE_RRC_VERSION >= MAKE_VERSION(10, 0, 0))
 
   return(0);
 
@@ -331,7 +327,7 @@ rrc_data_req_ue(
            sdu_sizeP,
            buffer_pP,
            modeP
-#if (RRC_VERSION >= MAKE_VERSION(14, 0, 0))
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
            ,NULL, NULL
 #endif
            );

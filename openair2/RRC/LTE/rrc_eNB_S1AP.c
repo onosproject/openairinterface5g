@@ -52,7 +52,7 @@
 #endif
 #include "msc.h"
 
-#include "UERadioAccessCapabilityInformation.h"
+#include "LTE_UERadioAccessCapabilityInformation.h"
 
 #include "gtpv1u_eNB_task.h"
 #include "RRC/LTE/rrc_eNB_GTPV1U.h"
@@ -74,13 +74,13 @@ static const uint16_t S1AP_ENCRYPTION_EEA2_MASK = 0x4000;
 static const uint16_t S1AP_INTEGRITY_EIA1_MASK = 0x8000;
 static const uint16_t S1AP_INTEGRITY_EIA2_MASK = 0x4000;
 
-#if (RRC_VERSION >= MAKE_VERSION(9, 2, 0))
-# define INTEGRITY_ALGORITHM_NONE SecurityAlgorithmConfig__integrityProtAlgorithm_eia0_v920
+#if (LTE_RRC_VERSION >= MAKE_VERSION(9, 2, 0))
+# define INTEGRITY_ALGORITHM_NONE LTE_SecurityAlgorithmConfig__integrityProtAlgorithm_eia0_v920
 #else
 #ifdef EXMIMO_IOT
-# define INTEGRITY_ALGORITHM_NONE SecurityAlgorithmConfig__integrityProtAlgorithm_eia2
+# define INTEGRITY_ALGORITHM_NONE LTE_SecurityAlgorithmConfig__integrityProtAlgorithm_eia2
 #else
-# define INTEGRITY_ALGORITHM_NONE SecurityAlgorithmConfig__integrityProtAlgorithm_reserved
+# define INTEGRITY_ALGORITHM_NONE LTE_SecurityAlgorithmConfig__integrityProtAlgorithm_reserved
 #endif
 #endif
 
@@ -305,21 +305,21 @@ rrc_eNB_get_ue_context_from_s1ap_ids(
  *\param algorithms The bit mask of available algorithms received from S1AP.
  *\return the selected algorithm.
  */
-static CipheringAlgorithm_r12_t rrc_eNB_select_ciphering(uint16_t algorithms)
+static LTE_CipheringAlgorithm_r12_t rrc_eNB_select_ciphering(uint16_t algorithms)
 {
 
 //#warning "Forced   return SecurityAlgorithmConfig__cipheringAlgorithm_eea0, to be deleted in future"
-  return CipheringAlgorithm_r12_eea0;
+  return LTE_CipheringAlgorithm_r12_eea0;
 
   if (algorithms & S1AP_ENCRYPTION_EEA2_MASK) {
-    return CipheringAlgorithm_r12_eea2;
+    return LTE_CipheringAlgorithm_r12_eea2;
   }
 
   if (algorithms & S1AP_ENCRYPTION_EEA1_MASK) {
-    return CipheringAlgorithm_r12_eea1;
+    return LTE_CipheringAlgorithm_r12_eea1;
   }
 
-  return CipheringAlgorithm_r12_eea0;
+  return LTE_CipheringAlgorithm_r12_eea0;
 }
 
 /*! \fn e_SecurityAlgorithmConfig__integrityProtAlgorithm rrc_eNB_select_integrity(uint16_t algorithms)
@@ -327,15 +327,15 @@ static CipheringAlgorithm_r12_t rrc_eNB_select_ciphering(uint16_t algorithms)
  *\param algorithms The bit mask of available algorithms received from S1AP.
  *\return the selected algorithm.
  */
-static e_SecurityAlgorithmConfig__integrityProtAlgorithm rrc_eNB_select_integrity(uint16_t algorithms)
+static e_LTE_SecurityAlgorithmConfig__integrityProtAlgorithm rrc_eNB_select_integrity(uint16_t algorithms)
 {
 
   if (algorithms & S1AP_INTEGRITY_EIA2_MASK) {
-    return SecurityAlgorithmConfig__integrityProtAlgorithm_eia2;
+    return LTE_SecurityAlgorithmConfig__integrityProtAlgorithm_eia2;
   }
 
   if (algorithms & S1AP_INTEGRITY_EIA1_MASK) {
-    return SecurityAlgorithmConfig__integrityProtAlgorithm_eia1;
+    return LTE_SecurityAlgorithmConfig__integrityProtAlgorithm_eia1;
   }
 
   return INTEGRITY_ALGORITHM_NONE;
@@ -355,9 +355,9 @@ rrc_eNB_process_security(
   security_capabilities_t* security_capabilities_pP
 )
 {
-  boolean_t                                         changed = FALSE;
-  CipheringAlgorithm_r12_t                          cipheringAlgorithm;
-  e_SecurityAlgorithmConfig__integrityProtAlgorithm integrityProtAlgorithm;
+  boolean_t                                             changed = FALSE;
+  LTE_CipheringAlgorithm_r12_t                          cipheringAlgorithm;
+  e_LTE_SecurityAlgorithmConfig__integrityProtAlgorithm integrityProtAlgorithm;
 
   /* Save security parameters */
   ue_context_pP->ue_context.security_capabilities = *security_capabilities_pP;
@@ -443,7 +443,7 @@ rrc_pdcp_config_security(
 #if defined(ENABLE_SECURITY)
 
 
-  SRB_ToAddModList_t*                 SRB_configList = ue_context_pP->ue_context.SRB_configList;
+  LTE_SRB_ToAddModList_t*             SRB_configList = ue_context_pP->ue_context.SRB_configList;
   uint8_t                            *kRRCenc = NULL;
   uint8_t                            *kRRCint = NULL;
   uint8_t                            *kUPenc = NULL;
@@ -467,43 +467,20 @@ rrc_pdcp_config_security(
                      &kRRCint);
 
 #if !defined(USRP_REC_PLAY)
-#define DEBUG_SECURITY 1
+  SET_LOG_DUMP(DEBUG_SECURITY) ;
 #endif
   
-#if defined (DEBUG_SECURITY)
-#undef msg
-#define msg printf
 
-  if (print_keys ==1 ) {
-    print_keys =0;
-    int i;
-    msg("\nKeNB:");
+  if ( LOG_DUMPFLAG( DEBUG_SECURITY ) ) {
+    if (print_keys ==1 ) {
+      print_keys =0;
 
-    for(i = 0; i < 32; i++) {
-      msg("%02x", ue_context_pP->ue_context.kenb[i]);
+      LOG_DUMPMSG(RRC, DEBUG_SECURITY, ue_context_pP->ue_context.kenb, 32,"\nKeNB:" );
+      LOG_DUMPMSG(RRC, DEBUG_SECURITY, kRRCenc, 32,"\nKRRCenc:" );
+      LOG_DUMPMSG(RRC, DEBUG_SECURITY, kRRCint, 32,"\nKRRCint:" );
     }
-
-    msg("\n");
-
-    msg("\nKRRCenc:");
-
-    for(i = 0; i < 32; i++) {
-      msg("%02x", kRRCenc[i]);
-    }
-
-    msg("\n");
-
-    msg("\nKRRCint:");
-
-    for(i = 0; i < 32; i++) {
-      msg("%02x", kRRCint[i]);
-    }
-
-    msg("\n");
-
   }
 
-#endif //DEBUG_SECURITY
   key = PDCP_COLL_KEY_VALUE(ctxt_pP->module_id, ctxt_pP->rnti, ctxt_pP->enb_flag, DCCH, SRB_FLAG_YES);
   h_rc = hashtable_get(pdcp_coll_p, key, (void**)&pdcp_p);
 
@@ -588,21 +565,21 @@ void
 rrc_eNB_send_S1AP_UPLINK_NAS(
   const protocol_ctxt_t*    const ctxt_pP,
   rrc_eNB_ue_context_t*             const ue_context_pP,
-  UL_DCCH_Message_t*        const ul_dcch_msg
+  LTE_UL_DCCH_Message_t*        const ul_dcch_msg
 )
 //------------------------------------------------------------------------------
 {
 #if defined(ENABLE_ITTI)
   {
-    ULInformationTransfer_t *ulInformationTransfer = &ul_dcch_msg->message.choice.c1.choice.ulInformationTransfer;
+    LTE_ULInformationTransfer_t *ulInformationTransfer = &ul_dcch_msg->message.choice.c1.choice.ulInformationTransfer;
 
-    if ((ulInformationTransfer->criticalExtensions.present == ULInformationTransfer__criticalExtensions_PR_c1)
+    if ((ulInformationTransfer->criticalExtensions.present == LTE_ULInformationTransfer__criticalExtensions_PR_c1)
     && (ulInformationTransfer->criticalExtensions.choice.c1.present
-    == ULInformationTransfer__criticalExtensions__c1_PR_ulInformationTransfer_r8)
+    == LTE_ULInformationTransfer__criticalExtensions__c1_PR_ulInformationTransfer_r8)
     && (ulInformationTransfer->criticalExtensions.choice.c1.choice.ulInformationTransfer_r8.dedicatedInfoType.present
-    == ULInformationTransfer_r8_IEs__dedicatedInfoType_PR_dedicatedInfoNAS)) {
+    == LTE_ULInformationTransfer_r8_IEs__dedicatedInfoType_PR_dedicatedInfoNAS)) {
       /* This message hold a dedicated info NAS payload, forward it to NAS */
-      struct ULInformationTransfer_r8_IEs__dedicatedInfoType *dedicatedInfoType =
+      struct LTE_ULInformationTransfer_r8_IEs__dedicatedInfoType *dedicatedInfoType =
           &ulInformationTransfer->criticalExtensions.choice.c1.choice.ulInformationTransfer_r8.dedicatedInfoType;
       uint32_t pdu_length;
       uint8_t *pdu_buffer;
@@ -625,15 +602,15 @@ rrc_eNB_send_S1AP_UPLINK_NAS(
   }
 #else
   {
-    ULInformationTransfer_t *ulInformationTransfer;
+    LTE_ULInformationTransfer_t *ulInformationTransfer;
     ulInformationTransfer =
     &ul_dcch_msg->message.choice.c1.choice.
     ulInformationTransfer;
 
     if (ulInformationTransfer->criticalExtensions.present ==
-    ULInformationTransfer__criticalExtensions_PR_c1) {
+    LTE_ULInformationTransfer__criticalExtensions_PR_c1) {
       if (ulInformationTransfer->criticalExtensions.choice.c1.present ==
-      ULInformationTransfer__criticalExtensions__c1_PR_ulInformationTransfer_r8) {
+      LTE_ULInformationTransfer__criticalExtensions__c1_PR_ulInformationTransfer_r8) {
 
         ULInformationTransfer_r8_IEs_t
         *ulInformationTransferR8;
@@ -642,7 +619,7 @@ rrc_eNB_send_S1AP_UPLINK_NAS(
         c1.choice.ulInformationTransfer_r8;
 
         if (ulInformationTransferR8->dedicatedInfoType.present ==
-            ULInformationTransfer_r8_IEs__dedicatedInfoType_PR_dedicatedInfoNAS) {
+            LTE_ULInformationTransfer_r8_IEs__dedicatedInfoType_PR_dedicatedInfoNAS) {
 
           extract_imsi(ulInformationTransferR8->dedicatedInfoType.choice.dedicatedInfoNAS.buf,
                        ulInformationTransferR8->dedicatedInfoType.choice.dedicatedInfoNAS.size,
@@ -662,30 +639,30 @@ rrc_eNB_send_S1AP_UPLINK_NAS(
 void rrc_eNB_send_S1AP_UE_CAPABILITIES_IND(
   const protocol_ctxt_t* const ctxt_pP,
   rrc_eNB_ue_context_t*          const ue_context_pP,
-  UL_DCCH_Message_t* ul_dcch_msg
+  LTE_UL_DCCH_Message_t* ul_dcch_msg
 )
 //------------------------------------------------------------------------------
 {
-  UECapabilityInformation_t *ueCapabilityInformation = &ul_dcch_msg->message.choice.c1.choice.ueCapabilityInformation;
+  LTE_UECapabilityInformation_t *ueCapabilityInformation = &ul_dcch_msg->message.choice.c1.choice.ueCapabilityInformation;
   /* 4096 is arbitrary, should be big enough */
   unsigned char buf[4096];
   unsigned char *buf2;
-  UERadioAccessCapabilityInformation_t rac;
+  LTE_UERadioAccessCapabilityInformation_t rac;
 
-  if (ueCapabilityInformation->criticalExtensions.present != UECapabilityInformation__criticalExtensions_PR_c1
-      || ueCapabilityInformation->criticalExtensions.choice.c1.present != UECapabilityInformation__criticalExtensions__c1_PR_ueCapabilityInformation_r8) {
+  if (ueCapabilityInformation->criticalExtensions.present != LTE_UECapabilityInformation__criticalExtensions_PR_c1
+      || ueCapabilityInformation->criticalExtensions.choice.c1.present != LTE_UECapabilityInformation__criticalExtensions__c1_PR_ueCapabilityInformation_r8) {
     LOG_E(RRC, "[eNB %d][UE %x] bad UE capabilities\n", ctxt_pP->module_id, ue_context_pP->ue_context.rnti);
     return;
   }
 
-  asn_enc_rval_t ret = uper_encode_to_buffer(&asn_DEF_UECapabilityInformation, NULL, ueCapabilityInformation, buf, 4096);
+  asn_enc_rval_t ret = uper_encode_to_buffer(&asn_DEF_LTE_UECapabilityInformation, NULL, ueCapabilityInformation, buf, 4096);
 
   if (ret.encoded == -1) abort();
 
-  memset(&rac, 0, sizeof(UERadioAccessCapabilityInformation_t));
+  memset(&rac, 0, sizeof(LTE_UERadioAccessCapabilityInformation_t));
 
-  rac.criticalExtensions.present = UERadioAccessCapabilityInformation__criticalExtensions_PR_c1;
-  rac.criticalExtensions.choice.c1.present = UERadioAccessCapabilityInformation__criticalExtensions__c1_PR_ueRadioAccessCapabilityInformation_r8;
+  rac.criticalExtensions.present = LTE_UERadioAccessCapabilityInformation__criticalExtensions_PR_c1;
+  rac.criticalExtensions.choice.c1.present = LTE_UERadioAccessCapabilityInformation__criticalExtensions__c1_PR_ueRadioAccessCapabilityInformation_r8;
   rac.criticalExtensions.choice.c1.choice.ueRadioAccessCapabilityInformation_r8.ue_RadioAccessCapabilityInfo.buf = buf;
   rac.criticalExtensions.choice.c1.choice.ueRadioAccessCapabilityInformation_r8.ue_RadioAccessCapabilityInfo.size = (ret.encoded+7)/8;
   rac.criticalExtensions.choice.c1.choice.ueRadioAccessCapabilityInformation_r8.nonCriticalExtension = NULL;
@@ -694,7 +671,7 @@ void rrc_eNB_send_S1AP_UE_CAPABILITIES_IND(
   buf2 = malloc16(8192);
   if (buf2 == NULL) abort();
 
-  ret = uper_encode_to_buffer(&asn_DEF_UERadioAccessCapabilityInformation, NULL, &rac, buf2, 8192);
+  ret = uper_encode_to_buffer(&asn_DEF_LTE_UERadioAccessCapabilityInformation, NULL, &rac, buf2, 8192);
 
   if (ret.encoded == -1) abort();
 
@@ -713,7 +690,7 @@ void
 rrc_eNB_send_S1AP_NAS_FIRST_REQ(
   const protocol_ctxt_t* const ctxt_pP,
   rrc_eNB_ue_context_t*          const ue_context_pP,
-  RRCConnectionSetupComplete_r8_IEs_t* rrcConnectionSetupComplete
+  LTE_RRCConnectionSetupComplete_r8_IEs_t* rrcConnectionSetupComplete
 )
 //------------------------------------------------------------------------------
 
@@ -778,17 +755,20 @@ rrc_eNB_send_S1AP_NAS_FIRST_REQ(
             ue_context_pP->ue_context.rnti);
       }
 
+      /* selected_plmn_identity: IE is 1-based, convert to 0-based (C array) */
+      int selected_plmn_identity = rrcConnectionSetupComplete->selectedPLMN_Identity - 1;
+      S1AP_NAS_FIRST_REQ(message_p).selected_plmn_identity = selected_plmn_identity;
+
       if (rrcConnectionSetupComplete->registeredMME != NULL) {
         /* Fill GUMMEI */
-        struct RegisteredMME *r_mme = rrcConnectionSetupComplete->registeredMME;
-        //int selected_plmn_identity = rrcConnectionSetupComplete->selectedPLMN_Identity;
+        struct LTE_RegisteredMME *r_mme = rrcConnectionSetupComplete->registeredMME;
 
         S1AP_NAS_FIRST_REQ (message_p).ue_identity.presenceMask |= UE_IDENTITIES_gummei;
 
         if (r_mme->plmn_Identity != NULL) {
           if ((r_mme->plmn_Identity->mcc != NULL) && (r_mme->plmn_Identity->mcc->list.count > 0)) {
             /* Use first indicated PLMN MCC if it is defined */
-            S1AP_NAS_FIRST_REQ (message_p).ue_identity.gummei.mcc = *r_mme->plmn_Identity->mcc->list.array[0];
+            S1AP_NAS_FIRST_REQ (message_p).ue_identity.gummei.mcc = *r_mme->plmn_Identity->mcc->list.array[selected_plmn_identity];
             LOG_I(S1AP, "[eNB %d] Build S1AP_NAS_FIRST_REQ adding in s_TMSI: GUMMEI MCC %u ue %x\n",
                 ctxt_pP->module_id,
                 S1AP_NAS_FIRST_REQ (message_p).ue_identity.gummei.mcc,
@@ -797,20 +777,16 @@ rrc_eNB_send_S1AP_NAS_FIRST_REQ(
 
           if (r_mme->plmn_Identity->mnc.list.count > 0) {
             /* Use first indicated PLMN MNC if it is defined */
-            S1AP_NAS_FIRST_REQ (message_p).ue_identity.gummei.mnc = *r_mme->plmn_Identity->mnc.list.array[0];
+            S1AP_NAS_FIRST_REQ (message_p).ue_identity.gummei.mnc = *r_mme->plmn_Identity->mnc.list.array[selected_plmn_identity];
             LOG_I(S1AP, "[eNB %d] Build S1AP_NAS_FIRST_REQ adding in s_TMSI: GUMMEI MNC %u ue %x\n",
                   ctxt_pP->module_id,
                   S1AP_NAS_FIRST_REQ (message_p).ue_identity.gummei.mnc,
                   ue_context_pP->ue_context.rnti);
           }
         } else {
-	  //          const Enb_properties_array_t   *enb_properties_p  = NULL;
-	  //          enb_properties_p = enb_config_get();
-
-          // actually the eNB configuration contains only one PLMN (can be up to 6)
-          S1AP_NAS_FIRST_REQ (message_p).ue_identity.gummei.mcc = rrc->mcc;
-          S1AP_NAS_FIRST_REQ (message_p).ue_identity.gummei.mnc = rrc->mnc;
-          S1AP_NAS_FIRST_REQ (message_p).ue_identity.gummei.mnc_len = rrc->mnc_digit_length;
+          S1AP_NAS_FIRST_REQ(message_p).ue_identity.gummei.mcc = rrc->configuration.mcc[selected_plmn_identity];
+          S1AP_NAS_FIRST_REQ(message_p).ue_identity.gummei.mnc = rrc->configuration.mnc[selected_plmn_identity];
+          S1AP_NAS_FIRST_REQ(message_p).ue_identity.gummei.mnc_len = rrc->configuration.mnc_digit_length[selected_plmn_identity];
         }
 
         S1AP_NAS_FIRST_REQ (message_p).ue_identity.gummei.mme_code     = BIT_STRING_to_uint8 (&r_mme->mmec);
@@ -945,16 +921,8 @@ rrc_eNB_process_S1AP_DOWNLINK_NAS(
                S1AP_DOWNLINK_NAS (msg_p).nas_pdu.length,
                S1AP_DOWNLINK_NAS (msg_p).nas_pdu.buffer);
 
-#ifdef RRC_MSG_PRINT
-    int i=0;
-    LOG_F(RRC,"[MSG] RRC DL Information Transfer\n");
+    LOG_DUMPMSG(RRC,DEBUG_RRC,buffer,length,"[MSG] RRC DL Information Transfer\n");
 
-    for (i = 0; i < length; i++) {
-      LOG_F(RRC,"%02x ", ((uint8_t*)buffer)[i]);
-    }
-
-    LOG_F(RRC,"\n");
-#endif
     /* 
      * switch UL or DL NAS message without RRC piggybacked to SRB2 if active. 
      */
@@ -1881,125 +1849,127 @@ int rrc_eNB_process_PAGING_IND(MessageDef *msg_p, const char *msg_name, instance
   for (uint16_t tai_size = 0; tai_size < S1AP_PAGING_IND(msg_p).tai_size; tai_size++) {
        LOG_D(RRC,"[eNB %d] In S1AP_PAGING_IND: MCC %d, MNC %d, TAC %d\n", instance, S1AP_PAGING_IND(msg_p).plmn_identity[tai_size].mcc,
              S1AP_PAGING_IND(msg_p).plmn_identity[tai_size].mnc, S1AP_PAGING_IND(msg_p).tac[tai_size]);
-      if (RC.rrc[instance]->configuration.mcc == S1AP_PAGING_IND(msg_p).plmn_identity[tai_size].mcc
-          && RC.rrc[instance]->configuration.mnc == S1AP_PAGING_IND(msg_p).plmn_identity[tai_size].mnc
-          && RC.rrc[instance]->configuration.tac == S1AP_PAGING_IND(msg_p).tac[tai_size]) {
-          for (uint8_t CC_id = 0; CC_id < MAX_NUM_CCs; CC_id++) {
-              lte_frame_type_t frame_type = RC.eNB[instance][CC_id]->frame_parms.frame_type;
-              /* get nB from configuration */
-              /* get default DRX cycle from configuration */
-              Tc = (uint8_t)RC.rrc[instance]->configuration.pcch_defaultPagingCycle[CC_id];
-              if (Tc < PCCH_Config__defaultPagingCycle_rf32 || Tc > PCCH_Config__defaultPagingCycle_rf256) {
-                  continue;
-              }
-              Tue = (uint8_t)S1AP_PAGING_IND(msg_p).paging_drx;
-              /* set T = min(Tc,Tue) */
-              T = Tc < Tue ? Ttab[Tc] : Ttab[Tue];
-              /* set pcch_nB = PCCH-Config->nB */
-              pcch_nB = (uint32_t)RC.rrc[instance]->configuration.pcch_nB[CC_id];
-              switch (pcch_nB) {
-                case PCCH_Config__nB_fourT:
-                    Ns = 4;
-                    break;
-                case PCCH_Config__nB_twoT:
-                    Ns = 2;
-                    break;
-                default:
-                    Ns = 1;
-                    break;
-              }
-              /* set N = min(T,nB) */
-              if (pcch_nB > PCCH_Config__nB_oneT) {
-                switch (pcch_nB) {
-                case PCCH_Config__nB_halfT:
-                  N = T/2;
-                  break;
-                case PCCH_Config__nB_quarterT:
-                  N = T/4;
-                  break;
-                case PCCH_Config__nB_oneEighthT:
-                  N = T/8;
-                  break;
-                case PCCH_Config__nB_oneSixteenthT:
-                  N = T/16;
-                  break;
-                case PCCH_Config__nB_oneThirtySecondT:
-                  N = T/32;
-                  break;
-                default:
-                  /* pcch_nB error */
-                  LOG_E(RRC, "[eNB %d] In S1AP_PAGING_IND:  pcch_nB error (pcch_nB %d) \n",
-                      instance, pcch_nB);
-                  return (-1);
-                }
-              } else {
-                N = T;
-              }
-
-              /* insert data to UE_PF_PO or update data in UE_PF_PO */
-              pthread_mutex_lock(&ue_pf_po_mutex);
-              uint16_t i = 0;
-              for (i = 0; i < MAX_MOBILES_PER_ENB; i++) {
-                if ((UE_PF_PO[CC_id][i].enable_flag == TRUE && UE_PF_PO[CC_id][i].ue_index_value == (uint16_t)(S1AP_PAGING_IND(msg_p).ue_index_value))
-                    || (UE_PF_PO[CC_id][i].enable_flag != TRUE)) {
-                    /* set T = min(Tc,Tue) */
-                    UE_PF_PO[CC_id][i].T = T;
-                    /* set UE_ID */
-                    UE_PF_PO[CC_id][i].ue_index_value = (uint16_t)S1AP_PAGING_IND(msg_p).ue_index_value;
-                    /* calculate PF and PO */
-                    /* set PF_min : SFN mod T = (T div N)*(UE_ID mod N) */
-                    UE_PF_PO[CC_id][i].PF_min = (T / N) * (UE_PF_PO[CC_id][i].ue_index_value % N);
-                    /* set PO */
-                    /* i_s = floor(UE_ID/N) mod Ns */
-                    i_s = (uint8_t)((UE_PF_PO[CC_id][i].ue_index_value / N) % Ns);
-                    if (Ns == 1) {
-                        UE_PF_PO[CC_id][i].PO = (frame_type==FDD) ? 9 : 0;
-                    } else if (Ns==2) {
-                        UE_PF_PO[CC_id][i].PO = (frame_type==FDD) ? (4+(5*i_s)) : (5*i_s);
-                    } else if (Ns==4) {
-                        UE_PF_PO[CC_id][i].PO = (frame_type==FDD) ? (4*(i_s&1)+(5*(i_s>>1))) : ((i_s&1)+(5*(i_s>>1)));
+      for (uint8_t j = 0; j < RC.rrc[instance]->configuration.num_plmn; j++) {
+          if (RC.rrc[instance]->configuration.mcc[j] == S1AP_PAGING_IND(msg_p).plmn_identity[tai_size].mcc
+              && RC.rrc[instance]->configuration.mnc[j] == S1AP_PAGING_IND(msg_p).plmn_identity[tai_size].mnc
+              && RC.rrc[instance]->configuration.tac == S1AP_PAGING_IND(msg_p).tac[tai_size]) {
+              for (uint8_t CC_id = 0; CC_id < MAX_NUM_CCs; CC_id++) {
+                  lte_frame_type_t frame_type = RC.eNB[instance][CC_id]->frame_parms.frame_type;
+                  /* get nB from configuration */
+                  /* get default DRX cycle from configuration */
+                  Tc = (uint8_t)RC.rrc[instance]->configuration.pcch_defaultPagingCycle[CC_id];
+                  if (Tc < LTE_PCCH_Config__defaultPagingCycle_rf32 || Tc > LTE_PCCH_Config__defaultPagingCycle_rf256) {
+                      continue;
+                  }
+                  Tue = (uint8_t)S1AP_PAGING_IND(msg_p).paging_drx;
+                  /* set T = min(Tc,Tue) */
+                  T = Tc < Tue ? Ttab[Tc] : Ttab[Tue];
+                  /* set pcch_nB = PCCH-Config->nB */
+                  pcch_nB = (uint32_t)RC.rrc[instance]->configuration.pcch_nB[CC_id];
+                  switch (pcch_nB) {
+                    case LTE_PCCH_Config__nB_fourT:
+                        Ns = 4;
+                        break;
+                    case LTE_PCCH_Config__nB_twoT:
+                        Ns = 2;
+                        break;
+                    default:
+                        Ns = 1;
+                        break;
+                  }
+                  /* set N = min(T,nB) */
+                  if (pcch_nB > LTE_PCCH_Config__nB_oneT) {
+                    switch (pcch_nB) {
+                    case LTE_PCCH_Config__nB_halfT:
+                      N = T/2;
+                      break;
+                    case LTE_PCCH_Config__nB_quarterT:
+                      N = T/4;
+                      break;
+                    case LTE_PCCH_Config__nB_oneEighthT:
+                      N = T/8;
+                      break;
+                    case LTE_PCCH_Config__nB_oneSixteenthT:
+                      N = T/16;
+                      break;
+                    case LTE_PCCH_Config__nB_oneThirtySecondT:
+                      N = T/32;
+                      break;
+                    default:
+                      /* pcch_nB error */
+                      LOG_E(RRC, "[eNB %d] In S1AP_PAGING_IND:  pcch_nB error (pcch_nB %d) \n",
+                          instance, pcch_nB);
+                      return (-1);
                     }
-                    if (UE_PF_PO[CC_id][i].enable_flag == TRUE) {
-                        //paging exist UE log
-                        LOG_D(RRC,"[eNB %d] CC_id %d In S1AP_PAGING_IND: Update exist UE %d, T %d, PF %d, PO %d\n", instance, CC_id, UE_PF_PO[CC_id][i].ue_index_value, T, UE_PF_PO[CC_id][i].PF_min, UE_PF_PO[CC_id][i].PO);
-                    } else {
-                        /* set enable_flag */
-                        UE_PF_PO[CC_id][i].enable_flag = TRUE;
-                        //paging new UE log
-                        LOG_D(RRC,"[eNB %d] CC_id %d In S1AP_PAGING_IND: Insert a new UE %d, T %d, PF %d, PO %d\n", instance, CC_id, UE_PF_PO[CC_id][i].ue_index_value, T, UE_PF_PO[CC_id][i].PF_min, UE_PF_PO[CC_id][i].PO);
-                    }
-                    break;
-                }
-              }
-              pthread_mutex_unlock(&ue_pf_po_mutex);
+                  } else {
+                    N = T;
+                  }
 
-              uint32_t length;
-              uint8_t buffer[RRC_BUF_SIZE];
-              uint8_t *message_buffer;
-              /* Transfer data to PDCP */
-              MessageDef *message_p;
-              message_p = itti_alloc_new_message (TASK_RRC_ENB, RRC_PCCH_DATA_REQ);
-              /* Create message for PDCP (DLInformationTransfer_t) */
-              length = do_Paging (instance,
-                                  buffer,
-                                  S1AP_PAGING_IND(msg_p).ue_paging_identity,
-                                  S1AP_PAGING_IND(msg_p).cn_domain);
-              if(length == -1)
-              {
-                LOG_I(RRC, "do_Paging error");
-                return -1;
+                  /* insert data to UE_PF_PO or update data in UE_PF_PO */
+                  pthread_mutex_lock(&ue_pf_po_mutex);
+                  uint8_t i = 0;
+                  for (i = 0; i < MAX_MOBILES_PER_ENB; i++) {
+                    if ((UE_PF_PO[CC_id][i].enable_flag == TRUE && UE_PF_PO[CC_id][i].ue_index_value == (uint16_t)(S1AP_PAGING_IND(msg_p).ue_index_value))
+                        || (UE_PF_PO[CC_id][i].enable_flag != TRUE)) {
+                        /* set T = min(Tc,Tue) */
+                        UE_PF_PO[CC_id][i].T = T;
+                        /* set UE_ID */
+                        UE_PF_PO[CC_id][i].ue_index_value = (uint16_t)S1AP_PAGING_IND(msg_p).ue_index_value;
+                        /* calculate PF and PO */
+                        /* set PF_min : SFN mod T = (T div N)*(UE_ID mod N) */
+                        UE_PF_PO[CC_id][i].PF_min = (T / N) * (UE_PF_PO[CC_id][i].ue_index_value % N);
+                        /* set PO */
+                        /* i_s = floor(UE_ID/N) mod Ns */
+                        i_s = (uint8_t)((UE_PF_PO[CC_id][i].ue_index_value / N) % Ns);
+                        if (Ns == 1) {
+                            UE_PF_PO[CC_id][i].PO = (frame_type==FDD) ? 9 : 0;
+                        } else if (Ns==2) {
+                            UE_PF_PO[CC_id][i].PO = (frame_type==FDD) ? (4+(5*i_s)) : (5*i_s);
+                        } else if (Ns==4) {
+                            UE_PF_PO[CC_id][i].PO = (frame_type==FDD) ? (4*(i_s&1)+(5*(i_s>>1))) : ((i_s&1)+(5*(i_s>>1)));
+                        }
+                        if (UE_PF_PO[CC_id][i].enable_flag == TRUE) {
+                            //paging exist UE log
+                            LOG_D(RRC,"[eNB %d] CC_id %d In S1AP_PAGING_IND: Update exist UE %d, T %d, PF %d, PO %d\n", instance, CC_id, UE_PF_PO[CC_id][i].ue_index_value, T, UE_PF_PO[CC_id][i].PF_min, UE_PF_PO[CC_id][i].PO);
+                        } else {
+                            /* set enable_flag */
+                            UE_PF_PO[CC_id][i].enable_flag = TRUE;
+                            //paging new UE log
+                            LOG_D(RRC,"[eNB %d] CC_id %d In S1AP_PAGING_IND: Insert a new UE %d, T %d, PF %d, PO %d\n", instance, CC_id, UE_PF_PO[CC_id][i].ue_index_value, T, UE_PF_PO[CC_id][i].PF_min, UE_PF_PO[CC_id][i].PO);
+                        }
+                        break;
+                    }
+                  }
+                  pthread_mutex_unlock(&ue_pf_po_mutex);
+
+                  uint32_t length;
+                  uint8_t buffer[RRC_BUF_SIZE];
+                  uint8_t *message_buffer;
+                  /* Transfer data to PDCP */
+                  MessageDef *message_p;
+                  message_p = itti_alloc_new_message (TASK_RRC_ENB, RRC_PCCH_DATA_REQ);
+                  /* Create message for PDCP (DLInformationTransfer_t) */
+                  length = do_Paging (instance,
+                                      buffer,
+                                      S1AP_PAGING_IND(msg_p).ue_paging_identity,
+                                      S1AP_PAGING_IND(msg_p).cn_domain);
+                  if(length == -1)
+                  {
+                    LOG_I(RRC, "do_Paging error");
+                    return -1;
+                  }
+                  message_buffer = itti_malloc (TASK_RRC_ENB, TASK_PDCP_ENB, length);
+                  /* Uses a new buffer to avoid issue with PDCP buffer content that could be changed by PDCP (asynchronous message handling). */
+                  memcpy (message_buffer, buffer, length);
+                  RRC_PCCH_DATA_REQ (message_p).sdu_size  = length;
+                  RRC_PCCH_DATA_REQ (message_p).sdu_p     = message_buffer;
+                  RRC_PCCH_DATA_REQ (message_p).mode      = PDCP_TRANSMISSION_MODE_TRANSPARENT;  /* not used */
+                  RRC_PCCH_DATA_REQ (message_p).rnti      = P_RNTI;
+                  RRC_PCCH_DATA_REQ (message_p).ue_index  = i;
+                  RRC_PCCH_DATA_REQ (message_p).CC_id  = CC_id;
+                  LOG_D(RRC, "[eNB %d] CC_id %d In S1AP_PAGING_IND: send encdoed buffer to PDCP buffer_size %d\n", instance, CC_id, length);
+                  itti_send_msg_to_task (TASK_PDCP_ENB, instance, message_p);
               }
-              message_buffer = itti_malloc (TASK_RRC_ENB, TASK_PDCP_ENB, length);
-              /* Uses a new buffer to avoid issue with PDCP buffer content that could be changed by PDCP (asynchronous message handling). */
-              memcpy (message_buffer, buffer, length);
-              RRC_PCCH_DATA_REQ (message_p).sdu_size  = length;
-              RRC_PCCH_DATA_REQ (message_p).sdu_p     = message_buffer;
-              RRC_PCCH_DATA_REQ (message_p).mode      = PDCP_TRANSMISSION_MODE_TRANSPARENT;  /* not used */
-              RRC_PCCH_DATA_REQ (message_p).rnti      = P_RNTI;
-              RRC_PCCH_DATA_REQ (message_p).ue_index  = i;
-              RRC_PCCH_DATA_REQ (message_p).CC_id  = CC_id;
-              LOG_D(RRC, "[eNB %d] CC_id %d In S1AP_PAGING_IND: send encdoed buffer to PDCP buffer_size %d\n", instance, CC_id, length);
-              itti_send_msg_to_task (TASK_PDCP_ENB, instance, message_p);
           }
       }
   }

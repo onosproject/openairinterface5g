@@ -201,6 +201,8 @@ typedef struct {
   double tx_bw;
   //! clock source 
   clock_source_t clock_source;
+  //! Manual SDR IP address
+  char *sdr_addrs;
   //! Auto calibration flag
   int autocal[4];
   //! rf devices work with x bits iqs when oai have its own iq format

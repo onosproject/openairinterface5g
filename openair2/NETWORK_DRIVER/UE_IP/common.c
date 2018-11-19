@@ -222,7 +222,7 @@ skb_p->mark = rb_idP;
 
   printk("\n");
 #endif //OAI_DRV_DEBUG_RECEIVE
-  netif_rx(skb_p);
+  netif_rx_ni(skb_p);
 #ifdef OAI_DRV_DEBUG_RECEIVE
   printk("[UE_IP_DRV][%s] end\n",__FUNCTION__);
 #endif
@@ -248,7 +248,7 @@ ue_ip_common_ip2wireless(
   //---------------------------------------------------------------------------
   struct pdcp_data_req_header_s     pdcph;
   ue_ip_priv_t                     *priv_p=netdev_priv(ue_ip_dev[instP]);
-#if (RRC_VERSION >= MAKE_VERSION(14, 0, 0))
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
   ipversion_t         *ipv_p             = NULL;
   unsigned int         hard_header_len   = 0;
   unsigned char       *src_addr          = 0;
