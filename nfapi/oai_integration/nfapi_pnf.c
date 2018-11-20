@@ -850,6 +850,10 @@ int pnf_phy_dl_config_req(nfapi_pnf_p7_config_t* pnf_p7, nfapi_dl_config_request
 
       nfapi_dl_config_dlsch_pdu *dlsch_pdu = &dl_config_pdu_list[i].dlsch_pdu;
       nfapi_dl_config_dlsch_pdu_rel8_t *rel8_pdu = &dlsch_pdu->dlsch_pdu_rel8;
+      
+      if (rel8_pdu->pdu_index < 0) {
+        handle_nfapi_dlsch_pdu( eNB, sfn,sf, &eNB->proc.proc_rxtx[0], &dl_config_pdu_list[i], rel8_pdu->transport_blocks-1, NULL);
+      } else {
       nfapi_tx_request_pdu_t *tx_pdu = tx_request_pdu[sfn][sf][rel8_pdu->pdu_index];
 
       if (tx_pdu != NULL) {
@@ -875,6 +879,7 @@ int pnf_phy_dl_config_req(nfapi_pnf_p7_config_t* pnf_p7, nfapi_dl_config_request
 
         NFAPI_TRACE(NFAPI_TRACE_ERROR, "%s() DLSCH NULL TX PDU SFN/SF:%d PDU_INDEX:%d\n", __FUNCTION__, NFAPI_SFNSF2DEC(req->sfn_sf), rel8_pdu->pdu_index);
       }
+     }
 
     } else {
       NFAPI_TRACE(NFAPI_TRACE_ERROR, "%s() UNKNOWN:%d\n", __FUNCTION__, dl_config_pdu_list[i].pdu_type);

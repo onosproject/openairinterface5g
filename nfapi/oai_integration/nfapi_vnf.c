@@ -645,7 +645,7 @@ int phy_cqi_indication(struct nfapi_vnf_p7_config* config, nfapi_cqi_indication_
 
   pthread_mutex_lock(&eNB->UL_INFO_mutex);
 
-  eNB->UL_INFO.cqi_ind = ind->cqi_indication_body;
+  eNB->UL_INFO.cqi_ind.cqi_indication_body = ind->cqi_indication_body;
 
   pthread_mutex_unlock(&eNB->UL_INFO_mutex);
 

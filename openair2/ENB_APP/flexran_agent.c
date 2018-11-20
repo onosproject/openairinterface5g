@@ -181,6 +181,10 @@ int channel_container_init = 0;
 int flexran_agent_start(mid_t mod_id)
 {
   flexran_agent_info_t *flexran = RC.flexran[mod_id];
+  if (!flexran) {
+    printf("flexran in disable!!!\n");
+    return 100;
+  }
   int channel_id;
   char *in_ip = flexran->remote_ipv4_addr;
   uint16_t in_port = flexran->remote_port;
