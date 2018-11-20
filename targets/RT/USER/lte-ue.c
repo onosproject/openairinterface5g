@@ -495,7 +495,7 @@ static void *UE_thread_synch(void *arg) {
 
     for (i=0; i<openair0_cfg[UE->rf_map.card].rx_num_channels; i++) {
       openair0_cfg[UE->rf_map.card].rx_freq[UE->rf_map.chain+i] = UE->frame_parms.dl_CarrierFreq;
-      openair0_cfg[UE->rf_map.card].tx_freq[UE->rf_map.chain+i] = UE->frame_parms.ul_CarrierFreq;
+      openair0_cfg[UE->rf_map.card].tx_freq[UE->rf_map.chain+i] = UE->frame_parms.dl_CarrierFreq + uplink_frequency_offset[CC_id][0];
       openair0_cfg[UE->rf_map.card].autocal[UE->rf_map.chain+i] = 1;
 
       if (uplink_frequency_offset[CC_id][i] != 0) //
