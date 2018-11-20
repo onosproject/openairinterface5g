@@ -243,6 +243,7 @@ uint8_t nr_init_pbch_interleaver(uint8_t *interleaver) {
 
   printf("\n");
 #endif
+  free(pre_interleaver_pattern);
 }
 
 int nr_generate_pbch(NR_gNB_PBCH *pbch,
