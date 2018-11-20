@@ -35,6 +35,7 @@
 #include "PHY/LTE_REFSIG/lte_refsig.h"
 #include "PHY/sse_intrin.h"
 
+//#define DEBUG_ITL
 //#define DEBUG_PBCH
 //#define DEBUG_PBCH_ENCODING
 //#define DEBUG_PBCH_DMRS
@@ -153,13 +154,14 @@ void nr_pbch_scrambling(NR_gNB_PBCH *pbch,
                         uint32_t Nid,
                         uint8_t nushift,
                         uint16_t M,
+                        uint8_t Lmax,
                         uint16_t length,
                         uint8_t encoded)
 {
   uint8_t reset, offset;
   uint32_t x1, x2, s=0;
   uint32_t *pbch_e = pbch->pbch_e;
-  uint32_t unscrambling_mask = 0x100006D;
+  uint32_t unscrambling_mask = (Lmax == 64) ? 0x100006D: 0x1000041;   
   reset = 1;
   // x1 is set in lte_gold_generic
   x2 = Nid;
@@ -174,37 +176,84 @@ void nr_pbch_scrambling(NR_gNB_PBCH *pbch,
   printf("Scrambling params: nushift %d M %d length %d encoded %d offset %d\n", nushift, M, length, encoded, offset);
 #endif
 
-  for (int i=0; i<length; i++) {
-    if (((i+offset)&0x1f)==0) {
-      s = lte_gold_generic(&x1, &x2, reset);
-      reset = 0;
-    }
 #ifdef DEBUG_PBCH_ENCODING
   printf("s: %04x\t", s);
 #endif
-    if (!encoded)
-      pbch->pbch_a_prime ^= ((unscrambling_mask>>i)&1)? ((pbch->pbch_a_interleaved>>i)&1)<<i : (((pbch->pbch_a_interleaved>>i)&1) ^ ((s>>((i+offset)&0x1f))&1))<<i;      
-
-    else
+  int k = 0;     
+  if (!encoded)
+  {
+    /// 1st Scrambling
+    for (int i = 0; i < length; ++i)
+    {
+      if ((unscrambling_mask>>i)&1)
+        pbch->pbch_a_prime ^= ((pbch->pbch_a_interleaved>>i)&1)<<i;
+      else{
+        if (((k+offset)&0x1f)==0) {
+            s = lte_gold_generic(&x1, &x2, reset);
+            reset = 0;
+          }
+        pbch->pbch_a_prime ^= (((pbch->pbch_a_interleaved>>i)&1) ^ ((s>>((k+offset)&0x1f))&1))<<i;
+        k++;                  /// k increase only when payload bit is not special bit
+      }  
+    }
+  }else{
+    /// 2nd Scrambling
+    for (int i = 0; i < length; ++i)
+      {
+        if (((i+offset)&0x1f)==0) {
+        s = lte_gold_generic(&x1, &x2, reset);
+        reset = 0;
+      }
       pbch_e[i>>5] ^= (((s>>((i+offset)&0x1f))&1)<<(i&0x1f));
+    }
   }
 }
 
 uint8_t nr_init_pbch_interleaver(uint8_t *interleaver) {
-  uint8_t j_sfn=0, j_hrf=10, j_ssb=11, j_other=14;
+ uint8_t j_sfn=0, j_hrf=10, j_ssb=11, j_other=14;
   memset((void*)interleaver,0, NR_POLAR_PBCH_PAYLOAD_BITS);
+  
+  uint8_t *pre_interleaver_pattern = (uint8_t*) malloc(NR_POLAR_PBCH_PAYLOAD_BITS*sizeof(uint8_t));
+  memset((uint8_t*)pre_interleaver_pattern,0, NR_POLAR_PBCH_PAYLOAD_BITS);
 
-  for (uint8_t i=0; i<NR_POLAR_PBCH_PAYLOAD_BITS; i++)
-    if (i<6) //Sfn bits:6
-      *(interleaver+i) = *(nr_pbch_payload_interleaving_pattern+j_sfn++);
+  /// Re-arrange pbch payload index prior interleaving
+  for (uint8_t i=0; i<NR_POLAR_PBCH_PAYLOAD_BITS; i++){
+    if (i==0) // Type bit - other
+      *(pre_interleaver_pattern+j_other++) = i;
+    else if (i<7) //Sfn bits:6
+      *(pre_interleaver_pattern+j_sfn++) = i;
     else if (i<24) // other
-      *(interleaver+i) = *(nr_pbch_payload_interleaving_pattern+j_other++);
+      *(pre_interleaver_pattern+j_other++) = i;
     else if (i<28) // Sfn:4
-      *(interleaver+i) = *(nr_pbch_payload_interleaving_pattern+j_sfn++);
+      *(pre_interleaver_pattern+j_sfn++) = i;
     else if (i==28) // Hrf bit
-      *(interleaver+i) = *(nr_pbch_payload_interleaving_pattern+j_hrf);
+      *(pre_interleaver_pattern+j_hrf) = i;
     else // Ssb bits
-      *(interleaver+i) = *(nr_pbch_payload_interleaving_pattern+j_ssb++);
+      *(pre_interleaver_pattern+j_ssb++) = i;
+
+  }
+
+  for (uint8_t i = 0; i < NR_POLAR_PBCH_PAYLOAD_BITS; i++)
+  {
+    *(interleaver+nr_pbch_payload_interleaving_pattern[i]) = *(pre_interleaver_pattern+i);
+  }
+
+#ifdef DEBUG_ITL
+  printf("nr_init_pbch_interleaver: Pre-Interleaving Pattern: ");
+  for (uint8_t i = 0; i < NR_POLAR_PBCH_PAYLOAD_BITS; ++i)
+  {
+    printf("%d ,",*(pre_interleaver_pattern+i));
+  }
+  printf("\n");
+
+  printf("nr_init_pbch_interleaver: Combine Interleaving Pattern: ");
+  for (uint8_t i = 0; i < NR_POLAR_PBCH_PAYLOAD_BITS; ++i)
+  {
+    printf("%d ,",*(interleaver+i));
+  }
+  printf("\n");
+#endif
+
 }
 
 int nr_generate_pbch(NR_gNB_PBCH *pbch,
@@ -248,7 +297,7 @@ int nr_generate_pbch(NR_gNB_PBCH *pbch,
 
     // Extra byte generation
   for (int i=0; i<4; i++)
-    (*xbyte) ^= ((sfn>>i)&1)<<i; // 4 lsb of sfn
+    (*xbyte) ^= ((sfn>>(3-i))&1)<<i; // 4 lsb of sfn 
 
   (*xbyte) ^= n_hf<<4; // half frame index bit
 
@@ -269,7 +318,7 @@ int nr_generate_pbch(NR_gNB_PBCH *pbch,
     in |= (uint32_t)(pbch->pbch_a[i]<<((3-i)<<3));
 
   for (int i=0; i<NR_POLAR_PBCH_PAYLOAD_BITS; i++) {
-    pbch->pbch_a_interleaved |= ((in>>i)&1)<<(*(interleaver+i));
+    pbch->pbch_a_interleaved |= ((in>>(*(interleaver+i)))&1)<<i;
 #ifdef DEBUG_PBCH_ENCODING
   printf("i %d in 0x%08x out 0x%08x ilv %d (in>>i)&1) %d\n", i, in, pbch->pbch_a_interleaved, *(interleaver+i), (in>>i)&1);
 #endif
@@ -284,7 +333,7 @@ int nr_generate_pbch(NR_gNB_PBCH *pbch,
   M = (Lmax == 64)? (NR_POLAR_PBCH_PAYLOAD_BITS - 6) : (NR_POLAR_PBCH_PAYLOAD_BITS - 3);
   nushift = (((sfn>>2)&1)<<1) ^ ((sfn>>1)&1);
   pbch->pbch_a_prime = 0;
-  nr_pbch_scrambling(pbch, (uint32_t)config->sch_config.physical_cell_id.value, nushift, M, NR_POLAR_PBCH_PAYLOAD_BITS, 0);
+  nr_pbch_scrambling(pbch, (uint32_t)config->sch_config.physical_cell_id.value, nushift, M, Lmax, NR_POLAR_PBCH_PAYLOAD_BITS, 0);
 #ifdef DEBUG_PBCH_ENCODING
   printf("Payload scrambling: nushift %d M %d sfn3 %d sfn2 %d\n", nushift, M, (sfn>>2)&1, (sfn>>1)&1);
   printf("pbch_a_prime: 0x%08x\n", pbch->pbch_a_prime);
@@ -302,7 +351,7 @@ int nr_generate_pbch(NR_gNB_PBCH *pbch,
   /// Scrambling
   M =  NR_POLAR_PBCH_E;
   nushift = (Lmax==4)? ssb_index&3 : ssb_index&7;
-  nr_pbch_scrambling(pbch, (uint32_t)config->sch_config.physical_cell_id.value, nushift, M, NR_POLAR_PBCH_E, 1);
+  nr_pbch_scrambling(pbch, (uint32_t)config->sch_config.physical_cell_id.value, nushift, M, Lmax, NR_POLAR_PBCH_E, 1);
 #ifdef DEBUG_PBCH_ENCODING
   printf("Scrambling:\n");
   for (int i=0; i<NR_POLAR_PBCH_E_DWORD; i++)

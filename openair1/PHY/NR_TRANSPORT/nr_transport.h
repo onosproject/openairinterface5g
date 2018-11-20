@@ -74,6 +74,7 @@ void nr_pbch_scrambling(NR_gNB_PBCH *pbch,
                         uint32_t Nid,
                         uint8_t nushift,
                         uint16_t M,
+                        uint8_t Lmax,
                         uint16_t length,
                         uint8_t encoded);
 
