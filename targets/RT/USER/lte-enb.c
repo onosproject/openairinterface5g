@@ -918,8 +918,8 @@ void fh_if4p5_asynch_DL(PHY_VARS_eNB *eNB,int *frame,int *subframe) {
 
   // intialize this to zero after we're done with the subframe
   proc->symbol_mask[*subframe] = 0;
-  
-  do_OFDM_mod_rt(*subframe, eNB);
+  if (PHY_vars_UE_g[0][0]->do_ofdm_mod==0)
+  	do_OFDM_mod_rt(*subframe, eNB);
 } 
 
 /*!
