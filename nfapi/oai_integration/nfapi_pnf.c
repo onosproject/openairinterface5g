@@ -839,6 +839,7 @@ int pnf_phy_dl_config_req(nfapi_pnf_p7_config_t* pnf_p7, nfapi_dl_config_request
         //NFAPI_TRACE(NFAPI_TRACE_INFO, "%s() PDU:%d BCH: pdu_index:%u pdu_length:%d sdu_length:%d BCH_SDU:%x,%x,%x\n", __FUNCTION__, i, pdu_index, bch_pdu->bch_pdu_rel8.length, tx_request_pdu[sfn][sf][pdu_index]->segments[0].segment_length, sdu[0], sdu[1], sdu[2]);
 
         handle_nfapi_bch_pdu(eNB, proc, &dl_config_pdu_list[i], tx_request_pdu[sfn][sf][pdu_index]->segments[0].segment_data);
+        tx_request_pdu[sfn][sf][pdu_index] = NULL;
 
         eNB->pbch_configured=1;
 
@@ -870,6 +871,7 @@ int pnf_phy_dl_config_req(nfapi_pnf_p7_config_t* pnf_p7, nfapi_dl_config_request
         uint8_t *dlsch_sdu = tx_pdus[UE_id][harq_pid];
         
         memcpy(dlsch_sdu, tx_pdu->segments[0].segment_data, tx_pdu->segments[0].segment_length);
+        tx_request_pdu[sfn][sf][rel8_pdu->pdu_index] = NULL;
 
         //NFAPI_TRACE(NFAPI_TRACE_INFO, "%s() DLSCH:pdu_index:%d handle_nfapi_dlsch_pdu(eNB, proc_rxtx, dlsch_pdu, transport_blocks:%d sdu:%p) eNB->pdcch_vars[proc->subframe_tx & 1].num_pdcch_symbols:%d\n", __FUNCTION__, rel8_pdu->pdu_index, rel8_pdu->transport_blocks, dlsch_sdu, eNB->pdcch_vars[proc->subframe_tx & 1].num_pdcch_symbols);
 
