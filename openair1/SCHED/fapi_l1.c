@@ -42,6 +42,7 @@ int oai_nfapi_dl_config_req(nfapi_dl_config_request_t *dl_config_req);
 int oai_nfapi_tx_req(nfapi_tx_request_t *tx_req);
 int oai_nfapi_hi_dci0_req(nfapi_hi_dci0_request_t *hi_dci0_req);
 int oai_nfapi_ul_config_req(nfapi_ul_config_request_t *ul_config_req);
+int oai_nfapi_release_rnti_req(nfapi_release_rnti_request_t *release_req);
 
 extern uint8_t nfapi_mode;
 
@@ -836,6 +837,8 @@ void schedule_response(Sched_Rsp_t *Sched_INFO)
     oai_nfapi_tx_req(Sched_INFO->TX_req);
 
     oai_nfapi_dl_config_req(Sched_INFO->DL_req); // DJP - .dl_config_request_body.dl_config_pdu_list[0]); // DJP - FIXME TODO - yuk - only copes with 1 pdu
+    Sched_INFO->RELEASE_rnti_req->sfn_sf = frame << 4 | subframe;
+    oai_nfapi_release_rnti_req(Sched_INFO->RELEASE_rnti_req);
   }
 
   if (nfapi_mode && number_hi_dci0_pdu!=0) {

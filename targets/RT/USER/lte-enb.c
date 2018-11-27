@@ -216,7 +216,10 @@ static inline int rxtx(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc, char *thread_nam
 #endif
   }
 
-  release_UE_in_freeList(eNB->Mod_id);
+  if(nfapi_mode != 1)
+    release_UE_in_freeList(eNB->Mod_id);
+  else
+    release_rnti_of_phy(eNB->Mod_id);
 
   // UE-specific RX processing for subframe n
   if (nfapi_mode == 0 || nfapi_mode == 1) {

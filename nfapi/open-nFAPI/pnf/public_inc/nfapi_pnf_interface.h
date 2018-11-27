@@ -546,7 +546,7 @@ typedef struct
 	nfapi_hi_dci0_request_t* hi_dci0_req;
 	nfapi_tx_request_t* tx_req;
 	nfapi_lbt_dl_config_request_t* lbt_dl_config_req;
-
+	nfapi_release_rnti_request_t* release_rnti_req;
 } nfapi_pnf_p7_subframe_buffer_t;
 
 typedef struct nfapi_pnf_p7_config nfapi_pnf_p7_config_t;
@@ -652,6 +652,16 @@ typedef struct nfapi_pnf_p7_config
 	 * \return not currently used
 	 */
 	int (*lbt_dl_config_req)(nfapi_pnf_p7_config_t* config, nfapi_lbt_dl_config_request_t* req);
+    /*! A callback for the RELEASE_RNTI_REQ.request
+     * \param config A poiner to the PNF P7 config
+     * \param req A pointer to the release rnti request message structure
+     * \return not currently used
+     *
+     * The release request contains pointers to the release rnti to be sent. In the case that the FAPI interface
+     * will 'keep' the pointers until they are transmitted the callee should set the pointers in the req to 0
+     * and then use the p7 codec config free function to release the rnti when appropriate.
+     */
+    int (*release_rnti_req)(nfapi_pnf_p7_config_t* config, nfapi_release_rnti_request_t* req);
 	
 	/*! A callback for vendor extension messages
 	 * \param config A poiner to the PNF P7 config

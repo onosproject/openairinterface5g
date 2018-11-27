@@ -51,6 +51,7 @@
 
 extern uint8_t nfapi_mode;
 
+extern nfapi_release_rnti_request_body_t release_rntis;
 
 
 int16_t get_hundred_times_delta_IF_eNB(PHY_VARS_eNB *eNB,uint16_t UE_id,uint8_t harq_pid, uint8_t bw_factor)
@@ -1608,7 +1609,10 @@ static void do_release_harq(PHY_VARS_eNB *eNB,int UE_id,int tb,uint16_t frame,ui
     frame_tx = ul_ACK_subframe2_dl_frame(&eNB->frame_parms,frame,subframe,subframe_tx);
     harq_pid = dlsch0->harq_ids[frame_tx%2][subframe_tx]; // or just use 0 for fdd?
 
-    AssertFatal((harq_pid>=0) && (harq_pid<10),"harq_pid %d not in 0...9\n",harq_pid);
+    if(harq_pid >= dlsch0->Mdlharq) {
+        LOG_E(PHY,"frame %d subframe %d harq_pid %d not in 0...7\n", frame_tx, subframe_tx, harq_pid);
+        return;
+    }
     dlsch0_harq     = dlsch0->harq_processes[harq_pid];
     dlsch1_harq     = dlsch1->harq_processes[harq_pid];
     AssertFatal(dlsch0_harq!=NULL,"dlsch0_harq is null\n");
@@ -2091,4 +2095,39 @@ void phy_procedures_eNB_uespec_RX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
   }
 
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_ENB_RX_UESPEC, 0 );
+}
+
+void release_rnti_of_phy(module_id_t mod_id){
+    int i,j;
+    int CC_id;
+    rnti_t rnti;
+    PHY_VARS_eNB *eNB_PHY = NULL;
+    LTE_eNB_ULSCH_t *ulsch = NULL;
+    LTE_eNB_DLSCH_t *dlsch = NULL;
+    for(i = 0; i< release_rntis.number_of_rnti;i++){
+        for (CC_id = 0; CC_id < MAX_NUM_CCs; CC_id++) {
+          eNB_PHY = RC.eNB[mod_id][CC_id];
+          rnti = release_rntis.UE_free_rnti[i];
+          for (j=0; j<=NUMBER_OF_UE_MAX; j++) {
+              ulsch = eNB_PHY->ulsch[j];
+              if((ulsch != NULL) && (ulsch->rnti == rnti)){
+                LOG_I(PHY, "clean_eNb_ulsch ulsch[%d] UE %x\n", j, rnti);
+                clean_eNb_ulsch(ulsch);
+              }
+          }
+          for(j=0; j<NUMBER_OF_UE_MAX; j++) {
+              if(eNB_PHY->uci_vars[j].rnti == rnti){
+                LOG_I(PHY, "clean eNb uci_vars[%d] UE %x \n",j, rnti);
+                memset(&eNB_PHY->uci_vars[i],0,sizeof(LTE_eNB_UCI));
+              }
+
+              dlsch = eNB_PHY->dlsch[j][0];
+              if((dlsch != NULL) && (dlsch->rnti == rnti)){
+                LOG_I(PHY, "clean_eNb_dlsch dlsch[%d] UE %x \n", j, rnti);
+                clean_eNb_dlsch(dlsch);
+              }
+          }
+        }
+    }
+    memset(&release_rntis, 0, sizeof(nfapi_release_rnti_request_body_t));
 }
