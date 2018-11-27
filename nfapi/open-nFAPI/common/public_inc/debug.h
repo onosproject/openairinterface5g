@@ -40,7 +40,7 @@ extern nfapi_trace_level_t nfapi_trace_level_g;
 
 /*! NFAPI trace macro */
 //#define NFAPI_TRACE(level, format, ...) { if(nfapi_trace_g && ((nfapi_trace_level_t)level <= nfapi_trace_level_g)) (*nfapi_trace_g)(level, format, ##__VA_ARGS__); }
-#define NFAPI_TRACE(level, format, ...) {}//{ if (nfapi_trace_g) (*nfapi_trace_g)(level, format, ##__VA_ARGS__); }
+#define NFAPI_TRACE(level, format, ...) { if (nfapi_trace_g) (*nfapi_trace_g)(level, format, ##__VA_ARGS__); }
 
 /*! Function to change the trace level 
  * \param new_level The modified trace level
