@@ -40,7 +40,8 @@
 #include "PHY/phy_extern_nr_ue.h"
 #include "PHY/NR_REFSIG/refsig_defs_ue.h"
 #include "PHY/MODULATION/modulation_UE.h"
-//#include "PHY/NR_UE_TRANSPORT/nr_transport_ue.h"
+#include "PHY/NR_UE_TRANSPORT/nr_transport_ue.h"
+#include "PHY/NR_UE_TRANSPORT/nr_transport_proto_ue.h"
 //#include "PHY/extern.h"
 #include "SCHED_NR_UE/defs.h"
 #include "SCHED_NR/extern.h"
@@ -51,10 +52,10 @@
 #include "SCHED/phy_procedures_emos.h"
 #endif
 
-#define DEBUG_PHY_PROC
+//#define DEBUG_PHY_PROC
 
 #define NR_PDCCH_SCHED
-#define NR_PDCCH_SCHED_DEBUG
+//#define NR_PDCCH_SCHED_DEBUG
 //#define NR_PUCCH_SCHED
 //#define NR_PUCCH_SCHED_DEBUG
 
@@ -3022,7 +3023,7 @@ void ue_measurement_procedures(
     uint8_t abstraction_flag,runmode_t mode)
 {
 
-  //LOG_I(PHY,"ue_measurement_procedures l %d Ncp %d\n",l,ue->frame_parms.Ncp);
+  LOG_D(PHY,"ue_measurement_procedures l %u Ncp %d\n",l,ue->frame_parms.Ncp);
 
   NR_DL_FRAME_PARMS *frame_parms=&ue->frame_parms;
 
@@ -3108,7 +3109,7 @@ void ue_measurement_procedures(
        0,
        16384);
     }
-
+    
   }
 
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_UE_MEASUREMENT_PROCEDURES, VCD_FUNCTION_OUT);
@@ -3671,7 +3672,6 @@ int nr_ue_pdcch_procedures(uint8_t eNB_id,PHY_VARS_NR_UE *ue,UE_nr_rxtx_proc_t *
 
       //  if (nr_tti_rx != 5)
       //    return 0;
-      if (abstraction_flag == 0)  {
         VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_RX_PDCCH, VCD_FUNCTION_IN);
 /*      rx_pdcch(ue,
               proc->frame_rx,
@@ -3776,55 +3776,6 @@ int nr_ue_pdcch_procedures(uint8_t eNB_id,PHY_VARS_NR_UE *ue,UE_nr_rxtx_proc_t *
               rx_phich(ue,proc,nr_tti_rx,eNB_id);
               VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_RX_PHICH, VCD_FUNCTION_OUT);
             }*/ //removed for nr_ue_pdcch_procedures
-      }
-
-	#ifdef PHY_ABSTRACTION
-	  else {
-	    for (i=0; i<NB_eNB_INST; i++) {
-	      for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++)
-	  if (PHY_vars_eNB_g[i][CC_id]->frame_parms.Nid_cell == ue->frame_parms.Nid_cell)
-	    break;
-
-	      if (CC_id < MAX_NUM_CCs)
-	  break;
-	    }
-
-	    if (i==NB_eNB_INST) {
-	      LOG_E(PHY,"[UE  %d] phy_procedures_lte_ue.c: FATAL : Could not find attached eNB for DCI emulation (Nid_cell %d)!!!!\n",ue->Mod_id,ue->frame_parms.Nid_cell);
-	      mac_xface->macphy_exit("Could not find attached eNB for DCI emulation");
-	      VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_UE_PDCCH_PROCEDURES, VCD_FUNCTION_OUT);
-	      return(-1);
-	    }
-
-	    LOG_D(PHY,"Calling dci_decoding_proc_emul ...\n");
-	    dci_cnt = dci_decoding_procedure_emul(ue->pdcch_vars[nr_tti_rx&1],
-	                                          PHY_vars_eNB_g[i][CC_id]->num_ue_spec_dci[nr_tti_rx&1],
-	                                          PHY_vars_eNB_g[i][CC_id]->num_common_dci[nr_tti_rx&1],
-	                                          PHY_vars_eNB_g[i][CC_id]->dci_alloc[nr_tti_rx&1],
-	                                          dci_alloc_rx,
-	                                          eNB_id);
-	    //    printf("DCI: dci_cnt %d\n",dci_cnt);
-	    UE_id = (uint32_t)find_ue((int16_t)ue->pdcch_vars[nr_tti_rx&1][eNB_id]->crnti,PHY_vars_eNB_g[i][CC_id]);
-
-	    if (UE_id>=0) {
-	      //      printf("Checking PHICH for UE  %d (eNB %d)\n",UE_id,i);
-	      if (is_phich_subframe(&ue->frame_parms,nr_tti_rx)) {
-	  harq_pid = phich_subframe_to_harq_pid(&ue->frame_parms,frame_rx,nr_tti_rx);
-
-	  if (ue->ulsch[eNB_id]->harq_processes[harq_pid]->status == ACTIVE) {
-	    // ue->ulsch[eNB_id]->harq_processes[harq_pid]->phich_ACK=1;
-	    ue->ulsch[eNB_id]->harq_processes[harq_pid]->subframe_scheduling_flag =0;
-	    ue->ulsch[eNB_id]->harq_processes[harq_pid]->status = IDLE;
-	    ue->ulsch_Msg3_active[eNB_id] = 0;
-	    ue->ulsch[eNB_id]->harq_processes[harq_pid]->round = 0;
-	    LOG_D(PHY,"Msg3 inactive\n");
-
-	  } // harq_pid is ACTIVE
-	      } // This is a PHICH nr_tti_rx
-	    } // UE_id exists
-	  }
-
-	#endif
 
       uint8_t *nCCE_current = &ue->pdcch_vars[ue->current_thread_id[nr_tti_rx]][eNB_id]->nCCE[nr_tti_rx];
       uint8_t *nCCE_dest = &ue->pdcch_vars[next1_thread_id][eNB_id]->nCCE[nr_tti_rx];
@@ -3916,275 +3867,7 @@ int nr_ue_pdcch_procedures(uint8_t eNB_id,PHY_VARS_NR_UE *ue,UE_nr_rxtx_proc_t *
         //printf(">>> calling MAC with dl_indication DCI_IND\n");
         //  TODO: check where should we send up this message.
         ue->dl_indication.dci_ind=&ue->dci_ind;
-        ue->if_inst->dl_indication(&ue->dl_indication);
-        
-	/*
-	 * This is the LTE part to be removed
-
-	    if ((ue->UE_mode[eNB_id]>PRACH) && (dci_alloc_rx[i].rnti == ue->pdcch_vars[ue->current_thread_id[nr_tti_rx]][eNB_id]->crnti) && (dci_alloc_rx[i].format != format0)) {
-
-	      LOG_D(PHY,"[UE  %d][DCI][PDSCH %x] AbsSubframe %d.%d: format %d, num_pdcch_symbols %d, nCCE %d, total CCEs %d\n",
-		    ue->Mod_id,dci_alloc_rx[i].rnti,
-		    frame_rx%1024,nr_tti_rx,
-		    dci_alloc_rx[i].format,
-		    ue->pdcch_vars[ue->current_thread_id[nr_tti_rx]][eNB_id]->num_pdcch_symbols,
-		    ue->pdcch_vars[ue->current_thread_id[nr_tti_rx]][eNB_id]->nCCE[nr_tti_rx],
-		    get_nCCE(3,&ue->frame_parms,get_mi(&ue->frame_parms,0)));
-
-	      //dump_dci(&ue->frame_parms, &dci_alloc_rx[i]);
-
-	      if ((ue->UE_mode[eNB_id] > PRACH) &&
-		  (generate_ue_dlsch_params_from_dci(frame_rx,
-						     nr_tti_rx,
-						     (void *)&dci_alloc_rx[i].dci_pdu,
-						     ue->pdcch_vars[ue->current_thread_id[nr_tti_rx]][eNB_id]->crnti,
-						     dci_alloc_rx[i].format,
-						     ue->pdcch_vars[ue->current_thread_id[nr_tti_rx]][eNB_id],
-						     ue->pdsch_vars[ue->current_thread_id[nr_tti_rx]][eNB_id],
-						     ue->dlsch[ue->current_thread_id[nr_tti_rx]][eNB_id],
-						     &ue->frame_parms,
-						     ue->pdsch_config_dedicated,
-						     SI_RNTI,
-						     0,
-						     P_RNTI,
-						     ue->transmission_mode[eNB_id]<7?0:ue->transmission_mode[eNB_id],
-						     ue->pdcch_vars[0%RX_NB_TH][eNB_id]->crnti_is_temporary? ue->pdcch_vars[ue->current_thread_id[nr_tti_rx]][eNB_id]->crnti: 0)==0)) {
-
-	          // update TPC for PUCCH
-	          if((dci_alloc_rx[i].format == format1)   ||
-	              (dci_alloc_rx[i].format == format1A) ||
-	              (dci_alloc_rx[i].format == format1B) ||
-	              (dci_alloc_rx[i].format == format2)  ||
-	              (dci_alloc_rx[i].format == format2A) ||
-	              (dci_alloc_rx[i].format == format2B))
-	          {
-	            //ue->dlsch[ue->current_thread_id[nr_tti_rx]][eNB_id][0]->g_pucch += ue->dlsch[ue->current_thread_id[nr_tti_rx]][eNB_id][0]->harq_processes[ue->dlsch[ue->current_thread_id[nr_tti_rx]][eNB_id][0]->current_harq_pid]->delta_PUCCH;
-	            int32_t delta_pucch = ue->dlsch[ue->current_thread_id[nr_tti_rx]][eNB_id][0]->harq_processes[ue->dlsch[ue->current_thread_id[nr_tti_rx]][eNB_id][0]->current_harq_pid]->delta_PUCCH;
-	            for(int th_id=0; th_id<RX_NB_TH; th_id++)
-	            {
-	                ue->dlsch[th_id][eNB_id][0]->g_pucch += delta_pucch;
-	            }
-	            LOG_D(PHY,"update TPC for PUCCH %d.%d / pid %d delta_PUCCH %d g_pucch %d %d \n",frame_rx, nr_tti_rx,ue->dlsch[ue->current_thread_id[nr_tti_rx]][eNB_id][0]->current_harq_pid,
-	                    delta_pucch,
-	                    ue->dlsch[0][eNB_id][0]->g_pucch,
-	                    ue->dlsch[1][eNB_id][0]->g_pucch
-	                    //ue->dlsch[2][eNB_id][0]->g_pucch
-	                    );
-	          }
-
-	  ue->dlsch_received[eNB_id]++;
-
-	#ifdef DEBUG_PHY_PROC
-		LOG_D(PHY,"[UE  %d] Generated UE DLSCH C_RNTI format %d\n",ue->Mod_id,dci_alloc_rx[i].format);
-		dump_dci(&ue->frame_parms, &dci_alloc_rx[i]);
-		LOG_D(PHY,"[UE %d] *********** dlsch->active in nr_tti_rx %d=> %d\n",ue->Mod_id,nr_tti_rx,ue->dlsch[ue->current_thread_id[nr_tti_rx]][eNB_id][0]->active);
-	#endif
-
-	  // we received a CRNTI, so we're in PUSCH
-	  if (ue->UE_mode[eNB_id] != PUSCH) {
-	#ifdef DEBUG_PHY_PROC
-	          LOG_I(PHY,"[UE  %d] Frame %d, nr_tti_rx %d: Received DCI with CRNTI %x => Mode PUSCH\n",ue->Mod_id,frame_rx,nr_tti_rx,ue->pdcch_vars[nr_tti_rx&1][eNB_id]->crnti);
-	#endif
-	    //dump_dci(&ue->frame_parms, &dci_alloc_rx[i]);
-	    ue->UE_mode[eNB_id] = PUSCH;
-	    //mac_xface->macphy_exit("Connected. Exiting\n");
-	  }
-	      } else {
-	  LOG_E(PHY,"[UE  %d] Frame %d, nr_tti_rx %d: Problem in DCI!\n",ue->Mod_id,frame_rx,nr_tti_rx);
-	  dump_dci(&ue->frame_parms, &dci_alloc_rx[i]);
-	      }
-	    }
-
-	    else if ((dci_alloc_rx[i].rnti == SI_RNTI) &&
-	       ((dci_alloc_rx[i].format == format1A) || (dci_alloc_rx[i].format == format1C))) {
-
-	#ifdef DEBUG_PHY_PROC
-	      LOG_I(PHY,"[UE  %d] nr_tti_rx %d: Found rnti %x, format 1%s, dci_cnt %d\n",ue->Mod_id,nr_tti_rx,dci_alloc_rx[i].rnti,dci_alloc_rx[i].format==format1A?"A":"C",i);
-	#endif
-
-
-	      if (generate_ue_dlsch_params_from_dci(frame_rx,
-	              nr_tti_rx,
-	              (void *)&dci_alloc_rx[i].dci_pdu,
-	              SI_RNTI,
-	              dci_alloc_rx[i].format,
-						    ue->pdcch_vars[ue->current_thread_id[nr_tti_rx]][eNB_id],
-						    ue->pdsch_vars_SI[eNB_id],
-	              &ue->dlsch_SI[eNB_id],
-	              &ue->frame_parms,
-	              ue->pdsch_config_dedicated,
-	              SI_RNTI,
-	              0,
-	              P_RNTI,
-	              ue->transmission_mode[eNB_id]<7?0:ue->transmission_mode[eNB_id],
-	              0)==0) {
-
-	  ue->dlsch_SI_received[eNB_id]++;
-
-
-	  LOG_I(PHY,"[UE  %d] Frame %d, nr_tti_rx %d : Generate UE DLSCH SI_RNTI format 1%s\n",ue->Mod_id,frame_rx,nr_tti_rx,dci_alloc_rx[i].format==format1A?"A":"C");
-	  //dump_dci(&ue->frame_parms, &dci_alloc_rx[i]);
-
-	      }
-	    }
-
-	    else if ((dci_alloc_rx[i].rnti == P_RNTI) &&
-	       ((dci_alloc_rx[i].format == format1A) || (dci_alloc_rx[i].format == format1C))) {
-
-	#ifdef DEBUG_PHY_PROC
-	      LOG_I(PHY,"[UE  %d] nr_tti_rx %d: Found rnti %x, format 1%s, dci_cnt %d\n",ue->Mod_id,nr_tti_rx,dci_alloc_rx[i].rnti,dci_alloc_rx[i].format==format1A?"A":"C",i);
-	#endif
-
-
-	      if (generate_ue_dlsch_params_from_dci(frame_rx,
-	              nr_tti_rx,
-	              (void *)&dci_alloc_rx[i].dci_pdu,
-	            P_RNTI,
-	              dci_alloc_rx[i].format,
-						    ue->pdcch_vars[ue->current_thread_id[nr_tti_rx]][eNB_id],
-						    ue->pdsch_vars_p[eNB_id],
-	              &ue->dlsch_SI[eNB_id],
-	              &ue->frame_parms,
-	              ue->pdsch_config_dedicated,
-	              SI_RNTI,
-	              0,
-	              P_RNTI,
-	              ue->transmission_mode[eNB_id]<7?0:ue->transmission_mode[eNB_id],
-	                                            0)==0) {
-
-	  ue->dlsch_p_received[eNB_id]++;
-	  LOG_D(PHY,"[UE  %d] Frame %d, nr_tti_rx %d : Generate UE DLSCH P_RNTI format 1%s\n",ue->Mod_id,frame_rx,nr_tti_rx,dci_alloc_rx[i].format==format1A?"A":"C");
-	  //dump_dci(&ue->frame_parms, &dci_alloc_rx[i]);
-
-	      }
-	    }
-
-	    else if ((ue->prach_resources[eNB_id]) &&
-	       (dci_alloc_rx[i].rnti == ue->prach_resources[eNB_id]->ra_RNTI) &&
-	       (dci_alloc_rx[i].format == format1A)) {
-
-	#ifdef DEBUG_PHY_PROC
-	      LOG_D(PHY,"[UE  %d][RAPROC] nr_tti_rx %d: Found RA rnti %x, format 1A, dci_cnt %d\n",ue->Mod_id,nr_tti_rx,dci_alloc_rx[i].rnti,i);
-
-	      //if (((frame_rx%100) == 0) || (frame_rx < 20))
-	      //dump_dci(&ue->frame_parms, &dci_alloc_rx[i]);
-	      //mac_xface->macphy_exit("so far so good...\n");
-	#endif
-
-
-	      if (generate_ue_dlsch_params_from_dci(frame_rx,
-	              nr_tti_rx,
-	              (DCI1A_5MHz_TDD_1_6_t *)&dci_alloc_rx[i].dci_pdu,
-	              ue->prach_resources[eNB_id]->ra_RNTI,
-	              format1A,
-						    ue->pdcch_vars[ue->current_thread_id[nr_tti_rx]][eNB_id],
-						    ue->pdsch_vars_ra[eNB_id],
-	              &ue->dlsch_ra[eNB_id],
-	              &ue->frame_parms,
-	              ue->pdsch_config_dedicated,
-	              SI_RNTI,
-	              ue->prach_resources[eNB_id]->ra_RNTI,
-	              P_RNTI,
-	              ue->transmission_mode[eNB_id]<7?0:ue->transmission_mode[eNB_id],
-	                                            0)==0) {
-
-	  ue->dlsch_ra_received[eNB_id]++;
-
-	#ifdef DEBUG_PHY_PROC
-	  LOG_D(PHY,"[UE  %d] Generate UE DLSCH RA_RNTI format 1A, rb_alloc %x, dlsch_ra[eNB_id] %p\n",
-	        ue->Mod_id,ue->dlsch_ra[eNB_id]->harq_processes[0]->rb_alloc_even[0],ue->dlsch_ra[eNB_id]);
-	#endif
-	      }
-	    } else if( (dci_alloc_rx[i].rnti == ue->pdcch_vars[ue->current_thread_id[nr_tti_rx]][eNB_id]->crnti) &&
-		       (dci_alloc_rx[i].format == format0)) {
-
-	#ifdef DEBUG_PHY_PROC
-	      LOG_D(PHY,"[UE  %d][PUSCH] Frame %d nr_tti_rx %d: Found rnti %x, format 0, dci_cnt %d\n",
-	      ue->Mod_id,frame_rx,nr_tti_rx,dci_alloc_rx[i].rnti,i);
-	#endif
-
-	      ue->ulsch_no_allocation_counter[eNB_id] = 0;
-	      //dump_dci(&ue->frame_parms,&dci_alloc_rx[i]);
-
-	      if ((ue->UE_mode[eNB_id] > PRACH) &&
-		  (generate_ue_ulsch_params_from_dci((void *)&dci_alloc_rx[i].dci_pdu,
-						     ue->pdcch_vars[ue->current_thread_id[nr_tti_rx]][eNB_id]->crnti,
-						     nr_tti_rx,
-						     format0,
-						     ue,
-						     proc,
-						     SI_RNTI,
-						     0,
-						     P_RNTI,
-						     CBA_RNTI,
-						     eNB_id,
-						     0)==0)) {
-	#if T_TRACER
-	    NR_DL_FRAME_PARMS *frame_parms = &ue->frame_parms;
-	    uint8_t harq_pid = subframe2harq_pid(frame_parms,
-	                                 pdcch_alloc2ul_frame(frame_parms,proc->frame_rx,proc->nr_tti_rx),
-	                                 pdcch_alloc2ul_subframe(frame_parms,proc->nr_tti_rx));
-
-	    T(T_UE_PHY_ULSCH_UE_DCI, T_INT(eNB_id), T_INT(proc->frame_rx%1024), T_INT(proc->nr_tti_rx), T_INT(ue->Mod_id),
-	      T_INT(dci_alloc_rx[i].rnti), T_INT(harq_pid),
-	      T_INT(ue->ulsch[eNB_id]->harq_processes[harq_pid]->mcs),
-	      T_INT(ue->ulsch[eNB_id]->harq_processes[harq_pid]->round),
-	      T_INT(ue->ulsch[eNB_id]->harq_processes[harq_pid]->first_rb),
-	      T_INT(ue->ulsch[eNB_id]->harq_processes[harq_pid]->nb_rb),
-	      T_INT(ue->ulsch[eNB_id]->harq_processes[harq_pid]->TBS));
-	#endif
-	#ifdef DEBUG_PHY_PROC
-	  LOG_D(PHY,"[UE  %d] Generate UE ULSCH C_RNTI format 0 (nr_tti_rx %d)\n",ue->Mod_id,nr_tti_rx);
-	#endif
-
-	      }
-	    } else if( (dci_alloc_rx[i].rnti == ue->ulsch[eNB_id]->cba_rnti[0]) &&
-	         (dci_alloc_rx[i].format == format0)) {
-	      // UE could belong to more than one CBA group
-	      // ue->Mod_id%ue->ulsch[eNB_id]->num_active_cba_groups]
-	#ifdef DEBUG_PHY_PROC
-	      LOG_D(PHY,"[UE  %d][PUSCH] Frame %d nr_tti_rx %d: Found cba rnti %x, format 0, dci_cnt %d\n",
-	      ue->Mod_id,frame_rx,nr_tti_rx,dci_alloc_rx[i].rnti,i);
-
-	  if (((frame_rx%100) == 0) || (frame_rx < 20))
-	  dump_dci(&ue->frame_parms, &dci_alloc_rx[i]);
-
-	#endif
-
-	      ue->ulsch_no_allocation_counter[eNB_id] = 0;
-	      //dump_dci(&ue->frame_parms,&dci_alloc_rx[i]);
-
-	      if ((ue->UE_mode[eNB_id] > PRACH) &&
-	    (generate_ue_ulsch_params_from_dci((void *)&dci_alloc_rx[i].dci_pdu,
-	               ue->ulsch[eNB_id]->cba_rnti[0],
-	               nr_tti_rx,
-	               format0,
-	               ue,
-	               proc,
-	               SI_RNTI,
-	               0,
-	               P_RNTI,
-	               CBA_RNTI,
-	               eNB_id,
-	               0)==0)) {
-
-	#ifdef DEBUG_PHY_PROC
-	  LOG_D(PHY,"[UE  %d] Generate UE ULSCH CBA_RNTI format 0 (nr_tti_rx %d)\n",ue->Mod_id,nr_tti_rx);
-	#endif
-	  ue->ulsch[eNB_id]->num_cba_dci[(nr_tti_rx+4)%10]++;
-	      }
-	    }
-
-	    else {
-	#ifdef DEBUG_PHY_PROC
-	      LOG_D(PHY,"[UE  %d] frame %d, nr_tti_rx %d: received DCI %d with RNTI=%x (C-RNTI:%x, CBA_RNTI %x) and format %d!\n",ue->Mod_id,frame_rx,nr_tti_rx,i,dci_alloc_rx[i].rnti,
-		    ue->pdcch_vars[ue->current_thread_id[nr_tti_rx]][eNB_id]->crnti,
-		    ue->ulsch[eNB_id]->cba_rnti[0],
-		    dci_alloc_rx[i].format);
-
-	      //      dump_dci(&ue->frame_parms, &dci_alloc_rx[i]);
-	#endif
-	    }*/
+        //ue->if_inst->dl_indication(&ue->dl_indication);
 
       } // end for loop dci_cnt
 #if UE_TIMING_TRACE
@@ -4196,8 +3879,6 @@ int nr_ue_pdcch_procedures(uint8_t eNB_id,PHY_VARS_NR_UE *ue,UE_nr_rxtx_proc_t *
   } // end for loop nb_searchspace_active
   return(0);
 }
-
-
 
 #endif
 

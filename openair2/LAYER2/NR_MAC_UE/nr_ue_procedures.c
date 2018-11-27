@@ -1295,14 +1295,15 @@ printf("\n>>> nr_ue_process_dci at MAC layer with dci_format=%d\n",dci_format);
  *    49 PADDING_NR_DCI: (Note 2) If DCI format 0_0 is monitored in common search space
  *    50 SUL_IND_0_0:
  */
+	 
             ul_config->ul_config_list[ul_config->number_pdus].pdu_type = FAPI_NR_UL_CONFIG_TYPE_PUSCH;
             ul_config->ul_config_list[ul_config->number_pdus].ulsch_config_pdu.rnti = rnti;
             fapi_nr_ul_config_pusch_pdu_rel15_t *ulsch_config_pdu_0_0 = &ul_config->ul_config_list[ul_config->number_pdus].ulsch_config_pdu.ulsch_pdu_rel15;
         /* IDENTIFIER_DCI_FORMATS */
         /* FREQ_DOM_RESOURCE_ASSIGNMENT_UL */
-            nr_ue_process_dci_freq_dom_resource_assignment(&ulsch_config_pdu_0_0,NULL,n_RB_ULBWP,0,dci->freq_dom_resource_assignment_UL);
+            nr_ue_process_dci_freq_dom_resource_assignment(ulsch_config_pdu_0_0,NULL,n_RB_ULBWP,0,dci->freq_dom_resource_assignment_UL);
         /* TIME_DOM_RESOURCE_ASSIGNMENT */
-            nr_ue_process_dci_time_dom_resource_assignment(&ulsch_config_pdu_0_0,NULL,dci->time_dom_resource_assignment,mac->mib->dmrs_TypeA_Position);
+            nr_ue_process_dci_time_dom_resource_assignment(ulsch_config_pdu_0_0,NULL,dci->time_dom_resource_assignment,mac->mib->dmrs_TypeA_Position);
         /* FREQ_HOPPING_FLAG */
             if ((mac->phy_config.config_req.ul_bwp_dedicated.pusch_config_dedicated.resource_allocation != 0) &&
                 (mac->phy_config.config_req.ul_bwp_dedicated.pusch_config_dedicated.frequency_hopping !=0))
@@ -1376,9 +1377,9 @@ printf("\n>>> nr_ue_process_dci at MAC layer with dci_format=%d\n",dci_format);
         /* BANDWIDTH_PART_IND */
             ulsch_config_pdu_0_1->bandwidth_part_ind = dci->bandwidth_part_ind;
         /* FREQ_DOM_RESOURCE_ASSIGNMENT_UL */
-            nr_ue_process_dci_freq_dom_resource_assignment(&ulsch_config_pdu_0_1,NULL,n_RB_ULBWP,0,dci->freq_dom_resource_assignment_UL);
+            nr_ue_process_dci_freq_dom_resource_assignment(ulsch_config_pdu_0_1,NULL,n_RB_ULBWP,0,dci->freq_dom_resource_assignment_UL);
         /* TIME_DOM_RESOURCE_ASSIGNMENT */
-            nr_ue_process_dci_time_dom_resource_assignment(&ulsch_config_pdu_0_1,NULL,dci->time_dom_resource_assignment,mac->mib->dmrs_TypeA_Position);
+            nr_ue_process_dci_time_dom_resource_assignment(ulsch_config_pdu_0_1,NULL,dci->time_dom_resource_assignment,mac->mib->dmrs_TypeA_Position);
         /* FREQ_HOPPING_FLAG */
             if ((mac->phy_config.config_req.ul_bwp_dedicated.pusch_config_dedicated.resource_allocation != 0) &&
                 (mac->phy_config.config_req.ul_bwp_dedicated.pusch_config_dedicated.frequency_hopping !=0))
