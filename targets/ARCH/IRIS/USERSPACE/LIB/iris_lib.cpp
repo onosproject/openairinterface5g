@@ -22,6 +22,14 @@
 #include "common_lib.h"
 #include <chrono>
 
+#ifdef __SSE4_1__
+#  include <smmintrin.h>
+#endif
+
+#ifdef __AVX2__
+#  include <immintrin.h>
+#endif
+
 #define SAMPLE_RATE_DOWN 1
 
 /*! \brief Iris Configuration */
@@ -139,21 +147,44 @@ trx_iris_write(openair0_device *device, openair0_timestamp timestamp, void **buf
     int flag = 0;
 
     iris_state_t *s = (iris_state_t *) device->priv;
+    int nsamps2;  // aligned to upper 32 or 16 byte boundary
+#if defined(__x86_64) || defined(__i386__)
+#ifdef __AVX2__
+    nsamps2 = (nsamps+7)>>3;
+    __m256i buff_tx[2][nsamps2];
+#else
+    nsamps2 = (nsamps+3)>>2;
+    __m128i buff_tx[2][nsamps2];
+#endif
+#endif
+
+    // bring RX data into 12 LSBs for softmodem RX
+    for (int i=0; i<cc; i++) {
+      for (int j=0; j<nsamps2; j++) {
+#if defined(__x86_64__) || defined(__i386__)
+#ifdef __AVX2__
+        buff_tx[i][j] = _mm256_slli_epi16(((__m256i *)buff[i])[j],4);
+#else
+        buff_tx[i][j] = _mm_slli_epi16(((__m128i *)buff[i])[j],4);
+#endif
+#endif
+      }
+    }
 
     clock_gettime(CLOCK_MONOTONIC_RAW, &tp_start);
 
     // This hack was added by cws to help keep packets flowing
-    if (flags == 8) {
+
+    if (flags)
+        flag |= SOAPY_SDR_HAS_TIME;
+    else {
         long long tempHack = s->iris[0]->getHardwareTime("");
         return nsamps;
     }
 
-    if (flags)
-        flag |= SOAPY_SDR_HAS_TIME;
-
     if (flags == 2 || flags == 1) { // start of burst
 
-    } else if (flags == 3 || flags == 4) {
+    } else if (flags == 3 | flags == 4) {
         flag |= SOAPY_SDR_END_BURST;
     }
 
@@ -164,13 +195,17 @@ trx_iris_write(openair0_device *device, openair0_timestamp timestamp, void **buf
     int m = s->tx_num_channels;
     for (r = 0; r < s->device_num; r++) {
         int samples_sent = 0;
-        samps[0] = (uint32_t *) buff[m * r];
+        samps[0] = (uint32_t *) buff_tx[m * r];
 
         if (cc % 2 == 0)
-            samps[1] = (uint32_t *) buff[m * r +
-                                         1]; //cws: it seems another thread can clobber these, so we need to save them locally.
-
+            samps[1] = (uint32_t *) buff_tx[m * r + 1]; //cws: it seems another thread can clobber these, so we need to save them locally.
+#ifdef IRIS_DEBUG
+        int i;
+        for (i = 200; i < 216; i++)
+            printf("%d, ",((int16_t)(samps[0][i]>>16))>>4);
+        printf("\n");
         //printf("\nHardware time before write: %lld, tx_time_stamp: %lld\n", s->iris[0]->getHardwareTime(""), timeNs);
+#endif
         ret = s->iris[r]->writeStream(s->txStream[r], (void **) samps, (size_t)(nsamps), flag, timeNs, 1000000);
 
         if (ret < 0)
@@ -211,15 +246,26 @@ static int trx_iris_read(openair0_device *device, openair0_timestamp *ptimestamp
 
     int r;
     int m = s->rx_num_channels;
+    int nsamps2;  // aligned to upper 32 or 16 byte boundary
+#if defined(__x86_64) || defined(__i386__)
+#ifdef __AVX2__
+    nsamps2 = (nsamps+7)>>3;
+    __m256i buff_tmp[2][nsamps2];
+#else
+    nsamps2 = (nsamps+3)>>2;
+    __m128i buff_tmp[2][nsamps2];
+#endif
+#endif
+
     for (r = 0; r < s->device_num; r++) {
         flags = 0;
         samples_received = 0;
-        samps[0] = (uint32_t *) buff[m * r];
+        samps[0] = (uint32_t *) buff_tmp[m * r];
         if (cc % 2 == 0)
-            samps[1] = (uint32_t *) buff[m * r + 1];
+            samps[1] = (uint32_t *) buff_tmp[m * r + 1];
 
         flags = 0;
-        ret = s->iris[r]->readStream(s->rxStream[r], (void **) samps, (size_t)(nsamps - samples_received), flags,
+        ret = s->iris[r]->readStream(s->rxStream[r], (void **) samps, (size_t)(nsamps), flags,
                                      timeNs, 1000000);
         if (ret < 0) {
             if (ret == SOAPY_SDR_TIME_ERROR)
@@ -274,6 +320,19 @@ static int trx_iris_read(openair0_device *device, openair0_timestamp *ptimestamp
                 }
                 nextTime += SoapySDR::ticksToTimeNs(samples_received, s->sample_rate / SAMPLE_RATE_DOWN);
             }
+        }
+
+        // bring RX data into 12 LSBs for softmodem RX
+        for (int i=0; i<cc; i++) {
+          for (int j=0; j<nsamps2; j++) {
+#if defined(__x86_64__) || defined(__i386__)
+#ifdef   __AVX2__
+            ((__m256i *)buff[i])[j] = _mm256_srai_epi16(buff_tmp[i][j],4);
+#else
+            ((__m128i *)buff[i])[j] = _mm_srai_epi16(buff_tmp[i][j],4);
+#endif  
+#endif  
+          }
         }
     }
     return samples_received;
@@ -467,26 +526,23 @@ int device_init(openair0_device *device, openair0_config_t *openair0_cfg) {
     // Initialize Iris device
     device->openair0_cfg = openair0_cfg;
     SoapySDR::Kwargs args;
-    printf("\nMAX_CARDS: %d\n", MAX_CARDS);
-    for (card = 0; card < 1; card++) {
-        char *remote_addr = device->openair0_cfg[card].remote_addr;
-        if (remote_addr == NULL) {
-            printf("Opened %lu cards...\n", card);
-            break;
-        }
-        char *drvtype = strtok(remote_addr, ",");
-        char *srl = strtok(NULL, ",");
-        while (srl != NULL) {
-            LOG_I(HW, "Attempting to open Iris device\n");//, srl);
-            args["driver"] = "iris";//drvtype;
-            args["serial"] = srl;
-            s->iris.push_back(SoapySDR::Device::make(args));
-            srl = strtok(NULL, ",");
-        }
-        //openair0_cfg[0].iq_txshift = 4;//if radio needs OAI to shift left the tx samples for preserving bit precision
-        //openair0_cfg[0].iq_rxrescale = 15;
-
+    args["driver"] = "iris";
+    char *iris_addrs = device->openair0_cfg[0].sdr_addrs;
+    if (iris_addrs == NULL)
+    { 
+        s->iris.push_back(SoapySDR::Device::make(args));
     }
+    else
+    {
+        char *serial = strtok(iris_addrs, ",");
+        while (serial != NULL) {
+            LOG_I(HW, "Attempting to open Iris device %s\n", serial);
+            args["serial"] = serial;
+            s->iris.push_back(SoapySDR::Device::make(args));
+            serial = strtok(NULL, ",");
+        }
+    }
+
     s->device_num = s->iris.size();
     device->type = IRIS_DEV;
 
@@ -611,11 +667,6 @@ int device_init(openair0_device *device, openair0_config_t *openair0_cfg) {
 
                 }
 
-                if (openair0_cfg[0].duplex_mode == 1) //duplex_mode_TDD
-                    s->iris[r]->setAntenna(SOAPY_SDR_RX, i, "TRX");
-                else
-                    s->iris[r]->setAntenna(SOAPY_SDR_RX, i, "RX");
-
                 s->iris[r]->setDCOffsetMode(SOAPY_SDR_RX, i, true); // move somewhere else
             }
         }
@@ -625,15 +676,15 @@ int device_init(openair0_device *device, openair0_config_t *openair0_cfg) {
                 s->iris[r]->setFrequency(SOAPY_SDR_TX, i, "RF", openair0_cfg[0].tx_freq[i]);
 
                 if (s->iris[r]->getHardwareInfo()["frontend"].compare(devFE) == 0) {
-                    s->iris[r]->setGain(SOAPY_SDR_TX, i, "PAD", openair0_cfg[0].tx_gain[i]);
-                    //s->iris[r]->setGain(SOAPY_SDR_TX, i, "PAD", 52);
-                    s->iris[r]->setGain(SOAPY_SDR_TX, i, "IAMP", 6);
+                    //s->iris[r]->setGain(SOAPY_SDR_TX, i, "PAD", openair0_cfg[0].tx_gain[i]);
+                    s->iris[r]->setGain(SOAPY_SDR_TX, i, "PAD", 52);
+                    s->iris[r]->setGain(SOAPY_SDR_TX, i, "IAMP", 12);
                     //s->iris[r]->writeSetting("TX_ENABLE_DELAY", "0");
                     //s->iris[r]->writeSetting("TX_DISABLE_DELAY", "100");
                 } else {
                     s->iris[r]->setGain(SOAPY_SDR_TX, i, "ATTN", 0); // [-18, 0, 6] dB
-                    s->iris[r]->setGain(SOAPY_SDR_TX, i, "IAMP", 0); // [-12, 12, 1] dB
-                    s->iris[r]->setGain(SOAPY_SDR_TX, i, "PAD", openair0_cfg[0].tx_gain[i]);
+                    s->iris[r]->setGain(SOAPY_SDR_TX, i, "IAMP", 9); // [-12, 12, 1] dB
+                    s->iris[r]->setGain(SOAPY_SDR_TX, i, "PAD", 52); //openair0_cfg[0].tx_gain[i]);
                     //s->iris[r]->setGain(SOAPY_SDR_TX, i, "PAD", 35); // [0, 52, 1] dB
                     s->iris[r]->setGain(SOAPY_SDR_TX, i, "PA1", 9); // 17 ??? dB
                     s->iris[r]->setGain(SOAPY_SDR_TX, i, "PA2", 0); // [0, 17, 17] dB
@@ -654,14 +705,14 @@ int device_init(openair0_device *device, openair0_config_t *openair0_cfg) {
         for (i = 0; i < s->iris[r]->getNumChannels(SOAPY_SDR_RX); i++) {
             if (i < s->rx_num_channels) {
 
-                if (s->iris[r]->getHardwareInfo()["frontend"].compare(devFE) != 0) {
-                    printf("\nUsing SKLK calibration...\n");
-                    s->iris[r]->writeSetting(SOAPY_SDR_RX, i, "CALIBRATE", "SKLK");
-                } else {
-                    s->iris[r]->writeSetting(SOAPY_SDR_RX, i, "CALIBRATE", "");
-                    printf("\nUsing LMS calibration...\n");
+                //if (s->iris[r]->getHardwareInfo()["frontend"].compare(devFE) != 0) {
+                //    printf("\nUsing SKLK calibration...\n");
+                //    s->iris[r]->writeSetting(SOAPY_SDR_RX, i, "CALIBRATE", "SKLK");
+                //} else {
+                //    s->iris[r]->writeSetting(SOAPY_SDR_RX, i, "CALIBRATE", "");
+                //    printf("\nUsing LMS calibration...\n");
 
-                }
+                //}
             }
 
         }
@@ -681,16 +732,17 @@ int device_init(openair0_device *device, openair0_config_t *openair0_cfg) {
 
         }
 
-
-        for (i = 0; i < s->iris[r]->getNumChannels(SOAPY_SDR_RX); i++) {
-            if (openair0_cfg[0].duplex_mode == 0) {
-                printf("\nFDD: Setting receive antenna to %s\n", s->iris[r]->listAntennas(SOAPY_SDR_RX, i)[1].c_str());
-                if (i < s->rx_num_channels)
-                    s->iris[r]->setAntenna(SOAPY_SDR_RX, i, "RX");
-            } else {
-                printf("\nTDD: Setting receive antenna to %s\n", s->iris[r]->listAntennas(SOAPY_SDR_RX, i)[0].c_str());
-                if (i < s->rx_num_channels)
-                    s->iris[r]->setAntenna(SOAPY_SDR_RX, i, "TRX");
+        if (s->iris[r]->getHardwareInfo()["frontend"].compare(devFE) == 0) {
+            for (i = 0; i < s->iris[r]->getNumChannels(SOAPY_SDR_RX); i++) {
+                if (openair0_cfg[0].duplex_mode == 0) {
+                    printf("\nFDD: Setting receive antenna to %s\n", s->iris[r]->listAntennas(SOAPY_SDR_RX, i)[1].c_str());
+                    if (i < s->rx_num_channels)
+                        s->iris[r]->setAntenna(SOAPY_SDR_RX, i, "RX");
+                } else {
+                    printf("\nTDD: Setting receive antenna to %s\n", s->iris[r]->listAntennas(SOAPY_SDR_RX, i)[0].c_str());
+                    if (i < s->rx_num_channels)
+                        s->iris[r]->setAntenna(SOAPY_SDR_RX, i, "TRX");
+                }
             }
         }
 
@@ -788,3 +840,8 @@ int device_init(openair0_device *device, openair0_config_t *openair0_cfg) {
 }
 }
 /*@}*/
+
+
+
+
+
