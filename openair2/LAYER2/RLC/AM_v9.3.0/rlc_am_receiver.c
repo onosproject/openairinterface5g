@@ -267,6 +267,7 @@ rlc_am_receive_routing (
         AssertFatal( tb_size_in_bytes == 0,
                      "Remaining %d bytes following a control PDU",
                      tb_size_in_bytes);
+	//if (tb_size_in_bytes == 0) printf("Remaining %d bytes following a control PDU",tb_size_in_bytes);
       }
 
       LOG_D(RLC, PROTOCOL_RLC_AM_CTXT_FMT"[RX ROUTING] VR(R)=%03d VR(MR)=%03d\n",

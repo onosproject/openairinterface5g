@@ -1126,7 +1126,7 @@ void rx_rf(PHY_VARS_eNB *eNB,int *frame,int *subframe) {
   
 
   stop_meas(&softmodem_stats_rx_rf);
-  if (proc->frame_rx==1020) print_meas(&softmodem_stats_rx_rf,"softmodem_stats_rx_rf",NULL,NULL);
+  //if (proc->frame_rx==1020) print_meas(&softmodem_stats_rx_rf,"softmodem_stats_rx_rf",NULL,NULL);
 }
 void rx_rf_freq(PHY_VARS_eNB *eNB,int *frame,int *subframe) {
   start_meas(&softmodem_stats_rx_rf_freq);
@@ -1983,9 +1983,9 @@ static void* eNB_thread_single( void* param ) {
 
     if (rxtx(eNB,proc_rxtx,"eNB_thread_single") < 0) break;
     stop_meas(&softmodem_stats_hw);
-    if (temp_f==3000) {
+    /*if (temp_f==3000) {
 	print_opp_meas();
-    }
+    }*/
   }
   
 

@@ -477,11 +477,11 @@ int init_freq_channel_prach(channel_desc_t *desc,uint16_t nb_rb,int16_t n_sample
   prach_samples = (prach_fmt<4)?13+839+12:3+139+2;
   if (first_run)
   {
-	cos_lut_f_prach = (float **)malloc16(prach_samples*sizeof(float*));
-	sin_lut_f_prach = (float **)malloc16(prach_samples*sizeof(float*));
-        for (f=max_nb_rb_samples/2-prach_pbr_offset_samples,f1=0; f<max_nb_rb_samples/2-prach_pbr_offset_samples+prach_samples; f++,f1++) {
-	    cos_lut_f_prach[f1] = (float *)malloc16_clear((int)desc->nb_taps*sizeof(float));
-	    sin_lut_f_prach[f1] = (float *)malloc16_clear((int)desc->nb_taps*sizeof(float));
+	cos_lut_f_prach = (float **)malloc16((int)desc->nb_taps*sizeof(float*));
+	sin_lut_f_prach = (float **)malloc16((int)desc->nb_taps*sizeof(float*));
+        for (f=0; f<prach_samples; f++) {
+	    cos_lut_f_prach[f] = (float *)malloc16_clear(prach_samples*sizeof(float));
+	    sin_lut_f_prach[f] = (float *)malloc16_clear(prach_samples*sizeof(float));
 	}
 	first_run=0;
   }
@@ -580,10 +580,10 @@ int init_freq_channel_prach_SSE_float(channel_desc_t *desc,uint16_t nb_rb,int16_
 
   return(0);
 }
+static int first_run=1;
 int init_freq_channel_prach_AVX_float(channel_desc_t *desc,uint16_t nb_rb,int16_t n_samples,int16_t prach_fmt,int16_t n_ra_prb)
 {
 
-  static int first_run=1;
   float delta_f,twopi;  // 90 kHz spacing
   float delay;
   int16_t f,f1;
@@ -602,15 +602,14 @@ int init_freq_channel_prach_AVX_float(channel_desc_t *desc,uint16_t nb_rb,int16_
   prach_samples = (prach_fmt<4)?13+839+12:3+139+2;
   if (first_run)
   {
-	cos_lut_f_prach = (float **)malloc16(prach_samples*sizeof(float*));
-	sin_lut_f_prach = (float **)malloc16(prach_samples*sizeof(float*));
-        for (f=max_nb_rb_samples/2-prach_pbr_offset_samples,f1=0; f<max_nb_rb_samples/2-prach_pbr_offset_samples+prach_samples; f++,f1++) {
-	    cos_lut_f_prach[f1] = (float *)malloc16_clear((int)desc->nb_taps*sizeof(float));
-	    sin_lut_f_prach[f1] = (float *)malloc16_clear((int)desc->nb_taps*sizeof(float));
+	cos_lut_f_prach = (float **)malloc16((int)desc->nb_taps*sizeof(float*));
+	sin_lut_f_prach = (float **)malloc16((int)desc->nb_taps*sizeof(float*));
+        for (f=0; f<prach_samples; f++) {
+	    cos_lut_f_prach[f] = (float *)malloc16_clear((int)prach_samples*sizeof(float));
+	    sin_lut_f_prach[f] = (float *)malloc16_clear((int)prach_samples*sizeof(float));
 	}
 	first_run=0;
   }
-
   //cos_lut = (double **)malloc(prach_samples*sizeof(double*));
   //sin_lut = (double **)malloc(prach_samples*sizeof(double*));
 
