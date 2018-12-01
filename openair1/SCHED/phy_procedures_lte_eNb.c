@@ -1016,8 +1016,9 @@ void pdsch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,LTE_eNB_DLSCH_t *d
 
 	int UE_id;
 
-	if (crnti!=0) 
+	if (crnti!=0){ 
 	  UE_id = add_ue(crnti,eNB);
+        }
 	else 
 	  UE_id = -1;
 	    
@@ -1140,7 +1141,6 @@ void pdsch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,LTE_eNB_DLSCH_t *d
     stop_meas(&eNB->dlsch_scrambling_stats);
 
     start_meas(&eNB->dlsch_modulation_stats);
-
 
     dlsch_modulation(eNB,
 		     eNB->common_vars.txdataF[0],

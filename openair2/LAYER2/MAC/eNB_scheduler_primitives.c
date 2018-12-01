@@ -111,7 +111,6 @@ int find_UE_id(module_id_t mod_idP, rnti_t rntiP)
 {
   int UE_id;
   UE_list_t *UE_list = &eNB_mac_inst[mod_idP].UE_list;
-
   for (UE_id = 0; UE_id < NUMBER_OF_UE_MAX; UE_id++) {
     if (UE_list->active[UE_id] != TRUE) continue;
     if (UE_list->UE_template[UE_PCCID(mod_idP,UE_id)][UE_id].rnti==rntiP) {
@@ -275,7 +274,7 @@ int add_new_ue(module_id_t mod_idP, int cc_idP, rnti_t rntiP,int harq_pidP)
 
   for (i = 0; i < NUMBER_OF_UE_MAX; i++) {
     if (UE_list->active[i] == TRUE) continue;
-printf("MAC: new UE id %d rnti %x\n", i, rntiP);
+printf("MAC: new UE id %d rnti %x eNB_id %d CC_id %d\n", i, rntiP,mod_idP,cc_idP);
     UE_id = i;
     UE_list->UE_template[cc_idP][UE_id].rnti       = rntiP;
     UE_list->UE_template[cc_idP][UE_id].configured = FALSE;

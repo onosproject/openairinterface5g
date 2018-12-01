@@ -476,13 +476,14 @@ schedule_ue_spec(
     // get number of PRBs less those used by common channels
     total_nb_available_rb[CC_id] = frame_parms[CC_id]->N_RB_DL;
     for (i=0;i<frame_parms[CC_id]->N_RB_DL;i++)
-      if (eNB->common_channels[CC_id].vrb_map[i]!=0)
+      if (eNB->common_channels[CC_id].vrb_map[i]!=0){
 	total_nb_available_rb[CC_id]--;
-
+        //printf("Common channels: PRB %d\n",i);
+      }
     N_RBG[CC_id] = frame_parms[CC_id]->N_RBG;
 
     // store the global enb stats:
-    eNB->eNB_stats[CC_id].num_dlactive_UEs =  UE_list->num_UEs[CC_id];//This was false. But now, We consider CC_id.
+    eNB->eNB_stats[CC_id].num_dlactive_UEs =  UE_list->num_UEs[CC_id];//Now, We consider CC_id for CRAN scalability.
     eNB->eNB_stats[CC_id].available_prbs =  total_nb_available_rb[CC_id];
     eNB->eNB_stats[CC_id].total_available_prbs +=  total_nb_available_rb[CC_id];
     eNB->eNB_stats[CC_id].dlsch_bytes_tx=0;

@@ -1988,7 +1988,6 @@ inline int check_skip_dc(int rb,LTE_DL_FRAME_PARMS *frame_parms) {
     return(0);
 }
 
-
 int dlsch_modulation(PHY_VARS_eNB* phy_vars_eNB,
                      int32_t **txdataF,
                      int16_t amp,
@@ -1998,7 +1997,7 @@ int dlsch_modulation(PHY_VARS_eNB* phy_vars_eNB,
                      LTE_eNB_DLSCH_t *dlsch1)
 {
   LTE_DL_FRAME_PARMS *frame_parms = &phy_vars_eNB->frame_parms;
-
+  printf("dlsch_modulation:CC_id %d \n",phy_vars_eNB->CC_id);
   uint8_t nsymb;
   uint8_t harq_pid = -1; //= dlsch0->current_harq_pid;
   LTE_DL_eNB_HARQ_t *dlsch0_harq = NULL;
@@ -2356,6 +2355,7 @@ int dlsch_modulation(PHY_VARS_eNB* phy_vars_eNB,
      if (dlsch0) {
         if (dlsch0_harq->Nlayers>1) {
           msg("Nlayers %d: re_offset %d, symbol %d offset %d\n",dlsch0_harq->Nlayers,re_offset,l,symbol_offset);
+	  printf("\n");
           return(-1);
         }
       }
@@ -2363,6 +2363,7 @@ int dlsch_modulation(PHY_VARS_eNB* phy_vars_eNB,
       if (dlsch1) {
         if (dlsch1_harq->Nlayers>1) {
           printf("Nlayers %d: re_offset %d, symbol %d offset %d\n",dlsch0_harq->Nlayers,re_offset,l,symbol_offset);
+	  printf("\n");
           return(-1);
         }
       }

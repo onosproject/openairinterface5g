@@ -1743,9 +1743,9 @@ static void* eNB_thread_single( void* param ) {
 
     if (rxtx(eNB,proc_rxtx,"eNB_thread_single") < 0) break;
     stop_meas(&softmodem_stats_hw);
-    if (temp_f==3000) {
-	print_opp_meas();
-    }
+    //if (temp_f==3000) {
+	//print_opp_meas();
+    //}
   }
   
 
