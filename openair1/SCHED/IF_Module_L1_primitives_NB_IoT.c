@@ -195,7 +195,7 @@ void handle_nfapi_dlsch_pdu_NB_IoT(PHY_VARS_eNB *eNB,
   else if(rel13->rnti != 65535 && rel13->rnti_type == 1)
   {
   	  //printf("rel13->rnti: %d, eNB->ndlsch_RAR->rnti: %d\n",rel13->rnti,eNB->ndlsch_RAR->rnti);
-  	  eNB->ndlsch_RAR->rnti = rel13->rnti;
+  	  //eNB->ndlsch_RAR->rnti = rel13->rnti;
 	  //check if the PDU is for RAR
 	  if(eNB->ndlsch_RAR != NULL && rel13->rnti == eNB->ndlsch_RAR->rnti) //rnti for the RAR should have been set priviously by the DCI
 	  {

@@ -211,6 +211,8 @@ void schedule_rar_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, int abs_subframe){
 		    dci_n0 = (DCIFormatN0_t *)malloc(sizeof(DCIFormatN0_t));
 			dci_n1_rar = (DCIFormatN1_t *)malloc(sizeof(DCIFormatN1_t));
 			
+			msg2_nodes->ue_rnti = tc_rnti;
+		
 		    fill_rar_NB_IoT(mac_inst, msg2_nodes, msg3_scheduling_delay, rep, &npusch_info);
 		    
             msg2_nodes->wait_msg3_ack = 1;
@@ -274,7 +276,7 @@ void schedule_rar_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, int abs_subframe){
 			dci_n0->rv = 0;
 			dci_n0->DCIRep = 1;//get_DCI_REP()
 			
-			msg2_nodes->ue_rnti = tc_rnti;
+			//msg2_nodes->ue_rnti = tc_rnti;
 			
 			LOG_D(MAC,"[%04d][RA scheduler][MSG2] RARDCI %d-%d RAR %d-%d MSG3 %d-%d\n", abs_subframe-1, dci_first_subframe, dci_end_subframe, msg2_first_subframe, msg2_end_subframe, npusch_info.sf_start, npusch_info.sf_end);
 			LOG_D(MAC,"[%04d][RA scheduler][MSG2][CE%d] Change RA-RNTI %d->T-CRNTI %d\n", abs_subframe-1, msg2_nodes->ce_level, msg2_nodes->ra_rnti, msg2_nodes->ue_rnti);
