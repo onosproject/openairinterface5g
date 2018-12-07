@@ -153,7 +153,8 @@ int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB      *eNB,
                                               NB_IoT_eNB_NPDCCH_t      *ndlcch,
                                               LTE_DL_FRAME_PARMS    *frame_parms,
                                               uint8_t                  aggregation,         //////????? maybe add the ncce index ??????????
-									                            uint8_t                  npdcch_start_symbol)
+									                            uint8_t                  npdcch_start_symbol,
+                                              uint8_t                  ncce_index)
 {
 
  // NB_IoT_eNB_NPDCCH_t  *ndlcch     = ;
@@ -162,7 +163,7 @@ int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB      *eNB,
   //eNB->DCI_pdu = (DCI_PDU_NB_IoT*) malloc(sizeof(DCI_PDU_NB_IoT));
 
   //N1 parameters
-  uint8_t ncce_index = 0;
+  //uint8_t ncce_index = 0;
 
   /// type = 0 => DCI Format N0, type = 1 => DCI Format N1, 1 bits
   uint8_t type = 0;
@@ -227,10 +228,10 @@ int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB      *eNB,
     ((DCIN1_RAR_t *)DLSCH_DCI_NB_IoT)->DCIRep         =DCIRep;
 
 
-    add_dci_NB_IoT(eNB->DCI_pdu,DLSCH_DCI_NB_IoT,rnti,sizeof(DCIN1_RAR_t),aggregation,sizeof_DCIN1_RAR_t,DCIFormatN1_RAR, npdcch_start_symbol);
+    //add_dci_NB_IoT(eNB->DCI_pdu,DLSCH_DCI_NB_IoT,rnti,sizeof(DCIN1_RAR_t),aggregation,sizeof_DCIN1_RAR_t,DCIFormatN1_RAR, npdcch_start_symbol);
 
 
-    /*Now configure the ndlsch structure*/
+    /*Now configure the npdcch structure*/
 
    // ndlcch->ncce_index          =   NCCE_index;
    // ndlcch->aggregation_level   =   aggregation;
@@ -239,7 +240,7 @@ int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB      *eNB,
 
     //ndlcch->subframe_tx[subframe] = 1; // check if it's OK
     ndlcch->rnti[ncce_index] = rnti; //we store the RNTI (e.g. for RNTI will be used later)
-    ndlcch->active[ncce_index] = 0; //will be activated by the corresponding NDSLCH pdu
+    ndlcch->active[ncce_index] = 1; //will be activated by the corresponding NDSLCH pdu
 
     // use this value to configure PHY both harq_processes and resource mapping.
     ndlcch->scheduling_delay[ncce_index]         = Sched_delay;
@@ -251,7 +252,7 @@ int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB      *eNB,
 
     //ndlcch->status[ncce_index] = ACTIVE_NB_IoT;
     ndlcch->mcs[ncce_index]    = mcs;
-
+    ndlcch->pdu[ncce_index]    = DLSCH_DCI_NB_IoT;
     /*
      * TS 36.213 ch 16.4.1.5
      * ITBS is always set equivalent to IMCS for data
@@ -268,7 +269,7 @@ int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB      *eNB,
     //ndlsch-> sqrt_rho_a?? set in dlsch_modulation
     //ndlsch-> sqrt_rho_b??? set in dlsch_modulation
 
-    LOG_D(PHY,"DCI packing for N1RAR done \n");
+    LOG_I(PHY,"DCI packing for N1RAR done \n");
 
     //set in new_eNB_dlsch (initialization)
     /*
@@ -306,9 +307,9 @@ int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB      *eNB,
     ((DCIN1_t *)DLSCH_DCI_NB_IoT)->DCIRep         =DCIRep;
 
 
-    add_dci_NB_IoT(eNB->DCI_pdu,DLSCH_DCI_NB_IoT,rnti,sizeof(DCIN1_t),aggregation,sizeof_DCIN1_t,DCIFormatN1,npdcch_start_symbol);
+    //add_dci_NB_IoT(eNB->DCI_pdu,DLSCH_DCI_NB_IoT,rnti,sizeof(DCIN1_t),aggregation,sizeof_DCIN1_t,DCIFormatN1,npdcch_start_symbol);
 
-    /*Now configure the ndlsch structure*/
+    /*Now configure the npdcch structure*/
     ndlcch->A[ncce_index]               = sizeof(DCIN1_t); // number of bits in DCI
 
     // ndlcch->ncce_index          =   NCCE_index;
@@ -316,7 +317,7 @@ int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB      *eNB,
 
     //ndlcch->subframe_tx[subframe] = 1; // check if it's OK
     ndlcch->rnti[ncce_index]                  = rnti; //we store the RNTI (e.g. for RNTI will be used later)
-    ndlcch->active[ncce_index]                = 0;//will be activated by the corresponding NDSLCH pdu
+    ndlcch->active[ncce_index]                = 1;//will be activated by the corresponding NDSLCH pdu
 
     // use this value to configure PHY both harq_processes and resource mapping.
     ndlcch->scheduling_delay[ncce_index]         = Sched_delay;
@@ -329,6 +330,7 @@ int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB      *eNB,
   	//ndlcch->status[ncce_index]  = ACTIVE_NB_IoT;
   	ndlcch->mcs[ncce_index]     = mcs;
   	ndlcch->TBS[ncce_index]     = TBStable_NB_IoT[mcs][ResAssign]; // this table should be rewritten for nb-iot
+    ndlcch->pdu[ncce_index]    =  DLSCH_DCI_NB_IoT;
 
 
     ndlcch->counter_repetition_number[ncce_index] = DCIRep;          ////??????? should be repalce by the value in spec table 16.6-3, check also Rmax
@@ -351,7 +353,7 @@ int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB      *eNB,
     ((DCIN2_Ind_t *)DLSCH_DCI_NB_IoT)->resInfoBits    =resInfoBits;
 
 
-    add_dci_NB_IoT(eNB->DCI_pdu,DLSCH_DCI_NB_IoT,rnti,sizeof(DCIN2_Ind_t),aggregation,sizeof_DCIN2_Ind_t,DCIFormatN2_Ind,npdcch_start_symbol);
+    //add_dci_NB_IoT(eNB->DCI_pdu,DLSCH_DCI_NB_IoT,rnti,sizeof(DCIN2_Ind_t),aggregation,sizeof_DCIN2_Ind_t,DCIFormatN2_Ind,npdcch_start_symbol);
 
     // use this value to configure PHY both harq_processes and resource mapping.
     break;

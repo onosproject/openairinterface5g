@@ -783,6 +783,10 @@ void generate_eNB_dlsch_params_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t * proc,n
           ndlsch               =  eNB->ndlsch_RAR;
           ndlsch->ndlsch_type  =  RAR;
 
+          ndlsch->rnti         =  dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.rnti;
+
+          npdcch               =  eNB->npdcch_DCI;
+          
           //LOG_I(PHY,"Generating dlsch params for RA_RNTI and packing DCI\n");
           generate_eNB_dlsch_params_from_dci_NB_IoT(eNB,
                                                     frame,
@@ -790,10 +794,11 @@ void generate_eNB_dlsch_params_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t * proc,n
                                                     DCI_Content,
                                                     dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.rnti,
                                                     DCI_format,
-                                                    ndlsch,
+                                                    npdcch,
                                                     fp,
                                                     dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.aggregation_level,
-                                                    dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.start_symbol);
+                                                    dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.start_symbol,
+                                                    dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.ncce_index);
 
         //printf("PHY_vars_eNB_g[0][0]->ndlsch_RAR->rnti = %d\n",PHY_vars_eNB_g[0][0]->ndlsch_RAR->rnti);
           //eNB->dlsch_ra_NB->nCCE[subframe] = eNB->DCI_pdu->dci_alloc.firstCCE;
@@ -849,10 +854,11 @@ void generate_eNB_dlsch_params_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t * proc,n
                                                       DCI_Content,
                                                       dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.rnti,
                                                       DCI_format,
-                                                      ndlsch,
+                                                      npdcch,
                                                       fp,
                                                       dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.aggregation_level,
-                                                      dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.start_symbol); 
+                                                      dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.start_symbol,
+                                                      dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.ncce_index);
 
               //eNB->ndlsch[(uint8_t)UE_id]->nCCE[subframe] = eNB->DCI_pdu->dci_alloc[i].firstCCE;
 

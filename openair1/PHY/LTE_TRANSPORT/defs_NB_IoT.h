@@ -721,7 +721,7 @@ typedef struct {
   uint8_t   npdcch_w[2][3*3*(16+NPDCCH_A)];
   uint8_t   npdcch_e[2][MAX_BITS_IN_SF];
   ///pdu of the npbch message
-  uint8_t   pdu[2][3];
+  uint8_t   *pdu[2];
 
 } NB_IoT_eNB_NPDCCH_t;
 

@@ -212,7 +212,8 @@ int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB    *eNB,
                                               NB_IoT_eNB_NPDCCH_t      *ndlcch,
                                               LTE_DL_FRAME_PARMS  *frame_parms,
                                               uint8_t                aggregation,
-									                            uint8_t                npdcch_start_symbol);
+									                            uint8_t                npdcch_start_symbol,
+                                              uint8_t                ncce_index);
 
 
 /*Function for DCI encoding, scrambling, modulation*/
