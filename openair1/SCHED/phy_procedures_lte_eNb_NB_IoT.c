@@ -234,7 +234,7 @@ void common_signal_procedures_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
 
   uint32_t                hyper_frame=proc->HFN;
 
-  //fp->flag_free_sf =0;
+  fp->flag_free_sf =0;
   ////////////////////////////////////////////////////////////////////////////////////
   /*
   rrc_eNB_carrier_data_NB_IoT_t *carrier = &eNB_rrc_inst_NB_IoT->carrier[0];
@@ -786,7 +786,10 @@ void generate_eNB_dlsch_params_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t * proc,n
           ndlsch->rnti         =  dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.rnti;
 
           npdcch               =  eNB->npdcch_DCI;
-          
+           
+          LOG_I(PHY,"Generating pdcch params for DCIN1 RAR and packing DCI\n");
+          //LOG_I(PHY,"Rep of DCI is : %d\n",DCI_Content->DCIN1_RAR.RepNum);
+
           //LOG_I(PHY,"Generating dlsch params for RA_RNTI and packing DCI\n");
           generate_eNB_dlsch_params_from_dci_NB_IoT(eNB,
                                                     frame,

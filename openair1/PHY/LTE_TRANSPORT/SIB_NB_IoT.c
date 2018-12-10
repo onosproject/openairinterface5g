@@ -216,6 +216,7 @@ int generate_NDLSCH_NB_IoT(NB_IoT_eNB_NDLSCH_t 	  *RAR,
 
     if( RAR->active == 1 )
     {
+        LOG_I(PHY,"[Frame: %d][Subframe: %d]sent RAR\n",frame,subframe);
     	uint8_t *RAR_pdu  = RAR->harq_process->pdu;
 	 	uint32_t rep =  RAR->repetition_number;
 	 	uint8_t eutra_control_region = 3;
@@ -281,7 +282,7 @@ int generate_NDLSCH_NB_IoT(NB_IoT_eNB_NDLSCH_t 	  *RAR,
 		        		RAR->counter_current_sf_repetition =0;
 
 		        	} else {
-
+                        //printf("RAR done\n");
 		        		RAR->active = 0;
 		        		done =1;
 		        	}
@@ -308,6 +309,7 @@ int generate_NDLSCH_NB_IoT(NB_IoT_eNB_NDLSCH_t 	  *RAR,
 
 		        	if (Nsf == RAR->pointer_to_subframe)
 		        	{
+                        //printf("RAR done\n");
 		        		RAR->active = 0;
 		        		done =1;
 		        	}
@@ -339,7 +341,7 @@ int generate_NPDCCH_NB_IoT(NB_IoT_eNB_NPDCCH_t 	  *DCI,
 
 		    if( DCI->active[i] == 1)
 		    {
-
+                LOG_I(PHY,"[Frame: %d][Subframe: %d]sent DCI\n",frame,subframe);
 		    	uint8_t  *DCI_pdu  = DCI->pdu[i];
 			 	uint32_t rep =  DCI->dci_repetitions[i];         /// repetition number
 			 	uint8_t  eutra_control_region = 3;
@@ -392,6 +394,7 @@ int generate_NPDCCH_NB_IoT(NB_IoT_eNB_NPDCCH_t 	  *DCI,
 
 		        if(DCI->counter_repetition_number[i] == 0)
 		        { 	
+                        //printf("DCI REP done\n");
 		        		DCI->active[i] = 0;
 		        		done =1;
 		        }

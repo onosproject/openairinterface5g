@@ -2,17 +2,51 @@
 #include "LAYER2/MAC/proto_NB_IoT.h"
 #include "LAYER2/MAC/extern_NB_IoT.h"
 
+int tmp =0;
+
+void simulate_preamble(UL_IND_NB_IoT_t *UL_INFO, int CE, int sc)
+{
+      UL_INFO->nrach_ind.number_of_initial_scs_detected = 1;
+      UL_INFO->nrach_ind.nrach_pdu_list[0].nrach_indication_rel13.initial_sc       = sc;
+      UL_INFO->nrach_ind.nrach_pdu_list[0].nrach_indication_rel13.timing_advance   = 0;
+      UL_INFO->nrach_ind.nrach_pdu_list[0].nrach_indication_rel13.nrach_ce_level   = CE;
+}
+
+void enable_preamble_simulation(UL_IND_NB_IoT_t *UL_INFO,int i)
+{
+  if(i == 1)
+  {
+    // simulate preamble session
+    if(UL_INFO->frame==60 && UL_INFO->subframe==2 && tmp==0)
+    {
+      simulate_preamble(UL_INFO,0,2);
+      tmp++;
+    }
+    if(UL_INFO->frame==100 && UL_INFO->subframe==2 && tmp==1)
+    {
+      simulate_preamble(UL_INFO,1,13);
+      tmp++;
+    }
+    if(UL_INFO->frame==60 && UL_INFO->subframe==2 && tmp==2)
+    {
+      simulate_preamble(UL_INFO,2,26);
+      tmp++;
+    }
+  }
+}
 
 // Sched_INFO as a input for the scheduler
 void UL_indication_NB_IoT(UL_IND_NB_IoT_t *UL_INFO)
 {
     int i=0;
     uint32_t abs_subframe;
-    Sched_Rsp_NB_IoT_t *SCHED_info = &mac_inst->Sched_INFO;;
+    Sched_Rsp_NB_IoT_t *SCHED_info = &mac_inst->Sched_INFO;
     //UE_TEMPLATE_NB_IoT *UE_info;
 
-      //If there is a preamble, do the initiate RA procedure
-      if(UL_INFO->nrach_ind.number_of_initial_scs_detected>0)
+    enable_preamble_simulation(UL_INFO,1);
+
+    //If there is a preamble, do the initiate RA procedure
+    if(UL_INFO->nrach_ind.number_of_initial_scs_detected>0)
         {
           // only use one preamble now
           //for(i=0;i<UL_INFO->nrach_ind.number_of_initial_scs_detected;i++)

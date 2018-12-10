@@ -144,6 +144,62 @@ int generate_eNB_ulsch_params_from_dci_NB_IoT(PHY_VARS_eNB        *eNB,
 //map the Isf (DCI param) to the number of subframes (Nsf)
 int resource_to_subframe[8] = {1,2,3,4,5,6,8,10};
 
+int Scheddly_less_128[8] = {0,4,8,12,16,32,64,128};
+int Scheddly_bigger_128[8] = {0,16,32,64,128,256,512,1024};
+int Irep_to_Nrep[16] = {1,2,4,8,16,32,64,128,192,256,384,512,768,1024,1536,2048};
+
+
+int Idelay_to_K0(uint8_t Sched_delay, int Rmax)
+{
+  int k0=0;
+
+  if(Rmax <128)
+  {
+    k0 = Scheddly_less_128[Sched_delay];
+  }else if(Rmax >=128)
+  {
+    k0 = Scheddly_bigger_128[Sched_delay];
+  } 
+  return k0;
+}
+
+
+int DCIrep_to_real_rep(uint8_t DCI_rep, int Rmax)
+{
+    int R=0;
+    if(Rmax == 1)
+    {
+      if(DCI_rep == 0)
+        R = 1;
+    }else if (Rmax == 2)
+    {
+      if(DCI_rep == 0)
+        R = 1;
+      else if(DCI_rep == 1)
+        R = 2;
+    }else if (Rmax == 4)
+    {
+      if(DCI_rep == 0)
+        R = 1;
+      else if(DCI_rep == 1)
+        R = 2;
+        else if(DCI_rep == 2)
+        R = 4;
+    }else if (Rmax >= 8)
+    {
+      if(DCI_rep == 0)
+        R = Rmax/8;
+      else if(DCI_rep == 1)
+        R = Rmax/4;
+      else if(DCI_rep == 2)
+        R = Rmax/2;
+      else if(DCI_rep == 3)
+        R = Rmax;
+    }
+
+    return R;
+}
+
 int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB      *eNB,
                                               int                      frame,
                                               uint8_t                  subframe,
@@ -243,10 +299,13 @@ int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB      *eNB,
     ndlcch->active[ncce_index] = 1; //will be activated by the corresponding NDSLCH pdu
 
     // use this value to configure PHY both harq_processes and resource mapping.
-    ndlcch->scheduling_delay[ncce_index]         = Sched_delay;
+    ndlcch->scheduling_delay[ncce_index]         = Idelay_to_K0(Sched_delay,32);
     ndlcch->resource_assignment[ncce_index]      = resource_to_subframe[ResAssign];  //from Isf of DCI to the number of subframe
-    ndlcch->repetition_number[ncce_index]        = RepNum;                             // repetition number for NPDSCH
-    ndlcch->dci_repetitions[ncce_index]          = DCIRep;        ////??????? should be repalce by the value in spec table 16.6-3, check also Rmax
+    ndlcch->repetition_number[ncce_index]        = Irep_to_Nrep[RepNum];                             // repetition number for NPDSCH
+    ndlcch->dci_repetitions[ncce_index]          = DCIrep_to_real_rep(DCIRep,32);        ////??????? should be repalce by the value in spec table 16.6-3, check also Rmax
+
+    //printf("dci_repetitions: %d\n",ndlcch->dci_repetitions[ncce_index]);
+
     ndlcch->modulation[ncce_index]               = 2; //QPSK
     //// ////////////////////////////////////////////////if(ndlcch->round == 0) //this should be set from initialization (init-lte)
 
@@ -261,7 +320,7 @@ int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB      *eNB,
 
     ndlcch->TBS[ncce_index]      = TBStable_NB_IoT[mcs][ResAssign];
     //ndlcch->subframe[ncce_index] = subframe;
-    ndlcch->counter_repetition_number[ncce_index] = DCIRep;          ////??????? should be repalce by the value in spec table 16.6-3, check also Rmax
+    ndlcch->counter_repetition_number[ncce_index] = DCIrep_to_real_rep(DCIRep,32);          ////??????? should be repalce by the value in spec table 16.6-3, check also Rmax
     //ndlsch_harq->B; we don-t have now my is given when we receive the dlsch data
     //ndlsch->error_treshold
     //ndlsch->G??
@@ -320,10 +379,10 @@ int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB      *eNB,
     ndlcch->active[ncce_index]                = 1;//will be activated by the corresponding NDSLCH pdu
 
     // use this value to configure PHY both harq_processes and resource mapping.
-    ndlcch->scheduling_delay[ncce_index]         = Sched_delay;
-    ndlcch->resource_assignment[ncce_index]      = resource_to_subframe[ResAssign]; //from Isf of DCI to the number of subframe
-    ndlcch->repetition_number[ncce_index]        = RepNum;
-    ndlcch->dci_repetitions[ncce_index]          = DCIRep;             // ????????????? mapping with the table in spec, take into account Rmax
+    ndlcch->scheduling_delay[ncce_index]         = Idelay_to_K0(Sched_delay,32);
+    ndlcch->resource_assignment[ncce_index]      = resource_to_subframe[ResAssign];  //from Isf of DCI to the number of subframe
+    ndlcch->repetition_number[ncce_index]        = Irep_to_Nrep[RepNum];                             // repetition number for NPDSCH
+    ndlcch->dci_repetitions[ncce_index]          = DCIrep_to_real_rep(DCIRep,32);        ////??????? should be repalce by the value in spec table 16.6-3, check also Rmax
     ndlcch->modulation[ncce_index]               = 2; //QPSK
     //if(ndlcch->round == 0){ //this should be set from initialization (init-lte)
 
@@ -333,7 +392,7 @@ int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB      *eNB,
     ndlcch->pdu[ncce_index]    =  DLSCH_DCI_NB_IoT;
 
 
-    ndlcch->counter_repetition_number[ncce_index] = DCIRep;          ////??????? should be repalce by the value in spec table 16.6-3, check also Rmax
+    ndlcch->counter_repetition_number[ncce_index] = DCIrep_to_real_rep(DCIRep,32);          ////??????? should be repalce by the value in spec table 16.6-3, check also Rmax
     //}
     //ndlcch->frame[ncce_index]    = frame;
     //ndlcch->subframe[ncce_index] = subframe;
@@ -376,7 +435,7 @@ int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB      *eNB,
     ((DCIN2_Pag_t *)DLSCH_DCI_NB_IoT)->DCIRep    =DCIRep;
 
 
-    add_dci_NB_IoT(eNB->DCI_pdu,DLSCH_DCI_NB_IoT,rnti,sizeof(DCIN2_Pag_t),aggregation,sizeof_DCIN2_Pag_t,DCIFormatN2_Pag,npdcch_start_symbol);
+    //add_dci_NB_IoT(eNB->DCI_pdu,DLSCH_DCI_NB_IoT,rnti,sizeof(DCIN2_Pag_t),aggregation,sizeof_DCIN2_Pag_t,DCIFormatN2_Pag,npdcch_start_symbol);
 
     // use this value to configure PHY both harq_processes and resource mapping.
     break;
@@ -390,7 +449,7 @@ int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB      *eNB,
 
   // compute DL power control parameters
 
-  free(DLSCH_DCI_NB_IoT);
+  //free(DLSCH_DCI_NB_IoT);
 
   return(0);
 }

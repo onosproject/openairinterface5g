@@ -46,6 +46,8 @@
 
 #include "PHY/INIT/defs_NB_IoT.h"
 
+int Irep_to_Nrep_x[16] = {1,2,4,8,16,32,64,128,192,256,384,512,768,1024,1536,2048};
+
 
 void handle_nfapi_dlsch_pdu_NB_IoT(PHY_VARS_eNB *eNB,
 						  		   eNB_rxtx_proc_t *proc,
@@ -212,12 +214,12 @@ void handle_nfapi_dlsch_pdu_NB_IoT(PHY_VARS_eNB *eNB,
 
 		  eNB->ndlsch_RAR->rnti_type 				= rel13->rnti_type;
   		  eNB->ndlsch_RAR->resource_assignment 		= rel13->resource_assignment;    // for NDLSCH // this value point to -->  number of subframes needed
-          eNB->ndlsch_RAR->repetition_number 		= rel13->repetition_number;
+          eNB->ndlsch_RAR->repetition_number 		= Irep_to_Nrep_x[rel13->repetition_number];
   		  eNB->ndlsch_RAR->modulation 				= rel13->modulation;
 
   		  eNB->ndlsch_RAR->number_of_subframes_for_resource_assignment   = rel13->number_of_subframes_for_resource_assignment; // for NDLSCH //table 16.4.1.3-1 // TS 36.213
 
-		  eNB->ndlsch_RAR->counter_repetition_number       = rel13->repetition_number;
+		  eNB->ndlsch_RAR->counter_repetition_number       = Irep_to_Nrep_x[rel13->repetition_number];
 		  eNB->ndlsch_RAR->counter_current_sf_repetition   = 0;
 		  eNB->ndlsch_RAR->pointer_to_subframe             = 0;
 
@@ -244,12 +246,12 @@ void handle_nfapi_dlsch_pdu_NB_IoT(PHY_VARS_eNB *eNB,
 
 		  eNB->ndlsch_RAR->rnti_type 				= rel13->rnti_type;   
   		  eNB->ndlsch_RAR->resource_assignment 		= rel13->resource_assignment ;    // for NDLSCH // this value point to -->  number of subframes needed
-          eNB->ndlsch_RAR->repetition_number 		= rel13->repetition_number;
+          eNB->ndlsch_RAR->repetition_number 		= Irep_to_Nrep_x[rel13->repetition_number];
   		  eNB->ndlsch_RAR->modulation 				= rel13->modulation;
 
   		  eNB->ndlsch_RAR->number_of_subframes_for_resource_assignment   = rel13->number_of_subframes_for_resource_assignment; // for NDLSCH //table 16.4.1.3-1 // TS 36.213
 
-		  eNB->ndlsch_RAR->counter_repetition_number       = rel13->repetition_number;
+		  eNB->ndlsch_RAR->counter_repetition_number       = Irep_to_Nrep_x[rel13->repetition_number];
 		  eNB->ndlsch_RAR->counter_current_sf_repetition   = 0;
 		  eNB->ndlsch_RAR->pointer_to_subframe             = 0;
 
