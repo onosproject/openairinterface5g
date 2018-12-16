@@ -62,12 +62,6 @@
 
 #include "targets/RT/USER/rt_wrapper.h"
 
-// Note: this is needed for prototype of generate_drs_pusch, which is used as a reference signal for OTA synchronization
-#include "PHY/LTE_UE_TRANSPORT/transport_proto_ue.h"
-// RU OFDM Modulator, used in IF4p5 RRU, RCC/RAU with IF5, eNodeB
-
-extern openair0_config_t openair0_cfg[MAX_CARDS];
-
 extern int oai_exit;
 
 
@@ -97,27 +91,33 @@ void feptx0(RU_t *ru,int slot) {
 					                      fp->nb_prefix_samples,
 					                      CYCLIC_PREFIX);
     else {
-      AssertFatal(ru->generate_dmrs_sync==1 && (fp->frame_type != TDD || ru->is_slave == 1),
+     /* AssertFatal(ru->generate_dmrs_sync==1 && (fp->frame_type != TDD || ru->is_slave == 1),
 		  "ru->generate_dmrs_sync should not be set, frame_type %d, is_slave %d\n",
 		  fp->frame_type,ru->is_slave);
+*/
 
       if (ru->generate_dmrs_sync == 1 && slot == 0 && subframe == 1 && aa==0) {
+	//int32_t dmrs[ru->frame_parms.ofdm_symbol_size*14] __attribute__((aligned(32)));
+        //int32_t *dmrsp[2] ={dmrs,NULL}; //{&dmrs[(3-ru->frame_parms.Ncp)*ru->frame_parms.ofdm_symbol_size],NULL};
+  
 	generate_drs_pusch((PHY_VARS_UE *)NULL,
 			   (UE_rxtx_proc_t*)NULL,
 			   fp,
 			   ru->common.txdataF_BF,
 			   0,
 			   AMP,
-			   1,
+			   0,
 			   0,
 			   fp->N_RB_DL,
 			   aa);
-      }
+      } 
       normal_prefix_mod(&ru->common.txdataF_BF[aa][slot*slot_sizeF],
-			(int*)&ru->common.txdata[aa][slot_offset],
-			7,
-			fp);
-    }
+                        (int*)&ru->common.txdata[aa][slot_offset],
+                        7,
+                        fp);
+
+       
+  }
    /* 
     len = fp->samples_per_tti>>1;
 
@@ -192,7 +192,7 @@ static void *feptx_thread(void *param) {
       exit_fun( "ERROR pthread_cond_signal" );
       return NULL;
     }
-	/*if(opp_enabled == 1 && ru->ofdm_mod_wakeup_stats.diff_now>30*3000){
+	/*if(opp_enabled == 1 && ru->ofdm_mod_wakeup_stats.p_time>30*3000){
       print_meas_now(&ru->ofdm_mod_wakeup_stats,"fep wakeup",stderr);
       printf("delay in fep wakeup in frame_tx: %d  subframe_rx: %d \n",proc->frame_tx,proc->subframe_tx);
     }*/
@@ -252,7 +252,7 @@ void feptx_ofdm_2thread(RU_t *ru) {
   start_meas(&ru->ofdm_mod_wait_stats);
   wait_on_busy_condition(&proc->mutex_feptx,&proc->cond_feptx,&proc->instance_cnt_feptx,"feptx thread");  
   stop_meas(&ru->ofdm_mod_wait_stats);
-  /*if(opp_enabled == 1 && ru->ofdm_mod_wait_stats.diff_now>30*3000){
+  /*if(opp_enabled == 1 && ru->ofdm_mod_wait_stats.p_time>30*3000){
     print_meas_now(&ru->ofdm_mod_wait_stats,"fep wakeup",stderr);
     printf("delay in feptx wait on codition in frame_rx: %d  subframe_rx: %d \n",proc->frame_tx,proc->subframe_tx);
   }*/
@@ -406,13 +406,10 @@ void feptx_ofdm(RU_t *ru) {
 
 void feptx_prec(RU_t *ru) {
 	
-  // Theoni's
-  int l,i,aa,rb,p;
+  int l,i,aa,p;
   int subframe = ru->proc.subframe_tx;
   PHY_VARS_eNB **eNB_list = ru->eNB_list,*eNB; 
   LTE_DL_FRAME_PARMS *fp;
-  int32_t ***bw;
-  RU_proc_t *proc  = &ru->proc;
 
   /* fdragon
   int l,i,aa;
@@ -422,7 +419,6 @@ void feptx_prec(RU_t *ru) {
   int subframe = ru->proc.subframe_tx;
   */
 
-  if (ru->idx != 0) return;
 
   if (ru->num_eNB == 1) {
 
@@ -430,6 +426,8 @@ void feptx_prec(RU_t *ru) {
     fp  = &eNB->frame_parms;
     LTE_eNB_PDCCH *pdcch_vars = &eNB->pdcch_vars[subframe&1]; 
     
+    if (subframe_select(fp,subframe) == SF_UL) return;
+
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_RU_FEPTX_PREC+ru->idx , 1);
 
     for (aa=0;aa<ru->nb_tx;aa++) {
@@ -443,10 +441,7 @@ void feptx_prec(RU_t *ru) {
 #else
 	
 	if (p<fp->nb_antenna_ports_eNB) {				
-	  // pdcch region, copy entire signal from txdataF->txdataF_BF (bf_mask = 1)
-	  // else do beamforming for pdcch according to beam_weights
-	  // to be updated for eMBMS (p=4)
-	  // For the moment this does nothing different than below.	     
+	  // For the moment this does nothing different than below, except ignore antenna ports 5,7,8.	     
 	  for (l=0;l<pdcch_vars->num_pdcch_symbols;l++)
 	    beam_precoding(eNB->common_vars.txdataF,
 			   ru->common.txdataF_BF,
@@ -455,7 +450,8 @@ void feptx_prec(RU_t *ru) {
 			   ru->beam_weights,
 			   l,
 			   aa,
-			   p);
+			   p,
+			   eNB->Mod_id);
 	} //if (p<fp->nb_antenna_ports_eNB)
 	
 	  // PDSCH region
@@ -468,7 +464,8 @@ void feptx_prec(RU_t *ru) {
 			   ru->beam_weights,
 			   l,
 			   aa,
-			   p);			
+			   p,
+                           eNB->Mod_id);			
 	  } // for (l=pdcch_vars ....)
 	} // if (p<fp->nb_antenna_ports_eNB) ...
 #endif //NO_PRECODING
@@ -511,7 +508,6 @@ void feptx_prec(RU_t *ru) {
     for (i=0;i<ru->num_eNB;i++) {
       eNB = eNB_list[i];
       fp  = &eNB->frame_parms;
-      bw  = ru->beam_weights[i];
       
       for (l=0;l<fp->symbols_per_tti;l++) {
 	for (aa=0;aa<ru->nb_tx;aa++) {
@@ -519,10 +515,11 @@ void feptx_prec(RU_t *ru) {
 			 ru->common.txdataF_BF,
 			 subframe,
 			 fp,
-			 bw,
+			 ru->beam_weights,
 			 subframe<<1,
 			 l,
-			 aa);
+			 aa,
+			 eNB->Mod_id);
 	}
       }
     }
@@ -582,7 +579,7 @@ static void *fep_thread(void *param) {
       exit_fun( "ERROR pthread_cond_signal" );
       return NULL;
     }
-    /*if(opp_enabled == 1 && ru->ofdm_demod_wakeup_stats.diff_now>30*3000){
+    /*if(opp_enabled == 1 && ru->ofdm_demod_wakeup_stats.p_time>30*3000){
       print_meas_now(&ru->ofdm_demod_wakeup_stats,"fep wakeup",stderr);
       printf("delay in fep wakeup in frame_rx: %d  subframe_rx: %d \n",proc->frame_rx,proc->subframe_rx);
     }*/
@@ -697,7 +694,7 @@ void ru_fep_full_2thread(RU_t *ru) {
   start_meas(&ru->ofdm_demod_wait_stats);
   wait_on_busy_condition(&proc->mutex_fep,&proc->cond_fep,&proc->instance_cnt_fep,"fep thread");  
   stop_meas(&ru->ofdm_demod_wait_stats);
-  if(opp_enabled == 1 && ru->ofdm_demod_wakeup_stats.diff_now>30*3000){
+  if(opp_enabled == 1 && ru->ofdm_demod_wakeup_stats.p_time>30*3000){
     print_meas_now(&ru->ofdm_demod_wakeup_stats,"fep wakeup",stderr);
     printf("delay in fep wait on codition in frame_rx: %d  subframe_rx: %d \n",proc->frame_rx,proc->subframe_rx);
   }

@@ -85,7 +85,8 @@ void fill_eNB_dlsch_MCH(PHY_VARS_eNB *eNB,int Qm,int TBS)
 }
 
 
-void generate_mch(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
+
+void generate_mch(PHY_VARS_eNB *eNB,L1_rxtx_proc_t *proc)
 {
 
   int G;

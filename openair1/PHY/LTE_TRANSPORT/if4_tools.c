@@ -150,8 +150,8 @@ void send_IF4p5(RU_t *ru, int frame, int subframe, uint16_t packet_type) {
 	   uint32_t *rx0 = (uint32_t*) &rxdataF[antenna_id][blockoffsetF];
 	   uint32_t *rx1 = (uint32_t*) &rxdataF[antenna_id][slotoffsetF];
 
-	   VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME( VCD_SIGNAL_DUMPER_VARIABLES_SEND_IF4_SYMBOL, symbol_id );
-	   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_COMPR_IF, 1 );		
+	   //VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME( VCD_SIGNAL_DUMPER_VARIABLES_SEND_IF4_SYMBOL, symbol_id );
+	   //VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_COMPR_IF, 1 );		
 
 	   start_meas(&ru->compression);
 
@@ -181,12 +181,12 @@ void send_IF4p5(RU_t *ru, int frame, int subframe, uint16_t packet_type) {
           }
         }
         stop_meas(&ru->compression);
-        VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_COMPR_IF, 0 );   	
+        //VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_COMPR_IF, 0 );   	
         packet_header->frame_status &= ~(0x07);
         packet_header->frame_status |= ru->nb_rx-1;
 	packet_header->frame_status &= ~(0x000f<<26);
 	packet_header->frame_status |= (symbol_id&0x000f)<<26; 
-	if (ru->idx<=1) VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_WRITE_IF0+ru->idx, 1 );  
+	//if (ru->idx<=1) VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_WRITE_IF0+ru->idx, 1 );  
 	start_meas(&ru->transport);
 	if ((ru->ifdevice.trx_write_func(&ru->ifdevice,
 					 symbol_id,
@@ -197,7 +197,7 @@ void send_IF4p5(RU_t *ru, int frame, int subframe, uint16_t packet_type) {
 	  perror("ETHERNET write for IF4p5_PULFFT\n");
 	}
 	stop_meas(&ru->transport);
-	if (ru->idx<=1) VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_WRITE_IF0+ru->idx, 0 );
+	//if (ru->idx<=1) VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_WRITE_IF0+ru->idx, 0 );
 	slotoffsetF  += fp->ofdm_symbol_size;
 	blockoffsetF += fp->ofdm_symbol_size;
       }    
@@ -215,7 +215,7 @@ void send_IF4p5(RU_t *ru, int frame, int subframe, uint16_t packet_type) {
   } else if (packet_type >= IF4p5_PRACH && 
 	     packet_type <= IF4p5_PRACH+4) {
     // FIX: hard coded prach samples length
-    LOG_D(PHY,"IF4p5_PRACH: frame %d, subframe %d,packet type %x\n",frame,subframe,packet_type);
+    if (frame < 10) LOG_D(PHY,"IF4p5_PRACH: frame %d, subframe %d,packet type %x\n",frame,subframe,packet_type);
     db_fulllength = PRACH_NUM_SAMPLES;
     
     if (eth->flags == ETH_RAW_IF4p5_MODE) {
@@ -249,6 +249,7 @@ void send_IF4p5(RU_t *ru, int frame, int subframe, uint16_t packet_type) {
                (void *)rxF,
                PRACH_BLOCK_SIZE_BYTES);
       }
+      if (frame == 0) LOG_D(PHY,"signal energy prach %d\n",dB_fixed(signal_energy(rxF,839)));
     }
     if (ru->idx<=1) VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_WRITE_IF0+ru->idx, 1 );
     if ((ru->ifdevice.trx_write_func(&ru->ifdevice,
@@ -284,7 +285,6 @@ void recv_IF4p5(RU_t *ru, int *frame, int *subframe, uint16_t *packet_type, uint
   int slotoffsetF=0, blockoffsetF=0; 
   eth_state_t *eth = (eth_state_t*) (ru->ifdevice.priv);
   int idx;
-
   if (ru->idx<=1) VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_RECV_IF4+ru->idx, 1 );   
   
   if (ru->function == NGFI_RRU_IF4p5) {
@@ -307,10 +307,12 @@ void recv_IF4p5(RU_t *ru, int *frame, int *subframe, uint16_t *packet_type, uint
 				 0) < 0) {
     perror("ETHERNET read");
     read_cnt++;
+/*
     if (read_cnt == 2) {
       ru->cmd = STOP_RU;
       return;
-    }
+    }*/
+    LOG_E(PHY,"if4p5 read_cnt %d\n",read_cnt);
   }
   if (ru->idx<=1) VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_READ_IF0+ru->idx, 0 );
   if (eth->flags == ETH_RAW_IF4p5_MODE) {
@@ -408,7 +410,7 @@ void recv_IF4p5(RU_t *ru, int *frame, int *subframe, uint16_t *packet_type, uint
                PRACH_BLOCK_SIZE_BYTES);
       }
     }
-    LOG_D(PHY,"PRACH_IF4p5: CC_id %d : frame %d, subframe %d => %d dB\n",ru->idx,*frame,*subframe,
+    if (frame == 0) LOG_D(PHY,"PRACH_IF4p5: CC_id %d : frame %d, subframe %d => %d dB\n",ru->idx,*frame,*subframe,
 	  dB_fixed(signal_energy((int*)&prach_rxsigF[0][0],839)));
       for (idx=0;idx<ru->num_eNB;idx++) ru->wakeup_prach_eNB(ru->eNB_list[idx],ru,*frame,*subframe);
 

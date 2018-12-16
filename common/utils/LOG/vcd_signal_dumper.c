@@ -44,7 +44,6 @@
 #include <unistd.h>
 
 #include "assertions.h"
-#include "signals.h"
 
 #include "vcd_signal_dumper.h"
 
@@ -79,6 +78,14 @@ const char* eurecomVariablesNames[] = {
   "subframe_number_TX1_RU",
   "subframe_number_RX0_RU",
   "subframe_number_RX1_RU",
+  "subframe_number_if4p5_north_out",
+  "frame_number_if4p5_north_out",
+  "subframe_number_if4p5_north_asynch_in",
+  "frame_number_if4p5_north_asynch_in",
+  "subframe_number_if4p5_south_out",
+  "frame_number_if4p5_south_out",
+  "subframe_number_if4p5_south_in",
+  "frame_number_if4p5_south_in",
   "runtime_TX_eNB",
   "runtime_RX_eNB",
   "frame_number_TX0_UE",

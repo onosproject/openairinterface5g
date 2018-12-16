@@ -90,7 +90,7 @@ int16_t find_ulsch(uint16_t rnti, PHY_VARS_eNB *eNB,find_type_t type)
 
 
 
-void fill_pdcch_order(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,DCI_ALLOC_t *dci_alloc,nfapi_dl_config_dci_dl_pdu *pdu)
+void fill_pdcch_order(PHY_VARS_eNB *eNB,L1_rxtx_proc_t *proc,DCI_ALLOC_t *dci_alloc,nfapi_dl_config_dci_dl_pdu *pdu)
 {
   LTE_DL_FRAME_PARMS                *fp      = &eNB->frame_parms;
   uint8_t                           *dci_pdu = &dci_alloc->dci_pdu[0];
@@ -220,11 +220,11 @@ void fill_pdcch_order(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,DCI_ALLOC_t *dci_a
     break;
   }
 
-  LOG_I(PHY,"%d.%d: DCI 1A: rnti %x, PDCCH order to do PRACH\n",
+  LOG_T(PHY,"%d.%d: DCI 1A: rnti %x, PDCCH order to do PRACH\n",
         proc->frame_tx, proc->subframe_tx, rel8->rnti);
 }
 
-void fill_dci_and_dlsch(PHY_VARS_eNB *eNB,int frame,int subframe,eNB_rxtx_proc_t *proc,DCI_ALLOC_t *dci_alloc,nfapi_dl_config_dci_dl_pdu *pdu)
+void fill_dci_and_dlsch(PHY_VARS_eNB *eNB,int frame,int subframe,L1_rxtx_proc_t *proc,DCI_ALLOC_t *dci_alloc,nfapi_dl_config_dci_dl_pdu *pdu)
 {
   LTE_DL_FRAME_PARMS *fp = &eNB->frame_parms;
   uint8_t *dci_pdu = &dci_alloc->dci_pdu[0];
@@ -1497,7 +1497,7 @@ void fill_dci_and_dlsch(PHY_VARS_eNB *eNB,int frame,int subframe,eNB_rxtx_proc_t
 
 }
 
-void fill_mdci_and_dlsch(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,mDCI_ALLOC_t *dci_alloc,nfapi_dl_config_mpdcch_pdu *pdu) {
+void fill_mdci_and_dlsch(PHY_VARS_eNB *eNB,L1_rxtx_proc_t *proc,mDCI_ALLOC_t *dci_alloc,nfapi_dl_config_mpdcch_pdu *pdu) {
 
   LTE_DL_FRAME_PARMS *fp = &eNB->frame_parms;
 
@@ -1770,7 +1770,7 @@ void fill_mdci_and_dlsch(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,mDCI_ALLOC_t *d
 
 }
 
-void fill_dci0(PHY_VARS_eNB *eNB,int frame,int subframe,eNB_rxtx_proc_t *proc,
+void fill_dci0(PHY_VARS_eNB *eNB,int frame,int subframe,L1_rxtx_proc_t *proc,
     DCI_ALLOC_t *dci_alloc,nfapi_hi_dci0_dci_pdu *pdu)
 {
   LTE_DL_FRAME_PARMS *frame_parms = &eNB->frame_parms;
@@ -1791,7 +1791,7 @@ void fill_dci0(PHY_VARS_eNB *eNB,int frame,int subframe,eNB_rxtx_proc_t *proc,
 
 #ifdef T_TRACER
   T(T_ENB_PHY_ULSCH_UE_DCI, T_INT(eNB->Mod_id), T_INT(frame), T_INT(subframe),
-    T_INT(pdu->dci_pdu_rel8.rnti), T_INT(((frame*10+subframe+4) % 8) /* TODO: correct harq pid */),
+    T_INT(pdu->dci_pdu_rel8.rnti), T_INT(pdu->dci_pdu_rel8.harq_pid),
     T_INT(mcs), T_INT(-1 /* TODO: remove round? */),
     T_INT(pdu->dci_pdu_rel8.resource_block_start),
     T_INT(pdu->dci_pdu_rel8.number_of_resource_block),

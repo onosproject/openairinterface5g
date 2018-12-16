@@ -276,11 +276,11 @@ int lte_sync_time_init(LTE_DL_FRAME_PARMS *frame_parms )   // LTE_UE_COMMON *com
 
 
 
-LOG_M_BEGIN(DEBUG_LTEESTIM);
-  LOG_M("primary_sync0.m","psync0",primary_synch0_time,frame_parms->ofdm_symbol_size,1,1);
-  LOG_M("primary_sync1.m","psync1",primary_synch1_time,frame_parms->ofdm_symbol_size,1,1);
-  LOG_M("primary_sync2.m","psync2",primary_synch2_time,frame_parms->ofdm_symbol_size,1,1);
-LOG_M_END
+  if ( LOG_DUMPFLAG(DEBUG_LTEESTIM)){
+    LOG_M("primary_sync0.m","psync0",primary_synch0_time,frame_parms->ofdm_symbol_size,1,1);
+    LOG_M("primary_sync1.m","psync1",primary_synch1_time,frame_parms->ofdm_symbol_size,1,1);
+    LOG_M("primary_sync2.m","psync2",primary_synch2_time,frame_parms->ofdm_symbol_size,1,1);
+  }
   return (1);
 }
 
@@ -483,18 +483,18 @@ int lte_sync_time(int **rxdata, ///rx data in time domain
   LOG_I(PHY,"[UE] lte_sync_time: Sync source = %d, Peak found at pos %d, val = %d (%d dB)\n",sync_source,peak_pos,peak_val,dB_fixed(peak_val)/2);
 
 
-LOG_M_BEGIN(DEBUG_LTEESTIM)
-static int debug_cnt;
-  if (debug_cnt == 0) {
-    LOG_M("sync_corr0_ue.m","synccorr0",sync_corr_ue0,2*length,1,2);
-    LOG_M("sync_corr1_ue.m","synccorr1",sync_corr_ue1,2*length,1,2);
-    LOG_M("sync_corr2_ue.m","synccorr2",sync_corr_ue2,2*length,1,2);
-    LOG_M("rxdata0.m","rxd0",rxdata[0],length<<1,1,1);
-    //    exit(-1);
-  } else {
+  if ( LOG_DUMPFLAG(DEBUG_LTEESTIM)){
+    static int debug_cnt;
+    if (debug_cnt == 0) {
+      LOG_M("sync_corr0_ue.m","synccorr0",sync_corr_ue0,2*length,1,2);
+      LOG_M("sync_corr1_ue.m","synccorr1",sync_corr_ue1,2*length,1,2);
+      LOG_M("sync_corr2_ue.m","synccorr2",sync_corr_ue2,2*length,1,2);
+      LOG_M("rxdata0.m","rxd0",rxdata[0],length<<1,1,1);
+      //    exit(-1);
+    } else {
     debug_cnt++;
   }
-LOG_M_END
+} 
 
 	//printf("\x1B[32m");
 	//printf("\n\n\n\n[IRTBL] \n\n\n");
@@ -513,13 +513,23 @@ LOG_M_END
 int ru_sync_time_init(RU_t *ru)   // LTE_UE_COMMON *common_vars
 {
 
+  /*
   int16_t dmrs[2048];
   int16_t *dmrsp[2] = {dmrs,NULL};
+  */
 
-  ru->dmrssync = (int16_t*)malloc16_clear(ru->frame_parms.N_RB_DL*2*sizeof(int16_t)); 
+  int32_t dmrs[ru->frame_parms.ofdm_symbol_size*14] __attribute__((aligned(32)));
+//  int32_t *dmrsp[2] = {&dmrs[(3-ru->frame_parms.Ncp)*ru->frame_parms.ofdm_symbol_size],NULL};
+  int32_t *dmrsp[2] = {&dmrs[0],NULL};
+
+  generate_ul_ref_sigs();
+ 
+  ru->dmrssync = (int16_t*)malloc16_clear(ru->frame_parms.ofdm_symbol_size*2*sizeof(int16_t)); 
+  ru->dmrs_corr = (uint64_t*)malloc16_clear(ru->frame_parms.samples_per_tti*10*sizeof(uint64_t));
+
   generate_drs_pusch(NULL,NULL,
 		     &ru->frame_parms,
-		     (int32_t**)dmrsp,
+		     dmrsp,
 		     0,
 		     AMP,
 		     0,
@@ -529,28 +539,28 @@ int ru_sync_time_init(RU_t *ru)   // LTE_UE_COMMON *common_vars
 
   switch (ru->frame_parms.N_RB_DL) {
   case 6:
-    idft128(dmrs,          /// complex input
+    idft128((int16_t*)(&dmrsp[0][3*ru->frame_parms.ofdm_symbol_size]),
 	    ru->dmrssync, /// complex output
 	    1);
     break;
   case 25:
-    idft512(dmrs,
+    idft512((int16_t*)(&dmrsp[0][3*ru->frame_parms.ofdm_symbol_size]),
 	    ru->dmrssync, /// complex output
 	    1);
     break;
   case 50:
-    idft1024(dmrs,
+    idft1024((int16_t*)(&dmrsp[0][3*ru->frame_parms.ofdm_symbol_size]),
 	    ru->dmrssync, /// complex output
 	    1);
     break;
-    
+     
   case 75:
-    idft1536(dmrs,
+    idft1536((int16_t*)(&dmrsp[0][3*ru->frame_parms.ofdm_symbol_size]),
 	     ru->dmrssync,
 	     1); /// complex output
     break;
   case 100:
-    idft2048(dmrs,
+    idft2048((int16_t*)(&dmrsp[0][3*ru->frame_parms.ofdm_symbol_size]),
 	     ru->dmrssync, /// complex output
 	     1);
     break;
@@ -566,6 +576,7 @@ void ru_sync_time_free(RU_t *ru) {
 
   AssertFatal(ru->dmrssync!=NULL,"ru->dmrssync is NULL\n");
   free(ru->dmrssync);
+  if (ru->dmrs_corr) free(ru->dmrs_corr);
 }
 
 //#define DEBUG_PHY
@@ -660,6 +671,12 @@ int lte_sync_time_eNB(int32_t **rxdata, ///rx data in time domain
 }
 
 
+static inline int64_t abs64(int64_t x)
+{
+  return (((int64_t)((int32_t*)&x)[0])*((int64_t)((int32_t*)&x)[0]) + ((int64_t)
+((int32_t*)&x)[1])*((int64_t)((int32_t*)&x)[1]));
+}
+
 int ru_sync_time(RU_t *ru,
 		 int64_t *lev,
 		 int64_t *avg)
@@ -682,38 +699,42 @@ int ru_sync_time(RU_t *ru,
   int32_t magtmp0,maxlev0=0;
   int     maxpos0=0;
   int64_t avg0=0;
-  int32_t result;
+  int64_t result;
+  int64_t dmrs_corr;
 
+  int maxval=0;
+  for (int i=0;i<2*(frame_parms->ofdm_symbol_size);i++) {
+    maxval = max(maxval,ru->dmrssync[i]);
+    maxval = max(maxval,-ru->dmrssync[i]);
+  }
+  int shift = log2_approx(maxval);
 
   for (int n=0; n<length; n+=4) {
 
-    tmp0 = 0;
+    dmrs_corr = 0;
 
     //calculate dot product of primary_synch0_time and rxdata[ar][n] (ar=0..nb_ant_rx) and store the sum in temp[n];
     for (int ar=0; ar<ru->nb_rx; ar++) {
       
-      result  = dot_product(ru->dmrssync,
-			    (int16_t*) &ru->common.rxdata[ar][n],
-			    frame_parms->ofdm_symbol_size,
-			    11);     
-      ((int16_t*)&tmp0)[0] += ((int16_t*) &result)[0];
-      ((int16_t*)&tmp0)[1] += ((int16_t*) &result)[1];
+      result  = dot_product64(ru->dmrssync,
+			      (int16_t*) &ru->common.rxdata[ar][n],
+			      frame_parms->ofdm_symbol_size,
+			      shift);     
+      dmrs_corr += abs64(result);
     }
+    if (ru->dmrs_corr != NULL) ru->dmrs_corr[n] = dmrs_corr;
 
     // tmpi holds <synchi,rx0>+<synci,rx1>+...+<synchi,rx_{nbrx-1}>
 
-    magtmp0 = abs32(tmp0);
 
-    // this does max |tmp0(n)|^2  and argmax |tmp0(n)|^2 
-      
-    if (magtmp0>maxlev0) { maxlev0 = magtmp0; maxpos0 = n; }
-    avg0 += magtmp0;
+    if (dmrs_corr>maxlev0) { maxlev0 = dmrs_corr; maxpos0 = n; }
+    avg0 += dmrs_corr;
   }
   avg0/=(length/4);
 
-  int dmrsoffset = 2*(frame_parms->ofdm_symbol_size+frame_parms->nb_prefix_samples) + frame_parms->nb_prefix_samples0;
+  int dmrsoffset = frame_parms->samples_per_tti + (3*frame_parms->ofdm_symbol_size)+(2*frame_parms->nb_prefix_samples) + frame_parms->nb_prefix_samples0;
   
-  if ((int64_t)maxlev0 > (5*avg0)) {*lev = maxlev0; *avg=avg0; return((length+maxpos0-dmrsoffset)%length);}
+  if ((int64_t)maxlev0 > (10*avg0)) {*lev = maxlev0; *avg=avg0; return((length+maxpos0-dmrsoffset)%length);}
 
   return(-1);
 

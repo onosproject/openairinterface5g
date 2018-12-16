@@ -48,7 +48,7 @@ extern uint8_t nfapi_mode;
 
 void handle_nfapi_dci_dl_pdu(PHY_VARS_eNB *eNB,
                              int frame, int subframe,
-                             eNB_rxtx_proc_t *proc,
+                             L1_rxtx_proc_t *proc,
                              nfapi_dl_config_request_pdu_t *dl_config_pdu)
 {
   int idx                         = subframe&1;
@@ -66,7 +66,7 @@ void handle_nfapi_dci_dl_pdu(PHY_VARS_eNB *eNB,
 #if (RRC_VERSION >= MAKE_VERSION(14, 0, 0))
 
 void handle_nfapi_mpdcch_pdu(PHY_VARS_eNB *eNB,
-                             eNB_rxtx_proc_t *proc,
+                             L1_rxtx_proc_t *proc,
                              nfapi_dl_config_request_pdu_t *dl_config_pdu)
 {
   int idx                         = proc->subframe_tx&1;
@@ -81,7 +81,7 @@ void handle_nfapi_mpdcch_pdu(PHY_VARS_eNB *eNB,
 
 #endif
 
-void handle_nfapi_hi_dci0_dci_pdu(PHY_VARS_eNB *eNB,int frame,int subframe,eNB_rxtx_proc_t *proc,
+void handle_nfapi_hi_dci0_dci_pdu(PHY_VARS_eNB *eNB,int frame,int subframe,L1_rxtx_proc_t *proc,
                                   nfapi_hi_dci0_request_pdu_t *hi_dci0_config_pdu)
 {
   int idx                         = subframe&1;
@@ -93,7 +93,7 @@ void handle_nfapi_hi_dci0_dci_pdu(PHY_VARS_eNB *eNB,int frame,int subframe,eNB_r
   fill_dci0(eNB,frame,subframe,proc,&pdcch_vars->dci_alloc[pdcch_vars->num_dci], &hi_dci0_config_pdu->dci_pdu);
 }
 
-void handle_nfapi_hi_dci0_hi_pdu(PHY_VARS_eNB *eNB,int frame,int subframe,eNB_rxtx_proc_t *proc,
+void handle_nfapi_hi_dci0_hi_pdu(PHY_VARS_eNB *eNB,int frame,int subframe,L1_rxtx_proc_t *proc,
                                  nfapi_hi_dci0_request_pdu_t *hi_dci0_config_pdu)
 {
   LTE_eNB_PHICH *phich = &eNB->phich_vars[subframe&1];
@@ -107,9 +107,12 @@ void handle_nfapi_hi_dci0_hi_pdu(PHY_VARS_eNB *eNB,int frame,int subframe,eNB_rx
   phich->config[phich->num_hi].hi       = hi_dci0_config_pdu->hi_pdu.hi_pdu_rel8.hi_value;
   phich->config[phich->num_hi].first_rb = hi_dci0_config_pdu->hi_pdu.hi_pdu_rel8.resource_block_start;
   phich->config[phich->num_hi].n_DMRS   = hi_dci0_config_pdu->hi_pdu.hi_pdu_rel8.cyclic_shift_2_for_drms;
+  phich->num_hi++;
+  AssertFatal(phich->num_hi<32,"Maximum number of phich reached in subframe\n");
+
 }
 
-void handle_nfapi_bch_pdu(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,
+void handle_nfapi_bch_pdu(PHY_VARS_eNB *eNB,L1_rxtx_proc_t *proc,
                           nfapi_dl_config_request_pdu_t *dl_config_pdu,
                           uint8_t *sdu)
 {
@@ -136,7 +139,7 @@ extern uint32_t localRIV2alloc_LUT100_2[6000];
 extern uint32_t localRIV2alloc_LUT100_3[6000];
 #endif
 
-void handle_nfapi_dlsch_pdu(PHY_VARS_eNB *eNB,int frame,int subframe,eNB_rxtx_proc_t *proc,
+void handle_nfapi_dlsch_pdu(PHY_VARS_eNB *eNB,int frame,int subframe,L1_rxtx_proc_t *proc,
                             nfapi_dl_config_request_pdu_t *dl_config_pdu,
                             uint8_t codeword_index,
                             uint8_t *sdu)
@@ -546,7 +549,7 @@ void handle_uci_harq_pdu(PHY_VARS_eNB *eNB,int UE_id,nfapi_ul_config_request_pdu
 {
   LTE_eNB_UCI *uci = &eNB->uci_vars[UE_id];
 
-  LOG_I(PHY,"Frame %d, Subframe %d: Programming UCI_HARQ process (type %d)\n",frame,subframe,HARQ);
+  LOG_D(PHY,"Frame %d, Subframe %d: Programming UCI_HARQ process (type %d)\n",frame,subframe,HARQ);
   uci->frame             = frame;
   uci->subframe          = subframe;
   uci->rnti              = ul_config_pdu->uci_harq_pdu.ue_information.ue_information_rel8.rnti;
@@ -582,7 +585,7 @@ void handle_srs_pdu(PHY_VARS_eNB *eNB,nfapi_ul_config_request_pdu_t *ul_config_p
   AssertFatal(i<NUMBER_OF_UE_MAX,"No room for SRS processing\n");
 }
 
-void handle_nfapi_ul_pdu(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,
+void handle_nfapi_ul_pdu(PHY_VARS_eNB *eNB,L1_rxtx_proc_t *proc,
                          nfapi_ul_config_request_pdu_t *ul_config_pdu,
                          uint16_t frame,uint8_t subframe,uint8_t srs_present)
 {
@@ -660,7 +663,7 @@ void handle_nfapi_ul_pdu(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,
 void schedule_response(Sched_Rsp_t *Sched_INFO)
 {
   PHY_VARS_eNB *eNB;
-  eNB_rxtx_proc_t *proc;
+  L1_rxtx_proc_t *proc;
   // copy data from L2 interface into L1 structures
   module_id_t               Mod_id       = Sched_INFO->module_id;
   uint8_t                   CC_id        = Sched_INFO->CC_id;
@@ -683,7 +686,7 @@ void schedule_response(Sched_Rsp_t *Sched_INFO)
 
   eNB         = RC.eNB[Mod_id][CC_id];
   fp          = &eNB->frame_parms;
-  proc        = &eNB->proc.proc_rxtx[0];
+  proc        = &eNB->proc.L1_proc;
 
   /* TODO: check that following line is correct - in the meantime it is disabled */
   //if ((fp->frame_type == TDD) && (subframe_select(fp,subframe)==SF_UL)) return;

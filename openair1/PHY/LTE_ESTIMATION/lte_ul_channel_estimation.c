@@ -35,7 +35,7 @@ static int16_t ru_90c[2*128] = {32767, 0,32766, -402,32758, -804,32746, -1206,32
 #define SCALE 0x3FFF
 
 int32_t lte_ul_channel_estimation(PHY_VARS_eNB *eNB,
-				  eNB_rxtx_proc_t *proc,
+				  L1_rxtx_proc_t *proc,
                                   module_id_t UE_id,
                                   unsigned char l,
                                   unsigned char Ns) {
@@ -91,7 +91,7 @@ int32_t temp_in_ifft_0[2048*2] __attribute__((aligned(32)));
                   eNB->ulsch[UE_id]->harq_processes[harq_pid]->n_DMRS2 +
                   frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.nPRS[(subframe<<1)+Ns]) % 12;
 
-  Msc_idx_ptr = (uint16_t*) bsearch(&Msc_RS, dftsizes, 33, sizeof(uint16_t), compareints);
+  Msc_idx_ptr = (uint16_t*) bsearch(&Msc_RS, dftsizes, 34, sizeof(uint16_t), compareints);
 
   if (Msc_idx_ptr)
     Msc_RS_idx = Msc_idx_ptr - dftsizes;

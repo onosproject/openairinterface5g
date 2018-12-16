@@ -450,11 +450,11 @@ void phy_config_sib2_eNB(uint8_t Mod_id,
       } else if (mbsfn_SubframeConfigList->list.array[i]->subframeAllocation.present == MBSFN_SubframeConfig__subframeAllocation_PR_fourFrames) { // 24-bit subframe configuration
         fp->MBSFN_config[i].fourFrames_flag = 1;
         fp->MBSFN_config[i].mbsfn_SubframeConfig =
-          mbsfn_SubframeConfigList->list.array[i]->subframeAllocation.choice.oneFrame.buf[0]|
+          mbsfn_SubframeConfigList->list.array[i]->subframeAllocation.choice.oneFrame.buf[2]|
           (mbsfn_SubframeConfigList->list.array[i]->subframeAllocation.choice.oneFrame.buf[1]<<8)|
-          (mbsfn_SubframeConfigList->list.array[i]->subframeAllocation.choice.oneFrame.buf[2]<<16);
+          (mbsfn_SubframeConfigList->list.array[i]->subframeAllocation.choice.oneFrame.buf[0]<<16);
 
-        LOG_I(PHY, "[CONFIG] MBSFN_SubframeConfig[%d] pattern is  %d\n", i,
+        LOG_I(PHY, "[CONFIG] MBSFN_SubframeConfig[%d] pattern is  %x\n", i,
               fp->MBSFN_config[i].mbsfn_SubframeConfig);
       }
     }
@@ -781,13 +781,13 @@ int phy_init_lte_eNB(PHY_VARS_eNB *eNB,
   common_vars->txdataF = (int32_t **)malloc16(NB_ANTENNA_PORTS_ENB*sizeof(int32_t*));
   common_vars->rxdataF = (int32_t **)malloc16(64*sizeof(int32_t*));
   
-  LOG_D(PHY,"[INIT] NB_ANTENNA_PORTS_ENB:%d fp->nb_antenna_ports_eNB:%d\n", NB_ANTENNA_PORTS_ENB, fp->nb_antenna_ports_eNB);
+  LOG_I(PHY,"[INIT] NB_ANTENNA_PORTS_ENB:%d fp->nb_antenna_ports_eNB:%d\n", NB_ANTENNA_PORTS_ENB, fp->nb_antenna_ports_eNB);
 
   for (i=0; i<NB_ANTENNA_PORTS_ENB; i++) {
     if (i<fp->nb_antenna_ports_eNB || i==4 || i==5 || i==7 || i==8) {
       common_vars->txdataF[i] = (int32_t*)malloc16_clear(fp->ofdm_symbol_size*fp->symbols_per_tti*10*sizeof(int32_t) );
       
-      LOG_D(PHY,"[INIT] common_vars->txdataF[%d] = %p (%lu bytes)\n",
+      LOG_I(PHY,"[INIT] common_vars->txdataF[%d] = %p (%lu bytes)\n",
 	    i,common_vars->txdataF[i],
 	    fp->ofdm_symbol_size*fp->symbols_per_tti*10*sizeof(int32_t));
     }
