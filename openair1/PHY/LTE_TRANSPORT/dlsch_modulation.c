@@ -1997,7 +1997,15 @@ int dlsch_modulation(PHY_VARS_eNB* phy_vars_eNB,
                      LTE_eNB_DLSCH_t *dlsch1)
 {
   LTE_DL_FRAME_PARMS *frame_parms = &phy_vars_eNB->frame_parms;
-  printf("dlsch_modulation:CC_id %d \n",phy_vars_eNB->CC_id);
+  int num_UEs_total=0;
+  int UE_id;
+  for (UE_id = 0; UE_id < NUMBER_OF_UE_MAX; UE_id++) {
+    if (eNB_mac_inst[phy_vars_eNB->Mod_id].UE_list.active[UE_id] != TRUE) continue;
+    	num_UEs_total++;
+	printf("Active: UE%d, CC_id %d\n",UE_id,phy_vars_eNB->CC_id);
+  }
+  printf("dlsch_modulation:CC_id %d, num_UEs_total %d \n",phy_vars_eNB->CC_id,num_UEs_total);
+  if (num_UEs_total>0 && eNB_mac_inst[phy_vars_eNB->Mod_id].UE_list.num_UEs[phy_vars_eNB->CC_id]==0) return 0;//The dlsch modulation only is valid when there is at least 1 UE per Component carrier.
   uint8_t nsymb;
   uint8_t harq_pid = -1; //= dlsch0->current_harq_pid;
   LTE_DL_eNB_HARQ_t *dlsch0_harq = NULL;

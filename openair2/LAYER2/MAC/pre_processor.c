@@ -55,7 +55,7 @@
 
 #define DEBUG_eNB_SCHEDULER 1
 #define DEBUG_HEADER_PARSING 1
-//#define COORDINATION_SCHEDULING 1
+#define COORDINATION_SCHEDULING 1
 //#define DEBUG_PACKET_TRACE 1
 static int CC_total;
 static int CC_idx_last;
