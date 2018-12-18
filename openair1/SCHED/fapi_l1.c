@@ -328,7 +328,7 @@ void handle_nfapi_dlsch_pdu(PHY_VARS_eNB *eNB,int frame,int subframe,L1_rxtx_pro
 }
 
     
-void handle_nfapi_mch_dl_pdu(PHY_VARS_eNB *eNB,int frame,int subframe,eNB_rxtx_proc_t *proc,
+void handle_nfapi_mch_dl_pdu(PHY_VARS_eNB *eNB,int frame,int subframe,L1_rxtx_proc_t *proc,
 			     nfapi_dl_config_request_pdu_t *dl_config_pdu,
 			     uint8_t *sdu) {
   
@@ -721,7 +721,7 @@ void schedule_response(Sched_Rsp_t *Sched_INFO)
   eNB->pdcch_vars[subframe&1].num_pdcch_symbols = number_pdcch_ofdm_symbols;
   eNB->pdcch_vars[subframe&1].num_dci           = 0;
 
-  eNB->dlsch_MCH->active                        = 0;
+  if (eNB->dlsch_MCH) eNB->dlsch_MCH->active                        = 0;
   LOG_D(PHY,"NFAPI: Sched_INFO:SFN/SF:%04d%d DL_req:SFN/SF:%04d%d:dl_pdu:%d tx_req:SFN/SF:%04d%d:pdus:%d\n",
        frame,subframe,
        NFAPI_SFNSF2SFN(DL_req->sfn_sf),NFAPI_SFNSF2SF(DL_req->sfn_sf),number_dl_pdu,
