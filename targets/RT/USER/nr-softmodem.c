@@ -1034,7 +1034,7 @@ int main( int argc, char **argv )
   CPU_ZERO(&cpuset);
 #ifdef CPU_AFFINITY
   if (get_nprocs() > 2) {
-    CPU_SET(0, &cpuset);
+    CPU_SET(1, &cpuset);
     s = pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
     if (s != 0) {
       perror( "pthread_setaffinity_np");

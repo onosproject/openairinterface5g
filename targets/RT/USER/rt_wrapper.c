@@ -294,20 +294,32 @@ void thread_top_init(char *thread_name,
   char cpu_affinity[1024];
   cpu_set_t cpuset;
 
-  /* Set affinity mask to include CPUs 1 to MAX_CPUS */
+  /* Set affinity mask to include CPUs 2 to MAX_CPUS */
   /* CPU 0 is reserved for UHD threads */
   /* CPU 1 is reserved for all RX_TX threads */
-  /* Enable CPU Affinity only if number of CPUs >2 */
+  /* Enable CPU Affinity only if number of CPUs > 2 */
   CPU_ZERO(&cpuset);
 
 #ifdef CPU_AFFINITY
   if (get_nprocs() > 2)
   {
     if (affinity == 0)
-      CPU_SET(0,&cpuset);
-    else
-      for (j = 1; j < get_nprocs(); j++)
+    {
+      printf("[SYRTEM CPU AFFINITY !!!] ERROR:affinity is 0 -> 2-7 !!!!!!!!!! !!!!!!!!!!\n");
+      // CPU_SET(0,&cpuset);
+      for (j = 2; j < get_nprocs(); j++)
+      {
         CPU_SET(j, &cpuset);
+      }
+    }
+    else
+    {
+      for (j = 2; j < get_nprocs(); j++)
+      {
+        CPU_SET(j, &cpuset);
+      }
+    }
+
     s = pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
     if (s != 0)
     {
@@ -319,17 +331,21 @@ void thread_top_init(char *thread_name,
 
   /* Check the actual affinity mask assigned to the thread */
   s = pthread_getaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
-  if (s != 0) {
+  if (s != 0)
+  {
     perror( "pthread_getaffinity_np");
     exit_fun("Error getting processor affinity ");
   }
   memset(cpu_affinity,0,sizeof(cpu_affinity));
   for (j = 0; j < 1024; j++)
-    if (CPU_ISSET(j, &cpuset)) {  
+  {
+    if (CPU_ISSET(j, &cpuset))
+    {  
       char temp[1024];
       sprintf (temp, " CPU_%d", j);
       strcat(cpu_affinity, temp);
     }
+  }
 
   memset(&sparam, 0, sizeof(sparam));
   sparam.sched_priority = sched_get_priority_max(SCHED_FIFO);
