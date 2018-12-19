@@ -826,7 +826,7 @@ int32_t dlsch_qpsk_llr(LTE_DL_FRAME_PARMS *frame_parms,
                        uint16_t pbch_pss_sss_adj,
                        //int16_t **llr128p,
                        uint8_t beamforming_mode);
-//KhodrSaaifan
+//Author: Khodr Saaifan @ Fraunhofer IIS
 int dlsch_qpsk_llr_tm4(LTE_DL_FRAME_PARMS *frame_parms,
                    int32_t **rxdataF_comp,
                    int16_t *dlsch_llr,
@@ -871,7 +871,7 @@ void dlsch_16qam_llr(LTE_DL_FRAME_PARMS *frame_parms,
                      uint16_t pbch_pss_sss_adjust,
                      int16_t **llr128p,
                      uint8_t beamforming_mode);
-//KhodrSaaifan
+//Author: Khodr Saaifan @ Fraunhofer IIS
 void dlsch_16qam_llr_tm4(LTE_DL_FRAME_PARMS *frame_parms,
                      int32_t **rxdataF_comp,
                      int16_t *dlsch_llr,
@@ -935,7 +935,7 @@ void dlsch_64qam_llr(LTE_DL_FRAME_PARMS *frame_parms,
                      uint32_t llr_offset,
                      uint8_t beamforming_mode);
 
-//KhodrSaaifan
+//Author: Khodr Saaifan @ Fraunhofer IIS
 void dlsch_64qam_llr_tm4(LTE_DL_FRAME_PARMS *frame_parms,
 		             int32_t **rxdataF_comp,
                      int16_t *dlsch_llr,
@@ -991,20 +991,7 @@ void dlsch_alamouti(LTE_DL_FRAME_PARMS *frame_parms,
                     uint8_t symbol,
                     uint16_t nb_rb);
 
-/** \fn KhodrSaaifan: dlsch_postcoding_tm4(LTE_DL_FRAME_PARMS *frame_parms,
-    int32_t **rxdataF_comp,
-    int32_t **dl_ch_mag,
-    int32_t **dl_ch_magb,
-    uint8_t symbol,
-    uint16_t nb_rb)
-    \brief This function does Alamouti combining on RX and prepares LLR inputs by skipping pilots, PBCH and primary/secondary synchronization signals.
-    @param frame_parms Frame descriptor structure
-    @param rxdataF_comp Compensated channel output
-    @param dl_ch_mag First squared-magnitude of channel (16QAM and 64QAM) for LLR computation.  Alamouti combining should be performed on this as well. Result is stored in first antenna position
-    @param dl_ch_magb Second squared-magnitude of channel (64QAM only) for LLR computation.  Alamouti combining should be performed on this as well. Result is stored in first antenna position
-    @param symbol Symbol in sub-frame
-    @param nb_rb Number of RBs in this allocation
-*/
+//Author: Khodr Saaifan @ Fraunhofer IIS
 void dlsch_postcoding_tm4(LTE_DL_FRAME_PARMS *frame_parms,
                     int **rxdataF_comp,
                     int **dl_ch_mag,

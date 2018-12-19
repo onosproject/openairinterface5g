@@ -21,7 +21,8 @@
 
 #define	FHG_TM4_LOG_CQI
 //#define FHG_LOG
-#define FHG_LOG_TM4
+
+//#define FHG_LOG_TM4
 
 
 
@@ -37,7 +38,6 @@ extern FILE *debug_sudas_LOG_MAC;
 
 
 #ifdef FHG_LOG
-
 	#define sudas_LOG_PHY(c,...) fprintf(c,__VA_ARGS__)
 	#define sudas_LOG_MAC(c,...) fprintf(c,__VA_ARGS__)
 #else

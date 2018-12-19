@@ -54,8 +54,7 @@
 #include "LAYER2/MAC/extern.h"
 #include "LAYER2/MAC/defs.h"
 #include "UTIL/LOG/log.h"
-//SFN
-#include "sudas_tm4.h"
+
 #ifdef EMOS
 fifo_dump_emos_UE emos_dump_UE;
 #endif
@@ -412,10 +411,8 @@ uint8_t is_cqi_TXOp(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id)
 {
   int subframe = proc->subframe_tx;
   int frame    = proc->frame_tx;
-
   CQI_REPORTPERIODIC *cqirep = &ue->cqi_report_config[eNB_id].CQI_ReportPeriodic;
-  //sudas_LOG_PHY(debug_sudas_LOG_PHY,"[UE][UCI--->PUSCH] CQI_ReportPeriodic cqirep->Npd %d cqirep->N_OFFSET_CQI %d \n",cqirep->Npd,cqirep->N_OFFSET_CQI);
-  //fflush(debug_sudas_LOG_PHY);
+
   //LOG_I(PHY,"[UE %d][CRNTI %x] AbsSubFrame %d.%d Checking for CQI TXOp (cqi_ConfigIndex %d) isCQIOp %d\n",
   //      ue->Mod_id,ue->pdcch_vars[eNB_id]->crnti,frame,subframe,
   //      cqirep->cqi_PMI_ConfigIndex,
@@ -1530,8 +1527,6 @@ void ue_prach_procedures(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,uin
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_UE_TX_PRACH, VCD_FUNCTION_OUT);
 }
 
-
-// UL UE Procedure for Shared Channel
 void ue_ulsch_uespec_procedures(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,uint8_t abstraction_flag) {
 
   int harq_pid;
@@ -1539,14 +1534,14 @@ void ue_ulsch_uespec_procedures(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB
   int subframe_tx=proc->subframe_tx;
   int Mod_id = ue->Mod_id;
   int CC_id = ue->CC_id;
-  uint8_t Msg3_flag=0;//schedule RRC request
-  uint16_t first_rb, nb_rb;//indicate the first RB in the virtual RB array
+  uint8_t Msg3_flag=0;
+  uint16_t first_rb, nb_rb;
   unsigned int input_buffer_length;
   int i;
   int aa;
   int tx_amp;
-  uint8_t ulsch_input_buffer[5477] __attribute__ ((aligned(32)));//32 bytes aligned for SIMD operation
-  uint8_t access_mode;//indicate PUSCH or PUCCH
+  uint8_t ulsch_input_buffer[5477] __attribute__ ((aligned(32)));
+  uint8_t access_mode;
   uint8_t Nbundled=0;
   uint8_t NbundledCw1=0;
   uint8_t ack_status_cw0=0;
@@ -1596,9 +1591,9 @@ void ue_ulsch_uespec_procedures(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB
       Msg3_flag=0;
     }
   }
-// Check and test if the schedulig ifo are valid for PUSCH channel
-// it uses isBad to test the validation of the parms first_rb, nb_rb, and RV index
+
   if (ue->ulsch[eNB_id]->harq_processes[harq_pid]->subframe_scheduling_flag == 1) {
+
     uint8_t isBad = 0;
     if (ue->frame_parms.N_RB_UL <= ue->ulsch[eNB_id]->harq_processes[harq_pid]->first_rb) {
       LOG_D(PHY,"Invalid PUSCH first_RB=%d for N_RB_UL=%d\n",
@@ -1640,7 +1635,6 @@ void ue_ulsch_uespec_procedures(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB
       ue->ulsch[eNB_id]->harq_processes[harq_pid]->subframe_scheduling_flag = 0;
     }
   }
-
   if (ue->ulsch[eNB_id]->harq_processes[harq_pid]->subframe_scheduling_flag == 1) {
 
     ue->generate_ul_signal[eNB_id] = 1;
@@ -1648,14 +1642,13 @@ void ue_ulsch_uespec_procedures(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB
     // deactivate service request
     // ue->ulsch[eNB_id]->harq_processes[harq_pid]->subframe_scheduling_flag = 0;
     LOG_D(PHY,"Generating PUSCH (Abssubframe: %d.%d): harq-Id: %d, round: %d, MaxReTrans: %d \n",frame_tx,subframe_tx,harq_pid,ue->ulsch[eNB_id]->harq_processes[harq_pid]->round,ue->ulsch[eNB_id]->Mlimit);
-// Control HARQ process round=0,...,Mlimit - 1, where Mlimit = 4
     if (ue->ulsch[eNB_id]->harq_processes[harq_pid]->round >= (ue->ulsch[eNB_id]->Mlimit - 1))
     {
         LOG_D(PHY,"PUSCH MAX Retransmission achieved ==> send last pusch\n");
         ue->ulsch[eNB_id]->harq_processes[harq_pid]->subframe_scheduling_flag = 0;
         ue->ulsch[eNB_id]->harq_processes[harq_pid]->round  = 0;
     }
-// Get ack status for cw0 for antenna 0 for PDSCH
+
     ack_status_cw0 = reset_ack(&ue->frame_parms,
             ue->dlsch[ue->current_thread_id[proc->subframe_rx]][eNB_id][0]->harq_ack,
             subframe_tx,
@@ -1663,7 +1656,6 @@ void ue_ulsch_uespec_procedures(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB
             ue->ulsch[eNB_id]->o_ACK,
             &Nbundled,
             0);
-// Reset ack status for cw1 for antenna 1 for PDSCH ()
     ack_status_cw1 = reset_ack(&ue->frame_parms,
             ue->dlsch[ue->current_thread_id[proc->subframe_rx]][eNB_id][1]->harq_ack,
             subframe_tx,
@@ -1689,13 +1681,8 @@ void ue_ulsch_uespec_procedures(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB
     // compute CQI/RI resources
     compute_cqi_ri_resources(ue, ue->ulsch[eNB_id], eNB_id, ue->ulsch[eNB_id]->rnti, P_RNTI, CBA_RNTI, cqi_status, ri_status);
 
-
-    sudas_LOG_PHY(debug_sudas_LOG_PHY,"Generating PUSCH (frame_tx %d subframe_tx %d): o_ACK %d ack_status_cw0 %d\n",frame_tx,subframe_tx,ue->ulsch[eNB_id]->o_ACK[0],ack_status_cw0);
-#ifdef FHG_LOG
-    fflush(debug_sudas_LOG_PHY);
-#endif
-
     if (ack_status_cw0 > 0) {
+
       // check if we received a PDSCH at subframe_tx - 4
       // ==> send ACK/NACK on PUSCH
       if (ue->frame_parms.frame_type == FDD)
@@ -2174,7 +2161,8 @@ void ue_pucch_procedures(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,uin
           SR_payload = 1;
       }
   }
-
+//Author: Khodr Saaifan @Fraunhofer
+//      : Get ack for cw0 then reset the request
   ack_status_cw0 = reset_ack(&ue->frame_parms,
                        ue->dlsch[ue->current_thread_id[proc->subframe_rx]][eNB_id][0]->harq_ack,
                        subframe_tx,
@@ -2182,7 +2170,8 @@ void ue_pucch_procedures(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,uin
                        pucch_ack_payload,
                        &N_kbundled,
                        0);
-
+//Author: Khodr Saaifan @Fraunhofer
+//      : Get ack for cw1 then reset the request
   ack_status_cw1 = reset_ack(&ue->frame_parms,
                        ue->dlsch[ue->current_thread_id[proc->subframe_rx]][eNB_id][1]->harq_ack,
                        subframe_tx,
@@ -2236,12 +2225,6 @@ void ue_pucch_procedures(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,uin
   // Part - IV
   // Generate PUCCH signal
   ue->generate_ul_signal[eNB_id] = 1;
-
-sudas_LOG_PHY(debug_sudas_LOG_PHY,"PUCCH Format:: %d SR %d ACK_status %d CQI_status %d RI_status %d  \n",format, SR_payload,ack_status_cw0,cqi_status,ri_status);
-#ifdef FHG_LOG
-  fflush(debug_sudas_LOG_PHY);
-#endif
-
 
   switch (format) {
   case pucch_format1:
@@ -2342,10 +2325,7 @@ sudas_LOG_PHY(debug_sudas_LOG_PHY,"PUCCH Format:: %d SR %d ACK_status %d CQI_sta
                   pucch_payload,
                   tx_amp,
                   subframe_tx);
-          sudas_LOG_PHY(debug_sudas_LOG_PHY,"PUCCH Format %d pucch_resource %d isShortenPucch %d  \n",format, pucch_resource,isShortenPucch);
-#ifdef FHG_LOG
-           fflush(debug_sudas_LOG_PHY);
-#endif
+
       } else {
 #ifdef PHY_ABSTRACTION
           LOG_D(PHY,"Calling generate_pucch_emul ... (ACK %d %d, SR %d)\n",pucch_ack_payload[0],pucch_ack_payload[1],SR_payload);
@@ -2478,10 +2458,6 @@ void phy_procedures_UE_TX(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,ui
   }
 
   if (ue->UE_mode[eNB_id] == PUSCH) {
-	  sudas_LOG_PHY(debug_sudas_LOG_PHY,"****** start TX-Chain Check if PUCCH is active for AbsSubframe %d.%d ******\n", frame_tx, subframe_tx);
-#ifdef FHG_LOG
-	    fflush(debug_sudas_LOG_PHY);
-#endif
       // check if we need to use PUCCH 1a/1b
       ue_pucch_procedures(ue,proc,eNB_id,abstraction_flag);
       // check if we need to use SRS
@@ -4008,17 +3984,6 @@ void ue_dlsch_procedures(PHY_VARS_UE *ue,
 			   pdsch==PDSCH?1:0,
 			   dlsch0->harq_processes[harq_pid]->TBS>256?1:0);
 
-      if (pdsch==PDSCH) {
-    	  sudas_LOG_PHY(debug_sudas_LOG_PHY,"ret %d HARQinfo status %d round %d harq_pid %d ack %d  \n", ret,dlsch0->harq_processes[harq_pid]->status,
-    	      dlsch0->harq_processes[harq_pid]->round,
-    	      dlsch0->harq_ack[subframe_rx].harq_id,
-    	      dlsch0->harq_ack[subframe_rx].ack);
-#ifdef FHG_LOG
-      fflush(debug_sudas_LOG_PHY);
-#endif
-      }
-
-
 #if UE_TIMING_TRACE
       stop_meas(&ue->dlsch_decoding_stats[ue->current_thread_id[subframe_rx]]);
 #if DISABLE_LOG_X
@@ -5364,6 +5329,8 @@ int phy_procedures_UE_RX(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,
     ue_pbch_procedures(eNB_id,ue,proc,abstraction_flag);
   }
 
+
+
   // do procedures for C-RNTI
   LOG_D(PHY," ------ --> PDSCH ChannelComp/LLR slot 0: AbsSubframe %d.%d ------  \n", frame_rx%1024, subframe_rx);
   if (ue->dlsch[ue->current_thread_id[subframe_rx]][eNB_id][0]->active == 1) {
@@ -5385,10 +5352,6 @@ int phy_procedures_UE_RX(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,
 #if UE_TIMING_TRACE
     stop_meas(&ue->pdsch_procedures_stat[ue->current_thread_id[subframe_rx]]);
     start_meas(&ue->dlsch_procedures_stat[ue->current_thread_id[subframe_rx]]);
-#endif
-    sudas_LOG_PHY(debug_sudas_LOG_PHY," ------ --> PDSCH ue_dlsch_procedures AbsSubframe %d.%d ------  \n", frame_rx%1024, subframe_rx);
-#ifdef FHG_LOG
-    fflush(debug_sudas_LOG_PHY);
 #endif
     ue_dlsch_procedures(ue,
 			proc,

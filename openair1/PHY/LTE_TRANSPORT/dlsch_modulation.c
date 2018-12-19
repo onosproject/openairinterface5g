@@ -628,10 +628,10 @@ int allocate_REs_in_RB(PHY_VARS_eNB* phy_vars_eNB,
   ((int16_t *)&qpsk[0])[0] = gain_lin_QPSK;
   ((int16_t *)&qpsk[0])[1] = gain_lin_QPSK;
   ((int16_t *)&qpsk[1])[0] = -gain_lin_QPSK;
-  ((int16_t *)&qpsk[1])[1] = gain_lin_QPSK;
-  ((int16_t *)&qpsk[2])[0] = gain_lin_QPSK;
-  ((int16_t *)&qpsk[2])[1] = -gain_lin_QPSK;
-  ((int16_t *)&qpsk[3])[0] = -gain_lin_QPSK;
+  ((int16_t *)&qpsk[1])[1] = gain_lin_QPSK;;
+  ((int16_t *)&qpsk[2])[0] = gain_lin_QPSK;;
+  ((int16_t *)&qpsk[2])[1] = -gain_lin_QPSK;;
+  ((int16_t *)&qpsk[3])[0] = -gain_lin_QPSK;;
   ((int16_t *)&qpsk[3])[1] = -gain_lin_QPSK;
 
   if ((dlsch0_harq != NULL) && (dlsch1_harq != NULL)) { //this is for TM3, TM4
@@ -958,9 +958,9 @@ int allocate_REs_in_RB(PHY_VARS_eNB* phy_vars_eNB,
           ((int16_t *)&txdataF[1][tti_offset+2])[1] += -((int16_t *)&txdataF[0][tti_offset])[1];
         }
       }
-      /*Author: Khodr Saaifan (Fraunhofer IIs)
-       * RE mapping for TM4
-       */
+      //Author: Khodr Saaifan (Fraunhofer IIs)
+      //       RE mapping for TM4 with No precoding
+
       else if (mimo_mode == TM4_NO_PRECODING){
           *re_allocated = *re_allocated + 1;
           amp = (int16_t)(((int32_t)tmp_amp*ONE_OVER_SQRT2_Q15)>>15);

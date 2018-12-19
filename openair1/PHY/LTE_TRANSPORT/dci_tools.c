@@ -37,8 +37,7 @@
 #endif
 #include "assertions.h"
 
-//SFN
-#include "sudas_tm4.h"
+
 //#define DEBUG_HARQ
 
 #include "LAYER2/MAC/extern.h"
@@ -885,7 +884,7 @@ int generate_eNB_dlsch_params_from_dci(int frame,
   uint8_t rv=0,rv1=0,rv2=0;
   uint8_t rah=0;
   uint8_t TPC=0;
-  uint8_t Nl_layer=1;//sfn
+  uint8_t Nl_layer=1;
   uint8_t TB0_active=0,TB1_active=0;
   LTE_DL_eNB_HARQ_t *dlsch0_harq=NULL,*dlsch1_harq=NULL;
 
@@ -1556,9 +1555,9 @@ int generate_eNB_dlsch_params_from_dci(int frame,
       dlsch0_harq = dlsch0->harq_processes[harq_pid];
 
       dlsch0_harq->rvidx = rv1;
-      /*sfn:
-       * TBS size, mcs, and Harq status are the same for 4 rounds
-       */
+      //Khodr Saaifan: @Fraunhofer IIS
+      //             : TBS size, mcs, and Harq status 
+      //             : are the same for 4 rounds
       if (dlsch0_harq->round == 0) {
           dlsch0_harq->status = ACTIVE;
           dlsch0_harq->mcs = mcs1;
@@ -1628,7 +1627,7 @@ int generate_eNB_dlsch_params_from_dci(int frame,
 
     // assume both TBs are active
     if (dlsch0_harq != NULL)
-      dlsch0_harq->Nl        = 1;//SFN: 2 TM4 test
+      dlsch0_harq->Nl        = 1;
     if (dlsch1_harq != NULL)
       dlsch1_harq->Nl        = 1;
 
@@ -1676,28 +1675,34 @@ int generate_eNB_dlsch_params_from_dci(int frame,
         case 1:
           dlsch0_harq->mimo_mode   = UNIFORM_PRECODING11;
           dlsch0_harq->pmi_alloc   = pmi_extend(frame_parms,0,0);
+          dlsch0_harq->Nl        = 1;
           break;
         case 2:
           dlsch0_harq->mimo_mode   = UNIFORM_PRECODING1m1;
           dlsch0_harq->pmi_alloc   = pmi_extend(frame_parms,1,0);
+          dlsch0_harq->Nl        = 1;
           break;
         case 3:
           dlsch0_harq->mimo_mode   = UNIFORM_PRECODING1j;
           dlsch0_harq->pmi_alloc   = pmi_extend(frame_parms,2,0);
+          dlsch0_harq->Nl        = 1;
           break;
         case 4:
           dlsch0_harq->mimo_mode   = UNIFORM_PRECODING1mj;
           dlsch0_harq->pmi_alloc   = pmi_extend(frame_parms,3,0);
+          dlsch0_harq->Nl        = 1;
           break;
         case 5:
           dlsch0_harq->mimo_mode   = PUSCH_PRECODING0;
           dlsch0_harq->pmi_alloc   = DL_pmi_single;
+          dlsch0_harq->Nl        = 2;
           break;
         case 6:
           dlsch0_harq->mimo_mode   = PUSCH_PRECODING1;
           dlsch0_harq->pmi_alloc   = DL_pmi_single;
+         dlsch0_harq->Nl        = 2;
           break;
-        case 7://SFN:
+        case 7://SFN: Test TM4 With NO precoding
           dlsch0_harq->mimo_mode   = TM4_NO_PRECODING;
           dlsch0_harq->Nl        = 2;
           break;
@@ -5055,6 +5060,12 @@ int check_dci_format2_2a_coherency(DCI_format_t dci_format,
       }
     }
 
+    if( mcs2 > 28)
+    {
+          LOG_I(PHY,"bad mcs2\n");
+          return(0);
+
+    }
     switch (N_RB_DL) {
     case 6:
         if (rah == 0)
@@ -5121,8 +5132,11 @@ int check_dci_format2_2a_coherency(DCI_format_t dci_format,
        LOG_I(PHY,"bad NPRB\n");
       return(0);
    }
-//Khodr Saaifan: only for this momentcheck alamouti and test Tm4
-   if ((rv2!=1)&&(mcs2!=0))//deactivate TBS1
+//Khodr Saaifan: To avoid wrong detection of DCI2
+//             : we further check the off condition for TB1
+//             : tpmi values from 0 to 6 we use 7 to test Tm4
+   
+if ((rv2!=1)&&(mcs2!=0))//deactivate TBS1
    {
           // DCI false detection
            LOG_I(PHY,"TBS1 is active %d\n");
@@ -5136,19 +5150,6 @@ int check_dci_format2_2a_coherency(DCI_format_t dci_format,
        return(0);
     }
 
-
-   /*if(pdlsch0_harq->round > 0)
-        {
-  	   // compare old TBS to new TBS
-  	   if((mcs1<29) && (pdlsch0_harq->TBS != TBStable[get_I_TBS(mcs1)][NPRB-1]))
-  	   {
-  		   // this is an eNB issue
-  	       // retransmisison but old and new TBS are different !!!
-  	       // work around, consider it as a new transmission
-  		   LOG_E(PHY,"Format2 Retransmission but TBS are different: consider it as new transmission !!! \n");
-  	       pdlsch0_harq->round = 0;
-  	   }
-        }*/
    return(1);
 }
 
@@ -5780,6 +5781,8 @@ void prepare_dl_decoding_format2_2A(DCI_format_t dci_format,
     uint8_t  ndi2     = pdci_info_extarcted->ndi2;
     uint8_t  Nl     = 1;
 
+    uint8_t TB0_active = 1;
+    uint8_t TB1_active = 1;
     uint8_t  NPRB    = 0;
     uint8_t  nb_rb_alloc = 0;
     NPRB = conv_nprb(rah, rballoc, 25);
@@ -5790,7 +5793,14 @@ void prepare_dl_decoding_format2_2A(DCI_format_t dci_format,
     pdlsch0->rnti             = rnti;
 
 
-
+      if ((rv1 == 1) && (mcs1 == 0)) {
+        TB0_active=0;
+      }
+      if ((rv2 == 1) && (mcs2 == 0)) {
+        TB1_active=0;
+      }
+if((TB0_active==1)&&(TB1_active==0))//we are here
+{
     /*SFN:
      * Case 1:eNB receives ACK (due to channel) for erroneous decoded data
      * Description: UE has a decoding error. Hence it increases round and send Nack to eNB
@@ -5830,13 +5840,10 @@ void prepare_dl_decoding_format2_2A(DCI_format_t dci_format,
         {
             LOG_D(PHY,"skip pdsch decoding and report ack\n");
             // skip pdsch decoding and report ack
-            //pdlsch0_harq->status   = SCH_IDLE;
             pdlsch0->active       = 0;
             pdlsch0->harq_ack[subframe].ack = 1;
             pdlsch0->harq_ack[subframe].harq_id = harq_pid;
             pdlsch0->harq_ack[subframe].send_harq_status = 1;
-
-            //pdlsch0_harq->first_tx = 0;
         }
         else  //normal retransmission
         {
@@ -5888,6 +5895,9 @@ void prepare_dl_decoding_format2_2A(DCI_format_t dci_format,
                    dlsch0_harq,
                    nb_rb_alloc,
                    subframe);
+} else if((TB0_active==1)&&(TB1_active==1))//two active streams go here
+{
+}
 }
 
 int generate_ue_dlsch_params_from_dci(int frame,
@@ -6088,13 +6098,8 @@ int generate_ue_dlsch_params_from_dci(int frame,
           printf("bad DCI 1 !!! \n");
           return(-1);
       }
-sudas_LOG_PHY(debug_sudas_LOG_PHY,"/////////////////////////\n");
-sudas_LOG_PHY(debug_sudas_LOG_PHY,"Frame %d Subframe %d\n",frame%1024,subframe);
-sudas_LOG_PHY(debug_sudas_LOG_PHY,"Detect DCI format 1\n");
-sudas_LOG_PHY(debug_sudas_LOG_PHY,"harq_pid %d NDI1 %d\n",dci_info_extarcted.harq_pid,dci_info_extarcted.ndi1);
-#ifdef FHG_LOG
-fflush(debug_sudas_LOG_PHY);
-#endif
+
+
       // dci is correct ==> update internal structure and prepare dl decoding
 #ifdef DEBUG_DCI
       LOG_I(PHY,"[DCI-FORMAT-1] AbsSubframe %d.%d prepare dl decoding \n", frame, subframe);
@@ -6126,6 +6131,7 @@ fflush(debug_sudas_LOG_PHY);
                 dci_pdu,
                 &dci_info_extarcted);
 
+
         // check dci content
         dlsch[0]->active = 0;
         dlsch[1]->active = 0;
@@ -6156,13 +6162,6 @@ fflush(debug_sudas_LOG_PHY);
              return(-1);
          }
 
-sudas_LOG_PHY(debug_sudas_LOG_PHY,"/////////////////////////\n");
-sudas_LOG_PHY(debug_sudas_LOG_PHY,"Frame %d Subframe %d\n",frame%1024,subframe);
-sudas_LOG_PHY(debug_sudas_LOG_PHY,"Detect DCI format 2\n");
-sudas_LOG_PHY(debug_sudas_LOG_PHY,"harq_pid %d NDI1 %d\n",dci_info_extarcted.harq_pid,dci_info_extarcted.ndi1);
-#ifdef FHG_LOG
-fflush(debug_sudas_LOG_PHY);
-#endif
 
         // dci is correct ==> update internal structure and prepare dl decoding
         //LOG_I(PHY,"[DCI-format2] update internal structure and prepare dl decoding \n");
@@ -6775,7 +6774,8 @@ uint16_t quantize_subband_pmi2(PHY_MEASUREMENTS *meas,uint8_t eNB_id,uint8_t a_i
       pmivect |= (pmiq<<(2*i));
     } else if (rank==1)
     {
-    	pmi_re = meas->subband_pmi_re[eNB_id][i][a_id];
+    	//sfn@ Fraunhofer IIS PMI for rank 2
+        pmi_re = meas->subband_pmi_re[eNB_id][i][a_id];
     	pmi_im = meas->subband_pmi_im[eNB_id][i][a_id];
     	if (pmi_re >= pmi_im)
     		pmiq = PMI_2A_R1_11;
@@ -6955,10 +6955,9 @@ void fill_CQI(LTE_UE_ULSCH_t *ulsch,PHY_MEASUREMENTS *meas,uint8_t eNB_id,uint8_
   else
     sinr_tmp = (double) meas->wideband_cqi_avg[eNB_id];
 
-  //LOG_I(PHY,"[UE][UCI--->PUSCH] Filling CQI format %d for eNB %d N_RB_DL %d\n",uci_format,eNB_id,N_RB_DL);
-  //SFN
-  //sudas_LOG_PHY(debug_sudas_LOG_PHY,"[UE][UCI--->PUSCH] meas->rank[eNB_id] %d Filling CQI format %d for eNB %d N_RB_DL %d flag_LA %d\n",meas->rank[eNB_id],uci_format,eNB_id,N_RB_DL,flag_LA);
-  //fflush(debug_sudas_LOG_PHY);
+
+
+  //LOG_I(PHY,"[UE][UCI] Filling CQI format %d for eNB %d N_RB_DL %d\n",uci_format,eNB_id,N_RB_DL);
 
   switch (N_RB_DL) {
 
@@ -7019,8 +7018,8 @@ void fill_CQI(LTE_UE_ULSCH_t *ulsch,PHY_MEASUREMENTS *meas,uint8_t eNB_id,uint8_
   case 25:
     switch (uci_format) {
     case wideband_cqi_rank1_2A:
-    	//sfn: we enable this
-      ((wideband_cqi_rank1_2A_5MHz *)o)->cqi1 = sinr2cqi(sinr_tmp,trans_mode);
+    	//sfn: we need to test sinr2cqi(sinr_tmp,tmode) when tmode =4 
+      ((wideband_cqi_rank1_2A_5MHz *)o)->cqi1 = sinr2cqi(sinr_tmp,2);
       ((wideband_cqi_rank1_2A_5MHz *)o)->pmi  = quantize_subband_pmi(meas,eNB_id,25);
       break;
 
@@ -7031,9 +7030,6 @@ void fill_CQI(LTE_UE_ULSCH_t *ulsch,PHY_MEASUREMENTS *meas,uint8_t eNB_id,uint8_
       break;
 
     case HLC_subband_cqi_nopmi:
-    	//SFN
-    	//sudas_LOG_PHY(debug_sudas_LOG_PHY,"[UE][UCI--->PUSCH] HLC_subband_cqi_nopmi\n");
-    	//fflush(debug_sudas_LOG_PHY);
       ((HLC_subband_cqi_nopmi_5MHz *)o)->cqi1     = sinr2cqi(sinr_tmp,trans_mode);
       ((HLC_subband_cqi_nopmi_5MHz *)o)->diffcqi1 = fill_subband_cqi(meas,eNB_id,trans_mode,7);
       break;
@@ -7544,20 +7540,14 @@ int generate_ue_ulsch_params_from_dci(void *dci_pdu,
 
     if (cqi_req == 1) {
 
-    	/*SFN: enable PMI feedback and remove dependency on transmission_mode flag
-         * Hardcode for testing TM4
-         *
-         * */
-      //if( (AntennaInfoDedicated__transmissionMode_tm3 == transmission_mode) || (AntennaInfoDedicated__transmissionMode_tm4 == transmission_mode) )
-      //{
+      if( (AntennaInfoDedicated__transmissionMode_tm3 == transmission_mode) || (AntennaInfoDedicated__transmissionMode_tm4 == transmission_mode) )
+      {
           ulsch->O_RI = 1;
-      //}
-      //else
-      //{
-      //    ulsch->O_RI = 0;
-      //}
-      //sudas_LOG_PHY(debug_sudas_LOG_PHY,"[UE][UCI--->PUSCH] transmission_mode %d ulsch->O_RI %d\n",transmission_mode,ulsch->O_RI);
-      //fflush(debug_sudas_LOG_PHY);
+      }
+      else
+      {
+          ulsch->O_RI = 0;
+      }
       //ulsch->O_RI = 0; //we only support 2 antenna ports, so this is always 1 according to 3GPP 36.213 Table
 
       switch(transmission_mode) {
@@ -7652,35 +7642,28 @@ int generate_ue_ulsch_params_from_dci(void *dci_pdu,
 
           ulsch->uci_format                          = HLC_subband_cqi_mcs_CBA;
           ulsch->o_RI[0]                             = 0;
-        } else //if(meas->rank[eNB_id] == 0)
-        {
-        /*Enable PMI reporting for TM2
-         * remove dependency on RI
-         *
-         * */
-        	switch (ue->frame_parms.N_RB_DL) {
-        	case 6:
-        		ulsch->O                                   = sizeof_HLC_subband_cqi_nopmi_1_5MHz;
-        		break;
-            case 25:
+        } else if(meas->rank[eNB_id] == 0) {
+          switch (ue->frame_parms.N_RB_DL) {
+          case 6:
+            ulsch->O                                   = sizeof_HLC_subband_cqi_nopmi_1_5MHz;
+            break;
 
-            	//ulsch->O                                   = sizeof_HLC_subband_cqi_nopmi_5MHz;
-            	ulsch->O                                   = sizeof_wideband_cqi_rank1_2A_5MHz;
-            	break;
-        	case 50:
-        		ulsch->O                                   = sizeof_HLC_subband_cqi_nopmi_10MHz;
-        	    break;
-        	case 100:
-        		ulsch->O                                   = sizeof_HLC_subband_cqi_nopmi_20MHz;
-        	    break;
-        	          }
-        	//ulsch->uci_format                          = HLC_subband_cqi_nopmi;
-        	//ulsch->o_RI[0]= 0;
-            ulsch->uci_format                          = wideband_cqi_rank1_2A;
-            if(meas->rank[eNB_id] == 0) ulsch->o_RI[0] = 0;
-            else ulsch->o_RI[0] = 1;
-        }
-        /*else {
+          case 25:
+            ulsch->O                                   = sizeof_HLC_subband_cqi_nopmi_5MHz;
+            break;
+
+          case 50:
+            ulsch->O                                   = sizeof_HLC_subband_cqi_nopmi_10MHz;
+            break;
+
+          case 100:
+            ulsch->O                                   = sizeof_HLC_subband_cqi_nopmi_20MHz;
+            break;
+          }
+
+          ulsch->uci_format                          = HLC_subband_cqi_nopmi;
+          ulsch->o_RI[0]                             = 0;
+        } else {
           switch (ue->frame_parms.N_RB_DL) {
           case 6:
             ulsch->O                                   = sizeof_HLC_subband_cqi_nopmi_1_5MHz;
@@ -7701,7 +7684,7 @@ int generate_ue_ulsch_params_from_dci(void *dci_pdu,
 
           ulsch->uci_format                          = HLC_subband_cqi_nopmi;
           ulsch->o_RI[0]                             = 1;
-        }*/
+        }
 
         break;
 
@@ -7795,7 +7778,7 @@ int generate_ue_ulsch_params_from_dci(void *dci_pdu,
 
           ulsch->uci_format                          = HLC_subband_cqi_mcs_CBA;
           ulsch->o_RI[0]                             = 0;
-        } else if(meas->rank[eNB_id] == 0) {
+        } else /*if(meas->rank[eNB_id] == 0)*/ {//for TM4 we enable for now only sizeof_wideband_cqi_rank1_2A_1_5MHz
           switch (ue->frame_parms.N_RB_DL) {
           case 6:
             ulsch->O                                   = sizeof_wideband_cqi_rank1_2A_1_5MHz;
@@ -7815,8 +7798,12 @@ int generate_ue_ulsch_params_from_dci(void *dci_pdu,
           }
 
           ulsch->uci_format                          = wideband_cqi_rank1_2A;
-          ulsch->o_RI[0]                             = 0;
-        } else {
+          
+
+          if(meas->rank[eNB_id] == 0) ulsch->o_RI[0] = 0;
+          else ulsch->o_RI[0] = 1;
+        
+         } /*else {
           switch (ue->frame_parms.N_RB_DL) {
           case 6:
             ulsch->O                                   = sizeof_wideband_cqi_rank2_2A_1_5MHz;
@@ -7837,7 +7824,7 @@ int generate_ue_ulsch_params_from_dci(void *dci_pdu,
 
           ulsch->uci_format                          = wideband_cqi_rank2_2A;
           ulsch->o_RI[0]                             = 1;
-        }
+        }*/
 
         break;
 
@@ -8361,12 +8348,12 @@ int generate_eNB_ulsch_params_from_dci(PHY_VARS_eNB *eNB,
        * TODO: deal with TM 8&9 correctly when they are implemented.
        * TODO: deal with periodic reporting if we implement it.
        */
-      //SFN FIX:
+      
       // O_RI: 1 bit for RI
-      //if (transmission_mode == 3 || transmission_mode == 4)
+      if (transmission_mode == 3 || transmission_mode == 4)
         ulsch->harq_processes[harq_pid]->O_RI = 1; //we only support 2 antenna ports, so this is always 1 according to 3GPP 36.213 Table
-      //else
-        //ulsch->harq_processes[harq_pid]->O_RI = 0;
+      else
+        ulsch->harq_processes[harq_pid]->O_RI = 0;
 
       switch(transmission_mode) {
         // The aperiodic CQI reporting mode is fixed for every transmission mode instead of being configured by higher layer signaling
@@ -8443,41 +8430,27 @@ int generate_eNB_ulsch_params_from_dci(PHY_VARS_eNB *eNB,
 
           ulsch->harq_processes[harq_pid]->uci_format                            = HLC_subband_cqi_mcs_CBA;
         } else {
+          ulsch->harq_processes[harq_pid]->Or2                                   = 0;
 
           switch (frame_parms->N_RB_DL) {
           case 6:
-        	ulsch->harq_processes[harq_pid]->Or2                                   = 0;
             ulsch->harq_processes[harq_pid]->Or1                                   = sizeof_HLC_subband_cqi_nopmi_1_5MHz;
             break;
 
           case 25:
-        	//SFN:
-        	/*To support PMI reporting for transmission mode 2,
-        	 * Hardcoded only for 25 RBs to test TM4 feedback
-        	 * we add TM4 uci_format as follows:
-        	 * */
-        	//ulsch->harq_processes[harq_pid]->Or2                                   = 0;
-            //ulsch->harq_processes[harq_pid]->Or1                                   = sizeof_HLC_subband_cqi_nopmi_5MHz;
-
-        	ulsch->harq_processes[harq_pid]->Or2                                 = sizeof_wideband_cqi_rank2_2A_5MHz;
-        	ulsch->harq_processes[harq_pid]->Or1                                 = sizeof_wideband_cqi_rank1_2A_5MHz;
-
+            ulsch->harq_processes[harq_pid]->Or1                                   = sizeof_HLC_subband_cqi_nopmi_5MHz;
             break;
 
           case 50:
-        	ulsch->harq_processes[harq_pid]->Or2                                   = 0;
             ulsch->harq_processes[harq_pid]->Or1                                   = sizeof_HLC_subband_cqi_nopmi_10MHz;
             break;
 
           case 100:
-        	ulsch->harq_processes[harq_pid]->Or2                                   = 0;
             ulsch->harq_processes[harq_pid]->Or1                                   = sizeof_HLC_subband_cqi_nopmi_20MHz;
             break;
           }
-          /*SFN
-           * add uci_format wideband_cqi_rank1_2A into TM2*/
-          //ulsch->harq_processes[harq_pid]->uci_format                            = HLC_subband_cqi_nopmi;
-          ulsch->harq_processes[harq_pid]->uci_format                          = wideband_cqi_rank1_2A;
+
+          ulsch->harq_processes[harq_pid]->uci_format                            = HLC_subband_cqi_nopmi;
         }
 
         break;
@@ -8866,6 +8839,8 @@ double sinr_eff_cqi_calc(PHY_VARS_UE *ue, uint8_t eNB_id, uint8_t subframe)
     break;
 
   case 2:
+    case 3:
+      case 4:
     for (count=0; count<frame_parms->N_RB_DL*12; count++) {
       abs_channel=0;
 

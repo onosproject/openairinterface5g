@@ -36,8 +36,6 @@
 #include "LAYER2/MAC/defs.h"
 #include "SCHED/defs.h"
 #include "UTIL/LOG/vcd_signal_dumper.h"
-//SFN
-#include "sudas_tm4.h"
 
 #include "assertions.h"
 
@@ -268,15 +266,15 @@ int generate_ue_ulsch_params_from_rar(PHY_VARS_UE *ue,
     ulsch->harq_processes[harq_pid]->status = ACTIVE;
 
   if (cqireq==1) {
-    /*SFN: enable PMI reporting
-     * remove dependency on RI
-     * */
-	ulsch->O_RI                                = 1;
-
+    ulsch->O_RI                                  = 1;
+    //Author: Khodr Saaifan @ Fraunhofer IIS
+    //      : enable UCI rank 1 for 2 antennas format (Hardcoded)
 	ulsch->uci_format                          = wideband_cqi_rank1_2A;
     ulsch->O                                   = sizeof_wideband_cqi_rank1_2A_5MHz;
-    if (meas->rank[eNB_id] == 0) ulsch->o_RI[0]  = 0;
-    else ulsch->o_RI[0]  = 1;
+    if (meas->rank[eNB_id] == 0) 
+        ulsch->o_RI[0]  = 0;
+    else 
+        ulsch->o_RI[0]  = 1;
 
     ulsch->uci_format                          = wideband_cqi_rank1_2A;
     /*if (meas->rank[eNB_id] == 1){
@@ -290,7 +288,6 @@ int generate_ue_ulsch_params_from_rar(PHY_VARS_UE *ue,
     }*/
 
     //ulsch->uci_format = HLC_subband_cqi_nopmi;
-
     fill_CQI(ulsch,meas,eNB_id,0,ue->frame_parms.N_RB_DL,0, transmission_mode,ue->sinr_eff);
 
     if (((proc->frame_tx % 100) == 0) || (proc->frame_tx < 10))

@@ -51,8 +51,7 @@
 
 #include "UTIL/LOG/vcd_signal_dumper.h"
 //#define DEBUG_ULSCH_DECODING
-//SFN
-#include "sudas_tm4.h"
+
 void free_eNB_ulsch(LTE_eNB_ULSCH_t *ulsch)
 {
 
@@ -1335,13 +1334,12 @@ unsigned int  ulsch_decoding(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,
     r = Rmux_prime -1 - (i>>2);
 
     for (q=0; q<Q_m; q++){
-//SFN bug fix here
-    	if (i==0)
+    //Author: Khodr Saaifan @ Fraunhofer IIR
+    //      : OAI UE sets Qprime_RI to 1 (1 symbol)
+    //      : However, we note that the OAI eNB configures Qprime_RI as 1 or 2 or 3
+    //      : Thus, we limit Qprime_RI to 1 for now to decode RI correctly
+    if (i==0)
       ulsch_harq->q_RI[(q+(Q_m*i))%len_RI] = y[q+(Q_m*((r*Cmux) + columnset[j]))];
-
-	 // sudas_LOG_PHY(debug_sudas_LOG_PHY,"[SFN goo] ulsch_harq->q_RI[0] %d ulsch_harq->q_RI[1] %d len_RI %d\n",ulsch_harq->q_RI[0],ulsch_harq->q_RI[1],len_RI);
-
-	 // fflush(debug_sudas_LOG_PHY);
     }
     ytag[(r*Cmux) + columnset[j]] = LTE_NULL;
     j=(j+3)&3;
@@ -1547,52 +1545,19 @@ unsigned int  ulsch_decoding(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,
   }
 
   // RI
-//SFN: fix here
+
   // rank 1
-
+  // Author: Khodr Saaifan @ Fraunhofer IIS
+  //       : Fix RI detection
   if ((ulsch_harq->O_RI == 1) && (Qprime_RI > 0)) {
-	  switch (Q_m) {
-	  case 2:
 		  ulsch_harq->o_RI[0] =((ulsch_harq->q_RI[0] + ulsch_harq->q_RI[1]) > 0) ? 1 : 0;
-		 // sudas_LOG_PHY(debug_sudas_LOG_PHY,"[SFN] ulsch_harq->q_RI[0] %d ulsch_harq->q_RI[1] %d Qprime_RI %d\n",ulsch_harq->q_RI[0],ulsch_harq->q_RI[1],Qprime_RI);
-		  //sudas_LOG_PHY(debug_sudas_LOG_PHY,"[SFN] ulsch_harq->q_RI[0] %d ulsch_harq->q_RI[1] %d Qprime_RI %d\n",ulsch_harq->q_RI[0],ulsch_harq->q_RI[1],Qprime_RI);
-
-		  //fflush(debug_sudas_LOG_PHY);
-
-	      break;
-	  case 4:
-		  ulsch_harq->o_RI[0] =((ulsch_harq->q_RI[0]+ ulsch_harq->q_RI[1]) > 0) ? 1 : 0;
-		 //sudas_LOG_PHY(debug_sudas_LOG_PHY,"[SFN] ulsch_harq->q_RI[0] %d ulsch_harq->q_RI[1] %d Qprime_RI %d\n",ulsch_harq->q_RI[0],ulsch_harq->q_RI[1],Qprime_RI);
-		  //fflush(debug_sudas_LOG_PHY);
-
-		  break;
-	  case 6:
-		  ulsch_harq->o_RI[0] =((ulsch_harq->q_RI[0] + ulsch_harq->q_RI[1]) > 0) ? 1 : 0;
-		  //sudas_LOG_PHY(debug_sudas_LOG_PHY,"[SFN] ulsch_harq->q_RI[0] %d ulsch_harq->q_RI[1] %d  Qprime_RI %d\n",ulsch_harq->q_RI[0],ulsch_harq->q_RI[1],Qprime_RI);
-		  //fflush(debug_sudas_LOG_PHY);
-
-		  break;
-	  }
-	  //sudas_LOG_PHY(debug_sudas_LOG_PHY,"[SFN]ulsch_harq->o_RI[0] %d Qprime_RI %d\n",ulsch_harq->o_RI[0],Qprime_RI);
-	  //fflush(debug_sudas_LOG_PHY);
   }
-    //ulsch_harq->o_RI[0] = ulsch_harq->q_RI[0]&1;//((ulsch_harq->q_RI[0] + ulsch_harq->q_RI[Q_m/2]) > 0) ? 0 : 1;
-
 
   // CQI
-static int ri_disply_cntr=0;
 
   //  printf("before cqi c[%d] = %p\n",0,ulsch_harq->c[0]);
   ulsch_harq->cqi_crc_status = 0;
   if (Q_CQI>0) {
-	  /*ri_disply_cntr++;
-	  if (ri_disply_cntr>10){
-		  ri_disply_cntr=0;
-	  //show log
-	  LOG_I(PHY,"Qprime_RI %d [SFN CQI reports %d] O_RI %d o_RI[0]%d\n",Qprime_RI,ri_disply_cntr,ulsch_harq->O_RI,ulsch_harq->o_RI[0]);
-	  }*/
-	  //sudas_LOG_PHY(debug_sudas_LOG_PHY,"[SFN]ulsch_harq->O_RI %d ulsch_harq->o_RI[0]%d\n",ulsch_harq->O_RI,ulsch_harq->o_RI[0]);
-	  //        	fflush(debug_sudas_LOG_PHY);
     memset((void *)&dummy_w_cc[0],0,3*(ulsch_harq->Or1+8+32));
 
     O_RCC = generate_dummy_w_cc(ulsch_harq->Or1+8,

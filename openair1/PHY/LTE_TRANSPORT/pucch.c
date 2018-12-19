@@ -35,13 +35,9 @@
 
 #include "UTIL/LOG/log.h"
 #include "UTIL/LOG/vcd_signal_dumper.h"
-//SFN
-#include "sudas_tm4.h"
 
 #include "T.h"
 
-//SFN
-#include "sudas_tm4.h"
 //uint8_t ncs_cell[20][7];
 //#define DEBUG_PUCCH_TX
 //#define DEBUG_PUCCH_RX
@@ -479,7 +475,6 @@ void generate_pucch1x(int32_t **txdataF,
         ref_re = (int16_t)(((int32_t)tmp_re*W_re - (int32_t)tmp_im*W_im)>>15);
         ref_im = (int16_t)(((int32_t)tmp_re*W_im + (int32_t)tmp_im*W_re)>>15);
 
-
         if ((l<2)||(l>=(N_UL_symb-2))) { //these are PUCCH data symbols
           switch (fmt) {
           case pucch_format1:   //OOK 1-bit
@@ -543,22 +538,11 @@ void generate_pucch1x(int32_t **txdataF,
     nprime=nprime1;
     n_oc  =n_oc1;
   } // ns
-  zptr = (int16_t *)z;
- /* sudas_LOG_PHY(debug_sudas_LOG_PHY,"Allocat z[12*14] sequence matrix\n");
-  int n_sfn=0;
-  for (n_sfn=0;n_sfn<(12*14);n_sfn++)
-  {
-	  sudas_LOG_PHY(debug_sudas_LOG_PHY," z[%d]_Re= %d z[%d]_Im= %d\n",n_sfn,zptr[n_sfn<<1],n_sfn,zptr[1+(n_sfn<<1)]);
-  }*/
 
- rem = (((deltaPUCCH_Shift*Ncs1_div_deltaPUCCH_Shift)&7)>0) ? 1 : 0;
+  rem = ((((deltaPUCCH_Shift*Ncs1_div_deltaPUCCH_Shift)>>3)&7)>0) ? 1 : 0;
 
  m = (n1_pucch < thres) ? NRB2 : (((n1_pucch-thres)/(12*c/deltaPUCCH_Shift))+NRB2+((deltaPUCCH_Shift*Ncs1_div_deltaPUCCH_Shift)>>3)+rem);
 
-  sudas_LOG_PHY(debug_sudas_LOG_PHY,"Allocat PUCCH amp %d m %d nprime0 %d nprime1 %d n_oc0 %d n_oc1 %d \n",amp,m,nprime0,nprime1,n_oc0,n_oc1);
-#ifdef FHG_LOG
-  fflush(debug_sudas_LOG_PHY);
-#endif
 #ifdef DEBUG_PUCCH_TX
   printf("[PHY] PUCCH: m %d\n",m);
 #endif
@@ -2059,14 +2043,9 @@ uint32_t rx_pucch(PHY_VARS_eNB *eNB,
     n_oc  =n_oc1;
   } // ns
 
-  rem = ((((deltaPUCCH_Shift*Ncs1_div_deltaPUCCH_Shift))&7)>0) ? 1 : 0;
+  rem = ((((deltaPUCCH_Shift*Ncs1_div_deltaPUCCH_Shift)>>3)&7)>0) ? 1 : 0;
 
   m = (n1_pucch < thres) ? NRB2 : (((n1_pucch-thres)/(12*c/deltaPUCCH_Shift))+NRB2+((deltaPUCCH_Shift*Ncs1_div_deltaPUCCH_Shift)>>3)+rem);
-
-  sudas_LOG_MAC(debug_sudas_LOG_MAC,"format %d DemAllocat PUCCH m %d nprime0 %d nprime1 %d n_oc0 %d n_oc1 %d\n",fmt,m,nprime0,nprime1,n_oc0,n_oc1);
-#ifdef FHG_LOG
-  fflush(debug_sudas_LOG_MAC);
-#endif
 
 #ifdef DEBUG_PUCCH_RX
   printf("[eNB] PUCCH: m %d\n",m);
@@ -2202,25 +2181,11 @@ uint32_t rx_pucch(PHY_VARS_eNB *eNB,
 
     }
     */
-    sudas_LOG_MAC(debug_sudas_LOG_MAC,"dB_fixed(stat_max) %d  pucch1_thres %d sigma2_dB %d\n",dB_fixed(stat_max),pucch1_thres,sigma2_dB);
-#ifdef FHG_LOG
-    fflush(debug_sudas_LOG_MAC);
-#endif
-    // This is a moving average of the PUCCH1 statistics conditioned on being above or below the threshold
-    /*SFN:
-     *
-     sigma2_dB= eNB->measurements[0].n0_subband_power_tot_dB[0]-10; where
-     measurements->n0_power_tot +=  measurements->n0_power[aarx];
-     is not correct.
-     n0_power_tot denotes received noise variance for two antennas measured by sounding reference signal.
-     n0_power_tot=N_aarx*[(N_0*df)*N_FFT]*N_F*Rx_Gain*(2^15)^2 which computed in time domain
-     In the absence of PUCCH signal, stat_max will hold the received power of noise computed in frequency after DFT
-     stat_max=N_aarx*[(N_0*df)*N_FFT]*N_F*Rx_Gain*(2^15)^2
-     In the presence of PUCCH signal
-     stat_max=H_rx^2*N_FFT*(2^15)^2+N_aarx*[(N_0*df)*N_FFT]*N_F*Rx_Gain*(2^15)^2
-     */
 
-    if ((dB_fixed(stat_max)-10)>sigma2_dB){//pucch1_thres
+    // This is a moving average of the PUCCH1 statistics conditioned on being above or below the threshold
+    // Author: Khodr Saaifan @ Fraunhofer IIS
+    //       : Adjust Thresh detection  
+    if ((dB_fixed(stat_max)-5)>sigma2_dB){//pucch1_thres
       *payload = 1;
       *Po_PUCCH1_above = ((*Po_PUCCH1_above<<9) + (stat_max<<9)+1024)>>10;
       //LOG_I(PHY,"[eNB] PUCCH fmt1:  stat_max : %d, sigma2_dB %d (%d, %d), phase_max : %d\n",dB_fixed(stat_max),sigma2_dB,eNB->PHY_measurements_eNB[0].n0_power_tot_dBm,pucch1_thres,phase_max);
@@ -2334,11 +2299,6 @@ uint32_t rx_pucch(PHY_VARS_eNB *eNB,
 	   dB_fixed(*Po_PUCCH));
     */
     // Do detection now
-
-    sudas_LOG_MAC(debug_sudas_LOG_MAC,"dB_fixed(stat_max) %d  pucch1_thres %d sigma2_dB %d\n",dB_fixed(stat_max),pucch1_thres,sigma2_dB);
-#ifdef FHG_LOG
-    fflush(debug_sudas_LOG_MAC);
-#endif
     if (sigma2_dB<(dB_fixed(stat_max)-pucch1_thres))  {//
 
 
@@ -2352,11 +2312,11 @@ uint32_t rx_pucch(PHY_VARS_eNB *eNB,
           chest_im=0;
           cfo =  (frame_parms->Ncp==0) ? &cfo_pucch_np[14*phase_max] : &cfo_pucch_ep[12*phase_max];
 
-          // channel estimate for first slot select DMRS SCs
+          // channel estimate for first slot
           for (l=2; l<(nsymb>>1)-2; l++) {
             off=(re<<1) + (24*l);
             chest_re += (((rxcomp[aa][off]*(int32_t)cfo[l<<1])>>15)     - ((rxcomp[aa][1+off]*(int32_t)cfo[1+(l<<1)])>>15))/chL;
-	        chest_im += (((rxcomp[aa][off]*(int32_t)cfo[1+(l<<1)])>>15) + ((rxcomp[aa][1+off]*(int32_t)cfo[(l<<1)])>>15))/chL;
+	    chest_im += (((rxcomp[aa][off]*(int32_t)cfo[1+(l<<1)])>>15) + ((rxcomp[aa][1+off]*(int32_t)cfo[(l<<1)])>>15))/chL;
           }
 
 #ifdef DEBUG_PUCCH_RX

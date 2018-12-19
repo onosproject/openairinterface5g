@@ -47,8 +47,7 @@
 
 #include "RRC/LITE/extern.h"
 #include "RRC/L2_INTERFACE/openair_rrc_L2_interface.h"
-//SFN
-#include "sudas_tm4.h"
+
 //#include "LAYER2/MAC/pre_processor.c"
 #include "pdcp.h"
 
@@ -525,10 +524,10 @@ schedule_ue_spec(
         //  mac_xface->macphy_exit("[MAC][eNB] Cannot find eNB_UE_stats\n");
         continue_flag=1;
       }
-/* SFN:
-*Add TM4 aggregation level
-*/
 
+//Author: Khodr Saaifan @ Fraunhofer IIS
+//      : Add aggregation level for format2 (TM4)
+//      : we use highest value for testing
       if (continue_flag != 1){
         switch(mac_xface->get_transmission_mode(module_idP,CC_id,rnti)){
         case 1:
@@ -587,10 +586,10 @@ schedule_ue_spec(
       /* if we don't add it, next allocations may succeed but overall allocations may fail */
       /* will be removed at the end of this function */
 
-      /* SFN:
-       * Add UE spec DCI to UEs DCI (update Num_DCI)
-       * Support format1, format2A, and format2
-       */
+//Author: Khodr Saaifan @ Fraunhofer IIS
+//      : Add UEs DCI (update Num_DCI) to CCE Map
+//      : Support format1, format2A, and format2
+
       switch(mac_xface->get_transmission_mode(module_idP,CC_id,rnti)){
               case 1:
               case 2:
@@ -613,6 +612,7 @@ schedule_ue_spec(
             	                      1,
             	                      format2A,
             	                      0);
+                  break;
               case 4:
             	  add_ue_spec_dci(&eNB->common_channels[CC_id].DCI_pdu,
             	                      &(char[]){0},
@@ -655,9 +655,7 @@ schedule_ue_spec(
       // store stats
       UE_list->eNB_UE_stats[CC_id][UE_id].dl_cqi= eNB_UE_stats->DL_cqi[0];
 
-      
-
-     // initializing the rb allocation indicator for each UE
+      // initializing the rb allocation indicator for each UE
       for(j=0; j<frame_parms[CC_id]->N_RBG; j++) {
         UE_list->UE_template[CC_id][UE_id].rballoc_subband[harq_pid][j] = 0;
       }
@@ -762,15 +760,6 @@ schedule_ue_spec(
                 LOG_D(MAC,"[eNB %d] Retransmission CC_id %d : harq_pid %d, round %d, mcs %d\n",
                       module_idP,CC_id,harq_pid,round,((DCI1_5MHz_FDD_t*)DLSCH_dci)->mcs);
 
-
-
- sudas_LOG_MAC(debug_sudas_LOG_MAC,"UE %d Frame %d Subframe %d schedule Retransmission Format 1\n",UE_id, frameP, subframeP);                
-sudas_LOG_MAC(debug_sudas_LOG_MAC,"[eNB %d] Retransmission CC_id %d : harq_pid %d, round %d, NDI %d\n",
-                        module_idP,CC_id,harq_pid,round,((DCI1_5MHz_FDD_t*)DLSCH_dci)->ndi);
-#ifdef FHG_LOG
-fflush(debug_sudas_LOG_MAC);
-#endif
-
               }
 
               break;
@@ -818,25 +807,49 @@ fflush(debug_sudas_LOG_MAC);
 
             break;
 
-	    // this code is to enable TM4 DCI
+	    //Author: Khodr Saaifan @ Fraunhofer IIS
+        //      : This code is to enable TM4 DCI for FDD 5 MHz
           case 4:
-        	  ((DCI2A_5MHz_2A_FDD_t*)DLSCH_dci)->harq_pid = harq_pid;
-        	  ((DCI2A_5MHz_2A_FDD_t*)DLSCH_dci)->rv1       = round&3;
+            switch (frame_parms[CC_id]->N_RB_DL) {
+            case 6:
+              if (frame_parms[CC_id]->frame_type == TDD) {
+                //LOG_I(MAC,"TM4 is not supported for TDD 3 MHz\n");
+              } else {//FDD supported only
+                //LOG_I(MAC,"TM4 is not supported for FDD 3 MHz\n");
+              }
+              break;
+
+            case 25:               
+              if (frame_parms[CC_id]->frame_type == TDD) {
+               ((DCI2_5MHz_2A_TDD_t*)DLSCH_dci)->ndi1 = 0;
+               ((DCI2_5MHz_2A_TDD_t*)DLSCH_dci)->harq_pid = harq_pid;
+               ((DCI2_5MHz_2A_TDD_t*)DLSCH_dci)->dai = (UE_list->UE_template[CC_id][UE_id].DAI-1)&3;
+              } else {//FDD tested only
+               ((DCI2A_5MHz_2A_FDD_t*)DLSCH_dci)->harq_pid = harq_pid;
+        	   ((DCI2A_5MHz_2A_FDD_t*)DLSCH_dci)->rv1       = round&3;
         	   LOG_D(MAC,"[eNB %d] Retransmission CC_id %d : harq_pid %d, round %d, mcs %d\n",
         	                        module_idP,CC_id,harq_pid,round,((DCI2A_5MHz_2A_FDD_t*)DLSCH_dci)->mcs1);
+              }
 
-               sudas_LOG_MAC(debug_sudas_LOG_MAC,"UE %d Frame %d Subframe %d schedule Retransmission Format 2\n",UE_id, frameP, subframeP);
-        	   sudas_LOG_MAC(debug_sudas_LOG_MAC,"[eNB %d] Retransmission CC_id %d : harq_pid %d, round %d, ndi %d\n",
-                       module_idP,CC_id,harq_pid,round,((DCI2A_5MHz_2A_FDD_t*)DLSCH_dci)->ndi1);
-#ifdef FHG_LOG
-        	   fflush(debug_sudas_LOG_MAC);
-#endif
-        	   //LOG_I(MAC,"[eNB %d] Retransmission CC_id %d : harq_pid %d, round %d, mcs %d\n",
-        	   //                       module_idP,CC_id,harq_pid,round,((DCI2A_5MHz_2A_FDD_t*)DLSCH_dci)->mcs1);
-        	   //LOG_I(MAC,"UE %d Frame %d Subframe %d schedule Retransmission Format 2\n",UE_id, frameP, subframeP);
+            case 50:
+              break;
+              if (frame_parms[CC_id]->frame_type == TDD) {
+               //LOG_I(MAC,"TM4 is not supported for TDD 10 MHz\n");
+              } else {//FDD supported only
+               //LOG_I(MAC,"TM4 is not supported for FDD 10 MHz\n");
+              }
+              break;
 
+            case 100:
+              break;
+              if (frame_parms[CC_id]->frame_type == TDD) {
+               //LOG_I(MAC,"TM4 is not supported for TDD 20 MHz\n");
+              } else {//FDD supported only
+               //LOG_I(MAC,"TM4 is not supported for FDD 20 MHz\n");
+              }
+              break;
+            }
             break;
-
           }
 
           add_ue_dlsch_info(module_idP,
@@ -1059,6 +1072,9 @@ fflush(debug_sudas_LOG_MAC);
             nb_rb=min_rb_unit[CC_id];
           }
 
+	    //Author: Khodr Saaifan @ Fraunhofer IIS
+        //      : for TM4, we introduce Nl for spatial Multiplexing Mode
+        //      : Further information for PMI may be usefull for tpmi setting
           int N_layer=1;
           switch(mac_xface->get_transmission_mode(module_idP,CC_id,rnti)){
           		        case 1:
@@ -1067,13 +1083,14 @@ fflush(debug_sudas_LOG_MAC);
           		        	N_layer=1;
           			    break;
           		        case 4:
-          		        	N_layer=2;
+          		        	if (eNB_UE_stats->rank==0) 
+                              N_layer=1;
+          		        	else 
+                              N_layer=2;
           		        break;
           		        default:
           		        	N_layer=1;
           		        }
-
-
 
           TBS = mac_xface->get_TBS_DL(mcs,N_layer*nb_rb);
 
@@ -1089,7 +1106,6 @@ fflush(debug_sudas_LOG_MAC);
 
             TBS = mac_xface->get_TBS_DL(eNB_UE_stats->dlsch_mcs1,N_layer*nb_rb);
           }
-
 
           if(nb_rb == ue_sched_ctl->pre_nb_available_rbs[CC_id]) {
             for(j=0; j<frame_parms[CC_id]->N_RBG; j++) { // for indicating the rballoc for each sub-band
@@ -1348,16 +1364,6 @@ fflush(debug_sudas_LOG_MAC);
                 ((DCI1_5MHz_FDD_t*)DLSCH_dci)->ndi = 1-UE_list->UE_template[CC_id][UE_id].oldNDI[harq_pid];
                 ((DCI1_5MHz_FDD_t*)DLSCH_dci)->rv = 0;
                 ((DCI1_5MHz_FDD_t*)DLSCH_dci)->TPC = tpc;
-sudas_LOG_MAC(debug_sudas_LOG_MAC,"############################################################\n");                
-sudas_LOG_MAC(debug_sudas_LOG_MAC,"UE %d Frame %d Subframe %d schedule New transmission Format 1\n",UE_id, frameP, subframeP);                
-sudas_LOG_MAC(debug_sudas_LOG_MAC,"[eNB %d] New transmission CC_id %d harq_pid %d ndi %d\n",module_idP,CC_id, harq_pid,((DCI1_5MHz_FDD_t*)DLSCH_dci)->ndi);
-#ifdef FHG_LOG
-fflush(debug_sudas_LOG_MAC);
-#endif
-              //  LOG_I(MAC,"[eNB %d] New transmission CC_id %d NDI %d\n",module_idP,CC_id,((DCI1_5MHz_FDD_t*)DLSCH_dci)->ndi);
-              //  LOG_I(MAC,"UE %d Frame %d Subframe %d schedule New transmission Format 1\n",UE_id, frameP, subframeP);
-
-
                 break;
 
               case 50:
@@ -1524,8 +1530,14 @@ fflush(debug_sudas_LOG_MAC);
 
             break;
 
+//Author: Khodr Saaifan @ Fraunhofer IIS
+//      : We tested only Alamouti and TM4 with Unity Matrix Precoding
+
           case 4:
-        	  ((DCI2_5MHz_2A_FDD_t*)DLSCH_dci)->tpmi = 7;//0: ALAMOUTI/7: test TM4_NO_precoding
+        	  if (eNB_UE_stats->rank==0)  
+                ((DCI2_5MHz_2A_FDD_t*)DLSCH_dci)->tpmi = 0;//0: ALAMOUTI/7: test TM4_NO_precoding
+        	  else  
+                ((DCI2_5MHz_2A_FDD_t*)DLSCH_dci)->tpmi = 7;//7 TM4_NO_precoding
         	  ((DCI2_5MHz_2A_FDD_t*)DLSCH_dci)->mcs1 = mcs;
         	  ((DCI2_5MHz_2A_FDD_t*)DLSCH_dci)->harq_pid = harq_pid;
         	  ((DCI2_5MHz_2A_FDD_t*)DLSCH_dci)->ndi1 = 1-UE_list->UE_template[CC_id][UE_id].oldNDI[harq_pid];
@@ -1534,19 +1546,6 @@ fflush(debug_sudas_LOG_MAC);
                 // deactivate TB2
         	  ((DCI2_5MHz_2A_FDD_t*)DLSCH_dci)->mcs2 = 0;
         	  ((DCI2_5MHz_2A_FDD_t*)DLSCH_dci)->rv2 = 1;
-              
-sudas_LOG_MAC(debug_sudas_LOG_MAC,"############################################################\n");                
-sudas_LOG_MAC(debug_sudas_LOG_MAC,"UE %d Frame %d Subframe %d schedule New transmission Format 2\n",UE_id, frameP, subframeP);                
-sudas_LOG_MAC(debug_sudas_LOG_MAC,"[eNB %d] New transmission CC_id %d harq_pid %d NDI1 %d\n",module_idP,CC_id,harq_pid,((DCI2_5MHz_2A_FDD_t*)DLSCH_dci)->ndi1);
-#ifdef FHG_LOG
-fflush(debug_sudas_LOG_MAC);
-#endif
-//LOG_I(MAC,"Format2 DCI: harq_pid %d, ndi %d\n",harq_pid,((DCI2_5MHz_2A_FDD_t*)DLSCH_dci)->ndi1);
-
-//LOG_I(MAC,"Format2 DCI: harq_pid %d, ndi %d\n",harq_pid,((DCI2_5MHz_2A_FDD_t*)DLSCH_dci)->ndi1);
-//LOG_I(MAC,"UE %d Frame %d Subframe %d schedule New transmission Format 2\n",UE_id, frameP, subframeP);
-
-
               break;
 	    /*
 	    // disabled for now as this needs to be done properly
@@ -2020,13 +2019,13 @@ fill_DLSCH_dci(
 
           break;
 
-
+//Author: Khodr Saaifan @ Fraunhofer IIS
+//      : For testing we add DCI format 2 aggregation level 3
         case 4:
 
-          /* sfn: DCI format 2*/
+          // DCI format_2_2A
           ((DCI2_5MHz_2A_FDD_t*)DLSCH_dci)->rballoc = allocate_prbs_sub(nb_rb,rballoc_sub);
           ((DCI2_5MHz_2A_FDD_t*)DLSCH_dci)->rah = 0;
-
           add_ue_spec_dci(DCI_pdu,
                                    DLSCH_dci,
                                    rnti,
@@ -2035,9 +2034,6 @@ fill_DLSCH_dci(
          			 sizeof_DCI2_5MHz_2A_FDD_t,
                                    format2,
                                    0);
-
-
-
           break;
 /*
         case 5:

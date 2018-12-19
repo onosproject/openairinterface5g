@@ -708,14 +708,14 @@ int dump_eNB_stats(PHY_VARS_eNB *eNB, char* buffer, int length)
 		       eNB->UE_stats[UE_id].rank,
 		       eNB->UE_stats[UE_id].rank? pmi2hex_2Ar2(eNB->UE_stats[UE_id].DL_pmi_single) : pmi2hex_2Ar1(eNB->UE_stats[UE_id].DL_pmi_single));
 
-	len += sprintf(&buffer[len],"eNB can schedule TM %d\n",eNB->UE_stats[UE_id].rank?4:2);
+	len += sprintf(&buffer[len],"eNB can schedule TM 4 PMI %d\n",eNB->UE_stats[UE_id].rank?7:0);
 
 	len += sprintf(&buffer[len],"////////////////////////******************/////////////////////////////\n");
 
 	for (i=0; i<8; i++){
 
-		len+= sprintf(&buffer[len],"DL TM %d, DL Nl %d, rb %d, TBS %d, \n",
-					      eNB->dlsch[(uint8_t)UE_id][0]->harq_processes[i]->mimo_mode==15?4 : 2,
+		len+= sprintf(&buffer[len],"DL TM 4 PMI%d, DL Nl %d, rb %d, TBS %d, \n",
+					      eNB->dlsch[(uint8_t)UE_id][0]->harq_processes[i]->mimo_mode==15?7 : 0,
 					      eNB->dlsch[(uint8_t)UE_id][0]->harq_processes[i]->Nl,
 					      eNB->dlsch[(uint8_t)UE_id][0]->harq_processes[i]->nb_rb,
 					      eNB->dlsch[(uint8_t)UE_id][0]->harq_processes[i]->TBS);

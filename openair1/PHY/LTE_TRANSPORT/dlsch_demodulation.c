@@ -37,11 +37,6 @@
 #include "PHY/sse_intrin.h"
 #include "T.h"
 
-//SFN
-#include "sudas_tm4.h"
-
-
-
 #ifndef USER_MODE
 #define NOCYGWIN_STATIC static
 #else
@@ -152,8 +147,6 @@ int rx_pdsch(PHY_VARS_UE *ue,
     break;
 
   case PDSCH:
-	//sudas_LOG_PHY(debug_sudas_LOG_PHY,"ue->DLSCH: PDSCH; \n");
-        //fflush(debug_sudas_LOG_PHY);
     pdsch_vars = ue->pdsch_vars[ue->current_thread_id[subframe]];
     dlsch = ue->dlsch[ue->current_thread_id[subframe]][eNB_id];
     //printf("status TB0 = %d, status TB1 = %d \n", dlsch[0]->harq_processes[harq_pid]->status, dlsch[1]->harq_processes[harq_pid]->status);
@@ -326,8 +319,7 @@ int rx_pdsch(PHY_VARS_UE *ue,
                                        dlsch0_harq->mimo_mode);
     }
   } else if (beamforming_mode==0) { //else if nb_antennas_ports_eNB==1 && beamforming_mode == 0
-    //1)
-	  nb_rb = dlsch_extract_rbs_single(common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].rxdataF,
+    nb_rb = dlsch_extract_rbs_single(common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].rxdataF,
                                      common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].dl_ch_estimates[eNB_id],
                                      pdsch_vars[eNB_id]->rxdataF_ext,
                                      pdsch_vars[eNB_id]->dl_ch_estimates_ext,
@@ -785,10 +777,7 @@ int rx_pdsch(PHY_VARS_UE *ue,
       }
     } else {
 
-	//sudas_LOG_PHY(debug_sudas_LOG_PHY,"ue->measurements: rx_pdsch: dlsch_detection_mrc(); \n");
-        //fflush(debug_sudas_LOG_PHY);
-    	//if (dlsch0_harq->mimo_mode<LARGE_CDD)//Apply it for Alamouti only
-    	 if (dlsch0_harq->mimo_mode != TM4_NO_PRECODING)
+	   if (dlsch0_harq->mimo_mode != TM4_NO_PRECODING)
     	 {
     	dlsch_detection_mrc(frame_parms,
                           pdsch_vars[eNB_id]->rxdataF_comp0,
@@ -818,9 +807,6 @@ int rx_pdsch(PHY_VARS_UE *ue,
       nb_rb);
     */
   } else if (dlsch0_harq->mimo_mode == ALAMOUTI) {
-//sudas_LOG_PHY(debug_sudas_LOG_PHY,"ue->measurements: rx_pdsch: dlsch_alamouti(); \n");
-//        fflush(debug_sudas_LOG_PHY);
-
     dlsch_alamouti(frame_parms,
                    pdsch_vars[eNB_id]->rxdataF_comp0,
                    pdsch_vars[eNB_id]->dl_ch_mag0,

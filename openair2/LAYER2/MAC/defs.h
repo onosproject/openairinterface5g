@@ -652,8 +652,7 @@ typedef struct {
 
   /// Number of Allocated RBs for DL after scheduling (prior to frequency allocation)
   uint16_t nb_rb[8]; // num_max_harq
-  //TM of allocated RBs
-    uint16_t Trans_Mode[8][50]; // num_max_harq
+
   /// Number of Allocated RBs for UL after scheduling (prior to frequency allocation)
   uint16_t nb_rb_ul[8]; // num_max_harq
 
