@@ -1,0 +1,233 @@
+*******************************************************************************************************
+*Below is the list of files whose conflicts have been reolved, including some comments for the files  *
+*where the conflicts are not resolved completely yet                                                  *
+*******************************************************************************************************
+
+cmake_targets/CMakeLists.txt 		(complicated and pending)
+common/config/config_cmdline.c 		(Done but not sure)
+common/config/config_userapi.c		
+d2d_emulator_setup.txt
+nfapi/oai_integration/nfapi_pnf.c
+nfapi/open-nFAPI/vnf/src/vnf_p7.c
+openair1/PHY/INIT/lte_init.c
+openair1/PHY/INIT/lte_init_ue.c
+openair1/PHY/LTE_ESTIMATION/lte_sync_time.c
+openair1/PHY/LTE_ESTIMATION/lte_ul_channel_estimation.c (Do not know which definition of lte_ul_channel_estimation() to use. It seems that
+                                                         both are needed: one for sidelink, one for normal Uplink. Pending...)
+openair1/PHY/LTE_TRANSPORT/dci.c
+openair1/PHY/LTE_TRANSPORT/dci_tools.c
+openair1/PHY/LTE_TRANSPORT/dlsch_coding.c
+openair1/PHY/LTE_TRANSPORT/pbch.c
+openair1/PHY/LTE_TRANSPORT/prach.c
+openair1/PHY/LTE_TRANSPORT/transport_eNB.h
+openair1/PHY/LTE_TRANSPORT/ulsch_demodulation.c
+openair1/PHY/LTE_UE_TRANSPORT/transport_proto_ue.h (Not sure whether the following func. definitions should be there: ulsch_qpsk_llr, 
+                                                    ulsch_16qam_llr, fill_dci_and_dlsch, fill_mdci_and_dlsch, fill_dci0,
+                                                    fill_ulsch, generate_eNB_dlsch_params_from_dci, generate_eNB_ulsch_params_from_rar.
+                                                     Same for: ul_subframe2pdcch_alloc_subframe, find_dlsch, )
+openair1/PHY/MODULATION/slot_fep_ul.c
+openair1/PHY/defs_eNB.h (Removed definitons of typedef uint8_t(decoder_if_t) and typedef uint8_t(*encoder_if_t)(uint8_t *input from defs_enb.h and left 
+                         only the corresponding definitions in defs_common.h. However they are slightly different. I kept the ones that were in  
+                         defs_enb.h (i.e., modified the ones on defs_common so that they are identical with the ones in defs_enb.h. Not sure if 
+                         this is correct).
+openair1/PHY/impl_defs_lte.h
+openair1/PHY/phy_vars.h
+openair1/SCHED/fapi_l1.c
+openair1/SCHED/phy_procedures_lte_eNb.c
+openair1/SCHED/sched_common.h (There are a lot of function definitions which are also in other header files and they differ. Not sure which one I 
+                              should keep.)
+
+openair1/SCHED_UE/phy_procedures_lte_ue.c
+openair1/SIMULATION/ETH_TRANSPORT/multicast_link.c
+openair1/SIMULATION/LTE_PHY/dlsim.c
+openair2/COMMON/mac_rrc_primitives.h
+openair2/COMMON/platform_types.h
+
+
+
+
+*******************************************************************************************************
+*Below is the pending list of files with conflicts that remain to be resolved                         *
+*******************************************************************************************************
+
+	deleted by them: openair1/PHY/TOOLS/file_output.c
+        deleted by them: openair1/SCHED/pusch_pc.c
+        both modified:   openair2/COMMON/rrc_messages_types.h
+	both modified:   openair2/ENB_APP/enb_config.c
+	both modified:   openair2/ENB_APP/enb_paramdef.h
+	both modified:   openair2/ENB_APP/flexran_agent_ran_api.c
+	both modified:   openair2/LAYER2/MAC/config.c
+	both modified:   openair2/LAYER2/MAC/config_ue.c
+	both modified:   openair2/LAYER2/MAC/eNB_scheduler.c
+	both modified:   openair2/LAYER2/MAC/eNB_scheduler_RA.c
+	both modified:   openair2/LAYER2/MAC/eNB_scheduler_dlsch.c
+	both modified:   openair2/LAYER2/MAC/eNB_scheduler_mch.c
+	both modified:   openair2/LAYER2/MAC/eNB_scheduler_ulsch.c
+	both modified:   openair2/LAYER2/MAC/mac.h
+	both modified:   openair2/LAYER2/MAC/mac_proto.h
+	both modified:   openair2/LAYER2/MAC/pre_processor.c
+	both modified:   openair2/LAYER2/MAC/ra_procedures.c
+	both modified:   openair2/LAYER2/MAC/ue_procedures.c
+	both modified:   openair2/LAYER2/PDCP_v10.1.0/pdcp.c
+	both modified:   openair2/LAYER2/PDCP_v10.1.0/pdcp.h
+	both modified:   openair2/LAYER2/PDCP_v10.1.0/pdcp_fifo.c
+	both modified:   openair2/LAYER2/PDCP_v10.1.0/pdcp_proto_extern.h
+	both modified:   openair2/LAYER2/RLC/UM_v9.3.0/rlc_um.c
+	both modified:   openair2/LAYER2/RLC/UM_v9.3.0/rlc_um.h
+	both modified:   openair2/LAYER2/RLC/UM_v9.3.0/rlc_um_control_primitives.c
+	both modified:   openair2/LAYER2/RLC/UM_v9.3.0/rlc_um_control_primitives.h
+	both modified:   openair2/LAYER2/RLC/rlc.c
+	both modified:   openair2/LAYER2/RLC/rlc.h
+	both modified:   openair2/LAYER2/RLC/rlc_mac.c
+	both modified:   openair2/LAYER2/RLC/rlc_mpls.c
+	both modified:   openair2/LAYER2/RLC/rlc_rrc.c
+	both modified:   openair2/NETWORK_DRIVER/UE_IP/common.c
+	both modified:   openair2/NETWORK_DRIVER/UE_IP/device.c
+	both modified:   openair2/NETWORK_DRIVER/UE_IP/local.h
+	both modified:   openair2/PHY_INTERFACE/IF_Module.c
+	both added:      openair2/PHY_INTERFACE/UE_MAC_interface.h
+	both added:      openair2/PHY_INTERFACE/phy_stub_UE.c
+	both added:      openair2/PHY_INTERFACE/phy_stub_UE.h
+	both modified:   openair2/RRC/LTE/L2_interface.c
+	both modified:   openair2/RRC/LTE/L2_interface_ue.c
+	both modified:   openair2/RRC/LTE/MESSAGES/asn1_msg.c
+	both modified:   openair2/RRC/LTE/MESSAGES/asn1_msg.h
+	both modified:   openair2/RRC/LTE/rrc_UE.c
+	both modified:   openair2/RRC/LTE/rrc_defs.h
+	both modified:   openair2/RRC/LTE/rrc_eNB.c
+	both modified:   openair2/RRC/LTE/rrc_proto.h
+	deleted by them: openair2/UTIL/LOG/log.c
+	deleted by them: openair2/UTIL/LOG/log.h
+	both modified:   openair3/GTPV1-U/gtpv1u_eNB.c
+	both modified:   targets/ARCH/USRP/USERSPACE/LIB/usrp_lib.cpp
+	both added:      targets/PROJECTS/GENERIC-LTE-EPC/CONF/enb.band7.tm1.50PRB.usrpb210-d2d.conf
+	both modified:   targets/PROJECTS/GENERIC-LTE-EPC/CONF/enb.band7.tm1.50PRB.usrpb210.conf
+	both added:      targets/PROJECTS/GENERIC-LTE-EPC/CONF/rcc.band7.tm1.50PRB.nfapi-STUB.conf
+	both modified:   targets/PROJECTS/GENERIC-LTE-EPC/CONF/rcc.band7.tm1.50PRB.nfapi.conf
+	both modified:   targets/RT/USER/lte-enb.c
+	deleted by them: targets/RT/USER/lte-ran.c
+	both modified:   targets/RT/USER/lte-ru.c
+	both modified:   targets/RT/USER/lte-softmodem.c
+	both modified:   targets/RT/USER/lte-softmodem.h
+	both modified:   targets/RT/USER/lte-ue.c
+	both modified:   targets/RT/USER/lte-uesoftmodem.c
+	deleted by them: targets/SIMU/USER/channel_sim.c (Shouldn't remove that)
+
+
+
+
+
+
+
+*******************************************************************************************************
+*Below is the initial list of files with conflicts right after the merge                              *
+*******************************************************************************************************
+
+	both modified:   cmake_targets/CMakeLists.txt
+	both modified:   common/config/config_cmdline.c
+	both modified:   common/config/config_userapi.c
+	both added:      d2d_emulator_setup.txt
+	both modified:   nfapi/oai_integration/nfapi_pnf.c
+	both modified:   nfapi/open-nFAPI/vnf/src/vnf_p7.c
+	both modified:   openair1/PHY/INIT/lte_init.c
+	both modified:   openair1/PHY/INIT/lte_init_ue.c
+	both modified:   openair1/PHY/LTE_ESTIMATION/lte_sync_time.c
+	both modified:   openair1/PHY/LTE_ESTIMATION/lte_ul_channel_estimation.c
+	both modified:   openair1/PHY/LTE_TRANSPORT/dci.c
+	both modified:   openair1/PHY/LTE_TRANSPORT/dci_tools.c
+	both modified:   openair1/PHY/LTE_TRANSPORT/dlsch_coding.c
+	both modified:   openair1/PHY/LTE_TRANSPORT/pbch.c
+	both modified:   openair1/PHY/LTE_TRANSPORT/prach.c
+	both modified:   openair1/PHY/LTE_TRANSPORT/transport_eNB.h
+	both modified:   openair1/PHY/LTE_TRANSPORT/ulsch_demodulation.c
+	both modified:   openair1/PHY/LTE_UE_TRANSPORT/transport_proto_ue.h
+	both modified:   openair1/PHY/MODULATION/slot_fep_ul.c
+	deleted by them: openair1/PHY/TOOLS/file_output.c
+	both modified:   openair1/PHY/defs_eNB.h
+	both modified:   openair1/PHY/impl_defs_lte.h
+	both modified:   openair1/PHY/phy_vars.h
+	both modified:   openair1/SCHED/fapi_l1.c
+	both modified:   openair1/SCHED/phy_procedures_lte_eNb.c
+	deleted by them: openair1/SCHED/pusch_pc.c
+	both modified:   openair1/SCHED/sched_common.h
+	both modified:   openair1/SCHED_UE/phy_procedures_lte_ue.c
+	both modified:   openair1/SIMULATION/ETH_TRANSPORT/multicast_link.c
+	both modified:   openair1/SIMULATION/LTE_PHY/dlsim.c
+	both modified:   openair2/COMMON/mac_rrc_primitives.h
+	both modified:   openair2/COMMON/platform_types.h               #We have done up to here
+	both modified:   openair2/COMMON/rrc_messages_types.h
+	both modified:   openair2/ENB_APP/enb_config.c
+	both modified:   openair2/ENB_APP/enb_paramdef.h
+	both modified:   openair2/ENB_APP/flexran_agent_ran_api.c
+	both modified:   openair2/LAYER2/MAC/config.c
+	both modified:   openair2/LAYER2/MAC/config_ue.c
+	both modified:   openair2/LAYER2/MAC/eNB_scheduler.c
+	both modified:   openair2/LAYER2/MAC/eNB_scheduler_RA.c
+	both modified:   openair2/LAYER2/MAC/eNB_scheduler_dlsch.c
+	both modified:   openair2/LAYER2/MAC/eNB_scheduler_mch.c
+	both modified:   openair2/LAYER2/MAC/eNB_scheduler_ulsch.c
+	both modified:   openair2/LAYER2/MAC/mac.h
+	both modified:   openair2/LAYER2/MAC/mac_proto.h
+	both modified:   openair2/LAYER2/MAC/pre_processor.c
+	both modified:   openair2/LAYER2/MAC/ra_procedures.c
+	both modified:   openair2/LAYER2/MAC/ue_procedures.c
+	both modified:   openair2/LAYER2/PDCP_v10.1.0/pdcp.c
+	both modified:   openair2/LAYER2/PDCP_v10.1.0/pdcp.h
+	both modified:   openair2/LAYER2/PDCP_v10.1.0/pdcp_fifo.c
+	both modified:   openair2/LAYER2/PDCP_v10.1.0/pdcp_proto_extern.h
+	both modified:   openair2/LAYER2/RLC/UM_v9.3.0/rlc_um.c
+	both modified:   openair2/LAYER2/RLC/UM_v9.3.0/rlc_um.h
+	both modified:   openair2/LAYER2/RLC/UM_v9.3.0/rlc_um_control_primitives.c
+	both modified:   openair2/LAYER2/RLC/UM_v9.3.0/rlc_um_control_primitives.h
+	both modified:   openair2/LAYER2/RLC/rlc.c
+	both modified:   openair2/LAYER2/RLC/rlc.h
+	both modified:   openair2/LAYER2/RLC/rlc_mac.c
+	both modified:   openair2/LAYER2/RLC/rlc_mpls.c
+	both modified:   openair2/LAYER2/RLC/rlc_rrc.c
+	both modified:   openair2/NETWORK_DRIVER/UE_IP/common.c
+	both modified:   openair2/NETWORK_DRIVER/UE_IP/device.c
+	both modified:   openair2/NETWORK_DRIVER/UE_IP/local.h
+	both modified:   openair2/PHY_INTERFACE/IF_Module.c
+	both added:      openair2/PHY_INTERFACE/UE_MAC_interface.h
+	both added:      openair2/PHY_INTERFACE/phy_stub_UE.c
+	both added:      openair2/PHY_INTERFACE/phy_stub_UE.h
+	both modified:   openair2/RRC/LTE/L2_interface.c
+	both modified:   openair2/RRC/LTE/L2_interface_ue.c
+	both modified:   openair2/RRC/LTE/MESSAGES/asn1_msg.c
+	both modified:   openair2/RRC/LTE/MESSAGES/asn1_msg.h
+	both modified:   openair2/RRC/LTE/rrc_UE.c
+	both modified:   openair2/RRC/LTE/rrc_defs.h
+	both modified:   openair2/RRC/LTE/rrc_eNB.c
+	both modified:   openair2/RRC/LTE/rrc_proto.h
+	deleted by them: openair2/UTIL/LOG/log.c
+	deleted by them: openair2/UTIL/LOG/log.h
+	both modified:   openair3/GTPV1-U/gtpv1u_eNB.c
+	both modified:   targets/ARCH/USRP/USERSPACE/LIB/usrp_lib.cpp
+	both added:      targets/PROJECTS/GENERIC-LTE-EPC/CONF/enb.band7.tm1.50PRB.usrpb210-d2d.conf
+	both modified:   targets/PROJECTS/GENERIC-LTE-EPC/CONF/enb.band7.tm1.50PRB.usrpb210.conf
+	both added:      targets/PROJECTS/GENERIC-LTE-EPC/CONF/rcc.band7.tm1.50PRB.nfapi-STUB.conf
+	both modified:   targets/PROJECTS/GENERIC-LTE-EPC/CONF/rcc.band7.tm1.50PRB.nfapi.conf
+	both modified:   targets/RT/USER/lte-enb.c
+	deleted by them: targets/RT/USER/lte-ran.c
+	both modified:   targets/RT/USER/lte-ru.c
+	both modified:   targets/RT/USER/lte-softmodem.c
+	both modified:   targets/RT/USER/lte-softmodem.h
+	both modified:   targets/RT/USER/lte-ue.c
+	both modified:   targets/RT/USER/lte-uesoftmodem.c
+	deleted by them: targets/SIMU/USER/channel_sim.c (Shouldn't remove that)
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git checkout -- <file>..." to discard changes in working directory)
+
+	modified:   openair1/PHY/LTE_UE_TRANSPORT/pbch_ue.c
+	modified:   openair1/PHY/defs_UE.h
+	modified:   openair1/PHY/defs_common.h
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+
+	.cproject
+	.project
+	diff_merge_develop.patch
+
