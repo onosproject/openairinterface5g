@@ -568,6 +568,14 @@ generate_Msg2(module_id_t module_idP, int CC_idP, frame_t frameP,
 		dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.num_bf_prb_per_subband                 = 1;
 		dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.num_bf_vector                          = 1;
 		//    dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.bf_vector                    = ; 
+		// Rel10 fields
+		dl_config_pdu->dlsch_pdu.dlsch_pdu_rel10.tl.tag                                = NFAPI_DL_CONFIG_REQUEST_DLSCH_PDU_REL10_TAG;
+		dl_config_pdu->dlsch_pdu.dlsch_pdu_rel10.pdsch_start                           = cc->sib1_v13ext->bandwidthReducedAccessRelatedInfo_r13->startSymbolBR_r13;
+		// Rel13 fields
+		dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.tl.tag                                = NFAPI_DL_CONFIG_REQUEST_DLSCH_PDU_REL13_TAG;
+		dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.ue_type                               = 0;
+		dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.pdsch_payload_type                    = 2;    // not BR
+		dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.initial_transmission_sf_io            = 0xFFFF;   // absolute SF              = 0;
 		dl_req->number_pdu++;
                 mac->DL_req[CC_idP].sfn_sf = frameP<<4 | subframeP;
 

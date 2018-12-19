@@ -2105,10 +2105,12 @@ void schedule_PCH(module_id_t module_idP, frame_t frameP, sub_frame_t subframeP)
 
 	// Rel10 fields
 #if (LTE_RRC_VERSION >= MAKE_VERSION(10, 0, 0))
+	dl_config_pdu->dlsch_pdu.dlsch_pdu_rel10.tl.tag                                = NFAPI_DL_CONFIG_REQUEST_DLSCH_PDU_REL10_TAG;
 	dl_config_pdu->dlsch_pdu.dlsch_pdu_rel10.pdsch_start                           = 3;
 #endif
 	// Rel13 fields
 #if (LTE_RRC_VERSION >= MAKE_VERSION(13, 0, 0))
+	dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.tl.tag                                 = NFAPI_DL_CONFIG_REQUEST_DLSCH_PDU_REL13_TAG;
 	dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.ue_type                               = 0; // regular UE
 	dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.pdsch_payload_type                    = 2; // not BR
 	dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.initial_transmission_sf_io            = 0xFFFF;
