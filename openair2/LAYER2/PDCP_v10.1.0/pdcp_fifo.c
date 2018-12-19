@@ -46,16 +46,16 @@ extern int otg_enabled;
 #define rtf_put write
 #define rtf_get read
 
-#include "../MAC/extern.h"
+#include "../MAC/mac_extern.h"
 #include "RRC/L2_INTERFACE/openair_rrc_L2_interface.h"
 #include "NETWORK_DRIVER/LITE/constant.h"
-#include "SIMULATION/ETH_TRANSPORT/extern.h"
+//#include "SIMULATION/ETH_TRANSPORT/extern.h"
 #include "UTIL/OCG/OCG.h"
 #include "UTIL/OCG/OCG_extern.h"
-#include "UTIL/LOG/log.h"
+#include "common/utils/LOG/log.h"
 #include "UTIL/OTG/otg_tx.h"
 #include "UTIL/FIFO/pad_list.h"
-#include "UTIL/LOG/vcd_signal_dumper.h"
+#include "common/utils/LOG/vcd_signal_dumper.h"
 #include "platform_constants.h"
 #include "msc.h"
 #include "pdcp.h"
@@ -74,7 +74,7 @@ extern struct nlmsghdr *nas_nlh_rx;
 extern struct iovec nas_iov_tx;
 extern struct iovec nas_iov_rx;
 #ifdef UE_NAS_USE_TUN
-extern int nas_sock_fd[NUMBER_OF_UE_MAX];
+extern int nas_sock_fd[MAX_MOBILES_PER_ENB];
 #else
 extern int nas_sock_fd;
 #endif
@@ -168,7 +168,11 @@ int pdcp_fifo_flush_sdus(const protocol_ctxt_t* const  ctxt_pP)
             ((pdcp_data_ind_header_t*) sdu_p->data)->inst,
             ((pdcp_data_ind_header_t *) sdu_p->data)->data_size);
 #else
+<<<<<<< HEAD
      // ((pdcp_data_ind_header_t *)(sdu_p->data))->inst = 0;
+=======
+      ((pdcp_data_ind_header_t *)(sdu_p->data))->inst = 0;
+>>>>>>> main/develop
 #endif
 
 #ifdef Rel14
@@ -191,7 +195,11 @@ int pdcp_fifo_flush_sdus(const protocol_ctxt_t* const  ctxt_pP)
          LOG_D(PDCP,"Sending to GTPV1U %d bytes\n", ((pdcp_data_ind_header_t *)(sdu_p->data))->data_size);
          gtpv1u_new_data_req(
                ctxt_pP->module_id, //gtpv1u_data_t *gtpv1u_data_p,
+<<<<<<< HEAD
                ctxt_pP->rnti,//rb_id/maxDRB, TO DO UE ID
+=======
+               ctxt_pP->rnti,//rb_id/LTE_maxDRB, TO DO UE ID
+>>>>>>> main/develop
                ((pdcp_data_ind_header_t *)(sdu_p->data))->rb_id + 4,
                &(((uint8_t *) sdu_p->data)[sizeof (pdcp_data_ind_header_t)]),
                ((pdcp_data_ind_header_t *)(sdu_p->data))->data_size,
@@ -208,30 +216,51 @@ int pdcp_fifo_flush_sdus(const protocol_ctxt_t* const  ctxt_pP)
 
 #endif /* defined(ENABLE_USE_MME) */
 #ifdef PDCP_DEBUG
+<<<<<<< HEAD
       LOG_I(PDCP, "PDCP->IP TTI %d INST %d: Preparing %d Bytes of data from rab %d to Nas_mesh\n",
+=======
+      LOG_D(PDCP, "PDCP->IP TTI %d INST %d: Preparing %d Bytes of data from rab %d to Nas_mesh\n",
+>>>>>>> main/develop
             ctxt_pP->frame, ((pdcp_data_ind_header_t *)(sdu_p->data))->inst,
             ((pdcp_data_ind_header_t *)(sdu_p->data))->data_size, ((pdcp_data_ind_header_t *)(sdu_p->data))->rb_id);
 #endif //PDCP_DEBUG
       cont = 0;
 
 //TTN - for D2D (PC5S)
+<<<<<<< HEAD
 #ifdef Rel14
+=======
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
+>>>>>>> main/develop
       sidelink_pc5s_element *sl_pc5s_msg_recv = NULL;
       char send_buf[BUFSIZE];
       int rb_id = ((pdcp_data_ind_header_t *)(sdu_p->data))->rb_id;
 
+<<<<<<< HEAD
       if (rb_id >= MAX_NUM_LCID_DATA) { //hardcoded for PC5-Signaling
+=======
+      if (rb_id == 10) { //hardcoded for PC5-Signaling
+>>>>>>> main/develop
       //if ((rb_id == 28) | (rb_id == 29) | (rb_id == 30))
 
 #ifdef PDCP_DEBUG
          sl_pc5s_msg_recv = calloc(1, sizeof(sidelink_pc5s_element));
          memcpy((void*)sl_pc5s_msg_recv, (void*)(sdu_p->data+sizeof(pdcp_data_ind_header_t)), sizeof(sidelink_pc5s_element));
+<<<<<<< HEAD
          LOG_I(PDCP,"Received PC5S message, header traffic_type: %d)\n", sl_pc5s_msg_recv->pc5s_header.traffic_type);
          LOG_I(PDCP,"Received PC5S message, header rb_id: %d)\n", sl_pc5s_msg_recv->pc5s_header.rb_id);
          LOG_I(PDCP,"Received PC5S message, header data_size: %d)\n", sl_pc5s_msg_recv->pc5s_header.data_size);
          LOG_I(PDCP,"Received PC5S message, header inst: %d)\n", sl_pc5s_msg_recv->pc5s_header.inst);
          LOG_I(PDCP,"Received PC5-S message, sourceL2Id: 0x%08x\n)\n", sl_pc5s_msg_recv->pc5s_header.sourceL2Id);
          LOG_I(PDCP,"Received PC5-S message, destinationL1Id: 0x%08x\n)\n", sl_pc5s_msg_recv->pc5s_header.destinationL2Id);
+=======
+         LOG_D(PDCP,"Received PC5S message, header traffic_type: %d)\n", sl_pc5s_msg_recv->pc5s_header.traffic_type);
+         LOG_D(PDCP,"Received PC5S message, header rb_id: %d)\n", sl_pc5s_msg_recv->pc5s_header.rb_id);
+         LOG_D(PDCP,"Received PC5S message, header data_size: %d)\n", sl_pc5s_msg_recv->pc5s_header.data_size);
+         LOG_D(PDCP,"Received PC5S message, header inst: %d)\n", sl_pc5s_msg_recv->pc5s_header.inst);
+         LOG_D(PDCP,"Received PC5-S message, sourceL2Id: 0x%08x\n)\n", sl_pc5s_msg_recv->pc5s_header.sourceL2Id);
+         LOG_D(PDCP,"Received PC5-S message, destinationL1Id: 0x%08x\n)\n", sl_pc5s_msg_recv->pc5s_header.destinationL2Id);
+>>>>>>> main/develop
          free(sl_pc5s_msg_recv);
 #endif
          memset(send_buf, 0, BUFSIZE);
@@ -250,7 +279,10 @@ int pdcp_fifo_flush_sdus(const protocol_ctxt_t* const  ctxt_pP)
          if (!pdcp_output_header_bytes_to_write) {
             pdcp_output_header_bytes_to_write = sizeof (pdcp_data_ind_header_t);
          }
+<<<<<<< HEAD
          //LOG_I(PDCP, "Panos-D: pdcp_fifo_flush_sdus() in PDCP_USE_NETLINK 0 \n");
+=======
+>>>>>>> main/develop
 
 #ifdef PDCP_USE_RT_FIFO
          bytes_wrote = rtf_put (PDCP2PDCP_USE_RT_FIFO,
@@ -261,7 +293,10 @@ int pdcp_fifo_flush_sdus(const protocol_ctxt_t* const  ctxt_pP)
 #ifdef PDCP_USE_NETLINK
          //LOG_I(PDCP, "Panos-D: pdcp_fifo_flush_sdus() in PDCP_USE_NETLINK 0.1 \n");
 #ifdef LINUX
+<<<<<<< HEAD
          //LOG_I(PDCP, "Panos-D: pdcp_fifo_flush_sdus() in PDCP_USE_NETLINK 1 \n");
+=======
+>>>>>>> main/develop
          memcpy(NLMSG_DATA(nas_nlh_tx), &(((uint8_t *) sdu_p->data)[sizeof (pdcp_data_ind_header_t) - pdcp_output_header_bytes_to_write]),
                pdcp_output_header_bytes_to_write);
          nas_nlh_tx->nlmsg_len = pdcp_output_header_bytes_to_write;
@@ -337,7 +372,11 @@ int pdcp_fifo_flush_sdus(const protocol_ctxt_t* const  ctxt_pP)
 #endif // PDCP_USE_RT_FIFO
 
 #ifdef PDCP_DEBUG
+<<<<<<< HEAD
                LOG_I(PDCP, "PDCP->IP Frame %d INST %d: Sent %d Bytes of data from rab %d to higher layers\n",
+=======
+               LOG_D(PDCP, "PDCP->IP Frame %d INST %d: Sent %d Bytes of data from rab %d to higher layers\n",
+>>>>>>> main/develop
                      ctxt_pP->frame,
                      ((pdcp_data_ind_header_t *)(sdu_p->data))->inst,
                      bytes_wrote,
@@ -349,7 +388,11 @@ int pdcp_fifo_flush_sdus(const protocol_ctxt_t* const  ctxt_pP)
 
                   if (!pdcp_output_sdu_bytes_to_write) { // OK finish with this SDU
                      // LOG_D(PDCP, "rb sent a sdu qos_sap %d\n", sapiP);
+<<<<<<< HEAD
                      LOG_I(PDCP,
+=======
+                     LOG_D(PDCP,
+>>>>>>> main/develop
                            "[FRAME %05d][xxx][PDCP][MOD xx/xx][RB %u][--- PDCP_DATA_IND / %d Bytes --->][IP][INSTANCE %u][RB %u]\n",
                            ctxt_pP->frame,
                            ((pdcp_data_ind_header_t *)(sdu_p->data))->rb_id,
@@ -368,7 +411,10 @@ int pdcp_fifo_flush_sdus(const protocol_ctxt_t* const  ctxt_pP)
                   }
                } else {
                   LOG_W(PDCP, "2: RADIO->IP SEND SDU CONGESTION!\n");
+<<<<<<< HEAD
                   AssertFatal(1==0,"congestion, aborting\n");
+=======
+>>>>>>> main/develop
                }
             } else {
                LOG_W(PDCP, "3: RADIO->IP SEND SDU CONGESTION!\n");
@@ -471,12 +517,21 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
                          ctxt.instance, rab_id, rab_id, len);
 
       pdcp_data_req(&ctxt, SRB_FLAG_NO, rab_id, RLC_MUI_UNDEFINED,
+<<<<<<< HEAD
                     RLC_SDU_CONFIRM_NO, len, nl_rx_buf,
                     PDCP_TRANSMISSION_MODE_DATA
 #ifdef Rel14
                     ,NULL, NULL
 #endif
         );
+=======
+                    RLC_SDU_CONFIRM_NO, len, (unsigned char *)nl_rx_buf,
+                    PDCP_TRANSMISSION_MODE_DATA
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
+                    , NULL, NULL
+#endif
+                   );
+>>>>>>> main/develop
     } else {
       MSC_LOG_RX_DISCARDED_MESSAGE(
       (ctxt_pP->enb_flag == ENB_FLAG_YES) ? MSC_PDCP_ENB:MSC_PDCP_UE,
@@ -509,10 +564,16 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
    pdcp_t*                        pdcp_p    = NULL;
 
 //TTN for D2D (PC5S)
+<<<<<<< HEAD
 #ifdef Rel14
    int prose_addr_len;
    char send_buf[BUFSIZE], receive_buf[BUFSIZE];
    // Panos: Remove the following definitions due to warnings of unused variables.
+=======
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
+   int prose_addr_len;
+   char send_buf[BUFSIZE], receive_buf[BUFSIZE];
+>>>>>>> main/develop
    //int optval;
    int bytes_received;
    sidelink_pc5s_element *sl_pc5s_msg_recv = NULL;
@@ -531,7 +592,11 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
 
    while (pdcp_netlink_dequeue_element(ctxt_pP, &data_p) != 0) {
       DevAssert(data_p != NULL);
+<<<<<<< HEAD
       rab_id = data_p->pdcp_read_header.rb_id % maxDRB;
+=======
+      rab_id = data_p->pdcp_read_header.rb_id % LTE_maxDRB;
+>>>>>>> main/develop
       // ctxt_pP->rnti is NOT_A_RNTI
       ctxt_cpy.rnti = pdcp_module_id_to_rnti[ctxt_cpy.module_id][data_p->pdcp_read_header.inst];
       key = PDCP_COLL_KEY_VALUE(ctxt_pP->module_id, ctxt_cpy.rnti, ctxt_pP->enb_flag, rab_id, SRB_FLAG_NO);
@@ -548,7 +613,11 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
 
       CHECK_CTXT_ARGS(&ctxt_cpy);
 
+<<<<<<< HEAD
       AssertFatal (rab_id    < maxDRB,                       "RB id is too high (%u/%d)!\n", rab_id, maxDRB);
+=======
+      AssertFatal (rab_id    < LTE_maxDRB,                       "RB id is too high (%u/%d)!\n", rab_id, LTE_maxDRB);
+>>>>>>> main/develop
 
       if (rab_id != 0) {
          LOG_D(PDCP, "[FRAME %05d][%s][IP][INSTANCE %u][RB %u][--- PDCP_DATA_REQ "
@@ -565,7 +634,11 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
          if ((data_p->pdcp_read_header.traffic_type == TRAFFIC_IPV6_TYPE_MULTICAST) /*TRAFFIC_IPV6_TYPE_MULTICAST */ ||
                (data_p->pdcp_read_header.traffic_type == TRAFFIC_IPV4_TYPE_MULTICAST) /*TRAFFIC_IPV4_TYPE_MULTICAST */ ||
                (data_p->pdcp_read_header.traffic_type == TRAFFIC_IPV4_TYPE_BROADCAST) /*TRAFFIC_IPV4_TYPE_BROADCAST */ ) {
+<<<<<<< HEAD
 #if defined(Rel10) || defined(Rel14)
+=======
+#if (LTE_RRC_VERSION >= MAKE_VERSION(10, 0, 0))
+>>>>>>> main/develop
             PDCP_TRANSMISSION_MODE_TRANSPARENT;
 #else
             pdcp_mode= PDCP_TRANSMISSION_MODE_DATA;
@@ -583,13 +656,21 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
 #endif
          pdcp_data_req(&ctxt_cpy,
                SRB_FLAG_NO,
+<<<<<<< HEAD
                rab_id % maxDRB,
+=======
+               rab_id % LTE_maxDRB,
+>>>>>>> main/develop
                RLC_MUI_UNDEFINED,
                RLC_SDU_CONFIRM_NO,
                data_p->pdcp_read_header.data_size,
                data_p->data,
                pdcp_mode
+<<<<<<< HEAD
 #ifdef Rel14
+=======
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
+>>>>>>> main/develop
                ,NULL, NULL
 #endif
                );
@@ -617,7 +698,11 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
                      data_p->pdcp_read_header.data_size,
                      data_p->data,
                      PDCP_TRANSMISSION_MODE_DATA
+<<<<<<< HEAD
 #ifdef Rel14
+=======
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
+>>>>>>> main/develop
                      ,NULL, NULL
 #endif
                      );
@@ -634,7 +719,11 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
                data_p->pdcp_read_header.data_size,
                data_p->data,
                PDCP_TRANSMISSION_MODE_DATA
+<<<<<<< HEAD
 #ifdef Rel14
+=======
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
+>>>>>>> main/develop
                ,NULL, NULL
 #endif
                );
@@ -654,7 +743,11 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
 
 
 //TTN for D2D (PC5S)
+<<<<<<< HEAD
 #ifdef Rel14
+=======
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
+>>>>>>> main/develop
    prose_addr_len = sizeof(prose_pdcp_addr);
    // receive a message from ProSe App
    memset(receive_buf, 0, BUFSIZE);
@@ -684,6 +777,7 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
             exit(EXIT_FAILURE);
          }
       } else if (pc5s_header->traffic_type == TRAFFIC_PC5S_SIGNALLING) { //if containing PC5-S message -> send to other UE
+<<<<<<< HEAD
          LOG_I(PDCP,"Received PC5-S message ... send to the other UE\n");
 #ifdef PDCP_DEBUG
          LOG_I(PDCP,"Received PC5-S message, traffic_type: %d)\n", pc5s_header->traffic_type);
@@ -692,6 +786,16 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
          LOG_I(PDCP,"Received PC5-S message, inst: %d)\n", pc5s_header->inst);
          LOG_I(PDCP,"Received PC5-S message,sourceL2Id: 0x%08x\n)\n", pc5s_header->sourceL2Id);
          LOG_I(PDCP,"Received PC5-S message,destinationL1Id: 0x%08x\n)\n", pc5s_header->destinationL2Id);
+=======
+         LOG_D(PDCP,"Received PC5-S message ... send to the other UE\n");
+#ifdef PDCP_DEBUG
+         LOG_D(PDCP,"Received PC5-S message, traffic_type: %d)\n", pc5s_header->traffic_type);
+         LOG_D(PDCP,"Received PC5-S message, rbid: %d)\n", pc5s_header->rb_id);
+         LOG_D(PDCP,"Received PC5-S message, data_size: %d)\n", pc5s_header->data_size);
+         LOG_D(PDCP,"Received PC5-S message, inst: %d)\n", pc5s_header->inst);
+         LOG_D(PDCP,"Received PC5-S message,sourceL2Id: 0x%08x\n)\n", pc5s_header->sourceL2Id);
+         LOG_D(PDCP,"Received PC5-S message,destinationL1Id: 0x%08x\n)\n", pc5s_header->destinationL2Id);
+>>>>>>> main/develop
 
 #endif
 
@@ -702,18 +806,31 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
             ctxt.frame         = ctxt_cpy.frame;
             ctxt.enb_flag      = ENB_FLAG_YES;
             ctxt.module_id     = pc5s_header.inst  +  oai_emulation.info.first_enb_local;
+<<<<<<< HEAD
             ctxt.rnti          = oai_emulation.info.eNB_ue_module_id_to_rnti[ctxt.module_id ][pc5s_header->rb_id / maxDRB + oai_emulation.info.first_ue_local];
             rab_id    = pc5s_header->rb_id % maxDRB;
+=======
+            ctxt.rnti          = oai_emulation.info.eNB_ue_module_id_to_rnti[ctxt.module_id ][pc5s_header->rb_id / LTE_maxDRB + oai_emulation.info.first_ue_local];
+            rab_id    = pc5s_header->rb_id % LTE_maxDRB;
+>>>>>>> main/develop
          } else {
             ctxt.frame         = ctxt_cpy.frame;
             ctxt.enb_flag      = ENB_FLAG_NO;
             ctxt.module_id     = pc5s_header->inst - oai_emulation.info.nb_enb_local + oai_emulation.info.first_ue_local;
             ctxt.rnti          = pdcp_UE_UE_module_id_to_rnti[ctxt.module_id];
+<<<<<<< HEAD
             rab_id    = pc5s_header->rb_id % maxDRB;
          }
 
          CHECK_CTXT_ARGS(&ctxt);
          AssertFatal (rab_id    < maxDRB,                       "RB id is too high (%u/%d)!\n", rab_id, maxDRB);
+=======
+            rab_id    = pc5s_header->rb_id % LTE_maxDRB;
+         }
+
+         CHECK_CTXT_ARGS(&ctxt);
+         AssertFatal (rab_id    < LTE_maxDRB,                       "RB id is too high (%u/%d)!\n", rab_id, LTE_maxDRB);
+>>>>>>> main/develop
          /*LGpdcp_read_header.inst = (pc5s_header.inst >= oai_emulation.info.nb_enb_local) ? \
                   pc5s_header.inst - oai_emulation.info.nb_enb_local+ NB_eNB_INST + oai_emulation.info.first_ue_local :
                   pc5s_header.inst +  oai_emulation.info.first_enb_local;*/
@@ -728,11 +845,19 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
 
          if (ctxt_cpy.enb_flag) {
             ctxt.module_id = 0;
+<<<<<<< HEAD
             rab_id      = pc5s_header->rb_id % maxDRB;
             ctxt.rnti          = pdcp_eNB_UE_instance_to_rnti[pdcp_eNB_UE_instance_to_rnti_index];
          } else {
             ctxt.module_id = 0;
             rab_id      = pc5s_header->rb_id % maxDRB;
+=======
+            rab_id      = pc5s_header->rb_id % LTE_maxDRB;
+            ctxt.rnti          = pdcp_eNB_UE_instance_to_rnti[pdcp_eNB_UE_instance_to_rnti_index];
+         } else {
+            ctxt.module_id = 0;
+            rab_id      = pc5s_header->rb_id % LTE_maxDRB;
+>>>>>>> main/develop
             ctxt.rnti          = pdcp_UE_UE_module_id_to_rnti[ctxt.module_id];
          }
 #endif
@@ -741,6 +866,7 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
          if (!ctxt.enb_flag) {
             if (rab_id != 0) {
                if (rab_id == UE_IP_DEFAULT_RAB_ID) {
+<<<<<<< HEAD
                   LOG_D(PDCP, "PDCP_COLL_KEY_DEFAULT_DRB_VALUE(module_id=%d, rnti=%x, enb_flag=%d)\n",
                         ctxt.module_id, ctxt.rnti, ctxt.enb_flag);
                   key = PDCP_COLL_KEY_DEFAULT_DRB_VALUE(ctxt.module_id, ctxt.rnti, ctxt.enb_flag);
@@ -755,6 +881,21 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
                   h_rc = hashtable_get(pdcp_coll_p, key, (void**)&pdcp_p);
 
                   LOG_D(PDCP,"request key %x : (%d,%x,%d,%d)\n",
+=======
+                  LOG_I(PDCP, "PDCP_COLL_KEY_DEFAULT_DRB_VALUE(module_id=%d, rnti=%x, enb_flag=%d)\n",
+                        ctxt.module_id, ctxt.rnti, ctxt.enb_flag);
+                  key = PDCP_COLL_KEY_DEFAULT_DRB_VALUE(ctxt.module_id, ctxt.rnti, ctxt.enb_flag);
+                  h_rc = hashtable_get(pdcp_coll_p, key, (void**)&pdcp_p);
+                  LOG_I(PDCP,"request key %x : (%d,%x,%d,%d)\n",
+                        (uint8_t)key,ctxt.module_id, ctxt.rnti, ctxt.enb_flag, rab_id);
+               } else {
+                  rab_id = rab_id % LTE_maxDRB;
+                  LOG_I(PDCP, "PDCP_COLL_KEY_VALUE(module_id=%d, rnti=%x, enb_flag=%d, rab_id=%d, SRB_FLAG=%d)\n",
+                        ctxt.module_id, ctxt.rnti, ctxt.enb_flag, rab_id, SRB_FLAG_NO);
+                  key = PDCP_COLL_KEY_VALUE(ctxt.module_id, ctxt.rnti, ctxt.enb_flag, rab_id, SRB_FLAG_NO);
+                  h_rc = hashtable_get(pdcp_coll_p, key, (void**)&pdcp_p);
+                  LOG_I(PDCP,"request key %x : (%d,%x,%d,%d)\n",
+>>>>>>> main/develop
                 		  (uint8_t)key,ctxt.module_id, ctxt.rnti, ctxt.enb_flag, rab_id);
                }
 
@@ -783,10 +924,17 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
                                     0,
                                     MSC_AS_TIME_FMT" DATA-REQ inst %u rb %u rab %u size %u",
                                     MSC_AS_TIME_ARGS(ctxt_pP),
+<<<<<<< HEAD
                                     pc5s_header.inst,
                                     pc5s_header.rb_id,
                                     rab_id,
                                     pc5s_header.data_size);
+=======
+                                    pc5s_header->inst,
+                                    pc5s_header->rb_id,
+                                    rab_id,
+                                    pc5s_header->data_size);
+>>>>>>> main/develop
 
                   pdcp_data_req(
                         &ctxt,
@@ -797,7 +945,11 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
                         pc5s_header->data_size,
                         (unsigned char *)receive_buf,
                         PDCP_TRANSMISSION_MODE_DATA
+<<<<<<< HEAD
 #ifdef Rel14
+=======
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
+>>>>>>> main/develop
                         ,&pc5s_header->sourceL2Id
                         ,&pc5s_header->destinationL2Id
 #endif
@@ -810,10 +962,17 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
                                     0,
                                     MSC_AS_TIME_FMT" DATA-REQ inst %u rb %u rab %u size %u",
                                     MSC_AS_TIME_ARGS(ctxt_pP),
+<<<<<<< HEAD
                                     pc5s_header.inst,
                                     pc5s_header.rb_id,
                                     rab_id,
                                     pc5s_header.data_size);
+=======
+                                    pc5s_header->inst,
+                                    pc5s_header->rb_id,
+                                    rab_id,
+                                    pc5s_header->data_size);
+>>>>>>> main/develop
                   LOG_D(PDCP,
                         "[FRAME %5u][UE][IP][INSTANCE %u][RB %u][--- PDCP_DATA_REQ / %d Bytes ---X][PDCP][MOD %u][UE %u][RB %u] NON INSTANCIATED INSTANCE key 0x%"PRIx64", DROPPED\n",
                         ctxt.frame,
@@ -846,7 +1005,10 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
                                  DEFAULT_RAB_ID,
                                  pc5s_header->data_size);
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> main/develop
                pdcp_data_req (
                      &ctxt,
                      SRB_FLAG_NO,
@@ -856,7 +1018,11 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
                      pc5s_header->data_size,
                      (unsigned char *)receive_buf,
                      PDCP_TRANSMISSION_MODE_DATA
+<<<<<<< HEAD
 #ifdef Rel14
+=======
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
+>>>>>>> main/develop
                      ,&pc5s_header->sourceL2Id
                      ,&pc5s_header->destinationL2Id
 #endif
@@ -868,7 +1034,11 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
       }
    }
 
+<<<<<<< HEAD
 #endif /*end PC5S*/
+=======
+#endif
+>>>>>>> main/develop
 
    while ((len > 0) && (rlc_data_req_flag !=0))  {
       VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_PDCP_FIFO_READ, 1 );
@@ -878,7 +1048,11 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
 
       if (len<=0) {
          // nothing in pdcp NAS socket
+<<<<<<< HEAD
          LOG_D(PDCP, "[PDCP][NETLINK] Nothing in socket, length %d \n", len);
+=======
+         //LOG_D(PDCP, "[PDCP][NETLINK] Nothing in socket, length %d \n", len);
+>>>>>>> main/develop
       } else {
 
          msg_len = len;
@@ -921,18 +1095,31 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
                   ctxt.frame         = ctxt_cpy.frame;
                   ctxt.enb_flag      = ENB_FLAG_YES;
                   ctxt.module_id     = pdcp_read_header_g.inst  +  oai_emulation.info.first_enb_local;
+<<<<<<< HEAD
                   ctxt.rnti          = oai_emulation.info.eNB_ue_module_id_to_rnti[ctxt.module_id ][pdcp_read_header_g.rb_id / maxDRB + oai_emulation.info.first_ue_local];
                   rab_id    = pdcp_read_header_g.rb_id % maxDRB;
+=======
+                  ctxt.rnti          = oai_emulation.info.eNB_ue_module_id_to_rnti[ctxt.module_id ][pdcp_read_header_g.rb_id / LTE_maxDRB + oai_emulation.info.first_ue_local];
+                  rab_id    = pdcp_read_header_g.rb_id % LTE_maxDRB;
+>>>>>>> main/develop
                } else {
                   ctxt.frame         = ctxt_cpy.frame;
                   ctxt.enb_flag      = ENB_FLAG_NO;
                   ctxt.module_id     = pdcp_read_header_g.inst - oai_emulation.info.nb_enb_local + oai_emulation.info.first_ue_local;
                   ctxt.rnti          = pdcp_UE_UE_module_id_to_rnti[ctxt.module_id];
+<<<<<<< HEAD
                   rab_id    = pdcp_read_header_g.rb_id % maxDRB;
                }
 
                CHECK_CTXT_ARGS(&ctxt);
                AssertFatal (rab_id    < maxDRB,                       "RB id is too high (%u/%d)!\n", rab_id, maxDRB);
+=======
+                  rab_id    = pdcp_read_header_g.rb_id % LTE_maxDRB;
+               }
+
+               CHECK_CTXT_ARGS(&ctxt);
+               AssertFatal (rab_id    < LTE_maxDRB,                       "RB id is too high (%u/%d)!\n", rab_id, LTE_maxDRB);
+>>>>>>> main/develop
                /*LGpdcp_read_header.inst = (pdcp_read_header_g.inst >= oai_emulation.info.nb_enb_local) ? \
                   pdcp_read_header_g.inst - oai_emulation.info.nb_enb_local+ NB_eNB_INST + oai_emulation.info.first_ue_local :
                   pdcp_read_header_g.inst +  oai_emulation.info.first_enb_local;*/
@@ -944,16 +1131,19 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
                ctxt.enb_flag      = ctxt_cpy.enb_flag;
 
 #ifdef PDCP_DEBUG
+<<<<<<< HEAD
                LOG_I(PDCP, "[PDCP][NETLINK] pdcp_read_header_g.rb_id = %d, source L2Id = 0x%08x, destination L2Id = 0x%08x \n", pdcp_read_header_g.rb_id, pdcp_read_header_g.sourceL2Id, pdcp_read_header_g.destinationL2Id);
+=======
+               LOG_D(PDCP, "[PDCP][NETLINK] pdcp_read_header_g.rb_id = %d, source L2Id = 0x%08x, destination L2Id = 0x%08x \n", pdcp_read_header_g.rb_id, pdcp_read_header_g.sourceL2Id, pdcp_read_header_g.destinationL2Id);
+>>>>>>> main/develop
 #endif
-
           if (ctxt_cpy.enb_flag) {
             ctxt.module_id = 0;
-            rab_id      = pdcp_read_header_g.rb_id % maxDRB;
-            ctxt.rnti          = pdcp_eNB_UE_instance_to_rnti[pdcp_read_header_g.rb_id / maxDRB];
+            rab_id      = pdcp_read_header_g.rb_id % LTE_maxDRB;
+            ctxt.rnti          = pdcp_eNB_UE_instance_to_rnti[pdcp_read_header_g.rb_id / LTE_maxDRB];
           } else {
             ctxt.module_id = 0;
-            rab_id      = pdcp_read_header_g.rb_id % maxDRB;
+            rab_id      = pdcp_read_header_g.rb_id % LTE_maxDRB;
             ctxt.rnti          = pdcp_UE_UE_module_id_to_rnti[ctxt.module_id];
           }
 
@@ -961,10 +1151,14 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
 
           if (ctxt.enb_flag) {
             if (rab_id != 0) {
-              rab_id = rab_id % maxDRB;
+              rab_id = rab_id % LTE_maxDRB;
               key = PDCP_COLL_KEY_VALUE(ctxt.module_id, ctxt.rnti, ctxt.enb_flag, rab_id, SRB_FLAG_NO);
               h_rc = hashtable_get(pdcp_coll_p, key, (void**)&pdcp_p);
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> main/develop
                      if (h_rc == HASH_TABLE_OK) {
 #ifdef PDCP_DEBUG
                         LOG_D(PDCP, "[FRAME %5u][eNB][NETLINK][IP->PDCP] INST %d: Received socket with length %d (nlmsg_len = %zu) on Rab %d \n",
@@ -1003,7 +1197,11 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
                               pdcp_read_header_g.data_size,
                               (unsigned char *)NLMSG_DATA(nas_nlh_rx),
                               PDCP_TRANSMISSION_MODE_DATA
+<<<<<<< HEAD
 #ifdef Rel14
+=======
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
+>>>>>>> main/develop
                               ,NULL, NULL
 #endif
                               );
@@ -1040,7 +1238,11 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
                                  pdcp_read_header_g.data_size,
                                  (unsigned char *)NLMSG_DATA(nas_nlh_rx),
                                  PDCP_TRANSMISSION_MODE_DATA
+<<<<<<< HEAD
 #ifdef Rel14
+=======
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
+>>>>>>> main/develop
                                 ,NULL, NULL
 #endif
                                 );
@@ -1054,15 +1256,25 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
                               ctxt.module_id, ctxt.rnti, ctxt.enb_flag);
                         key = PDCP_COLL_KEY_DEFAULT_DRB_VALUE(ctxt.module_id, ctxt.rnti, ctxt.enb_flag);
                         h_rc = hashtable_get(pdcp_coll_p, key, (void**)&pdcp_p);
+<<<<<<< HEAD
                         LOG_I(PDCP,"request key %x : (%d,%x,%d,%d)\n",
                         		(uint8_t)key,ctxt.module_id, ctxt.rnti, ctxt.enb_flag, rab_id);
                      } else {
                         rab_id = rab_id % maxDRB;
+=======
+                        LOG_D(PDCP,"request key %x : (%d,%x,%d,%d)\n",
+                        		(uint8_t)key,ctxt.module_id, ctxt.rnti, ctxt.enb_flag, rab_id);
+                     } else {
+                        rab_id = rab_id % LTE_maxDRB;
+>>>>>>> main/develop
                         LOG_D(PDCP, "PDCP_COLL_KEY_VALUE(module_id=%d, rnti=%x, enb_flag=%d, rab_id=%d, SRB_FLAG=%d)\n",
                               ctxt.module_id, ctxt.rnti, ctxt.enb_flag, rab_id, SRB_FLAG_NO);
                         key = PDCP_COLL_KEY_VALUE(ctxt.module_id, ctxt.rnti, ctxt.enb_flag, rab_id, SRB_FLAG_NO);
                         h_rc = hashtable_get(pdcp_coll_p, key, (void**)&pdcp_p);
+<<<<<<< HEAD
 
+=======
+>>>>>>> main/develop
                         LOG_D(PDCP,"request key %x : (%d,%x,%d,%d)\n",
                         		(uint8_t)key,ctxt.module_id, ctxt.rnti, ctxt.enb_flag, rab_id);
                      }
@@ -1070,14 +1282,22 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
                      if (h_rc == HASH_TABLE_OK) {
                         rab_id = pdcp_p->rb_id;
 #ifdef PDCP_DEBUG
+<<<<<<< HEAD
                         LOG_I(PDCP, "[FRAME %5u][UE][NETLINK][IP->PDCP] INST %d: Received socket with length %d (nlmsg_len = %zu) on Rab %d \n",
+=======
+                        LOG_D(PDCP, "[FRAME %5u][UE][NETLINK][IP->PDCP] INST %d: Received socket with length %d (nlmsg_len = %zu) on Rab %d \n",
+>>>>>>> main/develop
                               ctxt.frame,
                               pdcp_read_header_g.inst,
                               len,
                               nas_nlh_rx->nlmsg_len-sizeof(struct nlmsghdr),
                               pdcp_read_header_g.rb_id);
 
+<<<<<<< HEAD
                         LOG_I(PDCP, "[FRAME %5u][UE][IP][INSTANCE %u][RB %u][--- PDCP_DATA_REQ / %d Bytes --->][PDCP][MOD %u][UE %u][RB %u]\n",
+=======
+                        LOG_D(PDCP, "[FRAME %5u][UE][IP][INSTANCE %u][RB %u][--- PDCP_DATA_REQ / %d Bytes --->][PDCP][MOD %u][UE %u][RB %u]\n",
+>>>>>>> main/develop
                               ctxt.frame,
                               pdcp_read_header_g.inst,
                               pdcp_read_header_g.rb_id,
@@ -1098,6 +1318,7 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
                                           rab_id,
                                           pdcp_read_header_g.data_size);
 
+<<<<<<< HEAD
                         LOG_I(PDCP, "[THINH] source L2 Id: 0x%08x, destL2 0x%08x \n",pdcp_read_header_g.sourceL2Id, pdcp_read_header_g.destinationL2Id);
 
                         //TTN - for traffic from OIP1 (to eNB), sourceL2/DestL2 should be set to NULL
@@ -1133,6 +1354,22 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
                            );
                         }
 
+=======
+                        pdcp_data_req(
+                              &ctxt,
+                              SRB_FLAG_NO,
+                              rab_id,
+                              RLC_MUI_UNDEFINED,
+                              RLC_SDU_CONFIRM_NO,
+                              pdcp_read_header_g.data_size,
+                              (unsigned char *)NLMSG_DATA(nas_nlh_rx),
+                              PDCP_TRANSMISSION_MODE_DATA
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
+                              ,&pdcp_read_header_g.sourceL2Id
+                              ,&pdcp_read_header_g.destinationL2Id
+#endif
+                              );
+>>>>>>> main/develop
                      } else {
                         MSC_LOG_RX_DISCARDED_MESSAGE(
                               (ctxt_pP->enb_flag == ENB_FLAG_YES) ? MSC_PDCP_ENB:MSC_PDCP_UE,
@@ -1177,6 +1414,7 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
                                        DEFAULT_RAB_ID,
                                        pdcp_read_header_g.data_size);
 
+<<<<<<< HEAD
                      LOG_I(PDCP, "[THINH] source L2 Id: 0x%08x, destL2 0x%08x \n",pdcp_read_header_g.sourceL2Id, pdcp_read_header_g.destinationL2Id);
                      //TTN - for traffic from OIP1 (to eNB), sourceL2/DestL2 should be set to NULL
                      if (pdcp_read_header_g.inst == 0){  //INST == 0 (OIP0)
@@ -1211,6 +1449,22 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
                         );
                      }
 
+=======
+                     pdcp_data_req (
+                           &ctxt,
+                           SRB_FLAG_NO,
+                           DEFAULT_RAB_ID,
+                           RLC_MUI_UNDEFINED,
+                           RLC_SDU_CONFIRM_NO,
+                           pdcp_read_header_g.data_size,
+                           (unsigned char *)NLMSG_DATA(nas_nlh_rx),
+                           PDCP_TRANSMISSION_MODE_DATA
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
+                           ,&pdcp_read_header_g.sourceL2Id
+                           ,&pdcp_read_header_g.destinationL2Id
+#endif
+                           );
+>>>>>>> main/develop
                   }
                }
 
@@ -1247,14 +1501,18 @@ void pdcp_fifo_read_input_sdus_from_otg (const protocol_ctxt_t* const  ctxt_pP) 
       ctxt_pP->subframe,
       ctxt_pP->module_id);
 
-    for (dst_id = 0; dst_id<NUMBER_OF_UE_MAX; dst_id++) {
+    for (dst_id = 0; dst_id<MAX_MOBILES_PER_ENB; dst_id++) {
       ctxt.rnti = oai_emulation.info.eNB_ue_module_id_to_rnti[ctxt.module_id][dst_id];
     }
   }
 }
 
 //TTN for D2D (PC5S)
+<<<<<<< HEAD
 #ifdef Rel14
+=======
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
+>>>>>>> main/develop
 
 void
 pdcp_pc5_socket_init() {
@@ -1290,5 +1548,8 @@ pdcp_pc5_socket_init() {
 }
 
 #endif
+<<<<<<< HEAD
 
 
+=======
+>>>>>>> main/develop

@@ -32,29 +32,28 @@
 
 #include "COMMON/platform_types.h"
 #include "COMMON/platform_constants.h"
-#include "SCHED/defs.h"
-#include "SystemInformationBlockType2.h"
+#include "LTE_SystemInformationBlockType2.h"
 //#include "RadioResourceConfigCommonSIB.h"
-#include "RadioResourceConfigDedicated.h"
-#ifdef Rel14
-#include "PRACH-ConfigSIB-v1310.h"
+#include "LTE_RadioResourceConfigDedicated.h"
+#if (LTE_RRC_VERSION >= MAKE_VERSION(13, 0, 0))
+#include "LTE_PRACH-ConfigSIB-v1310.h"
 #endif
-#include "MeasGapConfig.h"
-#include "MeasObjectToAddModList.h"
-#include "TDD-Config.h"
-#include "MAC-MainConfig.h"
-#include "defs.h"
-#include "proto.h"
-#include "extern.h"
-#include "UTIL/LOG/log.h"
-#include "UTIL/LOG/vcd_signal_dumper.h"
+#include "LTE_MeasGapConfig.h"
+#include "LTE_MeasObjectToAddModList.h"
+#include "LTE_TDD-Config.h"
+#include "LTE_MAC-MainConfig.h"
+#include "mac.h"
+#include "mac_proto.h"
+#include "mac_extern.h"
+#include "common/utils/LOG/log.h"
+#include "common/utils/LOG/vcd_signal_dumper.h"
 
 #include "common/ran_context.h"
-#if defined(Rel10) || defined(Rel14)
-#include "MBSFN-AreaInfoList-r9.h"
-#include "MBSFN-AreaInfo-r9.h"
-#include "MBSFN-SubframeConfigList.h"
-#include "PMCH-InfoList-r9.h"
+#if (LTE_RRC_VERSION >= MAKE_VERSION(9, 0, 0))
+#include "LTE_MBSFN-AreaInfoList-r9.h"
+#include "LTE_MBSFN-AreaInfo-r9.h"
+#include "LTE_MBSFN-SubframeConfigList.h"
+#include "LTE_PMCH-InfoList-r9.h"
 #endif
 
 extern RAN_CONTEXT_t RC;
@@ -161,6 +160,58 @@ uint32_t to_earfcn(int eutra_bandP, uint32_t dl_CarrierFreq, uint32_t bw)
 	  (eutra_bandtable[i].N_OFFs_DL / 10));
 }
 
+uint32_t to_earfcn_DL(int eutra_bandP, long long int dl_CarrierFreq, uint32_t bw)
+{
+
+  uint32_t dl_CarrierFreq_by_100k = dl_CarrierFreq / 100000;
+  int bw_by_100 = bw / 100;
+
+  int i;
+
+  AssertFatal(eutra_bandP < 69, "eutra_band %d > 68\n", eutra_bandP);
+  for (i = 0; i < 69 && eutra_bandtable[i].band != eutra_bandP; i++);
+
+  AssertFatal(dl_CarrierFreq_by_100k >= eutra_bandtable[i].dl_min,
+              "Band %d, bw %u : DL carrier frequency %lld Hz < %u\n",
+              eutra_bandP, bw, dl_CarrierFreq,
+              eutra_bandtable[i].dl_min);
+  AssertFatal(dl_CarrierFreq_by_100k <=
+              (eutra_bandtable[i].dl_max - bw_by_100),
+              "Band %d, bw %u : DL carrier frequency %lld Hz > %d\n",
+              eutra_bandP, bw, dl_CarrierFreq,
+              eutra_bandtable[i].dl_max - bw_by_100);
+
+
+  return (dl_CarrierFreq_by_100k - eutra_bandtable[i].dl_min +
+          (eutra_bandtable[i].N_OFFs_DL / 10));
+}
+
+uint32_t to_earfcn_UL(int eutra_bandP, long long int ul_CarrierFreq, uint32_t bw)
+{
+
+  uint32_t ul_CarrierFreq_by_100k = ul_CarrierFreq / 100000;
+  int bw_by_100 = bw / 100;
+
+  int i;
+
+  AssertFatal(eutra_bandP < 69, "eutra_band %d > 68\n", eutra_bandP);
+  for (i = 0; i < 69 && eutra_bandtable[i].band != eutra_bandP; i++);
+
+  AssertFatal(ul_CarrierFreq_by_100k >= eutra_bandtable[i].ul_min,
+              "Band %d, bw %u : UL carrier frequency %lld Hz < %u\n",
+              eutra_bandP, bw, ul_CarrierFreq,
+              eutra_bandtable[i].ul_min);
+  AssertFatal(ul_CarrierFreq_by_100k <=
+              (eutra_bandtable[i].ul_max - bw_by_100),
+              "Band %d, bw %u : UL carrier frequency %lld Hz > %d\n",
+              eutra_bandP, bw, ul_CarrierFreq,
+              eutra_bandtable[i].ul_max - bw_by_100);
+
+
+  return (ul_CarrierFreq_by_100k - eutra_bandtable[i].ul_min +
+          ((eutra_bandtable[i].N_OFFs_DL + 180000) / 10));
+}
+
 uint32_t from_earfcn(int eutra_bandP, uint32_t dl_earfcn)
 {
 
@@ -188,13 +239,13 @@ void config_mib(int                 Mod_idP,
 		int                 CC_idP,
 		int                 eutra_bandP,  
 		int                 dl_BandwidthP,
-		PHICH_Config_t      *phich_configP,
+		LTE_PHICH_Config_t  *phich_configP,
 		int                 Nid_cellP,
 		int                 NcpP,
 		int                 p_eNBP,
 		uint32_t            dl_CarrierFreqP,
 		uint32_t            ul_CarrierFreqP
-#ifdef Rel14
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
                 ,
 		uint32_t            pbch_repetitionP
 #endif
@@ -219,7 +270,7 @@ void config_mib(int                 Mod_idP,
   cfg->rf_config.dl_channel_bandwidth.value        = to_prb(dl_BandwidthP);
   cfg->rf_config.dl_channel_bandwidth.tl.tag = NFAPI_RF_CONFIG_DL_CHANNEL_BANDWIDTH_TAG;
   cfg->num_tlv++;
-  LOG_E(PHY,"%s() dl_BandwidthP:%d\n", __FUNCTION__, dl_BandwidthP);
+  LOG_D(PHY,"%s() dl_BandwidthP:%d\n", __FUNCTION__, dl_BandwidthP);
 
   cfg->rf_config.ul_channel_bandwidth.value        = to_prb(dl_BandwidthP);
   cfg->rf_config.ul_channel_bandwidth.tl.tag = NFAPI_RF_CONFIG_UL_CHANNEL_BANDWIDTH_TAG;
@@ -266,14 +317,14 @@ void config_mib(int                 Mod_idP,
   cfg->sch_config.physical_cell_id.tl.tag = NFAPI_SCH_CONFIG_PHYSICAL_CELL_ID_TAG;
   cfg->num_tlv++;
 
-#ifdef Rel14
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
   cfg->emtc_config.pbch_repetitions_enable_r13.value                 = pbch_repetitionP;
   cfg->emtc_config.pbch_repetitions_enable_r13.tl.tag = NFAPI_EMTC_CONFIG_PBCH_REPETITIONS_ENABLE_R13_TAG;
   cfg->num_tlv++;
 #endif  
   LOG_I(MAC,
 	"%s() NFAPI_CONFIG_REQUEST(num_tlv:%u) DL_BW:%u UL_BW:%u Ncp %d,p_eNB %d,earfcn %d,band %d,phich_resource %u phich_duration %u phich_power_offset %u PSS %d SSS %d PCI %d"
-#ifdef Rel14
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
 	
 	" PBCH repetition %d"
 #endif  
@@ -291,13 +342,13 @@ void config_mib(int                 Mod_idP,
 	,cfg->sch_config.primary_synchronization_signal_epre_eprers.value
 	,cfg->sch_config.secondary_synchronization_signal_epre_eprers.value
 	,cfg->sch_config.physical_cell_id.value
-#ifdef Rel14
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
 	,cfg->emtc_config.pbch_repetitions_enable_r13.value
 #endif  
       );
 }
 
-void config_sib1(int Mod_idP, int CC_idP, TDD_Config_t * tdd_ConfigP)
+void config_sib1(int Mod_idP, int CC_idP, LTE_TDD_Config_t * tdd_ConfigP)
 {
 
 
@@ -329,14 +380,14 @@ int power_off_dB[6] = { 78, 118, 140, 170, 188, 200 };
 void
 config_sib2(int Mod_idP,
 	    int CC_idP,
-	    RadioResourceConfigCommonSIB_t * radioResourceConfigCommonP,
-#ifdef Rel14
-	    RadioResourceConfigCommonSIB_t * radioResourceConfigCommon_BRP,
+	    LTE_RadioResourceConfigCommonSIB_t * radioResourceConfigCommonP,
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
+	    LTE_RadioResourceConfigCommonSIB_t * radioResourceConfigCommon_BRP,
 #endif
-            ARFCN_ValueEUTRA_t *ul_CArrierFreqP,
+            LTE_ARFCN_ValueEUTRA_t *ul_CArrierFreqP,
             long *ul_BandwidthP,
-            AdditionalSpectrumEmission_t *additionalSpectrumEmissionP,
-            struct MBSFN_SubframeConfigList  *mbsfn_SubframeConfigListP) {
+            LTE_AdditionalSpectrumEmission_t *additionalSpectrumEmissionP,
+            struct LTE_MBSFN_SubframeConfigList  *mbsfn_SubframeConfigListP) {
 
   nfapi_config_request_t *cfg = &RC.mac[Mod_idP]->config[CC_idP];
 
@@ -423,7 +474,7 @@ config_sib2(int Mod_idP,
 
 
   // how to enable/disable SRS?
-  if (radioResourceConfigCommonP->soundingRS_UL_ConfigCommon.present==SoundingRS_UL_ConfigCommon_PR_setup) {
+  if (radioResourceConfigCommonP->soundingRS_UL_ConfigCommon.present== LTE_SoundingRS_UL_ConfigCommon_PR_setup) {
     cfg->srs_config.bandwidth_configuration.value                       = radioResourceConfigCommonP->soundingRS_UL_ConfigCommon.choice.setup.srs_BandwidthConfig;
     cfg->srs_config.bandwidth_configuration.tl.tag = NFAPI_SRS_CONFIG_BANDWIDTH_CONFIGURATION_TAG;
     cfg->num_tlv++;
@@ -445,7 +496,7 @@ config_sib2(int Mod_idP,
     cfg->num_tlv++;
   }
 
-#ifdef Rel14
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
   if (RC.mac[Mod_idP]->common_channels[CC_idP].mib->message.schedulingInfoSIB1_BR_r13 > 0) {
     AssertFatal(radioResourceConfigCommon_BRP != NULL, "radioResource rou is missing\n");
     AssertFatal(radioResourceConfigCommon_BRP->ext4 != NULL, "ext4 is missing\n");
@@ -461,12 +512,16 @@ config_sib2(int Mod_idP,
     cfg->emtc_config.prach_catm_high_speed_flag.tl.tag = NFAPI_EMTC_CONFIG_PRACH_CATM_HIGH_SPEED_FLAG;
     cfg->num_tlv++;
 
-    struct PRACH_ConfigSIB_v1310 *ext4_prach = radioResourceConfigCommon_BRP->ext4->prach_ConfigCommon_v1310;
+    struct LTE_PRACH_ConfigSIB_v1310 *ext4_prach = radioResourceConfigCommon_BRP->ext4->prach_ConfigCommon_v1310;
 
-    PRACH_ParametersListCE_r13_t *prach_ParametersListCE_r13 = &ext4_prach->prach_ParametersListCE_r13;
+    LTE_PRACH_ParametersListCE_r13_t *prach_ParametersListCE_r13 = &ext4_prach->prach_ParametersListCE_r13;
 
+<<<<<<< HEAD
     PRACH_ParametersCE_r13_t *p;
 
+=======
+    LTE_PRACH_ParametersCE_r13_t *p;
+>>>>>>> main/develop
     cfg->emtc_config.prach_ce_level_0_enable.value = 0;
     cfg->emtc_config.prach_ce_level_0_enable.tl.tag=NFAPI_EMTC_CONFIG_PRACH_CE_LEVEL_0_ENABLE_TAG;
     cfg->num_tlv++;
@@ -616,18 +671,18 @@ config_sib2(int Mod_idP,
       cfg->num_tlv++;
     }
 
-    struct FreqHoppingParameters_r13 *ext4_freqHoppingParameters = radioResourceConfigCommonP->ext4->freqHoppingParameters_r13;
+    struct LTE_FreqHoppingParameters_r13 *ext4_freqHoppingParameters = radioResourceConfigCommonP->ext4->freqHoppingParameters_r13;
     if ((ext4_freqHoppingParameters) &&
         (ext4_freqHoppingParameters->interval_ULHoppingConfigCommonModeA_r13)){
       switch(ext4_freqHoppingParameters->interval_ULHoppingConfigCommonModeA_r13->present) {
-      case      FreqHoppingParameters_r13__interval_ULHoppingConfigCommonModeA_r13_PR_NOTHING:  /* No components present */
+      case LTE_FreqHoppingParameters_r13__interval_ULHoppingConfigCommonModeA_r13_PR_NOTHING:  /* No components present */
         break;
-      case FreqHoppingParameters_r13__interval_ULHoppingConfigCommonModeA_r13_PR_interval_FDD_r13:
+      case LTE_FreqHoppingParameters_r13__interval_ULHoppingConfigCommonModeA_r13_PR_interval_FDD_r13:
         cfg->emtc_config.pucch_interval_ulhoppingconfigcommonmodea.value = ext4_freqHoppingParameters->interval_ULHoppingConfigCommonModeA_r13->choice.interval_FDD_r13;
         cfg->emtc_config.pucch_interval_ulhoppingconfigcommonmodea.tl.tag = NFAPI_EMTC_CONFIG_PUCCH_INTERVAL_ULHOPPINGCONFIGCOMMONMODEA_TAG;
         cfg->num_tlv++;
         break;
-      case FreqHoppingParameters_r13__interval_ULHoppingConfigCommonModeA_r13_PR_interval_TDD_r13:
+      case LTE_FreqHoppingParameters_r13__interval_ULHoppingConfigCommonModeA_r13_PR_interval_TDD_r13:
         cfg->emtc_config.pucch_interval_ulhoppingconfigcommonmodea.value = ext4_freqHoppingParameters->interval_ULHoppingConfigCommonModeA_r13->choice.interval_TDD_r13;
         cfg->emtc_config.pucch_interval_ulhoppingconfigcommonmodea.tl.tag = NFAPI_EMTC_CONFIG_PUCCH_INTERVAL_ULHOPPINGCONFIGCOMMONMODEA_TAG;
         cfg->num_tlv++;
@@ -637,14 +692,14 @@ config_sib2(int Mod_idP,
     if ((ext4_freqHoppingParameters) &&
         (ext4_freqHoppingParameters->interval_ULHoppingConfigCommonModeB_r13)){
       switch(ext4_freqHoppingParameters->interval_ULHoppingConfigCommonModeB_r13->present) {
-      case      FreqHoppingParameters_r13__interval_ULHoppingConfigCommonModeB_r13_PR_NOTHING:  /* No components present */
+      case LTE_FreqHoppingParameters_r13__interval_ULHoppingConfigCommonModeB_r13_PR_NOTHING:  /* No components present */
         break;
-      case FreqHoppingParameters_r13__interval_ULHoppingConfigCommonModeB_r13_PR_interval_FDD_r13:
+      case LTE_FreqHoppingParameters_r13__interval_ULHoppingConfigCommonModeB_r13_PR_interval_FDD_r13:
         cfg->emtc_config.pucch_interval_ulhoppingconfigcommonmodeb.value = ext4_freqHoppingParameters->interval_ULHoppingConfigCommonModeB_r13->choice.interval_FDD_r13;
         cfg->emtc_config.pucch_interval_ulhoppingconfigcommonmodeb.tl.tag = NFAPI_EMTC_CONFIG_PUCCH_INTERVAL_ULHOPPINGCONFIGCOMMONMODEB_TAG;
         cfg->num_tlv++;
         break;
-      case FreqHoppingParameters_r13__interval_ULHoppingConfigCommonModeB_r13_PR_interval_TDD_r13:
+      case LTE_FreqHoppingParameters_r13__interval_ULHoppingConfigCommonModeB_r13_PR_interval_TDD_r13:
         cfg->emtc_config.pucch_interval_ulhoppingconfigcommonmodeb.value = ext4_freqHoppingParameters->interval_ULHoppingConfigCommonModeB_r13->choice.interval_TDD_r13;
         cfg->emtc_config.pucch_interval_ulhoppingconfigcommonmodeb.tl.tag = NFAPI_EMTC_CONFIG_PUCCH_INTERVAL_ULHOPPINGCONFIGCOMMONMODEB_TAG;
         cfg->num_tlv++;
@@ -660,7 +715,7 @@ void
 config_dedicated(int Mod_idP,
 		 int CC_idP,
 		 uint16_t rnti,
-		 struct PhysicalConfigDedicated *physicalConfigDedicated)
+		 struct LTE_PhysicalConfigDedicated *physicalConfigDedicated)
 {
 
 }
@@ -668,7 +723,7 @@ config_dedicated(int Mod_idP,
 void
 config_dedicated_scell(int Mod_idP,
 		       uint16_t rnti,
-		       SCellToAddMod_r10_t * sCellToAddMod_r10)
+		       LTE_SCellToAddMod_r10_t * sCellToAddMod_r10)
 {
 
 }
@@ -680,45 +735,45 @@ rrc_mac_config_req_eNB(module_id_t Mod_idP,
 		       int physCellId,
 		       int p_eNB,
 		       int Ncp, int eutra_band, uint32_t dl_CarrierFreq,
-#ifdef Rel14
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
 		       int pbch_repetition,
 #endif
 		       rnti_t rntiP,
-		       BCCH_BCH_Message_t * mib,
-		       RadioResourceConfigCommonSIB_t *
+		       LTE_BCCH_BCH_Message_t * mib,
+		       LTE_RadioResourceConfigCommonSIB_t *
 		       radioResourceConfigCommon,
-#ifdef Rel14
-		       RadioResourceConfigCommonSIB_t *
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
+		       LTE_RadioResourceConfigCommonSIB_t *
 		       radioResourceConfigCommon_BR,
 #endif
-		       struct PhysicalConfigDedicated
+		       struct LTE_PhysicalConfigDedicated
 		       *physicalConfigDedicated,
-#if defined(Rel10) || defined(Rel14)
-		       SCellToAddMod_r10_t * sCellToAddMod_r10,
-		       //struct PhysicalConfigDedicatedSCell_r10 *physicalConfigDedicatedSCell_r10,
+#if (LTE_RRC_VERSION >= MAKE_VERSION(10, 0, 0))
+		       LTE_SCellToAddMod_r10_t * sCellToAddMod_r10,
+		       //struct LTE_PhysicalConfigDedicatedSCell_r10 *physicalConfigDedicatedSCell_r10,
 #endif
-		       MeasObjectToAddMod_t ** measObj,
-		       MAC_MainConfig_t * mac_MainConfig,
+		       LTE_MeasObjectToAddMod_t ** measObj,
+		       LTE_MAC_MainConfig_t * mac_MainConfig,
 		       long logicalChannelIdentity,
-		       LogicalChannelConfig_t * logicalChannelConfig,
-		       MeasGapConfig_t * measGapConfig,
-		       TDD_Config_t * tdd_Config,
-		       MobilityControlInfo_t * mobilityControlInfo,
-		       SchedulingInfoList_t * schedulingInfoList,
+		       LTE_LogicalChannelConfig_t * logicalChannelConfig,
+		       LTE_MeasGapConfig_t * measGapConfig,
+		       LTE_TDD_Config_t * tdd_Config,
+		       LTE_MobilityControlInfo_t * mobilityControlInfo,
+		       LTE_SchedulingInfoList_t * schedulingInfoList,
 		       uint32_t ul_CarrierFreq,
 		       long *ul_Bandwidth,
-		       AdditionalSpectrumEmission_t *
+		       LTE_AdditionalSpectrumEmission_t *
 		       additionalSpectrumEmission,
-		       struct MBSFN_SubframeConfigList
+		       struct LTE_MBSFN_SubframeConfigList
 		       *mbsfn_SubframeConfigList
-#if defined(Rel10) || defined(Rel14)
+#if (LTE_RRC_VERSION >= MAKE_VERSION(9, 0, 0))
 		       , uint8_t MBMS_Flag,
-		       MBSFN_AreaInfoList_r9_t * mbsfn_AreaInfoList,
-		       PMCH_InfoList_r9_t * pmch_InfoList
+		       LTE_MBSFN_AreaInfoList_r9_t * mbsfn_AreaInfoList,
+		       LTE_PMCH_InfoList_r9_t * pmch_InfoList
 #endif
-#ifdef Rel14
+#if (LTE_RRC_VERSION >= MAKE_VERSION(13, 0, 0))
 		       ,
-		       SystemInformationBlockType1_v1310_IEs_t *
+		       LTE_SystemInformationBlockType1_v1310_IEs_t *
 		       sib1_v13ext
 #endif
                        ) {
@@ -731,13 +786,13 @@ rrc_mac_config_req_eNB(module_id_t Mod_idP,
 
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_RRC_MAC_CONFIG, VCD_FUNCTION_IN);
 
-  LOG_E(MAC, "RC.mac:%p mib:%p\n", RC.mac, mib);
+  LOG_D(MAC, "RC.mac:%p mib:%p\n", RC.mac, mib);
 
   if (mib != NULL) {
     if (RC.mac == NULL)
       l2_init_eNB();
 
-    mac_top_init_eNB();
+    //mac_top_init_eNB();
 
     //LOG_E(MAC, "%s() %s:%d\n", __FUNCTION__, __FILE__, __LINE__);
 
@@ -771,7 +826,7 @@ rrc_mac_config_req_eNB(module_id_t Mod_idP,
 	       p_eNB,
 	       dl_CarrierFreq,
 	       ul_CarrierFreq
-#ifdef Rel14
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
 	       , pbch_repetition
 #endif
 	       );
@@ -783,7 +838,7 @@ rrc_mac_config_req_eNB(module_id_t Mod_idP,
       RC.mac[Mod_idP]->common_channels[CC_idP].schedulingInfoList = schedulingInfoList;    
       config_sib1(Mod_idP,CC_idP,tdd_Config);
     }
-#ifdef Rel14
+#if (LTE_RRC_VERSION >= MAKE_VERSION(13, 0, 0))
     if (sib1_v13ext != NULL) {
       RC.mac[Mod_idP]->common_channels[CC_idP].sib1_v13ext = sib1_v13ext;
     }
@@ -842,7 +897,7 @@ rrc_mac_config_req_eNB(module_id_t Mod_idP,
 	  dl_Bandwidth;
 
       config_sib2(Mod_idP, CC_idP, radioResourceConfigCommon,
-#ifdef Rel14
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
 		  radioResourceConfigCommon_BR,
 #endif
 		  NULL, ul_Bandwidth, additionalSpectrumEmission,
@@ -860,16 +915,21 @@ rrc_mac_config_req_eNB(module_id_t Mod_idP,
       LOG_E(MAC, "%s:%d:%s: ERROR, UE_id == -1\n", __FILE__,
 	    __LINE__, __FUNCTION__);
     } else {
-      if (logicalChannelConfig)
+		if (logicalChannelConfig) {
         UE_list->
           UE_template[CC_idP][UE_id].lcgidmap
           [logicalChannelIdentity] =
           *logicalChannelConfig->
-	  ul_SpecificParameters->logicalChannelGroup;
-      else
-        UE_list->
-          UE_template[CC_idP][UE_id].lcgidmap
-          [logicalChannelIdentity] = 0;
+			ul_SpecificParameters->logicalChannelGroup;
+		UE_list->
+          UE_template[CC_idP][UE_id].lcgidpriority
+          [logicalChannelIdentity]=
+			logicalChannelConfig->ul_SpecificParameters->priority;
+
+		} else
+			UE_list->
+				UE_template[CC_idP][UE_id].lcgidmap
+				[logicalChannelIdentity] = 0;
     }
   }
 
@@ -884,7 +944,7 @@ rrc_mac_config_req_eNB(module_id_t Mod_idP,
   }
 
 
-#if defined(Rel10) || defined(Rel14)
+#if (LTE_RRC_VERSION >= MAKE_VERSION(10, 0, 0))
 
   if (sCellToAddMod_r10 != NULL) {
     UE_id = find_UE_id(Mod_idP, rntiP);
@@ -917,11 +977,11 @@ rrc_mac_config_req_eNB(module_id_t Mod_idP,
 	    subframeAllocation.choice.oneFrame.buf[0]);
     }
 
-#ifdef Rel10
+#if (LTE_RRC_VERSION >= MAKE_VERSION(10, 0, 0))
     RC.mac[Mod_idP]->common_channels[0].MBMS_flag = MBMS_Flag;
 #endif
   }
-#if defined(Rel10) || defined(Rel14)
+#if (LTE_RRC_VERSION >= MAKE_VERSION(10, 0, 0))
 
   if (mbsfn_AreaInfoList != NULL) {
     // One eNB could be part of multiple mbsfn syc area, this could change over time so reset each time
@@ -971,6 +1031,23 @@ rrc_mac_config_req_eNB(module_id_t Mod_idP,
   }
 
 #endif
+<<<<<<< HEAD
+=======
+
+    LOG_D(MAC, "%s() %s:%d RC.mac[Mod_idP]->if_inst->PHY_config_req:%p\n", __FUNCTION__, __FILE__, __LINE__, RC.mac[Mod_idP]->if_inst->PHY_config_req);
+
+    // if in nFAPI mode 
+    if (
+        (nfapi_mode == 1 || nfapi_mode == 2) &&
+        (RC.mac[Mod_idP]->if_inst->PHY_config_req == NULL)
+       ) {
+      while(RC.mac[Mod_idP]->if_inst->PHY_config_req == NULL) {
+        // DJP AssertFatal(RC.mac[Mod_idP]->if_inst->PHY_config_req != NULL,"if_inst->phy_config_request is null\n");
+        usleep(100 * 1000);
+        printf("Waiting for PHY_config_req\n");
+      }
+    }
+>>>>>>> main/develop
 
   LOG_E(MAC, "%s() %s:%d RC.mac[Mod_idP]->if_inst->PHY_config_req:%p\n", __FUNCTION__, __FILE__, __LINE__, RC.mac[Mod_idP]->if_inst->PHY_config_req);
 
@@ -985,6 +1062,7 @@ rrc_mac_config_req_eNB(module_id_t Mod_idP,
       usleep(100 * 1000);
       printf("Waiting for PHY_config_req\n");
     }
+<<<<<<< HEAD
   }
 
   if (radioResourceConfigCommon != NULL) {
@@ -1002,4 +1080,9 @@ rrc_mac_config_req_eNB(module_id_t Mod_idP,
 
   return(0);			   
 
+=======
+    RC.mac[Mod_idP]->scheduler_mode = global_scheduler_mode;
+
+    return(0);			   
+>>>>>>> main/develop
 }

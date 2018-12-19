@@ -30,20 +30,18 @@
  * \warning
  */
 
-#include "PHY/defs.h"
-#include "PHY/extern.h"
-#include "SCHED/defs.h"
-#include "SCHED/extern.h"
-
+#include "PHY/defs_eNB.h"
+#include "PHY/phy_extern.h"
+#include "SCHED/sched_eNB.h"
+#include "PHY/MODULATION/modulation_eNB.h"
 #include "PHY/LTE_TRANSPORT/if4_tools.h"
 #include "PHY/LTE_TRANSPORT/if5_tools.h"
+#include "PHY/LTE_TRANSPORT/transport_common_proto.h"
 
-#include "LAYER2/MAC/extern.h"
-#include "LAYER2/MAC/defs.h"
-#include "UTIL/LOG/log.h"
-#include "UTIL/LOG/vcd_signal_dumper.h"
+#include "LAYER2/MAC/mac.h"
+#include "common/utils/LOG/log.h"
+#include "common/utils/LOG/vcd_signal_dumper.h"
 
-#include "T.h"
 
 #include "assertions.h"
 #include "msc.h"
@@ -51,10 +49,6 @@
 #include <time.h>
 
 #include "targets/RT/USER/rt_wrapper.h"
-
-// RU OFDM Modulator, used in IF4p5 RRU, RCC/RAU with IF5, eNodeB
-
-extern openair0_config_t openair0_cfg[MAX_CARDS];
 
 extern int oai_exit;
 
@@ -65,7 +59,6 @@ void feptx0(RU_t *ru,int slot) {
   //int dummy_tx_b[7680*2] __attribute__((aligned(32)));
 
   unsigned int aa,slot_offset;
-  int i, tx_offset;
   int slot_sizeF = (fp->ofdm_symbol_size)*
                    ((fp->Ncp==1) ? 6 : 7);
   int subframe = ru->proc.subframe_tx;
@@ -112,7 +105,7 @@ void feptx0(RU_t *ru,int slot) {
     }
 */
     // TDD: turn on tx switch N_TA_offset before by setting buffer in these samples to 0    
-    if ((slot == 0) &&
+/*    if ((slot == 0) &&
         (fp->frame_type == TDD) && 
         ((fp->tdd_config==0) ||
          (fp->tdd_config==1) ||
@@ -129,7 +122,7 @@ void feptx0(RU_t *ru,int slot) {
 	
 	ru->common.txdata[aa][tx_offset] = 0x00000000;
       }
-    }
+    }*/
   }
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_RU_FEPTX_OFDM+slot , 0);
 }
@@ -153,6 +146,7 @@ static void *feptx_thread(void *param) {
   while (!oai_exit) {
 
     if (wait_on_condition(&proc->mutex_feptx,&proc->cond_feptx,&proc->instance_cnt_feptx,"feptx thread")<0) break;  
+    if (oai_exit) break;
     //stop_meas(&ru->ofdm_mod_wakeup_stats);
     feptx0(ru,1);
     if (release_thread(&proc->mutex_feptx,&proc->instance_cnt_feptx,"feptx thread")<0) break;
@@ -162,7 +156,7 @@ static void *feptx_thread(void *param) {
       exit_fun( "ERROR pthread_cond_signal" );
       return NULL;
     }
-	/*if(opp_enabled == 1 && ru->ofdm_mod_wakeup_stats.diff_now>30*3000){
+	/*if(opp_enabled == 1 && ru->ofdm_mod_wakeup_stats.p_time>30*3000){
       print_meas_now(&ru->ofdm_mod_wakeup_stats,"fep wakeup",stderr);
       printf("delay in fep wakeup in frame_tx: %d  subframe_rx: %d \n",proc->frame_tx,proc->subframe_tx);
     }*/
@@ -222,7 +216,7 @@ void feptx_ofdm_2thread(RU_t *ru) {
   start_meas(&ru->ofdm_mod_wait_stats);
   wait_on_busy_condition(&proc->mutex_feptx,&proc->cond_feptx,&proc->instance_cnt_feptx,"feptx thread");  
   stop_meas(&ru->ofdm_mod_wait_stats);
-  /*if(opp_enabled == 1 && ru->ofdm_mod_wait_stats.diff_now>30*3000){
+  /*if(opp_enabled == 1 && ru->ofdm_mod_wait_stats.p_time>30*3000){
     print_meas_now(&ru->ofdm_mod_wait_stats,"fep wakeup",stderr);
     printf("delay in feptx wait on codition in frame_rx: %d  subframe_rx: %d \n",proc->frame_tx,proc->subframe_tx);
   }*/
@@ -250,7 +244,6 @@ void feptx_ofdm(RU_t *ru) {
 //  int CC_id = ru->proc.CC_id;
 
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_RU_FEPTX_OFDM , 1 );
-
   slot_offset_F = 0;
 
   slot_offset = subframe*fp->samples_per_tti;
@@ -345,25 +338,27 @@ void feptx_ofdm(RU_t *ru) {
        }
      }
       */
-     if ((fp->frame_type == TDD) && 
-         ((fp->tdd_config==0) ||
-	   (fp->tdd_config==1) ||
-	   (fp->tdd_config==2) ||
-	   (fp->tdd_config==6)) && 
-	     ((subframe==0) || (subframe==5))) {
-       // turn on tx switch N_TA_offset before
-       //LOG_D(HW,"subframe %d, time to switch to tx (N_TA_offset %d, slot_offset %d) \n",subframe,ru->N_TA_offset,slot_offset);
-       for (i=0; i<ru->N_TA_offset; i++) {
-         tx_offset = (int)slot_offset+i-ru->N_TA_offset/2;
-         if (tx_offset<0)
-           tx_offset += LTE_NUMBER_OF_SUBFRAMES_PER_FRAME*fp->samples_per_tti;
-	 
-         if (tx_offset>=(LTE_NUMBER_OF_SUBFRAMES_PER_FRAME*fp->samples_per_tti))
-           tx_offset -= LTE_NUMBER_OF_SUBFRAMES_PER_FRAME*fp->samples_per_tti;
-	 
-         ru->common.txdata[aa][tx_offset] = 0x00000000;
-       }
-     }
+
+//     if ((fp->frame_type == TDD) &&
+//         ((fp->tdd_config==0) ||
+//	   (fp->tdd_config==1) ||
+//	   (fp->tdd_config==2) ||
+//	   (fp->tdd_config==6)) &&
+//	     ((subframe==0) || (subframe==5))) {
+//       // turn on tx switch N_TA_offset before
+//       //LOG_D(HW,"subframe %d, time to switch to tx (N_TA_offset %d, slot_offset %d) \n",subframe,ru->N_TA_offset,slot_offset);
+//       for (i=0; i<ru->N_TA_offset; i++) {
+//         tx_offset = (int)slot_offset+i-ru->N_TA_offset/2;
+//         if (tx_offset<0)
+//           tx_offset += LTE_NUMBER_OF_SUBFRAMES_PER_FRAME*fp->samples_per_tti;
+//
+//         if (tx_offset>=(LTE_NUMBER_OF_SUBFRAMES_PER_FRAME*fp->samples_per_tti))
+//           tx_offset -= LTE_NUMBER_OF_SUBFRAMES_PER_FRAME*fp->samples_per_tti;
+//
+//         ru->common.txdata[aa][tx_offset] = 0x00000000;
+//       }
+//     }
+
      stop_meas(&ru->ofdm_mod_stats);
      LOG_D(PHY,"feptx_ofdm (TXPATH): frame %d, subframe %d: txp (time %p) %d dB, txp (freq) %d dB\n",
 	   ru->proc.frame_tx,subframe,txdata,dB_fixed(signal_energy((int32_t*)txdata,fp->samples_per_tti)),
@@ -411,11 +406,6 @@ void feptx_prec(RU_t *ru) {
 			 aa);
 	}
       }
-#if 0
-      LOG_D(PHY,"feptx_prec: frame %d, subframe %d: txp (freq) %d dB\n",
-	    ru->proc.frame_tx,subframe,
-	    dB_fixed(signal_energy_nodc(ru->common.txdataF_BF[0],2*fp->symbols_per_tti*fp->ofdm_symbol_size)));
-#endif
     }
   }
 }
@@ -461,6 +451,7 @@ static void *fep_thread(void *param) {
   while (!oai_exit) {
 
     if (wait_on_condition(&proc->mutex_fep,&proc->cond_fep,&proc->instance_cnt_fep,"fep thread")<0) break; 
+    if (oai_exit) break;
 	//stop_meas(&ru->ofdm_demod_wakeup_stats);
 	VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_RU_FEPRX1, 1 ); 
     fep0(ru,0);
@@ -472,7 +463,7 @@ static void *fep_thread(void *param) {
       exit_fun( "ERROR pthread_cond_signal" );
       return NULL;
     }
-    /*if(opp_enabled == 1 && ru->ofdm_demod_wakeup_stats.diff_now>30*3000){
+    /*if(opp_enabled == 1 && ru->ofdm_demod_wakeup_stats.p_time>30*3000){
       print_meas_now(&ru->ofdm_demod_wakeup_stats,"fep wakeup",stderr);
       printf("delay in fep wakeup in frame_rx: %d  subframe_rx: %d \n",proc->frame_rx,proc->subframe_rx);
     }*/
@@ -510,6 +501,33 @@ void init_fep_thread(RU_t *ru,pthread_attr_t *attr_fep) {
 
 
 }
+
+extern void kill_fep_thread(RU_t *ru)
+{
+  RU_proc_t *proc = &ru->proc;
+  pthread_mutex_lock( &proc->mutex_fep );
+  proc->instance_cnt_fep         = 0;
+  pthread_cond_signal(&proc->cond_fep);
+  pthread_mutex_unlock( &proc->mutex_fep );
+  LOG_D(PHY, "Joining pthread_fep\n");
+  pthread_join(proc->pthread_fep, NULL);
+  pthread_mutex_destroy( &proc->mutex_fep );
+  pthread_cond_destroy( &proc->cond_fep );
+}
+
+extern void kill_feptx_thread(RU_t *ru)
+{
+  RU_proc_t *proc = &ru->proc;
+  pthread_mutex_lock( &proc->mutex_feptx );
+  proc->instance_cnt_feptx         = 0;
+  pthread_cond_signal(&proc->cond_feptx);
+  pthread_mutex_unlock( &proc->mutex_feptx );
+  LOG_D(PHY, "Joining pthread_feptx\n");
+  pthread_join(proc->pthread_feptx, NULL);
+  pthread_mutex_destroy( &proc->mutex_feptx );
+  pthread_cond_destroy( &proc->cond_feptx );
+}
+
 void ru_fep_full_2thread(RU_t *ru) {
 
   RU_proc_t *proc = &ru->proc;
@@ -560,7 +578,7 @@ void ru_fep_full_2thread(RU_t *ru) {
   start_meas(&ru->ofdm_demod_wait_stats);
   wait_on_busy_condition(&proc->mutex_fep,&proc->cond_fep,&proc->instance_cnt_fep,"fep thread");  
   stop_meas(&ru->ofdm_demod_wait_stats);
-  if(opp_enabled == 1 && ru->ofdm_demod_wakeup_stats.diff_now>30*3000){
+  if(opp_enabled == 1 && ru->ofdm_demod_wakeup_stats.p_time>30*3000){
     print_meas_now(&ru->ofdm_demod_wakeup_stats,"fep wakeup",stderr);
     printf("delay in fep wait on codition in frame_rx: %d  subframe_rx: %d \n",proc->frame_rx,proc->subframe_rx);
   }

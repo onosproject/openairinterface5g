@@ -253,4 +253,3 @@ Expected results:
 Note: 
  - Use wireshark to observe unicast/multicast traffic from UE2/3.   
 
-

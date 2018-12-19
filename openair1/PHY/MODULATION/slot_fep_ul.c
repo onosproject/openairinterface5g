@@ -19,9 +19,11 @@
  *      contact@openairinterface.org
  */
 
-#include "PHY/defs.h"
-#include "PHY/extern.h"
-#include "defs.h"
+#include "PHY/defs_eNB.h"
+#include "PHY/phy_extern.h"
+#include "modulation_eNB.h"
+//#define DEBUG_FEP
+
 
 //#define DEBUG_FEP
 //#undef LOG_D

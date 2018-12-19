@@ -34,9 +34,6 @@
 #include <stdint.h>
 #endif
 
-#if defined(ENABLE_ITTI)
-#include "itti_types.h"
-#endif
 //-----------------------------------------------------------------------------
 // GENERIC TYPES
 //-----------------------------------------------------------------------------
@@ -68,7 +65,7 @@ typedef int32_t               sdu_size_t;
 typedef uint32_t              frame_t;
 typedef int32_t               sframe_t;
 typedef uint32_t              sub_frame_t;
-typedef uint8_t               module_id_t;
+typedef uint16_t               module_id_t;
 typedef uint8_t               slice_id_t;
 typedef uint8_t               eNB_index_t;
 typedef uint16_t              ue_id_t;
@@ -114,9 +111,15 @@ typedef enum {
     CR_HOL   = 2,
     CR_LC    = 3,
     CR_CQI   = 4,
-    CR_NUM   = 5
+    CR_LCP   = 5,
+    CR_NUM   = 6
 } sorting_criterion_t;
 
+typedef enum {
+    POL_FAIR   = 0,
+    POL_GREEDY = 1,
+    POL_NUM    = 2
+} accounting_policy_t;
 //-----------------------------------------------------------------------------
 // PHY TYPES
 //-----------------------------------------------------------------------------
@@ -292,4 +295,7 @@ typedef struct protocol_ctxt_s {
     (CTXT_Pp)->rnti
 
 #define CHECK_CTXT_ARGS(CTXT_Pp)
+
+#define exit_fun(msg) exit_function(__FILE__,__FUNCTION__,__LINE__,msg)
+void exit_function(const char* file, const char* function, const int line, const char* s);
 #endif

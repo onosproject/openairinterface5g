@@ -99,9 +99,12 @@ void *ue_ip_interrupt(void)
 }
 #endif //NETLINK
 //---------------------------------------------------------------------------
+<<<<<<< HEAD
 
 
 
+=======
+>>>>>>> main/develop
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 15, 0))
 void ue_ip_timer(struct timer_list *t)
 #else
@@ -265,7 +268,11 @@ int ue_ip_hard_start_xmit(struct sk_buff *skb_pP, struct net_device *dev_pP)
 
     // End debug information
     netif_stop_queue(dev_pP);
+<<<<<<< HEAD
 #if  (LINUX_VERSION_CODE >= KERNEL_VERSION(4,7,0) || defined RHEL_RELEASE_CODE && RHEL_RELEASE_CODE >= 1796)
+=======
+#if  LINUX_VERSION_CODE >= KERNEL_VERSION(4,7,0) || (defined RHEL_RELEASE_CODE && RHEL_RELEASE_CODE >= 1796)
+>>>>>>> main/develop
     netif_trans_update(dev_pP);
 #else
     dev_pP->trans_start = jiffies;
@@ -359,7 +366,11 @@ static const struct net_device_ops ue_ip_netdev_ops = {
   .ndo_set_mac_address    = ue_ip_set_mac_address,
   .ndo_set_config         = ue_ip_set_config,
   .ndo_do_ioctl           = NULL,
-  .ndo_change_mtu         = ue_ip_change_mtu,
+#if RHEL_RELEASE_CODE>=1797
+  .extended.ndo_change_mtu         = ue_ip_change_mtu,
+#else
+  .ndo_change_mtu   = ue_ip_change_mtu,
+#endif
   .ndo_tx_timeout         = ue_ip_tx_timeout,
   .ndo_change_rx_flags    = ue_ip_change_rx_flags,
 };

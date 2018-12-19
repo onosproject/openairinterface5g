@@ -40,7 +40,7 @@
 #include <math.h>
 #include "common_lib.h"
 #include "openair2/PHY_INTERFACE/IF_Module_NB_IoT.h"
-
+#include "defs_eNB.h"
 //#include <complex.h>
 #include "assertions.h"
 #ifdef MEX
@@ -52,7 +52,7 @@
 #     include "COMMON/ral_messages_types.h"
 #     include "UTIL/queue.h"
 #   endif
-#   include "log.h"
+#   include "common/utils/LOG/log.h"
 #   define msg(aRGS...) LOG_D(PHY, ##aRGS)
 # else
 #   define msg printf
@@ -341,8 +341,6 @@ typedef struct eNB_proc_NB_IoT_t_s {
   int                     instance_cnt_asynch_rxtx;
   /// pthread structure for FH processing thread
   pthread_t               pthread_FH;
-  /// pthread structure for eNB single processing thread
-  pthread_t               pthread_single;
   /// pthread structure for asychronous RX/TX processing thread
   pthread_t               pthread_asynch_rxtx;
   /// flag to indicate first RX acquisition
@@ -427,7 +425,7 @@ typedef struct eNB_proc_NB_IoT_t_s {
   int RU_mask;
   /// mask for RUs serving nbiot (PRACH)
   int RU_mask_prach;
-#ifdef Rel14
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
   /// mask for RUs serving eNB (PRACH)
   int RU_mask_prach_br;
 #endif

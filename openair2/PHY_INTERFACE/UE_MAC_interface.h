@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
 /*This is the interface module between PHY
 *Provided the FAPI style interface structures for P7.
@@ -5,11 +6,18 @@
 *
 *
 *//*
+=======
+/*
+>>>>>>> main/develop
  * Licensed to the OpenAirInterface (OAI) Software Alliance under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The OpenAirInterface Software Alliance licenses this file to You under
+<<<<<<< HEAD
  * the OAI Public License, Version 1.0  (the "License"); you may not use this file
+=======
+ * the OAI Public License, Version 1.1  (the "License"); you may not use this file
+>>>>>>> main/develop
  * except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -25,6 +33,13 @@
  *      contact@openairinterface.org
  */
 
+<<<<<<< HEAD
+=======
+/* This is the interface module between PHY
+ * Provided the FAPI style interface structures for P7.
+ */
+
+>>>>>>> main/develop
 /*! \file openair2/PHY_INTERFACE/IF_Module.h
 * \brief data structures for PHY/MAC interface modules
 * \author EURECOM/NTUST
@@ -194,14 +209,22 @@ typedef struct{
 }UE_MAC_BCH_indication_body_t;
 
 
+<<<<<<< HEAD
 // Panos: Corresponding to inputs of MAC functions: ue_send_sdu(), ue_decode_si(), ue_decode_p().
+=======
+// Corresponding to inputs of MAC functions: ue_send_sdu(), ue_decode_si(), ue_decode_p().
+>>>>>>> main/develop
 typedef struct{
 	uint8_t* 	data;
 	uint16_t 	data_len;
 }UE_MAC_dlsch_pdu;
 
 
+<<<<<<< HEAD
 // Panos: Corresponding to inputs of MAC function: process_rar().
+=======
+// Corresponding to inputs of MAC function: process_rar().
+>>>>>>> main/develop
 typedef struct{
 	rnti_t 		ra_rnti;
 	uint8_t* 	rar_input_buffer; // Originating from PHY

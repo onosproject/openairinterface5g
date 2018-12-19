@@ -2,11 +2,19 @@
 //#include "openair1/PHY/defs.h"
 //#include "openair2/PHY_INTERFACE/IF_Module.h"
 //#include "openair1/PHY/extern.h"
+<<<<<<< HEAD
 #include "openair2/LAYER2/MAC/extern.h"
 #include "openair2/LAYER2/MAC/defs.h"
 #include "openair2/LAYER2/MAC/proto.h"
 //#include "openair2/LAYER2/MAC/vars.h"
 #include "openair1/SCHED/defs.h"
+=======
+#include "openair2/LAYER2/MAC/mac_extern.h"
+#include "openair2/LAYER2/MAC/mac.h"
+#include "openair2/LAYER2/MAC/mac_proto.h"
+//#include "openair2/LAYER2/MAC/vars.h"
+#include "openair1/SCHED_UE/sched_UE.h"
+>>>>>>> main/develop
 #include "nfapi/open-nFAPI/nfapi/public_inc/nfapi_interface.h"
 //#include "common/ran_context.h"
 #include "openair2/PHY_INTERFACE/phy_stub_UE.h"
@@ -22,7 +30,10 @@
 extern int oai_nfapi_crc_indication(nfapi_crc_indication_t *crc_ind);
 extern int oai_nfapi_rx_ind(nfapi_rx_indication_t *ind);
 extern int oai_nfapi_rach_ind(nfapi_rach_indication_t *rach_ind);
+<<<<<<< HEAD
 //extern static int rrc_set_state (module_id_t ue_mod_idP, Rrc_State_t state);
+=======
+>>>>>>> main/develop
 void configure_nfapi_pnf(char *vnf_ip_addr, int vnf_p5_port, char *pnf_ip_addr, int pnf_p7_port, int vnf_p7_port);
 
 
@@ -69,7 +80,11 @@ void fill_rx_indication_UE_MAC(module_id_t Mod_id,int frame,int subframe, UL_IND
 	  pdu->data                              = ulsch_buffer;
 	  // estimate timing advance for MAC
 	  //sync_pos                               = lte_est_timing_advance_pusch(eNB,UE_id);
+<<<<<<< HEAD
 	  timing_advance_update                  = 0;  //Panos: Don't know what to put here
+=======
+	  timing_advance_update                  = 0;  // Don't know what to put here
+>>>>>>> main/develop
 	  pdu->rx_indication_rel8.timing_advance = timing_advance_update;
 
 		  int SNRtimes10 = 640;
@@ -88,7 +103,10 @@ void fill_rx_indication_UE_MAC(module_id_t Mod_id,int frame,int subframe, UL_IND
 
 void fill_sr_indication_UE_MAC(int Mod_id,int frame,int subframe, UL_IND_t *UL_INFO, uint16_t rnti) {
 
+<<<<<<< HEAD
 	LOG_I(MAC, "fill_sr_indication_UE_MAC() for Mod_Id: %d \n", Mod_id);
+=======
+>>>>>>> main/develop
 
   pthread_mutex_lock(&UE_mac_inst[Mod_id].UL_INFO_mutex);
 
@@ -107,10 +125,17 @@ void fill_sr_indication_UE_MAC(int Mod_id,int frame,int subframe, UL_IND_t *UL_I
   pdu->instance_length                                = 0; // don't know what to do with this
   //  pdu->rx_ue_information.handle                       = handle;
   pdu->rx_ue_information.tl.tag                       = NFAPI_RX_UE_INFORMATION_TAG;
+<<<<<<< HEAD
   pdu->rx_ue_information.rnti                         = rnti; //UE_mac_inst[Mod_id].crnti;; //Panos: Is this the right RNTI?
 
 
   // Panos dependency from PHY not sure how to substitute this. Should we hardcode it?
+=======
+  pdu->rx_ue_information.rnti                         = rnti; //UE_mac_inst[Mod_id].crnti
+
+
+  // dependency from PHY not sure how to substitute this. Should we hardcode it?
+>>>>>>> main/develop
   //int SNRtimes10 = dB_fixed_times10(stat) - 200;//(10*eNB->measurements.n0_power_dB[0]);
   int SNRtimes10 = 640;
 
@@ -132,7 +157,11 @@ void fill_crc_indication_UE_MAC(int Mod_id,int frame,int subframe, UL_IND_t *UL_
 
   pthread_mutex_lock(&UE_mac_inst[Mod_id].UL_INFO_mutex);
 
+<<<<<<< HEAD
   //Panos: REMEMBER HAVE EXCHANGED THE FOLLOWING TWO LINES HERE!
+=======
+  // REMEMBER HAVE EXCHANGED THE FOLLOWING TWO LINES HERE!
+>>>>>>> main/develop
   nfapi_crc_indication_pdu_t *pdu =   &UL_INFO->crc_ind.crc_indication_body.crc_pdu_list[UL_INFO->crc_ind.crc_indication_body.number_of_crcs];
 
   UL_INFO->crc_ind.sfn_sf                    = frame<<4| subframe;
@@ -174,9 +203,15 @@ void fill_rach_indication_UE_MAC(int Mod_id,int frame,int subframe, UL_IND_t *UL
 
 	    UL_INFO->rach_ind.rach_indication_body.preamble_list = (nfapi_preamble_pdu_t*)malloc(UL_INFO->rach_ind.rach_indication_body.number_of_preambles*sizeof(nfapi_preamble_pdu_t));
 	    UL_INFO->rach_ind.rach_indication_body.preamble_list[0].preamble_rel8.tl.tag   		= NFAPI_PREAMBLE_REL8_TAG;
+<<<<<<< HEAD
 	    UL_INFO->rach_ind.rach_indication_body.preamble_list[0].preamble_rel8.timing_advance = 0; //Panos: Not sure about that
 
 	    //Panos: The two following should get extracted from the call to get_prach_resources().
+=======
+	    UL_INFO->rach_ind.rach_indication_body.preamble_list[0].preamble_rel8.timing_advance = 0; // Not sure about that
+
+	    //The two following should get extracted from the call to get_prach_resources().
+>>>>>>> main/develop
 	    UL_INFO->rach_ind.rach_indication_body.preamble_list[0].preamble_rel8.preamble = ra_PreambleIndex;
 	    UL_INFO->rach_ind.rach_indication_body.preamble_list[0].preamble_rel8.rnti 	  = ra_RNTI;
 	    //UL_INFO->rach_ind.rach_indication_body.number_of_preambles++;
@@ -193,7 +228,11 @@ void fill_rach_indication_UE_MAC(int Mod_id,int frame,int subframe, UL_IND_t *UL
 	        	  UL_INFO->rach_ind.rach_indication_body.preamble_list[0].preamble_rel8.rnti,
 	        	  UL_INFO->rach_ind.rach_indication_body.preamble_list[0].preamble_rel13.rach_resource_type);
 
+<<<<<<< HEAD
 	          //Panos: This function is currently defined only in the nfapi-RU-RAU-split so we should call it when we merge
+=======
+	          // This function is currently defined only in the nfapi-RU-RAU-split so we should call it when we merge
+>>>>>>> main/develop
 	          // with that branch.
 	          oai_nfapi_rach_ind(&UL_INFO->rach_ind);
 	          free(UL_INFO->rach_ind.rach_indication_body.preamble_list);
@@ -212,12 +251,20 @@ void fill_ulsch_cqi_indication_UE_MAC(int Mod_id, uint16_t frame,uint8_t subfram
 
 	pdu->rx_ue_information.tl.tag          = NFAPI_RX_UE_INFORMATION_TAG;
 	pdu->rx_ue_information.rnti = rnti;
+<<<<<<< HEAD
 	//Panos: Since we assume that CRC flag is always 0 (ACK) I guess that data_offset should always be 0.
+=======
+	// Since we assume that CRC flag is always 0 (ACK) I guess that data_offset should always be 0.
+>>>>>>> main/develop
 	pdu->cqi_indication_rel9.data_offset = 0;
 
 	// by default set O to rank 1 value
 	//pdu->cqi_indication_rel9.length = (ulsch_harq->Or1>>3) + ((ulsch_harq->Or1&7) > 0 ? 1 : 0);
+<<<<<<< HEAD
 	// Panos: Not useful field for our case
+=======
+	//  Not useful field for our case
+>>>>>>> main/develop
 	pdu->cqi_indication_rel9.tl.tag = NFAPI_CQI_INDICATION_REL9_TAG;
 	pdu->cqi_indication_rel9.length = 0;
 	pdu->cqi_indication_rel9.ri[0]  = 0;
@@ -227,7 +274,11 @@ void fill_ulsch_cqi_indication_UE_MAC(int Mod_id, uint16_t frame,uint8_t subfram
   pdu->cqi_indication_rel9.number_of_cc_reported = 1;
   pdu->ul_cqi_information.channel = 1; // PUSCH
 
+<<<<<<< HEAD
   //Panos: Not sure how to substitute this. This should be the actual CQI value? So can
+=======
+  // Not sure how to substitute this. This should be the actual CQI value? So can
+>>>>>>> main/develop
   // we hardcode it to a specific value?
   //memcpy((void*)raw_pdu->pdu,ulsch_harq->o,pdu->cqi_indication_rel9.length);
   raw_pdu->pdu[0] = 7;
@@ -242,7 +293,10 @@ void fill_ulsch_cqi_indication_UE_MAC(int Mod_id, uint16_t frame,uint8_t subfram
 void fill_ulsch_harq_indication_UE_MAC(int Mod_id, int frame,int subframe, UL_IND_t *UL_INFO, nfapi_ul_config_ulsch_harq_information *harq_information, uint16_t rnti)
 {
 
+<<<<<<< HEAD
 	LOG_I(MAC, "Panos-D: fill_ulsch_harq_indication_UE_MAC(), NUM ACK_NAK REL. 10: %d, NUM ACK_NAK REL. 13: %d, SFN/SF: %d/%d", harq_information->harq_information_rel10.harq_size, harq_information->harq_information_rel13.harq_size_2, frame, subframe);
+=======
+>>>>>>> main/develop
   pthread_mutex_lock(&UE_mac_inst[Mod_id].UL_INFO_mutex);
   nfapi_harq_indication_pdu_t *pdu =   &UL_INFO->harq_ind.harq_indication_body.harq_pdu_list[UL_INFO->harq_ind.harq_indication_body.number_of_harqs];
   int i;
@@ -258,6 +312,7 @@ void fill_ulsch_harq_indication_UE_MAC(int Mod_id, int frame,int subframe, UL_IN
   pdu->rx_ue_information.tl.tag                       = NFAPI_RX_UE_INFORMATION_TAG;
   pdu->rx_ue_information.rnti                         = rnti;
 
+<<<<<<< HEAD
   //Panos: For now we consider only FDD
   //if (eNB->frame_parms.frame_type == FDD) {
     pdu->harq_indication_fdd_rel13.tl.tag = NFAPI_HARQ_INDICATION_FDD_REL13_TAG;
@@ -276,6 +331,22 @@ void fill_ulsch_harq_indication_UE_MAC(int Mod_id, int frame,int subframe, UL_IN
       pdu->harq_indication_fdd_rel13.harq_tb_n[i] = 1; //Panos: Assuming always an ACK (No NACK or DTX)
 
     }*/
+=======
+  // For now we consider only FDD
+  //if (eNB->frame_parms.frame_type == FDD) {
+    pdu->harq_indication_fdd_rel13.tl.tag = NFAPI_HARQ_INDICATION_FDD_REL13_TAG;
+    pdu->harq_indication_fdd_rel13.mode = 0;
+    pdu->harq_indication_fdd_rel13.number_of_ack_nack = harq_information->harq_information_rel10.harq_size;
+
+    // Could this be wrong? Is the number_of_ack_nack field equivalent to O_ACK?
+    //pdu->harq_indication_fdd_rel13.number_of_ack_nack = ulsch_harq->O_ACK;
+
+    for (i=0;i<harq_information->harq_information_rel10.harq_size;i++) {
+
+      pdu->harq_indication_fdd_rel13.harq_tb_n[i] = 1; // Assuming always an ACK (No NACK or DTX)
+
+    }
+>>>>>>> main/develop
 
   UL_INFO->harq_ind.harq_indication_body.number_of_harqs++;
   pthread_mutex_unlock(&UE_mac_inst[Mod_id].UL_INFO_mutex);
@@ -292,7 +363,10 @@ void fill_uci_harq_indication_UE_MAC(int Mod_id,
 			      uint16_t tdd_multiplexing_mask*/) {
 
 
+<<<<<<< HEAD
 	LOG_I (MAC, "Panos-D: fill_uci_harq_indication_UE_MAC 1 SFN/SF: %d/%d \n", frame, subframe);
+=======
+>>>>>>> main/develop
   pthread_mutex_lock(&UE_mac_inst[Mod_id].UL_INFO_mutex);
   nfapi_harq_indication_t *ind       = &UL_INFO->harq_ind;
   nfapi_harq_indication_body_t *body = &ind->harq_indication_body;
@@ -327,8 +401,12 @@ void fill_uci_harq_indication_UE_MAC(int Mod_id,
       pdu->harq_indication_fdd_rel13.number_of_ack_nack = 1;
 
       //AssertFatal(harq_ack[0] == 1 || harq_ack[0] == 2 || harq_ack[0] == 4, "harq_ack[0] is %d, should be 1,2 or 4\n",harq_ack[0]);
+<<<<<<< HEAD
       pdu->harq_indication_fdd_rel13.harq_tb_n[0] = 1; //Panos: Assuming always an ACK (No NACK or DTX)
       LOG_I (MAC, "Panos-D: fill_uci_harq_indication_UE_MAC 2 SFN/SF: %d/%d, harq_information->harq_information_rel9_fdd.harq_size: %d \n", frame, subframe, harq_information->harq_information_rel9_fdd.harq_size);
+=======
+      pdu->harq_indication_fdd_rel13.harq_tb_n[0] = 1; // Assuming always an ACK (No NACK or DTX)
+>>>>>>> main/develop
 
 
     }
@@ -337,10 +415,15 @@ void fill_uci_harq_indication_UE_MAC(int Mod_id,
       pdu->harq_indication_fdd_rel13.tl.tag = NFAPI_HARQ_INDICATION_FDD_REL13_TAG;
       pdu->harq_indication_fdd_rel13.mode = 0;
       pdu->harq_indication_fdd_rel13.number_of_ack_nack = 2;
+<<<<<<< HEAD
       pdu->harq_indication_fdd_rel13.harq_tb_n[0] = 1; //Panos: Assuming always an ACK (No NACK or DTX)
       pdu->harq_indication_fdd_rel13.harq_tb_n[1] = 1; //Panos: Assuming always an ACK (No NACK or DTX)
 
       LOG_I (MAC, "Panos-D: fill_uci_harq_indication_UE_MAC 3 SFN/SF: %d/%d, harq_information->harq_information_rel9_fdd.harq_size: %d \n", frame, subframe, harq_information->harq_information_rel9_fdd.harq_size);
+=======
+      pdu->harq_indication_fdd_rel13.harq_tb_n[0] = 1; // Assuming always an ACK (No NACK or DTX)
+      pdu->harq_indication_fdd_rel13.harq_tb_n[1] = 1; // Assuming always an ACK (No NACK or DTX)
+>>>>>>> main/develop
 
     }
     else AssertFatal(1==0,"only format 1a/b for now, received \n");
@@ -357,11 +440,18 @@ void handle_nfapi_ul_pdu_UE_MAC(module_id_t Mod_id,
                          nfapi_ul_config_request_pdu_t *ul_config_pdu,
                          uint16_t frame,uint8_t subframe,uint8_t srs_present, int index)
 {
+<<<<<<< HEAD
   nfapi_ul_config_ulsch_pdu_rel8_t *rel8 = &ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8;
 
   if (ul_config_pdu->pdu_type == NFAPI_UL_CONFIG_ULSCH_PDU_TYPE) {
     LOG_D(PHY,"Applying UL config for UE, rnti %x for frame %d, subframe %d\n",
          rel8->rnti,frame,subframe);
+=======
+
+  if (ul_config_pdu->pdu_type == NFAPI_UL_CONFIG_ULSCH_PDU_TYPE) {
+    LOG_D(PHY,"Applying UL config for UE, rnti %x for frame %d, subframe %d\n",
+         (ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8).rnti,frame,subframe);
+>>>>>>> main/develop
     uint8_t ulsch_buffer[5477] __attribute__ ((aligned(32)));
     uint16_t buflen = ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.size;
 
@@ -373,6 +463,7 @@ void handle_nfapi_ul_pdu_UE_MAC(module_id_t Mod_id,
     		fill_crc_indication_UE_MAC(Mod_id, frame, subframe, UL_INFO, 0, index, rnti);
     		fill_rx_indication_UE_MAC(Mod_id, frame, subframe, UL_INFO, UE_mac_inst[Mod_id].RA_prach_resources.Msg3,buflen, rnti, index);
     		Msg3_transmitted(Mod_id, 0, frame, 0);
+<<<<<<< HEAD
     		// Panos: Modification
     		UE_mac_inst[Mod_id].UE_mode[0] = PUSCH;
     		UE_mac_inst[Mod_id].first_ULSCH_Tx = 0;
@@ -382,6 +473,16 @@ void handle_nfapi_ul_pdu_UE_MAC(module_id_t Mod_id,
     	}
     	else {
     		//LOG_I(MAC, "Panos-D: handle_nfapi_ul_pdu_UE_MAC 2.3 \n");
+=======
+    		//  Modification
+    		UE_mac_inst[Mod_id].UE_mode[0] = PUSCH;
+    		UE_mac_inst[Mod_id].first_ULSCH_Tx = 0;
+
+    		// This should be done after the reception of the respective hi_dci0
+    		//UE_mac_inst[Mod_id].first_ULSCH_Tx = 0;
+    	}
+    	else {
+>>>>>>> main/develop
     		ue_get_sdu( Mod_id, 0, frame, subframe, 0, ulsch_buffer, buflen, &access_mode);
     		fill_crc_indication_UE_MAC(Mod_id, frame, subframe, UL_INFO, 0, index, rnti);
     		fill_rx_indication_UE_MAC(Mod_id, frame, subframe, UL_INFO, ulsch_buffer,buflen, rnti, index);
@@ -404,12 +505,19 @@ void handle_nfapi_ul_pdu_UE_MAC(module_id_t Mod_id,
 			  fill_rx_indication_UE_MAC(Mod_id, frame, subframe, UL_INFO, UE_mac_inst[Mod_id].RA_prach_resources.Msg3,buflen, rnti, index);
 			  Msg3_transmitted(Mod_id, 0, frame, 0);
 			  //UE_mac_inst[Mod_id].first_ULSCH_Tx = 0;
+<<<<<<< HEAD
 			  // Panos: Modification
+=======
+			  // Modification
+>>>>>>> main/develop
 			  UE_mac_inst[Mod_id].UE_mode[0] = PUSCH;
 			  UE_mac_inst[Mod_id].first_ULSCH_Tx = 0;
 		  }
 		  else {
+<<<<<<< HEAD
 			  //LOG_I(MAC, "Panos-D: handle_nfapi_ul_pdu_UE_MAC 3.1 \n");
+=======
+>>>>>>> main/develop
 			  ue_get_sdu( Mod_id, 0, frame, subframe, 0, ulsch_buffer, buflen, &access_mode);
 			  fill_crc_indication_UE_MAC(Mod_id, frame, subframe, UL_INFO, 0, index, rnti);
 			  fill_rx_indication_UE_MAC(Mod_id, frame, subframe, UL_INFO, ulsch_buffer,buflen, rnti, index);
@@ -432,7 +540,11 @@ void handle_nfapi_ul_pdu_UE_MAC(module_id_t Mod_id,
 			  fill_rx_indication_UE_MAC(Mod_id, frame, subframe, UL_INFO, UE_mac_inst[Mod_id].RA_prach_resources.Msg3,buflen, rnti, index);
 			  Msg3_transmitted(Mod_id, 0, frame, 0);
 			  //UE_mac_inst[Mod_id].first_ULSCH_Tx = 0;
+<<<<<<< HEAD
 			  // Panos: Modification
+=======
+			  // Modification
+>>>>>>> main/develop
 			  UE_mac_inst[Mod_id].UE_mode[0] = PUSCH;
 			  UE_mac_inst[Mod_id].first_ULSCH_Tx = 0;
 		  }
@@ -459,7 +571,11 @@ void handle_nfapi_ul_pdu_UE_MAC(module_id_t Mod_id,
 			  fill_rx_indication_UE_MAC(Mod_id, frame, subframe, UL_INFO, UE_mac_inst[Mod_id].RA_prach_resources.Msg3,buflen, rnti, index);
 			  Msg3_transmitted(Mod_id, 0, frame, 0);
 			  //UE_mac_inst[Mod_id].first_ULSCH_Tx = 0;
+<<<<<<< HEAD
 			  // Panos: Modification
+=======
+			  // Modification
+>>>>>>> main/develop
 			  UE_mac_inst[Mod_id].UE_mode[0] = PUSCH;
 			  UE_mac_inst[Mod_id].first_ULSCH_Tx = 0;
 		  }
@@ -574,17 +690,26 @@ int ul_config_req_UE_MAC(nfapi_ul_config_request_t* req, int timer_frame, int ti
 
 int tx_req_UE_MAC(nfapi_tx_request_t* req)
 {
+<<<<<<< HEAD
   uint16_t sfn = NFAPI_SFNSF2SFN(req->sfn_sf);
   uint16_t sf = NFAPI_SFNSF2SF(req->sfn_sf);
 
   LOG_D(PHY,"%s() SFN/SF:%d/%d PDUs:%d\n", __FUNCTION__, sfn, sf, req->tx_request_body.number_of_pdus);
+=======
+
+  LOG_D(PHY,"%s() SFN/SF:%d/%d PDUs:%d\n", __FUNCTION__, NFAPI_SFNSF2SFN(req->sfn_sf), NFAPI_SFNSF2SF(req->sfn_sf), req->tx_request_body.number_of_pdus);
+>>>>>>> main/develop
 
 
     for (int i=0; i<req->tx_request_body.number_of_pdus; i++)
     {
       LOG_D(PHY,"%s() SFN/SF:%d/%d number_of_pdus:%d [PDU:%d] pdu_length:%d pdu_index:%d num_segments:%d\n",
           __FUNCTION__,
+<<<<<<< HEAD
           sfn, sf,
+=======
+          NFAPI_SFNSF2SFN(req->sfn_sf), NFAPI_SFNSF2SF(req->sfn_sf),
+>>>>>>> main/develop
           req->tx_request_body.number_of_pdus,
           i,
           req->tx_request_body.tx_pdu_list[i].pdu_length,
@@ -661,16 +786,25 @@ int dl_config_req_UE_MAC(nfapi_dl_config_request_t* req, module_id_t Mod_id) //,
 		}
 		else if (dl_config_pdu_list[i].dci_dl_pdu.dci_dl_pdu_rel8.rnti_type == 2) {
 			dl_config_pdu_tmp = &dl_config_pdu_list[i+1];
+<<<<<<< HEAD
 			//LOG_I(MAC, "Panos-D: Before decoding SIB1 1\n \n");
+=======
+>>>>>>> main/develop
 			if(dl_config_pdu_tmp->pdu_type == NFAPI_DL_CONFIG_DLSCH_PDU_TYPE && dl_config_pdu_list[i].dci_dl_pdu.dci_dl_pdu_rel8.rnti == 0xFFFF && UE_mac_inst[Mod_id].UE_mode[0] != NOT_SYNCHED){ //&& UE_mac_inst[Mod_id].UE_mode[0] != NOT_SYNCHED
 
 				if(dl_config_pdu_tmp->dlsch_pdu.dlsch_pdu_rel8.pdu_index <= tx_req_num_elems -1){
 				//if(tx_request_pdu_list + dl_config_pdu_tmp->dlsch_pdu.dlsch_pdu_rel8.pdu_index!= NULL){
+<<<<<<< HEAD
 					//LOG_I(MAC, "Panos-D: Before decoding SIB1 2\n \n");
 					ue_decode_si(Mod_id, 0, sfn, 0,
 						     tx_request_pdu_list[dl_config_pdu_tmp->dlsch_pdu.dlsch_pdu_rel8.pdu_index].segments[0].segment_data,
 						     tx_request_pdu_list[dl_config_pdu_tmp->dlsch_pdu.dlsch_pdu_rel8.pdu_index].segments[0].segment_length,
 						     NULL,NULL,NULL);
+=======
+					ue_decode_si(Mod_id, 0, sfn, 0,
+							tx_request_pdu_list[dl_config_pdu_tmp->dlsch_pdu.dlsch_pdu_rel8.pdu_index].segments[0].segment_data,
+							tx_request_pdu_list[dl_config_pdu_tmp->dlsch_pdu.dlsch_pdu_rel8.pdu_index].segments[0].segment_length);
+>>>>>>> main/develop
 					i++;
 				}
 				else{
@@ -731,13 +865,21 @@ int dl_config_req_UE_MAC(nfapi_dl_config_request_t* req, module_id_t Mod_id) //,
     	// for our case.
     	//LOG_E(MAC,"dl_config_req_UE_MAC 4 Received MIB: sfn/sf: %d.%d \n", sfn, sf);
     	if(UE_mac_inst[Mod_id].UE_mode[0] == NOT_SYNCHED){
+<<<<<<< HEAD
     		//rrc_set_state(Mod_id, RRC_STATE_IDLE);
+=======
+>>>>>>> main/develop
     		dl_phy_sync_success(Mod_id,sfn,0, 1);
     		LOG_E(MAC,"dl_config_req_UE_MAC 5 Received MIB: UE_mode: %d, sfn/sf: %d.%d\n", UE_mac_inst[Mod_id].UE_mode[0], sfn, sf);
     		UE_mac_inst[Mod_id].UE_mode[0]=PRACH;
     	}
+<<<<<<< HEAD
     	//else
     		//dl_phy_sync_success(Mod_id,sfn,0, 0);
+=======
+    	else
+    		dl_phy_sync_success(Mod_id,sfn,0, 0);
+>>>>>>> main/develop
 
     }
 
@@ -803,6 +945,7 @@ int hi_dci0_req_UE_MAC(nfapi_hi_dci0_request_t* req, module_id_t Mod_id)
 int memcpy_dl_config_req (nfapi_pnf_p7_config_t* pnf_p7, nfapi_dl_config_request_t* req)
 {
 
+<<<<<<< HEAD
 	//module_id_t Mod_id = 0; //Panos: Currently static (only for one UE) but this should change.
 
 	//for (Mod_id=0; Mod_id<NB_UE_INST; Mod_id++){
@@ -810,6 +953,11 @@ int memcpy_dl_config_req (nfapi_pnf_p7_config_t* pnf_p7, nfapi_dl_config_request
 	dl_config_req = (nfapi_dl_config_request_t*)malloc(sizeof(nfapi_dl_config_request_t));
 	//LOG_I(MAC, "Panos-D: memcpy_dl_config_req 1, Mod_id:%d \n", Mod_id);
 
+=======
+	//for (Mod_id=0; Mod_id<NB_UE_INST; Mod_id++){
+
+	dl_config_req = (nfapi_dl_config_request_t*)malloc(sizeof(nfapi_dl_config_request_t));
+>>>>>>> main/develop
 
 	//UE_mac_inst[Mod_id].dl_config_req->header = req->header;
 	dl_config_req->sfn_sf = req->sfn_sf;
@@ -837,10 +985,13 @@ int memcpy_dl_config_req (nfapi_pnf_p7_config_t* pnf_p7, nfapi_dl_config_request
 
 int memcpy_ul_config_req (nfapi_pnf_p7_config_t* pnf_p7, nfapi_ul_config_request_t* req)
 {
+<<<<<<< HEAD
 	//LOG_D(MAC, "Panos-D: memcpy_ul_config_req 1 \n");
 
 	//module_id_t Mod_id = 0; //Panos: Currently static (only for one UE) but this should change.
 
+=======
+>>>>>>> main/develop
 
 	//for (Mod_id=0; Mod_id<NB_UE_INST; Mod_id++){
 
@@ -872,8 +1023,11 @@ int memcpy_ul_config_req (nfapi_pnf_p7_config_t* pnf_p7, nfapi_ul_config_request
 
 int memcpy_tx_req (nfapi_pnf_p7_config_t* pnf_p7, nfapi_tx_request_t* req)
 {
+<<<<<<< HEAD
 	//module_id_t Mod_id = 0; //Panos: Currently static (only for one UE) but this should change.
 
+=======
+>>>>>>> main/develop
 
 	tx_req_num_elems = req->tx_request_body.number_of_pdus;
 	tx_request_pdu_list = (nfapi_tx_request_pdu_t*) calloc(tx_req_num_elems, sizeof(nfapi_tx_request_pdu_t));
@@ -899,7 +1053,10 @@ int memcpy_hi_dci0_req (nfapi_pnf_p7_config_t* pnf_p7, nfapi_hi_dci0_request_t* 
 {
 
 	//if(req!=0){
+<<<<<<< HEAD
 	//module_id_t Mod_id = 0; //Panos: Currently static (only for one UE) but this should change.
+=======
+>>>>>>> main/develop
 
 	//for (Mod_id=0; Mod_id<NB_UE_INST; Mod_id++){
 	hi_dci0_req = (nfapi_hi_dci0_request_t*)malloc(sizeof(nfapi_hi_dci0_request_t));
@@ -944,7 +1101,11 @@ void UE_config_stub_pnf(void) {
 		  if (strcmp(*(L1_ParamList.paramarray[j][L1_TRANSPORT_N_PREFERENCE_IDX].strptr), "local_mac") == 0) {
 			  sf_ahead = 4; // Need 4 subframe gap between RX and TX
 			  }
+<<<<<<< HEAD
 		  // Panos: Right now that we have only one UE (thread) it is ok to put the eth_params in the UE_mac_inst.
+=======
+		  // Right now that we have only one UE (thread) it is ok to put the eth_params in the UE_mac_inst.
+>>>>>>> main/develop
 		  // Later I think we have to change that to attribute eth_params to a global element for all the UEs.
 		  else if (strcmp(*(L1_ParamList.paramarray[j][L1_TRANSPORT_N_PREFERENCE_IDX].strptr), "nfapi") == 0) {
 			  stub_eth_params.local_if_name            = strdup(*(L1_ParamList.paramarray[j][L1_LOCAL_N_IF_NAME_IDX].strptr));
@@ -1027,7 +1188,11 @@ uint32_t from_earfcn(int eutra_bandP, uint32_t dl_earfcn) { return(0);}
 
 int32_t get_uldl_offset(int eutra_bandP) { return(0);}
 
+<<<<<<< HEAD
 int l1_north_init_eNB() {
+=======
+int l1_north_init_eNB(void) {
+>>>>>>> main/develop
 return 0;
 }
 

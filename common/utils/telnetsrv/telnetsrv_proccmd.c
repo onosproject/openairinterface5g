@@ -52,10 +52,9 @@
 #define TELNETSERVERCODE
 #include "telnetsrv.h"
 #define TELNETSRV_PROCCMD_MAIN
-#include "log.h"
-#include "log_extern.h"
+#include "common/utils/LOG/log.h"
 #include "common/config/config_userapi.h"
-#include "openair1/PHY/extern.h"
+#include "openair1/PHY/phy_extern.h"
 #include "telnetsrv_proccmd.h"
 
 void decode_procstat(char *record, int debug, telnet_printfunc_t prnt)
@@ -193,7 +192,6 @@ struct dirent *entry;
 
 int proccmd_show(char *buf, int debug, telnet_printfunc_t prnt)
 {
-extern log_t *g_log;   
    
    if (debug > 0)
        prnt(" proccmd_show received %s\n",buf);
@@ -201,12 +199,29 @@ extern log_t *g_log;
        print_threads(buf,debug,prnt);
    }
    if (strcasestr(buf,"loglvl") != NULL) {
-       prnt("component                 verbosity  level  enabled\n");
+       prnt("\n               component level  enabled   output\n");
        for (int i=MIN_LOG_COMPONENTS; i < MAX_LOG_COMPONENTS; i++) {
-            prnt("%02i %17.17s:%10.10s%10.10s  %s\n",i ,g_log->log_component[i].name, 
-                  map_int_to_str(log_verbosity_names,g_log->log_component[i].flag),
-	          map_int_to_str(log_level_names,g_log->log_component[i].level),
-                  ((g_log->log_component[i].interval>0)?"Y":"N") );
+            if (g_log->log_component[i].name != NULL) {
+               prnt("%02i %17.17s:%10.10s    %s      %s\n",i ,g_log->log_component[i].name, 
+	             map_int_to_str(log_level_names,(g_log->log_component[i].level>=0)?g_log->log_component[i].level:g_log->log_component[i].savedlevel),
+                     ((g_log->log_component[i].level>=0)?"Y":"N"),
+                     ((g_log->log_component[i].filelog>0)?g_log->log_component[i].filelog_name:"stdout"));
+           }
+       }
+   }
+   if (strcasestr(buf,"logopt") != NULL) {
+       prnt("\n               option      enabled\n");
+       for (int i=0; log_options[i].name != NULL; i++) {
+               prnt("%02i %17.17s %10.10s \n",i ,log_options[i].name, 
+                     ((g_log->flag & log_options[i].value)?"Y":"N") );
+       }
+   }
+   if (strcasestr(buf,"dbgopt") != NULL) {
+       prnt("\n               module  debug dumpfile\n");
+       for (int i=0; log_maskmap[i].name != NULL ; i++) {
+               prnt("%02i %17.17s %5.5s   %5.5s\n",i ,log_maskmap[i].name, 
+	             ((g_log->debug_mask &  log_maskmap[i].value)?"Y":"N"),
+                     ((g_log->dump_mask & log_maskmap[i].value)?"Y":"N") );
        }
    }
    if (strcasestr(buf,"config") != NULL) {
@@ -288,8 +303,6 @@ char sv1[64];
 } 
 int proccmd_exit(char *buf, int debug, telnet_printfunc_t prnt)
 {
-extern void exit_fun(const char* s);   
-   
    if (debug > 0)
        prnt("process module received %s\n",buf);
 
@@ -323,42 +336,100 @@ int s = sscanf(buf,"%ms %i-%i\n",&logsubcmd, &idx1,&idx2);
           prnt("Available log levels: \n   ");
           for (int i=0; log_level_names[i].name != NULL; i++)
              prnt("%s ",log_level_names[i].name);
-          prnt("\nAvailable verbosity: \n   ");
-          for (int i=0; log_verbosity_names[i].name != NULL; i++)
-             prnt("%s ",log_verbosity_names[i].name);
-          prnt("\n");
+          prnt("\n\n");
+          prnt("Available display options: \n   ");
+          for (int i=0; log_options[i].name != NULL; i++)
+             prnt("%s ",log_options[i].name);
+          prnt("\n\n");
+          prnt("Available debug and dump options: \n   ");
+          for (int i=0; log_maskmap[i].name != NULL; i++)
+             prnt("%s ",log_maskmap[i].name);
+          prnt("\n\n");
    	  proccmd_show("loglvl",debug,prnt);
+   	  proccmd_show("logopt",debug,prnt);
+   	  proccmd_show("dbgopt",debug,prnt);
       }
       else if (strcasestr(logsubcmd,"help") != NULL) {
           prnt(PROCCMD_LOG_HELP_STRING);
       } else {
           prnt("%s: wrong log command...\n",logsubcmd);
       }
+   } else if ( s == 2 && logsubcmd != NULL) {
+      char *opt=NULL;
+      char *logparam=NULL;
+      int  l;
+      int optbit;
+
+      l=sscanf(logsubcmd,"%m[^'_']_%ms",&logparam,&opt);
+      if (l == 2 && strcmp(logparam,"print") == 0){
+         optbit=map_str_to_int(log_options,opt);
+         if (optbit < 0) {
+            prnt("option %s unknown\n",opt);
+         } else {
+            if (idx1 > 0)    
+                SET_LOG_OPTION(optbit);
+            else
+                CLEAR_LOG_OPTION(optbit);
+            proccmd_show("logopt",debug,prnt);
+         }
+      }
+      else if (l == 2 && strcmp(logparam,"debug") == 0){
+         optbit=map_str_to_int(log_maskmap,opt);
+         if (optbit < 0) {
+            prnt("module %s unknown\n",opt);
+         } else {
+            if (idx1 > 0)    
+                SET_LOG_DEBUG(optbit);
+            else
+                CLEAR_LOG_DEBUG(optbit);
+            proccmd_show("dbgopt",debug,prnt);
+         }
+      }  
+       else if (l == 2 && strcmp(logparam,"dump") == 0){
+         optbit=map_str_to_int(log_maskmap,opt);
+         if (optbit < 0) {
+            prnt("module %s unknown\n",opt);
+         } else {
+            if (idx1 > 0)    
+                SET_LOG_DUMP(optbit);
+            else
+                CLEAR_LOG_DUMP(optbit);
+            proccmd_show("dbgopt",debug,prnt);
+         }
+      }       
+      if (logparam != NULL) free(logparam);
+      if (opt != NULL)      free(opt); 
    } else if ( s == 3 && logsubcmd != NULL) {
-      int level, verbosity, interval;
+      int level, enable,filelog;
       char *tmpstr=NULL;
       char *logparam=NULL;
       int l;
 
-      level = verbosity = interval = -1;
+      level = OAILOG_DISABLE - 1;
+      filelog = -1;
+      enable=-1; 
       l=sscanf(logsubcmd,"%m[^'_']_%m[^'_']",&logparam,&tmpstr);
       if (debug > 0)
           prnt("l=%i, %s %s\n",l,((logparam==NULL)?"\"\"":logparam), ((tmpstr==NULL)?"\"\"":tmpstr));
       if (l ==2 ) {
          if (strcmp(logparam,"level") == 0) {
              level=map_str_to_int(log_level_names,tmpstr);
-             if (level < 0)  prnt("level %s unknown\n",tmpstr);
-         } else if (strcmp(logparam,"verbos") == 0) {
-             verbosity=map_str_to_int(log_verbosity_names,tmpstr);
-             if (verbosity < 0)  prnt("verbosity %s unknown\n",tmpstr);
+             if (level < 0) {
+                 prnt("level %s unknown\n",tmpstr);
+                 level=OAILOG_DISABLE - 1;
+              }
          } else {
              prnt("%s%s unknown log sub command \n",logparam, tmpstr);
          }
       } else if (l ==1 ) {
          if (strcmp(logparam,"enable") == 0) {
-              interval = 1;
+            enable=1;
          } else if (strcmp(logparam,"disable") == 0) {
-              interval = 0;
+             level=OAILOG_DISABLE;
+         } else if (strcmp(logparam,"file") == 0) {
+             filelog = 1 ;
+         } else if (strcmp(logparam,"nofile") == 0) {
+             filelog = 0 ;
          } else {
              prnt("%s%s unknown log sub command \n",logparam, tmpstr);
          }
@@ -368,15 +439,18 @@ int s = sscanf(buf,"%ms %i-%i\n",&logsubcmd, &idx1,&idx2);
       if (logparam != NULL) free(logparam);
       if (tmpstr != NULL)   free(tmpstr);
       for (int i=idx1; i<=idx2 ; i++) {
-          set_comp_log(i, level, verbosity, interval);
-          prnt("log level/verbosity  comp %i %s set to %s / %s (%s)\n",
-                i,((g_log->log_component[i].name==NULL)?"":g_log->log_component[i].name),
-                map_int_to_str(log_level_names,g_log->log_component[i].level),
-                map_int_to_str(log_verbosity_names,g_log->log_component[i].flag),
-                ((g_log->log_component[i].interval>0)?"enabled":"disabled"));
-
-        
-      }     
+        if (level >= OAILOG_DISABLE)
+           set_log(i, level);
+        else if ( enable == 1)
+           set_log(i,g_log->log_component[i].savedlevel);
+        else if ( filelog == 1 ) {
+           set_component_filelog(i);
+        } else if ( filelog == 0 ) {
+           close_component_filelog(i);
+        } 
+          
+      }
+     proccmd_show("loglvl",debug,prnt);
    } else {
        prnt("%s: wrong log command...\n",buf);
    }

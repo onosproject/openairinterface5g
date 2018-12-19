@@ -26,6 +26,7 @@
  * \version 0.1
  */
 
+#include <dlfcn.h>
 #include "flexran_agent_ran_api.h"
 
 static inline int phy_is_present(mid_t mod_id, uint8_t cc_id)
@@ -112,6 +113,21 @@ int flexran_get_num_ues(mid_t mod_id)
   return RC.mac[mod_id]->UE_list.num_UEs;
 }
 
+int flexran_get_ue_id(mid_t mod_id, int i)
+{
+  int n;
+  if (!mac_is_present(mod_id)) return 0;
+  /* get the (i+1)'th active UE */
+  for (n = 0; n < MAX_MOBILES_PER_ENB; ++n) {
+    if (RC.mac[mod_id]->UE_list.active[n] == TRUE) {
+      if (i == 0)
+        return n;
+      --i;
+    }
+  }
+  return 0;
+}
+
 rnti_t flexran_get_ue_crnti(mid_t mod_id, mid_t ue_id)
 {
   return UE_RNTI(mod_id, ue_id);
@@ -141,10 +157,17 @@ rlc_buffer_occupancy_t flexran_get_tx_queue_size(mid_t mod_id, mid_t ue_id, logi
   frame_t frame = flexran_get_current_frame(mod_id);
   sub_frame_t subframe = flexran_get_current_subframe(mod_id);
   mac_rlc_status_resp_t rlc_status = mac_rlc_status_ind(mod_id,rnti, mod_id, frame, subframe, ENB_FLAG_YES,MBMS_FLAG_NO, channel_id, 0
+<<<<<<< HEAD
 #ifdef Rel14
 							,0,0
 #endif
 							);
+=======
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
+                                                    ,0, 0
+#endif
+                                                    );
+>>>>>>> main/develop
   return rlc_status.bytes_in_buffer;
 }
 
@@ -154,10 +177,17 @@ rlc_buffer_occupancy_t flexran_get_num_pdus_buffer(mid_t mod_id, mid_t ue_id, lo
   frame_t frame = flexran_get_current_frame(mod_id);
   sub_frame_t subframe = flexran_get_current_subframe(mod_id);
   mac_rlc_status_resp_t rlc_status = mac_rlc_status_ind(mod_id,rnti, mod_id, frame, subframe, ENB_FLAG_YES,MBMS_FLAG_NO, channel_id, 0
+<<<<<<< HEAD
 #ifdef Rel14
 							,0,0
 #endif
 							);
+=======
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
+                                                    ,0, 0
+#endif
+                                                    );
+>>>>>>> main/develop
   return rlc_status.pdus_in_buffer;
 }
 
@@ -167,10 +197,17 @@ frame_t flexran_get_hol_delay(mid_t mod_id, mid_t ue_id, logical_chan_id_t chann
   frame_t frame = flexran_get_current_frame(mod_id);
   sub_frame_t subframe = flexran_get_current_subframe(mod_id);
   mac_rlc_status_resp_t rlc_status = mac_rlc_status_ind(mod_id, rnti, mod_id, frame, subframe, ENB_FLAG_YES, MBMS_FLAG_NO, channel_id, 0
+<<<<<<< HEAD
 #ifdef Rel14
 							,0,0
 #endif
 							);
+=======
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
+                                                    ,0, 0
+#endif
+                                                    );
+>>>>>>> main/develop
   return rlc_status.head_sdu_creation_time;
 }
 
@@ -703,7 +740,7 @@ uint8_t flexran_get_num_pdcch_symb(mid_t mod_id, uint8_t cc_id)
  */
 
 
-TimeAlignmentTimer_t flexran_get_time_alignment_timer(mid_t mod_id, mid_t ue_id)
+LTE_TimeAlignmentTimer_t flexran_get_time_alignment_timer(mid_t mod_id, mid_t ue_id)
 {
   if (!rrc_is_present(mod_id)) return -1;
 
@@ -724,11 +761,11 @@ Protocol__FlexMeasGapConfigPattern flexran_get_meas_gap_config(mid_t mod_id, mid
 
   if (!ue_context_p) return -1;
   if (!ue_context_p->ue_context.measGapConfig) return -1;
-  if (ue_context_p->ue_context.measGapConfig->present != MeasGapConfig_PR_setup) return -1;
+  if (ue_context_p->ue_context.measGapConfig->present != LTE_MeasGapConfig_PR_setup) return -1;
   switch (ue_context_p->ue_context.measGapConfig->choice.setup.gapOffset.present) {
-  case MeasGapConfig__setup__gapOffset_PR_gp0:
+  case LTE_MeasGapConfig__setup__gapOffset_PR_gp0:
     return PROTOCOL__FLEX_MEAS_GAP_CONFIG_PATTERN__FLMGCP_GP1;
-  case MeasGapConfig__setup__gapOffset_PR_gp1:
+  case LTE_MeasGapConfig__setup__gapOffset_PR_gp1:
     return PROTOCOL__FLEX_MEAS_GAP_CONFIG_PATTERN__FLMGCP_GP2;
   default:
     return PROTOCOL__FLEX_MEAS_GAP_CONFIG_PATTERN__FLMGCP_OFF;
@@ -745,11 +782,11 @@ long flexran_get_meas_gap_config_offset(mid_t mod_id, mid_t ue_id)
 
   if (!ue_context_p) return -1;
   if (!ue_context_p->ue_context.measGapConfig) return -1;
-  if (ue_context_p->ue_context.measGapConfig->present != MeasGapConfig_PR_setup) return -1;
+  if (ue_context_p->ue_context.measGapConfig->present != LTE_MeasGapConfig_PR_setup) return -1;
   switch (ue_context_p->ue_context.measGapConfig->choice.setup.gapOffset.present) {
-  case MeasGapConfig__setup__gapOffset_PR_gp0:
+  case LTE_MeasGapConfig__setup__gapOffset_PR_gp0:
     return ue_context_p->ue_context.measGapConfig->choice.setup.gapOffset.choice.gp0;
-  case MeasGapConfig__setup__gapOffset_PR_gp1:
+  case LTE_MeasGapConfig__setup__gapOffset_PR_gp1:
     return ue_context_p->ue_context.measGapConfig->choice.setup.gapOffset.choice.gp1;
   default:
     return -1;
@@ -788,7 +825,7 @@ int flexran_get_half_duplex(mid_t mod_id, mid_t ue_id)
 
   if (!ue_context_p) return -1;
   if (!ue_context_p->ue_context.UE_Capability) return -1;
-  SupportedBandListEUTRA_t *bands = &ue_context_p->ue_context.UE_Capability->rf_Parameters.supportedBandListEUTRA;
+  LTE_SupportedBandListEUTRA_t *bands = &ue_context_p->ue_context.UE_Capability->rf_Parameters.supportedBandListEUTRA;
   for (int i = 0; i < bands->list.count; i++) {
     if (bands->list.array[i]->halfDuplex > 0) return 1;
   }
@@ -960,7 +997,7 @@ BOOLEAN_t flexran_get_ack_nack_simultaneous_trans(mid_t mod_id, mid_t ue_id, uin
   return RC.rrc[mod_id]->carrier[cc_id].sib2->radioResourceConfigCommon.soundingRS_UL_ConfigCommon.choice.setup.ackNackSRS_SimultaneousTransmission;
 }
 
-CQI_ReportModeAperiodic_t flexran_get_aperiodic_cqi_rep_mode(mid_t mod_id,mid_t ue_id)
+LTE_CQI_ReportModeAperiodic_t flexran_get_aperiodic_cqi_rep_mode(mid_t mod_id,mid_t ue_id)
 {
   if (!rrc_is_present(mod_id)) return -1;
 
@@ -1025,9 +1062,9 @@ int flexran_get_ue_transmission_antenna(mid_t mod_id, mid_t ue_id)
   if (!ue_context_p->ue_context.physicalConfigDedicated) return -1;
   if (!ue_context_p->ue_context.physicalConfigDedicated->antennaInfo) return -1;
   switch (ue_context_p->ue_context.physicalConfigDedicated->antennaInfo->choice.explicitValue.ue_TransmitAntennaSelection.choice.setup) {
-  case AntennaInfoDedicated__ue_TransmitAntennaSelection__setup_closedLoop:
+  case LTE_AntennaInfoDedicated__ue_TransmitAntennaSelection__setup_closedLoop:
     return 2;
-  case AntennaInfoDedicated__ue_TransmitAntennaSelection__setup_openLoop:
+  case LTE_AntennaInfoDedicated__ue_TransmitAntennaSelection__setup_openLoop:
     return 1;
   default:
     return 0;
@@ -1193,111 +1230,163 @@ void flexran_agent_set_operating_frame_type(mid_t mod_id, uint8_t cc_id, lte_fra
 
 /*********** PDCP  *************/
 /*PDCP super frame counter flexRAN*/
-uint32_t flexran_get_pdcp_sfn(const mid_t mod_id){
+
+/* TODO the following is a hack. all the functions below should instead already
+ * receive the PDCP's uid and operate on it and the caller has the obligation
+ * to get the ID for this layer.
+ */
+static inline uint16_t flexran_get_pdcp_uid(mid_t mod_id, mid_t ue_id)
+{
+  rnti_t rnti = flexran_get_ue_crnti(mod_id, ue_id);
+  if (rnti == NOT_A_RNTI) return 0;
+
+  for (uint16_t pdcp_uid = 0; pdcp_uid < MAX_MOBILES_PER_ENB; ++pdcp_uid) {
+    if (pdcp_enb[mod_id].rnti[pdcp_uid] == rnti)
+      return pdcp_uid;
+  }
+  return 0;
+}
+
+uint32_t flexran_get_pdcp_sfn(mid_t mod_id)
+{
   return pdcp_enb[mod_id].sfn;
 }
 
 /*PDCP super frame counter flexRAN*/
-void flexran_set_pdcp_tx_stat_window(const mid_t mod_id, const mid_t ue_id, uint16_t obs_window){
+void flexran_set_pdcp_tx_stat_window(mid_t mod_id, mid_t ue_id, uint16_t obs_window)
+{
+  uint16_t uid = flexran_get_pdcp_uid(mod_id, ue_id);
   if (obs_window > 0 ){
-    Pdcp_stats_tx_window_ms[mod_id][ue_id]=obs_window;
+    Pdcp_stats_tx_window_ms[mod_id][uid]=obs_window;
   }
   else{
-    Pdcp_stats_tx_window_ms[mod_id][ue_id]=1000;
+    Pdcp_stats_tx_window_ms[mod_id][uid]=1000;
   }
 }
 
 /*PDCP super frame counter flexRAN*/
-void flexran_set_pdcp_rx_stat_window(const mid_t mod_id, const mid_t ue_id, uint16_t obs_window){
+void flexran_set_pdcp_rx_stat_window(mid_t mod_id, mid_t ue_id, uint16_t obs_window)
+{
+  uint16_t uid = flexran_get_pdcp_uid(mod_id, ue_id);
   if (obs_window > 0 ){
-    Pdcp_stats_rx_window_ms[mod_id][ue_id]=obs_window;
+    Pdcp_stats_rx_window_ms[mod_id][uid]=obs_window;
   }
   else{
-    Pdcp_stats_rx_window_ms[mod_id][ue_id]=1000;
+    Pdcp_stats_rx_window_ms[mod_id][uid]=1000;
   }
 }
 
 /*PDCP num tx pdu status flexRAN*/
-uint32_t flexran_get_pdcp_tx(const mid_t mod_id,  const mid_t ue_id, const lcid_t lcid){
-  if (mod_id <0 || mod_id> MAX_NUM_CCs || ue_id<0 || ue_id> NUMBER_OF_UE_MAX || lcid<0 || lcid>NB_RB_MAX)
+uint32_t flexran_get_pdcp_tx(mid_t mod_id, mid_t ue_id, lcid_t lcid)
+{
+  if (mod_id < 0 || mod_id > MAX_NUM_CCs || ue_id < 0 || ue_id > MAX_MOBILES_PER_ENB
+      || lcid < 0 || lcid > NB_RB_MAX)
     return -1;
-  return Pdcp_stats_tx[mod_id][ue_id][lcid];
+  uint16_t uid = flexran_get_pdcp_uid(mod_id, ue_id);
+  return Pdcp_stats_tx[mod_id][uid][lcid];
 }
 
 /*PDCP num tx bytes status flexRAN*/
-uint32_t flexran_get_pdcp_tx_bytes(const mid_t mod_id,  const mid_t ue_id, const lcid_t lcid){
-  return Pdcp_stats_tx_bytes[mod_id][ue_id][lcid];
+uint32_t flexran_get_pdcp_tx_bytes(mid_t mod_id, mid_t ue_id, lcid_t lcid)
+{
+  uint16_t uid = flexran_get_pdcp_uid(mod_id, ue_id);
+  return Pdcp_stats_tx_bytes[mod_id][uid][lcid];
 }
 
 /*PDCP number of transmit packet / second status flexRAN*/
-uint32_t flexran_get_pdcp_tx_w(const mid_t mod_id,  const mid_t ue_id, const lcid_t lcid){
-  return Pdcp_stats_tx_w[mod_id][ue_id][lcid];
+uint32_t flexran_get_pdcp_tx_w(mid_t mod_id, mid_t ue_id, lcid_t lcid)
+{
+  uint16_t uid = flexran_get_pdcp_uid(mod_id, ue_id);
+  return Pdcp_stats_tx_w[mod_id][uid][lcid];
 }
 
 /*PDCP throughput (bit/s) status flexRAN*/
-uint32_t flexran_get_pdcp_tx_bytes_w(const mid_t mod_id,  const mid_t ue_id, const lcid_t lcid){
-  return Pdcp_stats_tx_bytes_w[mod_id][ue_id][lcid];
+uint32_t flexran_get_pdcp_tx_bytes_w(mid_t mod_id, mid_t ue_id, lcid_t lcid)
+{
+  uint16_t uid = flexran_get_pdcp_uid(mod_id, ue_id);
+  return Pdcp_stats_tx_bytes_w[mod_id][uid][lcid];
 }
 
 /*PDCP tx sequence number flexRAN*/
-uint32_t flexran_get_pdcp_tx_sn(const mid_t mod_id,  const mid_t ue_id, const lcid_t lcid){
-  return Pdcp_stats_tx_sn[mod_id][ue_id][lcid];
+uint32_t flexran_get_pdcp_tx_sn(mid_t mod_id, mid_t ue_id, lcid_t lcid)
+{
+  uint16_t uid = flexran_get_pdcp_uid(mod_id, ue_id);
+  return Pdcp_stats_tx_sn[mod_id][uid][lcid];
 }
 
 /*PDCP tx aggregated packet arrival  flexRAN*/
-uint32_t flexran_get_pdcp_tx_aiat(const mid_t mod_id,  const mid_t ue_id, const lcid_t lcid){
-  return Pdcp_stats_tx_aiat[mod_id][ue_id][lcid];
+uint32_t flexran_get_pdcp_tx_aiat(mid_t mod_id, mid_t ue_id, lcid_t lcid)
+{
+  uint16_t uid = flexran_get_pdcp_uid(mod_id, ue_id);
+  return Pdcp_stats_tx_aiat[mod_id][uid][lcid];
 }
 
 /*PDCP tx aggregated packet arrival  flexRAN*/
-uint32_t flexran_get_pdcp_tx_aiat_w(const mid_t mod_id,  const mid_t ue_id, const lcid_t lcid){
-  return Pdcp_stats_tx_aiat_w[mod_id][ue_id][lcid];
+uint32_t flexran_get_pdcp_tx_aiat_w(mid_t mod_id, mid_t ue_id, lcid_t lcid)
+{
+  uint16_t uid = flexran_get_pdcp_uid(mod_id, ue_id);
+  return Pdcp_stats_tx_aiat_w[mod_id][uid][lcid];
 }
-
 
 /*PDCP num rx pdu status flexRAN*/
-uint32_t flexran_get_pdcp_rx(const mid_t mod_id,  const mid_t ue_id, const lcid_t lcid){
-  return Pdcp_stats_rx[mod_id][ue_id][lcid];
+uint32_t flexran_get_pdcp_rx(mid_t mod_id, mid_t ue_id, lcid_t lcid)
+{
+  uint16_t uid = flexran_get_pdcp_uid(mod_id, ue_id);
+  return Pdcp_stats_rx[mod_id][uid][lcid];
 }
 
 /*PDCP num rx bytes status flexRAN*/
-uint32_t flexran_get_pdcp_rx_bytes(const mid_t mod_id,  const mid_t ue_id, const lcid_t lcid){
-  return Pdcp_stats_rx_bytes[mod_id][ue_id][lcid];
+uint32_t flexran_get_pdcp_rx_bytes(mid_t mod_id, mid_t ue_id, lcid_t lcid)
+{
+  uint16_t uid = flexran_get_pdcp_uid(mod_id, ue_id);
+  return Pdcp_stats_rx_bytes[mod_id][uid][lcid];
 }
 
 /*PDCP number of received packet / second  flexRAN*/
-uint32_t flexran_get_pdcp_rx_w(const mid_t mod_id,  const mid_t ue_id, const lcid_t lcid){
-  return Pdcp_stats_rx_w[mod_id][ue_id][lcid];
+uint32_t flexran_get_pdcp_rx_w(mid_t mod_id, mid_t ue_id, lcid_t lcid)
+{
+  uint16_t uid = flexran_get_pdcp_uid(mod_id, ue_id);
+  return Pdcp_stats_rx_w[mod_id][uid][lcid];
 }
 
 /*PDCP gootput (bit/s) status flexRAN*/
-uint32_t flexran_get_pdcp_rx_bytes_w(const mid_t mod_id,  const mid_t ue_id, const lcid_t lcid){
-  return Pdcp_stats_rx_bytes_w[mod_id][ue_id][lcid];
+uint32_t flexran_get_pdcp_rx_bytes_w(mid_t mod_id, mid_t ue_id, lcid_t lcid)
+{
+  uint16_t uid = flexran_get_pdcp_uid(mod_id, ue_id);
+  return Pdcp_stats_rx_bytes_w[mod_id][uid][lcid];
 }
 
 /*PDCP rx sequence number flexRAN*/
-uint32_t flexran_get_pdcp_rx_sn(const mid_t mod_id,  const mid_t ue_id, const lcid_t lcid){
-  return Pdcp_stats_rx_sn[mod_id][ue_id][lcid];
+uint32_t flexran_get_pdcp_rx_sn(mid_t mod_id, mid_t ue_id, lcid_t lcid)
+{
+  uint16_t uid = flexran_get_pdcp_uid(mod_id, ue_id);
+  return Pdcp_stats_rx_sn[mod_id][uid][lcid];
 }
 
 /*PDCP rx aggregated packet arrival  flexRAN*/
-uint32_t flexran_get_pdcp_rx_aiat(const mid_t mod_id,  const mid_t ue_id, const lcid_t lcid){
-  return Pdcp_stats_rx_aiat[mod_id][ue_id][lcid];
+uint32_t flexran_get_pdcp_rx_aiat(mid_t mod_id, mid_t ue_id, lcid_t lcid)
+{
+  uint16_t uid = flexran_get_pdcp_uid(mod_id, ue_id);
+  return Pdcp_stats_rx_aiat[mod_id][uid][lcid];
 }
 
 /*PDCP rx aggregated packet arrival  flexRAN*/
-uint32_t flexran_get_pdcp_rx_aiat_w(const mid_t mod_id,  const mid_t ue_id, const lcid_t lcid){
-  return Pdcp_stats_rx_aiat_w[mod_id][ue_id][lcid];
+uint32_t flexran_get_pdcp_rx_aiat_w(mid_t mod_id, mid_t ue_id, lcid_t lcid)
+{
+  uint16_t uid = flexran_get_pdcp_uid(mod_id, ue_id);
+  return Pdcp_stats_rx_aiat_w[mod_id][uid][lcid];
 }
 
 /*PDCP num of received outoforder pdu status flexRAN*/
-uint32_t flexran_get_pdcp_rx_oo(const mid_t mod_id,  const mid_t ue_id, const lcid_t lcid){
-  return Pdcp_stats_rx_outoforder[mod_id][ue_id][lcid];
+uint32_t flexran_get_pdcp_rx_oo(mid_t mod_id, mid_t ue_id, lcid_t lcid)
+{
+  uint16_t uid = flexran_get_pdcp_uid(mod_id, ue_id);
+  return Pdcp_stats_rx_outoforder[mod_id][uid][lcid];
 }
 
 /******************** RRC *****************************/
 
-MeasId_t flexran_get_rrc_pcell_measid(mid_t mod_id, mid_t ue_id)
+LTE_MeasId_t flexran_get_rrc_pcell_measid(mid_t mod_id, mid_t ue_id)
 {
   if (!rrc_is_present(mod_id)) return -1;
 
@@ -1344,11 +1433,11 @@ int flexran_get_rrc_num_ncell(mid_t mod_id, mid_t ue_id)
   if (!ue_context_p) return 0;
   if (!ue_context_p->ue_context.measResults) return 0;
   if (!ue_context_p->ue_context.measResults->measResultNeighCells) return 0;
-  if (ue_context_p->ue_context.measResults->measResultNeighCells->present != MeasResults__measResultNeighCells_PR_measResultListEUTRA) return 0;
+  if (ue_context_p->ue_context.measResults->measResultNeighCells->present != LTE_MeasResults__measResultNeighCells_PR_measResultListEUTRA) return 0;
   return ue_context_p->ue_context.measResults->measResultNeighCells->choice.measResultListEUTRA.list.count;
 }
 
-PhysCellId_t flexran_get_rrc_neigh_phy_cell_id(mid_t mod_id, mid_t ue_id, int cell_id)
+LTE_PhysCellId_t flexran_get_rrc_neigh_phy_cell_id(mid_t mod_id, mid_t ue_id, int cell_id)
 {
   if (!rrc_is_present(mod_id)) return -1;
 
@@ -1358,7 +1447,7 @@ PhysCellId_t flexran_get_rrc_neigh_phy_cell_id(mid_t mod_id, mid_t ue_id, int ce
   if (!ue_context_p) return -1;
   if (!ue_context_p->ue_context.measResults) return -1;
   if (!ue_context_p->ue_context.measResults->measResultNeighCells) return -1;
-  if (ue_context_p->ue_context.measResults->measResultNeighCells->present != MeasResults__measResultNeighCells_PR_measResultListEUTRA) return -1;
+  if (ue_context_p->ue_context.measResults->measResultNeighCells->present != LTE_MeasResults__measResultNeighCells_PR_measResultListEUTRA) return -1;
   if (!ue_context_p->ue_context.measResults->measResultNeighCells->choice.measResultListEUTRA.list.array[cell_id]) return -1;
   return ue_context_p->ue_context.measResults->measResultNeighCells->choice.measResultListEUTRA.list.array[cell_id]->physCellId;
 }
@@ -1373,7 +1462,7 @@ float flexran_get_rrc_neigh_rsrp(mid_t mod_id, mid_t ue_id, int cell_id)
   if (!ue_context_p) return -1;
   if (!ue_context_p->ue_context.measResults) return -1;
   if (!ue_context_p->ue_context.measResults->measResultNeighCells) return -1;
-  if (ue_context_p->ue_context.measResults->measResultNeighCells->present != MeasResults__measResultNeighCells_PR_measResultListEUTRA) return -1;
+  if (ue_context_p->ue_context.measResults->measResultNeighCells->present != LTE_MeasResults__measResultNeighCells_PR_measResultListEUTRA) return -1;
   if (!ue_context_p->ue_context.measResults->measResultNeighCells->choice.measResultListEUTRA.list.array[cell_id]) return -1;
   if (!ue_context_p->ue_context.measResults->measResultNeighCells->choice.measResultListEUTRA.list.array[cell_id]->measResult.rsrpResult) return 0;
   return RSRP_meas_mapping[*(ue_context_p->ue_context.measResults->measResultNeighCells->choice.measResultListEUTRA.list.array[cell_id]->measResult.rsrpResult)];
@@ -1389,7 +1478,423 @@ float flexran_get_rrc_neigh_rsrq(mid_t mod_id, mid_t ue_id, int cell_id)
   if (!ue_context_p) return -1;
   if (!ue_context_p->ue_context.measResults) return -1;
   if (!ue_context_p->ue_context.measResults->measResultNeighCells) return -1;
-  if (ue_context_p->ue_context.measResults->measResultNeighCells->present != MeasResults__measResultNeighCells_PR_measResultListEUTRA) return -1;
+  if (ue_context_p->ue_context.measResults->measResultNeighCells->present != LTE_MeasResults__measResultNeighCells_PR_measResultListEUTRA) return -1;
   if (!ue_context_p->ue_context.measResults->measResultNeighCells->choice.measResultListEUTRA.list.array[cell_id]->measResult.rsrqResult) return 0;
   return RSRQ_meas_mapping[*(ue_context_p->ue_context.measResults->measResultNeighCells->choice.measResultListEUTRA.list.array[cell_id]->measResult.rsrqResult)];
+}
+
+int flexran_get_ue_dl_slice_id(mid_t mod_id, mid_t ue_id)
+{
+  if (!mac_is_present(mod_id)) return -1;
+  int slice_idx = RC.mac[mod_id]->UE_list.assoc_dl_slice_idx[ue_id];
+  if (slice_idx >= 0 && slice_idx < RC.mac[mod_id]->slice_info.n_dl)
+    return RC.mac[mod_id]->slice_info.dl[slice_idx].id;
+  return 0;
+}
+
+void flexran_set_ue_dl_slice_idx(mid_t mod_id, mid_t ue_id, int slice_idx)
+{
+  if (!mac_is_present(mod_id)) return;
+  if (flexran_get_ue_crnti(mod_id, ue_id) == NOT_A_RNTI) return;
+  if (!flexran_dl_slice_exists(mod_id, slice_idx)) return;
+  RC.mac[mod_id]->UE_list.assoc_dl_slice_idx[ue_id] = slice_idx;
+}
+
+int flexran_get_ue_ul_slice_id(mid_t mod_id, mid_t ue_id)
+{
+  if (!mac_is_present(mod_id)) return -1;
+  int slice_idx = RC.mac[mod_id]->UE_list.assoc_ul_slice_idx[ue_id];
+  if (slice_idx >= 0 && slice_idx < RC.mac[mod_id]->slice_info.n_ul)
+    return RC.mac[mod_id]->slice_info.ul[slice_idx].id;
+  return 0;
+}
+
+void flexran_set_ue_ul_slice_idx(mid_t mod_id, mid_t ue_id, int slice_idx)
+{
+  if (!mac_is_present(mod_id)) return;
+  if (flexran_get_ue_crnti(mod_id, ue_id) == NOT_A_RNTI) return;
+  if (!flexran_ul_slice_exists(mod_id, slice_idx)) return;
+  RC.mac[mod_id]->UE_list.assoc_ul_slice_idx[ue_id] = slice_idx;
+}
+
+int flexran_dl_slice_exists(mid_t mod_id, int slice_idx)
+{
+  if (!mac_is_present(mod_id)) return -1;
+  return slice_idx >= 0 && slice_idx < RC.mac[mod_id]->slice_info.n_dl;
+}
+
+int flexran_create_dl_slice(mid_t mod_id, slice_id_t slice_id)
+{
+  if (!mac_is_present(mod_id)) return -1;
+  int newidx = RC.mac[mod_id]->slice_info.n_dl;
+  if (newidx >= MAX_NUM_SLICES) return -1;
+  ++RC.mac[mod_id]->slice_info.n_dl;
+  flexran_set_dl_slice_id(mod_id, newidx, slice_id);
+  return newidx;
+}
+
+int flexran_find_dl_slice(mid_t mod_id, slice_id_t slice_id)
+{
+  if (!mac_is_present(mod_id)) return -1;
+  slice_info_t *sli = &RC.mac[mod_id]->slice_info;
+  int n = sli->n_dl;
+  for (int i = 0; i < n; i++) {
+    if (sli->dl[i].id == slice_id) return i;
+  }
+  return -1;
+}
+
+int flexran_remove_dl_slice(mid_t mod_id, int slice_idx)
+{
+  if (!mac_is_present(mod_id)) return -1;
+  slice_info_t *sli = &RC.mac[mod_id]->slice_info;
+  if (sli->n_dl <= 1) return -1;
+
+  if (sli->dl[slice_idx].sched_name) free(sli->dl[slice_idx].sched_name);
+  --sli->n_dl;
+  /* move last element to the position of the removed one */
+  if (slice_idx != sli->n_dl)
+    memcpy(&sli->dl[slice_idx], &sli->dl[sli->n_dl], sizeof(sli->dl[sli->n_dl]));
+  memset(&sli->dl[sli->n_dl], 0, sizeof(sli->dl[sli->n_dl]));
+
+  /* all UEs that have been in the old slice are put into slice index 0 */
+  int *assoc_list = RC.mac[mod_id]->UE_list.assoc_dl_slice_idx;
+  for (int i = 0; i < MAX_MOBILES_PER_ENB; ++i) {
+    if (assoc_list[i] == slice_idx)
+      assoc_list[i] = 0;
+  }
+  return sli->n_dl;
+}
+
+int flexran_get_num_dl_slices(mid_t mod_id)
+{
+  if (!mac_is_present(mod_id)) return -1;
+  return RC.mac[mod_id]->slice_info.n_dl;
+}
+
+int flexran_get_intraslice_sharing_active(mid_t mod_id)
+{
+  if (!mac_is_present(mod_id)) return -1;
+  return RC.mac[mod_id]->slice_info.intraslice_share_active;
+}
+void flexran_set_intraslice_sharing_active(mid_t mod_id, int intraslice_active)
+{
+  if (!mac_is_present(mod_id)) return;
+  RC.mac[mod_id]->slice_info.intraslice_share_active = intraslice_active;
+}
+
+int flexran_get_interslice_sharing_active(mid_t mod_id)
+{
+  if (!mac_is_present(mod_id)) return -1;
+  return RC.mac[mod_id]->slice_info.interslice_share_active;
+}
+void flexran_set_interslice_sharing_active(mid_t mod_id, int interslice_active)
+{
+  if (!mac_is_present(mod_id)) return;
+  RC.mac[mod_id]->slice_info.interslice_share_active = interslice_active;
+}
+
+slice_id_t flexran_get_dl_slice_id(mid_t mod_id, int slice_idx)
+{
+  if (!mac_is_present(mod_id)) return -1;
+  return RC.mac[mod_id]->slice_info.dl[slice_idx].id;
+}
+void flexran_set_dl_slice_id(mid_t mod_id, int slice_idx, slice_id_t slice_id)
+{
+  if (!mac_is_present(mod_id)) return;
+  RC.mac[mod_id]->slice_info.dl[slice_idx].id = slice_id;
+}
+
+int flexran_get_dl_slice_percentage(mid_t mod_id, int slice_idx)
+{
+  if (!mac_is_present(mod_id)) return -1;
+  return RC.mac[mod_id]->slice_info.dl[slice_idx].pct * 100.0f;
+}
+void flexran_set_dl_slice_percentage(mid_t mod_id, int slice_idx, int percentage)
+{
+  if (!mac_is_present(mod_id)) return;
+  RC.mac[mod_id]->slice_info.dl[slice_idx].pct = percentage / 100.0f;
+}
+
+int flexran_get_dl_slice_isolation(mid_t mod_id, int slice_idx)
+{
+  if (!mac_is_present(mod_id)) return -1;
+  return RC.mac[mod_id]->slice_info.dl[slice_idx].isol;
+}
+void flexran_set_dl_slice_isolation(mid_t mod_id, int slice_idx, int is_isolated)
+{
+  if (!mac_is_present(mod_id)) return;
+  RC.mac[mod_id]->slice_info.dl[slice_idx].isol = is_isolated;
+}
+
+int flexran_get_dl_slice_priority(mid_t mod_id, int slice_idx)
+{
+  if (!mac_is_present(mod_id)) return -1;
+  return RC.mac[mod_id]->slice_info.dl[slice_idx].prio;
+}
+void flexran_set_dl_slice_priority(mid_t mod_id, int slice_idx, int priority)
+{
+  if (!mac_is_present(mod_id)) return;
+  RC.mac[mod_id]->slice_info.dl[slice_idx].prio = priority;
+}
+
+int flexran_get_dl_slice_position_low(mid_t mod_id, int slice_idx)
+{
+  if (!mac_is_present(mod_id)) return -1;
+  return RC.mac[mod_id]->slice_info.dl[slice_idx].pos_low;
+}
+void flexran_set_dl_slice_position_low(mid_t mod_id, int slice_idx, int poslow)
+{
+  if (!mac_is_present(mod_id)) return;
+  RC.mac[mod_id]->slice_info.dl[slice_idx].pos_low = poslow;
+}
+
+int flexran_get_dl_slice_position_high(mid_t mod_id, int slice_idx)
+{
+  if (!mac_is_present(mod_id)) return -1;
+  return RC.mac[mod_id]->slice_info.dl[slice_idx].pos_high;
+}
+void flexran_set_dl_slice_position_high(mid_t mod_id, int slice_idx, int poshigh)
+{
+  if (!mac_is_present(mod_id)) return;
+  RC.mac[mod_id]->slice_info.dl[slice_idx].pos_high = poshigh;
+}
+
+int flexran_get_dl_slice_maxmcs(mid_t mod_id, int slice_idx)
+{
+  if (!mac_is_present(mod_id)) return -1;
+  return RC.mac[mod_id]->slice_info.dl[slice_idx].maxmcs;
+}
+void flexran_set_dl_slice_maxmcs(mid_t mod_id, int slice_idx, int maxmcs)
+{
+  if (!mac_is_present(mod_id)) return;
+  RC.mac[mod_id]->slice_info.dl[slice_idx].maxmcs = maxmcs;
+}
+
+int flexran_get_dl_slice_sorting(mid_t mod_id, int slice_idx, Protocol__FlexDlSorting **sorting_list)
+{
+  if (!mac_is_present(mod_id)) return -1;
+  if (!(*sorting_list)) {
+    *sorting_list = calloc(CR_NUM, sizeof(Protocol__FlexDlSorting));
+    if (!(*sorting_list)) return -1;
+  }
+  uint32_t policy = RC.mac[mod_id]->slice_info.dl[slice_idx].sorting;
+  for (int i = 0; i < CR_NUM; i++) {
+    switch (policy >> 4 * (CR_NUM - 1 - i) & 0xF) {
+    case CR_ROUND:
+      (*sorting_list)[i] = PROTOCOL__FLEX_DL_SORTING__CR_ROUND;
+      break;
+    case CR_SRB12:
+      (*sorting_list)[i] = PROTOCOL__FLEX_DL_SORTING__CR_SRB12;
+      break;
+    case CR_HOL:
+      (*sorting_list)[i] = PROTOCOL__FLEX_DL_SORTING__CR_HOL;
+      break;
+    case CR_LC:
+      (*sorting_list)[i] = PROTOCOL__FLEX_DL_SORTING__CR_LC;
+      break;
+    case CR_CQI:
+      (*sorting_list)[i] = PROTOCOL__FLEX_DL_SORTING__CR_CQI;
+      break;
+    case CR_LCP:
+      (*sorting_list)[i] = PROTOCOL__FLEX_DL_SORTING__CR_LCP;
+      break;
+    default:
+      /* this should not happen, but a "default" */
+      (*sorting_list)[i] = PROTOCOL__FLEX_DL_SORTING__CR_ROUND;
+      break;
+    }
+  }
+  return CR_NUM;
+}
+void flexran_set_dl_slice_sorting(mid_t mod_id, int slice_idx, Protocol__FlexDlSorting *sorting_list, int n)
+{
+  if (!mac_is_present(mod_id)) return;
+  uint32_t policy = 0;
+  for (int i = 0; i < n && i < CR_NUM; i++) {
+    switch (sorting_list[i]) {
+    case PROTOCOL__FLEX_DL_SORTING__CR_ROUND:
+      policy = policy << 4 | CR_ROUND;
+      break;
+    case PROTOCOL__FLEX_DL_SORTING__CR_SRB12:
+      policy = policy << 4 | CR_SRB12;
+      break;
+    case PROTOCOL__FLEX_DL_SORTING__CR_HOL:
+      policy = policy << 4 | CR_HOL;
+      break;
+    case PROTOCOL__FLEX_DL_SORTING__CR_LC:
+      policy = policy << 4 | CR_LC;
+      break;
+    case PROTOCOL__FLEX_DL_SORTING__CR_CQI:
+      policy = policy << 4 | CR_CQI;
+      break;
+    case PROTOCOL__FLEX_DL_SORTING__CR_LCP:
+      policy = policy << 4 | CR_LCP;
+      break;
+    default: /* suppresses warnings */
+      policy = policy << 4 | CR_ROUND;
+      break;
+    }
+  }
+  /* fill up with 0 == CR_ROUND */
+  if (CR_NUM > n) policy = policy << 4 * (CR_NUM - n);
+  RC.mac[mod_id]->slice_info.dl[slice_idx].sorting = policy;
+}
+
+Protocol__FlexDlAccountingPolicy flexran_get_dl_slice_accounting_policy(mid_t mod_id, int slice_idx)
+{
+  if (!mac_is_present(mod_id)) return PROTOCOL__FLEX_DL_ACCOUNTING_POLICY__POL_FAIR;
+  switch (RC.mac[mod_id]->slice_info.dl[slice_idx].accounting) {
+  case POL_FAIR:
+    return PROTOCOL__FLEX_DL_ACCOUNTING_POLICY__POL_FAIR;
+  case POL_GREEDY:
+    return PROTOCOL__FLEX_DL_ACCOUNTING_POLICY__POL_GREEDY;
+  default:
+    return PROTOCOL__FLEX_DL_ACCOUNTING_POLICY__POL_FAIR;
+  }
+}
+void flexran_set_dl_slice_accounting_policy(mid_t mod_id, int slice_idx, Protocol__FlexDlAccountingPolicy accounting)
+{
+  if (!mac_is_present(mod_id)) return;
+  switch (accounting) {
+  case PROTOCOL__FLEX_DL_ACCOUNTING_POLICY__POL_FAIR:
+    RC.mac[mod_id]->slice_info.dl[slice_idx].accounting = POL_FAIR;
+    return;
+  case PROTOCOL__FLEX_DL_ACCOUNTING_POLICY__POL_GREEDY:
+    RC.mac[mod_id]->slice_info.dl[slice_idx].accounting = POL_GREEDY;
+    return;
+  default:
+    RC.mac[mod_id]->slice_info.dl[slice_idx].accounting = POL_FAIR;
+    return;
+  }
+}
+
+char *flexran_get_dl_slice_scheduler(mid_t mod_id, int slice_idx)
+{
+  if (!mac_is_present(mod_id)) return NULL;
+  return RC.mac[mod_id]->slice_info.dl[slice_idx].sched_name;
+}
+int flexran_set_dl_slice_scheduler(mid_t mod_id, int slice_idx, char *name)
+{
+  if (!mac_is_present(mod_id)) return 0;
+  if (RC.mac[mod_id]->slice_info.dl[slice_idx].sched_name)
+    free(RC.mac[mod_id]->slice_info.dl[slice_idx].sched_name);
+  RC.mac[mod_id]->slice_info.dl[slice_idx].sched_name = strdup(name);
+  RC.mac[mod_id]->slice_info.dl[slice_idx].sched_cb = dlsym(NULL, name);
+  return RC.mac[mod_id]->slice_info.dl[slice_idx].sched_cb != NULL;
+}
+
+int flexran_create_ul_slice(mid_t mod_id, slice_id_t slice_id)
+{
+  if (!mac_is_present(mod_id)) return -1;
+  int newidx = RC.mac[mod_id]->slice_info.n_ul;
+  if (newidx >= MAX_NUM_SLICES) return -1;
+  ++RC.mac[mod_id]->slice_info.n_ul;
+  flexran_set_ul_slice_id(mod_id, newidx, slice_id);
+  return newidx;
+}
+
+int flexran_find_ul_slice(mid_t mod_id, slice_id_t slice_id)
+{
+  if (!mac_is_present(mod_id)) return -1;
+  slice_info_t *sli = &RC.mac[mod_id]->slice_info;
+  int n = sli->n_ul;
+  for (int i = 0; i < n; i++) {
+    if (sli->ul[i].id == slice_id) return i;
+  }
+  return -1;
+}
+
+int flexran_remove_ul_slice(mid_t mod_id, int slice_idx)
+{
+  if (!mac_is_present(mod_id)) return -1;
+  slice_info_t *sli = &RC.mac[mod_id]->slice_info;
+  if (sli->n_ul <= 1) return -1;
+
+  if (sli->ul[slice_idx].sched_name) free(sli->ul[slice_idx].sched_name);
+  --sli->n_ul;
+  /* move last element to the position of the removed one */
+  if (slice_idx != sli->n_ul)
+    memcpy(&sli->ul[slice_idx], &sli->ul[sli->n_ul], sizeof(sli->ul[sli->n_ul]));
+  memset(&sli->ul[sli->n_ul], 0, sizeof(sli->ul[sli->n_ul]));
+
+  /* all UEs that have been in the old slice are put into slice index 0 */
+  int *assoc_list = RC.mac[mod_id]->UE_list.assoc_ul_slice_idx;
+  for (int i = 0; i < MAX_MOBILES_PER_ENB; ++i) {
+    if (assoc_list[i] == slice_idx)
+      assoc_list[i] = 0;
+  }
+  return sli->n_ul;
+}
+
+int flexran_get_num_ul_slices(mid_t mod_id)
+{
+  if (!mac_is_present(mod_id)) return -1;
+  return RC.mac[mod_id]->slice_info.n_ul;
+}
+
+int flexran_ul_slice_exists(mid_t mod_id, int slice_idx)
+{
+  if (!mac_is_present(mod_id)) return -1;
+  return slice_idx >= 0 && slice_idx < RC.mac[mod_id]->slice_info.n_ul;
+}
+
+slice_id_t flexran_get_ul_slice_id(mid_t mod_id, int slice_idx)
+{
+  if (!mac_is_present(mod_id)) return -1;
+  return RC.mac[mod_id]->slice_info.ul[slice_idx].id;
+}
+void flexran_set_ul_slice_id(mid_t mod_id, int slice_idx, slice_id_t slice_id)
+{
+  if (!mac_is_present(mod_id)) return;
+  RC.mac[mod_id]->slice_info.ul[slice_idx].id = slice_id;
+}
+
+int flexran_get_ul_slice_percentage(mid_t mod_id, int slice_idx)
+{
+  if (!mac_is_present(mod_id)) return -1;
+  return RC.mac[mod_id]->slice_info.ul[slice_idx].pct * 100.0f;
+}
+void flexran_set_ul_slice_percentage(mid_t mod_id, int slice_idx, int percentage)
+{
+  if (!mac_is_present(mod_id)) return;
+  RC.mac[mod_id]->slice_info.ul[slice_idx].pct = percentage / 100.0f;
+}
+
+int flexran_get_ul_slice_first_rb(mid_t mod_id, int slice_idx)
+{
+  if (!mac_is_present(mod_id)) return -1;
+  return RC.mac[mod_id]->slice_info.ul[slice_idx].first_rb;
+}
+
+void flexran_set_ul_slice_first_rb(mid_t mod_id, int slice_idx, int first_rb)
+{
+  if (!mac_is_present(mod_id)) return;
+  RC.mac[mod_id]->slice_info.ul[slice_idx].first_rb = first_rb;
+}
+
+int flexran_get_ul_slice_maxmcs(mid_t mod_id, int slice_idx)
+{
+  if (!mac_is_present(mod_id)) return -1;
+  return RC.mac[mod_id]->slice_info.ul[slice_idx].maxmcs;
+}
+void flexran_set_ul_slice_maxmcs(mid_t mod_id, int slice_idx, int maxmcs)
+{
+  if (!mac_is_present(mod_id)) return;
+  RC.mac[mod_id]->slice_info.ul[slice_idx].maxmcs = maxmcs;
+}
+
+char *flexran_get_ul_slice_scheduler(mid_t mod_id, int slice_idx)
+{
+  if (!mac_is_present(mod_id)) return NULL;
+  return RC.mac[mod_id]->slice_info.ul[slice_idx].sched_name;
+}
+int flexran_set_ul_slice_scheduler(mid_t mod_id, int slice_idx, char *name)
+{
+  if (!mac_is_present(mod_id)) return 0;
+  if (RC.mac[mod_id]->slice_info.ul[slice_idx].sched_name)
+    free(RC.mac[mod_id]->slice_info.ul[slice_idx].sched_name);
+  RC.mac[mod_id]->slice_info.ul[slice_idx].sched_name = strdup(name);
+  RC.mac[mod_id]->slice_info.ul[slice_idx].sched_cb = dlsym(NULL, name);
+  return RC.mac[mod_id]->slice_info.ul[slice_idx].sched_cb != NULL;
 }

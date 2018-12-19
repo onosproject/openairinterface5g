@@ -22,7 +22,7 @@
 #if defined(ENABLE_ITTI)
 # include "intertask_interface.h"
 # include "create_tasks.h"
-# include "log.h"
+# include "common/utils/LOG/log.h"
 
 # ifdef OPENAIR2
 #   if defined(ENABLE_USE_MME)
@@ -36,7 +36,7 @@
 #     include "lteRALue.h"
 #     include "lteRALenb.h"
 #   endif
-#   include "RRC/LITE/defs.h"
+#   include "RRC/LTE/rrc_defs.h"
 # endif
 # include "enb_app.h"
 

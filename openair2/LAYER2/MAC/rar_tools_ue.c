@@ -28,11 +28,11 @@
 
  */
 
-#include "defs.h"
-#include "proto.h"
-#include "extern.h"
-#include "SIMULATION/TOOLS/defs.h"
-#include "UTIL/LOG/log.h"
+#include "mac.h"
+#include "mac_proto.h"
+#include "mac_extern.h"
+#include "SIMULATION/TOOLS/sim.h"
+#include "common/utils/LOG/log.h"
 #include "OCG.h"
 #include "OCG_extern.h"
 #include "UTIL/OPT/opt.h"
@@ -93,7 +93,7 @@ uint16_t ue_process_rar(const module_id_t module_idP, const int CC_id, const fra
     }
 
     LOG_I(MAC,
-	  "[eNB %d][RAPROC] Frame %d Received RAR (%02x|%02x.%02x.%02x.%02x.%02x.%02x) for preamble %d/%d\n",
+	  "[UE %d][RAPROC] Frame %d Received RAR (%02x|%02x.%02x.%02x.%02x.%02x.%02x) for preamble %d/%d\n",
 	  module_idP, frameP, *(uint8_t *) rarh, rar[0], rar[1], rar[2],
 	  rar[3], rar[4], rar[5], rarh->RAPID, preamble_index);
 #ifdef DEBUG_RAR
@@ -119,8 +119,8 @@ uint16_t ue_process_rar(const module_id_t module_idP, const int CC_id, const fra
 	LOG_D(OPT,
 	      "[UE %d][RAPROC] CC_id %d RAR Frame %d trace pdu for ra-RNTI %x\n",
 	      module_idP, CC_id, frameP, ra_rnti);
-	trace_pdu(1, (uint8_t *) dlsch_buffer, n_rarh + n_rarpy * 6,
-		  module_idP, 2, ra_rnti, UE_mac_inst[module_idP].rxFrame,
+	trace_pdu(DIRECTION_DOWNLINK, (uint8_t *) dlsch_buffer, n_rarh + n_rarpy * 6,
+		  module_idP, WS_RA_RNTI, ra_rnti, UE_mac_inst[module_idP].rxFrame,
 		  UE_mac_inst[module_idP].rxSubframe, 0, 0);
     }
 

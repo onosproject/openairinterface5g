@@ -22,25 +22,33 @@
 #if defined(ENABLE_ITTI)
 # include "intertask_interface.h"
 # include "create_tasks.h"
-# include "log.h"
+# include "common/utils/LOG/log.h"
+# include "targets/RT/USER/lte-softmodem.h"
 
 # ifdef OPENAIR2
 #   if defined(ENABLE_USE_MME)
 #     include "sctp_eNB_task.h"
+#     include "x2ap_eNB.h"
 #     include "s1ap_eNB.h"
 #     include "nas_ue_task.h"
 #     include "udp_eNB_task.h"
 #     include "gtpv1u_eNB_task.h"
+/* temporary warning removale while implementing noS1 */
+/* as config option                                   */
+#   else
+#     ifdef EPC_MODE_ENABLED
+#       undef  EPC_MODE_ENABLED
+#     endif
+#     define EPC_MODE_ENABLED 0
 #   endif
 #   if ENABLE_RAL
 #     include "lteRALue.h"
 #     include "lteRALenb.h"
 #   endif
-#   include "RRC/LITE/defs.h"
+#   include "RRC/LTE/rrc_defs.h"
 # endif
 # include "enb_app.h"
 
-extern int emulate_rf;
 
 int create_tasks(uint32_t enb_nb)
 {
@@ -59,9 +67,14 @@ int create_tasks(uint32_t enb_nb)
       return -1;
     }
   }
-
-#   if defined(ENABLE_USE_MME)
+# if defined(ENABLE_USE_MME)
+  if (EPC_MODE_ENABLED) {
       if (enb_nb > 0) {
+        if (itti_create_task (TASK_X2AP, x2ap_task, NULL) < 0) {
+          LOG_E(X2AP, "Create task for X2AP failed\n");
+          return -1;
+        }
+
         if (itti_create_task (TASK_SCTP, sctp_eNB_task, NULL) < 0) {
           LOG_E(SCTP, "Create task for SCTP failed\n");
           return -1;
@@ -71,7 +84,7 @@ int create_tasks(uint32_t enb_nb)
           LOG_E(S1AP, "Create task for S1AP failed\n");
           return -1;
         }
-        if(!emulate_rf){
+        if(!(get_softmodem_params()->emulate_rf)){
           if (itti_create_task (TASK_UDP, udp_eNB_task, NULL) < 0) {
             LOG_E(UDP_, "Create task for UDP failed\n");
             return -1;
@@ -84,8 +97,8 @@ int create_tasks(uint32_t enb_nb)
         }
       }
 
-#      endif
-
+  } /* if (EPC_MODE_ENABLED) */
+#endif
     if (enb_nb > 0) {
       LOG_I(RRC,"Creating RRC eNB Task\n");
 
