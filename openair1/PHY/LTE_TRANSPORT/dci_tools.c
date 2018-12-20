@@ -7537,7 +7537,7 @@ int generate_ue_ulsch_params_from_dci(void *dci_pdu,
 
     if (cqi_req == 1) {
 
-      if( (AntennaInfoDedicated__transmissionMode_tm3 == transmission_mode) || (AntennaInfoDedicated__transmissionMode_tm4 == transmission_mode) )
+      if (transmission_mode == 3 || transmission_mode == 4)
       {
           ulsch->O_RI = 1;
       }
