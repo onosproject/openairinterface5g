@@ -50,7 +50,6 @@
 #include "RRC/LITE/extern.h"
 #include "RRC/L2_INTERFACE/openair_rrc_L2_interface.h"
 #include "rlc.h"
-#include "sudas_tm4.h"
 
 
 #define DEBUG_eNB_SCHEDULER 1
