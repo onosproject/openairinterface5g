@@ -44,8 +44,14 @@
 #include "PHY/NR_UE_TRANSPORT/nr_transport_proto_ue.h"
 
 #include "SCHED_NR/sched_nr.h"
+#include "SCHED_NR_UE/fapi_nr_ue_l1.h"
 
+#include "LAYER2/NR_MAC_gNB/nr_mac_gNB.h"
+#include "LAYER2/NR_MAC_UE/mac_defs.h"
+#include "LAYER2/NR_MAC_UE/mac_extern.h"
 
+#include "NR_PHY_INTERFACE/NR_IF_Module.h"
+#include "NR_UE_PHY_INTERFACE/NR_IF_Module.h"
 
 PHY_VARS_gNB *gNB;
 PHY_VARS_NR_UE *UE;
@@ -70,14 +76,31 @@ int32_t get_uldl_offset(int eutra_bandP) {return(0);}
 
 NR_IF_Module_t *NR_IF_Module_init(int Mod_id){return(NULL);}
 
+int8_t dummy_nr_ue_dl_indication(nr_downlink_indication_t *dl_info){return(0);}
+int8_t dummy_nr_ue_ul_indication(nr_uplink_indication_t *ul_info){return(0);}
+
 void exit_function(const char* file, const char* function, const int line,const char *s) { 
    const char * msg= s==NULL ? "no comment": s;
    printf("Exiting at: %s:%d %s(), %s\n", file, line, function, msg); 
    exit(-1); 
 }
 
+int8_t nr_mac_rrc_data_ind_ue(const module_id_t     module_id,
+			      const int             CC_id,
+			      const uint8_t         gNB_index,
+			      const int8_t          channel,
+			      const uint8_t*        pduP,
+			      const sdu_size_t      pdu_len)
+{return(0);}
+int rlc_module_init (void) {return(0);}
+void pdcp_layer_init(void) {}
+int rrc_init_nr_global_param(void){return(0);}
+
+
+
 // needed for some functions
-PHY_VARS_NR_UE * PHY_vars_UE_g[1][1]={{NULL}};
+PHY_VARS_NR_UE ***PHY_vars_UE_g;
+uint16_t conjugate[8]__attribute__((aligned(32))) = {-1,1,-1,1,-1,1,-1,1};
 
 int main(int argc, char **argv)
 {
@@ -99,7 +122,7 @@ int main(int argc, char **argv)
   int freq_offset;
   //  int subframe_offset;
   //  char fname[40], vname[40];
-  int trial,n_trials=1,n_errors,n_errors_payload;
+  int trial,n_trials=1,n_errors,n_errors2,n_alamouti;
   uint8_t transmission_mode = 1,n_tx=1,n_rx=1;
   uint16_t Nid_cell=0;
 
@@ -122,14 +145,20 @@ int main(int argc, char **argv)
   unsigned char frame_type = 0;
   unsigned char pbch_phase = 0;
 
-  int frame=0,subframe=0;
+  int frame=0,subframe=1;
   int frame_length_complex_samples;
   int frame_length_complex_samples_no_prefix;
   NR_DL_FRAME_PARMS *frame_parms;
   nfapi_nr_config_request_t *gNB_config;
+  gNB_L1_rxtx_proc_t gNB_proc;
+  UE_nr_rxtx_proc_t UE_proc;
+  NR_Sched_Rsp_t Sched_INFO;
+  gNB_MAC_INST *gNB_mac;
+  NR_UE_MAC_INST_t *UE_mac;
 
-  int ret, payload_ret=0;
+  int ret;
   int run_initial_sync=0;
+  int do_pdcch_flag=1;
 
   int loglvl=OAILOG_WARNING;
 
@@ -425,6 +454,9 @@ int main(int argc, char **argv)
 
   //configure UE
   UE = malloc(sizeof(PHY_VARS_NR_UE));
+  PHY_vars_UE_g = malloc(sizeof(PHY_VARS_NR_UE**));
+  PHY_vars_UE_g[0] = malloc(sizeof(PHY_VARS_NR_UE*));
+  PHY_vars_UE_g[0][0] = UE;
   memcpy(&UE->frame_parms,frame_parms,sizeof(NR_DL_FRAME_PARMS));
   phy_init_nr_top(UE);
   if (run_initial_sync==1)  UE->is_synchronized = 0;
@@ -439,11 +471,45 @@ int main(int argc, char **argv)
   }
 
   nr_gold_pbch(UE);
+
+  RC.nb_nr_macrlc_inst = 1;
+  mac_top_init_gNB();
+  gNB_mac = RC.nrmac[0];
+
+  nr_l2_init_ue();
+  UE_mac = get_mac_inst(0);
+
+  UE->if_inst = nr_ue_if_module_init(0);
+  UE->if_inst->scheduled_response = nr_ue_scheduled_response;
+  UE->if_inst->phy_config_request = nr_ue_phy_config_request;
+  UE->if_inst->dl_indication = dummy_nr_ue_dl_indication;
+  UE->if_inst->ul_indication = dummy_nr_ue_ul_indication;
+  
+
+  //mac->if_module = nr_ue_if_module_init(0);
+
+  
   // generate signal
   if (input_fd==NULL) {
     gNB->pbch_configured = 1;
     for (int i=0;i<4;i++) gNB->pbch_pdu[i]=i+1;
-    nr_common_signal_procedures (gNB,frame,subframe);
+
+    nr_schedule_css_dlsch_phytest(0,frame,subframe);
+    Sched_INFO.module_id = 0;
+    Sched_INFO.CC_id     = 0;
+    Sched_INFO.frame     = frame;
+    Sched_INFO.subframe  = subframe;
+    Sched_INFO.DL_req    = &gNB_mac->DL_req[0];
+    Sched_INFO.UL_req    = NULL;
+    Sched_INFO.HI_DCI0_req  = NULL;
+    Sched_INFO.TX_req    = &gNB_mac->TX_req[0];
+    nr_schedule_response(&Sched_INFO);
+
+    gNB_proc.frame_tx = frame;
+    gNB_proc.subframe_tx = subframe;
+    phy_procedures_gNB_TX(gNB,&gNB_proc,0);
+    
+    //nr_common_signal_procedures (gNB,frame,subframe);
 
 	LOG_M("txsigF0.m","txsF0", gNB->common_vars.txdataF[0],frame_length_complex_samples_no_prefix,1,1);
 	if (gNB->frame_parms.nb_antennas_tx>1)
@@ -495,11 +561,55 @@ int main(int argc, char **argv)
       r_im[aa][i] = ((double)(((short *)txdata[aa]))[(i<<1)+1]);
     }
   }
+
+  //Configure UE
+  fapi_nr_dl_config_request_t dl_config; 
+  //  Type0 PDCCH search space
+  dl_config.number_pdus =  1;
+  dl_config.dl_config_list[0].pdu_type = FAPI_NR_DL_CONFIG_TYPE_DCI;
+  dl_config.dl_config_list[0].dci_config_pdu.dci_config_rel15.rnti = 3;	//	to be set
+  
+  uint64_t mask = 0x0;
+  uint16_t num_rbs=24;
+  uint16_t rb_offset=0;
+  uint16_t cell_id=0;
+  uint16_t num_symbols=2;
+  for(i=0; i<(num_rbs/6); ++i){   //  38.331 Each bit corresponds a group of 6 RBs
+    mask = mask >> 1;
+    mask = mask | 0x100000000000;
+  }
+  dl_config.dl_config_list[0].dci_config_pdu.dci_config_rel15.coreset.frequency_domain_resource = mask;
+  dl_config.dl_config_list[0].dci_config_pdu.dci_config_rel15.coreset.rb_offset = rb_offset;  //  additional parameter other than coreset
+  
+  dl_config.dl_config_list[0].dci_config_pdu.dci_config_rel15.coreset.duration = num_symbols;
+  dl_config.dl_config_list[0].dci_config_pdu.dci_config_rel15.coreset.cce_reg_mapping_type =CCE_REG_MAPPING_TYPE_INTERLEAVED;
+  dl_config.dl_config_list[0].dci_config_pdu.dci_config_rel15.coreset.cce_reg_interleaved_reg_bundle_size = 6;   //  L 38.211 7.3.2.2
+  dl_config.dl_config_list[0].dci_config_pdu.dci_config_rel15.coreset.cce_reg_interleaved_interleaver_size = 2;  //  R 38.211 7.3.2.2
+  dl_config.dl_config_list[0].dci_config_pdu.dci_config_rel15.coreset.cce_reg_interleaved_shift_index = cell_id;
+  dl_config.dl_config_list[0].dci_config_pdu.dci_config_rel15.coreset.precoder_granularity = PRECODER_GRANULARITY_SAME_AS_REG_BUNDLE;
+  dl_config.dl_config_list[0].dci_config_pdu.dci_config_rel15.coreset.pdcch_dmrs_scrambling_id = cell_id;
+  
+  uint32_t number_of_search_space_per_slot=1;
+  uint32_t first_symbol_index=0;
+  uint32_t search_space_duration;  //  element of search space
+  uint32_t coreset_duration;  //  element of coreset
+  
+  coreset_duration = num_symbols * number_of_search_space_per_slot;
+  
+  dl_config.dl_config_list[0].dci_config_pdu.dci_config_rel15.number_of_candidates[0] = table_38213_10_1_1_c2[0];
+  dl_config.dl_config_list[0].dci_config_pdu.dci_config_rel15.number_of_candidates[1] = table_38213_10_1_1_c2[1];
+  dl_config.dl_config_list[0].dci_config_pdu.dci_config_rel15.number_of_candidates[2] = table_38213_10_1_1_c2[2];   //  CCE aggregation level = 4
+  dl_config.dl_config_list[0].dci_config_pdu.dci_config_rel15.number_of_candidates[3] = table_38213_10_1_1_c2[3];   //  CCE aggregation level = 8
+  dl_config.dl_config_list[0].dci_config_pdu.dci_config_rel15.number_of_candidates[4] = table_38213_10_1_1_c2[4];   //  CCE aggregation level = 16
+  dl_config.dl_config_list[0].dci_config_pdu.dci_config_rel15.duration = search_space_duration;
+  dl_config.dl_config_list[0].dci_config_pdu.dci_config_rel15.monitoring_symbols_within_slot = (0x3fff << first_symbol_index) & (0x3fff >> (14-coreset_duration-first_symbol_index)) & 0x3fff;
+  	
   
   for (SNR=snr0; SNR<snr1; SNR+=.2) {
 
     n_errors = 0;
-    n_errors_payload = 0;
+    n_errors2 = 0;
+    n_alamouti = 0;
 
     for (trial=0; trial<n_trials; trial++) {
 
@@ -531,67 +641,30 @@ int main(int argc, char **argv)
       }
       else {
 	UE->rx_offset=0;
-	//symbol 1
-	nr_slot_fep(UE,
-		    5,
-		    0,
-		    0,
-		    0,
-		    1,
-		    NR_PBCH_EST);
-	
-	//symbol 2
-	nr_slot_fep(UE,
-		    6,
-		    0,
-		    0,
-		    0,
-		    1,
-		    NR_PBCH_EST);
-	
-	//symbol 3
-	nr_slot_fep(UE,
-		    7,
-		    0,
-		    0,
-		    0,
-		    1,
-		    NR_PBCH_EST);
-	
-	ret = nr_rx_pbch(UE,
-			 &UE->proc.proc_rxtx[0],
-			 UE->pbch_vars[0],
-			 frame_parms,
-			 0,
-			 SISO,
-			 UE->high_speed_flag);
 
-	if (ret==0) {
-	  //UE->rx_ind.rx_indication_body->mib_pdu.ssb_index;  //not yet detected automatically
-	  //UE->rx_ind.rx_indication_body->mib_pdu.ssb_length; //Lmax, not yet detected automatically
-	  uint8_t gNB_xtra_byte=0;
-	  for (int i=0; i<8; i++)
-	    gNB_xtra_byte |= ((gNB->pbch.pbch_a>>(31-i))&1)<<(7-i);
-	  
-	  payload_ret = (UE->rx_ind.rx_indication_body->mib_pdu.additional_bits == gNB_xtra_byte);
-	  for (i=0;i<3;i++){
-	    payload_ret += (UE->rx_ind.rx_indication_body->mib_pdu.pdu[i] == gNB->pbch_pdu[2-i]);
-	    //printf("pdu byte %d gNB: 0x%02x UE: 0x%02x\n",i,gNB->pbch_pdu[i], UE->rx_ind.rx_indication_body->mib_pdu.pdu[i]); 
-	  } 
-	  //printf("xtra byte gNB: 0x%02x UE: 0x%02x\n",gNB_xtra_byte, UE->rx_ind.rx_indication_body->mib_pdu.additional_bits);
-	  //printf("ret %d\n", payload_ret);
-	  if (payload_ret!=4) 
-	    n_errors_payload++;
-	}
+	UE_proc.frame_rx = frame;
+	UE_proc.nr_tti_rx= subframe;
+	UE_proc.subframe_rx = subframe;
+	
+	UE_mac->scheduled_response.dl_config = &dl_config;
+	nr_ue_scheduled_response(&UE_mac->scheduled_response);
 
-	if (ret<0) n_errors++;
+	phy_procedures_nrUE_RX(UE,
+			       &UE_proc,
+			       0,
+			       0,
+			       do_pdcch_flag,
+			       normal_txrx,
+			       no_relay);
+		
+	if (UE->dci_ind.number_of_dcis==0) n_errors++;
       }
     } //noise trials
 
-    printf("SNR %f: trials %d, n_errors_crc = %d, n_errors_payload %d\n", SNR,n_trials,n_errors,n_errors_payload);
+    printf("SNR %f : n_errors (negative CRC) = %d/%d\n", SNR,n_errors,n_trials);
 
-    if (((float)n_errors/(float)n_trials <= target_error_rate) && (n_errors_payload==0)) {
-      printf("PBCH test OK\n");
+    if ((float)n_errors/(float)n_trials <= target_error_rate) {
+      printf("PDCCH test OK\n");
       break;
     }
       
