@@ -5799,8 +5799,7 @@ void prepare_dl_decoding_format2_2A(DCI_format_t dci_format,
       if ((rv2 == 1) && (mcs2 == 0)) {
         TB1_active=0;
       }
-if((TB0_active==1)&&(TB1_active==0))//we are here
-{
+
     /*SFN:
      * Case 1:eNB receives ACK (due to channel) for erroneous decoded data
      * Description: UE has a decoding error. Hence it increases round and send Nack to eNB
@@ -5895,9 +5894,7 @@ if((TB0_active==1)&&(TB1_active==0))//we are here
                    dlsch0_harq,
                    nb_rb_alloc,
                    subframe);
-} else if((TB0_active==1)&&(TB1_active==1))//two active streams go here
-{
-}
+
 }
 
 int generate_ue_dlsch_params_from_dci(int frame,
@@ -8348,7 +8345,7 @@ int generate_eNB_ulsch_params_from_dci(PHY_VARS_eNB *eNB,
        * TODO: deal with TM 8&9 correctly when they are implemented.
        * TODO: deal with periodic reporting if we implement it.
        */
-      
+      //SFN FIX:
       // O_RI: 1 bit for RI
       if (transmission_mode == 3 || transmission_mode == 4)
         ulsch->harq_processes[harq_pid]->O_RI = 1; //we only support 2 antenna ports, so this is always 1 according to 3GPP 36.213 Table
@@ -8434,7 +8431,7 @@ int generate_eNB_ulsch_params_from_dci(PHY_VARS_eNB *eNB,
 
           switch (frame_parms->N_RB_DL) {
           case 6:
-            ulsch->harq_processes[harq_pid]->Or1                                   = sizeof_HLC_subband_cqi_nopmi_1_5MHz;
+        	ulsch->harq_processes[harq_pid]->Or1                                   = sizeof_HLC_subband_cqi_nopmi_1_5MHz;
             break;
 
           case 25:
@@ -8442,11 +8439,11 @@ int generate_eNB_ulsch_params_from_dci(PHY_VARS_eNB *eNB,
             break;
 
           case 50:
-            ulsch->harq_processes[harq_pid]->Or1                                   = sizeof_HLC_subband_cqi_nopmi_10MHz;
+        	ulsch->harq_processes[harq_pid]->Or1                                   = sizeof_HLC_subband_cqi_nopmi_10MHz;
             break;
 
           case 100:
-            ulsch->harq_processes[harq_pid]->Or1                                   = sizeof_HLC_subband_cqi_nopmi_20MHz;
+        	ulsch->harq_processes[harq_pid]->Or1                                   = sizeof_HLC_subband_cqi_nopmi_20MHz;
             break;
           }
 
