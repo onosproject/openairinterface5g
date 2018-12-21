@@ -1341,7 +1341,8 @@ static uint8_t pack_hi_dci0_dci_rel8_pdu_value(void *tlv, uint8_t **ppWritePacke
 			 push8(dci_pdu_rel8->ul_index, ppWritePackedMsg, end) &&
 			 push8(dci_pdu_rel8->dl_assignment_index, ppWritePackedMsg, end) &&
 			 push32(dci_pdu_rel8->tpc_bitmap, ppWritePackedMsg, end) &&
-			 push16(dci_pdu_rel8->transmission_power, ppWritePackedMsg, end));
+			 push16(dci_pdu_rel8->transmission_power, ppWritePackedMsg, end) &&
+                         push8(dci_pdu_rel8->harq_pid, ppWritePackedMsg, end));
 }
 
 static uint8_t pack_hi_dci0_dci_rel10_pdu_value(void *tlv, uint8_t **ppWritePackedMsg, uint8_t *end)
@@ -4187,7 +4188,8 @@ static uint8_t unpack_hi_dci0_dci_pdu_rel8_value(void *tlv, uint8_t **ppReadPack
 			pull8(ppReadPackedMsg, &dci_pdu_rel8->ul_index, end) &&
 			pull8(ppReadPackedMsg, &dci_pdu_rel8->dl_assignment_index, end) &&
 			pull32(ppReadPackedMsg, &dci_pdu_rel8->tpc_bitmap, end) &&
-			pull16(ppReadPackedMsg, &dci_pdu_rel8->transmission_power, end));
+			pull16(ppReadPackedMsg, &dci_pdu_rel8->transmission_power, end) &&
+                        pull8(ppReadPackedMsg, &dci_pdu_rel8->harq_pid, end));
 }
 
 static uint8_t unpack_hi_dci0_dci_pdu_rel10_value(void *tlv, uint8_t **ppReadPackedMsg, uint8_t *end)
