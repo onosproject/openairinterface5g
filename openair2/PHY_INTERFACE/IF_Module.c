@@ -111,8 +111,8 @@ void handle_cqi(UL_IND_t *UL_info) {
     for (i=0;i<UL_info->cqi_ind.cqi_indication_body.number_of_cqis;i++)
       cqi_indication(UL_info->module_id,
           UL_info->CC_id,
-          UL_info->frame,
-          UL_info->subframe,
+          NFAPI_SFNSF2SFN(UL_info->cqi_ind.sfn_sf),
+          NFAPI_SFNSF2SF(UL_info->cqi_ind.sfn_sf),
           UL_info->cqi_ind.cqi_indication_body.cqi_pdu_list[i].rx_ue_information.rnti,
           &UL_info->cqi_ind.cqi_indication_body.cqi_pdu_list[i].cqi_indication_rel9,
           UL_info->cqi_ind.cqi_indication_body.cqi_raw_pdu_list[i].pdu,
