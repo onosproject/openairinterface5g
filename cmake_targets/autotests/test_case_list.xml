@@ -949,6 +949,7 @@
 
       (TM2 Test 1 10 MHz, R.11 FDD (MCS 14), EVA5, 6.8 dB (70%)),
       (TM2 Test 1b 5 MHz, R.11-2 FDD (MCS 13), EVA5, 5.9 dB (70%)),
+      (Control Test 1 10 MHz, non-3GPP, AWGN, -4 dB (70%)),
        </desc>
       <pre_compile_prog></pre_compile_prog>
       <compile_prog>$OPENAIR_DIR/cmake_targets/build_oai</compile_prog>
@@ -969,7 +970,8 @@
                         -m=26 -g=F -s=17.3 -w=1.0 -f=.2 -n=500 -B=100 -c=2 -z=2 -r=1600 -O=60
                         -m=26 -g=F -s=16.6 -w=1.0 -f=.2 -n=500 -B=100 -c=2 -z=2 -r=1899 -O=60
                         -m=14 -g=F -s=6.8  -w=1.0 -f=.2 -n=500 -B=50 -c=2 -x=2 -y=2 -z=2 -O=60
-                        -m=13 -g=F -s=5.9  -w=1.0 -f=.2 -n=500 -B=25 -c=3 -x=2 -y=2 -z=2 -O=60</main_exec_args>
+                        -m=13 -g=F -s=5.9  -w=1.0 -f=.2 -n=500 -B=25 -c=3 -x=2 -y=2 -z=2 -O=60i
+                        -m=5 -a -s=-6 -w=1.0 -f=.2 -n=500 -B=50 -c=3 -x=2 -y=2 -z=2 -O=70 -e=1 -r=8</main_exec_args>
       <tags>dlsim.test1 dlsim.test5 dlsim.test6 dlsim.test6b dlsim.test7 dlsim.test7b dlsim.test10 dlsim.test10b dlsim.test11 dlsim.TM2_test1 dlsim.TM2_test1b</tags>
       <search_expr_true>"passed"</search_expr_true>
       <search_expr_false>segmentation fault|assertion|exiting|fatal</search_expr_false>
