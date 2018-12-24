@@ -2044,6 +2044,7 @@ void schedule_PCH(module_id_t module_idP, frame_t frameP, sub_frame_t subframeP)
         memset((void *) dl_config_pdu, 0, sizeof(nfapi_dl_config_request_pdu_t));
         dl_config_pdu->pdu_type = NFAPI_DL_CONFIG_DCI_DL_PDU_TYPE;
         dl_config_pdu->pdu_size = (uint8_t) (2 + sizeof(nfapi_dl_config_dci_dl_pdu));
+        dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.tl.tag = NFAPI_DL_CONFIG_REQUEST_DCI_DL_PDU_REL8_TAG;
 #ifdef FORMAT1C
         dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.dci_format                  = NFAPI_DL_DCI_FORMAT_1C;
         dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.resource_block_coding       = getRIV(n_vrb_dl/n_rb_step, first_rb/n_rb_step, Lcrbs/n_rb_step);
@@ -2077,6 +2078,8 @@ void schedule_PCH(module_id_t module_idP, frame_t frameP, sub_frame_t subframeP)
 	  dl_config_pdu->pdu_size                                                        = (uint8_t)(2+sizeof(nfapi_dl_config_dlsch_pdu));
 	  dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.pdu_index                              = eNB->pdu_index[CC_id];
 	  dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.rnti                                   = 0xFFFE;
+          dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.tl.tag                                 = NFAPI_DL_CONFIG_REQUEST_DLSCH_PDU_REL8_TAG;
+          dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.length                                 = pcch_sdu_length;
 #ifdef FORMAT1C
           dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.resource_allocation_type               = 3;   // format 1C
           dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.resource_block_coding                  = getRIV(n_vrb_dl/n_rb_step, first_rb/n_rb_step, Lcrbs/n_rb_step);
@@ -2127,6 +2130,7 @@ void schedule_PCH(module_id_t module_idP, frame_t frameP, sub_frame_t subframeP)
 	  TX_req->segments[0].segment_data                                               = cc[CC_id].PCCH_pdu.payload;
           eNB->TX_req[CC_id].tx_request_body.tl.tag = NFAPI_TX_REQUEST_BODY_TAG;
 	  eNB->TX_req[CC_id].tx_request_body.number_of_pdus++;
+          eNB->TX_req[CC_id].header.message_id = NFAPI_TX_REQUEST;
 	} else {
 	  LOG_E(MAC,"[eNB %d] CCid %d Frame %d, subframe %d : Cannot add DCI 1A/1C for Paging\n",module_idP, CC_id, frameP, subframeP);
 	  continue;
