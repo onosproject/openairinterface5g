@@ -216,7 +216,6 @@ int generate_NDLSCH_NB_IoT(NB_IoT_eNB_NDLSCH_t 	  *RAR,
 
     if( RAR->active == 1 )
     {
-        LOG_I(PHY,"[Frame: %d][Subframe: %d]sent RAR\n",frame,subframe);
     	uint8_t *RAR_pdu  = RAR->harq_process->pdu;
 	 	uint32_t rep =  RAR->repetition_number;
 	 	uint8_t eutra_control_region = 3;
@@ -227,6 +226,8 @@ int generate_NDLSCH_NB_IoT(NB_IoT_eNB_NDLSCH_t 	  *RAR,
 
     	int G = get_G_NB_IoT(frame_parms);
     	uint8_t Nsf = RAR->number_of_subframes_for_resource_assignment;
+
+        LOG_I(PHY,"[Frame: %d][Subframe: %d]sent RAR, rep : %d, counter_rep:%d, Num_res:%d\n",frame,subframe,rep,counter_rep,Nsf);
 
         if( (counter_rep == rep) && (counter_sf_rep == 0) && (pointer_to_sf == 0) )
         {

@@ -222,6 +222,7 @@ void handle_nfapi_dlsch_pdu_NB_IoT(PHY_VARS_eNB *eNB,
 		  eNB->ndlsch_RAR->counter_repetition_number       = Irep_to_Nrep_x[rel13->repetition_number];
 		  eNB->ndlsch_RAR->counter_current_sf_repetition   = 0;
 		  eNB->ndlsch_RAR->pointer_to_subframe             = 0;
+		  printf("number of subframe : %d, Rep of subframe : %d\n",eNB->ndlsch_RAR->number_of_subframes_for_resource_assignment,eNB->ndlsch_RAR->counter_repetition_number);
 
 	  }
 	  else
@@ -254,7 +255,6 @@ void handle_nfapi_dlsch_pdu_NB_IoT(PHY_VARS_eNB *eNB,
 		  eNB->ndlsch_RAR->counter_repetition_number       = Irep_to_Nrep_x[rel13->repetition_number];
 		  eNB->ndlsch_RAR->counter_current_sf_repetition   = 0;
 		  eNB->ndlsch_RAR->pointer_to_subframe             = 0;
-
 	  }
 
   }

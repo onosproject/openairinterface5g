@@ -216,6 +216,8 @@ int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB      *eNB,
  // NB_IoT_eNB_NPDCCH_t  *ndlcch     = ;
   void                  *DLSCH_DCI_NB_IoT = NULL;
 
+  uint8_t  *DCI_tmp = NULL;
+
   //eNB->DCI_pdu = (DCI_PDU_NB_IoT*) malloc(sizeof(DCI_PDU_NB_IoT));
 
   //N1 parameters
@@ -283,7 +285,7 @@ int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB      *eNB,
     ((DCIN1_RAR_t *)DLSCH_DCI_NB_IoT)->HARQackRes     =HARQackRes;
     ((DCIN1_RAR_t *)DLSCH_DCI_NB_IoT)->DCIRep         =DCIRep;
 
-
+    printf("DUMP: DCI N1 RAR : type = %d, orderIndicator = %d, Sched_delay = %d, ResAssign = %d, mcs = %d, RepNum = %d, ndi = %d, HARQackRes = %d, DCIRep = %d\n", type, orderIndicator, Sched_delay, ResAssign, mcs, RepNum, ndi, HARQackRes, DCIRep);
     //add_dci_NB_IoT(eNB->DCI_pdu,DLSCH_DCI_NB_IoT,rnti,sizeof(DCIN1_RAR_t),aggregation,sizeof_DCIN1_RAR_t,DCIFormatN1_RAR, npdcch_start_symbol);
 
 
@@ -304,7 +306,7 @@ int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB      *eNB,
     ndlcch->repetition_number[ncce_index]        = Irep_to_Nrep[RepNum];                             // repetition number for NPDSCH
     ndlcch->dci_repetitions[ncce_index]          = DCIrep_to_real_rep(DCIRep,32);        ////??????? should be repalce by the value in spec table 16.6-3, check also Rmax
 
-    //printf("dci_repetitions: %d\n",ndlcch->dci_repetitions[ncce_index]);
+    printf("dci_repetitions: %d\n",ndlcch->dci_repetitions[ncce_index]);
 
     ndlcch->modulation[ncce_index]               = 2; //QPSK
     //// ////////////////////////////////////////////////if(ndlcch->round == 0) //this should be set from initialization (init-lte)
@@ -312,6 +314,13 @@ int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB      *eNB,
     //ndlcch->status[ncce_index] = ACTIVE_NB_IoT;
     ndlcch->mcs[ncce_index]    = mcs;
     ndlcch->pdu[ncce_index]    = DLSCH_DCI_NB_IoT;
+    DCI_tmp = (uint8_t*)DLSCH_DCI_NB_IoT;
+    int tmp = 0;
+
+    printf("DCI PDU content\n");
+    for (tmp =0;tmp<3;tmp++)
+      printf("%02x ",DCI_tmp[tmp]);
+    printf("\n");
     /*
      * TS 36.213 ch 16.4.1.5
      * ITBS is always set equivalent to IMCS for data

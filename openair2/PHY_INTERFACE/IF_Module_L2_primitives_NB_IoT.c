@@ -43,7 +43,7 @@ void UL_indication_NB_IoT(UL_IND_NB_IoT_t *UL_INFO)
     Sched_Rsp_NB_IoT_t *SCHED_info = &mac_inst->Sched_INFO;
     //UE_TEMPLATE_NB_IoT *UE_info;
 
-    //enable_preamble_simulation(UL_INFO,1);
+    enable_preamble_simulation(UL_INFO,1);
 
     //If there is a preamble, do the initiate RA procedure
     if(UL_INFO->nrach_ind.number_of_initial_scs_detected>0)
