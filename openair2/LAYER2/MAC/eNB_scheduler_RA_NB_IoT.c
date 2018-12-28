@@ -92,6 +92,7 @@ uint16_t find_suit_i_delay(uint32_t rmax, uint32_t r, uint32_t dci_candidate){
 
 
 void schedule_rar_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, int abs_subframe){
+
 	RA_TEMPLATE_NB_IoT *msg2_nodes = mac_inst->RA_msg2_list.head;
 	//RA_TEMPLATE_NB_IoT *msg3_list_tail = mac_inst->RA_msg3_list.tail;
 	RA_TEMPLATE_NB_IoT *migrate_node;
@@ -117,12 +118,12 @@ void schedule_rar_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, int abs_subframe){
 
 		fail=0;
 		rmax = mac_inst->rrc_config.mac_NPRACH_ConfigSIB[msg2_nodes->ce_level].mac_npdcch_NumRepetitions_RA_NB_IoT;//32;
-		num_candidate = 8;//rmax / r;
+		num_candidate = 1;//rmax / r;
 		r = rmax/num_candidate;
 		num_dci_subframe = r;
 		dci_subframe = abs_subframe;//mac_inst->current_subframe;
 
-		//LOG_I(MAC,"rmax : %d, num_dci_subframe : %d, dci_subframe: %d\n",rmax,r,dci_subframe);
+		LOG_D(MAC,"rmax : %d, num_dci_subframe : %d, dci_subframe: %d\n",rmax,r,dci_subframe);
 
 		//print_available_resource_DL(mac_inst);
 

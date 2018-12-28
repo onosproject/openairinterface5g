@@ -301,10 +301,10 @@ int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB      *eNB,
     ndlcch->active[ncce_index] = 1; //will be activated by the corresponding NDSLCH pdu
 
     // use this value to configure PHY both harq_processes and resource mapping.
-    ndlcch->scheduling_delay[ncce_index]         = Idelay_to_K0(Sched_delay,32);
+    ndlcch->scheduling_delay[ncce_index]         = Idelay_to_K0(Sched_delay,4);
     ndlcch->resource_assignment[ncce_index]      = resource_to_subframe[ResAssign];  //from Isf of DCI to the number of subframe
     ndlcch->repetition_number[ncce_index]        = Irep_to_Nrep[RepNum];                             // repetition number for NPDSCH
-    ndlcch->dci_repetitions[ncce_index]          = DCIrep_to_real_rep(DCIRep,32);        ////??????? should be repalce by the value in spec table 16.6-3, check also Rmax
+    ndlcch->dci_repetitions[ncce_index]          = DCIrep_to_real_rep(DCIRep,4);        ////??????? should be repalce by the value in spec table 16.6-3, check also Rmax
 
     printf("dci_repetitions: %d\n",ndlcch->dci_repetitions[ncce_index]);
 
@@ -329,7 +329,7 @@ int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB      *eNB,
 
     ndlcch->TBS[ncce_index]      = TBStable_NB_IoT[mcs][ResAssign];
     //ndlcch->subframe[ncce_index] = subframe;
-    ndlcch->counter_repetition_number[ncce_index] = DCIrep_to_real_rep(DCIRep,32);          ////??????? should be repalce by the value in spec table 16.6-3, check also Rmax
+    ndlcch->counter_repetition_number[ncce_index] = DCIrep_to_real_rep(DCIRep,4);          ////??????? should be repalce by the value in spec table 16.6-3, check also Rmax
     //ndlsch_harq->B; we don-t have now my is given when we receive the dlsch data
     //ndlsch->error_treshold
     //ndlsch->G??

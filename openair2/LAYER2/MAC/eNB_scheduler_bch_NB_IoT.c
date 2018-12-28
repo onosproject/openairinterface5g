@@ -77,7 +77,7 @@ void schedule_sibs(eNB_MAC_INST_NB_IoT *mac_inst, uint32_t sibs_order, int start
 		num_subframe_per_SIB = 8;
 	else
 		LOG_E(MAC,"Invalid SIB size\n");
-	num_subframe = num_subframe_per_SIB *8;
+	num_subframe = num_subframe_per_SIB *4;
 	
 	int rmax = mac_inst->rrc_config.mac_NPRACH_ConfigSIB[0].mac_npdcch_NumRepetitions_RA_NB_IoT;
 	rmax = (rmax * 10) >> 3;	//	x1.25

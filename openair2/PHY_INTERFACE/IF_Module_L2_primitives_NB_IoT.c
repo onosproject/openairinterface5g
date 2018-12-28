@@ -17,20 +17,22 @@ void enable_preamble_simulation(UL_IND_NB_IoT_t *UL_INFO,int i)
   if(i == 1)
   {
     // simulate preamble session
-    if(UL_INFO->frame==60 && UL_INFO->subframe==2 && tmp==0)
+    /*
+    if(UL_INFO->frame==60 && UL_INFO->subframe==2 && (tmp%3==0))
     {
       simulate_preamble(UL_INFO,0,2);
       tmp++;
     }
-    if(UL_INFO->frame==100 && UL_INFO->subframe==2 && tmp==1)
+    if(UL_INFO->frame==100 && UL_INFO->subframe==2 && (tmp%3==1))
     {
       simulate_preamble(UL_INFO,1,13);
       tmp++;
     }
-    if(UL_INFO->frame==60 && UL_INFO->subframe==2 && tmp==2)
+    */
+    if(UL_INFO->frame==525 && UL_INFO->subframe==8)
     {
       simulate_preamble(UL_INFO,2,26);
-      tmp++;
+      //tmp++;
     }
   }
 }
@@ -43,7 +45,7 @@ void UL_indication_NB_IoT(UL_IND_NB_IoT_t *UL_INFO)
     Sched_Rsp_NB_IoT_t *SCHED_info = &mac_inst->Sched_INFO;
     //UE_TEMPLATE_NB_IoT *UE_info;
 
-    enable_preamble_simulation(UL_INFO,1);
+    enable_preamble_simulation(UL_INFO,0);
 
     //If there is a preamble, do the initiate RA procedure
     if(UL_INFO->nrach_ind.number_of_initial_scs_detected>0)
