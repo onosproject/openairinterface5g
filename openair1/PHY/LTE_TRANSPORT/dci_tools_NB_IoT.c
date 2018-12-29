@@ -317,7 +317,7 @@ int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB      *eNB,
     DCI_tmp = (uint8_t*)DLSCH_DCI_NB_IoT;
     int tmp = 0;
 
-    printf("DCI PDU content\n");
+    printf("DCI PDU content:");
     for (tmp =0;tmp<3;tmp++)
       printf("%02x ",DCI_tmp[tmp]);
     printf("\n");

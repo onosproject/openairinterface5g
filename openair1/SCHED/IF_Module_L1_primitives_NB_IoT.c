@@ -207,6 +207,15 @@ void handle_nfapi_dlsch_pdu_NB_IoT(PHY_VARS_eNB *eNB,
 	  	  eNB->ndlsch_RAR->harq_process->TBS = rel13->length;
 
 		  eNB->ndlsch_RAR->harq_process->pdu 		= sdu;
+		  
+		  printf("RAR PDU content:");
+		  int fori = 0;
+		  for(fori=0;fori<7;fori++)
+		  {
+			printf("%02x ",eNB->ndlsch_RAR->harq_process->pdu[fori]);
+		  }
+		  printf("\n");
+			
 		  eNB->ndlsch_RAR->npdsch_start_symbol 		= rel13->start_symbol;
 		  eNB->ndlsch_RAR->active 					= 1;
 
