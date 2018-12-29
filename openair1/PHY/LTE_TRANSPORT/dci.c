@@ -3727,7 +3727,7 @@ uint16_t dci_decoding_procedure(PHY_VARS_UE *ue,
 
   }
   // These are for CRNTI based on transmission mode
-  if ((tmode < 3) || (tmode == 7)) {
+  if ((tmode < 3) || (tmode == 7) || (tmode == 4)) {
     // Now check UE_SPEC format 1 search spaces at aggregation 1
     old_dci_cnt=dci_cnt;
     dci_decoding_procedure0(pdcch_vars,0,mode,subframe,
@@ -3753,13 +3753,12 @@ uint16_t dci_decoding_procedure(PHY_VARS_UE *ue,
                             &CCEmap1,
                             &CCEmap2);
     //printf("[DCI search] Format 1 aggregation 1 dci_cnt %d\n",dci_cnt);
-
-    if ((CCEmap0==0xffff) ||
+// to avoid dropping format 2 detection
+   /* if ((CCEmap0==0xffff) ||
         (format_c_found==1))
       return(dci_cnt);
-
     if (dci_cnt>old_dci_cnt)
-      return(dci_cnt);
+      return(dci_cnt);*/
 
     // Now check UE_SPEC format 1 search spaces at aggregation 2
     old_dci_cnt=dci_cnt;
@@ -3787,12 +3786,12 @@ uint16_t dci_decoding_procedure(PHY_VARS_UE *ue,
                             &CCEmap2);
     //printf("[DCI search] Format 1 aggregation 2 dci_cnt %d\n",dci_cnt);
 
-    if ((CCEmap0==0xffff)||
+// to avoid dropping format 2 detection
+    /*if ((CCEmap0==0xffff)||
         (format_c_found==1))
       return(dci_cnt);
-
     if (dci_cnt>old_dci_cnt)
-      return(dci_cnt);
+      return(dci_cnt);*/
 
     // Now check UE_SPEC format 1 search spaces at aggregation 4
     old_dci_cnt=dci_cnt;
@@ -3820,12 +3819,12 @@ uint16_t dci_decoding_procedure(PHY_VARS_UE *ue,
                             &CCEmap2);
     //printf("[DCI search] Format 1 aggregation 4 dci_cnt %d\n",dci_cnt);
 
-    if ((CCEmap0==0xffff)||
+// to avoid dropping format 2 detection
+    /*if ((CCEmap0==0xffff)||
         ((format0_found==1)&&(format_c_found==1)))
       return(dci_cnt);
-
     if (dci_cnt>old_dci_cnt)
-      return(dci_cnt);
+      return(dci_cnt);*/
 
     //#ifdef ALL_AGGREGATION
     // Now check UE_SPEC format 1 search spaces at aggregation 8
@@ -3854,6 +3853,142 @@ uint16_t dci_decoding_procedure(PHY_VARS_UE *ue,
                             &CCEmap2);
     //printf("[DCI search] Format 1 aggregation 8 dci_cnt %d\n",dci_cnt);
 
+// to avoid dropping format 2 detection
+    /*if ((CCEmap0==0xffff)||
+        ((format0_found==1)&&(format_c_found==1)))
+      return(dci_cnt);
+    if (dci_cnt>old_dci_cnt)
+      return(dci_cnt);*/
+
+
+/* Khodr Saaifan: Enable Format2 seaching in UE space along with Format 1 detaction
+ *             : Work around to avoid droping format1 detection of RRC messages before TM4 config
+ *             : aggregation 1,2,4, and 8
+ */
+    // Now check UE_SPEC format 2_2A search spaces at aggregation 1
+    old_dci_cnt=dci_cnt;
+    dci_decoding_procedure0(pdcch_vars,0,mode,
+                            subframe,
+                            dci_alloc,
+                            eNB_id,
+                            ue->current_thread_id[subframe],
+                            frame_parms,
+                            mi,
+                            ((ue->decode_SIB == 1) ? SI_RNTI : 0),
+                            ra_rnti,
+			    P_RNTI,
+                            3,
+                            format1A,
+                            format1A,
+                            format1A,
+                            format2,
+                            format2_size_bits,
+                            format2_size_bytes,
+                            &dci_cnt,
+                            &format0_found,
+                            &format_c_found,
+                            &CCEmap0,
+                            &CCEmap1,
+                            &CCEmap2);
+
+    if ((CCEmap0==0xffff)||
+        ((format0_found==1)&&(format_c_found==1)))
+      return(dci_cnt);
+    if (dci_cnt>old_dci_cnt)
+      return(dci_cnt);
+
+    // Now check UE_SPEC format 2 search spaces at aggregation 2
+    old_dci_cnt=dci_cnt;
+    dci_decoding_procedure0(pdcch_vars,0,mode,
+                            subframe,
+                            dci_alloc,
+                            eNB_id,
+                            ue->current_thread_id[subframe],
+                            frame_parms,
+                            mi,
+                            ((ue->decode_SIB == 1) ? SI_RNTI : 0),
+                            ra_rnti,
+			    P_RNTI,
+                            2,
+                            format1A,
+                            format1A,
+                            format1A,
+                            format2,
+                            format2_size_bits,
+                            format2_size_bytes,
+                            &dci_cnt,
+                            &format0_found,
+                            &format_c_found,
+                            &CCEmap0,
+                            &CCEmap1,
+                            &CCEmap2);
+
+    if ((CCEmap0==0xffff)||
+        ((format0_found==1)&&(format_c_found==1)))
+      return(dci_cnt);
+    if (dci_cnt>old_dci_cnt)
+      return(dci_cnt);
+
+    // Now check UE_SPEC format 2_2A search spaces at aggregation 4
+    old_dci_cnt=dci_cnt;
+    dci_decoding_procedure0(pdcch_vars,0,mode,
+                            subframe,
+                            dci_alloc,
+                            eNB_id,
+                            ue->current_thread_id[subframe],
+                            frame_parms,
+                            mi,
+                            ((ue->decode_SIB == 1) ? SI_RNTI : 0),
+                            ra_rnti,
+			    P_RNTI,
+                            1,
+                            format1A,
+                            format1A,
+                            format1A,
+                            format2,
+                            format2_size_bits,
+                            format2_size_bytes,
+                            &dci_cnt,
+                            &format0_found,
+                            &format_c_found,
+                            &CCEmap0,
+                            &CCEmap1,
+                            &CCEmap2);
+
+    if ((CCEmap0==0xffff)||
+        ((format0_found==1)&&(format_c_found==1)))
+      return(dci_cnt);
+    if (dci_cnt>old_dci_cnt)
+      return(dci_cnt);
+
+    //#ifdef ALL_AGGREGATION
+    // Now check UE_SPEC format 2_2A search spaces at aggregation 8
+    old_dci_cnt=dci_cnt;
+    dci_decoding_procedure0(pdcch_vars,0,mode,
+                            subframe,
+                            dci_alloc,
+                            eNB_id,
+                            ue->current_thread_id[subframe],
+                            frame_parms,
+                            mi,
+                            ((ue->decode_SIB == 1) ? SI_RNTI : 0),
+                            ra_rnti,
+			    P_RNTI,
+                            0,
+                            format1A,
+                            format1A,
+                            format1A,
+                            format2,
+                            format2_size_bits,
+                            format2_size_bytes,
+                            &dci_cnt,
+                            &format0_found,
+                            &format_c_found,
+                            &CCEmap0,
+                            &CCEmap1,
+                            &CCEmap2);
+    //#endif
+
     if ((CCEmap0==0xffff)||
         ((format0_found==1)&&(format_c_found==1)))
       return(dci_cnt);
@@ -3861,7 +3996,6 @@ uint16_t dci_decoding_procedure(PHY_VARS_UE *ue,
     if (dci_cnt>old_dci_cnt)
       return(dci_cnt);
 
-    //#endif //ALL_AGGREGATION
   } else if (tmode == 3) {
 
 

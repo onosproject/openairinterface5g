@@ -2245,10 +2245,12 @@ void ue_pucch_procedures(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,uin
               ue->tx_power_max_dBm,
               ue->frame_parms.N_RB_UL,
               1);
-      /*KhodrSaaifan: Fraunhofer iis
-       * Fix 0 amp bug which kill the Tx signal
+      /* KhodrSaaifan: Fraunhofer iis
+       * I see a problem in tx_amp, which should be solved later on
+       * To avoid a signal clipping of PUCCH at eNB, we use tx_amp=256
        * */
-      if (tx_amp <= 0) tx_amp=2;
+      //LOG_I(PHY,"[UE  %d] AbsSubframe %d.%d  Po_PUCCH %d tx_amp %d\n",Mod_id,frame_tx%1024, subframe_tx,Po_PUCCH,tx_amp);
+      tx_amp=256;//
 #else
       tx_amp = AMP;
 #endif
@@ -5693,5 +5695,4 @@ void phy_procedures_UE_lte(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,u
 #endif
   } // slot
 }
-
 

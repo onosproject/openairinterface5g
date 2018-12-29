@@ -479,15 +479,15 @@ void generate_pucch1x(int32_t **txdataF,
           switch (fmt) {
           case pucch_format1:   //OOK 1-bit
 
-            zptr[n<<1] =(int16_t)(((int32_t)amp*ref_re));//amp is not fixed point
-            zptr[1+(n<<1)] =(int16_t)(((int32_t)amp*ref_im));
+            zptr[n<<1] =(int16_t)(((int32_t)amp*ref_re)>>15);//amp is a fixed point var
+            zptr[1+(n<<1)] =(int16_t)(((int32_t)amp*ref_im)>>15);
 
             break;
 
           case pucch_format1a:  //BPSK 1-bit
             d0 = (payload[0]&1)==0 ? amp : -amp;
-            zptr[n<<1] = (int16_t)(((int32_t)d0*ref_re));
-            zptr[1+(n<<1)] = (int16_t)(((int32_t)d0*ref_im));
+            zptr[n<<1] = (int16_t)(((int32_t)d0*ref_re)>>15);
+            zptr[1+(n<<1)] = (int16_t)(((int32_t)d0*ref_im)>>15);
             //      printf("d0 %d\n",d0);
             break;
 
@@ -520,8 +520,8 @@ void generate_pucch1x(int32_t **txdataF,
           } // switch fmt
         } else { // These are PUCCH reference symbols
 
-        	zptr[n<<1] = (int16_t)(((int32_t)amp*ref_re));//amp is not fixed point
-        	zptr[1+(n<<1)] =(int16_t)(((int32_t)amp*ref_im));
+        	zptr[n<<1] = (int16_t)(((int32_t)amp*ref_re)>>15);//amp is a fixed point var
+        	zptr[1+(n<<1)] =(int16_t)(((int32_t)amp*ref_im)>>15);
           //    printf("ref\n");
         }
 
@@ -538,7 +538,7 @@ void generate_pucch1x(int32_t **txdataF,
     nprime=nprime1;
     n_oc  =n_oc1;
   } // ns
-
+ zptr = (int16_t *)z;
   rem = ((((deltaPUCCH_Shift*Ncs1_div_deltaPUCCH_Shift)>>3)&7)>0) ? 1 : 0;
 
  m = (n1_pucch < thres) ? NRB2 : (((n1_pucch-thres)/(12*c/deltaPUCCH_Shift))+NRB2+((deltaPUCCH_Shift*Ncs1_div_deltaPUCCH_Shift)>>3)+rem);
@@ -2103,7 +2103,7 @@ uint32_t rx_pucch(PHY_VARS_eNB *eNB,
     stat_max = 0;
 
 
-    for (phase=0; phase<7; phase++) {
+    for (phase=0; phase<7; phase++) { zptr = (int16_t *)z;
       stat=0;
 
       for (aa=0; aa<frame_parms->nb_antennas_rx; aa++) {

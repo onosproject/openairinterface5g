@@ -5149,7 +5149,27 @@ if ((rv2!=1)&&(mcs2!=0))//deactivate TBS1
         LOG_I(PHY,"bad tpmi %d\n", tpmi);
        return(0);
     }
-
+/*SFN:
+     * Case 1:eNB receives ACK (due to channel) for erroneous decoded data
+     * Description: UE has a decoding error. Hence it increases round and send Nack to eNB
+     * if eNB receives ACK. So, it assumes a new Transmission and sends new TBS
+     * pdlsch0->harq_processes[harq_pid]
+     */
+int Nl;
+    if(pdlsch0_harq->round > 0)
+    {
+    	if(tpmi==0) Nl=1;
+    	else if(tpmi==7) Nl=2;
+    	// compare old TBS to new TBS
+    	if((mcs1<29) && (pdlsch0_harq->TBS != TBStable[get_I_TBS(mcs1)][Nl*NPRB-1]))
+      	   {
+      		   // this is an eNB issue due to wrong receiption of Ack/Nack
+      	       // retransmisison but old and new TBS are different !!!
+      	       // work around, consider it as a new transmission
+      		   LOG_E(PHY,"Format2 Retransmission but TBS are different: consider it as new transmission !!! \n");
+      		 pdlsch0_harq->round = 0;
+      	   }
+    }
    return(1);
 }
 
@@ -5781,8 +5801,7 @@ void prepare_dl_decoding_format2_2A(DCI_format_t dci_format,
     uint8_t  ndi2     = pdci_info_extarcted->ndi2;
     uint8_t  Nl     = 1;
 
-    uint8_t TB0_active = 1;
-    uint8_t TB1_active = 1;
+  
     uint8_t  NPRB    = 0;
     uint8_t  nb_rb_alloc = 0;
     NPRB = conv_nprb(rah, rballoc, 25);
@@ -5793,34 +5812,7 @@ void prepare_dl_decoding_format2_2A(DCI_format_t dci_format,
     pdlsch0->rnti             = rnti;
 
 
-      if ((rv1 == 1) && (mcs1 == 0)) {
-        TB0_active=0;
-      }
-      if ((rv2 == 1) && (mcs2 == 0)) {
-        TB1_active=0;
-      }
-
-    /*SFN:
-     * Case 1:eNB receives ACK (due to channel) for erroneous decoded data
-     * Description: UE has a decoding error. Hence it increases round and send Nack to eNB
-     * if eNB receives ACK. So, it assumes a new Transmission and sends new TBS
-     * pdlsch0->harq_processes[harq_pid]
-     */
-    if(dlsch0_harq->round > 0)
-    {
-    	if(tpmi==0) Nl=1;
-    	else if(tpmi==7) Nl=2;
-    	// compare old TBS to new TBS
-    	if((mcs1<29) && (dlsch0_harq->TBS != TBStable[get_I_TBS(mcs1)][Nl*NPRB-1]))
-      	   {
-      		   // this is an eNB issue due to wrong receiption of Ack/Nack
-      	       // retransmisison but old and new TBS are different !!!
-      	       // work around, consider it as a new transmission
-      		   LOG_E(PHY,"Format2 Retransmission but TBS are different: consider it as new transmission !!! \n");
-      		 dlsch0_harq->round = 0;
-      	   }
-    }
-
+   
     // NDI has been toggled or this is the first transmission
     if ((ndi1!=dlsch0_harq->DCINdi) || (dlsch0_harq->first_tx==1))
     {
