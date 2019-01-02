@@ -1033,8 +1033,13 @@ int main( int argc, char **argv )
   char cpu_affinity[1024];
   CPU_ZERO(&cpuset);
 #ifdef CPU_AFFINITY
+  int j;
   if (get_nprocs() > 2) {
-    CPU_SET(1, &cpuset);
+    // CPU_SET(1, &cpuset);
+    for (j = 2; j < get_nprocs(); j++)
+    {
+      CPU_SET(j, &cpuset);
+    }
     s = pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
     if (s != 0) {
       perror( "pthread_setaffinity_np");

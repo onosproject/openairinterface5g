@@ -303,21 +303,9 @@ void thread_top_init(char *thread_name,
 #ifdef CPU_AFFINITY
   if (get_nprocs() > 2)
   {
-    if (affinity == 0)
+    for (j = 2; j < get_nprocs(); j++)
     {
-      printf("[SYRTEM CPU AFFINITY !!!] ERROR:affinity is 0 -> 2-7 !!!!!!!!!! !!!!!!!!!!\n");
-      // CPU_SET(0,&cpuset);
-      for (j = 2; j < get_nprocs(); j++)
-      {
-        CPU_SET(j, &cpuset);
-      }
-    }
-    else
-    {
-      for (j = 2; j < get_nprocs(); j++)
-      {
-        CPU_SET(j, &cpuset);
-      }
+      CPU_SET(j, &cpuset);
     }
 
     s = pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
