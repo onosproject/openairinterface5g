@@ -313,8 +313,14 @@ int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB      *eNB,
 
     //ndlcch->status[ncce_index] = ACTIVE_NB_IoT;
     ndlcch->mcs[ncce_index]    = mcs;
-    ndlcch->pdu[ncce_index]    = DLSCH_DCI_NB_IoT;
+
+    //ndlcch->pdu[ncce_index]    = DLSCH_DCI_NB_IoT;
     DCI_tmp = (uint8_t*)DLSCH_DCI_NB_IoT;
+    //DCI_tmp[0]        = 128;
+    //DCI_tmp[1]        = 66;
+    //DCI_tmp[2]        = 4;
+    ndlcch->pdu[ncce_index]    = DCI_tmp;
+
     int tmp = 0;
 
     printf("DCI PDU content:");

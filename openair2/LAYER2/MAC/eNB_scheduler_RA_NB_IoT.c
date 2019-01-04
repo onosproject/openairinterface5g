@@ -48,7 +48,7 @@ void init_RA_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, uint8_t preamble_index, ce_le
 	}
 
 	migrate_node->active = 1;
-	migrate_node->preamble_index = preamble_index;
+	migrate_node->preamble_index = 0;
 	migrate_node->ce_level = ce_level;
 	migrate_node->ra_rnti = (sfn_id>>2) + 1;
 	migrate_node->ta = ta;
@@ -226,7 +226,7 @@ void schedule_rar_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, int abs_subframe){
 			dci_n1_rar->RepNum = msg2_nodes->ce_level;	//	36.213 table 16.4.1.3-2, 8 candidates
 			dci_n1_rar->ndi = 0;	//	ndi is useless in RAR	36.212 says the feild is reserved
 			dci_n1_rar->HARQackRes = 0;	//	no HARQ procedure in RAR	36.212 says the feild is reserved
-			dci_n1_rar->DCIRep = 0;	//	36.213 table 16.6-1 R=Rmax/8
+			dci_n1_rar->DCIRep = 2;	//	36.213 table 16.6-1 R=Rmax/8
 
 			//printf("I_sf = %d,I_mcs = %d, RepNum = %d\n",dci_n1_rar->ResAssign,I_mcs,msg2_nodes->ce_level);
 			//	for dci

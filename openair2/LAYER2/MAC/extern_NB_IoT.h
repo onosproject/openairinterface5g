@@ -132,7 +132,7 @@ extern const int BSR_table[64];
 extern const int dl_rep[3];
 extern const uint32_t dci_rep[3];
 extern const uint32_t harq_rep[3];
-
+extern int cooooount;
 //SIBs
 extern int extend_space[2];
 extern int extend_alpha_offset[2];

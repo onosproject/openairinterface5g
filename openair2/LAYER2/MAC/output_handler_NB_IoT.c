@@ -37,11 +37,18 @@
 
 #define fixed_scheduling 1
 
+int init_time=0;
+
 int fixed_scheduler(uint32_t frame, uint32_t subframe, Sched_Rsp_NB_IoT_t *SCHED_info)
 {
 	nfapi_dl_config_request_pdu_t *dl_config_pdu;
+
+	if(cooooount==1)
+	{
+		init_time++;
+	}	
 	
-	if(frame==529&&subframe==8)
+	if(cooooount==1 && init_time==6)
 	{
 		//DCI
 		LOG_I(MAC,"[frame:%2d][subframe:%2d]NB-IoT fill DL_DCI\n",frame,subframe);
@@ -68,7 +75,7 @@ int fixed_scheduler(uint32_t frame, uint32_t subframe, Sched_Rsp_NB_IoT_t *SCHED
                 dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.dci_subframe_repetition_number        = 2;
 		return 1;		
 	}
-	if(frame==530 && subframe==7)
+	if(cooooount==1 && init_time==15)
 	{
                 LOG_I(MAC,"[frame:%2d][subframe:%2d]NB-IoT fill DL Data\n",frame,subframe);
 		uint8_t *rar_pdu;
@@ -94,6 +101,8 @@ int fixed_scheduler(uint32_t frame, uint32_t subframe, Sched_Rsp_NB_IoT_t *SCHED
                 dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13.modulation             = 2;
                 dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13.number_of_subframes_for_resource_assignment = get_num_sf(dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13.resource_assignment);
                 SCHED_info->TX_req->tx_request_body.tx_pdu_list[dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13.pdu_index].segments[0].segment_data = rar_pdu;
+		cooooount =0;
+		init_time =0;
 		return 1;
 	}
 	return 0;

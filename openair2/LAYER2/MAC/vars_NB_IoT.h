@@ -39,7 +39,7 @@
 //#include "PHY_INTERFACE/defs.h"
 //#include "COMMON/mac_rrc_primitives.h"
 
-
+int cooooount;
 //IF_Module_NB_IoT_t *if_inst_NB_IoT;
 
 //NB-IoT--------------------------------------

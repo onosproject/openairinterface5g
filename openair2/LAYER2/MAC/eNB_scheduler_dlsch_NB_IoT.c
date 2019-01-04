@@ -980,11 +980,11 @@ uint32_t get_I_mcs(int CE_level)
 	}
 	else if(CE_level==1)
 	{
-		return 12;
+		return 10;
 	}
 	else
 	{
-		return 11;
+		return 4;
 	}
 }
 
