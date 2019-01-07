@@ -37,47 +37,50 @@
 
 #define fixed_scheduling 1
 
-int init_time=0;
+int delay_time=0;
+int rar_transmit = 0;
 
 int fixed_scheduler(uint32_t frame, uint32_t subframe, Sched_Rsp_NB_IoT_t *SCHED_info)
 {
+	int RARNTI = 0;
 	nfapi_dl_config_request_pdu_t *dl_config_pdu;
-
-	if(cooooount==1)
-	{
-		init_time++;
-	}	
 	
-	if(cooooount==1 && init_time==6)
+	if(preamble_trigger==1 && subframe==7 && rar_transmit==0)
 	{
+		RARNTI = 1 + preamble_sfn/4;
 		//DCI
 		LOG_I(MAC,"[frame:%2d][subframe:%2d]NB-IoT fill DL_DCI\n",frame,subframe);
-                dl_config_pdu = SCHED_info->DL_req->dl_config_request_body.dl_config_pdu_list;
-                SCHED_info->DL_req->dl_config_request_body.number_dci = 1;
-                SCHED_info->DL_req->dl_config_request_body.number_pdu = 1;
-                // not consider the case transmitting 2 DCIs for the moment also not consider N2 now
-                dl_config_pdu->pdu_type                                                          = NFAPI_DL_CONFIG_NPDCCH_PDU_TYPE;
-                dl_config_pdu->pdu_size                                                          = 2+sizeof(nfapi_dl_config_npdcch_pdu_rel13_t);
-                dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.length                                = 7;
-                dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.pdu_index                             = 1;
-                dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.ncce_index                            = 0;
-                dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.aggregation_level                     = 1;
-                dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.rnti_type                             = 1; // 1 = 
-                dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.rnti                                  = 133; // RA-RNTI = 1+floor(SFN/4)
-                dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.dci_format                            = 0; // N1
-                dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.scheduling_delay                      = 0;
-                dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.resource_assignment                   = 0;
-                dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.repetition_number                     = 2;
-                dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.mcs                                   = 4;
-                dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.new_data_indicator                    = 0;
-                dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.harq_ack_resource                     = 0;
-                dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.npdcch_order_indication               = 0;
-                dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.dci_subframe_repetition_number        = 2;
+        dl_config_pdu = SCHED_info->DL_req->dl_config_request_body.dl_config_pdu_list;
+        SCHED_info->DL_req->dl_config_request_body.number_dci = 1;
+        SCHED_info->DL_req->dl_config_request_body.number_pdu = 1;
+        // not consider the case transmitting 2 DCIs for the moment also not consider N2 now
+        dl_config_pdu->pdu_type                                                          = NFAPI_DL_CONFIG_NPDCCH_PDU_TYPE;
+        dl_config_pdu->pdu_size                                                          = 2+sizeof(nfapi_dl_config_npdcch_pdu_rel13_t);
+        dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.length                                = 7;
+        dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.pdu_index                             = 1;
+        dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.ncce_index                            = 0;
+        dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.aggregation_level                     = 1;
+        dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.rnti_type                             = 1; // 1 = 
+        dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.rnti                                  = RARNTI; // RA-RNTI = 1+floor(SFN/4)
+        dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.dci_format                            = 0; // N1
+        dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.scheduling_delay                      = 0;
+        dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.resource_assignment                   = 0;
+        dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.repetition_number                     = 2;
+        dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.mcs                                   = 4;
+        dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.new_data_indicator                    = 0;
+        dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.harq_ack_resource                     = 0;
+        dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.npdcch_order_indication               = 0;
+        dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.dci_subframe_repetition_number        = 2;
+        rar_transmit=1;
+        delay_time=1;
 		return 1;		
 	}
-	if(cooooount==1 && init_time==15)
+	if(rar_transmit==1)
+		delay_time++;
+	if(rar_transmit==1 && delay_time==10)
 	{
-                LOG_I(MAC,"[frame:%2d][subframe:%2d]NB-IoT fill DL Data\n",frame,subframe);
+        LOG_I(MAC,"[frame:%2d][subframe:%2d]NB-IoT fill DL Data\n",frame,subframe);
+		RARNTI = 1 + preamble_sfn/4;
 		uint8_t *rar_pdu;
 		rar_pdu = (uint8_t *)malloc(7*sizeof(uint8_t));
 		rar_pdu[0] = 64; // + preamble index
@@ -88,21 +91,22 @@ int fixed_scheduler(uint32_t frame, uint32_t subframe, Sched_Rsp_NB_IoT_t *SCHED
 		rar_pdu[5] = 255;
 		rar_pdu[6] = 242;
 
-                dl_config_pdu = SCHED_info->DL_req->dl_config_request_body.dl_config_pdu_list;
-                SCHED_info->DL_req->dl_config_request_body.number_pdu = 1;
-                dl_config_pdu->pdu_type                                           = NFAPI_DL_CONFIG_NDLSCH_PDU_TYPE;
-                dl_config_pdu->pdu_size                                           = 2+sizeof(nfapi_dl_config_ndlsch_pdu_rel13_t);
-                dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13.length                 = 7;
-                dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13.pdu_index              = 1;
-                dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13.rnti_type              = 1;
-                dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13.rnti                   = 133; // C-RNTI
-                dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13.resource_assignment    = 0;
-                dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13.repetition_number      = 2;
-                dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13.modulation             = 2;
-                dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13.number_of_subframes_for_resource_assignment = get_num_sf(dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13.resource_assignment);
-                SCHED_info->TX_req->tx_request_body.tx_pdu_list[dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13.pdu_index].segments[0].segment_data = rar_pdu;
-		cooooount =0;
-		init_time =0;
+        dl_config_pdu = SCHED_info->DL_req->dl_config_request_body.dl_config_pdu_list;
+        SCHED_info->DL_req->dl_config_request_body.number_pdu = 1;
+        dl_config_pdu->pdu_type                                           = NFAPI_DL_CONFIG_NDLSCH_PDU_TYPE;
+        dl_config_pdu->pdu_size                                           = 2+sizeof(nfapi_dl_config_ndlsch_pdu_rel13_t);
+        dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13.length                 = 7;
+        dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13.pdu_index              = 1;
+        dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13.rnti_type              = 1;
+        dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13.rnti                   = RARNTI; // RA-RNTI
+        dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13.resource_assignment    = 0;
+        dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13.repetition_number      = 2;
+        dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13.modulation             = 2;
+        dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13.number_of_subframes_for_resource_assignment = get_num_sf(dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13.resource_assignment);
+        SCHED_info->TX_req->tx_request_body.tx_pdu_list[dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13.pdu_index].segments[0].segment_data = rar_pdu;
+		rar_transmit = 0;
+		preamble_trigger =0;
+		delay_time =0;
 		return 1;
 	}
 	return 0;

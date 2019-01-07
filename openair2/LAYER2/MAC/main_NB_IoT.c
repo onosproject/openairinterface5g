@@ -144,8 +144,11 @@ void init_mac_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst)
   //Initialize uplink resource from nprach configuration
   Initialize_Resource();
   //add_UL_Resource(mac_inst);    
- extend_available_resource_DL(mac_inst, mac_inst->current_subframe + 1 + 160);
- cooooount = 0;
+  extend_available_resource_DL(mac_inst, mac_inst->current_subframe + 1 + 160);
+  
+  // for fixed scheduling
+  preamble_trigger = 0;
+  preamble_sfn = 0;
 
 }
 
