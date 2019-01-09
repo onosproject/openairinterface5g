@@ -294,7 +294,7 @@ int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB      *eNB,
    // ndlcch->ncce_index          =   NCCE_index;
    // ndlcch->aggregation_level   =   aggregation;
 
-    ndlcch->A[ncce_index]               = sizeof(DCIN1_RAR_t); // number of bits in DCI
+    ndlcch->A[ncce_index]               = sizeof_DCIN1_RAR_t; // number of bits in DCI
 
     //ndlcch->subframe_tx[subframe] = 1; // check if it's OK
     ndlcch->rnti[ncce_index] = rnti; //we store the RNTI (e.g. for RNTI will be used later)
@@ -306,7 +306,7 @@ int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB      *eNB,
     ndlcch->repetition_number[ncce_index]        = Irep_to_Nrep[RepNum];                             // repetition number for NPDSCH
     ndlcch->dci_repetitions[ncce_index]          = DCIrep_to_real_rep(DCIRep,4);        ////??????? should be repalce by the value in spec table 16.6-3, check also Rmax
 
-    printf("dci_repetitions: %d\n",ndlcch->dci_repetitions[ncce_index]);
+    printf("dci_repetitions: %d, A = %d\n",ndlcch->dci_repetitions[ncce_index],ndlcch->A[ncce_index]);
 
     ndlcch->modulation[ncce_index]               = 2; //QPSK
     //// ////////////////////////////////////////////////if(ndlcch->round == 0) //this should be set from initialization (init-lte)

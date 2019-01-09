@@ -29,7 +29,7 @@ void enable_preamble_simulation(UL_IND_NB_IoT_t *UL_INFO,int i)
       tmp++;
     }
     */
-    if(UL_INFO->frame==525 && UL_INFO->subframe==8)
+    if(UL_INFO->frame==528 && UL_INFO->subframe==8)
     {
       simulate_preamble(UL_INFO,2,26);
       //tmp++;
