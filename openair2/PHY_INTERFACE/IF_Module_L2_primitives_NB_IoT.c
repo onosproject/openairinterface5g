@@ -47,8 +47,8 @@ void UL_indication_NB_IoT(UL_IND_NB_IoT_t *UL_INFO)
 
     enable_preamble_simulation(UL_INFO,0);
 
-    if(preamble_trigger==0)
-    {
+    //if(preamble_trigger==0)
+    //{
       //If there is a preamble, do the initiate RA procedure
       if(UL_INFO->nrach_ind.number_of_initial_scs_detected>0)
           {
@@ -60,19 +60,19 @@ void UL_indication_NB_IoT(UL_IND_NB_IoT_t *UL_INFO)
                   //(UL_INFO->NRACH.nrach_pdu_list+i)->nrach_indication_rel13.initial_sc
                   //(UL_INFO->NRACH.nrach_pdu_list+i)->nrach_indication_rel13.timing_advance
                   LOG_D(MAC,"Init_RA_NB_IoT in, index of sc = %d\n",(UL_INFO->nrach_ind.nrach_pdu_list+i)->nrach_indication_rel13.initial_sc);
-                  /*init_RA_NB_IoT(mac_inst,
+                  init_RA_NB_IoT(mac_inst,
                                  (UL_INFO->nrach_ind.nrach_pdu_list+i)->nrach_indication_rel13.initial_sc,
                                  (UL_INFO->nrach_ind.nrach_pdu_list+i)->nrach_indication_rel13.nrach_ce_level,
                                  UL_INFO->frame,
                                  //timing_offset = Timing_advance * 16
                                  (UL_INFO->nrach_ind.nrach_pdu_list+i)->nrach_indication_rel13.timing_advance*16
-                                 );*/
+                                 );
                   LOG_D(MAC,"Init_RA_NB_IoT Out\n");
                   preamble_trigger=1;
                   preamble_sfn = UL_INFO->frame;
                 }
           }
-      }
+      //}
 
         UL_INFO->nrach_ind.number_of_initial_scs_detected = 0;
 

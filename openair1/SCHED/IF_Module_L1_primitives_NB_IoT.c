@@ -205,6 +205,16 @@ void handle_nfapi_dlsch_pdu_NB_IoT(PHY_VARS_eNB *eNB,
 		  
 	  	  eNB->ndlsch_RAR->active = 1;
 	  	  eNB->ndlsch_RAR->harq_process->TBS = rel13->length;
+          /*uint8_t   tab_rar[7];
+		  tab_rar[0]=64;
+      	  tab_rar[1]=0;
+          tab_rar[2]=9;
+          tab_rar[3]=96;
+          tab_rar[4]=64;
+          tab_rar[5]=255; // 16
+          tab_rar[6]=242;     // 5
+
+		  eNB->ndlsch_RAR->harq_process->pdu 		= tab_rar;*/
 
 		  eNB->ndlsch_RAR->harq_process->pdu 		= sdu;
 		  
@@ -212,7 +222,7 @@ void handle_nfapi_dlsch_pdu_NB_IoT(PHY_VARS_eNB *eNB,
 		  int fori = 0;
 		  for(fori=0;fori<7;fori++)
 		  {
-			printf("%02x ",eNB->ndlsch_RAR->harq_process->pdu[fori]);
+			printf("%d ",eNB->ndlsch_RAR->harq_process->pdu[fori]);
 		  }
 		  printf("\n");
 			

@@ -35,7 +35,7 @@
 #include "openair2/RRC/LITE/proto_NB_IoT.h"
 #include "openair2/PHY_INTERFACE/IF_Module_NB_IoT.h"
 
-#define fixed_scheduling 1
+#define fixed_scheduling 0
 
 int delay_time=0;
 int rar_transmit = 0;
@@ -95,7 +95,7 @@ int fixed_scheduler(uint32_t frame, uint32_t subframe, Sched_Rsp_NB_IoT_t *SCHED
         SCHED_info->DL_req->dl_config_request_body.number_pdu = 1;
         dl_config_pdu->pdu_type                                           = NFAPI_DL_CONFIG_NDLSCH_PDU_TYPE;
         dl_config_pdu->pdu_size                                           = 2+sizeof(nfapi_dl_config_ndlsch_pdu_rel13_t);
-        dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13.length                 = 7;
+        dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13.length                 = 56;
         dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13.pdu_index              = 1;
         dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13.rnti_type              = 1;
         dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13.rnti                   = RARNTI; // RA-RNTI
@@ -269,7 +269,7 @@ int output_handler(eNB_MAC_INST_NB_IoT *mac_inst, module_id_t module_id, int CC_
 						// not consider the case transmitting 2 DCIs for the moment also not consider N2 now
 						dl_config_pdu->pdu_type                                                          = NFAPI_DL_CONFIG_NPDCCH_PDU_TYPE;
 						dl_config_pdu->pdu_size                                                          = 2+sizeof(nfapi_dl_config_npdcch_pdu_rel13_t);
-						dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.length				                 = schedule_result_list_DL->sdu_length;
+						dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.length				                 = (schedule_result_list_DL->sdu_length)*8;
 						dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.pdu_index                             = 1;
 						dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.ncce_index                            = 0;
 						dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.aggregation_level     				 = 1;
@@ -322,7 +322,7 @@ int output_handler(eNB_MAC_INST_NB_IoT *mac_inst, module_id_t module_id, int CC_
                         SCHED_info->DL_req->dl_config_request_body.number_pdu = 1;
 						dl_config_pdu->pdu_type                                           = NFAPI_DL_CONFIG_NDLSCH_PDU_TYPE;
 						dl_config_pdu->pdu_size                                           = 2+sizeof(nfapi_dl_config_ndlsch_pdu_rel13_t);
-						dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13.length                 = schedule_result_list_DL->sdu_length;
+						dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13.length                 = (schedule_result_list_DL->sdu_length)*8;
 						dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13.pdu_index			  = 1;
 						dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13.rnti_type              = 1;
 						dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13.rnti                   = schedule_result_list_DL->rnti; // C-RNTI
@@ -334,6 +334,7 @@ int output_handler(eNB_MAC_INST_NB_IoT *mac_inst, module_id_t module_id, int CC_
 						if(schedule_result_list_DL->rnti==SI_RNTI)
 						{
 							dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13.number_of_subframes_for_resource_assignment =((DCIFormatN1_t *)DCI_pdu)->ResAssign;
+							dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13.length                 = schedule_result_list_DL->sdu_length;
 							LOG_D(MAC,"[hypersfn:%2d][frame:%2d][subframe:%2d]NB-IoT fill SIBs\n",hypersfn,frame,subframe);
 
 						}else
