@@ -256,7 +256,6 @@ static inline int rxtx(PHY_VARS_eNB *eNB,L1_rxtx_proc_t *proc, char *thread_name
     }
 #endif
 
-  pthread_mutex_lock(&eNB->UL_INFO_mutex);
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_ENB_DLSCH_ULSCH_SCHEDULER, 1 );
 
   pthread_mutex_lock(&eNB->UL_INFO_mutex);

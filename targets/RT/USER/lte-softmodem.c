@@ -903,22 +903,15 @@ if (nfapi_mode==2) {// VNF
   printf("wait_eNBs()\n");
   wait_eNBs();
   printf("About to Init RU threads RC.nb_RU:%d\n", RC.nb_RU);
-
-  if (RC.nb_RU >0) {
+  // RU thread and some L1 procedure aren't necessary in VNF or L2 FAPI simulator.
+  // but RU thread deals with pre_scd and this is necessary in VNF and simulator.
+  // some initialization is necessary and init_ru_vnf do this.
+  if (RC.nb_RU >0 && nfapi_mode != 2) {
     printf("Initializing RU threads\n");
     init_RU(get_softmodem_params()->rf_config_file);
-
-    printf("About to Init RU threads RC.nb_RU:%d\n", RC.nb_RU);
-    // RU thread and some L1 procedure aren't necessary in VNF or L2 FAPI simulator.
-    // but RU thread deals with pre_scd and this is necessary in VNF and simulator.
-    // some initialization is necessary and init_ru_vnf do this.
-    if (RC.nb_RU >0 && nfapi_mode != 2) {
-      printf("Initializing RU threads\n");
-      init_RU(get_softmodem_params()->rf_config_file);
-      for (ru_id=0;ru_id<RC.nb_RU;ru_id++) {
-	RC.ru[ru_id]->rf_map.card=0;
-        RC.ru[ru_id]->rf_map.chain=CC_id+(get_softmodem_params()->chain_offset);
-      }
+    for (ru_id=0;ru_id<RC.nb_RU;ru_id++) {
+      RC.ru[ru_id]->rf_map.card=0;
+      RC.ru[ru_id]->rf_map.chain=CC_id+(get_softmodem_params()->chain_offset);
     }
   }
 
