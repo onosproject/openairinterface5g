@@ -217,6 +217,7 @@ int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB      *eNB,
   void                  *DLSCH_DCI_NB_IoT = NULL;
 
   uint8_t  *DCI_tmp = NULL;
+  uint8_t  *DCI_flip = NULL;
 
   //eNB->DCI_pdu = (DCI_PDU_NB_IoT*) malloc(sizeof(DCI_PDU_NB_IoT));
 
@@ -316,16 +317,20 @@ int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB      *eNB,
 
     //ndlcch->pdu[ncce_index]    = DLSCH_DCI_NB_IoT;
     DCI_tmp = (uint8_t*)DLSCH_DCI_NB_IoT;
-    //DCI_tmp[0]        = 128;
-    //DCI_tmp[1]        = 66;
-    //DCI_tmp[2]        = 4;
-    ndlcch->pdu[ncce_index]    = DCI_tmp;
+
+    DCI_flip = (uint8_t*)malloc(3*sizeof(uint8_t));
+
+    DCI_flip[0]        = DCI_tmp[2]*2;
+    DCI_flip[1]        = DCI_tmp[1]*2;
+    DCI_flip[2]        = DCI_tmp[0]*2;
+    
+    ndlcch->pdu[ncce_index]    = DCI_flip;
 
     int tmp = 0;
 
     printf("DCI PDU content:");
     for (tmp =0;tmp<3;tmp++)
-      printf("%d ",DCI_tmp[tmp]);
+      printf("%d ",DCI_flip[tmp]);
     printf("\n");
     /*
      * TS 36.213 ch 16.4.1.5
