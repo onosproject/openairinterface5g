@@ -49,7 +49,7 @@ int fixed_scheduler(uint32_t frame, uint32_t subframe, Sched_Rsp_NB_IoT_t *SCHED
 	{
 		RARNTI = 1 + preamble_sfn/4;
 		//DCI
-		LOG_I(MAC,"[frame:%2d][subframe:%2d]NB-IoT fill DL_DCI\n",frame,subframe);
+		LOG_D(MAC,"[frame:%2d][subframe:%2d]NB-IoT fill DL_DCI\n",frame,subframe);
         dl_config_pdu = SCHED_info->DL_req->dl_config_request_body.dl_config_pdu_list;
         SCHED_info->DL_req->dl_config_request_body.number_dci = 1;
         SCHED_info->DL_req->dl_config_request_body.number_pdu = 1;

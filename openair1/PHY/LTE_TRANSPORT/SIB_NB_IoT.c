@@ -149,6 +149,8 @@ int generate_SIB23(NB_IoT_eNB_NDLSCH_t 	      *SIB23,
 
     if( SIB23->active == 1 )
     {
+        //LOG_I(PHY,"[Frame: %d][Subframe: %d]sent SIB23\n",frame,subframe);
+
     	uint8_t *SIB23_pdu  = SIB23->harq_process->pdu;
 	 	uint32_t rep =  SIB23->resource_assignment;
 	 	uint8_t eutra_control_region = 3;

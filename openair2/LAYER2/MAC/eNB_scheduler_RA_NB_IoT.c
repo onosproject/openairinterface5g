@@ -48,7 +48,7 @@ void init_RA_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, uint8_t preamble_index, ce_le
 	}
 
 	migrate_node->active = 1;
-	migrate_node->preamble_index = 0;
+	migrate_node->preamble_index = preamble_index;
 	migrate_node->ce_level = ce_level;
 	migrate_node->ra_rnti = (sfn_id>>2) + 1;
 	migrate_node->ta = ta;
@@ -125,7 +125,7 @@ void schedule_rar_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, int abs_subframe){
 
 		LOG_D(MAC,"rmax : %d, num_dci_subframe : %d, dci_subframe: %d\n",rmax,r,dci_subframe);
 
-		//print_available_resource_DL(mac_inst);
+		print_available_resource_DL(mac_inst);
 
 
 		for(dci_candidate=0; dci_candidate<num_candidate; ++dci_candidate){
@@ -280,7 +280,7 @@ void schedule_rar_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, int abs_subframe){
 			
 			//msg2_nodes->ue_rnti = tc_rnti;
 			
-			LOG_D(MAC,"[%04d][RA scheduler][MSG2] RARDCI %d-%d RAR %d-%d MSG3 %d-%d\n", abs_subframe-1, dci_first_subframe, dci_end_subframe, msg2_first_subframe, msg2_end_subframe, npusch_info.sf_start, npusch_info.sf_end);
+			LOG_I(MAC,"[%04d][RA scheduler][MSG2] RARDCI %d-%d RAR %d-%d MSG3 %d-%d\n", abs_subframe-1, dci_first_subframe, dci_end_subframe, msg2_first_subframe, msg2_end_subframe, npusch_info.sf_start, npusch_info.sf_end);
 			LOG_D(MAC,"[%04d][RA scheduler][MSG2][CE%d] Change RA-RNTI %d->T-CRNTI %d\n", abs_subframe-1, msg2_nodes->ce_level, msg2_nodes->ra_rnti, msg2_nodes->ue_rnti);
 			LOG_D(MAC,"[%04d][RA scheduler][MSG2][CE%d] RAR DCI %d-%d RAR %d-%d MSG3 %d-%d\n", abs_subframe-1, msg2_nodes->ce_level, dci_first_subframe, dci_end_subframe, msg2_first_subframe, msg2_end_subframe, npusch_info.sf_start, npusch_info.sf_end);
 
@@ -931,9 +931,11 @@ void fill_rar_NB_IoT(
 	uint8_t subcarrier_indication = schedule_template->subcarrier_indication; // 6bits
 	uint8_t i_delay = msg3_schedule_delay; // 2bits
 	uint8_t msg3_repetition = msg3_rep;// 3bit
-	uint8_t mcs_index = 0;//3bit, msg3 88bits 3'b000
-	
-	rar[1] |= (subcarrier_spacing<<4) | (subcarrier_indication>>3);
+	uint8_t mcs_index = 2;//3bit, msg3 88bits 3'b000
+
+		LOG_I(MAC,"Dump UL Grant: subcarrier spacing : %d, subcarrier indication: %d, delay : %d, Rep : %d, MCS : %d\n",subcarrier_spacing,subcarrier_indication,i_delay,msg3_repetition,mcs_index);
+
+	rar[1] |= (subcarrier_spacing<<3) | (subcarrier_indication>>3);
 	rar[2] = (uint8_t)(subcarrier_indication<<5) | (i_delay<<3) | msg3_repetition;
 	rar[3] = (mcs_index<<5)&0xe0;  //  maped
 	

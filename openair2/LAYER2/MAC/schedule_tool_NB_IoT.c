@@ -1085,22 +1085,28 @@ void maintain_available_resource(eNB_MAC_INST_NB_IoT *mac_inst){
     available_resource_UL_t *pfree2, *iterator2;
     schedule_result_t *iterator1;
     if(available_resource_DL != (available_resource_DL_t *)0){
+    LOG_D(MAC,"[maintain]current:%d, end:%d\n",mac_inst->current_subframe,available_resource_DL->end_subframe);
     if(mac_inst->current_subframe >= available_resource_DL->end_subframe){
         pfree = available_resource_DL;
 
         if(available_resource_DL->next == (available_resource_DL_t *)0){
-            //DEBUG("[maintain_available_resource]=====t:%d=====dl resource list next is NULL %d\n", mac_inst->current_subframe, available_resource_DL->end_subframe);
-            
+            LOG_D(MAC,"[maintain_available_resource]=====t:%d=====dl resource list next is NULL %d\n", mac_inst->current_subframe, available_resource_DL->end_subframe);
             available_resource_DL = (available_resource_DL_t *)0;
         }else{
-            //DEBUG("[maintain_available_resource]=====t:%d=====dl resource list remove next:%d-%d\n", mac_inst->current_subframe, available_resource_DL->next->start_subframe, available_resource_DL->next->end_subframe);
+            LOG_D(MAC,"[maintain_available_resource]=====t:%d=====dl resource list remove next:%d-%d\n", mac_inst->current_subframe, available_resource_DL->next->start_subframe, available_resource_DL->next->end_subframe);
             available_resource_DL = available_resource_DL->next;
             available_resource_DL->prev = (available_resource_DL_t *)0;
         }
         free((available_resource_DL_t *)pfree);
         
     }else{
-        available_resource_DL->start_subframe = mac_inst->current_subframe;
+        // only update when current subframe bigger than to start subframe
+        if(mac_inst->current_subframe > available_resource_DL->start_subframe)
+        {
+            LOG_D(MAC,"[maintain] update from %d to current %d, ori end %d\n",available_resource_DL->start_subframe,mac_inst->current_subframe,available_resource_DL->end_subframe);
+            available_resource_DL->start_subframe = mac_inst->current_subframe;
+        }else
+            LOG_D(MAC,"[maintain] do nothing\n");
     }
 }
     //  UL 
