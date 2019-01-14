@@ -59,23 +59,15 @@
 #include "LTE_MBSFN-SubframeConfigList.h"
 #include "LTE_PMCH-InfoList-r9.h"
 #endif
-<<<<<<< HEAD:openair2/LAYER2/MAC/defs.h
-#ifdef Rel14
-#include "SystemInformationBlockType1-v1310-IEs.h"
-#include "SystemInformationBlockType18-r12.h"
-#include "SL-Preconfiguration-r12.h"
-#endif
-#include "RadioResourceConfigCommonSIB.h"
-=======
 #if (LTE_RRC_VERSION >= MAKE_VERSION(10, 0, 0))
 #include "LTE_SCellToAddMod-r10.h"
 #endif
 #if (LTE_RRC_VERSION >= MAKE_VERSION(13, 0, 0))
 #include "LTE_SystemInformationBlockType1-v1310-IEs.h"
 #include "LTE_SystemInformationBlockType18-r12.h"
+#include "SL-Preconfiguration-r12.h"
 #endif
 #include "LTE_RadioResourceConfigCommonSIB.h"
->>>>>>> main/develop:openair2/LAYER2/MAC/mac.h
 #include "nfapi_interface.h"
 #include "PHY_INTERFACE/IF_Module.h"
 
@@ -96,11 +88,7 @@
 #define PCCH_PAYLOAD_SIZE_MAX 128
 #define RAR_PAYLOAD_SIZE_MAX 128
 
-<<<<<<< HEAD:openair2/LAYER2/MAC/defs.h
-#define SCH_PAYLOAD_SIZE_MAX 4096
-=======
 #define SCH_PAYLOAD_SIZE_MAX 8192
->>>>>>> main/develop:openair2/LAYER2/MAC/mac.h
 #define DCH_PAYLOAD_SIZE_MAX 4096
 /// Logical channel ids from 36-311 (Note BCCH is not specified in 36-311, uses the same as first DRB)
 
@@ -338,10 +326,6 @@ typedef struct {
     uint8_t Buffer_size0:6;
 } __attribute__ ((__packed__)) BSR_LONG;
 
-<<<<<<< HEAD:openair2/LAYER2/MAC/defs.h
-// Panos:
-=======
->>>>>>> main/develop:openair2/LAYER2/MAC/mac.h
 /*!\brief  mac control element: sidelink buffer status report */
 typedef struct {
 	uint8_t DST_1:4;
@@ -464,13 +448,9 @@ typedef struct {
 /*!\brief LCID of Carrier component activation/deactivation */
 #define CC_ACT_DEACT 27
 //TTN (for D2D)
-<<<<<<< HEAD:openair2/LAYER2/MAC/defs.h
 /*!\brief Value of MIB-SL / SRB0 logical channel */
 #define MIBSLCH 8 // (fake)
 #define SL_DISCOVERY 9 //LCID (fake)
-=======
-#define SL_DISCOVERY 8 //LCID (fake)
->>>>>>> main/develop:openair2/LAYER2/MAC/mac.h
 #define MAX_NUM_DEST 10
 #endif
 
@@ -518,20 +498,14 @@ typedef struct {
     uint16_t Pdu_size;
 } __attribute__ ((__packed__)) ULSCH_PDU;
 
-<<<<<<< HEAD:openair2/LAYER2/MAC/defs.h
-
-=======
->>>>>>> main/develop:openair2/LAYER2/MAC/mac.h
 /*! \brief Uplink SCH PDU Structure */
 typedef struct {
   int8_t payload[DCH_PAYLOAD_SIZE_MAX];         /*!< \brief SACH payload */
   uint16_t Pdu_size;
 } __attribute__ ((__packed__)) ULDCH_PDU;
-<<<<<<< HEAD:openair2/LAYER2/MAC/defs.h
 
+//Panos: Not sure if we need that here anymore
 #include "PHY/impl_defs_top.h"
-=======
->>>>>>> main/develop:openair2/LAYER2/MAC/mac.h
 
 /*!\brief RA process state*/
 typedef enum {
@@ -1516,248 +1490,89 @@ typedef struct {
 /*!\brief Top level UE MAC structure */
 
 typedef struct {
-<<<<<<< HEAD:openair2/LAYER2/MAC/defs.h
-   //SL source L2Id
-   uint32_t sourceL2Id;
-   //SL groupL2Id
-   uint32_t groupL2Id;
-   //SL destinationL2Id
-   uint32_t destinationL2Id;
-   //LCID
-   uint32_t  LCID;
-} SL_INFO;
-
-
-typedef struct {
-  uint16_t Node_id;
-  /// RX frame counter
-  frame_t rxFrame;
-  /// RX subframe counter
-  sub_frame_t rxSubframe;
-  /// TX frame counter
-  frame_t txFrame;
-  /// TX subframe counter
-  sub_frame_t txSubframe;
-  /// C-RNTI of UE
-  uint16_t crnti;
-  /// C-RNTI of UE before HO
-  rnti_t crnti_before_ho;	///user id (rnti) of connected UEs
-  /// uplink active flag
-  uint8_t ul_active;
-  /// pointer to RRC PHY configuration
-  RadioResourceConfigCommonSIB_t *radioResourceConfigCommon;
-  /// pointer to RACH_ConfigDedicated (NULL when not active, i.e. upon HO completion or T304 expiry)
-  struct RACH_ConfigDedicated *rach_ConfigDedicated;
-  /// pointer to RRC PHY configuration
-  struct PhysicalConfigDedicated *physicalConfigDedicated;
-#if defined(Rel10) || defined(Rel14)
-  /// pointer to RRC PHY configuration SCEll
-  struct PhysicalConfigDedicatedSCell_r10
-  *physicalConfigDedicatedSCell_r10;
-#endif
-#if defined(Rel14)
-  /// Preconfiguration for Sidelink
-  struct SL_Preconfiguration_r12 *SL_Preconfiguration;
-  /// RX Pool for Sidelink from SIB18
-  SL_CommRxPoolList_r12_t	 commRxPool_r12;
-  /// TX Pool Normal for Sidelink from SIB18
-  struct SL_CommTxPoolList_r12	*commTxPoolNormalCommon_r12;
-  /// TX Pool Exceptional for Sidelink from SIB18
-  struct SL_CommTxPoolList_r12	*commTxPoolExceptional_r12;
-  /// Common Sync Config for Sidelink from SIB18
-  struct SL_SyncConfigList_r12	*commSyncConfig_r12;
-  /// Dedicated Sync TX control for Sidelink
-  struct SL_SyncTxControl_r12 *sl_SyncTxControl_r12;
-  /// Dedicated Discovery TX control for Sidelink
-  struct SL_DiscConfig_r12	*sl_DiscConfig_r12;
-  /// Dedicated TX config for Sidelink
-  struct SL_CommConfig_r12	*sl_CommConfig_r12;
-  //SL sourceL2ID
-  uint32_t sourceL2Id;
-  //SL groupL2Id
-  uint32_t groupL2Id;
-  //SL destinationL2Id
-  uint32_t destinationL2Id;
-  uint8_t numCommFlows;
-  //list of (SLID, G, D)s
-  SL_INFO sl_info[MAX_NUM_LCID];
-
-#endif
-  /// pointer to TDD Configuration (NULL for FDD)
-  TDD_Config_t *tdd_Config;
-  /// Number of adjacent cells to measure
-  uint8_t n_adj_cells;
-  /// Array of adjacent physical cell ids
-  uint32_t adj_cell_id[6];
-  /// Pointer to RRC MAC configuration
-  MAC_MainConfig_t *macConfig;
-  /// Pointer to RRC Measurement gap configuration
-  MeasGapConfig_t *measGapConfig;
-  /// Pointers to LogicalChannelConfig indexed by LogicalChannelIdentity. Note NULL means LCHAN is inactive.
-  LogicalChannelConfig_t *logicalChannelConfig[MAX_NUM_LCID];
-  /// Scheduling Information
-  UE_SCHEDULING_INFO scheduling_info;
-  /// Outgoing CCCH pdu for PHY
-  CCCH_PDU CCCH_pdu;
-  /// Outgoing RAR pdu for PHY
-  RAR_PDU RAR_pdu;
-  /// Incoming DLSCH pdu for PHY
-  DLSCH_PDU DLSCH_pdu[NUMBER_OF_UE_MAX][2];
-#ifdef Rel14
-  int sltx_active;
-  SLSCH_t slsch;
-  SLDCH_t sldch;
-  SLSS_t slss;
-  ULSCH_PDU slsch_pdu;
-  int slsch_lcid;
-  uint32_t directFrameNumber_r12;
-  long directSubframeNumber_r12;
-  long sl_Bandwidth_r12;
-#endif
-  
-  /// number of attempt for rach
-  uint8_t RA_attempt_number;
-  /// Random-access procedure flag
-  uint8_t RA_active;
-  /// Random-access window counter
-  int8_t RA_window_cnt;
-  /// Random-access Msg3 size in bytes
-  uint8_t RA_Msg3_size;
-  /// Random-access prachMaskIndex
-  uint8_t RA_prachMaskIndex;
-  /// Flag indicating Preamble set (A,B) used for first Msg3 transmission
-  uint8_t RA_usedGroupA;
-  /// Random-access Resources
-  PRACH_RESOURCES_t RA_prach_resources;
-  /// Random-access PREAMBLE_TRANSMISSION_COUNTER
-  uint8_t RA_PREAMBLE_TRANSMISSION_COUNTER;
-  /// Random-access backoff counter
-  int16_t RA_backoff_cnt;
-  /// Random-access variable for window calculation (frame of last change in window counter)
-  uint32_t RA_tx_frame;
-  /// Random-access variable for window calculation (subframe of last change in window counter)
-  uint8_t RA_tx_subframe;
-  /// Random-access Group B maximum path-loss
-  /// Random-access variable for backoff (frame of last change in backoff counter)
-  uint32_t RA_backoff_frame;
-  /// Random-access variable for backoff (subframe of last change in backoff counter)
-  uint8_t RA_backoff_subframe;
-  /// Random-access Group B maximum path-loss
-  uint16_t RA_maxPL;
-  /// Random-access Contention Resolution Timer active flag
-  uint8_t RA_contention_resolution_timer_active;
-  /// Random-access Contention Resolution Timer count value
-  uint8_t RA_contention_resolution_cnt;
-  /// power headroom reporitng reconfigured
-  uint8_t PHR_reconfigured;
-  /// power headroom state as configured by the higher layers
-  uint8_t PHR_state;
-  /// power backoff due to power management (as allowed by P-MPRc) for this cell
-  uint8_t PHR_reporting_active;
-  /// power backoff due to power management (as allowed by P-MPRc) for this cell
-  uint8_t power_backoff_db[NUMBER_OF_eNB_MAX];
-  /// BSR report falg management
-  uint8_t BSR_reporting_active;
-  /// retxBSR-Timer expires flag
-  uint8_t retxBSRTimer_expires_flag;
-  /// periodBSR-Timer expires flag
-  uint8_t periodBSRTimer_expires_flag;
-  
-  /// MBSFN_Subframe Configuration
-  struct MBSFN_SubframeConfig *mbsfn_SubframeConfig[8];	// FIXME replace 8 by MAX_MBSFN_AREA?
-  /// number of subframe allocation pattern available for MBSFN sync area
-  uint8_t num_sf_allocation_pattern;
-#if defined(Rel10) || defined(Rel14)
-  /// number of active MBSFN area
-  uint8_t num_active_mbsfn_area;
-  /// MBSFN Area Info
-  struct MBSFN_AreaInfo_r9 *mbsfn_AreaInfo[MAX_MBSFN_AREA];
-  /// PMCH Config
-  struct PMCH_Config_r9 *pmch_Config[MAX_PMCH_perMBSFN];
-  /// MCCH status
-  uint8_t mcch_status;
-  /// MSI status
-  uint8_t msi_status;		// could be an array if there are >1 MCH in one MBSFN area
-=======
-    uint16_t Node_id;
-    /// RX frame counter
-    frame_t rxFrame;
-    /// RX subframe counter
-    sub_frame_t rxSubframe;
-    /// TX frame counter
-    frame_t txFrame;
-    /// TX subframe counter
-    sub_frame_t txSubframe;
-    /// C-RNTI of UE
-    uint16_t crnti;
-    /// C-RNTI of UE before HO
-    rnti_t crnti_before_ho;	///user id (rnti) of connected UEs
-    /// uplink active flag
-    uint8_t ul_active;
-    /// pointer to RRC PHY configuration
-    LTE_RadioResourceConfigCommonSIB_t *radioResourceConfigCommon;
-    /// pointer to RACH_ConfigDedicated (NULL when not active, i.e. upon HO completion or T304 expiry)
-    struct LTE_RACH_ConfigDedicated *rach_ConfigDedicated;
-    /// pointer to RRC PHY configuration
-    struct LTE_PhysicalConfigDedicated *physicalConfigDedicated;
-#if (LTE_RRC_VERSION >= MAKE_VERSION(10, 0, 0))
-  /// pointer to RRC PHY configuration SCEll
-  struct LTE_PhysicalConfigDedicatedSCell_r10 *physicalConfigDedicatedSCell_r10;
-  /// Preconfiguration for Sidelink
-  struct LTE_SL_Preconfiguration_r12 *SL_Preconfiguration;
-  /// RX Pool for Sidelink from SIB18
-  LTE_SL_CommRxPoolList_r12_t	 commRxPool_r12;
-  /// TX Pool Normal for Sidelink from SIB18
-  struct LTE_SL_CommTxPoolList_r12	*commTxPoolNormalCommon_r12;
-  /// TX Pool Exceptional for Sidelink from SIB18
-  struct LTE_SL_CommTxPoolList_r12	*commTxPoolExceptional_r12;
-  /// Common Sync Config for Sidelink from SIB18
-  struct LTE_SL_SyncConfigList_r12	*commSyncConfig_r12;
-  /// Dedicated Sync TX control for Sidelink
-  struct LTE_SL_SyncTxControl_r12 *sl_SyncTxControl_r12;
-  /// Dedicated Discovery TX control for Sidelink
-  struct LTE_SL_DiscConfig_r12	*sl_DiscConfig_r12;
-  /// Dedicated TX config for Sidelink
-  struct LTE_SL_CommConfig_r12	*sl_CommConfig_r12;
-  //SL sourceL2ID
-  uint32_t sourceL2Id;
-  //SL groupL2Id
-  uint32_t groupL2Id;
-  //SL destinationL2Id
-  uint32_t destinationL2Id;
-  //List of destinations
-  uint32_t destinationList[MAX_NUM_DEST];
-  uint8_t numCommFlows;
-  uint32_t  SL_LCID[MAX_NUM_LCID];
-
-#endif
-    /// pointer to TDD Configuration (NULL for FDD)
-    LTE_TDD_Config_t *tdd_Config;
-    /// Number of adjacent cells to measure
-    uint8_t n_adj_cells;
-    /// Array of adjacent physical cell ids
-    uint32_t adj_cell_id[6];
-    /// Pointer to RRC MAC configuration
-    LTE_MAC_MainConfig_t *macConfig;
-    /// Pointer to RRC Measurement gap configuration
-    LTE_MeasGapConfig_t *measGapConfig;
-    /// Pointers to LogicalChannelConfig indexed by LogicalChannelIdentity. Note NULL means LCHAN is inactive.
-    LTE_LogicalChannelConfig_t *logicalChannelConfig[MAX_NUM_LCID];
-    /// Scheduling Information
-    UE_SCHEDULING_INFO scheduling_info;
-    /// Outgoing CCCH pdu for PHY
-    CCCH_PDU CCCH_pdu;
-    /// Outgoing RAR pdu for PHY
-    RAR_PDU RAR_pdu;
-    /// Incoming DLSCH pdu for PHY
-    DLSCH_PDU DLSCH_pdu[MAX_MOBILES_PER_ENB][2];
-#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
-    int sltx_active;
-    SLSCH_t slsch;
-    SLDCH_t sldch;
-    ULSCH_PDU slsch_pdu;
-    int slsch_lcid;
-#endif
+	uint16_t Node_id;
+	/// RX frame counter
+	frame_t rxFrame;
+	/// RX subframe counter
+	sub_frame_t rxSubframe;
+	/// TX frame counter
+	frame_t txFrame;
+	/// TX subframe counter
+	sub_frame_t txSubframe;
+	/// C-RNTI of UE
+	uint16_t crnti;
+	/// C-RNTI of UE before HO
+	rnti_t crnti_before_ho;	///user id (rnti) of connected UEs
+	/// uplink active flag
+	uint8_t ul_active;
+	/// pointer to RRC PHY configuration
+	LTE_RadioResourceConfigCommonSIB_t *radioResourceConfigCommon;
+	/// pointer to RACH_ConfigDedicated (NULL when not active, i.e. upon HO completion or T304 expiry)
+	struct LTE_RACH_ConfigDedicated *rach_ConfigDedicated;
+	/// pointer to RRC PHY configuration
+	struct LTE_PhysicalConfigDedicated *physicalConfigDedicated;
+	#if (LTE_RRC_VERSION >= MAKE_VERSION(10, 0, 0))
+	/// pointer to RRC PHY configuration SCEll
+	struct LTE_PhysicalConfigDedicatedSCell_r10 *physicalConfigDedicatedSCell_r10;
+	/// Preconfiguration for Sidelink
+	struct LTE_SL_Preconfiguration_r12 *SL_Preconfiguration;
+	/// RX Pool for Sidelink from SIB18
+	LTE_SL_CommRxPoolList_r12_t	 commRxPool_r12;
+	/// TX Pool Normal for Sidelink from SIB18
+	struct LTE_SL_CommTxPoolList_r12	*commTxPoolNormalCommon_r12;
+	/// TX Pool Exceptional for Sidelink from SIB18
+	struct LTE_SL_CommTxPoolList_r12	*commTxPoolExceptional_r12;
+	/// Common Sync Config for Sidelink from SIB18
+	struct LTE_SL_SyncConfigList_r12	*commSyncConfig_r12;
+	/// Dedicated Sync TX control for Sidelink
+	struct LTE_SL_SyncTxControl_r12 *sl_SyncTxControl_r12;
+	/// Dedicated Discovery TX control for Sidelink
+	struct LTE_SL_DiscConfig_r12	*sl_DiscConfig_r12;
+	/// Dedicated TX config for Sidelink
+	struct LTE_SL_CommConfig_r12	*sl_CommConfig_r12;
+	//SL sourceL2ID
+	uint32_t sourceL2Id;
+	//SL groupL2Id
+	uint32_t groupL2Id;
+	//SL destinationL2Id
+	uint32_t destinationL2Id;
+	//List of destinations
+	uint32_t destinationList[MAX_NUM_DEST];
+	uint8_t numCommFlows;
+	//list of (SLID, G, D)s
+	SL_INFO sl_info[MAX_NUM_LCID];
+	#endif
+	/// pointer to TDD Configuration (NULL for FDD)
+	LTE_TDD_Config_t *tdd_Config;
+	/// Number of adjacent cells to measure
+	uint8_t n_adj_cells;
+	/// Array of adjacent physical cell ids
+	uint32_t adj_cell_id[6];
+	/// Pointer to RRC MAC configuration
+	LTE_MAC_MainConfig_t *macConfig;
+	/// Pointer to RRC Measurement gap configuration
+	LTE_MeasGapConfig_t *measGapConfig;
+	/// Pointers to LogicalChannelConfig indexed by LogicalChannelIdentity. Note NULL means LCHAN is inactive.
+	LTE_LogicalChannelConfig_t *logicalChannelConfig[MAX_NUM_LCID];
+	/// Scheduling Information
+	UE_SCHEDULING_INFO scheduling_info;
+	/// Outgoing CCCH pdu for PHY
+	CCCH_PDU CCCH_pdu;
+	/// Outgoing RAR pdu for PHY
+	RAR_PDU RAR_pdu;
+	/// Incoming DLSCH pdu for PHY
+	DLSCH_PDU DLSCH_pdu[MAX_MOBILES_PER_ENB][2];
+	#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
+	int sltx_active;
+	SLSCH_t slsch;
+	SLDCH_t sldch;
+	SLSS_t slss;
+	ULSCH_PDU slsch_pdu;
+	int slsch_lcid;
+    uint32_t directFrameNumber_r12;
+    long directSubframeNumber_r12;
+    long sl_Bandwidth_r12;
+	#endif
     /// number of attempt for rach
     uint8_t RA_attempt_number;
     /// Random-access procedure flag
@@ -1798,7 +1613,7 @@ typedef struct {
     /// power backoff due to power management (as allowed by P-MPRc) for this cell
     uint8_t PHR_reporting_active;
     /// power backoff due to power management (as allowed by P-MPRc) for this cell
-    uint8_t power_backoff_db[MAX_eNB];
+    uint8_t power_backoff_db[NUMBER_OF_eNB_MAX];
     /// BSR report falg management
     uint8_t BSR_reporting_active;
     /// retxBSR-Timer expires flag
@@ -1810,7 +1625,7 @@ typedef struct {
     struct LTE_MBSFN_SubframeConfig *mbsfn_SubframeConfig[8];	// FIXME replace 8 by MAX_MBSFN_AREA?
     /// number of subframe allocation pattern available for MBSFN sync area
     uint8_t num_sf_allocation_pattern;
-#if (LTE_RRC_VERSION >= MAKE_VERSION(9, 0, 0))
+	#if (LTE_RRC_VERSION >= MAKE_VERSION(9, 0, 0))
     /// number of active MBSFN area
     uint8_t num_active_mbsfn_area;
     /// MBSFN Area Info
@@ -1830,28 +1645,19 @@ typedef struct {
 
     uint8_t pmch_lcids[28];
     uint16_t pmch_stop_mtch[28];
->>>>>>> main/develop:openair2/LAYER2/MAC/mac.h
 #endif
-  //#ifdef CBA
-  /// CBA RNTI for each group
-  uint16_t cba_rnti[NUM_MAX_CBA_GROUP];
-  /// last SFN for CBA channel access
-  uint8_t cba_last_access[NUM_MAX_CBA_GROUP];
-  //#endif
-  /// total UE scheduler processing time
-<<<<<<< HEAD:openair2/LAYER2/MAC/defs.h
-  time_stats_t ue_scheduler;	// total
-  /// UE ULSCH tx  processing time inlcuding RLC interface (rlc_data_req) and mac header generation
-  time_stats_t tx_ulsch_sdu;
-  /// UE DLSCH rx  processing time inlcuding RLC interface (mac_rrc_data_ind or mac_rlc_status_ind+mac_rlc_data_ind) and mac header parser
-  time_stats_t rx_dlsch_sdu;
-=======
+    //#ifdef CBA
+    /// CBA RNTI for each group
+    uint16_t cba_rnti[NUM_MAX_CBA_GROUP];
+    /// last SFN for CBA channel access
+    uint8_t cba_last_access[NUM_MAX_CBA_GROUP];
+    //#endif
+    /// total UE scheduler processing time
   time_stats_t ue_scheduler; // total
   /// UE ULSCH tx  processing time inlcuding RLC interface (rlc_data_req) and mac header generation
   time_stats_t tx_ulsch_sdu;
   /// UE DLSCH rx  processing time inlcuding RLC interface (mac_rrc_data_ind or mac_rlc_status_ind+mac_rlc_data_ind) and mac header parser
   time_stats_t rx_dlsch_sdu ;
->>>>>>> main/develop:openair2/LAYER2/MAC/mac.h
   /// UE query for MCH subframe processing time
   time_stats_t ue_query_mch;
   /// UE MCH rx processing time
@@ -1860,15 +1666,6 @@ typedef struct {
   time_stats_t rx_si;
   /// UE PCCH rx processing time including RLC interface (mac_rrc_data_ind)
   time_stats_t rx_p;
-<<<<<<< HEAD:openair2/LAYER2/MAC/defs.h
-  /// Panos: Mutex for nfapi UL_INFO
-  pthread_mutex_t      UL_INFO_mutex;
-  /// Panos: UE_Mode variable should be used in the case of Phy_stub operation since we won't have access to PHY_VARS_UE
-  /// where the UE_mode originally is for the full stack operation mode. The transitions between the states of the UE_Mode
-  /// will be triggered within phy_stub_ue.c in this case
-  UE_MODE_t        UE_mode[NUMBER_OF_CONNECTED_eNB_MAX];
-  /// Panos: Phy_stub mode: Boolean variable to distinguish whether a Msg3 or a regular ULSCH data pdu should be generated
-=======
   /// Mutex for nfapi UL_INFO
   pthread_mutex_t      UL_INFO_mutex;
   /// UE_Mode variable should be used in the case of Phy_stub operation since we won't have access to PHY_VARS_UE
@@ -1876,7 +1673,6 @@ typedef struct {
   /// will be triggered within phy_stub_ue.c in this case
   UE_MODE_t        UE_mode[NUMBER_OF_CONNECTED_eNB_MAX];
   /// Phy_stub mode: Boolean variable to distinguish whether a Msg3 or a regular ULSCH data pdu should be generated
->>>>>>> main/develop:openair2/LAYER2/MAC/mac.h
   /// after the reception of NFAPI_UL_CONFIG_ULSCH_PDU_TYPE.
   uint8_t first_ULSCH_Tx;
   uint8_t SI_Decoded;
@@ -1892,11 +1688,7 @@ typedef struct {
     uint8_t n_adj_cells;
 } neigh_cell_id_t;
 
-<<<<<<< HEAD:openair2/LAYER2/MAC/defs.h
-
-
 #include "proto.h"
-=======
 typedef struct {
   volatile uint8_t flag;
   rnti_t rnti;
@@ -1915,6 +1707,5 @@ typedef  struct {
 
 #include "mac_proto.h"
 
->>>>>>> main/develop:openair2/LAYER2/MAC/mac.h
 /*@}*/
 #endif /*__LAYER2_MAC_DEFS_H__ */

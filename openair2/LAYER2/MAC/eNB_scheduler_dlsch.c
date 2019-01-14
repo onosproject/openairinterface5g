@@ -866,21 +866,12 @@ schedule_ue_spec(module_id_t module_idP, int slice_idxP,
 	if (TBS - ta_len - header_length_total - sdu_length_total - 3 > 0) {
 	  rlc_status = mac_rlc_status_ind(module_idP, rnti, module_idP, frameP, subframeP, ENB_FLAG_YES, MBMS_FLAG_NO, DCCH,
                                           TBS - ta_len - header_length_total - sdu_length_total - 3
-<<<<<<< HEAD
-
-                                          #ifdef Rel14
-                                          	  ,0, 0
-                                          #endif
-                          );
-	  sdu_lengths[0] = 0;
-=======
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
                                                     ,0, 0
 #endif
                           );
 
           sdu_lengths[0] = 0;
->>>>>>> main/develop
 
 	  if (rlc_status.bytes_in_buffer > 0) {
 	    LOG_D(MAC, "[eNB %d] SFN/SF %d.%d, DL-DCCH->DLSCH CC_id %d, Requesting %d bytes from RLC (RRC message)\n",
@@ -890,21 +881,11 @@ schedule_ue_spec(module_id_t module_idP, int slice_idxP,
 	    sdu_lengths[0] = mac_rlc_data_req(module_idP, rnti, module_idP, frameP, ENB_FLAG_YES, MBMS_FLAG_NO, DCCH,
                                               TBS, //not used
 					      (char *)&dlsch_buffer[0]
-<<<<<<< HEAD
-#ifdef Rel14
-=======
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
->>>>>>> main/develop
                           ,0, 0
 #endif
                           );
 
-<<<<<<< HEAD
-	    T(T_ENB_MAC_UE_DL_SDU, T_INT(module_idP),
-	      T_INT(CC_id), T_INT(rnti), T_INT(frameP),
-	      T_INT(subframeP), T_INT(harq_pid), T_INT(DCCH),
-	      T_INT(sdu_lengths[0]));
-=======
             pthread_mutex_lock(&rrc_release_freelist);
             if((rrc_release_info.num_UEs > 0) && (rlc_am_mui.rrc_mui_num > 0)){
               uint16_t release_total = 0;
@@ -960,7 +941,6 @@ schedule_ue_spec(module_id_t module_idP, int slice_idxP,
               T_INT(CC_id), T_INT(rnti), T_INT(frameP),
               T_INT(subframeP), T_INT(harq_pid), T_INT(DCCH),
               T_INT(sdu_lengths[0]));
->>>>>>> main/develop
 
 	    LOG_D(MAC, "[eNB %d][DCCH] CC_id %d Got %d bytes from RLC\n",
 		  module_idP, CC_id, sdu_lengths[0]);
@@ -995,17 +975,10 @@ schedule_ue_spec(module_id_t module_idP, int slice_idxP,
 	if (TBS - ta_len - header_length_total - sdu_length_total - 3 > 0) {
 	  rlc_status = mac_rlc_status_ind(module_idP, rnti, module_idP, frameP, subframeP, ENB_FLAG_YES, MBMS_FLAG_NO, DCCH + 1,
                                           TBS - ta_len - header_length_total - sdu_length_total - 3
-<<<<<<< HEAD
-                                          #ifdef Rel14
-                                          	  ,0, 0
-										  #endif
-	  	  	  	  	  	  	  	  	  	  );
-=======
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
                                                     ,0, 0
 #endif
                                          );
->>>>>>> main/develop
 
 	  // DCCH SDU
 	  sdu_lengths[num_sdus] = 0;
@@ -1018,11 +991,7 @@ schedule_ue_spec(module_id_t module_idP, int slice_idxP,
 	    sdu_lengths[num_sdus] += mac_rlc_data_req(module_idP, rnti, module_idP, frameP, ENB_FLAG_YES, MBMS_FLAG_NO, DCCH + 1,
                                                       TBS, //not used
 						      (char *)&dlsch_buffer[sdu_length_total]
-<<<<<<< HEAD
-#ifdef Rel14
-=======
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
->>>>>>> main/develop
                           ,0, 0
 #endif
 	    );
@@ -1077,17 +1046,10 @@ schedule_ue_spec(module_id_t module_idP, int slice_idxP,
 					    MBMS_FLAG_NO,
 					    lcid,
 					    TBS - ta_len - header_length_total - sdu_length_total - 3
-<<<<<<< HEAD
-						#ifdef Rel14
-					    	,0, 0
-						#endif
-	    				);
-=======
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
                                                     ,0, 0
 #endif
                                            );
->>>>>>> main/develop
 
 
 
@@ -1102,11 +1064,7 @@ schedule_ue_spec(module_id_t module_idP, int slice_idxP,
 	      sdu_lengths[num_sdus] = mac_rlc_data_req(module_idP, rnti, module_idP, frameP, ENB_FLAG_YES, MBMS_FLAG_NO, lcid,
                                                        TBS, //not used
 						       (char *)&dlsch_buffer[sdu_length_total]
-<<<<<<< HEAD
-#ifdef Rel14
-=======
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
->>>>>>> main/develop
                           ,0, 0
 #endif
 	      );

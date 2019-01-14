@@ -105,50 +105,7 @@ store_dlsch_buffer(module_id_t Mod_id,
     if (!ue_dl_slice_membership(Mod_id, UE_id, slice_idx))
       continue;
 
-<<<<<<< HEAD
-	UE_template =
-	    &UE_list->UE_template[UE_PCCID(Mod_id, UE_id)][UE_id];
-
-	// clear logical channel interface variables
-	UE_template->dl_buffer_total = 0;
-	UE_template->dl_pdus_total = 0;
-
-	for (i = 0; i < MAX_NUM_LCID; i++) {
-	    UE_template->dl_buffer_info[i] = 0;
-	    UE_template->dl_pdus_in_buffer[i] = 0;
-	    UE_template->dl_buffer_head_sdu_creation_time[i] = 0;
-	    UE_template->dl_buffer_head_sdu_remaining_size_to_send[i] = 0;
-	}
-
-	rnti = UE_RNTI(Mod_id, UE_id);
-
-	for (i = 0; i < MAX_NUM_LCID; i++) {	// loop over all the logical channels
-
-	    rlc_status =
-		mac_rlc_status_ind(Mod_id, rnti, Mod_id, frameP, subframeP,
-				   ENB_FLAG_YES, MBMS_FLAG_NO, i, 0
-#ifdef Rel14
-                   ,0, 0
-#endif
-                   );
-
-	    UE_template->dl_buffer_info[i] = rlc_status.bytes_in_buffer;	//storing the dlsch buffer for each logical channel
-	    UE_template->dl_pdus_in_buffer[i] = rlc_status.pdus_in_buffer;
-	    UE_template->dl_buffer_head_sdu_creation_time[i] =
-		rlc_status.head_sdu_creation_time;
-	    UE_template->dl_buffer_head_sdu_creation_time_max =
-		cmax(UE_template->dl_buffer_head_sdu_creation_time_max,
-		     rlc_status.head_sdu_creation_time);
-	    UE_template->dl_buffer_head_sdu_remaining_size_to_send[i] =
-		rlc_status.head_sdu_remaining_size_to_send;
-	    UE_template->dl_buffer_head_sdu_is_segmented[i] =
-		rlc_status.head_sdu_is_segmented;
-	    UE_template->dl_buffer_total += UE_template->dl_buffer_info[i];	//storing the total dlsch buffer
-	    UE_template->dl_pdus_total +=
-		UE_template->dl_pdus_in_buffer[i];
-=======
     UE_template = &UE_list->UE_template[UE_PCCID(Mod_id, UE_id)][UE_id];
->>>>>>> main/develop
 
     // clear logical channel interface variables
     UE_template->dl_buffer_total = 0;
@@ -232,100 +189,6 @@ assign_rbs_required(module_id_t Mod_id,
   eNB_UE_STATS *eNB_UE_stats, *eNB_UE_stats_i, *eNB_UE_stats_j;
   int N_RB_DL;
 
-<<<<<<< HEAD
-    // clear rb allocations across all CC_id
-    for (UE_id = 0; UE_id < NUMBER_OF_UE_MAX; UE_id++) {
-	if (UE_list->active[UE_id] != TRUE)
-	    continue;
-	if (!ue_slice_membership(UE_id, slice_id))
-	    continue;
-	pCCid = UE_PCCID(Mod_id, UE_id);
-
-	//update CQI information across component carriers
-	for (n = 0; n < UE_list->numactiveCCs[UE_id]; n++) {
-	    CC_id = UE_list->ordered_CCids[n][UE_id];
-	    eNB_UE_stats = &UE_list->eNB_UE_stats[CC_id][UE_id];
-
-	    eNB_UE_stats->dlsch_mcs1 =cmin(cqi_to_mcs[UE_list->UE_sched_ctrl[UE_id].dl_cqi[CC_id]],
-									   slice_maxmcs[slice_id]);
-
-	}
-
-	// provide the list of CCs sorted according to MCS
-	for (i = 0; i < UE_list->numactiveCCs[UE_id]; i++) {
-	    eNB_UE_stats_i =
-		&UE_list->eNB_UE_stats[UE_list->
-				       ordered_CCids[i][UE_id]][UE_id];
-	    for (j = i + 1; j < UE_list->numactiveCCs[UE_id]; j++) {
-		DevAssert(j < MAX_NUM_CCs);
-		eNB_UE_stats_j =
-		    &UE_list->
-		    eNB_UE_stats[UE_list->ordered_CCids[j][UE_id]][UE_id];
-		if (eNB_UE_stats_j->dlsch_mcs1 >
-		    eNB_UE_stats_i->dlsch_mcs1) {
-		    tmp = UE_list->ordered_CCids[i][UE_id];
-		    UE_list->ordered_CCids[i][UE_id] =
-			UE_list->ordered_CCids[j][UE_id];
-		    UE_list->ordered_CCids[j][UE_id] = tmp;
-		}
-	    }
-	}
-
-	if (UE_list->UE_template[pCCid][UE_id].dl_buffer_total > 0) {
-	    LOG_D(MAC, "[preprocessor] assign RB for UE %d\n", UE_id);
-
-	    for (i = 0; i < UE_list->numactiveCCs[UE_id]; i++) {
-		CC_id = UE_list->ordered_CCids[i][UE_id];
-		eNB_UE_stats = &UE_list->eNB_UE_stats[CC_id][UE_id];
-
-		if (eNB_UE_stats->dlsch_mcs1 == 0) {
-		    nb_rbs_required[CC_id][UE_id] = 4;	// don't let the TBS get too small
-		} else {
-		    nb_rbs_required[CC_id][UE_id] = min_rb_unit[CC_id];
-		}
-
-		TBS =
-		    get_TBS_DL(eNB_UE_stats->dlsch_mcs1,
-			       nb_rbs_required[CC_id][UE_id]);
-
-		LOG_D(MAC,
-		      "[preprocessor] start RB assignement for UE %d CC_id %d dl buffer %d (RB unit %d, MCS %d, TBS %d) \n",
-		      UE_id, CC_id,
-		      UE_list->UE_template[pCCid][UE_id].dl_buffer_total,
-		      nb_rbs_required[CC_id][UE_id],
-		      eNB_UE_stats->dlsch_mcs1, TBS);
-
-		N_RB_DL =
-		    to_prb(RC.mac[Mod_id]->common_channels[CC_id].
-			   mib->message.dl_Bandwidth);
-
-		UE_list->UE_sched_ctrl[UE_id].max_rbs_allowed_slice[CC_id][slice_id]= flexran_nb_rbs_allowed_slice(slice_percentage[slice_id],N_RB_DL);
-
-		/* calculating required number of RBs for each UE */
-		while (TBS <
-		       UE_list->UE_template[pCCid][UE_id].
-		       dl_buffer_total) {
-		    nb_rbs_required[CC_id][UE_id] += min_rb_unit[CC_id];
-
-		    if (nb_rbs_required[CC_id][UE_id] > UE_list->UE_sched_ctrl[UE_id].max_rbs_allowed_slice[CC_id][slice_id]) {
-			TBS = get_TBS_DL(eNB_UE_stats->dlsch_mcs1, UE_list->UE_sched_ctrl[UE_id].max_rbs_allowed_slice[CC_id][slice_id]);
-			nb_rbs_required[CC_id][UE_id] = UE_list->UE_sched_ctrl[UE_id].max_rbs_allowed_slice[CC_id][slice_id];
-			break;
-		    }
-
-		    TBS =
-			get_TBS_DL(eNB_UE_stats->dlsch_mcs1,
-				   nb_rbs_required[CC_id][UE_id]);
-		}		// end of while
-
-		LOG_D(MAC,
-		      "[eNB %d] Frame %d: UE %d on CC %d: RB unit %d,  nb_required RB %d (TBS %d, mcs %d)\n",
-		      Mod_id, frameP, UE_id, CC_id, min_rb_unit[CC_id],
-		      nb_rbs_required[CC_id][UE_id], TBS,
-		      eNB_UE_stats->dlsch_mcs1);
-	    }
-	}
-=======
   // clear rb allocations across all CC_id
   for (UE_id = 0; UE_id < MAX_MOBILES_PER_ENB; UE_id++) {
     if (UE_list->active[UE_id] != TRUE) continue;
@@ -403,7 +266,6 @@ assign_rbs_required(module_id_t Mod_id,
 
         sli->pre_processor_results[slice_idx].mcs[CC_id][UE_id] = eNB_UE_stats->dlsch_mcs1;
       }
->>>>>>> main/develop
     }
   }
 }
@@ -1505,16 +1367,11 @@ dlsch_scheduler_pre_processor_reset(module_id_t module_idP,
       ue_sched_ctl = &UE_list->UE_sched_ctrl[UE_id];
       rnti = UE_RNTI(module_idP, UE_id);
 
-
-<<<<<<< HEAD
-       if (ue_sched_ctl->ta_timer == 0) {
-=======
       if (rnti == NOT_A_RNTI)
         continue;
 
       if (UE_list->active[UE_id] != TRUE)
         continue;
->>>>>>> main/develop
 
       if (!ue_dl_slice_membership(module_idP, UE_id, slice_idx))
         continue;

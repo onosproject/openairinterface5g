@@ -346,10 +346,7 @@ typedef enum {
 #define ENB_CONFIG_STRING_UETIMERS_N310                                 "ue_TimersAndConstants_n310"
 #define ENB_CONFIG_STRING_UETIMERS_N311                                 "ue_TimersAndConstants_n311"
 #define ENB_CONFIG_STRING_UE_TRANSMISSION_MODE                          "ue_TransmissionMode"
-<<<<<<< HEAD
-=======
 #define ENB_CONFIG_STRING_UE_MULTIPLE_MAX                               "ue_multiple_max"
->>>>>>> main/develop
 
 //TTN - for D2D
 //SIB18
@@ -394,11 +391,7 @@ typedef enum {
 #define ENB_CONFIG_STRING_DISCRXPOOLPS_RC_SFBITMAP_CHOICE_BS_BUF              "DISCRXPOOLPS_ResourceConfig_subframeBitmap_choice_bs_buf"
 #define ENB_CONFIG_STRING_DISCRXPOOLPS_RC_SFBITMAP_CHOICE_BS_SIZE             "DISCRXPOOLPS_ResourceConfig_subframeBitmap_choice_bs_size"
 #define ENB_CONFIG_STRING_DISCRXPOOLPS_RC_SFBITMAP_CHOICE_BS_ASN_BITS_UNUSED  "DISCRXPOOLPS_ResourceConfig_subframeBitmap_choice_bs_bits_unused"
-<<<<<<< HEAD
-		
-=======
 
->>>>>>> main/develop
 /*-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 /*                                     component carriers configuration parameters                                                                                                     */
 /*   optname                                                   helpstr   paramflags    XXXptr                                        defXXXval                    type         numelt  */
@@ -588,10 +581,7 @@ typedef enum {
 {ENB_CONFIG_STRING_UETIMERS_N310,                                NULL,   0,           iptr:&ue_TimersAndConstants_n310,               defintval:20,              TYPE_UINT,       0},  \
 {ENB_CONFIG_STRING_UETIMERS_N311,                                NULL,   0,           iptr:&ue_TimersAndConstants_n311,               defintval:1,               TYPE_UINT,       0},  \
 {ENB_CONFIG_STRING_UE_TRANSMISSION_MODE,                         NULL,   0,           iptr:&ue_TransmissionMode,                      defintval:1,               TYPE_UINT,       0},  \
-<<<<<<< HEAD
-=======
 {ENB_CONFIG_STRING_UE_MULTIPLE_MAX,                              NULL,   0,           iptr:&ue_multiple_max,                          defintval:4,               TYPE_UINT,       0},  \
->>>>>>> main/develop
 {ENB_CONFIG_STRING_RXPOOL_SC_CP_LEN,                             NULL,   0,   strptr:(char **)&rxPool_sc_CP_Len,          defstrval:"normal",  TYPE_STRING,  0}, \
 {ENB_CONFIG_STRING_RXPOOL_SC_PRIOD,                              NULL,   0,   strptr:(char **)&rxPool_sc_Period,          defstrval:"sf40",  TYPE_STRING,  0}, \
 {ENB_CONFIG_STRING_RXPOOL_DATA_CP_LEN,                           NULL,   0,   strptr:(char **)&rxPool_data_CP_Len,          defstrval:"normal",  TYPE_STRING,  0}, \

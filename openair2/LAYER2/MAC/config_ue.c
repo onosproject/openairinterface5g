@@ -140,22 +140,15 @@ rrc_mac_config_req_ue(module_id_t Mod_idP,
 #ifdef CBA
 		      , uint8_t num_active_cba_groups, uint16_t cba_rnti
 #endif
-<<<<<<< HEAD
-#if defined(Rel14)
-		      ,config_action_t config_action,
-		      const uint32_t * const sourceL2Id,
-		      const uint32_t * const destinationL2Id,
-                      const uint32_t * const groupL2Id,
-		      SL_Preconfiguration_r12_t *SL_Preconfiguration_r12,
-		      uint32_t directFrameNumber_r12,
-		      long directSubframeNumber_r12,
-		      long *sl_Bandwidth_r12
-=======
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
   ,config_action_t  config_action
   ,const uint32_t * const sourceL2Id
-  ,const uint32_t * const destinationL2Id
->>>>>>> main/develop
+  ,const uint32_t * const destinationL2Id,
+  const uint32_t * const groupL2Id,
+  SL_Preconfiguration_r12_t *SL_Preconfiguration_r12,
+  uint32_t directFrameNumber_r12,
+  long directSubframeNumber_r12,
+  long *sl_Bandwidth_r12
 #endif
 		      )
 {
@@ -251,15 +244,9 @@ rrc_mac_config_req_ue(module_id_t Mod_idP,
 	  LTE_MAC_MainConfig__ul_SCH_Config__maxHARQ_Tx_n5;
       }
       if(nfapi_mode!=3)
-<<<<<<< HEAD
-      phy_config_harq_ue(Mod_idP, 0, eNB_index,
-			 UE_mac_inst[Mod_idP].
-			 scheduling_info.maxHARQ_Tx);
-=======
         phy_config_harq_ue(Mod_idP, 0, eNB_index,
 			   UE_mac_inst[Mod_idP].
 			   scheduling_info.maxHARQ_Tx);
->>>>>>> main/develop
 
       if (mac_MainConfig->ul_SCH_Config->retxBSR_Timer) {
 	UE_mac_inst[Mod_idP].scheduling_info.retxBSR_Timer =
@@ -377,15 +364,9 @@ rrc_mac_config_req_ue(module_id_t Mod_idP,
 
 
   if (physicalConfigDedicated != NULL) {
-<<<<<<< HEAD
-	  if(nfapi_mode!=3)
-    phy_config_dedicated_ue(Mod_idP, 0, eNB_index,
-			    physicalConfigDedicated);
-=======
     if(nfapi_mode!=3)
       phy_config_dedicated_ue(Mod_idP, 0, eNB_index,
 			      physicalConfigDedicated);
->>>>>>> main/develop
     UE_mac_inst[Mod_idP].physicalConfigDedicated = physicalConfigDedicated;	// for SR proc
   }
 #if (LTE_RRC_VERSION >= MAKE_VERSION(10, 0, 0))
@@ -466,15 +447,9 @@ rrc_mac_config_req_ue(module_id_t Mod_idP,
 	   sizeof(LTE_PUSCH_ConfigCommon_t));
 
     if (mobilityControlInfo->radioResourceConfigCommon.phich_Config) {
-<<<<<<< HEAD
-      // memcpy((void *)&UE_mac_inst[Mod_idP].radioResourceConfigCommon->phich_Config,
-	 //(void *)mobilityControlInfo->radioResourceConfigCommon.phich_Config,
-	 //sizeof(PHICH_Config_t));
-=======
       /* memcpy((void *)&UE_mac_inst[Mod_idP].radioResourceConfigCommon->phich_Config,
 	 (void *)mobilityControlInfo->radioResourceConfigCommon.phich_Config,
 	 sizeof(LTE_PHICH_Config_t)); */
->>>>>>> main/develop
     }
 
     if (mobilityControlInfo->radioResourceConfigCommon.

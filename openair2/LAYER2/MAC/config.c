@@ -516,12 +516,7 @@ config_sib2(int Mod_idP,
 
     LTE_PRACH_ParametersListCE_r13_t *prach_ParametersListCE_r13 = &ext4_prach->prach_ParametersListCE_r13;
 
-<<<<<<< HEAD
-    PRACH_ParametersCE_r13_t *p;
-
-=======
     LTE_PRACH_ParametersCE_r13_t *p;
->>>>>>> main/develop
     cfg->emtc_config.prach_ce_level_0_enable.value = 0;
     cfg->emtc_config.prach_ce_level_0_enable.tl.tag=NFAPI_EMTC_CONFIG_PRACH_CE_LEVEL_0_ENABLE_TAG;
     cfg->num_tlv++;
@@ -1031,8 +1026,6 @@ rrc_mac_config_req_eNB(module_id_t Mod_idP,
   }
 
 #endif
-<<<<<<< HEAD
-=======
 
     LOG_D(MAC, "%s() %s:%d RC.mac[Mod_idP]->if_inst->PHY_config_req:%p\n", __FUNCTION__, __FILE__, __LINE__, RC.mac[Mod_idP]->if_inst->PHY_config_req);
 
@@ -1047,7 +1040,6 @@ rrc_mac_config_req_eNB(module_id_t Mod_idP,
         printf("Waiting for PHY_config_req\n");
       }
     }
->>>>>>> main/develop
 
   LOG_E(MAC, "%s() %s:%d RC.mac[Mod_idP]->if_inst->PHY_config_req:%p\n", __FUNCTION__, __FILE__, __LINE__, RC.mac[Mod_idP]->if_inst->PHY_config_req);
 
@@ -1062,7 +1054,6 @@ rrc_mac_config_req_eNB(module_id_t Mod_idP,
       usleep(100 * 1000);
       printf("Waiting for PHY_config_req\n");
     }
-<<<<<<< HEAD
   }
 
   if (radioResourceConfigCommon != NULL) {
@@ -1078,11 +1069,7 @@ rrc_mac_config_req_eNB(module_id_t Mod_idP,
 	  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_RRC_MAC_CONFIG, VCD_FUNCTION_OUT);
   }
 
-  return(0);			   
-
-=======
     RC.mac[Mod_idP]->scheduler_mode = global_scheduler_mode;
 
     return(0);			   
->>>>>>> main/develop
 }

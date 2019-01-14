@@ -602,15 +602,6 @@ rx_sdu(const module_id_t enb_mod_idP,
 	  // prepare transmission of Msg4
 	  ra->state = MSG4;
 
-
-
-<<<<<<< HEAD
-	  // Program Msg4 PDCCH+DLSCH/MPDCCH transmission 4 subframes from now, // Check if this is ok for BL/CE, or if the rule is different
-	  ra->Msg4_frame = frameP + ((subframeP > 5) ? 1 : 0);
-	  ra->Msg4_subframe = (subframeP + 4) % 10;
-	  LOG_D(MAC, " Received Msg4, SFN/SF:%d.%d \n", ra->Msg4_frame, ra->Msg4_subframe);
-
-=======
           if(mac->common_channels[CC_idP].tdd_Config!=NULL){
             switch(mac->common_channels[CC_idP].tdd_Config->subframeAssignment){
             case 1:
@@ -625,7 +616,6 @@ rx_sdu(const module_id_t enb_mod_idP,
             ra->Msg4_frame = frameP + ((subframeP > 5) ? 1 : 0);
             ra->Msg4_subframe = (subframeP + 4) % 10;
           }
->>>>>>> main/develop
 
           UE_list->UE_sched_ctrl[UE_id].crnti_reconfigurationcomplete_flag = 0;
 	}		// if process is active

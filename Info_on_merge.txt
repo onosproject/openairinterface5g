@@ -42,6 +42,20 @@ openair1/SIMULATION/ETH_TRANSPORT/multicast_link.c
 openair1/SIMULATION/LTE_PHY/dlsim.c
 openair2/COMMON/mac_rrc_primitives.h
 openair2/COMMON/platform_types.h
+openair2/COMMON/rrc_messages_types.h
+openair2/ENB_APP/enb_config.c (done but not so sure)
+openair2/ENB_APP/enb_paramdef.h
+openair2/ENB_APP/flexran_agent_ran_api.c
+openair2/LAYER2/MAC/config.c
+openair2/LAYER2/MAC/config_ue.c
+openair2/LAYER2/MAC/eNB_scheduler.c
+openair2/LAYER2/MAC/eNB_scheduler_RA.c
+openair2/LAYER2/MAC/eNB_scheduler_dlsch.c
+openair2/LAYER2/MAC/eNB_scheduler_mch.c
+openair2/LAYER2/MAC/eNB_scheduler_ulsch.c
+openair2/LAYER2/MAC/mac.h
+openair2/LAYER2/MAC/mac_proto.h
+openair2/LAYER2/MAC/pre_processor.c
 
 
 
@@ -52,20 +66,6 @@ openair2/COMMON/platform_types.h
 
 	deleted by them: openair1/PHY/TOOLS/file_output.c
         deleted by them: openair1/SCHED/pusch_pc.c
-        both modified:   openair2/COMMON/rrc_messages_types.h
-	both modified:   openair2/ENB_APP/enb_config.c
-	both modified:   openair2/ENB_APP/enb_paramdef.h
-	both modified:   openair2/ENB_APP/flexran_agent_ran_api.c
-	both modified:   openair2/LAYER2/MAC/config.c
-	both modified:   openair2/LAYER2/MAC/config_ue.c
-	both modified:   openair2/LAYER2/MAC/eNB_scheduler.c
-	both modified:   openair2/LAYER2/MAC/eNB_scheduler_RA.c
-	both modified:   openair2/LAYER2/MAC/eNB_scheduler_dlsch.c
-	both modified:   openair2/LAYER2/MAC/eNB_scheduler_mch.c
-	both modified:   openair2/LAYER2/MAC/eNB_scheduler_ulsch.c
-	both modified:   openair2/LAYER2/MAC/mac.h
-	both modified:   openair2/LAYER2/MAC/mac_proto.h
-	both modified:   openair2/LAYER2/MAC/pre_processor.c
 	both modified:   openair2/LAYER2/MAC/ra_procedures.c
 	both modified:   openair2/LAYER2/MAC/ue_procedures.c
 	both modified:   openair2/LAYER2/PDCP_v10.1.0/pdcp.c
@@ -154,8 +154,8 @@ openair2/COMMON/platform_types.h
 	both modified:   openair1/SIMULATION/ETH_TRANSPORT/multicast_link.c
 	both modified:   openair1/SIMULATION/LTE_PHY/dlsim.c
 	both modified:   openair2/COMMON/mac_rrc_primitives.h
-	both modified:   openair2/COMMON/platform_types.h               #We have done up to here
-	both modified:   openair2/COMMON/rrc_messages_types.h
+	both modified:   openair2/COMMON/platform_types.h               
+	both modified:   openair2/COMMON/rrc_messages_types.h		
 	both modified:   openair2/ENB_APP/enb_config.c
 	both modified:   openair2/ENB_APP/enb_paramdef.h
 	both modified:   openair2/ENB_APP/flexran_agent_ran_api.c
@@ -166,9 +166,9 @@ openair2/COMMON/platform_types.h
 	both modified:   openair2/LAYER2/MAC/eNB_scheduler_dlsch.c
 	both modified:   openair2/LAYER2/MAC/eNB_scheduler_mch.c
 	both modified:   openair2/LAYER2/MAC/eNB_scheduler_ulsch.c
-	both modified:   openair2/LAYER2/MAC/mac.h
+	both modified:   openair2/LAYER2/MAC/mac.h			
 	both modified:   openair2/LAYER2/MAC/mac_proto.h
-	both modified:   openair2/LAYER2/MAC/pre_processor.c
+	both modified:   openair2/LAYER2/MAC/pre_processor.c	        #We have done up to here
 	both modified:   openair2/LAYER2/MAC/ra_procedures.c
 	both modified:   openair2/LAYER2/MAC/ue_procedures.c
 	both modified:   openair2/LAYER2/PDCP_v10.1.0/pdcp.c

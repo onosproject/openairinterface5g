@@ -550,11 +550,7 @@ void ue_send_sl_sdu(module_id_t module_idP,
 	       sl_discovery_flag_t sl_discovery_flag
 		    );
 
-<<<<<<< HEAD:openair2/LAYER2/MAC/proto.h
-#if defined(Rel10) || defined(Rel14)
-=======
 #if (LTE_RRC_VERSION >= MAKE_VERSION(10, 0, 0))
->>>>>>> main/develop:openair2/LAYER2/MAC/mac_proto.h
 /* \brief Called by PHY to transfer MCH transport block to ue MAC.
 @param Mod_id Index of module instance
 @param frame Frame index
@@ -592,11 +588,7 @@ void ue_get_sdu(module_id_t module_idP, int CC_id, frame_t frameP,
 		uint8_t * ulsch_buffer, uint16_t buflen,
 		uint8_t * access_mode);
 
-<<<<<<< HEAD:openair2/LAYER2/MAC/proto.h
-/* \brief Called by PHY to get sdu for PSBCH/SSS/PSS transmission.  
-=======
 /* \brief Called by PHY to get sdu for PSBCH/SSS/PSS transmission.
->>>>>>> main/develop:openair2/LAYER2/MAC/mac_proto.h
 @param Mod_id Instance id of UE in machine
 @param frame_tx TX frame index
 @param subframe_tx TX subframe index
@@ -604,11 +596,7 @@ void ue_get_sdu(module_id_t module_idP, int CC_id, frame_t frameP,
 */
 SLSS_t *ue_get_slss(module_id_t module_idP, int CC_id,frame_t frameP, sub_frame_t subframe);
 
-<<<<<<< HEAD:openair2/LAYER2/MAC/proto.h
-/* \brief Called by PHY to get sdu for PSDCH transmission.  
-=======
 /* \brief Called by PHY to get sdu for PSDCH transmission.
->>>>>>> main/develop:openair2/LAYER2/MAC/mac_proto.h
 @param Mod_id Instance id of UE in machine
 @param frame_tx TX frame index
 @param subframe_tx TX subframe index
@@ -616,21 +604,13 @@ SLSS_t *ue_get_slss(module_id_t module_idP, int CC_id,frame_t frameP, sub_frame_
 */
 SLDCH_t *ue_get_sldch(module_id_t module_idP, int CC_id,frame_t frameP, sub_frame_t subframe);
 
-<<<<<<< HEAD:openair2/LAYER2/MAC/proto.h
-/* \brief Called by PHY to get sdu for PSSCH transmission.  
-=======
 /* \brief Called by PHY to get sdu for PSSCH transmission.
->>>>>>> main/develop:openair2/LAYER2/MAC/mac_proto.h
 @param Mod_id Instance id of UE in machine
 @param frame_tx TX frame index
 @param subframe_tx TX subframe index
 @returns pointer to SLSCH_t descriptor
 */
-<<<<<<< HEAD:openair2/LAYER2/MAC/proto.h
 SLSCH_t *ue_get_slsch(module_id_t module_idP, int CC_id,frame_t frameP, sub_frame_t subframe, int slsch_test);
-=======
-SLSCH_t *ue_get_slsch(module_id_t module_idP, int CC_id,frame_t frameP, sub_frame_t subframe);
->>>>>>> main/develop:openair2/LAYER2/MAC/mac_proto.h
 
 /* \brief Function called by PHY to retrieve information to be transmitted using the RA procedure.  If the UE is not in PUSCH mode for a particular eNB index, this is assumed to be an Msg3 and MAC attempts to retrieves the CCCH message from RRC. If the UE is in PUSCH mode for a particular eNB index and PUCCH format 0 (Scheduling Request) is not activated, the MAC may use this resource for random-access to transmit a BSR along with the C-RNTI control element (see 5.1.4 from 36.321)
 @param Mod_id Index of UE instance
@@ -1077,27 +1057,18 @@ int rrc_mac_config_req_ue(module_id_t module_idP,
 			  ,
 			  uint8_t num_active_cba_groups, uint16_t cba_rnti
 #endif
-<<<<<<< HEAD:openair2/LAYER2/MAC/proto.h
-#if defined(Rel14)
-			  ,config_action_t config_action,
-			  const uint32_t * const sourceL2Id,
-			  const uint32_t * const destinationL2Id,
-                          const uint32_t * const groupL2Id,
+
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
+			  ,config_action_t config_action
+			  ,const uint32_t * const sourceL2Id
+			  ,const uint32_t * const destinationL2Id,
+			  const uint32_t * const groupL2Id,
 			  SL_Preconfiguration_r12_t *SL_Preconfiguration_r12_t,
 			  uint32_t directFrame_r12,
 			  long directSubframe_r12,
 			  long *sl_Bandwidth_r12
 #endif
 			  );
-=======
-#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
-			  ,config_action_t config_action
-			  ,const uint32_t * const sourceL2Id
-			  ,const uint32_t * const destinationL2Id
-#endif
-			  );
-
->>>>>>> main/develop:openair2/LAYER2/MAC/mac_proto.h
 
 uint16_t getRIV(uint16_t N_RB_DL, uint16_t RBstart, uint16_t Lcrbs);
 

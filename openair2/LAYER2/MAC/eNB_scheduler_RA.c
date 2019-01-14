@@ -175,11 +175,7 @@ add_msg3(module_id_t module_idP, int CC_id, RA_t * ra, frame_t frameP,
 	      module_idP, frameP, subframeP, CC_id, ra->Msg3_frame,
 	      ra->Msg3_subframe);
 
-<<<<<<< HEAD
-	LOG_I(MAC,
-=======
 	LOG_D(MAC,
->>>>>>> main/develop
 	      "Frame %d, Subframe %d Adding Msg3 UL Config Request for (%d,%d) : (%d,%d,%d) for rnti: %d\n",
 	      frameP, subframeP, ra->Msg3_frame, ra->Msg3_subframe,
 	      ra->msg3_nb_rb, ra->msg3_first_rb, ra->msg3_round, ra->rnti);
@@ -1018,11 +1014,7 @@ generate_Msg4(module_id_t module_idP, int CC_idP, frame_t frameP,
 #endif
     {
     // This is normal LTE case
-<<<<<<< HEAD
-	LOG_I(MAC, "Generate_Msg4 1 ra->Msg4_frame SFN/SF: %d.%d,  frameP SFN/SF: %d.%d FOR eNB_Mod: %d \n", ra->Msg4_frame, ra->Msg4_subframe, frameP, subframeP, module_idP);
-=======
 	LOG_D(MAC, "generate_Msg4 1 ra->Msg4_frame SFN/SF: %d.%d,  frameP SFN/SF: %d.%d FOR eNB_Mod: %d \n", ra->Msg4_frame, ra->Msg4_subframe, frameP, subframeP, module_idP);
->>>>>>> main/develop
     	if ((ra->Msg4_frame == frameP) && (ra->Msg4_subframe == subframeP)) {
 
     	    // Get RRCConnectionSetup for Piggyback
@@ -1039,11 +1031,6 @@ generate_Msg4(module_id_t module_idP, int CC_idP, frame_t frameP,
     	    AssertFatal(rrc_sdu_length > 0,
     			"[MAC][eNB Scheduler] CCCH not allocated, rrc_sdu_length: %d\n", rrc_sdu_length);
 
-<<<<<<< HEAD
-=======
-
-
->>>>>>> main/develop
 	    LOG_D(MAC,
 		  "[eNB %d][RAPROC] CC_id %d Frame %d, subframeP %d: Generating Msg4 with RRC Piggyback (RNTI %x)\n",
 		  module_idP, CC_idP, frameP, subframeP, ra->rnti);
@@ -1295,11 +1282,7 @@ check_Msg4_retransmission(module_id_t module_idP, int CC_idP,
     dl_config_pdu = &dl_req_body->dl_config_pdu_list[dl_req_body->number_pdu];
     N_RB_DL = to_prb(cc[CC_idP].mib->message.dl_Bandwidth);
 
-<<<<<<< HEAD
-    LOG_I(MAC,
-=======
     LOG_D(MAC,
->>>>>>> main/develop
 	  "[eNB %d][RAPROC] CC_id %d Frame %d, subframeP %d: Checking if Msg4 for harq_pid %d was acknowledged (round %d), UE_id: %d \n",
 	  module_idP, CC_idP, frameP, subframeP, ra->harq_pid, round, UE_id);
 
@@ -1350,11 +1333,7 @@ check_Msg4_retransmission(module_id_t module_idP, int CC_idP,
 			  ra->rnti, round, frameP, subframeP);
 		    // DLSCH Config
                     //DJP - fix this pdu_index = -1
-<<<<<<< HEAD
-		    LOG_I(MAC, "Panos:D: check_Msg4_retransmission() before fill_nfapi_dlsch_config() with pdu_index = -1 \n");
-=======
 		    LOG_D(MAC, "check_Msg4_retransmission() before fill_nfapi_dlsch_config() with pdu_index = -1 \n");
->>>>>>> main/develop
 		    fill_nfapi_dlsch_config(mac, dl_req_body, ra->msg4_TBsize,
 					    -1
 					    /* retransmission, no pdu_index */
