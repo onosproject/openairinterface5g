@@ -453,7 +453,7 @@ void rrc_mac_config_req_NB_IoT(
         ///OAI only supports SIB2/3-NB for the sibs
 
             mac_config->sibs_NB_IoT_sched[0].si_periodicity =   si_Periodicity_rf64 ;
-            mac_config->sibs_NB_IoT_sched[0].si_repetition_pattern =  si_RepetitionPattern_every2ndRF;
+            mac_config->sibs_NB_IoT_sched[0].si_repetition_pattern =  si_RepetitionPattern_every4thRF;
      
             mac_config->sibs_NB_IoT_sched[0].sib_mapping_info =   sib3_v;
             mac_config->sibs_NB_IoT_sched[0].si_tb =      si_TB_680;

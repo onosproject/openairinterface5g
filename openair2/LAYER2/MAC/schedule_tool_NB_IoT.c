@@ -1101,12 +1101,12 @@ void maintain_available_resource(eNB_MAC_INST_NB_IoT *mac_inst){
         
     }else{
         // only update when current subframe bigger than to start subframe
-        //if(mac_inst->current_subframe > available_resource_DL->start_subframe)
-        //{
+        if(mac_inst->current_subframe > available_resource_DL->start_subframe)
+        {
             LOG_D(MAC,"[maintain] update from %d to current %d, ori end %d\n",available_resource_DL->start_subframe,mac_inst->current_subframe,available_resource_DL->end_subframe);
             available_resource_DL->start_subframe = mac_inst->current_subframe;
-        //}else
-            //LOG_D(MAC,"[maintain] do nothing\n");
+        }else
+            LOG_D(MAC,"[maintain] do nothing\n");
     }
 }
     //  UL 

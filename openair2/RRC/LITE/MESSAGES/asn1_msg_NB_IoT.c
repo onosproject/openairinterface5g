@@ -336,7 +336,7 @@ uint8_t do_SIB1_NB_IoT(uint8_t Mod_id, int CC_id,
   // There is only one sib2+sib3 common setting
 
   schedulingInfo_NB_IoT.si_Periodicity_r13=  SchedulingInfo_NB_r13__si_Periodicity_r13_rf64; //SchedulingInfo_NB_r13__si_Periodicity_r13_rf4096; // (to be set to 64)
-  schedulingInfo_NB_IoT.si_RepetitionPattern_r13=  SchedulingInfo_NB_r13__si_RepetitionPattern_r13_every2ndRF; //This Indicates the starting radio frames within the SI window used for SI message transmission.
+  schedulingInfo_NB_IoT.si_RepetitionPattern_r13=  SchedulingInfo_NB_r13__si_RepetitionPattern_r13_every4thRF; //This Indicates the starting radio frames within the SI window used for SI message transmission.
   schedulingInfo_NB_IoT.si_TB_r13= SchedulingInfo_NB_r13__si_TB_r13_b680;//208 bits
   
 
@@ -577,7 +577,7 @@ uint8_t do_SIB1_NB_IoT_x(uint8_t Mod_id, int CC_id,
   // There is only one sib2+sib3 common setting
 
   schedulingInfo_NB_IoT.si_Periodicity_r13=  SchedulingInfo_NB_r13__si_Periodicity_r13_rf64; //SchedulingInfo_NB_r13__si_Periodicity_r13_rf4096; // (to be set to 64)
-  schedulingInfo_NB_IoT.si_RepetitionPattern_r13=  SchedulingInfo_NB_r13__si_RepetitionPattern_r13_every2ndRF; //This Indicates the starting radio frames within the SI window used for SI message transmission.
+  schedulingInfo_NB_IoT.si_RepetitionPattern_r13=  SchedulingInfo_NB_r13__si_RepetitionPattern_r13_every4thRF; //This Indicates the starting radio frames within the SI window used for SI message transmission.
   schedulingInfo_NB_IoT.si_TB_r13= SchedulingInfo_NB_r13__si_TB_r13_b680;//208 bits
   
   // This is for SIB2/3
