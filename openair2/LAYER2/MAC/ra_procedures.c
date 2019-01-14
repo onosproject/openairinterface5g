@@ -43,67 +43,10 @@
 #include "UTIL/OPT/opt.h"
 #include "OCG.h"
 #include "OCG_extern.h"
-<<<<<<< HEAD
-#ifdef PHY_EMUL
-#include "SIMULATION/simulation_defs.h"
-#endif
 
-#include "SIMULATION/TOOLS/defs.h"	// for taus
-
-extern uint8_t  nfapi_mode;
-extern UE_MODE_t get_ue_mode(uint8_t Mod_id,uint8_t CC_id,uint8_t eNB_index);
-
-
-int8_t get_DELTA_PREAMBLE(module_id_t module_idP,int CC_id)
-{
-
-    AssertFatal(CC_id == 0,
-		"Transmission on secondary CCs is not supported yet\n");
-    uint8_t prachConfigIndex =
-	UE_mac_inst[module_idP].radioResourceConfigCommon->
-	prach_Config.prach_ConfigInfo.prach_ConfigIndex;
-    uint8_t preambleformat;
-
-    if (UE_mac_inst[module_idP].tdd_Config) {	// TDD
-	if (prachConfigIndex < 20) {
-	    preambleformat = 0;
-	} else if (prachConfigIndex < 30) {
-	    preambleformat = 1;
-	} else if (prachConfigIndex < 40) {
-	    preambleformat = 2;
-	} else if (prachConfigIndex < 48) {
-	    preambleformat = 3;
-	} else {
-	    preambleformat = 4;
-	}
-    } else {			// FDD
-	preambleformat = prachConfigIndex >> 2;
-    }
-
-    switch (preambleformat) {
-    case 0:
-    case 1:
-	return (0);
-
-    case 2:
-    case 3:
-	return (-3);
-
-    case 4:
-	return (8);
-
-    default:
-	AssertFatal(1 == 0,
-		    "[UE %d] ue_procedures.c: FATAL, Illegal preambleformat %d, prachConfigIndex %d\n",
-		    module_idP, preambleformat, prachConfigIndex);
-    }
-
-}
-=======
 #include "SIMULATION/TOOLS/sim.h"	// for taus
 #include "PHY/LTE_TRANSPORT/transport_common_proto.h"
 #include "PHY/LTE_ESTIMATION/lte_estimation.h"
->>>>>>> main/develop
 
 extern uint8_t  nfapi_mode;
 extern UE_MODE_t get_ue_mode(uint8_t Mod_id,uint8_t CC_id,uint8_t eNB_index);
@@ -357,7 +300,7 @@ PRACH_RESOURCES_t *ue_get_rach(module_id_t module_idP, int CC_id,
 {
     uint8_t Size = 0;
     UE_MODE_t UE_mode;
-    // Panos: Modification for phy_stub_ue operation
+    // Modification for phy_stub_ue operation
     if(nfapi_mode == 3) { // Panos: phy_stub_ue mode
     	  UE_mode = UE_mac_inst[module_idP].UE_mode[0];
     	  LOG_D(MAC, "ue_get_rach , UE_mode: %d", UE_mode);
@@ -365,21 +308,6 @@ PRACH_RESOURCES_t *ue_get_rach(module_id_t module_idP, int CC_id,
     else { // Full stack mode
     	  UE_mode = get_ue_mode(module_idP,0,eNB_indexP);
     }
-
-<<<<<<< HEAD
-=======
-    uint8_t Size = 0;
-    UE_MODE_t UE_mode;
-    // Modification for phy_stub_ue operation
-    if(nfapi_mode == 3) { // phy_stub_ue mode
-        UE_mode = UE_mac_inst[module_idP].UE_mode[0];
-        LOG_D(MAC, "ue_get_rach , UE_mode: %d", UE_mode);
-    }
-    else { // Full stack mode
-        UE_mode = get_ue_mode(module_idP,0,eNB_indexP);
-    }
-
->>>>>>> main/develop
 
     uint8_t lcid = CCCH;
     uint16_t Size16;
@@ -394,11 +322,7 @@ PRACH_RESOURCES_t *ue_get_rach(module_id_t module_idP, int CC_id,
 		"Transmission on secondary CCs is not supported yet\n");
 
     if (UE_mode == PRACH) {
-<<<<<<< HEAD
-    	LOG_D(MAC, "ue_get_rach 3, RA_active value: %d", UE_mac_inst[module_idP].RA_active);
-=======
-        LOG_D(MAC, "ue_get_rach 3, RA_active value: %d", UE_mac_inst[module_idP].RA_active);
->>>>>>> main/develop
+        LOG_D(MAC, "RA_active value: %d", UE_mac_inst[module_idP].RA_active);
 	if (UE_mac_inst[module_idP].radioResourceConfigCommon) {
 	    rach_ConfigCommon =
 		&UE_mac_inst[module_idP].
@@ -484,11 +408,7 @@ PRACH_RESOURCES_t *ue_get_rach(module_id_t module_idP, int CC_id,
 				       UE_mac_inst[module_idP].crnti,
 				       eNB_indexP, frameP, subframeP,
 				       ENB_FLAG_NO, MBMS_FLAG_NO, DCCH, 6
-<<<<<<< HEAD
-#ifdef Rel14
-=======
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
->>>>>>> main/develop
                ,0, 0
 #endif
                );
@@ -506,16 +426,6 @@ PRACH_RESOURCES_t *ue_get_rach(module_id_t module_idP, int CC_id,
 			  module_idP, frameP, rlc_status.bytes_in_buffer,
 			  dcch_header_len);
 
-<<<<<<< HEAD
-		sdu_lengths[0] = mac_rlc_data_req(module_idP, UE_mac_inst[module_idP].crnti, eNB_indexP, frameP, ENB_FLAG_NO, MBMS_FLAG_NO, DCCH, 6,	//not used
-						  (char *) &ulsch_buff[0]
-#ifdef Rel14
-						  ,0,0
-#endif
-                  	  	 );
-		LOG_D(MAC, "[UE %d] TX Got %d bytes for DCCH\n",
-		      module_idP, sdu_lengths[0]);
-=======
 		sdu_lengths = mac_rlc_data_req(module_idP, UE_mac_inst[module_idP].crnti, eNB_indexP, frameP, ENB_FLAG_NO, MBMS_FLAG_NO, DCCH, 6,	//not used
 						  (char *) &ulsch_buff[0]
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
@@ -531,7 +441,6 @@ PRACH_RESOURCES_t *ue_get_rach(module_id_t module_idP, int CC_id,
                   LOG_E(MAC, "[UE %d] TX DCCH error\n",
                          module_idP );
 
->>>>>>> main/develop
 		update_bsr(module_idP, frameP, subframeP, eNB_indexP);
 		UE_mac_inst[module_idP].
 		    scheduling_info.BSR[UE_mac_inst[module_idP].

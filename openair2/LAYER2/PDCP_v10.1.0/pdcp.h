@@ -232,19 +232,11 @@ boolean_t pdcp_data_req(
               const sdu_size_t sdu_buffer_size,
               unsigned char* const sdu_buffer,
               const pdcp_transmission_mode_t mode
-<<<<<<< HEAD
-#ifdef Rel14
-              ,const uint32_t * const sourceL2Id
-              ,const uint32_t * const destinationL2Id
-#endif
-              ));
-=======
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
               ,const uint32_t * const sourceL2Id
               ,const uint32_t * const destinationL2Id
 #endif
               );
->>>>>>> main/develop
 
 /*! \fn boolean_t pdcp_data_ind(const protocol_ctxt_t* const, srb_flag_t, MBMS_flag_t, rb_id_t, sdu_size_t, mem_block_t*, boolean_t)
 * \brief This functions handles data transfer indications coming from RLC
@@ -282,16 +274,12 @@ void rrc_pdcp_config_req (
               const srb_flag_t  srb_flagP,
               const uint32_t    actionP,
               const rb_id_t     rb_idP,
-<<<<<<< HEAD
               const uint8_t     security_modeP
-#ifdef Rel14
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
               ,const uint32_t sourceL2Id
               ,const uint32_t destinationL2Id
 #endif
-              );)
-=======
-              const uint8_t     security_modeP);
->>>>>>> main/develop
+              );
 
 /*! \fn bool rrc_pdcp_config_asn1_req (const protocol_ctxt_t* const , SRB_ToAddModList_t* srb2add_list, DRB_ToAddModList_t* drb2add_list, DRB_ToReleaseList_t*  drb2release_list)
 * \brief  Function for RRC to configure a Radio Bearer.
@@ -421,11 +409,7 @@ typedef struct pdcp_data_req_header_s {
   sdu_size_t          data_size;
   signed int          inst;
   ip_traffic_type_t   traffic_type;
-<<<<<<< HEAD
-#ifdef Rel14
-=======
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
->>>>>>> main/develop
   uint32_t sourceL2Id;
   uint32_t destinationL2Id;
 #endif
@@ -436,11 +420,7 @@ typedef struct pdcp_data_ind_header_s {
   sdu_size_t          data_size;
   signed int          inst;
   ip_traffic_type_t   dummy_traffic_type;
-<<<<<<< HEAD
-#ifdef Rel14
-=======
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
->>>>>>> main/develop
   uint32_t sourceL2Id;
   uint32_t destinationL2Id;
 #endif
@@ -454,26 +434,14 @@ struct pdcp_netlink_element_s {
 };
 
 //TTN for D2D (PC5S)
-<<<<<<< HEAD
-#ifdef Rel14
-=======
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
->>>>>>> main/develop
 #define PDCP_SOCKET_PORT_NO 9999 //temporary value
 #define PC5_SIGNALLING_PAYLOAD_SIZE   100  //should be updated with a correct value
 int pdcp_pc5_sockfd;
 struct sockaddr_in prose_ctrl_addr;
 struct sockaddr_in prose_pdcp_addr;
 struct sockaddr_in pdcp_sin;
-<<<<<<< HEAD
-/*<<<<<<< HEAD
-int pdcp_pc5_socket_init(void);
-=======*/
 void pdcp_pc5_socket_init(void);
-//>>>>>>> origin/on-off-integration
-=======
-void pdcp_pc5_socket_init(void);
->>>>>>> main/develop
 
 typedef struct  {
    rb_id_t             rb_id;
@@ -486,11 +454,7 @@ typedef struct  {
 
 //new PC5S-message
 typedef struct  {
-<<<<<<< HEAD
    unsigned char bytes[PC5_SIGNALLING_PAYLOAD_SIZE]; 
-=======
-   unsigned char bytes[PC5_SIGNALLING_PAYLOAD_SIZE];
->>>>>>> main/develop
 }  __attribute__((__packed__)) PC5SignallingMessage ;
 
 //example of PC5-S messages
@@ -503,20 +467,6 @@ typedef struct {
 } __attribute__((__packed__)) sidelink_pc5s_element;
 
 
-<<<<<<< HEAD
-#endif
-
-
-#if 0
-/*
- * Missing PDU information struct, a copy of this will be enqueued
- * into pdcp.missing_pdus for every missing PDU
- */
-typedef struct pdcp_missing_pdu_info_t {
-  pdcp_sn_t sequence_number;
-} pdcp_missing_pdu_info_t;
-=======
->>>>>>> main/develop
 #endif
 
 /*

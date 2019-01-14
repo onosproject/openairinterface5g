@@ -784,7 +784,7 @@ rrc_t310_expiration(
                            CONFIG_ACTION_REMOVE,
                            UE_rrc_inst[ctxt_pP->module_id].Srb2[eNB_index].Srb_info.Srb_id,
                            0
-#ifdef Rel14
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
                           ,0
                           ,0
 #endif
@@ -2533,7 +2533,7 @@ rrc_ue_process_mobilityControlInfo(
 <<<<<<< HEAD:openair2/RRC/LITE/rrc_UE.c
   LOG_N(RRC,"[UE %d] : Update needed for rrc_pdcp_config_req (deprecated) and rrc_rlc_config_req commands(deprecated)\n", ctxt_pP->module_id);
   rrc_pdcp_config_req (ctxt_pP, SRB_FLAG_YES, CONFIG_ACTION_REMOVE, DCCH,UNDEF_SECURITY_MODE
-#ifdef Rel14
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
                        ,0
                        ,0
 #endif
@@ -2545,7 +2545,7 @@ rrc_ue_process_mobilityControlInfo(
 #endif
     );
   rrc_pdcp_config_req (ctxt_pP, SRB_FLAG_YES, CONFIG_ACTION_REMOVE, DCCH1,UNDEF_SECURITY_MODE
-#ifdef Rel14
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
                        ,0
                        ,0
 #endif
@@ -2557,7 +2557,7 @@ rrc_ue_process_mobilityControlInfo(
 #endif
     );
   rrc_pdcp_config_req (ctxt_pP, SRB_FLAG_NO, CONFIG_ACTION_REMOVE, DTCH,UNDEF_SECURITY_MODE
-#ifdef Rel14
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
                        ,0
                        ,0
 #endif

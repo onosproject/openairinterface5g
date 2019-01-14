@@ -96,11 +96,7 @@ boolean_t pdcp_data_req(
   const sdu_size_t     sdu_buffer_sizeP,
   unsigned char *const sdu_buffer_pP,
   const pdcp_transmission_mode_t modeP
-<<<<<<< HEAD
-#ifdef Rel14
-=======
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
->>>>>>> main/develop
     ,const uint32_t * const sourceL2Id
     ,const uint32_t * const destinationL2Id
 #endif
@@ -187,11 +183,7 @@ boolean_t pdcp_data_req(
                                 sdu_buffer_sizeP);
 #endif
       rlc_status = rlc_data_req(ctxt_pP, srb_flagP, MBMS_FLAG_YES, rb_idP, muiP, confirmP, sdu_buffer_sizeP, pdcp_pdu_p
-<<<<<<< HEAD
-#ifdef Rel14
-=======
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
->>>>>>> main/develop
                                 ,NULL, NULL
 #endif
                                 );
@@ -379,14 +371,6 @@ boolean_t pdcp_data_req(
                              ,sourceL2Id
                              ,destinationL2Id
 #endif
-<<<<<<< HEAD
-    rlc_status = rlc_data_req(ctxt_pP, srb_flagP, MBMS_FLAG_NO, rb_idP, muiP, confirmP, pdcp_pdu_size, pdcp_pdu_p
-#ifdef Rel14
-                             ,sourceL2Id
-                             ,destinationL2Id
-#endif
-=======
->>>>>>> main/develop
                              );
 
   }
@@ -957,7 +941,7 @@ pdcp_run (
 //-----------------------------------------------------------------------------
 {
   
-<<<<<<< HEAD
+	// Not sure if we need this
 #if defined(ENABLE_ITTI)
   MessageDef   *msg_p;
   const char   *msg_name;
@@ -966,8 +950,6 @@ pdcp_run (
   protocol_ctxt_t  ctxt;
 #endif
   
-=======
->>>>>>> main/develop
   if (ctxt_pP->enb_flag) {
     start_meas(&eNB_pdcp_stats[ctxt_pP->module_id].pdcp_run);
   } else {
@@ -1020,11 +1002,7 @@ pdcp_run (
                                 RRC_DCCH_DATA_REQ (msg_p).sdu_size,
                                 RRC_DCCH_DATA_REQ (msg_p).sdu_p,
                                 RRC_DCCH_DATA_REQ (msg_p).mode
-<<<<<<< HEAD
-#ifdef Rel14
-=======
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
->>>>>>> main/develop
                                 , NULL, NULL
 #endif
                                 );
@@ -1827,7 +1805,7 @@ rrc_pdcp_config_req (
   const uint32_t actionP,
   const rb_id_t rb_idP,
   const uint8_t security_modeP
-#ifdef Rel14
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
     ,const uint32_t sourceL2Id
     ,const uint32_t destinationL2Id
 #endif

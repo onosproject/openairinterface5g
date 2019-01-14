@@ -56,6 +56,10 @@ openair2/LAYER2/MAC/eNB_scheduler_ulsch.c
 openair2/LAYER2/MAC/mac.h
 openair2/LAYER2/MAC/mac_proto.h
 openair2/LAYER2/MAC/pre_processor.c
+openair2/LAYER2/MAC/ra_procedures.c
+openair2/LAYER2/MAC/ue_procedures.c
+openair2/LAYER2/PDCP_v10.1.0/pdcp.c
+openair2/LAYER2/PDCP_v10.1.0/pdcp.h
 
 
 
@@ -65,11 +69,7 @@ openair2/LAYER2/MAC/pre_processor.c
 *******************************************************************************************************
 
 	deleted by them: openair1/PHY/TOOLS/file_output.c
-        deleted by them: openair1/SCHED/pusch_pc.c
-	both modified:   openair2/LAYER2/MAC/ra_procedures.c
-	both modified:   openair2/LAYER2/MAC/ue_procedures.c
-	both modified:   openair2/LAYER2/PDCP_v10.1.0/pdcp.c
-	both modified:   openair2/LAYER2/PDCP_v10.1.0/pdcp.h
+        deleted by them: openair1/SCHED/pusch_pc.c		
 	both modified:   openair2/LAYER2/PDCP_v10.1.0/pdcp_fifo.c
 	both modified:   openair2/LAYER2/PDCP_v10.1.0/pdcp_proto_extern.h
 	both modified:   openair2/LAYER2/RLC/UM_v9.3.0/rlc_um.c
@@ -168,11 +168,11 @@ openair2/LAYER2/MAC/pre_processor.c
 	both modified:   openair2/LAYER2/MAC/eNB_scheduler_ulsch.c
 	both modified:   openair2/LAYER2/MAC/mac.h			
 	both modified:   openair2/LAYER2/MAC/mac_proto.h
-	both modified:   openair2/LAYER2/MAC/pre_processor.c	        #We have done up to here
+	both modified:   openair2/LAYER2/MAC/pre_processor.c	        
 	both modified:   openair2/LAYER2/MAC/ra_procedures.c
 	both modified:   openair2/LAYER2/MAC/ue_procedures.c
 	both modified:   openair2/LAYER2/PDCP_v10.1.0/pdcp.c
-	both modified:   openair2/LAYER2/PDCP_v10.1.0/pdcp.h
+	both modified:   openair2/LAYER2/PDCP_v10.1.0/pdcp.h		#Conflicts solved up to here
 	both modified:   openair2/LAYER2/PDCP_v10.1.0/pdcp_fifo.c
 	both modified:   openair2/LAYER2/PDCP_v10.1.0/pdcp_proto_extern.h
 	both modified:   openair2/LAYER2/RLC/UM_v9.3.0/rlc_um.c
