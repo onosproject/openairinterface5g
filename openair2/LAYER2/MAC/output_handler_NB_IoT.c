@@ -322,7 +322,7 @@ int output_handler(eNB_MAC_INST_NB_IoT *mac_inst, module_id_t module_id, int CC_
                         SCHED_info->DL_req->dl_config_request_body.number_pdu = 1;
 						dl_config_pdu->pdu_type                                           = NFAPI_DL_CONFIG_NDLSCH_PDU_TYPE;
 						dl_config_pdu->pdu_size                                           = 2+sizeof(nfapi_dl_config_ndlsch_pdu_rel13_t);
-						dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13.length                 = (schedule_result_list_DL->sdu_length)*8;
+						dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13.length                 = schedule_result_list_DL->sdu_length;
 						dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13.pdu_index			  = 1;
 						dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13.rnti_type              = 1;
 						dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13.rnti                   = schedule_result_list_DL->rnti; // C-RNTI
@@ -338,7 +338,7 @@ int output_handler(eNB_MAC_INST_NB_IoT *mac_inst, module_id_t module_id, int CC_
 							LOG_D(MAC,"[hypersfn:%2d][frame:%2d][subframe:%2d]NB-IoT fill SIBs\n",hypersfn,frame,subframe);
 
 						}else
-							LOG_D(MAC,"[hypersfn:%2d][frame:%2d][subframe:%2d]NB-IoT fill DL Data\n",hypersfn,frame,subframe);
+							LOG_D(MAC,"[hypersfn:%2d][frame:%2d][subframe:%2d]NB-IoT fill DL Data, length = %d\n",hypersfn,frame,subframe,dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13.length);
 
 
 						//LOG_D(MAC,"A NB-IoT fill DL Data pdu : %d \n",schedule_result_list_DL->DLSCH_pdu);

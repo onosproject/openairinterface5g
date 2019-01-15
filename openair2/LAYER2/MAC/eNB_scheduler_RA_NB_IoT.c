@@ -108,6 +108,7 @@ void schedule_rar_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, int abs_subframe){
 	int dci_candidate, i, num_candidate;
 	int msg2_i_delay;
 	int msg3_scheduling_delay;
+
 	static uint16_t tc_rnti = 0x0101;
 	int rep=1;
 	sched_temp_UL_NB_IoT_t npusch_info;
@@ -153,14 +154,14 @@ void schedule_rar_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, int abs_subframe){
 			fail|=0x1;
 		}
 		//	check msg2 resource
-		uint32_t TBS, I_tbs, I_mcs, I_sf, Nrep;
+		uint32_t TBS, I_tbs, I_mcs, I_sf, Nrep, RAR_TBS;
 		
 		I_mcs = get_I_mcs(msg2_nodes->ce_level);
 	    I_tbs = I_mcs;
 		TBS = get_tbs(7, I_tbs, &I_sf);   //  rar 7 bytes
 		Nrep = dl_rep[msg2_nodes->ce_level];
 		num_msg2_subframe = get_num_sf(I_sf) * Nrep;
-
+		RAR_TBS = TBS*8;
 		
 		//num_msg2_subframe = 8;
 		msg2_i_delay = find_suit_i_delay(rmax, r, dci_candidate);
@@ -250,7 +251,7 @@ void schedule_rar_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, int abs_subframe){
 			//	for msg2
 		    msg2_result->output_subframe = msg2_first_subframe;//msg2_subframe;
 		    msg2_result->end_subframe = msg2_end_subframe;
-		    msg2_result->sdu_length = 56;   //  rar size
+		    msg2_result->sdu_length = RAR_TBS;   //  rar size
 		    msg2_result->DLSCH_pdu = msg2_nodes->rar_buffer;
 		    msg2_result->direction = DL;
 		    msg2_result->DCI_release = 1;
