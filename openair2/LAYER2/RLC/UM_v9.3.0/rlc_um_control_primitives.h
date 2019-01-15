@@ -101,19 +101,11 @@ void config_req_rlc_um_asn1 (
                                       const LTE_DL_UM_RLC_t  * const dl_rlc_pP,
                                       const rb_id_t            rb_idP,
                                       const logical_chan_id_t  chan_idP
-<<<<<<< HEAD
-#ifdef Rel14
-                                      ,const uint32_t          sourceL2Id
-                                      ,const uint32_t          destinationL2Id
-#endif
-                                      );)
-=======
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
                                       ,const uint32_t          sourceL2Id
                                       ,const uint32_t          destinationL2Id
 #endif
                                       );
->>>>>>> main/develop
 
 /*! \fn void rlc_um_init (const protocol_ctxt_t* const ctxt_pP, rlc_um_entity_t * const rlc_pP)
 * \brief    Initialize a RLC UM protocol instance, initialize all variables, lists, allocate buffers for making this instance ready to be configured with protocol configuration parameters. After this initialization the RLC UM protocol instance will be in RLC_NULL_STATE state.

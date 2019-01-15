@@ -41,11 +41,7 @@ rlc_op_status_t mpls_rlc_data_req     (
   //-----------------------------------------------------------------------------
   // third arg should be set to 1 or 0
   return rlc_data_req(ctxtP, SRB_FLAG_NO, MBMS_FLAG_NO, rb_idP, RLC_MUI_UNDEFINED, RLC_SDU_CONFIRM_NO, sdu_sizeP, sduP
-<<<<<<< HEAD
-#ifdef Rel14
-=======
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
->>>>>>> main/develop
                       ,NULL, NULL
 #endif
                       );

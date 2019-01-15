@@ -207,11 +207,7 @@ rlc_um_rx (const protocol_ctxt_t* const ctxt_pP, void *argP, struct mac_data_ind
     // establishment, the RLC entity:
     //   - is created; and
     //   - enters the DATA_TRANSFER_READY state.
-<<<<<<< HEAD
-    LOG_W(RLC, PROTOCOL_RLC_UM_CTXT_FMT" ERROR MAC_DATA_IND IN RLC_NULL_STATE\n",
-=======
     LOG_I(RLC, PROTOCOL_RLC_UM_CTXT_FMT" ERROR MAC_DATA_IND IN RLC_NULL_STATE\n",
->>>>>>> main/develop
           PROTOCOL_RLC_UM_CTXT_ARGS(ctxt_pP,l_rlc_p));
 #if MESSAGE_CHART_GENERATOR
 

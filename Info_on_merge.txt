@@ -60,6 +60,17 @@ openair2/LAYER2/MAC/ra_procedures.c
 openair2/LAYER2/MAC/ue_procedures.c
 openair2/LAYER2/PDCP_v10.1.0/pdcp.c
 openair2/LAYER2/PDCP_v10.1.0/pdcp.h
+openair2/LAYER2/PDCP_v10.1.0/pdcp_fifo.c
+openair2/LAYER2/PDCP_v10.1.0/pdcp_proto_extern.h
+openair2/LAYER2/RLC/UM_v9.3.0/rlc_um.c
+openair2/LAYER2/RLC/UM_v9.3.0/rlc_um.h
+openair2/LAYER2/RLC/UM_v9.3.0/rlc_um_control_primitives.c
+openair2/LAYER2/RLC/UM_v9.3.0/rlc_um_control_primitives.h
+openair2/LAYER2/RLC/rlc.c
+openair2/LAYER2/RLC/rlc.h
+openair2/LAYER2/RLC/rlc_mac.c
+openair2/LAYER2/RLC/rlc_mpls.c
+openair2/LAYER2/RLC/rlc_rrc.c
 
 
 
@@ -70,17 +81,6 @@ openair2/LAYER2/PDCP_v10.1.0/pdcp.h
 
 	deleted by them: openair1/PHY/TOOLS/file_output.c
         deleted by them: openair1/SCHED/pusch_pc.c		
-	both modified:   openair2/LAYER2/PDCP_v10.1.0/pdcp_fifo.c
-	both modified:   openair2/LAYER2/PDCP_v10.1.0/pdcp_proto_extern.h
-	both modified:   openair2/LAYER2/RLC/UM_v9.3.0/rlc_um.c
-	both modified:   openair2/LAYER2/RLC/UM_v9.3.0/rlc_um.h
-	both modified:   openair2/LAYER2/RLC/UM_v9.3.0/rlc_um_control_primitives.c
-	both modified:   openair2/LAYER2/RLC/UM_v9.3.0/rlc_um_control_primitives.h
-	both modified:   openair2/LAYER2/RLC/rlc.c
-	both modified:   openair2/LAYER2/RLC/rlc.h
-	both modified:   openair2/LAYER2/RLC/rlc_mac.c
-	both modified:   openair2/LAYER2/RLC/rlc_mpls.c
-	both modified:   openair2/LAYER2/RLC/rlc_rrc.c
 	both modified:   openair2/NETWORK_DRIVER/UE_IP/common.c
 	both modified:   openair2/NETWORK_DRIVER/UE_IP/device.c
 	both modified:   openair2/NETWORK_DRIVER/UE_IP/local.h
@@ -172,7 +172,7 @@ openair2/LAYER2/PDCP_v10.1.0/pdcp.h
 	both modified:   openair2/LAYER2/MAC/ra_procedures.c
 	both modified:   openair2/LAYER2/MAC/ue_procedures.c
 	both modified:   openair2/LAYER2/PDCP_v10.1.0/pdcp.c
-	both modified:   openair2/LAYER2/PDCP_v10.1.0/pdcp.h		#Conflicts solved up to here
+	both modified:   openair2/LAYER2/PDCP_v10.1.0/pdcp.h		
 	both modified:   openair2/LAYER2/PDCP_v10.1.0/pdcp_fifo.c
 	both modified:   openair2/LAYER2/PDCP_v10.1.0/pdcp_proto_extern.h
 	both modified:   openair2/LAYER2/RLC/UM_v9.3.0/rlc_um.c
@@ -183,7 +183,7 @@ openair2/LAYER2/PDCP_v10.1.0/pdcp.h
 	both modified:   openair2/LAYER2/RLC/rlc.h
 	both modified:   openair2/LAYER2/RLC/rlc_mac.c
 	both modified:   openair2/LAYER2/RLC/rlc_mpls.c
-	both modified:   openair2/LAYER2/RLC/rlc_rrc.c
+	both modified:   openair2/LAYER2/RLC/rlc_rrc.c		    #Conflicts solved up to here
 	both modified:   openair2/NETWORK_DRIVER/UE_IP/common.c
 	both modified:   openair2/NETWORK_DRIVER/UE_IP/device.c
 	both modified:   openair2/NETWORK_DRIVER/UE_IP/local.h

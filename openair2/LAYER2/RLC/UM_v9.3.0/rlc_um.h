@@ -158,17 +158,13 @@ rlc_um_get_pdus (const protocol_ctxt_t* const ctxt_pP, void *argP);
 * \param[in]  rlc_pP                    RLC UM protocol instance pointer.
 * \param[in]  data_indication           PDUs from MAC.
 */
-<<<<<<< HEAD
-protected_rlc_um( void     rlc_um_rx (const protocol_ctxt_t* const ctxt_pP, rlc_um_entity_t * const rlc_pP, struct mac_data_ind data_indication
+
+void
+rlc_um_rx (const protocol_ctxt_t* const ctxt_pP, void *argP, struct mac_data_ind data_indP
 #ifdef Rel14
   , sl_reset_rlc_flag_t    sl_reset_rlc_flag
 #endif
-);)
-
-=======
-void
-rlc_um_rx (const protocol_ctxt_t* const ctxt_pP, void *argP, struct mac_data_ind data_indP);
->>>>>>> main/develop
+);
 /*! \fn struct mac_status_resp rlc_um_mac_status_indication (const protocol_ctxt_t* const ctxt_pP, rlc_um_entity_t * const rlc_pP, uint16_t tbs_sizeP, struct mac_status_ind tx_statusP)
 * \brief    Request the maximum number of bytes that can be served by RLC instance to MAC and fix the amount of bytes requested by MAC for next RLC transmission.
 * \param[in]  ctxt_pP                   Running context.
@@ -207,14 +203,6 @@ rlc_um_mac_data_request (const protocol_ctxt_t* const ctxt_pP, void *rlc_pP,cons
 * \param[in]  rlc_pP                    RLC UM protocol instance pointer.
 * \param[in]  data_indP                 PDUs from MAC.
 */
-<<<<<<< HEAD
-public_rlc_um(   void     rlc_um_mac_data_indication (const protocol_ctxt_t* const ctxt_pP, rlc_um_entity_t * const rlc_pP, struct mac_data_ind data_indP
-#ifdef Rel14
-  , sl_reset_rlc_flag_t    sl_reset_rlc_flag
-#endif
-);)
-=======
->>>>>>> main/develop
 
 /*! \fn uint32_t rlc_um_get_buffer_occupancy (rlc_um_entity_t *rlc_pP)
 * \brief    Gets Tx Buffer Occupancy.
@@ -229,7 +217,11 @@ uint32_t rlc_um_get_buffer_occupancy (rlc_um_entity_t *rlc_pP);
 * \param[in]  sduP                      SDU. (A struct rlc_um_data_req is mapped on sduP->data.)
 */
 void
-rlc_um_mac_data_indication (const protocol_ctxt_t* const ctxt_pP, void *rlc_pP, struct mac_data_ind data_indP);
+rlc_um_mac_data_indication (const protocol_ctxt_t* const ctxt_pP, void *rlc_pP, struct mac_data_ind data_indP
+#ifdef Rel14
+  , sl_reset_rlc_flag_t    sl_reset_rlc_flag
+#endif
+  );
 void
 rlc_um_data_req (const protocol_ctxt_t *const ctxt_pP, void *rlc_pP, mem_block_t *sdu_pP) ;
 /** @} */

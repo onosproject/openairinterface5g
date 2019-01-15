@@ -320,11 +320,7 @@ rlc_op_status_t rlc_data_req     (const protocol_ctxt_t* const ctxt_pP,
                                   confirm_t    confirmP,
                                   sdu_size_t   sdu_sizeP,
                                   mem_block_t *sdu_pP
-<<<<<<< HEAD
-#ifdef Rel14
-=======
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
->>>>>>> main/develop
                                   ,const uint32_t * const sourceL2Id
                                   ,const uint32_t * const destinationL2Id
 #endif
@@ -422,11 +418,8 @@ rlc_op_status_t rlc_data_req     (const protocol_ctxt_t* const ctxt_pP,
   } else {
     rlc_mode = RLC_MODE_NONE;
     //AssertFatal (0 , "RLC not configured key %ju\n", key);
-<<<<<<< HEAD
-=======
   	LOG_E(RLC, "not configured key %lu\n", key);
   	return RLC_OP_STATUS_OUT_OF_RESSOURCES;
->>>>>>> main/develop
   }
 
   if (MBMS_flagP == 0) {

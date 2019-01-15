@@ -47,19 +47,11 @@
 #include "assertions.h"
 //-----------------------------------------------------------------------------
 rlc_op_status_t rrc_rlc_config_asn1_req (const protocol_ctxt_t   * const ctxt_pP,
-<<<<<<< HEAD
-    const SRB_ToAddModList_t   * const srb2add_listP,
-    const DRB_ToAddModList_t   * const drb2add_listP,
-    const DRB_ToReleaseList_t  * const drb2release_listP
-#if defined(Rel10) || defined(Rel14)
-    ,const PMCH_InfoList_r9_t * const pmch_InfoList_r9_pP
-=======
     const LTE_SRB_ToAddModList_t   * const srb2add_listP,
     const LTE_DRB_ToAddModList_t   * const drb2add_listP,
     const LTE_DRB_ToReleaseList_t  * const drb2release_listP
 #if (LTE_RRC_VERSION >= MAKE_VERSION(9, 0, 0))
     ,const LTE_PMCH_InfoList_r9_t * const pmch_InfoList_r9_pP
->>>>>>> main/develop
     ,const uint32_t sourceL2Id
     ,const uint32_t destinationL2Id
 #endif
@@ -113,15 +105,9 @@ rlc_op_status_t rrc_rlc_config_asn1_req (const protocol_ctxt_t   * const ctxt_pP
           case LTE_RLC_Config_PR_NOTHING:
             break;
 
-<<<<<<< HEAD
-          case RLC_Config_PR_am:
-            if (rrc_rlc_add_rlc (ctxt_pP, SRB_FLAG_YES, MBMS_FLAG_NO, rb_id, lc_id, RLC_MODE_AM
-#ifdef Rel14
-=======
           case LTE_RLC_Config_PR_am:
             if (rrc_rlc_add_rlc (ctxt_pP, SRB_FLAG_YES, MBMS_FLAG_NO, rb_id, lc_id, RLC_MODE_AM
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
->>>>>>> main/develop
                                 ,0,
                                 0
 #endif
@@ -139,15 +125,9 @@ rlc_op_status_t rrc_rlc_config_asn1_req (const protocol_ctxt_t   * const ctxt_pP
 
             break;
 
-<<<<<<< HEAD
-          case RLC_Config_PR_um_Bi_Directional:
-            if (rrc_rlc_add_rlc (ctxt_pP, SRB_FLAG_YES, MBMS_FLAG_NO, rb_id, lc_id, RLC_MODE_UM
-#ifdef Rel14
-=======
           case LTE_RLC_Config_PR_um_Bi_Directional:
             if (rrc_rlc_add_rlc (ctxt_pP, SRB_FLAG_YES, MBMS_FLAG_NO, rb_id, lc_id, RLC_MODE_UM
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
->>>>>>> main/develop
                                 ,0,
                                 0
 #endif
@@ -161,11 +141,7 @@ rlc_op_status_t rrc_rlc_config_asn1_req (const protocol_ctxt_t   * const ctxt_pP
                 &srb_toaddmod_p->rlc_Config->choice.explicitValue.choice.um_Bi_Directional.ul_UM_RLC,
                 &srb_toaddmod_p->rlc_Config->choice.explicitValue.choice.um_Bi_Directional.dl_UM_RLC,
                 rb_id, lc_id
-<<<<<<< HEAD
-#ifdef Rel14
-=======
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
->>>>>>> main/develop
                ,0, 0
 #endif
                );
@@ -177,15 +153,9 @@ rlc_op_status_t rrc_rlc_config_asn1_req (const protocol_ctxt_t   * const ctxt_pP
 
             break;
 
-<<<<<<< HEAD
-          case RLC_Config_PR_um_Uni_Directional_UL:
-            if (rrc_rlc_add_rlc (ctxt_pP, SRB_FLAG_YES, MBMS_FLAG_NO, rb_id, lc_id, RLC_MODE_UM
-#ifdef Rel14
-=======
           case LTE_RLC_Config_PR_um_Uni_Directional_UL:
             if (rrc_rlc_add_rlc (ctxt_pP, SRB_FLAG_YES, MBMS_FLAG_NO, rb_id, lc_id, RLC_MODE_UM
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
->>>>>>> main/develop
                                  ,0,
                                  0
 #endif
@@ -199,11 +169,7 @@ rlc_op_status_t rrc_rlc_config_asn1_req (const protocol_ctxt_t   * const ctxt_pP
                 &srb_toaddmod_p->rlc_Config->choice.explicitValue.choice.um_Uni_Directional_UL.ul_UM_RLC,
                 NULL,
                 rb_id, lc_id
-<<<<<<< HEAD
-#ifdef Rel14
-=======
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
->>>>>>> main/develop
                ,0, 0
 #endif
                );
@@ -215,15 +181,9 @@ rlc_op_status_t rrc_rlc_config_asn1_req (const protocol_ctxt_t   * const ctxt_pP
 
             break;
 
-<<<<<<< HEAD
-          case RLC_Config_PR_um_Uni_Directional_DL:
-            if (rrc_rlc_add_rlc (ctxt_pP, SRB_FLAG_YES, MBMS_FLAG_NO, rb_id, lc_id, RLC_MODE_UM
-#ifdef Rel14
-=======
           case LTE_RLC_Config_PR_um_Uni_Directional_DL:
             if (rrc_rlc_add_rlc (ctxt_pP, SRB_FLAG_YES, MBMS_FLAG_NO, rb_id, lc_id, RLC_MODE_UM
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
->>>>>>> main/develop
                                  ,0,
                                  0
 #endif
@@ -237,11 +197,7 @@ rlc_op_status_t rrc_rlc_config_asn1_req (const protocol_ctxt_t   * const ctxt_pP
                 NULL,
                 &srb_toaddmod_p->rlc_Config->choice.explicitValue.choice.um_Uni_Directional_DL.dl_UM_RLC,
                 rb_id, lc_id
-<<<<<<< HEAD
-#ifdef Rel14
-=======
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
->>>>>>> main/develop
                ,0, 0
 #endif
                );
@@ -265,18 +221,6 @@ rlc_op_status_t rrc_rlc_config_asn1_req (const protocol_ctxt_t   * const ctxt_pP
         case LTE_SRB_ToAddMod__rlc_Config_PR_defaultValue:
 //#warning TO DO SRB_ToAddMod__rlc_Config_PR_defaultValue
           LOG_I(RRC, "RLC SRB1 is default value !!\n");
-<<<<<<< HEAD
-          struct RLC_Config__am  *  config_am_pP = &srb_toaddmod_p->rlc_Config->choice.explicitValue.choice.am;
-          config_am_pP->dl_AM_RLC.t_Reordering     = T_Reordering_ms35;
-          config_am_pP->dl_AM_RLC.t_StatusProhibit = T_StatusProhibit_ms0;
-          config_am_pP->ul_AM_RLC.t_PollRetransmit = T_PollRetransmit_ms45;
-          config_am_pP->ul_AM_RLC.pollPDU          = PollPDU_pInfinity;
-          config_am_pP->ul_AM_RLC.pollByte         = PollByte_kBinfinity;
-          config_am_pP->ul_AM_RLC.maxRetxThreshold = UL_AM_RLC__maxRetxThreshold_t4;
-
-          if (rrc_rlc_add_rlc (ctxt_pP, SRB_FLAG_YES, MBMS_FLAG_NO, rb_id, lc_id, RLC_MODE_AM
-#ifdef Rel14
-=======
           struct LTE_RLC_Config__am  *  config_am_pP = &srb_toaddmod_p->rlc_Config->choice.explicitValue.choice.am;
           config_am_pP->dl_AM_RLC.t_Reordering     = LTE_T_Reordering_ms35;
           config_am_pP->dl_AM_RLC.t_StatusProhibit = LTE_T_StatusProhibit_ms0;
@@ -287,7 +231,6 @@ rlc_op_status_t rrc_rlc_config_asn1_req (const protocol_ctxt_t   * const ctxt_pP
 
           if (rrc_rlc_add_rlc (ctxt_pP, SRB_FLAG_YES, MBMS_FLAG_NO, rb_id, lc_id, RLC_MODE_AM
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
->>>>>>> main/develop
                                ,0,
                                0
 #endif
@@ -346,11 +289,7 @@ rlc_op_status_t rrc_rlc_config_asn1_req (const protocol_ctxt_t   * const ctxt_pP
         continue;
       }
 
-<<<<<<< HEAD
-      LOG_I(RLC, "Adding DRB %ld, lc_id %d\n",drb_id,lc_id);
-=======
       LOG_D(RLC, "Adding DRB %ld, lc_id %d\n",drb_id,lc_id);
->>>>>>> main/develop
 
       if (drb_toaddmod_p->rlc_Config) {
 
@@ -358,15 +297,9 @@ rlc_op_status_t rrc_rlc_config_asn1_req (const protocol_ctxt_t   * const ctxt_pP
         case LTE_RLC_Config_PR_NOTHING:
           break;
 
-<<<<<<< HEAD
-        case RLC_Config_PR_am:
-          if (rrc_rlc_add_rlc (ctxt_pP, SRB_FLAG_NO, MBMS_FLAG_NO, drb_id, lc_id, RLC_MODE_AM
-#ifdef Rel14
-=======
         case LTE_RLC_Config_PR_am:
           if (rrc_rlc_add_rlc (ctxt_pP, SRB_FLAG_NO, MBMS_FLAG_NO, drb_id, lc_id, RLC_MODE_AM
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
->>>>>>> main/develop
                                ,0,
                                0
 #endif
@@ -380,15 +313,9 @@ rlc_op_status_t rrc_rlc_config_asn1_req (const protocol_ctxt_t   * const ctxt_pP
 
           break;
 
-<<<<<<< HEAD
-        case RLC_Config_PR_um_Bi_Directional:
-          if (rrc_rlc_add_rlc (ctxt_pP, SRB_FLAG_NO, MBMS_FLAG_NO, drb_id, lc_id, RLC_MODE_UM
-#ifdef Rel14
-=======
         case LTE_RLC_Config_PR_um_Bi_Directional:
           if (rrc_rlc_add_rlc (ctxt_pP, SRB_FLAG_NO, MBMS_FLAG_NO, drb_id, lc_id, RLC_MODE_UM
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
->>>>>>> main/develop
                                ,sourceL2Id,
                                destinationL2Id
 #endif
@@ -402,11 +329,7 @@ rlc_op_status_t rrc_rlc_config_asn1_req (const protocol_ctxt_t   * const ctxt_pP
               &drb_toaddmod_p->rlc_Config->choice.um_Bi_Directional.ul_UM_RLC,
               &drb_toaddmod_p->rlc_Config->choice.um_Bi_Directional.dl_UM_RLC,
               drb_id, lc_id
-<<<<<<< HEAD
-#ifdef Rel14
-=======
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
->>>>>>> main/develop
               ,sourceL2Id,
               destinationL2Id
 #endif
@@ -415,15 +338,9 @@ rlc_op_status_t rrc_rlc_config_asn1_req (const protocol_ctxt_t   * const ctxt_pP
 
           break;
 
-<<<<<<< HEAD
-        case RLC_Config_PR_um_Uni_Directional_UL:
-          if (rrc_rlc_add_rlc (ctxt_pP, SRB_FLAG_NO, MBMS_FLAG_NO, drb_id, lc_id, RLC_MODE_UM
-#ifdef Rel14
-=======
         case LTE_RLC_Config_PR_um_Uni_Directional_UL:
           if (rrc_rlc_add_rlc (ctxt_pP, SRB_FLAG_NO, MBMS_FLAG_NO, drb_id, lc_id, RLC_MODE_UM
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
->>>>>>> main/develop
                               ,0,
                                0
 #endif
@@ -437,11 +354,7 @@ rlc_op_status_t rrc_rlc_config_asn1_req (const protocol_ctxt_t   * const ctxt_pP
               &drb_toaddmod_p->rlc_Config->choice.um_Uni_Directional_UL.ul_UM_RLC,
               NULL,
               drb_id, lc_id
-<<<<<<< HEAD
-#ifdef Rel14
-=======
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
->>>>>>> main/develop
                ,0, 0
 #endif
                );
@@ -449,15 +362,9 @@ rlc_op_status_t rrc_rlc_config_asn1_req (const protocol_ctxt_t   * const ctxt_pP
 
           break;
 
-<<<<<<< HEAD
-        case RLC_Config_PR_um_Uni_Directional_DL:
-          if (rrc_rlc_add_rlc (ctxt_pP, SRB_FLAG_NO, MBMS_FLAG_NO, drb_id, lc_id, RLC_MODE_UM
-#ifdef Rel14
-=======
         case LTE_RLC_Config_PR_um_Uni_Directional_DL:
           if (rrc_rlc_add_rlc (ctxt_pP, SRB_FLAG_NO, MBMS_FLAG_NO, drb_id, lc_id, RLC_MODE_UM
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
->>>>>>> main/develop
                               ,0,
                                0
 #endif
@@ -471,11 +378,7 @@ rlc_op_status_t rrc_rlc_config_asn1_req (const protocol_ctxt_t   * const ctxt_pP
               NULL,
               &drb_toaddmod_p->rlc_Config->choice.um_Uni_Directional_DL.dl_UM_RLC,
               drb_id, lc_id
-<<<<<<< HEAD
-#ifdef Rel14
-=======
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
->>>>>>> main/develop
                ,0, 0
 #endif
                );
@@ -552,14 +455,10 @@ rlc_op_status_t rrc_rlc_config_asn1_req (const protocol_ctxt_t   * const ctxt_pP
                           rb_id,
                           lc_id,
                           RLC_MODE_UM, 0, 0);
-<<<<<<< HEAD
-          AssertFatal(rlc_union_p != NULL, "ADD MBMS RLC UM FAILED");
-=======
           //AssertFatal(rlc_union_p != NULL, "ADD MBMS RLC UM FAILED");
           if(rlc_union_p == NULL){
             LOG_E(RLC, "ADD MBMS RLC UM FAILED\n");
           }
->>>>>>> main/develop
         }
 
         LOG_D(RLC, PROTOCOL_CTXT_FMT" CONFIG REQ MBMS ASN1 LC ID %u RB ID %u SESSION ID %u SERVICE ID %u\n",
@@ -581,11 +480,7 @@ rlc_op_status_t rrc_rlc_config_asn1_req (const protocol_ctxt_t   * const ctxt_pP
           NULL,
           &dl_um_rlc,
           rb_id, lc_id
-<<<<<<< HEAD
-#ifdef Rel14
-=======
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
->>>>>>> main/develop
           ,0, 0
 #endif
                );
@@ -793,11 +688,7 @@ rlc_union_t* rrc_rlc_add_rlc   (
   const rb_id_t           rb_idP,
   const logical_chan_id_t chan_idP,
   const rlc_mode_t        rlc_modeP
-<<<<<<< HEAD
-#ifdef Rel14
-=======
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
->>>>>>> main/develop
   ,const uint32_t sourceL2Id,
   const uint32_t  destinationL2Id
 #endif
@@ -950,11 +841,7 @@ rlc_op_status_t rrc_rlc_config_req   (
 
   case CONFIG_ACTION_ADD:
     if (rrc_rlc_add_rlc(ctxt_pP, srb_flagP, MBMS_FLAG_NO, rb_idP, rb_idP, rlc_infoP.rlc_mode
-<<<<<<< HEAD
-#ifdef Rel14
-=======
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
->>>>>>> main/develop
                         ,0,
                         0
 #endif
@@ -1038,11 +925,7 @@ rlc_op_status_t rrc_rlc_data_req     (
   if (sdu != NULL) {
     memcpy (sdu->data, sduP, sdu_sizeP);
     return rlc_data_req(ctxt_pP, SRB_FLAG_YES, MBMS_flagP, rb_idP, muiP, confirmP, sdu_sizeP, sdu
-<<<<<<< HEAD
-#ifdef Rel14
-=======
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
->>>>>>> main/develop
                         ,NULL, NULL
 #endif
                         );

@@ -94,11 +94,7 @@ void config_req_rlc_um_asn1 (
   const LTE_DL_UM_RLC_t   * const dl_rlc_pP,
   const rb_id_t             rb_idP,
   const logical_chan_id_t   chan_idP
-<<<<<<< HEAD
-#ifdef Rel14
-=======
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
->>>>>>> main/develop
  ,const uint32_t            sourceL2Id
  ,const uint32_t            destinationL2Id
 #endif

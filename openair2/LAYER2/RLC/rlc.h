@@ -297,21 +297,12 @@ struct mac_data_ind   mac_rlc_deserialize_tb (char*, tb_size_t, num_tb_t, crc_t 
 */
 rlc_op_status_t rrc_rlc_config_asn1_req (
                   const protocol_ctxt_t* const,
-<<<<<<< HEAD
-                  const SRB_ToAddModList_t* const ,
-                  const DRB_ToAddModList_t* const ,
-                  const DRB_ToReleaseList_t* const ,
-                  const PMCH_InfoList_r9_t * const pmch_info_listP ,
-                  const uint32_t ,
-                  const uint32_t );)
-=======
                   const LTE_SRB_ToAddModList_t* const ,
                   const LTE_DRB_ToAddModList_t* const ,
                   const LTE_DRB_ToReleaseList_t* const ,
                   const LTE_PMCH_InfoList_r9_t * const pmch_info_listP ,
                   const uint32_t ,
                   const uint32_t );
->>>>>>> main/develop
 #else
 /*! \fn rlc_op_status_t rrc_rlc_config_asn1_req (const protocol_ctxt_t* const ctxtP, const SRB_ToAddModList_t* const srb2add_listP, const DRB_ToAddModList_t* const drb2add_listP, const DRB_ToReleaseList_t* const drb2release_listP)
 * \brief  Function for RRC to configure a Radio Bearer.
@@ -354,16 +345,12 @@ rlc_op_status_t rrc_rlc_remove_ue (const protocol_ctxt_t* const);
 * \param[in]  rb_idP             Radio bearer identifier.
 * \return     A status about the processing, OK or error code.
 */
-<<<<<<< HEAD
-public_rlc_rrc(rlc_op_status_t rrc_rlc_remove_rlc   (const protocol_ctxt_t* const, const srb_flag_t, const MBMS_flag_t, const  rb_id_t
+rlc_op_status_t rrc_rlc_remove_rlc   (const protocol_ctxt_t* const, const srb_flag_t, const MBMS_flag_t, const  rb_id_t
 #ifdef Rel14
     ,const uint32_t sourceL2Id
     ,const uint32_t destinationL2Id
 #endif
-    );)
-=======
-rlc_op_status_t rrc_rlc_remove_rlc   (const protocol_ctxt_t* const, const srb_flag_t, const MBMS_flag_t, const  rb_id_t );
->>>>>>> main/develop
+    );
 
 /*! \fn rlc_union_t*  rrc_rlc_add_rlc   (const protocol_ctxt_t* const ctxtP, const srb_flag_t srb_flagP, const  MBMS_flag_t MBMS_flagP, const  rb_id_t rb_idP, logical_chan_id_t chan_idP, rlc_mode_t rlc_modeP)
 * \brief  Add a RLC protocol instance to a radio bearer.
@@ -375,21 +362,12 @@ rlc_op_status_t rrc_rlc_remove_rlc   (const protocol_ctxt_t* const, const srb_fl
 * \param[in]  rlc_modeP          Mode of RLC (AM, UM, TM).
 * \return     A status about the processing, OK or error code.
 */
-<<<<<<< HEAD
-private_rlc_rrc(rlc_union_t*  rrc_rlc_add_rlc      (const protocol_ctxt_t* const, const srb_flag_t,  const  MBMS_flag_t MBMS_flagP, const  rb_id_t, logical_chan_id_t, rlc_mode_t
-#ifdef Rel14
-  ,const uint32_t  sourceL2Id,
-  const uint32_t  destinationL2Id
-#endif
-);)
-=======
 rlc_union_t*  rrc_rlc_add_rlc      (const protocol_ctxt_t* const, const srb_flag_t,  const  MBMS_flag_t MBMS_flagP, const  rb_id_t, logical_chan_id_t, rlc_mode_t
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
   ,const uint32_t  sourceL2Id,
   const uint32_t  destinationL2Id
 #endif
 );
->>>>>>> main/develop
 
 /*! \fn rlc_op_status_t rrc_rlc_config_req (
      const protocol_ctxt_t* const ctxtP,
@@ -415,16 +393,12 @@ rlc_op_status_t rrc_rlc_config_req   (
                   const MBMS_flag_t,
                   config_action_t,
                   const  rb_id_t,
-<<<<<<< HEAD
                   rlc_info_t
 #ifdef Rel14
                   ,const uint32_t
                   ,const uint32_t
 #endif
-                  );)
-=======
-                  rlc_info_t );
->>>>>>> main/develop
+                  );
 
 /*! \fn rlc_op_status_t rrc_rlc_data_req     (const protocol_ctxt_t* const ctxtP, const  MBMS_flag_t MBMS_flagP, const  rb_id_t rb_idP, mui_t muiP, confirm_t confirmP, sdu_size_t sdu_sizeP, char* sduP)
 * \brief  Function for RRC to send a SDU through a Signalling Radio Bearer.
@@ -461,21 +435,12 @@ void rrc_rlc_register_rrc (rrc_data_ind_cb_t rrc_data_indP, rrc_data_conf_cb_t r
 * \param [in,out] bufferP          Memory area to fill with the bytes requested by MAC.
 * \return     A status about the processing, OK or error code.
 */
-<<<<<<< HEAD
-public_rlc_mac(tbs_size_t            mac_rlc_data_req     (const module_id_t, const rnti_t, const eNB_index_t, const frame_t, const  eNB_flag_t, const  MBMS_flag_t, logical_chan_id_t, const tb_size_t,char*
-#ifdef Rel14
-                                                           ,const uint32_t sourceL2Id
-                                                           ,const uint32_t destinationL2Id
-#endif
-);)
-=======
 tbs_size_t            mac_rlc_data_req     (const module_id_t, const rnti_t, const eNB_index_t, const frame_t, const  eNB_flag_t, const  MBMS_flag_t, logical_chan_id_t, const tb_size_t,char*
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
                                                            ,const uint32_t sourceL2Id
                                                            ,const uint32_t destinationL2Id
 #endif
 );
->>>>>>> main/develop
 
 /*! \fn void mac_rlc_data_ind     (const module_id_t mod_idP, const rnti_t rntiP, const frame_t frameP, const  eNB_flag_t eNB_flagP, const  MBMS_flag_t MBMS_flagP, logical_chan_id_t rb_idP, uint32_t frameP, char* bufferP, tb_size_t tb_sizeP, num_tb_t num_tbP, crc_t *crcs)
 * \brief    Interface with MAC layer, deserialize the transport blocks sent by MAC, then map data indication to the RLC instance corresponding to the radio bearer identifier.
@@ -490,17 +455,12 @@ tbs_size_t            mac_rlc_data_req     (const module_id_t, const rnti_t, con
 * \param[in]  num_tbP          Number of transport blocks.
 * \param[in]  crcs             Array of CRC decoding.
 */
-<<<<<<< HEAD
-public_rlc_mac(void                  mac_rlc_data_ind     (const module_id_t, const rnti_t, const eNB_index_t,const frame_t, const  eNB_flag_t, const  MBMS_flag_t, logical_chan_id_t, char*, tb_size_t, num_tb_t,
+void                  mac_rlc_data_ind     (const module_id_t, const rnti_t, const eNB_index_t,const frame_t, const  eNB_flag_t, const  MBMS_flag_t, logical_chan_id_t, char*, tb_size_t, num_tb_t,
                crc_t*
 #ifdef Rel14
   , sl_reset_rlc_flag_t
 #endif
-  );)
-=======
-void                  mac_rlc_data_ind     (const module_id_t, const rnti_t, const eNB_index_t,const frame_t, const  eNB_flag_t, const  MBMS_flag_t, logical_chan_id_t, char*, tb_size_t, num_tb_t,
-               crc_t* );
->>>>>>> main/develop
+);
 
 /*! \fn mac_rlc_status_resp_t mac_rlc_status_ind     (const module_id_t mod_idP, const rnti_t rntiP, const frame_t frameP, const sub_frame_t subframeP, const  eNB_flag_t eNB_flagP, const  MBMS_flag_t MBMS_flagP, logical_chan_id_t rb_idP, tb_size_t tb_sizeP)
 * \brief    Interface with MAC layer, request and set the number of bytes scheduled for transmission by the RLC instance corresponding to the radio bearer identifier.
@@ -514,21 +474,12 @@ void                  mac_rlc_data_ind     (const module_id_t, const rnti_t, con
 * \param[in]  tb_sizeP         Size of a transport block set in bytes.
 * \return     The maximum number of bytes that the RLC instance can send in the next transmission sequence.
 */
-<<<<<<< HEAD
-public_rlc_mac(mac_rlc_status_resp_t mac_rlc_status_ind   (const module_id_t, const rnti_t, const eNB_index_t, const frame_t, const sub_frame_t, const  eNB_flag_t, const  MBMS_flag_t, logical_chan_id_t, tb_size_t
-#ifdef Rel14
-                                                           ,const uint32_t sourceL2Id
-                                                           ,const uint32_t destinationL2Id
-#endif
-  );)
-=======
 mac_rlc_status_resp_t mac_rlc_status_ind   (const module_id_t, const rnti_t, const eNB_index_t, const frame_t, const sub_frame_t, const  eNB_flag_t, const  MBMS_flag_t, logical_chan_id_t, tb_size_t
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
                                                            ,const uint32_t sourceL2Id
                                                            ,const uint32_t destinationL2Id
 #endif
   );
->>>>>>> main/develop
 
 /*! \fn rlc_buffer_occupancy_t mac_rlc_get_buffer_occupancy_ind(const module_id_t module_idP, const rnti_t rntiP, const eNB_index_t eNB_index, const frame_t frameP, const sub_frame_t subframeP,const eNB_flag_t enb_flagP, const logical_chan_id_t channel_idP)
 * \brief    Interface with MAC layer, UE only: request and get the number of bytes scheduled for transmission by the RLC instance corresponding to the radio bearer identifier.
@@ -579,19 +530,11 @@ rlc_op_status_t rlc_data_req     (
              const confirm_t ,
              const sdu_size_t ,
              mem_block_t * const
-<<<<<<< HEAD
-#ifdef Rel14
-             ,const uint32_t * const
-             ,const uint32_t * const
-#endif
-             );)
-=======
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
              ,const uint32_t * const
              ,const uint32_t * const
 #endif
              );
->>>>>>> main/develop
 
 /*! \fn void rlc_data_ind     (const protocol_ctxt_t* const ctxtP, const  srb_flag_t srb_flagP, const  MBMS_flag_t MBMS_flagP, const  rb_id_t rb_idP, const sdu_size_t sdu_sizeP, mem_block_t* sduP) {
 * \brief    Interface with higher layers, route SDUs coming from RLC protocol instances to upper layer instance.

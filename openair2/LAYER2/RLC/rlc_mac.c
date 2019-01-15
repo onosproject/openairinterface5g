@@ -128,11 +128,7 @@ tbs_size_t mac_rlc_data_req(
   const logical_chan_id_t channel_idP,
   const tb_size_t         tb_sizeP,
   char             *buffer_pP
-<<<<<<< HEAD
-#ifdef Rel14
-=======
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
->>>>>>> main/develop
   ,const uint32_t sourceL2Id
   ,const uint32_t destinationL2Id
 #endif
@@ -184,11 +180,7 @@ tbs_size_t mac_rlc_data_req(
     }
   } else {
     key = RLC_COLL_KEY_LCID_VALUE(module_idP, rntiP, enb_flagP, channel_idP, srb_flag);
-<<<<<<< HEAD
-#ifdef Rel14
-=======
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
->>>>>>> main/develop
     if ((sourceL2Id > 0) && (destinationL2Id > 0))
        key = RLC_COLL_KEY_LCID_SOURCE_DEST_VALUE(module_idP, rntiP, enb_flagP, channel_idP, sourceL2Id, destinationL2Id, srb_flag);
 #endif
@@ -347,11 +339,7 @@ mac_rlc_status_resp_t mac_rlc_status_ind(
   const MBMS_flag_t       MBMS_flagP,
   const logical_chan_id_t channel_idP,
   const tb_size_t         tb_sizeP
-<<<<<<< HEAD
-#ifdef Rel14
-=======
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
->>>>>>> main/develop
   ,const uint32_t sourceL2Id
   ,const uint32_t destinationL2Id
 #endif
@@ -384,20 +372,12 @@ mac_rlc_status_resp_t mac_rlc_status_ind(
 
     key = RLC_COLL_KEY_MBMS_VALUE(module_idP, rntiP, enb_flagP, mbms_id_p->service_id, mbms_id_p->session_id);
   } else {
-<<<<<<< HEAD
-#ifdef Rel14
-=======
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
->>>>>>> main/develop
     if ((sourceL2Id > 0) && (destinationL2Id > 0)) {
        key = RLC_COLL_KEY_SOURCE_DEST_VALUE(module_idP, rntiP, enb_flagP, channel_idP, sourceL2Id, destinationL2Id, srb_flag);
     } else
 #endif
     {
-<<<<<<< HEAD
-    	//LOG_I(RLC, "Panos-D mac_rlc_status_ind 1 enb_flagP: %d, channel_idP: %d, srb_flag: %d \n", enb_flagP, channel_idP, srb_flag);
-=======
->>>>>>> main/develop
     key = RLC_COLL_KEY_LCID_VALUE(module_idP, rntiP, enb_flagP, channel_idP, srb_flag);
     }
 }
@@ -409,10 +389,6 @@ mac_rlc_status_resp_t mac_rlc_status_ind(
     rlc_mode = rlc_union_p->mode;
   } else {
     rlc_mode = RLC_MODE_NONE;
-<<<<<<< HEAD
-    //LOG_D(RLC , "Panos-D: mac_rlc_status_ind() In RLC_MODE_NONE \n");
-=======
->>>>>>> main/develop
     //LOG_W(RLC , "[%s] RLC not configured lcid %u module %u!\n", __FUNCTION__, channel_idP, module_idP);
     //LOG_D(RLC , "[%s] RLC not configured rb id %u lcid %u module %u!\n", __FUNCTION__, rb_id, channel_idP, ue_module_idP);
   }
