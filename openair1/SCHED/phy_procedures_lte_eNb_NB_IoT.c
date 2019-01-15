@@ -788,7 +788,7 @@ void generate_eNB_dlsch_params_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t * proc,n
 
           npdcch               =  eNB->npdcch_DCI;
            
-          LOG_I(PHY,"Generating pdcch params for DCIN1 RAR and packing DCI\n");
+          LOG_D(PHY,"Generating pdcch params for DCIN1 RAR and packing DCI\n");
           //LOG_I(PHY,"Rep of DCI is : %d\n",DCI_Content->DCIN1_RAR.RepNum);
 
           //LOG_I(PHY,"Generating dlsch params for RA_RNTI and packing DCI\n");

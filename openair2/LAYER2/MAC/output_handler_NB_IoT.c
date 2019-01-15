@@ -273,7 +273,7 @@ int output_handler(eNB_MAC_INST_NB_IoT *mac_inst, module_id_t module_id, int CC_
 			if(schedule_result_list_UL->channel == NPUSCH)
 			{
 				//LOG_D(MAC,"first UL \n");
-				LOG_I(MAC,"NB-IoT fill ul_config_pdu\n");
+				LOG_D(MAC,"[hypersfn:%2d][frame:%2d][subframe:%2d]NB-IoT fill UL config\n",hypersfn,frame,subframe);
 				//SCHED_info->UL_req = (nfapi_ul_config_request_t *)malloc(sizeof(nfapi_ul_config_request_t));
 				//SCHED_info->UL_req->ul_config_request_body.number_of_pdus = 0;
 				//SCHED_info->UL_req->ul_config_request_body.ul_config_pdu_list = (nfapi_ul_config_request_pdu_t *)malloc(5 * sizeof(nfapi_ul_config_request_pdu_t));

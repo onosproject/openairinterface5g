@@ -286,7 +286,7 @@ int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB      *eNB,
     ((DCIN1_RAR_t *)DLSCH_DCI_NB_IoT)->HARQackRes     =HARQackRes;
     ((DCIN1_RAR_t *)DLSCH_DCI_NB_IoT)->DCIRep         =DCIRep;
 
-    printf("DUMP: DCI N1 RAR : type = %d, orderIndicator = %d, Sched_delay = %d, ResAssign = %d, mcs = %d, RepNum = %d, ndi = %d, HARQackRes = %d, DCIRep = %d\n", type, orderIndicator, Sched_delay, ResAssign, mcs, RepNum, ndi, HARQackRes, DCIRep);
+    //printf("DUMP: DCI N1 RAR : type = %d, orderIndicator = %d, Sched_delay = %d, ResAssign = %d, mcs = %d, RepNum = %d, ndi = %d, HARQackRes = %d, DCIRep = %d\n", type, orderIndicator, Sched_delay, ResAssign, mcs, RepNum, ndi, HARQackRes, DCIRep);
     //add_dci_NB_IoT(eNB->DCI_pdu,DLSCH_DCI_NB_IoT,rnti,sizeof(DCIN1_RAR_t),aggregation,sizeof_DCIN1_RAR_t,DCIFormatN1_RAR, npdcch_start_symbol);
 
 
@@ -307,7 +307,7 @@ int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB      *eNB,
     ndlcch->repetition_number[ncce_index]        = Irep_to_Nrep[RepNum];                             // repetition number for NPDSCH
     ndlcch->dci_repetitions[ncce_index]          = DCIrep_to_real_rep(DCIRep,4);        ////??????? should be repalce by the value in spec table 16.6-3, check also Rmax
 
-    printf("dci_repetitions: %d, A = %d\n",ndlcch->dci_repetitions[ncce_index],ndlcch->A[ncce_index]);
+    //printf("dci_repetitions: %d, A = %d\n",ndlcch->dci_repetitions[ncce_index],ndlcch->A[ncce_index]);
 
     ndlcch->modulation[ncce_index]               = 2; //QPSK
     //// ////////////////////////////////////////////////if(ndlcch->round == 0) //this should be set from initialization (init-lte)

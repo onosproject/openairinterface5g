@@ -218,13 +218,13 @@ void handle_nfapi_dlsch_pdu_NB_IoT(PHY_VARS_eNB *eNB,
 
 		  eNB->ndlsch_RAR->harq_process->pdu 		= sdu;
 		  
-		  printf("RAR PDU content:");
+		  /*printf("RAR PDU content:");
 		  int fori = 0;
 		  for(fori=0;fori<7;fori++)
 		  {
 			printf("%d ",eNB->ndlsch_RAR->harq_process->pdu[fori]);
 		  }
-		  printf("\n");
+		  printf("\n");*/
 			
 		  eNB->ndlsch_RAR->npdsch_start_symbol 		= rel13->start_symbol;
 		  eNB->ndlsch_RAR->active 					= 1;
@@ -241,7 +241,7 @@ void handle_nfapi_dlsch_pdu_NB_IoT(PHY_VARS_eNB *eNB,
 		  eNB->ndlsch_RAR->counter_repetition_number       = Irep_to_Nrep_x[rel13->repetition_number];
 		  eNB->ndlsch_RAR->counter_current_sf_repetition   = 0;
 		  eNB->ndlsch_RAR->pointer_to_subframe             = 0;
-		  printf("number of subframe : %d, Rep of subframe : %d\n",eNB->ndlsch_RAR->number_of_subframes_for_resource_assignment,eNB->ndlsch_RAR->counter_repetition_number);
+		  //printf("number of subframe : %d, Rep of subframe : %d\n",eNB->ndlsch_RAR->number_of_subframes_for_resource_assignment,eNB->ndlsch_RAR->counter_repetition_number);
 
 	  }
 	  else
@@ -440,6 +440,7 @@ void schedule_response_NB_IoT(Sched_Rsp_NB_IoT_t *Sched_INFO)
 		   * diferent from the DL_CONFIG one)
 		   *
 		   */
+	  		LOG_I(PHY,"IF module proceed UL config NULSCH pdu\n");
 		  break;
 	  case NFAPI_UL_CONFIG_NRACH_PDU_TYPE:
 		  //TODO just for update the nprach  configuration (given at the beginning through phy_config_sib2)

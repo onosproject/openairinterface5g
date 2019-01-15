@@ -229,7 +229,7 @@ int generate_NDLSCH_NB_IoT(NB_IoT_eNB_NDLSCH_t 	  *RAR,
     	int G = get_G_NB_IoT(frame_parms);
     	uint8_t Nsf = RAR->number_of_subframes_for_resource_assignment;
 
-        LOG_I(PHY,"[Frame: %d][Subframe: %d]sent RAR, rep : %d, counter_rep:%d, Num_res:%d\n",frame,subframe,rep,counter_rep,Nsf);
+        //LOG_I(PHY,"[Frame: %d][Subframe: %d]sent RAR, rep : %d, counter_rep:%d, Num_res:%d\n",frame,subframe,rep,counter_rep,Nsf);
 
         if( (counter_rep == rep) && (counter_sf_rep == 0) && (pointer_to_sf == 0) )
         {
@@ -344,7 +344,7 @@ int generate_NPDCCH_NB_IoT(NB_IoT_eNB_NPDCCH_t 	  *DCI,
 
 		    if( DCI->active[i] == 1)
 		    {
-                LOG_I(PHY,"[Frame: %d][Subframe: %d]sent DCI\n",frame,subframe);
+                //LOG_I(PHY,"[Frame: %d][Subframe: %d]sent DCI\n",frame,subframe);
 		    	uint8_t  *DCI_pdu  = DCI->pdu[i];
 			 	uint32_t rep =  DCI->dci_repetitions[i];         /// repetition number
 			 	uint8_t  eutra_control_region = 3;
