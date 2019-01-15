@@ -68,8 +68,6 @@ void UL_indication_NB_IoT(UL_IND_NB_IoT_t *UL_INFO)
                                  (UL_INFO->nrach_ind.nrach_pdu_list+i)->nrach_indication_rel13.timing_advance*16
                                  );
                   LOG_D(MAC,"Init_RA_NB_IoT Out\n");
-                  preamble_trigger=1;
-                  preamble_sfn = UL_INFO->frame;
                 }
           }
       //}

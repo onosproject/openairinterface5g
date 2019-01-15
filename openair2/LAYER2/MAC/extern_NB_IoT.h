@@ -30,30 +30,9 @@
 #ifndef __MAC_EXTERN_NB_IOT_H__
 #define __MAC_EXTERN_NB_IOT_H__
 
-// #ifdef USER_MODE
-// //#include "stdio.h"
-// #endif //USER_MODE
-// #include "PHY/defs.h"
-// #include "defs.h"
-// #include "COMMON/mac_rrc_primitives.h"
-// #ifdef PHY_EMUL
-// //#include "SIMULATION/simulation_defs.h"
-// #endif //PHY_EMUL
 #include "openair2/PHY_INTERFACE/defs_NB_IoT.h" 
-//#include "RRC/LITE/defs_NB_IoT.h"
-
-//#include "LAYER2/MAC/vars_NB_IoT.h"
-
-//NB-IoT
-//extern IF_Module_NB_IoT_t *if_inst_NB_IoT;
-//extern eNB_MAC_INST_NB_IoT *mac_inst_NB_IoT;
 
 
-
-
-//#ifndef USER_MODE
-
-// extern RRC_XFACE *Rrc_xface;          //// to uncomment when it is used
 
 extern uint8_t Is_rrc_registered;
 
@@ -79,9 +58,6 @@ extern EMULATION_VARS *Emul_vars;
 
 extern eNB_MAC_INST_NB_IoT *mac_inst;
 extern uint8_t Is_rrc_registered_NB_IoT;
-//extern BCCH_BCH_Message_NB_t               MIB;
-//extern BCCH_DL_SCH_Message_NB_t            SIB;
-//extern RRCConnectionSetup_NB_r13_IEs_t     DED_Config;
 
 extern available_resource_DL_t *available_resource_DL;
 extern available_resource_tones_UL_t *available_resource_UL;
@@ -133,8 +109,6 @@ extern const int dl_rep[3];
 extern const uint32_t dci_rep[3];
 extern const uint32_t harq_rep[3];
 
-extern int preamble_trigger;
-extern int preamble_sfn;
 //SIBs
 extern int extend_space[2];
 extern int extend_alpha_offset[2];

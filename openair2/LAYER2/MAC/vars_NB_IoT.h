@@ -33,22 +33,12 @@
 #ifdef USER_MODE
 //#include "stdio.h"
 #endif //USER_MODE
-//#include "PHY/defs.h"
-//#include "defs.h"
-#include "LAYER2/MAC/defs_NB_IoT.h"
-//#include "PHY_INTERFACE/defs.h"
-//#include "COMMON/mac_rrc_primitives.h"
 
-int preamble_trigger;
-int preamble_sfn;
-//IF_Module_NB_IoT_t *if_inst_NB_IoT;
+#include "LAYER2/MAC/defs_NB_IoT.h"
 
 //NB-IoT--------------------------------------
 eNB_MAC_INST_NB_IoT *mac_inst;
 
-//BCCH_BCH_Message_NB_t               MIB;
-//BCCH_DL_SCH_Message_NB_t            SIB;
-//RRCConnectionSetup_NB_r13_IEs_t     DED_Config;
 schedule_result_t *schedule_result_list_UL;
 schedule_result_t *schedule_result_list_DL;
 available_resource_DL_t *available_resource_DL;
