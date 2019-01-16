@@ -34,6 +34,7 @@
 #include <dlfcn.h>
 #include <errno.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include "common_lib.h"
 #include "common/utils/load_module_shlib.h"
@@ -97,8 +98,11 @@ int load_lib(openair0_device *device, openair0_config_t *openair0_cfg, eth_param
   int ret=0;
   char *libname;
   if (flag == RAU_LOCAL_RADIO_HEAD) {
-      libname=OAI_RF_LIBNAME;
-      shlib_fdesc[0].fname="device_init";
+	  if (getenv("RFSIMULATOR") != NULL) 
+     	  libname="rfsimulator";
+	  else 
+      		libname=OAI_RF_LIBNAME;
+       	shlib_fdesc[0].fname="device_init";
     } else {
       libname=OAI_TP_LIBNAME;
       shlib_fdesc[0].fname="transport_init";      

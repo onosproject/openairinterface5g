@@ -62,7 +62,6 @@ extern int otg_enabled;
 
 #include "assertions.h"
 
-#ifdef PDCP_USE_NETLINK
 #include <sys/socket.h>
 #include <linux/netlink.h>
 #include "NETWORK_DRIVER/UE_IP/constant.h"
@@ -86,7 +85,8 @@ extern uint8_t nfapi_mode;
 #ifdef UESIM_EXPANSION
 extern uint16_t inst_pdcp_list[NUMBER_OF_UE_MAX];
 #endif
-#endif
+
+
 
 extern Packet_OTG_List_t *otg_pdcp_buffer;
 #if defined(LINK_ENB_PDCP_TO_GTPV1U)
@@ -118,9 +118,7 @@ int pdcp_fifo_flush_sdus(const protocol_ctxt_t* const  ctxt_pP)
 {
    //-----------------------------------------------------------------------------
 
-   //#if defined(PDCP_USE_NETLINK) && defined(LINUX)
    int ret = 0;
-   //#endif
 
 #ifdef DEBUG_PDCP_FIFO_FLUSH_SDU
 #define THREAD_NAME_LEN 16
@@ -253,11 +251,9 @@ int pdcp_fifo_flush_sdus(const protocol_ctxt_t* const  ctxt_pP)
 
 #else
 #ifdef PDCP_USE_NETLINK
-#ifdef LINUX
          memcpy(NLMSG_DATA(nas_nlh_tx), &(((uint8_t *) sdu_p->data)[sizeof (pdcp_data_ind_header_t) - pdcp_output_header_bytes_to_write]),
                pdcp_output_header_bytes_to_write);
          nas_nlh_tx->nlmsg_len = pdcp_output_header_bytes_to_write;
-#endif //LINUX
 #endif //PDCP_USE_NETLINK
 
          bytes_wrote = pdcp_output_header_bytes_to_write;
@@ -281,7 +277,6 @@ int pdcp_fifo_flush_sdus(const protocol_ctxt_t* const  ctxt_pP)
 #else
 
 #ifdef PDCP_USE_NETLINK
-#ifdef LINUX
           memcpy(NLMSG_DATA(nas_nlh_tx)+sizeof(pdcp_data_ind_header_t), &(sdu_p->data[sizeof (pdcp_data_ind_header_t)]), pdcp_output_sdu_bytes_to_write);
           nas_nlh_tx->nlmsg_len += pdcp_output_sdu_bytes_to_write;
           VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME( VCD_SIGNAL_DUMPER_VARIABLES_UE_PDCP_FLUSH_SIZE, pdcp_output_sdu_bytes_to_write);
@@ -319,7 +314,6 @@ int pdcp_fifo_flush_sdus(const protocol_ctxt_t* const  ctxt_pP)
         	    ((pdcp_data_ind_header_t *)(sdu_p->data))->data_size);
           }
 
-#endif // LINUX
 #endif //PDCP_USE_NETLINK
                bytes_wrote= pdcp_output_sdu_bytes_to_write;
 #endif // PDCP_USE_RT_FIFO

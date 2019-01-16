@@ -70,7 +70,6 @@ extern struct iovec nas_iov_rx;
 extern int nas_sock_fd;
 extern struct msghdr nas_msg_rx;
 
-#if defined(PDCP_USE_NETLINK_QUEUES)
 static pthread_t pdcp_netlink_thread;
 
 /* We use lock-free queues between the User-plane driver running in kernel-space
@@ -248,7 +247,7 @@ void *pdcp_netlink_thread_fct(void *arg)
                   new_data_p->pdcp_read_header.data_size);
           } else {
             LOG_E(PDCP, "[NETLINK_THREAD] WRONG size %d should be sizeof "
-                  "%d ((pdcp_data_req_header_t) + sizeof(struct nlmsghdr))\n",
+                  "%ld ((pdcp_data_req_header_t) + sizeof(struct nlmsghdr))\n",
                   nas_nlh_rx->nlmsg_len,
                   sizeof (pdcp_data_req_header_t) + sizeof(struct nlmsghdr));
           }
@@ -263,7 +262,7 @@ void *pdcp_netlink_thread_fct(void *arg)
             if (pdcp_netlink_nb_element_enb[module_id]
                 > PDCP_QUEUE_NB_ELEMENTS) {
               LOG_E(PDCP, "[NETLINK_THREAD][Mod %02x] We reached maximum number of elements in eNB pdcp queue (%d)\n",
-                    module_id, pdcp_netlink_nb_element_enb);
+                    module_id, pdcp_netlink_nb_element_enb[module_id]);
             }
 
             LOG_I(PDCP,"[NETLINK_THREAD] IP->PDCP : En-queueing packet for eNB module id %d\n", module_id);
@@ -276,7 +275,7 @@ void *pdcp_netlink_thread_fct(void *arg)
             if (pdcp_netlink_nb_element_ue[module_id]
                 > PDCP_QUEUE_NB_ELEMENTS) {
               LOG_E(PDCP, "[NETLINK_THREAD][Mod %02x] We reached maximum number of elements in UE pdcp queue (%d)\n",
-                    module_id, pdcp_netlink_nb_element_ue);
+                    module_id, pdcp_netlink_nb_element_ue[module_id]);
             }
 
             LOG_I(PDCP,"[NETLINK_THREAD] IP->PDCP : En-queueing packet for UE module id  %d\n", module_id);
@@ -293,4 +292,3 @@ void *pdcp_netlink_thread_fct(void *arg)
 
   return NULL;
 }
-#endif

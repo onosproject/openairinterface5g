@@ -203,9 +203,6 @@ int nas_timer_init(void)
   (void) sigdelset (&act.sa_mask, SIGILL);
   (void) sigdelset (&act.sa_mask, SIGTRAP);
   (void) sigdelset (&act.sa_mask, SIGIOT);
-# ifndef LINUX
-  (void) sigdelset (&act.sa_mask, SIGEMT);
-# endif
   (void) sigdelset (&act.sa_mask, SIGFPE);
   (void) sigdelset (&act.sa_mask, SIGBUS);
   (void) sigdelset (&act.sa_mask, SIGSEGV);
