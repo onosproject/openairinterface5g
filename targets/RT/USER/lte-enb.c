@@ -947,7 +947,7 @@ void init_eNB_proc(int inst) {
     }
     else if (nfapi_mode == 2) { // this is neccesary in VNF or L2 FAPI simulator.
       pthread_create( &L1_proc->pthread, attr0, L1_thread, L1_proc);
-      pthread_create( &L1_proc_tx->pthread, attr1, L1_thread_tx, proc);
+      pthread_create( &L1_proc_tx->pthread, attr1, L1_thread, L1_proc_tx);
     }
     pthread_create( &proc->pthread_prach, attr_prach, eNB_thread_prach, eNB );
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
