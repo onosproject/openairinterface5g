@@ -380,10 +380,8 @@ int pdcp_module_init     (void);
 void pdcp_module_cleanup (void);
 void pdcp_layer_init     (void);
 void pdcp_layer_cleanup  (void);
-#if defined(PDCP_USE_NETLINK_QUEUES)
 int pdcp_netlink_init    (void);
 
-#endif
 #define PDCP2NW_DRIVER_FIFO 21
 #define NW_DRIVER2PDCP_FIFO 22
 

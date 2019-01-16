@@ -176,9 +176,7 @@ extern struct net_device *nasdev[NB_INSTANCES_MAX];
 extern uint8_t NAS_NULL_IMEI[14];
 
 //global variables shared with RRC
-#ifndef PDCP_USE_NETLINK
 extern int pdcp_2_nas_irq;
-#endif
 //extern uint8_t nas_IMEI[14];
 
 #endif

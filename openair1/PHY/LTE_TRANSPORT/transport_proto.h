@@ -351,18 +351,6 @@ int32_t generate_pbch(LTE_eNB_PBCH *eNB_pbch,
 
 
 
-/*! \brief DCI Encoding. This routine codes an arbitrary DCI PDU after appending the 8-bit 3GPP CRC.  It then applied sub-block interleaving and rate matching.
-  \param a Pointer to DCI PDU (coded in bytes)
-  \param A Length of DCI PDU in bits
-  \param E Length of DCI PDU in coded bits
-  \param e Pointer to sequence
-  \param rnti RNTI for CRC scrambling*/
-void dci_encoding(uint8_t *a,
-                  uint8_t A,
-                  uint16_t E,
-                  uint8_t *e,
-                  uint16_t rnti);
-
 /*! \brief Top-level DCI entry point. This routine codes an set of DCI PDUs and performs PDCCH modulation, interleaving and mapping.
   \param num_dci  Number of pdcch symbols
   \param num_dci  Number of DCI pdus to encode
@@ -456,14 +444,6 @@ void generate_pcfich(uint8_t num_pdcch_symbols,
                      LTE_DL_FRAME_PARMS *frame_parms,
                      int32_t **txdataF,
                      uint8_t subframe);
-
-
-
-
-
-void init_transport_channels(uint8_t);
-
-
 
 void rx_ulsch(PHY_VARS_eNB *eNB,
               L1_rxtx_proc_t *proc,

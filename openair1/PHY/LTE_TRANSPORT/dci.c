@@ -60,7 +60,7 @@
 //static uint8_t d[3*(MAX_DCI_SIZE_BITS + 16) + 96];
 //static uint8_t w[3*3*(MAX_DCI_SIZE_BITS+16)];
 
-void dci_encoding(uint8_t *a,
+static uint  dci_encoding(uint8_t *a,
                   uint8_t A,
                   uint16_t E,
                   uint8_t *e,
@@ -101,14 +101,14 @@ void dci_encoding(uint8_t *a,
 #ifdef DEBUG_DCI_ENCODING
   printf("Doing DCI rate matching for %d channel bits, RCC %d, e %p\n",E,RCC,e);
 #endif
-  lte_rate_matching_cc(RCC,E,w,e);
+  return lte_rate_matching_cc(RCC,E,w,e);
 
 
 }
 
 
-uint8_t *generate_dci0(uint8_t *dci,
-                       uint8_t *e,
+uint generate_dci0(uint8_t *dci,
+                       uint8_t *eee,
                        uint8_t DCI_LENGTH,
                        uint8_t aggregation_level,
                        uint16_t rnti)
@@ -166,9 +166,7 @@ uint8_t *generate_dci0(uint8_t *dci,
 #endif
   }
 
-  dci_encoding(dci_flip,DCI_LENGTH,coded_bits,e,rnti);
-
-  return(e+coded_bits);
+  return dci_encoding(dci_flip,DCI_LENGTH,coded_bits,eee,rnti);
 }
 
 //uint32_t Y;
@@ -285,13 +283,12 @@ uint8_t generate_dci_top(uint8_t num_pdcch_symbols,
 {
 
 
-  uint8_t *e_ptr;
   int8_t L;
   uint32_t i, lprime;
   uint32_t gain_lin_QPSK,kprime,kprime_mod12,mprime,nsymb,symbol_offset,tti_offset;
   int16_t re_offset;
   uint8_t mi = get_mi(frame_parms,subframe);
-  uint8_t e[DCI_BITS_MAX];
+  uint8_t eee[DCI_BITS_MAX];
   uint32_t Msymb=(DCI_BITS_MAX/2);
   int32_t yseq0[Msymb],yseq1[Msymb],wbar0[Msymb],wbar1[Msymb];
 
@@ -351,14 +348,14 @@ uint8_t generate_dci_top(uint8_t num_pdcch_symbols,
    * but it has to be validated for all the various cases
    * so let's just do it for the basic simulator
    */
-  memset(e, 2, DCI_BITS_MAX);
+  memset(eee, 2, DCI_BITS_MAX);
 #else
 #if 1
   // reset all bits to <NIL>, here we set <NIL> elements as 2
   // memset(e, 2, DCI_BITS_MAX);
   // here we interpret NIL as a random QPSK sequence. That makes power estimation easier.
   for (i=0; i<DCI_BITS_MAX; i++)
-    e[i]=taus()&1;
+    eee[i]=taus()&1;
 #endif
 
   /* clear all bits, the above code may generate too much false detections
@@ -367,7 +364,7 @@ uint8_t generate_dci_top(uint8_t num_pdcch_symbols,
   //memset(e, 0, DCI_BITS_MAX);
 #endif /* BASIC_SIMULATOR */
 
-  e_ptr = e;
+  uint8_t * e_ptr = eee;
 
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_GENERATE_DCI0,1);
 
@@ -384,8 +381,8 @@ uint8_t generate_dci_top(uint8_t num_pdcch_symbols,
 		dci_alloc[i].rnti);
 
         if (dci_alloc[i].firstCCE>=0) {
-          e_ptr = generate_dci0(dci_alloc[i].dci_pdu,
-                                e+(72*dci_alloc[i].firstCCE),
+          e_ptr += generate_dci0(dci_alloc[i].dci_pdu,
+                                e_ptr,
                                 dci_alloc[i].dci_length,
                                 dci_alloc[i].L,
                                 dci_alloc[i].rnti);
@@ -402,9 +399,19 @@ uint8_t generate_dci_top(uint8_t num_pdcch_symbols,
   //LOG_D(PHY, "num_pdcch_symbols:%d mi:%d nquad:%d\n", num_pdcch_symbols, mi, get_nquad(num_pdcch_symbols, frame_parms, mi));
 
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PDCCH_SCRAMBLING,1);
+  // Regular 0/1 alternates seems never detected as wrong DCI
+  // It should be better for spectrum measurements than all 0
+  // random value creates wrong DCI detection
+  // scrambler will do some randomization 
+  if ( getenv("RFSIMULATOR") != NULL) {
+      uint8_t*end=eee+8*get_nquad(num_pdcch_symbols, frame_parms, mi);
+      uint8_t dummy=0;
+      for (uint8_t* p=e_ptr; p < end ; p++)
+        *p=dummy++&1;
+  }
   pdcch_scrambling(frame_parms,
                    subframe,
-                   e,
+                   eee,
                    8*get_nquad(num_pdcch_symbols, frame_parms, mi));
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PDCCH_SCRAMBLING,0);
   //72*get_nCCE(num_pdcch_symbols,frame_parms,mi));
@@ -419,7 +426,7 @@ uint8_t generate_dci_top(uint8_t num_pdcch_symbols,
   else
     gain_lin_QPSK = amp/2;
 
-  e_ptr = e;
+  e_ptr = eee;
 
 #ifdef DEBUG_DCI_ENCODING
   printf(" PDCCH Modulation, Msymb %d, Msymb2 %d,gain_lin_QPSK %d\n",Msymb,Msymb2,gain_lin_QPSK);

@@ -586,6 +586,8 @@ set(HWLIB_TCP_BRIDGE_OAI_SOURCE
 add_library(tcp_bridge_oai MODULE ${HWLIB_TCP_BRIDGE_OAI_SOURCE} )
 set_target_properties(tcp_bridge_oai PROPERTIES COMPILE_FLAGS "-fvisibility=hidden")
 
+add_library(rfsimulator MODULE ${OPENAIR_TARGETS}/ARCH/rfsimulator/simulator.c)
+
 ##########################################################
 
 include_directories ("${OPENAIR_TARGETS}/ARCH/COMMON")
@@ -608,7 +610,6 @@ add_boolean_option(NAS_NETLINK False "useless ??? Must be True to compile nasmes
 add_boolean_option(OAI_NW_DRIVER_USE_NETLINK True "????")
 
 add_boolean_option(USE_MME False "this flag is used only one time in lte-softmodem.c")
-add_list_string_option(PACKAGE_NAME "NotDefined" "As per attribute name")
 add_boolean_option(MESSAGE_CHART_GENERATOR False         "For generating sequence diagrams")
 add_boolean_option(MESSAGE_CHART_GENERATOR_RLC_MAC False "trace RLC-MAC exchanges in sequence diagrams")
 add_boolean_option(MESSAGE_CHART_GENERATOR_PHY     False "trace some PHY exchanges in sequence diagrams")
@@ -628,7 +629,6 @@ add_boolean_option(ENB_MODE True "Swap the include directories between openair2 
 add_boolean_option(ENABLE_USE_CPU_EXECUTION_TIME True "Add data in vcd traces: disable it if perf issues")
 add_boolean_option(ENABLE_VCD              True  "always true now, time measurements of proc calls and var displays")
 add_boolean_option(ENABLE_VCD_FIFO         True  "time measurements of proc calls and var displays sent to FIFO (one more thread)")
-add_boolean_option(LINUX                   False "used in weird memcpy() in pdcp.c ???")
 add_boolean_option(LINUX_LIST              False "used only in lists.c: either use OAI implementation of lists or Linux one (should be True, but it is False")
 add_boolean_option(OPENAIR_LTE             True "Seems legacy: keep it to true")
 
@@ -2239,16 +2239,6 @@ endif (${T_TRACER})
 # this is documented as https://www.kernel.org/doc/Documentation/kbuild/modules.txt
 ######################################
 
-# retrieve the compiler options to send it to gccxml
-get_directory_property(DirDefs COMPILE_DEFINITIONS )
-foreach( d ${DirDefs} )
-  set(module_cc_opt "${module_cc_opt} -D${d}")
-endforeach()
-get_directory_property( DirDefs INCLUDE_DIRECTORIES )
-foreach( d ${DirDefs} )
-  set(module_cc_opt "${module_cc_opt} -I${d}")
-endforeach()
-
 EXECUTE_PROCESS(COMMAND uname -r
   OUTPUT_VARIABLE os_release
   OUTPUT_STRIP_TRAILING_WHITESPACE)
@@ -2275,7 +2265,6 @@ endfunction(make_driver name dir src)
 # nashmesh module
 ################
 list(APPEND nasmesh_src device.c common.c ioctl.c classifier.c tool.c mesh.c)
-set(module_cc_opt "${module_cc_opt} -DNAS_NETLINK -DPDCP_USE_NETLINK")
 # legacy Makefile was using NAS_NETLINK flag, but other drivers the hereafter flag
 # so, this cmake use OAI_NW_DRIVER_USE_NETLINK everywhere
 if (OAI_NW_DRIVER_USE_NETLINK)

@@ -4917,13 +4917,11 @@ rrc_eNB_process_RRCConnectionReconfigurationComplete(
 //-----------------------------------------------------------------------------
 {
   int                                 i, drb_id;
-#ifdef PDCP_USE_NETLINK
   int                                 oip_ifup = 0;
   int                                 dest_ip_offset = 0;
   /* avoid gcc warnings */
   (void)oip_ifup;
   (void)dest_ip_offset;
-#endif
   uint8_t                            *kRRCenc = NULL;
   uint8_t                            *kRRCint = NULL;
   uint8_t                            *kUPenc = NULL;
