@@ -231,6 +231,8 @@ int oaisim_flag=0;
  */
 uint8_t abstraction_flag=0;
 
+nfapi_release_rnti_request_body_t release_rntis;
+
 /* forward declarations */
 void set_default_frame_parms(LTE_DL_FRAME_PARMS *frame_parms[MAX_NUM_CCs]);
 

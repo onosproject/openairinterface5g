@@ -82,7 +82,7 @@ nfapi_tx_request_pdu_t* tx_request_pdu[1023][10][10]; // [frame][subframe][max_n
 
 uint8_t tx_pdus[32][8][4096];
 
-nfapi_release_rnti_request_body_t release_rntis;
+extern nfapi_release_rnti_request_body_t release_rntis;
 
 uint16_t phy_antenna_capability_values[] = { 1, 2, 4, 8, 16 };
 
@@ -1692,43 +1692,3 @@ int oai_nfapi_sr_indication(nfapi_sr_indication_t *ind) {
 
   return retval;
 }
-
-#if BASIC_SIMULATOR
-void release_rnti_of_phy(module_id_t mod_id){
-}
-#else
-void release_rnti_of_phy(module_id_t mod_id){
-    int i,j;
-    int CC_id;
-    rnti_t rnti;
-    PHY_VARS_eNB *eNB_PHY = NULL;
-    LTE_eNB_ULSCH_t *ulsch = NULL;
-    LTE_eNB_DLSCH_t *dlsch = NULL;
-    for(i = 0; i< release_rntis.number_of_rnti;i++){
-        for (CC_id = 0; CC_id < MAX_NUM_CCs; CC_id++) {
-          eNB_PHY = RC.eNB[mod_id][CC_id];
-          rnti = release_rntis.UE_free_rnti[i];
-          for (j=0; j<=NUMBER_OF_UE_MAX; j++) {
-              ulsch = eNB_PHY->ulsch[j];
-              if((ulsch != NULL) && (ulsch->rnti == rnti)){
-                LOG_I(PHY, "clean_eNb_ulsch ulsch[%d] UE %x\n", j, rnti);
-                clean_eNb_ulsch(ulsch);
-              }
-          }
-          for(j=0; j<NUMBER_OF_UE_MAX; j++) {
-              if(eNB_PHY->uci_vars[j].rnti == rnti){
-                LOG_I(PHY, "clean eNb uci_vars[%d] UE %x \n",j, rnti);
-                memset(&eNB_PHY->uci_vars[i],0,sizeof(LTE_eNB_UCI));
-              }
-
-              dlsch = eNB_PHY->dlsch[j][0];
-              if((dlsch != NULL) && (dlsch->rnti == rnti)){
-                LOG_I(PHY, "clean_eNb_dlsch dlsch[%d] UE %x \n", j, rnti);
-                clean_eNb_dlsch(dlsch);
-              }
-          }
-        }
-    }
-    memset(&release_rntis, 0, sizeof(nfapi_release_rnti_request_body_t));
-}
-#endif

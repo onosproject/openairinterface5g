@@ -51,6 +51,8 @@
 
 extern uint8_t nfapi_mode;
 
+nfapi_release_rnti_request_body_t release_rntis;
+
 
 int16_t get_hundred_times_delta_IF_eNB(PHY_VARS_eNB *eNB,uint16_t UE_id,uint8_t harq_pid, uint8_t bw_factor)
 {
@@ -2097,3 +2099,37 @@ void phy_procedures_eNB_uespec_RX(PHY_VARS_eNB *eNB,L1_rxtx_proc_t *proc)
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_ENB_RX_UESPEC, 0 );
 }
 
+void release_rnti_of_phy(module_id_t mod_id){
+    int i,j;
+    int CC_id;
+    rnti_t rnti;
+    PHY_VARS_eNB *eNB_PHY = NULL;
+    LTE_eNB_ULSCH_t *ulsch = NULL;
+    LTE_eNB_DLSCH_t *dlsch = NULL;
+    for(i = 0; i< release_rntis.number_of_rnti;i++){
+        for (CC_id = 0; CC_id < MAX_NUM_CCs; CC_id++) {
+          eNB_PHY = RC.eNB[mod_id][CC_id];
+          rnti = release_rntis.UE_free_rnti[i];
+          for (j=0; j<=NUMBER_OF_UE_MAX; j++) {
+              ulsch = eNB_PHY->ulsch[j];
+              if((ulsch != NULL) && (ulsch->rnti == rnti)){
+                LOG_I(PHY, "clean_eNb_ulsch ulsch[%d] UE %x\n", j, rnti);
+                clean_eNb_ulsch(ulsch);
+              }
+          }
+          for(j=0; j<NUMBER_OF_UE_MAX; j++) {
+              if(eNB_PHY->uci_vars[j].rnti == rnti){
+                LOG_I(PHY, "clean eNb uci_vars[%d] UE %x \n",j, rnti);
+                memset(&eNB_PHY->uci_vars[i],0,sizeof(LTE_eNB_UCI));
+              }
+
+              dlsch = eNB_PHY->dlsch[j][0];
+              if((dlsch != NULL) && (dlsch->rnti == rnti)){
+                LOG_I(PHY, "clean_eNb_dlsch dlsch[%d] UE %x \n", j, rnti);
+                clean_eNb_dlsch(dlsch);
+              }
+          }
+        }
+    }
+    memset(&release_rntis, 0, sizeof(nfapi_release_rnti_request_body_t));
+}
