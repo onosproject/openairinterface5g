@@ -44,6 +44,7 @@
 #define IF4p5_PRACH_BR_CE2 0x0024
 #define IF4p5_PRACH_BR_CE3 0x0025
 #define IF4p5_PULTICK 0x0026
+#define IF4p5_PULCALIB 0x0027
 
 struct IF4p5_header {  
   /// Type

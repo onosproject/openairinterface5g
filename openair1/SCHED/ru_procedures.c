@@ -97,10 +97,7 @@ void feptx0(RU_t *ru,int slot) {
 */
 
       if (ru->generate_dmrs_sync == 1 && slot == 0 && subframe == 1 && aa==0) {
-	//int32_t dmrs[ru->frame_parms.ofdm_symbol_size*14] __attribute__((aligned(32)));
-        //int32_t *dmrsp[2] ={dmrs,NULL}; //{&dmrs[(3-ru->frame_parms.Ncp)*ru->frame_parms.ofdm_symbol_size],NULL};
-  
-	generate_drs_pusch((PHY_VARS_UE *)NULL,
+      	generate_drs_pusch((PHY_VARS_UE *)NULL,
 			   (UE_rxtx_proc_t*)NULL,
 			   fp,
 			   ru->common.txdataF_BF,
@@ -110,6 +107,19 @@ void feptx0(RU_t *ru,int slot) {
 			   0,
 			   fp->N_RB_DL,
 			   aa);
+      }
+
+      if (ru->is_slave==1 && ru->generate_dmrs_sync == 1 && slot == 1 && subframe == 1 && aa==0) {
+      	generate_drs_pusch((PHY_VARS_UE *)NULL,
+                           (UE_rxtx_proc_t*)NULL,
+                           fp,
+                           ru->common.txdataF_BF,
+                           0,
+                           AMP,
+                           0,
+                           0,
+                           fp->N_RB_DL,
+                           aa);
       } 
       normal_prefix_mod(&ru->common.txdataF_BF[aa][slot*slot_sizeF],
                         (int*)&ru->common.txdata[aa][slot_offset],
@@ -701,6 +711,17 @@ void ru_fep_full_2thread(RU_t *ru) {
   if(opp_enabled == 1 && ru->ofdm_demod_wakeup_stats.p_time>30*3000){
     print_meas_now(&ru->ofdm_demod_wakeup_stats,"fep wakeup",stderr);
     printf("delay in fep wait on condition in frame_rx: %d  subframe_rx: %d \n",proc->frame_rx,proc->subframe_rx);
+  }
+
+  if (proc->subframe_rx==1 && ru->is_slave==0) {
+
+        ulsch_extract_rbs_single(ru->common.rxdataF,
+                                 calibration->rxdataF_ext,
+                                 0,
+                                 fp->N_RB_DL,
+                                 3%(fp->symbols_per_tti/2),// l = symbol within slot
+                                 10/(fp->symbols_per_tti/2),// Ns = slot number 
+                                 fp);
   }
 
   if (proc->subframe_rx==1 && ru->is_slave==1/* && ru->state == RU_CHECK_SYNC*/) {

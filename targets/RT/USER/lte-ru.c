@@ -473,7 +473,7 @@ void fh_if4p5_north_asynch_in(RU_t *ru,int *frame,int *subframe) {
     VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME(VCD_SIGNAL_DUMPER_VARIABLES_SUBFRAME_NUMBER_IF4P5_NORTH_ASYNCH_IN,subframe_tx);
   }
 
-
+  if (ru->is_slave==1 && ru->state==RU_RUN && frame_tx%ru->p==ru->tag-1) ru->generate_dmrs_sync = 1;
   if (ru->feptx_ofdm) ru->feptx_ofdm(ru);
 
   if (ru->fh_south_out) ru->fh_south_out(ru);
@@ -504,7 +504,8 @@ void fh_if4p5_north_out(RU_t *ru) {
   LOG_D(PHY,"fh_if4p5_north_out: Sending IF4p5_PULFFT SFN.SF %d.%d\n",proc->frame_rx,proc->subframe_rx);
   if ((fp->frame_type == TDD) && (subframe_select(fp,subframe)!=SF_UL)) {
     /// **** in TDD during DL send_IF4 of ULTICK to RCC **** ///
-    send_IF4p5(ru, proc->frame_rx, proc->subframe_rx, IF4p5_PULTICK);
+    //send_IF4p5(ru, proc->frame_rx, proc->subframe_rx, IF4p5_PULTICK);
+    send_IF4p5(ru, proc->frame_rx, proc->subframe_rx, IF4p5_PULCALIB);
     ru->north_out_cnt++;
     return;
   }
@@ -719,7 +720,7 @@ void tx_rf(RU_t *ru) {
     int siglen=fp->samples_per_tti,flags=1;
     
     if (SF_type == SF_S) {
-      int txsymb = fp->dl_symbols_in_S_subframe+(ru->is_slave==0 ? 1 : 0);
+      int txsymb = fp->dl_symbols_in_S_subframe+(ru->is_slave==0 ? 1 : -1);
       AssertFatal(txsymb>0,"illegal txsymb %d\n",txsymb);
       siglen = fp->nb_prefix_samples0 + (txsymb*fp->ofdm_symbol_size) + (txsymb-1)*fp->nb_prefix_samples;
       //siglen = fp->dl_symbols_in_S_subframe*(fp->ofdm_symbol_size+fp->nb_prefix_samples0);
@@ -798,6 +799,17 @@ void tx_rf(RU_t *ru) {
 				      siglen+sf_extension,
 				      ru->nb_tx,
 				      flags);
+ LOG_I(PHY,"RU_id %d,RU_tag %d,timestamp %d,offset %d,extension %d,olo %d\n",ru->idx,ru->tag,proc->timestamp_tx,ru->ts_offset,sf_extension,
+									     proc->timestamp_tx+ru->ts_offset-ru->openair0_cfg.tx_sample_advance-sf_extension);
+    if (ru->is_slave==1 && ru->state==RU_RUN && proc->frame_tx%ru->p==ru->tag-1) {
+    	txs = ru->rfdevice.trx_write_func(&ru->rfdevice,
+                                      proc->timestamp_tx+ru->ts_offset-ru->openair0_cfg.tx_sample_advance-sf_extension,
+                                      txp,
+                                      siglen+sf_extension,
+                                      ru->nb_tx,
+                                      flags);
+    }
+
     ru->south_out_cnt++;
     LOG_D(PHY,"south_out_cnt %d, frame %d, subframe %d\n",ru->south_out_cnt,proc->frame_tx,proc->subframe_tx);
     int se = dB_fixed(signal_energy(txp[0],siglen+sf_extension));

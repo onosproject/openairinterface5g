@@ -118,6 +118,58 @@ void send_IF4p5(RU_t *ru, int frame, int subframe, uint16_t packet_type) {
       slotoffsetF  += fp->ofdm_symbol_size;
       blockoffsetF += fp->ofdm_symbol_size;    
     }
+  } else if (packet_type == IF4p5_PULCALIB) {
+    LOG_D(PHY,"send UL_IF4p5: RU %d frame %d, subframe %d\n",ru->idx,frame,subframe);
+
+    if (subframe_select(fp,subframe)==SF_S) {
+    	nsym=fp->ul_symbols_in_S_subframe;
+    	db_fulllength = 12*fp->N_RB_UL;
+    	db_halflength = (db_fulllength)>>1;
+    	//slotoffsetF = 1;//(subframe)*(fp->ofdm_symbol_size)*((fp->Ncp==1) ? 12 : 14) + 1;
+    	//blockoffsetF = slotoffsetF + fp->ofdm_symbol_size - db_halflength - 1; 
+    	slotoffsetF  += (fp->ofdm_symbol_size*(fp->symbols_per_tti-nsym));
+    	blockoffsetF += (fp->ofdm_symbol_size*(fp->symbols_per_tti-nsym));
+    }
+
+    if (eth->flags == ETH_RAW_IF4p5_MODE) {
+      packet_header = (IF4p5_header_t *)(tx_buffer + MAC_HEADER_SIZE_BYTES);
+      data_block = (uint16_t*)(tx_buffer + MAC_HEADER_SIZE_BYTES + sizeof_IF4p5_header_t);
+    } else {
+      packet_header = (IF4p5_header_t *)(tx_buffer);
+      data_block = (uint16_t*)(tx_buffer + sizeof_IF4p5_header_t);
+    }    
+    gen_IF4p5_ul_header(packet_header, packet_type, frame, subframe);
+
+    AssertFatal(txdataF[0]!=NULL,"txdataF_BF[0] is null\n");
+    for (symbol_id=0; symbol_id<nsym; symbol_id++) {
+      for (int antenna_id=0; antenna_id<ru->nb_tx; antenna_id++) {
+        for (element_id=0; element_id<db_halflength; element_id++) {
+          i = (uint16_t*) &txdataF[antenna_id][blockoffsetF+element_id];
+          data_block[element_id] = ((uint16_t) lin2alaw_if4p5[*i]) | (lin2alaw_if4p5[*(i+1)]<<8);
+
+          i = (uint16_t*) &txdataF[antenna_id][slotoffsetF+element_id];
+          data_block[element_id+db_halflength] = ((uint16_t) lin2alaw_if4p5[*i]) | (lin2alaw_if4p5[*(i+1)]<<8);
+	 }
+      }
+      VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_COMPR_IF, 0 );
+      packet_header->frame_status &= ~(0x7);
+      packet_header->frame_status |= (ru->nb_rx-1);
+
+      packet_header->frame_status &= ~(0x000f<<26);
+      packet_header->frame_status |= (symbol_id&0x000f)<<26; 
+      if (ru->idx<=1) VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_WRITE_IF0+ru->idx, 1 );          
+      if ((ru->ifdevice.trx_write_func(&ru->ifdevice,
+                                       symbol_id,
+                                       &tx_buffer,
+                                       db_fulllength*ru->nb_rx, 
+                                       1,
+                                       IF4p5_PULCALIB)) < 0) {
+        perror("ETHERNET write for IF4p5_PULCALIB\n");
+      }
+      if (ru->idx<=1) VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_WRITE_IF0+ru->idx, 0 );
+      slotoffsetF  += fp->ofdm_symbol_size;
+      blockoffsetF += fp->ofdm_symbol_size;    
+    }
   } else if ((packet_type == IF4p5_PULFFT)||
 	     (packet_type == IF4p5_PULTICK)){
     db_fulllength = 12*fp->N_RB_UL;

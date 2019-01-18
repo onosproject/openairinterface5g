@@ -131,7 +131,9 @@ int send_config(RU_t *ru, RRU_CONFIG_msg_t rru_config_msg){
   rru_config_msg.type = RRU_config;
   rru_config_msg.len  = sizeof(RRU_CONFIG_msg_t)-MAX_RRU_CONFIG_SIZE+sizeof(RRU_config_t);
 
-  LOG_I(PHY,"Sending Configuration to RRU %d (num_bands %d,band0 %d,txfreq %u,rxfreq %u,att_tx %d,att_rx %d,N_RB_DL %d,N_RB_UL %d,3/4FS %d, prach_FO %d, prach_CI %d\n",ru->idx,
+  LOG_I(PHY,"Sending Configuration to RRU %d (RRU p %d,RRU tag %d,num_bands %d,band0 %d,txfreq %u,rxfreq %u,att_tx %d,att_rx %d,N_RB_DL %d,N_RB_UL %d,3/4FS %d, prach_FO %d, prach_CI %d\n",ru->idx,
+        ((RRU_config_t *)&rru_config_msg.msg[0])->p,
+        ((RRU_config_t *)&rru_config_msg.msg[0])->tag,
 	((RRU_config_t *)&rru_config_msg.msg[0])->num_bands,
 	((RRU_config_t *)&rru_config_msg.msg[0])->band_list[0],
 	((RRU_config_t *)&rru_config_msg.msg[0])->tx_freq[0],
@@ -239,7 +241,9 @@ int attach_rru(RU_t *ru) {
 		    
   rru_config_msg.type = RRU_config;
   rru_config_msg.len  = sizeof(RRU_CONFIG_msg_t)-MAX_RRU_CONFIG_SIZE+sizeof(RRU_config_t);
-  LOG_I(PHY,"Sending Configuration to RRU %d (num_bands %d,band0 %d,txfreq %u,rxfreq %u,att_tx %d,att_rx %d,N_RB_DL %d,N_RB_UL %d,3/4FS %d, prach_FO %d, prach_CI %d)\n",ru->idx,
+  LOG_I(PHY,"Sending Configuration to RRU %d (RRU p %d,RRU tag %d,num_bands %d,band0 %d,txfreq %u,rxfreq %u,att_tx %d,att_rx %d,N_RB_DL %d,N_RB_UL %d,3/4FS %d, prach_FO %d, prach_CI %d)\n",ru->idx,
+        ((RRU_config_t *)&rru_config_msg.msg[0])->p,
+        ((RRU_config_t *)&rru_config_msg.msg[0])->tag,
 	((RRU_config_t *)&rru_config_msg.msg[0])->num_bands,
 	((RRU_config_t *)&rru_config_msg.msg[0])->band_list[0],
 	((RRU_config_t *)&rru_config_msg.msg[0])->tx_freq[0],
@@ -430,12 +434,14 @@ void configure_ru(int idx,
   config->N_RB_DL[0]             = ru->frame_parms.N_RB_DL;
   config->N_RB_UL[0]             = ru->frame_parms.N_RB_UL;
   config->threequarter_fs[0]     = ru->frame_parms.threequarter_fs;
+  config->tag			 = idx;
+  config->p			 = RC.nb_RU-1;
   if (ru->if_south==REMOTE_IF4p5) {
     config->prach_FreqOffset[0]  = ru->frame_parms.prach_config_common.prach_ConfigInfo.prach_FreqOffset;
     config->prach_ConfigIndex[0] = ru->frame_parms.prach_config_common.prach_ConfigInfo.prach_ConfigIndex;
     LOG_I(PHY,"REMOTE_IF4p5: prach_FrequOffset %d, prach_ConfigIndex %d\n",
 	  config->prach_FreqOffset[0],config->prach_ConfigIndex[0]);
-    
+     
 #if (RRC_VERSION >= MAKE_VERSION(14, 0, 0))
     int i;
     for (i=0;i<4;i++) {
@@ -456,6 +462,8 @@ void configure_rru(int idx,
   RRU_config_t *config = (RRU_config_t *)arg;
   RU_t         *ru         = RC.ru[idx];
 
+  ru->tag						   		   = config->tag;
+  ru->p									   = config->p;
   ru->frame_parms.eutra_band                                               = config->band_list[0];
   ru->frame_parms.dl_CarrierFreq                                           = config->tx_freq[0];
   ru->frame_parms.ul_CarrierFreq                                           = config->rx_freq[0];
@@ -574,7 +582,9 @@ void* ru_thread_control( void* param ) {
 				
 	    case RRU_config: // RRU
 	      if (ru->if_south == LOCAL_RF){
-		LOG_I(PHY,"Configuration received from RAU  (num_bands %d,band0 %d,txfreq %u,rxfreq %u,att_tx %d,att_rx %d,N_RB_DL %d,N_RB_UL %d,3/4FS %d, prach_FO %d, prach_CI %d)\n",
+		LOG_I(PHY,"Configuration received from RAU  (RRU p %d,RRU tag %d,num_bands %d,band0 %d,txfreq %u,rxfreq %u,att_tx %d,att_rx %d,N_RB_DL %d,N_RB_UL %d,3/4FS %d, prach_FO %d, prach_CI %d)\n",
+                      ((RRU_config_t *)&rru_config_msg.msg[0])->p,
+		      ((RRU_config_t *)&rru_config_msg.msg[0])->tag,
 		      ((RRU_config_t *)&rru_config_msg.msg[0])->num_bands,
 		      ((RRU_config_t *)&rru_config_msg.msg[0])->band_list[0],
 		      ((RRU_config_t *)&rru_config_msg.msg[0])->tx_freq[0],
