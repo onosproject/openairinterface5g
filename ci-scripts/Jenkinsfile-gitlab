@@ -40,7 +40,7 @@ pipeline {
         disableConcurrentBuilds()
         timestamps()
         gitLabConnection('OAI GitLab')
-        gitlabBuilds(builds: ["Build eNb-USRP", "Build basic-sim", "Build phy-sim", "Build eNb-ethernet", "Build UE-ethernet", "Analysis with cppcheck", "Test phy-sim", "Test basic-sim"])//, "Test-FDD-Band7", "Test-TDD-Band40"])
+        gitlabBuilds(builds: ["Build eNb-USRP", "Build basic-sim", "Build phy-sim", "Build eNb-ethernet", "Build UE-ethernet", "Analysis with cppcheck", "Test phy-sim"])//, "Test basic-sim", "Test-FDD-Band7", "Test-TDD-Band40"])
         ansiColor('xterm')
     }
 
@@ -198,32 +198,32 @@ pipeline {
                         }
                     }
                 }
-                stage ("Build eNb-USRP on Red Hat") {
-                    when {
-                        expression {doRedHatBuild}
-                    }
-                    steps {
-                        gitlabCommitStatus(name: "Build eNb-USRP-CentOS") {
-                            script {
-                                try {
-                                    withCredentials([
-                                        [$class: 'UsernamePasswordMultiBinding', credentialsId: "${params.RedHatRemoteCredentials}", usernameVariable: 'RH_Username', passwordVariable: 'RH_Password']
-                                    ]) {
-                                        sh "./ci-scripts/buildOnRH.sh --workspace $WORKSPACE --job-name ${JOB_NAME} --build-id ${BUILD_ID} --remote-host ${params.RedHatRemoteServer} --remote-path ${params.RedHatWorkingPath} --remote-user-name ${RH_Username} --remote-password ${RH_Password}"
-                                    }
-                                } catch (Exception e) {
-                                    echo "Red Hat build failed not an error now"
-                                }
-                            }
-                        }
-                    }
-                }
+//                stage ("Build eNb-USRP on Red Hat") {
+//                    when {
+//                        expression {doRedHatBuild}
+//                    }
+//                    steps {
+//                        gitlabCommitStatus(name: "Build eNb-USRP-CentOS") {
+//                            script {
+//                                try {
+//                                    withCredentials([
+//                                        [$class: 'UsernamePasswordMultiBinding', credentialsId: "${params.RedHatRemoteCredentials}", usernameVariable: 'RH_Username', passwordVariable: 'RH_Password']
+//                                    ]) {
+//                                        sh "./ci-scripts/buildOnRH.sh --workspace $WORKSPACE --job-name ${JOB_NAME} --build-id ${BUILD_ID} --remote-host ${params.RedHatRemoteServer} --remote-path ${params.RedHatWorkingPath} --remote-user-name ${RH_Username} --remote-password ${RH_Password}"
+//                                    }
+//                                } catch (Exception e) {
+//                                    echo "Red Hat build failed not an error now"
+//                                }
+//                            }
+//                        }
+//                    }
+//                }
             }
             post {
                 always {
                     script {
                         dir ('archives') {
-                            sh "zip -r -qq vm_build_logs.zip basic_sim enb_usrp phy_sim cppcheck enb_eth ue_eth red_hat"
+                            sh "zip -r -qq vm_build_logs.zip basic_sim enb_usrp phy_sim cppcheck enb_eth ue_eth" //red_hat
                         }
                         if(fileExists('archives/vm_build_logs.zip')) {
                             archiveArtifacts artifacts: 'archives/vm_build_logs.zip'
