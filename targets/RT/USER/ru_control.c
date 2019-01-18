@@ -336,7 +336,9 @@ int connect_rau(RU_t *ru) {
       LOG_I(PHY,"Waiting for configuration from RAU\n");     
     }    
     else {
-      LOG_I(PHY,"Configuration received from RAU  (num_bands %d,band0 %d,txfreq %u,rxfreq %u,att_tx %d,att_rx %d,N_RB_DL %d,N_RB_UL %d,3/4FS %d, prach_FO %d, prach_CI %d)\n",
+      LOG_I(PHY,"Configuration received from RAU  (RRU p %d,RRU tag %d,num_bands %d,band0 %d,txfreq %u,rxfreq %u,att_tx %d,att_rx %d,N_RB_DL %d,N_RB_UL %d,3/4FS %d, prach_FO %d, prach_CI %d)\n",
+            ((RRU_config_t *)&rru_config_msg.msg[0])->p,
+            ((RRU_config_t *)&rru_config_msg.msg[0])->tag,
 	    ((RRU_config_t *)&rru_config_msg.msg[0])->num_bands,
 	    ((RRU_config_t *)&rru_config_msg.msg[0])->band_list[0],
 	    ((RRU_config_t *)&rru_config_msg.msg[0])->tx_freq[0],

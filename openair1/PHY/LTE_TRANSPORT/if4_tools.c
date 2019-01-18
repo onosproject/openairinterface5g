@@ -434,6 +434,35 @@ void recv_IF4p5(RU_t *ru, int *frame, int *subframe, uint16_t *packet_type, uint
 	  	     signal_energy((int*)&rxdataF[antenna_id][blockoffsetF],db_halflength)));
     }
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_DECOMPR_IF, 0 );	
+  } else if (*packet_type == IF4p5_PULCALIB) {
+    db_fulllength/=ru->nb_rx;
+    db_halflength/=ru->nb_rx;         
+    *symbol_number = ((packet_header->frame_status)>>26)&0x000f;         
+
+    VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME( VCD_SIGNAL_DUMPER_VARIABLES_RECV_IF4_SYMBOL, *symbol_number );
+    if (ru->idx==0) LOG_D(PHY,"UL_IF4p5: RU %d : frame %d, subframe %d, symbol %d\n",ru->idx,*frame,*subframe,*symbol_number);
+
+
+    slotoffsetF = (*symbol_number)*(fp->ofdm_symbol_size);
+    blockoffsetF = slotoffsetF + fp->ofdm_symbol_size - db_halflength;
+    VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_DECOMPR_IF, 1 );
+    for (int antenna_id=0;antenna_id<ru->nb_rx;antenna_id++) { 
+      for (element_id=0; element_id<db_halflength; element_id++) {
+        i = (uint16_t*) &rxdataF[antenna_id][blockoffsetF+element_id];
+        *i = alaw2lin_if4p5[ (data_block[element_id] & 0xff) ]; 
+        *(i+1) = alaw2lin_if4p5[ (data_block[element_id]>>8) ];
+
+        i = (uint16_t*) &rxdataF[antenna_id][slotoffsetF+element_id];
+        *i = alaw2lin_if4p5[ (data_block[element_id+db_halflength] & 0xff) ]; 
+        *(i+1) = alaw2lin_if4p5[ (data_block[element_id+db_halflength]>>8) ];
+
+        //if (element_id==0) LOG_I(PHY,"recv_if4p5: symbol %d rxdata0 = (%u,%u)\n",*symbol_number,*i,*(i+1));
+      }
+      LOG_D(PHY,"PULCALIB_IF4p5: CC_id %d : frame %d, subframe %d (symbol %d)=> %d dB\n",ru->idx,*frame,*subframe,*symbol_number,
+            dB_fixed(signal_energy((int*)&rxdataF[antenna_id][slotoffsetF],db_halflength)+
+                     signal_energy((int*)&rxdataF[antenna_id][blockoffsetF],db_halflength)));
+    }
+    VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_DECOMPR_IF, 0 );
   } else if (*packet_type >= IF4p5_PRACH &&
 	     *packet_type <= IF4p5_PRACH + 4) {  
 
