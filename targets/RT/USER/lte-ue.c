@@ -785,18 +785,11 @@ static void *UE_thread_rxn_txnp4(void *arg) {
 	      threadname);
 
   while (!oai_exit) {
-    if (pthread_mutex_lock(&proc->mutex_rxtx) != 0) {
-      LOG_E( PHY, "[SCHED][UE] error locking mutex for UE RXTX\n" );
-      exit_fun("nothing to add");
-    }
-    while (proc->instance_cnt_rxtx < 0) {
+    AssertFatal (pthread_mutex_lock(&proc->mutex_rxtx) == 0, "[SCHED][UE] error locking mutex for UE RXTX\n" );
+    while (proc->instance_cnt_rxtx < 0) 
       // most of the time, the thread is waiting here
       pthread_cond_wait( &proc->cond_rxtx, &proc->mutex_rxtx );
-    }
-    if (pthread_mutex_unlock(&proc->mutex_rxtx) != 0) {
-      LOG_E( PHY, "[SCHED][UE] error unlocking mutex for UE RXn_TXnp4\n" );
-      exit_fun("nothing to add");
-    }
+     AssertFatal (pthread_mutex_unlock(&proc->mutex_rxtx) == 0, "[SCHED][UE] error unlocking mutex for UE RXn_TXnp4\n" );
 
     initRefTimes(t2);
     initRefTimes(t3);
@@ -870,18 +863,12 @@ static void *UE_thread_rxn_txnp4(void *arg) {
 	phy_procedures_UE_S_TX(UE,0,0);
     updateTimes(current, &t3, 10000, "Delay to process sub-frame (case 3)");
 
-    if (pthread_mutex_lock(&proc->mutex_rxtx) != 0) {
-      LOG_E( PHY, "[SCHED][UE] error locking mutex for UE RXTX\n" );
-      exit_fun("noting to add");
-    }
+    AssertFatal (pthread_mutex_lock(&proc->mutex_rxtx) == 0, "[SCHED][UE] error locking mutex for UE RXTX\n" );
     proc->instance_cnt_rxtx--;
 #if BASIC_SIMULATOR
-    if (pthread_cond_signal(&proc->cond_rxtx) != 0) abort();
+    AssertFatal (pthread_cond_signal(&proc->cond_rxtx) == 0, "");
 #endif
-    if (pthread_mutex_unlock(&proc->mutex_rxtx) != 0) {
-      LOG_E( PHY, "[SCHED][UE] error unlocking mutex for UE RXTX\n" );
-      exit_fun("noting to add");
-    }
+    AssertFatal (pthread_mutex_unlock(&proc->mutex_rxtx) == 0, "[SCHED][UE] error unlocking mutex for UE RXTX\n" );
   }
 
   // thread finished
@@ -1025,7 +1012,6 @@ static void *UE_phy_stub_single_thread_rxn_txnp4(void *arg) {
     }
     while (phy_stub_ticking->ticking_var < 0) {
       // most of the time, the thread is waiting here
-      //pthread_cond_wait( &proc->cond_rxtx, &proc->mutex_rxtx )
       LOG_D(MAC,"Waiting for ticking_var\n");
       pthread_cond_wait( &phy_stub_ticking->cond_ticking, &phy_stub_ticking->mutex_ticking);
     }
@@ -1377,7 +1363,6 @@ static void *UE_phy_stub_thread_rxn_txnp4(void *arg) {
     }
     while (phy_stub_ticking->ticking_var < 0) {
       // most of the time, the thread is waiting here
-      //pthread_cond_wait( &proc->cond_rxtx, &proc->mutex_rxtx )
       LOG_D(MAC,"Waiting for ticking_var\n");
       pthread_cond_wait( &phy_stub_ticking->cond_ticking, &phy_stub_ticking->mutex_ticking);
     }
@@ -1742,7 +1727,7 @@ void *UE_thread(void *arg) {
                         // compute TO compensation that should be applied for this frame
 
 			if (UE->no_timing_correction == 0) {
-                          if ( getenv(RFSIMULATOR) != NULL && UE->rx_offset) {
+                          if ( getenv("RFSIMULATOR") != NULL && UE->rx_offset) {
                                  //LOG_E(HW,"in simu, rx_offset is not null (impossible): %d\n", UE->rx_offset);
                                  UE->rx_offset=0;
 			}
@@ -1817,7 +1802,15 @@ void *UE_thread(void *arg) {
                     proc->instance_cnt_rxtx++;
                     LOG_D( PHY, "[SCHED][UE %d] UE RX instance_cnt_rxtx %d subframe %d !!\n", UE->Mod_id, proc->instance_cnt_rxtx,proc->subframe_rx);
                     if (proc->instance_cnt_rxtx != 0) {
-                      LOG_E( PHY, "[SCHED][UE %d] UE RX thread busy (IC %d)!!\n", UE->Mod_id, proc->instance_cnt_rxtx);
+	              if ( getenv("RFSIMULATOR") != NULL ) {
+		         do {
+			    AssertFatal (pthread_mutex_unlock(&proc->mutex_rxtx) == 0, "");
+			    usleep(100);
+			    AssertFatal (pthread_mutex_lock(&proc->mutex_rxtx) == 0, "");
+			 } while ( proc->instance_cnt_rxtx >= 0);
+
+		      } else
+                         LOG_E( PHY, "[SCHED][UE %d] UE RX thread busy (IC %d)!!\n", UE->Mod_id, proc->instance_cnt_rxtx);
                       if (proc->instance_cnt_rxtx > 2)
                         exit_fun("instance_cnt_rxtx > 2");
                     }

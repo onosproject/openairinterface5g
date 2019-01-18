@@ -251,6 +251,7 @@ add_boolean_option(UE_TIMING_TRACE     False "Activate UE timing trace")
 add_boolean_option(DISABLE_LOG_X       False "Deactivate all LOG_* macros")
 add_boolean_option(USRP_REC_PLAY       False "Enable USRP record playback mode")
 add_boolean_option(UE_NAS_USE_TUN      False "Enable UE NAS TUN device instead of ue_ip.ko")
+add_boolean_option(NOS1      False "Allows to run without a EPC")
 add_boolean_option(BASIC_SIMULATOR     False "Has to be True when building the basic simulator, False otherwise")
 
 add_boolean_option(DEBUG_CONSOLE False "makes debugging easier, disables stdout/stderr buffering")
@@ -618,11 +619,6 @@ add_boolean_option(PHY_TX_THREAD            False         "enable UE_EXPANSION w
 add_boolean_option(PRE_SCD_THREAD           False         "enable UE_EXPANSION with max 256 UE")
 add_boolean_option(UESIM_EXPANSION          False         "enable UESIM_EXPANSION with max 256 UE")
 
-########################
-# Include order
-##########################
-add_boolean_option(ENB_MODE True "Swap the include directories between openair2 and openair3" )
-
 ##########################
 # SCHEDULING/REAL-TIME/PERF options
 ##########################
@@ -722,19 +718,13 @@ include_directories("${OPENAIR_BIN_DIR}")
 #include_directories("${include_dirs_all}")
 
 # Legacy exact order
-if(ENB_MODE)
-  include_directories("${OPENAIR2_DIR}/COMMON")
-  include_directories("${OPENAIR2_DIR}/UTIL")
-  include_directories("${OPENAIR2_DIR}/UTIL/LOG")
-  include_directories("${OPENAIR3_DIR}/COMMON")
-  include_directories("${OPENAIR3_DIR}/UTILS")
-else()
-  include_directories("${OPENAIR3_DIR}/COMMON")
-  include_directories("${OPENAIR3_DIR}/UTILS")
-  include_directories("${OPENAIR2_DIR}/COMMON")
-  include_directories("${OPENAIR2_DIR}/UTIL")
-  include_directories("${OPENAIR2_DIR}/UTIL/LOG")
-endif()
+
+include_directories("${OPENAIR2_DIR}/COMMON")
+include_directories("${OPENAIR2_DIR}/UTIL")
+include_directories("${OPENAIR2_DIR}/UTIL/LOG")
+include_directories("${OPENAIR3_DIR}/COMMON")
+include_directories("${OPENAIR3_DIR}/UTILS")
+
 include_directories("${NFAPI_DIR}/nfapi/public_inc")
 include_directories("${NFAPI_DIR}/common/public_inc")
 include_directories("${NFAPI_DIR}/pnf/public_inc")
@@ -1388,6 +1378,10 @@ add_library(L2_UE
   ${L2_SRC_UE}
   ${MAC_SRC_UE}
 )
+
+if (NOT ${NOS1})
+target_compile_definitions(L2_UE INTERFACE -DPDCP_USE_NETLINK)
+endif()
 add_dependencies(L2_UE rrc_flag s1ap_flag x2_flag)
 
 include_directories(${NFAPI_USER_DIR})
@@ -2041,6 +2035,9 @@ add_executable(lte-uesoftmodem
   )
 
 add_dependencies(lte-uesoftmodem rrc_flag s1ap_flag x2_flag)
+if (NOT ${NOS1})
+	target_compile_definitions(lte-uesoftmodem PRIVATE -DPDCP_USE_NETLINK)
+endif()
 target_link_libraries (lte-uesoftmodem
   -Wl,--start-group
   RRC_LIB S1AP_LIB S1AP_ENB X2AP_LIB X2AP_ENB GTPV1U SECU_CN SECU_OSA UTIL HASHTABLE SCTP_CLIENT UDP SCHED_RU_LIB SCHED_UE_LIB PHY_COMMON PHY_UE PHY_RU LFDS L2_UE SIMU
@@ -2239,6 +2236,16 @@ endif (${T_TRACER})
 # this is documented as https://www.kernel.org/doc/Documentation/kbuild/modules.txt
 ######################################
 
+# retrieve the compiler options to send it to gccxml
+get_directory_property(DirDefs COMPILE_DEFINITIONS )
+foreach( d ${DirDefs} )
+  set(module_cc_opt "${module_cc_opt} -D${d}")
+endforeach()
+get_directory_property( DirDefs INCLUDE_DIRECTORIES )
+foreach( d ${DirDefs} )
+  set(module_cc_opt "${module_cc_opt} -I${d}")
+endforeach()
+
 EXECUTE_PROCESS(COMMAND uname -r
   OUTPUT_VARIABLE os_release
   OUTPUT_STRIP_TRAILING_WHITESPACE)
@@ -2265,6 +2272,7 @@ endfunction(make_driver name dir src)
 # nashmesh module
 ################
 list(APPEND nasmesh_src device.c common.c ioctl.c classifier.c tool.c mesh.c)
+set(module_cc_opt "${module_cc_opt} -DNAS_NETLINK -DPDCP_USE_NETLINK")
 # legacy Makefile was using NAS_NETLINK flag, but other drivers the hereafter flag
 # so, this cmake use OAI_NW_DRIVER_USE_NETLINK everywhere
 if (OAI_NW_DRIVER_USE_NETLINK)
