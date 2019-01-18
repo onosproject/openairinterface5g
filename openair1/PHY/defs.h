@@ -519,7 +519,8 @@ NB_IoT_eNB_NPDCCH_t       *npdcch[NUMBER_OF_UE_MAX_NB_IoT];
 //NB_IoT_eNB_NDLSCH_t       ndlsch_rar;
 NB_IoT_eNB_NPDCCH_t       *npdcch_DCI;
 
-NB_IoT_eNB_NULSCH_t       *ulsch_NB_IoT[NUMBER_OF_UE_MAX+1]; 
+NB_IoT_eNB_NULSCH_t       *ulsch_NB_IoT[NUMBER_OF_UE_MAX+1];
+NB_IoT_eNB_NULSCH_t       *ulsch_msg3_NB_IoT; 
 ////////////// For IF Module /////////////////////////////
 
 IF_Module_NB_IoT_t          *if_inst;           // should be replaced by if_inst_NB_IoT;  to avoid conflict during the merge with develop branch

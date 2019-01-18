@@ -76,6 +76,9 @@ const int UL_TBS_Table[14][8]=
   {224,488,744,1128,1256,1544,2024,2536}
 };
 
+const int UL_TBS_Table_msg3[8]={88,88,88,0,0,0,0,0};
+
+
 const int rachperiod[8]={40,80,160,240,320,640,1280,2560};
 const int rachstart[8]={8,16,32,64,128,256,512,1024};
 const int rachrepeat[8]={1,2,4,8,16,32,64,128};

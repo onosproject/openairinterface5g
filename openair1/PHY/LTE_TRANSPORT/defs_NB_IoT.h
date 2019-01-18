@@ -486,6 +486,10 @@ typedef struct {
   uint16_t              first_rb;
   /// Current Number of RBs
   uint16_t              nb_rb;
+
+  uint8_t               new_data_indication;
+  /// Determined the subcarrier spacing for NPUSCH (15 kHz or 3.75 KHz)
+  uint8_t               subcarrier_spacing;
   /// Determined the subcarrier allocation for the NPUSCH.(15, 3.75 KHz)
   uint8_t               subcarrier_indication;
   /// Determined the number of resource unit for the NPUSCH
@@ -530,9 +534,9 @@ typedef struct {
   /// coded CQI bits
   int8_t                o_d[96+((MAX_CQI_BITS_NB_IoT+8)*3)];
   /// soft bits for each received segment ("w"-sequence)(for definition see 36-212 V8.6 2009-03, p.15)
-  int16_t w[MAX_NUM_ULSCH_SEGMENTS_NB_IoT][3*(6144+64)];
+  int16_t               w[MAX_NUM_ULSCH_SEGMENTS_NB_IoT][3*(6144+64)];
   /// soft bits for each received segment ("d"-sequence)(for definition see 36-212 V8.6 2009-03, p.15)
-  int16_t *d[MAX_NUM_ULSCH_SEGMENTS_NB_IoT];
+  int16_t               *d[MAX_NUM_ULSCH_SEGMENTS_NB_IoT];
   ///
   uint32_t              C;
   /// Number of "small" code segments (for definition see 36-212 V8.6 2009-03, p.10)
@@ -624,9 +628,9 @@ typedef struct {
   /// number of cell specific TX antenna ports assumed by the UE
   uint8_t                 nrs_antenna_ports;
   ///
-  uint16_t                scrambling_sequence_intialization;
+  uint16_t                C_init;
   ///
-  uint16_t                sf_index;
+  uint16_t                SF_idx;
   /// Determined the ACK/NACK delay and the subcarrier allocation TS 36.213 Table 16.4.2
   uint8_t                 HARQ_ACK_resource;
 

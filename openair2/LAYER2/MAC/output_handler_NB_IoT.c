@@ -270,7 +270,7 @@ int output_handler(eNB_MAC_INST_NB_IoT *mac_inst, module_id_t module_id, int CC_
 		}	
 		while(schedule_result_list_UL->output_subframe == current_time)
 		{
-			if(schedule_result_list_UL->channel == NPUSCH)
+			if(schedule_result_list_UL->channel == NPUSCH)  // condition should be added to switch between HI_DCI0 and Msg3
 			{
 				//LOG_D(MAC,"first UL \n");
 				LOG_D(MAC,"[hypersfn:%2d][frame:%2d][subframe:%2d]NB-IoT fill UL config\n",hypersfn,frame,subframe);
@@ -287,9 +287,14 @@ int output_handler(eNB_MAC_INST_NB_IoT *mac_inst, module_id_t module_id, int CC_
 					DCI_pdu = schedule_result_list_UL->DCI_pdu;
 					// bug here
 					(ul_config_pdu + i) ->nulsch_pdu.nulsch_pdu_rel13.nulsch_format           = 0;
-					(ul_config_pdu + i) ->nulsch_pdu.nulsch_pdu_rel13.size                    = UL_TBS_Table[((DCIFormatN0_t *)DCI_pdu)->mcs][((DCIFormatN0_t *)DCI_pdu)->ResAssign];
+
+					//contidition should be added to select either the UL_TBS_Table or t UL_TBS_table_msg3
+
+					//(ul_config_pdu + i) ->nulsch_pdu.nulsch_pdu_rel13.size                    = UL_TBS_Table[((DCIFormatN0_t *)DCI_pdu)->mcs][((DCIFormatN0_t *)DCI_pdu)->ResAssign];
+					(ul_config_pdu + i) ->nulsch_pdu.nulsch_pdu_rel13.size                    = UL_TBS_Table_msg3[((DCIFormatN0_t *)DCI_pdu)->mcs];   // for the case of MSG3
+					
 					//LOG_D(MAC,"test\n");
-					(ul_config_pdu + i) ->nulsch_pdu.nulsch_pdu_rel13.rnti                    = schedule_result_list_UL->rnti;
+					(ul_config_pdu + i) ->nulsch_pdu.nulsch_pdu_rel13.rnti                    = schedule_result_list_UL->rnti;  //TODO : check if it is the right rnti // get from msg2
 					(ul_config_pdu + i) ->nulsch_pdu.nulsch_pdu_rel13.subcarrier_indication   = ((DCIFormatN0_t *)DCI_pdu)->scind;
 					(ul_config_pdu + i) ->nulsch_pdu.nulsch_pdu_rel13.resource_assignment     = ((DCIFormatN0_t *)DCI_pdu)->ResAssign;
 					(ul_config_pdu + i) ->nulsch_pdu.nulsch_pdu_rel13.mcs                     = ((DCIFormatN0_t *)DCI_pdu)->mcs;

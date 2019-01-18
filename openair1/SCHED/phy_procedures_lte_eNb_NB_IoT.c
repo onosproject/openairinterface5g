@@ -396,7 +396,10 @@ void phy_procedures_eNB_uespec_RX_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc
   eNB->rb_mask_ul[3] = 0;
   ////////////////////////////////////////////////////////////////////////////////////////
   */
-  uint8_t data_or_control=0;
+  uint8_t data_or_control=0;  // get this info from UL_config_request
+
+  npusch_procedures(eNB,proc,data_or_control);
+
 
   pthread_mutex_lock(&eNB->UL_INFO_mutex);
 
@@ -406,7 +409,7 @@ void phy_procedures_eNB_uespec_RX_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc
 
   pthread_mutex_unlock(&eNB->UL_INFO_mutex);
  // if (nfapi_mode == 0 || nfapi_mode == 1) { // If PNF or monolithic
-      npusch_procedures(eNB,proc,data_or_control);
+     
   //}          
 
      

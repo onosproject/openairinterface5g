@@ -2066,7 +2066,7 @@ uint8_t rx_ulsch_Gen_NB_IoT(PHY_VARS_eNB            *eNB,
                          uint32_t                scrambling_frame_msg3,     // first received frame
                          uint16_t                nb_slot,                   //  total number of occupied slots
                          uint16_t                I_sc,
-                         uint16_t                Nsc_RU,
+                         uint16_t                Nsc_RU,   // to remove and create function Nsc_RU = f(I_sc)
                          uint16_t                Mcs, 
                          unsigned int            A,                         //  A = TBS
                          uint16_t                counter_msg,

@@ -428,9 +428,19 @@ void schedule_response_NB_IoT(Sched_Rsp_NB_IoT_t *Sched_INFO)
   for(i = 0; i< number_ul_pdu; i++)
   {
 	  ul_config_pdu = &UL_req->ul_config_request_body.ul_config_pdu_list[i];
+         
+      NB_IoT_eNB_NULSCH_t *nulsch;
+	  NB_IoT_UL_eNB_HARQ_t *nulsch_harq;
+      nfapi_ul_config_nulsch_pdu_rel13_t *nfapi_parameters_rel13 = &ul_config_pdu->nulsch_pdu.nulsch_pdu_rel13;
+      
 	  switch(ul_config_pdu->pdu_type)
 	  {
 	  case NFAPI_UL_CONFIG_NULSCH_PDU_TYPE:
+
+	  		// new condition should be added to identify if this is msg3 3 since the TBS_table is not the same.
+
+	  		// the type of subcarrier spacing should be specified before the call of rx_ulsch since the parameter does not exist in nfapi parameters.
+
 		  //TODO should distinguish between data and between data (npusch format)
 		  /*NB: for reception of Msg3 generally not exist a DCI (because scheduling information are implicitly given by the RAR)
 		   * but in case of FAPI specs we should receive an UL_config (containing the NULSCH pdu) for configuring the PHY for Msg3 reception from the MAC
@@ -440,6 +450,31 @@ void schedule_response_NB_IoT(Sched_Rsp_NB_IoT_t *Sched_INFO)
 		   * diferent from the DL_CONFIG one)
 		   *
 		   */
+		
+	  ///////////////////////////////////////////////////////////////////////////////////////////
+
+	        nulsch = eNB->ulsch_NB_IoT[0];
+			nulsch_harq = nulsch->harq_process;
+	
+			nulsch->Msg3_active        = 1;
+			nulsch->Msg3_flag          = 1;
+			nulsch->rnti               = nfapi_parameters_rel13->rnti;
+			nulsch->npusch_format      = nfapi_parameters_rel13->nulsch_format;
+			nulsch->N_srs              = nfapi_parameters_rel13->n_srs;
+            nulsch->C_init             = nfapi_parameters_rel13->scrambling_sequence_initialization_cinit;
+            nulsch->SF_idx             = nfapi_parameters_rel13->sf_idx;
+            nulsch->HARQ_ACK_resource  = nfapi_parameters_rel13->nb_harq_information.nb_harq_information_rel13_fdd.harq_ack_resource;
+
+			nulsch_harq->subcarrier_spacing      = 0;  // 0 for 15 KHz and 1 for 3.75 KHz// TODO : get the value from the DCI 
+			nulsch_harq->subcarrier_indication   = nfapi_parameters_rel13->subcarrier_indication;    // Isc =0->18 , or 0->47 // format 2, 0->3 or 0->7
+			nulsch_harq->resource_assignment     = nfapi_parameters_rel13->resource_assignment;    // valid for format 1  // this should be set by DCI N0 // not used for msg3 // I_RU --> helps to get N_RU
+			nulsch_harq->mcs                     = nfapi_parameters_rel13->mcs;                 // I_mcs = 0->10 (single tone) and 0->12 (multi-tone)
+			nulsch_harq->rvidx                   = nfapi_parameters_rel13->redudancy_version;   // values = 0 or 1
+			nulsch_harq->repetition_number       = nfapi_parameters_rel13->repetition_number;    //  // N_rep values = 0->7  // new funciton to be created to compute the nb_slots = f(N_rep)
+			nulsch_harq->new_data_indication     = nfapi_parameters_rel13->new_data_indication;   // valid only for DCI N0
+			nulsch_harq->TBS                     = nfapi_parameters_rel13->size;  /// check if needed *8 or /8 or nothing to do
+			
+	  ////////////////////////////////////////////////////////////////////////////////////////
 	  		LOG_I(PHY,"IF module proceed UL config NULSCH pdu\n");
 		  break;
 	  case NFAPI_UL_CONFIG_NRACH_PDU_TYPE:
