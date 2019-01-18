@@ -112,6 +112,9 @@ void pre_scd_nb_rbs_required(    module_id_t     module_idP,
   rnti_t                       rnti;
   mac_rlc_status_resp_t        rlc_status;
   uint16_t                     step_size=2;
+  int header_length_last;
+  int header_length_total;
+
   N_RB_DL = to_prb(RC.mac[module_idP]->common_channels[CC_id].mib->message.dl_Bandwidth);
 
   if(N_RB_DL==50) step_size=3;
@@ -124,6 +127,7 @@ void pre_scd_nb_rbs_required(    module_id_t     module_idP,
   for (UE_id = 0; UE_id <NUMBER_OF_UE_MAX; UE_id++) {
     if (pre_scd_activeUE[UE_id] != TRUE)
       continue;
+    header_length_total = 0;
 
     // store dlsch buffer
     // clear logical channel interface variables
@@ -139,8 +143,16 @@ void pre_scd_nb_rbs_required(    module_id_t     module_idP,
 #endif
                           );
       UE_template.dl_buffer_total += rlc_status.bytes_in_buffer; //storing the total dlsch buffer
+      if(rlc_status.bytes_in_buffer > 0){
+          header_length_last = 1 + 1 + (rlc_status.bytes_in_buffer >= 128);
+          header_length_total += header_length_last;
+       }
     }
-
+    if (header_length_total) {
+      header_length_total -= header_length_last;
+      header_length_total++;
+    }
+    UE_template.dl_buffer_total += header_length_total;
     // end of store dlsch buffer
     // assgin rbs required
     // Calculate the number of RBs required by each UE on the basis of logical channel's buffer
@@ -149,6 +161,7 @@ void pre_scd_nb_rbs_required(    module_id_t     module_idP,
     eNB_UE_stats->dlsch_mcs1 = cqi_to_mcs[UE_list->UE_sched_ctrl[UE_id].dl_cqi[CC_id]];
 
     if (UE_template.dl_buffer_total > 0) {
+      UE_template.dl_buffer_total += 3;
       nb_rbs_required[CC_id][UE_id] = search_rbs_required(eNB_UE_stats->dlsch_mcs1, UE_template.dl_buffer_total, N_RB_DL, step_size);
     }
   }
