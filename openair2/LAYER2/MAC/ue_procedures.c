@@ -3421,7 +3421,7 @@ SLDCH_t *ue_get_sldch(module_id_t Mod_id,int CC_id,frame_t frame_tx,sub_frame_t 
 
 SLSCH_t *ue_get_slsch(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_t subframeP) {
 
-   mac_rlc_status_resp_t rlc_status; //, rlc_status_data;
+   mac_rlc_status_resp_t rlc_status={0}; //, rlc_status_data;
    uint32_t absSF = (frameP*10)+subframeP;
    UE_MAC_INST *ue = &UE_mac_inst[module_idP];
    int rvtab[4] = {0,2,3,1};
@@ -3461,7 +3461,7 @@ SLSCH_t *ue_get_slsch(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_
          (ue->sltx_active == 1)) { // every 4th subframe, check for new data from RLC
       // 10 PRBs, mcs 19
       int TBS = 4584/8;
-      int req;
+      int req=0;
 
 
       if (TBS <= rlc_status.bytes_in_buffer) req = TBS;

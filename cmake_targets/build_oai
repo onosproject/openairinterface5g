@@ -51,7 +51,7 @@ CPU_AFFINITY_FLAG_USER="False" #Only valid when lowlatecy flag is set to False
 REL="Rel14"
 HW="None"
 TP="None"
-NOS1=0
+NOS1="False"
 EPC=0
 VERBOSE_COMPILE=0
 CFLAGS_PROCESSOR_USER=""
@@ -287,7 +287,7 @@ function main() {
 		echo_info "Will copy OpenAirInterface files in Linux directories"
 		shift;;
             --noS1)
-		NOS1=1
+		NOS1="True"
 		echo_info "Will compile without S1 interface"
 		shift;;
             --verbose-compile)
@@ -493,7 +493,7 @@ function main() {
     if [ "$T_TRACER" =  "False" ] ; then
 	noLOGDirsuffix="_noLOG"
     fi
-    if [ "$NOS1" =  "1" ] ; then
+    if [ "$NOS1" =  "True" ] ; then
 	noS1Dir="_noS1"
         bin_suffix="-nos1"
     else
@@ -513,7 +513,7 @@ function main() {
 	mkdir -p $DIR/$lte_build_dir/build
 	cmake_file=$DIR/$lte_build_dir/CMakeLists.txt
 	echo "cmake_minimum_required(VERSION 2.8)"   >  $cmake_file
-	if [ "$NOS1" = "1" ] ; then
+	if [ "$NOS1" = "True" ] ; then
 	    cat  $DIR/$lte_build_dir/CMakeLists.template >>  $cmake_file
         fi
         echo "set ( CMAKE_BUILD_TYPE $CMAKE_BUILD_TYPE )" >> $cmake_file
@@ -534,10 +534,8 @@ function main() {
         echo "set (UE_TIMING_TRACE $UE_TIMING_TRACE)"        >>  $cmake_file
         echo "set (DISABLE_LOG_X $DISABLE_LOG_X)"        >>  $cmake_file
         echo "set (USRP_REC_PLAY $USRP_REC_PLAY)"        >>  $cmake_file
-	if [ "$UE" = 1 -a "$NOS1" = "0" ] ; then
-	    echo_info "Compiling UE S1 build : enabling NETLINK"
-	    echo "set (PDCP_USE_NETLINK True )"   >>  $cmake_file
-	fi
+        echo "set (UE_NAS_USE_TUN $UE_NAS_USE_TUN)"        >>  $cmake_file
+        echo "set (NOS1 $NOS1)"        >>  $cmake_file
 	echo 'include(${CMAKE_CURRENT_SOURCE_DIR}/../CMakeLists.txt)' >> $cmake_file
 	cd  $DIR/$lte_build_dir/build
         eval $CMAKE_CMD
@@ -557,7 +555,7 @@ function main() {
             $lte_build_dir coding \
             libcoding.so $dbin/libcoding.so
 	
-	if [ "$NOS1" = "1" ] ; then
+	if [ "$NOS1" = "True" ] ; then
 	    compilations \
 		$lte_build_dir nasmesh \
 		CMakeFiles/nasmesh/nasmesh.ko $dbin/nasmesh.ko
@@ -582,7 +580,7 @@ function main() {
             $lte_build_dir coding \
             libcoding.so $dbin/libcoding.so
 	
-	if [ "$NOS1" = "1" ] ; then
+	if [ "$NOS1" = "True" ] ; then
 	    compilations \
 		$lte_build_dir nasmesh \
 		CMakeFiles/nasmesh/nasmesh.ko $dbin/nasmesh.ko
@@ -593,9 +591,11 @@ function main() {
 	else	    
 	    # ue_ip driver compilation
             echo_info "Compiling UE specific part"
-            compilations \
-                $lte_build_dir ue_ip \
-		CMakeFiles/ue_ip/ue_ip.ko $dbin/ue_ip.ko
+	    if [ "$UE_NAS_USE_TUN" = "False" ] ; then 
+               compilations \
+                   $lte_build_dir ue_ip \
+	   	CMakeFiles/ue_ip/ue_ip.ko $dbin/ue_ip.ko
+            fi
 	    
 	    #    mkdir -p $DIR/at_commands/build
 	    #    cd $DIR/at_commands/build
@@ -771,7 +771,7 @@ function main() {
 	fi
 	
 
-	# build trasport protocol libraries (currently only ETHERNET is available)
+	# build transport protocol libraries (currently only ETHERNET is available)
 	if [ "$TP" != "None" ] ; then
 	    rm -f liboai_transpro.so
 	    rm -f $dbin/liboai_transpro.so

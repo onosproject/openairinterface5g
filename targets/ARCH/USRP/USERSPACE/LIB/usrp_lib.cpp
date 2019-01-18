@@ -720,6 +720,7 @@ void *freq_thread(void *arg) {
   usrp_state_t *s = (usrp_state_t *)device->priv;
   s->usrp->set_tx_freq(device->openair0_cfg[0].tx_freq[0]);
   s->usrp->set_rx_freq(device->openair0_cfg[0].rx_freq[0]);
+  return NULL;
 }
 /*! \brief Set frequencies (TX/RX). Spawns a thread to handle the frequency change to not block the calling thread
  * \param device the hardware to use
