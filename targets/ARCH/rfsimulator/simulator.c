@@ -280,7 +280,7 @@ bool flushInput(tcp_bridge_state_t *t) {
         else
           blockSz= b->transferPtr+b->remainToTransfer < b->circularBufEnd ?
 	    b->remainToTransfer :
-	    b->circularBufEnd - b->transferPtr;
+	    b->circularBufEnd - 1 - b->transferPtr ;
 
         int sz=recv(fd, b->transferPtr, blockSz, MSG_DONTWAIT);
 
@@ -294,6 +294,8 @@ bool flushInput(tcp_bridge_state_t *t) {
 
         AssertFatal((b->remainToTransfer-=sz) >= 0, "");
         b->transferPtr+=sz;
+	if (b->transferPtr==b->circularBufEnd - 1)
+		b->transferPtr=(char*)b->circularBuf;
 
         // check the header and start block transfer
         if ( b->headerMode==true && b->remainToTransfer==0) {

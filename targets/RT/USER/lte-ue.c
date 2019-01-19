@@ -783,11 +783,18 @@ static void *UE_thread_rxn_txnp4(void *arg) {
 	      threadname);
 
   while (!oai_exit) {
-    AssertFatal (pthread_mutex_lock(&proc->mutex_rxtx) == 0, "[SCHED][UE] error locking mutex for UE RXTX\n" );
-    while (proc->instance_cnt_rxtx < 0) 
+    if (pthread_mutex_lock(&proc->mutex_rxtx) != 0) {
+      LOG_E( PHY, "[SCHED][UE] error locking mutex for UE RXTX\n" );
+      exit_fun("nothing to add");
+    }
+    while (proc->instance_cnt_rxtx < 0) {
       // most of the time, the thread is waiting here
       pthread_cond_wait( &proc->cond_rxtx, &proc->mutex_rxtx );
-     AssertFatal (pthread_mutex_unlock(&proc->mutex_rxtx) == 0, "[SCHED][UE] error unlocking mutex for UE RXn_TXnp4\n" );
+    }
+    if (pthread_mutex_unlock(&proc->mutex_rxtx) != 0) {
+      LOG_E( PHY, "[SCHED][UE] error unlocking mutex for UE RXn_TXnp4\n" );
+      exit_fun("nothing to add");
+    }
 
     initRefTimes(t2);
     initRefTimes(t3);
@@ -861,12 +868,18 @@ static void *UE_thread_rxn_txnp4(void *arg) {
 	phy_procedures_UE_S_TX(UE,0,0);
     updateTimes(current, &t3, 10000, "Delay to process sub-frame (case 3)");
 
-    AssertFatal (pthread_mutex_lock(&proc->mutex_rxtx) == 0, "[SCHED][UE] error locking mutex for UE RXTX\n" );
+    if (pthread_mutex_lock(&proc->mutex_rxtx) != 0) {
+      LOG_E( PHY, "[SCHED][UE] error locking mutex for UE RXTX\n" );
+      exit_fun("noting to add");
+    }
     proc->instance_cnt_rxtx--;
-#if BASIC_SIMULATOR
-    AssertFatal (pthread_cond_signal(&proc->cond_rxtx) == 0, "");
+#if 1 //BASIC_SIMULATOR
+    if (pthread_cond_signal(&proc->cond_rxtx) != 0) abort();
 #endif
-    AssertFatal (pthread_mutex_unlock(&proc->mutex_rxtx) == 0, "[SCHED][UE] error unlocking mutex for UE RXTX\n" );
+    if (pthread_mutex_unlock(&proc->mutex_rxtx) != 0) {
+      LOG_E( PHY, "[SCHED][UE] error unlocking mutex for UE RXTX\n" );
+      exit_fun("noting to add");
+    }
   }
 
   // thread finished
@@ -981,6 +994,7 @@ static void *UE_phy_stub_single_thread_rxn_txnp4(void *arg) {
     }
     while (phy_stub_ticking->ticking_var < 0) {
       // most of the time, the thread is waiting here
+      //pthread_cond_wait( &proc->cond_rxtx, &proc->mutex_rxtx )
       LOG_D(MAC,"Waiting for ticking_var\n");
       pthread_cond_wait( &phy_stub_ticking->cond_ticking, &phy_stub_ticking->mutex_ticking);
     }
@@ -1265,6 +1279,7 @@ static void *UE_phy_stub_thread_rxn_txnp4(void *arg) {
     }
     while (phy_stub_ticking->ticking_var < 0) {
       // most of the time, the thread is waiting here
+      //pthread_cond_wait( &proc->cond_rxtx, &proc->mutex_rxtx )
       LOG_D(MAC,"Waiting for ticking_var\n");
       pthread_cond_wait( &phy_stub_ticking->cond_ticking, &phy_stub_ticking->mutex_ticking);
     }
@@ -1456,12 +1471,6 @@ void *UE_thread(void *arg) {
   }
 
   while (!oai_exit) {
-#if BASIC_SIMULATOR
-    while (!(UE->proc.instance_cnt_synch < 0)) {
-      printf("ue sync not ready\n");
-      usleep(500*1000);
-    }
-#endif
 
     AssertFatal ( 0== pthread_mutex_lock(&UE->proc.mutex_synch), "");
     int instance_cnt_synch = UE->proc.instance_cnt_synch;
@@ -1591,7 +1600,7 @@ void *UE_thread(void *arg) {
                 // update thread index for received subframe
                 UE->current_thread_id[sub_frame] = thread_idx;
 
-#if BASIC_SIMULATOR
+#if 1 //BASIC_SIMULATOR
                 {
                   int t;
                   for (t = 0; t < 2; t++) {
@@ -1629,10 +1638,10 @@ void *UE_thread(void *arg) {
                         // compute TO compensation that should be applied for this frame
 
 			if (UE->no_timing_correction == 0) {
-                          if ( getenv("RFSIMULATOR") != NULL && UE->rx_offset) {
-                                 //LOG_E(HW,"in simu, rx_offset is not null (impossible): %d\n", UE->rx_offset);
-                                 UE->rx_offset=0;
-			}
+if (UE->rx_offset) {
+   //LOG_E(HW,"in simu, rx_offset is not null: %d\n", UE->rx_offset);
+   UE->rx_offset=0;
+}
 			  if ( UE->rx_offset < 5*UE->frame_parms.samples_per_tti  &&
 			       UE->rx_offset > 0 )
                             UE->rx_offset_diff = -1 ;
@@ -1704,6 +1713,7 @@ void *UE_thread(void *arg) {
                     proc->instance_cnt_rxtx++;
                     LOG_D( PHY, "[SCHED][UE %d] UE RX instance_cnt_rxtx %d subframe %d !!\n", UE->Mod_id, proc->instance_cnt_rxtx,proc->subframe_rx);
                     if (proc->instance_cnt_rxtx != 0) {
+		    /*
 	              if ( getenv("RFSIMULATOR") != NULL ) {
 		         do {
 			    AssertFatal (pthread_mutex_unlock(&proc->mutex_rxtx) == 0, "");
@@ -1711,7 +1721,7 @@ void *UE_thread(void *arg) {
 			    AssertFatal (pthread_mutex_lock(&proc->mutex_rxtx) == 0, "");
 			 } while ( proc->instance_cnt_rxtx >= 0);
 
-		      } else
+		      } else */
                          LOG_E( PHY, "[SCHED][UE %d] UE RX thread busy (IC %d)!!\n", UE->Mod_id, proc->instance_cnt_rxtx);
                       if (proc->instance_cnt_rxtx > 2)
                         exit_fun("instance_cnt_rxtx > 2");
