@@ -547,7 +547,7 @@ int initial_sync(PHY_VARS_UE *ue, runmode_t mode)
 	  ue->frame_parms.nb_antenna_ports_eNB);
 #endif
 
-#if defined(OAI_USRP) || defined(EXMIMO) || defined(OAI_BLADERF) || defined(OAI_LMSSDR)
+#if defined(MANAGED_RF)
 #  if DISABLE_LOG_X
     printf("[UE %d] Frame %d Measured Carrier Frequency %.0f Hz (offset %d Hz)\n",
 	  ue->Mod_id,
@@ -608,23 +608,14 @@ int initial_sync(PHY_VARS_UE *ue, runmode_t mode)
   LOG_I(PHY,"[UE%d] Initial sync : Estimated power: %d dB\n",ue->Mod_id,ue->measurements.rx_power_avg_dB[0] );
 #endif
 
-#ifndef OAI_USRP
-#ifndef OAI_BLADERF
-#ifndef OAI_LMSSDR
+#ifndef MANAGED_RF
   phy_adjust_gain(ue,ue->measurements.rx_power_avg_dB[0],0);
 #endif
-#endif
-#endif
 
-  }
-  else {
+  } else {
 
-#ifndef OAI_USRP
-#ifndef OAI_BLADERF
-#ifndef OAI_LMSSDR
+#ifndef MANAGED_RF
   phy_adjust_gain(ue,dB_fixed(ue->measurements.rssi),0);
-#endif
-#endif
 #endif
 
   }

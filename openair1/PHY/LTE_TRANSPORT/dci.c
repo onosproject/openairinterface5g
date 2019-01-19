@@ -107,7 +107,7 @@ static uint  dci_encoding(uint8_t *a,
 }
 
 
-uint generate_dci0(uint8_t *dci,
+static uint generate_dci0(uint8_t *dci,
                        uint8_t *eee,
                        uint8_t DCI_LENGTH,
                        uint8_t aggregation_level,

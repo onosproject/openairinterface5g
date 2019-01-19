@@ -921,11 +921,6 @@ rrc_ue_establish_drb(
 //-----------------------------------------------------------------------------
 {
   // add descriptor from RRC PDU
-  int oip_ifup=0,ip_addr_offset3=0,ip_addr_offset4=0;
-  /* avoid gcc warnings */
-  (void)oip_ifup;
-  (void)ip_addr_offset3;
-  (void)ip_addr_offset4;
 
   LOG_I(RRC,"[UE %d] Frame %d: processing RRCConnectionReconfiguration: reconfiguring DRB %ld/LCID %d\n",
         ue_mod_idP, frameP, DRB_config->drb_Identity, (int)*DRB_config->logicalChannelIdentity);
@@ -938,12 +933,12 @@ rrc_ue_establish_drb(
                     RADIO_ACCESS_BEARER,Rlc_info_um);
    */
 #ifdef PDCP_USE_NETLINK
-#   if !defined(OAI_NW_DRIVER_TYPE_ETHERNET) && !defined(EXMIMO) && !defined(OAI_USRP) && !defined(OAI_BLADERF) && !defined(ETHERNET) && !defined(LINK_ENB_PDCP_TO_GTPV1U)
-  ip_addr_offset3 = 0;
-  ip_addr_offset4 = 1;
+#   if !defined(OAI_NW_DRIVER_TYPE_ETHERNET) && !defined(MANAGED_RF) && !defined(ETHERNET) && !defined(LINK_ENB_PDCP_TO_GTPV1U)
+  int ip_addr_offset3 = 0;
+  int ip_addr_offset4 = 1;
   LOG_I(OIP,"[UE %d] trying to bring up the OAI interface oai%d, IP 10.0.%d.%d\n", ue_mod_idP, ip_addr_offset3+ue_mod_idP,
         ip_addr_offset3+ue_mod_idP+1,ip_addr_offset4+ue_mod_idP+1);
-  oip_ifup=nas_config(ip_addr_offset3+ue_mod_idP,   // interface_id
+  int oip_ifup=nas_config(ip_addr_offset3+ue_mod_idP,   // interface_id
                       ip_addr_offset3+ue_mod_idP+1, // third_octet
                       ip_addr_offset4+ue_mod_idP+1); // fourth_octet
 

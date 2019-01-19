@@ -4917,11 +4917,6 @@ rrc_eNB_process_RRCConnectionReconfigurationComplete(
 //-----------------------------------------------------------------------------
 {
   int                                 i, drb_id;
-  int                                 oip_ifup = 0;
-  int                                 dest_ip_offset = 0;
-  /* avoid gcc warnings */
-  (void)oip_ifup;
-  (void)dest_ip_offset;
   uint8_t                            *kRRCenc = NULL;
   uint8_t                            *kRRCint = NULL;
   uint8_t                            *kUPenc = NULL;
@@ -5045,18 +5040,19 @@ rrc_eNB_process_RRCConnectionReconfigurationComplete(
                 ctxt_pP->module_id, ctxt_pP->frame, (int)DRB_configList->list.array[i]->drb_Identity);
 #if  defined(PDCP_USE_NETLINK) && !defined(LINK_ENB_PDCP_TO_GTPV1U)
           // can mean also IPV6 since ether -> ipv6 autoconf
-#   if !defined(OAI_NW_DRIVER_TYPE_ETHERNET) && !defined(EXMIMO) && !defined(OAI_USRP) && !defined(OAI_BLADERF) && !defined(ETHERNET)
-          LOG_I(OIP, "[eNB %d] trying to bring up the OAI interface oai%d\n",
+#   if !defined(OAI_NW_DRIVER_TYPE_ETHERNET) && !defined(MANAGED_RF) && !defined(ETHERNET)
+
+	  LOG_I(OIP, "[eNB %d] trying to bring up the OAI interface oai%d\n",
                 ctxt_pP->module_id,
                 ctxt_pP->module_id);
-          oip_ifup = nas_config(
+          int oip_ifup = nas_config(
                        ctxt_pP->module_id,   // interface index
                        ctxtReportConfigToAddMod__reportConfig_PR_reportConfigEUTRA_pP->module_id + 1,   // thrid octet
                        ctxt_pP->module_id + 1);  // fourth octet
 
           if (oip_ifup == 0) {    // interface is up --> send a config the DRB
             module_id_t ue_module_id;
-            dest_ip_offset = 8;
+            int dest_ip_offset = 8;
             LOG_I(OIP,
                   "[eNB %d] Config the oai%d to send/receive pkt on DRB %ld to/from the protocol stack\n",
                   ctxt_pP->module_id, ctxt_pP->module_id,
