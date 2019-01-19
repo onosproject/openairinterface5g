@@ -108,7 +108,7 @@ Options
    Rel8 limits the implementation to 3GPP Release 8 version
    Rel10 limits the implementation to 3GPP Release 10 version
 -w | --hardware
-   EXMIMO, USRP, BLADERF, ETHERNET, LMSSDR, IRIS, None (Default)
+   EXMIMO, USRP, BLADERF, ETHERNET, LMSSDR, IRIS, SIMU, None (Default)
    Adds this RF board support (in external packages installation and in compilation)
 -t | --transport protocol
    ETHERNET , None
@@ -238,7 +238,7 @@ function main() {
 		    "EXMIMO")
 			HW="EXMIMO"
 			;;
-		    "USRP" | "BLADERF" | "LMSSDR" | "IRIS")
+		    "USRP" | "BLADERF" | "LMSSDR" | "IRIS" | "SIMU")
 			HW="OAI_"$2
 			;;
 		    "None")
@@ -514,7 +514,7 @@ function main() {
 	[ "$CLEAN" = "1" ] && rm -rf $DIR/$lte_build_dir/build
 	mkdir -p $DIR/$lte_build_dir/build
 	cmake_file=$DIR/$lte_build_dir/CMakeLists.txt
-	echo "cmake_minimum_required(VERSION 2.8)"   >  $cmake_file
+	echo "cmake_minimum_required(VERSION 3.0)"   >  $cmake_file
 	if [ "$NOS1" = "True" ] ; then
 	    cat  $DIR/$lte_build_dir/CMakeLists.template >>  $cmake_file
         fi
@@ -790,7 +790,7 @@ function main() {
 	fi
     fi
     
-    if [ "$RFSIMULATOR" == "true" ] ; then
+    if [ "$RFSIMULATOR" == "true" -o "$HW" == "OAI_SIMU" ] ; then
 	echo_info "Compiling rfsimulator"
 	compilations \
             $lte_build_dir rfsimulator \
@@ -855,7 +855,7 @@ function main() {
 	# enb
 	
 	cmake_file=$OPENAIR_DIR/cmake_targets/basic_simulator/enb/CMakeLists.txt
-	echo "cmake_minimum_required(VERSION 2.8)"         >  $cmake_file
+	echo "cmake_minimum_required(VERSION 3.0)"         >  $cmake_file
 	echo "set ( CMAKE_BUILD_TYPE $CMAKE_BUILD_TYPE )"  >> $cmake_file
 	echo "set ( CFLAGS_PROCESSOR_USER \"$CFLAGS_PROCESSOR_USER\" )" >>  $cmake_file
 	echo "set ( RRC_ASN1_VERSION \"${REL}\")"          >>  $cmake_file
@@ -908,7 +908,7 @@ function main() {
 	    conf2uedata $dbin/conf2uedata
 	
 	cmake_file=$OPENAIR_DIR/cmake_targets/basic_simulator/ue/CMakeLists.txt
-	echo "cmake_minimum_required(VERSION 2.8)"        >  $cmake_file
+	echo "cmake_minimum_required(VERSION 3.0)"        >  $cmake_file
 	echo "set ( CMAKE_BUILD_TYPE $CMAKE_BUILD_TYPE )" >> $cmake_file
 	echo "set ( CFLAGS_PROCESSOR_USER \"$CFLAGS_PROCESSOR_USER\" )" >>  $cmake_file
 	echo "set ( RRC_ASN1_VERSION \"${REL}\")"         >>  $cmake_file

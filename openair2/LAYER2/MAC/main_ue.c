@@ -70,7 +70,6 @@ mac_UE_out_of_sync_ind(module_id_t module_idP, frame_t frameP,
 		       uint16_t eNB_index)
 {
 
-    //  Mac_rlc_xface->mac_out_of_sync_ind(Mod_id, frameP, eNB_index);
 }
 
 

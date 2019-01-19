@@ -2565,8 +2565,6 @@ ue_scheduler(const module_id_t module_idP,
     }
 #endif
 
-    //Mac_rlc_xface->frameP=frameP;
-    //Rrc_xface->Frame_index=Mac_rlc_xface->frameP;
     //if (subframe%5 == 0)
     //LG#ifdef EXMIMO
 

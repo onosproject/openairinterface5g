@@ -39,14 +39,6 @@
 #define NL_MAX_PAYLOAD 9000  /* this should cover the max mtu size*/
 #endif
 
-#ifdef LARGE_SCALE
-#    define NB_MODULES_MAX 128
-#    define NB_NODE_MAX    128
-#else
-#    define NB_MODULES_MAX 32
-#    define NB_NODE_MAX    32
-#endif
-
 #ifdef JUMBO_FRAME
 #    define MAX_IP_PACKET_SIZE         10000 // 9000
 #else
@@ -59,9 +51,6 @@
 #   define MAX_IP_PACKET_SIZE          1500 // 3000
 # endif
 #endif
-// overwrite the previous deinitions
-
-#    define MAX_MODULES                NB_MODULES_MAX
 
 #ifndef UE_EXPANSION
 // TODO:L2 FAPI simulator.
@@ -145,8 +134,6 @@
 
 #define  UNUSED_PARAM_MBMS_SESSION_ID  0
 #define  UNUSED_PARAM_MBMS_SERVICE_ID  0
-
-#define printk printf
 
 #define UNUSED_VARIABLE(vARIABLE)   (void)(vARIABLE)
 

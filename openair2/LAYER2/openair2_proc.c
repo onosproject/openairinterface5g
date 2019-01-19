@@ -363,6 +363,7 @@ int dump_eNB_l2_stats(char *buffer, int length) {
     return len + 1 /* SR: for trailing \0 */;
 }
 #ifdef PROC
+
 int openair2_stats_read(char *buffer, char **my_buffer, off_t off, int length) {
     int len = 0,fg,Overhead, Sign;
     unsigned int i,j,k,kk;
@@ -563,6 +564,7 @@ int openair2_stats_read(char *buffer, char **my_buffer, off_t off, int length) {
                             if (status == RLC_OP_STATUS_OK) {
                             len+=sprintf(&buffer[len],"\t[RLC] LCHAN %d, NB_SDU_TO_TX = %d\tNB_SDU_DISC %d\tNB_RX_SDU %d\n",
                                 CH_mac_inst[Mod_id].Dtch_lchan[j][i].Lchan_info.Lchan_id.Index,
+
                              tx_pdcp_sdu,
                              tx_pdcp_sdu_discarded,
                              rx_sdu);
@@ -617,7 +619,6 @@ int openair2_stats_read(char *buffer, char **my_buffer, off_t off, int length) {
             }
         }
     }
-
     return len;
 }
 
