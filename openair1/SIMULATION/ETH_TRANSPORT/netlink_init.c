@@ -63,7 +63,7 @@ struct msghdr nas_msg_tx;
 struct msghdr nas_msg_rx;
 
 #define GRAAL_NETLINK_ID 31
-
+ 
 #ifdef UE_NAS_USE_TUN
 
 static int tun_alloc(char *dev)

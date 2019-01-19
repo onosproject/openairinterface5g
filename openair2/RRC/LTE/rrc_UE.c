@@ -4670,7 +4670,6 @@ void *rrc_ue_task( void *args_p ) {
         itti_send_msg_to_task(TASK_RAL_UE, instance, message_p);
         break;
       }
-
       case RRC_RAL_CONFIGURE_THRESHOLD_REQ:
         LOG_D(RRC, "[UE %d] Received %s\n", ue_mod_id, ITTI_MSG_NAME (msg_p));
         rrc_ue_ral_handle_configure_threshold_request(ue_mod_id, msg_p);
@@ -4687,7 +4686,6 @@ void *rrc_ue_task( void *args_p ) {
               LOG_D(RRC, "not sending connection request\n");
               rrc_set_sub_state (ue_mod_id, RRC_SUB_STATE_IDLE_CONNECTING);
             }
-
             break;
           }
 
