@@ -31,11 +31,10 @@
 #define RRC_UE
 #define RRC_UE_C
 #define _GNU_SOURCE
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_UE.c
-#include <pthread.h>
-=======
 
->>>>>>> main/develop:openair2/RRC/LTE/rrc_UE.c
+// Panos: Not sure if pthread.h is needed here
+//#include <pthread.h>
+
 #include "assertions.h"
 #include "hashtable.h"
 #include "asn1_conversions.h"
@@ -86,8 +85,6 @@
 #endif
 
 #include "SIMULATION/TOOLS/sim.h" // for taus
-
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_UE.c
 #ifdef Rel14
 #include "SL-Preconfiguration-r12.h"
 
@@ -99,18 +96,13 @@ int slrb_id;
 int send_ue_information = 0;
 SL_UE_STATE_t On_Off_Net = UE_STATE_OFF_NETWORK;
 #endif
-=======
 #include "openair2/LAYER2/MAC/mac_extern.h"
->>>>>>> main/develop:openair2/RRC/LTE/rrc_UE.c
 
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
 #include "LTE_SL-Preconfiguration-r12.h"
 
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_UE.c
 extern uint8_t  nfapi_mode;
-
 //#define XER_PRINT
-=======
 //for D2D
 int ctrl_sock_fd;
 #define BUFSIZE 1024
@@ -118,7 +110,6 @@ struct sockaddr_in prose_app_addr;
 int slrb_id;
 int send_ue_information = 0;
 #endif
->>>>>>> main/develop:openair2/RRC/LTE/rrc_UE.c
 
 // for malloc_clear
 #include "PHY/defs_UE.h"
@@ -168,11 +159,7 @@ static uint8_t check_trigger_meas_event(
 
 #if (LTE_RRC_VERSION >= MAKE_VERSION(10, 0, 0))
 static void decode_MBSFNAreaConfiguration(module_id_t module_idP, uint8_t eNB_index, frame_t frameP,uint8_t mbsfn_sync_area);
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_UE.c
-uint8_t rrc_ue_generate_SidelinkUEInformation( const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_index,SL_DestinationInfoList_r12_t  *destinationInfoList, long *discTxResourceReq, SL_TRIGGER_t mode);
-=======
 uint8_t rrc_ue_generate_SidelinkUEInformation( const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_index,LTE_SL_DestinationInfoList_r12_t  *destinationInfoList, long *discTxResourceReq, SL_TRIGGER_t mode);
->>>>>>> main/develop:openair2/RRC/LTE/rrc_UE.c
 #endif
 
 
@@ -294,25 +281,6 @@ static void init_SI_UE( const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_
   UE_rrc_inst[ctxt_pP->module_id].sizeof_SIB1[eNB_index] = 0;
   UE_rrc_inst[ctxt_pP->module_id].sizeof_SI[eNB_index] = 0;
   UE_rrc_inst[ctxt_pP->module_id].SIB1[eNB_index] = (uint8_t*)malloc16_clear( 32 );
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_UE.c
-  UE_rrc_inst[ctxt_pP->module_id].sib1[eNB_index] = malloc16_clear( sizeof(SystemInformationBlockType1_t) );
-  UE_rrc_inst[ctxt_pP->module_id].sib2[eNB_index] = malloc16_clear( sizeof(SystemInformationBlockType2_t) );
-  UE_rrc_inst[ctxt_pP->module_id].sib3[eNB_index] = malloc16_clear( sizeof(SystemInformationBlockType3_t) );
-  UE_rrc_inst[ctxt_pP->module_id].sib4[eNB_index] = malloc16_clear( sizeof(SystemInformationBlockType4_t) );
-  UE_rrc_inst[ctxt_pP->module_id].sib5[eNB_index] = malloc16_clear( sizeof(SystemInformationBlockType5_t) );
-  UE_rrc_inst[ctxt_pP->module_id].sib6[eNB_index] = malloc16_clear( sizeof(SystemInformationBlockType6_t) );
-  UE_rrc_inst[ctxt_pP->module_id].sib7[eNB_index] = malloc16_clear( sizeof(SystemInformationBlockType7_t) );
-  UE_rrc_inst[ctxt_pP->module_id].sib8[eNB_index] = malloc16_clear( sizeof(SystemInformationBlockType8_t) );
-  UE_rrc_inst[ctxt_pP->module_id].sib9[eNB_index] = malloc16_clear( sizeof(SystemInformationBlockType9_t) );
-  UE_rrc_inst[ctxt_pP->module_id].sib10[eNB_index] = malloc16_clear( sizeof(SystemInformationBlockType10_t) );
-  UE_rrc_inst[ctxt_pP->module_id].sib11[eNB_index] = malloc16_clear( sizeof(SystemInformationBlockType11_t) );
-#if defined(Rel10) || defined(Rel14)
-  UE_rrc_inst[ctxt_pP->module_id].sib12[eNB_index] = malloc16_clear( sizeof(SystemInformationBlockType12_r9_t) );
-  UE_rrc_inst[ctxt_pP->module_id].sib13[eNB_index] = malloc16_clear( sizeof(SystemInformationBlockType13_r9_t) );
-  UE_rrc_inst[ctxt_pP->module_id].sib18[eNB_index] = malloc16_clear( sizeof(SystemInformationBlockType18_r12_t) );
-  UE_rrc_inst[ctxt_pP->module_id].sib19[eNB_index] = malloc16_clear( sizeof(SystemInformationBlockType19_r12_t) );
-  UE_rrc_inst[ctxt_pP->module_id].sib21[eNB_index] = malloc16_clear( sizeof(SystemInformationBlockType21_r14_t) );
-=======
   UE_rrc_inst[ctxt_pP->module_id].sib1[eNB_index] = malloc16_clear( sizeof(LTE_SystemInformationBlockType1_t) );
   UE_rrc_inst[ctxt_pP->module_id].sib2[eNB_index] = malloc16_clear( sizeof(LTE_SystemInformationBlockType2_t) );
   UE_rrc_inst[ctxt_pP->module_id].sib3[eNB_index] = malloc16_clear( sizeof(LTE_SystemInformationBlockType3_t) );
@@ -330,8 +298,6 @@ static void init_SI_UE( const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_
   UE_rrc_inst[ctxt_pP->module_id].sib18[eNB_index] = malloc16_clear( sizeof(LTE_SystemInformationBlockType18_r12_t) );
   UE_rrc_inst[ctxt_pP->module_id].sib19[eNB_index] = malloc16_clear( sizeof(LTE_SystemInformationBlockType19_r12_t) );
   UE_rrc_inst[ctxt_pP->module_id].sib21[eNB_index] = malloc16_clear( sizeof(LTE_SystemInformationBlockType21_r14_t) );
->>>>>>> main/develop:openair2/RRC/LTE/rrc_UE.c
-
 #endif
   UE_rrc_inst[ctxt_pP->module_id].SI[eNB_index] = (uint8_t*)malloc16_clear( 64 );
 
@@ -341,280 +307,96 @@ static void init_SI_UE( const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_
   UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIcnt    = 0;
 }
 
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_UE.c
-#ifdef Rel14
-void init_SL_preconfig(UE_RRC_INST *UE, const uint8_t eNB_index )
-{
-  LOG_I(RRC,"Initializing Sidelink Pre-configuration for UE\n");
-
-  // General
-  UE->SL_Preconfiguration[eNB_index] = malloc16_clear( sizeof(struct SL_Preconfiguration_r12) );
-  UE->SL_Preconfiguration[eNB_index]->preconfigGeneral_r12.rohc_Profiles_r12.profile0x0001_r12       = true;
-  UE->SL_Preconfiguration[eNB_index]->preconfigGeneral_r12.carrierFreq_r12                           = 3350;
-  UE->SL_Preconfiguration[eNB_index]->preconfigGeneral_r12.maxTxPower_r12                            = 0;
-  UE->SL_Preconfiguration[eNB_index]->preconfigGeneral_r12.additionalSpectrumEmission_r12            = 0;
-  UE->SL_Preconfiguration[eNB_index]->preconfigGeneral_r12.sl_bandwidth_r12                          = SL_PreconfigGeneral_r12__sl_bandwidth_r12_n50;
-  UE->SL_Preconfiguration[eNB_index]->preconfigGeneral_r12.tdd_ConfigSL_r12.subframeAssignmentSL_r12 = TDD_ConfigSL_r12__subframeAssignmentSL_r12_none;
-
-  // SYNC
-  UE->SL_Preconfiguration[eNB_index]->preconfigSync_r12.syncCP_Len_r12            = SL_CP_Len_r12_normal;
-  UE->SL_Preconfiguration[eNB_index]->preconfigSync_r12.syncOffsetIndicator1_r12  = 0;
-  UE->SL_Preconfiguration[eNB_index]->preconfigSync_r12.syncOffsetIndicator2_r12  = 0;
-  UE->SL_Preconfiguration[eNB_index]->preconfigSync_r12.syncTxParameters_r12      = 0;
-  UE->SL_Preconfiguration[eNB_index]->preconfigSync_r12.syncTxThreshOoC_r12       = 0;
-  UE->SL_Preconfiguration[eNB_index]->preconfigSync_r12.filterCoefficient_r12     = FilterCoefficient_fc0;
-  UE->SL_Preconfiguration[eNB_index]->preconfigSync_r12.syncRefMinHyst_r12        = SL_PreconfigSync_r12__syncRefMinHyst_r12_dB0;
-  UE->SL_Preconfiguration[eNB_index]->preconfigSync_r12.syncRefDiffHyst_r12       = SL_PreconfigSync_r12__syncRefDiffHyst_r12_dB0;
-  UE->SL_Preconfiguration[eNB_index]->preconfigSync_r12.ext1                      = malloc16_clear(sizeof(struct SL_PreconfigSync_r12__ext1));
-  UE->SL_Preconfiguration[eNB_index]->preconfigSync_r12.ext1->syncTxPeriodic_r13  = NULL;
-
-  // SL Control portion
-  struct SL_PreconfigCommPool_r12 *preconfigpool = malloc16_clear(sizeof(struct SL_PreconfigCommPool_r12));
-  preconfigpool->sc_CP_Len_r12                                                    = SL_CP_Len_r12_normal;
-  preconfigpool->sc_Period_r12                                                    = SL_PeriodComm_r12_sf320;
-  // 4 PRBs for SL-SC communications
-  preconfigpool->sc_TF_ResourceConfig_r12.prb_Num_r12                             = 4;
-  preconfigpool->sc_TF_ResourceConfig_r12.prb_Start_r12                           = 5;
-  preconfigpool->sc_TF_ResourceConfig_r12.prb_End_r12                             = 44;
-  // Offset set to 0 subframes
-  preconfigpool->sc_TF_ResourceConfig_r12.offsetIndicator_r12.present             = SL_OffsetIndicator_r12_PR_small_r12;
-  preconfigpool->sc_TF_ResourceConfig_r12.offsetIndicator_r12.choice.small_r12    = 0;
-  // 4 ms SL Period
-  preconfigpool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.present              = SubframeBitmapSL_r12_PR_bs4_r12;
-  preconfigpool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs4_r12.buf         = CALLOC(1,1);
-  preconfigpool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs4_r12.size        = 1;
-  preconfigpool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs4_r12.bits_unused = 4;
-  // 1st 4 subframes for PSCCH
-  preconfigpool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs4_r12.buf[0]      = 0x0F;
-  preconfigpool->sc_TxParameters_r12                                              = 0;
-
-  //SL Data portion
-  // 20 PRBs for SL communications
-  preconfigpool->data_TF_ResourceConfig_r12.prb_Num_r12                             = 20;
-  preconfigpool->data_TF_ResourceConfig_r12.prb_Start_r12                           = 5;
-  preconfigpool->data_TF_ResourceConfig_r12.prb_End_r12                             = 44;
-  preconfigpool->data_CP_Len_r12                                                  = SL_CP_Len_r12_normal;
-
-  preconfigpool->dataHoppingConfig_r12.hoppingParameter_r12                         = 0;
-  preconfigpool->dataHoppingConfig_r12.numSubbands_r12                              = SL_HoppingConfigComm_r12__numSubbands_r12_ns1;
-  preconfigpool->dataHoppingConfig_r12.rb_Offset_r12                                = 0;
-
-  preconfigpool->dataTxParameters_r12                                               = 0;
-
-  ASN_SEQUENCE_ADD(&UE->SL_Preconfiguration[eNB_index]->preconfigComm_r12.list,preconfigpool);
-
-  // Discovery (Use Rel13 fields)
-  
-
-  // Rel13 extensions
-  struct SL_Preconfiguration_r12__ext1 *ext1 = malloc16_clear(sizeof(struct SL_Preconfiguration_r12__ext1));
-  ext1->preconfigComm_v1310=NULL;
-  ext1->preconfigRelay_r13=NULL;
-  ext1->preconfigDisc_r13 = malloc16_clear(sizeof(struct SL_Preconfiguration_r12__ext1__preconfigDisc_r13));
-  
-  SL_PreconfigDiscPool_r13_t *discrxpool = malloc16_clear(sizeof(struct SL_PreconfigDiscPool_r13));
-  UE->SL_Preconfiguration[eNB_index]->ext1=ext1;
-  discrxpool->cp_Len_r13             = SL_CP_Len_r12_normal;
-  discrxpool->discPeriod_r13         = SL_PreconfigDiscPool_r13__discPeriod_r13_rf128;
-  discrxpool->numRetx_r13            = 3;
-  discrxpool->numRepetition_r13      = 1;
-  discrxpool->tf_ResourceConfig_r13.prb_Num_r12  = 8;
-  discrxpool->tf_ResourceConfig_r13.prb_Start_r12  = 15;
-  discrxpool->tf_ResourceConfig_r13.prb_End_r12  = 34;
-  discrxpool->tf_ResourceConfig_r13.offsetIndicator_r12.present  = SL_OffsetIndicator_r12_PR_small_r12;
-  discrxpool->tf_ResourceConfig_r13.offsetIndicator_r12.choice.small_r12  = 1;
-  discrxpool->tf_ResourceConfig_r13.subframeBitmap_r12.present  = SubframeBitmapSL_r12_PR_bs16_r12;
-  discrxpool->tf_ResourceConfig_r13.subframeBitmap_r12.choice.bs16_r12.buf  = CALLOC(1,2);
-  discrxpool->tf_ResourceConfig_r13.subframeBitmap_r12.choice.bs16_r12.buf[0]  = 0xFF;
-  discrxpool->tf_ResourceConfig_r13.subframeBitmap_r12.choice.bs16_r12.buf[1]  = 0xFF;
-
-  discrxpool->txParameters_r13 = malloc16_clear(sizeof(struct SL_PreconfigDiscPool_r13__txParameters_r13));
-  discrxpool->txParameters_r13->txParametersGeneral_r13 = 0;
-  discrxpool->txParameters_r13->txProbability_r13 = SL_PreconfigDiscPool_r13__txParameters_r13__txProbability_r13_p100;
-  ASN_SEQUENCE_ADD(&ext1->preconfigDisc_r13->discRxPoolList_r13.list,discrxpool);              
-  
-  UE->SL_Preconfiguration[eNB_index]->ext1 = ext1;
- 
-}
-
-#endif
-
-#if defined(Rel10) || defined(Rel14)
-//-----------------------------------------------------------------------------
-#if 0
-void init_MCCH_UE(module_id_t ue_mod_idP, uint8_t eNB_index)
-=======
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
 void init_SL_preconfig(UE_RRC_INST *UE, const uint8_t eNB_index )
->>>>>>> main/develop:openair2/RRC/LTE/rrc_UE.c
 {
-  LOG_I(RRC,"Initializing Sidelink Pre-configuration for UE\n");
+	LOG_I(RRC,"Initializing Sidelink Pre-configuration for UE\n");
+	//General
+	UE->SL_Preconfiguration[eNB_index] = malloc16_clear( sizeof(struct LTE_SL_Preconfiguration_r12) );
+	UE->SL_Preconfiguration[eNB_index]->preconfigGeneral_r12.rohc_Profiles_r12.profile0x0001_r12       = true;
+	UE->SL_Preconfiguration[eNB_index]->preconfigGeneral_r12.carrierFreq_r12                           = 3350;
+	UE->SL_Preconfiguration[eNB_index]->preconfigGeneral_r12.maxTxPower_r12                            = 0;
+	UE->SL_Preconfiguration[eNB_index]->preconfigGeneral_r12.additionalSpectrumEmission_r12            = 0;
+	UE->SL_Preconfiguration[eNB_index]->preconfigGeneral_r12.sl_bandwidth_r12                          = LTE_SL_PreconfigGeneral_r12__sl_bandwidth_r12_n50;
+	UE->SL_Preconfiguration[eNB_index]->preconfigGeneral_r12.tdd_ConfigSL_r12.subframeAssignmentSL_r12 = LTE_TDD_ConfigSL_r12__subframeAssignmentSL_r12_none;
+	//SYNC
+	UE->SL_Preconfiguration[eNB_index]->preconfigSync_r12.syncCP_Len_r12            = LTE_SL_CP_Len_r12_normal;
+	UE->SL_Preconfiguration[eNB_index]->preconfigSync_r12.syncOffsetIndicator1_r12  = 0;
+	UE->SL_Preconfiguration[eNB_index]->preconfigSync_r12.syncOffsetIndicator2_r12  = 0;
+	UE->SL_Preconfiguration[eNB_index]->preconfigSync_r12.syncTxParameters_r12      = 0;
+	UE->SL_Preconfiguration[eNB_index]->preconfigSync_r12.syncTxThreshOoC_r12       = 0;
+	UE->SL_Preconfiguration[eNB_index]->preconfigSync_r12.filterCoefficient_r12     = LTE_FilterCoefficient_fc0;
+	UE->SL_Preconfiguration[eNB_index]->preconfigSync_r12.syncRefMinHyst_r12        = LTE_SL_PreconfigSync_r12__syncRefMinHyst_r12_dB0;
+	UE->SL_Preconfiguration[eNB_index]->preconfigSync_r12.syncRefDiffHyst_r12       = LTE_SL_PreconfigSync_r12__syncRefDiffHyst_r12_dB0;
+	UE->SL_Preconfiguration[eNB_index]->preconfigSync_r12.ext1                      = malloc16_clear(sizeof(struct LTE_SL_PreconfigSync_r12__ext1));
+	UE->SL_Preconfiguration[eNB_index]->preconfigSync_r12.ext1->syncTxPeriodic_r13  = NULL;
 
-  UE->SL_Preconfiguration[eNB_index] = malloc16_clear( sizeof(struct LTE_SL_Preconfiguration_r12) );
-  UE->SL_Preconfiguration[eNB_index]->preconfigGeneral_r12.rohc_Profiles_r12.profile0x0001_r12       = true;
-  UE->SL_Preconfiguration[eNB_index]->preconfigGeneral_r12.carrierFreq_r12                           = 3350;
-  UE->SL_Preconfiguration[eNB_index]->preconfigGeneral_r12.maxTxPower_r12                            = 0;
-  UE->SL_Preconfiguration[eNB_index]->preconfigGeneral_r12.additionalSpectrumEmission_r12            = 0;
-  UE->SL_Preconfiguration[eNB_index]->preconfigGeneral_r12.sl_bandwidth_r12                          = LTE_SL_PreconfigGeneral_r12__sl_bandwidth_r12_n50;
-  UE->SL_Preconfiguration[eNB_index]->preconfigGeneral_r12.tdd_ConfigSL_r12.subframeAssignmentSL_r12 = LTE_TDD_ConfigSL_r12__subframeAssignmentSL_r12_none;
+	struct LTE_SL_PreconfigCommPool_r12 *preconfigpool = malloc16_clear(sizeof(struct LTE_SL_PreconfigCommPool_r12));
+	preconfigpool->sc_CP_Len_r12                                                    = LTE_SL_CP_Len_r12_normal;
+	preconfigpool->sc_Period_r12                                                    = LTE_SL_PeriodComm_r12_sf40;
+	// 4 PRBs for SL communications
+	preconfigpool->sc_TF_ResourceConfig_r12.prb_Num_r12                             = 4;
+	preconfigpool->sc_TF_ResourceConfig_r12.prb_Start_r12                           = 5;
+	preconfigpool->sc_TF_ResourceConfig_r12.prb_End_r12                             = 44;
+	// Offset set to 0 subframes
+	preconfigpool->sc_TF_ResourceConfig_r12.offsetIndicator_r12.present             = LTE_SL_OffsetIndicator_r12_PR_small_r12;
+	preconfigpool->sc_TF_ResourceConfig_r12.offsetIndicator_r12.choice.small_r12    = 0;
+	// 4 ms SL Period
+	preconfigpool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.present              = LTE_SubframeBitmapSL_r12_PR_bs4_r12;
+	preconfigpool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs4_r12.buf         = CALLOC(1,1);
+	preconfigpool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs4_r12.size        = 1;
+	preconfigpool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs4_r12.bits_unused = 4;
+	// 1st 4 subframes for PSCCH
+	preconfigpool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs4_r12.buf[0]      = 0x0F;
+	preconfigpool->sc_TxParameters_r12                                              = 0;
 
-  UE->SL_Preconfiguration[eNB_index]->preconfigSync_r12.syncCP_Len_r12            = LTE_SL_CP_Len_r12_normal;
-  UE->SL_Preconfiguration[eNB_index]->preconfigSync_r12.syncOffsetIndicator1_r12  = 0;
-  UE->SL_Preconfiguration[eNB_index]->preconfigSync_r12.syncOffsetIndicator2_r12  = 0;
-  UE->SL_Preconfiguration[eNB_index]->preconfigSync_r12.syncTxParameters_r12      = 0;
-  UE->SL_Preconfiguration[eNB_index]->preconfigSync_r12.syncTxThreshOoC_r12       = 0;
-  UE->SL_Preconfiguration[eNB_index]->preconfigSync_r12.filterCoefficient_r12     = LTE_FilterCoefficient_fc0;
-  UE->SL_Preconfiguration[eNB_index]->preconfigSync_r12.syncRefMinHyst_r12        = LTE_SL_PreconfigSync_r12__syncRefMinHyst_r12_dB0;
-  UE->SL_Preconfiguration[eNB_index]->preconfigSync_r12.syncRefDiffHyst_r12       = LTE_SL_PreconfigSync_r12__syncRefDiffHyst_r12_dB0;
-  UE->SL_Preconfiguration[eNB_index]->preconfigSync_r12.ext1                      = malloc16_clear(sizeof(struct LTE_SL_PreconfigSync_r12__ext1));
-  UE->SL_Preconfiguration[eNB_index]->preconfigSync_r12.ext1->syncTxPeriodic_r13  = NULL;
+	//SL Data portion
+	// 20 PRBs for SL communications
+	preconfigpool->data_TF_ResourceConfig_r12.prb_Num_r12                             = 20;
+	preconfigpool->data_TF_ResourceConfig_r12.prb_Start_r12                           = 5;
+	preconfigpool->data_TF_ResourceConfig_r12.prb_End_r12                             = 44;
+	preconfigpool->data_CP_Len_r12                                                  = LTE_SL_CP_Len_r12_normal;
 
-  struct LTE_SL_PreconfigCommPool_r12 *preconfigpool = malloc16_clear(sizeof(struct LTE_SL_PreconfigCommPool_r12));
-  preconfigpool->sc_CP_Len_r12                                                    = LTE_SL_CP_Len_r12_normal;
-  preconfigpool->sc_Period_r12                                                    = LTE_SL_PeriodComm_r12_sf40;
-  // 20 PRBs for SL communications
-  preconfigpool->sc_TF_ResourceConfig_r12.prb_Num_r12                             = 20;
-  preconfigpool->sc_TF_ResourceConfig_r12.prb_Start_r12                           = 5;
-  preconfigpool->sc_TF_ResourceConfig_r12.prb_End_r12                             = 44;
-  // Offset set to 0 subframes
-  preconfigpool->sc_TF_ResourceConfig_r12.offsetIndicator_r12.present             = LTE_SL_OffsetIndicator_r12_PR_small_r12;
-  preconfigpool->sc_TF_ResourceConfig_r12.offsetIndicator_r12.choice.small_r12    = 0;
-  // 40 ms SL Period
-  preconfigpool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.present              = LTE_SubframeBitmapSL_r12_PR_bs40_r12;
-  preconfigpool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs40_r12.buf         = CALLOC(1,5);
-  preconfigpool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs40_r12.size        = 5;
-  preconfigpool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs40_r12.bits_unused = 0;
-  // 1st 4 subframes for PSCCH
-  preconfigpool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs40_r12.buf[0]      = 0xF;
-  preconfigpool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs40_r12.buf[1]      = 0;
-  preconfigpool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs40_r12.buf[2]      = 0;
-  preconfigpool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs40_r12.buf[3]      = 0;
-  preconfigpool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs40_r12.buf[4]      = 0;
-  preconfigpool->sc_TxParameters_r12                                              = 0;
+	preconfigpool->dataHoppingConfig_r12.hoppingParameter_r12                         = 0;
+	preconfigpool->dataHoppingConfig_r12.numSubbands_r12                              = LTE_SL_HoppingConfigComm_r12__numSubbands_r12_ns1;
+	preconfigpool->dataHoppingConfig_r12.rb_Offset_r12                                = 0;
 
-  preconfigpool->data_CP_Len_r12                                                  = LTE_SL_CP_Len_r12_normal;
-  // 20 PRBs for SL communications
-  preconfigpool->data_TF_ResourceConfig_r12.prb_Num_r12                             = 20;
-  preconfigpool->data_TF_ResourceConfig_r12.prb_Start_r12                           = 5;
-  preconfigpool->data_TF_ResourceConfig_r12.prb_End_r12                             = 44;
-  // Offset set to 0 subframes
-  preconfigpool->data_TF_ResourceConfig_r12.offsetIndicator_r12.present             = LTE_SL_OffsetIndicator_r12_PR_small_r12;
-  preconfigpool->data_TF_ResourceConfig_r12.offsetIndicator_r12.choice.small_r12    = 0;
-  // 40 ms SL Period
-  preconfigpool->data_TF_ResourceConfig_r12.subframeBitmap_r12.present              = LTE_SubframeBitmapSL_r12_PR_bs40_r12;
-  preconfigpool->data_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs40_r12.buf         = CALLOC(1,5);
-  preconfigpool->data_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs40_r12.size        = 5;
-  preconfigpool->data_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs40_r12.bits_unused = 0;
-  // last 36 subframes for PSCCH
-  preconfigpool->data_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs40_r12.buf[0]      = 0xF0;
-  preconfigpool->data_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs40_r12.buf[1]      = 0xFF;
-  preconfigpool->data_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs40_r12.buf[2]      = 0xFF;
-  preconfigpool->data_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs40_r12.buf[3]      = 0xFF;
-  preconfigpool->data_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs40_r12.buf[5]      = 0xFF;
+	preconfigpool->dataTxParameters_r12                                               = 0;
 
-  preconfigpool->dataHoppingConfig_r12.hoppingParameter_r12                         = 0;
-  preconfigpool->dataHoppingConfig_r12.numSubbands_r12                              = LTE_SL_HoppingConfigComm_r12__numSubbands_r12_ns1;
-  preconfigpool->dataHoppingConfig_r12.rb_Offset_r12                                = 0;
+	ASN_SEQUENCE_ADD(&UE->SL_Preconfiguration[eNB_index]->preconfigComm_r12.list,preconfigpool);
 
-  preconfigpool->dataTxParameters_r12                                               = 0;
+	// Discovery (Use Rel13 fields)
 
-  ASN_SEQUENCE_ADD(&UE->SL_Preconfiguration[eNB_index]->preconfigComm_r12.list,preconfigpool);
 
-  // Rel13 extensions
-  UE->SL_Preconfiguration[eNB_index]->ext1 = NULL;
-/*
-  // Establish a SLRB (using DRB 3 for now)
-  protocol_ctxt_t ctxt;
-  PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, 0, ENB_FLAG_NO, 0x1234, 0, 0,0);
+	// Rel13 extensions
+	struct SL_Preconfiguration_r12__ext1 *ext1 = malloc16_clear(sizeof(struct SL_Preconfiguration_r12__ext1));
+	ext1->preconfigComm_v1310=NULL;
+	ext1->preconfigRelay_r13=NULL;
+	ext1->preconfigDisc_r13 = malloc16_clear(sizeof(struct SL_Preconfiguration_r12__ext1__preconfigDisc_r13));
 
-  UE->DRB_config[0][0] = CALLOC(1,sizeof(struct DRB_ToAddMod));
-  UE->DRB_config[0][0]->eps_BearerIdentity = CALLOC(1, sizeof(long));
-  UE->DRB_config[0][0]->drb_Identity =  3;
-  UE->DRB_config[0][0]->eps_BearerIdentity = CALLOC(1, sizeof(long));
-  // allowed value 5..15, value : x+4
-  *(UE->DRB_config[0][0]->eps_BearerIdentity) = 3;
-  UE->DRB_config[0][0]->logicalChannelIdentity = CALLOC(1, sizeof(long));
-  *(UE->DRB_config[0][0]->logicalChannelIdentity) = UE->DRB_config[0][0]->drb_Identity; //(long) (ue_context_pP->ue_context.e_rab[i].param.e_rab_id + 2); // value : x+2
+	SL_PreconfigDiscPool_r13_t *discrxpool = malloc16_clear(sizeof(struct SL_PreconfigDiscPool_r13));
+	UE->SL_Preconfiguration[eNB_index]->ext1=ext1;
+	discrxpool->cp_Len_r13             = SL_CP_Len_r12_normal;
+	discrxpool->discPeriod_r13         = SL_PreconfigDiscPool_r13__discPeriod_r13_rf128;
+	discrxpool->numRetx_r13            = 3;
+	discrxpool->numRepetition_r13      = 1;
+	discrxpool->tf_ResourceConfig_r13.prb_Num_r12  = 8;
+	discrxpool->tf_ResourceConfig_r13.prb_Start_r12  = 15;
+	discrxpool->tf_ResourceConfig_r13.prb_End_r12  = 34;
+	discrxpool->tf_ResourceConfig_r13.offsetIndicator_r12.present  = SL_OffsetIndicator_r12_PR_small_r12;
+	discrxpool->tf_ResourceConfig_r13.offsetIndicator_r12.choice.small_r12  = 1;
+	discrxpool->tf_ResourceConfig_r13.subframeBitmap_r12.present  = SubframeBitmapSL_r12_PR_bs16_r12;
+	discrxpool->tf_ResourceConfig_r13.subframeBitmap_r12.choice.bs16_r12.buf  = CALLOC(1,2);
+	discrxpool->tf_ResourceConfig_r13.subframeBitmap_r12.choice.bs16_r12.buf[0]  = 0xFF;
+	discrxpool->tf_ResourceConfig_r13.subframeBitmap_r12.choice.bs16_r12.buf[1]  = 0xFF;
 
-  // TTN - Establish a new SLRB for PC5-S (using DRB 10 for now)
-  UE->DRB_config[0][1] = CALLOC(1,sizeof(struct DRB_ToAddMod));
-  UE->DRB_config[0][1]->eps_BearerIdentity = CALLOC(1, sizeof(long));
-  UE->DRB_config[0][1]->drb_Identity =  10;
-  UE->DRB_config[0][1]->eps_BearerIdentity = CALLOC(1, sizeof(long));
-  // allowed value 5..15, value : x+4
-  *(UE->DRB_config[0][1]->eps_BearerIdentity) = 10;
-  UE->DRB_config[0][1]->logicalChannelIdentity = CALLOC(1, sizeof(long));
-  *(UE->DRB_config[0][1]->logicalChannelIdentity) = UE->DRB_config[0][1]->drb_Identity; //(long) (ue_context_pP->ue_context.e_rab[i].param.e_rab_id + 2); // value : x+2
+	discrxpool->txParameters_r13 = malloc16_clear(sizeof(struct SL_PreconfigDiscPool_r13__txParameters_r13));
+	discrxpool->txParameters_r13->txParametersGeneral_r13 = 0;
+	discrxpool->txParameters_r13->txProbability_r13 = SL_PreconfigDiscPool_r13__txParameters_r13__txProbability_r13_p100;
+	ASN_SEQUENCE_ADD(&ext1->preconfigDisc_r13->discRxPoolList_r13.list,discrxpool);
 
-  struct RLC_Config                  *DRB_rlc_config                   = CALLOC(1,sizeof(struct RLC_Config));
-  struct PDCP_Config                 *DRB_pdcp_config                  = CALLOC(1,sizeof(struct PDCP_Config));
-  struct PDCP_Config__rlc_UM         *PDCP_rlc_UM                      = CALLOC(1,sizeof(struct PDCP_Config__rlc_UM));
-  struct LogicalChannelConfig        *DRB_lchan_config                 = CALLOC(1,sizeof(struct LogicalChannelConfig));
-  struct LogicalChannelConfig__ul_SpecificParameters
-    *DRB_ul_SpecificParameters                                         = CALLOC(1, sizeof(struct LogicalChannelConfig__ul_SpecificParameters));
-  long                               *logicalchannelgroup_drb          = CALLOC(1, sizeof(long));
-
-  DRB_rlc_config->present = RLC_Config_PR_um_Bi_Directional;
-  DRB_rlc_config->choice.um_Bi_Directional.ul_UM_RLC.sn_FieldLength = SN_FieldLength_size10;
-  DRB_rlc_config->choice.um_Bi_Directional.dl_UM_RLC.sn_FieldLength = SN_FieldLength_size10;
-  DRB_rlc_config->choice.um_Bi_Directional.dl_UM_RLC.t_Reordering = T_Reordering_ms35;
-  UE->DRB_config[0][0]->rlc_Config = DRB_rlc_config;
-  UE->DRB_config[0][1]->rlc_Config = DRB_rlc_config;
-
-  DRB_pdcp_config = CALLOC(1, sizeof(*DRB_pdcp_config));
-  UE->DRB_config[0][0]->pdcp_Config = DRB_pdcp_config;
-  UE->DRB_config[0][1]->pdcp_Config = DRB_pdcp_config;
-  DRB_pdcp_config->discardTimer = CALLOC(1, sizeof(long));
-  *DRB_pdcp_config->discardTimer = PDCP_Config__discardTimer_infinity;
-  DRB_pdcp_config->rlc_AM = NULL;
-  DRB_pdcp_config->rlc_UM = NULL;
-
-  // avoid gcc warnings
-  (void)PDCP_rlc_UM;
-
-  DRB_pdcp_config->rlc_UM = PDCP_rlc_UM;
-  PDCP_rlc_UM->pdcp_SN_Size = PDCP_Config__rlc_UM__pdcp_SN_Size_len12bits;
-  DRB_pdcp_config->headerCompression.present = PDCP_Config__headerCompression_PR_notUsed;
-
-  UE->DRB_config[0][0]->logicalChannelConfig = DRB_lchan_config;
-  UE->DRB_config[0][1]->logicalChannelConfig = DRB_lchan_config;
-  DRB_ul_SpecificParameters = CALLOC(1, sizeof(*DRB_ul_SpecificParameters));
-  DRB_lchan_config->ul_SpecificParameters = DRB_ul_SpecificParameters;
-
-  DRB_ul_SpecificParameters->priority = 12;    // lower priority than srb1, srb2 and other dedicated bearer
-  DRB_ul_SpecificParameters->prioritisedBitRate =LogicalChannelConfig__ul_SpecificParameters__prioritisedBitRate_kBps8 ;
-    //LogicalChannelConfig__ul_SpecificParameters__prioritisedBitRate_infinity;
-  DRB_ul_SpecificParameters->bucketSizeDuration =
-    LogicalChannelConfig__ul_SpecificParameters__bucketSizeDuration_ms50;
-
-  // LCG for DTCH can take the value from 1 to 3 as defined in 36331: normally controlled by upper layers (like RRM)
-
-  *logicalchannelgroup_drb = 1;
-  DRB_ul_SpecificParameters->logicalChannelGroup = logicalchannelgroup_drb;
-
-  UE->DRB_configList = CALLOC(1,sizeof(DRB_ToAddModList_t));
-  ASN_SEQUENCE_ADD(&UE->DRB_configList->list,UE->DRB_config[0][0]);
-  ASN_SEQUENCE_ADD(&UE->DRB_configList->list,UE->DRB_config[0][1]);
-
-  rrc_pdcp_config_asn1_req(&ctxt,
-			   (SRB_ToAddModList_t *) NULL,
-			   UE->DRB_configList,
-			   (DRB_ToReleaseList_t*) NULL,
-			   0xff, NULL, NULL, NULL
-#if (LTE_RRC_VERSION >= MAKE_VERSION(10, 0, 0))
-                           , (LTE_PMCH_InfoList_r9_t *) NULL
-#endif
-                           ,NULL);
-
-  rrc_rlc_config_asn1_req(&ctxt,
-			  (SRB_ToAddModList_t*)NULL,
-			  UE->DRB_configList,
-			  (DRB_ToReleaseList_t*)NULL
-#if (LTE_RRC_VERSION >= MAKE_VERSION(10, 0, 0))
-			  ,(LTE_PMCH_InfoList_r9_t *)NULL
-#endif
-			  );
-*/
+	UE->SL_Preconfiguration[eNB_index]->ext1 = ext1;
+ 
 }
 
 #endif
@@ -909,12 +691,7 @@ int rrc_ue_decode_ccch( const protocol_ctxt_t* const ctxt_pP, const SRB_INFO* co
     char        message_string[10000];
     size_t      message_string_size;
 
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_UE.c
-    //LOG_I(RRC, "Panos-D: rrc_ue_decode_ccch, Before xer_sprint() \n");
-    if ((message_string_size = xer_sprint(message_string, sizeof(message_string), &asn_DEF_DL_CCCH_Message, (void *)dl_ccch_msg)) > 0) {
-=======
     if ((message_string_size = xer_sprint(message_string, sizeof(message_string), &asn_DEF_LTE_DL_CCCH_Message, (void *)dl_ccch_msg)) > 0) {
->>>>>>> main/develop:openair2/RRC/LTE/rrc_UE.c
       MessageDef *msg_p;
 
       msg_p = itti_alloc_new_message_sized (TASK_RRC_UE, RRC_DL_CCCH, message_string_size + sizeof (IttiMsgText));
@@ -1219,9 +996,8 @@ rrc_ue_process_measConfig(
 			  0,
 			  0
 #endif
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_UE.c
-#if defined(Rel14)
-           ,
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
+			  ,
 			  0,
 			  NULL,
 			  NULL,
@@ -1230,13 +1006,6 @@ rrc_ue_process_measConfig(
 			  1025, // indicates that there is no  update in the frame number
 			  11,   // /indicates that there isno update in the subframe number
 			  NULL
-=======
-#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
-           ,
-           0,
-           NULL,
-           NULL
->>>>>>> main/develop:openair2/RRC/LTE/rrc_UE.c
 #endif
 			  );
   }
@@ -1680,17 +1449,10 @@ rrc_ue_process_radioResourceConfigDedicated(
     // Refresh SRBs
     rrc_rlc_config_asn1_req(ctxt_pP,
                             radioResourceConfigDedicated->srb_ToAddModList,
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_UE.c
-                            (DRB_ToAddModList_t*)NULL,
-                            (DRB_ToReleaseList_t*)NULL
-#if defined(Rel10) || defined(Rel14)
-                            ,(PMCH_InfoList_r9_t *)NULL
-=======
                             (LTE_DRB_ToAddModList_t*)NULL,
                             (LTE_DRB_ToReleaseList_t*)NULL
 #if (LTE_RRC_VERSION >= MAKE_VERSION(9, 0, 0))
                             ,(LTE_PMCH_InfoList_r9_t *)NULL
->>>>>>> main/develop:openair2/RRC/LTE/rrc_UE.c
                             , 0, 0
 #endif
                            );
@@ -1758,9 +1520,8 @@ rrc_ue_process_radioResourceConfigDedicated(
 				0,
 				0
 #endif
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_UE.c
-#if defined(Rel14)
-           ,
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
+                ,
 				0,
 				NULL,
 				NULL,
@@ -1769,13 +1530,6 @@ rrc_ue_process_radioResourceConfigDedicated(
 				1025, // indicates that there is no  update in the frame number
 				11,   // /indicates that there isno update in the subframe number
 				NULL
-=======
-#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
-           ,
-           0,
-           NULL,
-           NULL
->>>>>>> main/develop:openair2/RRC/LTE/rrc_UE.c
 #endif
 				);
         }
@@ -1836,8 +1590,7 @@ rrc_ue_process_radioResourceConfigDedicated(
 				0,
 				0
 #endif
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_UE.c
-#if defined(Rel14)
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
 				,
 				0,
 				NULL,
@@ -1847,13 +1600,6 @@ rrc_ue_process_radioResourceConfigDedicated(
 				1025, // indicates that there is no  update in the frame number
 				11,   // /indicates that there isno update in the subframe number
 				NULL
-=======
-#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
-           ,
-           0,
-           NULL,
-           NULL
->>>>>>> main/develop:openair2/RRC/LTE/rrc_UE.c
 #endif
 				);
         }
@@ -1909,15 +1655,9 @@ rrc_ue_process_radioResourceConfigDedicated(
     rrc_rlc_config_asn1_req(ctxt_pP,
                             (LTE_SRB_ToAddModList_t*)NULL,
                             radioResourceConfigDedicated->drb_ToAddModList,
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_UE.c
-                            (DRB_ToReleaseList_t*)NULL
-#if defined(Rel10) || defined(Rel14)
-                            ,(PMCH_InfoList_r9_t *)NULL
-=======
                             (LTE_DRB_ToReleaseList_t*)NULL
 #if (LTE_RRC_VERSION >= MAKE_VERSION(9, 0, 0))
                             ,(LTE_PMCH_InfoList_r9_t *)NULL
->>>>>>> main/develop:openair2/RRC/LTE/rrc_UE.c
                             , 0, 0
 #endif
                            );
@@ -1969,8 +1709,7 @@ rrc_ue_process_radioResourceConfigDedicated(
 			      UE_rrc_inst[ue_mod_idP].num_active_cba_groups, //
 			      UE_rrc_inst[ue_mod_idP].cba_rnti[0]
 #endif
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_UE.c
-#if defined(Rel14)
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
 			      ,
 			      0,
 			      NULL,
@@ -1980,13 +1719,6 @@ rrc_ue_process_radioResourceConfigDedicated(
 			      1025, // indicates that there is no  update in the frame number
 			      11,   // /indicates that there isno update in the subframe number
 			      NULL
-=======
-#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
-           ,
-           0,
-           NULL,
-           NULL
->>>>>>> main/develop:openair2/RRC/LTE/rrc_UE.c
 #endif
 			      );
 
@@ -2075,17 +1807,10 @@ rrc_ue_process_securityModeCommand(
 
   if (securityMode >= NO_SECURITY_MODE) {
 	  LOG_I(RRC, "rrc_ue_process_securityModeCommand, security mode complete case \n");
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_UE.c
-    ul_dcch_msg.message.choice.c1.present = UL_DCCH_MessageType__c1_PR_securityModeComplete;
-  } else {
-	  LOG_I(RRC, "rrc_ue_process_securityModeCommand, security mode failure case \n");
-    ul_dcch_msg.message.choice.c1.present = UL_DCCH_MessageType__c1_PR_securityModeFailure;
-=======
     ul_dcch_msg.message.choice.c1.present = LTE_UL_DCCH_MessageType__c1_PR_securityModeComplete;
   } else {
 	  LOG_I(RRC, "rrc_ue_process_securityModeCommand, security mode failure case \n");
     ul_dcch_msg.message.choice.c1.present = LTE_UL_DCCH_MessageType__c1_PR_securityModeFailure;
->>>>>>> main/develop:openair2/RRC/LTE/rrc_UE.c
   }
 
 
@@ -2174,13 +1899,7 @@ rrc_ue_process_securityModeCommand(
     {
       char        message_string[20000];
       size_t      message_string_size;
-      
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_UE.c
-      //LOG_I(RRC, "Panos-D: rrc_ue_process_securityModeCommand, Before xer_sprint() \n");
-      if ((message_string_size = xer_sprint(message_string, sizeof(message_string), &asn_DEF_UL_DCCH_Message, (void *) &ul_dcch_msg)) > 0) {
-=======
       if ((message_string_size = xer_sprint(message_string, sizeof(message_string), &asn_DEF_LTE_UL_DCCH_Message, (void *) &ul_dcch_msg)) > 0) {
->>>>>>> main/develop:openair2/RRC/LTE/rrc_UE.c
 	MessageDef *msg_p;
 	
 	msg_p = itti_alloc_new_message_sized (TASK_RRC_UE, RRC_UL_DCCH, message_string_size + sizeof (IttiMsgText));
@@ -2259,11 +1978,7 @@ rrc_ue_process_ueCapabilityEnquiry(
 	      "UECapabilityEnquiry->criticalExtensions.present (%d) != UECapabilityEnquiry__criticalExtensions_PR_c1 (%d)\n",
 	      UECapabilityEnquiry->criticalExtensions.present,LTE_UECapabilityEnquiry__criticalExtensions_PR_c1);
 
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_UE.c
-  if (UECapabilityEnquiry->criticalExtensions.choice.c1.present != UECapabilityEnquiry__criticalExtensions__c1_PR_ueCapabilityEnquiry_r8)
-=======
   if (UECapabilityEnquiry->criticalExtensions.choice.c1.present != LTE_UECapabilityEnquiry__criticalExtensions__c1_PR_ueCapabilityEnquiry_r8)
->>>>>>> main/develop:openair2/RRC/LTE/rrc_UE.c
     LOG_I(RRC,"UECapabilityEnquiry->criticalExtensions.choice.c1.present (%d) != UECapabilityEnquiry__criticalExtensions__c1_PR_ueCapabilityEnquiry_r8)\n",
 	  UECapabilityEnquiry->criticalExtensions.choice.c1.present);
   
@@ -2294,13 +2009,7 @@ rrc_ue_process_ueCapabilityEnquiry(
       {
 	char        message_string[20000];
 	size_t      message_string_size;
-	
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_UE.c
-	//LOG_I(RRC, "Panos-D: rrc_ue_process_ueCapabilityEnquiry, Before xer_sprint() \n");
-	if ((message_string_size = xer_sprint(message_string, sizeof(message_string), &asn_DEF_UL_DCCH_Message, (void *) &ul_dcch_msg)) > 0) {
-=======
 	if ((message_string_size = xer_sprint(message_string, sizeof(message_string), &asn_DEF_LTE_UL_DCCH_Message, (void *) &ul_dcch_msg)) > 0) {
->>>>>>> main/develop:openair2/RRC/LTE/rrc_UE.c
 	  MessageDef *msg_p;
 	  
 	  msg_p = itti_alloc_new_message_sized (TASK_RRC_UE, RRC_UL_DCCH, message_string_size + sizeof (IttiMsgText));
@@ -2386,26 +2095,15 @@ rrc_ue_process_rrcConnectionReconfiguration(
                                     != NULL)
                                     && (rrcConnectionReconfiguration_r8->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->sl_CommConfig_r12
                                           != NULL)) {
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_UE.c
-         if (rrcConnectionReconfiguration_r8->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->sl_CommConfig_r12->commTxResources_r12->present != SL_CommConfig_r12__commTxResources_r12_PR_NOTHING){
-             On_Off_Net = UE_STATE_ON_NETWORK;
-        	 LOG_I(RRC,"sl-CommConfig is present, UE state: %d \n", On_Off_Net);
-            //process sl-CommConfig
-            rrc_ue_process_sidelink_radioResourceConfig(ctxt_pP->module_id,eNB_index,
-                  (SystemInformationBlockType18_r12_t *)NULL,
-                  (SystemInformationBlockType19_r12_t *)NULL,
-                  rrcConnectionReconfiguration_r8->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->sl_CommConfig_r12,
-                  (SL_DiscConfig_r12_t *)NULL
-=======
-         if (rrcConnectionReconfiguration_r8->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->sl_CommConfig_r12->commTxResources_r12->present != LTE_SL_CommConfig_r12__commTxResources_r12_PR_NOTHING){
-            LOG_I(RRC,"sl-CommConfig is present\n");
-            //process sl-CommConfig
-            rrc_ue_process_sidelink_radioResourceConfig(ctxt_pP->module_id,eNB_index,
-                  (LTE_SystemInformationBlockType18_r12_t *)NULL,
-                  (LTE_SystemInformationBlockType19_r12_t *)NULL,
-                  rrcConnectionReconfiguration_r8->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->sl_CommConfig_r12,
-                  (LTE_SL_DiscConfig_r12_t *)NULL
->>>>>>> main/develop:openair2/RRC/LTE/rrc_UE.c
+		if (rrcConnectionReconfiguration_r8->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->sl_CommConfig_r12->commTxResources_r12->present != LTE_SL_CommConfig_r12__commTxResources_r12_PR_NOTHING){
+			On_Off_Net = UE_STATE_ON_NETWORK;
+			LOG_I(RRC,"sl-CommConfig is present, UE state: %d \n", On_Off_Net);
+			//process sl-CommConfig
+			rrc_ue_process_sidelink_radioResourceConfig(ctxt_pP->module_id,eNB_index,
+					(LTE_SystemInformationBlockType18_r12_t *)NULL,
+					(LTE_SystemInformationBlockType19_r12_t *)NULL,
+					rrcConnectionReconfiguration_r8->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->sl_CommConfig_r12,
+					(LTE_SL_DiscConfig_r12_t *)NULL
             );
          }
       }
@@ -2530,7 +2228,6 @@ rrc_ue_process_mobilityControlInfo(
   }
    */
   //Removing SRB1 and SRB2 and DRB0
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_UE.c
   LOG_N(RRC,"[UE %d] : Update needed for rrc_pdcp_config_req (deprecated) and rrc_rlc_config_req commands(deprecated)\n", ctxt_pP->module_id);
   rrc_pdcp_config_req (ctxt_pP, SRB_FLAG_YES, CONFIG_ACTION_REMOVE, DCCH,UNDEF_SECURITY_MODE
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
@@ -2568,15 +2265,6 @@ rrc_ue_process_mobilityControlInfo(
     ,0
 #endif
     );
-=======
-  LOG_I(RRC,"[UE %d] : Update needed for rrc_pdcp_config_req (deprecated) and rrc_rlc_config_req commands(deprecated)\n", ctxt_pP->module_id);
-  rrc_pdcp_config_req (ctxt_pP, SRB_FLAG_YES, CONFIG_ACTION_REMOVE, DCCH,UNDEF_SECURITY_MODE);
-  rrc_rlc_config_req(ctxt_pP, SRB_FLAG_YES, MBMS_FLAG_NO, CONFIG_ACTION_REMOVE,ctxt_pP->module_id+DCCH,Rlc_info_am_config);
-  rrc_pdcp_config_req (ctxt_pP, SRB_FLAG_YES, CONFIG_ACTION_REMOVE, DCCH1,UNDEF_SECURITY_MODE);
-  rrc_rlc_config_req(ctxt_pP, SRB_FLAG_YES,CONFIG_ACTION_REMOVE, MBMS_FLAG_NO,ctxt_pP->module_id+DCCH1,Rlc_info_am_config);
-  rrc_pdcp_config_req (ctxt_pP, SRB_FLAG_NO, CONFIG_ACTION_REMOVE, DTCH,UNDEF_SECURITY_MODE);
-  rrc_rlc_config_req(ctxt_pP, SRB_FLAG_NO,CONFIG_ACTION_REMOVE, MBMS_FLAG_NO,ctxt_pP->module_id+DTCH,Rlc_info_um);
->>>>>>> main/develop:openair2/RRC/LTE/rrc_UE.c
   /*
   rrc_pdcp_config_asn1_req(NB_eNB_INST+ue_mod_idP,frameP, 0,eNB_index,
          NULL, // SRB_ToAddModList
@@ -2656,8 +2344,7 @@ rrc_ue_process_mobilityControlInfo(
 			,0,
 			0
 #endif
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_UE.c
-#if defined(Rel14)
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
 			,
 			0,
 			NULL,
@@ -2667,13 +2354,6 @@ rrc_ue_process_mobilityControlInfo(
 			1025, // indicates that there is no  update in the frame number
 			11,   // /indicates that there isno update in the subframe number
 			NULL
-=======
-#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
-           ,
-           0,
-           NULL,
-           NULL
->>>>>>> main/develop:openair2/RRC/LTE/rrc_UE.c
 #endif
 			);
 
@@ -2759,12 +2439,7 @@ rrc_ue_decode_dcch(
     char        message_string[30000];
     size_t      message_string_size;
 
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_UE.c
-    //LOG_I(RRC, "Panos-D: rrc_ue_decode_dcch, Before xer_sprint() \n");
-    if ((message_string_size = xer_sprint(message_string, sizeof(message_string), &asn_DEF_DL_DCCH_Message, (void *)dl_dcch_msg)) > 0) {
-=======
     if ((message_string_size = xer_sprint(message_string, sizeof(message_string), &asn_DEF_LTE_DL_DCCH_Message, (void *)dl_dcch_msg)) > 0) {
->>>>>>> main/develop:openair2/RRC/LTE/rrc_UE.c
       msg_p = itti_alloc_new_message_sized (TASK_RRC_UE, RRC_DL_DCCH, message_string_size + sizeof (IttiMsgText));
       msg_p->ittiMsg.rrc_dl_dcch.size = message_string_size;
       memcpy(&msg_p->ittiMsg.rrc_dl_dcch.text, message_string, message_string_size);
@@ -2983,13 +2658,8 @@ rrc_ue_decode_dcch(
         if (send_ue_information == 0) {
            LOG_I(RRC, "TEST SidelinkUEInformation [UE %d] Received  (eNB %d)\n",
                  ctxt_pP->module_id, eNB_indexP);
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_UE.c
-           SL_DestinationInfoList_r12_t *destinationInfoList = CALLOC(1, sizeof(SL_DestinationInfoList_r12_t));
-           SL_DestinationIdentity_r12_t *sl_destination_identity = CALLOC(1, sizeof(SL_DestinationIdentity_r12_t));
-=======
            LTE_SL_DestinationInfoList_r12_t *destinationInfoList = CALLOC(1, sizeof(LTE_SL_DestinationInfoList_r12_t));
            LTE_SL_DestinationIdentity_r12_t *sl_destination_identity = CALLOC(1, sizeof(LTE_SL_DestinationIdentity_r12_t));
->>>>>>> main/develop:openair2/RRC/LTE/rrc_UE.c
            sl_destination_identity->size = 3;
            sl_destination_identity->buf = CALLOC(1,3);
            sl_destination_identity->buf[0] = 0x00;
@@ -3309,12 +2979,7 @@ int decode_BCCH_DLSCH_Message(
     char        message_string[15000];
     size_t      message_string_size;
 
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_UE.c
-    //LOG_I(RRC, "Panos-D: decode_BCCH_DLSCH_Message, Before xer_sprint() \n");
-    if ((message_string_size = xer_sprint(message_string, sizeof(message_string), &asn_DEF_BCCH_DL_SCH_Message, (void *)bcch_message)) > 0) {
-=======
     if ((message_string_size = xer_sprint(message_string, sizeof(message_string), &asn_DEF_LTE_BCCH_DL_SCH_Message, (void *)bcch_message)) > 0) {
->>>>>>> main/develop:openair2/RRC/LTE/rrc_UE.c
       MessageDef *msg_p;
 
       msg_p = itti_alloc_new_message_sized (TASK_RRC_UE, RRC_DL_BCCH, message_string_size + sizeof (IttiMsgText));
@@ -3338,12 +3003,6 @@ int decode_BCCH_DLSCH_Message(
                   (void*)&bcch_message->message.choice.c1.choice.systemInformationBlockType1,
                   sizeof(LTE_SystemInformationBlockType1_t) );
           LOG_D( RRC, "[UE %"PRIu8"] Decoding First SIB1\n", ctxt_pP->module_id );
-
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_UE.c
-          //LOG_I( RRC, "Panos-D: decode_BCCH_DLSCH_Message1 BEFORE decode_SIB1");
-          //printf("Panos-D: decode_BCCH_DLSCH_Message1 BEFORE decode_SIB1");
-=======
->>>>>>> main/develop:openair2/RRC/LTE/rrc_UE.c
           decode_SIB1( ctxt_pP, eNB_index, rsrq, rsrp );
         }
       }
@@ -3362,11 +3021,6 @@ int decode_BCCH_DLSCH_Message(
         LOG_I( RRC, "[UE %"PRIu8"] Decoding SI for frameP %"PRIu32"\n",
                ctxt_pP->module_id,
                ctxt_pP->frame );
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_UE.c
-        //LOG_I( RRC, "Panos-D: decode_BCCH_DLSCH_Message1 BEFORE OTHER decode_SI");
-        //printf("Panos-D: decode_BCCH_DLSCH_Message1 BEFORE OTHER decode_SI");
-=======
->>>>>>> main/develop:openair2/RRC/LTE/rrc_UE.c
         decode_SI( ctxt_pP, eNB_index );
         //if (nfapi_mode == 3)
         	UE_mac_inst[ctxt_pP->module_id].SI_Decoded = 1;
@@ -3575,8 +3229,7 @@ int decode_SIB1( const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_index, 
 			0,
 			0
 #endif
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_UE.c
-#if defined(Rel14)
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
 			,
 			0,
 			NULL,
@@ -3589,17 +3242,7 @@ int decode_SIB1( const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_index, 
 #endif
 			);
 
-=======
-#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
-           ,
-           0,
-           NULL,
-           NULL
-#endif
-			);
-
   LOG_I(RRC,"Setting SIStatus bit 0 to 1\n");
->>>>>>> main/develop:openair2/RRC/LTE/rrc_UE.c
   UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIStatus = 1;
   UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIB1systemInfoValueTag = sib1->systemInfoValueTag;
 
@@ -3677,11 +3320,7 @@ int decode_SIB1( const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_index, 
 
 
 //-----------------------------------------------------------------------------
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_UE.c
- void dump_sib2( SystemInformationBlockType2_t *sib2 )
-=======
  void dump_sib2( LTE_SystemInformationBlockType2_t *sib2 )
->>>>>>> main/develop:openair2/RRC/LTE/rrc_UE.c
 {
   // ac_BarringInfo
   if (sib2->ac_BarringInfo) {
@@ -3925,11 +3564,7 @@ int decode_SIB1( const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_index, 
 }
 
 //-----------------------------------------------------------------------------
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_UE.c
- void dump_sib3( SystemInformationBlockType3_t *sib3 )
-=======
  void dump_sib3( LTE_SystemInformationBlockType3_t *sib3 )
->>>>>>> main/develop:openair2/RRC/LTE/rrc_UE.c
 {
   LOG_I( RRC, "Dumping SIB3 (see TS36.331 V8.21.0)\n" );
 
@@ -4076,11 +3711,7 @@ uint64_t arfcn_to_freq(long arfcn) {
     exit(1);
   }
 }
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_UE.c
- void dump_sib5( SystemInformationBlockType5_t *sib5 )
-=======
  void dump_sib5( LTE_SystemInformationBlockType5_t *sib5 )
->>>>>>> main/develop:openair2/RRC/LTE/rrc_UE.c
 {
   LTE_InterFreqCarrierFreqList_t interFreqCarrierFreqList = sib5->interFreqCarrierFreqList;
   int i,j;
@@ -4172,13 +3803,8 @@ uint64_t arfcn_to_freq(long arfcn) {
 
 }
 
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_UE.c
-#if defined(Rel10) || defined(Rel14)
- void dump_sib13( SystemInformationBlockType13_r9_t *sib13 )
-=======
 #if (LTE_RRC_VERSION >= MAKE_VERSION(9, 0, 0))
  void dump_sib13( LTE_SystemInformationBlockType13_r9_t *sib13 )
->>>>>>> main/develop:openair2/RRC/LTE/rrc_UE.c
 {
   LOG_I( RRC, "[UE] Dumping SIB13\n" );
   LOG_I( RRC, "[UE] dumping sib13 second time\n" );
@@ -4190,18 +3816,6 @@ uint64_t arfcn_to_freq(long arfcn) {
 
 //TTN - SIB18
 //-----------------------------------------------------------------------------
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_UE.c
- void dump_sib18(SystemInformationBlockType18_r12_t *sib18){
-   LOG_I( RRC, "[UE] Dumping SIB18\n" );
-   for (int i = 0; i < sib18->commConfig_r12->commRxPool_r12.list.count; i++) {
-       LOG_I(RRC, " Contents of SIB18 %d/%d \n", i+1, (int)sib18->commConfig_r12->commRxPool_r12.list.count);
-       LOG_I(RRC, " SIB18 rxPool_sc_CP_Len: %d \n", (int)sib18->commConfig_r12->commRxPool_r12.list.array[i]->sc_CP_Len_r12);
-       LOG_I(RRC, " SIB18 sc_Period_r12: %d \n", (int)sib18->commConfig_r12->commRxPool_r12.list.array[i]->sc_Period_r12);
-       LOG_I(RRC, " SIB18 data_CP_Len_r12: %d \n", (int)sib18->commConfig_r12->commRxPool_r12.list.array[i]->data_CP_Len_r12);
-       LOG_I(RRC, " SIB18 prb_Num_r12: %d \n", (int)sib18->commConfig_r12->commRxPool_r12.list.array[i]->sc_TF_ResourceConfig_r12.prb_Num_r12);
-       LOG_I(RRC, " SIB18 prb_Start_r12: %d \n", (int)sib18->commConfig_r12->commRxPool_r12.list.array[i]->sc_TF_ResourceConfig_r12.prb_Start_r12);
-       LOG_I(RRC, " SIB18 prb_End_r12: %d \n", (int)sib18->commConfig_r12->commRxPool_r12.list.array[i]->sc_TF_ResourceConfig_r12.prb_End_r12);
-=======
  void dump_sib18(LTE_SystemInformationBlockType18_r12_t *sib18){
    LOG_I( RRC, "[UE] Dumping SIB18\n" );
    for (int i = 0; i < sib18->commConfig_r12->commRxPool_r12.list.count; i++) {
@@ -4212,45 +3826,12 @@ uint64_t arfcn_to_freq(long arfcn) {
        LOG_I(RRC, " SIB18 prb_Num_r12: %ld \n", sib18->commConfig_r12->commRxPool_r12.list.array[i]->sc_TF_ResourceConfig_r12.prb_Num_r12);
        LOG_I(RRC, " SIB18 prb_Start_r12: %ld \n", sib18->commConfig_r12->commRxPool_r12.list.array[i]->sc_TF_ResourceConfig_r12.prb_Start_r12);
        LOG_I(RRC, " SIB18 prb_End_r12: %ld \n", sib18->commConfig_r12->commRxPool_r12.list.array[i]->sc_TF_ResourceConfig_r12.prb_End_r12);
->>>>>>> main/develop:openair2/RRC/LTE/rrc_UE.c
        //to add more log
      }
 }
 
 //TTN -  SIB19
 //-----------------------------------------------------------------------------
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_UE.c
- void dump_sib19(SystemInformationBlockType19_r12_t *sib19){
-   LOG_I( RRC, "[UE] Dumping SIB19\n" );
-   for (int i = 0; i < sib19->discConfig_r12->discRxPool_r12.list.count; i++) {
-       LOG_I(RRC, " Contents of SIB18 %d/%d \n", i+1, (int)sib19->discConfig_r12->discRxPool_r12.list.count);
-       LOG_I(RRC, " SIB19 cp_Len_r12: %d \n", (int)sib19->discConfig_r12->discRxPool_r12.list.array[i]->cp_Len_r12);
-       LOG_I(RRC, " SIB19 discPeriod_r12: %d \n", (int)sib19->discConfig_r12->discRxPool_r12.list.array[i]->discPeriod_r12);
-       LOG_I(RRC, " SIB19 numRetx_r12: %d \n", (int)sib19->discConfig_r12->discRxPool_r12.list.array[i]->numRetx_r12);
-       LOG_I(RRC, " SIB19 numRepetition_r12: %d \n", (int)sib19->discConfig_r12->discRxPool_r12.list.array[i]->numRepetition_r12);
-       LOG_I(RRC, " SIB19 prb_Num_r12: %d \n", (int)sib19->discConfig_r12->discRxPool_r12.list.array[i]->tf_ResourceConfig_r12.prb_Num_r12);
-       LOG_I(RRC, " SIB19 prb_Start_r12: %d \n", (int)sib19->discConfig_r12->discRxPool_r12.list.array[i]->tf_ResourceConfig_r12.prb_Start_r12);
-       LOG_I(RRC, " SIB19 prb_End_r12: %d \n", (int)sib19->discConfig_r12->discRxPool_r12.list.array[i]->tf_ResourceConfig_r12.prb_End_r12);
-       //to add more log
-     }
-}
-
- void dump_sib21(SystemInformationBlockType21_r14_t *sib21){
-    if ((sib21->sl_V2X_ConfigCommon_r14 != NULL) && (sib21->sl_V2X_ConfigCommon_r14->v2x_CommRxPool_r14 !=NULL) ){
-       for (int i = 0; i < sib21->sl_V2X_ConfigCommon_r14->v2x_CommRxPool_r14->list.count; i++) {
-          LOG_I(RRC, " Contents of SIB21 %d/%d \n", i+1, sib21->sl_V2X_ConfigCommon_r14->v2x_CommRxPool_r14->list.count);
-          LOG_I(RRC, " SIB21 sl_Subframe_r14: %d \n", sib21->sl_V2X_ConfigCommon_r14->v2x_CommRxPool_r14->list.array[i]->sl_Subframe_r14.present);
-          LOG_I(RRC, " SIB21 adjacencyPSCCH_PSSCH_r14: %d \n", sib21->sl_V2X_ConfigCommon_r14->v2x_CommRxPool_r14->list.array[i]->adjacencyPSCCH_PSSCH_r14);
-          LOG_I(RRC, " SIB21 sizeSubchannel_r14: %ld \n", sib21->sl_V2X_ConfigCommon_r14->v2x_CommRxPool_r14->list.array[i]->sizeSubchannel_r14);
-          LOG_I(RRC, " SIB21 numSubchannel_r14: %ld \n", sib21->sl_V2X_ConfigCommon_r14->v2x_CommRxPool_r14->list.array[i]->numSubchannel_r14);
-          LOG_I(RRC, " SIB21 startRB_Subchannel_r14: %ld \n", sib21->sl_V2X_ConfigCommon_r14->v2x_CommRxPool_r14->list.array[i]->startRB_Subchannel_r14);
-          //to add more log
-       }
-    }
- }
-
-
-=======
  void dump_sib19(LTE_SystemInformationBlockType19_r12_t *sib19){
    LOG_I( RRC, "[UE] Dumping SIB19\n" );
    for (int i = 0; i < sib19->discConfig_r12->discRxPool_r12.list.count; i++) {
@@ -4280,61 +3861,36 @@ uint64_t arfcn_to_freq(long arfcn) {
     }
  }
 
-
->>>>>>> main/develop:openair2/RRC/LTE/rrc_UE.c
 #endif
 //-----------------------------------------------------------------------------
  int decode_SI( const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_index )
 {
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_UE.c
-  //LOG_D( RRC, "Panos-D: decode_SI 1 \n");
-  SystemInformation_t** si = &UE_rrc_inst[ctxt_pP->module_id].si[eNB_index];
-=======
   LTE_SystemInformation_t** si = &UE_rrc_inst[ctxt_pP->module_id].si[eNB_index];
->>>>>>> main/develop:openair2/RRC/LTE/rrc_UE.c
   int new_sib = 0;
   LTE_SystemInformationBlockType1_t* sib1 = UE_rrc_inst[ctxt_pP->module_id].sib1[eNB_index];
 
-  //LOG_D( RRC, "Panos-D: decode_SI 2 \n");
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_RRC_UE_DECODE_SI, VCD_FUNCTION_IN );
 
   // Dump contents
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_UE.c
-  if ((*si)->criticalExtensions.present == SystemInformation__criticalExtensions_PR_systemInformation_r8 ||
-		  (*si)->criticalExtensions.present == SystemInformation__criticalExtensions_PR_criticalExtensionsFuture) {
-=======
   if ((*si)->criticalExtensions.present == LTE_SystemInformation__criticalExtensions_PR_systemInformation_r8 ||
 #if (LTE_RRC_VERSION >= MAKE_VERSION(15, 3, 0))
 		  (*si)->criticalExtensions.present == LTE_SystemInformation__criticalExtensions_PR_criticalExtensionsFuture_r15) {
 #else
 		  (*si)->criticalExtensions.present == LTE_SystemInformation__criticalExtensions_PR_criticalExtensionsFuture) {
 #endif
->>>>>>> main/develop:openair2/RRC/LTE/rrc_UE.c
     LOG_D( RRC, "[UE] (*si)->criticalExtensions.choice.systemInformation_r8.sib_TypeAndInfo.list.count %d\n",
            (*si)->criticalExtensions.choice.systemInformation_r8.sib_TypeAndInfo.list.count );
   } else {
-	  //LOG_D( RRC, "Panos-D: decode_SI 2.3 \n");
     LOG_D( RRC, "[UE] Unknown criticalExtension version (not Rel8)\n" );
     return -1;
   }
 
-  LOG_D( RRC, "Panos-D: decode_SI 3 \n");
   for (int i=0; i<(*si)->criticalExtensions.choice.systemInformation_r8.sib_TypeAndInfo.list.count; i++) {
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_UE.c
-    //LOG_I( RRC, "Panos-D: SI count %d\n", i );
-    struct SystemInformation_r8_IEs__sib_TypeAndInfo__Member *typeandinfo;
-    typeandinfo = (*si)->criticalExtensions.choice.systemInformation_r8.sib_TypeAndInfo.list.array[i];
-
-    switch(typeandinfo->present) {
-    case SystemInformation_r8_IEs__sib_TypeAndInfo__Member_PR_sib2:
-    	//LOG_D( RRC, "Panos-D: decode_SI 4 \n");
-=======
     struct LTE_SystemInformation_r8_IEs__sib_TypeAndInfo__Member *typeandinfo;
     typeandinfo = (*si)->criticalExtensions.choice.systemInformation_r8.sib_TypeAndInfo.list.array[i];
 
     switch(typeandinfo->present) {
     case LTE_SystemInformation_r8_IEs__sib_TypeAndInfo__Member_PR_sib2:
->>>>>>> main/develop:openair2/RRC/LTE/rrc_UE.c
       if ((UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIStatus&2) == 0) {
 	UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIStatus|=2;
 	new_sib=1;
@@ -4373,8 +3929,7 @@ uint64_t arfcn_to_freq(long arfcn) {
 			      ,0,
 			      0
 #endif
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_UE.c
-#if defined(Rel14)
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
 			      ,
 			      0,
 			      NULL,
@@ -4384,13 +3939,6 @@ uint64_t arfcn_to_freq(long arfcn) {
 			      1025, // indicates that there is no  update in the frame number
 			      11,   // /indicates that there isno update in the subframe number
 			      NULL
-=======
-#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
-           ,
-           0,
-           NULL,
-           NULL
->>>>>>> main/develop:openair2/RRC/LTE/rrc_UE.c
 #endif
 			      );
 	// After SI is received, prepare RRCConnectionRequest
@@ -4436,12 +3984,7 @@ uint64_t arfcn_to_freq(long arfcn) {
       }
       break; // case SystemInformation_r8_IEs__sib_TypeAndInfo__Member_PR_sib2
 
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_UE.c
-    case SystemInformation_r8_IEs__sib_TypeAndInfo__Member_PR_sib3:
-    	//LOG_D( RRC, "Panos-D: decode_SI 5 \n");
-=======
     case LTE_SystemInformation_r8_IEs__sib_TypeAndInfo__Member_PR_sib3:
->>>>>>> main/develop:openair2/RRC/LTE/rrc_UE.c
       if ((UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIStatus&4) == 0) {
 	UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIStatus|=4;
 	new_sib=1;
@@ -4466,12 +4009,7 @@ uint64_t arfcn_to_freq(long arfcn) {
       if ((UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIStatus&16) == 0) {
 	UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIStatus|=16;
 	new_sib=1;
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_UE.c
-
-	memcpy( UE_rrc_inst[ctxt_pP->module_id].sib5[eNB_index], &typeandinfo->choice.sib5, sizeof(SystemInformationBlockType5_t) );
-=======
 	memcpy( UE_rrc_inst[ctxt_pP->module_id].sib5[eNB_index], &typeandinfo->choice.sib5, sizeof(LTE_SystemInformationBlockType5_t) );
->>>>>>> main/develop:openair2/RRC/LTE/rrc_UE.c
 	LOG_I( RRC, "[UE %"PRIu8"] Frame %"PRIu32" Found SIB5 from eNB %"PRIu8"\n", ctxt_pP->module_id, ctxt_pP->frame, eNB_index );
 	dump_sib5(UE_rrc_inst[ctxt_pP->module_id].sib5[eNB_index]);
       }
@@ -4482,11 +4020,7 @@ uint64_t arfcn_to_freq(long arfcn) {
 	UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIStatus|=32;
 	new_sib=1;
 
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_UE.c
-	memcpy( UE_rrc_inst[ctxt_pP->module_id].sib6[eNB_index], &typeandinfo->choice.sib6, sizeof(SystemInformationBlockType6_t) );
-=======
 	memcpy( UE_rrc_inst[ctxt_pP->module_id].sib6[eNB_index], &typeandinfo->choice.sib6, sizeof(LTE_SystemInformationBlockType6_t) );
->>>>>>> main/develop:openair2/RRC/LTE/rrc_UE.c
 	LOG_I( RRC, "[UE %"PRIu8"] Frame %"PRIu32" Found SIB6 from eNB %"PRIu8"\n", ctxt_pP->module_id, ctxt_pP->frame, eNB_index );
       }
       break;
@@ -4513,12 +4047,7 @@ uint64_t arfcn_to_freq(long arfcn) {
       if ((UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIStatus&256) == 0) {
 	UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIStatus|=256;
 	new_sib=1;
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_UE.c
-
-	memcpy( UE_rrc_inst[ctxt_pP->module_id].sib9[eNB_index], &typeandinfo->choice.sib9, sizeof(SystemInformationBlockType9_t) );
-=======
 	memcpy( UE_rrc_inst[ctxt_pP->module_id].sib9[eNB_index], &typeandinfo->choice.sib9, sizeof(LTE_SystemInformationBlockType9_t) );
->>>>>>> main/develop:openair2/RRC/LTE/rrc_UE.c
 	LOG_I( RRC, "[UE %"PRIu8"] Frame %"PRIu32" Found SIB9 from eNB %"PRIu8"\n", ctxt_pP->module_id, ctxt_pP->frame, eNB_index );
       }
       break;
@@ -4553,20 +4082,12 @@ uint64_t arfcn_to_freq(long arfcn) {
       }
       break;
 
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_UE.c
-    case SystemInformation_r8_IEs__sib_TypeAndInfo__Member_PR_sib13_v920:
-=======
     case LTE_SystemInformation_r8_IEs__sib_TypeAndInfo__Member_PR_sib13_v920:
->>>>>>> main/develop:openair2/RRC/LTE/rrc_UE.c
       if ((UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIStatus&4096) == 0) {
 	UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIStatus|=4096;
 	new_sib=1;
 
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_UE.c
-	memcpy( UE_rrc_inst[ctxt_pP->module_id].sib13[eNB_index], &typeandinfo->choice.sib13_v920, sizeof(SystemInformationBlockType13_r9_t) );
-=======
 	memcpy( UE_rrc_inst[ctxt_pP->module_id].sib13[eNB_index], &typeandinfo->choice.sib13_v920, sizeof(LTE_SystemInformationBlockType13_r9_t) );
->>>>>>> main/develop:openair2/RRC/LTE/rrc_UE.c
 	LOG_I( RRC, "[UE %"PRIu8"] Frame %"PRIu32" Found SIB13 from eNB %"PRIu8"\n", ctxt_pP->module_id, ctxt_pP->frame, eNB_index );
 	dump_sib13( UE_rrc_inst[ctxt_pP->module_id].sib13[eNB_index] );
 	// adding here function to store necessary parameters for using in decode_MCCH_Message + maybe transfer to PHY layer
@@ -4596,8 +4117,7 @@ uint64_t arfcn_to_freq(long arfcn) {
 			      ,0,
 			      0
 #endif
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_UE.c
-#if defined(Rel14)
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
 			      ,
 			      0,
 			      NULL,
@@ -4607,37 +4127,20 @@ uint64_t arfcn_to_freq(long arfcn) {
 			      1025, // indicates that there is no  update in the frame number
 			      11,   // /indicates that there isno update in the subframe number
 			      NULL
-=======
-#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
-           ,
-           0,
-           NULL,
-           NULL
->>>>>>> main/develop:openair2/RRC/LTE/rrc_UE.c
 #endif
 			      );
 	break;
       }
 #endif
 
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_UE.c
-#if defined(Rel10) || defined(Rel14)
-      //SIB18
-    case SystemInformation_r8_IEs__sib_TypeAndInfo__Member_PR_sib18_v1250:
-=======
 #if (LTE_RRC_VERSION >= MAKE_VERSION(10, 0, 0))
       //SIB18
     case LTE_SystemInformation_r8_IEs__sib_TypeAndInfo__Member_PR_sib18_v1250:
->>>>>>> main/develop:openair2/RRC/LTE/rrc_UE.c
        if ((UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIStatus&8192) == 0) {
           UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIStatus|=8192;
           new_sib=1;
 
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_UE.c
-          memcpy( UE_rrc_inst[ctxt_pP->module_id].sib18[eNB_index], &typeandinfo->choice.sib18_v1250, sizeof(SystemInformationBlockType18_r12_t) );
-=======
           memcpy( UE_rrc_inst[ctxt_pP->module_id].sib18[eNB_index], &typeandinfo->choice.sib18_v1250, sizeof(LTE_SystemInformationBlockType18_r12_t) );
->>>>>>> main/develop:openair2/RRC/LTE/rrc_UE.c
           LOG_I( RRC, "[UE %"PRIu8"] Frame %"PRIu32" Found SIB18 from eNB %"PRIu8"\n", ctxt_pP->module_id, ctxt_pP->frame, eNB_index );
           dump_sib18( UE_rrc_inst[ctxt_pP->module_id].sib18[eNB_index] );
           // adding here function to store necessary parameters to transfer to PHY layer
@@ -4647,35 +4150,20 @@ uint64_t arfcn_to_freq(long arfcn) {
           //process SIB18 to transfer SL-related parameters to PHY
           rrc_ue_process_sidelink_radioResourceConfig(ctxt_pP->module_id,eNB_index,
                 UE_rrc_inst[ctxt_pP->module_id].sib18[eNB_index],
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_UE.c
-                (SystemInformationBlockType19_r12_t *)NULL,
-                (SL_CommConfig_r12_t *)NULL,
-                (SL_DiscConfig_r12_t *)NULL
-=======
                 (LTE_SystemInformationBlockType19_r12_t *)NULL,
                 (LTE_SL_CommConfig_r12_t *)NULL,
                 (LTE_SL_DiscConfig_r12_t *)NULL
->>>>>>> main/develop:openair2/RRC/LTE/rrc_UE.c
           );
 
        }
        break;
 
        //SIB19
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_UE.c
-    case SystemInformation_r8_IEs__sib_TypeAndInfo__Member_PR_sib19_v1250:
-=======
     case LTE_SystemInformation_r8_IEs__sib_TypeAndInfo__Member_PR_sib19_v1250:
->>>>>>> main/develop:openair2/RRC/LTE/rrc_UE.c
        if ((UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIStatus&16384) == 0) {
           UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIStatus|=16384;
           new_sib=1;
-
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_UE.c
-          memcpy( UE_rrc_inst[ctxt_pP->module_id].sib19[eNB_index], &typeandinfo->choice.sib19_v1250, sizeof(SystemInformationBlockType19_r12_t) );
-=======
           memcpy( UE_rrc_inst[ctxt_pP->module_id].sib19[eNB_index], &typeandinfo->choice.sib19_v1250, sizeof(LTE_SystemInformationBlockType19_r12_t) );
->>>>>>> main/develop:openair2/RRC/LTE/rrc_UE.c
           LOG_I( RRC, "[UE %"PRIu8"] Frame %"PRIu32" Found SIB19 from eNB %"PRIu8"\n", ctxt_pP->module_id, ctxt_pP->frame, eNB_index );
           dump_sib19( UE_rrc_inst[ctxt_pP->module_id].sib19[eNB_index] );
           // adding here function to store necessary parameters to transfer to PHY layer
@@ -4683,37 +4171,22 @@ uint64_t arfcn_to_freq(long arfcn) {
                 ctxt_pP->frame, ctxt_pP->module_id, eNB_index, ctxt_pP->module_id);
           //process SIB19 to transfer SL-related parameters to PHY
           rrc_ue_process_sidelink_radioResourceConfig(ctxt_pP->module_id,eNB_index,
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_UE.c
-                (SystemInformationBlockType18_r12_t *)NULL,
-                UE_rrc_inst[ctxt_pP->module_id].sib19[eNB_index],
-                (SL_CommConfig_r12_t *)NULL,
-                (SL_DiscConfig_r12_t *)NULL
-=======
                 (LTE_SystemInformationBlockType18_r12_t *)NULL,
                 UE_rrc_inst[ctxt_pP->module_id].sib19[eNB_index],
                 (LTE_SL_CommConfig_r12_t *)NULL,
                 (LTE_SL_DiscConfig_r12_t *)NULL
->>>>>>> main/develop:openair2/RRC/LTE/rrc_UE.c
           );
 
        }
        break;
 
        //SIB21
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_UE.c
-    case SystemInformation_r8_IEs__sib_TypeAndInfo__Member_PR_sib21_v1430:
-=======
     case LTE_SystemInformation_r8_IEs__sib_TypeAndInfo__Member_PR_sib21_v1430:
->>>>>>> main/develop:openair2/RRC/LTE/rrc_UE.c
        if ((UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIStatus&32768) == 0) {
           UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIStatus|=32768;
           new_sib=1;
 
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_UE.c
-          memcpy( UE_rrc_inst[ctxt_pP->module_id].sib21[eNB_index], &typeandinfo->choice.sib21_v1430, sizeof(SystemInformationBlockType21_r14_t) );
-=======
           memcpy( UE_rrc_inst[ctxt_pP->module_id].sib21[eNB_index], &typeandinfo->choice.sib21_v1430, sizeof(LTE_SystemInformationBlockType21_r14_t) );
->>>>>>> main/develop:openair2/RRC/LTE/rrc_UE.c
           LOG_I( RRC, "[UE %"PRIu8"] Frame %"PRIu32" Found SIB21 from eNB %"PRIu8"\n", ctxt_pP->module_id, ctxt_pP->frame, eNB_index );
           dump_sib21( UE_rrc_inst[ctxt_pP->module_id].sib21[eNB_index] );
           // adding here function to store necessary parameters to transfer to PHY layer
@@ -4878,11 +4351,7 @@ void ue_meas_filtering( const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_
         LOG_I(RRC, "[UE %d] Frame %d : Generating Measurement Report for eNB %d\n",
               ctxt_pP->module_id, ctxt_pP->frame, eNB_index);
         result = pdcp_data_req(ctxt_pP,  SRB_FLAG_YES, DCCH, rrc_mui++, 0, size, buffer, PDCP_TRANSMISSION_MODE_DATA
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_UE.c
-#ifdef Rel14
-=======
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
->>>>>>> main/develop:openair2/RRC/LTE/rrc_UE.c
                                ,NULL, NULL
 #endif
                                );
@@ -5197,8 +4666,7 @@ int decode_MCCH_Message( const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB
 			0,
 			0
 #endif
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_UE.c
-#if defined(Rel14)
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
 			,
 			0,
 			NULL,
@@ -5208,13 +4676,6 @@ int decode_MCCH_Message( const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB
 			1025, // indicates that there is no  update in the frame number
 			11,   // /indicates that there isno update in the subframe number
 			NULL
-=======
-#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
-           ,
-           0,
-           NULL,
-           NULL
->>>>>>> main/develop:openair2/RRC/LTE/rrc_UE.c
 #endif
 			);
 
@@ -5296,24 +4757,14 @@ void *rrc_ue_task( void *args_p )
       break;
 
     case RRC_MAC_OUT_OF_SYNC_IND:
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_UE.c
-    	//LOG_I(RRC, "In rrc_ue_task() received RRC_MAC_OUT_OF_SYNC_IND message through ITTI, UE RRC state: %d \n", rrc_get_state(ue_mod_id));
-      LOG_D(RRC, "[UE %d] Received %s: frameP %d, eNB %d\n", ue_mod_id, msg_name,
-=======
       LOG_D(RRC, "[UE %d] Received %s: frameP %d, eNB %d\n", ue_mod_id, ITTI_MSG_NAME (msg_p),
->>>>>>> main/develop:openair2/RRC/LTE/rrc_UE.c
             RRC_MAC_OUT_OF_SYNC_IND (msg_p).frame, RRC_MAC_OUT_OF_SYNC_IND (msg_p).enb_index);
 
       UE_rrc_inst[ue_mod_id].Info[RRC_MAC_OUT_OF_SYNC_IND (msg_p).enb_index].N310_cnt ++;
       break;
 
     case RRC_MAC_BCCH_DATA_IND:
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_UE.c
-    	//LOG_I(RRC, "In rrc_ue_task() received RRC_MAC_BCCH_DATA_IND message through ITTI, UE RRC state: %d \n", rrc_get_state(ue_mod_id));
-      LOG_D(RRC, "[UE %d] Received %s: frameP %d, eNB %d\n", ue_mod_id, msg_name,
-=======
       LOG_D(RRC, "[UE %d] Received %s: frameP %d, eNB %d\n", ue_mod_id, ITTI_MSG_NAME (msg_p),
->>>>>>> main/develop:openair2/RRC/LTE/rrc_UE.c
             RRC_MAC_BCCH_DATA_IND (msg_p).frame, RRC_MAC_BCCH_DATA_IND (msg_p).enb_index);
 
       //      PROTOCOL_CTXT_SET_BY_INSTANCE(&ctxt, instance, ENB_FLAG_NO, NOT_A_RNTI, RRC_MAC_BCCH_DATA_IND (msg_p).frame, 0);
@@ -5372,11 +4823,7 @@ void *rrc_ue_task( void *args_p )
 
   /*  //TTN (for D2D)
     case RRC_MAC_SL_DISCOVERY_DATA_IND:
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_UE.c
-       LOG_D(RRC, "[UE %d] Received %s: frameP %d, eNB %d\n", ue_mod_id, msg_name,
-=======
        LOG_D(RRC, "[UE %d] Received %s: frameP %d, eNB %d\n", ue_mod_id, ITTI_MSG_NAME (msg_p),
->>>>>>> main/develop:openair2/RRC/LTE/rrc_UE.c
              RRC_MAC_SL_DISCOVERY_DATA_IND (msg_p).frame, RRC_MAC_SL_DISCOVERY_DATA_IND (msg_p).enb_index);
        PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, ue_mod_id, ENB_FLAG_NO, M_RNTI, RRC_MAC_SL_DISCOVERY_DATA_IND (msg_p).frame, 0,RRC_MAC_SL_DISCOVERY_DATA_IND (msg_p).enb_index);
        //send to ProSeApp
@@ -5438,11 +4885,7 @@ void *rrc_ue_task( void *args_p )
       /* NAS messages */
     case NAS_CELL_SELECTION_REQ:
 
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_UE.c
-      LOG_I(RRC, "[UE %d] Received %s: state %d, plmnID (%d%d%d.%d%d%d), rat %x\n", ue_mod_id, msg_name, rrc_get_state(ue_mod_id),
-=======
       LOG_D(RRC, "[UE %d] Received %s: state %d, plmnID (%d%d%d.%d%d%d), rat %x\n", ue_mod_id, ITTI_MSG_NAME (msg_p), rrc_get_state(ue_mod_id),
->>>>>>> main/develop:openair2/RRC/LTE/rrc_UE.c
             NAS_CELL_SELECTION_REQ (msg_p).plmnID.MCCdigit1,
             NAS_CELL_SELECTION_REQ (msg_p).plmnID.MCCdigit2,
             NAS_CELL_SELECTION_REQ (msg_p).plmnID.MCCdigit3,
@@ -5795,27 +5238,15 @@ openair_rrc_top_init_ue(
       UE_rrc_inst[module_id].UECap = UECap;
       UE_rrc_inst[module_id].UECapability = UECap->sdu;
       UE_rrc_inst[module_id].UECapability_size = UECap->sdu_size;
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_UE.c
-    
-      
-#if defined(Rel10) || defined(Rel14)
-      LOG_I(RRC,"[UE] eMBMS active state is %d \n", eMBMS_active);
-      
-=======
     }
 
 #if (LTE_RRC_VERSION >= MAKE_VERSION(10, 0, 0))
     LOG_I(RRC,"[UE] eMBMS active state is %d \n", eMBMS_active);
 
     for (module_id=0; module_id<NB_UE_INST; module_id++) {
->>>>>>> main/develop:openair2/RRC/LTE/rrc_UE.c
       UE_rrc_inst[module_id].MBMS_flag = (uint8_t)eMBMS_active;
       
-      
-#endif
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_UE.c
-      
-#ifdef Rel14
+      #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
       init_SL_preconfig(&UE_rrc_inst[module_id],0);
       
       rrc_mac_config_req_ue(module_id,
@@ -5858,19 +5289,10 @@ openair_rrc_top_init_ue(
 			    NULL
 			    
 #endif
-#endif
 			    );
-    }
-=======
-
-#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
-  /* TODO: this is disabled for the moment because the standard UE
-   * crashes when calling this function.
-   */
-  //init_SL_preconfig(&UE_rrc_inst[module_id],0);
 #endif
-
->>>>>>> main/develop:openair2/RRC/LTE/rrc_UE.c
+    }
+#endif
   } else {
     UE_rrc_inst = NULL;
   }
@@ -5886,12 +5308,6 @@ rrc_top_cleanup_ue(
 {
 
   if (NB_UE_INST > 0) free (UE_rrc_inst);
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_UE.c
-
-=======
->>>>>>> main/develop:openair2/RRC/LTE/rrc_UE.c
-
-
 }
 
 

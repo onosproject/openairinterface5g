@@ -259,36 +259,7 @@ mac_rrc_data_ind(
     if((srb_idP & RAB_OFFSET) == CCCH) {
     Srb_info = &RC.rrc[module_idP]->carrier[CC_id].Srb0;
     LOG_D(RRC,"[eNB %d] Received SDU for CCCH on SRB %d\n",module_idP,Srb_info->Srb_id);
-<<<<<<< HEAD:openair2/RRC/LITE/L2_interface.c
-
-#if 0 //defined(ENABLE_ITTI)
-    {
-      MessageDef *message_p;
-      int msg_sdu_size = sizeof(RRC_MAC_CCCH_DATA_IND (message_p).sdu);
-
-      if (sdu_lenP > msg_sdu_size) {
-        LOG_E(RRC, "SDU larger than CCCH SDU buffer size (%d, %d)", sdu_lenP, msg_sdu_size);
-        sdu_size = msg_sdu_size;
-      } else {
-        sdu_size = sdu_lenP;
-      }
-
-      message_p = itti_alloc_new_message (TASK_MAC_ENB, RRC_MAC_CCCH_DATA_IND);
-      RRC_MAC_CCCH_DATA_IND (message_p).frame     = frameP;
-      RRC_MAC_CCCH_DATA_IND (message_p).sub_frame = sub_frameP;
-      RRC_MAC_CCCH_DATA_IND (message_p).rnti      = rntiP;
-      RRC_MAC_CCCH_DATA_IND (message_p).sdu_size  = sdu_size;
-      RRC_MAC_CCCH_DATA_IND (message_p).CC_id = CC_id;
-      memset (RRC_MAC_CCCH_DATA_IND (message_p).sdu, 0, CCCH_SDU_SIZE);
-      memcpy (RRC_MAC_CCCH_DATA_IND (message_p).sdu, sduP, sdu_size);
-      LOG_D(RRC,"[eNB %d] Sending message to RRC task\n",module_idP);
-      itti_send_msg_to_task (TASK_RRC_ENB, ctxt.instance, message_p);
-    }
-#else
-
-=======
     
->>>>>>> main/develop:openair2/RRC/LTE/L2_interface.c
     //    msg("\n******INST %d Srb_info %p, Srb_id=%d****\n\n",Mod_id,Srb_info,Srb_info->Srb_id);
     if (sdu_lenP > 0) {
       memcpy(Srb_info->Rx_buffer.Payload,sduP,sdu_lenP);

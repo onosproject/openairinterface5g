@@ -99,12 +99,6 @@ void *ue_ip_interrupt(void)
 }
 #endif //NETLINK
 //---------------------------------------------------------------------------
-<<<<<<< HEAD
-
-
-
-=======
->>>>>>> main/develop
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 15, 0))
 void ue_ip_timer(struct timer_list *t)
 #else
@@ -268,11 +262,7 @@ int ue_ip_hard_start_xmit(struct sk_buff *skb_pP, struct net_device *dev_pP)
 
     // End debug information
     netif_stop_queue(dev_pP);
-<<<<<<< HEAD
-#if  (LINUX_VERSION_CODE >= KERNEL_VERSION(4,7,0) || defined RHEL_RELEASE_CODE && RHEL_RELEASE_CODE >= 1796)
-=======
 #if  LINUX_VERSION_CODE >= KERNEL_VERSION(4,7,0) || (defined RHEL_RELEASE_CODE && RHEL_RELEASE_CODE >= 1796)
->>>>>>> main/develop
     netif_trans_update(dev_pP);
 #else
     dev_pP->trans_start = jiffies;

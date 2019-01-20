@@ -59,8 +59,6 @@ mac_rrc_data_req_ue(
 )
 //--------------------------------------------------------------------------
 {
-
-<<<<<<< HEAD:openair2/RRC/LITE/L2_interface_ue.c
   protocol_ctxt_t ctxt;
 
   PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, Mod_idP, 0, 0, frameP/10, frameP%10,eNB_indexP);
@@ -68,23 +66,6 @@ mac_rrc_data_req_ue(
 #ifdef DEBUG_RRC
   int i;
   LOG_I(RRC,"[eNB %d] mac_rrc_data_req to SRB ID=%d\n",Mod_idP,Srb_idP);
-=======
-  LOG_D(RRC,"[eNB %d] mac_rrc_data_req to SRB ID=%d\n",Mod_idP,Srb_id);
-
-
-#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
-     LOG_D(RRC,"[UE %d] Frame %d Filling SL DISCOVERY SRB_ID %d\n",Mod_idP,frameP,Srb_id);
-     LOG_D(RRC,"[UE %d] Frame %d buffer_pP status %d,\n",Mod_idP,frameP, UE_rrc_inst[Mod_idP].SL_Discovery[eNB_index].Tx_buffer.payload_size);
-
-   //TTN (for D2D)
-     if (Srb_id  == SL_DISCOVERY && UE_rrc_inst[Mod_idP].SL_Discovery[eNB_index].Tx_buffer.payload_size > 0){
-        memcpy(&buffer_pP[0],&UE_rrc_inst[Mod_idP].SL_Discovery[eNB_index].Tx_buffer.Payload[0],UE_rrc_inst[Mod_idP].SL_Discovery[eNB_index].Tx_buffer.payload_size);
-        uint8_t Ret_size=UE_rrc_inst[Mod_idP].SL_Discovery[eNB_index].Tx_buffer.payload_size;
-        LOG_I(RRC,"[UE %d] Sending SL_Discovery, size %d bytes\n",Mod_idP,Ret_size);
-        UE_rrc_inst[Mod_idP].SL_Discovery[eNB_index].Tx_buffer.payload_size = 0;
-        return(Ret_size);
-     }
->>>>>>> main/develop:openair2/RRC/LTE/L2_interface_ue.c
 #endif
 
   LOG_D(RRC,"[UE %d] Frame %d Filling CCCH SRB_ID %d\n",Mod_idP,frameP,Srb_idP);
@@ -93,7 +74,7 @@ mac_rrc_data_req_ue(
   AssertFatal(Srb_idP==MIBCH || Srb_idP==CCCH || Srb_idP==SL_DISCOVERY,"SRB_id %d is not possible should be (MIBCH %d or CCCH %d or SL_DISCOVERY %d)\n",
 	      Srb_idP,MIBCH,CCCH,SL_DISCOVERY);
 
-#ifdef Rel14
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
      LOG_D(RRC,"[UE %d] Frame %d Filling SL DISCOVERY SRB_ID %d\n",Mod_idP,frameP,Srb_idP);
      LOG_D(RRC,"[UE %d] Frame %d buffer_pP status %d,\n",Mod_idP,frameP, UE_rrc_inst[Mod_idP].SL_Discovery[eNB_indexP].Tx_buffer.payload_size);
 
@@ -153,7 +134,7 @@ mac_rrc_data_req_ue(
     return(Ret_size);
   }
 
-#ifdef Rel14
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
   
   //TTN (for D2D)
   else if (Srb_idP  == SL_DISCOVERY && UE_rrc_inst[Mod_idP].SL_Discovery[eNB_indexP].Tx_buffer.payload_size > 0){
@@ -404,11 +385,7 @@ rrc_data_req_ue(
            sdu_sizeP,
            buffer_pP,
            modeP
-<<<<<<< HEAD:openair2/RRC/LITE/L2_interface_ue.c
-#ifdef Rel14
-=======
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
->>>>>>> main/develop:openair2/RRC/LTE/L2_interface_ue.c
            ,NULL, NULL
 #endif
            );

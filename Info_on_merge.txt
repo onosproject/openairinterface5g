@@ -71,6 +71,23 @@ openair2/LAYER2/RLC/rlc.h
 openair2/LAYER2/RLC/rlc_mac.c
 openair2/LAYER2/RLC/rlc_mpls.c
 openair2/LAYER2/RLC/rlc_rrc.c
+openair2/NETWORK_DRIVER/UE_IP/common.c
+openair2/NETWORK_DRIVER/UE_IP/device.c
+openair2/NETWORK_DRIVER/UE_IP/local.h
+openair2/PHY_INTERFACE/IF_Module.c
+openair2/PHY_INTERFACE/UE_MAC_interface.h (Should be completely deleted)
+openair2/PHY_INTERFACE/phy_stub_UE.c
+openair2/PHY_INTERFACE/phy_stub_UE.h
+openair2/RRC/LTE/L2_interface.c
+openair2/RRC/LTE/L2_interface_ue.c
+openair2/RRC/LTE/MESSAGES/asn1_msg.c (Inside do_sib23() there are some lines ASN_SEQUENCE_ADD(...) corresponding to the addition of
+                                      SIB18, 19,21 which are commented out in the develop-version whereas they were intially integrated from 
+                                      Thinh in the sidelink branches. Is this the removal that Cedric did for RF operation because 
+                                      the SIB2/3 message turned out to be very large with these new elements?. 
+                                      Additional not sure whether lines 1646-1663 should be included or not. They were in the sidelink branch
+                                      version)
+openair2/RRC/LTE/MESSAGES/asn1_msg.h
+openair2/RRC/LTE/rrc_UE.c             (Some clonflicts were comlicated)
 
 
 
@@ -81,18 +98,6 @@ openair2/LAYER2/RLC/rlc_rrc.c
 
 	deleted by them: openair1/PHY/TOOLS/file_output.c
         deleted by them: openair1/SCHED/pusch_pc.c		
-	both modified:   openair2/NETWORK_DRIVER/UE_IP/common.c
-	both modified:   openair2/NETWORK_DRIVER/UE_IP/device.c
-	both modified:   openair2/NETWORK_DRIVER/UE_IP/local.h
-	both modified:   openair2/PHY_INTERFACE/IF_Module.c
-	both added:      openair2/PHY_INTERFACE/UE_MAC_interface.h
-	both added:      openair2/PHY_INTERFACE/phy_stub_UE.c
-	both added:      openair2/PHY_INTERFACE/phy_stub_UE.h
-	both modified:   openair2/RRC/LTE/L2_interface.c
-	both modified:   openair2/RRC/LTE/L2_interface_ue.c
-	both modified:   openair2/RRC/LTE/MESSAGES/asn1_msg.c
-	both modified:   openair2/RRC/LTE/MESSAGES/asn1_msg.h
-	both modified:   openair2/RRC/LTE/rrc_UE.c
 	both modified:   openair2/RRC/LTE/rrc_defs.h
 	both modified:   openair2/RRC/LTE/rrc_eNB.c
 	both modified:   openair2/RRC/LTE/rrc_proto.h
@@ -183,7 +188,7 @@ openair2/LAYER2/RLC/rlc_rrc.c
 	both modified:   openair2/LAYER2/RLC/rlc.h
 	both modified:   openair2/LAYER2/RLC/rlc_mac.c
 	both modified:   openair2/LAYER2/RLC/rlc_mpls.c
-	both modified:   openair2/LAYER2/RLC/rlc_rrc.c		    #Conflicts solved up to here
+	both modified:   openair2/LAYER2/RLC/rlc_rrc.c		    
 	both modified:   openair2/NETWORK_DRIVER/UE_IP/common.c
 	both modified:   openair2/NETWORK_DRIVER/UE_IP/device.c
 	both modified:   openair2/NETWORK_DRIVER/UE_IP/local.h
@@ -192,10 +197,10 @@ openair2/LAYER2/RLC/rlc_rrc.c
 	both added:      openair2/PHY_INTERFACE/phy_stub_UE.c
 	both added:      openair2/PHY_INTERFACE/phy_stub_UE.h
 	both modified:   openair2/RRC/LTE/L2_interface.c
-	both modified:   openair2/RRC/LTE/L2_interface_ue.c
+	both modified:   openair2/RRC/LTE/L2_interface_ue.c		    
 	both modified:   openair2/RRC/LTE/MESSAGES/asn1_msg.c
 	both modified:   openair2/RRC/LTE/MESSAGES/asn1_msg.h
-	both modified:   openair2/RRC/LTE/rrc_UE.c
+	both modified:   openair2/RRC/LTE/rrc_UE.c		   #Conflicts solved up to here
 	both modified:   openair2/RRC/LTE/rrc_defs.h
 	both modified:   openair2/RRC/LTE/rrc_eNB.c
 	both modified:   openair2/RRC/LTE/rrc_proto.h

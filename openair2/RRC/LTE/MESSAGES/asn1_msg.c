@@ -69,15 +69,9 @@
 
 #include "LTE_SIB-Type.h"
 
-<<<<<<< HEAD:openair2/RRC/LITE/MESSAGES/asn1_msg.c
-#include "BCCH-DL-SCH-Message.h"
-#include "SBCCH-SL-BCH-MessageType.h"
-#include "SBCCH-SL-BCH-Message.h"
-=======
 #include "LTE_BCCH-DL-SCH-Message.h"
 #include "LTE_SBCCH-SL-BCH-MessageType.h"
 #include "LTE_SBCCH-SL-BCH-Message.h"
->>>>>>> main/develop:openair2/RRC/LTE/MESSAGES/asn1_msg.c
 
 //#include "PHY/defs.h"
 
@@ -322,7 +316,6 @@ uint8_t do_MIB_SL(const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_index,
   return((enc_rval.encoded+7)/8);
 }
 
-<<<<<<< HEAD:openair2/RRC/LITE/MESSAGES/asn1_msg.c
 //TTN for D2D
 // 3GPP 36.331 (Section 5.10.7.4)
 uint8_t do_MIB_SL(const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_index, int absSF, uint8_t in_coverage)
@@ -393,9 +386,6 @@ uint8_t do_MIB_SL(const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_index,
 
   return((enc_rval.encoded+7)/8);
 }
-
-=======
->>>>>>> main/develop:openair2/RRC/LTE/MESSAGES/asn1_msg.c
 
 uint8_t do_SIB1(rrc_eNB_carrier_data_t *carrier,
 		int Mod_id,int CC_id
@@ -615,18 +605,6 @@ uint8_t do_SIB23(uint8_t Mod_id,
 #endif
                 )
 {
-
-<<<<<<< HEAD:openair2/RRC/LITE/MESSAGES/asn1_msg.c
-  struct SystemInformation_r8_IEs__sib_TypeAndInfo__Member *sib2_part,*sib3_part;
-
-#if defined(Rel14)
-  //TTN - for D2D
-  struct SystemInformation_r8_IEs__sib_TypeAndInfo__Member *sib18_part, *sib19_part, *sib21_part;
-  SL_CommRxPoolList_r12_t *SL_CommRxPoolList; //for SIB18
-  struct SL_CommResourcePool_r12 *SL_CommResourcePool; //for SIB18
-  SL_DiscRxPoolList_r12_t *SL_DiscRxPoolList; //for SIB19 (discRxPool)
-  struct SL_DiscResourcePool_r12 *SL_DiscResourcePool; //for SIB19 (discRxPool)
-=======
   struct LTE_SystemInformation_r8_IEs__sib_TypeAndInfo__Member *sib2_part,*sib3_part;
 
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
@@ -636,25 +614,16 @@ uint8_t do_SIB23(uint8_t Mod_id,
   struct LTE_SL_CommResourcePool_r12 *SL_CommResourcePool; //for SIB18
   LTE_SL_DiscRxPoolList_r12_t *SL_DiscRxPoolList; //for SIB19 (discRxPool)
   struct LTE_SL_DiscResourcePool_r12 *SL_DiscResourcePool; //for SIB19 (discRxPool)
->>>>>>> main/develop:openair2/RRC/LTE/MESSAGES/asn1_msg.c
   //SL_DiscRxPoolList_r12_t *SL_DiscRxPoolPSList; //for SIB19 (discRxPoolPS)
   //struct SL_DiscResourcePool_r12 *SL_DiscResourcePoolPS; //for SIB19 (discRxPoolPS)
   //struct SL_V2X_ConfigCommon_r14 *SL_V2X_ConfigCommon;
 #endif
 
-<<<<<<< HEAD:openair2/RRC/LITE/MESSAGES/asn1_msg.c
-#if defined(Rel10) || defined(Rel14)
-  struct SystemInformation_r8_IEs__sib_TypeAndInfo__Member *sib13_part;
-  MBSFN_SubframeConfigList_t *MBSFNSubframeConfigList;
-  MBSFN_AreaInfoList_r9_t *MBSFNArea_list;
-  struct MBSFN_AreaInfo_r9 *MBSFN_Area1, *MBSFN_Area2;
-=======
 #if (LTE_RRC_VERSION >= MAKE_VERSION(10, 0, 0))
   struct LTE_SystemInformation_r8_IEs__sib_TypeAndInfo__Member *sib13_part;
   LTE_MBSFN_SubframeConfigList_t *MBSFNSubframeConfigList;
   LTE_MBSFN_AreaInfoList_r9_t *MBSFNArea_list;
   struct LTE_MBSFN_AreaInfo_r9 *MBSFN_Area1, *MBSFN_Area2;
->>>>>>> main/develop:openair2/RRC/LTE/MESSAGES/asn1_msg.c
 #endif
   asn_enc_rval_t enc_rval;
 
@@ -667,19 +636,11 @@ uint8_t do_SIB23(uint8_t Mod_id,
   uint8_t                           MBMS_flag     = RC.rrc[Mod_id]->carrier[CC_id].MBMS_flag;
 #endif
 
-<<<<<<< HEAD:openair2/RRC/LITE/MESSAGES/asn1_msg.c
-#if defined(Rel10) || defined(Rel14)
-  //TTN - for D2D
-  SystemInformationBlockType18_r12_t     **sib18        = &RC.rrc[Mod_id]->carrier[CC_id].sib18;
-  SystemInformationBlockType19_r12_t     **sib19        = &RC.rrc[Mod_id]->carrier[CC_id].sib19;
-  SystemInformationBlockType21_r14_t     **sib21        = &RC.rrc[Mod_id]->carrier[CC_id].sib21;
-=======
 #if (LTE_RRC_VERSION >= MAKE_VERSION(10, 0, 0))
   //TTN - for D2D
   LTE_SystemInformationBlockType18_r12_t     **sib18        = &RC.rrc[Mod_id]->carrier[CC_id].sib18;
   LTE_SystemInformationBlockType19_r12_t     **sib19        = &RC.rrc[Mod_id]->carrier[CC_id].sib19;
   LTE_SystemInformationBlockType21_r14_t     **sib21        = &RC.rrc[Mod_id]->carrier[CC_id].sib21;
->>>>>>> main/develop:openair2/RRC/LTE/MESSAGES/asn1_msg.c
 #endif
 
   if (bcch_message) {
@@ -726,21 +687,6 @@ uint8_t do_SIB23(uint8_t Mod_id,
 
 #endif
 
-<<<<<<< HEAD:openair2/RRC/LITE/MESSAGES/asn1_msg.c
-#if defined(Rel10) || defined(Rel14)
-  //TTN - for D2D
-  sib18_part = CALLOC(1,sizeof(struct SystemInformation_r8_IEs__sib_TypeAndInfo__Member));
-  sib19_part = CALLOC(1,sizeof(struct SystemInformation_r8_IEs__sib_TypeAndInfo__Member));
-  sib21_part = CALLOC(1,sizeof(struct SystemInformation_r8_IEs__sib_TypeAndInfo__Member));
-
-  memset(sib18_part,0,sizeof(struct SystemInformation_r8_IEs__sib_TypeAndInfo__Member));
-  memset(sib19_part,0,sizeof(struct SystemInformation_r8_IEs__sib_TypeAndInfo__Member));
-  memset(sib21_part,0,sizeof(struct SystemInformation_r8_IEs__sib_TypeAndInfo__Member));
-
-  sib18_part->present = SystemInformation_r8_IEs__sib_TypeAndInfo__Member_PR_sib18_v1250;
-  sib19_part->present = SystemInformation_r8_IEs__sib_TypeAndInfo__Member_PR_sib19_v1250;
-  sib21_part->present = SystemInformation_r8_IEs__sib_TypeAndInfo__Member_PR_sib21_v1430;
-=======
 #if (LTE_RRC_VERSION >= MAKE_VERSION(10, 0, 0))
   //TTN - for D2D
   sib18_part = CALLOC(1,sizeof(struct LTE_SystemInformation_r8_IEs__sib_TypeAndInfo__Member));
@@ -753,15 +699,10 @@ uint8_t do_SIB23(uint8_t Mod_id,
   sib18_part->present = LTE_SystemInformation_r8_IEs__sib_TypeAndInfo__Member_PR_sib18_v1250;
   sib19_part->present = LTE_SystemInformation_r8_IEs__sib_TypeAndInfo__Member_PR_sib19_v1250;
   sib21_part->present = LTE_SystemInformation_r8_IEs__sib_TypeAndInfo__Member_PR_sib21_v1430;
->>>>>>> main/develop:openair2/RRC/LTE/MESSAGES/asn1_msg.c
 
   *sib18 = &sib18_part->choice.sib18_v1250;
   *sib19 = &sib19_part->choice.sib19_v1250;
   *sib21 = &sib21_part->choice.sib21_v1430;
-<<<<<<< HEAD:openair2/RRC/LITE/MESSAGES/asn1_msg.c
-=======
-
->>>>>>> main/develop:openair2/RRC/LTE/MESSAGES/asn1_msg.c
 #endif
 
 
@@ -1148,11 +1089,7 @@ uint8_t do_SIB23(uint8_t Mod_id,
 #endif
 
 
-<<<<<<< HEAD:openair2/RRC/LITE/MESSAGES/asn1_msg.c
-#if defined(Rel10) || defined(Rel14)
-=======
 #if (LTE_RRC_VERSION >= MAKE_VERSION(10, 0, 0))
->>>>>>> main/develop:openair2/RRC/LTE/MESSAGES/asn1_msg.c
   //TTN - for D2D
   // SIB18
   //commRxPool_r12
@@ -1172,78 +1109,44 @@ uint8_t do_SIB23(uint8_t Mod_id,
   SL_CommResourcePool->sc_TF_ResourceConfig_r12.prb_End_r12 = configuration->rxPool_ResourceConfig_prb_End[CC_id];
   SL_CommResourcePool->sc_TF_ResourceConfig_r12.offsetIndicator_r12.present = configuration->rxPool_ResourceConfig_offsetIndicator_present[CC_id];
 
-<<<<<<< HEAD:openair2/RRC/LITE/MESSAGES/asn1_msg.c
-  if (SL_CommResourcePool->sc_TF_ResourceConfig_r12.offsetIndicator_r12.present == SL_OffsetIndicator_r12_PR_small_r12 ) {
-     SL_CommResourcePool->sc_TF_ResourceConfig_r12.offsetIndicator_r12.choice.small_r12 = configuration->rxPool_ResourceConfig_offsetIndicator_choice[CC_id] ;
-  } else if (SL_CommResourcePool->sc_TF_ResourceConfig_r12.offsetIndicator_r12.present == SL_OffsetIndicator_r12_PR_large_r12 ){
-=======
   if (SL_CommResourcePool->sc_TF_ResourceConfig_r12.offsetIndicator_r12.present == LTE_SL_OffsetIndicator_r12_PR_small_r12 ) {
      SL_CommResourcePool->sc_TF_ResourceConfig_r12.offsetIndicator_r12.choice.small_r12 = configuration->rxPool_ResourceConfig_offsetIndicator_choice[CC_id] ;
   } else if (SL_CommResourcePool->sc_TF_ResourceConfig_r12.offsetIndicator_r12.present == LTE_SL_OffsetIndicator_r12_PR_large_r12 ){
->>>>>>> main/develop:openair2/RRC/LTE/MESSAGES/asn1_msg.c
      SL_CommResourcePool->sc_TF_ResourceConfig_r12.offsetIndicator_r12.choice.large_r12 = configuration->rxPool_ResourceConfig_offsetIndicator_choice[CC_id] ;
   }
 
   SL_CommResourcePool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.present = configuration->rxPool_ResourceConfig_subframeBitmap_present[CC_id];
-<<<<<<< HEAD:openair2/RRC/LITE/MESSAGES/asn1_msg.c
-  if (SL_CommResourcePool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.present == SubframeBitmapSL_r12_PR_bs4_r12){
-=======
   if (SL_CommResourcePool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.present == LTE_SubframeBitmapSL_r12_PR_bs4_r12){
->>>>>>> main/develop:openair2/RRC/LTE/MESSAGES/asn1_msg.c
      //for BS4
      SL_CommResourcePool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs4_r12.size = configuration->rxPool_ResourceConfig_subframeBitmap_choice_bs_size[CC_id];
      SL_CommResourcePool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs4_r12.buf  = (uint8_t *)configuration->rxPool_ResourceConfig_subframeBitmap_choice_bs_buf[CC_id];;
      SL_CommResourcePool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs4_r12.bits_unused = configuration->rxPool_ResourceConfig_subframeBitmap_choice_bs_bits_unused[CC_id];
-<<<<<<< HEAD:openair2/RRC/LITE/MESSAGES/asn1_msg.c
-  } else if (SL_CommResourcePool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.present == SubframeBitmapSL_r12_PR_bs8_r12){
-=======
   } else if (SL_CommResourcePool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.present == LTE_SubframeBitmapSL_r12_PR_bs8_r12){
->>>>>>> main/develop:openair2/RRC/LTE/MESSAGES/asn1_msg.c
      //for BS8
      SL_CommResourcePool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs8_r12.size = configuration->rxPool_ResourceConfig_subframeBitmap_choice_bs_size[CC_id];
      SL_CommResourcePool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs8_r12.buf  = (uint8_t *)configuration->rxPool_ResourceConfig_subframeBitmap_choice_bs_buf[CC_id];;
      SL_CommResourcePool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs8_r12.bits_unused = configuration->rxPool_ResourceConfig_subframeBitmap_choice_bs_bits_unused[CC_id];
-<<<<<<< HEAD:openair2/RRC/LITE/MESSAGES/asn1_msg.c
-  } else if (SL_CommResourcePool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.present == SubframeBitmapSL_r12_PR_bs12_r12){
-=======
   } else if (SL_CommResourcePool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.present == LTE_SubframeBitmapSL_r12_PR_bs12_r12){
->>>>>>> main/develop:openair2/RRC/LTE/MESSAGES/asn1_msg.c
      //for BS12
      SL_CommResourcePool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs12_r12.size = configuration->rxPool_ResourceConfig_subframeBitmap_choice_bs_size[CC_id];
      SL_CommResourcePool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs12_r12.buf  = (uint8_t *)configuration->rxPool_ResourceConfig_subframeBitmap_choice_bs_buf[CC_id];;
      SL_CommResourcePool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs12_r12.bits_unused = configuration->rxPool_ResourceConfig_subframeBitmap_choice_bs_bits_unused[CC_id];
-<<<<<<< HEAD:openair2/RRC/LITE/MESSAGES/asn1_msg.c
-  }else if (SL_CommResourcePool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.present == SubframeBitmapSL_r12_PR_bs16_r12){
-=======
   }else if (SL_CommResourcePool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.present == LTE_SubframeBitmapSL_r12_PR_bs16_r12){
->>>>>>> main/develop:openair2/RRC/LTE/MESSAGES/asn1_msg.c
      //for BS16
      SL_CommResourcePool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs16_r12.size = configuration->rxPool_ResourceConfig_subframeBitmap_choice_bs_size[CC_id];
      SL_CommResourcePool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs16_r12.buf  = (uint8_t *)configuration->rxPool_ResourceConfig_subframeBitmap_choice_bs_buf[CC_id];;
      SL_CommResourcePool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs16_r12.bits_unused = configuration->rxPool_ResourceConfig_subframeBitmap_choice_bs_bits_unused[CC_id];
-<<<<<<< HEAD:openair2/RRC/LITE/MESSAGES/asn1_msg.c
-  }else if (SL_CommResourcePool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.present == SubframeBitmapSL_r12_PR_bs30_r12){
-=======
   }else if (SL_CommResourcePool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.present == LTE_SubframeBitmapSL_r12_PR_bs30_r12){
->>>>>>> main/develop:openair2/RRC/LTE/MESSAGES/asn1_msg.c
      //for BS30
      SL_CommResourcePool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs30_r12.size = configuration->rxPool_ResourceConfig_subframeBitmap_choice_bs_size[CC_id];
      SL_CommResourcePool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs30_r12.buf  = (uint8_t *)configuration->rxPool_ResourceConfig_subframeBitmap_choice_bs_buf[CC_id];;
      SL_CommResourcePool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs30_r12.bits_unused = configuration->rxPool_ResourceConfig_subframeBitmap_choice_bs_bits_unused[CC_id];
-<<<<<<< HEAD:openair2/RRC/LITE/MESSAGES/asn1_msg.c
-  }else if (SL_CommResourcePool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.present == SubframeBitmapSL_r12_PR_bs40_r12){
-=======
   }else if (SL_CommResourcePool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.present == LTE_SubframeBitmapSL_r12_PR_bs40_r12){
->>>>>>> main/develop:openair2/RRC/LTE/MESSAGES/asn1_msg.c
      //for BS40
      SL_CommResourcePool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs40_r12.size = configuration->rxPool_ResourceConfig_subframeBitmap_choice_bs_size[CC_id];
      SL_CommResourcePool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs40_r12.buf  = (uint8_t *)configuration->rxPool_ResourceConfig_subframeBitmap_choice_bs_buf[CC_id];;
      SL_CommResourcePool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs40_r12.bits_unused = configuration->rxPool_ResourceConfig_subframeBitmap_choice_bs_bits_unused[CC_id];
-<<<<<<< HEAD:openair2/RRC/LITE/MESSAGES/asn1_msg.c
-  }else if (SL_CommResourcePool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.present == SubframeBitmapSL_r12_PR_bs42_r12){
-=======
   }else if (SL_CommResourcePool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.present == LTE_SubframeBitmapSL_r12_PR_bs42_r12){
->>>>>>> main/develop:openair2/RRC/LTE/MESSAGES/asn1_msg.c
      //for BS42
      SL_CommResourcePool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs42_r12.size = configuration->rxPool_ResourceConfig_subframeBitmap_choice_bs_size[CC_id];
      SL_CommResourcePool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs42_r12.buf  = (uint8_t *)configuration->rxPool_ResourceConfig_subframeBitmap_choice_bs_buf[CC_id];;
@@ -1252,11 +1155,7 @@ uint8_t do_SIB23(uint8_t Mod_id,
 
   //dataHoppingConfig_r12
   SL_CommResourcePool->dataHoppingConfig_r12.hoppingParameter_r12 = 0;
-<<<<<<< HEAD:openair2/RRC/LITE/MESSAGES/asn1_msg.c
-  SL_CommResourcePool->dataHoppingConfig_r12.numSubbands_r12  =  SL_HoppingConfigComm_r12__numSubbands_r12_ns1;
-=======
   SL_CommResourcePool->dataHoppingConfig_r12.numSubbands_r12  =  LTE_SL_HoppingConfigComm_r12__numSubbands_r12_ns1;
->>>>>>> main/develop:openair2/RRC/LTE/MESSAGES/asn1_msg.c
   SL_CommResourcePool->dataHoppingConfig_r12.rb_Offset_r12 = 0;
 
   //ue_SelectedResourceConfig_r12
@@ -1264,15 +1163,9 @@ uint8_t do_SIB23(uint8_t Mod_id,
   SL_CommResourcePool->ue_SelectedResourceConfig_r12->data_TF_ResourceConfig_r12.prb_Num_r12 = 20;
   SL_CommResourcePool->ue_SelectedResourceConfig_r12->data_TF_ResourceConfig_r12.prb_Start_r12 = 5;
   SL_CommResourcePool->ue_SelectedResourceConfig_r12->data_TF_ResourceConfig_r12.prb_End_r12 = 44;
-<<<<<<< HEAD:openair2/RRC/LITE/MESSAGES/asn1_msg.c
-  SL_CommResourcePool->ue_SelectedResourceConfig_r12->data_TF_ResourceConfig_r12.offsetIndicator_r12.present = SL_OffsetIndicator_r12_PR_small_r12;
-  SL_CommResourcePool->ue_SelectedResourceConfig_r12->data_TF_ResourceConfig_r12.offsetIndicator_r12.choice.small_r12 = 0 ;
-  SL_CommResourcePool->ue_SelectedResourceConfig_r12->data_TF_ResourceConfig_r12.subframeBitmap_r12.present = SubframeBitmapSL_r12_PR_bs40_r12;
-=======
   SL_CommResourcePool->ue_SelectedResourceConfig_r12->data_TF_ResourceConfig_r12.offsetIndicator_r12.present = LTE_SL_OffsetIndicator_r12_PR_small_r12;
   SL_CommResourcePool->ue_SelectedResourceConfig_r12->data_TF_ResourceConfig_r12.offsetIndicator_r12.choice.small_r12 = 0 ;
   SL_CommResourcePool->ue_SelectedResourceConfig_r12->data_TF_ResourceConfig_r12.subframeBitmap_r12.present = LTE_SubframeBitmapSL_r12_PR_bs40_r12;
->>>>>>> main/develop:openair2/RRC/LTE/MESSAGES/asn1_msg.c
   SL_CommResourcePool->ue_SelectedResourceConfig_r12->data_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs4_r12.size = 5;
   SL_CommResourcePool->ue_SelectedResourceConfig_r12->data_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs4_r12.buf  = CALLOC(1,5);
   SL_CommResourcePool->ue_SelectedResourceConfig_r12->data_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs4_r12.bits_unused = 0;
@@ -1290,11 +1183,7 @@ uint8_t do_SIB23(uint8_t Mod_id,
   SL_CommResourcePool->rxParametersNCell_r12->syncConfigIndex_r12 = 0;
   //txParameters_r12
   SL_CommResourcePool->txParameters_r12 = CALLOC (1, sizeof (*SL_CommResourcePool->txParameters_r12));
-<<<<<<< HEAD:openair2/RRC/LITE/MESSAGES/asn1_msg.c
-  SL_CommResourcePool->txParameters_r12->sc_TxParameters_r12.alpha_r12 = Alpha_r12_al0;
-=======
   SL_CommResourcePool->txParameters_r12->sc_TxParameters_r12.alpha_r12 = LTE_Alpha_r12_al0;
->>>>>>> main/develop:openair2/RRC/LTE/MESSAGES/asn1_msg.c
   SL_CommResourcePool->txParameters_r12->sc_TxParameters_r12.p0_r12 = 0;
 
   SL_CommResourcePool->ext1 = NULL ;
@@ -1330,15 +1219,6 @@ uint8_t do_SIB23(uint8_t Mod_id,
   SL_DiscResourcePool->tf_ResourceConfig_r12.prb_Start_r12 = configuration->discRxPool_ResourceConfig_prb_Start[CC_id];
   SL_DiscResourcePool->tf_ResourceConfig_r12.prb_End_r12 = configuration->discRxPool_ResourceConfig_prb_End[CC_id];
   SL_DiscResourcePool->tf_ResourceConfig_r12.offsetIndicator_r12.present = configuration->discRxPool_ResourceConfig_offsetIndicator_present[CC_id];
-<<<<<<< HEAD:openair2/RRC/LITE/MESSAGES/asn1_msg.c
-  if (SL_DiscResourcePool->tf_ResourceConfig_r12.offsetIndicator_r12.present == SL_OffsetIndicator_r12_PR_small_r12 ) {
-     SL_DiscResourcePool->tf_ResourceConfig_r12.offsetIndicator_r12.choice.small_r12 = configuration->discRxPool_ResourceConfig_offsetIndicator_choice[CC_id] ;
-  } else if (SL_DiscResourcePool->tf_ResourceConfig_r12.offsetIndicator_r12.present == SL_OffsetIndicator_r12_PR_large_r12 ){
-     SL_DiscResourcePool->tf_ResourceConfig_r12.offsetIndicator_r12.choice.large_r12 = configuration->discRxPool_ResourceConfig_offsetIndicator_choice[CC_id] ;
-  }
-  SL_DiscResourcePool->tf_ResourceConfig_r12.subframeBitmap_r12.present = configuration->discRxPool_ResourceConfig_subframeBitmap_present[CC_id];
-  if (SL_DiscResourcePool->tf_ResourceConfig_r12.subframeBitmap_r12.present == SubframeBitmapSL_r12_PR_bs4_r12){
-=======
   if (SL_DiscResourcePool->tf_ResourceConfig_r12.offsetIndicator_r12.present == LTE_SL_OffsetIndicator_r12_PR_small_r12 ) {
      SL_DiscResourcePool->tf_ResourceConfig_r12.offsetIndicator_r12.choice.small_r12 = configuration->discRxPool_ResourceConfig_offsetIndicator_choice[CC_id] ;
   } else if (SL_DiscResourcePool->tf_ResourceConfig_r12.offsetIndicator_r12.present == LTE_SL_OffsetIndicator_r12_PR_large_r12 ){
@@ -1346,61 +1226,36 @@ uint8_t do_SIB23(uint8_t Mod_id,
   }
   SL_DiscResourcePool->tf_ResourceConfig_r12.subframeBitmap_r12.present = configuration->discRxPool_ResourceConfig_subframeBitmap_present[CC_id];
   if (SL_DiscResourcePool->tf_ResourceConfig_r12.subframeBitmap_r12.present == LTE_SubframeBitmapSL_r12_PR_bs4_r12){
->>>>>>> main/develop:openair2/RRC/LTE/MESSAGES/asn1_msg.c
      //for BS4
      SL_DiscResourcePool->tf_ResourceConfig_r12.subframeBitmap_r12.choice.bs4_r12.size = configuration->discRxPool_ResourceConfig_subframeBitmap_choice_bs_size[CC_id];
      SL_DiscResourcePool->tf_ResourceConfig_r12.subframeBitmap_r12.choice.bs4_r12.buf  =  (uint8_t *)configuration->discRxPool_ResourceConfig_subframeBitmap_choice_bs_buf[CC_id];;
      SL_DiscResourcePool->tf_ResourceConfig_r12.subframeBitmap_r12.choice.bs4_r12.bits_unused = configuration->discRxPool_ResourceConfig_subframeBitmap_choice_bs_bits_unused[CC_id];
-<<<<<<< HEAD:openair2/RRC/LITE/MESSAGES/asn1_msg.c
-  } else if (SL_DiscResourcePool->tf_ResourceConfig_r12.subframeBitmap_r12.present == SubframeBitmapSL_r12_PR_bs8_r12){
-=======
   } else if (SL_DiscResourcePool->tf_ResourceConfig_r12.subframeBitmap_r12.present == LTE_SubframeBitmapSL_r12_PR_bs8_r12){
->>>>>>> main/develop:openair2/RRC/LTE/MESSAGES/asn1_msg.c
      //for BS8
      SL_DiscResourcePool->tf_ResourceConfig_r12.subframeBitmap_r12.choice.bs8_r12.size = configuration->discRxPool_ResourceConfig_subframeBitmap_choice_bs_size[CC_id];
      SL_DiscResourcePool->tf_ResourceConfig_r12.subframeBitmap_r12.choice.bs8_r12.buf  = (uint8_t *)configuration->discRxPool_ResourceConfig_subframeBitmap_choice_bs_buf[CC_id];;
      SL_DiscResourcePool->tf_ResourceConfig_r12.subframeBitmap_r12.choice.bs8_r12.bits_unused = configuration->discRxPool_ResourceConfig_subframeBitmap_choice_bs_bits_unused[CC_id];
-<<<<<<< HEAD:openair2/RRC/LITE/MESSAGES/asn1_msg.c
-  } else if (SL_DiscResourcePool->tf_ResourceConfig_r12.subframeBitmap_r12.present == SubframeBitmapSL_r12_PR_bs12_r12){
-=======
   } else if (SL_DiscResourcePool->tf_ResourceConfig_r12.subframeBitmap_r12.present == LTE_SubframeBitmapSL_r12_PR_bs12_r12){
->>>>>>> main/develop:openair2/RRC/LTE/MESSAGES/asn1_msg.c
      //for BS12
      SL_DiscResourcePool->tf_ResourceConfig_r12.subframeBitmap_r12.choice.bs12_r12.size = configuration->discRxPool_ResourceConfig_subframeBitmap_choice_bs_size[CC_id];
      SL_DiscResourcePool->tf_ResourceConfig_r12.subframeBitmap_r12.choice.bs12_r12.buf  = (uint8_t *)configuration->discRxPool_ResourceConfig_subframeBitmap_choice_bs_buf[CC_id];;
      SL_DiscResourcePool->tf_ResourceConfig_r12.subframeBitmap_r12.choice.bs12_r12.bits_unused = configuration->discRxPool_ResourceConfig_subframeBitmap_choice_bs_bits_unused[CC_id];
-<<<<<<< HEAD:openair2/RRC/LITE/MESSAGES/asn1_msg.c
-  }else if (SL_DiscResourcePool->tf_ResourceConfig_r12.subframeBitmap_r12.present == SubframeBitmapSL_r12_PR_bs16_r12){
-=======
   }else if (SL_DiscResourcePool->tf_ResourceConfig_r12.subframeBitmap_r12.present == LTE_SubframeBitmapSL_r12_PR_bs16_r12){
->>>>>>> main/develop:openair2/RRC/LTE/MESSAGES/asn1_msg.c
      //for BS16
      SL_DiscResourcePool->tf_ResourceConfig_r12.subframeBitmap_r12.choice.bs16_r12.size = configuration->discRxPool_ResourceConfig_subframeBitmap_choice_bs_size[CC_id];
      SL_DiscResourcePool->tf_ResourceConfig_r12.subframeBitmap_r12.choice.bs16_r12.buf  = (uint8_t *)configuration->discRxPool_ResourceConfig_subframeBitmap_choice_bs_buf[CC_id];;
      SL_DiscResourcePool->tf_ResourceConfig_r12.subframeBitmap_r12.choice.bs16_r12.bits_unused = configuration->discRxPool_ResourceConfig_subframeBitmap_choice_bs_bits_unused[CC_id];
-<<<<<<< HEAD:openair2/RRC/LITE/MESSAGES/asn1_msg.c
-  }else if (SL_DiscResourcePool->tf_ResourceConfig_r12.subframeBitmap_r12.present == SubframeBitmapSL_r12_PR_bs30_r12){
-=======
   }else if (SL_DiscResourcePool->tf_ResourceConfig_r12.subframeBitmap_r12.present == LTE_SubframeBitmapSL_r12_PR_bs30_r12){
->>>>>>> main/develop:openair2/RRC/LTE/MESSAGES/asn1_msg.c
      //for BS30
      SL_DiscResourcePool->tf_ResourceConfig_r12.subframeBitmap_r12.choice.bs30_r12.size = configuration->discRxPool_ResourceConfig_subframeBitmap_choice_bs_size[CC_id];
      SL_DiscResourcePool->tf_ResourceConfig_r12.subframeBitmap_r12.choice.bs30_r12.buf  = (uint8_t *)configuration->discRxPool_ResourceConfig_subframeBitmap_choice_bs_buf[CC_id];;
      SL_DiscResourcePool->tf_ResourceConfig_r12.subframeBitmap_r12.choice.bs30_r12.bits_unused = configuration->discRxPool_ResourceConfig_subframeBitmap_choice_bs_bits_unused[CC_id];
-<<<<<<< HEAD:openair2/RRC/LITE/MESSAGES/asn1_msg.c
-  }else if (SL_DiscResourcePool->tf_ResourceConfig_r12.subframeBitmap_r12.present == SubframeBitmapSL_r12_PR_bs40_r12){
-=======
   }else if (SL_DiscResourcePool->tf_ResourceConfig_r12.subframeBitmap_r12.present == LTE_SubframeBitmapSL_r12_PR_bs40_r12){
->>>>>>> main/develop:openair2/RRC/LTE/MESSAGES/asn1_msg.c
      //for BS40
      SL_DiscResourcePool->tf_ResourceConfig_r12.subframeBitmap_r12.choice.bs40_r12.size = configuration->discRxPool_ResourceConfig_subframeBitmap_choice_bs_size[CC_id];
      SL_DiscResourcePool->tf_ResourceConfig_r12.subframeBitmap_r12.choice.bs40_r12.buf  = (uint8_t *)configuration->discRxPool_ResourceConfig_subframeBitmap_choice_bs_buf[CC_id];;
      SL_DiscResourcePool->tf_ResourceConfig_r12.subframeBitmap_r12.choice.bs40_r12.bits_unused = configuration->discRxPool_ResourceConfig_subframeBitmap_choice_bs_bits_unused[CC_id];
-<<<<<<< HEAD:openair2/RRC/LITE/MESSAGES/asn1_msg.c
-  }else if (SL_DiscResourcePool->tf_ResourceConfig_r12.subframeBitmap_r12.present == SubframeBitmapSL_r12_PR_bs42_r12){
-=======
   }else if (SL_DiscResourcePool->tf_ResourceConfig_r12.subframeBitmap_r12.present == LTE_SubframeBitmapSL_r12_PR_bs42_r12){
->>>>>>> main/develop:openair2/RRC/LTE/MESSAGES/asn1_msg.c
      //for BS42
      SL_DiscResourcePool->tf_ResourceConfig_r12.subframeBitmap_r12.choice.bs42_r12.size = configuration->discRxPool_ResourceConfig_subframeBitmap_choice_bs_size[CC_id];
      SL_DiscResourcePool->tf_ResourceConfig_r12.subframeBitmap_r12.choice.bs42_r12.buf  = (uint8_t *)configuration->discRxPool_ResourceConfig_subframeBitmap_choice_bs_buf[CC_id];;
@@ -1487,13 +1342,8 @@ uint8_t do_SIB23(uint8_t Mod_id,
   //SL_V2X_ConfigCommon= (*sib21)->sl_V2X_ConfigCommon_r14;
   memset((*sib21)->sl_V2X_ConfigCommon_r14,0,sizeof(*(*sib21)->sl_V2X_ConfigCommon_r14));
 
-<<<<<<< HEAD:openair2/RRC/LITE/MESSAGES/asn1_msg.c
-  struct SL_CommRxPoolListV2X_r14 *SL_CommRxPoolListV2X;
-  struct SL_CommResourcePoolV2X_r14 *SL_CommResourcePoolV2X;
-=======
   struct LTE_SL_CommRxPoolListV2X_r14 *SL_CommRxPoolListV2X;
   struct LTE_SL_CommResourcePoolV2X_r14 *SL_CommResourcePoolV2X;
->>>>>>> main/develop:openair2/RRC/LTE/MESSAGES/asn1_msg.c
   (*sib21)->sl_V2X_ConfigCommon_r14->v2x_CommRxPool_r14 = CALLOC(1, sizeof(*(*sib21)->sl_V2X_ConfigCommon_r14->v2x_CommRxPool_r14));
   SL_CommRxPoolListV2X = (*sib21)->sl_V2X_ConfigCommon_r14->v2x_CommRxPool_r14;
 
@@ -1501,15 +1351,9 @@ uint8_t do_SIB23(uint8_t Mod_id,
   memset(SL_CommResourcePoolV2X,0,sizeof(*SL_CommResourcePoolV2X));
 
   SL_CommResourcePoolV2X->sl_OffsetIndicator_r14 = CALLOC(1, sizeof(*SL_CommResourcePoolV2X->sl_OffsetIndicator_r14));
-<<<<<<< HEAD:openair2/RRC/LITE/MESSAGES/asn1_msg.c
-  SL_CommResourcePoolV2X->sl_OffsetIndicator_r14->present  = SL_OffsetIndicator_r12_PR_small_r12;
-  SL_CommResourcePoolV2X->sl_OffsetIndicator_r14->choice.small_r12 = 0;
-  SL_CommResourcePoolV2X->sl_Subframe_r14.present = SubframeBitmapSL_r14_PR_bs40_r14;
-=======
   SL_CommResourcePoolV2X->sl_OffsetIndicator_r14->present  = LTE_SL_OffsetIndicator_r12_PR_small_r12;
   SL_CommResourcePoolV2X->sl_OffsetIndicator_r14->choice.small_r12 = 0;
   SL_CommResourcePoolV2X->sl_Subframe_r14.present = LTE_SubframeBitmapSL_r14_PR_bs40_r14;
->>>>>>> main/develop:openair2/RRC/LTE/MESSAGES/asn1_msg.c
   SL_CommResourcePoolV2X->sl_Subframe_r14.choice.bs40_r14.size =  5;
   SL_CommResourcePoolV2X->sl_Subframe_r14.choice.bs40_r14.buf =  CALLOC(1,5);
   SL_CommResourcePoolV2X->sl_Subframe_r14.choice.bs40_r14.bits_unused = 0;
@@ -1535,24 +1379,14 @@ uint8_t do_SIB23(uint8_t Mod_id,
   //end SIB21
 #endif
  
-<<<<<<< HEAD:openair2/RRC/LITE/MESSAGES/asn1_msg.c
-  bcch_message->message.present = BCCH_DL_SCH_MessageType_PR_c1;
-  bcch_message->message.choice.c1.present = BCCH_DL_SCH_MessageType__c1_PR_systemInformation;
-=======
-
   bcch_message->message.present = LTE_BCCH_DL_SCH_MessageType_PR_c1;
   bcch_message->message.choice.c1.present = LTE_BCCH_DL_SCH_MessageType__c1_PR_systemInformation;
->>>>>>> main/develop:openair2/RRC/LTE/MESSAGES/asn1_msg.c
 
   /*  memcpy((void*)&bcch_message.message.choice.c1.choice.systemInformation,
    (void*)systemInformation,
    sizeof(SystemInformation_t));*/
 
-<<<<<<< HEAD:openair2/RRC/LITE/MESSAGES/asn1_msg.c
-  bcch_message->message.choice.c1.choice.systemInformation.criticalExtensions.present = SystemInformation__criticalExtensions_PR_systemInformation_r8;
-=======
   bcch_message->message.choice.c1.choice.systemInformation.criticalExtensions.present = LTE_SystemInformation__criticalExtensions_PR_systemInformation_r8;
->>>>>>> main/develop:openair2/RRC/LTE/MESSAGES/asn1_msg.c
   bcch_message->message.choice.c1.choice.systemInformation.criticalExtensions.choice.systemInformation_r8.sib_TypeAndInfo.list.count=0;
 
   //  asn_set_empty(&systemInformation->criticalExtensions.choice.systemInformation_r8.sib_TypeAndInfo.list);//.size=0;
@@ -1566,15 +1400,13 @@ uint8_t do_SIB23(uint8_t Mod_id,
   if (MBMS_flag > 0) {
     ASN_SEQUENCE_ADD(&bcch_message->message.choice.c1.choice.systemInformation.criticalExtensions.choice.systemInformation_r8.sib_TypeAndInfo.list,sib13_part);
   }
-<<<<<<< HEAD:openair2/RRC/LITE/MESSAGES/asn1_msg.c
-
   //for D2D
+  // Panos: following lines were removed in the develop branch. Now brought back in but we have to examine whether we should keep
+  // them in the new merge with sidelink. Probably we have to create a new message for SIB18/19/21 and not include these
+  // elements in the SIB2/3 message.
   ASN_SEQUENCE_ADD(&bcch_message->message.choice.c1.choice.systemInformation.criticalExtensions.choice.systemInformation_r8.sib_TypeAndInfo.list, sib18_part);
   ASN_SEQUENCE_ADD(&bcch_message->message.choice.c1.choice.systemInformation.criticalExtensions.choice.systemInformation_r8.sib_TypeAndInfo.list, sib19_part);
   ASN_SEQUENCE_ADD(&bcch_message->message.choice.c1.choice.systemInformation.criticalExtensions.choice.systemInformation_r8.sib_TypeAndInfo.list, sib21_part);
-
-=======
->>>>>>> main/develop:openair2/RRC/LTE/MESSAGES/asn1_msg.c
 #endif
 
   if ( LOG_DEBUGFLAG(DEBUG_ASN1) ) {
@@ -1810,157 +1642,7 @@ uint8_t do_SidelinkUEInformation(uint8_t Mod_id, uint8_t *buffer,  LTE_SL_Destin
    AssertFatal (enc_rval.encoded > 0, "ASN1 message encoding failed (%s, %lu)!\n",
          enc_rval.failed_type->name, enc_rval.encoded);
 
-
-   LOG_D(RRC,"SidelinkUEInformation Encoded %d bits (%d bytes)\n",(uint32_t)enc_rval.encoded,(uint32_t)((enc_rval.encoded+7)/8));
-
-
-   return((enc_rval.encoded+7)/8);
-
-}
-
-
-<<<<<<< HEAD:openair2/RRC/LITE/MESSAGES/asn1_msg.c
-//TTN for D2D - 3GPP TS 36.331 (Section 5.10.2.3)
-uint8_t do_SidelinkUEInformation(uint8_t Mod_id, uint8_t *buffer,  SL_DestinationInfoList_r12_t  *destinationInfoList, long *discTxResourceReq, SL_TRIGGER_t mode)
-{
-
-   asn_enc_rval_t enc_rval;
-   UL_DCCH_Message_t ul_dcch_msg;
-   SidelinkUEInformation_r12_t *sidelinkUEInformation;
-   ARFCN_ValueEUTRA_r9_t carrierFreq = 25655;//sidelink communication frequency (hardcoded - should come from SIB2)
-
-   memset((void *)&ul_dcch_msg,0,sizeof(UL_DCCH_Message_t));
-   ul_dcch_msg.message.present = UL_DCCH_MessageType_PR_messageClassExtension;
-   ul_dcch_msg.message.choice.messageClassExtension.present  = UL_DCCH_MessageType__messageClassExtension_PR_c2;
-   ul_dcch_msg.message.choice.messageClassExtension.choice.c2.present =  UL_DCCH_MessageType__messageClassExtension__c2_PR_sidelinkUEInformation_r12;
-   sidelinkUEInformation            = &ul_dcch_msg.message.choice.messageClassExtension.choice.c2.choice.sidelinkUEInformation_r12;
-
-   //3GPP TS 36.331 (Section 5.10.2.3)
-   sidelinkUEInformation->criticalExtensions.present = SidelinkUEInformation_r12__criticalExtensions_PR_c1;
-   sidelinkUEInformation->criticalExtensions.choice.c1.present = SidelinkUEInformation_r12__criticalExtensions__c1_PR_sidelinkUEInformation_r12;
-   switch(mode) {
-   //if SIB18 is available
-   case SL_RECEIVE_COMMUNICATION: // to receive sidelink communication
-      sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.commRxInterestedFreq_r12 = CALLOC(1,
-            sizeof(*sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.commRxInterestedFreq_r12));
-      memcpy((void*)sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.commRxInterestedFreq_r12, (void*)&carrierFreq,
-            sizeof(ARFCN_ValueEUTRA_r9_t));
-      break;
-
-   case SL_TRANSMIT_NON_RELAY_ONE_TO_MANY: //to transmit non-relay related one-to-many sidelink communication
-      //commTxResourceReq
-      sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.commTxResourceReq_r12 = CALLOC(1,
-            sizeof(*sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.commTxResourceReq_r12));
-      sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.commTxResourceReq_r12->carrierFreq_r12 = CALLOC(1,
-            sizeof(*sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.commTxResourceReq_r12->carrierFreq_r12));
-      memcpy((void*)sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.commTxResourceReq_r12->carrierFreq_r12, (void*)&carrierFreq,
-            sizeof(ARFCN_ValueEUTRA_r9_t));
-      memcpy(&sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.commTxResourceReq_r12->destinationInfoList_r12,
-            destinationInfoList,
-            sizeof(SL_DestinationInfoList_r12_t));
-      break;
-
-   case SL_TRANSMIT_NON_RELAY_ONE_TO_ONE://transmit non-relay related one-to-one sidelink communication
-      //if commTxResourceUC-ReqAllowed is included in SIB18
-      sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension = CALLOC(1,
-            sizeof(*sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension));
-
-      sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceReqUC_r13 = CALLOC(1,
-            sizeof(*sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceReqUC_r13));
-      sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceReqUC_r13->carrierFreq_r12 = CALLOC(1,
-            sizeof(*sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceReqUC_r13->carrierFreq_r12));
-      memcpy((void*)sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceReqUC_r13->carrierFreq_r12, (void*)&carrierFreq,
-            sizeof (ARFCN_ValueEUTRA_r9_t));
-      memcpy(&sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceReqUC_r13->destinationInfoList_r12,
-            destinationInfoList,
-            sizeof(SL_DestinationInfoList_r12_t));
-      break;
-
-   case SL_TRANSMIT_RELAY_ONE_TO_ONE: //transmit relay related one-to-one sidelink communication
-      //if SIB19 includes discConfigRelay and UE acts a relay or UE has a selected relay
-      sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension = CALLOC(1,
-            sizeof(*sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension));
-      sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13= CALLOC(1,
-            sizeof(*sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13));
-      sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13->commTxResourceReqRelayUC_r13 = CALLOC(1,
-            sizeof(*sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13->commTxResourceReqRelayUC_r13));
-      memcpy(&sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13->commTxResourceReqRelayUC_r13->destinationInfoList_r12,
-            destinationInfoList,
-            sizeof(*destinationInfoList));
-      //set ue-type to relayUE or remoteUE
-      sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13->ue_Type_r13 =SidelinkUEInformation_v1310_IEs__commTxResourceInfoReqRelay_r13__ue_Type_r13_relayUE;
-      //sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12->nonCriticalExtension->commTxResourceInfoReqRelay_r13->ue_Type_r13 =SidelinkUEInformation_v1310_IEs__commTxResourceInfoReqRelay_r13__ue_Type_r13_remoteUE;
-      break;
-
-   case SL_TRANSMIT_RELAY_ONE_TO_MANY: //transmit relay related one-to-many sidelink communication
-      //if SIB19 includes discConfigRelay and UE acts a relay
-      //set ue-type to relayUE
-      sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension = CALLOC(1,
-            sizeof(*sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension));
-      sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13= CALLOC(1,
-            sizeof(*sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13));
-      sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13->commTxResourceReqRelay_r13 = CALLOC(1,
-            sizeof(*sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13->commTxResourceReqRelay_r13));
-      sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13->ue_Type_r13 =SidelinkUEInformation_v1310_IEs__commTxResourceInfoReqRelay_r13__ue_Type_r13_relayUE;
-      memcpy(&sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13->commTxResourceReqRelay_r13->destinationInfoList_r12,
-            destinationInfoList,
-            sizeof(*destinationInfoList));
-      break;
-
-      //if SIB19 is available
-      //we consider only one frequency  - a serving frequency
-   case SL_RECEIVE_DISCOVERY: //receive sidelink discovery announcements
-
-      sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.discRxInterest_r12 = CALLOC(1,
-            sizeof(*sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.discRxInterest_r12));
-      *sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.discRxInterest_r12 = SidelinkUEInformation_r12_IEs__discRxInterest_r12_true;
-      break;
-   case SL_TRANSMIT_NON_PS_DISCOVERY://to transmit non-PS related sidelink discovery announcements
-      //for the first frequency
-      sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.discTxResourceReq_r12 = CALLOC(1,
-            sizeof(*sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.discTxResourceReq_r12));
-
-      memcpy((void*)sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.discTxResourceReq_r12,
-            (void*)discTxResourceReq,
-            sizeof(long));
-      //for additional frequency
-      break;
-
-   case SL_TRANSMIT_PS_DISCOVERY://to transmit PS related sidelink discovery announcements
-      //if to transmit non-relay PS related discovery announcements and SIB19 includes discConfigPS
-      //if UE is acting as relay UE and SIB includes discConfigRelay (relay threshold condition)
-      //if relay UE/has a selected relay UE and if SIB19 includes discConfigRelay
-      sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension = CALLOC(1,
-            sizeof(*sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension));
-      sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->discTxResourceReqPS_r13 = CALLOC(1,
-            sizeof(*sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->discTxResourceReqPS_r13));
-      sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->discTxResourceReqPS_r13->discTxResourceReq_r13 = *discTxResourceReq;
-      break;
-      //SIB21
-   case SL_RECEIVE_V2X:
-      //TODO
-      break;
-   case SL_TRANSMIT_V2X:
-      //TODO
-      break;
-      //TODO: request sidelink discovery transmission/reception gaps
-      //TODO: report the system information parameters related to sidelink discovery of carriers other than the primary
-   default:
-      break;
-   }
-
-#ifdef XER_PRINT
-  xer_fprint(stdout, &asn_DEF_UL_DCCH_Message, (void*)&ul_dcch_msg);
-#endif
-
-
-   enc_rval = uper_encode_to_buffer(&asn_DEF_UL_DCCH_Message,
-         (void*)&ul_dcch_msg,
-         buffer,
-         100);
-   AssertFatal (enc_rval.encoded > 0, "ASN1 message encoding failed (%s, %lu)!\n",
-         enc_rval.failed_type->name, enc_rval.encoded);
-
+   //Panos: Lines 1646-1663 were in the sidelink branch version. Not sure if they should be in the merged with develop version.
 #if defined(ENABLE_ITTI)
 # if !defined(DISABLE_XER_SPRINT)
    {
@@ -1980,17 +1662,14 @@ uint8_t do_SidelinkUEInformation(uint8_t Mod_id, uint8_t *buffer,  SL_Destinatio
 # endif
 #endif
 
-#ifdef USER_MODE
-   LOG_D(RRC,"SidelinkUEInformation Encoded %d bits (%d bytes)\n",enc_rval.encoded,(enc_rval.encoded+7)/8);
-#endif
+
+   LOG_D(RRC,"SidelinkUEInformation Encoded %d bits (%d bytes)\n",(uint32_t)enc_rval.encoded,(uint32_t)((enc_rval.encoded+7)/8));
+
 
    return((enc_rval.encoded+7)/8);
 
 }
 
-
-=======
->>>>>>> main/develop:openair2/RRC/LTE/MESSAGES/asn1_msg.c
 uint8_t do_RRCConnectionSetupComplete(uint8_t Mod_id, uint8_t *buffer, const uint8_t Transaction_id, const int dedicatedInfoNASLength, const char *dedicatedInfoNAS)
 {
 
@@ -2631,31 +2310,6 @@ do_RRCConnectionReconfiguration(
   const protocol_ctxt_t*        const ctxt_pP,
   uint8_t                            *buffer,
   uint8_t                             Transaction_id,
-<<<<<<< HEAD:openair2/RRC/LITE/MESSAGES/asn1_msg.c
-  SRB_ToAddModList_t                 *SRB_list,
-  DRB_ToAddModList_t                 *DRB_list,
-  DRB_ToReleaseList_t                *DRB_list2,
-  struct SPS_Config                  *sps_Config,
-  struct PhysicalConfigDedicated     *physicalConfigDedicated,
-  MeasObjectToAddModList_t           *MeasObj_list,
-  ReportConfigToAddModList_t         *ReportConfig_list,
-  QuantityConfig_t                   *quantityConfig,
-  MeasIdToAddModList_t               *MeasId_list,
-  MAC_MainConfig_t                   *mac_MainConfig,
-  MeasGapConfig_t                    *measGapConfig,
-  MobilityControlInfo_t              *mobilityInfo,
-  struct MeasConfig__speedStatePars  *speedStatePars,
-  RSRP_Range_t                       *rsrp,
-  C_RNTI_t                           *cba_rnti,
-  struct RRCConnectionReconfiguration_r8_IEs__dedicatedInfoNASList
-  *dedicatedInfoNASList,
-#ifdef Rel14
-  SL_CommConfig_r12_t                *sl_CommConfig,
-  SL_DiscConfig_r12_t                *sl_DiscConfig
-#endif
-#if defined(Rel10) || defined(Rel14)
-  , SCellToAddMod_r10_t  *SCell_config
-=======
   LTE_SRB_ToAddModList_t                 *SRB_list,
   LTE_DRB_ToAddModList_t                 *DRB_list,
   LTE_DRB_ToReleaseList_t                *DRB_list2,
@@ -2677,7 +2331,6 @@ do_RRCConnectionReconfiguration(
   LTE_SL_DiscConfig_r12_t                *sl_DiscConfig
 #if (LTE_RRC_VERSION >= MAKE_VERSION(10, 0, 0))
   , LTE_SCellToAddMod_r10_t  *SCell_config
->>>>>>> main/develop:openair2/RRC/LTE/MESSAGES/asn1_msg.c
 #endif
 
 )
@@ -2788,11 +2441,7 @@ do_RRCConnectionReconfiguration(
      rrcConnectionReconfiguration->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r8.nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->sl_CommConfig_r12 = CALLOC(1,
            sizeof(*rrcConnectionReconfiguration->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r8.nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->sl_CommConfig_r12));
      memcpy((void*)rrcConnectionReconfiguration->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r8.nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->sl_CommConfig_r12, (void*)sl_CommConfig,
-<<<<<<< HEAD:openair2/RRC/LITE/MESSAGES/asn1_msg.c
-               sizeof(SL_CommConfig_r12_t));
-=======
                sizeof(LTE_SL_CommConfig_r12_t));
->>>>>>> main/develop:openair2/RRC/LTE/MESSAGES/asn1_msg.c
   }
 
   //allocate dedicated resource pools for SL discovery (sl_DiscConfig)
@@ -2811,18 +2460,11 @@ do_RRCConnectionReconfiguration(
      rrcConnectionReconfiguration->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r8.nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->sl_DiscConfig_r12 = CALLOC(1,
             sizeof(*rrcConnectionReconfiguration->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r8.nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->sl_DiscConfig_r12));
      memcpy((void*)rrcConnectionReconfiguration->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r8.nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->sl_DiscConfig_r12, (void*)sl_DiscConfig,
-<<<<<<< HEAD:openair2/RRC/LITE/MESSAGES/asn1_msg.c
-            sizeof(SL_DiscConfig_r12_t));
-  }
-
-  enc_rval = uper_encode_to_buffer(&asn_DEF_DL_DCCH_Message,
-=======
             sizeof(LTE_SL_DiscConfig_r12_t));
   }
 
   enc_rval = uper_encode_to_buffer(&asn_DEF_LTE_DL_DCCH_Message,
                                    NULL,
->>>>>>> main/develop:openair2/RRC/LTE/MESSAGES/asn1_msg.c
                                    (void*)&dl_dcch_msg,
                                    buffer,
                                    RRC_BUF_SIZE);
