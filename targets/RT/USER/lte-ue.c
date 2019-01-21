@@ -1742,10 +1742,10 @@ void *UE_thread(void *arg) {
                         // compute TO compensation that should be applied for this frame
 
 			if (UE->no_timing_correction == 0) {
-if (getenv(RFSIMULATOR) != NULL && UE->rx_offset) {
-   //LOG_E(HW,"in simu, rx_offset is not null: %d\n", UE->rx_offset);
-   UE->rx_offset=0;
-}
+                          if (getenv("RFSIMULATOR") != NULL && UE->rx_offset) {
+                              //LOG_E(HW,"in simu, rx_offset is not null: %d\n", UE->rx_offset);
+                               UE->rx_offset=0;
+                          }
 			  if ( UE->rx_offset < 5*UE->frame_parms.samples_per_tti  &&
 			       UE->rx_offset > 0 )
                             UE->rx_offset_diff = -1 ;
