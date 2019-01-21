@@ -700,7 +700,7 @@ void tx_rf(RU_t *ru) {
 
   RU_proc_t *proc = &ru->proc;
   LTE_DL_FRAME_PARMS *fp = &ru->frame_parms;
-  void *txp[ru->nb_tx]; 
+  void *txp[ru->nb_tx],*txp1[ru->nb_tx]; 
   unsigned int txs;
   int i;
 
@@ -724,6 +724,9 @@ void tx_rf(RU_t *ru) {
       AssertFatal(txsymb>0,"illegal txsymb %d\n",txsymb);
       siglen = fp->nb_prefix_samples0 + (txsymb*fp->ofdm_symbol_size) + (txsymb-1)*fp->nb_prefix_samples;
       //siglen = fp->dl_symbols_in_S_subframe*(fp->ofdm_symbol_size+fp->nb_prefix_samples0);
+      if (ru->is_slave==1 && ru->state==RU_RUN && proc->frame_tx%ru->p==ru->tag-1) {
+        siglen = fp->ofdm_symbol_size + fp->nb_prefix_samples; // length of symbol 10
+      }
       flags=3; // end of burst
     }
     if ((fp->frame_type == TDD) &&
@@ -751,9 +754,10 @@ void tx_rf(RU_t *ru) {
   sf_extension = (sf_extension)&0xfffffffc;
 #endif
     
-    for (i=0; i<ru->nb_tx; i++)
+    for (i=0; i<ru->nb_tx; i++) {
       txp[i] = (void*)&ru->common.txdata[i][(proc->subframe_tx*fp->samples_per_tti)-sf_extension];
-
+      txp1[i] = (void*)&ru->common.txdata[i][(proc->subframe_tx*fp->samples_per_tti)-sf_extension];
+    }
     /* add fail safe for late command */
     if(late_control!=STATE_BURST_NORMAL){//stop burst
       switch (late_control) {
@@ -799,12 +803,12 @@ void tx_rf(RU_t *ru) {
 				      siglen+sf_extension,
 				      ru->nb_tx,
 				      flags);
- LOG_I(PHY,"RU_id %d,RU_tag %d,timestamp %d,offset %d,extension %d,olo %d\n",ru->idx,ru->tag,proc->timestamp_tx,ru->ts_offset,sf_extension,
+ LOG_I(PHY,"************** RU_id %d,RU_tag %d,timestamp %d,offset %d,extension %d,olo %d\n",ru->idx,ru->tag,proc->timestamp_tx,ru->ts_offset,sf_extension,
 									     proc->timestamp_tx+ru->ts_offset-ru->openair0_cfg.tx_sample_advance-sf_extension);
-    if (ru->is_slave==1 && ru->state==RU_RUN && proc->frame_tx%ru->p==ru->tag-1) {
+    if (ru->is_slave==1 && ru->state==RU_RUN && proc->frame_tx%ru->p==ru->tag-1 && SF_type == SF_S) {
     	txs = ru->rfdevice.trx_write_func(&ru->rfdevice,
-                                      proc->timestamp_tx+ru->ts_offset-ru->openair0_cfg.tx_sample_advance-sf_extension,
-                                      txp,
+                                      proc->timestamp_tx+(ru->ts_offset+10*1024+80+10*72)-ru->openair0_cfg.tx_sample_advance-sf_extension,
+                                      txp1,
                                       siglen+sf_extension,
                                       ru->nb_tx,
                                       flags);
