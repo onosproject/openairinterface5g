@@ -87,9 +87,44 @@ openair2/RRC/LTE/MESSAGES/asn1_msg.c (Inside do_sib23() there are some lines ASN
                                       Additional not sure whether lines 1646-1663 should be included or not. They were in the sidelink branch
                                       version)
 openair2/RRC/LTE/MESSAGES/asn1_msg.h
-openair2/RRC/LTE/rrc_UE.c             (Some clonflicts were comlicated)
-
-
+openair2/RRC/LTE/rrc_UE.c             (Some conflicts were complicated)
+openair2/RRC/LTE/rrc_defs.h
+openair2/RRC/LTE/rrc_eNB.c            (In function rrc_rx_tx() not sure which one we should keep:
+                                       if (ue_context_p->ue_context.ul_failure_timer >= 8) { #sidelink branch version
+                                       OR
+                                       if (ue_context_p->ue_context.ul_failure_timer >= 20000) { #Develop branch version
+                                       For now I keep the develop version
+openair2/RRC/LTE/rrc_proto.h
+openair3/GTPV1-U/gtpv1u_eNB.c
+targets/ARCH/USRP/USERSPACE/LIB/usrp_lib.cpp (Had we changed something in the sidelink branch? I have kept all the develop versions
+                                              of the conflicts)
+targets/PROJECTS/GENERIC-LTE-EPC/CONF/enb.band7.tm1.50PRB.usrpb210-d2d.conf
+targets/PROJECTS/GENERIC-LTE-EPC/CONF/enb.band7.tm1.50PRB.usrpb210.conf
+targets/PROJECTS/GENERIC-LTE-EPC/CONF/rcc.band7.tm1.50PRB.nfapi-STUB.conf
+targets/PROJECTS/GENERIC-LTE-EPC/CONF/rcc.band7.tm1.50PRB.nfapi.conf
+targets/RT/USER/lte-enb.c
+targets/RT/USER/lte-ru.c
+targets/RT/USER/lte-softmodem.c
+targets/RT/USER/lte-softmodem.h
+targets/RT/USER/lte-ue.c					 (In UE_thread_synch() the following part referring to cell synchronization is
+                                              commented out:
+                                               /*
+	      									   FILE *fd;
+	      									   if ((fd = fopen("rxsig_frame0.dat","w"))!=NULL) {
+	      									   fwrite((void*)&UE->common_vars.rxdata[0][0],
+	      									   sizeof(int32_t),
+	      									   10*UE->frame_parms.samples_per_tti,
+	      									   fd);
+	      									   LOG_I(PHY,"Dummping Frame ... bye bye \n");
+	      									   fclose(fd);
+	      									   exit(0);
+	      									   }
+	      									   
+	      									   AssertFatal(1==0,"No cell synchronization found, abandoning");
+	      									   return &UE_thread_synch_retval; // not reached
+	      									   */
+	      									   
+	      									   	What should be done in the merged branch now? )
 
 
 *******************************************************************************************************
@@ -97,24 +132,11 @@ openair2/RRC/LTE/rrc_UE.c             (Some clonflicts were comlicated)
 *******************************************************************************************************
 
 	deleted by them: openair1/PHY/TOOLS/file_output.c
-        deleted by them: openair1/SCHED/pusch_pc.c		
-	both modified:   openair2/RRC/LTE/rrc_defs.h
-	both modified:   openair2/RRC/LTE/rrc_eNB.c
-	both modified:   openair2/RRC/LTE/rrc_proto.h
+	deleted by them: openair1/SCHED/pusch_pc.c		
 	deleted by them: openair2/UTIL/LOG/log.c
 	deleted by them: openair2/UTIL/LOG/log.h
-	both modified:   openair3/GTPV1-U/gtpv1u_eNB.c
-	both modified:   targets/ARCH/USRP/USERSPACE/LIB/usrp_lib.cpp
-	both added:      targets/PROJECTS/GENERIC-LTE-EPC/CONF/enb.band7.tm1.50PRB.usrpb210-d2d.conf
-	both modified:   targets/PROJECTS/GENERIC-LTE-EPC/CONF/enb.band7.tm1.50PRB.usrpb210.conf
-	both added:      targets/PROJECTS/GENERIC-LTE-EPC/CONF/rcc.band7.tm1.50PRB.nfapi-STUB.conf
-	both modified:   targets/PROJECTS/GENERIC-LTE-EPC/CONF/rcc.band7.tm1.50PRB.nfapi.conf
-	both modified:   targets/RT/USER/lte-enb.c
 	deleted by them: targets/RT/USER/lte-ran.c
-	both modified:   targets/RT/USER/lte-ru.c
-	both modified:   targets/RT/USER/lte-softmodem.c
-	both modified:   targets/RT/USER/lte-softmodem.h
-	both modified:   targets/RT/USER/lte-ue.c
+	both modified:   targets/RT/USER/lte-ue.c      (PENDING)
 	both modified:   targets/RT/USER/lte-uesoftmodem.c
 	deleted by them: targets/SIMU/USER/channel_sim.c (Shouldn't remove that)
 
@@ -200,7 +222,7 @@ openair2/RRC/LTE/rrc_UE.c             (Some clonflicts were comlicated)
 	both modified:   openair2/RRC/LTE/L2_interface_ue.c		    
 	both modified:   openair2/RRC/LTE/MESSAGES/asn1_msg.c
 	both modified:   openair2/RRC/LTE/MESSAGES/asn1_msg.h
-	both modified:   openair2/RRC/LTE/rrc_UE.c		   #Conflicts solved up to here
+	both modified:   openair2/RRC/LTE/rrc_UE.c		   
 	both modified:   openair2/RRC/LTE/rrc_defs.h
 	both modified:   openair2/RRC/LTE/rrc_eNB.c
 	both modified:   openair2/RRC/LTE/rrc_proto.h
@@ -216,7 +238,7 @@ openair2/RRC/LTE/rrc_UE.c             (Some clonflicts were comlicated)
 	deleted by them: targets/RT/USER/lte-ran.c
 	both modified:   targets/RT/USER/lte-ru.c
 	both modified:   targets/RT/USER/lte-softmodem.c
-	both modified:   targets/RT/USER/lte-softmodem.h
+	both modified:   targets/RT/USER/lte-softmodem.h        #Conflicts solved up to here
 	both modified:   targets/RT/USER/lte-ue.c
 	both modified:   targets/RT/USER/lte-uesoftmodem.c
 	deleted by them: targets/SIMU/USER/channel_sim.c (Shouldn't remove that)

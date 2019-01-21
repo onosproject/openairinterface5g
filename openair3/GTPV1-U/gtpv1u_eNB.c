@@ -53,27 +53,6 @@
 
 #undef GTP_DUMP_SOCKET
 
-<<<<<<< HEAD
-/*
-extern boolean_t pdcp_data_req(
-  const protocol_ctxt_t* const  ctxt_pP,
-  const srb_flag_t     srb_flagP,
-  const rb_id_t        rb_idP,
-  const mui_t          muiP,
-  const confirm_t      confirmP,
-  const sdu_size_t     sdu_buffer_sizeP,
-  unsigned char *const sdu_buffer_pP,
-  const pdcp_transmission_mode_t modeP
-#ifdef Rel14
-    ,const uint32_t * const sourceL2Id
-    ,const uint32_t * const destinationL2Id
-#endif
-    );
-
-  const pdcp_transmission_mode_t modeP);
-*/
-=======
->>>>>>> main/develop
 extern unsigned char NB_eNB_INST;
 extern RAN_CONTEXT_t RC;
 
@@ -284,11 +263,7 @@ NwGtpv1uRcT gtpv1u_eNB_process_stack_req(
 			     buffer_len,
 			     buffer,
 			     PDCP_TRANSMISSION_MODE_DATA
-<<<<<<< HEAD
-#ifdef Rel14
-=======
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
->>>>>>> main/develop
               ,NULL, NULL
 #endif
               );

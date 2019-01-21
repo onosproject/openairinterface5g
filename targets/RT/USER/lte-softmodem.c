@@ -190,15 +190,6 @@ uint64_t num_missed_slots=0; // counter for the number of missed slots
 
 extern void reset_opp_meas(void);
 extern void print_opp_meas(void);
-
-<<<<<<< HEAD
-extern PHY_VARS_UE* init_ue_vars(LTE_DL_FRAME_PARMS *frame_parms,
-			  uint8_t UE_id,
-			  uint8_t abstraction_flag,
-			  int sidelink_active);
-=======
->>>>>>> main/develop
-
 extern void init_eNB_afterRU(void);
 
 int transmission_mode=1;
@@ -207,13 +198,7 @@ int transmission_mode=1;
 
 double cpuf;
 
-<<<<<<< HEAD
-extern char uecap_xer[1024];
-uint8_t D2D_en = 0; // Normally this should be out if we remove any source files dependencies related to sidelink from the eNB based on CMakelists.txt
-char uecap_xer_in=0;
-=======
->>>>>>> main/develop
-
+//uint8_t D2D_en = 0; // Normally this should be out if we remove any source files dependencies related to sidelink from the eNB based on CMakelists.txt
 
 
 /* forward declarations */

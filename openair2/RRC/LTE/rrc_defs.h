@@ -42,12 +42,7 @@
 
 #include "COMMON/platform_constants.h"
 #include "COMMON/platform_types.h"
-
-<<<<<<< HEAD:openair2/RRC/LITE/defs.h
-#include "LAYER2/MAC/defs.h"
-=======
 #include "LAYER2/MAC/mac.h"
->>>>>>> main/develop:openair2/RRC/LTE/rrc_defs.h
 
 //for D2D
 #define DEBUG_CTRL_SOCKET
@@ -86,7 +81,6 @@
 #define DIRECT_COMMUNICATION_ESTABLISH_RSP  6
 #define GROUP_COMMUNICATION_RELEASE_REQ     7
 #define GROUP_COMMUNICATION_RELEASE_RSP     8
-<<<<<<< HEAD:openair2/RRC/LITE/defs.h
 #define DIRECT_COMMUNICATION_RELEASE_REQ    9
 #define DIRECT_COMMUNICATION_RELEASE_RSP    10
 #define PC5S_ESTABLISH_REQ                  11
@@ -96,15 +90,6 @@
 #define PC5S_RELEASE_RSP                    15
 
 #define PC5_DISCOVERY_PAYLOAD_SIZE	        29
-=======
-#define PC5S_ESTABLISH_REQ                  9
-#define PC5S_ESTABLISH_RSP                  10
-#define PC5_DISCOVERY_MESSAGE          	  11
-
-
-#define PC5_DISCOVERY_PAYLOAD_SIZE	    29
-
->>>>>>> main/develop:openair2/RRC/LTE/rrc_defs.h
 
 typedef enum {
    UE_STATE_OFF_NETWORK,
@@ -147,14 +132,11 @@ struct PC5SEstablishRsp{
    uint32_t slrbid_lcid30;
 };
 
-<<<<<<< HEAD:openair2/RRC/LITE/defs.h
 typedef enum {
    PC5S_RELEASE_OK = 0,
    PC5S_RELEASE_FAILURE
 } PC5S_Release_Status_t;
 
-=======
->>>>>>> main/develop:openair2/RRC/LTE/rrc_defs.h
 
 //PC5_DISCOVERY MESSAGE
 typedef struct  {
@@ -162,13 +144,10 @@ typedef struct  {
    uint32_t measuredPower;
 }  __attribute__((__packed__)) PC5DiscoveryMessage ;
 
-<<<<<<< HEAD:openair2/RRC/LITE/defs.h
 typedef enum {
    DIRECT_COMMUNICATION_RELEASE_OK = 0,
    DIRECT_COMMUNICATION_RELEASE_FAILURE
 } Direct_Communication_Status_t;
-=======
->>>>>>> main/develop:openair2/RRC/LTE/rrc_defs.h
 
 struct sidelink_ctrl_element {
    unsigned short type;
@@ -176,12 +155,8 @@ struct sidelink_ctrl_element {
       struct GroupCommunicationEstablishReq group_comm_establish_req;
       struct DirectCommunicationEstablishReq direct_comm_establish_req;
       Group_Communication_Status_t group_comm_release_rsp;
-<<<<<<< HEAD:openair2/RRC/LITE/defs.h
       Direct_Communication_Status_t direct_comm_release_rsp;
       PC5S_Release_Status_t pc5s_release_rsp;
-=======
-      //struct DirectCommunicationReleaseReq  direct_comm_release_req;
->>>>>>> main/develop:openair2/RRC/LTE/rrc_defs.h
       SL_UE_STATE_t ue_state;
       int slrb_id;
       struct PC5SEstablishReq pc5s_establish_req;
@@ -198,32 +173,6 @@ extern pthread_mutex_t slrb_mutex;
 
 //the thread function
 void *send_UE_status_notification(void *);
-
-
-<<<<<<< HEAD:openair2/RRC/LITE/defs.h
-#include "SystemInformationBlockType1.h"
-#include "SystemInformation.h"
-#include "RRCConnectionReconfiguration.h"
-#include "RRCConnectionReconfigurationComplete.h"
-#include "RRCConnectionSetup.h"
-#include "RRCConnectionSetupComplete.h"
-#include "RRCConnectionRequest.h"
-#include "RRCConnectionReestablishmentRequest.h"
-#include "BCCH-DL-SCH-Message.h"
-#include "SBCCH-SL-BCH-Message.h"
-#include "BCCH-BCH-Message.h"
-#if defined(Rel10) || defined(Rel14)
-#include "MCCH-Message.h"
-#include "MBSFNAreaConfiguration-r9.h"
-#include "SCellToAddMod-r10.h"
-#endif
-#include "AS-Config.h"
-#include "AS-Context.h"
-#include "UE-EUTRA-Capability.h"
-#include "MeasResults.h"
-#include "SidelinkUEInformation-r12.h"
-=======
-
 //#include "COMMON/openair_defs.h"
 #ifndef USER_MODE
 //#include <rtai.h>
@@ -254,7 +203,6 @@ void *send_UE_status_notification(void *);
 #if (LTE_RRC_VERSION >= MAKE_VERSION(12, 0, 0))
 #include "LTE_SidelinkUEInformation-r12.h"
 #endif
->>>>>>> main/develop:openair2/RRC/LTE/rrc_defs.h
 
 /* for ImsiMobileIdentity_t */
 #include "MobileIdentity.h"
@@ -425,11 +373,7 @@ typedef enum SL_TRIGGER_e {
   SL_REQUEST_DISCOVERY_RECEPTION_GAPS
 } SL_TRIGGER_t;
 
-<<<<<<< HEAD:openair2/RRC/LITE/defs.h
-//#define NUMBER_OF_UE_MAX MAX_MOBILES_PER_RG
-=======
 //#define MAX_MOBILES_PER_ENB MAX_MOBILES_PER_RG
->>>>>>> main/develop:openair2/RRC/LTE/rrc_defs.h
 #define RRM_FREE(p)       if ( (p) != NULL) { free(p) ; p=NULL ; }
 #define RRM_MALLOC(t,n)   (t *) malloc16( sizeof(t) * n )
 #define RRM_CALLOC(t,n)   (t *) malloc16( sizeof(t) * n)
@@ -727,17 +671,10 @@ typedef struct {
   SRB_INFO                          MCCH_MESS[8];// MAX_MBSFN_AREA
 #endif
   //TTN - SIB 18,19,21 for D2D
-<<<<<<< HEAD:openair2/RRC/LITE/defs.h
-  SystemInformationBlockType18_r12_t *sib18;
-  SystemInformationBlockType19_r12_t *sib19;
-  SystemInformationBlockType21_r14_t *sib21;
-
-=======
   LTE_SystemInformationBlockType18_r12_t *sib18;
   LTE_SystemInformationBlockType19_r12_t *sib19;
   LTE_SystemInformationBlockType21_r14_t *sib21;
   // End - TTN
->>>>>>> main/develop:openair2/RRC/LTE/rrc_defs.h
   SRB_INFO                          SI;
   SRB_INFO                          Srb0;
   uint8_t                           *paging[MAX_MOBILES_PER_ENB];
@@ -810,32 +747,6 @@ typedef struct UE_RRC_INST_s {
   uint8_t sizeof_SI[NB_CNX_UE];
   uint8_t SIB1Status[NB_CNX_UE];
   uint8_t SIStatus[NB_CNX_UE];
-<<<<<<< HEAD:openair2/RRC/LITE/defs.h
-  SystemInformationBlockType1_t *sib1[NB_CNX_UE];
-  SystemInformation_t *si[NB_CNX_UE]; //!< Temporary storage for an SI message. Decoding happens in decode_SI().
-  SystemInformationBlockType2_t *sib2[NB_CNX_UE];
-  SystemInformationBlockType3_t *sib3[NB_CNX_UE];
-  SystemInformationBlockType4_t *sib4[NB_CNX_UE];
-  SystemInformationBlockType5_t *sib5[NB_CNX_UE];
-  SystemInformationBlockType6_t *sib6[NB_CNX_UE];
-  SystemInformationBlockType7_t *sib7[NB_CNX_UE];
-  SystemInformationBlockType8_t *sib8[NB_CNX_UE];
-  SystemInformationBlockType9_t *sib9[NB_CNX_UE];
-  SystemInformationBlockType10_t *sib10[NB_CNX_UE];
-  SystemInformationBlockType11_t *sib11[NB_CNX_UE];
-  uint8_t                           *MIB;
-#ifdef Rel14
-  //SIB18
-  SystemInformationBlockType18_r12_t *sib18[NB_CNX_UE];
-  SystemInformationBlockType19_r12_t *sib19[NB_CNX_UE];
-  SystemInformationBlockType21_r14_t *sib21[NB_CNX_UE];
-
-  SBCCH_SL_BCH_Message_t   SL_mib_tx;
-  SBCCH_SL_BCH_Message_t   *SL_mib[NB_CNX_UE];
-  uint8_t                           SL_MIB[5];
-  /// Preconfiguration for Sidelink
-  struct SL_Preconfiguration_r12 *SL_Preconfiguration[NB_CNX_UE];
-=======
   LTE_SystemInformationBlockType1_t *sib1[NB_CNX_UE];
   LTE_SystemInformation_t *si[NB_CNX_UE]; //!< Temporary storage for an SI message. Decoding happens in decode_SI().
   LTE_SystemInformationBlockType2_t *sib2[NB_CNX_UE];
@@ -849,37 +760,29 @@ typedef struct UE_RRC_INST_s {
   LTE_SystemInformationBlockType10_t *sib10[NB_CNX_UE];
   LTE_SystemInformationBlockType11_t *sib11[NB_CNX_UE];
   uint8_t                           *MIB;
-#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
+  #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
   //SIB18
   LTE_SystemInformationBlockType18_r12_t *sib18[NB_CNX_UE];
   LTE_SystemInformationBlockType19_r12_t *sib19[NB_CNX_UE];
   LTE_SystemInformationBlockType21_r14_t *sib21[NB_CNX_UE];
 
+  LTE_SBCCH_SL_BCH_MessageType_t   SL_mib_tx;
   LTE_SBCCH_SL_BCH_MessageType_t   mib_sl[NB_CNX_UE];
+  uint8_t                           SL_MIB[5];
   /// Preconfiguration for Sidelink
   struct LTE_SL_Preconfiguration_r12 *SL_Preconfiguration[NB_CNX_UE];
->>>>>>> main/develop:openair2/RRC/LTE/rrc_defs.h
   //source L2 Id
   uint32_t sourceL2Id;
   //group L2 Id
   uint32_t groupL2Id;
   //current destination
   uint32_t destinationL2Id;
-<<<<<<< HEAD:openair2/RRC/LITE/defs.h
   SL_INFO sl_info[MAX_NUM_LCID];
-=======
-  //List of destinations
-   uint32_t destinationList[MAX_NUM_DEST];
->>>>>>> main/develop:openair2/RRC/LTE/rrc_defs.h
   //sl_discovery..
   SRB_INFO SL_Discovery[NB_CNX_UE];
 #endif
 
-<<<<<<< HEAD:openair2/RRC/LITE/defs.h
-#if defined(Rel10) || defined(Rel14)
-=======
 #if (LTE_RRC_VERSION >= MAKE_VERSION(10, 0, 0))
->>>>>>> main/develop:openair2/RRC/LTE/rrc_defs.h
   uint8_t                           MBMS_flag;
   uint8_t *MCCH_MESSAGE[NB_CNX_UE];
   uint8_t sizeof_MCCH_MESSAGE[NB_CNX_UE];
@@ -923,21 +826,12 @@ typedef struct UE_RRC_INST_s {
 #endif
 
   /* Used integrity/ciphering algorithms */
-<<<<<<< HEAD:openair2/RRC/LITE/defs.h
-  CipheringAlgorithm_r12_t                          ciphering_algorithm;
-  e_SecurityAlgorithmConfig__integrityProtAlgorithm integrity_algorithm;
-
-#ifdef Rel14
-  /// Used for Sidelink Preconfiguration
-  DRB_ToAddModList_t *DRB_configList;
-=======
   LTE_CipheringAlgorithm_r12_t                          ciphering_algorithm;
   e_LTE_SecurityAlgorithmConfig__integrityProtAlgorithm integrity_algorithm;
 
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
   /// Used for Sidelink Preconfiguration
   LTE_DRB_ToAddModList_t *DRB_configList;
->>>>>>> main/develop:openair2/RRC/LTE/rrc_defs.h
 #endif
 } UE_RRC_INST;
 

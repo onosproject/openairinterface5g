@@ -106,19 +106,11 @@ rrc_ue_decode_dcch(
   const uint8_t                eNB_indexP
 );
 
-<<<<<<< HEAD:openair2/RRC/LITE/proto.h
-#ifdef Rel14
-int decode_SL_Discovery_Message(
-  const protocol_ctxt_t* const ctxt_pP,
-  const uint8_t                eNB_index,
-  uint8_t*               const Sdu,
-=======
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
 int decode_SL_Discovery_Message(
   const protocol_ctxt_t* const ctxt_pP,
   const uint8_t                eNB_index,
   const uint8_t*               Sdu,
->>>>>>> main/develop:openair2/RRC/LTE/rrc_proto.h
   const uint8_t                Sdu_len);
 #endif
 
@@ -400,11 +392,7 @@ int
 rrc_eNB_generate_RRCConnectionReconfiguration_Sidelink(
       const protocol_ctxt_t* const ctxt_pP,
       rrc_eNB_ue_context_t*           const ue_context_pP,
-<<<<<<< HEAD:openair2/RRC/LITE/proto.h
-      SL_DestinationInfoList_r12_t  *destinationInfoList,
-=======
       LTE_SL_DestinationInfoList_r12_t  *destinationInfoList,
->>>>>>> main/develop:openair2/RRC/LTE/rrc_proto.h
       int n_discoveryMessages
 );
 
@@ -415,39 +403,24 @@ uint8_t
 rrc_eNB_process_SidelinkUEInformation(
       const protocol_ctxt_t* const ctxt_pP,
       rrc_eNB_ue_context_t*         ue_context_pP,
-<<<<<<< HEAD:openair2/RRC/LITE/proto.h
-      SidelinkUEInformation_r12_t*  sidelinkUEInformation
-=======
       LTE_SidelinkUEInformation_r12_t*  sidelinkUEInformation
->>>>>>> main/develop:openair2/RRC/LTE/rrc_proto.h
 );
 
 /** \brief Get a Resource Pool to transmit SL communication
     \param ctxt_pP Running context
     \param ue_context_pP UE context
     \param destinationInfoList Pointer to the list of SL destinations*/
-<<<<<<< HEAD:openair2/RRC/LITE/proto.h
-SL_CommConfig_r12_t rrc_eNB_get_sidelink_commTXPool(
-      const protocol_ctxt_t* const ctxt_pP,
-      rrc_eNB_ue_context_t* const ue_context_pP,
-      SL_DestinationInfoList_r12_t  *destinationInfoList
-=======
 LTE_SL_CommConfig_r12_t rrc_eNB_get_sidelink_commTXPool(
       const protocol_ctxt_t* const ctxt_pP,
       rrc_eNB_ue_context_t* const ue_context_pP,
       LTE_SL_DestinationInfoList_r12_t  *destinationInfoList
->>>>>>> main/develop:openair2/RRC/LTE/rrc_proto.h
 );
 
 /** \brief Get a Resource Pool for Discovery
     \param ctxt_pP Running context
     \param ue_context_pP UE context
     \param n_discoveryMessages Number of discovery messages*/
-<<<<<<< HEAD:openair2/RRC/LITE/proto.h
-SL_DiscConfig_r12_t rrc_eNB_get_sidelink_discTXPool(
-=======
 LTE_SL_DiscConfig_r12_t rrc_eNB_get_sidelink_discTXPool(
->>>>>>> main/develop:openair2/RRC/LTE/rrc_proto.h
       const protocol_ctxt_t* const ctxt_pP,
       rrc_eNB_ue_context_t* const ue_context_pP,
       int n_discoveryMessages

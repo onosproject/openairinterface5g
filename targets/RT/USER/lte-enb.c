@@ -117,10 +117,6 @@ extern int oaisim_flag;
 
 //uint16_t sf_ahead=4;
 extern uint16_t sf_ahead;
-<<<<<<< HEAD
-=======
-
->>>>>>> main/develop
 
 //pthread_t                       main_eNB_thread;
 
@@ -212,12 +208,7 @@ static inline int rxtx(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc, char *thread_nam
   // if this is IF5 or 3GPP_eNB
   if (eNB && eNB->RU_list && eNB->RU_list[0] && eNB->RU_list[0]->function < NGFI_RAU_IF4p5) {
     wakeup_prach_eNB(eNB,NULL,proc->frame_rx,proc->subframe_rx);
-<<<<<<< HEAD
-    //LOG_D(PHY,"%s:%s() %u/%u Before wakeup_prach_eNB_br() proc->instance_cnt_rxtx:%d\n", thread_name, __FUNCTION__, proc->frame_tx, proc->subframe_tx, proc->instance_cnt_rxtx);
-#ifdef Rel14
-=======
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
->>>>>>> main/develop
     wakeup_prach_eNB_br(eNB,NULL,proc->frame_rx,proc->subframe_rx);
     //LOG_D(PHY,"%s:%s() %u/%u proc->instance_cnt_rxtx:%d\n", thread_name, __FUNCTION__, proc->frame_tx, proc->subframe_tx, proc->instance_cnt_rxtx);
 #endif
@@ -435,17 +426,7 @@ static void* eNB_thread_rxtx( void* param ) {
       exit_fun( "ERROR pthread_cond_signal" );
     }
     pthread_mutex_unlock( &proc->mutex_rxtx );
-<<<<<<< HEAD
 
-    //Panos: NEW ACHECK FOR VNF HERE!
-    //if(nfapi_mode!=2){
-    if(get_nprocs() >= 8)      wakeup_tx(eNB,eNB->proc.ru_proc);
-    else if(get_nprocs() > 4)
-    {
-      LOG_I(PHY, "Panos-D: In eNB_thread_rxtx() before re-calling phy_procedures_eNB_TX() and wakeup_txfh() \n");
-      phy_procedures_eNB_TX(eNB, proc, no_relay, NULL, 1);
-      wakeup_txfh(proc,eNB->proc.ru_proc);
-=======
     if (nfapi_mode!=2){
     	if(get_thread_parallel_conf() == PARALLEL_RU_L1_TRX_SPLIT)      wakeup_tx(eNB,eNB->proc.ru_proc);
     	else if(get_thread_parallel_conf() == PARALLEL_RU_L1_SPLIT)
@@ -453,7 +434,6 @@ static void* eNB_thread_rxtx( void* param ) {
     		phy_procedures_eNB_TX(eNB, proc, 1);
     		wakeup_txfh(proc,eNB->proc.ru_proc);
     	}
->>>>>>> main/develop
     }
     //}
 
@@ -991,21 +971,6 @@ void init_eNB_proc(int inst) {
       init_te_thread(eNB);
       init_td_thread(eNB);
     }
-<<<<<<< HEAD
-    //////////////////////////////////////need to modified////////////////*****
-	//pthread_create( &proc_rxtx[0].pthread_rxtx, attr0, eNB_thread_rxtx, proc );
-
-	//pthread_create( &proc_rxtx[0].pthread_rxtx, attr0, eNB_thread_rxtx, proc_rxtx );
-
-
-    // Panos: Should we also include here the case where single_thread_flag = 1 ?
-	if(nfapi_mode!=2){
-		pthread_create( &proc_rxtx[0].pthread_rxtx, attr0, eNB_thread_rxtx, proc );
-		pthread_create( &proc_rxtx[1].pthread_rxtx, attr1, tx_thread, proc);
-	}
-=======
->>>>>>> main/develop
-
 
     LOG_I(PHY,"eNB->single_thread_flag:%d\n", eNB->single_thread_flag);
 

@@ -581,21 +581,12 @@ static int trx_usrp_read(openair0_device *device, openair0_timestamp *ptimestamp
         for (int j=0; j<nsamps2; j++) {
 #if defined(__x86_64__) || defined(__i386__)
 #ifdef __AVX2__
-<<<<<<< HEAD
-	      ((__m256i *)buff[i])[j] = _mm256_srai_epi16(buff_tmp[i][j],4);
-#else
-	      ((__m128i *)buff[i])[j] = _mm_srai_epi16(buff_tmp[i][j],4);
-#endif
-#elif defined(__arm__)
-	      ((int16x8_t*)buff[i])[j] = vshrq_n_s16(buff_tmp[i][j],4);
-=======
           ((__m256i *)buff[i])[j] = _mm256_srai_epi16(buff_tmp[i][j],4);
 #else
           ((__m128i *)buff[i])[j] = _mm_srai_epi16(buff_tmp[i][j],4);
 #endif
 #elif defined(__arm__)
           ((int16x8_t *)buff[i])[j] = vshrq_n_s16(buff_tmp[i][j],4);
->>>>>>> main/develop
 #endif
         }
       }
@@ -1159,37 +1150,12 @@ extern "C" {
             openair0_cfg[0].rx_bw                 = 10e6;
             break;
 
-<<<<<<< HEAD
-            // lock mboard clocks
-            if (openair0_cfg[0].clock_source == internal){
-	        s->usrp->set_clock_source("internal");
-            }
-            else{
-                s->usrp->set_clock_source("external");
-            }	
-
-            device->type = USRP_B200_DEV;
-            if ((vers == 3) && (subvers == 9) && (subsubvers>=2)) {
-                openair0_cfg[0].rx_gain_calib_table = calib_table_b210;
-                bw_gain_adjust=0;
-#if defined(USRP_REC_PLAY)
-		std::cerr << "-- Using calibration table: calib_table_b210" << std::endl; // Bell Labs info
-#endif		
-            } else {
-                openair0_cfg[0].rx_gain_calib_table = calib_table_b210_38;
-                bw_gain_adjust=1;
-#if defined(USRP_REC_PLAY)
-		std::cerr << "-- Using calibration table: calib_table_b210_38" << std::endl; // Bell Labs info
-#endif		
-            }
-=======
           case 7680000:
             //openair0_cfg[0].samples_per_packet    = 2048;
             openair0_cfg[0].tx_sample_advance     = 50;
             openair0_cfg[0].tx_bw                 = 5e6;
             openair0_cfg[0].rx_bw                 = 5e6;
             break;
->>>>>>> main/develop
 
           case 1920000:
             //openair0_cfg[0].samples_per_packet    = 2048;

@@ -1795,9 +1795,6 @@ static void* ru_thread( void* param ) {
     // If this proc is to provide synchronization, do so
     wakeup_slaves(proc);
 
-<<<<<<< HEAD
-    //LOG_E(PHY,"RU %d/%d frame_tx %d, subframe_tx %d - wakeup_eNBs...\n",0,ru->idx,proc->frame_tx,proc->subframe_tx);
-=======
 #if defined(PRE_SCD_THREAD)
     new_dlsch_ue_select_tbl_in_use = dlsch_ue_select_tbl_in_use;
     dlsch_ue_select_tbl_in_use = !dlsch_ue_select_tbl_in_use;
@@ -1826,7 +1823,6 @@ static void* ru_thread( void* param ) {
     }
 #endif
 
->>>>>>> main/develop
     // wakeup all eNB processes waiting for this RU
     if (ru->num_eNB>0) wakeup_eNBs(ru);
     
@@ -1845,8 +1841,6 @@ static void* ru_thread( void* param ) {
       }
       proc->emulate_rf_busy = 0;
     }
-<<<<<<< HEAD
-=======
 #else
     struct timespec time_req, time_rem;
     time_req.tv_sec = 0;
@@ -1857,7 +1851,6 @@ static void* ru_thread( void* param ) {
         continue;
     }
 #endif
->>>>>>> main/develop
   }
   
 

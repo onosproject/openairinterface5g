@@ -7779,7 +7779,7 @@ int decode_MIB_SL(  const protocol_ctxt_t* const ctxt_pP,
 
   asn_dec_rval_t dec_rval = uper_decode_complete( NULL,
                             &asn_DEF_SBCCH_SL_BCH_Message,
-                            (void **)&UE_rrc_inst[ctxt_pP->module_id].SL_mib[0],
+                            (void **)&UE_rrc_inst[ctxt_pP->module_id].mib_sl[0],
                             (const void *)Sdu,
                             Sdu_len );
 
@@ -7789,10 +7789,10 @@ int decode_MIB_SL(  const protocol_ctxt_t* const ctxt_pP,
   }
 
   LOG_D(RRC,"Decoded MIBSL SFN.SF %d.%d, sl_Bandwidth_r12 %d, InCoverage %d\n",
-                        BIT_STRING_to_uint32(&UE_rrc_inst[ctxt_pP->module_id].SL_mib[0]->message.directFrameNumber_r12), // indicates that there is no  update in the frame number
-                        (int)UE_rrc_inst[ctxt_pP->module_id].SL_mib[0]->message.directSubframeNumber_r12,   // /indicates that there isno update in the subframe number
-                        (int)UE_rrc_inst[ctxt_pP->module_id].SL_mib[0]->message.sl_Bandwidth_r12,
-                        (int)UE_rrc_inst[ctxt_pP->module_id].SL_mib[0]->message.inCoverage_r12);
+                        BIT_STRING_to_uint32(&UE_rrc_inst[ctxt_pP->module_id].mib_sl[0]->message.directFrameNumber_r12), // indicates that there is no  update in the frame number
+                        (int)UE_rrc_inst[ctxt_pP->module_id].mib_sl[0]->message.directSubframeNumber_r12,   // /indicates that there isno update in the subframe number
+                        (int)UE_rrc_inst[ctxt_pP->module_id].mib_sl[0]->message.sl_Bandwidth_r12,
+                        (int)UE_rrc_inst[ctxt_pP->module_id].mib_sl[0]->message.inCoverage_r12);
 
   rrc_mac_config_req_ue(ctxt_pP->module_id, 0, 0,
 			(RadioResourceConfigCommonSIB_t *)NULL,
@@ -7832,9 +7832,9 @@ int decode_MIB_SL(  const protocol_ctxt_t* const ctxt_pP,
 			NULL,
 			NULL,
 			NULL,
-			BIT_STRING_to_uint32(&UE_rrc_inst[ctxt_pP->module_id].SL_mib[0]->message.directFrameNumber_r12), // indicates that there is no  update in the frame number
-			UE_rrc_inst[ctxt_pP->module_id].SL_mib[0]->message.directSubframeNumber_r12,   // /indicates that there isno update in the subframe number
-			&UE_rrc_inst[ctxt_pP->module_id].SL_mib[0]->message.sl_Bandwidth_r12
+			BIT_STRING_to_uint32(&UE_rrc_inst[ctxt_pP->module_id].mib_sl[0]->message.directFrameNumber_r12), // indicates that there is no  update in the frame number
+			UE_rrc_inst[ctxt_pP->module_id].mib_sl[0]->message.directSubframeNumber_r12,   // /indicates that there isno update in the subframe number
+			&UE_rrc_inst[ctxt_pP->module_id].mib_sl[0]->message.sl_Bandwidth_r12
 #endif
 			);
 

@@ -1487,6 +1487,20 @@ typedef struct {
     int16_t bucket_size[MAX_NUM_LCID];
 } UE_SCHEDULING_INFO;
 
+
+typedef struct {
+   //SL source L2Id
+   uint32_t sourceL2Id;
+   //SL groupL2Id
+   uint32_t groupL2Id;
+   //SL destinationL2Id
+   uint32_t destinationL2Id;
+   //LCID
+   uint32_t  LCID;
+} SL_INFO;
+
+
+
 /*!\brief Top level UE MAC structure */
 
 typedef struct {

@@ -58,17 +58,10 @@
 #include "rrc_eNB_UE_context.h"
 #include "platform_types.h"
 #include "msc.h"
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_eNB.c
-#include "SL-CommConfig-r12.h"
-#include "PeriodicBSR-Timer-r12.h"
-#include "RetxBSR-Timer-r12.h"
-#include "UTIL/LOG/vcd_signal_dumper.h"
-=======
 #include "LTE_SL-CommConfig-r12.h"
 #include "LTE_PeriodicBSR-Timer-r12.h"
 #include "LTE_RetxBSR-Timer-r12.h"
 #include "common/utils/LOG/vcd_signal_dumper.h"
->>>>>>> main/develop:openair2/RRC/LTE/rrc_eNB.c
 
 #include "T.h"
 
@@ -258,12 +251,7 @@ init_SI(
 	RC.rrc[ctxt_pP->module_id]->carrier[CC_id].sib2->radioResourceConfigCommon.pusch_ConfigCommon.
 	ul_ReferenceSignalsPUSCH.cyclicShift);
 
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_eNB.c
-
-#if defined(Rel10) || defined(Rel14)
-=======
 #if (LTE_RRC_VERSION >= MAKE_VERSION(10, 0, 0))
->>>>>>> main/develop:openair2/RRC/LTE/rrc_eNB.c
 
   if (RC.rrc[ctxt_pP->module_id]->carrier[CC_id].MBMS_flag > 0) {
     for (i = 0; i < RC.rrc[ctxt_pP->module_id]->carrier[CC_id].sib2->mbsfn_SubframeConfigList->list.count; i++) {
@@ -284,10 +272,7 @@ init_SI(
 	    RC.rrc[ctxt_pP->module_id]->carrier[CC_id].sib2->mbsfn_SubframeConfigList->list.array[i]->radioframeAllocationOffset);
     }
 
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_eNB.c
-=======
 #if (LTE_RRC_VERSION >= MAKE_VERSION(9, 0, 0))
->>>>>>> main/develop:openair2/RRC/LTE/rrc_eNB.c
     //   SIB13
     for (i = 0; i < RC.rrc[ctxt_pP->module_id]->carrier[CC_id].sib13->mbsfn_AreaInfoList_r9.list.count; i++) {
       LOG_D(RRC, PROTOCOL_RRC_CTXT_FMT" SIB13 contents for MBSFN sync area %d/%d (partial)\n",
@@ -311,27 +296,6 @@ init_SI(
            PROTOCOL_RRC_CTXT_ARGS(ctxt_pP),
            j+1,
            RC.rrc[ctxt_pP->module_id]->carrier[CC_id].sib18->commConfig_r12->commRxPool_r12.list.count);
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_eNB.c
-     LOG_I(RRC, PROTOCOL_RRC_CTXT_FMT" SIB18 rxPool_sc_CP_Len: %d \n",
-           PROTOCOL_RRC_CTXT_ARGS(ctxt_pP),
-           RC.rrc[ctxt_pP->module_id]->carrier[CC_id].sib18->commConfig_r12->commRxPool_r12.list.array[j]->sc_CP_Len_r12);
-     LOG_I(RRC, PROTOCOL_RRC_CTXT_FMT" SIB18 sc_Period_r12: %d \n",
-           PROTOCOL_RRC_CTXT_ARGS(ctxt_pP),
-           RC.rrc[ctxt_pP->module_id]->carrier[CC_id].sib18->commConfig_r12->commRxPool_r12.list.array[j]->sc_Period_r12);
-     LOG_I(RRC, PROTOCOL_RRC_CTXT_FMT" SIB18 data_CP_Len_r12: %d \n",
-           PROTOCOL_RRC_CTXT_ARGS(ctxt_pP),
-           RC.rrc[ctxt_pP->module_id]->carrier[CC_id].sib18->commConfig_r12->commRxPool_r12.list.array[j]->data_CP_Len_r12);
-     LOG_I(RRC, PROTOCOL_RRC_CTXT_FMT" SIB18 prb_Num_r12: %d \n",
-           PROTOCOL_RRC_CTXT_ARGS(ctxt_pP),
-           RC.rrc[ctxt_pP->module_id]->carrier[CC_id].sib18->commConfig_r12->commRxPool_r12.list.array[j]->sc_TF_ResourceConfig_r12.prb_Num_r12);
-     LOG_I(RRC, PROTOCOL_RRC_CTXT_FMT" SIB18 prb_Start_r12: %d \n",
-           PROTOCOL_RRC_CTXT_ARGS(ctxt_pP),
-           RC.rrc[ctxt_pP->module_id]->carrier[CC_id].sib18->commConfig_r12->commRxPool_r12.list.array[j]->sc_TF_ResourceConfig_r12.prb_Start_r12);
-     LOG_I(RRC, PROTOCOL_RRC_CTXT_FMT" SIB18 prb_End_r12: %d \n",
-           PROTOCOL_RRC_CTXT_ARGS(ctxt_pP),
-           RC.rrc[ctxt_pP->module_id]->carrier[CC_id].sib18->commConfig_r12->commRxPool_r12.list.array[j]->sc_TF_ResourceConfig_r12.prb_End_r12);
-     LOG_I(RRC, PROTOCOL_RRC_CTXT_FMT" SIB18 offsetIndicator: %d \n",
-=======
      LOG_I(RRC, PROTOCOL_RRC_CTXT_FMT" SIB18 rxPool_sc_CP_Len: %ld \n",
            PROTOCOL_RRC_CTXT_ARGS(ctxt_pP),
            RC.rrc[ctxt_pP->module_id]->carrier[CC_id].sib18->commConfig_r12->commRxPool_r12.list.array[j]->sc_CP_Len_r12);
@@ -351,7 +315,6 @@ init_SI(
            PROTOCOL_RRC_CTXT_ARGS(ctxt_pP),
            RC.rrc[ctxt_pP->module_id]->carrier[CC_id].sib18->commConfig_r12->commRxPool_r12.list.array[j]->sc_TF_ResourceConfig_r12.prb_End_r12);
      LOG_I(RRC, PROTOCOL_RRC_CTXT_FMT" SIB18 offsetIndicator: %ld \n",
->>>>>>> main/develop:openair2/RRC/LTE/rrc_eNB.c
            PROTOCOL_RRC_CTXT_ARGS(ctxt_pP),
            RC.rrc[ctxt_pP->module_id]->carrier[CC_id].sib18->commConfig_r12->commRxPool_r12.list.array[j]->sc_TF_ResourceConfig_r12.offsetIndicator_r12.choice.small_r12);
      LOG_I(RRC, PROTOCOL_RRC_CTXT_FMT" SIB18 subframeBitmap_choice_bs_buf: %s \n",
@@ -366,30 +329,6 @@ init_SI(
            PROTOCOL_RRC_CTXT_ARGS(ctxt_pP),
            j+1,
            RC.rrc[ctxt_pP->module_id]->carrier[CC_id].sib19->discConfig_r12->discRxPool_r12.list.count);
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_eNB.c
-     LOG_I(RRC, PROTOCOL_RRC_CTXT_FMT" SIB19 cp_Len_r12: %d \n",
-           PROTOCOL_RRC_CTXT_ARGS(ctxt_pP),
-           RC.rrc[ctxt_pP->module_id]->carrier[CC_id].sib19->discConfig_r12->discRxPool_r12.list.array[j]->cp_Len_r12);
-     LOG_I(RRC, PROTOCOL_RRC_CTXT_FMT" SIB19 discPeriod_r12: %d \n",
-           PROTOCOL_RRC_CTXT_ARGS(ctxt_pP),
-           RC.rrc[ctxt_pP->module_id]->carrier[CC_id].sib19->discConfig_r12->discRxPool_r12.list.array[j]->discPeriod_r12);
-     LOG_I(RRC, PROTOCOL_RRC_CTXT_FMT" SIB19 numRetx_r12: %d \n",
-           PROTOCOL_RRC_CTXT_ARGS(ctxt_pP),
-           RC.rrc[ctxt_pP->module_id]->carrier[CC_id].sib19->discConfig_r12->discRxPool_r12.list.array[j]->numRetx_r12);
-     LOG_I(RRC, PROTOCOL_RRC_CTXT_FMT" SIB19 numRepetition_r12: %d \n",
-           PROTOCOL_RRC_CTXT_ARGS(ctxt_pP),
-           RC.rrc[ctxt_pP->module_id]->carrier[CC_id].sib19->discConfig_r12->discRxPool_r12.list.array[j]->numRepetition_r12);
-     LOG_I(RRC, PROTOCOL_RRC_CTXT_FMT" SIB19 tf_ResourceConfig_r12 prb_Num_r12: %d \n",
-           PROTOCOL_RRC_CTXT_ARGS(ctxt_pP),
-           RC.rrc[ctxt_pP->module_id]->carrier[CC_id].sib19->discConfig_r12->discRxPool_r12.list.array[j]->tf_ResourceConfig_r12.prb_Num_r12);
-     LOG_I(RRC, PROTOCOL_RRC_CTXT_FMT" SIB19 tf_ResourceConfig_r12 prb_Start_r12: %d \n",
-           PROTOCOL_RRC_CTXT_ARGS(ctxt_pP),
-           RC.rrc[ctxt_pP->module_id]->carrier[CC_id].sib19->discConfig_r12->discRxPool_r12.list.array[j]->tf_ResourceConfig_r12.prb_Start_r12);
-     LOG_I(RRC, PROTOCOL_RRC_CTXT_FMT" SIB19 tf_ResourceConfig_r12 prb_End_r12: %d \n",
-           PROTOCOL_RRC_CTXT_ARGS(ctxt_pP),
-           RC.rrc[ctxt_pP->module_id]->carrier[CC_id].sib19->discConfig_r12->discRxPool_r12.list.array[j]->tf_ResourceConfig_r12.prb_End_r12);
-     LOG_I(RRC, PROTOCOL_RRC_CTXT_FMT" SIB19 tf_ResourceConfig_r12 offsetIndicator: %d \n",
-=======
      LOG_I(RRC, PROTOCOL_RRC_CTXT_FMT" SIB19 cp_Len_r12: %ld \n",
            PROTOCOL_RRC_CTXT_ARGS(ctxt_pP),
            RC.rrc[ctxt_pP->module_id]->carrier[CC_id].sib19->discConfig_r12->discRxPool_r12.list.array[j]->cp_Len_r12);
@@ -412,7 +351,6 @@ init_SI(
            PROTOCOL_RRC_CTXT_ARGS(ctxt_pP),
            RC.rrc[ctxt_pP->module_id]->carrier[CC_id].sib19->discConfig_r12->discRxPool_r12.list.array[j]->tf_ResourceConfig_r12.prb_End_r12);
      LOG_I(RRC, PROTOCOL_RRC_CTXT_FMT" SIB19 tf_ResourceConfig_r12 offsetIndicator: %ld \n",
->>>>>>> main/develop:openair2/RRC/LTE/rrc_eNB.c
            PROTOCOL_RRC_CTXT_ARGS(ctxt_pP),
            RC.rrc[ctxt_pP->module_id]->carrier[CC_id].sib19->discConfig_r12->discRxPool_r12.list.array[j]->tf_ResourceConfig_r12.offsetIndicator_r12.choice.small_r12);
      LOG_I(RRC, PROTOCOL_RRC_CTXT_FMT" SIB19 tf_ResourceConfig_r12 subframeBitmap_choice_bs_buf: %s \n",
@@ -626,11 +564,7 @@ static void init_MBMS(
                             NULL,   // DRB_ToReleaseList
                             &(RC.rrc[enb_mod_idP]->carrier[CC_id].mcch_message->pmch_InfoList_r9)
 
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_eNB.c
-#ifdef Rel14
-=======
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
->>>>>>> main/develop:openair2/RRC/LTE/rrc_eNB.c
                             ,0, 0
 #endif
                             );
@@ -773,58 +707,6 @@ rrc_eNB_get_next_free_ue_context(
   }
 }
 
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_eNB.c
-#if 0 //!defined(ENABLE_USE_MME)
-void rrc_eNB_emulation_notify_ue_module_id(
-  const module_id_t ue_module_idP,
-  const rnti_t      rntiP,
-  const uint8_t     cell_identity_byte0P,
-  const uint8_t     cell_identity_byte1P,
-  const uint8_t     cell_identity_byte2P,
-  const uint8_t     cell_identity_byte3P)
-{
-	LOG_I(RRC, "Panos-D: rrc_eNB_emulation_notify_ue_module_id 1 \n");
-  module_id_t                         enb_module_id;
-  struct rrc_eNB_ue_context_s*        ue_context_p = NULL;
-  int                                 CC_id;
-
-  // find enb_module_id
-  for (enb_module_id = 0; enb_module_id < NUMBER_OF_eNB_MAX; enb_module_id++) {
-    if(enb_module_id>0){ /*FIX LATER*/
-      return;
-    }
-    for (CC_id = 0; CC_id < MAX_NUM_CCs; CC_id++) {
-      if (&RC.rrc[enb_module_id]->carrier[CC_id].sib1 != NULL) {
-        if (
-          (&RC.rrc[enb_module_id]->carrier[CC_id].sib1->cellAccessRelatedInfo.cellIdentity.buf[0] == cell_identity_byte0P) &&
-          (&RC.rrc[enb_module_id]->carrier[CC_id].sib1->cellAccessRelatedInfo.cellIdentity.buf[1] == cell_identity_byte1P) &&
-          (&RC.rrc[enb_module_id]->carrier[CC_id].sib1->cellAccessRelatedInfo.cellIdentity.buf[2] == cell_identity_byte2P) &&
-          (&RC.rrc[enb_module_id]->carrier[CC_id].sib1->cellAccessRelatedInfo.cellIdentity.buf[3] == cell_identity_byte3P)
-        ) {
-          ue_context_p = rrc_eNB_get_ue_context(
-                           RC.rrc[enb_module_id],
-                           rntiP
-                         );
-
-          if (NULL != ue_context_p) {
-            oai_emulation.info.eNB_ue_local_uid_to_ue_module_id[enb_module_id][ue_context_p->local_uid] = ue_module_idP;
-          }
-
-          //return;
-        }
-      }
-    }
-    oai_emulation.info.eNB_ue_module_id_to_rnti[enb_module_id][ue_module_idP] = rntiP;
-  }
-
-  AssertFatal(enb_module_id == NUMBER_OF_eNB_MAX,
-              "Cell identity not found for ue module id %u rnti %x",
-              ue_module_idP, rntiP);
-}
-#endif
-
-=======
->>>>>>> main/develop:openair2/RRC/LTE/rrc_eNB.c
 //-----------------------------------------------------------------------------
 void
 rrc_eNB_free_mem_UE_context(
@@ -1331,29 +1213,11 @@ rrc_eNB_generate_RRCConnectionReestablishment(
                                     rrc_eNB_get_next_transaction_identifier(ctxt_pP->module_id),
                                     SRB_configList,
                                     &ue_context_pP->ue_context.physicalConfigDedicated);
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_eNB.c
-
-  //LOG_D(RRC,"%s rrc_eNB_generate_RRCConnectionReestablishment() Payload size return value: %d \n", __FUNCTION__, RC.rrc[ctxt_pP->module_id]->carrier[CC_id].Srb0.Tx_buffer.payload_size);
-
-
-
-#ifdef RRC_MSG_PRINT
-  LOG_F(RRC,"[MSG] RRCConnectionReestablishment\n");
-
-  for (cnt = 0; cnt < RC.rrc[ctxt_pP->module_id]->carrier[CC_id].Srb0.Tx_buffer.payload_size; cnt++) {
-    LOG_F(RRC,"%02x ", ((uint8_t*)RC.rrc[ctxt_pP->module_id]->carrier[CC_id].Srb0.Tx_buffer.Payload)[cnt]);
-  }
-
-  LOG_F(RRC,"\n");
-#endif
-
-=======
   LOG_DUMPMSG(RRC,DEBUG_RRC,
               (char *)(RC.rrc[ctxt_pP->module_id]->carrier[CC_id].Srb0.Tx_buffer.Payload),
               RC.rrc[ctxt_pP->module_id]->carrier[CC_id].Srb0.Tx_buffer.payload_size,
               "[MSG] RRCConnectionReestablishment\n"
               );
->>>>>>> main/develop:openair2/RRC/LTE/rrc_eNB.c
   // configure SRB1 for UE
 
   if (*SRB_configList != NULL) {
@@ -1962,26 +1826,6 @@ rrc_eNB_process_RRCConnectionReestablishmentComplete(
 #ifdef EXMIMO_IOT
                                          NULL, NULL, NULL,NULL,
 #else
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_eNB.c
-                                         (MeasObjectToAddModList_t*)MeasObj_list,  // MeasObj_list,
-                                         (ReportConfigToAddModList_t*)ReportConfig_list,  // ReportConfig_list,
-                                         (QuantityConfig_t*)quantityConfig,  //quantityConfig,
-                                         (MeasIdToAddModList_t*)NULL,
-#endif
-                                         (MAC_MainConfig_t*)ue_context_pP->ue_context.mac_MainConfig,
-                                         (MeasGapConfig_t*)NULL,
-                                         (MobilityControlInfo_t*)NULL,
-                                         (struct MeasConfig__speedStatePars*)Sparams, // Sparams,
-                                         (RSRP_Range_t*)rsrp, // rsrp,
-                                         (C_RNTI_t*)cba_RNTI,  // cba_RNTI
-                                         (struct RRCConnectionReconfiguration_r8_IEs__dedicatedInfoNASList*)dedicatedInfoNASList //dedicatedInfoNASList
-#ifdef Rel14
-					 ,(SL_CommConfig_r12_t*)NULL,
-					 (SL_DiscConfig_r12_t*)NULL
-#endif
-#if defined(Rel10) || defined(Rel14)
-                                         , (SCellToAddMod_r10_t*)NULL
-=======
                                          (LTE_MeasObjectToAddModList_t*)MeasObj_list,  // MeasObj_list,
                                          (LTE_ReportConfigToAddModList_t*)ReportConfig_list,  // ReportConfig_list,
                                          (LTE_QuantityConfig_t*)quantityConfig,  //quantityConfig,
@@ -1993,12 +1837,13 @@ rrc_eNB_process_RRCConnectionReestablishmentComplete(
                                          (struct LTE_MeasConfig__speedStatePars*)Sparams, // Sparams,
                                          (LTE_RSRP_Range_t*)rsrp, // rsrp,
                                          (LTE_C_RNTI_t*)cba_RNTI,  // cba_RNTI
-                                         (struct LTE_RRCConnectionReconfiguration_r8_IEs__dedicatedInfoNASList*)dedicatedInfoNASList, //dedicatedInfoNASList
-                                         (LTE_SL_CommConfig_r12_t*)NULL,
+                                         (struct LTE_RRCConnectionReconfiguration_r8_IEs__dedicatedInfoNASList*)dedicatedInfoNASList //dedicatedInfoNASList
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
+                                         ,(LTE_SL_CommConfig_r12_t*)NULL,
                                          (LTE_SL_DiscConfig_r12_t*)NULL
+#endif
 #if (LTE_RRC_VERSION >= MAKE_VERSION(10, 0, 0))
                                          , (LTE_SCellToAddMod_r10_t*)NULL
->>>>>>> main/develop:openair2/RRC/LTE/rrc_eNB.c
 #endif
                                         );
   LOG_DUMPMSG(RRC,DEBUG_RRC,(char *)buffer,size,
@@ -2120,26 +1965,10 @@ rrc_eNB_generate_RRCConnectionReestablishmentReject(
     do_RRCConnectionReestablishmentReject(ctxt_pP->module_id,
                           (uint8_t*) RC.rrc[ctxt_pP->module_id]->carrier[CC_id].Srb0.Tx_buffer.Payload);
 
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_eNB.c
-  //LOG_D(RRC,"%s rrc_eNB_generate_RRCConnectionReestablishmentReject() Payload size return value: %d \n", __FUNCTION__, RC.rrc[ctxt_pP->module_id]->carrier[CC_id].Srb0.Tx_buffer.payload_size);
-
-
-
-#ifdef RRC_MSG_PRINT
-  LOG_F(RRC,"[MSG] RRCConnectionReestablishmentReject\n");
-
-  for (cnt = 0; cnt < RC.rrc[ctxt_pP->module_id]->carrier[CC_id].Srb0.Tx_buffer.payload_size; cnt++) {
-    LOG_F(RRC,"%02x ", ((uint8_t*)RC.rrc[ctxt_pP->module_id]->carrier[CC_id].Srb0.Tx_buffer.Payload)[cnt]);
-  }
-
-  LOG_F(RRC,"\n");
-#endif
-=======
   LOG_DUMPMSG(RRC,DEBUG_RRC,
               (char *)(RC.rrc[ctxt_pP->module_id]->carrier[CC_id].Srb0.Tx_buffer.Payload),
               RC.rrc[ctxt_pP->module_id]->carrier[CC_id].Srb0.Tx_buffer.payload_size,
               "[MSG] RRCConnectionReestablishmentReject\n");
->>>>>>> main/develop:openair2/RRC/LTE/rrc_eNB.c
 
   MSC_LOG_TX_MESSAGE(
     MSC_RRC_ENB,
@@ -2462,21 +2291,13 @@ rrc_eNB_generate_dedicatedRRCConnectionReconfiguration(const protocol_ctxt_t* co
                                          (struct LTE_SPS_Config*)NULL,    // *sps_Config,
 					  NULL, NULL, NULL, NULL,NULL,
 					  NULL, NULL,  NULL, NULL, NULL, NULL, 
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_eNB.c
-					  (struct RRCConnectionReconfiguration_r8_IEs__dedicatedInfoNASList*)dedicatedInfoNASList
-#ifdef Rel14
-					  ,(SL_CommConfig_r12_t*)NULL,
-					  (SL_DiscConfig_r12_t*)NULL
-#endif
-#if defined(Rel10) || defined(Rel14)
-                                         , (SCellToAddMod_r10_t*)NULL
-=======
-					  (struct LTE_RRCConnectionReconfiguration_r8_IEs__dedicatedInfoNASList*)dedicatedInfoNASList,
-					  (LTE_SL_CommConfig_r12_t*)NULL,
+					  (struct LTE_RRCConnectionReconfiguration_r8_IEs__dedicatedInfoNASList*)dedicatedInfoNASList
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
+					  ,(LTE_SL_CommConfig_r12_t*)NULL,
 					  (LTE_SL_DiscConfig_r12_t*)NULL
+#endif
 #if (LTE_RRC_VERSION >= MAKE_VERSION(10, 0, 0))
                                          , (LTE_SCellToAddMod_r10_t*)NULL
->>>>>>> main/develop:openair2/RRC/LTE/rrc_eNB.c
 #endif
                                         );
  
@@ -2726,35 +2547,6 @@ rrc_eNB_modify_dedicatedRRCConnectionReconfiguration(const protocol_ctxt_t* cons
 
   memset(buffer, 0, RRC_BUF_SIZE);
 
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_eNB.c
-  size = do_RRCConnectionReconfiguration(ctxt_pP,
-                                          buffer,
-                                          xid,
-                                          (SRB_ToAddModList_t*)NULL,
-                                          (DRB_ToAddModList_t*)DRB_configList2,
-                                          (DRB_ToReleaseList_t*)NULL,  // DRB2_list,
-                                          (struct SPS_Config*)NULL,    // *sps_Config,
-                                          NULL, NULL, NULL, NULL,NULL,
-                                          NULL, NULL,  NULL, NULL, NULL, NULL,
-                                          (struct RRCConnectionReconfiguration_r8_IEs__dedicatedInfoNASList*)dedicatedInfoNASList
-#ifdef Rel14
-					  ,(SL_CommConfig_r12_t*)NULL,
-					  (SL_DiscConfig_r12_t*)NULL
-#endif
-#if defined(Rel10) || defined(Rel14)
-					  , (SCellToAddMod_r10_t*)NULL
-#endif
-   	   	   	   	   	  );
-
-
-#ifdef RRC_MSG_PRINT
-  LOG_F(RRC,"[MSG] RRC Connection Reconfiguration\n");
-  for (i = 0; i < size; i++) {
-    LOG_F(RRC,"%02x ", ((uint8_t*)buffer)[i]);
-  }
-  LOG_F(RRC,"\n");
-  ////////////////////////////////////////
-=======
    size = do_RRCConnectionReconfiguration(ctxt_pP,
 					  buffer,
 					  xid,
@@ -2764,12 +2556,13 @@ rrc_eNB_modify_dedicatedRRCConnectionReconfiguration(const protocol_ctxt_t* cons
                                          (struct LTE_SPS_Config*)NULL,    // *sps_Config,
 					  NULL, NULL, NULL, NULL,NULL,
 					  NULL, NULL,  NULL, NULL, NULL, NULL, 
-					  (struct LTE_RRCConnectionReconfiguration_r8_IEs__dedicatedInfoNASList*)dedicatedInfoNASList,
-					  (LTE_SL_CommConfig_r12_t*)NULL,
+					  (struct LTE_RRCConnectionReconfiguration_r8_IEs__dedicatedInfoNASList*)dedicatedInfoNASList
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
+					  ,(LTE_SL_CommConfig_r12_t*)NULL,
 					  (LTE_SL_DiscConfig_r12_t*)NULL
+#endif
 #if (LTE_RRC_VERSION >= MAKE_VERSION(10, 0, 0))
 					  , (LTE_SCellToAddMod_r10_t*)NULL
->>>>>>> main/develop:openair2/RRC/LTE/rrc_eNB.c
 #endif
    	   	   	   	   	  );
 
@@ -2883,21 +2676,13 @@ rrc_eNB_generate_dedicatedRRCConnectionReconfiguration_release(  const protocol_
                                     NULL,
                                     NULL,
                                     NULL,
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_eNB.c
-                                    (struct RRCConnectionReconfiguration_r8_IEs__dedicatedInfoNASList*)dedicatedInfoNASList
-#ifdef Rel14
-					   ,(SL_CommConfig_r12_t*)NULL,
-					   (SL_DiscConfig_r12_t*)NULL
-#endif
-#if defined(Rel10) || defined(Rel14)
-                                    , (SCellToAddMod_r10_t*)NULL
-=======
-                                    (struct LTE_RRCConnectionReconfiguration_r8_IEs__dedicatedInfoNASList*)dedicatedInfoNASList,
-                                    (LTE_SL_CommConfig_r12_t*)NULL,
+                                    (struct LTE_RRCConnectionReconfiguration_r8_IEs__dedicatedInfoNASList*)dedicatedInfoNASList
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
+                                    ,(LTE_SL_CommConfig_r12_t*)NULL,
                                     (LTE_SL_DiscConfig_r12_t*)NULL
+#endif
 #if (LTE_RRC_VERSION >= MAKE_VERSION(10, 0, 0))
                                     , (LTE_SCellToAddMod_r10_t*)NULL
->>>>>>> main/develop:openair2/RRC/LTE/rrc_eNB.c
 #endif
                                    );
     ue_context_pP->ue_context.e_rab_release_command_flag = 1;
@@ -3605,26 +3390,6 @@ rrc_eNB_generate_defaultRRCConnectionReconfiguration(const protocol_ctxt_t* cons
 #ifdef EXMIMO_IOT
                                          NULL, NULL, NULL,NULL,
 #else
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_eNB.c
-                                         (MeasObjectToAddModList_t*)MeasObj_list,
-                                         (ReportConfigToAddModList_t*)ReportConfig_list,
-                                         (QuantityConfig_t*)quantityConfig,
-                                         (MeasIdToAddModList_t*)MeasId_list,
-#endif
-                                         (MAC_MainConfig_t*)mac_MainConfig,
-                                         (MeasGapConfig_t*)NULL,
-                                         (MobilityControlInfo_t*)NULL,
-                                         (struct MeasConfig__speedStatePars*)Sparams,
-                                         (RSRP_Range_t*)rsrp,
-                                         (C_RNTI_t*)cba_RNTI,
-                                         (struct RRCConnectionReconfiguration_r8_IEs__dedicatedInfoNASList*)dedicatedInfoNASList
-#ifdef Rel14
-                                         ,(SL_CommConfig_r12_t*)NULL,
-                                         (SL_DiscConfig_r12_t*)NULL
-#endif
-#if defined(Rel10) || defined(Rel14)
-                                         , (SCellToAddMod_r10_t*)NULL
-=======
                                          (LTE_MeasObjectToAddModList_t*)MeasObj_list,
                                          (LTE_ReportConfigToAddModList_t*)ReportConfig_list,
                                          (LTE_QuantityConfig_t*)quantityConfig,
@@ -3636,12 +3401,13 @@ rrc_eNB_generate_defaultRRCConnectionReconfiguration(const protocol_ctxt_t* cons
                                          (struct LTE_MeasConfig__speedStatePars*)Sparams,
                                          (LTE_RSRP_Range_t*)rsrp,
                                          (LTE_C_RNTI_t*)cba_RNTI,
-                                         (struct LTE_RRCConnectionReconfiguration_r8_IEs__dedicatedInfoNASList*)dedicatedInfoNASList,
-                                         (LTE_SL_CommConfig_r12_t*)NULL,
+                                         (struct LTE_RRCConnectionReconfiguration_r8_IEs__dedicatedInfoNASList*)dedicatedInfoNASList
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
+                                         ,(LTE_SL_CommConfig_r12_t*)NULL,
                                          (LTE_SL_DiscConfig_r12_t*)NULL
+#endif
 #if (LTE_RRC_VERSION >= MAKE_VERSION(10, 0, 0))
                                          , (LTE_SCellToAddMod_r10_t*)NULL
->>>>>>> main/develop:openair2/RRC/LTE/rrc_eNB.c
 #endif
                                         );
   LOG_DUMPMSG(RRC,DEBUG_RRC,(char *)buffer,size,
@@ -4216,33 +3982,19 @@ flexran_rrc_eNB_generate_defaultRRCConnectionReconfiguration(const protocol_ctxt
                                          (LTE_QuantityConfig_t*)quantityConfig,
                                          (LTE_MeasIdToAddModList_t*)MeasId_list,
 // #endif
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_eNB.c
-                                         (MAC_MainConfig_t*)mac_MainConfig,
-                                         (MeasGapConfig_t*)NULL,
-                                         (MobilityControlInfo_t*)NULL,
-                                         (struct MeasConfig__speedStatePars*)Sparams,
-                                         (RSRP_Range_t*)rsrp,
-                                         (C_RNTI_t*)cba_RNTI,
-                                         (struct RRCConnectionReconfiguration_r8_IEs__dedicatedInfoNASList*)dedicatedInfoNASList
-#ifdef Rel14
-                                         ,(SL_CommConfig_r12_t*)NULL,
-                                         (SL_DiscConfig_r12_t*)NULL
-#endif
-#if defined(Rel10) || defined(Rel14)
-                                         , (SCellToAddMod_r10_t*)NULL
-=======
                                          (LTE_MAC_MainConfig_t*)mac_MainConfig,
                                          (LTE_MeasGapConfig_t*)NULL,
                                          (LTE_MobilityControlInfo_t*)NULL,
                                          (struct LTE_MeasConfig__speedStatePars*)Sparams,
                                          (LTE_RSRP_Range_t*)rsrp,
                                          (LTE_C_RNTI_t*)cba_RNTI,
-                                         (struct LTE_RRCConnectionReconfiguration_r8_IEs__dedicatedInfoNASList*)dedicatedInfoNASList,
-                                         (LTE_SL_CommConfig_r12_t*)NULL,
+                                         (struct LTE_RRCConnectionReconfiguration_r8_IEs__dedicatedInfoNASList*)dedicatedInfoNASList
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
+                                         ,(LTE_SL_CommConfig_r12_t*)NULL,
                                          (LTE_SL_DiscConfig_r12_t*)NULL
+#endif
 #if (LTE_RRC_VERSION >= MAKE_VERSION(10, 0, 0))
                                          , (LTE_SCellToAddMod_r10_t*)NULL
->>>>>>> main/develop:openair2/RRC/LTE/rrc_eNB.c
 #endif
                                         );
   LOG_DUMPMSG(RRC,DEBUG_RRC,(char *)buffer,size,
@@ -4321,29 +4073,6 @@ rrc_eNB_generate_RRCConnectionReconfiguration_SCell(
   size = do_RRCConnectionReconfiguration(ctxt_pP,
                                          buffer,
                                          rrc_eNB_get_next_transaction_identifier(ctxt_pP->module_id),//Transaction_id,
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_eNB.c
-                                         (SRB_ToAddModList_t*)NULL,
-                                         (DRB_ToAddModList_t*)NULL,
-                                         (DRB_ToReleaseList_t*)NULL,
-                                         (struct SPS_Config*)NULL,
-                                         (struct PhysicalConfigDedicated*)NULL,
-                                         (MeasObjectToAddModList_t*)NULL,
-                                         (ReportConfigToAddModList_t*)NULL,
-                                         (QuantityConfig_t*)NULL,
-                                         (MeasIdToAddModList_t*)NULL,
-                                         (MAC_MainConfig_t*)NULL,
-                                         (MeasGapConfig_t*)NULL,
-                                         (MobilityControlInfo_t*)NULL,
-                                         (struct MeasConfig__speedStatePars*)NULL,
-                                         (RSRP_Range_t*)NULL,
-                                         (C_RNTI_t*)NULL,
-                                         (struct RRCConnectionReconfiguration_r8_IEs__dedicatedInfoNASList*)NULL
-#ifdef Rel14
-					 ,(SL_CommConfig_r12_t*)NULL,
-                                         (SL_DiscConfig_r12_t*)NULL
-#endif
-#if defined(Rel10) || defined(Rel14)
-=======
                                          (LTE_SRB_ToAddModList_t*)NULL,
                                          (LTE_DRB_ToAddModList_t*)NULL,
                                          (LTE_DRB_ToReleaseList_t*)NULL,
@@ -4359,12 +4088,13 @@ rrc_eNB_generate_RRCConnectionReconfiguration_SCell(
                                          (struct LTE_MeasConfig__speedStatePars*)NULL,
                                          (LTE_RSRP_Range_t*)NULL,
                                          (LTE_C_RNTI_t*)NULL,
-                                         (struct LTE_RRCConnectionReconfiguration_r8_IEs__dedicatedInfoNASList*)NULL,
-                                         (LTE_SL_CommConfig_r12_t*)NULL,
+                                         (struct LTE_RRCConnectionReconfiguration_r8_IEs__dedicatedInfoNASList*)NULL
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
+                                         ,(LTE_SL_CommConfig_r12_t*)NULL,
                                          (LTE_SL_DiscConfig_r12_t*)NULL
+#endif
 
 #if (LTE_RRC_VERSION >= MAKE_VERSION(10, 0, 0))
->>>>>>> main/develop:openair2/RRC/LTE/rrc_eNB.c
                                          , ue_context_pP->ue_context.sCell_config
 #endif
                                         );
@@ -4654,13 +4384,6 @@ check_handovers(
                                ue_context_p->ue_context.handover_info->size,
                                ue_context_p->ue_context.handover_info->buf,
                                PDCP_TRANSMISSION_MODE_CONTROL
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_eNB.c
-#ifdef Rel14
-                               ,NULL, NULL
-#endif
-                               );
-        AssertFatal(result == TRUE, "PDCP data request failed!\n");
-=======
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
                                ,NULL, NULL
 #endif
@@ -4671,7 +4394,6 @@ check_handovers(
           LOG_I(RRC, "PDCP data request failed!\n");
           return;
         }
->>>>>>> main/develop:openair2/RRC/LTE/rrc_eNB.c
         ue_context_p->ue_context.handover_info->ho_complete = 0xF2;
       }
     }
@@ -5491,15 +5213,9 @@ rrc_eNB_generate_RRCConnectionReconfiguration_handover(
 
   rrc_rlc_config_asn1_req(&ctxt,
                           ue_context_pP->ue_context.SRB_configList,
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_eNB.c
-                          (DRB_ToAddModList_t *) NULL, (DRB_ToReleaseList_t *) NULL
-#if defined(Rel10) || defined(Rel14)
-                          , (PMCH_InfoList_r9_t *) NULL
-=======
                           (LTE_DRB_ToAddModList_t *) NULL, (LTE_DRB_ToReleaseList_t *) NULL
 #if (LTE_RRC_VERSION >= MAKE_VERSION(9, 0, 0))
                           , (LTE_PMCH_InfoList_r9_t *) NULL
->>>>>>> main/develop:openair2/RRC/LTE/rrc_eNB.c
                           , 0, 0
 #endif
                          );
@@ -5529,19 +5245,12 @@ rrc_eNB_generate_RRCConnectionReconfiguration_handover(
            Sparams,
            NULL,
            NULL,
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_eNB.c
            dedicatedInfoNASList
-#ifdef Rel14 
-	   ,(SL_CommConfig_r12_t*)NULL,
-           (SL_DiscConfig_r12_t*)NULL
-#endif
-#if defined(Rel10) || defined(Rel14)
-=======
-           dedicatedInfoNASList,
-           (LTE_SL_CommConfig_r12_t*)NULL,
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
+           ,(LTE_SL_CommConfig_r12_t*)NULL,
            (LTE_SL_DiscConfig_r12_t*)NULL
+#endif
 #if (LTE_RRC_VERSION >= MAKE_VERSION(10, 0, 0))
->>>>>>> main/develop:openair2/RRC/LTE/rrc_eNB.c
            , NULL   // SCellToAddMod_r10_t
 #endif
          );
@@ -5738,13 +5447,8 @@ rrc_eNB_process_RRCConnectionReconfigurationComplete(
     DRB_configList,
 //    (LTE_DRB_ToReleaseList_t *) NULL
     DRB_Release_configList2
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_eNB.c
-#if defined(Rel10) || defined(Rel14)
-    , (PMCH_InfoList_r9_t *) NULL
-=======
 #if (LTE_RRC_VERSION >= MAKE_VERSION(9, 0, 0))
     , (LTE_PMCH_InfoList_r9_t *) NULL
->>>>>>> main/develop:openair2/RRC/LTE/rrc_eNB.c
     , 0, 0
 #endif
   );
@@ -5780,13 +5484,8 @@ rrc_eNB_process_RRCConnectionReconfigurationComplete(
     for (i = 0; i < DRB_configList->list.count; i++) {  // num max DRB (11-3-8)
       if (DRB_configList->list.array[i]) {
 	drb_id = (int)DRB_configList->list.array[i]->drb_Identity;
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_eNB.c
-        LOG_E(RRC,
-              "[eNB %d] Frame  %d : Logical Channel UL-DCCH, Received RRCConnectionReconfigurationComplete from UE rnti %x, reconfiguring DRB %d/LCID %d\n \n \n",
-=======
         LOG_I(RRC,
               "[eNB %d] Frame  %d : Logical Channel UL-DCCH, Received LTE_RRCConnectionReconfigurationComplete from UE rnti %x, reconfiguring DRB %d/LCID %d\n",
->>>>>>> main/develop:openair2/RRC/LTE/rrc_eNB.c
               ctxt_pP->module_id,
               ctxt_pP->frame,
               ctxt_pP->rnti,
@@ -6001,27 +5700,10 @@ rrc_eNB_generate_RRCConnectionSetup(
                           SRB_configList,
                           &ue_context_pP->ue_context.physicalConfigDedicated);
 
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_eNB.c
-  LOG_D(RRC,"%s rrc_eNB_generate_RRCConnectionSetup() Payload size return value: %d, SFN/SF:%d/%d \n", __FUNCTION__, RC.rrc[ctxt_pP->module_id]->carrier[CC_id].Srb0.Tx_buffer.payload_size, ctxt_pP->frame, ctxt_pP->subframe);
-
-
-
-#ifdef RRC_MSG_PRINT
-  LOG_F(RRC,"[MSG] RRC Connection Setup\n");
-
-  for (cnt = 0; cnt < RC.rrc[ctxt_pP->module_id]->carrier[CC_id].Srb0.Tx_buffer.payload_size; cnt++) {
-    LOG_F(RRC,"%02x ", ((uint8_t*)RC.rrc[ctxt_pP->module_id]->Srb0.Tx_buffer.Payload)[cnt]);
-  }
-
-  LOG_F(RRC,"\n");
-  //////////////////////////////////
-#endif
-=======
   LOG_DUMPMSG(RRC,DEBUG_RRC,
               (char *)(RC.rrc[ctxt_pP->module_id]->carrier[CC_id].Srb0.Tx_buffer.Payload),
               RC.rrc[ctxt_pP->module_id]->carrier[CC_id].Srb0.Tx_buffer.payload_size,
               "[MSG] RRC Connection Setup\n");
->>>>>>> main/develop:openair2/RRC/LTE/rrc_eNB.c
 
   // configure SRB1/SRB2, PhysicalConfigDedicated, LTE_MAC_MainConfig for UE
 
@@ -6574,19 +6256,11 @@ rrc_eNB_decode_ccch(
 
       rrc_rlc_config_asn1_req(ctxt_pP,
                               ue_context_p->ue_context.SRB_configList,
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_eNB.c
-                              (DRB_ToAddModList_t*) NULL,
-                              (DRB_ToReleaseList_t*) NULL
-#   if defined(Rel10) || defined(Rel14)
-                              , (PMCH_InfoList_r9_t *) NULL,
-			      0,0
-=======
                               (LTE_DRB_ToAddModList_t*) NULL,
                               (LTE_DRB_ToReleaseList_t*) NULL
 #if (LTE_RRC_VERSION >= MAKE_VERSION(9, 0, 0))
                               , (LTE_PMCH_InfoList_r9_t *) NULL,
                               0,0
->>>>>>> main/develop:openair2/RRC/LTE/rrc_eNB.c
 #   endif
                              );
 #endif //NO_RRM
@@ -6809,21 +6483,12 @@ rrc_eNB_decode_ccch(
 
       rrc_rlc_config_asn1_req(ctxt_pP,
                               ue_context_p->ue_context.SRB_configList,
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_eNB.c
-                              (DRB_ToAddModList_t*) NULL,
-                              (DRB_ToReleaseList_t*) NULL
-#   if defined(Rel10) || defined(Rel14)
-                              , (PMCH_InfoList_r9_t *) NULL
-                              , 0, 0
-#   endif
-=======
                               (LTE_DRB_ToAddModList_t*) NULL,
                               (LTE_DRB_ToReleaseList_t*) NULL
 #if (LTE_RRC_VERSION >= MAKE_VERSION(9, 0, 0))
                               , (LTE_PMCH_InfoList_r9_t *) NULL
                               , 0, 0
 #endif
->>>>>>> main/develop:openair2/RRC/LTE/rrc_eNB.c
                              );
 #endif //NO_RRM
 
@@ -6915,12 +6580,7 @@ rrc_eNB_decode_dcch(
                    RC.rrc[ctxt_pP->module_id],
                    ctxt_pP->rnti);
 
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_eNB.c
-  LOG_I(RRC, "THINH ul_dcch_msg->message.present %d \n", ul_dcch_msg->message.present);
-  if (ul_dcch_msg->message.present == UL_DCCH_MessageType_PR_c1) {
-=======
   if (ul_dcch_msg->message.present == LTE_UL_DCCH_MessageType_PR_c1) {
->>>>>>> main/develop:openair2/RRC/LTE/rrc_eNB.c
 
     switch (ul_dcch_msg->message.choice.c1.present) {
     case LTE_UL_DCCH_MessageType__c1_PR_NOTHING:   /* No components present */
@@ -7483,27 +7143,6 @@ if (ue_context_p->ue_context.nb_of_modify_e_rabs > 0) {
 
     return 0;
     //TTN for D2D
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_eNB.c
-  } else if (ul_dcch_msg->message.present == UL_DCCH_MessageType_PR_messageClassExtension){
-     LOG_I(RRC, "THINH [UL_DCCH_MessageType_PR_messageClassExtension]\n");
-
-     switch (ul_dcch_msg->message.choice.messageClassExtension.present) {
-     case UL_DCCH_MessageType__messageClassExtension_PR_NOTHING: /* No components present */
-        break;
-     case UL_DCCH_MessageType__messageClassExtension_PR_c2: //SidelinkUEInformation
-     //case UL_DCCH_MessageType__messageClassExtension__c2_PR_sidelinkUEInformation_r12: //SidelinkUEInformation
-        LOG_I(RRC,"THINH [UL_DCCH_MessageType__messageClassExtension_PR_c2]\n");
-
-#ifdef RRC_MSG_PRINT
-        LOG_F(RRC,"[MSG] SidelinkUEInformation\n");
-
-        for (i = 0; i < sdu_sizeP; i++) {
-           LOG_F(RRC,"%02x ", ((uint8_t*)Rx_sdu)[i]);
-        }
-
-        LOG_F(RRC,"\n");
-#endif
-=======
   } else if (ul_dcch_msg->message.present == LTE_UL_DCCH_MessageType_PR_messageClassExtension){
      LOG_I(RRC, "THINH [UL_DCCH_MessageType_PR_messageClassExtension]\n");
 
@@ -7516,7 +7155,6 @@ if (ue_context_p->ue_context.nb_of_modify_e_rabs > 0) {
 
         LOG_DUMPMSG(RRC,DEBUG_RRC,(char *)Rx_sdu,sdu_sizeP,
                     "[MSG] RRC SidelinkUEInformation \n");
->>>>>>> main/develop:openair2/RRC/LTE/rrc_eNB.c
 
         MSC_LOG_RX_MESSAGE(
               MSC_RRC_ENB,
@@ -7835,22 +7473,13 @@ uint8_t
 rrc_eNB_process_SidelinkUEInformation(
       const protocol_ctxt_t* const ctxt_pP,
       rrc_eNB_ue_context_t*         ue_context_pP,
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_eNB.c
-      SidelinkUEInformation_r12_t * sidelinkUEInformation
-)
-//-----------------------------------------------------------------------------
-{
-   SL_DestinationInfoList_r12_t  *destinationInfoList;
-   int n_destinations = 0;
-   int ue_type = 0;
-=======
       LTE_SidelinkUEInformation_r12_t * sidelinkUEInformation
 )
 //-----------------------------------------------------------------------------
 {
    LTE_SL_DestinationInfoList_r12_t  *destinationInfoList;
    int n_destinations = 0;
->>>>>>> main/develop:openair2/RRC/LTE/rrc_eNB.c
+   int ue_type = 0;
    int n_discoveryMessages = 0;
 
    LOG_I(RRC,
@@ -7858,13 +7487,8 @@ rrc_eNB_process_SidelinkUEInformation(
          PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP));
 
    //For SL Communication
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_eNB.c
-   if (sidelinkUEInformation->criticalExtensions.present ==  SidelinkUEInformation_r12__criticalExtensions_PR_c1){
-      if (sidelinkUEInformation->criticalExtensions.choice.c1.present == SidelinkUEInformation_r12__criticalExtensions__c1_PR_sidelinkUEInformation_r12){
-=======
    if (sidelinkUEInformation->criticalExtensions.present == LTE_SidelinkUEInformation_r12__criticalExtensions_PR_c1){
       if (sidelinkUEInformation->criticalExtensions.choice.c1.present == LTE_SidelinkUEInformation_r12__criticalExtensions__c1_PR_sidelinkUEInformation_r12){
->>>>>>> main/develop:openair2/RRC/LTE/rrc_eNB.c
          // express its interest to receive SL communication
          if (sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.commRxInterestedFreq_r12 !=  NULL){
 
@@ -7873,11 +7497,7 @@ rrc_eNB_process_SidelinkUEInformation(
          // express its interest to transmit  non-relay one-to-many SL communication
          if ((sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.commTxResourceReq_r12 != NULL) && (sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.commTxResourceReq_r12->carrierFreq_r12 != NULL)){
             n_destinations = sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.commTxResourceReq_r12->destinationInfoList_r12.list.count;
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_eNB.c
-            destinationInfoList = CALLOC(1, sizeof(SL_DestinationInfoList_r12_t));
-=======
             destinationInfoList = CALLOC(1, sizeof(LTE_SL_DestinationInfoList_r12_t));
->>>>>>> main/develop:openair2/RRC/LTE/rrc_eNB.c
             for (int i=0; i< n_destinations; i++ ){
                //sl_DestinationIdentityList[i] = *(sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.commTxResourceReq_r12->destinationInfoList_r12.list.array[i]);
                ASN_SEQUENCE_ADD(&destinationInfoList->list, sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.commTxResourceReq_r12->destinationInfoList_r12.list.array[i]);
@@ -7892,11 +7512,7 @@ rrc_eNB_process_SidelinkUEInformation(
          if ((sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension != NULL) && (sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceReqUC_r13 != NULL)) {
             if (sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceReqUC_r13->carrierFreq_r12 != NULL){
                n_destinations = sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceReqUC_r13->destinationInfoList_r12.list.count;
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_eNB.c
-               destinationInfoList = CALLOC(1, sizeof(SL_DestinationInfoList_r12_t));
-=======
                destinationInfoList = CALLOC(1, sizeof(LTE_SL_DestinationInfoList_r12_t));
->>>>>>> main/develop:openair2/RRC/LTE/rrc_eNB.c
                for (int i=0; i< n_destinations; i++ ){
                   //sl_DestinationIdentityList[i] = *(sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceReqUC_r13->destinationInfoList_r12.list.array[i]);
                   ASN_SEQUENCE_ADD(&destinationInfoList->list,sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceReqUC_r13->destinationInfoList_r12.list.array[i]);
@@ -7911,12 +7527,8 @@ rrc_eNB_process_SidelinkUEInformation(
          if ((sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension != NULL) &&(sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13->commTxResourceReqRelayUC_r13 != NULL)) {
             if (sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13->commTxResourceReqRelayUC_r13->destinationInfoList_r12.list.count > 0) {
                n_destinations = sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13->commTxResourceReqRelayUC_r13->destinationInfoList_r12.list.count;
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_eNB.c
-               ue_type = sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13->ue_Type_r13;
-               destinationInfoList = CALLOC(1, sizeof(SL_DestinationInfoList_r12_t));
-=======
+			   ue_type = sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13->ue_Type_r13;
                destinationInfoList = CALLOC(1, sizeof(LTE_SL_DestinationInfoList_r12_t));
->>>>>>> main/develop:openair2/RRC/LTE/rrc_eNB.c
                for (int i=0; i< n_destinations; i++ ){
                   //sl_DestinationIdentityList[i] = *(sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13->commTxResourceReqRelayUC_r13->destinationInfoList_r12.list.array[i]);
                   ASN_SEQUENCE_ADD(&destinationInfoList->list, sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13->commTxResourceReqRelayUC_r13->destinationInfoList_r12.list.array[i]);
@@ -7931,12 +7543,8 @@ rrc_eNB_process_SidelinkUEInformation(
          if ((sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension != NULL) && (sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13 != NULL)) {
             if (sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13->commTxResourceReqRelay_r13->destinationInfoList_r12.list.count > 0){
                n_destinations = sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13->commTxResourceReqRelay_r13->destinationInfoList_r12.list.count;
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_eNB.c
                ue_type = sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13->ue_Type_r13;
-               destinationInfoList = CALLOC(1, sizeof(SL_DestinationInfoList_r12_t));
-=======
                destinationInfoList = CALLOC(1, sizeof(LTE_SL_DestinationInfoList_r12_t));
->>>>>>> main/develop:openair2/RRC/LTE/rrc_eNB.c
                for (int i=0; i< n_destinations; i++ ){
                   //sl_DestinationIdentityList[i] = *(sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13->commTxResourceReqRelay_r13->destinationInfoList_r12.list.array[i]);
                   ASN_SEQUENCE_ADD(&destinationInfoList->list,sidelinkUEInformation->criticalExtensions.choice.c1.choice.sidelinkUEInformation_r12.nonCriticalExtension->commTxResourceInfoReqRelay_r13->commTxResourceReqRelay_r13->destinationInfoList_r12.list.array[i]);
@@ -7975,58 +7583,30 @@ int
 rrc_eNB_generate_RRCConnectionReconfiguration_Sidelink(
   const protocol_ctxt_t* const ctxt_pP,
   rrc_eNB_ue_context_t* const ue_context_pP,
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_eNB.c
-  SL_DestinationInfoList_r12_t  *destinationInfoList,
-=======
   LTE_SL_DestinationInfoList_r12_t  *destinationInfoList,
->>>>>>> main/develop:openair2/RRC/LTE/rrc_eNB.c
   int n_discoveryMessages
 )
 //-----------------------------------------------------------------------------
 {
 
   uint8_t                             buffer[RRC_BUF_SIZE];
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_eNB.c
-  uint16_t                            size;
-=======
   uint16_t                            size = -1;
->>>>>>> main/develop:openair2/RRC/LTE/rrc_eNB.c
   memset(buffer, 0, RRC_BUF_SIZE);
 
   // allocate dedicated pools for UE -sl-CommConfig/sl-DiscConfig (sl-V2X-ConfigDedicated)
   //populate dedicated resources for SL communication (sl-CommConfig)
   if ((destinationInfoList != NULL) && (destinationInfoList->list.count > 0)) {
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_eNB.c
-     LOG_I(RRC,"[eNB %d] Frame %d, Generate RRCConnectionReconfiguration_Sidelink (bytes %d, UE id %x), number of destinations %d\n",
-            ctxt_pP->module_id,ctxt_pP->frame, size, ue_context_pP->ue_context.rnti,destinationInfoList->list.count );
-     //get dedicated resources from available pool and assign to the UE
-     SL_CommConfig_r12_t  sl_CommConfig[destinationInfoList->list.count];
-=======
 
      LOG_I(RRC,"[eNB %d] Frame %d, Generate LTE_RRCConnectionReconfiguration_Sidelink (bytes %d, UE id %x), number of destinations %d\n",
             ctxt_pP->module_id,ctxt_pP->frame, size, ue_context_pP->ue_context.rnti,destinationInfoList->list.count );
      //get dedicated resources from available pool and assign to the UE
      LTE_SL_CommConfig_r12_t  sl_CommConfig[destinationInfoList->list.count];
->>>>>>> main/develop:openair2/RRC/LTE/rrc_eNB.c
      //get a RP from the available RPs
      sl_CommConfig[0] = rrc_eNB_get_sidelink_commTXPool(ctxt_pP, ue_context_pP, destinationInfoList);
 
      size = do_RRCConnectionReconfiguration(ctxt_pP,
                    buffer,
                    rrc_eNB_get_next_transaction_identifier(ctxt_pP->module_id),   //Transaction_id
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_eNB.c
-                   (SRB_ToAddModList_t*)NULL,
-                   (DRB_ToAddModList_t*)NULL,
-                   (DRB_ToReleaseList_t*)NULL,  // DRB2_list,
-                   (struct SPS_Config*)NULL,    // *sps_Config,
-                   NULL, NULL, NULL, NULL,NULL,
-                   NULL, NULL,  NULL, NULL, NULL, NULL,
-                   (struct RRCConnectionReconfiguration_r8_IEs__dedicatedInfoNASList*)NULL,
-                   (SL_CommConfig_r12_t*)&sl_CommConfig,
-                   (SL_DiscConfig_r12_t*)NULL
-  #if defined(Rel10) || defined(Rel14)
-                                           , (SCellToAddMod_r10_t*)NULL
-=======
                    (LTE_SRB_ToAddModList_t*)NULL,
                    (LTE_DRB_ToAddModList_t*)NULL,
                    (LTE_DRB_ToReleaseList_t*)NULL,  // DRB2_list,
@@ -8038,36 +7618,18 @@ rrc_eNB_generate_RRCConnectionReconfiguration_Sidelink(
                    (LTE_SL_DiscConfig_r12_t*)NULL
   #if (LTE_RRC_VERSION >= MAKE_VERSION(10, 0, 0))
                                            , (LTE_SCellToAddMod_r10_t*)NULL
->>>>>>> main/develop:openair2/RRC/LTE/rrc_eNB.c
   #endif
                                            );
      //
   }
   //populate dedicated resources for SL discovery (sl-DiscConfig)
   if (n_discoveryMessages > 0) {
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_eNB.c
-     SL_DiscConfig_r12_t sl_DiscConfig[n_discoveryMessages];
-=======
      LTE_SL_DiscConfig_r12_t sl_DiscConfig[n_discoveryMessages];
->>>>>>> main/develop:openair2/RRC/LTE/rrc_eNB.c
      //get a RP from the available RPs
      sl_DiscConfig[0] = rrc_eNB_get_sidelink_discTXPool(ctxt_pP, ue_context_pP, n_discoveryMessages );
      size = do_RRCConnectionReconfiguration(ctxt_pP,
                    buffer,
                    rrc_eNB_get_next_transaction_identifier(ctxt_pP->module_id),   //Transaction_id
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_eNB.c
-                   (SRB_ToAddModList_t*)NULL,
-                   (DRB_ToAddModList_t*)NULL,
-                   (DRB_ToReleaseList_t*)NULL,  // DRB2_list,
-                   (struct SPS_Config*)NULL,    // *sps_Config,
-                   NULL, NULL, NULL, NULL,NULL,
-                   NULL, NULL,  NULL, NULL, NULL, NULL,
-                   (struct RRCConnectionReconfiguration_r8_IEs__dedicatedInfoNASList*)NULL,
-                   (SL_CommConfig_r12_t*)NULL,
-                   (SL_DiscConfig_r12_t*)&sl_DiscConfig
-  #if defined(Rel10) || defined(Rel14)
-                                           , (SCellToAddMod_r10_t*)NULL
-=======
                    (LTE_SRB_ToAddModList_t*)NULL,
                    (LTE_DRB_ToAddModList_t*)NULL,
                    (LTE_DRB_ToReleaseList_t*)NULL,  // DRB2_list,
@@ -8079,16 +7641,11 @@ rrc_eNB_generate_RRCConnectionReconfiguration_Sidelink(
                    (LTE_SL_DiscConfig_r12_t*)&sl_DiscConfig
   #if (LTE_RRC_VERSION >= MAKE_VERSION(10, 0, 0))
                                            , (LTE_SCellToAddMod_r10_t*)NULL
->>>>>>> main/develop:openair2/RRC/LTE/rrc_eNB.c
   #endif
                                            );
   }
 
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_eNB.c
-  LOG_I(RRC,"[eNB %d] Frame %d, Logical Channel DL-DCCH, Generate RRCConnectionReconfiguration_Sidelink (bytes %d, UE id %x)\n",
-=======
   LOG_I(RRC,"[eNB %d] Frame %d, Logical Channel DL-DCCH, Generate LTE_RRCConnectionReconfiguration_Sidelink (bytes %d, UE id %x)\n",
->>>>>>> main/develop:openair2/RRC/LTE/rrc_eNB.c
         ctxt_pP->module_id,ctxt_pP->frame, size, ue_context_pP->ue_context.rnti);
 
   rrc_data_req(
@@ -8099,28 +7656,11 @@ rrc_eNB_generate_RRCConnectionReconfiguration_Sidelink(
     size,
     buffer,
     PDCP_TRANSMISSION_MODE_CONTROL);
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_eNB.c
-=======
-
->>>>>>> main/develop:openair2/RRC/LTE/rrc_eNB.c
   // rrc_data_req();
 
   return size;
 }
 
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_eNB.c
-SL_CommConfig_r12_t rrc_eNB_get_sidelink_commTXPool( const protocol_ctxt_t* const ctxt_pP, rrc_eNB_ue_context_t* const ue_context_pP,  SL_DestinationInfoList_r12_t  *destinationInfoList ){
-   // for the moment, use scheduled resource allocation
-
-   SL_CommConfig_r12_t  *sl_CommConfig;
-   SL_CommResourcePool_r12_t    *sc_CommTxConfig;
-
-   sl_CommConfig = CALLOC(1, sizeof(struct SL_CommConfig_r12));
-   sl_CommConfig->commTxResources_r12 = CALLOC(1, sizeof(*sl_CommConfig->commTxResources_r12));
-   sl_CommConfig->commTxResources_r12->present = SL_CommConfig_r12__commTxResources_r12_PR_setup;
-
-   sl_CommConfig->commTxResources_r12->choice.setup.present = SL_CommConfig_r12__commTxResources_r12__setup_PR_scheduled_r12;
-=======
 LTE_SL_CommConfig_r12_t rrc_eNB_get_sidelink_commTXPool( const protocol_ctxt_t* const ctxt_pP, rrc_eNB_ue_context_t* const ue_context_pP, LTE_SL_DestinationInfoList_r12_t  *destinationInfoList ){
    // for the moment, use scheduled resource allocation
    LTE_SL_CommConfig_r12_t  *sl_CommConfig;
@@ -8131,7 +7671,6 @@ LTE_SL_CommConfig_r12_t rrc_eNB_get_sidelink_commTXPool( const protocol_ctxt_t* 
    sl_CommConfig->commTxResources_r12->present = LTE_SL_CommConfig_r12__commTxResources_r12_PR_setup;
 
    sl_CommConfig->commTxResources_r12->choice.setup.present = LTE_SL_CommConfig_r12__commTxResources_r12__setup_PR_scheduled_r12;
->>>>>>> main/develop:openair2/RRC/LTE/rrc_eNB.c
    sl_CommConfig->commTxResources_r12->choice.setup.choice.scheduled_r12.sl_RNTI_r12.size = 2;
    sl_CommConfig->commTxResources_r12->choice.setup.choice.scheduled_r12.sl_RNTI_r12.buf = CALLOC(1,2);
    sl_CommConfig->commTxResources_r12->choice.setup.choice.scheduled_r12.sl_RNTI_r12.buf[0] = 0x00;
@@ -8139,64 +7678,37 @@ LTE_SL_CommConfig_r12_t rrc_eNB_get_sidelink_commTXPool( const protocol_ctxt_t* 
    sl_CommConfig->commTxResources_r12->choice.setup.choice.scheduled_r12.sl_RNTI_r12.bits_unused = 0;
    sl_CommConfig->commTxResources_r12->choice.setup.choice.scheduled_r12.mcs_r12 = CALLOC(1,sizeof(*sl_CommConfig->commTxResources_r12->choice.setup.choice.scheduled_r12.mcs_r12));
    //*sl_CommConfig_test->commTxResources_r12->choice.setup.choice.scheduled_r12.mcs_r12 = 12; //Msc
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_eNB.c
-   sl_CommConfig->commTxResources_r12->choice.setup.choice.scheduled_r12.mac_MainConfig_r12.retx_BSR_TimerSL = RetxBSR_Timer_r12_sf320; //MacConfig, for testing only
-=======
    sl_CommConfig->commTxResources_r12->choice.setup.choice.scheduled_r12.mac_MainConfig_r12.retx_BSR_TimerSL = LTE_RetxBSR_Timer_r12_sf320; //MacConfig, for testing only
->>>>>>> main/develop:openair2/RRC/LTE/rrc_eNB.c
    //sl_CommConfig_test->commTxResources_r12->choice.setup.choice.scheduled_r12.sc_CommTxConfig_r12;
 
    sc_CommTxConfig = & sl_CommConfig->commTxResources_r12->choice.setup.choice.scheduled_r12.sc_CommTxConfig_r12;
 
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_eNB.c
-   sc_CommTxConfig->sc_CP_Len_r12 = SL_CP_Len_r12_normal;
-   sc_CommTxConfig->sc_Period_r12 = SL_PeriodComm_r12_sf40;
-   sc_CommTxConfig->data_CP_Len_r12  = SL_CP_Len_r12_normal;
-=======
    sc_CommTxConfig->sc_CP_Len_r12 = LTE_SL_CP_Len_r12_normal;
    sc_CommTxConfig->sc_Period_r12 = LTE_SL_PeriodComm_r12_sf40;
    sc_CommTxConfig->data_CP_Len_r12 = LTE_SL_CP_Len_r12_normal;
->>>>>>> main/develop:openair2/RRC/LTE/rrc_eNB.c
    //sc_TF_ResourceConfig_r12
    sc_CommTxConfig->sc_TF_ResourceConfig_r12.prb_Num_r12 = 20;
    sc_CommTxConfig->sc_TF_ResourceConfig_r12.prb_Start_r12 = 5;
    sc_CommTxConfig->sc_TF_ResourceConfig_r12.prb_End_r12 = 44;
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_eNB.c
-   sc_CommTxConfig->sc_TF_ResourceConfig_r12.offsetIndicator_r12.present = SL_OffsetIndicator_r12_PR_small_r12;
-   sc_CommTxConfig->sc_TF_ResourceConfig_r12.offsetIndicator_r12.choice.small_r12 = 0;
-
-   sc_CommTxConfig->sc_TF_ResourceConfig_r12.subframeBitmap_r12.present = SubframeBitmapSL_r12_PR_bs40_r12;
-=======
    sc_CommTxConfig->sc_TF_ResourceConfig_r12.offsetIndicator_r12.present = LTE_SL_OffsetIndicator_r12_PR_small_r12;
    sc_CommTxConfig->sc_TF_ResourceConfig_r12.offsetIndicator_r12.choice.small_r12 = 0;
 
    sc_CommTxConfig->sc_TF_ResourceConfig_r12.subframeBitmap_r12.present = LTE_SubframeBitmapSL_r12_PR_bs40_r12;
->>>>>>> main/develop:openair2/RRC/LTE/rrc_eNB.c
    sc_CommTxConfig->sc_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs40_r12.size = 5;
    sc_CommTxConfig->sc_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs40_r12.buf  = CALLOC(1,5);
    sc_CommTxConfig->sc_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs40_r12.bits_unused = 0;
    //dataHoppingConfig_r12
    sc_CommTxConfig->dataHoppingConfig_r12.hoppingParameter_r12 = 0;
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_eNB.c
-   sc_CommTxConfig->dataHoppingConfig_r12.numSubbands_r12  =  SL_HoppingConfigComm_r12__numSubbands_r12_ns1;
-=======
    sc_CommTxConfig->dataHoppingConfig_r12.numSubbands_r12  = LTE_SL_HoppingConfigComm_r12__numSubbands_r12_ns1;
->>>>>>> main/develop:openair2/RRC/LTE/rrc_eNB.c
    sc_CommTxConfig->dataHoppingConfig_r12.rb_Offset_r12 = 0;
    //ue_SelectedResourceConfig_r12
    sc_CommTxConfig->ue_SelectedResourceConfig_r12 = CALLOC (1, sizeof (*sc_CommTxConfig->ue_SelectedResourceConfig_r12));
    sc_CommTxConfig->ue_SelectedResourceConfig_r12->data_TF_ResourceConfig_r12.prb_Num_r12 = 20;
    sc_CommTxConfig->ue_SelectedResourceConfig_r12->data_TF_ResourceConfig_r12.prb_Start_r12 = 5;
    sc_CommTxConfig->ue_SelectedResourceConfig_r12->data_TF_ResourceConfig_r12.prb_End_r12 = 44;
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_eNB.c
-   sc_CommTxConfig->ue_SelectedResourceConfig_r12->data_TF_ResourceConfig_r12.offsetIndicator_r12.present = SL_OffsetIndicator_r12_PR_small_r12;
-   sc_CommTxConfig->ue_SelectedResourceConfig_r12->data_TF_ResourceConfig_r12.offsetIndicator_r12.choice.small_r12 = 0 ;
-   sc_CommTxConfig->ue_SelectedResourceConfig_r12->data_TF_ResourceConfig_r12.subframeBitmap_r12.present = SubframeBitmapSL_r12_PR_bs40_r12;
-=======
    sc_CommTxConfig->ue_SelectedResourceConfig_r12->data_TF_ResourceConfig_r12.offsetIndicator_r12.present = LTE_SL_OffsetIndicator_r12_PR_small_r12;
    sc_CommTxConfig->ue_SelectedResourceConfig_r12->data_TF_ResourceConfig_r12.offsetIndicator_r12.choice.small_r12 = 0 ;
    sc_CommTxConfig->ue_SelectedResourceConfig_r12->data_TF_ResourceConfig_r12.subframeBitmap_r12.present = LTE_SubframeBitmapSL_r12_PR_bs40_r12;
->>>>>>> main/develop:openair2/RRC/LTE/rrc_eNB.c
    sc_CommTxConfig->ue_SelectedResourceConfig_r12->data_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs4_r12.size = 5;
    sc_CommTxConfig->ue_SelectedResourceConfig_r12->data_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs4_r12.buf  = CALLOC(1,5);
    sc_CommTxConfig->ue_SelectedResourceConfig_r12->data_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs4_r12.bits_unused = 0;
@@ -8213,11 +7725,7 @@ LTE_SL_CommConfig_r12_t rrc_eNB_get_sidelink_commTXPool( const protocol_ctxt_t* 
    sc_CommTxConfig->rxParametersNCell_r12->syncConfigIndex_r12 = 0;
    //txParameters_r12
    sc_CommTxConfig->txParameters_r12 = CALLOC (1, sizeof (*sc_CommTxConfig->txParameters_r12));
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_eNB.c
-   sc_CommTxConfig->txParameters_r12->sc_TxParameters_r12.alpha_r12 = Alpha_r12_al0;
-=======
    sc_CommTxConfig->txParameters_r12->sc_TxParameters_r12.alpha_r12 = LTE_Alpha_r12_al0;
->>>>>>> main/develop:openair2/RRC/LTE/rrc_eNB.c
    sc_CommTxConfig->txParameters_r12->sc_TxParameters_r12.p0_r12 = 0;
    sc_CommTxConfig->ext1 = NULL ;
 
@@ -8225,34 +7733,21 @@ LTE_SL_CommConfig_r12_t rrc_eNB_get_sidelink_commTXPool( const protocol_ctxt_t* 
 }
 
 
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_eNB.c
-SL_DiscConfig_r12_t rrc_eNB_get_sidelink_discTXPool( const protocol_ctxt_t* const ctxt_pP, rrc_eNB_ue_context_t* const ue_context_pP,  int n_discoveryMessages ){
-   //TODO
-   SL_DiscConfig_r12_t  sl_DiscConfig;
-   sl_DiscConfig.discTxResources_r12 = CALLOC(1,sizeof(*sl_DiscConfig.discTxResources_r12));
-   sl_DiscConfig.discTxResources_r12->present = SL_DiscConfig_r12__discTxResources_r12_PR_setup;
-   sl_DiscConfig.discTxResources_r12->choice.setup.present = SL_DiscConfig_r12__discTxResources_r12__setup_PR_scheduled_r12;
-=======
 LTE_SL_DiscConfig_r12_t rrc_eNB_get_sidelink_discTXPool( const protocol_ctxt_t* const ctxt_pP, rrc_eNB_ue_context_t* const ue_context_pP,  int n_discoveryMessages ){
    //TODO
    LTE_SL_DiscConfig_r12_t  sl_DiscConfig;
    sl_DiscConfig.discTxResources_r12 = CALLOC(1,sizeof(*sl_DiscConfig.discTxResources_r12));
    sl_DiscConfig.discTxResources_r12->present = LTE_SL_DiscConfig_r12__discTxResources_r12_PR_setup;
    sl_DiscConfig.discTxResources_r12->choice.setup.present = LTE_SL_DiscConfig_r12__discTxResources_r12__setup_PR_scheduled_r12;
->>>>>>> main/develop:openair2/RRC/LTE/rrc_eNB.c
    //sl_DiscConfig.discTxResources_r12->choice.setup.choice.scheduled_r12.discHoppingConfig_r12;
    //sl_DiscConfig.discTxResources_r12->choice.setup.choice.scheduled_r12.discTF_IndexList_r12;
    //sl_DiscConfig.discTxResources_r12->choice.setup.choice.scheduled_r12.discTxConfig_r12;
    return sl_DiscConfig;
 }
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_eNB.c
 
 
-RRC_status_t rrc_rx_tx(
-=======
 RRC_status_t
 rrc_rx_tx(
->>>>>>> main/develop:openair2/RRC/LTE/rrc_eNB.c
   protocol_ctxt_t* const ctxt_pP,
   const int          CC_id
 )
@@ -8290,12 +7785,7 @@ rrc_rx_tx(
       }
       if (ue_context_p->ue_context.ul_failure_timer>0) {
 	ue_context_p->ue_context.ul_failure_timer++;
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_eNB.c
-		LOG_D(RRC, "rrc_rx_tx(), ul_failure_timer: %d \n", ue_context_p->ue_context.ul_failure_timer);
-	if (ue_context_p->ue_context.ul_failure_timer >= 8) {
-=======
 	if (ue_context_p->ue_context.ul_failure_timer >= 20000) {
->>>>>>> main/develop:openair2/RRC/LTE/rrc_eNB.c
 	  // remove UE after 20 seconds after MAC has indicated UL failure
 	  LOG_I(RRC,"Removing UE %x instance\n",ue_context_p->ue_context.rnti);
 	  ue_to_be_removed = ue_context_p;
@@ -8410,14 +7900,9 @@ rrc_rx_tx(
 
       if (ue_context_p->ue_context.ue_release_timer>0) {
 	ue_context_p->ue_context.ue_release_timer++;
-	//LOG_D(RRC, "Panos-D: rrc_rx_tx(), release timer: %d \n", ue_context_p->ue_context.ue_release_timer);
 	if (ue_context_p->ue_context.ue_release_timer >=
 	    ue_context_p->ue_context.ue_release_timer_thres) {
-<<<<<<< HEAD:openair2/RRC/LITE/rrc_eNB.c
-	  LOG_I(RRC,"Removing UE %x instance, Release timer: %d, Release timer thres.: %d \n",ue_context_p->ue_context.rnti, ue_context_p->ue_context.ue_release_timer, ue_context_p->ue_context.ue_release_timer_thres);
-=======
           LOG_I(RRC,"Removing UE %x instance\n",ue_context_p->ue_context.rnti);
->>>>>>> main/develop:openair2/RRC/LTE/rrc_eNB.c
 	  ue_to_be_removed = ue_context_p;
           ue_context_p->ue_context.ue_release_timer = 0;
 	  break;
