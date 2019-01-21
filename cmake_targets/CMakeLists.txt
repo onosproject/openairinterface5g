@@ -1385,7 +1385,7 @@ add_library(L2_UE
 )
 
 if (NOT ${NOS1})
-target_compile_definitions(L2_UE INTERFACE -DPDCP_USE_NETLINK)
+target_compile_definitions(L2_UE PUBLIC -DPDCP_USE_NETLINK)
 endif()
 add_dependencies(L2_UE rrc_flag s1ap_flag x2_flag)
 

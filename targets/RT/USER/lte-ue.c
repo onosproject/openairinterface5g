@@ -875,7 +875,7 @@ static void *UE_thread_rxn_txnp4(void *arg) {
       exit_fun("noting to add");
     }
     proc->instance_cnt_rxtx--;
-#if 1 //BASIC_SIMULATOR
+#if BASIC_SIMULATOR
     if (pthread_cond_signal(&proc->cond_rxtx) != 0) abort();
 #endif
     if (pthread_mutex_unlock(&proc->mutex_rxtx) != 0) {
@@ -1569,6 +1569,12 @@ void *UE_thread(void *arg) {
   }
 
   while (!oai_exit) {
+#if BASIC_SIMULATOR
+    while (!(UE->proc.instance_cnt_synch < 0)) {
+      printf("ue sync not ready\n");
+      usleep(500*1000);
+    }
+#endif
 
     AssertFatal ( 0== pthread_mutex_lock(&UE->proc.mutex_synch), "");
     int instance_cnt_synch = UE->proc.instance_cnt_synch;
@@ -1698,7 +1704,7 @@ void *UE_thread(void *arg) {
                 // update thread index for received subframe
                 UE->current_thread_id[sub_frame] = thread_idx;
 
-#if 1 //BASIC_SIMULATOR
+#if BASIC_SIMULATOR
                 {
                   int t;
                   for (t = 0; t < 2; t++) {
@@ -1736,7 +1742,7 @@ void *UE_thread(void *arg) {
                         // compute TO compensation that should be applied for this frame
 
 			if (UE->no_timing_correction == 0) {
-if (UE->rx_offset) {
+if (getenv(RFSIMULATOR) != NULL && UE->rx_offset) {
    //LOG_E(HW,"in simu, rx_offset is not null: %d\n", UE->rx_offset);
    UE->rx_offset=0;
 }
@@ -1811,7 +1817,7 @@ if (UE->rx_offset) {
                     proc->instance_cnt_rxtx++;
                     LOG_D( PHY, "[SCHED][UE %d] UE RX instance_cnt_rxtx %d subframe %d !!\n", UE->Mod_id, proc->instance_cnt_rxtx,proc->subframe_rx);
                     if (proc->instance_cnt_rxtx != 0) {
-		    /*
+		    
 	              if ( getenv("RFSIMULATOR") != NULL ) {
 		         do {
 			    AssertFatal (pthread_mutex_unlock(&proc->mutex_rxtx) == 0, "");
@@ -1819,7 +1825,7 @@ if (UE->rx_offset) {
 			    AssertFatal (pthread_mutex_lock(&proc->mutex_rxtx) == 0, "");
 			 } while ( proc->instance_cnt_rxtx >= 0);
 
-		      } else */
+		      } else
                          LOG_E( PHY, "[SCHED][UE %d] UE RX thread busy (IC %d)!!\n", UE->Mod_id, proc->instance_cnt_rxtx);
                       if (proc->instance_cnt_rxtx > 2)
                         exit_fun("instance_cnt_rxtx > 2");
