@@ -4712,7 +4712,6 @@ void *rrc_ue_task( void *args_p )
       break;
 
     case MESSAGE_TEST:
-      LOG_D(RRC, "[UE %d] Received %s\n", ue_mod_id, ITTI_MSG_NAME (msg_p));
       break;
 
       /* MAC messages */
