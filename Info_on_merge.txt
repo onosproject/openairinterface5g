@@ -124,7 +124,15 @@ targets/RT/USER/lte-ue.c					 (In UE_thread_synch() the following part referring
 	      									   return &UE_thread_synch_retval; // not reached
 	      									   */
 	      									   
-	      									   	What should be done in the merged branch now? )
+	      									   	What should be done in the merged branch now? 
+	      									   	
+	      									   	In the branch version of init_UE_threads() which I kept I added the following lines originating
+	      									   	from the develop branch:
+	      									   	UE->proc.instance_cnt_synch = -1;
+  												UE->is_synchronized = 0;
+  												
+  												and then later:
+  												UE->proc.proc_rxtx[i].instance_cnt_rxtx = -1;)
 
 
 *******************************************************************************************************
@@ -136,8 +144,7 @@ targets/RT/USER/lte-ue.c					 (In UE_thread_synch() the following part referring
 	deleted by them: openair2/UTIL/LOG/log.c
 	deleted by them: openair2/UTIL/LOG/log.h
 	deleted by them: targets/RT/USER/lte-ran.c
-	both modified:   targets/RT/USER/lte-ue.c      (PENDING)
-	both modified:   targets/RT/USER/lte-uesoftmodem.c
+	both modified:   targets/RT/USER/lte-uesoftmodem.c (PENDING up to line 1022)
 	deleted by them: targets/SIMU/USER/channel_sim.c (Shouldn't remove that)
 
 
@@ -238,8 +245,8 @@ targets/RT/USER/lte-ue.c					 (In UE_thread_synch() the following part referring
 	deleted by them: targets/RT/USER/lte-ran.c
 	both modified:   targets/RT/USER/lte-ru.c
 	both modified:   targets/RT/USER/lte-softmodem.c
-	both modified:   targets/RT/USER/lte-softmodem.h        #Conflicts solved up to here
-	both modified:   targets/RT/USER/lte-ue.c
+	both modified:   targets/RT/USER/lte-softmodem.h        
+	both modified:   targets/RT/USER/lte-ue.c				#Conflicts solved up to here
 	both modified:   targets/RT/USER/lte-uesoftmodem.c
 	deleted by them: targets/SIMU/USER/channel_sim.c (Shouldn't remove that)
 
