@@ -84,7 +84,7 @@ void lte_adjust_synch(LTE_DL_FRAME_PARMS *frame_parms,
 
   if(subframe == 5)
   {
-      diff = max_pos_fil - (frame_parms->nb_prefix_samples>>3);
+      diff = max_pos_fil ; // - (frame_parms->nb_prefix_samples>>3);
 
       if ( abs(diff) < SYNCH_HYST )
           ue->rx_offset = 0;
