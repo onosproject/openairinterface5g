@@ -183,7 +183,7 @@ static int sync_to_gps(openair0_device *device) {
         num_gps_locked++;
         std::cout << boost::format("GPS Locked\n");
       } else {
-        std::cerr << "WARNING:  GPS not locked - time will not be accurate until locked" << std::endl;
+        LOG_W(HW,"GPS not locked - time will not be accurate until locked" << std::endl;
       }
 
       //Set to GPS time
@@ -1070,7 +1070,7 @@ extern "C" {
       uhd::device_addrs_t device_adds = uhd::device::find(args);
 
       if (device_adds.size() == 0) {
-        std::cerr<<"No USRP Device Found. " << std::endl;
+        "No USRP Device Found. " << std::endl;
         free(s);
         return -1;
       } else if (device_adds.size() > 1) {

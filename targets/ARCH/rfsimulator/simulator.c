@@ -177,9 +177,8 @@ int start_ue(openair0_device *device) {
 }
 
 int tcp_bridge_write(openair0_device *device, openair0_timestamp timestamp, void **samplesVoid, int nsamps, int nbAnt, int flags) {
-  
   tcp_bridge_state_t *t = device->priv;
-  
+
   for (int i=0; i<FD_SETSIZE; i++) {
     buffer_t *ptr=&t->buf[i];
 
@@ -187,15 +186,17 @@ int tcp_bridge_write(openair0_device *device, openair0_timestamp timestamp, void
       setblocking(ptr->conn_sock, blocking);
       transferHeader header= {t->typeStamp, nsamps, nbAnt, timestamp};
       int n=-1;
-
       AssertFatal( fullwrite(ptr->conn_sock,&header, sizeof(header)) == sizeof(header), "");
       sample_t tmpSamples[nsamps][nbAnt];
+
       for(int a=0; a<nbAnt; a++) {
-	sample_t* in=(sample_t*)samplesVoid[a];
-	for(int s=0; s<nsamps; s++)
-	  tmpSamples[s][a]=in[s];
+        sample_t *in=(sample_t *)samplesVoid[a];
+
+        for(int s=0; s<nsamps; s++)
+          tmpSamples[s][a]=in[s];
       }
-      n = fullwrite(ptr->conn_sock, (void*)tmpSamples, sampleToByte(nsamps,nbAnt));
+
+      n = fullwrite(ptr->conn_sock, (void *)tmpSamples, sampleToByte(nsamps,nbAnt));
 
       if (n != sampleToByte(nsamps,nbAnt) ) {
         LOG_E(HW,"tcp_bridge: write error ret %d (wanted %ld) error %s\n", n, sampleToByte(nsamps,nbAnt), strerror(errno));
@@ -215,101 +216,108 @@ int tcp_bridge_write(openair0_device *device, openair0_timestamp timestamp, void
 bool flushInput(tcp_bridge_state_t *t) {
   // Process all incoming events on sockets
   // store the data in lists
-  bool completedABuffer=false;
-  int iterations=10;
+  struct epoll_event events[FD_SETSIZE]= {0};
+  int nfds = epoll_wait(t->epollfd, events, FD_SETSIZE, 200);
 
-  while (!completedABuffer && iterations-- ) {
-    struct epoll_event events[FD_SETSIZE]= {0};
-    int nfds = epoll_wait(t->epollfd, events, FD_SETSIZE, 20);
+  if ( nfds==-1 ) {
+    if ( errno==EINTR || errno==EAGAIN )
+      return false;
+    else
+      AssertFatal(false,"error in epoll_wait\n");
+  }
 
-    if ( nfds==-1 ) {
-      if ( errno==EINTR || errno==EAGAIN )
+  for (int nbEv = 0; nbEv < nfds; ++nbEv) {
+    int fd=events[nbEv].data.fd;
+
+    if (events[nbEv].events & EPOLLIN && fd == t->listen_sock) {
+      int conn_sock;
+      AssertFatal( (conn_sock = accept(t->listen_sock,NULL,NULL)) != -1, "");
+      allocCirBuf(t, conn_sock);
+      LOG_I(HW,"A ue connected\n");
+    } else {
+      if ( events[nbEv].events & (EPOLLHUP | EPOLLERR | EPOLLRDHUP) ) {
+        LOG_W(HW,"Lost socket\n");
+        removeCirBuf(t, fd);
+
+        if (t->typeStamp==MAGICUE)
+          exit(1);
+
         continue;
+      }
+
+      buffer_t *b=&t->buf[fd];
+
+      if ( b->circularBuf == NULL ) {
+        LOG_E(HW, "received data on not connected socket %d\n", events[nbEv].data.fd);
+        continue;
+      }
+
+      int blockSz;
+
+      if ( b->headerMode)
+        blockSz=b->remainToTransfer;
       else
-        AssertFatal(false,"error in epoll_wait\n");
-    }
+        blockSz= b->transferPtr+b->remainToTransfer < b->circularBufEnd ?
+                 b->remainToTransfer :
+                 b->circularBufEnd - 1 - b->transferPtr ;
 
-    //printf("waited iter=%d, res %d, waiting fd %d\n", iterations, nfds, nfds>=1? events[0].data.fd:-1);
+      int sz=recv(fd, b->transferPtr, blockSz, MSG_DONTWAIT);
 
-    for (int nbEv = 0; nbEv < nfds; ++nbEv) {
-      int fd=events[nbEv].data.fd;
+      if ( sz < 0 ) {
+        if ( errno != EAGAIN ) {
+          LOG_E(HW,"socket failed %s\n", strerror(errno));
+          abort();
+        }
+      } else if ( sz == 0 )
+        continue;
 
-      if (events[nbEv].events & EPOLLIN && fd == t->listen_sock) {
-        int conn_sock;
-        AssertFatal( (conn_sock = accept(t->listen_sock,NULL,NULL)) != -1, "");
-        allocCirBuf(t, conn_sock);
-        LOG_I(HW,"A ue connected\n");
-      } else {
-        if ( events[nbEv].events & (EPOLLHUP | EPOLLERR | EPOLLRDHUP) ) {
-          LOG_W(HW,"Lost socket\n");
-          removeCirBuf(t, fd);
+      AssertFatal((b->remainToTransfer-=sz) >= 0, "");
+      b->transferPtr+=sz;
 
-          if (t->typeStamp==MAGICUE)
-            exit(1);
+      if (b->transferPtr==b->circularBufEnd - 1)
+        b->transferPtr=(char *)b->circularBuf;
 
-          continue;
+      // check the header and start block transfer
+      if ( b->headerMode==true && b->remainToTransfer==0) {
+        AssertFatal( (t->typeStamp == MAGICUE  && b->th.magic==MAGICeNB) ||
+                     (t->typeStamp == MAGICeNB && b->th.magic==MAGICUE), "Socket Error in protocol");
+        b->headerMode=false;
+
+        if ( b->lastReceivedTS != b->th.timestamp) {
+          int nbAnt= b->th.nbAnt;
+
+          for (uint64_t index=b->lastReceivedTS; index < b->th.timestamp; index++ )
+            for (int a=0; a < nbAnt; a++)
+              b->circularBuf[(index*nbAnt+a)%CirSize]=0;
+
+          LOG_W(HW,"gap of: %ld in reception\n", b->th.timestamp-b->lastReceivedTS );
         }
 
-        buffer_t *b=&t->buf[fd];
+        b->lastReceivedTS=b->th.timestamp;
+        b->transferPtr=(char *)&b->circularBuf[b->lastReceivedTS%CirSize];
+        b->remainToTransfer=sampleToByte(b->th.size, b->th.nbAnt);
+      }
 
-        if ( b->circularBuf == NULL ) {
-          LOG_E(HW, "received data on not connected socket %d\n", events[nbEv].data.fd);
-          continue;
-        }
+      if ( b->headerMode==false ) {
+        b->lastReceivedTS=b->th.timestamp+b->th.size-byteToSample(b->remainToTransfer,b->th.nbAnt);
 
-        int blockSz;
+        if ( b->remainToTransfer==0) {
+          LOG_D(HW,"Completed block reception: %ld\n", b->lastReceivedTS);
 
-        if ( b->headerMode)
-          blockSz=b->remainToTransfer;
-        else
-          blockSz= b->transferPtr+b->remainToTransfer < b->circularBufEnd ?
-	    b->remainToTransfer :
-	    b->circularBufEnd - 1 - b->transferPtr ;
+          // First block in UE, resync with the eNB current TS
+          if ( t->nextTimestamp == 0 )
+            t->nextTimestamp=b->lastReceivedTS-b->th.size;
 
-        int sz=recv(fd, b->transferPtr, blockSz, MSG_DONTWAIT);
-
-        if ( sz < 0 ) {
-          if ( errno != EAGAIN ) {
-            LOG_E(HW,"socket failed %s\n", strerror(errno));
-            abort();
-          }
-        } else if ( sz == 0 )
-          continue;
-
-        AssertFatal((b->remainToTransfer-=sz) >= 0, "");
-        b->transferPtr+=sz;
-	if (b->transferPtr==b->circularBufEnd - 1)
-		b->transferPtr=(char*)b->circularBuf;
-
-        // check the header and start block transfer
-        if ( b->headerMode==true && b->remainToTransfer==0) {
-	  AssertFatal( (t->typeStamp == MAGICUE  && b->th.magic==MAGICeNB) ||
-                       (t->typeStamp == MAGICeNB && b->th.magic==MAGICUE), "Socket Error in protocol");
-          b->headerMode=false;
-          b->lastReceivedTS=b->th.timestamp;
-          b->transferPtr=(char *)&b->circularBuf[b->lastReceivedTS%CirSize];
-          b->remainToTransfer=sampleToByte(b->th.size, b->th.nbAnt);
-        }
-
-        if ( b->headerMode==false ) {
-	  b->lastReceivedTS=b->th.timestamp+b->th.size-byteToSample(b->remainToTransfer,b->th.nbAnt);
-	  if ( b->remainToTransfer==0) {
-	    completedABuffer=true;
-	    LOG_D(HW,"Completed block reception: %ld\n", b->lastReceivedTS);
-	    // First block in UE, resync with the eNB current TS
-	    if ( t->nextTimestamp == 0 )
-	      t->nextTimestamp=b->lastReceivedTS-b->th.size;
-	    b->headerMode=true;
-	    b->transferPtr=(char *)&b->th;
-	    b->remainToTransfer=sizeof(transferHeader);
-	    b->th.magic=-1;
-	  } 
+          b->headerMode=true;
+          b->transferPtr=(char *)&b->th;
+          b->remainToTransfer=sizeof(transferHeader);
+          b->th.magic=-1;
         }
       }
     }
   }
-  
-  return completedABuffer;
+
+  return nfds>0;
 }
 
 int tcp_bridge_read(openair0_device *device, openair0_timestamp *ptimestamp, void **samplesVoid, int nsamps, int nbAnt) {
@@ -317,7 +325,6 @@ int tcp_bridge_read(openair0_device *device, openair0_timestamp *ptimestamp, voi
 
   tcp_bridge_state_t *t = device->priv;
   LOG_D(HW, "Enter tcp_bridge_read, expect %d samples, will release at TS: %ld\n", nsamps, t->nextTimestamp+nsamps);
-
   // deliver data from received data
   // check if a UE is connected
   int first_sock;
@@ -329,14 +336,17 @@ int tcp_bridge_read(openair0_device *device, openair0_timestamp *ptimestamp, voi
   if ( first_sock ==  FD_SETSIZE ) {
     // no connected device (we are eNB, no UE is connected)
     if (!flushInput(t)) {
-      for (int x=0; x < nbAnt; x++) 
-	memset(samplesVoid[x],0,sampleToByte(nsamps,1));
+      for (int x=0; x < nbAnt; x++)
+        memset(samplesVoid[x],0,sampleToByte(nsamps,1));
+
       t->nextTimestamp+=nsamps;
       LOG_W(HW,"Generated void samples for Rx: %ld\n", t->nextTimestamp);
+
       for (int a=0; a<nbAnt; a++) {
-	sample_t *out=(sample_t *)samplesVoid[a];
-	for ( int i=0; i < nsamps; i++ )
-	  out[i]=0;
+        sample_t *out=(sample_t *)samplesVoid[a];
+
+        for ( int i=0; i < nsamps; i++ )
+          out[i]=0;
       }
 
       *ptimestamp = t->nextTimestamp-nsamps;
@@ -368,6 +378,7 @@ int tcp_bridge_read(openair0_device *device, openair0_timestamp *ptimestamp, voi
   // Clear the output buffer
   for (int a=0; a<nbAnt; a++) {
     sample_t *out=(sample_t *)samplesVoid[a];
+
     for ( int i=0; i < nsamps; i++ )
       out[i]=0;
   }
@@ -378,9 +389,10 @@ int tcp_bridge_read(openair0_device *device, openair0_timestamp *ptimestamp, voi
 
     if ( ptr->circularBuf && ptr->alreadyWrote ) {
       for (int a=0; a<nbAnt; a++) {
-	sample_t *out=(sample_t *)samplesVoid[a];
-	for ( int i=0; i < nsamps; i++ )
-	  out[i]+=ptr->circularBuf[(t->nextTimestamp+(a*nbAnt+i))%CirSize]<<1;
+        sample_t *out=(sample_t *)samplesVoid[a];
+
+        for ( int i=0; i < nsamps; i++ )
+          out[i]+=ptr->circularBuf[((t->nextTimestamp+i)*nbAnt+a)%CirSize]<<1;
       }
     }
   }
@@ -388,9 +400,9 @@ int tcp_bridge_read(openair0_device *device, openair0_timestamp *ptimestamp, voi
   *ptimestamp = t->nextTimestamp; // return the time of the first sample
   t->nextTimestamp+=nsamps;
   LOG_D(HW,"Rx to upper layer: %d from %ld to %ld, energy in first antenna %d\n",
-	nsamps,
-	*ptimestamp, t->nextTimestamp,
-	signal_energy(samplesVoid[0], nsamps));
+        nsamps,
+        *ptimestamp, t->nextTimestamp,
+        signal_energy(samplesVoid[0], nsamps));
   return nsamps;
 }
 
@@ -432,13 +444,12 @@ int device_init(openair0_device *device, openair0_config_t *openair0_cfg) {
   }
 
   tcp_bridge->typeStamp = strncasecmp(tcp_bridge->ip,"enb",3) == 0 ?
-    MAGICeNB:
-    MAGICUE;
+                          MAGICeNB:
+                          MAGICUE;
   LOG_I(HW,"tcp_bridge: running as %s\n", tcp_bridge-> typeStamp == MAGICeNB ? "eNB" : "UE");
-
   device->trx_start_func       = tcp_bridge->typeStamp == MAGICeNB ?
-    server_start :
-    start_ue;
+                                 server_start :
+                                 start_ue;
   device->trx_get_stats_func   = tcp_bridge_get_stats;
   device->trx_reset_stats_func = tcp_bridge_reset_stats;
   device->trx_end_func         = tcp_bridge_end;
@@ -447,16 +458,15 @@ int device_init(openair0_device *device, openair0_config_t *openair0_cfg) {
   device->trx_set_gains_func   = tcp_bridge_set_gains;
   device->trx_write_func       = tcp_bridge_write;
   device->trx_read_func      = tcp_bridge_read;
-   /* let's pretend to be a b2x0 */
+  /* let's pretend to be a b2x0 */
   device->type = USRP_B200_DEV;
   device->openair0_cfg=&openair0_cfg[0];
-
   device->priv = tcp_bridge;
+
   for (int i=0; i<FD_SETSIZE; i++)
     tcp_bridge->buf[i].conn_sock=-1;
+
   AssertFatal((tcp_bridge->epollfd = epoll_create1(0)) != -1,"");
-
   tcp_bridge->initialAhead=openair0_cfg[0].sample_rate/1000; // One sub frame
-
   return 0;
 }
