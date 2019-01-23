@@ -321,14 +321,20 @@ int8_t nr_rrc_ue_decode_NR_BCCH_BCH_Message(
                                                    (void **)&bcch_message,
                                                    (const void *)bufferP,
                                                    buffer_len );
-
     if ((dec_rval.code != RC_OK) || (dec_rval.consumed == 0)) {
-      printf("NR_BCCH_BCH decode error\n");
+      printf("NR_BCCH_BCH decode error (return value %d)\n",dec_rval.code);
       for (i=0; i<buffer_len; i++){
 	printf("%02x ",bufferP[i]);
       }
       printf("\n");
+      mib = NULL;
       // free the memory
+      SEQUENCE_free( &asn_DEF_NR_BCCH_BCH_Message, (void *)bcch_message, 1 );
+      return -1;
+    }
+    else if (bcch_message->message.present != NR_BCCH_BCH_MessageType_PR_mib) {
+      printf("NR_BCCH_BCH message type is not MIB\n");
+      mib = NULL;
       SEQUENCE_free( &asn_DEF_NR_BCCH_BCH_Message, (void *)bcch_message, 1 );
       return -1;
     }
@@ -340,7 +346,7 @@ int8_t nr_rrc_ue_decode_NR_BCCH_BCH_Message(
       //    sizeof(NR_MIB_t) );
       
       nr_rrc_mac_config_req_ue( 0, 0, 0, mib, NULL, NULL, NULL);
-    }
+    } 
     
     return 0;
 }
