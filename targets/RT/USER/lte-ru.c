@@ -158,7 +158,7 @@ static inline void fh_if4p5_south_out(RU_t *ru) {
   if (subframe_select(&ru->frame_parms,ru->proc.subframe_tx)!=SF_UL) {
     send_IF4p5(ru,ru->proc.frame_tx, ru->proc.subframe_tx, IF4p5_PDLFFT);
     ru->south_out_cnt++;
-    //printf("south_out_cnt %d, frame %d, subframe %d, RU %d\n",ru->south_out_cnt,ru->proc.frame_tx,ru->proc.subframe_tx,ru->idx);
+    LOG_I(PHY,"south_out_cnt %d, frame %d, subframe %d, RU %d\n",ru->south_out_cnt,ru->proc.frame_tx,ru->proc.subframe_tx,ru->idx);
   }
 /*if (ru == RC.ru[0] || ru == RC.ru[1]) {
     VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME( VCD_SIGNAL_DUMPER_VARIABLES_FRAME_NUMBER_TX0_RU+ru->idx, ru->proc.frame_tx );
@@ -419,7 +419,7 @@ void fh_if4p5_north_asynch_in(RU_t *ru,int *frame,int *subframe) {
   symbol_number = 0;
   symbol_mask = 0;
   symbol_mask_full = ((subframe_select(fp,*subframe) == SF_S) ? (1<<fp->dl_symbols_in_S_subframe) : (1<<fp->symbols_per_tti))-1;
-  LOG_D(PHY,"fh_if4p5_north_asynch_in: RU %d, frame %d, subframe %d\n",ru->idx,*frame,*subframe);
+  LOG_D(PHY,"fh_if4p5_north_asynch_in: RU %d, frame %d, subframe %d, packet_type %x\n",ru->idx,*frame,*subframe,packet_type);
   do {   
     recv_IF4p5(ru, &frame_tx, &subframe_tx, &packet_type, &symbol_number);
     LOG_D(PHY,"income frame.subframe %d.%d, our frame.subframe.symbol_number %d.%d.%d (symbol mask %x)\n",frame_tx,subframe_tx,*frame,*subframe,symbol_number,symbol_mask);
@@ -501,11 +501,11 @@ void fh_if4p5_north_out(RU_t *ru) {
  	 VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME(VCD_SIGNAL_DUMPER_VARIABLES_SUBFRAME_NUMBER_IF4P5_NORTH_OUT, proc->subframe_rx );
          VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME(VCD_SIGNAL_DUMPER_VARIABLES_FRAME_NUMBER_IF4P5_NORTH_OUT, proc->frame_rx );
   }
-  LOG_D(PHY,"fh_if4p5_north_out: Sending IF4p5_PULFFT SFN.SF %d.%d\n",proc->frame_rx,proc->subframe_rx);
   if ((fp->frame_type == TDD) && (subframe_select(fp,subframe)!=SF_UL)) {
     /// **** in TDD during DL send_IF4 of ULTICK to RCC **** ///
     //send_IF4p5(ru, proc->frame_rx, proc->subframe_rx, IF4p5_PULTICK);
     send_IF4p5(ru, proc->frame_rx, proc->subframe_rx, IF4p5_PULCALIB);
+    LOG_D(PHY,"fh_if4p5_north_out: Sending IF4p5_PULCALIB SFN.SF %d.%d\n",proc->frame_rx,proc->subframe_rx);
     ru->north_out_cnt++;
     return;
   }
@@ -803,9 +803,10 @@ void tx_rf(RU_t *ru) {
 				      siglen+sf_extension,
 				      ru->nb_tx,
 				      flags);
- LOG_I(PHY,"************** RU_id %d,RU_tag %d,timestamp %d,offset %d,extension %d,olo %d\n",ru->idx,ru->tag,proc->timestamp_tx,ru->ts_offset,sf_extension,
-									     proc->timestamp_tx+ru->ts_offset-ru->openair0_cfg.tx_sample_advance-sf_extension);
-    if (ru->is_slave==1 && ru->state==RU_RUN && proc->frame_tx%ru->p==ru->tag-1 && SF_type == SF_S) {
+ //LOG_I(PHY,"************** RU_id %d,RU_tag %d,timestamp %d,offset %d,extension %d,olo %d\n",ru->idx,ru->tag,proc->timestamp_tx,ru->ts_offset,sf_extension,
+//									     proc->timestamp_tx+ru->ts_offset-ru->openair0_cfg.tx_sample_advance-sf_extension);
+    if (ru->is_slave==1 && ru->state==RU_RUN && proc->frame_tx%ru->p==ru->tag-1 && proc->subframe_tx==1) {
+	//LOG_I(PHY,"******** subframe %d Slave sends DMRS\n",proc->subframe_tx);
     	txs = ru->rfdevice.trx_write_func(&ru->rfdevice,
                                       proc->timestamp_tx+(ru->ts_offset+10*1024+80+10*72)-ru->openair0_cfg.tx_sample_advance-sf_extension,
                                       txp1,

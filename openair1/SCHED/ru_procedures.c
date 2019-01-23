@@ -714,7 +714,7 @@ void ru_fep_full_2thread(RU_t *ru) {
   }
 
   if (proc->subframe_rx==1 && ru->is_slave==0) {
-
+        //LOG_I(PHY,"******************** Master receives DMRS from slave\n");   
         ulsch_extract_rbs_single(ru->common.rxdataF,
                                  calibration->rxdataF_ext,
                                  0,
