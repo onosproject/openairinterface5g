@@ -638,7 +638,7 @@ static void *UE_thread_synch(void *arg)
 	UE->rfdevice.trx_set_freq_func(&UE->rfdevice,&openair0_cfg[0],0);
 	//UE->rfdevice.trx_set_gains_func(&openair0,&openair0_cfg[0]);
 	//UE->rfdevice.trx_stop_func(&UE->rfdevice);
-	sleep(1);
+	usleep(10000);
 	init_frame_parms(&UE->frame_parms,1);
 	/*if (UE->rfdevice.trx_start_func(&UE->rfdevice) != 0 ) {
 	  LOG_E(HW,"Could not start the device\n");
@@ -1478,10 +1478,10 @@ void *UE_thread(void *arg) {
     }
 #endif
 
-    AssertFatal ( 0== pthread_mutex_lock(&UE->proc.mutex_synch), "");
+    AssertFatal ( 0 == pthread_mutex_lock(&UE->proc.mutex_synch), "");
     int instance_cnt_synch = UE->proc.instance_cnt_synch;
     int is_synchronized    = UE->is_synchronized;
-    AssertFatal ( 0== pthread_mutex_unlock(&UE->proc.mutex_synch), "");
+    AssertFatal ( 0 == pthread_mutex_unlock(&UE->proc.mutex_synch), "");
 
     if (is_synchronized == 0) {
       if (instance_cnt_synch < 0) {  // we can invoke the synch
@@ -1511,10 +1511,10 @@ void *UE_thread(void *arg) {
 	  for (int i=0; i<UE->frame_parms.nb_antennas_tx; i++)
 	    free(dummy_tx[i]);
 	}
-	AssertFatal ( 0== pthread_mutex_lock(&UE->proc.mutex_synch), "");
+	AssertFatal( 0 == pthread_mutex_lock(&UE->proc.mutex_synch), "");
 	AssertFatal( 0 == ++UE->proc.instance_cnt_synch, "[SCHED][UE] UE sync thread busy!!\n" );
         AssertFatal( 0 == pthread_cond_signal(&UE->proc.cond_synch), "");
-	AssertFatal ( 0== pthread_mutex_unlock(&UE->proc.mutex_synch), "");
+	AssertFatal( 0 == pthread_mutex_unlock(&UE->proc.mutex_synch), "");
       } else {
 	// grab 10 ms of signal into dummy buffer to wait result of sync detection
 	if (UE->mode != loop_through_memory) {
