@@ -545,7 +545,7 @@ static void *UE_thread_synch(void *arg)
       // the thread waits here most of the time
       pthread_cond_wait( &UE->proc.cond_synch, &UE->proc.mutex_synch );
     AssertFatal ( 0== pthread_mutex_unlock(&UE->proc.mutex_synch), "");
-
+    LOG_I(PHY,"Starting a sync process\n"); 
     switch (sync_mode) {
     case pss:
       LOG_I(PHY,"[SCHED][UE] Scanning band %d (%d), freq %u\n",bands_to_scan.band_info[current_band].band, current_band,bands_to_scan.band_info[current_band].dl_min+current_offset);
@@ -578,11 +578,7 @@ static void *UE_thread_synch(void *arg)
 
     case pbch:
 
-#if DISABLE_LOG_X
-      printf("[UE thread Synch] Running Initial Synch (mode %d)\n",UE->mode);
-#else
       LOG_I(PHY, "[UE thread Synch] Running Initial Synch (mode %d)\n",UE->mode);
-#endif
       if (initial_sync( UE, UE->mode ) == 0) {
 
 	LOG_I( HW, "Got synch: hw_slot_offset %d, carrier off %d Hz, rxgain %d (DL %u, UL %u), UE_scan_carrier %d\n",
@@ -702,19 +698,11 @@ static void *UE_thread_synch(void *arg)
 	    return &UE_thread_synch_retval; // not reached
 	  }
 	}
-#if DISABLE_LOG_X
-	printf("[initial_sync] trying carrier off %d Hz, rxgain %d (DL %u, UL %u)\n",
-	       freq_offset,
-	       UE->rx_total_gain_dB,
-	       downlink_frequency[0][0]+freq_offset,
-	       downlink_frequency[0][0]+uplink_frequency_offset[0][0]+freq_offset );
-#else
 	LOG_I(PHY, "[initial_sync] trying carrier off %d Hz, rxgain %d (DL %u, UL %u)\n",
 	      freq_offset,
 	      UE->rx_total_gain_dB,
 	      downlink_frequency[0][0]+freq_offset,
 	      downlink_frequency[0][0]+uplink_frequency_offset[0][0]+freq_offset );
-#endif
 
 	for (i=0; i<openair0_cfg[UE->rf_map.card].rx_num_channels; i++) {
 	  openair0_cfg[UE->rf_map.card].rx_freq[UE->rf_map.chain+i] = downlink_frequency[CC_id][i]+freq_offset;
@@ -1532,7 +1520,7 @@ void *UE_thread(void *arg) {
 
   PHY_VARS_UE *UE = (PHY_VARS_UE *) arg;
   //  int tx_enabled = 0;
-  openair0_timestamp timestamp,timestamp1;
+  openair0_timestamp timestamp;
   void* rxp[NB_ANTENNAS_RX], *txp[NB_ANTENNAS_TX];
   int start_rx_stream = 0;
   int i;
@@ -1781,13 +1769,15 @@ void *UE_thread(void *arg) {
                     if( sub_frame==9) {
                         // read in first symbol of next frame and adjust for timing drift
                         int first_symbols=writeBlockSize-readBlockSize;
-                        if ( first_symbols > 0 )
-                            AssertFatal(first_symbols ==
-                                        UE->rfdevice.trx_read_func(&UE->rfdevice,
-                                                                   &timestamp1,
-                                                                   (void**)UE->common_vars.rxdata,
-                                                                   first_symbols,
-                                                                   UE->frame_parms.nb_antennas_rx),"");
+                        if ( first_symbols > 0 ) {
+			  openair0_timestamp timestamp1;
+			  AssertFatal(first_symbols ==
+				      UE->rfdevice.trx_read_func(&UE->rfdevice,
+								 &timestamp1,
+								 (void**)UE->common_vars.rxdata,
+								 first_symbols,
+								 UE->frame_parms.nb_antennas_rx),"");
+			}
                         if ( first_symbols <0 )
                             LOG_E(PHY,"can't compensate: diff =%d\n", first_symbols);
                     }

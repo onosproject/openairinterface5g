@@ -188,7 +188,7 @@ static int sync_to_gps(openair0_device *device) {
         num_gps_locked++;
         std::cout << boost::format("GPS Locked\n");
       } else {
-        LOG_W(HW,"WARNING:  GPS not locked - time will not be accurate until locked\n");
+        LOG_W(HW,"GPS not locked - time will not be accurate until locked" << std::endl;
       }
 
       //Set to GPS time
