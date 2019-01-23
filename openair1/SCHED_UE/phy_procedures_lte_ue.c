@@ -2397,8 +2397,7 @@ void ue_pbch_procedures(uint8_t eNB_id,PHY_VARS_UE *ue,UE_rxtx_proc_t *proc, uin
     }
 
     // if this is the first PBCH after initial synchronization and no timing correction is performed, make L1 state = PRACH
-    if (ue->UE_mode[eNB_id]==NOT_SYNCHED) ue->UE_mode[eNB_id] = PRACH;
-    //if (ue->UE_mode[eNB_id]==NOT_SYNCHED && ue->no_timing_correction == 1) ue->UE_mode[eNB_id] = PRACH;
+    if (ue->UE_mode[eNB_id]==NOT_SYNCHED && ue->no_timing_correction == 1) ue->UE_mode[eNB_id] = PRACH;
     if (first_run) {
       first_run = 0;
       proc->frame_rx = (proc->frame_rx & 0xFFFFFC00) | (frame_tx & 0x000003FF);
