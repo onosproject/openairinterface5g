@@ -3,7 +3,7 @@
 *where the conflicts are not resolved completely yet                                                  *
 *******************************************************************************************************
 
-cmake_targets/CMakeLists.txt 		(complicated and pending)
+cmake_targets/CMakeLists.txt 		(complicated)
 common/config/config_cmdline.c 		(Done but not sure)
 common/config/config_userapi.c		
 d2d_emulator_setup.txt
@@ -134,6 +134,8 @@ targets/RT/USER/lte-ue.c					 (In UE_thread_synch() the following part referring
   												and then later:
   												UE->proc.proc_rxtx[i].instance_cnt_rxtx = -1;)
 
+targets/RT/USER/lte-uesoftmodem.c              (Complicated in main())
+
 
 *******************************************************************************************************
 *Below is the pending list of files with conflicts that remain to be resolved                         *
@@ -143,13 +145,8 @@ targets/RT/USER/lte-ue.c					 (In UE_thread_synch() the following part referring
 	deleted by them: openair1/SCHED/pusch_pc.c		
 	deleted by them: openair2/UTIL/LOG/log.c
 	deleted by them: openair2/UTIL/LOG/log.h
-	deleted by them: targets/RT/USER/lte-ran.c
-	both modified:   targets/RT/USER/lte-uesoftmodem.c (PENDING up to line 1022)
+	deleted by them: targets/RT/USER/lte-ran.c 
 	deleted by them: targets/SIMU/USER/channel_sim.c (Shouldn't remove that)
-
-
-
-
 
 
 
@@ -246,8 +243,8 @@ targets/RT/USER/lte-ue.c					 (In UE_thread_synch() the following part referring
 	both modified:   targets/RT/USER/lte-ru.c
 	both modified:   targets/RT/USER/lte-softmodem.c
 	both modified:   targets/RT/USER/lte-softmodem.h        
-	both modified:   targets/RT/USER/lte-ue.c				#Conflicts solved up to here
-	both modified:   targets/RT/USER/lte-uesoftmodem.c
+	both modified:   targets/RT/USER/lte-ue.c				
+	both modified:   targets/RT/USER/lte-uesoftmodem.c          #Conflicts solved up to here
 	deleted by them: targets/SIMU/USER/channel_sim.c (Shouldn't remove that)
 
 Changes not staged for commit:

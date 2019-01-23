@@ -111,19 +111,12 @@ int nfapi_sync_var=-1; //!< protected by mutex \ref nfapi_sync_mutex
 
 uint8_t nfapi_mode = 0;
 
-<<<<<<< HEAD
 // Enabling D2D operations. Currently hardcoded but it should eventually be an execution option.
 uint8_t D2D_en = 0;
 
 uint16_t sf_ahead=2;
 
 //char *emul_iface;
-=======
-uint16_t sf_ahead=2;
-
-char *emul_iface;
-
->>>>>>> main/develop
 
 pthread_cond_t sync_cond;
 pthread_mutex_t sync_mutex;
@@ -207,29 +200,18 @@ static LTE_DL_FRAME_PARMS      *frame_parms[MAX_NUM_CCs];
 uint8_t exit_missed_slots=1;
 uint64_t num_missed_slots=0; // counter for the number of missed slots
 
-<<<<<<< HEAD
 
-extern void reset_opp_meas(void);
-extern void print_opp_meas(void);
+//extern void reset_opp_meas(void);
+//extern void print_opp_meas(void);
 extern void init_UE_stub_single_thread(int nb_inst,int eMBMS_active, int uecap_xer_in, char *emul_iface, int simL1);
-=======
-/* prototypes from function implemented in lte-ue.c, probably should be elsewhere in a include
-   file */
-extern void init_UE_stub_single_thread(int nb_inst,int eMBMS_active, int uecap_xer_in, char *emul_iface);
->>>>>>> main/develop
 
 PHY_VARS_UE* init_ue_vars(LTE_DL_FRAME_PARMS *frame_parms,
 			  uint8_t UE_id,
-<<<<<<< HEAD
 			  uint8_t abstraction_flag,
 			  int sidelink_active);
   
-=======
-			  uint8_t abstraction_flag);
-
 extern void get_uethreads_params(void);
 
->>>>>>> main/develop
 int transmission_mode=1;
 
 
@@ -570,15 +552,9 @@ static void get_options(void) {
     // Read it in and store in asn1c data structures
     sprintf(uecap_xer,"%stargets/PROJECTS/GENERIC-LTE-EPC/CONF/UE_config.xml",getenv("OPENAIR_HOME"));
     printf("%s\n",uecap_xer);
-<<<<<<< HEAD
     if(nfapi_mode!=3 && D2D_en != 1)
     	uecap_xer_in=1;
   } /* UE with config file  */
-=======
-    if(nfapi_mode!=3)
-    	uecap_xer_in=1;
-	} *//* UE with config file  */
->>>>>>> main/develop
 }
 
 
@@ -778,6 +754,7 @@ int restart_L1L2(module_id_t enb_id)
 	return 0;
 }
 
+
 int main( int argc, char **argv )
 {
 #if defined (XFORMS)
@@ -786,10 +763,6 @@ int main( int argc, char **argv )
 
   int CC_id;
   uint8_t  abstraction_flag=0;
-
-  // Default value for the number of UEs. It will hold,
-  // if not changed from the command line option --num-ues
-  NB_UE_INST=1;
 
   // Default value for the number of UEs. It will hold,
   // if not changed from the command line option --num-ues
@@ -816,30 +789,13 @@ int main( int argc, char **argv )
 
   printf("Reading in command-line options\n");
 
-<<<<<<< HEAD
-  get_options ();
-
-  printf("NFAPI_MODE value: %d \n", nfapi_mode);
-=======
   for (int i=0;i<MAX_NUM_CCs;i++) tx_max_power[i]=23;
+
   CONFIG_SETRTFLAG(CONFIG_NOCHECKUNKOPT); 
+  printf("NFAPI_MODE value: %d \n", nfapi_mode);
   get_options ();
->>>>>>> main/develop
 
   printf("D2D_en value: %d \n \n", D2D_en);
-
-  // Panos: Not sure if the following is needed here
-  /*if (CONFIG_ISFLAGSET(CONFIG_ABORT)) {
-      if (UE_flag == 0) {
-        fprintf(stderr,"Getting configuration failed\n");
-        exit(-1);
-      }
-      else {
-        printf("Setting nfapi mode to UE_STUB_OFFNET\n");
-        nfapi_mode = 4;
-      }
-    }*/
-
 
   if (SLonly == 1 || synchRef==1) sidelink_active=1;
 
@@ -853,7 +809,7 @@ int main( int argc, char **argv )
 
   printf("NFAPI_MODE value: %d \n", nfapi_mode);
 
-
+/*
 <<<<<<< HEAD
     set_comp_log(HW,      LOG_DEBUG,  LOG_HIGH, 1);
     set_comp_log(PHY,     LOG_INFO,   LOG_HIGH, 1);
@@ -868,11 +824,10 @@ int main( int argc, char **argv )
     set_comp_log(NAS,     LOG_INFO,   LOG_HIGH, 1);
 # endif
 =======
-
+*/
 
 #if T_TRACER
   T_Config_Init();
->>>>>>> main/develop
 #endif
   CONFIG_CLEARRTFLAG(CONFIG_NOCHECKUNKOPT); 
 
@@ -912,27 +867,16 @@ int main( int argc, char **argv )
 #endif
 #endif
 
-<<<<<<< HEAD
-#ifdef Rel14
+//TTN for D2D
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
   if (sidelink_active == 1) {
-    printf ("RRC control socket\n");
-    rrc_control_socket_init();
-    printf ("PDCP PC5S socket\n");
-    pdcp_pc5_socket_init();
+	printf ("RRC control socket\n");
+	rrc_control_socket_init();
+	printf ("PDCP PC5S socket\n");
+	pdcp_pc5_socket_init();
   }
 #endif
 
-#if !defined(ENABLE_ITTI)
-=======
-//TTN for D2D
-#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
-  printf ("RRC control socket\n");
-  rrc_control_socket_init();
-  printf ("PDCP PC5S socket\n");
-  pdcp_pc5_socket_init();
-#endif
-
->>>>>>> main/develop
   // to make a graceful exit when ctrl-c is pressed
   signal(SIGSEGV, signal_handler);
   signal(SIGINT, signal_handler);
@@ -955,39 +899,6 @@ int main( int argc, char **argv )
   }
 
 
-
-  NB_INST=1;
-  if(nfapi_mode == 3){
-	  PHY_vars_UE_g = malloc(sizeof(PHY_VARS_UE**)*NB_UE_INST);
-	  	  for (int i=0; i<NB_UE_INST; i++) {
-	  		  for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
-	  			PHY_vars_UE_g[i] = malloc(sizeof(PHY_VARS_UE*)*MAX_NUM_CCs);
-	  			PHY_vars_UE_g[i][CC_id] = init_ue_vars(frame_parms[CC_id], i,abstraction_flag);
-
-
-<<<<<<< HEAD
-  // Panos: From old version
-  /*if (UE_flag==1) {
-	  PHY_vars_UE_g = malloc(sizeof(PHY_VARS_UE**)*NB_UE_INST);
-	  for (int i=0; i<NB_UE_INST; i++) {
-		  for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
-
-			  PHY_vars_UE_g[i] = malloc(sizeof(PHY_VARS_UE*)*MAX_NUM_CCs);
-			  PHY_vars_UE_g[i][CC_id] = init_ue_vars(frame_parms[CC_id], i,abstraction_flag);
-
-			  UE[CC_id] = PHY_vars_UE_g[i][CC_id];
-			  printf("PHY_vars_UE_g[inst][%d] = %p\n",CC_id,UE[CC_id]);
-
-			  if (phy_test==1)
-				  UE[CC_id]->mac_enabled = 0;
-			  else
-				  UE[CC_id]->mac_enabled = 1;
-		  }
-	  }
-  }*/
-
-
-
   //NB_UE_INST=1;
   NB_INST=1;
   if(nfapi_mode == 3){
@@ -995,81 +906,8 @@ int main( int argc, char **argv )
 	  	  for (int i=0; i<NB_UE_INST; i++) {
 	  		  for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
 	  			PHY_vars_UE_g[i] = malloc(sizeof(PHY_VARS_UE*)*MAX_NUM_CCs);
-	  			PHY_vars_UE_g[i][CC_id] = init_ue_vars(frame_parms[CC_id], 0,abstraction_flag,sidelink_active);
+	  			PHY_vars_UE_g[i][CC_id] = init_ue_vars(frame_parms[CC_id], i,abstraction_flag,sidelink_active);
 
-	  			UE[CC_id] = PHY_vars_UE_g[i][CC_id];
-	  			printf("PHY_vars_UE_g[inst][%d] = %p\n",CC_id,UE[CC_id]);
-
-	  			if (phy_test==1)
-	  				UE[CC_id]->mac_enabled = 0;
-	  			else
-	  				UE[CC_id]->mac_enabled = 1;
-	  		}
-	  	  }
-  }
-  else{
-
-
-  for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
-      //NB_UE_INST=1;
-      NB_INST=1;
-      PHY_vars_UE_g = malloc(sizeof(PHY_VARS_UE**));
-      PHY_vars_UE_g[0] = malloc(sizeof(PHY_VARS_UE*)*MAX_NUM_CCs);
-      PHY_vars_UE_g[0][CC_id] = init_ue_vars(frame_parms[CC_id], 0,abstraction_flag,sidelink_active);
-      UE[CC_id] = PHY_vars_UE_g[0][CC_id];
-      printf("PHY_vars_UE_g[0][%d] = %p\n",CC_id,UE[CC_id]);
-
-      if (phy_test==1)
-	UE[CC_id]->mac_enabled = 0;
-      else
-	UE[CC_id]->mac_enabled = 1;
-
-      if (UE[CC_id]->mac_enabled == 0) {  //set default UL parameters for testing mode
-	for (i=0; i<NUMBER_OF_CONNECTED_eNB_MAX; i++) {
-	  UE[CC_id]->pusch_config_dedicated[i].betaOffset_ACK_Index = beta_ACK;
-	  UE[CC_id]->pusch_config_dedicated[i].betaOffset_RI_Index  = beta_RI;
-	  UE[CC_id]->pusch_config_dedicated[i].betaOffset_CQI_Index = beta_CQI;
-	  
-	  UE[CC_id]->scheduling_request_config[i].sr_PUCCH_ResourceIndex = 0;
-	  UE[CC_id]->scheduling_request_config[i].sr_ConfigIndex = 7+(0%3);
-	  UE[CC_id]->scheduling_request_config[i].dsr_TransMax = sr_n4;
-	}
-      }
-
-      UE[CC_id]->UE_scan = UE_scan;
-      UE[CC_id]->UE_scan_carrier = UE_scan_carrier;
-      UE[CC_id]->mode    = mode;
-      printf("UE[%d]->mode = %d\n",CC_id,mode);
-
-      if (UE[CC_id]->mac_enabled == 1) {
-	UE[CC_id]->pdcch_vars[0][0]->crnti = 0x1234;
-	UE[CC_id]->pdcch_vars[1][0]->crnti = 0x1234;
-      }else {
-	UE[CC_id]->pdcch_vars[0][0]->crnti = 0x1235;
-	UE[CC_id]->pdcch_vars[1][0]->crnti = 0x1235;
-      }
-      UE[CC_id]->rx_total_gain_dB =  (int)rx_gain[CC_id][0] + rx_gain_off;
-      UE[CC_id]->tx_power_max_dBm = tx_max_power[CC_id];
-
-      if (frame_parms[CC_id]->frame_type==FDD) {
-	UE[CC_id]->N_TA_offset = 0;
-      }
-      else {
-	if (frame_parms[CC_id]->N_RB_DL == 100)
-	  UE[CC_id]->N_TA_offset = 624;
-	else if (frame_parms[CC_id]->N_RB_DL == 50)
-	  UE[CC_id]->N_TA_offset = 624/2;
-	else if (frame_parms[CC_id]->N_RB_DL == 25)
-	  UE[CC_id]->N_TA_offset = 624/4;
-
-    }
-    init_openair0();
-  }
-
-
-  printf("Runtime table\n");
-  fill_modeled_runtime_table(runtime_phy_rx,runtime_phy_tx);
-=======
 	  			if (get_softmodem_params()->phy_test==1)
 	  				PHY_vars_UE_g[i][CC_id]->mac_enabled = 0;
 	  			else
@@ -1087,41 +925,46 @@ int main( int argc, char **argv )
     RCConfig_sim();
   }
 
+  /*printf("Runtime table\n");
+  fill_modeled_runtime_table(runtime_phy_rx,runtime_phy_tx);*/
+
+
+
+// source code written in below moved to later to avoid keeping waiting for nfapi_sync_cond in wait_nfapi_init.
+/*
   // start the main UE threads
   int eMBMS_active = 0;
-
-  if (nfapi_mode==3) // UE-STUB-PNF
-  {
-      config_sync_var=0;
-      wait_nfapi_init("main?");
-      //Panos: Temporarily we will be using single set of threads for multiple UEs.
-      //init_UE_stub(1,eMBMS_active,uecap_xer_in,emul_iface);
-      init_UE_stub_single_thread(NB_UE_INST,eMBMS_active,uecap_xer_in,emul_iface);
-  }
+  if (nfapi_mode==3 || D2D_en == 1) // UE-STUB-PNF or D2D (offnet-emulation) or both(D2D on-net)
+	  {
+	  config_sync_var=0;
+	  if(nfapi_mode==3)
+		  wait_nfapi_init("main?");
+	  //Temporarily we will be using single set of threads for multiple UEs.
+	  //init_UE_stub(1,eMBMS_active,uecap_xer_in,emul_iface);
+	  //LOG_I(MAC, "Panos-D: Interface name: %s", &emul_iface);
+	  init_UE_stub_single_thread(NB_UE_INST,eMBMS_active,uecap_xer_in,&emul_iface, simL1);
+	  }
   else {
-      init_UE(NB_UE_INST,eMBMS_active,uecap_xer_in,0,get_softmodem_params()->phy_test,UE_scan,UE_scan_carrier,mode,(int)rx_gain[0][0],tx_max_power[0],
-              frame_parms[0]);
+	  init_UE(NB_UE_INST,eMBMS_active,uecap_xer_in,0,get_softmodem_params()->phy_test,UE_scan,UE_scan_carrier,mode,(int)rx_gain[0][0],tx_max_power[0],
+			  frame_parms[0], sidelink_active,SLonly,synchRef,slsynconly,SLSCHtest);
   }
-
 
   if (get_softmodem_params()->phy_test==0) {
-    printf("Filling UE band info\n");
-    fill_ue_band_info();
-    dl_phy_sync_success (0, 0, 0, 1);
+	  printf("Filling UE band info\n");
+      fill_ue_band_info();
+      dl_phy_sync_success (0, 0, 0, 1);
   }
 
   if (nfapi_mode!=3){
-      number_of_cards = 1;
+	  number_of_cards = 1;
       for(CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
               PHY_vars_UE_g[0][CC_id]->rf_map.card=0;
               PHY_vars_UE_g[0][CC_id]->rf_map.chain=CC_id+(get_softmodem_params()->chain_offset);
       }
   }
-
-  
->>>>>>> main/develop
+*/
   cpuf=get_cpu_freq_GHz();
-  }
+  
   
   
   
@@ -1171,11 +1014,7 @@ int main( int argc, char **argv )
       printf("cannot create ITTI tasks\n");
       exit(-1); // need a softer mode
     }
-<<<<<<< HEAD
-    if(nfapi_mode==3){ //Panos: Here we should add another nfapi_mode for the case of Supervised LTE-D2D
-=======
     if(nfapi_mode==3){ // Here we should add another nfapi_mode for the case of Supervised LTE-D2D
->>>>>>> main/develop
     	UE_config_stub_pnf();
     }
     printf("ITTI tasks created\n");
@@ -1189,6 +1028,8 @@ int main( int argc, char **argv )
 
   const char *nfapi_mode_str = "<UNKNOWN>";
 
+// start the main UE threads
+  int eMBMS_active = 0;
     switch(nfapi_mode)
     {
       case 0:
@@ -1211,6 +1052,36 @@ int main( int argc, char **argv )
         break;
     }
     printf("NFAPI MODE:%s\n", nfapi_mode_str);
+
+
+  if (nfapi_mode==3 || D2D_en == 1) // UE-STUB-PNF or D2D (offnet-emulation) or both(D2D on-net)
+	  {
+	  config_sync_var=0;
+	  if(nfapi_mode==3)
+		  wait_nfapi_init("main?");
+	  //Temporarily we will be using single set of threads for multiple UEs.
+	  //init_UE_stub(1,eMBMS_active,uecap_xer_in,emul_iface);
+	  //LOG_I(MAC, "Panos-D: Interface name: %s", &emul_iface);
+	  init_UE_stub_single_thread(NB_UE_INST,eMBMS_active,uecap_xer_in,&emul_iface, simL1);
+	  }
+  else {
+	  init_UE(NB_UE_INST,eMBMS_active,uecap_xer_in,0,get_softmodem_params()->phy_test,UE_scan,UE_scan_carrier,mode,(int)rx_gain[0][0],tx_max_power[0],
+			  frame_parms[0], sidelink_active,SLonly,synchRef,slsynconly,SLSCHtest);
+  }
+
+  if (get_softmodem_params()->phy_test==0) {
+	  printf("Filling UE band info\n");
+      fill_ue_band_info();
+      dl_phy_sync_success (0, 0, 0, 1);
+  }
+
+  if (nfapi_mode!=3){
+	  number_of_cards = 1;
+      for(CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
+              PHY_vars_UE_g[0][CC_id]->rf_map.card=0;
+              PHY_vars_UE_g[0][CC_id]->rf_map.chain=CC_id+(get_softmodem_params()->chain_offset);
+      }
+  }
 
 
   // connect the TX/RX buffers
@@ -1279,77 +1150,16 @@ int main( int argc, char **argv )
   }
   
 #endif
-<<<<<<< HEAD
-  
-  rt_sleep_ns(10*100000000ULL);
-
-  const char *nfapi_mode_str = "<UNKNOWN>";
-
-    switch(nfapi_mode)
-    {
-      case 0:
-        nfapi_mode_str = "MONOLITHIC";
-        break;
-      case 1:
-        nfapi_mode_str = "PNF";
-        break;
-      case 2:
-        nfapi_mode_str = "VNF";
-        break;
-      case 3:
-        nfapi_mode_str = "UE_STUB_PNF";
-        break;
-      case 4:
-        nfapi_mode_str = "UE_STUB_OFFNET";
-        break;
-      default:
-        nfapi_mode_str = "<UNKNOWN NFAPI MODE>";
-        break;
-    }
-    printf("NFAPI MODE:%s\n", nfapi_mode_str);
-
-
-  // start the main threads
-    int eMBMS_active = 0;
-
-    if (nfapi_mode==3 || D2D_en == 1) // UE-STUB-PNF or D2D (offnet) or both(D2D on-net)
-    {
-    	config_sync_var=0;
-    	if(nfapi_mode==3)
-    		wait_nfapi_init("main?");
-    	//Panos: Temporarily we will be using single set of threads for multiple UEs.
-    	//init_UE_stub(1,eMBMS_active,uecap_xer_in,emul_iface);
-    	//LOG_I(MAC, "Panos-D: Interface name: %s", &emul_iface);
-    	init_UE_stub_single_thread(NB_UE_INST,eMBMS_active,uecap_xer_in,&emul_iface, simL1);
-    }
-    else {
-    	init_UE(1,eMBMS_active,uecap_xer_in,0,sidelink_active,SLonly,synchRef,slsynconly,SLSCHtest);
-    }
-
-    if (phy_test==0) {
-      printf("Filling UE band info\n");
-      fill_ue_band_info();
-      dl_phy_sync_success (0, 0, 0, 1);
-    }
-
-    if (nfapi_mode!=3){
-    	number_of_cards = 1;
-    	for(CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
-    		PHY_vars_UE_g[0][CC_id]->rf_map.card=0;
-    		PHY_vars_UE_g[0][CC_id]->rf_map.chain=CC_id+chain_offset;
-    	}
-    }
-
-=======
   ret=config_check_cmdlineopt(CONFIG_CHECKALLSECTIONS);
   if (ret != 0) {
      LOG_E(ENB_APP, "%i unknown options in command line (invalid section name)\n",ret);
      exit_fun("");
   }
->>>>>>> main/develop
+
 
   printf("Sending sync to all threads (%p,%p,%p)\n",&sync_var,&sync_cond,&sync_mutex);
 
+/*
 <<<<<<< HEAD
     for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
       
@@ -1382,8 +1192,8 @@ int main( int argc, char **argv )
   
   printf("Sending sync to all threads\n");
 =======
->>>>>>> main/develop
-  
+>>>>>>> main/develop*/
+
   pthread_mutex_lock(&sync_mutex);
   sync_var=0;
   pthread_cond_broadcast(&sync_cond);
