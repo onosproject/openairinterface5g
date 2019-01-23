@@ -49,6 +49,7 @@ typedef struct {
   int listen_sock, epollfd;
   uint64_t nextTimestamp;
   uint64_t typeStamp;
+  uint64_t initialAhead;
   char *ip;
   buffer_t buf[FD_SETSIZE];
 } tcp_bridge_state_t;
@@ -124,25 +125,8 @@ void setblocking(int sock, enum blocking_t active) {
   AssertFatal(fcntl(sock, F_SETFL, opts) >= 0, "");
 }
 
-
-tcp_bridge_state_t *init_bridge(openair0_device *device) {
-  tcp_bridge_state_t *tcp_bridge;
-
-  if (device->priv)
-    tcp_bridge=(tcp_bridge_state_t *) device->priv;
-  else
-    AssertFatal(((tcp_bridge=(tcp_bridge_state_t *)calloc(sizeof(tcp_bridge_state_t),1))) != NULL, "");
-
-  for (int i=0; i<FD_SETSIZE; i++)
-    tcp_bridge->buf[i].conn_sock=-1;
-
-  device->priv = tcp_bridge;
-  AssertFatal((tcp_bridge->epollfd = epoll_create1(0)) != -1,"");
-  return tcp_bridge;
-}
-
 int server_start(openair0_device *device) {
-  tcp_bridge_state_t *t = init_bridge(device);
+  tcp_bridge_state_t *t = (tcp_bridge_state_t *) device->priv;
   t->typeStamp=MAGICeNB;
   AssertFatal((t->listen_sock = socket(AF_INET, SOCK_STREAM, 0)) >= 0, "");
   int enable = 1;
@@ -162,7 +146,7 @@ int server_start(openair0_device *device) {
 }
 
 int start_ue(openair0_device *device) {
-  tcp_bridge_state_t *t = init_bridge(device);
+  tcp_bridge_state_t *t = device->priv;
   t->typeStamp=MAGICUE;
   int sock;
   AssertFatal((sock = socket(AF_INET, SOCK_STREAM, 0)) >= 0, "");
@@ -175,10 +159,10 @@ int start_ue(openair0_device *device) {
   bool connected=false;
 
   while(!connected) {
-    printf("tcp_bridge: trying to connect to %s:%d\n", t->ip, PORT);
+    LOG_I(HW,"tcp_bridge: trying to connect to %s:%d\n", t->ip, PORT);
 
     if (connect(sock, (struct sockaddr *)&addr, sizeof(addr)) == 0) {
-      printf("tcp_bridge: connection established\n");
+      LOG_I(HW,"tcp_bridge: connection established\n");
       connected=true;
     }
 
@@ -188,7 +172,7 @@ int start_ue(openair0_device *device) {
 
   setblocking(sock, notBlocking);
   allocCirBuf(t, sock);
-  t->buf[sock].alreadyWrote=true;
+  t->buf[sock].alreadyWrote=true; //+=t->initialAhead; // UE is slave
   return 0;
 }
 
@@ -214,11 +198,11 @@ int tcp_bridge_write(openair0_device *device, openair0_timestamp timestamp, void
       n = fullwrite(ptr->conn_sock, (void*)tmpSamples, sampleToByte(nsamps,nbAnt));
 
       if (n != sampleToByte(nsamps,nbAnt) ) {
-        printf("tcp_bridge: write error ret %d (wanted %ld) error %s\n", n, sampleToByte(nsamps,nbAnt), strerror(errno));
+        LOG_E(HW,"tcp_bridge: write error ret %d (wanted %ld) error %s\n", n, sampleToByte(nsamps,nbAnt), strerror(errno));
         abort();
       }
 
-      ptr->alreadyWrote=true;
+      ptr->alreadyWrote=true; //+=nsamps;
       setblocking(ptr->conn_sock, notBlocking);
     }
   }
@@ -329,9 +313,11 @@ bool flushInput(tcp_bridge_state_t *t) {
 }
 
 int tcp_bridge_read(openair0_device *device, openair0_timestamp *ptimestamp, void **samplesVoid, int nsamps, int nbAnt) {
-  if (nbAnt != 1) { printf("tcp_bridge: only 1 antenna tested\n"); exit(1); }
+  if (nbAnt != 1) { LOG_E(HW, "tcp_bridge: only 1 antenna tested\n"); exit(1); }
 
   tcp_bridge_state_t *t = device->priv;
+  LOG_D(HW, "Enter tcp_bridge_read, expect %d samples, will release at TS: %ld\n", nsamps, t->nextTimestamp+nsamps);
+
   // deliver data from received data
   // check if a UE is connected
   int first_sock;
@@ -364,7 +350,7 @@ int tcp_bridge_read(openair0_device *device, openair0_timestamp *ptimestamp, voi
 
       for ( int sock=0; sock<FD_SETSIZE; sock++)
         if ( t->buf[sock].circularBuf &&
-             t->buf[sock].alreadyWrote &&
+             t->buf[sock].alreadyWrote && //>= t->initialAhead &&
              (t->nextTimestamp+nsamps) > t->buf[sock].lastReceivedTS ) {
           have_to_wait=true;
           break;
@@ -441,22 +427,14 @@ int device_init(openair0_device *device, openair0_config_t *openair0_cfg) {
   tcp_bridge_state_t *tcp_bridge = (tcp_bridge_state_t *)calloc(sizeof(tcp_bridge_state_t),1);
 
   if ((tcp_bridge->ip=getenv("RFSIMULATOR")) == NULL ) {
-    printf(helpTxt);
+    LOG_E(HW,helpTxt);
     exit(1);
   }
 
   tcp_bridge->typeStamp = strncasecmp(tcp_bridge->ip,"enb",3) == 0 ?
     MAGICeNB:
     MAGICUE;
-  printf("tcp_bridge: running as %s\n", tcp_bridge-> typeStamp == MAGICeNB ? "eNB" : "UE");
-
-  /* only 25, 50 or 100 PRBs handled for the moment */
-  if (openair0_cfg[0].sample_rate != 30720000 &&
-      openair0_cfg[0].sample_rate != 15360000 &&
-      openair0_cfg[0].sample_rate !=  7680000) {
-    printf("tcp_bridge: ERROR: only 25, 50 or 100 PRBs supported\n");
-    exit(1);
-  }
+  LOG_I(HW,"tcp_bridge: running as %s\n", tcp_bridge-> typeStamp == MAGICeNB ? "eNB" : "UE");
 
   device->trx_start_func       = tcp_bridge->typeStamp == MAGICeNB ?
     server_start :
@@ -469,9 +447,16 @@ int device_init(openair0_device *device, openair0_config_t *openair0_cfg) {
   device->trx_set_gains_func   = tcp_bridge_set_gains;
   device->trx_write_func       = tcp_bridge_write;
   device->trx_read_func      = tcp_bridge_read;
-  device->priv = tcp_bridge;
-  /* let's pretend to be a b2x0 */
+   /* let's pretend to be a b2x0 */
   device->type = USRP_B200_DEV;
   device->openair0_cfg=&openair0_cfg[0];
+
+  device->priv = tcp_bridge;
+  for (int i=0; i<FD_SETSIZE; i++)
+    tcp_bridge->buf[i].conn_sock=-1;
+  AssertFatal((tcp_bridge->epollfd = epoll_create1(0)) != -1,"");
+
+  tcp_bridge->initialAhead=openair0_cfg[0].sample_rate/1000; // One sub frame
+
   return 0;
 }
