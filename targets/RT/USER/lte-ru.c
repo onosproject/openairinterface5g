@@ -158,7 +158,7 @@ static inline void fh_if4p5_south_out(RU_t *ru) {
   if (subframe_select(&ru->frame_parms,ru->proc.subframe_tx)!=SF_UL) {
     send_IF4p5(ru,ru->proc.frame_tx, ru->proc.subframe_tx, IF4p5_PDLFFT);
     ru->south_out_cnt++;
-    LOG_I(PHY,"south_out_cnt %d, frame %d, subframe %d, RU %d\n",ru->south_out_cnt,ru->proc.frame_tx,ru->proc.subframe_tx,ru->idx);
+    LOG_D(PHY,"south_out_cnt %d, frame %d, subframe %d, RU %d\n",ru->south_out_cnt,ru->proc.frame_tx,ru->proc.subframe_tx,ru->idx);
   }
 /*if (ru == RC.ru[0] || ru == RC.ru[1]) {
     VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME( VCD_SIGNAL_DUMPER_VARIABLES_FRAME_NUMBER_TX0_RU+ru->idx, ru->proc.frame_tx );
@@ -214,16 +214,27 @@ void fh_if4p5_south_in(RU_t *ru,int *frame,int *subframe) {
   uint32_t symbol_number=0;
   uint32_t symbol_mask_full;
 
-  if ((fp->frame_type == TDD) && (subframe_select(fp,*subframe)==SF_S))  
-    symbol_mask_full = (1<<fp->ul_symbols_in_S_subframe)-1;   
-  else     
+  if ((fp->frame_type == TDD) && (subframe_select(fp,*subframe)==SF_S)) {
+    if (*subframe == 1) {  
+    	symbol_mask_full = (1<<11)-1;
+    } else {    	
+    	symbol_mask_full = (1<<fp->ul_symbols_in_S_subframe)-1;   
+    }
+  } else {     
     symbol_mask_full = (1<<fp->symbols_per_tti)-1; 
+  }
+
+  if (proc->symbol_mask[*subframe] == symbol_mask_full) proc->symbol_mask[*subframe] = 0;
   LOG_D(PHY,"fh_if4p5_south_in: RU %d, frame %d, subframe %d, ru %d\n",ru->idx,*frame,*subframe,ru->idx);
   AssertFatal(proc->symbol_mask[*subframe]==0,"rx_fh_if4p5: proc->symbol_mask[%d] = %x\n",*subframe,proc->symbol_mask[*subframe]);
   do {
     recv_IF4p5(ru, &f, &sf, &packet_type, &symbol_number);
+    LOG_D(PHY,"~~~~*** RU %d, frame %d, subframe %d, ru %d, packet_type %x, symbol %d\n",ru->idx,*frame,*subframe,ru->idx,packet_type,symbol_number);
     if (oai_exit == 1 || ru->cmd== STOP_RU) break;
     if (packet_type == IF4p5_PULFFT) proc->symbol_mask[sf] = proc->symbol_mask[sf] | (1<<symbol_number);
+    else if (packet_type == IF4p5_PULCALIB) {
+    	proc->symbol_mask[sf] = (2<<symbol_number)-1;
+    }
     else if (packet_type == IF4p5_PULTICK) {           
       if ((proc->first_rx==0) && (f!=*frame)) LOG_E(PHY,"rx_fh_if4p5: PULTICK received frame %d != expected %d (RU %d)\n",f,*frame, ru->idx);       
       if ((proc->first_rx==0) && (sf!=*subframe)) LOG_E(PHY,"rx_fh_if4p5: PULTICK received subframe %d != expected %d (first_rx %d)\n",sf,*subframe,proc->first_rx);       
@@ -503,8 +514,13 @@ void fh_if4p5_north_out(RU_t *ru) {
   }
   if ((fp->frame_type == TDD) && (subframe_select(fp,subframe)!=SF_UL)) {
     /// **** in TDD during DL send_IF4 of ULTICK to RCC **** ///
-    //send_IF4p5(ru, proc->frame_rx, proc->subframe_rx, IF4p5_PULTICK);
-    send_IF4p5(ru, proc->frame_rx, proc->subframe_rx, IF4p5_PULCALIB);
+    if (subframe_select(fp,subframe)==SF_S && subframe==1) {
+        send_IF4p5(ru, proc->frame_rx, proc->subframe_rx, IF4p5_PULCALIB);
+        LOG_D(PHY,"~~~~~~******* Sending PULCALIB frame %d, subframe %d\n",proc->frame_rx,proc->subframe_rx); 
+     } else {
+        send_IF4p5(ru, proc->frame_rx, proc->subframe_rx, IF4p5_PULTICK);
+        LOG_D(PHY,"~~~~~~******* Sending PULTICK frame %d, subframe %d\n",proc->frame_rx,proc->subframe_rx); 
+    }
     LOG_D(PHY,"fh_if4p5_north_out: Sending IF4p5_PULCALIB SFN.SF %d.%d\n",proc->frame_rx,proc->subframe_rx);
     ru->north_out_cnt++;
     return;
@@ -1514,8 +1530,8 @@ static void* ru_stats_thread(void* param) {
           print_meas(&ru->transport,"transport",NULL,NULL);
           LOG_I(PHY,"ru->north_out_cnt = %d\n",ru->north_out_cnt);
        }
-       if (ru->fh_south_out) LOG_I(PHY,"ru->south_out_cnt = %d\n",ru->south_out_cnt);
-       if (ru->fh_north_asynch_in) LOG_I(PHY,"ru->north_in_cnt = %d\n",ru->north_in_cnt);
+       if (ru->fh_south_out) LOG_D(PHY,"ru->south_out_cnt = %d\n",ru->south_out_cnt);
+       if (ru->fh_north_asynch_in) LOG_D(PHY,"ru->north_in_cnt = %d\n",ru->north_in_cnt);
        
      }
   }

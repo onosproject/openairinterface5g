@@ -121,7 +121,7 @@ void send_IF4p5(RU_t *ru, int frame, int subframe, uint16_t packet_type) {
   } else if (packet_type == IF4p5_PULCALIB) {
     LOG_D(PHY,"send PULCALIB_IF4p5: RU %d frame %d, subframe %d\n",ru->idx,frame,subframe);
 
-    AssertFatal(subframe_select(fp,subframe==SF_S), "calling PULCALIB in non-S subframe\n"); 
+    AssertFatal(subframe_select(fp,subframe)==SF_S, "calling PULCALIB in non-S subframe\n"); 
     db_fulllength = 12*fp->N_RB_UL;
     db_halflength = (db_fulllength)>>1;
     slotoffsetF  += (fp->ofdm_symbol_size*3);
@@ -138,7 +138,7 @@ void send_IF4p5(RU_t *ru, int frame, int subframe, uint16_t packet_type) {
     gen_IF4p5_ul_header(packet_header, packet_type, frame, subframe);
 
     AssertFatal(txdataF[0]!=NULL,"txdataF_BF[0] is null\n");
-    for (symbol_id=3; symbol_id<11; symbol_id=10) {
+    for (symbol_id=3; symbol_id<11; symbol_id+=10) {
       for (int antenna_id=0; antenna_id<ru->nb_tx; antenna_id++) {
         for (element_id=0; element_id<db_halflength; element_id++) {
           i = (uint16_t*) &txdataF[antenna_id][blockoffsetF+element_id];
