@@ -176,9 +176,10 @@ void schedule_rar_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, int abs_subframe){
 		if(-1==msg2_i_delay){
 			fail|=0x2;
 		}
-		//	check msg3 resource
-		rep = mac_inst->rrc_config.mac_NPRACH_ConfigSIB[msg2_nodes->ce_level].mac_numRepetitionsPerPreambleAttempt_NB_IoT;
-		
+		//	check msg3 resource, follow the prach repeat
+		//rep = mac_inst->rrc_config.mac_NPRACH_ConfigSIB[msg2_nodes->ce_level].mac_numRepetitionsPerPreambleAttempt_NB_IoT;
+		// Set the temp rep
+		rep = 0;
 		
 		uint32_t Iru = 0, mcs, Nru;
 		uint32_t mappedMcsIndex = 4;  //  assume all ue supported multi-tone
@@ -272,10 +273,10 @@ void schedule_rar_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, int abs_subframe){
 			dci_n0->type = 0;
 			dci_n0->scind = npusch_info.subcarrier_indication;
 			dci_n0->ResAssign = 0;
-			dci_n0->mcs = 0;
+			dci_n0->mcs = 2;
 			dci_n0->ndi = 1;
 			dci_n0->Scheddly = msg3_scheduling_delay;
-			dci_n0->RepNum = rep;
+			dci_n0->RepNum = rep; //rep
 			dci_n0->rv = 0;
 			dci_n0->DCIRep = 1;//get_DCI_REP()
 			
