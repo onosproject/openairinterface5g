@@ -451,13 +451,14 @@ void schedule_response_NB_IoT(Sched_Rsp_NB_IoT_t *Sched_INFO)
 		   *
 		   */
 		
-	  ///////////////////////////////////////////////////////////////////////////////////////////
+	       ///////////////////////////////////////////////////////////////////////////////////////////
 
 	        nulsch = eNB->ulsch_NB_IoT[0];
 			nulsch_harq = nulsch->harq_process;
 	
 			nulsch->Msg3_active        = 1;
 			nulsch->Msg3_flag          = 1;
+			nulsch->flag_scramble      = 1;
 			nulsch->rnti               = nfapi_parameters_rel13->rnti;
 			nulsch->npusch_format      = nfapi_parameters_rel13->nulsch_format;
 			nulsch->N_srs              = nfapi_parameters_rel13->n_srs;
@@ -474,7 +475,7 @@ void schedule_response_NB_IoT(Sched_Rsp_NB_IoT_t *Sched_INFO)
 			nulsch_harq->new_data_indication     = nfapi_parameters_rel13->new_data_indication;   // valid only for DCI N0
 			nulsch_harq->TBS                     = nfapi_parameters_rel13->size;  /// check if needed *8 or /8 or nothing to do
 			
-	  ////////////////////////////////////////////////////////////////////////////////////////
+	        ////////////////////////////////////////////////////////////////////////////////////////
 	  		LOG_I(PHY,"IF module proceed UL config NULSCH pdu\n");
 		  break;
 	  case NFAPI_UL_CONFIG_NRACH_PDU_TYPE:

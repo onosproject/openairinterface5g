@@ -378,8 +378,7 @@ uint8_t rx_ulsch_Gen_NB_IoT(PHY_VARS_eNB            *eNB,
                          unsigned int            A,
                          uint16_t                counter_msg,
                          uint8_t                 subframerx,
-                         uint8_t                 rvdx,
-                         uint8_t                 option);
+                         uint8_t                 rvdx);
 
 void ulsch_extract_rbs_single_NB_IoT(int32_t **rxdataF,
                                      int32_t **rxdataF_ext,
@@ -428,6 +427,16 @@ int16_t* sub_sampling_NB_IoT(int16_t *input_buffer, uint32_t length_input, uint3
 void filtering_signal(int16_t *input_buffer, int16_t *filtered_buffer, uint32_t FRAME_LENGTH_COMPLEX_SAMPLESx); 
 //************************************************************//
 uint16_t get_UL_sc_start_NB_IoT(uint16_t I_sc); 
+
+uint16_t get_UL_sc_index_start_NB_IoT(uint8_t subcarrier_spacing, uint16_t I_sc, uint8_t npush_format);
+
+uint16_t get_UL_N_ru_NB_IoT(uint8_t I_mcs, uint8_t I_ru, uint8_t flag_msg3);
+
+uint16_t get_UL_N_rep_NB_IoT(uint8_t I_rep);
+
+uint8_t get_numb_UL_sc_NB_IoT(uint8_t subcarrier_spacing, uint8_t I_sc, uint8_t npush_format);
+
+uint8_t get_UL_slots_per_RU_NB_IoT(uint8_t subcarrier_spacing, uint8_t subcarrier_indcation, uint8_t UL_format);
 
 void generate_grouphop_NB_IoT(LTE_DL_FRAME_PARMS *frame_parms); 
 

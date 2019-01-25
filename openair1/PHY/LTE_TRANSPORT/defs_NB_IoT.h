@@ -627,12 +627,14 @@ typedef struct {
   uint8_t                 scrambling_re_intialization_batch_index;
   /// number of cell specific TX antenna ports assumed by the UE
   uint8_t                 nrs_antenna_ports;
-  ///
+  //////// nfapi param //////////////////////////////////////////
   uint16_t                C_init;
-  ///
+  //////// nfapi param //////////////////////////////////////////////////
   uint16_t                SF_idx;
   /// Determined the ACK/NACK delay and the subcarrier allocation TS 36.213 Table 16.4.2
   uint8_t                 HARQ_ACK_resource;
+  /// Flag to trigger the storage of frame & subframe values for scrambling
+  uint8_t                 flag_scramble;
 
   ///////////// kept from LTE ///////////////////////////////////////////////////
 
