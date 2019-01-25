@@ -734,6 +734,8 @@ void tx_rf(RU_t *ru) {
     
     
     int siglen=fp->samples_per_tti,flags=1;
+    int siglen2=fp->samples_per_tti+fp->nb_prefix_samples;
+    int sigoff2=2*fp->nb_prefix_samples0+8*fp->nb_prefix_samples+10*fp->ofdm_symbol_size;
     
     if (SF_type == SF_S) {
       int txsymb = fp->dl_symbols_in_S_subframe+(ru->is_slave==0 ? 1 : -1);
@@ -741,7 +743,7 @@ void tx_rf(RU_t *ru) {
       siglen = fp->nb_prefix_samples0 + (txsymb*fp->ofdm_symbol_size) + (txsymb-1)*fp->nb_prefix_samples;
       //siglen = fp->dl_symbols_in_S_subframe*(fp->ofdm_symbol_size+fp->nb_prefix_samples0);
       if (ru->is_slave==1 && ru->state==RU_RUN && proc->frame_tx%ru->p==ru->tag-1) {
-        siglen = fp->ofdm_symbol_size + fp->nb_prefix_samples; // length of symbol 10
+        siglen2 = fp->ofdm_symbol_size + fp->nb_prefix_samples; // length of symbol 10
       }
       flags=3; // end of burst
     }
@@ -772,7 +774,7 @@ void tx_rf(RU_t *ru) {
     
     for (i=0; i<ru->nb_tx; i++) {
       txp[i] = (void*)&ru->common.txdata[i][(proc->subframe_tx*fp->samples_per_tti)-sf_extension];
-      txp1[i] = (void*)&ru->common.txdata[i][(proc->subframe_tx*fp->samples_per_tti)-sf_extension];
+      txp1[i] = (void*)&ru->common.txdata[i][(proc->subframe_tx*fp->samples_per_tti)+(sigoff2)-sf_extension];
     }
     /* add fail safe for late command */
     if(late_control!=STATE_BURST_NORMAL){//stop burst
@@ -824,9 +826,9 @@ void tx_rf(RU_t *ru) {
     if (ru->is_slave==1 && ru->state==RU_RUN && proc->frame_tx%ru->p==ru->tag-1 && proc->subframe_tx==1) {
 	//LOG_I(PHY,"******** subframe %d Slave sends DMRS\n",proc->subframe_tx);
     	txs = ru->rfdevice.trx_write_func(&ru->rfdevice,
-                                      proc->timestamp_tx+(ru->ts_offset+10*1024+80+10*72)-ru->openair0_cfg.tx_sample_advance-sf_extension,
+                                      proc->timestamp_tx+(ru->ts_offset+sigoff2)-ru->openair0_cfg.tx_sample_advance-sf_extension,
                                       txp1,
-                                      siglen+sf_extension,
+                                      siglen2+sf_extension,
                                       ru->nb_tx,
                                       flags);
     }
