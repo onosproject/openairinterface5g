@@ -34,7 +34,6 @@ static int16_t ru_90c[2*128] = {32767, 0,32766, -402,32758, -804,32746, -1206,32
 
 #define SCALE 0x3FFF
 
-<<<<<<< HEAD
 int32_t lte_ul_channel_estimation(LTE_DL_FRAME_PARMS *frame_parms,
 				  int32_t **ul_ch_estimates,
 				  int32_t **ul_ch_estimates_time,
@@ -45,12 +44,7 @@ int32_t lte_ul_channel_estimation(LTE_DL_FRAME_PARMS *frame_parms,
 				  uint32_t u,
 				  uint32_t v,
 				  uint32_t cyclic_shift,
-=======
-int32_t lte_ul_channel_estimation(PHY_VARS_eNB *eNB,
-				  eNB_rxtx_proc_t *proc,
-                                  module_id_t UE_id,
->>>>>>> main/develop
-                                  unsigned char l,
+				  unsigned char l,
 				  int interpolate,
 				  uint16_t rnti) {
 
@@ -118,18 +112,10 @@ int32_t lte_ul_channel_estimation(PHY_VARS_eNB *eNB,
 
   LOG_D(PHY,"subframe %d, l %d, Msc_RS = %d, Msc_RS_idx = %d, u %d, v %d, cyclic_shift %d\n",subframe_rx,l,Msc_RS, Msc_RS_idx,u,v,cyclic_shift);
 #ifdef DEBUG_CH
-
-<<<<<<< HEAD
   if (l==pilot_pos1)
-    write_output("drs_seq0.m","drsseq0",ul_ref_sigs_rx[u][v][Msc_RS_idx],Msc_RS,1,1);
+	  LOG_M("drs_seq0.m","drsseq0",ul_ref_sigs_rx[u][v][Msc_RS_idx],Msc_RS,1,1);
   else
-    write_output("drs_seq1.m","drsseq1",ul_ref_sigs_rx[u][v][Msc_RS_idx],Msc_RS,1,1);
-=======
-  if (Ns==0)
-    LOG_M("drs_seq0.m","drsseq0",ul_ref_sigs_rx[u][v][Msc_RS_idx],2*Msc_RS,2,1);
-  else
-    LOG_M("drs_seq1.m","drsseq1",ul_ref_sigs_rx[u][v][Msc_RS_idx],2*Msc_RS,2,1);
->>>>>>> main/develop
+	  LOG_M("drs_seq1.m","drsseq1",ul_ref_sigs_rx[u][v][Msc_RS_idx],Msc_RS,1,1);
 
 #endif
 
@@ -248,11 +234,7 @@ int32_t lte_ul_channel_estimation(PHY_VARS_eNB *eNB,
     if((cyclic_shift != 0)) {
       // Compensating for the phase shift introduced at the transmitte
 #ifdef DEBUG_CH
-<<<<<<< HEAD
-      write_output("drs_est_pre.m","drsest_pre",ul_ch_estimates[0],300*12,1,1);
-=======
         LOG_M("drs_est_pre.m","drsest_pre",ul_ch_estimates[0],300*12,1,1);
->>>>>>> main/develop
 #endif
       
       for(i=symbol_offset; i<symbol_offset+Msc_RS; i++) {
@@ -275,11 +257,7 @@ int32_t lte_ul_channel_estimation(PHY_VARS_eNB *eNB,
       }
       
 #ifdef DEBUG_CH
-<<<<<<< HEAD
-      write_output("drs_est_post.m","drsest_post",ul_ch_estimates[0],300*12,1,1);
-=======
         LOG_M("drs_est_post.m","drsest_post",ul_ch_estimates[0],300*12,1,1);
->>>>>>> main/develop
 #endif
     }
     
@@ -320,29 +298,14 @@ int32_t lte_ul_channel_estimation(PHY_VARS_eNB *eNB,
 #endif
     }
 #ifdef DEBUG_CH
-<<<<<<< HEAD
-    
     if (aa==1) {
       if (l == pilot_pos1) {
-	write_output("rxdataF_ext.m","rxF_ext",&rxdataF_ext[aa][symbol_offset],512*2,2,1);
-	write_output("tmpin_ifft.m","drs_in",temp_in_ifft_0,512,1,1);
-	if (ul_ch_estimates_time[aa]) write_output("drs_est0.m","drs0",ul_ch_estimates_time[aa],512,1,1);
+    	  LOG_M("rxdataF_ext.m","rxF_ext",&rxdataF_ext[aa][symbol_offset],512*2,2,1);
+    	  LOG_M("tmpin_ifft.m","drs_in",temp_in_ifft_0,512,1,1);
+	if (ul_ch_estimates_time[aa]) LOG_M("drs_est0.m","drs0",ul_ch_estimates_time[aa],512,1,1);
       } else
-	if (ul_ch_estimates_time[aa]) write_output("drs_est1.m","drs1",ul_ch_estimates_time[aa],512,1,1);
+	if (ul_ch_estimates_time[aa]) LOG_M("drs_est1.m","drs1",ul_ch_estimates_time[aa],512,1,1);
     }
-    
-=======
-
-      if (aa==1) {
-        if (Ns == 0) {
-          LOG_M("rxdataF_ext.m","rxF_ext",&rxdataF_ext[aa][symbol_offset],512*2,2,1);
-          LOG_M("tmpin_ifft.m","drs_in",temp_in_ifft_0,512,1,1);
-          LOG_M("drs_est0.m","drs0",ul_ch_estimates_time[aa],512,1,1);
-        } else
-          LOG_M("drs_est1.m","drs1",ul_ch_estimates_time[aa],512,1,1);
-      }
-
->>>>>>> main/develop
 #endif
     
     

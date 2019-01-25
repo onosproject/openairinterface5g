@@ -13,7 +13,7 @@ openair1/PHY/INIT/lte_init.c
 openair1/PHY/INIT/lte_init_ue.c
 openair1/PHY/LTE_ESTIMATION/lte_sync_time.c
 openair1/PHY/LTE_ESTIMATION/lte_ul_channel_estimation.c (Do not know which definition of lte_ul_channel_estimation() to use. It seems that
-                                                         both are needed: one for sidelink, one for normal Uplink. Pending...)
+                                                         both are needed: one for sidelink, one for normal Uplink. Done but not sure...)
 openair1/PHY/LTE_TRANSPORT/dci.c
 openair1/PHY/LTE_TRANSPORT/dci_tools.c
 openair1/PHY/LTE_TRANSPORT/dlsch_coding.c
@@ -26,7 +26,7 @@ openair1/PHY/LTE_UE_TRANSPORT/transport_proto_ue.h (Not sure whether the followi
                                                     fill_ulsch, generate_eNB_dlsch_params_from_dci, generate_eNB_ulsch_params_from_rar.
                                                      Same for: ul_subframe2pdcch_alloc_subframe, find_dlsch, )
 openair1/PHY/MODULATION/slot_fep_ul.c
-openair1/PHY/defs_eNB.h (Removed definitons of typedef uint8_t(decoder_if_t) and typedef uint8_t(*encoder_if_t)(uint8_t *input from defs_enb.h and left 
+openair1/PHY/defs_eNB.h (Removed definitions of typedef uint8_t(decoder_if_t) and typedef uint8_t(*encoder_if_t)(uint8_t *input from defs_enb.h and left 
                          only the corresponding definitions in defs_common.h. However they are slightly different. I kept the ones that were in  
                          defs_enb.h (i.e., modified the ones on defs_common so that they are identical with the ones in defs_enb.h. Not sure if 
                          this is correct).
