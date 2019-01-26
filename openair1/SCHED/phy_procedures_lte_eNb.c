@@ -152,6 +152,10 @@ int32_t add_ue(int16_t rnti, PHY_VARS_eNB *eNB)
         eNB->Mod_id,
         eNB->CC_id,
         (uint16_t)rnti);
+ printf("[eNB %d/CC %d] Adding UE with rnti %x\n",
+        eNB->Mod_id,
+        eNB->CC_id,
+        (uint16_t)rnti); 
 
   for (i=0; i<NUMBER_OF_UE_MAX; i++) {
     if ((eNB->dlsch[i]==NULL) || (eNB->ulsch[i]==NULL)) {
@@ -162,6 +166,7 @@ int32_t add_ue(int16_t rnti, PHY_VARS_eNB *eNB)
       if (eNB->UE_stats[i].crnti==0) {
         MSC_LOG_EVENT(MSC_PHY_ENB, "0 Add ue %"PRIx16" ", rnti);
         LOG_D(PHY,"UE_id %d associated with rnti %x\n",i, (uint16_t)rnti);
+	printf("UE_id %d associated with rnti %x\n",i, (uint16_t)rnti);
         eNB->dlsch[i][0]->rnti = rnti;
         eNB->ulsch[i]->rnti = rnti;
         eNB->UE_stats[i].crnti = rnti;
@@ -947,9 +952,27 @@ void pdsch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,LTE_eNB_DLSCH_t *d
   uint8_t DLSCH_pdu_tmp[input_buffer_length+4]; //[768*8];
   uint8_t DLSCH_pdu_rar[256];
   int i;
+  int16_t crnti;
 
   LOG_D(PHY,
 	"[eNB %"PRIu8"][PDSCH %"PRIx16"/%"PRIu8"] Frame %d, subframe %d: Generating PDSCH/DLSCH with input size = %"PRIu16", G %d, nb_rb %"PRIu16", mcs %"PRIu8", pmi_alloc %"PRIx64", rv %"PRIu8" (round %"PRIu8")\n",
+	eNB->Mod_id, dlsch->rnti,harq_pid,
+	frame, subframe, input_buffer_length,
+	get_G(fp,
+	      dlsch_harq->nb_rb,
+	      dlsch_harq->rb_alloc,
+	      get_Qm(dlsch_harq->mcs),
+	      dlsch_harq->Nl,
+	      num_pdcch_symbols,
+	      frame,
+	      subframe,
+	      dlsch_harq->mimo_mode==TM7?7:0),
+	dlsch_harq->nb_rb,
+	dlsch_harq->mcs,
+	pmi2hex_2Ar1(dlsch_harq->pmi_alloc),
+	dlsch_harq->rvidx,
+	dlsch_harq->round);
+  printf("[eNB %"PRIu8"][PDSCH %"PRIx16"/%"PRIu8"] Frame %d, subframe %d: Generating PDSCH/DLSCH with input size = %"PRIu16", G %d, nb_rb %"PRIu16", mcs %"PRIu8", pmi_alloc %"PRIx64", rv %"PRIu8" (round %"PRIu8")\n",
 	eNB->Mod_id, dlsch->rnti,harq_pid,
 	frame, subframe, input_buffer_length,
 	get_G(fp,
@@ -1006,16 +1029,16 @@ void pdsch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,LTE_eNB_DLSCH_t *d
 					     0);
       }
       else {
-	int16_t crnti = mac_xface->fill_rar(eNB->Mod_id,
+	crnti = mac_xface->fill_rar(eNB->Mod_id,
 					    eNB->CC_id,
 					    frame,
 					    DLSCH_pdu_rar,
 					    fp->N_RB_UL,
 					    input_buffer_length);
 	DLSCH_pdu = DLSCH_pdu_rar;
-
+	printf("pdsch_procedures:eNB %d, CC_id %d, frame %d, subframe %d, N_RB_UL %d ,crnti %x, ra_flag %d\n",eNB->Mod_id,eNB->CC_id,frame,subframe,fp->N_RB_UL, crnti,ra_flag);
 	int UE_id;
-
+	
 	if (crnti!=0){ 
 	  UE_id = add_ue(crnti,eNB);
         }
@@ -1023,6 +1046,7 @@ void pdsch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,LTE_eNB_DLSCH_t *d
 	  UE_id = -1;
 	    
 	if (UE_id==-1) {
+	  printf("pdsch_procedures: UE_id==-1 crnti %x\n",crnti);
 	  LOG_W(PHY,"[eNB] Max user count reached.\n");
 	  mac_xface->cancel_ra_proc(eNB->Mod_id,
 				    eNB->CC_id,

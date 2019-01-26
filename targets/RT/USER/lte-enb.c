@@ -449,6 +449,16 @@ void tx_fh_if4p5(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc) {
       ((eNB->frame_parms.frame_type==TDD) &&
        (subframe_select(&eNB->frame_parms,proc->subframe_tx) != SF_UL)))    
     send_IF4p5(eNB,proc->frame_tx,proc->subframe_tx, IF4p5_PDLFFT, 0);
+    /*if (eNB->CC_id==0&&proc->subframe_tx==0){
+    	//write_output("datatxF0.out","dtxF0",eNB->common_vars.txdataF[0][0],10*eNB->frame_parms.ofdm_symbol_size*eNB->frame_parms.symbols_per_tti,1,16);
+	write_output("rx_prachF0.out","prachrxF0",eNB->prach_vars.rxsigF[0],eNB->frame_parms.ofdm_symbol_size*eNB->frame_parms.symbols_per_tti,1,16);
+	printf("tx_fh_if4p5: eNB=%d, CC=%d",eNB->Mod_id,eNB->CC_id);
+	}
+    else if (eNB->CC_id==1&&proc->subframe_tx==0){
+	//write_output("datatxF1.out","dtxF1",eNB->common_vars.txdataF[0][0],10*eNB->frame_parms.ofdm_symbol_size*eNB->frame_parms.symbols_per_tti,1,16);
+	write_output("rx_prachF1.out","prachrxF1",eNB->prach_vars.rxsigF[0],eNB->frame_parms.ofdm_symbol_size*eNB->frame_parms.symbols_per_tti,1,16);
+	printf("tx_fh_if4p5: eNB=%d, CC=%d",eNB->Mod_id,eNB->CC_id);
+	}*/
   stop_meas(&softmodem_stats_tx_fh_if4p5);
 }
 
@@ -547,7 +557,16 @@ void proc_tx_rru_if4p5(PHY_VARS_eNB *eNB,
     recv_IF4p5(eNB, &proc->frame_tx, &proc->subframe_tx, &packet_type, &symbol_number);
     symbol_mask = symbol_mask | (1<<symbol_number);
   } while (symbol_mask != symbol_mask_full); 
-
+  /*if (eNB->CC_id==0){
+    	//write_output("datarxF0.out","drxF0",eNB->common_vars.rxdataF[0],10*eNB->frame_parms.ofdm_symbol_size*eNB->frame_parms.symbols_per_tti,1,16);
+	write_output("rx_prachF0.out","prachrxF0",eNB->prach_vars.rxsigF[0],eNB->frame_parms.ofdm_symbol_size*eNB->frame_parms.symbols_per_tti,1,16);
+	printf("proc_tx_rru_if4p5: eNB=%d, CC=%d",eNB->Mod_id,eNB->CC_id);
+	}
+  else if (eNB->CC_id==1){
+	//write_output("datarxF1.out","drxF1",eNB->common_vars.rxdataF[0],10*eNB->frame_parms.ofdm_symbol_size*eNB->frame_parms.symbols_per_tti,1,16);
+	write_output("rx_prachF1.out","prachrxF1",eNB->prach_vars.rxsigF[0],eNB->frame_parms.ofdm_symbol_size*eNB->frame_parms.symbols_per_tti,1,16);
+	printf("proc_tx_rru_if4p5: eNB=%d, CC=%d",eNB->Mod_id,eNB->CC_id);
+	}*/
   do_OFDM_mod_rt(proc->subframe_tx, eNB);
 }
 
@@ -2087,7 +2106,7 @@ void init_eNB(eNB_func_t node_function[], eNB_timing_t node_timing[],int nb_inst
   PHY_VARS_eNB *eNB;
   int ret;
   
-  printf("lte-enb: MAX_NUM_CCs = %d\n",MAX_NUM_CCs);
+  printf("lte-enb: MAX_NUM_CCs = %d, nb_inst %d\n",MAX_NUM_CCs,nb_inst);
   for (inst=0;inst<nb_inst;inst++) {
     for (CC_id=0;CC_id<MAX_NUM_CCs;CC_id++) {
       reset_meas(&PHY_vars_eNB_g[inst][CC_id]->phy_proc_tx);

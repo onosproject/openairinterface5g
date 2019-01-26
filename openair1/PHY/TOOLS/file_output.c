@@ -74,7 +74,7 @@ int write_output(const char *fname,const char *vname,void *data,int length,int d
 
     break;
   case 16:
-    for (i=dec; i<(length+dec)<<1; i+=2) {
+    for (i=dec; i<(length+dec)<<1; i+=(2*dec)) {
       fprintf(fp,"%d\t%d\t%d\n",i/2,((short *)data)[i],((short *)data)[i+1]);
 
     }

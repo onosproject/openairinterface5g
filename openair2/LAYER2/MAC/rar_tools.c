@@ -55,7 +55,6 @@ unsigned short fill_rar(
 )
 //------------------------------------------------------------------------------
 {
-
   RA_HEADER_RAPID *rarh = (RA_HEADER_RAPID *)dlsch_buffer;
   //  RAR_PDU *rar = (RAR_PDU *)(dlsch_buffer+1);
   uint8_t *rar = (uint8_t *)(dlsch_buffer+1);
@@ -65,6 +64,7 @@ unsigned short fill_rar(
   AssertFatal(CC_id < MAX_NUM_CCs, "CC_id %u < MAX_NUM_CCs %u", CC_id, MAX_NUM_CCs);
 
   for (i=0; i<NB_RA_PROC_MAX; i++) {
+    printf("fill_rar: generate_rar %d, CC_id %d, eNB_id %d\n",eNB_mac_inst[module_idP].common_channels[CC_id].RA_template[i].generate_rar,CC_id,module_idP); 
     if (eNB_mac_inst[module_idP].common_channels[CC_id].RA_template[i].generate_rar == 1) {
       ra_idx=i;
       eNB_mac_inst[module_idP].common_channels[CC_id].RA_template[i].generate_rar = 0;
@@ -73,6 +73,7 @@ unsigned short fill_rar(
   }
 
   //DevAssert( ra_idx != -1 );
+  printf("fill_rar: ra_idx %d, NB_RA_PROC_MAX %d\n",ra_idx,NB_RA_PROC_MAX);
   if (ra_idx==-1)
     return(0);
 
@@ -108,6 +109,14 @@ unsigned short fill_rar(
   rar[3] = (((mcs&0x7)<<5)) | ((TPC&7)<<2) | ((ULdelay&1)<<1) | (cqireq&1);
 
   LOG_D(MAC,"[eNB %d][RAPROC] CC_id %d Frame %d Generating RAR (%02x|%02x.%02x.%02x.%02x.%02x.%02x) for ra_idx %d, CRNTI %x,preamble %d/%d,TIMING OFFSET %d\n",
+        module_idP, CC_id,
+        frameP,
+        *(uint8_t*)rarh,rar[0],rar[1],rar[2],rar[3],rar[4],rar[5],
+        ra_idx,
+        eNB_mac_inst[module_idP].common_channels[CC_id].RA_template[ra_idx].rnti,
+        rarh->RAPID,eNB_mac_inst[module_idP].common_channels[CC_id].RA_template[0].preamble_index,
+        eNB_mac_inst[module_idP].common_channels[CC_id].RA_template[ra_idx].timing_offset);
+  printf("[eNB %d][RAPROC] CC_id %d Frame %d Generating RAR (%02x|%02x.%02x.%02x.%02x.%02x.%02x) for ra_idx %d, CRNTI %x,preamble %d/%d,TIMING OFFSET %d\n",
         module_idP, CC_id,
         frameP,
         *(uint8_t*)rarh,rar[0],rar[1],rar[2],rar[3],rar[4],rar[5],

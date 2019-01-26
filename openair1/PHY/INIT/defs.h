@@ -338,7 +338,7 @@ void phy_cleanup(void);
 
 
 int init_frame_parms(LTE_DL_FRAME_PARMS *frame_parms,uint8_t osf);
-void dump_frame_parms(LTE_DL_FRAME_PARMS *frame_parms);
+void dump_frame_parms(LTE_DL_FRAME_PARMS *frame_parms, int CC_id);
 
 void lte_param_init(unsigned char N_tx_port_eNB, 
                     unsigned char N_tx_phy,

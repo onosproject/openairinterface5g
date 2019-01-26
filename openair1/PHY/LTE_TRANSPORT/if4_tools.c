@@ -46,12 +46,12 @@ const uint16_t alaw2lin_if4p5[256] = {60032, 60288, 59520, 59776, 61056, 61312, 
 
 void send_IF4p5(PHY_VARS_eNB *eNB, int frame, int subframe, uint16_t packet_type, int k) {
   LTE_DL_FRAME_PARMS *fp = &eNB->frame_parms;
-  int32_t **txdataF      = (eNB->CC_id==0) ? eNB->common_vars.txdataF[0] : PHY_vars_eNB_g[eNB->Mod_id][eNB->CC_id]->common_vars.txdataF[0];
+  int32_t **txdataF      = (eNB->CC_id==0) ? eNB->common_vars.txdataF[0] : PHY_vars_eNB_g[0][eNB->CC_id]->common_vars.txdataF[0];
   int32_t **rxdataF      = eNB->common_vars.rxdataF[0];
   int16_t **rxsigF       = eNB->prach_vars.rxsigF;  
   void *tx_buffer        = eNB->ifbuffer.tx[subframe&1];
   void *tx_buffer_prach  = eNB->ifbuffer.tx_prach;
-      
+  //printf("send_if4p5: eNB->Mod_id %d ,eNB->CC_id %d\n",eNB->Mod_id,eNB->CC_id);    
   uint16_t symbol_id=0, element_id=0;
   uint16_t db_fulllength, db_halflength;
   int slotoffsetF=0, blockoffsetF=0; 

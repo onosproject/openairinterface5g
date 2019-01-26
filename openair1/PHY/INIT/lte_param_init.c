@@ -98,7 +98,7 @@ void lte_param_init(unsigned char N_tx_port_eNB,
   UE->transmission_mode[0] = transmission_mode;
 
   phy_init_lte_top(frame_parms);
-  dump_frame_parms(frame_parms);
+  dump_frame_parms(frame_parms,eNB->CC_id);
 
   UE->measurements.n_adj_cells=0;
   UE->measurements.adj_cell_id[0] = Nid_cell+1;

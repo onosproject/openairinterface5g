@@ -400,31 +400,34 @@ void exit_fun(const char* s) {
 
 void reset_stats(FL_OBJECT *button, long arg) {
     int i,j,k;
-    PHY_VARS_eNB *phy_vars_eNB = PHY_vars_eNB_g[0][0];
+    int CC_id;
+    PHY_VARS_eNB *phy_vars_eNB;
+    for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++){
+    	phy_vars_eNB = PHY_vars_eNB_g[0][CC_id];
+	for (i=0; i<NUMBER_OF_UE_MAX; i++) {
+		for (k=0; k<8; k++) { //harq_processes
+		    for (j=0; j<phy_vars_eNB->dlsch[i][0]->Mlimit; j++) {
+		        phy_vars_eNB->UE_stats[i].dlsch_NAK[k][j]=0;
+		        phy_vars_eNB->UE_stats[i].dlsch_ACK[k][j]=0;
+		        phy_vars_eNB->UE_stats[i].dlsch_trials[k][j]=0;
+		    }
 
-    for (i=0; i<NUMBER_OF_UE_MAX; i++) {
-        for (k=0; k<8; k++) { //harq_processes
-            for (j=0; j<phy_vars_eNB->dlsch[i][0]->Mlimit; j++) {
-                phy_vars_eNB->UE_stats[i].dlsch_NAK[k][j]=0;
-                phy_vars_eNB->UE_stats[i].dlsch_ACK[k][j]=0;
-                phy_vars_eNB->UE_stats[i].dlsch_trials[k][j]=0;
-            }
+		    phy_vars_eNB->UE_stats[i].dlsch_l2_errors[k]=0;
+		    phy_vars_eNB->UE_stats[i].ulsch_errors[k]=0;
+		    phy_vars_eNB->UE_stats[i].ulsch_consecutive_errors=0;
 
-            phy_vars_eNB->UE_stats[i].dlsch_l2_errors[k]=0;
-            phy_vars_eNB->UE_stats[i].ulsch_errors[k]=0;
-            phy_vars_eNB->UE_stats[i].ulsch_consecutive_errors=0;
+		    for (j=0; j<phy_vars_eNB->ulsch[i]->Mlimit; j++) {
+		        phy_vars_eNB->UE_stats[i].ulsch_decoding_attempts[k][j]=0;
+		        phy_vars_eNB->UE_stats[i].ulsch_decoding_attempts_last[k][j]=0;
+		        phy_vars_eNB->UE_stats[i].ulsch_round_errors[k][j]=0;
+		        phy_vars_eNB->UE_stats[i].ulsch_round_fer[k][j]=0;
+		    }
+		}
 
-            for (j=0; j<phy_vars_eNB->ulsch[i]->Mlimit; j++) {
-                phy_vars_eNB->UE_stats[i].ulsch_decoding_attempts[k][j]=0;
-                phy_vars_eNB->UE_stats[i].ulsch_decoding_attempts_last[k][j]=0;
-                phy_vars_eNB->UE_stats[i].ulsch_round_errors[k][j]=0;
-                phy_vars_eNB->UE_stats[i].ulsch_round_fer[k][j]=0;
-            }
-        }
-
-        phy_vars_eNB->UE_stats[i].dlsch_sliding_cnt=0;
-        phy_vars_eNB->UE_stats[i].dlsch_NAK_round0=0;
-        phy_vars_eNB->UE_stats[i].dlsch_mcs_offset=0;
+		phy_vars_eNB->UE_stats[i].dlsch_sliding_cnt=0;
+		phy_vars_eNB->UE_stats[i].dlsch_NAK_round0=0;
+		phy_vars_eNB->UE_stats[i].dlsch_mcs_offset=0;
+	}
     }
 }
 
@@ -1717,8 +1720,8 @@ int main( int argc, char **argv ) {
     fill_modeled_runtime_table(runtime_phy_rx,runtime_phy_tx);
     cpuf=get_cpu_freq_GHz();
 
-
-    dump_frame_parms(frame_parms[0]);
+    for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++)
+    	dump_frame_parms(frame_parms[CC_id],CC_id);
 
     init_openair0();
 

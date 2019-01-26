@@ -197,8 +197,9 @@ int init_frame_parms(LTE_DL_FRAME_PARMS *frame_parms,uint8_t osf)
 }
 
 
-void dump_frame_parms(LTE_DL_FRAME_PARMS *frame_parms)
+void dump_frame_parms(LTE_DL_FRAME_PARMS *frame_parms, int CC_id)
 {
+  printf("Dumping frame_parms of CC_id %d:\n",CC_id);
   printf("frame_parms->N_RB_DL=%d\n",frame_parms->N_RB_DL);
   printf("frame_parms->N_RB_UL=%d\n",frame_parms->N_RB_UL);
   printf("frame_parms->Nid_cell=%d\n",frame_parms->Nid_cell);
@@ -217,5 +218,5 @@ void dump_frame_parms(LTE_DL_FRAME_PARMS *frame_parms)
   printf("frame_parms->nb_prefix_samples0=%d\n",frame_parms->nb_prefix_samples0);
   printf("frame_parms->first_carrier_offset=%d\n",frame_parms->first_carrier_offset);
   printf("frame_parms->samples_per_tti=%d\n",frame_parms->samples_per_tti);
-  printf("frame_parms->symbols_per_tti=%d\n",frame_parms->symbols_per_tti);
+  printf("frame_parms->symbols_per_tti=%d\n\n",frame_parms->symbols_per_tti);
 }

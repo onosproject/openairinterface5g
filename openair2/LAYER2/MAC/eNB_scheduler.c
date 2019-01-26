@@ -142,6 +142,7 @@ void eNB_dlsch_ulsch_scheduler(module_id_t module_idP,uint8_t cooperation_flag, 
     if ((frameP==0)&&(subframeP==0)) {
       LTE_eNB_UE_stats *eNB_UE_stats = mac_xface->get_eNB_UE_stats(module_idP, CC_id, rnti);
       int cqi = eNB_UE_stats == NULL ? -1 : eNB_UE_stats->DL_cqi[0];
+      //printf("eNB_dlsch_ulsch_scheduler: cqi %d\n",cqi);
       LOG_I(MAC,"UE  rnti %x : %s, PHR %d dB CQI %d\n", rnti,
             UE_list->UE_sched_ctrl[i].ul_out_of_sync==0 ? "in synch" : "out of sync",
             UE_list->UE_template[CC_id][i].phr_info,
@@ -156,7 +157,7 @@ void eNB_dlsch_ulsch_scheduler(module_id_t module_idP,uint8_t cooperation_flag, 
 
     eNB_mac_inst[module_idP].UE_list.UE_sched_ctrl[i].cqi_req_timer++;
     eNB_UE_stats = mac_xface->get_eNB_UE_stats(module_idP,CC_id,rnti);
-
+    //printf("eNB_dlsch_ulsch_scheduler: UE %d, CC_id %d, rnti %x, cqi %d\n",i,CC_id,rnti,eNB_UE_stats->DL_cqi[0]);//it works for multiple RRUs
     if (eNB_UE_stats==NULL) {
 	//mac_remove_ue(module_idP, i, frameP, subframeP);
       //Inform the controller about the UE deactivation. Should be moved to RRC agent in the future
@@ -290,17 +291,18 @@ void eNB_dlsch_ulsch_scheduler(module_id_t module_idP,uint8_t cooperation_flag, 
     if (msg_p != NULL) {
       msg_name = ITTI_MSG_NAME (msg_p);
       instance = ITTI_MSG_INSTANCE (msg_p);
-
+      
       switch (ITTI_MSG_ID(msg_p)) {
       case MESSAGE_TEST:
         LOG_D(MAC, "Received %s\n", ITTI_MSG_NAME(msg_p));
+	//printf("Received %s\n", ITTI_MSG_NAME(msg_p));
         break;
 
       case RRC_MAC_BCCH_DATA_REQ:
         LOG_D(MAC, "Received %s from %s: instance %d, frameP %d, eNB_index %d\n",
               msg_name, ITTI_MSG_ORIGIN_NAME(msg_p), instance,
               RRC_MAC_BCCH_DATA_REQ (msg_p).frame, RRC_MAC_BCCH_DATA_REQ (msg_p).enb_index);
-
+   	//printf("eNB_dlsch_ulsch_scheduler: eNB_id %d\n",(msg_p).enb_index);
         // TODO process BCCH data req.
         break;
 
@@ -344,6 +346,7 @@ void eNB_dlsch_ulsch_scheduler(module_id_t module_idP,uint8_t cooperation_flag, 
   
   //if (subframeP%5 == 0)
   //#ifdef EXMIMO
+  //printf("Going to pdcp_run\n");
   PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, module_idP, ENB_FLAG_YES, NOT_A_RNTI, frameP, subframeP,module_idP);
   pdcp_run(&ctxt);
   //#endif
