@@ -186,6 +186,11 @@ uint32_t get_I_mcs(int CE_level);
 uint32_t get_max_tbs(uint32_t I_tbs);
 uint32_t get_tbs(uint32_t data_size, uint32_t I_tbs, uint32_t *I_sf);
 uint32_t get_num_sf(uint32_t I_sf);
+
+//////
+uint8_t get_UL_I_TBS_from_MCS_NB_IoT(uint8_t I_mcs, uint8_t N_sc_RU, uint8_t Msg3_flag);
+//////
+
 uint32_t get_scheduling_delay(uint32_t I_delay, uint32_t R_max);
 uint32_t get_HARQ_delay(int subcarrier_spacing, uint32_t HARQ_delay_index);
 //void generate_scheduling_result_DL(uint32_t DCI_subframe, uint32_t NPDSCH_subframe, uint32_t HARQ_subframe, DCIFormatN1_t *DCI, rnti_t rnti, uint32_t TBS, uint8_t *DLSCH_pdu);

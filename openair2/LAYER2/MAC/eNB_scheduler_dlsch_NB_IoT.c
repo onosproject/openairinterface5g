@@ -971,6 +971,31 @@ void maintain_resource_DL(eNB_MAC_INST_NB_IoT *mac_inst, sched_temp_DL_NB_IoT_t 
 	}
 
 }
+
+//// get I_TBS for any NPUSCH config
+
+uint8_t I_TBS_index_single_tone[11]= {0,2,1,3,4,5,6,7,8,9,10};
+
+uint8_t get_UL_I_TBS_from_MCS_NB_IoT(uint8_t I_mcs, uint8_t N_sc_RU, uint8_t Msg3_flag)
+{
+
+    if(Msg3_flag == 1)
+    {
+        return I_mcs;
+
+    } else {
+
+        if(N_sc_RU == 1)
+        {
+            return I_TBS_index_single_tone[I_mcs];
+        } else {
+            return I_mcs;
+        }
+
+    }
+
+}
+
 /*Get MCS index*/
 uint32_t get_I_mcs(int CE_level)
 {

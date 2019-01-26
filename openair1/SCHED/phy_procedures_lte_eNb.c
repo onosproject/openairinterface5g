@@ -534,7 +534,7 @@ void common_signal_procedures (PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc) {
             proc->frame_dscr_msg5 = framerx; 
             proc->subframe_dscr_msg5 = subframerx;
           }
-
+          /*
           rx_ulsch_Gen_NB_IoT(eNB,
                           proc,
                           0,//eNB_id,                    // this is the effective sector id
@@ -554,7 +554,7 @@ void common_signal_procedures (PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc) {
                           proc->counter_msg5,
                           subframerx,            //current_rx_subframe,
                           0); // data (0) or control (1)
-             
+            */
 
 
           proc->subframe_msg5++; 
@@ -581,7 +581,7 @@ void common_signal_procedures (PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc) {
       //printf("frame %d in demod NPUSCH = \n",frame);
       ///////////////////////////////////////////////////  NPUSH DEMOD ////////////////////////////////////
       // LTE_eNB_COMMON      *common_vars  =  &eNB->common_vars;
-      
+     /* 
       rx_ulsch_Gen_NB_IoT(eNB,
                           proc,
                           0,//eNB_id,                    // this is the effective sector id
@@ -601,7 +601,7 @@ void common_signal_procedures (PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc) {
                           proc->counter_msg3,
                           subframerx,
                           0); // data (0) or control (1)
-  
+  */
     proc->counter_msg3--;
 
   }

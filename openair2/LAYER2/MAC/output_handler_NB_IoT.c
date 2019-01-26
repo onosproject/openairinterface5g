@@ -291,8 +291,10 @@ int output_handler(eNB_MAC_INST_NB_IoT *mac_inst, module_id_t module_id, int CC_
 					//contidition should be added to select either the UL_TBS_Table or t UL_TBS_table_msg3
 
 					//(ul_config_pdu + i) ->nulsch_pdu.nulsch_pdu_rel13.size                    = UL_TBS_Table[((DCIFormatN0_t *)DCI_pdu)->mcs][((DCIFormatN0_t *)DCI_pdu)->ResAssign];
-					(ul_config_pdu + i) ->nulsch_pdu.nulsch_pdu_rel13.size                    = UL_TBS_Table_msg3[((DCIFormatN0_t *)DCI_pdu)->mcs];   // for the case of MSG3
-					
+					//(ul_config_pdu + i) ->nulsch_pdu.nulsch_pdu_rel13.size                    = UL_TBS_Table[get_UL_I_TBS_from_MCS_NB_IoT(((DCIFormatN0_t *)DCI_pdu)->mcs, get_N_RU(), 0)][((DCIFormatN0_t *)DCI_pdu)->ResAssign];
+					// get_UL_I_TBS_from_MCS_NB_IoT() to  be used to get the I_TBS for any NPUSCH format 
+					(ul_config_pdu + i) ->nulsch_pdu.nulsch_pdu_rel13.size                    = UL_TBS_Table_msg3[get_UL_I_TBS_from_MCS_NB_IoT(((DCIFormatN0_t *)DCI_pdu)->mcs, 0, 1)];   // for the case of MSG3
+					 
 					//LOG_D(MAC,"test\n");
 					(ul_config_pdu + i) ->nulsch_pdu.nulsch_pdu_rel13.rnti                    = schedule_result_list_UL->rnti;  //TODO : check if it is the right rnti // get from msg2
 					(ul_config_pdu + i) ->nulsch_pdu.nulsch_pdu_rel13.subcarrier_indication   = ((DCIFormatN0_t *)DCI_pdu)->scind;
@@ -302,7 +304,7 @@ int output_handler(eNB_MAC_INST_NB_IoT *mac_inst, module_id_t module_id, int CC_
 					(ul_config_pdu + i) ->nulsch_pdu.nulsch_pdu_rel13.repetition_number       = ((DCIFormatN0_t *)DCI_pdu)->RepNum;
 					(ul_config_pdu + i) ->nulsch_pdu.nulsch_pdu_rel13.new_data_indication     = ((DCIFormatN0_t *)DCI_pdu)->ndi;
 
-				}else if(schedule_result_list_UL->npusch_format == 1){
+				} else if(schedule_result_list_UL->npusch_format == 1){
 					DCI_pdu = schedule_result_list_UL->DCI_pdu;
 					(ul_config_pdu + i) ->nulsch_pdu.nulsch_pdu_rel13.nulsch_format       = 1;
 					(ul_config_pdu + i) ->nulsch_pdu.nulsch_pdu_rel13.rnti                = schedule_result_list_UL->rnti;

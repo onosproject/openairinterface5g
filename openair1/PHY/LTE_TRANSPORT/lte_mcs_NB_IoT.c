@@ -36,17 +36,42 @@
 #include "PHY/LTE_TRANSPORT/proto_NB_IoT.h"
 #include "PHY/LTE_TRANSPORT/extern_NB_IoT.h"
 
-unsigned char get_Qm_ul_NB_IoT(unsigned char I_MCS, uint8_t N_sc_RU)
-{
-	// N_sc_RU  = 1, 3, 6, 12
 
-	if (N_sc_RU > 1)
-		return(2);
-	else				// case N_sc_RU = 1  , see table 16.5.1.2-1  , TS 36213 
-		if (I_MCS<2)
-			return(1); 
-		else
-			return(2);
+uint8_t get_Qm_UL_NB_IoT(unsigned char I_mcs, uint8_t N_sc_RU, uint8_t I_sc, uint8_t Msg3_flag)
+{
+	if (Msg3_flag == 1)    /////////////////////////// case of Msg3
+    {
+    	
+        if(I_mcs > 0)
+        {
+            return  2;
+
+        } else if (I_mcs == 0 && I_sc <12) {
+
+            return 1;
+
+        } else {           ////// I_mcs == 0 && I_sc >11
+
+            return 2;
+        }
+
+    } else {                 /////////////////////// case of other NPUSCH config
+
+        if(N_sc_RU == 1)
+        {
+            if(I_mcs <2)
+            {
+                return 1;
+            } else {
+                return 2;
+            }
+
+        } else {     /////////////// N_sc_RU > 1
+
+            return 2;
+        }
+
+    }
 	
 }
 

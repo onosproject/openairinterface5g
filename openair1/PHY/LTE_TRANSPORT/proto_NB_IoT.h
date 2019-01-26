@@ -237,13 +237,13 @@ uint8_t generate_dci_top_NB_IoT(NB_IoT_eNB_NPDCCH_t     *npdcch,
   @param llr8_flag If 1, indicate that the 8-bit turbo decoder should be used
   @returns 0 on success
 */
-unsigned int  ulsch_decoding_NB_IoT(PHY_VARS_eNB     *phy_vars_eNB,
+/*unsigned int  ulsch_decoding_NB_IoT(PHY_VARS_eNB     *phy_vars_eNB,
                                     eNB_rxtx_proc_t  *proc,
                                     uint8_t                 UE_id,
                                     uint8_t                 control_only_flag,
                                     uint8_t                 Nbundled,
                                     uint8_t                 llr8_flag);
-
+*/
 
 //  NB_IoT_eNB_NULSCH_t *new_eNB_ulsch_NB_IoT(uint8_t abstraction_flag);
 
@@ -255,7 +255,6 @@ uint8_t subframe2harq_pid_NB_IoT(LTE_DL_FRAME_PARMS *frame_parms,uint32_t frame,
     @param I_MCS */
 
 //uint8_t get_Qm_ul_NB_IoT(uint8_t I_MCS);
-unsigned char get_Qm_ul_NB_IoT(unsigned char I_MCS, uint8_t N_sc_RU);
 
 /** \fn dlsch_encoding(PHY_VARS_eNB *eNB,
     uint8_t *input_buffer,
@@ -351,13 +350,7 @@ int32_t dlsch_encoding_NB_IoT(unsigned char              *a,
                               unsigned int               G);         // G (number of available RE) is implicitly multiplied by 2 (since only QPSK modulation)
  
 
-/////////////////////////////////////////////////////////////////
-void rx_ulsch_NB_IoT(PHY_VARS_eNB      *phy_vars_eNB,
-                     eNB_rxtx_proc_t   *proc,
-                     uint8_t                  eNB_id,               // this is the effective sector id
-                     uint8_t                  UE_id,
-                     NB_IoT_eNB_NULSCH_t      **ulsch,
-                     uint8_t                  cooperation_flag);
+
 
 
 uint8_t rx_ulsch_Gen_NB_IoT(PHY_VARS_eNB            *eNB,
@@ -378,7 +371,8 @@ uint8_t rx_ulsch_Gen_NB_IoT(PHY_VARS_eNB            *eNB,
                          unsigned int            A,
                          uint16_t                counter_msg,
                          uint8_t                 subframerx,
-                         uint8_t                 rvdx);
+                         uint8_t                 rvdx,
+                         uint8_t                 msg3_flag);
 
 void ulsch_extract_rbs_single_NB_IoT(int32_t **rxdataF,
                                      int32_t **rxdataF_ext,
@@ -426,6 +420,13 @@ int16_t* sub_sampling_NB_IoT(int16_t *input_buffer, uint32_t length_input, uint3
 
 void filtering_signal(int16_t *input_buffer, int16_t *filtered_buffer, uint32_t FRAME_LENGTH_COMPLEX_SAMPLESx); 
 //************************************************************//
+///////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////
+//uint8_t get_UL_I_TBS_from_MCS_NB_IoT(uint8_t I_mcs, uint8_t N_sc_RU, uint8_t Msg3_flag);
+
+uint8_t get_Qm_UL_NB_IoT(unsigned char I_mcs, uint8_t N_sc_RU, uint8_t I_sc, uint8_t Msg3_flag);
+
 uint16_t get_UL_sc_start_NB_IoT(uint16_t I_sc); 
 
 uint16_t get_UL_sc_index_start_NB_IoT(uint8_t subcarrier_spacing, uint16_t I_sc, uint8_t npush_format);
@@ -437,6 +438,10 @@ uint16_t get_UL_N_rep_NB_IoT(uint8_t I_rep);
 uint8_t get_numb_UL_sc_NB_IoT(uint8_t subcarrier_spacing, uint8_t I_sc, uint8_t npush_format);
 
 uint8_t get_UL_slots_per_RU_NB_IoT(uint8_t subcarrier_spacing, uint8_t subcarrier_indcation, uint8_t UL_format);
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void generate_grouphop_NB_IoT(LTE_DL_FRAME_PARMS *frame_parms); 
 

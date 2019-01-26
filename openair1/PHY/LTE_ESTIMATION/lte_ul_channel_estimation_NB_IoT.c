@@ -404,7 +404,7 @@ int ul_chequal_tmp_NB_IoT(int32_t **rxdataF_ext,
 }
 
 /////////////////////////////////////////////////////////////////////////////
-
+/*
 int32_t ul_channel_estimation_NB_IoT(PHY_VARS_eNB             *eNB,
                                          eNB_rxtx_proc_t      *proc,
                                          uint8_t              eNB_id,
@@ -731,7 +731,7 @@ int32_t ul_channel_estimation_NB_IoT(PHY_VARS_eNB             *eNB,
 
 }
 
-
+*/
 
 
 

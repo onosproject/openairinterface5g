@@ -1117,7 +1117,7 @@ static inline unsigned int lte_gold_unscram_NB_IoT(unsigned int *x1, unsigned in
 
 }
 
-
+/*
 unsigned int  ulsch_decoding_NB_IoT(PHY_VARS_eNB     *eNB,
                                     eNB_rxtx_proc_t  *proc,
                                     uint8_t                 UE_id,
@@ -1183,9 +1183,9 @@ unsigned int  ulsch_decoding_NB_IoT(PHY_VARS_eNB     *eNB,
       VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_ENB_ULSCH_DECODING0+harq_pid,0); 
       return 1+ulsch->max_turbo_iterations;
   }
-
+*/
 /* ----------------------- Segmentation */
-
+/*
   // nb_rb = ulsch_harq->nb_rb;  // nb_rb set but not used ??
   //nb_rb = 1;  // nb_rb set but not used ??
   A     = ulsch_harq->TBS;
@@ -1248,7 +1248,7 @@ unsigned int  ulsch_decoding_NB_IoT(PHY_VARS_eNB     *eNB,
        //mac_xface_NB_IoT->macphy_exit("ulsch_decoding.c: FATAL sumKr is 0!");
     return(-1);
   }
-
+*/
   // No control information in NB-IoT
   // Compute Q_ri
 //   Qprime = ulsch_harq->O_RI*ulsch_harq->Msc_initial*ulsch_harq->Nsymb_initial * ulsch->beta_offset_ri_times8;
@@ -1313,7 +1313,7 @@ unsigned int  ulsch_decoding_NB_IoT(PHY_VARS_eNB     *eNB,
 // #endif
 
 //   G             = G - Q_RI - Q_CQI;
-  ulsch_harq->G = G;
+ /* ulsch_harq->G = G;
 
   if ((int)G < 0) {
     LOG_E(PHY,"FATAL: ulsch_decoding.c G < 0 (%d) : Q_RI %d, Q_CQI %d\n",G,Q_RI,Q_CQI);
@@ -1343,15 +1343,15 @@ unsigned int  ulsch_decoding_NB_IoT(PHY_VARS_eNB     *eNB,
   // read in buffer and unscramble llrs for everything but placeholder bits
   // llrs stored per symbol correspond to columns of interleaving matrix
   s  = lte_gold_unscram_NB_IoT(&x1, &x2, 1);
-  i2 = 0;
+  i2 = 0;*/
 
-  for (i=0; i<((Hpp*Q_m)>>5); i++) {
+ // for (i=0; i<((Hpp*Q_m)>>5); i++) {
     /*
     for (j=0; j<32; j++) {
       cseq[i2++] = (int16_t)((((s>>j)&1)<<1)-1);
     }
     */
-    #if defined(__x86_64__) || defined(__i386__)
+ /*   #if defined(__x86_64__) || defined(__i386__)
     #ifndef __AVX2__
         ((__m128i*)cseq)[i2++] = ((__m128i*)unscrambling_lut_NB_IoT)[(s&65535)<<1];
         ((__m128i*)cseq)[i2++] = ((__m128i*)unscrambling_lut_NB_IoT)[1+((s&65535)<<1)];
@@ -1372,7 +1372,7 @@ unsigned int  ulsch_decoding_NB_IoT(PHY_VARS_eNB     *eNB,
     s = lte_gold_unscram_NB_IoT(&x1, &x2, 0);
   }
 
-
+*/
   //  printf("after unscrambling c[%d] = %p\n",0,ulsch_harq->c[0]);
 
   // if (frame_parms->Ncp == 0)
@@ -1429,7 +1429,7 @@ unsigned int  ulsch_decoding_NB_IoT(PHY_VARS_eNB     *eNB,
   //   #endif
   //   j=(j+3)&3;
   // }
-
+/*
   i = 0;
 
   switch (Q_m) {
@@ -1459,7 +1459,7 @@ unsigned int  ulsch_decoding_NB_IoT(PHY_VARS_eNB     *eNB,
     }
 
     break;
-
+*/
   // case 4:
   //   for (j=0; j<Cmux; j++) {
 
@@ -1508,14 +1508,14 @@ unsigned int  ulsch_decoding_NB_IoT(PHY_VARS_eNB     *eNB,
   //   }
 
   //   break;
-  }
+ // }
 
 
 
 
   // if (i!=(H+Q_RI))
-  if (i!=(H))
-    LOG_D(PHY,"ulsch_decoding.c: Error in input buffer length (j %d, H+Q_RI %d)\n",i,H+Q_RI);
+//  if (i!=(H))
+//    LOG_D(PHY,"ulsch_decoding.c: Error in input buffer length (j %d, H+Q_RI %d)\n",i,H+Q_RI);
 
   // HARQ-ACK Bits (LLRs are nulled in overwritten bits after copying HARQ-ACK LLR)
 
@@ -1629,8 +1629,8 @@ unsigned int  ulsch_decoding_NB_IoT(PHY_VARS_eNB     *eNB,
   //  printf("after RI2 c[%d] = %p\n",0,ulsch_harq->c[0]);
 
   // CQI and Data bits
-  j  = 0;
-  j2 = 0;
+ // j  = 0;
+ // j2 = 0;
 
   //  r=0;
   // if (Q_RI>0) {
@@ -1726,9 +1726,9 @@ unsigned int  ulsch_decoding_NB_IoT(PHY_VARS_eNB     *eNB,
       *((int16x8_t *)&ulsch_harq->e[iprime]) = *((int16x8_t *)&y[j2]);
     #endif
     */
-    int16_t *yp,*ep;
+  //  int16_t *yp,*ep;
 
-    for (iprime=0,yp=&y[j2],ep=&ulsch_harq->e[0]; 
+ /*   for (iprime=0,yp=&y[j2],ep=&ulsch_harq->e[0]; 
 	     iprime<G;
 	     iprime+=8,j2+=8,ep+=8,yp+=8) {
        ep[0] = yp[0];
@@ -1741,7 +1741,7 @@ unsigned int  ulsch_decoding_NB_IoT(PHY_VARS_eNB     *eNB,
        ep[7] = yp[7];
     }
   
-    
+    */
    
   //stop_meas_NB_IoT(&eNB->ulsch_demultiplexing_stats);
 
@@ -1878,7 +1878,7 @@ unsigned int  ulsch_decoding_NB_IoT(PHY_VARS_eNB     *eNB,
 
 */
   // Do ULSCH Decoding for data portion
-
+/*
   ret = eNB->td(eNB,UE_id,harq_pid,llr8_flag);
 
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_ENB_ULSCH_DECODING0+harq_pid,0);
@@ -1886,7 +1886,7 @@ unsigned int  ulsch_decoding_NB_IoT(PHY_VARS_eNB     *eNB,
   return(ret);
 }
 
-
+*/
 /*
 #ifdef PHY_ABSTRACTION
 

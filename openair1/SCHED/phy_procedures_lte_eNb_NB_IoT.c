@@ -1616,7 +1616,6 @@ void npusch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,uint8_t data_or_c
                 nulsch->flag_scramble = 0;
            }
 
-
                      /*
                      // UE has ULSCH scheduling
                      for (int rb=0; rb<=ulsch_harq->nb_rb; rb++)
@@ -1632,6 +1631,8 @@ void npusch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,uint8_t data_or_c
                                         ulsch_harq->V_UL_DAI,
                                         ulsch_harq->nb_rb>20 ? 1 : 0);*/
                     // fill_ulsch_cqi_indication(eNB,frame,subframe,ulsch_harq,ulsch->rnti);
+              uint16_t N_slots = get_UL_slots_per_RU_NB_IoT(nulsch_harq->subcarrier_spacing, nulsch_harq->subcarrier_indication, nulsch->npusch_format)*get_UL_N_ru_NB_IoT(nulsch_harq->mcs,nulsch_harq->resource_assignment,nulsch->Msg3_flag);
+              
               rx_ulsch_Gen_NB_IoT(eNB,
                                    proc,
                                    0,                         // this is the effective sector id
@@ -1643,19 +1644,18 @@ void npusch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,uint8_t data_or_c
                                    nulsch->rnti,                     //= 65522
                                    nulsch->Msg3_subframe,  // first received subframe 
                                    nulsch->Msg3_frame,     // first received frame
-                                   get_UL_slots_per_RU_NB_IoT(nulsch_harq->subcarrier_spacing, nulsch_harq->subcarrier_indication, nulsch->npusch_format)*get_UL_N_ru_NB_IoT(nulsch_harq->mcs,nulsch_harq->resource_assignment,nulsch->Msg3_flag), //  total number of occupied slots = get_nb_slot_per_RU * NB_of_RU
+                                   N_slots, //  total number of occupied slots = get_nb_slot_per_RU * NB_of_RU
                                    get_UL_sc_index_start_NB_IoT(nulsch_harq->subcarrier_spacing,nulsch_harq->subcarrier_indication,nulsch->npusch_format),
-                                   1,
-                                   2, 
+                                   get_UL_N_ru_NB_IoT(nulsch_harq->mcs,nulsch_harq->resource_assignment,nulsch->Msg3_flag),   // N_RU
+                                   nulsch_harq->mcs,   // I_mcs
                                    nulsch_harq->TBS,      //  A = TBS
-                                   proc->counter_msg3,  // this represents the number of Subframe after encoding the msg3 // proc->counter_msg3
+                                   N_slots/2,  ///proc->counter_msg3,  // this represents the number of Subframe after encoding the msg3 // proc->counter_msg3
                                    subframerx,
-                                   0); 
+                                   0,
+                                   nulsch->Msg3_flag); 
 
          }
-
-                
-                
+          
    }  // for UE loop
 
 }
