@@ -1103,7 +1103,7 @@ rrc_pdcp_config_asn1_req (
   MBMS_SessionInfoList_r9_t *mbms_SessionInfoList_r9_p = NULL;
   MBMS_SessionInfo_r9_t     *MBMS_SessionInfo_p        = NULL;
 #endif
-
+printf("pdcp.c:ctxt_pP->module_id %d",ctxt_pP->module_id);
   LOG_T(PDCP, PROTOCOL_CTXT_FMT" %s() SRB2ADD %p DRB2ADD %p DRB2RELEASE %p\n",
         PROTOCOL_CTXT_ARGS(ctxt_pP),
         __FUNCTION__,

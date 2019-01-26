@@ -520,7 +520,7 @@ void phy_config_afterHO_ue(uint8_t Mod_id,uint8_t CC_id,uint8_t eNB_id, Mobility
            (void *)&PHY_vars_UE_g[Mod_id][CC_id]->frame_parms,
            sizeof(LTE_DL_FRAME_PARMS));
     PHY_vars_UE_g[Mod_id][CC_id]->ho_triggered = 1;
-    //PHY_vars_UE_g[UE_id]->UE_mode[0] = PRACH;
+    //PHY_vars_UE_g[UE_id]->UE_mode[eNB_id] = PRACH;
 
     LTE_DL_FRAME_PARMS *fp = &PHY_vars_UE_g[Mod_id][CC_id]->frame_parms;
     //     int N_ZC;
@@ -763,7 +763,7 @@ void phy_config_harq_ue(uint8_t Mod_id,int CC_id,uint8_t eNB_id,
 void phy_config_dedicated_ue(uint8_t Mod_id,int CC_id,uint8_t eNB_id,
                              struct PhysicalConfigDedicated *physicalConfigDedicated )
 {
-  printf("phy_config_dedicated_ue: eNB_id %d\n",eNB_id);
+
   static uint8_t first_dedicated_configuration = 0;
   PHY_VARS_UE *phy_vars_ue = PHY_vars_UE_g[Mod_id][CC_id];
 
@@ -1106,7 +1106,7 @@ int phy_init_lte_ue(PHY_VARS_UE *ue,
   {
 	current_thread_id[i] = i % 2;
         ue->current_thread_id[i] = i % 2;
-	printf("ue->Mod_id %d, thread %d = %d\n",ue->Mod_id,i,ue->current_thread_id[i]);
+	printf("UE %d, thread %d = %d\n",ue->Mod_id,i,ue->current_thread_id[i]);
   }
   printf("Initializing UE vars (abstraction %"PRIu8") for eNB TXant %"PRIu8", UE RXant %"PRIu8"\n",abstraction_flag,fp->nb_antennas_tx,fp->nb_antennas_rx);
   LOG_D(PHY,"[MSC_NEW][FRAME 00000][PHY_UE][MOD %02u][]\n", ue->Mod_id+NB_eNB_INST);
@@ -1138,7 +1138,7 @@ int phy_init_lte_ue(PHY_VARS_UE *ue,
   }
 
   ue->n_connected_eNB = nb_connected_eNB;
-  //printf("lte_init: n_connected_eNB = %d,%d\n",ue->n_connected_eNB,nb_connected_eNB);
+  printf("lte_init: n_connected_eNB = %d,%d\n",ue->n_connected_eNB,nb_connected_eNB);
   for(eNB_id = 0; eNB_id < ue->n_connected_eNB; eNB_id++) {
     ue->total_TBS[eNB_id] = 0;
     ue->total_TBS_last[eNB_id] = 0;

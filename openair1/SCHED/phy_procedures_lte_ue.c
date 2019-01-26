@@ -1428,7 +1428,7 @@ void ue_prach_procedures(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,uin
                  frame_tx,
                  eNB_id,
                  subframe_tx);
-      LOG_D(PHY,"Got prach_resources for eNB %d address %p, RRCCommon %p\n",eNB_id,ue->prach_resources[eNB_id],UE_mac_inst[ue->Mod_id].radioResourceConfigCommon);
+      LOG_D(PHY,"Got prach_resources for eNB %d address %p, RRCCommon %p\n",/*eNB_id*/ue->common_vars.eNb_id,ue->prach_resources[eNB_id],UE_mac_inst[ue->Mod_id].radioResourceConfigCommon);
       LOG_D(PHY,"Prach resources %p\n",ue->prach_resources[eNB_id]);
       //printf("Got prach_resources for eNB %d address %p, RRCCommon %p\n",ue->common_vars.eNb_id,ue->prach_resources[eNB_id],UE_mac_inst[ue->Mod_id].radioResourceConfigCommon);
       //printf("Prach resources %p\n",ue->prach_resources[eNB_id]);
@@ -1514,8 +1514,8 @@ void ue_prach_procedures(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,uin
           eNB_id);//not necessary to change
     }
 
-    LOG_I(PHY,"[UE  %d][RAPROC] Frame %d, subframe %d: Generating PRACH (eNB %d (ue->common_vars.eNb_id %d)) preamble index %d for UL, TX power %d dBm (PL %d dB), l3msg \n",
-    ue->Mod_id,frame_tx,subframe_tx,eNB_id,ue->common_vars.eNb_id,
+    LOG_I(PHY,"[UE  %d][RAPROC] Frame %d, subframe %d: Generating PRACH (eNB %d) preamble index %d for UL, TX power %d dBm (PL %d dB), l3msg \n",
+    ue->Mod_id,frame_tx,subframe_tx,ue->common_vars.eNb_id,
     ue->prach_resources[eNB_id]->ra_PreambleIndex,
     ue->prach_resources[eNB_id]->ra_PREAMBLE_RECEIVED_TARGET_POWER+get_PL(ue->Mod_id,ue->CC_id,eNB_id),
     get_PL(ue->Mod_id,ue->CC_id,eNB_id));
@@ -2547,7 +2547,7 @@ void phy_procedures_UE_TX(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,ui
     // check if we have PRACH opportunity
 
     if (is_prach_subframe(&ue->frame_parms,frame_tx,subframe_tx)) {
-      //printf("is there a PRACH opportunity? %d\n",is_prach_subframe(&ue->frame_parms,frame_tx,subframe_tx));
+      printf("prach_procedures: eNB_id %d, ue-eNB_id %d\n",eNB_id,ue->common_vars.eNb_id);
       ue_prach_procedures(ue,proc,eNB_id,abstraction_flag,mode);
     }
   } // mode is PRACH
@@ -5240,7 +5240,7 @@ else
     if (do_pdcch_flag) {
       if ((l==pilot1) ||
 	  ((pmch_flag==1)&(l==l2)))  {
-	LOG_D(PHY,"[UE  %d] Frame %d: Calling pdcch procedures (eNB %d)\n",ue->Mod_id,frame_rx,eNB_id);
+	LOG_D(PHY,"[UE  %d] Frame %d: Calling pdcch procedures (eNB %d)\n",ue->Mod_id,frame_rx,/*eNB_id*/ue->common_vars.eNb_id);
 
 	//start_meas(&ue->rx_pdcch_stats[ue->current_thread_id[subframe_rx]]);
 	if (ue_pdcch_procedures(eNB_id,ue,proc,abstraction_flag) == -1) {/*eNB_id=0*/

@@ -1090,7 +1090,7 @@ int8_t find_ue(uint16_t rnti, PHY_VARS_eNB *eNB)
   uint8_t i;
 
   for (i=0; i<NUMBER_OF_UE_MAX; i++) {
-    printf("eNB->dlsch[i] %d, eNB->dlsch[i][0] %d, eNB->dlsch[i][0]->rnti %d, rnti %d\n",eNB->dlsch[i],eNB->dlsch[i][0],eNB->dlsch[i][0]->rnti,rnti);
+    //printf("eNB->dlsch[i] %d, eNB->dlsch[i][0] %d, eNB->dlsch[i][0]->rnti %d, rnti %d\n",eNB->dlsch[i],eNB->dlsch[i][0],eNB->dlsch[i][0]->rnti,rnti);
     if ((eNB->dlsch[i]) &&
         (eNB->dlsch[i][0]) &&
         (eNB->dlsch[i][0]->rnti==rnti)) {

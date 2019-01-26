@@ -38,7 +38,7 @@ void lte_adjust_synch(LTE_DL_FRAME_PARMS *frame_parms,
                       unsigned char clear,
                       short coef)
 {
-  printf("lte_adjust_synch: eNB %d, UE %d\n",eNB_id,ue->Mod_id);
+  //printf("lte_adjust_synch: eNB %d, UE %d\n",eNB_id,ue->Mod_id);
   static int max_pos_fil = 0;
   static int count_max_pos_ok = 0;
   static int first_time = 1;

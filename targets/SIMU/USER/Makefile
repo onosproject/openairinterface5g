@@ -1,6 +1,5 @@
 # Include some shared directives
 include $(OPENAIR_TARGETS)/Makerules
-
 default: oaisim
 
 include $(OPENAIR_TARGETS)/Makefile.common
@@ -11,6 +10,7 @@ OPENAIR2_TOP          = $(OPENAIR2_DIR)
 OPENAIR3_TOP          = $(OPENAIR3_DIR)
 OPENAIR3              = $(OPENAIR3_DIR)
 
+CFLAGS += -pg
 ifeq ($(DEBUG),1)	
 CFLAGS += -g -ggdb -DDEBUG_PHY -DDEBUG_MEAS
 CFLAGS += -DRRC_MSG_PRINT
@@ -169,7 +169,6 @@ endif
 ifdef GPROF
 CFLAGS += -pg
 endif
-
 #require kernel patch for oai driver to enable address autoconfiguration (IPv6 only)
 ifdef ADDCONF
 CFLAGS+=-DADDRCONF
@@ -198,7 +197,7 @@ LIBS += $(OPENSSL_LIBS) $(NETTLE_LIBS)
 endif
 endif
 endif
-
+CFLAGS += -pg
 include $(OPENAIR1_DIR)/PHY/Makefile.inc
 include $(OPENAIR1_DIR)/SCHED/Makefile.inc
 include $(OPENAIR2_DIR)/RRC/LITE/MESSAGES/Makefile.inc

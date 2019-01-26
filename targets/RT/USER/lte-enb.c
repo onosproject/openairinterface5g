@@ -865,7 +865,7 @@ void fh_if4p5_asynch_DL(PHY_VARS_eNB *eNB,int *frame,int *subframe) {
   symbol_number = 0;
 
   LOG_D(PHY,"fh_asynch_DL_IF4p5: in, frame %d, subframe %d\n",*frame,*subframe);
-
+  //printf("fh_if4p5_asynch_DL: frame_tx:eNB_id %d, frame %d, subframe %d\n",eNB->Mod_id,*frame,*subframe);
   // correct for TDD
   if (fp->frame_type == TDD) {
     while (subframe_select(fp,*subframe) == SF_UL) {
