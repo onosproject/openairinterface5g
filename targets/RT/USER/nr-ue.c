@@ -676,7 +676,7 @@ static void *UE_thread_rxn_txnp4(void *arg) {
 
 
         // Process Rx data for one sub-frame
-        if (slot_select_nr(&UE->frame_parms, proc->frame_tx, proc->nr_tti_tx) & NR_DOWNLINK_SLOT) {
+        if (slot_select_nr(&UE->frame_parms, proc->frame_tx, proc->nr_slot_tx) & NR_DOWNLINK_SLOT) {
 
             //clean previous FAPI MESSAGE
             UE->rx_ind.number_pdus = 0;
@@ -688,12 +688,13 @@ static void *UE_thread_rxn_txnp4(void *arg) {
 	    UE->dcireq.gNB_index = 0;
 	    UE->dcireq.cc_id     = 0;
 	    UE->dcireq.frame     = proc->frame_rx;
-	    UE->dcireq.slot      = proc->nr_tti_rx;
+	    UE->dcireq.slot      = proc->nr_slot_rx;
 	    nr_ue_dcireq(&UE->dcireq); //to be replaced with function pointer later
 
 	    NR_UE_MAC_INST_t *UE_mac = get_mac_inst(0);
 	    UE_mac->scheduled_response.dl_config = &UE->dcireq.dl_config_req;
 	    nr_ue_scheduled_response(&UE_mac->scheduled_response);
+
 	    
 #ifdef UE_SLOT_PARALLELISATION
             phy_procedures_slot_parallelization_nrUE_RX( UE, proc, 0, 0, 1, UE->mode, no_relay, NULL );
@@ -718,7 +719,7 @@ static void *UE_thread_rxn_txnp4(void *arg) {
                 UE->ul_indication.gNB_index = 0;
                 UE->ul_indication.cc_id = 0;
                 UE->ul_indication.frame = proc->frame_rx; 
-                UE->ul_indication.slot = proc->nr_tti_rx;
+                UE->ul_indication.slot = proc->nr_slot_rx;
                 
                 UE->if_inst->ul_indication(&UE->ul_indication);
             }
@@ -732,7 +733,7 @@ static void *UE_thread_rxn_txnp4(void *arg) {
         // Prepare the future Tx data
 #if 0
 #ifndef NO_RAT_NR
-        if (slot_select_nr(&UE->frame_parms, proc->frame_tx, proc->nr_tti_tx) & NR_UPLINK_SLOT)
+        if (slot_select_nr(&UE->frame_parms, proc->frame_tx, proc->nr_slot_tx) & NR_UPLINK_SLOT)
 #else
         if ((subframe_select( &UE->frame_parms, proc->subframe_tx) == SF_UL) ||
                 (UE->frame_parms.frame_type == FDD) )
@@ -1026,16 +1027,15 @@ void *UE_thread(void *arg) {
                         UE->proc.proc_rxtx[th_id].gotIQs=readTime(gotIQs);
                     }
 
-                    proc->nr_tti_rx=subframe_nr;
+                    proc->nr_slot_rx=subframe_nr*UE->frame_parms.slots_per_subframe;
                     proc->subframe_rx=subframe_nr;
 		    
                     proc->frame_tx = proc->frame_rx;
-                    proc->nr_tti_tx= subframe_nr + DURATION_RX_TO_TX;
-                    if (proc->nr_tti_tx > NR_NUMBER_OF_SUBFRAMES_PER_FRAME) {
+                    proc->subframe_tx= subframe_nr + DURATION_RX_TO_TX;
+                    if (proc->subframe_tx > NR_NUMBER_OF_SUBFRAMES_PER_FRAME) {
                       proc->frame_tx = (proc->frame_tx + 1)%MAX_FRAME_NUMBER;
-                      proc->nr_tti_tx %= NR_NUMBER_OF_SUBFRAMES_PER_FRAME;
+                      proc->subframe_tx %= NR_NUMBER_OF_SUBFRAMES_PER_FRAME;
                     }
-                    proc->subframe_tx=proc->nr_tti_rx;
                     proc->timestamp_tx = timestamp+
                                          (DURATION_RX_TO_TX*UE->frame_parms.samples_per_subframe)-
                                          UE->frame_parms.ofdm_symbol_size-UE->frame_parms.nb_prefix_samples0;
@@ -1073,7 +1073,6 @@ void *UE_thread(void *arg) {
 //                    pickStaticTime(lastTime);
                 } //UE->mode != loop_through_memory
                 else {
-		  proc->nr_tti_rx=subframe_nr;
 		  proc->subframe_rx=subframe_nr;
 		  if(subframe_nr == 0) {
 		    for (th_id=0; th_id < RX_NB_TH; th_id++) {
@@ -1081,14 +1080,16 @@ void *UE_thread(void *arg) {
 		    }
 		  }
 		  proc->frame_tx = proc->frame_rx;
-		  proc->nr_tti_tx= subframe_nr + DURATION_RX_TO_TX;
-		  if (proc->nr_tti_tx > NR_NUMBER_OF_SUBFRAMES_PER_FRAME) {
+		  proc->subframe_tx= subframe_nr + DURATION_RX_TO_TX;
+		  if (proc->subframe_tx > NR_NUMBER_OF_SUBFRAMES_PER_FRAME) {
 		    proc->frame_tx = (proc->frame_tx + 1)%MAX_FRAME_NUMBER;
-		    proc->nr_tti_tx %= NR_NUMBER_OF_SUBFRAMES_PER_FRAME;
+		    proc->subframe_tx %= NR_NUMBER_OF_SUBFRAMES_PER_FRAME;
 		  }
-		  proc->subframe_tx=proc->nr_tti_tx;
 
-		  if (slot_select_nr(&UE->frame_parms, proc->frame_tx, proc->nr_tti_tx) & NR_DOWNLINK_SLOT) {
+		  for (proc->nr_slot_rx=proc->subframe_rx*UE->frame_parms.slots_per_subframe;
+		       proc->nr_slot_rx<(proc->subframe_rx+1)*UE->frame_parms.slots_per_subframe;
+		       proc->nr_slot_rx++) {
+		  if (slot_select_nr(&UE->frame_parms, proc->frame_rx, proc->nr_slot_rx) & NR_DOWNLINK_SLOT) {
 		    
 		    //clean previous FAPI MESSAGE
 		    UE->rx_ind.number_pdus = 0;
@@ -1100,7 +1101,7 @@ void *UE_thread(void *arg) {
 		    UE->dcireq.gNB_index = 0;
 		    UE->dcireq.cc_id     = 0;
 		    UE->dcireq.frame     = proc->frame_rx;
-		    UE->dcireq.slot      = proc->nr_tti_rx;
+		    UE->dcireq.slot      = proc->nr_slot_rx;
 		    nr_ue_dcireq(&UE->dcireq); //to be replaced with function pointer later
 
 		    NR_UE_MAC_INST_t *UE_mac = get_mac_inst(0);
@@ -1108,7 +1109,7 @@ void *UE_thread(void *arg) {
 		    nr_ue_scheduled_response(&UE_mac->scheduled_response);
 
 		    
-		    printf("Processing subframe %d\n",proc->subframe_rx);
+		    printf("Processing subframe %d slot %d\n",proc->subframe_rx,proc->nr_slot_rx);
 		    phy_procedures_nrUE_RX( UE, proc, 0, 1, UE->mode);
 		  }
 		  
@@ -1117,12 +1118,13 @@ void *UE_thread(void *arg) {
 		    UE->ul_indication.gNB_index = 0;
 		    UE->ul_indication.cc_id = 0;
 		    UE->ul_indication.frame = proc->frame_rx; 
-		    UE->ul_indication.slot = proc->nr_tti_rx;
+		    UE->ul_indication.slot = proc->nr_slot_rx;
 		    
 		    UE->if_inst->ul_indication(&UE->ul_indication);
 		  }
 		  
 		  getchar();
+		  }
 		} // else loop_through_memory
             } // start_rx_stream==1
         } // UE->is_synchronized==1

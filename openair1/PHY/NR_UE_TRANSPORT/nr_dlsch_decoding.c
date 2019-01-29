@@ -204,7 +204,7 @@ uint32_t nr_dlsch_decoding(PHY_VARS_NR_UE *phy_vars_ue,
                          NR_DL_UE_HARQ_t *harq_process,
                          uint32_t frame,
 						 uint16_t nb_symb_sch,
-                         uint8_t nr_tti_rx,
+                         uint8_t nr_slot_rx,
                          uint8_t harq_pid,
                          uint8_t is_crnti,
                          uint8_t llr8_flag)
@@ -265,14 +265,14 @@ uint32_t nr_dlsch_decoding(PHY_VARS_NR_UE *phy_vars_ue,
     return(dlsch->max_ldpc_iterations);
   }
 
-  /*if (nr_tti_rx> (10*frame_parms->ttis_per_subframe-1)) {
-    printf("dlsch_decoding.c: Illegal subframe index %d\n",nr_tti_rx);
+  /*if (nr_slot_rx> (10*frame_parms->slots_per_subframe-1)) {
+    printf("dlsch_decoding.c: Illegal subframe index %d\n",nr_slot_rx);
     return(dlsch->max_ldpc_iterations);
   }*/
 
   /*if (harq_process->harq_ack.ack != 2) {
     LOG_D(PHY, "[UE %d] DLSCH @ SF%d : ACK bit is %d instead of DTX even before PDSCH is decoded!\n",
-        phy_vars_ue->Mod_id, nr_tti_rx, harq_process->harq_ack.ack);
+        phy_vars_ue->Mod_id, nr_slot_rx, harq_process->harq_ack.ack);
   }*/
 
   //  nb_rb = dlsch->nb_rb;
@@ -472,7 +472,7 @@ uint32_t nr_dlsch_decoding(PHY_VARS_NR_UE *phy_vars_ue,
         start_meas(dlsch_turbo_decoding_stats);
 #endif
 
-      //LOG_E(PHY,"AbsSubframe %d.%d Start turbo segment %d/%d A %d ",frame%1024,nr_tti_rx,r,harq_process->C-1, A);
+      //LOG_E(PHY,"AbsSubframe %d.%d Start turbo segment %d/%d A %d ",frame%1024,nr_slot_rx,r,harq_process->C-1, A);
 
       //printf("harq process dr iteration %d\n", p_decParams->numMaxIter);
 
@@ -570,23 +570,23 @@ uint32_t nr_dlsch_decoding(PHY_VARS_NR_UE *phy_vars_ue,
 
 
     if ((err_flag == 0) && (ret>=(1+dlsch->max_ldpc_iterations))) {// a Code segment is in error so break;
-      LOG_D(PHY,"AbsSubframe %d.%d CRC failed, segment %d/%d \n",frame%1024,nr_tti_rx,r,harq_process->C-1);
+      LOG_D(PHY,"AbsSubframe %d.%d CRC failed, segment %d/%d \n",frame%1024,nr_slot_rx,r,harq_process->C-1);
       err_flag = 1;
     }
   }
 
   int32_t frame_rx_prev = frame;
-  int32_t tti_rx_prev = nr_tti_rx - 1;
-  if (tti_rx_prev < 0) {
+  int32_t slot_rx_prev = nr_slot_rx - 1;
+  if (slot_rx_prev < 0) {
     frame_rx_prev--;
-    tti_rx_prev += 10*frame_parms->ttis_per_subframe;
+    slot_rx_prev += 10*frame_parms->slots_per_subframe;
   }
   frame_rx_prev = frame_rx_prev%1024;
 
   if (err_flag == 1) {
 #if UE_DEBUG_TRACE
-    LOG_I(PHY,"[UE %d] DLSCH: Setting NAK for SFN/SF %d/%d (pid %d, status %d, round %d, TBS %d, mcs %d) Kr %d r %d harq_process->round %d\n",
-        phy_vars_ue->Mod_id, frame, nr_tti_rx, harq_pid,harq_process->status, harq_process->round,harq_process->TBS,harq_process->mcs,Kr,r,harq_process->round);
+    LOG_I(PHY,"[UE %d] DLSCH: Seslotng NAK for SFN/SF %d/%d (pid %d, status %d, round %d, TBS %d, mcs %d) Kr %d r %d harq_process->round %d\n",
+        phy_vars_ue->Mod_id, frame, nr_slot_rx, harq_pid,harq_process->status, harq_process->round,harq_process->TBS,harq_process->mcs,Kr,r,harq_process->round);
 #endif
     harq_process->harq_ack.ack = 0;
     harq_process->harq_ack.harq_id = harq_pid;
@@ -595,22 +595,22 @@ uint32_t nr_dlsch_decoding(PHY_VARS_NR_UE *phy_vars_ue,
     harq_process->round++;
 
 
-    //    printf("Rate: [UE %d] DLSCH: Setting NACK for subframe %d (pid %d, round %d)\n",phy_vars_ue->Mod_id,subframe,harq_pid,harq_process->round);
+    //    printf("Rate: [UE %d] DLSCH: Seslotng NACK for subframe %d (pid %d, round %d)\n",phy_vars_ue->Mod_id,subframe,harq_pid,harq_process->round);
     if (harq_process->round >= dlsch->Mdlharq) {
       harq_process->status = SCH_IDLE;
       harq_process->round  = 0;
     }
     if(is_crnti)
     {
-    LOG_D(PHY,"[UE %d] DLSCH: Setting NACK for nr_tti_rx %d (pid %d, pid status %d, round %d/Max %d, TBS %d)\n",
-               phy_vars_ue->Mod_id,nr_tti_rx,harq_pid,harq_process->status,harq_process->round,dlsch->Mdlharq,harq_process->TBS);
+    LOG_D(PHY,"[UE %d] DLSCH: Seslotng NACK for nr_slot_rx %d (pid %d, pid status %d, round %d/Max %d, TBS %d)\n",
+               phy_vars_ue->Mod_id,nr_slot_rx,harq_pid,harq_process->status,harq_process->round,dlsch->Mdlharq,harq_process->TBS);
     }
 
     return((1+dlsch->max_ldpc_iterations));
   } else {
 #if UE_DEBUG_TRACE
-      LOG_I(PHY,"[UE %d] DLSCH: Setting ACK for nr_tti_rx %d TBS %d mcs %d nb_rb %d harq_process->round %d\n",
-           phy_vars_ue->Mod_id,nr_tti_rx,harq_process->TBS,harq_process->mcs,harq_process->nb_rb, harq_process->round);
+      LOG_I(PHY,"[UE %d] DLSCH: Seslotng ACK for nr_slot_rx %d TBS %d mcs %d nb_rb %d harq_process->round %d\n",
+           phy_vars_ue->Mod_id,nr_slot_rx,harq_process->TBS,harq_process->mcs,harq_process->nb_rb, harq_process->round);
 #endif
 
     harq_process->status = SCH_IDLE;
@@ -618,14 +618,14 @@ uint32_t nr_dlsch_decoding(PHY_VARS_NR_UE *phy_vars_ue,
     harq_process->harq_ack.ack = 1;
     harq_process->harq_ack.harq_id = harq_pid;
     harq_process->harq_ack.send_harq_status = 1;
-    //LOG_I(PHY,"[UE %d] DLSCH: Setting ACK for SFN/SF %d/%d (pid %d, status %d, round %d, TBS %d, mcs %d)\n",
+    //LOG_I(PHY,"[UE %d] DLSCH: Seslotng ACK for SFN/SF %d/%d (pid %d, status %d, round %d, TBS %d, mcs %d)\n",
       //  phy_vars_ue->Mod_id, frame, subframe, harq_pid, harq_process->status, harq_process->round,harq_process->TBS,harq_process->mcs);
 
     if(is_crnti)
     {
-    LOG_D(PHY,"[UE %d] DLSCH: Setting ACK for nr_tti_rx %d (pid %d, round %d, TBS %d)\n",phy_vars_ue->Mod_id,nr_tti_rx,harq_pid,harq_process->round,harq_process->TBS);
+    LOG_D(PHY,"[UE %d] DLSCH: Seslotng ACK for nr_slot_rx %d (pid %d, round %d, TBS %d)\n",phy_vars_ue->Mod_id,nr_slot_rx,harq_pid,harq_process->round,harq_process->TBS);
     }
-    //LOG_D(PHY,"[UE %d] DLSCH: Setting ACK for subframe %d (pid %d, round %d)\n",phy_vars_ue->Mod_id,subframe,harq_pid,harq_process->round);
+    //LOG_D(PHY,"[UE %d] DLSCH: Seslotng ACK for subframe %d (pid %d, round %d)\n",phy_vars_ue->Mod_id,subframe,harq_pid,harq_process->round);
 
   }
 
@@ -673,7 +673,7 @@ uint32_t  nr_dlsch_decoding_mthread(PHY_VARS_NR_UE *phy_vars_ue,
                          NR_DL_UE_HARQ_t *harq_process,
                          uint32_t frame,
 			 uint16_t nb_symb_sch,
-                         uint8_t nr_tti_rx,
+                         uint8_t nr_slot_rx,
                          uint8_t harq_pid,
                          uint8_t is_crnti,
                          uint8_t llr8_flag)
@@ -740,14 +740,14 @@ uint32_t  nr_dlsch_decoding_mthread(PHY_VARS_NR_UE *phy_vars_ue,
     return(dlsch->max_ldpc_iterations);
   }
 
- /* if (nr_tti_rx> (10*frame_parms->ttis_per_subframe-1)) {
-    printf("dlsch_decoding.c: Illegal subframe index %d\n",nr_tti_rx);
+ /* if (nr_slot_rx> (10*frame_parms->slots_per_subframe-1)) {
+    printf("dlsch_decoding.c: Illegal subframe index %d\n",nr_slot_rx);
     return(dlsch->max_ldpc_iterations);
   }
 
-  if (dlsch->harq_ack[nr_tti_rx].ack != 2) {
+  if (dlsch->harq_ack[nr_slot_rx].ack != 2) {
     LOG_D(PHY, "[UE %d] DLSCH @ SF%d : ACK bit is %d instead of DTX even before PDSCH is decoded!\n",
-        phy_vars_ue->Mod_id, nr_tti_rx, dlsch->harq_ack[nr_tti_rx].ack);
+        phy_vars_ue->Mod_id, nr_slot_rx, dlsch->harq_ack[nr_slot_rx].ack);
   }*/
 
   /*
@@ -1089,7 +1089,7 @@ if (harq_process->C>1) { // wakeup worker if more than 1 segment
 #if UE_TIMING_TRACE
         start_meas(dlsch_turbo_decoding_stats);
 #endif
-      LOG_D(PHY,"mthread AbsSubframe %d.%d Start turbo segment %d/%d \n",frame%1024,nr_tti_rx,r,harq_process->C-1);
+      LOG_D(PHY,"mthread AbsSubframe %d.%d Start turbo segment %d/%d \n",frame%1024,nr_slot_rx,r,harq_process->C-1);
       
             for (int cnt =0; cnt < (kc-2)*p_decParams->Z; cnt++){
             inv_d[cnt] = (1)*harq_process->d[r][cnt];
@@ -1183,23 +1183,23 @@ if (harq_process->C>1) { // wakeup worker if more than 1 segment
 
 
     if ((err_flag == 0) && (ret>=(1+dlsch->max_ldpc_iterations))) {// a Code segment is in error so break;
-      LOG_D(PHY,"AbsSubframe %d.%d CRC failed, segment %d/%d \n",frame%1024,nr_tti_rx,r,harq_process->C-1);
+      LOG_D(PHY,"AbsSubframe %d.%d CRC failed, segment %d/%d \n",frame%1024,nr_slot_rx,r,harq_process->C-1);
       err_flag = 1;
     }
   //} //loop r
 
   int32_t frame_rx_prev = frame;
-  int32_t tti_rx_prev = nr_tti_rx - 1;
-  if (tti_rx_prev < 0) {
+  int32_t slot_rx_prev = nr_slot_rx - 1;
+  if (slot_rx_prev < 0) {
     frame_rx_prev--;
-    tti_rx_prev += 10*frame_parms->ttis_per_subframe;
+    slot_rx_prev += 10*frame_parms->slots_per_subframe;
   }
   frame_rx_prev = frame_rx_prev%1024;
 
   if (err_flag == 1) {
 #if UE_DEBUG_TRACE
-    LOG_I(PHY,"[UE %d] DLSCH: Setting NAK for SFN/SF %d/%d (pid %d, status %d, round %d, TBS %d, mcs %d) Kr %d r %d harq_process->round %d\n",
-        phy_vars_ue->Mod_id, frame, nr_tti_rx, harq_pid,harq_process->status, harq_process->round,harq_process->TBS,harq_process->mcs,Kr,r,harq_process->round);
+    LOG_I(PHY,"[UE %d] DLSCH: Seslotng NAK for SFN/SF %d/%d (pid %d, status %d, round %d, TBS %d, mcs %d) Kr %d r %d harq_process->round %d\n",
+        phy_vars_ue->Mod_id, frame, nr_slot_rx, harq_pid,harq_process->status, harq_process->round,harq_process->TBS,harq_process->mcs,Kr,r,harq_process->round);
 #endif
     harq_process->harq_ack.ack = 0;
     harq_process->harq_ack.harq_id = harq_pid;
@@ -1208,22 +1208,22 @@ if (harq_process->C>1) { // wakeup worker if more than 1 segment
     harq_process->round++;
 
 
-    //    printf("Rate: [UE %d] DLSCH: Setting NACK for subframe %d (pid %d, round %d)\n",phy_vars_ue->Mod_id,subframe,harq_pid,harq_process->round);
+    //    printf("Rate: [UE %d] DLSCH: Seslotng NACK for subframe %d (pid %d, round %d)\n",phy_vars_ue->Mod_id,subframe,harq_pid,harq_process->round);
     if (harq_process->round >= dlsch->Mdlharq) {
       harq_process->status = SCH_IDLE;
       harq_process->round  = 0;
     }
     if(is_crnti)
     {
-    LOG_D(PHY,"[UE %d] DLSCH: Setting NACK for nr_tti_rx %d (pid %d, pid status %d, round %d/Max %d, TBS %d)\n",
-               phy_vars_ue->Mod_id,nr_tti_rx,harq_pid,harq_process->status,harq_process->round,dlsch->Mdlharq,harq_process->TBS);
+    LOG_D(PHY,"[UE %d] DLSCH: Seslotng NACK for nr_slot_rx %d (pid %d, pid status %d, round %d/Max %d, TBS %d)\n",
+               phy_vars_ue->Mod_id,nr_slot_rx,harq_pid,harq_process->status,harq_process->round,dlsch->Mdlharq,harq_process->TBS);
     }
 
     return((1+dlsch->max_ldpc_iterations));
   } else {
 #if UE_DEBUG_TRACE
-      LOG_I(PHY,"[UE %d] DLSCH: Setting ACK for nr_tti_rx %d TBS %d mcs %d nb_rb %d\n",
-           phy_vars_ue->Mod_id,nr_tti_rx,harq_process->TBS,harq_process->mcs,harq_process->nb_rb);
+      LOG_I(PHY,"[UE %d] DLSCH: Seslotng ACK for nr_slot_rx %d TBS %d mcs %d nb_rb %d\n",
+           phy_vars_ue->Mod_id,nr_slot_rx,harq_process->TBS,harq_process->mcs,harq_process->nb_rb);
 #endif
 
     harq_process->status = SCH_IDLE;
@@ -1231,14 +1231,14 @@ if (harq_process->C>1) { // wakeup worker if more than 1 segment
     harq_process->harq_ack.ack = 1;
     harq_process->harq_ack.harq_id = harq_pid;
     harq_process->harq_ack.send_harq_status = 1;
-    //LOG_I(PHY,"[UE %d] DLSCH: Setting ACK for SFN/SF %d/%d (pid %d, status %d, round %d, TBS %d, mcs %d)\n",
+    //LOG_I(PHY,"[UE %d] DLSCH: Seslotng ACK for SFN/SF %d/%d (pid %d, status %d, round %d, TBS %d, mcs %d)\n",
       //  phy_vars_ue->Mod_id, frame, subframe, harq_pid, harq_process->status, harq_process->round,harq_process->TBS,harq_process->mcs);
 
     if(is_crnti)
     {
-    LOG_D(PHY,"[UE %d] DLSCH: Setting ACK for nr_tti_rx %d (pid %d, round %d, TBS %d)\n",phy_vars_ue->Mod_id,nr_tti_rx,harq_pid,harq_process->round,harq_process->TBS);
+    LOG_D(PHY,"[UE %d] DLSCH: Seslotng ACK for nr_slot_rx %d (pid %d, round %d, TBS %d)\n",phy_vars_ue->Mod_id,nr_slot_rx,harq_pid,harq_process->round,harq_process->TBS);
     }
-    //LOG_D(PHY,"[UE %d] DLSCH: Setting ACK for subframe %d (pid %d, round %d)\n",phy_vars_ue->Mod_id,subframe,harq_pid,harq_process->round);
+    //LOG_D(PHY,"[UE %d] DLSCH: Seslotng ACK for subframe %d (pid %d, round %d)\n",phy_vars_ue->Mod_id,subframe,harq_pid,harq_process->round);
 
   }
 
@@ -1339,7 +1339,7 @@ void *nr_dlsch_decoding_2thread0(void *arg)
     __m128i *pl = (__m128i*)&l;
 
     proc->instance_cnt_dlsch_td=-1;
-    proc->nr_tti_rx=proc->sub_frame_start;
+    proc->nr_slot_rx=proc->sub_frame_start;
 
     proc->decoder_thread_available = 0;
     
@@ -1406,7 +1406,7 @@ void *nr_dlsch_decoding_2thread0(void *arg)
 	        //r_offset						= proc->Er;
 	        //UE_rxtx_proc_t *proc    		= tdp->proc;
 	        int frame                       = proc->frame_rx;
-	        int subframe      				= proc->nr_tti_rx;
+	        int subframe      				= proc->nr_slot_rx;
 	        NR_UE_DLSCH_t *dlsch 			= phy_vars_ue->dlsch[phy_vars_ue->current_thread_id[subframe]][eNB_id][0];
 	        NR_DL_UE_HARQ_t *harq_process  = dlsch->harq_processes[harq_pid];
 	        short *dlsch_llr 				= phy_vars_ue->pdsch_vars[phy_vars_ue->current_thread_id[subframe]][eNB_id]->llr[0];
@@ -1707,7 +1707,7 @@ void *nr_dlsch_decoding_2thread0(void *arg)
 #if 0
   if (err_flag == 1) {
 //#if UE_DEBUG_TRACE
-    LOG_I(PHY,"[UE %d] THREAD 0 DLSCH: Setting NAK for SFN/SF %d/%d (pid %d, status %d, round %d, TBS %d, mcs %d) Kr %d r %d harq_process->round %d\n",
+    LOG_I(PHY,"[UE %d] THREAD 0 DLSCH: Seslotng NAK for SFN/SF %d/%d (pid %d, status %d, round %d, TBS %d, mcs %d) Kr %d r %d harq_process->round %d\n",
         phy_vars_ue->Mod_id, frame, subframe, harq_pid,harq_process->status, harq_process->round,harq_process->TBS,harq_process->mcs,Kr,r,harq_process->round);
 //#endif
     dlsch->harq_ack[subframe].ack = 0;
@@ -1717,14 +1717,14 @@ void *nr_dlsch_decoding_2thread0(void *arg)
     harq_process->round++;
 
 
-    //    printf("Rate: [UE %d] DLSCH: Setting NACK for subframe %d (pid %d, round %d)\n",phy_vars_ue->Mod_id,subframe,harq_pid,harq_process->round);
+    //    printf("Rate: [UE %d] DLSCH: Seslotng NACK for subframe %d (pid %d, round %d)\n",phy_vars_ue->Mod_id,subframe,harq_pid,harq_process->round);
     if (harq_process->round >= dlsch->Mdlharq) {
       harq_process->status = SCH_IDLE;
       harq_process->round  = 0;
     }
 /*    if(is_crnti)
     {
-    LOG_D(PHY,"[UE %d] DLSCH: Setting NACK for subframe %d (pid %d, pid status %d, round %d/Max %d, TBS %d)\n",
+    LOG_D(PHY,"[UE %d] DLSCH: Seslotng NACK for subframe %d (pid %d, pid status %d, round %d/Max %d, TBS %d)\n",
                phy_vars_ue->Mod_id,subframe,harq_pid,harq_process->status,harq_process->round,dlsch->Mdlharq,harq_process->TBS);
     }*/
 
@@ -1732,7 +1732,7 @@ void *nr_dlsch_decoding_2thread0(void *arg)
     //return((1+dlsch->max_ldpc_iterations));
   } else {
 #if UE_DEBUG_TRACE
-      LOG_I(PHY,"[UE %d] THREAD 0 DLSCH: Setting ACK for subframe %d TBS %d mcs %d nb_rb %d\n",
+      LOG_I(PHY,"[UE %d] THREAD 0 DLSCH: Seslotng ACK for subframe %d TBS %d mcs %d nb_rb %d\n",
            phy_vars_ue->Mod_id,subframe,harq_process->TBS,harq_process->mcs,harq_process->nb_rb);
 #endif
 
@@ -1741,14 +1741,14 @@ void *nr_dlsch_decoding_2thread0(void *arg)
     dlsch->harq_ack[subframe].ack = 1;
     dlsch->harq_ack[subframe].harq_id = harq_pid;
     dlsch->harq_ack[subframe].send_harq_status = 1;
-    //LOG_I(PHY,"[UE %d] DLSCH: Setting ACK for SFN/SF %d/%d (pid %d, status %d, round %d, TBS %d, mcs %d)\n",
+    //LOG_I(PHY,"[UE %d] DLSCH: Seslotng ACK for SFN/SF %d/%d (pid %d, status %d, round %d, TBS %d, mcs %d)\n",
       //  phy_vars_ue->Mod_id, frame, subframe, harq_pid, harq_process->status, harq_process->round,harq_process->TBS,harq_process->mcs);
 
 /*    if(is_crnti)
     {
-    LOG_D(PHY,"[UE %d] DLSCH: Setting ACK for subframe %d (pid %d, round %d, TBS %d)\n",phy_vars_ue->Mod_id,subframe,harq_pid,harq_process->round,harq_process->TBS);
+    LOG_D(PHY,"[UE %d] DLSCH: Seslotng ACK for subframe %d (pid %d, round %d, TBS %d)\n",phy_vars_ue->Mod_id,subframe,harq_pid,harq_process->round,harq_process->TBS);
     }
-    LOG_D(PHY,"[UE %d] DLSCH: Setting ACK for subframe %d (pid %d, round %d)\n",phy_vars_ue->Mod_id,subframe,harq_pid,harq_process->round);
+    LOG_D(PHY,"[UE %d] DLSCH: Seslotng ACK for subframe %d (pid %d, round %d)\n",phy_vars_ue->Mod_id,subframe,harq_pid,harq_process->round);
 
   }*/
 
@@ -1852,7 +1852,7 @@ void *nr_dlsch_decoding_2thread1(void *arg)
     __m128i *pl = (__m128i*)&l;
 
     proc->instance_cnt_dlsch_td1=-1;
-    proc->nr_tti_rx=proc->sub_frame_start;
+    proc->nr_slot_rx=proc->sub_frame_start;
 
     printf("start thread 1\n");
     proc->decoder_thread_available1 = 0;
@@ -1919,12 +1919,12 @@ void *nr_dlsch_decoding_2thread1(void *arg)
 	        //r_offset						= proc->Er;
 	        //UE_rxtx_proc_t *proc    		= tdp->proc;
 	        int frame                       = proc->frame_rx;
-	        int subframe      				= proc->nr_tti_rx;
+	        int subframe      				= proc->nr_slot_rx;
 	        NR_UE_DLSCH_t *dlsch 			= phy_vars_ue->dlsch[phy_vars_ue->current_thread_id[subframe]][eNB_id][0];
 	        NR_DL_UE_HARQ_t *harq_process  = dlsch->harq_processes[harq_pid];
 	        short *dlsch_llr 				= phy_vars_ue->pdsch_vars[phy_vars_ue->current_thread_id[subframe]][eNB_id]->llr[0];
 	        //printf("2thread0 llr flag %d tdp flag %d\n",llr8_flag1, tdp->llr8_flag);
-	        //printf("2thread1 nr_tti_tx %d subframe %d SF thread id %d r_offset %d\n", proc->nr_tti_rx, subframe, phy_vars_ue->current_thread_id[subframe], r_offset);
+	        //printf("2thread1 nr_slot_tx %d subframe %d SF thread id %d r_offset %d\n", proc->nr_slot_rx, subframe, phy_vars_ue->current_thread_id[subframe], r_offset);
 	        p_nrLDPC_procBuf = harq_process->p_nrLDPC_procBuf[2];
 
   /*

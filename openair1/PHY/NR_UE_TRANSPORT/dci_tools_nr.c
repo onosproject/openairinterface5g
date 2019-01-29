@@ -1153,7 +1153,7 @@ uint8_t nr_subframe2harq_pid(NR_DL_FRAME_PARMS *frame_parms,uint32_t frame,uint8
   */
 
   uint8_t ret = 255;
-  uint8_t subframe = nr_tti_rx>>((int)(log2 (frame_parms->ttis_per_subframe)));
+  uint8_t subframe = nr_tti_rx>>((int)(log2 (frame_parms->slots_per_subframe)));
 
   if (frame_parms->frame_type == FDD) {
     ret = (((frame<<1)+nr_tti_rx)&7);

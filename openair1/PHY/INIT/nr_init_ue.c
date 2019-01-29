@@ -1020,10 +1020,6 @@ void set_default_frame_parms_single(nfapi_nr_config_request_t *config, NR_DL_FRA
         frame_parms[CC_id]->prach_config_common.prach_ConfigInfo.highSpeedFlag=0;
         frame_parms[CC_id]->prach_config_common.prach_ConfigInfo.prach_FreqOffset=0;*/
 
-        // NR: Init to legacy LTE 20Mhz params
-        frame_parms->numerology_index	= 0;
-        frame_parms->ttis_per_subframe	= 1;
-        frame_parms->slots_per_tti		= 2;
 
     //}
 

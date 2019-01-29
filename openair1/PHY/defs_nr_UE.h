@@ -168,10 +168,10 @@ typedef struct {
   /// timestamp transmitted to HW
   openair0_timestamp timestamp_tx;
 //#ifdef UE_NR_PHY_DEMO
-  /// NR TTI index within subframe_tx [0 .. ttis_per_subframe - 1] to act upon for transmission
-  int nr_tti_tx;
-  /// NR TTI index within subframe_rx [0 .. ttis_per_subframe - 1] to act upon for reception
-  int nr_tti_rx;
+  /// NR slot index within subframe_tx [0 .. slots_per_subframe - 1] to act upon for transmission
+  int nr_slot_tx;
+  /// NR slot index within subframe_rx [0 .. slots_per_subframe - 1] to act upon for reception
+  int nr_slot_rx;
 //#endif
   /// subframe to act upon for transmission
   int subframe_tx;
@@ -1030,7 +1030,7 @@ typedef struct {
   fapi_nr_dci_indication_t dci_ind;
 
   // point to the current rxTx thread index
-  uint8_t current_thread_id[10];
+  uint8_t current_thread_id[120];
 
   NR_UE_PDSCH     *pdsch_vars[RX_NB_TH_MAX][NUMBER_OF_CONNECTED_eNB_MAX+1]; // two RxTx Threads
   NR_UE_PDSCH_FLP *pdsch_vars_flp[NUMBER_OF_CONNECTED_eNB_MAX+1];

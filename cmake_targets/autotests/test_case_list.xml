@@ -1057,8 +1057,8 @@
                                    (Test2: PBCH and synchronization, 106PBR),
                                    (Test3: PBCH-only, 217 PRB),
                                    (Test4: PBCH and synchronization, 217 RPB),
-                                   (Test5: PBCH-only, 217 PRB),
-                                   (Test6: PBCH and synchronization, 217 PRB)</desc>
+                                   (Test5: PBCH-only, 273 PRB),
+                                   (Test6: PBCH and synchronization, 273 PRB)</desc>
       <pre_compile_prog></pre_compile_prog>
       <compile_prog>$OPENAIR_DIR/cmake_targets/build_oai</compile_prog>
       <compile_prog_args> --phy_simulators  -c </compile_prog_args>

@@ -55,7 +55,7 @@ int set_tdd_config_nr(NR_DL_FRAME_PARMS *frame_parms, int dl_UL_TransmissionPeri
 {
   TDD_UL_DL_configCommon_t  *p_tdd_ul_dl_configuration;
   int slot_number = 0;
-  int nb_slots_to_set = TDD_CONFIG_NB_FRAMES*(frame_parms->ttis_per_subframe * LTE_NUMBER_OF_SUBFRAMES_PER_FRAME);
+  int nb_slots_to_set = TDD_CONFIG_NB_FRAMES*(frame_parms->slots_per_subframe * LTE_NUMBER_OF_SUBFRAMES_PER_FRAME);
 
   /* allocate buffer for configuration structure */
   p_tdd_ul_dl_configuration = calloc( 1, sizeof(TDD_UL_DL_configCommon_t));
@@ -78,7 +78,7 @@ int set_tdd_config_nr(NR_DL_FRAME_PARMS *frame_parms, int dl_UL_TransmissionPeri
 
   int nb_periods_per_frame = (FRAME_DURATION_MICRO_SEC/dl_UL_TransmissionPeriodicity);
 
-  int nb_slots_per_period = (frame_parms->ttis_per_subframe * LTE_NUMBER_OF_SUBFRAMES_PER_FRAME)/nb_periods_per_frame;
+  int nb_slots_per_period = (frame_parms->slots_per_subframe * LTE_NUMBER_OF_SUBFRAMES_PER_FRAME)/nb_periods_per_frame;
 
   if (nb_slots_per_period != (nrofDownlinkSlots + nrofUplinkSlots)) {
     LOG_E(PHY,"set_tdd_configuration_nr: given period is inconsistent with current tdd configuration \n");
@@ -189,7 +189,7 @@ int set_tdd_configuration_dedicated_nr(NR_DL_FRAME_PARMS *frame_parms)
 
   while(p_current_TDD_UL_DL_SlotConfig != NULL) {
     int slot_index = p_current_TDD_UL_DL_SlotConfig->slotIndex;
-    if (slot_index < TDD_CONFIG_NB_FRAMES*(frame_parms->ttis_per_subframe * LTE_NUMBER_OF_SUBFRAMES_PER_FRAME)) {
+    if (slot_index < TDD_CONFIG_NB_FRAMES*(frame_parms->slots_per_subframe * LTE_NUMBER_OF_SUBFRAMES_PER_FRAME)) {
       if (p_current_TDD_UL_DL_SlotConfig->nrofDownlinkSymbols != 0) {
         if (p_current_TDD_UL_DL_SlotConfig->nrofDownlinkSymbols == NR_TDD_SET_ALL_SYMBOLS) {
           if (p_current_TDD_UL_DL_SlotConfig->nrofUplinkSymbols == 0) {
@@ -250,7 +250,7 @@ int set_tdd_configuration_dedicated_nr(NR_DL_FRAME_PARMS *frame_parms)
 *
 *********************************************************************/
 
-int slot_select_nr(NR_DL_FRAME_PARMS *frame_parms, int nr_frame, int nr_tti)
+int slot_select_nr(NR_DL_FRAME_PARMS *frame_parms, int nr_frame, int nr_slot)
 {
   /* for FFD all slot can be considered as an uplink */
   if (frame_parms->frame_type == FDD) {
@@ -258,14 +258,14 @@ int slot_select_nr(NR_DL_FRAME_PARMS *frame_parms, int nr_frame, int nr_tti)
   }
 
   if (nr_frame%2 == 0) {
-    if (frame_parms->tdd_uplink_nr[nr_tti] == NR_TDD_UPLINK_SLOT) {
+    if (frame_parms->tdd_uplink_nr[nr_slot] == NR_TDD_UPLINK_SLOT) {
       return (NR_UPLINK_SLOT);
     }
     else {
       return (NR_DOWNLINK_SLOT);
     }
   }
-  else if ((frame_parms->tdd_uplink_nr[(frame_parms->ttis_per_subframe * LTE_NUMBER_OF_SUBFRAMES_PER_FRAME) + nr_tti] == NR_TDD_UPLINK_SLOT)) {
+  else if ((frame_parms->tdd_uplink_nr[(frame_parms->slots_per_subframe * LTE_NUMBER_OF_SUBFRAMES_PER_FRAME) + nr_slot] == NR_TDD_UPLINK_SLOT)) {
     return (NR_UPLINK_SLOT);
   }
   else {

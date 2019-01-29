@@ -604,7 +604,7 @@ int32_t generate_nr_prach( PHY_VARS_NR_UE *ue, uint8_t eNB_id, uint8_t subframe,
   uint16_t first_nonzero_root_idx=0;
 
 #if defined(EXMIMO) || defined(OAI_USRP)
-  prach_start =  (ue->rx_offset+subframe*ue->frame_parms.samples_per_tti-ue->hw_timing_advance-ue->N_TA_offset);
+  prach_start =  (ue->rx_offset+subframe*ue->frame_parms.samples_per_subframe-ue->hw_timing_advance-ue->N_TA_offset);
 #ifdef PRACH_DEBUG
     LOG_I(PHY,"[UE %d] prach_start %d, rx_offset %d, hw_timing_advance %d, N_TA_offset %d\n", ue->Mod_id,
         prach_start,
@@ -614,13 +614,13 @@ int32_t generate_nr_prach( PHY_VARS_NR_UE *ue, uint8_t eNB_id, uint8_t subframe,
 #endif
 
   if (prach_start<0)
-    prach_start+=(ue->frame_parms.samples_per_tti*LTE_NUMBER_OF_SUBFRAMES_PER_FRAME);
+    prach_start+=(ue->frame_parms.samples_per_subframe*LTE_NUMBER_OF_SUBFRAMES_PER_FRAME);
 
-  if (prach_start>=(ue->frame_parms.samples_per_tti*LTE_NUMBER_OF_SUBFRAMES_PER_FRAME))
-    prach_start-=(ue->frame_parms.samples_per_tti*LTE_NUMBER_OF_SUBFRAMES_PER_FRAME);
+  if (prach_start>=(ue->frame_parms.samples_per_subframe*LTE_NUMBER_OF_SUBFRAMES_PER_FRAME))
+    prach_start-=(ue->frame_parms.samples_per_subframe*LTE_NUMBER_OF_SUBFRAMES_PER_FRAME);
 
 #else //normal case (simulation)
-  prach_start = subframe*ue->frame_parms.samples_per_tti-ue->N_TA_offset;
+  prach_start = subframe*ue->frame_parms.samples_per_subframe-ue->N_TA_offset;
   LOG_I(PHY,"[UE %d] prach_start %d, rx_offset %d, hw_timing_advance %d, N_TA_offset %d\n", ue->Mod_id,
     prach_start,
     ue->rx_offset,
@@ -1160,10 +1160,10 @@ int32_t generate_nr_prach( PHY_VARS_NR_UE *ue, uint8_t eNB_id, uint8_t subframe,
 //	      "prach_fmt4 not fully implemented" );
 #if defined(EXMIMO) || defined(OAI_USRP) || defined(OAI_BLADERF) || defined(OAI_LMSSDR)
   int j;
-  int overflow = prach_start + prach_len - LTE_NUMBER_OF_SUBFRAMES_PER_FRAME*ue->frame_parms.samples_per_tti;
+  int overflow = prach_start + prach_len - LTE_NUMBER_OF_SUBFRAMES_PER_FRAME*ue->frame_parms.samples_per_subframe;
   LOG_I( PHY, "prach_start=%d, overflow=%d\n", prach_start, overflow );
 
-  for (i=prach_start,j=0; i<min(ue->frame_parms.samples_per_tti*LTE_NUMBER_OF_SUBFRAMES_PER_FRAME,prach_start+prach_len); i++,j++) {
+  for (i=prach_start,j=0; i<min(ue->frame_parms.samples_per_subframe*LTE_NUMBER_OF_SUBFRAMES_PER_FRAME,prach_start+prach_len); i++,j++) {
     ((int16_t*)ue->common_vars.txdata[0])[2*i] = prach[2*j];
     ((int16_t*)ue->common_vars.txdata[0])[2*i+1] = prach[2*j+1];
   }
@@ -1174,11 +1174,11 @@ int32_t generate_nr_prach( PHY_VARS_NR_UE *ue, uint8_t eNB_id, uint8_t subframe,
   }
 #if defined(EXMIMO)
   // handle switch before 1st TX subframe, guarantee that the slot prior to transmission is switch on
-  for (k=prach_start - (ue->frame_parms.samples_per_tti>>1) ; k<prach_start ; k++) {
+  for (k=prach_start - (ue->frame_parms.samples_per_subframe>>1) ; k<prach_start ; k++) {
     if (k<0)
-      ue->common_vars.txdata[0][k+ue->frame_parms.samples_per_tti*LTE_NUMBER_OF_SUBFRAMES_PER_FRAME] &= 0xFFFEFFFE;
-    else if (k>(ue->frame_parms.samples_per_tti*LTE_NUMBER_OF_SUBFRAMES_PER_FRAME))
-      ue->common_vars.txdata[0][k-ue->frame_parms.samples_per_tti*LTE_NUMBER_OF_SUBFRAMES_PER_FRAME] &= 0xFFFEFFFE;
+      ue->common_vars.txdata[0][k+ue->frame_parms.samples_per_subframe*LTE_NUMBER_OF_SUBFRAMES_PER_FRAME] &= 0xFFFEFFFE;
+    else if (k>(ue->frame_parms.samples_per_subframe*LTE_NUMBER_OF_SUBFRAMES_PER_FRAME))
+      ue->common_vars.txdata[0][k-ue->frame_parms.samples_per_subframe*LTE_NUMBER_OF_SUBFRAMES_PER_FRAME] &= 0xFFFEFFFE;
     else
       ue->common_vars.txdata[0][k] &= 0xFFFEFFFE;
   }
@@ -1197,7 +1197,7 @@ int32_t generate_nr_prach( PHY_VARS_NR_UE *ue, uint8_t eNB_id, uint8_t subframe,
 #if defined(PRACH_WRITE_OUTPUT_DEBUG)
   LOG_M("prach_txF0.m","prachtxF0",prachF,prach_len-Ncp,1,1);
   LOG_M("prach_tx0.m","prachtx0",prach+(Ncp<<1),prach_len-Ncp,1,1);
-  LOG_M("txsig.m","txs",(int16_t*)(&ue->common_vars.txdata[0][0]),2*ue->frame_parms.samples_per_tti,1,1);
+  LOG_M("txsig.m","txs",(int16_t*)(&ue->common_vars.txdata[0][0]),2*ue->frame_parms.samples_per_subframe,1,1);
   exit(-1);
 #endif
 
