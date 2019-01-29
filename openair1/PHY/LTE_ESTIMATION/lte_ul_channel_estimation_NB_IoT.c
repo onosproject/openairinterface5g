@@ -163,14 +163,14 @@ int ul_chest_tmp_f2_NB_IoT(int32_t **rxdataF_ext,
       uint8_t flag,
       uint8_t subframerx,
       uint8_t Qm, 
-      uint32_t I_sc,
+      uint16_t ul_sc_start,
       LTE_DL_FRAME_PARMS *frame_parms)
 {
   // NB-IoT: 36.211, Section 5.5.2.2.1, Table 5.5.2.2.1-2
   int16_t bar_w_re[9] = {32767, 32767, 32767, 32767, -16384, -16384, 32767, -16384, -16384}; 
   int16_t bar_w_im[9] = {    0,     0,     0,     0,  28377, -28377,     0, -28377,  28377};
   int pilot_pos_format2_15k[6] = {2,3,4,9,10,11}; // holds for npusch format 2, and 15 kHz subcarrier bandwidth
-  uint16_t ul_sc_start; // subcarrier start index into UL RB
+  //uint16_t ul_sc_start; // subcarrier start index into UL RB
   //uint8_t Qm = 1; // needed to rotate the estimated channel
   uint32_t u; //for group hopping
   //uint32_t I_sc = 0;
@@ -189,7 +189,7 @@ int ul_chest_tmp_f2_NB_IoT(int32_t **rxdataF_ext,
 
   pilot_pos_format2 = pilot_pos_format2_15k; // In futur version, this could be adapted for 3.75 kHz
   u = frame_parms->Nid_cell%16;
-    ul_sc_start = get_UL_sc_start_NB_IoT(I_sc); // NB-IoT: get the used subcarrier in RB
+    //ul_sc_start = get_UL_sc_start_NB_IoT(I_sc); // NB-IoT: get the used subcarrier in RB
   symbol = l + 7*(Ns&1);
 
   if (l == pilot_pos_format2[0] || l == pilot_pos_format2[1] || l == pilot_pos_format2[2])
@@ -283,12 +283,12 @@ int ul_chest_tmp_NB_IoT(int32_t             **rxdataF_ext,
                         uint8_t             counter_msg3,   /// should be replaced by the number of the received part of UL data 
                         uint8_t             pilot_pos1,
                         uint8_t             pilot_pos2,
-                        uint32_t            I_sc,
+                        uint16_t            ul_sc_start,
                         uint8_t             Qm,
                         LTE_DL_FRAME_PARMS  *frame_parms)
 {
   //int pilot_pos1 = 3, pilot_pos2 = 10; // holds for npusch format 1, and 15 kHz subcarrier bandwidth
-  uint16_t    ul_sc_start; // subcarrier start index into UL RB
+  //uint16_t    ul_sc_start; // subcarrier start index into UL RB
   //uint8_t Qm = 2; // needed to rotate the estimated channel
   uint32_t    u; //for group hopping
   int         symbol_offset; 
@@ -302,7 +302,7 @@ int ul_chest_tmp_NB_IoT(int32_t             **rxdataF_ext,
   int16_t     *ul_ch1, *ul_ch2;
 
   u= frame_parms->Nid_cell % 16; //Ncell_ID%16;
-  ul_sc_start = get_UL_sc_start_NB_IoT(I_sc); // NB-IoT: get the used subcarrier in RB   // I_sc = 11 for testing
+  //ul_sc_start = get_UL_sc_start_NB_IoT(I_sc); // NB-IoT: get the used subcarrier in RB   // I_sc = 11 for testing
   symbol = l + 7*(Ns&1);
 
   if (l == pilot_pos1) 

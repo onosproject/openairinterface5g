@@ -1247,14 +1247,14 @@ void phy_procedures_eNB_TX_NB_IoT(PHY_VARS_eNB_NB_IoT     *eNB,
              * (in stand alone i can put whatever the number)in other case consider the PRB index in the Table R&Shwartz pag 9
              *
              */
-
+/*
             generate_npbch(eNB->npbch,
                            txdataF,
                            AMP,
                            fp,
                            eNB->npbch->pdu,
                            frame%64,
-                           fp->NB_IoT_RB_ID);
+                           fp->NB_IoT_RB_ID);*/
                         
           }
 
@@ -1542,12 +1542,6 @@ uint32_t rx_nprach_NB_IoT(PHY_VARS_eNB *eNB, int frame, uint8_t subframe, uint16
   //int frame,frame_mod;    // subframe,
  // subframe = eNB->proc.subframe_prach; 
  // frame = eNB->proc.frame_prach;
-
-  //printf("frame = %i \n sf = %i\n",frame,subframe); 
- // frame_mod = 0;//(frame)%32; 
-  //if (subframe==1 && frame_mod==0 && frame!=0){
- //if (frame_mod==0 && frame!=0){
-    //printf("\n frame_in = %i\n",frame); 
     estimated_TA = process_nprach_NB_IoT(eNB,frame,subframe,rnti,preamble_index,timing_advance);
     //printf("estim = %i\n",estimated_TA);
  // }
@@ -1598,10 +1592,6 @@ void npusch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
   {
       //ulsch_NB_IoT = eNB->ulsch_NB_IoT[i];
       //ulsch_harq = ulsch_NB_IoT->harq_process;
-
-      nulsch->Msg3_active  = 1;
-      nulsch->Msg3_flag    = 1;   
-
       // if eNB is ready to receive UL data 
       // define a flag to trigger on or off the decoding process
       //if ((ulsch) && (ulsch->rnti>0) && (ulsch_harq->status == ACTIVE) && (ulsch_harq->frame == frame) && (ulsch_harq->subframe == subframe) && (ulsch_harq->handled == 0))
@@ -1624,15 +1614,14 @@ void npusch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
                                    proc,
                                    0,                         // this is the effective sector id
                                    0,
-                                   nulsch,
-                                   nulsch->npusch_format,                         //npusch_format,             // 1, 2  
+                                //   nulsch,
+                                  // nulsch->npusch_format,                         //npusch_format,             // 1, 2  
                                    22,                        // 22 , to be included in // to be replaced by NB_IoT_start ??
-                                   1,                         // 0 (3.75 KHz) or 1 (15 KHz)
-                                   nulsch->rnti,                     //= 65522
+                                  // 1,                         // 0 (3.75 KHz) or 1 (15 KHz)
                                    nulsch->Msg3_subframe,  // first received subframe 
                                    nulsch->Msg3_frame,     // first received frame
                                    N_slots, //  total number of occupied slots = get_nb_slot_per_RU * NB_of_RU
-                                   get_UL_sc_index_start_NB_IoT(nulsch_harq->subcarrier_spacing,nulsch_harq->subcarrier_indication,nulsch->npusch_format),
+                                   //get_UL_sc_index_start_NB_IoT(nulsch_harq->subcarrier_spacing,nulsch_harq->subcarrier_indication,nulsch->npusch_format),
                                    get_UL_N_ru_NB_IoT(nulsch_harq->mcs,nulsch_harq->resource_assignment,nulsch->Msg3_flag),   // N_RU
                                    //if 0<get_numb_UL_sc_NB_IoT(uint8_t subcarrier_spacing, uint8_t I_sc, uint8_t npush_format),// Nsc,
                                    nulsch_harq->mcs,   // I_mcs
@@ -1648,15 +1637,14 @@ void npusch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
                                    proc,
                                    0,                         // this is the effective sector id
                                    0,
-                                   nulsch,
-                                   nulsch->npusch_format,                         //npusch_format,             // 1, 2  
+                                //   nulsch,
+                                //   nulsch->npusch_format,                         //npusch_format,             // 1, 2  
                                    22,                        // 22 , to be included in // to be replaced by NB_IoT_start ??
-                                   1,                         // 0 (3.75 KHz) or 1 (15 KHz)
-                                   nulsch->rnti,                     //= 65522
+                               //    1,                         // 0 (3.75 KHz) or 1 (15 KHz)
                                    nulsch->Msg3_subframe,  // first received subframe 
                                    nulsch->Msg3_frame,     // first received frame
                                    N_slots, //  total number of occupied slots = get_nb_slot_per_RU * NB_of_RU
-                                   get_UL_sc_index_start_NB_IoT(nulsch_harq->subcarrier_spacing,nulsch_harq->subcarrier_indication,nulsch->npusch_format),
+                                  // get_UL_sc_index_start_NB_IoT(nulsch_harq->subcarrier_spacing,nulsch_harq->subcarrier_indication,nulsch->npusch_format),
                                    get_UL_N_ru_NB_IoT(nulsch_harq->mcs,nulsch_harq->resource_assignment,nulsch->Msg3_flag),   // N_RU
                                    nulsch_harq->mcs,   // I_mcs
                                    nulsch_harq->TBS,      //  A = TBS

@@ -405,7 +405,7 @@ void filtering_signal(int16_t *input_buffer, int16_t *filtered_buffer, uint32_t 
 
 }
 
-uint32_t process_nprach_NB_IoT(PHY_VARS_eNB *eNB, int frame, uint8_t subframe, uint32_t *rnti, uint16_t *preamble_index, uint16_t *timing_advance){ 
+uint32_t process_nprach_NB_IoT(PHY_VARS_eNB *eNB, int frame, uint8_t subframe, uint16_t *rnti, uint16_t *preamble_index, uint16_t *timing_advance){ 
 
 
 	//uint32_t estimated_TA_coarse=0;  
