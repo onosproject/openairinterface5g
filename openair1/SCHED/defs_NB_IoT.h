@@ -50,7 +50,7 @@ uint32_t is_SIB1_NB_IoT(const frame_t          frameP,
 
 uint32_t rx_nprach_NB_IoT(PHY_VARS_eNB *eNB,int frame, uint8_t subframe, uint16_t *rnti, uint16_t *preamble_index, uint16_t *timing_advance);
 
-void npusch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,uint8_t data_or_control);
+void npusch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc);
 
 ////////////////// NB-IoT testing ////////////////////
 void fill_rx_indication_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,uint8_t data_or_control);

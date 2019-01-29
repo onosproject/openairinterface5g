@@ -189,6 +189,8 @@ uint32_t get_num_sf(uint32_t I_sf);
 
 //////
 uint8_t get_UL_I_TBS_from_MCS_NB_IoT(uint8_t I_mcs, uint8_t N_sc_RU, uint8_t Msg3_flag);
+
+uint8_t test_signle_tone_UL_NB_IoT(uint8_t subcarrier_spacing, uint8_t I_sc, uint8_t npush_format);
 //////
 
 uint32_t get_scheduling_delay(uint32_t I_delay, uint32_t R_max);

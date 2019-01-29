@@ -289,11 +289,13 @@ int output_handler(eNB_MAC_INST_NB_IoT *mac_inst, module_id_t module_id, int CC_
 					(ul_config_pdu + i) ->nulsch_pdu.nulsch_pdu_rel13.nulsch_format           = 0;
 
 					//contidition should be added to select either the UL_TBS_Table or t UL_TBS_table_msg3
-
+					// ******* sc_spacing issues to be fixed next *******////
+					uint8_t sc_spacing = 0;  
+					(ul_config_pdu + i) ->nulsch_pdu.nulsch_pdu_rel13.handle           = sc_spacing; // 0 for 15 KHz , 1 for 3.75 KHz
 					//(ul_config_pdu + i) ->nulsch_pdu.nulsch_pdu_rel13.size                    = UL_TBS_Table[((DCIFormatN0_t *)DCI_pdu)->mcs][((DCIFormatN0_t *)DCI_pdu)->ResAssign];
 					//(ul_config_pdu + i) ->nulsch_pdu.nulsch_pdu_rel13.size                    = UL_TBS_Table[get_UL_I_TBS_from_MCS_NB_IoT(((DCIFormatN0_t *)DCI_pdu)->mcs, get_N_RU(), 0)][((DCIFormatN0_t *)DCI_pdu)->ResAssign];
 					// get_UL_I_TBS_from_MCS_NB_IoT() to  be used to get the I_TBS for any NPUSCH format 
-					(ul_config_pdu + i) ->nulsch_pdu.nulsch_pdu_rel13.size                    = UL_TBS_Table_msg3[get_UL_I_TBS_from_MCS_NB_IoT(((DCIFormatN0_t *)DCI_pdu)->mcs, 1, 1)];   // for the case of MSG3 
+					(ul_config_pdu + i) ->nulsch_pdu.nulsch_pdu_rel13.size                    = UL_TBS_Table_msg3[get_UL_I_TBS_from_MCS_NB_IoT(((DCIFormatN0_t *)DCI_pdu)->mcs, test_signle_tone_UL_NB_IoT(sc_spacing,((DCIFormatN0_t *)DCI_pdu)->scind, 0), 1)]/8;   // for the case of MSG3 
 					 
 					//LOG_D(MAC,"test\n");
 					(ul_config_pdu + i) ->nulsch_pdu.nulsch_pdu_rel13.rnti                    = schedule_result_list_UL->rnti;  //TODO : check if it is the right rnti // get from msg2

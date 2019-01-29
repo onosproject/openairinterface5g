@@ -396,9 +396,9 @@ void phy_procedures_eNB_uespec_RX_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc
   eNB->rb_mask_ul[3] = 0;
   ////////////////////////////////////////////////////////////////////////////////////////
   */
-  uint8_t data_or_control=0;  // get this info from UL_config_request
+  
 
-  npusch_procedures(eNB,proc,data_or_control);
+  npusch_procedures(eNB,proc);
 
 
   pthread_mutex_lock(&eNB->UL_INFO_mutex);
@@ -1580,7 +1580,7 @@ void fill_crc_indication_NB_IoT(PHY_VARS_eNB *eNB,int UE_id,int frame,int subfra
 }
 
 
-void npusch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,uint8_t data_or_control)
+void npusch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
 {
   
   uint32_t i;
@@ -1634,6 +1634,7 @@ void npusch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,uint8_t data_or_c
                                    N_slots, //  total number of occupied slots = get_nb_slot_per_RU * NB_of_RU
                                    get_UL_sc_index_start_NB_IoT(nulsch_harq->subcarrier_spacing,nulsch_harq->subcarrier_indication,nulsch->npusch_format),
                                    get_UL_N_ru_NB_IoT(nulsch_harq->mcs,nulsch_harq->resource_assignment,nulsch->Msg3_flag),   // N_RU
+                                   //if 0<get_numb_UL_sc_NB_IoT(uint8_t subcarrier_spacing, uint8_t I_sc, uint8_t npush_format),// Nsc,
                                    nulsch_harq->mcs,   // I_mcs
                                    nulsch_harq->TBS,      //  A = TBS
                                    N_slots/2,  ///proc->counter_msg3,  // this represents the number of Subframe after encoding the msg3 // proc->counter_msg3

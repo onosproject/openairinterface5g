@@ -995,6 +995,39 @@ uint8_t get_UL_I_TBS_from_MCS_NB_IoT(uint8_t I_mcs, uint8_t N_sc_RU, uint8_t Msg
     }
 
 }
+/////////////////
+///////////////////////////////////////////////
+//// function to test if configuration is single or multi-tone //// 1 for single and 0 for multi-tone
+uint8_t test_signle_tone_UL_NB_IoT(uint8_t subcarrier_spacing, uint8_t I_sc, uint8_t npush_format) 
+{
+			
+	if(npush_format == 0)  // format 1
+	{
+		if(subcarrier_spacing == 0)  // 15 KHz
+		{
+
+			if(I_sc >= 0 && I_sc < 12)
+			{
+				return 1;
+			} else if (I_sc >= 12 && I_sc < 16) {
+				return 0;
+			} else if (I_sc >= 16 && I_sc < 18) {
+				return 0;
+			} else if (I_sc == 18) {
+				return 0;
+			} else {
+				return 1;
+			}
+		} else {
+			return 1;
+		}
+
+	} else {          /// format 2
+		return 1;
+	}
+
+}
+//////////////////
 
 /*Get MCS index*/
 uint32_t get_I_mcs(int CE_level)

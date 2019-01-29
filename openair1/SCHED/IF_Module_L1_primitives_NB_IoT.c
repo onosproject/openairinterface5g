@@ -466,7 +466,7 @@ void schedule_response_NB_IoT(Sched_Rsp_NB_IoT_t *Sched_INFO)
             nulsch->SF_idx             = nfapi_parameters_rel13->sf_idx;
             nulsch->HARQ_ACK_resource  = nfapi_parameters_rel13->nb_harq_information.nb_harq_information_rel13_fdd.harq_ack_resource;
 
-			nulsch_harq->subcarrier_spacing      = nfapi_parameters_rel13->handle;  // 0 for 15 KHz and 1 for 3.75 KHz// TODO : get the value from the UL_grant of MSG3 
+			nulsch_harq->subcarrier_spacing      = nfapi_parameters_rel13->handle; //* TO FIXE*///  // 0 for 15 KHz and 1 for 3.75 KHz// TODO : get the value from the UL_grant of MSG3 
 			nulsch_harq->subcarrier_indication   = nfapi_parameters_rel13->subcarrier_indication;    // Isc =0->18 , or 0->47 // format 2, 0->3 or 0->7
 			nulsch_harq->resource_assignment     = nfapi_parameters_rel13->resource_assignment;    // valid for format 1  // this should be set by DCI N0 // not used for msg3 // I_RU --> helps to get N_RU
 			nulsch_harq->mcs                     = nfapi_parameters_rel13->mcs;                 // I_mcs = 0->10 (single tone) and 0->12 (multi-tone)

@@ -489,7 +489,7 @@ typedef struct {
 
   uint8_t               new_data_indication;
   /// Determined the subcarrier spacing for NPUSCH (15 kHz or 3.75 KHz)
-  uint8_t               subcarrier_spacing;
+  uint8_t               subcarrier_spacing;      /////////////////////////TODO: to be set using msg2 PDU content
   /// Determined the subcarrier allocation for the NPUSCH.(15, 3.75 KHz)
   uint8_t               subcarrier_indication;
   /// Determined the number of resource unit for the NPUSCH

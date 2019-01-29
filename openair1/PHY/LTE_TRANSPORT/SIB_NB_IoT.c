@@ -219,6 +219,7 @@ int generate_NDLSCH_NB_IoT(NB_IoT_eNB_NDLSCH_t 	  *RAR,
     if( RAR->active == 1 )
     {
     	uint8_t *RAR_pdu  = RAR->harq_process->pdu;
+        // TODO:  process the RAR PDU to get the subcarrier indication for NPUSCH , Then set value in NPUSCH
 	 	uint32_t rep =  RAR->repetition_number;
 	 	uint8_t eutra_control_region = 3;
 
