@@ -45,6 +45,7 @@ uint8_t dmrs1_tab[8] = {0,2,3,4,6,8,9,10};
 
 int N_RB_DL_array[6] = {6,15,25,50,75,100};
 
+extern uint8_t nfapi_mode;
 int l1_north_init_eNB() {
 
   int i,j;
@@ -776,7 +777,7 @@ int phy_init_lte_eNB(PHY_VARS_eNB *eNB,
   
 
 
-    
+  if(nfapi_mode !=2){    
   common_vars->rxdata  = (int32_t **)NULL;
   common_vars->txdataF = (int32_t **)malloc16(NB_ANTENNA_PORTS_ENB*sizeof(int32_t*));
   common_vars->rxdataF = (int32_t **)malloc16(64*sizeof(int32_t*));
@@ -878,7 +879,7 @@ int phy_init_lte_eNB(PHY_VARS_eNB *eNB,
     
   for (UE_id=0; UE_id<NUMBER_OF_UE_MAX; UE_id++)
     eNB->UE_stats_ptr[UE_id] = &eNB->UE_stats[UE_id];
-  
+  }
   eNB->pdsch_config_dedicated->p_a = dB0; //defaul value until overwritten by RRCConnectionReconfiguration
   
 

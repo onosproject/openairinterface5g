@@ -416,7 +416,8 @@ static void* L1_thread( void* param ) {
       if (rxtx(eNB,proc,thread_name) < 0) break;
     }
 
-    if(get_thread_parallel_conf() == PARALLEL_RU_L1_SPLIT)              phy_procedures_eNB_TX(eNB, proc, 1);
+    //if(get_thread_parallel_conf() == PARALLEL_RU_L1_SPLIT)              phy_procedures_eNB_TX(eNB, proc, 1);
+    if((get_thread_parallel_conf() == PARALLEL_RU_L1_SPLIT)&& (nfapi_mode != 2))              phy_procedures_eNB_TX(eNB, proc, 1);
     if (release_thread(&proc->mutex,&proc->instance_cnt,thread_name)<0) break;
     if (nfapi_mode!=2){
     	if(get_thread_parallel_conf() == PARALLEL_RU_L1_TRX_SPLIT)      wakeup_tx(eNB);
@@ -949,10 +950,13 @@ void init_eNB_proc(int inst) {
       pthread_create( &L1_proc->pthread, attr0, L1_thread, L1_proc);
       pthread_create( &L1_proc_tx->pthread, attr1, L1_thread, L1_proc_tx);
     }
+
+  if(nfapi_mode != 2){
     pthread_create( &proc->pthread_prach, attr_prach, eNB_thread_prach, eNB );
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
     pthread_create( &proc->pthread_prach_br, attr_prach_br, eNB_thread_prach_br, eNB );
 #endif
+  }
 
     AssertFatal(proc->instance_cnt_prach == -1,"instance_cnt_prach = %d\n",proc->instance_cnt_prach);
 
@@ -1114,7 +1118,7 @@ void init_transport(PHY_VARS_eNB *eNB) {
   int j;
   LTE_DL_FRAME_PARMS *fp = &eNB->frame_parms;
   LOG_I(PHY, "Initialise transport\n");
-
+if(nfapi_mode !=2){
   for (i=0; i<NUMBER_OF_UE_MAX; i++) {
     LOG_D(PHY,"Allocating Transport Channel Buffers for DLSCH, UE %d\n",i);
 
@@ -1157,6 +1161,7 @@ void init_transport(PHY_VARS_eNB *eNB) {
   LOG_D(PHY,"eNB %d.%d : RA %p\n",eNB->Mod_id,eNB->CC_id,eNB->dlsch_ra);
   eNB->dlsch_MCH = new_eNB_dlsch(1,8,NSOFT,fp->N_RB_DL, 0, fp);
   LOG_D(PHY,"eNB %d.%d : MCH %p\n",eNB->Mod_id,eNB->CC_id,eNB->dlsch_MCH);
+}
   eNB->rx_total_gain_dB=130;
 
   for(i=0; i<NUMBER_OF_UE_MAX; i++)
