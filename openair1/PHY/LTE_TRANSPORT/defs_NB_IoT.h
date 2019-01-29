@@ -498,6 +498,8 @@ typedef struct {
   uint8_t               scheduling_delay;
   /// The number of the repetition number for NPUSCH Transport block
   uint8_t               repetition_number;
+  //////////    counter for repetitions ///////////////////////
+  uint8_t               rep_tmp;
   /// Determined the repetition number value 0-3
   uint8_t               dci_subframe_repetitions;
   /// Flag indicating that this ULSCH has been allocated by a DCI (otherwise it is a retransmission based on PHICH NAK)

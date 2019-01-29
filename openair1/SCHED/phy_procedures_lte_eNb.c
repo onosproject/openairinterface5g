@@ -667,69 +667,17 @@ if(proc->flag_msg4 == 1 && proc->counter_msg4 > 0)
                 tab_rar[5]=nas_id[4];  // NAS part 5
                 tab_rar[6]=nas_id[5]; // NAS part 5   
                  
-
-                printf("ms4pdu[0] = %d \n",nas_id[0]);
-                printf("ms4pdu[1] = %d \n",nas_id[1]);
-                printf("ms4pdu[2] = %d \n",nas_id[2]);
-                printf("ms4pdu[3] = %d \n",nas_id[3]);
-                printf("ms4pdu[2] = %d \n",nas_id[4]);
-       
-
-                if(proc->flag_scrambling ==0)
-                {
-
-                      dlsch_encoding_NB_IoT(tab_rar,
-                                                rar,
-                                                1,                      ///// number_of_subframes_required
-                                                236);                   //////////// G*2   // option =2 for msg4
-
-
-                       dlsch_scrambling_Gen_NB_IoT(fp,
-                                                       rar,
-                                                       236,
-                                                       frame,
-                                                       subframe*2,
-                                                       65522);        //RA_template[0].RA_rnti
-                }
+               
                 proc->flag_scrambling =1;
                 printf("\n RAR sentttttt frame %d, subframe %d", frame, subframe);
           
-                   dlsch_modulation_NB_IoT(txdataF,
-                                            AMP,
-                                            fp,
-                                            3,                          // control region size for LTE , values between 0..3, (0 for stand-alone / 1, 2 or 3 for in-band)
-                                            rar,
-                                            236,                       // number of bits per subframe
-                                            frame,  // unrequired
-                                            subframe,       
-                                            22);
 
                  proc->counter_msg4--;
                  proc->subframe_msg4 =subframe+1;
 
-                 if(proc->counter_msg4 == 0)
-                 {
-                    proc->flag_msg5 =1;
-                    proc->counter_msg5 =2;
-                    proc->subframe_msg5= (subframe+12+1+4)%10;
-                    if( ((subframe+12+1+4)%10) <20)
-                    {
-                      proc->frame_msg5=frame + 2;
-
-                    }else{
-
-                      proc->frame_msg5=frame + 3;
-
-                    }
-                    
-                 }
-
+            
         }         
-       if(subframe==9)
-       {
-            proc->subframe_msg4=1;
-            proc->frame_msg4= frame+1;
-        } 
+      
 
 }
 

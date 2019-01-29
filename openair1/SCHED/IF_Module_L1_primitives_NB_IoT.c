@@ -475,6 +475,7 @@ void schedule_response_NB_IoT(Sched_Rsp_NB_IoT_t *Sched_INFO)
 			nulsch_harq->new_data_indication     = nfapi_parameters_rel13->new_data_indication;   // valid only for DCI N0
 			nulsch_harq->TBS                     = nfapi_parameters_rel13->size;  /// check if needed *8 or /8 or nothing to do
 			
+			//nulsch_harq->rep_tmp                 = ;
 	        ////////////////////////////////////////////////////////////////////////////////////////
 	  		LOG_I(PHY,"IF module proceed UL config NULSCH pdu\n");
 		  break;

@@ -1653,8 +1653,8 @@ uint8_t rx_ulsch_Gen_NB_IoT(PHY_VARS_eNB            *eNB,
      // uint8_t    log2_maxh = 0,aarx;
       //uint8_t    harq_pid;
       uint8_t    Qm;
-      int        subframe = proc->subframe_rx;
-      int        frame = proc->frame_rx;  
+      int        subframe = proc->subframe_rx;   // only used in the crc_indication !!
+      int        frame = proc->frame_rx;        // only used in the crc_indication !!
       //uint8_t    npusch_format = 1; // NB-IoT: format 1 (data), or 2: ack. Should be defined in higher layer 
       //uint8_t subcarrier_spacing = frame_parms->subcarrier_spacing; // 15 kHz or 3.75 kHz 
       uint8_t        pilot_pos1_format1_15k = 3, pilot_pos2_format1_15k = 10; // holds for npusch format 1, and 15 kHz subcarrier bandwidth
@@ -1891,7 +1891,7 @@ uint8_t rx_ulsch_Gen_NB_IoT(PHY_VARS_eNB            *eNB,
               Hpp        = Hprime;
               // Cmux       = (ulsch_harq->Nsymb_UL-1)*ulsch_harq->Nslot_UL; // see definition in 36.212, Section 6.3.2, but not consistent with definition
               // of RU in 36.211, Section 10.1.2.3. Maybe prefer the following: 
-              Cmux       =  (7-pilots_slot) * nb_slot; // 6*16; //////////////(ulsch_harq->Nsymb_UL)*ulsch_harq->Nslot_UL; 
+              Cmux       =  (7-pilots_slot) * nb_slot; // 6*16; //////////////(ulsch_harq->Nsymb_UL)*ulsch_harq->Nslot_UL;  // * N_RU **********
               Rmux_prime = Hpp/Cmux;
               // Clear "tag" interleaving matrix to allow for CQI/DATA identification
               memset(ytag,0,Cmux*Rmux_prime);
@@ -1928,6 +1928,9 @@ uint8_t rx_ulsch_Gen_NB_IoT(PHY_VARS_eNB            *eNB,
                       }
                   break;
               }
+///////////////////////////////// desin  multi-tone
+          //if multi-RU
+
 
               j  = 0;
               j2 = 0;

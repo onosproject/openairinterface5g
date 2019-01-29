@@ -1605,6 +1605,8 @@ void npusch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,uint8_t data_or_c
       // if eNB is ready to receive UL data 
       // define a flag to trigger on or off the decoding process
       //if ((ulsch) && (ulsch->rnti>0) && (ulsch_harq->status == ACTIVE) && (ulsch_harq->frame == frame) && (ulsch_harq->subframe == subframe) && (ulsch_harq->handled == 0))
+      uint16_t N_slots = get_UL_slots_per_RU_NB_IoT(nulsch_harq->subcarrier_spacing, nulsch_harq->subcarrier_indication, nulsch->npusch_format)*get_UL_N_ru_NB_IoT(nulsch_harq->mcs,nulsch_harq->resource_assignment,nulsch->Msg3_flag);
+              
       if ((nulsch->Msg3_active  == 1) && (nulsch->Msg3_flag   == 1)) // && (ulsch_harq->frame == framerx) && (ulsch_harq->subframe == subframerx))  
       {
            
@@ -1616,22 +1618,7 @@ void npusch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,uint8_t data_or_c
                 nulsch->flag_scramble = 0;
            }
 
-                     /*
-                     // UE has ULSCH scheduling
-                     for (int rb=0; rb<=ulsch_harq->nb_rb; rb++)
-                     {
-                          int rb2 = rb+ulsch_harq->first_rb;
-                          eNB->rb_mask_ul[rb2>>5] |= (1<<(rb2&31));
-                     }
-                     */
-                    //rx_ulsch(eNB,proc, i);
-                    /*ret = ulsch_decoding(eNB,proc,
-                                        i,
-                                        0, // control_only_flag
-                                        ulsch_harq->V_UL_DAI,
-                                        ulsch_harq->nb_rb>20 ? 1 : 0);*/
-                    // fill_ulsch_cqi_indication(eNB,frame,subframe,ulsch_harq,ulsch->rnti);
-              uint16_t N_slots = get_UL_slots_per_RU_NB_IoT(nulsch_harq->subcarrier_spacing, nulsch_harq->subcarrier_indication, nulsch->npusch_format)*get_UL_N_ru_NB_IoT(nulsch_harq->mcs,nulsch_harq->resource_assignment,nulsch->Msg3_flag);
+                  
               
               rx_ulsch_Gen_NB_IoT(eNB,
                                    proc,
@@ -1654,6 +1641,28 @@ void npusch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,uint8_t data_or_c
                                    0,
                                    nulsch->Msg3_flag); 
 
+         } else if((nulsch->Msg3_active  == 1) && (nulsch->Msg3_flag   == 0)){  //// case of NPUSCH other than Msg3
+
+              rx_ulsch_Gen_NB_IoT(eNB,
+                                   proc,
+                                   0,                         // this is the effective sector id
+                                   0,
+                                   nulsch,
+                                   nulsch->npusch_format,                         //npusch_format,             // 1, 2  
+                                   22,                        // 22 , to be included in // to be replaced by NB_IoT_start ??
+                                   1,                         // 0 (3.75 KHz) or 1 (15 KHz)
+                                   nulsch->rnti,                     //= 65522
+                                   nulsch->Msg3_subframe,  // first received subframe 
+                                   nulsch->Msg3_frame,     // first received frame
+                                   N_slots, //  total number of occupied slots = get_nb_slot_per_RU * NB_of_RU
+                                   get_UL_sc_index_start_NB_IoT(nulsch_harq->subcarrier_spacing,nulsch_harq->subcarrier_indication,nulsch->npusch_format),
+                                   get_UL_N_ru_NB_IoT(nulsch_harq->mcs,nulsch_harq->resource_assignment,nulsch->Msg3_flag),   // N_RU
+                                   nulsch_harq->mcs,   // I_mcs
+                                   nulsch_harq->TBS,      //  A = TBS
+                                   N_slots/2,  ///proc->counter_msg3,  // this represents the number of Subframe after encoding the msg3 // proc->counter_msg3
+                                   subframerx,
+                                   0,
+                                   nulsch->Msg3_flag); 
          }
           
    }  // for UE loop

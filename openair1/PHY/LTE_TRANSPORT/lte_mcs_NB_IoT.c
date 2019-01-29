@@ -21,7 +21,7 @@
 
 /*! \file PHY/LTE_TRANSPORT/lte_mcs_NB_IoT.c
 * \brief Some support routines for MCS computations
-* \author V. Savaux , M. KANJ
+* \author  M. KANJ
 * \date 2017
 * \version 0.1
 * \company b<>com
