@@ -353,25 +353,13 @@ int32_t dlsch_encoding_NB_IoT(unsigned char              *a,
 
 
 
-uint8_t rx_ulsch_Gen_NB_IoT(PHY_VARS_eNB            *eNB,
-                         eNB_rxtx_proc_t         *proc,
-                         uint8_t                 eNB_id,  // this is the effective sector id
-                         uint8_t                 UE_id,
-                        // NB_IoT_eNB_NULSCH_t     **ulsch,
-                         //uint8_t                 npusch_format,         // 1, 2  
-                         uint16_t                UL_RB_ID_NB_IoT,  // 22 , to be included in // to be replaced by NB_IoT_start ??
-                        // uint8_t                 subcarrier_spacing,  // 0 (3.75 KHz) or 1 (15 KHz)
-                         uint8_t                 scrambling_subframe_msg3,
-                         uint32_t                scrambling_frame_msg3,
-                         uint16_t                nb_slot,   // total number of occupied slots
-                         //uint16_t                I_sc,
-                         uint16_t                Nsc_RU,
-                         uint16_t                Mcs,
-                         unsigned int            A,
-                         uint16_t                counter_msg,
-                         uint8_t                 subframerx,
-                         uint8_t                 rvdx,
-                         uint8_t                 msg3_flag);
+uint8_t rx_ulsch_Gen_NB_IoT(PHY_VARS_eNB             *eNB,
+                             eNB_rxtx_proc_t         *proc,
+                             uint8_t                 eNB_id,  // this is the effective sector id
+                             uint8_t                 UE_id,
+                             uint16_t                UL_RB_ID_NB_IoT,  // 22 , to be included in // to be replaced by NB_IoT_start ??
+                             uint8_t                 subframe,
+                             uint32_t                frame);
 
 void ulsch_extract_rbs_single_NB_IoT(int32_t **rxdataF,
                                      int32_t **rxdataF_ext, 
@@ -424,7 +412,7 @@ void filtering_signal(int16_t *input_buffer, int16_t *filtered_buffer, uint32_t 
 
 uint8_t get_Qm_UL_NB_IoT(unsigned char I_mcs, uint8_t N_sc_RU, uint8_t I_sc, uint8_t Msg3_flag);
 
-uint16_t get_UL_sc_start_NB_IoT(uint16_t I_sc); 
+//uint16_t get_UL_sc_start_NB_IoT(uint16_t I_sc); 
 
 uint16_t get_UL_sc_index_start_NB_IoT(uint8_t subcarrier_spacing, uint16_t I_sc, uint8_t npush_format);
 
@@ -456,7 +444,8 @@ void rotate_single_carrier_NB_IoT(PHY_VARS_eNB          *eNB,
 
 void fill_rbs_zeros_NB_IoT(PHY_VARS_eNB *eNB, 
                                   LTE_DL_FRAME_PARMS *frame_parms,
-                                  int32_t **rxdataF_comp, 
+                                  int32_t **rxdataF_comp,
+                                  uint16_t ul_sc_start, 
                                   uint8_t UE_id,
                                   uint8_t symbol); 
 
@@ -465,7 +454,8 @@ int32_t ulsch_bpsk_llr_NB_IoT(PHY_VARS_eNB *eNB,
                               int32_t **rxdataF_comp,
                               int16_t *ulsch_llr,
                               uint8_t symbol, 
-                              uint8_t uint8_t, 
+                              uint16_t ul_sc_start,
+                              uint8_t UE_id, 
                               int16_t **llrp); 
 
 int32_t ulsch_qpsk_llr_NB_IoT(PHY_VARS_eNB *eNB, 
@@ -474,13 +464,14 @@ int32_t ulsch_qpsk_llr_NB_IoT(PHY_VARS_eNB *eNB,
                               int16_t *ulsch_llr, 
                               uint8_t symbol, 
                               uint8_t UE_id,
-                              uint32_t I_sc,
+                              uint16_t ul_sc_start,
                               uint8_t Nsc_RU, 
                               int16_t *llrp);
 
 void rotate_bpsk_NB_IoT(PHY_VARS_eNB *eNB, 
                         LTE_DL_FRAME_PARMS *frame_parms,
-                        int32_t **rxdataF_comp, 
+                        int32_t **rxdataF_comp,
+                        uint16_t ul_sc_start, 
                         uint8_t UE_id,
                         uint8_t symbol); 
 //************************************************************// 

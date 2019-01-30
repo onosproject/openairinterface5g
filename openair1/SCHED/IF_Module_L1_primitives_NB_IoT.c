@@ -458,7 +458,7 @@ void schedule_response_NB_IoT(Sched_Rsp_NB_IoT_t *Sched_INFO)
 	
 			nulsch->Msg3_active        = 1;
 			nulsch->Msg3_flag          = 1;
-			nulsch->flag_scramble      = 1;
+			nulsch->flag_vars          = 1;
 			nulsch->rnti               = nfapi_parameters_rel13->rnti;
 			nulsch->npusch_format      = nfapi_parameters_rel13->nulsch_format;
 			nulsch->N_srs              = nfapi_parameters_rel13->n_srs;

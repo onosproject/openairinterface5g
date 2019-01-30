@@ -1584,9 +1584,10 @@ void npusch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
   nulsch = eNB->ulsch_NB_IoT[0];
   nulsch_harq = nulsch->harq_process;
 
-  const int subframerx = proc->subframe_rx;
-  const int framerx    = proc->frame_rx;
+  const int rx_subframe   =   proc->subframe_rx;
+  const int rx_frame      =   proc->frame_rx;
 
+  int   RB_IoT_ID         = 22;
   //for (i=0; i<NUMBER_OF_UE_MAX; i++)
   for (i=0; i<1; i++)
   {
@@ -1595,64 +1596,40 @@ void npusch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
       // if eNB is ready to receive UL data 
       // define a flag to trigger on or off the decoding process
       //if ((ulsch) && (ulsch->rnti>0) && (ulsch_harq->status == ACTIVE) && (ulsch_harq->frame == frame) && (ulsch_harq->subframe == subframe) && (ulsch_harq->handled == 0))
-      uint16_t N_slots = get_UL_slots_per_RU_NB_IoT(nulsch_harq->subcarrier_spacing, nulsch_harq->subcarrier_indication, nulsch->npusch_format)*get_UL_N_ru_NB_IoT(nulsch_harq->mcs,nulsch_harq->resource_assignment,nulsch->Msg3_flag);
+      //uint16_t N_slots = get_UL_slots_per_RU_NB_IoT(nulsch_harq->subcarrier_spacing, nulsch_harq->subcarrier_indication, nulsch->npusch_format)*get_UL_N_ru_NB_IoT(nulsch_harq->mcs,nulsch_harq->resource_assignment,nulsch->Msg3_flag);
               
-      if ((nulsch->Msg3_active  == 1) && (nulsch->Msg3_flag   == 1)) // && (ulsch_harq->frame == framerx) && (ulsch_harq->subframe == subframerx))  
-      {
+     // if ((nulsch->Msg3_active  == 1) && (nulsch->Msg3_flag   == 1)) // && (ulsch_harq->frame == framerx) && (ulsch_harq->subframe == subframerx))  
+    //  {
            
-           if(nulsch->flag_scramble == 1)
+        /*   if(nulsch->flag_scramble == 1)
            {
                 
                 nulsch->Msg3_frame    = framerx;
                 nulsch->Msg3_subframe = subframerx;
                 nulsch->flag_scramble = 0;
-           }
-
-                  
-              
+           }*/
+ 
               rx_ulsch_Gen_NB_IoT(eNB,
                                    proc,
                                    0,                         // this is the effective sector id
                                    0,
-                                //   nulsch,
-                                  // nulsch->npusch_format,                         //npusch_format,             // 1, 2  
-                                   22,                        // 22 , to be included in // to be replaced by NB_IoT_start ??
-                                  // 1,                         // 0 (3.75 KHz) or 1 (15 KHz)
-                                   nulsch->Msg3_subframe,  // first received subframe 
-                                   nulsch->Msg3_frame,     // first received frame
-                                   N_slots, //  total number of occupied slots = get_nb_slot_per_RU * NB_of_RU
-                                   //get_UL_sc_index_start_NB_IoT(nulsch_harq->subcarrier_spacing,nulsch_harq->subcarrier_indication,nulsch->npusch_format),
-                                   get_UL_N_ru_NB_IoT(nulsch_harq->mcs,nulsch_harq->resource_assignment,nulsch->Msg3_flag),   // N_RU
-                                   //if 0<get_numb_UL_sc_NB_IoT(uint8_t subcarrier_spacing, uint8_t I_sc, uint8_t npush_format),// Nsc,
-                                   nulsch_harq->mcs,   // I_mcs
-                                   nulsch_harq->TBS,      //  A = TBS
-                                   N_slots/2,  ///proc->counter_msg3,  // this represents the number of Subframe after encoding the msg3 // proc->counter_msg3
-                                   subframerx,
-                                   0,
-                                   nulsch->Msg3_flag); 
+                                   RB_IoT_ID,                        // 22 , to be included in // to be replaced by NB_IoT_start ??
+                                   rx_subframe,  // first received subframe 
+                                   rx_frame);     // first received frame
+                                                 ///proc->counter_msg3,  // this represents the number of Subframe after encoding the msg3 // proc->counter_msg3
 
-         } else if((nulsch->Msg3_active  == 1) && (nulsch->Msg3_flag   == 0)){  //// case of NPUSCH other than Msg3
-
+       //  } else if((nulsch->Msg3_active  == 1) && (nulsch->Msg3_flag   == 0)){  //// case of NPUSCH other than Msg3
+/*
               rx_ulsch_Gen_NB_IoT(eNB,
                                    proc,
                                    0,                         // this is the effective sector id
                                    0,
-                                //   nulsch,
-                                //   nulsch->npusch_format,                         //npusch_format,             // 1, 2  
                                    22,                        // 22 , to be included in // to be replaced by NB_IoT_start ??
-                               //    1,                         // 0 (3.75 KHz) or 1 (15 KHz)
                                    nulsch->Msg3_subframe,  // first received subframe 
                                    nulsch->Msg3_frame,     // first received frame
-                                   N_slots, //  total number of occupied slots = get_nb_slot_per_RU * NB_of_RU
-                                  // get_UL_sc_index_start_NB_IoT(nulsch_harq->subcarrier_spacing,nulsch_harq->subcarrier_indication,nulsch->npusch_format),
-                                   get_UL_N_ru_NB_IoT(nulsch_harq->mcs,nulsch_harq->resource_assignment,nulsch->Msg3_flag),   // N_RU
-                                   nulsch_harq->mcs,   // I_mcs
-                                   nulsch_harq->TBS,      //  A = TBS
-                                   N_slots/2,  ///proc->counter_msg3,  // this represents the number of Subframe after encoding the msg3 // proc->counter_msg3
-                                   subframerx,
-                                   0,
-                                   nulsch->Msg3_flag); 
-         }
+                                   N_slots/2,              ///proc->counter_msg3,  // this represents the number of Subframe after encoding the msg3 // proc->counter_msg3
+                                   subframerx); */
+       //  }
           
    }  // for UE loop
 

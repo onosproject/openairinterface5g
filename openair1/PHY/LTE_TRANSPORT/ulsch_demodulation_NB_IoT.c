@@ -446,17 +446,18 @@ int32_t ulsch_bpsk_llr_NB_IoT(PHY_VARS_eNB *eNB,
                               LTE_DL_FRAME_PARMS *frame_parms,
                               int32_t **rxdataF_comp,
                               int16_t *ulsch_llr, 
-                              uint8_t symbol, 
+                              uint8_t symbol,
+                              uint16_t ul_sc_start, 
                               uint8_t UE_id, 
                               int16_t **llrp)
 {
 
   int16_t *rxF; 
-  uint32_t I_sc = 11;//eNB->ulsch_NB_IoT[UE_id]->harq_process->I_sc;  // NB_IoT: subcarrier indication field: must be defined in higher layer
-  uint16_t ul_sc_start; // subcarrier start index into UL RB 
+ // uint32_t I_sc = 11;//eNB->ulsch_NB_IoT[UE_id]->harq_process->I_sc;  // NB_IoT: subcarrier indication field: must be defined in higher layer
+ // uint16_t ul_sc_start; // subcarrier start index into UL RB 
   // int i; 
 
-  ul_sc_start = get_UL_sc_start_NB_IoT(I_sc); // NB-IoT: get the used subcarrier in RB
+  //ul_sc_start = get_UL_sc_start_NB_IoT(I_sc); // NB-IoT: get the used subcarrier in RB
   rxF = (int16_t *)&rxdataF_comp[0][(symbol*frame_parms->N_RB_DL*12) + ul_sc_start]; 
 
   //  printf("qpsk llr for symbol %d (pos %d), llr offset %d\n",symbol,(symbol*frame_parms->N_RB_DL*12),llr128U-(__m128i*)ulsch_llr);
@@ -469,7 +470,6 @@ int32_t ulsch_bpsk_llr_NB_IoT(PHY_VARS_eNB *eNB,
   return(0);
 
 }
-
 
 // int32_t ulsch_qpsk_llr_NB_IoT(NB_IoT_DL_FRAME_PARMS *frame_parms,
 //                               int32_t **rxdataF_comp,
@@ -512,7 +512,7 @@ int32_t ulsch_qpsk_llr_NB_IoT(PHY_VARS_eNB *eNB,
                               int16_t *ulsch_llr, 
                               uint8_t symbol, 
                               uint8_t UE_id,
-                              uint32_t I_sc,
+                              uint16_t ul_sc_start,
                               uint8_t Nsc_RU,
                               int16_t *llrp)
 {
@@ -520,12 +520,12 @@ int32_t ulsch_qpsk_llr_NB_IoT(PHY_VARS_eNB *eNB,
   int32_t *rxF; 
   int32_t *llrp32; // = (int32_t *)llrp; 
   //uint32_t I_sc = 11;//eNB->ulsch_NB_IoT[UE_id]->harq_process->I_sc;  // NB_IoT: subcarrier indication field: must be defined in higher layer
-  uint16_t ul_sc_start; // subcarrier start index into UL RB 
+  //uint16_t ul_sc_start; // subcarrier start index into UL RB 
   //uint8_t Nsc_RU = 1;//eNB->ulsch_NB_IoT[UE_id]->harq_process->N_sc_RU; // Vincent: number of sc 1,3,6,12 
   int i; 
   
   llrp32 = (int32_t *)&llrp[0];
-  ul_sc_start = get_UL_sc_start_NB_IoT(I_sc); // NB-IoT: get the used subcarrier in RB
+  //ul_sc_start = get_UL_sc_start_NB_IoT(I_sc); // NB-IoT: get the used subcarrier in RB
   rxF = (int32_t *)&rxdataF_comp[0][(symbol*frame_parms->N_RB_DL*12) + ul_sc_start]; 
 
   //  printf("qpsk llr for symbol %d (pos %d), llr offset %d\n",symbol,(symbol*frame_parms->N_RB_DL*12),llr128U-(__m128i*)ulsch_llr);
@@ -1323,18 +1323,19 @@ void ulsch_channel_compensation_NB_IoT(int32_t **rxdataF_ext,
 
 void fill_rbs_zeros_NB_IoT(PHY_VARS_eNB *eNB, 
                             LTE_DL_FRAME_PARMS *frame_parms,
-                            int32_t **rxdataF_comp, 
+                            int32_t **rxdataF_comp,
+                            uint16_t ul_sc_start,
                             uint8_t UE_id,
                             uint8_t symbol)
 {
 
-  uint32_t I_sc = 11;//eNB->ulsch[UE_id]->harq_process->I_sc;  // NB_IoT: subcarrier indication field: must be defined in higher layer
+  //uint32_t I_sc = 11;//eNB->ulsch[UE_id]->harq_process->I_sc;  // NB_IoT: subcarrier indication field: must be defined in higher layer
   uint8_t Nsc_RU = 1;//eNB->ulsch[UE_id]->harq_process->N_sc_RU; // Vincent: number of sc 1,3,6,12 
-  uint16_t ul_sc_start; // subcarrier start index into UL RB 
+  //uint16_t ul_sc_start; // subcarrier start index into UL RB 
   int32_t *rxdataF_comp32;   
   uint8_t m; // index of subcarrier
 
-  ul_sc_start = get_UL_sc_start_NB_IoT(I_sc); // NB-IoT: get the used subcarrier in RB 
+ // ul_sc_start = get_UL_sc_start_NB_IoT(I_sc); // NB-IoT: get the used subcarrier in RB 
   rxdataF_comp32   = (int32_t *)&rxdataF_comp[0][symbol*frame_parms->N_RB_DL*12]; 
   if (Nsc_RU != 12){
     for (m=0;m<12;m++)
@@ -1437,18 +1438,19 @@ void rotate_single_carrier_NB_IoT(PHY_VARS_eNB          *eNB,
 void rotate_bpsk_NB_IoT(PHY_VARS_eNB *eNB, 
                         LTE_DL_FRAME_PARMS *frame_parms,
                         int32_t **rxdataF_comp, 
+                        uint16_t ul_sc_start,
                         uint8_t UE_id,
                         uint8_t symbol)
 {
 
-  uint32_t I_sc = eNB->ulsch_NB_IoT[UE_id]->harq_process->I_sc;  // NB_IoT: subcarrier indication field: must be defined in higher layer
-  uint16_t ul_sc_start; // subcarrier start index into UL RB 
+  //uint32_t I_sc = eNB->ulsch_NB_IoT[UE_id]->harq_process->I_sc;  // NB_IoT: subcarrier indication field: must be defined in higher layer
+  //uint16_t ul_sc_start; // subcarrier start index into UL RB 
   int16_t m_pi_4_re = 25735; // cos(pi/4) 
   int16_t m_pi_4_im = 25736; // sin(pi/4) 
   int16_t *rxdataF_comp16; 
   int16_t rxdataF_comp16_re, rxdataF_comp16_im; 
 
-  ul_sc_start = get_UL_sc_start_NB_IoT(I_sc); // NB-IoT: get the used subcarrier in RB
+  //ul_sc_start = get_UL_sc_start_NB_IoT(I_sc); // NB-IoT: get the used subcarrier in RB
   rxdataF_comp16   = (int16_t *)&rxdataF_comp[0][symbol*frame_parms->N_RB_DL*12 + ul_sc_start]; 
   rxdataF_comp16_re = rxdataF_comp16[0]; 
   rxdataF_comp16_im = rxdataF_comp16[1]; 
@@ -1615,68 +1617,67 @@ int32_t llr_msg5[16];
 int32_t y_msg5[16];
 
 uint8_t rx_ulsch_Gen_NB_IoT(PHY_VARS_eNB            *eNB,
-                           eNB_rxtx_proc_t         *proc,
-                           uint8_t                 eNB_id,                    // this is the effective sector id
-                           uint8_t                 UE_id,
-                           //NB_IoT_eNB_NULSCH_t     **ulsch_NB_IoT, 
-                           //                      npusch format 
-                           uint16_t                UL_RB_ID_NB_IoT,           // 22 , to be included in // to be replaced by NB_IoT_start ??
-                          // uint8_t                 subcarrier_spacing,        // 0 (3.75 KHz) or 1 (15 KHz)
-                           uint8_t                 scrambling_subframe_msg3,  // first received subframe 
-                           uint32_t                scrambling_frame_msg3,     // first received frame
-                           uint16_t                nb_slot,                   //  total number of occupied slots
-                           //                      I_sc
-                           uint16_t                Nsc_RU,                // to remove and create function Nsc_RU = f(I_sc)
-                           uint16_t                Mcs, 
-                           unsigned int            A,                         //  A = TBS
-                           uint16_t                counter_msg,
-                           uint8_t                 subframerx,
-                           uint8_t                 rvdx, 
-                           uint8_t                 msg3_flag)                    // data (0) or control (1)
+                            eNB_rxtx_proc_t         *proc,
+                            uint8_t                 eNB_id,                    // this is the effective sector id
+                            uint8_t                 UE_id,
+                            uint16_t                UL_RB_ID_NB_IoT,           // 22 , to be included in // to be replaced by NB_IoT_start ??     
+                            uint8_t                 rx_subframe,               //  received subframe 
+                            uint32_t                rx_frame)                  //  received frame 
 {
       
       LTE_eNB_PUSCH       *pusch_vars   =  eNB->pusch_vars[UE_id];
       LTE_eNB_COMMON      *common_vars  =  &eNB->common_vars;
       //NB_IoT_DL_FRAME_PARMS  *frame_parms  =  &eNB->frame_parms;
-     // uint8_t    Nsc_RU = eNB->ulsch_NB_IoT[UE_id]->harq_process->N_sc_RU; // Vincent: number of sc 1,3,6,12 
+      // uint8_t    Nsc_RU = eNB->ulsch_NB_IoT[UE_id]->harq_process->N_sc_RU; // Vincent: number of sc 1,3,6,12 
       LTE_DL_FRAME_PARMS     *fp  =  &eNB->frame_parms; 
-     // NB_IoT_eNB_NULSCH_t    **ulsch_NB_IoT   =  &eNB->ulsch_NB_IoT[0];//[0][0]; 
+      // NB_IoT_eNB_NULSCH_t    **ulsch_NB_IoT   =  &eNB->ulsch_NB_IoT[0];//[0][0]; 
       NB_IoT_eNB_NULSCH_t     *ulsch_NB_IoT     = eNB->ulsch_NB_IoT[0];
       NB_IoT_UL_eNB_HARQ_t    *ulsch_harq       = ulsch_NB_IoT->harq_process;
-      //int         l;
-      //int16_t    *llrp;
-      int16_t    *llrp, *llrp2;
-      //uint8_t    nb_rb=1; //ulsch_NB_IoT[0]->harq_process->nb_rb, high level parameter always one, to take into account in case it is changed in the 3GPP spec
-      uint32_t   l,ii=0;//,i;
 
-      uint32_t     rnti_tmp              = ulsch_NB_IoT->rnti;               ////////////////////////////////////////////////////////
-      uint8_t      npusch_format         = ulsch_NB_IoT->npusch_format;             // 1, 2    /// TOFIXE values 0, 1
+  if (ulsch_NB_IoT->Msg3_active  == 1)    
+  {    
+      uint8_t      npusch_format         = ulsch_NB_IoT->npusch_format;     /// 0 or 1 -> format 1 or format 2         
       uint8_t      subcarrier_spacing    = ulsch_harq->subcarrier_spacing;  // can be set as fix value //values are OK // 0 (3.75 KHz) or 1 (15 KHz)
       uint16_t     I_sc                  = ulsch_harq->subcarrier_indication;  // Isc =0->18 , or 0->47 // format 2, 0->3 or 0->7
+      uint16_t     I_mcs                 = ulsch_harq->mcs;
+      uint16_t     Nsc_RU                = get_UL_N_ru_NB_IoT(I_mcs,ulsch_harq->resource_assignment,ulsch_NB_IoT->Msg3_flag);
 
-      //int32_t    avgs;
-     // uint8_t    log2_maxh = 0,aarx;
-      //uint8_t    harq_pid;
-      uint16_t  ul_sc_start          = get_UL_sc_index_start_NB_IoT(subcarrier_spacing,I_sc,npusch_format);
+      uint16_t     N_UL_slots            = get_UL_slots_per_RU_NB_IoT(subcarrier_spacing,I_sc,npusch_format)*Nsc_RU; // N_UL_slots per word
 
-      uint8_t    Qm;
-      int        subframe = proc->subframe_rx;   // only used in the crc_indication !!
-      int        frame = proc->frame_rx;        // only used in the crc_indication !!
-      //uint8_t    npusch_format = 1; // NB-IoT: format 1 (data), or 2: ack. Should be defined in higher layer 
-      //uint8_t subcarrier_spacing = frame_parms->subcarrier_spacing; // 15 kHz or 3.75 kHz 
-      uint8_t        pilot_pos1_format1_15k = 3, pilot_pos2_format1_15k = 10; // holds for npusch format 1, and 15 kHz subcarrier bandwidth
-      uint8_t        pilot_pos1_format2_15k = 2, pilot_pos2_format2_15k = 9; // holds for npusch format 2, and 15 kHz subcarrier bandwidth 
-      uint8_t        pilot_pos1_format1_3_75k = 4, pilot_pos2_format1_3_75k = 11; // holds for npusch format 1, and 3.75 kHz subcarrier bandwidth
-      uint8_t        pilot_pos1_format2_3_75k = 0,pilot_pos2_format2_3_75k = 7; // holds for npusch format 2, and 3.75 kHz subcarrier bandwidth 
+      uint16_t     N_SF_per_word         = N_UL_slots/2;
 
-      uint8_t        pilot_pos1, pilot_pos2; // holds for npusch format 1, and 15 kHz subcarrier bandwidth
-      //int        *pilot_pos_format2; // holds for npusch format 2, and 15 kHz subcarrier bandwidth
-      uint8_t         pilots_slot=0;
-      /////////////// harq_pid = subframe2harq_pid_NB_IoT(frame_parms,proc->frame_rx,subframe);
-      //uint8_t   I_sc = ulsch[UE_id]->harq_process->I_sc;
+      if(ulsch_NB_IoT->flag_vars == 1)
+      {
+        ulsch_NB_IoT->counter_sf          = N_SF_per_word;
+        ulsch_NB_IoT->counter_repetitions = get_UL_N_rep_NB_IoT(ulsch_harq->repetition_number);
 
-     // Qm       = get_Qm_ul_NB_IoT(ulsch[UE_id]->harq_process->mcs,Nsc_RU);   // I_msc is in the UL grant
-      Qm       = get_Qm_UL_NB_IoT( Mcs,Nsc_RU,I_sc,msg3_flag);  
+        ulsch_NB_IoT->flag_vars = 0;
+      }
+      
+      
+
+      if(ulsch_NB_IoT->counter_sf == N_SF_per_word)                // initialization for scrambling
+      {
+          ulsch_NB_IoT->Msg3_subframe   =   rx_subframe;      // first received subframe 
+          ulsch_NB_IoT->Msg3_frame      =   rx_frame;         // first received frame
+      }
+
+      int16_t      *llrp, *llrp2;
+      uint32_t     l,ii=0;
+
+      uint32_t     rnti_tmp              = ulsch_NB_IoT->rnti;               
+          
+      uint16_t     ul_sc_start           = get_UL_sc_index_start_NB_IoT(subcarrier_spacing,I_sc,npusch_format);
+
+      uint8_t      Qm                    = get_Qm_UL_NB_IoT(I_mcs,Nsc_RU,I_sc,ulsch_NB_IoT->Msg3_flag);
+   
+      uint8_t      pilot_pos1_format1_15k = 3, pilot_pos2_format1_15k = 10; // holds for npusch format 1, and 15 kHz subcarrier bandwidth
+      uint8_t      pilot_pos1_format2_15k = 2, pilot_pos2_format2_15k = 9; // holds for npusch format 2, and 15 kHz subcarrier bandwidth 
+      uint8_t      pilot_pos1_format1_3_75k = 4, pilot_pos2_format1_3_75k = 11; // holds for npusch format 1, and 3.75 kHz subcarrier bandwidth
+      uint8_t      pilot_pos1_format2_3_75k = 0,pilot_pos2_format2_3_75k = 7; // holds for npusch format 2, and 3.75 kHz subcarrier bandwidth 
+
+      uint8_t      pilot_pos1, pilot_pos2; // holds for npusch format 1, and 15 kHz subcarrier bandwidth
+      uint8_t      pilots_slot=0;        
 
 
       switch(npusch_format + subcarrier_spacing*2)
@@ -1725,7 +1726,7 @@ uint8_t rx_ulsch_Gen_NB_IoT(PHY_VARS_eNB            *eNB,
                                           pusch_vars->drs_ch_estimates[eNB_id],
                                           l%(fp->symbols_per_tti/2),          //symbol within slot 
                                           l/(fp->symbols_per_tti/2),
-                                          counter_msg,
+                                          ulsch_NB_IoT->counter_sf,  // counter_msg
                                           pilot_pos1,
                                           pilot_pos2,
                                           ul_sc_start,
@@ -1735,13 +1736,13 @@ uint8_t rx_ulsch_Gen_NB_IoT(PHY_VARS_eNB            *eNB,
                     /// Channel Estimation (NPUSCH format 2)
                       ul_chest_tmp_f2_NB_IoT(pusch_vars->rxdataF_ext[0],
                                             pusch_vars->drs_ch_estimates[0],
-                                            l%(fp->symbols_per_tti/2), //symbol within slot 
+                                            l%(fp->symbols_per_tti/2),        //symbol within slot 
                                             l/(fp->symbols_per_tti/2), 
-                                            counter_msg, 
-                                            proc->flag_msg5,  // =1
-                                            subframerx,
-                                            Qm, // =1
-                                            ul_sc_start, // = 0   
+                                            ulsch_NB_IoT->counter_sf,         //counter_msg, 
+                                            npusch_format,             // proc->flag_msg5, ********   // check why this is needed ?? the function is called only for format 2 ?!!!!              // =1
+                                            rx_subframe,
+                                            Qm,                               // =1
+                                            ul_sc_start,                       // = 0   
                                             fp); 
             }
       }
@@ -1769,7 +1770,7 @@ uint8_t rx_ulsch_Gen_NB_IoT(PHY_VARS_eNB            *eNB,
                                                pusch_vars->rxdataF_comp[eNB_id], 
                                                UE_id, // UE ID
                                                l, 
-                                               counter_msg,
+                                               ulsch_NB_IoT->counter_sf,   //counter_msg,
                                                ul_sc_start,
                                                Qm,
                                                0); // or data
@@ -1784,7 +1785,7 @@ uint8_t rx_ulsch_Gen_NB_IoT(PHY_VARS_eNB            *eNB,
                                              pusch_vars->rxdataF_comp[eNB_id], 
                                              eNB_id, // eNB_ID ID
                                              l, 
-                                             counter_msg, 
+                                             ulsch_NB_IoT->counter_sf, //counter_msg, 
                                              ul_sc_start,  // carrier 0  
                                              Qm, // Qm
                                              1); // for ACK 
@@ -1792,15 +1793,15 @@ uint8_t rx_ulsch_Gen_NB_IoT(PHY_VARS_eNB            *eNB,
 
       }
 
-    
+    //////// create a function for this part 
 
      if(npusch_format == 0)
      { 
-            llrp = (int16_t*)&pusch_vars->llr[0+ (8-counter_msg)*24];
+            llrp = (int16_t*)&pusch_vars->llr[0+ (8-ulsch_NB_IoT->counter_sf)*24];
 
      } else {
 
-            llrp = (int16_t*)&pusch_vars->llr[0+ (2-counter_msg)*16]; 
+            llrp = (int16_t*)&pusch_vars->llr[0+ (2-ulsch_NB_IoT->counter_sf)*16]; 
      }
 
       for (l=0; l<fp->symbols_per_tti; l++)
@@ -1821,7 +1822,7 @@ uint8_t rx_ulsch_Gen_NB_IoT(PHY_VARS_eNB            *eNB,
                                 pusch_vars->llr,
                                 l, 
                                 UE_id, // UE ID
-                                I_sc,
+                                ul_sc_start,
                                 Nsc_RU,
                                 &llrp[ii*2]); //// !!! Pensez à créer un buffer de longueur 8 subframes 
           ii++;
@@ -1829,24 +1830,21 @@ uint8_t rx_ulsch_Gen_NB_IoT(PHY_VARS_eNB            *eNB,
       }
       
       /////////////////////////////////////////////////  NPUSH DECOD //////////////////////////////////////
-      if(counter_msg==1)
+      if(ulsch_NB_IoT->counter_sf == 1)
       {   
-          int16_t                 *ulsch_llr    = eNB->pusch_vars[eNB_id]->llr;             //UE_id=0
+          int16_t         *ulsch_llr    = eNB->pusch_vars[eNB_id]->llr;             //UE_id=0
           
-          //unsigned int    A;
+          unsigned int    A      = ulsch_harq->TBS;
+          uint8_t         rvdx   = ulsch_harq->rvidx;
           unsigned int    j,j2; //i2,
           int             iprime;
-          //unsigned int    ret = 0;
           int             r,Kr;
           unsigned int    sumKr=0;
           unsigned int    G,H,Hprime,Hpp,Cmux,Rmux_prime;     // Q_CQI,Q_RI=0
           uint32_t        x1, x2, s=0;
-          //int16_t           c;
           int16_t         y[6*14*1200] __attribute__((aligned(32)));
           uint8_t         ytag[14*1200];
           //int16_t         cseq[6*14*1200];
-          //uint32_t         subframe = 1;        // first subframe of Msg3 received   // required for scrambling
-          //uint32_t     rnti_tmp= 65522; // true rnti should be used
           uint8_t      reset;
           uint8_t      counter_ack;       // ack counter for decision ack/nack
           int32_t      counter_ack_soft;
@@ -1859,7 +1857,7 @@ uint8_t rx_ulsch_Gen_NB_IoT(PHY_VARS_eNB            *eNB,
               // x2 should be reinitialized according to 36.211 Sections 10.1.3.1 and 10.1.3.6
               // A     =  ulsch_harq->TBS; //88; //  // only for msg3 , should be replace by generic one
               // Qm   =  get_Qm_ul_NB_IoT(I_MCS,Nsc_RU);   // (2,1)      ///// ulsch_harq->mcs,ulsch_harq->N_sc_RU   // G_UL ??
-              G     =  (7-pilots_slot) * Qm * nb_slot; //(1 * Q_m) * 6 * 16; // Vincent : see 36.212, Section 5.1.4.1.2  // 16 slot(total number of slots) * 6 symboles (7-pilots_slot) * Qm*1 
+              G     =  (7-pilots_slot) * Qm * N_UL_slots; //(1 * Q_m) * 6 * 16; // Vincent : see 36.212, Section 5.1.4.1.2  // 16 slot(total number of slots) * 6 symboles (7-pilots_slot) * Qm*1 
               //G = ulsch_harq->N_sc_RU * Q_m) * ulsch_harq->Nsymb_UL * ulsch_harq->Nslot_UL;   (= number of RE * 2 - pilots)
               if (ulsch_harq->round == 0)
               {
@@ -1897,13 +1895,13 @@ uint8_t rx_ulsch_Gen_NB_IoT(PHY_VARS_eNB            *eNB,
               Hpp        = Hprime;
               // Cmux       = (ulsch_harq->Nsymb_UL-1)*ulsch_harq->Nslot_UL; // see definition in 36.212, Section 6.3.2, but not consistent with definition
               // of RU in 36.211, Section 10.1.2.3. Maybe prefer the following: 
-              Cmux       =  (7-pilots_slot) * nb_slot; // 6*16; //////////////(ulsch_harq->Nsymb_UL)*ulsch_harq->Nslot_UL;  // * N_RU **********
+              Cmux       =  (7-pilots_slot) * N_UL_slots; // 6*16; //////////////(ulsch_harq->Nsymb_UL)*ulsch_harq->Nslot_UL;  // * N_RU **********
               Rmux_prime = Hpp/Cmux;
               // Clear "tag" interleaving matrix to allow for CQI/DATA identification
               memset(ytag,0,Cmux*Rmux_prime);
               memset(y,LTE_NULL_NB_IoT,Qm*Hpp);
 
-              x2 =  (rnti_tmp<<14) + (scrambling_subframe_msg3<<9) + ((scrambling_frame_msg3%2)<<13) + fp->Nid_cell; //this is c_init in 36.211 Sec 10.1.3.1
+              x2 =  (rnti_tmp<<14) + (ulsch_NB_IoT->Msg3_subframe<<9) + ((ulsch_NB_IoT->Msg3_frame%2)<<13) + fp->Nid_cell; //this is c_init in 36.211 Sec 10.1.3.1
 
               reset = 1; 
               switch (Qm)
@@ -1934,8 +1932,8 @@ uint8_t rx_ulsch_Gen_NB_IoT(PHY_VARS_eNB            *eNB,
                       }
                   break;
               }
-///////////////////////////////// desin  multi-tone
-          //if multi-RU
+                    ///////////////////////////////// desin  multi-tone
+                              //if multi-RU
 
 
               j  = 0;
@@ -2028,7 +2026,7 @@ uint8_t rx_ulsch_Gen_NB_IoT(PHY_VARS_eNB            *eNB,
                                                  1, //////////////////////////////// not used
                                                  0,   //Uplink
                                                  1,
-                                                 0,//ulsch_harq->rvidx,
+                                                 rvdx,//ulsch_harq->rvidx,
                                                  (ulsch_harq->round==0)?1:0,  // clear
                                                  Qm, //2 //get_Qm_ul(ulsch_harq->mcs),
                                                  1,
@@ -2090,13 +2088,13 @@ uint8_t rx_ulsch_Gen_NB_IoT(PHY_VARS_eNB            *eNB,
                                  offset += (Kr_bytes- ((ulsch_harq->C>1)?3:0));
                       }
                       
-                      fill_crc_indication_NB_IoT(eNB,0,frame,subframe,0); // indicate ACK to MAC
+                      fill_crc_indication_NB_IoT(eNB,0,rx_frame,rx_subframe,0); // indicate ACK to MAC
                       //fill_rx_indication_NB_IoT(eNB,i,frame,subframe);  // indicate SDU to MAC
                       fill_rx_indication_NB_IoT(eNB,proc,npusch_format);
 
                   } else {
                       
-                      fill_crc_indication_NB_IoT(eNB,0,frame,subframe,1);   // indicate NAK to MAC
+                      fill_crc_indication_NB_IoT(eNB,0,rx_frame,rx_subframe,1);   // indicate NAK to MAC
                       //fill_rx_indication_NB_IoT(eNB,i,frame,subframe);      // indicate SDU to MAC 
                       fill_rx_indication_NB_IoT(eNB,proc,npusch_format);
                       break;
@@ -2125,7 +2123,7 @@ uint8_t rx_ulsch_Gen_NB_IoT(PHY_VARS_eNB            *eNB,
                     llr_msg5[l] = llrp2[l<<1] + llrp2[(l<<1)+1];
                 }
  
-                x2     =  (rnti_tmp<<14) + (scrambling_subframe_msg3<<9) + ((scrambling_frame_msg3%2)<<13) + fp->Nid_cell; 
+                x2     =  (rnti_tmp<<14) + (ulsch_NB_IoT->Msg3_subframe<<9) + ((ulsch_NB_IoT->Msg3_frame%2)<<13) + fp->Nid_cell; 
                 reset = 1;  
                 s = lte_gold_generic(&x1, &x2, reset);
                 reset = 0;
@@ -2146,14 +2144,14 @@ uint8_t rx_ulsch_Gen_NB_IoT(PHY_VARS_eNB            *eNB,
                 if (counter_ack>8) //hard decision
                 {
                       printf("  decoded msg5: ACK  ");
-                      fill_crc_indication_NB_IoT(eNB,0,frame,subframe,0); // indicate ACK to MAC
+                      fill_crc_indication_NB_IoT(eNB,0,rx_frame,rx_subframe,0); // indicate ACK to MAC
                       //fill_rx_indication_NB_IoT(eNB,i,frame,subframe);  // indicate SDU to MAC
                       fill_rx_indication_NB_IoT(eNB,proc,npusch_format);
 
                 } else if (counter_ack<8) { //hard decision
 
                       printf("  decoded msg5: NACK  "); 
-                      fill_crc_indication_NB_IoT(eNB,0,frame,subframe,1);   // indicate NAK to MAC
+                      fill_crc_indication_NB_IoT(eNB,0,rx_frame,rx_subframe,1);   // indicate NAK to MAC
                       //fill_rx_indication_NB_IoT(eNB,i,frame,subframe);      // indicate SDU to MAC 
                       fill_rx_indication_NB_IoT(eNB,proc,npusch_format);
 
@@ -2169,14 +2167,14 @@ uint8_t rx_ulsch_Gen_NB_IoT(PHY_VARS_eNB            *eNB,
                       {
 
                         printf("  decoded msg5 (soft): ACK  ");
-                        fill_crc_indication_NB_IoT(eNB,0,frame,subframe,0); // indicate ACK to MAC
+                        fill_crc_indication_NB_IoT(eNB,0,rx_frame,rx_subframe,0); // indicate ACK to MAC
                         //fill_rx_indication_NB_IoT(eNB,i,frame,subframe);  // indicate SDU to MAC
                         fill_rx_indication_NB_IoT(eNB,proc,npusch_format);
 
                       } else {
 
                         printf("  decoded msg5 (soft): NACK "); 
-                        fill_crc_indication_NB_IoT(eNB,0,frame,subframe,1);   // indicate NAK to MAC
+                        fill_crc_indication_NB_IoT(eNB,0,rx_frame,rx_subframe,1);   // indicate NAK to MAC
                         //fill_rx_indication_NB_IoT(eNB,i,frame,subframe);      // indicate SDU to MAC 
                         fill_rx_indication_NB_IoT(eNB,proc,npusch_format); 
                       }
@@ -2184,8 +2182,33 @@ uint8_t rx_ulsch_Gen_NB_IoT(PHY_VARS_eNB            *eNB,
                 printf("\n\n\n");
           } 
 
-      } // NPUSH decode end
-      /////////////////////////////////////////END/////////////////////////////////////////////////////////////////////////////////////
+          /////  if last sf of the word
+          ulsch_NB_IoT->counter_repetitions--;
 
+          if(ulsch_NB_IoT->Msg3_flag == 1)
+          {
+              ulsch_harq->rvidx =  ulsch_NB_IoT->counter_repetitions % 2;        // rvidx toogle for new code word
+          }// else {}       for other npusch cases ??
+
+          if( (ulsch_NB_IoT->counter_sf == 1) && (ulsch_NB_IoT->counter_repetitions == 0) )
+          {
+            ulsch_NB_IoT->Msg3_active  = 0;
+            ulsch_NB_IoT->Msg3_flag    = 0;
+          }  
+          
+      } // NPUSH decode end
+
+      /// update conter sf after every call
+      ulsch_NB_IoT->counter_sf--;
+
+      if( (ulsch_NB_IoT->counter_sf == 0) && (ulsch_NB_IoT->counter_repetitions > 0) )
+      {
+          ulsch_NB_IoT->counter_sf          = N_SF_per_word;
+      }
+      /////////////////////////////////////////END/////////////////////////////////////////////////////////////////////////////////////
+  } else {
+    return 0;     // create void function for NPUSCH ?
+  }
+        
         
 }

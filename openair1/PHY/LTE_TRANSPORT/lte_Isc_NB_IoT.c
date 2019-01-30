@@ -39,6 +39,7 @@ uint8_t tab_ack_3_75khz[16]= {38,39,40,41,42,43,44,45,38,39,40,41,42,43,44,45};
 uint8_t tab_I_ru_N_ru_UL[8]= {1,2,3,4,5,6,8,10};
 uint8_t tab_I_rep_N_rep_UL[8]={1,2,4,8,16,32,64,128};
 
+/*
 // Section 16.5.1.1 in 36.213
 uint16_t get_UL_sc_start_NB_IoT(uint16_t I_sc)
 {
@@ -69,6 +70,7 @@ uint16_t get_UL_sc_start_NB_IoT(uint16_t I_sc)
 	}
 
 }
+*/
 
 uint16_t get_UL_N_rep_NB_IoT(uint8_t I_rep)
 {

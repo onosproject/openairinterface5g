@@ -614,7 +614,7 @@ typedef struct {
   /// Flag to indicate that eNB should decode UE Msg3
   uint8_t                 Msg3_flag;
   /// Subframe for Msg3
-  uint8_t                 Msg3_subframe;
+  uint32_t                Msg3_subframe;
   /// Frame for Msg3
   uint32_t                Msg3_frame;
   /// RNTI attributed to this ULSCH
@@ -635,9 +635,14 @@ typedef struct {
   uint16_t                SF_idx;
   /// Determined the ACK/NACK delay and the subcarrier allocation TS 36.213 Table 16.4.2
   uint8_t                 HARQ_ACK_resource;
-  /// Flag to trigger the storage of frame & subframe values for scrambling
-  uint8_t                 flag_scramble;
-
+  
+  //////////////////////////////////////////////////////////////////
+  /// Flag to trigger the storage of values 
+  uint8_t                 flag_vars;
+  uint16_t                counter_sf;
+  uint16_t                counter_repetitions;
+ // uint16_t                sf_number;
+ // uint16_t                rep_number;
   ///////////// kept from LTE ///////////////////////////////////////////////////
 
   /// Maximum number of iterations used in eNB turbo decoder
