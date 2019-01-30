@@ -64,8 +64,6 @@
 #include "rrc_nas_primitives.h"
 #include "COMMON/platform_types.h"
 
-#define MAKE_VERSION(a,b,c) ((a)*256+(b)*16+(c))
-
 struct rb_entity {
   nasRadioBearerId_t rab_id;
   nasSapId_t sapi;
