@@ -49,7 +49,7 @@ extern "C"
 /* utility functions, to be used by configuration module and/or configuration libraries */
 extern configmodule_interface_t *config_get_if(void);
 extern char *config_check_valptr(paramdef_t *cfgoptions, char **ptr, int length) ;
-extern void config_printhelp(paramdef_t *,int numparams);
+extern void config_printhelp(paramdef_t *,int numparams, char *prefix);
 extern int config_process_cmdline(paramdef_t *params,int numparams, char *prefix);
 extern void config_assign_processedint(paramdef_t *cfgoption, int val);
 extern void config_assign_int(paramdef_t *cfgoptions, char *fullname, int val);
@@ -57,9 +57,12 @@ extern int config_assign_ipv4addr(paramdef_t *cfgoptions, char *ipv4addr);
 
 /* apis to get/check parameters, to be used by oai modules, at configuration time */
 #define CONFIG_CHECKALLSECTIONS "ALLSECTIONS"
-extern int config_check_cmdlineopt(char *prefix);
+extern int config_check_unknown_cmdlineopt(char *prefix);
 extern int config_get(paramdef_t *params,int numparams, char *prefix);
 extern int config_getlist(paramlist_def_t *ParamList, paramdef_t *params, int numparams, char *prefix);
+
+/* apis to set some of the paramdef_t fields before using the get/getlist api's */
+extern void config_set_checkfunctions(paramdef_t *params, checkedparam_t *checkfunctions, int numparams);
 
 /* apis to retrieve parameters info after calling get or getlist functions */
 extern int config_isparamset(paramdef_t *params,int paramidx);

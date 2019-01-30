@@ -34,6 +34,24 @@
 Version = '0.1'
 
 #-----------------------------------------------------------
+# Constants
+#-----------------------------------------------------------
+ALL_PROCESSES_OK = 0
+ENB_PROCESS_FAILED = -1
+ENB_PROCESS_OK = +1
+ENB_PROCESS_SEG_FAULT = -11
+ENB_PROCESS_ASSERTION = -12
+ENB_PROCESS_REALTIME_ISSUE = -13
+ENB_PROCESS_NOLOGFILE_TO_ANALYZE = -14
+HSS_PROCESS_FAILED = -2
+HSS_PROCESS_OK = +2
+MME_PROCESS_FAILED = -3
+MME_PROCESS_OK = +3
+SPGW_PROCESS_FAILED = -4
+SPGW_PROCESS_OK = +4
+UE_IP_ADDRESS_ISSUE = -5
+
+#-----------------------------------------------------------
 # Import
 #-----------------------------------------------------------
 import sys		# arg
@@ -88,6 +106,19 @@ class SSHConnection():
 		self.htmlHeaderCreated = False
 		self.htmlFooterCreated = False
 		self.htmlUEConnected = 0
+		self.htmleNBFailureMsg = ''
+		self.picocom_closure = False
+		self.idle_sleep_time = 0
+		self.htmlTabRefs = []
+		self.htmlTabNames = []
+		self.htmlTabIcons = []
+		self.finalStatus = False
+		self.eNBOsVersion = ''
+		self.eNBKernelVersion = ''
+		self.eNBUhdVersion = ''
+		self.eNBCpuNb = ''
+		self.eNBCpuModel = ''
+		self.eNBCpuMHz = ''
 
 	def open(self, ipaddress, username, password):
 		self.ssh = pexpect.spawn('ssh', [username + '@' + ipaddress], timeout = 5)
@@ -154,32 +185,82 @@ class SSHConnection():
 		else:
 			logging.debug('\u001B[1;37;41m Unexpected Others \u001B[0m')
 
-	def copy(self, ipaddress, username, password, source, destination):
+	def copyin(self, ipaddress, username, password, source, destination):
+		count = 0
+		copy_status = False
 		logging.debug('scp '+ username + '@' + ipaddress + ':' + source + ' ' + destination)
-		scp_spawn = pexpect.spawn('scp '+ username + '@' + ipaddress + ':' + source + ' ' + destination, timeout = 5)
-		scp_response = scp_spawn.expect(['Are you sure you want to continue connecting (yes/no)?', 'password:', pexpect.EOF, pexpect.TIMEOUT])
-		if scp_response == 0:
-			scp_spawn.sendline('yes')
-			scp_spawn.expect('password:')
-			scp_spawn.sendline(password)
-			scp_response = scp_spawn.expect(['\$', 'Permission denied', 'password:', pexpect.EOF, pexpect.TIMEOUT])
+		while count < 10:
+			scp_spawn = pexpect.spawn('scp '+ username + '@' + ipaddress + ':' + source + ' ' + destination, timeout = 100)
+			scp_response = scp_spawn.expect(['Are you sure you want to continue connecting (yes/no)?', 'password:', pexpect.EOF, pexpect.TIMEOUT])
 			if scp_response == 0:
-				pass
+				scp_spawn.sendline('yes')
+				scp_spawn.expect('password:')
+				scp_spawn.sendline(password)
+				scp_response = scp_spawn.expect(['\$', 'Permission denied', 'password:', pexpect.EOF, pexpect.TIMEOUT])
+				if scp_response == 0:
+					count = 10
+					copy_status = True
+				else:
+					logging.debug('1 - scp_response = ' + str(scp_response))
+			elif scp_response == 1:
+				scp_spawn.sendline(password)
+				scp_response = scp_spawn.expect(['\$', 'Permission denied', 'password:', pexpect.EOF, pexpect.TIMEOUT])
+				if scp_response == 0 or scp_response == 3:
+					count = 10
+					copy_status = True
+				else:
+					logging.debug('2 - scp_response = ' + str(scp_response))
+			elif scp_response == 2:
+				count = 10
+				copy_status = True
 			else:
-				logging.debug('1 - scp_response = ' + str(scp_response))
-				sys.exit('SCP failed')
-		elif scp_response == 1:
-			scp_spawn.sendline(password)
-			scp_response = scp_spawn.expect(['\$', 'Permission denied', 'password:', pexpect.EOF, pexpect.TIMEOUT])
-			if scp_response == 0 or scp_response == 3:
-				pass
+				logging.debug('3 - scp_response = ' + str(scp_response))
+			# adding a tempo when failure
+			if not copy_status:
+				time.sleep(1)
+			count += 1
+		if copy_status:
+			return 0
+		else:
+			return -1
+
+	def copyout(self, ipaddress, username, password, source, destination):
+		count = 0
+		copy_status = False
+		logging.debug('scp ' + source + ' ' + username + '@' + ipaddress + ':' + destination)
+		while count < 4:
+			scp_spawn = pexpect.spawn('scp ' + source + ' ' + username + '@' + ipaddress + ':' + destination, timeout = 100)
+			scp_response = scp_spawn.expect(['Are you sure you want to continue connecting (yes/no)?', 'password:', pexpect.EOF, pexpect.TIMEOUT])
+			if scp_response == 0:
+				scp_spawn.sendline('yes')
+				scp_spawn.expect('password:')
+				scp_spawn.sendline(password)
+				scp_response = scp_spawn.expect(['\$', 'Permission denied', 'password:', pexpect.EOF, pexpect.TIMEOUT])
+				if scp_response == 0:
+					count = 10
+					copy_status = True
+				else:
+					logging.debug('1 - scp_response = ' + str(scp_response))
+			elif scp_response == 1:
+				scp_spawn.sendline(password)
+				scp_response = scp_spawn.expect(['\$', 'Permission denied', 'password:', pexpect.EOF, pexpect.TIMEOUT])
+				if scp_response == 0 or scp_response == 3:
+					count = 10
+					copy_status = True
+				else:
+					logging.debug('2 - scp_response = ' + str(scp_response))
+			elif scp_response == 2:
+				count = 10
+				copy_status = True
 			else:
-				logging.debug('2 - scp_response = ' + str(scp_response))
-				sys.exit('SCP failed')
-		elif scp_response == 2:
+				logging.debug('3 - scp_response = ' + str(scp_response))
+			# adding a tempo when failure
+			if not copy_status:
+				time.sleep(1)
+			count += 1
+		if copy_status:
 			pass
 		else:
-			logging.debug('3 - scp_response = ' + str(scp_response))
 			sys.exit('SCP failed')
 
 	def BuildeNB(self):
@@ -328,10 +409,24 @@ class SSHConnection():
 				#	self.CreateHtmlFooter()
 				#	self.close()
 				#	sys.exit(1)
-				logging.debug('\u001B[1;30;43m eNB logging system did not show got sync! See with attach later \u001B[0m')
-				self.CreateHtmlTestRow('-O ' + config_file + extra_options, 'eNB not showing got sync!', 0)
 				# Not getting got sync is bypassed for the moment
 				#sys.exit(1)
+				logging.error('\u001B[1;37;41m eNB logging system did not show got sync! \u001B[0m')
+				self.CreateHtmlTestRow('-O ' + config_file + extra_options, 'KO', ALL_PROCESSES_OK)
+				self.CreateHtmlTabFooter(False)
+				# In case of T tracer recording, we need to kill tshark on EPC side
+				result = re.search('T_stdout', str(self.Initialize_eNB_args))
+				if result is not None:
+					self.open(self.EPCIPAddress, self.EPCUserName, self.EPCPassword)
+					logging.debug('\u001B[1m Stopping tshark \u001B[0m')
+					self.command('echo ' + self.EPCPassword + ' | sudo -S killall --signal SIGKILL tshark', '\$', 5)
+					self.close()
+					time.sleep(1)
+					pcap_log_file = 'enb_' + self.testCase_id + '_s1log.pcap'
+					copyin_res = self.copyin(self.EPCIPAddress, self.EPCUserName, self.EPCPassword, '/tmp/' + pcap_log_file, '.')
+					if (copyin_res == 0):
+						self.copyout(self.eNBIPAddress, self.eNBUserName, self.eNBPassword, pcap_log_file, self.eNBSourceCodePath + '/cmake_targets/.')
+				sys.exit(1)
 			else:
 				self.command('rsync -v enb_' + SSH.testCase_id + '.log enb_' + SSH.testCase_id + '.txt; stdbuf -o0 cat enb_' + SSH.testCase_id + '.log | grep --color=never -i sync', '\$', 4)
 				result = re.search('got sync', str(self.ssh.before))
@@ -1246,6 +1341,147 @@ class SSHConnection():
 		except:
 			os.kill(os.getppid(),signal.SIGUSR1)
 
+	def AnalyzeLogFile_eNB(self, eNBlogFile):
+		if (not os.path.isfile('./' + eNBlogFile)):
+			return -1
+		enb_log_file = open('./' + eNBlogFile, 'r')
+		foundAssertion = False
+		msgAssertion = ''
+		msgLine = 0
+		foundSegFault = False
+		foundRealTimeIssue = False
+		rrcSetupRequest = 0
+		rrcSetupComplete = 0
+		rrcReleaseRequest = 0
+		rrcReconfigRequest = 0
+		rrcReconfigComplete = 0
+		rrcReestablishRequest = 0
+		rrcReestablishComplete = 0
+		rrcReestablishReject = 0
+		rlcDiscardBuffer = 0
+		rachCanceledProcedure = 0
+		uciStatMsgCount = 0
+		pdcpFailure = 0
+		ulschFailure = 0
+		for line in enb_log_file.readlines():
+			result = re.search('[Ss]egmentation [Ff]ault', str(line))
+			if result is not None:
+				foundSegFault = True
+			result = re.search('[Cc]ore [dD]ump', str(line))
+			if result is not None:
+				foundSegFault = True
+			result = re.search('[Aa]ssertion', str(line))
+			if result is not None:
+				foundAssertion = True
+			result = re.search('LLL', str(line))
+			if result is not None:
+				foundRealTimeIssue = True
+			if foundAssertion and (msgLine < 3):
+				msgLine += 1
+				msgAssertion += str(line)
+			result = re.search('Generating LTE_RRCConnectionSetup', str(line))
+			if result is not None:
+				rrcSetupRequest += 1
+			result = re.search('LTE_RRCConnectionSetupComplete from UE', str(line))
+			if result is not None:
+				rrcSetupComplete += 1
+			result = re.search('Generate LTE_RRCConnectionRelease', str(line))
+			if result is not None:
+				rrcReleaseRequest += 1
+			result = re.search('Generate LTE_RRCConnectionReconfiguration', str(line))
+			if result is not None:
+				rrcReconfigRequest += 1
+			result = re.search('LTE_RRCConnectionReconfigurationComplete from UE rnti', str(line))
+			if result is not None:
+				rrcReconfigComplete += 1
+			result = re.search('LTE_RRCConnectionReestablishmentRequest', str(line))
+			if result is not None:
+				rrcReestablishRequest += 1
+			result = re.search('LTE_RRCConnectionReestablishmentComplete', str(line))
+			if result is not None:
+				rrcReestablishComplete += 1
+			result = re.search('LTE_RRCConnectionReestablishmentReject', str(line))
+			if result is not None:
+				rrcReestablishReject += 1
+			result = re.search('uci->stat', str(line))
+			if result is not None:
+				uciStatMsgCount += 1
+			result = re.search('PDCP.*Out of Resources.*reason', str(line))
+			if result is not None:
+				pdcpFailure += 1
+			result = re.search('ULSCH in error in round', str(line))
+			if result is not None:
+				ulschFailure += 1
+			result = re.search('BAD all_segments_received', str(line))
+			if result is not None:
+				rlcDiscardBuffer += 1
+			result = re.search('Canceled RA procedure for UE rnti', str(line))
+			if result is not None:
+				rachCanceledProcedure += 1
+		enb_log_file.close()
+		self.htmleNBFailureMsg = ''
+		if uciStatMsgCount > 0:
+			statMsg = 'eNB showed ' + str(uciStatMsgCount) + ' "uci->stat" message(s)'
+			logging.debug('\u001B[1;30;43m ' + statMsg + ' \u001B[0m')
+			self.htmleNBFailureMsg += statMsg + '\n'
+		if pdcpFailure > 0:
+			statMsg = 'eNB showed ' + str(pdcpFailure) + ' "PDCP Out of Resources" message(s)'
+			logging.debug('\u001B[1;30;43m ' + statMsg + ' \u001B[0m')
+			self.htmleNBFailureMsg += statMsg + '\n'
+		if ulschFailure > 0:
+			statMsg = 'eNB showed ' + str(ulschFailure) + ' "ULSCH in error in round" message(s)'
+			logging.debug('\u001B[1;30;43m ' + statMsg + ' \u001B[0m')
+			self.htmleNBFailureMsg += statMsg + '\n'
+		if rrcSetupRequest > 0 or rrcSetupComplete > 0:
+			rrcMsg = 'eNB requested ' + str(rrcSetupRequest) + ' RRC Connection Setup(s)'
+			logging.debug('\u001B[1;30;43m ' + rrcMsg + ' \u001B[0m')
+			self.htmleNBFailureMsg += rrcMsg + '\n'
+			rrcMsg = ' -- ' + str(rrcSetupComplete) + ' were completed'
+			logging.debug('\u001B[1;30;43m ' + rrcMsg + ' \u001B[0m')
+			self.htmleNBFailureMsg += rrcMsg + '\n'
+		if rrcReleaseRequest > 0:
+			rrcMsg = 'eNB requested ' + str(rrcReleaseRequest) + ' RRC Connection Release(s)'
+			logging.debug('\u001B[1;30;43m ' + rrcMsg + ' \u001B[0m')
+			self.htmleNBFailureMsg += rrcMsg + '\n'
+		if rrcReconfigRequest > 0 or rrcReconfigComplete > 0:
+			rrcMsg = 'eNB requested ' + str(rrcReconfigRequest) + ' RRC Connection Reconfiguration(s)'
+			logging.debug('\u001B[1;30;43m ' + rrcMsg + ' \u001B[0m')
+			self.htmleNBFailureMsg += rrcMsg + '\n'
+			rrcMsg = ' -- ' + str(rrcReconfigComplete) + ' were completed'
+			logging.debug('\u001B[1;30;43m ' + rrcMsg + ' \u001B[0m')
+			self.htmleNBFailureMsg += rrcMsg + '\n'
+		if rrcReestablishRequest > 0 or rrcReestablishComplete > 0 or rrcReestablishReject > 0:
+			rrcMsg = 'eNB requested ' + str(rrcReestablishRequest) + ' RRC Connection Reestablishment(s)'
+			logging.debug('\u001B[1;30;43m ' + rrcMsg + ' \u001B[0m')
+			self.htmleNBFailureMsg += rrcMsg + '\n'
+			rrcMsg = ' -- ' + str(rrcReestablishComplete) + ' were completed'
+			logging.debug('\u001B[1;30;43m ' + rrcMsg + ' \u001B[0m')
+			self.htmleNBFailureMsg += rrcMsg + '\n'
+			rrcMsg = ' -- ' + str(rrcReestablishReject) + ' were rejected'
+			logging.debug('\u001B[1;30;43m ' + rrcMsg + ' \u001B[0m')
+			self.htmleNBFailureMsg += rrcMsg + '\n'
+		if rachCanceledProcedure > 0:
+			rachMsg = 'eNB cancelled ' + str(rachCanceledProcedure) + ' RA procedure(s)'
+			logging.debug('\u001B[1;30;43m ' + rachMsg + ' \u001B[0m')
+			self.htmleNBFailureMsg += rachMsg + '\n'
+		if foundSegFault:
+			logging.debug('\u001B[1;37;41m eNB ended with a Segmentation Fault! \u001B[0m')
+			return ENB_PROCESS_SEG_FAULT
+		if foundAssertion:
+			logging.debug('\u001B[1;37;41m eNB ended with an assertion! \u001B[0m')
+			self.htmleNBFailureMsg += msgAssertion
+			return ENB_PROCESS_ASSERTION
+		if foundRealTimeIssue:
+			logging.debug('\u001B[1;37;41m eNB faced real time issues! \u001B[0m')
+			self.htmleNBFailureMsg += 'eNB faced real time issues!\n'
+			#return ENB_PROCESS_REALTIME_ISSUE
+		if rlcDiscardBuffer > 0:
+			rlcMsg = 'eNB RLC discarded ' + str(rlcDiscardBuffer) + ' buffer(s)'
+			logging.debug('\u001B[1;37;41m ' + rlcMsg + ' \u001B[0m')
+			self.htmleNBFailureMsg += rlcMsg + '\n'
+			return ENB_PROCESS_REALTIME_ISSUE
+		return 0
+
 	def TerminateeNB(self):
 		self.open(self.eNBIPAddress, self.eNBUserName, self.eNBPassword)
 		self.command('cd ' + self.eNBSourceCodePath + '/cmake_targets', '\$', 5)
@@ -1257,8 +1493,57 @@ class SSHConnection():
 		result = re.search('lte-softmodem', str(self.ssh.before))
 		if result is not None:
 			self.command('echo ' + self.eNBPassword + ' | sudo -S killall --signal SIGKILL lte-softmodem || true', '\$', 5)
+			time.sleep(5)
 		self.close()
-		self.CreateHtmlTestRow('N/A', 'OK', 0)
+		# If tracer options is on, stopping tshark on EPC side
+		result = re.search('T_stdout', str(self.Initialize_eNB_args))
+		if result is not None:
+			self.open(self.EPCIPAddress, self.EPCUserName, self.EPCPassword)
+			logging.debug('\u001B[1m Stopping tshark \u001B[0m')
+			self.command('echo ' + self.EPCPassword + ' | sudo -S killall --signal SIGKILL tshark', '\$', 5)
+			time.sleep(1)
+			pcap_log_file = self.eNBLogFile.replace('.log', '_s1log.pcap')
+			self.command('echo ' + self.EPCPassword + ' | sudo -S chmod 666 /tmp/' + pcap_log_file, '\$', 5)
+			self.copyin(self.EPCIPAddress, self.EPCUserName, self.EPCPassword, '/tmp/' + pcap_log_file, '.')
+			self.copyout(self.eNBIPAddress, self.eNBUserName, self.eNBPassword, pcap_log_file, self.eNBSourceCodePath + '/cmake_targets/.')
+			self.close()
+			logging.debug('\u001B[1m Replaying RAW record file\u001B[0m')
+			self.open(self.eNBIPAddress, self.eNBUserName, self.eNBPassword)
+			self.command('cd ' + self.eNBSourceCodePath + '/common/utils/T/tracer/', '\$', 5)
+			raw_record_file = self.eNBLogFile.replace('.log', '_record.raw')
+			replay_log_file = self.eNBLogFile.replace('.log', '_replay.log')
+			extracted_txt_file = self.eNBLogFile.replace('.log', '_extracted_messages.txt')
+			extracted_log_file = self.eNBLogFile.replace('.log', '_extracted_messages.log')
+			self.command('./extract_config -i ' + self.eNBSourceCodePath + '/cmake_targets/' + raw_record_file + ' > ' + self.eNBSourceCodePath + '/cmake_targets/' + extracted_txt_file, '\$', 5)
+			self.command('echo $USER; nohup ./replay -i ' + self.eNBSourceCodePath + '/cmake_targets/' + raw_record_file + ' > ' + self.eNBSourceCodePath + '/cmake_targets/' + replay_log_file + ' 2>&1 &', self.eNBUserName, 5)
+			self.command('./textlog -d ' +  self.eNBSourceCodePath + '/cmake_targets/' + extracted_txt_file + ' -no-gui -ON -full > ' + self.eNBSourceCodePath + '/cmake_targets/' + extracted_log_file, '\$', 5)
+			self.close()
+			self.copyin(self.eNBIPAddress, self.eNBUserName, self.eNBPassword, self.eNBSourceCodePath + '/cmake_targets/' + extracted_log_file, '.')
+			logging.debug('\u001B[1m Analyzing eNB replay logfile \u001B[0m')
+			logStatus = self.AnalyzeLogFile_eNB(extracted_log_file)
+			self.CreateHtmlTestRow('N/A', 'OK', ALL_PROCESSES_OK)
+			self.eNBLogFile = ''
+		else:
+			result = re.search('enb_', str(self.eNBLogFile))
+			if result is not None:
+				copyin_res = self.copyin(self.eNBIPAddress, self.eNBUserName, self.eNBPassword, self.eNBSourceCodePath + '/cmake_targets/' + self.eNBLogFile, '.')
+				if (copyin_res == -1):
+					logging.debug('\u001B[1;37;41m Could not copy eNB logfile to analyze it! \u001B[0m')
+					self.htmleNBFailureMsg = 'Could not copy eNB logfile to analyze it!'
+					self.CreateHtmlTestRow('N/A', 'KO', ENB_PROCESS_NOLOGFILE_TO_ANALYZE)
+					self.eNBLogFile = ''
+					return
+				logging.debug('\u001B[1m Analyzing eNB logfile \u001B[0m')
+				logStatus = self.AnalyzeLogFile_eNB(self.eNBLogFile)
+				if (logStatus < 0):
+					self.CreateHtmlTestRow('N/A', 'KO', logStatus)
+					self.CreateHtmlTabFooter(False)
+					sys.exit(1)
+				else:
+					self.CreateHtmlTestRow('N/A', 'OK', ALL_PROCESSES_OK)
+				self.eNBLogFile = ''
+			else:
+				self.CreateHtmlTestRow('N/A', 'OK', ALL_PROCESSES_OK)
 
 	def TerminateHSS(self):
 		self.open(self.EPCIPAddress, self.EPCUserName, self.EPCPassword)
@@ -1414,6 +1699,37 @@ class SSHConnection():
 			self.command('cp /opt/ltebox/var/log/xGwLog.0 .', '\$', 5)
 			self.command('zip spgw.log.zip xGwLog.0', '\$', 60)
 		self.close()
+	def RetrieveSystemVersion(self):
+		if self.eNBIPAddress == '' or self.eNBUserName == '' or self.eNBPassword == '':
+			Usage()
+			sys.exit('Insufficient Parameter')
+		self.open(self.eNBIPAddress, self.eNBUserName, self.eNBPassword)
+		self.command('lsb_release -a', '\$', 5)
+		result = re.search('Description:\\\\t(?P<os_type>[a-zA-Z0-9\-\_\.\ ]+)', str(self.ssh.before))
+		if result is not None:
+			self.eNBOsVersion = result.group('os_type')
+			logging.debug('OS is: ' + self.eNBOsVersion)
+		self.command('uname -r', '\$', 5)
+		result = re.search('uname -r\\\\r\\\\n(?P<kernel_version>[a-zA-Z0-9\-\_\.]+)', str(self.ssh.before))
+		if result is not None:
+			self.eNBKernelVersion = result.group('kernel_version')
+			logging.debug('Kernel Version is: ' + self.eNBKernelVersion)
+		self.command('dpkg --list | egrep --color=never libuhd003', '\$', 5)
+		result = re.search('libuhd003:amd64 *(?P<uhd_version>[0-9\.]+)', str(self.ssh.before))
+		if result is not None:
+			self.eNBUhdVersion = result.group('uhd_version')
+			logging.debug('UHD Version is: ' + self.eNBUhdVersion)
+		self.command('lscpu', '\$', 5)
+		result = re.search('CPU\(s\): *(?P<nb_cpus>[0-9]+).*Model name: *(?P<model>[a-zA-Z0-9\-\_\.\ \(\)]+).*CPU MHz: *(?P<cpu_mhz>[0-9\.]+)', str(self.ssh.before))
+		if result is not None:
+			self.eNBCpuNb = result.group('nb_cpus')
+			logging.debug('nb_cpus: ' + self.eNBCpuNb)
+			self.eNBCpuModel = result.group('model')
+			logging.debug('model: ' + self.eNBCpuModel)
+			self.eNBCpuMHz = result.group('cpu_mhz') + ' MHz'
+			logging.debug('cpu_mhz: ' + self.eNBCpuMHz)
+		self.close()
+
 #-----------------------------------------------------------
 # HTML Reporting....
 #-----------------------------------------------------------
@@ -1496,8 +1812,54 @@ class SSHConnection():
 
 	def CreateHtmlFooter(self):
 		if ((not self.htmlFooterCreated) and (self.htmlHeaderCreated)):
+			self.htmlFile.write('      <tr>\n')
+			self.htmlFile.write('        <th bgcolor = "#33CCFF" colspan=2>Final Tab Status</th>\n')
+			if passStatus:
+				self.htmlFile.write('        <th bgcolor = "green" colspan=' + str(2 + self.htmlUEConnected) + '><font color="white">PASS <span class="glyphicon glyphicon-ok"></span> </font></th>\n')
+			else:
+				self.htmlFile.write('        <th bgcolor = "red" colspan=' + str(2 + self.htmlUEConnected) + '><font color="white">FAIL <span class="glyphicon glyphicon-remove"></span> </font></th>\n')
+			self.htmlFile.write('      </tr>\n')
 			self.htmlFile.write('  </table>\n')
-			self.htmlFile.write('</body>\n')
+			self.htmlFile.write('  </div>\n')
+		self.htmlFooterCreated = False
+
+	def CreateHtmlFooter(self, passStatus):
+		if (os.path.isfile('test_results.html')):
+			self.RetrieveSystemVersion()
+			self.htmlFile = open('test_results.html', 'a')
+			self.htmlFile.write('</div>\n')
+			self.htmlFile.write('  <p></p>\n')
+			self.htmlFile.write('  <table class="table table-condensed">\n')
+			self.htmlFile.write('      <tr>\n')
+			self.htmlFile.write('        <th colspan=6>eNB Server Characteristics</th>\n')
+			self.htmlFile.write('      </tr>\n')
+			self.htmlFile.write('      <tr>\n')
+			self.htmlFile.write('        <td>OS Version</td>\n')
+			self.htmlFile.write('        <td><span class="label label-default">' + self.eNBOsVersion + '</span></td>\n')
+			self.htmlFile.write('        <td>Kernel Version</td>\n')
+			self.htmlFile.write('        <td><span class="label label-default">' + self.eNBKernelVersion + '</span></td>\n')
+			self.htmlFile.write('        <td>UHD Version</td>\n')
+			self.htmlFile.write('        <td><span class="label label-default">' + self.eNBUhdVersion + '</span></td>\n')
+			self.htmlFile.write('      </tr>\n')
+			self.htmlFile.write('      <tr>\n')
+			self.htmlFile.write('        <td>Nb CPUs</td>\n')
+			self.htmlFile.write('        <td><span class="label label-default">' + self.eNBCpuNb + '</span></td>\n')
+			self.htmlFile.write('        <td>CPU Model Name</td>\n')
+			self.htmlFile.write('        <td><span class="label label-default">' + self.eNBCpuModel + '</span></td>\n')
+			self.htmlFile.write('        <td>CPU Frequency</td>\n')
+			self.htmlFile.write('        <td><span class="label label-default">' + self.eNBCpuMHz + '</span></td>\n')
+			self.htmlFile.write('      </tr>\n')
+			self.htmlFile.write('      <tr>\n')
+			self.htmlFile.write('        <th colspan=4 bgcolor = "#33CCFF">Final Status</th>\n')
+			if passStatus:
+				self.htmlFile.write('        <th colspan=2 bgcolor="green"><font color="white">PASS <span class="glyphicon glyphicon-ok"></span></font></th>\n')
+			else:
+				self.htmlFile.write('        <th colspan=2 bgcolor="red"><font color="white">FAIL <span class="glyphicon glyphicon-remove"></span> </font></th>\n')
+			self.htmlFile.write('      </tr>\n')
+			self.htmlFile.write('  </table>\n')
+			self.htmlFile.write('  <p></p>\n')
+			self.htmlFile.write('  <div class="well well-lg">End of Test Report -- Copyright <span class="glyphicon glyphicon-copyright-mark"></span> 2018 <a href="http://www.openairinterface.org/">OpenAirInterface</a>. All Rights Reserved.</div>\n')
+			self.htmlFile.write('</div></body>\n')
 			self.htmlFile.write('</html>\n')
 			self.htmlFile.close()
 		self.htmlFooterCreated = False
@@ -1515,7 +1877,15 @@ class SSHConnection():
 					self.htmlFile.write('        <td bgcolor = "lightcoral" >' + str(status)  + '</td>\n')
 				elif (processesStatus == -1):
 					self.htmlFile.write('        <td bgcolor = "lightcoral" >KO - eNB process not found</td>\n')
-				elif (processesStatus == -2):
+				elif (processesStatus == ENB_PROCESS_SEG_FAULT):
+					self.htmlFile.write('        <td bgcolor = "lightcoral" >KO - eNB process ended in Segmentation Fault</td>\n')
+				elif (processesStatus == ENB_PROCESS_ASSERTION):
+					self.htmlFile.write('        <td bgcolor = "lightcoral" >KO - eNB process ended in Assertion</td>\n')
+				elif (processesStatus == ENB_PROCESS_REALTIME_ISSUE):
+					self.htmlFile.write('        <td bgcolor = "lightcoral" >KO - eNB process faced Real Time issue(s)</td>\n')
+				elif (processesStatus == ENB_PROCESS_NOLOGFILE_TO_ANALYZE):
+					self.htmlFile.write('        <td bgcolor = "orange" >OK</td>\n')
+				elif (processesStatus == HSS_PROCESS_FAILED):
 					self.htmlFile.write('        <td bgcolor = "lightcoral" >KO - HSS process not found</td>\n')
 				elif (processesStatus == -3):
 					self.htmlFile.write('        <td bgcolor = "lightcoral" >KO - MME process not found</td>\n')
@@ -1525,10 +1895,23 @@ class SSHConnection():
 					self.htmlFile.write('        <td bgcolor = "lightcoral" >' + str(status)  + '</td>\n')
 			else:
 				self.htmlFile.write('        <td bgcolor = "orange" >' + str(status)  + '</td>\n')
-			i = 0
-			while (i < self.htmlUEConnected):
-				self.htmlFile.write('        <td>-</td>\n')
-				i += 1
+			if (len(str(self.htmleNBFailureMsg)) > 2):
+				cellBgColor = 'white'
+				result = re.search('ended with|faced real time issues', self.htmleNBFailureMsg)
+				if result is not None:
+					cellBgColor = 'red'
+				else:
+					result = re.search('showed|Reestablishment|Could not copy eNB logfile', self.htmleNBFailureMsg)
+					if result is not None:
+						cellBgColor = 'orange'
+				self.htmlFile.write('        <td bgcolor = "' + cellBgColor + '" colspan=' + str(self.htmlUEConnected) + '><pre style="background-color:' +
+ cellBgColor + '">' + self.htmleNBFailureMsg + '</pre></td>\n')
+				self.htmleNBFailureMsg = ''
+			else:
+				i = 0
+				while (i < self.htmlUEConnected):
+					self.htmlFile.write('        <td>-</td>\n')
+					i += 1
 			self.htmlFile.write('      </tr>\n')
 
 	def CreateHtmlTestRowQueue(self, options, status, ue_status, ue_queue):

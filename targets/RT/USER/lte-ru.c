@@ -118,9 +118,12 @@ static int DEFENBS[] = {0};
 #include "pdcp.h"
 
 extern volatile int                    oai_exit;
+extern int emulate_rf;
+extern int numerology;
 extern clock_source_t clock_source;
 extern uint8_t dlsch_ue_select_tbl_in_use;
 extern uint8_t nfapi_mode;
+
 extern PARALLEL_CONF_t get_thread_parallel_conf(void);
 extern WORKER_CONF_t   get_thread_worker_conf(void);
 extern void  phy_init_RU(RU_t*);

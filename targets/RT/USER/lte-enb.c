@@ -164,7 +164,9 @@ static inline int rxtx(PHY_VARS_eNB *eNB,L1_rxtx_proc_t *proc, char *thread_name
 
   // *******************************************************************
 
+#if defined(PRE_SCD_THREAD)
     RU_t *ru = RC.ru[0];
+#endif
 
   if (nfapi_mode == 1) {
     // I am a PNF and I need to let nFAPI know that we have a (sub)frame tick
@@ -220,6 +222,8 @@ static inline int rxtx(PHY_VARS_eNB *eNB,L1_rxtx_proc_t *proc, char *thread_name
   if (nfapi_mode == 0 || nfapi_mode == 1) {
     phy_procedures_eNB_uespec_RX(eNB, proc);
   }
+
+  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_ENB_DLSCH_ULSCH_SCHEDULER, 1 );
 
 #if defined(PRE_SCD_THREAD)
     if (nfapi_mode == 2){
@@ -945,13 +949,15 @@ void init_eNB_proc(int inst) {
     if ((get_thread_parallel_conf() == PARALLEL_RU_L1_SPLIT || get_thread_parallel_conf() == PARALLEL_RU_L1_TRX_SPLIT) && nfapi_mode!=2) {
       pthread_create( &L1_proc->pthread, attr0, L1_thread, proc );
       pthread_create( &L1_proc_tx->pthread, attr1, L1_thread_tx, proc);
-    }
-    else if (nfapi_mode == 2) { // this is neccesary in VNF or L2 FAPI simulator.
-      pthread_create( &L1_proc->pthread, attr0, L1_thread, L1_proc);
+    } else if (nfapi_mode == 2) { // this is neccesary in VNF or L2 FAPI simulator.
+      // Original Code from Fujitsu w/ old structure/field name
+      //pthread_create( &proc_rxtx[0].pthread_rxtx, attr0, eNB_thread_rxtx, &proc_rxtx[0] );
+      //pthread_create( &proc_rxtx[1].pthread_rxtx, attr1, eNB_thread_rxtx, &proc_rxtx[1] );
+      pthread_create( &L1_proc->pthread, attr0, L1_thread, L1_proc );
       pthread_create( &L1_proc_tx->pthread, attr1, L1_thread, L1_proc_tx);
     }
 
-  if(nfapi_mode != 2){
+  if (nfapi_mode != 2) {
     pthread_create( &proc->pthread_prach, attr_prach, eNB_thread_prach, eNB );
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
     pthread_create( &proc->pthread_prach_br, attr_prach_br, eNB_thread_prach_br, eNB );
