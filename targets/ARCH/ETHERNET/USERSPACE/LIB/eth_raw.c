@@ -164,7 +164,7 @@ int trx_eth_write_raw(openair0_device *device, openair0_timestamp timestamp, voi
     *(int16_t *)(buff2 + MAC_HEADER_SIZE_BYTES + sizeof(int16_t))=1+(i<<1);
     *(openair0_timestamp *)(buff2 + MAC_HEADER_SIZE_BYTES + sizeof(int32_t)) = timestamp;
   
-    int sent_byte;
+    int sent_byte=0;
     
 
     /*printf("[RRU]write mod_%d %d , len %d, buff %p \n",
