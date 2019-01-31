@@ -49,74 +49,54 @@ int nr_init_frame_parms0(NR_DL_FRAME_PARMS *fp,
   
   switch(mu) {
 
+    /*
     case NR_MU_0: //15kHz scs
       fp->subcarrier_spacing = nr_subcarrier_spacing[NR_MU_0];
       fp->slots_per_subframe = nr_slots_per_subframe[NR_MU_0];
       break;
-
+    */
+    
     case NR_MU_1: //30kHz scs
       fp->subcarrier_spacing = nr_subcarrier_spacing[NR_MU_1];
       fp->slots_per_subframe = nr_slots_per_subframe[NR_MU_1];
 
-      switch(N_RB_DL){
-        case 11:
-        case 24:
-        case 38:
-        case 78:
-        case 51:
-        case 65:
-
-        case 106: //40 MHz
+      
+      if (N_RB_DL>0 && N_RB_DL<=106) {
           if (fp->threequarter_fs) {
             fp->ofdm_symbol_size = 1536;
-            fp->first_carrier_offset = 900; //1536 - 636
             fp->nb_prefix_samples0 = 132;
             fp->nb_prefix_samples = 108;
           }
           else {
             fp->ofdm_symbol_size = 2048;
-            fp->first_carrier_offset = 1412; //2048 - 636
             fp->nb_prefix_samples0 = 176;
             fp->nb_prefix_samples = 144;
           }
-          break;
-
-        case 133:
-        case 162:
-        case 189:
-
-        case 217: //80 MHz
+      }
+      else if (N_RB_DL>106 && N_RB_DL<=217) {
           if (fp->threequarter_fs) {
             fp->ofdm_symbol_size = 3072;
-            fp->first_carrier_offset = 1770; //3072 - 1302
             fp->nb_prefix_samples0 = 264;
             fp->nb_prefix_samples = 216;
           }
 	  else {
 	    fp->ofdm_symbol_size = 4096;
-	    fp->first_carrier_offset = 2794; //4096 - 1302
 	    fp->nb_prefix_samples0 = 352;
 	    fp->nb_prefix_samples = 288;
 	  }
-          break;
-
-        case 245:
-	  AssertFatal(fp->threequarter_fs==0,"3/4 sampling impossible for N_RB %d and MU %d\n",N_RB_DL,mu); 
-	  fp->ofdm_symbol_size = 4096;
-	  fp->first_carrier_offset = 2626; //4096 - 1478
-	  fp->nb_prefix_samples0 = 352;
-	  fp->nb_prefix_samples = 288;
-	  break;
-        case 273:
-	  AssertFatal(fp->threequarter_fs==0,"3/4 sampling impossible for N_RB %d and MU %d\n",N_RB_DL,mu); 
-	  fp->ofdm_symbol_size = 4096;
-	  fp->first_carrier_offset = 2458; //4096 - 1638
-	  fp->nb_prefix_samples0 = 352;
-	  fp->nb_prefix_samples = 288;
-	  break;
-      default:
-        AssertFatal(1==0,"Number of resource blocks %d undefined for mu %d, frame parms = %p\n", N_RB_DL, mu, fp);
       }
+      else if (N_RB_DL>217 && N_RB_DL<=273) {
+	  AssertFatal(fp->threequarter_fs==0,"3/4 sampling impossible for N_RB %d and MU %d\n",N_RB_DL,mu); 
+	  fp->ofdm_symbol_size = 4096;
+	  fp->nb_prefix_samples0 = 352;
+	  fp->nb_prefix_samples = 288;
+      }
+      else {
+	AssertFatal(1==0,"Unsupported configuration N_RB %d and MU %d\n",N_RB_DL,mu); 
+      }
+      
+      fp->first_carrier_offset = fp->ofdm_symbol_size - N_RB_DL*6;
+
       break;
 
     case NR_MU_2: //60kHz scs
@@ -141,6 +121,7 @@ int nr_init_frame_parms0(NR_DL_FRAME_PARMS *fp,
       }
       break;
 
+      /*
     case NR_MU_3:
       fp->subcarrier_spacing = nr_subcarrier_spacing[NR_MU_3];
       fp->slots_per_subframe = nr_slots_per_subframe[NR_MU_3];
@@ -150,9 +131,10 @@ int nr_init_frame_parms0(NR_DL_FRAME_PARMS *fp,
       fp->subcarrier_spacing = nr_subcarrier_spacing[NR_MU_4];
       fp->slots_per_subframe = nr_slots_per_subframe[NR_MU_4];
       break;
+      */
 
-  default:
-    AssertFatal(1==0,"Invalid numerology index %d", mu);
+    default:
+      AssertFatal(1==0,"Invalid numerology index %d", mu);
   }
 
   fp->slots_per_frame = 10* fp->slots_per_subframe;
