@@ -20,6 +20,8 @@
  */
 
 // These messages files are mandatory and must always be placed in first position
+
+//Panos cannot find those 2 files temporarily commenting out
 #include "intertask_messages_def.h"
 #include "timer_messages_def.h"
 

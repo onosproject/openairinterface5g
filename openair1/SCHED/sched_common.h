@@ -25,118 +25,8 @@
   \email knopp@eurecom.fr
 */
 
-//<<<<<<< HEAD:openair1/SCHED/defs.h
-/*! \brief Scheduling for UE TX procedures in normal subframes.
-  @param phy_vars_ue Pointer to UE variables on which to act
-  @param proc Pointer to RXn-TXnp4 proc information
-  @param eNB_id Local id of eNB on which to act
-  @param abstraction_flag Indicator of PHY abstraction
-  @param mode calib/normal mode
-  @param r_type indicates the relaying operation: 0: no_relaying, 1: unicast relaying type 1, 2: unicast relaying type 2, 3: multicast relaying
-*/
-void phy_procedures_UE_TX(PHY_VARS_UE *phy_vars_ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,uint8_t abstraction_flag,runmode_t mode,relaying_type_t r_type);
-/*! \brief Scheduling for UE RX procedures in normal subframes.
-  @param last_slot Index of last slot (0-19)
-  @param phy_vars_ue Pointer to UE variables on which to act
-  @param proc Pointer to RXn_TXnp4 proc information
-  @param eNB_id Local id of eNB on which to act
-  @param abstraction_flag Indicator of PHY abstraction
-  @param mode calibration/debug mode
-  @param r_type indicates the relaying operation: 0: no_relaying, 1: unicast relaying type 1, 2: unicast relaying type 2, 3: multicast relaying
-  @param phy_vars_rn pointer to RN variables
-*/
-int phy_procedures_UE_RX(PHY_VARS_UE *phy_vars_ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,uint8_t abstraction_flag,uint8_t do_pdcch_flag,runmode_t mode,relaying_type_t r_type,PHY_VARS_RN *phy_vars_rn);
-
-/*! \brief Scheduling for UE Sidelink RX procedures in normal subframes.
-  @param ue Pointer to UE variables on which to act
-  @param proc Pointer to RXn_TXnp4 proc information
-*/
-void phy_procedures_UE_SL_RX(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc);
-
-/*! \brief Scheduling for UE Sidelink TX procedures in normal subframes.
-  @param ue Pointer to UE variables on which to act
-  @param proc Pointer to RXn_TXnp4 proc information
-*/
-void phy_procedures_UE_SL_TX(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc);
-
-int phy_procedures_slot_parallelization_UE_RX(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,
-                                              uint8_t abstraction_flag,uint8_t do_pdcch_flag,runmode_t mode,
-                                              relaying_type_t r_type,PHY_VARS_RN *phy_vars_rn);
-#ifdef UE_SLOT_PARALLELISATION
-void *UE_thread_slot1_dl_processing(void *arg);
-#endif
-
-/*! \brief Scheduling for UE TX procedures in TDD S-subframes.
-  @param phy_vars_ue Pointer to UE variables on which to act
-  @param eNB_id Local id of eNB on which to act
-  @param abstraction_flag Indicator of PHY abstraction
-  @param r_type indicates the relaying operation: 0: no_relaying, 1: unicast relaying type 1, 2: unicast relaying type 2, 3: multicast relaying
-*/
-void phy_procedures_UE_S_TX(PHY_VARS_UE *phy_vars_ue,uint8_t eNB_id,uint8_t abstraction_flag,relaying_type_t r_type);
-
-/*! \brief Scheduling for UE RX procedures in TDD S-subframes.
-  @param phy_vars_ue Pointer to UE variables on which to act
-  @param eNB_id Local id of eNB on which to act
-  @param abstraction_flag Indicator of PHY abstraction
-  @param r_type indicates the relaying operation: 0: no_relaying, 1: unicast relaying type 1, 2: unicast relaying type 2, 3: multicast relaying
-*/
-void phy_procedures_UE_S_RX(PHY_VARS_UE *phy_vars_ue,uint8_t eNB_id,uint8_t abstraction_flag, relaying_type_t r_type);
-
-/*! \brief Scheduling for eNB TX procedures in normal subframes.
-  @param phy_vars_eNB Pointer to eNB variables on which to act
-  @param abstraction_flag Indicator of PHY abstraction
-  @param r_type indicates the relaying operation: 0: no_relaying, 1: unicast relaying type 1, 2: unicast relaying type 2, 3: multicast relaying
-  @param phy_vars_rn pointer to the RN variables
-  @param do_meas Do inline timing measurement
-*/
-void phy_procedures_eNB_TX(PHY_VARS_eNB *phy_vars_eNB,eNB_rxtx_proc_t *proc,relaying_type_t r_type,PHY_VARS_RN *phy_vars_rn,int do_meas);
-
-/*! \brief Scheduling for eNB RX UE-specific procedures in normal subframes.
-  @param phy_vars_eNB Pointer to eNB variables on which to act
-  @param proc Pointer to RXn-TXnp4 proc information
-  @param r_type indicates the relaying operation: 0: no_relaying, 1: unicast relaying type 1, 2: unicast relaying type 2, 3: multicast relaying
-*/
-void phy_procedures_eNB_uespec_RX(PHY_VARS_eNB *phy_vars_eNB,eNB_rxtx_proc_t *proc,relaying_type_t r_type);
-
-/*! \brief Scheduling for eNB TX procedures in TDD S-subframes.
-  @param phy_vars_eNB Pointer to eNB variables on which to act
-  @param proc Pointer to RXn-TXnp4 proc information
-  @param r_type indicates the relaying operation: 0: no_relaying, 1: unicast relaying type 1, 2: unicast relaying type 2, 3: multicast relaying
-*/
-
-/*! \brief Scheduling for eNB RX common procedures in normal subframes.
-  @param phy_vars_eNB Pointer to eNB variables on which to act
-  @param abstraction_flag Indicator of PHY abstraction
-*/
-void phy_procedures_eNB_common_RX(PHY_VARS_eNB *phy_vars_eNB,eNB_rxtx_proc_t *proc);
-
-/*! \brief Scheduling for eNB TX procedures in TDD S-subframes.
-  @param phy_vars_eNB Pointer to eNB variables on which to act
-  @param r_type indicates the relaying operation: 0: no_relaying, 1: unicast relaying type 1, 2: unicast relaying type 2, 3: multicast relaying
-*/
-
-void phy_procedures_eNB_S_TX(PHY_VARS_eNB *phy_vars_eNB,relaying_type_t r_type);
-
-/*! \brief Scheduling for eNB RX procedures in TDD S-subframes.
-  @param phy_vars_eNB Pointer to eNB variables on which to act
-  @param r_type indicates the relaying operation: 0: no_relaying, 1: unicast relaying type 1, 2: unicast relaying type 2, 3: multicast relaying
-*/
-void phy_procedures_eNB_S_RX(PHY_VARS_eNB *phy_vars_eNB,eNB_rxtx_proc_t *proc,relaying_type_t r_type);
-
-/*! \brief Scheduling for eNB PRACH RX procedures
-  @param phy_vars_eNB Pointer to eNB variables on which to act
-  @param br_flag indicator for eMTC PRACH
-*/
-#ifdef Rel14
-void prach_procedures(PHY_VARS_eNB *eNB,
-		      int br_flag);
-#else
-void prach_procedures(PHY_VARS_eNB *eNB);
-#endif
-//=======
 #ifndef __openair_SCHED_COMMON_H__
 #define __openair_SCHED_COMMON_H__
-//>>>>>>> main/develop:openair1/SCHED/sched_common.h
 
 #include "PHY/defs_eNB.h"
 #include "PHY/defs_UE.h"
@@ -290,7 +180,7 @@ uint8_t is_SR_TXOp(PHY_VARS_UE *phy_vars_ue,UE_rxtx_proc_t *proc,uint8_t eNB_id)
   @param UE_id ID of UE which may be issuing the SR
   @returns 1 if TXOp is active.
 */
-uint8_t is_SR_subframe(PHY_VARS_eNB *phy_vars_eNB,eNB_rxtx_proc_t *proc,uint8_t UE_id);
+uint8_t is_SR_subframe(PHY_VARS_eNB *phy_vars_eNB,L1_rxtx_proc_t *proc,uint8_t UE_id);
 
 /*! \brief Gives the UL subframe corresponding to a PDDCH order in subframe n
   @param frame_parms Pointer to DL frame parameters
@@ -357,7 +247,7 @@ TDD, this routine computes the procedure described in Section 10.1 of 36.213 (th
 @param n1_pucch3 Pointer to n1_pucch3
 */
 void get_n1_pucch_eNB(PHY_VARS_eNB *phy_vars_eNB,
-		      eNB_rxtx_proc_t *proc,
+		      L1_rxtx_proc_t *proc,
                       uint8_t UE_id,
                       int16_t *n1_pucch0,
                       int16_t *n1_pucch1,
@@ -376,7 +266,7 @@ void get_n1_pucch_eNB(PHY_VARS_eNB *phy_vars_eNB,
 */
 void process_HARQ_feedback(uint8_t UE_id,
                            PHY_VARS_eNB *phy_vars_eNB,
-			   eNB_rxtx_proc_t *proc,
+			   L1_rxtx_proc_t *proc,
                            uint8_t pusch_flag,
                            uint8_t *pucch_payload,
                            uint8_t pucch_sel,

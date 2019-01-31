@@ -27,6 +27,7 @@
 
 //#include <string.h>
 #include "PHY/defs_UE.h"
+#include "PHY/phy_vars_ue.h"
 #include "PHY/phy_extern_ue.h"
 #include <math.h>
 

@@ -1,4 +1,4 @@
-/*
+ /*
  * Licensed to the OpenAirInterface (OAI) Software Alliance under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -65,7 +65,7 @@
 #if (LTE_RRC_VERSION >= MAKE_VERSION(13, 0, 0))
 #include "LTE_SystemInformationBlockType1-v1310-IEs.h"
 #include "LTE_SystemInformationBlockType18-r12.h"
-#include "SL-Preconfiguration-r12.h"
+#include "LTE_SL-Preconfiguration-r12.h"
 #endif
 #include "LTE_RadioResourceConfigCommonSIB.h"
 #include "nfapi_interface.h"
@@ -1077,8 +1077,7 @@ typedef struct {
 /*! \brief UE list used by eNB to order UEs/CC for scheduling*/
 typedef struct {
     /// Dedicated information for UEs
-    struct PhysicalConfigDedicated
-	*physicalConfigDedicated[NFAPI_CC_MAX][MAX_MOBILES_PER_ENB];
+    LTE_PhysicalConfigDedicated_t *physicalConfigDedicated[NFAPI_CC_MAX][MAX_MOBILES_PER_ENB];
     /// DLSCH pdu
     DLSCH_PDU DLSCH_pdu[NFAPI_CC_MAX][2][MAX_MOBILES_PER_ENB];
     /// DCI template and MAC connection parameters for UEs
@@ -1702,7 +1701,6 @@ typedef struct {
     uint8_t n_adj_cells;
 } neigh_cell_id_t;
 
-#include "proto.h"
 typedef struct {
   volatile uint8_t flag;
   rnti_t rnti;

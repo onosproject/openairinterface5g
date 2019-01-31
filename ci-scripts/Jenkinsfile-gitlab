@@ -31,6 +31,7 @@ def sendSocialMediaMessage(pipeChannel, pipeColor, pipeMessage) {
 }
 
 def doRedHatBuild = false
+def doFlexranCtrlTest = false
 
 pipeline {
     agent {
@@ -40,7 +41,7 @@ pipeline {
         disableConcurrentBuilds()
         timestamps()
         gitLabConnection('OAI GitLab')
-        gitlabBuilds(builds: ["Build eNb-USRP", "Build basic-sim", "Build phy-sim", "Build eNb-ethernet", "Build UE-ethernet", "Analysis with cppcheck", "Test phy-sim", "Test basic-sim", "Test-FDD-Band7", "Test-TDD-Band40", "Test-IF4p5-FDD-Band7", "Test-IF4p5-TDD-Band40"])
+        gitlabBuilds(builds: ["Build eNb-USRP", "Build basic-sim", "Build phy-sim", "Build eNb-ethernet", "Build UE-ethernet", "Analysis with cppcheck", "Test phy-sim", "Test basic-sim", "Test L2-sim", "Test-FDD-Band7", "Test-TDD-Band40", "Test-IF4p5-FDD-Band7", "Test-IF4p5-TDD-Band40"])
         ansiColor('xterm')
     }
 
@@ -68,6 +69,12 @@ pipeline {
                         doRedHatBuild = true
                     } else {
                         doRedHatBuild = false
+                    }
+                    if (params.FlexRanRtcGitLabRepository_Credentials != null) {
+                        doFlexranCtrlTest = true
+                    }
+                    if (fileExists("flexran")) {
+                        sh "rm -Rf flexran > /dev/null 2>&1"
                     }
                 }
             }
@@ -102,6 +109,18 @@ pipeline {
                         // Running astyle options on all C/H files in the repository
                         // For the moment, there is no fail criteria. Just a notification of number of files that do not follow
                         sh "./ci-scripts/checkCodingFormattingRules.sh"
+                    }
+                    if (doFlexranCtrlTest) {
+                        sh "mkdir flexran"
+                        dir ('flexran') {
+                            withCredentials([
+                                [$class: 'UsernamePasswordMultiBinding', credentialsId: "${params.FlexRanRtcGitLabRepository_Credentials}", usernameVariable: 'git_username', passwordVariable: 'git_password']
+                                ]) {
+                                sh "git clone https://${git_username}:${git_password}@gitlab.eurecom.fr/flexran/flexran-rtc.git . > ../git_clone.log 2>&1"
+                            }
+                            sh "sed -i -e 's#add-apt-repository.*cleishm.*neo4j#add-apt-repository ppa:cleishm/neo4j -y#' -e 's#libneo4j-client-dev#libneo4j-client-dev -y#' tools/install_dependencies"
+                            sh "zip -r -qq flexran.zip ."
+                        }
                     }
                 }
             }
@@ -143,6 +162,14 @@ pipeline {
             steps {
                 timeout (time: 5, unit: 'MINUTES') {
                     sh "./ci-scripts/oai-ci-vm-tool build --workspace $WORKSPACE --variant ue-ethernet --job-name ${JOB_NAME} --build-id ${BUILD_ID} --daemon"
+                }
+            }
+        }
+
+        stage ("Start VM -- L2-Sim") {
+            steps {
+                timeout (time: 5, unit: 'MINUTES') {
+                    sh "./ci-scripts/oai-ci-vm-tool build --workspace $WORKSPACE --variant l2-sim --job-name ${JOB_NAME} --build-id ${BUILD_ID} --daemon"
                 }
             }
         }
@@ -196,7 +223,7 @@ pipeline {
                     steps {
                         gitlabCommitStatus(name: "Build eNb-ethernet") {
                             timeout (time: 20, unit: 'MINUTES') {
-                                sh "./ci-scripts/oai-ci-vm-tool wait --workspace $WORKSPACE --variant enb-ethernet --job-name ${JOB_NAME} --build-id ${BUILD_ID} --keep-vm-alive"
+                                sh "./ci-scripts/oai-ci-vm-tool wait --workspace $WORKSPACE --variant enb-ethernet --job-name ${JOB_NAME} --build-id ${BUILD_ID}"
                             }
                         }
                     }
@@ -205,9 +232,18 @@ pipeline {
                     steps {
                         gitlabCommitStatus(name: "Build UE-ethernet") {
                             timeout (time: 20, unit: 'MINUTES') {
-                                sh "./ci-scripts/oai-ci-vm-tool wait --workspace $WORKSPACE --variant ue-ethernet --job-name ${JOB_NAME} --build-id ${BUILD_ID} --keep-vm-alive"
+                                sh "./ci-scripts/oai-ci-vm-tool wait --workspace $WORKSPACE --variant ue-ethernet --job-name ${JOB_NAME} --build-id ${BUILD_ID}"
                             }
                         }
+                    }
+                }
+                stage ("Build L2-Simulator-eNB") {
+                    steps {
+                        //gitlabCommitStatus(name: "Build UE-ethernet") {
+                            timeout (time: 20, unit: 'MINUTES') {
+                                sh "./ci-scripts/oai-ci-vm-tool wait --workspace $WORKSPACE --variant l2-sim --job-name ${JOB_NAME} --build-id ${BUILD_ID} --keep-vm-alive"
+                            }
+                        //}
                     }
                 }
                 stage ("Build physical simulators") {
@@ -288,9 +324,28 @@ pipeline {
                 stage ("Test basic simulator") {
                     steps {
                         gitlabCommitStatus(name: "Test basic-sim") {
-                            timeout (time: 20, unit: 'MINUTES') {
+                            timeout (time: 30, unit: 'MINUTES') {
                                 sh "./ci-scripts/oai-ci-vm-tool test --workspace $WORKSPACE --variant basic-sim --job-name ${JOB_NAME} --build-id ${BUILD_ID}"
                             }
+                        }
+                    }
+                }
+                stage ("Test L2 simulator") {
+                    steps {
+                        gitlabCommitStatus(name: "Test L2-sim") {
+                            timeout (time: 30, unit: 'MINUTES') {
+                                sh "./ci-scripts/oai-ci-vm-tool test --workspace $WORKSPACE --variant l2-sim --job-name ${JOB_NAME} --build-id ${BUILD_ID}"
+                            }
+                        }
+                    }
+                }
+                stage ("Build Flexran Controller") {
+                    when {
+                        expression {doFlexranCtrlTest}
+                    }
+                    steps {
+                        timeout (time: 20, unit: 'MINUTES') {
+                            sh "./ci-scripts/oai-ci-vm-tool build --workspace $WORKSPACE --variant flexran-rtc --job-name ${JOB_NAME} --build-id ${BUILD_ID} --keep-vm-alive"
                         }
                     }
                 }
@@ -479,7 +534,7 @@ pipeline {
                 always {
                     script {
                         dir ('archives') {
-                            sh "if [ -d basic_sim/test ] || [ -d phy_sim/test ]; then zip -r -qq vm_tests_logs.zip */test ; fi"
+                            sh "if [ -d basic_sim/test ] || [ -d phy_sim/test ] || [ -d l2_sim/test ]; then zip -r -qq vm_tests_logs.zip */test ; fi"
                         }
                         if(fileExists('archives/vm_tests_logs.zip')) {
                             archiveArtifacts artifacts: 'archives/vm_tests_logs.zip'

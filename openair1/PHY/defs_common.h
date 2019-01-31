@@ -58,6 +58,7 @@
 #include <math.h>
 #include "common_lib.h"
 #include "msc.h"
+#include <common/utils/LOG/log.h>
 
 
 //#include <complex.h>
@@ -878,22 +879,60 @@ typedef enum {
   RESYNCH=4
 } UE_MODE_t;
 
-/// Threading Parameter
-typedef enum {
-  PARALLEL_SINGLE_THREAD    =0,
-  PARALLEL_RU_L1_SPLIT      =1,
-  PARALLEL_RU_L1_TRX_SPLIT  =2
-}PARALLEL_CONF_t;
+#define FOREACH_PARALLEL(GEN)			\
+  GEN(PARALLEL_SINGLE_THREAD)			\
+  GEN(PARALLEL_RU_L1_SPLIT)			\
+  GEN(PARALLEL_RU_L1_TRX_SPLIT)
+
+#define GENERATE_ENUM(N) N,
+#define GENERATE_ENUMTXT(N) {(char*)#N, N},
 
 typedef enum {
-  WORKER_DISABLE            =0,
-  WORKER_ENABLE             =1
+  FOREACH_PARALLEL(GENERATE_ENUM)
+} PARALLEL_CONF_t;
+
+#define FOREACH_WORKER(GEN) GEN(WORKER_DISABLE) GEN(WORKER_ENABLE)
+typedef enum {
+  FOREACH_WORKER(GENERATE_ENUM)
 }WORKER_CONF_t;
 
 typedef struct THREAD_STRUCT_s {
   PARALLEL_CONF_t  parallel_conf;
   WORKER_CONF_t    worker_conf;
 } THREAD_STRUCT;
+extern THREAD_STRUCT  thread_struct;
+
+static inline void set_parallel_conf(char *parallel_conf) {
+  mapping config[]= {
+    FOREACH_PARALLEL(GENERATE_ENUMTXT)
+    {NULL,-1}
+  };
+  thread_struct.parallel_conf = (PARALLEL_CONF_t)map_str_to_int(config, parallel_conf);
+  if (thread_struct.parallel_conf == -1 ) {
+    LOG_E(ENB_APP,"Impossible value: %s\n", parallel_conf);
+    thread_struct.parallel_conf = PARALLEL_SINGLE_THREAD;
+  }
+}
+
+static inline void set_worker_conf(char *worker_conf) {
+  mapping config[]={
+    FOREACH_WORKER(GENERATE_ENUMTXT)
+    {NULL, -1}
+  };
+  thread_struct.worker_conf =  (WORKER_CONF_t)map_str_to_int(config, worker_conf);
+  if (thread_struct.worker_conf == -1 ) {
+    LOG_E(ENB_APP,"Impossible value: %s\n", worker_conf);
+    thread_struct.worker_conf = WORKER_DISABLE ;
+  }
+}
+
+static inline PARALLEL_CONF_t get_thread_parallel_conf(void) {
+  return thread_struct.parallel_conf;
+}
+
+static inline WORKER_CONF_t get_thread_worker_conf(void) {
+  return thread_struct.worker_conf;
+}
 
 typedef enum {SF_DL, SF_UL, SF_S} lte_subframe_t;
 
@@ -990,7 +1029,7 @@ extern int sync_var;
 
 
 //Before merge with sidelink
-/*typedef uint8_t(decoder_if_t)(int16_t *y,
+typedef uint8_t(decoder_if_t)(int16_t *y,
                                int16_t *y2,
     		               uint8_t *decoded_bytes,
     		               uint8_t *decoded_bytes2,
@@ -1009,9 +1048,10 @@ extern int sync_var;
 typedef uint8_t(encoder_if_t)(uint8_t *input,
                                uint16_t input_length_bytes,
                                uint8_t *output,
-                               uint8_t F);*/
+                               uint8_t F);
 
 //After merge with sidelink
+/*
 typedef uint8_t(*decoder_if_t)(int16_t *y,
                                int16_t *y2,
     		               uint8_t *decoded_bytes,
@@ -1037,7 +1077,7 @@ typedef uint8_t(*encoder_if_t)(uint8_t *input,
                                uint16_t interleaver_f1,
                                uint16_t interleaver_f2);
 
-
+*/
 static inline void wait_sync(char *thread_name) {
 
   printf( "waiting for sync (%s,%d/%p,%p,%p)\n",thread_name,sync_var,&sync_var,&sync_cond,&sync_mutex);

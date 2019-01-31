@@ -1175,7 +1175,7 @@ void generate_sldch(PHY_VARS_UE *ue,SLDCH_t *sldch,int frame_tx,int subframe_tx)
   \param frame_tx Frame number
   \param subframe_tx subframe number
 */
-void generate_slsch(PHY_VARS_UE *ue,SLSCH_t *slss,int frame_tx,int subframe_tx);
+void generate_slsch(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,SLSCH_t *slss,int frame_tx,int subframe_tx);
 
 void generate_64qam_table(void);
 void generate_16qam_table(void);
@@ -1445,13 +1445,13 @@ void ulsch_16qam_llr(LTE_DL_FRAME_PARMS *frame_parms,
 void fill_dci_and_dlsch(PHY_VARS_eNB *eNB,
                         int frame,
                         int subframe,
-			eNB_rxtx_proc_t *proc,
+			L1_rxtx_proc_t *proc,
 			DCI_ALLOC_t *dci_alloc,
 			nfapi_dl_config_dci_dl_pdu *pdu);
 
-void fill_mdci_and_dlsch(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,mDCI_ALLOC_t *dci_alloc,nfapi_dl_config_mpdcch_pdu *pdu);
+void fill_mdci_and_dlsch(PHY_VARS_eNB *eNB,L1_rxtx_proc_t *proc,mDCI_ALLOC_t *dci_alloc,nfapi_dl_config_mpdcch_pdu *pdu);
 
-void fill_dci0(PHY_VARS_eNB *eNB,int frame,int subframe,eNB_rxtx_proc_t *proc,DCI_ALLOC_t *dci_alloc,
+void fill_dci0(PHY_VARS_eNB *eNB,int frame,int subframe,L1_rxtx_proc_t *proc,DCI_ALLOC_t *dci_alloc,
 	      nfapi_hi_dci0_dci_pdu *pdu);
 
 void fill_ulsch(PHY_VARS_eNB *eNB,nfapi_ul_config_ulsch_pdu *ulsch_pdu,int frame,int subframe);
@@ -1519,8 +1519,6 @@ uint8_t rx_pcfich(LTE_DL_FRAME_PARMS *frame_parms,
 
 void generate_phich_reg_mapping(LTE_DL_FRAME_PARMS *frame_parms);
 
-
-void init_transport_channels(uint8_t);
 
 void generate_RIV_tables(void);
 
@@ -1834,24 +1832,7 @@ int rx_slsss(PHY_VARS_UE *ue,int32_t *tot_metric,uint8_t *phase_max,int Nid2);
 */
 void check_and_generate_slss(PHY_VARS_UE *ue,int frame_tx,int subframe_tx);
 
-/*! \brief Top-level generation route for Sidelink Discovery Channel
-  \param ue pointer to UE descriptor
-  \param sldch pointer to SLDCH configuration and payload
-  \param frame_tx Frame number
-  \param subframe_tx subframe number
-*/
-void generate_sldch(PHY_VARS_UE *ue,SLDCH_t *sldch,int frame_tx,int subframe_tx);
-
 void check_and_generate_psdch(PHY_VARS_UE *ue,int frame_tx,int subframe_tx);
-
-/*! \brief Top-level generation route for Sidelink Shared Channel
-  \param ue pointer to UE descriptor
-  \param slsch pointer to SLSCH configuration and payload
-  \param frame_tx Frame number
-  \param subframe_tx subframe number
-*/
-void generate_slsch(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,SLSCH_t *slss,int frame_tx,int subframe_tx);
-
 
 int generate_slbch(int32_t **txdataF,
 		   short amp,

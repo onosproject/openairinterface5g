@@ -92,10 +92,15 @@ function report_test {
     echo "<!DOCTYPE html>" > ./test_simulator_results.html
     echo "<html class=\"no-js\" lang=\"en-US\">" >> ./test_simulator_results.html
     echo "<head>" >> ./test_simulator_results.html
+    echo "  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">" >> ./test_simulator_results.html
+    echo "  <link rel=\"stylesheet\" href=\"https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css\">" >> ./test_simulator_results.html
+    echo "  <script src=\"https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js\"></script>" >> ./test_simulator_results.html
+    echo "  <script src=\"https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js\"></script>" >> ./test_simulator_results.html
     echo "  <title>Simulator Results for $JOB_NAME job build #$BUILD_ID</title>" >> ./test_simulator_results.html
     echo "  <base href = \"http://www.openairinterface.org/\" />" >> ./test_simulator_results.html
     echo "</head>" >> ./test_simulator_results.html
-    echo "<body>" >> ./test_simulator_results.html
+    echo "<body><div class=\"container\">" >> ./test_simulator_results.html
+    echo "  <br>" >> ./test_simulator_results.html
     echo "  <table style=\"border-collapse: collapse; border: none;\">" >> ./test_simulator_results.html
     echo "    <tr style=\"border-collapse: collapse; border: none;\">" >> ./test_simulator_results.html
     echo "      <td style=\"border-collapse: collapse; border: none;\">" >> ./test_simulator_results.html
@@ -112,45 +117,45 @@ function report_test {
     echo "  <br>" >> ./test_simulator_results.html
     echo "   <table border = \"1\">" >> ./test_simulator_results.html
     echo "      <tr>" >> ./test_simulator_results.html
-    echo "        <td bgcolor = \"lightcyan\" >Build Start Time (UTC)</td>" >> ./test_simulator_results.html
+    echo "        <td bgcolor = \"lightcyan\" > <span class=\"glyphicon glyphicon-time\"></span> Build Start Time (UTC)</td>" >> ./test_simulator_results.html
     echo "        <td>TEMPLATE_BUILD_TIME</td>" >> ./test_simulator_results.html
     echo "      </tr>" >> ./test_simulator_results.html
     echo "      <tr>" >> ./test_simulator_results.html
-    echo "        <td bgcolor = \"lightcyan\" >GIT Repository</td>" >> ./test_simulator_results.html
+    echo "        <td bgcolor = \"lightcyan\" > <span class=\"glyphicon glyphicon-cloud-upload\"></span> GIT Repository</td>" >> ./test_simulator_results.html
     echo "        <td><a href=\"$GIT_URL\">$GIT_URL</a></td>" >> ./test_simulator_results.html
     echo "      </tr>" >> ./test_simulator_results.html
     echo "      <tr>" >> ./test_simulator_results.html
-    echo "        <td bgcolor = \"lightcyan\" >Job Trigger</td>" >> ./test_simulator_results.html
+    echo "        <td bgcolor = \"lightcyan\" > <span class=\"glyphicon glyphicon-wrench\"></span> Job Trigger</td>" >> ./test_simulator_results.html
     if [ $PU_TRIG -eq 1 ]; then echo "        <td>Push Event</td>" >> ./test_simulator_results.html; fi
     if [ $MR_TRIG -eq 1 ]; then echo "        <td>Merge-Request</td>" >> ./test_simulator_results.html; fi
     echo "      </tr>" >> ./test_simulator_results.html
     if [ $PU_TRIG -eq 1 ]
     then
         echo "      <tr>" >> ./test_simulator_results.html
-        echo "        <td bgcolor = \"lightcyan\" >Branch</td>" >> ./test_simulator_results.html
+        echo "        <td bgcolor = \"lightcyan\" > <span class=\"glyphicon glyphicon-tree-deciduous\"></span> Branch</td>" >> ./test_simulator_results.html
         echo "        <td>$SOURCE_BRANCH</td>" >> ./test_simulator_results.html
         echo "      </tr>" >> ./test_simulator_results.html
         echo "      <tr>" >> ./test_simulator_results.html
-        echo "        <td bgcolor = \"lightcyan\" >Commit ID</td>" >> ./test_simulator_results.html
+        echo "        <td bgcolor = \"lightcyan\" > <span class=\"glyphicon glyphicon-tag\"></span> Commit ID</td>" >> ./test_simulator_results.html
         echo "        <td>$SOURCE_COMMIT_ID</td>" >> ./test_simulator_results.html
         echo "      </tr>" >> ./test_simulator_results.html
     fi
     if [ $MR_TRIG -eq 1 ]
     then
         echo "      <tr>" >> ./test_simulator_results.html
-        echo "        <td bgcolor = \"lightcyan\" >Source Branch</td>" >> ./test_simulator_results.html
+        echo "        <td bgcolor = \"lightcyan\" > <span class=\"glyphicon glyphicon-log-out\"></span> Source Branch</td>" >> ./test_simulator_results.html
         echo "        <td>$SOURCE_BRANCH</td>" >> ./test_simulator_results.html
         echo "      </tr>" >> ./test_simulator_results.html
         echo "      <tr>" >> ./test_simulator_results.html
-        echo "        <td bgcolor = \"lightcyan\" >Source Commit ID</td>" >> ./test_simulator_results.html
+        echo "        <td bgcolor = \"lightcyan\" > <span class=\"glyphicon glyphicon-tag\"></span> Source Commit ID</td>" >> ./test_simulator_results.html
         echo "        <td>$SOURCE_COMMIT_ID</td>" >> ./test_simulator_results.html
         echo "      </tr>" >> ./test_simulator_results.html
         echo "      <tr>" >> ./test_simulator_results.html
-        echo "        <td bgcolor = \"lightcyan\" >Target Branch</td>" >> ./test_simulator_results.html
+        echo "        <td bgcolor = \"lightcyan\" > <span class=\"glyphicon glyphicon-log-in\"></span> Target Branch</td>" >> ./test_simulator_results.html
         echo "        <td>$TARGET_BRANCH</td>" >> ./test_simulator_results.html
         echo "      </tr>" >> ./test_simulator_results.html
         echo "      <tr>" >> ./test_simulator_results.html
-        echo "        <td bgcolor = \"lightcyan\" >Target Commit ID</td>" >> ./test_simulator_results.html
+        echo "        <td bgcolor = \"lightcyan\" > <span class=\"glyphicon glyphicon-tag\"></span> Target Commit ID</td>" >> ./test_simulator_results.html
         echo "        <td>$TARGET_COMMIT_ID</td>" >> ./test_simulator_results.html
         echo "      </tr>" >> ./test_simulator_results.html
     fi
@@ -162,6 +167,26 @@ function report_test {
     then
         echo "   <h3>Basic Simulator Check</h3>" >> ./test_simulator_results.html
 
+        if [ -f $ARCHIVES_LOC/test_final_status.log ]
+        then
+            if [ `grep -c TEST_OK $ARCHIVES_LOC/test_final_status.log` -eq 1 ]
+            then
+                echo "   <div class=\"alert alert-success\">" >> ./test_simulator_results.html
+                echo "      <strong>TEST was SUCCESSFUL <span class=\"glyphicon glyphicon-ok-circle\"></span></strong>" >> ./test_simulator_results.html
+                echo "   </div>" >> ./test_simulator_results.html
+            else
+                echo "   <div class=\"alert alert-danger\">" >> ./test_simulator_results.html
+                echo "      <strong>TEST was a FAILURE! <span class=\"glyphicon glyphicon-ban-circle\"></span></strong>" >> ./test_simulator_results.html
+                echo "   </div>" >> ./test_simulator_results.html
+            fi
+        else
+            echo "   <div class=\"alert alert-danger\">" >> ./test_simulator_results.html
+            echo "      <strong>COULD NOT DETERMINE TEST FINAL STATUS! <span class=\"glyphicon glyphicon-ban-circle\"></span></strong>" >> ./test_simulator_results.html
+            echo "   </div>" >> ./test_simulator_results.html
+        fi
+
+        echo "   <button data-toggle=\"collapse\" data-target=\"#oai-basic-sim-test-details\">More details on Basic Simulator test results</button>" >> ./test_simulator_results.html
+        echo "   <div id=\"oai-basic-sim-test-details\" class=\"collapse\">" >> ./test_simulator_results.html
         echo "   <table border = \"1\">" >> ./test_simulator_results.html
         echo "      <tr bgcolor = \"#33CCFF\" >" >> ./test_simulator_results.html
         echo "        <th>Log File Name</th>" >> ./test_simulator_results.html
@@ -360,12 +385,184 @@ function report_test {
         done
 
         echo "   </table>" >> ./test_simulator_results.html
+        echo "   </div>" >> ./test_simulator_results.html
+    fi
+
+    if [ -e $JENKINS_WKSP/flexran/flexran_build_complete.txt ]
+    then
+        echo "   <h3>Basic Simulator + FlexRan Controller Check</h3>" >> ./test_simulator_results.html
+        echo "   <div class=\"alert alert-success\">" >> ./test_simulator_results.html
+        echo "      <strong>TEST was SUCCESSFUL <span class=\"glyphicon glyphicon-ok-circle\"></span></strong>" >> ./test_simulator_results.html
+        echo "   </div>" >> ./test_simulator_results.html
+        echo "   <button data-toggle=\"collapse\" data-target=\"#oai-flexran-test-details\">More details on Basic Simulator + Fleran Controller test results</button>" >> ./test_simulator_results.html
+        echo "   <div id=\"oai-flexran-test-details\" class=\"collapse\">" >> ./test_simulator_results.html
+        echo "   <table border = \"1\">" >> ./test_simulator_results.html
+        echo "      <tr bgcolor = \"#33CCFF\" >" >> ./test_simulator_results.html
+        echo "        <th>Log File Name</th>" >> ./test_simulator_results.html
+        echo "        <th>JSON Query Response</th>" >> ./test_simulator_results.html
+        echo "      </tr>" >> ./test_simulator_results.html
+
+        FLEXRAN_QUERIES=`ls $ARCHIVES_LOC/flexran_ctl_query_*log`
+        for QUERY in $FLEXRAN_QUERIES
+        do
+            echo "      <tr>" >> ./test_simulator_results.html
+            NAME=`echo $QUERY | sed -e "s#$ARCHIVES_LOC/##"`
+            echo "        <td>$NAME</td>" >> ./test_simulator_results.html
+            echo "        <td><pre><code>" >> ./test_simulator_results.html
+            egrep -v "LOG_NAME|\-\-\-\-\-" $QUERY >> ./test_simulator_results.html
+            echo "        </code></pre></td>" >> ./test_simulator_results.html
+            echo "      </tr>" >> ./test_simulator_results.html
+        done
+        echo "   </table>" >> ./test_simulator_results.html
+        echo "   </div>" >> ./test_simulator_results.html
+    fi
+
+    ARCHIVES_LOC=archives/l2_sim/test
+    if [ -d $ARCHIVES_LOC ]
+    then
+        echo "   <h3>L2-NFAPI Simulator Check</h3>" >> ./test_simulator_results.html
+
+        if [ -f $ARCHIVES_LOC/test_final_status.log ]
+        then
+            if [ `grep -c TEST_OK $ARCHIVES_LOC/test_final_status.log` -eq 1 ]
+            then
+                echo "   <div class=\"alert alert-success\">" >> ./test_simulator_results.html
+                echo "      <strong>TEST was SUCCESSFUL <span class=\"glyphicon glyphicon-ok-circle\"></span></strong>" >> ./test_simulator_results.html
+                echo "   </div>" >> ./test_simulator_results.html
+            else
+                echo "   <div class=\"alert alert-danger\">" >> ./test_simulator_results.html
+                echo "      <strong>TEST was a FAILURE! <span class=\"glyphicon glyphicon-ban-circle\"></span></strong>" >> ./test_simulator_results.html
+                echo "   </div>" >> ./test_simulator_results.html
+            fi
+        else
+            echo "   <div class=\"alert alert-danger\">" >> ./test_simulator_results.html
+            echo "      <strong>COULD NOT DETERMINE TEST FINAL STATUS! <span class=\"glyphicon glyphicon-ban-circle\"></span></strong>" >> ./test_simulator_results.html
+            echo "   </div>" >> ./test_simulator_results.html
+        fi
+
+        echo "   <button data-toggle=\"collapse\" data-target=\"#oai-l2-sim-test-details\">More details on L2-NFAPI Simulator test results</button>" >> ./test_simulator_results.html
+        echo "   <div id=\"oai-l2-sim-test-details\" class=\"collapse\">" >> ./test_simulator_results.html
+        echo "   <table border = \"1\">" >> ./test_simulator_results.html
+        echo "      <tr bgcolor = \"#33CCFF\" >" >> ./test_simulator_results.html
+        echo "        <th>Log File Name</th>" >> ./test_simulator_results.html
+        echo "        <th>Command</th>" >> ./test_simulator_results.html
+        echo "        <th>Status</th>" >> ./test_simulator_results.html
+        echo "        <th>Statistics</th>" >> ./test_simulator_results.html
+        echo "      </tr>" >> ./test_simulator_results.html
+
+        TRANS_MODES=("fdd")
+        BW_CASES=(05)
+        for TMODE in ${TRANS_MODES[@]}
+        do
+            for BW in ${BW_CASES[@]}
+            do
+                ENB_LOG=$ARCHIVES_LOC/${TMODE}_${BW}MHz_enb.log
+                UE_LOG=`echo $ENB_LOG | sed -e "s#enb#ue#"`
+                if [ -f $ENB_LOG ] && [ -f $UE_LOG ]
+                then
+                    NAME_ENB=`echo $ENB_LOG | sed -e "s#$ARCHIVES_LOC/##"`
+                    NAME_UE=`echo $UE_LOG | sed -e "s#$ARCHIVES_LOC/##"`
+                    echo "      <tr>" >> ./test_simulator_results.html
+                    echo "        <td>$NAME_ENB --- $NAME_UE</td>" >> ./test_simulator_results.html
+                    echo "        <td>N/A</td>" >> ./test_simulator_results.html
+                    NB_ENB_GOT_SYNC=`egrep -c "got sync" $ENB_LOG`
+                    NB_UE_GOT_SYNC=`egrep -c "got sync" $UE_LOG`
+                    NB_ENB_SYNCED_WITH_UE=`egrep -c "Sending NFAPI_START_RESPONSE" $UE_LOG`
+                    if [ $NB_ENB_GOT_SYNC -eq 1 ] && [ $NB_UE_GOT_SYNC -eq 3 ] && [ $NB_ENB_SYNCED_WITH_UE -eq 1 ]
+                    then
+                        echo "        <td bgcolor = \"green\" >OK</td>" >> ./test_simulator_results.html
+                    else
+                        echo "        <td bgcolor = \"red\" >KO</td>" >> ./test_simulator_results.html
+                    fi
+                    echo "        <td><pre>" >> ./test_simulator_results.html
+                    if [ $NB_ENB_GOT_SYNC -eq 1 ]
+                    then
+                        echo "<font color = \"blue\">- eNB --> got sync</font>" >> ./test_simulator_results.html
+                    else
+                        echo "<font color = \"red\"><b>- eNB NEVER got sync</b></font>" >> ./test_simulator_results.html
+                    fi
+                    if [ $NB_UE_GOT_SYNC -eq 3 ]
+                    then
+                        echo "<font color = \"blue\">- UE --> got sync</font>" >> ./test_simulator_results.html
+                    else
+                        echo "<font color = \"red\"><b>- UE NEVER got sync</b></font>" >> ./test_simulator_results.html
+                    fi
+                    if [ $NB_ENB_SYNCED_WITH_UE -eq 1 ]
+                    then
+                        echo "<font color = \"blue\">- UE attached to eNB</font>" >> ./test_simulator_results.html
+                    else
+                        echo "<font color = \"red\"><b>- UE NEVER attached to eNB</b></font>" >> ./test_simulator_results.html
+                    fi
+                    echo "        </pre></td>" >> ./test_simulator_results.html
+                    echo "      </tr>" >> ./test_simulator_results.html
+                fi
+                PING_CASE=$ARCHIVES_LOC/${TMODE}_${BW}MHz_ping_epc.txt
+                if [ -f $PING_CASE ]
+                then
+                    echo "      <tr>" >> ./test_simulator_results.html
+                    NAME=`echo $PING_CASE | sed -e "s#$ARCHIVES_LOC/##"`
+                    echo "        <td>$NAME</td>" >> ./test_simulator_results.html
+                    CMD=`egrep "COMMAND IS" $PING_CASE | sed -e "s#COMMAND IS: ##"`
+                    echo "        <td>$CMD</td>" >> ./test_simulator_results.html
+                    FILE_COMPLETE=`egrep -c "ping statistics" $PING_CASE`
+                    if [ $FILE_COMPLETE -eq 0 ]
+                    then
+                        echo "        <td bgcolor = \"red\" >KO</td>" >> ./test_simulator_results.html
+                        echo "        <td>N/A</td>" >> ./test_simulator_results.html
+                    else
+                        NB_TR_PACKETS=`egrep "packets transmitted" $PING_CASE | sed -e "s# packets transmitted.*##"`
+                        NB_RC_PACKETS=`egrep "packets transmitted" $PING_CASE | sed -e "s#^.*packets transmitted, ##" -e "s# received,.*##"`
+                        if [ $NB_TR_PACKETS -eq $NB_RC_PACKETS ]
+                        then
+                            echo "        <td bgcolor = \"green\" >OK</td>" >> ./test_simulator_results.html
+                        else
+                            echo "        <td bgcolor = \"red\" >KO</td>" >> ./test_simulator_results.html
+                        fi
+                        echo "        <td>" >> ./test_simulator_results.html
+                        echo "            <pre>" >> ./test_simulator_results.html
+                        STATS=`egrep "packets transmitted" $PING_CASE | sed -e "s#^.*received, ##" -e "s#, time.*##" -e "s# packet loss##"`
+                        echo "Packet Loss : $STATS" >> ./test_simulator_results.html
+                        RTTMIN=`egrep "rtt min" $PING_CASE | awk '{split($4,a,"/"); print a[1] " " $5}'`
+                        echo "RTT Minimal : $RTTMIN" >> ./test_simulator_results.html
+                        RTTAVG=`egrep "rtt min" $PING_CASE | awk '{split($4,a,"/"); print a[2] " " $5}'`
+                        echo "RTT Average : $RTTAVG" >> ./test_simulator_results.html
+                        RTTMAX=`egrep "rtt min" $PING_CASE | awk '{split($4,a,"/"); print a[3] " " $5}'`
+                        echo "RTT Maximal : $RTTMAX" >> ./test_simulator_results.html
+                        echo "            </pre>" >> ./test_simulator_results.html
+                        echo "        </td>" >> ./test_simulator_results.html
+                    fi
+                    echo "      </tr>" >> ./test_simulator_results.html
+                fi
+
+            done
+        done
+
+        echo "   </table>" >> ./test_simulator_results.html
+        echo "   </div>" >> ./test_simulator_results.html
     fi
 
     ARCHIVES_LOC=archives/phy_sim/test
     if [ -d $ARCHIVES_LOC ]
     then
         echo "   <h3>Physical Simulators Check</h3>" >> ./test_simulator_results.html
+
+        if [ -f $ARCHIVES_LOC/test_final_status.log ]
+        then
+            if [ `grep -c TEST_OK $ARCHIVES_LOC/test_final_status.log` -eq 1 ]
+            then
+                echo "   <div class=\"alert alert-success\">" >> ./test_simulator_results.html
+                echo "      <strong>TEST was SUCCESSFUL <span class=\"glyphicon glyphicon-ok-circle\"></span></strong>" >> ./test_simulator_results.html
+                echo "   </div>" >> ./test_simulator_results.html
+            else
+                echo "   <div class=\"alert alert-danger\">" >> ./test_simulator_results.html
+                echo "      <strong>TEST was a FAILURE! <span class=\"glyphicon glyphicon-ban-circle\"></span></strong>" >> ./test_simulator_results.html
+                echo "   </div>" >> ./test_simulator_results.html
+            fi
+        else
+            echo "   <div class=\"alert alert-danger\">" >> ./test_simulator_results.html
+            echo "      <strong>COULD NOT DETERMINE TEST FINAL STATUS! <span class=\"glyphicon glyphicon-ban-circle\"></span></strong>" >> ./test_simulator_results.html
+            echo "   </div>" >> ./test_simulator_results.html
+        fi
 
         echo "   <table border = \"1\">" >> ./test_simulator_results.html
         echo "      <tr bgcolor = \"#33CCFF\" >" >> ./test_simulator_results.html
@@ -399,6 +596,10 @@ function report_test {
         done
 
         echo "   </table>" >> ./test_simulator_results.html
+        echo "   <br>" >> ./test_simulator_results.html
+
+        echo "   <button data-toggle=\"collapse\" data-target=\"#oai-phy-sim-test-details\">More details on Physical Simulators test results</button>" >> ./test_simulator_results.html
+        echo "   <div id=\"oai-phy-sim-test-details\" class=\"collapse\">" >> ./test_simulator_results.html
 
         echo "   <h4>Details</h4>" >> ./test_simulator_results.html
         for XML_FILE in $XML_TESTS
@@ -449,6 +650,9 @@ function report_test {
         done
     fi
 
-    echo "</body>" >> ./test_simulator_results.html
+    echo "   </div>" >> ./test_simulator_results.html
+    echo "   <p></p>" >> ./test_simulator_results.html
+    echo "   <div class=\"well well-lg\">End of Test Report -- Copyright <span class=\"glyphicon glyphicon-copyright-mark\"></span> 2018 <a href=\"http://www.openairinterface.org/\">OpenAirInterface</a>. All Rights Reserved.</div>" >> ./test_simulator_results.html
+    echo "</div></body>" >> ./test_simulator_results.html
     echo "</html>" >> ./test_simulator_results.html
 }

@@ -186,20 +186,42 @@ typedef struct {
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
 
 typedef struct {
+  /// SL-OffsetIndicator (0-10239)
+  uint32_t SL_OffsetIndicator;
   uint16_t slss_id;
-  uint8_t *slmib;
+  uint8_t slmib_length;
+  uint8_t slmib[5];
+
 } SLSS_t;
+
+
+typedef enum {
+  disc_type1=0,
+  disc_type2B=1
+} SLD_t;
 
 typedef struct {
   // SL Configuration
-  /// Number of SL resource blocks (1-100)
-  uint32_t N_SL_RB;
-  /// prb-start (0-99)
-  uint32_t prb_Start;
-  /// prb-End (0-99)
-  uint32_t prb_End;
+  /// Number of SL resource blocks (1-100) for SCI
+  uint32_t N_SL_RB_SC;
+  /// prb-start (0-99) for SCI
+  uint32_t prb_Start_SC;
+  /// prb-End (0-99) for SCI
+  uint32_t prb_End_SC;
+  /// Number of SL resource blocks (1-100) for SCI
+  uint32_t N_SL_RB_data;
+  /// prb-start (0-99) for SCI
+  uint32_t prb_Start_data;
+  /// prb-End (0-99) for SCI
+  uint32_t prb_End_data;
   /// SL-OffsetIndicator (0-10239)
   uint32_t SL_OffsetIndicator;
+  /// SL-OffsetIndicator data (0-10239)
+  uint32_t SL_OffsetIndicator_data;
+  /// SC-SC_Period
+  uint32_t SL_SC_Period;
+  /// SC bitmap length (subframes)
+  uint32_t SubframeBitmapSL_length;
   /// PSCCH subframe bitmap, first 64-bits (up to 40 bits for Rel 12)
   uint64_t bitmap1;
   /// PSCCH subframe bitmap, 2nd 64-bits (up to 100 bits for Rel 14)
@@ -222,25 +244,26 @@ typedef struct {
   uint32_t timing_advance_indication;
   /// SCI0 Group Destination ID for SLSCH
   uint32_t group_destination_id;
-
   // SLSCH Parameters
   /// Number of Subbands (36.213 14.1.1.2)
   uint32_t Nsb;
-  /// N_RB_HO (36.213 14.1.1.2)
+  /// N_RB_HO (36.213 14.1.1.2) = numSubbands-r12
   uint32_t N_RB_HO;
-  /// n_ss_PSSCH (36.211 9.2.4)
+  /// n_ss_PSSCH (36.211 9.2.4) = rb-Offset-r12
   uint32_t n_ss_PSSCH;
-  /// n_ssf_PSSCH
+  /// n_ssf_PSSCH : (SL TM 1)
   uint32_t n_ssf_PSSCH;
   /// cinit (36.331 hoppingParameter-r12)
   uint32_t cinit;
   /// redundancy version
   uint32_t rvidx;
-  /// n_prime_VRB (36.213 14.1.1.2.1)
-  uint32_t n_prime_VRB;
-  /// M_RB_PSSCH_RP (36.213 14.1.3
+  /// n_prime_VRB parameters (36.213 14.1.1.2.1), RB_start
+  uint32_t RB_start;
+  /// n_prime_VRB parameters (36.213 14.1.1.2.1), L_CRBs
+  uint32_t L_CRBs;
+  /// M_RB_PSSCH_RP (36.213 14.1.3)
   uint32_t M_RB_PSSCH_RP;
-  /// n_prime_PRB (36.213 14.1.1.4
+  /// n_prime_PRB (36.213 14.1.1.4)
   uint32_t n_prime_PRB;
   /// m_nprime_PRB_PSSCH (36.213 14.1.3)
   uint32_t m_nprime_PRB_PSCCH;
@@ -248,12 +271,51 @@ typedef struct {
   int payload_length;
   /// pointer to payload
   uint8_t *payload;
+  /// index of current subframe modulo 10 in subframe pool
+  uint8_t ljmod10;
 } SLSCH_t;
 
 typedef struct {
+  // SL Discovery Configuration
+  /// Discovery Type
+  SLD_t type;
+  /// Number of SL resource blocks (1-100)
+  uint32_t N_SL_RB;
+  /// prb-start (0-99)
+  uint32_t prb_Start;
+  /// prb-End (0-99)
+  uint32_t prb_End;
+  /// SL-OffsetIndicator (0-10239)
+  uint32_t offsetIndicator;
+  /// SL-Discovery Period
+  uint32_t discPeriod;
+  /// Number of Repetitions (N_R)
+  uint32_t numRepetitions;
+  /// Number of retransmissions (numRetx-r12)
+  uint32_t numRetx;
+  /// PSDCH subframe bitmap (up to 100 bits, first 64)6
+  uint64_t bitmap1;
+  /// PSDCH subframe bitmap (up to 100 bits, second 36)
+  uint64_t bitmap2;
+  /// Bitmap length (N_B) (valid values (4,8,12,16,30,40,42) Rel12, (16,20,100) Rel14
+  uint32_t bitmap_length;
+  /// N1_PSDCH (a-r12)
+  uint32_t N1;
+  /// N1_PSDCH (b-r12)
+  uint32_t N2;
+  /// N1_PSDCH (c-r12)
+  uint32_t N3;
+  /// a10 (discPRB-Index)
+  uint32_t a10;
+  /// b10 (discSF-Index)
+  uint32_t b10;
+  /// transmission index (j)
+  uint32_t j;
+  // Discovery resource
+  uint32_t n_psdch;
   /// payload length
   int payload_length;
-	uint8_t payload[100];
+  uint8_t payload[100];
 } SLDCH_t;
 
 #define TTI_SYNC 0
@@ -275,6 +337,7 @@ typedef struct UE_tport_s {
   };
   uint8_t payload[1500];
 } UE_tport_t;
+
 
 #endif
 

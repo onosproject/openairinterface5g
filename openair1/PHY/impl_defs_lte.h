@@ -70,7 +70,7 @@ typedef struct {
 
 //Not sure if this should be placed here or in defs_common.h
 /// Enumeration of SL_channel_config
-typedef enum {
+/*typedef enum {
   NO_SL=0,
   PSCCH_12_EVEN=1,
   PSCCH_12_ODD=2,
@@ -81,5 +81,6 @@ typedef enum {
   PSDCH=7,
   PSBCH=8,
   MAX_SLTYPES=9
-} SL_chan_t;
+} SL_chan_t;*/
 #endif
+

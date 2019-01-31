@@ -222,10 +222,10 @@ void rrc_control_socket_init(void);
 void rrc_ue_process_sidelink_radioResourceConfig(
   module_id_t Mod_idP,
   uint8_t eNB_index,
-  SystemInformationBlockType18_r12_t     *sib18,
-  SystemInformationBlockType19_r12_t     *sib19,
-  SL_CommConfig_r12_t* sl_CommConfig,
-  SL_DiscConfig_r12_t* sl_DiscConfig);
+  LTE_SystemInformationBlockType18_r12_t     *sib18,
+  LTE_SystemInformationBlockType19_r12_t     *sib19,
+  LTE_SL_CommConfig_r12_t* sl_CommConfig,
+  LTE_SL_DiscConfig_r12_t* sl_DiscConfig);
 
 /** \brief Init control socket to listen to incoming packets from ProSe App
  *

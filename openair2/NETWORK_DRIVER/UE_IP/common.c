@@ -307,7 +307,6 @@ ue_ip_common_ip2wireless(
      src_addr = (unsigned char *)&((struct iphdr *)&skb_pP->data[hard_header_len])->saddr;
      dst_addr = (unsigned char *)&((struct iphdr *)&skb_pP->data[hard_header_len])->daddr;
 
-#ifdef OAI_DRV_DEBUG_SEND
     if (src_addr) {
       printk("[UE_IP_DRV][%s] Source %d.%d.%d.%d\n",__FUNCTION__, src_addr[0],src_addr[1],src_addr[2],src_addr[3]);
     }
@@ -315,7 +314,17 @@ ue_ip_common_ip2wireless(
       printk("[UE_IP_DRV][%s] Dest %d.%d.%d.%d\n",__FUNCTION__, dst_addr[0],dst_addr[1],dst_addr[2],dst_addr[3]);
     }
     printk("[UE_IP_DRV][%s] slrb_id %d\n",__FUNCTION__, pdcph.rb_id);
-#endif
+
+    // modify inst by IP address for the U-Plane of multiple UEs while L2 fapi simulator start
+    #ifdef UESIM_EXPANSION
+        if ((src_addr[3] - 2)> instP) {
+            pdcph.inst = src_addr[3] - 2;
+            printk("[UE_IP_DRV] change INST from %d to %d\n",instP, pdcph.inst);
+            instP = src_addr[3] - 2;
+            priv_p=netdev_priv(ue_ip_dev[instP]);
+        }
+    #endif
+
 
 
     //get source/destination MAC addresses

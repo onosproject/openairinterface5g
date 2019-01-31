@@ -36,8 +36,9 @@
 */
 
 //#include "defs.h"
-#include "PHY/defs.h"
-#include "PHY/extern.h"
+#include "PHY/defs_UE.h"
+#include "PHY/defs_common.h"
+#include "PHY/phy_extern_ue.h"
 
 int initial_syncSL(PHY_VARS_UE *ue) {
 
