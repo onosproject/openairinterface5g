@@ -1561,9 +1561,9 @@ void fill_crc_indication_NB_IoT(PHY_VARS_eNB *eNB,int UE_id,int frame,int subfra
 
   //pdu->instance_length                                = 0; // don't know what to do with this
   //  pdu->rx_ue_information.handle                       = handle;
-  pdu->rx_ue_information.tl.tag                       = NFAPI_RX_UE_INFORMATION_TAG;
-  pdu->rx_ue_information.rnti                         = eNB->ulsch[UE_id]->rnti;
-  pdu->crc_indication_rel8.tl.tag                     = NFAPI_CRC_INDICATION_REL8_TAG;
+  ///////////////////////pdu->rx_ue_information.tl.tag                       = NFAPI_RX_UE_INFORMATION_TAG;
+  pdu->rx_ue_information.rnti                         = eNB->ulsch_NB_IoT[0]->rnti;              /// OK
+  //////////////////////////pdu->crc_indication_rel8.tl.tag                     = NFAPI_CRC_INDICATION_REL8_TAG;
   pdu->crc_indication_rel8.crc_flag                   = crc_flag;
 
   eNB->UL_INFO.crc_ind.number_of_crcs++;
@@ -1595,42 +1595,13 @@ void npusch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
       //ulsch_harq = ulsch_NB_IoT->harq_process;
       // if eNB is ready to receive UL data 
       // define a flag to trigger on or off the decoding process
-      //if ((ulsch) && (ulsch->rnti>0) && (ulsch_harq->status == ACTIVE) && (ulsch_harq->frame == frame) && (ulsch_harq->subframe == subframe) && (ulsch_harq->handled == 0))
-      //uint16_t N_slots = get_UL_slots_per_RU_NB_IoT(nulsch_harq->subcarrier_spacing, nulsch_harq->subcarrier_indication, nulsch->npusch_format)*get_UL_N_ru_NB_IoT(nulsch_harq->mcs,nulsch_harq->resource_assignment,nulsch->Msg3_flag);
-              
-     // if ((nulsch->Msg3_active  == 1) && (nulsch->Msg3_flag   == 1)) // && (ulsch_harq->frame == framerx) && (ulsch_harq->subframe == subframerx))  
-    //  {
-           
-        /*   if(nulsch->flag_scramble == 1)
-           {
-                
-                nulsch->Msg3_frame    = framerx;
-                nulsch->Msg3_subframe = subframerx;
-                nulsch->flag_scramble = 0;
-           }*/
- 
-              rx_ulsch_Gen_NB_IoT(eNB,
-                                   proc,
-                                   0,                         // this is the effective sector id
-                                   0,
-                                   RB_IoT_ID,                        // 22 , to be included in // to be replaced by NB_IoT_start ??
-                                   rx_subframe,  // first received subframe 
-                                   rx_frame);     // first received frame
-                                                 ///proc->counter_msg3,  // this represents the number of Subframe after encoding the msg3 // proc->counter_msg3
-
-       //  } else if((nulsch->Msg3_active  == 1) && (nulsch->Msg3_flag   == 0)){  //// case of NPUSCH other than Msg3
-/*
-              rx_ulsch_Gen_NB_IoT(eNB,
-                                   proc,
-                                   0,                         // this is the effective sector id
-                                   0,
-                                   22,                        // 22 , to be included in // to be replaced by NB_IoT_start ??
-                                   nulsch->Msg3_subframe,  // first received subframe 
-                                   nulsch->Msg3_frame,     // first received frame
-                                   N_slots/2,              ///proc->counter_msg3,  // this represents the number of Subframe after encoding the msg3 // proc->counter_msg3
-                                   subframerx); */
-       //  }
-          
+     rx_ulsch_Gen_NB_IoT(eNB,
+                           proc,
+                           0,                         // this is the effective sector id
+                           0,
+                           RB_IoT_ID,                        // 22 , to be included in // to be replaced by NB_IoT_start ??
+                           rx_subframe,  // first received subframe 
+                           rx_frame);     // first received frame
    }  // for UE loop
 
 }

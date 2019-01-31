@@ -3192,7 +3192,7 @@ void phy_procedures_eNB_common_RX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc){
   ///VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_ENB_RX_COMMON+offset, 0 );
 }
 
-void fill_rx_indication_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,uint8_t data_or_control)
+void fill_rx_indication_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,uint8_t data_or_control, uint8_t msg3_flag)
 {
       nfapi_rx_indication_pdu_t *pdu;
 
@@ -3207,8 +3207,21 @@ void fill_rx_indication_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,uint8_t d
       // pdu->rx_ue_information.tl.tag          = NFAPI_RX_UE_INFORMATION_TAG;
       //pdu->rx_indication_rel8.tl.tag         = NFAPI_RX_INDICATION_REL8_TAG;
       pdu->rx_ue_information.rnti            = eNB->ulsch_NB_IoT[0]->rnti;
-      pdu->rx_indication_rel8.length         = eNB->ulsch_NB_IoT[0]->harq_process->TBS>>3;
-      pdu->data                              = eNB->ulsch_NB_IoT[0]->harq_process->b;
+     
+
+      if(msg3_flag == 1)
+      {
+          pdu->rx_indication_rel8.length         = 6; //eNB->ulsch_NB_IoT[0]->harq_process->TBS>>3;
+          int m =0;
+          for(m=0; m<6;m++)
+          { 
+              pdu->data[m]  = eNB->ulsch_NB_IoT[0]->harq_process->b[2+m];
+          }        
+          
+      } else {
+
+          pdu->data  = eNB->ulsch_NB_IoT[0]->harq_process->b;
+      }
       //pdu->data                              = eNB->ulsch_NB_IoT[UE_id]->harq_processes[harq_pid]->b;   
       //eNB->UL_INFO.rx_ind.rx_indication_body.number_of_pdus++;
       //eNB->UL_INFO.rx_ind.sfn_sf = frame<<4 | subframe;

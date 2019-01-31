@@ -731,25 +731,7 @@ void ulsch_channel_compensation_NB_IoT(int32_t **rxdataF_ext,
 
 #endif
 
-// #ifdef OFDMA_ULSCH
 
-// #if defined(__x86_64__) || defined(__i386__)
-//   if (Qm == 4)
-//     QAM_amp128U = _mm_set1_epi16(QAM16_n1);
-//   else if (Qm == 6) {
-//     QAM_amp128U  = _mm_set1_epi16(QAM64_n1);
-//     QAM_amp128bU = _mm_set1_epi16(QAM64_n2);
-//   }
-// #elif defined(__arm__)
-//   if (Qm == 4)
-//     QAM_amp128U = vdupq_n_s16(QAM16_n1);
-//   else if (Qm == 6) {
-//     QAM_amp128U  = vdupq_n_s16(QAM64_n1);
-//     QAM_amp128bU = vdupq_n_s16(QAM64_n2);
-//   }
-
-// #endif
-// #endif
 
   for (aarx=0; aarx<frame_parms->nb_antennas_rx; aarx++) {
 
@@ -771,79 +753,7 @@ void ulsch_channel_compensation_NB_IoT(int32_t **rxdataF_ext,
     rxdataF_comp128   = (int16x8_t *)&rxdataF_comp[aarx][symbol*frame_parms->N_RB_DL*12];
 
 #endif
-    // for (rb=0; rb<nb_rb; rb++) {
-      //            printf("comp: symbol %d rb %d\n",symbol,rb);
-// #ifdef OFDMA_ULSCH
-//       if (Qm>2) {
-//         // get channel amplitude if not QPSK
 
-// #if defined(__x86_64__) || defined(__i386__)
-//         mmtmpU0 = _mm_madd_epi16(ul_ch128[0],ul_ch128[0]);
-
-//         mmtmpU0 = _mm_srai_epi32(mmtmpU0,output_shift);
-
-//         mmtmpU1 = _mm_madd_epi16(ul_ch128[1],ul_ch128[1]);
-//         mmtmpU1 = _mm_srai_epi32(mmtmpU1,output_shift);
-//         mmtmpU0 = _mm_packs_epi32(mmtmpU0,mmtmpU1);
-
-//         ul_ch_mag128[0] = _mm_unpacklo_epi16(mmtmpU0,mmtmpU0);
-//         ul_ch_mag128b[0] = ul_ch_mag128[0];
-//         ul_ch_mag128[0] = _mm_mulhi_epi16(ul_ch_mag128[0],QAM_amp128U);
-//         ul_ch_mag128[0] = _mm_slli_epi16(ul_ch_mag128[0],2);  // 2 to compensate the scale channel estimate
-//         ul_ch_mag128[1] = _mm_unpackhi_epi16(mmtmpU0,mmtmpU0);
-//         ul_ch_mag128b[1] = ul_ch_mag128[1];
-//         ul_ch_mag128[1] = _mm_mulhi_epi16(ul_ch_mag128[1],QAM_amp128U);
-//         ul_ch_mag128[1] = _mm_slli_epi16(ul_ch_mag128[1],2);  // 2 to compensate the scale channel estimate
-
-//         mmtmpU0 = _mm_madd_epi16(ul_ch128[2],ul_ch128[2]);
-//         mmtmpU0 = _mm_srai_epi32(mmtmpU0,output_shift);
-//         mmtmpU1 = _mm_packs_epi32(mmtmpU0,mmtmpU0);
-
-//         ul_ch_mag128[2] = _mm_unpacklo_epi16(mmtmpU1,mmtmpU1);
-//         ul_ch_mag128b[2] = ul_ch_mag128[2];
-
-//         ul_ch_mag128[2] = _mm_mulhi_epi16(ul_ch_mag128[2],QAM_amp128U);
-//         ul_ch_mag128[2] = _mm_slli_epi16(ul_ch_mag128[2],2); // 2 to compensate the scale channel estimate
-
-
-//         ul_ch_mag128b[0] = _mm_mulhi_epi16(ul_ch_mag128b[0],QAM_amp128bU);
-//         ul_ch_mag128b[0] = _mm_slli_epi16(ul_ch_mag128b[0],2); // 2 to compensate the scale channel estimate
-
-
-//         ul_ch_mag128b[1] = _mm_mulhi_epi16(ul_ch_mag128b[1],QAM_amp128bU);
-//         ul_ch_mag128b[1] = _mm_slli_epi16(ul_ch_mag128b[1],2); // 2 to compensate the scale channel estimate
-
-//         ul_ch_mag128b[2] = _mm_mulhi_epi16(ul_ch_mag128b[2],QAM_amp128bU);
-//         ul_ch_mag128b[2] = _mm_slli_epi16(ul_ch_mag128b[2],2);// 2 to compensate the scale channel estimate
-
-// #elif defined(__arm__)
-//           mmtmpU0 = vmull_s16(ul_ch128[0], ul_ch128[0]);
-//           mmtmpU0 = vqshlq_s32(vqaddq_s32(mmtmpU0,vrev64q_s32(mmtmpU0)),-output_shift128);
-//           mmtmpU1 = vmull_s16(ul_ch128[1], ul_ch128[1]);
-//           mmtmpU1 = vqshlq_s32(vqaddq_s32(mmtmpU1,vrev64q_s32(mmtmpU1)),-output_shift128);
-//           mmtmpU2 = vcombine_s16(vmovn_s32(mmtmpU0),vmovn_s32(mmtmpU1));
-//           mmtmpU0 = vmull_s16(ul_ch128[2], ul_ch128[2]);
-//           mmtmpU0 = vqshlq_s32(vqaddq_s32(mmtmpU0,vrev64q_s32(mmtmpU0)),-output_shift128);
-//           mmtmpU1 = vmull_s16(ul_ch128[3], ul_ch128[3]);
-//           mmtmpU1 = vqshlq_s32(vqaddq_s32(mmtmpU1,vrev64q_s32(mmtmpU1)),-output_shift128);
-//           mmtmpU3 = vcombine_s16(vmovn_s32(mmtmpU0),vmovn_s32(mmtmpU1));
-//           mmtmpU0 = vmull_s16(ul_ch128[4], ul_ch128[4]);
-//           mmtmpU0 = vqshlq_s32(vqaddq_s32(mmtmpU0,vrev64q_s32(mmtmpU0)),-output_shift128);
-//           mmtmpU1 = vmull_s16(ul_ch128[5], ul_ch128[5]);
-//           mmtmpU1 = vqshlq_s32(vqaddq_s32(mmtmpU1,vrev64q_s32(mmtmpU1)),-output_shift128);
-//           mmtmpU4 = vcombine_s16(vmovn_s32(mmtmpU0),vmovn_s32(mmtmpU1));
-
-//           ul_ch_mag128b[0] = vqdmulhq_s16(mmtmpU2,QAM_amp128b);
-//           ul_ch_mag128b[1] = vqdmulhq_s16(mmtmpU3,QAM_amp128b);
-//           ul_ch_mag128[0] = vqdmulhq_s16(mmtmpU2,QAM_amp128);
-//           ul_ch_mag128[1] = vqdmulhq_s16(mmtmpU3,QAM_amp128);
-//           ul_ch_mag128b[2] = vqdmulhq_s16(mmtmpU4,QAM_amp128b);
-//           ul_ch_mag128[2]  = vqdmulhq_s16(mmtmpU4,QAM_amp128);
-// #endif
-//       }
-
-// #else // SC-FDMA
-// just compute channel magnitude without scaling, this is done after equalization for SC-FDMA
 
 #if defined(__x86_64__) || defined(__i386__)
       mmtmpU0 = _mm_madd_epi16(ul_ch128[0],ul_ch128[0]);
@@ -1028,299 +938,6 @@ void ulsch_channel_compensation_NB_IoT(int32_t **rxdataF_ext,
 #endif
 }
 
-
-
-
-// #if defined(__x86_64__) || defined(__i386__)
-// __m128i QAM_amp128U_0,QAM_amp128bU_0,QAM_amp128U_1,QAM_amp128bU_1;
-// #endif
-
-// void ulsch_channel_compensation_alamouti_NB_IoT(int32_t **rxdataF_ext,                 // For Distributed Alamouti Combining
-//     int32_t **ul_ch_estimates_ext_0,
-//     int32_t **ul_ch_estimates_ext_1,
-//     int32_t **ul_ch_mag_0,
-//     int32_t **ul_ch_magb_0,
-//     int32_t **ul_ch_mag_1,
-//     int32_t **ul_ch_magb_1,
-//     int32_t **rxdataF_comp_0,
-//     int32_t **rxdataF_comp_1,
-//     NB_IoT_DL_FRAME_PARMS *frame_parms,
-//     uint8_t symbol,
-//     uint8_t Qm,
-//     uint16_t nb_rb,
-//     uint8_t output_shift)
-// {
-// #if defined(__x86_64__) || defined(__i386__)
-//   uint16_t rb;
-//   __m128i *ul_ch128_0,*ul_ch128_1,*ul_ch_mag128_0,*ul_ch_mag128_1,*ul_ch_mag128b_0,*ul_ch_mag128b_1,*rxdataF128,*rxdataF_comp128_0,*rxdataF_comp128_1;
-//   uint8_t aarx;//,symbol_mod;
-//   __m128i mmtmpU0,mmtmpU1,mmtmpU2,mmtmpU3;
-
-//   //  symbol_mod = (symbol>=(7-frame_parms->Ncp)) ? symbol-(7-frame_parms->Ncp) : symbol;
-
-//   //    printf("comp: symbol %d\n",symbol);
-
-
-//   if (Qm == 4) {
-//     QAM_amp128U_0 = _mm_set1_epi16(QAM16_n1);
-//     QAM_amp128U_1 = _mm_set1_epi16(QAM16_n1);
-//   } else if (Qm == 6) {
-//     QAM_amp128U_0  = _mm_set1_epi16(QAM64_n1);
-//     QAM_amp128bU_0 = _mm_set1_epi16(QAM64_n2);
-
-//     QAM_amp128U_1  = _mm_set1_epi16(QAM64_n1);
-//     QAM_amp128bU_1 = _mm_set1_epi16(QAM64_n2);
-//   }
-
-//   for (aarx=0; aarx<frame_parms->nb_antennas_rx; aarx++) {
-
-//     ul_ch128_0          = (__m128i *)&ul_ch_estimates_ext_0[aarx][symbol*frame_parms->N_RB_DL*12];
-//     ul_ch_mag128_0      = (__m128i *)&ul_ch_mag_0[aarx][symbol*frame_parms->N_RB_DL*12];
-//     ul_ch_mag128b_0     = (__m128i *)&ul_ch_magb_0[aarx][symbol*frame_parms->N_RB_DL*12];
-//     ul_ch128_1          = (__m128i *)&ul_ch_estimates_ext_1[aarx][symbol*frame_parms->N_RB_DL*12];
-//     ul_ch_mag128_1      = (__m128i *)&ul_ch_mag_1[aarx][symbol*frame_parms->N_RB_DL*12];
-//     ul_ch_mag128b_1     = (__m128i *)&ul_ch_magb_1[aarx][symbol*frame_parms->N_RB_DL*12];
-//     rxdataF128        = (__m128i *)&rxdataF_ext[aarx][symbol*frame_parms->N_RB_DL*12];
-//     rxdataF_comp128_0   = (__m128i *)&rxdataF_comp_0[aarx][symbol*frame_parms->N_RB_DL*12];
-//     rxdataF_comp128_1   = (__m128i *)&rxdataF_comp_1[aarx][symbol*frame_parms->N_RB_DL*12];
-
-
-//     for (rb=0; rb<nb_rb; rb++) {
-//       //      printf("comp: symbol %d rb %d\n",symbol,rb);
-//       if (Qm>2) {
-//         // get channel amplitude if not QPSK
-
-//         mmtmpU0 = _mm_madd_epi16(ul_ch128_0[0],ul_ch128_0[0]);
-
-//         mmtmpU0 = _mm_srai_epi32(mmtmpU0,output_shift);
-
-//         mmtmpU1 = _mm_madd_epi16(ul_ch128_0[1],ul_ch128_0[1]);
-//         mmtmpU1 = _mm_srai_epi32(mmtmpU1,output_shift);
-//         mmtmpU0 = _mm_packs_epi32(mmtmpU0,mmtmpU1);
-
-//         ul_ch_mag128_0[0] = _mm_unpacklo_epi16(mmtmpU0,mmtmpU0);
-//         ul_ch_mag128b_0[0] = ul_ch_mag128_0[0];
-//         ul_ch_mag128_0[0] = _mm_mulhi_epi16(ul_ch_mag128_0[0],QAM_amp128U_0);
-//         ul_ch_mag128_0[0] = _mm_slli_epi16(ul_ch_mag128_0[0],2); // 2 to compensate the scale channel estimate
-
-//         ul_ch_mag128_0[1] = _mm_unpackhi_epi16(mmtmpU0,mmtmpU0);
-//         ul_ch_mag128b_0[1] = ul_ch_mag128_0[1];
-//         ul_ch_mag128_0[1] = _mm_mulhi_epi16(ul_ch_mag128_0[1],QAM_amp128U_0);
-//         ul_ch_mag128_0[1] = _mm_slli_epi16(ul_ch_mag128_0[1],2); // 2 to scale compensate the scale channel estimate
-
-//         mmtmpU0 = _mm_madd_epi16(ul_ch128_0[2],ul_ch128_0[2]);
-//         mmtmpU0 = _mm_srai_epi32(mmtmpU0,output_shift);
-//         mmtmpU1 = _mm_packs_epi32(mmtmpU0,mmtmpU0);
-
-//         ul_ch_mag128_0[2] = _mm_unpacklo_epi16(mmtmpU1,mmtmpU1);
-//         ul_ch_mag128b_0[2] = ul_ch_mag128_0[2];
-
-//         ul_ch_mag128_0[2] = _mm_mulhi_epi16(ul_ch_mag128_0[2],QAM_amp128U_0);
-//         ul_ch_mag128_0[2] = _mm_slli_epi16(ul_ch_mag128_0[2],2);  //  2 to scale compensate the scale channel estimat
-
-
-//         ul_ch_mag128b_0[0] = _mm_mulhi_epi16(ul_ch_mag128b_0[0],QAM_amp128bU_0);
-//         ul_ch_mag128b_0[0] = _mm_slli_epi16(ul_ch_mag128b_0[0],2);  //  2 to scale compensate the scale channel estima
-
-
-//         ul_ch_mag128b_0[1] = _mm_mulhi_epi16(ul_ch_mag128b_0[1],QAM_amp128bU_0);
-//         ul_ch_mag128b_0[1] = _mm_slli_epi16(ul_ch_mag128b_0[1],2);   //  2 to scale compensate the scale channel estima
-
-//         ul_ch_mag128b_0[2] = _mm_mulhi_epi16(ul_ch_mag128b_0[2],QAM_amp128bU_0);
-//         ul_ch_mag128b_0[2] = _mm_slli_epi16(ul_ch_mag128b_0[2],2);   //  2 to scale compensate the scale channel estima
-
-
-
-
-//         mmtmpU0 = _mm_madd_epi16(ul_ch128_1[0],ul_ch128_1[0]);
-
-//         mmtmpU0 = _mm_srai_epi32(mmtmpU0,output_shift);
-
-//         mmtmpU1 = _mm_madd_epi16(ul_ch128_1[1],ul_ch128_1[1]);
-//         mmtmpU1 = _mm_srai_epi32(mmtmpU1,output_shift);
-//         mmtmpU0 = _mm_packs_epi32(mmtmpU0,mmtmpU1);
-
-//         ul_ch_mag128_1[0] = _mm_unpacklo_epi16(mmtmpU0,mmtmpU0);
-//         ul_ch_mag128b_1[0] = ul_ch_mag128_1[0];
-//         ul_ch_mag128_1[0] = _mm_mulhi_epi16(ul_ch_mag128_1[0],QAM_amp128U_1);
-//         ul_ch_mag128_1[0] = _mm_slli_epi16(ul_ch_mag128_1[0],2); // 2 to compensate the scale channel estimate
-
-//         ul_ch_mag128_1[1] = _mm_unpackhi_epi16(mmtmpU0,mmtmpU0);
-//         ul_ch_mag128b_1[1] = ul_ch_mag128_1[1];
-//         ul_ch_mag128_1[1] = _mm_mulhi_epi16(ul_ch_mag128_1[1],QAM_amp128U_1);
-//         ul_ch_mag128_1[1] = _mm_slli_epi16(ul_ch_mag128_1[1],2); // 2 to scale compensate the scale channel estimate
-
-//         mmtmpU0 = _mm_madd_epi16(ul_ch128_1[2],ul_ch128_1[2]);
-//         mmtmpU0 = _mm_srai_epi32(mmtmpU0,output_shift);
-//         mmtmpU1 = _mm_packs_epi32(mmtmpU0,mmtmpU0);
-
-//         ul_ch_mag128_1[2] = _mm_unpacklo_epi16(mmtmpU1,mmtmpU1);
-//         ul_ch_mag128b_1[2] = ul_ch_mag128_1[2];
-
-//         ul_ch_mag128_1[2] = _mm_mulhi_epi16(ul_ch_mag128_1[2],QAM_amp128U_0);
-//         ul_ch_mag128_1[2] = _mm_slli_epi16(ul_ch_mag128_1[2],2);  //  2 to scale compensate the scale channel estimat
-
-
-//         ul_ch_mag128b_1[0] = _mm_mulhi_epi16(ul_ch_mag128b_1[0],QAM_amp128bU_1);
-//         ul_ch_mag128b_1[0] = _mm_slli_epi16(ul_ch_mag128b_1[0],2);  //  2 to scale compensate the scale channel estima
-
-
-//         ul_ch_mag128b_1[1] = _mm_mulhi_epi16(ul_ch_mag128b_1[1],QAM_amp128bU_1);
-//         ul_ch_mag128b_1[1] = _mm_slli_epi16(ul_ch_mag128b_1[1],2);   //  2 to scale compensate the scale channel estima
-
-//         ul_ch_mag128b_1[2] = _mm_mulhi_epi16(ul_ch_mag128b_1[2],QAM_amp128bU_1);
-//         ul_ch_mag128b_1[2] = _mm_slli_epi16(ul_ch_mag128b_1[2],2);   //  2 to scale compensate the scale channel estima
-//       }
-
-
-//       /************************For Computing (y)*(h0*)********************************************/
-
-//       // multiply by conjugated channel
-//       mmtmpU0 = _mm_madd_epi16(ul_ch128_0[0],rxdataF128[0]);
-//       //  print_ints("re",&mmtmpU0);
-
-//       // mmtmpU0 contains real part of 4 consecutive outputs (32-bit)
-//       mmtmpU1 = _mm_shufflelo_epi16(ul_ch128_0[0],_MM_SHUFFLE(2,3,0,1));
-//       mmtmpU1 = _mm_shufflehi_epi16(mmtmpU1,_MM_SHUFFLE(2,3,0,1));
-//       mmtmpU1 = _mm_sign_epi16(mmtmpU1,*(__m128i*)&conjugate[0]);
-//       //  print_ints("im",&mmtmpU1);
-//       mmtmpU1 = _mm_madd_epi16(mmtmpU1,rxdataF128[0]);
-//       // mmtmpU1 contains imag part of 4 consecutive outputs (32-bit)
-//       mmtmpU0 = _mm_srai_epi32(mmtmpU0,output_shift);
-//       //  print_ints("re(shift)",&mmtmpU0);
-//       mmtmpU1 = _mm_srai_epi32(mmtmpU1,output_shift);
-//       //  print_ints("im(shift)",&mmtmpU1);
-//       mmtmpU2 = _mm_unpacklo_epi32(mmtmpU0,mmtmpU1);
-//       mmtmpU3 = _mm_unpackhi_epi32(mmtmpU0,mmtmpU1);
-//       //        print_ints("c0",&mmtmpU2);
-//       //  print_ints("c1",&mmtmpU3);
-//       rxdataF_comp128_0[0] = _mm_packs_epi32(mmtmpU2,mmtmpU3);
-//       //        print_shorts("rx:",rxdataF128[0]);
-//       //        print_shorts("ch:",ul_ch128_0[0]);
-//       //        print_shorts("pack:",rxdataF_comp128_0[0]);
-
-//       // multiply by conjugated channel
-//       mmtmpU0 = _mm_madd_epi16(ul_ch128_0[1],rxdataF128[1]);
-//       // mmtmpU0 contains real part of 4 consecutive outputs (32-bit)
-//       mmtmpU1 = _mm_shufflelo_epi16(ul_ch128_0[1],_MM_SHUFFLE(2,3,0,1));
-//       mmtmpU1 = _mm_shufflehi_epi16(mmtmpU1,_MM_SHUFFLE(2,3,0,1));
-//       mmtmpU1 = _mm_sign_epi16(mmtmpU1,*(__m128i*)conjugate);
-//       mmtmpU1 = _mm_madd_epi16(mmtmpU1,rxdataF128[1]);
-//       // mmtmpU1 contains imag part of 4 consecutive outputs (32-bit)
-//       mmtmpU0 = _mm_srai_epi32(mmtmpU0,output_shift);
-//       mmtmpU1 = _mm_srai_epi32(mmtmpU1,output_shift);
-//       mmtmpU2 = _mm_unpacklo_epi32(mmtmpU0,mmtmpU1);
-//       mmtmpU3 = _mm_unpackhi_epi32(mmtmpU0,mmtmpU1);
-
-//       rxdataF_comp128_0[1] = _mm_packs_epi32(mmtmpU2,mmtmpU3);
-//       //        print_shorts("rx:",rxdataF128[1]);
-//       //        print_shorts("ch:",ul_ch128_0[1]);
-//       //        print_shorts("pack:",rxdataF_comp128_0[1]);
-//       //       multiply by conjugated channel
-//       mmtmpU0 = _mm_madd_epi16(ul_ch128_0[2],rxdataF128[2]);
-//       // mmtmpU0 contains real part of 4 consecutive outputs (32-bit)
-//       mmtmpU1 = _mm_shufflelo_epi16(ul_ch128_0[2],_MM_SHUFFLE(2,3,0,1));
-//       mmtmpU1 = _mm_shufflehi_epi16(mmtmpU1,_MM_SHUFFLE(2,3,0,1));
-//       mmtmpU1 = _mm_sign_epi16(mmtmpU1,*(__m128i*)conjugate);
-//       mmtmpU1 = _mm_madd_epi16(mmtmpU1,rxdataF128[2]);
-//       // mmtmpU1 contains imag part of 4 consecutive outputs (32-bit)
-//       mmtmpU0 = _mm_srai_epi32(mmtmpU0,output_shift);
-//       mmtmpU1 = _mm_srai_epi32(mmtmpU1,output_shift);
-//       mmtmpU2 = _mm_unpacklo_epi32(mmtmpU0,mmtmpU1);
-//       mmtmpU3 = _mm_unpackhi_epi32(mmtmpU0,mmtmpU1);
-
-//       rxdataF_comp128_0[2] = _mm_packs_epi32(mmtmpU2,mmtmpU3);
-//       //        print_shorts("rx:",rxdataF128[2]);
-//       //        print_shorts("ch:",ul_ch128_0[2]);
-//       //        print_shorts("pack:",rxdataF_comp128_0[2]);
-
-
-
-
-//       /*************************For Computing (y*)*(h1)************************************/
-//       // multiply by conjugated signal
-//       mmtmpU0 = _mm_madd_epi16(ul_ch128_1[0],rxdataF128[0]);
-//       //  print_ints("re",&mmtmpU0);
-
-//       // mmtmpU0 contains real part of 4 consecutive outputs (32-bit)
-//       mmtmpU1 = _mm_shufflelo_epi16(rxdataF128[0],_MM_SHUFFLE(2,3,0,1));
-//       mmtmpU1 = _mm_shufflehi_epi16(mmtmpU1,_MM_SHUFFLE(2,3,0,1));
-//       mmtmpU1 = _mm_sign_epi16(mmtmpU1,*(__m128i*)&conjugate[0]);
-//       //  print_ints("im",&mmtmpU1);
-//       mmtmpU1 = _mm_madd_epi16(mmtmpU1,ul_ch128_1[0]);
-//       // mmtmpU1 contains imag part of 4 consecutive outputs (32-bit)
-//       mmtmpU0 = _mm_srai_epi32(mmtmpU0,output_shift);
-//       //  print_ints("re(shift)",&mmtmpU0);
-//       mmtmpU1 = _mm_srai_epi32(mmtmpU1,output_shift);
-//       //  print_ints("im(shift)",&mmtmpU1);
-//       mmtmpU2 = _mm_unpacklo_epi32(mmtmpU0,mmtmpU1);
-//       mmtmpU3 = _mm_unpackhi_epi32(mmtmpU0,mmtmpU1);
-//       //        print_ints("c0",&mmtmpU2);
-//       //  print_ints("c1",&mmtmpU3);
-//       rxdataF_comp128_1[0] = _mm_packs_epi32(mmtmpU2,mmtmpU3);
-//       //        print_shorts("rx:",rxdataF128[0]);
-//       //        print_shorts("ch_conjugate:",ul_ch128_1[0]);
-//       //        print_shorts("pack:",rxdataF_comp128_1[0]);
-
-
-//       // multiply by conjugated signal
-//       mmtmpU0 = _mm_madd_epi16(ul_ch128_1[1],rxdataF128[1]);
-//       // mmtmpU0 contains real part of 4 consecutive outputs (32-bit)
-//       mmtmpU1 = _mm_shufflelo_epi16(rxdataF128[1],_MM_SHUFFLE(2,3,0,1));
-//       mmtmpU1 = _mm_shufflehi_epi16(mmtmpU1,_MM_SHUFFLE(2,3,0,1));
-//       mmtmpU1 = _mm_sign_epi16(mmtmpU1,*(__m128i*)conjugate);
-//       mmtmpU1 = _mm_madd_epi16(mmtmpU1,ul_ch128_1[1]);
-//       // mmtmpU1 contains imag part of 4 consecutive outputs (32-bit)
-//       mmtmpU0 = _mm_srai_epi32(mmtmpU0,output_shift);
-//       mmtmpU1 = _mm_srai_epi32(mmtmpU1,output_shift);
-//       mmtmpU2 = _mm_unpacklo_epi32(mmtmpU0,mmtmpU1);
-//       mmtmpU3 = _mm_unpackhi_epi32(mmtmpU0,mmtmpU1);
-
-//       rxdataF_comp128_1[1] = _mm_packs_epi32(mmtmpU2,mmtmpU3);
-//       //        print_shorts("rx:",rxdataF128[1]);
-//       //        print_shorts("ch_conjugate:",ul_ch128_1[1]);
-//       //        print_shorts("pack:",rxdataF_comp128_1[1]);
-
-
-//       //       multiply by conjugated signal
-//       mmtmpU0 = _mm_madd_epi16(ul_ch128_1[2],rxdataF128[2]);
-//       // mmtmpU0 contains real part of 4 consecutive outputs (32-bit)
-//       mmtmpU1 = _mm_shufflelo_epi16(rxdataF128[2],_MM_SHUFFLE(2,3,0,1));
-//       mmtmpU1 = _mm_shufflehi_epi16(mmtmpU1,_MM_SHUFFLE(2,3,0,1));
-//       mmtmpU1 = _mm_sign_epi16(mmtmpU1,*(__m128i*)conjugate);
-//       mmtmpU1 = _mm_madd_epi16(mmtmpU1,ul_ch128_1[2]);
-//       // mmtmpU1 contains imag part of 4 consecutive outputs (32-bit)
-//       mmtmpU0 = _mm_srai_epi32(mmtmpU0,output_shift);
-//       mmtmpU1 = _mm_srai_epi32(mmtmpU1,output_shift);
-//       mmtmpU2 = _mm_unpacklo_epi32(mmtmpU0,mmtmpU1);
-//       mmtmpU3 = _mm_unpackhi_epi32(mmtmpU0,mmtmpU1);
-
-//       rxdataF_comp128_1[2] = _mm_packs_epi32(mmtmpU2,mmtmpU3);
-//       //        print_shorts("rx:",rxdataF128[2]);
-//       //        print_shorts("ch_conjugate:",ul_ch128_0[2]);
-//       //        print_shorts("pack:",rxdataF_comp128_1[2]);
-
-
-
-//       ul_ch128_0+=3;
-//       ul_ch_mag128_0+=3;
-//       ul_ch_mag128b_0+=3;
-//       ul_ch128_1+=3;
-//       ul_ch_mag128_1+=3;
-//       ul_ch_mag128b_1+=3;
-//       rxdataF128+=3;
-//       rxdataF_comp128_0+=3;
-//       rxdataF_comp128_1+=3;
-
-//     }
-//   }
-
-
-//   _mm_empty();
-//   _m_empty();
-// #endif
-// }
-
 void fill_rbs_zeros_NB_IoT(PHY_VARS_eNB *eNB, 
                             LTE_DL_FRAME_PARMS *frame_parms,
                             int32_t **rxdataF_comp,
@@ -1355,12 +972,6 @@ void fill_rbs_zeros_NB_IoT(PHY_VARS_eNB *eNB,
 
 }
 
-//for (m=0;m<12;m++)
-    //{ // 12 is the number of subcarriers per RB
- 
-  //printf("  rxdataF_comp32_%d = %d",m,rxdataF_comp32[m]); 
-      
-  //}
 
 void rotate_single_carrier_NB_IoT(PHY_VARS_eNB          *eNB, 
                                   LTE_DL_FRAME_PARMS    *frame_parms,
@@ -1430,10 +1041,6 @@ void rotate_single_carrier_NB_IoT(PHY_VARS_eNB          *eNB,
 
 }
 
-/*int ooo; 
-  for (ooo=0;ooo<12;ooo++){
-  printf("   rx_data_%d = %d    ",ooo,rxdataF_comp[0][symbol*frame_parms->N_RB_DL*12 + ooo]);
-  }*/
 
 void rotate_bpsk_NB_IoT(PHY_VARS_eNB *eNB, 
                         LTE_DL_FRAME_PARMS *frame_parms,
@@ -1462,81 +1069,7 @@ void rotate_bpsk_NB_IoT(PHY_VARS_eNB *eNB,
 
 } 
 
-/*
-void ulsch_alamouti_NB_IoT(NB_IoT_DL_FRAME_PARMS *frame_parms,// For Distributed Alamouti Receiver Combining
-                    int32_t **rxdataF_comp,
-                    int32_t **rxdataF_comp_0,
-                    int32_t **rxdataF_comp_1,
-                    int32_t **ul_ch_mag,
-                    int32_t **ul_ch_magb,
-                    int32_t **ul_ch_mag_0,
-                    int32_t **ul_ch_magb_0,
-                    int32_t **ul_ch_mag_1,
-                    int32_t **ul_ch_magb_1,
-                    uint8_t symbol,
-                    uint16_t nb_rb)
-{
 
-#if defined(__x86_64__) || defined(__i386__)
-  int16_t *rxF,*rxF0,*rxF1;
-  __m128i *ch_mag,*ch_magb,*ch_mag0,*ch_mag1,*ch_mag0b,*ch_mag1b;
-  uint8_t rb,re,aarx;
-  int32_t jj=(symbol*frame_parms->N_RB_DL*12);
-
-
-  for (aarx=0; aarx<frame_parms->nb_antennas_rx; aarx++) {
-
-    rxF      = (int16_t*)&rxdataF_comp[aarx][jj];
-    rxF0     = (int16_t*)&rxdataF_comp_0[aarx][jj];   // Contains (y)*(h0*)
-    rxF1     = (int16_t*)&rxdataF_comp_1[aarx][jj];   // Contains (y*)*(h1)
-    ch_mag   = (__m128i *)&ul_ch_mag[aarx][jj];
-    ch_mag0 = (__m128i *)&ul_ch_mag_0[aarx][jj];
-    ch_mag1 = (__m128i *)&ul_ch_mag_1[aarx][jj];
-    ch_magb = (__m128i *)&ul_ch_magb[aarx][jj];
-    ch_mag0b = (__m128i *)&ul_ch_magb_0[aarx][jj];
-    ch_mag1b = (__m128i *)&ul_ch_magb_1[aarx][jj];
-
-    for (rb=0; rb<nb_rb; rb++) {
-
-      for (re=0; re<12; re+=2) {
-
-        // Alamouti RX combining
-
-        rxF[0] = rxF0[0] + rxF1[2];                   // re((y0)*(h0*))+ re((y1*)*(h1)) = re(x0)
-        rxF[1] = rxF0[1] + rxF1[3];                   // im((y0)*(h0*))+ im((y1*)*(h1)) = im(x0)
-
-        rxF[2] = rxF0[2] - rxF1[0];                   // re((y1)*(h0*))- re((y0*)*(h1)) = re(x1)
-        rxF[3] = rxF0[3] - rxF1[1];                   // im((y1)*(h0*))- im((y0*)*(h1)) = im(x1)
-
-        rxF+=4;
-        rxF0+=4;
-        rxF1+=4;
-      }
-
-      // compute levels for 16QAM or 64 QAM llr unit
-      ch_mag[0] = _mm_adds_epi16(ch_mag0[0],ch_mag1[0]);
-      ch_mag[1] = _mm_adds_epi16(ch_mag0[1],ch_mag1[1]);
-      ch_mag[2] = _mm_adds_epi16(ch_mag0[2],ch_mag1[2]);
-      ch_magb[0] = _mm_adds_epi16(ch_mag0b[0],ch_mag1b[0]);
-      ch_magb[1] = _mm_adds_epi16(ch_mag0b[1],ch_mag1b[1]);
-      ch_magb[2] = _mm_adds_epi16(ch_mag0b[2],ch_mag1b[2]);
-
-      ch_mag+=3;
-      ch_mag0+=3;
-      ch_mag1+=3;
-      ch_magb+=3;
-      ch_mag0b+=3;
-      ch_mag1b+=3;
-    }
-  }
-
-  _mm_empty();
-  _m_empty();
-
-#endif
-}
-
-*/
 
 
 
@@ -1628,7 +1161,6 @@ uint8_t rx_ulsch_Gen_NB_IoT(PHY_VARS_eNB            *eNB,
       LTE_eNB_PUSCH       *pusch_vars   =  eNB->pusch_vars[UE_id];
       LTE_eNB_COMMON      *common_vars  =  &eNB->common_vars;
       //NB_IoT_DL_FRAME_PARMS  *frame_parms  =  &eNB->frame_parms;
-      // uint8_t    Nsc_RU = eNB->ulsch_NB_IoT[UE_id]->harq_process->N_sc_RU; // Vincent: number of sc 1,3,6,12 
       LTE_DL_FRAME_PARMS     *fp  =  &eNB->frame_parms; 
       // NB_IoT_eNB_NULSCH_t    **ulsch_NB_IoT   =  &eNB->ulsch_NB_IoT[0];//[0][0]; 
       NB_IoT_eNB_NULSCH_t     *ulsch_NB_IoT     = eNB->ulsch_NB_IoT[0];
@@ -1636,14 +1168,12 @@ uint8_t rx_ulsch_Gen_NB_IoT(PHY_VARS_eNB            *eNB,
 
   if (ulsch_NB_IoT->Msg3_active  == 1)    
   {    
-      uint8_t      npusch_format         = ulsch_NB_IoT->npusch_format;     /// 0 or 1 -> format 1 or format 2         
-      uint8_t      subcarrier_spacing    = ulsch_harq->subcarrier_spacing;  // can be set as fix value //values are OK // 0 (3.75 KHz) or 1 (15 KHz)
-      uint16_t     I_sc                  = ulsch_harq->subcarrier_indication;  // Isc =0->18 , or 0->47 // format 2, 0->3 or 0->7
-      uint16_t     I_mcs                 = ulsch_harq->mcs;
+      uint8_t      npusch_format         = ulsch_NB_IoT->npusch_format;           /// 0 or 1 -> format 1 or format 2         
+      uint8_t      subcarrier_spacing    = ulsch_harq->subcarrier_spacing;        // can be set as fix value //values are OK // 0 (3.75 KHz) or 1 (15 KHz)
+      uint16_t     I_sc                  = ulsch_harq->subcarrier_indication;     // Isc =0->18 , or 0->47 // format 2, 0->3 or 0->7
+      uint16_t     I_mcs                 = ulsch_harq->mcs;                       // values 0->10
       uint16_t     Nsc_RU                = get_UL_N_ru_NB_IoT(I_mcs,ulsch_harq->resource_assignment,ulsch_NB_IoT->Msg3_flag);
-
-      uint16_t     N_UL_slots            = get_UL_slots_per_RU_NB_IoT(subcarrier_spacing,I_sc,npusch_format)*Nsc_RU; // N_UL_slots per word
-
+      uint16_t     N_UL_slots            = get_UL_slots_per_RU_NB_IoT(subcarrier_spacing,I_sc,npusch_format)*Nsc_RU;           // N_UL_slots per word
       uint16_t     N_SF_per_word         = N_UL_slots/2;
 
       if(ulsch_NB_IoT->flag_vars == 1)
@@ -1654,32 +1184,25 @@ uint8_t rx_ulsch_Gen_NB_IoT(PHY_VARS_eNB            *eNB,
         ulsch_NB_IoT->flag_vars = 0;
       }
       
-      
-
       if(ulsch_NB_IoT->counter_sf == N_SF_per_word)                // initialization for scrambling
       {
           ulsch_NB_IoT->Msg3_subframe   =   rx_subframe;      // first received subframe 
           ulsch_NB_IoT->Msg3_frame      =   rx_frame;         // first received frame
       }
 
+       uint8_t     pilot_pos1, pilot_pos2;                                      // holds for npusch format 1, and 15 kHz subcarrier bandwidth
       int16_t      *llrp, *llrp2;
       uint32_t     l,ii=0;
+      uint32_t     rnti_tmp                   = ulsch_NB_IoT->rnti;                   
+      uint16_t     ul_sc_start                = get_UL_sc_index_start_NB_IoT(subcarrier_spacing,I_sc,npusch_format);
+      uint8_t      Qm                         = get_Qm_UL_NB_IoT(I_mcs,Nsc_RU,I_sc,ulsch_NB_IoT->Msg3_flag);
+      uint8_t      pilot_pos1_format1_15k     = 3, pilot_pos2_format1_15k = 10;      // holds for npusch format 1, and 15 kHz subcarrier bandwidth
+      uint8_t      pilot_pos1_format2_15k     = 2, pilot_pos2_format2_15k = 9;       // holds for npusch format 2, and 15 kHz subcarrier bandwidth 
+      uint8_t      pilot_pos1_format1_3_75k   = 4, pilot_pos2_format1_3_75k = 11;    // holds for npusch format 1, and 3.75 kHz subcarrier bandwidth
+      uint8_t      pilot_pos1_format2_3_75k   = 0,pilot_pos2_format2_3_75k = 7;      // holds for npusch format 2, and 3.75 kHz subcarrier bandwidth 
+      uint8_t      pilots_slot                =0;        
 
-      uint32_t     rnti_tmp              = ulsch_NB_IoT->rnti;               
-          
-      uint16_t     ul_sc_start           = get_UL_sc_index_start_NB_IoT(subcarrier_spacing,I_sc,npusch_format);
-
-      uint8_t      Qm                    = get_Qm_UL_NB_IoT(I_mcs,Nsc_RU,I_sc,ulsch_NB_IoT->Msg3_flag);
-   
-      uint8_t      pilot_pos1_format1_15k = 3, pilot_pos2_format1_15k = 10; // holds for npusch format 1, and 15 kHz subcarrier bandwidth
-      uint8_t      pilot_pos1_format2_15k = 2, pilot_pos2_format2_15k = 9; // holds for npusch format 2, and 15 kHz subcarrier bandwidth 
-      uint8_t      pilot_pos1_format1_3_75k = 4, pilot_pos2_format1_3_75k = 11; // holds for npusch format 1, and 3.75 kHz subcarrier bandwidth
-      uint8_t      pilot_pos1_format2_3_75k = 0,pilot_pos2_format2_3_75k = 7; // holds for npusch format 2, and 3.75 kHz subcarrier bandwidth 
-
-      uint8_t      pilot_pos1, pilot_pos2; // holds for npusch format 1, and 15 kHz subcarrier bandwidth
-      uint8_t      pilots_slot=0;        
-
-
+      //void get_pilots_position(uint8_t npusch_format,uint8_t  subcarrier_spacing,pilot_pos1,pilot_pos2)
       switch(npusch_format + subcarrier_spacing*2)
       {
         case 0:    // data
@@ -1711,7 +1234,8 @@ uint8_t rx_ulsch_Gen_NB_IoT(PHY_VARS_eNB            *eNB,
         break;
       }
 
-      for (l=0; l<fp->symbols_per_tti; l++) { 
+      for (l=0; l<fp->symbols_per_tti; l++)
+      { 
             
              ulsch_extract_rbs_single_NB_IoT(common_vars->rxdataF[eNB_id],
                                              pusch_vars->rxdataF_ext[eNB_id],
@@ -1739,70 +1263,47 @@ uint8_t rx_ulsch_Gen_NB_IoT(PHY_VARS_eNB            *eNB,
                                             l%(fp->symbols_per_tti/2),        //symbol within slot 
                                             l/(fp->symbols_per_tti/2), 
                                             ulsch_NB_IoT->counter_sf,         //counter_msg, 
-                                            npusch_format,             // proc->flag_msg5, ********   // check why this is needed ?? the function is called only for format 2 ?!!!!              // =1
+                                            npusch_format,                    // proc->flag_msg5, 
                                             rx_subframe,
                                             Qm,                               // =1
                                             ul_sc_start,                       // = 0   
                                             fp); 
             }
       }
-
-
+      /////////////////////////////////////// Equalization ///////////////////////////////////
       for (l=0; l<fp->symbols_per_tti; l++)
       { 
-              /// Equalization
               ul_chequal_tmp_NB_IoT(pusch_vars->rxdataF_ext[eNB_id],
                                     pusch_vars->rxdataF_comp[eNB_id],
                                     pusch_vars->drs_ch_estimates[eNB_id],
-                                    l%(fp->symbols_per_tti/2), //symbol within slot 
+                                    l%(fp->symbols_per_tti/2),               //symbol within slot 
                                     l/(fp->symbols_per_tti/2),
                                     fp);
-      } 
+      }
+      ////////////////////////////////////// End Equalization /////////////////////////////////
+
+      ///////////////////////////////////////// Rotation       ////////////////////////////////
+      for (l=0; l<fp->symbols_per_tti; l++)
+      { 
+           /// In case of 1 subcarrier: BPSK and QPSK should be rotated by pi/2 and pi/4, respectively 
+            rotate_single_carrier_NB_IoT(eNB, 
+                                         fp, 
+                                         pusch_vars->rxdataF_comp[eNB_id], 
+                                         UE_id, // UE ID
+                                         l, 
+                                         ulsch_NB_IoT->counter_sf,   //counter_msg,
+                                         ul_sc_start,
+                                         Qm,
+                                         npusch_format); // or data
+      }
+      //////////////////////////////////////////End rotation ///////////////////////////////////
 
       if(npusch_format == 0)
-      {
-            for (l=0; l<fp->symbols_per_tti; l++)
-            { 
-
-                 /// In case of 1 subcarrier: BPSK and QPSK should be rotated by pi/2 and pi/4, respectively 
-                  rotate_single_carrier_NB_IoT(eNB, 
-                                               fp, 
-                                               pusch_vars->rxdataF_comp[eNB_id], 
-                                               UE_id, // UE ID
-                                               l, 
-                                               ulsch_NB_IoT->counter_sf,   //counter_msg,
-                                               ul_sc_start,
-                                               Qm,
-                                               0); // or data
-            }
-
+      { 
+             llrp = (int16_t*)&pusch_vars->llr[0+ (N_SF_per_word-ulsch_NB_IoT->counter_sf)*24];  /// 24= 12 symbols/SF * 2 // since Real and im
       } else {
-
-            for (l=0; l<fp->symbols_per_tti; l++)
-            {
-                rotate_single_carrier_NB_IoT(eNB, 
-                                             fp, 
-                                             pusch_vars->rxdataF_comp[eNB_id], 
-                                             eNB_id, // eNB_ID ID
-                                             l, 
-                                             ulsch_NB_IoT->counter_sf, //counter_msg, 
-                                             ul_sc_start,  // carrier 0  
-                                             Qm, // Qm
-                                             1); // for ACK 
-            }
-
+              llrp = (int16_t*)&pusch_vars->llr[0+ (2-ulsch_NB_IoT->counter_sf)*16]; // 16 = 8 symbols/SF * 2 // since real and im
       }
-
-    //////// create a function for this part 
-
-     if(npusch_format == 0)
-     { 
-            llrp = (int16_t*)&pusch_vars->llr[0+ (8-ulsch_NB_IoT->counter_sf)*24];
-
-     } else {
-
-            llrp = (int16_t*)&pusch_vars->llr[0+ (2-ulsch_NB_IoT->counter_sf)*16]; 
-     }
 
       for (l=0; l<fp->symbols_per_tti; l++)
       {
@@ -1824,9 +1325,8 @@ uint8_t rx_ulsch_Gen_NB_IoT(PHY_VARS_eNB            *eNB,
                                 UE_id, // UE ID
                                 ul_sc_start,
                                 Nsc_RU,
-                                &llrp[ii*2]); //// !!! Pensez à créer un buffer de longueur 8 subframes 
+                                &llrp[ii*2]); 
           ii++;
-  
       }
       
       /////////////////////////////////////////////////  NPUSH DECOD //////////////////////////////////////
@@ -1934,7 +1434,7 @@ uint8_t rx_ulsch_Gen_NB_IoT(PHY_VARS_eNB            *eNB,
               }
                     ///////////////////////////////// desin  multi-tone
                               //if multi-RU
-
+/// deinterleaving
 
               j  = 0;
               j2 = 0;
@@ -1950,7 +1450,8 @@ uint8_t rx_ulsch_Gen_NB_IoT(PHY_VARS_eNB            *eNB,
                    ep[6] = yp[6];
                    ep[7] = yp[7];
               }
-
+/////
+              /// decoding
               r=0;
               Kr=0;
               unsigned int r_offset=0,Kr_bytes,iind;
@@ -2064,10 +1565,9 @@ uint8_t rx_ulsch_Gen_NB_IoT(PHY_VARS_eNB            *eNB,
                            &eNB->ulsch_tc_ext_stats,
                            &eNB->ulsch_tc_intl1_stats,
                            &eNB->ulsch_tc_intl2_stats); 
-
+              ///////////////////end decoding //////////////////////////////////////////////
                   if (ret != (1+ulsch_NB_IoT->max_turbo_iterations)) 
-                 {   
-                      //printf("\n                      in last cdn \n");
+                  {   
                       if (r<ulsch_harq->Cminus)
                       {
                           Kr = ulsch_harq->Kminus;
@@ -2090,30 +1590,27 @@ uint8_t rx_ulsch_Gen_NB_IoT(PHY_VARS_eNB            *eNB,
                       
                       fill_crc_indication_NB_IoT(eNB,0,rx_frame,rx_subframe,0); // indicate ACK to MAC
                       //fill_rx_indication_NB_IoT(eNB,i,frame,subframe);  // indicate SDU to MAC
-                      fill_rx_indication_NB_IoT(eNB,proc,npusch_format);
+                      fill_rx_indication_NB_IoT(eNB,proc,npusch_format,ulsch_NB_IoT->Msg3_flag);
 
                   } else {
                       
                       fill_crc_indication_NB_IoT(eNB,0,rx_frame,rx_subframe,1);   // indicate NAK to MAC
                       //fill_rx_indication_NB_IoT(eNB,i,frame,subframe);      // indicate SDU to MAC 
-                      fill_rx_indication_NB_IoT(eNB,proc,npusch_format);
+                      fill_rx_indication_NB_IoT(eNB,proc,npusch_format,ulsch_NB_IoT->Msg3_flag);
                       break;
                   }
-                } //  r loop end
+              }////////////  r loop end  ////////////
 
-              uint8_t *msg3 = &eNB->msg3_pdu[0];
+         //     uint8_t *msg3 = &eNB->msg3_pdu[0];
              // printf("pdu[0] = %d \n",ulsch_harq->b[0]);
               
 
-              int m =0;
+           /*   int m =0;
               for(m=0; m<6;m++)
               { 
 
                     msg3[m]=ulsch_harq->b[2+m];
-              }
-
-              proc->flag_DCI_msg4 =1 ;
-              proc->counter_DCI_msg4=4;
+              }*/
 
           } else {   //////////////////////////////////// ACK //////////////////////////////
 
@@ -2146,14 +1643,14 @@ uint8_t rx_ulsch_Gen_NB_IoT(PHY_VARS_eNB            *eNB,
                       printf("  decoded msg5: ACK  ");
                       fill_crc_indication_NB_IoT(eNB,0,rx_frame,rx_subframe,0); // indicate ACK to MAC
                       //fill_rx_indication_NB_IoT(eNB,i,frame,subframe);  // indicate SDU to MAC
-                      fill_rx_indication_NB_IoT(eNB,proc,npusch_format);
+                      fill_rx_indication_NB_IoT(eNB,proc,npusch_format,ulsch_NB_IoT->Msg3_flag);
 
                 } else if (counter_ack<8) { //hard decision
 
                       printf("  decoded msg5: NACK  "); 
                       fill_crc_indication_NB_IoT(eNB,0,rx_frame,rx_subframe,1);   // indicate NAK to MAC
                       //fill_rx_indication_NB_IoT(eNB,i,frame,subframe);      // indicate SDU to MAC 
-                      fill_rx_indication_NB_IoT(eNB,proc,npusch_format);
+                      fill_rx_indication_NB_IoT(eNB,proc,npusch_format,ulsch_NB_IoT->Msg3_flag);
 
                 } else  {  //when equality (8 bits 0 vs 8 bits 1), soft decision
                
@@ -2169,14 +1666,14 @@ uint8_t rx_ulsch_Gen_NB_IoT(PHY_VARS_eNB            *eNB,
                         printf("  decoded msg5 (soft): ACK  ");
                         fill_crc_indication_NB_IoT(eNB,0,rx_frame,rx_subframe,0); // indicate ACK to MAC
                         //fill_rx_indication_NB_IoT(eNB,i,frame,subframe);  // indicate SDU to MAC
-                        fill_rx_indication_NB_IoT(eNB,proc,npusch_format);
+                        fill_rx_indication_NB_IoT(eNB,proc,npusch_format,ulsch_NB_IoT->Msg3_flag);
 
                       } else {
 
                         printf("  decoded msg5 (soft): NACK "); 
                         fill_crc_indication_NB_IoT(eNB,0,rx_frame,rx_subframe,1);   // indicate NAK to MAC
                         //fill_rx_indication_NB_IoT(eNB,i,frame,subframe);      // indicate SDU to MAC 
-                        fill_rx_indication_NB_IoT(eNB,proc,npusch_format); 
+                        fill_rx_indication_NB_IoT(eNB,proc,npusch_format,ulsch_NB_IoT->Msg3_flag); 
                       }
                 }
                 printf("\n\n\n");
@@ -2187,8 +1684,8 @@ uint8_t rx_ulsch_Gen_NB_IoT(PHY_VARS_eNB            *eNB,
 
           if(ulsch_NB_IoT->Msg3_flag == 1)
           {
-              ulsch_harq->rvidx =  ulsch_NB_IoT->counter_repetitions % 2;        // rvidx toogle for new code word
-          }// else {}       for other npusch cases ??
+              ulsch_harq->rvidx =  (ulsch_NB_IoT->counter_repetitions % 2)*2;        // rvidx toogle for new code word
+          } // else {}       for other npusch cases ??
 
           if( (ulsch_NB_IoT->counter_sf == 1) && (ulsch_NB_IoT->counter_repetitions == 0) )
           {

@@ -53,7 +53,7 @@ uint32_t rx_nprach_NB_IoT(PHY_VARS_eNB *eNB,int frame, uint8_t subframe, uint16_
 void npusch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc);
 
 ////////////////// NB-IoT testing ////////////////////
-void fill_rx_indication_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,uint8_t data_or_control);
+void fill_rx_indication_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,uint8_t data_or_control, uint8_t msg3_flag);
 
 #endif
 

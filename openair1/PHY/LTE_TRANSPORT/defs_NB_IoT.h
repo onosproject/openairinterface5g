@@ -558,9 +558,9 @@ typedef struct {
   /// Pointer to the payload
   uint8_t               *b;
   /// Pointers to transport block segments
-  uint8_t *c[MAX_NUM_ULSCH_SEGMENTS_NB_IoT];
+  uint8_t               *c[MAX_NUM_ULSCH_SEGMENTS_NB_IoT];
   /// RTC values for each segment (for definition see 36-212 V8.6 2009-03, p.15)
-  uint32_t RTC[MAX_NUM_ULSCH_SEGMENTS_NB_IoT];
+  uint32_t              RTC[MAX_NUM_ULSCH_SEGMENTS_NB_IoT];
   /// Current Number of Symbols
   uint8_t               Nsymb_pusch;
   /// Index of current HARQ round for this ULSCH
