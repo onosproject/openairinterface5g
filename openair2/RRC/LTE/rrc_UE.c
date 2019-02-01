@@ -536,7 +536,7 @@ mui_t rrc_mui=0;
 
 #if !(defined(ENABLE_ITTI) && defined(ENABLE_USE_MME))
 /* NAS Attach request with IMSI */
-static const char const nas_attach_req_imsi[] = {
+static const char nas_attach_req_imsi[] = {
   0x07, 0x41,
   /* EPS Mobile identity = IMSI */
   0x71, 0x08, 0x29, 0x80, 0x43, 0x21, 0x43, 0x65, 0x87,
