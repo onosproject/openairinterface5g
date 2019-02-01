@@ -1294,9 +1294,8 @@ extern "C" {
       samples/=10000;
       LOG_I(PHY,"RF board max packet size %u, size for 100µs jitter %d \n", max, samples);
 
-      if ( samples < max ) {
+      if ( samples < max )
         stream_args_rx.args["spp"] = str(boost::format("%d") % samples );
-      }
 
       LOG_I(PHY,"rx_max_num_samps %zu\n",
             s->usrp->get_rx_stream(stream_args_rx)->get_max_num_samps());

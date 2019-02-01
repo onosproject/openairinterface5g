@@ -62,6 +62,7 @@ extern int otg_enabled;
 
 #include "assertions.h"
 
+#ifdef PDCP_USE_NETLINK
 #include <sys/socket.h>
 #include <linux/netlink.h>
 #include "NETWORK_DRIVER/UE_IP/constant.h"
@@ -84,6 +85,7 @@ unsigned char pdcp_read_state_g = 0;
 extern uint8_t nfapi_mode;
 #ifdef UESIM_EXPANSION
 extern uint16_t inst_pdcp_list[NUMBER_OF_UE_MAX];
+#endif
 #endif
 
 extern Packet_OTG_List_t *otg_pdcp_buffer;

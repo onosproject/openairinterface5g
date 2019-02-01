@@ -610,7 +610,7 @@ void UL_indication(UL_IND_t *UL_info)
 
 IF_Module_t *IF_Module_init(int Mod_id){
 
-  AssertFatal(Mod_id==0,"Asking for Module %d > %d\n",Mod_id,MAX_IF_MODULES);
+  AssertFatal(Mod_id<MAX_MODULES,"Asking for Module %d > %d\n",Mod_id,MAX_IF_MODULES);
 
   LOG_D(PHY,"Installing callbacks for IF_Module - UL_indication\n");
 
@@ -629,7 +629,7 @@ IF_Module_t *IF_Module_init(int Mod_id){
 
 void IF_Module_kill(int Mod_id) {
 
-  AssertFatal(Mod_id==0,"Asking for Module %d > %d\n",Mod_id,MAX_IF_MODULES);
+  AssertFatal(Mod_id>MAX_MODULES,"Asking for Module %d > %d\n",Mod_id,MAX_IF_MODULES);
   if (if_inst[Mod_id]!=NULL) free(if_inst[Mod_id]);
 
 }

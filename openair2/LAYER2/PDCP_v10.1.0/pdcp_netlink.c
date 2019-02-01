@@ -263,7 +263,7 @@ void *pdcp_netlink_thread_fct(void *arg)
             if (pdcp_netlink_nb_element_enb[module_id]
                 > PDCP_QUEUE_NB_ELEMENTS) {
               LOG_E(PDCP, "[NETLINK_THREAD][Mod %02x] We reached maximum number of elements in eNB pdcp queue (%d)\n",
-                    module_id, pdcp_netlink_nb_element_enb[module_id]);
+                    module_id, pdcp_netlink_nb_element_enb);
             }
 
             LOG_I(PDCP,"[NETLINK_THREAD] IP->PDCP : En-queueing packet for eNB module id %d\n", module_id);
@@ -276,7 +276,7 @@ void *pdcp_netlink_thread_fct(void *arg)
             if (pdcp_netlink_nb_element_ue[module_id]
                 > PDCP_QUEUE_NB_ELEMENTS) {
               LOG_E(PDCP, "[NETLINK_THREAD][Mod %02x] We reached maximum number of elements in UE pdcp queue (%d)\n",
-                    module_id, pdcp_netlink_nb_element_ue[module_id]);
+                    module_id, pdcp_netlink_nb_element_ue);
             }
 
             LOG_I(PDCP,"[NETLINK_THREAD] IP->PDCP : En-queueing packet for UE module id  %d\n", module_id);
