@@ -479,7 +479,7 @@ add_dependencies(X2AP_ENB rrc_flag x2_flag)
 add_list1_option(NB_ANTENNAS_RX "2" "Number of antennas in reception" "1" "2" "4")
 add_list1_option(NB_ANTENNAS_TX "4" "Number of antennas in transmission" "1" "2" "4")
 
-add_list2_option(RF_BOARD "EXMIMO" "RF head type" "None" "EXMIMO" "OAI_USRP" "OAI_BLADERF" "CPRIGW" "OAI_LMSSDR")
+add_list2_option(RF_BOARD "EXMIMO" "RF head type" "None" "EXMIMO" "OAI_USRP" "OAI_BLADERF" "CPRIGW" "OAI_LMSSDR" "OAI_SIMU")
 if (NOT ${RF_BOARD} STREQUAL "None")
    add_definitions(-DMANAGED_RF=1)
 endif()
@@ -1673,6 +1673,9 @@ if(NAS_UE)
     ${libnas_ue_esm_sap_OBJS}
   )
   add_dependencies(LIB_NAS_UE rrc_flag)
+  if (NOT ${NOS1})
+  target_compile_definitions(LIB_NAS_UE PUBLIC -DPDCP_USE_NETLINK)
+  endif()
   set(NAS_UE_LIB LIB_NAS_UE)
 
   include_directories(${NAS_SRC}UE)
