@@ -48,7 +48,7 @@ int32_t lte_ul_channel_estimation(LTE_DL_FRAME_PARMS *frame_parms,
 				  int interpolate,
 				  uint16_t rnti) {
 
-
+	//int subframe = proc->subframe_rx;
 
   /*  int32_t **ul_ch_estimates=pusch_vars->drs_ch_estimates;
   int32_t **ul_ch_estimates_time=  pusch_vars->drs_ch_estimates_time;
@@ -293,7 +293,7 @@ int32_t lte_ul_channel_estimation(LTE_DL_FRAME_PARMS *frame_parms,
 #if T_TRACER
       if (aa == 0)
 	T(T_ENB_PHY_UL_CHANNEL_ESTIMATE, T_INT(0), T_INT(rnti),
-	  T_INT(frame_rx), T_INT(subframe),
+	  T_INT(frame_rx), T_INT(subframe_rx),
 	  T_INT(0), T_BUFFER(ul_ch_estimates_time[0], 512  * 4));
 #endif
     }

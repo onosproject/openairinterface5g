@@ -74,6 +74,8 @@ extern void add_subframe(uint16_t *frameP, uint16_t *subframeP, int offset);
 extern uint16_t sfnsf_add_subframe(uint16_t frameP, uint16_t subframeP, int offset);
 extern int oai_nfapi_ul_config_req(nfapi_ul_config_request_t *ul_config_req);
 
+extern uint8_t nfapi_mode;
+
 // This table holds the allowable PRB sizes for ULSCH transmissions
 uint8_t rb_table[34] = {
   1, 2, 3, 4, 5, 6, 8, 9, 10, 12, 15, 16, 18, 20, 24, 25, 27, 30, 32,
@@ -649,7 +651,11 @@ rx_sdu(const module_id_t enb_mod_idP,
                 "[eNB %d] CC_id %d Frame %d : ULSCH -> UL-DCCH, received %d bytes form UE %d on LCID %d \n",
                 enb_mod_idP, CC_idP, frameP, rx_lengths[i], UE_id,
                 rx_lcids[i]);
-          mac_rlc_data_ind(enb_mod_idP, current_rnti, enb_mod_idP, frameP, ENB_FLAG_YES, MBMS_FLAG_NO, rx_lcids[i], (char *) payload_ptr, rx_lengths[i], 1, NULL);  //(unsigned int*)crc_status);
+          mac_rlc_data_ind(enb_mod_idP, current_rnti, enb_mod_idP, frameP, ENB_FLAG_YES, MBMS_FLAG_NO, rx_lcids[i], (char *) payload_ptr, rx_lengths[i], 1, NULL
+						#ifdef Rel14
+        		  	  	  ,SL_RESET_RLC_FLAG_NO
+						#endif
+          	  	  	  	  );  //(unsigned int*)crc_status);
           UE_list->eNB_UE_stats[CC_idP][UE_id].num_pdu_rx[rx_lcids[i]] += 1;
           UE_list->eNB_UE_stats[CC_idP][UE_id].num_bytes_rx[rx_lcids[i]] += rx_lengths[i];
         }
@@ -708,7 +714,11 @@ rx_sdu(const module_id_t enb_mod_idP,
             }
 
             if ((rx_lengths[i] < SCH_PAYLOAD_SIZE_MAX) && (rx_lengths[i] > 0)) {  // MAX SIZE OF transport block
-              mac_rlc_data_ind(enb_mod_idP, current_rnti, enb_mod_idP, frameP, ENB_FLAG_YES, MBMS_FLAG_NO, rx_lcids[i], (char *) payload_ptr, rx_lengths[i], 1, NULL);
+              mac_rlc_data_ind(enb_mod_idP, current_rnti, enb_mod_idP, frameP, ENB_FLAG_YES, MBMS_FLAG_NO, rx_lcids[i], (char *) payload_ptr, rx_lengths[i], 1, NULL
+								#ifdef Rel14
+        		  	  	  	  	  ,SL_RESET_RLC_FLAG_NO
+								#endif
+              	  	  	  	  );
               UE_list->eNB_UE_stats[CC_idP][UE_id].num_pdu_rx[rx_lcids[i]] += 1;
               UE_list->eNB_UE_stats[CC_idP][UE_id].num_bytes_rx[rx_lcids[i]] += rx_lengths[i];
               //clear uplane_inactivity_timer

@@ -957,16 +957,7 @@ pdcp_run (
 )
 //-----------------------------------------------------------------------------
 {
-  
-	// Not sure if we need this
-#if defined(ENABLE_ITTI)
-  MessageDef   *msg_p;
-  const char   *msg_name;
-  instance_t    instance;
-  int           result;
-  protocol_ctxt_t  ctxt;
-#endif
-  
+
   if (ctxt_pP->enb_flag) {
     start_meas(&eNB_pdcp_stats[ctxt_pP->module_id].pdcp_run);
   } else {

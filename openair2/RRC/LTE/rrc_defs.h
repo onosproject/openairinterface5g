@@ -769,7 +769,7 @@ typedef struct UE_RRC_INST_s {
   LTE_SystemInformationBlockType21_r14_t *sib21[NB_CNX_UE];
 
   LTE_SBCCH_SL_BCH_MessageType_t   SL_mib_tx;
-  LTE_SBCCH_SL_BCH_MessageType_t   mib_sl[NB_CNX_UE];
+  LTE_SBCCH_SL_BCH_MessageType_t   *mib_sl[NB_CNX_UE];
   uint8_t                           SL_MIB[5];
   /// Preconfiguration for Sidelink
   struct LTE_SL_Preconfiguration_r12 *SL_Preconfiguration[NB_CNX_UE];

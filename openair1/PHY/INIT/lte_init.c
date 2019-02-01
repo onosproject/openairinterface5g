@@ -41,6 +41,7 @@ extern int32_t get_uldl_offset(int eutra_bandP);
 extern uint16_t prach_root_sequence_map0_3[838];
 extern uint16_t prach_root_sequence_map4[138];
 extern uint8_t nfapi_mode;
+uint8_t dmrs1_tab[8] = {0,2,3,4,6,8,9,10};
 
 
 int N_RB_DL_array[6] = {6,15,25,50,75,100};
@@ -723,7 +724,8 @@ void phy_config_dedicated_scell_eNB(uint8_t Mod_id,
 }
 */
 
-void  phy_config_cba_rnti (module_id_t Mod_id,int CC_id,eNB_flag_t eNB_flag, uint8_t index, rnti_t cba_rnti, uint8_t cba_group_id, uint8_t num_active_cba_groups)
+//The following function does not exist in develop branch anymore (01/2019), so not including it in the merge with sidelink
+/*void  phy_config_cba_rnti (module_id_t Mod_id,int CC_id,eNB_flag_t eNB_flag, uint8_t index, rnti_t cba_rnti, uint8_t cba_group_id, uint8_t num_active_cba_groups)
 {
   //   uint8_t i;
 
@@ -738,7 +740,7 @@ void  phy_config_cba_rnti (module_id_t Mod_id,int CC_id,eNB_flag_t eNB_flag, uin
     RC.eNB[Mod_id][CC_id]->ulsch[index]->cba_rnti[cba_group_id] = cba_rnti;
     //}
   }
-}
+}*/
 
 int phy_init_lte_eNB(PHY_VARS_eNB *eNB,
                      unsigned char is_secondary_eNB,

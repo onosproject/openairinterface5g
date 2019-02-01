@@ -12,8 +12,9 @@ nfapi/open-nFAPI/vnf/src/vnf_p7.c
 openair1/PHY/INIT/lte_init.c
 openair1/PHY/INIT/lte_init_ue.c
 openair1/PHY/LTE_ESTIMATION/lte_sync_time.c
-openair1/PHY/LTE_ESTIMATION/lte_ul_channel_estimation.c (Do not know which definition of lte_ul_channel_estimation() to use. It seems that
-                                                         both are needed: one for sidelink, one for normal Uplink. Done but not sure...)
+openair1/PHY/LTE_ESTIMATION/lte_ul_channel_estimation.c (Do not know which definition of lte_ul_channel_estimation() to use.
+                                                         All the changes correspond to sidelink? Should it be modified to support both sidelink and  
+                                                         uplink now?)
 openair1/PHY/LTE_TRANSPORT/dci.c
 openair1/PHY/LTE_TRANSPORT/dci_tools.c
 openair1/PHY/LTE_TRANSPORT/dlsch_coding.c
@@ -37,7 +38,8 @@ openair1/SCHED/phy_procedures_lte_eNb.c
 openair1/SCHED/sched_common.h (There are a lot of function definitions which are also in other header files and they differ. Not sure which one I 
                               should keep.)
 
-openair1/SCHED_UE/phy_procedures_lte_ue.c
+openair1/SCHED_UE/phy_procedures_lte_ue.c     (Should we keep ue->generate_ul_signal[][] or ue->generate_ul_signal[]? I guess the first.
+                                              In conflicting lines 1491-1497 I am not sure which version to keep.)
 openair1/SIMULATION/ETH_TRANSPORT/multicast_link.c
 openair1/SIMULATION/LTE_PHY/dlsim.c
 openair2/COMMON/mac_rrc_primitives.h
