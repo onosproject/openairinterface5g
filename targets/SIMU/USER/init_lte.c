@@ -155,6 +155,9 @@ PHY_VARS_eNB* init_lte_eNB(LTE_DL_FRAME_PARMS *frame_parms,
   PHY_vars_eNB->npdcch_DCI  = new_eNB_dlcch_NB_IoT(frame_parms);
 
   PHY_vars_eNB->UL_INFO.nrach_ind.nrach_pdu_list  = (nfapi_nrach_indication_pdu_t *)malloc16(sizeof(nfapi_nrach_indication_pdu_t));
+  PHY_vars_eNB->UL_INFO.crc_ind.crc_pdu_list  = (nfapi_crc_indication_pdu_t *)malloc16(sizeof(nfapi_crc_indication_pdu_t));
+  PHY_vars_eNB->UL_INFO.RX_NPUSCH.rx_pdu_list  = (nfapi_rx_indication_pdu_t *)malloc16(sizeof(nfapi_rx_indication_pdu_t));
+
  
   PHY_vars_eNB->ndlsch_SIB1->rnti = 0xffff;
   PHY_vars_eNB->ndlsch_SIB23->rnti = 0xffff;
