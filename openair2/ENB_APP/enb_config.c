@@ -2232,7 +2232,6 @@ int RCconfig_S1(
 
             paramdef_t S1Params[] = S1PARAMS_DESC;
             paramlist_def_t S1ParamList = {ENB_CONFIG_STRING_MME_IP_ADDRESS, NULL, 0};
-            paramdef_t SCTPParams[] = SCTPPARAMS_DESC;
             paramdef_t NETParams[] =  NETPARAMS_DESC;
             char aprefix[MAX_OPTNAME_SIZE*2 + 8];
             sprintf(aprefix, "%s.[%i]", ENB_CONFIG_STRING_ENB_LIST, k);
@@ -2375,6 +2374,7 @@ int RCconfig_S1(
             S1AP_REGISTER_ENB_REQ (msg_p).sctp_in_streams  = SCTP_IN_STREAMS;
 
             if (EPC_MODE_ENABLED) {
+              paramdef_t SCTPParams[] = SCTPPARAMS_DESC;
               sprintf(aprefix,"%s.[%i].%s",ENB_CONFIG_STRING_ENB_LIST,k,ENB_CONFIG_STRING_SCTP_CONFIG);
               config_get( SCTPParams,sizeof(SCTPParams)/sizeof(paramdef_t),aprefix);
               S1AP_REGISTER_ENB_REQ (msg_p).sctp_in_streams = (uint16_t)*(SCTPParams[ENB_SCTP_INSTREAMS_IDX].uptr);

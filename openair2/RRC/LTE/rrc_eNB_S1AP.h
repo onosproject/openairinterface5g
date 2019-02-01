@@ -31,7 +31,6 @@
 #ifndef RRC_ENB_S1AP_H_
 #define RRC_ENB_S1AP_H_
 
-# if defined(ENABLE_USE_MME)
 
 #include "LTE_UL-DCCH-Message.h"
 
@@ -270,5 +269,4 @@ int rrc_eNB_process_S1AP_E_RAB_RELEASE_COMMAND(MessageDef *msg_p, const char *ms
 int rrc_eNB_send_S1AP_E_RAB_RELEASE_RESPONSE(const protocol_ctxt_t* const ctxt_pP, rrc_eNB_ue_context_t*  const ue_context_pP, uint8_t xid );
 
 #   endif
-# endif /* defined(ENABLE_USE_MME) */
 #endif /* RRC_ENB_S1AP_H_ */

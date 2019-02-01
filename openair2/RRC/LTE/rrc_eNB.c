@@ -62,6 +62,7 @@
 #include "LTE_PeriodicBSR-Timer-r12.h"
 #include "LTE_RetxBSR-Timer-r12.h"
 #include "common/utils/LOG/vcd_signal_dumper.h"
+#include <openair2/RRC/LTE/rrc_eNB_S1AP.h>
 
 #include "T.h"
 
