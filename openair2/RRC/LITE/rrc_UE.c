@@ -2126,7 +2126,7 @@ rrc_ue_decode_dcch(
 )
 //-----------------------------------------------------------------------------
 {
-
+  printf("rrc_ue_decode_dcch: eNB_indexP %d\n",eNB_indexP);
   //DL_DCCH_Message_t dldcchmsg;
   DL_DCCH_Message_t *dl_dcch_msg=NULL;//&dldcchmsg;
   //  asn_dec_rval_t dec_rval;
@@ -2643,9 +2643,10 @@ int decode_BCCH_DLSCH_Message(
   const uint8_t                rsrq,
   const uint8_t                rsrp )
 {
+  //printf("decode_BCCH_DLSCH_Message: eNB_index %d\n",eNB_index);
   BCCH_DL_SCH_Message_t *bcch_message = NULL;
   SystemInformationBlockType1_t* sib1 = UE_rrc_inst[ctxt_pP->module_id].sib1[eNB_index];
-  int i;
+  //int i;
 
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_UE_DECODE_BCCH, VCD_FUNCTION_IN );
 
@@ -2770,7 +2771,7 @@ int decode_PCCH_DLSCH_Message(
   const uint8_t                Sdu_len)
 {
   PCCH_Message_t *pcch_message = NULL;
-  int i;
+  //int i;
 
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_UE_DECODE_PCCH, VCD_FUNCTION_IN );
 

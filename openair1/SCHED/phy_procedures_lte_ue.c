@@ -266,7 +266,7 @@ void phy_reset_ue(uint8_t Mod_id,uint8_t CC_id,uint8_t eNB_index)
 
   // This flushes ALL DLSCH and ULSCH harq buffers of ALL connected eNBs...add the eNB_index later
   // for more flexibility
-
+  //printf("phy_reset_ue: NUMBER_OF_CONNECTED_eNB_MAX %d\n",NUMBER_OF_CONNECTED_eNB_MAX);
   uint8_t i,j,k,s;
   PHY_VARS_UE *ue = PHY_vars_UE_g[Mod_id][CC_id];
 
@@ -1402,7 +1402,7 @@ void ulsch_common_procedures(PHY_VARS_UE *ue, UE_rxtx_proc_t *proc, uint8_t empt
 }
 
 void ue_prach_procedures(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,uint8_t abstraction_flag,runmode_t mode) {
-  //printf("ue_prach_procedures: eNB_id %d, ue->common_vars.eNb.id %d, mac enabled %d\n",eNB_id,ue->common_vars.eNb_id,ue->mac_enabled==1);
+  printf("ue_prach_procedures: UE %d, eNB_id %d, ue->common_vars.eNb.id %d, mac enabled %d\n",ue->Mod_id,eNB_id,ue->common_vars.eNb_id,ue->mac_enabled==1);
   int frame_tx = proc->frame_tx;
   int subframe_tx = proc->subframe_tx;
   int prach_power;
@@ -3080,7 +3080,7 @@ void ue_pbch_procedures(uint8_t eNB_id,PHY_VARS_UE *ue,UE_rxtx_proc_t *proc, uin
     ue->pbch_vars[eNB_id]->pdu_errors_conseq++;
     ue->pbch_vars[eNB_id]->pdu_errors++;
     if (ue->mac_enabled == 1) {
-      mac_xface->out_of_sync_ind(ue->Mod_id,frame_rx,eNB_id);
+      mac_xface->out_of_sync_ind(ue->Mod_id,frame_rx,ue->common_vars.eNb_id);
     }
     else{
       if (ue->pbch_vars[eNB_id]->pdu_errors_conseq>=100) {
