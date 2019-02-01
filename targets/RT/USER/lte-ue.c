@@ -636,7 +636,7 @@ static void *UE_thread_synch(void *arg)
 	UE->rfdevice.trx_set_freq_func(&UE->rfdevice,&openair0_cfg[0],0);
 	//UE->rfdevice.trx_set_gains_func(&openair0,&openair0_cfg[0]);
 	//UE->rfdevice.trx_stop_func(&UE->rfdevice);
-	usleep(10000);
+	sleep(1);
 	init_frame_parms(&UE->frame_parms,1);
 	/*if (UE->rfdevice.trx_start_func(&UE->rfdevice) != 0 ) {
 	  LOG_E(HW,"Could not start the device\n");
