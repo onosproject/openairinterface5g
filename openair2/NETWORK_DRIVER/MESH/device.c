@@ -53,8 +53,10 @@
 
 struct net_device *nasdev[NB_INSTANCES_MAX];
 
+#ifdef PDCP_USE_NETLINK
 extern void nas_netlink_release(void);
 extern int nas_netlink_init(void);
+#endif
 
 //int bytes_wrote;
 //int bytes_read;

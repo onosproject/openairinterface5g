@@ -348,6 +348,9 @@ static int _nas_set_signal_handler(int signal, void (handler)(int))
   (void) sigdelset (&act.sa_mask, SIGILL);
   (void) sigdelset (&act.sa_mask, SIGTRAP);
   (void) sigdelset (&act.sa_mask, SIGIOT);
+#ifndef LINUX
+  (void) sigdelset (&act.sa_mask, SIGEMT);
+#endif
   (void) sigdelset (&act.sa_mask, SIGFPE);
   (void) sigdelset (&act.sa_mask, SIGBUS);
   (void) sigdelset (&act.sa_mask, SIGSEGV);

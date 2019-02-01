@@ -177,6 +177,7 @@ Usage (Regular):
  NI/ETTUS B201  + OAI ENB : ./build_oai --eNB -x -w USRP"
 }
 
+
 function main() {
 
 
@@ -389,29 +390,43 @@ function main() {
     #########################################################
     # to be discussed
     
-    if [ "$eNB" = "1" ] ; then
-	if [ "$HW" = "None" -a  "$TP" = "None" ] ; then
-	    echo_fatal "Define a local radio head (e.g. -w EXMIMO) or a transport protocol (e.g. -t ETHERNET) to communicate with a remote radio head!"
-	fi
-	[ "$HW" = "None" ] && echo_info "No radio head has been selected (HW set to $HW)"	
-	[ "$TP" = "None" ] && echo_info "No transport protocol has been selected (TP set to $TP)"	
+  if [ "$eNB" = "1" ] ; then
+      if [ "$HW" = "None" -a  "$TP" = "None" ] ; then
+	  echo_fatal "Define a local radio head (e.g. -w EXMIMO) or a transport protocol (e.g. -t ETHERNET) to communicate with a remote radio head!"
+      fi
+      if [ "$HW" = "None" ] ; then 
+	  echo_info "No radio head has been selected (HW set to $HW)"	
+      fi
+      if [ "$TP" = "None" ] ; then
+	  echo_info "No transport protocol has been selected (TP set to $TP)"	
+      fi
     fi
     
     echo_info "RF HW set to $HW" 
     #Now we set flags to enable deadline scheduler settings
     #By default: USRP: disable, 
     #By default: BLADERF: enable,
-    #By default: EXMIMO: enable
-    if [ "$FORCE_DEADLINE_SCHEDULER_FLAG_USER" = "" ]; then
-	case "$HW" in
-	    "EXMIMO") 
-		DEADLINE_SCHEDULER_FLAG_USER="True"
-		;;
-	    *)
-		DEADLINE_SCHEDULER_FLAG_USER="False"
-		;;
-	esac
-    else
+  #By default: EXMIMO: enable
+  if [ "$FORCE_DEADLINE_SCHEDULER_FLAG_USER" = "" ]; then
+     if [ "$HW" = "EXMIMO" ] ; then 
+        DEADLINE_SCHEDULER_FLAG_USER="True"
+     elif [ "$HW" = "ETHERNET" ] ; then 
+        DEADLINE_SCHEDULER_FLAG_USER="False"
+     elif [ "$HW" = "OAI_USRP" ] ; then 
+        DEADLINE_SCHEDULER_FLAG_USER="False"
+     elif [ "$HW" = "OAI_BLADERF" ] ; then 
+        DEADLINE_SCHEDULER_FLAG_USER="False"
+     elif [ "$HW" = "OAI_LMSSDR" ] ; then     
+        DEADLINE_SCHEDULER_FLAG_USER="False" 
+     elif [ "$HW" = "OAI_IRIS" ] ; then
+        DEADLINE_SCHEDULER_FLAG_USER="False"
+     elif [ "$HW" = "None" ] ; then 
+        DEADLINE_SCHEDULER_FLAG_USER="False"
+     else 
+        echo_error "Unknown HW type $HW. Exiting now..."
+        exit 
+     fi
+  else
 	DEADLINE_SCHEDULER_FLAG_USER=$FORCE_DEADLINE_SCHEDULER_FLAG_USER
     fi
     
@@ -521,8 +536,9 @@ function main() {
         echo "set ( CMAKE_BUILD_TYPE $CMAKE_BUILD_TYPE )" >> $cmake_file
         echo "set ( CFLAGS_PROCESSOR_USER \"$CFLAGS_PROCESSOR_USER\" )" >>  $cmake_file
         echo "set ( UE_EXPANSION $UE_EXPANSION )"      >>  $cmake_file
-	#    echo "set ( PHY_TX_THREAD $UE_EXPANSION )"     >>  $cmake_file
+#    echo "set ( PHY_TX_THREAD $UE_EXPANSION )"     >>  $cmake_file
         echo "set ( PRE_SCD_THREAD $UE_EXPANSION )"    >>  $cmake_file
+        echo "set ( UESIM_EXPANSION $UESIM_EXPANSION )"      >>  $cmake_file
         echo "set ( RRC_ASN1_VERSION \"${REL}\")"      >>  $cmake_file
         echo "set ( ENABLE_VCD_FIFO $VCD_TIMING )"     >>  $cmake_file
         echo "set ( XFORMS $XFORMS )"                  >>  $cmake_file
@@ -925,6 +941,7 @@ function main() {
 	echo "set (UE_TIMING_TRACE $UE_TIMING_TRACE)"     >>  $cmake_file
 	echo "set (DISABLE_LOG_X $DISABLE_LOG_X)"         >>  $cmake_file
 	echo "set (USRP_REC_PLAY $USRP_REC_PLAY)"         >>  $cmake_file
+    echo "set (LINUX True )"                          >>  $cmake_file
 	echo "set (PDCP_USE_NETLINK True )"               >>  $cmake_file
 	echo "set (BASIC_SIMULATOR \"True\" )"            >>  $cmake_file
 	echo "set (UE_NAS_USE_TUN \"True\" )"             >>  $cmake_file
