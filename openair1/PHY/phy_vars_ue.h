@@ -32,7 +32,6 @@ char *namepointer_chMag ;
 char fmageren_name2[512];
 char *namepointer_log2;
 
-
 #include "PHY/LTE_REFSIG/primary_synch.h"
 #include "PHY/LTE_REFSIG/primary_synch_SL.h"
 int16_t *primary_synch0_time;

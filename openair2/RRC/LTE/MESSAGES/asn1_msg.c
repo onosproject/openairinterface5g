@@ -247,123 +247,63 @@ uint8_t do_MIB(rrc_eNB_carrier_data_t *carrier, uint32_t N_RB_DL, uint32_t phich
 
 //TTN for D2D
 // 3GPP 36.331 (Section 5.10.7.4)
-uint8_t do_MIB_SL(const protocol_ctxt_t *const ctxt_pP, const uint8_t eNB_index, uint32_t frame, uint8_t subframe, uint8_t in_coverage, uint8_t mode) {
-  asn_enc_rval_t enc_rval;
-  LTE_SBCCH_SL_BCH_MessageType_t *mib_sl = &UE_rrc_inst[ctxt_pP->module_id].mib_sl[eNB_index];
-  uint8_t sfn = (uint8_t)((frame>>2)&0xff);
-  UE_rrc_inst[ctxt_pP->module_id].MIB = (uint8_t *) malloc16(4);
-
-  if (in_coverage > 0 ) {
-    //in coverage
-    mib_sl->inCoverage_r12 = TRUE;
-    mib_sl->sl_Bandwidth_r12 = *UE_rrc_inst[ctxt_pP->module_id].sib2[eNB_index]->freqInfo.ul_Bandwidth;
-
-    if (UE_rrc_inst[ctxt_pP->module_id].sib1[eNB_index]->tdd_Config) {
-      mib_sl->tdd_ConfigSL_r12.subframeAssignmentSL_r12 = UE_rrc_inst[ctxt_pP->module_id].sib1[eNB_index]->tdd_Config->subframeAssignment;
-    } else {
-      mib_sl->tdd_ConfigSL_r12.subframeAssignmentSL_r12 = LTE_TDD_ConfigSL_r12__subframeAssignmentSL_r12_none;
-    }
-
-    //if triggered by sl communication
-    if (UE_rrc_inst[ctxt_pP->module_id].sib18[eNB_index]->commConfig_r12->commSyncConfig_r12->list.array[0]->txParameters_r12->syncInfoReserved_r12) {
-      mib_sl->reserved_r12 = *UE_rrc_inst[ctxt_pP->module_id].sib18[eNB_index]->commConfig_r12->commSyncConfig_r12->list.array[0]->txParameters_r12->syncInfoReserved_r12;
-    }
-
-    //if triggered by sl discovery
-    if (UE_rrc_inst[ctxt_pP->module_id].sib19[eNB_index]->discConfig_r12->discSyncConfig_r12->list.array[0]->txParameters_r12->syncInfoReserved_r12) {
-      mib_sl->reserved_r12 = *UE_rrc_inst[ctxt_pP->module_id].sib19[eNB_index]->discConfig_r12->discSyncConfig_r12->list.array[0]->txParameters_r12->syncInfoReserved_r12;
-    }
-
-    //Todo - if triggered by v2x
-  } else {
-    //Todo - out of coverage for V2X
-    // Todo - UE has a selected SyncRef UE
-    mib_sl->inCoverage_r12 = FALSE;
-    //set sl-Bandwidth, subframeAssignmentSL and reserved from the pre-configured parameters
-  }
-
-  //set FrameNumber, subFrameNumber
-  mib_sl->directFrameNumber_r12.buf =  &sfn;
-  mib_sl->directFrameNumber_r12.size = 1;
-  mib_sl->directFrameNumber_r12.bits_unused=0;
-  mib_sl->directSubframeNumber_r12 = subframe;
-  LOG_I(RRC,"[MIB-SL] sfn %x, subframe %x\n", (uint32_t)sfn, (uint8_t)subframe);
-  enc_rval = uper_encode_to_buffer(&asn_DEF_LTE_SBCCH_SL_BCH_Message,
-                                   NULL,
-                                   (void *)mib_sl,
-                                   UE_rrc_inst[ctxt_pP->module_id].MIB,
-                                   24);
-  AssertFatal (enc_rval.encoded > 0, "ASN1 message encoding failed (%s, %lu)!\n",
-               enc_rval.failed_type->name, enc_rval.encoded);
-
-  if (enc_rval.encoded==-1) {
-    return(-1);
-  }
-
-  return((enc_rval.encoded+7)/8);
-}
-
-//TTN for D2D
-// 3GPP 36.331 (Section 5.10.7.4)
 uint8_t do_MIB_SL(const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_index, int absSF, uint8_t in_coverage)
 {
-
    asn_enc_rval_t enc_rval;
-
-
    uint16_t frame = absSF/10;
    uint8_t subframe = absSF%10;
    uint32_t reserved = 0;
    UE_RRC_INST *UE = &UE_rrc_inst[ctxt_pP->module_id];
-   SBCCH_SL_BCH_Message_t *sl_mib = &UE->SL_mib_tx;
+   LTE_SBCCH_SL_BCH_MessageType_t *sl_mib = &UE->SL_mib_tx;
  
    AssertFatal(eNB_index==0,"eNB_index needs to be 0\n");
 
 
    if (in_coverage > 0 ){
       //in coverage
-      sl_mib->message.inCoverage_r12 = TRUE;
-      sl_mib->message.sl_Bandwidth_r12 = UE->sib2[eNB_index]->freqInfo.ul_Bandwidth;
+      sl_mib->inCoverage_r12 = TRUE;
+      sl_mib->sl_Bandwidth_r12 = UE->sib2[eNB_index]->freqInfo.ul_Bandwidth;
       if (UE->sib1[eNB_index]->tdd_Config) {
-         sl_mib->message.tdd_ConfigSL_r12.subframeAssignmentSL_r12 = UE->sib1[eNB_index]->tdd_Config->subframeAssignment;
+         sl_mib->tdd_ConfigSL_r12.subframeAssignmentSL_r12 = UE->sib1[eNB_index]->tdd_Config->subframeAssignment;
       } else {
-         sl_mib->message.tdd_ConfigSL_r12.subframeAssignmentSL_r12 = TDD_ConfigSL_r12__subframeAssignmentSL_r12_none;
+         sl_mib->tdd_ConfigSL_r12.subframeAssignmentSL_r12 = LTE_TDD_ConfigSL_r12__subframeAssignmentSL_r12_none;
       }
       //if triggered by sl communication
       if (UE->sib18[eNB_index]->commConfig_r12->commSyncConfig_r12->list.array[0]->txParameters_r12->syncInfoReserved_r12){
-         sl_mib->message.reserved_r12 = *UE->sib18[eNB_index]->commConfig_r12->commSyncConfig_r12->list.array[0]->txParameters_r12->syncInfoReserved_r12;
+         sl_mib->reserved_r12 = *UE->sib18[eNB_index]->commConfig_r12->commSyncConfig_r12->list.array[0]->txParameters_r12->syncInfoReserved_r12;
       }
       //if triggered by sl discovery
       if (UE->sib19[eNB_index]->discConfig_r12->discSyncConfig_r12->list.array[0]->txParameters_r12->syncInfoReserved_r12){
-              sl_mib->message.reserved_r12 = *UE->sib19[eNB_index]->discConfig_r12->discSyncConfig_r12->list.array[0]->txParameters_r12->syncInfoReserved_r12;
+              sl_mib->reserved_r12 = *UE->sib19[eNB_index]->discConfig_r12->discSyncConfig_r12->list.array[0]->txParameters_r12->syncInfoReserved_r12;
        }
       //Todo - if triggered by v2x
    } else {
      //Todo - out of coverage for V2X
      // Todo - UE has a selected SyncRef UE
-     sl_mib->message.inCoverage_r12 = FALSE;
-     sl_mib->message.sl_Bandwidth_r12                  = UE->SL_Preconfiguration[eNB_index]->preconfigGeneral_r12.sl_bandwidth_r12;
-     sl_mib->message.tdd_ConfigSL_r12.subframeAssignmentSL_r12 = UE->SL_Preconfiguration[eNB_index]->preconfigGeneral_r12.tdd_ConfigSL_r12.subframeAssignmentSL_r12;
+     sl_mib->inCoverage_r12 = FALSE;
+     sl_mib->sl_Bandwidth_r12                  = UE->SL_Preconfiguration[eNB_index]->preconfigGeneral_r12.sl_bandwidth_r12;
+     sl_mib->tdd_ConfigSL_r12.subframeAssignmentSL_r12 = UE->SL_Preconfiguration[eNB_index]->preconfigGeneral_r12.tdd_ConfigSL_r12.subframeAssignmentSL_r12;
      //set sl-Bandwidth, subframeAssignmentSL and reserved from the pre-configured parameters
-     sl_mib->message.reserved_r12.buf                          = &reserved;
-     sl_mib->message.reserved_r12.size                         = 3;
-     sl_mib->message.reserved_r12.bits_unused                  = 5;
+     sl_mib->reserved_r12.buf                          = &reserved;
+     sl_mib->reserved_r12.size                         = 3;
+     sl_mib->reserved_r12.bits_unused                  = 5;
    }
 
    //set FrameNumber, subFrameNumber
    uint8_t buf[2];
    buf[1] = frame&3;
    buf[0] = (frame>>2)&255; 
-   sl_mib->message.directFrameNumber_r12.buf =  &buf[0];
-   sl_mib->message.directFrameNumber_r12.size = 2;
-   sl_mib->message.directFrameNumber_r12.bits_unused=6;
-   sl_mib->message.directSubframeNumber_r12 = subframe;
+   sl_mib->directFrameNumber_r12.buf =  &buf[0];
+   sl_mib->directFrameNumber_r12.size = 2;
+   sl_mib->directFrameNumber_r12.bits_unused=6;
+   sl_mib->directSubframeNumber_r12 = subframe;
    
 
    if ((frame&255) == 0) LOG_D(RRC,"[MIB-SL] sfn %x, subframe %x\n", (uint32_t)frame, (uint8_t)subframe);
 
 
-  enc_rval = uper_encode_to_buffer(&asn_DEF_SBCCH_SL_BCH_Message,
+  enc_rval = uper_encode_to_buffer(&asn_DEF_LTE_SBCCH_SL_BCH_Message,
+		  	  	  	  	  	  	   NULL,
                                    (void*)sl_mib,
                                    UE->SL_MIB,
                                    40);
@@ -373,6 +313,7 @@ uint8_t do_MIB_SL(const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_index,
 
   return((enc_rval.encoded+7)/8);
 }
+
 
 uint8_t do_SIB1(rrc_eNB_carrier_data_t *carrier,
                 int Mod_id,int CC_id

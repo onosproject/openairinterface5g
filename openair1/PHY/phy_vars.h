@@ -33,8 +33,7 @@ char* namepointer_log2;
 
 
 
-// Panos: Removal based on the new seperation eNB-UE
-/*#include "PHY/LTE_REFSIG/primary_synch.h"
+#include "PHY/LTE_REFSIG/primary_synch.h"
 #include "PHY/LTE_REFSIG/primary_synch_SL.h"
 int16_t *primary_synch0_time;
 int16_t *primary_synch1_time;
@@ -45,7 +44,7 @@ int16_t *primary_synch0SL_time;
 int16_t *primary_synch1SL_time;
 int16_t *primary_synch0SL_time_rx;
 int16_t *primary_synch1SL_time_rx;
-*/
+
 
 //#include "PHY/CODING/vars.h"
 #include "PHY/LTE_TRANSPORT/transport_vars.h"

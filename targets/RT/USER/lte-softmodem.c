@@ -123,8 +123,6 @@ uint16_t sf_ahead=4;
 
 char emul_iface[100];
 
-uint16_t sf_ahead=4;
-
 pthread_cond_t sync_cond;
 pthread_mutex_t sync_mutex;
 int sync_var=-1; //!< protected by mutex \ref sync_mutex.
