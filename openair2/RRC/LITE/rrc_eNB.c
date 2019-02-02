@@ -39,6 +39,8 @@
 #include "extern_NB_IoT.h"
 #include "LAYER2/MAC/proto_NB_IoT.h"
 #include "RRC/LITE/MESSAGES/asn1_msg_NB_IoT.h"
+#include "RRCConnectionRequest-NB.h"
+#include "UL-CCCH-Message-NB.h"
 // NB-IoT end
 #include "assertions.h"
 #include "asn1_conversions.h"
@@ -118,6 +120,47 @@ extern void*                        bigphys_malloc(int);
 extern uint16_t                     two_tier_hexagonal_cellIds[7];
 
 mui_t                               rrc_eNB_mui = 0;
+
+void mac_rrc_msg3_ind_NB_IoT(uint8_t *payload_ptr, uint16_t rnti)
+{
+  LOG_I(RRC,"recieve MSG3 CCCH SDU from MAC\n");
+    asn_dec_rval_t                      dec_rval;
+  RRCConnectionRequest_NB_r13_IEs_t* rrcConnectionRequest_NB = NULL;
+  UL_CCCH_Message_NB_t* ul_ccch_msg_NB = NULL;
+  dec_rval = uper_decode(
+               NULL,
+               &asn_DEF_UL_CCCH_Message_NB,
+               (void**)&ul_ccch_msg_NB,
+               payload_ptr,
+               100,
+               0,
+               0);
+  if (ul_ccch_msg_NB->message.choice.c1.present==UL_CCCH_MessageType_NB__c1_PR_rrcConnectionRequest_r13)
+  {
+    LOG_I(RRC,"The decode CCH MSG is RRC connection Request NB\n");
+    rrcConnectionRequest_NB = &ul_ccch_msg_NB->message.choice.c1.choice.rrcConnectionRequest_r13.criticalExtensions.choice.rrcConnectionRequest_r13;
+    if (rrcConnectionRequest_NB->ue_Identity_r13.present == InitialUE_Identity_PR_randomValue)
+    {
+      uint8_t *da = rrcConnectionRequest_NB->ue_Identity_r13.choice.randomValue.buf;   /* BIT STRING body */
+      int length = rrcConnectionRequest_NB->ue_Identity_r13.choice.randomValue.size;       /* Size of the above buffer */
+      printf("Random Value: ");
+      for(int a = 0; a<length;a++)
+        printf("%02x ",da[a]);
+      printf("\n");
+    }else if (rrcConnectionRequest_NB->ue_Identity_r13.present == InitialUE_Identity_PR_s_TMSI)
+    {
+      uint8_t *da = rrcConnectionRequest_NB->ue_Identity_r13.choice.s_TMSI.m_TMSI.buf;   /* BIT STRING body */
+      int length = rrcConnectionRequest_NB->ue_Identity_r13.choice.s_TMSI.m_TMSI.size;       /* Size of the above buffer */
+      
+      printf("TMSI: ");
+      for(int a = 0; a<length;a++)
+        printf("%02x ",da[a]);
+      printf("\n");
+    }else
+	LOG_E(RRC,"unknown TMSI or Random Value format in RRC connection request NB\n");
+  }else
+	LOG_E(RRC,"unknown MSG3 format for NB-IoT for current test\n");
+}
 
 uint8_t *get_NB_IoT_MIB(
     rrc_eNB_carrier_data_NB_IoT_t *carrier,

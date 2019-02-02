@@ -2,7 +2,7 @@
 #include "LAYER2/MAC/proto_NB_IoT.h"
 #include "LAYER2/MAC/extern_NB_IoT.h"
 
-int tmp =0;
+int tmp = 0;
 
 void simulate_preamble(UL_IND_NB_IoT_t *UL_INFO, int CE, int sc)
 {
@@ -37,6 +37,41 @@ void enable_preamble_simulation(UL_IND_NB_IoT_t *UL_INFO,int i)
   }
 }
 
+void simulate_msg3(UL_IND_NB_IoT_t *UL_INFO)
+{
+	uint8_t *msg3 = NULL;
+	msg3 = (uint8_t *) malloc (11*sizeof(uint8_t));
+  msg3[0] = 0;
+  msg3[1] = 58;
+  msg3[2] = 42; // 2A
+  msg3[3] = 179; // B3
+  msg3[4] = 84; // 54
+  msg3[5] = 141; // 8D
+  msg3[6] = 43; // 2B
+  msg3[7] = 52; // 34
+  msg3[8] = 64; // 40
+  msg3[9] = 0;
+  msg3[10] = 0;
+	UL_INFO->RX_NPUSCH.number_of_pdus = 1;
+	UL_INFO->module_id = 0;
+	UL_INFO->CC_id = 0;
+	UL_INFO->frame = 521;
+	UL_INFO->subframe = 1;
+	UL_INFO->RX_NPUSCH.rx_pdu_list = (nfapi_rx_indication_pdu_t * )malloc(sizeof(nfapi_rx_indication_pdu_t));
+	UL_INFO->RX_NPUSCH.rx_pdu_list->rx_ue_information.rnti = 0x0101;
+	UL_INFO->RX_NPUSCH.rx_pdu_list->data = msg3;
+	UL_INFO->RX_NPUSCH.rx_pdu_list->rx_indication_rel8.length = 11; 
+}
+void enable_msg3_simulation(UL_IND_NB_IoT_t *UL_INFO, int i)
+{
+  if(i==1)
+  {
+	if(UL_INFO->frame==521 && UL_INFO->subframe==1)
+	{
+		simulate_msg3(UL_INFO);
+	}
+  }
+}
 // Sched_INFO as a input for the scheduler
 void UL_indication_NB_IoT(UL_IND_NB_IoT_t *UL_INFO)
 {
@@ -47,6 +82,7 @@ void UL_indication_NB_IoT(UL_IND_NB_IoT_t *UL_INFO)
 
     enable_preamble_simulation(UL_INFO,0);
 
+    enable_msg3_simulation(UL_INFO,0);
     //if(preamble_trigger==0)
     //{
       //If there is a preamble, do the initiate RA procedure
@@ -93,6 +129,7 @@ void UL_indication_NB_IoT(UL_IND_NB_IoT_t *UL_INFO)
           }
         }
 
+	*/
         //If there is a Uplink SDU which needs to send to MAC
 
         if(UL_INFO->RX_NPUSCH.number_of_pdus>0)
@@ -112,9 +149,8 @@ void UL_indication_NB_IoT(UL_IND_NB_IoT_t *UL_INFO)
               }
 
           }
+	UL_INFO->RX_NPUSCH.number_of_pdus = 0;
 
-          */
-    
     if(UL_INFO->hypersfn==1 && UL_INFO->frame==0)
     {
       LOG_D(MAC,"IF L2 hypersfn:%d frame: %d ,subframe: %d \n",UL_INFO->hypersfn,UL_INFO->frame,UL_INFO->subframe);

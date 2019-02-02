@@ -220,7 +220,7 @@ void rx_sdu_NB_IoT(module_id_t module_id, int CC_id, frame_t frame, sub_frame_t 
   int ul_total_buffer = 0;
   //mac_NB_IoT_t *mac_inst;
   UE_TEMPLATE_NB_IoT *UE_info;
-
+  LOG_I(MAC,"RX_SDU_IN\n");
   //mac_inst = get_mac_inst(module_id);
 
   // note: if lcid < 25 this is sdu, otherwise this is CE
@@ -257,13 +257,18 @@ void rx_sdu_NB_IoT(module_id_t module_id, int CC_id, frame_t frame, sub_frame_t 
                 // MSG3 content: |R|R|PHR|PHR|DVI|DVI|DVI|DVI|CCCH payload
                 PHR = ((payload_ptr[0] >> 5) & 0x01)*2+((payload_ptr[0]>>4) & 0x01);
                 DVI_index = (payload_ptr[0] >>3 & 0x01)*8+ (payload_ptr[0] >>2 & 0x01)*4 + (payload_ptr[0] >>1 & 0x01)*2 +(payload_ptr[0] >>0 & 0x01);
-          //LOG_D(MAC,"DVI_index= %d\n",DVI_index);
                 ul_total_buffer = DV_table[DVI_index];
-                LOG_D(MAC,"PHR = %d, ul_total_buffer = %d\n",PHR,ul_total_buffer);
+                LOG_I(MAC,"PHR = %d, ul_total_buffer = %d\n",PHR,ul_total_buffer);
                 // go to payload
                 payload_ptr+=1; 
+		// Note that the first 6 byte (48 bits) of this CCCH SDU should be encoded in the MSG4 for contention resolution 
+                printf("CCCH SDU content: ");
+                  for(int a = 0; a<9;a++)
+                    printf("%02x ",payload_ptr[a]);
+                  printf("\n");
                 rx_lengths[i]-=1;
-                LOG_D(MAC,"rx_lengths : %d\n", rx_lengths[i]);
+                LOG_I(MAC,"rx_lengths : %d\n", rx_lengths[i]);
+                mac_rrc_msg3_ind_NB_IoT(payload_ptr,rnti);
                 //NB_IoT_mac_rrc_data_ind(payload_ptr,mac_inst,rnti);
                 //NB_IoT_receive_msg3(mac_inst,rnti,PHR,ul_total_buffer);
           break;
