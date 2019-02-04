@@ -1203,7 +1203,7 @@ void qpsk_qpsk_TM3456(short *stream0_in,
     @param decoded_output Output of Viterbi decoder
 */
 void dci_decoding(uint8_t DCI_LENGTH,
-                  uint16_t coded_bits,
+                  uint8_t coded_bits,
                   int8_t *e,
                   uint8_t *decoded_output);
 

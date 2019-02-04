@@ -105,6 +105,8 @@
 
 #define NB_RX_ANTENNAS_MAX 64
 
+#define TRP8_MAX 106
+
 #ifdef OCP_FRAMEWORK
 #include "enums.h"
 #else

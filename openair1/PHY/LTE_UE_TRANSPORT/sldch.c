@@ -31,8 +31,9 @@
  */
 #ifndef __LTE_TRANSPORT_SLSS__C__
 #define __LTE_TRANSPORT_SLSS__C__
-#include "PHY/defs.h"
-#include "PHY/LTE_TRANSPORT/proto.h"
+#include "PHY/defs_UE.h"
+//#include "PHY/LTE_TRANSPORT/proto.h"
+#include "PHY/LTE_TRANSPORT/transport_proto.h"
 extern uint8_t D2D_en;
 
 //#define PSDCH_DEBUG 1

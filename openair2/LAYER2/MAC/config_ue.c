@@ -32,6 +32,7 @@
 #include "COMMON/platform_types.h"
 #include "COMMON/platform_constants.h"
 #include "SCHED_UE/sched_UE.h"
+#include "openair2/LAYER2/MAC/mac.h"
 #include "LTE_SystemInformationBlockType2.h"
 //#include "RadioResourceConfigCommonSIB.h"
 #include "LTE_RadioResourceConfigDedicated.h"
@@ -145,7 +146,7 @@ rrc_mac_config_req_ue(module_id_t Mod_idP,
   ,const uint32_t * const sourceL2Id
   ,const uint32_t * const destinationL2Id,
   const uint32_t * const groupL2Id,
-  SL_Preconfiguration_r12_t *SL_Preconfiguration_r12,
+  LTE_SL_Preconfiguration_r12_t *SL_Preconfiguration_r12,
   uint32_t directFrameNumber_r12,
   long directSubframeNumber_r12,
   long *sl_Bandwidth_r12
@@ -596,7 +597,7 @@ rrc_mac_config_req_ue(module_id_t Mod_idP,
 #endif
 
 //for D2D
-#if defined(Rel10) || defined(Rel14)
+#if (LTE_RRC_VERSION >= MAKE_VERSION(10, 0, 0))
   int j = 0;
   int k = 0;
   switch (config_action) {
@@ -742,7 +743,7 @@ rrc_mac_config_req_ue(module_id_t Mod_idP,
     // Note: Other synch parameters are ignored for now
     UE_mac_inst[Mod_idP].slss.slss_id              = 170;//+(taus()%168);
     // PSCCH
-    struct SL_PreconfigCommPool_r12 *preconfigpool = SL_Preconfiguration_r12->preconfigComm_r12.list.array[0];
+    struct LTE_SL_PreconfigCommPool_r12 *preconfigpool = SL_Preconfiguration_r12->preconfigComm_r12.list.array[0];
     UE_mac_inst[Mod_idP].slsch.N_SL_RB_SC                = preconfigpool->sc_TF_ResourceConfig_r12.prb_Num_r12;
     UE_mac_inst[Mod_idP].slsch.prb_Start_SC              = preconfigpool->sc_TF_ResourceConfig_r12.prb_Start_r12;
     UE_mac_inst[Mod_idP].slsch.prb_End_SC                = preconfigpool->sc_TF_ResourceConfig_r12.prb_End_r12;
@@ -760,15 +761,15 @@ rrc_mac_config_req_ue(module_id_t Mod_idP,
           UE_mac_inst[Mod_idP].slsch.prb_End_data);
 
     AssertFatal(preconfigpool->sc_Period_r12<10,"Maximum supported sc_Period is 320ms (sc_Period_r12=%d)\n",
-		SL_PeriodComm_r12_sf320);
+		LTE_SL_PeriodComm_r12_sf320);
     UE_mac_inst[Mod_idP].slsch.SL_SC_Period = SC_Period[preconfigpool->sc_Period_r12];
-    AssertFatal(preconfigpool->sc_TF_ResourceConfig_r12.offsetIndicator_r12.present == SL_OffsetIndicator_r12_PR_small_r12,
+    AssertFatal(preconfigpool->sc_TF_ResourceConfig_r12.offsetIndicator_r12.present == LTE_SL_OffsetIndicator_r12_PR_small_r12,
 		"offsetIndicator is limited to smaller format\n");
 
     UE_mac_inst[Mod_idP].slsch.SL_OffsetIndicator      = preconfigpool->sc_TF_ResourceConfig_r12.offsetIndicator_r12.choice.small_r12;
     UE_mac_inst[Mod_idP].slsch.SL_OffsetIndicator_data = preconfigpool->data_TF_ResourceConfig_r12.offsetIndicator_r12.choice.small_r12;
-    AssertFatal(preconfigpool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.present <= SubframeBitmapSL_r12_PR_bs40_r12 ||
-		preconfigpool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.present > SubframeBitmapSL_r12_PR_NOTHING,
+    AssertFatal(preconfigpool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.present <= LTE_SubframeBitmapSL_r12_PR_bs40_r12 ||
+		preconfigpool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.present > LTE_SubframeBitmapSL_r12_PR_NOTHING,
 		"PSCCH bitmap limited to 42 bits\n");
     UE_mac_inst[Mod_idP].slsch.SubframeBitmapSL_length = SubframeBitmapSL[preconfigpool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.present-1];
     UE_mac_inst[Mod_idP].slsch.bitmap1 = *((uint64_t*)preconfigpool->sc_TF_ResourceConfig_r12.subframeBitmap_r12.choice.bs40_r12.buf);
@@ -777,7 +778,7 @@ rrc_mac_config_req_ue(module_id_t Mod_idP,
     AssertFatal(SL_Preconfiguration_r12->ext1->preconfigDisc_r13!=NULL,"there is no SL discovery configuration\n");
     AssertFatal(SL_Preconfiguration_r12->ext1->preconfigDisc_r13->discRxPoolList_r13.list.count==1,"Discover RX pool list count %d != 1\n",
                 SL_Preconfiguration_r12->ext1->preconfigDisc_r13->discRxPoolList_r13.list.count);
-    SL_PreconfigDiscPool_r13_t *discrxpool=SL_Preconfiguration_r12->ext1->preconfigDisc_r13->discRxPoolList_r13.list.array[0];
+    LTE_SL_PreconfigDiscPool_r13_t *discrxpool=SL_Preconfiguration_r12->ext1->preconfigDisc_r13->discRxPoolList_r13.list.array[0];
 
   /// Discovery Type
     UE_mac_inst[Mod_idP].sldch.type     = disc_type1;
@@ -788,45 +789,45 @@ rrc_mac_config_req_ue(module_id_t Mod_idP,
   /// prb-End (0-99)
     UE_mac_inst[Mod_idP].sldch.prb_End = discrxpool->tf_ResourceConfig_r13.prb_End_r12;
   /// SL-OffsetIndicator (0-10239)
-    AssertFatal(discrxpool->tf_ResourceConfig_r13.offsetIndicator_r12.present  == SL_OffsetIndicator_r12_PR_small_r12,
+    AssertFatal(discrxpool->tf_ResourceConfig_r13.offsetIndicator_r12.present  == LTE_SL_OffsetIndicator_r12_PR_small_r12,
                 "offsetIndicator_r12 is not PR_small_r12\n");
 
     UE_mac_inst[Mod_idP].sldch.offsetIndicator = discrxpool->tf_ResourceConfig_r13.offsetIndicator_r12.choice.small_r12 ;
 
-    AssertFatal(discrxpool->tf_ResourceConfig_r13.subframeBitmap_r12.present >  SubframeBitmapSL_r12_PR_NOTHING && 
-                discrxpool->tf_ResourceConfig_r13.subframeBitmap_r12.present <= SubframeBitmapSL_r12_PR_bs42_r12,
+    AssertFatal(discrxpool->tf_ResourceConfig_r13.subframeBitmap_r12.present >  LTE_SubframeBitmapSL_r12_PR_NOTHING &&
+                discrxpool->tf_ResourceConfig_r13.subframeBitmap_r12.present <= LTE_SubframeBitmapSL_r12_PR_bs42_r12,
                 "illegal subframeBitmap %d\n",discrxpool->tf_ResourceConfig_r13.subframeBitmap_r12.present);
   	 
   /// PSDCH subframe bitmap (up to 100 bits, first 64)
     switch (discrxpool->tf_ResourceConfig_r13.subframeBitmap_r12.present) {
-          case SubframeBitmapSL_r12_PR_NOTHING:
+          case LTE_SubframeBitmapSL_r12_PR_NOTHING:
            AssertFatal(1==0,"Should never get here\n");
            break;
-  	  case SubframeBitmapSL_r12_PR_bs4_r12:
+  	  case LTE_SubframeBitmapSL_r12_PR_bs4_r12:
            UE_mac_inst[Mod_idP].sldch.bitmap1 = *(uint64_t*)discrxpool->tf_ResourceConfig_r13.subframeBitmap_r12.choice.bs4_r12.buf;
            UE_mac_inst[Mod_idP].sldch.bitmap_length = 4;
 	   break;
-          case SubframeBitmapSL_r12_PR_bs8_r12:
+          case LTE_SubframeBitmapSL_r12_PR_bs8_r12:
            UE_mac_inst[Mod_idP].sldch.bitmap1 = *(uint64_t*)discrxpool->tf_ResourceConfig_r13.subframeBitmap_r12.choice.bs8_r12.buf;
            UE_mac_inst[Mod_idP].sldch.bitmap_length = 9;
 	  break;
-          case SubframeBitmapSL_r12_PR_bs12_r12:
+          case LTE_SubframeBitmapSL_r12_PR_bs12_r12:
            UE_mac_inst[Mod_idP].sldch.bitmap1 = *(uint64_t*)discrxpool->tf_ResourceConfig_r13.subframeBitmap_r12.choice.bs12_r12.buf;
            UE_mac_inst[Mod_idP].sldch.bitmap_length = 12;
 	  break;
-          case SubframeBitmapSL_r12_PR_bs16_r12:
+          case LTE_SubframeBitmapSL_r12_PR_bs16_r12:
            UE_mac_inst[Mod_idP].sldch.bitmap1 = *(uint64_t*)discrxpool->tf_ResourceConfig_r13.subframeBitmap_r12.choice.bs16_r12.buf;
            UE_mac_inst[Mod_idP].sldch.bitmap_length = 16;
 	  break;
-          case SubframeBitmapSL_r12_PR_bs30_r12:
+          case LTE_SubframeBitmapSL_r12_PR_bs30_r12:
            UE_mac_inst[Mod_idP].sldch.bitmap1 = *(uint64_t*)discrxpool->tf_ResourceConfig_r13.subframeBitmap_r12.choice.bs30_r12.buf;
            UE_mac_inst[Mod_idP].sldch.bitmap_length = 30;
 	  break;
-          case SubframeBitmapSL_r12_PR_bs40_r12:
+          case LTE_SubframeBitmapSL_r12_PR_bs40_r12:
            UE_mac_inst[Mod_idP].sldch.bitmap1 = *(uint64_t*)discrxpool->tf_ResourceConfig_r13.subframeBitmap_r12.choice.bs40_r12.buf;
            UE_mac_inst[Mod_idP].sldch.bitmap_length = 40;
 	  break;
-          case SubframeBitmapSL_r12_PR_bs42_r12:
+          case LTE_SubframeBitmapSL_r12_PR_bs42_r12:
            UE_mac_inst[Mod_idP].sldch.bitmap1 = *(uint64_t*)discrxpool->tf_ResourceConfig_r13.subframeBitmap_r12.choice.bs42_r12.buf;
            UE_mac_inst[Mod_idP].sldch.bitmap_length = 42;
 	  break;
@@ -836,8 +837,8 @@ rrc_mac_config_req_ue(module_id_t Mod_idP,
     UE_mac_inst[Mod_idP].sldch.bitmap2 = 0;
 
   /// SL-Discovery Period
-    AssertFatal(SL_PreconfigDiscPool_r13__discPeriod_r13_spare == 15, "specifications have changed, update table\n");
-    int sldisc_period[SL_PreconfigDiscPool_r13__discPeriod_r13_spare] = {4,6,7,8,12,14,16,24,28,32,64,128,256,512,1024};
+    AssertFatal(LTE_SL_PreconfigDiscPool_r13__discPeriod_r13_spare == 15, "specifications have changed, update table\n");
+    int sldisc_period[LTE_SL_PreconfigDiscPool_r13__discPeriod_r13_spare] = {4,6,7,8,12,14,16,24,28,32,64,128,256,512,1024};
     UE_mac_inst[Mod_idP].sldch.discPeriod = sldisc_period[discrxpool->discPeriod_r13];
 
   /// Number of Repetitions (N_R)

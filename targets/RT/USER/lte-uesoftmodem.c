@@ -119,7 +119,7 @@ uint16_t inst_pdcp_list[NUMBER_OF_UE_MAX];
 uint8_t D2D_en = 0;  // Enabling D2D operations.
 uint16_t sf_ahead=2;
 int tddflag;
-char *emul_iface;
+//char *emul_iface;
 
 //char *emul_iface;
 

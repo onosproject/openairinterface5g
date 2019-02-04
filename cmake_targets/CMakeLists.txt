@@ -1081,6 +1081,14 @@ set(PHY_SRC_COMMON
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/dci_tools_common.c
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/lte_mcs.c
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/group_hopping.c
+  
+  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/pbch.c                #Source files that had to be added after merge with sidelink
+  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/ulsch_demodulation.c
+  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/dlsch_modulation.c
+  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/dci.c
+  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/dlsch_coding.c
+  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/pcfich.c
+  
   ${OPENAIR1_DIR}/PHY/LTE_UE_TRANSPORT/srs_modulation.c
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/initial_syncSL.c
   ${OPENAIR1_DIR}/PHY/LTE_UE_TRANSPORT/get_pmi.c
@@ -1094,6 +1102,10 @@ set(PHY_SRC_COMMON
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/lte_gold_generic.c
   ${OPENAIR1_DIR}/PHY/MODULATION/ofdm_mod.c
   ${OPENAIR1_DIR}/PHY/LTE_ESTIMATION/lte_sync_time.c
+  
+  ${OPENAIR1_DIR}/PHY/LTE_ESTIMATION/lte_ul_channel_estimation.c #Source files that had to be added after merge with sidelink
+  ${OPENAIR1_DIR}/PHY/LTE_ESTIMATION/freq_equalization.c
+  
   ${OPENAIR1_DIR}/PHY/LTE_REFSIG/lte_dl_cell_spec.c
   ${OPENAIR1_DIR}/PHY/LTE_REFSIG/lte_dl_uespec.c
   ${OPENAIR1_DIR}/PHY/LTE_REFSIG/lte_gold.c
@@ -2074,7 +2086,7 @@ add_executable(lte-uesoftmodem
   ${OPENAIR3_DIR}/NAS/UE/nas_ue_task.c
   ${OPENAIR_DIR}/common/utils/utils.c
   ${OPENAIR_DIR}/common/utils/system.c
-  ${OPENAIR_TARGETS}/SIMU/USER/channel_sim.c
+  #${OPENAIR_TARGETS}/SIMU/USER/channel_sim.c
   ${XFORMS_SOURCE}
   ${XFORMS_SOURCE_SOFTMODEM}
   ${T_SOURCE}
@@ -2182,7 +2194,7 @@ foreach(myExe dlsim ulsim slschsim pucchsim prachsim)
   add_executable(${myExe}
     ${OPENAIR1_DIR}/SIMULATION/LTE_PHY/${myExe}.c
     ${OPENAIR1_DIR}/SIMULATION/LTE_PHY/dummy_functions.c
-    ${OPENAIR_TARGETS}/SIMU/USER/channel_sim.c
+    #${OPENAIR_TARGETS}/SIMU/USER/channel_sim.c
     ${XFORMS_SOURCE}
     ${T_SOURCE}
     ${CONFIG_SOURCES}

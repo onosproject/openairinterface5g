@@ -81,7 +81,8 @@ void init_UE_threads_stub(int);
 void init_UE_single_thread_stub(int);
 void *UE_thread(void *arg);
 void *UE_threadSL(void *arg);
-void init_UE(int nb_inst,int eMBMS_active, int uecap_xer_in, int timing_correction, int phy_test, int UE_scan, int UE_scan_carrier, runmode_t mode,int rxgain,int txpowermax,LTE_DL_FRAME_PARMS *fp);
+void init_UE(int nb_inst,int eMBMS_active, int uecap_xer_in, int timing_correction,int phy_test, int UE_scan, int UE_scan_carrier, runmode_t mode,int rxgain,int txpowermax,LTE_DL_FRAME_PARMS *fp0, int sidelink_active,int SLonly,int isSynchRef,int slsynconly,int SLSCHtest);
+//void init_UE(int nb_inst,int eMBMS_active, int uecap_xer_in, int timing_correction,int phy_test, int UE_scan, int UE_scan_carrier, runmode_t mode,int rxgain,int txpowermax,LTE_DL_FRAME_PARMS *fp);
 void init_UE_stub(int nb_inst,int,int,char*,int);
 void init_UE_stub_single_thread(int nb_inst,int,int,char*, int);
 int init_timer_thread(void);
@@ -1032,7 +1033,7 @@ static void *UE_thread_rxn_txnp4(void *arg) {
 	  (UE->frame_parms.frame_type == FDD) )
 	if (UE->mode != loop_through_memory)
 	  //phy_procedures_UE_TX(UE,proc,0,0,UE->mode,no_relay);
-      phy_procedures_UE_TX(UE,proc,0,0,UE->mode,no_relay);
+      phy_procedures_UE_TX(UE,proc,0,0,UE->mode);
       
       
       
@@ -1110,7 +1111,7 @@ static void *UE_thread_rxn_txnp4(void *arg) {
 }
 
 
-#include "openair1/SIMULATION/TOOLS/defs.h"
+#include "openair1/SIMULATION/TOOLS/sim.h"
 unsigned int emulator_absSF;
 channel_desc_t *UE2UE[NUMBER_OF_UE_MAX][NUMBER_OF_UE_MAX][MAX_NUM_CCs];
 
@@ -2717,7 +2718,7 @@ int init_timer_thread(void) {
 /* HACK: this function is needed to compile the UE
  * fix it somehow
  */
-int8_t find_dlsch(uint16_t rnti, PHY_VARS_eNB *eNB,find_type_t type)
+int16_t find_dlsch(uint16_t rnti, PHY_VARS_eNB *eNB,find_type_t type)
 {
   printf("you cannot read this\n");
   abort();

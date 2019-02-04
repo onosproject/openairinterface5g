@@ -5134,6 +5134,25 @@ double sinr_eff_cqi_calc(PHY_VARS_UE *ue, uint8_t eNB_id, uint8_t subframe)
 }
 //
 
+//Added to be used from slsch.c (sidelink)
+void RIV2_alloc(uint16_t N_RB_DL,uint16_t RIV, int *Lcrbs, int *RBstart) {
+
+   int A = RIV/N_RB_DL;
+   int B = RIV%N_RB_DL;
+
+   *Lcrbs = A+1;
+   // check condition RBstart <= N_RB_DL + 1 - Lcrbs
+   if (A <= N_RB_DL - B) {
+    *Lcrbs = A+1;
+    *RBstart = B;
+   }
+   else {
+     *Lcrbs =  N_RB_DL+1-A;
+     *RBstart = N_RB_DL-1-B;
+   }
+
+}
+
 
 
 #ifdef DEBUG_DLSCH_TOOLS

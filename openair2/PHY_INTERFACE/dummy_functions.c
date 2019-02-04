@@ -18,7 +18,7 @@
  * For more information about the OpenAirInterface (OAI) Software Alliance:
  *      contact@openairinterface.org
  */
-#include "LAYER2/MAC/defs.h"
+#include "LAYER2/MAC/mac_proto.h"
 
 void initiate_ra_proc(module_id_t module_idP, int CC_id, frame_t frameP,
 			sub_frame_t subframeP, uint16_t preamble_index,

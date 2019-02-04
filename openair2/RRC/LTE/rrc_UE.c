@@ -2225,7 +2225,7 @@ rrc_ue_process_mobilityControlInfo(
   }
    */
   //Removing SRB1 and SRB2 and DRB0
-  LOG_N(RRC,"[UE %d] : Update needed for rrc_pdcp_config_req (deprecated) and rrc_rlc_config_req commands(deprecated)\n", ctxt_pP->module_id);
+  LOG_I(RRC,"[UE %d] : Update needed for rrc_pdcp_config_req (deprecated) and rrc_rlc_config_req commands(deprecated)\n", ctxt_pP->module_id);
   rrc_pdcp_config_req (ctxt_pP, SRB_FLAG_YES, CONFIG_ACTION_REMOVE, DCCH,UNDEF_SECURITY_MODE
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
                        ,0

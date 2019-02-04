@@ -854,7 +854,11 @@ ue_send_mch_sdu(module_id_t module_idP, uint8_t CC_id, frame_t frameP,
             (char *)payload_ptr,
             rx_lengths[i],
             1,
-            NULL);
+            NULL
+#ifdef Rel14
+  ,SL_RESET_RLC_FLAG_NO
+#endif
+          );
 
         }
       } else {

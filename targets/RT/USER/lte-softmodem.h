@@ -334,7 +334,7 @@ extern int setup_ue_buffers(PHY_VARS_UE **phy_vars_ue, openair0_config_t *openai
 extern void fill_ue_band_info(void);
 
 //extern void init_UE(int,int,int,int,int,int,int,int,int);
-extern void init_UE(int nb_inst,int eMBMS_active, int uecap_xer_in, int timing_correction, int phy_test, int UE_scan, int UE_scan_carrier, runmode_t mode,int rxgain,int txpowermax, LTE_DL_FRAME_PARMS *fp);
+extern void init_UE(int nb_inst,int eMBMS_active, int uecap_xer_in, int timing_correction,int phy_test, int UE_scan, int UE_scan_carrier, runmode_t mode,int rxgain,int txpowermax,LTE_DL_FRAME_PARMS *fp0, int sidelink_active,int SLonly,int isSynchRef,int slsynconly,int SLSCHtest);
 extern void init_thread(int sched_runtime, int sched_deadline, int sched_fifo, cpu_set_t *cpuset, char * name);
 
 extern void reset_opp_meas(void);
@@ -365,7 +365,7 @@ extern int stop_L1L2(module_id_t enb_id);
 extern int restart_L1L2(module_id_t enb_id);
 
 
-extern void init_UE_stub_single_thread(int nb_inst,int eMBMS_active, int uecap_xer_in, char *emul_iface);
+extern void init_UE_stub_single_thread(int nb_inst,int eMBMS_active, int uecap_xer_in, char *emul_iface, int simL1);
 
 
 #endif

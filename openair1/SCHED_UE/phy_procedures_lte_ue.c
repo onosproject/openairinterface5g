@@ -48,9 +48,8 @@
   #define PUCCH
 #endif
 
-#include "LAYER2/MAC/extern.h"
-#include "LAYER2/MAC/defs.h"
-#include "LAYER2/MAC/proto.h"
+#include "LAYER2/MAC/mac_extern.h"
+#include "LAYER2/MAC/mac_proto.h"
 
 #include "UTIL/LOG/log.h"
 #include "LAYER2/MAC/mac.h"
@@ -1182,7 +1181,7 @@ void ulsch_common_procedures(PHY_VARS_UE *ue, UE_rxtx_proc_t *proc, uint8_t empt
 
 
    LOG_D(PHY,"[UE %d] Frame %d, subframe %d: ulsch_start = %d (rxoff %d, HW TA %d, timing advance %d, TA_offset %d, empty subframe %d\n",
-	 ue->Mod_id,frame_tx,subframe_tx,
+	 ue->Mod_id,proc->frame_tx,subframe_tx,
 	 ulsch_start,
 	 ue->rx_offset,
 	 ue->hw_timing_advance,
@@ -2213,7 +2212,7 @@ void phy_procedures_UE_SL_TX(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc) {
 
    // LOG_I(PHY,"ULSCH %d.%d (generate_ul_signal %d): signal F energy %d dB (txdataF %p)\n",frame_tx,subframe_tx,ue->generate_ul_signal[subframe_tx][0],dB_fixed(signal_energy(&ue->common_vars.txdataF[0][subframe_tx*14*ue->frame_parms.ofdm_symbol_size],14*ue->frame_parms.ofdm_symbol_size)),&ue->common_vars.txdataF[0][subframe_tx*14*ue->frame_parms.ofdm_symbol_size]);
     
-    ulsch_common_procedures(ue,frame_tx,subframe_tx, (ue->generate_ul_signal[subframe_tx][0] == 0));
+    ulsch_common_procedures(ue,proc, (ue->generate_ul_signal[subframe_tx][0] == 0));
 
 
   }

@@ -66,6 +66,7 @@
 #include "platform_types.h"
 #include "PHY/LTE_UE_TRANSPORT/transport_ue.h"
 #include "PHY/LTE_TRANSPORT/transport_eNB.h" // for SIC
+#include "PHY/LTE_TRANSPORT/transport_common.h"
 #include <pthread.h>
 #include "assertions.h"
 
