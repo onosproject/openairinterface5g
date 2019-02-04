@@ -1357,7 +1357,7 @@ uint8_t rx_ulsch_Gen_NB_IoT(PHY_VARS_eNB            *eNB,
               // x2 should be reinitialized according to 36.211 Sections 10.1.3.1 and 10.1.3.6
               // A     =  ulsch_harq->TBS; //88; //  // only for msg3 , should be replace by generic one
               // Qm   =  get_Qm_ul_NB_IoT(I_MCS,Nsc_RU);   // (2,1)      ///// ulsch_harq->mcs,ulsch_harq->N_sc_RU   // G_UL ??
-              G     =  (7-pilots_slot) * Qm * N_UL_slots; //(1 * Q_m) * 6 * 16; // Vincent : see 36.212, Section 5.1.4.1.2  // 16 slot(total number of slots) * 6 symboles (7-pilots_slot) * Qm*1 
+              G     =  (7-pilots_slot) * Qm * N_UL_slots * Nsc_RU; //(1 * Q_m) * 6 * 16; // Vincent : see 36.212, Section 5.1.4.1.2  // 16 slot(total number of slots) * 6 symboles (7-pilots_slot) * Qm*1 
               //G = ulsch_harq->N_sc_RU * Q_m) * ulsch_harq->Nsymb_UL * ulsch_harq->Nslot_UL;   (= number of RE * 2 - pilots)
               if (ulsch_harq->round == 0)
               {
@@ -1395,7 +1395,7 @@ uint8_t rx_ulsch_Gen_NB_IoT(PHY_VARS_eNB            *eNB,
               Hpp        = Hprime;
               // Cmux       = (ulsch_harq->Nsymb_UL-1)*ulsch_harq->Nslot_UL; // see definition in 36.212, Section 6.3.2, but not consistent with definition
               // of RU in 36.211, Section 10.1.2.3. Maybe prefer the following: 
-              Cmux       =  (7-pilots_slot) * N_UL_slots; // 6*16; //////////////(ulsch_harq->Nsymb_UL)*ulsch_harq->Nslot_UL;  // * N_RU **********
+              Cmux       =  (7-pilots_slot) * N_UL_slots * Nsc_RU; // 6*16; //////////////(ulsch_harq->Nsymb_UL)*ulsch_harq->Nslot_UL;  // * N_RU **********
               Rmux_prime = Hpp/Cmux;
               // Clear "tag" interleaving matrix to allow for CQI/DATA identification
               memset(ytag,0,Cmux*Rmux_prime);
@@ -1407,7 +1407,7 @@ uint8_t rx_ulsch_Gen_NB_IoT(PHY_VARS_eNB            *eNB,
               switch (Qm)
               {
                   case 1: 
-                      for (j=0; j<Cmux; j++)
+                      for (j=0; j<Cmux; j++)   // 3.75 KHz
                       { 
                           //y[j] = cseq[j]*ulsch_llr[j]; /// To be defined for bpsk
                       }
