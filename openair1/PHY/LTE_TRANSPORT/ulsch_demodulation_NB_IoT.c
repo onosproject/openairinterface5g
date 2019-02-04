@@ -1591,12 +1591,15 @@ uint8_t rx_ulsch_Gen_NB_IoT(PHY_VARS_eNB            *eNB,
                       fill_crc_indication_NB_IoT(eNB,0,rx_frame,rx_subframe,0); // indicate ACK to MAC
                       //fill_rx_indication_NB_IoT(eNB,i,frame,subframe);  // indicate SDU to MAC
                       fill_rx_indication_NB_IoT(eNB,proc,npusch_format,ulsch_NB_IoT->Msg3_flag);
+                      printf(" MSG3 OK");
 
                   } else {
                       
                       fill_crc_indication_NB_IoT(eNB,0,rx_frame,rx_subframe,1);   // indicate NAK to MAC
                       //fill_rx_indication_NB_IoT(eNB,i,frame,subframe);      // indicate SDU to MAC 
                       fill_rx_indication_NB_IoT(eNB,proc,npusch_format,ulsch_NB_IoT->Msg3_flag);
+                      printf(" MSG3 NOT OK");
+
                       break;
                   }
               }////////////  r loop end  ////////////
