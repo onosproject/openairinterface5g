@@ -80,7 +80,7 @@ uint8_t NPRACH_detection_NB_IoT(int16_t *input_buffer,uint32_t input_length){
 	}
 
 	 //printf("energies = %ld %ld\n",energy_signal,energy_noise);
-	if ((uint64_t)(((uint64_t) energy_signal))<(uint64_t)energy_noise>>4){
+	if ((uint64_t)(((uint64_t) energy_signal))<(uint64_t)energy_noise>>6){
 			
 		return 1;
 	}else{
@@ -480,7 +480,7 @@ uint32_t process_nprach_NB_IoT(PHY_VARS_eNB *eNB, int frame, uint8_t subframe, u
 		*preamble_index = subcarrier_estimation(Rx_sub_sampled_buffer_128);
 		*timing_advance = 0;
 		*rnti = 1 + frame/4;
-		printf("estimated subaccier = %i\n",eNB->preamble_index_NB_IoT);
+		printf("estimated subaccier = %i\n",*preamble_index);
 		return 1;//estimated_TA;
 	}else{
 

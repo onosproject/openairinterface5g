@@ -1592,6 +1592,7 @@ uint8_t rx_ulsch_Gen_NB_IoT(PHY_VARS_eNB            *eNB,
                       //fill_rx_indication_NB_IoT(eNB,i,frame,subframe);  // indicate SDU to MAC
                       fill_rx_indication_NB_IoT(eNB,proc,npusch_format,ulsch_NB_IoT->Msg3_flag);
                       printf(" MSG3 OK");
+                      //return 1;
 
                   } else {
                       
@@ -1600,7 +1601,7 @@ uint8_t rx_ulsch_Gen_NB_IoT(PHY_VARS_eNB            *eNB,
                       fill_rx_indication_NB_IoT(eNB,proc,npusch_format,ulsch_NB_IoT->Msg3_flag);
                       printf(" MSG3 NOT OK");
 
-                      break;
+                      //return 0;
                   }
               }////////////  r loop end  ////////////
 
@@ -1647,14 +1648,14 @@ uint8_t rx_ulsch_Gen_NB_IoT(PHY_VARS_eNB            *eNB,
                       fill_crc_indication_NB_IoT(eNB,0,rx_frame,rx_subframe,0); // indicate ACK to MAC
                       //fill_rx_indication_NB_IoT(eNB,i,frame,subframe);  // indicate SDU to MAC
                       fill_rx_indication_NB_IoT(eNB,proc,npusch_format,ulsch_NB_IoT->Msg3_flag);
-
+                      //return 1;
                 } else if (counter_ack<8) { //hard decision
 
                       printf("  decoded msg5: NACK  "); 
                       fill_crc_indication_NB_IoT(eNB,0,rx_frame,rx_subframe,1);   // indicate NAK to MAC
                       //fill_rx_indication_NB_IoT(eNB,i,frame,subframe);      // indicate SDU to MAC 
                       fill_rx_indication_NB_IoT(eNB,proc,npusch_format,ulsch_NB_IoT->Msg3_flag);
-
+                      //return 0;
                 } else  {  //when equality (8 bits 0 vs 8 bits 1), soft decision
                
                       counter_ack_soft=0;
@@ -1670,13 +1671,14 @@ uint8_t rx_ulsch_Gen_NB_IoT(PHY_VARS_eNB            *eNB,
                         fill_crc_indication_NB_IoT(eNB,0,rx_frame,rx_subframe,0); // indicate ACK to MAC
                         //fill_rx_indication_NB_IoT(eNB,i,frame,subframe);  // indicate SDU to MAC
                         fill_rx_indication_NB_IoT(eNB,proc,npusch_format,ulsch_NB_IoT->Msg3_flag);
-
+                        //return 1;
                       } else {
 
                         printf("  decoded msg5 (soft): NACK "); 
                         fill_crc_indication_NB_IoT(eNB,0,rx_frame,rx_subframe,1);   // indicate NAK to MAC
                         //fill_rx_indication_NB_IoT(eNB,i,frame,subframe);      // indicate SDU to MAC 
-                        fill_rx_indication_NB_IoT(eNB,proc,npusch_format,ulsch_NB_IoT->Msg3_flag); 
+                        fill_rx_indication_NB_IoT(eNB,proc,npusch_format,ulsch_NB_IoT->Msg3_flag);
+                        //return 0; 
                       }
                 }
                 printf("\n\n\n");
@@ -1705,6 +1707,7 @@ uint8_t rx_ulsch_Gen_NB_IoT(PHY_VARS_eNB            *eNB,
       {
           ulsch_NB_IoT->counter_sf          = N_SF_per_word;
       }
+      return 1;
       /////////////////////////////////////////END/////////////////////////////////////////////////////////////////////////////////////
   } else {
     return 0;     // create void function for NPUSCH ?
