@@ -195,7 +195,7 @@ void schedule_rar_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, int abs_subframe){
         for(msg3_scheduling_delay=0; msg3_scheduling_delay<4; ++msg3_scheduling_delay){
 		    //    36.213 Table 16.3.3-1 Imcs=3'b000 Nru=4
 			msg3_subframe = msg2_end_subframe+msg3_scheduling_delay_table[msg3_scheduling_delay]+1;
-			if(0==Check_UL_resource(msg3_subframe, Nru*rep, &npusch_info, 1, 0)){	//1: multi-tones 0: single-tone. 1: format 2(ack/nack) 0: format 1
+			if(0==Check_UL_resource(msg3_subframe, Nru*rep, &npusch_info, 0, 0)){	//1: multi-tones 0: single-tone. 1: format 2(ack/nack) 0: format 1
 				break;
 			}
 		}
