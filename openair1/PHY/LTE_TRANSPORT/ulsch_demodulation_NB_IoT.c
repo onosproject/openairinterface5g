@@ -1255,6 +1255,7 @@ uint8_t rx_ulsch_Gen_NB_IoT(PHY_VARS_eNB            *eNB,
                                           pilot_pos2,
                                           ul_sc_start,
                                           Qm,
+                                          N_SF_per_word,
                                           fp); 
             } else {
                     /// Channel Estimation (NPUSCH format 2)
