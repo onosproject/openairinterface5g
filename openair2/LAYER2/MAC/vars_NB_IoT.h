@@ -78,7 +78,7 @@ const int UL_TBS_Table[14][8]=
 
 const int UL_TBS_Table_msg3[8]={88,88,88,0,0,0,0,0};
 
-
+const int ULrep[8] = {1,2,4,8,16,32,64,128};
 const int rachperiod[8]={40,80,160,240,320,640,1280,2560};
 const int rachstart[8]={8,16,32,64,128,256,512,1024};
 const int rachrepeat[8]={1,2,4,8,16,32,64,128};
@@ -93,7 +93,7 @@ const double pdcchoffset[4] = {0, 0.125f, 0.25f, 0.375f};
 const int dlrepeat[16] = {1, 2, 4, 8, 16, 32, 64, 128, 192, 256, 384, 512, 768, 1024, 1536, 2048};
 
 const uint32_t RU_table[8]={1,2,3,4,5,6,8,10};
-
+const uint32_t RU_table_msg3[8]={4,3,1,1,1,1,1,1};
 const uint32_t scheduling_delay[4]={8,16,32,64};
 const uint32_t msg3_scheduling_delay_table[4] = {12,16,32,64};
 

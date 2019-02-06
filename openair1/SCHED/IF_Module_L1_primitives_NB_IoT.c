@@ -477,7 +477,7 @@ void schedule_response_NB_IoT(Sched_Rsp_NB_IoT_t *Sched_INFO)
 			
 			//nulsch_harq->rep_tmp                 = ;
 	        ////////////////////////////////////////////////////////////////////////////////////////
-	  		LOG_I(PHY,"IF module proceed UL config NULSCH pdu\n");
+	  		LOG_I(PHY,"subframe = %d (TX timing), IF module proceed UL config NULSCH pdu, will trigger npusch in next subframe\n",subframe);
 		  break;
 	  case NFAPI_UL_CONFIG_NRACH_PDU_TYPE:
 		  //TODO just for update the nprach  configuration (given at the beginning through phy_config_sib2)

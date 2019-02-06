@@ -182,20 +182,22 @@ void schedule_rar_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, int abs_subframe){
 		rep = 0;
 		
 		uint32_t Iru = 0, mcs, Nru;
+		uint32_t Nrep_UL = 0; // need a table here
 		uint32_t mappedMcsIndex = 4;  //  assume all ue supported multi-tone
-		mcs = mapped_mcs[msg2_nodes->ce_level][mappedMcsIndex]; //  assume all ue supported multi-tone
-		
+		//mcs = mapped_mcs[msg2_nodes->ce_level][mappedMcsIndex]; //  assume all ue supported multi-tone
+		mcs = 2;
+		Nrep_UL = ULrep[rep];	
         TBS = get_TBS_UL_NB_IoT(mcs,1,Iru);
 		while((TBS<11)&&(Iru<=7)){    //  88 bits
             Iru++;
             TBS=get_TBS_UL_NB_IoT(mcs,1,Iru);
         }
-		Nru = RU_table[Iru];
-		
+		//Nru = RU_table[Iru];
+		Nru = RU_table_msg3[mcs];
         for(msg3_scheduling_delay=0; msg3_scheduling_delay<4; ++msg3_scheduling_delay){
 		    //    36.213 Table 16.3.3-1 Imcs=3'b000 Nru=4
 			msg3_subframe = msg2_end_subframe+msg3_scheduling_delay_table[msg3_scheduling_delay]+1;
-			if(0==Check_UL_resource(msg3_subframe, Nru*rep, &npusch_info, 0, 0)){	//1: multi-tones 0: single-tone. 1: format 2(ack/nack) 0: format 1
+			if(0==Check_UL_resource(msg3_subframe, Nru*Nrep_UL, &npusch_info, 0, 0)){	//1: multi-tones 0: single-tone. 1: format 2(ack/nack) 0: format 1
 				break;
 			}
 		}
@@ -282,7 +284,7 @@ void schedule_rar_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, int abs_subframe){
 			
 			//msg2_nodes->ue_rnti = tc_rnti;
 			
-			LOG_I(MAC,"[%04d][RA scheduler][MSG2] RARDCI %d-%d RAR %d-%d MSG3 %d-%d\n", abs_subframe-1, dci_first_subframe, dci_end_subframe, msg2_first_subframe, msg2_end_subframe, npusch_info.sf_start, npusch_info.sf_end);
+			LOG_I(MAC,"[%04d][RA scheduler][MSG2] RARDCI %d-%d RAR %d-%d MSG3 %d-%d Nru = %d, Nrep = %d\n", abs_subframe-1, dci_first_subframe, dci_end_subframe, msg2_first_subframe, msg2_end_subframe, npusch_info.sf_start, npusch_info.sf_end,Nru,Nrep_UL);
 			LOG_D(MAC,"[%04d][RA scheduler][MSG2][CE%d] Change RA-RNTI %d->T-CRNTI %d\n", abs_subframe-1, msg2_nodes->ce_level, msg2_nodes->ra_rnti, msg2_nodes->ue_rnti);
 			LOG_D(MAC,"[%04d][RA scheduler][MSG2][CE%d] RAR DCI %d-%d RAR %d-%d MSG3 %d-%d\n", abs_subframe-1, msg2_nodes->ce_level, dci_first_subframe, dci_end_subframe, msg2_first_subframe, msg2_end_subframe, npusch_info.sf_start, npusch_info.sf_end);
 
@@ -296,7 +298,7 @@ void schedule_rar_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, int abs_subframe){
 			fill_resource_DL(mac_inst, msg2_node, msg2_first_subframe, msg2_end_subframe, msg2_result);
 
 			//	fill msg3 resource
-			generate_scheduling_result_UL(-1, -1, npusch_info.sf_start, npusch_info.sf_end, dci_n0, tc_rnti, str11, (void *)0);
+			generate_scheduling_result_UL(-1, -1, npusch_info.sf_start+3, npusch_info.sf_end+3, dci_n0, tc_rnti, str11, (void *)0);
 			adjust_UL_resource_list(&npusch_info);
 
 			//simulate_rx(&simulate_rx_msg3_list, tc_rnti, npusch_info.sf_start);

@@ -78,6 +78,7 @@ extern const int UL_TBS_Table[14][8];
 
 const int UL_TBS_Table_msg3[8];
 
+extern const int ULrep[8];
 extern const int rachperiod[8];
 extern const int rachstart[8];
 extern const int rachrepeat[8];
@@ -90,6 +91,7 @@ extern const double gvalue[8];
 extern const double pdcchoffset[4];
 
 extern const uint32_t RU_table[8];
+extern const uint32_t RU_table_msg3[8];
 
 extern const uint32_t scheduling_delay[4];
 extern const uint32_t msg3_scheduling_delay_table[4];
