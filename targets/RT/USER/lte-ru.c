@@ -208,7 +208,8 @@ void fh_if4p5_south_in(RU_t *ru,int *frame,int *subframe) {
 
   LTE_DL_FRAME_PARMS *fp = &ru->frame_parms;
   RU_proc_t *proc = &ru->proc;
-  int f,sf;
+  RU_CALIBRATION *calibration = &ru->calibration;
+  int f,sf,Ns,l;
 
   uint16_t packet_type;
   uint32_t symbol_number=0;
@@ -225,11 +226,11 @@ void fh_if4p5_south_in(RU_t *ru,int *frame,int *subframe) {
   }
 
   if (proc->symbol_mask[*subframe] == symbol_mask_full) proc->symbol_mask[*subframe] = 0;
-  LOG_D(PHY,"fh_if4p5_south_in: RU %d, frame %d, subframe %d, ru %d\n",ru->idx,*frame,*subframe,ru->idx);
-  AssertFatal(proc->symbol_mask[*subframe]==0,"rx_fh_if4p5: proc->symbol_mask[%d] = %x\n",*subframe,proc->symbol_mask[*subframe]);
+  //printf("fh_if4p5_south_in: RU %d, frame %d, subframe %d, ru %d\n",ru->idx,*frame,*subframe,ru->idx);
+  //AssertFatal(proc->symbol_mask[*subframe]==0,"rx_fh_if4p5: proc->symbol_mask[%d] = %x\n",*subframe,proc->symbol_mask[*subframe]);
   do {
     recv_IF4p5(ru, &f, &sf, &packet_type, &symbol_number);
-    LOG_D(PHY,"~~~~*** RU %d, frame %d, subframe %d, ru %d, packet_type %x, symbol %d\n",ru->idx,*frame,*subframe,ru->idx,packet_type,symbol_number);
+    //printf("~~~~*** RU %d, frame %d, subframe %d, ru %d, packet_type %x, symbol %d\n",ru->idx,*frame,*subframe,ru->idx,packet_type,symbol_number);
     if (oai_exit == 1 || ru->cmd== STOP_RU) break;
     if (packet_type == IF4p5_PULFFT) proc->symbol_mask[sf] = proc->symbol_mask[sf] | (1<<symbol_number);
     else if (packet_type == IF4p5_PULCALIB) {
@@ -245,6 +246,51 @@ void fh_if4p5_south_in(RU_t *ru,int *frame,int *subframe) {
     }
     LOG_D(PHY,"rx_fh_if4p5: subframe %d symbol mask %x\n",*subframe,proc->symbol_mask[*subframe]);
   } while(proc->symbol_mask[*subframe] != symbol_mask_full);    
+
+  if (ru->wait_cnt==0) {
+  	T(T_RAU_INPUT_DMRS, T_INT(ru->idx), T_INT(proc->frame_rx), T_INT(proc->subframe_rx),
+          T_BUFFER(&ru->common.rxdataF[0][0],
+          fp->symbols_per_tti*fp->ofdm_symbol_size*sizeof(int32_t)));
+  }
+
+  // Estimate calibration channel estimates:
+  if (proc->subframe_rx==0) {
+  	Ns = (ru->is_slave==0 ? 1 : 0);
+	l = (ru->is_slave==0 ? 10 : 3);
+	ru->frame_parms.nb_antennas_rx = ru->nb_rx;		
+        ulsch_extract_rbs_single(ru->common.rxdataF,
+                                 calibration->rxdataF_ext,
+                                 0,
+                                 fp->N_RB_DL,
+                                 3%(fp->symbols_per_tti/2),// l = symbol within slot
+                                 Ns, 
+                                 fp);
+
+	// OR should I call just: lte_ul_channel_estimation();
+   	/*lte_ul_channel_estimation((PHY_VARS_eNB *)NULL,
+                                  proc,
+                                  ru->idx,
+                                  3%(fp->symbols_per_tti/2),
+                                  Ns);
+	*/
+        lte_ul_channel_estimation_RRU(fp,
+                                  calibration->drs_ch_estimates,
+                                  calibration->drs_ch_estimates_time,
+                                  calibration->rxdataF_ext,
+                                  fp->N_RB_DL, 
+                                  proc->frame_rx,
+                                  proc->subframe_rx,
+                                  0,
+                                  0,
+                                  0,
+                                  l,
+                                  0,
+                                  0);
+	
+		T(T_CALIBRATION_CHANNEL_ESTIMATES, T_INT(ru->idx), T_INT(proc->frame_rx), T_INT(proc->subframe_rx),
+                T_BUFFER(&calibration->drs_ch_estimates[0][l*12*fp->N_RB_UL],
+                12*fp->N_RB_UL*sizeof(int32_t)));
+}
 
   //calculate timestamp_rx, timestamp_tx based on frame and subframe
   proc->subframe_rx  = sf;
@@ -484,7 +530,6 @@ void fh_if4p5_north_asynch_in(RU_t *ru,int *frame,int *subframe) {
     VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME(VCD_SIGNAL_DUMPER_VARIABLES_SUBFRAME_NUMBER_IF4P5_NORTH_ASYNCH_IN,subframe_tx);
   }
 
-  if (ru->is_slave==1 && ru->state==RU_RUN && frame_tx%ru->p==ru->tag-1) ru->generate_dmrs_sync = 1;
   if (ru->feptx_ofdm) ru->feptx_ofdm(ru);
 
   if (ru->fh_south_out) ru->fh_south_out(ru);
@@ -717,7 +762,7 @@ void tx_rf(RU_t *ru) {
   RU_proc_t *proc = &ru->proc;
   LTE_DL_FRAME_PARMS *fp = &ru->frame_parms;
   void *txp[ru->nb_tx],*txp1[ru->nb_tx]; 
-  unsigned int txs;
+  unsigned int txs,txs1;
   int i;
 
   T(T_ENB_PHY_OUTPUT_SIGNAL, T_INT(0), T_INT(0), T_INT(proc->frame_tx), T_INT(proc->subframe_tx),
@@ -774,7 +819,7 @@ void tx_rf(RU_t *ru) {
     
     for (i=0; i<ru->nb_tx; i++) {
       txp[i] = (void*)&ru->common.txdata[i][(proc->subframe_tx*fp->samples_per_tti)-sf_extension];
-      txp1[i] = (void*)&ru->common.txdata[i][(proc->subframe_tx*fp->samples_per_tti)+(sigoff2)-sf_extension];
+      txp1[i] = (void*)&ru->common.txdata[i][(proc->subframe_tx*fp->samples_per_tti)+(sigoff2)-sf_extension]; // pointer to 1st sample of 10th symbol
     }
     /* add fail safe for late command */
     if(late_control!=STATE_BURST_NORMAL){//stop burst
@@ -821,16 +866,19 @@ void tx_rf(RU_t *ru) {
 				      siglen+sf_extension,
 				      ru->nb_tx,
 				      flags);
- //LOG_I(PHY,"************** RU_id %d,RU_tag %d,timestamp %d,offset %d,extension %d,olo %d\n",ru->idx,ru->tag,proc->timestamp_tx,ru->ts_offset,sf_extension,
-//									     proc->timestamp_tx+ru->ts_offset-ru->openair0_cfg.tx_sample_advance-sf_extension);
+    LOG_D(PHY,"txs %d, siglen %d, sf_extension %d\n",txs,siglen,sf_extension);
+
     if (ru->is_slave==1 && ru->state==RU_RUN && proc->frame_tx%ru->p==ru->tag-1 && proc->subframe_tx==1) {
-	//LOG_I(PHY,"******** subframe %d Slave sends DMRS\n",proc->subframe_tx);
-    	txs = ru->rfdevice.trx_write_func(&ru->rfdevice,
+    	txs1 = ru->rfdevice.trx_write_func(&ru->rfdevice,
                                       proc->timestamp_tx+(ru->ts_offset+sigoff2)-ru->openair0_cfg.tx_sample_advance-sf_extension,
                                       txp1,
                                       siglen2+sf_extension,
                                       ru->nb_tx,
                                       flags);
+    
+	//int se1 = dB_fixed(signal_energy(txp1[0],siglen2+sf_extension));
+        //LOG_D(PHY,"******** frame %d subframe %d Slave sends DMRS of energy10 %d, energy3 %d\n",proc->frame_tx,proc->subframe_tx,se1,dB_fixed(signal_energy(txp[0],siglen+sf_extension)));
+        //LOG_D(PHY,"txs1 %d, siglen2 %d, sf_extension %d\n",txs1,siglen2,sf_extension);
     }
 
     ru->south_out_cnt++;
@@ -841,12 +889,19 @@ void tx_rf(RU_t *ru) {
 	  (long long unsigned int)proc->timestamp_tx,proc->frame_tx,proc->frame_tx_unwrap,proc->subframe_tx);
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_WRITE, 0 );
     
-    
-//    AssertFatal(txs ==  siglen+sf_extension,"TX : Timeout (sent %d/%d)\n",txs, siglen);
-    if( (txs !=  siglen+sf_extension) && (late_control==STATE_BURST_NORMAL) ){ /* add fail safe for late command */
+    //    AssertFatal(txs ==  siglen+sf_extension,"TX : Timeout (sent %d/%d)\n",txs, siglen);
+    if (ru->is_slave==1 && ru->state==RU_RUN && proc->frame_tx%ru->p==ru->tag-1 && proc->subframe_tx==1) {
+        if( (txs1!=siglen2+sf_extension) && (late_control==STATE_BURST_NORMAL) ){ /* add fail safe for late command */
+                late_control=STATE_BURST_TERMINATE;
+                LOG_E(PHY,"TX : Timeout (sent %d/%d) state =%d\n",txs1, siglen2,late_control);
+        }
+    }
+
+    if( (txs!=siglen+sf_extension) && (late_control==STATE_BURST_NORMAL) ){ /* add fail safe for late command */
       late_control=STATE_BURST_TERMINATE;
       LOG_E(PHY,"TX : Timeout (sent %d/%d) state =%d\n",txs, siglen,late_control);
     }
+    
   }
 }
 
@@ -2757,9 +2812,9 @@ void init_RU(char *rf_config_file, clock_source_t clock_source,clock_source_t ti
     // NOTE: multiple CC_id are not handled here yet!
     ru->openair0_cfg.clock_source  = clock_source;
     ru->openair0_cfg.time_source = time_source;
-    ru->generate_dmrs_sync = (ru->is_slave == 0) ? 1 : 0;
-    if (ru->generate_dmrs_sync == 1) {
-    	generate_ul_ref_sigs();
+    ru->generate_dmrs_sync = 1;
+    generate_ul_ref_sigs();
+    if (ru->is_slave == 0) {
         ru->dmrssync = (int16_t*)malloc16_clear(ru->frame_parms.ofdm_symbol_size*2*sizeof(int16_t)); 	
     }
     eNB0             = ru->eNB_list[0];

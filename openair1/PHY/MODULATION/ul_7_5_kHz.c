@@ -99,7 +99,7 @@ void remove_7_5_kHz(RU_t *ru,uint8_t slot)
 #endif
     // apply 7.5 kHz
 
-    //      if (((slot>>1)&1) == 0) { // apply the sinusoid from the table directly
+    //      if (((slot>>1)&1) == 0)  // apply the sinusoid from the table directly
     for (i=0; i<(len>>2); i++) {
 
 #if defined(__x86_64__) || defined(__i386__)
@@ -158,16 +158,30 @@ void remove_7_5_kHz(RU_t *ru,uint8_t slot)
                            frame_parms->nb_prefix_samples0],
              (frame_parms->ofdm_symbol_size + frame_parms->nb_prefix_samples)*sizeof(int32_t));
     }
+    
+    // undo 7.5 kHz offset for symbol 10 in case RU is master (for OTA synchronization)
     if (ru->is_slave == 0 && slot == 3){
-      memcpy((void*)&rxdata_7_5kHz[aa][(10*frame_parms->ofdm_symbol_size)+
-                                (10*frame_parms->nb_prefix_samples)+
+      memcpy((void*)&rxdata_7_5kHz[aa][(3*frame_parms->ofdm_symbol_size)+
+                                (2*frame_parms->nb_prefix_samples)+
                                 frame_parms->nb_prefix_samples0],
              (void*)&rxdata[aa][slot_offset+ru->N_TA_offset+
-                           (10*frame_parms->ofdm_symbol_size)+
-                           (9*frame_parms->nb_prefix_samples)+
+                           (3*frame_parms->ofdm_symbol_size)+
+                           (2*frame_parms->nb_prefix_samples)+
                            frame_parms->nb_prefix_samples0],
              (frame_parms->ofdm_symbol_size + frame_parms->nb_prefix_samples)*sizeof(int32_t));
-    }  
+    }
+
+/*    if (ru->is_slave == 0 && slot == 3){
+      memcpy((void*)&rxdata_7_5kHz[aa][(10*frame_parms->ofdm_symbol_size)+
+                                (8*frame_parms->nb_prefix_samples)+
+                                2*frame_parms->nb_prefix_samples0],
+             (void*)&rxdata[aa][slot_offset+ru->N_TA_offset+
+                           (3*frame_parms->ofdm_symbol_size)+
+                           (2*frame_parms->nb_prefix_samples)+
+                           frame_parms->nb_prefix_samples0],
+             (frame_parms->ofdm_symbol_size + frame_parms->nb_prefix_samples)*sizeof(int32_t));
+    }*/
+
 }
 }
 

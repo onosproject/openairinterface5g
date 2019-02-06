@@ -114,7 +114,7 @@ int main(int n, char **v)
     if (fwrite(e.e[buffer_arg].b, e.e[buffer_arg].bsize, 1, out) != 1)
       { perror(output_file); exit(1); }
     found = 1;
-    break;
+    //break;
   }
 
   if (found == 0) printf("ERROR: event not found\n");
