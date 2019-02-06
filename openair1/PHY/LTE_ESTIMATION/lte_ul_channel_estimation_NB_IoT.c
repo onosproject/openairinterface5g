@@ -225,7 +225,7 @@ int ul_chest_tmp_f2_NB_IoT(int32_t **rxdataF_ext,
                             (int32_t)received_data[k<<1]*(int32_t)pilot_sig[(k<<1)+1])>>15); //imaginary part of estimated channel 
                   }
       /// Apply inverse rotation to the channel
-            rotate_channel_sc_tmp_NB_IoT(estimated_channel,symbol,Qm,counter_msg5,flag); 
+            rotate_channel_sc_tmp_NB_IoT(estimated_channel,symbol,Qm,counter_msg5,0,flag); 
             ul_ch_estimates_re = estimated_channel[ul_sc_start<<1]; 
             ul_ch_estimates_im = estimated_channel[(ul_sc_start<<1)+1]; 
 
