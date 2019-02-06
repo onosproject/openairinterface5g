@@ -285,6 +285,7 @@ int ul_chest_tmp_NB_IoT(int32_t             **rxdataF_ext,
                         uint8_t             pilot_pos2,
                         uint16_t            ul_sc_start,
                         uint8_t             Qm,
+                        uint16_t            N_SF_per_word,
                         LTE_DL_FRAME_PARMS  *frame_parms)
 {
   //int pilot_pos1 = 3, pilot_pos2 = 10; // holds for npusch format 1, and 15 kHz subcarrier bandwidth
@@ -312,7 +313,7 @@ int ul_chest_tmp_NB_IoT(int32_t             **rxdataF_ext,
     {
         received_data = (int16_t *)&rxdataF_ext[aa][symbol_offset];
         estimated_channel = (int16_t *)&ul_ch_estimates[aa][symbol_offset]; 
-        pilot_sig  = &ul_ref_sigs_rx_NB_IoT[u][index_Nsc_RU][24 + 24*((8-counter_msg3)*2+Ns)-(ul_sc_start<<1)]; // pilot values depends on the slots
+        pilot_sig  = &ul_ref_sigs_rx_NB_IoT[u][index_Nsc_RU][24 + 24*((N_SF_per_word-counter_msg3)*2+Ns)-(ul_sc_start<<1)]; // pilot values depends on the slots
 
         for (k=0;k<12;k++)
         {

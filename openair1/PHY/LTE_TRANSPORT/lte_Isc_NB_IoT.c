@@ -113,10 +113,10 @@ uint16_t get_UL_N_ru_NB_IoT(uint8_t I_mcs, uint8_t I_ru, uint8_t flag_msg3)
 uint16_t get_UL_sc_index_start_NB_IoT(uint8_t subcarrier_spacing, uint16_t I_sc, uint8_t npush_format)
 {
 
-	if(npush_format == 1)
+	if(npush_format == 0)    // format 1
 	{
 
-		if(subcarrier_spacing == 0)  ////////// 15 KHz
+		if(subcarrier_spacing == 1)  ////////// 15 KHz
 		{
 
 			if (0<=I_sc && I_sc<12)
@@ -149,7 +149,7 @@ uint16_t get_UL_sc_index_start_NB_IoT(uint8_t subcarrier_spacing, uint16_t I_sc,
 
 	} else {       /////////////////////////////////////// format 2
 
-		if(subcarrier_spacing == 0)  ////////// 15 KHz
+		if(subcarrier_spacing == 1)  ////////// 15 KHz
 		{
 			
 			return(tab_ack_15khz[I_sc]);   
@@ -167,9 +167,9 @@ uint16_t get_UL_sc_index_start_NB_IoT(uint8_t subcarrier_spacing, uint16_t I_sc,
 uint8_t get_numb_UL_sc_NB_IoT(uint8_t subcarrier_spacing, uint8_t I_sc, uint8_t npush_format) 
 {
 			
-	if(npush_format == 1)
+	if(npush_format == 0)    // format 1
 	{
-		if(subcarrier_spacing == 0)  // 15 KHz
+		if(subcarrier_spacing == 1)  // 15 KHz
 		{
 
 			if(I_sc >= 0 && I_sc < 12)
@@ -199,9 +199,9 @@ uint8_t get_UL_slots_per_RU_NB_IoT(uint8_t subcarrier_spacing, uint8_t subcarrie
 {
 	uint8_t subcarrier_number = get_numb_UL_sc_NB_IoT(subcarrier_spacing, subcarrier_indcation, UL_format);
 
-	if(UL_format == 1) // format 1
+	if(UL_format == 0) // format 1
 	{
-		if(subcarrier_spacing == 0) // 15 KHz
+		if(subcarrier_spacing == 1) // 15 KHz
 		{
 			if (subcarrier_number == 1 )
 			{

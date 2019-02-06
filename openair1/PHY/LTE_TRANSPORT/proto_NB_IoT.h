@@ -540,6 +540,7 @@ int ul_chest_tmp_NB_IoT(int32_t             **rxdataF_ext,
                         uint8_t             pilot_pos2,
                         uint16_t            ul_sc_start,
                         uint8_t             Qm,
+                        uint16_t            N_SF_per_word,
                         LTE_DL_FRAME_PARMS  *frame_parms); 
 
 /// Channel estimation for NPUSCH format 2
