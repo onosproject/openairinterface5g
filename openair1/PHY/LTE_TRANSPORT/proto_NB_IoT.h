@@ -559,6 +559,7 @@ void rotate_channel_sc_tmp_NB_IoT(int16_t *estimated_channel,
                                   uint8_t l, 
                                   uint8_t Qm, 
                                   uint8_t counter_msg3,
+                                  uint16_t N_SF_per_word,
                                   uint8_t flag); 
 
 int ul_chequal_tmp_NB_IoT(int32_t **rxdataF_ext,

@@ -100,6 +100,7 @@ void rotate_channel_sc_tmp_NB_IoT(int16_t *estimated_channel,
           uint8_t l, 
           uint8_t Qm, 
           uint8_t counter_msg3,
+          uint16_t N_SF_per_word,
           uint8_t flag)
 {
   int16_t e_phi_re[120] = {32767, 24811, 4807, -17531, -31357, -29956, -14010, 0, 21402, 32412, 27683, 9511, -13279, -29622, -32767, -24812, -4808, 17530, 31356, 29955, 14009, 0, -21403, -32413,  -27684, -9512, 13278, 29621, 32767, 24811, 4807, -17531, -31357, -29956, -14010, 0, 21402, 32412, 27683, 9511, -13279, -29622, -32767, -24812, -4808, 17530, 31356, 29955, 14009, -1, -21403, -32413,     -27684, -9512, 13278, 29621, 32767, 24811, 4807, -17531, -31357, -29956, -14010, 0, 21402, 32412, 27683, 9511, -13279, -29622, -32767, -24812, -4808, 17530, 31356, 29955, 14009, 0, -21403, -32413,    -27684, -9512, 13278, 29621, 32767, 24811, 4807, -17531, -31357, -29956, -14010, -1, 21402, 32412, 27683, 9511, -13279, -29622, -32767, -24812, -4808, 17530, 31356, 29955, 14009, 0, -21403,     -32413,   -27684, -9512, 13278, 29621}; 
@@ -138,10 +139,10 @@ void rotate_channel_sc_tmp_NB_IoT(int16_t *estimated_channel,
 
        if(flag==0) // rotation of msg3
        {
-          estimated_channel[k<<1] = (int16_t)(((int32_t)e_phi_re[14*(8-counter_msg3) + l] * (int32_t)est_channel_re2 + 
-                        (int32_t)e_phi_im[14*(8-counter_msg3) + l] * (int32_t)est_channel_im2)>>15); 
-          estimated_channel[(k<<1)+1] = (int16_t)(((int32_t)e_phi_re[14*(8-counter_msg3) + l] * (int32_t)est_channel_im2 - 
-                        (int32_t)e_phi_im[14*(8-counter_msg3) + l] * (int32_t)est_channel_re2)>>15); 
+          estimated_channel[k<<1] = (int16_t)(((int32_t)e_phi_re[14*(N_SF_per_word-counter_msg3) + l] * (int32_t)est_channel_re2 + 
+                        (int32_t)e_phi_im[14*(N_SF_per_word-counter_msg3) + l] * (int32_t)est_channel_im2)>>15); 
+          estimated_channel[(k<<1)+1] = (int16_t)(((int32_t)e_phi_re[14*(N_SF_per_word-counter_msg3) + l] * (int32_t)est_channel_im2 - 
+                        (int32_t)e_phi_im[14*(N_SF_per_word-counter_msg3) + l] * (int32_t)est_channel_re2)>>15); 
        }
       if(flag==1) // rotation of msg5
       {
@@ -324,7 +325,7 @@ int ul_chest_tmp_NB_IoT(int32_t             **rxdataF_ext,
                           (int32_t)received_data[k<<1]*(int32_t)pilot_sig[(k<<1)+1])>>15); //imaginary part of estimated channel 
         }
 
-      rotate_channel_sc_tmp_NB_IoT(estimated_channel,symbol,Qm,counter_msg3,0);   // 0 is used to indicate msg3
+      rotate_channel_sc_tmp_NB_IoT(estimated_channel,symbol,Qm,counter_msg3,N_SF_per_word,0);   // 0 is used to indicate msg3
       //printf("\n");
               /*for (k=11;k<12;k++)
       {
