@@ -45,8 +45,8 @@
 uint16_t sequence_length[4] = {100,100,100,100}; //the "32" value corresponds to the max gold sequence length 
 
 // int16_t *ul_ref_sigs[30][33];
-int16_t *ul_ref_sigs_f2_rx_NB_IoT[16]; //this table contain the 16 possible pilots for format 2 NPUSCH
 int16_t *ul_ref_sigs_rx_NB_IoT[30][4]; //these contain the sequences in repeated format and quantized to QPSK ifdef IFFT_FPGA
+int16_t *ul_ref_sigs_f2_rx_NB_IoT[16]; //this table contain the 16 possible pilots for format 2 NPUSCH
 uint16_t u_max[4] = {16,12,14,30}; // maximum u value, see 36.211, Section 10.1.4
 
 /* 36.211 table 5.5.1.2-1 */
@@ -233,17 +233,18 @@ void generate_ul_ref_sigs_rx_NB_IoT(void)
 {
 
   unsigned int u,index_Nsc_RU,n,m; // Vincent: index_Nsc_RU 0,1,2,3 ---> number of sc 1,3,6,12 
-  uint8_t npusch_format = 1; // NB-IoT: format 1 (data), or 2: ack. Should be defined in higher layer 
+  //uint8_t npusch_format = 1; // NB-IoT: format 1 (data), or 2: ack. Should be defined in higher layer 
   int16_t  a;
   int16_t   qpsk[2]; 
-  unsigned int x1, x2=35; // NB-IoT: defined in 36.211, Section 10.1.4.1.1
-  int16_t ref_sigs_sc1[2*sequence_length[0]]; 
+  unsigned int x1, x2; // NB-IoT: defined in 36.211, Section 10.1.4.1.1
+  int16_t ref_sigs_sc1[2*sequence_length[0]]; // this is for format 1
+  //int16_t ref_sigs_sc1_f2[2*sequence_length[0]]; // this is for format 2
   uint32_t s; 
 
   a = ONE_OVER_SQRT2_Q15_NB_IoT;
   qpsk[0] = a; 
   qpsk[1] = -a;
-  s = lte_gold_generic_NB_IoT(&x1, &x2, 1);
+  
   //printf("\n\n\n in generate_ul_ref_sigs_rx_NB_IoT  %d \n\n\n",a);
   for (index_Nsc_RU=0; index_Nsc_RU<4; index_Nsc_RU++) 
   {
@@ -253,33 +254,36 @@ void generate_ul_ref_sigs_rx_NB_IoT(void)
       switch (index_Nsc_RU)
       {
         case 0: // 36.211, Section 10.1.4.1.1
+    x2=35;
+    s = lte_gold_generic_NB_IoT(&x1, &x2, 1);
           ul_ref_sigs_rx_NB_IoT[u][index_Nsc_RU] = (int16_t*)malloc(sizeof(int16_t)*(2*sequence_length[index_Nsc_RU]*12+24)); // *12 is mandatory to fit channel estimation functions
-          ul_ref_sigs_f2_rx_NB_IoT[u] = (int16_t*)malloc(sizeof(int16_t)*(2*12*12+24)); // first "*12" is mandatory to fit channel estimation functions; first "*12" is the length of pilot sequence for 
+    ul_ref_sigs_f2_rx_NB_IoT[u] = (int16_t*)malloc(sizeof(int16_t)*(2*12*12+24)); // first "*12" is mandatory to fit channel estimation functions; first "*12" is the length of pilot sequence for                        format 2
           // NB-IoT: for same reason, +24 is added in order to fit the possible subcarrier start shift when index_Nsc_RU = 0, 1, 2 --> see ul_sc_start in channel estimation function
-          for (n=0; n<sequence_length[index_Nsc_RU]; n++) {
-    if (n>0 && n%32==0)
+          for (n=0; n<sequence_length[index_Nsc_RU]; n++) 
     {
-      s = lte_gold_generic_NB_IoT(&x1, &x2, 0);   
-    }
-            ref_sigs_sc1[n<<1]    = qpsk[(s>>(n%32))&1]*w_n[16*u+n%16]; 
-            // ref_sigs_sc1[1+(n<<1)] = qpsk[(s>>n)&1]*w_n[16*u+n%16];
-            ref_sigs_sc1[1+(n<<1)] = ref_sigs_sc1[n<<1];  
+        if (n>0 && n%32==0)
+        {
+            s = lte_gold_generic_NB_IoT(&x1, &x2, 0);   
+        }
+              ref_sigs_sc1[n<<1]    = qpsk[(s>>(n%32))&1]*w_n[16*u+n%16]; 
+              // ref_sigs_sc1[1+(n<<1)] = qpsk[(s>>n)&1]*w_n[16*u+n%16];
+              ref_sigs_sc1[1+(n<<1)] = ref_sigs_sc1[n<<1];  
       
           }
 
-            for (n=0; n<sequence_length[index_Nsc_RU]; n++) {
-
-                    ul_ref_sigs_rx_NB_IoT[u][index_Nsc_RU][12*(n<<1)+24]    = ref_sigs_sc1[n<<1]; // ul_ref_sigs_rx_NB_IoT is filled every 12 RE, real part
-                    ul_ref_sigs_rx_NB_IoT[u][index_Nsc_RU][1+12*(n<<1)+24]= ref_sigs_sc1[1+(n<<1)]; // ul_ref_sigs_rx_NB_IoT is filled every 12 RE, imaginary part    
-            }
+            for (n=0; n<sequence_length[index_Nsc_RU]; n++) 
+    {
+                  ul_ref_sigs_rx_NB_IoT[u][index_Nsc_RU][12*(n<<1)+24]    = ref_sigs_sc1[n<<1]; // ul_ref_sigs_rx_NB_IoT is filled every 12 RE, real part
+                  ul_ref_sigs_rx_NB_IoT[u][index_Nsc_RU][1+12*(n<<1)+24]= ref_sigs_sc1[1+(n<<1)]; // ul_ref_sigs_rx_NB_IoT is filled every 12 RE, imaginary part    
+              }
             for (n=0; n<4; n++) 
-            {
-                for (m=0; m<3; m++) 
-                {
-                      ul_ref_sigs_f2_rx_NB_IoT[u][12*((3*n+m)<<1)+24] = ref_sigs_sc1[n<<1]; // ul_ref_sigs_rx_NB_IoT is filled every 12 RE, real part
-                      ul_ref_sigs_f2_rx_NB_IoT[u][1+12*((3*n+m)<<1)+24] = ref_sigs_sc1[1+(n<<1)]; // ul_ref_sigs_rx_NB_IoT is filled every 12 RE, imaginary part    
+    {
+              for (m=0; m<3; m++) 
+      {
+                    ul_ref_sigs_f2_rx_NB_IoT[u][12*((3*n+m)<<1)+24] = ref_sigs_sc1[n<<1]; // ul_ref_sigs_rx_NB_IoT is filled every 12 RE, real part
+                    ul_ref_sigs_f2_rx_NB_IoT[u][1+12*((3*n+m)<<1)+24] = ref_sigs_sc1[1+(n<<1)]; // ul_ref_sigs_rx_NB_IoT is filled every 12 RE, imaginary part    
                 }  
-            }
+              }
 
           break;
       }

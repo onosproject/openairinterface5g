@@ -115,6 +115,14 @@ int generate_NDLSCH_NB_IoT(NB_IoT_eNB_NDLSCH_t    *RAR,
                        uint32_t                   subframe,
                        int                        RB_IoT_ID);
 
+int generate_NPDCCH_NB_IoT(NB_IoT_eNB_NPDCCH_t    *DCI,
+                           int32_t                **txdataF,
+                           int16_t                amp,
+                           LTE_DL_FRAME_PARMS     *frame_parms,
+                           uint32_t               frame,
+                           uint32_t               subframe,
+                           int                    RB_IoT_ID);
+
 int generate_SIB23(NB_IoT_eNB_NDLSCH_t    *SIB23,
                    int32_t                **txdataF,
                    int16_t                amp,
@@ -560,6 +568,7 @@ void rotate_channel_sc_tmp_NB_IoT(int16_t *estimated_channel,
                                   uint8_t Qm, 
                                   uint8_t counter_msg3,
                                   uint16_t N_SF_per_word,
+                                  uint16_t  ul_sc_start,
                                   uint8_t flag); 
 
 int ul_chequal_tmp_NB_IoT(int32_t **rxdataF_ext,

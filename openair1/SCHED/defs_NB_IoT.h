@@ -55,6 +55,8 @@ void npusch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc);
 ////////////////// NB-IoT testing ////////////////////
 void fill_rx_indication_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,uint8_t data_or_control, uint8_t msg3_flag);
 
+void fill_crc_indication_NB_IoT(PHY_VARS_eNB *eNB,int UE_id,int frame,int subframe,uint8_t crc_flag);
+
 #endif
 
 

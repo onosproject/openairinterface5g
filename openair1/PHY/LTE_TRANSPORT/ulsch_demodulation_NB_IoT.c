@@ -39,6 +39,9 @@
 //#define DEBUG_ULSCH
 //#include "PHY/sse_intrin.h"
 #include "PHY/LTE_ESTIMATION/defs_NB_IoT.h"
+
+#include "openair1/SCHED/defs_NB_IoT.h"
+
 #include "T.h"
 
 //extern char* namepointer_chMag ;
