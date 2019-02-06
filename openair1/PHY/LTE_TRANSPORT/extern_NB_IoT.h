@@ -40,4 +40,30 @@ extern short *ul_ref_sigs_rx_NB_IoT[30][4]; // NB-IoT: format 1 pilots
 extern short *ul_ref_sigs_f2_rx_NB_IoT[16]; // NB-IoT: format 2 pilots
 extern unsigned short dftsizes[33];
 
+
+extern  int16_t e_phi_re_m6[120];
+extern  int16_t e_phi_im_m6[120]; 
+extern  int16_t e_phi_re_m5[120];
+extern  int16_t e_phi_im_m5[120];
+extern  int16_t e_phi_re_m4[120];
+extern  int16_t e_phi_im_m4[120];
+extern  int16_t e_phi_re_m3[120];
+extern  int16_t e_phi_im_m3[120];
+extern  int16_t e_phi_re_m2[120];
+extern  int16_t e_phi_im_m2[120];
+extern  int16_t e_phi_re_m1[120];
+extern  int16_t e_phi_im_m1[120];
+extern  int16_t e_phi_re_0[120];
+extern  int16_t e_phi_im_0[120];
+extern  int16_t e_phi_re_p1[120];
+extern  int16_t e_phi_im_p1[120];
+extern  int16_t e_phi_re_p2[120];
+extern  int16_t e_phi_im_p2[120];
+extern  int16_t e_phi_re_p3[120];
+extern  int16_t e_phi_im_p3[120];
+extern  int16_t e_phi_re_p4[120];
+extern  int16_t e_phi_im_p4[120];
+extern  int16_t e_phi_re_p5[120];  
+extern  int16_t e_phi_im_p5[120]; 
+
 #endif

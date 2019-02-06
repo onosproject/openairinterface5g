@@ -41,6 +41,7 @@
 #include "PHY/LTE_ESTIMATION/defs_NB_IoT.h"
 
 #include "openair1/SCHED/defs_NB_IoT.h"
+//#include "openair1/PHY/LTE_TRANSPORT/sc_rotation_NB_IoT.h"
 
 #include "T.h"
 
@@ -975,7 +976,7 @@ void fill_rbs_zeros_NB_IoT(PHY_VARS_eNB *eNB,
 
 }
 
-
+/*
 void rotate_single_carrier_NB_IoT(PHY_VARS_eNB          *eNB, 
                                   LTE_DL_FRAME_PARMS    *frame_parms,
                                   int32_t               **rxdataF_comp, 
@@ -1029,21 +1030,130 @@ void rotate_single_carrier_NB_IoT(PHY_VARS_eNB          *eNB,
         rxdataF_comp16[1] = (int16_t)(((int32_t)e_phi_re[14*(8-counter_msg3) + l] * (int32_t)rxdataF_comp16_im_2 - 
                               (int32_t)e_phi_im[14*(8-counter_msg3) + l] * (int32_t)rxdataF_comp16_re_2)>>15); 
   } else {
-        /*rxdataF_comp16[0] = (int16_t)(((int32_t)e_phi_re[0] * (int32_t)rxdataF_comp16_re_2 + 
-                              (int32_t)e_phi_im[0] * (int32_t)rxdataF_comp16_im_2)>>15); 
-        rxdataF_comp16[1] = (int16_t)(((int32_t)e_phi_re[0] * (int32_t)rxdataF_comp16_im_2 - 
-                              (int32_t)e_phi_im[0] * (int32_t)rxdataF_comp16_re_2)>>15); */
+       
           rxdataF_comp16[0] = (int16_t)(((int32_t)e_phi_re_m6[14*(2-counter_msg3) + l] * (int32_t)rxdataF_comp16_re_2 + 
                               (int32_t)e_phi_im_m6[14*(2-counter_msg3) + l] * (int32_t)rxdataF_comp16_im_2)>>15); 
           rxdataF_comp16[1] = (int16_t)(((int32_t)e_phi_re_m6[14*(2-counter_msg3) + l] * (int32_t)rxdataF_comp16_im_2 - 
                               (int32_t)e_phi_im_m6[14*(2-counter_msg3) + l] * (int32_t)rxdataF_comp16_re_2)>>15); 
+//  }
+  
+
+//}*/
+//////////////////////////////////////////////////////////////////////
+void rotate_single_carrier_NB_IoT(PHY_VARS_eNB          *eNB, 
+                                  LTE_DL_FRAME_PARMS    *frame_parms,
+                                  int32_t               **rxdataF_comp, 
+                                  uint8_t               eNB_id,
+                                  uint8_t               symbol, //symbol within subframe
+                                  uint8_t               counter_msg3,          ///  to be replaced by the number of received part
+                                  uint16_t              ul_sc_start,
+                                  uint8_t               Qm,
+                                  uint16_t              N_SF_per_word, 
+                                  uint8_t               option)
+{
+
+  //uint32_t I_sc = 10;//eNB->ulsch_NB_IoT[UE_id]->harq_process->I_sc;  // NB_IoT: subcarrier indication field: must be defined in higher layer
+  //uint16_t ul_sc_start; // subcarrier start index into UL RB 
+  int16_t pi_2_re[2] = {32767 , 0}; 
+  int16_t pi_2_im[2] = {0 , 32767}; 
+  int16_t pi_4_re[2] = {32767 , 23170}; 
+  int16_t pi_4_im[2] = {0 , 23170}; 
+  int16_t *e_phi_re,*e_phi_im;
+  int16_t *rxdataF_comp16; 
+  int16_t rxdataF_comp16_re, rxdataF_comp16_im,rxdataF_comp16_re_2,rxdataF_comp16_im_2;    
+
+
+  switch(ul_sc_start)
+  {
+    case 0: 
+        e_phi_re = e_phi_re_m6; 
+        e_phi_im = e_phi_im_m6; 
+        break; 
+    case 1: 
+        e_phi_re = e_phi_re_m5; 
+        e_phi_im = e_phi_im_m5; 
+        break; 
+    case 2: 
+        e_phi_re = e_phi_re_m4; 
+        e_phi_im = e_phi_im_m4; 
+        break;
+    case 3: 
+        e_phi_re = e_phi_re_m3; 
+        e_phi_im = e_phi_im_m3; 
+        break;
+    case 4: 
+        e_phi_re = e_phi_re_m2; 
+        e_phi_im = e_phi_im_m2; 
+        break; 
+    case 5: 
+        e_phi_re = e_phi_re_m1; 
+        e_phi_im = e_phi_im_m1; 
+        break;
+    case 6: 
+        e_phi_re = e_phi_re_0; 
+        e_phi_im = e_phi_im_0; 
+        break;
+    case 7: 
+        e_phi_re = e_phi_re_p1; 
+        e_phi_im = e_phi_im_p1; 
+        break;
+    case 8: 
+        e_phi_re = e_phi_re_p2; 
+        e_phi_im = e_phi_im_p2; 
+        break;
+    case 9: 
+        e_phi_re = e_phi_re_p3; 
+        e_phi_im = e_phi_im_p3; 
+        break;
+    case 10: 
+        e_phi_re = e_phi_re_p4; 
+        e_phi_im = e_phi_im_p4; 
+        break;
+    case 11: 
+        e_phi_re = e_phi_re_p5; 
+        e_phi_im = e_phi_im_p5; 
+        break; 
   }
-  /*printf("\n");
-  printf("  re_eq_data = %d  im_eq_data = %d   ",rxdataF_comp16[0],rxdataF_comp16[1]);
-  printf("\n");*/
+
+  //ul_sc_start = get_UL_sc_start_NB_IoT(I_sc); // NB-IoT: get the used subcarrier in RB
+  rxdataF_comp16   = (int16_t *)&rxdataF_comp[0][symbol*frame_parms->N_RB_DL*12 + ul_sc_start]; 
+  rxdataF_comp16_re = rxdataF_comp16[0]; 
+  rxdataF_comp16_im = rxdataF_comp16[1]; 
+  rxdataF_comp16_re_2 = rxdataF_comp16_re; 
+  rxdataF_comp16_im_2 = rxdataF_comp16_re;
+    /// Apply two rotations, see section 10.1.5 in TS 36.211
+  if (Qm == 1){ // rotation due to pi/2 BPSK
+    rxdataF_comp16_re_2 = (int16_t)(((int32_t)pi_2_re[symbol%2] * (int32_t)rxdataF_comp16_re + 
+                        (int32_t)pi_2_im[symbol%2] * (int32_t)rxdataF_comp16_im)>>15); 
+    rxdataF_comp16_im_2 = (int16_t)(((int32_t)pi_2_re[symbol%2] * (int32_t)rxdataF_comp16_im - 
+                        (int32_t)pi_2_im[symbol%2] * (int32_t)rxdataF_comp16_re)>>15); 
+  }
+  if(Qm == 2){ // rotation due to pi/4 QPSK
+    rxdataF_comp16_re_2 = (int16_t)(((int32_t)pi_4_re[symbol%2] * (int32_t)rxdataF_comp16_re + 
+                        (int32_t)pi_4_im[symbol%2] * (int32_t)rxdataF_comp16_im)>>15); 
+    rxdataF_comp16_im_2 = (int16_t)(((int32_t)pi_4_re[symbol%2] * (int32_t)rxdataF_comp16_im - 
+                        (int32_t)pi_4_im[symbol%2] * (int32_t)rxdataF_comp16_re)>>15); 
+  }
+
+      if(option==0) // rotation for msg3 (NPUSCH format 1)
+    {
+              rxdataF_comp16[0] = (int16_t)(((int32_t)e_phi_re[14*(N_SF_per_word-counter_msg3) + symbol] * (int32_t)rxdataF_comp16_re_2 + 
+                        (int32_t)e_phi_im[14*(N_SF_per_word-counter_msg3) + symbol] * (int32_t)rxdataF_comp16_im_2)>>15); 
+              rxdataF_comp16[1] = (int16_t)(((int32_t)e_phi_re[14*(N_SF_per_word-counter_msg3) + symbol] * (int32_t)rxdataF_comp16_im_2 - 
+                        (int32_t)e_phi_im[14*(N_SF_per_word-counter_msg3) + symbol] * (int32_t)rxdataF_comp16_re_2)>>15); 
+    }
+      if(option==1) // rotation for msg5 (NPUSCH format 1)
+    {
+              rxdataF_comp16[0] = (int16_t)(((int32_t)e_phi_re[14*(2-counter_msg3) + symbol] * (int32_t)rxdataF_comp16_re_2 + 
+                        (int32_t)e_phi_im[14*(2-counter_msg3) + symbol] * (int32_t)rxdataF_comp16_im_2)>>15); 
+              rxdataF_comp16[1] = (int16_t)(((int32_t)e_phi_re[14*(2-counter_msg3) + symbol] * (int32_t)rxdataF_comp16_im_2 - 
+                        (int32_t)e_phi_im[14*(2-counter_msg3) + symbol] * (int32_t)rxdataF_comp16_re_2)>>15); 
+    }
 
 }
 
+//////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
 
 void rotate_bpsk_NB_IoT(PHY_VARS_eNB *eNB, 
                         LTE_DL_FRAME_PARMS *frame_parms,
@@ -1298,6 +1408,7 @@ uint8_t rx_ulsch_Gen_NB_IoT(PHY_VARS_eNB            *eNB,
                                          ulsch_NB_IoT->counter_sf,   //counter_msg,
                                          ul_sc_start,
                                          Qm,
+                                         N_SF_per_word,
                                          npusch_format); // or data
       }
       //////////////////////////////////////////End rotation ///////////////////////////////////

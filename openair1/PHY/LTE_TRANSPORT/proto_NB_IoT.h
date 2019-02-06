@@ -443,12 +443,13 @@ void init_ul_hopping_NB_IoT(NB_IoT_DL_FRAME_PARMS *frame_parms);
 void rotate_single_carrier_NB_IoT(PHY_VARS_eNB          *eNB, 
                                   LTE_DL_FRAME_PARMS    *frame_parms,
                                   int32_t               **rxdataF_comp, 
-                                  uint8_t               UE_id,
-                                  uint8_t               symbol, 
-                                  uint8_t               counter_msg3,
+                                  uint8_t               eNB_id,
+                                  uint8_t               symbol, //symbol within subframe
+                                  uint8_t               counter_msg3,          ///  to be replaced by the number of received part
                                   uint16_t              ul_sc_start,
                                   uint8_t               Qm,
-                                  uint8_t               option); 
+                                  uint16_t              N_SF_per_word, 
+                                  uint8_t               option);
 
 void fill_rbs_zeros_NB_IoT(PHY_VARS_eNB *eNB, 
                                   LTE_DL_FRAME_PARMS *frame_parms,
