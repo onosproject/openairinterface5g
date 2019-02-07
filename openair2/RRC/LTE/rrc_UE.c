@@ -5282,7 +5282,7 @@ openair_rrc_top_init_ue(
 			    (const uint32_t *)NULL,
 			    (const uint32_t *)NULL,
 			    (const uint32_t *)NULL,
-			    UE_rrc_inst[module_id].SL_Preconfiguration[0],
+				UE_rrc_inst[module_id].SL_Preconfiguration[0],  //(LTE_SL_Preconfiguration_r12_t *) NULL,
 			    1025, // indicates that there is no  update in the frame number
 			    11,   // /indicates that there isno update in the subframe number
 			    NULL

@@ -1131,8 +1131,8 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
                         				(unsigned char *)NLMSG_DATA(nas_nlh_rx),
                         				PDCP_TRANSMISSION_MODE_DATA
                         				#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
-                        				,&pdcp_read_header_g.sourceL2Id
-                        				,&pdcp_read_header_g.destinationL2Id
+                        				,&pdcp_read_header_g.sourceL2Id //NULL
+                        				,&pdcp_read_header_g.destinationL2Id //NULL
                         				#endif
                         				);
                         	} else {  //INST == 1 (OIP1)

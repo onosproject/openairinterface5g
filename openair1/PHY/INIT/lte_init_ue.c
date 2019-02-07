@@ -1057,28 +1057,24 @@ void init_lte_ue_transport(PHY_VARS_UE *ue,int abstraction_flag) {
   ue->dlsch_sldch    = new_eNB_dlsch(1,1,NSOFT,ue->frame_parms.N_RB_DL, abstraction_flag,&ue->frame_parms);
   ue->ulsch_sldch    = new_ue_ulsch(ue->frame_parms.N_RB_DL, abstraction_flag);
 
-  //Panos: Substituted the next line with the double for loop as harq_ids is a 2-dimension array now
-  //for (i=0;i<10;i++) ue->dlsch_sldch->harq_ids[j][i] = 0;
+  //***/ Substituted the next line with the double for loop as harq_ids is a 2-dimension array now
+  //for (i=0;i<10;i++) ue->dlsch_sldch->harq_ids[i] = 0;
 
-  for (j=0; j<2; j++){
-	  for (i=0;i<10;i++){
-		  ue->dlsch_sldch->harq_ids[j][i] = 0;
-	  }
-  }
+  LTE_eNB_DLSCH_t  *dlsch_sldch_tmp = &ue->dlsch_sldch;
+  for (i=0; i<20; i++)
+	  dlsch_sldch_tmp->harq_ids[i/10][i%10] = 0;
+
 
   ue->dlsch_rx_slsch = new_ue_dlsch(1,4,NSOFT,1,MAX_TURBO_ITERATIONS,ue->frame_parms.N_RB_DL, abstraction_flag);
   ue->dlsch_slsch    = new_eNB_dlsch(1,1,NSOFT,ue->frame_parms.N_RB_DL, abstraction_flag,&ue->frame_parms);
   ue->ulsch_slsch    = new_ue_ulsch(ue->frame_parms.N_RB_DL, abstraction_flag);
 
   //Panos: Substituted the next line with the double for loop as harq_ids is a 2-dimension array now
-  //for (i=0;i<10;i++) ue->dlsch_slsch->harq_ids[j][i] = 0;
+  //for (i=0;i<10;i++) ue->dlsch_slsch->harq_ids[i] = 0;
 
-  for (j=0; j<2; j++){
-	  for (i=0;i<10;i++){
-		  ue->dlsch_slsch->harq_ids[j][i] = 0;
-	  }
-
-  }
+  LTE_eNB_DLSCH_t  *dlsch_slsch_tmp = &ue->dlsch_slsch;
+  for (i=0; i<20; i++)
+	  dlsch_slsch_tmp->harq_ids[i/10][i%10] = 0;
 
   ue->slsch_txcnt = 0;
   ue->slsch_errors = 0;

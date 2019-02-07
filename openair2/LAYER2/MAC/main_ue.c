@@ -62,7 +62,7 @@ void dl_phy_sync_success(module_id_t module_idP, frame_t frameP, unsigned char e
     	LOG_I(MAC, "Panos-D: dl_phy_sync_success 1 \n");
 	openair_rrc_ue_init(module_idP, eNB_index);
     } else {
-    	LOG_I(MAC, "Panos-D: dl_phy_sync_success 2 \n");
+    	//LOG_I(MAC, "Panos-D: dl_phy_sync_success 2 \n");
 	rrc_in_sync_ind(module_idP, frameP, eNB_index);
     }
 }

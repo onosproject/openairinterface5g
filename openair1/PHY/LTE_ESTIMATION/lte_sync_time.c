@@ -63,7 +63,7 @@ int lte_sync_time_init(LTE_DL_FRAME_PARMS *frame_parms )   // LTE_UE_COMMON *com
 
   sync_corr_ue0 = (int64_t *)malloc16(4*LTE_NUMBER_OF_SUBFRAMES_PER_FRAME*sizeof(int64_t)*frame_parms->samples_per_tti);
   sync_corr_ue1 = (int64_t *)malloc16(4*LTE_NUMBER_OF_SUBFRAMES_PER_FRAME*sizeof(int64_t)*frame_parms->samples_per_tti);
-  sync_corr_ue2 = (int32_t *)malloc16(LTE_NUMBER_OF_SUBFRAMES_PER_FRAME*sizeof(int32_t)*frame_parms->samples_per_tti);
+  sync_corr_ue2 = (int64_t *)malloc16(LTE_NUMBER_OF_SUBFRAMES_PER_FRAME*sizeof(int64_t)*frame_parms->samples_per_tti);
 
   if (sync_corr_ue0) {
 #ifdef DEBUG_PHY

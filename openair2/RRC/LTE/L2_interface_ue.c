@@ -445,7 +445,7 @@ void rrc_in_sync_ind(module_id_t Mod_idP, frame_t frameP, uint16_t eNB_index)
   //-------------------------------------------------------------------------------------------//
 #if defined(ENABLE_ITTI)
   {
-	  LOG_I(RRC, "Panos-D: rrc_in_sync_ind 0 \n");
+	  LOG_D(RRC, "Panos-D: rrc_in_sync_ind 0 \n");
     MessageDef *message_p;
     //LOG_I(RRC,"sending a message to task_mac_ue\n");
     message_p = itti_alloc_new_message (TASK_MAC_UE, RRC_MAC_IN_SYNC_IND);
@@ -456,7 +456,7 @@ void rrc_in_sync_ind(module_id_t Mod_idP, frame_t frameP, uint16_t eNB_index)
   }
 #else
   UE_rrc_inst[Mod_idP].Info[eNB_index].N310_cnt=0;
-  LOG_I(RRC, "Panos-D: rrc_in_sync_ind 1 \n");
+  //LOG_I(RRC, "Panos-D: rrc_in_sync_ind 1 \n");
   if (UE_rrc_inst[Mod_idP].Info[eNB_index].T310_active==1) {
     UE_rrc_inst[Mod_idP].Info[eNB_index].N311_cnt++;
   }

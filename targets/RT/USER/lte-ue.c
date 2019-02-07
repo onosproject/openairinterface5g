@@ -261,9 +261,10 @@ void init_UE(int nb_inst,int eMBMS_active, int uecap_xer_in, int timing_correcti
 
   LOG_I(PHY,"UE : Calling Layer 2 for initialization\n");
 
-  l2_init_ue(eMBMS_active,(uecap_xer_in==1)?uecap_xer:NULL,
+  //***/ Change the order and call the next function call at the end
+  /*l2_init_ue(eMBMS_active,(uecap_xer_in==1)?uecap_xer:NULL,
 	     0,// cba_group_active
-	     0); // HO flag
+	     0); // HO flag*/
 
   if (PHY_vars_UE_g==NULL) PHY_vars_UE_g = (PHY_VARS_UE***)calloc(1+nb_inst,sizeof(PHY_VARS_UE**));
 
@@ -399,6 +400,10 @@ void init_UE(int nb_inst,int eMBMS_active, int uecap_xer_in, int timing_correcti
   }
 
   printf("UE threads created by %ld\n", gettid());
+  l2_init_ue(eMBMS_active,(uecap_xer_in==1)?uecap_xer:NULL,
+  	     0,// cba_group_active
+  	     0); // HO flag
+
 }
 
 
