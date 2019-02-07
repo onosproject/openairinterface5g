@@ -1449,7 +1449,7 @@ uint8_t rx_ulsch_Gen_NB_IoT(PHY_VARS_eNB            *eNB,
       {   
           int16_t         *ulsch_llr    = eNB->pusch_vars[eNB_id]->llr;             //UE_id=0
           
-          unsigned int    A      = ulsch_harq->TBS;
+          unsigned int    A      = (ulsch_harq->TBS)*8;
           uint8_t         rvdx   = ulsch_harq->rvidx;
           unsigned int    j,j2; //i2,
           int             iprime;
