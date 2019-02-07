@@ -358,7 +358,28 @@ int32_t dlsch_encoding_NB_IoT(unsigned char              *a,
                               unsigned int               G);         // G (number of available RE) is implicitly multiplied by 2 (since only QPSK modulation)
  
 
+void get_pilots_position(uint8_t npusch_format,uint8_t  subcarrier_spacing,uint8_t *pilot_pos1,uint8_t *pilot_pos2,uint8_t *pilots_slot);
 
+void UL_channel_estimation_NB_IoT(PHY_VARS_eNB        *eNB,
+                                  LTE_DL_FRAME_PARMS  *fp,
+                                  uint16_t            UL_RB_ID_NB_IoT,
+                                  uint16_t            Nsc_RU,
+                                  uint8_t             pilot_pos1,
+                                  uint8_t             pilot_pos2,
+                                  uint16_t            ul_sc_start,
+                                  uint8_t             Qm,
+                                  uint16_t            N_SF_per_word,
+                                  uint8_t             rx_subframe);
+
+void get_llr_per_sf_NB_IoT(PHY_VARS_eNB        *eNB,
+                           LTE_DL_FRAME_PARMS  *fp,
+                           uint8_t             npusch_format,
+                           uint8_t             counter_sf,
+                           uint16_t            N_SF_per_word,
+                           uint8_t             pilot_pos1,
+                           uint8_t             pilot_pos2,
+                           uint16_t            ul_sc_start,
+                           uint16_t            Nsc_RU);
 
 
 uint8_t rx_ulsch_Gen_NB_IoT(PHY_VARS_eNB             *eNB,
@@ -372,7 +393,7 @@ uint8_t rx_ulsch_Gen_NB_IoT(PHY_VARS_eNB             *eNB,
 void ulsch_extract_rbs_single_NB_IoT(int32_t **rxdataF,
                                      int32_t **rxdataF_ext, 
                                      uint16_t UL_RB_ID_NB_IoT, // index of UL NB_IoT resource block !!! may be defined twice : in frame_parms and in NB_IoT_UL_eNB_HARQ_t
-                                     uint8_t N_sc_RU, // number of subcarriers in UL 
+                                     uint16_t N_sc_RU, // number of subcarriers in UL 
                                      uint8_t l,
                                      uint8_t Ns,
                                      LTE_DL_FRAME_PARMS *frame_parms);
