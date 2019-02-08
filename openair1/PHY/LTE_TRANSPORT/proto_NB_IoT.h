@@ -390,6 +390,14 @@ void descrambling_NPUSCH_data_NB_IoT(LTE_DL_FRAME_PARMS  *fp,
                                      uint8_t             rx_subframe,
                                      uint32_t            rx_frame);
 
+void descrambling_NPUSCH_ack_NB_IoT(LTE_DL_FRAME_PARMS  *fp,
+                                    int32_t             *y_msg5,
+                                    int32_t             *llr_msg5,
+                                    uint32_t            rnti_tmp,
+                                    uint16_t            *counter_ack,
+                                    uint8_t             rx_subframe,
+                                    uint32_t            rx_frame);
+
 void decode_NPUSCH_msg_NB_IoT(PHY_VARS_eNB        *eNB,
                               LTE_DL_FRAME_PARMS  *fp,
                               eNB_rxtx_proc_t     *proc,
