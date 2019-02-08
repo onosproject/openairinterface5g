@@ -108,7 +108,7 @@ void get_prach_resources(module_id_t module_idP,
                          uint8_t first_Msg3,
                          RACH_ConfigDedicated_t *rach_ConfigDedicated)
 {
-
+  printf("get_prach_resources: eNB_index %d\n",eNB_index);
   uint8_t Msg3_size = UE_mac_inst[module_idP].RA_Msg3_size;
   PRACH_RESOURCES_t *prach_resources = &UE_mac_inst[module_idP].RA_prach_resources;
   RACH_ConfigCommon_t *rach_ConfigCommon = NULL;
@@ -210,7 +210,7 @@ void get_prach_resources(module_id_t module_idP,
       UE_mac_inst[module_idP].RA_prach_resources.ra_RACH_MaskIndex = 0;
       UE_mac_inst[module_idP].RA_usedGroupA = 1;
     } else if ((Msg3_size <messageSizeGroupA) ||
-               (mac_xface->get_PL(module_idP,0,eNB_index) > PLThreshold)) {//not necessary to change
+               (mac_xface->get_PL(module_idP,0,eNB_index) > PLThreshold)) {//not necessary to change eNB_index=0
       // use Group A procedure
       UE_mac_inst[module_idP].RA_prach_resources.ra_PreambleIndex  = (taus())%sizeOfRA_PreamblesGroupA;
       UE_mac_inst[module_idP].RA_prach_resources.ra_RACH_MaskIndex = 0;
@@ -307,9 +307,9 @@ void Msg3_tx(module_id_t module_idP,uint8_t CC_id,frame_t frameP, uint8_t eNB_id
 PRACH_RESOURCES_t *ue_get_rach(module_id_t module_idP,int CC_id,frame_t frameP, uint8_t eNB_indexP,sub_frame_t subframeP)
 {
 
-
+  printf("ue_get_rach: eNB_indexP %d\n",eNB_indexP);//eNB_indexP=0
   uint8_t                        Size=0;
-  UE_MODE_t                 UE_mode = mac_xface->get_ue_mode(module_idP,0,eNB_indexP);
+  UE_MODE_t                 UE_mode = mac_xface->get_ue_mode(module_idP,0,eNB_indexP);//eNB_indexP=0
   uint8_t                        lcid = CCCH;
   uint16_t                       Size16;
   struct RACH_ConfigCommon *rach_ConfigCommon = (struct RACH_ConfigCommon *)NULL;
@@ -376,7 +376,7 @@ PRACH_RESOURCES_t *ue_get_rach(module_id_t module_idP,int CC_id,frame_t frameP, 
           UE_mac_inst[module_idP].RA_backoff_frame    = frameP;
           UE_mac_inst[module_idP].RA_backoff_subframe = subframeP;
           // Fill in preamble and PRACH resource
-          get_prach_resources(module_idP,CC_id,eNB_indexP,subframeP,1,NULL);//not necessary change eNB_indexP by PHY_vars_UE_g[module_idP][0]->common_vars.eNb_id
+          get_prach_resources(module_idP,CC_id,eNB_indexP,subframeP,1,NULL);//not necessary change. //eNB_indexP=0
 
           generate_ulsch_header((uint8_t*)&UE_mac_inst[module_idP].CCCH_pdu.payload[0],  // mac header
                                 1,      // num sdus

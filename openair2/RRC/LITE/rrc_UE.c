@@ -310,7 +310,7 @@ static void openair_rrc_ue_init_security( const protocol_ctxt_t* const ctxt_pP )
 //-----------------------------------------------------------------------------
 char openair_rrc_ue_init( const module_id_t ue_mod_idP, const unsigned char eNB_index )
 {
-  protocol_ctxt_t ctxt;
+  protocol_ctxt_t ctxt;//eNb_id=0,1
   PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, ue_mod_idP, ENB_FLAG_NO, NOT_A_RNTI, 0, 0,eNB_index);
   LOG_I(RRC,
         PROTOCOL_RRC_CTXT_FMT" Init...\n",
@@ -363,7 +363,7 @@ char openair_rrc_ue_init( const module_id_t ue_mod_idP, const unsigned char eNB_
 //-----------------------------------------------------------------------------
 void rrc_ue_generate_RRCConnectionRequest( const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_index )
 {
-
+  //eNB_index=ue->common_vars.enb_id
   uint8_t i=0,rv[6];
 
   if(UE_rrc_inst[ctxt_pP->module_id].Srb0[eNB_index].Tx_buffer.payload_size ==0) {
@@ -439,7 +439,7 @@ static const char const nas_attach_req_guti[] = {
 //-----------------------------------------------------------------------------
 static void rrc_ue_generate_RRCConnectionSetupComplete( const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_index, const uint8_t Transaction_id )
 {
-
+  //eNB_index=ue->common_vars.enb_id
   uint8_t    buffer[100];
   uint8_t    size;
   const char * nas_msg;
@@ -473,7 +473,7 @@ static void rrc_ue_generate_RRCConnectionSetupComplete( const protocol_ctxt_t* c
 //-----------------------------------------------------------------------------
 static void rrc_ue_generate_RRCConnectionReconfigurationComplete( const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_index, const uint8_t Transaction_id )
 {
-
+  //eNB_index=ue->common_vars.enb_id
   uint8_t buffer[32], size;
   size = do_RRCConnectionReconfigurationComplete(ctxt_pP, buffer, Transaction_id);
   LOG_I(RRC,PROTOCOL_RRC_CTXT_UE_FMT" Logical Channel UL-DCCH (SRB1), Generating RRCConnectionReconfigurationComplete (bytes %d, eNB_index %d)\n",
@@ -502,6 +502,7 @@ static void rrc_ue_generate_RRCConnectionReconfigurationComplete( const protocol
 // Called by L2 interface (MAC)
 int rrc_ue_decode_ccch( const protocol_ctxt_t* const ctxt_pP, const SRB_INFO* const Srb_info, const uint8_t eNB_index )
 {
+  printf("rrc_ue_decode_ccch: eNB_index %d\n",eNB_index);//eNB_index=ue->common_vars.enb_id
   DL_CCCH_Message_t* dl_ccch_msg=NULL;
   asn_dec_rval_t dec_rval;
   int rval=0;
@@ -1192,7 +1193,7 @@ rrc_ue_process_radioResourceConfigDedicated(
 )
 //-----------------------------------------------------------------------------
 {
-
+  //eNB_index=ue->common_vars.enb_id
   long SRB_id,DRB_id;
   int i,cnt;
   LogicalChannelConfig_t *SRB1_logicalChannelConfig,*SRB2_logicalChannelConfig;
@@ -1560,7 +1561,7 @@ rrc_ue_process_securityModeCommand(
 )
 //-----------------------------------------------------------------------------
 {
-
+  //eNB_index=ue->common_vars.enb_id
   asn_enc_rval_t enc_rval;
 
   UL_DCCH_Message_t ul_dcch_msg;
@@ -1758,7 +1759,7 @@ rrc_ue_process_ueCapabilityEnquiry(
 )
 //-----------------------------------------------------------------------------
 {
-
+  //eNB_index=ue->common_vars.enb_id
   asn_enc_rval_t enc_rval;
 
   UL_DCCH_Message_t ul_dcch_msg;
@@ -1866,7 +1867,7 @@ rrc_ue_process_rrcConnectionReconfiguration(
 )
 //-----------------------------------------------------------------------------
 {
-
+  //eNB_index=ue->common_vars.enb_id
   LOG_I(RRC,"[UE %d] Frame %d: Receiving from SRB1 (DL-DCCH), Processing RRCConnectionReconfiguration (eNB %d)\n",
         ctxt_pP->module_id,ctxt_pP->frame,eNB_index);
 
@@ -2126,7 +2127,7 @@ rrc_ue_decode_dcch(
 )
 //-----------------------------------------------------------------------------
 {
-  printf("rrc_ue_decode_dcch: eNB_indexP %d\n",eNB_indexP);
+  printf("rrc_ue_decode_dcch: eNB_indexP %d\n",eNB_indexP);//eNB_indexP=ue->common_vars.enb_id
   //DL_DCCH_Message_t dldcchmsg;
   DL_DCCH_Message_t *dl_dcch_msg=NULL;//&dldcchmsg;
   //  asn_dec_rval_t dec_rval;
@@ -2643,7 +2644,7 @@ int decode_BCCH_DLSCH_Message(
   const uint8_t                rsrq,
   const uint8_t                rsrp )
 {
-  //printf("decode_BCCH_DLSCH_Message: eNB_index %d\n",eNB_index);
+  //printf("decode_BCCH_DLSCH_Message: eNB_index %d\n",eNB_index);//eNB_index=ue->common_vars.enb_id
   BCCH_DL_SCH_Message_t *bcch_message = NULL;
   SystemInformationBlockType1_t* sib1 = UE_rrc_inst[ctxt_pP->module_id].sib1[eNB_index];
   //int i;
@@ -2853,7 +2854,7 @@ static int decode_SIB1( const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_
     LOG_I( RRC, "Found Unknown operator (no entry in internal table)\n" );
   }
   LOG_I( RRC, "cellAccessRelatedInfo.cellIdentity         : raw:%"PRIu32" decoded:%02x.%02x.%02x.%02x\n",
-         BIT_STRING_to_uint32( &sib1->cellAccessRelatedInfo.cellIdentity)+eNB_index,
+         BIT_STRING_to_uint32( &sib1->cellAccessRelatedInfo.cellIdentity)/*+eNB_index*/,
          sib1->cellAccessRelatedInfo.cellIdentity.buf[0],
          sib1->cellAccessRelatedInfo.cellIdentity.buf[1],
          sib1->cellAccessRelatedInfo.cellIdentity.buf[2],
@@ -2996,7 +2997,7 @@ static int decode_SIB1( const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_
 
           msg_p = itti_alloc_new_message(TASK_RRC_UE, NAS_CELL_SELECTION_CNF);
           NAS_CELL_SELECTION_CNF (msg_p).errCode = AS_SUCCESS;
-          NAS_CELL_SELECTION_CNF (msg_p).cellID = BIT_STRING_to_uint32(&sib1->cellAccessRelatedInfo.cellIdentity)+eNB_index;
+          NAS_CELL_SELECTION_CNF (msg_p).cellID = BIT_STRING_to_uint32(&sib1->cellAccessRelatedInfo.cellIdentity)/*+eNB_index*/;
           NAS_CELL_SELECTION_CNF (msg_p).tac = BIT_STRING_to_uint16(&sib1->cellAccessRelatedInfo.trackingAreaCode);
           NAS_CELL_SELECTION_CNF (msg_p).rat = 0xFF;
           NAS_CELL_SELECTION_CNF (msg_p).rsrq = rsrq;
@@ -4326,7 +4327,7 @@ NAS_KENB_REFRESH_REQ,NAS_CELL_SELECTION_REQ,RRC_STATE_INACTIVE,RRC_STATE_IDLE,RR
 
       //      PROTOCOL_CTXT_SET_BY_INSTANCE(&ctxt, instance, ENB_FLAG_NO, NOT_A_RNTI, RRC_MAC_BCCH_DATA_IND (msg_p).frame, 0);
       PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, ue_mod_id, ENB_FLAG_NO, NOT_A_RNTI, RRC_MAC_BCCH_DATA_IND (msg_p).frame, 0,RRC_MAC_BCCH_DATA_IND (msg_p).enb_index);
-      //printf("decode_BCCH_DLSCH_Message for ue %d, enb %d \n",ue_mod_id,RRC_MAC_BCCH_DATA_IND (msg_p).enb_index);
+      printf("decode_BCCH_DLSCH_Message for ue %d, enb %d \n",ue_mod_id,RRC_MAC_BCCH_DATA_IND (msg_p).enb_index);//RRC_MAC_BCCH_DATA_IND (msg_p).enb_index=ue->common_vars.enb_id
       decode_BCCH_DLSCH_Message (&ctxt,
                                  RRC_MAC_BCCH_DATA_IND (msg_p).enb_index,
                                  RRC_MAC_BCCH_DATA_IND (msg_p).sdu,

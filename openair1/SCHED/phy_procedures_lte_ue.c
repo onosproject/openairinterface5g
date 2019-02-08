@@ -1402,7 +1402,7 @@ void ulsch_common_procedures(PHY_VARS_UE *ue, UE_rxtx_proc_t *proc, uint8_t empt
 }
 
 void ue_prach_procedures(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,uint8_t abstraction_flag,runmode_t mode) {
-  printf("ue_prach_procedures: UE %d, eNB_id %d, ue->common_vars.eNb.id %d, mac enabled %d\n",ue->Mod_id,eNB_id,ue->common_vars.eNb_id,ue->mac_enabled==1);
+  //printf("ue_prach_procedures: UE %d, eNB_id %d, ue->common_vars.eNb.id %d, mac enabled %d\n",ue->Mod_id,eNB_id,ue->common_vars.eNb_id,ue->mac_enabled==1);=0
   int frame_tx = proc->frame_tx;
   int subframe_tx = proc->subframe_tx;
   int prach_power;
@@ -2423,7 +2423,7 @@ void phy_procedures_UE_TX(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,ui
   } 
   count++;
   clock_t start=clock();*/
-
+  //printf("phy_procedures_UE_TX: eNB_id %d\n",eNB_id);
   LTE_DL_FRAME_PARMS *frame_parms=&ue->frame_parms;
   //int32_t ulsch_start=0;
   int subframe_tx = proc->subframe_tx;
@@ -2635,7 +2635,7 @@ void ue_measurement_procedures(
 {
 
   //LOG_I(PHY,"ue_measurement_procedures l %d Ncp %d\n",l,ue->frame_parms.Ncp);
-
+  //printf("ue_measurement_procedures: ue->do_ofdm_mod %d\n",ue->do_ofdm_mod);
   LTE_DL_FRAME_PARMS *frame_parms=&ue->frame_parms;
 
   int subframe_rx = proc->subframe_rx;
@@ -2729,13 +2729,14 @@ void ue_measurement_procedures(
 
     if (abstraction_flag == 0) {
       if (ue->no_timing_correction==0)
-	if (!ue->do_ofdm_mod)
+	if (!ue->do_ofdm_mod){
 	  lte_adjust_synch(&ue->frame_parms,
 	       ue,
 	       eNB_id,
 	       subframe_rx,
 	       0,
 	       16384);
+	}
     }
 
   }
@@ -2901,7 +2902,7 @@ void ue_pbch_procedures(uint8_t eNB_id,PHY_VARS_UE *ue,UE_rxtx_proc_t *proc, uin
 {
   //printf("PBCH: id %d\n",ue->Mod_id);
   //  int i;
-  //printf("ue_pbch_procedures: eNB_id %d, ue->common_vars.eNb.id %d\n",eNB_id,ue->common_vars.eNb_id);
+  //printf("ue_pbch_procedures: eNB_id %d, ue->common_vars.eNb.id %d\n",eNB_id,ue->common_vars.eNb_id);=0
   int pbch_tx_ant=0;
   uint8_t pbch_phase;
   uint16_t frame_tx;
@@ -3080,7 +3081,7 @@ void ue_pbch_procedures(uint8_t eNB_id,PHY_VARS_UE *ue,UE_rxtx_proc_t *proc, uin
     ue->pbch_vars[eNB_id]->pdu_errors_conseq++;
     ue->pbch_vars[eNB_id]->pdu_errors++;
     if (ue->mac_enabled == 1) {
-      mac_xface->out_of_sync_ind(ue->Mod_id,frame_rx,ue->common_vars.eNb_id);
+      mac_xface->out_of_sync_ind(ue->Mod_id,frame_rx,eNB_id);
     }
     else{
       if (ue->pbch_vars[eNB_id]->pdu_errors_conseq>=100) {
@@ -3106,7 +3107,7 @@ void ue_pbch_procedures(uint8_t eNB_id,PHY_VARS_UE *ue,UE_rxtx_proc_t *proc, uin
 
 int ue_pdcch_procedures(uint8_t eNB_id,PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t abstraction_flag)
 {
-  //printf("ue_pdcch_procedures: eNB_id %d, ue->common_vars.eNb.id %d\n",eNB_id,ue->common_vars.eNb_id);
+  //printf("ue_pdcch_procedures: eNB_id %d, ue->common_vars.eNb.id %d\n",eNB_id,ue->common_vars.eNb_id);=0
   unsigned int dci_cnt=0, i;
 
   int frame_rx = proc->frame_rx;
@@ -3821,7 +3822,11 @@ void process_rar(PHY_VARS_UE *ue, UE_rxtx_proc_t *proc, int eNB_id, runmode_t mo
   uint8_t *rar;
   uint8_t next1_thread_id = ue->current_thread_id[subframe_rx]== (RX_NB_TH-1) ? 0:(ue->current_thread_id[subframe_rx]+1);
   uint8_t next2_thread_id = next1_thread_id== (RX_NB_TH-1) ? 0:(next1_thread_id+1);
-
+  //printf("process_rar: eNB_id %d\n",eNB_id);=0
+  //printf("[UE  %d][RAPROC] Frame %d subframe %d Received RAR  mode %d\n",
+  //ue->Mod_id,
+  //frame_rx,
+  //subframe_rx, ue->UE_mode[eNB_id]);
   LOG_D(PHY,"[UE  %d][RAPROC] Frame %d subframe %d Received RAR  mode %d\n",
   ue->Mod_id,
   frame_rx,
@@ -3831,6 +3836,7 @@ void process_rar(PHY_VARS_UE *ue, UE_rxtx_proc_t *proc, int eNB_id, runmode_t mo
   if (ue->mac_enabled == 1) {
     if ((ue->UE_mode[eNB_id] != PUSCH) &&
   (ue->prach_resources[eNB_id]->Msg3!=NULL)) {
+
       LOG_D(PHY,"[UE  %d][RAPROC] Frame %d subframe %d Invoking MAC for RAR (current preamble %d)\n",
 	    ue->Mod_id,frame_rx,
 	    subframe_rx,
@@ -3857,6 +3863,7 @@ void process_rar(PHY_VARS_UE *ue, UE_rxtx_proc_t *proc, int eNB_id, runmode_t mo
               ue->pdcch_vars[ue->current_thread_id[subframe_rx]][eNB_id]->crnti,
               timing_advance);
 
+      printf("process_rar: ue->mac_enabled %d, (ue->UE_mode[eNB_id] != PUSCH) %d, ue->prach_resources[eNB_id]->Msg3!=NULL %d, timing advance %d\n",ue->mac_enabled,(ue->UE_mode[eNB_id] != PUSCH),ue->prach_resources[eNB_id]->Msg3!=NULL,timing_advance);
   // remember this c-rnti is still a tc-rnti
 
   ue->pdcch_vars[ue->current_thread_id[subframe_rx]][eNB_id]->crnti_is_temporary = 1;
@@ -5425,7 +5432,7 @@ else
 
   if ( (subframe_rx == 0) && (ue->decode_MIB == 1))
   {
-    printf("[ue_pbch_procedures] subframe_rx %d ,ue->decode_MIB %d, UE %d, eNB %d\n",subframe_rx,ue->decode_MIB,ue->Mod_id,ue->common_vars.eNb_id);
+    printf("[ue_pbch_procedures] subframe_rx %d ,ue->decode_MIB %d, UE %d, eNB_id %d, ue->common_vars.eNb_id %d\n",subframe_rx,ue->decode_MIB,ue->Mod_id,eNB_id,ue->common_vars.eNb_id);
     ue_pbch_procedures(eNB_id,ue,proc,abstraction_flag);
   }
 
@@ -5696,7 +5703,7 @@ void phy_procedures_UE_lte(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,u
     ue->UE_mode[eNB_id]=PUSCH;
   }
 
-
+  printf("phy_procedures_UE_lte: eNB_id %d\n",eNB_id);
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_UE_LTE,1);
 #if UE_TIMING_TRACE
   start_meas(&ue->phy_proc[ue->current_thread_id[subframe_rx]]);

@@ -1537,20 +1537,19 @@ void init_openair1(void)
    }
   }
 
-  for (eNB_id=0; eNB_id<NB_eNB_INST; eNB_id++) {
-    for (UE_id=0; UE_id<NB_UE_INST; UE_id++) {
+  for (UE_id=0; UE_id<NB_UE_INST; UE_id++) {
+    for (eNB_id=0; eNB_id<NB_eNB_INST; eNB_id++) {
       for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
         PHY_vars_eNB_g[eNB_id][CC_id]->pusch_config_dedicated[UE_id].betaOffset_ACK_Index = beta_ACK;
         PHY_vars_eNB_g[eNB_id][CC_id]->pusch_config_dedicated[UE_id].betaOffset_RI_Index  = beta_RI;
         PHY_vars_eNB_g[eNB_id][CC_id]->pusch_config_dedicated[UE_id].betaOffset_CQI_Index = beta_CQI;
         PHY_vars_eNB_g[eNB_id][CC_id]->frame_parms.pdsch_config_common.p_b = (frame_parms[CC_id]->nb_antenna_ports_eNB>1) ? 1 : 0; // rho_A = rho_B
-
-        PHY_vars_UE_g[UE_id][CC_id]->pusch_config_dedicated[eNB_id].betaOffset_ACK_Index = beta_ACK;
-        PHY_vars_UE_g[UE_id][CC_id]->pusch_config_dedicated[eNB_id].betaOffset_RI_Index  = beta_RI;
-        PHY_vars_UE_g[UE_id][CC_id]->pusch_config_dedicated[eNB_id].betaOffset_CQI_Index = beta_CQI;
-        PHY_vars_UE_g[UE_id][CC_id]->frame_parms.pdsch_config_common.p_b = (frame_parms[CC_id]->nb_antenna_ports_eNB>1) ? 1 : 0; // rho_A = rho_B
       }
     }
+        PHY_vars_UE_g[UE_id][0]->pusch_config_dedicated[0].betaOffset_ACK_Index = beta_ACK;
+        PHY_vars_UE_g[UE_id][0]->pusch_config_dedicated[0].betaOffset_RI_Index  = beta_RI;
+        PHY_vars_UE_g[UE_id][0]->pusch_config_dedicated[0].betaOffset_CQI_Index = beta_CQI;
+        PHY_vars_UE_g[UE_id][0]->frame_parms.pdsch_config_common.p_b = (frame_parms[0]->nb_antenna_ports_eNB>1) ? 1 : 0; // rho_A = rho_B
   }
   for (eNB_id=0; eNB_id<NB_eNB_INST; eNB_id++)
   	printf ("AFTER init: MAX_NUM_CCs %d, Nid_cell %d frame_type %d,tdd_config %d\n",
@@ -1630,7 +1629,7 @@ void init_openair1(void)
       PHY_vars_UE_g[UE_id][CC_id]->rx_total_gain_dB=100;
 
       // update UE_mode for each eNB_id not just 0
-      for (eNB_id=0; eNB_id<NB_eNB_INST; eNB_id++){
+      //for (eNB_id=0; eNB_id<NB_eNB_INST; eNB_id++){
 	      if (abstraction_flag == 0) {
 		if (phy_test==0) PHY_vars_UE_g[UE_id][CC_id]->UE_mode[0] = NOT_SYNCHED;
 		else PHY_vars_UE_g[UE_id][CC_id]->UE_mode[0] = PUSCH;
@@ -1638,22 +1637,22 @@ void init_openair1(void)
 		// 0 is the index of the connected eNB
 		PHY_vars_UE_g[UE_id][CC_id]->UE_mode[0] = PRACH;
 	      }
-      }
+      //}
       if (phy_test==1)
 	PHY_vars_UE_g[UE_id][CC_id]->mac_enabled=0;
       else
 	PHY_vars_UE_g[UE_id][CC_id]->mac_enabled=1;
-      for (eNB_id=0; eNB_id<NB_eNB_INST; eNB_id++){
-      	PHY_vars_UE_g[UE_id][CC_id]->pdcch_vars[0][eNB_id]->crnti = 0x1235 + UE_id;
+      //for (eNB_id=0; eNB_id<NB_eNB_INST; eNB_id++){
+      	PHY_vars_UE_g[UE_id][CC_id]->pdcch_vars[0][0]->crnti = 0x1235 + UE_id;
 
       	for (uint8_t i=0; i<RX_NB_TH_MAX; i++) {
-          PHY_vars_UE_g[UE_id][CC_id]->pdcch_vars[i][eNB_id]->dciFormat      = 0;
-          PHY_vars_UE_g[UE_id][CC_id]->pdcch_vars[i][eNB_id]->agregationLevel      = 0xFF;
+          PHY_vars_UE_g[UE_id][CC_id]->pdcch_vars[i][0]->dciFormat      = 0;
+          PHY_vars_UE_g[UE_id][CC_id]->pdcch_vars[i][0]->agregationLevel      = 0xFF;
       	}
-      	PHY_vars_UE_g[UE_id][CC_id]->current_dlsch_cqi[eNB_id] = 10;
+      	PHY_vars_UE_g[UE_id][CC_id]->current_dlsch_cqi[0] = 10;
 
-      	LOG_I(EMU, "eNB_id %d, UE %d, CC %d, mode is initialized to %d\n", eNB_id, UE_id, CC_id, PHY_vars_UE_g[UE_id][CC_id]->UE_mode[0] );
-      }
+      	LOG_I(EMU, "eNB_id %d, UE %d, CC %d, mode is initialized to %d\n",PHY_vars_UE_g[UE_id][CC_id]->common_vars.eNb_id, UE_id, CC_id, PHY_vars_UE_g[UE_id][CC_id]->UE_mode[0] );
+      //}
 #if ENABLE_RAL
       PHY_vars_UE_g[UE_id][CC_id]->ral_thresholds_timed = hashtable_create (64, NULL, NULL);
 
@@ -1867,7 +1866,7 @@ void update_omg_ocm()
   ue_node_list=get_current_positions(oai_emulation.info.omg_model_ue, UE, oai_emulation.info.time_s);
 
 }
-
+static int firt_cell_association=1;
 void update_ocm()
 {
   module_id_t UE_id, eNB_id;
@@ -1897,6 +1896,8 @@ void update_ocm()
     /* if (frame % 50 == 0)
        LOG_N(OCM,"Path loss for TTI %d : \n", frame);
     */
+   if (firt_cell_association){
+    firt_cell_association=0;//TODO This static variable is just for static users. If it is necessary to consider mobile UEs, this hack should be reconsidered, or consider a mutex solution for this for
     for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
       for (UE_id = 0; UE_id < NB_UE_INST; UE_id++) {
         for (eNB_id = 0; eNB_id < NB_eNB_INST; eNB_id++) {
@@ -1923,6 +1924,7 @@ void update_ocm()
       printf("UE %d is associated to eNB %d based on pathloss (%s domain)\n",UE_id,PHY_vars_UE_g[UE_id][CC_id]->common_vars.eNb_id,(PHY_vars_UE_g[UE_id][CC_id]->do_ofdm_mod)?"Frequency":"Time");
       }
     }
+   }
   }
 
   else {

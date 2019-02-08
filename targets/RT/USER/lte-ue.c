@@ -841,7 +841,7 @@ static void *UE_thread_rxn_txnp4(void *arg) {
         start_meas(&UE->generic_stat);
 #endif
         if (UE->mac_enabled==1) {
-
+	    printf("UE_thread_rxn_txnp4: eNB_id %d, common_vars.enb_id %d, UE %d\n",0,PHY_vars_UE_g[UE->Mod_id][0]->common_vars.eNb_id,UE->Mod_id);
             ret = mac_xface->ue_scheduler(UE->Mod_id,
                                           proc->frame_rx,
                                           proc->subframe_rx,

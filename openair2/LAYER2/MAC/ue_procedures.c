@@ -379,7 +379,7 @@ ue_send_sdu(
   if (payload_ptr != NULL) {
 
   for (i=0; i<num_ce; i++) {
-    //    printf("ce %d : %d\n",i,rx_ces[i]);
+    printf("ue_send_sdu: ce %d : %d\n",i,rx_ces[i]);
     switch (rx_ces[i]) {
     case UE_CONT_RES:
 
@@ -1836,7 +1836,7 @@ ue_scheduler(
   const int            CC_id)
 //------------------------------------------------------------------------------
 {
-  //printf("ue_scheduler: eNB_indexp %d, PHY_vars_UE_g[module_idP][0]->common_vars.eNb_id %d \n",eNB_indexP,PHY_vars_UE_g[module_idP][0]->common_vars.eNb_id);
+  printf("ue_scheduler: UE %d, eNB_indexp %d, PHY_vars_UE_g[module_idP][0]->common_vars.eNb_id %d \n",module_idP,eNB_indexP,PHY_vars_UE_g[module_idP][0]->common_vars.eNb_id);
   int lcid; // lcid index
   int TTI= 1;
   int bucketsizeduration = -1;
@@ -1870,6 +1870,7 @@ ue_scheduler(
 
       switch (ITTI_MSG_ID(msg_p)) {
       case RRC_MAC_CCCH_DATA_REQ:
+	//printf("ue_scheduler:(msg_p).enb_index %d\n",RRC_MAC_CCCH_DATA_REQ (msg_p).enb_index);=0 or 1
         LOG_I(MAC, "Received %s from %s: instance %d, frameP %d, eNB_index %d\n",
               msg_name, ITTI_MSG_ORIGIN_NAME(msg_p), instance,
               RRC_MAC_CCCH_DATA_REQ (msg_p).frame, RRC_MAC_CCCH_DATA_REQ (msg_p).enb_index);

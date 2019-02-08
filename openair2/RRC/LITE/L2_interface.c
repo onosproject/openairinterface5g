@@ -51,7 +51,7 @@ extern UE_MAC_INST *UE_mac_inst;
 #if defined(ENABLE_ITTI)
 # include "intertask_interface.h"
 #endif
-
+#include "PHY/extern.h"
 //#define RRC_DATA_REQ_DEBUG
 #define DEBUG_RRC 1
 
@@ -72,7 +72,7 @@ mac_rrc_data_req(
 )
 //--------------------------------------------------------------------------
 {
-  printf("mac_rrc_data_req:eNB_index %d\n",eNB_index);
+  printf("mac_rrc_data_req:eNB_index %d\n",eNB_index);//eNB_index=ue->common_vars.enb_id
   SRB_INFO *Srb_info;
   uint8_t Sdu_size=0;
 
@@ -348,7 +348,7 @@ mac_rrc_data_ind(
   SRB_INFO *Srb_info;
   protocol_ctxt_t ctxt;
   sdu_size_t      sdu_size = 0;
-  //printf("mac_rrc_data_ind\n");
+  printf("mac_rrc_data_ind: eNB_indexP %d\n",eNB_indexP);//eNB_index=ue->common_vars.enb_id
   /* for no gcc warnings */
   (void)sdu_size;
 
@@ -652,7 +652,7 @@ rrc_data_ind(
 void rrc_in_sync_ind(module_id_t Mod_idP, frame_t frameP, uint16_t eNB_index)
 {
   //-------------------------------------------------------------------------------------------//
-printf("rrc_in_sync_ind:eNB_index %d\n",eNB_index);
+printf("rrc_in_sync_ind:eNB_index %d\n",eNB_index);//enb_id=ue->common_vars.enb_id
 #if defined(ENABLE_ITTI)
   {
     MessageDef *message_p;
@@ -677,14 +677,14 @@ printf("rrc_in_sync_ind:eNB_index %d\n",eNB_index);
 void rrc_out_of_sync_ind(module_id_t Mod_idP, frame_t frameP, uint16_t eNB_index)
 {
   //-------------------------------------------------------------------------------------------//
-  printf("rrc_out_of_sync_ind:eNB_index %d\n",eNB_index);
-  if (UE_rrc_inst[Mod_idP].Info[eNB_index].N310_cnt>10)
+  printf("rrc_out_of_sync_ind:eNB_index %d\n",/*eNB_index*/PHY_vars_UE_g[Mod_idP][0]->common_vars.eNb_id);
+  if (UE_rrc_inst[Mod_idP].Info[/*eNB_index*/PHY_vars_UE_g[Mod_idP][0]->common_vars.eNb_id].N310_cnt>10)
     LOG_I(RRC,"[UE %d] Frame %d: OUT OF SYNC FROM eNB %d (T310 active %d : T310 %d, N310 %d, N311 %d)\n ",
-	  Mod_idP,frameP,eNB_index,
-	  UE_rrc_inst[Mod_idP].Info[eNB_index].T300_active,
-	  UE_rrc_inst[Mod_idP].Info[eNB_index].T310_cnt,
-	  UE_rrc_inst[Mod_idP].Info[eNB_index].N310_cnt,
-	  UE_rrc_inst[Mod_idP].Info[eNB_index].N311_cnt);
+	  Mod_idP,frameP,/*eNB_index*/PHY_vars_UE_g[Mod_idP][0]->common_vars.eNb_id,
+	  UE_rrc_inst[Mod_idP].Info[/*eNB_index*/PHY_vars_UE_g[Mod_idP][0]->common_vars.eNb_id].T300_active,
+	  UE_rrc_inst[Mod_idP].Info[/*eNB_index*/PHY_vars_UE_g[Mod_idP][0]->common_vars.eNb_id].T310_cnt,
+	  UE_rrc_inst[Mod_idP].Info[/*eNB_index*/PHY_vars_UE_g[Mod_idP][0]->common_vars.eNb_id].N310_cnt,
+	  UE_rrc_inst[Mod_idP].Info[/*eNB_index*/PHY_vars_UE_g[Mod_idP][0]->common_vars.eNb_id].N311_cnt);
   
 #if defined(ENABLE_ITTI)
   {
@@ -692,12 +692,12 @@ void rrc_out_of_sync_ind(module_id_t Mod_idP, frame_t frameP, uint16_t eNB_index
 
     message_p = itti_alloc_new_message (TASK_MAC_UE, RRC_MAC_OUT_OF_SYNC_IND);
     RRC_MAC_OUT_OF_SYNC_IND (message_p).frame = frameP;
-    RRC_MAC_OUT_OF_SYNC_IND (message_p).enb_index = eNB_index;
+    RRC_MAC_OUT_OF_SYNC_IND (message_p).enb_index = /*eNB_index*/PHY_vars_UE_g[Mod_idP][0]->common_vars.eNb_id;
 
     itti_send_msg_to_task (TASK_RRC_UE, UE_MODULE_ID_TO_INSTANCE(Mod_idP), message_p);
   }
 #else
-  UE_rrc_inst[Mod_idP].Info[eNB_index].N310_cnt++;
+  UE_rrc_inst[Mod_idP].Info[/*eNB_index*/PHY_vars_UE_g[Mod_idP][0]->common_vars.eNb_id].N310_cnt++;
 #endif
 }
 
@@ -767,10 +767,10 @@ int
 mac_UE_get_rrc_status(
   const module_id_t Mod_idP,
   const uint8_t     indexP
-  printf("mac_UE_get_rrc_status:eNB_index %d\n",eNB_index);
 )
 //------------------------------------------------------------------------------
 {
+  printf("mac_UE_get_rrc_status:eNB_index %d\n",indexP);
   return(UE_rrc_inst[Mod_idP].Info[indexP].State);
 }
 

@@ -48,11 +48,12 @@
 #include "MBSFN-SubframeConfigList.h"
 #include "PMCH-InfoList-r9.h"
 #endif
+#include "PHY/extern.h"
 
 /* sec 5.9, 36.321: MAC Reset Procedure */
 void ue_mac_reset(module_id_t module_idP,uint8_t eNB_index)
 {
-
+  printf("ue_mac_reset: eNB_index %d, common_vars.eNb_id %d\n",eNB_index,PHY_vars_UE_g[module_idP][0]->common_vars.eNb_id);
   //Resetting Bj
   UE_mac_inst[module_idP].scheduling_info.Bj[0] = 0;
   UE_mac_inst[module_idP].scheduling_info.Bj[1] = 0;
@@ -121,7 +122,7 @@ rrc_mac_config_req(
 #endif
                       )
 {
-  printf("rrc_mac_config_reg: eNB_index %d\n",eNB_index);
+  printf("rrc_mac_config_reg: eNB_index %d\n",eNB_index);//eNB_index=ue->common_vars.enb_id
   int i;
 
   int UE_id = -1;
@@ -147,7 +148,7 @@ rrc_mac_config_req(
 
   if (tdd_Config && SIwindowsize && SIperiod) {
     if (eNB_flagP == ENB_FLAG_YES) {
-      mac_xface->phy_config_sib1_eNB(Mod_idP, CC_idP, tdd_Config, *SIwindowsize, *SIperiod);//not necessary to change
+      mac_xface->phy_config_sib1_eNB(Mod_idP, CC_idP, tdd_Config, *SIwindowsize, *SIperiod);
     } else {
       mac_xface->phy_config_sib1_ue(Mod_idP,0,eNB_index,tdd_Config,*SIwindowsize,*SIperiod);//not necessary to change
     }
