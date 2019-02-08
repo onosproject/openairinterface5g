@@ -1403,6 +1403,75 @@ void get_llr_per_sf_NB_IoT(PHY_VARS_eNB        *eNB,
 }
 
 
+////////////////////////////////////descrambling NPUSCH //////////////////////////////////////////
+
+void descrambling_NPUSCH_data_NB_IoT(LTE_DL_FRAME_PARMS  *fp,
+                                     int16_t             *ulsch_llr,
+                                     int16_t             *y,
+                                     uint8_t             Qm,
+                                     unsigned int        Cmux,
+                                     uint32_t            rnti_tmp,
+                                     uint8_t             rx_subframe,
+                                     uint32_t            rx_frame)
+{
+
+      unsigned int    j,jj;
+      uint32_t        x1, x2, s=0;
+      uint8_t         reset;
+
+      x2 =  (rnti_tmp<<14) + (rx_subframe<<9) + ((rx_frame%2)<<13) + fp->Nid_cell; //this is c_init in 36.211 Sec 10.1.3.1
+
+      reset = 1; 
+      switch (Qm)
+      {
+          case 1:
+                  jj=0; 
+                  for (j=0; j<Cmux; j++)
+                  { 
+
+                      if (j%32==0) 
+                      {
+                          s = lte_gold_generic(&x1, &x2, reset);
+                          //      printf("lte_gold[%d]=%x\n",i,s);
+                          reset = 0;
+                      }
+
+                      if (((s>>(j%32))&1)==0)
+                      {
+                          y[j] = (ulsch_llr[jj<<1]>>1) + (ulsch_llr[(jj<<1)+1]>>1);
+                          jj+=2;
+                      } else {
+
+                          y[j] = -(ulsch_llr[jj<<1]>>1) + (ulsch_llr[(jj<<1)+1]>>1);
+                          jj+=2;
+                      }
+                  }
+          break; 
+
+          case 2:
+                  for (j=0; j<Cmux*2; j++)
+                  {
+
+                        if (j%32==0) 
+                        {
+                            s = lte_gold_generic(&x1, &x2, reset);
+                            //      printf("lte_gold[%d]=%x\n",i,s);
+                            reset = 0;
+                        }
+                        if (((s>>(j%32))&1)==0)
+                        {
+                            y[j] = -ulsch_llr[j];
+                        } else {
+
+                            y[j] = ulsch_llr[j];
+                        }
+                  }
+          break;
+      }
+
+}
+
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void decode_NPUSCH_msg_NB_IoT(PHY_VARS_eNB        *eNB,
@@ -1423,16 +1492,12 @@ void decode_NPUSCH_msg_NB_IoT(PHY_VARS_eNB        *eNB,
       NB_IoT_eNB_NULSCH_t     *ulsch_NB_IoT     = eNB->ulsch_NB_IoT[0];
       NB_IoT_UL_eNB_HARQ_t    *ulsch_harq       = ulsch_NB_IoT->harq_process;
 
-      int16_t         *ulsch_llr    = eNB->pusch_vars[0]->llr;  // eNB->pusch_vars[eNB_id]->llr;      //UE_id=0
-          
-          
-
           unsigned int    A      = (ulsch_harq->TBS)*8;
           uint8_t         rvdx   = ulsch_harq->rvidx;
           unsigned int    j,j2; //i2,
           int             iprime;
           int             r,Kr;
-          unsigned int    sumKr=0;
+          //unsigned int    sumKr=0;
           unsigned int    G,H,Hprime,Hpp,Cmux,Rmux_prime;     // Q_CQI,Q_RI=0
           uint32_t        x1, x2, s=0;
           int16_t         y[6*14*1200] __attribute__((aligned(32)));
@@ -1443,6 +1508,7 @@ void decode_NPUSCH_msg_NB_IoT(PHY_VARS_eNB        *eNB,
           
           if (npusch_format == 0)
           {
+              int16_t         *ulsch_llr    = eNB->pusch_vars[0]->llr;  // eNB->pusch_vars[eNB_id]->llr;      //UE_id=0
               // NB-IoT ///////////////////////////////////////////////
               // x1 is set in lte_gold_generic
               // x2 should not reinitialized each subframe
@@ -1466,20 +1532,6 @@ void decode_NPUSCH_msg_NB_IoT(PHY_VARS_eNB        *eNB,
                                           &ulsch_harq->F);
               }
 
-              sumKr = 0;
-
-              for (r=0; r<ulsch_harq->C; r++)
-              {
-                  if (r<ulsch_harq->Cminus)
-                  {
-                      Kr = ulsch_harq->Kminus;
-                  }else{
-
-                      Kr = ulsch_harq->Kplus;
-                  }
-                  sumKr += Kr;
-              }
-
               ulsch_harq->G = G;
               H      = G ;
               Hprime = H/Qm;
@@ -1492,38 +1544,16 @@ void decode_NPUSCH_msg_NB_IoT(PHY_VARS_eNB        *eNB,
               // Clear "tag" interleaving matrix to allow for CQI/DATA identification
               memset(ytag,0,Cmux*Rmux_prime);
               memset(y,LTE_NULL_NB_IoT,Qm*Hpp);
+              
+              descrambling_NPUSCH_data_NB_IoT(fp,
+                                              ulsch_llr,
+                                              y,
+                                              Qm,
+                                              Cmux,
+                                              rnti_tmp,
+                                              ulsch_NB_IoT->Msg3_subframe,
+                                              ulsch_NB_IoT->Msg3_frame);
 
-              x2 =  (rnti_tmp<<14) + (ulsch_NB_IoT->Msg3_subframe<<9) + ((ulsch_NB_IoT->Msg3_frame%2)<<13) + fp->Nid_cell; //this is c_init in 36.211 Sec 10.1.3.1
-
-              reset = 1; 
-              switch (Qm)
-              {
-                  case 1: 
-                      for (j=0; j<Cmux; j++)   // 3.75 KHz
-                      { 
-                          //y[j] = cseq[j]*ulsch_llr[j]; /// To be defined for bpsk
-                      }
-                  break; 
-                  case 2:
-                      for (j=0; j<Cmux*2; j++)
-                      {
-
-                            if (j%32==0) 
-                            {
-                                s = lte_gold_generic(&x1, &x2, reset);
-                                //      printf("lte_gold[%d]=%x\n",i,s);
-                                reset = 0;
-                            }
-                            if (((s>>(j%32))&1)==0)
-                            {
-                                y[j] = -ulsch_llr[j];
-                            } else {
-
-                                y[j] = ulsch_llr[j];
-                            }
-                      }
-                  break;
-              }
                     ///////////////////////////////// desin  multi-tone
                               //if multi-RU
              /// deinterleaving
@@ -1542,10 +1572,10 @@ void decode_NPUSCH_msg_NB_IoT(PHY_VARS_eNB        *eNB,
                    ep[6] = yp[6];
                    ep[7] = yp[7];
               }
-              /// decoding
+              ///  turbo decoding
               r=0;
               Kr=0;
-              unsigned int r_offset=0,Kr_bytes,iind;
+              unsigned int r_offset=0,Kr_bytes,iind=0;
               uint8_t crc_type;
               int offset = 0;
               int16_t dummy_w[MAX_NUM_ULSCH_SEGMENTS_NB_IoT][3*(6144+64)];
@@ -1802,7 +1832,7 @@ uint8_t rx_ulsch_Gen_NB_IoT(PHY_VARS_eNB            *eNB,
 {
       
       LTE_eNB_PUSCH       *pusch_vars   =  eNB->pusch_vars[UE_id];
-      LTE_eNB_COMMON      *common_vars  =  &eNB->common_vars;
+      //LTE_eNB_COMMON      *common_vars  =  &eNB->common_vars;
       //NB_IoT_DL_FRAME_PARMS  *frame_parms  =  &eNB->frame_parms;
       LTE_DL_FRAME_PARMS     *fp  =  &eNB->frame_parms; 
       // NB_IoT_eNB_NULSCH_t    **ulsch_NB_IoT   =  &eNB->ulsch_NB_IoT[0];//[0][0]; 

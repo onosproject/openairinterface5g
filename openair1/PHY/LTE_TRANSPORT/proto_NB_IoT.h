@@ -381,6 +381,28 @@ void get_llr_per_sf_NB_IoT(PHY_VARS_eNB        *eNB,
                            uint16_t            ul_sc_start,
                            uint16_t            Nsc_RU);
 
+void descrambling_NPUSCH_data_NB_IoT(LTE_DL_FRAME_PARMS  *fp,
+                                     int16_t             *ulsch_llr,
+                                     int16_t             *y,
+                                     uint8_t             Qm,
+                                     unsigned int        Cmux,
+                                     uint32_t            rnti_tmp,
+                                     uint8_t             rx_subframe,
+                                     uint32_t            rx_frame);
+
+void decode_NPUSCH_msg_NB_IoT(PHY_VARS_eNB        *eNB,
+                              LTE_DL_FRAME_PARMS  *fp,
+                              eNB_rxtx_proc_t     *proc,
+                              uint8_t             npusch_format,
+                              uint16_t            N_SF_per_word,
+                              uint16_t            Nsc_RU,
+                              uint16_t            N_UL_slots,
+                              uint8_t             Qm,
+                              uint8_t             pilots_slot,
+                              uint32_t            rnti_tmp,
+                              uint8_t             rx_subframe,
+                              uint32_t            rx_frame);
+
 
 uint8_t rx_ulsch_Gen_NB_IoT(PHY_VARS_eNB             *eNB,
                              eNB_rxtx_proc_t         *proc,
