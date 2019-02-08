@@ -696,7 +696,7 @@ void phy_config_dedicated_eNB(uint8_t Mod_id,
         LOG_E(PHY,"Unknown transmission mode!\n");
         break;
       }
-      LOG_I(PHY,"Transmission Mode (phy_config_dedicated_eNB) %d\n",eNB->transmission_mode[UE_id]);
+      LOG_I(PHY,"Transmission Mode (phy_config_dedicated_eNB) %d, eNB %d \n",eNB->transmission_mode[UE_id],Mod_id);
 
     } else {
       LOG_D(PHY,"[eNB %d] : Received NULL radioResourceConfigDedicated->antennaInfo from eNB %d\n",Mod_id,UE_id);

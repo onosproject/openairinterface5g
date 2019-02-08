@@ -166,7 +166,7 @@ int32_t add_ue(int16_t rnti, PHY_VARS_eNB *eNB)
       if (eNB->UE_stats[i].crnti==0) {
         MSC_LOG_EVENT(MSC_PHY_ENB, "0 Add ue %"PRIx16" ", rnti);
         LOG_D(PHY,"UE_id %d associated with rnti %x\n",i, (uint16_t)rnti);
-	printf("UE_id %d associated with rnti %x\n",i, (uint16_t)rnti);
+	printf("eNB %d, CC %d: UE_id %d associated with rnti %x\n",i, (uint16_t)rnti,eNB->Mod_id,eNB->CC_id);
         eNB->dlsch[i][0]->rnti = rnti;
         eNB->ulsch[i]->rnti = rnti;
         eNB->UE_stats[i].crnti = rnti;
