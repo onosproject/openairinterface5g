@@ -38,12 +38,20 @@
 //#include "defs.h"
 #include "PHY/defs_UE.h"
 #include "PHY/phy_extern.h"
+#include "transport_proto_ue.h"
+#include "PHY/LTE_TRANSPORT/transport_proto.h"
+#include "PHY/MODULATION/modulation_eNB.h"
+#include "PHY/LTE_ESTIMATION/lte_estimation.h"
 
 #define PSBCH_A 40
 #define PSBCH_E 1008 //12REs/PRB*6PRBs*7symbols*2 bits/RB
 
 //#define PSBCH_DEBUG 1
 
+extern void dft_lte(int32_t *z,int32_t *d, int32_t Msc_PUSCH, uint8_t Nsymb);
+extern void ulsch_channel_level(int32_t **drs_ch_estimates_ext, LTE_DL_FRAME_PARMS *frame_parms, int32_t *avg, uint16_t nb_rb);
+extern void lte_idft(LTE_DL_FRAME_PARMS *frame_parms,uint32_t *z, uint16_t Msc_PUSCH);
+extern void pbch_quantize(int8_t *pbch_llr8, int16_t *pbch_llr, uint16_t len);
 
 
 	  
@@ -133,14 +141,14 @@ int rx_psbch(PHY_VARS_UE *ue,int frame_rx,int subframe_rx) {
   
   
   int16_t **rxdataF      = ue->sl_rxdataF[ue->current_thread_id[subframe_rx]];
-  int16_t **rxdataF_ext  = ue->pusch_slbch->rxdataF_ext;
-  int16_t **drs_ch_estimates = ue->pusch_slbch->drs_ch_estimates;
-  int16_t **rxdataF_comp     = ue->pusch_slbch->rxdataF_comp;
-  int16_t **ul_ch_mag        = ue->pusch_slbch->ul_ch_mag;
+  int32_t **rxdataF_ext  = ue->pusch_slbch->rxdataF_ext;
+  int32_t **drs_ch_estimates = ue->pusch_slbch->drs_ch_estimates;
+  int32_t **rxdataF_comp     = ue->pusch_slbch->rxdataF_comp;
+  int32_t **ul_ch_mag        = ue->pusch_slbch->ul_ch_mag;
   int32_t avgs;
   uint8_t log2_maxh=0;
   int32_t avgU[2];
-  int Nsymb=7;
+  //int Nsymb=7;
 
   RU_t ru_tmp;
   memset((void*)&ru_tmp,0,sizeof(RU_t));
@@ -170,8 +178,8 @@ int rx_psbch(PHY_VARS_UE *ue,int frame_rx,int subframe_rx) {
   }
   LOG_D(PHY,"Running PBCH detection with Nid_SL %d (is_synchronizedSL %d) rxdata %p\n",ue->frame_parms.Nid_SL,ue->is_synchronizedSL,ue->common_vars.rxdata[0]);
   LOG_D(PHY,"slbch_decoding: FEP in %d.%d rx signal energy %d dB %d dB\n",frame_rx,subframe_rx,
-         dB_fixed(signal_energy(&ue->common_vars.rxdata[0][ue->frame_parms.samples_per_tti*subframe_rx],ue->frame_parms.samples_per_tti)),
-         dB_fixed(signal_energy(ue->sl_rxdata_7_5kHz[ue->current_thread_id[0]][0],ue->frame_parms.samples_per_tti)));
+         dB_fixed((uint32_t)signal_energy(&ue->common_vars.rxdata[0][ue->frame_parms.samples_per_tti*subframe_rx],ue->frame_parms.samples_per_tti)),
+         dB_fixed((uint32_t)signal_energy(ue->sl_rxdata_7_5kHz[ue->current_thread_id[0]][0],ue->frame_parms.samples_per_tti)));
  
   for (int l=0; l<11; l++) {
     slot_fep_ul(&ru_tmp,l%7,(l>6)?1:0,0);
@@ -306,12 +314,12 @@ int rx_psbch(PHY_VARS_UE *ue,int frame_rx,int subframe_rx) {
   
   uint8_t slbch_a[2+(PSBCH_A>>3)];
   uint32_t psbch_D;
-  uint8_t psbch_d_rx[96+(3*(16+PSBCH_A))];
+  int8_t psbch_d_rx[96+(3*(16+PSBCH_A))];
   uint8_t dummy_w_rx[3*3*(16+PSBCH_A)];
-  uint8_t psbch_w_rx[3*3*(16+PSBCH_A)];	  
-  uint8_t *psbch_e_rx=llr;
+  int8_t psbch_w_rx[3*3*(16+PSBCH_A)];
+  int8_t *psbch_e_rx=llr;
   uint8_t RCC;
-  int a;
+  //int a;
   uint8_t *decoded_output = ue->slss_rx.slmib;
   
   psbch_D    = 16+PSBCH_A;
@@ -358,7 +366,7 @@ int rx_psbch(PHY_VARS_UE *ue,int frame_rx,int subframe_rx) {
      return(-1);
   }
   else {
-     SLSS_t dummy_slss;
+     //SLSS_t dummy_slss;
      int testframe;
      int testsubframe;
      ue_decode_si(ue->Mod_id,

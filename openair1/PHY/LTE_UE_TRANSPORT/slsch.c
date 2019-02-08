@@ -31,6 +31,7 @@
  */
 #include "PHY/defs_UE.h"
 #include "pssch.h"
+#include "transport_proto_ue.h"
 
 //#define PSSCH_DEBUG 1
 #define DEBUG_SCI_DECODING 1
@@ -772,7 +773,7 @@ void check_and_generate_pscch(PHY_VARS_UE *ue,int frame_tx,int subframe_tx) {
 
 }
 
-void generate_slsch(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,SLSCH_t *slsch,int frame_tx,int subframe_tx) {
+void generate_slsch(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc, SLSCH_t *slsch,int frame_tx,int subframe_tx) {
     
   UE_tport_t pdu;
   size_t slsch_header_len = sizeof(UE_tport_header_t);

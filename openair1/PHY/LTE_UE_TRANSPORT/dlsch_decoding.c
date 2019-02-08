@@ -110,7 +110,7 @@ LTE_UE_DLSCH_t *new_ue_dlsch(uint8_t Kmimo,uint8_t Mdlharq,uint32_t Nsoft,int nh
     dlsch->max_turbo_iterations = max_turbo_iterations;
     
     for (i=0; i<nharq; i++) {
-      //      printf("new_ue_dlsch: Harq process %d\n",i);
+            printf("new_ue_dlsch: Harq process %d\n",i);
       dlsch->harq_processes[i] = (LTE_DL_UE_HARQ_t *)malloc16(sizeof(LTE_DL_UE_HARQ_t));
 
       if (dlsch->harq_processes[i]) {

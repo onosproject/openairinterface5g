@@ -36,6 +36,7 @@
 #include "transport_ue.h"
 
 #include "PHY/phy_extern.h"
+#include "PHY/MODULATION/modulation_eNB.h"
 
 //#define DEBUG_SSS
 

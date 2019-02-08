@@ -182,6 +182,7 @@ rlc_um_rx (const protocol_ctxt_t* const ctxt_pP, void *argP, struct mac_data_ind
   )
 {
   rlc_um_entity_t    *l_rlc_p = (rlc_um_entity_t *) argP;
+
 #if TRACE_RLC_UM_PDU || MESSAGE_CHART_GENERATOR
   char  message_string[10000];
   mem_block_t        *tb_p;

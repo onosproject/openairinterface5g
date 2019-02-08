@@ -79,7 +79,7 @@
 #define CONFIG_HLP_PRB           "Set the PRB, valid values: 6, 25, 50, 100  \n"    
 
 #define CONFIG_HLP_EMULIFACE     "Set the interface name for the multicast transport for emulation mode (e.g. eth0, lo, etc.)  \n"    
-#define CONFIG_HLP_SIML1         "Turn on simulation interface for L1"
+//#define CONFIG_HLP_SIML1         "Turn on simulation interface for L1"
 #define CONFIG_HLP_ENABLESL      "Enable SL functionality"
 #define CONFIG_HLP_SLONLY        "Use SL only (i.e. wire UE to off-network state)"
 #define CONFIG_HLP_SLSCHTEST     "Activate dummy transmission of SCI/SLSCH for testing"

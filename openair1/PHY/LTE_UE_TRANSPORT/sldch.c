@@ -263,7 +263,6 @@ void sldch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
 
 
   // Decoding
-
   ue->dlsch_rx_sldch[npsdch]->harq_processes[0]->rvidx = rvidx;
   ue->dlsch_rx_sldch[npsdch]->harq_processes[0]->nb_rb = 2;
   ue->dlsch_rx_sldch[npsdch]->harq_processes[0]->TBS   = 256;

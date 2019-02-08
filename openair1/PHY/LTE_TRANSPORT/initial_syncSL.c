@@ -40,6 +40,11 @@
 #include "PHY/defs_common.h"
 #include "PHY/phy_extern_ue.h"
 
+extern int lte_sync_timeSL(PHY_VARS_UE *ue, int *ind, int64_t *lev, int64_t *avg);
+extern int rx_slsss(PHY_VARS_UE *ue,int32_t *tot_metric,uint8_t *phase_max,int Nid2);
+extern void generate_sl_grouphop(PHY_VARS_UE *ue);
+extern int rx_psbch(PHY_VARS_UE *ue,int frame_rx,int subframe_rx);
+
 int initial_syncSL(PHY_VARS_UE *ue) {
 
   int index;
@@ -55,7 +60,7 @@ int initial_syncSL(PHY_VARS_UE *ue) {
 	 index,dB_fixed64((uint64_t)psslevel),dB_fixed64((uint64_t)avglevel),ue->rx_offsetSL);
   if (ue->rx_offsetSL >= 0) {
     int32_t sss_metric;
-    int32_t phase_max;
+    uint8_t phase_max;
     rx_slsss(ue,&sss_metric,&phase_max,index);
     generate_sl_grouphop(ue);
   
@@ -92,6 +97,7 @@ int initial_syncSL(PHY_VARS_UE *ue) {
     }
   }
   else {
+	  return (-1);
      /*write_output("rxsig0.m","rxs0",&ue->common_vars.rxdata[0][ue->frame_parms.samples_per_tti*subframe],ue->frame_parms.samples_per_tti,1,1);
      exit(-1);
 */

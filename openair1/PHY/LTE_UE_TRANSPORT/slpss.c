@@ -47,7 +47,7 @@ int generate_slpss(int32_t **txdataF,
 		   )
 {
 
-  unsigned int Nsymb;
+  //unsigned int Nsymb;
   unsigned short k,m,a;
   uint8_t Nid2;
   short *primary_sync;

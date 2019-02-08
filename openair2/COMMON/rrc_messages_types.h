@@ -26,7 +26,7 @@
  *      Author: winckel and Navid Nikaein
  */
 
-#ifndef RRC_MESSAGES_TYPES_H_<<>
+#ifndef RRC_MESSAGES_TYPES_H_
 #define RRC_MESSAGES_TYPES_H_
 
 #include "as_message.h"

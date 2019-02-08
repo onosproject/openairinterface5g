@@ -721,7 +721,7 @@ int init_lte_ue_signal(PHY_VARS_UE *ue,
   common_vars->rxdata                                      = (int32_t**)malloc16( fp->nb_antennas_rx*sizeof(int32_t*) );
   common_vars->common_vars_rx_data_per_thread[0].rxdataF   = (int32_t**)malloc16( fp->nb_antennas_rx*sizeof(int32_t*) );
   common_vars->common_vars_rx_data_per_thread[1].rxdataF   = (int32_t**)malloc16( fp->nb_antennas_rx*sizeof(int32_t*) );
-  if (ue->sidelink_active == 1) common_vars->rxdata_syncSL = (int32_t**)malloc16( fp->nb_antennas_rx*sizeof(int16_t*) );
+  if (ue->sidelink_active == 1) common_vars->rxdata_syncSL = (int16_t**)malloc16( fp->nb_antennas_rx*sizeof(int16_t*) );
     
   for (i=0; i<fp->nb_antennas_rx; i++) {
     common_vars->rxdata[i] = (int32_t*) malloc16_clear( (fp->samples_per_tti*10+2048)*sizeof(int32_t) );

@@ -171,6 +171,7 @@ uint8_t rrc_ue_generate_SidelinkUEInformation( const protocol_ctxt_t* const ctxt
 #if defined(ENABLE_USE_MME) || ENABLE_RAL
 static Rrc_State_t rrc_get_state (module_id_t ue_mod_idP)
 {
+	LOG_I(RRC, "In rrc_get_state \n");
   return UE_rrc_inst[ue_mod_idP].RrcState;
 }
 #endif
@@ -4891,9 +4892,10 @@ void *rrc_ue_task( void *args_p )
             NAS_CELL_SELECTION_REQ (msg_p).plmnID.MNCdigit3,
             NAS_CELL_SELECTION_REQ (msg_p).rat);
 
+      LOG_I(RRC, "RRC_GET_STATE: UE_ID: %d", ue_mod_id);
       if (rrc_get_state(ue_mod_id) == RRC_STATE_INACTIVE) {
         // have a look at MAC/main.c void dl_phy_sync_success(...)
-    	  LOG_I(RRC, "rrc_ue_task() in RRC_STATE_INACTIVE before openair_rrc_ue_init() \n");
+    	  LOG_I(RRC, "rrc_ue_task() in RRC_STATE_INACTIVE before openair_rrc_ue_init() \n \n");
         openair_rrc_ue_init(ue_mod_id,0);
       }
 

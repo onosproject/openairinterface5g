@@ -1042,14 +1042,14 @@ int main( int argc, char **argv ) {
 
   // connect the TX/RX buffers
 
-  /*
+
   if(nfapi_mode!=3) {
     if (setup_ue_buffers(PHY_vars_UE_g[0],&openair0_cfg[0])!=0) {
       printf("Error setting up eNB buffer\n");
       exit(-1);
     }
   }
-  */
+
 
   if (input_fd) {
     printf("Reading in from file to antenna buffer %d\n",0);

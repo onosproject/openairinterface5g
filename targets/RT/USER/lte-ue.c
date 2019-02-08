@@ -40,6 +40,7 @@
 #include "PHY/INIT/phy_init.h"
 #include "PHY/MODULATION/modulation_UE.h"
 #include "PHY/LTE_ESTIMATION/lte_estimation.h"
+#include "openair1/SIMULATION/TOOLS/sim.h"
 
 #undef MALLOC //there are two conflicting definitions, so we better make sure we don't use it at all
 //#undef FRAME_LENGTH_COMPLEX_SAMPLES //there are two conflicting definitions, so we better make sure we don't use it at all
@@ -86,6 +87,7 @@ void init_UE(int nb_inst,int eMBMS_active, int uecap_xer_in, int timing_correcti
 void init_UE_stub(int nb_inst,int,int,char*,int);
 void init_UE_stub_single_thread(int nb_inst,int,int,char*, int);
 int init_timer_thread(void);
+void init_sl_channel(void);
 extern void oai_subframe_ind(uint16_t sfn, uint16_t sf);
 extern void multicast_link_start(void (*rx_handlerP) (unsigned int, char *),
                           unsigned char _multicast_group, char *multicast_ifname);
@@ -95,6 +97,15 @@ extern int oai_nfapi_harq_indication(nfapi_harq_indication_t *harq_ind);
 extern int oai_nfapi_sr_indication(nfapi_sr_indication_t *ind);
 extern int oai_nfapi_rx_ind(nfapi_rx_indication_t *ind);
 extern int multicast_link_write_sock(int groupP, char *dataP, uint32_t sizeP);
+extern int initial_syncSL(PHY_VARS_UE *ue);
+
+//The following 4 lines need to be uncommented for SL emulation and correspond to the current definitions of the function
+/*extern void check_and_generate_pscch(PHY_VARS_UE *ue,int frame_tx,int subframe_tx);
+extern void check_and_generate_pssch(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_tx,int subframe_tx);
+extern void do_SL_sig(int UE_id,channel_desc_t *UE2UE[NUMBER_OF_UE_MAX][NUMBER_OF_UE_MAX][MAX_NUM_CCs],
+	       uint16_t subframe,uint16_t slot, int symbol_offset, LTE_DL_FRAME_PARMS *frame_parms,
+	       uint32_t frame,uint8_t CC_id);
+extern void rx_slcch(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subframe_rx);*/
 
 extern int simL1flag;
 extern uint16_t sf_ahead;
@@ -392,7 +403,7 @@ void init_UE(int nb_inst,int eMBMS_active, int uecap_xer_in, int timing_correcti
 				      &UE->proc.attr_ue,
 				      UE_thread,
 				      (void*)UE), "");
-    if (UE->sidelink_active == 1) 
+    if (UE->sidelink_active == 1)
       AssertFatal(0 == pthread_create(&UE->proc.pthread_ueSL,
 				      &UE->proc.attr_ueSL,
 				      UE_threadSL,
@@ -782,16 +793,17 @@ static void *UE_thread_synch(void *arg)
   return &UE_thread_synch_retval;
 }
 
-extern int64_t* sync_corr_ue1;
+//extern int64_t* sync_corr_ue1;
 
 static void *UE_thread_synchSL(void *arg)
 {
-  static int UE_thread_synch_retval;
-  int i, hw_slot_offset;
+  //static int UE_thread_synch_retval;
+  int i;
+  //int hw_slot_offset;
   PHY_VARS_UE *UE = (PHY_VARS_UE*) arg;
   int current_band = 0;
-  int current_offset = 0;
-  sync_mode_t sync_mode = pbch;
+  //int current_offset = 0;
+  //sync_mode_t sync_mode = pbch;
   int CC_id = UE->CC_id;
   int ind;
   int found;
@@ -838,11 +850,11 @@ static void *UE_thread_synchSL(void *arg)
     openair0_cfg[UE->rf_map.card].duplex_mode = duplex_mode_TDD;
   }
 
-  while (sync_var<0)
+  /*while (sync_var<0)
     pthread_cond_wait(&sync_cond, &sync_mutex);
-  pthread_mutex_unlock(&sync_mutex);
+  pthread_mutex_unlock(&sync_mutex);*/
 
-
+  wait_sync("UE thread synchSL");
 
 
   while (oai_exit==0) {
@@ -877,7 +889,7 @@ static void *UE_thread_synchSL(void *arg)
 	  UE->UE_scan_carrier = 0;
 	} else {
 	  AssertFatal ( 0== pthread_mutex_lock(&UE->proc.mutex_synch), "");
-          LOG_I(PHY,"Setting UE->is_synchronized to 1\n",UE->is_synchronized);
+          LOG_I(PHY,"Setting UE->is_synchronized to %d\n",UE->is_synchronized);
 	  UE->is_synchronizedSL = 1;
 	  AssertFatal ( 0== pthread_mutex_unlock(&UE->proc.mutex_synch), "");
         }
@@ -1116,7 +1128,6 @@ static void *UE_thread_rxn_txnp4(void *arg) {
 }
 
 
-#include "openair1/SIMULATION/TOOLS/sim.h"
 unsigned int emulator_absSF;
 channel_desc_t *UE2UE[NUMBER_OF_UE_MAX][NUMBER_OF_UE_MAX][MAX_NUM_CCs];
 
@@ -1168,10 +1179,12 @@ void ue_stub_rx_handler(unsigned int num_bytes, char *rx_buffer) {
     if (UE->sidelink_l2_emulation == 2) {
       // do simulation here
       UE->slsch = slsch;
-      check_and_generate_pscch(UE,frame,subframe);
+
+      //The following 4 lines need to be uncommented for emulation and correspond to the current definitions of the functions
+      /*check_and_generate_pscch(UE,frame,subframe);
       check_and_generate_pssch(UE,frame,subframe);
       do_SL_sig(UE2UE,subframe,&UE->frame_parms,frame,0);
-      rx_slcch(UE,frame,subframe);
+      rx_slcch(UE,frame,subframe);*/
     }
     ue_send_sl_sdu(0,
 		   0,
@@ -2305,9 +2318,11 @@ void *UE_threadSL(void *arg) {
 
   UE->proc.instance_cnt_synchSL=-1;
 
-  while (sync_var<0)
+  /*while (sync_var<0)
     pthread_cond_wait(&sync_cond, &sync_mutex);
-  pthread_mutex_unlock(&sync_mutex);
+  pthread_mutex_unlock(&sync_mutex);*/
+
+  wait_sync("UE thread SL");
 
   AssertFatal(UE->rfdevice.trx_start_func(&UE->rfdevice) == 0,"Could not start the device");
 
