@@ -1804,17 +1804,23 @@ void decode_NPUSCH_msg_NB_IoT(PHY_VARS_eNB        *eNB,
       /////  if last sf of the word
       ulsch_NB_IoT->counter_repetitions--;
 
-      if(ulsch_NB_IoT->Msg3_flag == 1)
+      if (npusch_format == 0)  // rvidx is used for data and not used otherwise
       {
-          ulsch_harq->rvidx =  (ulsch_NB_IoT->counter_repetitions % 2)*2;        // rvidx toogle for new code word
-      } // else {}       for other npusch cases ??
+          if(ulsch_NB_IoT->Msg3_flag == 1)   // case of msg3 
+          {
+              ulsch_harq->rvidx =  (ulsch_NB_IoT->counter_repetitions % 2)*2;        // rvidx toogle for new code word
+
+          } else {                       /// other NPUSCH cases
+
+              ulsch_harq->rvidx =  (((ulsch_harq->rvidx / 2) ^ 1) * 2);             // rvidx toogle for new code word
+          }
+      }
 
       if( (ulsch_NB_IoT->counter_sf == 1) && (ulsch_NB_IoT->counter_repetitions == 0) )
       {
         ulsch_NB_IoT->Msg3_active  = 0;
         ulsch_NB_IoT->Msg3_flag    = 0;
       } 
-
 
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
