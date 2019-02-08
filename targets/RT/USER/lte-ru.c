@@ -247,14 +247,14 @@ void fh_if4p5_south_in(RU_t *ru,int *frame,int *subframe) {
     LOG_D(PHY,"rx_fh_if4p5: subframe %d symbol mask %x\n",*subframe,proc->symbol_mask[*subframe]);
   } while(proc->symbol_mask[*subframe] != symbol_mask_full);    
 
-  if (ru->wait_cnt==0) {
-  	T(T_RAU_INPUT_DMRS, T_INT(ru->idx), T_INT(proc->frame_rx), T_INT(proc->subframe_rx),
+  if (ru->wait_cnt==0 && packet_type == IF4p5_PULCALIB) {
+  	T(T_RAU_INPUT_DMRS, T_INT(ru->idx), T_INT(f), T_INT(sf),
           T_BUFFER(&ru->common.rxdataF[0][0],
           fp->symbols_per_tti*fp->ofdm_symbol_size*sizeof(int32_t)));
-  }
+  
 
   // Estimate calibration channel estimates:
-  if (proc->subframe_rx==0) {
+  if (packet_type == IF4p5_PULCALIB) {
   	Ns = (ru->is_slave==0 ? 1 : 0);
 	l = (ru->is_slave==0 ? 10 : 3);
 	ru->frame_parms.nb_antennas_rx = ru->nb_rx;		
@@ -290,7 +290,8 @@ void fh_if4p5_south_in(RU_t *ru,int *frame,int *subframe) {
 		T(T_CALIBRATION_CHANNEL_ESTIMATES, T_INT(ru->idx), T_INT(proc->frame_rx), T_INT(proc->subframe_rx),
                 T_BUFFER(&calibration->drs_ch_estimates[0][l*12*fp->N_RB_UL],
                 12*fp->N_RB_UL*sizeof(int32_t)));
-}
+  }
+  }
 
   //calculate timestamp_rx, timestamp_tx based on frame and subframe
   proc->subframe_rx  = sf;
