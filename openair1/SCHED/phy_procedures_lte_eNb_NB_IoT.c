@@ -1549,7 +1549,7 @@ uint32_t rx_nprach_NB_IoT(PHY_VARS_eNB *eNB, int frame, uint8_t subframe, uint16
 }
 
 
-void fill_crc_indication_NB_IoT(PHY_VARS_eNB *eNB,int UE_id,int frame,int subframe,uint8_t crc_flag) {
+void fill_crc_indication_NB_IoT(PHY_VARS_eNB *eNB,int UE_id,int frame,int subframe,uint8_t crc_flag, uint8_t ACK_NACK) {
 
   pthread_mutex_lock(&eNB->UL_INFO_mutex);
   // nfapi_crc_indication_pdu_t* crc_pdu_list
@@ -1566,20 +1566,30 @@ void fill_crc_indication_NB_IoT(PHY_VARS_eNB *eNB,int UE_id,int frame,int subfra
   //////////////////////////pdu->crc_indication_rel8.tl.tag                     = NFAPI_CRC_INDICATION_REL8_TAG;
   pdu->crc_indication_rel8.crc_flag                   = crc_flag;
 
-  eNB->UL_INFO.crc_ind.number_of_crcs++;
-
+  if(ACK_NACK == 1)
+  {
+      eNB->UL_INFO.crc_ind.number_of_crcs++;
+  } else {
+     eNB->UL_INFO.crc_ind.number_of_crcs =0;
+  }
   //LOG_D(PHY, "%s() rnti:%04x crcs:%d crc_flag:%d\n", __FUNCTION__, pdu->rx_ue_information.rnti, eNB->UL_INFO.crc_ind.crc_indication_body.number_of_crcs, crc_flag);
 
   pthread_mutex_unlock(&eNB->UL_INFO_mutex);
 }
 
-void fill_rx_indication_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,uint8_t data_or_control, uint8_t msg3_flag)
+void fill_rx_indication_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,uint8_t data_or_control, uint8_t msg3_flag, uint8_t ACK_NACK)
 {
       nfapi_rx_indication_pdu_t *pdu;
 
       pthread_mutex_lock(&eNB->UL_INFO_mutex);
 
-      eNB->UL_INFO.RX_NPUSCH.number_of_pdus  = 1;
+      
+      if(ACK_NACK == 1)
+      { 
+          eNB->UL_INFO.RX_NPUSCH.number_of_pdus  = 1;
+      } else {
+          eNB->UL_INFO.RX_NPUSCH.number_of_pdus  = 0;
+      }
       //eNB->UL_INFO.RX_NPUSCH.rx_pdu_list.rx_ue_information.tl.tag = NFAPI_RX_INDICATION_BODY_TAG;   // do we need this ?? 
       //eNB->UL_INFO.RX_NPUSCH.rx_pdu_list.rx_ue_information.rnti = rnti;  // rnti should be got from eNB structure
       //pdu                                    = &eNB->UL_INFO.RX_NPUSCH.rx_pdu_list[eNB->UL_INFO.rx_ind.rx_indication_body.number_of_pdus];
