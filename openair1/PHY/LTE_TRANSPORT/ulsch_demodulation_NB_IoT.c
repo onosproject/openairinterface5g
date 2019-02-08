@@ -1499,6 +1499,186 @@ void descrambling_NPUSCH_ack_NB_IoT(LTE_DL_FRAME_PARMS  *fp,
             *counter_ack += (y_msg5[l]>>31)&1; 
         }
 }
+
+//////////////////////////////////////////////////////////////////////////////////////////
+uint32_t  turbo_decoding_NB_IoT(PHY_VARS_eNB           *eNB,
+                                NB_IoT_eNB_NULSCH_t    *ulsch_NB_IoT,
+                                eNB_rxtx_proc_t        *proc,
+                                uint8_t                 npusch_format,
+                                unsigned int            G,
+                                uint8_t                 rvdx,
+                                uint8_t                 Qm,
+                                uint32_t                rx_frame,
+                                uint8_t                 rx_subframe)
+{  
+          NB_IoT_UL_eNB_HARQ_t    *ulsch_harq       = ulsch_NB_IoT->harq_process;
+
+          int            r = 0, Kr = 0;
+          unsigned int   r_offset=0,Kr_bytes,iind=0;
+          uint8_t        crc_type;
+          int            offset = 0;
+          int16_t        dummy_w[MAX_NUM_ULSCH_SEGMENTS_NB_IoT][3*(6144+64)];
+          int            ret = 1;
+          unsigned int   E; 
+
+          uint8_t (*tc)(int16_t *y,
+                        uint8_t *,
+                        uint16_t,
+                        uint16_t,
+                        uint16_t,
+                        uint8_t,
+                        uint8_t,
+                        uint8_t,
+                        time_stats_t *,
+                        time_stats_t *,
+                        time_stats_t *,
+                        time_stats_t *,
+                        time_stats_t *,
+                        time_stats_t *,
+                        time_stats_t *);
+
+          tc = phy_threegpplte_turbo_decoder16;
+
+          for (r=0; r<ulsch_harq->C; r++)
+          {
+              // Get Turbo interleaver parameters
+              if (r<ulsch_harq->Cminus)
+              {
+                  Kr = ulsch_harq->Kminus;
+              } else{
+                  Kr = ulsch_harq->Kplus;
+              }
+
+              Kr_bytes = Kr>>3;
+
+              if (Kr_bytes<=64)
+              {
+                  iind = (Kr_bytes-5);
+
+              } else if (Kr_bytes <=128) { 
+                  
+                  iind = 59 + ((Kr_bytes-64)>>1);
+
+              } else if (Kr_bytes <= 256) {
+                  
+                  iind = 91 + ((Kr_bytes-128)>>2);
+
+              } else if (Kr_bytes <= 768) { 
+                  
+                  iind = 123 + ((Kr_bytes-256)>>3);
+
+              } else {
+                  LOG_E(PHY,"ulsch_decoding: Illegal codeword size %d!!!\n",Kr_bytes);
+              }
+
+              memset(&dummy_w[r][0],0,3*(6144+64)*sizeof(short));
+              ulsch_harq->RTC[r] = generate_dummy_w(4+(Kr_bytes*8),
+                                                    (uint8_t*)&dummy_w[r][0],
+                                                    (r==0) ? ulsch_harq->F : 0);
+
+              if (lte_rate_matching_turbo_rx(ulsch_harq->RTC[r],
+                                             G,
+                                             ulsch_harq->w[r],
+                                             (uint8_t*) &dummy_w[r][0],
+                                             ulsch_harq->e+r_offset,
+                                             ulsch_harq->C,
+                                             1,                           ////// not used
+                                             0,                           //Uplink
+                                             1,
+                                             rvdx,                        //ulsch_harq->rvidx,
+                                             (ulsch_harq->round==0)?1:0,  // clear
+                                             Qm,                          //2 //get_Qm_ul(ulsch_harq->mcs),
+                                             1,
+                                             r,
+                                             &E)==-1) 
+              {
+                  LOG_E(PHY,"ulsch_decoding.c: Problem in rate matching\n");
+              }
+
+              r_offset += E;
+
+              sub_block_deinterleaving_turbo(4+Kr,
+                                             &ulsch_harq->d[r][96],
+                                             ulsch_harq->w[r]); 
+
+              if (ulsch_harq->C == 1)
+              { 
+                  crc_type = CRC24_A;
+              }else{
+                  crc_type = CRC24_B;
+              }
+              // turbo decoding and CRC 
+              ret = tc(&ulsch_harq->d[r][96],
+                       ulsch_harq->c[r],
+                       Kr,
+                       f1f2mat_old[iind*2],
+                       f1f2mat_old[(iind*2)+1],
+                       ulsch_NB_IoT->max_turbo_iterations, // MAX_TURBO_ITERATIONS,
+                       crc_type,
+                       (r==0) ? ulsch_harq->F : 0,
+                       &eNB->ulsch_tc_init_stats,
+                       &eNB->ulsch_tc_alpha_stats,
+                       &eNB->ulsch_tc_beta_stats,
+                       &eNB->ulsch_tc_gamma_stats,
+                       &eNB->ulsch_tc_ext_stats,
+                       &eNB->ulsch_tc_intl1_stats,
+                       &eNB->ulsch_tc_intl2_stats); 
+              ///////////////end decoding /////////////
+              if (ret != (1+ulsch_NB_IoT->max_turbo_iterations)) 
+              {   
+                  if (r<ulsch_harq->Cminus)       
+                  {
+                      Kr = ulsch_harq->Kminus;
+                  } else {                        
+                      Kr = ulsch_harq->Kplus; 
+                      Kr_bytes = Kr>>3;
+                  }
+                  if (r==0)                       
+                  {
+                      memcpy(ulsch_harq->b,
+                            &ulsch_harq->c[0][(ulsch_harq->F>>3)],
+                            Kr_bytes - (ulsch_harq->F>>3) - ((ulsch_harq->C>1)?3:0));
+                            offset = Kr_bytes - (ulsch_harq->F>>3) - ((ulsch_harq->C>1)?3:0);
+                  } else {
+                      memcpy(ulsch_harq->b+offset,
+                             ulsch_harq->c[r],
+                             Kr_bytes - ((ulsch_harq->C>1)?3:0));
+                             offset += (Kr_bytes- ((ulsch_harq->C>1)?3:0));
+                  }
+                  
+                  fill_crc_indication_NB_IoT(eNB,0,rx_frame,rx_subframe,1,1); // indicate ACK to MAC
+                  fill_rx_indication_NB_IoT(eNB,proc,npusch_format,ulsch_NB_IoT->Msg3_flag,1);
+                  printf(" MSG3 OK");
+              } else { 
+                  fill_crc_indication_NB_IoT(eNB,0,rx_frame,rx_subframe,0,0);   // indicate NAK to MAC 
+                  fill_rx_indication_NB_IoT(eNB,proc,npusch_format,ulsch_NB_IoT->Msg3_flag,0);
+                  printf(" MSG3 NOT OK");
+              }
+          }  ////////////  r loop end  ////////////
+
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+void deinterleaving_NPUSCH_data_NB_IoT(NB_IoT_UL_eNB_HARQ_t *ulsch_harq, int16_t *y, unsigned int G)
+{
+    
+    unsigned int    j2=0;
+    int16_t         *yp,*ep;
+    int             iprime;
+
+    for (iprime=0,yp=&y[j2],ep=&ulsch_harq->e[0]; iprime<G; iprime+=8,j2+=8,ep+=8,yp+=8)
+    {
+         ep[0] = yp[0];
+         ep[1] = yp[1];
+         ep[2] = yp[2];
+         ep[3] = yp[3];
+         ep[4] = yp[4];
+         ep[5] = yp[5];
+         ep[6] = yp[6];
+         ep[7] = yp[7];
+    }
+
+}
  
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -1520,282 +1700,126 @@ void decode_NPUSCH_msg_NB_IoT(PHY_VARS_eNB        *eNB,
       NB_IoT_eNB_NULSCH_t     *ulsch_NB_IoT     = eNB->ulsch_NB_IoT[0];
       NB_IoT_UL_eNB_HARQ_t    *ulsch_harq       = ulsch_NB_IoT->harq_process;
 
-          unsigned int    A      = (ulsch_harq->TBS)*8;
-          uint8_t         rvdx   = ulsch_harq->rvidx;
-          unsigned int    j,j2;
-          int             iprime;
-          int             r,Kr;
-          unsigned int    G,H,Hprime,Hpp,Cmux,Rmux_prime;     // Q_CQI,Q_RI=0
+      unsigned int    A      = (ulsch_harq->TBS)*8;
+      uint8_t         rvdx   = ulsch_harq->rvidx;
+          
+      if (npusch_format == 0)
+      {
+          int16_t         *ulsch_llr    = eNB->pusch_vars[0]->llr;  // eNB->pusch_vars[eNB_id]->llr;      //UE_id=0
+
+          unsigned int    G,H,Hprime,Hpp,Cmux,Rmux_prime;
           int16_t         y[6*14*1200] __attribute__((aligned(32)));
           uint8_t         ytag[14*1200];
-          
-          if (npusch_format == 0)
+          G     =  (7-pilots_slot) * Qm * N_UL_slots * Nsc_RU; //(1 * Q_m) * 6 * 16; // Vincent : see 36.212, Section 5.1.4.1.2  // 16 slot(total number of slots) * 6 symboles (7-pilots_slot) * Qm*1 
+          // x1 is set in lte_gold_generic
+          // x2 should not reinitialized each subframe
+          // x2 should be reinitialized according to 36.211 Sections 10.1.3.1 and 10.1.3.6
+            if (ulsch_harq->round == 0)
           {
-              int16_t         *ulsch_llr    = eNB->pusch_vars[0]->llr;  // eNB->pusch_vars[eNB_id]->llr;      //UE_id=0
-              // NB-IoT ///////////////////////////////////////////////
-              // x1 is set in lte_gold_generic
-              // x2 should not reinitialized each subframe
-              // x2 should be reinitialized according to 36.211 Sections 10.1.3.1 and 10.1.3.6
-              // A     =  ulsch_harq->TBS; //88; //  // only for msg3 , should be replace by generic one
-              // Qm   =  get_Qm_ul_NB_IoT(I_MCS,Nsc_RU);   // (2,1)      ///// ulsch_harq->mcs,ulsch_harq->N_sc_RU   // G_UL ??
-              G     =  (7-pilots_slot) * Qm * N_UL_slots * Nsc_RU; //(1 * Q_m) * 6 * 16; // Vincent : see 36.212, Section 5.1.4.1.2  // 16 slot(total number of slots) * 6 symboles (7-pilots_slot) * Qm*1 
-              //G = ulsch_harq->N_sc_RU * Q_m) * ulsch_harq->Nsymb_UL * ulsch_harq->Nslot_UL;   (= number of RE * 2 - pilots)
-              if (ulsch_harq->round == 0)
-              {
-                  // This is a new packet, so compute quantities regarding segmentation
-                  ulsch_harq->B = A+24;
-                  lte_segmentation_NB_IoT(NULL,
-                                          NULL,
-                                          ulsch_harq->B,
-                                          &ulsch_harq->C,
-                                          &ulsch_harq->Cplus,
-                                          &ulsch_harq->Cminus,
-                                          &ulsch_harq->Kplus,
-                                          &ulsch_harq->Kminus,
-                                          &ulsch_harq->F);
-              }
+              // This is a new packet, so compute quantities regarding segmentation
+              ulsch_harq->B = A+24;
+              lte_segmentation_NB_IoT(NULL,
+                                      NULL,
+                                      ulsch_harq->B,
+                                      &ulsch_harq->C,
+                                      &ulsch_harq->Cplus,
+                                      &ulsch_harq->Cminus,
+                                      &ulsch_harq->Kplus,
+                                      &ulsch_harq->Kminus,
+                                      &ulsch_harq->F);
+          }
 
-              ulsch_harq->G  = G;
-              H              = G ;
-              Hprime         = H/Qm;
-              Hpp            = Hprime; 
-              Cmux           =  (7-pilots_slot) * N_UL_slots * Nsc_RU; // 6*16; /////(ulsch_harq->Nsymb_UL)*ulsch_harq->Nslot_UL; 
-              Rmux_prime     = Hpp/Cmux;
-              // Clear "tag" interleaving matrix to allow for CQI/DATA identification
-              memset(ytag,0,Cmux*Rmux_prime);
-              memset(y,LTE_NULL_NB_IoT,Qm*Hpp);
-              
-              descrambling_NPUSCH_data_NB_IoT(fp,
-                                              ulsch_llr,
-                                              y,
-                                              Qm,
-                                              Cmux,
-                                              rnti_tmp,
-                                              ulsch_NB_IoT->Msg3_subframe,
-                                              ulsch_NB_IoT->Msg3_frame);
+          ulsch_harq->G  = G;
+          H              = G ;
+          Hprime         = H/Qm;
+          Hpp            = Hprime;  // => Hprime = G/Qm
+          Cmux           =  (7-pilots_slot) * N_UL_slots * Nsc_RU; 
+          Rmux_prime     = Hpp/Cmux;
+          // Clear "tag" interleaving matrix to allow for CQI/DATA identification
+          memset(ytag,0,Cmux*Rmux_prime);
+          memset(y,LTE_NULL_NB_IoT,Qm*Hpp);
+          
+          descrambling_NPUSCH_data_NB_IoT(fp,
+                                          ulsch_llr,
+                                          y,
+                                          Qm,
+                                          Cmux,
+                                          rnti_tmp,
+                                          ulsch_NB_IoT->Msg3_subframe,
+                                          ulsch_NB_IoT->Msg3_frame);
 
-                    ///////////////////////////////// desin  multi-tone
-                              //if multi-RU
-             /// deinterleaving
+          /// deinterleaving
+          deinterleaving_NPUSCH_data_NB_IoT(ulsch_harq,y,G);
 
-              j  = 0;
-              j2 = 0;
-              int16_t *yp,*ep;
-              for (iprime=0,yp=&y[j2],ep=&ulsch_harq->e[0]; iprime<G; iprime+=8,j2+=8,ep+=8,yp+=8)
-              {
-                   ep[0] = yp[0];
-                   ep[1] = yp[1];
-                   ep[2] = yp[2];
-                   ep[3] = yp[3];
-                   ep[4] = yp[4];
-                   ep[5] = yp[5];
-                   ep[6] = yp[6];
-                   ep[7] = yp[7];
-              }
-              ///  turbo decoding
-              r=0;
-              Kr=0;
-              unsigned int r_offset=0,Kr_bytes,iind=0;
-              uint8_t crc_type;
-              int offset = 0;
-              int16_t dummy_w[MAX_NUM_ULSCH_SEGMENTS_NB_IoT][3*(6144+64)];
-              int ret = 1;
-              unsigned int E; 
+          ///  turbo decoding   NPUSCH data
+          turbo_decoding_NB_IoT(eNB,
+                                ulsch_NB_IoT,
+                                proc,
+                                npusch_format,
+                                G,
+                                rvdx,
+                                Qm,
+                                rx_frame,
+                                rx_subframe);
 
-              uint8_t (*tc)(int16_t *y,
-                            uint8_t *,
-                            uint16_t,
-                            uint16_t,
-                            uint16_t,
-                            uint8_t,
-                            uint8_t,
-                            uint8_t,
-                            time_stats_t *,
-                            time_stats_t *,
-                            time_stats_t *,
-                            time_stats_t *,
-                            time_stats_t *,
-                            time_stats_t *,
-                            time_stats_t *);
+      } else {   //////////////////// ACK ///////////////////
 
-              tc = phy_threegpplte_turbo_decoder16;
+            int32_t      llr_msg5[16]; 
+            int32_t      y_msg5[16];
+            int16_t      *llrp2;
+            int          l = 0;
+            uint16_t     counter_ack = 0;   // ack counter for decision ack/nack
+            
+            llrp2 = (int16_t*)&pusch_vars->llr[0];
 
-              for (r=0; r<ulsch_harq->C; r++)
-              {
-                  // Get Turbo interleaver parameters
-                  if (r<ulsch_harq->Cminus)
+            for (l=0;l<16;l++) // putting reanl and im over 32 bits                   /// Add real and imaginary parts of BPSK constellation 
+            {
+                llr_msg5[l] = llrp2[l<<1] + llrp2[(l<<1)+1];
+            }
+            /////////////////////////////////////// descrambling + pre-decision /////////////////////////
+            descrambling_NPUSCH_ack_NB_IoT(fp,
+                                           y_msg5,
+                                           llr_msg5,
+                                           rnti_tmp,
+                                           &counter_ack,
+                                           ulsch_NB_IoT->Msg3_subframe,
+                                           ulsch_NB_IoT->Msg3_frame);
+
+            ///////////////////////////////// Decision ACK/NACK /////////////////////////////////////
+            printf("\n\n\n");
+            if (counter_ack>8)   //hard decision
+            {      
+                  fill_crc_indication_NB_IoT(eNB,0,rx_frame,rx_subframe,1,1);                               // indicate ACK to MAC
+                  fill_rx_indication_NB_IoT(eNB,proc,npusch_format,ulsch_NB_IoT->Msg3_flag,1);
+                  printf("  decoded msg5: ACK  ");
+
+            } else if (counter_ack<8) {     //hard decision
+
+                  fill_crc_indication_NB_IoT(eNB,0,rx_frame,rx_subframe,0,0);                              // indicate NAK to MAC
+                  fill_rx_indication_NB_IoT(eNB,proc,npusch_format,ulsch_NB_IoT->Msg3_flag,0);
+                  printf("  decoded msg5: NACK  "); 
+
+            } else  {  //when equality (8 bits 0 vs 8 bits 1), soft decision
+           
+                  int32_t      counter_ack_soft = 0;
+
+                  for (l=0;l<16;l++)
                   {
-                      Kr = ulsch_harq->Kminus;
-                  } else{
-                      Kr = ulsch_harq->Kplus;
+                        counter_ack_soft += y_msg5[l];   
                   }
-
-                  Kr_bytes = Kr>>3;
-
-                  if (Kr_bytes<=64)
+                  if (counter_ack_soft>=0)            // decision 
                   {
-                      iind = (Kr_bytes-5);
-
-                  } else if (Kr_bytes <=128) { 
-                      
-                      iind = 59 + ((Kr_bytes-64)>>1);
-
-                  } else if (Kr_bytes <= 256) {
-                      
-                      iind = 91 + ((Kr_bytes-128)>>2);
-
-                  } else if (Kr_bytes <= 768) { 
-                      
-                      iind = 123 + ((Kr_bytes-256)>>3);
-
+                        fill_crc_indication_NB_IoT(eNB,0,rx_frame,rx_subframe,1,1); // indicate ACK to MAC
+                        fill_rx_indication_NB_IoT(eNB,proc,npusch_format,ulsch_NB_IoT->Msg3_flag,1);
+                        printf("  decoded msg5 (soft): ACK  ");
                   } else {
-                      LOG_E(PHY,"ulsch_decoding: Illegal codeword size %d!!!\n",Kr_bytes);
-                      //return(-1);
+                        fill_crc_indication_NB_IoT(eNB,0,rx_frame,rx_subframe,0,0);   // indicate NAK to MAC
+                        fill_rx_indication_NB_IoT(eNB,proc,npusch_format,ulsch_NB_IoT->Msg3_flag,1);
+                        printf("  decoded msg5 (soft): NACK ");  
                   }
-
-                  memset(&dummy_w[r][0],0,3*(6144+64)*sizeof(short));
-                  ulsch_harq->RTC[r] = generate_dummy_w(4+(Kr_bytes*8),
-                                                        (uint8_t*)&dummy_w[r][0],
-                                                        (r==0) ? ulsch_harq->F : 0);
-
-                  if (lte_rate_matching_turbo_rx(ulsch_harq->RTC[r],
-                                                 G,
-                                                 ulsch_harq->w[r],
-                                                 (uint8_t*) &dummy_w[r][0],
-                                                 ulsch_harq->e+r_offset,
-                                                 ulsch_harq->C,
-                                                 1, //////////////////////////////// not used
-                                                 0,   //Uplink
-                                                 1,
-                                                 rvdx,//ulsch_harq->rvidx,
-                                                 (ulsch_harq->round==0)?1:0,  // clear
-                                                 Qm, //2 //get_Qm_ul(ulsch_harq->mcs),
-                                                 1,
-                                                 r,
-                                                 &E)==-1) 
-                  {
-                      LOG_E(PHY,"ulsch_decoding.c: Problem in rate matching\n");
-                      //return(-1);
-                  }
-                  r_offset += E;
-
-                  sub_block_deinterleaving_turbo(4+Kr,
-                                                 &ulsch_harq->d[r][96],
-                                                 ulsch_harq->w[r]); 
-
-                  if (ulsch_harq->C == 1)
-                  { 
-                      crc_type = CRC24_A;
-                  }else{
-                      crc_type = CRC24_B;
-                  }
-                  // turbo decoding and CRC 
-                  ret = tc(&ulsch_harq->d[r][96],
-                           ulsch_harq->c[r],
-                           Kr,
-                           f1f2mat_old[iind*2],
-                           f1f2mat_old[(iind*2)+1],
-                           ulsch_NB_IoT->max_turbo_iterations, //MAX_TURBO_ITERATIONS,
-                           crc_type,
-                           (r==0) ? ulsch_harq->F : 0,
-                           &eNB->ulsch_tc_init_stats,
-                           &eNB->ulsch_tc_alpha_stats,
-                           &eNB->ulsch_tc_beta_stats,
-                           &eNB->ulsch_tc_gamma_stats,
-                           &eNB->ulsch_tc_ext_stats,
-                           &eNB->ulsch_tc_intl1_stats,
-                           &eNB->ulsch_tc_intl2_stats); 
-              ///////////////////end decoding //////////////////////////////////////////////
-                  if (ret != (1+ulsch_NB_IoT->max_turbo_iterations)) 
-                  {   
-                      if (r<ulsch_harq->Cminus)
-                      {
-                          Kr = ulsch_harq->Kminus;
-                      } else {
-                          Kr = ulsch_harq->Kplus; 
-                          Kr_bytes = Kr>>3;
-                      }
-                      if (r==0)
-                      {
-                          memcpy(ulsch_harq->b,
-                                &ulsch_harq->c[0][(ulsch_harq->F>>3)],
-                                Kr_bytes - (ulsch_harq->F>>3) - ((ulsch_harq->C>1)?3:0));
-                                offset = Kr_bytes - (ulsch_harq->F>>3) - ((ulsch_harq->C>1)?3:0);
-                      } else {
-                          memcpy(ulsch_harq->b+offset,
-                                 ulsch_harq->c[r],
-                                 Kr_bytes - ((ulsch_harq->C>1)?3:0));
-                                 offset += (Kr_bytes- ((ulsch_harq->C>1)?3:0));
-                      }
-                      
-                      fill_crc_indication_NB_IoT(eNB,0,rx_frame,rx_subframe,1,1); // indicate ACK to MAC
-                      fill_rx_indication_NB_IoT(eNB,proc,npusch_format,ulsch_NB_IoT->Msg3_flag,1);
-                      printf(" MSG3 OK");
-                  } else { 
-                      fill_crc_indication_NB_IoT(eNB,0,rx_frame,rx_subframe,0,0);   // indicate NAK to MAC 
-                      fill_rx_indication_NB_IoT(eNB,proc,npusch_format,ulsch_NB_IoT->Msg3_flag,0);
-                      printf(" MSG3 NOT OK");
-                  }
-              }  ////////////  r loop end  ////////////
-
-          } else {   //////////////////////////////////// ACK //////////////////////////////
-
-                int32_t      llr_msg5[16]; 
-                int32_t      y_msg5[16];
-                int16_t      *llrp2;
-                int          l = 0;
-                uint16_t     counter_ack = 0;   // ack counter for decision ack/nack
-                
-                llrp2 = (int16_t*)&pusch_vars->llr[0];
-
-                for (l=0;l<16;l++) // putting reanl and im over 32 bits                   /// Add real and imaginary parts of BPSK constellation 
-                {
-                    llr_msg5[l] = llrp2[l<<1] + llrp2[(l<<1)+1];
-                }
-                
-                descrambling_NPUSCH_ack_NB_IoT(fp,
-                                               y_msg5,
-                                               llr_msg5,
-                                               rnti_tmp,
-                                               &counter_ack,
-                                               ulsch_NB_IoT->Msg3_subframe,
-                                               ulsch_NB_IoT->Msg3_frame);
-
-                /// Decision ACK/NACK
-                printf("\n\n\n");
-                if (counter_ack>8)              //hard decision
-                {      
-                      fill_crc_indication_NB_IoT(eNB,0,rx_frame,rx_subframe,1,1);                   // indicate ACK to MAC
-                      fill_rx_indication_NB_IoT(eNB,proc,npusch_format,ulsch_NB_IoT->Msg3_flag,1);
-                      printf("  decoded msg5: ACK  ");
-
-                } else if (counter_ack<8) {     //hard decision
- 
-                      fill_crc_indication_NB_IoT(eNB,0,rx_frame,rx_subframe,0,0);   // indicate NAK to MAC
-                      fill_rx_indication_NB_IoT(eNB,proc,npusch_format,ulsch_NB_IoT->Msg3_flag,0);
-                      printf("  decoded msg5: NACK  "); 
-
-                } else  {  //when equality (8 bits 0 vs 8 bits 1), soft decision
-               
-                      int32_t      counter_ack_soft = 0;
-
-                      for (l=0;l<16;l++)
-                      {
-                            counter_ack_soft += y_msg5[l];   
-                      }
-                      if (counter_ack_soft>=0)            // decision 
-                      {
-                            fill_crc_indication_NB_IoT(eNB,0,rx_frame,rx_subframe,1,1); // indicate ACK to MAC
-                            fill_rx_indication_NB_IoT(eNB,proc,npusch_format,ulsch_NB_IoT->Msg3_flag,1);
-                            printf("  decoded msg5 (soft): ACK  ");
-                      } else {
-                            fill_crc_indication_NB_IoT(eNB,0,rx_frame,rx_subframe,0,0);   // indicate NAK to MAC
-                            fill_rx_indication_NB_IoT(eNB,proc,npusch_format,ulsch_NB_IoT->Msg3_flag,1);
-                            printf("  decoded msg5 (soft): NACK ");  
-                      }
-                }
-                printf("\n\n\n");  // end decision for ACK/NACK
-          } 
+            }
+            printf("\n\n\n");  // end decision for ACK/NACK
+      } 
 
       /////  if last sf of the word
       ulsch_NB_IoT->counter_repetitions--;
@@ -1814,8 +1838,8 @@ void decode_NPUSCH_msg_NB_IoT(PHY_VARS_eNB        *eNB,
 
       if( (ulsch_NB_IoT->counter_sf == 1) && (ulsch_NB_IoT->counter_repetitions == 0) )
       {
-        ulsch_NB_IoT->Msg3_active  = 0;
-        ulsch_NB_IoT->Msg3_flag    = 0;
+          ulsch_NB_IoT->Msg3_active  = 0;
+          ulsch_NB_IoT->Msg3_flag    = 0;
       } 
 
 }

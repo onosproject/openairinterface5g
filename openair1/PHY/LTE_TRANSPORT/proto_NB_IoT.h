@@ -398,6 +398,16 @@ void descrambling_NPUSCH_ack_NB_IoT(LTE_DL_FRAME_PARMS  *fp,
                                     uint8_t             rx_subframe,
                                     uint32_t            rx_frame);
 
+uint32_t  turbo_decoding_NB_IoT(PHY_VARS_eNB           *eNB,
+                                NB_IoT_eNB_NULSCH_t    *ulsch_NB_IoT,
+                                eNB_rxtx_proc_t        *proc,
+                                uint8_t                 npusch_format,
+                                unsigned int            G,
+                                uint8_t                 rvdx,
+                                uint8_t                 Qm,
+                                uint32_t                rx_frame,
+                                uint8_t                 rx_subframe);
+
 void decode_NPUSCH_msg_NB_IoT(PHY_VARS_eNB        *eNB,
                               LTE_DL_FRAME_PARMS  *fp,
                               eNB_rxtx_proc_t     *proc,
@@ -410,6 +420,8 @@ void decode_NPUSCH_msg_NB_IoT(PHY_VARS_eNB        *eNB,
                               uint32_t            rnti_tmp,
                               uint8_t             rx_subframe,
                               uint32_t            rx_frame);
+
+void deinterleaving_NPUSCH_data_NB_IoT(NB_IoT_UL_eNB_HARQ_t *ulsch_harq, int16_t *y, unsigned int G);
 
 
 uint8_t rx_ulsch_Gen_NB_IoT(PHY_VARS_eNB             *eNB,
