@@ -65,7 +65,7 @@ mac_rrc_data_req_ue(
 
 #ifdef DEBUG_RRC
   int i;
-  LOG_I(RRC,"[eNB %d] mac_rrc_data_req to SRB ID=%d\n",Mod_idP,Srb_idP);
+  LOG_D(RRC,"[eNB %d] mac_rrc_data_req to SRB ID=%d\n",Mod_idP,Srb_idP);
 #endif
 
   LOG_D(RRC,"[UE %d] Frame %d Filling CCCH SRB_ID %d\n",Mod_idP,frameP,Srb_idP);

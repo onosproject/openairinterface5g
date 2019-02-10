@@ -171,7 +171,7 @@ uint8_t rrc_ue_generate_SidelinkUEInformation( const protocol_ctxt_t* const ctxt
 #if defined(ENABLE_USE_MME) || ENABLE_RAL
 static Rrc_State_t rrc_get_state (module_id_t ue_mod_idP)
 {
-	LOG_I(RRC, "In rrc_get_state \n");
+	//LOG_I(RRC, "In rrc_get_state, %d \n", (int)UE_rrc_inst[ue_mod_idP].RrcState );
   return UE_rrc_inst[ue_mod_idP].RrcState;
 }
 #endif

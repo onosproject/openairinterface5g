@@ -760,7 +760,7 @@ void ulsch_extract_rbs_single(int32_t **rxdataF,
 
       rxF = &rxdataF[aarx][(6*(2*first_rb - frame_parms->N_RB_UL) + symbol*frame_parms->ofdm_symbol_size)];
 #ifdef DEBUG_ULSCH
-      printf("copying %d REs from %p to %p\n",nb_rb2*6,rxF,rxF_ext);
+      LOG_D(PHY,"copying %d REs from %p to %p\n",nb_rb2*6,rxF,rxF_ext);
 #endif
       memcpy(rxF_ext, rxF, nb_rb2*6*sizeof(int));
       rxF_ext += nb_rb2*6;
