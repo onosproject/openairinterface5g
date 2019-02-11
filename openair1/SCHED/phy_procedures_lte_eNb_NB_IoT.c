@@ -1600,7 +1600,7 @@ void fill_rx_indication_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,uint8_t d
       pdu->rx_ue_information.rnti            = eNB->ulsch_NB_IoT[0]->rnti;
      
 
-      if(msg3_flag == 1)
+      /*if(msg3_flag == 1)
       {
           pdu->rx_indication_rel8.length         = 6; //eNB->ulsch_NB_IoT[0]->harq_process->TBS>>3;
           int m =0;
@@ -1610,10 +1610,10 @@ void fill_rx_indication_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,uint8_t d
               printf(" pdu content = %d \n", eNB->ulsch_NB_IoT[0]->harq_process->b[2+m]);
           }        
           
-      } else {
+      } else { */
 
           pdu->data  = eNB->ulsch_NB_IoT[0]->harq_process->b;
-      }
+      //}
       //pdu->data                              = eNB->ulsch_NB_IoT[UE_id]->harq_processes[harq_pid]->b;   
       //eNB->UL_INFO.rx_ind.rx_indication_body.number_of_pdus++;
       //eNB->UL_INFO.rx_ind.sfn_sf = frame<<4 | subframe;
