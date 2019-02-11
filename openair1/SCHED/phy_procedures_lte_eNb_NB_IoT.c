@@ -1610,8 +1610,8 @@ void fill_rx_indication_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,uint8_t d
               printf(" pdu content = %d \n", eNB->ulsch_NB_IoT[0]->harq_process->b[2+m]);
           }        
           
-      } else { */
-
+      } else { */  
+          pdu->rx_indication_rel8.length         = eNB->ulsch_NB_IoT[0]->harq_process->TBS/8; //eNB->ulsch_NB_IoT[0]->harq_process->TBS>>3;
           pdu->data  = eNB->ulsch_NB_IoT[0]->harq_process->b;
       //}
       //pdu->data                              = eNB->ulsch_NB_IoT[UE_id]->harq_processes[harq_pid]->b;   
