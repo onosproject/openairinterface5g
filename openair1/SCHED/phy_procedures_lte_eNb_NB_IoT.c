@@ -401,13 +401,13 @@ void phy_procedures_eNB_uespec_RX_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc
   npusch_procedures(eNB,proc);
 
 
-  pthread_mutex_lock(&eNB->UL_INFO_mutex);
+  //pthread_mutex_lock(&eNB->UL_INFO_mutex);
 
   // Fix me here, these should be locked
-  eNB->UL_INFO.RX_NPUSCH.number_of_pdus  = 0;
-  eNB->UL_INFO.crc_ind.number_of_crcs = 0;
+  //eNB->UL_INFO.RX_NPUSCH.number_of_pdus  = 0;
+ // eNB->UL_INFO.crc_ind.number_of_crcs = 0;
 
-  pthread_mutex_unlock(&eNB->UL_INFO_mutex);
+ // pthread_mutex_unlock(&eNB->UL_INFO_mutex);
  // if (nfapi_mode == 0 || nfapi_mode == 1) { // If PNF or monolithic
      
   //}          
