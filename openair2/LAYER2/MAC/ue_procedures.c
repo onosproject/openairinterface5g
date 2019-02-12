@@ -1836,7 +1836,7 @@ ue_scheduler(
   const int            CC_id)
 //------------------------------------------------------------------------------
 {
-  printf("ue_scheduler: UE %d, eNB_indexp %d, PHY_vars_UE_g[module_idP][0]->common_vars.eNb_id %d \n",module_idP,eNB_indexP,PHY_vars_UE_g[module_idP][0]->common_vars.eNb_id);
+  //printf("ue_scheduler: UE %d, eNB_indexp %d, PHY_vars_UE_g[module_idP][0]->common_vars.eNb_id %d \n",module_idP,eNB_indexP,PHY_vars_UE_g[module_idP][0]->common_vars.eNb_id);
   int lcid; // lcid index
   int TTI= 1;
   int bucketsizeduration = -1;
@@ -2029,7 +2029,7 @@ ue_scheduler(
     }
 
   //Check whether Regular BSR is triggered
-  if (update_bsr(module_idP,txFrameP, txSubframeP,eNB_indexP) == TRUE) {//eNB_indexP change inside the function, so it is not necessary to change
+  if (update_bsr(module_idP,txFrameP, txSubframeP,eNB_indexP) == TRUE) {//eNB_indexP change inside the function, so it is not necessary to change here
   // call SR procedure to generate pending SR and BSR for next PUCCH/PUSCH TxOp.  This should implement the procedures
   // outlined in Sections 5.4.4 an 5.4.5 of 36.321
     UE_mac_inst[module_idP].scheduling_info.SR_pending= 1;
@@ -2074,7 +2074,7 @@ ue_scheduler(
       //LOG_D(MAC,"PHR normal operation %d active %d \n", UE_mac_inst[module_idP].scheduling_info.periodicPHR_SF, UE_mac_inst[module_idP].PHR_reporting_active);
       if ((UE_mac_inst[module_idP].scheduling_info.prohibitPHR_SF <= 0) &&
           ((mac_xface->get_PL(module_idP,0,eNB_indexP) <  UE_mac_inst[module_idP].scheduling_info.PathlossChange_db) ||/*eNB_indexP=0*/
-           (UE_mac_inst[module_idP].power_backoff_db[/*eNB_indexP*/PHY_vars_UE_g[module_idP][0]->common_vars.eNb_id] > UE_mac_inst[module_idP].scheduling_info.PathlossChange_db)))
+           (UE_mac_inst[module_idP].power_backoff_db[eNB_indexP/*PHY_vars_UE_g[module_idP][0]->common_vars.eNb_id*/] > UE_mac_inst[module_idP].scheduling_info.PathlossChange_db)))
         // trigger PHR and reset the timer later when the PHR report is sent
       {
         UE_mac_inst[module_idP].PHR_reporting_active = 1;

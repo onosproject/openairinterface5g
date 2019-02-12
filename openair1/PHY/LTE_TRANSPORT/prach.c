@@ -590,7 +590,7 @@ int is_prach_subframe(LTE_DL_FRAME_PARMS *frame_parms,uint32_t frame, uint8_t su
 
 int32_t generate_prach( PHY_VARS_UE *ue, uint8_t eNB_id, uint8_t subframe, uint16_t Nf )
 {
-
+  printf("generate_prach: eNB_id %d, UE %d\n",eNB_id, ue->Mod_id);
   lte_frame_type_t frame_type         = ue->frame_parms.frame_type;
   //uint8_t tdd_config         = ue->frame_parms.tdd_config;
   uint16_t rootSequenceIndex = ue->frame_parms.prach_config_common.rootSequenceIndex;
@@ -1092,7 +1092,7 @@ int32_t generate_prach( PHY_VARS_UE *ue, uint8_t eNB_id, uint8_t subframe, uint1
 }
 int32_t generate_prach_freq( PHY_VARS_UE *ue, uint8_t eNB_id, uint8_t subframe, uint16_t Nf )
 {
-
+  printf("generate_prach_freq: eNB_id %d, UE %d\n",eNB_id,ue->Mod_id);
   lte_frame_type_t frame_type         = ue->frame_parms.frame_type;
   //uint8_t tdd_config         = ue->frame_parms.tdd_config;
   uint16_t rootSequenceIndex = ue->frame_parms.prach_config_common.rootSequenceIndex;

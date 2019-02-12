@@ -1116,7 +1116,7 @@ int phy_init_lte_ue(PHY_VARS_UE *ue,
   AssertFatal( ue->n_connected_eNB <= NUMBER_OF_CONNECTED_eNB_MAX, "n_connected_eNB is too large" );
 
   // do_ofdm_mod for frequency analysis
-  int do_ofdm_mod = ue->do_ofdm_mod=0;
+  int do_ofdm_mod = ue->do_ofdm_mod=1;
 
   if (do_ofdm_mod==0)
   {

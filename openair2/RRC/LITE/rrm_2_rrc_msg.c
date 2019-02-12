@@ -63,7 +63,7 @@ extern UE_MAC_INST *UE_mac_inst;
 void  fn_rrc (void)
 {
   /******************************************************************************/
-
+  //printf("fn_rrc:\n");Not
   msg_head_t *Header ;
 #ifdef USER_MODE
   char *Data;

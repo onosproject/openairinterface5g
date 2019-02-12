@@ -1066,6 +1066,7 @@ int eNB_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void *
   //count++;
   int ret = nsamps;
   int eNB_id = device->Mod_id;
+  //printf("eNB_id %d\n",eNB_id);
   int CC_id  = device->CC_id;
   int UE_id = 0;
 
@@ -1130,8 +1131,7 @@ int eNB_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void *
       if (do_ofdm_mod)
       {
 	for (UE_id=0; UE_id<NB_UE_INST; UE_id++){
-	     if (eNB_id!=PHY_vars_UE_g[UE_id][CC_id]->common_vars.eNb_id)
-		continue;
+	     if (eNB_id!=PHY_vars_UE_g[UE_id][CC_id]->common_vars.eNb_id) continue;
 		if (is_prach_subframe(&PHY_vars_UE_g[UE_id][CC_id]->frame_parms,frame,subframe) && PHY_vars_UE_g[UE_id][CC_id]->generate_prach)
 		{
 			//clock_t start=clock();

@@ -1997,7 +1997,7 @@ void prach_procedures(PHY_VARS_eNB *eNB) {
   int frame = eNB->proc.frame_prach;
   uint8_t CC_id = eNB->CC_id;
   int do_ofdm_mod = PHY_vars_UE_g[0][0]->do_ofdm_mod;
-
+  //printf("prach_procedures: eNB_id %d\n",eNB->Mod_id);
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_ENB_PRACH_RX,1);
   memset(&preamble_energy_list[0],0,64*sizeof(uint16_t));
   memset(&preamble_delay_list[0],0,64*sizeof(uint16_t));
