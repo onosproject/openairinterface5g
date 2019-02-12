@@ -1611,7 +1611,7 @@ void fill_rx_indication_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,uint8_t d
           }        
           
       } else { */  
-          pdu->rx_indication_rel8.length         = eNB->ulsch_NB_IoT[0]->harq_process->TBS/8; //eNB->ulsch_NB_IoT[0]->harq_process->TBS>>3;
+          pdu->rx_indication_rel8.length         = eNB->ulsch_NB_IoT[0]->harq_process->TBS; //eNB->ulsch_NB_IoT[0]->harq_process->TBS>>3;
           pdu->data  = eNB->ulsch_NB_IoT[0]->harq_process->b;
       //}
       //pdu->data                              = eNB->ulsch_NB_IoT[UE_id]->harq_processes[harq_pid]->b;   
