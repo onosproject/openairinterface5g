@@ -942,6 +942,7 @@ schedule_ue_spec(module_id_t module_idP, int slice_idxP,
               T_INT(sdu_lengths[0]));
             LOG_D(MAC, "[eNB %d][DCCH] CC_id %d Got %d bytes from RLC\n",
                   module_idP, CC_id, sdu_lengths[0]);
+          if(sdu_lengths[0] > 0){
             sdu_length_total = sdu_lengths[0];
             sdu_lcids[0] = DCCH;
             UE_list->eNB_UE_stats[CC_id][UE_id].lcid_sdu[0] = DCCH;
@@ -951,6 +952,7 @@ schedule_ue_spec(module_id_t module_idP, int slice_idxP,
             header_length_last = 1 + 1 + (sdu_lengths[0] >= 128);
             header_length_total += header_length_last;
             num_sdus = 1;
+          }
 #ifdef DEBUG_eNB_SCHEDULER
             LOG_T(MAC,
                   "[eNB %d][DCCH] CC_id %d Got %d bytes :",

@@ -1355,6 +1355,7 @@ schedule_ue_spec_fairRR(module_id_t module_idP,
             LOG_D(MAC,
                   "[eNB %d][DCCH] CC_id %d frame %d subframe %d UE_id %d/%x Got %d bytes bytes_in_buffer %d from release_num %d\n",
                   module_idP, CC_id, frameP, subframeP, UE_id, rnti, sdu_lengths[0],rlc_status.bytes_in_buffer,rrc_release_info.num_UEs);
+          if(sdu_lengths[0] > 0){
             sdu_length_total = sdu_lengths[0];
             sdu_lcids[0] = DCCH;
             UE_list->eNB_UE_stats[CC_id][UE_id].
@@ -1363,6 +1364,10 @@ schedule_ue_spec_fairRR(module_id_t module_idP,
             eNB_UE_stats[CC_id][UE_id].num_bytes_tx[DCCH]
             += sdu_lengths[0];
             num_sdus = 1;
+          } else {
+              header_len_dcch = 0;
+              sdu_length_total = 0;
+          }
 #ifdef DEBUG_eNB_SCHEDULER
             LOG_T(MAC,
                   "[eNB %d][DCCH] CC_id %d Got %d bytes :",
