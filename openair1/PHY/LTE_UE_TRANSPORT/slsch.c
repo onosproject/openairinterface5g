@@ -44,7 +44,7 @@ extern int
 multicast_link_write_sock(int groupP, char *dataP, uint32_t sizeP);
 extern uint8_t D2D_en;
 
-void ulsch_channel_level(int32_t **drs_ch_estimates_ext, LTE_DL_FRAME_PARMS *frame_parms, int32_t *avg, uint16_t nb_rb);
+void ulsch_channel_level(int32_t **drs_ch_estimates_ext, LTE_DL_FRAME_PARMS *frame_parms, int32_t *avg, uint16_t nb_rb, int symbol_offset);
 void ulsch_extract_rbs_single(int32_t **rxdataF,
                               int32_t **rxdataF_ext,
                               uint32_t first_rb,
@@ -392,7 +392,7 @@ void pscch_codingmodulation(PHY_VARS_UE *ue,int frame_tx,int subframe_tx,uint32_
   // coding part
   if (ue->pscch_coded == 0) {
 
-    LOG_I(PHY,"pscch_coding\n");
+    LOG_D(PHY,"pscch_coding\n");
     sci = sci_mapping(ue);
 
     int length = log2_approx(slsch->N_SL_RB_data*((ue->slsch_rx.N_SL_RB_data+1)>>1))+32;
@@ -476,7 +476,7 @@ void pscch_codingmodulation(PHY_VARS_UE *ue,int frame_tx,int subframe_tx,uint32_
   int32_t d[Msymb];
   int16_t gain_lin_QPSK = (int16_t)((tx_amp*ONE_OVER_SQRT2_Q15)>>15);
 
-  LOG_I(PHY,"pscch modulation, Msymb %d\n",Msymb);
+  LOG_D(PHY,"pscch modulation, Msymb %d\n",Msymb);
   for (int i=0,j=0; i<Msymb; i++,j+=2) {
     
     ((int16_t*)&d[i])[0] = (pscch->b_tilde[j] == 1)  ? (-gain_lin_QPSK) : gain_lin_QPSK;
@@ -503,7 +503,7 @@ void pscch_codingmodulation(PHY_VARS_UE *ue,int frame_tx,int subframe_tx,uint32_
   int32_t *txptr;
 
   if (ue->generate_ul_signal[subframe_tx][0] == 0){ 
-    LOG_I(PHY,"%d.%d: clearing ul_signal\n",frame_tx,subframe_tx);
+    LOG_D(PHY,"%d.%d: clearing ul_signal\n",frame_tx,subframe_tx);
     for (int aa=0; aa<ue->frame_parms.nb_antennas_tx; aa++) {
       memset(&ue->common_vars.txdataF[aa][subframe_tx*ue->frame_parms.ofdm_symbol_size*ue->frame_parms.symbols_per_tti],
 	     0,
@@ -544,7 +544,7 @@ void pscch_codingmodulation(PHY_VARS_UE *ue,int frame_tx,int subframe_tx,uint32_
 
   ue->pscch_generated |= (1+slot);
   ue->generate_ul_signal[subframe_tx][0] = 1;
-  LOG_I(PHY, "PSCCH signal generated \n");
+  LOG_D(PHY, "PSCCH signal generated \n");
 
 }
 
@@ -560,7 +560,7 @@ void slsch_codingmodulation(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_tx,in
   
   AssertFatal(ue->slsch_sdu_active > 0,"ue->slsch_sdu_active isn't active\n");
 
-  LOG_I(PHY,"Generating SLSCH for rvidx %d, group_id %d, mcs %d, resource first rb %d, L_crbs %d\n",
+  LOG_D(PHY,"Generating SLSCH for rvidx %d, group_id %d, mcs %d, resource first rb %d, L_crbs %d\n",
 	slsch->rvidx,slsch->group_destination_id,slsch->mcs,slsch->RB_start+slsch->prb_Start_data,slsch->L_CRBs);
 
   
@@ -626,7 +626,7 @@ void slsch_codingmodulation(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_tx,in
   ulsch->harq_processes[0]->mcs         = slsch->mcs;
   ulsch->Nsymb_pusch                    = ((Nsymb-1)<<1);
 
-  LOG_I(PHY,"%d.%d : SLSCH nbrb %d, first rb %d\n",frame_tx,subframe_tx,slsch->L_CRBs,slsch->RB_start+slsch->prb_Start_data);
+  LOG_D(PHY,"%d.%d : SLSCH nbrb %d, first rb %d\n",frame_tx,subframe_tx,slsch->L_CRBs,slsch->RB_start+slsch->prb_Start_data);
 
   ue->sl_chan = PSSCH_12;
 
@@ -672,7 +672,7 @@ void slsch_codingmodulation(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_tx,in
 
   ue->pssch_generated = 1;
   ue->generate_ul_signal[subframe_tx][0] = 1;
-  LOG_I(PHY, "PSSCH signal generated \n");
+  LOG_D(PHY, "PSSCH signal generated \n");
 }
 
 void check_and_generate_pssch(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_tx,int subframe_tx) {
@@ -699,7 +699,7 @@ void check_and_generate_pssch(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_tx,
 
   absSF_modP = absSF_offset%P;
 
-  LOG_I(PHY,"Checking pssch for absSF_mod P %d, SubframeBitmapSL_length %d\n", absSF_modP, slsch->SubframeBitmapSL_length);
+  LOG_D(PHY,"Checking pssch for absSF_mod P %d, SubframeBitmapSL_length %d\n", absSF_modP, slsch->SubframeBitmapSL_length);
   // This is the condition for short SCCH bitmap (slsch->SubframeBitmapSL_length bits), check that the current subframe is for SLSCH
   if (absSF_modP < slsch->SubframeBitmapSL_length) return;
  
@@ -715,7 +715,7 @@ void check_and_generate_pssch(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_tx,
 	      "received Itrp %d: TRP8 is used with Itrp in 0...%d\n",
 	      slsch->time_resource_pattern,TRP8_MAX);
 
-  LOG_I(PHY,"Checking pssch for absSF %d (trp mask %d, rv %d)\n",
+  LOG_D(PHY,"Checking pssch for absSF %d (trp mask %d, rv %d)\n",
 	absSF, trp8[slsch->time_resource_pattern][absSF_modP&7],
 	slsch->rvidx);
   // Note : this assumes Ntrp=8 for now
@@ -789,7 +789,7 @@ void check_and_generate_pscch(PHY_VARS_UE *ue,int frame_tx,int subframe_tx) {
   uint32_t b2=(slsch->n_pscch + 1 + (a1%(LPSCCH-1)))%LPSCCH;
 
 
-  LOG_I(PHY,"Checking pscch for absSF %d / n_pscch %d (N_SL_RB_SC %d, LPSCCH %d, M_RB_PSCCH_RP %d, a1 %d, a2 %d, b1 %d, b2 %d) pscch_coded %d\n",
+  LOG_D(PHY,"Checking pscch for absSF %d / n_pscch %d (N_SL_RB_SC %d, LPSCCH %d, M_RB_PSCCH_RP %d, a1 %d, a2 %d, b1 %d, b2 %d) pscch_coded %d\n",
 	absSF, slsch->n_pscch,slsch->N_SL_RB_SC,LPSCCH, M_RB_PSCCH_RP,a1,a2,b1,b2,ue->pscch_coded);
 
   ue->slsch_sdu_active = 1;
@@ -933,7 +933,7 @@ void pscch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
   ulsch_channel_level((int32_t**)drs_ch_estimates,
 		      &ue->frame_parms,
 		      avgU,
-		      1);
+		      1,slot*7);
   avgs = 0;
   
   for (int aarx=0; aarx<ue->frame_parms.nb_antennas_rx; aarx++)
@@ -943,7 +943,10 @@ void pscch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
   
   log2_maxh = (log2_approx(avgs)/2)+ log2_approx(ue->frame_parms.nb_antennas_rx-1)+4;
 
-  LOG_D(PHY,"%d.%d: nprb %d slot %d, pssch log2_maxh %d\n",frame_rx,subframe_rx,nprb,slot,log2_maxh);
+  if (log2_maxh > 5) LOG_D(PHY,"%d.%d: nprb %d slot %d, pscch log2_maxh %d (avgs %d, slot energy %d dB)\n",frame_rx,subframe_rx,nprb,slot,log2_maxh, avgs,
+                  dB_fixed(signal_energy(&ue->common_vars.rxdata[0][((subframe_rx<<1)+slot)*(ue->frame_parms.samples_per_tti>>1)],ue->frame_parms.samples_per_tti>>1)));
+
+
   for (int l=0; l<(ue->frame_parms.symbols_per_tti>>1)-slot; l++) {
   
     int l2 = l + slot*(ue->frame_parms.symbols_per_tti>>1);
@@ -1084,8 +1087,9 @@ void pscch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
     ue->slcch_received                     = 1;
     ue->slsch_decoded                      = 0;
 #ifdef DEBUG_SCI_DECODING
-    printf("sci %lx (%d bits,RAbits %d) : freq_hop %d, resource_block_coding %d, time_resource_pattern %d, mcs %d, timing_advance_indication %d, group_destination_id %d (gid shift %d result %lx => %lx\n",
-	   sci_rx_flip,length,RAbits,
+    printf("%d.%d sci %lx (%d bits,RAbits %d) : freq_hop %d, resource_block_coding %d, time_resource_pattern %d, mcs %d, timing_advance_indication %d, group_destination_id %d (gid shift %d result %lx => %lx\n",
+       frame_rx,subframe_rx,
+       sci_rx_flip,length,RAbits,
 	   slsch->freq_hopping_flag,
 	   slsch->resource_block_coding,
 	   slsch->time_resource_pattern,
@@ -1113,7 +1117,8 @@ void pscch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
 		 12*2*(ue->frame_parms.symbols_per_tti>>1),
 		 1,0);    
 
-		 exit(-1);*/
+		 exit(-1);
+		 */
   }
   else {
     /*
@@ -1312,7 +1317,7 @@ void slsch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
   ulsch_channel_level((int32_t**)drs_ch_estimates,
 		      &ue->frame_parms,
 		      avgU,
-		      slsch->L_CRBs);
+		      slsch->L_CRBs,0);
  
 #ifdef PSSCH_DEBUG
   write_output("drs_ext0.m","drsest0",drs_ch_estimates[0],ue->frame_parms.N_RB_UL*12*14,1,1);
@@ -1523,7 +1528,7 @@ void slsch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
   }
   else if (ue->dlsch_rx_slsch->harq_processes[0]->rvidx == 1 &&
 	   ret==ue->dlsch_rx_slsch->max_turbo_iterations) {
-    LOG_I(PHY,"sLSCH received in error for group_id %d (L_CRBs %d, mcs %d) power (%d,%d)\n",
+    LOG_D(PHY,"sLSCH received in error for group_id %d (L_CRBs %d, mcs %d) power (%d,%d)\n",
 	  slsch->group_destination_id,slsch->L_CRBs,slsch->mcs,
 	  dB_fixed(ue->pusch_slsch->ulsch_power[0]),
 	  dB_fixed(ue->pusch_slsch->ulsch_power[1]));

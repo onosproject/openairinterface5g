@@ -48,7 +48,7 @@
 //#define PSBCH_DEBUG 1
 
 void dft_lte(int32_t *z,int32_t *d, int32_t Msc_PUSCH, uint8_t Nsymb);
-void ulsch_channel_level(int32_t **drs_ch_estimates_ext, LTE_DL_FRAME_PARMS *frame_parms, int32_t *avg, uint16_t nb_rb);
+void ulsch_channel_level(int32_t **drs_ch_estimates_ext, LTE_DL_FRAME_PARMS *frame_parms, int32_t *avg, uint16_t nb_rb, int symbol_offset);
 void lte_idft(LTE_DL_FRAME_PARMS *frame_parms,uint32_t *z, uint16_t Msc_PUSCH);
 void pbch_quantize(int8_t *pbch_llr8, int16_t *pbch_llr, uint16_t len);
 void ulsch_extract_rbs_single(int32_t **rxdataF,
@@ -251,7 +251,7 @@ int rx_psbch(PHY_VARS_UE *ue,int frame_rx,int subframe_rx) {
   ulsch_channel_level(drs_ch_estimates,
 		      &ue->frame_parms,
 		      avgU,
-		      2);
+		      2,0);
   
 #ifdef PSBCH_DEBUG
   if (ue->is_synchronizedSL == 1 && ue->frame_parms.Nid_SL == 170) write_output("drsbch_est0.m","drsbchest0",drs_ch_estimates[0],ue->frame_parms.N_RB_UL*12*14,1,1);

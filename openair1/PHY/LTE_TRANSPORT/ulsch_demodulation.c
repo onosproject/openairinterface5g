@@ -1035,7 +1035,8 @@ void ulsch_channel_compensation(int32_t **rxdataF_ext,
 void ulsch_channel_level(int32_t **drs_ch_estimates_ext,
                          LTE_DL_FRAME_PARMS *frame_parms,
                          int32_t *avg,
-                         uint16_t nb_rb)
+                         uint16_t nb_rb,
+						 int symbol_offset)
 {
 
   int16_t rb;
@@ -1051,7 +1052,7 @@ void ulsch_channel_level(int32_t **drs_ch_estimates_ext,
     //clear average level
 #if defined(__x86_64__) || defined(__i386__)
     avg128U = _mm_setzero_ps();
-    ul_ch128=(__m128i *)drs_ch_estimates_ext[aarx];
+    ul_ch128=(__m128i *)((symbol_offset*frame_parms->N_RB_UL*12)+drs_ch_estimates_ext[aarx]);
 
     for (rb=0; rb<nb_rb; rb++) {
 
@@ -1224,7 +1225,7 @@ void rx_ulsch(PHY_VARS_eNB *eNB,
   ulsch_channel_level(pusch_vars->drs_ch_estimates,
 		      frame_parms,
 		      avgU,
-		      ulsch[UE_id]->harq_processes[harq_pid]->nb_rb);
+		      ulsch[UE_id]->harq_processes[harq_pid]->nb_rb,0);
   
   LOG_D(PHY,"[ULSCH] avg[0] %d\n",avgU[0]);
   

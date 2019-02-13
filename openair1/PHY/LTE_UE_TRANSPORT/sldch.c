@@ -40,7 +40,7 @@
 #include "SCHED_UE/sched_UE.h"
 
 extern uint8_t D2D_en;
-void ulsch_channel_level(int32_t **drs_ch_estimates_ext, LTE_DL_FRAME_PARMS *frame_parms, int32_t *avg, uint16_t nb_rb);
+void ulsch_channel_level(int32_t **drs_ch_estimates_ext, LTE_DL_FRAME_PARMS *frame_parms, int32_t *avg, uint16_t nb_rb, int symbol_offset);
 void ulsch_extract_rbs_single(int32_t **rxdataF,
                               int32_t **rxdataF_ext,
                               uint32_t first_rb,
@@ -168,7 +168,7 @@ void sldch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
   ulsch_channel_level((int32_t**)drs_ch_estimates,
 		      &ue->frame_parms,
 		      avgU,
-		      2);
+		      2,0);
 
 #ifdef PSDCH_DEBUG
   write_output("drs_ext0.m","drsest0",drs_ch_estimates[0],ue->frame_parms.N_RB_UL*12*14,1,1);
