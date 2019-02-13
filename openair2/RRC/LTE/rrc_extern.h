@@ -44,16 +44,9 @@ extern LTE_LogicalChannelConfig_t SRB1_logicalChannelConfig_defaultValue;
 extern LTE_LogicalChannelConfig_t SRB2_logicalChannelConfig_defaultValue;
 
 
-#ifndef PHY_EMUL
-#ifndef PHYSIM
-//#define NB_INST 1
-#else
-extern unsigned char NB_INST;
-#endif
-extern unsigned char NB_eNB_INST;
-extern uint16_t NB_UE_INST;
-extern unsigned short NODE_ID[1];
-#endif
+extern int NB_eNB_INST;
+extern int NB_UE_INST;
+extern int NODE_ID[1];
 
 
 //CONSTANTS

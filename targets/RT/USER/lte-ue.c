@@ -1240,10 +1240,11 @@ static void *UE_phy_stub_single_thread_rxn_txnp4(void *arg) {
   uint16_t     ue_index = 0;
   uint16_t     ue_num = NB_UE_INST/NB_THREAD_INST+((NB_UE_INST%NB_THREAD_INST > ue_thread_id) ? 1 :0);
   module_id_t ue_Mod_id;
-  PHY_VARS_UE    *UE;   //= rtd->UE;
+  PHY_VARS_UE    *UE = rtd->UE;
   int ret;
   uint8_t   end_flag;
-  proc = &PHY_vars_UE_g[0][0]->proc.proc_rxtx[0];
+  AssertFatal(UE!=NULL,"UE context is null\n");
+  proc = &UE->proc.proc_rxtx[0];
   phy_stub_ticking->num_single_thread[ue_thread_id] = -1;
 
   if(ue_thread_id == 0){

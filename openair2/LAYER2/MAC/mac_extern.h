@@ -67,7 +67,7 @@ extern int NB_eNB_INST;
 extern int NB_UE_INST;
 extern int NB_THREAD_INST;
 extern int NB_RN_INST;
-extern unsigned short NODE_ID[1];
+extern int NODE_ID[1];
 
 
 extern int cqi_to_mcs[16];

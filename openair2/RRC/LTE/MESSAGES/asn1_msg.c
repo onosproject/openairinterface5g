@@ -98,7 +98,7 @@ typedef struct xer_sprint_string_s {
   size_t string_index;
 } xer_sprint_string_t;
 
-extern unsigned char NB_eNB_INST;
+extern int NB_eNB_INST;
 
 
 extern RAN_CONTEXT_t RC;
