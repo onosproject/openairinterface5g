@@ -971,8 +971,8 @@ extern "C" {
    * \param openair0_cfg RF frontend parameters set by application
    */
   int device_init(openair0_device *device, openair0_config_t *openair0_cfg) {
-    LOG_D(PHY, "openair0_cfg[0].sdr_addrs == '%s'\n", openair0_cfg[0].sdr_addrs);
-    LOG_D(PHY, "openair0_cfg[0].clock_source == '%d'\n", openair0_cfg[0].clock_source);
+    LOG_I(PHY, "openair0_cfg[0].sdr_addrs == '%s'\n", openair0_cfg[0].sdr_addrs);
+    LOG_I(PHY, "openair0_cfg[0].clock_source == '%d'\n", openair0_cfg[0].clock_source);
 #if defined(USRP_REC_PLAY)
     paramdef_t usrp_recplay_params[7];
     struct sysinfo systeminfo;

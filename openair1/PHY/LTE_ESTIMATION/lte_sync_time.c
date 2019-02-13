@@ -30,7 +30,7 @@
 //#include "PHY/phy_vars_ue.h"
 #include "PHY/phy_extern_ue.h"
 #include <math.h>
-
+#include "PHY/MODULATION/modulation_extern.h"
 
 #include "LAYER2/MAC/mac.h"
 #include "RRC/LTE/rrc_extern.h"
@@ -41,7 +41,7 @@ int64_t* sync_corr_ue0 = NULL;
 int64_t* sync_corr_ue1 = NULL;
 int64_t* sync_corr_ue2 = NULL;
 
-
+/*
 extern int16_t s6n_kHz_7_5[1920];
 extern int16_t s6e_kHz_7_5[1920];
 extern int16_t s25n_kHz_7_5[7680];
@@ -52,7 +52,7 @@ extern int16_t s75n_kHz_7_5[24576];
 extern int16_t s75e_kHz_7_5[24576];
 extern int16_t s100n_kHz_7_5[30720];
 extern int16_t s100e_kHz_7_5[30720];
-
+*/
 
 int lte_sync_time_init(LTE_DL_FRAME_PARMS *frame_parms )   // LTE_UE_COMMON *common_vars
 {
@@ -336,36 +336,35 @@ int lte_sync_time_init(LTE_DL_FRAME_PARMS *frame_parms )   // LTE_UE_COMMON *com
     idft128((int16_t*)syncF_tmp,          /// complex input
 	   (int16_t*)sync_tmp, /// complex output
 	   1);
-    kHz7_5ptr = (frame_parms->Ncp==0) ? &s6n_kHz_7_5[2*138]: &s6e_kHz_7_5[2*160];
+    kHz7_5ptr = (frame_parms->Ncp==0) ? ((int16_t*)s6n_kHz_7_5)+(2*138): ((int16_t*)s6e_kHz_7_5)+(2*160);
 
     break;
   case 25:
     idft512((int16_t*)syncF_tmp,          /// complex input
 	   (int16_t*)sync_tmp, /// complex output
 	   1);
-    kHz7_5ptr = (frame_parms->Ncp==0) ? &s25n_kHz_7_5[2*552] : &s25e_kHz_7_5[2*640];
+    kHz7_5ptr = (frame_parms->Ncp==0) ? ((int16_t*)s25n_kHz_7_5)+(2*552) : ((int16_t*)s25e_kHz_7_5)+(2*640);
 
     break;
   case 50:
     idft1024((int16_t*)syncF_tmp,          /// complex input
 	    (int16_t*)sync_tmp, /// complex output
 	    1);
-    kHz7_5ptr = (frame_parms->Ncp==0) ? &s50n_kHz_7_5[2*1104] : &s50e_kHz_7_5[2*1280];
-    printf("%p\n",kHz7_5ptr);
+    kHz7_5ptr = (frame_parms->Ncp==0) ? ((int16_t*)s50n_kHz_7_5)+(2*1104) : ((int16_t*)s50e_kHz_7_5)+(2*1280);
     break;
     
   case 75:
     idft1536((int16_t*)syncF_tmp,          /// complex input
 	     (int16_t*)sync_tmp,
 	     1); /// complex output
-    kHz7_5ptr = (frame_parms->Ncp==0) ? &s75n_kHz_7_5[2*1656]: &s75e_kHz_7_5[2*1920];
+    kHz7_5ptr = (frame_parms->Ncp==0) ? ((int16_t*)s75n_kHz_7_5)+(2*1656): ((int16_t*)s75e_kHz_7_5)+(2*1920);
 
     break;
   case 100:
     idft2048((int16_t*)syncF_tmp,          /// complex input
 	     (int16_t*)sync_tmp, /// complex output
 	     1);
-    kHz7_5ptr = (frame_parms->Ncp==0) ? &s100n_kHz_7_5[2*2208] : &s100e_kHz_7_5[2*2560];
+    kHz7_5ptr = (frame_parms->Ncp==0) ? ((int16_t*)s100n_kHz_7_5)+(2*2208) : ((int16_t*)s100e_kHz_7_5)+(2*2560);
 
     break;
   default:
@@ -451,18 +450,18 @@ int lte_sync_time_init(LTE_DL_FRAME_PARMS *frame_parms )   // LTE_UE_COMMON *com
   }
 
 
-  /*
-  write_output("primary_sync0.m","psync0",primary_synch0_time,frame_parms->ofdm_symbol_size,1,1);
-  write_output("primary_sync1.m","psync1",primary_synch1_time,frame_parms->ofdm_symbol_size,1,1);
-  write_output("primary_sync2.m","psync2",primary_synch2_time,frame_parms->ofdm_symbol_size,1,1);
-  write_output("primary_syncSL0.m","psyncSL0",primary_synch0SL_time,frame_parms->ofdm_symbol_size+frame_parms->nb_prefix_samples,1,1);
-  write_output("primary_syncSL1.m","psyncSL1",primary_synch1SL_time,frame_parms->ofdm_symbol_size+frame_parms->nb_prefix_samples,1,1);
+  
+  LOG_M("primary_sync0.m","psync0",primary_synch0_time,frame_parms->ofdm_symbol_size,1,1);
+  LOG_M("primary_sync1.m","psync1",primary_synch1_time,frame_parms->ofdm_symbol_size,1,1);
+  LOG_M("primary_sync2.m","psync2",primary_synch2_time,frame_parms->ofdm_symbol_size,1,1);
+  LOG_M("primary_syncSL0.m","psyncSL0",primary_synch0SL_time,frame_parms->ofdm_symbol_size+frame_parms->nb_prefix_samples,1,1);
+  LOG_M("primary_syncSL1.m","psyncSL1",primary_synch1SL_time,frame_parms->ofdm_symbol_size+frame_parms->nb_prefix_samples,1,1);
 
     
-  write_output("primary_syncSL1rx.m","psyncSL1rx",primary_synch1SL_time_rx,2*(frame_parms->ofdm_symbol_size+frame_parms->nb_prefix_samples),1,1);
-  write_output("primary_syncSL0rx.m","psyncSL0rx",primary_synch0SL_time_rx,2*(frame_parms->ofdm_symbol_size+frame_parms->nb_prefix_samples),1,1);
-  write_output("kHz75.m","kHz75",kHz7_5ptr,2*1096,1,1);
- */ 
+  LOG_M("primary_syncSL1rx.m","psyncSL1rx",primary_synch1SL_time_rx,2*(frame_parms->ofdm_symbol_size+frame_parms->nb_prefix_samples),1,1);
+  LOG_M("primary_syncSL0rx.m","psyncSL0rx",primary_synch0SL_time_rx,2*(frame_parms->ofdm_symbol_size+frame_parms->nb_prefix_samples),1,1);
+  LOG_M("kHz75.m","kHz75",kHz7_5ptr,2*1096,1,1);
+  
   if ( LOG_DUMPFLAG(DEBUG_LTEESTIM)){
     LOG_M("primary_sync0.m","psync0",primary_synch0_time,frame_parms->ofdm_symbol_size,1,1);
     LOG_M("primary_sync1.m","psync1",primary_synch1_time,frame_parms->ofdm_symbol_size,1,1);
