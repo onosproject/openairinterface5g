@@ -95,7 +95,7 @@ void feptx0(RU_t *ru,int slot) {
 		  "ru->generate_dmrs_sync should not be set, frame_type %d, is_slave %d\n",
 		  fp->frame_type,ru->is_slave);
 */
-
+      // generate_drs_pusch() generates dmrs for both slots (symbols 3,10)
       if (ru->generate_dmrs_sync == 1 && slot == 0 && subframe == 1 && aa==0) {
       	generate_drs_pusch((PHY_VARS_UE *)NULL,
 			   (UE_rxtx_proc_t*)NULL,
@@ -109,18 +109,6 @@ void feptx0(RU_t *ru,int slot) {
 			   aa);
       }
 
-      if (ru->is_slave==1 && ru->generate_dmrs_sync == 1 && slot == 1 && subframe == 1 && aa==0) {
-      	generate_drs_pusch((PHY_VARS_UE *)NULL,
-                           (UE_rxtx_proc_t*)NULL,
-                           fp,
-                           ru->common.txdataF_BF,
-                           0,
-                           AMP,
-                           0,
-                           0,
-                           fp->N_RB_DL,
-                           aa);
-      } 
       normal_prefix_mod(&ru->common.txdataF_BF[aa][slot*slot_sizeF],
                         (int*)&ru->common.txdata[aa][slot_offset],
                         7,
@@ -231,6 +219,7 @@ void feptx_ofdm_2thread(RU_t *ru) {
 
   // The 2nd check is to force the slave RRUs to send DMRS at symbol 10-subframe 1-slot 1 
   if (subframe_select(fp,subframe)==SF_DL || ((subframe_select(fp,subframe)==SF_DL || subframe==1) && ru->is_slave==1)) {
+  //  if (subframe_select(fp,subframe)==SF_DL) {
     // If this is not an S-subframe
     if (pthread_mutex_timedlock(&proc->mutex_feptx,&wait) != 0) {
       printf("[RU] ERROR pthread_mutex_lock for feptx thread (IC %d)\n", proc->instance_cnt_feptx);
@@ -724,8 +713,25 @@ void ru_fep_full_2thread(RU_t *ru) {
                                  3%(fp->symbols_per_tti/2),// l = symbol within slot
                                  10/(fp->symbols_per_tti/2),// Ns = slot number 
                                  fp);
-
-        lte_ul_channel_estimation_RRU(fp,
+	/*      if (proc->frame_rx==205) { // libra
+                LOG_I(PHY,"~~~~~~~~~~~~~~~~~~~~~~~~@@@@@@@@@@@@@@@@@@ ru_fep_full_2thread: frame %d, subframe %d\n",$
+                //LOG_M("rxdata.m","rxdata",&ru->common.rxdata[0][0], fp->samples_per_tti*2,1,1); // save 2 first su$
+                LOG_M("rxdata.m","rxdata",&ru->common.rxdata[0][0], fp->samples_per_tti*10,1,1); // save 1 frame
+                //LOG_M("rxdataF.m","rxdataF",&ru->common.rxdataF[0][0],2*fp->ofdm_symbol_size*fp->symbols_per_tti,1$
+                LOG_M("rxdataF.m","rxdataF",&ru->common.rxdataF[0][0],fp->ofdm_symbol_size*fp->symbols_per_tti*10,1,$
+                LOG_M("rxdataF_ext.m","rxdataFext",&calibration->rxdataF_ext[0][0], 14*12*(fp->N_RB_DL),1,1);
+                //exit(-1);
+        }*/
+/*      if (proc->frame_rx==204) { //aquila
+                LOG_I(PHY,"~~~~~~~~~~~~~~~~~~~~~~~~@@@@@@@@@@@@@@@@@@ ru_fep_full_2thread: frame %d, subframe %d\n",$
+                //LOG_M("rxdata.m","rxdata",&ru->common.rxdata[0][0], fp->samples_per_tti*2,1,1); // save 2 first su$
+                LOG_M("rxdata.m","rxdata",&ru->common.rxdata[0][0], fp->samples_per_tti*10,1,1); // save 1 frame
+                //LOG_M("rxdataF.m","rxdataF",&ru->common.rxdataF[0][0],2*fp->ofdm_symbol_size*fp->symbols_per_tti,1$
+                LOG_M("rxdataF.m","rxdataF",&ru->common.rxdataF[0][0],fp->ofdm_symbol_size*fp->symbols_per_tti*10,1,$
+                LOG_M("rxdataF_ext.m","rxdataFext",&calibration->rxdataF_ext[0][0], 14*12*(fp->N_RB_DL),1,1);
+                //exit(-1);
+	 }*/
+        /*lte_ul_channel_estimation_RRU(fp,
                                   calibration->drs_ch_estimates,
                                   calibration->drs_ch_estimates_time,
                                   calibration->rxdataF_ext,
@@ -759,6 +765,17 @@ void ru_fep_full_2thread(RU_t *ru) {
                                  3/(fp->symbols_per_tti/2),// Ns = slot number 
                                  fp);
         
+/*        if (proc->frame_rx==189) {
+        LOG_I(PHY,"~~~~~~~~~~~~~~~~~~~~~~~~@@@@@@@@@@@@@@@@@@ ru_fep_full_2thread: su$
+        //LOG_M("rxdata.m","rxdata",&ru->common.rxdata[0][0], fp->samples_per_tti*2,1$
+        LOG_M("rxdata.m","rxdata",&ru->common.rxdata[0][0], fp->samples_per_tti*10,1,$
+        //LOG_M("rxdataF.m","rxdataF",&ru->common.rxdataF[0][0],2*fp->ofdm_symbol_siz$
+        LOG_M("rxdataF.m","rxdataF",&ru->common.rxdataF[0][0],fp->ofdm_symbol_size*fp$
+        LOG_M("rxdataF_ext.m","rxdataFext",&calibration->rxdataF_ext[0][0], 14*12*(fp$
+        //exit(-1);
+        }
+*/
+
 	/*lte_ul_channel_estimation((PHY_VARS_eNB *)NULL,
 				  proc,
                                   ru->idx,

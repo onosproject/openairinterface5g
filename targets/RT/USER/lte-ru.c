@@ -248,13 +248,12 @@ void fh_if4p5_south_in(RU_t *ru,int *frame,int *subframe) {
   } while(proc->symbol_mask[*subframe] != symbol_mask_full);    
 
   if (ru->wait_cnt==0 && packet_type == IF4p5_PULCALIB) {
-  	T(T_RAU_INPUT_DMRS, T_INT(ru->idx), T_INT(f), T_INT(sf),
+  	T(T_RAU_INPUT_SIGNAL, T_INT(ru->idx), T_INT(f), T_INT(sf),
           T_BUFFER(&ru->common.rxdataF[0][0],
           fp->symbols_per_tti*fp->ofdm_symbol_size*sizeof(int32_t)));
   
 
-  // Estimate calibration channel estimates:
-  if (packet_type == IF4p5_PULCALIB) {
+        // Estimate calibration channel estimates:
   	Ns = (ru->is_slave==0 ? 1 : 0);
 	l = (ru->is_slave==0 ? 10 : 3);
 	ru->frame_parms.nb_antennas_rx = ru->nb_rx;		
@@ -278,8 +277,8 @@ void fh_if4p5_south_in(RU_t *ru,int *frame,int *subframe) {
                                   calibration->drs_ch_estimates_time,
                                   calibration->rxdataF_ext,
                                   fp->N_RB_DL, 
-                                  proc->frame_rx,
-                                  proc->subframe_rx,
+                                  f,
+                                  sf,
                                   0,
                                   0,
                                   0,
@@ -287,11 +286,20 @@ void fh_if4p5_south_in(RU_t *ru,int *frame,int *subframe) {
                                   0,
                                   0);
 	
-		T(T_CALIBRATION_CHANNEL_ESTIMATES, T_INT(ru->idx), T_INT(proc->frame_rx), T_INT(proc->subframe_rx),
+		T(T_CALIBRATION_CHANNEL_ESTIMATES, T_INT(ru->idx), T_INT(f), T_INT(sf),
                 T_BUFFER(&calibration->drs_ch_estimates[0][l*12*fp->N_RB_UL],
                 12*fp->N_RB_UL*sizeof(int32_t)));
+
+		T(T_RAU_INPUT_DMRS, T_INT(ru->idx), T_INT(f), T_INT(sf),
+                T_BUFFER(&calibration->rxdataF_ext[0][l*12*fp->N_RB_UL],
+                12*fp->N_RB_UL*sizeof(int32_t)));
+
+		/*if (f==252 && ru->idx==1) {
+			LOG_M("rxdataF_ext.m","rxdataFext",&calibration->rxdataF_ext[0][0], 14*12*(fp->N_RB_DL),1,1);
+			exit(-1);
+		}*/
   }
-  }
+  
 
   //calculate timestamp_rx, timestamp_tx based on frame and subframe
   proc->subframe_rx  = sf;
@@ -560,9 +568,12 @@ void fh_if4p5_north_out(RU_t *ru) {
   }
   if ((fp->frame_type == TDD) && (subframe_select(fp,subframe)!=SF_UL)) {
     /// **** in TDD during DL send_IF4 of ULTICK to RCC **** ///
-    if (subframe_select(fp,subframe)==SF_S && subframe==1) {
+    if (subframe_select(fp,subframe)==SF_S && subframe==1 && ru->state==RU_RUN) {
         send_IF4p5(ru, proc->frame_rx, proc->subframe_rx, IF4p5_PULCALIB);
-        LOG_D(PHY,"~~~~~~******* Sending PULCALIB frame %d, subframe %d\n",proc->frame_rx,proc->subframe_rx); 
+        LOG_D(PHY,"~~~~~~******* Sending PULCALIB frame %d, subframe %d\n",proc->frame_rx,proc->subframe_rx);
+	T(T_RAU_INPUT_DMRS, T_INT(ru->idx), T_INT(proc->frame_rx), T_INT(proc->subframe_rx),
+          T_BUFFER(&ru->common.rxdataF[0][proc->subframe_rx*fp->symbols_per_tti*fp->ofdm_symbol_size],
+          fp->symbols_per_tti*fp->ofdm_symbol_size*sizeof(int32_t))); 
      } else {
         send_IF4p5(ru, proc->frame_rx, proc->subframe_rx, IF4p5_PULTICK);
         LOG_D(PHY,"~~~~~~******* Sending PULTICK frame %d, subframe %d\n",proc->frame_rx,proc->subframe_rx); 
@@ -877,8 +888,8 @@ void tx_rf(RU_t *ru) {
                                       ru->nb_tx,
                                       flags);
     
-	//int se1 = dB_fixed(signal_energy(txp1[0],siglen2+sf_extension));
-        //LOG_D(PHY,"******** frame %d subframe %d Slave sends DMRS of energy10 %d, energy3 %d\n",proc->frame_tx,proc->subframe_tx,se1,dB_fixed(signal_energy(txp[0],siglen+sf_extension)));
+	int se1 = dB_fixed(signal_energy(txp1[0],siglen2+sf_extension));
+        LOG_I(PHY,"******** frame %d subframe %d Slave sends DMRS of energy10 %d, energy3 %d\n",proc->frame_tx,proc->subframe_tx,se1,dB_fixed(signal_energy(txp[0],siglen+sf_extension)));
         //LOG_D(PHY,"txs1 %d, siglen2 %d, sf_extension %d\n",txs1,siglen2,sf_extension);
     }
 
