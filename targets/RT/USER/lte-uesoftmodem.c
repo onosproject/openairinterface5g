@@ -969,6 +969,9 @@ int main( int argc, char **argv ) {
 
   LOG_I(HW, "CPU Affinity of main() function is... %s\n", cpu_affinity);
 #endif
+
+//Panos: Old location of create_tasks_ue
+/*
 #if defined(ENABLE_ITTI)
   if (create_tasks_ue(NB_UE_INST) < 0) {
     printf("cannot create ITTI tasks\n");
@@ -982,7 +985,8 @@ int main( int argc, char **argv ) {
   printf("ITTI tasks created\n");
 #endif
   mlockall(MCL_CURRENT | MCL_FUTURE);
-  rt_sleep_ns(10*100000000ULL);
+  rt_sleep_ns(10*100000000ULL);*/
+
   const char *nfapi_mode_str = "<UNKNOWN>";
   // start the main UE threads
   int eMBMS_active = 0;
@@ -1040,15 +1044,31 @@ int main( int argc, char **argv ) {
       }
   }
 
+  //Panos: New location of create_tasks_ue
+#if defined(ENABLE_ITTI)
+  if (create_tasks_ue(NB_UE_INST) < 0) {
+    printf("cannot create ITTI tasks\n");
+    exit(-1); // need a softer mode
+  }
+
+  if(nfapi_mode==3) { // Here we should add another nfapi_mode for the case of Supervised LTE-D2D
+    UE_config_stub_pnf();
+  }
+
+  printf("ITTI tasks created\n");
+#endif
+  mlockall(MCL_CURRENT | MCL_FUTURE);
+  rt_sleep_ns(10*100000000ULL);
+
   // connect the TX/RX buffers
 
 
-  if(nfapi_mode!=3) {
+  /*if(nfapi_mode!=3) {
     if (setup_ue_buffers(PHY_vars_UE_g[0],&openair0_cfg[0])!=0) {
       printf("Error setting up eNB buffer\n");
       exit(-1);
     }
-  }
+  }*/
 
 
   if (input_fd) {
