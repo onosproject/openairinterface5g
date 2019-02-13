@@ -107,13 +107,14 @@ int allocate_REs_in_RB_NB_IoT(LTE_DL_FRAME_PARMS    *frame_parms,
                               uint8_t               pilot_shift,
                               uint32_t              *re_allocated); 
 
-int generate_NDLSCH_NB_IoT(NB_IoT_eNB_NDLSCH_t    *RAR,
-                       int32_t                    **txdataF,
-                       int16_t                    amp,
-                       LTE_DL_FRAME_PARMS         *frame_parms,
-                       uint32_t                   frame,
-                       uint32_t                   subframe,
-                       int                        RB_IoT_ID);
+int generate_NDLSCH_NB_IoT(PHY_VARS_eNB           *eNB,
+                           NB_IoT_eNB_NDLSCH_t    *RAR,
+                           int32_t                    **txdataF,
+                           int16_t                    amp,
+                           LTE_DL_FRAME_PARMS         *frame_parms,
+                           uint32_t                   frame,
+                           uint32_t                   subframe,
+                           int                        RB_IoT_ID);
 
 int generate_NPDCCH_NB_IoT(NB_IoT_eNB_NPDCCH_t    *DCI,
                            int32_t                **txdataF,

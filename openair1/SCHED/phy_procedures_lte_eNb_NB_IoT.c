@@ -348,7 +348,8 @@ void common_signal_procedures_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
       /////////////////////////////////////////////////////////////////////////////////
       ///////////////////////////////////// NPDSCH ////////////////////////////////////
       /////////////////////////////////////////////////////////////////////////////////
-      generate_NDLSCH_NB_IoT(RAR,
+      generate_NDLSCH_NB_IoT(eNB,
+                             RAR,
                              txdataF,
                              AMP,
                              fp,
@@ -358,7 +359,7 @@ void common_signal_procedures_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
       ///////////////////////////////////////////////////////////////////////////////////
     }
 
- generate_pilots_NB_IoT(eNB,
+    generate_pilots_NB_IoT(eNB,
                            txdataF,
                            AMP,
                            subframe,

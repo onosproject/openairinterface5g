@@ -413,6 +413,8 @@ typedef struct {
   uint32_t                rnti;
   /// Active flag for baseband transmitter processing
   uint8_t                 active;
+  /// Active flag when msg2 is transmitted 
+  uint8_t                 active_msg2;
   /// Indicator of TX activation per subframe.  Used during PUCCH detection for ACK/NAK.
   uint8_t                 subframe_tx[10];
   /// First CCE of last PDSCH scheduling per subframe.  Again used during PUCCH detection for ACK/NAK.

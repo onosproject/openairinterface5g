@@ -290,8 +290,8 @@ int output_handler(eNB_MAC_INST_NB_IoT *mac_inst, module_id_t module_id, int CC_
 
 					//contidition should be added to select either the UL_TBS_Table or t UL_TBS_table_msg3
 					// ******* sc_spacing issues to be fixed next *******////
-					uint8_t sc_spacing = 1;  
-					(ul_config_pdu + i) ->nulsch_pdu.nulsch_pdu_rel13.handle           = sc_spacing; // 1 for 15 KHz , 0 for 3.75 KHz
+					uint8_t sc_spacing = 1;  // 1 for 15 KHz , 0 for 3.75 KHz  // TODO, get this value from scheduler
+					//(ul_config_pdu + i) ->nulsch_pdu.nulsch_pdu_rel13.handle           = sc_spacing; 
 					//(ul_config_pdu + i) ->nulsch_pdu.nulsch_pdu_rel13.size                    = UL_TBS_Table[((DCIFormatN0_t *)DCI_pdu)->mcs][((DCIFormatN0_t *)DCI_pdu)->ResAssign];
 					//(ul_config_pdu + i) ->nulsch_pdu.nulsch_pdu_rel13.size                    = UL_TBS_Table[get_UL_I_TBS_from_MCS_NB_IoT(((DCIFormatN0_t *)DCI_pdu)->mcs, get_N_RU(((DCIFormatN0_t *)DCI_pdu)->ResAssign), 0)][((DCIFormatN0_t *)DCI_pdu)->ResAssign];
 					// get_UL_I_TBS_from_MCS_NB_IoT() to  be used to get the I_TBS for any NPUSCH format 
