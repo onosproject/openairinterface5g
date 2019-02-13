@@ -42,7 +42,7 @@
 #include "COMMON/mac_rrc_primitives.h"
 #include "PHY/INIT/phy_init.h"
 #include "PHY/LTE_ESTIMATION/lte_estimation.h"
-
+#include "PHY/LTE_TRANSPORT/transport_common_proto.h"
 #include "RRC/L2_INTERFACE/openair_rrc_L2_interface.h"
 #include "RRC/LTE/rrc_extern.h"
 #include "common/utils/LOG/log.h"
@@ -889,8 +889,8 @@ void ue_send_sl_sdu(module_id_t module_idP,
 ) {
 
    int rlc_sdu_len;
-   char *rlc_sdu;
-   int lcid;
+   unsigned char *rlc_sdu;
+   int lcid=-1;
    uint32_t destinationL2Id =0x00000000;
    uint32_t sourceL2Id = 0x00000000;
 
@@ -1004,7 +1004,8 @@ void ue_send_sl_sdu(module_id_t module_idP,
       } else {
          LOG_D(MAC, "SL_RESET_RLC_FLAG_NO\n");
       }
-   
+  
+      AssertFatal(lcid>0,"lcid %d should not happen\n",lcid); 
       LOG_I(MAC,"%d.%d myL2Id %d sending sdu of size %d, sourceL2Id %d, lcid %d to RLC\n",frameP,subframeP,UE_mac_inst[module_idP].sourceL2Id,rlc_sdu_len,sourceL2Id,lcid);
 
       if(UE_rrc_inst[0].Info[0].rnti == 0){
@@ -1016,7 +1017,7 @@ void ue_send_sl_sdu(module_id_t module_idP,
             ENB_FLAG_NO,
             MBMS_FLAG_NO,
             lcid, //3/10
-            rlc_sdu,
+            (char*)rlc_sdu,
             rlc_sdu_len,
             1,
             NULL
@@ -1034,7 +1035,7 @@ void ue_send_sl_sdu(module_id_t module_idP,
     	              ENB_FLAG_NO,
     	              MBMS_FLAG_NO,
     	              lcid, //3/10
-    	              rlc_sdu,
+    	              (char*)rlc_sdu,
     	              rlc_sdu_len,
     	              1,
     	              NULL
@@ -3527,7 +3528,6 @@ int get_db_dl_PathlossChange(uint8_t dl_PathlossChange)
 
 
 SLSS_t *ue_get_slss(module_id_t Mod_id,int CC_id,frame_t frame_tx,sub_frame_t subframe_tx) {
-  UE_MAC_INST *ue = &UE_mac_inst[Mod_id];
   SLSS_t *slss = &UE_mac_inst[Mod_id].slss;
 
 
@@ -3575,7 +3575,7 @@ extern const int trp8[TRP8_MAX+1][8];
 
 SLSCH_t *ue_get_slsch(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_t subframeP,int slsch_test) {
 
-   mac_rlc_status_resp_t rlc_status, rlc_status_data;
+   mac_rlc_status_resp_t rlc_status;
    uint32_t absSF = (frameP*10)+subframeP;
    UE_MAC_INST *ue = &UE_mac_inst[module_idP];
    int sdu_length;
@@ -3624,7 +3624,7 @@ SLSCH_t *ue_get_slsch(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_
                      if ((ue->sourceL2Id > 0) && (ue->sl_info[i].groupL2Id >0) ){
                         rlc_status = mac_rlc_status_ind(module_idP, 0x1234,0,frameP,subframeP,ENB_FLAG_NO,MBMS_FLAG_NO, 
                               ue->sl_info[i].LCID, 0xFFFF, ue->sourceL2Id, ue->sl_info[i].groupL2Id);
-                        LOG_D(MAC,"Checking status (%d,Group %d) => LCID %d => %d bytes\n",ue->sourceL2Id,ue->sl_info[i].destinationL2Id);
+                        LOG_D(MAC,"Checking status (%d,Group %d) => LCID %d => %d bytes\n",ue->sourceL2Id,ue->sl_info[i].destinationL2Id,ue->sl_info[i].LCID, rlc_status.bytes_in_buffer);
                         if (rlc_status.bytes_in_buffer > 2 || slsch_test == 1){
 
                            if (slsch_test == 1 && rlc_status.bytes_in_buffer <= 2) rlc_status.bytes_in_buffer = 300;

@@ -108,11 +108,11 @@ eNB_DLSCH_INFO eNB_dlsch_info[NUMBER_OF_eNB_MAX][MAX_NUM_CCs][MAX_MOBILES_PER_EN
 
 
 #ifdef OPENAIR2
-unsigned char NB_eNB_INST = 0;
-uint16_t NB_UE_INST = 0;
-uint16_t NB_THREAD_INST = 0;
-unsigned char NB_RN_INST = 0;
-unsigned char NB_INST = 0;
+int NB_eNB_INST = 0;
+int NB_UE_INST = 0;
+int NB_THREAD_INST = 0;
+int NB_RN_INST = 0;
+int NB_INST = 0;
 #endif
 
 

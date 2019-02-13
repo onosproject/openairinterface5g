@@ -262,7 +262,7 @@ uint8_t do_MIB_SL(const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_index,
    if (in_coverage > 0 ){
       //in coverage
       sl_mib->inCoverage_r12 = TRUE;
-      sl_mib->sl_Bandwidth_r12 = UE->sib2[eNB_index]->freqInfo.ul_Bandwidth;
+      sl_mib->sl_Bandwidth_r12 = *UE->sib2[eNB_index]->freqInfo.ul_Bandwidth;
       if (UE->sib1[eNB_index]->tdd_Config) {
          sl_mib->tdd_ConfigSL_r12.subframeAssignmentSL_r12 = UE->sib1[eNB_index]->tdd_Config->subframeAssignment;
       } else {
@@ -284,7 +284,7 @@ uint8_t do_MIB_SL(const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_index,
      sl_mib->sl_Bandwidth_r12                  = UE->SL_Preconfiguration[eNB_index]->preconfigGeneral_r12.sl_bandwidth_r12;
      sl_mib->tdd_ConfigSL_r12.subframeAssignmentSL_r12 = UE->SL_Preconfiguration[eNB_index]->preconfigGeneral_r12.tdd_ConfigSL_r12.subframeAssignmentSL_r12;
      //set sl-Bandwidth, subframeAssignmentSL and reserved from the pre-configured parameters
-     sl_mib->reserved_r12.buf                          = &reserved;
+     sl_mib->reserved_r12.buf                          = (uint8_t*)&reserved;
      sl_mib->reserved_r12.size                         = 3;
      sl_mib->reserved_r12.bits_unused                  = 5;
    }

@@ -661,4 +661,8 @@ void remove_UE_from_freelist(module_id_t mod_id, rnti_t rnti);
 void put_UE_in_freelist(module_id_t mod_id, rnti_t rnti, boolean_t removeFlag);
 void release_UE_in_freeList(module_id_t mod_id);
 
+int decode_MIB_SL(  const protocol_ctxt_t* const ctxt_pP,
+                    uint8_t*               const Sdu,
+                    const uint8_t                Sdu_len);
+
 /** @}*/

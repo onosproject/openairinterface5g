@@ -64,7 +64,6 @@ mac_rrc_data_req_ue(
   PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, Mod_idP, 0, 0, frameP/10, frameP%10,eNB_indexP);
 
 #ifdef DEBUG_RRC
-  int i;
   LOG_D(RRC,"[eNB %d] mac_rrc_data_req to SRB ID=%d\n",Mod_idP,Srb_idP);
 #endif
 
@@ -301,8 +300,8 @@ mac_rrc_data_ind_ue(
 #ifdef Rel14
 
     if (srb_idP == MIBSLCH) {
-      LOG_D(RRC,"[UE %d] Received SDU for MIBSL\n");
-      if (decode_MIB_SL(&ctxt,sduP,5)>=0) LOG_D(RRC,"Received  MIB_SL: %x.%x.%x.%x.%x\n",sduP[0],sduP[1],sduP[2],sduP[3],sduP[4]);
+      LOG_D(RRC,"[UE %d] Received SDU for MIBSL\n",module_idP);
+      if (decode_MIB_SL(&ctxt,(uint8_t* const) sduP,5)>=0) LOG_D(RRC,"Received  MIB_SL: %x.%x.%x.%x.%x\n",sduP[0],sduP[1],sduP[2],sduP[3],sduP[4]);
       else                                LOG_E(RRC,"Received bogus MIB_SL\n");
     }
 

@@ -38,8 +38,7 @@
 //#include "defs.h"
 #include "PHY/defs_UE.h"
 #include "PHY/phy_extern.h"
-#include "transport_proto_ue.h"
-#include "PHY/LTE_TRANSPORT/transport_proto.h"
+#include "PHY/LTE_UE_TRANSPORT/transport_proto_ue.h"
 #include "PHY/MODULATION/modulation_eNB.h"
 #include "PHY/LTE_ESTIMATION/lte_estimation.h"
 
@@ -48,11 +47,28 @@
 
 //#define PSBCH_DEBUG 1
 
-extern void dft_lte(int32_t *z,int32_t *d, int32_t Msc_PUSCH, uint8_t Nsymb);
-extern void ulsch_channel_level(int32_t **drs_ch_estimates_ext, LTE_DL_FRAME_PARMS *frame_parms, int32_t *avg, uint16_t nb_rb);
-extern void lte_idft(LTE_DL_FRAME_PARMS *frame_parms,uint32_t *z, uint16_t Msc_PUSCH);
-extern void pbch_quantize(int8_t *pbch_llr8, int16_t *pbch_llr, uint16_t len);
+void dft_lte(int32_t *z,int32_t *d, int32_t Msc_PUSCH, uint8_t Nsymb);
+void ulsch_channel_level(int32_t **drs_ch_estimates_ext, LTE_DL_FRAME_PARMS *frame_parms, int32_t *avg, uint16_t nb_rb);
+void lte_idft(LTE_DL_FRAME_PARMS *frame_parms,uint32_t *z, uint16_t Msc_PUSCH);
+void pbch_quantize(int8_t *pbch_llr8, int16_t *pbch_llr, uint16_t len);
+void ulsch_extract_rbs_single(int32_t **rxdataF,
+                              int32_t **rxdataF_ext,
+                              uint32_t first_rb,
+                              uint32_t nb_rb,
+                              uint8_t l,
+                              uint8_t Ns,
+                              LTE_DL_FRAME_PARMS *frame_parms);
+void lte_idft(LTE_DL_FRAME_PARMS *frame_parms,uint32_t *z, uint16_t Msc_PUSCH);
 
+int dlsch_encoding0(LTE_DL_FRAME_PARMS *frame_parms,
+                    unsigned char *a,
+                    uint8_t num_pdcch_symbols,
+                    LTE_eNB_DLSCH_t *dlsch,
+                    int frame,
+                    uint8_t subframe,
+                    time_stats_t *rm_stats,
+                    time_stats_t *te_stats,
+                    time_stats_t *i_stats);
 
 	  
 int generate_slbch(int32_t **txdataF,
@@ -157,7 +173,7 @@ int rx_psbch(PHY_VARS_UE *ue,int frame_rx,int subframe_rx) {
   ru_tmp.N_TA_offset=0;
   ru_tmp.common.rxdata_7_5kHz     = (int32_t**)malloc16(ue->frame_parms.nb_antennas_rx*sizeof(int32_t*)); 
   for (int aa=0;aa<ue->frame_parms.nb_antennas_rx;aa++) 
-    ru_tmp.common.rxdata_7_5kHz[aa] = ue->sl_rxdata_7_5kHz[ue->current_thread_id[0]][aa];//(int32_t*)&ue->common_vars.rxdata_syncSL[aa][ue->rx_offsetSL*2];
+    ru_tmp.common.rxdata_7_5kHz[aa] = (int32_t*)ue->sl_rxdata_7_5kHz[ue->current_thread_id[0]][aa];//(int32_t*)&ue->common_vars.rxdata_syncSL[aa][ue->rx_offsetSL*2];
   ru_tmp.common.rxdataF = (int32_t**)rxdataF;
   ru_tmp.nb_rx = ue->frame_parms.nb_antennas_rx;
 
@@ -179,7 +195,7 @@ int rx_psbch(PHY_VARS_UE *ue,int frame_rx,int subframe_rx) {
   LOG_D(PHY,"Running PBCH detection with Nid_SL %d (is_synchronizedSL %d) rxdata %p\n",ue->frame_parms.Nid_SL,ue->is_synchronizedSL,ue->common_vars.rxdata[0]);
   LOG_D(PHY,"slbch_decoding: FEP in %d.%d rx signal energy %d dB %d dB\n",frame_rx,subframe_rx,
          dB_fixed((uint32_t)signal_energy(&ue->common_vars.rxdata[0][ue->frame_parms.samples_per_tti*subframe_rx],ue->frame_parms.samples_per_tti)),
-         dB_fixed((uint32_t)signal_energy(ue->sl_rxdata_7_5kHz[ue->current_thread_id[0]][0],ue->frame_parms.samples_per_tti)));
+         dB_fixed((uint32_t)signal_energy((int32_t*)ue->sl_rxdata_7_5kHz[ue->current_thread_id[0]][0],ue->frame_parms.samples_per_tti)));
  
   for (int l=0; l<11; l++) {
     slot_fep_ul(&ru_tmp,l%7,(l>6)?1:0,0);
@@ -286,7 +302,7 @@ int rx_psbch(PHY_VARS_UE *ue,int frame_rx,int subframe_rx) {
     if (l==0) l=3;
   }
   lte_idft(&ue->frame_parms,
-	   rxdataF_comp[0],
+	   (uint32_t*)rxdataF_comp[0],
 	   72);
   
 #ifdef PSBCH_DEBUG
@@ -297,7 +313,7 @@ int rx_psbch(PHY_VARS_UE *ue,int frame_rx,int subframe_rx) {
   
   for (int l=0; l<10; l++) {
     pbch_quantize(llrp,
-		  &rxdataF_comp[0][l*ue->frame_parms.N_RB_UL*12*2],
+		  (int16_t*)&rxdataF_comp[0][l*ue->frame_parms.N_RB_UL*12*2],
 		  72*2);
     llrp += 72*2;
     if (l==0) l=3;

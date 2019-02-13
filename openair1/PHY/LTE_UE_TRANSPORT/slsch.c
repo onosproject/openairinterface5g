@@ -31,8 +31,12 @@
  */
 #include "PHY/defs_UE.h"
 #include "pssch.h"
-#include "transport_proto_ue.h"
-
+#include "PHY/LTE_UE_TRANSPORT/transport_proto_ue.h"
+#include "PHY/LTE_REFSIG/lte_refsig.h"
+#include "SCHED_UE/sched_UE.h"
+#include "PHY/MODULATION/modulation_eNB.h"
+#include "PHY/LTE_ESTIMATION/lte_estimation.h"
+#include "LAYER2/MAC/mac_proto.h"
 //#define PSSCH_DEBUG 1
 #define DEBUG_SCI_DECODING 1
 
@@ -40,6 +44,31 @@ extern int
 multicast_link_write_sock(int groupP, char *dataP, uint32_t sizeP);
 extern uint8_t D2D_en;
 
+void ulsch_channel_level(int32_t **drs_ch_estimates_ext, LTE_DL_FRAME_PARMS *frame_parms, int32_t *avg, uint16_t nb_rb);
+void ulsch_extract_rbs_single(int32_t **rxdataF,
+                              int32_t **rxdataF_ext,
+                              uint32_t first_rb,
+                              uint32_t nb_rb,
+                              uint8_t l,
+                              uint8_t Ns,
+                              LTE_DL_FRAME_PARMS *frame_parms);
+void lte_idft(LTE_DL_FRAME_PARMS *frame_parms,uint32_t *z, uint16_t Msc_PUSCH);
+
+int dlsch_encoding0(LTE_DL_FRAME_PARMS *frame_parms,
+                    unsigned char *a,
+                    uint8_t num_pdcch_symbols,
+                    LTE_eNB_DLSCH_t *dlsch,
+                    int frame,
+                    uint8_t subframe,
+                    time_stats_t *rm_stats,
+                    time_stats_t *te_stats,
+                    time_stats_t *i_stats);
+
+void dci_encoding(uint8_t *a,
+                  uint8_t A,
+                  uint16_t E,
+                  uint8_t *e,
+                  uint16_t rnti);
 
 void generate_sl_grouphop(PHY_VARS_UE *ue)
 {
@@ -109,7 +138,7 @@ uint64_t sci_mapping(PHY_VARS_UE *ue) {
   AssertFatal(slsch->group_destination_id<256,"slsch->group_destination_id %d >= 256\n",slsch->group_destination_id);
   uint64_t group_destination_id = (uint64_t)slsch->group_destination_id;
  
-  LOG_D(PHY,"SCI : RAbits %d\n",RAbits); 
+  LOG_D(PHY,"SCI : RAbits %llu\n",(long long unsigned int)RAbits); 
   // map bitfields
   // frequency-hopping 1-bit
   return( (freq_hopping_flag <<63) | 
@@ -732,7 +761,7 @@ void check_and_generate_pscch(PHY_VARS_UE *ue,int frame_tx,int subframe_tx) {
     ue->pscch_generated=0;
     return;
   }
-  LOG_D(PHY,"Checking pscch for absSF_modP %d (SubframeBitmalSL_length %d,mask %x)\n",absSF_modP,slsch->SubframeBitmapSL_length,slsch->bitmap1);
+  LOG_D(PHY,"Checking pscch for absSF_modP %d (SubframeBitmalSL_length %d,mask %llx)\n",absSF_modP,slsch->SubframeBitmapSL_length,(long long unsigned int)slsch->bitmap1);
 
   uint64_t SFpos = ((uint64_t)1) << absSF_modP;
   if ((SFpos & slsch->bitmap1) == 0) return;
@@ -799,7 +828,7 @@ void generate_slsch(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc, SLSCH_t *slsch,int fra
 	    slsch_header_len+sizeof(SLSCH_t)-sizeof(uint8_t*)+slsch->payload_length);
       
       multicast_link_write_sock(0, 
-				&pdu, 
+				(char *)&pdu, 
 				slsch_header_len+sizeof(SLSCH_t)-sizeof(uint8_t*)+slsch->payload_length);
   
     }
@@ -824,10 +853,10 @@ void pscch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
   SLSCH_t *slsch = &ue->slsch_rx;
 
   uint32_t amod = a%(slsch->N_SL_RB_SC);
-  int16_t **rxdataF_ext      = ue->pusch_slcch->rxdataF_ext;
-  int16_t **drs_ch_estimates = ue->pusch_slcch->drs_ch_estimates;
-  int16_t **rxdataF_comp     = ue->pusch_slcch->rxdataF_comp;
-  int16_t **ul_ch_mag        = ue->pusch_slcch->ul_ch_mag;
+  int16_t **rxdataF_ext      = (int16_t**)ue->pusch_slcch->rxdataF_ext;
+  int16_t **drs_ch_estimates = (int16_t**)ue->pusch_slcch->drs_ch_estimates;
+  int16_t **rxdataF_comp     = (int16_t**)ue->pusch_slcch->rxdataF_comp;
+  int16_t **ul_ch_mag        = (int16_t**)ue->pusch_slcch->ul_ch_mag;
   int16_t **rxdata_7_5kHz    = ue->sl_rxdata_7_5kHz[ue->current_thread_id[subframe_rx]];
   int16_t **rxdataF          = ue->sl_rxdataF[ue->current_thread_id[subframe_rx]];
   int32_t avgs;
@@ -901,7 +930,7 @@ void pscch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
   write_output("drs_ext0.m","drsest0",drs_ch_estimates[0],ue->frame_parms.N_RB_UL*12*14,1,1);
 #endif
 
-  ulsch_channel_level(drs_ch_estimates,
+  ulsch_channel_level((int32_t**)drs_ch_estimates,
 		      &ue->frame_parms,
 		      avgU,
 		      1);
@@ -984,10 +1013,10 @@ void pscch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
     //    printf("Running ulsch_qpsk_llr for symbol %d\n",l2);
     ulsch_qpsk_llr(&ue->frame_parms,
 		   (int32_t**)rxdataF_comp,
-                   (int32_t *)llr,
+                   llr,
 		   l2,
 		   1,
-		   (int32_t *)&llrp);
+		   &llrp);
   }
   /*
   write_output("slcch_llr.m","slcchllr",llr,
@@ -1047,7 +1076,7 @@ void pscch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
     slsch->resource_block_coding     = (sci_rx_flip>>(63-1-RAbits+1))&((1<<RAbits)-1);
     RIV2_alloc(slsch->N_SL_RB_data,
                slsch->resource_block_coding,
-	       &slsch->L_CRBs,&slsch->RB_start);
+	       (int *)&slsch->L_CRBs,(int *)&slsch->RB_start);
     slsch->time_resource_pattern     = (sci_rx_flip>>(63-1-7-RAbits+1))&127;
     slsch->mcs                       = (sci_rx_flip>>(63-1-7-5-RAbits+1))&31;
     slsch->timing_advance_indication = (sci_rx_flip>>(63-1-7-5-11-RAbits+1))&2047;
@@ -1177,10 +1206,10 @@ void slsch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
 
   int Nsymb = 7;
   SLSCH_t *slsch = &ue->slsch_rx;
-  int16_t **rxdataF_ext      = ue->pusch_slsch->rxdataF_ext;
-  int16_t **drs_ch_estimates = ue->pusch_slsch->drs_ch_estimates;
-  int16_t **rxdataF_comp     = ue->pusch_slsch->rxdataF_comp;
-  int16_t **ul_ch_mag        = ue->pusch_slsch->ul_ch_mag;
+  int16_t **rxdataF_ext      = (int16_t**)ue->pusch_slsch->rxdataF_ext;
+  int16_t **drs_ch_estimates = (int16_t**)ue->pusch_slsch->drs_ch_estimates;
+  int16_t **rxdataF_comp     = (int16_t**)ue->pusch_slsch->rxdataF_comp;
+  int16_t **ul_ch_mag        = (int16_t**)ue->pusch_slsch->ul_ch_mag;
   int16_t **rxdata_7_5kHz    = ue->sl_rxdata_7_5kHz[ue->current_thread_id[subframe_rx]];
   int16_t **rxdataF          = ue->sl_rxdataF[ue->current_thread_id[subframe_rx]];
   int32_t avgs;
@@ -1243,7 +1272,7 @@ void slsch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
   write_output("slsch_rxF_ext.m","slschrxF_ext",rxdataF_ext[0],14*12*ue->frame_parms.N_RB_DL,1,1);
 #endif
 
-  AssertFatal(slsch->group_destination_id < 256,"Illegal group_destination_id %d\n",ue>slsch->group_destination_id);
+  AssertFatal(slsch->group_destination_id < 256,"Illegal group_destination_id %d\n",ue->slsch->group_destination_id);
   
   uint32_t u = ue->gh[1+slsch->group_destination_id][ljmod10<<1];
   uint32_t v = 0;
@@ -1280,7 +1309,7 @@ void slsch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
 			    0, // interpolation
 			    0);
 
-  ulsch_channel_level(drs_ch_estimates,
+  ulsch_channel_level((int32_t**)drs_ch_estimates,
 		      &ue->frame_parms,
 		      avgU,
 		      slsch->L_CRBs);
@@ -1307,11 +1336,11 @@ void slsch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
     }
 
     ulsch_channel_compensation(
-			       rxdataF_ext,
-			       drs_ch_estimates,
-			       ul_ch_mag,
+			       (int32_t**)rxdataF_ext,
+			       (int32_t**)drs_ch_estimates,
+			       (int32_t**)ul_ch_mag,
 			       NULL,
-			       rxdataF_comp,
+			       (int32_t**)rxdataF_comp,
 			       &ue->frame_parms,
 			       l,
 			       Qm,
@@ -1320,15 +1349,15 @@ void slsch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
 
     if (ue->frame_parms.nb_antennas_rx > 1)
       ulsch_detection_mrc(&ue->frame_parms,
-			  rxdataF_comp,
-			  ul_ch_mag,
+			  (int32_t**)rxdataF_comp,
+			  (int32_t**)ul_ch_mag,
 			  NULL,
 			  l,
 			  slsch->L_CRBs);
     
     freq_equalization(&ue->frame_parms,
-		      rxdataF_comp,
-		      ul_ch_mag,
+		      (int32_t**)rxdataF_comp,
+		      (int32_t**)ul_ch_mag,
 		      NULL,
 		      l,
 		      slsch->L_CRBs*12,
@@ -1336,7 +1365,7 @@ void slsch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
   
   }
   lte_idft(&ue->frame_parms,
-           rxdataF_comp[0],
+           (uint32_t*)rxdataF_comp[0],
            slsch->L_CRBs*12);
 
 #ifdef PSSCH_DEBUG
@@ -1357,18 +1386,18 @@ void slsch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
     switch (Qm) {
     case 2 :
       ulsch_qpsk_llr(&ue->frame_parms,
-                     rxdataF_comp,
-                     (int32_t *)ue->slsch_ulsch_llr,
+                     (int32_t**)rxdataF_comp,
+                     (int16_t*)ue->slsch_ulsch_llr,
                      l,
                      slsch->L_CRBs,
-                     (int32_t *)&llrp);
+                     &llrp);
       break;
 
     case 4 :
       ulsch_16qam_llr(&ue->frame_parms,
-                      rxdataF_comp,
-                      (int32_t *)ue->slsch_ulsch_llr,
-                      (int32_t *)ul_ch_mag,
+                      (int32_t**)rxdataF_comp,
+                      (int16_t*)ue->slsch_ulsch_llr,
+                      (int32_t**)ul_ch_mag,
                       l,slsch->L_CRBs,
                       &llrp);
       break;

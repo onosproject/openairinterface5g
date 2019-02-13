@@ -148,7 +148,7 @@
 
 #define CMDLINE_UEPARAMS_DESC {  \
 {"siml1",                      CONFIG_HLP_SIML1,       PARAMFLAG_BOOL,  iptr:&simL1flag,                    defintval:0,          TYPE_INT,      0},   \
-{"U",			       CONFIG_HLP_NUMUE,       0,               u8ptr:&NB_UE_INST,                  defuintval:1,         TYPE_UINT,     0},   \
+{"U",			       CONFIG_HLP_NUMUE,       0,               u8ptr:(uint8_t*)&NB_UE_INST,                   defuintval:1,         TYPE_UINT8,    0},   \
 {"ue-rxgain",        	       CONFIG_HLP_UERXG,       0,		dblptr:&(rx_gain[0][0]),	    defdblval:130,        TYPE_DOUBLE,   0},   \
 {"ue-rxgain-off",    	       CONFIG_HLP_UERXGOFF,    0,		dblptr:&rx_gain_off,		    defdblval:0,          TYPE_DOUBLE,   0},   \
 {"ue-txgain",        	       CONFIG_HLP_UETXG,       0,		dblptr:&(tx_gain[0][0]),	    defdblval:0,          TYPE_DOUBLE,   0},   \
@@ -156,7 +156,7 @@
 {"ue-nb-ant-tx",     	       CONFIG_HLP_UENANTT,     0,		u8ptr:&nb_antenna_tx,		    defuintval:1,         TYPE_UINT8,    0},   \
 {"ue-scan-carrier",  	       CONFIG_HLP_UESCAN,      PARAMFLAG_BOOL,	iptr:&UE_scan_carrier,  	    defintval:0,          TYPE_INT,	 0},   \
 {"ue-max-power",     	       NULL,		       0,		iptr:&(tx_max_power[0]),	    defintval:23,         TYPE_INT,	 0},   \
-{"emul-iface",                 CONFIG_HLP_EMULIFACE,   0,               strptr:&emul_iface,		    defstrval:"lo",       TYPE_STRING,   100}, \
+{"emul-iface",                 CONFIG_HLP_EMULIFACE,   0,               strptr:emul_iface,		    defstrval:"lo",       TYPE_STRING,   100}, \
 {"sim-L1",                     CONFIG_HLP_SIML1,      0,                iptr:&simL1,                        defintval:0,    TYPE_INT,      0}, \
 {"ue-enable-sl",               CONFIG_HLP_ENABLESL,   PARAMFLAG_BOOL,   iptr:&sidelink_active,              defintval:0,    TYPE_INT,      0}, \
 {"ue-sl-only",                 CONFIG_HLP_SLONLY,     PARAMFLAG_BOOL,   iptr:&SLonly,                       defintval:0,    TYPE_INT,      0}, \
@@ -164,8 +164,8 @@
 {"ue-synchref",                CONFIG_HLP_SYNCHREF,   PARAMFLAG_BOOL,   iptr:&synchRef,                     defintval:0,    TYPE_INT,      0}, \
 {"ue-slsync-only",             CONFIG_HLP_SLSYNCONLY, PARAMFLAG_BOOL,   iptr:&slsynconly,                   defintval:0,    TYPE_INT,      0}, \
 {"L2-emul",                    NULL,  		       0,               u8ptr:&nfapi_mode,		    defuintval:3,         TYPE_UINT8,	 0},   \
-{"D2D-emul",                   NULL,  				  0,                u8ptr:&D2D_en,                  defuintval:0, TYPE_UINT8,   0},	   \
-{"num-ues",     	       NULL,                   0,               u8ptr:&(NB_UE_INST),		    defuintval:1,         TYPE_UINT8,	 0},   \
+{"D2D-emul",                   NULL,     	       0,               u8ptr:&D2D_en,                      defuintval:0, TYPE_UINT8,   0},	   \
+{"num-ues",     	       NULL,                   0,               u8ptr:(uint8_t*)NB_UE_INST,	    defuintval:1,         TYPE_UINT8,	 0},   \
 {"nums_ue_thread",             NULL,                   0,               u16ptr:&(NB_THREAD_INST),           defuintval:1,         TYPE_UINT16,   0},   \
 {"r"  ,                        CONFIG_HLP_PRB,         0,               u8ptr:&(frame_parms[0]->N_RB_DL),   defintval:25,         TYPE_UINT8,    0},   \
 {"dlsch-demod-shift",          CONFIG_HLP_DLSHIFT,     0,		iptr:(int32_t *)&dlsch_demod_shift, defintval:0,          TYPE_INT,	 0},   \

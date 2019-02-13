@@ -717,7 +717,6 @@ int dlsch_encoding0(LTE_DL_FRAME_PARMS *frame_parms,
 
   unsigned int G;
   unsigned int crc=1;
-  unsigned short iind;
 
   unsigned char harq_pid = dlsch->harq_ids[frame%2][subframe];
   if(harq_pid >= dlsch->Mdlharq) {
@@ -793,20 +792,6 @@ int dlsch_encoding0(LTE_DL_FRAME_PARMS *frame_parms,
 
       Kr_bytes = Kr>>3;
 
-      // get interleaver index for Turbo code (lookup in Table 5.1.3-3 36-212, V8.6 2009-03, p. 13-14)
-      if (Kr_bytes<=64)
-        iind = (Kr_bytes-5);
-      else if (Kr_bytes <=128)
-        iind = 59 + ((Kr_bytes-64)>>1);
-      else if (Kr_bytes <= 256)
-        iind = 91 + ((Kr_bytes-128)>>2);
-      else if (Kr_bytes <= 768)
-        iind = 123 + ((Kr_bytes-256)>>3);
-      else {
-        printf("dlsch_coding: Illegal codeword size %d!!!\n",Kr_bytes);
-        return(-1);
-      }
-
 
 #ifdef DEBUG_DLSCH_CODING
       printf("Generating Code Segment %d (%d bits)\n",r,Kr);
@@ -818,10 +803,6 @@ int dlsch_encoding0(LTE_DL_FRAME_PARMS *frame_parms,
       printf("mod_order %d\n",mod_order);
 #endif
 
-
-#ifdef DEBUG_DLSCH_CODING
-      printf("Encoding ... iind %d f1 %d, f2 %d\n",iind,f1f2mat_old[iind*2],f1f2mat_old[(iind*2)+1]);
-#endif
       start_meas(te_stats);
       encoder(dlsch->harq_processes[harq_pid]->c[r],
               Kr>>3,

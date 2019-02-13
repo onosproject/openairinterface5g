@@ -1269,8 +1269,6 @@ void wakeup_L1s(RU_t *ru) {
 
   LOG_D(PHY,"wakeup_L1s (num %d) for RU %d ru->eNB_top:%p\n",ru->num_eNB,ru->idx, ru->eNB_top);
 
-  printf("wakeup_eNBs (num %d), ru->eNB_top:%p, nb. of processors: %d \n",ru->num_eNB,ru->idx, ru->eNB_top, get_nprocs());
-
   if (ru->num_eNB==1 && ru->eNB_top!=0 && get_thread_parallel_conf() == PARALLEL_SINGLE_THREAD) {
     // call eNB function directly
   

@@ -1369,6 +1369,7 @@ int32_t generate_drs_pusch(PHY_VARS_UE *phy_vars_ue,
   @param frame_parms Pointer to a LTE_DL_FRAME_PARMS structure (eNB or UE)*/
 void init_ul_hopping(LTE_DL_FRAME_PARMS *frame_parms);
 
+void generate_sl_grouphop(PHY_VARS_UE *ue);
 
 /*!
   \brief This function implements the initialization of paging parameters for UE (See Section 7, 36.304).It must be called after setting IMSImod1024 during UE startup and after receiving SIB2
@@ -1841,6 +1842,7 @@ int generate_slbch(int32_t **txdataF,
 		   uint8_t *slmib);
 
 int rx_psbch(PHY_VARS_UE *ue,int frame_rx,int subframe_rx);
+
 
 /**@}*/
 #endif

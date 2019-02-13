@@ -150,6 +150,11 @@ int generate_drs_pusch(PHY_VARS_UE *ue,
 		     frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.nPRS[(subframe<<1)+1]+
 		     ((ue->ulsch[0]->cooperation_flag==2)?10:0)+
 		     ant*6) % 12;
+     break;
+  default:
+     AssertFatal(1==0,"shouldn't get here\n");
+     break;
+
   }
   //       cyclic_shift0 = 0;
   //        cyclic_shift1 = 0;

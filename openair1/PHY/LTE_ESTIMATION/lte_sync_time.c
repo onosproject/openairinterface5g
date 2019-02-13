@@ -708,7 +708,7 @@ int lte_sync_timeSL(PHY_VARS_UE *ue,
   int64_t result;
   int32_t **rxdata = (int32_t**)ue->common_vars.rxdata_syncSL; ///rx data in time domain
   RU_t ru_tmp;
-  int16_t **rxdata_7_5kHz    = ue->sl_rxdata_7_5kHz;
+  int16_t **rxdata_7_5kHz    = (int16_t**)ue->sl_rxdata_7_5kHz;
 
   memset((void*)&ru_tmp,0,sizeof(RU_t));
   

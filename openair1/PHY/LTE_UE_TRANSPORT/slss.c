@@ -32,7 +32,8 @@
 #ifndef __LTE_TRANSPORT_SLSS__C__
 #define __LTE_TRANSPORT_SLSS__C__
 #include "PHY/defs_UE.h"
-
+#include "SCHED_UE/sched_UE.h"
+#include "PHY/LTE_UE_TRANSPORT/transport_proto_ue.h"
 
 void check_and_generate_slss(PHY_VARS_UE *ue,int frame_tx,int subframe_tx) {
 

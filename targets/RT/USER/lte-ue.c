@@ -485,10 +485,10 @@ void init_UE_stub(int nb_inst,int eMBMS_active, int uecap_xer_in, char *emul_ifa
 
   printf("UE threads created \n");
 
-  LOG_I(PHY,"Starting multicast link on %s\n", &emul_iface);
+  LOG_I(PHY,"Starting multicast link on %s\n", emul_iface);
   //if(nfapi_mode !=3) //This has to change now. It should be active for the case of D2D On-net
   if(D2D_en)
-     multicast_link_start(ue_stub_rx_handler,0, &emul_iface);
+     multicast_link_start(ue_stub_rx_handler,0, emul_iface);
 }
 
 
@@ -806,7 +806,6 @@ static void *UE_thread_synchSL(void *arg)
   //sync_mode_t sync_mode = pbch;
   int CC_id = UE->CC_id;
   int ind;
-  int found;
   int freq_offset=0;
   char threadname[128];
 
@@ -823,7 +822,6 @@ static void *UE_thread_synchSL(void *arg)
 
   printf("starting UE synchSL thread (IC %d)\n",UE->proc.instance_cnt_synchSL);
   ind = 0;
-  found = 0;
 
   do  {
     current_band = eutra_bands[ind].band;
@@ -834,7 +832,6 @@ static void *UE_thread_synchSL(void *arg)
 	uplink_frequency_offset[CC_id][i] = eutra_bands[ind].ul_min - eutra_bands[ind].dl_min;
       
       UE->frame_parms.ul_CarrierFreq = UE->frame_parms.dl_CarrierFreq+uplink_frequency_offset[CC_id][0];
-      found = 1;
       break;
     }
     
@@ -855,7 +852,6 @@ static void *UE_thread_synchSL(void *arg)
   pthread_mutex_unlock(&sync_mutex);*/
 
   wait_sync("UE thread synchSL");
-
 
   while (oai_exit==0) {
     AssertFatal ( 0== pthread_mutex_lock(&UE->proc.mutex_synchSL), "");
@@ -2292,7 +2288,7 @@ void *UE_threadSL(void *arg) {
   PHY_VARS_UE *UE = (PHY_VARS_UE *) arg;
   //  int tx_enabled = 0;
   int dummy_rx[UE->frame_parms.nb_antennas_rx][UE->frame_parms.samples_per_tti] __attribute__((aligned(32)));
-  openair0_timestamp timestamp,timestamp1;
+  openair0_timestamp timestamp;
   void* rxp[NB_ANTENNAS_RX], *txp[NB_ANTENNAS_TX];
   int start_rx_stream = 0;
   int i;
@@ -2693,7 +2689,7 @@ static void* timer_thread( void* param ) {
       //Panos: substitute this check with a check related to D2D (i.e., if D2D is enabled)
       //if (nfapi_mode!=3){
       multicast_link_write_sock(0,
-				&pdu,
+				(char*)&pdu,
 				sizeof(UE_tport_header_t));
       //}
 

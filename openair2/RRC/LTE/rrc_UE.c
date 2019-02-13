@@ -5254,7 +5254,7 @@ openair_rrc_top_init_ue(
 			    CC_id,
 			    0,
 			    (LTE_RadioResourceConfigCommonSIB_t *)NULL,
-			    (struct PhysicalConfigDedicated *)NULL,
+			    (struct LTE_PhysicalConfigDedicated *)NULL,
 #if (LTE_RRC_VERSION >= MAKE_VERSION(10, 0, 0))
 			    (LTE_SCellToAddMod_r10_t *)NULL,
 #endif
@@ -5270,7 +5270,7 @@ openair_rrc_top_init_ue(
 			    (LTE_ARFCN_ValueEUTRA_t *)NULL,
 			    (long *)NULL,
 			    (LTE_AdditionalSpectrumEmission_t *)NULL,
-			    (struct MBSFN_SubframeConfigList*)NULL
+			    (struct LTE_MBSFN_SubframeConfigList*)NULL
 #if (LTE_RRC_VERSION >= MAKE_VERSION(9, 0, 0))
 			    , 0,
 			    (LTE_MBSFN_AreaInfoList_r9_t *)NULL,
@@ -5817,7 +5817,7 @@ void *rrc_control_socket_thread_fct(void *arg)
 
 
          //configure MAC with sourceL2Id/groupL2ID
-         LOG_I(PHY,"Configuration MAC for sourceL2Id/GroupL2ID, %d/%d, UE->DRB_config[0][0]->drb_Identity: %d, group_comm_rbid: %d \n",sourceL2Id,groupL2Id,UE->DRB_config[0][0]->drb_Identity, group_comm_rbid);
+         LOG_I(PHY,"Configuration MAC for sourceL2Id/GroupL2ID, %d/%d, UE->DRB_config[0][0]->drb_Identity: %d, group_comm_rbid: %d \n",sourceL2Id,groupL2Id,(int)UE->DRB_config[0][0]->drb_Identity, group_comm_rbid);
          rrc_mac_config_req_ue(module_id,0,0, //eNB_index =0
                (LTE_RadioResourceConfigCommonSIB_t *)NULL,
                (struct LTE_PhysicalConfigDedicated *)NULL,
@@ -6230,7 +6230,7 @@ void *rrc_control_socket_thread_fct(void *arg)
 
           rrc_mac_config_req_ue(module_id,0,0, //eNB_index =0
                       (LTE_RadioResourceConfigCommonSIB_t *)NULL,
-                      (struct PhysicalConfigDedicated *)NULL,
+                      (struct LTE_PhysicalConfigDedicated *)NULL,
            #if defined(Rel10) || defined(Rel14)
                       (LTE_SCellToAddMod_r10_t *)NULL,
                       //struct PhysicalConfigDedicatedSCell_r10 *physicalConfigDedicatedSCell_r10,
@@ -6238,7 +6238,7 @@ void *rrc_control_socket_thread_fct(void *arg)
                       (LTE_MeasObjectToAddMod_t **)NULL,
                       (LTE_MAC_MainConfig_t *)NULL,
                       slrb_id,
-                      (struct LogicalChannelConfig *)NULL,
+                      (struct LTE_LogicalChannelConfig *)NULL,
                       (LTE_MeasGapConfig_t *)NULL,
                       (LTE_TDD_Config_t *)NULL,
                       (LTE_MobilityControlInfo_t *)NULL,
@@ -6605,7 +6605,7 @@ void *rrc_control_socket_thread_fct(void *arg)
 
            rrc_mac_config_req_ue(module_id,0,0, //eNB_index =0
                        (LTE_RadioResourceConfigCommonSIB_t *)NULL,
-                       (struct PhysicalConfigDedicated *)NULL,
+                       (struct LTE_PhysicalConfigDedicated *)NULL,
             #if defined(Rel10) || defined(Rel14)
                        (LTE_SCellToAddMod_r10_t *)NULL,
                        //struct PhysicalConfigDedicatedSCell_r10 *physicalConfigDedicatedSCell_r10,

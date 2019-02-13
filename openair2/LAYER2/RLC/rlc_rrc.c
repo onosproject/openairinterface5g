@@ -61,7 +61,6 @@ rlc_op_status_t rrc_rlc_config_asn1_req (const protocol_ctxt_t   * const ctxt_pP
   rb_id_t                rb_id           = 0;
   logical_chan_id_t      lc_id           = 0;
   LTE_DRB_Identity_t     drb_id          = 0;
-  LTE_DRB_Identity_t*    pdrb_id         = NULL;
   long int               cnt             = 0;
   const LTE_SRB_ToAddMod_t  *srb_toaddmod_p  = NULL;
   const LTE_DRB_ToAddMod_t  *drb_toaddmod_p  = NULL;
@@ -397,8 +396,8 @@ rlc_op_status_t rrc_rlc_config_asn1_req (const protocol_ctxt_t   * const ctxt_pP
 
   if (drb2release_listP != NULL) {
     for (cnt=0; cnt<drb2release_listP->list.count; cnt++) {
-       drb_id = drb2release_listP->list.array[cnt];
-       LOG_I(RLC, "Releasing rb_id %d\n",drb_id);
+       drb_id = *drb2release_listP->list.array[cnt];
+       LOG_I(RLC, "Releasing rb_id %d\n",(int)drb_id);
 
       rrc_rlc_remove_rlc(
         ctxt_pP,

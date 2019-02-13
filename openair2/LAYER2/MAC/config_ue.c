@@ -658,7 +658,7 @@ rrc_mac_config_req_ue(module_id_t Mod_idP,
            }
         }
      } else if ((logicalChannelIdentity >= MAX_NUM_LCID_DATA) && (logicalChannelIdentity < MAX_NUM_LCID)) {
-        LOG_I(MAC,"[UE %d] Configure LCID %d  for PC5S\n", Mod_idP, logicalChannelIdentity );
+        LOG_I(MAC,"[UE %d] Configure LCID %d  for PC5S\n", Mod_idP, (int)logicalChannelIdentity );
         j = 0;
         k = 0;
         for (k = MAX_NUM_LCID_DATA; k < MAX_NUM_LCID; k++) {
@@ -689,7 +689,7 @@ rrc_mac_config_req_ue(module_id_t Mod_idP,
   case CONFIG_ACTION_REMOVE:
      // OK for the moment since LCID is unique per flow
      if ((logicalChannelIdentity > 0) && (logicalChannelIdentity < MAX_NUM_LCID_DATA)) {
-        LOG_I(MAC,"[UE %d] Remove (logicalChannelIdentity %d)\n", Mod_idP, logicalChannelIdentity );
+        LOG_I(MAC,"[UE %d] Remove (logicalChannelIdentity %d)\n", Mod_idP, (int)logicalChannelIdentity );
         k = 0;
         for (k = 0; k < MAX_NUM_LCID_DATA; k++) {
            if (UE_mac_inst[Mod_idP].sl_info[k].LCID == logicalChannelIdentity) {
@@ -706,7 +706,7 @@ rrc_mac_config_req_ue(module_id_t Mod_idP,
         }
      } else if ((logicalChannelIdentity >= MAX_NUM_LCID_DATA) && (logicalChannelIdentity < MAX_NUM_LCID)) {
         //remove RBID for PCS5
-        LOG_I(MAC,"[UE %d] Remove (logicalChannelIdentity %d)\n", Mod_idP, logicalChannelIdentity );
+        LOG_I(MAC,"[UE %d] Remove (logicalChannelIdentity %d)\n", Mod_idP, (int)logicalChannelIdentity );
         k = 0;
         for (k = MAX_NUM_LCID_DATA; k < MAX_NUM_LCID; k++) {
            if (UE_mac_inst[Mod_idP].sl_info[k].LCID == logicalChannelIdentity) {

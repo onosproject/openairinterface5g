@@ -32,9 +32,34 @@
 #ifndef __LTE_TRANSPORT_SLSS__C__
 #define __LTE_TRANSPORT_SLSS__C__
 #include "PHY/defs_UE.h"
-//#include "PHY/LTE_TRANSPORT/proto.h"
-#include "PHY/LTE_TRANSPORT/transport_proto.h"
+#include "PHY/LTE_UE_TRANSPORT/transport_proto_ue.h"
+#include "PHY/MODULATION/modulation_eNB.h"
+#include "PHY/LTE_ESTIMATION/lte_estimation.h"
+#include "PHY/LTE_REFSIG/lte_refsig.h"
+#include "LAYER2/MAC/mac_proto.h"
+#include "SCHED_UE/sched_UE.h"
+
 extern uint8_t D2D_en;
+void ulsch_channel_level(int32_t **drs_ch_estimates_ext, LTE_DL_FRAME_PARMS *frame_parms, int32_t *avg, uint16_t nb_rb);
+void ulsch_extract_rbs_single(int32_t **rxdataF,
+                              int32_t **rxdataF_ext,
+                              uint32_t first_rb,
+                              uint32_t nb_rb,
+                              uint8_t l,
+                              uint8_t Ns,
+                              LTE_DL_FRAME_PARMS *frame_parms);
+void lte_idft(LTE_DL_FRAME_PARMS *frame_parms,uint32_t *z, uint16_t Msc_PUSCH);
+
+int dlsch_encoding0(LTE_DL_FRAME_PARMS *frame_parms,
+                    unsigned char *a,
+                    uint8_t num_pdcch_symbols,
+                    LTE_eNB_DLSCH_t *dlsch,
+                    int frame,
+                    uint8_t subframe,
+                    time_stats_t *rm_stats,
+                    time_stats_t *te_stats,
+                    time_stats_t *i_stats);
+
 
 //#define PSDCH_DEBUG 1
 
@@ -80,9 +105,9 @@ void sldch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
     }
   }
    LOG_D(PHY,"sldch_decoding: FEP in %d.%d for npsdch %d rvidx %d rx signal energy %d (%p) dB %d dB\n",frame_rx,subframe_rx,npsdch,rvidx,
-         dB_fixed(signal_energy(&ue->common_vars.rxdata[0][ue->frame_parms.samples_per_tti*subframe_rx],ue->frame_parms.samples_per_tti)),
+         dB_fixed(signal_energy((int32_t*)&ue->common_vars.rxdata[0][ue->frame_parms.samples_per_tti*subframe_rx],ue->frame_parms.samples_per_tti)),
          &ue->common_vars.rxdata[0][ue->frame_parms.samples_per_tti*subframe_rx],
-         dB_fixed(signal_energy(ue->sl_rxdata_7_5kHz[ue->current_thread_id[subframe_rx]][0],ue->frame_parms.samples_per_tti)));
+         dB_fixed(signal_energy((int32_t*)ue->sl_rxdata_7_5kHz[ue->current_thread_id[subframe_rx]][0],ue->frame_parms.samples_per_tti)));
 
   for (int l=0; l<Nsymb; l++) {
     ulsch_extract_rbs_single((int32_t**)rxdataF,
@@ -140,7 +165,7 @@ void sldch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
 			    0, // interpolation
 			    0);
 
-  ulsch_channel_level(drs_ch_estimates,
+  ulsch_channel_level((int32_t**)drs_ch_estimates,
 		      &ue->frame_parms,
 		      avgU,
 		      2);
@@ -200,7 +225,7 @@ void sldch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
   
   }
   lte_idft(&ue->frame_parms,
-           rxdataF_comp[0],
+           (uint32_t*)rxdataF_comp[0],
            24);
 
 #ifdef PSDCH_DEBUG
@@ -364,7 +389,7 @@ void rx_sldch(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc, int frame_rx,int subframe_rx
     int npsdch;
     int nprb;
 
-    LOG_D(PHY,"LPSDCH %d (%llx), N_TX_SLD %d, Ni %d, Nf %d\n",LPSDCH,sldch->bitmap1,N_TX_SLD,Ni,Nf); 
+    LOG_D(PHY,"LPSDCH %d (%llx), N_TX_SLD %d, Ni %d, Nf %d\n",LPSDCH,(long long unsigned int)sldch->bitmap1,N_TX_SLD,Ni,Nf); 
     // loop over all candidate PRBs 
     for (int a_ji=0;a_ji<Nf;a_ji++){
       jrx = absSF_modP%N_TX_SLD;//i/(Nf/N_TX_SLD);
@@ -410,7 +435,7 @@ void generate_sldch(PHY_VARS_UE *ue,SLDCH_t *sldch,int frame_tx,int subframe_tx)
         sldch_header_len+sizeof(SLDCH_t)-sizeof(uint8_t*)+sldch->payload_length);
 
   multicast_link_write_sock(0,
-                            &pdu,
+                            (char *)&pdu,
                             sldch_header_len+sizeof(SLDCH_t));
 
 }
@@ -555,7 +580,7 @@ void check_and_generate_psdch(PHY_VARS_UE *ue,int frame_tx,int subframe_tx) {
   absSF_modP = absSF_offset%P;
 
   uint64_t SFpos = ((uint64_t)1) << absSF_modP;
-  LOG_D(PHY,"SLDCH: SFN.SF %d.%d : absSF_modP %d, bitmap1 %llx\n",frame_tx,subframe_tx,absSF_modP,sldch->bitmap1);
+  LOG_D(PHY,"SLDCH: SFN.SF %d.%d : absSF_modP %d, bitmap1 %llx\n",frame_tx,subframe_tx,absSF_modP,(unsigned long long)sldch->bitmap1);
 
   if ((SFpos & sldch->bitmap1) == 0) return;
 

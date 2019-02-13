@@ -1019,7 +1019,7 @@ int main( int argc, char **argv ) {
 	  //Temporarily we will be using single set of threads for multiple UEs.
 	  //init_UE_stub(1,eMBMS_active,uecap_xer_in,emul_iface);
 	  //LOG_I(MAC, "Panos-D: Interface name: %s", &emul_iface);
-	  init_UE_stub_single_thread(NB_UE_INST,eMBMS_active,uecap_xer_in,&emul_iface, simL1);
+	  init_UE_stub_single_thread(NB_UE_INST,eMBMS_active,uecap_xer_in,emul_iface, simL1);
 	  }
   else {
 	  init_UE(NB_UE_INST,eMBMS_active,uecap_xer_in,0,get_softmodem_params()->phy_test,UE_scan,UE_scan_carrier,mode,(int)rx_gain[0][0],tx_max_power[0],
