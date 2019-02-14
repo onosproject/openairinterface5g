@@ -224,7 +224,7 @@ int generate_NDLSCH_NB_IoT(PHY_VARS_eNB           *eNB,
         if(RAR->active_msg2 == 1)
         {
             uint8_t one_byte = RAR_pdu[2]>>3;
-            uint8_t subcarrier_spacing = one_byte^0x01;
+            uint8_t subcarrier_spacing = one_byte & 0x01;
             eNB->ulsch_NB_IoT[0]->harq_process->subcarrier_spacing = subcarrier_spacing;
         }
         // to be added at the end of NPDSCH process
