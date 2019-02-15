@@ -419,31 +419,79 @@ function main() {
     if [ "$DEADLINE_SCHEDULER_FLAG_USER" = "True" ] ; then 
         CPU_AFFINITY_FLAG_USER="False"
     fi
-    
-    echo_info "Flags for Deadline scheduler: $DEADLINE_SCHEDULER_FLAG_USER"
-    echo_info "Flags for CPU Affinity: $CPU_AFFINITY_FLAG_USER"
-    
-    if [ -n "$UHD_IMAGES_DIR" ] && [ -z "$INSTALL_EXTERNAL" ]; then
-        echo_error "UHD images download settings will not be applied without -I present"
-        exit
-    fi
-    ############################################
-    # setting and printing OAI envs, we should check here
-    ############################################
-    
-    echo_info "2. Setting the OAI PATHS ..."
-    
-    cecho "OPENAIR_DIR    = $OPENAIR_DIR" $green
-    
-    # for conf files copy in this bash script
-    if [ -d /usr/lib/freeDiameter ]; then
-        export FREEDIAMETER_PREFIX=/usr
-    else
-        if [ -d /usr/local/lib/freeDiameter ]; then
-            export FREEDIAMETER_PREFIX=/usr/local
-        else
-            echo_warning "FreeDiameter prefix not found, install freeDiameter if EPC, HSS"
-        fi
+    echo_info "installing protobuf/protobuf-c for flexran agent support"
+    install_protobuf_from_source
+    install_protobuf_c_from_source
+  fi
+
+  if [ "$INSTALL_OPTIONAL" = "1" ] ; then
+    echo_info "Installing optional packages"
+    check_install_additional_tools
+  fi
+
+  
+  
+  echo_info "3. building the compilation directives ..."
+
+  DIR=$OPENAIR_DIR/cmake_targets
+  if [ "$NOS1" =  "1" ] ; then
+      lte_build_dir=lte_noS1_build_oai
+      if [ "$eNB" = "1" ] ; then
+         lte_exec=lte-softmodem-nos1
+      fi
+      if [ "$UE" = "1" ] ; then
+         lte_exec=lte-uesoftmodem-nos1
+      fi
+  else
+      lte_build_dir=lte_build_oai
+      if [ "$eNB" = "1" ] ; then
+         lte_exec=lte-softmodem
+      fi
+      if [ "$UE" = "1" ] ; then
+         lte_exec=lte-uesoftmodem
+      fi
+  fi
+  if [ "$T_TRACER" =  "False" ] ; then
+      lte_build_dir=${lte_build_dir}_noLOG
+  fi
+# configuration module libraries, one currently available, using libconfig 
+  config_libconfig_shlib=params_libconfig
+  
+  # first generate the CMakefile in the right directory
+  if [ "$eNB" = "1" -o "$UE" = "1" -o "$HW" = "EXMIMO" ] ; then
+
+    # LTE softmodem compilation
+    [ "$CLEAN" = "1" ] && rm -rf $DIR/$lte_build_dir/build
+    mkdir -p $DIR/$lte_build_dir/build
+    cmake_file=$DIR/$lte_build_dir/CMakeLists.txt
+    echo "cmake_minimum_required(VERSION 2.8)"   >  $cmake_file
+#    if [ "$NOS1" = "1" ] ; then
+#	cat  $DIR/$lte_build_dir/CMakeLists.template >>  $cmake_file
+#    fi
+    echo "set ( CMAKE_BUILD_TYPE $CMAKE_BUILD_TYPE )" >> $cmake_file
+    echo "set ( CFLAGS_PROCESSOR_USER \"$CFLAGS_PROCESSOR_USER\" )" >>  $cmake_file
+    echo "set ( XFORMS $XFORMS )"                  >>  $cmake_file
+    echo "set ( UE_EXPANSION $UE_EXPANSION )"      >>  $cmake_file
+#    echo "set ( PHY_TX_THREAD $UE_EXPANSION )"     >>  $cmake_file
+    echo "set ( PRE_SCD_THREAD $UE_EXPANSION )"    >>  $cmake_file
+    echo "set ( UESIM_EXPANSION $UESIM_EXPANSION )"      >>  $cmake_file
+    echo "set ( RRC_ASN1_VERSION \"${REL}\")"      >>  $cmake_file
+    echo "set ( ENABLE_VCD_FIFO $VCD_TIMING )"     >>  $cmake_file
+    echo "set ( RF_BOARD \"${HW}\")"               >>  $cmake_file
+    echo "set ( TRANSP_PRO \"${TP}\")"             >>  $cmake_file
+    echo "set(PACKAGE_NAME \"${lte_exec}\")"       >>  $cmake_file
+    echo "set (DEADLINE_SCHEDULER \"${DEADLINE_SCHEDULER_FLAG_USER}\" )"    >>$cmake_file
+    echo "set (CPU_AFFINITY \"${CPU_AFFINITY_FLAG_USER}\" )"      >>$cmake_file
+    echo "set ( T_TRACER $T_TRACER )"              >>  $cmake_file
+    echo "set (UE_AUTOTEST_TRACE $UE_AUTOTEST_TRACE)"        >>  $cmake_file
+    echo "set (UE_DEBUG_TRACE $UE_DEBUG_TRACE)"        >>  $cmake_file
+    echo "set (UE_TIMING_TRACE $UE_TIMING_TRACE)"        >>  $cmake_file
+    echo "set (DISABLE_LOG_X $DISABLE_LOG_X)"        >>  $cmake_file
+    echo "set (USRP_REC_PLAY $USRP_REC_PLAY)"        >>  $cmake_file
+    if [ "$UE" = 1 -a "$NOS1" = "0" ] ; then
+     echo_info "Compiling UE S1 build : enabling Linux and NETLINK"
+     echo "set (LINUX True )"              >>  $cmake_file
+     echo "set (PDCP_USE_NETLINK True )"   >>  $cmake_file
     fi
     
     
