@@ -930,11 +930,9 @@ void release_UE_in_freeList(module_id_t mod_id) {
             clean_eNb_ulsch(ulsch);
           }
 
-          for(j = 0;j < NUMBER_OF_UCI_VARS_MAX;j++){
-            if(eNB_PHY->uci_vars[j].rnti == rnti){
-              LOG_I(MAC, "clean eNb uci_vars[%d] UE %x \n",j, rnti);
-              memset(&eNB_PHY->uci_vars[j],0,sizeof(LTE_eNB_UCI));
-            }
+          if(eNB_PHY->uci_vars[i].rnti == rnti) {
+            LOG_I(MAC, "clean eNb uci_vars[%d] UE %x \n",i, rnti);
+            memset(&eNB_PHY->uci_vars[i],0,sizeof(LTE_eNB_UCI));
           }
         }
 
