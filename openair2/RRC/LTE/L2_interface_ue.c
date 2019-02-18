@@ -297,7 +297,7 @@ mac_rrc_data_ind_ue(
 
 #endif // #if (LTE_RRC_VERSION >= MAKE_VERSION(10, 0, 0))
 
-#ifdef Rel14
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
 
     if (srb_idP == MIBSLCH) {
       LOG_D(RRC,"[UE %d] Received SDU for MIBSL\n",module_idP);

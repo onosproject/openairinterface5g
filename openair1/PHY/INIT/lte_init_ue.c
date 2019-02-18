@@ -769,7 +769,7 @@ int init_lte_ue_signal(PHY_VARS_UE *ue,
     prach_vars[eNB_id]     = (LTE_UE_PRACH *)malloc16_clear(sizeof(LTE_UE_PRACH));
     pbch_vars[eNB_id]      = (LTE_UE_PBCH *)malloc16_clear(sizeof(LTE_UE_PBCH));
 
-#ifdef Rel14
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
     ue->pscch_vars_tx          = (LTE_UE_PSCCH_TX *)malloc16_clear(sizeof(LTE_UE_PSCCH_TX));
     ue->pscch_vars_rx          = (LTE_UE_PSCCH_RX *)malloc16_clear(sizeof(LTE_UE_PSCCH_RX));
 #endif
@@ -1159,7 +1159,7 @@ void free_ue_resources(PHY_VARS_UE *ue) {
     free(prach_vars[eNB_id]);
     free(pbch_vars[eNB_id]);
 
-#ifdef Rel14
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
     free(ue->pscch_vars_tx);
     free(ue->pscch_vars_rx);
 #endif

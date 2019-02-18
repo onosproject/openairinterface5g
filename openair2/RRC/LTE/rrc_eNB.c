@@ -5151,7 +5151,7 @@ rrc_eNB_process_RRCConnectionReconfigurationComplete(
               CONFIG_ACTION_REMOVE,
               DRB2LCHAN[i],
               Rlc_info_um
-#ifdef Rel14
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
     ,0
     ,0
 #endif

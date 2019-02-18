@@ -183,7 +183,7 @@ void phy_config_request(PHY_Config_t *phy_config) {
 		    fp->frame_type,
                     RC.eNB[Mod_id][CC_id]->X_u);
 
-#ifdef Rel14
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
   fp->prach_emtc_config_common.prach_Config_enabled=1;
 
   fp->prach_emtc_config_common.rootSequenceIndex                                         = cfg->emtc_config.prach_catm_root_sequence_index.value;

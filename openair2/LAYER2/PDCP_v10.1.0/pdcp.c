@@ -809,7 +809,7 @@ pdcp_data_ind(
           ((pdcp_data_ind_header_t*) new_sdu_p->data)->inst  = ctxt_pP->module_id;
 #endif
         } else {
-#ifdef Rel14
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
         //TTN (29/05/18) should check value of INST since 0 is for OIP0 (UE-UE), 1 is for OIP1 (UE-eNB) [even with S1 mode]
         //for the  moment, based on rb_id, we distinguish between the traffic from eNB and from other UE
         //if traffic from other UE

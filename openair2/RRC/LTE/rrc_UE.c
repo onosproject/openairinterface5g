@@ -576,7 +576,7 @@ rrc_t310_expiration(
                           CONFIG_ACTION_REMOVE,
                           UE_rrc_inst[ctxt_pP->module_id].Srb2[eNB_index].Srb_info.Srb_id,
                           Rlc_info_um
-#ifdef Rel14
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
                           ,0
                           ,0
 #endif
@@ -2234,7 +2234,7 @@ rrc_ue_process_mobilityControlInfo(
 #endif
                        );
   rrc_rlc_config_req(ctxt_pP, SRB_FLAG_YES, MBMS_FLAG_NO, CONFIG_ACTION_REMOVE,ctxt_pP->module_id+DCCH,Rlc_info_am_config
-#ifdef Rel14
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
     ,0
     ,0
 #endif
@@ -2246,7 +2246,7 @@ rrc_ue_process_mobilityControlInfo(
 #endif
                        );
   rrc_rlc_config_req(ctxt_pP, SRB_FLAG_YES,CONFIG_ACTION_REMOVE, MBMS_FLAG_NO,ctxt_pP->module_id+DCCH1,Rlc_info_am_config
-#ifdef Rel14
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
     ,0
     ,0
 #endif
@@ -2258,7 +2258,7 @@ rrc_ue_process_mobilityControlInfo(
 #endif
                        );
   rrc_rlc_config_req(ctxt_pP, SRB_FLAG_NO,CONFIG_ACTION_REMOVE, MBMS_FLAG_NO,ctxt_pP->module_id+DTCH,Rlc_info_um
-#ifdef Rel14
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
     ,0
     ,0
 #endif
@@ -6212,14 +6212,14 @@ void *rrc_control_socket_thread_fct(void *arg)
                 (SRB_ToAddModList_t*)NULL,
                 (DRB_ToAddModList_t*)NULL,
                 (DRB_ToReleaseList_t*)drb2release_list
- #ifdef Rel14
+ #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
                 ,(PMCH_InfoList_r9_t *)NULL
                 , sourceL2Id, destinationL2Id
  #endif
           );
   */
           rrc_rlc_config_req(&ctxt, SRB_FLAG_NO,CONFIG_ACTION_REMOVE, MBMS_FLAG_NO,slrb_id,Rlc_info_um
-        #ifdef Rel14
+        #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
             ,sourceL2Id
             ,destinationL2Id
         #endif
@@ -6231,7 +6231,7 @@ void *rrc_control_socket_thread_fct(void *arg)
           rrc_mac_config_req_ue(module_id,0,0, //eNB_index =0
                       (LTE_RadioResourceConfigCommonSIB_t *)NULL,
                       (struct LTE_PhysicalConfigDedicated *)NULL,
-           #if defined(Rel10) || defined(Rel14)
+           #if (LTE_RRC_VERSION >= MAKE_VERSION(10, 0, 0))
                       (LTE_SCellToAddMod_r10_t *)NULL,
                       //struct PhysicalConfigDedicatedSCell_r10 *physicalConfigDedicatedSCell_r10,
            #endif
@@ -6248,7 +6248,7 @@ void *rrc_control_socket_thread_fct(void *arg)
                       NULL,
                       NULL,
                       NULL
-           #if defined(Rel10) || defined(Rel14)
+           #if (LTE_RRC_VERSION >= MAKE_VERSION(10, 0, 0))
                       ,0,
                       (LTE_MBSFN_AreaInfoList_r9_t *)NULL,
                       (LTE_PMCH_InfoList_r9_t *)NULL
@@ -6259,7 +6259,7 @@ void *rrc_control_socket_thread_fct(void *arg)
                       0,
                       0
            #endif
-           #if defined(Rel10) || defined(Rel14)
+           #if (LTE_RRC_VERSION >= MAKE_VERSION(10, 0, 0))
                       ,CONFIG_ACTION_REMOVE,
                       &sourceL2Id,
                       NULL,
@@ -6596,7 +6596,7 @@ void *rrc_control_socket_thread_fct(void *arg)
                  (LTE_SRB_ToAddModList_t*)NULL,
                  (LTE_DRB_ToAddModList_t*)NULL,
                  (LTE_DRB_ToReleaseList_t*)drb2release_list
-  #ifdef Rel14
+  #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
                  ,(LTE_PMCH_InfoList_r9_t *)NULL
                  , sourceL2Id, destinationL2Id
   #endif
@@ -6606,7 +6606,7 @@ void *rrc_control_socket_thread_fct(void *arg)
            rrc_mac_config_req_ue(module_id,0,0, //eNB_index =0
                        (LTE_RadioResourceConfigCommonSIB_t *)NULL,
                        (struct LTE_PhysicalConfigDedicated *)NULL,
-            #if defined(Rel10) || defined(Rel14)
+			#if (LTE_RRC_VERSION >= MAKE_VERSION(10, 0, 0))
                        (LTE_SCellToAddMod_r10_t *)NULL,
                        //struct PhysicalConfigDedicatedSCell_r10 *physicalConfigDedicatedSCell_r10,
             #endif
@@ -6623,7 +6623,7 @@ void *rrc_control_socket_thread_fct(void *arg)
                        NULL,
                        NULL,
                        NULL
-            #if defined(Rel10) || defined(Rel14)
+            #if (LTE_RRC_VERSION >= MAKE_VERSION(10, 0, 0))
                        ,0,
                        (LTE_MBSFN_AreaInfoList_r9_t *)NULL,
                        (LTE_PMCH_InfoList_r9_t *)NULL
@@ -6634,7 +6634,7 @@ void *rrc_control_socket_thread_fct(void *arg)
                        0,
                        0
             #endif
-            #if defined(Rel10) || defined(Rel14)
+            #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
                        ,CONFIG_ACTION_REMOVE,
                        &sourceL2Id,
                        NULL,
@@ -6714,7 +6714,7 @@ int decode_MIB_SL(  const protocol_ctxt_t* const ctxt_pP,
   rrc_mac_config_req_ue(ctxt_pP->module_id, 0, 0,
 			(LTE_RadioResourceConfigCommonSIB_t *)NULL,
 			(struct LTE_PhysicalConfigDedicated *)NULL,
-#if defined(Rel10) || defined(Rel14)
+#if (LTE_RRC_VERSION >= MAKE_VERSION(10, 0, 0))
 			(LTE_SCellToAddMod_r10_t *)NULL,
 			//(struct PhysicalConfigDedicatedSCell_r10 *)NULL,
 #endif
@@ -6731,7 +6731,7 @@ int decode_MIB_SL(  const protocol_ctxt_t* const ctxt_pP,
 			NULL,
 			NULL,
 			(LTE_MBSFN_SubframeConfigList_t *)NULL
-#if defined(Rel10) || defined(Rel14)
+#if (LTE_RRC_VERSION >= MAKE_VERSION(10, 0, 0))
 			,0,
 			(LTE_MBSFN_AreaInfoList_r9_t *)NULL,
 			(LTE_PMCH_InfoList_r9_t *)NULL
@@ -6742,7 +6742,7 @@ int decode_MIB_SL(  const protocol_ctxt_t* const ctxt_pP,
 			0,
 			0
 #endif
-#if defined(Rel14)
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
 			,
 			0,
                         NULL,

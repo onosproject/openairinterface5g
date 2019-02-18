@@ -404,7 +404,7 @@ rlc_op_status_t rrc_rlc_config_asn1_req (const protocol_ctxt_t   * const ctxt_pP
         SRB_FLAG_NO,
         MBMS_FLAG_NO,
         drb_id
-#ifdef Rel14
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
               ,sourceL2Id,
               destinationL2Id
 #endif
@@ -540,7 +540,7 @@ rlc_op_status_t rrc_rlc_remove_ue (
                        SRB_FLAG_YES,
                        MBMS_FLAG_NO,
                        rb_id
-#ifdef Rel14
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
                ,0, 0
 #endif
                );
@@ -551,7 +551,7 @@ rlc_op_status_t rrc_rlc_remove_ue (
                        SRB_FLAG_NO,
                        MBMS_FLAG_NO,
                        rb_id
-#ifdef Rel14
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
                ,0, 0
 #endif
                );
@@ -566,7 +566,7 @@ rlc_op_status_t rrc_rlc_remove_rlc   (
   const srb_flag_t  srb_flagP,
   const MBMS_flag_t MBMS_flagP,
   const rb_id_t     rb_idP
-#ifdef Rel14
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
     ,const uint32_t sourceL2Id
     ,const uint32_t destinationL2Id
 #endif
@@ -641,7 +641,7 @@ rlc_op_status_t rrc_rlc_remove_rlc   (
               (srb_flagP) ? "SRB" : "DRB",
                     rb_idP);
      }
-#ifdef Rel14
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
      if ((sourceL2Id > 0) && (destinationL2Id > 0) ){
         key_lcid = RLC_COLL_KEY_LCID_SOURCE_DEST_VALUE(ctxt_pP->module_id, ctxt_pP->rnti, ctxt_pP->enb_flag, lcid, sourceL2Id, destinationL2Id, srb_flagP);
      } else
@@ -817,7 +817,7 @@ rlc_op_status_t rrc_rlc_config_req   (
   const config_action_t actionP,
   const rb_id_t         rb_idP,
   const rlc_info_t      rlc_infoP
-#ifdef Rel14
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
     ,const uint32_t sourceL2Id
     ,const uint32_t destinationL2Id
 #endif
@@ -893,7 +893,7 @@ rlc_op_status_t rrc_rlc_config_req   (
 
   case CONFIG_ACTION_REMOVE:
     return rrc_rlc_remove_rlc(ctxt_pP, srb_flagP, mbms_flagP, rb_idP
-#ifdef Rel14
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
                               ,sourceL2Id
                               ,destinationL2Id
 #endif

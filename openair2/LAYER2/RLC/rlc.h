@@ -346,7 +346,7 @@ rlc_op_status_t rrc_rlc_remove_ue (const protocol_ctxt_t* const);
 * \return     A status about the processing, OK or error code.
 */
 rlc_op_status_t rrc_rlc_remove_rlc   (const protocol_ctxt_t* const, const srb_flag_t, const MBMS_flag_t, const  rb_id_t
-#ifdef Rel14
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
     ,const uint32_t sourceL2Id
     ,const uint32_t destinationL2Id
 #endif
@@ -394,7 +394,7 @@ rlc_op_status_t rrc_rlc_config_req   (
                   config_action_t,
                   const  rb_id_t,
                   rlc_info_t
-#ifdef Rel14
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
                   ,const uint32_t
                   ,const uint32_t
 #endif
@@ -457,7 +457,7 @@ tbs_size_t            mac_rlc_data_req     (const module_id_t, const rnti_t, con
 */
 void                  mac_rlc_data_ind     (const module_id_t, const rnti_t, const eNB_index_t,const frame_t, const  eNB_flag_t, const  MBMS_flag_t, logical_chan_id_t, char*, tb_size_t, num_tb_t,
                crc_t*
-#ifdef Rel14
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
   , sl_reset_rlc_flag_t
 #endif
 );

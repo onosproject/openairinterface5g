@@ -179,7 +179,7 @@ int pdcp_fifo_flush_sdus(const protocol_ctxt_t* const  ctxt_pP)
       //}
 #endif
 
-#ifdef Rel14
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
       //TTN (29/05/18) OIP1 for UE-eNB, OIP0 for UE-UE (incoming packets)
       //for the  moment, based on rb_id, we distinguish between the traffic from eNB and from other UE
 

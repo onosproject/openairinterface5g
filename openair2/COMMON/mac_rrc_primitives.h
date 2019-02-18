@@ -346,7 +346,7 @@ typedef struct {
   void (*pdcp_run)(void);
   void (*pdcp_data_req)(module_id_t, rb_id_t, sdu_size_t, char*);
   signed int (*rrc_rlc_config_req)(unsigned int, unsigned int, unsigned int, unsigned int, rlc_info_t
-#ifdef Rel14
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
     ,unsigned int
     ,unsigned int
 #endif

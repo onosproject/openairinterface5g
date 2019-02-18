@@ -161,7 +161,7 @@ rlc_um_get_pdus (const protocol_ctxt_t* const ctxt_pP, void *argP);
 
 void
 rlc_um_rx (const protocol_ctxt_t* const ctxt_pP, void *argP, struct mac_data_ind data_indP
-#ifdef Rel14
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
   , sl_reset_rlc_flag_t    sl_reset_rlc_flag
 #endif
 );
@@ -218,7 +218,7 @@ uint32_t rlc_um_get_buffer_occupancy (rlc_um_entity_t *rlc_pP);
 */
 void
 rlc_um_mac_data_indication (const protocol_ctxt_t* const ctxt_pP, void *rlc_pP, struct mac_data_ind data_indP
-#ifdef Rel14
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
   , sl_reset_rlc_flag_t    sl_reset_rlc_flag
 #endif
   );

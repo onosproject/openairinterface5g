@@ -575,7 +575,7 @@ ue_send_sdu(module_id_t module_idP,
 				 MBMS_FLAG_NO, rx_lcids[i],
 				 (char *) payload_ptr, rx_lengths[i], 1,
 				 NULL
-#ifdef Rel14
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
   ,SL_RESET_RLC_FLAG_NO
 #endif
 		);
@@ -602,7 +602,7 @@ ue_send_sdu(module_id_t module_idP,
 				 rx_lcids[i],
 				 (char *) payload_ptr, rx_lengths[i], 1,
 				 NULL
-#ifdef Rel14
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
   ,SL_RESET_RLC_FLAG_NO
 #endif
 		);
@@ -643,7 +643,7 @@ ue_decode_si(module_id_t module_idP, int CC_id, frame_t frameP,
 			  0);
     }
     else {
-      LOG_D(MAC, "[UE %d] Frame %d Sending MIBSL to RRC (LCID Id %d,len %d) : %x.%x.%x.%x.%x\n",
+      LOG_I(MAC, "[UE %d] Frame %d Sending MIBSL to RRC (LCID Id %d,len %d) : %x.%x.%x.%x.%x\n",
           module_idP, frameP, MIBSLCH, 5, slss->slmib[0],slss->slmib[1],slss->slmib[2],slss->slmib[3],slss->slmib[4]);
  
       mac_rrc_data_ind_ue(module_idP, CC_id, frameP, 0,	// unknown subframe
@@ -653,7 +653,7 @@ ue_decode_si(module_id_t module_idP, int CC_id, frame_t frameP,
       // copy frame/subframe
       *frame    = UE_mac_inst[module_idP].directFrameNumber_r12;
       *subframe = UE_mac_inst[module_idP].directSubframeNumber_r12;
-      LOG_D(MAC,"SL: Resetting SF.SFN to %d.%d\n",*frame,*subframe);
+      LOG_I(MAC,"SL: Resetting SF.SFN to %d.%d\n",*frame,*subframe);
     }
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME
 	(VCD_SIGNAL_DUMPER_FUNCTIONS_UE_DECODE_SI, VCD_FUNCTION_OUT);
@@ -669,7 +669,7 @@ ue_decode_si(module_id_t module_idP, int CC_id, frame_t frameP,
 		  0xffff,
 		  UE_mac_inst[module_idP].rxFrame,
 		  UE_mac_inst[module_idP].rxSubframe, 0, 0);
-	LOG_D(OPT,
+	LOG_I(OPT,
 	      "[UE %d][BCH] Frame %d trace pdu for CC_id %d rnti %x with size %d\n",
 	      module_idP, frameP, CC_id, 0xffff, len);
     }
@@ -855,7 +855,7 @@ ue_send_mch_sdu(module_id_t module_idP, uint8_t CC_id, frame_t frameP,
             rx_lengths[i],
             1,
             NULL
-#ifdef Rel14
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
   ,SL_RESET_RLC_FLAG_NO
 #endif
           );
@@ -1021,7 +1021,7 @@ void ue_send_sl_sdu(module_id_t module_idP,
             rlc_sdu_len,
             1,
             NULL
-#ifdef Rel14
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
             ,reset_flag
 #endif
       );
@@ -1039,7 +1039,7 @@ void ue_send_sl_sdu(module_id_t module_idP,
     	              rlc_sdu_len,
     	              1,
     	              NULL
-    	  #ifdef Rel14
+		  #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
     	              ,reset_flag
     	  #endif
     	        );
@@ -3713,7 +3713,7 @@ SLSCH_t *ue_get_slsch(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_
                ue->slsch_lcid,
                req,
                (char*)(ue->slsch_pdu.payload + sizeof(SLSCH_SUBHEADER_24_Bit_DST_LONG))
-#ifdef Rel14
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
                ,ue->sourceL2Id,
                ue->destinationL2Id
 #endif

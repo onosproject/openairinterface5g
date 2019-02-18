@@ -176,7 +176,7 @@ rlc_um_get_pdus (const protocol_ctxt_t* const ctxt_pP, void *argP)
 //-----------------------------------------------------------------------------
 void
 rlc_um_rx (const protocol_ctxt_t* const ctxt_pP, void *argP, struct mac_data_ind data_indP
-#ifdef Rel14
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
   , sl_reset_rlc_flag_t    sl_reset_rlc_flag
 #endif
   )
@@ -382,7 +382,7 @@ rlc_um_rx (const protocol_ctxt_t* const ctxt_pP, void *argP, struct mac_data_ind
     }
 
 #endif
-#ifdef Rel14
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
     //trick to make UE receive multicast packet from different sources
     mem_block_t         *tb_p             = NULL;
     uint8_t            *first_byte_p     = NULL;
@@ -730,13 +730,13 @@ rlc_um_mac_data_request (const protocol_ctxt_t* const ctxt_pP, void *rlc_pP,cons
 //-----------------------------------------------------------------------------
 void
 rlc_um_mac_data_indication (const protocol_ctxt_t* const ctxt_pP, void *rlc_pP, struct mac_data_ind data_indP
-#ifdef Rel14
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
   , sl_reset_rlc_flag_t    sl_reset_rlc_flag
 #endif
   )
 {
   rlc_um_rx (ctxt_pP, rlc_pP, data_indP
-#ifdef Rel14
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
   ,sl_reset_rlc_flag
 #endif
   );

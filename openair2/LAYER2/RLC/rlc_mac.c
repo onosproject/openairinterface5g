@@ -244,7 +244,7 @@ void mac_rlc_data_ind     (
   const tb_size_t           tb_sizeP,
   num_tb_t                  num_tbP,
   crc_t                    *crcs_pP
-#ifdef Rel14
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
   , sl_reset_rlc_flag_t    sl_reset_rlc_flag
 #endif
    )
@@ -315,7 +315,7 @@ void mac_rlc_data_ind     (
 
   case RLC_MODE_UM:
     rlc_um_mac_data_indication(&ctxt, &rlc_union_p->rlc.um, data_ind
-#ifdef Rel14
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
   ,sl_reset_rlc_flag
 #endif
   );
