@@ -1867,6 +1867,7 @@ typedef struct {
 	nfapi_tl_t tl;
 	uint32_t handle;
 	uint16_t rnti;
+	uint16_t ue_id;
 } nfapi_ul_config_ue_information_rel8_t;
 #define NFAPI_UL_CONFIG_REQUEST_UE_INFORMATION_REL8_TAG 0x2013
 

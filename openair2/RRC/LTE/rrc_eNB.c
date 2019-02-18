@@ -921,7 +921,7 @@ void release_UE_in_freeList(module_id_t mod_id) {
       for (CC_id = 0; CC_id < MAX_NUM_CCs; CC_id++) {
         eNB_PHY = RC.eNB[mod_id][CC_id];
 
-        for (i=0; i<MAX_MOBILES_PER_ENB; i++) {
+        for (i=0; i<=MAX_MOBILES_PER_ENB; i++) {
           ulsch = eNB_PHY->ulsch[i];
 
           if((ulsch != NULL) && (ulsch->rnti == rnti)) {
@@ -929,11 +929,12 @@ void release_UE_in_freeList(module_id_t mod_id) {
             LOG_I(RRC, "clean_eNb_ulsch ulsch[%d] UE %x\n", i, rnti);
             clean_eNb_ulsch(ulsch);
           }
-
-          if(eNB_PHY->uci_vars[i].rnti == rnti) {
-            LOG_I(MAC, "clean eNb uci_vars[%d] UE %x \n",i, rnti);
-            memset(&eNB_PHY->uci_vars[i],0,sizeof(LTE_eNB_UCI));
-          }
+        }
+        for(j = 0;j < NUMBER_OF_UCI_VARS_MAX;j++){
+            if(eNB_PHY->uci_vars[j].rnti == rnti){
+              LOG_I(MAC, "clean eNb uci_vars[%d] UE %x \n",j, rnti);
+              memset(&eNB_PHY->uci_vars[j],0,sizeof(LTE_eNB_UCI));
+            }
         }
 
         for (i=0; i<MAX_MOBILES_PER_ENB; i++) {

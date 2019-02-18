@@ -912,7 +912,8 @@ static uint8_t pack_ul_config_request_ue_info_rel8_value(void *tlv, uint8_t **pp
 	nfapi_ul_config_ue_information_rel8_t* ue_info_rel8 = (nfapi_ul_config_ue_information_rel8_t*)tlv;
 	
 	return ( push32(ue_info_rel8->handle, ppWritePackedMsg, end) &&
-		 	 push16(ue_info_rel8->rnti, ppWritePackedMsg, end));
+		 	 push16(ue_info_rel8->rnti, ppWritePackedMsg, end) &&
+                         push16(ue_info_rel8->ue_id, ppWritePackedMsg, end));
 }
 static uint8_t pack_ul_config_request_ue_info_rel11_value(void *tlv, uint8_t **ppWritePackedMsg, uint8_t *end)
 {
@@ -3631,7 +3632,8 @@ static uint8_t unpack_ul_config_ue_info_rel8_value(void *tlv, uint8_t **ppReadPa
 	nfapi_ul_config_ue_information_rel8_t* ue_info_rel8 = (nfapi_ul_config_ue_information_rel8_t*)tlv;
 	
 	return (pull32(ppReadPackedMsg, &ue_info_rel8->handle, end) &&
-			pull16(ppReadPackedMsg, (uint16_t *)&ue_info_rel8->rnti, end));
+			pull16(ppReadPackedMsg, (uint16_t *)&ue_info_rel8->rnti, end) &&
+                        pull16(ppReadPackedMsg, (uint16_t *)&ue_info_rel8->ue_id, end));
 }
 static uint8_t unpack_ul_config_ue_info_rel11_value(void *tlv, uint8_t **ppReadPackedMsg, uint8_t *end)
 {

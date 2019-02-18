@@ -1440,7 +1440,7 @@ fill_nfapi_uci_acknak(module_id_t module_idP,
   ul_config_pdu->uci_harq_pdu.ue_information.ue_information_rel8.tl.tag = NFAPI_UL_CONFIG_REQUEST_UE_INFORMATION_REL8_TAG;
   ul_config_pdu->uci_harq_pdu.ue_information.ue_information_rel8.handle = 0;	// don't know how to use this
   ul_config_pdu->uci_harq_pdu.ue_information.ue_information_rel8.rnti   = rntiP;
-
+  ul_config_pdu->uci_harq_pdu.ue_information.ue_information_rel8.ue_id   = find_UE_id(module_idP, rntiP);
   fill_nfapi_harq_information(module_idP, CC_idP,
 			      rntiP,
 			      absSFP,
