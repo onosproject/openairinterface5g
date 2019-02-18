@@ -812,7 +812,11 @@ void generate_eNB_dlsch_params_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t * proc,n
         }
       else
         { //managing data
-
+        LOG_I(PHY,"Handling the DCI for ue-spec data or MSG4!\n");
+        // Temp: Add UE id when Msg4 trigger
+        eNB->ndlsch[0]= (NB_IoT_eNB_NDLSCH_t*) malloc(sizeof(NB_IoT_eNB_NDLSCH_t));
+        eNB->ndlsch[0]->harq_process = (NB_IoT_DL_eNB_HARQ_t*)malloc(sizeof(NB_IoT_DL_eNB_HARQ_t));
+        eNB->ndlsch[0]->rnti=dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.rnti; 
         //TODO target/SIMU/USER?init_lte/init_lte_eNB we should allocate the ndlsch structures
         UE_id = find_ue_NB_IoT(dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.rnti, eNB);
         AssertFatal(UE_id != -1, "no ndlsch context available or no ndlsch context corresponding to that rnti\n");
@@ -833,7 +837,7 @@ void generate_eNB_dlsch_params_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t * proc,n
               DCI_Content->DCIN1.HARQackRes     = dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.harq_ack_resource;
               DCI_Content->DCIN1.DCIRep         = dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.dci_subframe_repetition_number;
 
-
+              eNB->npdcch[(uint8_t)UE_id] = (NB_IoT_eNB_NPDCCH_t *) malloc(sizeof(NB_IoT_eNB_NPDCCH_t));
               //set the NPDCCH UE-specific structure  (calculate R)
               npdcch=eNB->npdcch[(uint8_t)UE_id];
               AssertFatal(npdcch != NULL, "NPDCCH structure for UE specific is not exist\n");

@@ -247,6 +247,7 @@ void handle_nfapi_dlsch_pdu_NB_IoT(PHY_VARS_eNB *eNB,
 	  else
 	  { //this for ue data
 		  //TODO
+	  	  LOG_I(PHY,"handling MSG4 or ue-spec data");
 		  //program addition DLSCH parameters not from DCI (for the moment we only pass the pdu)
 		  //int UE_id = find_dlsch(rel13->rnti,eNB,SEARCH_EXIST);
 
@@ -436,7 +437,8 @@ void schedule_response_NB_IoT(Sched_Rsp_NB_IoT_t *Sched_INFO)
 	  switch(ul_config_pdu->pdu_type)
 	  {
 	  case NFAPI_UL_CONFIG_NULSCH_PDU_TYPE:
-
+	  	if(nfapi_parameters_rel13->nulsch_format==0)
+	  	{
 	  		// new condition should be added to identify if this is msg3 3 since the TBS_table is not the same.
 
 	  		// the type of subcarrier spacing should be specified before the call of rx_ulsch since the parameter does not exist in nfapi parameters.
@@ -477,7 +479,9 @@ void schedule_response_NB_IoT(Sched_Rsp_NB_IoT_t *Sched_INFO)
 			
 			//nulsch_harq->rep_tmp                 = ;
 	        ////////////////////////////////////////////////////////////////////////////////////////
-	  		LOG_I(PHY,"subframe = %d (TX timing), IF module proceed UL config NULSCH pdu, will trigger npusch in next subframe\n",subframe);
+	  		LOG_I(PHY,"subframe = %d (TX timing), IF module proceed UL config NULSCH data pdu, will trigger npusch in next subframe\n",subframe);
+	  	}else
+	  		LOG_I(PHY,"subframe = %d (TX timing), IF module proceed UL config NULSCH ack pdu, will trigger npusch in next subframe\n",subframe);
 		  break;
 	  case NFAPI_UL_CONFIG_NRACH_PDU_TYPE:
 		  //TODO just for update the nprach  configuration (given at the beginning through phy_config_sib2)

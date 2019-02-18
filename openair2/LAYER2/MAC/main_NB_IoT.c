@@ -136,7 +136,37 @@ void init_mac_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst)
     mac_inst->RA_template[i].wait_msg4_ack = 0;
     mac_inst->RA_template[i].wait_msg3_ack = 0;
   }
-  
+ 
+  //3 CE level USS list
+  mac_inst->UE_list_spec = (UE_list_NB_IoT_t*)malloc(NUM_USS_PP*sizeof(UE_list_NB_IoT_t));
+  //initial UE list
+    LOG_I(MAC,"[init_mac_NB_IoT] Initial UE list\n");
+
+  mac_inst->num_uss_list = NUM_USS_PP;
+  for(i=0;i<NUM_USS_PP;++i)
+  {
+    //rrc_mac_config_req(&mac_inst->rrc_config, 0, 0, 1, i);
+
+    (mac_inst->UE_list_spec+i)->head = -1;
+    (mac_inst->UE_list_spec+i)->tail = -1;
+    (mac_inst->UE_list_spec+i)->NPDCCH_config_dedicated.R_max = mac_inst->rrc_config.npdcch_ConfigDedicated[i].R_max;
+    (mac_inst->UE_list_spec+i)->NPDCCH_config_dedicated.G = mac_inst->rrc_config.npdcch_ConfigDedicated[i].G;
+    (mac_inst->UE_list_spec+i)->NPDCCH_config_dedicated.a_offset = mac_inst->rrc_config.npdcch_ConfigDedicated[i].a_offset;
+    //(mac_inst->UE_list_spec+i)->NPDCCH_config_dedicated.R_max = 8;
+    //(mac_inst->UE_list_spec+i)->NPDCCH_config_dedicated.G = 1;
+    //(mac_inst->UE_list_spec+i)->NPDCCH_config_dedicated.a_offset = 0;
+    (mac_inst->UE_list_spec+i)->NPDCCH_config_dedicated.T = (uint32_t)((double)(mac_inst->UE_list_spec+i)->NPDCCH_config_dedicated.R_max * (mac_inst->UE_list_spec+i)->NPDCCH_config_dedicated.G);
+    (mac_inst->UE_list_spec+i)->NPDCCH_config_dedicated.ss_start_uss = (mac_inst->UE_list_spec+i)->NPDCCH_config_dedicated.T * (mac_inst->UE_list_spec+i)->NPDCCH_config_dedicated.a_offset;
+    //SCHEDULE_LOG("[init_mac_NB_IoT][CE%d] Rmax %d G %d, a_offset %d, PP %d search space start %d\n", i, (mac_inst->UE_list_spec+i)->NPDCCH_config_dedicated.R_max, (mac_inst->UE_list_spec+i)->NPDCCH_config_dedicated.G, (mac_inst->UE_list_spec+i)->NPDCCH_config_dedicated.a_offset, (mac_inst->UE_list_spec+i)->NPDCCH_config_dedicated.T, (mac_inst->UE_list_spec+i)->NPDCCH_config_dedicated.ss_start_uss);
+    for(j=0;j<MAX_NUMBER_OF_UE_MAX_NB_IoT;++j)
+    {
+      (mac_inst->UE_list_spec+i)->UE_template_NB_IoT[j].active=0;
+      (mac_inst->UE_list_spec+i)->UE_template_NB_IoT[j].RRC_connected=0;
+      (mac_inst->UE_list_spec+i)->UE_template_NB_IoT[j].direction = -1;
+    }
+    LOG_I(MAC,"[init_mac_NB_IoT] List_number %d R_max %d G %.1f a_offset %.1f T %d SS_start %d\n", i, (mac_inst->UE_list_spec+i)->NPDCCH_config_dedicated.R_max, (mac_inst->UE_list_spec+i)->NPDCCH_config_dedicated.G, (mac_inst->UE_list_spec+i)->NPDCCH_config_dedicated.a_offset, (mac_inst->UE_list_spec+i)->NPDCCH_config_dedicated.T, (mac_inst->UE_list_spec+i)->NPDCCH_config_dedicated.ss_start_uss);
+  }
+ 
   
   //UL initial
   //Setting nprach configuration

@@ -35,6 +35,7 @@
 
 #include "UTIL/LOG/log.h"
 #include "rrc_eNB_UE_context_NB_IoT.h"
+#include "proto_NB_IoT.h"
 #include "msc.h"
 
 //------------------------------------------------------------------------------

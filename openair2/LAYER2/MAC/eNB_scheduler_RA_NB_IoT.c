@@ -391,8 +391,9 @@ void receive_msg3_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, rnti_t c_rnti, uint32_t 
 	if((RA_TEMPLATE_NB_IoT *)0 != msg3_nodes)
 	while((RA_TEMPLATE_NB_IoT *)0 != msg3_nodes){
 		if(msg3_nodes->ue_rnti == c_rnti){
+			LOG_I(MAC,"add ue in\n");
 			add_ue_NB_IoT(mac_inst, c_rnti, msg3_nodes->ce_level, phr, ul_total_buffer);//	rnti, ce level
-			LOG_D(MAC,"[%04d][RA scheduler][MSG3][CE%d] Receive MSG3 T-CRNTI %d Preamble Index %d \n", mac_inst->current_subframe, msg3_nodes->ce_level, msg3_nodes->ue_rnti, msg3_nodes->preamble_index);
+			LOG_I(MAC,"[%04d][RA scheduler][MSG3][CE%d] Receive MSG3 T-CRNTI %d Preamble Index %d \n", mac_inst->current_subframe, msg3_nodes->ce_level, msg3_nodes->ue_rnti, msg3_nodes->preamble_index);
 			migrate_node = msg3_nodes;
 
 			//	maintain list
@@ -730,10 +731,11 @@ void schedule_msg4_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, int abs_subframe){
 			fail=0;
 			//	check dci resource
 			rmax = mac_inst->rrc_config.mac_NPRACH_ConfigSIB[msg4_nodes->ce_level].mac_npdcch_NumRepetitions_RA_NB_IoT;//32;
-    	    num_candidate = 8;//rmax / r;
+    	    num_candidate = 1;//rmax / r;
     		r = rmax/num_candidate;
     		num_dci_subframe = r;
     		dci_subframe = abs_subframe;//mac_inst->current_subframe;
+
 			for(dci_candidate=0; dci_candidate<num_candidate; ++dci_candidate){
 	            while(!is_dlsf(mac_inst, dci_subframe)){
                     ++dci_subframe;
@@ -757,12 +759,13 @@ void schedule_msg4_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, int abs_subframe){
 			}
 			//	check msg4 resource
 			rep = dl_rep[msg4_nodes->ce_level];
-			num_msg4_subframe = 1*rep;   //  8 subframes
+
+			num_msg4_subframe = 1*rep;   //  4 subframe?
 			msg4_i_delay = find_suit_i_delay(rmax, r, dci_candidate);
 			for(i=msg4_i_delay; i<8; ++i){
 				msg4_i_delay = (msg4_i_delay==8)?0:msg4_i_delay;
 				msg4_subframe = dci_end_subframe+4+get_scheduling_delay(msg4_i_delay, rmax);
-				msg4_node = (available_resource_DL_t *)check_resource_DL(mac_inst, msg4_subframe, num_msg4_subframe*rep, &msg4_end_subframe, &msg4_first_subframe);
+				msg4_node = (available_resource_DL_t *)check_resource_DL(mac_inst, msg4_subframe, num_msg4_subframe, &msg4_end_subframe, &msg4_first_subframe);
 				if((available_resource_DL_t *)0 != msg4_node){
 					LOG_D(MAC,"%d msg4 %d - %d\n", abs_subframe, msg4_first_subframe, msg4_end_subframe);
 					break;
@@ -796,11 +799,11 @@ void schedule_msg4_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, int abs_subframe){
 				dci_n1_msg4->orderIndicator = 0;
 				dci_n1_msg4->Scheddly = msg4_i_delay;
 				dci_n1_msg4->ResAssign = 0;
-				dci_n1_msg4->mcs = 0;
-				dci_n1_msg4->RepNum = 1;
+				dci_n1_msg4->mcs = 4;
+				dci_n1_msg4->RepNum = 2;
 				dci_n1_msg4->ndi = 1;
 				dci_n1_msg4->HARQackRes = HARQ_info.ACK_NACK_resource_field;
-				dci_n1_msg4->DCIRep = 1;
+				dci_n1_msg4->DCIRep = 2;
 
 				//	for dci
 				dci_result = (schedule_result_t *)malloc(sizeof(schedule_result_t));
@@ -811,7 +814,7 @@ void schedule_msg4_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, int abs_subframe){
 				dci_result->DCI_release = 0;
 				dci_result->channel = NPDCCH;
 				dci_result->rnti = msg4_nodes->ue_rnti;
-				dci_result->rnti_type = 1;
+				dci_result->rnti_type = 3;
 				dci_result->npusch_format = 0; //useless
 				dci_result->R_harq = 0;
 				dci_result->next = (schedule_result_t *)0;
@@ -848,12 +851,13 @@ void schedule_msg4_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, int abs_subframe){
 			    harq_result->DLSCH_pdu = NULL;
 			    harq_result->DCI_pdu = (void *)dci_n1_msg4;
 			    harq_result->DCI_release = 1;
+			    harq_result->npusch_format = 1;
 			    harq_result->channel = NPUSCH;
 			    harq_result->next = (schedule_result_t *)0;
 
 			    				
-				LOG_D(MAC,"[%04d][RA scheduler][MSG4] UE:%x MSG4DCI %d-%d MSG4 %d-%d HARQ %d-%d\n", abs_subframe-1, msg4_nodes->ue_rnti, dci_first_subframe, dci_end_subframe, msg4_first_subframe, msg4_end_subframe, HARQ_info.sf_start, HARQ_info.sf_end);
-	            LOG_D(MAC,"[%04d][RA scheduler][MSG4][CE%d] MSG4 DCI %d-%d MSG4 %d-%d HARQ %d-%d\n", abs_subframe-1, msg4_nodes->ce_level, dci_first_subframe, dci_end_subframe, msg4_first_subframe, msg4_end_subframe, HARQ_info.sf_start, HARQ_info.sf_end);
+				LOG_I(MAC,"[%04d][RA scheduler][MSG4] UE:%x MSG4DCI %d-%d MSG4 %d-%d HARQ %d-%d\n", abs_subframe-1, msg4_nodes->ue_rnti, dci_first_subframe, dci_end_subframe, msg4_first_subframe, msg4_end_subframe, HARQ_info.sf_start, HARQ_info.sf_end);
+	            LOG_I(MAC,"[%04d][RA scheduler][MSG4][CE%d] MSG4 DCI %d-%d MSG4 %d-%d HARQ %d-%d\n", abs_subframe-1, msg4_nodes->ce_level, dci_first_subframe, dci_end_subframe, msg4_first_subframe, msg4_end_subframe, HARQ_info.sf_start, HARQ_info.sf_end);
 	            msg4_nodes->msg4_retransmit_count++;
 	            
 				//	fill dci resource

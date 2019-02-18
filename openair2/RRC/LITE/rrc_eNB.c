@@ -121,10 +121,57 @@ extern uint16_t                     two_tier_hexagonal_cellIds[7];
 
 mui_t                               rrc_eNB_mui = 0;
 
-void mac_rrc_msg3_ind_NB_IoT(uint8_t *payload_ptr, uint16_t rnti)
+void generate_msg4_NB_IoT(rrc_eNB_carrier_data_NB_IoT_t *carrier)
+{
+  LOG_I(RRC,"start the RRC connection setup PDU\n");
+
+  rrc_eNB_ue_context_NB_IoT_t* ue_context_pP_NB_IoT;
+      
+  ue_context_pP_NB_IoT = (rrc_eNB_ue_context_NB_IoT_t*)malloc(sizeof(rrc_eNB_ue_context_NB_IoT_t));
+
+  SRB_ToAddModList_NB_r13_t  **SRB_configList_NB_IoT;
+
+  SRB_configList_NB_IoT = &ue_context_pP_NB_IoT->ue_context.SRB_configList;
+
+  carrier[0].Srb0.Tx_buffer.payload_size = do_RRCConnectionSetup_NB_IoT(ue_context_pP_NB_IoT,
+                                                                                0,
+                                                                                carrier[0].Srb0.Tx_buffer.Payload,
+                                                                                0,
+                                                                                SRB_configList_NB_IoT,
+                                                                                &ue_context_pP_NB_IoT->ue_context.physicalConfigDedicated_NB_IoT);
+
+  LOG_I(RRC,"[MSG] RRC Connection Setup NB-IoT\n");
+
+  int                                 cnt;
+
+  for (cnt = 0; cnt < carrier[0].Srb0.Tx_buffer.payload_size; cnt++) 
+  {
+    printf("%02x ", carrier[0].Srb0.Tx_buffer.Payload[cnt]);
+  }
+  printf("\n");
+}
+
+void mac_rrc_msg3_ind_NB_IoT(uint8_t *payload_ptr, uint16_t rnti, uint32_t length)
 {
   LOG_I(RRC,"recieve MSG3 CCCH SDU from MAC\n");
-    asn_dec_rval_t                      dec_rval;
+  asn_dec_rval_t                      dec_rval;
+  struct rrc_eNB_ue_context_NB_IoT_s  *ue_context_p = NULL;
+  SRB_INFO_NB_IoT *srb_info = NULL;
+  srb_info = &eNB_rrc_inst_NB_IoT->carrier[0].Srb0;
+  memcpy(srb_info->Rx_buffer.Payload,payload_ptr,length);
+  srb_info->Rx_buffer.payload_size = length;
+  LOG_D(RRC,"Decoding UL CCCH %x.%x.%x.%x.%x.%x.%x.%x.%x (%p)\n",
+        ((uint8_t *) srb_info->Rx_buffer.Payload)[0],
+        ((uint8_t *) srb_info->Rx_buffer.Payload)[1],
+        ((uint8_t *) srb_info->Rx_buffer.Payload)[2],
+        ((uint8_t *) srb_info->Rx_buffer.Payload)[3],
+        ((uint8_t *) srb_info->Rx_buffer.Payload)[4],
+        ((uint8_t *) srb_info->Rx_buffer.Payload)[5],
+        ((uint8_t *) srb_info->Rx_buffer.Payload)[6], 
+        ((uint8_t *) srb_info->Rx_buffer.Payload)[7], 
+        ((uint8_t *) srb_info->Rx_buffer.Payload)[8],  
+        (uint8_t *) srb_info->Rx_buffer.Payload);
+
   RRCConnectionRequest_NB_r13_IEs_t* rrcConnectionRequest_NB = NULL;
   UL_CCCH_Message_NB_t* ul_ccch_msg_NB = NULL;
   dec_rval = uper_decode(
@@ -156,9 +203,14 @@ void mac_rrc_msg3_ind_NB_IoT(uint8_t *payload_ptr, uint16_t rnti)
       for(int a = 0; a<length;a++)
         printf("%02x ",da[a]);
       printf("\n");
-    }else
-	LOG_E(RRC,"unknown TMSI or Random Value format in RRC connection request NB\n");
-  }else
+    }
+    else
+    {
+	     LOG_E(RRC,"unknown TMSI or Random Value format in RRC connection request NB\n");
+    }
+    generate_msg4_NB_IoT(&eNB_rrc_inst_NB_IoT->carrier[0]);
+  }
+  else
 	LOG_E(RRC,"unknown MSG3 format for NB-IoT for current test\n");
 }
 

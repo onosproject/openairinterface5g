@@ -267,8 +267,10 @@ void rx_sdu_NB_IoT(module_id_t module_id, int CC_id, frame_t frame, sub_frame_t 
                     printf("%02x ",payload_ptr[a]);
                   printf("\n");
                 rx_lengths[i]-=1;
-                LOG_I(MAC,"rx_lengths : %d\n", rx_lengths[i]);
-                mac_rrc_msg3_ind_NB_IoT(payload_ptr,rnti);
+                LOG_D(MAC,"rx_lengths : %d\n", rx_lengths[i]);
+                mac_rrc_msg3_ind_NB_IoT(payload_ptr,rnti,rx_lengths[i]);
+                receive_msg3_NB_IoT(mac_inst,rnti,PHR,DVI_index);
+                LOG_D(MAC,"recieve msg3 Successfully at MAC!\n");
                 //NB_IoT_mac_rrc_data_ind(payload_ptr,mac_inst,rnti);
                 //NB_IoT_receive_msg3(mac_inst,rnti,PHR,ul_total_buffer);
           break;

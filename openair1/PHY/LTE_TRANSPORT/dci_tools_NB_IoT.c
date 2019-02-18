@@ -215,7 +215,7 @@ int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB      *eNB,
 
  // NB_IoT_eNB_NPDCCH_t  *ndlcch     = ;
   void                  *DLSCH_DCI_NB_IoT = NULL;
-
+  int tmp = 0;
   uint8_t  *DCI_tmp = NULL;
   uint8_t  *DCI_flip = NULL;
 
@@ -326,9 +326,7 @@ int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB      *eNB,
     
     ndlcch->pdu[ncce_index]    = DCI_flip;
 
-    int tmp = 0;
-
-    printf("DCI PDU content:");
+    printf("DCI N1 RAR PDU content:");
     for (tmp =0;tmp<3;tmp++)
       printf("%d ",DCI_flip[tmp]);
     printf("\n");
@@ -389,7 +387,7 @@ int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB      *eNB,
     //add_dci_NB_IoT(eNB->DCI_pdu,DLSCH_DCI_NB_IoT,rnti,sizeof(DCIN1_t),aggregation,sizeof_DCIN1_t,DCIFormatN1,npdcch_start_symbol);
 
     /*Now configure the npdcch structure*/
-    ndlcch->A[ncce_index]               = sizeof(DCIN1_t); // number of bits in DCI
+    ndlcch->A[ncce_index]               = sizeof_DCIN1_t; // number of bits in DCI
 
     // ndlcch->ncce_index          =   NCCE_index;
     // ndlcch->aggregation_level   =   aggregation;
@@ -399,20 +397,33 @@ int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB      *eNB,
     ndlcch->active[ncce_index]                = 1;//will be activated by the corresponding NDSLCH pdu
 
     // use this value to configure PHY both harq_processes and resource mapping.
-    ndlcch->scheduling_delay[ncce_index]         = Idelay_to_K0(Sched_delay,32);
+    ndlcch->scheduling_delay[ncce_index]         = Idelay_to_K0(Sched_delay,4);
     ndlcch->resource_assignment[ncce_index]      = resource_to_subframe[ResAssign];  //from Isf of DCI to the number of subframe
     ndlcch->repetition_number[ncce_index]        = Irep_to_Nrep[RepNum];                             // repetition number for NPDSCH
-    ndlcch->dci_repetitions[ncce_index]          = DCIrep_to_real_rep(DCIRep,32);        ////??????? should be repalce by the value in spec table 16.6-3, check also Rmax
+    ndlcch->dci_repetitions[ncce_index]          = DCIrep_to_real_rep(DCIRep,4);        ////??????? should be repalce by the value in spec table 16.6-3, check also Rmax
     ndlcch->modulation[ncce_index]               = 2; //QPSK
     //if(ndlcch->round == 0){ //this should be set from initialization (init-lte)
 
   	//ndlcch->status[ncce_index]  = ACTIVE_NB_IoT;
   	ndlcch->mcs[ncce_index]     = mcs;
   	ndlcch->TBS[ncce_index]     = TBStable_NB_IoT[mcs][ResAssign]; // this table should be rewritten for nb-iot
-    ndlcch->pdu[ncce_index]    =  DLSCH_DCI_NB_IoT;
+    //ndlcch->pdu[ncce_index]    = DLSCH_DCI_NB_IoT;
+    DCI_tmp = (uint8_t*)DLSCH_DCI_NB_IoT;
 
+    DCI_flip = (uint8_t*)malloc(3*sizeof(uint8_t));
 
-    ndlcch->counter_repetition_number[ncce_index] = DCIrep_to_real_rep(DCIRep,32);          ////??????? should be repalce by the value in spec table 16.6-3, check also Rmax
+    DCI_flip[0]        = DCI_tmp[2]*2;
+    DCI_flip[1]        = DCI_tmp[1]*2;
+    DCI_flip[2]        = DCI_tmp[0]*2;
+    
+    ndlcch->pdu[ncce_index]    = DCI_flip;
+
+    printf("DCI N1 PDU content:");
+    for (tmp =0;tmp<3;tmp++)
+      printf("%d ",DCI_flip[tmp]);
+    printf("\n");
+
+    ndlcch->counter_repetition_number[ncce_index] = DCIrep_to_real_rep(DCIRep,4);          ////??????? should be repalce by the value in spec table 16.6-3, check also Rmax
     //}
     //ndlcch->frame[ncce_index]    = frame;
     //ndlcch->subframe[ncce_index] = subframe;
