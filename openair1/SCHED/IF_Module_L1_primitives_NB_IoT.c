@@ -240,20 +240,20 @@ void handle_nfapi_dlsch_pdu_NB_IoT(PHY_VARS_eNB *eNB,
 
 	  	  ndlsch->npdsch_start_symbol = rel13->start_symbol;
 	  	  ndlsch_harq->pdu  = sdu;
-	  	  ndlsch->active = 1;
+	  	  //ndlsch->active = 1;
 
-	  	  eNB->ndlsch_RAR->rnti 					= rel13->rnti;  // how this value is tested in line 177 ???? i am missing something ????
+	  	  ndlsch->rnti 					= rel13->rnti;  // how this value is tested in line 177 ???? i am missing something ????
 
-		  eNB->ndlsch_RAR->rnti_type 				= rel13->rnti_type;   
-  		  eNB->ndlsch_RAR->resource_assignment 		= rel13->resource_assignment ;    // for NDLSCH // this value point to -->  number of subframes needed
-          eNB->ndlsch_RAR->repetition_number 		= Irep_to_Nrep_x[rel13->repetition_number];
-  		  eNB->ndlsch_RAR->modulation 				= rel13->modulation;
+		  ndlsch->rnti_type 				= rel13->rnti_type;   
+  		  ndlsch->resource_assignment 		= rel13->resource_assignment ;    // for NDLSCH // this value point to -->  number of subframes needed
+          ndlsch->repetition_number 		= Irep_to_Nrep_x[rel13->repetition_number];
+  		  ndlsch->modulation 				= rel13->modulation;
 
-  		  eNB->ndlsch_RAR->number_of_subframes_for_resource_assignment   = rel13->number_of_subframes_for_resource_assignment; // for NDLSCH //table 16.4.1.3-1 // TS 36.213
+  		  ndlsch->number_of_subframes_for_resource_assignment   = rel13->number_of_subframes_for_resource_assignment; // for NDLSCH //table 16.4.1.3-1 // TS 36.213
 
-		  eNB->ndlsch_RAR->counter_repetition_number       = Irep_to_Nrep_x[rel13->repetition_number];
-		  eNB->ndlsch_RAR->counter_current_sf_repetition   = 0;
-		  eNB->ndlsch_RAR->pointer_to_subframe             = 0;
+		  ndlsch->counter_repetition_number       = Irep_to_Nrep_x[rel13->repetition_number];
+		  ndlsch->counter_current_sf_repetition   = 0;
+		  ndlsch->pointer_to_subframe             = 0;
 	  }
 
   }
