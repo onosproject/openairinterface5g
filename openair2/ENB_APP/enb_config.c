@@ -2144,6 +2144,8 @@ int RCconfig_X2(MessageDef *msg_p, uint32_t i) {
 		  X2AP_REGISTER_ENB_REQ (msg_p).frame_type[J] = FDD;
 		} else  if (strcmp(ccparams_lte.frame_type, "TDD") == 0) {
 		  X2AP_REGISTER_ENB_REQ (msg_p).frame_type[J] = TDD;
+      X2AP_REGISTER_ENB_REQ (msg_p).subframeAssignment[J] = tdd_config;
+      X2AP_REGISTER_ENB_REQ (msg_p).specialSubframe[J] = tdd_config_s;
 		} else {
 		  AssertFatal (0,
 			       "Failed to parse eNB configuration file %s, enb %d unknown value \"%s\" for frame_type choice: FDD or TDD !\n",
