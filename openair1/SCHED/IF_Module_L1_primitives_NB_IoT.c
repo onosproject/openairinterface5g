@@ -203,33 +203,11 @@ void handle_nfapi_dlsch_pdu_NB_IoT(PHY_VARS_eNB *eNB,
 	  //if(eNB->ndlsch_RAR != NULL && rel13->rnti == eNB->ndlsch_RAR->rnti) //rnti for the RAR should have been set priviously by the DCI
 	  {
 		  
-	  	  eNB->ndlsch_RAR->active = 1;
-	  	  eNB->ndlsch_RAR->harq_process->TBS = rel13->length;
-          /*uint8_t   tab_rar[7];
-		  tab_rar[0]=64;
-      	  tab_rar[1]=0;
-          tab_rar[2]=9;
-          tab_rar[3]=96;
-          tab_rar[4]=64;
-          tab_rar[5]=255; // 16
-          tab_rar[6]=242;     // 5
-
-		  eNB->ndlsch_RAR->harq_process->pdu 		= tab_rar;*/
-
-		  eNB->ndlsch_RAR->harq_process->pdu 		= sdu;
-		  
-		  /*printf("RAR PDU content:");
-		  int fori = 0;
-		  for(fori=0;fori<7;fori++)
-		  {
-			printf("%d ",eNB->ndlsch_RAR->harq_process->pdu[fori]);
-		  }
-		  printf("\n");*/
-			
-		  eNB->ndlsch_RAR->npdsch_start_symbol 		= rel13->start_symbol;
 		  eNB->ndlsch_RAR->active 					= 1;
+		  eNB->ndlsch_RAR->active_msg2              = 1;       /// activated only when NPDSCH is transmitting msg2
 
-		  eNB->ndlsch_RAR->rnti 					= rel13->rnti;  
+		  eNB->ndlsch_RAR->rnti 					= rel13->rnti;
+		  eNB->ndlsch_RAR->npdsch_start_symbol 		= rel13->start_symbol;  
 
 		  eNB->ndlsch_RAR->rnti_type 				= rel13->rnti_type;
   		  eNB->ndlsch_RAR->resource_assignment 		= rel13->resource_assignment;    // for NDLSCH // this value point to -->  number of subframes needed
@@ -242,7 +220,8 @@ void handle_nfapi_dlsch_pdu_NB_IoT(PHY_VARS_eNB *eNB,
 		  eNB->ndlsch_RAR->counter_current_sf_repetition   = 0;
 		  eNB->ndlsch_RAR->pointer_to_subframe             = 0;
 		  //printf("number of subframe : %d, Rep of subframe : %d\n",eNB->ndlsch_RAR->number_of_subframes_for_resource_assignment,eNB->ndlsch_RAR->counter_repetition_number);
-
+		  eNB->ndlsch_RAR->harq_process->TBS               = rel13->length;
+		  eNB->ndlsch_RAR->harq_process->pdu 		       = sdu;
 	  }
 	  else
 	  { //this for ue data
@@ -468,7 +447,7 @@ void schedule_response_NB_IoT(Sched_Rsp_NB_IoT_t *Sched_INFO)
             nulsch->SF_idx             = nfapi_parameters_rel13->sf_idx;
             nulsch->HARQ_ACK_resource  = nfapi_parameters_rel13->nb_harq_information.nb_harq_information_rel13_fdd.harq_ack_resource;
 
-			nulsch_harq->subcarrier_spacing      = nfapi_parameters_rel13->handle; //* TO FIXE*///  // 0 for 15 KHz and 1 for 3.75 KHz// TODO : get the value from the UL_grant of MSG3 
+			//nulsch_harq->subcarrier_spacing      = nfapi_parameters_rel13->handle; // get from the UL_grant of MSG3 
 			nulsch_harq->subcarrier_indication   = nfapi_parameters_rel13->subcarrier_indication;    // Isc =0->18 , or 0->47 // format 2, 0->3 or 0->7
 			nulsch_harq->resource_assignment     = nfapi_parameters_rel13->resource_assignment;    // valid for format 1  // this should be set by DCI N0 // not used for msg3 // I_RU --> helps to get N_RU
 			nulsch_harq->mcs                     = nfapi_parameters_rel13->mcs;                 // I_mcs = 0->10 (single tone) and 0->12 (multi-tone)
