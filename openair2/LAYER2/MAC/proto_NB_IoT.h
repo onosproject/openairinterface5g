@@ -121,11 +121,12 @@ void msg4_do_retransmit_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, rnti_t c_rnti);
 void schedule_RA_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst);
 void init_RA_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, uint8_t preamble_index, ce_level_t ce_level, uint32_t sfn_id, uint16_t ta);
 void schedule_rar_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, int abs_subframe);
-void receive_msg3_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, rnti_t c_rnti, uint32_t phr, uint32_t ul_total_buffer);
+void receive_msg3_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, rnti_t c_rnti, uint32_t phr, uint32_t ul_total_buffer, uint8_t* ccch_sdu, uint8_t* msg4_rrc_sdu);
 void schedule_msg3_retransimission_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, int abs_subframe);
 void schedule_msg4_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, int abs_subframe);
 void fill_rar_NB_IoT(eNB_MAC_INST_NB_IoT *inst, RA_TEMPLATE_NB_IoT *ra_template, uint8_t msg3_schedule_delay, uint8_t msg3_rep, sched_temp_UL_NB_IoT_t *schedule_template);
 void receive_msg4_ack_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, rnti_t rnti);
+void fill_msg4_NB_IoT(eNB_MAC_INST_NB_IoT *inst, RA_TEMPLATE_NB_IoT *ra_template);
 
 //USS
 void schedule_uss_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_inst, uint32_t subframe, uint32_t frame, uint32_t hypersfn, int index_ss);

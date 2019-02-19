@@ -121,9 +121,9 @@ extern uint16_t                     two_tier_hexagonal_cellIds[7];
 
 mui_t                               rrc_eNB_mui = 0;
 
-void generate_msg4_NB_IoT(rrc_eNB_carrier_data_NB_IoT_t *carrier)
+uint8_t* generate_msg4_NB_IoT(rrc_eNB_carrier_data_NB_IoT_t *carrier)
 {
-  LOG_I(RRC,"start the RRC connection setup PDU\n");
+  LOG_D(RRC,"start the RRC connection setup PDU\n");
 
   rrc_eNB_ue_context_NB_IoT_t* ue_context_pP_NB_IoT;
       
@@ -140,7 +140,7 @@ void generate_msg4_NB_IoT(rrc_eNB_carrier_data_NB_IoT_t *carrier)
                                                                                 SRB_configList_NB_IoT,
                                                                                 &ue_context_pP_NB_IoT->ue_context.physicalConfigDedicated_NB_IoT);
 
-  LOG_I(RRC,"[MSG] RRC Connection Setup NB-IoT\n");
+  LOG_I(RRC,"[MSG] RRC Connection Setup NB-IoT: ");
 
   int                                 cnt;
 
@@ -149,13 +149,16 @@ void generate_msg4_NB_IoT(rrc_eNB_carrier_data_NB_IoT_t *carrier)
     printf("%02x ", carrier[0].Srb0.Tx_buffer.Payload[cnt]);
   }
   printf("\n");
+
+  return carrier[0].Srb0.Tx_buffer.Payload;
 }
 
-void mac_rrc_msg3_ind_NB_IoT(uint8_t *payload_ptr, uint16_t rnti, uint32_t length)
+uint8_t* mac_rrc_msg3_ind_NB_IoT(uint8_t *payload_ptr, uint16_t rnti, uint32_t length)
 {
   LOG_I(RRC,"recieve MSG3 CCCH SDU from MAC\n");
   asn_dec_rval_t                      dec_rval;
   struct rrc_eNB_ue_context_NB_IoT_s  *ue_context_p = NULL;
+  uint8_t* msg4_rrc_sdu = NULL;
   SRB_INFO_NB_IoT *srb_info = NULL;
   srb_info = &eNB_rrc_inst_NB_IoT->carrier[0].Srb0;
   memcpy(srb_info->Rx_buffer.Payload,payload_ptr,length);
@@ -208,10 +211,11 @@ void mac_rrc_msg3_ind_NB_IoT(uint8_t *payload_ptr, uint16_t rnti, uint32_t lengt
     {
 	     LOG_E(RRC,"unknown TMSI or Random Value format in RRC connection request NB\n");
     }
-    generate_msg4_NB_IoT(&eNB_rrc_inst_NB_IoT->carrier[0]);
+    msg4_rrc_sdu = generate_msg4_NB_IoT(&eNB_rrc_inst_NB_IoT->carrier[0]);
   }
   else
-	LOG_E(RRC,"unknown MSG3 format for NB-IoT for current test\n");
+	 LOG_E(RRC,"unknown MSG3 format for NB-IoT for current test\n");
+  return msg4_rrc_sdu;
 }
 
 uint8_t *get_NB_IoT_MIB(

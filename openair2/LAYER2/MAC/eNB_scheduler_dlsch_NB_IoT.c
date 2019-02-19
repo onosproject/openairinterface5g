@@ -457,7 +457,7 @@ uint32_t generate_dlsch_header_NB_IoT(uint8_t *pdu, uint32_t num_sdu, logical_ch
 	{
 		mac_header->LCID=PADDING;
 		mac_header->E=1;
-		mac_header->F2=0;
+		//mac_header->F2=0;
 		mac_header->R=0;
 		mac_header++;
 		offset++;
@@ -466,7 +466,7 @@ uint32_t generate_dlsch_header_NB_IoT(uint8_t *pdu, uint32_t num_sdu, logical_ch
 	{
 		mac_header->LCID=PADDING;
 		mac_header->E=1;
-		mac_header->F2=0;
+		//mac_header->F2=0;
 		mac_header->R=0;
 		mac_header++;
 		offset++;
@@ -475,7 +475,7 @@ uint32_t generate_dlsch_header_NB_IoT(uint8_t *pdu, uint32_t num_sdu, logical_ch
 	{
 		mac_header->LCID=DRX_COMMAND;
 		mac_header->E=1;
-		mac_header->F2=0;
+		//mac_header->F2=0;
 		mac_header->R=0;
 		mac_header++;
 		num_subheader--;
@@ -487,7 +487,7 @@ uint32_t generate_dlsch_header_NB_IoT(uint8_t *pdu, uint32_t num_sdu, logical_ch
         {
             mac_header->E=0;
             mac_header->LCID = logical_channel[i];
-            mac_header->F2=0;
+            //mac_header->F2=0;
             mac_header->R=0;
             offset++;
             LOG_D(MAC,"last sdu\n");
@@ -527,7 +527,7 @@ uint32_t generate_dlsch_header_NB_IoT(uint8_t *pdu, uint32_t num_sdu, logical_ch
 	{
 		mac_header->LCID=PADDING;
 		mac_header->E=0;
-		mac_header->F2=0;
+		//mac_header->F2=0;
 		mac_header->R=0;
 		mac_header++;
 		offset++;

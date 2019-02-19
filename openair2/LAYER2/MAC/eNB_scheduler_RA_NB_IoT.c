@@ -382,7 +382,7 @@ void msg4_do_retransmit_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, rnti_t c_rnti){
 	return ;
 }
 
-void receive_msg3_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, rnti_t c_rnti, uint32_t phr, uint32_t ul_total_buffer){
+void receive_msg3_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, rnti_t c_rnti, uint32_t phr, uint32_t ul_total_buffer, uint8_t* ccch_sdu, uint8_t* msg4_rrc_sdu){
 	//	since successful receive msg3, tc-rnti become c-rnti.
 
 	RA_TEMPLATE_NB_IoT *msg3_nodes = mac_inst->RA_msg3_list.head;
@@ -391,9 +391,11 @@ void receive_msg3_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, rnti_t c_rnti, uint32_t 
 	if((RA_TEMPLATE_NB_IoT *)0 != msg3_nodes)
 	while((RA_TEMPLATE_NB_IoT *)0 != msg3_nodes){
 		if(msg3_nodes->ue_rnti == c_rnti){
-			LOG_I(MAC,"add ue in\n");
+			LOG_D(MAC,"add ue in\n");
 			add_ue_NB_IoT(mac_inst, c_rnti, msg3_nodes->ce_level, phr, ul_total_buffer);//	rnti, ce level
-			LOG_I(MAC,"[%04d][RA scheduler][MSG3][CE%d] Receive MSG3 T-CRNTI %d Preamble Index %d \n", mac_inst->current_subframe, msg3_nodes->ce_level, msg3_nodes->ue_rnti, msg3_nodes->preamble_index);
+			LOG_D(MAC,"[%04d][RA scheduler][MSG3][CE%d] Receive MSG3 T-CRNTI %d Preamble Index %d \n", mac_inst->current_subframe, msg3_nodes->ce_level, msg3_nodes->ue_rnti, msg3_nodes->preamble_index);
+			msg3_nodes->ccch_buffer = ccch_sdu;
+			msg3_nodes->msg4_rrc_buffer = msg4_rrc_sdu;
 			migrate_node = msg3_nodes;
 
 			//	maintain list
@@ -792,6 +794,7 @@ void schedule_msg4_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, int abs_subframe){
 
 			if(0==fail){
 			    LOG_D(MAC,"[%04d][RA scheduler][MSG4][CE%d] rnti: %d scheduling success\n", abs_subframe-1, msg4_nodes->ce_level, msg4_nodes->ue_rnti);
+			    fill_msg4_NB_IoT(mac_inst,msg4_nodes);
 			    msg4_nodes->wait_msg4_ack = 1;	
 				DCIFormatN1_t *dci_n1_msg4 = (DCIFormatN1_t *)malloc(sizeof(DCIFormatN1_t));
 				//	dci entity
@@ -840,6 +843,7 @@ void schedule_msg4_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, int abs_subframe){
 		    	msg4_result->R_harq = 0;
 				msg4_result->next = (schedule_result_t *)0;
 				msg4_result->DCI_pdu = (void *)dci_n1_msg4;
+				msg4_result->DLSCH_pdu = msg4_nodes->msg4_buffer;
 
 				harq_result = (schedule_result_t *)malloc(sizeof(schedule_result_t));
 				harq_result->rnti = msg4_nodes->ue_rnti;
@@ -857,7 +861,7 @@ void schedule_msg4_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, int abs_subframe){
 
 			    				
 				LOG_I(MAC,"[%04d][RA scheduler][MSG4] UE:%x MSG4DCI %d-%d MSG4 %d-%d HARQ %d-%d\n", abs_subframe-1, msg4_nodes->ue_rnti, dci_first_subframe, dci_end_subframe, msg4_first_subframe, msg4_end_subframe, HARQ_info.sf_start, HARQ_info.sf_end);
-	            LOG_I(MAC,"[%04d][RA scheduler][MSG4][CE%d] MSG4 DCI %d-%d MSG4 %d-%d HARQ %d-%d\n", abs_subframe-1, msg4_nodes->ce_level, dci_first_subframe, dci_end_subframe, msg4_first_subframe, msg4_end_subframe, HARQ_info.sf_start, HARQ_info.sf_end);
+	            LOG_D(MAC,"[%04d][RA scheduler][MSG4][CE%d] MSG4 DCI %d-%d MSG4 %d-%d HARQ %d-%d\n", abs_subframe-1, msg4_nodes->ce_level, dci_first_subframe, dci_end_subframe, msg4_first_subframe, msg4_end_subframe, HARQ_info.sf_start, HARQ_info.sf_end);
 	            msg4_nodes->msg4_retransmit_count++;
 	            
 				//	fill dci resource
@@ -941,7 +945,7 @@ void fill_rar_NB_IoT(
 	uint8_t msg3_repetition = msg3_rep;// 3bit
 	uint8_t mcs_index = 2;//3bit, msg3 88bits 3'b000
 
-		LOG_I(MAC,"Dump UL Grant: subcarrier spacing : %d, subcarrier indication: %d, delay : %d, Rep : %d, MCS : %d\n",subcarrier_spacing,subcarrier_indication,i_delay,msg3_repetition,mcs_index);
+	LOG_D(MAC,"Dump UL Grant: subcarrier spacing : %d, subcarrier indication: %d, delay : %d, Rep : %d, MCS : %d\n",subcarrier_spacing,subcarrier_indication,i_delay,msg3_repetition,mcs_index);
 
 	rar[1] |= (subcarrier_spacing<<3) | (subcarrier_indication>>3);
 	rar[2] = (uint8_t)(subcarrier_indication<<5) | (i_delay<<3) | msg3_repetition;
@@ -953,4 +957,50 @@ void fill_rar_NB_IoT(
 }
 
 
+//  Generate MSG4 MAC PDU
+void fill_msg4_NB_IoT(
+	eNB_MAC_INST_NB_IoT *inst, 
+	RA_TEMPLATE_NB_IoT *ra_template
+)
+{
+	uint8_t *dlsch_buffer = &ra_template->msg4_buffer[0];
+	// we have three subheader here: 1 for padding, 2 for Control element of Contention resolution, 3 for CCCH
+	SCH_SUBHEADER_FIXED_NB_IoT *msg4_sub_1 = (SCH_SUBHEADER_FIXED_NB_IoT*)dlsch_buffer;
+	msg4_sub_1->R = 0;
+	msg4_sub_1->E = 1;
+	msg4_sub_1->LCID = PADDING;
 
+	SCH_SUBHEADER_FIXED_NB_IoT *msg4_sub_2 = (SCH_SUBHEADER_FIXED_NB_IoT *) (msg4_sub_1 +1);
+	msg4_sub_2->R = 0;
+	msg4_sub_2->E = 1;
+	msg4_sub_2->LCID = UE_CONTENTION_RESOLUTION;
+
+	SCH_SUBHEADER_FIXED_NB_IoT *msg4_sub_3 = (SCH_SUBHEADER_FIXED_NB_IoT *) (msg4_sub_2 +1);
+	msg4_sub_3->R= 0;
+	msg4_sub_3->E= 0;
+	msg4_sub_3->LCID = CCCH_NB_IoT;
+
+	uint8_t *con_res = (uint8_t *)(dlsch_buffer+3);
+
+	con_res[0] = ra_template->ccch_buffer[0];
+	con_res[1] = ra_template->ccch_buffer[1];
+	con_res[2] = ra_template->ccch_buffer[2];
+	con_res[3] = ra_template->ccch_buffer[3];
+	con_res[4] = ra_template->ccch_buffer[4];
+	con_res[5] = ra_template->ccch_buffer[5];
+
+	uint8_t *msg4_rrc_sdu = (uint8_t *) (dlsch_buffer+9);
+
+	msg4_rrc_sdu[0] = ra_template->msg4_rrc_buffer[0];
+	msg4_rrc_sdu[1] = ra_template->msg4_rrc_buffer[1];
+	msg4_rrc_sdu[2] = ra_template->msg4_rrc_buffer[2];
+	msg4_rrc_sdu[3] = ra_template->msg4_rrc_buffer[3];
+	msg4_rrc_sdu[4] = ra_template->msg4_rrc_buffer[4];
+	msg4_rrc_sdu[5] = ra_template->msg4_rrc_buffer[5];
+	msg4_rrc_sdu[6] = ra_template->msg4_rrc_buffer[6];
+
+	printf("MSG4 PDU = ");
+	for(int i=0; i<16;i++)
+		printf("%02x ",dlsch_buffer[i]);
+	printf("\n");
+}

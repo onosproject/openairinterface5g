@@ -220,7 +220,9 @@ void rx_sdu_NB_IoT(module_id_t module_id, int CC_id, frame_t frame, sub_frame_t 
   int ul_total_buffer = 0;
   //mac_NB_IoT_t *mac_inst;
   UE_TEMPLATE_NB_IoT *UE_info;
-  LOG_I(MAC,"RX_SDU_IN\n");
+  uint8_t* msg4_rrc_pdu = NULL;
+
+  LOG_D(MAC,"RX_SDU_IN\n");
   //mac_inst = get_mac_inst(module_id);
 
   // note: if lcid < 25 this is sdu, otherwise this is CE
@@ -261,15 +263,15 @@ void rx_sdu_NB_IoT(module_id_t module_id, int CC_id, frame_t frame, sub_frame_t 
                 LOG_I(MAC,"PHR = %d, ul_total_buffer = %d\n",PHR,ul_total_buffer);
                 // go to payload
                 payload_ptr+=1; 
-		// Note that the first 6 byte (48 bits) of this CCCH SDU should be encoded in the MSG4 for contention resolution 
+		            // Note that the first 6 byte (48 bits) of this CCCH SDU should be encoded in the MSG4 for contention resolution 
                 printf("CCCH SDU content: ");
                   for(int a = 0; a<9;a++)
                     printf("%02x ",payload_ptr[a]);
                   printf("\n");
                 rx_lengths[i]-=1;
                 LOG_D(MAC,"rx_lengths : %d\n", rx_lengths[i]);
-                mac_rrc_msg3_ind_NB_IoT(payload_ptr,rnti,rx_lengths[i]);
-                receive_msg3_NB_IoT(mac_inst,rnti,PHR,DVI_index);
+                msg4_rrc_pdu = mac_rrc_msg3_ind_NB_IoT(payload_ptr,rnti,rx_lengths[i]);
+                receive_msg3_NB_IoT(mac_inst,rnti,PHR,DVI_index,payload_ptr,msg4_rrc_pdu);
                 LOG_D(MAC,"recieve msg3 Successfully at MAC!\n");
                 //NB_IoT_mac_rrc_data_ind(payload_ptr,mac_inst,rnti);
                 //NB_IoT_receive_msg3(mac_inst,rnti,PHR,ul_total_buffer);

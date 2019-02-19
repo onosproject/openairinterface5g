@@ -424,9 +424,8 @@ typedef struct {
 /*!\brief MAC subheader short without length field */
 typedef struct {
   uint8_t LCID:5;
-  uint8_t F2:1;
   uint8_t E:1;
-  uint8_t R:1;
+  uint8_t R:2;
 } __attribute__((__packed__))SCH_SUBHEADER_FIXED_NB_IoT;
 
 
@@ -549,7 +548,9 @@ typedef struct RA_TEMPLATE_NB_IoT_s{
   boolean_t wait_msg4_ack;
   boolean_t wait_msg3_ack;
   uint8_t rar_buffer[7];
-
+  uint8_t *ccch_buffer;
+  uint8_t msg4_buffer[16];
+  uint8_t *msg4_rrc_buffer;
 } RA_TEMPLATE_NB_IoT;
 
 typedef struct RA_template_list_s{
