@@ -3622,6 +3622,33 @@ flexran_rrc_eNB_generate_defaultRRCConnectionReconfiguration(const protocol_ctxt
   MeasObj->measObject.choice.measObjectEUTRA.neighCellConfig.size = 1;
   MeasObj->measObject.choice.measObjectEUTRA.neighCellConfig.bits_unused = 6;
   MeasObj->measObject.choice.measObjectEUTRA.offsetFreq = NULL;   // Default is 15 or 0dB
+
+
+  if (rrc_inst->carrier[0].sib1->tdd_Config!=NULL) {
+    MeasObj->measObject.choice.measObjectEUTRA.ext1 = CALLOC(1, sizeof(struct MeasObjectEUTRA__ext1));
+    MeasObj->measObject.choice.measObjectEUTRA.ext1->measCycleSCell_r10 = NULL;
+    MeasObj->measObject.choice.measObjectEUTRA.ext1->measSubframePatternConfigNeigh_r10 = CALLOC(1, sizeof(struct MeasSubframePatternConfigNeigh_r10));
+    MeasObj->measObject.choice.measObjectEUTRA.ext1->measSubframePatternConfigNeigh_r10->present=MeasSubframePatternConfigNeigh_r10_PR_setup;
+    MeasObj->measObject.choice.measObjectEUTRA.ext1->measSubframePatternConfigNeigh_r10->choice.setup.measSubframePatternNeigh_r10.present=MeasSubframePattern_r10_PR_subframePatternTDD_r10;
+    MeasObj->measObject.choice.measObjectEUTRA.ext1->measSubframePatternConfigNeigh_r10->choice.setup.measSubframePatternNeigh_r10.choice.subframePatternTDD_r10.present=MeasSubframePattern_r10__subframePatternTDD_r10_PR_subframeConfig1_5_r10;
+    MeasObj->measObject.choice.measObjectEUTRA.ext1->measSubframePatternConfigNeigh_r10->choice.setup.measSubframePatternNeigh_r10.choice.subframePatternTDD_r10.choice.subframeConfig1_5_r10.buf=CALLOC(3, sizeof(uint8_t));
+    MeasObj->measObject.choice.measObjectEUTRA.ext1->measSubframePatternConfigNeigh_r10->choice.setup.measSubframePatternNeigh_r10.choice.subframePatternTDD_r10.choice.subframeConfig1_5_r10.size=3;
+    MeasObj->measObject.choice.measObjectEUTRA.ext1->measSubframePatternConfigNeigh_r10->choice.setup.measSubframePatternNeigh_r10.choice.subframePatternTDD_r10.choice.subframeConfig1_5_r10.bits_unused=4; 
+    switch (rrc_inst->carrier[0].sib1->tdd_Config->subframeAssignment) {
+    case 1: //subframe 0,4,5,9
+      MeasObj->measObject.choice.measObjectEUTRA.ext1->measSubframePatternConfigNeigh_r10->choice.setup.measSubframePatternNeigh_r10.choice.subframePatternTDD_r10.choice.subframeConfig1_5_r10.buf[0]=0x8C;
+      MeasObj->measObject.choice.measObjectEUTRA.ext1->measSubframePatternConfigNeigh_r10->choice.setup.measSubframePatternNeigh_r10.choice.subframePatternTDD_r10.choice.subframeConfig1_5_r10.buf[1]=0x63;
+      MeasObj->measObject.choice.measObjectEUTRA.ext1->measSubframePatternConfigNeigh_r10->choice.setup.measSubframePatternNeigh_r10.choice.subframePatternTDD_r10.choice.subframeConfig1_5_r10.buf[2]=0x10;
+      break;
+
+    default: //subframe 0 , 5
+      MeasObj->measObject.choice.measObjectEUTRA.ext1->measSubframePatternConfigNeigh_r10->choice.setup.measSubframePatternNeigh_r10.choice.subframePatternTDD_r10.choice.subframeConfig1_5_r10.buf[0]=0x84;
+      MeasObj->measObject.choice.measObjectEUTRA.ext1->measSubframePatternConfigNeigh_r10->choice.setup.measSubframePatternNeigh_r10.choice.subframePatternTDD_r10.choice.subframeConfig1_5_r10.buf[1]=0x21;
+      MeasObj->measObject.choice.measObjectEUTRA.ext1->measSubframePatternConfigNeigh_r10->choice.setup.measSubframePatternNeigh_r10.choice.subframePatternTDD_r10.choice.subframeConfig1_5_r10.buf[2]=0x00;
+      break;
+    }
+  }
+
   MeasObj->measObject.choice.measObjectEUTRA.cellsToAddModList =
     (LTE_CellsToAddModList_t *) CALLOC(1, sizeof(*CellsToAddModList));
   CellsToAddModList = MeasObj->measObject.choice.measObjectEUTRA.cellsToAddModList;
@@ -4763,7 +4790,16 @@ rrc_eNB_generate_HO_RRCConnectionReconfiguration(const protocol_ctxt_t *const ct
   physicalConfigDedicated2->pucch_ConfigDedicated->ackNackRepetition.present =
     LTE_PUCCH_ConfigDedicated__ackNackRepetition_PR_release;
   physicalConfigDedicated2->pucch_ConfigDedicated->ackNackRepetition.choice.release = 0;
+<<<<<<< HEAD
   physicalConfigDedicated2->pucch_ConfigDedicated->tdd_AckNackFeedbackMode = NULL;    //PUCCH_ConfigDedicated__tdd_AckNackFeedbackMode_multiplexing;
+=======
+  if (rrc_inst->carrier[0].sib1->tdd_Config==NULL) {
+    physicalConfigDedicated2->pucch_ConfigDedicated->tdd_AckNackFeedbackMode = NULL;    //PUCCH_ConfigDedicated__tdd_AckNackFeedbackMode_multiplexing;
+  }else{
+    physicalConfigDedicated2->pucch_ConfigDedicated->tdd_AckNackFeedbackMode= CALLOC(1,sizeof(long));
+    *(physicalConfigDedicated2->pucch_ConfigDedicated->tdd_AckNackFeedbackMode) = PUCCH_ConfigDedicated__tdd_AckNackFeedbackMode_bundling;
+  }
+>>>>>>> 4295321e4... Add x2handover message for tdd.
   // Pusch_config_dedicated
   physicalConfigDedicated2->pusch_ConfigDedicated->betaOffset_ACK_Index = 0;  // 2.00
   physicalConfigDedicated2->pusch_ConfigDedicated->betaOffset_RI_Index = 0;   // 1.25
