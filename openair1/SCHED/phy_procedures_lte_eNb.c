@@ -2110,7 +2110,7 @@ void release_rnti_of_phy(module_id_t mod_id){
         for (CC_id = 0; CC_id < MAX_NUM_CCs; CC_id++) {
           eNB_PHY = RC.eNB[mod_id][CC_id];
           rnti = release_rntis.UE_free_rnti[i];
-          for (j=0; j<=NUMBER_OF_UE_MAX; j++) {
+          for (j=0; j<NUMBER_OF_UE_MAX; j++) {
               ulsch = eNB_PHY->ulsch[j];
               if((ulsch != NULL) && (ulsch->rnti == rnti)){
                 LOG_I(PHY, "clean_eNb_ulsch ulsch[%d] UE %x\n", j, rnti);
@@ -2121,6 +2121,11 @@ void release_rnti_of_phy(module_id_t mod_id){
                 LOG_I(PHY, "clean_eNb_dlsch dlsch[%d] UE %x \n", j, rnti);
                 clean_eNb_dlsch(dlsch);
               }
+          }
+          ulsch = eNB_PHY->ulsch[j];//clear ulsch[NUMBER_OF_UE_MAX+1]
+          if((ulsch != NULL) && (ulsch->rnti == rnti)){
+              LOG_I(PHY, "clean_eNb_ulsch ulsch[%d] UE %x\n", j, rnti);
+              clean_eNb_ulsch(ulsch);
           }
           for(j=0; j<NUMBER_OF_UCI_VARS_MAX; j++) {
               if(eNB_PHY->uci_vars[j].rnti == rnti){
