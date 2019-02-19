@@ -1058,7 +1058,7 @@ void pscch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
   int length = log2_approx(slsch->N_SL_RB_data*(slsch->N_SL_RB_data+1)>>1)+32;
   
   //Panos: Modification here to comply with the new definition of dci_decoding()
-  dci_decoding(length,2,f,(uint8_t*)&sci_rx);
+  dci_decoding(length,1,f,(uint8_t*)&sci_rx);
   //dci_decoding(length,E,f,(uint8_t*)&sci_rx);
   ((uint8_t *)&sci_rx_flip)[0] = ((uint8_t *)&sci_rx)[7];
   ((uint8_t *)&sci_rx_flip)[1] = ((uint8_t *)&sci_rx)[6];
