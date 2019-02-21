@@ -81,39 +81,6 @@ int find_inst(struct net_device *dev)
 }
 
 //---------------------------------------------------------------------------
-
-#ifndef PDCP_USE_NETLINK
-//void interrupt(void){
-void *nas_interrupt(void)
-{
-  //---------------------------------------------------------------------------
-  uint8_t cxi;
-
-  //  struct nas_priv *priv=netdev_priv(dev_id);
-  //  unsigned int flags;
-
-  //  priv->lock = SPIN_LOCK_UNLOCKED;
-
-#ifdef DEBUG_INTERRUPT
-  printk("INTERRUPT - begin\n");
-#endif
-  //  spin_lock_irqsave(&priv->lock,flags);
-  cxi=0;
-  //  mesh_GC_receive();
-  //  mesh_DC_receive(naspriv->cx+cxi);
-#ifndef PDCP_USE_NETLINK
-  nas_COMMON_QOS_receive();
-#endif
-  //  spin_unlock_irqrestore(&priv->lock,flags);
-#ifdef DEBUG_INTERRUPT
-  printk("INTERRUPT: end\n");
-#endif
-  //  return 0;
-  return NULL;
-}
-#endif //NETLINK
-
-//---------------------------------------------------------------------------
 // Called by ifconfig when the device is activated by ifconfig
 int nas_open(struct net_device *dev)
 {

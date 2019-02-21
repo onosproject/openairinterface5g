@@ -56,7 +56,7 @@ int32_t generate_prach( PHY_VARS_UE *ue, uint8_t eNB_id, uint8_t subframe, uint1
   uint8_t preamble_index     = ue->prach_resources[eNB_id]->ra_PreambleIndex;
   uint8_t tdd_mapindex       = ue->prach_resources[eNB_id]->ra_TDD_map_index;
   int16_t *prachF           = ue->prach_vars[eNB_id]->prachF;
-  static int16_t prach_tmp[45600*2] __attribute__((aligned(32)));
+  static int16_t prach_tmp[45600*4] __attribute__((aligned(32)));
   int16_t *prach            = prach_tmp;
   int16_t *prach2;
   int16_t amp               = ue->prach_vars[eNB_id]->amp;
@@ -82,7 +82,7 @@ int32_t generate_prach( PHY_VARS_UE *ue, uint8_t eNB_id, uint8_t subframe, uint1
   int i, prach_len;
   uint16_t first_nonzero_root_idx=0;
 
-#if defined(EXMIMO) || defined(OAI_USRP)
+#if defined(MANAGED_RF)
   prach_start =  (ue->rx_offset+subframe*ue->frame_parms.samples_per_tti-ue->hw_timing_advance-ue->N_TA_offset);
 #ifdef PRACH_DEBUG
     LOG_I(PHY,"[UE %d] prach_start %d, rx_offset %d, hw_timing_advance %d, N_TA_offset %d\n", ue->Mod_id,
@@ -488,7 +488,7 @@ int32_t generate_prach( PHY_VARS_UE *ue, uint8_t eNB_id, uint8_t subframe, uint1
 
   AssertFatal(prach_fmt<4,
 	      "prach_fmt4 not fully implemented" );
-#if defined(EXMIMO) || defined(OAI_USRP) || defined(OAI_BLADERF) || defined(OAI_LMSSDR)
+#if defined(MANAGED_RF)
   int j;
   int overflow = prach_start + prach_len - LTE_NUMBER_OF_SUBFRAMES_PER_FRAME*ue->frame_parms.samples_per_tti;
   LOG_I( PHY, "prach_start=%d, overflow=%d\n", prach_start, overflow );

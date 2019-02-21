@@ -104,6 +104,7 @@ void debug_pdcp_pc5s_sdu(sidelink_pc5s_element *sl_pc5s_msg, char *title) {
   LOG_I(PDCP,"PC5-S message, destinationL1Id: 0x%08x\n)\n", sl_pc5s_msg->pc5s_header.destinationL2Id);
 }
 //-----------------------------------------------------------------------------
+
 int pdcp_fifo_flush_sdus(const protocol_ctxt_t *const  ctxt_pP) {
   mem_block_t     *sdu_p;
   int              pdcp_nb_sdu_sent = 0;
@@ -119,6 +120,7 @@ int pdcp_fifo_flush_sdus(const protocol_ctxt_t *const  ctxt_pP) {
       if( LOG_DEBUGFLAG(DEBUG_PDCP) ) {
         debug_pdcp_pc5s_sdu((sidelink_pc5s_element *)&(sdu_p->data[sizeof(pdcp_data_ind_header_t)]),
                             "pdcp_fifo_flush_sdus received aPC5S message");
+
       }
 
       ret = sendto(pdcp_pc5_sockfd, &(sdu_p->data[sizeof(pdcp_data_ind_header_t)]),
@@ -136,7 +138,6 @@ int pdcp_fifo_flush_sdus(const protocol_ctxt_t *const  ctxt_pP) {
     free_mem_block (sdu_p, __func__);
     pdcp_nb_sdu_sent ++;
   }
-
   return pdcp_nb_sdu_sent;
 }
 

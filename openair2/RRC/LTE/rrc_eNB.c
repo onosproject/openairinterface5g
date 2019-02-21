@@ -63,6 +63,7 @@
 #include "LTE_PeriodicBSR-Timer-r12.h"
 #include "LTE_RetxBSR-Timer-r12.h"
 #include "common/utils/LOG/vcd_signal_dumper.h"
+#include <openair2/RRC/LTE/rrc_eNB_S1AP.h>
 
 #include "T.h"
 
@@ -6296,8 +6297,8 @@ rrc_eNB_process_RRCConnectionReconfigurationComplete(
 
           if (PDCP_USE_NETLINK && (!LINK_ENB_PDCP_TO_GTPV1U)) {
             // can mean also IPV6 since ether -> ipv6 autoconf
-#   if !defined(OAI_NW_DRIVER_TYPE_ETHERNET) && !defined(EXMIMO) && !defined(OAI_USRP) && !defined(OAI_BLADERF) && !defined(ETHERNET)
-          LOG_I(OIP, "[eNB %d] trying to bring up the OAI interface oai%d\n",
+#   if !defined(OAI_NW_DRIVER_TYPE_ETHERNET) && !defined(MANAGED_RF) && !defined(ETHERNET)
+	  LOG_I(OIP, "[eNB %d] trying to bring up the OAI interface oai%d\n",
                 ctxt_pP->module_id,
                 ctxt_pP->module_id);
           oip_ifup = nas_config(

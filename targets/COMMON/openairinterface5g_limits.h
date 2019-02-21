@@ -1,7 +1,7 @@
 #ifndef OPENAIRINTERFACE5G_LIMITS_H_
 #define OPENAIRINTERFACE5G_LIMITS_H_
 
-#if defined(CBMIMO1) || defined(EXMIMO) || defined(OAI_USRP) || defined(OAI_LMSSDR)
+#if defined(MANAGED_RF)
 #        define NUMBER_OF_eNB_MAX 1
 #        define NUMBER_OF_RU_MAX 2
 #        ifndef UE_EXPANSION

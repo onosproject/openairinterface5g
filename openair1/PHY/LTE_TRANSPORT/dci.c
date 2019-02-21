@@ -384,6 +384,16 @@ uint8_t generate_dci_top(uint8_t num_pdcch_symbols,
   //LOG_D(PHY, "num_pdcch_symbols:%d mi:%d nquad:%d\n", num_pdcch_symbols, mi, get_nquad(num_pdcch_symbols, frame_parms, mi));
 
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PDCCH_SCRAMBLING,1);
+  // Regular 0/1 alternates seems never detected as wrong DCI
+  // It should be better for spectrum measurements than all 0
+  // random value creates wrong DCI detection
+  // scrambler will do some randomization 
+  if ( getenv("RFSIMULATOR") != NULL) {
+      uint8_t*end=e+8*get_nquad(num_pdcch_symbols, frame_parms, mi);
+      uint8_t dummy=0;
+      for (uint8_t* p=e_ptr; p < end ; p++)
+        *p=dummy++&1;
+  }
   pdcch_scrambling(frame_parms,
                    subframe,
                    e,

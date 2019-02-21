@@ -57,7 +57,6 @@
 #include "platform_types.h"
 #include "sap.h"
 
-#define MAKE_VERSION(a,b,c) ((a)*256+(b)*16+(c))
 
 typedef struct ue_ip_priv_s {
   int                        irq;
