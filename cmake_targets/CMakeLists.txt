@@ -1385,7 +1385,7 @@ add_library(L2_UE
 )
 
 if (NOT ${NOS1})
-target_compile_definitions(L2_UE PUBLIC -DPDCP_USE_NETLINK)
+target_compile_definitions(L2_UE PUBLIC )
 endif()
 add_dependencies(L2_UE rrc_flag s1ap_flag x2_flag)
 
@@ -1675,7 +1675,7 @@ if(NAS_UE)
   )
   add_dependencies(LIB_NAS_UE rrc_flag)
   if (NOT ${NOS1})
-  target_compile_definitions(LIB_NAS_UE PUBLIC -DPDCP_USE_NETLINK)
+  target_compile_definitions(LIB_NAS_UE PUBLIC )
   endif()
   set(NAS_UE_LIB LIB_NAS_UE)
 
@@ -2049,7 +2049,7 @@ add_executable(lte-uesoftmodem
 
 add_dependencies(lte-uesoftmodem rrc_flag s1ap_flag x2_flag)
 if (NOT ${NOS1})
-	target_compile_definitions(lte-uesoftmodem PRIVATE -DPDCP_USE_NETLINK)
+	target_compile_definitions(lte-uesoftmodem PRIVATE )
 endif()
 target_link_libraries (lte-uesoftmodem
   -Wl,--start-group
