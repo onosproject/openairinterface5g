@@ -211,7 +211,7 @@ void pnf_nfapi_trace(nfapi_trace_level_t nfapi_level, const char* message, ...) 
   va_list args;
 
   va_start(args, message);
-  nfapi_log("FILE>", "FUNC", 999, PHY, nfapitooai_level(nfapi_level), message, args);
+  VLOG( NFAPI_PNF, nfapitooai_level(nfapi_level), message, args);
   va_end(args);
 }
 
