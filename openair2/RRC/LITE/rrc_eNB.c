@@ -155,7 +155,7 @@ uint8_t* generate_msg4_NB_IoT(rrc_eNB_carrier_data_NB_IoT_t *carrier)
 
 uint8_t* mac_rrc_msg3_ind_NB_IoT(uint8_t *payload_ptr, uint16_t rnti, uint32_t length)
 {
-  LOG_I(RRC,"recieve MSG3 CCCH SDU from MAC\n");
+  LOG_D(RRC,"recieve MSG3 CCCH SDU from MAC\n");
   asn_dec_rval_t                      dec_rval;
   struct rrc_eNB_ue_context_NB_IoT_s  *ue_context_p = NULL;
   uint8_t* msg4_rrc_sdu = NULL;

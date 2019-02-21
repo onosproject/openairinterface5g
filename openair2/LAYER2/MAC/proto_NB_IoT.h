@@ -126,7 +126,7 @@ void schedule_msg3_retransimission_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, int abs
 void schedule_msg4_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, int abs_subframe);
 void fill_rar_NB_IoT(eNB_MAC_INST_NB_IoT *inst, RA_TEMPLATE_NB_IoT *ra_template, uint8_t msg3_schedule_delay, uint8_t msg3_rep, sched_temp_UL_NB_IoT_t *schedule_template);
 void receive_msg4_ack_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, rnti_t rnti);
-void fill_msg4_NB_IoT(eNB_MAC_INST_NB_IoT *inst, RA_TEMPLATE_NB_IoT *ra_template);
+int fill_msg4_NB_IoT(eNB_MAC_INST_NB_IoT *inst, RA_TEMPLATE_NB_IoT *ra_template);
 
 //USS
 void schedule_uss_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_inst, uint32_t subframe, uint32_t frame, uint32_t hypersfn, int index_ss);

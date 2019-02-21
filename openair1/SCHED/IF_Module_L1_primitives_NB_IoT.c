@@ -199,8 +199,8 @@ void handle_nfapi_dlsch_pdu_NB_IoT(PHY_VARS_eNB *eNB,
   	  //printf("rel13->rnti: %d, eNB->ndlsch_RAR->rnti: %d\n",rel13->rnti,eNB->ndlsch_RAR->rnti);
   	  //eNB->ndlsch_RAR->rnti = rel13->rnti;
 	  //check if the PDU is for RAR
- 	  if(eNB->ndlsch_RAR != NULL && eNB->ndlsch_RAR->ndlsch_type == RAR) //rnti for the RAR should have been set priviously by the DCI
-	  //if(eNB->ndlsch_RAR != NULL && rel13->rnti == eNB->ndlsch_RAR->rnti) //rnti for the RAR should have been set priviously by the DCI
+ 	  //if(eNB->ndlsch_RAR != NULL && eNB->ndlsch_RAR->ndlsch_type == RAR) //rnti for the RAR should have been set priviously by the DCI
+	  if(eNB->ndlsch_RAR != NULL && rel13->rnti == eNB->ndlsch_RAR->rnti) //rnti for the RAR should have been set priviously by the DCI
 	  {
 		  
 		  eNB->ndlsch_RAR->active 					= 1;
@@ -226,13 +226,13 @@ void handle_nfapi_dlsch_pdu_NB_IoT(PHY_VARS_eNB *eNB,
 	  else
 	  { //this for ue data
 		  //TODO
-	  	  LOG_I(PHY,"handling MSG4 or ue-spec data");
+	  	  LOG_I(PHY,"handling MSG4 or ue-spec data\n");
 		  //program addition DLSCH parameters not from DCI (for the moment we only pass the pdu)
 		  //int UE_id = find_dlsch(rel13->rnti,eNB,SEARCH_EXIST);
 
-
-		  UE_id =  find_ue_NB_IoT(rel13->rnti,eNB);
-	  	  AssertFatal(UE_id==-1,"no existing ue specific dlsch_context\n");
+	  	  UE_id = 0;
+		  //UE_id =  find_ue_NB_IoT(rel13->rnti,eNB);
+	  	  //AssertFatal(UE_id==-1,"no existing ue specific dlsch_context\n");
 
 	  	  ndlsch = eNB->ndlsch[(uint8_t)UE_id];
 	  	  ndlsch_harq     = eNB->ndlsch[(uint8_t)UE_id]->harq_process;

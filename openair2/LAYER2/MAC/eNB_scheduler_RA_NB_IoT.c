@@ -677,7 +677,7 @@ void schedule_msg4_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, int abs_subframe){
 	int dci_subframe, dci_end_subframe, dci_first_subframe, num_dci_subframe;
 	int msg4_subframe = 0, msg4_end_subframe, msg4_first_subframe, num_msg4_subframe;
 	int harq_subframe, harq_end_subframe;
-
+	int msg4_length = 0; // return value of msg4 pdu (bits)
 	int dci_candidate, num_candidate;
 	int msg4_i_delay, i, res, rep;
 	int end_flagHARQ, HARQ_delay;
@@ -685,6 +685,11 @@ void schedule_msg4_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, int abs_subframe){
 	schedule_result_t *dci_result;
 	schedule_result_t *msg4_result;
 	schedule_result_t *harq_result;
+	uint32_t I_tbs, I_sf,I_mcs;
+	//Transport block size
+	int TBS;
+	int n_sf;
+
 
 #if 0
 	//	msg4 pre-processor
@@ -761,8 +766,22 @@ void schedule_msg4_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, int abs_subframe){
 			}
 			//	check msg4 resource
 			rep = dl_rep[msg4_nodes->ce_level];
+		    msg4_length = fill_msg4_NB_IoT(mac_inst,msg4_nodes);
+			I_mcs = get_I_mcs(msg4_nodes->ce_level);
+			I_tbs = I_mcs;
+			TBS = get_max_tbs(I_tbs);
+			if(TBS > msg4_length)
+			{
+				TBS = get_tbs(msg4_length, I_tbs, &I_sf);
+				LOG_D(MAC,"TBS change to %d because data size is smaller than previous TBS\n", TBS);
+			}else
+				LOG_E(MAC,"the size of MSG4 is bigger than max TBS\n");
 
-			num_msg4_subframe = 1*rep;   //  4 subframe?
+			//Get number of subframe this UE need per repetition
+			n_sf = get_num_sf(I_sf);
+			LOG_D(MAC,"n_sf = %d\n", n_sf);
+
+			num_msg4_subframe = n_sf*rep;   //  4 subframe?
 			msg4_i_delay = find_suit_i_delay(rmax, r, dci_candidate);
 			for(i=msg4_i_delay; i<8; ++i){
 				msg4_i_delay = (msg4_i_delay==8)?0:msg4_i_delay;
@@ -794,7 +813,6 @@ void schedule_msg4_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, int abs_subframe){
 
 			if(0==fail){
 			    LOG_D(MAC,"[%04d][RA scheduler][MSG4][CE%d] rnti: %d scheduling success\n", abs_subframe-1, msg4_nodes->ce_level, msg4_nodes->ue_rnti);
-			    fill_msg4_NB_IoT(mac_inst,msg4_nodes);
 			    msg4_nodes->wait_msg4_ack = 1;	
 				DCIFormatN1_t *dci_n1_msg4 = (DCIFormatN1_t *)malloc(sizeof(DCIFormatN1_t));
 				//	dci entity
@@ -833,7 +851,7 @@ void schedule_msg4_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, int abs_subframe){
 				msg4_result = (schedule_result_t *)malloc(sizeof(schedule_result_t));
 				msg4_result->output_subframe = msg4_first_subframe;// msg4_subframe;
 				msg4_result->end_subframe = msg4_end_subframe;
-				msg4_result->sdu_length = 0;
+				msg4_result->sdu_length = TBS*8;
 				msg4_result->direction = DL;
 				msg4_result->DCI_release = 0;
 				msg4_result->channel = NPDSCH;
@@ -860,7 +878,7 @@ void schedule_msg4_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, int abs_subframe){
 			    harq_result->next = (schedule_result_t *)0;
 
 			    				
-				LOG_I(MAC,"[%04d][RA scheduler][MSG4] UE:%x MSG4DCI %d-%d MSG4 %d-%d HARQ %d-%d\n", abs_subframe-1, msg4_nodes->ue_rnti, dci_first_subframe, dci_end_subframe, msg4_first_subframe, msg4_end_subframe, HARQ_info.sf_start, HARQ_info.sf_end);
+				LOG_I(MAC,"[%04d][RA scheduler][MSG4] UE:%x MSG4DCI %d-%d MSG4 %d-%d HARQ %d-%d, TBS = %d\n", abs_subframe-1, msg4_nodes->ue_rnti, dci_first_subframe, dci_end_subframe, msg4_first_subframe, msg4_end_subframe, HARQ_info.sf_start, HARQ_info.sf_end, TBS*8);
 	            LOG_D(MAC,"[%04d][RA scheduler][MSG4][CE%d] MSG4 DCI %d-%d MSG4 %d-%d HARQ %d-%d\n", abs_subframe-1, msg4_nodes->ce_level, dci_first_subframe, dci_end_subframe, msg4_first_subframe, msg4_end_subframe, HARQ_info.sf_start, HARQ_info.sf_end);
 	            msg4_nodes->msg4_retransmit_count++;
 	            
@@ -958,27 +976,31 @@ void fill_rar_NB_IoT(
 
 
 //  Generate MSG4 MAC PDU
-void fill_msg4_NB_IoT(
+int fill_msg4_NB_IoT(
 	eNB_MAC_INST_NB_IoT *inst, 
 	RA_TEMPLATE_NB_IoT *ra_template
 )
 {
+	int length = 0;
 	uint8_t *dlsch_buffer = &ra_template->msg4_buffer[0];
 	// we have three subheader here: 1 for padding, 2 for Control element of Contention resolution, 3 for CCCH
 	SCH_SUBHEADER_FIXED_NB_IoT *msg4_sub_1 = (SCH_SUBHEADER_FIXED_NB_IoT*)dlsch_buffer;
 	msg4_sub_1->R = 0;
 	msg4_sub_1->E = 1;
 	msg4_sub_1->LCID = PADDING;
+	length+=1;
 
 	SCH_SUBHEADER_FIXED_NB_IoT *msg4_sub_2 = (SCH_SUBHEADER_FIXED_NB_IoT *) (msg4_sub_1 +1);
 	msg4_sub_2->R = 0;
 	msg4_sub_2->E = 1;
 	msg4_sub_2->LCID = UE_CONTENTION_RESOLUTION;
+	length+=1;
 
 	SCH_SUBHEADER_FIXED_NB_IoT *msg4_sub_3 = (SCH_SUBHEADER_FIXED_NB_IoT *) (msg4_sub_2 +1);
 	msg4_sub_3->R= 0;
 	msg4_sub_3->E= 0;
 	msg4_sub_3->LCID = CCCH_NB_IoT;
+	length+=1;
 
 	uint8_t *con_res = (uint8_t *)(dlsch_buffer+3);
 
@@ -988,6 +1010,7 @@ void fill_msg4_NB_IoT(
 	con_res[3] = ra_template->ccch_buffer[3];
 	con_res[4] = ra_template->ccch_buffer[4];
 	con_res[5] = ra_template->ccch_buffer[5];
+	length+=6;
 
 	uint8_t *msg4_rrc_sdu = (uint8_t *) (dlsch_buffer+9);
 
@@ -998,9 +1021,12 @@ void fill_msg4_NB_IoT(
 	msg4_rrc_sdu[4] = ra_template->msg4_rrc_buffer[4];
 	msg4_rrc_sdu[5] = ra_template->msg4_rrc_buffer[5];
 	msg4_rrc_sdu[6] = ra_template->msg4_rrc_buffer[6];
-
+	length+=7;
+/*
 	printf("MSG4 PDU = ");
-	for(int i=0; i<16;i++)
+	for(int i=0; i<length;i++)
 		printf("%02x ",dlsch_buffer[i]);
 	printf("\n");
+*/
+	return length;
 }
