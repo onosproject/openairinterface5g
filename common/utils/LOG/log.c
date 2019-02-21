@@ -385,7 +385,6 @@ int logInit (void) {
   register_log_component("OCG","",OCG);
   register_log_component("PERF","",PERF);
   register_log_component("OIP","",OIP);
-  register_log_component("CLI","",CLI);
   register_log_component("MSC","log",MSC);
   register_log_component("OCM","log",OCM);
   register_log_component("HW","",HW);
@@ -408,6 +407,8 @@ int logInit (void) {
   register_log_component("X2AP","",X2AP);
   register_log_component("LOADER","log",LOADER);
   register_log_component("ASN","log",ASN);
+  register_log_component("NFAPI_PNF","log",NFAPI_PNF);
+  register_log_component("NFAPI_VNF","log",NFAPI_VNF);
 
   for (int i=0 ; log_level_names[i].name != NULL ; i++)
     g_log->level2string[i]           = toupper(log_level_names[i].name[0]); // uppercased first letter of level name
@@ -455,6 +456,12 @@ void logRecord_mt(const char *file, const char *func, int line, int comp, int le
   log_header(log_buffer,MAX_LOG_TOTAL ,comp, level,format);
   g_log->log_component[comp].vprint(g_log->log_component[comp].stream,log_buffer, args);
   va_end(args);
+}
+
+void vlogRecord_mt(const char *file, const char *func, int line, int comp, int level, const char *format, va_list args ) {
+  char log_buffer[MAX_LOG_TOTAL];
+  log_header(log_buffer,MAX_LOG_TOTAL ,comp, level,format);
+  g_log->log_component[comp].vprint(g_log->log_component[comp].stream,log_buffer, args);
 }
 
 void log_dump(int component, void *buffer, int buffsize,int datatype, const char *format, ... ) {
