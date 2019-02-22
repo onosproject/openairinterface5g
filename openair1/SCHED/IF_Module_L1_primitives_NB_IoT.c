@@ -234,15 +234,14 @@ void handle_nfapi_dlsch_pdu_NB_IoT(PHY_VARS_eNB *eNB,
 		  //UE_id =  find_ue_NB_IoT(rel13->rnti,eNB);
 	  	  //AssertFatal(UE_id==-1,"no existing ue specific dlsch_context\n");
 
-	  	  ndlsch = eNB->ndlsch[(uint8_t)UE_id];
-	  	  ndlsch_harq     = eNB->ndlsch[(uint8_t)UE_id]->harq_process;
+	  	  ndlsch           = eNB->ndlsch[(uint8_t)UE_id];
+	  	  ndlsch_harq      = eNB->ndlsch[(uint8_t)UE_id]->harq_process;
 	  	  AssertFatal(ndlsch_harq!=NULL,"dlsch_harq for ue specific is null\n");
 
-	  	  ndlsch->npdsch_start_symbol = rel13->start_symbol;
-	  	  ndlsch_harq->pdu  = sdu;
-	  	  //ndlsch->active = 1;
+          ndlsch->active   = 1;
 
-	  	  ndlsch->rnti 					= rel13->rnti;  // how this value is tested in line 177 ???? i am missing something ????
+	  	  ndlsch->rnti 					 = rel13->rnti;  // how this value is tested in line 177 ???? i am missing something ????
+	  	  ndlsch->npdsch_start_symbol    = rel13->start_symbol;
 
 		  ndlsch->rnti_type 				= rel13->rnti_type;   
   		  ndlsch->resource_assignment 		= rel13->resource_assignment ;    // for NDLSCH // this value point to -->  number of subframes needed
@@ -254,6 +253,9 @@ void handle_nfapi_dlsch_pdu_NB_IoT(PHY_VARS_eNB *eNB,
 		  ndlsch->counter_repetition_number       = Irep_to_Nrep_x[rel13->repetition_number];
 		  ndlsch->counter_current_sf_repetition   = 0;
 		  ndlsch->pointer_to_subframe             = 0;
+          
+          ndlsch_harq->TBS  = rel13->length;
+		  ndlsch_harq->pdu  = sdu;
 	  }
 
   }

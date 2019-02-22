@@ -237,7 +237,7 @@ int generate_NDLSCH_NB_IoT(PHY_VARS_eNB           *eNB,
 	    uint32_t counter_sf_rep =  RAR->counter_current_sf_repetition;   /// for identifiying when to trigger new scrambling
 	    uint32_t pointer_to_sf  =  RAR->pointer_to_subframe;             /// to identify wich encoded subframe to transmit 
 
-    	int G = get_G_NB_IoT(frame_parms);
+    	int     G   = get_G_NB_IoT(frame_parms);
     	uint8_t Nsf = RAR->number_of_subframes_for_resource_assignment;
 
         //LOG_I(PHY,"[Frame: %d][Subframe: %d]sent RAR, rep : %d, counter_rep:%d, Num_res:%d\n",frame,subframe,rep,counter_rep,Nsf);
@@ -295,8 +295,9 @@ int generate_NDLSCH_NB_IoT(PHY_VARS_eNB           *eNB,
 		        		RAR->counter_current_sf_repetition =0;
 
 		        	} else {
-                        //printf("RAR done\n");
-		        		RAR->active = 0;
+                        
+		        		RAR->active      = 0;
+                RAR->active_msg2 = 0;
 		        		done =1;
 		        	}
 
@@ -322,8 +323,9 @@ int generate_NDLSCH_NB_IoT(PHY_VARS_eNB           *eNB,
 
 		        	if (Nsf == RAR->pointer_to_subframe)
 		        	{
-                        //printf("RAR done\n");
-		        		RAR->active = 0;
+                       
+		        		RAR->active      = 0;
+                RAR->active_msg2 = 0;
 		        		done =1;
 		        	}
 

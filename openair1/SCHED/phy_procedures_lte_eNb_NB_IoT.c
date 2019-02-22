@@ -333,8 +333,9 @@ void common_signal_procedures_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
   
     if( (subframe != 0) && (subframe != 5) && (nsss_state != 1) && (fp->flag_free_sf == 0) )
     {
-      NB_IoT_eNB_NPDCCH_t  *npdcch_str     = eNB->npdcch_DCI;
-      NB_IoT_eNB_NDLSCH_t  *RAR            = eNB->ndlsch_RAR;
+      NB_IoT_eNB_NPDCCH_t  *npdcch_str      = eNB->npdcch_DCI;
+      NB_IoT_eNB_NDLSCH_t  *RAR             = eNB->ndlsch_RAR;
+      NB_IoT_eNB_NDLSCH_t  *data            = eNB->ndlsch[0];
       /////////////////////////////////////////////////////////////////////////////////
       ///////////////////////////////////// NPDCCH ////////////////////////////////////
       /////////////////////////////////////////////////////////////////////////////////
@@ -348,14 +349,27 @@ void common_signal_procedures_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
       /////////////////////////////////////////////////////////////////////////////////
       ///////////////////////////////////// NPDSCH ////////////////////////////////////
       /////////////////////////////////////////////////////////////////////////////////
-      generate_NDLSCH_NB_IoT(eNB,
-                             RAR,
-                             txdataF,
-                             AMP,
-                             fp,
-                             frame,
-                             subframe,
-                             RB_IoT_ID);
+      if(eNB->ndlsch_RAR != NULL && RAR->active_msg2 == 1)
+      {
+          generate_NDLSCH_NB_IoT(eNB,
+                                 RAR,
+                                 txdataF,
+                                 AMP,
+                                 fp,
+                                 frame,
+                                 subframe,
+                                 RB_IoT_ID);
+
+      } else if(eNB->ndlsch[0] != NULL) {
+          generate_NDLSCH_NB_IoT(eNB,
+                                 data,
+                                 txdataF,
+                                 AMP,
+                                 fp,
+                                 frame,
+                                 subframe,
+                                 RB_IoT_ID);
+      }
       ///////////////////////////////////////////////////////////////////////////////////
     }
 
