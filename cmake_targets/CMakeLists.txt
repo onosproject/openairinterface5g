@@ -614,6 +614,7 @@ add_boolean_option(NAS_NETLINK False "useless ??? Must be True to compile nasmes
 add_boolean_option(OAI_NW_DRIVER_USE_NETLINK True "????")
 
 add_boolean_option(USE_MME False "this flag is used only one time in lte-softmodem.c")
+add_list_string_option(PACKAGE_NAME "NotDefined" "As per attribute name")
 add_boolean_option(MESSAGE_CHART_GENERATOR False         "For generating sequence diagrams")
 add_boolean_option(MESSAGE_CHART_GENERATOR_RLC_MAC False "trace RLC-MAC exchanges in sequence diagrams")
 add_boolean_option(MESSAGE_CHART_GENERATOR_PHY     False "trace some PHY exchanges in sequence diagrams")
@@ -622,6 +623,11 @@ add_boolean_option(UE_EXPANSION             False         "enable UE_EXPANSION w
 add_boolean_option(PHY_TX_THREAD            False         "enable UE_EXPANSION with max 256 UE")
 add_boolean_option(PRE_SCD_THREAD           False         "enable UE_EXPANSION with max 256 UE")
 add_boolean_option(UESIM_EXPANSION          False         "enable UESIM_EXPANSION with max 256 UE")
+
+########################
+# Include order
+##########################
+add_boolean_option(ENB_MODE True "Swap the include directories between openair2 and openair3" )
 
 ##########################
 # SCHEDULING/REAL-TIME/PERF options
@@ -723,13 +729,19 @@ include_directories("${OPENAIR_BIN_DIR}")
 #include_directories("${include_dirs_all}")
 
 # Legacy exact order
-
-include_directories("${OPENAIR2_DIR}/COMMON")
-include_directories("${OPENAIR2_DIR}/UTIL")
-include_directories("${OPENAIR2_DIR}/UTIL/LOG")
-include_directories("${OPENAIR3_DIR}/COMMON")
-include_directories("${OPENAIR3_DIR}/UTILS")
-
+if(ENB_MODE)
+  include_directories("${OPENAIR2_DIR}/COMMON")
+  include_directories("${OPENAIR2_DIR}/UTIL")
+  include_directories("${OPENAIR2_DIR}/UTIL/LOG")
+  include_directories("${OPENAIR3_DIR}/COMMON")
+  include_directories("${OPENAIR3_DIR}/UTILS")
+else()
+  include_directories("${OPENAIR3_DIR}/COMMON")
+  include_directories("${OPENAIR3_DIR}/UTILS")
+  include_directories("${OPENAIR2_DIR}/COMMON")
+  include_directories("${OPENAIR2_DIR}/UTIL")
+  include_directories("${OPENAIR2_DIR}/UTIL/LOG")
+endif()
 include_directories("${NFAPI_DIR}/nfapi/public_inc")
 include_directories("${NFAPI_DIR}/common/public_inc")
 include_directories("${NFAPI_DIR}/pnf/public_inc")
@@ -1383,10 +1395,6 @@ add_library(L2_UE
   ${L2_SRC_UE}
   ${MAC_SRC_UE}
 )
-
-if (NOT ${NOS1})
-target_compile_definitions(L2_UE PUBLIC )
-endif()
 add_dependencies(L2_UE rrc_flag s1ap_flag x2_flag)
 
 include_directories(${NFAPI_USER_DIR})
@@ -1674,9 +1682,6 @@ if(NAS_UE)
     ${libnas_ue_esm_sap_OBJS}
   )
   add_dependencies(LIB_NAS_UE rrc_flag)
-  if (NOT ${NOS1})
-  target_compile_definitions(LIB_NAS_UE PUBLIC )
-  endif()
   set(NAS_UE_LIB LIB_NAS_UE)
 
   include_directories(${NAS_SRC}UE)
@@ -2048,9 +2053,6 @@ add_executable(lte-uesoftmodem
   )
 
 add_dependencies(lte-uesoftmodem rrc_flag s1ap_flag x2_flag)
-if (NOT ${NOS1})
-	target_compile_definitions(lte-uesoftmodem PRIVATE )
-endif()
 target_link_libraries (lte-uesoftmodem
   -Wl,--start-group
   RRC_LIB S1AP_LIB S1AP_ENB X2AP_LIB X2AP_ENB GTPV1U SECU_CN SECU_OSA UTIL HASHTABLE SCTP_CLIENT UDP SCHED_RU_LIB SCHED_UE_LIB PHY_COMMON PHY_UE PHY_RU LFDS L2_UE SIMU
@@ -2149,7 +2151,6 @@ foreach(myExe dlsim dlsim_tm7 ulsim pbchsim scansim mbmssim pdcchsim pucchsim pr
 
   add_executable(${myExe}
     ${OPENAIR1_DIR}/SIMULATION/LTE_PHY/${myExe}.c
-    ${OPENAIR_DIR}/common/utils/backtrace.c
     ${XFORMS_SOURCE}
     ${T_SOURCE}
     ${CONFIG_SOURCES}
@@ -2287,7 +2288,7 @@ endfunction(make_driver name dir src)
 # nashmesh module
 ################
 list(APPEND nasmesh_src device.c common.c ioctl.c classifier.c tool.c mesh.c)
-set(module_cc_opt "${module_cc_opt} -DNAS_NETLINK -DPDCP_USE_NETLINK -D${MKVER}")
+set(module_cc_opt "${module_cc_opt} -DNAS_NETLINK -DPDCP_USE_NETLINK")
 # legacy Makefile was using NAS_NETLINK flag, but other drivers the hereafter flag
 # so, this cmake use OAI_NW_DRIVER_USE_NETLINK everywhere
 if (OAI_NW_DRIVER_USE_NETLINK)
