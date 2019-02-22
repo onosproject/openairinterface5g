@@ -591,7 +591,7 @@ function main() {
             $lte_build_dir coding \
             libcoding.so $dbin/libcoding.so
         
-        if [ "$NOS1" = "0" ] ; then
+        if [ "$NOS1" = "1" ] ; then
             compilations \
                 $lte_build_dir nasmesh \
                 CMakeFiles/nasmesh/nasmesh.ko $dbin/nasmesh.ko

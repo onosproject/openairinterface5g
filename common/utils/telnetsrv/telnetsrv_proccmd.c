@@ -160,7 +160,7 @@ char arecord[1024];
 
 void print_threads(char *buf, int debug, telnet_printfunc_t prnt)
 {
-char aname[256];
+char aname[512];
 
 DIR *proc_dir;
 struct dirent *entry;
