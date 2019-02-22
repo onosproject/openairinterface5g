@@ -73,7 +73,7 @@ void rx_sdu(const module_id_t enb_mod_idP,
 	    const int         harq_pidP,
 	    uint8_t          *msg3_flagP)
 {
-
+  printf("rx_sdu: CC_id %d, find UE_id %d\n",CC_idP,find_UE_id(enb_mod_idP,rntiP));
   unsigned char  rx_ces[MAX_NUM_CE],num_ce,num_sdu,i,*payload_ptr;
   unsigned char  rx_lcids[NB_RB_MAX];
   unsigned short rx_lengths[NB_RB_MAX];
@@ -337,7 +337,7 @@ void rx_sdu(const module_id_t enb_mod_idP,
                   enb_mod_idP,CC_idP,frameP,rx_lengths[i],payload_ptr-sduP);
 
             if ((UE_id=add_new_ue(enb_mod_idP,CC_idP,eNB->common_channels[CC_idP].RA_template[ii].rnti,harq_pidP)) == -1 ) {
-              mac_xface->macphy_exit("[MAC][eNB] Max user count reached\n");
+              mac_xface->macphy_exit("[MAC][eNB] Max user count reached (rx_sdu)\n");
 	      // kill RA procedure
             } else
               LOG_I(MAC,"[eNB %d][RAPROC] CC_id %d Frame %d Added user with rnti %x => UE %d\n",
@@ -820,7 +820,7 @@ void schedule_ulsch_rnti(module_id_t   module_idP,
     rnti = UE_RNTI(module_idP,UE_id);
 
     if (rnti==NOT_A_RNTI) {
-      LOG_W(MAC,"[eNB %d] frame %d subfarme %d, UE %d: no RNTI \n", module_idP,frameP,subframeP,UE_id);
+      LOG_W(MAC,"[eNB %d] frame %d subframe %d, UE %d: no RNTI \n", module_idP,frameP,subframeP,UE_id);
       continue;
     }
 
@@ -1325,9 +1325,10 @@ void schedule_ulsch_cba_rnti(module_id_t module_idP, unsigned char cooperation_f
     available_rbs=frame_parms->N_RB_DL-1-first_rb[CC_id];
     remaining_rbs=available_rbs;
     total_groups=eNB_mac_inst[module_idP].common_channels[CC_id].num_active_cba_groups;
-    min_rb_unit=get_min_rb_unit(module_idP,CC_id);
+    min_rb_unit=get_min_rb_unit(module_idP,CC_id);   
 
-    if (available_rbs  < min_rb_unit )
+    printf("schedule_ulsch_cba_rnti: total_UEs %d, CC %d\n",total_UEs, CC_id); 
+    if (available_rbs  < min_rb_unit)
       continue;
 
     // remove this condition later

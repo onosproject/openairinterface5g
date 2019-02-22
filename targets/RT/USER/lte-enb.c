@@ -671,7 +671,7 @@ static void* eNB_thread_rxtx( void* param ) {
   
     if (oai_exit) break;
 
-    if (eNB->CC_id==0)
+    //if (eNB->CC_id==0)
       if (rxtx(eNB,proc,thread_name) < 0) break;
 
   } // while !oai_exit
@@ -1737,7 +1737,7 @@ static void* eNB_thread_single( void* param ) {
       subframe++;
     }      
 
-    if (eNB->CC_id==1) 
+    //if (eNB->CC_id==1) 
 	LOG_D(PHY,"eNB thread single (proc %p, CC_id %d), frame %d (%p), subframe %d (%p)\n",
 	  proc, eNB->CC_id, frame,&frame,subframe,&subframe);
  
@@ -1958,19 +1958,19 @@ void kill_eNB_proc(int inst) {
    Each rf chain is is addressed by the card number and the chain on the card. The
    rf_map specifies for each CC, on which rf chain the mapping should start. Multiple
    antennas are mapped to successive RF chains on the same card. */
-int setup_eNB_buffers(PHY_VARS_eNB **phy_vars_eNB, openair0_config_t *openair0_cfg) {
+int setup_eNB_buffers(PHY_VARS_eNB **phy_vars_eNB, openair0_config_t *openair0_cfg, int CC_id) {
 
   int i,j; 
-  int CC_id,card,ant;
+  int card,ant;
 
   //uint16_t N_TA_offset = 0;
 
   LTE_DL_FRAME_PARMS *frame_parms;
 
-  for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
+  //for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
     if (phy_vars_eNB[CC_id]) {
       frame_parms = &(phy_vars_eNB[CC_id]->frame_parms);
-      printf("setup_eNB_buffers: frame_parms = %p\n",frame_parms);
+      printf("setup_eNB_buffers: frame_parms = %p for CC_id %d\n",frame_parms,CC_id);
     } else {
       printf("phy_vars_eNB[%d] not initialized\n", CC_id);
       return(-1);
@@ -2043,7 +2043,7 @@ int setup_eNB_buffers(PHY_VARS_eNB **phy_vars_eNB, openair0_config_t *openair0_c
       }
       */
     }
-  }
+  //}
 
   return(0);
 }
@@ -2270,8 +2270,10 @@ void init_eNB(eNB_func_t node_function[], eNB_timing_t node_timing[],int nb_inst
 	eNB->rfdevice.host_type   = BBU_HOST;
 	eNB->ifdevice.host_type   = BBU_HOST;
   	eNB->ifdevice.nb_eth = NB_RRH_GW_INST;
+	eNB->rfdevice.Mod_id = CC_id;
         ret = openair0_transport_load(&eNB->ifdevice, &openair0_cfg[CC_id]/*openair0_cfg*/, eNB->eth_params);
         printf("openair0_transport_init returns %d for CC_id %d\n",ret,CC_id);
+	printf("loading transport interface eNB %d, rfdevice %d, ifdevice %d\n",eNB->Mod_id,eNB->rfdevice.Mod_id,eNB->ifdevice.Mod_id);
         if (ret<0) {
           printf("Exiting, cannot initialize transport protocol\n");
           exit(-1);
@@ -2306,7 +2308,7 @@ void init_eNB(eNB_func_t node_function[], eNB_timing_t node_timing[],int nb_inst
 
       }
 
-      if (setup_eNB_buffers(PHY_vars_eNB_g[inst],&openair0_cfg[CC_id])!=0) {
+      if (setup_eNB_buffers(PHY_vars_eNB_g[inst],&openair0_cfg[CC_id],CC_id)!=0) {
 	printf("Exiting, cannot initialize eNodeB Buffers\n");
 	exit(-1);
       }

@@ -125,6 +125,7 @@ rrc_mac_config_req(
   int i;
 
   int UE_id = -1;
+  printf("UE_list->eNB_UE_stats: CC_id %d, find_UE_id %d\n",CC_idP,find_UE_id(Mod_idP, rntiP));
   eNB_MAC_INST *eNB = &eNB_mac_inst[Mod_idP];
   UE_list_t *UE_list= &eNB->UE_list;
 

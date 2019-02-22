@@ -72,7 +72,7 @@ extern threads_t threads;
 
 extern void exit_fun(const char* s);
 // In lte-enb.c
-extern int setup_eNB_buffers(PHY_VARS_eNB **phy_vars_eNB, openair0_config_t *openair0_cfg);
+extern int setup_eNB_buffers(PHY_VARS_eNB **phy_vars_eNB, openair0_config_t *openair0_cfg, int CC_id);
 extern void init_eNB(eNB_func_t *, eNB_timing_t *,int,eth_params_t *,int,int);
 extern void stop_eNB(int);
 extern void kill_eNB_proc(int inst);

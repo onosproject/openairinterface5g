@@ -1391,6 +1391,7 @@ void init_openair0() {
 }
 
 int main( int argc, char **argv ) {
+    //printf("main\n");
     int i,j,k,aa,re;
 #if defined (XFORMS)
     void *status;

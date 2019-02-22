@@ -80,12 +80,14 @@ schedule_SI(
   int first_rb = -1;
   int rballoc[MAX_NUM_CCs];
   int sizeof1A_bytes,sizeof1A_bits = -1;
+  //uint8_t total_UEs;
   DCI_PDU *DCI_pdu;
 
   start_meas(&eNB->schedule_si);
 
   for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
-    
+    //total_UEs=UE_list->num_UEs[CC_id];
+    //printf("schedule_SI: total_UEs %d, CC %d\n",total_UEs, CC_id); 
     BCCH_alloc_pdu  = (void*)&eNB->common_channels[CC_id].BCCH_alloc_pdu;
     DCI_pdu         = (void*)&eNB->common_channels[CC_id].DCI_pdu;
     vrb_map         = (void*)&eNB->common_channels[CC_id].vrb_map;

@@ -114,6 +114,7 @@ int find_UE_id(module_id_t mod_idP, rnti_t rntiP)
   for (UE_id = 0; UE_id < NUMBER_OF_UE_MAX; UE_id++) {
     if (UE_list->active[UE_id] != TRUE) continue;
     if (UE_list->UE_template[UE_PCCID(mod_idP,UE_id)][UE_id].rnti==rntiP) {
+      //printf("eNB %d, UE %d, CC %d, rnti %x\n",mod_idP,UE_id,UE_PCCID(mod_idP,UE_id),UE_list->UE_template[UE_PCCID(mod_idP,UE_id)][UE_id].rnti);
       return(UE_id);
     }
   }

@@ -90,7 +90,7 @@ int trx_eth_start(openair0_device *device) {
 
     if(ethernet_tune (device,RCV_TIMEOUT,999999)!=0)  return -1;
   } else if (eth->flags == ETH_UDP_IF4p5_MODE) {
-    printf("Setting ETHERNET to UDP_IF4p5_MODE\n");
+    printf("Setting ETHERNET to UDP_IF4p5_MODE, ifdevice %d, local_if_name %s\n",device->Mod_id,eth->if_name);
     if (eth_socket_init_udp(device)!=0)   return -1; 
     if (device->host_type == BBU_HOST) {
       if(eth_set_dev_conf_udp(device)!=0)  return -1;

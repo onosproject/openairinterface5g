@@ -1888,7 +1888,8 @@ ue_scheduler(
   //Rrc_xface->Frame_index=Mac_rlc_xface->frameP;
   //if (subframe%5 == 0)
   //LG#ifdef EXMIMO
-  pdcp_run(&ctxt);
+  printf("ue_scheduler: eNB %d, CC_id %d\n",module_idP,CC_id);
+  pdcp_run(&ctxt,CC_id);
   //#endif
   UE_mac_inst[module_idP].txFrame    = txFrameP;
   UE_mac_inst[module_idP].txSubframe = txSubframeP;

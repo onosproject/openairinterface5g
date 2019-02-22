@@ -161,12 +161,13 @@ int32_t add_ue(int16_t rnti, PHY_VARS_eNB *eNB)
     if ((eNB->dlsch[i]==NULL) || (eNB->ulsch[i]==NULL)) {
       MSC_LOG_EVENT(MSC_PHY_ENB, "0 Failed add ue %"PRIx16" (ENOMEM)", rnti);
       LOG_E(PHY,"Can't add UE, not enough memory allocated\n");
+      printf("Can't add UE, not enough memory allocated\n");
       return(-1);
     } else {
       if (eNB->UE_stats[i].crnti==0) {
         MSC_LOG_EVENT(MSC_PHY_ENB, "0 Add ue %"PRIx16" ", rnti);
         LOG_D(PHY,"UE_id %d associated with rnti %x\n",i, (uint16_t)rnti);
-	printf("eNB %d, CC %d: UE_id %d associated with rnti %x\n",i, (uint16_t)rnti,eNB->Mod_id,eNB->CC_id);
+	printf("eNB %d, CC %d: UE_id %d associated with rnti %x\n",eNB->Mod_id,eNB->CC_id,i,(uint16_t)rnti);
         eNB->dlsch[i][0]->rnti = rnti;
         eNB->ulsch[i]->rnti = rnti;
         eNB->UE_stats[i].crnti = rnti;
@@ -203,14 +204,14 @@ int mac_phy_remove_ue(module_id_t Mod_idP,rnti_t rntiP) {
 	  MSC_LOG_EVENT(MSC_PHY_ENB, "0 Removed ue %"PRIx16" ", rntiP);
 
 	  LOG_D(PHY,"eNB %d removing UE %d with rnti %x\n",eNB->Mod_id,i,rntiP);
-
+	  printf("eNB %d, CC_id %d, removing UE %d with rnti %x\n",eNB->Mod_id,eNB->CC_id,i,rntiP);
 	  //LOG_D(PHY,("[PHY] UE_id %d\n",i);
 	  clean_eNb_dlsch(eNB->dlsch[i][0]);
 	  clean_eNb_ulsch(eNB->ulsch[i]);
 	  //eNB->UE_stats[i].crnti = 0;
 	  memset(&eNB->UE_stats[i],0,sizeof(LTE_eNB_UE_stats));
 	  //  mac_exit_wrapper("Removing UE");
-	  
+	  printf("eNB %d, CC_id %d, after removing UE %d with rnti %x\n",eNB->Mod_id,eNB->CC_id,i,eNB->UE_stats[i].crnti);
 
 	  return(i);
 	}
@@ -522,7 +523,7 @@ void common_signal_procedures (PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc) {
   uint8_t *pbch_pdu=&eNB->pbch_pdu[0];
   int subframe = proc->subframe_tx;
   int frame = proc->frame_tx;
-
+  //printf("common_signal_procedures: CC_id %d, subframe %d, Type %s\n",eNB->CC_id,subframe,(fp->frame_type == FDD)?"FDD":"TDD");
   // generate Cell-Specific Reference Signals for both slots
   if (eNB->abstraction_flag==0) {
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_ENB_RS_TX,1);
@@ -972,8 +973,8 @@ void pdsch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,LTE_eNB_DLSCH_t *d
 	pmi2hex_2Ar1(dlsch_harq->pmi_alloc),
 	dlsch_harq->rvidx,
 	dlsch_harq->round);
-  printf("[eNB %"PRIu8"][PDSCH %"PRIx16"/%"PRIu8"] Frame %d, subframe %d: Generating PDSCH/DLSCH with input size = %"PRIu16", G %d, nb_rb %"PRIu16", mcs %"PRIu8", pmi_alloc %"PRIx64", rv %"PRIu8" (round %"PRIu8")\n",
-	eNB->Mod_id, dlsch->rnti,harq_pid,
+  printf("[eNB %"PRIu8"/CC %d][PDSCH %"PRIx16"/%"PRIu8"] Frame %d, subframe %d: Generating PDSCH/DLSCH with input size = %"PRIu16", G %d, nb_rb %"PRIu16", mcs %"PRIu8", pmi_alloc %"PRIx64", rv %"PRIu8" (round %"PRIu8"), ra_flag %d\n",
+	eNB->Mod_id,eNB->CC_id, dlsch->rnti,harq_pid,
 	frame, subframe, input_buffer_length,
 	get_G(fp,
 	      dlsch_harq->nb_rb,
@@ -988,7 +989,8 @@ void pdsch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,LTE_eNB_DLSCH_t *d
 	dlsch_harq->mcs,
 	pmi2hex_2Ar1(dlsch_harq->pmi_alloc),
 	dlsch_harq->rvidx,
-	dlsch_harq->round);
+	dlsch_harq->round,
+	ra_flag);
 
 #if defined(MESSAGE_CHART_GENERATOR_PHY)
   MSC_LOG_TX_MESSAGE(
@@ -1021,7 +1023,7 @@ void pdsch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,LTE_eNB_DLSCH_t *d
       ue_stats->dlsch_trials[harq_pid][0]++;
 
     if (eNB->mac_enabled==1) {
-      if (ra_flag == 0) {
+      if (ra_flag == 0 /*|| subframe!=0 || subframe!=5*/) {
 	DLSCH_pdu = mac_xface->get_dlsch_sdu(eNB->Mod_id,
 					     eNB->CC_id,
 					     frame,
@@ -1047,7 +1049,8 @@ void pdsch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,LTE_eNB_DLSCH_t *d
 	    
 	if (UE_id==-1) {
 	  printf("pdsch_procedures: UE_id==-1 crnti %x\n",crnti);
-	  LOG_W(PHY,"[eNB] Max user count reached.\n");
+          printf("[eNB%d/CC%d] Max user count reached.\n",eNB->Mod_id,eNB->CC_id);
+	  LOG_W(PHY,"[eNB%d/CC%d] Max user count reached.\n",eNB->Mod_id,eNB->CC_id);
 	  mac_xface->cancel_ra_proc(eNB->Mod_id,
 				    eNB->CC_id,
 				    frame,
@@ -1197,10 +1200,11 @@ void phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
 			   int do_meas,
 			   int do_pdcch_flag)
 {
-  //printf("phy_procedures_eNB_TX: CC_id %d\n",eNB->CC_id);
   UNUSED(rn);
   int frame=proc->frame_tx;
   int subframe=proc->subframe_tx;
+  //printf("phy_procedures_eNB_TX: eNB %d, CC_id %d, frame %d, subframe %d\n",eNB->Mod_id,eNB->CC_id,frame,subframe);
+  //printf("proc_tx_high0:eNB %d, CC_id %d, frame %d, subframe %d, Nid_Cell %d\n",eNB->Mod_id,eNB->CC_id,frame,subframe,eNB->frame_parms.Nid_cell);
   //  uint16_t input_buffer_length;
   uint32_t i,j,aa;
   uint8_t harq_pid;
@@ -1382,7 +1386,7 @@ void phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
 	UE_id = i;
     }
     else UE_id=0;
-    
+    printf("loop over all DCIs: UE %d, CC_id %d\n",UE_id,eNB->CC_id);
     generate_eNB_dlsch_params(eNB,proc,dci_alloc,UE_id);
 
   }
@@ -1391,6 +1395,7 @@ void phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
 
   // Apply physicalConfigDedicated if needed
   // This is for UEs that have received this IE, which changes these DL and UL configuration, we apply after a delay for the eNodeB UL parameters
+  //printf("before: eNB %d, CC_id %d\n",eNB->Mod_id,eNB->CC_id);
   phy_config_dedicated_eNB_step2(eNB);
 
   // Now loop again over the DCIs for UL configuration
@@ -1471,7 +1476,7 @@ void phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
   // Check for SI activity
 
   if ((eNB->dlsch_SI) && (eNB->dlsch_SI->active == 1)) {
-
+    printf("Check for SI activity and start pdsch_procedures with ra_flag=%d and subframe %d\n",0,subframe);
     pdsch_procedures(eNB,proc,eNB->dlsch_SI,(LTE_eNB_DLSCH_t*)NULL,(LTE_eNB_UE_stats*)NULL,0,num_pdcch_symbols);
 
 #if defined(SMBV) 
@@ -1504,10 +1509,17 @@ void phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
 	  frame, subframe,
 	  eNB->ulsch[(uint32_t)UE_id]->Msg3_frame,
 	  eNB->ulsch[(uint32_t)UE_id]->Msg3_subframe);
-    
-    pdsch_procedures(eNB,proc,eNB->dlsch_ra,(LTE_eNB_DLSCH_t*)NULL,(LTE_eNB_UE_stats*)NULL,1,num_pdcch_symbols);
-    
-    
+    printf("[eNB %"PRIu8"][RAPROC] Frame %d, subframe %d: Calling generate_dlsch (RA),Msg3 frame %"PRIu32", Msg3 subframe %"PRIu8"\n",
+	  eNB->Mod_id,
+	  frame, subframe,
+	  eNB->ulsch[(uint32_t)UE_id]->Msg3_frame,
+	  eNB->ulsch[(uint32_t)UE_id]->Msg3_subframe);
+    printf("Calling generate_dlsch (RA) and start pdsch_procedures with ra_flag=%d and subframe %d, eNB->dlsch_ra->active %d\n",1,subframe,eNB->dlsch_ra->active);
+    if (subframe ==0 || subframe ==5)
+    	pdsch_procedures(eNB,proc,eNB->dlsch_ra,(LTE_eNB_DLSCH_t*)NULL,(LTE_eNB_UE_stats*)NULL,1,num_pdcch_symbols);
+    else    
+    	printf("False RA activity for CC_id %d\n",eNB->CC_id);
+
     eNB->dlsch_ra->active = 0;
   }
 
@@ -1517,7 +1529,7 @@ void phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
       if ((eNB->dlsch[(uint8_t)UE_id][0])&&
 	  (eNB->dlsch[(uint8_t)UE_id][0]->rnti>0)&&
 	  (eNB->dlsch[(uint8_t)UE_id][0]->active == 1)) {
-
+	printf("Scan UE specific DLSCH and start pdsch_procedures with ra_flag=%d and subframe %d\n",0,subframe);
 	pdsch_procedures(eNB,proc,eNB->dlsch[(uint8_t)UE_id][0],eNB->dlsch[(uint8_t)UE_id][1],&eNB->UE_stats[(uint32_t)UE_id],0,num_pdcch_symbols);
 
 
@@ -2840,9 +2852,24 @@ void eNB_fep_rru_if5(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc_rxtx) {
 
 void do_prach(PHY_VARS_eNB *eNB,int frame,int subframe) {
 
+  int num_UEs_total=0;
+  int num_UEs_active_CC=0;
+  int UE_id;
+  for (UE_id = 0; UE_id < NUMBER_OF_UE_MAX; UE_id++) {
+    if (eNB_mac_inst[eNB->Mod_id].UE_list.active[UE_id] != TRUE) continue;
+    	num_UEs_total++;
+	if (UE_PCCID(0,UE_id)==eNB->CC_id)
+	    num_UEs_active_CC++;
+	//printf("Active: UE%d, CC_id %d\n",UE_id,UE_PCCID(0,UE_id));
+  }
+  if (num_UEs_total>0&&num_UEs_active_CC==0) {
+     printf("There is not UEs attached to CC_id %d\n",eNB->CC_id);
+     return;
+  }
+
   eNB_proc_t *proc = &eNB->proc;
   LTE_DL_FRAME_PARMS *fp=&eNB->frame_parms;
-
+  printf("do_prach: eNB %d, CC_id %d\n",eNB->Mod_id,eNB->CC_id);
   // check if we have to detect PRACH first
   if (is_prach_subframe(fp,frame,subframe)>0) { 
     /* accept some delay in processing - up to 5ms */

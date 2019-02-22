@@ -46,6 +46,7 @@ uint8_t dci_ndi_toggle_odd[8]  = {0, 0, 0, 0, 0, 0, 0, 0};
 
 void fill_dci(DCI_PDU *DCI_pdu,PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
 {
+  //printf("fill_dci: eNB %d\n",eNB->Mod_id);
 /* SYRTEM */
   uint8_t *dci_ndi_toggle_tmp = NULL;
   uint8_t harq_pid_value      = 0;

@@ -395,10 +395,12 @@ void phy_config_dedicated_eNB_step2(PHY_VARS_eNB *eNB)
   LTE_DL_FRAME_PARMS *fp=&eNB->frame_parms;
 
   for (UE_id=0; UE_id<NUMBER_OF_UE_MAX; UE_id++) {
+    //printf("phy_config_dedicated_eNB_step2: UE_id %d\n",UE_id);
     physicalConfigDedicated = eNB->physicalConfigDedicated[UE_id];
 
     if (physicalConfigDedicated != NULL) {
-      LOG_I(PHY,"[eNB %d] Sent physicalConfigDedicated=%p for UE %d\n",eNB->Mod_id,physicalConfigDedicated,UE_id);
+      printf("phy_config_dedicated_eNB_step2: UE_id %d\n",UE_id);
+      LOG_I(PHY,"[eNB %d/CC %d] Sent physicalConfigDedicated=%p for UE %d\n",eNB->Mod_id,eNB->CC_id,physicalConfigDedicated,UE_id);
       LOG_D(PHY,"------------------------------------------------------------------------\n");
 
       if (physicalConfigDedicated->pdsch_ConfigDedicated) {
@@ -462,7 +464,7 @@ void phy_config_dedicated_eNB_step2(PHY_VARS_eNB *eNB)
 
       if (physicalConfigDedicated->antennaInfo) {
         eNB->transmission_mode[UE_id] = 1+(physicalConfigDedicated->antennaInfo->choice.explicitValue.transmissionMode);
-        LOG_D(PHY,"Transmission Mode (phy_config_dedicated_eNB_step2) %d\n",eNB->transmission_mode[UE_id]);
+        LOG_D(PHY,"Transmission Mode (phy_config_dedicated_eNB_step2) %d \n",eNB->transmission_mode[UE_id]);
         LOG_D(PHY,"\n");
       }
 
@@ -721,7 +723,7 @@ void phy_config_dedicated_scell_eNB(uint8_t Mod_id,
                                     int CC_id)
 {
 
-
+  //printf("phy_config_dedicated_scell_eNB: eNB %d, CC %d\n",Mod_id,0);
   uint8_t UE_id = find_ue(rnti,PHY_vars_eNB_g[Mod_id][0]);
   struct PhysicalConfigDedicatedSCell_r10 *physicalConfigDedicatedSCell_r10 = sCellToAddMod_r10->radioResourceConfigDedicatedSCell_r10->physicalConfigDedicatedSCell_r10;
   //struct RadioResourceConfigCommonSCell_r10 *physicalConfigCommonSCell_r10 = sCellToAddMod_r10->radioResourceConfigCommonSCell_r10;

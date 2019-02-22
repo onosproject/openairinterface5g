@@ -250,6 +250,8 @@ void schedule_RA(module_id_t module_idP,frame_t frameP, sub_frame_t subframeP,un
 	  if (!CCE_allocation_infeasible(module_idP,CC_id,1,subframeP,2,RA_template->RA_rnti)) {
 	    LOG_D(MAC,"Frame %d: Subframe %d : Adding common DCI for RA_RNTI %x\n",
                   frameP,subframeP,RA_template->RA_rnti);
+	    printf("Schedule_RA: eNB %d, CC_id %d, Frame %d: Subframe %d : Adding common DCI for RA_RNTI %x\n",
+                  module_idP,CC_id,frameP,subframeP,RA_template->RA_rnti);
 	    add_common_dci(DCI_pdu,
 			   (void*)&RA_template->RA_alloc_pdu1[0],
 			   RA_template->RA_rnti,
@@ -266,7 +268,7 @@ void schedule_RA(module_id_t module_idP,frame_t frameP, sub_frame_t subframeP,un
 
           // check for Msg4 Message
           UE_id = find_UE_id(module_idP,RA_template->rnti);
-          if (UE_id == -1) { printf("%s:%d:%s: FATAL ERROR\n", __FILE__, __LINE__, __FUNCTION__); abort(); }
+          if (UE_id == -1) {return; /*printf("%s:%d:%s: FATAL ERROR\n", __FILE__, __LINE__, __FUNCTION__); abort(); */}
 
           if (Is_rrc_registered == 1) {
 
@@ -755,7 +757,9 @@ void initiate_ra_proc(module_id_t module_idP, int CC_id,frame_t frameP, uint16_t
         RA_template[i].wait_ack_Msg4 == 0) {
       int loop = 0;
       RA_template[i].RA_active=TRUE;
+      printf("before generate_rar %d\n",RA_template[i].generate_rar);
       RA_template[i].generate_rar=1;
+      printf("after generate_rar %d\n",RA_template[i].generate_rar);
       RA_template[i].generate_Msg4=0;
       RA_template[i].wait_ack_Msg4=0;
       RA_template[i].timing_offset=timing_offset;

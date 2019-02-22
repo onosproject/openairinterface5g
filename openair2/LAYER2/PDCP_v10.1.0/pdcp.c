@@ -462,7 +462,7 @@ pdcp_data_ind(
 
 #if T_TRACER
   if (ctxt_pP->enb_flag != ENB_FLAG_NO)
-    T(T_ENB_PDCP_UL, T_INT(ctxt_pP->module_id), T_INT(ctxt_pP->rnti), T_INT(rb_idP), T_INT(sdu_buffer_sizeP));
+    T(T_ENB_PDCP_UL, T_INT(ctxt_pP->module_id),T_INT(ctxt_pP->module_id), T_INT(ctxt_pP->rnti), T_INT(rb_idP), T_INT(sdu_buffer_sizeP));
 #endif
 
   if (MBMS_flagP) {
@@ -887,7 +887,8 @@ pdcp_data_ind(
 //-----------------------------------------------------------------------------
 void
 pdcp_run (
-  const protocol_ctxt_t* const  ctxt_pP
+  const protocol_ctxt_t* const  ctxt_pP,
+  uint8_t CC_id
 )
 //-----------------------------------------------------------------------------
 {

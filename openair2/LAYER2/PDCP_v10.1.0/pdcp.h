@@ -354,7 +354,7 @@ public_pdcp(boolean_t pdcp_remove_UE(
 * @ingroup _pdcp
 */
 public_pdcp(void pdcp_run            (
-              const protocol_ctxt_t* const  ctxt_pP);)
+              const protocol_ctxt_t* const  ctxt_pP, uint8_t CC_id);)
 public_pdcp(int pdcp_module_init     (void);)
 public_pdcp(void pdcp_module_cleanup (void);)
 public_pdcp(void pdcp_layer_init     (void);)

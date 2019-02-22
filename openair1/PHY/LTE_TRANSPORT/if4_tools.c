@@ -46,7 +46,7 @@ const uint16_t alaw2lin_if4p5[256] = {60032, 60288, 59520, 59776, 61056, 61312, 
 
 void send_IF4p5(PHY_VARS_eNB *eNB, int frame, int subframe, uint16_t packet_type, int k) {
   LTE_DL_FRAME_PARMS *fp = &eNB->frame_parms;
-  int32_t **txdataF      = (eNB->CC_id==0) ? eNB->common_vars.txdataF[0] : PHY_vars_eNB_g[0][eNB->CC_id]->common_vars.txdataF[0];
+  int32_t **txdataF      = /*(eNB->CC_id==0) ?*/ eNB->common_vars.txdataF[0]/* : PHY_vars_eNB_g[0][eNB->CC_id]->common_vars.txdataF[0]*/;
   int32_t **rxdataF      = eNB->common_vars.rxdataF[0];
   int16_t **rxsigF       = eNB->prach_vars.rxsigF;  
   void *tx_buffer        = eNB->ifbuffer.tx[subframe&1];
@@ -184,6 +184,7 @@ void send_IF4p5(PHY_VARS_eNB *eNB, int frame, int subframe, uint16_t packet_type
   } else if (packet_type == IF4p5_PRACH) {
     // FIX: hard coded prach samples length
     LOG_D(PHY,"IF4p5_PRACH: frame %d, subframe %d\n",frame,subframe);
+    printf("IF4p5_PRACH_TX: eNB %d, CC_id %d, frame %d, subframe %d\n",eNB->Mod_id,eNB->CC_id,frame,subframe);
     db_fulllength = PRACH_HARD_CODED_NUM_SAMPLES;
     
     if (eth->flags == ETH_RAW_IF4p5_MODE) {
@@ -321,8 +322,9 @@ void recv_IF4p5(PHY_VARS_eNB *eNB, int *frame, int *subframe, uint16_t *packet_t
     }
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_DECOMPR_IF, 0 );		
   } else if (*packet_type == IF4p5_PRACH) {  
-     LOG_D(PHY,"PRACH_IF4p5: CC_id %d : frame %d, subframe %d\n",eNB->CC_id,*frame,*subframe);
-    if (eNB->CC_id==1) LOG_I(PHY,"PRACH_IF4p5: CC_id %d : frame %d, subframe %d\n",eNB->CC_id,*frame,*subframe);
+     LOG_I(PHY,"PRACH_IF4p5: CC_id %d : frame %d, subframe %d\n",eNB->CC_id,*frame,*subframe);
+     printf("PRACH_IF4p5_RX: eNB %d, CC_id %d : frame %d, subframe %d\n",eNB->Mod_id,eNB->CC_id,*frame,*subframe);
+    //if (eNB->CC_id==1) LOG_I(PHY,"PRACH_IF4p5: CC_id %d : frame %d, subframe %d\n",eNB->CC_id,*frame,*subframe);
     /*if (eNB->CC_id==0 && subframe==0){
         write_output("prachF0.m","prF0",rxsigF[0],839,0,16);
     } 

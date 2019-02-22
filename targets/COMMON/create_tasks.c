@@ -102,6 +102,7 @@ int create_tasks(uint32_t enb_nb, uint32_t ue_nb)
         LOG_E(RRC, "Create task for RRC eNB failed\n");
         return -1;
       }
+      //printf("rrc_enb_task: enb_nb %d\n",enb_nb);
 
 #   if ENABLE_RAL
 

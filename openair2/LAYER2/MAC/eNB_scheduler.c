@@ -346,16 +346,17 @@ void eNB_dlsch_ulsch_scheduler(module_id_t module_idP,uint8_t cooperation_flag, 
   
   //if (subframeP%5 == 0)
   //#ifdef EXMIMO
-  //printf("Going to pdcp_run\n");
   PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, module_idP, ENB_FLAG_YES, NOT_A_RNTI, frameP, subframeP,module_idP);
-  pdcp_run(&ctxt);
+  pdcp_run(&ctxt,CC_id);
   //#endif
 
   // check HO
-  rrc_rx_tx(&ctxt,
+  //for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
+    //printf("eNB_dlsch_ulsch_scheduler: eNB %d, CC_id %d\n",module_idP,0);
+    rrc_rx_tx(&ctxt,
             0, // eNB index, unused in eNB
             CC_id);
-
+  //}
 #if defined(Rel10) || defined(Rel14)
 
   for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {

@@ -70,6 +70,7 @@ unsigned short fill_rar(
       eNB_mac_inst[module_idP].common_channels[CC_id].RA_template[i].generate_rar = 0;
       break;
     }
+    printf("fill_rar: i %d,  generate_rar %d\n",i,eNB_mac_inst[module_idP].common_channels[CC_id].RA_template[i].generate_rar);
   }
 
   //DevAssert( ra_idx != -1 );
@@ -132,6 +133,9 @@ unsigned short fill_rar(
           module_idP, CC_id, frameP, eNB_mac_inst[module_idP].common_channels[CC_id].RA_template[ra_idx].rnti,
           rarh->RAPID, input_buffer_length);
   }
+  printf("[eNB %d][RAPROC] CC_id %d RAR Frame %d trace pdu for rnti %x and  rapid %d size %d\n",
+          module_idP, CC_id, frameP, eNB_mac_inst[module_idP].common_channels[CC_id].RA_template[ra_idx].rnti,
+          rarh->RAPID, input_buffer_length);
 
   return(eNB_mac_inst[module_idP].common_channels[CC_id].RA_template[ra_idx].rnti);
 }
