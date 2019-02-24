@@ -187,6 +187,7 @@ function main() {
 		shift;;
 	    -C | --clean-all)
 		CLEAN_ALL=1
+		shift;;		
 	    --clean-kernel)
 		clean_kernel
 		echo_info "Erased iptables config and removed modules from kernel"
