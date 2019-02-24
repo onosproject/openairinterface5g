@@ -1,3 +1,9 @@
+
+/*
+  Author: Laurent THOMAS, Open Cells for Nokia
+  copyleft: OpenAirInterface Software Alliance and it's licence
+*/
+
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
@@ -52,9 +58,9 @@ typedef struct {
   uint64_t initialAhead;
   char *ip;
   buffer_t buf[FD_SETSIZE];
-} tcp_bridge_state_t;
+} rfsimulator_state_t;
 
-void allocCirBuf(tcp_bridge_state_t *bridge, int sock) {
+void allocCirBuf(rfsimulator_state_t *bridge, int sock) {
   buffer_t *ptr=&bridge->buf[sock];
   AssertFatal ( (ptr->circularBuf=(sample_t *) malloc(sampleToByte(CirSize,1))) != NULL, "");
   ptr->circularBufEnd=((char *)ptr->circularBuf)+sampleToByte(CirSize,1);
@@ -70,7 +76,7 @@ void allocCirBuf(tcp_bridge_state_t *bridge, int sock) {
   AssertFatal(epoll_ctl(bridge->epollfd, EPOLL_CTL_ADD,  sock, &ev) != -1, "");
 }
 
-void removeCirBuf(tcp_bridge_state_t *bridge, int sock) {
+void removeCirBuf(rfsimulator_state_t *bridge, int sock) {
   AssertFatal( epoll_ctl(bridge->epollfd, EPOLL_CTL_DEL,  sock, NULL) != -1, "");
   close(sock);
   free(bridge->buf[sock].circularBuf);
@@ -80,7 +86,7 @@ void removeCirBuf(tcp_bridge_state_t *bridge, int sock) {
 
 #define helpTxt "\
 \x1b[31m\
-tcp_bridge: error: you have to run one UE and one eNB\n\
+rfsimulator: error: you have to run one UE and one eNB\n\
 For this, export RFSIMULATOR=enb (eNB case) or \n\
                  RFSIMULATOR=<an ip address> (UE case)\n\
 \x1b[m"
@@ -126,7 +132,7 @@ void setblocking(int sock, enum blocking_t active) {
 }
 
 int server_start(openair0_device *device) {
-  tcp_bridge_state_t *t = (tcp_bridge_state_t *) device->priv;
+  rfsimulator_state_t *t = (rfsimulator_state_t *) device->priv;
   t->typeStamp=MAGICeNB;
   AssertFatal((t->listen_sock = socket(AF_INET, SOCK_STREAM, 0)) >= 0, "");
   int enable = 1;
@@ -146,7 +152,7 @@ int server_start(openair0_device *device) {
 }
 
 int start_ue(openair0_device *device) {
-  tcp_bridge_state_t *t = device->priv;
+  rfsimulator_state_t *t = device->priv;
   t->typeStamp=MAGICUE;
   int sock;
   AssertFatal((sock = socket(AF_INET, SOCK_STREAM, 0)) >= 0, "");
@@ -159,14 +165,14 @@ int start_ue(openair0_device *device) {
   bool connected=false;
 
   while(!connected) {
-    LOG_I(HW,"tcp_bridge: trying to connect to %s:%d\n", t->ip, PORT);
+    LOG_I(HW,"rfsimulator: trying to connect to %s:%d\n", t->ip, PORT);
 
     if (connect(sock, (struct sockaddr *)&addr, sizeof(addr)) == 0) {
-      LOG_I(HW,"tcp_bridge: connection established\n");
+      LOG_I(HW,"rfsimulator: connection established\n");
       connected=true;
     }
 
-    perror("tcp_bridge");
+    perror("rfsimulator");
     sleep(1);
   }
 
@@ -176,8 +182,8 @@ int start_ue(openair0_device *device) {
   return 0;
 }
 
-int tcp_bridge_write(openair0_device *device, openair0_timestamp timestamp, void **samplesVoid, int nsamps, int nbAnt, int flags) {
-  tcp_bridge_state_t *t = device->priv;
+int rfsimulator_write(openair0_device *device, openair0_timestamp timestamp, void **samplesVoid, int nsamps, int nbAnt, int flags) {
+  rfsimulator_state_t *t = device->priv;
 
   for (int i=0; i<FD_SETSIZE; i++) {
     buffer_t *ptr=&t->buf[i];
@@ -199,7 +205,7 @@ int tcp_bridge_write(openair0_device *device, openair0_timestamp timestamp, void
       n = fullwrite(ptr->conn_sock, (void *)tmpSamples, sampleToByte(nsamps,nbAnt));
 
       if (n != sampleToByte(nsamps,nbAnt) ) {
-        LOG_E(HW,"tcp_bridge: write error ret %d (wanted %ld) error %s\n", n, sampleToByte(nsamps,nbAnt), strerror(errno));
+        LOG_E(HW,"rfsimulator: write error ret %d (wanted %ld) error %s\n", n, sampleToByte(nsamps,nbAnt), strerror(errno));
         abort();
       }
 
@@ -213,7 +219,7 @@ int tcp_bridge_write(openair0_device *device, openair0_timestamp timestamp, void
   return nsamps;
 }
 
-bool flushInput(tcp_bridge_state_t *t) {
+bool flushInput(rfsimulator_state_t *t) {
   // Process all incoming events on sockets
   // store the data in lists
   struct epoll_event events[FD_SETSIZE]= {0};
@@ -320,11 +326,12 @@ bool flushInput(tcp_bridge_state_t *t) {
   return nfds>0;
 }
 
-int tcp_bridge_read(openair0_device *device, openair0_timestamp *ptimestamp, void **samplesVoid, int nsamps, int nbAnt) {
-  if (nbAnt != 1) { LOG_E(HW, "tcp_bridge: only 1 antenna tested\n"); exit(1); }
 
-  tcp_bridge_state_t *t = device->priv;
-  LOG_D(HW, "Enter tcp_bridge_read, expect %d samples, will release at TS: %ld\n", nsamps, t->nextTimestamp+nsamps);
+int rfsimulator_read(openair0_device *device, openair0_timestamp *ptimestamp, void **samplesVoid, int nsamps, int nbAnt) {
+  if (nbAnt != 1) { LOG_E(HW, "rfsimulator: only 1 antenna tested\n"); exit(1); }
+
+  rfsimulator_state_t *t = device->priv;
+  LOG_D(HW, "Enter rfsimulator_read, expect %d samples, will release at TS: %ld\n", nsamps, t->nextTimestamp+nsamps);
   // deliver data from received data
   // check if a UE is connected
   int first_sock;
@@ -406,29 +413,28 @@ int tcp_bridge_read(openair0_device *device, openair0_timestamp *ptimestamp, voi
   return nsamps;
 }
 
-
-int tcp_bridge_request(openair0_device *device, void *msg, ssize_t msg_len) {
+int rfsimulator_request(openair0_device *device, void *msg, ssize_t msg_len) {
   abort();
   return 0;
 }
-int tcp_bridge_reply(openair0_device *device, void *msg, ssize_t msg_len) {
+int rfsimulator_reply(openair0_device *device, void *msg, ssize_t msg_len) {
   abort();
   return 0;
 }
-int tcp_bridge_get_stats(openair0_device *device) {
+int rfsimulator_get_stats(openair0_device *device) {
   return 0;
 }
-int tcp_bridge_reset_stats(openair0_device *device) {
+int rfsimulator_reset_stats(openair0_device *device) {
   return 0;
 }
-void tcp_bridge_end(openair0_device *device) {}
-int tcp_bridge_stop(openair0_device *device) {
+void rfsimulator_end(openair0_device *device) {}
+int rfsimulator_stop(openair0_device *device) {
   return 0;
 }
-int tcp_bridge_set_freq(openair0_device *device, openair0_config_t *openair0_cfg,int exmimo_dump_config) {
+int rfsimulator_set_freq(openair0_device *device, openair0_config_t *openair0_cfg,int exmimo_dump_config) {
   return 0;
 }
-int tcp_bridge_set_gains(openair0_device *device, openair0_config_t *openair0_cfg) {
+int rfsimulator_set_gains(openair0_device *device, openair0_config_t *openair0_cfg) {
   return 0;
 }
 
@@ -436,37 +442,37 @@ int tcp_bridge_set_gains(openair0_device *device, openair0_config_t *openair0_cf
 __attribute__((__visibility__("default")))
 int device_init(openair0_device *device, openair0_config_t *openair0_cfg) {
   //set_log(HW,OAILOG_DEBUG);
-  tcp_bridge_state_t *tcp_bridge = (tcp_bridge_state_t *)calloc(sizeof(tcp_bridge_state_t),1);
+  rfsimulator_state_t *rfsimulator = (rfsimulator_state_t *)calloc(sizeof(rfsimulator_state_t),1);
 
-  if ((tcp_bridge->ip=getenv("RFSIMULATOR")) == NULL ) {
+  if ((rfsimulator->ip=getenv("RFSIMULATOR")) == NULL ) {
     LOG_E(HW,helpTxt);
     exit(1);
   }
 
-  tcp_bridge->typeStamp = strncasecmp(tcp_bridge->ip,"enb",3) == 0 ?
+  rfsimulator->typeStamp = strncasecmp(rfsimulator->ip,"enb",3) == 0 ?
                           MAGICeNB:
                           MAGICUE;
-  LOG_I(HW,"tcp_bridge: running as %s\n", tcp_bridge-> typeStamp == MAGICeNB ? "eNB" : "UE");
-  device->trx_start_func       = tcp_bridge->typeStamp == MAGICeNB ?
+  LOG_I(HW,"rfsimulator: running as %s\n", rfsimulator-> typeStamp == MAGICeNB ? "eNB" : "UE");
+  device->trx_start_func       = rfsimulator->typeStamp == MAGICeNB ?
                                  server_start :
                                  start_ue;
-  device->trx_get_stats_func   = tcp_bridge_get_stats;
-  device->trx_reset_stats_func = tcp_bridge_reset_stats;
-  device->trx_end_func         = tcp_bridge_end;
-  device->trx_stop_func        = tcp_bridge_stop;
-  device->trx_set_freq_func    = tcp_bridge_set_freq;
-  device->trx_set_gains_func   = tcp_bridge_set_gains;
-  device->trx_write_func       = tcp_bridge_write;
-  device->trx_read_func      = tcp_bridge_read;
+  device->trx_get_stats_func   = rfsimulator_get_stats;
+  device->trx_reset_stats_func = rfsimulator_reset_stats;
+  device->trx_end_func         = rfsimulator_end;
+  device->trx_stop_func        = rfsimulator_stop;
+  device->trx_set_freq_func    = rfsimulator_set_freq;
+  device->trx_set_gains_func   = rfsimulator_set_gains;
+  device->trx_write_func       = rfsimulator_write;
+  device->trx_read_func      = rfsimulator_read;
   /* let's pretend to be a b2x0 */
   device->type = USRP_B200_DEV;
   device->openair0_cfg=&openair0_cfg[0];
-  device->priv = tcp_bridge;
+  device->priv = rfsimulator;
 
   for (int i=0; i<FD_SETSIZE; i++)
-    tcp_bridge->buf[i].conn_sock=-1;
+    rfsimulator->buf[i].conn_sock=-1;
 
-  AssertFatal((tcp_bridge->epollfd = epoll_create1(0)) != -1,"");
-  tcp_bridge->initialAhead=openair0_cfg[0].sample_rate/1000; // One sub frame
+  AssertFatal((rfsimulator->epollfd = epoll_create1(0)) != -1,"");
+  rfsimulator->initialAhead=openair0_cfg[0].sample_rate/1000; // One sub frame
   return 0;
 }

@@ -187,7 +187,7 @@ function main() {
 		shift;;
 	    -C | --clean-all)
 		CLEAN_ALL=1
-		shift;;		
+		shift;;
 	    --clean-kernel)
 		clean_kernel
 		echo_info "Erased iptables config and removed modules from kernel"
@@ -417,7 +417,6 @@ function main() {
               ;;
       esac
     fi
-
   #Disable CPU Affinity for deadline scheduler
   if [ "$DEADLINE_SCHEDULER_FLAG_USER" = "True" ] ; then 
      CPU_AFFINITY_FLAG_USER="False"
@@ -509,6 +508,7 @@ function main() {
         lte_build_dir=lte_build_oai
         bin_suffix=""
     fi
+
     lte_build_dir="lte${noS1Dir}_build_oai${noLOGDirsuffix}"
 # configuration module libraries, one currently available, using libconfig 
   config_libconfig_shlib=params_libconfig

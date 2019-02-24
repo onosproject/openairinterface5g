@@ -85,8 +85,6 @@ extern uint8_t nfapi_mode;
     extern uint16_t inst_pdcp_list[NUMBER_OF_UE_MAX];
 #endif
 
-
-
 extern Packet_OTG_List_t *otg_pdcp_buffer;
 
 
@@ -122,8 +120,8 @@ int pdcp_fifo_flush_sdus(const protocol_ctxt_t *const  ctxt_pP) {
       if( LOG_DEBUGFLAG(DEBUG_PDCP) ) {
         debug_pdcp_pc5s_sdu((sidelink_pc5s_element *)&(sdu_p->data[sizeof(pdcp_data_ind_header_t)]),
                             "pdcp_fifo_flush_sdus received aPC5S message");
-      }
 
+      }
       ret = sendto(pdcp_pc5_sockfd, &(sdu_p->data[sizeof(pdcp_data_ind_header_t)]),
                    sizeof(sidelink_pc5s_element), 0, (struct sockaddr *)&prose_pdcp_addr,sizeof(prose_pdcp_addr) );
     } else if (UE_NAS_USE_TUN) {

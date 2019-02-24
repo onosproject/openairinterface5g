@@ -535,7 +535,7 @@ mui_t rrc_mui=0;
 
 /* NAS Attach request with IMSI */
 
-static const char  nas_attach_req_imsi[] = {
+static const char nas_attach_req_imsi[] = {
   0x07, 0x41,
   /* EPS Mobile identity = IMSI */
   0x71, 0x08, 0x29, 0x80, 0x43, 0x21, 0x43, 0x65, 0x87,
@@ -804,6 +804,7 @@ rrc_ue_establish_drb(
 //-----------------------------------------------------------------------------
 {
   // add descriptor from RRC PDU
+
   int oip_ifup=0,ip_addr_offset3=0,ip_addr_offset4=0;
   /* avoid gcc warnings */
   (void)oip_ifup;
@@ -820,7 +821,7 @@ rrc_ue_establish_drb(
                     RADIO_ACCESS_BEARER,Rlc_info_um);
    */
   if(PDCP_USE_NETLINK) {
-#   if !defined(OAI_NW_DRIVER_TYPE_ETHERNET) && !defined(EXMIMO) && !defined(OAI_USRP) && !defined(OAI_BLADERF) && !defined(ETHERNET) && !defined(LINK_ENB_PDCP_TO_GTPV1U)
+#   if !defined(OAI_NW_DRIVER_TYPE_ETHERNET) && !defined(MANAGED_RF) && !defined(ETHERNET)
     ip_addr_offset3 = 0;
     ip_addr_offset4 = 1;
     LOG_I(OIP,"[UE %d] trying to bring up the OAI interface oai%d, IP 10.0.%d.%d\n", ue_mod_idP, ip_addr_offset3+ue_mod_idP,
@@ -843,7 +844,6 @@ rrc_ue_establish_drb(
                    ipv4_address(ip_addr_offset3+ue_mod_idP+1,eNB_index+1));//daddr
       LOG_D(RRC,"[UE %d] State = Attached (eNB %d)\n",ue_mod_idP,eNB_index);
     }
-
 #    endif
   }
   return(0);

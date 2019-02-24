@@ -1096,7 +1096,12 @@ extern "C" {
         device->type = USRP_B200_DEV;
         usrp_master_clock = 30.72e6;
         args += boost::str(boost::format(",master_clock_rate=%f") % usrp_master_clock);
+#if UHD_VERSION < 3131000
+        args += ",num_send_frames=256,num_recv_frames=256, send_frame_size=15360, recv_frame_size=15360" ;
+#else
+        LOG_W(HW,"Bug in UHD => 3.13.1, reduce paquet size until UHD is fixed\n");
         args += ",num_send_frames=256,num_recv_frames=256, send_frame_size=7680, recv_frame_size=7680" ;
+#endif
       }
 
       if (device_adds[0].get("type") == "n3xx") {
