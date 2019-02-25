@@ -119,7 +119,7 @@ extern UE_MAC_INST                 *UE_mac_inst;
 extern uint16_t                     two_tier_hexagonal_cellIds[7];
 
 mui_t                               rrc_eNB_mui = 0;
-
+uint32_t reconf_ue_num = 0;
 void
 openair_rrc_on(
   const protocol_ctxt_t *const ctxt_pP
@@ -7227,14 +7227,17 @@ rrc_rx_tx(
 
     if ((ctxt_pP->frame == 0) && (ctxt_pP->subframe == 0)) {
       if (ue_context_p->ue_context.Initialue_identity_s_TMSI.presence == TRUE) {
-        LOG_I(RRC, "UE rnti %x: S-TMSI %x failure timer %d/8\n",
+        LOG_I(RRC, "UE rnti %x: S-TMSI %x failure timer %d/20000\n",
               ue_context_p->ue_context.rnti,
               ue_context_p->ue_context.Initialue_identity_s_TMSI.m_tmsi,
               ue_context_p->ue_context.ul_failure_timer);
       } else {
-        LOG_I(RRC, "UE rnti %x failure timer %d/8\n",
+        LOG_I(RRC, "UE rnti %x failure timer %d/20000\n",
               ue_context_p->ue_context.rnti,
               ue_context_p->ue_context.ul_failure_timer);
+      }
+      if (ue_context_p->ue_context.Status == RRC_RECONFIGURED && ue_context_p->ue_context.ul_failure_timer <= 0) {
+        ++reconf_ue_num;
       }
     }
 
@@ -7390,7 +7393,10 @@ rrc_rx_tx(
       }
     }
   } // end RB_FOREACH
-
+  if((ctxt_pP->frame == 0) && (ctxt_pP->subframe == 0)) {
+    LOG_I(RRC, "NUMBER_OF_UE_IN_RRC_RECONFIGURED: %d\n", reconf_ue_num);
+    reconf_ue_num = 0;
+  }
   if (ue_to_be_removed) {
     if ((ue_to_be_removed->ue_context.ul_failure_timer >= 20000) ||
         ((ue_to_be_removed->ue_context.ue_rrc_inactivity_timer >= RC.rrc[ctxt_pP->module_id]->configuration.rrc_inactivity_timer_thres) &&
