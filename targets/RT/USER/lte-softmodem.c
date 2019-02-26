@@ -286,6 +286,7 @@ void exit_function(const char *file, const char *function, const int line, const
     printf("%s:%d %s() Exiting OAI softmodem: %s\n",file,line, function, s);
   }
 
+  close_log_mem();
   oai_exit = 1;
 
   if (RC.ru == NULL)

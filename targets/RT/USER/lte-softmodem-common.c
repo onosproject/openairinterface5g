@@ -78,6 +78,13 @@ void get_common_options(void) {
     load_module_shlib("telnetsrv",NULL,0,NULL);
   }
 
+  if (strlen(logmem_filename) > 0) {
+    log_mem_filename = &logmem_filename[0];
+    log_mem_flag = 1;
+    printf("Enabling OPT for log save at memory %s\n",log_mem_filename);
+    logInit_log_mem();
+  }
+
   if (noS1) {
     set_softmodem_optmask(SOFTMODEM_NOS1_BIT);
   }
