@@ -302,6 +302,27 @@ int  is_newline( char *str, int size);
 
 int register_log_component(char *name, char *fext, int compidx);
 
+// Statistics_info
+typedef struct STAT_INFO {
+  uint64_t rrc_connected_count;   /* Number of RRC_CONNECTED UEs    */
+  uint64_t rrc_release_count;     /* Number of RRC_Release count    */
+  uint64_t rrc_reest_count;       /* Number of RRC_Reestablishment  */
+  uint64_t memblock_alloc_ok;     /* Number of memblock alloc OK    */
+  uint64_t memblock_free_ok;     /* Number of  memblock free  OK    */
+  uint64_t pdcp_discard;          /* Number of PDCP discard         */
+  uint64_t rlc_discard;           /* Number of RLC  discard         */
+  uint64_t queue_discard_count;   /* Number of queue buffer discard */
+  uint64_t dlack_count;           /* Number of DL ACK               */
+  uint64_t dlnack_count;          /* Number of DL NACK              */
+  uint64_t ul_crcchk_ok;          /* Number of UL CRC Check OK      */
+  uint64_t ul_crcchk_ng;          /* Number of UL CRC Check NG      */
+  uint64_t rf_write_err;          /* Number of RF Write Err         */
+  uint64_t rf_read_err;           /* Number of RF Read  Err         */
+  uint64_t tx_failsafe;           /* Number of RF TX Failsafe       */
+} STAT_INFO_t;
+
+extern STAT_INFO_t stat_info;
+
 /* @}*/
 
 /*!\fn int32_t write_file_matlab(const char *fname, const char *vname, void *data, int length, int dec, char format);

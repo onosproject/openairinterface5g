@@ -773,6 +773,7 @@ void rx_rf(RU_t *ru,int *frame,int *subframe) {
 //	      "rx_rf: Asked for %d samples, got %d from SDR\n",fp->samples_per_tti,rxs);
   if(rxs != fp->samples_per_tti){
     LOG_E(PHY,"rx_rf: Asked for %d samples, got %d from SDR\n",fp->samples_per_tti,rxs);
+    stat_info.rf_read_err++;
     late_control=STATE_BURST_TERMINATE;
   }
 
@@ -957,6 +958,7 @@ void tx_rf(RU_t *ru) {
     if( (txs !=  siglen+sf_extension) && (late_control==STATE_BURST_NORMAL) ){ /* add fail safe for late command */
       late_control=STATE_BURST_TERMINATE;
       LOG_E(PHY,"TX : Timeout (sent %d/%d) state =%d\n",txs, siglen,late_control);
+      stat_info.rf_write_err++;
     }
   }
 }
@@ -1217,8 +1219,10 @@ void do_ru_synch(RU_t *ru) {
 				     rxp,
 				     fp->samples_per_tti*10,
 				     ru->nb_rx);
-    if (rxs != fp->samples_per_tti*10) LOG_E(PHY,"requested %d samples, got %d\n",fp->samples_per_tti*10,rxs);
- 
+    if (rxs != fp->samples_per_tti*10) {
+      LOG_E(PHY,"requested %d samples, got %d\n",fp->samples_per_tti*10,rxs);
+      stat_info.rf_read_err++;
+    }
     // wakeup synchronization processing thread
     wakeup_synch(ru);
     ic=0;
@@ -2051,6 +2055,7 @@ static void* eNB_thread_phy_tx( void* param ) {
         }else{
           LOG_E(PHY,"rf tx thread busy, skipping\n");
           late_control=STATE_BURST_TERMINATE;
+          stat_info.tx_failsafe++;
         }
         pthread_mutex_unlock( &ru->proc.mutex_rf_tx );
     }
@@ -2100,6 +2105,7 @@ static void* rf_tx( void* param ) {
     if(proc->instance_cnt_rf_tx >= 0){
       late_control=STATE_BURST_TERMINATE;
       LOG_E(PHY,"detect rf tx busy change mode TX failsafe\n");
+      stat_info.tx_failsafe++;
     }
   }
 

@@ -890,6 +890,7 @@ rlc_op_status_t rrc_rlc_data_req     (
 #endif
                         );
   } else {
+    stat_info.rlc_discard++;
     return RLC_OP_STATUS_INTERNAL_ERROR;
   }
 }

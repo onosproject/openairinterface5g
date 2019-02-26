@@ -3580,9 +3580,11 @@ extract_harq(module_id_t mod_idP, int CC_idP, int UE_id,
          if(harq_indication_tdd->harq_data[0].bundling.value_0==1){ //ack
            sched_ctl->round[CC_idP][harq_pid] = 8; // release HARQ process
            sched_ctl->tbcnt[CC_idP][harq_pid] = 0;
+           stat_info.dlack_count++;  // Statistics info (DL ACK)
            LOG_D(MAC,"frame %d subframe %d Acking (%d,%d) harq_pid %d round %d\n",frameP,subframeP,frame_tx,subframe_tx,harq_pid,sched_ctl->round[CC_idP][harq_pid]);
          }else{ //nack
 	   if( sched_ctl->round[CC_idP][harq_pid]<8) sched_ctl->round[CC_idP][harq_pid]++;
+           stat_info.dlnack_count++;  // Statistics info (DL NACK)
            if (sched_ctl->round[CC_idP][harq_pid] == 4) {
              sched_ctl->round[CC_idP][harq_pid] = 8;     // release HARQ process
              sched_ctl->tbcnt[CC_idP][harq_pid] = 0;
@@ -3682,6 +3684,7 @@ extract_harq(module_id_t mod_idP, int CC_idP, int UE_id,
 	if (pdu[0] == 1) {	// ACK
 	  sched_ctl->round[CC_idP][harq_pid] = 8;	// release HARQ process
 	  sched_ctl->tbcnt[CC_idP][harq_pid] = 0;
+          stat_info.dlack_count++;  // Statistics info (DL ACK)
 	} else if (pdu[0] == 2 || pdu[0] == 4) {	// NAK (treat DTX as NAK)
 	  sched_ctl->round[CC_idP][harq_pid]++;	// increment round
           if (sched_ctl->round[CC_idP][harq_pid] == 4) {
@@ -3698,6 +3701,7 @@ extract_harq(module_id_t mod_idP, int CC_idP, int UE_id,
             }
            }
           }
+        stat_info.dlnack_count++;  // Statistics info (DL NACK)
         }
       } else {
 	// one or two ACK/NAK bits

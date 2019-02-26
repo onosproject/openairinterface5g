@@ -336,7 +336,9 @@ mem_block_t * create_new_segment_from_pdu(
 		((struct mac_tb_ind *) (new_segment_p->data))->data_ptr = (uint8_t*)&new_segment_p->data[sizeof (mac_rlc_max_rx_header_size_t)];
 		((struct mac_tb_ind *) (new_segment_p->data))->size = data_length_to_copy + header_size;
 		memcpy(pdu_new_segment_info_p->payload,pdu_rx_info_p->payload + so_offset,data_length_to_copy);
-	}
+	} else {
+          stat_info.rlc_discard++;
+        }
 
 	return new_segment_p;
 }

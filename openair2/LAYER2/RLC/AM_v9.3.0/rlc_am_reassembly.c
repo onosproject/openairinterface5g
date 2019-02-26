@@ -56,6 +56,7 @@ rlc_am_reassembly (
 
     //assert(rlc_pP->output_sdu_in_construction != NULL);
     if(rlc_pP->output_sdu_in_construction == NULL) {
+      stat_info.rlc_discard++;
       LOG_E(RLC, PROTOCOL_RLC_AM_CTXT_FMT"[REASSEMBLY PAYLOAD] output_sdu_in_construction is NULL\n",
             PROTOCOL_RLC_AM_CTXT_ARGS(ctxt_pP,rlc_pP));
       return;
