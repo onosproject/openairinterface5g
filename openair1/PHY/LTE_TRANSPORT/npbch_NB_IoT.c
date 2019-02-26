@@ -244,7 +244,8 @@ int generate_npbch(NB_IoT_eNB_NPBCH_t 		*eNB_npbch,
   ///////////////////////////// for release 13.5.0 and above ////////////////////////
   uint32_t 		  ii=0;
   uint8_t         reset=1,flag_32=0; 
-  uint32_t 	      x1_v13_5_0, x2_v13_5_0 =0, s_v13_5_0 =0; 
+  uint32_t 	      x1_v13_5_0, x2_v13_5_0 =0, s_v13_5_0 =0;
+  x2_v13_5_0 = (((frame_parms->Nid_cell+1) * (frame_mod64%8 + 1) * (frame_mod64%8 + 1) * (frame_mod64%8 + 1)) <<9) + frame_parms->Nid_cell;
   //////////////////////////////////////////////////////////////////////////////////
 
   frame_parms->flag_free_sf =1;
@@ -321,8 +322,6 @@ int generate_npbch(NB_IoT_eNB_NPBCH_t 		*eNB_npbch,
 		
 		if(release_v13_5_0 == 1)
 		{
-
-            x2_v13_5_0 = (((frame_parms->Nid_cell+1) * (frame_mod64%8 + 1) * (frame_mod64%8 + 1) * (frame_mod64%8 + 1)) <<9) + frame_parms->Nid_cell;
 
             scrambling_npbch_REs_rel_13_5_0(frame_parms,
 		                                    txdataF,
