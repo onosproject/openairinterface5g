@@ -73,7 +73,7 @@ int scrambling_npbch_REs_rel_13_5_0(LTE_DL_FRAME_PARMS 	    *frame_parms,
   	uint8_t   c_even,c_odd; 
   	int16_t   theta_re,theta_im; 
   	int16_t   data_re[frame_parms->nb_antennas_tx],data_im[frame_parms->nb_antennas_tx];
-	uint32_t  mem_jj;
+	uint32_t  mem_jj=0;
 
   	first_re      = 0;
   	last_re       = 12;
@@ -242,9 +242,9 @@ int generate_npbch(NB_IoT_eNB_NPBCH_t 		*eNB_npbch,
   uint32_t 		  symbol_offset;
   uint16_t 		  amask=0;
   ///////////////////////////// for release 13.5.0 and above ////////////////////////
-  //uint32_t 		  ii=0;
-  //uint8_t         reset=1,flag_32=0; 
-  //uint32_t 	      x1_v13_5_0, x2_v13_5_0, s_v13_5_0 =0; 
+  uint32_t 		  ii=0;
+  uint8_t         reset=1,flag_32=0; 
+  uint32_t 	      x1_v13_5_0, x2_v13_5_0 =0, s_v13_5_0 =0; 
   //////////////////////////////////////////////////////////////////////////////////
 
   frame_parms->flag_free_sf =1;
@@ -321,9 +321,6 @@ int generate_npbch(NB_IoT_eNB_NPBCH_t 		*eNB_npbch,
 		
 		if(release_v13_5_0 == 1)
 		{
-            uint32_t 		  ii=0;
-  uint8_t         reset=1,flag_32=0; 
-  uint32_t 	      x1_v13_5_0, x2_v13_5_0, s_v13_5_0 =0; 
 
             x2_v13_5_0 = (((frame_parms->Nid_cell+1) * (frame_mod64%8 + 1) * (frame_mod64%8 + 1) * (frame_mod64%8 + 1)) <<9) + frame_parms->Nid_cell;
 
