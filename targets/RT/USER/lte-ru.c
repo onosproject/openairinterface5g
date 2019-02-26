@@ -214,6 +214,9 @@ void fh_if4p5_south_in(RU_t *ru,int *frame,int *subframe) {
   uint16_t packet_type;
   uint32_t symbol_number=0;
   uint32_t symbol_mask_full;
+  
+
+  if (ru->is_slave==1 && ru->wait_cnt!=0) RC.collect = 0;
 
   if ((fp->frame_type == TDD) && (subframe_select(fp,*subframe)==SF_S)) {
     if (*subframe == 1) {  
@@ -226,11 +229,11 @@ void fh_if4p5_south_in(RU_t *ru,int *frame,int *subframe) {
   }
 
   if (proc->symbol_mask[*subframe] == symbol_mask_full) proc->symbol_mask[*subframe] = 0;
-  //printf("fh_if4p5_south_in: RU %d, frame %d, subframe %d, ru %d\n",ru->idx,*frame,*subframe,ru->idx);
+  
+
   //AssertFatal(proc->symbol_mask[*subframe]==0,"rx_fh_if4p5: proc->symbol_mask[%d] = %x\n",*subframe,proc->symbol_mask[*subframe]);
   do {
     recv_IF4p5(ru, &f, &sf, &packet_type, &symbol_number);
-    //printf("~~~~*** RU %d, frame %d, subframe %d, ru %d, packet_type %x, symbol %d\n",ru->idx,*frame,*subframe,ru->idx,packet_type,symbol_number);
     if (oai_exit == 1 || ru->cmd== STOP_RU) break;
     if (packet_type == IF4p5_PULFFT) proc->symbol_mask[sf] = proc->symbol_mask[sf] | (1<<symbol_number);
     else if (packet_type == IF4p5_PULCALIB) {
@@ -247,21 +250,27 @@ void fh_if4p5_south_in(RU_t *ru,int *frame,int *subframe) {
     LOG_D(PHY,"rx_fh_if4p5: subframe %d symbol mask %x\n",*subframe,proc->symbol_mask[*subframe]);
   } while(proc->symbol_mask[*subframe] != symbol_mask_full);    
 
-  if (ru->wait_cnt==0 && packet_type == IF4p5_PULCALIB) {
+  T(T_RAU_INPUT_SIGNAL, T_INT(ru->idx), T_INT(f), T_INT(sf),
+          T_BUFFER(&ru->common.rxdataF[0][0],
+          fp->symbols_per_tti*fp->ofdm_symbol_size*sizeof(int32_t)));
+
+  if (ru->is_slave==1 && ru->wait_cnt==0 /*&& ru->state!=RU_LOST_SYNC*/) RC.collect = 1;
+
+  if (ru->wait_cnt==0 && packet_type == IF4p5_PULCALIB && RC.collect==1) {
+
   	T(T_RAU_INPUT_SIGNAL, T_INT(ru->idx), T_INT(f), T_INT(sf),
           T_BUFFER(&ru->common.rxdataF[0][0],
           fp->symbols_per_tti*fp->ofdm_symbol_size*sizeof(int32_t)));
-  
 
         // Estimate calibration channel estimates:
-  	Ns = (ru->is_slave==0 ? 1 : 0);
-	l = (ru->is_slave==0 ? 10 : 3);
+  	Ns = (ru->is_slave==0 ? 1 : 1);
+	l = (ru->is_slave==0 ? 10 : 10);
 	ru->frame_parms.nb_antennas_rx = ru->nb_rx;		
         ulsch_extract_rbs_single(ru->common.rxdataF,
                                  calibration->rxdataF_ext,
                                  0,
                                  fp->N_RB_DL,
-                                 3%(fp->symbols_per_tti/2),// l = symbol within slot
+				 3%(fp->symbols_per_tti/2),// l = symbol within slot
                                  Ns, 
                                  fp);
 
@@ -294,11 +303,17 @@ void fh_if4p5_south_in(RU_t *ru,int *frame,int *subframe) {
                 T_BUFFER(&calibration->rxdataF_ext[0][l*12*fp->N_RB_UL],
                 12*fp->N_RB_UL*sizeof(int32_t)));
 
-		/*if (f==252 && ru->idx==1) {
-			LOG_M("rxdataF_ext.m","rxdataFext",&calibration->rxdataF_ext[0][0], 14*12*(fp->N_RB_DL),1,1);
+		T(T_CALIBRATION_CHANNEL_ESTIMATES_TIME, T_INT(ru->idx), T_INT(f), T_INT(sf),
+                T_BUFFER(calibration->drs_ch_estimates_time[0],
+                fp->ofdm_symbol_size*sizeof(int32_t)));
+
+/*		if (f==251 && ru->idx==0) {
+			//LOG_M("rxdataF_ext.m","rxdataFext",&calibration->rxdataF_ext[0][0], 14*12*(fp->N_RB_DL),1,1);
+			LOG_M("dmrs_time.m","dmrstime",calibration->drs_ch_estimates_time[0], fp->ofdm_symbol_size,1,1);
 			exit(-1);
 		}*/
-  }
+  //}
+ }
   
 
   //calculate timestamp_rx, timestamp_tx based on frame and subframe

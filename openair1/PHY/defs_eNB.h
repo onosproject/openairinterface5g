@@ -302,7 +302,8 @@ typedef enum {
   RU_RUN    = 3,
   RU_ERROR  = 4,
   RU_SYNC   = 5,
-  RU_CHECK_SYNC = 6
+  RU_CHECK_SYNC = 6,
+  RU_LOST_SYNC = 7
 } rru_state_t;
 
 /// Some commamds to RRU. Not sure we should do it like this !

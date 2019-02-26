@@ -437,7 +437,7 @@ void configure_ru(int idx,
   config->N_RB_UL[0]             = ru->frame_parms.N_RB_UL;
   config->threequarter_fs[0]     = ru->frame_parms.threequarter_fs;
   config->tag			 = idx;
-  config->p			 = RC.nb_RU-1;
+  config->p			 = RC.nb_RU;
   if (ru->if_south==REMOTE_IF4p5) {
     config->prach_FreqOffset[0]  = ru->frame_parms.prach_config_common.prach_ConfigInfo.prach_FreqOffset;
     config->prach_ConfigIndex[0] = ru->frame_parms.prach_config_common.prach_ConfigInfo.prach_ConfigIndex;
@@ -717,7 +717,7 @@ void* ru_thread_control( void* param ) {
 	      if (ru->if_south == LOCAL_RF) LOG_E(PHY,"Received RRU_config_ok msg...Ignoring\n");
 	      else{
 		if (ru->is_slave == 1){
-                  printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Received RRU_sync_ok from RRU %d\n",ru->idx);
+                  printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Received RRU_sync_ok from RRU %d\n",ru->idx);
 		  // Just change the state of the RRU to unblock ru_thread()
 		  ru->state = RU_RUN;		
 		}else LOG_E(PHY,"Received RRU_sync_ok from a master RRU...Ignoring\n"); 	
@@ -745,8 +745,15 @@ void* ru_thread_control( void* param ) {
 		}else{
 		  LOG_I(PHY,"RRU not running, can't stop\n"); 
 		}
-	      }else LOG_E(PHY,"Received RRU_stop msg...Ignoring\n");
-	      
+	      }else { // RAU
+	       	/*if (ru->is_slave == 1){
+                  printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Received RRU_stop from RRU %d\n",ru->idx);
+                  // Just change the state of the RRU to unblock ru_thread()
+                  ru->state = RU_LOST_SYNC;
+		  //RC.collect = 0;
+		}*/
+		LOG_E(PHY,"Received RRU_stop msg...Ignoring\n");
+	      }
 	      break;
 
 	    default:
