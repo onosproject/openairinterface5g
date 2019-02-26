@@ -231,8 +231,8 @@ void *eNB_app_task(void *args_p)
 #endif
 
   /* Try to register each eNB with each other */
-  x2_registered_enb = 0;
-  x2_register_enb_pending = eNB_app_register_x2 (enb_id_start, enb_id_end);
+//  x2_registered_enb = 0;
+//  x2_register_enb_pending = eNB_app_register_x2 (enb_id_start, enb_id_end);
 
   do {
     // Wait for a message
