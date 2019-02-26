@@ -47,7 +47,8 @@ int generate_SIB1(NB_IoT_eNB_NDLSCH_t 		*sib1_struct,
                    uint32_t 				frame,
                    uint32_t 				subframe,
                    int                      RB_IoT_ID,
-                   uint8_t                  operation_mode)
+                   uint8_t                  operation_mode,
+                   uint8_t                release_v13_5_0)
 {
  	int done=0;
  	uint8_t *sib1_pdu  = sib1_struct->harq_process->pdu;
@@ -97,7 +98,7 @@ int generate_SIB1(NB_IoT_eNB_NDLSCH_t 		*sib1_struct,
     if((subframe == 4)  && (frame%2 == var) && (born_inf<= frame % rep_val) && (frame % rep_val < born_sup ))
     {
         LOG_D(PHY,"[%3d][%2d] Generating SIB1\n",frame,subframe);
-    	int G = get_G_SIB1_NB_IoT(frame_parms,operation_mode);
+    	  int G = get_G_SIB1_NB_IoT(frame_parms,operation_mode);
 
         if( frame % rep_val == var )
         {
@@ -111,7 +112,9 @@ int generate_SIB1(NB_IoT_eNB_NDLSCH_t 		*sib1_struct,
                                          8*G,
                                          frame, 
                                          subframe*2,
-                                         sib1_struct->rnti);
+                                         sib1_struct->rnti,
+                                         release_v13_5_0,
+                                         1);
         }
 
         dlsch_modulation_NB_IoT(txdataF,
@@ -137,13 +140,14 @@ int generate_SIB1(NB_IoT_eNB_NDLSCH_t 		*sib1_struct,
 /////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////
 
-int generate_SIB23(NB_IoT_eNB_NDLSCH_t 	      *SIB23,
-	                 int32_t 				  **txdataF,
-	                 int16_t                  amp,
+int generate_SIB23(NB_IoT_eNB_NDLSCH_t 	  *SIB23,
+	                 int32_t 				        **txdataF,
+	                 int16_t                amp,
 	                 LTE_DL_FRAME_PARMS 	  *frame_parms,
-	                 uint32_t 			      frame,
-	                 uint32_t 			      subframe,
-	                 int                      RB_IoT_ID)
+	                 uint32_t 			        frame,
+	                 uint32_t 			        subframe,
+	                 int                    RB_IoT_ID,
+                   uint8_t                release_v13_5_0)
 {
     int done=0;
 
@@ -152,8 +156,8 @@ int generate_SIB23(NB_IoT_eNB_NDLSCH_t 	      *SIB23,
         //LOG_I(PHY,"[Frame: %d][Subframe: %d]sent SIB23\n",frame,subframe);
 
     	uint8_t *SIB23_pdu  = SIB23->harq_process->pdu;
-	 	uint32_t rep =  SIB23->resource_assignment;
-	 	uint8_t eutra_control_region = 3;
+	 	  uint32_t rep =  SIB23->resource_assignment;
+	 	  uint8_t eutra_control_region = 3;
 
 	    uint32_t counter_rep    =  SIB23->counter_repetition_number;
 	    uint32_t pointer_to_sf  =  SIB23->pointer_to_subframe;             /// to identify wich encoded subframe to transmit 
@@ -173,7 +177,9 @@ int generate_SIB23(NB_IoT_eNB_NDLSCH_t 	      *SIB23,
                                          Nsf*G,
                                          frame, 
                                          subframe*2,
-                                         SIB23->rnti);
+                                         SIB23->rnti,
+                                         release_v13_5_0,
+                                         1);
         }
 
         dlsch_modulation_NB_IoT(txdataF,
@@ -208,30 +214,29 @@ int generate_SIB23(NB_IoT_eNB_NDLSCH_t 	      *SIB23,
 
 int generate_NDLSCH_NB_IoT(PHY_VARS_eNB           *eNB,
                            NB_IoT_eNB_NDLSCH_t 	  *RAR,
-		                   int32_t 				  **txdataF,
-		                   int16_t                amp,
-		                   LTE_DL_FRAME_PARMS 	  *frame_parms,
-		                   uint32_t 			  frame,
-		                   uint32_t 			  subframe,
-		                   int                    RB_IoT_ID)
+		                       int32_t 				        **txdataF,
+		                       int16_t                amp,
+		                       LTE_DL_FRAME_PARMS 	  *frame_parms,
+		                       uint32_t 			        frame,
+		                       uint32_t 			        subframe,
+		                       int                    RB_IoT_ID,
+                           uint8_t                release_v13_5_0)
 {
     int done = 0;
 
     if( RAR->active == 1 )
     {
     	uint8_t *RAR_pdu  = RAR->harq_process->pdu;
-        // TODO:  process the RAR PDU to get the subcarrier indication for NPUSCH , Then set value in NPUSCH
-        if(RAR->active_msg2 == 1 && RAR_pdu!=NULL)
-        {
-            //printf("RAR PDU = %p\n",RAR_pdu);
-            uint8_t one_byte = RAR_pdu[2]>>3;
-            uint8_t subcarrier_spacing = one_byte & 0x01;
-            eNB->ulsch_NB_IoT[0]->harq_process->subcarrier_spacing = subcarrier_spacing;
-        }
-        // to be added at the end of NPDSCH process
-        // make different between RAR data and NPDSCH data   // add a flag in NPDSCH to switch between RA and normal data transmission
-	 	uint32_t rep =  RAR->repetition_number;
-	 	uint8_t  eutra_control_region = 3;
+      
+      if(RAR->active_msg2 == 1 && RAR_pdu!=NULL)
+      {
+          uint8_t one_byte = RAR_pdu[2]>>3;
+          uint8_t subcarrier_spacing = one_byte & 0x01;
+          eNB->ulsch_NB_IoT[0]->harq_process->subcarrier_spacing = subcarrier_spacing;
+      }
+      // make different between RAR data and NPDSCH data   // add a flag in NPDSCH to switch between RA and normal data transmission
+	 	  uint32_t rep =  RAR->repetition_number;
+	 	  uint8_t  eutra_control_region = 3;
 
 	    uint32_t counter_rep    =  RAR->counter_repetition_number;
 	    uint32_t counter_sf_rep =  RAR->counter_current_sf_repetition;   /// for identifiying when to trigger new scrambling
@@ -242,8 +247,8 @@ int generate_NDLSCH_NB_IoT(PHY_VARS_eNB           *eNB,
 
         //LOG_I(PHY,"[Frame: %d][Subframe: %d]sent RAR, rep : %d, counter_rep:%d, Num_res:%d\n",frame,subframe,rep,counter_rep,Nsf);
 
-        if( (counter_rep == rep) && (counter_sf_rep == 0) && (pointer_to_sf == 0) )
-        {
+      if( (counter_rep == rep) && (counter_sf_rep == 0) && (pointer_to_sf == 0) )
+      {
         	
             dlsch_encoding_NB_IoT(RAR_pdu,
                                   RAR,
@@ -255,18 +260,22 @@ int generate_NDLSCH_NB_IoT(PHY_VARS_eNB           *eNB,
                                          Nsf*G,
                                          frame, 
                                          subframe*2,
-                                         RAR->rnti);
-        }
+                                         RAR->rnti,
+                                         release_v13_5_0,
+                                         0);
+      }
 
-		if( (counter_rep != rep) && (counter_sf_rep == 0) && (pointer_to_sf == 0) )
-		{
-			dlsch_scrambling_Gen_NB_IoT(frame_parms,
+		  if( (counter_rep != rep) && (counter_sf_rep == 0) && (pointer_to_sf == 0) )
+		  {
+			       dlsch_scrambling_Gen_NB_IoT(frame_parms,
                                          RAR,
                                          Nsf*G,
                                          frame, 
                                          subframe*2,
-                                         RAR->rnti);
-		}
+                                         RAR->rnti,
+                                         release_v13_5_0,
+                                         0);
+		  }
 
         if( rep > 4)
         {

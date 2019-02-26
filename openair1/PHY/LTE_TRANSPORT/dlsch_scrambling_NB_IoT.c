@@ -53,16 +53,20 @@ void dlsch_scrambling_Gen_NB_IoT(LTE_DL_FRAME_PARMS         *frame_parms,
                                   int                       tot_bits,            // total number of bits to transmit
                                   uint16_t                  Nf,                  // Nf is the frame number (0..9)
                                   uint8_t                   Ns,
-                                  uint32_t                  rnti)  
+                                  uint32_t                  rnti,
+                                  uint8_t                   release_v13_5_0,
+                                  uint8_t                   SIB)  
 {
   int         i,j,k=0;
   uint32_t    x1,x2, s=0;
   uint8_t     *e = dlsch->harq_process->e;                              //uint8_t *e=dlsch->harq_processes[dlsch->current_harq_pid]->e;
 
-   //x2 = (dlsch->si_rnti<<15) + (frame_parms->Nid_cell + 1) * ( (Nf % 61) + 1 ) ;
-  x2 = (rnti<<14) + ((Nf%2)<<13) + ((Ns>>1)<<9) + frame_parms->Nid_cell;
-  // for NPDSCH not carriying SIBs
-  //x2 = (dlsch->harq_process_sib1.rnti<<14) + ((Nf%2)<<13) + ((Ns>>1)<<9) + frame_parms->Nid_cell;   //this is c_init in 36.211 Sec 10.2.3.1
+  if(release_v13_5_0 == 1  && SIB == 1)    /// for SIBs from release 13.5.0 and above
+  {
+      x2 = (rnti<<15) + (frame_parms->Nid_cell + 1) * ( (Nf % 61) + 1 ) ;
+  } else {
+      x2 = (rnti<<14) + ((Nf%2)<<13) + ((Ns>>1)<<9) + frame_parms->Nid_cell;
+  }
   
   s = lte_gold_generic_NB_IoT(&x1, &x2, 1);
 

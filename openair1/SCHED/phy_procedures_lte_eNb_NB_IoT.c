@@ -231,6 +231,7 @@ void common_signal_procedures_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
   //uint16_t                Ntti      =  10;                      //ntti = 10
   int                     RB_IoT_ID=22;                          // XXX should be initialized (RB reserved for NB-IoT, PRB index)
   int                     With_NSSS=0;                            // With_NSSS = 1; if the frame include a sub-Frame with NSSS signal
+  uint8_t                 release_v13_5_0 = 0;
 
   uint32_t                hyper_frame=proc->HFN;
 
@@ -300,7 +301,8 @@ void common_signal_procedures_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
                      fp,
                      npbch_pdu,
                      frame%64,
-                     RB_IoT_ID);
+                     RB_IoT_ID,
+                     release_v13_5_0);
     }
     /////////////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////// SIB1 ////////////////////////////////////
@@ -309,13 +311,14 @@ void common_signal_procedures_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
     if(subframe == 4)
     {
        sib1_state = generate_SIB1(sib1,
-                      txdataF,
-                      AMP,
-                      fp,
-                      frame,
-                      subframe,
-                      RB_IoT_ID,
-                      0);
+                                  txdataF,
+                                  AMP,
+                                  fp,
+                                  frame,
+                                  subframe,
+                                  RB_IoT_ID,
+                                  0,
+                                  release_v13_5_0);
     }
     /////////////////////////////////////////////////////////////////////////////////
     ///////////////////////////////////// SIB23 ////////////////////////////////////
@@ -328,7 +331,8 @@ void common_signal_procedures_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
                          fp,
                          frame,
                          subframe,
-                         RB_IoT_ID);
+                         RB_IoT_ID,
+                         release_v13_5_0);
     }
   
     if( (subframe != 0) && (subframe != 5) && (nsss_state != 1) && (fp->flag_free_sf == 0) )
@@ -358,7 +362,8 @@ void common_signal_procedures_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
                                  fp,
                                  frame,
                                  subframe,
-                                 RB_IoT_ID);
+                                 RB_IoT_ID,
+                                 release_v13_5_0);
 
       } else if(eNB->ndlsch[0] != NULL) {
           generate_NDLSCH_NB_IoT(eNB,
@@ -368,7 +373,8 @@ void common_signal_procedures_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
                                  fp,
                                  frame,
                                  subframe,
-                                 RB_IoT_ID);
+                                 RB_IoT_ID,
+                                 release_v13_5_0);
       }
       ///////////////////////////////////////////////////////////////////////////////////
     }
