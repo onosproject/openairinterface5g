@@ -359,11 +359,11 @@ int wake_eNB_rxtx(PHY_VARS_eNB *eNB, uint16_t sfn, uint16_t sf) {
 
   // wake up TX for subframe n+sf_ahead
   // lock the TX mutex and make sure the thread is ready
-  if (pthread_mutex_timedlock(&L1_proc->mutex,&wait) != 0) {
-    LOG_E( PHY, "[eNB] ERROR pthread_mutex_lock for eNB RXTX thread %d (IC %d)\n", L1_proc->subframe_rx&1,L1_proc->instance_cnt );
-    exit_fun( "error locking mutex_rxtx" );
-    return(-1);
-  }
+//  if (pthread_mutex_timedlock(&L1_proc->mutex,&wait) != 0) {
+//    LOG_E( PHY, "[eNB] ERROR pthread_mutex_lock for eNB RXTX thread %d (IC %d)\n", L1_proc->subframe_rx&1,L1_proc->instance_cnt );
+//    exit_fun( "error locking mutex_rxtx" );
+//    return(-1);
+//  }
 
   {
     static uint16_t old_sf = 0;
@@ -379,7 +379,23 @@ int wake_eNB_rxtx(PHY_VARS_eNB *eNB, uint16_t sfn, uint16_t sf) {
     if (old_sf == 0 && old_sfn % 100==0) LOG_W( PHY,"[eNB] sfn/sf:%d%d old_sfn/sf:%d%d proc[rx:%d%d]\n", sfn, sf, old_sfn, old_sf, proc->frame_rx, proc->subframe_rx);
   }
 
-  ++L1_proc->instance_cnt;
+  // wake up TX for subframe n+sf_ahead
+  // lock the TX mutex and make sure the thread is ready
+  if (pthread_mutex_timedlock(&L1_proc->mutex,&wait) != 0) {
+      LOG_E( PHY, "[eNB] ERROR pthread_mutex_lock for eNB RXTX thread %d (IC %d)\n", L1_proc->subframe_rx&1,L1_proc->instance_cnt );
+      exit_fun( "error locking mutex_rxtx" );
+      return(-1);
+  }
+
+  if(L1_proc->instance_cnt < 0){
+    ++L1_proc->instance_cnt;
+  }else{
+    LOG_E(MAC,"RCC singal to rxtx frame %d subframe %d busy %d (frame %d subframe %d)\n",L1_proc->frame_rx,L1_proc->subframe_rx,L1_proc->instance_cnt,proc->frame_rx,proc->subframe_rx);
+    pthread_mutex_unlock( &L1_proc->mutex );
+    return(0);
+  }
+
+  pthread_mutex_unlock( &L1_proc->mutex );
 
   //LOG_D( PHY,"[VNF-subframe_ind] sfn/sf:%d:%d proc[frame_rx:%d subframe_rx:%d] L1_proc->instance_cnt_rxtx:%d \n", sfn, sf, proc->frame_rx, proc->subframe_rx, L1_proc->instance_cnt_rxtx);
 
@@ -403,10 +419,6 @@ int wake_eNB_rxtx(PHY_VARS_eNB *eNB, uint16_t sfn, uint16_t sf) {
     exit_fun( "ERROR pthread_cond_signal" );
     return(-1);
   }
-
-  //LOG_D(PHY,"%s() About to attempt pthread_mutex_unlock\n", __FUNCTION__);
-  pthread_mutex_unlock( &L1_proc->mutex );
-  //LOG_D(PHY,"%s() UNLOCKED pthread_mutex_unlock\n", __FUNCTION__);
 
   return(0);
 }
@@ -799,6 +811,7 @@ int vnf_pack_p4_p5_vendor_extension(nfapi_p4_p5_message_header_t* header, uint8_
 
 static pthread_t vnf_start_pthread;
 static pthread_t vnf_p7_start_pthread;
+static pthread_t vnf_p7_time_pthread;
 
 void* vnf_p7_start_thread(void *ptr) {
 
@@ -810,6 +823,14 @@ void* vnf_p7_start_thread(void *ptr) {
 
   nfapi_vnf_p7_start(config);
 
+  return config;
+}
+
+void* vnf_p7_time_thread(void *ptr) {
+  printf("%s()\n", __FUNCTION__);
+  pthread_setname_np(pthread_self(), "VNF_P7");
+  nfapi_vnf_p7_config_t* config = (nfapi_vnf_p7_config_t*)ptr;
+  nfapi_vnf_p7_time(config);
   return config;
 }
 
@@ -856,6 +877,7 @@ void* vnf_p7_thread_start(void* ptr) {
 
   NFAPI_TRACE(NFAPI_TRACE_INFO, "[VNF] Creating VNF NFAPI start thread %s\n", __FUNCTION__);
   pthread_create(&vnf_p7_start_pthread, NULL, &vnf_p7_start_thread, p7_vnf->config);
+  pthread_create(&vnf_p7_time_pthread, NULL, &vnf_p7_time_thread, p7_vnf->config);
 
   return 0;
 }
