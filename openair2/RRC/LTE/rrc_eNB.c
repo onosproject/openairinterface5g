@@ -1919,6 +1919,7 @@ rrc_eNB_generate_RRCConnectionRelease(
   ue_context_pP->ue_context.ue_reestablishment_timer = 0;
   ue_context_pP->ue_context.ue_release_timer = 0;
   ue_context_pP->ue_context.ue_rrc_inactivity_timer = 0;
+  stat_info.rrc_release_count++;  //statistics rrc_release count
   LOG_I(RRC,
         PROTOCOL_RRC_CTXT_UE_FMT" Logical Channel DL-DCCH, Generate RRCConnectionRelease (bytes %d)\n",
         PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP),
@@ -6200,7 +6201,7 @@ rrc_eNB_decode_dcch(
                 ue_context_p);
           } else {
             ue_context_p->ue_context.reestablishment_cause = LTE_ReestablishmentCause_spare1;
-
+            stat_info.rrc_reest_count++;  //statistics rrc_reest count
             for (uint8_t e_rab = 0; e_rab < ue_context_p->ue_context.nb_of_e_rabs; e_rab++) {
               if (ue_context_p->ue_context.e_rab[e_rab].status == E_RAB_STATUS_DONE) {
                 ue_context_p->ue_context.e_rab[e_rab].status = E_RAB_STATUS_ESTABLISHED;
@@ -6346,6 +6347,7 @@ rrc_eNB_decode_dcch(
               ctxt_pP,
               ue_context_p,
               &ul_dcch_msg->message.choice.c1.choice.rrcConnectionSetupComplete.criticalExtensions.choice.c1.choice.rrcConnectionSetupComplete_r8);
+             stat_info.rrc_connected_count++; //statistics rrc_connected count
             LOG_I(RRC, PROTOCOL_RRC_CTXT_UE_FMT" UE State = RRC_CONNECTED \n",
                   PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP));
 

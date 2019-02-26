@@ -227,6 +227,9 @@ int write_file_matlab(const char *fname,const char *vname,void *data,int length,
   return 0;
 }
 
+/* Statistics info */
+STAT_INFO_t stat_info={0,0,0,0,0,0,0,0,0};
+
 /* get log parameters from configuration file */
 void  log_getconfig(log_t *g_log) {
   char *gloglevel = NULL;
@@ -924,6 +927,57 @@ void close_log_mem(void){
     }
   }
  }
+void output_stat_info(void){
+  time_t t;
+  struct tm *tmp;
+  uint64_t rrc_connected_count_tmp;
+  uint64_t rrc_release_count_tmp;
+  uint64_t memblock_alloc_ok_tmp;
+  uint64_t memblock_free_ok_tmp;
+  uint64_t rf_write_err_tmp;
+  uint64_t rf_read_err_tmp;
+  uint64_t tx_failsafe_tmp;
+ 
+  rrc_connected_count_tmp = stat_info.rrc_connected_count;
+  rrc_release_count_tmp   = stat_info.rrc_release_count;
+  memblock_alloc_ok_tmp   = stat_info.memblock_alloc_ok;
+  memblock_free_ok_tmp    = stat_info.memblock_free_ok;
+  rf_write_err_tmp        = stat_info.rf_write_err;
+  rf_read_err_tmp         = stat_info.rf_read_err;
+  tx_failsafe_tmp         = stat_info.tx_failsafe;
+ 
+  time(&t);
+  tmp = localtime(&t);
+ 
+  LOG_I(RRC,"%d/%02d/%02d %02d:%02d:%02d, connected:%lld, release:%lld, reest:%lld, pdcp_dis:%lld, rlc_dis:%lld, queue_dis:%lld, dlack:%lld, dlnack:%lld, ulcrc_ok:%lld, ulcrc_ng:%lld, memblock_alloc_ok:%lld, memblock_free_ok:%lld, rf_write_err:%lld, rf_read_err:%lld, tx_failsafe:%lld\n", 
+    1900 + tmp->tm_year, 1 + tmp->tm_mon, tmp->tm_mday, tmp->tm_hour, tmp->tm_min, tmp->tm_sec,
+    stat_info.rrc_connected_count,
+    stat_info.rrc_release_count,
+    stat_info.rrc_reest_count,
+    stat_info.pdcp_discard,
+    stat_info.rlc_discard,
+    stat_info.queue_discard_count,
+    stat_info.dlack_count,
+    stat_info.dlnack_count,
+    stat_info.ul_crcchk_ok,
+    stat_info.ul_crcchk_ng,
+    stat_info.memblock_alloc_ok,
+    stat_info.memblock_free_ok,
+    stat_info.rf_write_err,
+    stat_info.rf_read_err,
+    stat_info.tx_failsafe);
+
+  memset(&stat_info, 0, sizeof(STAT_INFO_t));
+  stat_info.rrc_connected_count = rrc_connected_count_tmp;
+  stat_info.rrc_release_count   = rrc_release_count_tmp;
+  stat_info.memblock_alloc_ok   = memblock_alloc_ok_tmp;
+  stat_info.memblock_free_ok    = memblock_free_ok_tmp;
+  stat_info.rf_write_err        = rf_write_err_tmp;
+  stat_info.rf_read_err         = rf_read_err_tmp;
+  stat_info.tx_failsafe         = tx_failsafe_tmp;
+
+  return;
+}
 
 #ifdef LOG_TEST
 

@@ -119,6 +119,7 @@ rlc_um_segment_10 (const protocol_ctxt_t* const ctxt_pP, rlc_um_entity_t *rlc_pP
               PROTOCOL_RLC_UM_CTXT_ARGS(ctxt_pP,rlc_pP));
 #endif
         RLC_UM_MUTEX_UNLOCK(&rlc_pP->lock_input_sdus);
+        stat_info.rlc_discard++;
         return;
       }
 
@@ -509,6 +510,7 @@ rlc_um_segment_5 (const protocol_ctxt_t* const ctxt_pP, rlc_um_entity_t *rlc_pP)
               PROTOCOL_RLC_UM_CTXT_ARGS(ctxt_pP,rlc_pP));
 #endif
         RLC_UM_MUTEX_UNLOCK(&rlc_pP->lock_input_sdus);
+        stat_info.rlc_discard++;
         return;
       }
 

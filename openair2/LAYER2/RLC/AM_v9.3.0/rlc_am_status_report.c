@@ -730,8 +730,10 @@ rlc_am_send_status_pdu(
         pdu_size);
   tb_p = get_free_mem_block(sizeof(struct mac_tb_req) + pdu_size, __func__);
 
-  if(tb_p == NULL) return;
-
+  if(tb_p == NULL) {
+    stat_info.rlc_discard++;
+    return;
+  }
   memset(tb_p->data, 0, sizeof(struct mac_tb_req) + pdu_size);
   //estimation only ((struct mac_tb_req*)(tb_p->data))->tb_size  = pdu_size;
   ((struct mac_tb_req *)(tb_p->data))->data_ptr         = (uint8_t *)&(tb_p->data[sizeof(struct mac_tb_req)]);
