@@ -43,6 +43,7 @@
 extern int
 multicast_link_write_sock(int groupP, char *dataP, uint32_t sizeP);
 extern uint8_t D2D_en;
+extern UE_MAC_INST *UE_mac_inst;
 
 void ulsch_channel_level(int32_t **drs_ch_estimates_ext, LTE_DL_FRAME_PARMS *frame_parms, int32_t *avg, uint16_t nb_rb, int symbol_offset);
 void ulsch_extract_rbs_single(int32_t **rxdataF,
@@ -1084,7 +1085,22 @@ void pscch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
     slsch->mcs                       = (sci_rx_flip>>(63-1-7-5-RAbits+1))&31;
     slsch->timing_advance_indication = (sci_rx_flip>>(63-1-7-5-11-RAbits+1))&2047;
     slsch->group_destination_id      = (sci_rx_flip>>(63-1-7-5-11-8-RAbits+1))&255;
-    ue->slcch_received                     = 1;
+
+    uint8_t group_id_found = 0;
+    for (int j = 0; j< MAX_NUM_LCID; j++){
+    	//PC5-S (default RX)
+    	if (UE_mac_inst[ue->Mod_id].sl_info[j].groupL2Id == slsch->group_destination_id) {
+    		group_id_found = 1;
+    		break;
+    	}
+    }
+    //if(slsch->group_destination_id == UE_mac_inst[ue->Mod_id].groupL2Id || slsch->group_destination_id == UE_mac_inst[ue->Mod_id].sourceL2Id)
+    if(slsch->mcs<=20 && slsch->freq_hopping_flag==0 && (group_id_found|| slsch->group_destination_id == UE_mac_inst[ue->Mod_id].sourceL2Id))
+    	ue->slcch_received                     = 1;
+    else
+    	ue->slcch_received                     = 0;
+
+    //ue->slcch_received                     = 1;
     ue->slsch_decoded                      = 0;
 #ifdef DEBUG_SCI_DECODING
     printf("%d.%d sci %lx (%d bits,RAbits %d) : freq_hop %d, resource_block_coding %d, time_resource_pattern %d, mcs %d, timing_advance_indication %d, group_destination_id %d (gid shift %d result %lx => %lx\n",

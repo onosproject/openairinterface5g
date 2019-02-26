@@ -643,7 +643,7 @@ ue_decode_si(module_id_t module_idP, int CC_id, frame_t frameP,
 			  0);
     }
     else {
-      LOG_I(MAC, "[UE %d] Frame %d Sending MIBSL to RRC (LCID Id %d,len %d) : %x.%x.%x.%x.%x\n",
+      LOG_D(MAC, "[UE %d] Frame %d Sending MIBSL to RRC (LCID Id %d,len %d) : %x.%x.%x.%x.%x\n",
           module_idP, frameP, MIBSLCH, 5, slss->slmib[0],slss->slmib[1],slss->slmib[2],slss->slmib[3],slss->slmib[4]);
  
       mac_rrc_data_ind_ue(module_idP, CC_id, frameP, 0,	// unknown subframe
@@ -653,7 +653,7 @@ ue_decode_si(module_id_t module_idP, int CC_id, frame_t frameP,
       // copy frame/subframe
       *frame    = UE_mac_inst[module_idP].directFrameNumber_r12;
       *subframe = UE_mac_inst[module_idP].directSubframeNumber_r12;
-      LOG_I(MAC,"SL: Resetting SF.SFN to %d.%d\n",*frame,*subframe);
+      LOG_D(MAC,"SL: Resetting SF.SFN to %d.%d\n",*frame,*subframe);
     }
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME
 	(VCD_SIGNAL_DUMPER_FUNCTIONS_UE_DECODE_SI, VCD_FUNCTION_OUT);
@@ -921,6 +921,7 @@ void ue_send_sl_sdu(module_id_t module_idP,
             break;
          }
 
+      //LOG_I(MAC, "MAX_NUM_LCID: %d, MAX_NUM_LCID_DATA: %d, ")
       for (j = 0; j< MAX_NUM_LCID; j++){
          if ((longh->LCID < MAX_NUM_LCID_DATA) && (j < MAX_NUM_LCID_DATA)){
             if ((UE_mac_inst[module_idP].sl_info[j].destinationL2Id == sourceL2Id) && (UE_mac_inst[module_idP].sl_info[j].sourceL2Id == destinationL2Id)) {
@@ -1005,7 +1006,7 @@ void ue_send_sl_sdu(module_id_t module_idP,
          LOG_D(MAC, "SL_RESET_RLC_FLAG_NO\n");
       }
   
-      AssertFatal(lcid>0,"lcid %d should not happen\n",lcid); 
+      AssertFatal(lcid>0,"lcid %d should not happen\n",lcid);
       LOG_I(MAC,"%d.%d myL2Id %d sending sdu of size %d, sourceL2Id %d, lcid %d to RLC\n",frameP,subframeP,UE_mac_inst[module_idP].sourceL2Id,rlc_sdu_len,sourceL2Id,lcid);
 
       if(UE_rrc_inst[0].Info[0].rnti == 0){
