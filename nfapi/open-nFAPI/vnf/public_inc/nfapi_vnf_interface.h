@@ -884,6 +884,8 @@ void nfapi_vnf_p7_config_destory(nfapi_vnf_p7_config_t* config);
  
 int nfapi_vnf_p7_start(nfapi_vnf_p7_config_t* config);
 
+int nfapi_vnf_p7_time(nfapi_vnf_p7_config_t* config);
+
 /*! Stop the VNF P7 library. 
  *  \param config A pointer to an vnf p7 configuration structure
  *	\return A status value. 0 equal success, -1 indicates failure
