@@ -58,6 +58,7 @@ void get_common_options(void) {
   uint32_t noS1;
   uint32_t nokrnmod;
   uint32_t nonbiot;
+  char *logmem_filename = NULL;
   paramdef_t cmdline_params[] =CMDLINE_PARAMS_DESC ;
   paramdef_t cmdline_logparams[] =CMDLINE_LOGPARAMS_DESC ;
   checkedparam_t cmdline_log_CheckParams[] = CMDLINE_LOGPARAMS_CHECK_DESC;
@@ -78,7 +79,7 @@ void get_common_options(void) {
     load_module_shlib("telnetsrv",NULL,0,NULL);
   }
 
-  if (strlen(logmem_filename) > 0) {
+  if (logmem_filename != NULL && strlen(logmem_filename) > 0) {
     log_mem_filename = &logmem_filename[0];
     log_mem_flag = 1;
     printf("Enabling OPT for log save at memory %s\n",log_mem_filename);
