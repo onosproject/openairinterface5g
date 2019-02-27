@@ -3221,6 +3221,10 @@ rrc_eNB_generate_defaultRRCConnectionReconfiguration(const protocol_ctxt_t *cons
     size,
     buffer,
     PDCP_TRANSMISSION_MODE_CONTROL);
+    // activate release timer, if RRCReconfComplete not received after 100 frames, remove UE
+    ue_context_pP->ue_context.ue_reestablishment_timer = 1;
+    // remove UE after 100 frames after LTE_RRCConnectionRelease is triggered
+    ue_context_pP->ue_context.ue_reestablishment_timer_thres = 1000;
 }
 
 //-----------------------------------------------------------------------------
@@ -6361,6 +6365,10 @@ rrc_eNB_decode_dcch(
         }
 
         ue_context_p->ue_context.ue_release_timer=0;
+        // activate release timer, if RRCReconfComplete not received after 100 frames, remove UE
+        ue_context_p->ue_context.ue_reestablishment_timer = 1;
+        // remove UE after 100 frames after LTE_RRCConnectionRelease is triggered
+        ue_context_p->ue_context.ue_reestablishment_timer_thres = 1000;
         break;
 
       case LTE_UL_DCCH_MessageType__c1_PR_securityModeComplete:
@@ -7238,7 +7246,7 @@ rrc_rx_tx(
               ue_context_p->ue_context.rnti,
               ue_context_p->ue_context.ul_failure_timer);
       }
-      if (ue_context_p->ue_context.Status == RRC_RECONFIGURED && ue_context_p->ue_context.ul_failure_timer <= 0) {
+      if (ue_context_p->ue_context.Status == RRC_RECONFIGURED && ue_context_p->ue_context.ul_failure_timer <= 0 && ue_context_p->ue_context.ue_reestablishment_timer == 0) {
         ++reconf_ue_num;
       }
     }
