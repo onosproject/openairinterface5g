@@ -152,11 +152,6 @@ int32_t **txdata;
 
 #define KHz (1000UL)
 #define MHz (1000*KHz)
-#define SAIF_ENABLED
-
-#ifdef SAIF_ENABLED
-  uint64_t  g_ue_rx_thread_busy = 0;
-#endif
 
 typedef struct eutra_band_s {
   int16_t band;
@@ -284,10 +279,9 @@ void init_thread(int sched_runtime, int sched_deadline, int sched_fifo, cpu_set_
 }
 
 void init_UE(int nb_inst) {
-  int inst;
   NR_UE_MAC_INST_t *mac_inst;
 
-  for (inst=0; inst < nb_inst; inst++) {
+  for (int inst=0; inst < nb_inst; inst++) {
     //    UE->rfdevice.type      = NONE_DEV;
     //PHY_VARS_NR_UE *UE = PHY_vars_UE_g[inst][0];
     LOG_I(PHY,"Initializing memory for UE instance %d (%p)\n",inst,PHY_vars_UE_g[inst]);
@@ -682,7 +676,7 @@ static void *UE_thread_rxn_txnp4(void *arg) {
   UE_nr_rxtx_proc_t *proc = rtd->proc;
   PHY_VARS_NR_UE    *UE   = rtd->UE;
   //proc->counter_decoder = 0;
-  proc->instance_cnt_rxtx=-1;
+  proc->predicate_rxtx=false;
   proc->subframe_rx=proc->sub_frame_start;
   proc->dci_err_cnt=0;
   char threadname[256];
@@ -707,16 +701,11 @@ static void *UE_thread_rxn_txnp4(void *arg) {
 
   while (!oai_exit) {
     AssertFatal( 0 == pthread_mutex_lock(&proc->mutex_rxtx), "[SCHED][UE] error locking mutex for UE RXTX\n" );
-
-    while (proc->instance_cnt_rxtx < 0) {
+    while (! proc->predicate_rxtx)
       // most of the time, the thread is waiting here
       pthread_cond_wait( &proc->cond_rxtx, &proc->mutex_rxtx );
-    }
-
-    AssertFatal ( 0== pthread_mutex_unlock(&proc->mutex_rxtx), "[SCHED][UE] error unlocking mutex for UE RXn_TXnp4\n" );
+    LOG_D(HW,"processing subframe %d, in thread %s\n", proc->subframe_rx, threadname);
     processSubframeRX(UE, proc);
-    //printf(">>> mac ended\n");
-    // Prepare the future Tx data
 #if 0
 #ifndef NO_RAT_NR
 
@@ -739,13 +728,7 @@ static void *UE_thread_rxn_txnp4(void *arg) {
         updateTimes(current, &t3, 10000, timing_proc_name);
 
 #endif
-    AssertFatal( 0 == pthread_mutex_lock(&proc->mutex_rxtx), "[SCHED][UE] error locking mutex for UE RXTX\n" );
-    proc->instance_cnt_rxtx--;
-#if BASIC_SIMULATOR
-
-    if (pthread_cond_signal(&proc->cond_rxtx) != 0) abort();
-
-#endif
+    proc->predicate_rxtx=false;
     AssertFatal (0 == pthread_mutex_unlock(&proc->mutex_rxtx), "[SCHED][UE] error unlocking mutex for UE RXTX\n" );
   }
 
@@ -829,8 +812,8 @@ void syncInFrame(PHY_VARS_NR_UE *UE, openair0_timestamp *timestamp) {
 }
 
 int computeSamplesShift(PHY_VARS_NR_UE *UE) {
-  if ( getenv("RFSIMULATOR") != 0) {
-    LOG_E(PHY,"SET rx_offset %d \n",UE->rx_offset);
+  if ( getenv("RFSIMULATOR") != 0 && UE->rx_offset != 0) {
+    LOG_W(PHY,"rx_offset is not null in simulated rf %d \n",UE->rx_offset);
     //UE->rx_offset_diff=0;
     return 0;
   }
@@ -871,7 +854,7 @@ void *UE_thread(void *arg) {
   for (int i=0; i<  RX_NB_TH_MAX; i++ )
     UE->proc.proc_rxtx[i].counter_decoder = 0;
 
-  static uint8_t thread_idx = 0;
+  static int thread_idx = 0;
   cpu_set_t cpuset;
   CPU_ZERO(&cpuset);
 
@@ -962,45 +945,31 @@ void *UE_thread(void *arg) {
       continue;
     }
 
-    thread_idx++;
-    thread_idx%=RX_NB_TH;
-    //printf("slot_nr %d nb slot frame %d\n",slot_nr, nb_slot_frame);
-    slot_nr++;
-    slot_nr %= nb_slot_frame;
+    thread_idx= ( thread_idx + 1) % RX_NB_TH;
     UE_nr_rxtx_proc_t *proc = &UE->proc.proc_rxtx[thread_idx];
     // update thread index for received subframe
-    UE->current_thread_id[slot_nr] = thread_idx;
-#if BASIC_SIMULATOR
-
-    for (int t = 0; t < RX_NB_TH; t++) {
-      UE_rxtx_proc_t *proc = &UE->proc.proc_rxtx[t];
-      pthread_mutex_lock(&proc->mutex_rxtx);
-
-      while (proc->instance_cnt_rxtx >= 0) pthread_cond_wait( &proc->cond_rxtx, &proc->mutex_rxtx );
-
-      pthread_mutex_unlock(&proc->mutex_rxtx);
+    //printf("slot_nr %d nb slot frame %d\n",slot_nr, nb_slot_frame);
+    proc->nr_tti_rx=slot_nr++;
+    if ( proc->nr_tti_rx >= nb_slot_frame) {
+      proc->frame_rx = (proc->frame_rx + 1) % MAX_FRAME_NUMBER;
+      proc->nr_tti_rx %= nb_slot_frame;
     }
+    slot_nr%=nb_slot_frame;
+    proc->subframe_rx=table_sf_slot[proc->nr_tti_rx];
+    UE->current_thread_id[slot_nr] = thread_idx;
 
-#endif
-    LOG_D(PHY,"Process slot %d thread Idx %d \n", slot_nr, UE->current_thread_id[slot_nr]);
-    proc->nr_tti_rx=slot_nr;
-    proc->subframe_rx=table_sf_slot[slot_nr];
     proc->frame_tx = proc->frame_rx;
     proc->nr_tti_tx= slot_nr + DURATION_RX_TO_TX;
-
     if (proc->nr_tti_tx > nb_slot_frame) {
-      proc->frame_tx = (proc->frame_tx + 1)%MAX_FRAME_NUMBER;
+      proc->frame_tx = (proc->frame_tx + 1) % MAX_FRAME_NUMBER;
       proc->nr_tti_tx %= nb_slot_frame;
     }
-
-    if(slot_nr == 0) {
-      UE->proc.proc_rxtx[0].frame_rx++;
-
-      //UE->proc.proc_rxtx[1].frame_rx++;
-      for (th_id=1; th_id < RX_NB_TH; th_id++) {
-        UE->proc.proc_rxtx[th_id].frame_rx = UE->proc.proc_rxtx[0].frame_rx;
-      }
-    }
+    proc->subframe_tx=proc->nr_tti_rx;
+        
+    LOG_D(PHY, "Processing frame/subframe/slot RX: %d/%d/%d, TX: %d/%d/%d in thread: %d\n",
+	  proc->frame_rx, proc->subframe_rx, proc->nr_tti_rx,
+	  proc->frame_tx, proc->subframe_tx, proc->nr_tti_tx,
+	  UE->current_thread_id[slot_nr]);
 
     if (UE->mode != loop_through_memory) {
       for (i=0; i<UE->frame_parms.nb_antennas_rx; i++)
@@ -1009,7 +978,8 @@ void *UE_thread(void *arg) {
                  slot_nr*UE->frame_parms.samples_per_slot];
 
       for (i=0; i<UE->frame_parms.nb_antennas_tx; i++)
-        txp[i] = (void *)&UE->common_vars.txdata[i][((slot_nr+2)%NR_NUMBER_OF_SUBFRAMES_PER_FRAME)*UE->frame_parms.samples_per_slot];
+        txp[i] = (void *)&UE->common_vars.txdata[i][((slot_nr+2)%NR_NUMBER_OF_SUBFRAMES_PER_FRAME) *
+						    UE->frame_parms.samples_per_slot];
 
       int readBlockSize, writeBlockSize;
 
@@ -1060,17 +1030,22 @@ void *UE_thread(void *arg) {
 
       pickTime(gotIQs);
       // operate on thread sf mod 2
-      AssertFatal(pthread_mutex_lock(&proc->mutex_rxtx) ==0,"");
-#ifdef SAIF_ENABLED
+      struct timespec wait={0};
+	wait.tv_nsec=10*1000; // wait 10µ sec because we already waited I/Q samples, so the processing should be finished
+      
+      #if BASIC_SIMULATOR
+      wait.tv_sec=INT_MAX;
+      #endif
+      if (getenv("RFSIMULATOR"))
+	 wait.tv_sec=INT_MAX;
 
-      if (!(proc->frame_rx%4000)) {
-        printf("frame_rx=%d rx_thread_busy=%ld - rate %8.3f\n",
-               proc->frame_rx, g_ue_rx_thread_busy,
-               (float)g_ue_rx_thread_busy/(proc->frame_rx*10+1)*100.0);
-        fflush(stdout);
+      if (pthread_mutex_timedlock(&proc->mutex_rxtx,&wait)) {
+	if ( errno == ETIMEDOUT ) {
+	  LOG_E(PHY,"The Rx processing is late, skipping one sub-frame");
+	  continue;
+	}
+	AssertFatal(false,"pthread_mutex_timedlock error\n");
       }
-
-#endif
 
       //UE->proc.proc_rxtx[0].gotIQs=readTime(gotIQs);
       //UE->proc.proc_rxtx[1].gotIQs=readTime(gotIQs);
@@ -1078,32 +1053,12 @@ void *UE_thread(void *arg) {
         UE->proc.proc_rxtx[th_id].gotIQs=readTime(gotIQs);
       }
 
-      proc->subframe_tx=proc->nr_tti_rx;
       proc->timestamp_tx = timestamp+
                            (DURATION_RX_TO_TX*UE->frame_parms.samples_per_slot)-
                            UE->frame_parms.ofdm_symbol_size-UE->frame_parms.nb_prefix_samples0;
-      proc->instance_cnt_rxtx++;
-      LOG_D( PHY, "[SCHED][UE %d] UE RX instance_cnt_rxtx %d subframe %d !!\n", UE->Mod_id, proc->instance_cnt_rxtx,proc->subframe_rx);
-
-      if (proc->instance_cnt_rxtx != 0) {
-#ifdef SAIF_ENABLED
-        g_ue_rx_thread_busy++;
-#endif
-
-        if ( getenv("RFSIMULATOR") != NULL ) {
-          do {
-            AssertFatal (pthread_mutex_unlock(&proc->mutex_rxtx) == 0, "");
-            usleep(100);
-            AssertFatal (pthread_mutex_lock(&proc->mutex_rxtx) == 0, "");
-          } while ( proc->instance_cnt_rxtx >= 0);
-        } else
-          LOG_E( PHY, "[SCHED][UE %d] !! UE RX thread busy (IC %d)!!\n", UE->Mod_id, proc->instance_cnt_rxtx);
-
-        AssertFatal( proc->instance_cnt_rxtx <= 4, "[SCHED][UE %d] !!! UE instance_cnt_rxtx > 2 (IC %d) (Proc %d)!!",
-                     UE->Mod_id, proc->instance_cnt_rxtx,
-                     UE->current_thread_id[slot_nr]);
-      }
-
+      LOG_D( PHY, "[SCHED][UE %d] UE RX subframe %d, slot %d to thread %d !!\n",
+	     UE->Mod_id, proc->subframe_rx, slot_nr, thread_idx);
+      proc->predicate_rxtx=true;
       AssertFatal (pthread_cond_signal(&proc->cond_rxtx) ==0,"");
       AssertFatal (pthread_mutex_unlock(&proc->mutex_rxtx) ==0,"");
       //                    initRefTimes(t1);

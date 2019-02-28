@@ -183,7 +183,7 @@ typedef struct {
   int frame_rx;
   /// \brief Instance count for RXn-TXnp4 processing thread.
   /// \internal This variable is protected by \ref mutex_rxtx.
-  int instance_cnt_rxtx;
+  bool predicate_rxtx;
   /// pthread structure for RXn-TXnp4 processing thread
   pthread_t pthread_rxtx;
   /// pthread attributes for RXn-TXnp4 processing thread
