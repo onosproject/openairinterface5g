@@ -225,7 +225,7 @@ int output_handler(eNB_MAC_INST_NB_IoT *mac_inst, module_id_t module_id, int CC_
 							LOG_D(MAC,"[hypersfn:%2d][frame:%2d][subframe:%2d]NB-IoT fill SIBs\n",hypersfn,frame,subframe);
 
 						}else
-							LOG_D(MAC,"[hypersfn:%2d][frame:%2d][subframe:%2d]NB-IoT fill DL Data, length = %d\n",hypersfn,frame,subframe,dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13.length);
+							LOG_I(MAC,"[hypersfn:%2d][frame:%2d][subframe:%2d]NB-IoT fill DL Data, length = %d number of sf for a data = %d\n",hypersfn,frame,subframe,dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13.length,dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13.number_of_subframes_for_resource_assignment);
 					break;
 				default:
 					break;

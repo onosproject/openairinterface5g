@@ -819,8 +819,8 @@ void schedule_msg4_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, int abs_subframe){
 				dci_n1_msg4->type = 1;
 				dci_n1_msg4->orderIndicator = 0;
 				dci_n1_msg4->Scheddly = msg4_i_delay;
-				dci_n1_msg4->ResAssign = 0;
-				dci_n1_msg4->mcs = 4;
+				dci_n1_msg4->ResAssign = I_sf;
+				dci_n1_msg4->mcs = I_mcs;
 				dci_n1_msg4->RepNum = 2;
 				dci_n1_msg4->ndi = 1;
 				dci_n1_msg4->HARQackRes = HARQ_info.ACK_NACK_resource_field;
@@ -983,26 +983,20 @@ int fill_msg4_NB_IoT(
 {
 	int length = 0;
 	uint8_t *dlsch_buffer = &ra_template->msg4_buffer[0];
-	// we have three subheader here: 1 for padding, 2 for Control element of Contention resolution, 3 for CCCH
+	// we have three subheader here: 1 for Control element of Contention resolution, 2 for CCCH
 	SCH_SUBHEADER_FIXED_NB_IoT *msg4_sub_1 = (SCH_SUBHEADER_FIXED_NB_IoT*)dlsch_buffer;
 	msg4_sub_1->R = 0;
 	msg4_sub_1->E = 1;
-	msg4_sub_1->LCID = PADDING;
+	msg4_sub_1->LCID = UE_CONTENTION_RESOLUTION;
 	length+=1;
 
 	SCH_SUBHEADER_FIXED_NB_IoT *msg4_sub_2 = (SCH_SUBHEADER_FIXED_NB_IoT *) (msg4_sub_1 +1);
-	msg4_sub_2->R = 0;
-	msg4_sub_2->E = 1;
-	msg4_sub_2->LCID = UE_CONTENTION_RESOLUTION;
+	msg4_sub_2->R= 0;
+	msg4_sub_2->E= 0;
+	msg4_sub_2->LCID = CCCH_NB_IoT;
 	length+=1;
 
-	SCH_SUBHEADER_FIXED_NB_IoT *msg4_sub_3 = (SCH_SUBHEADER_FIXED_NB_IoT *) (msg4_sub_2 +1);
-	msg4_sub_3->R= 0;
-	msg4_sub_3->E= 0;
-	msg4_sub_3->LCID = CCCH_NB_IoT;
-	length+=1;
-
-	uint8_t *con_res = (uint8_t *)(dlsch_buffer+3);
+	uint8_t *con_res = (uint8_t *)(dlsch_buffer+2);
 
 	con_res[0] = ra_template->ccch_buffer[0];
 	con_res[1] = ra_template->ccch_buffer[1];
