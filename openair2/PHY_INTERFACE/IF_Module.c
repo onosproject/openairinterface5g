@@ -286,10 +286,10 @@ void handle_ulsch(UL_IND_t *UL_info) {
                       UL_RCC_INFO.rx_ind[k].rx_indication_body.rx_pdu_list[i].rx_indication_rel8.timing_advance,
                       UL_RCC_INFO.rx_ind[k].rx_indication_body.rx_pdu_list[i].rx_indication_rel8.ul_cqi);
               }
-              break;
               if(UL_RCC_INFO.rx_ind[k].rx_indication_body.rx_pdu_list[i].data != NULL){
                 free(UL_RCC_INFO.rx_ind[k].rx_indication_body.rx_pdu_list[i].data);
               }
+              break;
             } //if (UL_info->crc_ind.crc_pdu_list[j].rx_ue_information.rnti == UL_info->rx_ind.rx_pdu_list[i].rx_ue_information.rnti)
           } //    for (j=0;j<UL_info->crc_ind.crc_indication_body.number_of_crcs;j++)
         } //   for (i=0;i<UL_info->rx_ind.number_of_pdus;i++)
