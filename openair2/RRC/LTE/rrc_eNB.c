@@ -7412,7 +7412,7 @@ rrc_rx_tx(
         ((ue_to_be_removed->ue_context.ue_rrc_inactivity_timer >= RC.rrc[ctxt_pP->module_id]->configuration.rrc_inactivity_timer_thres) &&
          (RC.rrc[ctxt_pP->module_id]->configuration.rrc_inactivity_timer_thres > 0))) {
       ue_to_be_removed->ue_context.ue_release_timer_s1 = 1;
-      ue_to_be_removed->ue_context.ue_release_timer_thres_s1 = 100;
+      ue_to_be_removed->ue_context.ue_release_timer_thres_s1 = 200;
       ue_to_be_removed->ue_context.ue_release_timer = 0;
       ue_to_be_removed->ue_context.ue_reestablishment_timer = 0;
     }
