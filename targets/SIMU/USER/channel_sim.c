@@ -374,6 +374,7 @@ void do_DL_sig(channel_desc_t *eNB2UE[NUMBER_OF_eNB_MAX][NUMBER_OF_UE_MAX][MAX_N
 	    frame_parms->samples_per_tti,
 	    12);
         stop_meas(&eNB2UE[eNB_id][UE_id][CC_id]->DL_adc);
+	//write_output("chsim_rxsig_subframe.m","chsm_rxsF", PHY_vars_UE_g[UE_id][CC_id]->common_vars.rxdata[0],10*frame_parms->samples_per_tti,1,16);
 	//for (int idx=0;idx<10;idx++) printf("dumping DL raw subframe %d, eNB_id %d: rxdata[%d] = (%d,%d)\n", subframe,eNB_id, idx, ((short*)&rxdata[0][sf_offset+idx])[0], ((short*)&rxdata[0][sf_offset+idx])[1]);
 #ifdef DEBUG_SIM
 	rx_pwr2 = signal_energy(rxdata[0]+sf_offset,frame_parms->ofdm_symbol_size)/(12.0*frame_parms->N_RB_DL);
@@ -752,10 +753,10 @@ void do_DL_sig_freq(channel_desc_t *eNB2UE[NUMBER_OF_eNB_MAX][NUMBER_OF_UE_MAX][
               		//for (int idx=0;idx<10;idx++) printf("dumping DL raw subframe %d,UE %d, eNB_id %d: rxdataF0[%d] = (%d,%d)\n", subframe,UE_id,eNB_id, idx, ((short*)&rxdataF[0][sf_offset+idx])[0], ((short*)&rxdataF[0][sf_offset+idx])[1]);
       	        	//print_meas (&eNB2UE[eNB_id][UE_id][CC_id]->DL_adc,"[DL][adc]", &eNB2UE[eNB_id][UE_id][CC_id]->DL_adc, &eNB2UE[eNB_id][UE_id][CC_id]->DL_adc);
              		//for (int idx=0;idx<10;idx++) printf("dumping DL raw rx subframe %d: rxdataF[%d] = (%d,%d)=====>%s,txdataF[%d] = (%d,%d), r_re_im_p_f(%e,%e)\n", subframe, idx, ((short*)&rxdataF[0][sf_offset+idx])[0], ((short*)&rxdataF[0][sf_offset+idx])[1],(((((r_re_p_f[0][idx]<0)&&(((short*)&rxdataF[0][sf_offset+idx])[0]<0))||((r_re_p_f[0][idx]>=0)&&(((short*)&rxdataF[0][sf_offset+idx])[0]>=0))))&&(((r_im_p_f[0][idx]<0)&&(((short*)&rxdataF[0][sf_offset+idx])[1]<0))||((r_im_p_f[0][idx]>=0)&&(((short*)&rxdataF[0][sf_offset+idx])[1]>=0))))?"OK":"ERROR",idx,((short*)&txdataF[0][sf_offset+idx])[0],((short*)&txdataF[0][sf_offset+idx])[1],r_re_p_f[0][idx],r_im_p_f[0][idx]);
-			/*if (UE_id==0)
+			/*if ((subframe&0x1)==0)
 				write_output("chsim0_rxsigF_subframe0.m","chsm0_rxsF0", PHY_vars_UE_g[UE_id][CC_id]->common_vars.common_vars_rx_data_per_thread[0].rxdataF[0],10*frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti,1,16);
 			else
-				write_output("chsim1_rxsigF_subframe0.m","chsm1_rxsF0", PHY_vars_UE_g[UE_id][CC_id]->common_vars.common_vars_rx_data_per_thread[0].rxdataF[0],10*frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti,1,16);*/
+				write_output("chsim1_rxsigF_subframe0.m","chsm1_rxsF0", PHY_vars_UE_g[UE_id][CC_id]->common_vars.common_vars_rx_data_per_thread[1].rxdataF[0],10*frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti,1,16);*/
 			//write_output("chsim_rxsigF_subframe1.m","chsm_rxsF1", PHY_vars_UE_g[UE_id][CC_id]->common_vars.common_vars_rx_data_per_thread[1].rxdataF[0],10*frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti,1,16);
 	
 #ifdef DEBUG_SIM

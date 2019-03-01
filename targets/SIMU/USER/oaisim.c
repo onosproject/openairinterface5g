@@ -1331,12 +1331,13 @@ main (int argc, char **argv)
       exit(-1); // need a softer mode
   }
   else {
+      //NB_eNB_INST=1;
     if (create_tasks(0, 
 		     oai_emulation.info.nb_ue_local) < 0) 
       exit(-1); // need a softer mode
+      //NB_eNB_INST=2;
   }
 #endif
-  
   // wait for all threads to startup 
   sleep(3);
   printf("Sending sync to all threads\n");

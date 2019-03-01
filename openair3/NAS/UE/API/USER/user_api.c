@@ -132,6 +132,7 @@ int user_api_initialize(user_api_id_t *user_api_id, const char* host, const char
 
     /* Initialize communication channel */
     user_api_id->endpoint = user_api_id->open(SOCKET_SERVER, host, port);
+    printf("open: SOCKET_SERVER %d, host %s, port %s\n",SOCKET_SERVER, host, port);
 
     if (user_api_id->endpoint == NULL) {
       const char* error = ( (errno < 0) ?

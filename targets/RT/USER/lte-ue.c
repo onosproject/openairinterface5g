@@ -588,9 +588,9 @@ static void *UE_thread_synch_freq(void *arg) {
         case pbch:
 
 #if DISABLE_LOG_X
-            printf("[UE thread Synch] Running Initial Synch (mode %d)\n",UE->mode);
+            printf("[UE thread Synch] Running Initial Synch in the Frequency domain (mode %d)\n",UE->mode);
 #else
-            LOG_I(PHY, "[UE thread Synch] Running Initial Synch (mode %d)\n",UE->mode);
+            LOG_I(PHY, "[UE thread Synch] Running Initial Synch in the Frequency domain (mode %d)\n",UE->mode);
 #endif
 	    //Pushed N_RB_DL, PHICH_CONFIG, FRAME_NUMBER
             if (initial_sync_freq( UE, UE->mode ) == 0) {

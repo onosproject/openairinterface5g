@@ -76,13 +76,13 @@ void dl_phy_sync_success(module_id_t   module_idP,
 #else
   int mme_enabled=0;
 #endif
-
+  //printf("mme_enabled? %d\n",mme_enabled);
   if (first_sync==1 && !(mme_enabled==1 && abstraction_flag==0)) {
     layer2_init_UE(module_idP);
-    openair_rrc_ue_init(module_idP,PHY_vars_UE_g[module_idP][0]->common_vars.eNb_id);
+    openair_rrc_ue_init(module_idP,/*eNB_index*/PHY_vars_UE_g[module_idP][0]->common_vars.eNb_id);
   } else
   {
-    rrc_in_sync_ind(module_idP,frameP,PHY_vars_UE_g[module_idP][0]->common_vars.eNb_id);
+    rrc_in_sync_ind(module_idP,frameP,/*eNB_index*/PHY_vars_UE_g[module_idP][0]->common_vars.eNb_id);
   }
 }
 

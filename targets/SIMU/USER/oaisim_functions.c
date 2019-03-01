@@ -848,6 +848,7 @@ void get_simulation_options(int argc, char *argv[])
  }
   free(conf_config_file_name);
   conf_config_file_name = 0;
+  //NB_eNB_INST=NB_eNB_INST-1;
 }
 
 void check_and_adjust_params(void)
@@ -1046,7 +1047,7 @@ int UE_trx_set_gains(openair0_device *device, openair0_config_t *openair0_cfg) {
 
 extern pthread_mutex_t subframe_mutex;
 extern int subframe_eNB_mask,subframe_UE_mask;
-static int first_run=0;
+//static int first_run=0;
 //static int count=0;
 //static int sum=0;
 int eNB_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void **buff, int nsamps, int cc)
@@ -1070,6 +1071,7 @@ int eNB_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void *
   int CC_id  = device->CC_id;
   int UE_id = 0;
 
+  //printf("eNB_trx_read: eNB %d, Type %s\n",eNB_id,(PHY_vars_eNB_g[eNB_id][CC_id]->frame_parms.frame_type==FDD)?"FDD":"TDD");
   int subframe;
   int read_samples, max_samples;
   openair0_timestamp last = last_eNB_rx_timestamp[eNB_id][CC_id];
@@ -1136,7 +1138,7 @@ int eNB_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void *
 		{
 			//clock_t start=clock();
 			//printf("subframe UL PRACH: %d\n",subframe);
-			printf("prach is generated for UE %d, eNB %d\n",UE_id,eNB_id);
+			printf("prach is generated for UE %d, eNB %d, subframe %d\n",UE_id,eNB_id,subframe);
 			start_meas(&UE2eNB[UE_id][eNB_id][CC_id]->UL_PRACH_channel_freq);
 			do_UL_sig_freq_prach(UE2eNB,
 				enb_data,
@@ -1158,6 +1160,7 @@ int eNB_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void *
 	}
 	start_meas(&UE2eNB[0][eNB_id][CC_id]->UL_channel_freq);
 	//clock_t start=clock();
+	
         do_UL_sig_freq(UE2eNB,
                 enb_data,
                 ue_data,
@@ -1204,6 +1207,8 @@ int UE_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void **
   int subframe;
   //int frame=0;
   int read_samples, max_samples;
+  
+  //printf("UE_trx_read: UE %d, Type %s\n",UE_id,(PHY_vars_UE_g[UE_id][CC_id]->frame_parms.frame_type==FDD)?"FDD":"TDD");
   openair0_timestamp last = last_UE_rx_timestamp[UE_id][CC_id];
 
   *ptimestamp = last_UE_rx_timestamp[UE_id][CC_id];
@@ -1266,7 +1271,7 @@ int UE_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void **
       {
 	start_meas(&eNB2UE[0][UE_id][CC_id]->DL_channel_freq);
         //clock_t start=clock();
-      	do_DL_sig_freq(eNB2UE,
+      	  do_DL_sig_freq(eNB2UE,
                 enb_data,
                 ue_data,
                 subframe,
@@ -1452,8 +1457,8 @@ void init_openair1(void)
 {
   module_id_t UE_id;
   uint8_t  eNB_id = 0;
-  uint8_t  RN_id = 0;
-  uint8_t CC_id;
+  //uint8_t  RN_id = 0;
+  uint8_t CC_id = 0;
 #if ENABLE_RAL
   int list_index;
 #endif

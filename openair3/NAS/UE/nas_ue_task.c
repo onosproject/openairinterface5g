@@ -50,11 +50,12 @@ static int nas_ue_process_events(nas_user_container_t *users, struct epoll_event
   int exit_loop = FALSE;
 
   LOG_I(NAS, "[UE] Received %d events\n", nb_events);
-
+  printf("[UE] Received %d events\n", nb_events);
   for (event = 0; event < nb_events; event++) {
     if (events[event].events != 0) {
       /* If the event has not been yet been processed (not an itti message) */
       nas_user_t *user = find_user_from_fd(users, events[event].data.fd);
+      //printf("[UE] ueid %d\n", user->ueid);
       if ( user != NULL ) {
         exit_loop = nas_user_receive_and_process(user, NULL);
       } else {
@@ -93,11 +94,15 @@ void *nas_ue_task(void *args_p)
   instance_t            instance;
   unsigned int          Mod_id;
   int                   result;
+
+  //NB_eNB_INST=NB_eNB_INST-1;
+
   nas_user_container_t *users=args_p;
 
   itti_mark_task_ready (TASK_NAS_UE);
   MSC_START_USE();
   /* Initialize UE NAS (EURECOM-NAS) */
+  printf("nas_ue_task: # UEs = %d,NB_eNB_INST %d, NB_UE_INST %d\n",users->count,NB_eNB_INST,NB_UE_INST);
   for (int i=0; i < users->count; i++)
   {
     nas_user_t *user = &users->item[i];
@@ -302,6 +307,7 @@ char *make_port_str_from_ueid(const char *base_port_str, int ueid) {
   }
 
   port = base_port + ueid;
+  //printf("make_port_str_from_ueid: port %d\n",port);
   if ( port<1 || port > 65535 ) {
     return NULL;
   }

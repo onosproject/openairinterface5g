@@ -460,7 +460,7 @@ ue_send_sdu(
                        (uint8_t*)payload_ptr,
                        rx_lengths[i],
                        ENB_FLAG_NO,
-                       /*eNB_index*/PHY_vars_UE_g[module_idP][0]->common_vars.eNb_id,//changed
+                       eNB_index/*PHY_vars_UE_g[module_idP][0]->common_vars.eNb_id*/,//changed
                        0);
 	//printf("1\n");
 
@@ -468,7 +468,7 @@ ue_send_sdu(
       LOG_D(MAC,"[UE %d] Frame %d : DLSCH -> DL-DCCH%d, RRC message (eNB %d, %d bytes)\n", module_idP, frameP, rx_lcids[i],/*eNB_index*/PHY_vars_UE_g[module_idP][0]->common_vars.eNb_id,rx_lengths[i]);
       mac_rlc_data_ind(module_idP,
                        UE_mac_inst[module_idP].crnti,
-		       /*eNB_index*/PHY_vars_UE_g[module_idP][0]->common_vars.eNb_id,//changed
+		       eNB_index/*PHY_vars_UE_g[module_idP][0]->common_vars.eNb_id*/,//changed
                        frameP,
                        ENB_FLAG_NO,
                        MBMS_FLAG_NO,
@@ -490,7 +490,7 @@ ue_send_sdu(
 #endif
       mac_rlc_data_ind(module_idP,
 		       UE_mac_inst[module_idP].crnti,
-		       /*eNB_index*/PHY_vars_UE_g[module_idP][0]->common_vars.eNb_id,//changed
+		       eNB_index/*PHY_vars_UE_g[module_idP][0]->common_vars.eNb_id*/,//changed
 		       frameP,
 		       ENB_FLAG_NO,
 		       MBMS_FLAG_NO,
@@ -529,7 +529,7 @@ void ue_decode_si(module_id_t module_idP,int CC_id,frame_t frameP, uint8_t eNB_i
                    (uint8_t *)pdu,
                    len,
                    ENB_FLAG_NO,
-                   /*eNB_index*/PHY_vars_UE_g[module_idP][0]->common_vars.eNb_id,
+                   eNB_index/*PHY_vars_UE_g[module_idP][0]->common_vars.eNb_id*/,
                    0);
 //printf("2\n");
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_UE_DECODE_SI, VCD_FUNCTION_OUT);
@@ -569,7 +569,7 @@ void ue_decode_p(module_id_t module_idP,int CC_id,frame_t frameP, uint8_t eNB_in
                    (uint8_t *)pdu,
                    len,
                    ENB_FLAG_NO,
-                   /*eNB_index*/PHY_vars_UE_g[module_idP][0]->common_vars.eNb_id,
+                   eNB_index/*PHY_vars_UE_g[module_idP][0]->common_vars.eNb_id*/,
                    0);
 //printf("3\n");
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_UE_DECODE_PCCH, VCD_FUNCTION_OUT);
@@ -1429,7 +1429,7 @@ for (lcid=DCCH; (lcid < MAX_NUM_LCID) && (is_all_lcid_processed == FALSE) ; lcid
       is_lcid_processed	= FALSE;
       lcid_buffer_occupancy_old = mac_rlc_get_buffer_occupancy_ind(module_idP,
               	  	  	  	  	  	  	  UE_mac_inst[module_idP].crnti,
-						 		  /*eNB_index*/PHY_vars_UE_g[module_idP][0]->common_vars.eNb_id,
+						 		  eNB_index/*PHY_vars_UE_g[module_idP][0]->common_vars.eNb_id*/,
 								  frameP,
 								  subframe,
 								  ENB_FLAG_NO,
@@ -1465,7 +1465,7 @@ for (lcid=DCCH; (lcid < MAX_NUM_LCID) && (is_all_lcid_processed == FALSE) ; lcid
 
 		  sdu_lengths[num_sdus] = mac_rlc_data_req(module_idP,
 							 UE_mac_inst[module_idP].crnti,
-							 /*eNB_index*/PHY_vars_UE_g[module_idP][0]->common_vars.eNb_id,
+							 eNB_index/*PHY_vars_UE_g[module_idP][0]->common_vars.eNb_id*/,
 							 frameP,
 							 ENB_FLAG_NO,
 							 MBMS_FLAG_NO,
@@ -1519,7 +1519,7 @@ for (lcid=DCCH; (lcid < MAX_NUM_LCID) && (is_all_lcid_processed == FALSE) ; lcid
           /* Get updated BO after multiplexing this PDU */
           lcid_buffer_occupancy_new = mac_rlc_get_buffer_occupancy_ind(module_idP,
                         	  	  	  	  	  	  	  	  	  	  	  	  	  UE_mac_inst[module_idP].crnti,
-          																  /*eNB_index*/PHY_vars_UE_g[module_idP][0]->common_vars.eNb_id,
+          																  eNB_index/*PHY_vars_UE_g[module_idP][0]->common_vars.eNb_id*/,
           																  frameP,
           																  subframe,
           																  ENB_FLAG_NO,
@@ -1857,7 +1857,7 @@ ue_scheduler(
 #endif
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_UE_SCHEDULER, VCD_FUNCTION_IN);
 
-  PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, module_idP, ENB_FLAG_NO, UE_mac_inst[module_idP].crnti, txFrameP, txSubframeP,/*eNB_indexP*/PHY_vars_UE_g[module_idP][0]->common_vars.eNb_id);
+  PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, module_idP, ENB_FLAG_NO, UE_mac_inst[module_idP].crnti, txFrameP, txSubframeP,eNB_indexP/*PHY_vars_UE_g[module_idP][0]->common_vars.eNb_id*/);
 #if defined(ENABLE_ITTI)
 
   do {
@@ -1904,11 +1904,11 @@ ue_scheduler(
   UE_mac_inst[module_idP].rxSubframe = rxSubframeP;
 
 #ifdef CELLULAR
-  rrc_rx_tx(module_idP, txFrameP, 0, /*eNB_indexP*/PHY_vars_UE_g[module_idP][0]->common_vars.eNb_id);
+  rrc_rx_tx(module_idP, txFrameP, 0, eNB_indexP/*PHY_vars_UE_g[module_idP][0]->common_vars.eNb_id*/);
 #else
 
   switch (rrc_rx_tx(&ctxt,
-                    /*eNB_indexP*/PHY_vars_UE_g[module_idP][0]->common_vars.eNb_id,
+                    eNB_indexP/*PHY_vars_UE_g[module_idP][0]->common_vars.eNb_id*/,
                     CC_id)) {
   case RRC_OK:
     break;
@@ -2302,7 +2302,7 @@ boolean_t  update_bsr(module_id_t module_idP, frame_t frameP, sub_frame_t subfra
 			  	lcgid_buffer_remain[lcgid] += UE_mac_inst[module_idP].scheduling_info.LCID_buffer_remain[lcid];
 		  	}
 
-		    rlc_status = mac_rlc_status_ind(module_idP, UE_mac_inst[module_idP].crnti,/*eNB_index*/PHY_vars_UE_g[module_idP][0]->common_vars.eNb_id,frameP,subframeP,ENB_FLAG_NO,MBMS_FLAG_NO,
+		    rlc_status = mac_rlc_status_ind(module_idP, UE_mac_inst[module_idP].crnti,eNB_index/*PHY_vars_UE_g[module_idP][0]->common_vars.eNb_id*/,frameP,subframeP,ENB_FLAG_NO,MBMS_FLAG_NO,
 		                                    lcid,
 		                                    0xFFFF); //TBS is not used in RLC at this step, set a special value for debug
 

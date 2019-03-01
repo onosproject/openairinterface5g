@@ -4494,7 +4494,7 @@ NAS_KENB_REFRESH_REQ,NAS_CELL_SELECTION_REQ,RRC_STATE_INACTIVE,RRC_STATE_IDLE,RR
       if (rrc_get_state(ue_mod_id) == RRC_STATE_INACTIVE) {
         // have a look at MAC/main.c void dl_phy_sync_success(...)
 	//printf("openair_rrc_ue_init: UE %d\n",ue_mod_id);
-        openair_rrc_ue_init(ue_mod_id,PHY_vars_UE_g[ue_mod_id][0]->common_vars.eNb_id);
+        openair_rrc_ue_init(ue_mod_id,0/*PHY_vars_UE_g[ue_mod_id][0]->common_vars.eNb_id*/);
       }
 
       /* Save cell selection criterion */
@@ -4576,14 +4576,14 @@ NAS_KENB_REFRESH_REQ,NAS_CELL_SELECTION_REQ,RRC_STATE_INACTIVE,RRC_STATE_IDLE,RR
             NAS_CONN_ESTABLI_REQ (msg_p).plmnID.MNCdigit3);
 
       //PROTOCOL_CTXT_SET_BY_INSTANCE(&ctxt, instance, ENB_FLAG_NO, NOT_A_RNTI, 0, 0);
-      PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, ue_mod_id, ENB_FLAG_NO, NOT_A_RNTI, 0, 0, PHY_vars_UE_g[ue_mod_id][0]->common_vars.eNb_id);
+      PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, ue_mod_id, ENB_FLAG_NO, NOT_A_RNTI, 0, 0, 0/*PHY_vars_UE_g[ue_mod_id][0]->common_vars.eNb_id*/);
 
       UE_rrc_inst[ue_mod_id].initialNasMsg = NAS_CONN_ESTABLI_REQ (msg_p).initialNasMsg;
 
       switch (rrc_get_state(ue_mod_id)) {
       case RRC_STATE_IDLE: {
         if (rrc_get_sub_state(ue_mod_id) == RRC_SUB_STATE_IDLE_SIB_COMPLETE) {
-          rrc_ue_generate_RRCConnectionRequest(&ctxt, PHY_vars_UE_g[ue_mod_id][0]->common_vars.eNb_id);
+          rrc_ue_generate_RRCConnectionRequest(&ctxt, 0/*PHY_vars_UE_g[ue_mod_id][0]->common_vars.eNb_id*/);
           LOG_D(RRC, "not sending connection request\n");
 
           rrc_set_sub_state (ue_mod_id, RRC_SUB_STATE_IDLE_CONNECTING);
@@ -4615,11 +4615,11 @@ NAS_KENB_REFRESH_REQ,NAS_CELL_SELECTION_REQ,RRC_STATE_INACTIVE,RRC_STATE_IDLE,RR
       length = do_ULInformationTransfer(&buffer, NAS_UPLINK_DATA_REQ (msg_p).nasMsg.length, NAS_UPLINK_DATA_REQ (msg_p).nasMsg.data);
 
       /* Transfer data to PDCP */
-      PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, ue_mod_id, ENB_FLAG_NO, UE_rrc_inst[ue_mod_id].Info[PHY_vars_UE_g[ue_mod_id][0]->common_vars.eNb_id].rnti, 0, 0,PHY_vars_UE_g[ue_mod_id][0]->common_vars.eNb_id);
+      PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, ue_mod_id, ENB_FLAG_NO, UE_rrc_inst[ue_mod_id].Info[0/*PHY_vars_UE_g[ue_mod_id][0]->common_vars.eNb_id*/].rnti, 0, 0,0/*PHY_vars_UE_g[ue_mod_id][0]->common_vars.eNb_id*/);
 
       // check if SRB2 is created, if yes request data_req on DCCH1 (SRB2) 
       //printf("check if SRB2 is created, if yes request data_req on DCCH1: eNB_index %d, rnti %d, UE_rrc_inst[ue_mod_id].SRB2_config[PHY_vars_UE_g[ue_mod_id][0]->common_vars.eNb_id] == NULL %d\n",ctxt.eNB_index, ctxt.rnti,UE_rrc_inst[ue_mod_id].SRB2_config[PHY_vars_UE_g[ue_mod_id][0]->common_vars.eNb_id] == NULL);
-      if(UE_rrc_inst[ue_mod_id].SRB2_config[PHY_vars_UE_g[ue_mod_id][0]->common_vars.eNb_id] == NULL)
+      if(UE_rrc_inst[ue_mod_id].SRB2_config[0/*PHY_vars_UE_g[ue_mod_id][0]->common_vars.eNb_id*/] == NULL)
       {
           rrc_data_req (&ctxt,
                   DCCH,
@@ -4771,8 +4771,8 @@ NAS_KENB_REFRESH_REQ,NAS_CELL_SELECTION_REQ,RRC_STATE_INACTIVE,RRC_STATE_IDLE,RR
       switch (rrc_get_state(ue_mod_id)) {
       case RRC_STATE_IDLE: {
         if (rrc_get_sub_state(ue_mod_id) == RRC_SUB_STATE_IDLE_SIB_COMPLETE) {
-          PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, ue_mod_id, ENB_FLAG_NO, UE_rrc_inst[ue_mod_id].Info[PHY_vars_UE_g[ue_mod_id][0]->common_vars.eNb_id].rnti, 0, 0, PHY_vars_UE_g[ue_mod_id][0]->common_vars.eNb_id);
-          rrc_ue_generate_RRCConnectionRequest(&ctxt, PHY_vars_UE_g[ue_mod_id][0]->common_vars.eNb_id);
+          PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, ue_mod_id, ENB_FLAG_NO, UE_rrc_inst[ue_mod_id].Info[PHY_vars_UE_g[0/*ue_mod_id][0]->common_vars.eNb_id*/].rnti, 0, 0, 0/*PHY_vars_UE_g[ue_mod_id][0]->common_vars.eNb_id*/);
+          rrc_ue_generate_RRCConnectionRequest(&ctxt, 0/*PHY_vars_UE_g[ue_mod_id][0]->common_vars.eNb_id*/);
           LOG_D(RRC, "not sending connection request\n");
           rrc_set_sub_state (ue_mod_id, RRC_SUB_STATE_IDLE_CONNECTING);
         }

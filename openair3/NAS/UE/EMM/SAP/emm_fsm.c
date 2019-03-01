@@ -291,7 +291,9 @@ int emm_fsm_process(nas_user_t *user, const emm_reg_t *evt)
   LOG_TRACE(INFO, "EMM-FSM   - Received event %s (%d) in state %s",
             _emm_fsm_event_str[primitive - _EMMREG_START - 1], primitive,
             _emm_fsm_status_str[status]);
-
+  printf("EMM-FSM   - Received event %s (%d) in state %s",
+            _emm_fsm_event_str[primitive - _EMMREG_START - 1], primitive,
+            _emm_fsm_status_str[status]);
 
   /* Execute the EMM state machine */
   rc = (_emm_fsm_handlers[status])(user, evt);

@@ -1402,7 +1402,7 @@ void ulsch_common_procedures(PHY_VARS_UE *ue, UE_rxtx_proc_t *proc, uint8_t empt
 }
 
 void ue_prach_procedures(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,uint8_t abstraction_flag,runmode_t mode) {
-  //printf("ue_prach_procedures: UE %d, eNB_id %d, ue->common_vars.eNb.id %d, mac enabled %d\n",ue->Mod_id,eNB_id,ue->common_vars.eNb_id,ue->mac_enabled==1);=0
+  printf("ue_prach_procedures: UE %d, eNB_id %d, ue->common_vars.eNb.id %d, mac enabled %d\n",ue->Mod_id,eNB_id,ue->common_vars.eNb_id,ue->mac_enabled==1);
   int frame_tx = proc->frame_tx;
   int subframe_tx = proc->subframe_tx;
   int prach_power;
@@ -2926,7 +2926,7 @@ void ue_pbch_procedures(uint8_t eNB_id,PHY_VARS_UE *ue,UE_rxtx_proc_t *proc, uin
 
   for (pbch_trials=0; pbch_trials<4; pbch_trials++) {
     //for (pbch_phase=0;pbch_phase<4;pbch_phase++) {
-    //printf("[UE  %d] Frame %d, Trying PBCH %d (NidCell %d, eNB_id %d)\n",ue->Mod_id,frame_rx,pbch_phase,ue->frame_parms.Nid_cell,ue->common_vars.eNb_id);
+    printf("[UE  %d] Frame %d, Trying PBCH %d (NidCell %d, eNB_id %d)\n",ue->Mod_id,frame_rx,pbch_phase,ue->frame_parms.Nid_cell,ue->common_vars.eNb_id);
     if (abstraction_flag == 0) {
       pbch_tx_ant = rx_pbch(&ue->common_vars,
           ue->pbch_vars[eNB_id],
@@ -2997,7 +2997,7 @@ void ue_pbch_procedures(uint8_t eNB_id,PHY_VARS_UE *ue,UE_rxtx_proc_t *proc, uin
     //emos_dump_UE.mimo_mode = ue->pbch_vars[eNB_id]->decoded_output[1];
 #endif
 
-    if (first_run<=ue->Mod_id) {
+    if (first_run</*=ue->Mod_id*/NB_UE_INST) {
       first_run++;
 
       proc->frame_rx = (proc->frame_rx & 0xFFFFFC00) | (frame_tx & 0x000003FF);

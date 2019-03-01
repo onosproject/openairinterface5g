@@ -20,7 +20,7 @@
  */
 
 /*! \file netlink_init.c
-* \brief initiate the netlink socket for communication with nas dirver
+* \brief initiate the netlink socket for communication with nas driver
 * \author Navid Nikaein and Raymomd Knopp
 * \date 2011
 * \version 1.0
@@ -85,7 +85,7 @@ int netlink_init(void)
   nas_src_addr.nl_pid = 1;//getpid();  /* self pid */
   nas_src_addr.nl_groups = 0;  /* not in mcast groups */
   ret = bind(nas_sock_fd, (struct sockaddr*)&nas_src_addr, sizeof(nas_src_addr));
-
+  printf("[NETLINK]bind: fd %d, nas_src_addr %d, sizeof(nas_src_addr) %d\n",nas_sock_fd,nas_src_addr,sizeof(nas_src_addr));
 
 
   memset(&nas_dest_addr, 0, sizeof(nas_dest_addr));

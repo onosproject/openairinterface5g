@@ -47,12 +47,18 @@ int create_tasks(uint32_t enb_nb, uint32_t ue_nb)
     LOG_E(PDCP, "Create task for L2L1 failed\n");
     return -1;
   }
+  else{
+    printf("Create task for L2L1 succeeded\n");
+  }
 
   if (enb_nb > 0) {
     /* Last task to create, others task must be ready before its start */
     if (itti_create_task (TASK_ENB_APP, eNB_app_task, NULL) < 0) {
       LOG_E(ENB_APP, "Create task for eNB APP failed\n");
       return -1;
+    }
+    else{
+      printf("Create task for eNB APP succeeded\n");
     }
   }
 
@@ -62,25 +68,35 @@ int create_tasks(uint32_t enb_nb, uint32_t ue_nb)
 #   if defined(ENABLE_USE_MME)
     {
       if (enb_nb > 0) {
+	printf("ENABLE_USE_MME\n");
         if (itti_create_task (TASK_SCTP, sctp_eNB_task, NULL) < 0) {
           LOG_E(SCTP, "Create task for SCTP failed\n");
           return -1;
         }
+	else
+	  printf("Create task for SCTP succeeded\n");
 
         if (itti_create_task (TASK_S1AP, s1ap_eNB_task, NULL) < 0) {
           LOG_E(S1AP, "Create task for S1AP failed\n");
           return -1;
         }
+	else
+	  printf("Create task for S1AP succeeded\n");
+	  
 
         if (itti_create_task (TASK_UDP, udp_eNB_task, NULL) < 0) {
           LOG_E(UDP_, "Create task for UDP failed\n");
           return -1;
         }
+	else
+	  printf("Create task for UDP succeeded\n");
 
         if (itti_create_task (TASK_GTPV1_U, &gtpv1u_eNB_task, NULL) < 0) {
           LOG_E(GTPU, "Create task for GTPV1U failed\n");
           return -1;
         }
+	else
+	  printf("Create task for GTPV1U succeeded\n");
       }
 
 #      if defined(NAS_BUILT_IN_UE)
@@ -92,6 +108,8 @@ int create_tasks(uint32_t enb_nb, uint32_t ue_nb)
           LOG_E(NAS, "Create task for NAS UE failed\n");
           return -1;
         }
+	else
+	  printf("Create task for NAS UE succeeded:ue_nb %d\n",ue_nb);
       }
 #      endif
     }
@@ -104,7 +122,6 @@ int create_tasks(uint32_t enb_nb, uint32_t ue_nb)
       }
 
 #   if ENABLE_RAL
-
       if (itti_create_task (TASK_RAL_ENB, eRAL_task, NULL) < 0) {
         LOG_E(RAL_ENB, "Create task for RAL eNB failed\n");
         return -1;

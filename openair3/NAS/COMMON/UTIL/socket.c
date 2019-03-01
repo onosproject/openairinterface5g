@@ -46,6 +46,7 @@
 #include <sys/types.h>
 #include <sys/socket.h> // socket, setsockopt, connect, bind, recv, send
 #include <netdb.h>  // getaddrinfo
+#include <stdio.h>
 /****************************************************************************/
 /****************  E X T E R N A L    D E F I N I T I O N S  ****************/
 /****************************************************************************/
@@ -108,7 +109,7 @@ void* socket_udp_open(int type, const char* host, const char* port)
   struct addrinfo socket_info; /* endpoint information    */
   struct addrinfo *socket_addr, *sp; /* endpoint address    */
   int sfd; /* socket file descriptor  */
-
+  printf("socket_udp_open: port %s, host %s, type %d\n",port, host,type);
   /*
    * Parameters sanity check
    * -----------------------
@@ -171,7 +172,7 @@ void* socket_udp_open(int type, const char* host, const char* port)
   for (sp = socket_addr; sp != NULL; sp = sp->ai_next) {
     /* Create the socket endpoint for communication */
     sfd = socket (sp->ai_family, sp->ai_socktype, sp->ai_protocol);
-
+    printf("sfd0 %d, sfp %x\n",sfd,socket_addr);
     if (sfd < 0) {
       continue;
     }
@@ -222,7 +223,7 @@ void* socket_udp_open(int type, const char* host, const char* port)
     sid->port = atoi (port);
     sid->fd = sfd;
   }
-
+  printf("sfd %d\n",sfd);
   return sid;
 }
 

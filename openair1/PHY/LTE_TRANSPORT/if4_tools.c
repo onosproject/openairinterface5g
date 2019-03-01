@@ -90,7 +90,7 @@ void send_IF4p5(PHY_VARS_eNB *eNB, int frame, int subframe, uint16_t packet_type
 		    
     for (symbol_id=0; symbol_id<nsym; symbol_id++) {
       VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_COMPR_IF, 1 );
-      if (eNB->CC_id==1) LOG_I(PHY,"DL_IF4p5: CC_id %d : frame %d, subframe %d, symbol %d\n",eNB->CC_id,frame,subframe,symbol_id);
+      /*if (eNB->CC_id==1) */LOG_I(PHY,"DL_IF4p5: CC_id %d : frame %d, subframe %d, symbol %d\n",eNB->CC_id,frame,subframe,symbol_id);
       
       for (element_id=0; element_id<db_halflength; element_id++) {
         i = (uint16_t*) &txdataF[0][blockoffsetF+element_id];
@@ -182,6 +182,7 @@ void send_IF4p5(PHY_VARS_eNB *eNB, int frame, int subframe, uint16_t packet_type
   } else if (packet_type == IF4p5_PRACH) {
     // FIX: hard coded prach samples length
     LOG_D(PHY,"IF4p5_PRACH: frame %d, subframe %d\n",frame,subframe);
+    //printf("IF4p5_PRACH_TX: eNB %d, CC %d, frame %d, subframe %d\n",eNB->Mod_id,eNB->CC_id,frame,subframe); 
     db_fulllength = PRACH_HARD_CODED_NUM_SAMPLES;
     
     if (eth->flags == ETH_RAW_IF4p5_MODE) {
@@ -232,9 +233,9 @@ void recv_IF4p5(PHY_VARS_eNB *eNB, int *frame, int *subframe, uint16_t *packet_t
   uint16_t db_fulllength, db_halflength; 
   int slotoffsetF=0, blockoffsetF=0; 
   eth_state_t *eth = (eth_state_t*) (eNB->ifdevice.priv);
-for (int idx=0;idx<10;idx++)
+  //for (int idx=0;idx<10;idx++)
   // printf("dumping UL raw rx rvc_if4p5 subframe %d: rxdataF[%d] = (%d,%d)\n", *subframe, idx, ((short*)&rxdataF[0][idx])[0], ((short*)&rxdataF[0][idx])[1]);
-  if (eNB->CC_id==0) VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_RECV_IF4, 1 );   
+  /*if (eNB->CC_id==0) */VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_RECV_IF4, 1 );   
   
   if (eNB->node_function == NGFI_RRU_IF4p5) {
     db_fulllength = (12*fp->N_RB_DL); 
@@ -292,11 +293,11 @@ for (int idx=0;idx<10;idx++)
   } else if (*packet_type == IF4p5_PULFFT) {         
     *symbol_number = ((packet_header->frame_status)>>26)&0x000f;         
     VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME( VCD_SIGNAL_DUMPER_VARIABLES_RECV_IF4_SYMBOL, *symbol_number );
-    if (eNB->CC_id==0) LOG_D(PHY,"UL_IF4p5: CC_id %d : frame %d, subframe %d, symbol %d\n",eNB->CC_id,*frame,*subframe,*symbol_number);
+    /*if (eNB->CC_id==0) */LOG_D(PHY,"UL_IF4p5: CC_id %d : frame %d, subframe %d, symbol %d\n",eNB->CC_id,*frame,*subframe,*symbol_number);
     slotoffsetF = (*symbol_number)*(fp->ofdm_symbol_size);
     blockoffsetF = slotoffsetF + fp->ofdm_symbol_size - db_halflength; 
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_DECOMPR_IF, 1 );  
-    if (eNB->CC_id==0) LOG_D(PHY,"UL_IF4p5: CC_id %d : frame %d, subframe %d, symbol %d\n",eNB->CC_id,*frame,*subframe,*symbol_number);
+    /*if (eNB->CC_id==0) */LOG_D(PHY,"UL_IF4p5: CC_id %d : frame %d, subframe %d, symbol %d\n",eNB->CC_id,*frame,*subframe,*symbol_number);
     for (element_id=0; element_id<db_halflength; element_id++) {
       i = (uint16_t*) &rxdataF[0][blockoffsetF+element_id];
       *i = alaw2lin_if4p5[ (data_block[element_id] & 0xff) ]; 
@@ -311,7 +312,8 @@ for (int idx=0;idx<10;idx++)
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_DECOMPR_IF, 0 );		
   } else if (*packet_type == IF4p5_PRACH) {  
      LOG_D(PHY,"PRACH_IF4p5: CC_id %d : frame %d, subframe %d\n",eNB->CC_id,*frame,*subframe);
-    if (eNB->CC_id==1) LOG_I(PHY,"PRACH_IF4p5: CC_id %d : frame %d, subframe %d\n",eNB->CC_id,*frame,*subframe);
+    /*if (eNB->CC_id==1) */LOG_I(PHY,"PRACH_IF4p5: CC_id %d : frame %d, subframe %d\n",eNB->CC_id,*frame,*subframe);
+    printf("PRACH_IF4p5_RX: eNB %d, CC_id %d : frame %d, subframe %d\n",eNB->Mod_id,eNB->CC_id,*frame,*subframe);
 
     // FIX: hard coded prach samples length
     db_fulllength = PRACH_HARD_CODED_NUM_SAMPLES;
@@ -331,7 +333,7 @@ for (int idx=0;idx<10;idx++)
     AssertFatal(1==0, "recv_IF4p5 - Unknown packet_type %x", *packet_type);            
   }
 
-  if (eNB->CC_id==0) VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_RECV_IF4, 0 );     
+  /*if (eNB->CC_id==0) */VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_RECV_IF4, 0 );     
   return;   
 }
 

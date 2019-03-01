@@ -264,10 +264,10 @@ rlc_am_receive_routing (
         rlc_pP->stat_rx_control_pdu += 1;
         rlc_am_receive_process_control_pdu (ctxt_pP, rlc_pP, tb_p, &first_byte_p, &tb_size_in_bytes);
         // Test if remaining bytes not processed (up to know, highest probability is bug in MAC)
-        AssertFatal( tb_size_in_bytes == 0,
-                     "Remaining %d bytes following a control PDU",
-                     tb_size_in_bytes);
-	//if (tb_size_in_bytes == 0) printf("Remaining %d bytes following a control PDU",tb_size_in_bytes);
+        //AssertFatal( tb_size_in_bytes == 0,
+        //             "Remaining %d bytes following a control PDU",
+        //             tb_size_in_bytes);
+	if (tb_size_in_bytes == 0) printf("Remaining %d bytes following a control PDU",tb_size_in_bytes);
       }
 
       LOG_D(RLC, PROTOCOL_RLC_AM_CTXT_FMT"[RX ROUTING] VR(R)=%03d VR(MR)=%03d\n",
