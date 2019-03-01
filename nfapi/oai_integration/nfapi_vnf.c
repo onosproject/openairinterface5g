@@ -672,9 +672,12 @@ int phy_rx_indication(struct nfapi_vnf_p7_config* config, nfapi_rx_indication_t*
 
       memcpy(dest_pdu, src_pdu, sizeof(*src_pdu));
       // DJP - TODO FIXME - intentional memory leak
-      dest_pdu->data = malloc(dest_pdu->rx_indication_rel8.length);
-
-      memcpy(dest_pdu->data, src_pdu->data, dest_pdu->rx_indication_rel8.length);
+      if(dest_pdu->rx_indication_rel8.length > 0){
+        dest_pdu->data = malloc(dest_pdu->rx_indication_rel8.length);
+        memcpy(dest_pdu->data, src_pdu->data, dest_pdu->rx_indication_rel8.length);
+      }else{
+        dest_pdu->data = NULL;
+      }
 
       LOG_D(PHY, "%s() NFAPI SFN/SF:%d PDUs:%d [PDU:%d] handle:%d rnti:%04x length:%d offset:%d ul_cqi:%d ta:%d data:%p\n",
           __FUNCTION__,
