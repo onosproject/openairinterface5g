@@ -5622,6 +5622,14 @@ rrc_eNB_decode_ccch(
             RC.mac[ctxt_pP->module_id]->UE_list.UE_sched_ctrl[UE_id].ue_reestablishment_reject_timer = 1000;
             ue_context_p->ue_context.ue_reestablishment_timer = 0;
           }
+          //c-plane not end
+          if((ue_context_p->ue_context.Status != RRC_RECONFIGURED) && (ue_context_p->ue_context.reestablishment_cause == LTE_ReestablishmentCause_spare1)) {
+            LOG_E(RRC,
+                  PROTOCOL_RRC_CTXT_UE_FMT" LTE_RRCConnectionReestablishmentRequest (UE %x c-plane is not end), let's reject the UE\n",
+                  PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP),c_rnti);
+            rrc_eNB_generate_RRCConnectionReestablishmentReject(ctxt_pP, ue_context_p, CC_id);
+            break;
+          }
 
           if(ue_context_p->ue_context.ue_reestablishment_timer > 0) {
             LOG_E(RRC,
@@ -6368,7 +6376,7 @@ rrc_eNB_decode_dcch(
         // activate release timer, if RRCReconfComplete not received after 100 frames, remove UE
         ue_context_p->ue_context.ue_reestablishment_timer = 1;
         // remove UE after 100 frames after LTE_RRCConnectionRelease is triggered
-        ue_context_p->ue_context.ue_reestablishment_timer_thres = 1000;
+        ue_context_p->ue_context.ue_reestablishment_timer_thres = 10000;
         break;
 
       case LTE_UL_DCCH_MessageType__c1_PR_securityModeComplete:
