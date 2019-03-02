@@ -168,10 +168,9 @@ int nfapi_vnf_p7_start(nfapi_vnf_p7_config_t* config)
 
 		if (selectRetval==-1 && errno == 22)
 		{
-		    NFAPI_TRACE(NFAPI_TRACE_ERROR, "INVAL: pselect_timeout:%d.%ld adj[dur:%d adj:%d], sf_dur:%d.%ld\n",
+		    NFAPI_TRACE(NFAPI_TRACE_ERROR, "INVAL: pselect_timeout:%d.%ld adj[dur:%d adj:%d]\n",
                     pselect_timeout.tv_sec, pselect_timeout.tv_nsec, 
-                    phy->insync_minor_adjustment_duration, phy->insync_minor_adjustment, 
-                    sf_duration.tv_sec, sf_duration.tv_nsec);
+                    phy->insync_minor_adjustment_duration, phy->insync_minor_adjustment);
 		}
 
    if(selectRetval > 0)
@@ -191,7 +190,7 @@ int nfapi_vnf_p7_start(nfapi_vnf_p7_config_t* config)
      }
      else
      {
-       NFAPI_TRACE(NFAPI_TRACE_INFO, "P7 select failed result %d errno %d timeout:%d.%d orginal:%d.%d last_ms:%ld ms:%ld\n", selectRetval, errno, pselect_timeout.tv_sec, pselect_timeout.tv_nsec, pselect_timeout.tv_sec, pselect_timeout.tv_nsec, last_millisecond, millisecond);
+       NFAPI_TRACE(NFAPI_TRACE_INFO, "P7 select failed result %d errno %d timeout:%d.%d orginal:%d.%d \n", selectRetval, errno, pselect_timeout.tv_sec, pselect_timeout.tv_nsec, pselect_timeout.tv_sec, pselect_timeout.tv_nsec);
        // should we exit now?
        if (selectRetval == -1 && errno == 22) // invalid argument??? not sure about timeout duration
        {
