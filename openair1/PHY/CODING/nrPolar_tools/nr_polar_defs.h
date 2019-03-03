@@ -70,6 +70,7 @@ typedef struct decoder_node_t_s {
   int all_frozen;
   int16_t *alpha;
   int16_t *beta;
+  int16_t *soft_beta;
 } decoder_node_t;
 
 typedef struct decoder_tree_t_s {
