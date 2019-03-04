@@ -307,11 +307,25 @@ void thread_top_init(char *thread_name,
       CPU_SET(0,&cpuset);
     else {
       if (nfapi_mode == 2) {
-        for (j = 0; j < 2; j++)
-          CPU_SET(j, &cpuset);
+        if (get_nprocs() >= 8) {
+          for (j = 1; j < 4; j++) {
+             CPU_SET(j, &cpuset);
+           }
+        } else {
+          for (j = 0; j < 2; j++) {
+            CPU_SET(j, &cpuset);
+          }
+        }
       } else if (nfapi_mode == 1) {
-        for (j = 2; j < 4; j++)
-          CPU_SET(j, &cpuset);
+        if (get_nprocs() >= 8) {
+          for (j = 5; j < 7; j++) {
+            CPU_SET(j, &cpuset);
+          }
+        } else {
+          for (j = 2; j < 4; j++) {
+            CPU_SET(j, &cpuset);
+          }
+        }
       } else {
         for (j = 1; j < get_nprocs(); j++)
           CPU_SET(j, &cpuset);

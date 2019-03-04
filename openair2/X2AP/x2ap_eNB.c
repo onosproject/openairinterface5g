@@ -359,7 +359,7 @@ void *x2ap_task(void *arg) {
   X2AP_DEBUG("Starting X2AP layer\n");
   x2ap_eNB_prepare_internal_data();
   itti_mark_task_ready(TASK_X2AP);
-
+  thread_top_init("x2ap_task",1,500000,1000000,20000000);
   while (1) {
     itti_receive_msg(TASK_X2AP, &received_msg);
 

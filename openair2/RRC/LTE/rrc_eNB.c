@@ -6856,6 +6856,7 @@ rrc_enb_task(
 )
 //-----------------------------------------------------------------------------
 {
+  thread_top_init("rrc_enb_task",1,500000,1000000,20000000);
   rrc_enb_init();
   itti_mark_task_ready(TASK_RRC_ENB);
   LOG_I(RRC,"Entering main loop of RRC message task\n");

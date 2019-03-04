@@ -393,7 +393,7 @@ void *s1ap_eNB_process_itti_msg(void *notUsed) {
 
 void *s1ap_eNB_task(void *arg) {
   s1ap_eNB_init();
-
+  thread_top_init("s1ap_eNB_task",1,500000,1000000,20000000);
   while (1) {
     (void) s1ap_eNB_process_itti_msg(NULL);
   }
