@@ -1149,7 +1149,7 @@ void *gtpv1u_eNB_process_itti_msg(void *notUsed) {
 void *gtpv1u_eNB_task(void *args)
 {
   int rc = 0;
-
+  thread_top_init("gtpv1u_eNB_task",1,500000,1000000,20000000);
   rc = gtpv1u_eNB_init();
   AssertFatal(rc == 0, "gtpv1u_eNB_init Failed");
   itti_mark_task_ready(TASK_GTPV1_U);

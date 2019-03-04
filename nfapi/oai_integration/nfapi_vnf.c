@@ -1004,7 +1004,91 @@ void* vnf_p7_start_thread(void *ptr) {
   printf("%s()\n", __FUNCTION__);
 
   pthread_setname_np(pthread_self(), "VNF_P7");
+#ifdef DEADLINE_SCHEDULER
+  struct sched_attr attr;
 
+  unsigned int flags = 0;
+
+  attr.size = sizeof(attr);
+  attr.sched_flags = 0;
+  attr.sched_nice = 0;
+  attr.sched_priority = 0;
+
+  attr.sched_policy   = SCHED_DEADLINE;
+  attr.sched_runtime  = 870000L; 
+  attr.sched_deadline = 1000000L;
+  attr.sched_period   = 1000000L; 
+
+  if (sched_setattr(0, &attr, flags) < 0 ) {
+    fprintf(stderr,"sched_setattr Error = %s",strerror(errno));
+    exit(1);
+  }
+#else
+  int policy, s, j;
+  struct sched_param sparam;
+  char cpu_affinity[1024];
+  cpu_set_t cpuset;
+
+  /* Set affinity mask to include CPUs 1 to MAX_CPUS */
+  /* CPU 0 is reserved for UHD threads */
+  /* CPU 1 is reserved for all RX_TX threads */
+  /* Enable CPU Affinity only if number of CPUs >2 */
+  CPU_ZERO(&cpuset);
+#ifdef CPU_AFFINITY
+  if (get_nprocs() >= 8)
+  {
+    for (j = 1; j < 4; j++) {
+      CPU_SET(j, &cpuset);
+    }
+  } else if (get_nprocs() > 2) {
+    for (j = 1; j < get_nprocs(); j++) {
+      CPU_SET(j, &cpuset);
+    }
+  }
+  s = pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
+  if (s != 0)
+  {
+    printf("Error setting processor affinity");
+    exit(1);
+  }
+#endif //CPU_AFFINITY
+  /* Check the actual affinity mask assigned to the thread */
+  s  = pthread_getaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
+  if (s != 0) {
+    printf("Error getting processor affinity ");
+    exit(1);
+  }
+  memset(cpu_affinity,0,sizeof(cpu_affinity));
+  for (j = 0; j < 1024; j++)
+    if (CPU_ISSET(j, &cpuset)) {  
+      char temp[1024];
+      sprintf (temp, " CPU_%d", j);
+      strcat(cpu_affinity, temp);
+    }
+
+  memset(&sparam, 0, sizeof(sparam));
+  sparam.sched_priority = sched_get_priority_max(SCHED_FIFO);
+  policy = SCHED_FIFO ; 
+  
+  s = pthread_setschedparam(pthread_self(), policy, &sparam);
+  if (s != 0) {
+    printf("Error setting thread priority");
+    exit(1);
+  }
+  
+  s = pthread_getschedparam(pthread_self(), &policy, &sparam);
+  if (s != 0) {
+    printf("Error getting thread priority");
+    exit(1);
+  }
+
+  pthread_setname_np(pthread_self(), "vnf_p7_start_thread");
+
+  NFAPI_TRACE(NFAPI_TRACE_INFO, "%s()[SCHED][eNB] %s started on CPU %d, sched_policy = %s , priority = %d, CPU Affinity=%s \n", __FUNCTION__, "vnf_p7_start_thread", sched_getcpu(),
+                   (policy == SCHED_FIFO)  ? "SCHED_FIFO" : (policy == SCHED_RR)    ? "SCHED_RR" :
+                   (policy == SCHED_OTHER) ? "SCHED_OTHER" : "???", sparam.sched_priority, cpu_affinity );
+
+#endif //LOW_LATENCY
   nfapi_vnf_p7_config_t* config = (nfapi_vnf_p7_config_t*)ptr;
 
   nfapi_vnf_p7_start(config);
@@ -1260,7 +1344,91 @@ void vnf_start_thread(void* ptr) {
   NFAPI_TRACE(NFAPI_TRACE_INFO, "[VNF] VNF NFAPI thread - nfapi_vnf_start()%s\n", __FUNCTION__);
 
   pthread_setname_np(pthread_self(), "VNF");
+#ifdef DEADLINE_SCHEDULER
+  struct sched_attr attr;
 
+  unsigned int flags = 0;
+
+  attr.size = sizeof(attr);
+  attr.sched_flags = 0;
+  attr.sched_nice = 0;
+  attr.sched_priority = 0;
+
+  attr.sched_policy   = SCHED_DEADLINE;
+  attr.sched_runtime  = 870000L; 
+  attr.sched_deadline = 1000000L;
+  attr.sched_period   = 1000000L; 
+
+  if (sched_setattr(0, &attr, flags) < 0 ) {
+    fprintf(stderr,"sched_setattr Error = %s",strerror(errno));
+    exit(1);
+  }
+#else
+  int policy, s, j;
+  struct sched_param sparam;
+  char cpu_affinity[1024];
+  cpu_set_t cpuset;
+
+  /* Set affinity mask to include CPUs 1 to MAX_CPUS */
+  /* CPU 0 is reserved for UHD threads */
+  /* CPU 1 is reserved for all RX_TX threads */
+  /* Enable CPU Affinity only if number of CPUs >2 */
+  CPU_ZERO(&cpuset);
+#ifdef CPU_AFFINITY
+  if (get_nprocs() >= 8)
+  {
+    for (j = 1; j < 4; j++) {
+      CPU_SET(j, &cpuset);
+    }
+  } else if (get_nprocs() > 2) {
+    for (j = 1; j < get_nprocs(); j++) {
+      CPU_SET(j, &cpuset);
+    }
+  }
+  s = pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
+  if (s != 0)
+  {
+    printf("Error setting processor affinity");
+    exit(1);
+  }
+#endif //CPU_AFFINITY
+  /* Check the actual affinity mask assigned to the thread */
+  s  = pthread_getaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
+  if (s != 0) {
+    printf("Error getting processor affinity ");
+    exit(1);
+  }
+  memset(cpu_affinity,0,sizeof(cpu_affinity));
+  for (j = 0; j < 1024; j++)
+    if (CPU_ISSET(j, &cpuset)) {  
+      char temp[1024];
+      sprintf (temp, " CPU_%d", j);
+      strcat(cpu_affinity, temp);
+    }
+
+  memset(&sparam, 0, sizeof(sparam));
+  sparam.sched_priority = sched_get_priority_max(SCHED_FIFO);
+  policy = SCHED_FIFO ; 
+  
+  s = pthread_setschedparam(pthread_self(), policy, &sparam);
+  if (s != 0) {
+    printf("Error setting thread priority");
+    exit(1);
+  }
+  
+  s = pthread_getschedparam(pthread_self(), &policy, &sparam);
+  if (s != 0) {
+    printf("Error getting thread priority");
+    exit(1);
+  }
+
+  pthread_setname_np(pthread_self(), "vnf_start_thread");
+
+  NFAPI_TRACE(NFAPI_TRACE_INFO, "%s()[SCHED][eNB] %s started on CPU %d, sched_policy = %s , priority = %d, CPU Affinity=%s \n", __FUNCTION__, "vnf_start_thread", sched_getcpu(),
+                   (policy == SCHED_FIFO)  ? "SCHED_FIFO" : (policy == SCHED_RR)    ? "SCHED_RR" :
+                   (policy == SCHED_OTHER) ? "SCHED_OTHER" : "???", sparam.sched_priority, cpu_affinity );
+
+#endif //LOW_LATENCY
   config = (nfapi_vnf_config_t*)ptr;
 
   nfapi_vnf_start(config);

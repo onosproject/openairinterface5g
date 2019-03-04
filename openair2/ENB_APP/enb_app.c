@@ -191,7 +191,7 @@ void *eNB_app_task(void *args_p)
   int                             result;
   /* for no gcc warnings */
   (void)instance;
-
+  thread_top_init("eNB_app_task",1,500000,1000000,20000000);
   itti_mark_task_ready (TASK_ENB_APP);
 
   LOG_I(PHY, "%s() Task ready initialise structures\n", __FUNCTION__);
