@@ -46,7 +46,7 @@
 #include <errno.h>
 
 #include "openair1/PHY/defs_common.h"
-
+extern uint8_t nfapi_mode;
 static int latency_target_fd = -1;
 static int32_t latency_target_value = 0;
 /* Latency trick - taken from cyclictest.c
@@ -305,9 +305,18 @@ void thread_top_init(char *thread_name,
   {
     if (affinity == 0)
       CPU_SET(0,&cpuset);
-    else
-      for (j = 1; j < get_nprocs(); j++)
-        CPU_SET(j, &cpuset);
+    else {
+      if (nfapi_mode == 2) {
+        for (j = 0; j < 2; j++)
+          CPU_SET(j, &cpuset);
+      } else if (nfapi_mode == 1) {
+        for (j = 2; j < 4; j++)
+          CPU_SET(j, &cpuset);
+      } else {
+        for (j = 1; j < get_nprocs(); j++)
+          CPU_SET(j, &cpuset);
+      }
+    }
     s = pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
     if (s != 0)
     {

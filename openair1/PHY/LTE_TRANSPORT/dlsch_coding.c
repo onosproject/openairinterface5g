@@ -599,7 +599,12 @@ int dlsch_encoding_all(PHY_VARS_eNB *eNB,
 {
 	int encoding_return = 0;
 	unsigned int L,C,B;
-	B = dlsch->harq_processes[dlsch->harq_ids[frame%2][subframe]]->B;
+	unsigned char harq_pid = dlsch->harq_ids[frame%2][subframe];
+	if(harq_pid >= dlsch->Mdlharq) {
+		LOG_E(PHY,"dlsch_encoding_all illegal harq_pid %d\n", harq_pid);
+		return(-1);
+	}
+	B = dlsch->harq_processes[harq_pid]->B;
 	if(B<=6144)
 	{
 		L=0;

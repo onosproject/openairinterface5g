@@ -93,33 +93,32 @@ void handle_cqi(UL_IND_t *UL_info) {
 
   if (nfapi_mode == 1)
   {
-    if (UL_info->cqi_ind.number_of_cqis>0)
+    if (UL_info->cqi_ind.cqi_indication_body.number_of_cqis>0)
     {
-      LOG_D(PHY,"UL_info->cqi_ind.number_of_cqis:%d\n", UL_info->cqi_ind.number_of_cqis);
-      nfapi_cqi_indication_t ind;
+      LOG_D(PHY,"UL_info->cqi_ind.number_of_cqis:%d\n", UL_info->cqi_ind.cqi_indication_body.number_of_cqis);
+//      nfapi_cqi_indication_t ind;
 
-      ind.header.message_id = NFAPI_RX_CQI_INDICATION;
-      ind.sfn_sf = UL_info->frame<<4 | UL_info->subframe;
-      ind.cqi_indication_body = UL_info->cqi_ind;
+      UL_info->cqi_ind.header.message_id = NFAPI_RX_CQI_INDICATION;
+      UL_info->cqi_ind.sfn_sf = UL_info->frame<<4 | UL_info->subframe;
 
-      oai_nfapi_cqi_indication(&ind);
+      oai_nfapi_cqi_indication(&UL_info->cqi_ind);
 
-      UL_info->cqi_ind.number_of_cqis=0;
+      UL_info->cqi_ind.cqi_indication_body.number_of_cqis=0;
     }
   }
   else
   {
-    for (i=0;i<UL_info->cqi_ind.number_of_cqis;i++) 
+    for (i=0;i<UL_info->cqi_ind.cqi_indication_body.number_of_cqis;i++)
       cqi_indication(UL_info->module_id,
           UL_info->CC_id,
-          UL_info->frame,
-          UL_info->subframe,
-          UL_info->cqi_ind.cqi_pdu_list[i].rx_ue_information.rnti,
-          &UL_info->cqi_ind.cqi_pdu_list[i].cqi_indication_rel9,
-          UL_info->cqi_ind.cqi_raw_pdu_list[i].pdu,
-          &UL_info->cqi_ind.cqi_pdu_list[i].ul_cqi_information);
+          NFAPI_SFNSF2SFN(UL_info->cqi_ind.sfn_sf),
+          NFAPI_SFNSF2SF(UL_info->cqi_ind.sfn_sf),
+          UL_info->cqi_ind.cqi_indication_body.cqi_pdu_list[i].rx_ue_information.rnti,
+          &UL_info->cqi_ind.cqi_indication_body.cqi_pdu_list[i].cqi_indication_rel9,
+          UL_info->cqi_ind.cqi_indication_body.cqi_raw_pdu_list[i].pdu,
+          &UL_info->cqi_ind.cqi_indication_body.cqi_pdu_list[i].ul_cqi_information);
 
-    UL_info->cqi_ind.number_of_cqis=0;
+    UL_info->cqi_ind.cqi_indication_body.number_of_cqis=0;
   }
 }
 
@@ -525,7 +524,7 @@ void UL_indication(UL_IND_t *UL_info)
   LOG_D(PHY,"SFN/SF:%d%d module_id:%d CC_id:%d UL_info[rx_ind:%d harqs:%d crcs:%d cqis:%d preambles:%d sr_ind:%d]\n",
         UL_info->frame,UL_info->subframe,
         module_id,CC_id,
-        UL_info->rx_ind.rx_indication_body.number_of_pdus, UL_info->harq_ind.harq_indication_body.number_of_harqs, UL_info->crc_ind.crc_indication_body.number_of_crcs, UL_info->cqi_ind.number_of_cqis, UL_info->rach_ind.rach_indication_body.number_of_preambles, UL_info->sr_ind.sr_indication_body.number_of_srs);
+        UL_info->rx_ind.rx_indication_body.number_of_pdus, UL_info->harq_ind.harq_indication_body.number_of_harqs, UL_info->crc_ind.crc_indication_body.number_of_crcs, UL_info->cqi_ind.cqi_indication_body.number_of_cqis, UL_info->rach_ind.rach_indication_body.number_of_preambles, UL_info->sr_ind.sr_indication_body.number_of_srs);
   if(UL_info->frame==1023&&UL_info->subframe==6){ // dl scheduling (0,0)
       frame_cnt= (frame_cnt + 1)%7; // to prevent frame_cnt get too big
       LOG_D(MAC,"current (%d,%d) frame count dl is %d\n",UL_info->frame,UL_info->subframe,frame_cnt);
@@ -589,6 +588,9 @@ void UL_indication(UL_IND_t *UL_info)
         sched_info->UL_req      = NULL;
 
       sched_info->TX_req      = &mac->TX_req[CC_id];
+      pthread_mutex_lock(&lock_ue_freelist);
+      sched_info->RELEASE_rnti_req = &mac->RELEASE_rnti_req;
+      pthread_mutex_unlock(&lock_ue_freelist);
 
 #ifdef DUMP_FAPI
       dump_dl(sched_info);

@@ -89,4 +89,6 @@ int oai_nfapi_tx_req(nfapi_tx_request_t *tx_req) { return(0); }
 
 int oai_nfapi_dl_config_req(nfapi_dl_config_request_t *dl_config_req) { return(0); }
 
+int oai_nfapi_release_rnti_req(nfapi_release_rnti_request_t *release_req){ return(0); }
+
 int oai_nfapi_ul_config_req(nfapi_ul_config_request_t *ul_config_req) { return(0); }

@@ -294,8 +294,11 @@ void fill_dci_and_dlsch(PHY_VARS_eNB *eNB,int frame,int subframe,L1_rxtx_proc_t 
     dlsch0->harq_mask=0;
   }
   if ((dlsch0->harq_mask & (1<<rel8->harq_process)) > 0 ) {
-    if (rel8->new_data_indicator_1 != dlsch0_harq->ndi)
+    if (rel8->new_data_indicator_1 != dlsch0_harq->ndi){
       dlsch0_harq->round=0;
+    }else{
+      dlsch0_harq->round++;
+    }
   }
   else  { // process is inactive, so activate and set round to 0
     dlsch0_harq->round=0;

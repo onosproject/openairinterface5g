@@ -1352,6 +1352,9 @@ typedef struct eNB_MAC_INST_s {
   tx_request_pdu[NFAPI_CC_MAX][MAX_NUM_TX_REQUEST_PDU];
   /// NFAPI DL PDU structure
   nfapi_tx_request_t TX_req[NFAPI_CC_MAX];
+
+  /// NFAPI release rnti structure
+  nfapi_release_rnti_request_t RELEASE_rnti_req;
   /// UL handle
   uint32_t ul_handle;
   UE_list_t UE_list;

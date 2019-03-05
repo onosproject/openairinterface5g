@@ -645,7 +645,22 @@ int phy_cqi_indication(struct nfapi_vnf_p7_config* config, nfapi_cqi_indication_
 
   pthread_mutex_lock(&eNB->UL_INFO_mutex);
 
-  eNB->UL_INFO.cqi_ind = ind->cqi_indication_body;
+  nfapi_cqi_indication_t *dest_ind = &eNB->UL_INFO.cqi_ind;
+  *dest_ind = *ind;
+
+  dest_ind->cqi_indication_body.cqi_pdu_list = eNB->cqi_pdu_list;
+  dest_ind->cqi_indication_body.cqi_raw_pdu_list = eNB->cqi_raw_pdu_list;
+
+  for(int i=0; i<ind->cqi_indication_body.number_of_cqis; i++) {
+    nfapi_cqi_indication_pdu_t *src_pdu = &ind->cqi_indication_body.cqi_pdu_list[i];
+    LOG_D(MAC, "SR_IND[PDU:%d][rnti:%x cqi:%d channel:%d]\n", i, src_pdu->rx_ue_information.rnti,
+                src_pdu->ul_cqi_information.ul_cqi, src_pdu->ul_cqi_information.channel);
+    memcpy(&dest_ind->cqi_indication_body.cqi_pdu_list[i],
+           src_pdu, sizeof(nfapi_cqi_indication_pdu_t));
+
+    memcpy(&dest_ind->cqi_indication_body.cqi_raw_pdu_list[i],
+           &ind->cqi_indication_body.cqi_raw_pdu_list[i], sizeof(nfapi_cqi_indication_raw_pdu_t));
+  }
 
   pthread_mutex_unlock(&eNB->UL_INFO_mutex);
 
@@ -1184,4 +1199,23 @@ int oai_nfapi_ul_config_req(nfapi_ul_config_request_t *ul_config_req) {
     ul_config_req->ul_config_request_body.srs_present = 0;
   }
   return retval;
+}
+int oai_nfapi_release_rnti_req(nfapi_release_rnti_request_t *release_req){
+    if(release_req->release_rnti_request_body.number_of_rnti <= 0)
+        return 0;
+    nfapi_vnf_p7_config_t *p7_config = vnf.p7_vnfs[0].config;
+
+    release_req->header.phy_id = 1; // DJP HACK TODO FIXME - need to pass this around!!!!
+    release_req->header.message_id = NFAPI_RELEASE_RNTI_REQUEST;
+    release_req->release_rnti_request_body.tl.tag = NFAPI_RELEASE_RNTI_BODY_TAG;
+
+    int retval = nfapi_vnf_p7_release_rnti_req(p7_config, release_req);
+
+    if (retval!=0) {
+      LOG_E(PHY, "%s() Problem sending retval:%d\n", __FUNCTION__, retval);
+    } else {
+        release_req->release_rnti_request_body.number_of_rnti = 0;
+    }
+    return retval;
+
 }

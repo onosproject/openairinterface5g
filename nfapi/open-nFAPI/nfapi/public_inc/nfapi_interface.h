@@ -146,6 +146,7 @@ typedef enum {
 	NFAPI_LBT_DL_INDICATION,
 	NFAPI_NB_HARQ_INDICATION,
 	NFAPI_NRACH_INDICATION,
+	NFAPI_RELEASE_RNTI_REQUEST,
 
 	NFAPI_PNF_PARAM_REQUEST = 0x0100,
 	NFAPI_PNF_PARAM_RESPONSE,
@@ -1866,6 +1867,7 @@ typedef struct {
 	nfapi_tl_t tl;
 	uint32_t handle;
 	uint16_t rnti;
+	uint16_t ue_id;
 } nfapi_ul_config_ue_information_rel8_t;
 #define NFAPI_UL_CONFIG_REQUEST_UE_INFORMATION_REL8_TAG 0x2013
 
@@ -2377,6 +2379,14 @@ typedef struct {
 	nfapi_tx_request_pdu_t* tx_pdu_list;
 } nfapi_tx_request_body_t;
 #define NFAPI_TX_REQUEST_BODY_TAG 0x2022
+
+#define  NFAPI_RELEASE_MAX_RNTI  256
+typedef struct {
+    nfapi_tl_t tl;
+    uint16_t number_of_rnti;
+    uint16_t UE_free_rnti[NFAPI_RELEASE_MAX_RNTI];
+} nfapi_release_rnti_request_body_t;
+#define NFAPI_RELEASE_RNTI_BODY_TAG 0x2068
 
 // P7 Message Structures
 typedef struct {
@@ -3403,6 +3413,13 @@ typedef struct {
 	};
 	nfapi_vendor_extension_tlv_t vendor_extension;
 } nfapi_error_indication_t;
+
+typedef struct {
+    nfapi_p7_message_header_t header;
+    uint16_t sfn_sf;
+    nfapi_release_rnti_request_body_t release_rnti_request_body;
+    nfapi_vendor_extension_tlv_t vendor_extension;
+} nfapi_release_rnti_request_t;
 
 // 
 // P4 Messages

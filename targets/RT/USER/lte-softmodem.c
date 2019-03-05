@@ -219,6 +219,8 @@ struct timespec clock_difftime(struct timespec start, struct timespec end) {
   return temp;
 }
 
+nfapi_release_rnti_request_body_t release_rntis;
+
 void print_difftimes(void) {
 #ifdef DEBUG
   printf("difftimes min = %lu ns ; max = %lu ns\n", min_diff_time.tv_nsec, max_diff_time.tv_nsec);

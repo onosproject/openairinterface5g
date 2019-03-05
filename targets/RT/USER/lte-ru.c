@@ -1783,6 +1783,7 @@ static void* ru_thread( void* param ) {
     wakeup_slaves(proc);
 
 #if defined(PRE_SCD_THREAD)
+    if (nfapi_mode == 0){
     new_dlsch_ue_select_tbl_in_use = dlsch_ue_select_tbl_in_use;
     dlsch_ue_select_tbl_in_use = !dlsch_ue_select_tbl_in_use;
     memcpy(&pre_scd_eNB_UE_stats,&RC.mac[ru->eNB_list[0]->Mod_id]->UE_list.eNB_UE_stats, sizeof(eNB_UE_STATS)*MAX_NUM_CCs*NUMBER_OF_UE_MAX);
@@ -1807,6 +1808,7 @@ static void* ru_thread( void* param ) {
     if (pthread_mutex_unlock(&ru->proc.mutex_pre_scd)!= 0) {
         LOG_E( PHY, "[eNB] error unlocking mutex_pre_scd mutex for eNB pre scd\n");
         exit_fun("error unlocking mutex_pre_scd");
+    }
     }
 #endif
 
@@ -1959,7 +1961,7 @@ void* pre_scd_thread( void* param ){
             break;
         }
         pthread_mutex_lock(&ru->proc.mutex_pre_scd );
-        if (ru->proc.instance_pre_scd < 0) {
+        while(ru->proc.instance_pre_scd < 0) {
           pthread_cond_wait(&ru->proc.cond_pre_scd, &ru->proc.mutex_pre_scd);
         }
         pthread_mutex_unlock(&ru->proc.mutex_pre_scd);
@@ -2214,11 +2216,13 @@ void init_RU_proc(RU_t *ru) {
   pthread_create( &proc->pthread_FH, attr_FH, ru_thread, (void*)ru );
 
 #if defined(PRE_SCD_THREAD)
+  if (nfapi_mode == 0){
     proc->instance_pre_scd = -1;
     pthread_mutex_init( &proc->mutex_pre_scd, NULL);
     pthread_cond_init( &proc->cond_pre_scd, NULL);
     pthread_create(&proc->pthread_pre_scd, NULL, pre_scd_thread, (void*)ru);
     pthread_setname_np(proc->pthread_pre_scd, "pre_scd_thread");
+  }
 #endif
 
 #ifdef PHY_TX_THREAD
@@ -2270,6 +2274,7 @@ void kill_RU_proc(RU_t *ru)
   RU_proc_t *proc = &ru->proc;
 
 #if defined(PRE_SCD_THREAD)
+  if((nfapi_mode == 2) || (nfapi_mode == 0)){
   pthread_mutex_lock(&proc->mutex_pre_scd);
   ru->proc.instance_pre_scd = 0;
   pthread_cond_signal(&proc->cond_pre_scd);
@@ -2277,6 +2282,7 @@ void kill_RU_proc(RU_t *ru)
   pthread_join(proc->pthread_pre_scd, NULL);
   pthread_mutex_destroy(&proc->mutex_pre_scd);
   pthread_cond_destroy(&proc->cond_pre_scd);
+  }
 #endif
 #ifdef PHY_TX_THREAD
   pthread_mutex_lock(&proc->mutex_phy_tx);
@@ -2926,7 +2932,7 @@ void init_ru_vnf(void) {
   } // for ru_id
   
 
-
+  RC.ru_mask = 0;
   //  sleep(1);
   LOG_D(HW,"[lte-softmodem.c] RU threads created\n");
   

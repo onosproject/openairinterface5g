@@ -71,7 +71,7 @@ typedef struct{
   nfapi_sr_indication_t sr_ind;
 
   /// CQI indication list
-  nfapi_cqi_indication_body_t cqi_ind;
+  nfapi_cqi_indication_t cqi_ind;
 
   /// RACH indication list
   nfapi_rach_indication_t rach_ind;
@@ -109,6 +109,8 @@ typedef struct{
   nfapi_hi_dci0_request_t *HI_DCI0_req;
   /// Pointers to DL SDUs
   nfapi_tx_request_t *TX_req;
+  /// Pointers to release rntis
+  nfapi_release_rnti_request_t *RELEASE_rnti_req;
 }Sched_Rsp_t;
 
 typedef struct {
