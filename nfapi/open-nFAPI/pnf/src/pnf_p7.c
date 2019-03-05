@@ -838,7 +838,8 @@ int pnf_p7_subframe_ind(pnf_p7_t* pnf_p7, uint16_t phy_id, uint16_t sfn_sf)
                 //printf("pnf_p7->timing_info_ms_counter:%d\n", pnf_p7->timing_info_ms_counter);
 
 		// send the periodic timing info if configured
-		if(pnf_p7->_public.timing_info_mode_periodic && (pnf_p7->timing_info_period_counter++) == pnf_p7->_public.timing_info_period)
+		if(pnf_p7->_public.timing_info_mode_periodic && (++pnf_p7->timing_info_period_counter) == pnf_p7->_public.timing_info_period)
+
 		{
 			pnf_pack_and_send_timing_info(pnf_p7);
 
