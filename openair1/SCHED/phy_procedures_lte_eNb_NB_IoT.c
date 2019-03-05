@@ -857,19 +857,20 @@ void generate_eNB_dlsch_params_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t * proc,n
               DCI_Content->DCIN1.ndi            = dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.new_data_indicator;
               DCI_Content->DCIN1.HARQackRes     = dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.harq_ack_resource;
               DCI_Content->DCIN1.DCIRep         = dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.dci_subframe_repetition_number;
+              npdcch               =  eNB->npdcch_DCI;
 
-              eNB->npdcch[(uint8_t)UE_id] = (NB_IoT_eNB_NPDCCH_t *) malloc(sizeof(NB_IoT_eNB_NPDCCH_t));
+              //eNB->npdcch[(uint8_t)UE_id] = (NB_IoT_eNB_NPDCCH_t *) malloc(sizeof(NB_IoT_eNB_NPDCCH_t));
               //set the NPDCCH UE-specific structure  (calculate R)
-              npdcch=eNB->npdcch[(uint8_t)UE_id];
-              AssertFatal(npdcch != NULL, "NPDCCH structure for UE specific is not exist\n");
-              npdcch->repetition_idx[(uint8_t)UE_id] = 0; //this is used for the encoding mechanism to understand that is the first transmission
+              //npdcch=eNB->npdcch[(uint8_t)UE_id];
+              //AssertFatal(npdcch != NULL, "NPDCCH structure for UE specific is not exist\n");
+              //npdcch->repetition_idx[(uint8_t)UE_id] = 0; //this is used for the encoding mechanism to understand that is the first transmission
 
-              if(dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.aggregation_level) //whenever aggregation level is =1 we have only 1 repetition for USS
-              npdcch->repetition_number[(uint8_t)UE_id] = 1;
-              else
-              {
+              //if(dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.aggregation_level) //whenever aggregation level is =1 we have only 1 repetition for USS
+             // npdcch->repetition_number[(uint8_t)UE_id] = 1;
+              //else
+              //{
                 //see TS 36.213 Table 16.1-1
-              }
+              //}
 
 
               //fill the ndlsch structure for UE and packed the DCI PD

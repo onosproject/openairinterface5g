@@ -414,8 +414,8 @@ int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB      *eNB,
 
     DCI_flip[0]        = DCI_tmp[2]*2;
     DCI_flip[1]        = DCI_tmp[1]*2;
-    DCI_flip[2]        = DCI_tmp[0]*2;
-    
+    //DCI_flip[2]        = DCI_tmp[0]*2;
+    DCI_flip[2]        = 4;
     ndlcch->pdu[ncce_index]    = DCI_flip;
 
     printf("DCI N1 PDU content:");
