@@ -1037,9 +1037,9 @@ void* vnf_p7_start_thread(void *ptr) {
 #ifdef CPU_AFFINITY
   if (get_nprocs() >= 8)
   {
-    for (j = 1; j < 4; j++) {
-      CPU_SET(j, &cpuset);
-    }
+//    for (j = 1; j < 4; j++) {
+      CPU_SET(4, &cpuset);
+//    }
   } else if (get_nprocs() > 2) {
     for (j = 1; j < get_nprocs(); j++) {
       CPU_SET(j, &cpuset);
@@ -1147,7 +1147,7 @@ void* vnf_p7_thread_start(void* ptr) {
 
   NFAPI_TRACE(NFAPI_TRACE_INFO, "[VNF] Creating VNF NFAPI start thread %s\n", __FUNCTION__);
   pthread_create(&vnf_p7_start_pthread, NULL, &vnf_p7_start_thread, p7_vnf->config);
-  pthread_create(&vnf_p7_time_pthread, NULL, &vnf_p7_time_thread, p7_vnf->config);
+//  pthread_create(&vnf_p7_time_pthread, NULL, &vnf_p7_time_thread, p7_vnf->config);
 
   return 0;
 }
