@@ -986,7 +986,7 @@ int fill_msg4_NB_IoT(
 	// we have three subheader here: 1 for Control element of Contention resolution, 2 for CCCH
 	SCH_SUBHEADER_FIXED_NB_IoT *msg4_sub_1 = (SCH_SUBHEADER_FIXED_NB_IoT*)dlsch_buffer;
 	msg4_sub_1->R = 0;
-	msg4_sub_1->E = 1;
+	msg4_sub_1->E = 0;
 	msg4_sub_1->LCID = UE_CONTENTION_RESOLUTION;
 	length+=1;
 
@@ -1034,12 +1034,14 @@ int fill_msg4_NB_IoT_fixed(
 	int length = 0;
 	uint8_t *dlsch_buffer = &ra_template->msg4_buffer[0];
 	// we have three subheader here: 1 for Control element of Contention resolution, 2 for CCCH
+
 	SCH_SUBHEADER_FIXED_NB_IoT *msg4_sub_1 = (SCH_SUBHEADER_FIXED_NB_IoT*)dlsch_buffer;
 	msg4_sub_1->R = 0;
-	msg4_sub_1->E = 1;
+	msg4_sub_1->E = 0;
 	msg4_sub_1->LCID = UE_CONTENTION_RESOLUTION;
 	length+=1;
 
+	//dlsch_buffer[0] = 28;
 	uint8_t *con_res = (uint8_t *)(dlsch_buffer+1);
 
 	con_res[0] = ra_template->ccch_buffer[0];

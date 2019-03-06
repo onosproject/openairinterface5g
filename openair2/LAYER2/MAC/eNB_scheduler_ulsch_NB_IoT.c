@@ -223,11 +223,10 @@ void rx_sdu_NB_IoT(module_id_t module_id, int CC_id, frame_t frame, sub_frame_t 
   uint8_t* msg4_rrc_pdu = NULL;
   LOG_D(MAC,"RX_SDU_IN\n");
 
-  //uint8_t* first_6 = (uint8_t*) malloc(6*sizeof(uint8_t));
+  uint8_t* first_6 = (uint8_t*) malloc(6*sizeof(uint8_t));
 
-  //for(int a = 0; a<6;a++)
-    //first_6[a]=sdu[a];
-  //mac_inst = get_mac_inst(module_id);
+  for(int a = 0; a<6;a++)
+    first_6[a]=sdu[a+2];
 
   // note: if lcid < 25 this is sdu, otherwise this is CE
   payload_ptr = parse_ulsch_header_NB_IoT(sdu, &num_ce, &num_sdu,rx_ces, rx_lcids, rx_lengths, length);
@@ -275,8 +274,8 @@ void rx_sdu_NB_IoT(module_id_t module_id, int CC_id, frame_t frame, sub_frame_t 
                 rx_lengths[i]-=1;
                 LOG_D(MAC,"rx_lengths : %d\n", rx_lengths[i]);
                 msg4_rrc_pdu = mac_rrc_msg3_ind_NB_IoT(payload_ptr,rnti,rx_lengths[i]);
-                receive_msg3_NB_IoT(mac_inst,rnti,PHR,DVI_index,payload_ptr,msg4_rrc_pdu);
-                LOG_D(MAC,"recieve msg3 Successfully at MAC!\n");
+                receive_msg3_NB_IoT(mac_inst,rnti,PHR,DVI_index,first_6,msg4_rrc_pdu);
+                LOG_I(MAC,"Contention resolution ID = %02x %02x %02x %02x %02x %02x\n",first_6[0],first_6[1],first_6[2],first_6[3],first_6[4],first_6[5]);
                 //NB_IoT_mac_rrc_data_ind(payload_ptr,mac_inst,rnti);
                 //NB_IoT_receive_msg3(mac_inst,rnti,PHR,ul_total_buffer);
           break;
