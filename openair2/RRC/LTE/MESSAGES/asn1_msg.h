@@ -94,6 +94,13 @@ uint8_t do_SIB23(uint8_t Mod_id,
 #endif
                 );
 
+uint8_t do_SIB_SL(uint8_t Mod_id,
+                 int CC_id
+#if defined(ENABLE_ITTI)
+  , RrcConfigurationReq *configuration
+#endif
+                );
+
 /**
 \brief Generate an RRCConnectionRequest UL-CCCH-Message (UE) based on random string or S-TMSI.  This
 routine only generates an mo-data establishment cause.
