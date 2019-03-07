@@ -62,6 +62,27 @@
 #include "LAYER2/MAC/mac_extern.h"
 #include "common/ran_context.h"
 
+#define RESULT_OK  0
+#define RESULT_FAILED  -1
+
+/* structure for socket as source of MAC gNB data; copied from common/utils/itti_analyzer/libbuffer/socket.h */
+typedef struct {
+    pthread_t thread;
+    int       sd;
+    char     *ip_address;
+    uint16_t  port;
+
+    /* The pipe used between main thread (running GTK) and the socket thread */
+    int       pipe_fd;
+
+    /* Time used to avoid refreshing UI every time a new signal is incoming */
+    //gint64    last_data_notification;
+    //uint8_t   nb_signals_since_last_update;
+
+    /* The last signals received which are not yet been updated in GUI */
+    //GList    *signal_list;
+} socket_mac_gNB_data;
+
 /*! \brief gNB common channels */
 typedef struct {
     int physCellId;
@@ -147,6 +168,9 @@ typedef struct gNB_MAC_INST_s {
 
   /// UL handle
   uint32_t ul_handle;
+  
+  //Socket to receive data that will be sent from MAC
+  socket_mac_gNB_data *socket_mac_data;
 
     // MAC function execution peformance profiler
   /// processing time of eNB scheduler
@@ -174,5 +198,17 @@ typedef struct gNB_MAC_INST_s {
 void nr_schedule_css_dlsch_phytest(module_id_t   module_idP,
                                    frame_t       frameP,
                                    sub_frame_t   subframeP);
+
+
+
+/* Function to get the MAC PDU from socket data */
+
+int get_mac_pdu_from_socket(char* pdu, uint32_t TBS, socket_mac_gNB_data *socket_data);
+
+/* Function to open a socket and connect to the MAC data source*/
+int connect_mac_socket_to_data_source(const char *remote_ip, const uint16_t port, socket_mac_gNB_data *socket_data);
+
+/* Function to close the MAC data source socket */
+int disconnect_mac_socket_from_data_source(socket_mac_gNB_data *socket_data);
 
 #endif /*__LAYER2_NR_MAC_GNB_H__ */

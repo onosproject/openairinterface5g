@@ -119,6 +119,9 @@ void mac_top_init_gNB(void)
         nr_init_search_space(&RC.nrmac[i]->search_space[j][1]);
         }
         
+        RC.nrmac[i]->socket_mac_data = calloc(1, sizeof(socket_mac_gNB_data));
+        //Open socket for receiving data to send from MAC layer (should have different ports for different nrmac)
+        connect_mac_socket_to_data_source("10.102.81.239", 53108, RC.nrmac[i]->socket_mac_data);
 
     }//END for (i = 0; i < RC.nb_nr_macrlc_inst; i++)
 
