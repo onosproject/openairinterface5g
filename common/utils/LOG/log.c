@@ -789,10 +789,6 @@ void log_output_memory(const char *file, const char *func, int line, int comp, i
     //len += snprintf(&log_buffer[len], MAX_LOG_TOTAL - len, "[%08lx]", thread_id);
     //if (len > MAX_LOG_TOTAL) len = MAX_LOG_TOTAL;
 
-    len += vsnprintf(&log_buffer[len], MAX_LOG_TOTAL - len, format, args);
-    if (len > MAX_LOG_TOTAL) len = MAX_LOG_TOTAL;
-    log_end = log_buffer + len;
-
     struct timeval gettime;
     gettimeofday(&gettime,NULL);
     len += snprintf(&log_buffer[len], MAX_LOG_TOTAL - len, "[%ld.%06ld]", gettime.tv_sec, gettime.tv_usec);
@@ -803,6 +799,10 @@ void log_output_memory(const char *file, const char *func, int line, int comp, i
           log_level_highlight_end[level]);
       if (len > MAX_LOG_TOTAL) len = MAX_LOG_TOTAL;
     }
+
+    len += vsnprintf(&log_buffer[len], MAX_LOG_TOTAL - len, format, args);
+    if (len > MAX_LOG_TOTAL) len = MAX_LOG_TOTAL;
+    log_end = log_buffer + len;
   }
 
   //va_end(args);

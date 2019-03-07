@@ -383,12 +383,13 @@ int wake_eNB_rxtx(PHY_VARS_eNB *eNB, uint16_t sfn, uint16_t sf) {
 
   // wake up TX for subframe n+sf_ahead
   // lock the TX mutex and make sure the thread is ready
+  LOG_D(MAC,"before pthread_mutex_timedlock: frame %d subframe %d\n",proc->frame_rx,proc->subframe_rx);
   if (pthread_mutex_timedlock(&L1_proc->mutex,&wait) != 0) {
       LOG_E( PHY, "[eNB] ERROR pthread_mutex_lock for eNB RXTX thread %d (IC %d)\n", L1_proc->subframe_rx&1,L1_proc->instance_cnt );
       exit_fun( "error locking mutex_rxtx" );
       return(-1);
   }
-
+  LOG_D(MAC,"after  pthread_mutex_timedlock: frame %d subframe %d\n",proc->frame_rx,proc->subframe_rx);
   if(L1_proc->instance_cnt < 0){
     ++L1_proc->instance_cnt;
   }else{
@@ -398,7 +399,7 @@ int wake_eNB_rxtx(PHY_VARS_eNB *eNB, uint16_t sfn, uint16_t sf) {
   }
 
   pthread_mutex_unlock( &L1_proc->mutex );
-
+  LOG_D(MAC,"after  pthread_mutex_unlock: frame %d subframe %d\n",proc->frame_rx,proc->subframe_rx);
   //LOG_D( PHY,"[VNF-subframe_ind] sfn/sf:%d:%d proc[frame_rx:%d subframe_rx:%d] L1_proc->instance_cnt_rxtx:%d \n", sfn, sf, proc->frame_rx, proc->subframe_rx, L1_proc->instance_cnt_rxtx);
 
   // We have just received and processed the common part of a subframe, say n.
@@ -1038,7 +1039,7 @@ void* vnf_p7_start_thread(void *ptr) {
   if (get_nprocs() >= 8)
   {
 //    for (j = 1; j < 4; j++) {
-      CPU_SET(4, &cpuset);
+      CPU_SET(11, &cpuset);
 //    }
   } else if (get_nprocs() > 2) {
     for (j = 1; j < get_nprocs(); j++) {
@@ -1377,7 +1378,7 @@ void vnf_start_thread(void* ptr) {
 #ifdef CPU_AFFINITY
   if (get_nprocs() >= 8)
   {
-    for (j = 1; j < 4; j++) {
+    for (j = 8; j < 11; j++) {
       CPU_SET(j, &cpuset);
     }
   } else if (get_nprocs() > 2) {

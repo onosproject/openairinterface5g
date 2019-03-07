@@ -308,7 +308,7 @@ void thread_top_init(char *thread_name,
     else {
       if (nfapi_mode == 2) {
         if (get_nprocs() >= 8) {
-          for (j = 1; j < 4; j++) {
+          for (j = 8; j < 11; j++) {
              CPU_SET(j, &cpuset);
            }
         } else {
@@ -318,7 +318,7 @@ void thread_top_init(char *thread_name,
         }
       } else if (nfapi_mode == 1) {
         if (get_nprocs() >= 8) {
-          for (j = 5; j < 7; j++) {
+          for (j = 1; j < 5; j++) {
             CPU_SET(j, &cpuset);
           }
         } else {

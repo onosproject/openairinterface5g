@@ -276,7 +276,7 @@ void* pnf_p7_thread_start(void* ptr) {
 #ifdef CPU_AFFINITY
   if (get_nprocs() >= 8)
   {
-    for (j = 5; j < 9; j++) {
+    for (j = 1; j < 5; j++) {
       CPU_SET(j, &cpuset);
     }
   } else if (get_nprocs() > 2) {
@@ -1638,7 +1638,7 @@ void* pnf_start_thread(void* ptr) {
 #ifdef CPU_AFFINITY
   if (get_nprocs() >= 8)
   {
-    for (j = 5; j < 9; j++) {
+    for (j = 1; j < 5; j++) {
       CPU_SET(j, &cpuset);
     }
   } else if (get_nprocs() > 2) {
