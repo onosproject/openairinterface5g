@@ -1,4 +1,3 @@
-
 /*
   Author: Laurent THOMAS, Open Cells for Nokia
   copyleft: OpenAirInterface Software Alliance and it's licence
@@ -326,7 +325,6 @@ bool flushInput(rfsimulator_state_t *t) {
   return nfds>0;
 }
 
-
 int rfsimulator_read(openair0_device *device, openair0_timestamp *ptimestamp, void **samplesVoid, int nsamps, int nbAnt) {
   if (nbAnt != 1) { LOG_E(HW, "rfsimulator: only 1 antenna tested\n"); exit(1); }
 
@@ -413,6 +411,7 @@ int rfsimulator_read(openair0_device *device, openair0_timestamp *ptimestamp, vo
   return nsamps;
 }
 
+
 int rfsimulator_request(openair0_device *device, void *msg, ssize_t msg_len) {
   abort();
   return 0;
@@ -442,6 +441,7 @@ int rfsimulator_set_gains(openair0_device *device, openair0_config_t *openair0_c
 __attribute__((__visibility__("default")))
 int device_init(openair0_device *device, openair0_config_t *openair0_cfg) {
   //set_log(HW,OAILOG_DEBUG);
+  //set_log(PHY,OAILOG_DEBUG);
   rfsimulator_state_t *rfsimulator = (rfsimulator_state_t *)calloc(sizeof(rfsimulator_state_t),1);
 
   if ((rfsimulator->ip=getenv("RFSIMULATOR")) == NULL ) {
