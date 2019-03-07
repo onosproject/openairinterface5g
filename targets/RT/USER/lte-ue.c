@@ -990,55 +990,55 @@ static void *UE_thread_rxn_txnp4(void *arg) {
 
     // Process Rx data for one sub-frame
     lte_subframe_t sf_type = subframe_select( &UE->frame_parms, proc->subframe_rx);
-		if (UE->SLonly == 0) {
-		      if ((sf_type == SF_DL) ||
-			  (UE->frame_parms.frame_type == FDD) ||
-			  (sf_type == SF_S)) {
-
-			if (UE->frame_parms.frame_type == TDD) {
-			  LOG_D(PHY, "%s,TDD%d,%s: calling UE_RX\n",
-				threadname,
-				UE->frame_parms.tdd_config,
-				(sf_type==SF_DL? "SF_DL" :
-				 (sf_type==SF_UL? "SF_UL" :
-				  (sf_type==SF_S ? "SF_S"  : "UNKNOWN_SF_TYPE"))));
-			} else {
-			  LOG_D(PHY, "%s,%s,%s: calling UE_RX\n",
-				threadname,
-				(UE->frame_parms.frame_type==FDD? "FDD":
-				 (UE->frame_parms.frame_type==TDD? "TDD":"UNKNOWN_DUPLEX_MODE")),
-				(sf_type==SF_DL? "SF_DL" :
-				 (sf_type==SF_UL? "SF_UL" :
-				  (sf_type==SF_S ? "SF_S"  : "UNKNOWN_SF_TYPE"))));
-			}
-		#ifdef UE_SLOT_PARALLELISATION
-			phy_procedures_slot_parallelization_UE_RX( UE, proc, 0, 0, 1, UE->mode);
-		#else
-			phy_procedures_UE_RX( UE, proc, 0, 0, 1, UE->mode);
-		#endif
-		      }
-
-		#if UE_TIMING_TRACE
-		      start_meas(&UE->generic_stat);
-		#endif
-		      if (UE->mac_enabled==1) {
-
-			ret = ue_scheduler(UE->Mod_id,
-					   proc->frame_rx,
-					   proc->subframe_rx,
-					   proc->frame_tx,
-					   proc->subframe_tx,
-					   subframe_select(&UE->frame_parms,proc->subframe_tx),
-					   0,
-					   0/*FIXME CC_id*/);
-			if ( ret != CONNECTION_OK) {
-			  LOG_E( PHY, "[UE %"PRIu8"] Frame %"PRIu32", subframe %u %s\n",
-			       UE->Mod_id, proc->frame_rx, proc->subframe_tx,get_connectionloss_errstr(ret) );
-			}
-		      }
-		#if UE_TIMING_TRACE
-		      stop_meas(&UE->generic_stat);
-		#endif
+    if (UE->SLonly == 0) {
+      if ((sf_type == SF_DL) ||
+	  (UE->frame_parms.frame_type == FDD) ||
+	  (sf_type == SF_S)) {
+	
+	if (UE->frame_parms.frame_type == TDD) {
+	  LOG_D(PHY, "%s,TDD%d,%s: calling UE_RX\n",
+		threadname,
+		UE->frame_parms.tdd_config,
+		(sf_type==SF_DL? "SF_DL" :
+		 (sf_type==SF_UL? "SF_UL" :
+		  (sf_type==SF_S ? "SF_S"  : "UNKNOWN_SF_TYPE"))));
+	} else {
+	  LOG_D(PHY, "%s,%s,%s: calling UE_RX\n",
+		threadname,
+		(UE->frame_parms.frame_type==FDD? "FDD":
+		 (UE->frame_parms.frame_type==TDD? "TDD":"UNKNOWN_DUPLEX_MODE")),
+		(sf_type==SF_DL? "SF_DL" :
+		 (sf_type==SF_UL? "SF_UL" :
+		  (sf_type==SF_S ? "SF_S"  : "UNKNOWN_SF_TYPE"))));
+	}
+#ifdef UE_SLOT_PARALLELISATION
+	phy_procedures_slot_parallelization_UE_RX( UE, proc, 0, 0, 1, UE->mode);
+#else
+	phy_procedures_UE_RX( UE, proc, 0, 0, 1, UE->mode);
+#endif
+      }
+      
+#if UE_TIMING_TRACE
+      start_meas(&UE->generic_stat);
+#endif
+      if (UE->mac_enabled==1) {
+	
+	ret = ue_scheduler(UE->Mod_id,
+			   proc->frame_rx,
+			   proc->subframe_rx,
+			   proc->frame_tx,
+			   proc->subframe_tx,
+			   subframe_select(&UE->frame_parms,proc->subframe_tx),
+			   0,
+			   0/*FIXME CC_id*/);
+	if ( ret != CONNECTION_OK) {
+	  LOG_E( PHY, "[UE %"PRIu8"] Frame %"PRIu32", subframe %u %s\n",
+		 UE->Mod_id, proc->frame_rx, proc->subframe_tx,get_connectionloss_errstr(ret) );
+	}
+      }
+#if UE_TIMING_TRACE
+      stop_meas(&UE->generic_stat);
+#endif
       
       
       // Prepare the future Tx data
@@ -1047,7 +1047,7 @@ static void *UE_thread_rxn_txnp4(void *arg) {
 	  (UE->frame_parms.frame_type == FDD) )
 	if (UE->mode != loop_through_memory)
 	  //phy_procedures_UE_TX(UE,proc,0,0,UE->mode,no_relay);
-      phy_procedures_UE_TX(UE,proc,0,0,UE->mode);
+	  phy_procedures_UE_TX(UE,proc,0,0,UE->mode);
       
       
       
@@ -1057,7 +1057,7 @@ static void *UE_thread_rxn_txnp4(void *arg) {
 	  phy_procedures_UE_S_TX(UE,0,0);
       updateTimes(current, &t3, 10000, "Delay to process sub-frame (case 3)");
       
-
+      
     }
 
     // This is for Sidelink
