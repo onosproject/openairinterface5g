@@ -261,7 +261,7 @@ void handle_ulsch(UL_IND_t *UL_info) {
                        j,UL_RCC_INFO.crc_ind[k].crc_indication_body.crc_pdu_list[j].rx_ue_information.rnti, i,UL_RCC_INFO.rx_ind[k].rx_indication_body.rx_pdu_list[i].rx_ue_information.rnti);
             if (UL_RCC_INFO.crc_ind[k].crc_indication_body.crc_pdu_list[j].rx_ue_information.rnti == UL_RCC_INFO.rx_ind[k].rx_indication_body.rx_pdu_list[i].rx_ue_information.rnti) {
               LOG_D(PHY, "UL_info->crc_ind.crc_indication_body.crc_pdu_list[%d].crc_indication_rel8.crc_flag:%d\n",
-                          j, UL_info->crc_ind.crc_indication_body.crc_pdu_list[j].crc_indication_rel8.crc_flag);
+                          j, UL_RCC_INFO.crc_ind[k].crc_indication_body.crc_pdu_list[j].crc_indication_rel8.crc_flag);
               if (UL_RCC_INFO.crc_ind[k].crc_indication_body.crc_pdu_list[j].crc_indication_rel8.crc_flag == 1) { // CRC error indication
                 LOG_D(MAC,"Frame %d, Subframe %d Calling rx_sdu (CRC error) \n",UL_info->frame,UL_info->subframe);
                   rx_sdu(UL_info->module_id,

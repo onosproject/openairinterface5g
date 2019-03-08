@@ -1966,7 +1966,7 @@ void* pre_scd_thread( void* param ){
 
     frame = 0;
     subframe = 4;
-    thread_top_init("pre_scd_thread",0,870000,1000000,1000000);
+    thread_top_init("pre_scd_thread",1,870000,1000000,1000000);
 
     while (!oai_exit) {
         if(oai_exit){
