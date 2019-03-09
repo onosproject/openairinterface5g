@@ -5717,7 +5717,7 @@ void phy_procedures_UE_lte(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,u
     if (msg_p != NULL) {
       msg_name = ITTI_MSG_NAME (msg_p);
       instance = ITTI_MSG_INSTANCE (msg_p);
-      Mod_id = instance - NB_eNB_INST;
+      Mod_id = instance - 1/*NB_eNB_INST*/;
 
       switch (ITTI_MSG_ID(msg_p)) {
       case PHY_FIND_CELL_REQ:

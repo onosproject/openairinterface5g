@@ -122,6 +122,8 @@ int user_api_initialize(user_api_id_t *user_api_id, const char* host, const char
 
     LOG_TRACE(INFO, "USR-API   - User's communication device %d is OPENED "
               "on %s/%s", user_api_get_fd(user_api_id), user_api_id->send_buffer, devname);
+    printf("USR-API   - User's communication device %d is OPENED "
+              "on %s/%s", user_api_get_fd(user_api_id), user_api_id->send_buffer, devname);
   } else {
     /* Initialize network socket handlers */
     user_api_id->open  = socket_udp_open;

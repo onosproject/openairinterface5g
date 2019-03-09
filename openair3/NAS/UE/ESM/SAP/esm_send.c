@@ -173,7 +173,7 @@ int esm_send_pdn_connectivity_request(int pti, int is_emergency, int pdn_type,
       msg->accesspointname.accesspointnamevalue.value = (uint8_t *)apn;
     }
   }
-
+  printf("The PDN connectivity request message is sent by the UE to the network: apn %s, pdn_type %d\n",(uint8_t *)apn,pdn_type);
   /* Add PCO */
 # define CONFIGURATION_PROTOCOL_PPP          0
 # define PROTOCOL_ID_IPCP                    0x8021

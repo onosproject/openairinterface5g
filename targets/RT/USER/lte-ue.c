@@ -941,9 +941,10 @@ void *UE_thread(void *arg) {
     init_UE_threads(UE);
 
 #ifdef NAS_UE
+    printf("UE_thread: NAS_UE\n");
     MessageDef *message_p;
     message_p = itti_alloc_new_message(TASK_NAS_UE, INITIALIZE_MESSAGE);
-    itti_send_msg_to_task (TASK_NAS_UE, UE->Mod_id + NB_eNB_INST, message_p);
+    itti_send_msg_to_task (TASK_NAS_UE, UE->Mod_id + 1/*NB_eNB_INST*/, message_p);
 #endif
 
     int sub_frame=-1;
@@ -1206,7 +1207,7 @@ void *UE_thread_freq(void *arg) {
 #ifdef NAS_UE
     MessageDef *message_p;
     message_p = itti_alloc_new_message(TASK_NAS_UE, INITIALIZE_MESSAGE);
-    itti_send_msg_to_task (TASK_NAS_UE, UE->Mod_id + NB_eNB_INST, message_p);
+    itti_send_msg_to_task (TASK_NAS_UE, UE->Mod_id + 1/*NB_eNB_INST*/, message_p);
 #endif
 
     int sub_frame=-1;

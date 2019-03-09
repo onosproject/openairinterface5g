@@ -74,8 +74,8 @@ openair_rrc_on(
       eNB_rrc_inst[ctxt_pP->module_id].carrier[CC_id].Srb0.Active = 1;
     }
   } else {
-    LOG_I(RRC, PROTOCOL_RRC_CTXT_FMT" OPENAIR RRC IN....\n",
-          PROTOCOL_RRC_CTXT_ARGS(ctxt_pP));
+    LOG_I(RRC, PROTOCOL_RRC_CTXT_FMT" OPENAIR RRC IN....UE %d \n",
+          PROTOCOL_RRC_CTXT_ARGS(ctxt_pP), ctxt_pP->module_id);
 
     for (i = 0; i < NB_eNB_INST; i++) {
       LOG_D(RRC, PROTOCOL_RRC_CTXT_FMT" Activating CCCH (eNB %d)\n",

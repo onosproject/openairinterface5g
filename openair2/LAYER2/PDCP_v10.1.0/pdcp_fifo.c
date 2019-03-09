@@ -548,7 +548,8 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
           LOG_D(PDCP, "[PDCP][NETLINK] Something in socket, length %zu\n",
                 nas_nlh_rx->nlmsg_len - sizeof(struct nlmsghdr));
 #endif
-
+          printf("[PDCP][NETLINK] Something in socket, length %zu\n",
+                nas_nlh_rx->nlmsg_len - sizeof(struct nlmsghdr));
 #ifdef OAI_EMU
 
           // overwrite function input parameters, because only one netlink socket for all instances

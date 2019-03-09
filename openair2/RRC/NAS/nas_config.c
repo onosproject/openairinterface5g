@@ -124,7 +124,7 @@ int set_gateway(char *interfaceName, char *gateway)
     if(strstr(strerror(errno),"File exists") == NULL) {
       LOG_E(OIP,"ioctl SIOCADDRT failed : %s\n",strerror(errno));
       return 2;
-    } else { /*if SIOCADDRT error is route exist, retrun success*/
+    } else { /*if SIOCADDRT error is route exist, return success*/
       LOG_I(OIP,"File Exist ...\n");
       LOG_I(OIP,"set_gateway OK!\n");
       return 0;

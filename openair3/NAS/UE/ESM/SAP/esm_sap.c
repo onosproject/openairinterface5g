@@ -364,7 +364,7 @@ static int _esm_sap_recv(nas_user_t *user, int msg_type, int is_standalone,
   int esm_cause = ESM_CAUSE_SUCCESS;
   int rc = RETURNerror;
   int decoder_rc;
-
+  char    str[128];
   ESM_msg esm_msg;
 
   LOG_FUNC_IN;
@@ -433,10 +433,11 @@ static int _esm_sap_recv(nas_user_t *user, int msg_type, int is_standalone,
        * Process activate default EPS bearer context request message
        * received from the MME
        */
+      //esm_msg.activate_default_eps_bearer_context_request.pdnaddress.pdnaddressinformation.value[3]=esm_msg.activate_default_eps_bearer_context_request.pdnaddress.pdnaddressinformation.value[3]-2;
+      printf("_esm_sap_recv: ip_addr %s, ip_addr_offset4 %d\n", esm_data_get_ipv4_addr(&esm_msg.activate_default_eps_bearer_context_request.pdnaddress.pdnaddressinformation, str),esm_msg.activate_default_eps_bearer_context_request.pdnaddress.pdnaddressinformation.value[3]);
       esm_cause = esm_recv_activate_default_eps_bearer_context_request(
                     user, pti, ebi,
                     &esm_msg.activate_default_eps_bearer_context_request);
-
       if ( (esm_cause == ESM_CAUSE_SUCCESS) ||
            (esm_cause == ESM_CAUSE_PTI_ALREADY_IN_USE) ) {
         /* Return accept message */
@@ -612,7 +613,7 @@ static int _esm_sap_recv(nas_user_t *user, int msg_type, int is_standalone,
       esm_cause = ESM_CAUSE_MESSAGE_TYPE_NOT_IMPLEMENTED;
       break;
     }
-
+  
   if ( (esm_cause != ESM_CAUSE_SUCCESS) && (esm_procedure == NULL) ) {
     /* ESM message processing failed */
     if (!is_discarded) {
@@ -643,7 +644,7 @@ static int _esm_sap_recv(nas_user_t *user, int msg_type, int is_standalone,
 
     /* Complete the relevant ESM procedure */
     rc = (*esm_procedure)(user, is_standalone, ebi, rsp, triggered_by_ue);
-
+    printf("Encoded ESM %s, Encoded ESM response %s\n",esm_data_get_ipv4_addr(req, str),esm_data_get_ipv4_addr(rsp, str));
     if (is_discarded) {
       /* Return indication that received message has been discarded */
       *err = ESM_SAP_DISCARDED;

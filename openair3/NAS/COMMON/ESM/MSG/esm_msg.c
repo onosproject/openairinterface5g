@@ -84,7 +84,7 @@ int esm_msg_decode(ESM_msg *msg, uint8_t *buffer, uint32_t len)
 {
   int header_result;
   int decode_result;
-
+  
 #if ((defined(NAS_BUILT_IN_EPC) && defined(NAS_MME)) || (defined(ENABLE_NAS_UE_LOGGING) && defined(NAS_BUILT_IN_UE) && defined(NAS_UE)))
   uint8_t *buffer_log = buffer;
   uint32_t len_log = len;
@@ -110,97 +110,120 @@ int esm_msg_decode(ESM_msg *msg, uint8_t *buffer, uint32_t len)
 
   buffer += header_result;
   len -= header_result;
-
+  printf("esm_msg_decode: ");
   switch(msg->header.message_type) {
   case PDN_DISCONNECT_REQUEST:
+    printf("1\n");
     decode_result = decode_pdn_disconnect_request(&msg->pdn_disconnect_request, buffer, len);
     break;
 
   case DEACTIVATE_EPS_BEARER_CONTEXT_ACCEPT:
+    printf("2\n");
     decode_result = decode_deactivate_eps_bearer_context_accept(&msg->deactivate_eps_bearer_context_accept, buffer, len);
     break;
 
   case BEARER_RESOURCE_ALLOCATION_REQUEST:
+    printf("3\n");
     decode_result = decode_bearer_resource_allocation_request(&msg->bearer_resource_allocation_request, buffer, len);
     break;
 
   case ACTIVATE_DEFAULT_EPS_BEARER_CONTEXT_ACCEPT:
+    printf("4\n");
     decode_result = decode_activate_default_eps_bearer_context_accept(&msg->activate_default_eps_bearer_context_accept, buffer, len);
     break;
 
   case PDN_CONNECTIVITY_REJECT:
+    printf("5\n");
     decode_result = decode_pdn_connectivity_reject(&msg->pdn_connectivity_reject, buffer, len);
     break;
 
   case MODIFY_EPS_BEARER_CONTEXT_REJECT:
+    printf("6\n");
     decode_result = decode_modify_eps_bearer_context_reject(&msg->modify_eps_bearer_context_reject, buffer, len);
     break;
 
   case ACTIVATE_DEDICATED_EPS_BEARER_CONTEXT_REJECT:
+    printf("7\n");
     decode_result = decode_activate_dedicated_eps_bearer_context_reject(&msg->activate_dedicated_eps_bearer_context_reject, buffer, len);
     break;
 
   case MODIFY_EPS_BEARER_CONTEXT_ACCEPT:
+    printf("8\n");
     decode_result = decode_modify_eps_bearer_context_accept(&msg->modify_eps_bearer_context_accept, buffer, len);
     break;
 
   case DEACTIVATE_EPS_BEARER_CONTEXT_REQUEST:
+    printf("9\n");
     decode_result = decode_deactivate_eps_bearer_context_request(&msg->deactivate_eps_bearer_context_request, buffer, len);
     break;
 
   case ACTIVATE_DEDICATED_EPS_BEARER_CONTEXT_ACCEPT:
+    printf("10\n");
     decode_result = decode_activate_dedicated_eps_bearer_context_accept(&msg->activate_dedicated_eps_bearer_context_accept, buffer, len);
     break;
 
   case ACTIVATE_DEFAULT_EPS_BEARER_CONTEXT_REJECT:
+    printf("11\n");
     decode_result = decode_activate_default_eps_bearer_context_reject(&msg->activate_default_eps_bearer_context_reject, buffer, len);
     break;
 
   case MODIFY_EPS_BEARER_CONTEXT_REQUEST:
+    printf("12\n");
     decode_result = decode_modify_eps_bearer_context_request(&msg->modify_eps_bearer_context_request, buffer, len);
     break;
 
   case PDN_DISCONNECT_REJECT:
+    printf("13\n");
     decode_result = decode_pdn_disconnect_reject(&msg->pdn_disconnect_reject, buffer, len);
     break;
 
   case ACTIVATE_DEDICATED_EPS_BEARER_CONTEXT_REQUEST:
+    printf("14\n");
     decode_result = decode_activate_dedicated_eps_bearer_context_request(&msg->activate_dedicated_eps_bearer_context_request, buffer, len);
     break;
 
   case BEARER_RESOURCE_MODIFICATION_REJECT:
+    printf("15\n");
     decode_result = decode_bearer_resource_modification_reject(&msg->bearer_resource_modification_reject, buffer, len);
     break;
 
   case BEARER_RESOURCE_ALLOCATION_REJECT:
+    printf("16\n");
     decode_result = decode_bearer_resource_allocation_reject(&msg->bearer_resource_allocation_reject, buffer, len);
     break;
 
   case ACTIVATE_DEFAULT_EPS_BEARER_CONTEXT_REQUEST:
+    printf("17\n");
     decode_result = decode_activate_default_eps_bearer_context_request(&msg->activate_default_eps_bearer_context_request, buffer, len);
     break;
 
   case PDN_CONNECTIVITY_REQUEST:
+    printf("18\n");
     decode_result = decode_pdn_connectivity_request(&msg->pdn_connectivity_request, buffer, len);
     break;
 
   case ESM_INFORMATION_RESPONSE:
+    printf("19\n");
     decode_result = decode_esm_information_response(&msg->esm_information_response, buffer, len);
     break;
 
   case BEARER_RESOURCE_MODIFICATION_REQUEST:
+    printf("20\n");
     decode_result = decode_bearer_resource_modification_request(&msg->bearer_resource_modification_request, buffer, len);
     break;
 
   case ESM_INFORMATION_REQUEST:
+    printf("21\n");
     decode_result = decode_esm_information_request(&msg->esm_information_request, buffer, len);
     break;
 
   case ESM_STATUS:
+    printf("22\n");
     decode_result = decode_esm_status(&msg->esm_status, buffer, len);
     break;
 
   default:
+    printf("default\n");
     LOG_TRACE(ERROR, "ESM-MSG   - Unexpected message type: 0x%x",
               msg->header.message_type);
     decode_result = TLV_DECODE_WRONG_MESSAGE_TYPE;

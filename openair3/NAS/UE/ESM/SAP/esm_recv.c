@@ -282,7 +282,7 @@ int esm_recv_activate_default_eps_bearer_context_request(nas_user_t *user, int p
     const activate_default_eps_bearer_context_request_msg *msg)
 {
   LOG_FUNC_IN;
-
+  char    str[128];
   int esm_cause = ESM_CAUSE_SUCCESS;
   esm_pt_data_t *esm_pt_data = user->esm_pt_data;
 
@@ -374,6 +374,7 @@ int esm_recv_activate_default_eps_bearer_context_request(nas_user_t *user, int p
             &msg->pdnaddress.pdnaddressinformation,
             &msg->accesspointname.accesspointnamevalue,
             &esm_cause);
+  printf("esm_recv_activate_default_eps_bearer_context_request: %s\n", esm_data_get_ipv4_addr(&msg->pdnaddress.pdnaddressinformation, str));
 
   if (pid != RETURNerror) {
     /* Create local default EPS bearer context */

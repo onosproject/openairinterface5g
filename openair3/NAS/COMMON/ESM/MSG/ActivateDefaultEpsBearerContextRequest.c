@@ -48,8 +48,10 @@ int decode_activate_default_eps_bearer_context_request(activate_default_eps_bear
   else
     decoded += decoded_result;
 
-  if ((decoded_result = decode_pdn_address(&activate_default_eps_bearer_context_request->pdnaddress, 0, buffer + decoded, len - decoded)) < 0)
+  if ((decoded_result = decode_pdn_address(&activate_default_eps_bearer_context_request->pdnaddress, 0, buffer + decoded, len - decoded)) < 0){
+    printf("decode_activate_default_eps_bearer_context_request: \n");
     return decoded_result;
+  }
   else
     decoded += decoded_result;
 

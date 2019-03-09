@@ -80,7 +80,7 @@ int openair2_stats_read(char *buffer, char **my_buffer, off_t off, int length)
   // UE part
   for (ue_id=0; ue_id<NUM_UE_INST; ue_id++) {
     // mod_id used for PDCP and RLC
-    Mod_id = NB_eNB_INST + ue_id ;
+    Mod_id = 1/*NB_eNB_INST*/ + ue_id ;
 
     len+=sprintf(&buffer[len],"UE RX TTI: %d\n",UE_mac_inst[ue_id].rxFrame);
 

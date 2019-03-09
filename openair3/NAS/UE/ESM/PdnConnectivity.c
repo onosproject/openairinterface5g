@@ -364,7 +364,6 @@ int esm_proc_pdn_connectivity_accept(nas_user_t *user, int pti, esm_proc_pdn_typ
   } else {
     sprintf (apn_first_char, "%02X", apn->value[0]);
   }
-
   LOG_TRACE(INFO, "ESM-PROC  - PDN connectivity accepted by the network "
             "(pti=%d) APN = %s\"%s\", IP address = %s", pti, apn_first_char, isprint(apn->value[0]) ? &apn->value[0] : &apn->value[1],
             (pdn_type == ESM_PDN_TYPE_IPV4)? esm_data_get_ipv4_addr(pdn_addr, str) :

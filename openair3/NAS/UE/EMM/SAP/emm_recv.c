@@ -208,7 +208,7 @@ int emm_recv_attach_accept(nas_user_t *user, attach_accept_msg *msg, int *emm_ca
     guti.gummei.MMEcode = msg->guti.guti.mmecode;
     guti.m_tmsi = msg->guti.guti.mtmsi;
   }
-
+  printf("emm_recv_attach_accept: guti %d%d%d%d%d%d\n",guti.gummei.plmn.MCCdigit1,guti.gummei.plmn.MCCdigit2,guti.gummei.plmn.MCCdigit3,guti.gummei.plmn.MNCdigit1,guti.gummei.plmn.MNCdigit2,guti.gummei.plmn.MNCdigit3);
   /* Get the list of equivalent PLMNs */
   int n_eplmns = 0;
   plmn_t eplmn;
@@ -222,7 +222,7 @@ int emm_recv_attach_accept(nas_user_t *user, attach_accept_msg *msg, int *emm_ca
     eplmn.MNCdigit2 = msg->equivalentplmns.mncdigit2;
     eplmn.MNCdigit3 = msg->equivalentplmns.mncdigit3;
   }
-
+  printf("emm_recv_attach_accept: plmn %d%d%d%d%d%d\n",eplmn.MCCdigit1,eplmn.MCCdigit2,eplmn.MCCdigit3,eplmn.MNCdigit1,eplmn.MNCdigit2,eplmn.MNCdigit3);
   /* Execute attach procedure accepted by the network */
   rc = emm_proc_attach_accept(user, T3412, T3402, T3423, n_tais, tai, pguti,
                               n_eplmns, &eplmn,

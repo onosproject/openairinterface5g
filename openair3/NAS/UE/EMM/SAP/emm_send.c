@@ -213,7 +213,7 @@ int emm_send_attach_request(const emm_as_establish_t *msg,
     guti->mncdigit2 = msg->UEid.guti->gummei.plmn.MNCdigit2;
     guti->mncdigit3 = msg->UEid.guti->gummei.plmn.MNCdigit3;
   } else if (msg->UEid.imsi) {
-    LOG_TRACE(INFO, "EMMAS-SAP - Send Attach Request message with IMSI");
+    //LOG_TRACE(INFO, "EMMAS-SAP - Send Attach Request message with IMSI");
     /* Set IMSI mobile identity */
     ImsiEpsMobileIdentity_t *imsi = &emm_msg->oldgutiorimsi.imsi;
     imsi->typeofidentity = EPS_MOBILE_IDENTITY_IMSI;
@@ -233,8 +233,9 @@ int emm_send_attach_request(const emm_as_establish_t *msg,
     imsi->digit13 = msg->UEid.imsi->u.num.digit13;
     imsi->digit14 = msg->UEid.imsi->u.num.digit14;
     imsi->digit15 = msg->UEid.imsi->u.num.digit15;
+    LOG_TRACE(INFO, "EMMAS-SAP - Send Attach Request message with IMSI %d%d%d%d%d%d%d%d%d%d%d%d%d%d%d",imsi->digit1,imsi->digit2,imsi->digit3,imsi->digit4,imsi->digit5,imsi->digit6,imsi->digit7,imsi->digit8,imsi->digit9,imsi->digit10,imsi->digit11,imsi->digit12,imsi->digit13,imsi->digit14,imsi->digit15);
   } else if (msg->UEid.imei) {
-    LOG_TRACE(INFO, "EMMAS-SAP - Send Attach Request message with IMEI");
+    //LOG_TRACE(INFO, "EMMAS-SAP - Send Attach Request message with IMEI");
     /* Set IMEI mobile identity */
     ImeiEpsMobileIdentity_t *imei = &emm_msg->oldgutiorimsi.imei;
     imei->typeofidentity = EPS_MOBILE_IDENTITY_IMEI;
@@ -254,6 +255,7 @@ int emm_send_attach_request(const emm_as_establish_t *msg,
     imei->digit13 = msg->UEid.imei->u.num.digit13;
     imei->digit14 = msg->UEid.imei->u.num.digit14;
     imei->digit15 = msg->UEid.imei->u.num.digit15;
+    LOG_TRACE(INFO, "EMMAS-SAP - Send Attach Request message with IMEI %d%d%d%d%d%d%d%d%d%d%d%d%d%d%d",imei->digit1,imei->digit2,imei->digit3,imei->digit4,imei->digit5,imei->digit6,imei->digit7,imei->digit8,imei->digit9,imei->digit10,imei->digit11,imei->digit12,imei->digit13,imei->digit14,imei->digit15);
   }
 
   /* Mandatory - UE network capability */

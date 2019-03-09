@@ -172,7 +172,7 @@ void* socket_udp_open(int type, const char* host, const char* port)
   for (sp = socket_addr; sp != NULL; sp = sp->ai_next) {
     /* Create the socket endpoint for communication */
     sfd = socket (sp->ai_family, sp->ai_socktype, sp->ai_protocol);
-    printf("sfd0 %d, sfp %x\n",sfd,socket_addr);
+    printf("sfd0 %d\n",sfd);
     if (sfd < 0) {
       continue;
     }

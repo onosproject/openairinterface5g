@@ -95,14 +95,14 @@ void *nas_ue_task(void *args_p)
   unsigned int          Mod_id;
   int                   result;
 
-  //NB_eNB_INST=NB_eNB_INST-1;
+  //NB_eNB_INST=1;
 
   nas_user_container_t *users=args_p;
 
   itti_mark_task_ready (TASK_NAS_UE);
   MSC_START_USE();
   /* Initialize UE NAS (EURECOM-NAS) */
-  printf("nas_ue_task: # UEs = %d,NB_eNB_INST %d, NB_UE_INST %d\n",users->count,NB_eNB_INST,NB_UE_INST);
+  printf("nas_ue_task: # UEs = %d,NB_eNB_INST %d, NB_UE_INST %d\n",users->count,NB_eNB_INST,NB_UE_INST); 
   for (int i=0; i < users->count; i++)
   {
     nas_user_t *user = &users->item[i];
@@ -140,7 +140,7 @@ void *nas_ue_task(void *args_p)
   }
 
   /* Set UE activation state */
-  for (instance = NB_eNB_INST; instance < (NB_eNB_INST + NB_UE_INST); instance++) {
+  for (instance = 1/*NB_eNB_INST*/; instance < (1/*NB_eNB_INST*/ + NB_UE_INST); instance++) {
     MessageDef *message_p;
 
     message_p = itti_alloc_new_message(TASK_NAS_UE, DEACTIVATE_MESSAGE);
@@ -154,7 +154,8 @@ void *nas_ue_task(void *args_p)
     if (msg_p != NULL) {
       msg_name = ITTI_MSG_NAME (msg_p);
       instance = ITTI_MSG_INSTANCE (msg_p);
-      Mod_id = instance - NB_eNB_INST;
+      Mod_id = instance - 1/*NB_eNB_INST*/;
+      printf("nas_ue_task: instance %d, INSTANCE_DEFAULT %d\n",instance,INSTANCE_DEFAULT);
       if (instance == INSTANCE_DEFAULT) {
         printf("%s:%d: FATAL: instance is INSTANCE_DEFAULT, should not happen.\n",
                __FILE__, __LINE__);
@@ -283,6 +284,7 @@ void *nas_ue_task(void *args_p)
   }
 
   free(users);
+  //NB_eNB_INST-2;
   return NULL;
 }
 

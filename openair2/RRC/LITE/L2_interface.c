@@ -72,7 +72,7 @@ mac_rrc_data_req(
 )
 //--------------------------------------------------------------------------
 {
-  printf("mac_rrc_data_req:eNB_index %d\n",eNB_index);//eNB_index=ue->common_vars.enb_id
+  printf("mac_rrc_data_req:eNB_index %d, eNB %d, CC_id %d\n",eNB_index,Mod_idP,CC_id);//eNB_index=ue->common_vars.enb_id
   SRB_INFO *Srb_info;
   uint8_t Sdu_size=0;
 
@@ -348,7 +348,7 @@ mac_rrc_data_ind(
   SRB_INFO *Srb_info;
   protocol_ctxt_t ctxt;
   sdu_size_t      sdu_size = 0;
-  printf("mac_rrc_data_ind: eNB_indexP %d\n",eNB_indexP);//eNB_index=ue->common_vars.enb_id
+  printf("mac_rrc_data_ind: eNB_indexP %d, ctxt->instance %d, ctxt->module_id %d\n",eNB_indexP,ctxt.instance,ctxt.module_id);//eNB_index=ue->common_vars.enb_id
   /* for no gcc warnings */
   (void)sdu_size;
 
@@ -536,6 +536,7 @@ rrc_data_req(
     sdu_sizeP);
 
 #if defined(ENABLE_ITTI)
+printf("ENABLE_ITTI is on\n");
   {
     MessageDef *message_p;
     // Uses a new buffer to avoid issue with PDCP buffer content that could be changed by PDCP (asynchronous message handling).
@@ -560,7 +561,7 @@ rrc_data_req(
     RRC_DCCH_DATA_REQ (message_p).module_id = ctxt_pP->module_id;
     RRC_DCCH_DATA_REQ (message_p).rnti      = ctxt_pP->rnti;
     RRC_DCCH_DATA_REQ (message_p).eNB_index = ctxt_pP->eNB_index;
-
+    printf("RRC_DCCH_DATA_REQ (message_p): frame %d, enb_flag %d, rb_id %d, muip %d, confirmp %d, sdu_size %d, sdu_p %d, mode %d, module_id %d, rnti %x, eNB_index %d\n",ctxt_pP->frame,ctxt_pP->enb_flag,rb_idP,muiP,confirmP,sdu_sizeP,*message_buffer,modeP,ctxt_pP->module_id,ctxt_pP->rnti,ctxt_pP->eNB_index);
     itti_send_msg_to_task (
       ctxt_pP->enb_flag ? TASK_PDCP_ENB : TASK_PDCP_UE,
       ctxt_pP->instance,

@@ -221,8 +221,8 @@ int esm_ebr_context_create(
              in_addr.s_addr  = pdn->ip_addr[0] << 24                 |
                                ((pdn->ip_addr[1] << 16) & 0x00FF0000) |
                                ((pdn->ip_addr[2] <<  8) & 0x0000FF00) |
-                               ( pdn->ip_addr[3]        & 0x000000FF);
-
+                               ( (pdn->ip_addr[3])        & 0x000000FF);
+	     printf("ip_addr %d\n",pdn->ip_addr[3]);
              in_addr.s_addr = htonl(in_addr.s_addr);
 
              tmp = inet_ntoa(in_addr);
