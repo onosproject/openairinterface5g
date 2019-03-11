@@ -240,7 +240,7 @@ uint16_t get_nquad(uint8_t num_pdcch_symbols,LTE_DL_FRAME_PARMS *frame_parms,uin
 
   Ngroup_PHICH*=mi;
 
-  if ((num_pdcch_symbols>0) && (num_pdcch_symbols<4))
+  if ((num_pdcch_symbols>0) && (num_pdcch_symbols<4)) {
     switch (frame_parms->N_RB_DL) {
     case 6:
       Nreg=12+(num_pdcch_symbols-1)*18;
@@ -264,6 +264,11 @@ uint16_t get_nquad(uint8_t num_pdcch_symbols,LTE_DL_FRAME_PARMS *frame_parms,uin
 
   //   printf("Nreg %d (%d)\n",Nreg,Nreg - 4 - (3*Ngroup_PHICH));
   return(Nreg - 4 - (3*Ngroup_PHICH));
+  } else {
+    LOG_E(PHY, "RM2178 Error log num_pdcch_symbols %d, N_RB_DL %d, Ngroup_PHICH %d, mi %d, phich_resource %d, frame_type %d, Nreg %d\n",
+           num_pdcch_symbols, frame_parms->N_RB_DL, Ngroup_PHICH, mi, frame_parms->phich_config_common.phich_resource, frame_parms->frame_type, Nreg);
+    return Nreg;
+  }
 }
 
 uint16_t get_nCCE(uint8_t num_pdcch_symbols,LTE_DL_FRAME_PARMS *frame_parms,uint8_t mi)
