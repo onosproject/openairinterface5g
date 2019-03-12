@@ -630,6 +630,7 @@ ue_decode_si(module_id_t module_idP, int CC_id, frame_t frameP,
 #if UE_TIMING_TRACE
     start_meas(&UE_mac_inst[module_idP].rx_si);
 #endif
+
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME
 	(VCD_SIGNAL_DUMPER_FUNCTIONS_UE_DECODE_SI, VCD_FUNCTION_IN);
 
@@ -657,6 +658,7 @@ ue_decode_si(module_id_t module_idP, int CC_id, frame_t frameP,
     }
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME
 	(VCD_SIGNAL_DUMPER_FUNCTIONS_UE_DECODE_SI, VCD_FUNCTION_OUT);
+
 #if UE_TIMING_TRACE
     stop_meas(&UE_mac_inst[module_idP].rx_si);
 #endif
@@ -682,6 +684,7 @@ ue_decode_p(module_id_t module_idP, int CC_id, frame_t frameP,
 #if UE_TIMING_TRACE
     start_meas(&UE_mac_inst[module_idP].rx_p);
 #endif
+
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME
 	(VCD_SIGNAL_DUMPER_FUNCTIONS_UE_DECODE_PCCH, VCD_FUNCTION_IN);
 
@@ -695,6 +698,7 @@ ue_decode_p(module_id_t module_idP, int CC_id, frame_t frameP,
 		     0);
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME
 	(VCD_SIGNAL_DUMPER_FUNCTIONS_UE_DECODE_PCCH, VCD_FUNCTION_OUT);
+
 #if UE_TIMING_TRACE
     stop_meas(&UE_mac_inst[module_idP].rx_p);
 #endif

@@ -131,10 +131,6 @@ int config_sync_var=-1;
 uint16_t runtime_phy_rx[29][6]; // SISO [MCS 0-28][RBs 0-5 : 6, 15, 25, 50, 75, 100]
 uint16_t runtime_phy_tx[29][6]; // SISO [MCS 0-28][RBs 0-5 : 6, 15, 25, 50, 75, 100]
 
-#if defined(ENABLE_ITTI)
-  volatile int             start_eNB = 0;
-  volatile int             start_UE = 0;
-#endif
 volatile int             oai_exit = 0;
 
 clock_source_t clock_source = internal;
@@ -412,48 +408,6 @@ static void *scope_thread(void *arg) {
 
 
 
-#if defined(ENABLE_ITTI)
-void *l2l1_task(void *arg) {
-  MessageDef *message_p = NULL;
-  int         result;
-  itti_set_task_real_time(TASK_L2L1);
-  itti_mark_task_ready(TASK_L2L1);
-
-  do {
-    // Wait for a message
-    itti_receive_msg (TASK_L2L1, &message_p);
-
-    switch (ITTI_MSG_ID(message_p)) {
-      case TERMINATE_MESSAGE:
-        oai_exit=1;
-        itti_exit_task ();
-        break;
-
-      case ACTIVATE_MESSAGE:
-        start_UE = 1;
-        break;
-
-      case DEACTIVATE_MESSAGE:
-        start_UE = 0;
-        break;
-
-      case MESSAGE_TEST:
-        LOG_I(SIM, "Received %s\n", ITTI_MSG_NAME(message_p));
-        break;
-
-      default:
-        LOG_E(SIM, "Received unexpected message %s\n", ITTI_MSG_NAME(message_p));
-        break;
-    }
-
-    result = itti_free (ITTI_MSG_ORIGIN_ID(message_p), message_p);
-    AssertFatal (result == EXIT_SUCCESS, "Failed to free memory (%d)!\n", result);
-  } while(!oai_exit);
-
-  return NULL;
-}
-#endif
-
 extern int16_t dlsch_demod_shift;
 
 static void get_options(void) {
@@ -466,7 +420,6 @@ static void get_options(void) {
   CONFIG_SETRTFLAG(CONFIG_NOEXITONHELP);
   /* unknown parameters on command line will be checked in main
      after all init have been performed                         */
-  CONFIG_SETRTFLAG(CONFIG_NOCHECKUNKOPT);
   get_common_options();
   get_uethreads_params();
   paramdef_t cmdline_uemodeparams[] =CMDLINE_UEMODEPARAMS_DESC;
@@ -750,9 +703,13 @@ int main( int argc, char **argv ) {
 #if defined (XFORMS)
   int ret;
 #endif
+  configmodule_interface_t *config_mod;
+
   start_background_system();
 
-  if ( load_configmodule(argc,argv,CONFIG_ENABLECMDLINEONLY) == NULL) {
+  config_mod = load_configmodule(argc, argv, CONFIG_ENABLECMDLINEONLY);
+
+  if (config_mod == NULL) {
     exit_fun("[SOFTMODEM] Error, configuration module init failed\n");
   }
 
@@ -764,8 +721,6 @@ int main( int argc, char **argv ) {
 
   for (int i=0;i<MAX_NUM_CCs;i++) tx_max_power[i]=23;
 
-  CONFIG_SETRTFLAG(CONFIG_NOCHECKUNKOPT); 
-  printf("NFAPI_MODE value: %d \n", nfapi_mode);
   get_options ();
 
   printf("D2D_en value: %d \n \n", D2D_en);
@@ -808,7 +763,6 @@ int main( int argc, char **argv ) {
 #if T_TRACER
   T_Config_Init();
 #endif
-  CONFIG_CLEARRTFLAG(CONFIG_NOCHECKUNKOPT);
   //randominit (0);
   set_taus_seed (0);
   cpuf=get_cpu_freq_GHz();
@@ -825,12 +779,7 @@ int main( int argc, char **argv ) {
 
   MSC_INIT(MSC_E_UTRAN, THREAD_MAX+TASK_MAX);
 #endif
-
-  if (opt_type != OPT_NONE) {
-    if (init_opt(in_path, in_ip) == -1)
-      LOG_E(OPT,"failed to run OPT \n");
-  }
-
+  init_opt();
 #ifdef PDCP_USE_NETLINK
   printf("PDCP netlink\n");
   netlink_init();
@@ -884,8 +833,6 @@ int main( int argc, char **argv ) {
   else init_openair0(frame_parms[0],(int)rx_gain[0][0]);
 
   if (simL1flag==1) {
-    AssertFatal(NULL!=load_configmodule(argc,argv,CONFIG_ENABLECMDLINEONLY),
-                "[SOFTMODEM] Error, configuration module init failed\n");
     RCConfig_sim();
   }
 
@@ -1119,50 +1066,8 @@ int main( int argc, char **argv ) {
   }
 
 #endif
-  ret=config_check_unknown_cmdlineopt(CONFIG_CHECKALLSECTIONS);
-
-  if (ret != 0) {
-    LOG_E(ENB_APP, "%i unknown options in command line (invalid section name)\n",ret);
-    exit_fun("");
-  }
-
-
+  config_check_unknown_cmdlineopt(CONFIG_CHECKALLSECTIONS);
   printf("Sending sync to all threads (%p,%p,%p)\n",&sync_var,&sync_cond,&sync_mutex);
-
-/*
-<<<<<<< HEAD
-    for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
-      
-      
-#ifdef OAI_USRP
-      UE[CC_id]->hw_timing_advance = timing_advance;
-#else
-      UE[CC_id]->hw_timing_advance = 160;
-#endif
-    }
-    if(nfapi_mode!=3) {
-    	if (setup_ue_buffers(UE,&openair0_cfg[0])!=0) {
-    		printf("Error setting up eNB buffer\n");
-    		exit(-1);
-    	}
-    }
-    
-    
-    
-
-    if (input_fd) {
-      printf("Reading in from file to antenna buffer %d\n",0);
-      if (fread(UE[0]->common_vars.rxdata[0],
-		sizeof(int32_t),
-		frame_parms[0]->samples_per_tti*10,
-		input_fd) != frame_parms[0]->samples_per_tti*10)
-	printf("error reading from file\n");
-    }
-    //p_exmimo_config->framing.tdd_config = TXRXSWITCH_TESTRX;
-  
-  printf("Sending sync to all threads\n");
-=======
->>>>>>> main/develop*/
 
   pthread_mutex_lock(&sync_mutex);
   sync_var=0;
@@ -1213,9 +1118,7 @@ int main( int argc, char **argv ) {
   if (PHY_vars_UE_g[0][0]->rfdevice.trx_end_func)
     PHY_vars_UE_g[0][0]->rfdevice.trx_end_func(&PHY_vars_UE_g[0][0]->rfdevice);
 
-  if (opt_enabled == 1)
-    terminate_opt();
-
+  terminate_opt();
   logClean();
   printf("Bye.\n");
   return 0;

@@ -68,19 +68,5 @@ typedef struct {
   int32_t **tdd_calib_coeffs;
 } RU_COMMON;
 
-//Not sure if this should be placed here or in defs_common.h
-/// Enumeration of SL_channel_config
-/*typedef enum {
-  NO_SL=0,
-  PSCCH_12_EVEN=1,
-  PSCCH_12_ODD=2,
-  PSCCH_34_EVEN=3,
-  PSCCH_34_ODD=4,
-  PSSCH_12=5,
-  PSSCH_34=6,
-  PSDCH=7,
-  PSBCH=8,
-  MAX_SLTYPES=9
-} SL_chan_t;*/
 #endif
 

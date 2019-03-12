@@ -1233,6 +1233,10 @@ static void *UE_phy_stub_single_thread_rxn_txnp4(void *arg) {
 	//int init_ra_UE = -1; // This counter is used to initiate the RA of each UE in different SFrames
   static __thread int UE_thread_rxtx_retval;
   struct rx_tx_thread_data *rtd = arg;
+  if (rtd == NULL) {
+      LOG_E( MAC, "[SCHED][UE] rx_tx_thread_data *rtd: NULL pointer\n" );
+      exit_fun("nothing to add");    
+  }
   UE_rxtx_proc_t *proc = rtd->proc;
 
   // settings for nfapi-L2-emulator mode
@@ -1246,6 +1250,7 @@ static void *UE_phy_stub_single_thread_rxn_txnp4(void *arg) {
   AssertFatal(UE!=NULL,"UE context is null\n");
   proc = &UE->proc.proc_rxtx[0];
   phy_stub_ticking->num_single_thread[ue_thread_id] = -1;
+
 
   if(ue_thread_id == 0){
     phy_stub_ticking->ticking_var = -1;
@@ -1301,10 +1306,15 @@ static void *UE_phy_stub_single_thread_rxn_txnp4(void *arg) {
     proc->frame_tx = proc->frame_rx + (proc->subframe_rx>(9-sf_ahead)?1:0);
     //oai_subframe_ind(proc->frame_rx, proc->subframe_rx);
 
-    if(UE->frame_parms.frame_type == FDD){
-    oai_subframe_ind(proc->frame_rx, proc->subframe_rx);
-    }else{
-    oai_subframe_ind(proc->frame_tx,proc->subframe_tx);
+    if (UE != NULL) {
+      if (UE->frame_parms.frame_type == FDD) {
+        oai_subframe_ind(proc->frame_rx, proc->subframe_rx);
+      } else {
+        oai_subframe_ind(proc->frame_tx, proc->subframe_tx);
+      }
+    } else {
+      // Default will be FDD
+      oai_subframe_ind(proc->frame_rx, proc->subframe_rx);
     }
 
     //Guessing that the next 4 lines are not needed for the phy_stub mode.

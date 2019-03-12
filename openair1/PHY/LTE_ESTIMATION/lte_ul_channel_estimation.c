@@ -56,11 +56,11 @@ int32_t lte_ul_channel_estimation(LTE_DL_FRAME_PARMS *frame_parms,
   int subframe = proc->subframe_rx;
   */
 
+  //uint8_t harq_pid;
   int16_t delta_phase = 0;
   int16_t *ru1 = ru_90;
   int16_t *ru2 = ru_90;
   int16_t current_phase1,current_phase2;
-  //  uint16_t N_rb_alloc = eNB->ulsch[UE_id]->harq_processes[harq_pid]->nb_rb;
   uint16_t aa,Msc_RS,Msc_RS_idx;
   uint16_t * Msc_idx_ptr;
   int k,pilot_pos1 = 3 - frame_parms->Ncp, pilot_pos2 = 10 - 2*frame_parms->Ncp;

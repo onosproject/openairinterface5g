@@ -317,11 +317,18 @@ function install_epc_on_vm {
         echo "############################################################"
         echo "Creating test EPC VM ($LOC_EPC_VM_NAME) on Ubuntu Cloud Image base"
         echo "############################################################"
+        acquire_vm_create_lock
         uvt-kvm create $LOC_EPC_VM_NAME release=xenial --unsafe-caching
+        echo "Waiting for VM to be started"
+        uvt-kvm wait $LOC_EPC_VM_NAME --insecure
+        release_vm_create_lock
+    else
+        echo "Waiting for VM to be started"
+        uvt-kvm wait $LOC_EPC_VM_NAME --insecure
     fi
 
-    uvt-kvm wait $LOC_EPC_VM_NAME --insecure
     local LOC_EPC_VM_IP_ADDR=`uvt-kvm ip $LOC_EPC_VM_NAME`
+
     echo "$LOC_EPC_VM_NAME has for IP addr = $LOC_EPC_VM_IP_ADDR"
     scp -o StrictHostKeyChecking=no /etc/apt/apt.conf.d/01proxy ubuntu@$LOC_EPC_VM_IP_ADDR:/home/ubuntu
 
@@ -569,6 +576,7 @@ function start_l2_sim_enb {
         ENB_SYNC=1
         echo "L2-SIM eNB is sync'ed: waiting for UE(s) to connect"
     fi
+    sleep 10
 }
 
 function start_l2_sim_ue {
@@ -604,10 +612,34 @@ function start_l2_sim_ue {
     if [ $i -lt 50 ]
     then
         UE_SYNC=0
-        echo "L2-SIM UE is NOT sync'ed w/eNB"
+        echo "L2-SIM UE is NOT sync'ed w/ eNB"
+        return
     else
         UE_SYNC=1
-        echo "L2-SIM UE is sync'ed w/eNB"
+        echo "L2-SIM UE is sync'ed w/ eNB"
+    fi
+    # Checking oip1 interface has now an IP address
+    i="0"
+    echo "ifconfig oip1 | egrep -c \"inet addr\"" > $1
+    while [ $i -lt 10 ]
+    do
+        sleep 5
+        CONNECTED=`ssh -o StrictHostKeyChecking=no ubuntu@$LOC_VM_IP_ADDR < $1`
+        if [ $CONNECTED -eq 1 ]
+        then
+            i="100"
+        else
+            i=$[$i+1]
+        fi
+    done
+    rm $1
+    if [ $i -lt 50 ]
+    then
+        UE_SYNC=0
+        echo "L2-SIM UE oip1 is NOT sync'ed w/ EPC"
+    else
+        UE_SYNC=1
+        echo "L2-SIM UE oip1 is sync'ed w/ EPC"
     fi
     sleep 10
 }
