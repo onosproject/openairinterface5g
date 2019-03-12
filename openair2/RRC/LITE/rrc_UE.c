@@ -460,7 +460,7 @@ static void rrc_ue_generate_RRCConnectionSetupComplete( const protocol_ctxt_t* c
         ctxt_pP->module_id,ctxt_pP->frame, size, eNB_index);
   LOG_D(RLC,
         "[FRAME %05d][RRC_UE][MOD %02d][][--- PDCP_DATA_REQ/%d Bytes (RRCConnectionSetupComplete to eNB %d MUI %d) --->][PDCP][MOD %02d][RB %02d]\n",
-        ctxt_pP->frame, ctxt_pP->module_id+NB_eNB_INST, size, eNB_index, rrc_mui, ctxt_pP->module_id+NB_eNB_INST, DCCH);
+        ctxt_pP->frame, ctxt_pP->module_id+1/*NB_eNB_INST*/, size, eNB_index, rrc_mui, ctxt_pP->module_id+1/*NB_eNB_INST*/, DCCH);
   rrc_data_req (
 		ctxt_pP,
 		DCCH,
@@ -471,7 +471,7 @@ static void rrc_ue_generate_RRCConnectionSetupComplete( const protocol_ctxt_t* c
 		PDCP_TRANSMISSION_MODE_CONTROL);
 
         printf("[FRAME %05d][RRC_UE][MOD %02d][][--- PDCP_DATA_REQ/%d Bytes (RRCConnectionSetupComplete to eNB %d MUI %d) --->][PDCP][MOD %02d][RB %02d]\n",
-        ctxt_pP->frame, ctxt_pP->module_id+NB_eNB_INST, size, eNB_index, rrc_mui, ctxt_pP->module_id+NB_eNB_INST, DCCH);
+        ctxt_pP->frame, ctxt_pP->module_id+1/*NB_eNB_INST*/, size, eNB_index, rrc_mui, ctxt_pP->module_id+1/*NB_eNB_INST*/, DCCH);
 }
 
 //-----------------------------------------------------------------------------
@@ -4325,7 +4325,6 @@ NAS_KENB_REFRESH_REQ,NAS_CELL_SELECTION_REQ,RRC_STATE_INACTIVE,RRC_STATE_IDLE,RR
     itti_receive_msg (TASK_RRC_UE, &msg_p);
 
     msg_name = ITTI_MSG_NAME (msg_p);
-    printf("rrc_ue_task... wait for a message. Case %d, id %d, instance %d\n",ITTI_MSG_ID(msg_p),ue_mod_id,instance);
     instance = ITTI_MSG_INSTANCE (msg_p);
     ue_mod_id = UE_INSTANCE_TO_MODULE_ID(instance);
     printf("rrc_ue_task... wait for a message. Case %d, id %d, instance %d\n",ITTI_MSG_ID(msg_p),ue_mod_id,instance);

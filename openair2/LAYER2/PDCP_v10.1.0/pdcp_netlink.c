@@ -102,7 +102,7 @@ pdcp_netlink_init(
 
   reset_meas(&ip_pdcp_stats_tmp);
 #if defined(USER_MODE) && defined(OAI_EMU)
-  nb_inst_enb = oai_emulation.info.nb_enb_local;
+  nb_inst_enb = 1/*oai_emulation.info.nb_enb_local*/;
   nb_inst_ue  = oai_emulation.info.nb_ue_local;
 #else
   nb_inst_enb = 1;
@@ -263,9 +263,9 @@ void *pdcp_netlink_thread_fct(void *arg)
 #ifdef OAI_EMU
 
           // LG: new_data_p->pdcp_read_header.inst will contain in fact a module id
-          if (new_data_p->pdcp_read_header.inst >= oai_emulation.info.nb_enb_local) {
+          if (new_data_p->pdcp_read_header.inst >= 1/*oai_emulation.info.nb_enb_local*/) {
             module_id = new_data_p->pdcp_read_header.inst
-                                                - oai_emulation.info.nb_enb_local +
+                                                - 1/*oai_emulation.info.nb_enb_local*/ +
                                                 + oai_emulation.info.first_ue_local;
             eNB_flag = 0;
           } else {

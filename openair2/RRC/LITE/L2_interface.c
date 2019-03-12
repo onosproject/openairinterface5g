@@ -72,7 +72,7 @@ mac_rrc_data_req(
 )
 //--------------------------------------------------------------------------
 {
-  printf("mac_rrc_data_req:eNB_index %d, eNB %d, CC_id %d\n",eNB_index,Mod_idP,CC_id);//eNB_index=ue->common_vars.enb_id
+  printf("mac_rrc_data_req:eNB_index %d, UE %d, CC_id %d, enb_flag activated? %d\n",eNB_index,Mod_idP,CC_id,enb_flagP == ENB_FLAG_YES);//eNB_index=ue->common_vars.enb_id
   SRB_INFO *Srb_info;
   uint8_t Sdu_size=0;
 
@@ -566,7 +566,7 @@ printf("ENABLE_ITTI is on\n");
       ctxt_pP->enb_flag ? TASK_PDCP_ENB : TASK_PDCP_UE,
       ctxt_pP->instance,
       message_p);
-    //printf("rrc_data_req: eNB_index %d, rnti %d\n",RRC_DCCH_DATA_REQ (message_p).eNB_index,RRC_DCCH_DATA_REQ (message_p).rnti);
+    printf("rrc_data_req: ctxt_pP->instance %d, ctxt_pP->module_id %d\n",ctxt_pP->instance,ctxt_pP->module_id);
     return TRUE; // TODO should be changed to a CNF message later, currently RRC lite does not used the returned value anyway.
 
   }

@@ -354,7 +354,7 @@ static void set_cli_start(module_id_t module_idP, uint8_t start)
   if (module_idP < NB_eNB_INST) {
     oai_emulation.info.cli_start_enb[module_idP] = start;
   } else {
-    oai_emulation.info.cli_start_ue[module_idP - NB_eNB_INST] = start;
+    oai_emulation.info.cli_start_ue[module_idP - 1/*NB_eNB_INST*/] = start;
   }
 }
 #endif
@@ -540,7 +540,7 @@ l2l1_task (void *args_p)
     UE_stats[UE_inst] = fopen (UE_stats_filename, "w");
   }
 
-  for (eNB_inst=0; eNB_inst<NB_eNB_INST; eNB_inst++) {
+  for (eNB_inst=0; eNB_inst<1/*NB_eNB_INST*/; eNB_inst++) {
     sprintf(eNB_stats_filename,"eNB_stats%d.txt",eNB_inst);
     eNB_stats[eNB_inst] = fopen (eNB_stats_filename, "w");
   }

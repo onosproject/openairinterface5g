@@ -116,7 +116,7 @@ void rrc_init_mr_req(unsigned char Mod_id, rrci_init_mr_req_t  *smsg)
   Mac_config_req.Lchan_id.Index=(smsg->CH_index << RAB_SHIFT2) + BCCH;
   Index=Mac_rlc_xface->mac_config_req(Mod_id,ADD_LC,&Mac_config_req);
   msg("[OPENAIR][RRC][RRC_CONFIG] NODE %d, Config BCCH %d done\n",UE_rrc_inst[Mod_id-NB_CH_INST].Node_id,Index);
-
+  printf("rrc_init_mr_req: Mod_id %d, NB_CH_INST %d, smsg->CH_index %d\n",Mod_id, NB_CH_INST,smsg->CH_index);
   UE_rrc_inst[Mod_id].Srb0[smsg->CH_index].Srb_id = Index;
   memcpy(& UE_rrc_inst[Mod_id-NB_CH_INST].Srb0[smsg->CH_index].Lchan_desc[0],(LCHAN_DESC*)&smsg->Lchan_desc_srb0,LCHAN_DESC_SIZE); //0 rx, 1 tx
   memcpy(& UE_rrc_inst[Mod_id-NB_CH_INST].Srb0[smsg->CH_index].Lchan_desc[1],(LCHAN_DESC*)&smsg->Lchan_desc_srb0,LCHAN_DESC_SIZE); //0 rx, 1 tx

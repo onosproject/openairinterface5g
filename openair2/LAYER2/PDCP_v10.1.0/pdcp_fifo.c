@@ -247,6 +247,7 @@ int pdcp_fifo_flush_sdus(const protocol_ctxt_t* const  ctxt_pP)
           VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME( VCD_SIGNAL_DUMPER_VARIABLES_UE_PDCP_FLUSH_SIZE, pdcp_output_sdu_bytes_to_write);
           VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_PDCP_FIFO_FLUSH_BUFFER, 1 );
           ret = sendmsg(nas_sock_fd,&nas_msg_tx,0);
+	  //printf("[PDCP_FIFOS] sendmsg: socket %d\n",nas_sock_fd);
           VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_PDCP_FIFO_FLUSH_BUFFER, 0 );
           VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME( VCD_SIGNAL_DUMPER_VARIABLES_UE_PDCP_FLUSH_ERR, ret );
 
@@ -548,12 +549,12 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
           LOG_D(PDCP, "[PDCP][NETLINK] Something in socket, length %zu\n",
                 nas_nlh_rx->nlmsg_len - sizeof(struct nlmsghdr));
 #endif
-          printf("[PDCP][NETLINK] Something in socket, length %zu\n",
-                nas_nlh_rx->nlmsg_len - sizeof(struct nlmsghdr));
+          printf("[PDCP][NETLINK] Something in socket, length %zu, ctxt.module_id %d\n",
+                nas_nlh_rx->nlmsg_len - sizeof(struct nlmsghdr),ctxt.module_id);
 #ifdef OAI_EMU
 
           // overwrite function input parameters, because only one netlink socket for all instances
-          if (pdcp_read_header_g.inst < oai_emulation.info.nb_enb_local) {
+          if (pdcp_read_header_g.inst < 1/*oai_emulation.info.nb_enb_local*/) {
             ctxt.frame         = ctxt_cpy.frame;
             ctxt.enb_flag      = ENB_FLAG_YES;
             ctxt.module_id     = pdcp_read_header_g.inst  +  oai_emulation.info.first_enb_local;
@@ -562,7 +563,7 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
           } else {
             ctxt.frame         = ctxt_cpy.frame;
             ctxt.enb_flag      = ENB_FLAG_NO;
-            ctxt.module_id     = pdcp_read_header_g.inst - oai_emulation.info.nb_enb_local + oai_emulation.info.first_ue_local;
+            ctxt.module_id     = pdcp_read_header_g.inst - 1/*oai_emulation.info.nb_enb_local*/ + oai_emulation.info.first_ue_local;
             ctxt.rnti          = pdcp_UE_UE_module_id_to_rnti[ctxt.module_id];
             rab_id    = pdcp_read_header_g.rb_id % maxDRB;
           }

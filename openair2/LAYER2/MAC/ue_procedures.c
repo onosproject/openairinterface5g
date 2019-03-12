@@ -363,7 +363,7 @@ ue_send_sdu(
 
 #ifdef DEBUG_HEADER_PARSING
   LOG_D(MAC,"[UE %d] ue_send_sdu : Frame %d eNB_index %d : num_ce %d num_sdu %d\n",module_idP,
-        frameP,/*eNB_index*/PHY_vars_UE_g[module_idP][0]->common_vars.eNb_id,num_ce,num_sdu);
+        frameP,eNB_index/*PHY_vars_UE_g[module_idP][0]->common_vars.eNb_id*/,num_ce,num_sdu);
 #endif
 
 #if defined(ENABLE_MAC_PAYLOAD_DEBUG)
@@ -375,7 +375,13 @@ ue_send_sdu(
 
   LOG_T(MAC,"\n");
 #endif
+  printf("[UE %d] First 32 bytes of DLSCH : \n", module_idP);
 
+  for (i=0; i<32; i++) {
+    printf("%x.",sdu[i]);
+  }
+
+  printf("\n");
   if (payload_ptr != NULL) {
 
   for (i=0; i<num_ce; i++) {
@@ -439,7 +445,7 @@ ue_send_sdu(
             module_idP,
             UE_mac_inst[module_idP].crnti,
             frameP,
-            /*eNB_index*/PHY_vars_UE_g[module_idP][0]->common_vars.eNb_id,
+            eNB_index/*PHY_vars_UE_g[module_idP][0]->common_vars.eNb_id*/,
             rx_lengths[i]);
 
 #if defined(ENABLE_MAC_PAYLOAD_DEBUG)
@@ -465,7 +471,7 @@ ue_send_sdu(
 	//printf("1\n");
 
     } else if ((rx_lcids[i] == DCCH) || (rx_lcids[i] == DCCH1)) {
-      LOG_D(MAC,"[UE %d] Frame %d : DLSCH -> DL-DCCH%d, RRC message (eNB %d, %d bytes)\n", module_idP, frameP, rx_lcids[i],/*eNB_index*/PHY_vars_UE_g[module_idP][0]->common_vars.eNb_id,rx_lengths[i]);
+      LOG_D(MAC,"[UE %d] Frame %d : DLSCH -> DL-DCCH%d, RRC message (eNB %d, %d bytes)\n", module_idP, frameP, rx_lcids[i],eNB_index/*PHY_vars_UE_g[module_idP][0]->common_vars.eNb_id*/,rx_lengths[i]);
       mac_rlc_data_ind(module_idP,
                        UE_mac_inst[module_idP].crnti,
 		       eNB_index/*PHY_vars_UE_g[module_idP][0]->common_vars.eNb_id*/,//changed
@@ -480,7 +486,7 @@ ue_send_sdu(
  
     } else if ((rx_lcids[i]  < NB_RB_MAX) && (rx_lcids[i] > DCCH1 )) {
       
-      LOG_D(MAC,"[UE %d] Frame %d : DLSCH -> DL-DTCH%d (eNB %d, %d bytes)\n", module_idP, frameP,rx_lcids[i], /*eNB_index*/PHY_vars_UE_g[module_idP][0]->common_vars.eNb_id,rx_lengths[i]);
+      LOG_D(MAC,"[UE %d] Frame %d : DLSCH -> DL-DTCH%d (eNB %d, %d bytes)\n", module_idP, frameP,rx_lcids[i], eNB_index/*PHY_vars_UE_g[module_idP][0]->common_vars.eNb_id*/,rx_lengths[i]);
 
 #if defined(ENABLE_MAC_PAYLOAD_DEBUG)
       int j;
@@ -500,7 +506,7 @@ ue_send_sdu(
 		       1,
 		       NULL);
     } else {
-      LOG_E(MAC,"[UE %d] Frame %d : unknown LCID %d (eNB %d)\n", module_idP, frameP,rx_lcids[i], /*eNB_index*/PHY_vars_UE_g[module_idP][0]->common_vars.eNb_id);
+      LOG_E(MAC,"[UE %d] Frame %d : unknown LCID %d (eNB %d)\n", module_idP, frameP,rx_lcids[i], eNB_index/*PHY_vars_UE_g[module_idP][0]->common_vars.eNb_id*/);
     }
     payload_ptr+= rx_lengths[i];
   }

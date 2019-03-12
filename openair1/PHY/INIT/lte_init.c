@@ -1109,8 +1109,8 @@ int phy_init_lte_ue(PHY_VARS_UE *ue,
 	printf("UE %d, thread %d = %d\n",ue->Mod_id,i,ue->current_thread_id[i]);
   }
   printf("Initializing UE vars (abstraction %"PRIu8") for eNB TXant %"PRIu8", UE RXant %"PRIu8"\n",abstraction_flag,fp->nb_antennas_tx,fp->nb_antennas_rx);
-  LOG_D(PHY,"[MSC_NEW][FRAME 00000][PHY_UE][MOD %02u][]\n", ue->Mod_id+NB_eNB_INST);
-
+  LOG_D(PHY,"[MSC_NEW][FRAME 00000][PHY_UE][MOD %02u][]\n", ue->Mod_id+1/*NB_eNB_INST*/);
+  printf("[MSC_NEW][FRAME 00000][PHY_UE][MOD %02u][]\n", ue->Mod_id+1/*NB_eNB_INST*/);
   // many memory allocation sizes are hard coded
   AssertFatal( fp->nb_antennas_rx <= 2, "hard coded allocation for ue_common_vars->dl_ch_estimates[eNB_id]");
   AssertFatal( ue->n_connected_eNB <= NUMBER_OF_CONNECTED_eNB_MAX, "n_connected_eNB is too large" );

@@ -1224,7 +1224,7 @@ uint8_t do_RRCConnectionRequest(uint8_t Mod_id, uint8_t *buffer,uint8_t *rv)
       msg_p->ittiMsg.rrc_ul_ccch.size = message_string_size;
       memcpy(&msg_p->ittiMsg.rrc_ul_ccch.text, message_string, message_string_size);
 
-      itti_send_msg_to_task(TASK_UNKNOWN, NB_eNB_INST + Mod_id, msg_p);
+      itti_send_msg_to_task(TASK_UNKNOWN, 1/*NB_eNB_INST*/ + Mod_id, msg_p);
     }
   }
 # endif
@@ -1307,7 +1307,7 @@ uint8_t do_RRCConnectionSetupComplete(uint8_t Mod_id, uint8_t *buffer, const uin
       msg_p->ittiMsg.rrc_ul_dcch.size = message_string_size;
       memcpy(&msg_p->ittiMsg.rrc_ul_dcch.text, message_string, message_string_size);
 
-      itti_send_msg_to_task(TASK_UNKNOWN, NB_eNB_INST + Mod_id, msg_p);
+      itti_send_msg_to_task(TASK_UNKNOWN, 1/*NB_eNB_INST*/ + Mod_id, msg_p);
     }
   }
 # endif
@@ -2517,7 +2517,7 @@ uint8_t do_MeasurementReport(uint8_t Mod_id, uint8_t *buffer,int measid,int phy_
       msg_p->ittiMsg.rrc_dl_dcch.size = message_string_size;
       memcpy(&msg_p->ittiMsg.rrc_dl_dcch.text, message_string, message_string_size);
 
-      itti_send_msg_to_task(TASK_UNKNOWN, NB_eNB_INST + Mod_id, msg_p);
+      itti_send_msg_to_task(TASK_UNKNOWN, 1/*NB_eNB_INST*/ + Mod_id, msg_p);
     }
   }
 # endif
@@ -2749,7 +2749,7 @@ OAI_UECapability_t *fill_ue_capability(char *UE_EUTRA_Capability_xer_fname)
     msg_p = itti_alloc_new_message (TASK_RRC_UE, RRC_UE_EUTRA_CAPABILITY);
     memcpy (&msg_p->ittiMsg, (void *) UE_EUTRA_Capability, sizeof(RrcUeEutraCapability));
 
-    itti_send_msg_to_task (TASK_UNKNOWN, NB_eNB_INST, msg_p);
+    itti_send_msg_to_task (TASK_UNKNOWN, 1/*NB_eNB_INST*/, msg_p);
   }
 # else
   {

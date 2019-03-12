@@ -815,7 +815,8 @@ pdcp_data_ind(
       if (ctxt_pP->enb_flag == ENB_FLAG_NO) {
         ((pdcp_data_ind_header_t *) new_sdu_p->data)->rb_id = rb_id;
 #if defined(OAI_EMU)
-        ((pdcp_data_ind_header_t*) new_sdu_p->data)->inst  = ctxt_pP->module_id + oai_emulation.info.nb_enb_local - oai_emulation.info.first_ue_local;
+        ((pdcp_data_ind_header_t*) new_sdu_p->data)->inst  = ctxt_pP->module_id + 1/*oai_emulation.info.nb_enb_local*/ - oai_emulation.info.first_ue_local;
+        printf("pdcp_data_ind: inst %d, ctxt_pP->module_id %d, oai_emulation.info.nb_enb_local %d, oai_emulation.info.first_ue_local %d\n",ctxt_pP->module_id + oai_emulation.info.nb_enb_local - oai_emulation.info.first_ue_local,ctxt_pP->module_id , oai_emulation.info.nb_enb_local , oai_emulation.info.first_ue_local);
 #else
 #  if defined(ENABLE_USE_MME)
         /* for the UE compiled in S1 mode, we need 1 here

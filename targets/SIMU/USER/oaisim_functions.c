@@ -1826,9 +1826,9 @@ void init_ocm(void)
 void init_otg_pdcp_buffer(void)
 {
   module_id_t i;
-  otg_pdcp_buffer = malloc((NB_UE_INST + NB_eNB_INST) * sizeof(Packet_OTG_List_t));
+  otg_pdcp_buffer = malloc((NB_UE_INST + 1/*NB_eNB_INST*/) * sizeof(Packet_OTG_List_t));
 
-  for (i = 0; i < NB_UE_INST + NB_eNB_INST; i++) {
+  for (i = 0; i < NB_UE_INST + 1/*NB_eNB_INST*/; i++) {
     pkt_list_init(&(otg_pdcp_buffer[i]));
     //LOG_I(EMU,"HEAD of otg_pdcp_buffer[%d] is %p\n", i, pkt_list_get_head(&(otg_pdcp_buffer[i])));
   }
@@ -1967,7 +1967,7 @@ void update_otg_eNB(module_id_t enb_module_idP, unsigned int ctime)
 
     int dst_id, app_id;
     Packet_otg_elt_t *otg_pkt;
-
+    printf("update_otg_eNB: enb_module_idP %d\n",enb_module_idP);
     for (dst_id = 0; dst_id < NUMBER_OF_UE_MAX; dst_id++) {
       for_times += 1;
 
@@ -1979,7 +1979,7 @@ void update_otg_eNB(module_id_t enb_module_idP, unsigned int ctime)
         for (app_id=0; app_id<MAX_NUM_APPLICATION; app_id++) {
           otg_pkt = malloc (sizeof(Packet_otg_elt_t));
 
-          (otg_pkt->otg_pkt).sdu_buffer = (uint8_t*) packet_gen(enb_module_idP, dst_id + NB_eNB_INST, app_id, ctime, &((otg_pkt->otg_pkt).sdu_buffer_size));
+          (otg_pkt->otg_pkt).sdu_buffer = (uint8_t*) packet_gen(enb_module_idP, dst_id + 1/*NB_eNB_INST*/, app_id, ctime, &((otg_pkt->otg_pkt).sdu_buffer_size));
 
           if ((otg_pkt->otg_pkt).sdu_buffer != NULL) {
             otg_times += 1;
@@ -2108,7 +2108,7 @@ void update_otg_UE(module_id_t ue_mod_idP, unsigned int ctime)
   int app_id;
   if (oai_emulation.info.otg_enabled ==1 ) {
     module_id_t dst_id, src_id; //dst_id = eNB_index
-    module_id_t module_id = ue_mod_idP+NB_eNB_INST;
+    module_id_t module_id = ue_mod_idP+1/*NB_eNB_INST*/;
 
     src_id = module_id;
 
