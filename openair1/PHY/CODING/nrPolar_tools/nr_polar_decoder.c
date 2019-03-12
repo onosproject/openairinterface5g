@@ -1153,6 +1153,8 @@ void init_polar_deinterleaver_table(t_nrPolar_params *polarParams) {
   }
 }
 
+uint64_t Cprimetest;
+
 uint32_t polar_decoder_int16(int16_t *input,
                              uint64_t *out,
                              const t_nrPolar_params *polarParams) {
@@ -1166,20 +1168,17 @@ uint32_t polar_decoder_int16(int16_t *input,
 
   memcpy((void *)&polarParams->tree.root->alpha[0],(void *)&d_tilde[0],sizeof(int16_t)*polarParams->N);
 
-  for (int iter=0;iter<4;iter++) {
 
-
-    generic_polar_decoder(polarParams,polarParams->tree.root,1);
+  generic_polar_decoder(polarParams,polarParams->tree.root);
     
-    //Extract the information bits (û to ĉ)
-    uint64_t Cprime[4]={0,0,0,0};
-    uint64_t B[4]={0,0,0,0};
-    for (int i=0;i<polarParams->K;i++) Cprime[i>>6] = Cprime[i>>6] | ((uint64_t)polarParams->nr_polar_U[polarParams->Q_I_N[i]])<<(i&63);
-    printf("iter %d : Cprime %llx|%llx\n",
-	   iter,Cprime[1],Cprime[0]);
-    //Deinterleaving (ĉ to b)
-    uint8_t *Cprimebyte = (uint8_t*)Cprime;
-    if (polarParams->K<65) {
+  //Extract the information bits (û to ĉ)
+  uint64_t Cprime[4]={0,0,0,0};
+  uint64_t B[4]={0,0,0,0};
+  for (int i=0;i<polarParams->K;i++) Cprime[i>>6] = Cprime[i>>6] | ((uint64_t)polarParams->nr_polar_U[polarParams->Q_I_N[i]])<<(i&63);
+
+  //Deinterleaving (ĉ to b)
+  uint8_t *Cprimebyte = (uint8_t*)Cprime;
+  if (polarParams->K<65) {
       B[0] = polarParams->B_tab0[0][Cprimebyte[0]] |
 	polarParams->B_tab0[1][Cprimebyte[1]] |
 	polarParams->B_tab0[2][Cprimebyte[2]] |
@@ -1199,80 +1198,48 @@ uint32_t polar_decoder_int16(int16_t *input,
     }
     
     
-    int len=polarParams->payloadBits;
-    //int len_mod64=len&63;
-    int crclen = polarParams->crcParityBits;
-    uint64_t rxcrc=B[0]&((1<<crclen)-1);
-    uint32_t crc;
-    uint64_t Ar;
-    
-    AssertFatal(len<65,"A must be less than 65 bits\n");
-    if (len<=32) {
-      Ar = (uint32_t)(B[0]>>crclen);
-      uint8_t A32_flip[4];
-      uint32_t Aprime= (uint32_t)(Ar<<(32-len));
-      A32_flip[0]=((uint8_t*)&Aprime)[3];
-      A32_flip[1]=((uint8_t*)&Aprime)[2];
-      A32_flip[2]=((uint8_t*)&Aprime)[1];
-      A32_flip[3]=((uint8_t*)&Aprime)[0];
-      crc = (uint64_t)(crc24c(A32_flip,len)>>8);
-    }
-    else if (len<=64) {
-      Ar = (B[0]>>crclen) | (B[1]<<(64-crclen));;
-      uint8_t A64_flip[8];
-      uint64_t Aprime= (uint32_t)(Ar<<(64-len));
-      A64_flip[0]=((uint8_t*)&Aprime)[7];
-      A64_flip[1]=((uint8_t*)&Aprime)[6];
-      A64_flip[2]=((uint8_t*)&Aprime)[5];
-      A64_flip[3]=((uint8_t*)&Aprime)[4];
-      A64_flip[4]=((uint8_t*)&Aprime)[3];
-      A64_flip[5]=((uint8_t*)&Aprime)[2];
-      A64_flip[6]=((uint8_t*)&Aprime)[1];
-      A64_flip[7]=((uint8_t*)&Aprime)[0];
-      crc = (uint64_t)(crc24c(A64_flip,len)>>8);
-    }
-    
-    //#if 0
-
-    //#endif
-    
-    out[0]=Ar;
-    printf("iter %d : A %llx B %llx|%llx Cprime %llx|%llx  (crc %x,rxcrc %llx %d)\n",
-	   iter,Ar,
-	   B[1],B[0],Cprime[1],Cprime[0],crc,
-	   rxcrc,polarParams->payloadBits);
-    if (crc==rxcrc) return(0);
-    
-    int32_t avg_llr=0,llr_tmp;
-
-    for (int i=0;i<polarParams->N;i++) {
-      llr_tmp = abs(polarParams->tree.root->softbeta[i]);
-      avg_llr += llr_tmp;
-    }
-    avg_llr/=polarParams->N;
-    int shift = log2_approx(avg_llr) - 3;
-    printf("iter %d: avg_llr %d shift %d\n",iter,avg_llr,shift);
-
-
-    //    for (int i=0;i<polarParams->N;i++) printf("i %d: alpha %d, beta %d\n",i,polarParams->tree.root->alpha[i],polarParams->tree.root->softbeta[i]);
-
-    /*    for (int i=0; i<polarParams->N; i++) {
-      if (polarParams->tree.root->softbeta[i]<-128) polarParams->tree.root->alpha[i]=-128;
-      else if (polarParams->tree.root->softbeta[i]>127) polarParams->tree.root->alpha[i]=127;
-      else polarParams->tree.root->alpha[i]=polarParams->tree.root->softbeta[i];
-      }*/
-
-    for (int i=0;i<polarParams->N;i++) {
-
-      if ((polarParams->tree.root->alpha[i] * (polarParams->tree.root->softbeta[i])) < 0 ) printf("i %d: alpha %d => %d\n",i,polarParams->tree.root->alpha[i],polarParams->tree.root->softbeta[i]>>shift);
-
-      polarParams->tree.root->alpha[i] = polarParams->tree.root->softbeta[i]>>shift;
-
-    }
-
-    //for (int i=0;i<polarParams->N;i++) printf("i %d: %d => %d\n",i,polarParams->tree.root->alpha[i],d_tilde[i]);;
-
+  int len=polarParams->payloadBits;
+  //int len_mod64=len&63;
+  int crclen = polarParams->crcParityBits;
+  uint64_t rxcrc=B[0]&((1<<crclen)-1);
+  uint32_t crc;
+  uint64_t Ar;
+  
+  AssertFatal(len<65,"A must be less than 65 bits\n");
+  if (len<=32) {
+    Ar = (uint32_t)(B[0]>>crclen);
+    uint8_t A32_flip[4];
+    uint32_t Aprime= (uint32_t)(Ar<<(32-len));
+    A32_flip[0]=((uint8_t*)&Aprime)[3];
+    A32_flip[1]=((uint8_t*)&Aprime)[2];
+    A32_flip[2]=((uint8_t*)&Aprime)[1];
+    A32_flip[3]=((uint8_t*)&Aprime)[0];
+    crc = (uint64_t)(crc24c(A32_flip,len)>>8);
   }
-  return(-1);
+  else if (len<=64) {
+    Ar = (B[0]>>crclen) | (B[1]<<(64-crclen));;
+    uint8_t A64_flip[8];
+    uint64_t Aprime= (uint32_t)(Ar<<(64-len));
+    A64_flip[0]=((uint8_t*)&Aprime)[7];
+    A64_flip[1]=((uint8_t*)&Aprime)[6];
+    A64_flip[2]=((uint8_t*)&Aprime)[5];
+    A64_flip[3]=((uint8_t*)&Aprime)[4];
+    A64_flip[4]=((uint8_t*)&Aprime)[3];
+    A64_flip[5]=((uint8_t*)&Aprime)[2];
+    A64_flip[6]=((uint8_t*)&Aprime)[1];
+    A64_flip[7]=((uint8_t*)&Aprime)[0];
+    crc = (uint64_t)(crc24c(A64_flip,len)>>8);
+  }
+  
+  //#if 0
+  
+  //#endif
+  
+  out[0]=Ar;
+  if (crc!=rxcrc) printf("CRC mismatch: A %llx B %llx|%llx Cprime %llx|%llx  (crc %x,rxcrc %llx %d)\n",
+			 Ar,
+			 B[1],B[0],Cprime[1],Cprime[0],crc,
+			 rxcrc,polarParams->payloadBits);
+  return(crc^rxcrc);
 
 }

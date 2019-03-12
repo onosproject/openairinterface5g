@@ -68,14 +68,20 @@ typedef struct decoder_node_t_s {
   int Nv;
   int first_leaf_index;
   int all_frozen;
+  int bit_index;
   int16_t *alpha;
   int16_t *beta;
-  int16_t *softbeta;
 } decoder_node_t;
 
+#define LISTSIZE_MAX 8
 typedef struct decoder_tree_t_s {
   decoder_node_t *root;
   int num_nodes;
+  int list_size;
+  int32_t PM[LISTSIZE_MAX];
+  uint64_t decoderout[LISTSIZE_MAX][4];
+  int numentries;
+  int minentry;
 } decoder_tree_t;
 
 struct nrPolar_params {
@@ -186,7 +192,7 @@ int8_t polar_decoder_dci(double *input,
                          uint16_t n_RNTI);
 
 void generic_polar_decoder(t_nrPolar_params *,
-                           decoder_node_t *,int);
+                           decoder_node_t *);
 
 void build_decoder_tree(t_nrPolar_params *pp);
 void build_polar_tables(t_nrPolar_params *polarParams);

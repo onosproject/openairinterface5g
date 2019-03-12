@@ -412,6 +412,7 @@ void build_polar_tables(t_nrPolar_params *polarParams) {
     polarParams->rm_tab[tcnt] = polarParams->rate_matching_pattern[outpos]>>shift;
 }
 
+
 void polar_encoder_fast(uint64_t *A,
                         uint32_t *out,
                         int32_t crcmask,
@@ -484,7 +485,7 @@ void polar_encoder_fast(uint64_t *A,
     }
   }
 
-  //#ifdef DEBUG_POLAR_ENCODER
+#ifdef DEBUG_POLAR_ENCODER
 
   if (polarParams->K<65)
     printf("A %llx B %llx Cprime %llx (payload bits %d,crc %x)\n",
@@ -510,7 +511,7 @@ void polar_encoder_fast(uint64_t *A,
              crc24c((uint8_t *)A,bitlen)>>8);
   }
 
-  //#endif
+#endif
   /*  printf("Bbytes : %x.%x.%x.%x.%x.%x.%x.%x\n",Bbyte[0],Bbyte[1],Bbyte[2],Bbyte[3],Bbyte[4],Bbyte[5],Bbyte[6],Bbyte[7]);
   printf("%llx,%llx,%llx,%llx,%llx,%llx,%llx,%llx\n",polarParams->cprime_tab[0][Bbyte[0]] ,
       polarParams->cprime_tab[1][Bbyte[1]] ,

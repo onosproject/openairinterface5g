@@ -372,21 +372,18 @@ int main(int argc, char *argv[]) {
       printf("estimatedOutput: [0]->0x%08x\n", estimatedOutput[0]);*/
 
       //calculate errors
-      if (decoderState!=0) {
-        blockErrorState=-1;
-        nBitError=-1;
-      } else {
-        for (int j = 0; j < currentPtr->payloadBits; j++) {
-          if (((estimatedOutput[0]>>j) & 1) != ((testInput[0]>>j) & 1)) nBitError++;
-
-          //          printf("bit %d: %d => %d\n",j,(testInput[0]>>j)&1,(estimatedOutput[0]>>j)&1);
-        }
-
-        if (nBitError>0) {
-          blockErrorState=1;
-          //          printf("Error: Input %x, Output %x\n",testInput[0],estimatedOutput[0]);
-        }
+      for (int j = 0; j < currentPtr->payloadBits; j++) {
+	if (((estimatedOutput[0]>>j) & 1) != ((testInput[0]>>j) & 1)) {
+	  nBitError++;
+	  printf("bit %d: %d => %d\n",j,(testInput[0]>>j)&1,(estimatedOutput[0]>>j)&1);
+	}
       }
+      
+      if (nBitError>0) {
+          blockErrorState=1;
+          printf("Error: Input %x, Output %x\n",testInput[0],estimatedOutput[0]);
+      }
+    
 
       //Iteration times are in microseconds.
       timeEncoderCumulative+=(timeEncoder.diff/(cpu_freq_GHz*1000.0));

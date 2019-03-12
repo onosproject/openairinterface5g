@@ -206,7 +206,6 @@ decoder_node_t *new_decoder_node(int first_leaf_index,int level) {
   node->all_frozen=0;
   node->alpha      = (int16_t*)malloc16(node->Nv*sizeof(int16_t));
   node->beta       = (int16_t*)malloc16(node->Nv*sizeof(int16_t));
-  node->softbeta   = (int16_t*)malloc16(node->Nv*sizeof(int16_t));
   memset((void*)node->beta,-1,node->Nv*sizeof(int16_t));
   
 
@@ -384,17 +383,36 @@ void applyFtoleft(t_nrPolar_params *pp,decoder_node_t *node) {
     }
     if (node->Nv == 2) { // apply hard decision on left node
       betal[0] = (alpha_l[0]>0) ? -1 : 1;
-      node->left->softbeta[0] = alpha_l[0];
 #ifdef DEBUG_NEW_IMPL
-      printf("betal[0] %d (%p), softbeta %d \n",betal[0],&betal[0],node->left->softbeta[0]);
+      printf("betal[0] %d (%p)\n",betal[0],&betal[0]);
 #endif
-      pp->nr_polar_U[node->first_leaf_index] = (1+betal[0])>>1; 
-      //#ifdef DEBUG_NEW_IMPL
-      printf("Setting bit %d to %d (LLR %d)\n",node->first_leaf_index,(betal[0]+1)>>1,alpha_l[0]);
-      //#endif
+      //      pp->nr_polar_U[node->first_leaf_index] = (1+betal[0])>>1;
+      int bi = node->left->bit_bitindex;
+      int ne1 = pp->tree.num_entries;
+      int16_t abs_alpha = ((alpha_l[0]>0) ? alpha_l[0] : -alpha_l[0]);
+      if (pp->tree.num_entries < pp->tree.list_size) {
+	// update list for SC hard-decision
+	for (int i=0;i<pp->tree.num_entries;i++) pp->tree.decoderout[i][bi>>6] |= (((1+betal[0])>>1)<<(bi&63));
+	
+	// update list for flipped SC hard-decision
+
+	
+	int ne2=pp->tree.num_entries<<1;
+	if (ne2 > pp->tree.list_size) ne2 = pp->tree.list_size;
+	for (int i=pp->tree.num_entries;i<ne2;i++)  {
+	  pp->tree.decoderout[i][bi>>6] = pp->tree.decoderout[i-pp->tree.num_entries][bi>>6] ^ (((uint64_t)1)<<(bi&63));
+	  pp->tree.PM[i] = pp->tree.PM[i-pp->tree.num_entries] - abs_alpha;
+	}
+      }
+      for (int i=0;i<pp->tree.num_entries-(ne2-pp->tree.num_entries);i++) update_min(pp->tree,abs_alpha);
+      
+
+#ifdef DEBUG_NEW_IMPL
+      int j;
+      printf("Setting bit %d (%d) to %d (LLR %d)\n",node->first_leaf_index,bit_index,(betal[0]+1)>>1,alpha_l[0]);
+#endif
     }
   }
-  else for (int i=0;i<node->Nv/2;i++) node->left->softbeta[i]=32767;
 }
 
 void applyGtoright(t_nrPolar_params *pp,decoder_node_t *node) {
@@ -458,10 +476,11 @@ void applyGtoright(t_nrPolar_params *pp,decoder_node_t *node) {
       }
     if (node->Nv == 2) { // apply hard decision on right node
       betar[0] = (alpha_r[0]>0) ? -1 : 1;
-      node->right->softbeta[0] = alpha_r[0];
       pp->nr_polar_U[node->first_leaf_index+1] = (1+betar[0])>>1;
       //#ifdef DEBUG_NEW_IMPL
-      printf("Setting bit %d to %d (LLR %d)\n",node->first_leaf_index+1,(betar[0]+1)>>1,alpha_r[0]);
+      int j;
+      for (j=0;j<pp->K;j++) if (pp->Q_I_N[j] == (node->first_leaf_index+1)) break;
+      printf("Setting bit %d (%d) to %d (LLR %d)\n",node->first_leaf_index+1,j,(betar[0]+1)>>1,alpha_r[0]);
       //#endif
     } 
   }
@@ -473,14 +492,11 @@ int16_t all1[16] = {1,1,1,1,
 		    1,1,1,1,
 		    1,1,1,1};
 
-void computeBeta(t_nrPolar_params *pp,decoder_node_t *node, int do_softbeta) {
+void computeBeta(t_nrPolar_params *pp,decoder_node_t *node) {
 
   int16_t *betav     = node->beta;
   int16_t *betal     = node->left->beta;
   int16_t *betar     = node->right->beta;
-  int16_t *softbetav = node->softbeta;
-  int16_t *softbetal = node->left->softbeta;
-  int16_t *softbetar = node->right->softbeta;
 
 #ifdef DEBUG_NEW_IMPL
   printf("Computing beta @ level %d first_leaf_index %d (all_frozen %d)\n",node->level,node->first_leaf_index,node->left->all_frozen);
@@ -532,42 +548,21 @@ void computeBeta(t_nrPolar_params *pp,decoder_node_t *node, int do_softbeta) {
 
   memcpy((void*)&betav[node->Nv/2],betar,(node->Nv/2)*sizeof(int16_t));
 
-// softbeta computation
-  if (do_softbeta==1) {
-
-    int16_t a,b,absa,absb,maska,maskb,minabs;
-
-    for (int i=0;i<node->Nv/2;i++) {
-      a=softbetal[i];
-      b=softbetar[i];
-      maska=a>>15;
-      maskb=b>>15;
-      absa=(a+maska)^maska;
-      absb=(b+maskb)^maskb;
-      minabs = absa<absb ? absa : absb;
-      softbetav[i] = (maska^maskb)!=0 ? -minabs : minabs;
-#ifdef DEBUG_NEW_IMPL
-      printf("Nv %d, first_leaf %d: beta_v[%d] %d (%d,%d) softbetav[%d] %d (%d,%d)\n",node->Nv,node->first_leaf_index,i,betav[i],betal[i],betar[i],i,softbetav[i],a,b);
-#endif
-    }
-    memcpy((void*)&softbetav[node->Nv/2],(void*)softbetar,sizeof(int16_t)*node->Nv/2);
-  }
- 
 
 
 }
 
-void generic_polar_decoder(t_nrPolar_params *pp,decoder_node_t *node, int do_softbeta) {
+void generic_polar_decoder(t_nrPolar_params *pp,decoder_node_t *node) {
 
 
   // Apply F to left
   applyFtoleft(pp,node);
   // if left is not a leaf recurse down to the left
-  if (node->left->leaf==0) generic_polar_decoder(pp,node->left,do_softbeta);
+  if (node->left->leaf==0) generic_polar_decoder(pp,node->left);
 
   applyGtoright(pp,node);
-  if (node->right->leaf==0) generic_polar_decoder(pp,node->right,do_softbeta);	
+  if (node->right->leaf==0) generic_polar_decoder(pp,node->right);	
 
-  computeBeta(pp,node,do_softbeta);
+  computeBeta(pp,node);
 
 } 
