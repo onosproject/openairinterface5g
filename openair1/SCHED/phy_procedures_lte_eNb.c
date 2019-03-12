@@ -495,7 +495,10 @@ void phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
 	   0,fp->ofdm_symbol_size*(fp->symbols_per_tti)*sizeof(int32_t));
   }
   
-
+  if (nfapi_mode == 1 && eNB->pdcch_vars[subframe&1].num_pdcch_symbols == 0) {
+    LOG_E(PHY, "eNB->pdcch_vars[%d].num_pdcch_symbols == 0: frame %d subframe %d\n",subframe&1,frame,subframe);
+    return ;
+  }
 
   if (nfapi_mode == 0 || nfapi_mode == 1) {
     if (is_pmch_subframe(frame,subframe,fp)) {

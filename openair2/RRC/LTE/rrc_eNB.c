@@ -894,7 +894,7 @@ void release_UE_in_freeList(module_id_t mod_id) {
   eNB_MAC_INST                             *eNB_MAC = RC.mac[mod_id];
   boolean_t                                 remove_UEContext;
   rnti_t                                    rnti;
-  int                                       head, tail, ue_num;
+  int                                       head, tail, ue_num, ue_num_tmp;
   pthread_mutex_lock(&lock_ue_freelist);
   head = eNB_MAC->UE_free_list.head_freelist;
   tail = eNB_MAC->UE_free_list.tail_freelist;
@@ -911,11 +911,12 @@ void release_UE_in_freeList(module_id_t mod_id) {
   pthread_mutex_unlock(&lock_ue_freelist);
 
   for(ue_num = head; ue_num < tail; ue_num++) {
-    ue_num = ue_num % (NUMBER_OF_UE_MAX+1);
-    rnti = eNB_MAC->UE_free_list.UE_free_ctrl[ue_num].rnti;
+    ue_num_tmp = ue_num % (NUMBER_OF_UE_MAX+1);
+    rnti = eNB_MAC->UE_free_list.UE_free_ctrl[ue_num_tmp].rnti;
 
     if(rnti != 0) {
-      remove_UEContext = eNB_MAC->UE_free_list.UE_free_ctrl[ue_num].removeContextFlg;
+      remove_UEContext = eNB_MAC->UE_free_list.UE_free_ctrl[ue_num_tmp].removeContextFlg;
+      remove_UE_from_freelist(mod_id, rnti);
       PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, mod_id, ENB_FLAG_YES, rnti, 0, 0,mod_id);
 
       for (CC_id = 0; CC_id < MAX_NUM_CCs; CC_id++) {
@@ -992,7 +993,6 @@ void release_UE_in_freeList(module_id_t mod_id) {
       }
 
       LOG_I(RRC, "[release_UE_in_freeList] remove UE %x from freeList\n", rnti);
-      remove_UE_from_freelist(mod_id, rnti);
     }
   }
 }

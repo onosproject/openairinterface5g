@@ -197,7 +197,7 @@ static inline int rxtx(PHY_VARS_eNB *eNB,L1_rxtx_proc_t *proc, char *thread_name
   }
 
   if (nfapi_mode == 1 && eNB->pdcch_vars[proc->subframe_tx&1].num_pdcch_symbols == 0) {
-    LOG_E(PHY, "eNB->pdcch_vars[proc->subframe_tx&1].num_pdcch_symbols == 0");
+    LOG_E(PHY, "eNB->pdcch_vars[%d].num_pdcch_symbols == 0: frame %d subframe %d\n",proc->subframe_tx&1,proc->frame_tx,proc->subframe_tx);
     return 0;
   }
 
