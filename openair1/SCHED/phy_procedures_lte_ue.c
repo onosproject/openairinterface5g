@@ -1402,7 +1402,7 @@ void ulsch_common_procedures(PHY_VARS_UE *ue, UE_rxtx_proc_t *proc, uint8_t empt
 }
 
 void ue_prach_procedures(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,uint8_t abstraction_flag,runmode_t mode) {
-  printf("ue_prach_procedures: UE %d, eNB_id %d, ue->common_vars.eNb.id %d, mac enabled %d\n",ue->Mod_id,eNB_id,ue->common_vars.eNb_id,ue->mac_enabled==1);
+  //printf("ue_prach_procedures: UE %d, eNB_id %d, ue->common_vars.eNb.id %d, mac enabled %d\n",ue->Mod_id,eNB_id,ue->common_vars.eNb_id,ue->mac_enabled==1);
   int frame_tx = proc->frame_tx;
   int subframe_tx = proc->subframe_tx;
   int prach_power;
@@ -2547,7 +2547,7 @@ void phy_procedures_UE_TX(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,ui
     // check if we have PRACH opportunity
 
     if (is_prach_subframe(&ue->frame_parms,frame_tx,subframe_tx)) {
-      printf("prach_procedures: eNB_id %d, ue-eNB_id %d\n",eNB_id,ue->common_vars.eNb_id);
+      //printf("prach_procedures: eNB_id %d, ue-eNB_id %d\n",eNB_id,ue->common_vars.eNb_id);
       ue_prach_procedures(ue,proc,eNB_id,abstraction_flag,mode);
     }
   } // mode is PRACH

@@ -72,7 +72,7 @@ mac_rrc_data_req(
 )
 //--------------------------------------------------------------------------
 {
-  printf("mac_rrc_data_req:eNB_index %d, UE %d, CC_id %d, enb_flag activated? %d\n",eNB_index,Mod_idP,CC_id,enb_flagP == ENB_FLAG_YES);//eNB_index=ue->common_vars.enb_id
+  //printf("mac_rrc_data_req:eNB_index %d, UE %d, CC_id %d, enb_flag activated? %d\n",eNB_index,Mod_idP,CC_id,enb_flagP == ENB_FLAG_YES);//eNB_index=ue->common_vars.enb_id
   SRB_INFO *Srb_info;
   uint8_t Sdu_size=0;
 
@@ -348,7 +348,7 @@ mac_rrc_data_ind(
   SRB_INFO *Srb_info;
   protocol_ctxt_t ctxt;
   sdu_size_t      sdu_size = 0;
-  printf("mac_rrc_data_ind: eNB_indexP %d, ctxt->instance %d, ctxt->module_id %d\n",eNB_indexP,ctxt.instance,ctxt.module_id);//eNB_index=ue->common_vars.enb_id
+  //printf("mac_rrc_data_ind: eNB_indexP %d, ctxt->instance %d, ctxt->module_id %d\n",eNB_indexP,ctxt.instance,ctxt.module_id);//eNB_index=ue->common_vars.enb_id
   /* for no gcc warnings */
   (void)sdu_size;
 
@@ -536,7 +536,7 @@ rrc_data_req(
     sdu_sizeP);
 
 #if defined(ENABLE_ITTI)
-printf("ENABLE_ITTI is on\n");
+//printf("ENABLE_ITTI is on\n");yes
   {
     MessageDef *message_p;
     // Uses a new buffer to avoid issue with PDCP buffer content that could be changed by PDCP (asynchronous message handling).
@@ -561,12 +561,12 @@ printf("ENABLE_ITTI is on\n");
     RRC_DCCH_DATA_REQ (message_p).module_id = ctxt_pP->module_id;
     RRC_DCCH_DATA_REQ (message_p).rnti      = ctxt_pP->rnti;
     RRC_DCCH_DATA_REQ (message_p).eNB_index = ctxt_pP->eNB_index;
-    printf("RRC_DCCH_DATA_REQ (message_p): frame %d, enb_flag %d, rb_id %d, muip %d, confirmp %d, sdu_size %d, sdu_p %d, mode %d, module_id %d, rnti %x, eNB_index %d\n",ctxt_pP->frame,ctxt_pP->enb_flag,rb_idP,muiP,confirmP,sdu_sizeP,*message_buffer,modeP,ctxt_pP->module_id,ctxt_pP->rnti,ctxt_pP->eNB_index);
+    //printf("RRC_DCCH_DATA_REQ (message_p): frame %d, enb_flag %d, rb_id %d, muip %d, confirmp %d, sdu_size %d, sdu_p %d, mode %d, module_id %d, rnti %x, eNB_index %d\n",ctxt_pP->frame,ctxt_pP->enb_flag,rb_idP,muiP,confirmP,sdu_sizeP,*message_buffer,modeP,ctxt_pP->module_id,ctxt_pP->rnti,ctxt_pP->eNB_index);
     itti_send_msg_to_task (
       ctxt_pP->enb_flag ? TASK_PDCP_ENB : TASK_PDCP_UE,
       ctxt_pP->instance,
       message_p);
-    printf("rrc_data_req: ctxt_pP->instance %d, ctxt_pP->module_id %d\n",ctxt_pP->instance,ctxt_pP->module_id);
+    //printf("rrc_data_req: ctxt_pP->instance %d, ctxt_pP->module_id %d\n",ctxt_pP->instance,ctxt_pP->module_id);
     return TRUE; // TODO should be changed to a CNF message later, currently RRC lite does not used the returned value anyway.
 
   }
@@ -672,20 +672,20 @@ void rrc_in_sync_ind(module_id_t Mod_idP, frame_t frameP, uint16_t eNB_index)
   }
 
 #endif
-    printf("rrc_in_sync_ind:eNB_index %d\n",eNB_index);//enb_id=ue->common_vars.enb_id
-    printf("[UE %d] Frame %d: IN SYNC FROM eNB %d (T310 active %d : T310 %d, N310 %d, N311 %d)\n ",
-	  Mod_idP,frameP,eNB_index/*PHY_vars_UE_g[Mod_idP][0]->common_vars.eNb_id*/,
-	  UE_rrc_inst[Mod_idP].Info[eNB_index/*PHY_vars_UE_g[Mod_idP][0]->common_vars.eNb_id*/].T310_active,
-	  UE_rrc_inst[Mod_idP].Info[eNB_index/*PHY_vars_UE_g[Mod_idP][0]->common_vars.eNb_id*/].T310_cnt,
-	  UE_rrc_inst[Mod_idP].Info[eNB_index/*PHY_vars_UE_g[Mod_idP][0]->common_vars.eNb_id*/].N310_cnt,
-	  UE_rrc_inst[Mod_idP].Info[eNB_index/*PHY_vars_UE_g[Mod_idP][0]->common_vars.eNb_id*/].N311_cnt);
+    //printf("rrc_in_sync_ind:eNB_index %d\n",eNB_index);//enb_id=ue->common_vars.enb_id
+    //printf("[UE %d] Frame %d: IN SYNC FROM eNB %d (T310 active %d : T310 %d, N310 %d, N311 %d)\n ",
+//	  Mod_idP,frameP,eNB_index/*PHY_vars_UE_g[Mod_idP][0]->common_vars.eNb_id*/,
+	//  UE_rrc_inst[Mod_idP].Info[eNB_index/*PHY_vars_UE_g[Mod_idP][0]->common_vars.eNb_id*/].T310_active,
+	//  UE_rrc_inst[Mod_idP].Info[eNB_index/*PHY_vars_UE_g[Mod_idP][0]->common_vars.eNb_id*/].T310_cnt,
+	//  UE_rrc_inst[Mod_idP].Info[eNB_index/*PHY_vars_UE_g[Mod_idP][0]->common_vars.eNb_id*/].N310_cnt,
+	//  UE_rrc_inst[Mod_idP].Info[eNB_index/*PHY_vars_UE_g[Mod_idP][0]->common_vars.eNb_id*/].N311_cnt);
 }
 
 //-------------------------------------------------------------------------------------------//
 void rrc_out_of_sync_ind(module_id_t Mod_idP, frame_t frameP, uint16_t eNB_index)
 {
   //-------------------------------------------------------------------------------------------//
-  printf("rrc_out_of_sync_ind:eNB_index %d\n",eNB_index/*PHY_vars_UE_g[Mod_idP][0]->common_vars.eNb_id*/);
+  //printf("rrc_out_of_sync_ind:eNB_index %d\n",eNB_index/*PHY_vars_UE_g[Mod_idP][0]->common_vars.eNb_id*/);
   if (UE_rrc_inst[Mod_idP].Info[eNB_index/*PHY_vars_UE_g[Mod_idP][0]->common_vars.eNb_id*/].N310_cnt>10)
     LOG_I(RRC,"[UE %d] Frame %d: OUT OF SYNC FROM eNB %d (T300 active %d : T310 %d, N310 %d, N311 %d)\n ",
 	  Mod_idP,frameP,eNB_index/*PHY_vars_UE_g[Mod_idP][0]->common_vars.eNb_id*/,
@@ -707,12 +707,12 @@ void rrc_out_of_sync_ind(module_id_t Mod_idP, frame_t frameP, uint16_t eNB_index
 #else
   UE_rrc_inst[Mod_idP].Info[eNB_index/*PHY_vars_UE_g[Mod_idP][0]->common_vars.eNb_id*/].N310_cnt++;
 #endif
-    printf("[UE %d] Frame %d: OUT OF SYNC FROM eNB %d (T300 active %d : T310 %d, N310 %d, N311 %d)\n ",
-	  Mod_idP,frameP,eNB_index/*PHY_vars_UE_g[Mod_idP][0]->common_vars.eNb_id*/,
-	  UE_rrc_inst[Mod_idP].Info[eNB_index/*PHY_vars_UE_g[Mod_idP][0]->common_vars.eNb_id*/].T300_active,
-	  UE_rrc_inst[Mod_idP].Info[eNB_index/*PHY_vars_UE_g[Mod_idP][0]->common_vars.eNb_id*/].T310_cnt,
-	  UE_rrc_inst[Mod_idP].Info[eNB_index/*PHY_vars_UE_g[Mod_idP][0]->common_vars.eNb_id*/].N310_cnt,
-	  UE_rrc_inst[Mod_idP].Info[eNB_index/*PHY_vars_UE_g[Mod_idP][0]->common_vars.eNb_id*/].N311_cnt);
+    //printf("[UE %d] Frame %d: OUT OF SYNC FROM eNB %d (T300 active %d : T310 %d, N310 %d, N311 %d)\n ",
+	//  Mod_idP,frameP,eNB_index/*PHY_vars_UE_g[Mod_idP][0]->common_vars.eNb_id*/,
+	//  UE_rrc_inst[Mod_idP].Info[eNB_index/*PHY_vars_UE_g[Mod_idP][0]->common_vars.eNb_id*/].T300_active,
+	//  UE_rrc_inst[Mod_idP].Info[eNB_index/*PHY_vars_UE_g[Mod_idP][0]->common_vars.eNb_id*/].T310_cnt,
+	//  UE_rrc_inst[Mod_idP].Info[eNB_index/*PHY_vars_UE_g[Mod_idP][0]->common_vars.eNb_id*/].N310_cnt,
+	//  UE_rrc_inst[Mod_idP].Info[eNB_index/*PHY_vars_UE_g[Mod_idP][0]->common_vars.eNb_id*/].N311_cnt);
 }
 
 //------------------------------------------------------------------------------
@@ -784,7 +784,7 @@ mac_UE_get_rrc_status(
 )
 //------------------------------------------------------------------------------
 {
-  printf("mac_UE_get_rrc_status:eNB_index %d\n",indexP);
+  //printf("mac_UE_get_rrc_status:eNB_index %d\n",indexP);
   return(UE_rrc_inst[Mod_idP].Info[indexP].State);
 }
 

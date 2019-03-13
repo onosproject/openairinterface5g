@@ -516,7 +516,7 @@ static void rrc_ue_generate_RRCConnectionReconfigurationComplete( const protocol
 // Called by L2 interface (MAC)
 int rrc_ue_decode_ccch( const protocol_ctxt_t* const ctxt_pP, const SRB_INFO* const Srb_info, const uint8_t eNB_index )
 {
-  printf("rrc_ue_decode_ccch: eNB_index %d, ctxt_pP->instance %d, UE %d\n",eNB_index,ctxt_pP->instance,ctxt_pP->module_id);//eNB_index=ue->common_vars.enb_id
+  //printf("rrc_ue_decode_ccch: eNB_index %d, ctxt_pP->instance %d, UE %d\n",eNB_index,ctxt_pP->instance,ctxt_pP->module_id);//eNB_index=ue->common_vars.enb_id
   DL_CCCH_Message_t* dl_ccch_msg=NULL;
   asn_dec_rval_t dec_rval;
   int rval=0;
@@ -613,7 +613,7 @@ int rrc_ue_decode_ccch( const protocol_ctxt_t* const ctxt_pP, const SRB_INFO* co
               ctxt_pP->frame,
               ctxt_pP->rnti);
         // Get configuration
-	printf("T300 timer %d before release, rnti %x, eNB %d UE %d\n", UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].T300_active,UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].rnti = ctxt_pP->rnti,eNB_index,ctxt_pP->module_id);
+	//printf("T300 timer %d before release, rnti %x, eNB %d UE %d\n", UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].T300_active,UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].rnti = ctxt_pP->rnti,eNB_index,ctxt_pP->module_id);
         // Release T300 timer
         UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].T300_active = 0;
         rrc_ue_process_radioResourceConfigDedicated(
@@ -658,7 +658,7 @@ rrc_ue_establish_srb1(
 {
   // add descriptor from RRC PDU
   // eNb_id=0,1
-  printf("rrc_ue_establish_srb1: eNB_index %d\n",eNB_index);
+  //printf("rrc_ue_establish_srb1: eNB_index %d\n",eNB_index);
   uint8_t lchan_id = DCCH;
 
   UE_rrc_inst[ue_mod_idP].Srb1[eNB_index].Active = 1;
@@ -693,7 +693,7 @@ rrc_ue_establish_srb2(
 {
   // add descriptor from RRC PDU
   //eNb_id=0,1
-  printf("rrc_ue_establish_srb2: eNB_index %d\n",eNB_index);
+  //printf("rrc_ue_establish_srb2: eNB_index %d\n",eNB_index);
   uint8_t lchan_id = DCCH1;
 
   UE_rrc_inst[ue_mod_idP].Srb2[eNB_index].Active = 1;
@@ -726,7 +726,7 @@ rrc_ue_establish_drb(
 )
 //-----------------------------------------------------------------------------
 {
-  printf("rrc_ue_establish_drb: eNB_index %d UE %d\n",eNB_index,ue_mod_idP);
+  //printf("rrc_ue_establish_drb: eNB_index %d UE %d\n",eNB_index,ue_mod_idP);
   // add descriptor from RRC PDU
 #ifdef PDCP_USE_NETLINK
   printf("PDCP_USE_NETLINK\n");
@@ -752,16 +752,16 @@ rrc_ue_establish_drb(
 #    ifdef OAI_EMU
   ip_addr_offset3 = oai_emulation.info.nb_enb_local;
   ip_addr_offset4 = NB_eNB_INST;
-  printf("OAI_EMU: ip_addr_offset4 %d\n",ip_addr_offset4);
+  //printf("OAI_EMU: ip_addr_offset4 %d\n",ip_addr_offset4);
 #    else
   ip_addr_offset3 = 0;
   ip_addr_offset4 = 8;
-  printf("else OAI_EMU: ip_addr_offset4 %d\n",ip_addr_offset4);
+  //printf("else OAI_EMU: ip_addr_offset4 %d\n",ip_addr_offset4);
 #    endif
   LOG_I(OIP,"[UE %d] trying to bring up the OAI interface oai%d, IP 10.0.%d.%d\n", ue_mod_idP, ip_addr_offset3+ue_mod_idP,
         ip_addr_offset3+ue_mod_idP+1,ip_addr_offset4+ue_mod_idP+1);
-  printf("[UE %d] trying to bring up the OAI interface oai%d, IP 10.0.%d.%d\n", ue_mod_idP, ip_addr_offset3+ue_mod_idP,
-        ip_addr_offset3+ue_mod_idP+1,ip_addr_offset4+ue_mod_idP+1);
+  //printf("[UE %d] trying to bring up the OAI interface oai%d, IP 10.0.%d.%d\n", ue_mod_idP, ip_addr_offset3+ue_mod_idP,
+  //      ip_addr_offset3+ue_mod_idP+1,ip_addr_offset4+ue_mod_idP+1);
   oip_ifup=nas_config(ip_addr_offset3+ue_mod_idP,   // interface_id
                       ip_addr_offset3+ue_mod_idP+1, // third_octet
                       ip_addr_offset4+ue_mod_idP+1); // fourth_octet
@@ -774,10 +774,10 @@ rrc_ue_establish_drb(
           ue_mod_idP,
           ip_addr_offset3+ue_mod_idP,
           (long int)((eNB_index * maxDRB) + DRB_config->drb_Identity));
-    printf("[UE %d] Config the oai%d to send/receive pkt on DRB %ld to/from the protocol stack\n",
-          ue_mod_idP,
-          ip_addr_offset3+ue_mod_idP,
-          (long int)((eNB_index * maxDRB) + DRB_config->drb_Identity));
+    //printf("[UE %d] Config the oai%d to send/receive pkt on DRB %ld to/from the protocol stack\n",
+    //      ue_mod_idP,
+    //      ip_addr_offset3+ue_mod_idP,
+    //      (long int)((eNB_index * maxDRB) + DRB_config->drb_Identity));
 
     rb_conf_ipv4(0,//add
                  ue_mod_idP,//cx align with the UE index
@@ -792,7 +792,7 @@ rrc_ue_establish_drb(
 #    else
 #        ifdef OAI_EMU
   oai_emulation.info.oai_ifup[ue_mod_idP]=1;
-  printf("OAI_EMU: ip_addr_offset4 %d, oip_ifup? %d\n",ip_addr_offset4,oip_ifup);
+  //printf("OAI_EMU: ip_addr_offset4 %d, oip_ifup? %d\n",ip_addr_offset4,oip_ifup);
 #        endif
 #    endif
 #endif
@@ -810,7 +810,7 @@ rrc_ue_process_measConfig(
 )
 //-----------------------------------------------------------------------------
 {
-  printf("rrc_ue_process_measConfig: eNB_index %d\n",eNB_index);
+  //printf("rrc_ue_process_measConfig: eNB_index %d\n",eNB_index);
   // This is the procedure described in 36.331 Section 5.5.2.1
   int i;
   long ind;
@@ -1000,7 +1000,7 @@ rrc_ue_update_radioResourceConfigDedicated(RadioResourceConfigDedicated_t* radio
         const protocol_ctxt_t* const ctxt_pP,
         uint8_t eNB_index)
 {
-    printf("rrc_ue_update_radioResourceConfigDedicated: eNB_index %d\n",eNB_index);
+    //printf("rrc_ue_update_radioResourceConfigDedicated: eNB_index %d\n",eNB_index);
     PhysicalConfigDedicated_t* physicalConfigDedicated2 = NULL;
 
     physicalConfigDedicated2 = CALLOC(1,sizeof(*physicalConfigDedicated2));
@@ -1222,7 +1222,7 @@ rrc_ue_process_radioResourceConfigDedicated(
 //-----------------------------------------------------------------------------
 {
   //eNB_index=ue->common_vars.enb_id
-  printf("rrc_ue_process_radioResourceConfigDedicated: eNB_index %d\n",eNB_index);
+  //printf("rrc_ue_process_radioResourceConfigDedicated: eNB_index %d\n",eNB_index);
   long SRB_id,DRB_id;
   int i,cnt;
   LogicalChannelConfig_t *SRB1_logicalChannelConfig,*SRB2_logicalChannelConfig;
@@ -1591,7 +1591,7 @@ rrc_ue_process_securityModeCommand(
 //-----------------------------------------------------------------------------
 {
   //eNB_index=ue->common_vars.enb_id
-  printf("rrc_ue_process_securityModeCommand: eNB_index %d\n",eNB_index);
+  //printf("rrc_ue_process_securityModeCommand: eNB_index %d\n",eNB_index);
   asn_enc_rval_t enc_rval;
 
   UL_DCCH_Message_t ul_dcch_msg;
@@ -1790,7 +1790,7 @@ rrc_ue_process_ueCapabilityEnquiry(
 //-----------------------------------------------------------------------------
 {
   //eNB_index=ue->common_vars.enb_id
-  printf("rrc_ue_process_ueCapabilityEnquiry: eNB_index %d\n",eNB_index);
+  //printf("rrc_ue_process_ueCapabilityEnquiry: eNB_index %d\n",eNB_index);
   asn_enc_rval_t enc_rval;
 
   UL_DCCH_Message_t ul_dcch_msg;
@@ -1899,7 +1899,7 @@ rrc_ue_process_rrcConnectionReconfiguration(
 //-----------------------------------------------------------------------------
 {
   //eNB_index=ue->common_vars.enb_id
-  printf("rrc_ue_process_rrcConnectionReconfiguration: eNB_index %d\n",eNB_index);
+  //printf("rrc_ue_process_rrcConnectionReconfiguration: eNB_index %d\n",eNB_index);
   LOG_I(RRC,"[UE %d] Frame %d: Receiving from SRB1 (DL-DCCH), Processing RRCConnectionReconfiguration (eNB %d)\n",
         ctxt_pP->module_id,ctxt_pP->frame,eNB_index);
 
@@ -2013,7 +2013,7 @@ rrc_ue_process_mobilityControlInfo(
 )
 //-----------------------------------------------------------------------------
 {
-  printf("rrc_ue_process_mobilityControlInfo: eNB_index %d\n",eNB_index); 
+  //printf("rrc_ue_process_mobilityControlInfo: eNB_index %d\n",eNB_index); 
   /*
   DRB_ToReleaseList_t*  drb2release_list;
   DRB_Identity_t *lcid;
@@ -2160,7 +2160,7 @@ rrc_ue_decode_dcch(
 )
 //-----------------------------------------------------------------------------
 {
-  printf("rrc_ue_decode_dcch: eNB_indexP %d\n",eNB_indexP);//eNB_indexP=ue->common_vars.enb_id
+  //printf("rrc_ue_decode_dcch: eNB_indexP %d\n",eNB_indexP);//eNB_indexP=ue->common_vars.enb_id
   //DL_DCCH_Message_t dldcchmsg;
   DL_DCCH_Message_t *dl_dcch_msg=NULL;//&dldcchmsg;
   //  asn_dec_rval_t dec_rval;
@@ -2678,7 +2678,7 @@ int decode_BCCH_DLSCH_Message(
   const uint8_t                rsrp )
 {
   //printf("decode_BCCH_DLSCH_Message: eNB_index %d\n",eNB_index);//eNB_index=ue->common_vars.enb_id
-  printf("decode_BCCH_DLSCH_Message: eNB_index %d\n",eNB_index);
+  //printf("decode_BCCH_DLSCH_Message: eNB_index %d\n",eNB_index);
   BCCH_DL_SCH_Message_t *bcch_message = NULL;
   SystemInformationBlockType1_t* sib1 = UE_rrc_inst[ctxt_pP->module_id].sib1[eNB_index];
   //int i;
@@ -2807,7 +2807,7 @@ int decode_PCCH_DLSCH_Message(
 {
   PCCH_Message_t *pcch_message = NULL;
   //int i;
-  printf("decode_PCCH_DLSCH_Message: eNB_index %d\n",eNB_index);
+  //printf("decode_PCCH_DLSCH_Message: eNB_index %d\n",eNB_index);
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_UE_DECODE_PCCH, VCD_FUNCTION_IN );
 
   asn_dec_rval_t dec_rval = uper_decode_complete( NULL,
@@ -2838,7 +2838,7 @@ static int decode_SIB1( const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_
   SystemInformationBlockType1_t* sib1 = UE_rrc_inst[ctxt_pP->module_id].sib1[eNB_index];
 
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_RRC_UE_DECODE_SIB1, VCD_FUNCTION_IN );
-  printf("Dumping sib1: eNB_index %d, ctxt_pP->instance %d\n",eNB_index,ctxt_pP->instance);
+  //printf("Dumping sib1: eNB_index %d, ctxt_pP->instance %d\n",eNB_index,ctxt_pP->instance);
   LOG_I( RRC, "[UE %d] : Dumping SIB 1\n", ctxt_pP->module_id );
 
   PLMN_Identity_t *PLMN_identity = &sib1->cellAccessRelatedInfo.plmn_IdentityList.list.array[0]->plmn_Identity;
@@ -3558,7 +3558,7 @@ static void dump_sib13( SystemInformationBlockType13_r9_t *sib13 )
 //-----------------------------------------------------------------------------
 static int decode_SI( const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_index )
 {
-  printf("decode_SI: eNB_index %d, ctxt_pP->instance %d\n",eNB_index,ctxt_pP->instance);
+  //printf("decode_SI: eNB_index %d, ctxt_pP->instance %d\n",eNB_index,ctxt_pP->instance);
   SystemInformation_t** si = &UE_rrc_inst[ctxt_pP->module_id].si[eNB_index];
   int new_sib = 0;
   SystemInformationBlockType1_t* sib1 = UE_rrc_inst[ctxt_pP->module_id].sib1[eNB_index];
@@ -3825,7 +3825,7 @@ static int decode_SI( const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_in
 //-----------------------------------------------------------------------------
 void ue_meas_filtering( const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_index )
 {
-  printf("ue_meas_filtering: eNB_index %d\n",eNB_index);
+  //printf("ue_meas_filtering: eNB_index %d\n",eNB_index);
   float a  = UE_rrc_inst[ctxt_pP->module_id].filter_coeff_rsrp; // 'a' in 36.331 Sec. 5.5.3.2
   float a1 = UE_rrc_inst[ctxt_pP->module_id].filter_coeff_rsrq;
   //float rsrp_db, rsrq_db;
@@ -3904,7 +3904,7 @@ void ue_meas_filtering( const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_
 //-----------------------------------------------------------------------------
 static void rrc_ue_generate_MeasurementReport(protocol_ctxt_t* const ctxt_pP, uint8_t eNB_index )
 {
-  printf("rrc_ue_generate_MeasurementReport: eNB_index %d\n",eNB_index);
+  //printf("rrc_ue_generate_MeasurementReport: eNB_index %d\n",eNB_index);
   uint8_t             buffer[32], size;
   uint8_t             i;
   uint8_t             target_eNB_offset;
@@ -4110,7 +4110,7 @@ static uint8_t check_trigger_meas_event(
   long            a3_offset,
   TimeToTrigger_t ttt )
 {
-  printf("check_trigger_meas_event: eNB_index %d\n",eNB_index);
+  //printf("check_trigger_meas_event: eNB_index %d\n",eNB_index);
   uint8_t eNB_offset;
   uint8_t currentCellIndex = mac_xface->frame_parms->Nid_cell;
   uint8_t tmp_offset;
@@ -4166,7 +4166,7 @@ static uint8_t check_trigger_meas_event(
 //-----------------------------------------------------------------------------
 int decode_MCCH_Message( const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB_index, const uint8_t* const Sdu, const uint8_t Sdu_len, const uint8_t mbsfn_sync_area )
 {
-  printf("decode_MCCH_Message: eNB_index %d, ctxt_pP->instance %d\n",eNB_index, ctxt_pP->instance);
+  //printf("decode_MCCH_Message: eNB_index %d, ctxt_pP->instance %d\n",eNB_index, ctxt_pP->instance);
   MCCH_Message_t               *mcch=NULL;
   MBSFNAreaConfiguration_r9_t** mcch_message=&UE_rrc_inst[ctxt_pP->module_id].mcch_message[eNB_index];
 
@@ -4228,7 +4228,7 @@ int decode_MCCH_Message( const protocol_ctxt_t* const ctxt_pP, const uint8_t eNB
 //-----------------------------------------------------------------------------
 static void decode_MBSFNAreaConfiguration( module_id_t ue_mod_idP, uint8_t eNB_index, frame_t frameP, uint8_t mbsfn_sync_area )
 {
-  printf("decode_MBSFNAreaConfiguration: eNB_index %d\n",eNB_index);
+  //printf("decode_MBSFNAreaConfiguration: eNB_index %d\n",eNB_index);
   protocol_ctxt_t               ctxt;
 
   LOG_I(RRC,"[UE %d] Frame %d : Number of MCH(s) in the MBSFN Sync Area %d  is %d\n",
@@ -4327,7 +4327,7 @@ NAS_KENB_REFRESH_REQ,NAS_CELL_SELECTION_REQ,RRC_STATE_INACTIVE,RRC_STATE_IDLE,RR
     msg_name = ITTI_MSG_NAME (msg_p);
     instance = ITTI_MSG_INSTANCE (msg_p);
     ue_mod_id = UE_INSTANCE_TO_MODULE_ID(instance);
-    printf("rrc_ue_task... wait for a message. Case %d, id %d, instance %d\n",ITTI_MSG_ID(msg_p),ue_mod_id,instance);
+    //printf("rrc_ue_task... wait for a message. Case %d, id %d, instance %d\n",ITTI_MSG_ID(msg_p),ue_mod_id,instance);
     switch (ITTI_MSG_ID(msg_p)) {
     case TERMINATE_MESSAGE:
       itti_exit_task ();
@@ -4341,8 +4341,8 @@ NAS_KENB_REFRESH_REQ,NAS_CELL_SELECTION_REQ,RRC_STATE_INACTIVE,RRC_STATE_IDLE,RR
     case RRC_MAC_IN_SYNC_IND:
       LOG_D(RRC, "[UE %d] Received %s: frameP %d, eNB %d\n", ue_mod_id, msg_name,
             RRC_MAC_IN_SYNC_IND (msg_p).frame, RRC_MAC_IN_SYNC_IND (msg_p).enb_index);
-      printf("[UE %d] Received %s: frameP %d, eNB %d\n", ue_mod_id, msg_name,
-            RRC_MAC_IN_SYNC_IND (msg_p).frame, RRC_MAC_IN_SYNC_IND (msg_p).enb_index);
+      //printf("[UE %d] Received %s: frameP %d, eNB %d\n", ue_mod_id, msg_name,
+      //      RRC_MAC_IN_SYNC_IND (msg_p).frame, RRC_MAC_IN_SYNC_IND (msg_p).enb_index);
       UE_rrc_inst[ue_mod_id].Info[RRC_MAC_IN_SYNC_IND (msg_p).enb_index].N310_cnt = 0;
 
       if (UE_rrc_inst[ue_mod_id].Info[RRC_MAC_IN_SYNC_IND (msg_p).enb_index].T310_active == 1) {
@@ -4354,20 +4354,20 @@ NAS_KENB_REFRESH_REQ,NAS_CELL_SELECTION_REQ,RRC_STATE_INACTIVE,RRC_STATE_IDLE,RR
     case RRC_MAC_OUT_OF_SYNC_IND:
       LOG_D(RRC, "[UE %d] Received %s: frameP %d, eNB %d\n", ue_mod_id, msg_name,
             RRC_MAC_OUT_OF_SYNC_IND (msg_p).frame, RRC_MAC_OUT_OF_SYNC_IND (msg_p).enb_index);
-      printf("[UE %d] Received %s: frameP %d, eNB %d\n", ue_mod_id, msg_name,
-            RRC_MAC_OUT_OF_SYNC_IND (msg_p).frame, RRC_MAC_OUT_OF_SYNC_IND (msg_p).enb_index);
+      //printf("[UE %d] Received %s: frameP %d, eNB %d\n", ue_mod_id, msg_name,
+      //      RRC_MAC_OUT_OF_SYNC_IND (msg_p).frame, RRC_MAC_OUT_OF_SYNC_IND (msg_p).enb_index);
       UE_rrc_inst[ue_mod_id].Info[RRC_MAC_OUT_OF_SYNC_IND (msg_p).enb_index].N310_cnt ++;
       break;
 
     case RRC_MAC_BCCH_DATA_IND:
-      printf("rrc_ue_task:[UE %d] Received %s: frameP %d, eNB %d\n", ue_mod_id, msg_name,
-            RRC_MAC_BCCH_DATA_IND (msg_p).frame, RRC_MAC_BCCH_DATA_IND (msg_p).enb_index);
+      //printf("rrc_ue_task:[UE %d] Received %s: frameP %d, eNB %d\n", ue_mod_id, msg_name,
+      //      RRC_MAC_BCCH_DATA_IND (msg_p).frame, RRC_MAC_BCCH_DATA_IND (msg_p).enb_index);
       LOG_D(RRC, "[UE %d] Received %s: frameP %d, eNB %d\n", ue_mod_id, msg_name,
             RRC_MAC_BCCH_DATA_IND (msg_p).frame, RRC_MAC_BCCH_DATA_IND (msg_p).enb_index);
 
       //      PROTOCOL_CTXT_SET_BY_INSTANCE(&ctxt, instance, ENB_FLAG_NO, NOT_A_RNTI, RRC_MAC_BCCH_DATA_IND (msg_p).frame, 0);
       PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, ue_mod_id, ENB_FLAG_NO, NOT_A_RNTI, RRC_MAC_BCCH_DATA_IND (msg_p).frame, 0,RRC_MAC_BCCH_DATA_IND (msg_p).enb_index);
-      printf("decode_BCCH_DLSCH_Message for ue %d, enb %d , ctxt.intance %d\n",ue_mod_id,RRC_MAC_BCCH_DATA_IND (msg_p).enb_index,ctxt.instance);//RRC_MAC_BCCH_DATA_IND (msg_p).enb_index=ue->common_vars.enb_id
+      //printf("decode_BCCH_DLSCH_Message for ue %d, enb %d , ctxt.intance %d\n",ue_mod_id,RRC_MAC_BCCH_DATA_IND (msg_p).enb_index,ctxt.instance);//RRC_MAC_BCCH_DATA_IND (msg_p).enb_index=ue->common_vars.enb_id
       decode_BCCH_DLSCH_Message (&ctxt,
                                  RRC_MAC_BCCH_DATA_IND (msg_p).enb_index,
                                  RRC_MAC_BCCH_DATA_IND (msg_p).sdu,
@@ -4379,8 +4379,8 @@ NAS_KENB_REFRESH_REQ,NAS_CELL_SELECTION_REQ,RRC_STATE_INACTIVE,RRC_STATE_IDLE,RR
     case RRC_MAC_CCCH_DATA_CNF:
       LOG_D(RRC, "[UE %d] Received %s: eNB %d\n", ue_mod_id, msg_name,
             RRC_MAC_CCCH_DATA_CNF (msg_p).enb_index);
-      printf("[UE %d] Received %s: eNB %d\n", ue_mod_id, msg_name,
-            RRC_MAC_CCCH_DATA_CNF (msg_p).enb_index);
+      //printf("[UE %d] Received %s: eNB %d\n", ue_mod_id, msg_name,
+      //      RRC_MAC_CCCH_DATA_CNF (msg_p).enb_index);
       // reset the tx buffer to indicate RRC that ccch was successfully transmitted (for example if contention resolution succeeds)
       UE_rrc_inst[ue_mod_id].Srb0[RRC_MAC_CCCH_DATA_CNF (msg_p).enb_index].Tx_buffer.payload_size = 0;
       break;
@@ -4392,15 +4392,15 @@ NAS_KENB_REFRESH_REQ,NAS_CELL_SELECTION_REQ,RRC_STATE_INACTIVE,RRC_STATE_IDLE,RR
             msg_name,
             RRC_MAC_CCCH_DATA_IND (msg_p).frame,
             RRC_MAC_CCCH_DATA_IND (msg_p).enb_index);
-      printf("[UE %d] RNTI %x Received %s: frameP %d, eNB %d\n",
-            ue_mod_id,
-            RRC_MAC_CCCH_DATA_IND (msg_p).rnti,
-            msg_name,
-            RRC_MAC_CCCH_DATA_IND (msg_p).frame,
-            RRC_MAC_CCCH_DATA_IND (msg_p).enb_index);
+      //printf("[UE %d] RNTI %x Received %s: frameP %d, eNB %d\n",
+      //      ue_mod_id,
+       //     RRC_MAC_CCCH_DATA_IND (msg_p).rnti,
+      //      msg_name,
+       //     RRC_MAC_CCCH_DATA_IND (msg_p).frame,
+      //      RRC_MAC_CCCH_DATA_IND (msg_p).enb_index);
 
       srb_info_p = &UE_rrc_inst[ue_mod_id].Srb0[RRC_MAC_CCCH_DATA_IND (msg_p).enb_index];
-      printf("ctxt->instance %d\n",ctxt.instance);
+      //printf("ctxt->instance %d\n",ctxt.instance);
 
       memcpy (srb_info_p->Rx_buffer.Payload, RRC_MAC_CCCH_DATA_IND (msg_p).sdu,
               RRC_MAC_CCCH_DATA_IND (msg_p).sdu_size);
@@ -4417,8 +4417,8 @@ NAS_KENB_REFRESH_REQ,NAS_CELL_SELECTION_REQ,RRC_STATE_INACTIVE,RRC_STATE_IDLE,RR
     case RRC_MAC_MCCH_DATA_IND:
       LOG_D(RRC, "[UE %d] Received %s: frameP %d, eNB %d, mbsfn SA %d\n", ue_mod_id, msg_name,
             RRC_MAC_MCCH_DATA_IND (msg_p).frame, RRC_MAC_MCCH_DATA_IND (msg_p).enb_index, RRC_MAC_MCCH_DATA_IND (msg_p).mbsfn_sync_area);
-      printf("[UE %d] Received %s: frameP %d, eNB %d, mbsfn SA %d\n", ue_mod_id, msg_name,
-            RRC_MAC_MCCH_DATA_IND (msg_p).frame, RRC_MAC_MCCH_DATA_IND (msg_p).enb_index, RRC_MAC_MCCH_DATA_IND (msg_p).mbsfn_sync_area);
+      //printf("[UE %d] Received %s: frameP %d, eNB %d, mbsfn SA %d\n", ue_mod_id, msg_name,
+      //      RRC_MAC_MCCH_DATA_IND (msg_p).frame, RRC_MAC_MCCH_DATA_IND (msg_p).enb_index, RRC_MAC_MCCH_DATA_IND (msg_p).mbsfn_sync_area);
 
       //PROTOCOL_CTXT_SET_BY_INSTANCE(&ctxt, instance, ENB_FLAG_NO, M_RNTI, RRC_MAC_MCCH_DATA_IND (msg_p).frame, 0);
       PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, ue_mod_id, ENB_FLAG_NO, M_RNTI, RRC_MAC_MCCH_DATA_IND (msg_p).frame, 0,RRC_MAC_MCCH_DATA_IND (msg_p).enb_index);
@@ -4446,20 +4446,20 @@ NAS_KENB_REFRESH_REQ,NAS_CELL_SELECTION_REQ,RRC_STATE_INACTIVE,RRC_STATE_IDLE,RR
             msg_name,
             RRC_DCCH_DATA_IND (msg_p).dcch_index,
             RRC_DCCH_DATA_IND (msg_p).eNB_index);
-      printf("[UE %d] Received %s: frameP %d, DCCH %d, eNB %d\n",
-            RRC_DCCH_DATA_IND (msg_p).module_id,
-            msg_name,
-            RRC_DCCH_DATA_IND (msg_p).frame,
-            RRC_DCCH_DATA_IND (msg_p).dcch_index,
-            RRC_DCCH_DATA_IND (msg_p).eNB_index);
+      //printf("[UE %d] Received %s: frameP %d, DCCH %d, eNB %d\n",
+      //      RRC_DCCH_DATA_IND (msg_p).module_id,
+      //      msg_name,
+      //      RRC_DCCH_DATA_IND (msg_p).frame,
+      //      RRC_DCCH_DATA_IND (msg_p).dcch_index,
+      //      RRC_DCCH_DATA_IND (msg_p).eNB_index);
 
-      printf("rrc_ue_decode_dcch:Received %s DCCH %d, eNB %d, ctxt.instance %d, ctxt.module_id %d\n",
-            msg_name,
-            RRC_DCCH_DATA_IND (msg_p).dcch_index,
-            RRC_DCCH_DATA_IND (msg_p).eNB_index,
-	    ctxt.instance,
-	    ctxt.module_id
-	    );
+      //printf("rrc_ue_decode_dcch:Received %s DCCH %d, eNB %d, ctxt.instance %d, ctxt.module_id %d\n",
+      //      msg_name,
+      //      RRC_DCCH_DATA_IND (msg_p).dcch_index,
+      //      RRC_DCCH_DATA_IND (msg_p).eNB_index,
+	//    ctxt.instance,
+	//    ctxt.module_id
+	//    );
       rrc_ue_decode_dcch (
         &ctxt,
         RRC_DCCH_DATA_IND (msg_p).dcch_index,
@@ -4507,14 +4507,14 @@ NAS_KENB_REFRESH_REQ,NAS_CELL_SELECTION_REQ,RRC_STATE_INACTIVE,RRC_STATE_IDLE,RR
             NAS_CELL_SELECTION_REQ (msg_p).plmnID.MNCdigit2,
             NAS_CELL_SELECTION_REQ (msg_p).plmnID.MNCdigit3,
             NAS_CELL_SELECTION_REQ (msg_p).rat);
-      printf("[UE %d] Received %s: state %d, plmnID (%d%d%d.%d%d%d), rat %x\n", ue_mod_id, msg_name, rrc_get_state(ue_mod_id),
-            NAS_CELL_SELECTION_REQ (msg_p).plmnID.MCCdigit1,
-            NAS_CELL_SELECTION_REQ (msg_p).plmnID.MCCdigit2,
-            NAS_CELL_SELECTION_REQ (msg_p).plmnID.MCCdigit3,
-            NAS_CELL_SELECTION_REQ (msg_p).plmnID.MNCdigit1,
-            NAS_CELL_SELECTION_REQ (msg_p).plmnID.MNCdigit2,
-            NAS_CELL_SELECTION_REQ (msg_p).plmnID.MNCdigit3,
-            NAS_CELL_SELECTION_REQ (msg_p).rat);
+      ///printf("[UE %d] Received %s: state %d, plmnID (%d%d%d.%d%d%d), rat %x\n", ue_mod_id, msg_name, rrc_get_state(ue_mod_id),
+      //      NAS_CELL_SELECTION_REQ (msg_p).plmnID.MCCdigit1,
+      //      NAS_CELL_SELECTION_REQ (msg_p).plmnID.MCCdigit2,
+      //      NAS_CELL_SELECTION_REQ (msg_p).plmnID.MCCdigit3,
+      //      NAS_CELL_SELECTION_REQ (msg_p).plmnID.MNCdigit1,
+      //      NAS_CELL_SELECTION_REQ (msg_p).plmnID.MNCdigit2,
+      //      NAS_CELL_SELECTION_REQ (msg_p).plmnID.MNCdigit3,
+      //      NAS_CELL_SELECTION_REQ (msg_p).rat);
 
       if (rrc_get_state(ue_mod_id) == RRC_STATE_INACTIVE) {
         // have a look at MAC/main.c void dl_phy_sync_success(...)
@@ -4589,16 +4589,16 @@ NAS_KENB_REFRESH_REQ,NAS_CELL_SELECTION_REQ,RRC_STATE_INACTIVE,RRC_STATE_IDLE,RR
             NAS_CONN_ESTABLI_REQ (msg_p).plmnID.MNCdigit1,
             NAS_CONN_ESTABLI_REQ (msg_p).plmnID.MNCdigit2,
             NAS_CONN_ESTABLI_REQ (msg_p).plmnID.MNCdigit3);
-      printf("[UE %d] Received %s: cause %d, type %d, s_tmsi (mme code %"PRIu8", m-tmsi %"PRIu32"), plmnID (%d%d%d.%d%d%d)\n", ue_mod_id, msg_name, NAS_CONN_ESTABLI_REQ (msg_p).cause,
-            NAS_CONN_ESTABLI_REQ (msg_p).type,
-            NAS_CONN_ESTABLI_REQ (msg_p).s_tmsi.MMEcode,
-            NAS_CONN_ESTABLI_REQ (msg_p).s_tmsi.m_tmsi,
-            NAS_CONN_ESTABLI_REQ (msg_p).plmnID.MCCdigit1,
-            NAS_CONN_ESTABLI_REQ (msg_p).plmnID.MCCdigit2,
-            NAS_CONN_ESTABLI_REQ (msg_p).plmnID.MCCdigit3,
-            NAS_CONN_ESTABLI_REQ (msg_p).plmnID.MNCdigit1,
-            NAS_CONN_ESTABLI_REQ (msg_p).plmnID.MNCdigit2,
-            NAS_CONN_ESTABLI_REQ (msg_p).plmnID.MNCdigit3);
+      //printf("[UE %d] Received %s: cause %d, type %d, s_tmsi (mme code %"PRIu8", m-tmsi %"PRIu32"), plmnID (%d%d%d.%d%d%d)\n", ue_mod_id, msg_name, NAS_CONN_ESTABLI_REQ (msg_p).cause,
+      //      NAS_CONN_ESTABLI_REQ (msg_p).type,
+      //      NAS_CONN_ESTABLI_REQ (msg_p).s_tmsi.MMEcode,
+      //      NAS_CONN_ESTABLI_REQ (msg_p).s_tmsi.m_tmsi,
+      //      NAS_CONN_ESTABLI_REQ (msg_p).plmnID.MCCdigit1,
+      //      NAS_CONN_ESTABLI_REQ (msg_p).plmnID.MCCdigit2,
+      //      NAS_CONN_ESTABLI_REQ (msg_p).plmnID.MCCdigit3,
+      //      NAS_CONN_ESTABLI_REQ (msg_p).plmnID.MNCdigit1,
+      //      NAS_CONN_ESTABLI_REQ (msg_p).plmnID.MNCdigit2,
+      //     NAS_CONN_ESTABLI_REQ (msg_p).plmnID.MNCdigit3);
 
       //PROTOCOL_CTXT_SET_BY_INSTANCE(&ctxt, instance, ENB_FLAG_NO, NOT_A_RNTI, 0, 0);
       PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, ue_mod_id, ENB_FLAG_NO, NOT_A_RNTI, 0, 0, 0/*PHY_vars_UE_g[ue_mod_id][0]->common_vars.eNb_id*/);

@@ -50,7 +50,7 @@ static int nas_ue_process_events(nas_user_container_t *users, struct epoll_event
   int exit_loop = FALSE;
 
   LOG_I(NAS, "[UE] Received %d events\n", nb_events);
-  printf("[UE] Received %d events\n", nb_events);
+  //printf("[UE] Received %d events\n", nb_events);
   for (event = 0; event < nb_events; event++) {
     if (events[event].events != 0) {
       /* If the event has not been yet been processed (not an itti message) */
@@ -155,7 +155,7 @@ void *nas_ue_task(void *args_p)
       msg_name = ITTI_MSG_NAME (msg_p);
       instance = ITTI_MSG_INSTANCE (msg_p);
       Mod_id = instance - 1/*NB_eNB_INST*/;
-      printf("nas_ue_task: instance %d, INSTANCE_DEFAULT %d\n",instance,INSTANCE_DEFAULT);
+      //printf("nas_ue_task: instance %d, INSTANCE_DEFAULT %d\n",instance,INSTANCE_DEFAULT);
       if (instance == INSTANCE_DEFAULT) {
         printf("%s:%d: FATAL: instance is INSTANCE_DEFAULT, should not happen.\n",
                __FILE__, __LINE__);

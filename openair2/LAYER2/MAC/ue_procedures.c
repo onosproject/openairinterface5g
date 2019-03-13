@@ -375,13 +375,6 @@ ue_send_sdu(
 
   LOG_T(MAC,"\n");
 #endif
-  printf("[UE %d] First 32 bytes of DLSCH : \n", module_idP);
-
-  for (i=0; i<32; i++) {
-    printf("%x.",sdu[i]);
-  }
-
-  printf("\n");
   if (payload_ptr != NULL) {
 
   for (i=0; i<num_ce; i++) {

@@ -816,7 +816,7 @@ pdcp_data_ind(
         ((pdcp_data_ind_header_t *) new_sdu_p->data)->rb_id = rb_id;
 #if defined(OAI_EMU)
         ((pdcp_data_ind_header_t*) new_sdu_p->data)->inst  = ctxt_pP->module_id + 1/*oai_emulation.info.nb_enb_local*/ - oai_emulation.info.first_ue_local;
-        printf("pdcp_data_ind: inst %d, ctxt_pP->module_id %d, oai_emulation.info.nb_enb_local %d, oai_emulation.info.first_ue_local %d\n",ctxt_pP->module_id + oai_emulation.info.nb_enb_local - oai_emulation.info.first_ue_local,ctxt_pP->module_id , oai_emulation.info.nb_enb_local , oai_emulation.info.first_ue_local);
+        //printf("pdcp_data_ind: inst %d, ctxt_pP->module_id %d, oai_emulation.info.nb_enb_local %d, oai_emulation.info.first_ue_local %d\n",ctxt_pP->module_id + oai_emulation.info.nb_enb_local - oai_emulation.info.first_ue_local,ctxt_pP->module_id , oai_emulation.info.nb_enb_local , oai_emulation.info.first_ue_local);
 #else
 #  if defined(ENABLE_USE_MME)
         /* for the UE compiled in S1 mode, we need 1 here
@@ -928,7 +928,7 @@ pdcp_run (
           RRC_DCCH_DATA_REQ (msg_p).frame, 
 	  0,
 	  RRC_DCCH_DATA_REQ (msg_p).eNB_index);
-        printf("pdcp_run:RRC_DCCH_DATA_REQ: eNB %d, rnti %x\n",RRC_DCCH_DATA_REQ (msg_p).eNB_index,RRC_DCCH_DATA_REQ (msg_p).rnti);
+        //printf("pdcp_run:RRC_DCCH_DATA_REQ: eNB %d, rnti %x\n",RRC_DCCH_DATA_REQ (msg_p).eNB_index,RRC_DCCH_DATA_REQ (msg_p).rnti);
         LOG_I(PDCP, PROTOCOL_CTXT_FMT"Received %s from %s: instance %d, rb_id %d, muiP %d, confirmP %d, mode %d\n",
               PROTOCOL_CTXT_ARGS(&ctxt),
               msg_name,

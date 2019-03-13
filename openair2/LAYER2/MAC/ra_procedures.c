@@ -108,7 +108,7 @@ void get_prach_resources(module_id_t module_idP,
                          uint8_t first_Msg3,
                          RACH_ConfigDedicated_t *rach_ConfigDedicated)
 {
-  printf("get_prach_resources: eNB_index %d\n",eNB_index);
+  //printf("get_prach_resources: eNB_index %d\n",eNB_index);
   uint8_t Msg3_size = UE_mac_inst[module_idP].RA_Msg3_size;
   PRACH_RESOURCES_t *prach_resources = &UE_mac_inst[module_idP].RA_prach_resources;
   RACH_ConfigCommon_t *rach_ConfigCommon = NULL;
@@ -307,7 +307,7 @@ void Msg3_tx(module_id_t module_idP,uint8_t CC_id,frame_t frameP, uint8_t eNB_id
 PRACH_RESOURCES_t *ue_get_rach(module_id_t module_idP,int CC_id,frame_t frameP, uint8_t eNB_indexP,sub_frame_t subframeP)
 {
 
-  printf("ue_get_rach: eNB_indexP %d\n",eNB_indexP);//eNB_indexP=0
+  //printf("ue_get_rach: eNB_indexP %d\n",eNB_indexP);//eNB_indexP=0
   uint8_t                        Size=0;
   UE_MODE_t                 UE_mode = mac_xface->get_ue_mode(module_idP,0,eNB_indexP);//eNB_indexP=0
   uint8_t                        lcid = CCCH;
