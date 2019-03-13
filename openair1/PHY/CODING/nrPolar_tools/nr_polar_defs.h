@@ -82,6 +82,7 @@ typedef struct decoder_tree_t_s {
   uint64_t decoderout[LISTSIZE_MAX][4];
   int numentries;
   int minentry;
+  int minPM;
 } decoder_tree_t;
 
 struct nrPolar_params {

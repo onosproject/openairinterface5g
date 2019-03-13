@@ -226,7 +226,15 @@ decoder_node_t *add_nodes(int level,int first_leaf_index,t_nrPolar_params *pp) {
     printf("leaf %d (%s)\n",first_leaf_index,pp->information_bit_pattern[first_leaf_index]==1 ? "information or crc" : "frozen");
 #endif
     new_node->leaf=1;
-    new_node->all_frozen = pp->information_bit_pattern[first_leaf_index]==0 ? 1 : 0;
+    if (pp->information_bit_pattern[first_leaf_index]==0) new_node->all_frozen = 1;
+    else {
+      new_node->all_frozen = 0;
+      int i=0;
+      for (;i<pp->K;i++)
+	if (pp->Q_I_N[i] == first_leaf_index) break;
+      AssertFatal(i<pp->K,"Couldn't find a valid bit position for leaf index %d\n",first_leaf_index);
+      new_node->bit_index = i;
+    }
     return new_node; // this is a leaf node
   }
 
@@ -259,6 +267,27 @@ void build_decoder_tree(t_nrPolar_params *pp) {
 #endif
 }
 
+inline void update_min(t_nrPolar_params *pp,int bi,int i,int u,int16_t abs_alpha) __attribute__((always_inline));
+
+inline void update_min(t_nrPolar_params *pp,int bi,int i,int u,int16_t abs_alpha) {
+
+  int newPM = pp->tree.PM[i]-abs_alpha;
+  int minPM=0;
+  int minentry=pp->tree.minentry;
+
+  if (newPM > pp->tree.minPM) {
+    pp->tree.PM[minentry] = newPM;
+    pp->tree.decoderout[minentry][bi>>6] &= ~(((uint64_t)1)<<(bi&63));
+    pp->tree.decoderout[minentry][bi>>6] |= (((uint64_t)u)<<(bi&63));
+  }
+  for (int j=0;j<pp->tree.numentries;j++) 
+    if (pp->tree.PM[i] < minPM) {
+      pp->tree.PM[i] = minPM;
+      pp->tree.minentry = i;
+    }
+
+}
+
 #if defined(__arm__) || defined(__aarch64__)
 // translate 1-1 SIMD functions from SSE to NEON
 #define __m128i int16x8_t
@@ -270,6 +299,7 @@ void build_decoder_tree(t_nrPolar_params *pp) {
 #define _mm_min_pi16(a,b) vmin_s16(a,b)
 #define _mm_subs_pi16(a,b) vsub_s16(a,b)
 #endif
+
 
 void applyFtoleft(t_nrPolar_params *pp,decoder_node_t *node) {
   int16_t *alpha_v=node->alpha;
@@ -387,24 +417,28 @@ void applyFtoleft(t_nrPolar_params *pp,decoder_node_t *node) {
       printf("betal[0] %d (%p)\n",betal[0],&betal[0]);
 #endif
       //      pp->nr_polar_U[node->first_leaf_index] = (1+betal[0])>>1;
-      int bi = node->left->bit_bitindex;
-      int ne1 = pp->tree.num_entries;
+      int bi = node->left->bit_index;
       int16_t abs_alpha = ((alpha_l[0]>0) ? alpha_l[0] : -alpha_l[0]);
-      if (pp->tree.num_entries < pp->tree.list_size) {
+      int ne2=pp->tree.numentries<<1;
+      if (ne2 > pp->tree.list_size) ne2 = pp->tree.list_size;
+
+      if (pp->tree.numentries < pp->tree.list_size) {
 	// update list for SC hard-decision
-	for (int i=0;i<pp->tree.num_entries;i++) pp->tree.decoderout[i][bi>>6] |= (((1+betal[0])>>1)<<(bi&63));
+	for (int i=0;i<pp->tree.numentries;i++) pp->tree.decoderout[i][bi>>6] |= (((1+betal[0])>>1)<<(bi&63));
 	
 	// update list for flipped SC hard-decision
 
 	
-	int ne2=pp->tree.num_entries<<1;
-	if (ne2 > pp->tree.list_size) ne2 = pp->tree.list_size;
-	for (int i=pp->tree.num_entries;i<ne2;i++)  {
-	  pp->tree.decoderout[i][bi>>6] = pp->tree.decoderout[i-pp->tree.num_entries][bi>>6] ^ (((uint64_t)1)<<(bi&63));
-	  pp->tree.PM[i] = pp->tree.PM[i-pp->tree.num_entries] - abs_alpha;
+	for (int i=pp->tree.numentries;i<ne2;i++)  {
+	  pp->tree.decoderout[i][bi>>6] = pp->tree.decoderout[i-pp->tree.numentries][bi>>6] ^ (((uint64_t)1)<<(bi&63));
+	  pp->tree.PM[i] = pp->tree.PM[i-pp->tree.numentries] - abs_alpha;
+	  if (pp->tree.PM[i] < pp->tree.minPM) {
+	    pp->tree.minPM    = pp->tree.PM[i];
+	    pp->tree.minentry = i; 
+	  }
 	}
       }
-      for (int i=0;i<pp->tree.num_entries-(ne2-pp->tree.num_entries);i++) update_min(pp->tree,abs_alpha);
+      for (int i=0;i<(pp->tree.numentries<<1)-ne2;i++) update_min(pp,bi,i,(1-betal[0])>>1,abs_alpha);
       
 
 #ifdef DEBUG_NEW_IMPL
@@ -476,12 +510,35 @@ void applyGtoright(t_nrPolar_params *pp,decoder_node_t *node) {
       }
     if (node->Nv == 2) { // apply hard decision on right node
       betar[0] = (alpha_r[0]>0) ? -1 : 1;
-      pp->nr_polar_U[node->first_leaf_index+1] = (1+betar[0])>>1;
-      //#ifdef DEBUG_NEW_IMPL
-      int j;
-      for (j=0;j<pp->K;j++) if (pp->Q_I_N[j] == (node->first_leaf_index+1)) break;
+      //      pp->nr_polar_U[node->first_leaf_index+1] = (1+betar[0])>>1;
+      int bi = node->right->bit_index;
+      int16_t abs_alpha = ((alpha_r[0]>0) ? alpha_r[0] : -alpha_r[0]);
+      int ne2=pp->tree.numentries<<1;
+      if (ne2 > pp->tree.list_size) ne2 = pp->tree.list_size;
+
+      if (pp->tree.numentries < pp->tree.list_size) {
+	// update list for SC hard-decision
+	for (int i=0;i<pp->tree.numentries;i++) pp->tree.decoderout[i][bi>>6] |= (((1+betar[0])>>1)<<(bi&63));
+	
+	// update list for flipped SC hard-decision
+
+	
+	for (int i=pp->tree.numentries;i<ne2;i++)  {
+	  pp->tree.decoderout[i][bi>>6] = pp->tree.decoderout[i-pp->tree.numentries][bi>>6] ^ (((uint64_t)1)<<(bi&63));
+	  pp->tree.PM[i] = pp->tree.PM[i-pp->tree.numentries] - abs_alpha;
+	  if (pp->tree.PM[i] < pp->tree.minPM) {
+	    pp->tree.minPM    = pp->tree.PM[i];
+	    pp->tree.minentry = i; 
+	  }
+	}
+      }
+      for (int i=0;i<(pp->tree.numentries<<1)-ne2;i++) update_min(pp,bi,i,(1-betar[0])>>1,abs_alpha);
+      
+#ifdef DEBUG_NEW_IMPL
+      //      int j;
+      //      for (j=0;j<pp->K;j++) if (pp->Q_I_N[j] == (node->first_leaf_index+1)) break;
       printf("Setting bit %d (%d) to %d (LLR %d)\n",node->first_leaf_index+1,j,(betar[0]+1)>>1,alpha_r[0]);
-      //#endif
+#endif
     } 
   }
 }
