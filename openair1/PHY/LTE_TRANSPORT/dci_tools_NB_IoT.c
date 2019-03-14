@@ -214,12 +214,9 @@ int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB      *eNB,
 {
 
  // NB_IoT_eNB_NPDCCH_t  *ndlcch     = ;
-  void                  *DLSCH_DCI_NB_IoT = NULL;
   int tmp = 0;
-  uint8_t  *DCI_tmp = NULL;
+  int i = 0;
   uint8_t  *DCI_flip = NULL;
-
-  //eNB->DCI_pdu = (DCI_PDU_NB_IoT*) malloc(sizeof(DCI_PDU_NB_IoT));
 
   //N1 parameters
   //uint8_t ncce_index = 0;
@@ -272,23 +269,6 @@ int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB      *eNB,
     ndi                = DCI_Content->DCIN1_RAR.ndi;
     HARQackRes         = DCI_Content->DCIN1_RAR.HARQackRes; 
     DCIRep             = DCI_Content->DCIN1_RAR.DCIRep;
-    
-    DLSCH_DCI_NB_IoT = (DCIN1_RAR_t *)malloc(sizeof(DCIN1_RAR_t));
-
-    //DCI pdu content
-    ((DCIN1_RAR_t *)DLSCH_DCI_NB_IoT)->type           =type;
-    ((DCIN1_RAR_t *)DLSCH_DCI_NB_IoT)->orderIndicator =orderIndicator;
-    ((DCIN1_RAR_t *)DLSCH_DCI_NB_IoT)->Scheddly       =Sched_delay;
-    ((DCIN1_RAR_t *)DLSCH_DCI_NB_IoT)->ResAssign      =ResAssign;
-    ((DCIN1_RAR_t *)DLSCH_DCI_NB_IoT)->mcs            =mcs;
-    ((DCIN1_RAR_t *)DLSCH_DCI_NB_IoT)->RepNum         =RepNum;
-    ((DCIN1_RAR_t *)DLSCH_DCI_NB_IoT)->ndi            =ndi;
-    ((DCIN1_RAR_t *)DLSCH_DCI_NB_IoT)->HARQackRes     =HARQackRes;
-    ((DCIN1_RAR_t *)DLSCH_DCI_NB_IoT)->DCIRep         =DCIRep;
-
-    //printf("DUMP: DCI N1 RAR : type = %d, orderIndicator = %d, Sched_delay = %d, ResAssign = %d, mcs = %d, RepNum = %d, ndi = %d, HARQackRes = %d, DCIRep = %d\n", type, orderIndicator, Sched_delay, ResAssign, mcs, RepNum, ndi, HARQackRes, DCIRep);
-    //add_dci_NB_IoT(eNB->DCI_pdu,DLSCH_DCI_NB_IoT,rnti,sizeof(DCIN1_RAR_t),aggregation,sizeof_DCIN1_RAR_t,DCIFormatN1_RAR, npdcch_start_symbol);
-
 
     /*Now configure the npdcch structure*/
 
@@ -315,14 +295,16 @@ int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB      *eNB,
     //ndlcch->status[ncce_index] = ACTIVE_NB_IoT;
     ndlcch->mcs[ncce_index]    = mcs;
 
-    //ndlcch->pdu[ncce_index]    = DLSCH_DCI_NB_IoT;
-    DCI_tmp = (uint8_t*)DLSCH_DCI_NB_IoT;
 
     DCI_flip = (uint8_t*)malloc(3*sizeof(uint8_t));
 
-    DCI_flip[0]        = DCI_tmp[2]*2;
-    DCI_flip[1]        = DCI_tmp[1]*2;
-    DCI_flip[2]        = DCI_tmp[0]*2;
+    for(i=0; i<3; ++i){
+      DCI_flip[i] = 0x0;
+    }
+
+    DCI_flip[0] = (type << 7) | (orderIndicator << 6) | (Sched_delay<<2) | ResAssign ;
+    DCI_flip[1] = (mcs << 4) | RepNum;
+    DCI_flip[2] = (ndi << 7) | (HARQackRes << 3) | (DCIRep <<1);
     
     ndlcch->pdu[ncce_index]    = DCI_flip;
 
@@ -371,19 +353,6 @@ int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB      *eNB,
     HARQackRes         = DCI_Content->DCIN1.HARQackRes; 
     DCIRep             = DCI_Content->DCIN1.DCIRep;
 
-    DLSCH_DCI_NB_IoT = (DCIN1_t *)malloc(sizeof(DCIN1_t));
-    /*Packed DCI here*/
-    ((DCIN1_t *)DLSCH_DCI_NB_IoT)->type           =type;
-    ((DCIN1_t *)DLSCH_DCI_NB_IoT)->orderIndicator =orderIndicator;
-    ((DCIN1_t *)DLSCH_DCI_NB_IoT)->Scheddly       =Sched_delay;
-    ((DCIN1_t *)DLSCH_DCI_NB_IoT)->ResAssign      =ResAssign;
-    ((DCIN1_t *)DLSCH_DCI_NB_IoT)->mcs            =mcs;
-    ((DCIN1_t *)DLSCH_DCI_NB_IoT)->RepNum         =RepNum;
-    ((DCIN1_t *)DLSCH_DCI_NB_IoT)->ndi            =ndi;
-    ((DCIN1_t *)DLSCH_DCI_NB_IoT)->HARQackRes     =HARQackRes;
-    ((DCIN1_t *)DLSCH_DCI_NB_IoT)->DCIRep         =DCIRep;
-
-
     //add_dci_NB_IoT(eNB->DCI_pdu,DLSCH_DCI_NB_IoT,rnti,sizeof(DCIN1_t),aggregation,sizeof_DCIN1_t,DCIFormatN1,npdcch_start_symbol);
 
     /*Now configure the npdcch structure*/
@@ -408,14 +377,21 @@ int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB      *eNB,
   	ndlcch->mcs[ncce_index]     = mcs;
   	ndlcch->TBS[ncce_index]     = TBStable_NB_IoT[mcs][ResAssign]; // this table should be rewritten for nb-iot
     //ndlcch->pdu[ncce_index]    = DLSCH_DCI_NB_IoT;
-    DCI_tmp = (uint8_t*)DLSCH_DCI_NB_IoT;
 
     DCI_flip = (uint8_t*)malloc(3*sizeof(uint8_t));
-    DCI_flip[0]        = 129;
+
+    for(i=0; i<3; ++i){
+      DCI_flip[i] = 0x0;
+    }
+
+    DCI_flip[0] = (type << 7) | (orderIndicator << 6) | (Sched_delay<<2) | ResAssign ;
+    DCI_flip[1] = (mcs << 4) | RepNum;
+    DCI_flip[2] = (ndi << 7) | (HARQackRes << 3) | (DCIRep <<1);
+    //DCI_flip[0]        = 129;
 
     //DCI_flip[0]        = DCI_tmp[2]*2;
-    DCI_flip[1]        = DCI_tmp[1]*2;
-    DCI_flip[2]        = DCI_tmp[0]*2;
+    //DCI_flip[1]        = DCI_tmp[1]*2;
+    //DCI_flip[2]        = DCI_tmp[0]*2;
     //DCI_flip[2]        = 4;
     ndlcch->pdu[ncce_index]    = DCI_flip;
 
@@ -437,11 +413,6 @@ int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB      *eNB,
     directIndInf       = DCI_Content->DCIN2_Ind.directIndInf; 
     resInfoBits        = DCI_Content->DCIN2_Ind.resInfoBits; 
 
-    DLSCH_DCI_NB_IoT = (DCIN2_Ind_t *)malloc(sizeof(DCIN2_Ind_t));
-    /*Packed DCI here*/
-    ((DCIN2_Ind_t *)DLSCH_DCI_NB_IoT)->type           =type;
-    ((DCIN2_Ind_t *)DLSCH_DCI_NB_IoT)->directIndInf   =directIndInf;
-    ((DCIN2_Ind_t *)DLSCH_DCI_NB_IoT)->resInfoBits    =resInfoBits;
 
 
     //add_dci_NB_IoT(eNB->DCI_pdu,DLSCH_DCI_NB_IoT,rnti,sizeof(DCIN2_Ind_t),aggregation,sizeof_DCIN2_Ind_t,DCIFormatN2_Ind,npdcch_start_symbol);
@@ -456,16 +427,7 @@ int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB      *eNB,
     ResAssign          = DCI_Content->DCIN2_Pag.ResAssign; 
     mcs                = DCI_Content->DCIN2_Pag.mcs; 
     RepNum             = DCI_Content->DCIN2_Pag.RepNum; 
-    DCIRep             = DCI_Content->DCIN2_Pag.DCIRep; 
-
-    DLSCH_DCI_NB_IoT = (DCIN2_Pag_t *)malloc(sizeof(DCIN2_Pag_t));
-    /*Packed DCI here*/
-    ((DCIN2_Pag_t *)DLSCH_DCI_NB_IoT)->type      =type;
-    ((DCIN2_Pag_t *)DLSCH_DCI_NB_IoT)->ResAssign =ResAssign;
-    ((DCIN2_Pag_t *)DLSCH_DCI_NB_IoT)->mcs       =mcs;
-    ((DCIN2_Pag_t *)DLSCH_DCI_NB_IoT)->RepNum    =RepNum;
-    ((DCIN2_Pag_t *)DLSCH_DCI_NB_IoT)->DCIRep    =DCIRep;
-
+    DCIRep             = DCI_Content->DCIN2_Pag.DCIRep;
 
     //add_dci_NB_IoT(eNB->DCI_pdu,DLSCH_DCI_NB_IoT,rnti,sizeof(DCIN2_Pag_t),aggregation,sizeof_DCIN2_Pag_t,DCIFormatN2_Pag,npdcch_start_symbol);
 
