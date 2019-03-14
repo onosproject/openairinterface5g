@@ -1007,7 +1007,7 @@ int fill_msg4_NB_IoT(
 	con_res[5] = ra_template->ccch_buffer[5];
 	length+=6;
 
-	uint8_t *msg4_rrc_sdu = (uint8_t *) (dlsch_buffer+9);
+	uint8_t *msg4_rrc_sdu = (uint8_t *) (dlsch_buffer+8);
 
 	msg4_rrc_sdu[0] = ra_template->msg4_rrc_buffer[0];
 	msg4_rrc_sdu[1] = ra_template->msg4_rrc_buffer[1];
