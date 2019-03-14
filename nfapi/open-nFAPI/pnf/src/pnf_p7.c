@@ -28,7 +28,7 @@
 #include <stdio.h>
 
 #include "pnf_p7.h"
-
+#include "common/utils/LOG/log.h"
 #define FAPI2_IP_DSCP	0
 
 extern uint16_t sf_ahead;
@@ -36,7 +36,7 @@ extern uint16_t sf_ahead;
 
 void add_sf(uint16_t *frameP, uint16_t *subframeP, int offset)
 {
-    *frameP    = *frameP + ((*subframeP + offset) / 10);
+    *frameP    = (*frameP + ((*subframeP + offset) / 10))%1024;
 
     *subframeP = ((*subframeP + offset) % 10);
 }
@@ -838,7 +838,8 @@ int pnf_p7_subframe_ind(pnf_p7_t* pnf_p7, uint16_t phy_id, uint16_t sfn_sf)
                 //printf("pnf_p7->timing_info_ms_counter:%d\n", pnf_p7->timing_info_ms_counter);
 
 		// send the periodic timing info if configured
-		if(pnf_p7->_public.timing_info_mode_periodic && (pnf_p7->timing_info_period_counter++) == pnf_p7->_public.timing_info_period)
+		if(pnf_p7->_public.timing_info_mode_periodic && (++pnf_p7->timing_info_period_counter) == pnf_p7->_public.timing_info_period)
+
 		{
 			pnf_pack_and_send_timing_info(pnf_p7);
 
@@ -905,7 +906,7 @@ uint8_t is_p7_request_in_window(uint16_t sfnsf, const char* name, pnf_p7_t* phy)
 			if(recv_sfn_sf_dec > ((current_sfn_sf_dec + timing_window) % NFAPI_MAX_SFNSFDEC))
 			{
 				// out of window
-				NFAPI_TRACE(NFAPI_TRACE_NOTE, "[%d] %s is late %d (with wrap)\n", current_sfn_sf_dec, name, recv_sfn_sf_dec);
+				LOG_E(PHY, "[%d] %s is late %d (with wrap)\n", current_sfn_sf_dec, name, recv_sfn_sf_dec);
 			}
 			else
 			{
@@ -917,7 +918,7 @@ uint8_t is_p7_request_in_window(uint16_t sfnsf, const char* name, pnf_p7_t* phy)
 		else
 		{
 			// too late
-			NFAPI_TRACE(NFAPI_TRACE_NOTE, "[%d] %s is in late %d (delta:%d)\n", current_sfn_sf_dec, name, recv_sfn_sf_dec, (current_sfn_sf_dec - recv_sfn_sf_dec));
+			LOG_E(PHY, "[%d] %s is in late %d (delta:%d)\n", current_sfn_sf_dec, name, recv_sfn_sf_dec, (current_sfn_sf_dec - recv_sfn_sf_dec));
 		}
 
 	}
@@ -933,7 +934,7 @@ uint8_t is_p7_request_in_window(uint16_t sfnsf, const char* name, pnf_p7_t* phy)
 		else
 		{
 			// too far in the future
-			NFAPI_TRACE(NFAPI_TRACE_NOTE, "[%d] %s is out of window %d (delta:%d) [max:%d]\n", current_sfn_sf_dec, name, recv_sfn_sf_dec,  (recv_sfn_sf_dec - current_sfn_sf_dec), timing_window);
+			LOG_E(PHY, "[%d] %s is out of window %d (delta:%d) [max:%d]\n", current_sfn_sf_dec, name, recv_sfn_sf_dec,  (recv_sfn_sf_dec - current_sfn_sf_dec), timing_window);
 		}
 
 	}

@@ -212,6 +212,7 @@ void rlc_am_segment_10 (
         LOG_E(RLC, PROTOCOL_RLC_AM_CTXT_FMT"[SEGMENT] ERROR COULD NOT GET NEW PDU, EXIT\n",
               PROTOCOL_RLC_AM_CTXT_ARGS(ctxt_pP,rlc_pP));
         RLC_AM_MUTEX_UNLOCK(&rlc_pP->lock_input_sdus);
+        stat_info.rlc_discard++;
         return;
       }
 

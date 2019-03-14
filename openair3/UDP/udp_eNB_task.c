@@ -304,7 +304,7 @@ void *udp_eNB_task(void *args_p)
   //const char         *msg_name = NULL;
   //instance_t          instance  = 0;
   udp_enb_init();
-
+  thread_top_init("udp_eNB_task",1,500000,1000000,20000000);
   itti_mark_task_ready(TASK_UDP);
   MSC_START_USE();
 

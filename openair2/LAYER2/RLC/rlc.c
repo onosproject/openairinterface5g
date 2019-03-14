@@ -464,6 +464,7 @@ rlc_op_status_t rlc_data_req     (const protocol_ctxt_t *const ctxt_pP,
         } else {
           VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_RLC_DATA_REQ,VCD_FUNCTION_OUT);
           free_mem_block(sdu_pP, __func__);
+          stat_info.rlc_discard++;
           return RLC_OP_STATUS_INTERNAL_ERROR;
         }
 
@@ -496,6 +497,7 @@ rlc_op_status_t rlc_data_req     (const protocol_ctxt_t *const ctxt_pP,
         } else {
           VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_RLC_DATA_REQ,VCD_FUNCTION_OUT);
           free_mem_block(sdu_pP, __func__);
+          stat_info.rlc_discard++;
           return RLC_OP_STATUS_INTERNAL_ERROR;
         }
 
@@ -518,6 +520,7 @@ rlc_op_status_t rlc_data_req     (const protocol_ctxt_t *const ctxt_pP,
           //handle_event(ERROR,"FILE %s FONCTION rlc_data_req() LINE %s : out of memory\n", __FILE__, __LINE__);
           VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_RLC_DATA_REQ,VCD_FUNCTION_OUT);
           free_mem_block(sdu_pP, __func__);
+          stat_info.rlc_discard++;
           return RLC_OP_STATUS_INTERNAL_ERROR;
         }
 
@@ -551,6 +554,7 @@ rlc_op_status_t rlc_data_req     (const protocol_ctxt_t *const ctxt_pP,
         } else {
           VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_RLC_DATA_REQ,VCD_FUNCTION_OUT);
           free_mem_block(sdu_pP, __func__);
+          stat_info.rlc_discard++;
           return RLC_OP_STATUS_BAD_PARAMETER;
         }
       } else {

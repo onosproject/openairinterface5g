@@ -24,7 +24,7 @@
 #include <errno.h>
 
 #include "vnf_p7.h"
-
+#include "common/utils/LOG/log.h"
 #define SYNC_CYCLE_COUNT 2
 
 void* vnf_p7_malloc(vnf_p7_t* vnf_p7, size_t size)
@@ -1244,18 +1244,26 @@ void vnf_handle_timing_info(void *pRecvMsg, int recvMsgLen, vnf_p7_t* vnf_p7)
 
         if (vnf_p7 && vnf_p7->p7_connections)
         {
-          int16_t vnf_pnf_sfnsf_delta = NFAPI_SFNSF2DEC(vnf_p7->p7_connections[0].sfn_sf) - NFAPI_SFNSF2DEC(ind.last_sfn_sf);
+//          int16_t vnf_pnf_sfnsf_delta = NFAPI_SFNSF2DEC(vnf_p7->p7_connections[0].sfn_sf) - NFAPI_SFNSF2DEC(ind.last_sfn_sf);
 
-          //NFAPI_TRACE(NFAPI_TRACE_INFO, "%s() PNF:SFN/SF:%d VNF:SFN/SF:%d deltaSFNSF:%d\n", __FUNCTION__, NFAPI_SFNSF2DEC(ind.last_sfn_sf), NFAPI_SFNSF2DEC(vnf_p7->p7_connections[0].sfn_sf), vnf_pnf_sfnsf_delta);
+          LOG_D(PHY, "%s() PNF:SFN/SF:%d VNF:SFN/SF:%d deltaSFNSF:%d\n", __FUNCTION__, NFAPI_SFNSF2DEC(ind.last_sfn_sf), NFAPI_SFNSF2DEC(vnf_p7->p7_connections[0].sfn_sf), NFAPI_SFNSF2DEC(vnf_p7->p7_connections[0].sfn_sf) - NFAPI_SFNSF2DEC(ind.last_sfn_sf));
 
           // Panos: Careful here!!! Modification of the original nfapi-code
           //if (vnf_pnf_sfnsf_delta>1 || vnf_pnf_sfnsf_delta < -1)
-          if (vnf_pnf_sfnsf_delta>0 || vnf_pnf_sfnsf_delta < 0)
-          {
-            NFAPI_TRACE(NFAPI_TRACE_INFO, "%s() LARGE SFN/SF DELTA between PNF and VNF delta:%d VNF:%d PNF:%d\n\n\n\n\n\n\n\n\n", __FUNCTION__, vnf_pnf_sfnsf_delta, NFAPI_SFNSF2DEC(vnf_p7->p7_connections[0].sfn_sf), NFAPI_SFNSF2DEC(ind.last_sfn_sf));
+//          if (vnf_pnf_sfnsf_delta>0 || vnf_pnf_sfnsf_delta < 0)
+//          {
+//            NFAPI_TRACE(NFAPI_TRACE_INFO, "%s() LARGE SFN/SF DELTA between PNF and VNF delta:%d VNF:%d PNF:%d\n\n\n\n\n\n\n\n\n", __FUNCTION__, vnf_pnf_sfnsf_delta, NFAPI_SFNSF2DEC(vnf_p7->p7_connections[0].sfn_sf), NFAPI_SFNSF2DEC(ind.last_sfn_sf));
             // Panos: Careful here!!! Modification of the original nfapi-code
             vnf_p7->p7_connections[0].sfn_sf = ind.last_sfn_sf;
-          }
+//          }
+          send_mac_subframe_indications(vnf_p7);
+          vnf_p7->sf_start_time_hr = vnf_get_current_time_hr();
+          nfapi_vnf_p7_connection_info_t* curr = vnf_p7->p7_connections;
+          while(curr != 0)
+          {
+            vnf_sync(vnf_p7, curr);
+            curr = curr->next;
+           }
         }
 }
 

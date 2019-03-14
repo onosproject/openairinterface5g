@@ -765,6 +765,7 @@ void rx_rf(RU_t *ru,int *frame,int *subframe) {
 //	      "rx_rf: Asked for %d samples, got %d from SDR\n",fp->samples_per_tti,rxs);
   if(rxs != fp->samples_per_tti){
     LOG_E(PHY,"rx_rf: Asked for %d samples, got %d from SDR\n",fp->samples_per_tti,rxs);
+    stat_info.rf_read_err++;
     late_control=STATE_BURST_TERMINATE;
   }
 
@@ -949,6 +950,7 @@ void tx_rf(RU_t *ru) {
     if( (txs !=  siglen+sf_extension) && (late_control==STATE_BURST_NORMAL) ){ /* add fail safe for late command */
       late_control=STATE_BURST_TERMINATE;
       LOG_E(PHY,"TX : Timeout (sent %d/%d) state =%d\n",txs, siglen,late_control);
+      stat_info.rf_write_err++;
     }
   }
 }
@@ -1209,8 +1211,10 @@ void do_ru_synch(RU_t *ru) {
 				     rxp,
 				     fp->samples_per_tti*10,
 				     ru->nb_rx);
-    if (rxs != fp->samples_per_tti*10) LOG_E(PHY,"requested %d samples, got %d\n",fp->samples_per_tti*10,rxs);
- 
+    if (rxs != fp->samples_per_tti*10) {
+      LOG_E(PHY,"requested %d samples, got %d\n",fp->samples_per_tti*10,rxs);
+      stat_info.rf_read_err++;
+    }
     // wakeup synchronization processing thread
     wakeup_synch(ru);
     ic=0;
@@ -1954,7 +1958,7 @@ void* pre_scd_thread( void* param ){
 
     frame = 0;
     subframe = 4;
-    thread_top_init("pre_scd_thread",0,870000,1000000,1000000);
+    thread_top_init("pre_scd_thread",1,870000,1000000,1000000);
 
     while (!oai_exit) {
         if(oai_exit){
@@ -2043,6 +2047,7 @@ static void* eNB_thread_phy_tx( void* param ) {
         }else{
           LOG_E(PHY,"rf tx thread busy, skipping\n");
           late_control=STATE_BURST_TERMINATE;
+          stat_info.tx_failsafe++;
         }
         pthread_mutex_unlock( &ru->proc.mutex_rf_tx );
     }
@@ -2092,6 +2097,7 @@ static void* rf_tx( void* param ) {
     if(proc->instance_cnt_rf_tx >= 0){
       late_control=STATE_BURST_TERMINATE;
       LOG_E(PHY,"detect rf tx busy change mode TX failsafe\n");
+      stat_info.tx_failsafe++;
     }
   }
 
@@ -2256,7 +2262,7 @@ void init_RU_proc(RU_t *ru) {
     pthread_setname_np( proc->pthread_FH, name );
     
   }
-  else if (ru->function == eNodeB_3GPP && ru->if_south == LOCAL_RF) { // DJP - need something else to distinguish between monolithic and PNF
+  else if (ru->function == eNodeB_3GPP && ru->if_south == LOCAL_RF && (ru->do_prach > 0)) { // DJP - need something else to distinguish between monolithic and PNF
     LOG_I(PHY,"%s() DJP - added creation of pthread_prach\n", __FUNCTION__);
     pthread_create( &proc->pthread_prach, attr_prach, ru_thread_prach, (void*)ru );
   }

@@ -197,7 +197,7 @@ static inline int rxtx(PHY_VARS_eNB *eNB,L1_rxtx_proc_t *proc, char *thread_name
   }
 
   if (nfapi_mode == 1 && eNB->pdcch_vars[proc->subframe_tx&1].num_pdcch_symbols == 0) {
-    LOG_E(PHY, "eNB->pdcch_vars[proc->subframe_tx&1].num_pdcch_symbols == 0");
+    LOG_E(PHY, "eNB->pdcch_vars[%d].num_pdcch_symbols == 0: frame %d subframe %d\n",proc->subframe_tx&1,proc->frame_tx,proc->subframe_tx);
     return 0;
   }
 
@@ -406,6 +406,9 @@ static void* L1_thread( void* param ) {
     T(T_ENB_MASTER_TICK, T_INT(0), T_INT(proc->frame_rx), T_INT(proc->subframe_rx));
 
     if (wait_on_condition(&proc->mutex,&proc->cond,&proc->instance_cnt,thread_name)<0) break;
+    if (proc->frame_tx == 0 && proc->subframe_tx == 0){
+      output_stat_info();
+    }
 
     VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME(VCD_SIGNAL_DUMPER_VARIABLES_CPUID_ENB_THREAD_RXTX,sched_getcpu());
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_eNB_PROC_RXTX0+(proc->subframe_rx&1), 1 );
@@ -946,7 +949,9 @@ void init_eNB_proc(int inst) {
 
     LOG_I(PHY,"eNB->single_thread_flag:%d\n", eNB->single_thread_flag);
 
-    if ((get_thread_parallel_conf() == PARALLEL_RU_L1_SPLIT || get_thread_parallel_conf() == PARALLEL_RU_L1_TRX_SPLIT) && nfapi_mode!=2) {
+    if ((get_thread_parallel_conf() == PARALLEL_RU_L1_SPLIT) && nfapi_mode!=2) {
+      pthread_create( &L1_proc->pthread, attr0, L1_thread, proc );
+    } else if ((get_thread_parallel_conf() == PARALLEL_RU_L1_TRX_SPLIT) && nfapi_mode!=2) {
       pthread_create( &L1_proc->pthread, attr0, L1_thread, proc );
       pthread_create( &L1_proc_tx->pthread, attr1, L1_thread_tx, proc);
     } else if (nfapi_mode == 2) { // this is neccesary in VNF or L2 FAPI simulator.

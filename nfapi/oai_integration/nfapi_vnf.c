@@ -42,6 +42,8 @@
 
 #include "common/ran_context.h"
 extern RAN_CONTEXT_t RC;
+extern UL_RCC_IND_t  UL_RCC_INFO;
+extern uint8_t  nfapi_mode;
 
 typedef struct {
   uint8_t enabled;
@@ -359,11 +361,11 @@ int wake_eNB_rxtx(PHY_VARS_eNB *eNB, uint16_t sfn, uint16_t sf) {
 
   // wake up TX for subframe n+sf_ahead
   // lock the TX mutex and make sure the thread is ready
-  if (pthread_mutex_timedlock(&L1_proc->mutex,&wait) != 0) {
-    LOG_E( PHY, "[eNB] ERROR pthread_mutex_lock for eNB RXTX thread %d (IC %d)\n", L1_proc->subframe_rx&1,L1_proc->instance_cnt );
-    exit_fun( "error locking mutex_rxtx" );
-    return(-1);
-  }
+//  if (pthread_mutex_timedlock(&L1_proc->mutex,&wait) != 0) {
+//    LOG_E( PHY, "[eNB] ERROR pthread_mutex_lock for eNB RXTX thread %d (IC %d)\n", L1_proc->subframe_rx&1,L1_proc->instance_cnt );
+//    exit_fun( "error locking mutex_rxtx" );
+//    return(-1);
+//  }
 
   {
     static uint16_t old_sf = 0;
@@ -379,8 +381,25 @@ int wake_eNB_rxtx(PHY_VARS_eNB *eNB, uint16_t sfn, uint16_t sf) {
     if (old_sf == 0 && old_sfn % 100==0) LOG_W( PHY,"[eNB] sfn/sf:%d%d old_sfn/sf:%d%d proc[rx:%d%d]\n", sfn, sf, old_sfn, old_sf, proc->frame_rx, proc->subframe_rx);
   }
 
-  ++L1_proc->instance_cnt;
+  // wake up TX for subframe n+sf_ahead
+  // lock the TX mutex and make sure the thread is ready
+  LOG_D(MAC,"before pthread_mutex_timedlock: frame %d subframe %d\n",proc->frame_rx,proc->subframe_rx);
+  if (pthread_mutex_timedlock(&L1_proc->mutex,&wait) != 0) {
+      LOG_E( PHY, "[eNB] ERROR pthread_mutex_lock for eNB RXTX thread %d (IC %d)\n", L1_proc->subframe_rx&1,L1_proc->instance_cnt );
+      exit_fun( "error locking mutex_rxtx" );
+      return(-1);
+  }
+  LOG_D(MAC,"after  pthread_mutex_timedlock: frame %d subframe %d\n",proc->frame_rx,proc->subframe_rx);
+  if(L1_proc->instance_cnt < 0){
+    ++L1_proc->instance_cnt;
+  }else{
+    LOG_E(MAC,"RCC singal to rxtx frame %d subframe %d busy %d (frame %d subframe %d)\n",L1_proc->frame_rx,L1_proc->subframe_rx,L1_proc->instance_cnt,proc->frame_rx,proc->subframe_rx);
+    pthread_mutex_unlock( &L1_proc->mutex );
+    return(0);
+  }
 
+  pthread_mutex_unlock( &L1_proc->mutex );
+  LOG_D(MAC,"after  pthread_mutex_unlock: frame %d subframe %d\n",proc->frame_rx,proc->subframe_rx);
   //LOG_D( PHY,"[VNF-subframe_ind] sfn/sf:%d:%d proc[frame_rx:%d subframe_rx:%d] L1_proc->instance_cnt_rxtx:%d \n", sfn, sf, proc->frame_rx, proc->subframe_rx, L1_proc->instance_cnt_rxtx);
 
   // We have just received and processed the common part of a subframe, say n.
@@ -403,10 +422,6 @@ int wake_eNB_rxtx(PHY_VARS_eNB *eNB, uint16_t sfn, uint16_t sf) {
     exit_fun( "ERROR pthread_cond_signal" );
     return(-1);
   }
-
-  //LOG_D(PHY,"%s() About to attempt pthread_mutex_unlock\n", __FUNCTION__);
-  pthread_mutex_unlock( &L1_proc->mutex );
-  //LOG_D(PHY,"%s() UNLOCKED pthread_mutex_unlock\n", __FUNCTION__);
 
   return(0);
 }
@@ -463,7 +478,41 @@ int phy_rach_indication(struct nfapi_vnf_p7_config* config, nfapi_rach_indicatio
   printf("[VNF] RACH_IND eNB:%p sfn_sf:%d number_of_preambles:%d\n", eNB, NFAPI_SFNSF2DEC(ind->sfn_sf), ind->rach_indication_body.number_of_preambles);
 
   pthread_mutex_lock(&eNB->UL_INFO_mutex);
+  if(nfapi_mode == 2){
+    int8_t index = -1;
+    for(uint8_t i= 0;i< NUM_NFPAI_SUBFRAME;i++){
+      if((UL_RCC_INFO.rach_ind[i].header.message_id == 0) && (index == -1)){
+        index = i;
+        break;
+      }
+    }
+    if(index == -1){
+      LOG_E(MAC,"phy_rach_indication : num of rach reach max \n");
+      return 0;
+    }
+    UL_RCC_INFO.rach_ind[index] = *ind;
 
+    if (ind->rach_indication_body.number_of_preambles > 0)
+      UL_RCC_INFO.rach_ind[index].rach_indication_body.preamble_list = malloc(sizeof(nfapi_preamble_pdu_t)*ind->rach_indication_body.number_of_preambles );
+
+    for (int i=0; i<ind->rach_indication_body.number_of_preambles; i++) {
+      if (ind->rach_indication_body.preamble_list[i].preamble_rel8.tl.tag == NFAPI_PREAMBLE_REL8_TAG) {
+
+        printf("preamble[%d]: rnti:%02x preamble:%d timing_advance:%d\n",
+              i,
+              ind->rach_indication_body.preamble_list[i].preamble_rel8.rnti,
+              ind->rach_indication_body.preamble_list[i].preamble_rel8.preamble,
+              ind->rach_indication_body.preamble_list[i].preamble_rel8.timing_advance
+              );
+      }
+
+      if(ind->rach_indication_body.preamble_list[i].preamble_rel13.tl.tag == NFAPI_PREAMBLE_REL13_TAG) {
+        printf("RACH PREAMBLE REL13 present\n");
+      }
+
+      UL_RCC_INFO.rach_ind[index].rach_indication_body.preamble_list[i] = ind->rach_indication_body.preamble_list[i];
+    }
+  }else{
   eNB->UL_INFO.rach_ind = *ind;
   eNB->UL_INFO.rach_ind.rach_indication_body.preamble_list = eNB->preamble_list;
 
@@ -484,6 +533,7 @@ int phy_rach_indication(struct nfapi_vnf_p7_config* config, nfapi_rach_indicatio
 
     eNB->preamble_list[i] = ind->rach_indication_body.preamble_list[i];
   }
+  }
   pthread_mutex_unlock(&eNB->UL_INFO_mutex);
 
   // vnf_p7_info* p7_vnf = (vnf_p7_info*)(config->user_data);
@@ -498,14 +548,34 @@ int phy_harq_indication(struct nfapi_vnf_p7_config* config, nfapi_harq_indicatio
   LOG_D(MAC, "%s() NFAPI SFN/SF:%d number_of_harqs:%u\n", __FUNCTION__, NFAPI_SFNSF2DEC(ind->sfn_sf), ind->harq_indication_body.number_of_harqs);
 
   pthread_mutex_lock(&eNB->UL_INFO_mutex);
+  if(nfapi_mode == 2){
+    int8_t index = -1;
+    for(uint8_t i= 0;i< NUM_NFPAI_SUBFRAME;i++){
+      if((UL_RCC_INFO.harq_ind[i].header.message_id == 0) && (index == -1)){
+        index = i;
+        break;
+      }
+    }
+    if(index == -1){
+      LOG_E(MAC,"phy_harq_indication : num of harq reach max \n");
+      return 0;
+    }
+    UL_RCC_INFO.harq_ind[index] = *ind;
 
+    if (ind->harq_indication_body.number_of_harqs > 0)
+      UL_RCC_INFO.harq_ind[index].harq_indication_body.harq_pdu_list = malloc(sizeof(nfapi_harq_indication_pdu_t)*ind->harq_indication_body.number_of_harqs );
+
+    for (int i=0; i<ind->harq_indication_body.number_of_harqs; i++) {
+        memcpy(&UL_RCC_INFO.harq_ind[index].harq_indication_body.harq_pdu_list[i], &ind->harq_indication_body.harq_pdu_list[i], sizeof(nfapi_harq_indication_pdu_t));
+    }
+  }else{
   eNB->UL_INFO.harq_ind = *ind;
   eNB->UL_INFO.harq_ind.harq_indication_body.harq_pdu_list = eNB->harq_pdu_list;
 
   for (int i=0; i<ind->harq_indication_body.number_of_harqs; i++) {
     memcpy(&eNB->UL_INFO.harq_ind.harq_indication_body.harq_pdu_list[i], &ind->harq_indication_body.harq_pdu_list[i], sizeof(eNB->UL_INFO.harq_ind.harq_indication_body.harq_pdu_list[i]));
   }
-
+  }
   pthread_mutex_unlock(&eNB->UL_INFO_mutex);
 
   // vnf_p7_info* p7_vnf = (vnf_p7_info*)(config->user_data);
@@ -519,7 +589,37 @@ int phy_crc_indication(struct nfapi_vnf_p7_config* config, nfapi_crc_indication_
   struct PHY_VARS_eNB_s *eNB = RC.eNB[0][0];
 
   pthread_mutex_lock(&eNB->UL_INFO_mutex);
+  if(nfapi_mode == 2){
+    int8_t index = -1;
+    for(uint8_t i= 0;i< NUM_NFPAI_SUBFRAME;i++){
+      if((UL_RCC_INFO.crc_ind[i].header.message_id == 0) && (index == -1)){
+        index = i;
+      }
+      if(UL_RCC_INFO.rx_ind[i].sfn_sf == ind->sfn_sf){
+        index = i;
+        break;
+      }
+    }
+    if(index == -1){
+      LOG_E(MAC,"phy_crc_indication : num of crc reach max \n");
+      return 0;
+    }
+    UL_RCC_INFO.crc_ind[index] = *ind;
 
+    if (ind->crc_indication_body.number_of_crcs > 0)
+      UL_RCC_INFO.crc_ind[index].crc_indication_body.crc_pdu_list = malloc(sizeof(nfapi_crc_indication_pdu_t)*ind->crc_indication_body.number_of_crcs );
+
+    for (int i=0; i<ind->crc_indication_body.number_of_crcs; i++) {
+      memcpy(&UL_RCC_INFO.crc_ind[index].crc_indication_body.crc_pdu_list[i], &ind->crc_indication_body.crc_pdu_list[i], sizeof(ind->crc_indication_body.crc_pdu_list[0]));
+
+      LOG_D(MAC, "%s() NFAPI SFN/SF:%d CRC_IND:number_of_crcs:%u UL_INFO:crcs:%d PDU[%d] rnti:%04x UL_INFO:rnti:%04x\n",
+          __FUNCTION__,
+          NFAPI_SFNSF2DEC(ind->sfn_sf), ind->crc_indication_body.number_of_crcs, UL_RCC_INFO.crc_ind[index].crc_indication_body.number_of_crcs,
+          i,
+          ind->crc_indication_body.crc_pdu_list[i].rx_ue_information.rnti,
+          UL_RCC_INFO.crc_ind[index].crc_indication_body.crc_pdu_list[i].rx_ue_information.rnti);
+    }
+  }else{
   eNB->UL_INFO.crc_ind = *ind;
 
   nfapi_crc_indication_t *dest_ind = &eNB->UL_INFO.crc_ind;
@@ -541,7 +641,7 @@ int phy_crc_indication(struct nfapi_vnf_p7_config* config, nfapi_crc_indication_
         ind->crc_indication_body.crc_pdu_list[i].rx_ue_information.rnti, 
         eNB->UL_INFO.crc_ind.crc_indication_body.crc_pdu_list[i].rx_ue_information.rnti);
   }
-
+  }
   pthread_mutex_unlock(&eNB->UL_INFO_mutex);
 
   // vnf_p7_info* p7_vnf = (vnf_p7_info*)(config->user_data);
@@ -559,7 +659,52 @@ int phy_rx_indication(struct nfapi_vnf_p7_config* config, nfapi_rx_indication_t*
   }
 
   pthread_mutex_lock(&eNB->UL_INFO_mutex);
+  if(nfapi_mode == 2){
+    int8_t index = -1;
+    for(uint8_t i= 0;i< NUM_NFPAI_SUBFRAME;i++){
+      if((UL_RCC_INFO.rx_ind[i].header.message_id == 0) && (index == -1)){
+        index = i;
+      }
+      if(UL_RCC_INFO.crc_ind[i].sfn_sf == ind->sfn_sf){
+        index = i;
+        break;
+      }
+    }
+    if(index == -1){
+      LOG_E(MAC,"phy_rx_indication : num of rx reach max \n");
+      return 0;
+    }
+    UL_RCC_INFO.rx_ind[index] = *ind;
 
+    if (ind->rx_indication_body.number_of_pdus > 0)
+      UL_RCC_INFO.rx_ind[index].rx_indication_body.rx_pdu_list = malloc(sizeof(nfapi_rx_indication_pdu_t)*ind->rx_indication_body.number_of_pdus );
+
+    for (int i=0; i<ind->rx_indication_body.number_of_pdus; i++) {
+      nfapi_rx_indication_pdu_t *dest_pdu = &UL_RCC_INFO.rx_ind[index].rx_indication_body.rx_pdu_list[i];
+      nfapi_rx_indication_pdu_t *src_pdu = &ind->rx_indication_body.rx_pdu_list[i];
+
+      memcpy(dest_pdu, src_pdu, sizeof(*src_pdu));
+      // DJP - TODO FIXME - intentional memory leak
+      if(dest_pdu->rx_indication_rel8.length > 0){
+        dest_pdu->data = malloc(dest_pdu->rx_indication_rel8.length);
+        memcpy(dest_pdu->data, src_pdu->data, dest_pdu->rx_indication_rel8.length);
+      }else{
+        dest_pdu->data = NULL;
+      }
+
+      LOG_D(PHY, "%s() NFAPI SFN/SF:%d PDUs:%d [PDU:%d] handle:%d rnti:%04x length:%d offset:%d ul_cqi:%d ta:%d data:%p\n",
+          __FUNCTION__,
+          NFAPI_SFNSF2DEC(ind->sfn_sf), ind->rx_indication_body.number_of_pdus, i,
+          dest_pdu->rx_ue_information.handle,
+          dest_pdu->rx_ue_information.rnti,
+          dest_pdu->rx_indication_rel8.length,
+          dest_pdu->rx_indication_rel8.offset,
+          dest_pdu->rx_indication_rel8.ul_cqi,
+          dest_pdu->rx_indication_rel8.timing_advance,
+          dest_pdu->data
+          );
+    }
+  }else{
   nfapi_rx_indication_t *dest_ind = &eNB->UL_INFO.rx_ind;
   nfapi_rx_indication_pdu_t *dest_pdu_list = eNB->rx_pdu_list;
 
@@ -589,7 +734,7 @@ int phy_rx_indication(struct nfapi_vnf_p7_config* config, nfapi_rx_indication_t*
         dest_pdu->data
         );
   }
-
+  }
   pthread_mutex_unlock(&eNB->UL_INFO_mutex);
 
   // vnf_p7_info* p7_vnf = (vnf_p7_info*)(config->user_data);
@@ -609,7 +754,33 @@ int phy_sr_indication(struct nfapi_vnf_p7_config* config, nfapi_sr_indication_t*
   LOG_D(MAC, "%s() NFAPI SFN/SF:%d srs:%d\n", __FUNCTION__, NFAPI_SFNSF2DEC(ind->sfn_sf), ind->sr_indication_body.number_of_srs);
 
   pthread_mutex_lock(&eNB->UL_INFO_mutex);
+  if(nfapi_mode == 2){
+    int8_t index = -1;
+    for(uint8_t i= 0;i< NUM_NFPAI_SUBFRAME;i++){
+      if((UL_RCC_INFO.sr_ind[i].header.message_id == 0) && (index == -1)){
+        index = i;
+        break;
+      }
+    }
+    if(index == -1){
+      LOG_E(MAC,"phy_sr_indication : num of sr reach max \n");
+      return 0;
+    }
+    UL_RCC_INFO.sr_ind[index] = *ind;
 
+    LOG_D(MAC,"%s() UL_INFO[%d].sr_ind.sr_indication_body.number_of_srs:%d\n", __FUNCTION__, index, eNB->UL_INFO.sr_ind.sr_indication_body.number_of_srs);
+    if (ind->sr_indication_body.number_of_srs > 0)
+      UL_RCC_INFO.sr_ind[index].sr_indication_body.sr_pdu_list = malloc(sizeof(nfapi_sr_indication_pdu_t)*ind->sr_indication_body.number_of_srs );
+
+    for (int i=0; i<ind->sr_indication_body.number_of_srs; i++) {
+        nfapi_sr_indication_pdu_t *dest_pdu = &UL_RCC_INFO.sr_ind[index].sr_indication_body.sr_pdu_list[i];
+        nfapi_sr_indication_pdu_t *src_pdu = &ind->sr_indication_body.sr_pdu_list[i];
+
+        LOG_D(MAC, "SR_IND[PDU:%d %d][rnti:%x cqi:%d channel:%d]\n", index, i, src_pdu->rx_ue_information.rnti, src_pdu->ul_cqi_information.ul_cqi, src_pdu->ul_cqi_information.channel);
+
+        memcpy(dest_pdu, src_pdu, sizeof(*src_pdu));
+    }
+  }else{
   nfapi_sr_indication_t *dest_ind = &eNB->UL_INFO.sr_ind;
   nfapi_sr_indication_pdu_t *dest_pdu_list = eNB->sr_pdu_list;
 
@@ -626,7 +797,7 @@ int phy_sr_indication(struct nfapi_vnf_p7_config* config, nfapi_sr_indication_t*
 
     memcpy(dest_pdu, src_pdu, sizeof(*src_pdu));
   }
-
+  }
   pthread_mutex_unlock(&eNB->UL_INFO_mutex);
 
   // vnf_p7_info* p7_vnf = (vnf_p7_info*)(config->user_data);
@@ -644,7 +815,35 @@ int phy_cqi_indication(struct nfapi_vnf_p7_config* config, nfapi_cqi_indication_
   LOG_D(MAC, "%s() NFAPI SFN/SF:%d number_of_cqis:%u\n", __FUNCTION__, NFAPI_SFNSF2DEC(ind->sfn_sf), ind->cqi_indication_body.number_of_cqis);
 
   pthread_mutex_lock(&eNB->UL_INFO_mutex);
+  if(nfapi_mode == 2){
+    int8_t index = -1;
+    for(uint8_t i= 0;i< NUM_NFPAI_SUBFRAME;i++){
+      if((UL_RCC_INFO.cqi_ind[i].header.message_id == 0) && (index == -1)){
+        index = i;
+        break;
+      }
+    }
+    if(index == -1){
+      LOG_E(MAC,"phy_cqi_indication : num of cqi reach max \n");
+      return 0;
+    }
+    UL_RCC_INFO.cqi_ind[index] = *ind;
 
+    if (ind->cqi_indication_body.number_of_cqis > 0){
+      UL_RCC_INFO.cqi_ind[index].cqi_indication_body.cqi_pdu_list = malloc(sizeof(nfapi_cqi_indication_pdu_t)*ind->cqi_indication_body.number_of_cqis );
+      UL_RCC_INFO.cqi_ind[index].cqi_indication_body.cqi_raw_pdu_list = malloc(sizeof(nfapi_cqi_indication_raw_pdu_t)*ind->cqi_indication_body.number_of_cqis );
+    }
+    for (int i=0; i<ind->cqi_indication_body.number_of_cqis; i++) {
+        nfapi_cqi_indication_pdu_t *src_pdu = &ind->cqi_indication_body.cqi_pdu_list[i];
+        LOG_D(MAC, "SR_IND[PDU:%d][rnti:%x cqi:%d channel:%d]\n", i, src_pdu->rx_ue_information.rnti,
+                    src_pdu->ul_cqi_information.ul_cqi, src_pdu->ul_cqi_information.channel);
+        memcpy(&UL_RCC_INFO.cqi_ind[index].cqi_indication_body.cqi_pdu_list[i],
+               src_pdu, sizeof(nfapi_cqi_indication_pdu_t));
+
+        memcpy(&UL_RCC_INFO.cqi_ind[index].cqi_indication_body.cqi_raw_pdu_list[i],
+               &ind->cqi_indication_body.cqi_raw_pdu_list[i], sizeof(nfapi_cqi_indication_raw_pdu_t));
+    }
+  }else{
   nfapi_cqi_indication_t *dest_ind = &eNB->UL_INFO.cqi_ind;
   *dest_ind = *ind;
 
@@ -661,7 +860,7 @@ int phy_cqi_indication(struct nfapi_vnf_p7_config* config, nfapi_cqi_indication_
     memcpy(&dest_ind->cqi_indication_body.cqi_raw_pdu_list[i],
            &ind->cqi_indication_body.cqi_raw_pdu_list[i], sizeof(nfapi_cqi_indication_raw_pdu_t));
   }
-
+  }
   pthread_mutex_unlock(&eNB->UL_INFO_mutex);
 
   return 1;
@@ -799,17 +998,110 @@ int vnf_pack_p4_p5_vendor_extension(nfapi_p4_p5_message_header_t* header, uint8_
 
 static pthread_t vnf_start_pthread;
 static pthread_t vnf_p7_start_pthread;
+static pthread_t vnf_p7_time_pthread;
 
 void* vnf_p7_start_thread(void *ptr) {
 
   printf("%s()\n", __FUNCTION__);
 
   pthread_setname_np(pthread_self(), "VNF_P7");
+#ifdef DEADLINE_SCHEDULER
+  struct sched_attr attr;
 
+  unsigned int flags = 0;
+
+  attr.size = sizeof(attr);
+  attr.sched_flags = 0;
+  attr.sched_nice = 0;
+  attr.sched_priority = 0;
+
+  attr.sched_policy   = SCHED_DEADLINE;
+  attr.sched_runtime  = 870000L; 
+  attr.sched_deadline = 1000000L;
+  attr.sched_period   = 1000000L; 
+
+  if (sched_setattr(0, &attr, flags) < 0 ) {
+    fprintf(stderr,"sched_setattr Error = %s",strerror(errno));
+    exit(1);
+  }
+#else
+  int policy, s, j;
+  struct sched_param sparam;
+  char cpu_affinity[1024];
+  cpu_set_t cpuset;
+
+  /* Set affinity mask to include CPUs 1 to MAX_CPUS */
+  /* CPU 0 is reserved for UHD threads */
+  /* CPU 1 is reserved for all RX_TX threads */
+  /* Enable CPU Affinity only if number of CPUs >2 */
+  CPU_ZERO(&cpuset);
+#ifdef CPU_AFFINITY
+  if (get_nprocs() >= 8)
+  {
+//    for (j = 1; j < 4; j++) {
+      CPU_SET(11, &cpuset);
+//    }
+  } else if (get_nprocs() > 2) {
+    for (j = 1; j < get_nprocs(); j++) {
+      CPU_SET(j, &cpuset);
+    }
+  }
+  s = pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
+  if (s != 0)
+  {
+    printf("Error setting processor affinity");
+    exit(1);
+  }
+#endif //CPU_AFFINITY
+  /* Check the actual affinity mask assigned to the thread */
+  s  = pthread_getaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
+  if (s != 0) {
+    printf("Error getting processor affinity ");
+    exit(1);
+  }
+  memset(cpu_affinity,0,sizeof(cpu_affinity));
+  for (j = 0; j < 1024; j++)
+    if (CPU_ISSET(j, &cpuset)) {  
+      char temp[1024];
+      sprintf (temp, " CPU_%d", j);
+      strcat(cpu_affinity, temp);
+    }
+
+  memset(&sparam, 0, sizeof(sparam));
+  sparam.sched_priority = sched_get_priority_max(SCHED_FIFO);
+  policy = SCHED_FIFO ; 
+  
+  s = pthread_setschedparam(pthread_self(), policy, &sparam);
+  if (s != 0) {
+    printf("Error setting thread priority");
+    exit(1);
+  }
+  
+  s = pthread_getschedparam(pthread_self(), &policy, &sparam);
+  if (s != 0) {
+    printf("Error getting thread priority");
+    exit(1);
+  }
+
+  pthread_setname_np(pthread_self(), "vnf_p7_start_thread");
+
+  NFAPI_TRACE(NFAPI_TRACE_INFO, "%s()[SCHED][eNB] %s started on CPU %d, sched_policy = %s , priority = %d, CPU Affinity=%s \n", __FUNCTION__, "vnf_p7_start_thread", sched_getcpu(),
+                   (policy == SCHED_FIFO)  ? "SCHED_FIFO" : (policy == SCHED_RR)    ? "SCHED_RR" :
+                   (policy == SCHED_OTHER) ? "SCHED_OTHER" : "???", sparam.sched_priority, cpu_affinity );
+
+#endif //LOW_LATENCY
   nfapi_vnf_p7_config_t* config = (nfapi_vnf_p7_config_t*)ptr;
 
   nfapi_vnf_p7_start(config);
 
+  return config;
+}
+
+void* vnf_p7_time_thread(void *ptr) {
+  printf("%s()\n", __FUNCTION__);
+  pthread_setname_np(pthread_self(), "VNF_P7");
+  nfapi_vnf_p7_config_t* config = (nfapi_vnf_p7_config_t*)ptr;
+  nfapi_vnf_p7_time(config);
   return config;
 }
 
@@ -856,6 +1148,7 @@ void* vnf_p7_thread_start(void* ptr) {
 
   NFAPI_TRACE(NFAPI_TRACE_INFO, "[VNF] Creating VNF NFAPI start thread %s\n", __FUNCTION__);
   pthread_create(&vnf_p7_start_pthread, NULL, &vnf_p7_start_thread, p7_vnf->config);
+//  pthread_create(&vnf_p7_time_pthread, NULL, &vnf_p7_time_thread, p7_vnf->config);
 
   return 0;
 }
@@ -1052,7 +1345,91 @@ void vnf_start_thread(void* ptr) {
   NFAPI_TRACE(NFAPI_TRACE_INFO, "[VNF] VNF NFAPI thread - nfapi_vnf_start()%s\n", __FUNCTION__);
 
   pthread_setname_np(pthread_self(), "VNF");
+#ifdef DEADLINE_SCHEDULER
+  struct sched_attr attr;
 
+  unsigned int flags = 0;
+
+  attr.size = sizeof(attr);
+  attr.sched_flags = 0;
+  attr.sched_nice = 0;
+  attr.sched_priority = 0;
+
+  attr.sched_policy   = SCHED_DEADLINE;
+  attr.sched_runtime  = 870000L; 
+  attr.sched_deadline = 1000000L;
+  attr.sched_period   = 1000000L; 
+
+  if (sched_setattr(0, &attr, flags) < 0 ) {
+    fprintf(stderr,"sched_setattr Error = %s",strerror(errno));
+    exit(1);
+  }
+#else
+  int policy, s, j;
+  struct sched_param sparam;
+  char cpu_affinity[1024];
+  cpu_set_t cpuset;
+
+  /* Set affinity mask to include CPUs 1 to MAX_CPUS */
+  /* CPU 0 is reserved for UHD threads */
+  /* CPU 1 is reserved for all RX_TX threads */
+  /* Enable CPU Affinity only if number of CPUs >2 */
+  CPU_ZERO(&cpuset);
+#ifdef CPU_AFFINITY
+  if (get_nprocs() >= 8)
+  {
+    for (j = 8; j < 11; j++) {
+      CPU_SET(j, &cpuset);
+    }
+  } else if (get_nprocs() > 2) {
+    for (j = 1; j < get_nprocs(); j++) {
+      CPU_SET(j, &cpuset);
+    }
+  }
+  s = pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
+  if (s != 0)
+  {
+    printf("Error setting processor affinity");
+    exit(1);
+  }
+#endif //CPU_AFFINITY
+  /* Check the actual affinity mask assigned to the thread */
+  s  = pthread_getaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
+  if (s != 0) {
+    printf("Error getting processor affinity ");
+    exit(1);
+  }
+  memset(cpu_affinity,0,sizeof(cpu_affinity));
+  for (j = 0; j < 1024; j++)
+    if (CPU_ISSET(j, &cpuset)) {  
+      char temp[1024];
+      sprintf (temp, " CPU_%d", j);
+      strcat(cpu_affinity, temp);
+    }
+
+  memset(&sparam, 0, sizeof(sparam));
+  sparam.sched_priority = sched_get_priority_max(SCHED_FIFO);
+  policy = SCHED_FIFO ; 
+  
+  s = pthread_setschedparam(pthread_self(), policy, &sparam);
+  if (s != 0) {
+    printf("Error setting thread priority");
+    exit(1);
+  }
+  
+  s = pthread_getschedparam(pthread_self(), &policy, &sparam);
+  if (s != 0) {
+    printf("Error getting thread priority");
+    exit(1);
+  }
+
+  pthread_setname_np(pthread_self(), "vnf_start_thread");
+
+  NFAPI_TRACE(NFAPI_TRACE_INFO, "%s()[SCHED][eNB] %s started on CPU %d, sched_policy = %s , priority = %d, CPU Affinity=%s \n", __FUNCTION__, "vnf_start_thread", sched_getcpu(),
+                   (policy == SCHED_FIFO)  ? "SCHED_FIFO" : (policy == SCHED_RR)    ? "SCHED_RR" :
+                   (policy == SCHED_OTHER) ? "SCHED_OTHER" : "???", sparam.sched_priority, cpu_affinity );
+
+#endif //LOW_LATENCY
   config = (nfapi_vnf_config_t*)ptr;
 
   nfapi_vnf_start(config);
@@ -1116,6 +1493,8 @@ void configure_nfapi_vnf(char *vnf_addr, int vnf_p5_port)
   config->deallocate_p4_p5_vendor_ext = &vnf_deallocate_p4_p5_vendor_ext;
   config->codec_config.allocate = &vnf_allocate;
   config->codec_config.deallocate = &vnf_deallocate;
+
+  memset(&UL_RCC_INFO,0,sizeof(UL_RCC_IND_t));
 
   NFAPI_TRACE(NFAPI_TRACE_INFO, "[VNF] Creating VNF NFAPI start thread %s\n", __FUNCTION__);
   pthread_create(&vnf_start_pthread, NULL, (void*)&vnf_start_thread, config);

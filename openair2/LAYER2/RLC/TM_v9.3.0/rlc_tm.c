@@ -78,6 +78,7 @@ rlc_tm_send_sdu (
     rlc_pP->output_sdu_in_construction = NULL;
   } else {
     LOG_D (RLC,"[RLC_TM %p][SEND_SDU] ERROR  OUTPUT SDU IS NULL\n", rlc_pP);
+    stat_info.rlc_discard++;
   }
 }
 //-----------------------------------------------------------------------------
@@ -100,6 +101,7 @@ rlc_tm_no_segment (
     if (!(pdu_p = get_free_mem_block (((rlc_pP->rlc_pdu_size + 7) >> 3) + sizeof (struct rlc_tm_tx_data_pdu_struct) + GUARD_CRC_LIH_SIZE, __func__))) {
       LOG_D(RLC, PROTOCOL_RLC_TM_CTXT_FMT"[SEGMENT] ERROR COULD NOT GET NEW PDU, EXIT\n",
             PROTOCOL_RLC_TM_CTXT_ARGS(ctxt_pP, rlc_pP));
+      stat_info.rlc_discard++;
       return;
     }
 

@@ -205,11 +205,13 @@ free_mem_block (mem_block_t * leP, const char* caller)
         counters[5],counters[6],counters[7],counters[8],counters[9],
         counters[10],counters[11]);
 #endif
-    leP = NULL;                 // this prevent from freeing the block twice
+   //stat_info.memblock_free_ok++;
+   // leP = NULL;                 // this prevent from freeing the block twice
   } else {
     LOG_E (RLC,"[MEM_MNGT][FREE] ERROR free_mem_block() unknown pool_id : %d\n", leP->pool_id);
   }
-
+  stat_info.memblock_free_ok++;
+  leP = NULL;                 // this prevent from freeing the block twice
 #ifdef MEMBLOCK_BIG_LOCK
   if (pthread_mutex_unlock(&mtex)) abort();
 #endif
@@ -265,7 +267,7 @@ get_free_mem_block (uint32_t sizeP, const char* caller)
 #ifdef MEMBLOCK_BIG_LOCK
   if (pthread_mutex_unlock(&mtex)) abort();
 #endif
-
+      stat_info.memblock_alloc_ok++;
       return le;
     }
 
@@ -309,6 +311,7 @@ get_free_copy_mem_block (void)
           counters[5],counters[6],counters[7],counters[8],counters[9],
           counters[10],counters[11]);
 #endif
+    stat_info.memblock_alloc_ok++;
     return le;
   } else {
     LOG_E (RLC,"[MEM_MNGT][ERROR] POOL COPY IS EMPTY\n");

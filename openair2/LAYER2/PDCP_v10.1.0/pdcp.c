@@ -195,6 +195,7 @@ boolean_t pdcp_data_req(
       rlc_status = RLC_OP_STATUS_OUT_OF_RESSOURCES;
       LOG_W(PDCP,PROTOCOL_CTXT_FMT" PDCP_DATA_REQ SDU DROPPED, OUT OF MEMORY \n",
             PROTOCOL_CTXT_ARGS(ctxt_pP));
+      stat_info.pdcp_discard++;
 #if defined(STOP_ON_IP_TRAFFIC_OVERLOAD)
       AssertFatal(0, PROTOCOL_CTXT_FMT"[RB %u] PDCP_DATA_REQ SDU DROPPED, OUT OF MEMORY \n",
                   PROTOCOL_CTXT_ARGS(ctxt_pP),
@@ -343,7 +344,7 @@ boolean_t pdcp_data_req(
       //util_flush_hex_octets(PDCP, (unsigned char*)pdcp_pdu->data, pdcp_pdu_size);
     } else {
       LOG_E(PDCP, "Cannot create a mem_block for a PDU!\n");
-
+      stat_info.pdcp_discard++;
       if (ctxt_pP->enb_flag == ENB_FLAG_NO) {
         stop_meas(&eNB_pdcp_stats[ctxt_pP->module_id].data_req);
       } else {
@@ -831,8 +832,8 @@ pdcp_data_ind(
              sdu_buffer_sizeP - payload_offset);
       list_add_tail_eurecom (new_sdu_p, sdu_list_p);
 
-      
-      
+    } else {  
+      stat_info.pdcp_discard++;
     }
 
   /* Print octets of incoming data in hexadecimal form */

@@ -336,7 +336,9 @@ mem_block_t * create_new_segment_from_pdu(
 		((struct mac_tb_ind *) (new_segment_p->data))->data_ptr = (uint8_t*)&new_segment_p->data[sizeof (mac_rlc_max_rx_header_size_t)];
 		((struct mac_tb_ind *) (new_segment_p->data))->size = data_length_to_copy + header_size;
 		memcpy(pdu_new_segment_info_p->payload,pdu_rx_info_p->payload + so_offset,data_length_to_copy);
-	}
+	} else {
+          stat_info.rlc_discard++;
+        }
 
 	return new_segment_p;
 }
@@ -938,7 +940,7 @@ rlc_am_rx_check_all_byte_segments(
   rlc_am_pdu_info_t  *pdu_info_p        = &((rlc_am_rx_pdu_management_t*)(tb_pP->data))->pdu_info;
   mem_block_t        *cursor_p        = NULL;
   mem_block_t        *first_cursor_p  = NULL;
-  rlc_sn_t            sn              = pdu_info_p->sn;
+  rlc_usn_t            sn              = pdu_info_p->sn;
   sdu_size_t          next_waited_so;
   sdu_size_t          last_end_so;
 
@@ -969,6 +971,9 @@ rlc_am_rx_check_all_byte_segments(
   // the so field of the first PDU should be 0
   //cursor_p = list.head;
   //we start from the first stored PDU segment of this SN
+  if(cursor_p->data == NULL){
+    return;
+  }
   pdu_info_p = &((rlc_am_rx_pdu_management_t*)(cursor_p->data))->pdu_info;
 
   // if the first segment does not have SO = 0 then no need to continue
@@ -985,6 +990,9 @@ rlc_am_rx_check_all_byte_segments(
   while (cursor_p->next != NULL) {
     //msg("rlc_am_rx_check_all_byte_segments(%d) @4\n",sn);
     cursor_p = cursor_p->next;
+    if(cursor_p->data == NULL){
+      return;
+    }
     pdu_info_p = &((rlc_am_rx_pdu_management_t*)(cursor_p->data))->pdu_info;
 
     if (pdu_info_p->sn == sn) {

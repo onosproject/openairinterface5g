@@ -336,7 +336,7 @@ rx_sdu(const module_id_t enb_mod_idP,
             ra = &mac->common_channels[CC_idP].ra[ii];
 
             if ((ra->rnti == current_rnti) && (ra->state != IDLE)) {
-              mac_rrc_data_ind(enb_mod_idP,
+              int8_t ret = mac_rrc_data_ind(enb_mod_idP,
                                CC_idP,
                                frameP, subframeP,
                                old_rnti,
@@ -344,6 +344,7 @@ rx_sdu(const module_id_t enb_mod_idP,
                                (uint8_t *) payload_ptr,
                                rx_lengths[i],
                                0);
+              if(ret == 0){
               // prepare transmission of Msg4(RRCConnectionReconfiguration)
               ra->state = MSGCRNTI;
               LOG_I(MAC,
@@ -367,6 +368,9 @@ rx_sdu(const module_id_t enb_mod_idP,
 
               UE_list->UE_template[CC_idP][UE_id].ul_SR = 1;
               UE_list->UE_sched_ctrl[UE_id].crnti_reconfigurationcomplete_flag = 1;
+              }else{
+                cancel_ra_proc(enb_mod_idP, CC_idP, frameP,current_rnti);
+              }
               break;
             }
           }

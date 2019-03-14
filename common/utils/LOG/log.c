@@ -39,12 +39,29 @@
 #include "vcd_signal_dumper.h"
 #include "assertions.h"
 
+#if defined(ENABLE_ITTI)
+# include "intertask_interface.h"
+#endif
+
 #include <pthread.h>
 #include <string.h>
 #include <linux/prctl.h>
 #include "common/config/config_userapi.h"
 // main log variables
 
+log_mem_cnt_t log_mem_d[2];
+int log_mem_flag=0;
+int log_mem_multi=1;
+volatile int log_mem_side=0;
+pthread_mutex_t log_mem_lock;
+pthread_cond_t log_mem_notify;
+pthread_t log_mem_thread;
+int log_mem_file_cnt=0;
+volatile int log_mem_write_flag=0;
+volatile int log_mem_write_side=0;
+char __log_mem_filename[1024]={0};
+char * log_mem_filename = &__log_mem_filename[0];
+char logmem_filename[1024] = {0};
 
 
 
@@ -210,6 +227,9 @@ int write_file_matlab(const char *fname,const char *vname,void *data,int length,
   return 0;
 }
 
+/* Statistics info */
+STAT_INFO_t stat_info={0,0,0,0,0,0,0,0,0};
+
 /* get log parameters from configuration file */
 void  log_getconfig(log_t *g_log) {
   char *gloglevel = NULL;
@@ -219,6 +239,7 @@ void  log_getconfig(log_t *g_log) {
   paramdef_t logparams_logfile[MAX_LOG_PREDEF_COMPONENTS];
   paramdef_t logparams_debug[sizeof(log_maskmap)/sizeof(mapping)];
   paramdef_t logparams_dump[sizeof(log_maskmap)/sizeof(mapping)];
+  //CONFIG_SETRTFLAG(CONFIG_NOCHECKUNKOPT);
   int ret = config_get( logparams_defaults,sizeof(logparams_defaults)/sizeof(paramdef_t),CONFIG_STRING_LOG_PREFIX);
 
   if (ret <0) {
@@ -304,6 +325,7 @@ void  log_getconfig(log_t *g_log) {
   }
 
   config_get( logparams_debug,(sizeof(log_maskmap)/sizeof(mapping)) - 1 ,CONFIG_STRING_LOG_PREFIX);
+  //CONFIG_CLEARRTFLAG(CONFIG_NOCHECKUNKOPT);
   config_get( logparams_dump,(sizeof(log_maskmap)/sizeof(mapping)) - 1 ,CONFIG_STRING_LOG_PREFIX);
   config_check_unknown_cmdlineopt(CONFIG_STRING_LOG_PREFIX);
 
@@ -452,8 +474,17 @@ void logRecord_mt(const char *file, const char *func, int line, int comp, int le
   char log_buffer[MAX_LOG_TOTAL];
   va_list args;
   va_start(args, format);
+
+  if(log_mem_flag == 1) {
+    log_output_memory(file,func,line,comp,level, format,args);
+  }
+  else {
+
+
+
   log_header(log_buffer,MAX_LOG_TOTAL ,comp, level,format);
   g_log->log_component[comp].vprint(g_log->log_component[comp].stream,log_buffer, args);
+  }
   va_end(args);
 }
 
@@ -636,6 +667,317 @@ void logClean (void) {
   }
 }
 
+  
+extern int oai_exit;
+void flush_mem_to_file(void)
+{
+  int fp;
+  char f_name[1024];
+  struct timespec slp_tm;
+  slp_tm.tv_sec = 0;
+  slp_tm.tv_nsec = 10000;
+  
+  pthread_setname_np( pthread_self(), "flush_mem_to_file");
+
+  while (!oai_exit) {
+    pthread_mutex_lock(&log_mem_lock);
+    log_mem_write_flag=0;
+    pthread_cond_wait(&log_mem_notify, &log_mem_lock);
+    log_mem_write_flag=1;
+    pthread_mutex_unlock(&log_mem_lock);
+    // write!
+    if(log_mem_d[log_mem_write_side].enable_flag==0){
+      if(log_mem_file_cnt>5){
+        log_mem_file_cnt=5;
+        printf("log over write!!!\n");
+      }
+      snprintf(f_name,1024, "%s_%d.log",log_mem_filename,log_mem_file_cnt);
+      fp=open(f_name, O_WRONLY | O_CREAT, 0666);
+      int ret = write(fp, log_mem_d[log_mem_write_side].buf_p, log_mem_d[log_mem_write_side].buf_index);
+      if ( ret < 0) {
+          fprintf(stderr,"{LOG} %s %d Couldn't write in %s \n",__FILE__,__LINE__,f_name);
+          exit(EXIT_FAILURE);
+      }
+      close(fp);
+      log_mem_file_cnt++;
+      log_mem_d[log_mem_write_side].buf_index=0;
+      log_mem_d[log_mem_write_side].enable_flag=1;
+    }else{
+      printf("If you'd like to write log, you should set enable flag to 0!!!\n");
+      nanosleep(&slp_tm,NULL);
+    }
+  }
+}
+
+char logmem_log_level[NUM_LOG_LEVEL]={'E','W','I','D','T'};
+
+void log_output_memory(const char *file, const char *func, int line, int comp, int level, const char* format,va_list args)
+{
+  //logRecord_mt(file,func,line, pthread_self(), comp, level, format, ##args)
+  int len = 0;
+  log_component_t *c;
+  char *log_start;
+  char *log_end;
+  /* The main difference with the version above is the use of this local log_buffer.
+   * The other difference is the return value of snprintf which was not used
+   * correctly. It was not a big problem because in practice MAX_LOG_TOTAL is
+   * big enough so that the buffer is never full.
+   */
+  char log_buffer[MAX_LOG_TOTAL];
+
+  /* for no gcc warnings */
+  (void)log_start;
+  (void)log_end;
+
+
+  c = &g_log->log_component[comp];
+
+  //VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_LOG_RECORD, VCD_FUNCTION_IN);
+
+  // make sure that for log trace the extra info is only printed once, reset when the level changes
+  if (level == OAILOG_TRACE) {
+    log_start = log_buffer;
+    len = vsnprintf(log_buffer, MAX_LOG_TOTAL, format, args);
+    if (len > MAX_LOG_TOTAL) len = MAX_LOG_TOTAL;
+    log_end = log_buffer + len;
+  } else {
+    if ( (g_log->flag & 0x001) || (c->flag & 0x001) ) {
+      len += snprintf(&log_buffer[len], MAX_LOG_TOTAL - len, "%s",
+                      log_level_highlight_start[level]);
+      if (len > MAX_LOG_TOTAL) len = MAX_LOG_TOTAL;
+    }
+
+    log_start = log_buffer + len;
+
+//    if ( (g_log->flag & 0x004) || (c->flag & 0x004) ) {
+      len += snprintf(&log_buffer[len], MAX_LOG_TOTAL - len, "[%s]",
+                      g_log->log_component[comp].name);
+      if (len > MAX_LOG_TOTAL) len = MAX_LOG_TOTAL;
+//    }
+
+    if ( (level >= OAILOG_ERR) && (level <= OAILOG_TRACE) ) {
+      len += snprintf(&log_buffer[len], MAX_LOG_TOTAL - len, "[%c]",
+                      logmem_log_level[level]);
+      if (len > MAX_LOG_TOTAL) len = MAX_LOG_TOTAL;
+    }
+
+    if ( (g_log->flag & FLAG_THREAD) || (c->flag & FLAG_THREAD) ) {
+#     define THREAD_NAME_LEN 128
+      char threadname[THREAD_NAME_LEN];
+      if (pthread_getname_np(pthread_self(), threadname, THREAD_NAME_LEN) != 0)
+      {
+        perror("pthread_getname_np : ");
+      } else {
+        len += snprintf(&log_buffer[len], MAX_LOG_TOTAL - len, "[%s]", threadname);
+        if (len > MAX_LOG_TOTAL) len = MAX_LOG_TOTAL;
+      }
+#     undef THREAD_NAME_LEN
+    }
+
+    if ( (g_log->flag & FLAG_FUNCT) || (c->flag & FLAG_FUNCT) ) {
+      len += snprintf(&log_buffer[len], MAX_LOG_TOTAL - len, "[%s] ",
+                      func);
+      if (len > MAX_LOG_TOTAL) len = MAX_LOG_TOTAL;
+    }
+
+    if ( (g_log->flag & FLAG_FILE_LINE) || (c->flag & FLAG_FILE_LINE) ) {
+      len += snprintf(&log_buffer[len], MAX_LOG_TOTAL - len, "[%s:%d]",
+                      file, line);
+      if (len > MAX_LOG_TOTAL) len = MAX_LOG_TOTAL;
+    }
+
+    //len += snprintf(&log_buffer[len], MAX_LOG_TOTAL - len, "[%08lx]", thread_id);
+    //if (len > MAX_LOG_TOTAL) len = MAX_LOG_TOTAL;
+
+    struct timeval gettime;
+    gettimeofday(&gettime,NULL);
+    len += snprintf(&log_buffer[len], MAX_LOG_TOTAL - len, "[%ld.%06ld]", gettime.tv_sec, gettime.tv_usec);
+    if (len > MAX_LOG_TOTAL) len = MAX_LOG_TOTAL;
+
+    if ( (g_log->flag & FLAG_NOCOLOR) || (c->flag & FLAG_NOCOLOR) ) {
+      len += snprintf(&log_buffer[len], MAX_LOG_TOTAL - len, "%s",
+          log_level_highlight_end[level]);
+      if (len > MAX_LOG_TOTAL) len = MAX_LOG_TOTAL;
+    }
+
+    len += vsnprintf(&log_buffer[len], MAX_LOG_TOTAL - len, format, args);
+    if (len > MAX_LOG_TOTAL) len = MAX_LOG_TOTAL;
+    log_end = log_buffer + len;
+  }
+
+  //va_end(args);
+
+  // OAI printf compatibility
+    if(log_mem_flag==1){
+      if(log_mem_d[log_mem_side].enable_flag==1){
+        int temp_index;
+        temp_index=log_mem_d[log_mem_side].buf_index;
+        if(temp_index+len+1 < LOG_MEM_SIZE){
+          log_mem_d[log_mem_side].buf_index+=len;
+          memcpy(&log_mem_d[log_mem_side].buf_p[temp_index],log_buffer,len);
+        }else{
+          log_mem_d[log_mem_side].enable_flag=0;
+          if(log_mem_d[1-log_mem_side].enable_flag==1){
+            temp_index=log_mem_d[1-log_mem_side].buf_index;
+            if(temp_index+len+1 < LOG_MEM_SIZE){
+              log_mem_d[1-log_mem_side].buf_index+=len;
+              log_mem_side=1-log_mem_side;
+              memcpy(&log_mem_d[log_mem_side].buf_p[temp_index],log_buffer,len);
+              /* write down !*/
+              if (pthread_mutex_lock(&log_mem_lock) != 0) {
+                return;
+              }
+              if(log_mem_write_flag==0){
+                log_mem_write_side=1-log_mem_side;
+                if(pthread_cond_signal(&log_mem_notify) != 0) {
+                }
+              }
+              if(pthread_mutex_unlock(&log_mem_lock) != 0) {
+                return;
+              }
+            }else{
+              log_mem_d[1-log_mem_side].enable_flag=0;
+            }
+          }
+        }
+      }
+    }else{
+      fwrite(log_buffer, len, 1, stdout);
+    }
+}
+
+int logInit_log_mem (void)
+{
+  if(log_mem_flag==1){
+    if(log_mem_multi==1){
+      printf("log-mem multi!!!\n");
+      log_mem_d[0].buf_p = malloc(LOG_MEM_SIZE);
+      log_mem_d[0].buf_index=0;
+      log_mem_d[0].enable_flag=1;
+      log_mem_d[1].buf_p = malloc(LOG_MEM_SIZE);
+      log_mem_d[1].buf_index=0;
+      log_mem_d[1].enable_flag=1;
+      log_mem_side=0;
+      if ((pthread_mutex_init (&log_mem_lock, NULL) != 0)
+          || (pthread_cond_init (&log_mem_notify, NULL) != 0)) {
+        log_mem_d[1].enable_flag=0;
+        return -1;
+      }
+      pthread_create(&log_mem_thread, NULL, (void *(*)(void *))flush_mem_to_file, (void*)NULL);
+    }else{
+      printf("log-mem single!!!\n");
+      log_mem_d[0].buf_p = malloc(LOG_MEM_SIZE);
+      log_mem_d[0].buf_index=0;
+      log_mem_d[0].enable_flag=1;
+      log_mem_d[1].enable_flag=0;
+      log_mem_side=0;
+    }
+  }else{
+    log_mem_d[0].buf_p=NULL;
+    log_mem_d[1].buf_p=NULL;
+    log_mem_d[0].enable_flag=0;
+    log_mem_d[1].enable_flag=0;
+  }
+
+  printf("log init done\n");
+  
+  return 0;
+}
+
+void close_log_mem(void){
+  int fp;
+  char f_name[1024];
+
+  if(log_mem_flag==1){
+    log_mem_d[0].enable_flag=0;
+    log_mem_d[1].enable_flag=0;
+    usleep(10); // wait for log writing
+    while(log_mem_write_flag==1){
+      usleep(100);
+    }
+    if(log_mem_multi==1){
+      snprintf(f_name,1024, "%s_%d.log",log_mem_filename,log_mem_file_cnt);
+      fp=open(f_name, O_WRONLY | O_CREAT, 0666);
+      int ret = write(fp, log_mem_d[0].buf_p, log_mem_d[0].buf_index);
+      if ( ret < 0) {
+          fprintf(stderr,"{LOG} %s %d Couldn't write in %s \n",__FILE__,__LINE__,f_name);
+          exit(EXIT_FAILURE);
+      }
+      close(fp);
+      free(log_mem_d[0].buf_p);
+      
+      snprintf(f_name,1024, "%s_%d.log",log_mem_filename,log_mem_file_cnt);
+      fp=open(f_name, O_WRONLY | O_CREAT, 0666);
+      ret = write(fp, log_mem_d[1].buf_p, log_mem_d[1].buf_index);
+      if ( ret < 0) {
+          fprintf(stderr,"{LOG} %s %d Couldn't write in %s \n",__FILE__,__LINE__,f_name);
+          exit(EXIT_FAILURE);
+      }
+      close(fp);
+      free(log_mem_d[1].buf_p);
+    }else{
+      fp=open(log_mem_filename, O_WRONLY | O_CREAT, 0666);
+      int ret = write(fp, log_mem_d[0].buf_p, log_mem_d[0].buf_index);
+      if ( ret < 0) {
+          fprintf(stderr,"{LOG} %s %d Couldn't write in %s \n",__FILE__,__LINE__,log_mem_filename);
+          exit(EXIT_FAILURE);
+       }
+      close(fp);
+      free(log_mem_d[0].buf_p);
+    }
+  }
+ }
+void output_stat_info(void){
+  time_t t;
+  struct tm *tmp;
+  uint64_t rrc_connected_count_tmp;
+  uint64_t rrc_release_count_tmp;
+  uint64_t memblock_alloc_ok_tmp;
+  uint64_t memblock_free_ok_tmp;
+  uint64_t rf_write_err_tmp;
+  uint64_t rf_read_err_tmp;
+  uint64_t tx_failsafe_tmp;
+ 
+  rrc_connected_count_tmp = stat_info.rrc_connected_count;
+  rrc_release_count_tmp   = stat_info.rrc_release_count;
+  memblock_alloc_ok_tmp   = stat_info.memblock_alloc_ok;
+  memblock_free_ok_tmp    = stat_info.memblock_free_ok;
+  rf_write_err_tmp        = stat_info.rf_write_err;
+  rf_read_err_tmp         = stat_info.rf_read_err;
+  tx_failsafe_tmp         = stat_info.tx_failsafe;
+ 
+  time(&t);
+  tmp = localtime(&t);
+ 
+  LOG_I(RRC,"%d/%02d/%02d %02d:%02d:%02d, connected:%lld, release:%lld, reest:%lld, pdcp_dis:%lld, rlc_dis:%lld, queue_dis:%lld, dlack:%lld, dlnack:%lld, ulcrc_ok:%lld, ulcrc_ng:%lld, memblock_alloc_ok:%lld, memblock_free_ok:%lld, rf_write_err:%lld, rf_read_err:%lld, tx_failsafe:%lld\n", 
+    1900 + tmp->tm_year, 1 + tmp->tm_mon, tmp->tm_mday, tmp->tm_hour, tmp->tm_min, tmp->tm_sec,
+    stat_info.rrc_connected_count,
+    stat_info.rrc_release_count,
+    stat_info.rrc_reest_count,
+    stat_info.pdcp_discard,
+    stat_info.rlc_discard,
+    stat_info.queue_discard_count,
+    stat_info.dlack_count,
+    stat_info.dlnack_count,
+    stat_info.ul_crcchk_ok,
+    stat_info.ul_crcchk_ng,
+    stat_info.memblock_alloc_ok,
+    stat_info.memblock_free_ok,
+    stat_info.rf_write_err,
+    stat_info.rf_read_err,
+    stat_info.tx_failsafe);
+
+  memset(&stat_info, 0, sizeof(STAT_INFO_t));
+  stat_info.rrc_connected_count = rrc_connected_count_tmp;
+  stat_info.rrc_release_count   = rrc_release_count_tmp;
+  stat_info.memblock_alloc_ok   = memblock_alloc_ok_tmp;
+  stat_info.memblock_free_ok    = memblock_free_ok_tmp;
+  stat_info.rf_write_err        = rf_write_err_tmp;
+  stat_info.rf_read_err         = rf_read_err_tmp;
+  stat_info.tx_failsafe         = tx_failsafe_tmp;
+
+  return;
+}
 
 #ifdef LOG_TEST
 
