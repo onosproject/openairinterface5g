@@ -329,6 +329,7 @@ int generate_NDLSCH_NB_IoT(PHY_VARS_eNB           *eNB,
 		        if(RAR->counter_current_sf_repetition == rep)
 		        {
 		        	RAR->pointer_to_subframe++;
+              RAR->counter_current_sf_repetition =0;
 
 		        	if (Nsf == RAR->pointer_to_subframe)
 		        	{
