@@ -411,8 +411,9 @@ int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB      *eNB,
     DCI_tmp = (uint8_t*)DLSCH_DCI_NB_IoT;
 
     DCI_flip = (uint8_t*)malloc(3*sizeof(uint8_t));
+    DCI_flip[0]        = 129;
 
-    DCI_flip[0]        = DCI_tmp[2]*2;
+    //DCI_flip[0]        = DCI_tmp[2]*2;
     DCI_flip[1]        = DCI_tmp[1]*2;
     DCI_flip[2]        = DCI_tmp[0]*2;
     //DCI_flip[2]        = 4;

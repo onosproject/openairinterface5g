@@ -766,8 +766,9 @@ void schedule_msg4_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, int abs_subframe){
 			}
 			//	check msg4 resource
 			rep = dl_rep[msg4_nodes->ce_level];
-		    msg4_length = fill_msg4_NB_IoT_fixed(mac_inst,msg4_nodes);
+		    msg4_length = fill_msg4_NB_IoT(mac_inst,msg4_nodes);
 			I_mcs = get_I_mcs(msg4_nodes->ce_level);
+			//I_mcs = 1;
 			I_tbs = I_mcs;
 			TBS = get_max_tbs(I_tbs);
 			if(TBS > msg4_length)
@@ -986,7 +987,7 @@ int fill_msg4_NB_IoT(
 	// we have three subheader here: 1 for Control element of Contention resolution, 2 for CCCH
 	SCH_SUBHEADER_FIXED_NB_IoT *msg4_sub_1 = (SCH_SUBHEADER_FIXED_NB_IoT*)dlsch_buffer;
 	msg4_sub_1->R = 0;
-	msg4_sub_1->E = 0;
+	msg4_sub_1->E = 1;
 	msg4_sub_1->LCID = UE_CONTENTION_RESOLUTION;
 	length+=1;
 

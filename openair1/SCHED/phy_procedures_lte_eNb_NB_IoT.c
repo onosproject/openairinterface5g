@@ -880,7 +880,7 @@ void generate_eNB_dlsch_params_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t * proc,n
 
               //parameters we don't consider pdsch config dedicated since not calling the phy config dedicated step2
 
-            LOG_I(PHY,"Generating dlsch params for DCIN1 data and packing DCI\n");
+            LOG_I(PHY,"Generating dlsch params for DCIN1 data and packing DCI, res: %d\n",DCI_Content->DCIN1.ResAssign);
             generate_eNB_dlsch_params_from_dci_NB_IoT(eNB,
                                                       frame,
                                                       subframe,

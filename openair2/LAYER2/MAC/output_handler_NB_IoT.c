@@ -180,6 +180,8 @@ int output_handler(eNB_MAC_INST_NB_IoT *mac_inst, module_id_t module_id, int CC_
 						dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.harq_ack_resource                     = ((DCIFormatN1_t *)DCI_pdu)->HARQackRes;
 						dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.npdcch_order_indication               = ((DCIFormatN1_t *)DCI_pdu)->orderIndicator;
 						dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.dci_subframe_repetition_number        = ((DCIFormatN1_t *)DCI_pdu)->DCIRep;
+						LOG_I(MAC,"[hypersfn:%2d][frame:%2d][subframe:%2d]NB-IoT fill DL DCI, res:%d\n",hypersfn,frame,subframe,dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.resource_assignment);
+
 					}else if(schedule_result_list_DL->direction == UL) // DCI for uplink
 					{
 						LOG_D(MAC,"[hypersfn:%2d][frame:%2d][subframe:%2d]NB-IoT fill UL_DCI\n",hypersfn,frame,subframe);
