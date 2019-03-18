@@ -34,11 +34,11 @@
 #include "PHY/LTE_TRANSPORT/transport_common_proto.h"
 #include "PHY/LTE_UE_TRANSPORT/transport_proto_ue.h"
 #include "PHY/LTE_REFSIG/lte_refsig.h"
-
+#include "nfapi/oai_integration/vendor_ext.h"
 void init_7_5KHz(void);
 
 uint8_t dmrs1_tab_ue[8] = {0,2,3,4,6,8,9,10};
-extern uint8_t nfapi_mode;
+
 
 void phy_config_sib1_ue(module_id_t Mod_id,int CC_id,
                         uint8_t eNB_id,
@@ -569,7 +569,7 @@ void phy_config_dedicated_ue(module_id_t Mod_id,int CC_id,uint8_t eNB_id,
   	phy_vars_ue->decode_MIB = 0;
   }
 
-  if(nfapi_mode!=3){
+  if(NFAPI_MODE!=NFAPI_UE_STUB_PNF){
     //phy_vars_ue->pdcch_vars[1][eNB_id]->crnti = phy_vars_ue->pdcch_vars[0][eNB_id]->crnti;
     if(phy_vars_ue->pdcch_vars[0][eNB_id]->crnti == 0x1234)
         phy_vars_ue->pdcch_vars[0][eNB_id]->crnti = phy_vars_ue->pdcch_vars[1][eNB_id]->crnti;

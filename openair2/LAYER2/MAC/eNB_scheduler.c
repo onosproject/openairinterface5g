@@ -36,6 +36,7 @@
 
 #include "LAYER2/MAC/mac_proto.h"
 #include "common/utils/LOG/log.h"
+#include "nfapi/oai_integration/vendor_ext.h"
 #include "common/utils/LOG/vcd_signal_dumper.h"
 #include "UTIL/OPT/opt.h"
 #include "OCG.h"
@@ -345,8 +346,6 @@ schedule_SR(module_id_t module_idP, frame_t frameP, sub_frame_t subframeP)
   }				// for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++)
 }
 
-extern uint8_t nfapi_mode;
-
 void
 check_ul_failure(module_id_t module_idP, int CC_id, int UE_id,
 		 frame_t frameP, sub_frame_t subframeP)
@@ -433,7 +432,7 @@ clear_nfapi_information(eNB_MAC_INST * eNB, int CC_idP,
 
   eNB->pdu_index[CC_idP] = 0;
 
-  if (nfapi_mode==0 || nfapi_mode == 1) { // monolithic or PNF
+  if (NFAPI_MODE == NFAPI_MODE_PNF || NFAPI_MODE == NFAPI_MONOLITHIC) { // monolithic or PNF
 
     DL_req[CC_idP].dl_config_request_body.number_pdcch_ofdm_symbols           = 1;
     DL_req[CC_idP].dl_config_request_body.number_dci                          = 0;

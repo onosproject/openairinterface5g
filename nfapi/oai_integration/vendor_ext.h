@@ -64,4 +64,18 @@ typedef struct {
 
 #define VENDOR_EXT_TLV_2_TAG 0xF002
 
+typedef enum {
+ NFAPI_MONOLITHIC=0,
+ NFAPI_MODE_PNF,
+ NFAPI_MODE_VNF,
+ NFAPI_UE_STUB_PNF,
+ NFAPI_UE_STUB_OFFNET,
+ NFAPI_MODE_UNKNOWN
+} nfapi_mode_t;
+
+char *nfapi_get_strmode(void);
+void nfapi_logmode(void);
+nfapi_mode_t nfapi_getmode(void);
+void nfapi_setmode(nfapi_mode_t nfapi_mode);
+#define NFAPI_MODE (nfapi_getmode())
 #endif // _VENDOR_EXT_

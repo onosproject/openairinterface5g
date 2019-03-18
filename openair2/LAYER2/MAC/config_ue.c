@@ -32,9 +32,9 @@
 
 #include "COMMON/platform_types.h"
 #include "COMMON/platform_constants.h"
+#include "nfapi/oai_integration/vendor_ext.h"
 #include "SCHED_UE/sched_UE.h"
 #include "LTE_SystemInformationBlockType2.h"
-//#include "RadioResourceConfigCommonSIB.h"
 #include "LTE_RadioResourceConfigDedicated.h"
 #if (LTE_RRC_VERSION >= MAKE_VERSION(13, 0, 0))
 #include "LTE_PRACH-ConfigSIB-v1310.h"
@@ -61,7 +61,6 @@
 extern void mac_init_cell_params(int Mod_idP,int CC_idP);
 extern void phy_reset_ue(module_id_t Mod_id,uint8_t CC_id,uint8_t eNB_index);
 
-extern uint8_t  nfapi_mode;
 
 
 /* sec 5.9, 36.321: MAC Reset Procedure */
@@ -236,7 +235,7 @@ rrc_mac_config_req_ue(module_id_t Mod_idP,
 	  (uint16_t)
 	  LTE_MAC_MainConfig__ul_SCH_Config__maxHARQ_Tx_n5;
       }
-      if(nfapi_mode!=3)
+      if(NFAPI_MODE !=  NFAPI_UE_STUB_PNF)
         phy_config_harq_ue(Mod_idP, 0, eNB_index,
 			   UE_mac_inst[Mod_idP].
 			   scheduling_info.maxHARQ_Tx);
@@ -357,7 +356,7 @@ rrc_mac_config_req_ue(module_id_t Mod_idP,
 
 
   if (physicalConfigDedicated != NULL) {
-    if(nfapi_mode!=3)
+    if(NFAPI_MODE !=  NFAPI_UE_STUB_PNF)
       phy_config_dedicated_ue(Mod_idP, 0, eNB_index,
 			      physicalConfigDedicated);
     UE_mac_inst[Mod_idP].physicalConfigDedicated = physicalConfigDedicated;	// for SR proc

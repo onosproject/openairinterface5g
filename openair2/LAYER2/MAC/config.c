@@ -46,22 +46,21 @@
 #include "mac_proto.h"
 #include "mac_extern.h"
 #include "common/utils/LOG/log.h"
+#include "nfapi/oai_integration/vendor_ext.h"
 #include "common/utils/LOG/vcd_signal_dumper.h"
 
 #include "common/ran_context.h"
-#if (LTE_RRC_VERSION >= MAKE_VERSION(9, 0, 0))
 #include "LTE_MBSFN-AreaInfoList-r9.h"
 #include "LTE_MBSFN-AreaInfo-r9.h"
 #include "LTE_MBSFN-SubframeConfigList.h"
 #include "LTE_PMCH-InfoList-r9.h"
-#endif
+
 
 extern RAN_CONTEXT_t RC;
 extern int l2_init_eNB(void);
 extern void mac_top_init_eNB(void);
 extern void mac_init_cell_params(int Mod_idP,int CC_idP);
 
-extern uint8_t nfapi_mode;
 
 int32_t **rxdata;
 int32_t **txdata;
@@ -1003,7 +1002,7 @@ int rrc_mac_config_req_eNB(module_id_t Mod_idP,
 
     // if in nFAPI mode 
     if (
-        (nfapi_mode == 1 || nfapi_mode == 2) &&
+        (NFAPI_MODE == NFAPI_MODE_PNF ||NFAPI_MODE == NFAPI_MODE_VNF) &&
         (RC.mac[Mod_idP]->if_inst->PHY_config_req == NULL)
        ) {
       while(RC.mac[Mod_idP]->if_inst->PHY_config_req == NULL) {

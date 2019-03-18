@@ -36,8 +36,8 @@
 #include "PHY/LTE_UE_TRANSPORT/transport_proto_ue.h"
 #include "PHY/phy_extern_ue.h"
 #include "PHY/LTE_ESTIMATION/lte_estimation.h"
+#include "nfapi/oai_integration/vendor_ext.h"
 
-extern uint8_t  nfapi_mode;
 
 int16_t get_hundred_times_delta_IF(PHY_VARS_UE *ue,uint8_t eNB_id,uint8_t harq_pid)
 {
@@ -131,8 +131,8 @@ void pusch_power_cntl(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,uint8_
 
 int8_t get_PHR(uint8_t Mod_id, uint8_t CC_id,uint8_t eNB_index)
 {
-	if(nfapi_mode!=3)
+	if(NFAPI_MODE!=NFAPI_UE_STUB_PNF)
 		return PHY_vars_UE_g[Mod_id][CC_id]->ulsch[eNB_index]->PHR;
 	else
-		return 40; // For nfapi_mode=3 consider ideal conditions
+		return 40; // l1l2 simulator => ideal conditions
 }

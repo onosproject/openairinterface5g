@@ -21,6 +21,15 @@
 
 #include <stdio.h>
 #include <pthread.h>
+#include "nfapi/oai_integration/vendor_ext.h"
+#include "common/utils/LOG/log.h"
+static char nfapi_str_mode[6][24] ={"MONOLITHIC","PNF","VNF","UE_STUB_PNF","UE_STUB_OFFNET","<UNKNOWN NFAPI MODE>"};
+
+typedef struct {
+  nfapi_mode_t nfapi_mode;
+} nfapi_params_t;
+
+static nfapi_params_t nfapi_params;
 
 void set_thread_priority(int priority)
 {
@@ -48,4 +57,24 @@ void set_thread_priority(int priority)
   {
     printf("failed to set sched param\n");
   }
+}
+
+char *nfapi_get_strmode(void) {
+
+  if (nfapi_params.nfapi_mode > NFAPI_MODE_UNKNOWN)
+    return nfapi_str_mode[NFAPI_MODE_UNKNOWN];
+  return nfapi_str_mode[nfapi_params.nfapi_mode];
+}
+
+void nfapi_logmode() {
+  LOG_I(ENB_APP,"nfapi running mode: %s\n",nfapi_get_strmode());
+}
+
+nfapi_mode_t nfapi_getmode(void){
+   return nfapi_params.nfapi_mode;
+}
+
+void nfapi_setmode(nfapi_mode_t nfapi_mode){
+   nfapi_params.nfapi_mode = nfapi_mode;
+   nfapi_logmode();
 }

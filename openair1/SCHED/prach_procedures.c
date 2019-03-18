@@ -37,6 +37,7 @@
 #include "fapi_l1.h"
 #include "nfapi_pnf.h"
 #include "common/utils/LOG/log.h"
+#include "nfapi/oai_integration/vendor_ext.h"
 #include "common/utils/LOG/vcd_signal_dumper.h"
 
 
@@ -49,7 +50,6 @@
 #   include "intertask_interface.h"
 #endif
 
-extern uint32_t nfapi_mode;
 
 extern int oai_nfapi_rach_ind(nfapi_rach_indication_t *rach_ind);
 
@@ -199,7 +199,7 @@ void prach_procedures(PHY_VARS_eNB *eNB
 	    eNB->preamble_list[0].preamble_rel13.rach_resource_type   = 0;
 	    eNB->preamble_list[0].instance_length                     = 0; //don't know exactly what this is
 	    
-            if (nfapi_mode == 1) {  // If NFAPI PNF then we need to send the message to the VNF
+            if (NFAPI_MODE==NFAPI_MODE_PNF) {  // If NFAPI PNF then we need to send the message to the VNF
 
               LOG_D(PHY,"Filling NFAPI indication for RACH : SFN_SF:%d TA %d, Preamble %d, rnti %x, rach_resource_type %d\n",
                   NFAPI_SFNSF2DEC(eNB->UL_INFO.rach_ind.sfn_sf),

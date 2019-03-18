@@ -41,6 +41,7 @@
 
 #include "LAYER2/MAC/mac_proto.h"
 #include "common/utils/LOG/log.h"
+#include "nfapi/oai_integration/vendor_ext.h"
 #include "common/utils/LOG/vcd_signal_dumper.h"
 #include "UTIL/OPT/opt.h"
 #include "OCG.h"
@@ -67,7 +68,7 @@
 
 extern RAN_CONTEXT_t RC;
 
-extern uint8_t nfapi_mode;
+
 extern int oai_nfapi_hi_dci0_req(nfapi_hi_dci0_request_t *hi_dci0_req);
 
 void add_subframe(uint16_t *frameP, uint16_t *subframeP, int offset)
@@ -220,7 +221,7 @@ add_msg3(module_id_t module_idP, int CC_id, RA_t * ra, frame_t frameP,
             hi_dci0_req->sfn_sf                                     = sfnsf_add_subframe(frameP, subframeP, sf_ahead_dl);
             hi_dci0_req->header.message_id                          = NFAPI_HI_DCI0_REQUEST;
 
-            if (nfapi_mode) {
+            if (NFAPI_MODE != NFAPI_MONOLITHIC) {
               oai_nfapi_hi_dci0_req(hi_dci0_req);
               hi_dci0_req_body->number_of_hi=0;
             }
@@ -1496,7 +1497,7 @@ initiate_ra_proc(module_id_t module_idP,
               }
             }else{//FDD
                 // DJP - this is because VNF is 2 subframes ahead of PNF and TX needs 4 subframes
-                if (nfapi_mode)
+                if (NFAPI_MODE != NFAPI_MONOLITHIC)
                   offset = 7;
                 else
                   offset = 5;

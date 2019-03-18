@@ -131,7 +131,7 @@
 
 #define CMDLINE_UEPARAMS_DESC {  \
     {"siml1",                      CONFIG_HLP_SIML1,       PARAMFLAG_BOOL,  iptr:&simL1flag,                    defintval:0,          TYPE_INT,      0},   \
-    {"U",            CONFIG_HLP_NUMUE,       0,               u16ptr:&NB_UE_INST,                  defuintval:1,         TYPE_UINT16,     0},   \
+    {"U",                        CONFIG_HLP_NUMUE,       0,               u16ptr:&NB_UE_INST,                  defuintval:1,         TYPE_UINT16,     0},   \
     {"ue-rxgain",                CONFIG_HLP_UERXG,       0,   dblptr:&(rx_gain[0][0]),      defdblval:130,        TYPE_DOUBLE,   0},   \
     {"ue-rxgain-off",            CONFIG_HLP_UERXGOFF,    0,   dblptr:&rx_gain_off,        defdblval:0,          TYPE_DOUBLE,   0},   \
     {"ue-txgain",                CONFIG_HLP_UETXG,       0,   dblptr:&(tx_gain[0][0]),      defdblval:0,          TYPE_DOUBLE,   0},   \
@@ -243,6 +243,7 @@
 #define SOFTMODEM_NONBIOT_BIT         (1<<2)
 #define SOFTMODEM_RFSIM_BIT           (1<<10)
 #define SOFTMODEM_BASICSIM_BIT        (1<<11)
+#define SOFTMODEM_SIML1_BIT           (1<<12)
 typedef struct {
   uint64_t       optmask;
   THREAD_STRUCT  thread_struct;
@@ -265,6 +266,7 @@ typedef struct {
 #define IS_SOFTMODEM_NONBIOT         ( get_softmodem_optmask() & SOFTMODEM_NONBIOT_BIT)
 #define IS_SOFTMODEM_RFSIM           ( get_softmodem_optmask() & SOFTMODEM_RFSIM_BIT)
 #define IS_SOFTMODEM_BASICSIM        ( get_softmodem_optmask() & SOFTMODEM_BASICSIM_BIT)
+#define IS_SOFTMODEM_SIML1           ( get_softmodem_optmask() & SOFTMODEM_SIML1_BIT)
 extern uint64_t get_softmodem_optmask(void);
 extern uint64_t set_softmodem_optmask(uint64_t bitmask);
 extern void get_common_options(void);

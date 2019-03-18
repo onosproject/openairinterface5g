@@ -109,7 +109,7 @@ extern int emulate_rf;
 extern int numerology;
 extern clock_source_t clock_source;
 extern uint8_t dlsch_ue_select_tbl_in_use;
-extern uint8_t nfapi_mode;
+
 
 extern PARALLEL_CONF_t get_thread_parallel_conf(void);
 extern WORKER_CONF_t   get_thread_worker_conf(void);
@@ -1854,7 +1854,7 @@ void *pre_scd_thread( void *param ) {
   RU_t               *ru      = (RU_t *)param;
 
   // L2-emulator can work only one eNB
-  if( nfapi_mode == 2)
+  if( NFAPI_MODE==NFAPI_MODE_VNF)
     Mod_id = 0;
   else
     Mod_id = ru->eNB_list[0]->Mod_id;

@@ -46,9 +46,11 @@
 #include "common/utils/LOG/log.h"
 #include <inttypes.h>
 #include "platform_constants.h"
+#include "nfapi/oai_integration/vendor_ext.h"
 #include "common/utils/LOG/vcd_signal_dumper.h"
 #include "msc.h"
 #include "targets/COMMON/openairinterface5g_limits.h"
+#include "targets/RT/USER/lte-softmodem.h"
 #include "SIMULATION/ETH_TRANSPORT/proto.h"
 #include "UTIL/OSA/osa_defs.h"
 #include "openair2/RRC/NAS/nas_config.h"
@@ -59,7 +61,7 @@
 #  include "gtpv1u.h"
 
 extern int otg_enabled;
-extern uint8_t nfapi_mode;
+
 #include "common/ran_context.h"
 extern RAN_CONTEXT_t RC;
 hash_table_t  *pdcp_coll_p = NULL;
@@ -925,7 +927,7 @@ pdcp_data_ind(
            * for the UE compiled in noS1 mode, we need 0
            * TODO: be sure of this
            */
-          if (nfapi_mode == 3) {
+          if (NFAPI_MODE == NFAPI_UE_STUB_PNF ) {
 #ifdef UESIM_EXPANSION
 
             if (UE_NAS_USE_TUN) {
@@ -2044,10 +2046,11 @@ uint64_t pdcp_module_init( uint64_t pdcp_optmask ) {
     nas_getparams();
 
     if(UE_NAS_USE_TUN) {
-      netlink_init_tun("ue");
+      int num_if = (NFAPI_MODE == NFAPI_UE_STUB_PNF || IS_SOFTMODEM_SIML1 )?MAX_NUMBER_NETIF:1;
+      netlink_init_tun("ue",num_if);
       LOG_I(PDCP, "UE pdcp will use tun interface\n");
     } else if(ENB_NAS_USE_TUN) {
-      netlink_init_tun("enb");
+      netlink_init_tun("enb",1);
       nas_config(1, 1, 1, "enb");
       LOG_I(PDCP, "ENB pdcp will use tun interface\n");
     } else {

@@ -36,6 +36,7 @@
 #include "LAYER2/MAC/mac_extern.h"
 #include "common/utils/LOG/log.h"
 #include "common/utils/LOG/vcd_signal_dumper.h"
+#include "nfapi/oai_integration/vendor_ext.h"
 #include "UTIL/OPT/opt.h"
 #include "OCG.h"
 #include "OCG_extern.h"
@@ -70,7 +71,7 @@ extern int oai_nfapi_hi_dci0_req(nfapi_hi_dci0_request_t *hi_dci0_req);
 extern void add_subframe(uint16_t *frameP, uint16_t *subframeP, int offset);
 extern uint16_t sfnsf_add_subframe(uint16_t frameP, uint16_t subframeP, int offset);
 extern int oai_nfapi_ul_config_req(nfapi_ul_config_request_t *ul_config_req);
-extern uint8_t nfapi_mode;
+
 
 // This table holds the allowable PRB sizes for ULSCH transmissions
 uint8_t rb_table[34] = {
@@ -1498,7 +1499,7 @@ schedule_ulsch_rnti(module_id_t module_idP,
         /* These aperiodic reports behave as periodic ones... */
         if (status >= RRC_CONNECTED && UE_sched_ctrl_ptr->cqi_req_timer > 30) {
           if (UE_sched_ctrl_ptr->cqi_received == 0) {
-            if (nfapi_mode) {
+            if (NFAPI_MODE != NFAPI_MONOLITHIC) {
               cqi_req = 0;
             } else {
               cqi_req = 1;

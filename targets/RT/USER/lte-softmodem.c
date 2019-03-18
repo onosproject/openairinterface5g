@@ -64,7 +64,7 @@
 #include "LAYER2/MAC/mac_proto.h"
 #include "RRC/LTE/rrc_vars.h"
 #include "PHY_INTERFACE/phy_interface_vars.h"
-
+#include "nfapi/oai_integration/vendor_ext.h"
 #ifdef SMBV
 #include "PHY/TOOLS/smbv.h"
 unsigned short config_frames[4] = {2,9,11,13};
@@ -112,7 +112,6 @@ pthread_cond_t nfapi_sync_cond;
 pthread_mutex_t nfapi_sync_mutex;
 int nfapi_sync_var=-1; //!< protected by mutex \ref nfapi_sync_mutex
 
-uint8_t nfapi_mode = 0; // Default to monolithic mode
 
 uint16_t sf_ahead=4;
 
@@ -133,7 +132,7 @@ int32_t                  uplink_frequency_offset[MAX_NUM_CCs][4];
 int UE_scan = 1;
 int UE_scan_carrier = 0;
 runmode_t mode = normal_txrx;
-int simL1flag;
+
 FILE *input_fd=NULL;
 
 
@@ -725,35 +724,14 @@ int main( int argc, char **argv ) {
 #endif
   rt_sleep_ns(10*100000000ULL);
 
-  if (nfapi_mode) {
+  if (nfapi_getmode()!=NFAPI_MONOLITHIC) {
     LOG_I(ENB_APP,"NFAPI*** - mutex and cond created - will block shortly for completion of PNF connection\n");
     pthread_cond_init(&sync_cond,NULL);
     pthread_mutex_init(&sync_mutex, NULL);
   }
 
-  const char *nfapi_mode_str = "<UNKNOWN>";
 
-  switch(nfapi_mode) {
-    case 0:
-      nfapi_mode_str = "MONOLITHIC";
-      break;
-
-    case 1:
-      nfapi_mode_str = "PNF";
-      break;
-
-    case 2:
-      nfapi_mode_str = "VNF";
-      break;
-
-    default:
-      nfapi_mode_str = "<UNKNOWN NFAPI MODE>";
-      break;
-  }
-
-  LOG_I(ENB_APP,"NFAPI MODE:%s\n", nfapi_mode_str);
-
-  if (nfapi_mode==2) {// VNF
+  if (nfapi_getmode()==NFAPI_MODE_VNF) {// VNF
 #if defined(PRE_SCD_THREAD)
     init_ru_vnf();  // ru pointer is necessary for pre_scd.
 #endif
@@ -779,7 +757,7 @@ int main( int argc, char **argv ) {
   // RU thread and some L1 procedure aren't necessary in VNF or L2 FAPI simulator.
   // but RU thread deals with pre_scd and this is necessary in VNF and simulator.
   // some initialization is necessary and init_ru_vnf do this.
-  if (RC.nb_RU >0 && nfapi_mode != 2) {
+  if (RC.nb_RU >0 && NFAPI_MODE!=NFAPI_MODE_VNF) {
     printf("Initializing RU threads\n");
     init_RU(get_softmodem_params()->rf_config_file);
 
@@ -791,7 +769,7 @@ int main( int argc, char **argv ) {
 
   config_sync_var=0;
 
-  if (nfapi_mode==1) { // PNF
+  if (NFAPI_MODE==NFAPI_MODE_PNF) { // PNF
     wait_nfapi_init("main?");
   }
 
@@ -803,7 +781,7 @@ int main( int argc, char **argv ) {
   // once all RUs are ready intiailize the rest of the eNBs ((dependence on final RU parameters after configuration)
   printf("ALL RUs ready - init eNBs\n");
 
-  if (nfapi_mode != 1 && nfapi_mode != 2) {
+  if (NFAPI_MODE!=NFAPI_MODE_PNF && NFAPI_MODE!=NFAPI_MODE_VNF) {
     LOG_I(ENB_APP,"Not NFAPI mode - call init_eNB_afterRU()\n");
     init_eNB_afterRU();
   } else {

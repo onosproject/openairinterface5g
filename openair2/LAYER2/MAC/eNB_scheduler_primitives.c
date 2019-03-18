@@ -36,6 +36,7 @@
 
 #include "LAYER2/MAC/mac_proto.h"
 #include "common/utils/LOG/log.h"
+#include "nfapi/oai_integration/vendor_ext.h"
 #include "common/utils/LOG/vcd_signal_dumper.h"
 #include "UTIL/OPT/opt.h"
 #include "OCG.h"
@@ -61,7 +62,7 @@ extern uint16_t frame_cnt;
 #include "SCHED/sched_common.h"
 
 extern RAN_CONTEXT_t RC;
-extern uint8_t nfapi_mode;
+
 
 //------------------------------------------------------------------------------
 int 
@@ -4021,7 +4022,7 @@ extract_harq(module_id_t mod_idP,
 
           // In case of nFAPI, sometimes timing of eNB and UE become different.
           // So if nfapi_mode == 2(VNF), this function don't check assertion to avoid process exit.
-          if (nfapi_mode != 2) {
+          if (NFAPI_MODE != NFAPI_MODE_VNF) {
             AssertFatal(sched_ctl->round[CC_idP][harq_pid] < 8, "Got ACK/NAK for inactive harq_pid %d for UE %d/%x\n",
                         harq_pid, 
                         UE_id, 

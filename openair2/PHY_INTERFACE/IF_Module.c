@@ -4,7 +4,7 @@
 #include "LAYER2/MAC/mac_extern.h"
 #include "LAYER2/MAC/mac_proto.h"
 #include "common/ran_context.h"
-
+#include "nfapi/oai_integration/vendor_ext.h"
 #define MAX_IF_MODULES 100
 
 IF_Module_t *if_inst[MAX_IF_MODULES];
@@ -15,7 +15,7 @@ extern int oai_nfapi_crc_indication(nfapi_crc_indication_t *crc_ind);
 extern int oai_nfapi_cqi_indication(nfapi_cqi_indication_t *cqi_ind);
 extern int oai_nfapi_sr_indication(nfapi_sr_indication_t *ind);
 extern int oai_nfapi_rx_ind(nfapi_rx_indication_t *ind);
-extern uint8_t nfapi_mode;
+
 extern uint16_t sf_ahead;
 uint16_t frame_cnt=0;
 void handle_rach(UL_IND_t *UL_info) {
@@ -69,7 +69,7 @@ void handle_sr(UL_IND_t *UL_info) {
 
   int i;
 
-  if (nfapi_mode == 1)  // PNF
+  if (NFAPI_MODE == NFAPI_MODE_PNF)  // PNF
   {
     if (UL_info->sr_ind.sr_indication_body.number_of_srs>0)
     {
@@ -94,7 +94,7 @@ void handle_cqi(UL_IND_t *UL_info) {
 
   int i;
 
-  if (nfapi_mode == 1)
+  if (NFAPI_MODE==NFAPI_MODE_PNF)
   {
     if (UL_info->cqi_ind.number_of_cqis>0)
     {
@@ -130,7 +130,7 @@ void handle_harq(UL_IND_t *UL_info) {
 
   int i;
 
-  if (nfapi_mode == 1 && UL_info->harq_ind.harq_indication_body.number_of_harqs>0) // PNF
+  if (NFAPI_MODE == NFAPI_MODE_PNF && UL_info->harq_ind.harq_indication_body.number_of_harqs>0) // PNF
   {
     //LOG_D(PHY, "UL_info->harq_ind.harq_indication_body.number_of_harqs:%d Send to VNF\n", UL_info->harq_ind.harq_indication_body.number_of_harqs);
 
@@ -160,7 +160,7 @@ void handle_ulsch(UL_IND_t *UL_info) {
 
   int i,j;
 
-  if(nfapi_mode == 1)
+  if(NFAPI_MODE == NFAPI_MODE_PNF)
   {
     if (UL_info->crc_ind.crc_indication_body.number_of_crcs>0)
     {
@@ -534,7 +534,7 @@ void UL_indication(UL_IND_t *UL_info)
       LOG_D(MAC,"current (%d,%d) frame count dl is %d\n",UL_info->frame,UL_info->subframe,frame_cnt);
   }
 
-  if (nfapi_mode != 1)
+  if (NFAPI_MODE != NFAPI_MODE_PNF)
   {
     if (ifi->CC_mask==0) {
       ifi->current_frame    = UL_info->frame;
@@ -569,7 +569,7 @@ void UL_indication(UL_IND_t *UL_info)
   
   handle_ulsch(UL_info);
 
-  if (nfapi_mode != 1)
+  if (NFAPI_MODE != NFAPI_MODE_PNF)
   {
     if (ifi->CC_mask == ((1<<MAX_NUM_CCs)-1)) {
 

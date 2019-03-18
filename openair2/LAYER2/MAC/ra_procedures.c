@@ -40,6 +40,7 @@
 #include "RRC/LTE/rrc_extern.h"
 #include "RRC/L2_INTERFACE/openair_rrc_L2_interface.h"
 #include "common/utils/LOG/log.h"
+#include "nfapi/oai_integration/vendor_ext.h"
 #include "UTIL/OPT/opt.h"
 #include "OCG.h"
 #include "OCG_extern.h"
@@ -47,7 +48,7 @@
 #include "PHY/LTE_TRANSPORT/transport_common_proto.h"
 #include "PHY/LTE_ESTIMATION/lte_estimation.h"
 
-extern uint8_t  nfapi_mode;
+
 extern UE_MODE_t get_ue_mode(uint8_t Mod_id,uint8_t CC_id,uint8_t eNB_index);
 
 /// This routine implements Section 5.1.2 (UE Random Access Resource Selection) from 36.321
@@ -300,7 +301,7 @@ PRACH_RESOURCES_t *ue_get_rach(module_id_t module_idP, int CC_id,
     uint8_t Size = 0;
     UE_MODE_t UE_mode;
     // Modification for phy_stub_ue operation
-    if(nfapi_mode == 3) { // phy_stub_ue mode
+    if(NFAPI_MODE == NFAPI_UE_STUB_PNF) { // phy_stub_ue mode
         UE_mode = UE_mac_inst[module_idP].UE_mode[0];
         LOG_D(MAC, "ue_get_rach , UE_mode: %d", UE_mode);
     }

@@ -35,6 +35,7 @@
 #include "LAYER2/MAC/mac_proto.h"
 #include "LAYER2/MAC/mac_extern.h"
 #include "common/utils/LOG/log.h"
+#include "nfapi/oai_integration/vendor_ext.h"
 #include "common/utils/LOG/vcd_signal_dumper.h"
 #include "UTIL/OPT/opt.h"
 #include "OCG.h"
@@ -64,7 +65,7 @@
 
 #include "common/ran_context.h"
 extern RAN_CONTEXT_t RC;
-extern uint8_t nfapi_mode;
+
 
 //------------------------------------------------------------------------------
 void
@@ -743,7 +744,7 @@ schedule_ue_spec(module_id_t module_idP,
                 (eNB_UE_stats->dl_cqi > MAX_CQI_VALUE)),
                 eNB_UE_stats->dl_cqi, MIN_CQI_VALUE, MAX_CQI_VALUE);
       */
-      if (nfapi_mode) {
+      if (NFAPI_MODE != NFAPI_MONOLITHIC) {
         eNB_UE_stats->dlsch_mcs1 = 10; // cqi_to_mcs[ue_sched_ctrl->dl_cqi[CC_id]];
       } else { // this operation is also done in the preprocessor
         eNB_UE_stats->dlsch_mcs1 = cmin(eNB_UE_stats->dlsch_mcs1,

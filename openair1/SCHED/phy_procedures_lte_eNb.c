@@ -35,7 +35,7 @@
 #include "SCHED/sched_eNB.h"
 #include "SCHED/sched_common_extern.h"
 #include "PHY/LTE_ESTIMATION/lte_estimation.h"
-#include "nfapi_interface.h"
+#include "nfapi/oai_integration/vendor_ext.h"
 #include "fapi_l1.h"
 #include "common/utils/LOG/log.h"
 #include "common/utils/LOG/vcd_signal_dumper.h"
@@ -45,11 +45,8 @@
 
 #include <time.h>
 
-#if defined(ENABLE_ITTI)
 #include "intertask_interface.h"
-#endif
 
-extern uint8_t nfapi_mode;
 
 
 
@@ -337,7 +334,7 @@ void pdsch_procedures(PHY_VARS_eNB *eNB,
   if (dlsch->rnti!=0xffff) LOG_D(PHY,"Generating DLSCH/PDSCH pdu:%p pdsch_start:%d frame:%d subframe:%d nb_rb:%d rb_alloc:%d Qm:%d Nl:%d round:%d\n",
 	dlsch_harq->pdu,dlsch_harq->pdsch_start,frame,subframe,dlsch_harq->nb_rb,dlsch_harq->rb_alloc[0],dlsch_harq->Qm,dlsch_harq->Nl,dlsch_harq->round);
   // 36-212 
-  if (nfapi_mode == 0 || nfapi_mode == 1) { // monolthic OR PNF - do not need turbo encoding on VNF
+  if (NFAPI_MODE==NFAPI_MONOLITHIC || NFAPI_MODE==NFAPI_MODE_PNF) { // monolthic OR PNF - do not need turbo encoding on VNF
 
     if (dlsch_harq->pdu==NULL){
       LOG_E(PHY,"dlsch_harq->pdu == NULL SFN/SF:%04d%d dlsch[rnti:%x] dlsch_harq[pdu:%p pdsch_start:%d Qm:%d Nl:%d round:%d nb_rb:%d rb_alloc[0]:%d]\n", frame,subframe,dlsch->rnti, dlsch_harq->pdu,dlsch_harq->pdsch_start,dlsch_harq->Qm,dlsch_harq->Nl,dlsch_harq->round,dlsch_harq->nb_rb,dlsch_harq->rb_alloc[0]);
@@ -444,7 +441,7 @@ void phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
   }
   
   
-  if (nfapi_mode == 0 || nfapi_mode == 1) {
+  if (NFAPI_MODE==NFAPI_MONOLITHIC || NFAPI_MODE==NFAPI_MODE_PNF) {
     if (is_pmch_subframe(frame,subframe,fp)) {
       pmch_procedures(eNB,proc);
     }
@@ -521,7 +518,7 @@ void phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
   
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_ENB_PDCCH_TX,1);
   
-  if (nfapi_mode == 0 || nfapi_mode == 1) {
+  if (NFAPI_MODE==NFAPI_MONOLITHIC || NFAPI_MODE==NFAPI_MODE_PNF) {
     generate_dci_top(num_pdcch_symbols,
 		     num_dci,
 		     &eNB->pdcch_vars[subframe&1].dci_alloc[0],
@@ -2080,7 +2077,7 @@ void phy_procedures_eNB_uespec_RX(PHY_VARS_eNB *eNB,L1_rxtx_proc_t *proc)
   
   uci_procedures (eNB, proc);
   
-  if (nfapi_mode == 0 || nfapi_mode == 1) { // If PNF or monolithic
+  if (NFAPI_MODE==NFAPI_MONOLITHIC || NFAPI_MODE==NFAPI_MODE_PNF) { // If PNF or monolithic
     pusch_procedures(eNB,proc);
   }
 
