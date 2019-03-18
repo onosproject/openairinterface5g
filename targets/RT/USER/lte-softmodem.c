@@ -724,14 +724,14 @@ int main( int argc, char **argv ) {
 #endif
   rt_sleep_ns(10*100000000ULL);
 
-  if (nfapi_getmode()!=NFAPI_MONOLITHIC) {
+  if (NFAPI_MODE!=NFAPI_MONOLITHIC) {
     LOG_I(ENB_APP,"NFAPI*** - mutex and cond created - will block shortly for completion of PNF connection\n");
     pthread_cond_init(&sync_cond,NULL);
     pthread_mutex_init(&sync_mutex, NULL);
   }
 
 
-  if (nfapi_getmode()==NFAPI_MODE_VNF) {// VNF
+  if (NFAPI_MODE==NFAPI_MODE_VNF) {// VNF
 #if defined(PRE_SCD_THREAD)
     init_ru_vnf();  // ru pointer is necessary for pre_scd.
 #endif

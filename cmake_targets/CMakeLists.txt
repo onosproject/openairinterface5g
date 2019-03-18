@@ -2155,6 +2155,7 @@ foreach(myExe dlsim dlsim_tm7 ulsim pbchsim scansim mbmssim pdcchsim pucchsim pr
     ${T_SOURCE}
     ${CONFIG_SOURCES}
     ${SHLIB_LOADER_SOURCES}
+    ${NFAPI_USER_DIR}/nfapi.c
     )
   target_link_libraries (${myExe}
 

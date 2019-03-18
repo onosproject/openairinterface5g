@@ -405,7 +405,7 @@ void generate_Msg2(module_id_t module_idP,
             ra->Msg2_frame = (frameP + 1) & 1023;
           else
             ra->Msg2_frame = frameP;
-            ra->Msg2_subframe = (subframeP + 2) % 10; // +2 is the "n+x" from Section 7.1.11  in 36.213
+          ra->Msg2_subframe = (subframeP + 2) % 10; // +2 is the "n+x" from Section 7.1.11  in 36.213
           
           LOG_D(MAC, "[eNB %d][RAPROC] Frame %d, Subframe %d : In generate_Msg2, programmed Msg2 for %d.%d\n", 
                 module_idP, 

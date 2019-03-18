@@ -66,7 +66,7 @@
 #include "SCHED_UE/sched_UE.h"
 #include "common/config/config_load_configmodule.h"
 #include "PHY/INIT/phy_init.h"
-
+#include "nfapi/oai_integration/vendor_ext.h"
 
 void feptx_ofdm(RU_t *ru);
 void feptx_prec(RU_t *ru);

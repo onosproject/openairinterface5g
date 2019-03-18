@@ -50,6 +50,9 @@
   #include "LTE_MBMS-SessionInfoList-r9.h"
   #include "LTE_PMCH-InfoList-r9.h"
 #endif
+/* maximum number of tun interfaces that will be created to emulates UEs */
+/* UEs beyond that will be multiplexed on the same tun   */
+#define MAX_NUMBER_NETIF           16
 
 #define PDCP_USE_NETLINK_BIT            (1<< 11)
 #define LINK_ENB_PDCP_TO_IP_DRIVER_BIT  (1<< 13)

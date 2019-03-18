@@ -55,7 +55,7 @@
 
 #include "PHY/TOOLS/lte_phy_scope.h"
 #include "dummy_functions.c"
-
+#include "nfapi/oai_integration/vendor_ext.h"
 #include "common/config/config_load_configmodule.h"
 double cpuf;
 #define inMicroS(a) (((double)(a))/(cpu_freq_GHz*1000.0))
