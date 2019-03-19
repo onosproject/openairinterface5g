@@ -737,10 +737,6 @@ static void *UE_thread_rxn_txnp4(void *arg) {
 
 void readFrame(PHY_VARS_NR_UE *UE,  openair0_timestamp *timestamp) {
   void *rxp[NB_ANTENNAS_RX];
-  void *dummy_tx[UE->frame_parms.nb_antennas_tx];
-
-  for (int i=0; i<UE->frame_parms.nb_antennas_tx; i++)
-    dummy_tx[i]=malloc16_clear(UE->frame_parms.samples_per_subframe*4);
 
   for(int x=0; x<10; x++) {
     for (int i=0; i<UE->frame_parms.nb_antennas_rx; i++)
@@ -754,16 +750,9 @@ void readFrame(PHY_VARS_NR_UE *UE,  openair0_timestamp *timestamp) {
                                             UE->frame_parms.nb_antennas_rx), "");
   }
 
-  for (int i=0; i<UE->frame_parms.nb_antennas_tx; i++)
-    free(dummy_tx[i]);
 }
 
 void trashFrame(PHY_VARS_NR_UE *UE, openair0_timestamp *timestamp) {
-  void *dummy_tx[UE->frame_parms.nb_antennas_tx];
-
-  for (int i=0; i<UE->frame_parms.nb_antennas_tx; i++)
-    dummy_tx[i]=malloc16_clear(UE->frame_parms.samples_per_subframe*4);
-
   void *dummy_rx[UE->frame_parms.nb_antennas_rx];
 
   for (int i=0; i<UE->frame_parms.nb_antennas_rx; i++)
@@ -776,11 +765,8 @@ void trashFrame(PHY_VARS_NR_UE *UE, openair0_timestamp *timestamp) {
                                dummy_rx,
                                UE->frame_parms.samples_per_subframe,
                                UE->frame_parms.nb_antennas_rx);
-    usleep(500); // this sleep improves in the case of simulated RF and doesn't harm with true radio
+    //usleep(500); // this sleep improves in the case of simulated RF and doesn't harm with true radio
   }
-
-  for (int i=0; i<UE->frame_parms.nb_antennas_tx; i++)
-    free(dummy_tx[i]);
 
   for (int i=0; i<UE->frame_parms.nb_antennas_rx; i++)
     free(dummy_rx[i]);
@@ -789,10 +775,6 @@ void trashFrame(PHY_VARS_NR_UE *UE, openair0_timestamp *timestamp) {
 void syncInFrame(PHY_VARS_NR_UE *UE, openair0_timestamp *timestamp) {
   if (UE->no_timing_correction==0) {
     LOG_I(PHY,"Resynchronizing RX by %d samples (mode = %d)\n",UE->rx_offset,UE->mode);
-    void *dummy_tx[UE->frame_parms.nb_antennas_tx];
-
-    for (int i=0; i<UE->frame_parms.nb_antennas_tx; i++)
-      dummy_tx[i]=malloc16_clear(UE->frame_parms.samples_per_subframe*4);
 
     for ( int size=UE->rx_offset ; size > 0 ; size -= UE->frame_parms.samples_per_subframe ) {
       int unitTransfer=size>UE->frame_parms.samples_per_subframe ? UE->frame_parms.samples_per_subframe : size ;
@@ -803,9 +785,6 @@ void syncInFrame(PHY_VARS_NR_UE *UE, openair0_timestamp *timestamp) {
                                              unitTransfer,
                                              UE->frame_parms.nb_antennas_rx),"");
     }
-
-    for (int i=0; i<UE->frame_parms.nb_antennas_tx; i++)
-      free(dummy_tx[i]);
   }
 }
 
@@ -901,7 +880,7 @@ void *UE_thread(void *arg) {
       UE->proc.instance_cnt_synch=0;
       AssertFatal( 0 == pthread_cond_signal(&UE->proc.cond_synch), "");
       AssertFatal( 0 == pthread_mutex_unlock(&UE->proc.mutex_synch), "");
-      usleep(1000);
+      //usleep(1000);
       continue;
     }
 
