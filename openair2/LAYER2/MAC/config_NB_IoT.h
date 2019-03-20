@@ -2,16 +2,14 @@
 /*! \file config_NB_IoT.h
  * \brief configured structures used by scheduler
  * \author  NTUST BMW Lab./
- * \date 2017
+ * \date 2019
  * \email: 
- * \version 1.0
+ * \version 2.0
  *
  */
 
 #ifndef _CONFIG_H_
 #define _CONFIG_H_
-
-//#include "NB_IoT_Message_definitions.h"
 
 #define NUMBER_OF_SIBS_MAX_NB_IoT 6
 

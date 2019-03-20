@@ -21,7 +21,7 @@
 /*! \file defs_NB_IoT.c
  * \brief MAC layer structures
  * \author  NTUST BMW Lab./Nick HO, Xavier LIU, Calvin HSU
- * \date 2017 - 2018
+ * \date 2017 - 2019
  * \email: nick133371@gmail.com, sephiroth7277@gmail.com , kai-hsiang.hsu@eurecom.fr
  * \version 1.0
  *
@@ -150,33 +150,6 @@ typedef enum{
 /*Index of PADDING logical channel*/
 #define PADDING 31
 
-
-/// NPRACH-ParametersList-NB_IoT-r13 from 36.331 RRC spec defined in PHY
-/*typedef struct NPRACH_Parameters_NB_IoT{
-
-    /// the period time for nprach
-    int nprach_Periodicity;
-    /// for the start time for the NPRACH resource from 40ms-2560ms
-    int nprach_StartTime;
-    /// for the subcarrier of set to the NPRACH preamble from n0 - n34
-    int nprach_SubcarrierOffset;
-    ///number of subcarriers in a NPRACH resource allowed values (n12,n24,n36,n48)
-    int nprach_NumSubcarriers;
-    /// where is the region that in NPRACH resource to indicate if this UE support MSG3 for multi-tone or not. from 0 - 1
-    int nprach_SubcarrierMSG3_RangeStart;
-    /// The max preamble transmission attempt for the CE level from 1 - 128
-    int maxNumPreambleAttemptCE;
-    /// Number of NPRACH repetitions per attempt for each NPRACH resource
-    int numRepetitionsPerPreambleAttempt;
-    /// The number of the repetition for DCI use in RAR/MSG3/MSG4 from 1 - 2048 (Rmax)
-    int npdcch_NumRepetitions_RA;
-    /// Starting subframe for NPDCCH Common searching space for (RAR/MSG3/MSG4)
-    int npdcch_StartSF_CSS_RA;
-    /// Fractional period offset of starting subframe for NPDCCH common search space
-    int npdcch_Offset_RA;
-
-} nprach_parameters_NB_IoT_t;*/
-
 /*! \brief Downlink SCH PDU Structure */
 typedef struct {
   uint8_t payload[SCH_PAYLOAD_SIZE_MAX_NB_IoT];
@@ -238,22 +211,23 @@ typedef struct {
 
 } UE_TEMPLATE_NB_IoT;
 
+// link list of uplink resource node 
 typedef struct available_resource_UL_s{
-
-    ///Resource start subframe
-    uint32_t start_subframe;
-    ///Resource end subframe
-    uint32_t end_subframe;
-    // pointer to next node
-    struct available_resource_UL_s *next, *prev;
-
+  ///Resource start subframe
+  uint32_t start_subframe;
+  ///Resource end subframe
+  uint32_t end_subframe;
+  //pointer to next and previous node
+  struct available_resource_UL_s *next, *prev;
 }available_resource_UL_t;
 
+// link list of downlink resource node
 typedef struct available_resource_DL_s{
+  ///Resource start subframe
   uint32_t start_subframe;
+  ///Resource end subframe
   uint32_t end_subframe;
-  //uint32_t DLSF_num;
-
+  //pointer to next and previous node
   struct available_resource_DL_s *next, *prev;
 }available_resource_DL_t;
 
@@ -271,13 +245,10 @@ typedef struct{
 
 /*Structure used for UL scheduling*/
 typedef struct{
-  //resource position info.
+  //resource position info, used subframe as unit
   uint32_t sf_end, sf_start;
-  //resource position info. separate by HyperSF, Frame, Subframe
-  //uint32_t start_h, end_h;
-  //uint32_t start_f, end_f;
-  //uint32_t start_sf, end_sf;
-  // information for allocating the resource
+
+  // information for allocating the resource (to fill DCIN)
   int tone;
   int scheduling_delay;
   int subcarrier_indication;
@@ -285,7 +256,6 @@ typedef struct{
   available_resource_UL_t *node;
 }sched_temp_UL_NB_IoT_t;
 
-/******Update******/
 /*** the value of variable in this structure is able to be changed in Preprocessor**/
 typedef struct{
   
@@ -333,7 +303,6 @@ typedef struct{
   uint8_t flag_schedule_success;
 }UE_SCHED_CTRL_NB_IoT_t;
 
-
 /*36331 NPDCCH-ConfigDedicated-NB_IoT*/
 typedef struct{
   //npdcch-NumRepetitions-r13
@@ -369,9 +338,8 @@ typedef struct {
 
 } UE_list_NB_IoT_t;
 
-
+// scheduling flag calculated by computing flag function
 typedef struct{
-
   // flag to indicate scheduing MIB-NB_IoT
   uint8_t flag_MIB;
   // flag to indicate scheduling SIB1-NB_IoT
@@ -392,7 +360,6 @@ typedef struct{
   uint8_t num_type1_css_run;
   // number of the uss to schedule in this period
   uint8_t num_uss_run;
-
 }scheduling_flag_t;
 
 /*!\brief  MAC subheader short with 7bit Length field */
@@ -404,6 +371,7 @@ typedef struct {
   uint8_t L:7;     // octet 2 LSB
   uint8_t F:1;     // octet 2 MSB
 } __attribute__((__packed__))SCH_SUBHEADER_SHORT_NB_IoT;
+
 typedef struct {
   uint8_t LCID:5;   // octet 1 LSB
   uint8_t E:1;
@@ -413,6 +381,7 @@ typedef struct {
   uint8_t F:1;      // octet 2 MSB
   uint8_t L_LSB:8;
 } __attribute__((__packed__))SCH_SUBHEADER_LONG_NB_IoT;
+
 typedef struct {
   uint8_t LCID:5;   // octet 1 LSB
   uint8_t E:1;
@@ -421,6 +390,7 @@ typedef struct {
   uint8_t L_MSB:8;      // octet 2 MSB
   uint8_t L_LSB:8;
 } __attribute__((__packed__))SCH_SUBHEADER_LONG_EXTEND_NB_IoT;
+
 /*!\brief MAC subheader short without length field */
 typedef struct {
   uint8_t LCID:5;
@@ -447,22 +417,22 @@ typedef struct {
 } __attribute__((__packed__))RA_HEADER_RAPID_NB_IoT;
 
 
-typedef struct Available_available_resource_DL{
+typedef struct Available_resource_tones_UL_s{
 
-    ///Available Resoruce for sixtone
-    available_resource_UL_t *sixtone_Head;//, *sixtone_npusch_frame;
+  ///Available Resoruce for sixtone
+  available_resource_UL_t *sixtone_Head;//, *sixtone_npusch_frame;
   uint32_t sixtone_end_subframe;
-    ///Available Resoruce for threetone
-    available_resource_UL_t *threetone_Head;//, *threetone_npusch_frame;
+  ///Available Resoruce for threetone
+  available_resource_UL_t *threetone_Head;//, *threetone_npusch_frame;
   uint32_t threetone_end_subframe;
-    ///Available Resoruce for singletone1
-    available_resource_UL_t *singletone1_Head;//, *singletone1_npusch_frame;
+  ///Available Resoruce for singletone1
+  available_resource_UL_t *singletone1_Head;//, *singletone1_npusch_frame;
   uint32_t singletone1_end_subframe;
-    ///Available Resoruce for singletone2
-    available_resource_UL_t *singletone2_Head;//, *singletone2_npusch_frame;
-    uint32_t singletone2_end_subframe;
+  ///Available Resoruce for singletone2
+  available_resource_UL_t *singletone2_Head;//, *singletone2_npusch_frame;
+  uint32_t singletone2_end_subframe;
   ///Available Resoruce for singletone3
-    available_resource_UL_t *singletone3_Head;//, *singletone3_npusch_frame;
+  available_resource_UL_t *singletone3_Head;//, *singletone3_npusch_frame;
   uint32_t singletone3_end_subframe;
   
 }available_resource_tones_UL_t;
@@ -500,9 +470,8 @@ typedef struct schedule_result{
   int16_t dl_sdly;
   int16_t ul_sdly;
   int16_t num_sf;
-  //-----clare
+  
   int16_t harq_round;
-  //-----clare
 
   
 }schedule_result_t;

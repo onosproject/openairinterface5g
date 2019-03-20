@@ -50,7 +50,6 @@ void eNB_scheduler_computing_flag_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, uint32_t
 		*common_flags |= flag_sib1;
 	}
 
-/*	uint32_t type2_css_pp[3] = { 	type2_css_info[0]->npdcch_NumRepetitions_RA_r13*type2_css_info[0]->npdcch_StartSF_CSS_RA_r13,		type2_css_info[1]->npdcch_NumRepetitions_RA_r13*type2_css_info[1]->npdcch_StartSF_CSS_RA_r13,		type2_css_info[2]->npdcch_NumRepetitions_RA_r13*type2_css_info[2]->npdcch_StartSF_CSS_RA_r13	};*/
 	uint32_t type2_css_pp[3] = { 	mac_inst->npdcch_config_common[0].R_max*mac_inst->npdcch_config_common[0].G,
 									mac_inst->npdcch_config_common[1].R_max*mac_inst->npdcch_config_common[1].G,
 									mac_inst->npdcch_config_common[2].R_max*mac_inst->npdcch_config_common[2].G	};

@@ -35,16 +35,12 @@ unsigned char str20[] = "DCI_uss";
 unsigned char str21[] = "DATA_uss";
 
 // scheduling UL
-//-------Daniel
 int schedule_UL_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst,UE_TEMPLATE_NB_IoT *UE_info,uint32_t subframe, uint32_t frame, uint32_t H_SFN, UE_SCHED_CTRL_NB_IoT_t *UE_sched_ctrl_info){
-//-------Daniel
 	int i,ndi = 0,check_DCI_result = 0,check_UL_result = 0,candidate;
 	uint32_t DL_end;
     //Scheduling resource temp buffer
     sched_temp_DL_NB_IoT_t *NPDCCH_info = (sched_temp_DL_NB_IoT_t*)malloc(sizeof(sched_temp_DL_NB_IoT_t));
-//-------Daniel
 	candidate = UE_info->R_max/UE_sched_ctrl_info->R_dci;
-//-------Daniel
     uint32_t mcs = max_mcs[UE_info->multi_tone];
     uint32_t mappedMcsIndex=UE_info->PHR+(4 * UE_info->multi_tone);
     int TBS = 0;
@@ -53,27 +49,20 @@ int schedule_UL_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst,UE_TEMPLATE_NB_IoT *UE_info
 
     if(UE_info->ul_total_buffer<=0)
     {
-      //------Daniel
         LOG_D(MAC,"[%04d][ULSchedulerUSS][UE:%05d] No UL data in buffer\n", mac_inst->current_subframe, UE_info->rnti);
-      //------Daniel
         return -1;
     }
 
     TBS=get_TBS_UL_NB_IoT(mcs,UE_info->multi_tone,Iru);
-    //-------Daniel
     LOG_D(MAC,"Initial TBS : %d UL_buffer: %d\n", TBS, UE_info->ul_total_buffer);
-    //-------Daneil
 
     sched_temp_UL_NB_IoT_t *NPUSCH_info = (sched_temp_UL_NB_IoT_t*)malloc(sizeof(sched_temp_UL_NB_IoT_t));
 
-    //-------Daniel
     //DCIFormatN0_t *DCI_N0 = (DCIFormatN0_t*)malloc(sizeof(DCIFormatN0_t));
-    //-------Daniel
 
     //available_resource_DL_t *node;
 
     // setting of the NDI
-    //-------Daniel
     /*
     if(UE_info->HARQ_round == 0)
     {
@@ -81,7 +70,6 @@ int schedule_UL_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst,UE_TEMPLATE_NB_IoT *UE_info
         UE_info->oldNDI_UL=ndi;
     }
     */
-    //-------Daniel
 
     for (i = 0; i < candidate; i++)
 	{
@@ -106,7 +94,6 @@ int schedule_UL_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst,UE_TEMPLATE_NB_IoT *UE_info
 
             mcs = mapped_mcs[UE_info->CE_level][mappedMcsIndex];
 
-            //--------Daniel
             if(UE_info->HARQ_round==0)
             {
              
@@ -124,7 +111,6 @@ int schedule_UL_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst,UE_TEMPLATE_NB_IoT *UE_info
                     TBS=get_TBS_UL_NB_IoT(mcs,UE_info->multi_tone,Iru);
                 }
             }
-            //--------Daniel
             //LOG_D(MAC,"TBS : %d MCS %d I_RU %d\n", TBS, UE_info->ul_total_buffer, mcs, Iru);
 
             Nru = RU_table[Iru];
@@ -143,11 +129,7 @@ int schedule_UL_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst,UE_TEMPLATE_NB_IoT *UE_info
                 check_UL_result = Check_UL_resource(uplink_time,total_ru, NPUSCH_info, UE_info->multi_tone, 0);
                 if (check_UL_result != -1)
                 {
-                //----Daniel
 
-                //----Daniel  
-
-                //----Daniel
                 //LOG_D(MAC,"[%04d][UL scheduler][UE:%05d] DCI content = scind : %d ResAssign : %d mcs : %d ndi : %d scheddly : %d RepNum : %d rv : %d DCIRep : %d\n", mac_inst->current_subframe,UE_info->rnti,DCI_N0->scind,DCI_N0->ResAssign,DCI_N0->mcs,DCI_N0->ndi,DCI_N0->Scheddly,DCI_N0->RepNum,DCI_N0->rv,DCI_N0->DCIRep);
                 LOG_D(MAC,"[%04d][ULSchedulerUSS][%d][Success] complete scheduling with data size %d\n", mac_inst->current_subframe, UE_info->rnti, UE_info->ul_total_buffer);
                 LOG_D(MAC,"[%04d][ULSchedulerUSS][%d] Multi-tone:%d,MCS:%d,TBS:%d,UL_buffer:%d,DL_start:%d,DL_end:%d,N_rep:%d,N_ru:%d,Total_ru:%d\n", mac_inst->current_subframe,UE_info->rnti,UE_info->multi_tone,mcs,TBS,UE_info->ul_total_buffer,NPDCCH_info->sf_start,DL_end,N_rep,Nru,total_ru);
@@ -243,9 +225,13 @@ void rx_sdu_NB_IoT(module_id_t module_id, int CC_id, frame_t frame, sub_frame_t 
             break;
         case SHORT_BSR:
             // update BSR here
+        LOG_I(MAC,"Update BSR, but still not implemented here\n");
         UE_info = get_ue_from_rnti(mac_inst, rnti);
         BSR_index = payload_ptr[0] & 0x3f;
-        UE_info->ul_total_buffer = BSR_table[BSR_index];
+        if(UE_info != NULL)          
+          UE_info->ul_total_buffer = BSR_table[BSR_index];
+        else
+          LOG_E(MAC,"UE info empty\n"); 
             payload_ptr+=1;
             break;
         default:
@@ -365,7 +351,6 @@ uint16_t length, ce_len=0;
   return(mac_header_ptr);
 }
 
-//------Daniel
 void fill_DCI_N0(DCIFormatN0_t *DCI_N0, UE_TEMPLATE_NB_IoT *UE_info, UE_SCHED_CTRL_NB_IoT_t *UE_sched_ctrl_info)
 {
     DCI_N0->type = 0;
@@ -380,4 +365,3 @@ void fill_DCI_N0(DCIFormatN0_t *DCI_N0, UE_TEMPLATE_NB_IoT *UE_info, UE_SCHED_CT
     //DCI_N0->DCIRep = UE_sched_ctrl_info->dci_n0_index_R_dci;
     LOG_D(MAC,"[fill_DCI_N0] Type %d scind %d I_ru %d I_mcs %d ndi %d I_delay %d I_rep %d RV %d I_dci %d\n", DCI_N0->type, DCI_N0->scind, DCI_N0->ResAssign, DCI_N0->mcs, DCI_N0->ndi, DCI_N0->Scheddly, DCI_N0->RepNum, DCI_N0->rv, DCI_N0->DCIRep);
 }
-//-----Daniel
