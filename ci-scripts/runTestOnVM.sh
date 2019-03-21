@@ -627,6 +627,7 @@ function start_l2_sim_ue {
         UE_SYNC=1
         echo "L2-SIM UE is sync'ed w/ eNB"
     fi
+
     # Checking oaitun_ue1 interface has now an IP address
     i="0"
     echo "ifconfig oaitun_ue1 | egrep -c \"inet addr\"" > $1
