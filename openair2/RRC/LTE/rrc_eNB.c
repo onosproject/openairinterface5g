@@ -226,6 +226,23 @@ init_SI(
 								     , configuration
 								     );
 
+
+  //Call sidelink SI creation routine
+#if (LTE_RRC_VERSION >= MAKE_VERSION(10, 0, 0))
+  RC.rrc[ctxt_pP->module_id]->carrier[CC_id].sizeof_SIB181921 = 0;
+  RC.rrc[ctxt_pP->module_id]->carrier[CC_id].SIB181921 = (uint8_t *) malloc16(128);
+  AssertFatal(RC.rrc[ctxt_pP->module_id]->carrier[CC_id].SIB181921!=NULL,"cannot allocate memory for SIB");
+  RC.rrc[ctxt_pP->module_id]->carrier[CC_id].sizeof_SIB181921 = do_SIB_SL(
+          ctxt_pP->module_id,
+          CC_id
+  #if defined(ENABLE_ITTI)
+          , configuration
+  #endif
+        );
+  AssertFatal(RC.rrc[ctxt_pP->module_id]->carrier[CC_id].sizeof_SIB181921 != 255,"FATAL, RC.rrc[mod].carrier[CC_id].sizeof_SIB181921 == 255");
+#endif
+
+  LOG_I(RRC, "Size of SIB1: %d, size of SIB23: %d, size of SIB181921: %d \n \n", RC.rrc[ctxt_pP->module_id]->carrier[CC_id].sizeof_SIB1, RC.rrc[ctxt_pP->module_id]->carrier[CC_id].sizeof_SIB23, RC.rrc[ctxt_pP->module_id]->carrier[CC_id].sizeof_SIB181921);
   AssertFatal(RC.rrc[ctxt_pP->module_id]->carrier[CC_id].sizeof_SIB23 != 255,"FATAL, RC.rrc[mod].carrier[CC_id].sizeof_SIB23 == 255");
 
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))

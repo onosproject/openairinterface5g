@@ -107,7 +107,7 @@ mac_rrc_data_req(
              RC.rrc[Mod_idP]->carrier[CC_id].sizeof_SIB23);
 
       if (LOG_DEBUGFLAG(DEBUG_RRC)) {
-        LOG_T(RRC,"[eNB %d] Frame %d BCCH request => SIB 2-3\n",Mod_idP,frameP);
+        LOG_T(RRC,"[eNB %d] Frame %d BCCH request => SIB 2-3 \n \n",Mod_idP,frameP);
 
         for (int i=0; i<RC.rrc[Mod_idP]->carrier[CC_id].sizeof_SIB23; i++) {
           LOG_T(RRC,"%x.",buffer_pP[i]);
@@ -117,7 +117,26 @@ mac_rrc_data_req(
       } /* LOG_DEBUGFLAG(DEBUG_RRC) */
 
       return(RC.rrc[Mod_idP]->carrier[CC_id].sizeof_SIB23);
-    } else {
+    }
+    else if ((frameP%8) == 3) {
+    	memcpy(&buffer_pP[0],
+    			RC.rrc[Mod_idP]->carrier[CC_id].SIB181921,
+				RC.rrc[Mod_idP]->carrier[CC_id].sizeof_SIB181921);
+
+    	if (LOG_DEBUGFLAG(DEBUG_RRC)) {
+    		LOG_T(RRC,"[eNB %d] Frame %d BCCH request => SIB 18,19,21, size:%d \n \n",Mod_idP,frameP, RC.rrc[Mod_idP]->carrier[CC_id].sizeof_SIB181921);
+
+    		for (int i=0; i<RC.rrc[Mod_idP]->carrier[CC_id].sizeof_SIB181921; i++) {
+    			LOG_T(RRC,"%x.",buffer_pP[i]);
+    		}
+
+    		LOG_T(RRC,"\n");
+         } /* LOG_DEBUGFLAG(DEBUG_RRC) */
+
+          return(RC.rrc[Mod_idP]->carrier[CC_id].sizeof_SIB181921);
+    }
+
+    else {
       return(0);
     }
   }
@@ -209,6 +228,7 @@ mac_rrc_data_req(
   }
 
   if ((Srb_id & RAB_OFFSET) == BCCH_SI_BR) { // First SI message with SIB2/3
+
     memcpy(&buffer_pP[0],
            RC.rrc[Mod_idP]->carrier[CC_id].SIB23_BR,
            RC.rrc[Mod_idP]->carrier[CC_id].sizeof_SIB23_BR);

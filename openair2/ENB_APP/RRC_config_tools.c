@@ -77,6 +77,9 @@ static const eutra_band_t eutra_bands[] = {
   {42, 3400    * MHz, 3600    * MHz, 3400    * MHz, 3600    * MHz, TDD},
   {43, 3600    * MHz, 3800    * MHz, 3600    * MHz, 3800    * MHz, TDD},
   {44, 703    * MHz, 803    * MHz, 703    * MHz, 803    * MHz, TDD},
+// this area is reserved for non-3GPP bands
+  {99, 900    * MHz, 910    * MHz, 920    * MHz, 930    * MHz, FDD}
+
 };
 
 

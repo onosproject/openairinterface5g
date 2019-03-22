@@ -662,6 +662,8 @@ typedef struct {
   uint8_t                           sizeof_SIB1;
   uint8_t                           *SIB23;
   uint8_t                           sizeof_SIB23;
+  uint8_t                           *SIB181921;
+  uint8_t                           sizeof_SIB181921;
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
   uint8_t                           *SIB1_BR;
   uint8_t                           sizeof_SIB1_BR;

@@ -2452,7 +2452,7 @@ rrc_ue_decode_dcch(
 const char siWindowLength[8][5] = {"1ms","2ms","5ms","10ms","15ms","20ms","40ms","ERR"};
 const char siWindowLength_int[7] = {1,2,5,10,15,20,40};
 
-const char SIBType[12][6] = {"SIB3","SIB4","SIB5","SIB6","SIB7","SIB8","SIB9","SIB10","SIB11","SIB12","SIB13","Spare"};
+const char SIBType[13][6] = {"SIB3","SIB4","SIB5","SIB6","SIB7","SIB8","SIB9","SIB10","SIB11","SIB12","SIB13","SIB19","Spare"};
 const char SIBPeriod[8][6]= {"rf8","rf16","rf32","rf64","rf128","rf256","rf512","ERR"};
 int siPeriod_int[7] = {80,160,320,640,1280,2560,5120};
 
@@ -4067,7 +4067,7 @@ void ue_measurement_report_triggering(protocol_ctxt_t *const ctxt_pP, const uint
                       ctxt_pP,
                       eNB_index);
                     UE_rrc_inst[ctxt_pP->module_id].HandoverInfoUe.measFlag = 1;
-                    LOG_I(RRC,"[UE %d] Frame %d: A3 event detected, state: %d \n",
+                    LOG_D(RRC,"[UE %d] Frame %d: A3 event detected, state: %d \n",
                           ctxt_pP->module_id, ctxt_pP->frame, UE_rrc_inst[ctxt_pP->module_id].Info[0].State);
                   } else {
                     if(UE_rrc_inst[ctxt_pP->module_id].measReportList[i][j] != NULL) {
@@ -4121,7 +4121,7 @@ uint8_t check_trigger_meas_event(
   uint8_t eNB_offset;
   //  uint8_t currentCellIndex = frame_parms->Nid_cell;
   uint8_t tmp_offset;
-  LOG_I(RRC,"[UE %d] ofn(%ld) ocn(%ld) hys(%ld) ofs(%ld) ocs(%ld) a3_offset(%ld) ttt(%ld) rssi %3.1f\n",
+  LOG_D(RRC,"[UE %d] ofn(%ld) ocn(%ld) hys(%ld) ofs(%ld) ocs(%ld) a3_offset(%ld) ttt(%ld) rssi %3.1f\n",
         ue_mod_idP,
         ofn,ocn,hys,ofs,ocs,a3_offset,ttt,
         10*log10(get_RSSI(ue_mod_idP,0))-get_rx_total_gain_dB(ue_mod_idP,0));

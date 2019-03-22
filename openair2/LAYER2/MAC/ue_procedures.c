@@ -2345,7 +2345,7 @@ ue_get_sdu(module_id_t module_idP, int CC_id, frame_t frameP,
 
 
 	phr_p->R = 0;
-	LOG_D(MAC,
+	LOG_I(MAC,
 	      "[UE %d] Frame %d report PHR with mapping (%d->%d) for LCID %d\n",
 	      module_idP, frameP, get_PHR(module_idP, CC_id, eNB_index),
 	      phr_p->PH, POWER_HEADROOM);

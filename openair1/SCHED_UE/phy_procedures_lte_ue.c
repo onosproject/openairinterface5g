@@ -1559,8 +1559,8 @@ void ue_ulsch_uespec_procedures(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB
       }
     }
 
-    if ( LOG_DEBUGFLAG(DEBUG_UE_PHYPROC)) {
-      LOG_D(PHY,
+    if ( LOG_DEBUGFLAG(DEBUG_UE_PHYPROC)) { //LOG_DEBUGFLAG(DEBUG_UE_PHYPROC)) {
+      LOG_I(PHY,
             "[UE  %d][PUSCH %d] AbsSubframe %d.%d Generating PUSCH : first_rb %d, nb_rb %d, round %d, mcs %d, rv %d, "
             "cyclic_shift %d (cyclic_shift_common %d,n_DMRS2 %d,n_PRS %d), ACK (%d,%d), O_ACK %d, ack_status_cw0 %d ack_status_cw1 %d bundling %d, Nbundled %d, CQI %d, RI %d\n",
             Mod_id,harq_pid,frame_tx%1024,subframe_tx,
