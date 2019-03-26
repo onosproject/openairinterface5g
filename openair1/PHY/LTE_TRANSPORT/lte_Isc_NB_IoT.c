@@ -39,6 +39,9 @@ uint8_t tab_ack_3_75khz[16]= {38,39,40,41,42,43,44,45,38,39,40,41,42,43,44,45};
 uint8_t tab_I_ru_N_ru_UL[8]= {1,2,3,4,5,6,8,10};
 uint8_t tab_I_rep_N_rep_UL[8]={1,2,4,8,16,32,64,128};
 
+/// 
+uint8_t tab_ack_sc_format1[16]={0,1,2,3,0,1,2,3,0,1,2,3,0,1,2,3};
+uint8_t tab_ack_sc_format2[16]={38,39,40,41,42,43,44,45,38,39,40,41,42,43,44,45};
 /*
 // Section 16.5.1.1 in 36.213
 uint16_t get_UL_sc_start_NB_IoT(uint16_t I_sc)
@@ -107,7 +110,21 @@ uint16_t get_UL_N_ru_NB_IoT(uint8_t I_mcs, uint8_t I_ru, uint8_t flag_msg3)
 
 }
 
+uint16_t get_UL_sc_ACK_NB_IoT(uint8_t subcarrier_spacing,uint16_t harq_ack_resource)
+{
 
+   if(subcarrier_spacing == 1)   /// 15KHz
+   {
+
+   	 return tab_ack_sc_format1[harq_ack_resource];
+
+   } else {    // 3.75 KHz
+
+   	 return tab_ack_sc_format2[harq_ack_resource];
+
+   }
+
+}
 
 
 uint16_t get_UL_sc_index_start_NB_IoT(uint8_t subcarrier_spacing, uint16_t I_sc, uint8_t npush_format)

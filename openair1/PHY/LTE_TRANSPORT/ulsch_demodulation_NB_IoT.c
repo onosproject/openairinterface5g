@@ -1867,6 +1867,7 @@ uint8_t rx_ulsch_Gen_NB_IoT(PHY_VARS_eNB            *eNB,
 
   if (ulsch_NB_IoT->Msg3_active  == 1)    
   {    
+      
       uint8_t      npusch_format         = ulsch_NB_IoT->npusch_format;           /// 0 or 1 -> format 1 or format 2         
       uint8_t      subcarrier_spacing    = ulsch_harq->subcarrier_spacing;        // can be set as fix value //values are OK // 0 (3.75 KHz) or 1 (15 KHz)
       uint16_t     I_sc                  = ulsch_harq->subcarrier_indication;     // Isc =0->18 , or 0->47 // format 2, 0->3 or 0->7
@@ -1874,6 +1875,7 @@ uint8_t rx_ulsch_Gen_NB_IoT(PHY_VARS_eNB            *eNB,
       uint16_t     Nsc_RU                = get_UL_N_ru_NB_IoT(I_mcs,ulsch_harq->resource_assignment,ulsch_NB_IoT->Msg3_flag);
       uint16_t     N_UL_slots            = get_UL_slots_per_RU_NB_IoT(subcarrier_spacing,I_sc,npusch_format)*Nsc_RU;           // N_UL_slots per word
       uint16_t     N_SF_per_word         = N_UL_slots/2;
+      uint16_t     ul_sc_start           = 0;//nulsch->HARQ_ACK_resource
 
       if(ulsch_NB_IoT->flag_vars == 1)
       {
@@ -1890,10 +1892,17 @@ uint8_t rx_ulsch_Gen_NB_IoT(PHY_VARS_eNB            *eNB,
       }
 
       uint8_t     pilot_pos1, pilot_pos2, pilots_slot;                                      // holds for npusch format 1, and 15 kHz subcarrier bandwidth
-      uint32_t     l;
-      uint32_t     rnti_tmp                   = ulsch_NB_IoT->rnti;                   
-      uint16_t     ul_sc_start                = get_UL_sc_index_start_NB_IoT(subcarrier_spacing,I_sc,npusch_format);
-      uint8_t      Qm                         = get_Qm_UL_NB_IoT(I_mcs,Nsc_RU,I_sc,ulsch_NB_IoT->Msg3_flag);              
+      uint32_t    l;
+      uint32_t    rnti_tmp              = ulsch_NB_IoT->rnti;
+
+      if( npusch_format == 1)    // format 2  // ACK part  
+      { 
+           ul_sc_start    =    get_UL_sc_ACK_NB_IoT(subcarrier_spacing,I_sc);
+      } else {                   
+           ul_sc_start    =    get_UL_sc_index_start_NB_IoT(subcarrier_spacing,I_sc,npusch_format); 
+      }
+
+      uint8_t      Qm     =    get_Qm_UL_NB_IoT(I_mcs,Nsc_RU,I_sc,ulsch_NB_IoT->Msg3_flag);              
 
       get_pilots_position(npusch_format, subcarrier_spacing, &pilot_pos1, &pilot_pos2, &pilots_slot);
       

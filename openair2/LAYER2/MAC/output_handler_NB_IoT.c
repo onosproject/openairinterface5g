@@ -315,9 +315,9 @@ int output_handler(eNB_MAC_INST_NB_IoT *mac_inst, module_id_t module_id, int CC_
                     (ul_config_pdu + i) ->nulsch_pdu.nulsch_pdu_rel13.size                = 16;
 
 					(ul_config_pdu + i) ->nulsch_pdu.nulsch_pdu_rel13.rnti                    = schedule_result_list_UL->rnti;
-					(ul_config_pdu + i) ->nulsch_pdu.nulsch_pdu_rel13.subcarrier_indication   = ((DCIFormatN0_t *)DCI_pdu)->scind;
-					(ul_config_pdu + i) ->nulsch_pdu.nulsch_pdu_rel13.resource_assignment     = ((DCIFormatN0_t *)DCI_pdu)->ResAssign;
-					(ul_config_pdu + i) ->nulsch_pdu.nulsch_pdu_rel13.repetition_number       = ((DCIFormatN0_t *)DCI_pdu)->RepNum;
+					//(ul_config_pdu + i) ->nulsch_pdu.nulsch_pdu_rel13.subcarrier_indication   = ((DCIFormatN0_t *)DCI_pdu)->scind;
+					//(ul_config_pdu + i) ->nulsch_pdu.nulsch_pdu_rel13.resource_assignment     = ((DCIFormatN0_t *)DCI_pdu)->ResAssign;
+					//(ul_config_pdu + i) ->nulsch_pdu.nulsch_pdu_rel13.repetition_number       = ((DCIFormatN0_t *)DCI_pdu)->RepNum;
 
 					(ul_config_pdu + i) ->nulsch_pdu.nulsch_pdu_rel13.ue_information.ue_information_rel13.total_number_of_repetitions = schedule_result_list_UL->R_harq;
 					//for ACK /NACK

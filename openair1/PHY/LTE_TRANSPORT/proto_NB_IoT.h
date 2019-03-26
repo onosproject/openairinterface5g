@@ -490,7 +490,9 @@ void filtering_signal(int16_t *input_buffer, int16_t *filtered_buffer, uint32_t 
 
 uint8_t get_Qm_UL_NB_IoT(unsigned char I_mcs, uint8_t N_sc_RU, uint8_t I_sc, uint8_t Msg3_flag);
 
-//uint16_t get_UL_sc_start_NB_IoT(uint16_t I_sc); 
+//uint16_t get_UL_sc_start_NB_IoT(uint16_t I_sc);
+
+uint16_t get_UL_sc_ACK_NB_IoT(uint8_t subcarrier_spacing,uint16_t harq_ack_resource); 
 
 uint16_t get_UL_sc_index_start_NB_IoT(uint8_t subcarrier_spacing, uint16_t I_sc, uint8_t npush_format);
 
