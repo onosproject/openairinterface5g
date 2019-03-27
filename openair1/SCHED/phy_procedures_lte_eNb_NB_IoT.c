@@ -1575,12 +1575,24 @@ uint32_t rx_nprach_NB_IoT(PHY_VARS_eNB *eNB, int frame, uint8_t subframe, uint16
 }
 
 
-void fill_crc_indication_NB_IoT(PHY_VARS_eNB *eNB,int UE_id,int frame,int subframe,uint8_t crc_flag, uint8_t ACK_NACK) {
+void fill_crc_indication_NB_IoT(PHY_VARS_eNB *eNB,int UE_id,int frame,int subframe,uint8_t decode_flag) {
+
 
   pthread_mutex_lock(&eNB->UL_INFO_mutex);
-  // nfapi_crc_indication_pdu_t* crc_pdu_list
-  nfapi_crc_indication_pdu_t *pdu =   &eNB->UL_INFO.crc_ind.crc_pdu_list[0]; //[eNB->UL_INFO.crc_ind.crc_indication_body.number_of_crcs];
+  
+ 
+          nfapi_crc_indication_pdu_t *pdu            =  &eNB->UL_INFO.crc_ind.crc_pdu_list[0]; //[eNB->UL_INFO.crc_ind.crc_indication_body.number_of_crcs];
+          pdu->rx_ue_information.rnti                =  eNB->ulsch_NB_IoT[0]->rnti;              /// OK
+          pdu->crc_indication_rel8.crc_flag          =  decode_flag;
 
+          if(decode_flag == 1)
+          {
+              eNB->UL_INFO.crc_ind.number_of_crcs++;
+          } else {
+             eNB->UL_INFO.crc_ind.number_of_crcs =0;
+          }
+
+    // nfapi_crc_indication_pdu_t* crc_pdu_list
   ///eNB->UL_INFO.crc_ind.sfn_sf                         = frame<<4 | subframe;
   //eNB->UL_INFO.crc_ind.header.message_id              = NFAPI_CRC_INDICATION;
   //eNB->UL_INFO.crc_ind.crc_indication_body.tl.tag     = NFAPI_CRC_INDICATION_BODY_TAG;
@@ -1588,42 +1600,59 @@ void fill_crc_indication_NB_IoT(PHY_VARS_eNB *eNB,int UE_id,int frame,int subfra
   //pdu->instance_length                                = 0; // don't know what to do with this
   //  pdu->rx_ue_information.handle                       = handle;
   ///////////////////////pdu->rx_ue_information.tl.tag                       = NFAPI_RX_UE_INFORMATION_TAG;
-  pdu->rx_ue_information.rnti                         = eNB->ulsch_NB_IoT[0]->rnti;              /// OK
   //////////////////////////pdu->crc_indication_rel8.tl.tag                     = NFAPI_CRC_INDICATION_REL8_TAG;
-  pdu->crc_indication_rel8.crc_flag                   = crc_flag;
-
-  if(ACK_NACK == 1)
-  {
-      eNB->UL_INFO.crc_ind.number_of_crcs++;
-  } else {
-     eNB->UL_INFO.crc_ind.number_of_crcs =0;
-  }
+  
+  
   //LOG_D(PHY, "%s() rnti:%04x crcs:%d crc_flag:%d\n", __FUNCTION__, pdu->rx_ue_information.rnti, eNB->UL_INFO.crc_ind.crc_indication_body.number_of_crcs, crc_flag);
 
   pthread_mutex_unlock(&eNB->UL_INFO_mutex);
 }
 
-void fill_rx_indication_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,uint8_t data_or_control, uint8_t msg3_flag, uint8_t ACK_NACK)
+void fill_rx_indication_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,uint8_t data_or_control, uint8_t decode_flag)
 {
       nfapi_rx_indication_pdu_t *pdu;
+      nfapi_nb_harq_indication_pdu_t *ack_ind; // &eNB->UL_INFO.nb_harq_ind.nb_harq_indication_body.nb_harq_pdu_list[0] // nb_harq_indication_fdd_rel13->harq_tb1
 
       pthread_mutex_lock(&eNB->UL_INFO_mutex);
 
-      
-      if(ACK_NACK == 1)
-      { 
-          eNB->UL_INFO.RX_NPUSCH.number_of_pdus  = 1;
-      } else {
-          eNB->UL_INFO.RX_NPUSCH.number_of_pdus  = 0;
+      if (data_or_control == 0)    // format 1
+      {
+
+            if(decode_flag == 1)
+            { 
+                eNB->UL_INFO.RX_NPUSCH.number_of_pdus  = 1;
+            } else {
+                eNB->UL_INFO.RX_NPUSCH.number_of_pdus  = 0;
+            }
+           
+            pdu                                    = &eNB->UL_INFO.RX_NPUSCH.rx_pdu_list[0];
+            pdu->rx_ue_information.rnti            = eNB->ulsch_NB_IoT[0]->rnti;
+            pdu->rx_indication_rel8.length         = eNB->ulsch_NB_IoT[0]->harq_process->TBS; //eNB->ulsch_NB_IoT[0]->harq_process->TBS>>3;
+            pdu->data                              = eNB->ulsch_NB_IoT[0]->harq_process->b;
+
+      } else {             // format 2
+
+           if(decode_flag == 1)
+           { 
+                  ack_ind                                             =  &eNB->UL_INFO.nb_harq_ind.nb_harq_indication_body.nb_harq_pdu_list[0];
+                  ack_ind->nb_harq_indication_fdd_rel13.harq_tb1      =  1;
+                  ack_ind->rx_ue_information.rnti                     =  eNB->ulsch_NB_IoT[0]->rnti;
+
+            } else {
+
+                  ack_ind                                             =  &eNB->UL_INFO.nb_harq_ind.nb_harq_indication_body.nb_harq_pdu_list[0];
+                  ack_ind->nb_harq_indication_fdd_rel13.harq_tb1      =  2;
+                  ack_ind->rx_ue_information.rnti                     =  eNB->ulsch_NB_IoT[0]->rnti;
+            }
       }
-      //eNB->UL_INFO.RX_NPUSCH.rx_pdu_list.rx_ue_information.tl.tag = NFAPI_RX_INDICATION_BODY_TAG;   // do we need this ?? 
+      
+       //eNB->UL_INFO.RX_NPUSCH.rx_pdu_list.rx_ue_information.tl.tag = NFAPI_RX_INDICATION_BODY_TAG;   // do we need this ?? 
       //eNB->UL_INFO.RX_NPUSCH.rx_pdu_list.rx_ue_information.rnti = rnti;  // rnti should be got from eNB structure
       //pdu                                    = &eNB->UL_INFO.RX_NPUSCH.rx_pdu_list[eNB->UL_INFO.rx_ind.rx_indication_body.number_of_pdus];
-      pdu                                    = &eNB->UL_INFO.RX_NPUSCH.rx_pdu_list[0];
       //  pdu->rx_ue_information.handle          = eNB->ulsch[UE_id]->handle;
       // pdu->rx_ue_information.tl.tag          = NFAPI_RX_UE_INFORMATION_TAG;
       //pdu->rx_indication_rel8.tl.tag         = NFAPI_RX_INDICATION_REL8_TAG;
-      pdu->rx_ue_information.rnti            = eNB->ulsch_NB_IoT[0]->rnti;
+      
      
 
       /*if(msg3_flag == 1)
@@ -1637,8 +1666,7 @@ void fill_rx_indication_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,uint8_t d
           }        
           
       } else { */  
-          pdu->rx_indication_rel8.length         = eNB->ulsch_NB_IoT[0]->harq_process->TBS; //eNB->ulsch_NB_IoT[0]->harq_process->TBS>>3;
-          pdu->data  = eNB->ulsch_NB_IoT[0]->harq_process->b;
+         
       //}
       //pdu->data                              = eNB->ulsch_NB_IoT[UE_id]->harq_processes[harq_pid]->b;   
       //eNB->UL_INFO.rx_ind.rx_indication_body.number_of_pdus++;

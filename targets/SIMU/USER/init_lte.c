@@ -158,7 +158,11 @@ PHY_VARS_eNB* init_lte_eNB(LTE_DL_FRAME_PARMS *frame_parms,
   PHY_vars_eNB->UL_INFO.crc_ind.crc_pdu_list  = (nfapi_crc_indication_pdu_t *)malloc16(sizeof(nfapi_crc_indication_pdu_t));
   PHY_vars_eNB->UL_INFO.RX_NPUSCH.rx_pdu_list  = (nfapi_rx_indication_pdu_t *)malloc16(sizeof(nfapi_rx_indication_pdu_t));
   PHY_vars_eNB->UL_INFO.RX_NPUSCH.rx_pdu_list[0].data  = (unsigned char*)malloc(300);
+  
+  PHY_vars_eNB->UL_INFO.nb_harq_ind.nb_harq_indication_body.nb_harq_pdu_list = (nfapi_nb_harq_indication_pdu_t*)malloc16(sizeof(nfapi_nb_harq_indication_pdu_t));
 
+  
+  //nfapi_nb_harq_indication_t nb_harq_ind
  
   PHY_vars_eNB->ndlsch_SIB1->rnti = 0xffff;
   PHY_vars_eNB->ndlsch_SIB23->rnti = 0xffff;
