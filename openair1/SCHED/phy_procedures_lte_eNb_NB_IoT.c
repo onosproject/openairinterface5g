@@ -1634,12 +1634,13 @@ void fill_rx_indication_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,uint8_t d
 
            if(decode_flag == 1)
            { 
+                  eNB->UL_INFO.nb_harq_ind.nb_harq_indication_body.number_of_harqs =1;
                   ack_ind                                             =  &eNB->UL_INFO.nb_harq_ind.nb_harq_indication_body.nb_harq_pdu_list[0];
                   ack_ind->nb_harq_indication_fdd_rel13.harq_tb1      =  1;
                   ack_ind->rx_ue_information.rnti                     =  eNB->ulsch_NB_IoT[0]->rnti;
 
             } else {
-
+                  eNB->UL_INFO.nb_harq_ind.nb_harq_indication_body.number_of_harqs =1;
                   ack_ind                                             =  &eNB->UL_INFO.nb_harq_ind.nb_harq_indication_body.nb_harq_pdu_list[0];
                   ack_ind->nb_harq_indication_fdd_rel13.harq_tb1      =  2;
                   ack_ind->rx_ue_information.rnti                     =  eNB->ulsch_NB_IoT[0]->rnti;
