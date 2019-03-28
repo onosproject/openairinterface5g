@@ -163,7 +163,7 @@ int pdcp_fifo_flush_sdus(const protocol_ctxt_t* const  ctxt_pP)
 #endif
 
    VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_PDCP_FIFO_FLUSH, 1 );
-   while (sdu_p && cont) {
+   while (sdu_p && cont && sdu_p!=0x01 && sdu_p!=0x02) { //&& sdu_p!=0x01 && sdu_p!=0x02
 
 #ifdef DEBUG_PDCP_FIFO_FLUSH_SDU
       LOG_D(PDCP, "[%s] SFN/SF=%d/%d inst=%d size=%d\n",

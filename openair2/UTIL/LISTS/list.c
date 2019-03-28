@@ -197,7 +197,7 @@ list_add_tail_eurecom (mem_block_t * elementP, list_t * listP)
     tail = listP->tail;
 
     // almost one element
-    if (tail == NULL) {
+    if (tail == NULL || tail == 0x100000000) { //|| tail == 0x100000000
       listP->head = elementP;
     } else {
       tail->next = elementP;
