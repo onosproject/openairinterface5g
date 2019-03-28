@@ -419,7 +419,7 @@ int nr_rx_pbch( PHY_VARS_NR_UE *ue,
   int max_h=0;
   int symbol;
   //uint8_t pbch_a[64];
-  uint8_t *pbch_a = malloc(sizeof(uint8_t) * 32);
+  uint8_t *pbch_a = calloc(NR_POLAR_PBCH_PAYLOAD_BITS,sizeof(*pbch_a));
   //uint32_t pbch_a_prime;
   int16_t *pbch_e_rx;
   uint8_t *decoded_output = nr_ue_pbch_vars->decoded_output;
@@ -433,12 +433,11 @@ int nr_rx_pbch( PHY_VARS_NR_UE *ue,
   //uint8_t decoderListSize = 8, pathMetricAppr = 0;
   //time_stats_t polar_decoder_init,polar_rate_matching,decoding,bit_extraction,deinterleaving;
   //time_stats_t path_metric,sorting,update_LLR;
-  memset(&pbch_a[0], 0, sizeof(uint8_t) * NR_POLAR_PBCH_PAYLOAD_BITS);
   //printf("nr_pbch_ue nid_cell %d\n",frame_parms->Nid_cell);
 
-  pbch_e_rx = &nr_ue_pbch_vars->llr[0];
+  pbch_e_rx = nr_ue_pbch_vars->llr;
   // clear LLR buffer
-  memset(nr_ue_pbch_vars->llr,0,NR_POLAR_PBCH_E);
+  memset(nr_ue_pbch_vars->llr,0,NR_POLAR_PBCH_E * sizeof(*nr_ue_pbch_vars->llr));
   int symbol_offset=1;
 
   if (ue->is_synchronized > 0)
@@ -499,12 +498,12 @@ int nr_rx_pbch( PHY_VARS_NR_UE *ue,
     */
     if (symbol==1) {
       nr_pbch_quantize(pbch_e_rx,
-                       (short *)&(nr_ue_pbch_vars->rxdataF_comp[0][symbol*240]),
+                       (short *)&(nr_ue_pbch_vars->rxdataF_ext[0][symbol*240]),
                        144);
       pbch_e_rx+=144;
     } else {
       nr_pbch_quantize(pbch_e_rx,
-                       (short *)&(nr_ue_pbch_vars->rxdataF_comp[0][symbol*240]),
+                       (short *)&(nr_ue_pbch_vars->rxdataF_ext[0][symbol*240]),
                        360);
       pbch_e_rx+=360;
     }

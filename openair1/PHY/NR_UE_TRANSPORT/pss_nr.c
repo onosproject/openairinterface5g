@@ -626,11 +626,11 @@ void decimation_synchro_nr(PHY_VARS_NR_UE *PHY_vars_UE, int rate_change, int **r
 /* build with cic filter does not work properly. Performances are significantly deteriorated */
 #ifdef CIC_DECIMATOR
 
-  cic_decimator((int16_t *)&(PHY_vars_UE->common_vars.rxdata[0][0]), (int16_t *)&(rxdata[0][0]),
+  cic_decimator((int16_t *)&(PHY_vars_UE->common_vars.rxdataTime[0][0]), (int16_t *)&(rxdata[0][0]),
                             samples_for_frame, rate_change, CIC_FILTER_STAGE_NUMBER, 0, FIR_RATE_CHANGE);
 #else
 
-  fir_decimator((int16_t *)&(PHY_vars_UE->common_vars.rxdata[0][0]), (int16_t *)&(rxdata[0][0]),
+  fir_decimator((int16_t *)&(PHY_vars_UE->common_vars.rxdataTime[0][0]), (int16_t *)&(rxdata[0][0]),
                             samples_for_frame, rate_change, 0);
 
 #endif
@@ -669,7 +669,7 @@ int pss_synchro_nr(PHY_VARS_NR_UE *PHY_vars_UE, int rate_change)
 
   int samples_for_frame = frame_parms->samples_per_subframe*NR_NUMBER_OF_SUBFRAMES_PER_FRAME;
 
-  LOG_M("rxdata0_rand.m","rxd0_rand", &PHY_vars_UE->common_vars.rxdata[0][0], samples_for_frame, 1, 1);
+  LOG_M("rxdata0_rand.m","rxd0_rand", &PHY_vars_UE->common_vars.rxdataTime[0][0], samples_for_frame, 1, 1);
 
 #endif
 
@@ -688,7 +688,7 @@ int pss_synchro_nr(PHY_VARS_NR_UE *PHY_vars_UE, int rate_change)
   }
   else {
 
-    rxdata = PHY_vars_UE->common_vars.rxdata;
+    rxdata = PHY_vars_UE->common_vars.rxdataTime;
   }
 
 #ifdef DBG_PSS_NR

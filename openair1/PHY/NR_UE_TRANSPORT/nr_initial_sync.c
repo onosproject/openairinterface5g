@@ -76,7 +76,7 @@ int nr_pbch_detection(PHY_VARS_NR_UE *ue, runmode_t mode)
 	      0,
 	      1,
 	      NR_PBCH_EST);
-  
+  //memset(&ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[0]].rxdataF[0][ue->frame_parms.ofdm_symbol_size*1], 0, ue->frame_parms.ofdm_symbol_size*4);
   //symbol 2
   nr_slot_fep(ue,
 	      2,
@@ -85,6 +85,7 @@ int nr_pbch_detection(PHY_VARS_NR_UE *ue, runmode_t mode)
 	      0,
 	      1,
 	      NR_PBCH_EST);
+  //memset(&ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[0]].rxdataF[0][ue->frame_parms.ofdm_symbol_size*2], 0, ue->frame_parms.ofdm_symbol_size*4);
 
   //symbol 3
   nr_slot_fep(ue,
@@ -94,6 +95,7 @@ int nr_pbch_detection(PHY_VARS_NR_UE *ue, runmode_t mode)
 	      0,
 	      1,
 	      NR_PBCH_EST);
+  //memset(&ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[0]].rxdataF[0][ue->frame_parms.ofdm_symbol_size*3], 0, ue->frame_parms.ofdm_symbol_size*4);
 
   //put back nb_prefix_samples0
   frame_parms->nb_prefix_samples0 = nb_prefix_samples0;
@@ -190,7 +192,7 @@ int nr_initial_sync(PHY_VARS_NR_UE *ue, runmode_t mode)
     
   ue->rx_offset = ue->ssb_offset - sync_pos_slot;
 
-  //write_output("rxdata1.m","rxd1",ue->common_vars.rxdata[0],10*fp->samples_per_subframe,1,1);
+  //write_output("rxdata1.m","rxd1",ue->common_vars.rxdataTime[0],10*fp->samples_per_subframe,1,1);
 
 #ifdef DEBUG_INITIAL_SYNCH
   LOG_I(PHY,"[UE%d] Initial sync : Estimated PSS position %d, Nid2 %d\n", ue->Mod_id, sync_pos,ue->common_vars.eNb_id);
@@ -207,10 +209,10 @@ int nr_initial_sync(PHY_VARS_NR_UE *ue, runmode_t mode)
 
 	for(int n=start; n<end; n++){  	
 	  for (int ar=0; ar<fp->nb_antennas_rx; ar++) {
-		re = ((double)(((short *)ue->common_vars.rxdata[ar]))[2*n]);
-		im = ((double)(((short *)ue->common_vars.rxdata[ar]))[2*n+1]);
-		((short *)ue->common_vars.rxdata[ar])[2*n] = (short)(round(re*cos(n*off_angle) - im*sin(n*off_angle))); 
-		((short *)ue->common_vars.rxdata[ar])[2*n+1] = (short)(round(re*sin(n*off_angle) + im*cos(n*off_angle)));
+		re = ((double)(((short *)ue->common_vars.rxdataTime[ar]))[2*n]);
+		im = ((double)(((short *)ue->common_vars.rxdataTime[ar]))[2*n+1]);
+		((short *)ue->common_vars.rxdataTime[ar])[2*n] = (short)(round(re*cos(n*off_angle) - im*sin(n*off_angle))); 
+		((short *)ue->common_vars.rxdataTime[ar])[2*n+1] = (short)(round(re*sin(n*off_angle) + im*cos(n*off_angle)));
 	  }
 	}
   }

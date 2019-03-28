@@ -510,7 +510,7 @@ void readFrame(PHY_VARS_NR_UE *UE,  openair0_timestamp *timestamp) {
 
   for(int x=0; x<10; x++) {
     for (int i=0; i<UE->frame_parms.nb_antennas_rx; i++)
-      rxp[i] = ((void *)&UE->common_vars.rxdata[i][0]) + 4*x*UE->frame_parms.samples_per_subframe;
+      rxp[i] = ((void *)&UE->common_vars.rxdataTime[i][0]) + 4*x*UE->frame_parms.samples_per_subframe;
 
     AssertFatal( UE->frame_parms.samples_per_subframe ==
                  UE->rfdevice.trx_read_func(&UE->rfdevice,
@@ -564,7 +564,7 @@ void syncInFrame(PHY_VARS_NR_UE *UE, openair0_timestamp *timestamp) {
       AssertFatal(unitTransfer ==
                   UE->rfdevice.trx_read_func(&UE->rfdevice,
                                              timestamp,
-                                             (void **)UE->common_vars.rxdata,
+                                             (void **)UE->common_vars.rxdataTime,
                                              unitTransfer,
                                              UE->frame_parms.nb_antennas_rx),"");
     }
@@ -650,7 +650,7 @@ void *UE_thread(void *arg) {
       AssertFatal (UE->frame_parms.ofdm_symbol_size+UE->frame_parms.nb_prefix_samples0 ==
                    UE->rfdevice.trx_read_func(&UE->rfdevice,
                                               &timestamp,
-                                              (void **)UE->common_vars.rxdata,
+                                              (void **)UE->common_vars.rxdataTime,
                                               UE->frame_parms.ofdm_symbol_size+UE->frame_parms.nb_prefix_samples0,
                                               UE->frame_parms.nb_antennas_rx),"");
       continue;
@@ -671,7 +671,7 @@ void *UE_thread(void *arg) {
     LOG_D(PHY,"Process slot %d thread Idx %d \n", slot_nr, thread_idx);
 
     for (int i=0; i<UE->frame_parms.nb_antennas_rx; i++)
-      rxp[i] = (void *)&UE->common_vars.rxdata[i][UE->frame_parms.ofdm_symbol_size+
+      rxp[i] = (void *)&UE->common_vars.rxdataTime[i][UE->frame_parms.ofdm_symbol_size+
                UE->frame_parms.nb_prefix_samples0+
                slot_nr*UE->frame_parms.samples_per_slot];
 
@@ -718,7 +718,7 @@ void *UE_thread(void *arg) {
         AssertFatal(first_symbols ==
                     UE->rfdevice.trx_read_func(&UE->rfdevice,
                                                &timestamp,
-                                               (void **)UE->common_vars.rxdata,
+                                               (void **)UE->common_vars.rxdataTime,
                                                first_symbols,
                                                UE->frame_parms.nb_antennas_rx),"");
       else

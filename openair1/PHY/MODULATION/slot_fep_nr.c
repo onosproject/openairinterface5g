@@ -9,7 +9,7 @@
  *
  *      http://www.openairinterface.org/?page_id=698
  *
- * Unless required by applicable law or agreed to in writing, software
+ * Unless required by applicable law or agreed to in writing, software/data/openairinterface5g.nr/openair1/PHY/MODULATION/slot_fep_nr.c
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
@@ -25,7 +25,7 @@
 #include "PHY/LTE_ESTIMATION/lte_estimation.h"
 #include "PHY/NR_UE_ESTIMATION/nr_estimation.h"
 
-//#define DEBUG_FEP
+#define DEBUG_FEP(a...)
 
 #define SOFFSET 0
 
@@ -35,18 +35,16 @@
 #endif*/
 
 int nr_slot_fep(PHY_VARS_NR_UE *ue,
-		unsigned char l,
-		unsigned char Ns,
-		int sample_offset,
-		int no_prefix,
-		int reset_freq_est,
-		NR_CHANNEL_EST_t channel)
-{
+                unsigned char symbol,
+                unsigned char Ns,
+                int sample_offset,
+                int no_prefix,
+                int reset_freq_est,
+                NR_CHANNEL_EST_t channel) {
   NR_DL_FRAME_PARMS *frame_parms = &ue->frame_parms;
   NR_UE_COMMON *common_vars   = &ue->common_vars;
   uint8_t eNB_id = 0;//ue_common_vars->eNb_id;
   unsigned char aa;
-  unsigned char symbol = l;//+((7-frame_parms->Ncp)*(Ns&1)); ///symbol within sub-frame
   unsigned int nb_prefix_samples = (no_prefix ? 0 : frame_parms->nb_prefix_samples);
   unsigned int nb_prefix_samples0 = (no_prefix ? 0 : frame_parms->nb_prefix_samples0);
   //unsigned int subframe_offset;//,subframe_offset_F;
@@ -62,52 +60,23 @@ int nr_slot_fep(PHY_VARS_NR_UE *ue,
   uint8_t p=0;
   uint8_t l0 = pdcch_vars->coreset[0].duration;
   uint64_t coreset_freq_dom  = pdcch_vars->coreset[0].frequencyDomainResources;
+
   for (int i = 0; i < 45; i++) {
     if (((coreset_freq_dom & 0x1FFFFFFFFFFF) >> i) & 0x1) nb_rb_coreset++;
   }
-  nb_rb_coreset = 6 * nb_rb_coreset; 
+
+  nb_rb_coreset = 6 * nb_rb_coreset;
   //printf("corset duration %d nb_rb_coreset %d\n", l0, nb_rb_coreset);
-
   void (*dft)(int16_t *,int16_t *, int);
-  int tmp_dft_in[8192] __attribute__ ((aligned (32)));  // This is for misalignment issues for 6 and 15 PRBs
-
-  switch (frame_parms->ofdm_symbol_size) {
-  case 128:
-    dft = dft128;
-    break;
-
-  case 256:
-    dft = dft256;
-    break;
-
-  case 512:
-    dft = dft512;
-    break;
-
-  case 1024:
-    dft = dft1024;
-    break;
-
-  case 1536:
-    dft = dft1536;
-    break;
-
-  case 2048:
-    dft = dft2048;
-    break;
-
-  case 4096:
-    dft = dft4096;
-    break;
-
-  case 8192:
-    dft = dft8192;
-    break;
-
-  default:
-    dft = dft512;
-    break;
+  struct l_s {
+    int key;
+    void (*val)(int16_t *,int16_t *, int);
   }
+  listFunc[] = {
+    {128, dft128},{256,dft256},{512,dft512},{1024,dft1024},
+    {1536,dft1536},{2048,dft2048},{4096,dft4096},{8192,dft8192}
+  };
+  findInList(frame_parms->ofdm_symbol_size, dft, listFunc, struct l_s);
 
   if (no_prefix) {
     slot_offset = frame_parms->ofdm_symbol_size * (frame_parms->symbols_per_slot) * (Ns);
@@ -115,195 +84,110 @@ int nr_slot_fep(PHY_VARS_NR_UE *ue,
     slot_offset = (frame_parms->samples_per_slot) * (Ns);
   }
 
-  /*if (l<0 || l>=7-frame_parms->Ncp) {
-    printf("slot_fep: l must be between 0 and %d\n",7-frame_parms->Ncp);
-    return(-1);
-    }*/
-
-  if (Ns<0 || Ns>=20) {
-    printf("slot_fep: Ns must be between 0 and 19\n");
-    return(-1);
-  }
-
-
+  int32_t **rxdf=common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[Ns]].rxdataF;
+  AssertFatal (Ns>=0 && Ns<20, "slot_fep: Ns must be between 0 and 19\n");
 
   for (aa=0; aa<frame_parms->nb_antennas_rx; aa++) {
-    memset(&common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[Ns]].rxdataF[aa][frame_parms->ofdm_symbol_size*symbol],0,frame_parms->ofdm_symbol_size*sizeof(int));
+    memset(&rxdf[aa][frame_parms->ofdm_symbol_size*symbol],0,frame_parms->ofdm_symbol_size*sizeof(int));
 
-    rx_offset = sample_offset + slot_offset + nb_prefix_samples0 - SOFFSET;
+    rx_offset = sample_offset + slot_offset + nb_prefix_samples0 - SOFFSET+
+                (frame_parms->ofdm_symbol_size+nb_prefix_samples)*symbol;
+    rx_offset %= frame_length_samples;
     // Align with 256 bit
     //    rx_offset = rx_offset&0xfffffff8;
+    LOG_D(PHY,"slot_fep: slot %d, symbol %d, nb_prefix_samples %d, nb_prefix_samples0 %d, slot_offset %d,  sample_offset %d,rx_offset %d, frame_length_samples %d\n",
+          Ns, symbol, nb_prefix_samples,nb_prefix_samples0,slot_offset,sample_offset,rx_offset,frame_length_samples);
 
-#ifdef DEBUG_FEP
-      //  if (ue->frame <100)
-    /*LOG_I(PHY,*/printf("slot_fep: frame %d: slot %d, symbol %d, nb_prefix_samples %d, nb_prefix_samples0 %d, slot_offset %d,  sample_offset %d,rx_offset %d, frame_length_samples %d\n", ue->proc.proc_rxtx[(Ns)&1].frame_rx,Ns, symbol,
-          nb_prefix_samples,nb_prefix_samples0,slot_offset,sample_offset,rx_offset,frame_length_samples);
-#endif
-
-    if (l==0) {
-
-      if (rx_offset > (frame_length_samples - frame_parms->ofdm_symbol_size))
-        memcpy((short *)&common_vars->rxdata[aa][frame_length_samples],
-               (short *)&common_vars->rxdata[aa][0],
-               frame_parms->ofdm_symbol_size*sizeof(int));
-
-      if ((rx_offset&7)!=0) {  // if input to dft is not 256-bit aligned, issue for size 6,15 and 25 PRBs
-        memcpy((void *)tmp_dft_in,
-               (void *)&common_vars->rxdata[aa][rx_offset % frame_length_samples],
-               frame_parms->ofdm_symbol_size*sizeof(int));
-        dft((int16_t *)tmp_dft_in,
-            (int16_t *)&common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[Ns]].rxdataF[aa][frame_parms->ofdm_symbol_size*symbol],1);
-      } else { // use dft input from RX buffer directly
-#if UE_TIMING_TRACE
-          start_meas(&ue->rx_dft_stats);
-#endif
-
-        dft((int16_t *)&common_vars->rxdata[aa][(rx_offset) % frame_length_samples],
-            (int16_t *)&common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[Ns]].rxdataF[aa][frame_parms->ofdm_symbol_size*symbol],1);
-#if UE_TIMING_TRACE
-        stop_meas(&ue->rx_dft_stats);
-#endif
-      }
-    } else {
-      rx_offset += (frame_parms->ofdm_symbol_size+nb_prefix_samples)*l;// +
-      //                   (frame_parms->ofdm_symbol_size+nb_prefix_samples)*(l-1);
-
-      if (rx_offset > (frame_length_samples - frame_parms->ofdm_symbol_size))
-        memcpy((void *)&common_vars->rxdata[aa][frame_length_samples],
-               (void *)&common_vars->rxdata[aa][0],
-               frame_parms->ofdm_symbol_size*sizeof(int));
-#if UE_TIMING_TRACE
-      start_meas(&ue->rx_dft_stats);
-#endif
-
-      if ((rx_offset&7)!=0) {  // if input to dft is not 128-bit aligned, issue for size 6 and 15 PRBs
-        memcpy((void *)tmp_dft_in,
-               (void *)&common_vars->rxdata[aa][(rx_offset) % frame_length_samples],
-               frame_parms->ofdm_symbol_size*sizeof(int));
-        dft((int16_t *)tmp_dft_in,
-            (int16_t *)&common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[Ns]].rxdataF[aa][frame_parms->ofdm_symbol_size*symbol],1);
-      } else { // use dft input from RX buffer directly
-
-        dft((int16_t *)&common_vars->rxdata[aa][(rx_offset) % frame_length_samples],
-            (int16_t *)&common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[Ns]].rxdataF[aa][frame_parms->ofdm_symbol_size*symbol],1);
-      }
-#if UE_TIMING_TRACE
-      stop_meas(&ue->rx_dft_stats);
-#endif
-
-
+    if (rx_offset > (frame_length_samples - frame_parms->ofdm_symbol_size)) {
+      if (rx_offset+frame_parms->ofdm_symbol_size > frame_parms->samples_per_subframe*10+2048)
+	LOG_E(PHY,"rx_offset get out of buffer\n");
+      else
+	LOG_W(PHY,"DFT on a buffer outside regular space, code looks wrong\n");
+      memcpy((short *)&common_vars->rxdataTime[aa][frame_length_samples],
+             (short *)&common_vars->rxdataTime[aa][0],
+             frame_parms->ofdm_symbol_size*sizeof(int));
+    }
+    if ((rx_offset&7)!=0) {  // if input to dft is not 256-bit aligned, issue for size 6,15 and 25 PRBs
+      LOG_D(PHY,"dft on unaligned buffer: %d offset\n", rx_offset);
+      int tmp_dft_in[8192] __attribute__ ((aligned (32)));
+      memcpy((void *)tmp_dft_in,
+             (void *)&common_vars->rxdataTime[aa][rx_offset],
+             frame_parms->ofdm_symbol_size*sizeof(int));
+      UE_meas(ue->rx_dft_stats,
+              dft((int16_t *)tmp_dft_in,
+                  (int16_t *)&rxdf[aa][frame_parms->ofdm_symbol_size*symbol],1));
+    } else { // use dft input from RX buffer directly
+      UE_meas(ue->rx_dft_stats,
+              dft((int16_t *)&common_vars->rxdataTime[aa][rx_offset],
+                  (int16_t *)&rxdf[aa][frame_parms->ofdm_symbol_size*symbol],1));
     }
 
-    #ifdef DEBUG_FEP
-        //  if (ue->frame <100)
-        printf("slot_fep: frame %d: symbol %d rx_offset %d\n", ue->proc.proc_rxtx[(Ns)&1].frame_rx, symbol,rx_offset);
-    #endif
+    //  if (ue->frame <100)
+    DEBUG_FEP("slot_fep: frame %d: symbol %d rx_offset %d\n", ue->proc.proc_rxtx[(Ns)&1].frame_rx, symbol,rx_offset);
   }
 
   if (ue->perfect_ce == 0) {
+    switch(channel) {
+      case NR_PBCH_EST:
+        DEBUG_FEP("Channel estimation eNB %d, slot %d, symbol %d\n",eNB_id,Ns,l);
+        UE_meas(ue->dlsch_channel_estimation_stats,
+                nr_pbch_channel_estimation(ue,eNB_id,0,
+                                           Ns,
+                                           symbol,
+                                           symbol));
+        // do frequency offset estimation here!
+        // use channel estimates from current symbol (=ch_t) and last symbol (ch_{t-1})
+        DEBUG_FEP("Frequency offset estimation\n");
 
-  switch(channel){
-  case NR_PBCH_EST:
+        if (symbol==(4-frame_parms->Ncp)) {
+          /*UE_meas(ue->dlsch_freq_offset_estimation_stats,
+          lte_est_freq_offset(common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[Ns>>1]].dl_ch_estimates[0],
+                              frame_parms,
+                              l,
+                              &common_vars->freq_offset,
+            reset_freq_est);*/
+        }
 
-#ifdef DEBUG_FEP
-    printf("Channel estimation eNB %d, slot %d, symbol %d\n",eNB_id,Ns,l);
-#endif
-#if UE_TIMING_TRACE
-    start_meas(&ue->dlsch_channel_estimation_stats);
-#endif
-    nr_pbch_channel_estimation(ue,eNB_id,0,
-			       Ns,
-			       l,
-			       symbol);
-      //}
-#if UE_TIMING_TRACE
-        stop_meas(&ue->dlsch_channel_estimation_stats);
-#endif
+        break;
 
-      // do frequency offset estimation here!
-      // use channel estimates from current symbol (=ch_t) and last symbol (ch_{t-1})
-#ifdef DEBUG_FEP
-      printf("Frequency offset estimation\n");
-#endif
+      case NR_PDCCH_EST:
+        DEBUG_FEP("PDCCH Channel estimation eNB %d, aatx %d, slot %d, symbol %d start_sc %d\n",eNB_id,aa,Ns,l,coreset_start_subcarrier);
+        UE_meas(ue->dlsch_channel_estimation_stats,
+                nr_pdcch_channel_estimation(ue,eNB_id,0,
+                                            Ns,
+                                            symbol,
+                                            symbol,
+                                            coreset_start_subcarrier,
+                                            nb_rb_coreset));
+        break;
 
-      if (l==(4-frame_parms->Ncp)) {
+      case NR_PDSCH_EST:
+        DEBUG_FEP("Channel estimation eNB %d, aatx %d, slot %d, symbol %d\n",eNB_id,aa,Ns,l);
+        ue->frame_parms.nushift =  (p>>1)&1;
 
-#if UE_TIMING_TRACE
-          start_meas(&ue->dlsch_freq_offset_estimation_stats);
-#endif
+        if (symbol ==l0)
+          UE_meas(ue->dlsch_channel_estimation_stats,
+                  nr_pdsch_channel_estimation(ue,eNB_id,0,
+                                              Ns,
+                                              p,
+                                              symbol,
+                                              symbol,
+                                              bwp_start_subcarrier,
+                                              nb_rb_pdsch));
 
-        /*lte_est_freq_offset(common_vars->common_vars_rx_data_per_thread[ue->current_thread_id[Ns>>1]].dl_ch_estimates[0],
-                            frame_parms,
-                            l,
-                            &common_vars->freq_offset,
-			    reset_freq_est);*/
-#if UE_TIMING_TRACE
-        stop_meas(&ue->dlsch_freq_offset_estimation_stats);
-#endif
+        break;
 
-      }
+      case NR_SSS_EST:
+        break;
 
-  break;
-
-  case NR_PDCCH_EST:
-
-#ifdef DEBUG_FEP
-    printf("PDCCH Channel estimation eNB %d, aatx %d, slot %d, symbol %d start_sc %d\n",eNB_id,aa,Ns,l,coreset_start_subcarrier);
-#endif
-#if UE_TIMING_TRACE
-    start_meas(&ue->dlsch_channel_estimation_stats);
-#endif
-    nr_pdcch_channel_estimation(ue,eNB_id,0,
-				Ns,
-				l,
-				symbol,
-				coreset_start_subcarrier,
-				nb_rb_coreset);
-#if UE_TIMING_TRACE
-    stop_meas(&ue->dlsch_channel_estimation_stats);
-#endif
-    
-    break;
-    
-  case NR_PDSCH_EST:
-#ifdef DEBUG_FEP
-    printf("Channel estimation eNB %d, aatx %d, slot %d, symbol %d\n",eNB_id,aa,Ns,l);
-#endif
-#if UE_TIMING_TRACE
-    start_meas(&ue->dlsch_channel_estimation_stats);
-#endif
-
-  ue->frame_parms.nushift =  (p>>1)&1;;
-
-    if (symbol ==l0)
-    nr_pdsch_channel_estimation(ue,eNB_id,0,
-				Ns,
-				p,
-				l,
-				symbol,
-				bwp_start_subcarrier,
-				nb_rb_pdsch);
-				
-#if UE_TIMING_TRACE
-    stop_meas(&ue->dlsch_channel_estimation_stats);
-#endif
-    
-    break;
-    
-  case NR_SSS_EST:
-  break;
-
-  default:
-    LOG_E(PHY,"[UE][FATAL] Unknown channel format %d\n",channel);
-    return(-1);
-    break;
+      default:
+        LOG_E(PHY,"[UE][FATAL] Unknown channel format %d\n",channel);
+        return(-1);
+        break;
+    }
   }
 
-  }
-
-#ifdef DEBUG_FEP
-  printf("slot_fep: done\n");
-#endif
+  DEBUG_FEP("slot_fep: done\n");
   return(0);
 }
 
