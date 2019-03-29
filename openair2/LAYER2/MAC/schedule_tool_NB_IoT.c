@@ -746,8 +746,8 @@ void add_ue_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, uint16_t rnti, ce_level_t ce, 
             UE_list->UE_template_NB_IoT[i].CE_level = (uint32_t)ce;
             //assume random select direction
             UE_list->UE_template_NB_IoT[i].R_dci = dci_rep[(uint32_t)ce];
-            //UE_list->UE_template_NB_IoT[i].R_max = UE_list->NPDCCH_config_dedicated.R_max;
-            UE_list->UE_template_NB_IoT[i].R_max = 4;
+            UE_list->UE_template_NB_IoT[i].R_max = UE_list->NPDCCH_config_dedicated.R_max;
+            //UE_list->UE_template_NB_IoT[i].R_max = 16;
             UE_list->UE_template_NB_IoT[i].R_harq = harq_rep[(uint32_t)ce];
             UE_list->UE_template_NB_IoT[i].HARQ_round = 0;
             UE_list->UE_template_NB_IoT[i].oldNDI_UL = 0;
