@@ -203,7 +203,6 @@ extern void get_uethreads_params(void);
 int transmission_mode=1;
 
 
-
 char *usrp_args=NULL;
 char *usrp_clksrc=NULL;
 
@@ -450,7 +449,7 @@ static void get_options(void) {
   }
 
   UE_scan=0;
-
+   
   if (tddflag > 0) {
     for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
       frame_parms[CC_id]->frame_type = TDD;
@@ -856,8 +855,8 @@ int main( int argc, char **argv ) {
     //init_UE_stub(1,eMBMS_active,uecap_xer_in,emul_iface);
     init_UE_stub_single_thread(NB_UE_INST,eMBMS_active,uecap_xer_in,emul_iface);
   } else {
-    init_UE(NB_UE_INST,eMBMS_active,uecap_xer_in,0,get_softmodem_params()->phy_test,UE_scan,UE_scan_carrier,mode,(int)rx_gain[0][0],tx_max_power[0],
-            frame_parms[0]);
+      init_UE(NB_UE_INST,eMBMS_active,uecap_xer_in,0,get_softmodem_params()->phy_test,UE_scan,UE_scan_carrier,mode,(int)rx_gain[0][0],tx_max_power[0],
+              frame_parms[0]);
   }
 
   if (get_softmodem_params()->phy_test==0) {
@@ -874,7 +873,6 @@ int main( int argc, char **argv ) {
       PHY_vars_UE_g[0][CC_id]->rf_map.chain=CC_id+(get_softmodem_params()->chain_offset);
     }
   }
-
 
   if (input_fd) {
     printf("Reading in from file to antenna buffer %d\n",0);
