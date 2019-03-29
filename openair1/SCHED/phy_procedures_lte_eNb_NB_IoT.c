@@ -913,16 +913,18 @@ void generate_eNB_dlsch_params_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t * proc,n
 
 void generate_eNB_ulsch_params_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,nfapi_hi_dci0_request_pdu_t *hi_dci0_pdu) {
 
-  int UE_id = -1;
+  //int UE_id = -1;
   //int harq_pid = 0;
-
+  int                      frame         =  proc->frame_tx;
+  int                      subframe      =  proc->subframe_tx;
   DCI_CONTENT *DCI_Content;
   DCI_Content = (DCI_CONTENT*) malloc(sizeof(DCI_CONTENT));
+  NB_IoT_eNB_NPDCCH_t      *npdcch;
 
   //mapping the fapi parameters to the OAI parameters
   DCI_Content->DCIN0.type       = 0;
   DCI_Content->DCIN0.scind      = hi_dci0_pdu->npdcch_dci_pdu.npdcch_dci_pdu_rel13.subcarrier_indication;
-  DCI_Content->DCIN0.ResAssign  = hi_dci0_pdu->npdcch_dci_pdu.npdcch_dci_pdu_rel13.subcarrier_indication;
+  DCI_Content->DCIN0.ResAssign  = hi_dci0_pdu->npdcch_dci_pdu.npdcch_dci_pdu_rel13.resource_assignment;
   DCI_Content->DCIN0.mcs        = hi_dci0_pdu->npdcch_dci_pdu.npdcch_dci_pdu_rel13.mcs;
   DCI_Content->DCIN0.ndi        = hi_dci0_pdu->npdcch_dci_pdu.npdcch_dci_pdu_rel13.new_data_indicator;
   DCI_Content->DCIN0.Scheddly   = hi_dci0_pdu->npdcch_dci_pdu.npdcch_dci_pdu_rel13.scheduling_delay;
@@ -930,27 +932,24 @@ void generate_eNB_ulsch_params_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,nf
   DCI_Content->DCIN0.rv         = hi_dci0_pdu->npdcch_dci_pdu.npdcch_dci_pdu_rel13.redudancy_version;
   DCI_Content->DCIN0.DCIRep     = hi_dci0_pdu->npdcch_dci_pdu.npdcch_dci_pdu_rel13.dci_subframe_repetition_number;
 
-
-
-  UE_id = find_ue_NB_IoT(hi_dci0_pdu->npdcch_dci_pdu.npdcch_dci_pdu_rel13.rnti, eNB);
-  AssertFatal(UE_id == -1, "no ndlsch context available or no ndlsch context corresponding to that rnti\n");
-
+  npdcch               =  eNB->npdcch_DCI;
 
   /*Log for generate ULSCH DCI*/
+  LOG_I(PHY,"packing DCI N0\n");
+
+  LOG_I(PHY,"Dump DCI N0 : scind: %d, ResAssign: %d, mcs: %d, ndi: %d, Scheddly: %d, RepNum: %d, rv: %d, DCIRep: %d\n",DCI_Content->DCIN0.scind,DCI_Content->DCIN0.ResAssign,DCI_Content->DCIN0.mcs,DCI_Content->DCIN0.ndi,DCI_Content->DCIN0.Scheddly,DCI_Content->DCIN0.RepNum,DCI_Content->DCIN0.rv,DCI_Content->DCIN0.DCIRep);
 
   generate_eNB_ulsch_params_from_dci_NB_IoT(eNB,
-                                            proc,
+                                            frame,
+                                            subframe,
                                             DCI_Content,
                                             hi_dci0_pdu->npdcch_dci_pdu.npdcch_dci_pdu_rel13.rnti,
-                                            DCIFormatN0,
-                                            UE_id,
+                                            npdcch,
                                             hi_dci0_pdu->npdcch_dci_pdu.npdcch_dci_pdu_rel13.aggregation_level,
-                                            hi_dci0_pdu->npdcch_dci_pdu.npdcch_dci_pdu_rel13.start_symbol);  
+                                            hi_dci0_pdu->npdcch_dci_pdu.npdcch_dci_pdu_rel13.start_symbol,
+                                            hi_dci0_pdu->npdcch_dci_pdu.npdcch_dci_pdu_rel13.ncce_index
+                                            );  
 
-  
-  //LOG for ULSCH DCI Resource allocation
-  //CBA is not used in NB-IoT
-    eNB->nulsch[UE_id]->harq_process->subframe_scheduling_flag = 1;
   
 }
 

@@ -184,7 +184,7 @@ int output_handler(eNB_MAC_INST_NB_IoT *mac_inst, module_id_t module_id, int CC_
 
 					}else if(schedule_result_list_DL->direction == UL) // DCI for uplink
 					{
-						LOG_D(MAC,"[hypersfn:%2d][frame:%2d][subframe:%2d]NB-IoT fill UL_DCI\n",hypersfn,frame,subframe);
+						LOG_I(MAC,"[hypersfn:%2d][frame:%2d][subframe:%2d]NB-IoT fill UL_DCI\n",hypersfn,frame,subframe);
 						hi_dci0_pdu = SCHED_info->HI_DCI0_req->hi_dci0_request_body.hi_dci0_pdu_list;
 						DCI_pdu = schedule_result_list_DL-> DCI_pdu;
 						SCHED_info-> HI_DCI0_req->hi_dci0_request_body.number_of_dci =1;
@@ -275,7 +275,7 @@ int output_handler(eNB_MAC_INST_NB_IoT *mac_inst, module_id_t module_id, int CC_
 			if(schedule_result_list_UL->channel == NPUSCH)  // condition should be added to switch between HI_DCI0 and Msg3
 			{
 				//LOG_D(MAC,"first UL \n");
-				LOG_D(MAC,"[hypersfn:%2d][frame:%2d][subframe:%2d]NB-IoT fill UL config\n",hypersfn,frame,subframe);
+				LOG_I(MAC,"[hypersfn:%2d][frame:%2d][subframe:%2d]NB-IoT fill UL config\n",hypersfn,frame,subframe);
 				//SCHED_info->UL_req = (nfapi_ul_config_request_t *)malloc(sizeof(nfapi_ul_config_request_t));
 				//SCHED_info->UL_req->ul_config_request_body.number_of_pdus = 0;
 				//SCHED_info->UL_req->ul_config_request_body.ul_config_pdu_list = (nfapi_ul_config_request_pdu_t *)malloc(5 * sizeof(nfapi_ul_config_request_pdu_t));

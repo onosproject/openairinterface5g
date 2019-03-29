@@ -395,8 +395,8 @@ void schedule_response_NB_IoT(Sched_Rsp_NB_IoT_t *Sched_INFO)
     switch (hi_dci0_pdu->pdu_type) 
     {
     	case NFAPI_HI_DCI0_NPDCCH_DCI_PDU_TYPE:
-
-      		//generate_eNB_ulsch_params_NB_IoT(eNB,proc,hi_dci0_pdu);
+    		LOG_I(PHY, "hi_dci0_pdu type for NB_IoT\n");
+      		generate_eNB_ulsch_params_NB_IoT(eNB,proc,hi_dci0_pdu);
 
       		break;
     	default:
@@ -462,7 +462,7 @@ void schedule_response_NB_IoT(Sched_Rsp_NB_IoT_t *Sched_INFO)
 	        ////////////////////////////////////////////////////////////////////////////////////////
 	  		LOG_I(PHY,"subframe = %d (TX timing), IF module proceed UL config NULSCH data pdu, will trigger npusch in next subframe\n",subframe);
 	  	}else
-
+	  	{
 	  		nulsch = eNB->ulsch_NB_IoT[0];
 			nulsch_harq = nulsch->harq_process;
 	
@@ -487,6 +487,7 @@ void schedule_response_NB_IoT(Sched_Rsp_NB_IoT_t *Sched_INFO)
 
 
 	  		LOG_I(PHY,"subframe = %d (TX timing), IF module proceed UL config NULSCH ack pdu, will trigger npusch in next subframe\n",subframe);
+		 }
 		  break;
 	  case NFAPI_UL_CONFIG_NRACH_PDU_TYPE:
 		  //TODO just for update the nprach  configuration (given at the beginning through phy_config_sib2)

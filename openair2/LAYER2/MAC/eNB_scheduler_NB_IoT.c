@@ -78,7 +78,7 @@ void eNB_scheduler_computing_flag_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, uint32_t
 			LOG_D(MAC,"[%d][computing flags] common searching space: %d, num subframe: %d\n", mac_inst->current_subframe, i, extend_space[i]);
 		}
 	}
-/*	
+	
 	//USS trigger flag
 	for(i=0;i<mac_inst->num_uss_list;++i)
 	{
@@ -89,7 +89,7 @@ void eNB_scheduler_computing_flag_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, uint32_t
 			LOG_D(MAC,"[%d][computing flags] UE-spec searching space: %d, num subframe: %d\n", mac_inst->current_subframe, i, mac_inst->UE_list_spec[i].NPDCCH_config_dedicated.T);
 		}
 	}
-*/
+
 	*max_subframe = max;	//	the maximum subframe to be extend
 }
 
@@ -137,9 +137,9 @@ void eNB_dlsch_ulsch_scheduler_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, uint32_t ab
 	for(i=0;i<mac_inst->num_uss_list;++i)
 	{
 		if((scheduler_flags&(flag_uss_v<<i))>0){
-			LOG_I(MAC,"--------------[%04d][SchedulerUSS] Schedule USS list %d------------\n", mac_inst->current_subframe, (scheduler_flags&(flag_uss_v<<i))>>3);
+			LOG_D(MAC,"--------------[%04d][SchedulerUSS] Schedule USS list %d------------\n", mac_inst->current_subframe, (scheduler_flags&(flag_uss_v<<i))>>3);
 			schedule_uss_NB_IoT(0, mac_inst,sf, f, h, i);
-			LOG_I(MAC,"--------------[%04d][SchedulerUSS] Schedule USS list %d end------------\n", mac_inst->current_subframe, (scheduler_flags&(flag_uss_v<<i))>>3);
+			LOG_D(MAC,"--------------[%04d][SchedulerUSS] Schedule USS list %d end------------\n", mac_inst->current_subframe, (scheduler_flags&(flag_uss_v<<i))>>3);
 			scheduler_flags &= ~(flag_uss_v<<i);
 		}
 	}
@@ -291,7 +291,7 @@ void schedule_uss_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_inst, u
 					LOG_D(MAC,"[%04d][schedule_uss_NB_IoT][UE%d] UE_sched_ctrl NPUSCH information:sf_start %d sf end %d\n", mac_inst->current_subframe, UE_template_temp->rnti, UE_sched_ctrl_info->NPUSCH_sf_start, UE_sched_ctrl_info->NPUSCH_sf_end);
 	    			DCI_N0 = (DCIFormatN0_t*)malloc(sizeof(DCIFormatN0_t));
 	    			//generate DCI-N0 content
-                    //fill_DCI_N0(DCI_N0, UE_template_temp, UE_sched_ctrl_info);
+                    fill_DCI_N0(DCI_N0, UE_template_temp, UE_sched_ctrl_info);
 	    			generate_scheduling_result_UL(UE_sched_ctrl_info->NPDCCH_sf_start, UE_sched_ctrl_info->NPDCCH_sf_end,UE_sched_ctrl_info->NPUSCH_sf_start, UE_sched_ctrl_info->NPUSCH_sf_end,DCI_N0, UE_template_temp->rnti, str22, str23);
 	      			//sotre UE_template
 	      			UE_template_temp->R_dci=UE_sched_ctrl_info->R_dci;
@@ -301,6 +301,8 @@ void schedule_uss_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_inst, u
 				    {
 				        UE_template_temp->oldNDI_UL=1-UE_template_temp->oldNDI_UL;
 				    }
+
+				    UE_template_temp->direction = -1;
 	      			break;
 				case -1:	//	Idle
 					//DEBUG("current idle.. \n");
@@ -311,8 +313,8 @@ void schedule_uss_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_inst, u
       		}
     	}
 		UE_sched_ctrl_info -> flag_schedule_success = 0;
+		UE_ID = UE_template_temp->next;
 	}
-    UE_ID = UE_template_temp->next;
 }
 
 

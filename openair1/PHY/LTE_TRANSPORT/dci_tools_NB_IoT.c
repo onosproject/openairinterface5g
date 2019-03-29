@@ -67,80 +67,6 @@ void add_dci_NB_IoT(DCI_PDU_NB_IoT *DCI_pdu,void *pdu,rnti_t rnti,unsigned char 
   LOG_D(MAC,"add ue specific dci format %d for rnti %x \n",dci_fmt,rnti);
 }
 
-
-int generate_eNB_ulsch_params_from_dci_NB_IoT(PHY_VARS_eNB        *eNB,
-                                              eNB_rxtx_proc_t            *proc,
-                                              DCI_CONTENT                *DCI_Content,
-                                              uint16_t                   rnti,
-                                              DCI_format_NB_IoT_t        dci_format,
-                                              uint8_t                    UE_id,
-                                              uint8_t                    aggregation,
-									                            uint8_t                    npdcch_start_symbol)
-{
-
-  void *ULSCH_DCI_NB_IoT = NULL;
-
-  eNB->DCI_pdu = (DCI_PDU_NB_IoT*) malloc(sizeof(DCI_PDU_NB_IoT));
-
-  /// type = 0 => DCI Format N0, type = 1 => DCI Format N1, 1 bits
-  uint8_t type;
-  /// Subcarrier indication, 6 bits
-  uint8_t scind;
-  /// Resourse Assignment (RU Assignment), 3 bits
-  uint8_t ResAssign;
-  /// Modulation and Coding Scheme, 4 bits
-  uint8_t mcs;
-  /// New Data Indicator, 1 bits
-  uint8_t ndi;
-  /// Scheduling Delay, 2 bits
-  uint8_t Scheddly;
-  /// Repetition Number, 3 bits
-  uint8_t RepNum;
-  /// Redundancy version for HARQ (only use 0 and 2), 1 bits
-  uint8_t rv;
-  /// DCI subframe repetition Number, 2 bits
-  uint8_t DCIRep;
-  
-  if (dci_format == DCIFormatN0) 
-    {
-      
-      type        = DCI_Content->DCIN0.type;
-      scind       = DCI_Content->DCIN0.scind;
-      ResAssign   = DCI_Content->DCIN0.ResAssign;
-      mcs         = DCI_Content->DCIN0.mcs;
-      ndi         = DCI_Content->DCIN0.ndi;
-      Scheddly    = DCI_Content->DCIN0.Scheddly;
-      RepNum      = DCI_Content->DCIN0.RepNum;
-      rv          = DCI_Content->DCIN0.rv;
-      DCIRep      = DCI_Content->DCIN0.DCIRep;
-
-      /*Packed DCI here*/
-      ((DCIN0_t *)ULSCH_DCI_NB_IoT)->type      =type;
-      ((DCIN0_t *)ULSCH_DCI_NB_IoT)->scind     =scind;
-      ((DCIN0_t *)ULSCH_DCI_NB_IoT)->ResAssign =ResAssign;
-      ((DCIN0_t *)ULSCH_DCI_NB_IoT)->Scheddly  =Scheddly;
-      ((DCIN0_t *)ULSCH_DCI_NB_IoT)->mcs       =mcs;
-      ((DCIN0_t *)ULSCH_DCI_NB_IoT)->rv        =rv;
-      ((DCIN0_t *)ULSCH_DCI_NB_IoT)->RepNum    =RepNum;
-      ((DCIN0_t *)ULSCH_DCI_NB_IoT)->ndi       =ndi;
-      ((DCIN0_t *)ULSCH_DCI_NB_IoT)->DCIRep    =DCIRep;
-
-
-      add_dci_NB_IoT(eNB->DCI_pdu,ULSCH_DCI_NB_IoT,rnti,sizeof(DCIN0_t),aggregation,sizeof_DCIN0_t,DCIFormatN0, npdcch_start_symbol);
-
-      // use this value to configure PHY both harq_processes and resource mapping.
-
-
-      
-      return(0);
-    } 
-  else 
-    {
-        LOG_E(PHY,"generate_eNB_ulsch_params_from_dci, Illegal dci_format %d\n",dci_format);
-        return(-1);
-    }
-}
-
 //map the Isf (DCI param) to the number of subframes (Nsf)
 int resource_to_subframe[8] = {1,2,3,4,5,6,8,10};
 
@@ -199,6 +125,97 @@ int DCIrep_to_real_rep(uint8_t DCI_rep, int Rmax)
 
     return R;
 }
+
+
+int generate_eNB_ulsch_params_from_dci_NB_IoT(PHY_VARS_eNB            *eNB,
+                                              int                     frame,
+                                              uint8_t                 subframe,
+                                              DCI_CONTENT             *DCI_Content,
+                                              uint16_t                rnti,
+                                              NB_IoT_eNB_NPDCCH_t     *ndlcch,
+                                              uint8_t                 aggregation,
+                                              uint8_t                 npdcch_start_symbol,
+                                              uint8_t                 ncce_index)
+{
+
+  int tmp = 0;
+  int i = 0;
+  uint8_t  *DCI_flip = NULL;
+  ncce_index = 0;
+
+  /// type = 0 => DCI Format N0, type = 1 => DCI Format N1, 1 bits
+  uint8_t type;
+  /// Subcarrier indication, 6 bits
+  uint8_t scind;
+  /// Resourse Assignment (RU Assignment), 3 bits
+  uint8_t ResAssign;
+  /// Modulation and Coding Scheme, 4 bits
+  uint8_t mcs;
+  /// New Data Indicator, 1 bits
+  uint8_t ndi;
+  /// Scheduling Delay, 2 bits
+  uint8_t Scheddly;
+  /// Repetition Number, 3 bits
+  uint8_t RepNum;
+  /// Redundancy version for HARQ (only use 0 and 2), 1 bits
+  uint8_t rv;
+  /// DCI subframe repetition Number, 2 bits
+  uint8_t DCIRep;
+  
+      
+  type        = DCI_Content->DCIN0.type;
+  scind       = DCI_Content->DCIN0.scind;
+  ResAssign   = DCI_Content->DCIN0.ResAssign;
+  mcs         = DCI_Content->DCIN0.mcs;
+  ndi         = DCI_Content->DCIN0.ndi;
+  Scheddly    = DCI_Content->DCIN0.Scheddly;
+  RepNum      = DCI_Content->DCIN0.RepNum;
+  rv          = DCI_Content->DCIN0.rv;
+  DCIRep      = DCI_Content->DCIN0.DCIRep;
+
+  /*Now configure the npdcch structure*/
+
+  // ndlcch->ncce_index          =   NCCE_index;
+  // ndlcch->aggregation_level   =   aggregation;
+
+  ndlcch->A[ncce_index]               = sizeof_DCIN0_t; // number of bits in DCI
+
+  ndlcch->rnti[ncce_index] = rnti; //we store the RNTI (e.g. for RNTI will be used later)
+  ndlcch->active[ncce_index] = 1; //will be activated by the corresponding NDSLCH pdu
+
+  ndlcch->dci_repetitions[ncce_index]          = DCIrep_to_real_rep(DCIRep,4);        ////??????? should be repalce by the value in spec table 16.6-3, check also Rmax
+
+  //printf("dci_repetitions: %d, A = %d\n",ndlcch->dci_repetitions[ncce_index],ndlcch->A[ncce_index]);
+
+  DCI_flip = (uint8_t*)malloc(3*sizeof(uint8_t));
+
+    for(i=0; i<3; ++i){
+      DCI_flip[i] = 0x0;
+    }
+
+    DCI_flip[0] = (type << 7) | (scind << 1) | (ResAssign>>2);
+    DCI_flip[1] =  (uint8_t)(ResAssign << 6) | (Scheddly << 4) | mcs;
+    DCI_flip[2] = (rv << 7) | (RepNum << 4) | (ndi << 3) |(DCIRep <<1);
+    
+    ndlcch->pdu[ncce_index]    = DCI_flip;
+
+    printf("DCI N0 content:");
+    for (tmp =0;tmp<3;tmp++)
+      printf("%d ",DCI_flip[tmp]);
+    printf("\n");
+    /*
+     * TS 36.213 ch 16.4.1.5
+     * ITBS is always set equivalent to IMCS for data
+     * ISF = ResAssign
+     */
+
+    ndlcch->counter_repetition_number[ncce_index] = DCIrep_to_real_rep(DCIRep,4);          ////??????? should be repalce by the value in spec table 16.6-3, check also Rmax
+
+
+    LOG_I(PHY,"DCI packing for N0 done \n");
+
+}
+
 
 int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB      *eNB,
                                               int                      frame,

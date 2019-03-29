@@ -122,7 +122,8 @@ void UL_indication_NB_IoT(UL_IND_NB_IoT_t *UL_INFO)
     // Check if there is any feed back of HARQ
     if(UL_INFO->nb_harq_ind.nb_harq_indication_body.number_of_harqs>0)
     {
-      LOG_I(MAC,"Recieved Ack of DL Data\n");
+      LOG_I(MAC,"Recieved Ack of DL Data, rnti : %x\n",UL_INFO->nb_harq_ind.nb_harq_indication_body.nb_harq_pdu_list[0].rx_ue_information.rnti);
+      receive_msg4_ack_NB_IoT(mac_inst,UL_INFO->nb_harq_ind.nb_harq_indication_body.nb_harq_pdu_list[0].rx_ue_information.rnti);
     }
 
     UL_INFO->nb_harq_ind.nb_harq_indication_body.number_of_harqs = 0;

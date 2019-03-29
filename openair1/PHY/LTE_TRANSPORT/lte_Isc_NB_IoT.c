@@ -98,7 +98,7 @@ uint16_t get_UL_N_ru_NB_IoT(uint8_t I_mcs, uint8_t I_ru, uint8_t flag_msg3)
 
 			return 1;
 		} else {
-			printf("error in I_mcs value from nfapi");
+			//printf("error in I_mcs value from nfapi");
 			return 0;
 		}
 

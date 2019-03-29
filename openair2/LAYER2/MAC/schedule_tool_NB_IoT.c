@@ -319,7 +319,8 @@ int get_N_REP(int CE_level)
         N_rep = (nprach_list+1)->numRepetitionsPerPreambleAttempt;
     }else if (CE_level == 2)
     {
-        N_rep = (nprach_list+2)->numRepetitionsPerPreambleAttempt;
+        //N_rep = (nprach_list+2)->numRepetitionsPerPreambleAttempt;
+        N_rep = 1;
     }else
     {
         LOG_D(MAC,"unknown CE level!\n");
@@ -611,7 +612,7 @@ void generate_scheduling_result_UL(int32_t DCI_subframe, int32_t DCI_end_subfram
         DL_result->end_subframe = DCI_end_subframe;
         DL_result->DCI_pdu = DCI_inst;
         DL_result->DCI_release = 0;
-        DL_result->direction = DL;
+        DL_result->direction = UL;
         DL_result->channel = NPDCCH;
         DL_result->rnti = rnti;
         DL_result->next = NULL;
@@ -745,13 +746,14 @@ void add_ue_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, uint16_t rnti, ce_level_t ce, 
             UE_list->UE_template_NB_IoT[i].CE_level = (uint32_t)ce;
             //assume random select direction
             UE_list->UE_template_NB_IoT[i].R_dci = dci_rep[(uint32_t)ce];
-            UE_list->UE_template_NB_IoT[i].R_max = UE_list->NPDCCH_config_dedicated.R_max;
+            //UE_list->UE_template_NB_IoT[i].R_max = UE_list->NPDCCH_config_dedicated.R_max;
+            UE_list->UE_template_NB_IoT[i].R_max = 4;
             UE_list->UE_template_NB_IoT[i].R_harq = harq_rep[(uint32_t)ce];
             UE_list->UE_template_NB_IoT[i].HARQ_round = 0;
             UE_list->UE_template_NB_IoT[i].oldNDI_UL = 0;
             UE_list->UE_template_NB_IoT[i].oldNDI_DL = 0;
 
-            UE_list->UE_template_NB_IoT[i].multi_tone = 1;
+            UE_list->UE_template_NB_IoT[i].multi_tone = 0;
             //New UE setting ending
             UE_list->UE_template_NB_IoT[i].prev = -1;
             

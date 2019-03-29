@@ -207,14 +207,15 @@ void add_dci_NB_IoT(DCI_PDU_NB_IoT    *DCI_pdu,
 
 
 /*Use the UL DCI Information to configure PHY and also Pack the DCI*/
-int generate_eNB_ulsch_params_from_dci_NB_IoT(PHY_VARS_eNB     *eNB,
-                                              eNB_rxtx_proc_t         *proc,
+int generate_eNB_ulsch_params_from_dci_NB_IoT(PHY_VARS_eNB            *eNB,
+                                              int                     frame,
+                                              uint8_t                 subframe,
                                               DCI_CONTENT             *DCI_Content,
                                               uint16_t                rnti,
-                                              DCI_format_NB_IoT_t     dci_format,
-                                              uint8_t                 UE_id,
+                                              NB_IoT_eNB_NPDCCH_t     *ndlcch,
                                               uint8_t                 aggregation,
-									                            uint8_t                 npdcch_start_symbol);
+                                              uint8_t                 npdcch_start_symbol,
+                                              uint8_t                 ncce_index);
 
 
 /*Use the DL DCI Information to configure PHY and also Pack the DCI*/

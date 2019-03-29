@@ -657,7 +657,7 @@ void receive_msg4_ack_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, rnti_t rnti){
 				ue_info[i].direction = 1;
 			}
 			ue_info[i].RRC_connected = 1;
-			LOG_D(MAC,"[%04d][RA scheduler][MSG4] received UE:%d direction: %d \n", mac_inst->current_subframe, rnti, ue_info[i].direction );
+			LOG_D(MAC,"[%04d][RA scheduler][MSG4] received UE:%d direction: %d ul_total_buffer: %d\n", mac_inst->current_subframe, rnti, ue_info[i].direction,ue_info[i].ul_total_buffer);
 			break;
 		}
 	}
