@@ -19,7 +19,7 @@
  *      contact@openairinterface.org
  */
 
-#include "phy_init.h"
+#include "PHY/INIT/phy_init.h"
 #include "SCHED_UE/sched_UE.h"
 #include "PHY/phy_extern_nr_ue.h"
 //#include "SIMULATION/TOOLS/sim.h"
@@ -34,7 +34,6 @@
 #include "PHY/NR_UE_TRANSPORT/nr_transport_proto_ue.h"
 //#include "PHY/LTE_REFSIG/lte_refsig.h"
 #include "PHY/CODING/nrPolar_tools/nr_polar_pbch_defs.h"
-#include "PHY/INIT/phy_init.h"
 #include "PHY/NR_REFSIG/pss_nr.h"
 #include "openair1/PHY/NR_REFSIG/ul_ref_seq_nr.h"
 
@@ -711,13 +710,13 @@ int init_nr_ue_signal(PHY_VARS_NR_UE *ue,
 
     // init RX buffers
 
-    common_vars->rxdata   = (int32_t**)malloc16( fp->nb_antennas_rx*sizeof(int32_t*) );
+    common_vars->rxdataTime   = (int32_t**)malloc16( fp->nb_antennas_rx*sizeof(int32_t*) );
     for (th_id=0; th_id<RX_NB_TH_MAX; th_id++) {
         common_vars->common_vars_rx_data_per_thread[th_id].rxdataF  = (int32_t**)malloc16( fp->nb_antennas_rx*sizeof(int32_t*) );
     }
 
     for (i=0; i<fp->nb_antennas_rx; i++) {
-      common_vars->rxdata[i] = (int32_t*) malloc16_clear( (fp->samples_per_subframe*10+2048)*sizeof(int32_t) );
+      common_vars->rxdataTime[i] = (int32_t*) malloc16_clear( (fp->samples_per_subframe*10+2048)*sizeof(int32_t) );
       for (th_id=0; th_id<RX_NB_TH_MAX; th_id++) {
           common_vars->common_vars_rx_data_per_thread[th_id].rxdataF[i] = (int32_t*)malloc16_clear( sizeof(int32_t)*(fp->ofdm_symbol_size*14) );
       }

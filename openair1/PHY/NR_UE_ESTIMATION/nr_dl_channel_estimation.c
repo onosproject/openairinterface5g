@@ -413,7 +413,6 @@ int nr_pbch_channel_estimation(PHY_VARS_NR_UE *ue,
 int nr_pdcch_channel_estimation(PHY_VARS_NR_UE *ue,
 				uint8_t eNB_offset,
 				unsigned char Ns,
-				unsigned char l,
 				unsigned char symbol,
 				unsigned short coreset_start_subcarrier,
 				unsigned short nb_rb_coreset)
@@ -616,14 +615,14 @@ int nr_pdcch_channel_estimation(PHY_VARS_NR_UE *ue,
     break;
   }
 
-  if( (Ns== 1) && (l == 0))
+  if( (Ns== 1) && (symbol == 0))
   {
       // do ifft of channel estimate
       for (aarx=0; aarx<ue->frame_parms.nb_antennas_rx; aarx++)
           for (p=0; p<ue->frame_parms.nb_antenna_ports_eNB; p++) {
               if (ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[Ns]].dl_ch_estimates[eNB_offset][(p<<1)+aarx])
               {
-                  LOG_D(PHY,"Channel Impulse Computation Slot %d ThreadId %d Symbol %d \n", Ns, ue->current_thread_id[Ns], l);
+                  LOG_D(PHY,"Channel Impulse Computation Slot %d ThreadId %d Symbol %d \n", Ns, ue->current_thread_id[Ns], symbol);
                   idft((int16_t*) &ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[Ns]].dl_ch_estimates[eNB_offset][(p<<1)+aarx][0],
                           (int16_t*) ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[Ns]].dl_ch_estimates_time[eNB_offset][(p<<1)+aarx],1);
               }
@@ -634,13 +633,12 @@ int nr_pdcch_channel_estimation(PHY_VARS_NR_UE *ue,
 }
 
 int nr_pdsch_channel_estimation(PHY_VARS_NR_UE *ue,
-                              uint8_t eNB_offset,
-                              unsigned char Ns,
-                              unsigned short p,
-                              unsigned char l,
-                              unsigned char symbol,
-							  unsigned short bwp_start_subcarrier,
-							  unsigned short nb_rb_pdsch)
+				uint8_t eNB_offset,
+				unsigned char Ns,
+				unsigned short p,
+				unsigned char symbol,
+				unsigned short bwp_start_subcarrier,
+				unsigned short nb_rb_pdsch)
 {
   int pilot[1320] __attribute__((aligned(16)));
   unsigned char aarx;

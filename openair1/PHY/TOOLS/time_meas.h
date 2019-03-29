@@ -147,4 +147,15 @@ static inline void copy_meas(time_stats_t *dst_ts,time_stats_t *src_ts)
     dst_ts->max=src_ts->max;
   }
 }
+
+#if UE_TIMING_TRACE
+#define UE_meas(meaS, funC)   \
+  start_meas(&meaS);\
+  funC;\
+  stop_meas(&meaS);
+#else
+#define UE_meas(meaS, funC)   \
+  funC;
+#endif
+
 #endif

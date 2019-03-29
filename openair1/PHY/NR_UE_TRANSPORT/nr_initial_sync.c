@@ -173,7 +173,7 @@ int nr_pbch_detection(PHY_VARS_NR_UE *ue, int pbch_initial_symbol, runmode_t mod
 
   free_list(best_ssb);
 
-  
+ 
   if (ret==0) {
     
     frame_parms->nb_antenna_ports_eNB = 1; //pbch_tx_ant;
@@ -253,7 +253,7 @@ int nr_initial_sync(PHY_VARS_NR_UE *ue, runmode_t mode)
     ue->ssb_offset = sync_pos + (fp->samples_per_subframe * 10) - fp->nb_prefix_samples;
 
 
-  //write_output("rxdata1.m","rxd1",ue->common_vars.rxdata[0],10*fp->samples_per_subframe,1,1);
+  //write_output("rxdata1.m","rxd1",ue->common_vars.rxdataTime[0],10*fp->samples_per_subframe,1,1);
 
 #ifdef DEBUG_INITIAL_SYNCH
   LOG_I(PHY,"[UE%d] Initial sync : Estimated PSS position %d, Nid2 %d\n", ue->Mod_id, sync_pos,ue->common_vars.eNb_id);
@@ -270,10 +270,10 @@ int nr_initial_sync(PHY_VARS_NR_UE *ue, runmode_t mode)
 
 	for(int n=start; n<end; n++){  	
 	  for (int ar=0; ar<fp->nb_antennas_rx; ar++) {
-		re = ((double)(((short *)ue->common_vars.rxdata[ar]))[2*n]);
-		im = ((double)(((short *)ue->common_vars.rxdata[ar]))[2*n+1]);
-		((short *)ue->common_vars.rxdata[ar])[2*n] = (short)(round(re*cos(n*off_angle) - im*sin(n*off_angle))); 
-		((short *)ue->common_vars.rxdata[ar])[2*n+1] = (short)(round(re*sin(n*off_angle) + im*cos(n*off_angle)));
+		re = ((double)(((short *)ue->common_vars.rxdataTime[ar]))[2*n]);
+		im = ((double)(((short *)ue->common_vars.rxdataTime[ar]))[2*n+1]);
+		((short *)ue->common_vars.rxdataTime[ar])[2*n] = (short)(round(re*cos(n*off_angle) - im*sin(n*off_angle))); 
+		((short *)ue->common_vars.rxdataTime[ar])[2*n+1] = (short)(round(re*sin(n*off_angle) + im*cos(n*off_angle)));
 	  }
 	}
   }

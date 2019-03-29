@@ -582,7 +582,7 @@ void phy_scope_UE(FD_lte_phy_scope_ue *form,
   llr_pdcch = (float*) calloc(12*frame_parms->N_RB_DL*num_pdcch_symbols*2,sizeof(float)); // init to zero
   bit_pdcch = (float*) calloc(12*frame_parms->N_RB_DL*num_pdcch_symbols*2,sizeof(float));
 
-  rxsig_t = (int16_t**) phy_vars_ue->common_vars.rxdata;
+  rxsig_t = (int16_t**) phy_vars_ue->common_vars.rxdataTime;
   rxsig_t_dB = calloc(nb_antennas_rx,sizeof(float*));
   for (arx=0; arx<nb_antennas_rx; arx++) {
     rxsig_t_dB[arx] = (float*) calloc(samples_per_frame,sizeof(float));
