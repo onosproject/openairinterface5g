@@ -1078,9 +1078,9 @@ uint8_t do_RRCConnectionSetup_NB_IoT(
 #endif
 
  // NPDCCH
- physicalConfigDedicated2_NB_IoT->npdcch_ConfigDedicated_r13->npdcch_NumRepetitions_r13 =NPDCCH_ConfigDedicated_NB_r13__npdcch_NumRepetitions_r13_r256;
+ physicalConfigDedicated2_NB_IoT->npdcch_ConfigDedicated_r13->npdcch_NumRepetitions_r13 =NPDCCH_ConfigDedicated_NB_r13__npdcch_NumRepetitions_r13_r16;
  physicalConfigDedicated2_NB_IoT->npdcch_ConfigDedicated_r13->npdcch_Offset_USS_r13 =NPDCCH_ConfigDedicated_NB_r13__npdcch_Offset_USS_r13_zero;
- physicalConfigDedicated2_NB_IoT->npdcch_ConfigDedicated_r13->npdcch_StartSF_USS_r13=NPDCCH_ConfigDedicated_NB_r13__npdcch_StartSF_USS_r13_v1dot5;
+ physicalConfigDedicated2_NB_IoT->npdcch_ConfigDedicated_r13->npdcch_StartSF_USS_r13=NPDCCH_ConfigDedicated_NB_r13__npdcch_StartSF_USS_r13_v4;
 
  // NPUSCH
  npusch_repetitions = CALLOC(1, sizeof(long));
