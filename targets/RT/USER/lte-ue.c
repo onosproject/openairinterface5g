@@ -404,7 +404,7 @@ void init_UE(int nb_inst,int eMBMS_active, int uecap_xer_in, int timing_correcti
 				      &UE->proc.attr_ue,
 				      UE_thread,
 				      (void*)UE), "");
-    if (UE->sidelink_active == 1)
+    if (UE->sidelink_active == 1 && UE->SLonly == 1) //&& UE->SLonly == 0
       AssertFatal(0 == pthread_create(&UE->proc.pthread_ueSL,
 				      &UE->proc.attr_ueSL,
 				      UE_threadSL,
@@ -1061,7 +1061,7 @@ static void *UE_thread_rxn_txnp4(void *arg) {
     }
 
     // This is for Sidelink
-    if (UE->sidelink_active == 1) {
+    if (UE->sidelink_active == 1) { //&& UE->UE_mode[0]==PUSCH
 
       phy_procedures_UE_SL_RX(UE,proc);
 
@@ -1105,6 +1105,11 @@ static void *UE_thread_rxn_txnp4(void *arg) {
 	phy_procedures_UE_S_TX(UE,0,0);
     updateTimes(current, &t3, 10000, "Delay to process sub-frame (case 3)");
 
+
+    if(UE->generate_prach==0) {
+    	LOG_D(PHY,"ULSCH %d.%d (generate_ul_signal %d): signal F energy %d dB (txdataF %p)\n",proc->frame_tx,proc->subframe_tx,UE->generate_ul_signal[proc->subframe_tx][0],dB_fixed(signal_energy(&UE->common_vars.txdataF[0][proc->subframe_tx*14*UE->frame_parms.ofdm_symbol_size],14*UE->frame_parms.ofdm_symbol_size)),&UE->common_vars.txdataF[0][proc->subframe_tx*14*UE->frame_parms.ofdm_symbol_size]);
+    	ulsch_common_procedures(UE,proc, (UE->generate_ul_signal[proc->subframe_tx][0] == 0));
+    }
 
  if (pthread_mutex_lock(&proc->mutex_rxtx) != 0) {
 	LOG_E( PHY, "[SCHED][UE] error locking mutex for UE RXTX\n" );
@@ -2045,7 +2050,7 @@ void *UE_thread(void *arg) {
                         //UE->proc.proc_rxtx[0].frame_rx++;
                         //UE->proc.proc_rxtx[1].frame_rx++;
                         for (th_id=0; th_id < RX_NB_TH; th_id++) {
-                            UE->proc.proc_rxtx[th_id].frame_rx++;
+                            UE->proc.proc_rxtx[th_id].frame_rx=(UE->proc.proc_rxtx[th_id].frame_rx+1)&1023;
                         }
                     }
                     //UE->proc.proc_rxtx[0].gotIQs=readTime(gotIQs);
@@ -2055,7 +2060,8 @@ void *UE_thread(void *arg) {
                     }
                     proc->subframe_rx=sub_frame;
                     proc->subframe_tx=(sub_frame+4)%10;
-                    proc->frame_tx = proc->frame_rx + (proc->subframe_rx>5?1:0);
+
+                    proc->frame_tx = (proc->frame_rx + (proc->subframe_rx>5?1:0))&1023;
                     proc->timestamp_tx = timestamp+
                                          (4*UE->frame_parms.samples_per_tti)-
                                          UE->frame_parms.ofdm_symbol_size-UE->frame_parms.nb_prefix_samples0;
@@ -2116,7 +2122,7 @@ void init_UE_threads(int inst) {
   UE->proc.instance_cnt_synch = -1;
   UE->is_synchronized = 0;
 
-  if (UE->sidelink_active == 1) {
+  if (UE->sidelink_active == 1 && UE->SLonly==1) {
     pthread_attr_init (&UE->proc.attr_ueSL);
     pthread_attr_setstacksize(&UE->proc.attr_ueSL,8192);//5*PTHREAD_STACK_MIN);
 
@@ -2157,7 +2163,7 @@ void init_UE_threads(int inst) {
     pthread_mutex_init(&UE->sldch_mutex,NULL);
     pthread_mutex_init(&UE->slsch_mutex,NULL);
     pthread_mutex_init(&UE->slsch_rx_mutex,NULL);
-    pthread_create(&UE->proc.pthread_synchSL,NULL,UE_thread_synchSL,(void*)UE);
+    if(UE->SLonly==1) pthread_create(&UE->proc.pthread_synchSL,NULL,UE_thread_synchSL,(void*)UE);
   }
 }
 

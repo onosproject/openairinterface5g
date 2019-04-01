@@ -1559,7 +1559,7 @@ void ue_ulsch_uespec_procedures(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB
       }
     }
 
-    if ( LOG_DEBUGFLAG(DEBUG_UE_PHYPROC)) { //LOG_DEBUGFLAG(DEBUG_UE_PHYPROC)) {
+    if ( LOG_DEBUGFLAG(DEBUG_UE_PHYPROC)) {
       LOG_I(PHY,
             "[UE  %d][PUSCH %d] AbsSubframe %d.%d Generating PUSCH : first_rb %d, nb_rb %d, round %d, mcs %d, rv %d, "
             "cyclic_shift %d (cyclic_shift_common %d,n_DMRS2 %d,n_PRS %d), ACK (%d,%d), O_ACK %d, ack_status_cw0 %d ack_status_cw1 %d bundling %d, Nbundled %d, CQI %d, RI %d\n",
@@ -1727,6 +1727,7 @@ void ue_ulsch_uespec_procedures(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB
                        0,
                        0);
 
+      ue->sl_chan = NO_SL;
       for (aa=0; aa<1/*frame_parms->nb_antennas_tx*/; aa++)
         generate_drs_pusch(ue,
                            proc,
@@ -2198,21 +2199,11 @@ void phy_procedures_UE_SL_TX(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc) {
       check_and_generate_pssch(ue,proc,frame_tx,subframe_tx);
   }
   AssertFatal(0==pthread_mutex_unlock(&ue->slsch_mutex),"");
-  //LOG_I(PHY,"%d.%d ULSCH (after slsch) generate_ul_signal %d : signal F energy %d dB (txdataF %p)\n",frame_tx,subframe_tx,ue->generate_ul_signal[subframe_tx][0],dB_fixed(signal_energy(&ue->common_vars.txdataF[0][subframe_tx*14*ue->frame_parms.ofdm_symbol_size],14*ue->frame_parms.ofdm_symbol_size)),&ue->common_vars.txdataF[0][subframe_tx*14*ue->frame_parms.ofdm_symbol_size]);
+  LOG_D(PHY,"%d.%d ULSCH (after slsch) generate_ul_signal %d : signal F energy %d dB (txdataF %p)\n",frame_tx,subframe_tx,ue->generate_ul_signal[subframe_tx][0],dB_fixed(signal_energy(&ue->common_vars.txdataF[0][subframe_tx*14*ue->frame_parms.ofdm_symbol_size],14*ue->frame_parms.ofdm_symbol_size)),&ue->common_vars.txdataF[0][subframe_tx*14*ue->frame_parms.ofdm_symbol_size]);
   LOG_D(PHY,"****** end Sidelink TX-Chain for AbsSubframe %d.%d (ul %d) ******\n", frame_tx, subframe_tx,
 	ue->generate_ul_signal[subframe_tx][0]);
 
-  if (ue->SLonly == 1) {
-
-
-
-   // LOG_I(PHY,"ULSCH %d.%d (generate_ul_signal %d): signal F energy %d dB (txdataF %p)\n",frame_tx,subframe_tx,ue->generate_ul_signal[subframe_tx][0],dB_fixed(signal_energy(&ue->common_vars.txdataF[0][subframe_tx*14*ue->frame_parms.ofdm_symbol_size],14*ue->frame_parms.ofdm_symbol_size)),&ue->common_vars.txdataF[0][subframe_tx*14*ue->frame_parms.ofdm_symbol_size]);
     
-    ulsch_common_procedures(ue,proc, (ue->generate_ul_signal[subframe_tx][0] == 0));
-
-
-  }
-  
   if (frame_tx==0 && subframe_tx ==0) 
     for (int i=0;i<MAX_SLDCH;i++) if (ue->sldch_txcnt[i]>0) LOG_I(PHY,"n_psdch %d TX count %d\n",i,ue->sldch_txcnt[i]);
 
@@ -2266,9 +2257,6 @@ void phy_procedures_UE_TX(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,ui
     } // UE_mode==PUSCH
   }
 
-  LOG_D(PHY,"doing ulsch_common_procedures (%d.%d): generate_ul_signal %d\n",frame_tx,subframe_tx,
-		  ue->generate_ul_signal[subframe_tx][eNB_id]);
-  ulsch_common_procedures(ue,proc, (ue->generate_ul_signal[subframe_tx][eNB_id] == 0));
 
   if ((ue->UE_mode[eNB_id] == PRACH) &&
       (ue->frame_parms.prach_config_common.prach_Config_enabled==1)) {

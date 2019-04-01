@@ -75,8 +75,9 @@ void check_and_generate_slss(PHY_VARS_UE *ue,int frame_tx,int subframe_tx) {
 #else
   tx_amp = AMP;
 #endif  
+  LOG_D(PHY, "slss: ue->tx_power_dBm: %d, tx_amp: %d \n \n", ue->tx_power_dBm, tx_amp);
 
-  if (ue->generate_ul_signal[subframe_tx][0] == 0) 
+  if (ue->generate_ul_signal[subframe_tx][0] == 0)
     for (int aa=0; aa<ue->frame_parms.nb_antennas_tx; aa++) {
       LOG_D(PHY,"%d.%d: clearing ul signal\n",frame_tx,subframe_tx);
       memset(&ue->common_vars.txdataF[aa][subframe_tx*ue->frame_parms.ofdm_symbol_size*ue->frame_parms.symbols_per_tti],
@@ -86,7 +87,6 @@ void check_and_generate_slss(PHY_VARS_UE *ue,int frame_tx,int subframe_tx) {
 
 
   // PSS
-  
   generate_slpss(ue->common_vars.txdataF,
                  tx_amp<<1,
                  &ue->frame_parms,
@@ -132,6 +132,7 @@ void check_and_generate_slss(PHY_VARS_UE *ue,int frame_tx,int subframe_tx) {
                      0,
                      NULL,
                      0);
+
   
  
   LOG_D(PHY,"%d.%d : SLSS nbrb %d, first rb %d\n",frame_tx,subframe_tx,6,(ue->frame_parms.N_RB_UL/2)-3);
@@ -139,7 +140,7 @@ void check_and_generate_slss(PHY_VARS_UE *ue,int frame_tx,int subframe_tx) {
   ue->generate_ul_signal[subframe_tx][0] = 1;
   ue->slss_generated = 1;
   
-  LOG_D(PHY,"ULSCH (after slss) : signal F energy %d dB (txdataF %p)\n",dB_fixed(signal_energy(&ue->common_vars.txdataF[0][subframe_tx*14*ue->frame_parms.ofdm_symbol_size],14*ue->frame_parms.ofdm_symbol_size)),&ue->common_vars.txdataF[0][subframe_tx*14*ue->frame_parms.ofdm_symbol_size]);
-    
+  LOG_D(PHY,"ULSCH (after slss) : signal F energy %d dB (txdataF %p) at SFN/SF: %d/%d \n",dB_fixed(signal_energy(&ue->common_vars.txdataF[0][subframe_tx*14*ue->frame_parms.ofdm_symbol_size],14*ue->frame_parms.ofdm_symbol_size)),&ue->common_vars.txdataF[0][subframe_tx*14*ue->frame_parms.ofdm_symbol_size], frame_tx, subframe_tx);
+
 }
 #endif
