@@ -3592,6 +3592,11 @@ SLSCH_t *ue_get_slsch(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_
    // Note: this is hard-coded for now for the default SL configuration (4 SF PSCCH, 36 SF PSSCH)
    SLSCH_t *slsch = &ue->slsch;
 
+   uint16_t ue_rnti = 0x1234; //Default rnti in sl-only mode
+   if(UE_mac_inst[module_idP].crnti!=0){  // UE->Info[0].rnti == 0
+	   ue_rnti = UE_mac_inst[module_idP].crnti;
+   }
+
    AssertFatal(slsch!=NULL,"SLSCH is null\n");
    uint32_t O = slsch->SL_OffsetIndicator;
    uint32_t P = slsch->SL_SC_Period;
@@ -3609,7 +3614,7 @@ SLSCH_t *ue_get_slsch(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_
                if (ue->sl_info[i].LCID > 0)  {
                  // for (int j = 0; j < ue->numCommFlows; j++){
                      if ((ue->sourceL2Id > 0) && (ue->sl_info[i].destinationL2Id >0) ){
-                        rlc_status = mac_rlc_status_ind(module_idP, 0x1234,0,frameP,subframeP,ENB_FLAG_NO,MBMS_FLAG_NO,
+                    	 rlc_status = mac_rlc_status_ind(module_idP, ue_rnti,0,frameP,subframeP,ENB_FLAG_NO,MBMS_FLAG_NO,
                               ue->sl_info[i].LCID, 0xFFFF, ue->sourceL2Id, ue->sl_info[i].destinationL2Id );
                         LOG_D(MAC,"absSF_offset %d (test %d): Checking status (%d,Dest %d) => LCID %d => %d bytes\n",absSF_offset,slsch_test,ue->sourceL2Id,ue->sl_info[i].destinationL2Id,ue->sl_info[i].LCID,rlc_status.bytes_in_buffer);
                         if (rlc_status.bytes_in_buffer > 2 || slsch_test == 1){
@@ -3627,7 +3632,7 @@ SLSCH_t *ue_get_slsch(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_
                      }
 
                      if ((ue->sourceL2Id > 0) && (ue->sl_info[i].groupL2Id >0) ){
-                        rlc_status = mac_rlc_status_ind(module_idP, 0x1234,0,frameP,subframeP,ENB_FLAG_NO,MBMS_FLAG_NO, 
+                        rlc_status = mac_rlc_status_ind(module_idP, ue_rnti,0,frameP,subframeP,ENB_FLAG_NO,MBMS_FLAG_NO,
                               ue->sl_info[i].LCID, 0xFFFF, ue->sourceL2Id, ue->sl_info[i].groupL2Id);
                         LOG_D(MAC,"Checking status (%d,Group %d) => LCID %d => %d bytes\n",ue->sourceL2Id,ue->sl_info[i].destinationL2Id,ue->sl_info[i].LCID, rlc_status.bytes_in_buffer);
                         if (rlc_status.bytes_in_buffer > 2 || slsch_test == 1){
@@ -3699,7 +3704,7 @@ SLSCH_t *ue_get_slsch(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_
       int req;
 
       
-      rlc_status = mac_rlc_status_ind(module_idP, 0x1234,0,frameP,subframeP,ENB_FLAG_NO,MBMS_FLAG_NO,
+      rlc_status = mac_rlc_status_ind(module_idP, ue_rnti,0,frameP,subframeP,ENB_FLAG_NO,MBMS_FLAG_NO,
                                       ue->slsch_lcid, 0xFFFF, ue->sourceL2Id, ue->destinationL2Id );
 
       if (slsch_test == 1 && rlc_status.bytes_in_buffer < 2) rlc_status.bytes_in_buffer = 300;
@@ -3710,7 +3715,7 @@ SLSCH_t *ue_get_slsch(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_
 
       if (req>0) {
          sdu_length = mac_rlc_data_req(module_idP,
-               0x1234,
+        	   ue_rnti,
                0,
                frameP,
                ENB_FLAG_NO,
