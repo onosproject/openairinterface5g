@@ -2585,7 +2585,7 @@ class SSHConnection():
 		if result is not None:
 			self.UhdVersion = result.group('uhd_version')
 			logging.debug('UHD Version is: ' + self.UhdVersion)
-		self.command('echo ' + Password + ' | sudo -S uhd_find_devices', '\$', 5)
+		self.command('echo ' + Password + ' | sudo -S uhd_find_devices', '\$', 12)
 		result = re.search('product: (?P<usrp_board>[0-9A-Za-z]+)\\\\r\\\\n', str(self.ssh.before))
 		if result is not None:
 			self.UsrpBoard = result.group('usrp_board')
@@ -3199,10 +3199,14 @@ elif re.match('^FinalizeHtml$', mode, re.IGNORECASE):
 	SSH.CreateHtmlFooter(SSH.finalStatus)
 elif re.match('^TesteNB$', mode, re.IGNORECASE) or re.match('^TestUE$', mode, re.IGNORECASE):
 	if re.match('^TesteNB$', mode, re.IGNORECASE):
-		if SSH.eNBIPAddress == '' or SSH.eNBRepository == '' or SSH.eNBBranch == '' or SSH.eNBUserName == '' or SSH.eNBPassword == '' or SSH.eNBSourceCodePath == '' or SSH.EPCIPAddress == '' or SSH.EPCUserName == '' or SSH.EPCPassword == '' or SSH.EPCType == '' or SSH.EPCSourceCodePath == '' or SSH.ADBIPAddress == '' or SSH.ADBUserName == '' or SSH.ADBPassword == '':
+		if SSH.eNBIPAddress == '' or SSH.eNBRepository == '' or SSH.eNBBranch == '' or SSH.eNBUserName == '' or SSH.eNBPassword == '' or SSH.eNBSourceCodePath == '':
 			Usage()
 			sys.exit('Insufficient Parameter')
-
+		elif SSH.ADBIPAddress == 'none' and SSH.EPCIPAddress == 'none':
+			pass
+		elif SSH.EPCIPAddress == '' or SSH.EPCUserName == '' or SSH.EPCPassword == '' or SSH.EPCType == '' or SSH.EPCSourceCodePath == '' or SSH.ADBIPAddress == '' or SSH.ADBUserName == '' or SSH.ADBPassword == '':
+			Usage()
+			sys.exit('Insufficient Parameter')
 		if (SSH.EPCIPAddress != ''):
 			SSH.copyout(SSH.EPCIPAddress, SSH.EPCUserName, SSH.EPCPassword, cwd + "/tcp_iperf_stats.awk", "/tmp")
 			SSH.copyout(SSH.EPCIPAddress, SSH.EPCUserName, SSH.EPCPassword, cwd + "/active_net_interfaces.awk", "/tmp")
