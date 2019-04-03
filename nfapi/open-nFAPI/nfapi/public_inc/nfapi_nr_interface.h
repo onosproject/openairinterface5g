@@ -501,6 +501,7 @@ uint16_t padding;
 typedef struct{
   nfapi_tl_t tl;
   uint8_t  coreset_id;
+  ///bitmap of 45 bits, where each bit is 6 PRB
   uint64_t  frequency_domain_resources;
   uint8_t  duration;
   uint8_t  cce_reg_mapping_type;

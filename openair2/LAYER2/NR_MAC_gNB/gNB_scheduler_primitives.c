@@ -344,6 +344,8 @@ void nr_configure_css_dci_initial(nfapi_nr_dl_config_pdcch_parameters_rel15_t* p
 
 }
 
+/* this function fills the pdcch_params based on the coreset and search_space parameters. */
+
 void nr_configure_dci_from_pdcch_config(nfapi_nr_dl_config_pdcch_parameters_rel15_t* pdcch_params,
                                             nfapi_nr_coreset_t* coreset,
                                             nfapi_nr_search_space_t* search_space,

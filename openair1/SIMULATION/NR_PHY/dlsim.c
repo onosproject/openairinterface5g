@@ -154,7 +154,7 @@ int main(int argc, char **argv)
   unsigned char frame_type = 0;
   unsigned char pbch_phase = 0;
 
-  int frame=0,slot=1;
+  int frame=0,slot=0;
   int frame_length_complex_samples;
   int frame_length_complex_samples_no_prefix;
   int slot_length_complex_samples_no_prefix;
@@ -170,7 +170,7 @@ int main(int argc, char **argv)
   int run_initial_sync=0;
   int do_pdcch_flag=1;
 
-  int loglvl=OAILOG_WARNING;
+  int loglvl=OAILOG_INFO;
 
   float target_error_rate = 0.01;
 
@@ -405,23 +405,24 @@ int main(int argc, char **argv)
 
   double fs,bw;
 
-  if (mu == 1 && N_RB_DL == 217) { 
-    fs = 122.88e6;
-    bw = 80e6;
-  }					       
-  else if (mu == 1 && N_RB_DL == 245) {
-    fs = 122.88e6;
-    bw = 90e6;
+  if (mu == 1) {
+    if (N_RB_DL > 217 && N_RB_DL <= 273) { 
+      fs = 122.88e6;
+      bw = 100e6;
+    }					       
+    else if (N_RB_DL > 106 && N_RB_DL <= 217) { 
+      fs = 122.88e6;
+      bw = 80e6;
+    }					       
+    else if (N_RB_DL > 0 && N_RB_DL <= 106) { 
+      fs = 61.44e6;
+      bw = 40e6;
+    }
+    else
+      AssertFatal(1==0,"Unsupported numerology for mu %d, N_RB %d\n",mu, N_RB_DL);
   }
-  else if (mu == 1 && N_RB_DL == 273) {
-    fs = 122.88e6;
-    bw = 100e6;
-  }
-  else if (mu == 1 && N_RB_DL == 106) { 
-    fs = 61.44e6;
-    bw = 40e6;
-  }
-  else AssertFatal(1==0,"Unsupported numerology for mu %d, N_RB %d\n",mu, N_RB_DL);
+  else 
+    AssertFatal(1==0,"Unsupported numerology for mu %d, N_RB %d\n",mu, N_RB_DL);
 
   gNB2UE = new_channel_desc_scm(n_tx,
                                 n_rx,
@@ -607,15 +608,18 @@ int main(int argc, char **argv)
   dl_config.dl_config_list[0].pdu_type = FAPI_NR_DL_CONFIG_TYPE_DCI;
   dl_config.dl_config_list[0].dci_config_pdu.dci_config_rel15.rnti = 0x1234;	//	to be set
   
-  uint64_t mask = 0x0;
   uint16_t num_rbs=24;
   uint16_t rb_offset=0;
   uint16_t cell_id=0;
   uint16_t num_symbols=2;
+  uint64_t mask = 0x1E0000000000;
+  /*uint64_t mask = 0x0;
   for(i=0; i<(num_rbs/6); ++i){   //  38.331 Each bit corresponds a group of 6 RBs
     mask = mask >> 1;
     mask = mask | 0x100000000000;
-  }
+    }*/
+  printf("mask = %lx\n",mask);
+  
   dl_config.dl_config_list[0].dci_config_pdu.dci_config_rel15.coreset.frequency_domain_resource = mask;
   dl_config.dl_config_list[0].dci_config_pdu.dci_config_rel15.coreset.rb_offset = rb_offset;  //  additional parameter other than coreset
   
@@ -641,6 +645,8 @@ int main(int argc, char **argv)
   dl_config.dl_config_list[0].dci_config_pdu.dci_config_rel15.number_of_candidates[4] = table_38213_10_1_1_c2[4];   //  CCE aggregation level = 16
   dl_config.dl_config_list[0].dci_config_pdu.dci_config_rel15.duration = search_space_duration;
   dl_config.dl_config_list[0].dci_config_pdu.dci_config_rel15.monitoring_symbols_within_slot = (0x3fff << first_symbol_index) & (0x3fff >> (14-coreset_duration-first_symbol_index)) & 0x3fff;
+
+  printf("monitoring_symbols_within_slot = %x\n",dl_config.dl_config_list[0].dci_config_pdu.dci_config_rel15.monitoring_symbols_within_slot);
 
   dl_config.dl_config_list[0].dci_config_pdu.dci_config_rel15.N_RB_BWP = N_RB_DL;
 
