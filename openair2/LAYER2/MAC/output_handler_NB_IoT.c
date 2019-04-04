@@ -297,12 +297,19 @@ int output_handler(eNB_MAC_INST_NB_IoT *mac_inst, module_id_t module_id, int CC_
 					//(ul_config_pdu + i) ->nulsch_pdu.nulsch_pdu_rel13.size                    = UL_TBS_Table[((DCIFormatN0_t *)DCI_pdu)->mcs][((DCIFormatN0_t *)DCI_pdu)->ResAssign];
 					//(ul_config_pdu + i) ->nulsch_pdu.nulsch_pdu_rel13.size                    = UL_TBS_Table[get_UL_I_TBS_from_MCS_NB_IoT(((DCIFormatN0_t *)DCI_pdu)->mcs, get_N_RU(((DCIFormatN0_t *)DCI_pdu)->ResAssign), 0)][((DCIFormatN0_t *)DCI_pdu)->ResAssign];
 					// get_UL_I_TBS_from_MCS_NB_IoT() to  be used to get the I_TBS for any NPUSCH format 
-					(ul_config_pdu + i) ->nulsch_pdu.nulsch_pdu_rel13.size                    = UL_TBS_Table_msg3[get_UL_I_TBS_from_MCS_NB_IoT(((DCIFormatN0_t *)DCI_pdu)->mcs, test_signle_tone_UL_NB_IoT(sc_spacing,((DCIFormatN0_t *)DCI_pdu)->scind, 0), 1)]/8;   // for the case of MSG3 
-					 
+					
+				//	if(msg3_mac_flag ==1)  // remove comment after creating a the mac flag for msg3
+				//	{
+					   (ul_config_pdu + i) ->nulsch_pdu.nulsch_pdu_rel13.size                    = UL_TBS_Table_msg3[get_UL_I_TBS_from_MCS_NB_IoT(((DCIFormatN0_t *)DCI_pdu)->mcs, test_signle_tone_UL_NB_IoT(sc_spacing,((DCIFormatN0_t *)DCI_pdu)->scind, 0), 1)]/8;   // for the case of MSG3 
+				//	 } else {
+					 	//(ul_config_pdu + i) ->nulsch_pdu.nulsch_pdu_rel13.size                    = UL_TBS_Table[get_UL_I_TBS_from_MCS_NB_IoT(((DCIFormatN0_t *)DCI_pdu)->mcs, get_N_RU(((DCIFormatN0_t *)DCI_pdu)->ResAssign), 0)][((DCIFormatN0_t *)DCI_pdu)->ResAssign]/8;   // for the case of other NPUSH msgs
+					    (ul_config_pdu + i) ->nulsch_pdu.nulsch_pdu_rel13.size                    = UL_TBS_Table[get_UL_I_TBS_from_MCS_NB_IoT(((DCIFormatN0_t *)DCI_pdu)->mcs,1,0)][((DCIFormatN0_t *)DCI_pdu)->ResAssign]/8;   // for the case of other NPUSH msgs
+					
+				//	 }
 					//LOG_D(MAC,"test\n");
 					(ul_config_pdu + i) ->nulsch_pdu.nulsch_pdu_rel13.rnti                    = schedule_result_list_UL->rnti;  //TODO : check if it is the right rnti // get from msg2
 					(ul_config_pdu + i) ->nulsch_pdu.nulsch_pdu_rel13.subcarrier_indication   = ((DCIFormatN0_t *)DCI_pdu)->scind;
-					(ul_config_pdu + i) ->nulsch_pdu.nulsch_pdu_rel13.resource_assignment     = ((DCIFormatN0_t *)DCI_pdu)->ResAssign;
+					(ul_config_pdu + i) ->nulsch_pdu.nulsch_pdu_rel13.resource_assignment     = ((DCIFormatN0_t *)DCI_pdu)->ResAssign;  // this value is the I_RU ??
 					(ul_config_pdu + i) ->nulsch_pdu.nulsch_pdu_rel13.mcs                     = ((DCIFormatN0_t *)DCI_pdu)->mcs;
 					(ul_config_pdu + i) ->nulsch_pdu.nulsch_pdu_rel13.redudancy_version       = ((DCIFormatN0_t *)DCI_pdu)->rv;
 					(ul_config_pdu + i) ->nulsch_pdu.nulsch_pdu_rel13.repetition_number       = ((DCIFormatN0_t *)DCI_pdu)->RepNum;
