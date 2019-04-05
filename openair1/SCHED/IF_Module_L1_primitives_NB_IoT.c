@@ -435,29 +435,53 @@ void schedule_response_NB_IoT(Sched_Rsp_NB_IoT_t *Sched_INFO)
 		   */
 		
 	       ///////////////////////////////////////////////////////////////////////////////////////////
-
-	        nulsch = eNB->ulsch_NB_IoT[0];
-			nulsch_harq = nulsch->harq_process;
-	
-			nulsch->Msg3_active        = 1;
-			nulsch->Msg3_flag          = 1;
-			nulsch->flag_vars          = 1;
-			nulsch->rnti               = nfapi_parameters_rel13->rnti;
-			nulsch->npusch_format      = nfapi_parameters_rel13->nulsch_format;
-			nulsch->N_srs              = nfapi_parameters_rel13->n_srs;
-            nulsch->C_init             = nfapi_parameters_rel13->scrambling_sequence_initialization_cinit;
-            nulsch->SF_idx             = nfapi_parameters_rel13->sf_idx;
-            nulsch->HARQ_ACK_resource  = nfapi_parameters_rel13->nb_harq_information.nb_harq_information_rel13_fdd.harq_ack_resource;
-
-			//nulsch_harq->subcarrier_spacing      = nfapi_parameters_rel13->handle; // get from the UL_grant of MSG3 
-			nulsch_harq->subcarrier_indication   = nfapi_parameters_rel13->subcarrier_indication;    // Isc =0->18 , or 0->47 // format 2, 0->3 or 0->7
-			nulsch_harq->resource_assignment     = nfapi_parameters_rel13->resource_assignment;    // valid for format 1  // this should be set by DCI N0 // not used for msg3 // I_RU --> helps to get N_RU
-			nulsch_harq->mcs                     = nfapi_parameters_rel13->mcs;                 // I_mcs = 0->10 (single tone) and 0->12 (multi-tone)
-			nulsch_harq->rvidx                   = nfapi_parameters_rel13->redudancy_version;   // values = 0 or 1
-			nulsch_harq->repetition_number       = nfapi_parameters_rel13->repetition_number;    //  // N_rep values = 0->7  // new funciton to be created to compute the nb_slots = f(N_rep)
-			nulsch_harq->new_data_indication     = nfapi_parameters_rel13->new_data_indication;   // valid only for DCI N0
-			nulsch_harq->TBS                     = nfapi_parameters_rel13->size;  /// check if needed *8 or /8 or nothing to do
+           //maybe this condition should be replaced by another test ?!
+           if(nfapi_parameters_rel13->size < 80)    // msg3 data
+           {
+			        nulsch = eNB->ulsch_NB_IoT[0];
+					nulsch_harq = nulsch->harq_process;
 			
+					nulsch->Msg3_active        = 1;
+					nulsch->Msg3_flag          = 1;
+					nulsch->flag_vars          = 1;
+					nulsch->rnti               = nfapi_parameters_rel13->rnti;
+					nulsch->npusch_format      = nfapi_parameters_rel13->nulsch_format;
+					nulsch->N_srs              = nfapi_parameters_rel13->n_srs;
+		            nulsch->C_init             = nfapi_parameters_rel13->scrambling_sequence_initialization_cinit;
+		            nulsch->SF_idx             = nfapi_parameters_rel13->sf_idx;
+		            nulsch->HARQ_ACK_resource  = nfapi_parameters_rel13->nb_harq_information.nb_harq_information_rel13_fdd.harq_ack_resource;
+
+					//nulsch_harq->subcarrier_spacing      = nfapi_parameters_rel13->handle; // get from the UL_grant of MSG3 
+					nulsch_harq->subcarrier_indication   = nfapi_parameters_rel13->subcarrier_indication;    // Isc =0->18 , or 0->47 // format 2, 0->3 or 0->7
+					nulsch_harq->resource_assignment     = nfapi_parameters_rel13->resource_assignment;    // valid for format 1  // this should be set by DCI N0 // not used for msg3 // I_RU --> helps to get N_RU
+					nulsch_harq->mcs                     = nfapi_parameters_rel13->mcs;                 // I_mcs = 0->10 (single tone) and 0->12 (multi-tone)
+					nulsch_harq->rvidx                   = nfapi_parameters_rel13->redudancy_version;   // values = 0 or 1
+					nulsch_harq->repetition_number       = nfapi_parameters_rel13->repetition_number;    //  // N_rep values = 0->7  // new funciton to be created to compute the nb_slots = f(N_rep)
+					nulsch_harq->new_data_indication     = nfapi_parameters_rel13->new_data_indication;   // valid only for DCI N0
+					nulsch_harq->TBS                     = nfapi_parameters_rel13->size;  /// check if needed *8 or /8 or nothing to do
+			} else{    // other npusch data 
+					nulsch = eNB->ulsch_NB_IoT[0];
+					nulsch_harq = nulsch->harq_process;
+			
+					nulsch->Msg3_active        = 1;
+					nulsch->Msg3_flag          = 0;
+					nulsch->flag_vars          = 1;
+					nulsch->rnti               = nfapi_parameters_rel13->rnti;
+					nulsch->npusch_format      = nfapi_parameters_rel13->nulsch_format;
+					nulsch->N_srs              = nfapi_parameters_rel13->n_srs;
+		            nulsch->C_init             = nfapi_parameters_rel13->scrambling_sequence_initialization_cinit;
+		            nulsch->SF_idx             = nfapi_parameters_rel13->sf_idx;
+		            nulsch->HARQ_ACK_resource  = nfapi_parameters_rel13->nb_harq_information.nb_harq_information_rel13_fdd.harq_ack_resource;
+
+					//nulsch_harq->subcarrier_spacing      = nfapi_parameters_rel13->handle; // get from the UL_grant of MSG3 
+					nulsch_harq->subcarrier_indication   = nfapi_parameters_rel13->subcarrier_indication;    // Isc =0->18 , or 0->47 // format 2, 0->3 or 0->7
+					nulsch_harq->resource_assignment     = nfapi_parameters_rel13->resource_assignment;    // valid for format 1  // this should be set by DCI N0 // not used for msg3 // I_RU --> helps to get N_RU
+					nulsch_harq->mcs                     = nfapi_parameters_rel13->mcs;                 // I_mcs = 0->10 (single tone) and 0->12 (multi-tone)
+					nulsch_harq->rvidx                   = nfapi_parameters_rel13->redudancy_version;   // values = 0 or 1
+					nulsch_harq->repetition_number       = nfapi_parameters_rel13->repetition_number;    //  // N_rep values = 0->7  // new funciton to be created to compute the nb_slots = f(N_rep)
+					nulsch_harq->new_data_indication     = nfapi_parameters_rel13->new_data_indication;   // valid only for DCI N0
+					nulsch_harq->TBS                     = nfapi_parameters_rel13->size;  /// check if needed *8 or /8 or nothing to do
+			}
 			//nulsch_harq->rep_tmp                 = ;
 	        ////////////////////////////////////////////////////////////////////////////////////////
 	  		LOG_I(PHY,"subframe = %d (TX timing), IF module proceed UL config NULSCH data pdu, will trigger npusch in next subframe\n",subframe);
