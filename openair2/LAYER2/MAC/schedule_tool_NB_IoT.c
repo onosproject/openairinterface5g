@@ -584,7 +584,7 @@ void insert_schedule_result(schedule_result_t **list, int subframe, schedule_res
         }
 }
 
-void generate_scheduling_result_UL(int32_t DCI_subframe, int32_t DCI_end_subframe, uint32_t UL_subframe, uint32_t UL_end_subframe, DCIFormatN0_t *DCI_inst, rnti_t rnti, uint8_t *ul_printf_str, uint8_t *dl_printf_str){
+void generate_scheduling_result_UL(int32_t DCI_subframe, int32_t DCI_end_subframe, uint32_t UL_subframe, uint32_t UL_end_subframe, DCIFormatN0_t *DCI_inst, rnti_t rnti, uint8_t *ul_printf_str, uint8_t *dl_printf_str, uint8_t msg3_flag){
 
     // create the schedule result node for this time transmission
     schedule_result_t *UL_result = (schedule_result_t*)malloc(sizeof(schedule_result_t));
@@ -599,6 +599,7 @@ void generate_scheduling_result_UL(int32_t DCI_subframe, int32_t DCI_end_subfram
     UL_result->DCI_release = 1;
     UL_result->channel = NPUSCH;
     UL_result->rnti = rnti;
+    UL_result->msg3_flag = msg3_flag;
     UL_result->next = NULL;
     //UL_result->printf_str = ul_printf_str;
     

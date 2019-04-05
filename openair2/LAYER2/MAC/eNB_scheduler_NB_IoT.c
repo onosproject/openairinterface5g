@@ -292,7 +292,7 @@ void schedule_uss_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_inst, u
 	    			DCI_N0 = (DCIFormatN0_t*)malloc(sizeof(DCIFormatN0_t));
 	    			//generate DCI-N0 content
                     fill_DCI_N0(DCI_N0, UE_template_temp, UE_sched_ctrl_info);
-	    			generate_scheduling_result_UL(UE_sched_ctrl_info->NPDCCH_sf_start, UE_sched_ctrl_info->NPDCCH_sf_end,UE_sched_ctrl_info->NPUSCH_sf_start, UE_sched_ctrl_info->NPUSCH_sf_end,DCI_N0, UE_template_temp->rnti, str22, str23);
+	    			generate_scheduling_result_UL(UE_sched_ctrl_info->NPDCCH_sf_start, UE_sched_ctrl_info->NPDCCH_sf_end,UE_sched_ctrl_info->NPUSCH_sf_start+3, UE_sched_ctrl_info->NPUSCH_sf_end+3,DCI_N0, UE_template_temp->rnti, str22, str23, 0);
 	      			//sotre UE_template
 	      			UE_template_temp->R_dci=UE_sched_ctrl_info->R_dci;
 	      			UE_template_temp->R_ul=UE_sched_ctrl_info->R_ul_data;

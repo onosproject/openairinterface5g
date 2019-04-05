@@ -166,7 +166,7 @@ int single_tone_ru_allocation(uint32_t uplink_time, int total_ru, sched_temp_UL_
 /*Check multi tone resource list*/
 int multi_tone_ru_allocation(uint32_t uplink_time, int total_ru, sched_temp_UL_NB_IoT_t *NPUSCH_info);
 /*Generate scheduling result of DCI N0 and Uplink config*/
-void generate_scheduling_result_UL(int32_t DCI_subframe, int32_t DCI_end_subframe, uint32_t UL_subframe, uint32_t UL_end_subframe, DCIFormatN0_t *DCI_inst, rnti_t rnti, uint8_t *ul_debug_str, uint8_t *dl_debug_str);
+void generate_scheduling_result_UL(int32_t DCI_subframe, int32_t DCI_end_subframe, uint32_t UL_subframe, uint32_t UL_end_subframe, DCIFormatN0_t *DCI_inst, rnti_t rnti, uint8_t *ul_debug_str, uint8_t *dl_debug_str, uint8_t msg3_flag);
 /*Adjust UL resource by removing the used resource*/
 void adjust_UL_resource_list(sched_temp_UL_NB_IoT_t *NPUSCH_info);
 /*Initialize resource by nprach configuration*/

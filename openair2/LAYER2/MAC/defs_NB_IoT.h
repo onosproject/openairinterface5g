@@ -472,7 +472,8 @@ typedef struct schedule_result{
   int16_t num_sf;
   
   int16_t harq_round;
-
+  // determine this uplink data is msg3 or not (different TBS table here)
+  uint8_t msg3_flag;
   
 }schedule_result_t;
 

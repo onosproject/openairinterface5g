@@ -295,7 +295,7 @@ void schedule_rar_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, int abs_subframe){
 			fill_resource_DL(mac_inst, msg2_node, msg2_first_subframe, msg2_end_subframe, msg2_result);
 
 			//	fill msg3 resource
-			generate_scheduling_result_UL(-1, -1, npusch_info.sf_start+3, npusch_info.sf_end+3, dci_n0, tc_rnti, str11, (void *)0);
+			generate_scheduling_result_UL(-1, -1, npusch_info.sf_start+3, npusch_info.sf_end+3, dci_n0, tc_rnti, str11, (void *)0, 1); // the last argument is msg3 flag
 			adjust_UL_resource_list(&npusch_info);
 
 			//simulate_rx(&simulate_rx_msg3_list, tc_rnti, npusch_info.sf_start);
@@ -586,7 +586,7 @@ void schedule_msg3_retransimission_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, int abs
 			    //	fill dci resource
 			    fill_resource_DL(mac_inst, dci_node, dci_first_subframe, dci_end_subframe, dci_result);
 			    //	fill msg3 resource
-			    generate_scheduling_result_UL(-1, -1, npusch_info.sf_start, npusch_info.sf_end, dci_n0_msg3, msg3_nodes->ue_rnti, str12, (void *)0);	//	rnti
+			    generate_scheduling_result_UL(-1, -1, npusch_info.sf_start, npusch_info.sf_end, dci_n0_msg3, msg3_nodes->ue_rnti, str12, (void *)0, 1);	//	rnti
 				adjust_UL_resource_list(&npusch_info);
 	            LOG_D(MAC,"[%04d][RA scheduler][MSG3 re] MSG3DCI %d-%d MSG3 %d-%d\n", abs_subframe, dci_first_subframe, dci_end_subframe, npusch_info.sf_start, npusch_info.sf_end );
 			}else{

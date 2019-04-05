@@ -298,14 +298,16 @@ int output_handler(eNB_MAC_INST_NB_IoT *mac_inst, module_id_t module_id, int CC_
 					//(ul_config_pdu + i) ->nulsch_pdu.nulsch_pdu_rel13.size                    = UL_TBS_Table[get_UL_I_TBS_from_MCS_NB_IoT(((DCIFormatN0_t *)DCI_pdu)->mcs, get_N_RU(((DCIFormatN0_t *)DCI_pdu)->ResAssign), 0)][((DCIFormatN0_t *)DCI_pdu)->ResAssign];
 					// get_UL_I_TBS_from_MCS_NB_IoT() to  be used to get the I_TBS for any NPUSCH format 
 					
-				//	if(msg3_mac_flag ==1)  // remove comment after creating a the mac flag for msg3
-				//	{
+					if(schedule_result_list_UL->msg3_flag ==1)  
+					{
 					   (ul_config_pdu + i) ->nulsch_pdu.nulsch_pdu_rel13.size                    = UL_TBS_Table_msg3[get_UL_I_TBS_from_MCS_NB_IoT(((DCIFormatN0_t *)DCI_pdu)->mcs, test_signle_tone_UL_NB_IoT(sc_spacing,((DCIFormatN0_t *)DCI_pdu)->scind, 0), 1)]/8;   // for the case of MSG3 
-				//	 } else {
+					   LOG_I(MAC,"process msg3 at output handler, size = %d\n",(ul_config_pdu + i) ->nulsch_pdu.nulsch_pdu_rel13.size);
+					} else 
+					{
 					 	//(ul_config_pdu + i) ->nulsch_pdu.nulsch_pdu_rel13.size                    = UL_TBS_Table[get_UL_I_TBS_from_MCS_NB_IoT(((DCIFormatN0_t *)DCI_pdu)->mcs, get_N_RU(((DCIFormatN0_t *)DCI_pdu)->ResAssign), 0)][((DCIFormatN0_t *)DCI_pdu)->ResAssign]/8;   // for the case of other NPUSH msgs
 					    (ul_config_pdu + i) ->nulsch_pdu.nulsch_pdu_rel13.size                    = UL_TBS_Table[get_UL_I_TBS_from_MCS_NB_IoT(((DCIFormatN0_t *)DCI_pdu)->mcs,1,0)][((DCIFormatN0_t *)DCI_pdu)->ResAssign]/8;   // for the case of other NPUSH msgs
-					
-				//	 }
+					    LOG_I(MAC,"Process uplink data at output handler, size = %d\n",(ul_config_pdu + i) ->nulsch_pdu.nulsch_pdu_rel13.size);
+					}
 					//LOG_D(MAC,"test\n");
 					(ul_config_pdu + i) ->nulsch_pdu.nulsch_pdu_rel13.rnti                    = schedule_result_list_UL->rnti;  //TODO : check if it is the right rnti // get from msg2
 					(ul_config_pdu + i) ->nulsch_pdu.nulsch_pdu_rel13.subcarrier_indication   = ((DCIFormatN0_t *)DCI_pdu)->scind;
