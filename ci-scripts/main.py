@@ -335,8 +335,6 @@ class SSHConnection():
 		self.command('mkdir -p build_log_' + self.testCase_id, '\$', 5)
 		self.command('mv log/* ' + 'build_log_' + self.testCase_id, '\$', 5)
 		self.command('mv compile_oai_enb.log ' + 'build_log_' + self.testCase_id, '\$', 5)
-		# Workaround to run with develop-nr
-		self.command('if [ -e ran_build ]; then cp -rf ran_build lte_build_oai; fi', '\$', 30)
 		self.close()
 		self.CreateHtmlTestRow(self.Build_eNB_args, 'OK', ALL_PROCESSES_OK)
 
