@@ -521,6 +521,8 @@ NB_IoT_eNB_NPDCCH_t       *npdcch_DCI;
 
 NB_IoT_eNB_NULSCH_t       *ulsch_NB_IoT[NUMBER_OF_UE_MAX+1];
 NB_IoT_eNB_NULSCH_t       *ulsch_msg3_NB_IoT; 
+
+NPRACH_CONFIG_COMMON       nprach_config_common;
 ////////////// For IF Module /////////////////////////////
 
 IF_Module_NB_IoT_t          *if_inst;           // should be replaced by if_inst_NB_IoT;  to avoid conflict during the merge with develop branch
@@ -528,6 +530,7 @@ UL_IND_NB_IoT_t             UL_INFO;            // should be replaced by UL_INFO
 pthread_mutex_t             UL_INFO_mutex;
 /// NFAPI NPRACH information 
 //nfapi_preamble_pdu_t preamble_list_NB_IoT[MAX_NUM_RX_PRACH_PREAMBLES];   // MAX_NUM_RX_PRACH_PREAMBLES in PHY/defs_eNB.h
+
 //nfapi_preamble_pdu_t preamble_list_NB_IoT[4];
 
 uint8_t                     msg3_pdu[6];
