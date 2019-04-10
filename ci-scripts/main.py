@@ -101,6 +101,7 @@ class SSHConnection():
 		self.desc = ''
 		self.Build_eNB_args = ''
 		self.Initialize_eNB_args = ''
+		self.air_interface = 'lte'
 		self.eNBLogFile = ''
 		self.eNB_instance = ''
 		self.eNBOptions = ''
@@ -139,6 +140,8 @@ class SSHConnection():
 		self.UESourceCodePath = ''
 		self.Build_OAI_UE_args = ''
 		self.Initialize_OAI_UE_args = ''
+		self.Initialize_OAI_eNB_args = ''
+		self.clean_repository = True
 		self.eNBOsVersion = ''
 		
 	def open(self, ipaddress, username, password):
@@ -349,7 +352,8 @@ class SSHConnection():
 		# here add a check if git clone or git fetch went smoothly
 		self.command('git config user.email "jenkins@openairinterface.org"', '\$', 5)
 		self.command('git config user.name "OAI Jenkins"', '\$', 5)
-		self.command('echo ' + self.UEPassword + ' | sudo -S git clean -x -d -ff', '\$', 30)
+		if self.clean_repository:
+			self.command('echo ' + self.UEPassword + ' | sudo -S git clean -x -d -ff', '\$', 30)
 		# if the commit ID is provided use it to point to it
 		if self.eNBCommitID != '':
 			self.command('git checkout -f ' + self.eNBCommitID, '\$', 5)
@@ -498,7 +502,7 @@ class SSHConnection():
 		# Launch eNB with the modified config file
 		self.command('source oaienv', '\$', 5)
 		self.command('cd cmake_targets', '\$', 5)
-		self.command('echo "ulimit -c unlimited && ./ran_build/build/lte-softmodem -O ' + self.eNBSourceCodePath + '/' + ci_full_config_file + extra_options + '" > ./my-lte-softmodem-run' + str(self.eNB_instance) + '.sh ', '\$', 5)
+		self.command('echo "ulimit -c unlimited && ./ran_build/build/' + self.air_interface + '-softmodem -O ' + self.eNBSourceCodePath + '/' + ci_full_config_file + extra_options + '" > ./my-lte-softmodem-run' + str(self.eNB_instance) + '.sh ', '\$', 5)
 		self.command('chmod 775 ./my-lte-softmodem-run' + str(self.eNB_instance) + '.sh ', '\$', 5)
 		self.command('echo ' + self.eNBPassword + ' | sudo -S rm -Rf enb_' + self.testCase_id + '.log', '\$', 5)
 		self.command('echo ' + self.eNBPassword + ' | sudo -S -E daemon --inherit --unsafe --name=enb' + str(self.eNB_instance) + '_daemon --chdir=' + self.eNBSourceCodePath + '/cmake_targets -o ' + self.eNBSourceCodePath + '/cmake_targets/enb_' + self.testCase_id + '.log ./my-lte-softmodem-run' + str(self.eNB_instance) + '.sh', '\$', 5)
@@ -629,7 +633,7 @@ class SSHConnection():
 		# Launch UE with the modified config file
 		self.command('source oaienv', '\$', 5)
 		self.command('cd cmake_targets/ran_build_oai/build', '\$', 5)
-		self.command('echo "ulimit -c unlimited && ./lte-uesoftmodem ' + self.Initialize_OAI_UE_args + '" > ./my-lte-uesoftmodem-run' + str(self.UE_instance) + '.sh', '\$', 5)
+		self.command('echo "ulimit -c unlimited && ./'+ self.air_interface +'-uesoftmodem ' + self.Initialize_OAI_UE_args + '" > ./my-lte-uesoftmodem-run' + str(self.UE_instance) + '.sh', '\$', 5)
 		self.command('chmod 775 ./my-lte-uesoftmodem-run' + str(self.UE_instance) + '.sh', '\$', 5)
 		self.command('echo ' + self.UEPassword + ' | sudo -S rm -Rf ' + self.UESourceCodePath + '/cmake_targets/ue_' + self.testCase_id + '.log', '\$', 5)
 		self.command('echo ' + self.UEPassword + ' | sudo -S -E daemon --inherit --unsafe --name=ue' + str(self.UE_instance) + '_daemon --chdir=' + self.UESourceCodePath + '/cmake_targets/ran_build/build -o ' + self.UESourceCodePath + '/cmake_targets/ue_' + self.testCase_id + '.log ./my-lte-uesoftmodem-run' + str(self.UE_instance) + '.sh', '\$', 5)
@@ -672,6 +676,90 @@ class SSHConnection():
 					doLoop = False
 					self.CreateHtmlTestRow(self.Initialize_OAI_UE_args, 'OK', ALL_PROCESSES_OK, 'OAI UE')
 					logging.debug('\u001B[1m Initialize OAI UE Completed\u001B[0m')
+		self.close()
+
+	def InitializeOAIeNB(self):
+		if self.eNBIPAddress == '' or self.eNBUserName == '' or self.eNBPassword == '' or self.eNBSourceCodePath == '':
+			Usage()
+			sys.exit('Insufficient Parameter')
+		#initialize_OAI_eNB_flag = True
+		#pStatus = self.CheckOAIeNBProcessExist(initialize_OAI_eNB_flag)
+		#if (pStatus < 0):
+		#	self.CreateHtmlTestRow(self.Initialize_OAI_eNB_args, 'KO', pStatus)
+		#	self.CreateHtmlTabFooter(False)
+		#	sys.exit(1)
+		self.open(self.eNBIPAddress, self.eNBUserName, self.eNBPassword)
+		self.command('cd ' + self.eNBSourceCodePath, '\$', 5)
+		# Initialize_OAI_eNB_args usually start with -C and followed by the location in repository
+		#full_config_file = self.Initialize_OAI_eNB_args.replace('-O ','')
+		#extIdx = full_config_file.find('.conf')
+		#if (extIdx > 0):
+		#	extra_options = full_config_file[extIdx + 5:]
+		#	# if tracer options is on, compiling and running T Tracer
+		#	result = re.search('T_stdout', str(extra_options))
+		##	if result is not None:
+		#		logging.debug('\u001B[1m Compiling and launching T Tracer\u001B[0m')
+		#		self.command('cd common/utils/T/tracer', '\$', 5)
+		#		self.command('make', '\$', 10)
+		#		self.command('echo $USER; nohup ./record -d ../T_messages.txt -o ' + self.eNBSourceCodePath + '/cmake_targets/enb_' + self.testCase_id + '_record.raw -ON -off VCD -off HEAVY -off LEGACY_GROUP_TRACE -off LEGACY_GROUP_DEBUG > ' + self.eNBSourceCodePath + '/cmake_targets/enb_' + self.testCase_id + '_record.log 2>&1 &', self.eNBUserName, 5)
+		#		self.command('cd ' + self.eNBSourceCodePath, '\$', 5)
+		#	full_config_file = full_config_file[:extIdx + 5]
+		#	config_path, config_file = os.path.split(full_config_file)
+		#ci_full_config_file = config_path + '/ci-' + config_file
+		#rruCheck = False
+		#result = re.search('rru', str(config_file))
+		#if result is not None:
+		#	rruCheck = True
+		## Make a copy and adapt to EPC / eNB IP addresses
+		#self.command('cp ' + full_config_file + ' ' + ci_full_config_file, '\$', 5)
+		#self.command('sed -i -e \'s/CI_eNB_IP_ADDR/' + self.eNBIPAddress + '/\' ' + ci_full_config_file, '\$', 2);
+		# Launch eNB with the modified config file
+		self.command('source oaienv', '\$', 5)
+		self.command('cd cmake_targets/ran_build_oai/build', '\$', 5)
+		#self.command('echo "ulimit -c unlimited && ./' + self.air_interface + '-softmodem ' + self.Initialize_OAI_eNB_args + '" > ./my-lte-softmodem-run' + str(self.eNB_instance) + '.sh', '\$', 5)
+		self.command('echo "ulimit -c unlimited && ./' + self.air_interface + '-softmodem ' + self.Initialize_OAI_eNB_args + '|& tee ' + self.eNBSourceCodePath + '/cmake_targets/enb_' + self.testCase_id + '.log' + '" > ./my-lte-softmodem-run' + str(self.eNB_instance) + '.sh', '\$', 5)
+		self.command('chmod 775 ./my-lte-softmodem-run' + str(self.eNB_instance) + '.sh', '\$', 5)
+		self.command('echo ' + self.eNBPassword + ' | sudo -S rm -Rf ' + self.eNBSourceCodePath + '/cmake_targets/enb_' + self.testCase_id + '.log', '\$', 5)
+		self.command('echo ' + self.eNBPassword + ' | sudo -S -E daemon --inherit --unsafe --name=enb' + str(self.eNB_instance) + '_daemon --chdir=' + self.eNBSourceCodePath + '/cmake_targets/ran_build/build -o ' + self.eNBSourceCodePath + '/cmake_targets/enb_' + self.testCase_id + '.log ./my-lte-softmodem-run' + str(self.eNB_instance) + '.sh', '\$', 5)
+		self.eNBLogFile = 'enb_' + self.testCase_id + '.log'
+		time.sleep(6)
+		self.command('cd ../..', '\$', 5)
+		doLoop = True
+		loopCounter = 10
+		while (doLoop):
+			loopCounter = loopCounter - 1
+			if (loopCounter == 0):
+				# In case of T tracer recording, we may need to kill it
+				#result = re.search('T_stdout', str(self.Initialize_OAI_eNB_args))
+				#if result is not None:
+				#	self.command('killall --signal SIGKILL record', '\$', 5)
+				self.close()
+				doLoop = False
+				logging.error('\u001B[1;37;41m eNB logging system did not show got sync! \u001B[0m')
+				self.CreateHtmlTestRow(self.Initialize_OAI_eNB_args, 'KO', ALL_PROCESSES_OK, 'OAI eNB')
+				self.CreateHtmlTabFooter(False)
+				## In case of T tracer recording, we need to kill tshark on EPC side
+				#result = re.search('T_stdout', str(self.Initialize_OAI_eNB_args))
+				#if result is not None:
+				#	self.open(self.EPCIPAddress, self.EPCUserName, self.EPCPassword)
+				#	logging.debug('\u001B[1m Stopping tshark \u001B[0m')
+				#	self.command('echo ' + self.EPCPassword + ' | sudo -S killall --signal SIGKILL tshark', '\$', 5)
+				#	self.close()
+				#	time.sleep(1)
+				#	pcap_log_file = 'enb_' + self.testCase_id + '_s1log.pcap'
+				#	copyin_res = self.copyin(self.EPCIPAddress, self.EPCUserName, self.EPCPassword, '/tmp/' + pcap_log_file, '.')
+				#	if (copyin_res == 0):
+				#		self.copyout(self.eNBIPAddress, self.eNBUserName, self.eNBPassword, pcap_log_file, self.eNBSourceCodePath + '/cmake_targets/.')
+				sys.exit(1)
+			else:
+				self.command('stdbuf -o0 cat enb_' + self.testCase_id + '.log | egrep --text --color=never -i "wait|sync"', '\$', 4)
+				result = re.search('got sync', str(self.ssh.before))
+				if result is None:
+					time.sleep(6)
+				else:
+					doLoop = False
+					self.CreateHtmlTestRow(self.Initialize_OAI_eNB_args, 'OK', ALL_PROCESSES_OK, 'OAI eNB')
+					logging.debug('\u001B[1m Initialize OAI eNB Completed\u001B[0m')
 		self.close()
 
 	def checkDevTTYisUnlocked(self):
@@ -1844,8 +1932,8 @@ class SSHConnection():
 	def CheckOAIUEProcess(self, status_queue):
 		try:
 			self.open(self.OAIUEIPAddress, self.OAIUEUserName, self.OAIUEPassword)
-			self.command('stdbuf -o0 ps -aux | grep -v grep | grep --color=never lte-uesoftmodem', '\$', 5)
-			result = re.search('lte-uesoftmodem', str(self.ssh.before))
+			self.command('stdbuf -o0 ps -aux | grep -v grep | grep --color=never ' + self.air_interface + '-uesoftmodem', '\$', 5)
+			result = re.search(air_interface + '-uesoftmodem', str(self.ssh.before))
 			if result is None:
 				logging.debug('\u001B[1;37;41m OAI UE Process Not Found! \u001B[0m')
 				status_queue.put(OAI_UE_PROCESS_FAILED)
@@ -1858,8 +1946,8 @@ class SSHConnection():
 	def CheckeNBProcess(self, status_queue):
 		try:
 			self.open(self.eNBIPAddress, self.eNBUserName, self.eNBPassword)
-			self.command('stdbuf -o0 ps -aux | grep -v grep | grep --color=never lte-softmodem', '\$', 5)
-			result = re.search('lte-softmodem', str(self.ssh.before))
+			self.command('stdbuf -o0 ps -aux | grep -v grep | grep --color=never ' + self.air_interface + '-softmodem', '\$', 5)
+			result = re.search(air_interface + '-softmodem', str(self.ssh.before))
 			if result is None:
 				logging.debug('\u001B[1;37;41m eNB Process Not Found! \u001B[0m')
 				status_queue.put(ENB_PROCESS_FAILED)
@@ -2228,12 +2316,12 @@ class SSHConnection():
 		self.command('cd ' + self.eNBSourceCodePath + '/cmake_targets', '\$', 5)
 		self.command('echo ' + self.eNBPassword + ' | sudo -S daemon --name=enb' + str(self.eNB_instance) + '_daemon --stop', '\$', 5)
 		self.command('rm -f my-lte-softmodem-run' + str(self.eNB_instance) + '.sh', '\$', 5)
-		self.command('echo ' + self.eNBPassword + ' | sudo -S killall --signal SIGINT lte-softmodem || true', '\$', 5)
+		self.command('echo ' + self.eNBPassword + ' | sudo -S killall --signal SIGINT ' + self.air_interface + '-softmodem || true', '\$', 5)
 		time.sleep(5)
-		self.command('stdbuf -o0  ps -aux | grep -v grep | grep lte-softmodem', '\$', 5)
-		result = re.search('lte-softmodem', str(self.ssh.before))
+		self.command('stdbuf -o0  ps -aux | grep -v grep | grep ' + self.air_interface + '-softmodem', '\$', 5)
+		result = re.search(air_interface + '-softmodem', str(self.ssh.before))
 		if result is not None:
-			self.command('echo ' + self.eNBPassword + ' | sudo -S killall --signal SIGKILL lte-softmodem || true', '\$', 5)
+			self.command('echo ' + self.eNBPassword + ' | sudo -S killall --signal SIGKILL ' + self.air_interface + '-softmodem || true', '\$', 5)
 			time.sleep(5)
 		self.close()
 		# If tracer options is on, stopping tshark on EPC side
@@ -2368,12 +2456,12 @@ class SSHConnection():
 		self.command('cd ' + self.UESourceCodePath + '/cmake_targets', '\$', 5)
 		self.command('echo ' + self.UEPassword + ' | sudo -S daemon --name=ue' + str(self.UE_instance) + '_daemon --stop', '\$', 5)
 		self.command('rm -f my-lte-uesoftmodem-run' + str(self.UE_instance) + '.sh', '\$', 5)
-		self.command('echo ' + self.UEPassword + ' | sudo -S killall --signal SIGINT lte-uesoftmodem || true', '\$', 5)
+		self.command('echo ' + self.UEPassword + ' | sudo -S killall --signal SIGINT ' + self.air_interface + '-uesoftmodem || true', '\$', 5)
 		time.sleep(5)
-		self.command('stdbuf -o0  ps -aux | grep -v grep | grep lte-uesoftmodem', '\$', 5)
-		result = re.search('lte-uesoftmodem', str(self.ssh.before))
+		self.command('stdbuf -o0  ps -aux | grep -v grep | grep ' + self.air_interface + '-uesoftmodem', '\$', 5)
+		result = re.search(air_interface + '-uesoftmodem', str(self.ssh.before))
 		if result is not None:
-			self.command('echo ' + self.UEPassword + ' | sudo -S killall --signal SIGKILL lte-uesoftmodem || true', '\$', 5)
+			self.command('echo ' + self.UEPassword + ' | sudo -S killall --signal SIGKILL ' + self.air_interface + '-uesoftmodem || true', '\$', 5)
 			time.sleep(5)
 		self.close()
 		# If tracer options is on, stopping tshark on EPC side
@@ -2929,7 +3017,7 @@ def Usage():
 	print('------------------------------------------------------------')
 
 def CheckClassValidity(action,id):
-	if action != 'Build_eNB' and action != 'Initialize_eNB' and action != 'Terminate_eNB' and action != 'Initialize_UE' and action != 'Terminate_UE' and action != 'Attach_UE' and action != 'Detach_UE' and action != 'Build_OAI_UE' and action != 'Initialize_OAI_UE' and action != 'Terminate_OAI_UE' and action != 'Ping' and action != 'Iperf' and action != 'Reboot_UE' and action != 'Initialize_HSS' and action != 'Terminate_HSS' and action != 'Initialize_MME' and action != 'Terminate_MME' and action != 'Initialize_SPGW' and action != 'Terminate_SPGW'  and action != 'Initialize_CatM_module' and action != 'Terminate_CatM_module' and action != 'Attach_CatM_module' and action != 'Detach_CatM_module' and action != 'Ping_CatM_module' and action != 'IdleSleep':
+	if action != 'Build_eNB' and action != 'Initialize_eNB' and action != 'Terminate_eNB' and action != 'Initialize_UE' and action != 'Terminate_UE' and action != 'Attach_UE' and action != 'Detach_UE' and action != 'Build_OAI_UE' and action != 'Initialize_OAI_UE' and action != 'Terminate_OAI_UE' and action != 'Initialize_OAI_eNB' and action != 'Ping' and action != 'Iperf' and action != 'Reboot_UE' and action != 'Initialize_HSS' and action != 'Terminate_HSS' and action != 'Initialize_MME' and action != 'Terminate_MME' and action != 'Initialize_SPGW' and action != 'Terminate_SPGW'  and action != 'Initialize_CatM_module' and action != 'Terminate_CatM_module' and action != 'Attach_CatM_module' and action != 'Detach_CatM_module' and action != 'Ping_CatM_module' and action != 'IdleSleep':
 		logging.debug('ERROR: test-case ' + id + ' has wrong class ' + action)
 		return False
 	return True
@@ -2943,7 +3031,12 @@ def GetParametersFromXML(action):
 		SSH.eNB_instance = test.findtext('eNB_instance')
 		if (SSH.eNB_instance is None):
 			SSH.eNB_instance = '0'
-
+		SSH.air_interface = test.findtext('air_interface')
+		if (SSH.air_interface is None):
+			SSH.air_interface = 'lte'
+		else:
+			SSH.air_interface = SSH.air_interface.lower()
+	
 	if action == 'Terminate_eNB':
 		SSH.eNB_instance = test.findtext('eNB_instance')
 		if (SSH.eNB_instance is None):
@@ -2958,12 +3051,33 @@ def GetParametersFromXML(action):
 
 	if action == 'Build_OAI_UE':
 		SSH.Build_OAI_UE_args = test.findtext('Build_OAI_UE_args')
+		SSH.clean_repository = test.findtext('clean_repository')
+		if (SSH.clean_repository == 'false'):
+			SSH.clean_repository = False
+		else:
+			SSH.clean_repository = True
 
 	if action == 'Initialize_OAI_UE':
 		SSH.Initialize_OAI_UE_args = test.findtext('Initialize_OAI_UE_args')
 		SSH.UE_instance = test.findtext('UE_instance')
 		if (SSH.UE_instance is None):
 			SSH.UE_instance = '0'
+		SSH.air_interface = test.findtext('air_interface')
+		if (SSH.air_interface is None):
+			SSH.air_interface = 'lte'
+		else:
+			SSH.air_interface = SSH.air_interface.lower()
+	
+	if action == 'Initialize_OAI_eNB':
+		SSH.Initialize_OAI_UE_args = test.findtext('Initialize_OAI_eNB_args')
+		SSH.UE_instance = test.findtext('eNB_instance')
+		if (SSH.eNB_instance is None):
+			SSH.eNB_instance = '0'
+		SSH.air_interface = test.findtext('air_interface')
+		if (SSH.air_interface is None):
+			SSH.air_interface = 'lte'
+		else:
+			SSH.air_interface = SSH.air_interface.lower()
 
 	if action == 'Terminate_OAI_UE':
 		SSH.eNB_instance = test.findtext('UE_instance')
@@ -3174,10 +3288,10 @@ elif re.match('^LogCollectIperf$', mode, re.IGNORECASE):
 		sys.exit('Insufficient Parameter')
 	SSH.LogCollectIperf()
 elif re.match('^LogCollectOAIUE$', mode, re.IGNORECASE):
-        if SSH.UEIPAddress == '' or SSH.UEUserName == '' or SSH.UEPassword == '' or SSH.UESourceCodePath == '':
-                Usage()
-                sys.exit('Insufficient Parameter')
-        SSH.LogCollectOAIUE()
+	if SSH.UEIPAddress == '' or SSH.UEUserName == '' or SSH.UEPassword == '' or SSH.UESourceCodePath == '':
+		Usage()
+		sys.exit('Insufficient Parameter')
+	SSH.LogCollectOAIUE()
 elif re.match('^InitiateHtml$', mode, re.IGNORECASE):
 	if (SSH.ADBIPAddress == '' or SSH.ADBUserName == '' or SSH.ADBPassword == ''):
 		Usage()
@@ -3305,6 +3419,8 @@ elif re.match('^TesteNB$', mode, re.IGNORECASE) or re.match('^TestUE$', mode, re
 				SSH.InitializeOAIUE()
 			elif action == 'Terminate_OAI_UE':
 				SSH.TerminateOAIUE()
+			elif action == 'Initialize_OAI_eNB':
+				SSH.InitializeOAIeNB()
 			elif action == 'Initialize_CatM_module':
 				SSH.InitializeCatM()
 			elif action == 'Terminate_CatM_module':
