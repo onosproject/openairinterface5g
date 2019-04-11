@@ -2166,6 +2166,7 @@ target_link_libraries (lte-softmodem-nos1 ${T_LIB})
 
 add_executable(lte-uesoftmodem
   ${OPENAIR_TARGETS}/RT/USER/rt_wrapper.c
+  ${OPENAIR_DIR}/common/utils/threadPool/thread-pool.c
   ${OPENAIR_TARGETS}/RT/USER/lte-ue.c
   ${OPENAIR_TARGETS}/RT/USER/lte-uesoftmodem.c
   ${OPENAIR_TARGETS}/RT/USER/lte-softmodem-common.c
