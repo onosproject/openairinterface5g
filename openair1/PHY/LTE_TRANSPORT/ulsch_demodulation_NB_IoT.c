@@ -1061,7 +1061,9 @@ void rotate_single_carrier_NB_IoT(PHY_VARS_eNB          *eNB,
   int16_t *e_phi_re,*e_phi_im;
   int16_t *rxdataF_comp16; 
   int16_t rxdataF_comp16_re, rxdataF_comp16_im,rxdataF_comp16_re_2,rxdataF_comp16_im_2;    
-
+  
+  int32_t sign_pm[2] = {1,-1}; 
+  int8_t ind_sign_pm; // index for above table
 
   switch(ul_sc_start)
   {
@@ -1114,7 +1116,7 @@ void rotate_single_carrier_NB_IoT(PHY_VARS_eNB          *eNB,
         e_phi_im = e_phi_im_p5; 
         break; 
   }
-
+  ind_sign_pm = ((14*(N_SF_per_word-counter_msg3) + symbol)/14)%2;
   //ul_sc_start = get_UL_sc_start_NB_IoT(I_sc); // NB-IoT: get the used subcarrier in RB
   rxdataF_comp16   = (int16_t *)&rxdataF_comp[0][symbol*frame_parms->N_RB_DL*12 + ul_sc_start]; 
   rxdataF_comp16_re = rxdataF_comp16[0]; 
@@ -1137,10 +1139,11 @@ void rotate_single_carrier_NB_IoT(PHY_VARS_eNB          *eNB,
 
       if(option==0) // rotation for msg3 (NPUSCH format 1)
     {
-              rxdataF_comp16[0] = (int16_t)(((int32_t)e_phi_re[14*(N_SF_per_word-counter_msg3) + symbol] * (int32_t)rxdataF_comp16_re_2 + 
-                        (int32_t)e_phi_im[14*(N_SF_per_word-counter_msg3) + symbol] * (int32_t)rxdataF_comp16_im_2)>>15); 
-              rxdataF_comp16[1] = (int16_t)(((int32_t)e_phi_re[14*(N_SF_per_word-counter_msg3) + symbol] * (int32_t)rxdataF_comp16_im_2 - 
-                        (int32_t)e_phi_im[14*(N_SF_per_word-counter_msg3) + symbol] * (int32_t)rxdataF_comp16_re_2)>>15); 
+              rxdataF_comp16[0] = (int16_t)(((int32_t)e_phi_re[(14*(N_SF_per_word-counter_msg3) + symbol)%14] * sign_pm[ind_sign_pm] * (int32_t)rxdataF_comp16_re_2 + 
+                        (int32_t)e_phi_im[(14*(N_SF_per_word-counter_msg3) + symbol)%14] * sign_pm[ind_sign_pm] * (int32_t)rxdataF_comp16_im_2)>>15); 
+              rxdataF_comp16[1] = (int16_t)(((int32_t)e_phi_re[(14*(N_SF_per_word-counter_msg3) + symbol)%14] * sign_pm[ind_sign_pm] * (int32_t)rxdataF_comp16_im_2 - 
+                        (int32_t)e_phi_im[(14*(N_SF_per_word-counter_msg3) + symbol)%14] * sign_pm[ind_sign_pm] * (int32_t)rxdataF_comp16_re_2)>>15); 
+    
     }
       if(option==1) // rotation for msg5 (NPUSCH format 1)
     {
@@ -1865,6 +1868,12 @@ uint8_t rx_ulsch_Gen_NB_IoT(PHY_VARS_eNB            *eNB,
       NB_IoT_eNB_NULSCH_t     *ulsch_NB_IoT     = eNB->ulsch_NB_IoT[0];
       NB_IoT_UL_eNB_HARQ_t    *ulsch_harq       = ulsch_NB_IoT->harq_process;
 
+if(  (7 < ((rx_frame*10 + rx_subframe)%160)) && ( ((rx_frame*10 + rx_subframe)%160) < (8+6)) )
+{ 
+     return 0;
+
+ } else {
+
   if (ulsch_NB_IoT->Msg3_active  == 1)    
   {    
       
@@ -1977,6 +1986,6 @@ uint8_t rx_ulsch_Gen_NB_IoT(PHY_VARS_eNB            *eNB,
   } else {
     return 0;     // create void function for NPUSCH ?
   }
-        
+}      
         
 }

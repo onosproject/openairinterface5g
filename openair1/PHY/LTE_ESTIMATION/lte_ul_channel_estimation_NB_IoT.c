@@ -177,6 +177,9 @@ void rotate_channel_sc_tmp_NB_IoT(int16_t   *estimated_channel,
   int16_t est_channel_re, est_channel_im, est_channel_re2, est_channel_im2;  
   int16_t *e_phi_re,*e_phi_im;
 
+  int32_t sign_pm[2] = {1,-1}; 
+  int8_t ind_sign_pm; // index for above table
+
   switch(ul_sc_start)         /// only for single tone and 15 KHz spacing ?    // missing the other configs
   {
     case 0: 
@@ -230,6 +233,7 @@ void rotate_channel_sc_tmp_NB_IoT(int16_t   *estimated_channel,
   }
 
   //ul_sc_start = get_UL_sc_start_NB_IoT(I_sc); // NB-IoT: get the used subcarrier in RB
+  ind_sign_pm = ((14*(N_SF_per_word-counter_msg3) + l)/14)%2;
 
   for (k=0;k<12;k++)
   {
@@ -252,10 +256,11 @@ void rotate_channel_sc_tmp_NB_IoT(int16_t   *estimated_channel,
         }
       if(flag==0) // rotation of msg3
     {
-              estimated_channel[k<<1] = (int16_t)(((int32_t)e_phi_re[14*(N_SF_per_word-counter_msg3) + l] * (int32_t)est_channel_re2 + 
-                        (int32_t)e_phi_im[14*(N_SF_per_word-counter_msg3) + l] * (int32_t)est_channel_im2)>>15); 
-              estimated_channel[(k<<1)+1] = (int16_t)(((int32_t)e_phi_re[14*(N_SF_per_word-counter_msg3) + l] * (int32_t)est_channel_im2 - 
-                        (int32_t)e_phi_im[14*(N_SF_per_word-counter_msg3) + l] * (int32_t)est_channel_re2)>>15); 
+         estimated_channel[k<<1] = (int16_t)(((int32_t)e_phi_re[(14*(N_SF_per_word-counter_msg3) + l)%14] * sign_pm[ind_sign_pm] * (int32_t)est_channel_re2 + 
+                        (int32_t)e_phi_im[(14*(N_SF_per_word-counter_msg3) + l)%14] * sign_pm[ind_sign_pm] * (int32_t)est_channel_im2)>>15); 
+              estimated_channel[(k<<1)+1] = (int16_t)(((int32_t)e_phi_re[(14*(N_SF_per_word-counter_msg3) + l)%14] * sign_pm[ind_sign_pm] * (int32_t)est_channel_im2 - 
+                        (int32_t)e_phi_im[(14*(N_SF_per_word-counter_msg3) + l)%14] * sign_pm[ind_sign_pm] * (int32_t)est_channel_re2)>>15); 
+   
     }
       if(flag==1) // rotation of msg5
     {
