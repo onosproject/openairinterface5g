@@ -69,7 +69,7 @@ int16_t get_PL(module_id_t Mod_id,uint8_t CC_id,uint8_t eNB_index)
     RSoffset = 3;
   */
 
-  LOG_D(PHY,"get_PL : Frame %d : rsrp %f dBm/RE (%f), eNB power %d dBm/RE\n", ue->proc.proc_rxtx[0].frame_rx,
+  LOG_D(PHY,"get_PL :  rsrp %f dBm/RE (%f), eNB power %d dBm/RE\n", 
         (1.0*dB_fixed_times10(ue->measurements.rsrp[eNB_index])-(10.0*ue->rx_total_gain_dB))/10.0,
         10*log10((double)ue->measurements.rsrp[eNB_index]),
         ue->frame_parms.pdsch_config_common.referenceSignalPower);
@@ -343,7 +343,7 @@ void ue_rrc_measurements(PHY_VARS_UE *ue,
       for (l=0,nu=0; l<=(4-ue->frame_parms.Ncp); l+=(4-ue->frame_parms.Ncp),nu=3) {
         k = (nu + nushift)%6;
 	//#ifdef DEBUG_MEAS_RRC
-        LOG_D(PHY,"[UE %d] Frame %d subframe %d Doing ue_rrc_measurements rsrp/rssi (Nid_cell %d, nushift %d, eNB_offset %d, k %d, l %d)\n",ue->Mod_id,ue->proc.proc_rxtx[subframe&1].frame_rx,subframe,Nid_cell,nushift,
+        LOG_D(PHY,"[UE %d] subframe %d Doing ue_rrc_measurements rsrp/rssi (Nid_cell %d, nushift %d, eNB_offset %d, k %d, l %d)\n",ue->Mod_id,subframe,Nid_cell,nushift,
               eNB_offset,k,l);
 	//#endif
 
@@ -426,15 +426,15 @@ void ue_rrc_measurements(PHY_VARS_UE *ue,
 
       if (eNB_offset == 0)
 	
-        LOG_D(PHY,"[UE %d] Frame %d, subframe %d RRC Measurements => rssi %3.1f dBm (digital: %3.1f dB, gain %d), N0 %d dBm\n",ue->Mod_id,
-              ue->proc.proc_rxtx[subframe&1].frame_rx,subframe,10*log10(ue->measurements.rssi)-ue->rx_total_gain_dB,
+        LOG_D(PHY,"[UE %d] subframe %d RRC Measurements => rssi %3.1f dBm (digital: %3.1f dB, gain %d), N0 %d dBm\n",ue->Mod_id,
+              subframe,10*log10(ue->measurements.rssi)-ue->rx_total_gain_dB,
               10*log10(ue->measurements.rssi),
               ue->rx_total_gain_dB,
               ue->measurements.n0_power_tot_dBm);
 
-      LOG_D(PHY,"[UE %d] Frame %d, subframe %d RRC Measurements (idx %d, Cell id %d) => rsrp: %3.1f dBm/RE (%d), rsrq: %3.1f dB\n",
+      LOG_D(PHY,"[UE %d] subframe %d RRC Measurements (idx %d, Cell id %d) => rsrp: %3.1f dBm/RE (%d), rsrq: %3.1f dB\n",
             ue->Mod_id,
-            ue->proc.proc_rxtx[subframe&1].frame_rx,subframe,eNB_offset,
+            subframe,eNB_offset,
             (eNB_offset>0) ? ue->measurements.adj_cell_id[eNB_offset-1] : ue->frame_parms.Nid_cell,
             10*log10(ue->measurements.rsrp[eNB_offset])-ue->rx_total_gain_dB,
             ue->measurements.rsrp[eNB_offset],

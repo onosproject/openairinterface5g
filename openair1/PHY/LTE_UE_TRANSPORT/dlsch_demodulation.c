@@ -185,7 +185,7 @@ int rx_pdsch(PHY_VARS_UE *ue,
         printf("[DEMOD] I am assuming only TB1 is active, it is in cw %d\n", dlsch0_harq->codeword);
 #endif
       } else {
-        LOG_E(PHY,"[UE][FATAL] Frame %d subframe %d: no active DLSCH\n",ue->proc.proc_rxtx[0].frame_rx,subframe);
+        LOG_E(PHY,"[UE][FATAL] subframe %d: no active DLSCH\n",subframe);
         return(-1);
       }
 
@@ -193,7 +193,7 @@ int rx_pdsch(PHY_VARS_UE *ue,
       break;
 
     default:
-      LOG_E(PHY,"[UE][FATAL] Frame %d subframe %d: Unknown PDSCH format %d\n",ue->proc.proc_rxtx[0].frame_rx,subframe,type);
+      LOG_E(PHY,"[UE][FATAL] subframe %d: Unknown PDSCH format %d\n",subframe,type);
       return(-1);
       break;
   }
