@@ -210,11 +210,14 @@ void rx_sdu_NB_IoT(module_id_t module_id, int CC_id, frame_t frame, sub_frame_t 
             break;
         case SHORT_BSR:
             // update BSR here
-        LOG_I(MAC,"Update BSR, but still not implemented here\n");
+        LOG_I(MAC,"Update BSR, rnti : %d\n",rnti);
         UE_info = get_ue_from_rnti(mac_inst, rnti);
         BSR_index = payload_ptr[0] & 0x3f;
-        if(UE_info != NULL)          
+        if(UE_info != NULL)
+        {          
+          LOG_I(MAC,"Find UE in CE 2 list, update ul_total_buffer to %d bytes\n",BSR_table[BSR_index]);
           UE_info->ul_total_buffer = BSR_table[BSR_index];
+        }
         else
           LOG_E(MAC,"UE info empty\n"); 
             payload_ptr+=1;
@@ -252,6 +255,7 @@ void rx_sdu_NB_IoT(module_id_t module_id, int CC_id, frame_t frame, sub_frame_t 
           break;
             case DCCH0_NB_IoT:
             case DCCH1_NB_IoT:
+                LOG_I(MAC,"DCCH PDU Here\n");
                 // UE specific here
                 //NB_IoT_mac_rlc_data_ind(payload_ptr,mac_inst,rnti);
             

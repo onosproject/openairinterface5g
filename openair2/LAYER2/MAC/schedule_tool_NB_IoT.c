@@ -1702,9 +1702,9 @@ uint16_t length, ce_len=0;
 UE_TEMPLATE_NB_IoT *get_ue_from_rnti(eNB_MAC_INST_NB_IoT *inst, rnti_t rnti){
     uint32_t i;
     for(i=0; i<MAX_NUMBER_OF_UE_MAX_NB_IoT; ++i){
-        if(inst->UE_list_spec->UE_template_NB_IoT[i].active == 1){
-            if(inst->UE_list_spec->UE_template_NB_IoT[i].rnti == rnti){
-                return &inst->UE_list_spec->UE_template_NB_IoT[i];
+        if((inst->UE_list_spec+ (uint32_t)2)->UE_template_NB_IoT[i].active == 1){
+            if((inst->UE_list_spec+ (uint32_t)2)->UE_template_NB_IoT[i].rnti == rnti){
+                return &(inst->UE_list_spec+ (uint32_t)2)->UE_template_NB_IoT[i];
             }
         }
     }
