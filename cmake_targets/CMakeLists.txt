@@ -2395,10 +2395,12 @@ target_link_libraries (nr-softmodem-nos1 ${T_LIB})
 add_executable(nr-uesoftmodem
   ${rrc_h}
   ${s1ap_h}
-#  ${OPENAIR_BIN_DIR}/messages_xml.h
-  ${OPENAIR_DIR}/common/utils/threadPool/thread-pool.c
-  ${OPENAIR_DIR}/executables//nr-uesoftmodem.c
-  ${OPENAIR_DIR}/executables/nr-ue.c
+  #${OPENAIR_DIR}/common/utils/threadPool/thread-pool.c
+  #${OPENAIR_DIR}/executables/nr-uesoftmodem.c
+  #${OPENAIR_DIR}/executables/nr-ue.c
+  ${OPENAIR_TARGETS}/RT/USER/rt_wrapper.c
+  ${OPENAIR_DIR}/targets/RT/USER/nr-uesoftmodem.c
+  ${OPENAIR_DIR}/targets/RT/USER/nr-ue.c
   ${OPENAIR1_DIR}/SIMULATION/TOOLS/taus.c
   ${OPENAIR_TARGETS}/ARCH/COMMON/common_lib.c
   ${OPENAIR1_DIR}/SIMULATION/ETH_TRANSPORT/netlink_init.c

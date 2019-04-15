@@ -239,21 +239,28 @@ void init_UE(int nb_inst) {
   NR_UE_MAC_INST_t *mac_inst;
 
   for (inst=0; inst < nb_inst; inst++) {
-    //    UE->rfdevice.type      = NONE_DEV;
-    //PHY_VARS_NR_UE *UE = PHY_vars_UE_g[inst][0];
-    LOG_I(PHY,"Initializing memory for UE instance %d (%p)\n",inst,PHY_vars_UE_g[inst]);
-    PHY_vars_UE_g[inst][0] = init_nr_ue_vars(NULL,inst,0);
     PHY_VARS_NR_UE *UE = PHY_vars_UE_g[inst][0];
     AssertFatal((UE->if_inst = nr_ue_if_module_init(inst)) != NULL, "can not initial IF module\n");
     nr_l3_init_ue();
     nr_l2_init_ue();
-    mac_inst = get_mac_inst(0);
+    mac_inst = get_mac_inst(inst);
     mac_inst->if_module = UE->if_inst;
-    UE->if_inst->scheduled_response = nr_ue_scheduled_response;
-    UE->if_inst->phy_config_request = nr_ue_phy_config_request;
+
+    // Initial bandwidth part configuration -- full carrier bandwidth
+    mac_inst->initial_bwp_dl.bwp_id = 0;
+    mac_inst->initial_bwp_dl.location = 0;
+    mac_inst->initial_bwp_dl.scs = UE->frame_parms.subcarrier_spacing;
+    mac_inst->initial_bwp_dl.N_RB = UE->frame_parms.N_RB_DL;
+    mac_inst->initial_bwp_dl.cyclic_prefix = UE->frame_parms.Ncp;
+    
+    mac_inst->initial_bwp_ul.bwp_id = 0;
+    mac_inst->initial_bwp_ul.location = 0;
+    mac_inst->initial_bwp_ul.scs = UE->frame_parms.subcarrier_spacing;
+    mac_inst->initial_bwp_ul.N_RB = UE->frame_parms.N_RB_UL;
+    mac_inst->initial_bwp_ul.cyclic_prefix = UE->frame_parms.Ncp;
+
     LOG_I(PHY,"Intializing UE Threads for instance %d (%p,%p)...\n",inst,PHY_vars_UE_g[inst],PHY_vars_UE_g[inst][0]);
-    //init_UE_threads(inst);
-    //UE = PHY_vars_UE_g[inst][0];
+
     AssertFatal(0 == pthread_create(&UE->proc.pthread_ue,
                                     &UE->proc.attr_ue,
                                     UE_thread,
@@ -587,10 +594,15 @@ void processSubframeRX( PHY_VARS_NR_UE *UE, UE_nr_rxtx_proc_t *proc) {
     nr_ue_dcireq(&UE->dcireq); //to be replaced with function pointer later
     NR_UE_MAC_INST_t *UE_mac = get_mac_inst(0);
     UE_mac->scheduled_response.dl_config = &UE->dcireq.dl_config_req;
+    UE_mac->scheduled_response.ul_config = NULL;
+    UE_mac->scheduled_response.tx_request = NULL;
+    UE_mac->scheduled_response.module_id = UE->Mod_id;
+    UE_mac->scheduled_response.CC_id     = 0;
+    UE_mac->scheduled_response.frame = proc->frame_rx;
     UE_mac->scheduled_response.slot = proc->nr_tti_rx;
     nr_ue_scheduled_response(&UE_mac->scheduled_response);
     //write_output("uerxdata_frame.m", "uerxdata_frame", UE->common_vars.rxdata[0], UE->frame_parms.samples_per_frame, 1, 1);
-    printf("Processing slot %d\n",proc->nr_tti_rx);
+    LOG_D(PHY,"Processing slot %d\n",proc->nr_tti_rx);
 #ifdef UE_SLOT_PARALLELISATION
     phy_procedures_slot_parallelization_nrUE_RX( UE, proc, 0, 0, 1, UE->mode, no_relay, NULL );
 #else
@@ -760,12 +772,12 @@ int computeSamplesShift(PHY_VARS_NR_UE *UE) {
   }
 
   // compute TO compensation that should be applied for this frame
-  if ( UE->rx_offset < 5*UE->frame_parms.samples_per_slot  &&
+  if ( UE->rx_offset < UE->frame_parms.samples_per_frame/2  &&
        UE->rx_offset > 0 )
     return -1 ;
 
-  if ( UE->rx_offset > 5*UE->frame_parms.samples_per_slot &&
-       UE->rx_offset < 10*UE->frame_parms.samples_per_slot )
+  if ( UE->rx_offset > UE->frame_parms.samples_per_frame/2 &&
+       UE->rx_offset < UE->frame_parms.samples_per_frame/2 )
     return 1;
 
   return 0;

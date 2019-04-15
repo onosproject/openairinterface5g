@@ -206,7 +206,6 @@ int                             otg_enabled;
 //int                             number_of_cards =   1;
 
 static NR_DL_FRAME_PARMS      *frame_parms[MAX_NUM_CCs];
-static nfapi_nr_config_request_t *config[MAX_NUM_CCs];
 int16_t   node_synch_ref[MAX_NUM_CCs];
 
 uint32_t target_dl_mcs = 28; //maximum allowed mcs
@@ -654,13 +653,6 @@ void set_default_frame_parms(NR_DL_FRAME_PARMS *frame_parms[MAX_NUM_CCs]) {
         frame_parms[CC_id] = (NR_DL_FRAME_PARMS*) malloc(sizeof(NR_DL_FRAME_PARMS));
         /* Set some default values that may be overwritten while reading options */
         frame_parms[CC_id] = (NR_DL_FRAME_PARMS*) malloc(sizeof(NR_DL_FRAME_PARMS));
-        config[CC_id] = (nfapi_nr_config_request_t*) malloc(sizeof(nfapi_nr_config_request_t));
-        config[CC_id]->subframe_config.numerology_index_mu.value =1;
-        config[CC_id]->subframe_config.duplex_mode.value = 1; //FDD
-        config[CC_id]->subframe_config.dl_cyclic_prefix_type.value = 0; //NORMAL
-        config[CC_id]->rf_config.dl_carrier_bandwidth.value = 106;
-        config[CC_id]->rf_config.ul_carrier_bandwidth.value = 106;
-        config[CC_id]->sch_config.physical_cell_id.value = 0;
 	frame_parms[CC_id]->eutra_band = 78;
         frame_parms[CC_id]->frame_type          = FDD;
         frame_parms[CC_id]->tdd_config          = 3;
@@ -676,26 +668,6 @@ void set_default_frame_parms(NR_DL_FRAME_PARMS *frame_parms[MAX_NUM_CCs]) {
         frame_parms[CC_id]->nb_antennas_rx      = 1;
 
         //frame_parms[CC_id]->nushift             = 0;
-
-        ///frame_parms[CC_id]->phich_config_common.phich_resource = oneSixth;
-        //frame_parms[CC_id]->phich_config_common.phich_duration = normal;
-
-	// UL RS Config
-        /*frame_parms[CC_id]->pusch_config_common.ul_ReferenceSignalsPUSCH.cyclicShift = 1;//n_DMRS1 set to 0
-        frame_parms[CC_id]->pusch_config_common.ul_ReferenceSignalsPUSCH.groupHoppingEnabled = 1;
-        frame_parms[CC_id]->pusch_config_common.ul_ReferenceSignalsPUSCH.sequenceHoppingEnabled = 0;
-        frame_parms[CC_id]->pusch_config_common.ul_ReferenceSignalsPUSCH.groupAssignmentPUSCH = 0;
-
-	frame_parms[CC_id]->pusch_config_common.n_SB = 1;
-	frame_parms[CC_id]->pusch_config_common.hoppingMode = 0;
-	frame_parms[CC_id]->pusch_config_common.pusch_HoppingOffset = 0;
-	frame_parms[CC_id]->pusch_config_common.enable64QAM = 0;
-		
-        frame_parms[CC_id]->prach_config_common.rootSequenceIndex=22;
-        frame_parms[CC_id]->prach_config_common.prach_ConfigInfo.zeroCorrelationZoneConfig=1;
-        frame_parms[CC_id]->prach_config_common.prach_ConfigInfo.prach_ConfigIndex=0;
-        frame_parms[CC_id]->prach_config_common.prach_ConfigInfo.highSpeedFlag=0;
-        frame_parms[CC_id]->prach_config_common.prach_ConfigInfo.prach_FreqOffset=0;*/
 
         // NR: Init to legacy LTE 20Mhz params
         frame_parms[CC_id]->numerology_index	= 0;
@@ -960,22 +932,6 @@ int main( int argc, char **argv ) {
       UE[CC_id]->mac_enabled = 0;
     else
       UE[CC_id]->mac_enabled = 1;
-    
-    if (UE[CC_id]->mac_enabled == 0) {  //set default UL parameters for testing mode
-      for (i=0; i<NUMBER_OF_CONNECTED_eNB_MAX; i++) {
-	//UE[CC_id]->pusch_config_dedicated[i] = malloc(sizeof(PUSCH_CONFIG_DEDICATED));
-	
-	//UE[CC_id]->scheduling_request_config[i] = malloc(sizeof(SCHEDULING_REQUEST_CONFIG));
-	
-	/*UE[CC_id]->pusch_config_dedicated[i].betaOffset_ACK_Index = beta_ACK;
-	  UE[CC_id]->pusch_config_dedicated[i].betaOffset_RI_Index  = beta_RI;
-	  UE[CC_id]->pusch_config_dedicated[i].betaOffset_CQI_Index = beta_CQI;
-	  
-	  UE[CC_id]->scheduling_request_config[i].sr_PUCCH_ResourceIndex = 0;
-	  UE[CC_id]->scheduling_request_config[i].sr_ConfigIndex = 7+(0%3);
-	  UE[CC_id]->scheduling_request_config[i].dsr_TransMax = sr_n4;*/
-      }
-    }
     
     UE[CC_id]->UE_scan = UE_scan;
     UE[CC_id]->UE_scan_carrier = UE_scan_carrier;

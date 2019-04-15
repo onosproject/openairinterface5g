@@ -382,7 +382,7 @@ void processSubframeRX( PHY_VARS_NR_UE *UE, UE_nr_rxtx_proc_t *proc) {
     UE_mac->scheduled_response.slot  = proc->nr_tti_rx;
     nr_ue_scheduled_response(&UE_mac->scheduled_response);
     //write_output("uerxdata_frame.m", "uerxdata_frame", UE->common_vars.rxdata[0], UE->frame_parms.samples_per_frame, 1, 1);
-    printf("Processing slot %d\n",proc->nr_tti_rx);
+    LOG_D(PHY,"Processing slot %d\n",proc->nr_tti_rx);
 #ifdef UE_SLOT_PARALLELISATION
     phy_procedures_slot_parallelization_nrUE_RX( UE, proc, 0, 0, 1, UE->mode, no_relay, NULL );
 #else
@@ -687,14 +687,14 @@ void *UE_thread(void *arg) {
         nbSlotProcessing--;
         usleep(200);
       }
+      pushTpool(Tpool, processingMsg[thread_idx]);
     }
-
-    while (nbSlotProcessing >= RX_NB_TH && !tryPullTpool(&nf, Tpool)) {
-      nbSlotProcessing--;
-      usleep(200);
+    else {
+      if (tryPullTpool(&nf, Tpool))
+	pushTpool(Tpool, processingMsg[thread_idx]);
+      else 
+	LOG_W(PHY,"can't schedule slot %d\n",slot_nr);
     }
-
-    pushTpool(Tpool, processingMsg[thread_idx]);
   } // while !oai_exit
 
   return NULL;
