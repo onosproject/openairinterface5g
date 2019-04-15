@@ -12,7 +12,7 @@ pipeline {
         stage ('Retrieve latest from branch') {
             steps {
                 script {
-                    checkout([$class: 'GitSCM', branches: [[name: '*/scheduled_pipeline']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[url: 'https://gitlab.eurecom.fr/oai/openairinterface5g.git']]])
+                    checkout([$class: 'GitSCM', branches: [[name: '*/gNB-nrUE-USRP']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[url: 'https://gitlab.eurecom.fr/oai/openairinterface5g.git']]])
                     sh "git clean -x -d -ff"
                     sh "git log -n1"
                 }
