@@ -118,6 +118,7 @@ typedef struct {
   int frame_tx;
   /// frame to act upon for reception
   int frame_rx;
+  int decoded_frame_rx;
   /// \brief Instance count for RXn-TXnp4 processing thread.
   /// \internal This variable is protected by \ref mutex_rxtx.
   int instance_cnt_rxtx;
@@ -190,7 +191,6 @@ typedef struct {
   /// instance count for eNBs
   int instance_cnt_eNBs;
   /// set of scheduling variables RXn-TXnp4 threads
-  UE_rxtx_proc_t proc_rxtx[RX_NB_TH];
 } UE_proc_t;
 
 /// Structure holding timer_thread related elements (phy_stub_UE mode)

@@ -2400,48 +2400,15 @@ void ue_pbch_procedures(uint8_t eNB_id,PHY_VARS_UE *ue,UE_rxtx_proc_t *proc, uin
                           ue->UE_mode[eNB_id]==NOT_SYNCHED ? 1 : 0);
     }
 
+    proc->decoded_frame_rx = (proc->frame_rx & 0xFFFFFC00) | (frame_tx & 0x000003FF);
+    if ( proc->decoded_frame_rx != proc->frame_tx || proc->decoded_frame_rx != proc->frame_rx)
+	   LOG_W(PHY, "decoded frame: %d, computed rx: %d, tx: %d\n", proc->decoded_frame_rx , proc->frame_rx, proc->frame_tx); 
+    frame_rx = proc->frame_tx = proc->frame_rx = proc->decoded_frame_rx; 
+
     // if this is the first PBCH after initial synchronization and no timing correction is performed, make L1 state = PRACH
-    if (ue->UE_mode[eNB_id]==NOT_SYNCHED && ue->no_timing_correction == 1) ue->UE_mode[eNB_id] = PRACH;
+    if (ue->UE_mode[eNB_id]==NOT_SYNCHED && ue->no_timing_correction == 1) 
+	    ue->UE_mode[eNB_id] = PRACH;
 
-    if (first_run) {
-      first_run = 0;
-      proc->frame_rx = (proc->frame_rx & 0xFFFFFC00) | (frame_tx & 0x000003FF);
-      proc->frame_tx = proc->frame_rx;
-
-      for(int th_id=0; th_id<RX_NB_TH; th_id++) {
-        ue->proc.proc_rxtx[th_id].frame_rx = proc->frame_rx;
-        ue->proc.proc_rxtx[th_id].frame_tx = proc->frame_tx;
-        printf("[UE %d] frame %d, subframe %d: Adjusting frame counter (PBCH ant_tx=%d, frame_tx=%d, phase %d, rx_offset %d) => new frame %d\n",
-               ue->Mod_id,
-               ue->proc.proc_rxtx[th_id].frame_rx,
-               subframe_rx,
-               pbch_tx_ant,
-               frame_tx,
-               pbch_phase,
-               ue->rx_offset,
-               proc->frame_rx);
-      }
-
-      frame_rx = proc->frame_rx;
-    } else if (((frame_tx & 0x03FF) != (proc->frame_rx & 0x03FF))) {
-      //(pbch_tx_ant != ue->frame_parms.nb_antennas_tx)) {
-      LOG_D(PHY,"[UE %d] frame %d, subframe %d: Re-adjusting frame counter (PBCH ant_tx=%d, frame_rx=%d, frame%%1024=%d, phase %d).\n",
-            ue->Mod_id,
-            proc->frame_rx,
-            subframe_rx,
-            pbch_tx_ant,
-            frame_tx,
-            frame_rx & 0x03FF,
-            pbch_phase);
-      proc->frame_rx = (proc->frame_rx & 0xFFFFFC00) | (frame_tx & 0x000003FF);
-      proc->frame_tx = proc->frame_rx;
-      frame_rx = proc->frame_rx;
-
-      for(int th_id=0; th_id<RX_NB_TH; th_id++) {
-        ue->proc.proc_rxtx[th_id].frame_rx = (proc->frame_rx & 0xFFFFFC00) | (frame_tx & 0x000003FF);
-        ue->proc.proc_rxtx[th_id].frame_tx = proc->frame_rx;
-      }
-    }
 
     if (LOG_DEBUGFLAG(DEBUG_UE_PHYPROC)) {
       LOG_UI(PHY,"[UE %d] frame %d, subframe %d, Received PBCH (MIB): nb_antenna_ports_eNB %d, tx_ant %d, frame_tx %d. N_RB_DL %d, phich_duration %d, phich_resource %d/6!\n",
@@ -2456,6 +2423,7 @@ void ue_pbch_procedures(uint8_t eNB_id,PHY_VARS_UE *ue,UE_rxtx_proc_t *proc, uin
              ue->frame_parms.phich_config_common.phich_resource);
     }
   } else {
+    LOG_W(PHY, "Failed to decode BCH, frame: %d\n", frame_rx);
     if (LOG_DUMPFLAG(DEBUG_UE_PHYPROC)) {
       LOG_E(PHY,"[UE %d] frame %d, subframe %d, Error decoding PBCH!\n",
             ue->Mod_id,frame_rx, subframe_rx);

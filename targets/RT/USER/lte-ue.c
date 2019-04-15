@@ -441,10 +441,17 @@ void init_UE_stub(int nb_inst,int eMBMS_active, int uecap_xer_in, char *emul_ifa
  * \returns a pointer to an int. The storage is not on the heap and must not be freed.
  */
 
+typedef struct syncData_s {
+  UE_rxtx_proc_t proc;
+  PHY_VARS_UE *UE;
+} syncData_t;
+
 static void *UE_thread_synch(void *arg) {
+  struct  rx_tx_thread_data   *syncD=(struct  rx_tx_thread_data *) arg;
   static int UE_thread_synch_retval;
   int i ;
-  PHY_VARS_UE *UE = (PHY_VARS_UE *) arg;
+  PHY_VARS_UE *UE = syncD->UE;
+
   int current_band = 0;
   int current_offset = 0;
   sync_mode_t sync_mode = pbch;
@@ -568,7 +575,7 @@ static void *UE_thread_synch(void *arg) {
       case pbch:
         LOG_I(PHY, "[UE thread Synch] Running Initial Synch (mode %d)\n",UE->mode);
 
-        if (initial_sync( UE, UE->mode ) == 0) {
+        if (initial_sync( UE, syncD->proc, UE->mode ) == 0) {
           LOG_I( HW, "Got synch: hw_slot_offset %d, carrier off %d Hz, rxgain %d (DL %u, UL %u), UE_scan_carrier %d\n",
                  (UE->rx_offset<<1) / UE->frame_parms.samples_per_tti,
                  freq_offset,
@@ -642,31 +649,31 @@ static void *UE_thread_synch(void *arg) {
             AssertFatal ( 0== pthread_mutex_lock(&UE->proc.mutex_synch), "");
             UE->is_synchronized = 1;
             AssertFatal ( 0== pthread_mutex_unlock(&UE->proc.mutex_synch), "");
-
+	    
             if( UE->mode == rx_dump_frame ) {
               FILE *fd;
-
-              if ((UE->proc.proc_rxtx[0].frame_rx&1) == 0) {  // this guarantees SIB1 is present
-                if ((fd = fopen("rxsig_frame0.dat","w")) != NULL) {
-                  fwrite((void *)&UE->common_vars.rxdata[0][0],
-                         sizeof(int32_t),
-                         10*UE->frame_parms.samples_per_tti,
-                         fd);
-                  LOG_I(PHY,"Dummping Frame ... bye bye \n");
-                  fclose(fd);
-                  exit(0);
-                } else {
-                  LOG_E(PHY,"Cannot open file for writing\n");
-                  exit(0);
-                }
-              } else {
-                AssertFatal ( 0== pthread_mutex_lock(&UE->proc.mutex_synch), "");
-                UE->is_synchronized = 0;
-                AssertFatal ( 0== pthread_mutex_unlock(&UE->proc.mutex_synch), "");
+	      
+              if ((syncD->proc->frame_rx&1) == 0) {  // this guarantees SIB1 is present
+	      if ((fd = fopen("rxsig_frame0.dat","w")) != NULL) {
+		fwrite((void *)&UE->common_vars.rxdata[0][0],
+		       sizeof(int32_t),
+		       10*UE->frame_parms.samples_per_tti,
+		       fd);
+		LOG_I(PHY,"Dummping Frame ... bye bye \n");
+		fclose(fd);
+		exit(0);
+	      } else {
+		LOG_E(PHY,"Cannot open file for writing\n");
+		exit(0);
+	      }
+	  } else {
+	    AssertFatal ( 0== pthread_mutex_lock(&UE->proc.mutex_synch), "");
+	    UE->is_synchronized = 0;
+	    AssertFatal ( 0== pthread_mutex_unlock(&UE->proc.mutex_synch), "");
               }
-            }
-          }
-        } else {
+	  }
+	}
+    } else {
           // initial sync failed
           // calculate new offset and try again
           if (UE->UE_scan_carrier == 1) {
@@ -954,7 +961,7 @@ static void *UE_phy_stub_single_thread_rxn_txnp4(void *arg) {
   if (rtd == NULL) {
     LOG_E( MAC, "[SCHED][UE] rx_tx_thread_data *rtd: NULL pointer\n" );
     exit_fun("nothing to add");
-  }
+  } 
 
   UE_rxtx_proc_t *proc = rtd->proc;
   // settings for nfapi-L2-emulator mode
@@ -965,7 +972,7 @@ static void *UE_phy_stub_single_thread_rxn_txnp4(void *arg) {
   PHY_VARS_UE    *UE = NULL;
   int ret;
   uint8_t   end_flag;
-  proc = &PHY_vars_UE_g[0][0]->proc.proc_rxtx[0];
+  proc = rtd->proc;
   phy_stub_ticking->num_single_thread[ue_thread_id] = -1;
   UE = rtd->UE;
 
@@ -1481,6 +1488,8 @@ static void *UE_phy_stub_thread_rxn_txnp4(void *arg) {
 }
 
 
+struct  rx_tx_thread_data syncData[NUMBER_OF_UE_MAX];
+struct rx_tx_thread_data procs[RX_NB_TH];
 
 /*!
  * \brief This is the main UE thread.
@@ -1500,8 +1509,8 @@ void *UE_thread(void *arg) {
   void *rxp[NB_ANTENNAS_RX], *txp[NB_ANTENNAS_TX];
   int start_rx_stream = 0;
   int i;
-  int th_id;
-  static uint8_t thread_idx = 0;
+  uint8_t thread_idx = 0;
+  int current_frame_rx=-1;
   cpu_set_t cpuset;
   CPU_ZERO(&cpuset);
 
@@ -1609,9 +1618,7 @@ void *UE_thread(void *arg) {
 
           //UE->proc.proc_rxtx[0].frame_rx++;
           //UE->proc.proc_rxtx[1].frame_rx++;
-          for (th_id=0; th_id < RX_NB_TH; th_id++) {
-            UE->proc.proc_rxtx[th_id].frame_rx++;
-          }
+	  current_frame_rx=syncData[0].proc->decoded_frame_rx+1;
 
           // read in first symbol
           AssertFatal (UE->frame_parms.ofdm_symbol_size+UE->frame_parms.nb_prefix_samples0 ==
@@ -1625,9 +1632,9 @@ void *UE_thread(void *arg) {
         else
           rt_sleep_ns(1000*1000);
       } else {
-        sub_frame++;
-        sub_frame%=10;
-        UE_rxtx_proc_t *proc = &UE->proc.proc_rxtx[thread_idx];
+        sub_frame=(sub_frame+1)%10;
+	thread_idx=sub_frame%RX_NB_TH;
+        UE_rxtx_proc_t *proc = procs[thread_idx].proc;
         // update thread index for received subframe
         UE->current_thread_id[sub_frame] = thread_idx;
 
@@ -1635,7 +1642,7 @@ void *UE_thread(void *arg) {
           int t;
 
           for (t = 0; t < 2; t++) {
-            UE_rxtx_proc_t *proc = &UE->proc.proc_rxtx[t];
+            UE_rxtx_proc_t *proc = procs[t].proc;
             pthread_mutex_lock(&proc->mutex_rxtx);
 
             while (proc->instance_cnt_rxtx >= 0) pthread_cond_wait( &proc->cond_rxtx, &proc->mutex_rxtx );
@@ -1646,10 +1653,6 @@ void *UE_thread(void *arg) {
         }
 
         LOG_D(PHY,"Process Subframe %d thread Idx %d \n", sub_frame, UE->current_thread_id[sub_frame]);
-        thread_idx++;
-
-        if(thread_idx>=RX_NB_TH)
-          thread_idx = 0;
 
         if (UE->mode != loop_through_memory) {
           for (i=0; i<UE->frame_parms.nb_antennas_rx; i++)
@@ -1741,21 +1744,16 @@ void *UE_thread(void *arg) {
             }
           }
 
-          //usleep(3000);
-          if(sub_frame == 0) {
-            //UE->proc.proc_rxtx[0].frame_rx++;
-            //UE->proc.proc_rxtx[1].frame_rx++;
-            for (th_id=0; th_id < RX_NB_TH; th_id++) {
-              UE->proc.proc_rxtx[th_id].frame_rx++;
-            }
-          }
-
           //UE->proc.proc_rxtx[0].gotIQs=readTime(gotIQs);
           //UE->proc.proc_rxtx[1].gotIQs=readTime(gotIQs);
-          for (th_id=0; th_id < RX_NB_TH; th_id++) {
-            UE->proc.proc_rxtx[th_id].gotIQs=readTime(gotIQs);
+          for (int th_id=0; th_id < RX_NB_TH; th_id++) {
+            procs[th_id].proc->gotIQs=readTime(gotIQs);
+	    if ( procs[th_id].proc->decoded_frame_rx > current_frame_rx )
+	      current_frame_rx=procs[th_id].proc->decoded_frame_rx;
+	    procs[th_id].proc->decoded_frame_rx=-1;
           }
 
+	  proc->frame_rx=current_frame_rx;
           proc->subframe_rx=sub_frame;
           proc->subframe_tx=(sub_frame+4)%10;
           proc->frame_tx = proc->frame_rx + (proc->subframe_rx>5?1:0);
@@ -1794,6 +1792,7 @@ void *UE_thread(void *arg) {
  * - UE_thread_dlsch_proc_slot1
  * and the locking between them.
  */
+
 void init_UE_threads(int inst) {
   struct rx_tx_thread_data *rtd;
   PHY_VARS_UE *UE;
@@ -1814,16 +1813,18 @@ void init_UE_threads(int inst) {
     rtd = calloc(1, sizeof(struct rx_tx_thread_data));
 
     if (rtd == NULL) abort();
-
+ 
+    procs[i].UE=UE;
+    procs[i].proc=calloc(sizeof(*procs[i].proc), 1);
+  
     rtd->UE = UE;
-    rtd->proc = &UE->proc.proc_rxtx[i];
-    pthread_mutex_init(&UE->proc.proc_rxtx[i].mutex_rxtx,NULL);
-    pthread_cond_init(&UE->proc.proc_rxtx[i].cond_rxtx,NULL);
-    UE->proc.proc_rxtx[i].instance_cnt_rxtx = -1;
-    UE->proc.proc_rxtx[i].sub_frame_start=i;
-    UE->proc.proc_rxtx[i].sub_frame_step=nb_threads;
-    printf("Init_UE_threads rtd %d proc %d nb_threads %d i %d\n",rtd->proc->sub_frame_start, UE->proc.proc_rxtx[i].sub_frame_start,nb_threads, i);
-    pthread_create(&UE->proc.proc_rxtx[i].pthread_rxtx, NULL, UE_thread_rxn_txnp4, rtd);
+    rtd->proc = procs[i].proc;
+    pthread_mutex_init(&procs[i].proc->mutex_rxtx,NULL);
+    pthread_cond_init(&procs[i].proc->cond_rxtx,NULL);
+    procs[i].proc->instance_cnt_rxtx = -1;
+    procs[i].proc->sub_frame_start=i;
+    procs[i].proc->sub_frame_step=nb_threads;
+    pthread_create(&procs[i].proc->pthread_rxtx, NULL, UE_thread_rxn_txnp4, rtd);
 #ifdef UE_SLOT_PARALLELISATION
     //pthread_mutex_init(&UE->proc.proc_rxtx[i].mutex_slot0_dl_processing,NULL);
     //pthread_cond_init(&UE->proc.proc_rxtx[i].cond_slot0_dl_processing,NULL);
@@ -1833,8 +1834,10 @@ void init_UE_threads(int inst) {
     pthread_create(&UE->proc.proc_rxtx[i].pthread_slot1_dl_processing,NULL,UE_thread_slot1_dl_processing, rtd);
 #endif
   }
-
-  pthread_create(&UE->proc.pthread_synch,NULL,UE_thread_synch,(void *)UE);
+  syncData[inst].UE=UE;
+  syncData[inst].proc=calloc(sizeof(*syncData[inst].proc),1);
+  
+  pthread_create(&UE->proc.pthread_synch,NULL,UE_thread_synch,(void *)&syncData[inst]);
 }
 
 
@@ -1886,16 +1889,16 @@ void init_UE_single_thread_stub(int nb_inst) {
       rtd = calloc(1, sizeof(struct rx_tx_thread_data));
 
       if (rtd == NULL) abort();
+      procs[i].proc=calloc(sizeof(*procs[i].proc), 1);
 
       rtd->UE = UE;
-      rtd->proc = &UE->proc.proc_rxtx[i];
+      rtd->proc = procs[i].proc;
       rtd->ue_thread_id = ue_thread_id;
-      pthread_mutex_init(&UE->proc.proc_rxtx[i].mutex_rxtx,NULL);
-      pthread_cond_init(&UE->proc.proc_rxtx[i].cond_rxtx,NULL);
-      UE->proc.proc_rxtx[i].sub_frame_start=i;
-      UE->proc.proc_rxtx[i].sub_frame_step=nb_threads;
-      printf("Init_UE_threads rtd %d proc %d nb_threads %d i %d\n",rtd->proc->sub_frame_start, UE->proc.proc_rxtx[i].sub_frame_start,nb_threads, i);
-      pthread_create(&UE->proc.proc_rxtx[i].pthread_rxtx, NULL, UE_phy_stub_single_thread_rxn_txnp4, rtd);
+      pthread_mutex_init(&rtd->proc->mutex_rxtx,NULL);
+      pthread_cond_init(&rtd->proc->cond_rxtx,NULL);
+      rtd->proc->sub_frame_start=i;
+      rtd->proc->sub_frame_step=nb_threads;
+      pthread_create(&rtd->proc->pthread_rxtx, NULL, UE_phy_stub_single_thread_rxn_txnp4, rtd);
     }
   }
 
@@ -1940,13 +1943,14 @@ void init_UE_threads_stub(int inst) {
     if (rtd == NULL) abort();
 
     rtd->UE = UE;
-    rtd->proc = &UE->proc.proc_rxtx[i];
-    pthread_mutex_init(&UE->proc.proc_rxtx[i].mutex_rxtx,NULL);
-    pthread_cond_init(&UE->proc.proc_rxtx[i].cond_rxtx,NULL);
-    UE->proc.proc_rxtx[i].sub_frame_start=i;
-    UE->proc.proc_rxtx[i].sub_frame_step=nb_threads;
-    printf("Init_UE_threads rtd %d proc %d nb_threads %d i %d\n",rtd->proc->sub_frame_start, UE->proc.proc_rxtx[i].sub_frame_start,nb_threads, i);
-    pthread_create(&UE->proc.proc_rxtx[i].pthread_rxtx, NULL, UE_phy_stub_thread_rxn_txnp4, rtd);
+    procs[i].proc=calloc(sizeof(*procs[i].proc), 1);
+
+    rtd->proc =procs[i].proc ;
+    pthread_mutex_init(&rtd->proc->mutex_rxtx,NULL);
+    pthread_cond_init(&rtd->proc->cond_rxtx,NULL);
+    rtd->proc->sub_frame_start=i;
+    rtd->proc->sub_frame_step=nb_threads;
+    pthread_create(&rtd->proc->pthread_rxtx, NULL, UE_phy_stub_thread_rxn_txnp4, rtd);
   }
 
   // Remove thread for UE_sync in phy_stub_UE mode.

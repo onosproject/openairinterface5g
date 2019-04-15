@@ -45,7 +45,7 @@ extern openair0_config_t openair0_cfg[];
 
 //#define DEBUG_INITIAL_SYNCH
 
-int pbch_detection(PHY_VARS_UE *ue, runmode_t mode)
+int pbch_detection(PHY_VARS_UE *ue, UE_rxtx_proc_t *proc, runmode_t mode)
 {
 
   uint8_t l,pbch_decoded,frame_mod4,pbch_tx_ant,dummy;
@@ -234,23 +234,17 @@ int pbch_detection(PHY_VARS_UE *ue, runmode_t mode)
       break;
     }
 
-    for(int i=0; i<RX_NB_TH;i++)
-    {
-        ue->proc.proc_rxtx[i].frame_rx =   (((ue->pbch_vars[0]->decoded_output[2]&3)<<6) + (ue->pbch_vars[0]->decoded_output[1]>>2))<<2;
-        ue->proc.proc_rxtx[i].frame_rx =   (((ue->pbch_vars[0]->decoded_output[2]&3)<<6) + (ue->pbch_vars[0]->decoded_output[1]>>2))<<2;
+        proc->decoded_frame_rx =   (((ue->pbch_vars[0]->decoded_output[2]&3)<<6) + (ue->pbch_vars[0]->decoded_output[1]>>2))<<2;
+        proc->frame_rx=proc->frame_tx=proc->decoded_frame_rx;
 
-        ue->proc.proc_rxtx[i].frame_tx = ue->proc.proc_rxtx[0].frame_rx;
-    }
-#ifdef DEBUG_INITIAL_SYNCH
     LOG_I(PHY,"[UE%d] Initial sync: pbch decoded sucessfully p %d, tx_ant %d, frame %d, N_RB_DL %d, phich_duration %d, phich_resource %s!\n",
           ue->Mod_id,
           frame_parms->nb_antenna_ports_eNB,
           pbch_tx_ant,
-          ue->proc.proc_rxtx[0].frame_rx,
+          proc->decoded_frame_rx,
           frame_parms->N_RB_DL,
           frame_parms->phich_config_common.phich_duration,
           phich_resource);  //frame_parms->phich_config_common.phich_resource);
-#endif
     return(0);
   } else {
     return(-1);
@@ -262,7 +256,7 @@ char phich_string[13][4] = {"","1/6","","1/2","","","one","","","","","","two"};
 char duplex_string[2][4] = {"FDD","TDD"};
 char prefix_string[2][9] = {"NORMAL","EXTENDED"};
 
-int initial_sync(PHY_VARS_UE *ue, runmode_t mode)
+int initial_sync(PHY_VARS_UE *ue, UE_rxtx_proc_t *proc, runmode_t mode)
 {
 
   int32_t sync_pos,sync_pos2,sync_pos_slot;
@@ -324,7 +318,7 @@ int initial_sync(PHY_VARS_UE *ue, runmode_t mode)
 
     init_frame_parms(&ue->frame_parms,1);
     lte_gold(frame_parms,ue->lte_gold_table[0],frame_parms->Nid_cell);
-    ret = pbch_detection(ue,mode);
+    ret = pbch_detection(ue,proc, mode);
     //   LOG_M("rxdata2.m","rxd2",ue->common_vars.rxdata[0],10*frame_parms->samples_per_tti,1,1);
 
 #ifdef DEBUG_INITIAL_SYNCH
@@ -371,7 +365,7 @@ int initial_sync(PHY_VARS_UE *ue, runmode_t mode)
 
       init_frame_parms(&ue->frame_parms,1);
       lte_gold(frame_parms,ue->lte_gold_table[0],frame_parms->Nid_cell);
-      ret = pbch_detection(ue,mode);
+      ret = pbch_detection(ue,proc, mode);
       //     LOG_M("rxdata3.m","rxd3",ue->common_vars.rxdata[0],10*frame_parms->samples_per_tti,1,1);
 #ifdef DEBUG_INITIAL_SYNCH
       LOG_I(PHY,"FDD Extended prefix: CellId %d metric %d, phase %d, flip %d, pbch %d\n",
@@ -415,7 +409,7 @@ int initial_sync(PHY_VARS_UE *ue, runmode_t mode)
       init_frame_parms(&ue->frame_parms,1);
 
       lte_gold(frame_parms,ue->lte_gold_table[0],frame_parms->Nid_cell);
-      ret = pbch_detection(ue,mode);
+      ret = pbch_detection(ue,proc, mode);
       //      LOG_M("rxdata4.m","rxd4",ue->common_vars.rxdata[0],10*frame_parms->samples_per_tti,1,1);
 
 #ifdef DEBUG_INITIAL_SYNCH
@@ -452,7 +446,7 @@ int initial_sync(PHY_VARS_UE *ue, runmode_t mode)
 
         init_frame_parms(&ue->frame_parms,1);
         lte_gold(frame_parms,ue->lte_gold_table[0],frame_parms->Nid_cell);
-        ret = pbch_detection(ue,mode);
+        ret = pbch_detection(ue,proc, mode);
 
 	//	LOG_M("rxdata5.m","rxd5",ue->common_vars.rxdata[0],10*frame_parms->samples_per_tti,1,1);
 #ifdef DEBUG_INITIAL_SYNCH
@@ -467,11 +461,9 @@ int initial_sync(PHY_VARS_UE *ue, runmode_t mode)
   if( (abs(ue->common_vars.freq_offset) > 150) && (ret == 0) )
   {
 	  ret=-1;
-#if DISABLE_LOG_X
-	  printf("Ignore MIB with high freq offset [%d Hz] estimation \n",ue->common_vars.freq_offset);
-#else
+
 	  LOG_E(HW, "Ignore MIB with high freq offset [%d Hz] estimation \n",ue->common_vars.freq_offset);
-#endif
+
   }
 
   if (ret==0) {  // PBCH found so indicate sync to higher layers and configure frame parameters
@@ -489,7 +481,7 @@ int initial_sync(PHY_VARS_UE *ue, runmode_t mode)
     #if UE_AUTOTEST_TRACE
       LOG_I(PHY,"[UE  %d] AUTOTEST Cell Sync : frame = %d, rx_offset %d, freq_offset %d \n",
               ue->Mod_id,
-              ue->proc.proc_rxtx[0].frame_rx,
+              proc->frame_rx,
               ue->rx_offset,
               ue->common_vars.freq_offset );
     #endif
@@ -504,9 +496,9 @@ int initial_sync(PHY_VARS_UE *ue, runmode_t mode)
 
     }
 
-#if DISABLE_LOG_X
-    printf("[UE %d] Frame %d RRC Measurements => rssi %3.1f dBm (dig %3.1f dB, gain %d), N0 %d dBm,  rsrp %3.1f dBm/RE, rsrq %3.1f dB\n",ue->Mod_id,
-	  ue->proc.proc_rxtx[0].frame_rx,
+    LOG_I(PHY, "[UE %d] FRAME %d RRC Measurements => rssi %3.1f dBm (dig %3.1f dB, gain %d), N0 %d dBm,  rsrp %3.1f dBm/RE, rsrq %3.1f dB\n",
+		    ue->Mod_id,
+	  proc->frame_rx,
 	  10*log10(ue->measurements.rssi)-ue->rx_total_gain_dB,
 	  10*log10(ue->measurements.rssi),
 	  ue->rx_total_gain_dB,
@@ -514,10 +506,9 @@ int initial_sync(PHY_VARS_UE *ue, runmode_t mode)
 	  10*log10(ue->measurements.rsrp[0])-ue->rx_total_gain_dB,
 	  (10*log10(ue->measurements.rsrq[0])));
 
-
-    printf("[UE %d] Frame %d MIB Information => %s, %s, NidCell %d, N_RB_DL %d, PHICH DURATION %d, PHICH RESOURCE %s, TX_ANT %d\n",
+    LOG_I(PHY, "[UE %d] FRAME %d MIB Information => %s, %s, NidCell %d, N_RB_DL %d, PHICH DURATION %d, PHICH RESOURCE %s, TX_ANT %d\n",
 	  ue->Mod_id,
-	  ue->proc.proc_rxtx[0].frame_rx,
+	  proc->frame_rx,
 	  duplex_string[ue->frame_parms.frame_type],
 	  prefix_string[ue->frame_parms.Ncp],
 	  ue->frame_parms.Nid_cell,
@@ -525,42 +516,13 @@ int initial_sync(PHY_VARS_UE *ue, runmode_t mode)
 	  ue->frame_parms.phich_config_common.phich_duration,
 	  phich_string[ue->frame_parms.phich_config_common.phich_resource],
 	  ue->frame_parms.nb_antenna_ports_eNB);
-#else
-    LOG_I(PHY, "[UE %d] Frame %d RRC Measurements => rssi %3.1f dBm (dig %3.1f dB, gain %d), N0 %d dBm,  rsrp %3.1f dBm/RE, rsrq %3.1f dB\n",ue->Mod_id,
-	  ue->proc.proc_rxtx[0].frame_rx,
-	  10*log10(ue->measurements.rssi)-ue->rx_total_gain_dB,
-	  10*log10(ue->measurements.rssi),
-	  ue->rx_total_gain_dB,
-	  ue->measurements.n0_power_tot_dBm,
-	  10*log10(ue->measurements.rsrp[0])-ue->rx_total_gain_dB,
-	  (10*log10(ue->measurements.rsrq[0])));
-
-    LOG_I(PHY, "[UE %d] Frame %d MIB Information => %s, %s, NidCell %d, N_RB_DL %d, PHICH DURATION %d, PHICH RESOURCE %s, TX_ANT %d\n",
-	  ue->Mod_id,
-	  ue->proc.proc_rxtx[0].frame_rx,
-	  duplex_string[ue->frame_parms.frame_type],
-	  prefix_string[ue->frame_parms.Ncp],
-	  ue->frame_parms.Nid_cell,
-	  ue->frame_parms.N_RB_DL,
-	  ue->frame_parms.phich_config_common.phich_duration,
-	  phich_string[ue->frame_parms.phich_config_common.phich_resource],
-	  ue->frame_parms.nb_antenna_ports_eNB);
-#endif
 
 #if defined(OAI_USRP) || defined(EXMIMO) || defined(OAI_BLADERF) || defined(OAI_LMSSDR)
-#  if DISABLE_LOG_X
-    printf("[UE %d] Frame %d Measured Carrier Frequency %.0f Hz (offset %d Hz)\n",
-	  ue->Mod_id,
-	  ue->proc.proc_rxtx[0].frame_rx,
-	  openair0_cfg[0].rx_freq[0]-ue->common_vars.freq_offset,
-	  ue->common_vars.freq_offset);
-#  else
     LOG_I(PHY, "[UE %d] Frame %d Measured Carrier Frequency %.0f Hz (offset %d Hz)\n",
 	  ue->Mod_id,
-	  ue->proc.proc_rxtx[0].frame_rx,
+	  proc->frame_rx,
 	  openair0_cfg[0].rx_freq[0]-ue->common_vars.freq_offset,
 	  ue->common_vars.freq_offset);
-#  endif
 #endif
   } else {
 #ifdef DEBUG_INITIAL_SYNC

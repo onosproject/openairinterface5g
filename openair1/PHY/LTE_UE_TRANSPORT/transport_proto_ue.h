@@ -1451,7 +1451,7 @@ void generate_RIV_tables(void);
   parameters are know, the routine calls some basic initialization routines (cell-specific reference signals, etc.)
   @param phy_vars_ue Pointer to UE variables
 */
-int initial_sync(PHY_VARS_UE *phy_vars_ue, runmode_t mode);
+int initial_sync(PHY_VARS_UE *phy_vars_ue,  UE_rxtx_proc_t *proc, runmode_t mode);
 
 
 /*!
