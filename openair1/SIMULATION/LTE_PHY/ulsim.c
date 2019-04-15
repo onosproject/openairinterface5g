@@ -786,7 +786,7 @@ int main(int argc, char **argv) {
   eNB->frame_parms.pusch_config_common.ul_ReferenceSignalsPUSCH.groupAssignmentPUSCH = 0;
   UE->mac_enabled=0;
   L1_rxtx_proc_t *proc_rxtx         = &eNB->proc.L1_proc;
-  UE_rxtx_proc_t *proc_rxtx_ue = &UE->proc.proc_rxtx[subframe&1];
+  UE_rxtx_proc_t *proc_rxtx_ue = calloc(sizeof(UE_rxtx_proc_t),0);
   proc_rxtx->frame_rx=1;
   proc_rxtx->subframe_rx=subframe;
   proc_rxtx->frame_tx=pdcch_alloc2ul_frame(&eNB->frame_parms,1,subframe);

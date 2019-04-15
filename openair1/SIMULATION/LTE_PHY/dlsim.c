@@ -1320,7 +1320,6 @@ int main(int argc, char **argv) {
     }
 
     for (SNR=snr0; SNR<snr1; SNR+=snr_step) {
-      UE->proc.proc_rxtx[UE->current_thread_id[subframe]].frame_rx=0;
       errs[0]=0;
       errs[1]=0;
       errs[2]=0;
@@ -1398,6 +1397,7 @@ int main(int argc, char **argv) {
       varArray_t *table_rx_dec=initVarArray(1000,sizeof(double));
 
       for (trials = 0; trials<n_frames; trials++) {
+          UE_rxtx_proc_t *proc = calloc(sizeof(UE_rxtx_proc_t),1);
         //printf("Trial %d\n",trials);
         fflush(stdout);
         round=0;
@@ -1522,7 +1522,6 @@ int main(int argc, char **argv) {
           }
 
           DL_channel(ru,UE,subframe,awgn_flag,SNR,tx_lev,hold_channel,abstx,num_rounds,trials,round,eNB2UE,s_re,s_im,r_re,r_im,csv_fd);
-          UE_rxtx_proc_t *proc = &UE->proc.proc_rxtx[UE->current_thread_id[subframe]];
           proc->subframe_rx = subframe;
           UE->UE_mode[0] = PUSCH;
           // first symbol has to be done separately in one-shot mode
@@ -1761,7 +1760,7 @@ int main(int argc, char **argv) {
                          subframe);
           }
 
-          UE->proc.proc_rxtx[UE->current_thread_id[subframe]].frame_rx++;
+          proc->frame_rx++;
         }  //round
 
         //      printf("\n");
@@ -1772,7 +1771,7 @@ int main(int argc, char **argv) {
         //len = chbch_stats_read(stats_buffer,NULL,0,4096);
         //printf("%s\n\n",stats_buffer);
 
-        if (UE->proc.proc_rxtx[UE->current_thread_id[subframe]].frame_rx % 10 == 0) {
+        if (proc->frame_rx % 10 == 0) {
           UE->bitrate[eNB_id] = (UE->total_TBS[eNB_id] - UE->total_TBS_last[eNB_id])*10;
           LOG_D(PHY,"[UE %d] Calculating bitrate: total_TBS = %d, total_TBS_last = %d, bitrate = %d kbits/s\n",UE->Mod_id,UE->total_TBS[eNB_id],UE->total_TBS_last[eNB_id],
                 UE->bitrate[eNB_id]/1000);
