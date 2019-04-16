@@ -99,23 +99,23 @@ void print_scheduling_result_UL(void)
 
 void setting_nprach(){
 
-    nprach_list[0].nprach_Periodicity = rachperiod[4];
+    nprach_list[0].nprach_Periodicity = rachperiod[3];
     nprach_list[0].nprach_StartTime = rachstart[0];
     nprach_list[0].nprach_SubcarrierOffset = rachscofst[0];
     nprach_list[0].nprach_NumSubcarriers = rachnumsc[0];
-    nprach_list[0].numRepetitionsPerPreambleAttempt = rachrepeat[1];
+    nprach_list[0].numRepetitionsPerPreambleAttempt = rachrepeat[0];
 
-    nprach_list[1].nprach_Periodicity = rachperiod[4];
+    nprach_list[1].nprach_Periodicity = rachperiod[3];
     nprach_list[1].nprach_StartTime = rachstart[0];
     nprach_list[1].nprach_SubcarrierOffset = rachscofst[1];
     nprach_list[1].nprach_NumSubcarriers = rachnumsc[0];
-    nprach_list[1].numRepetitionsPerPreambleAttempt = rachrepeat[3];
+    nprach_list[1].numRepetitionsPerPreambleAttempt = rachrepeat[0];
 
-    nprach_list[2].nprach_Periodicity = rachperiod[4];
+    nprach_list[2].nprach_Periodicity = rachperiod[3];
     nprach_list[2].nprach_StartTime = rachstart[0];
     nprach_list[2].nprach_SubcarrierOffset = rachscofst[2];
     nprach_list[2].nprach_NumSubcarriers = rachnumsc[1];
-    nprach_list[2].numRepetitionsPerPreambleAttempt = rachrepeat[5];
+    nprach_list[2].numRepetitionsPerPreambleAttempt = rachrepeat[0];
 
     // fixed nprach configuration
 }

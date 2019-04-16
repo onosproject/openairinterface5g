@@ -115,7 +115,7 @@ void eNB_dlsch_ulsch_scheduler_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, uint32_t ab
 	
 	maintain_available_resource(mac_inst);
 
-	if((abs_subframe % rachperiod[4]) == rachstart[0]){	//TODO, configuration should be pass by configuration module
+	if((abs_subframe % nprach_list->nprach_Periodicity) == rachstart[0]){	//TODO, configuration should be pass by configuration module
 		add_UL_Resource();
 	}
 
@@ -203,7 +203,7 @@ void USS_scheduling_module(eNB_MAC_INST_NB_IoT *mac_inst, uint32_t abs_subframe,
 	}
 	maintain_available_resource(mac_inst);
 	// reserve resource for NPRACH
-	if((abs_subframe % rachperiod[4]) == rachstart[0])
+	if((abs_subframe % nprach_list->nprach_Periodicity) == rachstart[0])
 	{
 		//DEBUG("[%04d][USS_scheduling_module] In add_UL_Resource\n", mac_inst->current_subframe);
 		add_UL_Resource();

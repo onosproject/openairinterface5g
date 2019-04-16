@@ -198,7 +198,7 @@ void rx_sdu_NB_IoT(module_id_t module_id, int CC_id, frame_t frame, sub_frame_t 
   // note: if lcid < 25 this is sdu, otherwise this is CE
   payload_ptr = parse_ulsch_header_NB_IoT(sdu, &num_ce, &num_sdu,rx_ces, rx_lcids, rx_lengths, length);
 
-  //LOG_D(MAC,"num_CE= %d, num_sdu= %d, rx_ces[0] = %d, rx_lcids =  %d, rx_lengths[0] = %d, length = %d\n",num_ce,num_sdu,rx_ces[0],rx_lcids[0],rx_lengths[0],length);
+  LOG_I(MAC,"num_CE= %d, num_sdu= %d, rx_ces[0] = %d, rx_lcids =  %d, rx_lengths[0] = %d, length = %d\n",num_ce,num_sdu,rx_ces[0],rx_lcids[0],rx_lengths[0],length);
 
   for (i = 0; i < num_ce; i++)
   {
