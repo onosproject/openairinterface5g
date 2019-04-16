@@ -35,7 +35,7 @@ def eNB_TargetBranch
 
 pipeline {
     agent {
-        label 'caracal'
+        label pythonExecutor 
     }
     options {
         disableConcurrentBuilds()
@@ -91,27 +91,32 @@ pipeline {
                         // picking default
                         testStageName = 'Template Test Stage'
                     }
+                    echo "params.eNB_IPAddress = ${params.eNB_IPAddress}"
                     if (params.eNB_IPAddress == null) {
                         allParametersPresent = false
                     }
+                    echo "params.UE_IPAddress = ${params.UE_IPAddress}"
                     if (params.UE_IPAddress == null) {
                         allParametersPresent = false
                     }
+                    echo "params.eNB_SourceCodePath = ${params.eNB_SourceCodePath}"
                     if (params.eNB_SourceCodePath == null) {
                         allParametersPresent = false
                     }
+                    echo "params.eNB_Credentials = ${params.eNB_Credentials}"
                     if (params.eNB_Credentials == null) {
                         allParametersPresent = false
-                    }                   
+                    }
+                    echo "params.UE_Credentials = ${params.UE_Credentials}"
                     if (params.UE_Credentials == null) {
                         allParametersPresent = false
                     }
+                    echo "params.eNB_Repository = ${params.eNB_Repository}"
                     if (params.eNB_Repository == null) {
                         eNB_Repository = env.GIT_URL
                     } else {
                         eNB_Repository = params.eNB_Repository
                     }
-
                     if (allParametersPresent) {
                         echo "All parameters are present"
                         sh "git fetch"
