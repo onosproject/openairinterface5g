@@ -19,6 +19,14 @@ pipeline {
                 }
             }
         }
+        stage ("Build") {
+            steps {
+                echo "Building on ${GIT_URL}"
+                echo "  Branch -- ${GIT_BRANCH}"
+                echo "  Branch -- ${GIT_COMMIT}"
+                sh "git log -n1"
+            }
+        }
     }
 }
 
