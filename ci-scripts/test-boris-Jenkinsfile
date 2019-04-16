@@ -151,6 +151,35 @@ pipeline {
                 }
             }
         }
+
+        stage ("Terminate") {
+            parallel {
+                stage('Terminate NR UE') {
+                    steps {
+                        echo '\u2705 \u001B[32mTerminate UE\u001B[0m'
+                    }
+                    post {
+                        success {
+                            script {
+                                termStatusArray[termUE] = true
+                            }
+                        }
+                    }
+                }
+                stage('Terminate NR eNB') {
+                    steps {
+                        echo '\u2705 \u001B[32mTerminate eNB\u001B[0m'
+                    }
+                    post {
+                        success {
+                            script {
+                                termStatusArray[termENB] = true
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
