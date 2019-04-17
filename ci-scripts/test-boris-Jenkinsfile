@@ -159,6 +159,31 @@ pipeline {
                 script {
                     dir ('ci-scripts') {
                         echo "\u2705 \u001B[32m${testStageName}\u001B[0m"
+			echo "params.eNB_Credentials = ${params.eNB_Credentials}"
+			echo "params.UE_Credentials = ${params.UE_Credentials}"
+			echo "eNB_Repository = ${eNB_Repository}"
+			echo "eNB_Branch= ${eNB_Branch}"
+			echo "eNB_CommitID= ${eNB_CommitID}"
+			echo "eNB_AllowMergeRequestProcess= ${eNB_AllowMergeRequestProcess}"
+			echo "eNB_TargetBranch= ${eNB_TargetBranch}"
+			echo "params.ADB_IPAddress= ${params.ADB_IPAddress}"
+			echo "ADB_Username = ${ADB_Username}"
+			echo "ADB_Password = ${ADB_Password}"
+			echo "eNB_Password = ${eNB_Password}"
+			echo "mainPythonAllXmlFiles = ${mainPythonAllXmlFiles}"
+			echo "params.eNB_IPAddress = ${params.eNB_IPAddress}"
+			echo "eNB_Username = ${eNB_Username}"
+			echo "eNB_Password = ${eNB_Password}"
+			echo "eNBBranch = ${eNBBranch}"
+			echo "params.eNB_SourceCodePath = ${params.eNB_SourceCodePath}"
+			echo "params.ADB_IPAddress = ${params.ADB_IPAddress}"
+			echo "params.EPC_IPAddress = ${params.EPC_IPAddress}"
+			echo "xmlFile = ${xmlFile}"
+			echo "buildStageStatus = ${buildStageStatus}"
+			echo "params. = ${params.}"
+			echo "params. = ${params.}"
+			echo "params. = ${params.}"
+			echo "params. = ${params.}"
                         withCredentials([
                             [$class: 'UsernamePasswordMultiBinding', credentialsId: "${params.eNB_Credentials}", usernameVariable: 'eNB_Username', passwordVariable: 'eNB_Password'],
                             [$class: 'UsernamePasswordMultiBinding', credentialsId: "${params.UE_Credentials}", usernameVariable: 'UE_Username', passwordVariable: 'UE_Password']
