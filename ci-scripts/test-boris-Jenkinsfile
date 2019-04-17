@@ -79,6 +79,9 @@ pipeline {
         stage ("Verify Parameters") {
             steps {
                 script {
+                    JOB_TIMESTAMP = sh returnStdout: true, script: 'date --utc --rfc-3339=seconds | sed -e "s#+00:00##"'
+                    JOB_TIMESTAMP = JOB_TIMESTAMP.trim()
+
                     echo '\u2705 \u001B[32mVerify Parameters\u001B[0m'
                     def allParametersPresent = true
 
@@ -141,8 +144,6 @@ pipeline {
                     if (allParametersPresent) {
 			echo "then 2"
                         echo "All parameters are present"
-                        sh "git fetch"
-                        sh "git checkout -f ${eNB_CommitID}"
                     } else {
                         echo "else 2"
                         echo "Some parameters are missing"
