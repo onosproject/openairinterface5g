@@ -54,12 +54,14 @@ pipeline {
         }
         stage ("Print latest commit info") {
             steps {
-                echo "Building on: "
-                echo "  Repository -- ${GIT_URL}"
-                echo "  Branch -- ${GIT_BRANCH}"
-                echo "  Commit -- ${GIT_COMMIT}"
-                sh "git log -n1"
-                eNB_Repository = ${GIT_URL}
+		script {
+                    echo "Building on: "
+                    echo "  Repository -- ${GIT_URL}"
+                    echo "  Branch -- ${GIT_BRANCH}"
+                    echo "  Commit -- ${GIT_COMMIT}"
+                    sh "git log -n1"
+                    eNB_Repository = ${GIT_URL}
+	        }
             }
         }
         stage ("Verify Parameters") {
