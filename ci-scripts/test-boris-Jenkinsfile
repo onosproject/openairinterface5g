@@ -60,7 +60,7 @@ pipeline {
                     echo "  Branch -- ${GIT_BRANCH}"
                     echo "  Commit -- ${GIT_COMMIT}"
                     sh "git log -n1"
-                    eNB_Repository = ${GIT_URL}
+                    //eNB_Repository = ${GIT_URL}
 		}
             }
         }
