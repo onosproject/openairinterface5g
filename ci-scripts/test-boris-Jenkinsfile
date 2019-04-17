@@ -158,6 +158,12 @@ pipeline {
                         sh "./ci-scripts/fail.sh"
                     }
                     echo "end if 2"
+                    // The following parameters are kept not to break the current main.py command line and code.
+                    // They should be removed in the future.
+                    if (params.ADB_IPAddress == null) {
+                        params.ADB_IPAddress = "none"
+                    }
+                    echo "params.ADB_IPAddress = ${params.ADB_IPAddress}"
                 }
             }
         }
