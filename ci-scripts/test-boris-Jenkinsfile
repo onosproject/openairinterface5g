@@ -173,7 +173,6 @@ pipeline {
 			echo "eNB_Branch= ${eNB_Branch}"
 			echo "eNB_CommitID= ${eNB_CommitID}"
 			echo "eNB_AllowMergeRequestProcess= ${eNB_AllowMergeRequestProcess}"
-			echo "eNB_TargetBranch= ${eNB_TargetBranch}"
 			echo "params.ADB_IPAddress= ${params.ADB_IPAddress}"
 			echo "ADB_Username = ${ADB_Username}"
 			echo "ADB_Password = ${ADB_Password}"
@@ -192,7 +191,7 @@ pipeline {
                             [$class: 'UsernamePasswordMultiBinding', credentialsId: "${params.eNB_Credentials}", usernameVariable: 'eNB_Username', passwordVariable: 'eNB_Password'],
                             [$class: 'UsernamePasswordMultiBinding', credentialsId: "${params.UE_Credentials}", usernameVariable: 'UE_Username', passwordVariable: 'UE_Password']
                         ]) {
-                            sh "python3 main.py --mode=InitiateHtml --eNBRepository=${eNB_Repository} --eNBBranch=${eNB_Branch} --eNBCommitID=${eNB_CommitID} --eNB_AllowMerge=${eNB_AllowMergeRequestProcess} --eNBTargetBranch=${eNB_TargetBranch} --ADBIPAddress=${params.ADB_IPAddress} --ADBUserName=${ADB_Username} --ADBPassword=${ADB_Password} --eNBIPAddress=127.0.0.1 --eNBUserName=carabe --eNBPassword=${eNB_Password} ${mainPythonAllXmlFiles}"
+                            sh "python3 main.py --mode=InitiateHtml --eNBRepository=${eNB_Repository} --eNBBranch=${eNB_Branch} --eNBCommitID=${eNB_CommitID} --eNB_AllowMerge=${eNB_AllowMergeRequestProcess} --ADBIPAddress=${params.ADB_IPAddress} --ADBUserName=${ADB_Username} --ADBPassword=${ADB_Password} --eNBIPAddress=127.0.0.1 --eNBUserName=carabe --eNBPassword=${eNB_Password} ${mainPythonAllXmlFiles}"
                             String[] myXmlTestSuite = testXMLFile.split("\\r?\\n")
                             for (xmlFile in myXmlTestSuite) {
                             if (fileExists(xmlFile)) {
