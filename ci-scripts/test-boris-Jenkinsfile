@@ -51,6 +51,7 @@ pipeline {
     options {
         disableConcurrentBuilds()
 	timestamps()
+        gitLabConnection('OAI GitLab')
         ansiColor('xterm')
     }
     stages {
@@ -128,7 +129,7 @@ pipeline {
 	            echo "begin if 1"
                     if (params.eNB_Repository == null) {
                         echo "then 1"
-                        eNB_Repository = ${GIT_URL} 
+                        eNB_Repository = GIT_URL 
                     } else {
                         echo "else 1"
                         eNB_Repository = params.eNB_Repository
