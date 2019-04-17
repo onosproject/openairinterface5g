@@ -21,6 +21,17 @@
  */
 
 
+// Abstraction function to send social media messages:
+// like on Slack or Mattermost
+def sendSocialMediaMessage(pipeChannel, pipeColor, pipeMessage) {
+    if (params.pipelineUsesSlack != null) {
+        if (params.pipelineUsesSlack) {
+            slackSend channel: pipeChannel, color: pipeColor, message: pipeMessage
+        }
+    }
+}
+
+
 // Location of the test XML file to be run
 def testXMLFile = params.pythonTestXmlFile
 def mainPythonAllXmlFiles = ""
@@ -114,22 +125,29 @@ pipeline {
                     if (params.UE_Credentials == null) {
                         allParametersPresent = false
                     }
+	            echo "begin if 1"
                     if (params.eNB_Repository == null) {
+                        echo "then 1"
                         eNB_Repository = ${GIT_URL} 
                     } else {
+                        echo "else 1"
                         eNB_Repository = params.eNB_Repository
                     }
-	            echo "test"
+	            echo "end if 1"
                     echo "eNB_Repository = ${eNB_Repository}"
 	            echo "allParametersPresent = ${allParametersPresent}"
+                    echo "begin if 2"
                     if (allParametersPresent) {
+			echo "then 2"
                         echo "All parameters are present"
                         sh "git fetch"
                         sh "git checkout -f ${eNB_CommitID}"
                     } else {
+                        echo "else 2"
                         echo "Some parameters are missing"
                         sh "./ci-scripts/fail.sh"
                     }
+                    echo "end if 2"
                 }
             }
         }
