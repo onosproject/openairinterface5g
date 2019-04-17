@@ -48,6 +48,8 @@ def ADB_IPAddress = "none"
 def ADB_Username = "none"
 def ADB_Password = "none"
 def EPC_IPAddress = "none"
+def EPC_Username = "none"
+def EPC_Password = "none"
 
 
 
@@ -190,7 +192,7 @@ pipeline {
 			echo "ADB_IPAddress= ${ADB_IPAddress}"
 			echo "ADB_Username = ${ADB_Username}"
 			echo "ADB_Password = ${ADB_Password}"
-			echo "mainPythonAllXmlFiles = ${mainPythonAllXmlFiles}"
+			//echo "mainPythonAllXmlFiles = ${mainPythonAllXmlFiles}"
 			echo "params.eNB_IPAddress = ${params.eNB_IPAddress}"
 			echo "eNB_Username = ${eNB_Username}"
 			echo "params.eNB_Password = ${params.eNB_Password}"
@@ -209,7 +211,8 @@ pipeline {
                             for (xmlFile in myXmlTestSuite) {
                             if (fileExists(xmlFile)) {
                                 try {
-                                    sh "python3 main.py --mode=TesteNB --eNBIPAddress=${params.eNB_IPAddress} --eNBUserName=${eNB_Username} --eNBPassword=${params.eNB_Password} --eNBBranch=${eNB_Branch} --eNBSourceCodePath=${params.eNB_SourceCodePath} --eNBRepository=${eNB_Repository} --eNBCommitID=${eNB_CommitID} --ADBIPAddress=${ADB_IPAddress} --EPCIPAddress=${EPC_IPAddress} --XMLTestFile=${xmlFile}"
+			            echo "The test will be executed here." 
+                                    //sh "python3 main.py --mode=TesteNB --eNBIPAddress=${params.eNB_IPAddress} --eNBUserName=${eNB_Username} --eNBPassword=${params.eNB_Password} --eNBBranch=${eNB_Branch} --eNBSourceCodePath=${params.eNB_SourceCodePath} --eNBRepository=${eNB_Repository} --eNBCommitID=${eNB_CommitID} --ADBIPAddress=${ADB_IPAddress} --EPCIPAddress=${EPC_IPAddress} --XMLTestFile=${xmlFile}"
                                 } catch (Exception e) {
                                     currentBuild.result = 'FAILURE'
                                     buildStageStatus = false
