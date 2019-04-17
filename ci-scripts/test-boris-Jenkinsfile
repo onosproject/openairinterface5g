@@ -45,7 +45,7 @@ def eNB_AllowMergeRequestProcess = false
 def eNB_TargetBranch
 // Global Parameters not to break the main.py command line and code.
 def ADB_IPAddress = "none"
-def ADB_UserName = "none"
+def ADB_Username = "none"
 def ADB_Password = "none"
 def EPC_IPAddress = "none"
 
@@ -189,18 +189,18 @@ pipeline {
 			echo "params.ADB_IPAddress= ${params.ADB_IPAddress}"
 			echo "ADB_IPAddress= ${ADB_IPAddress}"
 			echo "ADB_Username = ${ADB_Username}"
-			//echo "ADB_Password = ${ADB_Password}"
-			//echo "eNB_Password = ${eNB_Password}"
-			//echo "mainPythonAllXmlFiles = ${mainPythonAllXmlFiles}"
-			//echo "params.eNB_IPAddress = ${params.eNB_IPAddress}"
-			//echo "eNB_Username = ${eNB_Username}"
-			//echo "eNB_Password = ${eNB_Password}"
-			//echo "eNBBranch = ${eNBBranch}"
-			//echo "params.eNB_SourceCodePath = ${params.eNB_SourceCodePath}"
-			//echo "params.ADB_IPAddress = ${params.ADB_IPAddress}"
-			//echo "params.EPC_IPAddress = ${params.EPC_IPAddress}"
-			//echo "xmlFile = ${xmlFile}"
-			//echo "buildStageStatus = ${buildStageStatus}"
+			echo "ADB_Password = ${ADB_Password}"
+			echo "eNB_Password = ${eNB_Password}"
+			echo "mainPythonAllXmlFiles = ${mainPythonAllXmlFiles}"
+			echo "params.eNB_IPAddress = ${params.eNB_IPAddress}"
+			echo "eNB_Username = ${eNB_Username}"
+			echo "eNB_Password = ${eNB_Password}"
+			echo "eNBBranch = ${eNBBranch}"
+			echo "params.eNB_SourceCodePath = ${params.eNB_SourceCodePath}"
+			echo "params.ADB_IPAddress = ${params.ADB_IPAddress}"
+			echo "params.EPC_IPAddress = ${params.EPC_IPAddress}"
+			echo "xmlFile = ${xmlFile}"
+			echo "buildStageStatus = ${buildStageStatus}"
                         withCredentials([
                             [$class: 'UsernamePasswordMultiBinding', credentialsId: "${params.eNB_Credentials}", usernameVariable: 'eNB_Username', passwordVariable: 'eNB_Password'],
                             [$class: 'UsernamePasswordMultiBinding', credentialsId: "${params.UE_Credentials}", usernameVariable: 'UE_Username', passwordVariable: 'UE_Password']
