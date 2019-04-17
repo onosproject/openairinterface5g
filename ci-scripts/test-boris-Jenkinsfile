@@ -180,10 +180,6 @@ pipeline {
 			echo "params.EPC_IPAddress = ${params.EPC_IPAddress}"
 			echo "xmlFile = ${xmlFile}"
 			echo "buildStageStatus = ${buildStageStatus}"
-			echo "params. = ${params.}"
-			echo "params. = ${params.}"
-			echo "params. = ${params.}"
-			echo "params. = ${params.}"
                         withCredentials([
                             [$class: 'UsernamePasswordMultiBinding', credentialsId: "${params.eNB_Credentials}", usernameVariable: 'eNB_Username', passwordVariable: 'eNB_Password'],
                             [$class: 'UsernamePasswordMultiBinding', credentialsId: "${params.UE_Credentials}", usernameVariable: 'UE_Username', passwordVariable: 'UE_Password']
