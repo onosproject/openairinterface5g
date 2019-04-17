@@ -120,6 +120,7 @@ pipeline {
                         eNB_Repository = params.eNB_Repository
                     }
                     echo "params.eNB_Repository = ${params.eNB_Repository}"
+	            echo "allParametersPresent = ${allParametersPresent}"
                     if (allParametersPresent) {
                         echo "All parameters are present"
                         sh "git fetch"
