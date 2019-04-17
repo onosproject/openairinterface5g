@@ -119,6 +119,7 @@ pipeline {
                     } else {
                         eNB_Repository = params.eNB_Repository
                     }
+	            echo "test"
                     echo "eNB_Repository = ${eNB_Repository}"
 	            echo "allParametersPresent = ${allParametersPresent}"
                     if (allParametersPresent) {
