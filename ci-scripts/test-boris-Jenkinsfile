@@ -44,10 +44,10 @@ def eNB_CommitID
 def eNB_AllowMergeRequestProcess = false
 def eNB_TargetBranch
 // Global Parameters not to break the main.py command line and code.
-def ADBIPAddress = "none"
-def ADBUserName = "none"
-def ADBPassword = "none"
-def EPCIPAddress = "none"
+def ADB_IPAddress = "none"
+def ADB_UserName = "none"
+def ADB_Password = "none"
+def EPC_IPAddress = "none"
 
 
 
