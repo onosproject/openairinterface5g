@@ -114,12 +114,12 @@ pipeline {
                     if (params.UE_Credentials == null) {
                         allParametersPresent = false
                     }
-                    echo "params.eNB_Repository = ${params.eNB_Repository}"
                     if (params.eNB_Repository == null) {
                         eNB_Repository = ${GIT_URL} 
                     } else {
                         eNB_Repository = params.eNB_Repository
                     }
+                    echo "params.eNB_Repository = ${params.eNB_Repository}"
                     if (allParametersPresent) {
                         echo "All parameters are present"
                         sh "git fetch"
