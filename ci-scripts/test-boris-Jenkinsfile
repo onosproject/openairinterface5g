@@ -166,9 +166,15 @@ stage ("Verify Parameters") {
 	    if (params.UE_Credentials == null) {
 		allParametersPresent = false
 	    }
-	    author = $(git show -s --pretty=%an)
+	    author = sh (
+                script: 'git show -s --pretty=%an',
+                returnStdout: true
+            ).trim()
 	    echo "The author of the commit is: ${author}"
-	    email_author = $(git show -s --pretty=%ae) 
+            email_author = sh (
+                script: 'git show -s --pretty=%ae',
+                returnStdout: true
+            ).trim()
 	    echo "The email of the author is: ${email_author}"
 	    echo "allParametersPresent = ${allParametersPresent}"
 	    echo "begin if 2"
@@ -350,7 +356,7 @@ Regards,
 OAI CI Team''',
                      replyTo: 'no-reply@openairinterface.org',
                      subject: '$PROJECT_NAME - Build # $BUILD_NUMBER - $buildStageStatus!',
-                     to: env.gitlabUserEmail
+                     to: email_author
             }
         }
         success {
