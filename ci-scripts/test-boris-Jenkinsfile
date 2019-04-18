@@ -37,6 +37,13 @@ def testXMLFile = params.pythonTestXmlFile
 def mainPythonAllXmlFiles = ""
 def buildStageStatus = true
 
+// Terminate Status
+def termUE = 0
+def termENB = 1
+def termStatusArray = new Boolean[2]
+termStatusArray[termUE] = false
+termStatusArray[termENB] = false
+
 // Global Parameters.
 def eNB_Repository
 def eNB_Branch
