@@ -332,7 +332,7 @@ pipeline {
             script {
                 // Stage destroy may not be run if error in previous stage
                 //sh "./ci-scripts/oai-ci-vm-tool destroy --job-name ${JOB_NAME} --build-id ${BUILD_ID}"
-		echo "PROJECT_NAME = ${PROJECT_NAME}"		
+		//echo "PROJECT_NAME = ${PROJECT_NAME}"		
 		echo "BUILD_NUMBER = ${BUILD_NUMBER}"		
 		echo "BUILD_STATUS = ${BUILD_STATUS}"		
                 emailext attachmentsPattern: '*results*.html',
