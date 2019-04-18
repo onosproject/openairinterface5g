@@ -327,5 +327,51 @@ pipeline {
             }
         }
     }
+    post {
+        always {
+            script {
+                // Stage destroy may not be run if error in previous stage
+                //sh "./ci-scripts/oai-ci-vm-tool destroy --job-name ${JOB_NAME} --build-id ${BUILD_ID}"
+		echo "PROJECT_NAME = ${PROJECT_NAME}"		
+		echo "BUILD_NUMBER = ${BUILD_NUMBER}"		
+		echo "BUILD_STATUS = ${BUILD_STATUS}"		
+                emailext attachmentsPattern: '*results*.html',
+                     body: '''Hi,
+Here are attached HTML report files for $PROJECT_NAME - Build # $BUILD_NUMBER - $BUILD_STATUS!
+
+Regards,
+OAI CI Team''',
+                     replyTo: 'no-reply@openairinterface.org',
+                     subject: '$PROJECT_NAME - Build # $BUILD_NUMBER - $BUILD_STATUS!',
+                     to: env.gitlabUserEmail
+            }
+        }
+        success {
+            script {
+                def message = "OAI " + JOB_NAME + " build (" + BUILD_ID + "): passed (" + BUILD_URL + ")"
+                if ("MERGE".equals(env.gitlabActionType)) {
+                    echo "This is a MERGE event"
+                    addGitLabMRComment comment: message
+                    def message2 = "OAI " + JOB_NAME + " build (" + BUILD_ID + "): passed (" + BUILD_URL + ") -- MergeRequest #" + env.gitlabMergeRequestIid + " (" + env.gitlabMergeRequestTitle + ")"
+                    sendSocialMediaMessage('ci-enb', 'good', message2)
+                } else {
+                    sendSocialMediaMessage('ci-enb', 'good', message)
+                }
+            }
+        }
+        failure {
+            script {
+                def message = "OAI " + JOB_NAME + " build (" + BUILD_ID + "): failed (" + BUILD_URL + ")"
+                if ("MERGE".equals(env.gitlabActionType)) {
+                    echo "This is a MERGE event"
+                    addGitLabMRComment comment: message
+                    def message2 = "OAI " + JOB_NAME + " build (" + BUILD_ID + "): failed (" + BUILD_URL + ") -- MergeRequest #" + env.gitlabMergeRequestIid + " (" + env.gitlabMergeRequestTitle + ")"
+                    sendSocialMediaMessage('ci-enb', 'danger', message2)
+                } else {
+                    sendSocialMediaMessage('ci-enb', 'danger', message)
+                }
+            }
+        }
+    }
 }
 
