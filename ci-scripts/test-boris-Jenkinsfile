@@ -24,11 +24,11 @@
 // Abstraction function to send social media messages:
 // like on Slack or Mattermost
 def sendSocialMediaMessage(pipeChannel, pipeColor, pipeMessage) {
-if (params.pipelineUsesSlack != null) {
-if (params.pipelineUsesSlack) {
-    slackSend channel: pipeChannel, color: pipeColor, message: pipeMessage
-}
-}
+    if (params.pipelineUsesSlack != null) {
+        if (params.pipelineUsesSlack) {
+            slackSend channel: pipeChannel, color: pipeColor, message: pipeMessage
+        }
+    }
 }
 
 
@@ -64,283 +64,285 @@ def EPC_Password = "none"
 
 
 pipeline {
-agent {
-label pythonExecutor 
-}
-options {
-disableConcurrentBuilds()
-timestamps()
-gitLabConnection('OAI GitLab')
-ansiColor('xterm')
-}
-stages {
-stage ('Retrieve latest from branch') {
-    steps {
-	script {
-	    checkout([$class: 'GitSCM', branches: [[name: '*/gNB-nrUE-USRP']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[url: 'https://gitlab.eurecom.fr/oai/openairinterface5g.git']]])
-	    sh "git clean -x -d -ff"
-	    sh "git log -n1"
-	}
+    agent {
+        label pythonExecutor 
     }
+    options {
+        disableConcurrentBuilds()
+        timestamps()
+        gitLabConnection('OAI GitLab')
+        ansiColor('xterm')
 }
-stage ("Print latest commit info") {
-    steps {
-	script {
-	    echo "Building on: "
-	    echo "  Repository -- ${GIT_URL}"
-	    echo "  Branch -- ${GIT_BRANCH}"
-	    echo "  Commit -- ${GIT_COMMIT}"
-	    sh "git log -n1"
-	    //eNB_Repository = ${GIT_URL}
-	}
+
+    stages {
+        stage ('Retrieve latest from branch') {
+            steps {
+	        script {
+	            checkout([$class: 'GitSCM', branches: [[name: '*/gNB-nrUE-USRP']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[url: 'https://gitlab.eurecom.fr/oai/openairinterface5g.git']]])
+	            sh "git clean -x -d -ff"
+	            sh "git log -n1"
+	        }
+            }
+        }
+        stage ("print latest commit info") {
+            steps {
+        	    script {
+        	        echo "Building on: "
+        	        echo "  Repository -- ${GIT_URL}"
+        	        echo "  Branch -- ${GIT_BRANCH}"
+        	        echo "  Commit -- ${GIT_COMMIT}"
+        	        sh "git log -n1"
+        	        //eNB_Repository = ${GIT_URL}
+        	    }
+            }
+        }
+        stage ("Verify Parameters") {
+            steps {
+                script {
+                    JOB_TIMESTAMP = sh returnStdout: true, script: 'date --utc --rfc-3339=seconds | sed -e "s#+00:00##"'
+                    JOB_TIMESTAMP = JOB_TIMESTAMP.trim()
+
+                    echo '\u2705 \u001B[32mVerify Parameters\u001B[0m'
+                    def allParametersPresent = true
+
+                    // It is already too late to check it
+                    if (params.pythonExecutor != null) {
+                       echo "eNB CI executor node  :   ${pythonExecutor}"
+                    }
+                    if (params.eNB_Repository == null) {
+                        eNB_Repository = GIT_URL 
+                    } else {
+                        eNB_Repository = params.eNB_Repository
+                    }
+                    echo "eNB_Repository = ${eNB_Repository}"
+                    if (params.eNB_Branch== null) {
+                        eNB_Branch = GIT_BRANCH
+                    } else {
+                        eNB_Branch = params.eNB_Branch
+                    }
+                    echo "eNB_Branch = ${eNB_Branch}"
+                    if (params.eNB_CommitID == null) {
+                        eNB_CommitID = GIT_COMMIT 
+                    } else {
+                        eNB_CommitID = params.eNB_CommitID
+                    }
+                    echo "eNB_CommitID = ${eNB_CommitID}"
+                    // If not present picking a default XML file
+                    if (params.pythonTestXmlFile == null) {
+                        // picking default
+                        testXMLFile = 'xml_files/gnb_usrp_build.xml'
+                        echo "Test XML file(default):   ${testXMLFile}"
+                        mainPythonAllXmlFiles += "--XMLTestFile=" + testXMLFile + " "
+                    } else {
+                        String[] myXmlTestSuite = testXMLFile.split("\\r?\\n")
+                        for (xmlFile in myXmlTestSuite) {
+                            if (fileExists("ci-scripts/" + xmlFile)) {
+                        	mainPythonAllXmlFiles += "--XMLTestFile=" + xmlFile + " "
+                        	echo "Test XML file         :   ${xmlFile}"
+                            }
+                        }
+                    }
+                    // If not present picking a default Stage Name
+                    if (params.pipelineTestStageName == null) {
+                        // picking default
+                        testStageName = 'Template Test Stage'
+                    }
+                    echo "params.eNB_IPAddress = ${params.eNB_IPAddress}"
+                    if (params.eNB_IPAddress == null) {
+                        allParametersPresent = false
+                    }
+                    echo "params.UE_IPAddress = ${params.UE_IPAddress}"
+                    if (params.UE_IPAddress == null) {
+                        allParametersPresent = false
+                    }
+                    echo "params.eNB_SourceCodePath = ${params.eNB_SourceCodePath}"
+                    if (params.eNB_SourceCodePath == null) {
+                        allParametersPresent = false
+                    }
+                    echo "params.eNB_Credentials = ${params.eNB_Credentials}"
+                    if (params.eNB_Credentials == null) {
+                        allParametersPresent = false
+                    }
+                    echo "params.UE_Credentials = ${params.UE_Credentials}"
+                    if (params.UE_Credentials == null) {
+                        allParametersPresent = false
+                    }
+                    GIT_COMMIT_AUTHOR = sh (
+                        script: 'git show -s --pretty=%an',
+                        returnStdout: true
+                    ).trim()
+                    echo "The author of the commit is: ${GIT_COMMIT_AUTHOR}"
+                    GIT_COMMIT_EMAIL = sh (
+                        script: 'git show -s --pretty=%ae',
+                        returnStdout: true
+                    ).trim()
+                    echo "The email of the author is: ${GIT_COMMIT_EMAIL}"
+                    echo "allParametersPresent = ${allParametersPresent}"
+                    echo "begin if 2"
+                    if (allParametersPresent) {
+                        echo "then 2"
+                        echo "All parameters are present"
+                    } else {
+                        echo "else 2"
+                        echo "Some parameters are missing"
+                        sh "./ci-scripts/fail.sh"
+                    }
+                    echo "end if 2"
+                    // The following parameters are kept not to break the current main.py command line and code.
+                    // They should be removed in the future.
+                    //if (params.ADB_IPAddress == null) {
+                    //    params.ADB_IPAddress = "none"
+                    //}
+                    //echo "params.ADB_IPAddress = ${params.ADB_IPAddress}"
+                }
+            }
+        }
+
+        stage ("Build and Test") {
+            steps {
+        	    script {
+        	        dir ('ci-scripts') {
+        	    	echo "\u2705 \u001B[32m${testStageName}\u001B[0m"
+        	    	echo "params.eNB_Credentials = ${params.eNB_Credentials}"
+        	    	echo "params.UE_Credentials = ${params.UE_Credentials}"
+        	    	echo "eNB_Repository = ${eNB_Repository}"
+        	    	echo "eNB_Branch= ${eNB_Branch}"
+        	    	echo "eNB_CommitID= ${eNB_CommitID}"
+        	    	echo "eNB_AllowMergeRequestProcess= ${eNB_AllowMergeRequestProcess}"
+        	    	echo "params.ADB_IPAddress= ${params.ADB_IPAddress}"
+        	    	echo "ADB_IPAddress= ${ADB_IPAddress}"
+        	    	echo "ADB_Username = ${ADB_Username}"
+        	    	echo "ADB_Password = ${ADB_Password}"
+        	    	echo "params.eNB_IPAddress = ${params.eNB_IPAddress}"
+        	    	echo "params.eNB_SourceCodePath = ${params.eNB_SourceCodePath}"
+        	    	echo "ADB_IPAddress = ${ADB_IPAddress}"
+        	    	echo "EPC_IPAddress = ${EPC_IPAddress}"
+        	    	echo "buildStageStatus = ${buildStageStatus}"
+        	    	withCredentials([
+        	    	    [$class: 'UsernamePasswordMultiBinding', credentialsId: "${params.eNB_Credentials}", usernameVariable: 'eNB_Username', passwordVariable: 'eNB_Password'],
+        	    	    [$class: 'UsernamePasswordMultiBinding', credentialsId: "${params.UE_Credentials}", usernameVariable: 'UE_Username', passwordVariable: 'UE_Password']
+        	    	]) {
+        	    	    sh "python3 main.py --mode=InitiateHtml --eNBRepository=${eNB_Repository} --eNBBranch=${eNB_Branch} --eNBCommitID=${eNB_CommitID} --eNB_AllowMerge=${eNB_AllowMergeRequestProcess} --ADBIPAddress=${ADB_IPAddress} --ADBUserName=${ADB_Username} --ADBPassword=${ADB_Password} --eNBIPAddress=127.0.0.1 --eNBUserName=carabe --eNBPassword=${eNB_Password} ${mainPythonAllXmlFiles}"
+        	    	    String[] myXmlTestSuite = testXMLFile.split("\\r?\\n")
+        	    	    for (xmlFile in myXmlTestSuite) {
+        	    	    if (fileExists(xmlFile)) {
+        	    		try {
+        	    		    echo "The test will be executed here. The command would be:"
+        	    		    echo  "sh \"python3 main.py --mode=TesteNB --eNBIPAddress=${params.eNB_IPAddress} --eNBUserName=${eNB_Username} --eNBPassword=${params.eNB_Password} --eNBBranch=${eNB_Branch} --eNBSourceCodePath=${params.eNB_SourceCodePath} --eNBRepository=${eNB_Repository} --eNBCommitID=${eNB_CommitID} --ADBIPAddress=${ADB_IPAddress} --EPCIPAddress=${EPC_IPAddress} --XMLTestFile=${xmlFile}\""
+        	    		    //sh "python3 main.py --mode=TesteNB --eNBIPAddress=${params.eNB_IPAddress} --eNBUserName=${eNB_Username} --eNBPassword=${params.eNB_Password} --eNBBranch=${eNB_Branch} --eNBSourceCodePath=${params.eNB_SourceCodePath} --eNBRepository=${eNB_Repository} --eNBCommitID=${eNB_CommitID} --ADBIPAddress=${ADB_IPAddress} --EPCIPAddress=${EPC_IPAddress} --XMLTestFile=${xmlFile}"
+        	    		} catch (Exception e) {
+        	    		    currentBuild.result = 'FAILURE'
+        	    		    buildStageStatus = false
+        	    		}
+        	    	    }
+        	    	    }
+        	    	    sh "python3 main.py --mode=FinalizeHtml --finalStatus=${buildStageStatus} --eNBIPAddress=${params.eNB_IPAddress} --eNBUserName=${eNB_Username} --eNBPassword=${eNB_Password}"
+        	    	}
+        	        }
+        	    }
+            }
+        }
+
+        stage ("Terminate") {
+            parallel {
+        	stage('Terminate NR UE') {
+        	    steps {
+        		echo '\u2705 \u001B[32mTerminate UE\u001B[0m'
+        	    }
+        	    post {
+        		success {
+        		    script {
+        			termStatusArray[termUE] = true
+        		    }
+        		}
+        	    }
+        	}
+        	stage('Terminate NR eNB') {
+        	    steps {
+        		echo '\u2705 \u001B[32mTerminate eNB\u001B[0m'
+        	    }
+        	    post {
+        		success {
+        		    script {
+        			termStatusArray[termENB] = true
+        		    }
+        		}
+        	    }
+        	}
+            }
+        }
+
+        stage('Log Collection') {
+            parallel {
+        	stage('Log Collection (gNB and NR UE - Build)') {
+        	    steps {
+        		withCredentials([
+        		     [$class: 'UsernamePasswordMultiBinding', credentialsId: "${params.eNB_Credentials}", usernameVariable: 'eNB_Username', passwordVariable: 'eNB_Password']
+        		]) {
+        		    echo '\u2705 \u001B[32mLog Collection (gNB and NR UE - Build)\u001B[0m'
+        		    sh "python3 ci-scripts/main.py --mode=LogCollectBuild --eNBIPAddress=${params.eNB_IPAddress} --eNBUserName=${eNB_Username} --eNBPassword=${eNB_Password} --eNBSourceCodePath=${params.eNB_SourceCodePath}"
+        
+        		    echo '\u2705 \u001B[32mLog Transfer (gNB and NR UE - Build)\u001B[0m'
+        		    sh "sshpass -p \'${eNB_Password}\' scp -o 'StrictHostKeyChecking no' -o 'ConnectTimeout 10' ${eNB_Username}@${params.eNB_IPAddress}:${eNB_SourceCodePath}/cmake_targets/build.log.zip ./build.log.${env.BUILD_ID}.zip || true"
+        		}
+        		script {
+        		    if(fileExists("build.log.${env.BUILD_ID}.zip")) {
+        			archiveArtifacts "build.log.${env.BUILD_ID}.zip"
+        		    }
+        		}
+        	    }
+        	}
+        	stage('Log Collection (gNB - Run)') {
+        	    steps {
+        		withCredentials([
+        		     [$class: 'UsernamePasswordMultiBinding', credentialsId: "${params.eNB_Credentials}", usernameVariable: 'eNB_Username', passwordVariable: 'eNB_Password']
+        		]) {
+        		    echo '\u2705 \u001B[32mLog Collection (gNB - Run)\u001B[0m'
+        		    sh "python3 ci-scripts/main.py --mode=LogCollecteNB --eNBIPAddress=${params.eNB_IPAddress} --eNBUserName=${eNB_Username} --eNBPassword=${eNB_Password} --eNBSourceCodePath=${params.eNB_SourceCodePath}"
+        
+        		    echo '\u2705 \u001B[32mLog Transfer (gNB - Run)\u001B[0m'
+        		    sh "sshpass -p \'${eNB_Password}\' scp -o 'StrictHostKeyChecking no' -o 'ConnectTimeout 10' ${eNB_Username}@${params.eNB_IPAddress}:${eNB_SourceCodePath}/cmake_targets/gnb.log.zip ./gnb.log.${env.BUILD_ID}.zip || true"
+        		}
+        		script {
+        		    if(fileExists("gnb.log.${env.BUILD_ID}.zip")) {
+        			archiveArtifacts "gnb.log.${env.BUILD_ID}.zip"
+        		    }
+        		    if(fileExists("ci-scripts/test_results.html")) {
+        			sh "mv ci-scripts/test_results.html test_results-${JOB_NAME}.html"
+        			sh "sed -i -e 's#TEMPLATE_JOB_NAME#${JOB_NAME}#' -e 's@build #TEMPLATE_BUILD_ID@build #${BUILD_ID}@' -e 's#Build-ID: TEMPLATE_BUILD_ID#Build-ID: <a href=\"${BUILD_URL}\">${BUILD_ID}</a>#' -e 's#TEMPLATE_STAGE_NAME#${testStageName}#' test_results-${JOB_NAME}.html"
+        			archiveArtifacts "test_results-${JOB_NAME}.html"
+        		    }
+        		}
+        	    }
+        	}
+        	stage('Log Collection (NR UE - Run)') {
+        	    steps {
+        		withCredentials([
+        		     [$class: 'UsernamePasswordMultiBinding', credentialsId: "${params.eNB_Credentials}", usernameVariable: 'eNB_Username', passwordVariable: 'eNB_Password']
+        		]) {
+        		    echo '\u2705 \u001B[32mLog Collection (gNB - Run)\u001B[0m'
+        		    sh "python3 ci-scripts/main.py --mode=LogCollecteNB --eNBIPAddress=${params.eNB_IPAddress} --eNBUserName=${eNB_Username} --eNBPassword=${eNB_Password} --eNBSourceCodePath=${params.eNB_SourceCodePath}"
+        
+        		    echo '\u2705 \u001B[32mLog Transfer (gNB - Run)\u001B[0m'
+        		    sh "sshpass -p \'${eNB_Password}\' scp -o 'StrictHostKeyChecking no' -o 'ConnectTimeout 10' ${eNB_Username}@${params.eNB_IPAddress}:${eNB_SourceCodePath}/cmake_targets/nr-ue.log.zip ./nr-ue.log.${env.BUILD_ID}.zip || true"
+        		}
+        		script {
+        		    if(fileExists("nr-ue.log.${env.BUILD_ID}.zip")) {
+        			archiveArtifacts "nr-ue.log.${env.BUILD_ID}.zip"
+        		    }
+        		    if(fileExists("ci-scripts/test_results.html")) {
+        			sh "mv ci-scripts/test_results.html test_results-${JOB_NAME}.html"
+        			sh "sed -i -e 's#TEMPLATE_JOB_NAME#${JOB_NAME}#' -e 's@build #TEMPLATE_BUILD_ID@build #${BUILD_ID}@' -e 's#Build-ID: TEMPLATE_BUILD_ID#Build-ID: <a href=\"${BUILD_URL}\">${BUILD_ID}</a>#' -e 's#TEMPLATE_STAGE_NAME#${testStageName}#' test_results-${JOB_NAME}.html"
+        			archiveArtifacts "test_results-${JOB_NAME}.html"
+        		    }
+        		}
+        	    }
+        	}
+            }
+        }
     }
-}
-stage ("Verify Parameters") {
-    steps {
-	script {
-	    JOB_TIMESTAMP = sh returnStdout: true, script: 'date --utc --rfc-3339=seconds | sed -e "s#+00:00##"'
-	    JOB_TIMESTAMP = JOB_TIMESTAMP.trim()
 
-	    echo '\u2705 \u001B[32mVerify Parameters\u001B[0m'
-	    def allParametersPresent = true
-
-	    // It is already too late to check it
-	    if (params.pythonExecutor != null) {
-	       echo "eNB CI executor node  :   ${pythonExecutor}"
-	    }
-	    if (params.eNB_Repository == null) {
-		eNB_Repository = GIT_URL 
-	    } else {
-		eNB_Repository = params.eNB_Repository
-	    }
-	    echo "eNB_Repository = ${eNB_Repository}"
-	    if (params.eNB_Branch== null) {
-		eNB_Branch = GIT_BRANCH
-	    } else {
-		eNB_Branch = params.eNB_Branch
-	    }
-	    echo "eNB_Branch = ${eNB_Branch}"
-	    if (params.eNB_CommitID == null) {
-		eNB_CommitID = GIT_COMMIT 
-	    } else {
-		eNB_CommitID = params.eNB_CommitID
-	    }
-	    echo "eNB_CommitID = ${eNB_CommitID}"
-	    // If not present picking a default XML file
-	    if (params.pythonTestXmlFile == null) {
-		// picking default
-		testXMLFile = 'xml_files/gnb_usrp_build.xml'
-		echo "Test XML file(default):   ${testXMLFile}"
-		mainPythonAllXmlFiles += "--XMLTestFile=" + testXMLFile + " "
-	    } else {
-		String[] myXmlTestSuite = testXMLFile.split("\\r?\\n")
-		for (xmlFile in myXmlTestSuite) {
-		    if (fileExists("ci-scripts/" + xmlFile)) {
-			mainPythonAllXmlFiles += "--XMLTestFile=" + xmlFile + " "
-			echo "Test XML file         :   ${xmlFile}"
-		    }
-		}
-	    }
-	    // If not present picking a default Stage Name
-	    if (params.pipelineTestStageName == null) {
-		// picking default
-		testStageName = 'Template Test Stage'
-	    }
-	    echo "params.eNB_IPAddress = ${params.eNB_IPAddress}"
-	    if (params.eNB_IPAddress == null) {
-		allParametersPresent = false
-	    }
-	    echo "params.UE_IPAddress = ${params.UE_IPAddress}"
-	    if (params.UE_IPAddress == null) {
-		allParametersPresent = false
-	    }
-	    echo "params.eNB_SourceCodePath = ${params.eNB_SourceCodePath}"
-	    if (params.eNB_SourceCodePath == null) {
-		allParametersPresent = false
-	    }
-	    echo "params.eNB_Credentials = ${params.eNB_Credentials}"
-	    if (params.eNB_Credentials == null) {
-		allParametersPresent = false
-	    }
-	    echo "params.UE_Credentials = ${params.UE_Credentials}"
-	    if (params.UE_Credentials == null) {
-		allParametersPresent = false
-	    }
-	    GIT_COMMIT_AUTHOR = sh (
-                script: 'git show -s --pretty=%an',
-                returnStdout: true
-            ).trim()
-	    echo "The author of the commit is: ${GIT_COMMIT_AUTHOR}"
-            GIT_COMMIT_EMAIL = sh (
-                script: 'git show -s --pretty=%ae',
-                returnStdout: true
-            ).trim()
-	    echo "The email of the author is: ${GIT_COMMIT_EMAIL}"
-	    echo "allParametersPresent = ${allParametersPresent}"
-	    echo "begin if 2"
-	    if (allParametersPresent) {
-		echo "then 2"
-		echo "All parameters are present"
-	    } else {
-		echo "else 2"
-		echo "Some parameters are missing"
-		sh "./ci-scripts/fail.sh"
-	    }
-	    echo "end if 2"
-	    // The following parameters are kept not to break the current main.py command line and code.
-	    // They should be removed in the future.
-	    //if (params.ADB_IPAddress == null) {
-	    //    params.ADB_IPAddress = "none"
-	    //}
-	    //echo "params.ADB_IPAddress = ${params.ADB_IPAddress}"
-	}
-    }
-}
-
-stage ("Build and Test") {
-    steps {
-	script {
-	    dir ('ci-scripts') {
-		echo "\u2705 \u001B[32m${testStageName}\u001B[0m"
-		echo "params.eNB_Credentials = ${params.eNB_Credentials}"
-		echo "params.UE_Credentials = ${params.UE_Credentials}"
-		echo "eNB_Repository = ${eNB_Repository}"
-		echo "eNB_Branch= ${eNB_Branch}"
-		echo "eNB_CommitID= ${eNB_CommitID}"
-		echo "eNB_AllowMergeRequestProcess= ${eNB_AllowMergeRequestProcess}"
-		echo "params.ADB_IPAddress= ${params.ADB_IPAddress}"
-		echo "ADB_IPAddress= ${ADB_IPAddress}"
-		echo "ADB_Username = ${ADB_Username}"
-		echo "ADB_Password = ${ADB_Password}"
-		echo "params.eNB_IPAddress = ${params.eNB_IPAddress}"
-		echo "params.eNB_SourceCodePath = ${params.eNB_SourceCodePath}"
-		echo "ADB_IPAddress = ${ADB_IPAddress}"
-		echo "EPC_IPAddress = ${EPC_IPAddress}"
-		echo "buildStageStatus = ${buildStageStatus}"
-		withCredentials([
-		    [$class: 'UsernamePasswordMultiBinding', credentialsId: "${params.eNB_Credentials}", usernameVariable: 'eNB_Username', passwordVariable: 'eNB_Password'],
-		    [$class: 'UsernamePasswordMultiBinding', credentialsId: "${params.UE_Credentials}", usernameVariable: 'UE_Username', passwordVariable: 'UE_Password']
-		]) {
-		    sh "python3 main.py --mode=InitiateHtml --eNBRepository=${eNB_Repository} --eNBBranch=${eNB_Branch} --eNBCommitID=${eNB_CommitID} --eNB_AllowMerge=${eNB_AllowMergeRequestProcess} --ADBIPAddress=${ADB_IPAddress} --ADBUserName=${ADB_Username} --ADBPassword=${ADB_Password} --eNBIPAddress=127.0.0.1 --eNBUserName=carabe --eNBPassword=${eNB_Password} ${mainPythonAllXmlFiles}"
-		    String[] myXmlTestSuite = testXMLFile.split("\\r?\\n")
-		    for (xmlFile in myXmlTestSuite) {
-		    if (fileExists(xmlFile)) {
-			try {
-			    echo "The test will be executed here. The command would be:"
-			    echo  "sh \"python3 main.py --mode=TesteNB --eNBIPAddress=${params.eNB_IPAddress} --eNBUserName=${eNB_Username} --eNBPassword=${params.eNB_Password} --eNBBranch=${eNB_Branch} --eNBSourceCodePath=${params.eNB_SourceCodePath} --eNBRepository=${eNB_Repository} --eNBCommitID=${eNB_CommitID} --ADBIPAddress=${ADB_IPAddress} --EPCIPAddress=${EPC_IPAddress} --XMLTestFile=${xmlFile}\""
-			    //sh "python3 main.py --mode=TesteNB --eNBIPAddress=${params.eNB_IPAddress} --eNBUserName=${eNB_Username} --eNBPassword=${params.eNB_Password} --eNBBranch=${eNB_Branch} --eNBSourceCodePath=${params.eNB_SourceCodePath} --eNBRepository=${eNB_Repository} --eNBCommitID=${eNB_CommitID} --ADBIPAddress=${ADB_IPAddress} --EPCIPAddress=${EPC_IPAddress} --XMLTestFile=${xmlFile}"
-			} catch (Exception e) {
-			    currentBuild.result = 'FAILURE'
-			    buildStageStatus = false
-			}
-		    }
-		    }
-		    sh "python3 main.py --mode=FinalizeHtml --finalStatus=${buildStageStatus} --eNBIPAddress=${params.eNB_IPAddress} --eNBUserName=${eNB_Username} --eNBPassword=${eNB_Password}"
-		}
-	    }
-	}
-    }
-}
-
-stage ("Terminate") {
-    parallel {
-	stage('Terminate NR UE') {
-	    steps {
-		echo '\u2705 \u001B[32mTerminate UE\u001B[0m'
-	    }
-	    post {
-		success {
-		    script {
-			termStatusArray[termUE] = true
-		    }
-		}
-	    }
-	}
-	stage('Terminate NR eNB') {
-	    steps {
-		echo '\u2705 \u001B[32mTerminate eNB\u001B[0m'
-	    }
-	    post {
-		success {
-		    script {
-			termStatusArray[termENB] = true
-		    }
-		}
-	    }
-	}
-    }
-}
-
-stage('Log Collection') {
-    parallel {
-	stage('Log Collection (gNB and NR UE - Build)') {
-	    steps {
-		withCredentials([
-		     [$class: 'UsernamePasswordMultiBinding', credentialsId: "${params.eNB_Credentials}", usernameVariable: 'eNB_Username', passwordVariable: 'eNB_Password']
-		]) {
-		    echo '\u2705 \u001B[32mLog Collection (gNB and NR UE - Build)\u001B[0m'
-		    sh "python3 ci-scripts/main.py --mode=LogCollectBuild --eNBIPAddress=${params.eNB_IPAddress} --eNBUserName=${eNB_Username} --eNBPassword=${eNB_Password} --eNBSourceCodePath=${params.eNB_SourceCodePath}"
-
-		    echo '\u2705 \u001B[32mLog Transfer (gNB and NR UE - Build)\u001B[0m'
-		    sh "sshpass -p \'${eNB_Password}\' scp -o 'StrictHostKeyChecking no' -o 'ConnectTimeout 10' ${eNB_Username}@${params.eNB_IPAddress}:${eNB_SourceCodePath}/cmake_targets/build.log.zip ./build.log.${env.BUILD_ID}.zip || true"
-		}
-		script {
-		    if(fileExists("build.log.${env.BUILD_ID}.zip")) {
-			archiveArtifacts "build.log.${env.BUILD_ID}.zip"
-		    }
-		}
-	    }
-	}
-	stage('Log Collection (gNB - Run)') {
-	    steps {
-		withCredentials([
-		     [$class: 'UsernamePasswordMultiBinding', credentialsId: "${params.eNB_Credentials}", usernameVariable: 'eNB_Username', passwordVariable: 'eNB_Password']
-		]) {
-		    echo '\u2705 \u001B[32mLog Collection (gNB - Run)\u001B[0m'
-		    sh "python3 ci-scripts/main.py --mode=LogCollecteNB --eNBIPAddress=${params.eNB_IPAddress} --eNBUserName=${eNB_Username} --eNBPassword=${eNB_Password} --eNBSourceCodePath=${params.eNB_SourceCodePath}"
-
-		    echo '\u2705 \u001B[32mLog Transfer (gNB - Run)\u001B[0m'
-		    sh "sshpass -p \'${eNB_Password}\' scp -o 'StrictHostKeyChecking no' -o 'ConnectTimeout 10' ${eNB_Username}@${params.eNB_IPAddress}:${eNB_SourceCodePath}/cmake_targets/gnb.log.zip ./gnb.log.${env.BUILD_ID}.zip || true"
-		}
-		script {
-		    if(fileExists("gnb.log.${env.BUILD_ID}.zip")) {
-			archiveArtifacts "gnb.log.${env.BUILD_ID}.zip"
-		    }
-		    if(fileExists("ci-scripts/test_results.html")) {
-			sh "mv ci-scripts/test_results.html test_results-${JOB_NAME}.html"
-			sh "sed -i -e 's#TEMPLATE_JOB_NAME#${JOB_NAME}#' -e 's@build #TEMPLATE_BUILD_ID@build #${BUILD_ID}@' -e 's#Build-ID: TEMPLATE_BUILD_ID#Build-ID: <a href=\"${BUILD_URL}\">${BUILD_ID}</a>#' -e 's#TEMPLATE_STAGE_NAME#${testStageName}#' test_results-${JOB_NAME}.html"
-			archiveArtifacts "test_results-${JOB_NAME}.html"
-		    }
-		}
-	    }
-	}
-	stage('Log Collection (NR UE - Run)') {
-	    steps {
-		withCredentials([
-		     [$class: 'UsernamePasswordMultiBinding', credentialsId: "${params.eNB_Credentials}", usernameVariable: 'eNB_Username', passwordVariable: 'eNB_Password']
-		]) {
-		    echo '\u2705 \u001B[32mLog Collection (gNB - Run)\u001B[0m'
-		    sh "python3 ci-scripts/main.py --mode=LogCollecteNB --eNBIPAddress=${params.eNB_IPAddress} --eNBUserName=${eNB_Username} --eNBPassword=${eNB_Password} --eNBSourceCodePath=${params.eNB_SourceCodePath}"
-
-		    echo '\u2705 \u001B[32mLog Transfer (gNB - Run)\u001B[0m'
-		    sh "sshpass -p \'${eNB_Password}\' scp -o 'StrictHostKeyChecking no' -o 'ConnectTimeout 10' ${eNB_Username}@${params.eNB_IPAddress}:${eNB_SourceCodePath}/cmake_targets/nr-ue.log.zip ./nr-ue.log.${env.BUILD_ID}.zip || true"
-		}
-		script {
-		    if(fileExists("nr-ue.log.${env.BUILD_ID}.zip")) {
-			archiveArtifacts "nr-ue.log.${env.BUILD_ID}.zip"
-		    }
-		    if(fileExists("ci-scripts/test_results.html")) {
-			sh "mv ci-scripts/test_results.html test_results-${JOB_NAME}.html"
-			sh "sed -i -e 's#TEMPLATE_JOB_NAME#${JOB_NAME}#' -e 's@build #TEMPLATE_BUILD_ID@build #${BUILD_ID}@' -e 's#Build-ID: TEMPLATE_BUILD_ID#Build-ID: <a href=\"${BUILD_URL}\">${BUILD_ID}</a>#' -e 's#TEMPLATE_STAGE_NAME#${testStageName}#' test_results-${JOB_NAME}.html"
-			archiveArtifacts "test_results-${JOB_NAME}.html"
-		    }
-		}
-	    }
-	}
-    }
-}
-}
-post {
+    post {
         always {
             script {
                 // Stage destroy may not be run if error in previous stage
@@ -350,7 +352,7 @@ post {
 		echo "buildStageStatus = ${buildStageStatus}"		
                 emailext attachmentsPattern: '*results*.html',
                      body: '''Hi,
-Here are attached HTML report files for $PROJECT_NAME - Build # $BUILD_NUMBER - $buildStageStatus!
+Here are attached HTML report files for $PROJECT_NAME - Build # $BUILD_NUMBER - ${buildStageStatus}!
 
 Regards,
 OAI CI Team''',
