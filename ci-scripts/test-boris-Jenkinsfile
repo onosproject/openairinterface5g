@@ -178,16 +178,12 @@ pipeline {
                     ).trim()
                     echo "The email of the author is: ${GIT_COMMIT_EMAIL}"
                     echo "allParametersPresent = ${allParametersPresent}"
-                    echo "begin if 2"
                     if (allParametersPresent) {
-                        echo "then 2"
                         echo "All parameters are present"
                     } else {
-                        echo "else 2"
                         echo "Some parameters are missing"
                         sh "./ci-scripts/fail.sh"
                     }
-                    echo "end if 2"
                     // The following parameters are kept not to break the current main.py command line and code.
                     // They should be removed in the future.
                     //if (params.ADB_IPAddress == null) {
