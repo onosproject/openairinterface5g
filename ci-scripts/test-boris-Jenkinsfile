@@ -368,10 +368,9 @@ OAI CI Team''',
 			     booleanParam(name: 'eNB_mergeRequest', value: true),
 			     string(name: 'eNB_TargetBranch', value: String.valueOf(env.gitlabTargetBranch))
 		       ]
-		}
+		    }
 		}
             }
-        }
         success {
             script {
                 def message = "OAI " + JOB_NAME + " build (" + BUILD_ID + "): passed (" + BUILD_URL + ")"
@@ -398,4 +397,6 @@ OAI CI Team''',
                 }
             }
         }
+    }
 }
+
