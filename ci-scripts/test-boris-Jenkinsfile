@@ -368,9 +368,9 @@ OAI CI Team''',
                     echo "This is a MERGE event"
                     addGitLabMRComment comment: message
                     def message2 = "OAI " + JOB_NAME + " build (" + BUILD_ID + "): passed (" + BUILD_URL + ") -- MergeRequest #" + env.gitlabMergeRequestIid + " (" + env.gitlabMergeRequestTitle + ")"
-                    sendSocialMediaMessage('ci-enb', 'good', message2)
+                    sendSocialMediaMessage('develop-nr', 'good', message2)
                 } else {
-                    sendSocialMediaMessage('ci-enb', 'good', message)
+                    sendSocialMediaMessage('develop-nr', 'good', message)
                 }
             }
         }
@@ -381,9 +381,9 @@ OAI CI Team''',
                     echo "This is a MERGE event"
                     addGitLabMRComment comment: message
                     def message2 = "OAI " + JOB_NAME + " build (" + BUILD_ID + "): failed (" + BUILD_URL + ") -- MergeRequest #" + env.gitlabMergeRequestIid + " (" + env.gitlabMergeRequestTitle + ")"
-                    sendSocialMediaMessage('ci-enb', 'danger', message2)
+                    sendSocialMediaMessage('develop-nr', 'danger', message2)
                 } else {
-                    sendSocialMediaMessage('ci-enb', 'danger', message)
+                    sendSocialMediaMessage('develop-nr', 'danger', message)
                 }
             }
         }
