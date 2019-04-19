@@ -359,6 +359,17 @@ OAI CI Team''',
                      replyTo: 'no-reply@openairinterface.org',
                      subject: '$PROJECT_NAME - Build # $BUILD_NUMBER - $BUILD_STAGE_STATUS',
                      to: GIT_COMMIT_EMAIL
+		     gitlabCommitStatus(name: "boris-test") {
+		     build job: 'boris-test',
+		         parameters: [
+			     string(name: 'eNB_Repository', value: String.valueOf(GIT_URL)),
+			     string(name: 'eNB_Branch', value: String.valueOf(env.gitlabSourceBranch)),
+			     string(name: 'eNB_CommitID', value: String.valueOf(env.gitlabMergeRequestLastCommit)),
+			     booleanParam(name: 'eNB_mergeRequest', value: true),
+			     string(name: 'eNB_TargetBranch', value: String.valueOf(env.gitlabTargetBranch))
+		       ]
+		}
+		}
             }
         }
         success {
