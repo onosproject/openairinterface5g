@@ -359,8 +359,8 @@ OAI CI Team''',
                      replyTo: 'no-reply@openairinterface.org',
                      subject: '$PROJECT_NAME - Build # $BUILD_NUMBER - $BUILD_STAGE_STATUS',
                      to: GIT_COMMIT_EMAIL
-		     gitlabCommitStatus(name: "boris-test") {
-		     build job: 'boris-test',
+		     gitlabCommitStatus(name: "test-boris") {
+		     build job: 'test-boris',
 		         parameters: [
 			     string(name: 'eNB_Repository', value: String.valueOf(GIT_URL)),
 			     string(name: 'eNB_Branch', value: String.valueOf(env.gitlabSourceBranch)),
