@@ -371,7 +371,7 @@ OAI CI Team''',
 //			     string(name: 'eNB_TargetBranch', value: String.valueOf(env.gitlabTargetBranch))
 //		       ]
 //		    }
-//		}
+		}
             }
         success {
             script {
