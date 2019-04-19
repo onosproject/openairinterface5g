@@ -35,7 +35,7 @@ def sendSocialMediaMessage(pipeChannel, pipeColor, pipeMessage) {
 // Location of the test XML file to be run
 def testXMLFile = params.pythonTestXmlFile
 def mainPythonAllXmlFiles = ""
-def buildStageStatus = true
+def BUILD_STAGE_STATUS = true
 
 // Terminate Status
 def termUE = 0
@@ -217,7 +217,7 @@ pipeline {
         	    	echo "params.eNB_SourceCodePath = ${params.eNB_SourceCodePath}"
         	    	echo "ADB_IPAddress = ${ADB_IPAddress}"
         	    	echo "EPC_IPAddress = ${EPC_IPAddress}"
-        	    	echo "buildStageStatus = ${buildStageStatus}"
+        	    	echo "BUILD_STAGE_STATUS = ${BUILD_STAGE_STATUS}"
         	    	withCredentials([
         	    	    [$class: 'UsernamePasswordMultiBinding', credentialsId: "${params.eNB_Credentials}", usernameVariable: 'eNB_Username', passwordVariable: 'eNB_Password'],
         	    	    [$class: 'UsernamePasswordMultiBinding', credentialsId: "${params.UE_Credentials}", usernameVariable: 'UE_Username', passwordVariable: 'UE_Password']
@@ -232,11 +232,11 @@ pipeline {
         	    		    //sh "python3 main.py --mode=TesteNB --eNBIPAddress=${params.eNB_IPAddress} --eNBUserName=${eNB_Username} --eNBPassword=${params.eNB_Password} --eNBBranch=${eNB_Branch} --eNBSourceCodePath=${params.eNB_SourceCodePath} --eNBRepository=${eNB_Repository} --eNBCommitID=${eNB_CommitID} --ADBIPAddress=${ADB_IPAddress} --EPCIPAddress=${EPC_IPAddress} --XMLTestFile=${xmlFile}"
         	    		} catch (Exception e) {
         	    		    currentBuild.result = 'FAILURE'
-        	    		    buildStageStatus = false
+        	    		    BUILD_STAGE_STATUS = false
         	    		}
         	    	    }
         	    	    }
-        	    	    sh "python3 main.py --mode=FinalizeHtml --finalStatus=${buildStageStatus} --eNBIPAddress=${params.eNB_IPAddress} --eNBUserName=${eNB_Username} --eNBPassword=${eNB_Password}"
+        	    	    sh "python3 main.py --mode=FinalizeHtml --finalStatus=${BUILD_STAGE_STATUS} --eNBIPAddress=${params.eNB_IPAddress} --eNBUserName=${eNB_Username} --eNBPassword=${eNB_Password}"
         	    	}
         	        }
         	    }
@@ -349,15 +349,15 @@ pipeline {
                 //sh "./ci-scripts/oai-ci-vm-tool destroy --job-name ${JOB_NAME} --build-id ${BUILD_ID}"
 		echo "PROJECT_NAME = ${PROJECT_NAME}"		
 		echo "BUILD_NUMBER = ${BUILD_NUMBER}"		
-		echo "buildStageStatus = ${buildStageStatus}"		
+		echo "BUILD_STAGE_STATUS = ${BUILD_STAGE_STATUS}"		
                 emailext attachmentsPattern: '*results*.html',
                      body: '''Hi,
-Here are attached HTML report files for $PROJECT_NAME - Build # $BUILD_NUMBER - $buildStageStatus
+Here are attached HTML report files for $PROJECT_NAME - Build # $BUILD_NUMBER - $BUILD_STAGE_STATUS
 
 Regards,
 OAI CI Team''',
                      replyTo: 'no-reply@openairinterface.org',
-                     subject: '$PROJECT_NAME - Build # $BUILD_NUMBER - $buildStageStatus',
+                     subject: '$PROJECT_NAME - Build # $BUILD_NUMBER - $BUILD_STAGE_STATUS',
                      to: GIT_COMMIT_EMAIL
             }
         }
