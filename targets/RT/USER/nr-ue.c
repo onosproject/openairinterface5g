@@ -777,7 +777,7 @@ int computeSamplesShift(PHY_VARS_NR_UE *UE) {
     return -1 ;
 
   if ( UE->rx_offset > UE->frame_parms.samples_per_frame/2 &&
-       UE->rx_offset < UE->frame_parms.samples_per_frame/2 )
+       UE->rx_offset < UE->frame_parms.samples_per_frame )
     return 1;
 
   return 0;
