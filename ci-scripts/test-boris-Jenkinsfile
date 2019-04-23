@@ -218,14 +218,14 @@ pipeline {
         	    	    [$class: 'UsernamePasswordMultiBinding', credentialsId: "${params.eNB_Credentials}", usernameVariable: 'eNB_Username', passwordVariable: 'eNB_Password'],
         	    	    [$class: 'UsernamePasswordMultiBinding', credentialsId: "${params.UE_Credentials}", usernameVariable: 'UE_Username', passwordVariable: 'UE_Password']
         	    	]) {
-        	    	    sh "python3 main.py --mode=InitiateHtml --wrongParam=22 --eNBRepository=${eNB_Repository} --eNBBranch=${eNB_Branch} --eNBCommitID=${eNB_CommitID} --eNB_AllowMerge=${eNB_AllowMergeRequestProcess} --ADBIPAddress=${ADB_IPAddress} --ADBUserName=${ADB_Username} --ADBPassword=${ADB_Password} --eNBIPAddress=127.0.0.1 --eNBUserName=carabe --eNBPassword=${eNB_Password} ${mainPythonAllXmlFiles}"
+        	    	    sh "python3 main.py --mode=InitiateHtml --eNBRepository=${eNB_Repository} --eNBBranch=${eNB_Branch} --eNBCommitID=${eNB_CommitID} --eNB_AllowMerge=${eNB_AllowMergeRequestProcess} --ADBIPAddress=${ADB_IPAddress} --ADBUserName=${ADB_Username} --ADBPassword=${ADB_Password} --eNBIPAddress=127.0.0.1 --eNBUserName=carabe --eNBPassword=${eNB_Password} ${mainPythonAllXmlFiles}"
         	    	    String[] myXmlTestSuite = testXMLFile.split("\\r?\\n")
         	    	    for (xmlFile in myXmlTestSuite) {
         	    	    if (fileExists(xmlFile)) {
         	    		try {
         	    		    echo "The test will be executed here. The command would be:"
         	    		    echo  "sh \"python3 main.py --mode=TesteNB --eNBIPAddress=${params.eNB_IPAddress} --eNBUserName=${eNB_Username} --eNBPassword=${params.eNB_Password} --eNBBranch=${eNB_Branch} --eNBSourceCodePath=${params.eNB_SourceCodePath} --eNBRepository=${eNB_Repository} --eNBCommitID=${eNB_CommitID} --ADBIPAddress=${ADB_IPAddress} --EPCIPAddress=${EPC_IPAddress} --XMLTestFile=${xmlFile}\""
-        	    		    //sh "python3 main.py --mode=TesteNB --eNBIPAddress=${params.eNB_IPAddress} --eNBUserName=${eNB_Username} --eNBPassword=${params.eNB_Password} --eNBBranch=${eNB_Branch} --eNBSourceCodePath=${params.eNB_SourceCodePath} --eNBRepository=${eNB_Repository} --eNBCommitID=${eNB_CommitID} --ADBIPAddress=${ADB_IPAddress} --EPCIPAddress=${EPC_IPAddress} --XMLTestFile=${xmlFile}"
+        	    		    sh "python3 main.py --wrongParam=22 --mode=TesteNB --eNBIPAddress=${params.eNB_IPAddress} --eNBUserName=${eNB_Username} --eNBPassword=${params.eNB_Password} --eNBBranch=${eNB_Branch} --eNBSourceCodePath=${params.eNB_SourceCodePath} --eNBRepository=${eNB_Repository} --eNBCommitID=${eNB_CommitID} --ADBIPAddress=${ADB_IPAddress} --EPCIPAddress=${EPC_IPAddress} --XMLTestFile=${xmlFile}"
         	    		} catch (Exception e) {
         	    		    currentBuild.result = 'FAILURE'
         	    		    BUILD_STAGE_STATUS = false
