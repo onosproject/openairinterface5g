@@ -32,7 +32,7 @@
 	<testCase id="090101">
 		<class>Build_eNB</class>
 		<desc>Build gNB (USRP)</desc>
-		<Build_eNB_args>--gNB -w USRP</Build_eNB_args>
+		<Buil_eNB_args>--gNB -w USRP</Buil_eNB_args>
 	</testCase>
 
 </testCaseList>

@@ -439,7 +439,6 @@ class SSHConnection():
 		self.CreateHtmlTestRow(self.EPCType, 'OK', ALL_PROCESSES_OK)
 
 	def InitializeeNB(self):
-		sys.exit('TEST FAILURE')
 		if self.eNBIPAddress == '' or self.eNBUserName == '' or self.eNBPassword == '' or self.eNBSourceCodePath == '':
 			Usage()
 			sys.exit('Insufficient Parameter')
