@@ -352,12 +352,12 @@ pipeline {
 		echo "env.gitlabTargetBranch = ${env.gitlabTargetBranch}"		
                 emailext attachmentsPattern: '*results*.html',
                      body: '''Hi,
-Here are attached HTML report files for $PROJECT_NAME - Build # $BUILD_NUMBER - $BUILD_STAGE_STATUS
+Here are attached HTML report files for $PROJECT_NAME - Build # $BUILD_NUMBER - $BUILD_STATUS!
 
 Regards,
 OAI CI Team''',
                      replyTo: 'no-reply@openairinterface.org',
-                     subject: '$PROJECT_NAME - Build # $BUILD_NUMBER - $BUILD_STAGE_STATUS',
+                     subject: '$PROJECT_NAME - Build # $BUILD_NUMBER - $BUILD_STATUS!',
                      to: GIT_COMMIT_EMAIL
 //                  def message = "OAI " + PROJECT_NAME + " build (" + BUILD_NUMBER + "); Build Status" + BUILD_STAGE_STATUS 
 //                  addGitLabMRComment comment: message
