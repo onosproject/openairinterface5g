@@ -361,16 +361,16 @@ OAI CI Team''',
                      to: GIT_COMMIT_EMAIL
 //                  def message = "OAI " + PROJECT_NAME + " build (" + BUILD_NUMBER + "); Build Status" + BUILD_STAGE_STATUS 
 //                  addGitLabMRComment comment: message
-		     gitlabCommitStatus(name: "test-boris") {
-		     build job: 'test-boris',
-		         parameters: [
-			     string(name: 'eNB_Repository', value: String.valueOf(GIT_URL)),
-			     string(name: 'eNB_Branch', value: String.valueOf(env.gitlabSourceBranch)),
-			     string(name: 'eNB_CommitID', value: String.valueOf(env.gitlabMergeRequestLastCommit)),
-			     booleanParam(name: 'eNB_mergeRequest', value: true),
-			     string(name: 'eNB_TargetBranch', value: String.valueOf(env.gitlabTargetBranch))
-		       ]
-		    }
+		    // gitlabCommitStatus(name: "test-boris") {
+		    // build job: 'test-boris',
+		    //     parameters: [
+		    //         string(name: 'eNB_Repository', value: String.valueOf(GIT_URL)),
+		    //         string(name: 'eNB_Branch', value: String.valueOf(env.gitlabSourceBranch)),
+		    //         string(name: 'eNB_CommitID', value: String.valueOf(env.gitlabMergeRequestLastCommit)),
+		    //         booleanParam(name: 'eNB_mergeRequest', value: true),
+		    //         string(name: 'eNB_TargetBranch', value: String.valueOf(env.gitlabTargetBranch))
+		    //   ]
+		    //}
 		}
             }
         success {
