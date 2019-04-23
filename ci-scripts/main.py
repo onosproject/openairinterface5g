@@ -57,7 +57,7 @@ UE_IP_ADDRESS_ISSUE = -5
 #-----------------------------------------------------------
 # Import
 #-----------------------------------------------------------
-mport sys		# arg
+import sys		# arg
 import re		# reg
 import pexpect		# pexpect
 import time		# sleep
@@ -342,6 +342,7 @@ class SSHConnection():
 		self.CreateHtmlTestRow(self.Build_eNB_args, 'OK', ALL_PROCESSES_OK)
 
 	def BuildOAIUE(self):
+		sys.exit('TEST FAILURE')
 		if self.UEIPAddress == '' or self.eNBRepository == '' or self.eNBBranch == '' or self.UEUserName == '' or self.UEPassword == '' or self.UESourceCodePath == '':
 			Usage()
 			sys.exit('Insufficient Parameter')
