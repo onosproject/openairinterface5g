@@ -306,7 +306,6 @@ class SSHConnection():
 			sys.exit('SCP failed')
 
 	def BuildeNB(self):
-		sys.exit('TEST FAILURE')
 		if self.eNBIPAddress == '' or self.eNBRepository == '' or self.eNBBranch == '' or self.eNBUserName == '' or self.eNBPassword == '' or self.eNBSourceCodePath == '':
 			Usage()
 			sys.exit('Insufficient Parameter')
@@ -440,6 +439,7 @@ class SSHConnection():
 		self.CreateHtmlTestRow(self.EPCType, 'OK', ALL_PROCESSES_OK)
 
 	def InitializeeNB(self):
+		sys.exit('TEST FAILURE')
 		if self.eNBIPAddress == '' or self.eNBUserName == '' or self.eNBPassword == '' or self.eNBSourceCodePath == '':
 			Usage()
 			sys.exit('Insufficient Parameter')
