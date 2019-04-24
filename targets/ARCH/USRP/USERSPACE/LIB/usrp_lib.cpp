@@ -1090,7 +1090,7 @@ extern "C" {
 
       double usrp_master_clock;
 
-      if (device_adds.size>1 && strcmp(device_adds[0].get("type"),device_adds[1].get("type")) != 0) {
+      if (device_adds.size()>1 && strcmp(device_adds[0].get("type").c_str(),device_adds[1].get("type").c_str()) != 0) {
 	LOG_E(HW,"Please use the same type of USRP\n");
 	free(s);
 	return(-1);
