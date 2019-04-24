@@ -148,6 +148,8 @@ class SSHConnection():
 		print('begin open ssh')
 		print('ipaddress: ' + ipaddress)
 		print('username: ' + username)
+		if password == 'null':
+			print('password is null')
 		count = 0
 		connect_status = False
 		while count < 4:
