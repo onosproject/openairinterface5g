@@ -53,6 +53,8 @@ def eNB_TargetBranch
 def PROJECT_NAME = "test-boris"
 def GIT_COMMIT_AUTHOR
 def GIT_COMMIT_EMAIL
+def modeList = ['TesteNB', 'TestUE', 'TesteNB']
+
 // Global Parameters not to break the main.py command line and code.
 def ADB_IPAddress = "none"
 def ADB_Username = "none"
@@ -221,17 +223,16 @@ pipeline {
         	    	    sh "python3 main.py --mode=InitiateHtml --eNBRepository=${eNB_Repository} --eNBBranch=${eNB_Branch} --eNBCommitID=${eNB_CommitID} --eNB_AllowMerge=${eNB_AllowMergeRequestProcess} --ADBIPAddress=${ADB_IPAddress} --ADBUserName=${ADB_Username} --ADBPassword=${ADB_Password} --eNBIPAddress=${params.eNB_IPAddress} --eNBUserName=${eNB_Username} --eNBPassword=${eNB_Password} ${mainPythonAllXmlFiles}"
         	    	    String[] myXmlTestSuite = testXMLFile.split("\\r?\\n")
         	    	    for (xmlFile in myXmlTestSuite) {
+			    mode = modeList.pop() 
         	    	    if (fileExists(xmlFile)) {
-        	    		try {
-        	    		    sh "python3 main.py --mode=TesteNB --eNBIPAddress=${params.eNB_IPAddress} --eNBUserName=${eNB_Username} --eNBPassword=${eNB_Password} --eNBBranch=${eNB_Branch} --eNBSourceCodePath=${params.eNB_SourceCodePath} --eNBRepository=${eNB_Repository} --eNBCommitID=${eNB_CommitID} --ADBIPAddress=${ADB_IPAddress} --EPCIPAddress=${EPC_IPAddress} --XMLTestFile=${xmlFile}"
-        	    		} catch (Exception e) {
-        	    		    currentBuild.result = 'FAILURE'
-        	    		    BUILD_STAGE_STATUS = false
-        	    		}
+        	    	        try {
+        	    	            sh "python3 main.py --mode=${mode} --eNBIPAddress=${params.eNB_IPAddress} --eNBUserName=${eNB_Username} --eNBPassword=${eNB_Password} --eNBBranch=${eNB_Branch} --eNBSourceCodePath=${params.eNB_SourceCodePath} --eNBRepository=${eNB_Repository} --eNBCommitID=${eNB_CommitID} --ADBIPAddress=${ADB_IPAddress} --EPCIPAddress=${EPC_IPAddress} --XMLTestFile=${xmlFile}"
+        	    	        } catch (Exception e) {
+        	    	            currentBuild.result = 'FAILURE'
+        	    	            BUILD_STAGE_STATUS = false
+        	    	        }
         	    	    }
         	    	    }
-        	    	    sh "python3 main.py --mode=FinalizeHtml --finalStatus=${BUILD_STAGE_STATUS} --eNBIPAddress=${params.eNB_IPAddress} --eNBUserName=${eNB_Username} --eNBPassword=${eNB_Password}"
-        	    	}
         	        }
         	    }
             }

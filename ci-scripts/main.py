@@ -3021,8 +3021,8 @@ def Usage():
 	print('  --XMLTestFile=[XML Test File to be run]')
 	print('------------------------------------------------------------')
 
-def GetModeFromXML():
-	SSH.mode = test.findtext('mode')
+#def GetModeFromXML():
+#	SSH.mode = test.findtext('mode')
 
 def CheckClassValidity(action,id):
 	if action != 'Build_eNB' and action != 'Initialize_eNB' and action != 'Terminate_eNB' and action != 'Initialize_UE' and action != 'Terminate_UE' and action != 'Attach_UE' and action != 'Detach_UE' and action != 'Build_OAI_UE' and action != 'Initialize_OAI_UE' and action != 'Terminate_OAI_UE' and action != 'Initialize_OAI_eNB' and action != 'Ping' and action != 'Iperf' and action != 'Reboot_UE' and action != 'Initialize_HSS' and action != 'Terminate_HSS' and action != 'Initialize_MME' and action != 'Terminate_MME' and action != 'Initialize_SPGW' and action != 'Terminate_SPGW'  and action != 'Initialize_CatM_module' and action != 'Terminate_CatM_module' and action != 'Attach_CatM_module' and action != 'Detach_CatM_module' and action != 'Ping_CatM_module' and action != 'IdleSleep':
@@ -3142,12 +3142,11 @@ while len(argvs) > 1:
 		Usage()
 		sys.exit(0)
 	elif re.match('^\-\-mode=(.+)$', myArgv, re.IGNORECASE):
-		mode = GetModeFromXML()
-		print('mode: ' + mode)
+		#print('mode: ' + mode)
 		matchReg = re.match('^\-\-mode=(.+)$', myArgv, re.IGNORECASE)
-		if matchReg and mode is not None:
-			print('Warning: the mode is defined in both xml file and command line')
-			print('ignoring the mode defined in the xml file')
+		#if matchReg and mode is not None:
+			#print('Warning: the mode is defined in both xml file and command line')
+			#print('ignoring the mode defined in the xml file')
 		print('mode: ' + mode)
 		mode = matchReg.group(1)
 	elif re.match('^\-\-eNBIPAddress=(.+)$', myArgv, re.IGNORECASE):
@@ -3406,6 +3405,7 @@ elif re.match('^TesteNB$', mode, re.IGNORECASE) or re.match('^TestUE$', mode, re
 			SSH.testCase_id = id
 			SSH.desc = test.findtext('desc')
 			action = test.findtext('class')
+			mode = test.findtext('mode')
 			if (CheckClassValidity(action, id) == False):
 				continue
 			SSH.ShowTestID()
