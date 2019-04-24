@@ -145,7 +145,7 @@ class SSHConnection():
 		self.eNBOsVersion = ''
 		
 	def open(self, ipaddress, username, password):
-		print(open ssh)
+		print('begin open ssh')
 		print('ipaddress: ' + ipaddress)
 		print('username: ' + username)
 		print('password: ' + password)
