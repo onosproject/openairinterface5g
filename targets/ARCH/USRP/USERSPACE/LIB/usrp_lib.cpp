@@ -1082,21 +1082,27 @@ extern "C" {
         LOG_E(HW,"No USRP Device Found.\n ");
         free(s);
         return -1;
-      } else if (device_adds.size() > 1) {
-        LOG_E(HW,"More than one USRP Device Found. Please specify device more precisely in config file.\n");
+      } else if (device_adds.size() > 2) {
+        LOG_E(HW,"More than two USRP Devices Found. Please specify devices more precisely in config file.\n");
 	free(s);
 	return -1;
       }
 
-      LOG_I(HW,"Found USRP %s\n", device_adds[0].get("type").c_str());
       double usrp_master_clock;
 
+      if (device_adds.size>1 && strcmp(device_adds[0].get("type"),device_adds[1].get("type")) != 0) {
+	LOG_E(HW,"Please use the same type of USRP\n");
+	free(s);
+	return(-1);
+      }
+      LOG_I(HW,"Found %d USRP of type %s\n", device_adds.size,device_adds[0].get("type").c_str());
+
       if (device_adds[0].get("type") == "b200") {
-        printf("Found USRP b200\n");
-        device->type = USRP_B200_DEV;
-        usrp_master_clock = 30.72e6;
-        args += boost::str(boost::format(",master_clock_rate=%f") % usrp_master_clock);
-        args += ",num_send_frames=256,num_recv_frames=256, send_frame_size=7680, recv_frame_size=7680" ;
+	  printf("Found USRP b200\n");
+	  device->type = USRP_B200_DEV;
+	  usrp_master_clock = 30.72e6;
+	  args += boost::str(boost::format(",master_clock_rate=%f") % usrp_master_clock);
+	  args += ",num_send_frames=256,num_recv_frames=256, send_frame_size=7680, recv_frame_size=7680" ;
       }
 
       if (device_adds[0].get("type") == "n3xx") {
@@ -1116,7 +1122,7 @@ extern "C" {
       s->usrp = uhd::usrp::multi_usrp::make(args);
 
       // lock mboard clocks
-      if (openair0_cfg[0].clock_source == internal)
+      if (openair0_cfg[0].clock_source == internal && device_adds.size == 1)
         s->usrp->set_clock_source("internal");
       else
         s->usrp->set_clock_source("external");
