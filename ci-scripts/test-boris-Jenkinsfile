@@ -218,7 +218,7 @@ pipeline {
         	    	    [$class: 'UsernamePasswordMultiBinding', credentialsId: "${params.eNB_Credentials}", usernameVariable: 'eNB_Username', passwordVariable: 'eNB_Password'],
         	    	    [$class: 'UsernamePasswordMultiBinding', credentialsId: "${params.UE_Credentials}", usernameVariable: 'UE_Username', passwordVariable: 'UE_Password']
         	    	]) {
-        	    	    sh "python3 main.py --mode=InitiateHtml --eNBRepository=${eNB_Repository} --eNBBranch=${eNB_Branch} --eNBCommitID=${eNB_CommitID} --eNB_AllowMerge=${eNB_AllowMergeRequestProcess} --ADBIPAddress=${ADB_IPAddress} --ADBUserName=${ADB_Username} --ADBPassword=${ADB_Password} --eNBIPAddress=127.0.0.1 --eNBUserName=caracal --eNBPassword=${eNB_Password} ${mainPythonAllXmlFiles}"
+        	    	    sh "python3 main.py --mode=InitiateHtml --eNBRepository=${eNB_Repository} --eNBBranch=${eNB_Branch} --eNBCommitID=${eNB_CommitID} --eNB_AllowMerge=${eNB_AllowMergeRequestProcess} --ADBIPAddress=${ADB_IPAddress} --ADBUserName=${ADB_Username} --ADBPassword=${ADB_Password} --eNBIPAddress= ${params.eNB_IPAddress} --eNBUserName=${eNB_Username} --eNBPassword=${eNB_Password} ${mainPythonAllXmlFiles}"
         	    	    String[] myXmlTestSuite = testXMLFile.split("\\r?\\n")
         	    	    for (xmlFile in myXmlTestSuite) {
         	    	    if (fileExists(xmlFile)) {
@@ -380,9 +380,9 @@ OAI CI Team''',
                     echo "This is a MERGE event"
                     addGitLabMRComment comment: message
                     def message2 = "OAI " + JOB_NAME + " build (" + BUILD_ID + "): passed (" + BUILD_URL + ") -- MergeRequest #" + env.gitlabMergeRequestIid + " (" + env.gitlabMergeRequestTitle + ")"
-                    sendSocialMediaMessage('develop-nr', 'good', message2)
+                    sendSocialMediaMessage('ci-test', 'good', message2)
                 } else {
-                    sendSocialMediaMessage('develop-nr', 'good', message)
+                    sendSocialMediaMessage('ci-test', 'good', message)
                 }
             }
         }
@@ -395,9 +395,9 @@ OAI CI Team''',
                     echo "This is a MERGE event"
                     addGitLabMRComment comment: message
                     def message2 = "OAI " + JOB_NAME + " build (" + BUILD_ID + "): failed (" + BUILD_URL + ") -- MergeRequest #" + env.gitlabMergeRequestIid + " (" + env.gitlabMergeRequestTitle + ")"
-                    sendSocialMediaMessage('develop-nr', 'danger', message2)
+                    sendSocialMediaMessage('ci-test', 'danger', message2)
                 } else {
-                    sendSocialMediaMessage('develop-nr', 'danger', message)
+                    sendSocialMediaMessage('ci-test', 'danger', message)
                 }
             }
         }
