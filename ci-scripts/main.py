@@ -145,6 +145,10 @@ class SSHConnection():
 		self.eNBOsVersion = ''
 		
 	def open(self, ipaddress, username, password):
+		print(open ssh)
+		print('ipaddress: ' + ipaddress)
+		print('username: ' + username)
+		print('password: ' + password)
 		count = 0
 		connect_status = False
 		while count < 4:
