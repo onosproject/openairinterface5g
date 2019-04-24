@@ -74,7 +74,7 @@ pipeline {
         timestamps()
         gitLabConnection('OAI GitLab')
         ansiColor('xterm')
-}
+    }
 
     stages {
         stage ('Retrieve latest from branch') {
@@ -400,6 +400,7 @@ OAI CI Team''',
                 }
             }
         }
+    }
     }
 }
 
