@@ -30,6 +30,7 @@
 	<TestCaseExclusionList></TestCaseExclusionList>
 
 	<testCase id="090102">
+		<mode>TestUE</mode>
 		<class>Build_OAI_UE</class>
 		<desc>Build NR UE (USRP)</desc>
 		<Build_OAI_UE_args>--nrUE -w USRP</Build_OAI_UE_args>
