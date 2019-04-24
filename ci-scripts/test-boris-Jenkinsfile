@@ -31,7 +31,6 @@ def sendSocialMediaMessage(pipeChannel, pipeColor, pipeMessage) {
     }
 }
 
-
 // Location of the test XML file to be run
 def testXMLFile = params.pythonTestXmlFile
 def mainPythonAllXmlFiles = ""
@@ -335,6 +334,7 @@ pipeline {
         	}
             }
         }
+        }
     }
 
     post {
@@ -400,7 +400,6 @@ OAI CI Team''',
                 }
             }
         }
-
     }
 }
 
