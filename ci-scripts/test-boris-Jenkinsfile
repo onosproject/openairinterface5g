@@ -234,9 +234,10 @@ pipeline {
         	    	    }
         	        }
         	    }
+                }
             }
-        }
-
+	}	
+	
         stage ("Terminate") {
             parallel {
         	stage('Terminate NR UE') {
@@ -334,7 +335,6 @@ pipeline {
         	}
             }
         }
-        }
     }
 
     post {
@@ -370,8 +370,8 @@ OAI CI Team''',
 		    //         string(name: 'eNB_TargetBranch', value: String.valueOf(env.gitlabTargetBranch))
 		    //   ]
 		    //}
-		}
-            }
+	    }
+        }
         success {
             script {
                 def message = "OAI " + JOB_NAME + " build (" + BUILD_ID + "): passed (" + BUILD_URL + ")"
