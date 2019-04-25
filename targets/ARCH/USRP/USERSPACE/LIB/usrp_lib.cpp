@@ -1095,10 +1095,9 @@ extern "C" {
 	free(s);
 	return(-1);
       }
-      LOG_I(HW,"Found %d USRP of type %s\n", device_adds.size,device_adds[0].get("type").c_str());
+      LOG_I(HW,"Found %lu USRP of type %s\n", device_adds.size(),device_adds[0].get("type").c_str());
 
       if (device_adds[0].get("type") == "b200") {
-	  printf("Found USRP b200\n");
 	  device->type = USRP_B200_DEV;
 	  usrp_master_clock = 30.72e6;
 	  args += boost::str(boost::format(",master_clock_rate=%f") % usrp_master_clock);
@@ -1122,7 +1121,7 @@ extern "C" {
       s->usrp = uhd::usrp::multi_usrp::make(args);
 
       // lock mboard clocks
-      if (openair0_cfg[0].clock_source == internal && device_adds.size == 1)
+      if (openair0_cfg[0].clock_source == internal && device_adds.size() == 1)
         s->usrp->set_clock_source("internal");
       else
         s->usrp->set_clock_source("external");
