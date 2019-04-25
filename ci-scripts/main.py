@@ -514,7 +514,10 @@ class SSHConnection():
 		self.command('cd cmake_targets', '\$', 5)
 		self.command('echo "ulimit -c unlimited && ./ran_build/build/' + self.air_interface + '-softmodem -O ' + self.eNBSourceCodePath + '/' + ci_full_config_file + extra_options + '" > ./my-lte-softmodem-run' + str(self.eNB_instance) + '.sh ', '\$', 5)
 		self.command('chmod 775 ./my-lte-softmodem-run' + str(self.eNB_instance) + '.sh ', '\$', 5)
-		self.command('echo ' + self.eNBPassword + ' | sudo -S rm -Rf enb_' + self.testCase_id + '.log', '\$', 5)
+		self.command('echo ' + self.eNBPassword + ' | sudo -S rm -Rf enb_' + self.testCase_id + '.log', '\$', 5)				
+		#to use daemon on CentOS we need to source the function
+		if re.match('(.*)CentOS(.*)', linux_distro, re.IGNORECASE):
+			self.command('source /etc/init.d/functions', '\$', 5)
 		self.command('echo ' + self.eNBPassword + ' | sudo -S -E daemon --inherit --unsafe --name=enb' + str(self.eNB_instance) + '_daemon --chdir=' + self.eNBSourceCodePath + '/cmake_targets -o ' + self.eNBSourceCodePath + '/cmake_targets/enb_' + self.testCase_id + '.log ./my-lte-softmodem-run' + str(self.eNB_instance) + '.sh', '\$', 5)
 		if not rruCheck:
 			self.eNBLogFile = 'enb_' + self.testCase_id + '.log'
@@ -646,6 +649,9 @@ class SSHConnection():
 		self.command('echo "ulimit -c unlimited && ./'+ self.air_interface +'-uesoftmodem ' + self.Initialize_OAI_UE_args + '" > ./my-lte-uesoftmodem-run' + str(self.UE_instance) + '.sh', '\$', 5)
 		self.command('chmod 775 ./my-lte-uesoftmodem-run' + str(self.UE_instance) + '.sh', '\$', 5)
 		self.command('echo ' + self.UEPassword + ' | sudo -S rm -Rf ' + self.UESourceCodePath + '/cmake_targets/ue_' + self.testCase_id + '.log', '\$', 5)
+		#to use daemon on CentOS we need to source the function		
+		if re.match('(.*)CentOS(.*)', linux_distro, re.IGNORECASE):
+			self.command('source /etc/init.d/functions', '\$', 5)
 		self.command('echo ' + self.UEPassword + ' | sudo -S -E daemon --inherit --unsafe --name=ue' + str(self.UE_instance) + '_daemon --chdir=' + self.UESourceCodePath + '/cmake_targets/ran_build/build -o ' + self.UESourceCodePath + '/cmake_targets/ue_' + self.testCase_id + '.log ./my-lte-uesoftmodem-run' + str(self.UE_instance) + '.sh', '\$', 5)
 		self.UELogFile = 'ue_' + self.testCase_id + '.log'
 		time.sleep(6)
@@ -730,6 +736,9 @@ class SSHConnection():
 		self.command('echo "ulimit -c unlimited && ./' + self.air_interface + '-softmodem ' + self.Initialize_OAI_eNB_args + '|& tee ' + self.eNBSourceCodePath + '/cmake_targets/enb_' + self.testCase_id + '.log' + '" > ./my-lte-softmodem-run' + str(self.eNB_instance) + '.sh', '\$', 5)
 		self.command('chmod 775 ./my-lte-softmodem-run' + str(self.eNB_instance) + '.sh', '\$', 5)
 		self.command('echo ' + self.eNBPassword + ' | sudo -S rm -Rf ' + self.eNBSourceCodePath + '/cmake_targets/enb_' + self.testCase_id + '.log', '\$', 5)
+		#to use daemon on CentOS we need to source the function
+		if re.match('(.*)CentOS(.*)', linux_distro, re.IGNORECASE):
+			self.command('source /etc/init.d/functions', '\$', 5)
 		self.command('echo ' + self.eNBPassword + ' | sudo -S -E daemon --inherit --unsafe --name=enb' + str(self.eNB_instance) + '_daemon --chdir=' + self.eNBSourceCodePath + '/cmake_targets/ran_build/build -o ' + self.eNBSourceCodePath + '/cmake_targets/enb_' + self.testCase_id + '.log ./my-lte-softmodem-run' + str(self.eNB_instance) + '.sh', '\$', 5)
 		self.eNBLogFile = 'enb_' + self.testCase_id + '.log'
 		time.sleep(6)
@@ -2324,6 +2333,9 @@ class SSHConnection():
 	def TerminateeNB(self):
 		self.open(self.eNBIPAddress, self.eNBUserName, self.eNBPassword)
 		self.command('cd ' + self.eNBSourceCodePath + '/cmake_targets', '\$', 5)
+		#to use daemon on CentOS we need to source the function		
+		if re.match('(.*)CentOS(.*)', linux_distro, re.IGNORECASE):
+			self.command('source /etc/init.d/functions', '\$', 5)
 		self.command('echo ' + self.eNBPassword + ' | sudo -S daemon --name=enb' + str(self.eNB_instance) + '_daemon --stop', '\$', 5)
 		self.command('rm -f my-lte-softmodem-run' + str(self.eNB_instance) + '.sh', '\$', 5)
 		self.command('echo ' + self.eNBPassword + ' | sudo -S killall --signal SIGINT ' + self.air_interface + '-softmodem || true', '\$', 5)
@@ -2397,6 +2409,9 @@ class SSHConnection():
 			self.command('cd ' + self.EPCSourceCodePath, '\$', 5)
 			self.command('cd scripts', '\$', 5)
 			self.command('rm -f ./kill_hss.sh', '\$', 5)
+			#to use daemon on CentOS we need to source the function         
+			if re.match('(.*)CentOS(.*)', linux_distro, re.IGNORECASE):
+				self.command('source /etc/init.d/functions', '\$', 5)
 			self.command('echo ' + self.EPCPassword + ' | sudo -S daemon --name=simulated_hss --stop', '\$', 5)
 			time.sleep(1)
 			self.command('echo ' + self.EPCPassword + ' | sudo -S killall --signal SIGKILL hss_sim', '\$', 5)
@@ -2464,6 +2479,9 @@ class SSHConnection():
 	def TerminateOAIUE(self):
 		self.open(self.UEIPAddress, self.UEUserName, self.UEPassword)
 		self.command('cd ' + self.UESourceCodePath + '/cmake_targets', '\$', 5)
+		#to use daemon on CentOS we need to source the function
+		if re.match('(.*)CentOS(.*)', linux_distro, re.IGNORECASE):
+			self.command('source /etc/init.d/functions', '\$', 5)
 		self.command('echo ' + self.UEPassword + ' | sudo -S daemon --name=ue' + str(self.UE_instance) + '_daemon --stop', '\$', 5)
 		self.command('rm -f my-lte-uesoftmodem-run' + str(self.UE_instance) + '.sh', '\$', 5)
 		self.command('echo ' + self.UEPassword + ' | sudo -S killall --signal SIGINT ' + self.air_interface + '-uesoftmodem || true', '\$', 5)
