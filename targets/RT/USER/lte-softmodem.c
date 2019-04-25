@@ -1531,10 +1531,12 @@ int main( int argc, char **argv ) {
         if (init_opt(in_path, in_ip, NULL, radio_type) == -1)
             LOG_E(OPT,"failed to run OPT \n");
     }
-
+printf("netlink is disabled for pdcp\n");
 #ifdef PDCP_USE_NETLINK
+    printf("netlink is enabled for pdcp\n");
     netlink_init();
 #if defined(PDCP_USE_NETLINK_QUEUES)
+    printf("netlink queues is enabled for pdcp\n");
     pdcp_netlink_init();
 #endif
 #endif

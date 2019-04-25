@@ -3607,6 +3607,7 @@ rrc_eNB_process_RRCConnectionReconfigurationComplete(
 
           if (oip_ifup == 0) {    // interface is up --> send a config the DRB
 #      ifdef OAI_EMU
+ 	    printf("OAI_EMU\n");
             oai_emulation.info.oai_ifup[ctxt_pP->module_id] = 1;
             dest_ip_offset = NB_eNB_INST;
 #      else
@@ -3831,9 +3832,10 @@ rrc_eNB_generate_RRCConnectionSetup(
 
 
   LOG_I(RRC,
-        PROTOCOL_RRC_CTXT_UE_FMT" [RAPROC] Logical Channel DL-CCCH, Generating RRCConnectionSetup (bytes %d)\n",
+        PROTOCOL_RRC_CTXT_UE_FMT" [RAPROC] Logical Channel DL-CCCH, Generating RRCConnectionSetup (bytes %d), CC_id %d\n",
         PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP),
-        eNB_rrc_inst[ctxt_pP->module_id].carrier[CC_id].Srb0.Tx_buffer.payload_size);
+        eNB_rrc_inst[ctxt_pP->module_id].carrier[CC_id].Srb0.Tx_buffer.payload_size,
+	CC_id);
 
   // activate release timer, if RRCSetupComplete not received after 10 frames, remove UE
   ue_context_pP->ue_context.ue_release_timer=1;
@@ -5031,6 +5033,7 @@ rrc_enb_task(
             PROTOCOL_RRC_CTXT_UE_ARGS(&ctxt),
             RRC_DCCH_DATA_IND(msg_p).dcch_index,
             msg_name_p);
+      printf("RRC_DCCH_DATA_IND: ctxt->instance %d,  ctxt->module_id %d\n",ctxt.instance,ctxt.module_id);
       rrc_eNB_decode_dcch(&ctxt,
                           RRC_DCCH_DATA_IND(msg_p).dcch_index,
                           RRC_DCCH_DATA_IND(msg_p).sdu_p,

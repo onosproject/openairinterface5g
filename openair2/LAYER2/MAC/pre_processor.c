@@ -55,7 +55,7 @@
 
 #define DEBUG_eNB_SCHEDULER 1
 #define DEBUG_HEADER_PARSING 1
-#define COORDINATION_SCHEDULING 1
+//#define COORDINATION_SCHEDULING 1
 //#define DEBUG_PACKET_TRACE 1
 static int CC_total;
 static int CC_idx_last;
@@ -277,14 +277,16 @@ void assign_rbs_required (module_id_t Mod_id,
         LOG_D(MAC,"[preprocessor] start RB assignement for UE %d CC_id %d dl buffer %d (RB unit %d, MCS %d, TBS %d) \n",
               UE_id, CC_id, UE_list->UE_template[pCCid][UE_id].dl_buffer_total,
               nb_rbs_required[CC_id][UE_id],eNB_UE_stats[CC_id]->dlsch_mcs1,TBS);
-
+	printf("[preprocessor] start RB assignement for UE %d CC_id %d dl buffer %d (RB unit %d, MCS %d, TBS %d) \n",
+              UE_id, CC_id, UE_list->UE_template[pCCid][UE_id].dl_buffer_total,
+              nb_rbs_required[CC_id][UE_id],eNB_UE_stats[CC_id]->dlsch_mcs1,TBS);
         //printf("(num_UEs_total(%d)=UE_list->num_UEs[%d](%d))? %d, CC_id=%d, active CCs %d, CC_idx_last %d\n",num_UEs,CC_id,UE_list->num_UEs[CC_id],num_UEs==UE_list->num_UEs[CC_id],CC_id,CC_total,CC_idx_last);
 
         /* calculating required number of RBs for each UE */
         while (TBS < UE_list->UE_template[pCCid][UE_id].dl_buffer_total)  {
           nb_rbs_required[CC_id][UE_id] += min_rb_unit[CC_id];
 #ifdef COORDINATION_SCHEDULING
-	  if (subframe==0 || subframe==5 || num_UEs==UE_list->num_UEs[CC_id])//This if allows to allocate all subframe 0 and 5 to allow UEs to synchronize with the eNb.
+	  if (subframe==0 || subframe==5 || num_UEs==UE_list->num_UEs[CC_id])//Subframes 0 and 5 are common signals that allow UEs to synchronize with the eNb.
 	  {
 		if (nb_rbs_required[CC_id][UE_id] > frame_parms[CC_id]->N_RB_DL)
 		{
@@ -677,8 +679,13 @@ void dlsch_scheduler_pre_processor (module_id_t   Mod_id,
       //      mac_xface->get_ue_active_harq_pid(Mod_id,CC_id,rnti,frameP,subframeP,&harq_pid,&round,0);
 
       if(round>0) {
-        nb_rbs_required[CC_id][UE_id] = UE_list->UE_template[CC_id][UE_id].nb_rb[harq_pid];
+#ifdef COORDINATION_SCHEDULING
+        nb_rbs_required[CC_id][UE_id] = UE_list->UE_template[CC_id][UE_id].nb_rb[harq_pid]/CC_total;
+	printf("nb_rb [UE%d][CC%d][harq_pid%d][round%d] = %d\n",UE_id,CC_id,harq_pid,round,UE_list->UE_template[CC_id][UE_id].nb_rb[harq_pid]/CC_total);
+#else
+	nb_rbs_required[CC_id][UE_id] = UE_list->UE_template[CC_id][UE_id].nb_rb[harq_pid];
 	printf("nb_rb [UE%d][CC%d][harq_pid%d][round%d] = %d\n",UE_id,CC_id,harq_pid,round,UE_list->UE_template[CC_id][UE_id].nb_rb[harq_pid]);
+#endif
       }
 
       //nb_rbs_required_remaining[UE_id] = nb_rbs_required[UE_id];

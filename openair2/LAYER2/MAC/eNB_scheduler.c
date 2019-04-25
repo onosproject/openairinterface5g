@@ -84,7 +84,7 @@
 
 
 
-void eNB_dlsch_ulsch_scheduler(module_id_t module_idP,uint8_t cooperation_flag, frame_t frameP, sub_frame_t subframeP)  //, int calibration_flag) {
+void eNB_dlsch_ulsch_scheduler(module_id_t module_idP,uint8_t cooperation_flag, frame_t frameP, sub_frame_t subframeP,uint8_t CC)  //, int calibration_flag) {
 {
 
   int mbsfn_status[MAX_NUM_CCs];
@@ -112,7 +112,6 @@ void eNB_dlsch_ulsch_scheduler(module_id_t module_idP,uint8_t cooperation_flag, 
 #endif
 
   LOG_D(MAC,"[eNB %d] Frame %d, Subframe %d, entering MAC scheduler (UE_list->head %d)\n",module_idP, frameP, subframeP,UE_list->head);
-
   start_meas(&eNB_mac_inst[module_idP].eNB_scheduler);
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_ENB_DLSCH_ULSCH_SCHEDULER,VCD_FUNCTION_IN);
 
@@ -147,6 +146,10 @@ void eNB_dlsch_ulsch_scheduler(module_id_t module_idP,uint8_t cooperation_flag, 
             UE_list->UE_sched_ctrl[i].ul_out_of_sync==0 ? "in synch" : "out of sync",
             UE_list->UE_template[CC_id][i].phr_info,
             cqi);
+      printf("eNB %d/ CC_id %d: UE  rnti %x : %s, PHR %d dB CQI %d\n", module_idP,CC_id,rnti,
+            UE_list->UE_sched_ctrl[i].ul_out_of_sync==0 ? "in synch" : "out of sync",
+            UE_list->UE_template[CC_id][i].phr_info,
+            cqi);
     }
 
     PHY_vars_eNB_g[module_idP][CC_id]->pusch_stats_bsr[i][(frameP*10)+subframeP]=-63;
@@ -157,7 +160,7 @@ void eNB_dlsch_ulsch_scheduler(module_id_t module_idP,uint8_t cooperation_flag, 
 
     eNB_mac_inst[module_idP].UE_list.UE_sched_ctrl[i].cqi_req_timer++;
     eNB_UE_stats = mac_xface->get_eNB_UE_stats(module_idP,CC_id,rnti);
-    //printf("eNB_dlsch_ulsch_scheduler: UE %d, CC_id %d, rnti %x, cqi %d\n",i,CC_id,rnti,eNB_UE_stats->DL_cqi[0]);//it works for multiple RRUs
+    //printf("eNB_dlsch_ulsch_scheduler: UE %d, CC_id %d, rnti %x, cqi %d\n",i,CC_id,rnti,eNB_UE_stats->DL_cqi[0]);
     if (eNB_UE_stats==NULL) {
 	//mac_remove_ue(module_idP, i, frameP, subframeP);
       //Inform the controller about the UE deactivation. Should be moved to RRC agent in the future
@@ -347,15 +350,15 @@ void eNB_dlsch_ulsch_scheduler(module_id_t module_idP,uint8_t cooperation_flag, 
   //if (subframeP%5 == 0)
   //#ifdef EXMIMO
   PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, module_idP, ENB_FLAG_YES, NOT_A_RNTI, frameP, subframeP,module_idP);
-  pdcp_run(&ctxt,CC_id);
+  pdcp_run(&ctxt,CC_id);// CC_id unused in RCC
   //#endif
 
   // check HO
   //for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
     //printf("eNB_dlsch_ulsch_scheduler: eNB %d, CC_id %d\n",module_idP,0);
     rrc_rx_tx(&ctxt,
-            0, // eNB index, unused in eNB
-            CC_id);
+            0, // eNB index, unused in RCC. It does not support multiple eNBs.
+            CC_id);//CC_id unused in RCC
   //}
 #if defined(Rel10) || defined(Rel14)
 

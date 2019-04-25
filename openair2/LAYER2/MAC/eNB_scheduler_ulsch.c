@@ -614,6 +614,7 @@ void set_msg3_subframe(module_id_t Mod_id,
                        int Msg3_frame,
                        int Msg3_subframe)
 {
+  printf("set_msg3_subframe: Msg3_subframe %d, CC_id %d\n",Msg3_subframe,CC_id);
   eNB_MAC_INST *eNB=&eNB_mac_inst[Mod_id];
   int i;
   for (i=0; i<NB_RA_PROC_MAX; i++) {
@@ -632,7 +633,6 @@ void schedule_ulsch(module_id_t module_idP,
 		    unsigned char sched_subframe) {
 
 
-
   uint16_t first_rb[MAX_NUM_CCs],i;
   int CC_id;
   eNB_MAC_INST *eNB=&eNB_mac_inst[module_idP];
@@ -641,7 +641,7 @@ void schedule_ulsch(module_id_t module_idP,
 
 
   for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
-
+    //printf("schedule_ulsch: Msg3_subframe %d, CC_id %d\n",sched_subframe,CC_id);
     //leave out first RB for PUCCH
     first_rb[CC_id] = 1;
 

@@ -327,6 +327,7 @@ NwGtpv1uRcT gtpv1u_eNB_process_stack_req(
 #endif
 
 //#warning "LG eps bearer mapping to DRB id to do (offset -4)"
+      //printf("gtpv1u_eNB_process_stack_req: gtpv1u_teid_data_p->ue_id %d\n",gtpv1u_teid_data_p->ue_id);
       PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, gtpv1u_teid_data_p->enb_id, ENB_FLAG_YES,  gtpv1u_teid_data_p->ue_id, 0, 0,gtpv1u_teid_data_p->enb_id);
       MSC_LOG_TX_MESSAGE(
 			 MSC_GTPU_ENB,

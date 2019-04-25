@@ -61,7 +61,7 @@ typedef struct {
 
   // eNB functions
   /// Invoke dlsch/ulsch scheduling procedure for new subframe
-  void (*eNB_dlsch_ulsch_scheduler)(module_id_t Mod_id,uint8_t cooperation_flag, frame_t frameP, sub_frame_t subframeP);//, int calibration_flag);
+  void (*eNB_dlsch_ulsch_scheduler)(module_id_t Mod_id,uint8_t cooperation_flag, frame_t frameP, sub_frame_t subframeP, uint8_t CC);//, int calibration_flag);
 
   /// Fill random access response sdu, passing timing advance
   uint16_t (*fill_rar)(module_id_t Mod_id,int CC_id,frame_t frameP,uint8_t *dlsch_buffer,uint16_t N_RB_UL, uint8_t input_buffer_length);
