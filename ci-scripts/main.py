@@ -67,6 +67,7 @@ import xml.etree.ElementTree as ET
 import logging
 import datetime
 import signal
+import platform
 from multiprocessing import Process, Lock, SimpleQueue
 logging.basicConfig(
 	level=logging.DEBUG,
@@ -404,6 +405,7 @@ class SSHConnection():
 			self.command('cd /opt/hss_sim0609', '\$', 5)
 			self.command('echo ' + self.EPCPassword + ' | sudo -S rm -f hss.log daemon.log', '\$', 5)
 			#to use daemon on CentOS we need to source the function
+			linux_distro = platform.linux_distribution()[0]
 			if re.match('(.*)CentOS(.*)', linux_distro, re.IGNORECASE):
 				self.command('source /etc/init.d/functions', '\$', 5)
 			self.command('echo ' + self.EPCPassword + ' | sudo -S echo "Starting sudo session" && sudo daemon --unsafe --name=simulated_hss --chdir=/opt/hss_sim0609 ./starthss_real  ', '\$', 5)
@@ -516,6 +518,7 @@ class SSHConnection():
 		self.command('chmod 775 ./my-lte-softmodem-run' + str(self.eNB_instance) + '.sh ', '\$', 5)
 		self.command('echo ' + self.eNBPassword + ' | sudo -S rm -Rf enb_' + self.testCase_id + '.log', '\$', 5)				
 		#to use daemon on CentOS we need to source the function
+		linux_distro = platform.linux_distribution()[0]
 		if re.match('(.*)CentOS(.*)', linux_distro, re.IGNORECASE):
 			self.command('source /etc/init.d/functions', '\$', 5)
 		self.command('echo ' + self.eNBPassword + ' | sudo -S -E daemon --inherit --unsafe --name=enb' + str(self.eNB_instance) + '_daemon --chdir=' + self.eNBSourceCodePath + '/cmake_targets -o ' + self.eNBSourceCodePath + '/cmake_targets/enb_' + self.testCase_id + '.log ./my-lte-softmodem-run' + str(self.eNB_instance) + '.sh', '\$', 5)
@@ -649,7 +652,8 @@ class SSHConnection():
 		self.command('echo "ulimit -c unlimited && ./'+ self.air_interface +'-uesoftmodem ' + self.Initialize_OAI_UE_args + '" > ./my-lte-uesoftmodem-run' + str(self.UE_instance) + '.sh', '\$', 5)
 		self.command('chmod 775 ./my-lte-uesoftmodem-run' + str(self.UE_instance) + '.sh', '\$', 5)
 		self.command('echo ' + self.UEPassword + ' | sudo -S rm -Rf ' + self.UESourceCodePath + '/cmake_targets/ue_' + self.testCase_id + '.log', '\$', 5)
-		#to use daemon on CentOS we need to source the function		
+		#to use daemon on CentOS we need to source the function
+		linux_distro = platform.linux_distribution()[0]		
 		if re.match('(.*)CentOS(.*)', linux_distro, re.IGNORECASE):
 			self.command('source /etc/init.d/functions', '\$', 5)
 		self.command('echo ' + self.UEPassword + ' | sudo -S -E daemon --inherit --unsafe --name=ue' + str(self.UE_instance) + '_daemon --chdir=' + self.UESourceCodePath + '/cmake_targets/ran_build/build -o ' + self.UESourceCodePath + '/cmake_targets/ue_' + self.testCase_id + '.log ./my-lte-uesoftmodem-run' + str(self.UE_instance) + '.sh', '\$', 5)
@@ -737,6 +741,7 @@ class SSHConnection():
 		self.command('chmod 775 ./my-lte-softmodem-run' + str(self.eNB_instance) + '.sh', '\$', 5)
 		self.command('echo ' + self.eNBPassword + ' | sudo -S rm -Rf ' + self.eNBSourceCodePath + '/cmake_targets/enb_' + self.testCase_id + '.log', '\$', 5)
 		#to use daemon on CentOS we need to source the function
+		linux_distro = platform.linux_distribution()[0]		
 		if re.match('(.*)CentOS(.*)', linux_distro, re.IGNORECASE):
 			self.command('source /etc/init.d/functions', '\$', 5)
 		self.command('echo ' + self.eNBPassword + ' | sudo -S -E daemon --inherit --unsafe --name=enb' + str(self.eNB_instance) + '_daemon --chdir=' + self.eNBSourceCodePath + '/cmake_targets/ran_build/build -o ' + self.eNBSourceCodePath + '/cmake_targets/enb_' + self.testCase_id + '.log ./my-lte-softmodem-run' + str(self.eNB_instance) + '.sh', '\$', 5)
@@ -2333,7 +2338,8 @@ class SSHConnection():
 	def TerminateeNB(self):
 		self.open(self.eNBIPAddress, self.eNBUserName, self.eNBPassword)
 		self.command('cd ' + self.eNBSourceCodePath + '/cmake_targets', '\$', 5)
-		#to use daemon on CentOS we need to source the function		
+		#to use daemon on CentOS we need to source the function
+		linux_distro = platform.linux_distribution()[0]		
 		if re.match('(.*)CentOS(.*)', linux_distro, re.IGNORECASE):
 			self.command('source /etc/init.d/functions', '\$', 5)
 		self.command('echo ' + self.eNBPassword + ' | sudo -S daemon --name=enb' + str(self.eNB_instance) + '_daemon --stop', '\$', 5)
@@ -2409,7 +2415,8 @@ class SSHConnection():
 			self.command('cd ' + self.EPCSourceCodePath, '\$', 5)
 			self.command('cd scripts', '\$', 5)
 			self.command('rm -f ./kill_hss.sh', '\$', 5)
-			#to use daemon on CentOS we need to source the function         
+			#to use daemon on CentOS we need to source the function
+			linux_distro = platform.linux_distribution()[0]         
 			if re.match('(.*)CentOS(.*)', linux_distro, re.IGNORECASE):
 				self.command('source /etc/init.d/functions', '\$', 5)
 			self.command('echo ' + self.EPCPassword + ' | sudo -S daemon --name=simulated_hss --stop', '\$', 5)
@@ -2480,6 +2487,7 @@ class SSHConnection():
 		self.open(self.UEIPAddress, self.UEUserName, self.UEPassword)
 		self.command('cd ' + self.UESourceCodePath + '/cmake_targets', '\$', 5)
 		#to use daemon on CentOS we need to source the function
+		linux_distro = platform.linux_distribution()[0]
 		if re.match('(.*)CentOS(.*)', linux_distro, re.IGNORECASE):
 			self.command('source /etc/init.d/functions', '\$', 5)
 		self.command('echo ' + self.UEPassword + ' | sudo -S daemon --name=ue' + str(self.UE_instance) + '_daemon --stop', '\$', 5)
