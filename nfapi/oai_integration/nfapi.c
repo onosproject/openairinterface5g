@@ -62,7 +62,7 @@ char *nfapi_get_strmode(void) {
 }
 
 void nfapi_logmode() {
-  LOG_I(ENB_APP,"nfapi running mode: %s\n",nfapi_get_strmode());
+  LOG_I(ENB_APP,"nfapi running mode: %s (%d)\n",nfapi_get_strmode(),nfapi_params.nfapi_mode);
 }
 
 nfapi_mode_t nfapi_getmode(void) {
