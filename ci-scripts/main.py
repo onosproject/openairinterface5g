@@ -311,6 +311,7 @@ class SSHConnection():
 			sys.exit('SCP failed')
 
 	def BuildeNB(self):
+		pass
 		if self.eNBIPAddress == '' or self.eNBRepository == '' or self.eNBBranch == '' or self.eNBUserName == '' or self.eNBPassword == '' or self.eNBSourceCodePath == '':
 			Usage()
 			sys.exit('Insufficient Parameter')
@@ -347,6 +348,7 @@ class SSHConnection():
 		self.CreateHtmlTestRow(self.Build_eNB_args, 'OK', ALL_PROCESSES_OK)
 
 	def BuildOAIUE(self):
+		pass
 		if self.UEIPAddress == '' or self.eNBRepository == '' or self.eNBBranch == '' or self.UEUserName == '' or self.UEPassword == '' or self.UESourceCodePath == '':
 			Usage()
 			sys.exit('Insufficient Parameter')
@@ -640,7 +642,7 @@ class SSHConnection():
 		#self.command('sed -i -e \'s/CI_UE_IP_ADDR/' + self.UEIPAddress + '/\' ' + ci_full_config_file, '\$', 2);
 		# Launch UE with the modified config file
 		self.command('source oaienv', '\$', 5)
-		self.command('cd cmake_targets/ran_build_oai/build', '\$', 5)
+		self.command('cd cmake_targets/ran_build/build', '\$', 5)
 		self.command('echo "ulimit -c unlimited && ./'+ self.air_interface +'-uesoftmodem ' + self.Initialize_OAI_UE_args + '" > ./my-lte-uesoftmodem-run' + str(self.UE_instance) + '.sh', '\$', 5)
 		self.command('chmod 775 ./my-lte-uesoftmodem-run' + str(self.UE_instance) + '.sh', '\$', 5)
 		self.command('echo ' + self.UEPassword + ' | sudo -S rm -Rf ' + self.UESourceCodePath + '/cmake_targets/ue_' + self.testCase_id + '.log', '\$', 5)
@@ -723,7 +725,7 @@ class SSHConnection():
 		#self.command('sed -i -e \'s/CI_eNB_IP_ADDR/' + self.eNBIPAddress + '/\' ' + ci_full_config_file, '\$', 2);
 		# Launch eNB with the modified config file
 		self.command('source oaienv', '\$', 5)
-		self.command('cd cmake_targets/ran_build_oai/build', '\$', 5)
+		self.command('cd cmake_targets/ran_build/build', '\$', 5)
 		#self.command('echo "ulimit -c unlimited && ./' + self.air_interface + '-softmodem ' + self.Initialize_OAI_eNB_args + '" > ./my-lte-softmodem-run' + str(self.eNB_instance) + '.sh', '\$', 5)
 		self.command('echo "ulimit -c unlimited && ./' + self.air_interface + '-softmodem ' + self.Initialize_OAI_eNB_args + '|& tee ' + self.eNBSourceCodePath + '/cmake_targets/enb_' + self.testCase_id + '.log' + '" > ./my-lte-softmodem-run' + str(self.eNB_instance) + '.sh', '\$', 5)
 		self.command('chmod 775 ./my-lte-softmodem-run' + str(self.eNB_instance) + '.sh', '\$', 5)
