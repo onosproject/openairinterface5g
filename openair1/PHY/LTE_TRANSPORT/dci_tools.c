@@ -6787,7 +6787,7 @@ return(pmi_alloc_new);
 
 uint16_t quantize_subband_pmi(PHY_MEASUREMENTS *meas,uint8_t eNB_id,int nb_rb)
 {
-
+  //printf("quantize_subband_pmi: eNB_id %d\n",eNB_id);
   int i, aarx;
   uint16_t pmiq=0;
   uint32_t pmivect = 0;
@@ -6874,7 +6874,7 @@ uint16_t quantize_subband_pmi(PHY_MEASUREMENTS *meas,uint8_t eNB_id,int nb_rb)
 
 uint16_t quantize_subband_pmi2(PHY_MEASUREMENTS *meas,uint8_t eNB_id,uint8_t a_id,int nb_subbands)
 {
-
+  //printf("quantize_subband_pmi2: eNB_id %d\n",eNB_id);
   uint8_t i;
   uint16_t pmiq=0;
   uint16_t pmivect = 0;
@@ -6908,7 +6908,7 @@ uint16_t quantize_subband_pmi2(PHY_MEASUREMENTS *meas,uint8_t eNB_id,uint8_t a_i
 
 uint16_t quantize_wideband_pmi(PHY_MEASUREMENTS *meas,uint8_t eNB_id)
 {
-
+  //printf("quantize_wideband_pmi: eNB_id %d\n",eNB_id);
   uint16_t pmiq=0;
   uint8_t rank = meas->rank[eNB_id];
   //int pmi;
@@ -7031,7 +7031,7 @@ uint8_t sinr2cqi(double sinr,uint8_t trans_mode)
 
 uint32_t fill_subband_cqi(PHY_MEASUREMENTS *meas,uint8_t eNB_id,uint8_t trans_mode,int nb_subbands)
 {
-
+  //printf("fill_subband_cqi: eNB_id %d\n",eNB_id);
   uint8_t i;
 
   uint32_t cqivect = 0,offset=0;
@@ -7060,7 +7060,7 @@ uint32_t fill_subband_cqi(PHY_MEASUREMENTS *meas,uint8_t eNB_id,uint8_t trans_mo
 
 void fill_CQI(LTE_UE_ULSCH_t *ulsch,PHY_MEASUREMENTS *meas,uint8_t eNB_id,uint8_t harq_pid,int N_RB_DL,uint16_t rnti, uint8_t trans_mode, double sinr_eff)
 {
-
+  //printf("fill_CQI: eNB_id %d\n",eNB_id);
   //  printf("[PHY][UE] Filling CQI for eNB %d, meas->wideband_cqi_tot[%d] %d\n",
   //      eNB_id,eNB_id,meas->wideband_cqi_tot[eNB_id]);
   double sinr_tmp;
@@ -7350,7 +7350,7 @@ int generate_ue_ulsch_params_from_dci(void *dci_pdu,
                                       uint8_t eNB_id,
                                       uint8_t use_srs)
 {
-
+  //printf("generate_ue_ulsch_params_from_dci: eNB_id %d\n",eNB_id);
   uint8_t harq_pid;
   uint8_t transmission_mode = ue->transmission_mode[eNB_id];
   ANFBmode_t AckNackFBMode;
@@ -8918,6 +8918,7 @@ int generate_eNB_ulsch_params_from_dci(PHY_VARS_eNB *eNB,
 
 double sinr_eff_cqi_calc(PHY_VARS_UE *ue, uint8_t eNB_id, uint8_t subframe)
 {
+  printf("sinr_eff_cqi_calc: eNB_id %d\n",eNB_id);
   uint8_t transmission_mode = ue->transmission_mode[eNB_id];
   PHY_MEASUREMENTS *meas = &ue->measurements;
   LTE_DL_FRAME_PARMS *frame_parms =  &ue->frame_parms;

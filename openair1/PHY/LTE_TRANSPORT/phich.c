@@ -1381,8 +1381,8 @@ void rx_phich(PHY_VARS_UE *ue,
 
   if (HI16>0) {   //NACK
     if (ue->ulsch_Msg3_active[eNB_id] == 1) {
-      LOG_I(PHY,"[UE  %d][PUSCH %d][RAPROC] Frame %d subframe %d Msg3 PHICH, received NAK (%d) nseq %d, ngroup %d\n",
-            ue->Mod_id,harq_pid,
+      LOG_I(PHY,"[UE  %d/ eNB %d][PUSCH %d][RAPROC] Frame %d subframe %d Msg3 PHICH, received NAK (%d) nseq %d, ngroup %d\n",
+            ue->Mod_id,eNB_id,harq_pid,
             proc->frame_rx,
             subframe,
             HI16,
@@ -1458,8 +1458,8 @@ void rx_phich(PHY_VARS_UE *ue,
 
   } else {  //ACK
     if (ue->ulsch_Msg3_active[eNB_id] == 1) {
-      LOG_I(PHY,"[UE  %d][PUSCH %d][RAPROC] Frame %d subframe %d Msg3 PHICH, received ACK (%d) nseq %d, ngroup %d\n\n",
-            ue->Mod_id,harq_pid,
+      LOG_I(PHY,"[UE  %d/ eNB %d][PUSCH %d][RAPROC] Frame %d subframe %d Msg3 PHICH, received ACK (%d) nseq %d, ngroup %d\n\n",
+            ue->Mod_id,eNB_id,harq_pid,
             proc->frame_rx,
             subframe,
             HI16,

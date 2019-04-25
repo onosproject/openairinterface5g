@@ -205,7 +205,7 @@ int generate_ue_ulsch_params_from_rar(PHY_VARS_UE *ue,
   uint16_t RIV_max = 0;
 
   LOG_D(PHY,"[eNB][RAPROC] Frame %d: generate_ue_ulsch_params_from_rar: subframe %d (harq_pid %d)\n",proc->frame_tx,subframe,harq_pid);
-
+  printf("[eNB %d][RAPROC] Frame %d: generate_ue_ulsch_params_from_rar: subframe %d (harq_pid %d)\n",eNB_id,proc->frame_tx,subframe,harq_pid);
   switch (frame_parms->N_RB_DL) {
   case 6:
     RIV2nb_rb_LUT     = &RIV2nb_rb_LUT6[0];

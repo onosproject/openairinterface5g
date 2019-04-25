@@ -108,7 +108,7 @@ void get_prach_resources(module_id_t module_idP,
                          uint8_t first_Msg3,
                          RACH_ConfigDedicated_t *rach_ConfigDedicated)
 {
-  //printf("get_prach_resources: eNB_index %d\n",eNB_index);
+  printf("get_prach_resources: eNB_index %d\n",eNB_index);
   uint8_t Msg3_size = UE_mac_inst[module_idP].RA_Msg3_size;
   PRACH_RESOURCES_t *prach_resources = &UE_mac_inst[module_idP].RA_prach_resources;
   RACH_ConfigCommon_t *rach_ConfigCommon = NULL;

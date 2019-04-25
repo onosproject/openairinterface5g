@@ -100,7 +100,7 @@ int rx_pdsch(PHY_VARS_UE *ue,
              unsigned char i_mod,
              unsigned char harq_pid)
 {
-
+  //printf("rx_pdsch: eNB_id %d\n",eNB_id);
   LTE_UE_COMMON *common_vars  = &ue->common_vars;
   LTE_UE_PDSCH **pdsch_vars;
   LTE_DL_FRAME_PARMS *frame_parms    = &ue->frame_parms;

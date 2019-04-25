@@ -292,7 +292,7 @@ int16_t phase_im[7] = {-28378, -21063, -11208, 0, 11207, 21062, 28377};
 
 int rx_sss(PHY_VARS_UE *ue,int32_t *tot_metric,uint8_t *flip_max,uint8_t *phase_max)
 {
-
+  printf("rx_sss: Nid2=eNB_id %d\n",ue->common_vars.eNb_id);
   uint8_t i;
   int32_t pss_ext[4][72];
   int32_t sss0_ext[4][72],sss5_ext[4][72];

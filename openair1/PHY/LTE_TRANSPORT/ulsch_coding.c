@@ -207,7 +207,7 @@ uint32_t ulsch_encoding(uint8_t *a,
                         uint8_t control_only_flag,
                         uint8_t Nbundled)
 {
-
+  //printf("ulsch_encoding: eNB_id %d\n",eNB_id);
   time_stats_t *seg_stats=&ue->ulsch_segmentation_stats;
   time_stats_t *rm_stats=&ue->ulsch_rate_matching_stats;
   time_stats_t *te_stats=&ue->ulsch_turbo_encoding_stats;

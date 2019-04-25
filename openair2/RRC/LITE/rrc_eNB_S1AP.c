@@ -206,6 +206,7 @@ rrc_eNB_get_ue_context_from_s1ap_ids(
   const uint32_t    eNB_ue_s1ap_idP
 )
 {
+printf("rrc_eNB_get_ue_context_from_s1ap_ids\n");
   rrc_ue_s1ap_ids_t* temp = NULL;
   temp =
     rrc_eNB_S1AP_get_ue_ids(
@@ -628,6 +629,7 @@ rrc_eNB_send_S1AP_NAS_FIRST_REQ(
 )
 //------------------------------------------------------------------------------
 {
+printf("rrc_eNB_send_S1AP_NAS_FIRST_REQ\n");
 #if defined(ENABLE_ITTI)
   {
     MessageDef*         message_p         = NULL;
@@ -1136,6 +1138,7 @@ void rrc_eNB_send_S1AP_UE_CONTEXT_RELEASE_REQ (
 /*------------------------------------------------------------------------------*/
 int rrc_eNB_process_S1AP_UE_CONTEXT_RELEASE_COMMAND (MessageDef *msg_p, const char *msg_name, instance_t instance)
 {
+printf("rrc_eNB_process_S1AP_UE_CONTEXT_RELEASE_COMMAND\n");
   uint32_t eNB_ue_s1ap_id;
   protocol_ctxt_t              ctxt;
   struct rrc_eNB_ue_context_s *ue_context_p = NULL;
@@ -1253,6 +1256,7 @@ int rrc_eNB_process_S1AP_UE_CONTEXT_RELEASE_COMMAND (MessageDef *msg_p, const ch
 
 int rrc_eNB_process_S1AP_E_RAB_SETUP_REQ(MessageDef *msg_p, const char *msg_name, instance_t instance)
 {
+  printf("rrc_eNB_process_S1AP_E_RAB_SETUP_REQ\n");
   uint16_t                        ue_initial_id;
   uint32_t                        eNB_ue_s1ap_id;
   gtpv1u_enb_create_tunnel_req_t  create_tunnel_req;

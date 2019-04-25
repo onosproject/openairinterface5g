@@ -226,6 +226,7 @@ int8_t find_next_ue_index(PHY_VARS_eNB *eNB)
 	(eNB->dlsch[i][0]) &&
 	(eNB->dlsch[i][0]->rnti==0))*/
       LOG_D(PHY,"Next free UE id is %d\n",i);
+      printf("find_next_ue_index: Next free UE id is %d\n",i);
       return(i);
     }
   }
@@ -1997,7 +1998,7 @@ void prach_procedures(PHY_VARS_eNB *eNB) {
   int frame = eNB->proc.frame_prach;
   uint8_t CC_id = eNB->CC_id;
   int do_ofdm_mod = PHY_vars_UE_g[0][0]->do_ofdm_mod;
-  //printf("prach_procedures: eNB_id %d\n",eNB->Mod_id);
+  //printf("prach_procedures: UE %d,eNB_id %d, Nid_cell %d\n",find_next_ue_index(eNB),eNB->Mod_id,eNB->frame_parms.Nid_cell);
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_ENB_PRACH_RX,1);
   memset(&preamble_energy_list[0],0,64*sizeof(uint16_t));
   memset(&preamble_delay_list[0],0,64*sizeof(uint16_t));
@@ -2007,6 +2008,8 @@ void prach_procedures(PHY_VARS_eNB *eNB) {
     {
     	LOG_D(PHY,"[eNB %d][RAPROC][Freq] Frame %d, Subframe %d : PRACH RX Signal Power : %d dBm\n",eNB->Mod_id, 
           frame,subframe,dB_fixed(signal_energy(&eNB->common_vars.rxdataF[0][0][subframe*fp->symbols_per_tti*fp->ofdm_symbol_size],512)) - eNB->rx_total_gain_dB);
+    	//printf("[eNB %d][RAPROC][Freq] Frame %d, Subframe %d : PRACH RX Signal Power : %d dBm\n",eNB->Mod_id, 
+        //  frame,subframe,dB_fixed(signal_energy(&eNB->common_vars.rxdataF[0][0][subframe*fp->symbols_per_tti*fp->ofdm_symbol_size],512)) - eNB->rx_total_gain_dB);
 	  rx_prach_freq(eNB,
              preamble_energy_list,
              preamble_delay_list,
@@ -2070,6 +2073,16 @@ void prach_procedures(PHY_VARS_eNB *eNB) {
 
       eNB->UE_stats[(uint32_t)UE_id].sector = 0;
       LOG_D(PHY,"[eNB %d/%d][RAPROC] Frame %d, subframe %d Initiating RA procedure (UE_id %d) with preamble %d, energy %d.%d dB, delay %d\n",
+            eNB->Mod_id,
+            eNB->CC_id,
+            frame,
+            subframe,
+	    UE_id,
+            preamble_max,
+            preamble_energy_max/10,
+            preamble_energy_max%10,
+            preamble_delay_list[preamble_max]);
+      printf("[eNB %d/CC_id %d][RAPROC] Frame %d, subframe %d Initiating RA procedure (UE_id %d) with preamble %d, energy %d.%d dB, delay %d\n",
             eNB->Mod_id,
             eNB->CC_id,
             frame,

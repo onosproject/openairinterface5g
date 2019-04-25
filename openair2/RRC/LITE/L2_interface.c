@@ -72,7 +72,7 @@ mac_rrc_data_req(
 )
 //--------------------------------------------------------------------------
 {
-  //printf("mac_rrc_data_req:eNB_index %d, UE %d, CC_id %d, enb_flag activated? %d\n",eNB_index,Mod_idP,CC_id,enb_flagP == ENB_FLAG_YES);//eNB_index=ue->common_vars.enb_id
+  printf("mac_rrc_data_req:eNB_index %d, UE %d, CC_id %d, enb_flag activated? %d\n",eNB_index,Mod_idP,CC_id,enb_flagP == ENB_FLAG_YES);//eNB_index=ue->common_vars.enb_id
   SRB_INFO *Srb_info;
   uint8_t Sdu_size=0;
 

@@ -351,7 +351,7 @@ log_thread_finalize (void)
 #if defined(ENABLE_ITTI)
 static void set_cli_start(module_id_t module_idP, uint8_t start)
 {
-  if (module_idP < NB_eNB_INST) {
+  if (module_idP < 1/*NB_eNB_INST*/) {
     oai_emulation.info.cli_start_enb[module_idP] = start;
   } else {
     oai_emulation.info.cli_start_ue[module_idP - 1/*NB_eNB_INST*/] = start;
@@ -1326,16 +1326,14 @@ main (int argc, char **argv)
 #if defined(ENABLE_ITTI)
   // Note: Cannot handle both RRU/RAU and eNB at the same time, if the first "eNB" is an RRU/RAU, no NAS
   if (oai_emulation.info.node_function[0] < NGFI_RAU_IF4p5) { 
-    if (create_tasks(oai_emulation.info.nb_enb_local, 
+    if (create_tasks(1/*oai_emulation.info.nb_enb_local*/, 
 		     oai_emulation.info.nb_ue_local) < 0) 
       exit(-1); // need a softer mode
   }
   else {
-      //NB_eNB_INST=1;
     if (create_tasks(0, 
 		     oai_emulation.info.nb_ue_local) < 0) 
       exit(-1); // need a softer mode
-      //NB_eNB_INST=2;
   }
 #endif
   // wait for all threads to startup 

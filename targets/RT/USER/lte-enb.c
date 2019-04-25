@@ -1203,6 +1203,7 @@ void rx_rf_freq(PHY_VARS_eNB *eNB,int *frame,int *subframe) {
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_READ, 1 );
 
   old_ts = proc->timestamp_rx;
+  //printf("rx_rf_freq: eNB %d, eNB->rfdevice.Mod_id %d, eNB->ifdevice.Mod_id %d\n",eNB->Mod_id,eNB->rfdevice.Mod_id,eNB->ifdevice.Mod_id);
   rxs_freq = eNB->rfdevice.trx_read_func(&eNB->rfdevice,
 				    &ts,
 				    rxp_freq,
@@ -1780,7 +1781,7 @@ static void* eNB_thread_single( void* param ) {
   //PHY_VARS_eNB *eNB = PHY_vars_eNB_g[eNB_id][proc->CC_id];
   LTE_DL_FRAME_PARMS *fp = &eNB->frame_parms;
   eNB->CC_id =  proc->CC_id;
-  int do_ofdm_mod = PHY_vars_UE_g[0][eNB->CC_id]->do_ofdm_mod;
+  int do_ofdm_mod = PHY_vars_UE_g[0][0]->do_ofdm_mod;
 
   void *rxp[2],*rxp2[2];
   void *rxp_freq[2],*rxp2_freq[2];
@@ -2211,7 +2212,7 @@ int setup_eNB_buffers(PHY_VARS_eNB **phy_vars_eNB, openair0_config_t *openair0_c
 
     if (openair0_cfg[CC_id].mmapped_dma == 1) {
     // replace RX signal buffers with mmaped HW versions
-if (PHY_vars_UE_g[0][CC_id]->do_ofdm_mod){
+if (PHY_vars_UE_g[0][0]->do_ofdm_mod){
 	      for (i=0; i<frame_parms->nb_antennas_rx; i++) {
 		card = i/4;
 		ant = i%4;
@@ -2387,7 +2388,7 @@ void init_eNB(eNB_func_t node_function[], eNB_timing_t node_timing[],int nb_inst
 	eNB->proc_uespec_rx       = NULL;
 	eNB->proc_tx              = NULL;
 	eNB->tx_fh                = NULL;
-	eNB->rx_fh                = (PHY_vars_UE_g[0][CC_id]->do_ofdm_mod)?rx_rf_freq:rx_rf;
+	eNB->rx_fh                = (PHY_vars_UE_g[0][0]->do_ofdm_mod)?rx_rf_freq:rx_rf;
 	eNB->start_rf             = start_rf;
 	eNB->start_if             = start_if;
 	eNB->fh_asynch            = fh_if5_asynch_DL;
@@ -2417,7 +2418,7 @@ void init_eNB(eNB_func_t node_function[], eNB_timing_t node_timing[],int nb_inst
 	eNB->proc_uespec_rx       = NULL;
 	eNB->proc_tx              = NULL;//proc_tx_rru_if4p5;
 	eNB->tx_fh                = NULL;
-	eNB->rx_fh                = (PHY_vars_UE_g[0][CC_id]->do_ofdm_mod)?rx_rf_freq:rx_rf;
+	eNB->rx_fh                = (PHY_vars_UE_g[0][0]->do_ofdm_mod)?rx_rf_freq:rx_rf;
 	eNB->fh_asynch            = fh_if4p5_asynch_DL;
 	eNB->start_rf             = start_rf;
 	eNB->start_if             = start_if;
@@ -2451,7 +2452,7 @@ void init_eNB(eNB_func_t node_function[], eNB_timing_t node_timing[],int nb_inst
 	eNB->proc_uespec_rx       = phy_procedures_eNB_uespec_RX;
 	eNB->proc_tx              = proc_tx_full;
 	eNB->tx_fh                = NULL;
-	eNB->rx_fh                = (PHY_vars_UE_g[0][CC_id]->do_ofdm_mod)?rx_rf_freq:rx_rf;
+	eNB->rx_fh                = (PHY_vars_UE_g[0][0]->do_ofdm_mod)?rx_rf_freq:rx_rf;
 	eNB->start_rf             = start_rf;
 	eNB->start_if             = NULL;
         eNB->fh_asynch            = NULL;

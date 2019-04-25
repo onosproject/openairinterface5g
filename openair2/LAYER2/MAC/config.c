@@ -122,7 +122,7 @@ rrc_mac_config_req(
 #endif
                       )
 {
-  printf("rrc_mac_config_reg: eNB_index %d\n",eNB_index);//eNB_index=ue->common_vars.enb_id
+  printf("rrc_mac_config_reg: eNB_index %d, Mod_idP %d\n",eNB_index,Mod_idP);//eNB_index=ue->common_vars.enb_id
   int i;
 
   int UE_id = -1;

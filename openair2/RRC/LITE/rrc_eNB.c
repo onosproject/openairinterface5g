@@ -3732,7 +3732,6 @@ rrc_eNB_generate_RRCConnectionSetup(
 )
 //-----------------------------------------------------------------------------
 {
-
   LogicalChannelConfig_t             *SRB1_logicalChannelConfig;  //,*SRB2_logicalChannelConfig;
   SRB_ToAddModList_t                **SRB_configList;
   SRB_ToAddMod_t                     *SRB1_config;
@@ -3869,14 +3868,14 @@ openair_rrc_eNB_init(
 #endif
 //-----------------------------------------------------------------------------
 {
+  printf("openair_rrc_eNB_init\n");
   protocol_ctxt_t ctxt;
   int             CC_id;
-
   PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, enb_mod_idP, ENB_FLAG_YES, NOT_A_RNTI, 0, 0,enb_mod_idP);
   LOG_I(RRC,
         PROTOCOL_RRC_CTXT_FMT" Init...\n",
         PROTOCOL_RRC_CTXT_ARGS(&ctxt));
-
+  //printf("openair_rrc_eNB_init: ctxt_pP->module_id %d\n",ctxt.module_id);
 #if OCP_FRAMEWORK
 while ( eNB_rrc_inst == NULL ) {
   LOG_E(RRC, "eNB_rrc_inst not yet initialized, waiting 1 second\n");
@@ -4022,6 +4021,7 @@ rrc_eNB_decode_ccch(
 )
 //-----------------------------------------------------------------------------
 {
+printf("rrc_eNB_decode_ccch\n");
   module_id_t                                   Idx;
   asn_dec_rval_t                      dec_rval;
   UL_CCCH_Message_t                  *ul_ccch_msg = NULL;
@@ -4397,7 +4397,7 @@ rrc_eNB_decode_dcch(
 )
 //-----------------------------------------------------------------------------
 {
-
+  printf("rrc_eNB_decode_dcch\n");
   asn_dec_rval_t                      dec_rval;
   //UL_DCCH_Message_t uldcchmsg;
   UL_DCCH_Message_t                  *ul_dcch_msg = NULL; //&uldcchmsg;
@@ -4931,7 +4931,6 @@ rrc_eNB_decode_dcch(
 #if defined(ENABLE_ITTI)
 void rrc_eNB_reconfigure_DRBs (const protocol_ctxt_t* const ctxt_pP,
 			       rrc_eNB_ue_context_t*  ue_context_pP){
-
   int i;
   int e_rab_done=0;
   for (i = 0; 
@@ -4970,6 +4969,7 @@ rrc_enb_task(
 )
 //-----------------------------------------------------------------------------
 {
+printf("rrc_enb_task\n");
   MessageDef                         *msg_p;
   const char                         *msg_name_p;
   instance_t                          instance;

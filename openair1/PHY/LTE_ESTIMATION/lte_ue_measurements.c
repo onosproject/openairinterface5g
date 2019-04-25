@@ -62,7 +62,7 @@ void print_ints(char *s,int *x)
 
 int16_t get_PL(uint8_t Mod_id,uint8_t CC_id,uint8_t eNB_index)
 {
-
+  //printf("get_PL: eNB_index %d\n",eNB_index);
   PHY_VARS_UE *ue = PHY_vars_UE_g[Mod_id][CC_id];
   /*
   int RSoffset;
@@ -119,7 +119,7 @@ uint32_t get_RSSI (uint8_t Mod_id,uint8_t CC_id)
 }
 uint32_t get_RSRP(uint8_t Mod_id,uint8_t CC_id,uint8_t eNB_index)
 {
-
+  //printf("get_RSRP: eNB_index %d\n",eNB_index);
   PHY_VARS_UE *ue = PHY_vars_UE_g[Mod_id][CC_id];
 
   if (ue)
@@ -130,7 +130,7 @@ uint32_t get_RSRP(uint8_t Mod_id,uint8_t CC_id,uint8_t eNB_index)
 
 uint32_t get_RSRQ(uint8_t Mod_id,uint8_t CC_id,uint8_t eNB_index)
 {
-
+  //printf("get_RSRQ: eNB_index %d\n",eNB_index);
   PHY_VARS_UE *ue = PHY_vars_UE_g[Mod_id][CC_id];
 
   if (ue)
@@ -141,7 +141,7 @@ uint32_t get_RSRQ(uint8_t Mod_id,uint8_t CC_id,uint8_t eNB_index)
 
 int8_t set_RSRP_filtered(uint8_t Mod_id,uint8_t CC_id,uint8_t eNB_index,float rsrp)
 {
-
+  //printf("set_RSRP_filtered: eNB_index %d\n",eNB_index);
   PHY_VARS_UE *ue = PHY_vars_UE_g[Mod_id][CC_id];
 
   if (ue) {
@@ -155,7 +155,7 @@ int8_t set_RSRP_filtered(uint8_t Mod_id,uint8_t CC_id,uint8_t eNB_index,float rs
 
 int8_t set_RSRQ_filtered(uint8_t Mod_id,uint8_t CC_id,uint8_t eNB_index,float rsrq)
 {
-
+  //printf("set_RSRQ_filtered: eNB_index %d\n",eNB_index);
   PHY_VARS_UE *ue = PHY_vars_UE_g[Mod_id][CC_id];
 
   if (ue) {
@@ -172,7 +172,7 @@ void ue_rrc_measurements(PHY_VARS_UE *ue,
     uint8_t slot,
     uint8_t abstraction_flag)
 {
-
+  //printf("ue_rrc_measurements: UE %d, Nid_cell %d\n",ue->Mod_id,ue->frame_parms.Nid_cell);
   uint8_t subframe = slot>>1;
   int aarx,rb,i;
   uint8_t pss_symb;
@@ -463,6 +463,7 @@ void ue_rrc_measurements_freq(PHY_VARS_UE *ue,
     uint8_t slot,
     uint8_t abstraction_flag)
 {
+  //printf("ue_rrc_measurements_freq: UE %d, Nid_cell %d\n",ue->Mod_id,ue->frame_parms.Nid_cell);
   int i;
   uint8_t subframe = slot>>1;
   int aarx,rb;

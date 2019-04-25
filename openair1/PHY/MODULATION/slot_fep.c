@@ -417,7 +417,7 @@ int slot_fep_freq(PHY_VARS_UE *ue,
 #if UE_TIMING_TRACE
         stop_meas(&ue->dlsch_channel_estimation_stats);
 #endif
-
+	//printf("slop_fep_freq: n_adj_cells %d\n",ue->measurements.n_adj_cells);
         for (i=0; i<ue->measurements.n_adj_cells; i++) {
           lte_dl_channel_estimation_freq(ue,0,i+1,
                                     Ns,

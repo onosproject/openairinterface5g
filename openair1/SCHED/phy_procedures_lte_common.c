@@ -46,7 +46,7 @@ void get_Msg3_alloc(LTE_DL_FRAME_PARMS *frame_parms,
 {
 
   // Fill in other TDD Configuration!!!!
-
+  printf("get_Msg3_alloc: current_subframe %d, subframe %d, current_frame %d, frame %d\n",current_subframe,current_subframe+6,current_frame,(current_frame+1) & 1023);
   if (frame_parms->frame_type == FDD) {
     *subframe = current_subframe+6;
 

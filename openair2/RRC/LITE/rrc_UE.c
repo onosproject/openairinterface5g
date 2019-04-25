@@ -750,8 +750,8 @@ rrc_ue_establish_drb(
 #ifdef PDCP_USE_NETLINK
 #   if !defined(OAI_NW_DRIVER_TYPE_ETHERNET) && !defined(EXMIMO) && !defined(OAI_USRP) && !defined(OAI_BLADERF) && !defined(ETHERNET) && !defined(LINK_ENB_PDCP_TO_GTPV1U)
 #    ifdef OAI_EMU
-  ip_addr_offset3 = oai_emulation.info.nb_enb_local;
-  ip_addr_offset4 = NB_eNB_INST;
+  ip_addr_offset3 = 1/*oai_emulation.info.nb_enb_local*/;
+  ip_addr_offset4 = 1/*NB_eNB_INST*/;
   //printf("OAI_EMU: ip_addr_offset4 %d\n",ip_addr_offset4);
 #    else
   ip_addr_offset3 = 0;
@@ -788,7 +788,7 @@ rrc_ue_establish_drb(
                  ipv4_address(ip_addr_offset3+ue_mod_idP+1,eNB_index+1));//daddr
     LOG_D(RRC,"[UE %d] State = Attached (eNB %d)\n",ue_mod_idP,eNB_index);
   }
-
+  printf("[UE %d] State = Attached (eNB %d)\n",ue_mod_idP,eNB_index);
 #    else
 #        ifdef OAI_EMU
   oai_emulation.info.oai_ifup[ue_mod_idP]=1;

@@ -781,7 +781,7 @@ void phy_config_dedicated_ue(uint8_t Mod_id,int CC_id,uint8_t eNB_id,
   phy_vars_ue->cqi_report_config[eNB_id].CQI_ReportPeriodic.cqi_PMI_ConfigIndex = -1;
 
   if (physicalConfigDedicated) {
-    LOG_D(PHY,"[UE %d] Received physicalConfigDedicated from eNB %d\n",Mod_id, /*eNB_id*/phy_vars_ue->common_vars.eNb_id);
+    LOG_D(PHY,"[UE %d] Received physicalConfigDedicated from eNB %d/eNb_id %d\n",Mod_id,eNB_id, /*eNB_id*/phy_vars_ue->common_vars.eNb_id);
     LOG_D(PHY,"------------------------------------------------------------------------\n");
 
     if (physicalConfigDedicated->pdsch_ConfigDedicated) {

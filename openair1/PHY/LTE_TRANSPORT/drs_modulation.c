@@ -43,7 +43,7 @@ int generate_drs_pusch(PHY_VARS_UE *ue,
                        unsigned int nb_rb,
                        uint8_t ant)
 {
-
+  //printf("generate_drs_push: eNB_id %d\n",eNB_id);
   uint16_t k,l,Msc_RS,Msc_RS_idx,rb,drs_offset;
   uint16_t * Msc_idx_ptr;
   int subframe_offset,re_offset,symbol_offset;

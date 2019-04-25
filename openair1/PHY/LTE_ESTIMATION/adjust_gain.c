@@ -26,7 +26,7 @@
 void
 phy_adjust_gain (PHY_VARS_UE *ue, uint32_t rx_power_fil_dB, uint8_t eNB_id)
 {
-
+  //printf("phy_adjust_gain: eNB_id %d\n", eNB_id);
   LOG_D(PHY,"[UE %d] Gain control: rssi %d (%d,%d)\n",
 	ue->Mod_id,
 	rx_power_fil_dB,

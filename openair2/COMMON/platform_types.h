@@ -221,10 +221,10 @@ typedef struct protocol_ctxt_s {
 // warning time hardcoded
 #define PROTOCOL_CTXT_TIME_MILLI_SECONDS(CtXt_h) ((CtXt_h)->frame*10+(CtXt_h)->subframe)
 
-//#define UE_MODULE_ID_TO_INSTANCE( mODULE_iD ) mODULE_iD + NB_eNB_INST
+//#define UE_MODULE_ID_TO_INSTANCE( mODULE_iD ) mODULE_iD + 1/*NB_eNB_INST*/
 #define UE_MODULE_ID_TO_INSTANCE( mODULE_iD ) mODULE_iD + 1
 #define ENB_MODULE_ID_TO_INSTANCE( mODULE_iD ) mODULE_iD
-//#define UE_INSTANCE_TO_MODULE_ID( iNSTANCE ) iNSTANCE - NB_eNB_INST
+//#define UE_INSTANCE_TO_MODULE_ID( iNSTANCE ) iNSTANCE - 1/*NB_eNB_INST*/
 #define UE_INSTANCE_TO_MODULE_ID( iNSTANCE ) iNSTANCE - 1
 #define ENB_INSTANCE_TO_MODULE_ID( iNSTANCE )iNSTANCE
 
@@ -281,10 +281,10 @@ typedef struct protocol_ctxt_s {
                      (CTXT_Pp)->module_id,\
                      oai_emulation.info.first_enb_local,\
                      oai_emulation.info.nb_enb_local);\
-        AssertFatal (((CTXT_Pp)->module_id < (oai_emulation.info.first_enb_local + oai_emulation.info.nb_enb_local)) && (oai_emulation.info.nb_enb_local > 0),\
+        AssertFatal (((CTXT_Pp)->module_id < (oai_emulation.info.first_enb_local + 1/*oai_emulation.info.nb_enb_local*/)) && (oai_emulation.info.nb_enb_local > 0),\
                      "eNB module id is too high (%u/%d)!\n",\
                      (CTXT_Pp)->module_id,\
-                     oai_emulation.info.first_enb_local + oai_emulation.info.nb_enb_local);\
+                     oai_emulation.info.first_enb_local + 1/*oai_emulation.info.nb_enb_local*/);\
     } else {\
         AssertFatal ((CTXT_Pp)->module_id  < (oai_emulation.info.first_ue_local + oai_emulation.info.nb_ue_local),\
                      "UE module id is too high (%u/%d)!\n",\

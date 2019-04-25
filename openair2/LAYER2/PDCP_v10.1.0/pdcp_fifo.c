@@ -567,8 +567,8 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
             ctxt.rnti          = pdcp_UE_UE_module_id_to_rnti[ctxt.module_id];
             rab_id    = pdcp_read_header_g.rb_id % maxDRB;
           }
-	  //printf("ctxt.module_id %d,pdcp_read_header_g.inst %d, oai_emulation.info.first_enb_local %d\n",ctxt.module_id, pdcp_read_header_g.inst,oai_emulation.info.first_enb_local);
-          CHECK_CTXT_ARGS(&ctxt);
+	  //printf("ctxt.module_id %d,pdcp_read_header_g.inst %d, oai_emulation.info.first_enb_local %d, oai_emulation.info.nb_ue_local %d\n",ctxt.module_id, pdcp_read_header_g.inst,oai_emulation.info.first_enb_local,oai_emulation.info.nb_ue_local);
+          //CHECK_CTXT_ARGS(&ctxt);
           AssertFatal (rab_id    < maxDRB,                       "RB id is too high (%u/%d)!\n", rab_id, maxDRB);
           /*LGpdcp_read_header.inst = (pdcp_read_header_g.inst >= oai_emulation.info.nb_enb_local) ? \
                   pdcp_read_header_g.inst - oai_emulation.info.nb_enb_local+ NB_eNB_INST + oai_emulation.info.first_ue_local :

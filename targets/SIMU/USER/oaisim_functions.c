@@ -890,7 +890,7 @@ void check_and_adjust_params(void)
 
   if (ethernet_flag == 1) {
     oai_emulation.info.master[oai_emulation.info.master_id].nb_ue = oai_emulation.info.nb_ue_local + oai_emulation.info.nb_rn_local;
-    oai_emulation.info.master[oai_emulation.info.master_id].nb_enb = oai_emulation.info.nb_enb_local + oai_emulation.info.nb_rn_local;
+    oai_emulation.info.master[oai_emulation.info.master_id].nb_enb = 1/*oai_emulation.info.nb_enb_local*/ + oai_emulation.info.nb_rn_local;
 
     if (oai_emulation.info.nb_rn_local>0)
       LOG_N(EMU,"Ethernet emulation is not yet tested with the relay nodes\n");
@@ -1138,7 +1138,7 @@ int eNB_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void *
 		{
 			//clock_t start=clock();
 			//printf("subframe UL PRACH: %d\n",subframe);
-			printf("prach is generated for UE %d, eNB %d, subframe %d\n",UE_id,eNB_id,subframe);
+			printf("prach is generated for UE %d, eNB %d, PHY_vars_UE_g[UE_id][CC_id]->common_vars.eNb_id %d, subframe %d\n",UE_id,eNB_id,PHY_vars_UE_g[UE_id][CC_id]->common_vars.eNb_id,subframe);
 			start_meas(&UE2eNB[UE_id][eNB_id][CC_id]->UL_PRACH_channel_freq);
 			do_UL_sig_freq_prach(UE2eNB,
 				enb_data,
@@ -1157,7 +1157,6 @@ int eNB_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void *
 			//write_output("txprachF.m","prach_txF", PHY_vars_UE_g[0][CC_id]->prach_vars[0]->prachF,12*frame_parms->ofdm_symbol_size*frame_parms->symbols_per_tti,1,16);
 			break;
 		}
-	}
 	start_meas(&UE2eNB[0][eNB_id][CC_id]->UL_channel_freq);
 	//clock_t start=clock();
 	
@@ -1174,6 +1173,7 @@ int eNB_trx_read(openair0_device *device, openair0_timestamp *ptimestamp, void *
         /*clock_t stop=clock();
   	printf("do_UL_sig time is %f s, AVERAGE time is %f s, count %d, sum %d, start %d, stop %d\n",(float) (stop-start)/CLOCKS_PER_SEC,(float) (sum+stop-start)/(count*CLOCKS_PER_SEC),count,sum+stop-start,start,stop);
   	sum=(sum+stop-start);*/
+	}
       }
       else
       {

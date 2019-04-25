@@ -2158,7 +2158,7 @@ int32_t rx_pdcch(PHY_VARS_UE *ue,
                  uint32_t high_speed_flag,
                  uint8_t is_secondary_ue)
 {
-
+  //printf("rx_pdcch: eNB_id %d\n",eNB_id);
   LTE_UE_COMMON *common_vars      = &ue->common_vars;
   LTE_DL_FRAME_PARMS *frame_parms = &ue->frame_parms;
   LTE_UE_PDCCH **pdcch_vars       = ue->pdcch_vars[ue->current_thread_id[subframe]];
@@ -3371,7 +3371,7 @@ void dci_decoding_procedure0(LTE_UE_PDCCH **pdcch_vars,
                              uint32_t *CCEmap1,
                              uint32_t *CCEmap2)
 {
-
+  //printf("dci_decoding_procedure0: eNB_id %d",eNB_id);
   uint16_t crc,CCEind,nCCE;
   uint32_t *CCEmap=NULL,CCEmap_mask=0;
   int L2=(1<<L);
@@ -3623,7 +3623,7 @@ uint16_t dci_CRNTI_decoding_procedure(PHY_VARS_UE *ue,
                                 int16_t eNB_id,
                                 uint8_t subframe)
 {
-
+  //printf("dci_CRNTI_decoding_procedure: eNB %d\n",eNB_id);
   uint8_t  dci_cnt=0,old_dci_cnt=0;
   uint32_t CCEmap0=0,CCEmap1=0,CCEmap2=0;
   LTE_UE_PDCCH **pdcch_vars = ue->pdcch_vars[ue->current_thread_id[subframe]];
@@ -3797,7 +3797,7 @@ uint16_t dci_decoding_procedure(PHY_VARS_UE *ue,
                                 int16_t eNB_id,
                                 uint8_t subframe)
 {
-
+  //printf("dci_decoding_procedure: eNB %d\n",eNB_id);
   uint8_t  dci_cnt=0,old_dci_cnt=0;
   uint32_t CCEmap0=0,CCEmap1=0,CCEmap2=0;
   LTE_UE_PDCCH **pdcch_vars = ue->pdcch_vars[ue->current_thread_id[subframe]];

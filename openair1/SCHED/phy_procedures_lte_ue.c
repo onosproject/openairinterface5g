@@ -325,7 +325,7 @@ void ra_succeeded(uint8_t Mod_id,uint8_t CC_id,uint8_t eNB_index)
   int i;
 
   LOG_I(PHY,"[UE %d][RAPROC] Random-access procedure succeeded. Set C-RNTI = Temporary C-RNTI\n",Mod_id);
-
+  printf("[UE %d, eNB %d, CC_id %d][RAPROC] Random-access procedure succeeded. Set C-RNTI = Temporary C-RNTI\n",Mod_id,eNB_index,CC_id);
   PHY_vars_UE_g[Mod_id][CC_id]->pdcch_vars[0][eNB_index]->crnti_is_temporary = 0;
   PHY_vars_UE_g[Mod_id][CC_id]->pdcch_vars[1][eNB_index]->crnti_is_temporary = 0;
   PHY_vars_UE_g[Mod_id][CC_id]->ulsch_Msg3_active[eNB_index] = 0;
@@ -1514,8 +1514,8 @@ void ue_prach_procedures(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,uin
           eNB_id);//not necessary to change
     }
 
-    LOG_I(PHY,"[UE  %d][RAPROC] Frame %d, subframe %d: Generating PRACH (eNB %d) preamble index %d for UL, TX power %d dBm (PL %d dB), l3msg \n",
-    ue->Mod_id,frame_tx,subframe_tx,ue->common_vars.eNb_id,
+    LOG_I(PHY,"[UE  %d][RAPROC] Frame %d, subframe %d: Generating PRACH (eNB %d/ eNb_id %d) preamble index %d for UL, TX power %d dBm (PL %d dB), l3msg \n",
+    ue->Mod_id,frame_tx,subframe_tx,eNB_id,ue->common_vars.eNb_id,
     ue->prach_resources[eNB_id]->ra_PreambleIndex,
     ue->prach_resources[eNB_id]->ra_PREAMBLE_RECEIVED_TARGET_POWER+get_PL(ue->Mod_id,ue->CC_id,eNB_id),
     get_PL(ue->Mod_id,ue->CC_id,eNB_id));
@@ -1582,6 +1582,12 @@ void ue_ulsch_uespec_procedures(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB
       ue->ulsch[eNB_id]->power_offset = 14;
       LOG_D(PHY,"[UE  %d][RAPROC] Frame %d: Setting Msg3_flag in subframe %d, for harq_pid %d\n",
       Mod_id,
+      frame_tx,
+      subframe_tx,
+      harq_pid);
+      printf("[UE  %d/ eNB %d][RAPROC] Frame %d: Setting Msg3_flag in subframe %d, for harq_pid %d\n",
+      Mod_id,
+      eNB_id,
       frame_tx,
       subframe_tx,
       harq_pid);
@@ -1755,7 +1761,7 @@ void ue_ulsch_uespec_procedures(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB
 
 
     if (Msg3_flag == 1) {
-      LOG_I(PHY,"[UE  %d][RAPROC] Frame %d, Subframe %d Generating (RRCConnectionRequest) Msg3 (nb_rb %d, first_rb %d, round %d, rvidx %d) Msg3: %x.%x.%x|%x.%x.%x.%x.%x.%x\n",Mod_id,frame_tx,
+      LOG_I(PHY,"[UE  %d/ eNB %d][RAPROC] Frame %d, Subframe %d Generating (RRCConnectionRequest) Msg3 (nb_rb %d, first_rb %d, round %d, rvidx %d) Msg3: %x.%x.%x|%x.%x.%x.%x.%x.%x\n",Mod_id,eNB_id,frame_tx,
 	    subframe_tx,
 	    ue->ulsch[eNB_id]->harq_processes[harq_pid]->nb_rb,
 	    ue->ulsch[eNB_id]->harq_processes[harq_pid]->first_rb,
@@ -2926,7 +2932,7 @@ void ue_pbch_procedures(uint8_t eNB_id,PHY_VARS_UE *ue,UE_rxtx_proc_t *proc, uin
 
   for (pbch_trials=0; pbch_trials<4; pbch_trials++) {
     //for (pbch_phase=0;pbch_phase<4;pbch_phase++) {
-    printf("[UE  %d] Frame %d, Trying PBCH %d (NidCell %d, eNB_id %d)\n",ue->Mod_id,frame_rx,pbch_phase,ue->frame_parms.Nid_cell,ue->common_vars.eNb_id);
+    printf("[UE  %d] Frame %d, Trying PBCH %d (NidCell %d, eNB_id %d, ue->common_vars.eNb_id %d)\n",ue->Mod_id,frame_rx,pbch_phase,ue->frame_parms.Nid_cell,eNB_id,ue->common_vars.eNb_id);
     if (abstraction_flag == 0) {
       pbch_tx_ant = rx_pbch(&ue->common_vars,
           ue->pbch_vars[eNB_id],
@@ -3813,7 +3819,6 @@ void ue_pdsch_procedures(PHY_VARS_UE *ue, UE_rxtx_proc_t *proc, int eNB_id, PDSC
 }
 
 void process_rar(PHY_VARS_UE *ue, UE_rxtx_proc_t *proc, int eNB_id, runmode_t mode, int abstraction_flag) {
-
   int frame_rx = proc->frame_rx;
   int subframe_rx = proc->subframe_rx;
   int timing_advance;
@@ -3822,7 +3827,7 @@ void process_rar(PHY_VARS_UE *ue, UE_rxtx_proc_t *proc, int eNB_id, runmode_t mo
   uint8_t *rar;
   uint8_t next1_thread_id = ue->current_thread_id[subframe_rx]== (RX_NB_TH-1) ? 0:(ue->current_thread_id[subframe_rx]+1);
   uint8_t next2_thread_id = next1_thread_id== (RX_NB_TH-1) ? 0:(next1_thread_id+1);
-  //printf("process_rar: eNB_id %d\n",eNB_id);=0
+  printf("process_rar: UE %d, eNB_id %d,ue->common_vars.eNb.id %d, subframe %d, frame %d\n",ue->Mod_id,eNB_id,ue->common_vars.eNb_id,subframe_rx,frame_rx);
   //printf("[UE  %d][RAPROC] Frame %d subframe %d Received RAR  mode %d\n",
   //ue->Mod_id,
   //frame_rx,
@@ -3863,14 +3868,13 @@ void process_rar(PHY_VARS_UE *ue, UE_rxtx_proc_t *proc, int eNB_id, runmode_t mo
               ue->pdcch_vars[ue->current_thread_id[subframe_rx]][eNB_id]->crnti,
               timing_advance);
 
-      printf("process_rar: ue->mac_enabled %d, (ue->UE_mode[eNB_id] != PUSCH) %d, ue->prach_resources[eNB_id]->Msg3!=NULL %d, timing advance %d\n",ue->mac_enabled,(ue->UE_mode[eNB_id] != PUSCH),ue->prach_resources[eNB_id]->Msg3!=NULL,timing_advance);
+      printf("process_rar: ue->mac_enabled %d, (ue->UE_mode[eNB_id=%d] != PUSCH) %d, ue->prach_resources[eNB_id]->Msg3!=NULL %d, timing advance %d\n",ue->mac_enabled,eNB_id,(ue->UE_mode[eNB_id] != PUSCH),ue->prach_resources[eNB_id]->Msg3!=NULL,timing_advance);
   // remember this c-rnti is still a tc-rnti
 
   ue->pdcch_vars[ue->current_thread_id[subframe_rx]][eNB_id]->crnti_is_temporary = 1;
 	      
 	//timing_advance = 0;
 	process_timing_advance_rar(ue,proc,timing_advance);
-	      
 	if (mode!=debug_prach) {
 	  ue->ulsch_Msg3_active[eNB_id]=1;
 	  get_Msg3_alloc(&ue->frame_parms,
@@ -3878,9 +3882,15 @@ void process_rar(PHY_VARS_UE *ue, UE_rxtx_proc_t *proc, int eNB_id, runmode_t mo
 			 frame_rx,
 			 &ue->ulsch_Msg3_frame[eNB_id],
 			 &ue->ulsch_Msg3_subframe[eNB_id]);
-	  
 	  LOG_D(PHY,"[UE  %d][RAPROC] Got Msg3_alloc Frame %d subframe %d: Msg3_frame %d, Msg3_subframe %d\n",
 		ue->Mod_id,
+		frame_rx,
+		subframe_rx,
+		ue->ulsch_Msg3_frame[eNB_id],
+		ue->ulsch_Msg3_subframe[eNB_id]);
+	  printf("[UE  %d/ eNB %d][RAPROC] Got Msg3_alloc Frame %d subframe %d: Msg3_frame %d, Msg3_subframe %d\n",
+		ue->Mod_id,
+		eNB_id,
 		frame_rx,
 		subframe_rx,
 		ue->ulsch_Msg3_frame[eNB_id],
@@ -5128,7 +5138,6 @@ int phy_procedures_UE_RX(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,
   } 
   count++;
   clock_t start=clock();*/
-  //printf("phy_procedures_UE_RX id %d\n",ue->Mod_id);
 
   int l,l2;
   int pilot1;

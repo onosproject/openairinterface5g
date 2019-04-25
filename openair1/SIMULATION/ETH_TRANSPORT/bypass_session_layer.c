@@ -568,7 +568,8 @@ void bypass_tx_data(emu_transport_info_t Type, unsigned int frame, unsigned int 
   /***************************************************************************/
   unsigned int         num_flows;
   bypass_msg_header_t *messg;
-
+  printf("Entering bypass_tx [%s] for frame %d next_slot %d\n",
+        map_int_to_str(transport_names, Type), frame, next_slot);
   LOG_D(EMU, "Entering bypass_tx [%s] for frame %d next_slot %d\n",
         map_int_to_str(transport_names, Type), frame, next_slot);
 
