@@ -630,17 +630,18 @@ void schedule_ulsch(module_id_t module_idP,
 		    frame_t frameP,
 		    unsigned char cooperation_flag,
 		    sub_frame_t subframeP, 
-		    unsigned char sched_subframe) {
+		    unsigned char sched_subframe,
+		    uint8_t CC_id) {
 
 
   uint16_t first_rb[MAX_NUM_CCs],i;
-  int CC_id;
+  //int CC_id;
   eNB_MAC_INST *eNB=&eNB_mac_inst[module_idP];
 
   start_meas(&eNB->schedule_ulsch);
 
 
-  for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
+  //for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
     //printf("schedule_ulsch: Msg3_subframe %d, CC_id %d\n",sched_subframe,CC_id);
     //leave out first RB for PUCCH
     first_rb[CC_id] = 1;
@@ -690,7 +691,7 @@ void schedule_ulsch(module_id_t module_idP,
       first_rb[CC_id] = (mac_xface->get_prach_prb_offset(&(mac_xface->lte_frame_parms),
     */
 
-  }
+  //}
 
   /* TODO: remove this hack which is to avoid scheduling new uplink where there is a
    * retransmission. It increases first_rb to move after the retransmission RBs,
@@ -713,7 +714,7 @@ void schedule_ulsch(module_id_t module_idP,
     if (UE_list->UE_template[UE_PCCID(module_idP,UE_id)][UE_id].configured==FALSE) continue;
     drop_ue = 0;
     for (n=0; n<UE_list->numactiveULCCs[UE_id]; n++) {
-      CC_id = UE_list->ordered_ULCCids[n][UE_id];
+      if (CC_id != UE_list->ordered_ULCCids[n][UE_id]) continue;
       if (mac_xface->get_eNB_UE_stats(module_idP,CC_id,rnti) == NULL) {
         drop_ue = 1;
         break;
@@ -723,7 +724,7 @@ void schedule_ulsch(module_id_t module_idP,
 
     for (n=0; n<UE_list->numactiveULCCs[UE_id]; n++) {
       // This is the actual CC_id in the list
-      CC_id = UE_list->ordered_ULCCids[n][UE_id];
+      if (CC_id != UE_list->ordered_ULCCids[n][UE_id]) continue;
       eNB_UE_stats = mac_xface->get_eNB_UE_stats(module_idP,CC_id,rnti);
 
       if (eNB_UE_stats->mode == PUSCH) { // ue has a ulsch channel
@@ -750,10 +751,10 @@ void schedule_ulsch(module_id_t module_idP,
       } // UE is in PUSCH
     } // loop over CC
   } // loop over UE
-
-  schedule_ulsch_rnti(module_idP, cooperation_flag, frameP, subframeP, sched_subframe,first_rb);
+  schedule_ulsch_rnti(module_idP, cooperation_flag, frameP, subframeP, sched_subframe,first_rb,CC_id);
 
 #ifdef CBA
+  printf("schedule_ulsch: CBA activated \n");
   schedule_ulsch_cba_rnti(module_idP, cooperation_flag, frameP, subframeP, sched_subframe, first_rb);
 #endif
 
@@ -769,7 +770,8 @@ void schedule_ulsch_rnti(module_id_t   module_idP,
                          frame_t       frameP,
                          sub_frame_t   subframeP,
                          unsigned char sched_subframe,
-                         uint16_t     *first_rb)
+                         uint16_t     *first_rb,
+			 uint8_t CC_id)
 {
 
   int                UE_id;
@@ -788,7 +790,8 @@ void schedule_ulsch_rnti(module_id_t   module_idP,
   int32_t                 normalized_rx_power, target_rx_power=-90;
   static int32_t          tpc_accumulated=0;
 
-  int n,CC_id = 0;
+  int n;
+  //CC_id = 0;
   eNB_MAC_INST      *eNB=&eNB_mac_inst[module_idP];
   UE_list_t         *UE_list=&eNB->UE_list;
   UE_TEMPLATE       *UE_template;
@@ -803,7 +806,8 @@ void schedule_ulsch_rnti(module_id_t   module_idP,
   ulsch_scheduler_pre_processor(module_idP,
                                 frameP,
                                 subframeP,
-                                first_rb);
+                                first_rb,
+				CC_id);
 
   //  LOG_I(MAC,"exiting ulsch preprocesor\n");
 
@@ -812,7 +816,7 @@ void schedule_ulsch_rnti(module_id_t   module_idP,
 
     // don't schedule if Msg4 is not received yet
     if (UE_list->UE_template[UE_PCCID(module_idP,UE_id)][UE_id].configured==FALSE) {
-      LOG_I(MAC,"[eNB %d] frame %d subfarme %d, UE %d: not configured, skipping UE scheduling \n", 
+      LOG_I(MAC,"[eNB %d] frame %d subframe %d, UE %d: not configured, skipping UE scheduling \n", 
 	    module_idP,frameP,subframeP,UE_id);
       continue;
     }
@@ -828,7 +832,7 @@ void schedule_ulsch_rnti(module_id_t   module_idP,
     /* TODO: refine? */
     drop_ue = 0;
     for (n=0; n<UE_list->numactiveULCCs[UE_id]; n++) {
-      CC_id = UE_list->ordered_ULCCids[n][UE_id];
+      if (CC_id != UE_list->ordered_ULCCids[n][UE_id]) continue;
       if (mac_xface->get_eNB_UE_stats(module_idP,CC_id,rnti) == NULL) {
         LOG_W(MAC,"[eNB %d] frame %d subframe %d, UE %d/%x CC %d: no PHY context\n", module_idP,frameP,subframeP,UE_id,rnti,CC_id);
         drop_ue = 1;
@@ -860,7 +864,7 @@ abort();
     // loop over all active UL CC_ids for this UE
     for (n=0; n<UE_list->numactiveULCCs[UE_id]; n++) {
       // This is the actual CC_id in the list
-      CC_id = UE_list->ordered_ULCCids[n][UE_id];
+      if (CC_id != UE_list->ordered_ULCCids[n][UE_id]) continue;
       frame_parms = mac_xface->get_lte_frame_parms(module_idP,CC_id);
       eNB_UE_stats = mac_xface->get_eNB_UE_stats(module_idP,CC_id,rnti);
 

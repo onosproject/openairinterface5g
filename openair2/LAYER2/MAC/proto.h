@@ -49,7 +49,7 @@ for the message.
 @param subframe Subframe number on which to act
 
 */
-void schedule_RA(module_id_t module_idP,frame_t frameP,sub_frame_t subframe,uint8_t Msg3_subframe);
+void schedule_RA(module_id_t module_idP,frame_t frameP,sub_frame_t subframe,uint8_t Msg3_subframe,uint8_t CC_id);
 
 /** \brief First stage of SI Scheduling. Gets a SI SDU from RRC if available and computes the MCS required to transport it as a function of the SDU length.  It assumes a length less than or equal to 64 bytes (MCS 6, 3 PRBs).
 @param Mod_id Instance ID of eNB
@@ -87,7 +87,7 @@ int8_t ue_get_mbsfn_sf_alloction (module_id_t module_idP, uint8_t mbsfn_sync_are
 @param subframe Subframe number on which to act
 @param sched_subframe Subframe number where PUSCH is transmitted (for DAI lookup)
 */
-void schedule_ulsch(module_id_t module_idP,frame_t frameP,unsigned char cooperation_flag,sub_frame_t subframe,unsigned char sched_subframe);
+void schedule_ulsch(module_id_t module_idP,frame_t frameP,unsigned char cooperation_flag,sub_frame_t subframe,unsigned char sched_subframe, uint8_t CC_id);
 
 /** \brief ULSCH Scheduling per RNTI
 @param Mod_id Instance ID of eNB
@@ -95,7 +95,7 @@ void schedule_ulsch(module_id_t module_idP,frame_t frameP,unsigned char cooperat
 @param subframe Subframe number on which to act
 @param sched_subframe Subframe number where PUSCH is transmitted (for DAI lookup)
 */
-void schedule_ulsch_rnti(module_id_t module_idP, unsigned char cooperation_flag, frame_t frameP, sub_frame_t subframe, unsigned char sched_subframe, uint16_t *first_rb);
+void schedule_ulsch_rnti(module_id_t module_idP, unsigned char cooperation_flag, frame_t frameP, sub_frame_t subframe, unsigned char sched_subframe, uint16_t *first_rb, uint8_t CC_id);
 
 /** \brief ULSCH Scheduling for CBA  RNTI
 @param Mod_id Instance ID of eNB
@@ -111,7 +111,7 @@ void schedule_ulsch_cba_rnti(module_id_t module_idP, unsigned char cooperation_f
 @param subframe Index of subframe
 @param mbsfn_flag Indicates that this subframe is for MCH/MCCH
 */
-void fill_DLSCH_dci(module_id_t module_idP,frame_t frameP,sub_frame_t subframe,int *mbsfn_flag);
+void fill_DLSCH_dci(module_id_t module_idP,frame_t frameP,sub_frame_t subframe,int *mbsfn_flag, uint8_t CC_id);
 
 /** \brief UE specific DLSCH scheduling. Retrieves next ue to be schduled from round-robin scheduler and gets the appropriate harq_pid for the subframe from PHY. If the process is active and requires a retransmission, it schedules the retransmission with the same PRB count and MCS as the first transmission. Otherwise it consults RLC for DCCH/DTCH SDUs (status with maximum number of available PRBS), builds the MAC header (timing advance sent by default) and copies
 @param Mod_id Instance ID of eNB
@@ -120,7 +120,7 @@ void fill_DLSCH_dci(module_id_t module_idP,frame_t frameP,sub_frame_t subframe,i
 
 @param mbsfn_flag  Indicates that MCH/MCCH is in this subframe
 */
-void schedule_ue_spec(module_id_t module_idP,frame_t frameP,sub_frame_t subframe,int *mbsfn_flag);
+void schedule_ue_spec(module_id_t module_idP,frame_t frameP,sub_frame_t subframe,int *mbsfn_flag, uint8_t CC_id);
 
 
 /** \brief Function for UE/PHY to compute PUSCH transmit power in power-control procedure.
@@ -185,7 +185,8 @@ void dlsch_scheduler_pre_processor (module_id_t module_idP,
                                     frame_t frameP,
                                     sub_frame_t subframe,
                                     int N_RBG[MAX_NUM_CCs],
-                                    int *mbsfn_flag);
+                                    int *mbsfn_flag,
+				    uint8_t CC_id);
 
 
 void dlsch_scheduler_pre_processor_allocate (module_id_t   Mod_id,
@@ -210,7 +211,7 @@ can be scheduled.
 @param subframe Index of current subframe
 @param calibration_flag Flag to indicate that eNB scheduler should schedule TDD auto-calibration PUSCH.
 */
-void eNB_dlsch_ulsch_scheduler(module_id_t module_idP, uint8_t cooperation_flag, frame_t frameP, sub_frame_t subframeP,uint8_t CC);//, int calibration_flag);
+void eNB_dlsch_ulsch_scheduler(module_id_t module_idP, uint8_t cooperation_flag, frame_t frameP, sub_frame_t subframeP,uint8_t CC_id);//, int calibration_flag);
 
 /* \brief Function to retrieve result of scheduling (DCI) in current subframe.  Can be called an arbitrary numeber of times after eNB_dlsch_ulsch_scheduler
 in a given subframe.
@@ -534,7 +535,7 @@ int UE_PCCID(module_id_t mod_idP,int ue_idP);
 rnti_t UE_RNTI(module_id_t mod_idP, int ue_idP);
 
 
-void ulsch_scheduler_pre_processor(module_id_t module_idP, int frameP, sub_frame_t subframeP, uint16_t *first_rb);
+void ulsch_scheduler_pre_processor(module_id_t module_idP, int frameP, sub_frame_t subframeP, uint16_t *first_rb, uint8_t CC_id);
 void store_ulsch_buffer(module_id_t module_idP, int frameP, sub_frame_t subframeP);
 void sort_ue_ul (module_id_t module_idP,int frameP, sub_frame_t subframeP);
 void assign_max_mcs_min_rb(module_id_t module_idP,int frameP, sub_frame_t subframeP,uint16_t *first_rb);

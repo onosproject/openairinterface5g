@@ -62,10 +62,10 @@
 
 #include "T.h"
 
-void schedule_RA(module_id_t module_idP,frame_t frameP, sub_frame_t subframeP,unsigned char Msg3_subframe)
+void schedule_RA(module_id_t module_idP,frame_t frameP, sub_frame_t subframeP,unsigned char Msg3_subframe,uint8_t CC_id)
 {
 
-  int CC_id;
+  //int CC_id;
   eNB_MAC_INST *eNB = &eNB_mac_inst[module_idP];
 
 
@@ -83,7 +83,7 @@ void schedule_RA(module_id_t module_idP,frame_t frameP, sub_frame_t subframeP,un
 
   start_meas(&eNB->schedule_ra);
 
-  for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
+  //for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
 
 
     vrb_map = eNB->common_channels[CC_id].vrb_map;
@@ -735,7 +735,7 @@ printf("MAC: msg4 acknowledged for rnti %x fsf %d/%d, let's configure it\n", RA_
 	}
       }
     } // for i=0 .. N_RA_PROC-1 
-  } // CC_id
+  //} // CC_id
 
   stop_meas(&eNB->schedule_ra);
 }

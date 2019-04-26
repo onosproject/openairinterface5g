@@ -567,7 +567,8 @@ void dlsch_scheduler_pre_processor (module_id_t   Mod_id,
                                     frame_t       frameP,
                                     sub_frame_t   subframeP,
                                     int           N_RBG[MAX_NUM_CCs],
-                                    int           *mbsfn_flag)
+                                    int           *mbsfn_flag,
+				    uint8_t       CC_id)
 {
 
   unsigned char rballoc_sub[MAX_NUM_CCs][N_RBG_MAX],harq_pid=0,round=0,total_ue_count;
@@ -581,7 +582,7 @@ void dlsch_scheduler_pre_processor (module_id_t   Mod_id,
   rnti_t             rnti;
   int                min_rb_unit[MAX_NUM_CCs];
   uint16_t r1=0;
-  uint8_t CC_id;
+  //uint8_t CC_id;
   UE_list_t *UE_list = &eNB_mac_inst[Mod_id].UE_list;
   LTE_DL_FRAME_PARMS   *frame_parms[MAX_NUM_CCs] = {0};
 
@@ -600,10 +601,10 @@ void dlsch_scheduler_pre_processor (module_id_t   Mod_id,
   UE_sched_ctrl *ue_sched_ctl1,*ue_sched_ctl2;
 #endif
 
-  for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
+  //for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
 
     if (mbsfn_flag[CC_id]>0)  // If this CC is allocated for MBSFN skip it here
-      continue;
+      return;
 
     frame_parms[CC_id] = mac_xface->get_lte_frame_parms(Mod_id,CC_id);
 
@@ -630,7 +631,7 @@ void dlsch_scheduler_pre_processor (module_id_t   Mod_id,
         MIMO_mode_indicator);
 
     }
-  }
+  //}
 
 
   // Store the DLSCH buffer for each logical channel
@@ -663,7 +664,7 @@ void dlsch_scheduler_pre_processor (module_id_t   Mod_id,
     UE_id = i;
 
     for (ii=0; ii<UE_num_active_CC(UE_list,UE_id); ii++) {
-      CC_id = UE_list->ordered_CCids[ii][UE_id];
+      if (CC_id != UE_list->ordered_CCids[ii][UE_id]) continue;
       ue_sched_ctl = &UE_list->UE_sched_ctrl[UE_id];
       harq_pid = ue_sched_ctl->harq_pid[CC_id];
       round    = ue_sched_ctl->round[CC_id];
@@ -735,7 +736,7 @@ void dlsch_scheduler_pre_processor (module_id_t   Mod_id,
       continue;
 
     for (ii=0; ii<UE_num_active_CC(UE_list,i); ii++) {
-      CC_id = UE_list->ordered_CCids[ii][i];
+      if (CC_id != UE_list->ordered_CCids[ii][i]) continue;
       ue_sched_ctl = &UE_list->UE_sched_ctrl[i];
       round    = ue_sched_ctl->round[CC_id];
 
@@ -757,7 +758,7 @@ void dlsch_scheduler_pre_processor (module_id_t   Mod_id,
 
     for(i=UE_list->head; i>=0; i=UE_list->next[i]) {
       for (ii=0; ii<UE_num_active_CC(UE_list,i); ii++) {
-        CC_id = UE_list->ordered_CCids[ii][i];
+        if (CC_id != UE_list->ordered_CCids[ii][i]) continue;
 
         if(r1 == 0) {
           nb_rbs_required_remaining[CC_id][i] = nb_rbs_required_remaining_1[CC_id][i];
@@ -793,7 +794,7 @@ if (nb_rbs_required_remaining[CC_id][i]<0) abort();
         UE_id = i;
 
         for (ii=0; ii<UE_num_active_CC(UE_list,UE_id); ii++) {
-          CC_id = UE_list->ordered_CCids[ii][UE_id];
+          if (CC_id != UE_list->ordered_CCids[ii][UE_id]) continue;
 	  ue_sched_ctl = &UE_list->UE_sched_ctrl[UE_id];
 	  harq_pid = ue_sched_ctl->harq_pid[CC_id];
 	  round    = ue_sched_ctl->round[CC_id];
@@ -922,7 +923,7 @@ if (nb_rbs_required_remaining[CC_id][i]<0) abort();
 #ifdef TM5
 
   // This has to be revisited!!!!
-  for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
+  //for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
     i1=0;
     i2=0;
     i3=0;
@@ -951,7 +952,7 @@ if (nb_rbs_required_remaining[CC_id][i]<0) abort();
 
     PHY_vars_eNB_g[Mod_id][CC_id]->check_for_total_transmissions = PHY_vars_eNB_g[Mod_id][CC_id]->check_for_total_transmissions + 1;
 
-  }
+  //}
 
 #endif
 
@@ -960,7 +961,7 @@ if (nb_rbs_required_remaining[CC_id][i]<0) abort();
     ue_sched_ctl = &UE_list->UE_sched_ctrl[UE_id];
 
     for (ii=0; ii<UE_num_active_CC(UE_list,UE_id); ii++) {
-      CC_id = UE_list->ordered_CCids[ii][UE_id];
+      if (CC_id != UE_list->ordered_CCids[ii][UE_id]) continue;
       //PHY_vars_eNB_g[Mod_id]->mu_mimo_mode[UE_id].dl_pow_off = dl_pow_off[UE_id];
 
       if (ue_sched_ctl->pre_nb_available_rbs[CC_id] > 0 ) {
@@ -1099,7 +1100,7 @@ void dlsch_scheduler_pre_processor_reset (int module_idP,
     sf0_lower=11;
     sf0_upper=13;
     break;
-  default: printf("unsupported RBs (%d)\n", PHY_vars_eNB_g[module_idP][CC_id]->frame_parms.N_RB_DL); fflush(stdout); abort();
+  default: printf("unsupported RBs (%d/%d)\n", PHY_vars_eNB_g[module_idP][CC_id]->frame_parms.N_RB_DL,N_RBG); fflush(stdout); abort();
   }
 #endif
   // Initialize Subbands according to VRB map
@@ -1253,12 +1254,14 @@ void dlsch_scheduler_pre_processor_allocate (module_id_t   Mod_id,
 void ulsch_scheduler_pre_processor(module_id_t module_idP,
                                    int frameP,
                                    sub_frame_t subframeP,
-                                   uint16_t *first_rb)
+                                   uint16_t *first_rb,
+				   uint8_t CC_id)
 {
 
   int16_t            i;
   uint16_t           UE_id,n,r;
-  uint8_t            CC_id, round, harq_pid;
+  //uint8_t 	     CC_id;
+  uint8_t            round, harq_pid;
   uint16_t           nb_allocated_rbs[MAX_NUM_CCs][NUMBER_OF_UE_MAX],total_allocated_rbs[MAX_NUM_CCs],average_rbs_per_user[MAX_NUM_CCs];
   int16_t            total_remaining_rbs[MAX_NUM_CCs];
   uint16_t           max_num_ue_to_be_scheduled=0,total_ue_count=0;
@@ -1279,7 +1282,7 @@ void ulsch_scheduler_pre_processor(module_id_t module_idP,
 
   // we need to distribute RBs among UEs
   // step1:  reset the vars
-  for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
+  //for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
     total_allocated_rbs[CC_id]=0;
     total_remaining_rbs[CC_id]=0;
     average_rbs_per_user[CC_id]=0;
@@ -1287,7 +1290,7 @@ void ulsch_scheduler_pre_processor(module_id_t module_idP,
     for (i=UE_list->head_ul; i>=0; i=UE_list->next_ul[i]) {
       nb_allocated_rbs[CC_id][i]=0;
     }
-  }
+  //}
 
   //LOG_I(MAC,"step2 \n");
   // step 2: calculate the average rb per UE
@@ -1311,7 +1314,7 @@ void ulsch_scheduler_pre_processor(module_id_t module_idP,
 
     for (n=0; n<UE_list->numactiveULCCs[UE_id]; n++) {
       // This is the actual CC_id in the list
-      CC_id = UE_list->ordered_ULCCids[n][UE_id];
+      if (CC_id != UE_list->ordered_ULCCids[n][UE_id]) continue;
       UE_template = &UE_list->UE_template[CC_id][UE_id];
       average_rbs_per_user[CC_id]=0;
       frame_parms = mac_xface->get_lte_frame_parms(module_idP,CC_id);
@@ -1364,7 +1367,7 @@ void ulsch_scheduler_pre_processor(module_id_t module_idP,
 
     for (n=0; n<UE_list->numactiveULCCs[UE_id]; n++) {
       // This is the actual CC_id in the list
-      CC_id = UE_list->ordered_ULCCids[n][UE_id];
+      if (CC_id != UE_list->ordered_ULCCids[n][UE_id]) continue;
 
       mac_xface->get_ue_active_harq_pid(module_idP,CC_id,rnti,frameP,subframeP,&harq_pid,&round,openair_harq_UL);
 
@@ -1396,7 +1399,7 @@ void ulsch_scheduler_pre_processor(module_id_t module_idP,
 
       for (n=0; n<UE_list->numactiveULCCs[UE_id]; n++) {
         // This is the actual CC_id in the list
-        CC_id = UE_list->ordered_ULCCids[n][UE_id];
+        if (CC_id != UE_list->ordered_ULCCids[n][UE_id]) continue;
         UE_template = &UE_list->UE_template[CC_id][UE_id];
         frame_parms = mac_xface->get_lte_frame_parms(module_idP,CC_id);
         total_remaining_rbs[CC_id]=frame_parms->N_RB_UL - first_rb[CC_id] - total_allocated_rbs[CC_id];
@@ -1422,13 +1425,13 @@ void ulsch_scheduler_pre_processor(module_id_t module_idP,
     }
   }
 
-  for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
+  //for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
     frame_parms= mac_xface->get_lte_frame_parms(module_idP,CC_id);
 
     if (total_allocated_rbs[CC_id]>0) {
       LOG_D(MAC,"[eNB %d] total RB allocated for all UEs = %d/%d\n", module_idP, total_allocated_rbs[CC_id], frame_parms->N_RB_UL - first_rb[CC_id]);
     }
-  }
+  //}
 }
 
 

@@ -416,12 +416,13 @@ schedule_ue_spec(
   module_id_t   module_idP,
   frame_t       frameP,
   sub_frame_t   subframeP,
-  int*          mbsfn_flag
+  int*          mbsfn_flag,
+  uint8_t CC_id
 )
 //------------------------------------------------------------------------------
 {
 
-  uint8_t               CC_id;
+  //uint8_t               CC_id;
   int                   UE_id;
   int                   N_RBG[MAX_NUM_CCs];
   unsigned char         aggregation;
@@ -464,13 +465,13 @@ schedule_ue_spec(
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_SCHEDULE_DLSCH,VCD_FUNCTION_IN);
 
   /* save DCI_pdu size */
-  for (CC_id = 0; CC_id < MAX_NUM_CCs; CC_id++)
+  //for (CC_id = 0; CC_id < MAX_NUM_CCs; CC_id++)
     saved_DCI_pdu[CC_id].Num_dci = eNB->common_channels[CC_id].DCI_pdu.Num_dci;
 
   //weight = get_ue_weight(module_idP,UE_id);
   aggregation = 2; 
 
-  for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
+  //for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
     min_rb_unit[CC_id]=get_min_rb_unit(module_idP,CC_id);
     frame_parms[CC_id] = mac_xface->get_lte_frame_parms(module_idP,CC_id);
     // get number of PRBs less those used by common channels
@@ -488,7 +489,7 @@ schedule_ue_spec(
     eNB->eNB_stats[CC_id].total_available_prbs +=  total_nb_available_rb[CC_id];
     eNB->eNB_stats[CC_id].dlsch_bytes_tx=0;
     eNB->eNB_stats[CC_id].dlsch_pdus_tx=0;
-  }
+  //}
 
   /// CALLING Pre_Processor for downlink scheduling (Returns estimation of RBs required by each UE and the allocation on sub-band)
 
@@ -498,15 +499,16 @@ schedule_ue_spec(
                                 frameP,
                                 subframeP,
                                 N_RBG,
-                                mbsfn_flag);
+                                mbsfn_flag,
+				CC_id);
   stop_meas(&eNB->schedule_dlsch_preprocessor);
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_DLSCH_PREPROCESSOR,VCD_FUNCTION_OUT);
 
-  for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
+  //for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
     LOG_D(MAC, "doing schedule_ue_spec for CC_id %d\n",CC_id);
 
     if (mbsfn_flag[CC_id]>0)
-      continue;
+      return;
 
     for (UE_id=UE_list->head; UE_id>=0; UE_id=UE_list->next[UE_id]) {
       continue_flag=0; // reset the flag to allow allocation for the remaining UEs
@@ -1662,10 +1664,10 @@ schedule_ue_spec(
       }
 
     } // UE_id loop
-  }  // CC_id loop
+  //}  // CC_id loop
 
   /* restore DCI_pdu size */
-  for (CC_id = 0; CC_id < MAX_NUM_CCs; CC_id++)
+  //for (CC_id = 0; CC_id < MAX_NUM_CCs; CC_id++)
     eNB->common_channels[CC_id].DCI_pdu.Num_dci = saved_DCI_pdu[CC_id].Num_dci;
 
 
@@ -1680,7 +1682,8 @@ fill_DLSCH_dci(
 	       module_id_t module_idP,
 	       frame_t frameP,
 	       sub_frame_t subframeP,
-	       int* mbsfn_flagP
+	       int* mbsfn_flagP,
+	       uint8_t CC_id
 	       )
 //------------------------------------------------------------------------------
 {
@@ -1700,7 +1703,7 @@ fill_DLSCH_dci(
   int           i;
   //void         *BCCH_alloc_pdu;
   int           size_bits,size_bytes;
-  int CC_id;
+  //int CC_id;
   eNB_MAC_INST *eNB  =&eNB_mac_inst[module_idP];
   UE_list_t    *UE_list = &eNB->UE_list;
   //RA_TEMPLATE  *RA_template;
@@ -1709,11 +1712,11 @@ fill_DLSCH_dci(
   start_meas(&eNB->fill_DLSCH_dci);
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_FILL_DLSCH_DCI,VCD_FUNCTION_IN);
 
-  for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
+  //for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
     LOG_D(MAC,"Doing fill DCI for CC_id %d\n",CC_id);
 
     if (mbsfn_flagP[CC_id]>0)
-      continue;
+      return;
 
     DCI_pdu         = &eNB->common_channels[CC_id].DCI_pdu;
     
@@ -1984,7 +1987,7 @@ fill_DLSCH_dci(
       }
     }
 
-  }
+  //}
 
   stop_meas(&eNB->fill_DLSCH_dci);
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_FILL_DLSCH_DCI,VCD_FUNCTION_OUT);
