@@ -573,7 +573,7 @@ void UL_indication(UL_IND_t *UL_info) {
   int          CC_id       = UL_info->CC_id;
   Sched_Rsp_t  *sched_info = &Sched_INFO[module_id][CC_id];
   IF_Module_t  *ifi        = if_inst[module_id];
-  eNB_MAC_INST *mac        = (NFAPI_MODE != NFAPI_MODE_PNF)? &RC.mac[module_id] : NULL;
+  eNB_MAC_INST *mac        = (NFAPI_MODE != NFAPI_MODE_PNF)? RC.mac[module_id] : NULL;
   LOG_D(PHY,"SFN/SF:%d%d module_id:%d CC_id:%d UL_info[rx_ind:%d harqs:%d crcs:%d cqis:%d preambles:%d sr_ind:%d]\n",
         UL_info->frame,UL_info->subframe,
         module_id,CC_id,

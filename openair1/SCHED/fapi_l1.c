@@ -783,7 +783,7 @@ void schedule_response(Sched_Rsp_t *Sched_INFO) {
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
   eNB->mpdcch_vars[subframe&1].num_dci           = 0;
 #endif
-  LOG_D(PHY,"NFAPI: Sched_INFO:SFN/SF:%04d%d DL_req:SFN/SF:%04d%d:dl_pdu:%d tx_req:SFN/SF:%04d%d:pdus:%d\n",
+  LOG_D(PHY,"NFAPI: Sched_INFO:SFN/SF:%04d%d DL_req:SFN/SF:%04d%d:pdcch_syms:%d dl_pdu:%d tx_req:SFN/SF:%04d%d:pdus:%d\n",
         frame,subframe,
         NFAPI_SFNSF2SFN(DL_req->sfn_sf),NFAPI_SFNSF2SF(DL_req->sfn_sf),number_dl_pdu,
         NFAPI_SFNSF2SFN(TX_req->sfn_sf),NFAPI_SFNSF2SF(TX_req->sfn_sf),TX_req->tx_request_body.number_of_pdus

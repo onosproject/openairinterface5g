@@ -1007,6 +1007,7 @@ eNB_dlsch_ulsch_scheduler(module_id_t module_idP,
       allocate_CCEs(module_idP, CC_id, frameP, subframeP, 2);
     }
   }
+  LOG_D(MAC,"After CCE Allocation : num_pdcch_symbols %d\n",eNB->DL_req[0].dl_config_request_body.number_pdcch_ofdm_symbols); 
 
   if (flexran_agent_get_mac_xface(module_idP) && subframeP == 9) {
     flexran_agent_slice_update(module_idP);

@@ -672,6 +672,9 @@ int main( int argc, char **argv ) {
   printf("Runtime table\n");
   fill_modeled_runtime_table(runtime_phy_rx,runtime_phy_tx);
 
+  // initially set nfapi mode to MONOLITHIC
+  nfapi_setmode(NFAPI_MONOLITHIC);
+
   /* Read configuration */
   if (RC.nb_inst > 0) {
     read_config_and_init();

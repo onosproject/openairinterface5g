@@ -238,31 +238,32 @@ uint16_t get_nquad(uint8_t num_pdcch_symbols,LTE_DL_FRAME_PARMS *frame_parms,uin
     Ngroup_PHICH<<=1;
   }
 
+  AssertFatal(num_pdcch_symbols > 0 && num_pdcch_symbols<4,"illegal num_pdcch_symbols %d\n",num_pdcch_symbols);
   Ngroup_PHICH*=mi;
 
-  if ((num_pdcch_symbols>0) && (num_pdcch_symbols<4))
-    switch (frame_parms->N_RB_DL) {
-    case 6:
-      Nreg=12+(num_pdcch_symbols-1)*18;
-      break;
+  switch (frame_parms->N_RB_DL) {
+  case 6:
+    Nreg=12+(num_pdcch_symbols-1)*18;
+    break;
 
-    case 25:
-      Nreg=50+(num_pdcch_symbols-1)*75;
-      break;
+  case 25:
+    Nreg=50+(num_pdcch_symbols-1)*75;
+    break;
 
-    case 50:
-      Nreg=100+(num_pdcch_symbols-1)*150;
-      break;
+  case 50:
+    Nreg=100+(num_pdcch_symbols-1)*150;
+    break;
 
-    case 100:
-      Nreg=200+(num_pdcch_symbols-1)*300;
-      break;
+  case 100:
+    Nreg=200+(num_pdcch_symbols-1)*300;
+    break;
 
-    default:
-      return(0);
-    }
+  default:
+    AssertFatal(1==0,"Unsupported or illegal N_RB_DL %d\n",frame_parms->N_RB_DL);
+    return(0);
+  }
 
-  //   printf("Nreg %d (%d)\n",Nreg,Nreg - 4 - (3*Ngroup_PHICH));
+  //printf("Nreg %d (%d)\n",Nreg,Nreg - 4 - (3*Ngroup_PHICH));
   return(Nreg - 4 - (3*Ngroup_PHICH));
 }
 
