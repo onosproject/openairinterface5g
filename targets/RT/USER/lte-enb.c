@@ -205,7 +205,8 @@ static inline int rxtx(PHY_VARS_eNB *eNB,L1_rxtx_proc_t *proc, char *thread_name
 #endif
   }
 
-  release_UE_in_freeList(eNB->Mod_id);
+ // this is very bad ... could easily be done in the right place in L2
+  if (NFAPI_MODE == NFAPI_MODE_VNF)   release_UE_in_freeList(eNB->Mod_id);
 
   // UE-specific RX processing for subframe n
   if (NFAPI_MODE==NFAPI_MONOLITHIC || NFAPI_MODE==NFAPI_MODE_PNF) {
@@ -1139,9 +1140,9 @@ void init_transport(PHY_VARS_eNB *eNB) {
 void init_eNB_afterRU(void) {
   int inst,CC_id,ru_id,i,aa;
   PHY_VARS_eNB *eNB;
-  LOG_I(PHY,"%s() RC.nb_inst:%d\n", __FUNCTION__, RC.nb_inst);
+  LOG_I(PHY,"%s() RC.nb_L1_inst:%d\n", __FUNCTION__, RC.nb_L1_inst);
 
-  for (inst=0; inst<RC.nb_inst; inst++) {
+  for (inst=0; inst<RC.nb_L1_inst; inst++) {
     LOG_I(PHY,"RC.nb_CC[inst]:%d\n", RC.nb_CC[inst]);
 
     for (CC_id=0; CC_id<RC.nb_CC[inst]; CC_id++) {
