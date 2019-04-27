@@ -1256,13 +1256,12 @@ void phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
   }
 
   // Get scheduling info for next subframe
-  // This is called only for the CC_id = 0 and triggers scheduling for all CC_id's
-  // There is a bug in the scheduler for multiple RRUs. We modify it to work with each CC_id
+  // This is called all CC_id's
   if (eNB->mac_enabled==1) {
     //if (eNB->CC_id == 0) {
       mac_xface->eNB_dlsch_ulsch_scheduler(eNB->Mod_id,0,frame,subframe,eNB->CC_id);//,1);
     //}
-    printf("[eNB %d/CC_id %d] Frame %d, Subframe %d, entering MAC scheduler\n",eNB->Mod_id,eNB->CC_id, frame, subframe);
+    //printf("[eNB %d/CC_id %d] Frame %d, Subframe %d, entering MAC scheduler\n",eNB->Mod_id,eNB->CC_id, frame, subframe);
   }
 
   // clear the transmit data array for the current subframe
@@ -1387,7 +1386,7 @@ void phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
 	UE_id = i;
     }
     else UE_id=0;
-    printf("loop over all DCIs: UE %d, CC_id %d\n",UE_id,eNB->CC_id);
+    //printf("loop over all DCIs: UE %d, CC_id %d\n",UE_id,eNB->CC_id);
     generate_eNB_dlsch_params(eNB,proc,dci_alloc,UE_id);
 
   }
@@ -1478,7 +1477,7 @@ void phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
 
   if ((eNB->dlsch_SI) && (eNB->dlsch_SI->active == 1)) {
     printf("Check for SI activity and start pdsch_procedures with ra_flag=%d, dci_alloc->ra_flag=%d, and subframe %d\n",0,dci_alloc->ra_flag,subframe);
-    dci_alloc->ra_flag = 0;
+    //dci_alloc->ra_flag = 0;
     pdsch_procedures(eNB,proc,eNB->dlsch_SI,(LTE_eNB_DLSCH_t*)NULL,(LTE_eNB_UE_stats*)NULL,0,num_pdcch_symbols);
 
 #if defined(SMBV) 
@@ -1493,9 +1492,6 @@ void phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
   }
 
   // Check for RA activity
-  //pthread_mutex_lock(&ra_flag_mutex[eNB->CC_id]);
-  //if (subframe==0 || subframe==5)//This solution only solves max user reached, but it still has scheduling issues.
-  //{
    if ((eNB->dlsch_ra) && (eNB->dlsch_ra->active == 1)) {
 
 #if defined(SMBV) 
@@ -1521,7 +1517,7 @@ void phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
 	  eNB->ulsch[(uint32_t)UE_id]->Msg3_subframe);
     printf("Calling generate_dlsch (RA) and start pdsch_procedures with ra_flag=%d, dci_alloc->ra_flag=%d, and subframe %d, eNB->dlsch_ra->active %d, CC_id %d\n",1,dci_alloc->ra_flag,subframe,eNB->dlsch_ra->active,eNB->CC_id);
     //if (subframe==0 || subframe==5)
-    dci_alloc->ra_flag = 1;
+    //dci_alloc->ra_flag = 1;
     pdsch_procedures(eNB,proc,eNB->dlsch_ra,(LTE_eNB_DLSCH_t*)NULL,(LTE_eNB_UE_stats*)NULL,1,num_pdcch_symbols);
     //else    
     //	printf("False RA activity for CC_id %d\n",eNB->CC_id);
@@ -1542,7 +1538,7 @@ void phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
 	  (eNB->dlsch[(uint8_t)UE_id][0]->rnti>0)&&
 	  (eNB->dlsch[(uint8_t)UE_id][0]->active == 1)) {
 	printf("Scan UE specific DLSCH and start pdsch_procedures with ra_flag=%d, dci_alloc->ra_flag=%d, and subframe %d\n",0,dci_alloc->ra_flag,subframe);
-        dci_alloc->ra_flag = 0;
+        //dci_alloc->ra_flag = 0;
 	pdsch_procedures(eNB,proc,eNB->dlsch[(uint8_t)UE_id][0],eNB->dlsch[(uint8_t)UE_id][1],&eNB->UE_stats[(uint32_t)UE_id],0,num_pdcch_symbols);
 
 
@@ -1598,12 +1594,7 @@ void process_Msg3(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,uint8_t UE_id, uint8_t
         UE_id,eNB->ulsch[(uint32_t)UE_id]->Msg3_active,
         eNB->ulsch[(uint32_t)UE_id]->Msg3_subframe,
         eNB->ulsch[(uint32_t)UE_id]->Msg3_frame);
-  printf("[eNB %d/ CC_id %d/ UE %d][RAPROC] frame %d : subframe %d : process_Msg3 UE_id %d (active %d, subframe %d, frame %d)\n",
-        eNB->Mod_id,eNB->CC_id,UE_id,
-        frame,subframe,
-        UE_id,eNB->ulsch[(uint32_t)UE_id]->Msg3_active,
-        eNB->ulsch[(uint32_t)UE_id]->Msg3_subframe,
-        eNB->ulsch[(uint32_t)UE_id]->Msg3_frame);
+
   eNB->ulsch[(uint32_t)UE_id]->Msg3_flag = 0;
 
   if ((eNB->ulsch[(uint32_t)UE_id]->Msg3_active == 1) &&
@@ -2877,7 +2868,7 @@ void do_prach(PHY_VARS_eNB *eNB,int frame,int subframe) {
   int num_UEs_total=0;
   int num_UEs_active_CC=0;
   int UE_id;
-  for (UE_id = 0; UE_id < NUMBER_OF_UE_MAX; UE_id++) {
+  /*for (UE_id = 0; UE_id < NUMBER_OF_UE_MAX; UE_id++) {
     if (eNB_mac_inst[eNB->Mod_id].UE_list.active[UE_id] != TRUE) continue;
     	num_UEs_total++;
 	if (UE_PCCID(0,UE_id)==eNB->CC_id)
@@ -2887,7 +2878,7 @@ void do_prach(PHY_VARS_eNB *eNB,int frame,int subframe) {
   if (num_UEs_total>0&&num_UEs_active_CC==0) {
      printf("do_prach: There is not UEs attached to CC_id %d\n",eNB->CC_id);
      return;
-  }
+  }*/
 
   eNB_proc_t *proc = &eNB->proc;
   LTE_DL_FRAME_PARMS *fp=&eNB->frame_parms;
@@ -3047,7 +3038,7 @@ void phy_procedures_eNB_uespec_RX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,const 
     if (eNB->mac_enabled==1) {
       if (eNB->UE_stats[i].mode == RA_RESPONSE) {
 	process_Msg3(eNB,proc,i,harq_pid);
-	printf("Checking for Msg3: eNB %d, CC_id %d, frame %d, subframe %d\n",eNB->Mod_id,eNB->CC_id,frame,subframe);
+	//printf("Checking for Msg3: eNB %d, CC_id %d, frame %d, subframe %d\n",eNB->Mod_id,eNB->CC_id,frame,subframe);
       }
     }
 
@@ -3072,11 +3063,6 @@ void phy_procedures_eNB_uespec_RX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,const 
 
       if (eNB->ulsch[i]->Msg3_flag == 1) {
         LOG_D(PHY,"[eNB %d] frame %d, subframe %d: Scheduling ULSCH Reception for Msg3 in Sector %d\n",
-              eNB->Mod_id,
-              frame,
-              subframe,
-              eNB->UE_stats[i].sector);
-        printf("[eNB %d] frame %d, subframe %d: Scheduling ULSCH Reception for Msg3 in Sector %d\n",
               eNB->Mod_id,
               frame,
               subframe,

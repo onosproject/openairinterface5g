@@ -614,7 +614,7 @@ void set_msg3_subframe(module_id_t Mod_id,
                        int Msg3_frame,
                        int Msg3_subframe)
 {
-  printf("set_msg3_subframe: Msg3_subframe %d, CC_id %d\n",Msg3_subframe,CC_id);
+  //printf("set_msg3_subframe: Msg3_subframe %d, CC_id %d\n",Msg3_subframe,CC_id);
   eNB_MAC_INST *eNB=&eNB_mac_inst[Mod_id];
   int i;
   for (i=0; i<NB_RA_PROC_MAX; i++) {

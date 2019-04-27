@@ -2007,7 +2007,7 @@ get_dlsch_sdu(
 
   int UE_id;
   eNB_MAC_INST *eNB=&eNB_mac_inst[module_idP];
-  printf("get_dlsch_sdu: module_idP %d, CC_id %d, frame %d, rntiP %d, TBindex %d, UE_id(find_UE_id()) %d\n",module_idP,CC_id,frameP,rntiP,TBindex,find_UE_id(module_idP,rntiP));
+  //printf("get_dlsch_sdu: module_idP %d, CC_id %d, frame %d, rntiP %d, TBindex %d, UE_id(find_UE_id()) %d\n",module_idP,CC_id,frameP,rntiP,TBindex,find_UE_id(module_idP,rntiP));
   if (rntiP==SI_RNTI) {
     LOG_D(MAC,"[eNB %d] CC_id %d Frame %d Get DLSCH sdu for BCCH \n", module_idP, CC_id, frameP);
 

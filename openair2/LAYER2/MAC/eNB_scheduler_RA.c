@@ -757,9 +757,9 @@ void initiate_ra_proc(module_id_t module_idP, int CC_id,frame_t frameP, uint16_t
         RA_template[i].wait_ack_Msg4 == 0) {
       int loop = 0;
       RA_template[i].RA_active=TRUE;
-      printf("before generate_rar %d\n",RA_template[i].generate_rar);
+      //printf("before generate_rar %d\n",RA_template[i].generate_rar);
       RA_template[i].generate_rar=1;
-      printf("after generate_rar %d\n",RA_template[i].generate_rar);
+      //printf("after generate_rar %d\n",RA_template[i].generate_rar);
       RA_template[i].generate_Msg4=0;
       RA_template[i].wait_ack_Msg4=0;
       RA_template[i].timing_offset=timing_offset;

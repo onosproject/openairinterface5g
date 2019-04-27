@@ -64,17 +64,17 @@ unsigned short fill_rar(
   AssertFatal(CC_id < MAX_NUM_CCs, "CC_id %u < MAX_NUM_CCs %u", CC_id, MAX_NUM_CCs);
 
   for (i=0; i<NB_RA_PROC_MAX; i++) {
-    printf("fill_rar: generate_rar %d, CC_id %d, eNB_id %d\n",eNB_mac_inst[module_idP].common_channels[CC_id].RA_template[i].generate_rar,CC_id,module_idP); 
+    //printf("fill_rar: generate_rar %d, CC_id %d, eNB_id %d\n",eNB_mac_inst[module_idP].common_channels[CC_id].RA_template[i].generate_rar,CC_id,module_idP); 
     if (eNB_mac_inst[module_idP].common_channels[CC_id].RA_template[i].generate_rar == 1) {
       ra_idx=i;
       eNB_mac_inst[module_idP].common_channels[CC_id].RA_template[i].generate_rar = 0;
       break;
     }
-    printf("fill_rar: i %d,  generate_rar %d\n",i,eNB_mac_inst[module_idP].common_channels[CC_id].RA_template[i].generate_rar);
+    //printf("fill_rar: i %d,  generate_rar %d\n",i,eNB_mac_inst[module_idP].common_channels[CC_id].RA_template[i].generate_rar);
   }
 
   //DevAssert( ra_idx != -1 );
-  printf("fill_rar: ra_idx %d, NB_RA_PROC_MAX %d\n",ra_idx,NB_RA_PROC_MAX);
+  //printf("fill_rar: ra_idx %d, NB_RA_PROC_MAX %d\n",ra_idx,NB_RA_PROC_MAX);
   if (ra_idx==-1)
     return(0);
 
