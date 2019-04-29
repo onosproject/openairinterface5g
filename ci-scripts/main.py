@@ -617,7 +617,7 @@ class SSHConnection():
 		self.open(self.UEIPAddress, self.UEUserName, self.UEPassword)
 		# b2xx_fx3_utils reset procedure
 		self.command('echo ' + self.UEPassword + ' | sudo -S uhd_find_devices', '\$', 10)
-		result = re.search('type: b200', str(self.ssh.before))
+		result = re.search('type: n3xx', str(self.ssh.before))
 		if result is not None:
 			pass
 			##logging.debug('Found a B2xx device --> resetting it')
@@ -3188,7 +3188,6 @@ while len(argvs) > 1:
 		Usage()
 		sys.exit(0)
 	elif re.match('^\-\-mode=(.+)$', myArgv, re.IGNORECASE):
-		#print('mode: ' + mode)
 		matchReg = re.match('^\-\-mode=(.+)$', myArgv, re.IGNORECASE)
 		#if matchReg and mode is not None:
 			#print('Warning: the mode is defined in both xml file and command line')
