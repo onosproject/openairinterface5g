@@ -532,7 +532,6 @@ class SSHConnection():
 		time.sleep(6)
 		doLoop = True
 		loopCounter = 10
-		print('gNB log file: ' + 'enb_' + self.testCase_id + '.log')
 		while (doLoop):
 			loopCounter = loopCounter - 1
 			if (loopCounter == 0):
@@ -785,6 +784,7 @@ class SSHConnection():
 				#		self.copyout(self.eNBIPAddress, self.eNBUserName, self.eNBPassword, pcap_log_file, self.eNBSourceCodePath + '/cmake_targets/.')
 				sys.exit(1)
 			else:
+				print('gNB log file: ' + 'enb_' + self.testCase_id + '.log')
 				self.command('stdbuf -o0 cat enb_' + self.testCase_id + '.log | egrep --text --color=never -i "wait|sync"', '\$', 4)
 				result = re.search('got sync', str(self.ssh.before))
 				if result is None:
