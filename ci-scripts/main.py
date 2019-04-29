@@ -789,7 +789,7 @@ class SSHConnection():
 				self.command('pwd', '\$', 4)
 				print('self.command pwd: ' + str(self.ssh.before))
 				self.command('stdbuf -o0 cat ' + self.eNBLogFile + ' | egrep --text --color=never -i "wait|sync"', '\$', 4)
-				print(self.ssh.before)
+				#print(self.ssh.before)
 				result = re.search('got sync', str(self.ssh.before))
 				if result is None:
 					time.sleep(6)
