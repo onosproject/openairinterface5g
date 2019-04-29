@@ -663,7 +663,7 @@ class SSHConnection():
 		#use nohup instead of daemon
 		##self.command('echo $USER; nohup sudo ./my-lte-uesoftmodem-run' + str(self.UE_instance) + '.sh' + ' > ' + self.UESourceCodePath + '/cmake_targets/ue_' + self.testCase_id + '.log ' + ' 2>&1 &', self.UEUserName, 5)
 		#self.command('echo ' + self.UEPassword + ' | sudo -S -E daemon --inherit --unsafe --name=ue' + str(self.UE_instance) + '_daemon --chdir=' + self.UESourceCodePath + '/cmake_targets/ran_build/build -o ' + self.UESourceCodePath + '/cmake_targets/ue_' + self.testCase_id + '.log ./my-lte-uesoftmodem-run' + str(self.UE_instance) + '.sh', '\$', 5)
-		self.UELogFile = 'ue_' + self.testCase_id + '.log'
+		self.UELogFile = + 'ue_' + self.testCase_id + '.log'
 		time.sleep(6)
 		self.command('cd ../..', '\$', 5)
 		doLoop = True
@@ -694,7 +694,7 @@ class SSHConnection():
 				#		self.copyout(self.UEIPAddress, self.UEUserName, self.UEPassword, pcap_log_file, self.UESourceCodePath + '/cmake_targets/.')
 				sys.exit(1)
 			else:
-				self.command('stdbuf -o0 cat ue_' + self.testCase_id + '.log | egrep --text --color=never -i "wait|sync"', '\$', 4)
+				self.command('stdbuf -o0 cat ' + self.UELogFile + ' | egrep --text --color=never -i "wait|sync"', '\$', 4)
 				result = re.search('got sync', str(self.ssh.before))
 				if result is None:
 					time.sleep(6)
@@ -743,7 +743,8 @@ class SSHConnection():
 		self.command('source oaienv', '\$', 5)
 		self.command('cd cmake_targets/ran_build/build', '\$', 5)
 		#self.command('echo "ulimit -c unlimited && ./' + self.air_interface + '-softmodem ' + self.Initialize_OAI_eNB_args + '" > ./my-lte-softmodem-run' + str(self.eNB_instance) + '.sh', '\$', 5)
-		self.command('echo "ulimit -c unlimited && ./' + self.air_interface + '-softmodem ' + self.Initialize_OAI_eNB_args + '|& tee ' + self.eNBSourceCodePath + '/cmake_targets/enb_' + self.testCase_id + '.log' + '" > ./my-lte-softmodem-run' + str(self.eNB_instance) + '.sh', '\$', 5)
+		self.eNBLogFile = 'enb_' + self.testCase_id + '.log'
+		self.command('echo "ulimit -c unlimited && ./' + self.air_interface + '-softmodem ' + self.Initialize_OAI_eNB_args + '|& tee ' + self.eNBSourceCodePath + '/cmake_targets/' + self.eNBLogFile + '" > ./my-lte-softmodem-run' + str(self.eNB_instance) + '.sh', '\$', 5)
 		self.command('chmod 775 ./my-lte-softmodem-run' + str(self.eNB_instance) + '.sh', '\$', 5)
 		##self.command('echo ' + self.eNBPassword + ' | sudo -S rm -Rf ' + self.eNBSourceCodePath + '/cmake_targets/enb_' + self.testCase_id + '.log', '\$', 5)
 		#to use daemon on CentOS we need to source the function
@@ -753,12 +754,11 @@ class SSHConnection():
 		#use nohup instead of daemon
 		##self.command('echo $USER; nohup sudo ./my-lte-softmodem-run' + str(self.eNB_instance) + '.sh' + ' > ' + self.eNBSourceCodePath + '/cmake_targets/enb_' + self.testCase_id + '.log' + ' 2>&1 &', self.eNBUserName, 5)
 		#self.command('echo ' + self.eNBPassword + ' | sudo -S -E daemon --inherit --unsafe --name=enb' + str(self.eNB_instance) + '_daemon --chdir=' + self.eNBSourceCodePath + '/cmake_targets/ran_build/build -o ' + self.eNBSourceCodePath + '/cmake_targets/enb_' + self.testCase_id + '.log ./my-lte-softmodem-run' + str(self.eNB_instance) + '.sh', '\$', 5)
-		self.eNBLogFile = 'enb_' + self.testCase_id + '.log'
 		time.sleep(6)
 		self.command('cd ../..', '\$', 5)
 		doLoop = True
 		loopCounter = 10
-		print('gNB log file: ' + 'enb_' + self.testCase_id + '.log')
+		print('gNB log file: ' + self.eNBLogFile)
 		while (doLoop):
 			loopCounter = loopCounter - 1
 			if (loopCounter == 0):
@@ -785,7 +785,11 @@ class SSHConnection():
 				#		self.copyout(self.eNBIPAddress, self.eNBUserName, self.eNBPassword, pcap_log_file, self.eNBSourceCodePath + '/cmake_targets/.')
 				sys.exit(1)
 			else:
-				self.command('stdbuf -o0 cat enb_' + self.testCase_id + '.log | egrep --text --color=never -i "wait|sync"', '\$', 4)
+				print('current directory: ' + os.getcwd())
+				self.command('pwd', '\$', 4)
+				print('self.command pwd: ' + str(self.ssh.before))
+				self.command('stdbuf -o0 cat ' + self.eNBLogFile + ' | egrep --text --color=never -i "wait|sync"', '\$', 4)
+				print(self.ssh.before)
 				result = re.search('got sync', str(self.ssh.before))
 				if result is None:
 					time.sleep(6)
