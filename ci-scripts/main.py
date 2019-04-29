@@ -517,7 +517,7 @@ class SSHConnection():
 		self.command('cd cmake_targets', '\$', 5)
 		self.command('echo "ulimit -c unlimited && ./ran_build/build/' + self.air_interface + '-softmodem -O ' + self.eNBSourceCodePath + '/' + ci_full_config_file + extra_options + '" > ./my-lte-softmodem-run' + str(self.eNB_instance) + '.sh ', '\$', 5)
 		self.command('chmod 775 ./my-lte-softmodem-run' + str(self.eNB_instance) + '.sh ', '\$', 5)
-		self.command('echo ' + self.eNBPassword + ' | sudo -S rm -Rf enb_' + self.testCase_id + '.log', '\$', 5)				
+		##self.command('echo ' + self.eNBPassword + ' | sudo -S rm -Rf enb_' + self.testCase_id + '.log', '\$', 5)				
 		#to use daemon on CentOS we need to source the function
 		#linux_distro = platform.linux_distribution()[0]
 		#if re.match('(.*)CentOS(.*)', linux_distro, re.IGNORECASE):
@@ -2358,7 +2358,7 @@ class SSHConnection():
 		#use nohup instead of daemon
 		##self.command('echo ' + self.eNBPassword + ' | sudo -S daemon --name=enb' + str(self.eNB_instance) + '_daemon --stop', '\$', 5)
 		#self.command('echo $USER; nohup sudo ./my-lte-softmodem-run ' + ' > ' + self.eNBSourceCodePath + '/cmake_targets/enb_' + self.testCase_id + '.log' + ' 2>&1 &', self.eNBUserName, 5)
-		self.command('rm -f my-lte-softmodem-run' + str(self.eNB_instance) + '.sh', '\$', 5)
+		##self.command('rm -f my-lte-softmodem-run' + str(self.eNB_instance) + '.sh', '\$', 5)
 		self.command('echo ' + self.eNBPassword + ' | sudo -S killall --signal SIGINT ' + self.air_interface + '-softmodem || true', '\$', 5)
 		time.sleep(5)
 		self.command('stdbuf -o0  ps -aux | grep -v grep | grep ' + self.air_interface + '-softmodem', '\$', 5)
@@ -2506,7 +2506,7 @@ class SSHConnection():
 		#if re.match('(.*)CentOS(.*)', linux_distro, re.IGNORECASE):
 			#self.command('source /etc/init.d/functions', '\$', 5)
 		##self.command('echo ' + self.UEPassword + ' | sudo -S daemon --name=ue' + str(self.UE_instance) + '_daemon --stop', '\$', 5)
-		self.command('rm -f my-lte-uesoftmodem-run' + str(self.UE_instance) + '.sh', '\$', 5)
+		##self.command('rm -f my-lte-uesoftmodem-run' + str(self.UE_instance) + '.sh', '\$', 5)
 		self.command('echo ' + self.UEPassword + ' | sudo -S killall --signal SIGINT ' + self.air_interface + '-uesoftmodem || true', '\$', 5)
 		time.sleep(5)
 		self.command('stdbuf -o0  ps -aux | grep -v grep | grep ' + self.air_interface + '-uesoftmodem', '\$', 5)
