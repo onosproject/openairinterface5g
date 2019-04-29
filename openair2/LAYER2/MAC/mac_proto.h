@@ -711,8 +711,6 @@ int rrc_mac_remove_ue(module_id_t Mod_id, rnti_t rntiP);
 void store_dlsch_buffer(module_id_t Mod_id, int slice_idx, frame_t frameP, sub_frame_t subframeP);
 void assign_rbs_required(module_id_t Mod_id, int slice_idx, frame_t frameP, sub_frame_t subframe, uint16_t nb_rbs_required[NFAPI_CC_MAX][MAX_MOBILES_PER_ENB], int min_rb_unit[NFAPI_CC_MAX]);
 
-int maxround(module_id_t Mod_id, uint16_t rnti, int frame,
-	     sub_frame_t subframe, uint8_t ul_flag);
 void swap_UEs(UE_list_t * listP, int nodeiP, int nodejP, int ul_flag);
 int prev(UE_list_t * listP, int nodeP, int ul_flag);
 void dump_ue_list(UE_list_t * listP, int ul_flag);
@@ -730,11 +728,11 @@ void set_ul_DAI(int module_idP,
 
 void ulsch_scheduler_pre_processor(module_id_t module_idP, int slice_idx, int frameP,
 				   sub_frame_t subframeP,
+                                   int sched_frameP,
                                    unsigned char sched_subframeP,
 				   uint16_t * first_rb);
 void store_ulsch_buffer(module_id_t module_idP, int frameP,
 			sub_frame_t subframeP);
-void sort_ue_ul(module_id_t module_idP, int slice_idx, int frameP, sub_frame_t subframeP, rnti_t *rntiTable);
 void assign_max_mcs_min_rb(module_id_t module_idP, int slice_idx, int frameP,
 			   sub_frame_t subframeP, uint16_t * first_rb);
 void adjust_bsr_info(int buffer_occupancy, uint16_t TBS,
@@ -1275,10 +1273,14 @@ void pre_scd_nb_rbs_required(    module_id_t     module_idP,
                                  uint16_t        nb_rbs_required[MAX_NUM_CCs][NUMBER_OF_UE_MAX]);
 #endif
 
-/*Slice related functions */
+/* Slice related functions */
 uint16_t nb_rbs_allowed_slice(float rb_percentage, int total_rbs);
 int ue_dl_slice_membership(module_id_t mod_id, int UE_id, int slice_idx);
 int ue_ul_slice_membership(module_id_t mod_id, int UE_id, int slice_idx);
+
+/* DRX Configuration */
+/* Configure local DRX timers and thresholds in UE context, following the drx_configuration input */
+void eNB_Config_Local_DRX(module_id_t Mod_id, rnti_t rnti, LTE_DRX_Config_t *drx_Configuration);
 
 /* from here: prototypes to get rid of compilation warnings: doc to be written by function author */
 uint8_t ul_subframe2_k_phich(COMMON_channels_t * cc, sub_frame_t ul_subframe);

@@ -35,6 +35,7 @@
 #include "flexran_agent.h"
 #include "s1ap_eNB.h"
 #include "SIMULATION/ETH_TRANSPORT/proto.h"
+#include "proto_agent.h"
 
 /* help strings definition for command line options, used in CMDLINE_XXX_DESC macros and printed when -h option is used */
 #define CONFIG_HLP_RFCFGF        "Configuration file for front-end (e.g. LMS7002M)\n"
@@ -243,6 +244,7 @@
 #define SOFTMODEM_NONBIOT_BIT         (1<<2)
 #define SOFTMODEM_RFSIM_BIT           (1<<10)
 #define SOFTMODEM_BASICSIM_BIT        (1<<11)
+#define SOFTMODEM_SIML1_BIT           (1<<12)
 typedef struct {
   uint64_t       optmask;
   THREAD_STRUCT  thread_struct;
@@ -265,6 +267,7 @@ typedef struct {
 #define IS_SOFTMODEM_NONBIOT         ( get_softmodem_optmask() & SOFTMODEM_NONBIOT_BIT)
 #define IS_SOFTMODEM_RFSIM           ( get_softmodem_optmask() & SOFTMODEM_RFSIM_BIT)
 #define IS_SOFTMODEM_BASICSIM        ( get_softmodem_optmask() & SOFTMODEM_BASICSIM_BIT)
+#define IS_SOFTMODEM_SIML1           ( get_softmodem_optmask() & SOFTMODEM_SIML1_BIT)
 extern uint64_t get_softmodem_optmask(void);
 extern uint64_t set_softmodem_optmask(uint64_t bitmask);
 extern void get_common_options(void);
