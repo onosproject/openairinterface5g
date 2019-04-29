@@ -174,14 +174,15 @@ void assign_rbs_required (module_id_t Mod_id,
                           frame_t     frameP,
                           sub_frame_t subframe,
                           uint16_t    nb_rbs_required[MAX_NUM_CCs][NUMBER_OF_UE_MAX],
-                          int         min_rb_unit[MAX_NUM_CCs])
+                          int         min_rb_unit[MAX_NUM_CCs],
+			  uint8_t     CC_id)
 {
 
 
   rnti_t           rnti;
   uint16_t         TBS = 0;
   LTE_eNB_UE_stats *eNB_UE_stats[MAX_NUM_CCs];
-  int              UE_id,n,i,j,CC_id,pCCid,tmp;
+  int              UE_id,n,i,j/*,CC_id*/,pCCid,tmp;
   int 		   k;
   int		   CC_list[MAX_NUM_CCs];
   int 		   num_UEs=0;
@@ -207,7 +208,7 @@ void assign_rbs_required (module_id_t Mod_id,
 	//printf("num_UEs[%d]=%d\n",k,UE_list->num_UEs[k]);
   }
 #endif
-  // clear rb allocations across all CC_ids
+  // clear rb allocations across each CC_id
   for (UE_id = 0; UE_id < NUMBER_OF_UE_MAX; UE_id++) {
     if (UE_list->active[UE_id] != TRUE) continue;
 
@@ -221,7 +222,7 @@ void assign_rbs_required (module_id_t Mod_id,
     //update CQI information across component carriers
     for (n=0; n<UE_list->numactiveCCs[UE_id]; n++) {
 
-      CC_id = UE_list->ordered_CCids[n][UE_id];
+      if (CC_id != UE_list->ordered_CCids[n][UE_id]) continue;
       frame_parms[CC_id] = mac_xface->get_lte_frame_parms(Mod_id,CC_id);
       eNB_UE_stats[CC_id] = mac_xface->get_eNB_UE_stats(Mod_id,CC_id,rnti);
       /*
@@ -262,7 +263,7 @@ void assign_rbs_required (module_id_t Mod_id,
       LOG_D(MAC,"[preprocessor] assign RB for UE %d\n",UE_id);
 
       for (i=0; i<UE_list->numactiveCCs[UE_id]; i++) {
-        CC_id = UE_list->ordered_CCids[i][UE_id];
+        if (CC_id != UE_list->ordered_CCids[i][UE_id]) continue;
         frame_parms[CC_id] = mac_xface->get_lte_frame_parms(Mod_id,CC_id);
         eNB_UE_stats[CC_id] = mac_xface->get_eNB_UE_stats(Mod_id,CC_id,rnti);
 
@@ -640,7 +641,7 @@ void dlsch_scheduler_pre_processor (module_id_t   Mod_id,
 
 
   // Calculate the number of RBs required by each UE on the basis of logical channel's buffer
-  assign_rbs_required (Mod_id,frameP,subframeP,nb_rbs_required,min_rb_unit);
+  assign_rbs_required (Mod_id,frameP,subframeP,nb_rbs_required,min_rb_unit,CC_id);
 
 
 
