@@ -505,9 +505,9 @@ class SSHConnection():
 			result = re.search('type: b200', str(self.ssh.before))
 			if result is not None:
 				logging.debug('Found a B2xx device --> resetting it')
-				self.command('echo ' + self.eNBPassword + ' | sudo -S sudo b2xx_fx3_utils --reset-device', '\$', 5)
+				##self.command('echo ' + self.eNBPassword + ' | sudo -S sudo b2xx_fx3_utils --reset-device', '\$', 5)
 				# Reloading FGPA bin firmware
-				self.command('echo ' + self.eNBPassword + ' | sudo -S uhd_find_devices', '\$', 5)
+				##self.command('echo ' + self.eNBPassword + ' | sudo -S uhd_find_devices', '\$', 5)
 		# Make a copy and adapt to EPC / eNB IP addresses
 		self.command('cp ' + full_config_file + ' ' + ci_full_config_file, '\$', 5)
 		self.command('sed -i -e \'s/CI_MME_IP_ADDR/' + self.EPCIPAddress + '/\' ' + ci_full_config_file, '\$', 2);
@@ -532,6 +532,7 @@ class SSHConnection():
 		time.sleep(6)
 		doLoop = True
 		loopCounter = 10
+		print('gNB log file: ' + 'enb_' + self.testCase_id + '.log')
 		while (doLoop):
 			loopCounter = loopCounter - 1
 			if (loopCounter == 0):
