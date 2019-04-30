@@ -312,7 +312,6 @@ class SSHConnection():
 			sys.exit('SCP failed')
 
 	def BuildeNB(self):
-		return()	
 		if self.eNBIPAddress == '' or self.eNBRepository == '' or self.eNBBranch == '' or self.eNBUserName == '' or self.eNBPassword == '' or self.eNBSourceCodePath == '':
 			Usage()
 			sys.exit('Insufficient Parameter')
@@ -349,7 +348,6 @@ class SSHConnection():
 		self.CreateHtmlTestRow(self.Build_eNB_args, 'OK', ALL_PROCESSES_OK)
 
 	def BuildOAIUE(self):
-		return()
 		if self.UEIPAddress == '' or self.eNBRepository == '' or self.eNBBranch == '' or self.UEUserName == '' or self.UEPassword == '' or self.UESourceCodePath == '':
 			Usage()
 			sys.exit('Insufficient Parameter')
@@ -504,7 +502,8 @@ class SSHConnection():
 			self.command('echo ' + self.eNBPassword + ' | sudo -S uhd_find_devices', '\$', 5)
 			result = re.search('type: b200', str(self.ssh.before))
 			if result is not None:
-				logging.debug('Found a B2xx device --> resetting it')
+				pass
+				##logging.debug('Found a B2xx device --> resetting it')
 				##self.command('echo ' + self.eNBPassword + ' | sudo -S sudo b2xx_fx3_utils --reset-device', '\$', 5)
 				# Reloading FGPA bin firmware
 				##self.command('echo ' + self.eNBPassword + ' | sudo -S uhd_find_devices', '\$', 5)
@@ -2508,7 +2507,7 @@ class SSHConnection():
 		#linux_distro = platform.linux_distribution()[0]
 		#if re.match('(.*)CentOS(.*)', linux_distro, re.IGNORECASE):
 			#self.command('source /etc/init.d/functions', '\$', 5)
-		##self.command('echo ' + self.UEPassword + ' | sudo -S daemon --name=ue' + str(self.UE_instance) + '_daemon --stop', '\$', 5)
+		#self.command('echo ' + self.UEPassword + ' | sudo -S daemon --name=ue' + str(self.UE_instance) + '_daemon --stop', '\$', 5)
 		self.command('rm -f my-lte-uesoftmodem-run' + str(self.UE_instance) + '.sh', '\$', 5)
 		self.command('echo ' + self.UEPassword + ' | sudo -S killall --signal SIGINT ' + self.air_interface + '-uesoftmodem || true', '\$', 5)
 		time.sleep(5)
@@ -3126,7 +3125,7 @@ def GetParametersFromXML(action):
 			SSH.air_interface = SSH.air_interface.lower()
 	
 	if action == 'Initialize_OAI_eNB':
-		SSH.Initialize_OAI_UE_args = test.findtext('Initialize_OAI_eNB_args')
+		SSH.Initialize_OAI_eNB_args = test.findtext('Initialize_OAI_eNB_args')
 		SSH.UE_instance = test.findtext('eNB_instance')
 		if (SSH.eNB_instance is None):
 			SSH.eNB_instance = '0'

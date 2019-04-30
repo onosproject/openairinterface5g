@@ -32,7 +32,7 @@
         <testCase id="090101">
                 <class>Initialize_OAI_eNB</class>
                 <desc>Initialize gNB USRP</desc>
-		<Initialize_OAI_eNB_args>-O ../../../targets/PROJECTS/GENERIC-LTE-EPC/CONF/boris.gnb.band78.tm1.106PRB.usrpn300.conf</Initialize_OAI_eNB_args>
+		<Initialize_OAI_eNB_args>-O ../../../targets/PROJECTS/GENERIC-LTE-EPC/CONF/gnb.band78.tm1.106PRB.usrpn300.conf</Initialize_OAI_eNB_args>
 		<air_interface>NR</air_interface>
         </testCase>
 
