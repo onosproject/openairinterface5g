@@ -663,7 +663,7 @@ class SSHConnection():
 		#use nohup instead of daemon
 		##self.command('echo $USER; nohup sudo ./my-lte-uesoftmodem-run' + str(self.UE_instance) + '.sh' + ' > ' + self.UESourceCodePath + '/cmake_targets/ue_' + self.testCase_id + '.log ' + ' 2>&1 &', self.UEUserName, 5)
 		#self.command('echo ' + self.UEPassword + ' | sudo -S -E daemon --inherit --unsafe --name=ue' + str(self.UE_instance) + '_daemon --chdir=' + self.UESourceCodePath + '/cmake_targets/ran_build/build -o ' + self.UESourceCodePath + '/cmake_targets/ue_' + self.testCase_id + '.log ./my-lte-uesoftmodem-run' + str(self.UE_instance) + '.sh', '\$', 5)
-		self.UELogFile = + 'ue_' + self.testCase_id + '.log'
+		self.UELogFile = 'ue_' + self.testCase_id + '.log'
 		time.sleep(6)
 		self.command('cd ../..', '\$', 5)
 		doLoop = True
