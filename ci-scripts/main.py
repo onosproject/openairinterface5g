@@ -323,7 +323,7 @@ class SSHConnection():
 		# Raphael: here add a check if git clone or git fetch went smoothly
 		self.command('git config user.email "jenkins@openairinterface.org"', '\$', 5)
 		self.command('git config user.name "OAI Jenkins"', '\$', 5)
-		##self.command('echo ' + self.eNBPassword + ' | sudo -S git clean -x -d -ff', '\$', 30)
+		self.command('echo ' + self.eNBPassword + ' | sudo -S git clean -x -d -ff', '\$', 30)
 		# if the commit ID is provided use it to point to it
 		if self.eNBCommitID != '':
 			self.command('git checkout -f ' + self.eNBCommitID, '\$', 5)
@@ -362,7 +362,7 @@ class SSHConnection():
 		self.command('git config user.name "OAI Jenkins"', '\$', 5)
 		if self.clean_repository:
 			pass
-			##self.command('echo ' + self.UEPassword + ' | sudo -S git clean -x -d -ff', '\$', 30)
+			self.command('echo ' + self.UEPassword + ' | sudo -S git clean -x -d -ff', '\$', 30)
 		# if the commit ID is provided use it to point to it
 		if self.eNBCommitID != '':
 			self.command('git checkout -f ' + self.eNBCommitID, '\$', 5)
@@ -517,7 +517,7 @@ class SSHConnection():
 		self.command('cd cmake_targets', '\$', 5)
 		self.command('echo "ulimit -c unlimited && ./ran_build/build/' + self.air_interface + '-softmodem -O ' + self.eNBSourceCodePath + '/' + ci_full_config_file + extra_options + '" > ./my-lte-softmodem-run' + str(self.eNB_instance) + '.sh ', '\$', 5)
 		self.command('chmod 775 ./my-lte-softmodem-run' + str(self.eNB_instance) + '.sh ', '\$', 5)
-		##self.command('echo ' + self.eNBPassword + ' | sudo -S rm -Rf enb_' + self.testCase_id + '.log', '\$', 5)				
+		self.command('echo ' + self.eNBPassword + ' | sudo -S rm -Rf enb_' + self.testCase_id + '.log', '\$', 5)				
 		#to use daemon on CentOS we need to source the function
 		#linux_distro = platform.linux_distribution()[0]
 		#if re.match('(.*)CentOS(.*)', linux_distro, re.IGNORECASE):
@@ -655,13 +655,13 @@ class SSHConnection():
 		self.command('cd cmake_targets/ran_build/build', '\$', 5)
 		self.command('echo "ulimit -c unlimited && ./'+ self.air_interface +'-uesoftmodem ' + self.Initialize_OAI_UE_args + '" > ./my-lte-uesoftmodem-run' + str(self.UE_instance) + '.sh', '\$', 5)
 		self.command('chmod 775 ./my-lte-uesoftmodem-run' + str(self.UE_instance) + '.sh', '\$', 5)
-		##self.command('echo ' + self.UEPassword + ' | sudo -S rm -Rf ' + self.UESourceCodePath + '/cmake_targets/ue_' + self.testCase_id + '.log', '\$', 5)
+		self.command('echo ' + self.UEPassword + ' | sudo -S rm -Rf ' + self.UESourceCodePath + '/cmake_targets/ue_' + self.testCase_id + '.log', '\$', 5)
 		#to use daemon on CentOS we need to source the function
 		#linux_distro = platform.linux_distribution()[0]		
 		#if re.match('(.*)CentOS(.*)', linux_distro, re.IGNORECASE):
 			#self.command('source /etc/init.d/functions', '\$', 5)
 		#use nohup instead of daemon
-		##self.command('echo $USER; nohup sudo ./my-lte-uesoftmodem-run' + str(self.UE_instance) + '.sh' + ' > ' + self.UESourceCodePath + '/cmake_targets/ue_' + self.testCase_id + '.log ' + ' 2>&1 &', self.UEUserName, 5)
+		self.command('echo $USER; nohup sudo ./my-lte-uesoftmodem-run' + str(self.UE_instance) + '.sh' + ' > ' + self.UESourceCodePath + '/cmake_targets/ue_' + self.testCase_id + '.log ' + ' 2>&1 &', self.UEUserName, 5)
 		#self.command('echo ' + self.UEPassword + ' | sudo -S -E daemon --inherit --unsafe --name=ue' + str(self.UE_instance) + '_daemon --chdir=' + self.UESourceCodePath + '/cmake_targets/ran_build/build -o ' + self.UESourceCodePath + '/cmake_targets/ue_' + self.testCase_id + '.log ./my-lte-uesoftmodem-run' + str(self.UE_instance) + '.sh', '\$', 5)
 		self.UELogFile = 'ue_' + self.testCase_id + '.log'
 		time.sleep(6)
@@ -749,13 +749,13 @@ class SSHConnection():
 		self.eNBLogFile = 'enb_' + self.testCase_id + '.log'
 		self.command('echo "ulimit -c unlimited && ./' + self.air_interface + '-softmodem ' + self.Initialize_OAI_eNB_args + '|& tee ' + self.eNBSourceCodePath + '/cmake_targets/' + self.eNBLogFile + '" > ./my-lte-softmodem-run' + str(self.eNB_instance) + '.sh', '\$', 5)
 		self.command('chmod 775 ./my-lte-softmodem-run' + str(self.eNB_instance) + '.sh', '\$', 5)
-		##self.command('echo ' + self.eNBPassword + ' | sudo -S rm -Rf ' + self.eNBSourceCodePath + '/cmake_targets/enb_' + self.testCase_id + '.log', '\$', 5)
+		self.command('echo ' + self.eNBPassword + ' | sudo -S rm -Rf ' + self.eNBSourceCodePath + '/cmake_targets/enb_' + self.testCase_id + '.log', '\$', 5)
 		#to use daemon on CentOS we need to source the function
 		#linux_distro = platform.linux_distribution()[0]		
 		#if re.match('(.*)CentOS(.*)', linux_distro, re.IGNORECASE):
 			#self.command('source /etc/init.d/functions', '\$', 5)
 		#use nohup instead of daemon
-		##self.command('echo $USER; nohup sudo ./my-lte-softmodem-run' + str(self.eNB_instance) + '.sh' + ' > ' + self.eNBSourceCodePath + '/cmake_targets/enb_' + self.testCase_id + '.log' + ' 2>&1 &', self.eNBUserName, 5)
+		self.command('echo $USER; nohup sudo ./my-lte-softmodem-run' + str(self.eNB_instance) + '.sh' + ' > ' + self.eNBSourceCodePath + '/cmake_targets/enb_' + self.testCase_id + '.log' + ' 2>&1 &', self.eNBUserName, 5)
 		#self.command('echo ' + self.eNBPassword + ' | sudo -S -E daemon --inherit --unsafe --name=enb' + str(self.eNB_instance) + '_daemon --chdir=' + self.eNBSourceCodePath + '/cmake_targets/ran_build/build -o ' + self.eNBSourceCodePath + '/cmake_targets/enb_' + self.testCase_id + '.log ./my-lte-softmodem-run' + str(self.eNB_instance) + '.sh', '\$', 5)
 		time.sleep(6)
 		self.command('cd ../..', '\$', 5)
@@ -2359,9 +2359,9 @@ class SSHConnection():
 		#if re.match('(.*)CentOS(.*)', linux_distro, re.IGNORECASE):
 			#self.command('source /etc/init.d/functions', '\$', 5)
 		#use nohup instead of daemon
-		##self.command('echo ' + self.eNBPassword + ' | sudo -S daemon --name=enb' + str(self.eNB_instance) + '_daemon --stop', '\$', 5)
+		self.command('echo ' + self.eNBPassword + ' | sudo -S daemon --name=enb' + str(self.eNB_instance) + '_daemon --stop', '\$', 5)
 		#self.command('echo $USER; nohup sudo ./my-lte-softmodem-run ' + ' > ' + self.eNBSourceCodePath + '/cmake_targets/enb_' + self.testCase_id + '.log' + ' 2>&1 &', self.eNBUserName, 5)
-		##self.command('rm -f my-lte-softmodem-run' + str(self.eNB_instance) + '.sh', '\$', 5)
+		self.command('rm -f my-lte-softmodem-run' + str(self.eNB_instance) + '.sh', '\$', 5)
 		self.command('echo ' + self.eNBPassword + ' | sudo -S killall --signal SIGINT ' + self.air_interface + '-softmodem || true', '\$', 5)
 		time.sleep(5)
 		self.command('stdbuf -o0  ps -aux | grep -v grep | grep ' + self.air_interface + '-softmodem', '\$', 5)
@@ -2509,7 +2509,7 @@ class SSHConnection():
 		#if re.match('(.*)CentOS(.*)', linux_distro, re.IGNORECASE):
 			#self.command('source /etc/init.d/functions', '\$', 5)
 		##self.command('echo ' + self.UEPassword + ' | sudo -S daemon --name=ue' + str(self.UE_instance) + '_daemon --stop', '\$', 5)
-		##self.command('rm -f my-lte-uesoftmodem-run' + str(self.UE_instance) + '.sh', '\$', 5)
+		self.command('rm -f my-lte-uesoftmodem-run' + str(self.UE_instance) + '.sh', '\$', 5)
 		self.command('echo ' + self.UEPassword + ' | sudo -S killall --signal SIGINT ' + self.air_interface + '-uesoftmodem || true', '\$', 5)
 		time.sleep(5)
 		self.command('stdbuf -o0  ps -aux | grep -v grep | grep ' + self.air_interface + '-uesoftmodem', '\$', 5)
@@ -2616,7 +2616,7 @@ class SSHConnection():
 		self.command('cd cmake_targets', '\$', 5)
 		self.command('echo ' + self.eNBPassword + ' | sudo -S rm -f enb.log.zip', '\$', 5)
 		self.command('echo ' + self.eNBPassword + ' | sudo -S zip enb.log.zip enb*.log core* enb_*record.raw enb_*.pcap enb_*txt', '\$', 60)
-		##self.command('echo ' + self.eNBPassword + ' | sudo -S rm enb*.log core* enb_*record.raw enb_*.pcap enb_*txt', '\$', 5)
+		self.command('echo ' + self.eNBPassword + ' | sudo -S rm enb*.log core* enb_*record.raw enb_*.pcap enb_*txt', '\$', 5)
 		self.close()
 
 	def LogCollectPing(self):
@@ -2681,7 +2681,7 @@ class SSHConnection():
 		self.command('cd ' + self.UESourceCodePath, '\$', 5)
 		self.command('cd cmake_targets', '\$', 5)
 		self.command('echo ' + self.UEPassword + ' | sudo -S rm -f ue.log.zip', '\$', 5)
-		##self.command('echo ' + self.UEPassword + ' | sudo -S zip ue.log.zip ue*.log core* ue_*record.raw ue_*.pcap ue_*txt', '\$', 60)
+		self.command('echo ' + self.UEPassword + ' | sudo -S zip ue.log.zip ue*.log core* ue_*record.raw ue_*.pcap ue_*txt', '\$', 60)
 		self.command('echo ' + self.UEPassword + ' | sudo -S rm ue*.log core* ue_*record.raw ue_*.pcap ue_*txt', '\$', 5)
 		self.close()
 
