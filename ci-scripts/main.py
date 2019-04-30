@@ -668,6 +668,9 @@ class SSHConnection():
 		self.command('cd ../..', '\$', 5)
 		doLoop = True
 		loopCounter = 10
+		print('current directory: ' + os.getcwd())
+		self.command('pwd', '\$', 4)
+		print('self.command pwd: ' + str(self.ssh.before))
 		while (doLoop):
 			loopCounter = loopCounter - 1
 			if (loopCounter == 0):
