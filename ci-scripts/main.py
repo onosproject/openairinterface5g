@@ -3097,6 +3097,11 @@ def GetParametersFromXML(action):
 		SSH.eNB_instance = test.findtext('eNB_instance')
 		if (SSH.eNB_instance is None):
 			SSH.eNB_instance = '0'
+		SSH.air_interface = test.findtext('air_interface')
+		if (SSH.air_interface is None):
+			SSH.air_interface = 'lte'
+		else:
+			SSH.air_interface = SSH.air_interface.lower()
 
 	if action == 'Attach_UE':
 		nbMaxUEtoAttach = test.findtext('nbMaxUEtoAttach')
@@ -3139,6 +3144,11 @@ def GetParametersFromXML(action):
 		SSH.eNB_instance = test.findtext('UE_instance')
 		if (SSH.UE_instance is None):
 			SSH.UE_instance = '0'
+		SSH.air_interface = test.findtext('air_interface')
+		if (SSH.air_interface is None):
+			SSH.air_interface = 'lte'
+		else:
+			SSH.air_interface = SSH.air_interface.lower()
 
 	if action == 'Ping' or action == 'Ping_CatM_module':
 		SSH.ping_args = test.findtext('ping_args')
