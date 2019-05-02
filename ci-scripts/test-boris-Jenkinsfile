@@ -55,7 +55,7 @@ def eNB_TargetBranch
 def PROJECT_NAME = "test-boris"
 def GIT_COMMIT_AUTHOR
 def GIT_COMMIT_EMAIL
-def modeList = ['TestUE', 'TesteNB', 'TesteNB', 'TestUE', 'TesteNB']
+def modeList = ['TestUE', 'TesteNB', 'TesteNB', 'TestUE', 'TesteNB', 'TestUE', 'TesteNB']
 
 // Global Parameters not to break the main.py command line and code.
 def ADB_IPAddress = "none"

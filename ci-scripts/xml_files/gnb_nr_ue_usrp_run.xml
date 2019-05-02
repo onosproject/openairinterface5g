@@ -25,7 +25,7 @@
         <htmlTabName>run-OAI-gNB-NR-UE-USRP</htmlTabName>
         <htmlTabIcon>tasks</htmlTabIcon>	
 	<TestCaseRequestedList>
-090101 000001 090102 000001 090103 000001 090109
+090101 000001 090102 000001
 	</TestCaseRequestedList>
 	<TestCaseExclusionList></TestCaseExclusionList>
 	
@@ -54,21 +54,5 @@
                 <desc>Sleep</desc>
                 <idle_sleep_time_in_sec>30</idle_sleep_time_in_sec>
         </testCase>
-
-        <testCase id="090103">
-                <class>Terminate_OAI_UE</class>
-                <desc>Terminate NR UE</desc>
-        </testCase>
-
-        <testCase id="000001">
-                <class>IdleSleep</class>
-                <desc>Sleep</desc>
-                <idle_sleep_time_in_sec>30</idle_sleep_time_in_sec>
-        </testCase>
-
-	<testCase id="090109">
-		<class>Terminate_eNB</class>
-		<desc>Terminate gNB</desc>
-	</testCase>
 
 </testCaseList>
