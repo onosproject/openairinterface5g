@@ -3361,7 +3361,10 @@ elif re.match('^InitiateHtml$', mode, re.IGNORECASE):
 	while (count < SSH.nbTestXMLfiles):
 		xml_test_file = cwd + "/" + SSH.testXMLfiles[count]
 		if (os.path.isfile(xml_test_file)):
-			xmlTree = ET.parse(xml_test_file)
+			try:
+				xmlTree = ET.parse(xml_test_file)
+			except:
+				print("Error while parsing file: " + xml_test_file)
 			xmlRoot = xmlTree.getroot()
 			SSH.htmlTabRefs.append(xmlRoot.findtext('htmlTabRef',default='test-tab-' + str(count)))
 			SSH.htmlTabNames.append(xmlRoot.findtext('htmlTabName',default='Test-' + str(count)))
