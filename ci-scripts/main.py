@@ -697,9 +697,12 @@ class SSHConnection():
 				sys.exit(1)
 			else:
 				self.command('stdbuf -o0 cat ' + self.UELogFile + ' | egrep --text --color=never -i "wait|sync"', '\$', 4)
-				result = re.search('got sync', str(self.ssh.before))
+				if self.air_interface == 'nr':
+					result = re.search('Starting sync detection', str(self.ssh.before))
+				else:
+					result = re.search('got sync', str(self.ssh.before))
 				if result is None:
-					time.sleep(6)
+					time.sleep(10)
 				else:
 					doLoop = False
 					self.CreateHtmlTestRow(self.Initialize_OAI_UE_args, 'OK', ALL_PROCESSES_OK, 'OAI UE')
@@ -794,7 +797,7 @@ class SSHConnection():
 				#print(self.ssh.before)
 				result = re.search('got sync', str(self.ssh.before))
 				if result is None:
-					time.sleep(6)
+					time.sleep(10)
 				else:
 					doLoop = False
 					self.CreateHtmlTestRow(self.Initialize_OAI_eNB_args, 'OK', ALL_PROCESSES_OK, 'OAI eNB')
