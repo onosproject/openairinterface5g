@@ -55,8 +55,8 @@ def eNB_TargetBranch
 def PROJECT_NAME = "test-boris"
 def GIT_COMMIT_AUTHORi
 def GIT_COMMIT_EMAIL
-// Reversing list because pop() will take the last element
-def modeList = ['TestUE', 'TesteNB', 'TesteNB', 'TestUE', 'TesteNB', 'TestUE', 'TesteNB'].reverse()
+// Reversing list because pop() will take the last (right-most) element
+def modeList = ['TesteNB', 'TestUE', 'TesteNB', 'TestUE', 'TesteNB'].reverse()
 
 // Global Parameters not to break the main.py command line and code.
 def ADB_IPAddress = "none"
