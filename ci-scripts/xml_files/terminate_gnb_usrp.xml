@@ -1,0 +1,23 @@
+<testCaseList>
+        <htmlTabRef>Terminate gNB USRP</htmlTabRef>
+        <htmlTabName>terminate-gNB-USRP</htmlTabName>
+        <htmlTabIcon>tasks</htmlTabIcon>
+        <TestCaseRequestedList>
+090109 000001
+        </TestCaseRequestedList>
+        <TestCaseExclusionList></TestCaseExclusionList>
+
+        <testCase id="090109">
+                <class>Terminate_eNB</class>
+                <desc>Terminate gNB</desc>
+        </testCase>
+
+        <testCase id="000001">
+                <class>IdleSleep</class>
+                <desc>Sleep</desc>
+                <idle_sleep_time_in_sec>30</idle_sleep_time_in_sec>
+        </testCase>
+
+</testCaseList>
+                                                                                                                                                                                          74,1          Bot
+
