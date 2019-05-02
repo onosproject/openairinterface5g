@@ -25,9 +25,31 @@
 	<htmlTabName>Build</htmlTabName>
 	<htmlTabIcon>wrench</htmlTabIcon>
 	<TestCaseRequestedList>
-090101
+090103 000001 090109 000001 090101
 	</TestCaseRequestedList>
 	<TestCaseExclusionList></TestCaseExclusionList>
+
+        <testCase id="090103">
+                <class>Terminate_OAI_UE</class>
+                <desc>Terminate NR UE</desc>
+        </testCase>
+
+        <testCase id="000001">
+                <class>IdleSleep</class>
+                <desc>Sleep</desc>
+                <idle_sleep_time_in_sec>30</idle_sleep_time_in_sec>
+        </testCase>
+
+	<testCase id="090109">
+		<class>Terminate_eNB</class>
+		<desc>Terminate gNB</desc>
+	</testCase>
+
+        <testCase id="000001">
+                <class>IdleSleep</class>
+                <desc>Sleep</desc>
+                <idle_sleep_time_in_sec>30</idle_sleep_time_in_sec>
+        </testCase>
 
 	<testCase id="090101">
 		<mode>TesteNB</mode>	

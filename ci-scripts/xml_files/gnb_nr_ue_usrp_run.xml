@@ -21,13 +21,39 @@
 
 -->
 <testCaseList>
-        <htmlTabRef>terminate gNB and NR UE USRPs</htmlTabRef>
-        <htmlTabName>terminate-gNB-NR-UE-USRP</htmlTabName>
+        <htmlTabRef>run gNB USRP</htmlTabRef>
+        <htmlTabName>run-gNB-USRP</htmlTabName>
         <htmlTabIcon>tasks</htmlTabIcon>	
 	<TestCaseRequestedList>
-090103 000001 090109 000001
+090101 000001 090102 000001 090103 000001 090109
 	</TestCaseRequestedList>
 	<TestCaseExclusionList></TestCaseExclusionList>
+	
+        <testCase id="090101">
+                <class>Initialize_OAI_eNB</class>
+                <desc>Initialize gNB USRP</desc>
+		<Initialize_OAI_eNB_args>-O ../../../targets/PROJECTS/GENERIC-LTE-EPC/CONF/gnb.band78.tm1.106PRB.usrpn300.conf</Initialize_OAI_eNB_args>
+		<air_interface>NR</air_interface>
+        </testCase>
+
+	<testCase id="000001">
+		<class>IdleSleep</class>
+		<desc>Sleep</desc>
+		<idle_sleep_time_in_sec>30</idle_sleep_time_in_sec>
+	</testCase>
+
+        <testCase id="090102">
+                <class>Initialize_OAI_UE</class>
+                <desc>Initialize NR UE USRP</desc>
+		<Initialize_OAI_UE_args>-C 3510000000 --numerology 1 -r 106 --phy-test --usrp-args "addr=192.168.30.2,clock_source=external,time_source=external" --threadoffset 16</Initialize_OAI_UE_args>
+		<air_interface>NR</air_interface>
+        </testCase>
+
+        <testCase id="000001">
+                <class>IdleSleep</class>
+                <desc>Sleep</desc>
+                <idle_sleep_time_in_sec>30</idle_sleep_time_in_sec>
+        </testCase>
 
         <testCase id="090103">
                 <class>Terminate_OAI_UE</class>
@@ -44,11 +70,5 @@
 		<class>Terminate_eNB</class>
 		<desc>Terminate gNB</desc>
 	</testCase>
-
-        <testCase id="000001">
-                <class>IdleSleep</class>
-                <desc>Sleep</desc>
-                <idle_sleep_time_in_sec>30</idle_sleep_time_in_sec>
-        </testCase>
 
 </testCaseList>
