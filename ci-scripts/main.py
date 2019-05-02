@@ -787,9 +787,9 @@ class SSHConnection():
 				#		self.copyout(self.eNBIPAddress, self.eNBUserName, self.eNBPassword, pcap_log_file, self.eNBSourceCodePath + '/cmake_targets/.')
 				sys.exit(1)
 			else:
-				print('current directory: ' + os.getcwd())
-				self.command('pwd', '\$', 4)
-				print('self.command pwd: ' + str(self.ssh.before))
+				#print('current directory: ' + os.getcwd())
+				#self.command('pwd', '\$', 4)
+				#print('self.command pwd: ' + str(self.ssh.before))
 				self.command('stdbuf -o0 cat ' + self.eNBLogFile + ' | egrep --text --color=never -i "wait|sync"', '\$', 4)
 				#print(self.ssh.before)
 				result = re.search('got sync', str(self.ssh.before))
