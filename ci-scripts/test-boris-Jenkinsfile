@@ -234,6 +234,7 @@ pipeline {
         	    	    for (xmlFile in myXmlTestSuite) {
         	    	    if (fileExists(xmlFile)) {
         	    	        try {
+				    echo "DEBUG FOR"
 				    echo "python3 main.py --mode=TesteNB --eNBIPAddress=${params.eNB_IPAddress} --eNBUserName=${eNB_Username} --eNBPassword=${eNB_Password} ---UEIPAddress=${params.eNB_IPAddress} --UEUserName=${eNB_Username} --UEPassword=${eNB_Password} -eNBBranch=${eNB_Branch} --eNBSourceCodePath=${params.eNB_SourceCodePath} ---UESourceCodePath=${params.UE_SourceCodePath} --eNBRepository=${eNB_Repository} --UERepository=${UE_Repository} --eNBCommitID=${eNB_CommitID} --ADBIPAddress=${ADB_IPAddress} --EPCIPAddress=${EPC_IPAddress} --XMLTestFile=${xmlFile}"
         	    	            sh "python3 main.py --mode=TesteNB --eNBIPAddress=${params.eNB_IPAddress} --eNBUserName=${eNB_Username} --eNBPassword=${eNB_Password} ---UEIPAddress=${params.eNB_IPAddress} --UEUserName=${eNB_Username} --UEPassword=${eNB_Password} -eNBBranch=${eNB_Branch} --eNBSourceCodePath=${params.eNB_SourceCodePath} ---UESourceCodePath=${params.UE_SourceCodePath} --eNBRepository=${eNB_Repository} --UERepository=${UE_Repository} --eNBCommitID=${eNB_CommitID} --ADBIPAddress=${ADB_IPAddress} --EPCIPAddress=${EPC_IPAddress} --XMLTestFile=${xmlFile}"
         	    	        } catch (Exception e) {
