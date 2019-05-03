@@ -327,7 +327,7 @@ echo  "sh \"python3 main.py --mode=TesteNB --eNBIPAddress=${params.eNB_IPAddress
         		     [$class: 'UsernamePasswordMultiBinding', credentialsId: "${params.eNB_Credentials}", usernameVariable: 'eNB_Username', passwordVariable: 'eNB_Password']
         		]) {
         		    echo '\u2705 \u001B[32mLog Collection (gNB - Run)\u001B[0m'
-        		    sh "python3 ci-scripts/main.py --mode=LogCollectUE --eNBIPAddress=${params.eNB_IPAddress} --eNBUserName=${eNB_Username} --eNBPassword=${eNB_Password} --eNBSourceCodePath=${params.eNB_SourceCodePath}"
+        		    sh "python3 ci-scripts/main.py --mode=LogCollectOAIUE --eNBIPAddress=${params.eNB_IPAddress} --eNBUserName=${eNB_Username} --eNBPassword=${eNB_Password} --eNBSourceCodePath=${params.eNB_SourceCodePath}"
         
         		    echo '\u2705 \u001B[32mLog Transfer (gNB - Run)\u001B[0m'
         		    sh "sshpass -p \'${eNB_Password}\' scp -o 'StrictHostKeyChecking no' -o 'ConnectTimeout 10' ${eNB_Username}@${params.eNB_IPAddress}:${eNB_SourceCodePath}/cmake_targets/nr-ue.log.zip ./nr-ue.log.${env.BUILD_ID}.zip || true"
