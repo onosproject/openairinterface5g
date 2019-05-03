@@ -797,7 +797,7 @@ class SSHConnection():
 				#print(self.ssh.before)
 				result = re.search('got sync', str(self.ssh.before))
 				if result is None:
-					time.sleep(10)
+					time.sleep(11)
 				else:
 					doLoop = False
 					self.CreateHtmlTestRow(self.Initialize_OAI_eNB_args, 'OK', ALL_PROCESSES_OK, 'OAI eNB')
