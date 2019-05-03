@@ -322,13 +322,6 @@ pipeline {
             script {
                 // Stage destroy may not be run if error in previous stage
                 //sh "./ci-scripts/oai-ci-vm-tool destroy --job-name ${JOB_NAME} --build-id ${BUILD_ID}"
-		echo "PROJECT_NAME = ${PROJECT_NAME}"		
-		echo "BUILD_NUMBER = ${BUILD_NUMBER}"		
-		echo "BUILD_STAGE_STATUS = ${BUILD_STAGE_STATUS}"
-		echo "GIT_URL = ${GIT_URL}"
-		echo "env.gitlabSourceBranch = ${env.gitlabSourceBranch}"
-		echo "env.gitlabMergeRequestLastCommit = ${env.gitlabMergeRequestLastCommit}"
-		echo "env.gitlabTargetBranch = ${env.gitlabTargetBranch}"		
                 emailext attachmentsPattern: '*results*.html',
                      body: '''Hi,
 Here are attached HTML report files for $PROJECT_NAME - Build # $BUILD_NUMBER - $BUILD_STATUS!
