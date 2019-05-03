@@ -97,8 +97,6 @@ pipeline {
         	        echo "  Repository -- ${GIT_URL}"
         	        echo "  Branch -- ${GIT_BRANCH}"
         	        echo "  Commit -- ${GIT_COMMIT}"
-        	        sh "git log -n1"
-        	        //eNB_Repository = ${GIT_URL}
         	    }
             }
         }
@@ -195,12 +193,6 @@ pipeline {
                         echo "Some parameters are missing"
                         sh "./ci-scripts/fail.sh"
                     }
-                    // The following parameters are kept not to break the current main.py command line and code.
-                    // They should be removed in the future.
-                    //if (params.ADB_IPAddress == null) {
-                    //    params.ADB_IPAddress = "none"
-                    //}
-                    //echo "params.ADB_IPAddress = ${params.ADB_IPAddress}"
                 }
             }
         }
@@ -209,22 +201,6 @@ pipeline {
             steps {
         	    script {
         	        dir ('ci-scripts') {
-        	    	echo "\u2705 \u001B[32m${testStageName}\u001B[0m"
-        	    	echo "params.eNB_Credentials = ${params.eNB_Credentials}"
-        	    	echo "params.UE_Credentials = ${params.UE_Credentials}"
-        	    	echo "eNB_Repository = ${eNB_Repository}"
-        	    	echo "eNB_Branch= ${eNB_Branch}"
-        	    	echo "eNB_CommitID= ${eNB_CommitID}"
-        	    	echo "eNB_AllowMergeRequestProcess= ${eNB_AllowMergeRequestProcess}"
-        	    	echo "params.ADB_IPAddress= ${params.ADB_IPAddress}"
-        	    	echo "ADB_IPAddress= ${ADB_IPAddress}"
-        	    	echo "ADB_Username = ${ADB_Username}"
-        	    	echo "ADB_Password = ${ADB_Password}"
-        	    	echo "params.eNB_IPAddress = ${params.eNB_IPAddress}"
-        	    	echo "params.eNB_SourceCodePath = ${params.eNB_SourceCodePath}"
-        	    	echo "ADB_IPAddress = ${ADB_IPAddress}"
-        	    	echo "EPC_IPAddress = ${EPC_IPAddress}"
-        	    	echo "BUILD_STAGE_STATUS = ${BUILD_STAGE_STATUS}"
         	    	withCredentials([
         	    	    [$class: 'UsernamePasswordMultiBinding', credentialsId: "${params.eNB_Credentials}", usernameVariable: 'eNB_Username', passwordVariable: 'eNB_Password'],
         	    	    [$class: 'UsernamePasswordMultiBinding', credentialsId: "${params.UE_Credentials}", usernameVariable: 'UE_Username', passwordVariable: 'UE_Password']
@@ -234,8 +210,6 @@ pipeline {
         	    	    for (xmlFile in myXmlTestSuite) {
         	    	    if (fileExists(xmlFile)) {
         	    	        try {
-				    echo "The test will be executed here. The command would be:"
-echo  "sh \"python3 main.py --mode=TesteNB --eNBIPAddress=${params.eNB_IPAddress} --eNBUserName=${eNB_Username} --eNBPassword=${eNB_Password} --UEIPAddress=${params.eNB_IPAddress} --UEUserName=${eNB_Username} --UEPassword=${eNB_Password} --eNBBranch=${eNB_Branch} --eNBSourceCodePath=${params.eNB_SourceCodePath} --UESourceCodePath=${params.eNB_SourceCodePath} --eNBRepository=${eNB_Repository} --eNBCommitID=${eNB_CommitID} --ADBIPAddress=${ADB_IPAddress} --EPCIPAddress=${EPC_IPAddress} --XMLTestFile=${xmlFile}\""
         	    	            sh "python3 main.py --mode=TesteNB --eNBIPAddress=${params.eNB_IPAddress} --eNBUserName=${eNB_Username} --eNBPassword=${eNB_Password} --UEIPAddress=${params.eNB_IPAddress} --UEUserName=${eNB_Username} --UEPassword=${eNB_Password} --eNBBranch=${eNB_Branch} --eNBSourceCodePath=${params.eNB_SourceCodePath} --UESourceCodePath=${params.eNB_SourceCodePath} --eNBRepository=${eNB_Repository} --eNBCommitID=${eNB_CommitID} --ADBIPAddress=${ADB_IPAddress} --EPCIPAddress=${EPC_IPAddress} --XMLTestFile=${xmlFile}"
         	    	        } catch (Exception e) {
         	    	            currentBuild.result = 'FAILURE'
@@ -335,11 +309,6 @@ echo  "sh \"python3 main.py --mode=TesteNB --eNBIPAddress=${params.eNB_IPAddress
         		script {
         		    if(fileExists("ue.log.${env.BUILD_ID}.zip")) {
         			archiveArtifacts "ue.log.${env.BUILD_ID}.zip"
-        		    }
-        		    if(fileExists("ci-scripts/test_results.html")) {
-        			sh "mv ci-scripts/test_results.html test_results-${JOB_NAME}.html"
-        			sh "sed -i -e 's#TEMPLATE_JOB_NAME#${JOB_NAME}#' -e 's@build #TEMPLATE_BUILD_ID@build #${BUILD_ID}@' -e 's#Build-ID: TEMPLATE_BUILD_ID#Build-ID: <a href=\"${BUILD_URL}\">${BUILD_ID}</a>#' -e 's#TEMPLATE_STAGE_NAME#${testStageName}#' test_results-${JOB_NAME}.html"
-        			archiveArtifacts "test_results-${JOB_NAME}.html"
         		    }
         		}
         	    }

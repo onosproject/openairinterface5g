@@ -25,11 +25,11 @@
 	<htmlTabName>Build</htmlTabName>
 	<htmlTabIcon>wrench</htmlTabIcon>
 	<TestCaseRequestedList>
-090101
+010101
 	</TestCaseRequestedList>
 	<TestCaseExclusionList></TestCaseExclusionList>
 
-	<testCase id="090101">
+	<testCase id="010101">
 		<mode>TesteNB</mode>	
 		<class>Build_eNB</class>
 		<desc>Build gNB (USRP)</desc>

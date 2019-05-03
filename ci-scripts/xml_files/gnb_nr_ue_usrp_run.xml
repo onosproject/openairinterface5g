@@ -26,7 +26,7 @@
         <htmlTabName>run-OAI-gNB-NR-UE-USRP</htmlTabName>
         <htmlTabIcon>tasks</htmlTabIcon>	
 	<TestCaseRequestedList>
-090101 000001 090102 000001 090103 090109
+090101 000001 090102 000001 090108 090109
 	</TestCaseRequestedList>
 	<TestCaseExclusionList></TestCaseExclusionList>
 	
@@ -50,7 +50,7 @@
 		<air_interface>NR</air_interface>
         </testCase>
 
-        <testCase id="090103">
+        <testCase id="090108">
                 <class>Terminate_OAI_UE</class>
                 <desc>Terminate NR UE</desc>
 		<air_interface>NR</air_interface>
