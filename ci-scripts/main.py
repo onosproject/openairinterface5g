@@ -3388,7 +3388,7 @@ elif re.match('^TesteNB$', mode, re.IGNORECASE) or re.match('^TestUE$', mode, re
 	if re.match('^TesteNB$', mode, re.IGNORECASE):
 		if (SSH.eNBRepository == '' or SSH.eNBBranch == '' or SSH.eNBSourceCodePath == ''):
 			Usage()
-                        sys.exit('Insufficient Parameter')
+			sys.exit('Insufficient Parameter')
 		if (SSH.eNBIPAddress == '' or SSH.eNBUserName == '' or SSH.eNBPassword == '') and (SSH.UEIPAddress == '' or SSH.UEUserName == '' or SSH.UEPassword == ''):
 			Usage()
 			sys.exit('Insufficient Parameter')
