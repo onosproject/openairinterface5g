@@ -26,7 +26,7 @@
         <htmlTabName>run-OAI-gNB-NR-UE-USRP</htmlTabName>
         <htmlTabIcon>tasks</htmlTabIcon>	
 	<TestCaseRequestedList>
-090102 
+090101 000001 090102 000001 090103 090109
 	</TestCaseRequestedList>
 	<TestCaseExclusionList></TestCaseExclusionList>
 	
