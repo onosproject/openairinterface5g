@@ -232,11 +232,6 @@ pipeline {
         	    	    sh "python3 main.py --mode=InitiateHtml --eNBRepository=${eNB_Repository} --eNBBranch=${eNB_Branch} --eNBCommitID=${eNB_CommitID} --eNB_AllowMerge=${eNB_AllowMergeRequestProcess} --ADBIPAddress=${ADB_IPAddress} --ADBUserName=${ADB_Username} --ADBPassword=${ADB_Password} --eNBIPAddress=${params.eNB_IPAddress} --eNBUserName=${eNB_Username} --eNBPassword=${eNB_Password} ${mainPythonAllXmlFiles}"
         	    	    String[] myXmlTestSuite = testXMLFile.split("\\r?\\n")
         	    	    for (xmlFile in myXmlTestSuite) {
-			    //mode = modeList.pop()
-			    //machine = 'eNB'
-		            //if ( mode == 'TestUE' ) {
-			    //    machine = 'UE'
-			    //} 
         	    	    if (fileExists(xmlFile)) {
         	    	        try {
         	    	            sh "python3 main.py --mode=TesteNB --eNBIPAddress=${params.eNB_IPAddress} --eNBUserName=${eNB_Username} --eNBPassword=${eNB_Password} ---UEIPAddress=${params.eNB_IPAddress} --UEUserName=${eNB_Username} --UEPassword=${eNB_Password} -eNBBranch=${eNB_Branch} --eNBSourceCodePath=${params.eNB_SourceCodePath} ---UESourceCodePath=${params.UE_SourceCodePath} --eNBRepository=${eNB_Repository} --UERepository=${UE_Repository} --eNBCommitID=${eNB_CommitID} --ADBIPAddress=${ADB_IPAddress} --EPCIPAddress=${EPC_IPAddress} --XMLTestFile=${xmlFile}"
