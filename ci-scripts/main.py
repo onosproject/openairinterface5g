@@ -3386,7 +3386,10 @@ elif re.match('^FinalizeHtml$', mode, re.IGNORECASE):
 	SSH.CreateHtmlFooter(SSH.finalStatus)
 elif re.match('^TesteNB$', mode, re.IGNORECASE) or re.match('^TestUE$', mode, re.IGNORECASE):
 	if re.match('^TesteNB$', mode, re.IGNORECASE):
-		if (SSH.eNBIPAddress == '' or SSH.eNBRepository == '' or SSH.eNBBranch == '' or SSH.eNBUserName == '' or SSH.eNBPassword == '' or SSH.eNBSourceCodePath == '') or (SSH.UEIPAddress == '' or SSH.UERepository == '' or SSH.UEBranch == '' or SSH.UEUserName == '' or SSH.UEPassword == '' or SSH.UESourceCodePath == ''):
+		if (SSH.eNBRepository == '' or SSH.eNBBranch == '' or SSH.eNBSourceCodePath == ''):
+			Usage()
+                        sys.exit('Insufficient Parameter')
+		if (SSH.eNBIPAddress == '' or SSH.eNBUserName == '' or SSH.eNBPassword == '') and (SSH.UEIPAddress == '' or SSH.UEUserName == '' or SSH.UEPassword == ''):
 			Usage()
 			sys.exit('Insufficient Parameter')
 		elif SSH.ADBIPAddress == 'none' and SSH.EPCIPAddress == 'none':
