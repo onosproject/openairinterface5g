@@ -231,7 +231,7 @@ pipeline {
                         withCredentials([
                             [$class: 'UsernamePasswordMultiBinding', credentialsId: "${params.eNB_Credentials}", usernameVariable: 'UE_Username', passwordVariable: 'UE_Password']
                         ]) {
-                            sh "python3 ci-scripts/main.py --mode=TerminateOAIUE --UEPAddress=${params.eNB_IPAddress} --UEUserName=${UE_Username} --UEPassword=${UE_Password}"
+                            sh "python3 ci-scripts/main.py --mode=TerminateOAIUE --UEIPAddress=${params.eNB_IPAddress} --UEUserName=${UE_Username} --UEPassword=${UE_Password}"
                         }
         	    }
         	    post {
