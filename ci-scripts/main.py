@@ -146,11 +146,6 @@ class SSHConnection():
 		self.eNBOsVersion = ''
 		
 	def open(self, ipaddress, username, password):
-		print('begin open ssh')
-		print('ipaddress: ' + ipaddress)
-		print('username: ' + username)
-		if password == 'null':
-			print('password is null')
 		count = 0
 		connect_status = False
 		while count < 4:
@@ -403,10 +398,6 @@ class SSHConnection():
 			self.command('mkdir -p ' + self.EPCSourceCodePath + '/scripts', '\$', 5)
 			self.command('cd /opt/hss_sim0609', '\$', 5)
 			self.command('echo ' + self.EPCPassword + ' | sudo -S rm -f hss.log daemon.log', '\$', 5)
-			#to use daemon on CentOS we need to source the function
-			#linux_distro = platform.linux_distribution()[0]
-			#if re.match('(.*)CentOS(.*)', linux_distro, re.IGNORECASE):
-				#self.command('source /etc/init.d/functions', '\$', 5)
 			self.command('echo ' + self.EPCPassword + ' | sudo -S echo "Starting sudo session" && sudo daemon --unsafe --name=simulated_hss --chdir=/opt/hss_sim0609 ./starthss_real  ', '\$', 5)
 		self.close()
 		self.CreateHtmlTestRow(self.EPCType, 'OK', ALL_PROCESSES_OK)

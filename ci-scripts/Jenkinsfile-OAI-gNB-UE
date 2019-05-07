@@ -347,8 +347,6 @@ OAI CI Team''',
         }
         failure {
             script {
-		echo "currentBuild.result = ${currentBuild.result}"
-		currentBuild.result = 'FAILURE'
                 def message = "OAI " + JOB_NAME + " build (" + BUILD_ID + "): failed (" + BUILD_URL + ")"
                 if ("MERGE".equals(env.gitlabActionType)) {
                     echo "This is a MERGE event"
