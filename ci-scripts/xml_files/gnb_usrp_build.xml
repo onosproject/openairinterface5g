@@ -22,7 +22,7 @@
 -->
 <testCaseList>
 	<htmlTabRef>build-tab</htmlTabRef>
-	<htmlTabName>Build</htmlTabName>
+	<htmlTabName>Build-gNB</htmlTabName>
 	<htmlTabIcon>wrench</htmlTabIcon>
 	<TestCaseRequestedList>
 010101

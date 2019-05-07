@@ -2311,10 +2311,8 @@ class SSHConnection():
 			#self.command('source /etc/init.d/functions', '\$', 5)
 		#use nohup instead of daemon
 		self.command('echo ' + self.eNBPassword + ' | sudo -S daemon --name=enb' + str(self.eNB_instance) + '_daemon --stop', '\$', 5)
-		logging.debug(str(self.ssh.before))
 		self.command('rm -f my-lte-softmodem-run' + str(self.eNB_instance) + '.sh', '\$', 5)
 		self.command('echo ' + self.eNBPassword + ' | sudo -S killall --signal SIGINT -r .*-softmodem || true', '\$', 5)
-		logging.debug(str(self.ssh.before))
 		time.sleep(5)
 		self.command('stdbuf -o0  ps -aux | grep softmodem | grep -v grep', '\$', 5)
 		result = re.search('-softmodem', str(self.ssh.before))
@@ -3124,7 +3122,6 @@ while len(argvs) > 1:
 		#if matchReg and mode is not None:
 			#print('Warning: the mode is defined in both xml file and command line')
 			#print('ignoring the mode defined in the xml file')
-		print('mode: ' + mode)
 		mode = matchReg.group(1)
 	elif re.match('^\-\-eNBIPAddress=(.+)$', myArgv, re.IGNORECASE):
 		matchReg = re.match('^\-\-eNBIPAddress=(.+)$', myArgv, re.IGNORECASE)
