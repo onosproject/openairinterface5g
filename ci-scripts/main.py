@@ -3305,7 +3305,7 @@ elif re.match('^TerminateOAIUE$', mode, re.IGNORECASE):
 		Usage()
 		sys.exit('Insufficient Parameter')
 	signal.signal(signal.SIGUSR1, receive_signal)
-	SSH.TerminateUE()
+	SSH.TerminateOAIUE()
 elif re.match('^TerminateHSS$', mode, re.IGNORECASE):
 	if SSH.EPCIPAddress == '' or SSH.EPCUserName == '' or SSH.EPCPassword == '' or SSH.EPCType == '' or SSH.EPCSourceCodePath == '':
 		Usage()

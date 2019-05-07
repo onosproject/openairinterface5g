@@ -34,7 +34,6 @@ def sendSocialMediaMessage(pipeChannel, pipeColor, pipeMessage) {
 // Location of the test XML file to be run
 def testXMLFile = params.pythonTestXmlFile
 def mainPythonAllXmlFiles = ""
-def BUILD_STAGE_STATUS = true
 
 // Name of the phone resource
 def ciUSRPsResource = params.USRPsResource
@@ -74,7 +73,6 @@ pipeline {
     }
     options {
         disableConcurrentBuilds()
-        timestamps()
         gitLabConnection('OAI GitLab')
         ansiColor('xterm')
 	lock (ciUSRPsResource)
@@ -156,23 +154,18 @@ pipeline {
                         allParametersPresent = false
                     }
 	
-                    echo "params.eNB_IPAddress = ${params.eNB_IPAddress}"
                     if (params.eNB_IPAddress == null) {
                         allParametersPresent = false
                     }
-                    echo "params.UE_IPAddress = ${params.UE_IPAddress}"
                     if (params.UE_IPAddress == null) {
                         allParametersPresent = false
                     }
-                    echo "params.eNB_SourceCodePath = ${params.eNB_SourceCodePath}"
                     if (params.eNB_SourceCodePath == null) {
                         allParametersPresent = false
                     }
-                    echo "params.eNB_Credentials = ${params.eNB_Credentials}"
                     if (params.eNB_Credentials == null) {
                         allParametersPresent = false
                     }
-                    echo "params.UE_Credentials = ${params.UE_Credentials}"
                     if (params.UE_Credentials == null) {
                         allParametersPresent = false
                     }
@@ -186,7 +179,6 @@ pipeline {
                         returnStdout: true
                     ).trim()
                     echo "The email of the author is: ${GIT_COMMIT_EMAIL}"
-                    echo "allParametersPresent = ${allParametersPresent}"
                     if (allParametersPresent) {
                         echo "All parameters are present"
                     } else {
@@ -213,7 +205,6 @@ pipeline {
         	    	            sh "python3 main.py --mode=TesteNB --eNBIPAddress=${params.eNB_IPAddress} --eNBUserName=${eNB_Username} --eNBPassword=${eNB_Password} --UEIPAddress=${params.eNB_IPAddress} --UEUserName=${eNB_Username} --UEPassword=${eNB_Password} --eNBBranch=${eNB_Branch} --eNBSourceCodePath=${params.eNB_SourceCodePath} --UESourceCodePath=${params.eNB_SourceCodePath} --eNBRepository=${eNB_Repository} --eNBCommitID=${eNB_CommitID} --ADBIPAddress=${ADB_IPAddress} --EPCIPAddress=${EPC_IPAddress} --XMLTestFile=${xmlFile}"
         	    	        } catch (Exception e) {
         	    	            currentBuild.result = 'FAILURE'
-        	    	            BUILD_STAGE_STATUS = false
         	    	        }
         	    	    }
         	    	    }
@@ -231,7 +222,7 @@ pipeline {
                         withCredentials([
                             [$class: 'UsernamePasswordMultiBinding', credentialsId: "${params.eNB_Credentials}", usernameVariable: 'UE_Username', passwordVariable: 'UE_Password']
                         ]) {
-                            sh "python3 ci-scripts/main.py --mode=TerminateOAIUE --ADBIPAddress=none --ADBUserName=none --ADBPassword=none --UEIPAddress=${params.eNB_IPAddress} --UEUserName=${UE_Username} --UEPassword=${UE_Password}"
+                            sh "python3 ci-scripts/main.py --mode=TerminateOAIUE --UEIPAddress=${params.eNB_IPAddress} --UEUserName=${UE_Username} --UEPassword=${UE_Password}"
                         }
         	    }
         	    post {
@@ -330,8 +321,6 @@ pipeline {
     post {
         always {
             script {
-                // Stage destroy may not be run if error in previous stage
-                //sh "./ci-scripts/oai-ci-vm-tool destroy --job-name ${JOB_NAME} --build-id ${BUILD_ID}"
                 emailext attachmentsPattern: '*results*.html',
                      body: '''Hi,
 Here are attached HTML report files for $PROJECT_NAME - Build # $BUILD_NUMBER - $BUILD_STATUS!
@@ -341,18 +330,6 @@ OAI CI Team''',
                      replyTo: 'no-reply@openairinterface.org',
                      subject: '$PROJECT_NAME - Build # $BUILD_NUMBER - $BUILD_STATUS!',
                      to: GIT_COMMIT_EMAIL
-//                  def message = "OAI " + PROJECT_NAME + " build (" + BUILD_NUMBER + "); Build Status" + BUILD_STAGE_STATUS 
-//                  addGitLabMRComment comment: message
-		    // gitlabCommitStatus(name: "test-boris") {
-		    // build job: 'test-boris',
-		    //     parameters: [
-		    //         string(name: 'eNB_Repository', value: String.valueOf(GIT_URL)),
-		    //         string(name: 'eNB_Branch', value: String.valueOf(env.gitlabSourceBranch)),
-		    //         string(name: 'eNB_CommitID', value: String.valueOf(env.gitlabMergeRequestLastCommit)),
-		    //         booleanParam(name: 'eNB_mergeRequest', value: true),
-		    //         string(name: 'eNB_TargetBranch', value: String.valueOf(env.gitlabTargetBranch))
-		    //   ]
-		    //}
 	    }
         }
         success {
@@ -360,7 +337,7 @@ OAI CI Team''',
                 def message = "OAI " + JOB_NAME + " build (" + BUILD_ID + "): passed (" + BUILD_URL + ")"
                 if ("MERGE".equals(env.gitlabActionType)) {
                     echo "This is a MERGE event"
-                    addGitLabMRComment comment: message
+                    //addGitLabMRComment comment: message
                     def message2 = "OAI " + JOB_NAME + " build (" + BUILD_ID + "): passed (" + BUILD_URL + ") -- MergeRequest #" + env.gitlabMergeRequestIid + " (" + env.gitlabMergeRequestTitle + ")"
                     sendSocialMediaMessage('ci-test', 'good', message2)
                 } else {
@@ -375,7 +352,7 @@ OAI CI Team''',
                 def message = "OAI " + JOB_NAME + " build (" + BUILD_ID + "): failed (" + BUILD_URL + ")"
                 if ("MERGE".equals(env.gitlabActionType)) {
                     echo "This is a MERGE event"
-                    addGitLabMRComment comment: message
+                    //addGitLabMRComment comment: message
                     def message2 = "OAI " + JOB_NAME + " build (" + BUILD_ID + "): failed (" + BUILD_URL + ") -- MergeRequest #" + env.gitlabMergeRequestIid + " (" + env.gitlabMergeRequestTitle + ")"
                     sendSocialMediaMessage('ci-test', 'danger', message2)
                 } else {
