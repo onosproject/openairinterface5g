@@ -138,6 +138,7 @@ class SSHConnection():
 		self.UEUserName = ''
 		self.UEPassword = ''
 		self.UE_instance = ''
+		self.UELogFile = ''
 		self.UESourceCodePath = ''
 		self.Build_OAI_UE_args = ''
 		self.Initialize_OAI_UE_args = ''
@@ -493,11 +494,10 @@ class SSHConnection():
 			self.command('echo ' + self.eNBPassword + ' | sudo -S uhd_find_devices', '\$', 5)
 			result = re.search('type: b200', str(self.ssh.before))
 			if result is not None:
-				pass
-				##logging.debug('Found a B2xx device --> resetting it')
-				##self.command('echo ' + self.eNBPassword + ' | sudo -S sudo b2xx_fx3_utils --reset-device', '\$', 5)
+				logging.debug('Found a B2xx device --> resetting it')
+				self.command('echo ' + self.eNBPassword + ' | sudo -S sudo b2xx_fx3_utils --reset-device', '\$', 5)
 				# Reloading FGPA bin firmware
-				##self.command('echo ' + self.eNBPassword + ' | sudo -S uhd_find_devices', '\$', 5)
+				self.command('echo ' + self.eNBPassword + ' | sudo -S uhd_find_devices', '\$', 5)
 		# Make a copy and adapt to EPC / eNB IP addresses
 		self.command('cp ' + full_config_file + ' ' + ci_full_config_file, '\$', 5)
 		self.command('sed -i -e \'s/CI_MME_IP_ADDR/' + self.EPCIPAddress + '/\' ' + ci_full_config_file, '\$', 2);
@@ -610,37 +610,14 @@ class SSHConnection():
 		result = re.search('type: n3xx', str(self.ssh.before))
 		if result is not None:
 			pass
-			##logging.debug('Found a B2xx device --> resetting it')
-			##self.command('echo ' + self.UEPassword + ' | sudo -S sudo b2xx_fx3_utils --reset-device', '\$', 5)
+			logging.debug('Found a B2xx device --> resetting it')
+			self.command('echo ' + self.UEPassword + ' | sudo -S sudo b2xx_fx3_utils --reset-device', '\$', 5)
 			# Reloading FGPA bin firmware
-			##self.command('echo ' + self.UEPassword + ' | sudo -S uhd_find_devices', '\$', 5)
+			self.command('echo ' + self.UEPassword + ' | sudo -S uhd_find_devices', '\$', 5)
 		else:
 			logging.debug('Did not find any B2xx device')
 		self.command('cd ' + self.UESourceCodePath, '\$', 5)
 		# Initialize_OAI_UE_args usually start with -C and followed by the location in repository
-		#full_config_file = self.Initialize_OAI_UE_args.replace('-O ','')
-		#extIdx = full_config_file.find('.conf')
-		#if (extIdx > 0):
-		#	extra_options = full_config_file[extIdx + 5:]
-		#	# if tracer options is on, compiling and running T Tracer
-		#	result = re.search('T_stdout', str(extra_options))
-		##	if result is not None:
-		#		logging.debug('\u001B[1m Compiling and launching T Tracer\u001B[0m')
-		#		self.command('cd common/utils/T/tracer', '\$', 5)
-		#		self.command('make', '\$', 10)
-		#		self.command('echo $USER; nohup ./record -d ../T_messages.txt -o ' + self.UESourceCodePath + '/cmake_targets/ue_' + self.testCase_id + '_record.raw -ON -off VCD -off HEAVY -off LEGACY_GROUP_TRACE -off LEGACY_GROUP_DEBUG > ' + self.UESourceCodePath + '/cmake_targets/enb_' + self.testCase_id + '_record.log 2>&1 &', self.UEUserName, 5)
-		#		self.command('cd ' + self.UESourceCodePath, '\$', 5)
-		#	full_config_file = full_config_file[:extIdx + 5]
-		#	config_path, config_file = os.path.split(full_config_file)
-		#ci_full_config_file = config_path + '/ci-' + config_file
-		#rruCheck = False
-		#result = re.search('rru', str(config_file))
-		#if result is not None:
-		#	rruCheck = True
-		## Make a copy and adapt to EPC / UE IP addresses
-		#self.command('cp ' + full_config_file + ' ' + ci_full_config_file, '\$', 5)
-		#self.command('sed -i -e \'s/CI_UE_IP_ADDR/' + self.UEIPAddress + '/\' ' + ci_full_config_file, '\$', 2);
-		# Launch UE with the modified config file
 		self.command('source oaienv', '\$', 5)
 		self.command('cd cmake_targets/ran_build/build', '\$', 5)
 		self.command('echo "ulimit -c unlimited && ./'+ self.air_interface +'-uesoftmodem ' + self.Initialize_OAI_UE_args + '" > ./my-lte-uesoftmodem-run' + str(self.UE_instance) + '.sh', '\$', 5)
@@ -658,33 +635,14 @@ class SSHConnection():
 		self.command('cd ../..', '\$', 5)
 		doLoop = True
 		loopCounter = 10
-		print('current directory: ' + os.getcwd())
-		self.command('pwd', '\$', 4)
-		print('self.command pwd: ' + str(self.ssh.before))
 		while (doLoop):
 			loopCounter = loopCounter - 1
 			if (loopCounter == 0):
-				# In case of T tracer recording, we may need to kill it
-				#result = re.search('T_stdout', str(self.Initialize_OAI_UE_args))
-				#if result is not None:
-				#	self.command('killall --signal SIGKILL record', '\$', 5)
 				self.close()
 				doLoop = False
 				logging.error('\u001B[1;37;41m UE logging system did not show got sync! \u001B[0m')
 				self.CreateHtmlTestRow(self.Initialize_OAI_UE_args, 'KO', ALL_PROCESSES_OK, 'OAI UE')
 				self.CreateHtmlTabFooter(False)
-				## In case of T tracer recording, we need to kill tshark on EPC side
-				#result = re.search('T_stdout', str(self.Initialize_OAI_UE_args))
-				#if result is not None:
-				#	self.open(self.EPCIPAddress, self.EPCUserName, self.EPCPassword)
-				#	logging.debug('\u001B[1m Stopping tshark \u001B[0m')
-				#	self.command('echo ' + self.EPCPassword + ' | sudo -S killall --signal SIGKILL tshark', '\$', 5)
-				#	self.close()
-				#	time.sleep(1)
-				#	pcap_log_file = 'enb_' + self.testCase_id + '_s1log.pcap'
-				#	copyin_res = self.copyin(self.EPCIPAddress, self.EPCUserName, self.EPCPassword, '/tmp/' + pcap_log_file, '.')
-				#	if (copyin_res == 0):
-				#		self.copyout(self.UEIPAddress, self.UEUserName, self.UEPassword, pcap_log_file, self.UESourceCodePath + '/cmake_targets/.')
 				sys.exit(1)
 			else:
 				self.command('stdbuf -o0 cat ' + self.UELogFile + ' | egrep --text --color=never -i "wait|sync"', '\$', 4)
