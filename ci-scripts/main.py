@@ -2311,14 +2311,15 @@ class SSHConnection():
 			#self.command('source /etc/init.d/functions', '\$', 5)
 		#use nohup instead of daemon
 		self.command('echo ' + self.eNBPassword + ' | sudo -S daemon --name=enb' + str(self.eNB_instance) + '_daemon --stop', '\$', 5)
-		#self.command('echo $USER; nohup sudo ./my-lte-softmodem-run ' + ' > ' + self.eNBSourceCodePath + '/cmake_targets/enb_' + self.testCase_id + '.log' + ' 2>&1 &', self.eNBUserName, 5)
+		logging.debug(str(self.ssh.before))
 		self.command('rm -f my-lte-softmodem-run' + str(self.eNB_instance) + '.sh', '\$', 5)
-		self.command('echo ' + self.eNBPassword + ' | sudo -S killall --signal SIGINT ' + self.air_interface + '-softmodem || true', '\$', 5)
+		self.command('echo ' + self.eNBPassword + ' | sudo -S killall --signal SIGINT -r *-softmodem || true', '\$', 5)
+		logging.debug(str(self.ssh.before))
 		time.sleep(5)
-		self.command('stdbuf -o0  ps -aux | grep -v grep | grep ' + self.air_interface + '-softmodem', '\$', 5)
-		result = re.search(self.air_interface + '-softmodem', str(self.ssh.before))
+		self.command('stdbuf -o0  ps -aux | grep softmodem | grep -v grep', '\$', 5)
+		result = re.search('-softmodem', str(self.ssh.before))
 		if result is not None:
-			self.command('echo ' + self.eNBPassword + ' | sudo -S killall --signal SIGKILL ' + self.air_interface + '-softmodem || true', '\$', 5)
+			self.command('echo ' + self.eNBPassword + ' | sudo -S killall --signal SIGKILL -r *-softmodem || true', '\$', 5)
 			time.sleep(5)
 		self.close()
 		# If tracer options is on, stopping tshark on EPC side
@@ -2461,69 +2462,40 @@ class SSHConnection():
 			#self.command('source /etc/init.d/functions', '\$', 5)
 		#self.command('echo ' + self.UEPassword + ' | sudo -S daemon --name=ue' + str(self.UE_instance) + '_daemon --stop', '\$', 5)
 		self.command('rm -f my-lte-uesoftmodem-run' + str(self.UE_instance) + '.sh', '\$', 5)
-		self.command('echo ' + self.UEPassword + ' | sudo -S killall --signal SIGINT ' + self.air_interface + '-uesoftmodem || true', '\$', 5)
+		self.command('echo ' + self.UEPassword + ' | sudo -S killall --signal SIGINT -r *-uesoftmodem || true', '\$', 5)
 		time.sleep(5)
-		self.command('stdbuf -o0  ps -aux | grep -v grep | grep ' + self.air_interface + '-uesoftmodem', '\$', 5)
-		result = re.search(self.air_interface + '-uesoftmodem', str(self.ssh.before))
+		self.command('stdbuf -o0  ps -aux | grep uesoftmodem | grep -v grep', '\$', 5)
+		result = re.search('-uesoftmodem', str(self.ssh.before))
 		if result is not None:
-			self.command('echo ' + self.UEPassword + ' | sudo -S killall --signal SIGKILL ' + self.air_interface + '-uesoftmodem || true', '\$', 5)
+			self.command('echo ' + self.UEPassword + ' | sudo -S killall --signal SIGKILL -r *-uesoftmodem || true', '\$', 5)
 			time.sleep(5)
 		self.close()
-		# If tracer options is on, stopping tshark on EPC side
-		result = re.search('T_stdout', str(self.Initialize_OAI_UE_args))
+		result = re.search('ue_', str(self.UELogFile))
 		if result is not None:
-			self.open(self.UEIPAddress, self.UEUserName, self.UEPassword)
-			logging.debug('\u001B[1m Stopping tshark \u001B[0m')
-			self.command('echo ' + self.UEPassword + ' | sudo -S killall --signal SIGKILL tshark', '\$', 5)
-			time.sleep(1)
-			pcap_log_file = self.UELogFile.replace('.log', '_s1log.pcap')
-			self.command('echo ' + self.UEPassword + ' | sudo -S chmod 666 /tmp/' + pcap_log_file, '\$', 5)
-			self.copyin(self.UEIPAddress, self.UEUserName, self.UEPassword, '/tmp/' + pcap_log_file, '.')
-			self.copyout(self.UEIPAddress, self.UEUserName, self.UEPassword, pcap_log_file, self.UESourceCodePath + '/cmake_targets/.')
-			self.close()
-			logging.debug('\u001B[1m Replaying RAW record file\u001B[0m')
-			self.open(self.UEIPAddress, self.UEUserName, self.UEPassword)
-			self.command('cd ' + self.UESourceCodePath + '/common/utils/T/tracer/', '\$', 5)
-			raw_record_file = self.UELogFile.replace('.log', '_record.raw')
-			replay_log_file = self.UELogFile.replace('.log', '_replay.log')
-			extracted_txt_file = self.UELogFile.replace('.log', '_extracted_messages.txt')
-			extracted_log_file = self.UELogFile.replace('.log', '_extracted_messages.log')
-			self.command('./extract_config -i ' + self.UESourceCodePath + '/cmake_targets/' + raw_record_file + ' > ' + self.UESourceCodePath + '/cmake_targets/' + extracted_txt_file, '\$', 5)
-			self.command('echo $USER; nohup ./replay -i ' + self.UESourceCodePath + '/cmake_targets/' + raw_record_file + ' > ' + self.UESourceCodePath + '/cmake_targets/' + replay_log_file + ' 2>&1 &', self.UEUserName, 5)
-			self.command('./textlog -d ' +  self.UESourceCodePath + '/cmake_targets/' + extracted_txt_file + ' -no-gui -ON -full > ' + self.UESourceCodePath + '/cmake_targets/' + extracted_log_file, '\$', 5)
-			self.close()
-			self.copyin(self.UEIPAddress, self.UEUserName, self.UEPassword, self.UESourceCodePath + '/cmake_targets/' + extracted_log_file, '.')
-			logging.debug('\u001B[1m Analyzing UE replay logfile \u001B[0m')
-			logStatus = self.AnalyzeLogFile_UE(extracted_log_file)
-			self.CreateHtmlTestRow(html_queue, 'OK', ALL_PROCESSES_OK)
+			copyin_res = self.copyin(self.UEIPAddress, self.UEUserName, self.UEPassword, self.UESourceCodePath + '/cmake_targets/' + self.UELogFile, '.')
+			if (copyin_res == -1):
+				logging.debug('\u001B[1;37;41m Could not copy UE logfile to analyze it! \u001B[0m')
+				optionsMsg = '<pre style="background-color:white">Could not copy UE logfile to analyze it!</pre>'
+				self.CreateHtmlTestRow(optionsMsg, 'KO', UE_PROCESS_NOLOGFILE_TO_ANALYZE, 'UE')
+				self.UELogFile = ''
+				return
+			logging.debug('\u001B[1m Analyzing UE logfile \u001B[0m')
+			logStatus = self.AnalyzeLogFile_UE(self.UELogFile)
+			if (logStatus < 0):
+				optionsMsg = '<pre style="background-color:white"><b>Sniffing Unsuccessful</b>\n'
+				optionsMsg += self.htmlUEFailureMsg
+				optionsMsg += '</pre>'
+				self.CreateHtmlTestRow(optionsMsg, 'KO', logStatus, 'UE')
+				self.CreateHtmlTabFooter(False)
+				sys.exit(1)
+			else:
+				optionsMsg = '<pre style="background-color:white"><b>Sniffing Successful</b>\n'
+				optionsMsg += self.htmlUEFailureMsg
+				optionsMsg += '</pre>'
+				self.CreateHtmlTestRow(optionsMsg, 'OK', ALL_PROCESSES_OK)
 			self.UELogFile = ''
 		else:
-			result = re.search('ue_', str(self.UELogFile))
-			if result is not None:
-				copyin_res = self.copyin(self.UEIPAddress, self.UEUserName, self.UEPassword, self.UESourceCodePath + '/cmake_targets/' + self.UELogFile, '.')
-				if (copyin_res == -1):
-					logging.debug('\u001B[1;37;41m Could not copy UE logfile to analyze it! \u001B[0m')
-					optionsMsg = '<pre style="background-color:white">Could not copy UE logfile to analyze it!</pre>'
-					self.CreateHtmlTestRow(optionsMsg, 'KO', UE_PROCESS_NOLOGFILE_TO_ANALYZE, 'UE')
-					self.UELogFile = ''
-					return
-				logging.debug('\u001B[1m Analyzing UE logfile \u001B[0m')
-				logStatus = self.AnalyzeLogFile_UE(self.UELogFile)
-				if (logStatus < 0):
-					optionsMsg = '<pre style="background-color:white"><b>Sniffing Unsuccessful</b>\n'
-					optionsMsg += self.htmlUEFailureMsg
-					optionsMsg += '</pre>'
-					self.CreateHtmlTestRow(optionsMsg, 'KO', logStatus, 'UE')
-					self.CreateHtmlTabFooter(False)
-					sys.exit(1)
-				else:
-					optionsMsg = '<pre style="background-color:white"><b>Sniffing Successful</b>\n'
-					optionsMsg += self.htmlUEFailureMsg
-					optionsMsg += '</pre>'
-					self.CreateHtmlTestRow(optionsMsg, 'OK', ALL_PROCESSES_OK)
-				self.UELogFile = ''
-			else:
-				self.CreateHtmlTestRow('<pre style="background-color:white">No Log File to analyze</pre>', 'OK', ALL_PROCESSES_OK)
+			self.CreateHtmlTestRow('<pre style="background-color:white">No Log File to analyze</pre>', 'OK', ALL_PROCESSES_OK)
 
 	def AutoTerminateUEandeNB(self):
 		self.testCase_id = 'AUTO-KILL-UE'
