@@ -324,7 +324,13 @@ pipeline {
                 if ("MERGE".equals(env.gitlabActionType)) {
                     echo "This is a MERGE event"
                 } else {
-                   echo "BUILD_STATUS = $BUILD_STATUS"
+                    gitlabCommitStatus(name: "Test-gNB-nrUE") {
+                        if ((currentBuild.result == null) || (currentBuild.result == 'SUCCESS')) {
+                            echo "Setting the gitlab commit status to pass"
+                        } else {
+                            sh "./ci-scripts/fail.sh"
+                        }
+                    }
                 }
                 emailext attachmentsPattern: '*results*.html',
                      body: '''Hi,
