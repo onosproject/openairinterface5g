@@ -30,7 +30,7 @@
  */
 
 #define PDCP_FIFO_C
-#define PDCP_DEBUG 1
+//#define PDCP_DEBUG 1
 //#define DEBUG_PDCP_FIFO_FLUSH_SDU
 
 extern int otg_enabled;
@@ -163,7 +163,7 @@ int pdcp_fifo_flush_sdus(const protocol_ctxt_t* const  ctxt_pP)
 #endif
 
    VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_PDCP_FIFO_FLUSH, 1 );
-   while (sdu_p && cont && sdu_p!=0x01 && sdu_p!=0x02) { //&& sdu_p!=0x01 && sdu_p!=0x02
+   while (sdu_p && cont) { //&& sdu_p!=0x01 && sdu_p!=0x02 && sdu_p!=0x100000000 && sdu_p!=0x200000000
 
 #ifdef DEBUG_PDCP_FIFO_FLUSH_SDU
       LOG_D(PDCP, "[%s] SFN/SF=%d/%d inst=%d size=%d\n",
@@ -216,7 +216,7 @@ int pdcp_fifo_flush_sdus(const protocol_ctxt_t* const  ctxt_pP)
 
 #endif /* defined(ENABLE_USE_MME) */
 #ifdef PDCP_DEBUG
-      LOG_I(PDCP, "PDCP->IP TTI %d INST %d: Preparing %d Bytes of data from rab %d to Nas_mesh\n",
+      LOG_D(PDCP, "PDCP->IP TTI %d INST %d: Preparing %d Bytes of data from rab %d to Nas_mesh\n",
             ctxt_pP->frame, ((pdcp_data_ind_header_t *)(sdu_p->data))->inst,
             ((pdcp_data_ind_header_t *)(sdu_p->data))->data_size, ((pdcp_data_ind_header_t *)(sdu_p->data))->rb_id);
 #endif //PDCP_DEBUG
@@ -276,9 +276,6 @@ int pdcp_fifo_flush_sdus(const protocol_ctxt_t* const  ctxt_pP)
          bytes_wrote = pdcp_output_header_bytes_to_write;
 #endif //PDCP_USE_RT_FIFO
 
-         LOG_I(PDCP, "Frame %d Sent %d Bytes of header to Nas_mesh\n",
-                        ctxt_pP->frame,
-                        bytes_wrote);
 #ifdef PDCP_DEBUG
          LOG_D(PDCP, "Frame %d Sent %d Bytes of header to Nas_mesh\n",
                ctxt_pP->frame,
@@ -354,7 +351,7 @@ int pdcp_fifo_flush_sdus(const protocol_ctxt_t* const  ctxt_pP)
 
                   if (!pdcp_output_sdu_bytes_to_write) { // OK finish with this SDU
                      // LOG_D(PDCP, "rb sent a sdu qos_sap %d\n", sapiP);
-                     LOG_I(PDCP,
+                     LOG_D(PDCP,
                            "[FRAME %05d][xxx][PDCP][MOD xx/xx][RB %u][--- PDCP_DATA_IND / %d Bytes --->][IP][INSTANCE %u][RB %u]\n",
                            ctxt_pP->frame,
                            ((pdcp_data_ind_header_t *)(sdu_p->data))->rb_id,
@@ -364,6 +361,7 @@ int pdcp_fifo_flush_sdus(const protocol_ctxt_t* const  ctxt_pP)
 
                      list_remove_head (&pdcp_sdu_list);
                      free_mem_block (sdu_p, __func__);
+
                      cont = 1;
                      pdcp_nb_sdu_sent += 1;
                      sdu_p = list_get_head (&pdcp_sdu_list);
@@ -763,13 +761,13 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
                if (h_rc == HASH_TABLE_OK) {
                   rab_id = pdcp_p->rb_id;
 #ifdef PDCP_DEBUG
-                  LOG_I(PDCP, "[FRAME %5u][UE][NETLINK][IP->PDCP] INST %d: Received socket with length %d  on Rab %d \n",
+                  LOG_D(PDCP, "[FRAME %5u][UE][NETLINK][IP->PDCP] INST %d: Received socket with length %d  on Rab %d \n",
                         ctxt.frame,
                         pc5s_header->inst,
                         bytes_received,
                         pc5s_header->rb_id);
 
-                  LOG_I(PDCP, "[FRAME %5u][UE][IP][INSTANCE %u][RB %u][--- PDCP_DATA_REQ / %d Bytes --->][PDCP][MOD %u][UE %u][RB %u]\n",
+                  LOG_D(PDCP, "[FRAME %5u][UE][IP][INSTANCE %u][RB %u][--- PDCP_DATA_REQ / %d Bytes --->][PDCP][MOD %u][UE %u][RB %u]\n",
                         ctxt.frame,
                         pc5s_header->inst,
                         pc5s_header->rb_id,
@@ -790,6 +788,9 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
                                     rab_id,
                                     pc5s_header->data_size);
 
+                  /*LOG_I(PDCP, "In pdcp_fifo_read_input_sdus() before calling pdcp_data_req() 1 \n");
+                  list_display_memory_head_tail(&pdcp_sdu_list);*/
+
                   pdcp_data_req(
                         &ctxt,
                         SRB_FLAG_NO,
@@ -804,6 +805,9 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
                         ,&pc5s_header->destinationL2Id
 #endif
                         );
+                  /*LOG_I(PDCP, "In pdcp_fifo_read_input_sdus() after calling pdcp_data_req 1() \n");
+                  list_display_memory_head_tail(&pdcp_sdu_list);*/
+
                } else {
                   MSC_LOG_RX_DISCARDED_MESSAGE(
                         (ctxt_pP->enb_flag == ENB_FLAG_YES) ? MSC_PDCP_ENB:MSC_PDCP_UE,
@@ -847,7 +851,6 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
                                  pc5s_header->rb_id,
                                  DEFAULT_RAB_ID,
                                  pc5s_header->data_size);
-
                pdcp_data_req (
                      &ctxt,
                      SRB_FLAG_NO,
@@ -1076,7 +1079,7 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
                      if (h_rc == HASH_TABLE_OK) {
                         rab_id = pdcp_p->rb_id;
 #ifdef PDCP_DEBUG
-                        LOG_I(PDCP, "[FRAME %5u][UE][NETLINK][IP->PDCP] INST %d: Received socket with length %d (nlmsg_len = %zu) on Rab %d \n",
+                        LOG_D(PDCP, "[FRAME %5u][UE][NETLINK][IP->PDCP] INST %d: Received socket with length %d (nlmsg_len = %zu) on Rab %d \n",
                               ctxt.frame,
                               pdcp_read_header_g.inst,
                               len,
@@ -1120,7 +1123,7 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
                               );
                         }else{
                         	//TTN - for traffic from OIP1 (to eNB), sourceL2/DestL2 should be set to NULL
-                        	LOG_I(PDCP, "[THINH] source L2 Id: 0x%08x, destL2 0x%08x \n",pdcp_read_header_g.sourceL2Id, pdcp_read_header_g.destinationL2Id);
+                        	LOG_D(PDCP, "[THINH] source L2 Id: 0x%08x, destL2 0x%08x \n",pdcp_read_header_g.sourceL2Id, pdcp_read_header_g.destinationL2Id);
                         	if (pdcp_read_header_g.inst == 0 ){ //INST == 0 (OIP0)
                         		pdcp_data_req(&ctxt,
                         				SRB_FLAG_NO,
@@ -1213,7 +1216,7 @@ int pdcp_fifo_read_input_sdus (const protocol_ctxt_t* const  ctxt_pP)
                      }else{
                     	 //TTN - for traffic from OIP1 (to eNB), sourceL2/DestL2 should be set to NULL
                     	 if (pdcp_read_header_g.inst == 0){  //INST == 0 (OIP0)
-                    		 LOG_I(PDCP, "[THINH] source L2 Id: 0x%08x, destL2 0x%08x \n",pdcp_read_header_g.sourceL2Id, pdcp_read_header_g.destinationL2Id);
+                    		 LOG_D(PDCP, "[THINH] source L2 Id: 0x%08x, destL2 0x%08x \n",pdcp_read_header_g.sourceL2Id, pdcp_read_header_g.destinationL2Id);
                     		 pdcp_data_req (
                     				 &ctxt,
                     				 SRB_FLAG_NO,

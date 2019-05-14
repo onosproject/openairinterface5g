@@ -188,7 +188,9 @@ int ue_ip_netlink_send(unsigned char *data,unsigned int len)
     // mutex_unlock(&nasmesh_mutex);
 
     if (status < 0) {
+#ifdef NETLINK_DEBUG
       printk("[UE_IP_DRV][NETLINK] SEND status is %d\n",status);
+#endif
       return(0);
     } else {
 #ifdef NETLINK_DEBUG
@@ -197,7 +199,9 @@ int ue_ip_netlink_send(unsigned char *data,unsigned int len)
       return len;
     }
   } else {
+#ifdef NETLINK_DEBUG
     printk("[UE_IP_DRV][SEND] socket is NULL\n");
+#endif
     return(0);
   }
 }

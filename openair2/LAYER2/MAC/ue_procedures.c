@@ -891,8 +891,7 @@ void ue_send_sl_sdu(module_id_t module_idP,
       uint8_t eNB_index,
       sl_discovery_flag_t sl_discovery_flag
 ) {
-
-   int rlc_sdu_len;
+	int rlc_sdu_len;
    unsigned char *rlc_sdu;
    int lcid=-1;
    uint32_t destinationL2Id =0x00000000;
@@ -921,7 +920,7 @@ void ue_send_sl_sdu(module_id_t module_idP,
       for (i=0; i< MAX_NUM_LCID; i++)
          if ((UE_mac_inst[module_idP].sl_info[i].groupL2Id == destinationL2Id) && (UE_mac_inst[module_idP].sl_info[i].sourceL2Id != sourceL2Id)) {
 	    lcid = UE_mac_inst[module_idP].sl_info[i].LCID;
-            LOG_I(MAC, "Found corresponding receiver LCID for group communication: %d \n", lcid);
+            LOG_D(MAC, "Found corresponding receiver LCID for group communication: %d \n", lcid);
             break;
          }
 
@@ -931,7 +930,7 @@ void ue_send_sl_sdu(module_id_t module_idP,
             if ((UE_mac_inst[module_idP].sl_info[j].destinationL2Id == sourceL2Id) && (UE_mac_inst[module_idP].sl_info[j].sourceL2Id == destinationL2Id)) {
                //lcid = longh->LCID; 
 	       lcid = UE_mac_inst[module_idP].sl_info[j].LCID;
-               LOG_I(MAC, "Found corresponding receiver LCID for DATA direct communication: %d \n", lcid);
+               LOG_D(MAC, "Found corresponding receiver LCID for DATA direct communication: %d \n", lcid);
                break;
             }
          }
@@ -1011,10 +1010,10 @@ void ue_send_sl_sdu(module_id_t module_idP,
       }
   
       AssertFatal(lcid>0,"lcid %d should not happen\n",lcid);
-      LOG_I(MAC,"%d.%d myL2Id %d sending sdu of size %d, sourceL2Id %d, lcid %d to RLC\n",frameP,subframeP,UE_mac_inst[module_idP].sourceL2Id,rlc_sdu_len,sourceL2Id,lcid);
+      LOG_D(MAC,"%d.%d myL2Id %d sending sdu of size %d, sourceL2Id %d, lcid %d to RLC\n",frameP,subframeP,UE_mac_inst[module_idP].sourceL2Id,rlc_sdu_len,sourceL2Id,lcid);
 
       if(UE_rrc_inst[0].Info[0].rnti == 0){
-      mac_rlc_data_ind(
+    	  mac_rlc_data_ind(
             module_idP,
             0x1234,
             eNB_index,
@@ -3614,9 +3613,17 @@ SLSCH_t *ue_get_slsch(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_
                if (ue->sl_info[i].LCID > 0)  {
                  // for (int j = 0; j < ue->numCommFlows; j++){
                      if ((ue->sourceL2Id > 0) && (ue->sl_info[i].destinationL2Id >0) ){
+
+                    	 /*LOG_I(MAC,"In ue_get_slsch before mac_rlc_status_ind \n");
+                    	 list_display_memory_head_tail(&pdcp_sdu_list);*/
+
                     	 rlc_status = mac_rlc_status_ind(module_idP, ue_rnti,0,frameP,subframeP,ENB_FLAG_NO,MBMS_FLAG_NO,
                               ue->sl_info[i].LCID, 0xFFFF, ue->sourceL2Id, ue->sl_info[i].destinationL2Id );
-                        LOG_D(MAC,"absSF_offset %d (test %d): Checking status (%d,Dest %d) => LCID %d => %d bytes\n",absSF_offset,slsch_test,ue->sourceL2Id,ue->sl_info[i].destinationL2Id,ue->sl_info[i].LCID,rlc_status.bytes_in_buffer);
+
+                    	 /*LOG_I(MAC,"In ue_get_slsch after mac_rlc_status_ind \n");
+                    	 list_display_memory_head_tail(&pdcp_sdu_list);*/
+
+                    	 LOG_D(MAC,"absSF_offset %d (test %d): Checking status (%d,Dest %d) => LCID %d => %d bytes\n",absSF_offset,slsch_test,ue->sourceL2Id,ue->sl_info[i].destinationL2Id,ue->sl_info[i].LCID,rlc_status.bytes_in_buffer);
                         if (rlc_status.bytes_in_buffer > 2 || slsch_test == 1){
                            if (slsch_test == 1 && rlc_status.bytes_in_buffer <= 2) rlc_status.bytes_in_buffer = 300;
                            LOG_D(MAC,"SFN.SF %d.%d: Scheduling for %d bytes in Sidelink buffer \n",frameP,subframeP,rlc_status.bytes_in_buffer);
@@ -3662,7 +3669,7 @@ SLSCH_t *ue_get_slsch(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_
      slsch->RB_start = RB_start;
      slsch->L_CRBs   = L_CRBs;
      // fill in SCI fields
-     slsch->n_pscch                   = ue->sourceL2Id;  
+     slsch->n_pscch                   = 2; //ue->sourceL2Id;  
      slsch->format                    = 0;
      slsch->freq_hopping_flag         = 0;
      slsch->resource_block_coding     = computeRIV(slsch->N_SL_RB_data,RB_start,L_CRBs);
@@ -3714,7 +3721,7 @@ SLSCH_t *ue_get_slsch(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_
       else req = rlc_status.bytes_in_buffer+2;
 
       if (req>0) {
-         sdu_length = mac_rlc_data_req(module_idP,
+    	  sdu_length = mac_rlc_data_req(module_idP,
         	   ue_rnti,
                0,
                frameP,
@@ -3728,15 +3735,14 @@ SLSCH_t *ue_get_slsch(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_
                ue->destinationL2Id
 #endif
          );
-
          if (sdu_length == 0 && slsch_test == 1) sdu_length = 300;
 
          // Notes: 1. hard-coded to 24-bit destination format for now
          if (sdu_length > 0) {
 
-            LOG_I(MAC,"SFN.SF %d.%d : got %d bytes from Sidelink buffer (%d requested)\n",frameP,subframeP,sdu_length,req);
-            LOG_I(MAC,"sourceL2Id: 0x%08x \n",ue->sourceL2Id);
-            LOG_I(MAC,"groupL2Id/destinationL2Id: 0x%08x \n",ue->destinationL2Id);
+            LOG_D(MAC,"SFN.SF %d.%d : got %d bytes from Sidelink buffer (%d requested)\n",frameP,subframeP,sdu_length,req);
+            LOG_D(MAC,"sourceL2Id: 0x%08x \n",ue->sourceL2Id);
+            LOG_D(MAC,"groupL2Id/destinationL2Id: 0x%08x \n",ue->destinationL2Id);
 
             slsch->payload = (unsigned char*)ue->slsch_pdu.payload;
             if (sdu_length < 128) {

@@ -37,8 +37,9 @@
 #include "PHY/MODULATION/modulation_eNB.h"
 #include "PHY/LTE_ESTIMATION/lte_estimation.h"
 #include "LAYER2/MAC/mac_proto.h"
+#include "LAYER2/PDCP_v10.1.0/pdcp.h"
 //#define PSSCH_DEBUG 1
-#define DEBUG_SCI_DECODING 1
+//#define DEBUG_SCI_DECODING 1
 
 extern int
 multicast_link_write_sock(int groupP, char *dataP, uint32_t sizeP);
@@ -398,7 +399,7 @@ void pscch_codingmodulation(PHY_VARS_UE *ue,int frame_tx,int subframe_tx,uint32_
 
     int length = log2_approx(slsch->N_SL_RB_data*((ue->slsch_rx.N_SL_RB_data+1)>>1))+32;
 
-    LOG_D(PHY,"sci %lx (%d bits): freq_hopping_flag %d,resource_block_coding %d,time_resource_pattern %d,mcs %d,timing_advance_indication %d, group_destination_id %d\n",sci,length, 
+    LOG_D(PHY,"sci %lx (%d bits): freq_hopping_flag %d,resource_block_coding %d,time_resource_pattern %d,mcs %d,timing_advance_indication %d, group_destination_id %d\n",sci,length,
            slsch->freq_hopping_flag, 
            slsch->resource_block_coding,
            slsch->time_resource_pattern,
@@ -1100,7 +1101,7 @@ void pscch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
     else
     	ue->slcch_received                     = 0;
 
-    //ue->slcch_received                     = 1;
+    ue->slcch_received                     = 1;
     ue->slsch_decoded                      = 0;
 #ifdef DEBUG_SCI_DECODING
     printf("%d.%d sci %lx (%d bits,RAbits %d) : freq_hop %d, resource_block_coding %d, time_resource_pattern %d, mcs %d, timing_advance_indication %d, group_destination_id %d (gid shift %d result %lx => %lx\n",
@@ -1216,8 +1217,14 @@ void rx_slcch(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subframe_rx)
   
     if (frame_rx < 100) LOG_D(PHY,"%d.%d: Checking n_pscch %d => a1 %d, a2 %d, b1 %d, b2 %d (LPSCCH %d, M_RB_PSCCH_RP %d)\n",
                                 frame_rx,subframe_rx,n_pscch,a1,a2,b1,b2,LPSCCH,M_RB_PSCCH_RP); 
-    if (absSF_modP == b1)      pscch_decoding(ue,proc,frame_rx,subframe_rx,a1,0);	
-    else if (absSF_modP == b2) pscch_decoding(ue,proc,frame_rx,subframe_rx,a2,1);
+    if (absSF_modP == b1) {
+    	LOG_D(PHY, "About to decode SCI at b1: %d \n \n \n", b1);
+    	pscch_decoding(ue,proc,frame_rx,subframe_rx,a1,0);
+    }
+    else if (absSF_modP == b2){
+    	LOG_D(PHY, "About to decode SCI at b2: %d \n \n \n", b2);
+    	pscch_decoding(ue,proc,frame_rx,subframe_rx,a2,1);
+    }
     else continue;
   }
 
@@ -1529,6 +1536,9 @@ void slsch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
 	  slsch->group_destination_id,slsch->L_CRBs,slsch->mcs,
 	  slsch->rvidx,ret);
 
+    /*LOG_I(PDCP, "In slsch_decoding() before calling ue_send_sl_sdu() 1 \n");
+    list_display_memory_head_tail(&pdcp_sdu_list);*/
+
     ue_send_sl_sdu(0,
                    0,
                    frame_rx,subframe_rx,
@@ -1536,6 +1546,8 @@ void slsch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
                    ue->dlsch_rx_slsch->harq_processes[0]->TBS>>3,
                    0,
                    SL_DISCOVERY_FLAG_NO);
+    /*LOG_I(PDCP, "In slsch_decoding() before calling ue_send_sl_sdu() 1 \n");
+    list_display_memory_head_tail(&pdcp_sdu_list);*/
 
     if      (slsch->rvidx == 0 ) ue->slsch_rxcnt[0]++;
     else if (slsch->rvidx == 2 ) ue->slsch_rxcnt[1]++;

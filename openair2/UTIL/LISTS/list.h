@@ -59,6 +59,7 @@ void         list_add_head (mem_block_t* , list_t* );
 void         list_add_tail_eurecom (mem_block_t* , list_t* );
 void         list_add_list (list_t* , list_t* );
 void         list_display (list_t* );
+void		 list_display_memory_head_tail(list_t * listP);
 //-----------------------------------------------------------------------------
 void         list2_init           (list2_t*, char*);
 void         list2_free           (list2_t* );

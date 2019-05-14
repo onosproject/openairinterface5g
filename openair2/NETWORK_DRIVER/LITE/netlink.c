@@ -184,7 +184,7 @@ int oai_nw_drv_netlink_send(unsigned char *data,unsigned int len)
     // mutex_unlock(&nasmesh_mutex);
 
     if (status < 0) {
-      printk("[OAI_IP_DRV][NETLINK] SEND status is %d\n",status);
+      //printk("[OAI_IP_DRV][NETLINK] SEND status is %d\n",status);
       return(0);
     } else {
 #ifdef NETLINK_DEBUG

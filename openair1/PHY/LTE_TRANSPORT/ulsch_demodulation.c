@@ -760,7 +760,7 @@ void ulsch_extract_rbs_single(int32_t **rxdataF,
 
       rxF = &rxdataF[aarx][(6*(2*first_rb - frame_parms->N_RB_UL) + symbol*frame_parms->ofdm_symbol_size)];
 #ifdef DEBUG_ULSCH
-      LOG_D(PHY,"copying %d REs from %p to %p\n",nb_rb2*6,rxF,rxF_ext);
+      //LOG_D(PHY,"copying %d REs from %p to %p\n",nb_rb2*6,rxF,rxF_ext);
 #endif
       memcpy(rxF_ext, rxF, nb_rb2*6*sizeof(int));
       rxF_ext += nb_rb2*6;
@@ -846,7 +846,7 @@ void ulsch_channel_compensation(int32_t **rxdataF_ext,
 
 #endif
     for (rb=0; rb<nb_rb; rb++) {
-      LOG_D(PHY,"comp: symbol %d rb %d\n",symbol,rb);
+      //LOG_D(PHY,"comp: symbol %d rb %d\n",symbol,rb);
 
 // just compute channel magnitude without scaling, this is done after equalization for SC-FDMA
 
@@ -869,7 +869,7 @@ void ulsch_channel_compensation(int32_t **rxdataF_ext,
       mmtmpU1 = _mm_packs_epi32(mmtmpU0,mmtmpU0);
       ul_ch_mag128[2] = _mm_unpacklo_epi16(mmtmpU1,mmtmpU1);
 
-      LOG_D(PHY,"comp: symbol %d rb %d => %d,%d,%d (output_shift %d)\n",symbol,rb,*((int16_t*)&ul_ch_mag128[0]),*((int16_t*)&ul_ch_mag128[1]),*((int16_t*)&ul_ch_mag128[2]),output_shift);
+      //LOG_D(PHY,"comp: symbol %d rb %d => %d,%d,%d (output_shift %d)\n",symbol,rb,*((int16_t*)&ul_ch_mag128[0]),*((int16_t*)&ul_ch_mag128[1]),*((int16_t*)&ul_ch_mag128[2]),output_shift);
 
 
 #elif defined(__arm__)

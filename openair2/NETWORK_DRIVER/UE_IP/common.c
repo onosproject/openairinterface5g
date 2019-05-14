@@ -57,8 +57,8 @@
         ntohs((addr)->s6_addr16[7])
 
 
-#define OAI_DRV_DEBUG_SEND
-#define OAI_DRV_DEBUG_RECEIVE
+//#define OAI_DRV_DEBUG_SEND
+//#define OAI_DRV_DEBUG_RECEIVE
 
 void
 ue_ip_common_class_wireless2ip(
@@ -286,7 +286,7 @@ ue_ip_common_ip2wireless(
 
   if (skb_pP->mark && instP == 0) {
     pdcph.rb_id      = skb_pP->mark;
-    printk("[UE_IP_DRV_PROSE] skb_pP->mark %d, oip instance: %d\n",skb_pP->mark, instP);
+    //printk("[UE_IP_DRV_PROSE] skb_pP->mark %d, oip instance: %d\n",skb_pP->mark, instP);
   } else {
     pdcph.rb_id      = UE_IP_DEFAULT_RAB_ID;
   }
@@ -299,14 +299,16 @@ ue_ip_common_ip2wireless(
 
   switch (ipv_p->version) {
   case 6:
+#ifdef OAI_DRV_DEBUG_RECEIVE
     printk("[UE_IP_DRV][%s] receive IPv6 message\n",__FUNCTION__);
+#endif
     //TODO
     break;
 
   case 4:
      src_addr = (unsigned char *)&((struct iphdr *)&skb_pP->data[hard_header_len])->saddr;
      dst_addr = (unsigned char *)&((struct iphdr *)&skb_pP->data[hard_header_len])->daddr;
-
+#ifdef OAI_DRV_DEBUG_SEND
     if (src_addr) {
       printk("[UE_IP_DRV][%s] Source %d.%d.%d.%d\n",__FUNCTION__, src_addr[0],src_addr[1],src_addr[2],src_addr[3]);
     }
@@ -314,7 +316,7 @@ ue_ip_common_ip2wireless(
       printk("[UE_IP_DRV][%s] Dest %d.%d.%d.%d\n",__FUNCTION__, dst_addr[0],dst_addr[1],dst_addr[2],dst_addr[3]);
     }
     printk("[UE_IP_DRV][%s] slrb_id %d\n",__FUNCTION__, pdcph.rb_id);
-
+#endif
     // modify inst by IP address for the U-Plane of multiple UEs while L2 fapi simulator start
     #ifdef UESIM_EXPANSION
         if ((src_addr[3] - 2)> instP) {
@@ -341,8 +343,10 @@ ue_ip_common_ip2wireless(
     //get Ipv4 address and pass to PCDP header
     //pdcph.sourceL2Id = ntohl( ((struct iphdr *)&skb_pP->data[hard_header_len])->saddr) & 0x00FFFFFF;
     //pdcph.destinationL2Id = ntohl( ((struct iphdr *)&skb_pP->data[hard_header_len])->daddr) & 0x00FFFFFF;
+#ifdef OAI_DRV_DEBUG_SEND
     printk("[UE_IP_DRV] source Id: 0x%08x\n",pdcph.sourceL2Id );
     printk("[UE_IP_DRV] destinationL2Id Id: 0x%08x\n",pdcph.destinationL2Id );
+#endif
     break;
 
   default:
@@ -357,8 +361,10 @@ ue_ip_common_ip2wireless(
 #endif
 
   if (bytes_wrote != UE_IP_PDCPH_SIZE) {
+#ifdef OAI_DRV_DEBUG_SEND
     printk("[UE_IP_DRV][%s] problem while writing PDCP's header (bytes wrote = %d)\n",__FUNCTION__,bytes_wrote);
     printk("rb_id %d, Wrote %d, Header Size %d \n", pdcph.rb_id , bytes_wrote, UE_IP_PDCPH_SIZE);
+#endif
     priv_p->stats.tx_dropped ++;
     return;
   }
@@ -367,6 +373,7 @@ ue_ip_common_ip2wireless(
 
 
   if (bytes_wrote != skb_pP->len+UE_IP_PDCPH_SIZE) {
+#ifdef OAI_DRV_DEBUG_SEND
     printk("[UE_IP_DRV][%s] Inst %d, RB_ID %d: problem while writing PDCP's data, bytes_wrote = %d, Data_len %d, PDCPH_SIZE %d\n",
            __FUNCTION__,
            instP,
@@ -374,6 +381,7 @@ ue_ip_common_ip2wireless(
            bytes_wrote,
            skb_pP->len,
            UE_IP_PDCPH_SIZE); // congestion
+#endif
 
     priv_p->stats.tx_dropped ++;
     return;

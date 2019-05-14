@@ -64,6 +64,8 @@
 #endif
 
 extern int otg_enabled;
+extern int sidelink_active;
+
 #if defined(ENABLE_USE_MME)
   extern uint8_t nfapi_mode;
 #endif
@@ -176,7 +178,6 @@ boolean_t pdcp_data_req(
   if (modeP == PDCP_TRANSMISSION_MODE_TRANSPARENT) {
     LOG_D(PDCP, " [TM] Asking for a new mem_block of size %d\n",sdu_buffer_sizeP);
     pdcp_pdu_p = get_free_mem_block(sdu_buffer_sizeP, __func__);
-
     if (pdcp_pdu_p != NULL) {
       memcpy(&pdcp_pdu_p->data[0], sdu_buffer_pP, sdu_buffer_sizeP);
 #if defined(DEBUG_PDCP_PAYLOAD)
@@ -184,7 +185,6 @@ boolean_t pdcp_data_req(
                                 (unsigned char *)&pdcp_pdu_p->data[0],
                                 sdu_buffer_sizeP);
 #endif
-      LOG_D(PDCP, "Before rlc_data_req 1, srb_flagP: %d, rb_idP: %d \n", srb_flagP, rb_idP);
       rlc_status = rlc_data_req(ctxt_pP, srb_flagP, MBMS_FLAG_YES, rb_idP, muiP, confirmP, sdu_buffer_sizeP, pdcp_pdu_p
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
                                 ,NULL, NULL
@@ -220,7 +220,6 @@ boolean_t pdcp_data_req(
      * Allocate a new block for the new PDU (i.e. PDU header and SDU payload)
      */
     pdcp_pdu_p = get_free_mem_block(pdcp_pdu_size, __func__);
-
     if (pdcp_pdu_p != NULL) {
       /*
        * Create a Data PDU with header and append data
@@ -291,14 +290,12 @@ boolean_t pdcp_data_req(
       LOG_D(PDCP, "Sequence number %d is assigned to current PDU\n", current_sn);
       /* Then append data... */
       memcpy(&pdcp_pdu_p->data[pdcp_header_len], sdu_buffer_pP, sdu_buffer_sizeP);
-
       //For control plane data that are not integrity protected,
       // the MAC-I field is still present and should be padded with padding bits set to 0.
       // NOTE: user-plane data are never integrity protected
       for (i=0; i<pdcp_tailer_len; i++) {
         pdcp_pdu_p->data[pdcp_header_len + sdu_buffer_sizeP + i] = 0x00;// pdu_header.mac_i[i];
       }
-
 #if defined(ENABLE_SECURITY)
 
       if ((pdcp_p->security_activated != 0) &&
@@ -359,13 +356,18 @@ boolean_t pdcp_data_req(
      */
     LOG_DUMPMSG(PDCP,DEBUG_PDCP,(char *)pdcp_pdu_p->data,pdcp_pdu_size,
                 "[MSG] PDCP DL %s PDU on rb_id %d\n",(srb_flagP)? "CONTROL" : "DATA", rb_idP);
-    LOG_D(PDCP, "Before rlc_data_req 2, srb_flagP: %d, rb_idP: %d \n", srb_flagP, rb_idP);
+
+    //LOG_I(PDCP, "In pdcp_data_req() before calling rlc_data_req() 1 \n");
+    //list_display_memory_head_tail(&pdcp_sdu_list);
+
     rlc_status = rlc_data_req(ctxt_pP, srb_flagP, MBMS_FLAG_NO, rb_idP, muiP, confirmP, pdcp_pdu_size, pdcp_pdu_p
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
                               ,sourceL2Id
                               ,destinationL2Id
 #endif
                              );
+    //LOG_I(PDCP, "In pdcp_data_req() after calling rlc_data_req() 1 \n");
+    //list_display_memory_head_tail(&pdcp_sdu_list);
   }
 
   switch (rlc_status) {
@@ -406,10 +408,15 @@ boolean_t pdcp_data_req(
    * so we return TRUE afterwards
    */
 
-  for (pdcp_uid=0; pdcp_uid< MAX_MOBILES_PER_ENB; pdcp_uid++) {
-    if (pdcp_enb[ctxt_pP->module_id].rnti[pdcp_uid] == ctxt_pP->rnti )
-      break;
-  }
+  LOG_D(PDCP, "In pdcp_data_req(), MAX_MOBILES_PER_ENB: %d, ctxt_pP->module_id: %d, ctxt_pP->rnti: %d \n \n", MAX_MOBILES_PER_ENB, ctxt_pP->module_id, ctxt_pP->rnti);
+
+  if (!sidelink_active){
+	  for (pdcp_uid=0; pdcp_uid< MAX_MOBILES_PER_ENB; pdcp_uid++) {
+		  LOG_I(PDCP, "In pdcp_data_req(), pdcp_enb[ctxt_pP->module_id].rnti[pdcp_uid]: %d", pdcp_enb[ctxt_pP->module_id].rnti[pdcp_uid]);
+		  if (pdcp_enb[ctxt_pP->module_id].rnti[pdcp_uid] == ctxt_pP->rnti )
+			  break;
+	  }
+
 
   //LOG_I(PDCP,"ueid %d lcid %d tx seq num %d\n", pdcp_uid, rb_idP+rb_offset, current_sn);
   Pdcp_stats_tx[ctxt_pP->module_id][pdcp_uid][rb_idP+rb_offset]++;
@@ -421,6 +428,12 @@ boolean_t pdcp_data_req(
   Pdcp_stats_tx_aiat_tmp_w[ctxt_pP->module_id][pdcp_uid][rb_idP+rb_offset]+= (pdcp_enb[ctxt_pP->module_id].sfn - Pdcp_stats_tx_iat[ctxt_pP->module_id][pdcp_uid][rb_idP+rb_offset]);
   Pdcp_stats_tx_iat[ctxt_pP->module_id][pdcp_uid][rb_idP+rb_offset]=pdcp_enb[ctxt_pP->module_id].sfn;
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PDCP_DATA_REQ,VCD_FUNCTION_OUT);
+
+  } //if (!sidelink_active)
+
+  /*LOG_I(PDCP, "In pdcp_data_req() just before returning... \n");
+  list_display_memory_head_tail(&pdcp_sdu_list);*/
+
   return ret;
 }
 
@@ -437,7 +450,6 @@ pdcp_data_ind(
 )
 //-----------------------------------------------------------------------------
 {
-	//LOG_I(RLC, "Panos-D: pdcp_data_ind() 1 \n");
   pdcp_t      *pdcp_p          = NULL;
   list_t      *sdu_list_p      = NULL;
   mem_block_t *new_sdu_p       = NULL;
@@ -568,6 +580,7 @@ pdcp_data_ind(
             PROTOCOL_PDCP_CTXT_FMT"Incoming (from RLC) SDU is short of size (size:%d)! Ignoring...\n",
             PROTOCOL_PDCP_CTXT_ARGS(ctxt_pP, pdcp_p),
             sdu_buffer_sizeP);
+
       free_mem_block(sdu_buffer_pP, __func__);
 
       if (ctxt_pP->enb_flag) {
@@ -756,7 +769,8 @@ pdcp_data_ind(
 #endif
 
   if (FALSE == packet_forwarded) {
-    new_sdu_p = get_free_mem_block(sdu_buffer_sizeP - payload_offset + sizeof (pdcp_data_ind_header_t), __func__);
+
+	  new_sdu_p = get_free_mem_block(sdu_buffer_sizeP - payload_offset + sizeof (pdcp_data_ind_header_t), __func__);
 
     if (new_sdu_p) {
       if ((MBMS_flagP == 0) && (pdcp_p->rlc_mode == RLC_MODE_AM)) {
@@ -816,9 +830,13 @@ pdcp_data_ind(
       LOG_D(PDCP, "inst=%d size=%d\n", ((pdcp_data_ind_header_t*) new_sdu_p->data)->inst, ((pdcp_data_ind_header_t *) new_sdu_p->data)->data_size);
 #endif
       //((pdcp_data_ind_header_t*) new_sdu_p->data)->inst = 1; //pdcp_inst++;
+
+
+      LOG_D(PDCP, "sizeof (pdcp_data_ind_header_t): %d, payload_offset: %d \n \n \n", sizeof (pdcp_data_ind_header_t), payload_offset);
       memcpy(&new_sdu_p->data[sizeof (pdcp_data_ind_header_t)], \
              &sdu_buffer_pP->data[payload_offset], \
-             sdu_buffer_sizeP - payload_offset);
+             sdu_buffer_sizeP - payload_offset); //payload_offset sizeof (pdcp_data_ind_header_t)
+
       list_add_tail_eurecom (new_sdu_p, sdu_list_p);
     }
 
@@ -862,7 +880,6 @@ pdcp_data_ind(
   }
 
   free_mem_block(sdu_buffer_pP, __func__);
-
   if (ctxt_pP->enb_flag) {
     stop_meas(&eNB_pdcp_stats[ctxt_pP->module_id].data_ind);
   } else {
@@ -1034,7 +1051,13 @@ pdcp_run (
     start_meas(&UE_pdcp_stats[ctxt_pP->module_id].pdcp_ip);
   }
 
+  //LOG_I(PDCP, "In pdcp_run() before calling pdcp_fifo_flush_sdus() 1 \n");
+  //list_display_memory_head_tail(&pdcp_sdu_list);
+
   pdcp_fifo_flush_sdus(ctxt_pP);
+
+  //LOG_I(PDCP, "In pdcp_run() after calling pdcp_fifo_flush_sdus() 1 \n");
+  //list_display_memory_head_tail(&pdcp_sdu_list);
 
   if (ctxt_pP->enb_flag) {
     stop_meas(&eNB_pdcp_stats[ctxt_pP->module_id].pdcp_ip);

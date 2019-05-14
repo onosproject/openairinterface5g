@@ -178,6 +178,14 @@ list_add_head (mem_block_t * elementP, list_t * listP)
   }
 }
 
+void
+list_display_memory_head_tail(list_t * listP){
+	/*printf("Displaying list's head address: %p \n", listP->head);
+	printf("Displaying list's tail address: %p \n \n", listP->tail);*/
+
+}
+
+
 //-----------------------------------------------------------------------------
 /*
  *  add an element to the end of a list
@@ -194,12 +202,25 @@ list_add_tail_eurecom (mem_block_t * elementP, list_t * listP)
     // access optimisation
     listP->nb_elements = listP->nb_elements + 1;
     elementP->next = NULL;
+
+    //printf("In list_add_tail_eurecom 3\n");
+      //list_display_memory_head_tail(listP);
+
     tail = listP->tail;
 
+    //printf("In list_add_tail_eurecom 4\n");
+      //list_display_memory_head_tail(listP);
+
     // almost one element
-    if (tail == NULL || tail == 0x100000000) { //|| tail == 0x100000000
+    if (tail == NULL) { //|| tail == 0x100000000
+    	//printf("In list_add_tail_eurecom 5\n");
+    	      //list_display_memory_head_tail(listP);
+
       listP->head = elementP;
     } else {
+    	//printf("In list_add_tail_eurecom 6\n");
+    	      //list_display_memory_head_tail(listP);
+
       tail->next = elementP;
     }
 
