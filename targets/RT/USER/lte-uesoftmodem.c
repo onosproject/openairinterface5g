@@ -552,9 +552,12 @@ void set_default_frame_parms(LTE_DL_FRAME_PARMS *frame_parms[MAX_NUM_CCs]) {
   }
 }
 
-void init_openair0(LTE_DL_FRAME_PARMS *frame_parms,int rxgain) {
+void init_openair0(LTE_DL_FRAME_PARMS *frame_parms,int rxgain,int SLactive) {
   int card;
   int i;
+  
+  AssertFatal(frame_parms!=NULL,"frame_parms is null\n");
+  AssertFatal(SLactive == 0 || SLactive == 1, "Illegal SLactive %d\n",SLactive);
 
   for (card=0; card<MAX_CARDS; card++) {
     openair0_cfg[card].mmapped_dma=mmapped_dma;
@@ -597,8 +600,8 @@ void init_openair0(LTE_DL_FRAME_PARMS *frame_parms,int rxgain) {
     openair0_cfg[card].Mod_id = 0;
     openair0_cfg[card].num_rb_dl=frame_parms->N_RB_DL;
     openair0_cfg[card].clock_source = clock_source;
-    openair0_cfg[card].tx_num_channels=min(2,frame_parms->nb_antennas_tx);
-    openair0_cfg[card].rx_num_channels=min(2,frame_parms->nb_antennas_rx);
+    openair0_cfg[card].tx_num_channels=min(2,frame_parms->nb_antennas_tx)<<SLactive;
+    openair0_cfg[card].rx_num_channels=min(2,frame_parms->nb_antennas_rx)<<SLactive;
 
     for (i=0; i<4; i++) {
       if (i<openair0_cfg[card].tx_num_channels)
@@ -606,11 +609,20 @@ void init_openair0(LTE_DL_FRAME_PARMS *frame_parms,int rxgain) {
       else
         openair0_cfg[card].tx_freq[i]=0.0;
 
-      if (i<openair0_cfg[card].rx_num_channels)
-        openair0_cfg[card].rx_freq[i] = downlink_frequency[0][i];
-      else
+      if (SLactive==0) {
+	if (i<openair0_cfg[card].rx_num_channels)
+	  openair0_cfg[card].rx_freq[i] = downlink_frequency[0][i];
+	else
         openair0_cfg[card].rx_freq[i]=0.0;
-
+      }
+      else { // assign DL and UL frequency alternately on antenna ports if SL is active
+	if (i<openair0_cfg[card].rx_num_channels) {
+	  if ((i&2)==0) openair0_cfg[card].rx_freq[i] = downlink_frequency[0][i/2];
+	  else          openair0_cfg[card].rx_freq[i] = downlink_frequency[0][i/2]+uplink_frequency_offset[0][i];
+	}
+	else 
+	  openair0_cfg[card].rx_freq[i]=0.0;
+      }
       openair0_cfg[card].autocal[i] = 1;
       openair0_cfg[card].tx_gain[i] = tx_gain[0][i];
       openair0_cfg[card].rx_gain[i] = rxgain - rx_gain_off;
@@ -728,6 +740,7 @@ int main( int argc, char **argv ) {
   if (SLonly == 1 || synchRef==1) sidelink_active=1;
 
 
+
   printf("Running with %d UE instances\n",NB_UE_INST);
 
   if (NB_UE_INST > 1 && simL1flag != 1 && nfapi_mode != 3) {
@@ -830,7 +843,7 @@ int main( int argc, char **argv ) {
 	  		}
 	  	  }
   }
-  else init_openair0(frame_parms[0],(int)rx_gain[0][0]);
+  else init_openair0(frame_parms[0],(int)rx_gain[0][0],(PHY_vars_UE_g[0][0]->sidelink_active==1 && PHY_vars_UE_g[0][0]->SLonly==0)?1:0);
 
   if (simL1flag==1) {
     RCConfig_sim();

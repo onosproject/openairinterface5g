@@ -528,6 +528,8 @@ static void *UE_thread_synch(void *arg)
   ind = 0;
   found = 0;
 
+  // this is number of RX antennas for legacy LTE operation (i.e. not sidelink)
+  int nb_rx = UE->sidelink_active == 1 ? openair0_cfg[UE->rf_map.card].rx_num_channels : openair0_cfg[UE->rf_map.card].rx_num_channels>>1;
 
   if (UE->UE_scan == 0) {
     do  {
@@ -554,7 +556,7 @@ static void *UE_thread_synch(void *arg)
 
     LOG_I( PHY, "[SCHED][UE] Check absolute frequency DL %"PRIu32", UL %"PRIu32" (oai_exit %d, rx_num_channels %d)\n", UE->frame_parms.dl_CarrierFreq, UE->frame_parms.ul_CarrierFreq,oai_exit, openair0_cfg[0].rx_num_channels);
 
-    for (i=0;i<openair0_cfg[UE->rf_map.card].rx_num_channels;i++) {
+    for (i=0;i<nb_rx;i++) {
       openair0_cfg[UE->rf_map.card].rx_freq[UE->rf_map.chain+i] = UE->frame_parms.dl_CarrierFreq;
       openair0_cfg[UE->rf_map.card].tx_freq[UE->rf_map.chain+i] = UE->frame_parms.ul_CarrierFreq;
       openair0_cfg[UE->rf_map.card].autocal[UE->rf_map.chain+i] = 1;
@@ -569,7 +571,7 @@ static void *UE_thread_synch(void *arg)
   } else if  (UE->UE_scan == 1) {
     current_band=0;
 
-    for (i=0; i<openair0_cfg[UE->rf_map.card].rx_num_channels; i++) {
+    for (i=0; i<nb_rx; i++) {
       downlink_frequency[UE->rf_map.card][UE->rf_map.chain+i] = bands_to_scan.band_info[CC_id].dl_min;
       uplink_frequency_offset[UE->rf_map.card][UE->rf_map.chain+i] =
 	bands_to_scan.band_info[CC_id].ul_min-bands_to_scan.band_info[CC_id].dl_min;
@@ -612,7 +614,7 @@ static void *UE_thread_synch(void *arg)
 	oai_exit=1;
       }
 
-      for (i=0; i<openair0_cfg[UE->rf_map.card].rx_num_channels; i++) {
+      for (i=0; i<nb_rx; i++) {
 	downlink_frequency[UE->rf_map.card][UE->rf_map.chain+i] = bands_to_scan.band_info[current_band].dl_min+current_offset;
 	uplink_frequency_offset[UE->rf_map.card][UE->rf_map.chain+i] = bands_to_scan.band_info[current_band].ul_min-bands_to_scan.band_info[0].dl_min + current_offset;
 
@@ -1094,7 +1096,7 @@ static void *UE_thread_rxn_txnp4(void *arg) {
             LOG_E( PHY, "[UE %"PRIu8"] Frame %"PRIu32", subframe %u %s\n",
                    UE->Mod_id, proc->frame_rx, proc->subframe_tx,txt );
           }
-      }
+      } // SLonly==1 && mac_enabled == 1
 
       phy_procedures_UE_SL_TX(UE,proc);
     }

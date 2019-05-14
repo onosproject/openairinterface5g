@@ -177,10 +177,13 @@ int rx_psbch(PHY_VARS_UE *ue,int frame_rx,int subframe_rx) {
   ru_tmp.common.rxdataF = (int32_t**)rxdataF;
   ru_tmp.nb_rx = ue->frame_parms.nb_antennas_rx;
 
+  int SLaoffset=0;
+  if (ue->SLonly==0) SLaoffset=1;
+  // if SLonly then all antennas are SL only, else they are inteleaved with legacy RX antennas
 
   if (ue->is_synchronizedSL == 1) { // Run front-end processing
     ru_tmp.common.rxdata            = (int32_t**)malloc16(ue->frame_parms.nb_antennas_rx*sizeof(int32_t*));
-    for (int aa=0;aa<ue->frame_parms.nb_antennas_rx;aa++) {
+    for (int aa=SLaoffset;aa<(ue->frame_parms.nb_antennas_rx<<SLaoffset);aa+=(1<<SLaoffset)) {
       ru_tmp.common.rxdata[aa]        = (int32_t*)&ue->common_vars.rxdata[aa][0];
     }
 
