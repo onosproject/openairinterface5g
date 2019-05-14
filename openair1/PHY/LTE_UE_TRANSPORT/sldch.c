@@ -96,7 +96,7 @@ void sldch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
 
     ru_tmp.common.rxdata            = (int32_t**)malloc16(ue->frame_parms.nb_antennas_rx*sizeof(int32_t*));
     for (int aa=SLaoffset;aa<(ue->frame_parms.nb_antennas_rx<<SLaoffset);aa+=(1<<SLaoffset)) {
-      ru_tmp.common.rxdata[aa]        = (int32_t*)&ue->common_vars.rxdata[aa][0];
+      ru_tmp.common.rxdata[aa>>1]        = (int32_t*)&ue->common_vars.rxdata[aa][0];
     }
     ru_tmp.common.rxdata_7_5kHz = (int32_t**)rxdata_7_5kHz;
     ru_tmp.common.rxdataF = (int32_t**)rxdataF;
