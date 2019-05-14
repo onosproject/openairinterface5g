@@ -81,6 +81,9 @@ void sldch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
 
   if (ue->sldch_received[npsdch] > 0) return;
 
+  int SLaoffset=0;
+  if (ue->SLonly==0) SLaoffset=1;
+
   // slot FEP
   if (proc->sl_fep_done == 0) {
     proc->sl_fep_done = 1;
@@ -89,13 +92,20 @@ void sldch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
     
     memcpy((void*)&ru_tmp.frame_parms,(void*)&ue->frame_parms,sizeof(LTE_DL_FRAME_PARMS));
     ru_tmp.N_TA_offset=0;
-    ru_tmp.common.rxdata = ue->common_vars.rxdata;
+    //    ru_tmp.common.rxdata = ue->common_vars.rxdata;
+
+    ru_tmp.common.rxdata            = (int32_t**)malloc16(ue->frame_parms.nb_antennas_rx*sizeof(int32_t*));
+    for (int aa=SLaoffset;aa<(ue->frame_parms.nb_antennas_rx<<SLaoffset);aa+=(1<<SLaoffset)) {
+      ru_tmp.common.rxdata[aa]        = (int32_t*)&ue->common_vars.rxdata[aa][0];
+    }
     ru_tmp.common.rxdata_7_5kHz = (int32_t**)rxdata_7_5kHz;
     ru_tmp.common.rxdataF = (int32_t**)rxdataF;
     ru_tmp.nb_rx = ue->frame_parms.nb_antennas_rx;
     
     remove_7_5_kHz(&ru_tmp,(subframe_rx<<1));
     remove_7_5_kHz(&ru_tmp,(subframe_rx<<1)+1);
+
+    free(ru_tmp.common.rxdata);
 
     // extract symbols from slot  
     for (int l=0; l<Nsymb; l++) {

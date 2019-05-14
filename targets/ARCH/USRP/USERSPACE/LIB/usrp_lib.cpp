@@ -746,8 +746,10 @@ int trx_usrp_set_freq(openair0_device *device, openair0_config_t *openair0_cfg, 
   if (dont_block == 1)
     pthread_create(&f_thread,NULL,freq_thread,(void *)device);
   else {
-    s->usrp->set_tx_freq(device->openair0_cfg[0].tx_freq[0]);
-    s->usrp->set_rx_freq(device->openair0_cfg[0].rx_freq[0]);
+    for (int i=0;i<device->openair0_cfg[0].tx_num_channels;i++)
+      s->usrp->set_tx_freq(device->openair0_cfg[0].tx_freq[i],i);
+    for (int i=0;i<device->openair0_cfg[0].rx_num_channels;i++)
+      s->usrp->set_rx_freq(device->openair0_cfg[0].rx_freq[i],i);
   }
 
   return(0);
@@ -1123,8 +1125,11 @@ extern "C" {
       // lock mboard clocks
       if (openair0_cfg[0].clock_source == internal && device_adds.size() == 1)
         s->usrp->set_clock_source("internal");
-      else
+      else // if we set to external or if we have more than 1 USRP
         s->usrp->set_clock_source("external");
+
+      // if we have more than 1 USRP require PPS source
+      if (device_adds.size()>1) s->usrp->set_time_source("external");
 
       if (device->type==USRP_X300_DEV) {
         openair0_cfg[0].rx_gain_calib_table = calib_table_x310;
