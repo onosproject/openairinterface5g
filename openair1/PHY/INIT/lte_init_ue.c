@@ -718,15 +718,19 @@ int init_lte_ue_signal(PHY_VARS_UE *ue,
   }
   
   // init RX buffers
+  int nb_rx = (ue->sidelink_active == 1 && ue->SLonly == 0) ? 2*fp->nb_antennas_rx : fp->nb_antennas_rx;
   
   common_vars->rxdata                                      = (int32_t**)malloc16( fp->nb_antennas_rx*sizeof(int32_t*) );
   common_vars->common_vars_rx_data_per_thread[0].rxdataF   = (int32_t**)malloc16( fp->nb_antennas_rx*sizeof(int32_t*) );
   common_vars->common_vars_rx_data_per_thread[1].rxdataF   = (int32_t**)malloc16( fp->nb_antennas_rx*sizeof(int32_t*) );
   if (ue->sidelink_active == 1) common_vars->rxdata_syncSL = (int16_t**)malloc16( fp->nb_antennas_rx*sizeof(int16_t*) );
     
-  for (i=0; i<fp->nb_antennas_rx; i++) {
+  for (i=0; i<nb_rx; i++) {
     common_vars->rxdata[i] = (int32_t*) malloc16_clear( (fp->samples_per_tti*10+2048)*sizeof(int32_t) );
     LOG_I(PHY,"common_vars->rxdata[%d] %p\n",i,common_vars->rxdata[i]);
+  }
+  
+  for (i=0; i<fp->nb_antennas_rx; i++) {
     common_vars->common_vars_rx_data_per_thread[0].rxdataF[i] = (int32_t*)malloc16_clear( sizeof(int32_t)*(fp->ofdm_symbol_size*14) );
     common_vars->common_vars_rx_data_per_thread[1].rxdataF[i] = (int32_t*)malloc16_clear( sizeof(int32_t)*(fp->ofdm_symbol_size*14) );
 

@@ -600,9 +600,11 @@ void init_openair0(LTE_DL_FRAME_PARMS *frame_parms,int rxgain,int SLactive) {
     openair0_cfg[card].Mod_id = 0;
     openair0_cfg[card].num_rb_dl=frame_parms->N_RB_DL;
     openair0_cfg[card].clock_source = clock_source;
-    openair0_cfg[card].tx_num_channels=min(2,frame_parms->nb_antennas_tx)<<SLactive;
-    openair0_cfg[card].rx_num_channels=min(2,frame_parms->nb_antennas_rx)<<SLactive;
+    openair0_cfg[card].tx_num_channels=min(2,frame_parms->nb_antennas_tx);
+    openair0_cfg[card].rx_num_channels=min(2,frame_parms->nb_antennas_rx);
 
+    LOG_I(PHY,"card %d: tx_num_channels %d, rx_num_channels %d\n",card,openair0_cfg[card].tx_num_channels,openair0_cfg[card].rx_num_channels);
+    
     for (i=0; i<4; i++) {
       if (i<openair0_cfg[card].tx_num_channels)
         openair0_cfg[card].tx_freq[i] = downlink_frequency[0][i]+uplink_frequency_offset[0][i];
@@ -613,12 +615,13 @@ void init_openair0(LTE_DL_FRAME_PARMS *frame_parms,int rxgain,int SLactive) {
 	if (i<openair0_cfg[card].rx_num_channels)
 	  openair0_cfg[card].rx_freq[i] = downlink_frequency[0][i];
 	else
-        openair0_cfg[card].rx_freq[i]=0.0;
+	  openair0_cfg[card].rx_freq[i]=0.0;
       }
       else { // assign DL and UL frequency alternately on antenna ports if SL is active
 	if (i<openair0_cfg[card].rx_num_channels) {
-	  if ((i&2)==0) openair0_cfg[card].rx_freq[i] = downlink_frequency[0][i/2];
-	  else          openair0_cfg[card].rx_freq[i] = downlink_frequency[0][i/2]+uplink_frequency_offset[0][i];
+	    openair0_cfg[card].rx_freq[i] = downlink_frequency[0][i/2];
+	    openair0_cfg[card].rx_freq[i+openair0_cfg[card].rx_num_channels] = downlink_frequency[0][i/2]+uplink_frequency_offset[0][i];
+	    LOG_I(PHY,"Setting SL receiver @ %f\n",openair0_cfg[card].rx_freq[i+openair0_cfg[card].rx_num_channels]);
 	}
 	else 
 	  openair0_cfg[card].rx_freq[i]=0.0;
@@ -843,7 +846,7 @@ int main( int argc, char **argv ) {
 	  		}
 	  	  }
   }
-  else init_openair0(frame_parms[0],(int)rx_gain[0][0],(PHY_vars_UE_g[0][0]->sidelink_active==1 && PHY_vars_UE_g[0][0]->SLonly==0)?1:0);
+  else init_openair0(frame_parms[0],(int)rx_gain[0][0],(sidelink_active==1 && SLonly==0)?1:0);
 
   if (simL1flag==1) {
     RCConfig_sim();

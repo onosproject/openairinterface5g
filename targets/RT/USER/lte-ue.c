@@ -529,7 +529,7 @@ static void *UE_thread_synch(void *arg)
   found = 0;
 
   // this is number of RX antennas for legacy LTE operation (i.e. not sidelink)
-  int nb_rx = UE->sidelink_active == 1 ? openair0_cfg[UE->rf_map.card].rx_num_channels : openair0_cfg[UE->rf_map.card].rx_num_channels>>1;
+  int nb_rx = openair0_cfg[UE->rf_map.card].rx_num_channels;
 
   if (UE->UE_scan == 0) {
     do  {
@@ -771,9 +771,11 @@ static void *UE_thread_synch(void *arg)
 #endif
 
 	for (i=0; i<openair0_cfg[UE->rf_map.card].rx_num_channels; i++) {
-	  openair0_cfg[UE->rf_map.card].rx_freq[UE->rf_map.chain+i] = downlink_frequency[CC_id][i]+freq_offset;
-	  openair0_cfg[UE->rf_map.card].tx_freq[UE->rf_map.chain+i] = downlink_frequency[CC_id][i]+uplink_frequency_offset[CC_id][i]+freq_offset;
+	  if (UE->sidelink_active == 1) openair0_cfg[UE->rf_map.card].rx_freq[UE->rf_map.chain+i+openair0_cfg[UE->rf_map.card].rx_num_channels] = downlink_frequency[CC_id][0]+uplink_frequency_offset[CC_id][0]+freq_offset;
+	  openair0_cfg[UE->rf_map.card].rx_freq[UE->rf_map.chain+i] = downlink_frequency[CC_id][0]+freq_offset;
+	  openair0_cfg[UE->rf_map.card].tx_freq[UE->rf_map.chain+i] = downlink_frequency[CC_id][0]+uplink_frequency_offset[CC_id][0]+freq_offset;
 	  openair0_cfg[UE->rf_map.card].rx_gain[UE->rf_map.chain+i] = UE->rx_total_gain_dB;//-USRP_GAIN_OFFSET;
+	  if (UE->sidelink_active == 1) openair0_cfg[UE->rf_map.card].rx_gain[UE->rf_map.chain+i+openair0_cfg[UE->rf_map.card].rx_num_channels] = UE->rx_total_gain_dB;//-USRP_GAIN_OFFSET;
 	  if (UE->UE_scan_carrier==1)
 	    openair0_cfg[UE->rf_map.card].autocal[UE->rf_map.chain+i] = 1;
 	}
@@ -1828,10 +1830,10 @@ void *UE_thread(void *arg) {
 
   PHY_VARS_UE *UE = (PHY_VARS_UE *) arg;
   //  int tx_enabled = 0;
-  int dummy_rx[UE->frame_parms.nb_antennas_rx][UE->frame_parms.samples_per_tti] __attribute__((aligned(32)));
+
   openair0_timestamp timestamp,timestamp1;
   void* rxp[NB_ANTENNAS_RX], *txp[NB_ANTENNAS_TX];
-  int start_rx_stream = 0;
+  int start_rx_stream =1;
   int i;
   int th_id;
 
@@ -1864,7 +1866,9 @@ void *UE_thread(void *arg) {
     LOG_E(HW,"Could not start the device\n");
     oai_exit=1;
   }
-
+  int nb_rx = (UE->sidelink_active == 1 && UE->SLonly == 0) ? 2*UE->frame_parms.nb_antennas_rx : UE->frame_parms.nb_antennas_rx;
+  int dummy_rx[nb_rx][UE->frame_parms.samples_per_tti] __attribute__((aligned(32)));
+  
   while (!oai_exit) {
 #if BASIC_SIMULATOR
     while (!(UE->proc.instance_cnt_synch < 0)) {
@@ -1881,7 +1885,7 @@ void *UE_thread(void *arg) {
     if (is_synchronized == 0) {
       if (instance_cnt_synch < 0) {  // we can invoke the synch
 	// grab 10 ms of signal and wakeup synch thread
-	for (int i=0; i<UE->frame_parms.nb_antennas_rx; i++)
+	for (int i=0; i<nb_rx; i++)
 	  rxp[i] = (void*)&UE->common_vars.rxdata[i][0];
 
 	if (UE->mode != loop_through_memory)
@@ -1907,7 +1911,7 @@ void *UE_thread(void *arg) {
 #else
 	// grab 10 ms of signal into dummy buffer
 	if (UE->mode != loop_through_memory) {
-	  for (int i=0; i<UE->frame_parms.nb_antennas_rx; i++)
+	  for (int i=0; i<nb_rx; i++)
 	    rxp[i] = (void*)&dummy_rx[i][0];
 	  for (int sf=0; sf<10; sf++)
 	    //	    printf("Reading dummy sf %d\n",sf);
@@ -1980,7 +1984,7 @@ void *UE_thread(void *arg) {
 
 
                 if (UE->mode != loop_through_memory) {
-                    for (i=0; i<UE->frame_parms.nb_antennas_rx; i++)
+                    for (i=0; i<nb_rx; i++)
                         rxp[i] = (void*)&UE->common_vars.rxdata[i][UE->frame_parms.ofdm_symbol_size+
                                  UE->frame_parms.nb_prefix_samples0+
                                  sub_frame*UE->frame_parms.samples_per_tti];
@@ -2122,7 +2126,7 @@ void init_UE_threads(int inst) {
   pthread_mutex_init(&UE->proc.mutex_synch,NULL);
   pthread_cond_init(&UE->proc.cond_synch,NULL);
   UE->proc.instance_cnt_synch = -1;
-  UE->is_synchronized = 0;
+  UE->is_synchronized = 1;
 
   if (UE->sidelink_active == 1 && UE->SLonly==1) {
     pthread_attr_init (&UE->proc.attr_ueSL);

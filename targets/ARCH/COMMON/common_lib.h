@@ -288,6 +288,9 @@ struct openair0_device_t {
   /*!brief Can be used by driver to hold internal structure*/
   void *priv;
 
+  /*!brief Can be used by driver to hold second internal structure*/
+  void *priv2;
+
   /* Functions API, which are called by the application*/
 
   /*! \brief Called to start the transceiver. Return 0 if OK, < 0 if error
