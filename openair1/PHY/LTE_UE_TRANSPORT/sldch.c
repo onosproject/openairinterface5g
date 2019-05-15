@@ -94,9 +94,11 @@ void sldch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
     ru_tmp.N_TA_offset=0;
     //    ru_tmp.common.rxdata = ue->common_vars.rxdata;
 
-    ru_tmp.common.rxdata            = (int32_t**)malloc16(ue->frame_parms.nb_antennas_rx*sizeof(int32_t*));
+    ru_tmp.common.rxdata            = (int32_t**)malloc16((1+ue->frame_parms.nb_antennas_rx)*sizeof(int32_t*));
+    int aaSL=0;
     for (int aa=SLaoffset;aa<(ue->frame_parms.nb_antennas_rx<<SLaoffset);aa+=(1<<SLaoffset)) {
-      ru_tmp.common.rxdata[aa>>1]        = (int32_t*)&ue->common_vars.rxdata[aa][0];
+      ru_tmp.common.rxdata[aaSL]        = (int32_t*)&ue->common_vars.rxdata[aa][0];
+      aaSL++;
     }
     ru_tmp.common.rxdata_7_5kHz = (int32_t**)rxdata_7_5kHz;
     ru_tmp.common.rxdataF = (int32_t**)rxdataF;
@@ -115,8 +117,8 @@ void sldch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
     }
   }
    LOG_D(PHY,"sldch_decoding: FEP in %d.%d for npsdch %d rvidx %d rx signal energy %d (%p) dB %d dB\n",frame_rx,subframe_rx,npsdch,rvidx,
-         dB_fixed(signal_energy((int32_t*)&ue->common_vars.rxdata[0][ue->frame_parms.samples_per_tti*subframe_rx],ue->frame_parms.samples_per_tti)),
-         &ue->common_vars.rxdata[0][ue->frame_parms.samples_per_tti*subframe_rx],
+         dB_fixed(signal_energy((int32_t*)&ue->common_vars.rxdata[SLaoffset][ue->frame_parms.samples_per_tti*subframe_rx],ue->frame_parms.samples_per_tti)),
+         &ue->common_vars.rxdata[SLaoffset][ue->frame_parms.samples_per_tti*subframe_rx],
          dB_fixed(signal_energy((int32_t*)ue->sl_rxdata_7_5kHz[ue->current_thread_id[subframe_rx]][0],ue->frame_parms.samples_per_tti)));
 
   for (int l=0; l<Nsymb; l++) {
@@ -193,7 +195,7 @@ void sldch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
   
   log2_maxh = (log2_approx(avgs)/2)+ log2_approx(ue->frame_parms.nb_antennas_rx-1)+4;
 
-  LOG_D(PHY,"sldch_decoding %d.%d npsdch %d log2_maxh %d\n",frame_rx,subframe_rx,npsdch,log2_maxh);
+  if (log2_maxh > 5) LOG_D(PHY,"sldch_decoding %d.%d npsdch %d log2_maxh %d\n",frame_rx,subframe_rx,npsdch,log2_maxh);
 
 
 
@@ -320,7 +322,7 @@ void sldch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
 
 //  printf("slsch decoding round %d ret %d\n",ue->dlsch_rx_sldch->harq_processes[0]->round,ret);
   if (ret<ue->dlsch_rx_sldch[npsdch]->max_turbo_iterations) {
-    LOG_D(PHY,"SLDCH received for npsdch %d (rvidx %d, iter %d)\n",
+    LOG_I(PHY,"SLDCH received for npsdch %d (rvidx %d, iter %d)\n",
 	  npsdch,
 	  rvidx,ret);
     ue->sldch_received[npsdch] = 1;

@@ -30,8 +30,8 @@
  */
 
 #define PDCP_FIFO_C
-//#define PDCP_DEBUG 1
-//#define DEBUG_PDCP_FIFO_FLUSH_SDU
+#define PDCP_DEBUG 1
+#define DEBUG_PDCP_FIFO_FLUSH_SDU
 
 extern int otg_enabled;
 
@@ -216,7 +216,7 @@ int pdcp_fifo_flush_sdus(const protocol_ctxt_t* const  ctxt_pP)
 
 #endif /* defined(ENABLE_USE_MME) */
 #ifdef PDCP_DEBUG
-      LOG_D(PDCP, "PDCP->IP TTI %d INST %d: Preparing %d Bytes of data from rab %d to Nas_mesh\n",
+      LOG_I(PDCP, "PDCP->IP TTI %d INST %d: Preparing %d Bytes of data from rab %d to Nas_mesh\n",
             ctxt_pP->frame, ((pdcp_data_ind_header_t *)(sdu_p->data))->inst,
             ((pdcp_data_ind_header_t *)(sdu_p->data))->data_size, ((pdcp_data_ind_header_t *)(sdu_p->data))->rb_id);
 #endif //PDCP_DEBUG

@@ -291,7 +291,7 @@ mac_rrc_data_ind_ue(
     }
     //TTN (for D2D)
     if(srb_idP == SL_DISCOVERY) {
-    	LOG_I(RRC,"[UE %d] Received SDU (%d bytes) for SL_DISCOVERY on SRB %d from eNB %d\n",module_idP, sdu_lenP, srb_idP,eNB_indexP);
+    	LOG_I(RRC,"[UE %d] Received SDU (%d bytes) for SL_DISCOVERY on SRB %d\n",module_idP, sdu_lenP, srb_idP);
     	decode_SL_Discovery_Message(&ctxt, eNB_indexP, sduP, sdu_lenP);
     }
 
@@ -307,7 +307,7 @@ mac_rrc_data_ind_ue(
 
     //TTN (for D2D)
     if(srb_idP == SL_DISCOVERY) {
-       LOG_D(RRC,"[UE %d] Received SDU (%d bytes) for SL_DISCOVERY on SRB %d from eNB %d\n",module_idP, sdu_lenP, srb_idP,eNB_indexP);
+       LOG_D(RRC,"[UE %d] Received SDU (%d bytes) for SL_DISCOVERY on SRB %d\n",module_idP, sdu_lenP, srb_idP);
        decode_SL_Discovery_Message(&ctxt, eNB_indexP, sduP, sdu_lenP);
     }
 #endif // Re114

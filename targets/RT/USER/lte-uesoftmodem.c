@@ -618,10 +618,11 @@ void init_openair0(LTE_DL_FRAME_PARMS *frame_parms,int rxgain,int SLactive) {
 	  openair0_cfg[card].rx_freq[i]=0.0;
       }
       else { // assign DL and UL frequency alternately on antenna ports if SL is active
-	if (i<openair0_cfg[card].rx_num_channels) {
-	    openair0_cfg[card].rx_freq[i] = downlink_frequency[0][i/2];
-	    openair0_cfg[card].rx_freq[i+openair0_cfg[card].rx_num_channels] = downlink_frequency[0][i/2]+uplink_frequency_offset[0][i];
-	    LOG_I(PHY,"Setting SL receiver @ %f\n",openair0_cfg[card].rx_freq[i+openair0_cfg[card].rx_num_channels]);
+	int num_legacy_channels=openair0_cfg[card].rx_num_channels;
+	if (i<num_legacy_channels) {
+	    openair0_cfg[card].rx_freq[i] = downlink_frequency[0][i];
+	    openair0_cfg[card].rx_freq[i+num_legacy_channels] = downlink_frequency[0][i]+uplink_frequency_offset[0][i];
+	    LOG_I(PHY,"Setting SL receiver @ %f\n",openair0_cfg[card].rx_freq[i+num_legacy_channels]);
 	}
 	else 
 	  openair0_cfg[card].rx_freq[i]=0.0;

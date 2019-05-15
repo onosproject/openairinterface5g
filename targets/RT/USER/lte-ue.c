@@ -282,7 +282,7 @@ void init_UE(int nb_inst,int eMBMS_active, int uecap_xer_in, int timing_correcti
 
   for (inst=0;inst<nb_inst;inst++) {
 	  if (PHY_vars_UE_g[inst]==NULL) PHY_vars_UE_g[inst] = (PHY_VARS_UE**)calloc(1+MAX_NUM_CCs,sizeof(PHY_VARS_UE*));
-	  LOG_I(PHY,"Allocating UE context %d\n",inst);
+	  LOG_I(PHY,"Allocating UE context %d, (sidelink active %d, isSynchRef %d, SLonly %d)\n",inst,sidelink_active,isSynchRef,SLonly);
 
 	  if (simL1flag == 0) PHY_vars_UE_g[inst][0] = init_ue_vars(fp0,inst,0,sidelink_active);
 	  else {
@@ -524,10 +524,12 @@ static void *UE_thread_synch(void *arg)
   sprintf(threadname, "sync UE %d\n", UE->Mod_id);
   init_thread(100000, 500000, FIFO_PRIORITY-1, &cpuset, threadname);
 
-  printf("starting UE synch thread (IC %d)\n",UE->proc.instance_cnt_synch);
+  LOG_I(PHY,"starting UE synch thread (IC %d)\n",UE->proc.instance_cnt_synch);
   ind = 0;
   found = 0;
-
+  int SLactive = UE->sidelink_active;
+  AssertFatal(SLactive == 0 || SLactive == 1,"SLactive needs to be 0 or 1\n");
+  
   // this is number of RX antennas for legacy LTE operation (i.e. not sidelink)
   int nb_rx = openair0_cfg[UE->rf_map.card].rx_num_channels;
 
@@ -554,12 +556,13 @@ static void *UE_thread_synch(void *arg)
     }
 
 
-    LOG_I( PHY, "[SCHED][UE] Check absolute frequency DL %"PRIu32", UL %"PRIu32" (oai_exit %d, rx_num_channels %d)\n", UE->frame_parms.dl_CarrierFreq, UE->frame_parms.ul_CarrierFreq,oai_exit, openair0_cfg[0].rx_num_channels);
+    LOG_I( PHY, "[SCHED][UE] Check absolute frequency DL %"PRIu32", UL %"PRIu32" (oai_exit %d, rx_num_channels %d)\n", UE->frame_parms.dl_CarrierFreq, UE->frame_parms.ul_CarrierFreq,oai_exit, nb_rx);
 
     for (i=0;i<nb_rx;i++) {
       openair0_cfg[UE->rf_map.card].rx_freq[UE->rf_map.chain+i] = UE->frame_parms.dl_CarrierFreq;
       openair0_cfg[UE->rf_map.card].tx_freq[UE->rf_map.chain+i] = UE->frame_parms.ul_CarrierFreq;
       openair0_cfg[UE->rf_map.card].autocal[UE->rf_map.chain+i] = 1;
+      if (SLactive == 1)       openair0_cfg[UE->rf_map.card].rx_freq[UE->rf_map.chain+i+nb_rx] = UE->frame_parms.ul_CarrierFreq;
       if (uplink_frequency_offset[CC_id][i] != 0) //
 	openair0_cfg[UE->rf_map.card].duplex_mode = duplex_mode_FDD;
       else //FDD
@@ -647,18 +650,26 @@ static void *UE_thread_synch(void *arg)
 
 
 	// rerun with new cell parameters and frequency-offset
-	for (i=0; i<openair0_cfg[UE->rf_map.card].rx_num_channels; i++) {
+	for (i=0; i<nb_rx; i++) {
 	  openair0_cfg[UE->rf_map.card].rx_gain[UE->rf_map.chain+i] = UE->rx_total_gain_dB;//-USRP_GAIN_OFFSET;
 	  if (UE->UE_scan_carrier == 1) {
 	    if (freq_offset >= 0)
 	      openair0_cfg[UE->rf_map.card].rx_freq[UE->rf_map.chain+i] += abs(UE->common_vars.freq_offset);
 	    else
 	      openair0_cfg[UE->rf_map.card].rx_freq[UE->rf_map.chain+i] -= abs(UE->common_vars.freq_offset);
-	    openair0_cfg[UE->rf_map.card].tx_freq[UE->rf_map.chain+i] =
-	      openair0_cfg[UE->rf_map.card].rx_freq[UE->rf_map.chain+i]+uplink_frequency_offset[CC_id][i];
-	    downlink_frequency[CC_id][i] = openair0_cfg[CC_id].rx_freq[i];
-	    freq_offset=0;
 	  }
+	  openair0_cfg[UE->rf_map.card].tx_freq[UE->rf_map.chain+i] =
+	    openair0_cfg[UE->rf_map.card].rx_freq[UE->rf_map.chain+i]+uplink_frequency_offset[CC_id][i];
+	  LOG_I(PHY,"Setting TX%d frequency to %f\n",i,openair0_cfg[UE->rf_map.card].rx_freq[UE->rf_map.chain+i]);
+	  LOG_I(PHY,"Setting TX%d frequency to %f\n",i,openair0_cfg[UE->rf_map.card].tx_freq[UE->rf_map.chain+i]);
+	  if (SLactive == 1) {
+	    openair0_cfg[UE->rf_map.card].rx_freq[UE->rf_map.chain+i+nb_rx] = openair0_cfg[UE->rf_map.card].tx_freq[UE->rf_map.chain+i];
+	    LOG_I(PHY,"Setting SL RX%d frequency to %f\n",i,openair0_cfg[UE->rf_map.card].rx_freq[UE->rf_map.chain+i+nb_rx]);
+	  }
+	  downlink_frequency[CC_id][i] = openair0_cfg[CC_id].rx_freq[i];
+	  freq_offset=0;
+	
+	  
 	}
 
 	// reconfigure for potentially different bandwidth
@@ -770,12 +781,12 @@ static void *UE_thread_synch(void *arg)
 	      downlink_frequency[0][0]+uplink_frequency_offset[0][0]+freq_offset );
 #endif
 
-	for (i=0; i<openair0_cfg[UE->rf_map.card].rx_num_channels; i++) {
-	  if (UE->sidelink_active == 1) openair0_cfg[UE->rf_map.card].rx_freq[UE->rf_map.chain+i+openair0_cfg[UE->rf_map.card].rx_num_channels] = downlink_frequency[CC_id][0]+uplink_frequency_offset[CC_id][0]+freq_offset;
+	for (i=0; i<nb_rx; i++) {
+	  if (UE->sidelink_active == 1) openair0_cfg[UE->rf_map.card].rx_freq[UE->rf_map.chain+i+nb_rx] = downlink_frequency[CC_id][0]+uplink_frequency_offset[CC_id][0]+freq_offset;
 	  openair0_cfg[UE->rf_map.card].rx_freq[UE->rf_map.chain+i] = downlink_frequency[CC_id][0]+freq_offset;
 	  openair0_cfg[UE->rf_map.card].tx_freq[UE->rf_map.chain+i] = downlink_frequency[CC_id][0]+uplink_frequency_offset[CC_id][0]+freq_offset;
 	  openair0_cfg[UE->rf_map.card].rx_gain[UE->rf_map.chain+i] = UE->rx_total_gain_dB;//-USRP_GAIN_OFFSET;
-	  if (UE->sidelink_active == 1) openair0_cfg[UE->rf_map.card].rx_gain[UE->rf_map.chain+i+openair0_cfg[UE->rf_map.card].rx_num_channels] = UE->rx_total_gain_dB;//-USRP_GAIN_OFFSET;
+	  if (UE->sidelink_active == 1) openair0_cfg[UE->rf_map.card].rx_gain[UE->rf_map.chain+i+nb_rx] = UE->rx_total_gain_dB;//-USRP_GAIN_OFFSET;
 	  if (UE->UE_scan_carrier==1)
 	    openair0_cfg[UE->rf_map.card].autocal[UE->rf_map.chain+i] = 1;
 	}
@@ -1833,7 +1844,7 @@ void *UE_thread(void *arg) {
 
   openair0_timestamp timestamp,timestamp1;
   void* rxp[NB_ANTENNAS_RX], *txp[NB_ANTENNAS_TX];
-  int start_rx_stream =1;
+  int start_rx_stream =0;
   int i;
   int th_id;
 
@@ -2126,7 +2137,7 @@ void init_UE_threads(int inst) {
   pthread_mutex_init(&UE->proc.mutex_synch,NULL);
   pthread_cond_init(&UE->proc.cond_synch,NULL);
   UE->proc.instance_cnt_synch = -1;
-  UE->is_synchronized = 1;
+  UE->is_synchronized = 0;
 
   if (UE->sidelink_active == 1 && UE->SLonly==1) {
     pthread_attr_init (&UE->proc.attr_ueSL);

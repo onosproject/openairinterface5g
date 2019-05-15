@@ -877,7 +877,6 @@ void pscch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
   // slot FEP
   int SLaoffset=0;
   if (ue->SLonly==0) SLaoffset=1;
-
   if (proc->sl_fep_done == 0) {
     RU_t ru_tmp;
     memset((void*)&ru_tmp,0,sizeof(RU_t));
@@ -885,11 +884,13 @@ void pscch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
     memcpy((void*)&ru_tmp.frame_parms,(void*)&ue->frame_parms,sizeof(LTE_DL_FRAME_PARMS));
     ru_tmp.N_TA_offset=0;
     //    ru_tmp.common.rxdata = ue->common_vars.rxdata;
-    ru_tmp.common.rxdata            = (int32_t**)malloc16(ue->frame_parms.nb_antennas_rx*sizeof(int32_t*));
+    ru_tmp.common.rxdata            = (int32_t**)malloc16((1+ue->frame_parms.nb_antennas_rx)*sizeof(int32_t*));
+    int aaSL=0;
     for (int aa=SLaoffset;aa<(ue->frame_parms.nb_antennas_rx<<SLaoffset);aa+=(1<<SLaoffset)) {
-      ru_tmp.common.rxdata[aa>>1]        = (int32_t*)&ue->common_vars.rxdata[aa][0];
+      ru_tmp.common.rxdata[aaSL]        = (int32_t*)&ue->common_vars.rxdata[aa][0];
+      aaSL++;
     }
-
+    
     ru_tmp.common.rxdata_7_5kHz = (int32_t**)rxdata_7_5kHz;
     ru_tmp.common.rxdataF = (int32_t**)rxdataF;
     ru_tmp.nb_rx = ue->frame_parms.nb_antennas_rx;
@@ -1109,12 +1110,13 @@ void pscch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
     	}
     }
     //if(slsch->group_destination_id == UE_mac_inst[ue->Mod_id].groupL2Id || slsch->group_destination_id == UE_mac_inst[ue->Mod_id].sourceL2Id)
-    if(slsch->mcs<=20 && slsch->freq_hopping_flag==0 && (group_id_found|| slsch->group_destination_id == UE_mac_inst[ue->Mod_id].sourceL2Id))
+    if(slsch->mcs<=20 && slsch->freq_hopping_flag==0 && (group_id_found|| slsch->group_destination_id == UE_mac_inst[ue->Mod_id].sourceL2Id)) {
     	ue->slcch_received                     = 1;
+	ue->slsch_rx_sdu_active=1;
+    }
     else
     	ue->slcch_received                     = 0;
-
-    ue->slcch_received                     = 1;
+    
     ue->slsch_decoded                      = 0;
 #ifdef DEBUG_SCI_DECODING
     printf("%d.%d sci %lx (%d bits,RAbits %d) : freq_hop %d, resource_block_coding %d, time_resource_pattern %d, mcs %d, timing_advance_indication %d, group_destination_id %d (gid shift %d result %lx => %lx\n",
@@ -1132,7 +1134,6 @@ void pscch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
     );
 #endif
     // check group_id here (not done yet)
-    ue->slsch_rx_sdu_active=1;
     /*
     write_output("rxsig0_input.m","rxs0_in",&ue->common_vars.rxdata[0][((subframe_rx<<1)+slot)*ue->frame_parms.samples_per_tti>>1],ue->frame_parms.samples_per_tti>>1,1,1);
     write_output("rxsig0_7_5kHz.m","rxs0_7_5kHz",rxdata_7_5kHz[0],ue->frame_parms.samples_per_tti,1,1);
@@ -1272,9 +1273,11 @@ void slsch_decoding(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,int frame_rx,int subfra
     memcpy((void*)&ru_tmp.frame_parms,(void*)&ue->frame_parms,sizeof(LTE_DL_FRAME_PARMS));
     ru_tmp.N_TA_offset=0;
     //    ru_tmp.common.rxdata = ue->common_vars.rxdata;
-    ru_tmp.common.rxdata            = (int32_t**)malloc16(ue->frame_parms.nb_antennas_rx*sizeof(int32_t*));
+    ru_tmp.common.rxdata            = (int32_t**)malloc16((1+ue->frame_parms.nb_antennas_rx)*sizeof(int32_t*));
+    int aaSL=0;
     for (int aa=SLaoffset;aa<(ue->frame_parms.nb_antennas_rx<<SLaoffset);aa+=(1<<SLaoffset)) {
-      ru_tmp.common.rxdata[aa]        = (int32_t*)&ue->common_vars.rxdata[aa][0];
+      ru_tmp.common.rxdata[aaSL]        = (int32_t*)&ue->common_vars.rxdata[aa][0];
+      aaSL++;
     }
     ru_tmp.common.rxdata_7_5kHz = (int32_t**)rxdata_7_5kHz;
     ru_tmp.common.rxdataF = (int32_t**)rxdataF;

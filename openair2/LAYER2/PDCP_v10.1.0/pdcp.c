@@ -812,7 +812,7 @@ pdcp_data_ind(
         { //traffic from eNB
            ((pdcp_data_ind_header_t*) new_sdu_p->data)->inst  = 1;
         }
-          ((pdcp_data_ind_header_t*) new_sdu_p->data)->inst  = 1;
+          //((pdcp_data_ind_header_t*) new_sdu_p->data)->inst  = 1;
         }
 
 #endif
@@ -841,7 +841,7 @@ pdcp_data_ind(
     }
 
     /* Print octets of incoming data in hexadecimal form */
-    LOG_D(PDCP, "Following content has been received from RLC (%d,%d)(PDCP header has already been removed):\n",
+    LOG_I(PDCP, "Following content has been received from RLC (%d,%d)(PDCP header has already been removed):\n",
           sdu_buffer_sizeP  - payload_offset + (int)sizeof(pdcp_data_ind_header_t),
           sdu_buffer_sizeP  - payload_offset);
     //util_print_hex_octets(PDCP, &new_sdu_p->data[sizeof (pdcp_data_ind_header_t)], sdu_buffer_sizeP - payload_offset);

@@ -56,7 +56,7 @@ int initial_syncSL(PHY_VARS_UE *ue) {
 				    &index,
 				    &psslevel,
 				    &avglevel);
-  printf("index %d, psslevel %d dB avglevel %d dB => %d sample offset\n",
+  LOG_I(PHY,"index %d, psslevel %d dB avglevel %d dB => %d sample offset\n",
 	 index,dB_fixed64((uint64_t)psslevel),dB_fixed64((uint64_t)avglevel),ue->rx_offsetSL);
   if (ue->rx_offsetSL >= 0) {
     int32_t sss_metric;
