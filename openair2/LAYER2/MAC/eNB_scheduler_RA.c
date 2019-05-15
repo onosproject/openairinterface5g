@@ -824,7 +824,7 @@ generate_Msg4(module_id_t module_idP,
       dl_req_body->number_pdu++;
       ra->state = WAITMSG4ACK;
       lcid = 0;
-      UE_list->UE_sched_ctrl[UE_id].round[CC_idP][ra->harq_pid] = 0;
+      UE_list->UE_sched_ctrl[UE_id].round[CC_idP][ra->harq_pid][TB1] = 0;
       msg4_header = 1 + 6 + 1;        // CR header, CR CE, SDU header
       AssertFatal((ra->msg4_TBsize - ra->msg4_rrc_sdu_length - msg4_header)>=0,
                   "msg4_TBS %d is too small, change mcs to increase by %d bytes\n",ra->msg4_TBsize,ra->msg4_rrc_sdu_length+msg4_header-ra->msg4_TBsize);
@@ -841,7 +841,7 @@ generate_Msg4(module_id_t module_idP,
              module_idP, CC_idP, frameP, subframeP, ra->msg4_TBsize, ra->msg4_rrc_sdu_length, msg4_header, msg4_padding, msg4_post_padding);
       DevAssert (UE_id != UE_INDEX_INVALID);  // FIXME not sure how to gracefully return
       // CHECK THIS: &cc[CC_idP].CCCH_pdu.payload[0]
-      offset = generate_dlsch_header ((unsigned char *) mac->UE_list.DLSCH_pdu[CC_idP][0][(unsigned char) UE_id].payload[0], 1,       //num_sdus
+      offset = generate_dlsch_header ((unsigned char *) mac->UE_list.DLSCH_pdu[CC_idP][0][(unsigned char) UE_id].payload[0][TB1], 1,       //num_sdus
                                       (unsigned short *) &ra->msg4_rrc_sdu_length,     //
                                       &lcid,  // sdu_lcid
                                       255,    // no drx
@@ -849,7 +849,7 @@ generate_Msg4(module_id_t module_idP,
                                       ra->cont_res_id,       // contention res id
                                       msg4_padding,   // no padding
                                       msg4_post_padding);
-      memcpy ((void *) &mac->UE_list.DLSCH_pdu[CC_idP][0][(unsigned char) UE_id].payload[0][(unsigned char) offset], &cc[CC_idP].CCCH_pdu.payload[0], ra->msg4_rrc_sdu_length);
+      memcpy ((void *) &mac->UE_list.DLSCH_pdu[CC_idP][0][(unsigned char) UE_id].payload[0][TB1][(unsigned char) offset], &cc[CC_idP].CCCH_pdu.payload[0], ra->msg4_rrc_sdu_length);
       // DL request
       mac->TX_req[CC_idP].sfn_sf = (frameP << 4) + subframeP;
       TX_req = &mac->TX_req[CC_idP].tx_request_body.tx_pdu_list[mac->TX_req[CC_idP].tx_request_body.number_of_pdus];
@@ -857,7 +857,7 @@ generate_Msg4(module_id_t module_idP,
       TX_req->pdu_index = mac->pdu_index[CC_idP]++;
       TX_req->num_segments = 1;
       TX_req->segments[0].segment_length = ra->msg4_TBsize;
-      TX_req->segments[0].segment_data = mac->UE_list.DLSCH_pdu[CC_idP][0][(unsigned char) UE_id].payload[0];
+      TX_req->segments[0].segment_data = mac->UE_list.DLSCH_pdu[CC_idP][0][(unsigned char) UE_id].payload[0][TB1];
       mac->TX_req[CC_idP].tx_request_body.number_of_pdus++;
       // Program ACK/NAK for Msg4 PDSCH
       int             absSF = (frameP * 10) + subframeP;
@@ -890,10 +890,10 @@ generate_Msg4(module_id_t module_idP,
 
       ul_req_body->number_of_pdus++;
       T (T_ENB_MAC_UE_DL_PDU_WITH_DATA, T_INT (module_idP), T_INT (CC_idP), T_INT (ra->rnti), T_INT (frameP), T_INT (subframeP),
-         T_INT (0 /*harq_pid always 0? */ ), T_BUFFER (&mac->UE_list.DLSCH_pdu[CC_idP][0][UE_id].payload[0], ra->msg4_TBsize));
+         T_INT (0 /*harq_pid always 0? */ ), T_BUFFER (&mac->UE_list.DLSCH_pdu[CC_idP][0][UE_id].payload[0][TB1], ra->msg4_TBsize));
 
       if (opt_enabled == 1) {
-        trace_pdu (1, (uint8_t *) mac->UE_list.DLSCH_pdu[CC_idP][0][(unsigned char) UE_id].payload[0], ra->msg4_rrc_sdu_length, UE_id, 3, UE_RNTI (module_idP, UE_id), mac->frame, mac->subframe, 0, 0);
+        trace_pdu (1, (uint8_t *) mac->UE_list.DLSCH_pdu[CC_idP][0][(unsigned char) UE_id].payload[0][TB1], ra->msg4_rrc_sdu_length, UE_id, 3, UE_RNTI (module_idP, UE_id), mac->frame, mac->subframe, 0, 0);
         LOG_D (OPT, "[eNB %d][DLSCH] CC_id %d Frame %d trace pdu for rnti %x with size %d\n", module_idP, CC_idP, frameP, UE_RNTI (module_idP, UE_id), ra->msg4_rrc_sdu_length);
       }
     }                           // Msg4 frame/subframe
@@ -993,7 +993,7 @@ generate_Msg4(module_id_t module_idP,
           lcid = 0;
           // put HARQ process round to 0
           ra->harq_pid = frame_subframe2_dl_harq_pid(cc->tdd_Config,frameP,subframeP);
-          UE_list->UE_sched_ctrl[UE_id].round[CC_idP][ra->harq_pid] = 0;
+          UE_list->UE_sched_ctrl[UE_id].round[CC_idP][ra->harq_pid][TB1] = 0;
 
           if ((ra->msg4_TBsize - rrc_sdu_length - msg4_header) <= 2) {
             msg4_padding = ra->msg4_TBsize - rrc_sdu_length - msg4_header;
@@ -1011,7 +1011,7 @@ generate_Msg4(module_id_t module_idP,
           DevAssert(UE_id != UE_INDEX_INVALID); // FIXME not sure how to gracefully return
           // CHECK THIS: &cc[CC_idP].CCCH_pdu.payload[0]
           int num_sdus = rrc_sdu_length > 0 ? 1 : 0;
-          offset = generate_dlsch_header((unsigned char *) mac->UE_list.DLSCH_pdu[CC_idP][0][(unsigned char) UE_id].payload[0],
+          offset = generate_dlsch_header((unsigned char *) mac->UE_list.DLSCH_pdu[CC_idP][0][(unsigned char) UE_id].payload[0][TB1],
                                          num_sdus,  //num_sdus
                                          (unsigned short *) &rrc_sdu_length,  //
                                          &lcid, // sdu_lcid
@@ -1020,7 +1020,7 @@ generate_Msg4(module_id_t module_idP,
                                          ra->cont_res_id, // contention res id
                                          msg4_padding,  // no padding
                                          msg4_post_padding);
-          memcpy((void *) &mac->UE_list.DLSCH_pdu[CC_idP][0][(unsigned char)UE_id].payload[0][(unsigned char)offset],
+          memcpy((void *) &mac->UE_list.DLSCH_pdu[CC_idP][0][(unsigned char)UE_id].payload[0][TB1][(unsigned char)offset],
                  &cc[CC_idP].CCCH_pdu.payload[0], rrc_sdu_length);
           // DLSCH Config
           fill_nfapi_dlsch_config(mac, dl_req_body, ra->msg4_TBsize, mac->pdu_index[CC_idP], ra->rnti, 2, // resource_allocation_type : format 1A/1B/1D
@@ -1052,7 +1052,7 @@ generate_Msg4(module_id_t module_idP,
                               rrc_sdu_length,
                               mac->pdu_index[CC_idP],
                               mac->UE_list.
-                              DLSCH_pdu[CC_idP][0][(unsigned char)UE_id].payload[0]);
+                              DLSCH_pdu[CC_idP][0][(unsigned char)UE_id].payload[0][TB1]);
           mac->pdu_index[CC_idP]++;
           dl_req->sfn_sf = mac->TX_req[CC_idP].sfn_sf;
           LOG_D(MAC, "Filling UCI ACK/NAK information, cce_idx %d\n",
@@ -1068,12 +1068,12 @@ generate_Msg4(module_id_t module_idP,
             T_INT(CC_idP), T_INT(ra->rnti), T_INT(frameP),
             T_INT(subframeP), T_INT(0 /*harq_pid always 0? */ ),
             T_BUFFER(&mac->UE_list.DLSCH_pdu[CC_idP][0][UE_id].
-                     payload[0], ra->msg4_TBsize));
+                     payload[0][TB1], ra->msg4_TBsize));
 
           if (opt_enabled == 1) {
             trace_pdu(DIRECTION_DOWNLINK,
                       (uint8_t *) mac->
-                      UE_list.DLSCH_pdu[CC_idP][0][(unsigned char)UE_id].payload[0],
+                      UE_list.DLSCH_pdu[CC_idP][0][(unsigned char)UE_id].payload[0][TB1],
                       rrc_sdu_length, UE_id,  WS_C_RNTI,
                       UE_RNTI(module_idP, UE_id), mac->frame,
                       mac->subframe, 0, 0);
@@ -1157,7 +1157,7 @@ check_Msg4_retransmission(module_id_t module_idP, int CC_idP,
   // check HARQ status and retransmit if necessary
   UE_id = find_UE_id(module_idP, ra->rnti);
   AssertFatal(UE_id >= 0, "Can't find UE for t-crnti\n");
-  round = UE_list->UE_sched_ctrl[UE_id].round[CC_idP][ra->harq_pid];
+  round = UE_list->UE_sched_ctrl[UE_id].round[CC_idP][ra->harq_pid][TB1];
   vrb_map = cc[CC_idP].vrb_map;
   dl_req = &mac->DL_req[CC_idP];
   dl_req_body = &dl_req->dl_config_request_body;

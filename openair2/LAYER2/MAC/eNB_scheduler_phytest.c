@@ -182,7 +182,7 @@ schedule_ue_spec_phy_test(
 						    (frameP*10)+subframeP,
 						    TBS,
 						    eNB->pdu_index[CC_id],
-						    eNB->UE_list.DLSCH_pdu[CC_id][0][(unsigned char)UE_id].payload[0]);
+						    eNB->UE_list.DLSCH_pdu[CC_id][0][(unsigned char)UE_id].payload[0][TB1]);
     }
     else {
       LOG_W(MAC,"[eNB_scheduler_phytest] DCI allocation infeasible!\n");

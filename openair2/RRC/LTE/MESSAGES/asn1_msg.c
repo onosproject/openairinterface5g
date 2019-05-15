@@ -2715,7 +2715,7 @@ do_RRCConnectionSetup(
       break;
       */
   }
-
+  LOG_I(RRC,"UE %x Transmission mode is set to %ld at RRCConnectionSetup because antenna port is %d!\n", ue_context_pP->ue_id_rnti, physicalConfigDedicated2->antennaInfo->choice.explicitValue.transmissionMode+1, carrier->p_eNB);
   physicalConfigDedicated2->antennaInfo->choice.explicitValue.ue_TransmitAntennaSelection.present = LTE_AntennaInfoDedicated__ue_TransmitAntennaSelection_PR_release;
   physicalConfigDedicated2->antennaInfo->choice.explicitValue.ue_TransmitAntennaSelection.choice.release = 0;
   // SchedulingRequestConfig
@@ -3101,7 +3101,7 @@ uint8_t do_RRCConnectionSetup_BR(
     */
   }
 
-
+  LOG_I(RRC,"UE %x Transmission mode is set to %ld at RRCConnectionSetup_RB because antenna port is %d!\n", ue_context_pP->ue_id_rnti, physicalConfigDedicated2->antennaInfo->choice.explicitValue.transmissionMode+1, carrier->p_eNB);
   physicalConfigDedicated2->antennaInfo->choice.explicitValue.ue_TransmitAntennaSelection.present = LTE_AntennaInfoDedicated__ue_TransmitAntennaSelection_PR_release;
   physicalConfigDedicated2->antennaInfo->choice.explicitValue.ue_TransmitAntennaSelection.choice.release = 0;
 
@@ -3600,6 +3600,11 @@ uint16_t do_RRCConnectionReconfiguration(const protocol_ctxt_t *const ctxt_pP,
   rrcConnectionReconfiguration->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r8.radioResourceConfigDedicated->drb_ToReleaseList = DRB_list2;
   rrcConnectionReconfiguration->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r8.radioResourceConfigDedicated->sps_Config = sps_Config;
   rrcConnectionReconfiguration->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r8.radioResourceConfigDedicated->physicalConfigDedicated = physicalConfigDedicated;
+  if (physicalConfigDedicated && physicalConfigDedicated->antennaInfo) {
+    LOG_I(RRC,"UE %x Transmission mode is set to %ld at this RRCConnectionReconfiguration!\n", ctxt_pP->rnti, physicalConfigDedicated->antennaInfo->choice.explicitValue.transmissionMode+1);
+  } else {
+    LOG_I(RRC,"UE %x Transmission mode is not defined at this RRCConnectionReconfiguration!\n", ctxt_pP->rnti);
+  }
 #ifdef CBA
   rrcConnectionReconfiguration->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r8.radioResourceConfigDedicated->cba_RNTI_vlola= cba_rnti;
 #endif
@@ -3860,6 +3865,11 @@ do_RRCConnectionReestablishment(
   rrcConnectionReestablishment->criticalExtensions.choice.c1.choice.rrcConnectionReestablishment_r8.radioResourceConfigDedicated.sps_Config = NULL;
   rrcConnectionReestablishment->criticalExtensions.choice.c1.choice.rrcConnectionReestablishment_r8.radioResourceConfigDedicated.physicalConfigDedicated = physicalConfigDedicated2;
   rrcConnectionReestablishment->criticalExtensions.choice.c1.choice.rrcConnectionReestablishment_r8.radioResourceConfigDedicated.mac_MainConfig = NULL;
+  if (physicalConfigDedicated2 && physicalConfigDedicated2->antennaInfo) {
+    LOG_I(RRC,"UE %x Transmission mode is set to %ld at RRCConnectionReestablishment!\n", ue_context_pP->ue_id_rnti, physicalConfigDedicated2->antennaInfo->choice.explicitValue.transmissionMode+1);
+  } else {
+    LOG_I(RRC,"UE %x Transmission mode is not defined at RRCConnectionReestablishment!\n", ue_context_pP->ue_id_rnti);
+  }
   uint8_t KeNB_star[32] = { 0 };
   uint16_t pci = rrc->carrier[CC_id].physCellId;
   uint32_t earfcn_dl = (uint32_t)freq_to_arfcn10(RC.mac[ctxt_pP->module_id]->common_channels[CC_id].eutra_band,

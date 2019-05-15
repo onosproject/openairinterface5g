@@ -1207,6 +1207,7 @@ void fill_nfapi_dlsch_config(eNB_MAC_INST * eNB,
 void fill_nfapi_harq_information(module_id_t module_idP,
 				 int CC_idP,
 				 uint16_t rntiP,
+                                 uint16_t absSFP,
 				 nfapi_ul_config_harq_information *
 				 harq_information, uint8_t cce_idxP);
 

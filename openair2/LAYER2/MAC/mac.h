@@ -471,9 +471,19 @@ typedef struct {
 #define	BSR_TRIGGER_PADDING		(4)	/* For Padding BSR Trigger */
 
 
+#define MAX_NUM_TB 2
+#define TB1 0
+#define TB2 1
+#define SINGLE_RI 1
+#define MULTI_RI 2
+#define SINGLE_CW 1
+#define MULTI_CW 2
+#define TX_DIVERSITY 1
+#define LARGE_DELAY_CDD 2
+
 /*! \brief Downlink SCH PDU Structure */
 typedef struct {
-    uint8_t payload[8][SCH_PAYLOAD_SIZE_MAX];
+    uint8_t payload[8][MAX_NUM_TB][SCH_PAYLOAD_SIZE_MAX];
     uint16_t Pdu_size[8];
 } __attribute__ ((__packed__)) DLSCH_PDU;
 
@@ -647,7 +657,7 @@ typedef struct {
     /// harq pid
     uint8_t harq_pid;
     /// harq rounf
-    uint8_t harq_round;
+    uint8_t harq_round[MAX_NUM_TB];
     /// total available number of PRBs for a new transmission
     uint16_t rbs_used;
     /// total available number of PRBs for a retransmission
@@ -657,12 +667,10 @@ typedef struct {
     /// total avilable nccc for a retransmission: num control channel element
     uint16_t ncce_used_retx;
 
-    // mcs1 before the rate adaptaion
-    uint8_t dlsch_mcs1;
-    /// Target mcs2 after rate-adaptation
-    uint8_t dlsch_mcs2;
-    //  current TBS with mcs2
-    uint32_t TBS;
+    // mcs
+    uint8_t dlsch_mcs[MAX_NUM_TB];
+    //  current TBS
+    uint32_t TBS[MAX_NUM_TB];
     //  total TBS with mcs2
     //  uint32_t total_TBS;
     //  total rb used for a new transmission
@@ -693,7 +701,7 @@ typedef struct {
     //total
     uint32_t total_dlsch_bitrate;
     /// headers+ CE +  padding bytes for a MAC PDU
-    uint64_t overhead_bytes;
+    uint64_t overhead_bytes[MAX_NUM_TB];
     /// headers+ CE +  padding bytes for a MAC PDU
     uint64_t total_overhead_bytes;
     /// headers+ CE +  padding bytes for a MAC PDU
@@ -786,11 +794,9 @@ typedef struct {
     /// C-RNTI of UE
     rnti_t rnti;
     /// NDI from last scheduling
-    uint8_t oldNDI[8];
-    /// mcs1 from last scheduling
-    uint8_t oldmcs1[8];
-    /// mcs2 from last scheduling
-    uint8_t oldmcs2[8];
+    uint8_t oldNDI[8][MAX_NUM_TB];
+    /// mcs from last scheduling
+    uint8_t oldmcs[8][MAX_NUM_TB];
     /// NDI from last UL scheduling
     uint8_t oldNDI_UL[8];
     /// mcs from last UL scheduling
@@ -947,7 +953,7 @@ typedef struct {
     // resource scheduling information
 
     /// Current DL harq round per harq_pid on each CC
-    uint8_t round[NFAPI_CC_MAX][10];
+    uint8_t round[NFAPI_CC_MAX][10][MAX_NUM_TB];
     /// Current Active TBs per harq_pid on each CC
     uint8_t tbcnt[NFAPI_CC_MAX][10];
     /// Current UL harq round per harq_pid on each CC
@@ -1003,6 +1009,11 @@ typedef struct {
     uint8_t crnti_reconfigurationcomplete_flag;
     uint8_t cqi_req_flag;
 
+    uint8_t cw_num[NFAPI_CC_MAX][10];
+    uint8_t select_tb[NFAPI_CC_MAX][10];
+    uint8_t swap_flag[NFAPI_CC_MAX][10];
+    uint8_t rsn[NFAPI_CC_MAX][10][MAX_NUM_TB];
+	
     /* HARQ RRT Timers */
     /// (UL) HARQ RTT timers, especially used for CDRX operations, one timer per cell per harq process (and per user)
     uint8_t harq_rtt_timer[NFAPI_CC_MAX][8];
@@ -1199,7 +1210,7 @@ typedef struct {
 
     uint32_t bytes_lcid[MAX_MOBILES_PER_ENB][MAX_NUM_LCID];
     uint32_t wb_pmi[NFAPI_CC_MAX][MAX_MOBILES_PER_ENB];
-    uint8_t  mcs[NFAPI_CC_MAX][MAX_MOBILES_PER_ENB];
+    uint8_t  mcs[NFAPI_CC_MAX][MAX_MOBILES_PER_ENB][MAX_NUM_TB];
 
 } pre_processor_results_t;
 

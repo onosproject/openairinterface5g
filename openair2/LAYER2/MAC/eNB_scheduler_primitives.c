@@ -1335,6 +1335,7 @@ program_dlsch_acknak(module_id_t module_idP,
     fill_nfapi_harq_information(module_idP,
                                 CC_idP,
                                 rnti,
+                                (frameP * 10) + subframeP,
                                 harq_information,
                                 cce_idx);
   }
@@ -1482,15 +1483,26 @@ void
 fill_nfapi_harq_information(module_id_t                      module_idP,
                             int                              CC_idP,
                             uint16_t                         rntiP,
+                            uint16_t                         absSFP,
                             nfapi_ul_config_harq_information *harq_information,
                             uint8_t                          cce_idxP)
 //------------------------------------------------------------------------------
 {
+  UE_sched_ctrl *ue_sched_ctl;
+  uint8_t       harq_pid;
+  frame_t       frameP;
+  sub_frame_t   subframeP;
   eNB_MAC_INST *eNB     = RC.mac[module_idP];
   COMMON_channels_t *cc = &eNB->common_channels[CC_idP];
   UE_list_t *UE_list    = &eNB->UE_list;
-  int UE_id = find_UE_id(module_idP,
-                         rntiP);
+
+  int UE_id = find_UE_id(module_idP, rntiP);
+
+  frameP       = absSFP / 10;
+  subframeP    = absSFP % 10;
+  ue_sched_ctl = &UE_list->UE_sched_ctrl[UE_id];
+  harq_pid     = frame_subframe2_dl_harq_pid(cc->tdd_Config, frameP, subframeP);
+
   AssertFatal(UE_id >= 0, "UE_id cannot be found, impossible\n");
   AssertFatal(UE_list != NULL, "UE_list is null\n");
   harq_information->harq_information_rel11.tl.tag        = NFAPI_UL_CONFIG_REQUEST_HARQ_INFORMATION_REL11_TAG;
@@ -1546,14 +1558,22 @@ fill_nfapi_harq_information(module_id_t                      module_idP,
         }
 
         harq_information->harq_information_rel10_tdd.tl.tag                     = NFAPI_UL_CONFIG_REQUEST_HARQ_INFORMATION_REL10_TDD_TAG;
+      if(ue_sched_ctl->cw_num[CC_idP][harq_pid] == MULTI_CW){
         harq_information->harq_information_rel10_tdd.harq_size                  = 2;
+	  }else{
+        harq_information->harq_information_rel10_tdd.harq_size                = 1;
+      }
         harq_information->harq_information_rel10_tdd.n_pucch_1_0                = cc->radioResourceConfigCommon->pucch_ConfigCommon.n1PUCCH_AN + cce_idxP;
         harq_information->harq_information_rel10_tdd.number_of_pucch_resources  = 1;
       } else {
         harq_information->harq_information_rel9_fdd.tl.tag                      = NFAPI_UL_CONFIG_REQUEST_HARQ_INFORMATION_REL9_FDD_TAG;
         harq_information->harq_information_rel9_fdd.number_of_pucch_resources   = 1;
         harq_information->harq_information_rel9_fdd.ack_nack_mode               = 0;  // 1a/b
+      if(ue_sched_ctl->cw_num[CC_idP][harq_pid] == MULTI_CW){
         harq_information->harq_information_rel9_fdd.harq_size                   = 2;
+      }else{
+        harq_information->harq_information_rel9_fdd.harq_size                 = 1;
+      }
         harq_information->harq_information_rel9_fdd.n_pucch_1_0                 = cc->radioResourceConfigCommon->pucch_ConfigCommon.n1PUCCH_AN + cce_idxP;
       }
 
@@ -1587,6 +1607,7 @@ fill_nfapi_uci_acknak(module_id_t module_idP,
   fill_nfapi_harq_information(module_idP,
                               CC_idP,
                               rntiP,
+                              absSFP,
                               &ul_config_pdu->uci_harq_pdu.harq_information,
                               cce_idxP);
   LOG_D(MAC, "Filled in UCI HARQ request for rnti %x SF %d.%d acknakSF %d.%d, cce_idxP %d-> n1_pucch %d\n",
@@ -1634,6 +1655,7 @@ fill_nfapi_dlsch_config(eNB_MAC_INST *eNB,
                         uint8_t num_bf_vector)
 //------------------------------------------------------------------------------
 {
+  uint8_t subband_num;
   nfapi_dl_config_request_pdu_t *dl_config_pdu = &dl_req->dl_config_pdu_list[dl_req->number_pdu];
   memset((void *) dl_config_pdu, 0, sizeof(nfapi_dl_config_request_pdu_t));
   dl_config_pdu->pdu_type                                                        = NFAPI_DL_CONFIG_DLSCH_PDU_TYPE;
@@ -1652,7 +1674,11 @@ fill_nfapi_dlsch_config(eNB_MAC_INST *eNB,
   dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.transmission_scheme                    = transmission_scheme;
   dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.number_of_layers                       = number_of_layers;
   dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.number_of_subbands                     = number_of_subbands;
-  // dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.codebook_index                         = codebook_index;
+
+  for(subband_num = 0; subband_num < number_of_subbands; subband_num++){
+	dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.codebook_index[subband_num]          = 0;
+  }
+
   dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.ue_category_capacity                   = ue_category_capacity;
   dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.pa                                     = pa;
   dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.delta_power_offset_index               = delta_power_offset_index;
@@ -1661,6 +1687,18 @@ fill_nfapi_dlsch_config(eNB_MAC_INST *eNB,
   dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.transmission_mode                      = transmission_mode;
   dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.num_bf_prb_per_subband                 = num_bf_prb_per_subband;
   dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.num_bf_vector                          = num_bf_vector;
+  // Rel10 fields
+#if (LTE_RRC_VERSION >= MAKE_VERSION(10, 0, 0))
+  dl_config_pdu->dlsch_pdu.dlsch_pdu_rel10.tl.tag = NFAPI_DL_CONFIG_REQUEST_DLSCH_PDU_REL10_TAG;
+  dl_config_pdu->dlsch_pdu.dlsch_pdu_rel10.pdsch_start = 3;
+#endif
+  // Rel13 fields
+#if (LTE_RRC_VERSION >= MAKE_VERSION(13, 0, 0))
+  dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.tl.tag = NFAPI_DL_CONFIG_REQUEST_DLSCH_PDU_REL13_TAG;
+  dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.ue_type = 0; // regular UE
+  dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.pdsch_payload_type = 2; // not BR
+  dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.initial_transmission_sf_io = 0xFFFF; // absolute SF
+#endif
   dl_req->number_pdu++;
   return;
 }
@@ -2193,10 +2231,16 @@ add_new_ue(module_id_t mod_idP,
     UE_list->UE_sched_ctrl[UE_id].ta_update = 31;
 
     for (j = 0; j < 8; j++) {
-      UE_list->UE_template[cc_idP][UE_id].oldNDI[j] = (j == 0) ? 1 : 0; // 1 because first transmission is with format1A (Msg4) for harq_pid 0
-      UE_list->UE_template[cc_idP][UE_id].oldNDI_UL[j] = (j == harq_pidP) ? 0 : 1;  // 1st transmission is with Msg3;
-      UE_list->UE_sched_ctrl[UE_id].round[cc_idP][j] = 8;
+      UE_list->UE_template[cc_idP][UE_id].oldNDI[j][TB1] = (j == 0) ? 1 : 0;	// 1 because first transmission is with format1A (Msg4) for harq_pid 0
+      UE_list->UE_template[cc_idP][UE_id].oldNDI[j][TB2] = 1;
+      UE_list->UE_template[cc_idP][UE_id].oldNDI_UL[j] = (j == harq_pidP) ? 0 : 1;	// 1st transmission is with Msg3;
+      UE_list->UE_sched_ctrl[UE_id].round[cc_idP][j][TB1] = 8;
+      UE_list->UE_sched_ctrl[UE_id].round[cc_idP][j][TB2] = 8;
       UE_list->UE_sched_ctrl[UE_id].round_UL[cc_idP][j] = 0;
+      UE_list->UE_sched_ctrl[UE_id].rsn[cc_idP][j][TB1] = 0;
+      UE_list->UE_sched_ctrl[UE_id].rsn[cc_idP][j][TB2] = 0;
+      UE_list->eNB_UE_stats[cc_idP][UE_id].TBS[TB1] = 0;
+      UE_list->eNB_UE_stats[cc_idP][UE_id].TBS[TB2] = 0;
     }
 
     eNB_ulsch_info[mod_idP][cc_idP][UE_id].status = S_UL_WAITING;
@@ -3943,6 +3987,10 @@ extract_harq(module_id_t mod_idP,
   sub_frame_t subframe_tx;
   int frame_tx;
   uint8_t harq_pid;
+  uint8_t select_tb;
+  uint8_t oppose_tb;
+  uint8_t swap_flg;
+  
 #if (LTE_RRC_VERSION >= MAKE_VERSION(13, 0, 0))
   LTE_PhysicalConfigDedicated_t *physicalConfigDedicated = UE_list->UE_template[pCCid][UE_id].physicalConfigDedicated;
 
@@ -3978,106 +4026,144 @@ extract_harq(module_id_t mod_idP,
                         subframeP,
                         m);
 
-          if (frameP==1023&&subframeP>5) frame_tx=-1;
-          else frame_tx = subframeP < 4 ? frameP -1 : frameP;
+	if(frameP==1023&&subframeP>5)
+	  frame_tx=-1;
+	else
+	  frame_tx = subframeP < 4 ? frameP -1 : frameP;
+	harq_pid = frame_subframe2_dl_harq_pid(cc->tdd_Config,frame_tx,subframe_tx);
 
-          harq_pid = frame_subframe2_dl_harq_pid(cc->tdd_Config,
-                                                 frame_tx,
-                                                 subframe_tx);
+	select_tb = sched_ctl->select_tb[CC_idP][harq_pid];
+	oppose_tb = select_tb ^ 0x1;
+
+	swap_flg  = sched_ctl->swap_flag[CC_idP][harq_pid];
+
+	if (tmode[0] == 1 || tmode[0] == 2 || tmode[0] == 5 || tmode[0] == 6 || tmode[0] == 7) {
+
           RA_t *ra = &eNB->common_channels[CC_idP].ra[0];
 
           if(num_ack_nak == 1) {
             if (harq_indication_tdd->harq_data[0].bundling.value_0 == 1) { //ack
-              sched_ctl->round[CC_idP][harq_pid] = 8; // release HARQ process
+           sched_ctl->round[CC_idP][harq_pid][TB1] = 8; // release HARQ process
               sched_ctl->tbcnt[CC_idP][harq_pid] = 0;
-              LOG_D(MAC, "frame %d subframe %d Acking (%d,%d) harq_pid %d round %d\n",
-                    frameP,
-                    subframeP,
-                    frame_tx,
-                    subframe_tx,
-                    harq_pid,
-                    sched_ctl->round[CC_idP][harq_pid]);
+           LOG_D(MAC,"frame %d subframe %d Acking (%d,%d) harq_pid %d round %d\n",frameP,subframeP,frame_tx,subframe_tx,harq_pid,sched_ctl->round[CC_idP][harq_pid][TB1]);
             } else { //nack
-              if (sched_ctl->round[CC_idP][harq_pid] < 8) sched_ctl->round[CC_idP][harq_pid]++;
-
-              if (sched_ctl->round[CC_idP][harq_pid] == 4) {
-                sched_ctl->round[CC_idP][harq_pid] = 8;     // release HARQ process
-                sched_ctl->tbcnt[CC_idP][harq_pid] = 0;
-              }
-
-              LOG_D(MAC,"frame %d subframe %d Nacking (%d,%d) harq_pid %d round %d\n",
-                    frameP,
-                    subframeP,
-                    frame_tx,
-                    subframe_tx,
-                    harq_pid,
-                    sched_ctl->round[CC_idP][harq_pid]);
-
-              if (sched_ctl->round[CC_idP][harq_pid] == 8) {
-                for (uint8_t ra_i = 0; ra_i < NB_RA_PROC_MAX; ra_i++) {
-                  if (ra[ra_i].rnti == rnti && ra[ra_i].state == WAITMSG4ACK) {
-                    //Msg NACK num to MAC ,remove UE
-                    // add UE info to freeList
-                    LOG_I(RRC, "put UE %x into freeList\n",
-                          rnti);
-                    put_UE_in_freelist(mod_idP,
-                                       rnti,
-                                       1);
-                  }
-                }
-              }
-            }
-          }
-
-          for (uint8_t ra_i = 0; ra_i < NB_RA_PROC_MAX; ra_i++) {
-            if (ra[ra_i].rnti == rnti && ra[ra_i].state == MSGCRNTI_ACK && ra[ra_i].crnti_harq_pid == harq_pid) {
-              LOG_D(MAC,"CRNTI Reconfiguration: ACK %d rnti %x round %d frame %d subframe %d \n",
-                    harq_indication_tdd->harq_data[0].bundling.value_0,
-                    rnti,
-                    sched_ctl->round[CC_idP][harq_pid],
-                    frameP,
-                    subframeP);
-
-              if (num_ack_nak == 1 && harq_indication_tdd->harq_data[0].bundling.value_0 == 1) {
-                cancel_ra_proc(mod_idP,
-                               CC_idP,
-                               frameP,
-                               ra[ra_i].rnti);
-              } else {
-                if(sched_ctl->round[CC_idP][harq_pid] == 7) {
-                  cancel_ra_proc(mod_idP,
-                                 CC_idP,
-                                 frameP,
-                                 ra[ra_i].rnti);
-                }
-              }
-
-              break;
-            }
-          }
+	   if( sched_ctl->round[CC_idP][harq_pid][TB1]<8) sched_ctl->round[CC_idP][harq_pid][TB1]++;
+           if (sched_ctl->round[CC_idP][harq_pid][TB1] == 4) {
+             sched_ctl->round[CC_idP][harq_pid][TB1] = 8;     // release HARQ process
+             sched_ctl->tbcnt[CC_idP][harq_pid] = 0;
+           }
+           LOG_D(MAC,"frame %d subframe %d Nacking (%d,%d) harq_pid %d round %d\n",frameP,subframeP,frame_tx,subframe_tx,harq_pid,sched_ctl->round[CC_idP][harq_pid][TB1]);
+      if(sched_ctl->round[CC_idP][harq_pid][TB1] == 8){
+       for (uint8_t ra_i = 0; ra_i < NB_RA_PROC_MAX; ra_i++) {
+        if((ra[ra_i].rnti == rnti) && (ra[ra_i].state == WAITMSG4ACK)){
+         //Msg NACK num to MAC ,remove UE
+         // add UE info to freeList
+         LOG_I(RRC, "put UE %x into freeList\n", rnti);
+         put_UE_in_freelist(mod_idP, rnti, 1);
         }
-
-        break;
-
-      case 1:   // Channel Selection
-      case 2:   // Format 3
-      case 3:   // Format 4
-      case 4:   // Format 5
-        break;
+       }
+      }
+         }
+        }
+        for (uint8_t ra_i = 0; ra_i < NB_RA_PROC_MAX; ra_i++) {
+        if ((ra[ra_i].rnti == rnti) && (ra[ra_i].state == MSGCRNTI_ACK) && (ra[ra_i].crnti_harq_pid == harq_pid)) {
+         LOG_D(MAC,"CRNTI Reconfiguration: ACK %d rnti %x round %d frame %d subframe %d \n",harq_indication_tdd->harq_data[0].bundling.value_0,rnti,sched_ctl->round[CC_idP][harq_pid][TB1],frameP,subframeP);
+         if(num_ack_nak == 1 && harq_indication_tdd->harq_data[0].bundling.value_0 == 1) {
+          cancel_ra_proc(mod_idP, CC_idP, frameP, ra[ra_i].rnti);
+         }else{
+          if(sched_ctl->round[CC_idP][harq_pid][TB1] == 7){
+           cancel_ra_proc(mod_idP, CC_idP, frameP, ra[ra_i].rnti);
+          }
+         }
+         break;
+        }
+       }
+	}else{
+		if((num_ack_nak==2)
+		   && (harq_indication_tdd->harq_data[select_tb].bundling.value_0==1)
+		   && (harq_indication_tdd->harq_data[oppose_tb].bundling.value_0==1)){
+			sched_ctl->round[CC_idP][harq_pid][select_tb] = 8;
+			sched_ctl->round[CC_idP][harq_pid][oppose_tb] = 8;
+			sched_ctl->rsn[CC_idP][harq_pid][select_tb]   = 0;
+			sched_ctl->rsn[CC_idP][harq_pid][oppose_tb]   = 0;
+		}else if(   (num_ack_nak==2)
+				 && ((harq_indication_tdd->harq_data[select_tb].bundling.value_0==2) || (harq_indication_tdd->harq_data[select_tb].bundling.value_0==4))
+				 && ((harq_indication_tdd->harq_data[oppose_tb].bundling.value_0==2) || (harq_indication_tdd->harq_data[oppose_tb].bundling.value_0==4))){
+			sched_ctl->round[CC_idP][harq_pid][select_tb]++;
+			sched_ctl->round[CC_idP][harq_pid][oppose_tb]++;
+			sched_ctl->rsn[CC_idP][harq_pid][select_tb]++;
+			sched_ctl->rsn[CC_idP][harq_pid][oppose_tb]++;
+			
+			if(sched_ctl->round[CC_idP][harq_pid][select_tb] == 4){
+				sched_ctl->round[CC_idP][harq_pid][select_tb] = 8;     // release HARQ process
+				sched_ctl->rsn[CC_idP][harq_pid][select_tb]   = 0;
+			}
+			if(sched_ctl->round[CC_idP][harq_pid][oppose_tb] == 4){
+				sched_ctl->round[CC_idP][harq_pid][oppose_tb] = 8;     // release HARQ process
+				sched_ctl->rsn[CC_idP][harq_pid][oppose_tb]   = 0;
+			}
+		}else if(   (num_ack_nak==2)
+				 && (harq_indication_tdd->harq_data[select_tb].bundling.value_0==1)
+				 && ((harq_indication_tdd->harq_data[oppose_tb].bundling.value_0==2) || (harq_indication_tdd->harq_data[oppose_tb].bundling.value_0==4))){
+			sched_ctl->round[CC_idP][harq_pid][select_tb] = 8;
+			sched_ctl->round[CC_idP][harq_pid][oppose_tb]++;
+			sched_ctl->rsn[CC_idP][harq_pid][select_tb]   = 0;
+			sched_ctl->rsn[CC_idP][harq_pid][oppose_tb]++;
+			
+			if(sched_ctl->round[CC_idP][harq_pid][oppose_tb] == 4){
+				sched_ctl->round[CC_idP][harq_pid][oppose_tb] = 8;     // release HARQ process
+				sched_ctl->rsn[CC_idP][harq_pid][oppose_tb] = 0;
+			}
+		}else if(   (num_ack_nak==2)
+				 && ((harq_indication_tdd->harq_data[select_tb].bundling.value_0==2) || (harq_indication_tdd->harq_data[select_tb].bundling.value_0==4))
+				 && (harq_indication_tdd->harq_data[oppose_tb].bundling.value_0==1)){
+			sched_ctl->round[CC_idP][harq_pid][select_tb]++;
+			sched_ctl->round[CC_idP][harq_pid][oppose_tb] = 8;
+			sched_ctl->rsn[CC_idP][harq_pid][select_tb]++;
+			sched_ctl->rsn[CC_idP][harq_pid][oppose_tb]   = 0;
+			
+			if(sched_ctl->round[CC_idP][harq_pid][select_tb] == 4){
+				sched_ctl->round[CC_idP][harq_pid][select_tb] = 8;     // release HARQ process
+				sched_ctl->rsn[CC_idP][harq_pid][select_tb]   = 0;
+			}
+		}else if(   (num_ack_nak==1)
+				 && (harq_indication_tdd->harq_data[TB1].bundling.value_0==1)){
+			sched_ctl->round[CC_idP][harq_pid][swap_flg] = 8;
+			sched_ctl->rsn[CC_idP][harq_pid][swap_flg]   = 0;
+		}else if(   (num_ack_nak==1)
+				 && ((harq_indication_tdd->harq_data[TB1].bundling.value_0==2) || (harq_indication_tdd->harq_data[TB1].bundling.value_0==4))){
+			sched_ctl->round[CC_idP][harq_pid][swap_flg]++;
+			sched_ctl->rsn[CC_idP][harq_pid][swap_flg]++;
+			
+			if(sched_ctl->round[CC_idP][harq_pid][swap_flg] == 4){
+				sched_ctl->round[CC_idP][harq_pid][swap_flg] = 8;     // release HARQ process
+				sched_ctl->rsn[CC_idP][harq_pid][swap_flg]   = 0;
+			}
+		}
+	}
+       
+      }
+      break;
+    case 1:		// Channel Selection
+      break;
+    case 2:		// Format 3
+      break;
+    case 3:		// Format 4
+      break;
+    case 4:		// Format 5
+      break;
     }
   } else {
     harq_indication_fdd = (nfapi_harq_indication_fdd_rel13_t *) harq_indication;
     num_ack_nak         = harq_indication_fdd->number_of_ack_nack;
     pdu                 = &harq_indication_fdd->harq_tb_n[0];
     harq_pid = ((10 * frameP) + subframeP + 10236) & 7;
-    LOG_D(MAC, "frame %d subframe %d harq_pid %d mode %d tmode[0] %d num_ack_nak %d round %d\n",
-          frameP,
-          subframeP,
-          harq_pid,
-          harq_indication_fdd->mode,
-          tmode[0],
-          num_ack_nak,
-          sched_ctl->round[CC_idP][harq_pid]);
+	select_tb = sched_ctl->select_tb[CC_idP][harq_pid];
+    oppose_tb = select_tb ^ 0x1;
+
+    swap_flg  = sched_ctl->swap_flag[CC_idP][harq_pid];
+	
+    LOG_D(MAC,"frame %d subframe %d harq_pid %d mode %d tmode[0] %d num_ack_nak %d round %d\n",frameP,subframeP,harq_pid,harq_indication_fdd->mode,tmode[0],num_ack_nak,sched_ctl->round[CC_idP][harq_pid][TB1]);
 
     // use 1 HARQ proces of BL/CE UE for now
     if (UE_list->UE_template[pCCid][UE_id].rach_resource_type > 0) harq_pid = 0;
@@ -4097,16 +4183,12 @@ extract_harq(module_id_t mod_idP,
           // In case of nFAPI, sometimes timing of eNB and UE become different.
           // So if nfapi_mode == 2(VNF), this function don't check assertion to avoid process exit.
           if (NFAPI_MODE != NFAPI_MODE_VNF) {
-            AssertFatal(sched_ctl->round[CC_idP][harq_pid] < 8, "Got ACK/NAK for inactive harq_pid %d for UE %d/%x\n",
-                        harq_pid,
-                        UE_id,
-                        rnti);
+		AssertFatal(sched_ctl->round[CC_idP][harq_pid][TB1] < 8,
+			    "Got ACK/NAK for inactive harq_pid %d for UE %d/%x\n",
+			    harq_pid, UE_id, rnti);
           } else {
-            if (sched_ctl->round[CC_idP][harq_pid] == 8) {
-              LOG_E(MAC,"Got ACK/NAK for inactive harq_pid %d for UE %d/%x\n",
-                    harq_pid,
-                    UE_id,
-                    rnti);
+		if(sched_ctl->round[CC_idP][harq_pid][TB1] == 8){
+			LOG_E(MAC,"Got ACK/NAK for inactive harq_pid %d for UE %d/%x\n",harq_pid, UE_id, rnti);
               return;
             }
           }
@@ -4126,7 +4208,7 @@ extract_harq(module_id_t mod_idP,
               LOG_D(MAC,"CRNTI Reconfiguration: ACK %d rnti %x round %d frame %d subframe %d \n",
                     pdu[0],
                     rnti,
-                    sched_ctl->round[CC_idP][harq_pid],
+                    sched_ctl->round[CC_idP][harq_pid][TB1],
                     frameP,
                     subframeP);
 
@@ -4136,7 +4218,7 @@ extract_harq(module_id_t mod_idP,
                                frameP,
                                ra[ra_i].rnti);
               } else {
-                if (sched_ctl->round[CC_idP][harq_pid] == 7) {
+                if(sched_ctl->round[CC_idP][harq_pid][TB1] == 7){
                   cancel_ra_proc(mod_idP,
                                  CC_idP,
                                  frameP,
@@ -4151,24 +4233,24 @@ extract_harq(module_id_t mod_idP,
           LOG_D(MAC, "In extract_harq(): pdu[0] = %d for harq_pid = %d\n", pdu[0], harq_pid);
 
           if (pdu[0] == 1) {  // ACK
-            sched_ctl->round[CC_idP][harq_pid] = 8; // release HARQ process
+	  sched_ctl->round[CC_idP][harq_pid][TB1] = 8;	// release HARQ process
             sched_ctl->tbcnt[CC_idP][harq_pid] = 0;
 
             /* CDRX: PUCCH gives an ACK, so reset corresponding HARQ RTT */
             sched_ctl->harq_rtt_timer[CC_idP][harq_pid] = 0;
 
           } else if (pdu[0] == 2 || pdu[0] == 4) {  // NAK (treat DTX as NAK)
-            sched_ctl->round[CC_idP][harq_pid]++; // increment round
+	        sched_ctl->round[CC_idP][harq_pid][TB1]++;	// increment round
 
-            if (sched_ctl->round[CC_idP][harq_pid] == 4) {
-              sched_ctl->round[CC_idP][harq_pid] = 8; // release HARQ process
+          if (sched_ctl->round[CC_idP][harq_pid][TB1] == 4) {
+	          sched_ctl->round[CC_idP][harq_pid][TB1] = 8;	// release HARQ process
               sched_ctl->tbcnt[CC_idP][harq_pid] = 0;
 
               /* CDRX: PUCCH gives an NACK and max number of repetitions reached so reset corresponding HARQ RTT */
               sched_ctl->harq_rtt_timer[CC_idP][harq_pid] = 0;
             }
 
-            if (sched_ctl->round[CC_idP][harq_pid] == 8) {
+          if (sched_ctl->round[CC_idP][harq_pid][TB1] == 8){
               for (uint8_t ra_i = 0; ra_i < NB_RA_PROC_MAX; ra_i++) {
                 if((ra[ra_i].rnti == rnti) && (ra[ra_i].state == WAITMSG4ACK)) {
                   // Msg NACK num to MAC ,remove UE
@@ -4186,64 +4268,86 @@ extract_harq(module_id_t mod_idP,
           // one or two ACK/NAK bits
           AssertFatal(num_ack_nak <= 2, "num_ack_nak %d > 2 for 1 CC and TM3/4/8/9/10\n",
                       num_ack_nak);
-
-          if (num_ack_nak == 2 && sched_ctl->round[CC_idP][harq_pid] < 8 && sched_ctl->tbcnt[CC_idP][harq_pid] == 1 && pdu[0] == 1 && pdu[1] == 1) {
-            sched_ctl->round[CC_idP][harq_pid] = 8;
-            sched_ctl->tbcnt[CC_idP][harq_pid] = 0;
-
+	if ((num_ack_nak == 2)
+	    && (sched_ctl->round[CC_idP][harq_pid][select_tb] < 8)
+	    && (sched_ctl->round[CC_idP][harq_pid][oppose_tb] < 8)
+	    && (pdu[select_tb] == 1) && (pdu[oppose_tb] == 1)) {
+	    sched_ctl->round[CC_idP][harq_pid][select_tb] = 8;
+	    sched_ctl->round[CC_idP][harq_pid][oppose_tb] = 8;
+	  	sched_ctl->rsn[CC_idP][harq_pid][select_tb]   = 0;
+	    sched_ctl->rsn[CC_idP][harq_pid][oppose_tb]   = 0;
             /* CDRX: PUCCH gives an ACK, so reset corresponding HARQ RTT */
             sched_ctl->harq_rtt_timer[CC_idP][harq_pid] = 0;
           }
 
-          if ((num_ack_nak == 2)
-              && (sched_ctl->round[CC_idP][harq_pid] < 8)
-              && (sched_ctl->tbcnt[CC_idP][harq_pid] == 1)
-              && (pdu[0] == 2) && (pdu[1] == 2)) {
-            sched_ctl->round[CC_idP][harq_pid]++;
-
-            if (sched_ctl->round[CC_idP][harq_pid] == 4) {
-              sched_ctl->round[CC_idP][harq_pid] = 8;     // release HARQ process
-              sched_ctl->tbcnt[CC_idP][harq_pid] = 0;
-
-              /* CDRX: PUCCH gives an NACK and max number of repetitions reached so reset corresponding HARQ RTT */
-              sched_ctl->harq_rtt_timer[CC_idP][harq_pid] = 0;
-            }
-          } else if (((num_ack_nak == 2)
-                      && (sched_ctl->round[CC_idP][harq_pid] < 8)
-                      && (sched_ctl->tbcnt[0][harq_pid] == 2)
-                      && (pdu[0] == 1) && (pdu[1] == 2))
-                     || ((num_ack_nak == 2)
-                         && (sched_ctl->round[CC_idP][harq_pid] < 8)
-                         && (sched_ctl->tbcnt[CC_idP][harq_pid] == 2)
-                         && (pdu[0] == 2) && (pdu[1] == 1))) {
-            sched_ctl->round[CC_idP][harq_pid]++;
-            sched_ctl->tbcnt[CC_idP][harq_pid] = 1;
-
-            if (sched_ctl->round[CC_idP][harq_pid] == 4) {
-              sched_ctl->round[CC_idP][harq_pid] = 8;     // release HARQ process
-              sched_ctl->tbcnt[CC_idP][harq_pid] = 0;  /* TODO: do we have to set it to 0? */
+	else if(   (num_ack_nak == 2)
+			&& (sched_ctl->round[CC_idP][harq_pid][select_tb] < 8)
+			&& (sched_ctl->round[CC_idP][harq_pid][oppose_tb] < 8)
+			&& ((pdu[select_tb] == 2) || (pdu[select_tb] == 4))
+			&& ((pdu[oppose_tb] == 2) || (pdu[oppose_tb] == 4))) {
+		sched_ctl->round[CC_idP][harq_pid][select_tb]++;
+		sched_ctl->round[CC_idP][harq_pid][oppose_tb]++;
+		sched_ctl->rsn[CC_idP][harq_pid][select_tb]++;
+		sched_ctl->rsn[CC_idP][harq_pid][oppose_tb]++;
+		if (sched_ctl->round[CC_idP][harq_pid][select_tb] == 4) {
+			sched_ctl->round[CC_idP][harq_pid][select_tb] = 8;     // release HARQ process
+			sched_ctl->rsn[CC_idP][harq_pid][select_tb]   = 0;
 
               /* CDRX: PUCCH gives an NACK and max number of repetitions reached so reset corresponding HARQ RTT */
               sched_ctl->harq_rtt_timer[CC_idP][harq_pid] = 0;
             }
-          } else if ((num_ack_nak == 2)
-                     && (sched_ctl->round[CC_idP][harq_pid] < 8)
-                     && (sched_ctl->tbcnt[CC_idP][harq_pid] == 2)
-                     && (pdu[0] == 2) && (pdu[1] == 2)) {
-            sched_ctl->round[CC_idP][harq_pid]++;
-
-            if (sched_ctl->round[CC_idP][harq_pid] == 4) {
-              sched_ctl->round[CC_idP][harq_pid] = 8;     // release HARQ process
-              sched_ctl->tbcnt[CC_idP][harq_pid] = 0;
-
-              /* CDRX: PUCCH gives an NACK and max number of repetitions reached so reset corresponding HARQ RTT */
-              sched_ctl->harq_rtt_timer[CC_idP][harq_pid] = 0;
-            }
-          } else
+		if (sched_ctl->round[CC_idP][harq_pid][oppose_tb] == 4) {
+			sched_ctl->round[CC_idP][harq_pid][oppose_tb] = 8;     // release HARQ process
+			sched_ctl->rsn[CC_idP][harq_pid][oppose_tb]   = 0;
+			sched_ctl->harq_rtt_timer[CC_idP][harq_pid] = 0;
+		}
+	} else if ((num_ack_nak == 2)
+			 && (sched_ctl->round[CC_idP][harq_pid][select_tb] < 8)
+			 && (sched_ctl->round[CC_idP][harq_pid][oppose_tb] < 8)
+			 && (pdu[select_tb] == 1)
+			 && ((pdu[oppose_tb] == 2) || pdu[oppose_tb] == 4)){
+		sched_ctl->round[CC_idP][harq_pid][select_tb] = 8;
+		sched_ctl->round[CC_idP][harq_pid][oppose_tb]++;
+		sched_ctl->rsn[CC_idP][harq_pid][select_tb]   = 0;
+		sched_ctl->rsn[CC_idP][harq_pid][oppose_tb]++;
+		
+		if (sched_ctl->round[CC_idP][harq_pid][oppose_tb] == 4) {
+			sched_ctl->round[CC_idP][harq_pid][oppose_tb] = 8;     // release HARQ process
+			sched_ctl->rsn[CC_idP][harq_pid][oppose_tb] = 0;
+			/* CDRX: PUCCH gives an NACK and max number of repetitions reached so reset corresponding HARQ RTT */
+            sched_ctl->harq_rtt_timer[CC_idP][harq_pid] = 0;
+		}
+	}
+	else if ((num_ack_nak == 2)
+			 && (sched_ctl->round[CC_idP][harq_pid][select_tb] < 8)
+			 && (sched_ctl->round[CC_idP][harq_pid][oppose_tb] < 8)
+			 && ((pdu[select_tb] == 2) || (pdu[select_tb] == 4))
+			 && (pdu[oppose_tb] == 1)){
+		sched_ctl->round[CC_idP][harq_pid][select_tb]++;
+		sched_ctl->round[CC_idP][harq_pid][oppose_tb] = 8;
+		sched_ctl->rsn[CC_idP][harq_pid][select_tb]++;
+		sched_ctl->rsn[CC_idP][harq_pid][oppose_tb]   = 0;
+		
+		if (sched_ctl->round[CC_idP][harq_pid][select_tb] == 4) {
+			sched_ctl->round[CC_idP][harq_pid][select_tb] = 8;     // release HARQ process
+			sched_ctl->rsn[CC_idP][harq_pid][select_tb]   = 0;
+		    /* CDRX: PUCCH gives an NACK and max number of repetitions reached so reset corresponding HARQ RTT */
+            sched_ctl->harq_rtt_timer[CC_idP][harq_pid] = 0;
+		}
+	} else if(   (num_ack_nak == 1)
+	        && (pdu[TB1] == 2 || pdu[TB1] == 4)) {		// NAK (treat DTX as NAK)
+		sched_ctl->round[CC_idP][harq_pid][swap_flg]++;		// increment round
+		sched_ctl->rsn[CC_idP][harq_pid][swap_flg]++;
+		
+		if (sched_ctl->round[CC_idP][harq_pid][swap_flg] == 4) {
+			sched_ctl->round[CC_idP][harq_pid][swap_flg] = 8;	// release HARQ process
+			sched_ctl->rsn[CC_idP][harq_pid][swap_flg] = 0;
+		}
+	} else
             AssertFatal(1 == 0, "Illegal ACK/NAK/round combination (%d,%d,%d,%d,%d) for harq_pid %d, UE %d/%x\n",
                         num_ack_nak,
-                        sched_ctl->round[CC_idP][harq_pid],
-                        sched_ctl->round[CC_idP][harq_pid],
+		                sched_ctl->round[CC_idP][harq_pid][TB1],
+		                sched_ctl->round[CC_idP][harq_pid][TB1], pdu[0],
                         pdu[0],
                         pdu[1],
                         harq_pid,
@@ -4258,8 +4362,8 @@ extract_harq(module_id_t mod_idP,
                     numCC);
 
         if ((num_ack_nak == 2)
-            && (sched_ctl->round[pCCid][harq_pid] < 8)
-            && (sched_ctl->round[1 - pCCid][harq_pid] < 8)
+	  && (sched_ctl->round[pCCid][harq_pid][TB1] < 8)
+	  && (sched_ctl->round[1 - pCCid][harq_pid][TB1] < 8)
             && (sched_ctl->tbcnt[pCCid][harq_pid] == 1)
             && (sched_ctl->tbcnt[1 - pCCid][harq_pid] == 1)) {
           AssertFatal(pdu[0] <= 3, "pdu[0] %d is not ACK/NAK/DTX\n",
@@ -4268,27 +4372,26 @@ extract_harq(module_id_t mod_idP,
                       pdu[1]);
 
           if (pdu[0] == 1)
-            sched_ctl->round[pCCid][harq_pid] = 8;
+	  sched_ctl->round[pCCid][harq_pid][TB1] = 8;
           else {
-            sched_ctl->round[pCCid][harq_pid]++;
+	  sched_ctl->round[pCCid][harq_pid][TB1]++;
 
-            if (sched_ctl->round[pCCid][harq_pid] == 4)
-              sched_ctl->round[pCCid][harq_pid] = 8;
+          if (sched_ctl->round[pCCid][harq_pid][TB1] == 4)
+	    sched_ctl->round[pCCid][harq_pid][TB1] = 8;
           }
 
           if (pdu[1] == 1)
-            sched_ctl->round[1 - pCCid][harq_pid] = 8;
-          else {
-            sched_ctl->round[1 - pCCid][harq_pid]++;
-
-            if (sched_ctl->round[1 - pCCid][harq_pid] == 4)
-              sched_ctl->round[1 - pCCid][harq_pid] = 8;
+	  sched_ctl->round[1 - pCCid][harq_pid][TB1] = 8;
+	else {
+	  sched_ctl->round[1 - pCCid][harq_pid][TB1]++;
+	  if (sched_ctl->round[1 - pCCid][harq_pid][TB1] == 4)
+	    sched_ctl->round[1 - pCCid][harq_pid][TB1] = 8;
           }
         }     // A=2
         else if ((num_ack_nak == 3)
-                 && (sched_ctl->round[pCCid][harq_pid] < 8)
-                 && (sched_ctl->tbcnt[pCCid][harq_pid] == 2)
-                 && (sched_ctl->round[1 - pCCid][harq_pid] < 8)
+	       && (sched_ctl->round[pCCid][harq_pid][TB1] < 8)
+	       && (sched_ctl->tbcnt[pCCid][harq_pid] == 2)
+	       && (sched_ctl->round[1 - pCCid][harq_pid][TB1] < 8)
                  && (sched_ctl->tbcnt[1 - pCCid][harq_pid] == 1)) {
           AssertFatal(pdu[0] <= 3, "pdu[0] %d is not ACK/NAK/DTX\n",
                       pdu[0]);
@@ -4308,38 +4411,36 @@ extract_harq(module_id_t mod_idP,
                       rnti);
 
           if (pdu[0] == 1 && pdu[1] == 1) { // both ACK
-            sched_ctl->round[pCCid][harq_pid] = 8;
+	        sched_ctl->round[pCCid][harq_pid][TB1] = 8;
             sched_ctl->tbcnt[pCCid][harq_pid] = 0;
           } else if ((pdu[0] == 2 && pdu[1] == 1) || (pdu[0] == 1 && pdu[1] == 2)) {
-            sched_ctl->round[pCCid][harq_pid]++;
+	        sched_ctl->round[pCCid][harq_pid][TB1]++;
             sched_ctl->tbcnt[pCCid][harq_pid] = 1;
 
-            if (sched_ctl->round[pCCid][harq_pid] == 4) {
-              sched_ctl->round[pCCid][harq_pid] = 8;
+	  if (sched_ctl->round[pCCid][harq_pid][TB1] == 4) {
+	    sched_ctl->round[pCCid][harq_pid][TB1] = 8;
               sched_ctl->tbcnt[pCCid][harq_pid] = 0; /* TODO: do we have to set it to 0? */
             }
           } else {
-            sched_ctl->round[pCCid][harq_pid]++;
-
-            if (sched_ctl->round[pCCid][harq_pid] == 4) {
-              sched_ctl->round[pCCid][harq_pid] = 8;
+	  sched_ctl->round[pCCid][harq_pid][TB1]++;
+	  if (sched_ctl->round[pCCid][harq_pid][TB1] == 4) {
+	    sched_ctl->round[pCCid][harq_pid][TB1] = 8;
               sched_ctl->tbcnt[pCCid][harq_pid] = 0;
             }
           }
 
-          if (pdu[2] == 1) sched_ctl->round[1 - pCCid][harq_pid] = 8;
+          if (pdu[2] == 1) sched_ctl->round[1 - pCCid][harq_pid][TB1] = 8;
           else {
-            sched_ctl->round[1 - pCCid][harq_pid]++;
-
-            if (sched_ctl->round[1 - pCCid][harq_pid] == 4) {
-              sched_ctl->round[1 - pCCid][harq_pid] = 8;
-            }
+	  sched_ctl->round[1 - pCCid][harq_pid][TB1]++;
+	  if (sched_ctl->round[1 - pCCid][harq_pid][TB1] == 4) {
+	    sched_ctl->round[1 - pCCid][harq_pid][TB1] = 8;
           }
-        }     // A=3 primary cell has 2 TBs
-        else if ((num_ack_nak == 3)
-                 && (sched_ctl->round[1 - pCCid][harq_pid] < 8)
-                 && (sched_ctl->round[pCCid][harq_pid] < 8)
-                 && (sched_ctl->tbcnt[1 - pCCid][harq_pid] == 2)
+        }
+      }			// A=3 primary cell has 2 TBs
+      else if ((num_ack_nak == 3)
+	       && (sched_ctl->round[1 - pCCid][harq_pid][TB1] < 8)
+	       && (sched_ctl->round[pCCid][harq_pid][TB1] < 8)
+	       && (sched_ctl->tbcnt[1 - pCCid][harq_pid] == 2)
                  && (sched_ctl->tbcnt[pCCid][harq_pid] == 1)) {
           AssertFatal(pdu[0] <= 3, "pdu[0] %d is not ACK/NAK/DTX\n",
                       pdu[0]);
@@ -4359,39 +4460,39 @@ extract_harq(module_id_t mod_idP,
                       rnti);
 
           if (pdu[0] == 1 && pdu[1] == 1) { // both ACK
-            sched_ctl->round[1 - pCCid][harq_pid] = 8;
+	  sched_ctl->round[1 - pCCid][harq_pid][TB1] = 8;
             sched_ctl->tbcnt[1 - pCCid][harq_pid] = 0;
           } else if ((pdu[0] >= 2 && pdu[1] == 1) || (pdu[0] == 1 && pdu[1] >= 2)) { // one ACK
-            sched_ctl->round[1 - pCCid][harq_pid]++;
+	  sched_ctl->round[1 - pCCid][harq_pid][TB1]++;
             sched_ctl->tbcnt[1 - pCCid][harq_pid] = 1;
 
-            if (sched_ctl->round[1 - pCCid][harq_pid] == 4) {
-              sched_ctl->round[1 - pCCid][harq_pid] = 8;
+	  if (sched_ctl->round[1 - pCCid][harq_pid][TB1] == 4) {
+	    sched_ctl->round[1 - pCCid][harq_pid][TB1] = 8;
               sched_ctl->tbcnt[1 - pCCid][harq_pid] = 0;
             }
           } else {    // both NAK/DTX
-            sched_ctl->round[1 - pCCid][harq_pid]++;
+	  sched_ctl->round[1 - pCCid][harq_pid][TB1]++;
 
-            if (sched_ctl->round[1 - pCCid][harq_pid] == 4) {
-              sched_ctl->round[1 - pCCid][harq_pid] = 8;
+	  if (sched_ctl->round[1 - pCCid][harq_pid][TB1] == 4) {
+	    sched_ctl->round[1 - pCCid][harq_pid][TB1] = 8;
               sched_ctl->tbcnt[1 - pCCid][harq_pid] = 0;
             }
           }
 
-          if (pdu[2] == 1) sched_ctl->round[pCCid][harq_pid] = 8;
+          if (pdu[2] == 1) sched_ctl->round[pCCid][harq_pid][TB1] = 8;
           else {
-            sched_ctl->round[pCCid][harq_pid]++;
+	  sched_ctl->round[pCCid][harq_pid][TB1]++;
 
-            if (sched_ctl->round[pCCid][harq_pid] == 4) {
-              sched_ctl->round[pCCid][harq_pid] = 8;
+	  if (sched_ctl->round[pCCid][harq_pid][TB1] == 4) {
+	    sched_ctl->round[pCCid][harq_pid][TB1] = 8;
             }
           }
         }     // A=3 secondary cell has 2 TBs
 
 #if MAX_NUM_CCs>1
         else if ((num_ack_nak == 4)
-                 && (sched_ctl->round[0][harq_pid] < 8)
-                 && (sched_ctl->round[1][harq_pid] < 8)
+	       && (sched_ctl->round[0][harq_pid][TB1] < 8)
+	       && (sched_ctl->round[1][harq_pid][TB1] < 8)
                  && (sched_ctl->tbcnt[1 - pCCid][harq_pid] == 2)
                  && (sched_ctl->tbcnt[pCCid][harq_pid] == 2)) {
           AssertFatal(pdu[0] <= 3, "pdu[0] %d is not ACK/NAK/DTX\n",
@@ -4412,41 +4513,41 @@ extract_harq(module_id_t mod_idP,
                       rnti);
 
           if (pdu[0] == 1 && pdu[1] == 1) { // both ACK
-            sched_ctl->round[0][harq_pid] = 8;
+	  sched_ctl->round[0][harq_pid][TB1] = 8;
             sched_ctl->tbcnt[0][harq_pid] = 0;
           } else if ((pdu[0] >= 2 && pdu[1] == 1) || (pdu[0] == 1 && pdu[1] >= 2)) { // one ACK
-            sched_ctl->round[0][harq_pid]++;
+	  sched_ctl->round[0][harq_pid][TB1]++;
             sched_ctl->tbcnt[0][harq_pid] = 1;
 
-            if (sched_ctl->round[0][harq_pid] == 4) {
-              sched_ctl->round[0][harq_pid] = 8;
+	  if (sched_ctl->round[0][harq_pid][TB1] == 4) {
+	    sched_ctl->round[0][harq_pid][TB1] = 8;
               sched_ctl->tbcnt[0][harq_pid] = 0;
             }
           } else {    // both NAK/DTX
-            sched_ctl->round[0][harq_pid]++;
+	  sched_ctl->round[0][harq_pid][TB1]++;
 
-            if (sched_ctl->round[0][harq_pid] == 4) {
-              sched_ctl->round[0][harq_pid] = 8;
+	  if (sched_ctl->round[0][harq_pid][TB1] == 4) {
+	    sched_ctl->round[0][harq_pid][TB1] = 8;
               sched_ctl->tbcnt[0][harq_pid] = 0;
             }
           }
 
           if (pdu[2] == 1 && pdu[3] == 1) { // both ACK
-            sched_ctl->round[1][harq_pid] = 8;
+	  sched_ctl->round[1][harq_pid][TB1] = 8;
             sched_ctl->tbcnt[1][harq_pid] = 0;
           } else if ((pdu[2] >= 2 && pdu[3] == 1) || (pdu[2] == 1 && pdu[3] >= 2)) { // one ACK
-            sched_ctl->round[1][harq_pid]++;
+	  sched_ctl->round[1][harq_pid][TB1]++;
             sched_ctl->tbcnt[1][harq_pid] = 1;
 
-            if (sched_ctl->round[1][harq_pid] == 4) {
-              sched_ctl->round[1][harq_pid] = 8;
+	  if (sched_ctl->round[1][harq_pid][TB1] == 4) {
+	    sched_ctl->round[1][harq_pid][TB1] = 8;
               sched_ctl->tbcnt[1][harq_pid] = 0;
             }
           } else {    // both NAK/DTX
-            sched_ctl->round[1][harq_pid]++;
+	  sched_ctl->round[1][harq_pid][TB1]++;
 
-            if (sched_ctl->round[1][harq_pid] == 4) {
-              sched_ctl->round[1][harq_pid] = 8;
+	  if (sched_ctl->round[1][harq_pid][TB1] == 4) {
+	    sched_ctl->round[1][harq_pid][TB1] = 8;
               sched_ctl->tbcnt[1][harq_pid] = 0;
             }
           }
@@ -4460,16 +4561,16 @@ extract_harq(module_id_t mod_idP,
                     numCC);
 
         for (i = 0, j = 0; i < numCC; i++) {
-          if (sched_ctl->round[i][harq_pid] < 8) {
+	if ((sched_ctl->round[i][harq_pid][TB1] < 8)) {
             if (tmode[i] == 1 || tmode[i] == 2 || tmode[0] == 5 || tmode[0] == 6 || tmode[0] == 7) {
               if (pdu[j] == 1) {
-                sched_ctl->round[i][harq_pid] = 8;
+	      sched_ctl->round[i][harq_pid][TB1] = 8;
                 sched_ctl->tbcnt[i][harq_pid] = 0;
               } else if (pdu[j] == 2) {
-                sched_ctl->round[i][harq_pid]++;
+	      sched_ctl->round[i][harq_pid][TB1]++;
 
-                if (sched_ctl->round[i][harq_pid] == 4) {
-                  sched_ctl->round[i][harq_pid] = 8;
+	      if (sched_ctl->round[i][harq_pid][TB1] == 4) {
+	        sched_ctl->round[i][harq_pid][TB1] = 8;
                   sched_ctl->tbcnt[i][harq_pid] = 0;
                 }
               } else
@@ -4483,29 +4584,29 @@ extract_harq(module_id_t mod_idP,
               j++;
             } else if (spatial_bundling == 0) {
               if (sched_ctl->tbcnt[i][harq_pid] == 2 && pdu[j] == 1 && pdu[j + 1] == 1) {
-                sched_ctl->round[i][harq_pid] = 8;
+	      sched_ctl->round[i][harq_pid][TB1] = 8;
                 sched_ctl->tbcnt[i][harq_pid] = 0;
               } else if (sched_ctl->tbcnt[i][harq_pid] == 2 && pdu[j] == 1 && pdu[j + 1] == 2) {
-                sched_ctl->round[i][harq_pid]++;
+	      sched_ctl->round[i][harq_pid][TB1]++;
                 sched_ctl->tbcnt[i][harq_pid] = 1;
 
-                if (sched_ctl->round[i][harq_pid] == 4) {
-                  sched_ctl->round[i][harq_pid] = 8;
+	      if (sched_ctl->round[i][harq_pid][TB1] == 4) {
+	        sched_ctl->round[i][harq_pid][TB1] = 8;
                   sched_ctl->tbcnt[i][harq_pid] = 0;
                 }
               } else if (sched_ctl->tbcnt[i][harq_pid] == 2 && pdu[j] == 2 && pdu[j + 1] == 1) {
-                sched_ctl->round[i][harq_pid]++;
+	      sched_ctl->round[i][harq_pid][TB1]++;
                 sched_ctl->tbcnt[i][harq_pid] = 1;
 
-                if (sched_ctl->round[i][harq_pid] == 4) {
-                  sched_ctl->round[i][harq_pid] = 8;
+	      if (sched_ctl->round[i][harq_pid][TB1] == 4) {
+	        sched_ctl->round[i][harq_pid][TB1] = 8;
                   sched_ctl->tbcnt[i][harq_pid] = 0;
                 }
               } else if (sched_ctl->tbcnt[i][harq_pid] == 2 && pdu[j] == 2 && pdu[j + 1] == 2) {
-                sched_ctl->round[i][harq_pid]++;
+	      sched_ctl->round[i][harq_pid][TB1]++;
 
-                if (sched_ctl->round[i][harq_pid] == 4) {
-                  sched_ctl->round[i][harq_pid] = 8;
+	      if (sched_ctl->round[i][harq_pid][TB1] == 4) {
+	        sched_ctl->round[i][harq_pid][TB1] = 8;
                   sched_ctl->tbcnt[i][harq_pid] = 0;
                 }
               } else
@@ -4521,13 +4622,13 @@ extract_harq(module_id_t mod_idP,
               j += 2;
             } else if (spatial_bundling == 1) {
               if (pdu[j] == 1) {
-                sched_ctl->round[i][harq_pid] = 8;
+	      sched_ctl->round[i][harq_pid][TB1] = 8;
                 sched_ctl->tbcnt[i][harq_pid] = 0;
               } else if (pdu[j] == 2) {
-                sched_ctl->round[i][harq_pid]++;
+	      sched_ctl->round[i][harq_pid][TB1]++;
 
-                if (sched_ctl->round[i][harq_pid] == 4) {
-                  sched_ctl->round[i][harq_pid] = 8;
+	      if (sched_ctl->round[i][harq_pid][TB1] == 4) {
+	        sched_ctl->round[i][harq_pid][TB1] = 8;
                   sched_ctl->tbcnt[i][harq_pid] = 0;
                 }
               } else {
