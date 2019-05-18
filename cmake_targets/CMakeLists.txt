@@ -2377,6 +2377,30 @@ target_link_libraries (nr-softmodem pthread m ${CONFIG_LIBRARIES} rt crypt ${CRY
 target_link_libraries (nr-softmodem ${LIB_LMS_LIBRARIES})
 target_link_libraries (nr-softmodem ${T_LIB})
 
+add_executable(ocpsoftmodem
+  ${OPENAIR_DIR}/executables/gNBmain.c
+  ${OPENAIR1_DIR}/SIMULATION/TOOLS/taus.c
+  ${OPENAIR_TARGETS}/ARCH/COMMON/common_lib.c
+  ${OPENAIR_DIR}/common/utils/utils.c
+  ${OPENAIR_DIR}/common/utils/system.c
+  ${GTPU_need_ITTI}
+  ${T_SOURCE}
+  ${CONFIG_SOURCES}
+  ${SHLIB_LOADER_SOURCES}
+  )
+
+target_link_libraries (ocpsoftmodem
+  -Wl,--start-group
+  UTIL HASHTABLE SCTP_CLIENT UDP SCHED_LIB SCHED_RU_LIB SCHED_NR_LIB PHY_NR PHY PHY_COMMON PHY_RU LFDS GTPV1U SECU_CN SECU_OSA
+  ${ITTI_LIB} ${FLPT_MSG_LIB} ${ASYNC_IF_LIB} ${FLEXRAN_AGENT_LIB} LFDS7 ${MSC_LIB} ${RAL_LIB} ${NAS_UE_LIB}
+  RRC_LIB NR_RRC_LIB S1AP_LIB S1AP_ENB L2 L2_NR MAC_NR_COMMON
+  NFAPI_COMMON_LIB NFAPI_LIB NFAPI_VNF_LIB NFAPI_PNF_LIB NFAPI_USER_LIB
+  -Wl,--end-group z dl)
+
+target_link_libraries (ocpsoftmodem ${LIBXML2_LIBRARIES})
+target_link_libraries (ocpsoftmodem pthread m ${CONFIG_LIBRARIES} rt crypt ${CRYPTO_LIBRARIES} ${OPENSSL_LIBRARIES} ${NETTLE_LIBRARIES} sctp  ${PROTOBUF_LIB}  ${CMAKE_DL_LIBS} ${LIBYAML_LIBRARIES} ${ATLAS_LIBRARIES})
+target_link_libraries (ocpsoftmodem ${LIB_LMS_LIBRARIES})
+
 # nr-softmodem-nos1
 ###################################################
 
