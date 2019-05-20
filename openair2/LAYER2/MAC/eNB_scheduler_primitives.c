@@ -2189,6 +2189,8 @@ add_new_ue(module_id_t mod_idP,
   int UE_id;
   int i, j;
   UE_list_t *UE_list = &RC.mac[mod_idP]->UE_list;
+  eNB_MAC_INST *eNB     = RC.mac[mod_idP];
+  COMMON_channels_t *cc = &eNB->common_channels[cc_idP];
   LOG_D(MAC, "[eNB %d, CC_id %d] Adding UE with rnti %x (next avail %d, num_UEs %d)\n",
         mod_idP,
         cc_idP,
@@ -2212,6 +2214,7 @@ add_new_ue(module_id_t mod_idP,
     UE_list->ordered_ULCCids[0][UE_id] = cc_idP;
     UE_list->num_UEs++;
     UE_list->active[UE_id] = TRUE;
+    UE_list->UE_template[cc_idP][UE_id].tm=cc->p_eNB;
 #if defined(USRP_REC_PLAY) // not specific to record/playback ?
     UE_list->UE_template[cc_idP][UE_id].pre_assigned_mcs_ul = 0;
 #endif
@@ -2597,6 +2600,15 @@ UE_is_to_be_scheduled(module_id_t module_idP,
   return 0;
 }
 
+void set_tmode(module_id_t module_idP, int CC_idP, int rntiP, int tm){
+  int UE_id;
+  eNB_MAC_INST *eNB = RC.mac[module_idP];
+  UE_list_t *UE_list= &eNB->UE_list;
+  UE_id = find_UE_id(module_idP, rntiP);
+  if (UE_id != -1)
+    UE_list->UE_template[CC_idP][UE_id].tm=tm;
+}
+
 //------------------------------------------------------------------------------
 uint8_t
 get_tmode(module_id_t module_idP,
@@ -2626,7 +2638,8 @@ get_tmode(module_id_t module_idP,
               CC_idP);
 
   if (physicalConfigDedicated->antennaInfo->present == LTE_PhysicalConfigDedicated__antennaInfo_PR_explicitValue) {
-    return (1 + physicalConfigDedicated->antennaInfo->choice.explicitValue.transmissionMode);
+//    return (1 + physicalConfigDedicated->antennaInfo->choice.explicitValue.transmissionMode);
+    return eNB->UE_list.UE_template[CC_idP][UE_idP].tm;
   }
 
   if (physicalConfigDedicated->antennaInfo->present == LTE_PhysicalConfigDedicated__antennaInfo_PR_defaultValue) {

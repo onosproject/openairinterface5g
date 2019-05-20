@@ -1237,7 +1237,7 @@ void fill_nfapi_dl_dci_1A(nfapi_dl_config_request_pdu_t * dl_config_pdu,
 nfapi_ul_config_request_pdu_t *has_ul_grant(module_id_t module_idP,
 					    int CC_idP, uint16_t subframeP,
 					    uint16_t rnti);
-
+void set_tmode(module_id_t module_idP, int CC_idP, int rntiP, int tm);
 uint8_t get_tmode(module_id_t module_idP, int CC_idP, int UE_idP);
 
 uint8_t get_ul_req_index(module_id_t module_idP, int CC_idP,

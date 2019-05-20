@@ -919,7 +919,7 @@ typedef struct {
     sub_frame_t Msg2_subframe;
 
     LTE_PhysicalConfigDedicated_t *physicalConfigDedicated;
-
+    int tm;
 } UE_TEMPLATE;
 
 /*! \brief scheduling control information set through an API (not used)*/

@@ -5755,6 +5755,16 @@ rrc_eNB_process_RRCConnectionReconfigurationComplete(
     ue_context_pP->ue_context.DRB_configList2[xid] = NULL;
   } // end if DRB_configList != NULL
 
+  struct LTE_PhysicalConfigDedicated    **physicalConfigDedicated = &ue_context_pP->ue_context.physicalConfigDedicated;
+
+  if (*physicalConfigDedicated) {
+    if ((*physicalConfigDedicated)->antennaInfo) {
+      if((*physicalConfigDedicated)->antennaInfo->choice.explicitValue.transmissionMode>1){
+        set_tmode(ctxt_pP->module_id, ue_context_pP->ue_context.primaryCC_id, ue_context_pP->ue_context.rnti, (*physicalConfigDedicated)->antennaInfo->choice.explicitValue.transmissionMode+1);
+      }
+    }
+  }
+
   if(DRB_Release_configList2 != NULL) {
     for (int i = 0; i < DRB_Release_configList2->list.count; i++) {
       if (DRB_Release_configList2->list.array[i]) {
