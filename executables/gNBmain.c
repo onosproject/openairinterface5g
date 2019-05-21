@@ -77,7 +77,7 @@ double cpuf;
 uint16_t sf_ahead=4;
 uint16_t sl_ahead=4;
 static notifiedFIFO_t mainThreadFIFO;
-typedef enum { 
+typedef enum {
   AbortRU,
   doneInitRU
 } localMsg;
@@ -155,8 +155,8 @@ void rx_rf(RU_t *ru,int *frame,int *slot) {
                 "Received Timestamp (%lu) doesn't correspond to the time we think it is (proc->tti_rx %d, subframe %d)\n",
                 proc->timestamp_rx,proc->tti_rx,*slot);
     AssertFatal(proc->frame_rx == *frame,
-                 "Received Timestamp (%lu) doesn't correspond to the time we think it is (proc->frame_rx %d frame %d)\n",
-                 proc->timestamp_rx,proc->frame_rx,*frame);
+                "Received Timestamp (%lu) doesn't correspond to the time we think it is (proc->frame_rx %d frame %d)\n",
+                proc->timestamp_rx,proc->frame_rx,*frame);
   } else {
     proc->first_rx = 0;
     *frame = proc->frame_rx;
@@ -316,7 +316,8 @@ void gNB_top(PHY_VARS_gNB *gNB, int frame_rx, int slot_rx, char *string, struct 
     L1_proc->frame_tx     = (L1_proc->slot_rx > (fp->slots_per_frame-1-sl_ahead)) ? (L1_proc->frame_rx+1)&1023 : L1_proc->frame_rx;
     L1_proc->slot_tx      = (L1_proc->slot_rx + sl_ahead)%fp->slots_per_frame;
 
-    if (rxtx(gNB,L1_proc,string) < 0) LOG_E(PHY,"gNB %d CC_id %d failed during execution\n",gNB->Mod_id,gNB->CC_id);
+    if (rxtx(gNB,L1_proc,string) < 0)
+      LOG_E(PHY,"gNB %d CC_id %d failed during execution\n",gNB->Mod_id,gNB->CC_id);
 
     ru_proc->timestamp_tx = L1_proc->timestamp_tx;
     ru_proc->tti_tx       = L1_proc->slot_tx;
@@ -441,6 +442,7 @@ static void *ru_thread_prach( void *param ) {
   ru_thread_prach_status = 0;
   return &ru_thread_prach_status;
 }
+
 void fill_rf_config(RU_t *ru, char *rf_config_file) {
   int i;
   NR_DL_FRAME_PARMS *fp   = ru->nr_frame_parms;
@@ -744,7 +746,6 @@ static void *ru_thread( void *param ) {
 
   AssertFatal(setup_RU_buffers(ru),"Exiting, cannot initialize RU Buffers\n");
 
-
   // Start RF device if any
   if (ru->start_rf) {
     if (ru->start_rf(ru) != 0)
@@ -752,16 +753,19 @@ static void *ru_thread( void *param ) {
     else LOG_I(PHY,"RU %d rf device ready\n",ru->idx);
   } else LOG_I(PHY,"RU %d no rf device\n",ru->idx);
 
+  // The RU initializationis in the middle of gNB one
+  // so , we signal and wait the gNB finishes it's init
+  // before running the main loop
   static notifiedFIFO_t ruThreadFIFO;
   initNotifiedFIFO(&ruThreadFIFO);
   LOG_I(PHY, "Signaling main thread that RU %d is ready\n",ru->idx);
-  notifiedFIFO_elt_t * msg=newNotifiedFIFO_elt(0,doneInitRU,&ruThreadFIFO,NULL);
+  notifiedFIFO_elt_t *msg=newNotifiedFIFO_elt(0,doneInitRU,&ruThreadFIFO,NULL);
   pushNotifiedFIFO(&mainThreadFIFO,msg);
-
   LOG_I(PHY, "wait main thread that RU %d is ready\n",ru->idx);
   delNotifiedFIFO_elt(pullNotifiedFIFO(&ruThreadFIFO));
-  
+
   // This is a forever while loop, it loops over subframes which are scheduled by incoming samples from HW devices
+  
   while (!oai_exit) {
     // these are local subframe/frame counters to check that we are in synch with the fronthaul timing.
     // They are set on the first rx/tx in the underly FH routines.
@@ -776,7 +780,6 @@ static void *ru_thread( void *param ) {
     // synchronization on input FH interface, acquire signals/data and block
     AssertFatal(ru->fh_south_in, "No fronthaul interface at south port");
     ru->fh_south_in(ru,&frame,&slot);
-
     LOG_D(PHY,"AFTER fh_south_in - SFN/SL:%d%d RU->proc[RX:%d.%d TX:%d.%d] RC.gNB[0][0]:[RX:%d%d TX(SFN):%d]\n",
           frame,slot,
           proc->frame_rx,proc->tti_rx,
@@ -807,7 +810,7 @@ static void *ru_thread( void *param ) {
     // wakeup all gNB processes waiting for this RU
     for (int gnb=0; gnb < ru->num_gNB; gnb++)
       ru->gNB_top(ru->gNB_list[gnb],ru->proc.frame_rx,ru->proc.tti_rx,"not def",ru);
-    
+
     if(ru->num_eNB==0) {
       // do TX front-end processing if needed (precoding and/or IDFTs)
       if (ru->feptx_prec)
@@ -825,7 +828,8 @@ static void *ru_thread( void *param ) {
         ru->fh_north_out(ru);
     }
   }
-  notifiedFIFO_elt_t * msg2=newNotifiedFIFO_elt(0,AbortRU,NULL,NULL);
+
+  notifiedFIFO_elt_t *msg2=newNotifiedFIFO_elt(0,AbortRU,NULL,NULL);
   pushNotifiedFIFO(&mainThreadFIFO,msg2);
   return NULL;
 }
@@ -1099,13 +1103,13 @@ void RCconfig_RU(void) {
           RC.ru[j]->function                        = gNodeB_3GPP;
           printf("Setting function for RU %d to gNodeB_3GPP\n",j);
         } else {
-          RC.ru[j]->eth_params.local_if_name            = strdup(*(RUParamList.paramarray[j][RU_LOCAL_IF_NAME_IDX].strptr));
-          RC.ru[j]->eth_params.my_addr                  = strdup(*(RUParamList.paramarray[j][RU_LOCAL_ADDRESS_IDX].strptr));
-          RC.ru[j]->eth_params.remote_addr              = strdup(*(RUParamList.paramarray[j][RU_REMOTE_ADDRESS_IDX].strptr));
-          RC.ru[j]->eth_params.my_portc                 = *(RUParamList.paramarray[j][RU_LOCAL_PORTC_IDX].uptr);
-          RC.ru[j]->eth_params.remote_portc             = *(RUParamList.paramarray[j][RU_REMOTE_PORTC_IDX].uptr);
-          RC.ru[j]->eth_params.my_portd                 = *(RUParamList.paramarray[j][RU_LOCAL_PORTD_IDX].uptr);
-          RC.ru[j]->eth_params.remote_portd             = *(RUParamList.paramarray[j][RU_REMOTE_PORTD_IDX].uptr);
+          RC.ru[j]->eth_params.local_if_name  = strdup(*(RUParamList.paramarray[j][RU_LOCAL_IF_NAME_IDX].strptr));
+          RC.ru[j]->eth_params.my_addr        = strdup(*(RUParamList.paramarray[j][RU_LOCAL_ADDRESS_IDX].strptr));
+          RC.ru[j]->eth_params.remote_addr    = strdup(*(RUParamList.paramarray[j][RU_REMOTE_ADDRESS_IDX].strptr));
+          RC.ru[j]->eth_params.my_portc       = *(RUParamList.paramarray[j][RU_LOCAL_PORTC_IDX].uptr);
+          RC.ru[j]->eth_params.remote_portc   = *(RUParamList.paramarray[j][RU_REMOTE_PORTC_IDX].uptr);
+          RC.ru[j]->eth_params.my_portd       = *(RUParamList.paramarray[j][RU_LOCAL_PORTD_IDX].uptr);
+          RC.ru[j]->eth_params.remote_portd   = *(RUParamList.paramarray[j][RU_REMOTE_PORTD_IDX].uptr);
 
           if (strcmp(*(RUParamList.paramarray[j][RU_TRANSPORT_PREFERENCE_IDX].strptr), "udp") == 0) {
             RC.ru[j]->if_south                        = LOCAL_RF;
@@ -1170,10 +1174,10 @@ void RCconfig_RU(void) {
         }
       }  /* strcmp(local_rf, "yes") != 0 */
 
-      RC.ru[j]->nb_tx                             = *(RUParamList.paramarray[j][RU_NB_TX_IDX].uptr);
-      RC.ru[j]->nb_rx                             = *(RUParamList.paramarray[j][RU_NB_RX_IDX].uptr);
-      RC.ru[j]->att_tx                            = *(RUParamList.paramarray[j][RU_ATT_TX_IDX].uptr);
-      RC.ru[j]->att_rx                            = *(RUParamList.paramarray[j][RU_ATT_RX_IDX].uptr);
+      RC.ru[j]->nb_tx   = *(RUParamList.paramarray[j][RU_NB_TX_IDX].uptr);
+      RC.ru[j]->nb_rx   = *(RUParamList.paramarray[j][RU_NB_RX_IDX].uptr);
+      RC.ru[j]->att_tx  = *(RUParamList.paramarray[j][RU_ATT_TX_IDX].uptr);
+      RC.ru[j]->att_rx  = *(RUParamList.paramarray[j][RU_ATT_RX_IDX].uptr);
     }// j=0..num_rus
   } else {
     RC.nb_RU = 0;
@@ -1295,19 +1299,28 @@ int main( int argc, char **argv ) {
     f(&p);
   }
 
+  // Fixme: a sleep is needed because some external (thread?)
+  // has to populate something
+  // remove the sleep, you will see the assert
+  sleep(1);
   number_of_cards = 1;
   init_gNB(single_thread_flag,wait_for_sync);
   init_RU(rf_config_file);
-  notifiedFIFO_elt_t * msg=pullNotifiedFIFO(&mainThreadFIFO);
+  notifiedFIFO_elt_t *msgs[RC.nb_RU];
+
+  for (int ru=0; ru<RC.nb_RU; ru++)
+    msgs[ru]=pullNotifiedFIFO(&mainThreadFIFO);
   init_eNB_afterRU();
-  pushNotifiedFIFO(msg->reponseFifo, msg);
+  
+  for (int ru=0; ru<RC.nb_RU; ru++)
+    pushNotifiedFIFO(msgs[ru]->reponseFifo, msgs[ru]);
+  
   pthread_mutex_lock(&sync_mutex);
   sync_var=0;
   pthread_cond_broadcast(&sync_cond);
   pthread_mutex_unlock(&sync_mutex);
-  
-  while (oai_exit==0)
-    sleep(1);
-  
+
+  // When threads leaves, they  send a final message to main
+  notifiedFIFO_elt_t *msg=pullNotifiedFIFO(&mainThreadFIFO);
   return 0;
 }

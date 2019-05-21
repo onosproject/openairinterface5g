@@ -457,6 +457,7 @@ int rfsimulator_set_gains(openair0_device *device, openair0_config_t *openair0_c
 __attribute__((__visibility__("default")))
 int device_init(openair0_device *device, openair0_config_t *openair0_cfg) {
   //set_log(HW,OAILOG_DEBUG);
+  set_log(TMR,OAILOG_DEBUG);
   //set_log(PHY,OAILOG_DEBUG);
   rfsimulator_state_t *rfsimulator = (rfsimulator_state_t *)calloc(sizeof(rfsimulator_state_t),1);
 
