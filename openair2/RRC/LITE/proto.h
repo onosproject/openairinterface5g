@@ -454,7 +454,8 @@ rrc_eNB_free_mem_UE_context(
 void
 rrc_eNB_free_UE(
 		const module_id_t enb_mod_idP,
-		const struct rrc_eNB_ue_context_s*         const ue_context_pP
+		const struct rrc_eNB_ue_context_s*         const ue_context_pP,
+		uint8_t CC_id
 );
 
 long binary_search_int(int elements[], long numElem, int value);

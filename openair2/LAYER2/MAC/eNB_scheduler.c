@@ -359,7 +359,7 @@ void eNB_dlsch_ulsch_scheduler(module_id_t module_idP,uint8_t cooperation_flag, 
   //for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
     //printf("eNB_dlsch_ulsch_scheduler: eNB %d, CC_id %d\n",module_idP,0);
     rrc_rx_tx(&ctxt,
-            0, // eNB index, unused in RCC. It does not support multiple eNBs.
+            0, // eNB index, unused in RCC.
             CC_id);//CC_id unused in RCC
   //}
 #if defined(Rel10) || defined(Rel14)

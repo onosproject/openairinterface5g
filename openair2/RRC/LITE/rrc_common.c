@@ -551,8 +551,10 @@ rrc_rx_tx(
       }
     }
     if (ue_to_be_removed)
-      rrc_eNB_free_UE(ctxt_pP->module_id,ue_to_be_removed);
-
+    {
+      printf("ue_to_be_removed: CC_id %d\n",CC_id);
+      rrc_eNB_free_UE(ctxt_pP->module_id,ue_to_be_removed,CC_id);
+    }
 #ifdef RRC_LOCALIZATION
 
     /* for the localization, only primary CC_id might be relevant*/

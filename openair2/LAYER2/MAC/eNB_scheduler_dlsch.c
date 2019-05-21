@@ -60,6 +60,7 @@
 #include "T.h"
 
 #define ENABLE_MAC_PAYLOAD_DEBUG
+#define COORDINATED_SCHEDULING 1
 //#define DEBUG_eNB_SCHEDULER 1
 
 
@@ -455,6 +456,28 @@ schedule_ue_spec(
   int i;
   DCI_PDU      saved_DCI_pdu[MAX_NUM_CCs];
 
+#ifdef COORDINATED_SCHEDULING
+  int 		   k, num_UEs=0;
+  int		   CC_list[MAX_NUM_CCs];
+  uint16_t CC_total=0;
+  uint8_t CC_idx_last=0;
+  num_UEs=0;
+  for (k=0;k<MAX_NUM_CCs;k++) 
+    CC_list[k]=0;
+  for (UE_id = 0; UE_id < NUMBER_OF_UE_MAX; UE_id++) {
+    if (UE_list->active[UE_id] != TRUE) continue;
+    CC_list[UE_PCCID(module_idP,UE_id)]=1;
+  }
+  for (k=0;k<MAX_NUM_CCs;k++){ 
+    CC_total+=CC_list[k];
+    if (CC_list[k]) CC_idx_last=k;
+  }
+  for (k=0;k<MAX_NUM_CCs;k++){
+	num_UEs+=UE_list->num_UEs[k];
+	//printf("num_UEs[%d]=%d\n",k,UE_list->num_UEs[k]);
+  }
+#endif
+
 #if 0
   if (UE_list->head==-1) {
     return;
@@ -475,12 +498,48 @@ schedule_ue_spec(
     min_rb_unit[CC_id]=get_min_rb_unit(module_idP,CC_id);
     frame_parms[CC_id] = mac_xface->get_lte_frame_parms(module_idP,CC_id);
     // get number of PRBs less those used by common channels
+#ifdef COORDINATED_SCHEDULING
+    if (subframeP==0 || subframeP==5 || num_UEs==UE_list->num_UEs[CC_id])
+    {
+    	total_nb_available_rb[CC_id] = frame_parms[CC_id]->N_RB_DL;
+    	for (i=0;i<frame_parms[CC_id]->N_RB_DL;i++)
+      		if (eNB->common_channels[CC_id].vrb_map[i]!=0){
+			total_nb_available_rb[CC_id]--;
+        		//printf("Common channels: PRB %d\n",i);
+      		}
+    }
+    else
+    {
+	if ((uint16_t)(CC_idx_last==CC_id)&&(uint16_t)(frame_parms[CC_id]->N_RB_DL%CC_total!=0))
+	{
+		printf("CC_idx_last %d, CC_id %d, CC_idx_last==CC_id %d, N_RB_DLmodCC_total %d, total_nb_available_rb %d, CC_total %d\n",CC_idx_last,CC_id,CC_idx_last==CC_id,(uint16_t)(frame_parms[CC_id]->N_RB_DL%CC_total!=0),(uint16_t) floor(frame_parms[CC_id]->N_RB_DL/CC_total)+1,CC_total);
+    		total_nb_available_rb[CC_id] = (uint16_t) floor(frame_parms[CC_id]->N_RB_DL/CC_total)+1;
+	        for (i=0;i<(uint16_t) floor(frame_parms[CC_id]->N_RB_DL/CC_total)+1;i++)
+	          if (eNB->common_channels[CC_id].vrb_map[i]!=0){
+		    total_nb_available_rb[CC_id]--;
+		    //printf("Common channels: PRB %d\n",i);
+	          } 
+	}
+	else
+	{
+		printf("CC_idx_last %d, CC_id %d, CC_idx_last==CC_id %d, N_RB_DLmodCC_total %d, total_nb_available_rb %d, CC_total %d\n",CC_idx_last,CC_id,CC_idx_last==CC_id,(uint16_t)(frame_parms[CC_id]->N_RB_DL%CC_total!=0),(uint16_t) floor(frame_parms[CC_id]->N_RB_DL/CC_total),CC_total);
+		total_nb_available_rb[CC_id] = (uint16_t) floor(frame_parms[CC_id]->N_RB_DL/CC_total);
+	        for (i=0;i<(uint16_t) floor(frame_parms[CC_id]->N_RB_DL/CC_total);i++)
+	          if (eNB->common_channels[CC_id].vrb_map[i]!=0){
+		    total_nb_available_rb[CC_id]--;
+		    //printf("Common channels: PRB %d\n",i);
+	          } 
+	}
+    }
+#else
     total_nb_available_rb[CC_id] = frame_parms[CC_id]->N_RB_DL;
     for (i=0;i<frame_parms[CC_id]->N_RB_DL;i++)
       if (eNB->common_channels[CC_id].vrb_map[i]!=0){
 	total_nb_available_rb[CC_id]--;
         //printf("Common channels: PRB %d\n",i);
       }
+#endif
+
     N_RBG[CC_id] = frame_parms[CC_id]->N_RBG;
 
     // store the global enb stats:
@@ -636,6 +695,7 @@ schedule_ue_spec(
         nb_rb = UE_list->UE_template[CC_id][UE_id].nb_rb[harq_pid];
 
         if (nb_rb <= nb_available_rb) {
+	  printf("round>0: CC_id %d, nb_available_rb %d, nb_rb %d\n", CC_id,nb_available_rb,nb_rb);
           if (frame_parms[CC_id]->frame_type == TDD) {
             UE_list->UE_template[CC_id][UE_id].DAI++;
             update_ul_dci(module_idP,CC_id,rnti,UE_list->UE_template[CC_id][UE_id].DAI);

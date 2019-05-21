@@ -790,10 +790,9 @@ rrc_eNB_free_mem_UE_context(
 //-----------------------------------------------------------------------------
 // should be called when UE is lost by eNB
 void
-rrc_eNB_free_UE(const module_id_t enb_mod_idP,const struct rrc_eNB_ue_context_s*        const ue_context_pP)
+rrc_eNB_free_UE(const module_id_t enb_mod_idP,const struct rrc_eNB_ue_context_s*        const ue_context_pP, uint8_t CC_id)
 //-----------------------------------------------------------------------------
 {
-
 
   protocol_ctxt_t                     ctxt;
 #if !defined(ENABLE_USE_MME)
@@ -802,8 +801,11 @@ rrc_eNB_free_UE(const module_id_t enb_mod_idP,const struct rrc_eNB_ue_context_s*
   (void)ue_module_id;
 #endif
   rnti_t rnti = ue_context_pP->ue_context.rnti;
-
-
+  if (CC_id!=UE_PCCID(enb_mod_idP,rnti)) 
+  {
+    printf("CC_id %d/ UE_PCCID %d: UE %d with rnti %x is already removed or is not associated to the actual Component carrier. Do nothing.\n",CC_id,UE_PCCID(enb_mod_idP,rnti),find_UE_id(enb_mod_idP,rnti),rnti);
+    return;
+  }
   AssertFatal(enb_mod_idP < NB_eNB_INST, "eNB inst invalid (%d/%d) for UE %x!", enb_mod_idP, NB_eNB_INST, rnti);
   /*  ue_context_p = rrc_eNB_get_ue_context(
                    &eNB_rrc_inst[enb_mod_idP],
@@ -813,6 +815,7 @@ rrc_eNB_free_UE(const module_id_t enb_mod_idP,const struct rrc_eNB_ue_context_s*
   if (NULL != ue_context_pP) {
     PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, enb_mod_idP, ENB_FLAG_YES, rnti, 0, 0,enb_mod_idP);
     LOG_W(RRC, "[eNB %d] Removing UE RNTI %x\n", enb_mod_idP, rnti);
+    printf("[eNB %d] Removing UE RNTI %x\n", enb_mod_idP, rnti);
 
 #if defined(ENABLE_USE_MME)
     rrc_eNB_send_S1AP_UE_CONTEXT_RELEASE_REQ(enb_mod_idP, ue_context_pP, S1AP_CAUSE_RADIO_NETWORK, 21); // send cause 21: connection with ue lost
@@ -4200,6 +4203,8 @@ rrc_eNB_decode_ccch(
             if ((ue_context_p = rrc_eNB_ue_context_random_exist(ctxt_pP, random_value))) {
               LOG_W(RRC, "new UE rnti %x (coming with random value) is already there as UE %x, removing %x from MAC/PHY\n",
                     ctxt_pP->rnti, ue_context_p->ue_context.rnti, ctxt_pP->rnti);
+              printf("new UE rnti %x (coming with random value) is already there as UE %x, removing %x from MAC/PHY\n",
+                    ctxt_pP->rnti, ue_context_p->ue_context.rnti, ctxt_pP->rnti);
 	      rrc_mac_remove_ue(ctxt_pP->module_id, ctxt_pP->rnti);
               ue_context_p = NULL;
               return 0;
@@ -4214,6 +4219,7 @@ rrc_eNB_decode_ccch(
             random_value = (((uint64_t)mme_code) << 32) | m_tmsi;
             if ((ue_context_p = rrc_eNB_ue_context_stmsi_exist(ctxt_pP, mme_code, m_tmsi))) {
 	      LOG_I(RRC," S-TMSI exists, ue_context_p %p, old rnti %x => %x\n",ue_context_p,ue_context_p->ue_context.rnti,ctxt_pP->rnti);
+	      printf("S-TMSI exists, ue_context_p %p, old rnti %x => %x\n",ue_context_p,ue_context_p->ue_context.rnti,ctxt_pP->rnti);
 	      rrc_mac_remove_ue(ctxt_pP->module_id, ue_context_p->ue_context.rnti);
 	      stmsi_received=1;
               /* replace rnti in the context */
@@ -4298,6 +4304,9 @@ rrc_eNB_decode_ccch(
         } else {
           // no context available
           LOG_I(RRC, PROTOCOL_RRC_CTXT_UE_FMT" Can't create new context for UE random UE identity (0x%" PRIx64 ")\n",
+                PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP),
+                random_value);
+          printf(" Can't create new context for UE random UE identity (0x%" PRIx64 ")\n",
                 PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP),
                 random_value);
 	  rrc_mac_remove_ue(ctxt_pP->module_id,ctxt_pP->rnti);

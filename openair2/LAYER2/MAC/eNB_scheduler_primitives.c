@@ -316,7 +316,7 @@ int rrc_mac_remove_ue(module_id_t mod_idP,rnti_t rntiP)
   int pCC_id;
 
   if (UE_id == -1) {
-printf("MAC: cannot remove UE rnti %x\n", rntiP);
+    printf("MAC: cannot remove UE rnti %x, CC_id %d\n", rntiP,UE_PCCID(mod_idP,UE_id));
     LOG_W(MAC,"rrc_mac_remove_ue: UE %x not found\n", rntiP);
     mac_phy_remove_ue(mod_idP, rntiP);
     return 0;
