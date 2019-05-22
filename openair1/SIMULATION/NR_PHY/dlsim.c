@@ -681,7 +681,7 @@ int main(int argc, char **argv)
   UE_mac->scheduled_response.frame = frame;
   UE_mac->scheduled_response.slot = slot;
 
-  for (SNR=snr0 ; SNR< snr1 ; SNR+=.5) {
+  for (SNR=snr0 ; SNR< snr1 ; SNR+=.2) {
 
     n_errors = 0;
     //n_errors2 = 0;
