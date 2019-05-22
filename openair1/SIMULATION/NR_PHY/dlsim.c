@@ -681,13 +681,13 @@ int main(int argc, char **argv)
   UE_mac->scheduled_response.frame = frame;
   UE_mac->scheduled_response.slot = slot;
 
-  for (SNR= -10 ; SNR< 2 ; SNR+=.5) {
+  for (SNR=snr0 ; SNR< snr1 ; SNR+=.5) {
 
     n_errors = 0;
     //n_errors2 = 0;
     //n_alamouti = 0;
 
-    for (trial=0; trial< 1000 ; trial++) {
+    for (trial=0; trial< n_trials ; trial++) {
 
       // multipath channel
       //multipath_channel(gNB2UE,s_re,s_im,r_re,r_im,frame_length_complex_samples,0);
