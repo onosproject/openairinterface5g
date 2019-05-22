@@ -523,7 +523,7 @@ uint32_t nr_dlsch_decoding(PHY_VARS_NR_UE *phy_vars_ue,
         ret = 2;
       }
       else {
-        printf("CRC NOK\n");
+        //printf("CRC NOK\n");
         ret = 1+dlsch->max_ldpc_iterations;
       }
 
@@ -1133,7 +1133,7 @@ uint32_t  nr_dlsch_decoding_mthread(PHY_VARS_NR_UE *phy_vars_ue,
         ret = 2;
       }
       else {
-        printf("CRC NOK\n");
+        //printf("CRC NOK\n");
         ret = 1+dlsch->max_ldpc_iterations;
       }
 

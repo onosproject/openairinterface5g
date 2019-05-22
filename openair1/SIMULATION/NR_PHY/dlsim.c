@@ -681,19 +681,19 @@ int main(int argc, char **argv)
   UE_mac->scheduled_response.frame = frame;
   UE_mac->scheduled_response.slot = slot;
 
-  for (SNR=snr0; SNR<snr1; SNR+=.2) {
+  for (SNR= -10 ; SNR< 2 ; SNR+=.5) {
 
     n_errors = 0;
     //n_errors2 = 0;
     //n_alamouti = 0;
 
-    for (trial=0; trial<n_trials; trial++) {
+    for (trial=0; trial< 1000 ; trial++) {
 
       // multipath channel
       //multipath_channel(gNB2UE,s_re,s_im,r_re,r_im,frame_length_complex_samples,0);
       
       //AWGN
-      sigma2_dB = 10*log10((double)txlev)-SNR;
+      sigma2_dB = 20*log10((double)AMP/4)-SNR; //10*log10((double)txlev)-SNR;
       sigma2 = pow(10,sigma2_dB/10);
       //      printf("sigma2 %f (%f dB)\n",sigma2,sigma2_dB);
 
@@ -725,7 +725,7 @@ int main(int argc, char **argv)
 	
 	nr_ue_scheduled_response(&UE_mac->scheduled_response);
 
-	printf("Running phy procedures UE RX %d.%d\n",frame,slot);
+	//printf("Running phy procedures UE RX %d.%d\n",frame,slot);
 
 	phy_procedures_nrUE_RX(UE,
 			       &UE_proc,
@@ -745,13 +745,13 @@ int main(int argc, char **argv)
 
     printf("SNR %f : n_errors (negative CRC) = %d/%d\n", SNR,n_errors,n_trials);
 
-    if ((float)n_errors/(float)n_trials <= target_error_rate) {
+   /* if ((float)n_errors/(float)n_trials <= target_error_rate) {
       printf("PDCCH test OK\n");
       break;
-    }
+    } */
       
-    if (n_trials==1)
-      break;
+    //if (n_trials==1)
+      //break;
 
   } // NSR
 
