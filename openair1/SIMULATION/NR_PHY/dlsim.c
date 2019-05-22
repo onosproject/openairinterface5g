@@ -745,10 +745,10 @@ int main(int argc, char **argv)
 
     printf("SNR %f : n_errors (negative CRC) = %d/%d\n", SNR,n_errors,n_trials);
 
-   /* if ((float)n_errors/(float)n_trials <= target_error_rate) {
+    if ((float)n_errors/(float)n_trials <= target_error_rate) {
       printf("PDCCH test OK\n");
       break;
-    } */
+    } 
       
     //if (n_trials==1)
       //break;
