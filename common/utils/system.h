@@ -44,8 +44,11 @@ void start_background_system(void);
 
 void set_latency_target(void);
 void configure_linux(void);
+  
+  void threadCreate_impl(pthread_t* t, void * (*func)(void*), void * param, char* name, int affinity, int priority, const char * funcName);
+#define threadCreate(t, f, p, n , a, prio) threadCreate_impl(t, f, p, n , a, prio, #f)
 
-void threadCreate(pthread_t* t, void * (*func)(void*), void * param, char* name, int affinity, int priority);
+  
 #define OAI_PRIORITY_RT_LOW sched_get_priority_min(SCHED_FIFO)
 #define OAI_PRIORITY_RT sched_get_priority_max(SCHED_FIFO)-10
 #define OAI_PRIORITY_RT_MAX sched_get_priority_max(SCHED_FIFO)

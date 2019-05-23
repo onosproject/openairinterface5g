@@ -68,7 +68,11 @@ mapping log_options[] = {
   {NULL,-1}
 };
 
-
+#define COMP_NAME(CoMP) #CoMP,
+static const char *predef_names[]={
+  FOREACH_COMP(COMP_NAME)
+};
+  
 mapping log_maskmap[] = LOG_MASKMAP_INIT;
 
 char *log_level_highlight_start[] = {LOG_RED, LOG_ORANGE, "", LOG_BLUE, LOG_CYBL};  /*!< \brief Optional start-format strings for highlighting */
@@ -248,12 +252,7 @@ void  log_getconfig(log_t *g_log) {
   memset(logparams_logfile,  0, sizeof(paramdef_t)*MAX_LOG_PREDEF_COMPONENTS);
 
   for (int i=MIN_LOG_COMPONENTS; i < MAX_LOG_PREDEF_COMPONENTS; i++) {
-    if(g_log->log_component[i].name == NULL) {
-      g_log->log_component[i].name = malloc(16);
-      sprintf((char *)g_log->log_component[i].name,"comp%i?",i);
-      logparams_logfile[i].paramflags = PARAMFLAG_DONOTREAD;
-      logparams_level[i].paramflags = PARAMFLAG_DONOTREAD;
-    }
+    AssertFatal(g_log->log_component[i].name, "Must have been intialized before\n");
 
     sprintf(logparams_level[i].optname,    LOG_CONFIG_LEVEL_FORMAT,       g_log->log_component[i].name);
     sprintf(logparams_logfile[i].optname,  LOG_CONFIG_LOGFILE_FORMAT,     g_log->log_component[i].name);
@@ -282,8 +281,8 @@ void  log_getconfig(log_t *g_log) {
 
   /* now set the log levels and infile option, according to what we read */
   for (int i=MIN_LOG_COMPONENTS; i < MAX_LOG_PREDEF_COMPONENTS; i++) {
-    g_log->log_component[i].level = map_str_to_int(log_level_names,    *(logparams_level[i].strptr));
-    set_log(i, g_log->log_component[i].level);
+    int level = map_str_nocase_to_int(log_level_names,    *(logparams_level[i].strptr));
+    set_log(i, level);
 
     if (*(logparams_logfile[i].uptr) == 1)
       set_component_filelog(i);
@@ -323,7 +322,7 @@ void  log_getconfig(log_t *g_log) {
   set_glog_onlinelog(consolelog);
 }
 
-int register_log_component(char *name, char *fext, int compidx) {
+int register_log_component(const char *name, char *fext, const int compidx) {
   int computed_compidx=compidx;
 
   if (strlen(fext) > 3) {
@@ -345,6 +344,7 @@ int register_log_component(char *name, char *fext, int compidx) {
     g_log->log_component[computed_compidx].filelog = 0;
     g_log->log_component[computed_compidx].filelog_name = malloc(strlen(name)+16);/* /tmp/<name>.%s  */
     sprintf(g_log->log_component[computed_compidx].filelog_name,"/tmp/%s.%s",name,fext);
+    set_log(computed_compidx, OAILOG_ERR);
   } else {
     fprintf(stderr,"{LOG} %s %d Couldn't register componemt %s\n",__FILE__,__LINE__,name);
   }
@@ -362,45 +362,18 @@ int logInit (void) {
   }
 
   memset(g_log,0,sizeof(log_t));
-  register_log_component("PHY","log",PHY);
-  register_log_component("MAC","log",MAC);
-  register_log_component("OPT","log",OPT);
-  register_log_component("RLC","log",RLC);
-  register_log_component("PDCP","log",PDCP);
-  register_log_component("RRC","log",RRC);
+  for (int i=MIN_LOG_COMPONENTS; i < MAX_LOG_PREDEF_COMPONENTS; i++) {
+    register_log_component(predef_names[i], "log", i+MIN_LOG_COMPONENTS);
+  }
+
   register_log_component("OMG","csv",OMG);
-  register_log_component("OTG","log",OTG);
   register_log_component("OTG_LATENCY","dat",OTG_LATENCY);
   register_log_component("OTG_LATENCY_BG","dat",OTG_LATENCY_BG);
   register_log_component("OTG_GP","dat",OTG_GP);
   register_log_component("OTG_GP_BG","dat",OTG_GP_BG);
   register_log_component("OTG_JITTER","dat",OTG_JITTER);
-  register_log_component("OCG","",OCG);
-  register_log_component("PERF","",PERF);
-  register_log_component("OIP","",OIP);
-  register_log_component("CLI","",CLI);
-  register_log_component("MSC","log",MSC);
-  register_log_component("OCM","log",OCM);
-  register_log_component("HW","",HW);
-  register_log_component("OSA","",OSA);
-  register_log_component("eRAL","",RAL_ENB);
-  register_log_component("mRAL","",RAL_UE);
-  register_log_component("ENB_APP","log",ENB_APP);
-  register_log_component("FLEXRAN_AGENT","log",FLEXRAN_AGENT);
-  register_log_component("TMR","",TMR);
   register_log_component("USIM","txt",USIM);
   register_log_component("SIM","txt",SIM);
-  /* following log component are used for the localization*/
-  register_log_component("LOCALIZE","log",LOCALIZE);
-  register_log_component("NAS","log",NAS);
-  register_log_component("UDP","",UDP_);
-  register_log_component("GTPV1U","",GTPU);
-  register_log_component("S1AP","",S1AP);
-  register_log_component("X2AP","",X2AP);
-  register_log_component("SCTP","",SCTP);
-  register_log_component("X2AP","",X2AP);
-  register_log_component("LOADER","log",LOADER);
-  register_log_component("ASN","log",ASN);
 
   for (int i=0 ; log_level_names[i].name != NULL ; i++)
     g_log->level2string[i]           = toupper(log_level_names[i].name[0]); // uppercased first letter of level name
@@ -497,10 +470,8 @@ int set_log(int component, int level) {
            component, MIN_LOG_COMPONENTS, MAX_LOG_COMPONENTS);
   DevCheck((level < NUM_LOG_LEVEL) && (level >= OAILOG_DISABLE), level, NUM_LOG_LEVEL,
            OAILOG_ERR);
-
   if ( g_log->log_component[component].level != OAILOG_DISABLE )
-    g_log->log_component[component].savedlevel = g_log->log_component[component].level;
-
+    g_log->log_component[component].savedlevel = level;
   g_log->log_component[component].level = level;
   return 0;
 }
@@ -582,6 +553,20 @@ int map_str_to_int(mapping *map, const char *str) {
     }
 
     if (!strcmp(map->name, str)) {
+      return(map->value);
+    }
+
+    map++;
+  }
+}
+int map_str_nocase_to_int(mapping *map, const char *str) {
+  while (1) {
+    if (map->name == NULL) {
+      return(-1);
+    }
+    printf("cmp: %s, %s, res %d\n", map->name, str, strcasecmp(map->name, str));
+    if (!strcasecmp(map->name, str)) {
+	    printf ("found \n");
       return(map->value);
     }
 

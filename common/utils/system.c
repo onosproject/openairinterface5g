@@ -197,7 +197,8 @@ void start_background_system(void) {
 }
 
 
-void threadCreate(pthread_t* t, void * (*func)(void*), void * param, char* name, int affinity, int priority){
+void threadCreate_impl(pthread_t* t, void * (*func)(void*), void * param, char* name, int affinity, int priority, const char *functionName){
+  LOG_I(TMR, "creating thread: %s, for function %s, priotity %d\n", name, functionName, priority);
   pthread_attr_t attr;
   pthread_attr_init(&attr);
   pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);

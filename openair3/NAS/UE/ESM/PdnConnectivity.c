@@ -358,7 +358,7 @@ int esm_proc_pdn_connectivity_accept(nas_user_t *user, int pti, esm_proc_pdn_typ
   int     pid = RETURNerror;
   char    apn_first_char[4];
 
-  LOG_VAR(char,    str[128]);
+  LOG_USEDINLOG_VAR(char,    str[128]);
 
   if (isprint(apn->value[0])) {
     apn_first_char[0] = '\0';

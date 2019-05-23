@@ -1265,11 +1265,11 @@ void init_RU(const char *rf_config_file) {
 }
 
 int main( int argc, char **argv ) {
-  start_background_system();
   AssertFatal(load_configmodule(argc,argv) != NULL, "");
+  logInit();
+  start_background_system();
   mode = normal_txrx;
   configure_linux();
-  logInit();
   printf("Reading in command-line options\n");
   get_options ();
   set_taus_seed (0);

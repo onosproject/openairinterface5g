@@ -176,56 +176,57 @@ extern "C" {
 #define SET_LOG_DUMP(B)   g_log->dump_mask = (g_log->dump_mask | B)
 #define CLEAR_LOG_DUMP(B) g_log->dump_mask = (g_log->dump_mask & (~B))
 
-
-
+#define FOREACH_COMP(COMP)			\
+  COMP(PHY)					\
+  COMP(MAC)					\
+  COMP(EMU)					\
+  COMP(SIM)					\
+  COMP(OCG)					\
+  COMP(OMG)					\
+  COMP(OPT)					\
+  COMP(OTG)					\
+  COMP(OTG_LATENCY)				\
+  COMP(OTG_LATENCY_BG)				\
+  COMP(OTG_GP)					\
+  COMP(OTG_GP_BG)				\
+  COMP(OTG_JITTER)				\
+  COMP(RLC)					\
+  COMP(PDCP)					\
+  COMP(RRC)					\
+  COMP(NAS)					\
+ COMP( PERF)					\
+  COMP(OIP)					\
+  COMP(CLI)					\
+  COMP(MSC)					\
+  COMP(OCM)					\
+  COMP(UDP_)					\
+  COMP(GTPU)					\
+  COMP(SPGW)					\
+  COMP(S1AP)					\
+  COMP(SCTP)					\
+  COMP(HW)					\
+  COMP(OSA)					\
+  COMP(RAL_ENB)					\
+  COMP(RAL_UE)					\
+  COMP(ENB_APP)					\
+  COMP(FLEXRAN_AGENT)				\
+  COMP(TMR)					\
+  COMP(USIM)					\
+  COMP(LOCALIZE)				\
+  COMP(X2AP)					\
+  COMP(GNB_APP)					\
+  COMP(NR_RRC)					\
+  COMP(NR_MAC)					\
+  COMP(NR_PHY)					\
+  COMP(LOADER)					\
+  COMP(ASN)
+ 
+#define COMP_ENUM(CoMP) CoMP,
+#define MIN_LOG_COMPONENTS 0
 typedef enum {
-  MIN_LOG_COMPONENTS = 0,
-  PHY = MIN_LOG_COMPONENTS,
-  MAC,
-  EMU,
-  SIM,
-  OCG,
-  OMG,
-  OPT,
-  OTG,
-  OTG_LATENCY,
-  OTG_LATENCY_BG,
-  OTG_GP,
-  OTG_GP_BG,
-  OTG_JITTER,
-  RLC,
-  PDCP,
-  RRC,
-  NAS,
-  PERF,
-  OIP,
-  CLI,
-  MSC,
-  OCM,
-  UDP_,
-  GTPU,
-  SPGW,
-  S1AP,
-  SCTP,
-  HW,
-  OSA,
-  RAL_ENB,
-  RAL_UE,
-  ENB_APP,
-  FLEXRAN_AGENT,
-  TMR,
-  USIM,
-  LOCALIZE,
-  X2AP,
-  GNB_APP,
-  NR_RRC,
-  NR_MAC,
-  NR_PHY,
-  LOADER,
-  ASN,
-  MAX_LOG_PREDEF_COMPONENTS,
-}
-comp_name_t;
+  FOREACH_COMP(COMP_ENUM)
+  MAX_LOG_PREDEF_COMPONENTS
+} comp_name_t;
 
 #define MAX_LOG_DYNALLOC_COMPONENTS 20
 #define MAX_LOG_COMPONENTS (MAX_LOG_PREDEF_COMPONENTS + MAX_LOG_DYNALLOC_COMPONENTS)
@@ -300,11 +301,12 @@ void set_component_filelog(int comp);
 void close_component_filelog(int comp);
 void set_component_consolelog(int comp);
 int  map_str_to_int(mapping *map, const char *str);
+int  map_str_nocase_to_int(mapping *map, const char *str);
 char *map_int_to_str(mapping *map, int val);
 void logClean (void);
 int  is_newline( char *str, int size);
 
-int register_log_component(char *name, char *fext, int compidx);
+int register_log_component(const char *name, char *fext, const int compidx);
 
 /* @}*/
 
@@ -360,7 +362,9 @@ int32_t write_file_matlab(const char *fname, const char *vname, void *data, int 
 #define LOG_DUMP_DOUBLE     1
 // debugging macros
 #define LOG_F  LOG_I           /* because  LOG_F was originaly to dump a message or buffer but is also used as a regular level...., to dump use LOG_DUMPMSG */
-#  if T_TRACER
+#  ifndef T_TRACER
+#define T_stdout 1
+#endif
 /* per component, level dependant macros */
 #    define LOG_E(c, x...) do { if (T_stdout) { if( g_log->log_component[c].level >= OAILOG_ERR    ) logRecord_mt(__FILE__, __FUNCTION__, __LINE__,c, OAILOG_ERR, x)     ;} else { T(T_LEGACY_ ## c ## _ERROR, T_PRINTF(x))   ;}} while (0)
 #    define LOG_W(c, x...) do { if (T_stdout) { if( g_log->log_component[c].level >= OAILOG_WARNING) logRecord_mt(__FILE__, __FUNCTION__, __LINE__,c, OAILOG_WARNING, x) ;} else { T(T_LEGACY_ ## c ## _WARNING, T_PRINTF(x)) ;}} while (0)
@@ -377,21 +381,7 @@ int32_t write_file_matlab(const char *fname, const char *vname, void *data, int 
 #    define LOG_DUMPFLAG(D) (g_log->dump_mask & D)
 #    define LOG_M(file, vector, data, len, dec, format) do { write_file_matlab(file, vector, data, len, dec, format);} while(0)/* */
 /* define variable only used in LOG macro's */
-#    define LOG_VAR(A,B) A B
-#  else /* T_TRACER: remove all debugging and tracing messages, except errors */
-#    define LOG_I(c, x...) do {logRecord_mt(__FILE__, __FUNCTION__, __LINE__,c, OAILOG_INFO, x) ; } while(0)/* */
-#    define LOG_W(c, x...) do {logRecord_mt(__FILE__, __FUNCTION__, __LINE__,c, OAILOG_WARNING, x) ; } while(0)/* */
-#    define LOG_E(c, x...) do {logRecord_mt(__FILE__, __FUNCTION__, __LINE__,c, OAILOG_ERR, x) ; } while(0)/* */
-#    define LOG_D(c, x...) do {logRecord_mt(__FILE__, __FUNCTION__, __LINE__,c, OAILOG_DEBUG, x) ; } while(0)/* */
-#    define LOG_T(c, x...) /* */
 
-#    define LOG_DUMPMSG(c, b, s, x...) /* */
-#    define nfapi_log(FILE, FNC, LN, COMP, LVL, FMT...)
-#    define LOG_DEBUGFLAG(D)  ( 0 )
-#    define LOG_DUMPFLAG(D) ( 0 )
-#    define LOG_M(file, vector, data, len, dec, format) do { write_file_matlab(file, vector, data, len, dec, format);} while(0)
-#    define LOG_VAR(A,B)
-#  endif /* T_TRACER */
 /* avoid warnings for variables only used in LOG macro's but set outside debug section */
 #define GCC_NOTUSED   __attribute__((unused))
 #define LOG_USEDINLOG_VAR(A,B) GCC_NOTUSED A B
