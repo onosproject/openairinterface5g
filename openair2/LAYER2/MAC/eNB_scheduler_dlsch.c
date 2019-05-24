@@ -60,7 +60,7 @@
 #include "T.h"
 
 #define ENABLE_MAC_PAYLOAD_DEBUG
-#define COORDINATED_SCHEDULING 1
+//#define COORDINATED_SCHEDULING 1
 //#define DEBUG_eNB_SCHEDULER 1
 
 
@@ -100,12 +100,14 @@ schedule_next_dlue(
   UE_list_t *UE_list=&eNB_mac_inst[module_idP].UE_list;
 
   for (next_ue=UE_list->head; next_ue>=0; next_ue=UE_list->next[next_ue] ) {
+    if (CC_id!=UE_PCCID(module_idP,next_ue)) continue;
     if  (eNB_dlsch_info[module_idP][CC_id][next_ue].status == S_DL_WAITING) {
       return next_ue;
     }
   }
 
   for (next_ue=UE_list->head; next_ue>=0; next_ue=UE_list->next[next_ue] ) {
+    if (CC_id!=UE_PCCID(module_idP,next_ue)) continue;
     if  (eNB_dlsch_info[module_idP][CC_id][next_ue].status == S_DL_BUFFERED) {
       eNB_dlsch_info[module_idP][CC_id][next_ue].status = S_DL_WAITING;
     }
@@ -499,7 +501,7 @@ schedule_ue_spec(
     frame_parms[CC_id] = mac_xface->get_lte_frame_parms(module_idP,CC_id);
     // get number of PRBs less those used by common channels
 #ifdef COORDINATED_SCHEDULING
-    if (subframeP==0 || subframeP==5 || num_UEs==UE_list->num_UEs[CC_id])
+    if (subframeP==0 || subframeP==5 || CC_total==1)
     {
     	total_nb_available_rb[CC_id] = frame_parms[CC_id]->N_RB_DL;
     	for (i=0;i<frame_parms[CC_id]->N_RB_DL;i++)
@@ -570,6 +572,7 @@ schedule_ue_spec(
       return;
 
     for (UE_id=UE_list->head; UE_id>=0; UE_id=UE_list->next[UE_id]) {
+      if (CC_id!=UE_PCCID(module_idP,UE_id)) continue;
       continue_flag=0; // reset the flag to allow allocation for the remaining UEs
       rnti = UE_RNTI(module_idP,UE_id);
       //printf("schedule_ue_spec: ue_rnti %x, UE_id %d, eNB %d, CC_id %d\n",rnti,UE_id,module_idP,CC_id);
@@ -649,8 +652,26 @@ schedule_ue_spec(
                       1,
                       format1,
                       0);
-
+#ifdef COORDINATED_SCHEDULING
+      if (subframeP==0 || subframeP==5 || num_UEs==UE_list->num_UEs[CC_id])
+	nb_available_rb = ue_sched_ctl->pre_nb_available_rbs[CC_id];
+      else
+      {
+	if ((uint16_t)(CC_idx_last==CC_id)&&(uint16_t)(frame_parms[CC_id]->N_RB_DL%CC_total!=0))
+	{
+		if ((ue_sched_ctl->pre_nb_available_rbs[CC_id] > (uint16_t) floor(frame_parms[CC_id]->N_RB_DL/CC_total+1)))
+      			nb_available_rb = (uint16_t) floor(frame_parms[CC_id]->N_RB_DL/CC_total+1);
+	}
+	else
+	{
+		if ((ue_sched_ctl->pre_nb_available_rbs[CC_id] > (uint16_t) floor(frame_parms[CC_id]->N_RB_DL/CC_total)))
+			nb_available_rb = (uint16_t) floor(frame_parms[CC_id]->N_RB_DL/CC_total);
+	}
+      }
+	
+#else
       nb_available_rb = ue_sched_ctl->pre_nb_available_rbs[CC_id];
+#endif
       harq_pid = ue_sched_ctl->harq_pid[CC_id];
       round = ue_sched_ctl->round[CC_id];
       UE_list->eNB_UE_stats[CC_id][UE_id].crnti= rnti;
@@ -695,7 +716,7 @@ schedule_ue_spec(
         nb_rb = UE_list->UE_template[CC_id][UE_id].nb_rb[harq_pid];
 
         if (nb_rb <= nb_available_rb) {
-	  printf("round>0: CC_id %d, nb_available_rb %d, nb_rb %d\n", CC_id,nb_available_rb,nb_rb);
+	  printf("round>0: CC_id %d, nb_available_rb %d, nb_rb %d, subframe %d\n", CC_id,nb_available_rb,nb_rb,subframeP);
           if (frame_parms[CC_id]->frame_type == TDD) {
             UE_list->UE_template[CC_id][UE_id].DAI++;
             update_ul_dci(module_idP,CC_id,rnti,UE_list->UE_template[CC_id][UE_id].DAI);
@@ -1087,7 +1108,7 @@ schedule_ue_spec(
           }
 
           TBS = mac_xface->get_TBS_DL(mcs,nb_rb);
-
+	  printf("schedule_ue_spec (before while): nb_rb %d\n", nb_rb);
           while (TBS < (sdu_length_total + header_len_dcch + header_len_dtch + ta_len))  {
             nb_rb += min_rb_unit[CC_id];  //
 
@@ -1099,8 +1120,9 @@ schedule_ue_spec(
             }
 
             TBS = mac_xface->get_TBS_DL(eNB_UE_stats->dlsch_mcs1,nb_rb);
+	    printf("schedule_ue_spec (inside while): nb_rb %d\n", nb_rb);
           }
-
+          printf("schedule_ue_spec (after while): nb_rb %d\n", nb_rb);
           if(nb_rb == ue_sched_ctl->pre_nb_available_rbs[CC_id]) {
             for(j=0; j<frame_parms[CC_id]->N_RBG; j++) { // for indicating the rballoc for each sub-band
               UE_list->UE_template[CC_id][UE_id].rballoc_subband[harq_pid][j] = ue_sched_ctl->rballoc_sub_UE[CC_id][j];
@@ -1221,7 +1243,7 @@ schedule_ue_spec(
 
           T(T_ENB_MAC_UE_DL_PDU_WITH_DATA, T_INT(module_idP), T_INT(CC_id), T_INT(rnti), T_INT(frameP), T_INT(subframeP),
             T_INT(harq_pid), T_BUFFER(UE_list->DLSCH_pdu[CC_id][0][UE_id].payload[0], TBS));
-
+	  printf("schedule_ue_spec assignation UE_list->UE_template[CC_id][UE_id].nb_rb[harq_pid]: nb_rb %d\n", nb_rb);
 	  UE_list->UE_template[CC_id][UE_id].nb_rb[harq_pid] = nb_rb;
 
           add_ue_dlsch_info(module_idP,
@@ -1783,6 +1805,7 @@ fill_DLSCH_dci(
 
     // UE specific DCIs
     for (UE_id=UE_list->head; UE_id>=0; UE_id=UE_list->next[UE_id]) {
+      if (CC_id!=UE_PCCID(module_idP,UE_id)) continue;
       LOG_T(MAC,"CC_id %d, UE_id: %d => status %d\n",CC_id,UE_id,eNB_dlsch_info[module_idP][CC_id][UE_id].status);
 
       if (eNB_dlsch_info[module_idP][CC_id][UE_id].status == S_DL_SCHEDULED) {
