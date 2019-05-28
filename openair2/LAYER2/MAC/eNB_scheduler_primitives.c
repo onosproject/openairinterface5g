@@ -4347,6 +4347,10 @@ extract_harq(module_id_t mod_idP,
 		    /* CDRX: PUCCH gives an NACK and max number of repetitions reached so reset corresponding HARQ RTT */
             sched_ctl->harq_rtt_timer[CC_idP][harq_pid] = 0;
 		}
+	
+	}else if( (num_ack_nak == 1) && (pdu[TB1] == 1) ){	// ACK
+		sched_ctl->round[CC_idP][harq_pid][swap_flg] = 8;	// release HARQ process
+		sched_ctl->rsn[CC_idP][harq_pid][swap_flg]   = 0;
 	} else if(   (num_ack_nak == 1)
 	        && (pdu[TB1] == 2 || pdu[TB1] == 4)) {		// NAK (treat DTX as NAK)
 		sched_ctl->round[CC_idP][harq_pid][swap_flg]++;		// increment round
