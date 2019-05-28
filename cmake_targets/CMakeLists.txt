@@ -2383,6 +2383,7 @@ add_executable(ocpsoftmodem
   ${OPENAIR_TARGETS}/ARCH/COMMON/common_lib.c
   ${OPENAIR_DIR}/common/utils/utils.c
   ${OPENAIR_DIR}/common/utils/system.c
+  ${OPENAIR_DIR}/common/utils/threadPool/thread-pool.c
   ${GTPU_need_ITTI}
   ${T_SOURCE}
   ${CONFIG_SOURCES}

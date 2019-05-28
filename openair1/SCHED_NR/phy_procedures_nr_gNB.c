@@ -143,18 +143,25 @@ void phy_procedures_gNB_TX(PHY_VARS_gNB *gNB,
   if ((cfg->subframe_config.duplex_mode.value == TDD) && (nr_slot_select(cfg,slot)==SF_UL)) return;
 
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_ENB_TX+offset,1);
+   initRefTimes(mem);
+   initRefTimes(sign);
+   initRefTimes(dci);
+   initRefTimes(pdsch);
 
   if (do_meas==1) start_meas(&gNB->phy_proc_tx);
 
+  pickTime(beg);
   // clear the transmit data array for the current subframe
   for (aa=0; aa<1/*15*/; aa++) {
     memset(gNB->common_vars.txdataF[aa],0,fp->samples_per_slot_wCP*sizeof(int32_t));
   }
-
+    updateTimes(beg, &mem, 1000, "emem");
+    pickTime(beg2);
   if (nfapi_mode == 0 || nfapi_mode == 1) {
     nr_common_signal_procedures(gNB,frame, slot);
     //if (frame == 9)
     //write_output("txdataF.m","txdataF",gNB->common_vars.txdataF[aa],fp->samples_per_frame_wCP, 1, 1);
+    updateTimes(beg2, &sign, 1000, "sign");
   }
 
   num_dci = gNB->pdcch_vars.num_dci;
@@ -165,18 +172,23 @@ void phy_procedures_gNB_TX(PHY_VARS_gNB *gNB,
     Calling nr_generate_dci_top (number of DCI %d)\n", gNB->Mod_id, frame, slot, num_dci);
 
     if (nfapi_mode == 0 || nfapi_mode == 1) {
+        pickTime(beg3);
+
       nr_generate_dci_top(gNB->pdcch_vars,
                           gNB->nr_gold_pdcch_dmrs[slot],
                           gNB->common_vars.txdataF[0],
                           AMP, *fp, *cfg);
+    updateTimes(beg3, &dci, 1000, "dic");
+    pickTime(beg4);
 
       if (num_pdsch_rnti) {
-        LOG_I(PHY, "PDSCH generation started (%d)\n", num_pdsch_rnti);
+        LOG_I(PHY, "PDSCH generation started slot %d (%d)\n", slot, num_pdsch_rnti);
         nr_generate_pdsch(*gNB->dlsch[0][0],
                           gNB->pdcch_vars.dci_alloc[0],
                           gNB->nr_gold_pdsch_dmrs[slot],
                           gNB->common_vars.txdataF,
                           AMP, slot, *fp, *cfg);
+    updateTimes(beg4, &pdsch, 1000, "pdsch");
       }
     }
   }

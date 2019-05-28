@@ -25,6 +25,7 @@
 #include <common/utils/threadPool/thread-pool.h>
 
 RAN_CONTEXT_t RC;
+tpool_t * Tpool;
 volatile int oai_exit = 0;
 char   rf_config_file[1024]="";
 unsigned int mmapped_dma=0;
@@ -296,7 +297,11 @@ static inline int rxtx(PHY_VARS_gNB *gNB,gNB_L1_rxtx_proc_t *proc, char *thread_
   // (may be relaxed in the future for performance reasons)
   // *****************************************
   //if (wait_CCs(proc)<0) return(-1);
+  uint64_t a=rdtsc();
   phy_procedures_gNB_TX(gNB, proc, 1);
+  uint64_t b=rdtsc() -a;
+  if (b/3500.0 > 100 )
+    printf("processin: %d, %ld \n", proc->slot_rx, b/3500);
   return(0);
 }
 
@@ -717,6 +722,26 @@ bool setup_RU_buffers(RU_t *ru) {
   return(true);
 }
 
+static void modulateSend (void* arg) {
+  RU_t *ru=*(RU_t**)arg;
+  if(ru->num_eNB==0) {
+    // do TX front-end processing if needed (precoding and/or IDFTs)
+    if (ru->feptx_prec)
+      ru->feptx_prec(ru);
+    
+    // do OFDM if needed
+    if ((ru->fh_north_asynch_in == NULL) && (ru->feptx_ofdm))
+      ru->feptx_ofdm(ru);
+    
+    // do outgoing fronthaul (south) if needed
+    if ((ru->fh_north_asynch_in == NULL) && (ru->fh_south_out))
+      ru->fh_south_out(ru);
+    
+    if (ru->fh_north_out)
+      ru->fh_north_out(ru);
+  }
+}
+
 static void *ru_thread( void *param ) {
   RU_t               *ru      = (RU_t *)param;
   RU_proc_t          *proc    = &ru->proc;
@@ -729,12 +754,6 @@ static void *ru_thread( void *param ) {
   sprintf(threadname,"ru_thread %d",ru->idx);
   LOG_I(PHY,"Starting RU %d (%s,%s),\n",ru->idx,NB_functions[ru->function],NB_timing[ru->if_timing]);
 
-  // Start IF device if any
-  if (ru->start_if) {
-    LOG_I(PHY,"Starting IF interface for RU %d\n",ru->idx);
-    AssertFatal(ru->start_if(ru,NULL) == 0, "Could not start the IF device\n");
-    AssertFatal(connect_rau(ru)==0,"Cannot connect to remote radio\n");
-  }
 
   if (ru->if_south == LOCAL_RF) { // configure RF parameters only
     fill_rf_config(ru,ru->rf_config_file);
@@ -764,8 +783,18 @@ static void *ru_thread( void *param ) {
   LOG_I(PHY, "wait main thread that RU %d is ready\n",ru->idx);
   delNotifiedFIFO_elt(pullNotifiedFIFO(&ruThreadFIFO));
 
-  // This is a forever while loop, it loops over subframes which are scheduled by incoming samples from HW devices
+  // Start IF device if any
+  if (ru->start_if) {
+    LOG_I(PHY,"Starting IF interface for RU %d\n",ru->idx);
+    AssertFatal(ru->start_if(ru,NULL) == 0, "Could not start the IF device\n");
+    AssertFatal(connect_rau(ru)==0,"Cannot connect to remote radio\n");
+  }
   
+  // This is a forever while loop, it loops over subframes which are scheduled by incoming samples from HW devices
+  initRefTimes(rx);
+  initRefTimes(frx);
+  initRefTimes(mainProc);
+
   while (!oai_exit) {
     // these are local subframe/frame counters to check that we are in synch with the fronthaul timing.
     // They are set on the first rx/tx in the underly FH routines.
@@ -777,6 +806,7 @@ static void *ru_thread( void *param ) {
       slot++;
     }
 
+    pickTime(beg);
     // synchronization on input FH interface, acquire signals/data and block
     AssertFatal(ru->fh_south_in, "No fronthaul interface at south port");
     ru->fh_south_in(ru,&frame,&slot);
@@ -801,35 +831,32 @@ static void *ru_thread( void *param ) {
     if (ru->idx!=0)
       proc->frame_tx = (proc->frame_tx+proc->frame_offset)&1023;
 
+    updateTimes(beg, &rx, 1000, "trx_read");
+    pickTime(beg2);
+
+    if (rx.iterations%1000 == 0 ) printf("%d \n", rx.iterations);
+
     // do RX front-end processing (frequency-shift, dft) if needed
     if (ru->feprx)
       ru->feprx(ru);
 
     // At this point, all information for subframe has been received on FH interface
+    updateTimes(beg2, &frx, 1000, "feprx");
+    pickTime(beg3);
 
     // wakeup all gNB processes waiting for this RU
     for (int gnb=0; gnb < ru->num_gNB; gnb++)
       ru->gNB_top(ru->gNB_list[gnb],ru->proc.frame_rx,ru->proc.tti_rx,"not def",ru);
 
-    if(ru->num_eNB==0) {
-      // do TX front-end processing if needed (precoding and/or IDFTs)
-      if (ru->feptx_prec)
-        ru->feptx_prec(ru);
-
-      // do OFDM if needed
-      if ((ru->fh_north_asynch_in == NULL) && (ru->feptx_ofdm))
-        ru->feptx_ofdm(ru);
-
-      // do outgoing fronthaul (south) if needed
-      if ((ru->fh_north_asynch_in == NULL) && (ru->fh_south_out))
-        ru->fh_south_out(ru);
-
-      if (ru->fh_north_out)
-        ru->fh_north_out(ru);
-    }
+    updateTimes(beg3, &mainProc, 1000, "rxtx");
+    
+    notifiedFIFO_elt_t *txWork=newNotifiedFIFO_elt(0,0,NULL,modulateSend);
+    void **tmp= (void**)NotifiedFifoData(txWork);
+    *tmp=(void*)ru;
+    pushTpool(Tpool,txWork);
   }
 
-  notifiedFIFO_elt_t *msg2=newNotifiedFIFO_elt(0,AbortRU,NULL,NULL);
+  notifiedFIFO_elt_t *msg2=newNotifiedFIFO_elt(sizeof(ru),AbortRU,NULL,modulateSend);
   pushNotifiedFIFO(&mainThreadFIFO,msg2);
   return NULL;
 }
@@ -1264,6 +1291,7 @@ void init_RU(const char *rf_config_file) {
   LOG_D(HW,"[nr-softmodem.c] RU threads created\n");
 }
 
+
 int main( int argc, char **argv ) {
   AssertFatal(load_configmodule(argc,argv) != NULL, "");
   logInit();
@@ -1289,6 +1317,11 @@ int main( int argc, char **argv ) {
   pthread_cond_init(&sync_cond,NULL);
   pthread_mutex_init(&sync_mutex, NULL);
 
+  tpool_t pool;
+  Tpool=&pool;
+  char params[]="-1,-1";
+  initTpool(params, Tpool, false);
+
   if (do_forms==1) {
     loader_shlibfunc_t shlib_fdesc[1]= {0};
     shlib_fdesc[0].fname="startScope";
@@ -1310,16 +1343,16 @@ int main( int argc, char **argv ) {
 
   for (int ru=0; ru<RC.nb_RU; ru++)
     msgs[ru]=pullNotifiedFIFO(&mainThreadFIFO);
+
   init_eNB_afterRU();
-  
+
   for (int ru=0; ru<RC.nb_RU; ru++)
     pushNotifiedFIFO(msgs[ru]->reponseFifo, msgs[ru]);
-  
+
   pthread_mutex_lock(&sync_mutex);
   sync_var=0;
   pthread_cond_broadcast(&sync_cond);
   pthread_mutex_unlock(&sync_mutex);
-
   // When threads leaves, they  send a final message to main
   notifiedFIFO_elt_t *msg=pullNotifiedFIFO(&mainThreadFIFO);
   return 0;

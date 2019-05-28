@@ -35,6 +35,7 @@
 #define byteToSample(a,b) ((a)/(sizeof(sample_t)*(b)))
 
 #define sample_t uint32_t //2*16 bits complex number
+pthread_mutex_t Sockmutex;
 
 typedef struct buffer_s {
   int conn_sock;
@@ -212,6 +213,7 @@ sin_addr:
 
 uint64_t lastW=-1;
 int rfsimulator_write(openair0_device *device, openair0_timestamp timestamp, void **samplesVoid, int nsamps, int nbAnt, int flags) {
+  pthread_mutex_lock(&Sockmutex);
   rfsimulator_state_t *t = device->priv;
   LOG_D(HW,"sending %d samples at time: %ld\n", nsamps, timestamp);
 
@@ -237,25 +239,30 @@ int rfsimulator_write(openair0_device *device, openair0_timestamp timestamp, voi
   lastW=timestamp;
   LOG_D(HW,"sent %d samples at time: %ld->%ld, energy in first antenna: %d\n",
         nsamps, timestamp, timestamp+nsamps, signal_energy(samplesVoid[0], nsamps) );
+
   // Let's verify we don't have incoming data
   // This is mandatory when the opposite side don't transmit
   flushInput(t, 0);
+  pthread_mutex_unlock(&Sockmutex);
   return nsamps;
 }
 
 static bool flushInput(rfsimulator_state_t *t, int timeout) {
   // Process all incoming events on sockets
   // store the data in lists
+
   struct epoll_event events[FD_SETSIZE]= {0};
   int nfds = epoll_wait(t->epollfd, events, FD_SETSIZE, timeout);
 
   if ( nfds==-1 ) {
-    if ( errno==EINTR || errno==EAGAIN )
+    if ( errno==EINTR || errno==EAGAIN ) {
       return false;
+    }
     else
       AssertFatal(false,"error in epoll_wait\n");
   }
 
+  
   for (int nbEv = 0; nbEv < nfds; ++nbEv) {
     int fd=events[nbEv].data.fd;
 
@@ -345,7 +352,6 @@ static bool flushInput(rfsimulator_state_t *t, int timeout) {
       }
     }
   }
-
   return nfds>0;
 }
 
@@ -354,6 +360,7 @@ int rfsimulator_read(openair0_device *device, openair0_timestamp *ptimestamp, vo
     LOG_E(HW, "rfsimulator: only 1 antenna tested\n");
     exit(1);
   }
+  pthread_mutex_lock(&Sockmutex); 
 
   rfsimulator_state_t *t = device->priv;
   LOG_D(HW, "Enter rfsimulator_read, expect %d samples, will release at TS: %ld\n", nsamps, t->nextTimestamp+nsamps);
@@ -374,6 +381,7 @@ int rfsimulator_read(openair0_device *device, openair0_timestamp *ptimestamp, vo
       t->nextTimestamp+=nsamps;
       LOG_W(HW,"Generated void samples for Rx: %ld\n", t->nextTimestamp);
       *ptimestamp = t->nextTimestamp-nsamps;
+        pthread_mutex_unlock(&Sockmutex); 
       return nsamps;
     }
   } else {
@@ -424,6 +432,7 @@ int rfsimulator_read(openair0_device *device, openair0_timestamp *ptimestamp, vo
         nsamps,
         *ptimestamp, t->nextTimestamp,
         signal_energy(samplesVoid[0], nsamps));
+  pthread_mutex_unlock(&Sockmutex); 
   return nsamps;
 }
 
@@ -460,12 +469,12 @@ int device_init(openair0_device *device, openair0_config_t *openair0_cfg) {
   set_log(TMR,OAILOG_DEBUG);
   //set_log(PHY,OAILOG_DEBUG);
   rfsimulator_state_t *rfsimulator = (rfsimulator_state_t *)calloc(sizeof(rfsimulator_state_t),1);
-
+  
   if ((rfsimulator->ip=getenv("RFSIMULATOR")) == NULL ) {
     LOG_E(HW,helpTxt);
     exit(1);
   }
-
+  pthread_mutex_init(&Sockmutex, NULL);
   if ( strncasecmp(rfsimulator->ip,"enb",3) == 0 ||
        strncasecmp(rfsimulator->ip,"server",3) == 0 )
     rfsimulator->typeStamp = ENB_MAGICDL_FDD;
