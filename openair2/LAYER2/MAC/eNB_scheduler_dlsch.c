@@ -478,6 +478,7 @@ schedule_ue_spec(
 	num_UEs+=UE_list->num_UEs[k];
 	//printf("num_UEs[%d]=%d\n",k,UE_list->num_UEs[k]);
   }
+  printf("CC_idx_last %d, CC_id %d, CC_total %d, subframe %d\n",CC_idx_last,CC_id,CC_total,subframeP);
 #endif
 
 #if 0
@@ -501,7 +502,7 @@ schedule_ue_spec(
     frame_parms[CC_id] = mac_xface->get_lte_frame_parms(module_idP,CC_id);
     // get number of PRBs less those used by common channels
 #ifdef COORDINATED_SCHEDULING
-    if (subframeP==0 || subframeP==5 || CC_total==1)
+    if (subframeP==0 || subframeP==5 || CC_total<2)
     {
     	total_nb_available_rb[CC_id] = frame_parms[CC_id]->N_RB_DL;
     	for (i=0;i<frame_parms[CC_id]->N_RB_DL;i++)
@@ -509,28 +510,29 @@ schedule_ue_spec(
 			total_nb_available_rb[CC_id]--;
         		//printf("Common channels: PRB %d\n",i);
       		}
+	printf("CC_idx_last %d, CC_id %d, N_RB_DL %d, total_nb_available_rb [CC%d] %d, CC_total %d, subframe %d\n",CC_idx_last,CC_id,frame_parms[CC_id]->N_RB_DL,CC_id,total_nb_available_rb[CC_id],CC_total,subframeP);
     }
     else
     {
-	if ((uint16_t)(CC_idx_last==CC_id)&&(uint16_t)(frame_parms[CC_id]->N_RB_DL%CC_total!=0))
+	if ((CC_idx_last==CC_id)&&((uint16_t) frame_parms[CC_id]->N_RB_DL%CC_total!=0))
 	{
-		printf("CC_idx_last %d, CC_id %d, CC_idx_last==CC_id %d, N_RB_DLmodCC_total %d, total_nb_available_rb %d, CC_total %d\n",CC_idx_last,CC_id,CC_idx_last==CC_id,(uint16_t)(frame_parms[CC_id]->N_RB_DL%CC_total!=0),(uint16_t) floor(frame_parms[CC_id]->N_RB_DL/CC_total)+1,CC_total);
-    		total_nb_available_rb[CC_id] = (uint16_t) floor(frame_parms[CC_id]->N_RB_DL/CC_total)+1;
-	        for (i=0;i<(uint16_t) floor(frame_parms[CC_id]->N_RB_DL/CC_total)+1;i++)
+    		total_nb_available_rb[CC_id] = (uint16_t) floor(frame_parms[CC_id]->N_RB_DL/CC_total+1);
+	        for (i=0;i<(uint16_t) floor(frame_parms[CC_id]->N_RB_DL/CC_total+1);i++)
 	          if (eNB->common_channels[CC_id].vrb_map[i]!=0){
 		    total_nb_available_rb[CC_id]--;
 		    //printf("Common channels: PRB %d\n",i);
 	          } 
+		printf("CC_idx_last %d, CC_id %d, N_RB_DL %d, (N_RB_DL/CC_total+1)total_nb_available_rb [CC%d] %d, CC_total %d, subframe %d\n",CC_idx_last,CC_id,frame_parms[CC_id]->N_RB_DL,CC_id,total_nb_available_rb[CC_id],CC_total,subframeP);
 	}
 	else
 	{
-		printf("CC_idx_last %d, CC_id %d, CC_idx_last==CC_id %d, N_RB_DLmodCC_total %d, total_nb_available_rb %d, CC_total %d\n",CC_idx_last,CC_id,CC_idx_last==CC_id,(uint16_t)(frame_parms[CC_id]->N_RB_DL%CC_total!=0),(uint16_t) floor(frame_parms[CC_id]->N_RB_DL/CC_total),CC_total);
 		total_nb_available_rb[CC_id] = (uint16_t) floor(frame_parms[CC_id]->N_RB_DL/CC_total);
 	        for (i=0;i<(uint16_t) floor(frame_parms[CC_id]->N_RB_DL/CC_total);i++)
 	          if (eNB->common_channels[CC_id].vrb_map[i]!=0){
 		    total_nb_available_rb[CC_id]--;
 		    //printf("Common channels: PRB %d\n",i);
 	          } 
+		printf("CC_idx_last %d, CC_id %d, N_RB_DL %d, (N_RB_DL/CC_total)total_nb_available_rb [CC%d] %d, CC_total %d, subframe %d\n",CC_idx_last,CC_id,frame_parms[CC_id]->N_RB_DL,CC_id,total_nb_available_rb[CC_id],CC_total,subframeP);
 	}
     }
 #else
@@ -550,6 +552,7 @@ schedule_ue_spec(
     eNB->eNB_stats[CC_id].total_available_prbs +=  total_nb_available_rb[CC_id];
     eNB->eNB_stats[CC_id].dlsch_bytes_tx=0;
     eNB->eNB_stats[CC_id].dlsch_pdus_tx=0;
+    //printf("store stats: CC_id %d, total_nb_available_rb %d, UE_list->num_UEs[CC_id] %d, subframe %d, eNB->eNB_stats[CC_id].total_available_prbs %d\n", CC_id,total_nb_available_rb[CC_id],UE_list->num_UEs[CC_id],subframeP,eNB->eNB_stats[CC_id].total_available_prbs);
   //}
 
   /// CALLING Pre_Processor for downlink scheduling (Returns estimation of RBs required by each UE and the allocation on sub-band)
@@ -652,8 +655,8 @@ schedule_ue_spec(
                       1,
                       format1,
                       0);
-#ifdef COORDINATED_SCHEDULING
-      if (subframeP==0 || subframeP==5 || num_UEs==UE_list->num_UEs[CC_id])
+/*#ifdef COORDINATED_SCHEDULING
+      if (subframeP==0 || subframeP==5 || CC_total==1)
 	nb_available_rb = ue_sched_ctl->pre_nb_available_rbs[CC_id];
       else
       {
@@ -669,9 +672,9 @@ schedule_ue_spec(
 	}
       }
 	
-#else
+#else*/
       nb_available_rb = ue_sched_ctl->pre_nb_available_rbs[CC_id];
-#endif
+//#endif
       harq_pid = ue_sched_ctl->harq_pid[CC_id];
       round = ue_sched_ctl->round[CC_id];
       UE_list->eNB_UE_stats[CC_id][UE_id].crnti= rnti;
@@ -709,14 +712,12 @@ schedule_ue_spec(
 
 
       /* process retransmission  */
-
       if (round > 0) {
 
         // get freq_allocation
         nb_rb = UE_list->UE_template[CC_id][UE_id].nb_rb[harq_pid];
-
+	//printf("round>0 get freq_allocation (nb_rb <= nb_available_rb): CC_id %d, nb_available_rb %d,  pre_nb_available_rbs %d, nb_rb %d, subframe %d\n", CC_id,nb_available_rb,ue_sched_ctl->pre_nb_available_rbs[CC_id],nb_rb,subframeP);
         if (nb_rb <= nb_available_rb) {
-	  printf("round>0: CC_id %d, nb_available_rb %d, nb_rb %d, subframe %d\n", CC_id,nb_available_rb,nb_rb,subframeP);
           if (frame_parms[CC_id]->frame_type == TDD) {
             UE_list->UE_template[CC_id][UE_id].DAI++;
             update_ul_dci(module_idP,CC_id,rnti,UE_list->UE_template[CC_id][UE_id].DAI);
@@ -748,15 +749,14 @@ schedule_ue_spec(
               j = j+1;
             }
           }
-
           nb_available_rb -= nb_rb;
           PHY_vars_eNB_g[module_idP][CC_id]->mu_mimo_mode[UE_id].pre_nb_available_rbs = nb_rb;
           PHY_vars_eNB_g[module_idP][CC_id]->mu_mimo_mode[UE_id].dl_pow_off = ue_sched_ctl->dl_pow_off[CC_id];
+          //printf("round>0 (else): CC_id %d, nb_available_rb %d, nb_rb %d, subframe %d\n", CC_id,nb_available_rb,nb_rb,subframeP);
 
           for(j=0; j<frame_parms[CC_id]->N_RBG; j++) {
             PHY_vars_eNB_g[module_idP][CC_id]->mu_mimo_mode[UE_id].rballoc_sub[j] = UE_list->UE_template[CC_id][UE_id].rballoc_subband[harq_pid][j];
           }
-
           switch (mac_xface->get_transmission_mode(module_idP,CC_id,rnti)) {
           case 1:
           case 2:
@@ -886,7 +886,6 @@ schedule_ue_spec(
             break;
 	    */
           }
-
           add_ue_dlsch_info(module_idP,
                             CC_id,
                             UE_id,
@@ -899,6 +898,7 @@ schedule_ue_spec(
           UE_list->eNB_UE_stats[CC_id][UE_id].total_rbs_used_retx+=nb_rb;
           UE_list->eNB_UE_stats[CC_id][UE_id].dlsch_mcs1=eNB_UE_stats->dlsch_mcs1;
           UE_list->eNB_UE_stats[CC_id][UE_id].dlsch_mcs2=eNB_UE_stats->dlsch_mcs1;
+	  printf("retransmission: nb_rb %d, subframe %d\n",nb_rb,subframeP);
         } else {
           LOG_E(MAC,"[eNB %d] Frame %d CC_id %d : don't schedule UE %d, its retransmission takes more resources than we have\n",
                 module_idP, frameP, CC_id, UE_id);
@@ -1019,7 +1019,6 @@ schedule_ue_spec(
 
 	  }
         }
-
 	// assume the max dtch header size, and adjust it later
 	header_len_dtch=0;
 	header_len_dtch_last=0; // the header length of the last mac sdu
@@ -1108,7 +1107,7 @@ schedule_ue_spec(
           }
 
           TBS = mac_xface->get_TBS_DL(mcs,nb_rb);
-	  printf("schedule_ue_spec (before while): nb_rb %d\n", nb_rb);
+	  //printf("schedule_ue_spec (before while): nb_rb %d, UE_id %d\n", nb_rb, UE_id);
           while (TBS < (sdu_length_total + header_len_dcch + header_len_dtch + ta_len))  {
             nb_rb += min_rb_unit[CC_id];  //
 
@@ -1120,9 +1119,9 @@ schedule_ue_spec(
             }
 
             TBS = mac_xface->get_TBS_DL(eNB_UE_stats->dlsch_mcs1,nb_rb);
-	    printf("schedule_ue_spec (inside while): nb_rb %d\n", nb_rb);
+	    //printf("schedule_ue_spec (inside while): nb_rb %d, UE_id %d, nb_available_rb %d, nb_rb %d\n", nb_rb,UE_id,nb_available_rb, nb_rb);
           }
-          printf("schedule_ue_spec (after while): nb_rb %d\n", nb_rb);
+          //printf("schedule_ue_spec (after while): nb_rb %d, UE_id %d, nb_available_rb %d\n", nb_rb,UE_id,nb_available_rb);
           if(nb_rb == ue_sched_ctl->pre_nb_available_rbs[CC_id]) {
             for(j=0; j<frame_parms[CC_id]->N_RBG; j++) { // for indicating the rballoc for each sub-band
               UE_list->UE_template[CC_id][UE_id].rballoc_subband[harq_pid][j] = ue_sched_ctl->rballoc_sub_UE[CC_id][j];
@@ -1147,7 +1146,7 @@ schedule_ue_spec(
               j = j+1;
             }
           }
-
+          printf("schedule_ue_spec ue_sched_ctl: nb_rb %d, UE_id %d, ue_sched_ctl->pre_nb_available_rbs[CC%d] %d\n", nb_rb,UE_id,CC_id,ue_sched_ctl->pre_nb_available_rbs[CC_id]);
           PHY_vars_eNB_g[module_idP][CC_id]->mu_mimo_mode[UE_id].pre_nb_available_rbs = nb_rb;
           PHY_vars_eNB_g[module_idP][CC_id]->mu_mimo_mode[UE_id].dl_pow_off = ue_sched_ctl->dl_pow_off[CC_id];
 
@@ -1747,7 +1746,6 @@ schedule_ue_spec(
 
     } // UE_id loop
   //}  // CC_id loop
-
   /* restore DCI_pdu size */
   //for (CC_id = 0; CC_id < MAX_NUM_CCs; CC_id++)
     eNB->common_channels[CC_id].DCI_pdu.Num_dci = saved_DCI_pdu[CC_id].Num_dci;
@@ -1816,7 +1814,7 @@ fill_DLSCH_dci(
 	//        mac_xface->get_ue_active_harq_pid(module_idP,CC_id,rnti,frameP,subframeP,&harq_pid,&round,0);
 	harq_pid = UE_list->UE_sched_ctrl[UE_id].harq_pid[CC_id];
         nb_rb = UE_list->UE_template[CC_id][UE_id].nb_rb[harq_pid];
-
+        printf("fill_DLSCH_dci: UE_list->UE_template[CC_id][UE_id].nb_rb[harq_pid]: nb_rb %d, subframe %d\n", nb_rb,subframeP);
         DLSCH_dci = (void *)UE_list->UE_template[CC_id][UE_id].DLSCH_DCI[harq_pid];
 	eNB_UE_stats = mac_xface->get_eNB_UE_stats(module_idP,CC_id,rnti);
 

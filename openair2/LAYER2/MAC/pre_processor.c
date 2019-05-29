@@ -145,7 +145,7 @@ void store_dlsch_buffer (module_id_t Mod_id,
        */
       if (UE_template->dl_buffer_info[i]>0)
         LOG_D(MAC,
-              "[eNB %d] Frame %d Subframe %d : RLC status for UE %d in LCID%d: total of %d pdus and size %d, head sdu queuing time %d, remaining size %d, is segmeneted %d \n",
+              "[eNB %d] Frame %d Subframe %d : RLC status for UE %d in LCID%d: total of %d pdus and size %d, head sdu queuing time %d, remaining size %d, is segmented %d \n",
               Mod_id, frameP, subframeP, UE_id,
               i, UE_template->dl_pdus_in_buffer[i],UE_template->dl_buffer_info[i],
               UE_template->dl_buffer_head_sdu_creation_time[i],
@@ -288,7 +288,7 @@ void assign_rbs_required (module_id_t Mod_id,
         while (TBS < UE_list->UE_template[pCCid][UE_id].dl_buffer_total)  {
           nb_rbs_required[CC_id][UE_id] += min_rb_unit[CC_id];
 #ifdef COORDINATED_SCHEDULING
-	  if (subframe==0 || subframe==5 || CC_total==1)//Subframes 0 and 5 are common signals that allow UEs to synchronize with the eNb.
+	  if (subframe==0 || subframe==5 || CC_total<2)//Subframes 0 and 5 are common signals that allow UEs to synchronize with the eNb.
 	  {
 		if (nb_rbs_required[CC_id][UE_id] > frame_parms[CC_id]->N_RB_DL)
 		{
@@ -300,7 +300,7 @@ void assign_rbs_required (module_id_t Mod_id,
 	  }
 	  else
 	  {
-	     if ((uint16_t)(CC_idx_last==CC_id)&&(uint16_t)(frame_parms[CC_id]->N_RB_DL%CC_total!=0))
+	     if ((CC_idx_last==CC_id)&&((uint16_t) frame_parms[CC_id]->N_RB_DL%CC_total!=0))
 	     {
 		//printf("CC_idx_last %d, CC_id %d, CC_idx_last==CC_id %d\n",CC_idx_last,CC_id,CC_idx_last==CC_id);
           	if (nb_rbs_required[CC_id][UE_id] > ((uint16_t) floor(frame_parms[CC_id]->N_RB_DL/CC_total)+1))
@@ -481,7 +481,8 @@ static int ue_dl_compare(const void *_a, const void *_b, void *_params)
 // This fuction sorts the UE in order their dlsch buffer and CQI
 void sort_UEs (module_id_t Mod_idP,
                int         frameP,
-               sub_frame_t subframeP)
+               sub_frame_t subframeP,
+	       uint8_t     CC_id)
 {
   int               i;
   int               list[NUMBER_OF_UE_MAX];
@@ -492,6 +493,7 @@ void sort_UEs (module_id_t Mod_idP,
   UE_list_t *UE_list = &eNB_mac_inst[Mod_idP].UE_list;
 
   for (i = 0; i < NUMBER_OF_UE_MAX; i++) {
+    if (CC_id!=UE_PCCID(Mod_idP,i)) continue;
     rnti = UE_RNTI(Mod_idP, i);
     if (rnti == NOT_A_RNTI)
       continue;
@@ -633,7 +635,7 @@ void dlsch_scheduler_pre_processor (module_id_t   Mod_id,
     min_rb_unit[CC_id]=get_min_rb_unit(Mod_id,CC_id);
     //printf("dlsch_scheduler_pre_processor: min_rb_unit[%d] = %d, CC_id %d\n",CC_id,min_rb_unit[CC_id],CC_id);The value is 2
     for (i = 0; i < NUMBER_OF_UE_MAX; i++) {
-      if (UE_list->active[i] != TRUE) continue;
+      if (UE_list->active[i] != TRUE || CC_id!=UE_PCCID(Mod_id,i)) continue;
 
       UE_id = i;
       // Initialize scheduling information for all active UEs
@@ -653,7 +655,15 @@ void dlsch_scheduler_pre_processor (module_id_t   Mod_id,
 
     }
   //}
-
+/*#ifdef COORDINATED_SCHEDULING
+  for (i=0; i<2;i++) {
+	printf("COORDINATED_SCHEDULING: nb_rb [UE%d][CC%d][harq_pid%d] = %d, subframe %d\n",i,CC_id,UE_list->UE_sched_ctrl[i].harq_pid[CC_id],UE_list->UE_template[CC_id][i].nb_rb[UE_list->UE_sched_ctrl[i].harq_pid[CC_id]],subframeP);
+  }
+#else
+  for (i=0; i<2;i++) {
+	printf("nb_rb [UE%d][CC%d][harq_pid%d] = %d, subframe %d\n",i,CC_id,UE_list->UE_sched_ctrl[i].harq_pid[CC_id],UE_list->UE_template[CC_id][i].nb_rb[UE_list->UE_sched_ctrl[i].harq_pid[CC_id]],subframeP);
+  }
+#endif*/
 
   // Store the DLSCH buffer for each logical channel
   store_dlsch_buffer (Mod_id,frameP,subframeP,CC_id);
@@ -665,7 +675,7 @@ void dlsch_scheduler_pre_processor (module_id_t   Mod_id,
   //The value of CC_total is updated in the assign_rbs_required function. CC_total gives us the number of active CCs
 
   // Sorts the user on the basis of dlsch logical channel buffer and CQI
-  sort_UEs (Mod_id,frameP,subframeP);
+  sort_UEs (Mod_id,frameP,subframeP,CC_id);
 
 
 
@@ -701,14 +711,38 @@ void dlsch_scheduler_pre_processor (module_id_t   Mod_id,
       //      mac_xface->get_ue_active_harq_pid(Mod_id,CC_id,rnti,frameP,subframeP,&harq_pid,&round,0);
 
       if(round>0) {
-	nb_rbs_required[CC_id][UE_id] = UE_list->UE_template[CC_id][UE_id].nb_rb[harq_pid];
 #ifdef COORDINATED_SCHEDULING
-	printf("COORDINATED_SCHEDULING: nb_rb [UE%d][CC%d][harq_pid%d][round%d] = %d\n",UE_id,CC_id,harq_pid,round,UE_list->UE_template[CC_id][UE_id].nb_rb[harq_pid]);
+	if (subframeP==0 || subframeP==5 || CC_total<2)
+		nb_rbs_required[CC_id][UE_id] = UE_list->UE_template[CC_id][UE_id].nb_rb[harq_pid];
+	else
+	{
+		if ((CC_idx_last==CC_id)&&((uint16_t) frame_parms[CC_id]->N_RB_DL%CC_total!=0))
+		{
+			if (UE_list->UE_template[CC_id][UE_id].nb_rb[harq_pid]>(uint16_t) floor(frame_parms[CC_id]->N_RB_DL/CC_total+1))
+			{
+				UE_list->UE_template[CC_id][UE_id].nb_rb[harq_pid]=(uint16_t) floor(frame_parms[CC_id]->N_RB_DL/CC_total+1);
+				nb_rbs_required[CC_id][UE_id] = UE_list->UE_template[CC_id][UE_id].nb_rb[harq_pid];
+			}
+			else
+				nb_rbs_required[CC_id][UE_id] = UE_list->UE_template[CC_id][UE_id].nb_rb[harq_pid];
+		}
+		else
+		{
+			if (UE_list->UE_template[CC_id][UE_id].nb_rb[harq_pid]>(uint16_t) floor(frame_parms[CC_id]->N_RB_DL/CC_total))
+			{
+				UE_list->UE_template[CC_id][UE_id].nb_rb[harq_pid]=(uint16_t) floor(frame_parms[CC_id]->N_RB_DL/CC_total);
+				nb_rbs_required[CC_id][UE_id] = UE_list->UE_template[CC_id][UE_id].nb_rb[harq_pid];
+			}
+			else
+				nb_rbs_required[CC_id][UE_id] = UE_list->UE_template[CC_id][UE_id].nb_rb[harq_pid];
+		}
+	}
+	printf("COORDINATED_SCHEDULING: nb_rb [UE%d][CC%d][harq_pid%d][round%d] = %d, subframe %d\n",UE_id,CC_id,harq_pid,round,UE_list->UE_template[CC_id][UE_id].nb_rb[harq_pid],subframeP);
 #else
+	nb_rbs_required[CC_id][UE_id] = UE_list->UE_template[CC_id][UE_id].nb_rb[harq_pid];
 	printf("nb_rb [UE%d][CC%d][harq_pid%d][round%d] = %d\n",UE_id,CC_id,harq_pid,round,UE_list->UE_template[CC_id][UE_id].nb_rb[harq_pid]);
 #endif
       }
-
       //nb_rbs_required_remaining[UE_id] = nb_rbs_required[UE_id];
       if (nb_rbs_required[CC_id][UE_id] > 0) {
         total_ue_count = total_ue_count + 1;
@@ -740,6 +774,7 @@ void dlsch_scheduler_pre_processor (module_id_t   Mod_id,
       else {
         average_rbs_per_user[CC_id] = min_rb_unit[CC_id]; // consider the total number of use that can be scheduled UE
       }
+      //printf("COORDINATED_SCHEDULING: [UE%d][CC%d] total_ue_count %d\n",UE_id,CC_id,total_ue_count);
     }
   }
 
@@ -778,7 +813,7 @@ void dlsch_scheduler_pre_processor (module_id_t   Mod_id,
   for(r1=0; r1<2; r1++) {
 
     for(i=UE_list->head; i>=0; i=UE_list->next[i]) {
-    if (CC_id!=UE_PCCID(Mod_id,i)) continue;
+      if (CC_id!=UE_PCCID(Mod_id,i)) continue;
       for (ii=0; ii<UE_num_active_CC(UE_list,i); ii++) {
         if (CC_id != UE_list->ordered_CCids[ii][i]) continue;
 
