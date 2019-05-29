@@ -25,7 +25,7 @@
 #include <common/utils/threadPool/thread-pool.h>
 
 RAN_CONTEXT_t RC;
-tpool_t * Tpool;
+tpool_t *Tpool;
 volatile int oai_exit = 0;
 char   rf_config_file[1024]="";
 unsigned int mmapped_dma=0;
@@ -300,8 +300,10 @@ static inline int rxtx(PHY_VARS_gNB *gNB,gNB_L1_rxtx_proc_t *proc, char *thread_
   uint64_t a=rdtsc();
   phy_procedures_gNB_TX(gNB, proc, 1);
   uint64_t b=rdtsc() -a;
+
   if (b/3500.0 > 100 )
     printf("processin: %d, %ld \n", proc->slot_rx, b/3500);
+
   return(0);
 }
 
@@ -722,21 +724,22 @@ bool setup_RU_buffers(RU_t *ru) {
   return(true);
 }
 
-static void modulateSend (void* arg) {
-  RU_t *ru=*(RU_t**)arg;
+static void modulateSend (void *arg) {
+  RU_t *ru=*(RU_t **)arg;
+
   if(ru->num_eNB==0) {
     // do TX front-end processing if needed (precoding and/or IDFTs)
     if (ru->feptx_prec)
       ru->feptx_prec(ru);
-    
+
     // do OFDM if needed
     if ((ru->fh_north_asynch_in == NULL) && (ru->feptx_ofdm))
       ru->feptx_ofdm(ru);
-    
+
     // do outgoing fronthaul (south) if needed
     if ((ru->fh_north_asynch_in == NULL) && (ru->fh_south_out))
       ru->fh_south_out(ru);
-    
+
     if (ru->fh_north_out)
       ru->fh_north_out(ru);
   }
@@ -753,7 +756,6 @@ static void *ru_thread( void *param ) {
   // set default return value
   sprintf(threadname,"ru_thread %d",ru->idx);
   LOG_I(PHY,"Starting RU %d (%s,%s),\n",ru->idx,NB_functions[ru->function],NB_timing[ru->if_timing]);
-
 
   if (ru->if_south == LOCAL_RF) { // configure RF parameters only
     fill_rf_config(ru,ru->rf_config_file);
@@ -789,7 +791,7 @@ static void *ru_thread( void *param ) {
     AssertFatal(ru->start_if(ru,NULL) == 0, "Could not start the IF device\n");
     AssertFatal(connect_rau(ru)==0,"Cannot connect to remote radio\n");
   }
-  
+
   // This is a forever while loop, it loops over subframes which are scheduled by incoming samples from HW devices
   initRefTimes(rx);
   initRefTimes(frx);
@@ -849,11 +851,15 @@ static void *ru_thread( void *param ) {
       ru->gNB_top(ru->gNB_list[gnb],ru->proc.frame_rx,ru->proc.tti_rx,"not def",ru);
 
     updateTimes(beg3, &mainProc, 1000, "rxtx");
-    
-    notifiedFIFO_elt_t *txWork=newNotifiedFIFO_elt(0,0,NULL,modulateSend);
-    void **tmp= (void**)NotifiedFifoData(txWork);
-    *tmp=(void*)ru;
-    pushTpool(Tpool,txWork);
+
+    if (0 ) {
+      notifiedFIFO_elt_t *txWork=newNotifiedFIFO_elt(0,0,NULL,modulateSend);
+      void **tmp= (void **)NotifiedFifoData(txWork);
+      *tmp=(void *)ru;
+      pushTpool(Tpool,txWork);
+    } else {
+      modulateSend(&ru);
+    }
   }
 
   notifiedFIFO_elt_t *msg2=newNotifiedFIFO_elt(sizeof(ru),AbortRU,NULL,modulateSend);
@@ -1316,7 +1322,6 @@ int main( int argc, char **argv ) {
   memset (&UE_PF_PO[0][0], 0, sizeof(UE_PF_PO_t)*NUMBER_OF_UE_MAX*MAX_NUM_CCs);
   pthread_cond_init(&sync_cond,NULL);
   pthread_mutex_init(&sync_mutex, NULL);
-
   tpool_t pool;
   Tpool=&pool;
   char params[]="-1,-1";
