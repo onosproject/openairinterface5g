@@ -279,9 +279,9 @@ void assign_rbs_required (module_id_t Mod_id,
         LOG_D(MAC,"[preprocessor] start RB assignement for UE %d CC_id %d dl buffer %d (RB unit %d, MCS %d, TBS %d) \n",
               UE_id, CC_id, UE_list->UE_template[pCCid][UE_id].dl_buffer_total,
               nb_rbs_required[CC_id][UE_id],eNB_UE_stats[CC_id]->dlsch_mcs1,TBS);
-	printf("[preprocessor] start RB assignement for UE %d CC_id %d dl buffer %d Frame %d subframe %d(RB unit %d, MCS %d, TBS %d) \n",
-              UE_id, CC_id, UE_list->UE_template[pCCid][UE_id].dl_buffer_total,frameP,subframe,
-              nb_rbs_required[CC_id][UE_id],eNB_UE_stats[CC_id]->dlsch_mcs1,TBS);
+	//printf("[preprocessor] start RB assignement for UE %d CC_id %d dl buffer %d Frame %d subframe %d(RB unit %d, MCS %d, TBS %d) \n",
+        //      UE_id, CC_id, UE_list->UE_template[pCCid][UE_id].dl_buffer_total,frameP,subframe,
+        //      nb_rbs_required[CC_id][UE_id],eNB_UE_stats[CC_id]->dlsch_mcs1,TBS);
         //printf("(num_UEs_total(%d)=UE_list->num_UEs[%d](%d))? %d, CC_id=%d, active CCs %d, CC_idx_last %d\n",num_UEs,CC_id,UE_list->num_UEs[CC_id],num_UEs==UE_list->num_UEs[CC_id],CC_id,CC_total,CC_idx_last);
 
         /* calculating required number of RBs for each UE */
@@ -335,13 +335,13 @@ void assign_rbs_required (module_id_t Mod_id,
 
         LOG_D(MAC,"[eNB %d] Frame %d: UE %d on CC %d: RB unit %d,  nb_required RB %d (TBS %d, mcs %d)\n",
               Mod_id, frameP,UE_id, CC_id,  min_rb_unit[CC_id], nb_rbs_required[CC_id][UE_id], TBS, eNB_UE_stats[CC_id]->dlsch_mcs1);
-#ifdef COORDINATED_SCHEDULING
+/*#ifdef COORDINATED_SCHEDULING
         printf("COORDINATED_SCHEDULING: [eNB %d] Frame %d, subframe %d: UE %d on CC %d: RB unit %d,  nb_required RB %d (TBS %d, mcs %d)\n",
               Mod_id, frameP,subframe,UE_id, CC_id,  min_rb_unit[CC_id], nb_rbs_required[CC_id][UE_id], TBS, eNB_UE_stats[CC_id]->dlsch_mcs1);
 #else
         printf("[eNB %d] Frame %d, subframe %d: UE %d on CC %d: RB unit %d,  nb_required RB %d (TBS %d, mcs %d)\n",
               Mod_id, frameP,subframe,UE_id, CC_id,  min_rb_unit[CC_id], nb_rbs_required[CC_id][UE_id], TBS, eNB_UE_stats[CC_id]->dlsch_mcs1);
-#endif
+#endif*/
       }
     }
   }
@@ -613,7 +613,7 @@ void dlsch_scheduler_pre_processor (module_id_t   Mod_id,
   int transmission_mode = 0;
   UE_sched_ctrl *ue_sched_ctl;
   //  int rrc_status           = RRC_IDLE;
-
+  //int resource_allocation[frame_parms->N_RB_DL][10];
 #ifdef TM5
   int harq_pid1=0,harq_pid2=0;
   int round1=0,round2=0;
@@ -737,10 +737,10 @@ void dlsch_scheduler_pre_processor (module_id_t   Mod_id,
 				nb_rbs_required[CC_id][UE_id] = UE_list->UE_template[CC_id][UE_id].nb_rb[harq_pid];
 		}
 	}
-	printf("COORDINATED_SCHEDULING: nb_rb [UE%d][CC%d][harq_pid%d][round%d] = %d, subframe %d\n",UE_id,CC_id,harq_pid,round,UE_list->UE_template[CC_id][UE_id].nb_rb[harq_pid],subframeP);
+	//printf("COORDINATED_SCHEDULING: nb_rb [UE%d][CC%d][harq_pid%d][round%d] = %d, subframe %d\n",UE_id,CC_id,harq_pid,round,UE_list->UE_template[CC_id][UE_id].nb_rb[harq_pid],subframeP);
 #else
 	nb_rbs_required[CC_id][UE_id] = UE_list->UE_template[CC_id][UE_id].nb_rb[harq_pid];
-	printf("nb_rb [UE%d][CC%d][harq_pid%d][round%d] = %d\n",UE_id,CC_id,harq_pid,round,UE_list->UE_template[CC_id][UE_id].nb_rb[harq_pid]);
+	//printf("nb_rb [UE%d][CC%d][harq_pid%d][round%d] = %d\n",UE_id,CC_id,harq_pid,round,UE_list->UE_template[CC_id][UE_id].nb_rb[harq_pid]);
 #endif
       }
       //nb_rbs_required_remaining[UE_id] = nb_rbs_required[UE_id];
@@ -833,14 +833,14 @@ if (nb_rbs_required_remaining[CC_id][i]<0) abort();
                 UE_list->UE_sched_ctrl[i].pre_nb_available_rbs[CC_id],
                 N_RBG[CC_id],
                 min_rb_unit[CC_id]);
-          printf("round %d : nb_rbs_required_remaining[%d][%d]= %d (remaining_1 %d, required %d,  pre_nb_available_rbs %d, N_RBG %d, rb_unit %d)\n",
+          /*printf("round %d : nb_rbs_required_remaining[%d][%d]= %d (remaining_1 %d, required %d,  pre_nb_available_rbs %d, N_RBG %d, rb_unit %d)\n",
                 r1, CC_id, i,
                 nb_rbs_required_remaining[CC_id][i],
                 nb_rbs_required_remaining_1[CC_id][i],
                 nb_rbs_required[CC_id][i],
                 UE_list->UE_sched_ctrl[i].pre_nb_available_rbs[CC_id],
                 N_RBG[CC_id],
-                min_rb_unit[CC_id]);
+                min_rb_unit[CC_id]);*/
         }
 
       }
@@ -1031,12 +1031,12 @@ if (nb_rbs_required_remaining[CC_id][i]<0) abort();
         for(j=0; j<N_RBG[CC_id]; j++) {
           //PHY_vars_eNB_g[Mod_id]->mu_mimo_mode[UE_id].rballoc_sub[i] = rballoc_sub_UE[CC_id][UE_id][i];
           LOG_D(MAC,"RB Alloc for UE%d and Subband%d = %d\n",UE_id,j,ue_sched_ctl->rballoc_sub_UE[CC_id][j]);
-          printf("RB Alloc for UE%d and Subband%d = %d, subframe %d\n",UE_id,j,ue_sched_ctl->rballoc_sub_UE[CC_id][j],subframeP);
+          //printf("RB Alloc for UE%d and Subband%d = %d, subframe %d\n",UE_id,j,ue_sched_ctl->rballoc_sub_UE[CC_id][j],subframeP);
         }
 
         //PHY_vars_eNB_g[Mod_id]->mu_mimo_mode[UE_id].pre_nb_available_rbs = pre_nb_available_rbs[CC_id][UE_id];
         LOG_D(MAC,"Total RBs allocated for UE%d = %d\n",UE_id,ue_sched_ctl->pre_nb_available_rbs[CC_id]);
-        printf("Total RBs allocated for UE%d = %d\n",UE_id,ue_sched_ctl->pre_nb_available_rbs[CC_id]);
+        //printf("Total RBs allocated for UE%d = %d\n",UE_id,ue_sched_ctl->pre_nb_available_rbs[CC_id]);
       }
     }
   }

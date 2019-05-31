@@ -275,7 +275,7 @@ int add_new_ue(module_id_t mod_idP, int cc_idP, rnti_t rntiP,int harq_pidP)
 
   for (i = 0; i < NUMBER_OF_UE_MAX; i++) {
     if (UE_list->active[i] == TRUE) continue;
-printf("MAC: new UE id %d rnti %x eNB_id %d CC_id %d\n", i, rntiP,mod_idP,cc_idP);
+    //printf("MAC: new UE id %d rnti %x eNB_id %d CC_id %d\n", i, rntiP,mod_idP,cc_idP);
     UE_id = i;
     UE_list->UE_template[cc_idP][UE_id].rnti       = rntiP;
     UE_list->UE_template[cc_idP][UE_id].configured = FALSE;
@@ -300,7 +300,7 @@ printf("MAC: new UE id %d rnti %x eNB_id %d CC_id %d\n", i, rntiP,mod_idP,cc_idP
     return(UE_id);
   }
 
-printf("MAC: cannot add new UE for rnti %x\n", rntiP);
+  //printf("MAC: cannot add new UE for rnti %x\n", rntiP);
   LOG_E(MAC,"error in add_new_ue(), could not find space in UE_list, Dumping UE list\n");
   dump_ue_list(UE_list,0);
   return(-1);

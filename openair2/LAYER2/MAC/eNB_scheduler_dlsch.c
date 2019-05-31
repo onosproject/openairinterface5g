@@ -542,6 +542,8 @@ schedule_ue_spec(
 	total_nb_available_rb[CC_id]--;
         //printf("Common channels: PRB %d\n",i);
       }
+      //printf("CC_id %d, N_RB_DL %d, (N_RB_DL/CC_total)total_nb_available_rb [CC%d] %d, subframe %d\n",CC_id,frame_parms[CC_id]->N_RB_DL,CC_id,total_nb_available_rb[CC_id],subframeP);
+
 #endif
 
     N_RBG[CC_id] = frame_parms[CC_id]->N_RBG;
@@ -898,7 +900,7 @@ schedule_ue_spec(
           UE_list->eNB_UE_stats[CC_id][UE_id].total_rbs_used_retx+=nb_rb;
           UE_list->eNB_UE_stats[CC_id][UE_id].dlsch_mcs1=eNB_UE_stats->dlsch_mcs1;
           UE_list->eNB_UE_stats[CC_id][UE_id].dlsch_mcs2=eNB_UE_stats->dlsch_mcs1;
-	  printf("retransmission: nb_rb %d, subframe %d\n",nb_rb,subframeP);
+	  //printf("retransmission: nb_rb %d, subframe %d\n",nb_rb,subframeP);
         } else {
           LOG_E(MAC,"[eNB %d] Frame %d CC_id %d : don't schedule UE %d, its retransmission takes more resources than we have\n",
                 module_idP, frameP, CC_id, UE_id);
@@ -1146,7 +1148,7 @@ schedule_ue_spec(
               j = j+1;
             }
           }
-          printf("schedule_ue_spec ue_sched_ctl: nb_rb %d, UE_id %d, ue_sched_ctl->pre_nb_available_rbs[CC%d] %d\n", nb_rb,UE_id,CC_id,ue_sched_ctl->pre_nb_available_rbs[CC_id]);
+          //printf("schedule_ue_spec ue_sched_ctl: nb_rb %d, UE_id %d, ue_sched_ctl->pre_nb_available_rbs[CC%d] %d\n", nb_rb,UE_id,CC_id,ue_sched_ctl->pre_nb_available_rbs[CC_id]);
           PHY_vars_eNB_g[module_idP][CC_id]->mu_mimo_mode[UE_id].pre_nb_available_rbs = nb_rb;
           PHY_vars_eNB_g[module_idP][CC_id]->mu_mimo_mode[UE_id].dl_pow_off = ue_sched_ctl->dl_pow_off[CC_id];
 
@@ -1242,7 +1244,7 @@ schedule_ue_spec(
 
           T(T_ENB_MAC_UE_DL_PDU_WITH_DATA, T_INT(module_idP), T_INT(CC_id), T_INT(rnti), T_INT(frameP), T_INT(subframeP),
             T_INT(harq_pid), T_BUFFER(UE_list->DLSCH_pdu[CC_id][0][UE_id].payload[0], TBS));
-	  printf("schedule_ue_spec assignation UE_list->UE_template[CC_id][UE_id].nb_rb[harq_pid]: nb_rb %d\n", nb_rb);
+	  //printf("schedule_ue_spec assignation UE_list->UE_template[CC_id][UE_id].nb_rb[harq_pid]: nb_rb %d\n", nb_rb);
 	  UE_list->UE_template[CC_id][UE_id].nb_rb[harq_pid] = nb_rb;
 
           add_ue_dlsch_info(module_idP,
@@ -1814,7 +1816,7 @@ fill_DLSCH_dci(
 	//        mac_xface->get_ue_active_harq_pid(module_idP,CC_id,rnti,frameP,subframeP,&harq_pid,&round,0);
 	harq_pid = UE_list->UE_sched_ctrl[UE_id].harq_pid[CC_id];
         nb_rb = UE_list->UE_template[CC_id][UE_id].nb_rb[harq_pid];
-        printf("fill_DLSCH_dci: UE_list->UE_template[CC_id][UE_id].nb_rb[harq_pid]: nb_rb %d, subframe %d\n", nb_rb,subframeP);
+        //printf("fill_DLSCH_dci: UE_list->UE_template[CC_id][UE_id].nb_rb[harq_pid]: nb_rb %d, subframe %d\n", nb_rb,subframeP);
         DLSCH_dci = (void *)UE_list->UE_template[CC_id][UE_id].DLSCH_DCI[harq_pid];
 	eNB_UE_stats = mac_xface->get_eNB_UE_stats(module_idP,CC_id,rnti);
 

@@ -152,22 +152,22 @@ int32_t add_ue(int16_t rnti, PHY_VARS_eNB *eNB)
         eNB->Mod_id,
         eNB->CC_id,
         (uint16_t)rnti);
- printf("[eNB %d/CC %d] Adding UE with rnti %x\n",
+ /*printf("[eNB %d/CC %d] Adding UE with rnti %x\n",
         eNB->Mod_id,
         eNB->CC_id,
-        (uint16_t)rnti); 
+        (uint16_t)rnti); */
 
   for (i=0; i<NUMBER_OF_UE_MAX; i++) {
     if ((eNB->dlsch[i]==NULL) || (eNB->ulsch[i]==NULL)) {
       MSC_LOG_EVENT(MSC_PHY_ENB, "0 Failed add ue %"PRIx16" (ENOMEM)", rnti);
       LOG_E(PHY,"Can't add UE, not enough memory allocated\n");
-      printf("Can't add UE, not enough memory allocated\n");
+      //printf("Can't add UE, not enough memory allocated\n");
       return(-1);
     } else {
       if (eNB->UE_stats[i].crnti==0) {
         MSC_LOG_EVENT(MSC_PHY_ENB, "0 Add ue %"PRIx16" ", rnti);
         LOG_D(PHY,"UE_id %d associated with rnti %x\n",i, (uint16_t)rnti);
-	printf("eNB %d, CC %d: UE_id %d associated with rnti %x\n",eNB->Mod_id,eNB->CC_id,i,(uint16_t)rnti);
+	//printf("eNB %d, CC %d: UE_id %d associated with rnti %x\n",eNB->Mod_id,eNB->CC_id,i,(uint16_t)rnti);
         eNB->dlsch[i][0]->rnti = rnti;
         eNB->ulsch[i]->rnti = rnti;
         eNB->UE_stats[i].crnti = rnti;
@@ -204,14 +204,14 @@ int mac_phy_remove_ue(module_id_t Mod_idP,rnti_t rntiP) {
 	  MSC_LOG_EVENT(MSC_PHY_ENB, "0 Removed ue %"PRIx16" ", rntiP);
 
 	  LOG_D(PHY,"eNB %d removing UE %d with rnti %x\n",eNB->Mod_id,i,rntiP);
-	  printf("eNB %d, CC_id %d, removing UE %d with rnti %x\n",eNB->Mod_id,eNB->CC_id,i,rntiP);
+	  //printf("eNB %d, CC_id %d, removing UE %d with rnti %x\n",eNB->Mod_id,eNB->CC_id,i,rntiP);
 	  //LOG_D(PHY,("[PHY] UE_id %d\n",i);
 	  clean_eNb_dlsch(eNB->dlsch[i][0]);
 	  clean_eNb_ulsch(eNB->ulsch[i]);
 	  //eNB->UE_stats[i].crnti = 0;
 	  memset(&eNB->UE_stats[i],0,sizeof(LTE_eNB_UE_stats));
 	  //  mac_exit_wrapper("Removing UE");
-	  printf("eNB %d, CC_id %d, after removing UE %d with rnti %x\n",eNB->Mod_id,eNB->CC_id,i,eNB->UE_stats[i].crnti);
+	 // printf("eNB %d, CC_id %d, after removing UE %d with rnti %x\n",eNB->Mod_id,eNB->CC_id,i,eNB->UE_stats[i].crnti);
 
 	  return(i);
 	}
@@ -973,7 +973,7 @@ void pdsch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,LTE_eNB_DLSCH_t *d
 	pmi2hex_2Ar1(dlsch_harq->pmi_alloc),
 	dlsch_harq->rvidx,
 	dlsch_harq->round);
-  printf("[eNB %"PRIu8"/CC %d][PDSCH %"PRIx16"/%"PRIu8"] Frame %d, subframe %d: Generating PDSCH/DLSCH with input size = %"PRIu16", G %d, nb_rb %"PRIu16", mcs %"PRIu8", pmi_alloc %"PRIx64", rv %"PRIu8" (round %"PRIu8"), ra_flag %d\n",
+  /*printf("[eNB %"PRIu8"/CC %d][PDSCH %"PRIx16"/%"PRIu8"] Frame %d, subframe %d: Generating PDSCH/DLSCH with input size = %"PRIu16", G %d, nb_rb %"PRIu16", mcs %"PRIu8", pmi_alloc %"PRIx64", rv %"PRIu8" (round %"PRIu8"), ra_flag %d\n",
 	eNB->Mod_id,eNB->CC_id, dlsch->rnti,harq_pid,
 	frame, subframe, input_buffer_length,
 	get_G(fp,
@@ -990,7 +990,7 @@ void pdsch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,LTE_eNB_DLSCH_t *d
 	pmi2hex_2Ar1(dlsch_harq->pmi_alloc),
 	dlsch_harq->rvidx,
 	dlsch_harq->round,
-	ra_flag);
+	ra_flag);*/
 
 #if defined(MESSAGE_CHART_GENERATOR_PHY)
   MSC_LOG_TX_MESSAGE(
@@ -1038,7 +1038,7 @@ void pdsch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,LTE_eNB_DLSCH_t *d
 					    fp->N_RB_UL,
 					    input_buffer_length);
 	DLSCH_pdu = DLSCH_pdu_rar;
-	printf("pdsch_procedures:eNB %d, CC_id %d, frame %d, subframe %d, N_RB_UL %d ,crnti %x, ra_flag %d\n",eNB->Mod_id,eNB->CC_id,frame,subframe,fp->N_RB_UL, crnti,ra_flag);
+	//printf("pdsch_procedures:eNB %d, CC_id %d, frame %d, subframe %d, N_RB_UL %d ,crnti %x, ra_flag %d\n",eNB->Mod_id,eNB->CC_id,frame,subframe,fp->N_RB_UL, crnti,ra_flag);
 	int UE_id;
 	
 	if (crnti!=0){ 
@@ -1048,8 +1048,8 @@ void pdsch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,LTE_eNB_DLSCH_t *d
 	  UE_id = -1;
 	    
 	if (UE_id==-1) {
-	  printf("pdsch_procedures: UE_id==-1 crnti %x\n",crnti);
-          printf("[eNB%d/CC%d] Max user count reached.\n",eNB->Mod_id,eNB->CC_id);
+	  //printf("pdsch_procedures: UE_id==-1 crnti %x\n",crnti);
+          //printf("[eNB%d/CC%d] Max user count reached.\n",eNB->Mod_id,eNB->CC_id);
 	  LOG_W(PHY,"[eNB%d/CC%d] Max user count reached.\n",eNB->Mod_id,eNB->CC_id);
 	  mac_xface->cancel_ra_proc(eNB->Mod_id,
 				    eNB->CC_id,
@@ -1476,7 +1476,7 @@ void phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
   // Check for SI activity
 
   if ((eNB->dlsch_SI) && (eNB->dlsch_SI->active == 1)) {
-    printf("Check for SI activity and start pdsch_procedures with ra_flag=%d, dci_alloc->ra_flag=%d, and subframe %d\n",0,dci_alloc->ra_flag,subframe);
+    //printf("Check for SI activity and start pdsch_procedures with ra_flag=%d, dci_alloc->ra_flag=%d, and subframe %d\n",0,dci_alloc->ra_flag,subframe);
     //dci_alloc->ra_flag = 0;
     pdsch_procedures(eNB,proc,eNB->dlsch_SI,(LTE_eNB_DLSCH_t*)NULL,(LTE_eNB_UE_stats*)NULL,0,num_pdcch_symbols);
 
@@ -1510,12 +1510,12 @@ void phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
 	  frame, subframe,
 	  eNB->ulsch[(uint32_t)UE_id]->Msg3_frame,
 	  eNB->ulsch[(uint32_t)UE_id]->Msg3_subframe);
-    printf("[eNB %"PRIu8"/ CC_id %d/ UE %d][RAPROC] Frame %d, subframe %d: Calling generate_dlsch (RA),Msg3 frame %"PRIu32", Msg3 subframe %"PRIu8"\n",
-	  eNB->Mod_id,eNB->CC_id,UE_id,
-	  frame, subframe,
-	  eNB->ulsch[(uint32_t)UE_id]->Msg3_frame,
-	  eNB->ulsch[(uint32_t)UE_id]->Msg3_subframe);
-    printf("Calling generate_dlsch (RA) and start pdsch_procedures with ra_flag=%d, dci_alloc->ra_flag=%d, and subframe %d, eNB->dlsch_ra->active %d, CC_id %d\n",1,dci_alloc->ra_flag,subframe,eNB->dlsch_ra->active,eNB->CC_id);
+    //printf("[eNB %"PRIu8"/ CC_id %d/ UE %d][RAPROC] Frame %d, subframe %d: Calling generate_dlsch (RA),Msg3 frame %"PRIu32", Msg3 subframe %"PRIu8"\n",
+	//  eNB->Mod_id,eNB->CC_id,UE_id,
+	//  frame, subframe,
+	//  eNB->ulsch[(uint32_t)UE_id]->Msg3_frame,
+	//  eNB->ulsch[(uint32_t)UE_id]->Msg3_subframe);
+    //printf("Calling generate_dlsch (RA) and start pdsch_procedures with ra_flag=%d, dci_alloc->ra_flag=%d, and subframe %d, eNB->dlsch_ra->active %d, CC_id %d\n",1,dci_alloc->ra_flag,subframe,eNB->dlsch_ra->active,eNB->CC_id);
     //if (subframe==0 || subframe==5)
     //dci_alloc->ra_flag = 1;
     pdsch_procedures(eNB,proc,eNB->dlsch_ra,(LTE_eNB_DLSCH_t*)NULL,(LTE_eNB_UE_stats*)NULL,1,num_pdcch_symbols);
@@ -1537,7 +1537,7 @@ void phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
       if ((eNB->dlsch[(uint8_t)UE_id][0])&&
 	  (eNB->dlsch[(uint8_t)UE_id][0]->rnti>0)&&
 	  (eNB->dlsch[(uint8_t)UE_id][0]->active == 1)) {
-	printf("Scan UE specific DLSCH and start pdsch_procedures with ra_flag=%d, dci_alloc->ra_flag=%d, and subframe %d\n",0,dci_alloc->ra_flag,subframe);
+	//printf("Scan UE specific DLSCH and start pdsch_procedures with ra_flag=%d, dci_alloc->ra_flag=%d, and subframe %d\n",0,dci_alloc->ra_flag,subframe);
         //dci_alloc->ra_flag = 0;
 	pdsch_procedures(eNB,proc,eNB->dlsch[(uint8_t)UE_id][0],eNB->dlsch[(uint8_t)UE_id][1],&eNB->UE_stats[(uint32_t)UE_id],0,num_pdcch_symbols);
 
@@ -1609,9 +1609,9 @@ void process_Msg3(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,uint8_t UE_id, uint8_t
     LOG_D(PHY,"[eNB %d][RAPROC] frame %d, subframe %d: Setting subframe_scheduling_flag (Msg3) for UE %d\n",
           eNB->Mod_id,
           frame,subframe,UE_id);
-    printf("[eNB %d/ CC_id %d/ UE %d][RAPROC] frame %d, subframe %d: Setting subframe_scheduling_flag (Msg3) for UE %d\n",
-          eNB->Mod_id,eNB->CC_id,UE_id,
-          frame,subframe,UE_id);
+    //printf("[eNB %d/ CC_id %d/ UE %d][RAPROC] frame %d, subframe %d: Setting subframe_scheduling_flag (Msg3) for UE %d\n",
+    //      eNB->Mod_id,eNB->CC_id,UE_id,
+    //      frame,subframe,UE_id);
   }
 }
 
@@ -2882,7 +2882,7 @@ void do_prach(PHY_VARS_eNB *eNB,int frame,int subframe) {
 
   eNB_proc_t *proc = &eNB->proc;
   LTE_DL_FRAME_PARMS *fp=&eNB->frame_parms;
-  printf("do_prach: eNB %d, CC_id %d\n",eNB->Mod_id,eNB->CC_id);
+  //printf("do_prach: eNB %d, CC_id %d\n",eNB->Mod_id,eNB->CC_id);
   // check if we have to detect PRACH first
   if (is_prach_subframe(fp,frame,subframe)>0) { 
     /* accept some delay in processing - up to 5ms */

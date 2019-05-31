@@ -117,14 +117,14 @@ unsigned short fill_rar(
         eNB_mac_inst[module_idP].common_channels[CC_id].RA_template[ra_idx].rnti,
         rarh->RAPID,eNB_mac_inst[module_idP].common_channels[CC_id].RA_template[0].preamble_index,
         eNB_mac_inst[module_idP].common_channels[CC_id].RA_template[ra_idx].timing_offset);
-  printf("[eNB %d][RAPROC] CC_id %d Frame %d Generating RAR (%02x|%02x.%02x.%02x.%02x.%02x.%02x) for ra_idx %d, CRNTI %x,preamble %d/%d,TIMING OFFSET %d\n",
+  /*printf("[eNB %d][RAPROC] CC_id %d Frame %d Generating RAR (%02x|%02x.%02x.%02x.%02x.%02x.%02x) for ra_idx %d, CRNTI %x,preamble %d/%d,TIMING OFFSET %d\n",
         module_idP, CC_id,
         frameP,
         *(uint8_t*)rarh,rar[0],rar[1],rar[2],rar[3],rar[4],rar[5],
         ra_idx,
         eNB_mac_inst[module_idP].common_channels[CC_id].RA_template[ra_idx].rnti,
         rarh->RAPID,eNB_mac_inst[module_idP].common_channels[CC_id].RA_template[0].preamble_index,
-        eNB_mac_inst[module_idP].common_channels[CC_id].RA_template[ra_idx].timing_offset);
+        eNB_mac_inst[module_idP].common_channels[CC_id].RA_template[ra_idx].timing_offset);*/
 
   if (opt_enabled) {
     trace_pdu(1, dlsch_buffer, input_buffer_length, module_idP, 2, 1,
@@ -133,9 +133,9 @@ unsigned short fill_rar(
           module_idP, CC_id, frameP, eNB_mac_inst[module_idP].common_channels[CC_id].RA_template[ra_idx].rnti,
           rarh->RAPID, input_buffer_length);
   }
-  printf("[eNB %d][RAPROC] CC_id %d RAR Frame %d trace pdu for rnti %x and  rapid %d size %d\n",
+  /*printf("[eNB %d][RAPROC] CC_id %d RAR Frame %d trace pdu for rnti %x and  rapid %d size %d\n",
           module_idP, CC_id, frameP, eNB_mac_inst[module_idP].common_channels[CC_id].RA_template[ra_idx].rnti,
-          rarh->RAPID, input_buffer_length);
+          rarh->RAPID, input_buffer_length);*/
 
   return(eNB_mac_inst[module_idP].common_channels[CC_id].RA_template[ra_idx].rnti);
 }

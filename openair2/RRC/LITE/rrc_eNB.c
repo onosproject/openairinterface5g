@@ -4408,7 +4408,7 @@ rrc_eNB_decode_dcch(
 )
 //-----------------------------------------------------------------------------
 {
-  printf("rrc_eNB_decode_dcch: module_id %d\n",ctxt_pP->module_id);
+  //printf("rrc_eNB_decode_dcch: module_id %d\n",ctxt_pP->module_id);
   asn_dec_rval_t                      dec_rval;
   //UL_DCCH_Message_t uldcchmsg;
   UL_DCCH_Message_t                  *ul_dcch_msg = NULL; //&uldcchmsg;
@@ -5020,7 +5020,7 @@ rrc_enb_task(
             msg_name_p);
 
       CC_id = RRC_MAC_CCCH_DATA_IND(msg_p).CC_id;
-      printf("rrc_enb_task: CC_id %d\n",CC_id);//ok
+      //printf("rrc_enb_task: CC_id %d\n",CC_id);//ok
       srb_info_p = &eNB_rrc_inst[instance].carrier[CC_id].Srb0;
 
       memcpy(srb_info_p->Rx_buffer.Payload,
@@ -5042,7 +5042,7 @@ rrc_enb_task(
             PROTOCOL_RRC_CTXT_UE_ARGS(&ctxt),
             RRC_DCCH_DATA_IND(msg_p).dcch_index,
             msg_name_p);
-      printf("RRC_DCCH_DATA_IND: ctxt->instance %d,  ctxt->module_id %d\n",ctxt.instance,ctxt.module_id);
+      //printf("RRC_DCCH_DATA_IND: ctxt->instance %d,  ctxt->module_id %d\n",ctxt.instance,ctxt.module_id);
       rrc_eNB_decode_dcch(&ctxt,
                           RRC_DCCH_DATA_IND(msg_p).dcch_index,
                           RRC_DCCH_DATA_IND(msg_p).sdu_p,

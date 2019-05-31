@@ -552,7 +552,7 @@ rrc_rx_tx(
     }
     if (ue_to_be_removed)
     {
-      printf("ue_to_be_removed: CC_id %d\n",CC_id);
+      //printf("ue_to_be_removed: CC_id %d\n",CC_id);
       rrc_eNB_free_UE(ctxt_pP->module_id,ue_to_be_removed,CC_id);
     }
 #ifdef RRC_LOCALIZATION
@@ -577,12 +577,12 @@ rrc_rx_tx(
               current_timestamp_ms,
               ctxt_pP->frame,
               estimated_distance);
-        printf(" RRC [UE/id %d -> eNB/id %d] timestamp %d frame %d estimated r = %f\n",
+        /*printf(" RRC [UE/id %d -> eNB/id %d] timestamp %d frame %d estimated r = %f\n",
               ctxt.rnti,
               ctxt_pP->module_id,
               current_timestamp_ms,
               ctxt_pP->frame,
-              estimated_distance);
+              estimated_distance);*/
         LOG_D(LOCALIZE, " RRC status %d\n", ue_context_p->ue_context.Status);
         push_front(&eNB_rrc_inst[ctxt_pP->module_id].loc_list,
                    estimated_distance);

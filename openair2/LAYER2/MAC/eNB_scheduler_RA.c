@@ -250,8 +250,8 @@ void schedule_RA(module_id_t module_idP,frame_t frameP, sub_frame_t subframeP,un
 	  if (!CCE_allocation_infeasible(module_idP,CC_id,1,subframeP,2,RA_template->RA_rnti)) {
 	    LOG_D(MAC,"Frame %d: Subframe %d : Adding common DCI for RA_RNTI %x\n",
                   frameP,subframeP,RA_template->RA_rnti);
-	    printf("Schedule_RA: eNB %d, CC_id %d, Frame %d: Subframe %d : Adding common DCI for RA_RNTI %x\n",
-                  module_idP,CC_id,frameP,subframeP,RA_template->RA_rnti);
+	    //printf("Schedule_RA: eNB %d, CC_id %d, Frame %d: Subframe %d : Adding common DCI for RA_RNTI %x\n",
+            //      module_idP,CC_id,frameP,subframeP,RA_template->RA_rnti);
 	    add_common_dci(DCI_pdu,
 			   (void*)&RA_template->RA_alloc_pdu1[0],
 			   RA_template->RA_rnti,
@@ -712,10 +712,10 @@ void schedule_RA(module_id_t module_idP,frame_t frameP, sub_frame_t subframeP,un
 			    RA_template->RA_dci_size_bits2,
 			    RA_template->RA_dci_fmt2,
 			    0);
-printf("MAC: msg4 retransmission for rnti %x (round %d) fsf %d/%d\n", RA_template->rnti, round, frameP, subframeP);
+          //printf("MAC: msg4 retransmission for rnti %x (round %d) fsf %d/%d\n", RA_template->rnti, round, frameP, subframeP);
 	  }
 else
-printf("MAC: msg4 retransmission for rnti %x (round %d) fsf %d/%d CCE allocation failed!\n", RA_template->rnti, round, frameP, subframeP);
+          //printf("MAC: msg4 retransmission for rnti %x (round %d) fsf %d/%d CCE allocation failed!\n", RA_template->rnti, round, frameP, subframeP);
 	  LOG_W(MAC,"[eNB %d][RAPROC] CC_id %d Frame %d, subframeP %d: Msg4 not acknowledged, adding ue specific dci (rnti %x) for RA (Msg4 Retransmission)\n",
 		module_idP,CC_id,frameP,subframeP,RA_template->rnti);
 	} else {
@@ -724,7 +724,7 @@ printf("MAC: msg4 retransmission for rnti %x (round %d) fsf %d/%d CCE allocation
 		  remove UE instance across all the layers: mac_xface->cancel_RA();
 		  }
 	  */
-printf("MAC: msg4 acknowledged for rnti %x fsf %d/%d, let's configure it\n", RA_template->rnti, frameP, subframeP);
+          //printf("MAC: msg4 acknowledged for rnti %x fsf %d/%d, let's configure it\n", RA_template->rnti, frameP, subframeP);
 	  LOG_I(MAC,"[eNB %d][RAPROC] CC_id %d Frame %d, subframeP %d : Msg4 acknowledged\n",module_idP,CC_id,frameP,subframeP);
 	  RA_template->wait_ack_Msg4=0;
 	  RA_template->RA_active=FALSE;
@@ -747,7 +747,7 @@ void initiate_ra_proc(module_id_t module_idP, int CC_id,frame_t frameP, uint16_t
   uint8_t i;
 
   LOG_D(MAC,"[eNB %d][RAPROC] CC_id %d Frame %d Initiating RA procedure for preamble index %d\n",module_idP,CC_id,frameP,preamble_index);
-  printf("initiate_ra_proc:[eNB %d][RAPROC] CC_id %d Frame %d subframe %d Initiating RA procedure for preamble index %d\n",module_idP,CC_id,frameP,subframeP,preamble_index);
+  //printf("initiate_ra_proc:[eNB %d][RAPROC] CC_id %d Frame %d subframe %d Initiating RA procedure for preamble index %d\n",module_idP,CC_id,frameP,subframeP,preamble_index);
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_INITIATE_RA_PROC,1);
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_INITIATE_RA_PROC,0);
 

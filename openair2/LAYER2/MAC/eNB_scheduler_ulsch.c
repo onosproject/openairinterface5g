@@ -73,7 +73,7 @@ void rx_sdu(const module_id_t enb_mod_idP,
 	    const int         harq_pidP,
 	    uint8_t          *msg3_flagP)
 {
-  printf("rx_sdu: CC_id %d, find UE_id %d\n",CC_idP,find_UE_id(enb_mod_idP,rntiP));
+  //printf("rx_sdu: CC_id %d, find UE_id %d\n",CC_idP,find_UE_id(enb_mod_idP,rntiP));
   unsigned char  rx_ces[MAX_NUM_CE],num_ce,num_sdu,i,*payload_ptr;
   unsigned char  rx_lcids[NB_RB_MAX];
   unsigned short rx_lengths[NB_RB_MAX];

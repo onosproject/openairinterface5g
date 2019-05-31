@@ -399,7 +399,7 @@ void phy_config_dedicated_eNB_step2(PHY_VARS_eNB *eNB)
     physicalConfigDedicated = eNB->physicalConfigDedicated[UE_id];
 
     if (physicalConfigDedicated != NULL) {
-      printf("phy_config_dedicated_eNB_step2: UE_id %d\n",UE_id);
+      //printf("phy_config_dedicated_eNB_step2: UE_id %d\n",UE_id);
       LOG_I(PHY,"[eNB %d/CC %d] Sent physicalConfigDedicated=%p for UE %d\n",eNB->Mod_id,eNB->CC_id,physicalConfigDedicated,UE_id);
       LOG_D(PHY,"------------------------------------------------------------------------\n");
 

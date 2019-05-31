@@ -1585,7 +1585,7 @@ do_RRCConnectionSetup(
     */
 
   //soundingRS-UL-ConfigDedicated
-  printf("enb_properties.properties[ctxt_pP->module_id=%d]->srs_enable[CC_id=%d] %d\n",ctxt_pP->module_id,CC_id,enb_properties.properties[ctxt_pP->module_id]->srs_enable[CC_id]);
+  //printf("enb_properties.properties[ctxt_pP->module_id=%d]->srs_enable[CC_id=%d] %d\n",ctxt_pP->module_id,CC_id,enb_properties.properties[ctxt_pP->module_id]->srs_enable[CC_id]);
   if (enb_properties.properties[ctxt_pP->module_id]->srs_enable[CC_id]) {
     physicalConfigDedicated2->soundingRS_UL_ConfigDedicated->present = SoundingRS_UL_ConfigDedicated_PR_setup;
     physicalConfigDedicated2->soundingRS_UL_ConfigDedicated->choice.setup.srs_Bandwidth =
@@ -1766,8 +1766,8 @@ do_RRCConnectionSetup(
   LOG_D(RRC,"RRCConnectionSetup Encoded %d bits (%d bytes), ecause %d\n",
         enc_rval.encoded,(enc_rval.encoded+7)/8,ecause);
 #endif
-  printf("RRCConnectionSetup Encoded %d bits (%d bytes), ecause %d\n",
-        enc_rval.encoded,(enc_rval.encoded+7)/8,ecause);
+  /*printf("RRCConnectionSetup Encoded %d bits (%d bytes), ecause %d\n",
+        enc_rval.encoded,(enc_rval.encoded+7)/8,ecause);*/
   //  FREEMEM(SRB_list);
   //  free(SRB1_config);
   //  free(SRB1_rlc_config);
