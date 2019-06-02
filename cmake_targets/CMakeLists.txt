@@ -405,6 +405,73 @@ add_library(S1AP_ENB
   )
 add_dependencies(S1AP_ENB rrc_flag s1ap_flag)
 
+#M2AP
+# Same limitation as described in RRC/S1AP: unknown generated file list
+# so we generate it at cmake time
+##############
+add_list1_option(M2AP_RELEASE R14 "M2AP ASN.1 grammar version" R14)
+
+set(M2AP_DIR ${OPENAIR2_DIR}/M2AP)
+if (${M2AP_RELEASE} STREQUAL "R8")
+  make_version(M2AP_VERSION 8 9 0)
+  set(M2AP_ASN_FILES m2ap-8.9.0.asn1)
+elseif (${M2AP_RELEASE} STREQUAL "R11")
+  make_version(M2AP_VERSION 11 9 0)
+  set(M2AP_ASN_FILES m2ap-11.9.0.asn1)
+elseif (${M2AP_RELEASE} STREQUAL "R12")
+  make_version(M2AP_VERSION 12 9 0)
+  set(M2AP_ASN_FILES m2ap-12.9.0.asn1)
+elseif (${M2AP_RELEASE} STREQUAL "R14")
+  make_version(M2AP_VERSION 14 0 0)
+  set(M2AP_ASN_FILES m2ap-14.0.0.asn1)
+elseif (${M2AP_RELEASE} STREQUAL "R15")
+  make_version(M2AP_VERSION 15 0 0)
+  set(M2AP_ASN_FILES m2ap-15.0.0.asn1)
+endif(${M2AP_RELEASE} STREQUAL "R8")
+add_definitions(-DM2AP_VERSION=${M2AP_VERSION})
+set(M2AP_ASN_DIR ${M2AP_DIR}/MESSAGES/ASN1/${M2AP_RELEASE})
+set(M2AP_C_DIR ${asn1_generated_dir}/M2AP_${M2AP_RELEASE})
+
+# Warning: if you modify ASN.1 source file to generate new C files, cmake should be re-run instead of make
+execute_process(COMMAND ${OPENAIR_CMAKE}/tools/make_asn1c_includes.sh "${M2AP_C_DIR}" "${M2AP_ASN_DIR}/${M2AP_ASN_FILES}"  "M2AP_" -fno-include-deps
+                RESULT_VARIABLE ret)
+if (NOT ${ret} STREQUAL 0)
+  message(FATAL_ERROR "${ret}: error")
+endif (NOT ${ret} STREQUAL 0)
+
+file(GLOB M2AP_source ${M2AP_C_DIR}/*.c)
+
+add_custom_target (
+  m2_flag ALL
+  COMMAND ${OPENAIR_CMAKE}/tools/make_asn1c_includes.sh "${M2AP_C_DIR}" "${M2AP_ASN_DIR}/${M2AP_ASN_FILES}"  "M2AP_" -fno-include-deps
+  DEPENDS ${M2AP_ASN_DIR}/${M2AP_ASN_FILES}
+  )
+
+add_library(M2AP_LIB
+  ${M2AP_source}
+  ${M2AP_DIR}/m2ap_common.c
+  )
+add_dependencies(M2AP_LIB rrc_flag m2_flag)
+
+include_directories ("${M2AP_C_DIR}")
+include_directories ("${M2AP_DIR}")
+
+add_library(M2AP_ENB
+  ${M2AP_DIR}/m2ap_common.c
+  #${M2AP_DIR}/m2ap_eNB.c
+  #${M2AP_DIR}/m2ap_decoder.c
+  #${M2AP_DIR}/m2ap_encoder.c
+  #${M2AP_DIR}/m2ap_handler.c
+  #${M2AP_DIR}/m2ap_itti_messaging.c
+  #${M2AP_DIR}/m2ap_eNB_management_procedures.c
+  #${M2AP_DIR}/m2ap_eNB_generate_messages.c
+  #${M2AP_DIR}/m2ap_ids.c
+  #${M2AP_DIR}/m2ap_timers.c
+  #${M2AP_DIR}/m2ap_MCE_interface_management.c
+ )
+add_dependencies(M2AP_ENB rrc_flag m2_flag)
+
+
 #X2AP
 # Same limitation as described in RRC/S1AP: unknown generated file list
 # so we generate it at cmake time
@@ -810,6 +877,7 @@ include_directories("${OPENAIR3_DIR}/SECU")
 include_directories("${OPENAIR3_DIR}/SCTP")
 include_directories("${OPENAIR3_DIR}/S1AP")
 include_directories("${OPENAIR2_DIR}/X2AP")
+include_directories("${OPENAIR2_DIR}/M2AP")
 include_directories("${OPENAIR2_DIR}/F1AP")
 include_directories("${OPENAIR3_DIR}/UDP")
 include_directories("${OPENAIR3_DIR}/GTPV1-U")
@@ -2085,7 +2153,7 @@ add_dependencies(lte-softmodem rrc_flag s1ap_flag x2_flag)
 
 target_link_libraries (lte-softmodem
   -Wl,--start-group
-  RRC_LIB S1AP_LIB S1AP_ENB F1AP_LIB F1AP X2AP_LIB X2AP_ENB GTPV1U SECU_CN SECU_OSA UTIL HASHTABLE SCTP_CLIENT UDP SCHED_LIB SCHED_RU_LIB PHY_COMMON PHY PHY_RU LFDS L2
+  RRC_LIB S1AP_LIB S1AP_ENB F1AP_LIB F1AP X2AP_LIB X2AP_ENB M2AP_LIB M2AP_ENB  GTPV1U SECU_CN SECU_OSA UTIL HASHTABLE SCTP_CLIENT UDP SCHED_LIB SCHED_RU_LIB PHY_COMMON PHY PHY_RU LFDS L2
   ${MSC_LIB} ${RAL_LIB} ${NAS_UE_LIB} ${ITTI_LIB} ${FLPT_MSG_LIB} ${ASYNC_IF_LIB} ${FLEXRAN_AGENT_LIB} ${FSPT_MSG_LIB} ${PROTO_AGENT_LIB} LFDS7
   NFAPI_COMMON_LIB NFAPI_LIB NFAPI_VNF_LIB NFAPI_PNF_LIB NFAPI_USER_LIB
   -Wl,--end-group z dl)
@@ -2153,7 +2221,7 @@ add_executable(lte-uesoftmodem
 add_dependencies(lte-uesoftmodem rrc_flag s1ap_flag x2_flag)
 target_link_libraries (lte-uesoftmodem
   -Wl,--start-group
-  RRC_LIB S1AP_LIB S1AP_ENB X2AP_LIB X2AP_ENB F1AP F1AP_LIB GTPV1U SECU_CN SECU_OSA UTIL HASHTABLE SCTP_CLIENT UDP SCHED_RU_LIB SCHED_UE_LIB PHY_COMMON PHY_UE PHY_RU LFDS L2_UE SIMU
+  RRC_LIB S1AP_LIB S1AP_ENB X2AP_LIB X2AP_ENB M2AP_LIB M2AP_ENB  F1AP F1AP_LIB GTPV1U SECU_CN SECU_OSA UTIL HASHTABLE SCTP_CLIENT UDP SCHED_RU_LIB SCHED_UE_LIB PHY_COMMON PHY_UE PHY_RU LFDS L2_UE SIMU
   ${MSC_LIB} ${RAL_LIB} ${NAS_UE_LIB} ${ITTI_LIB} ${FLPT_MSG_LIB} ${ASYNC_IF_LIB} LFDS7 ${ATLAS_LIBRARIES}
   NFAPI_COMMON_LIB NFAPI_LIB NFAPI_PNF_LIB NFAPI_USER_LIB
   -Wl,--end-group z dl)
@@ -2232,7 +2300,7 @@ add_executable(test_epc_generate_scenario
   ${OPENAIR3_DIR}/S1AP/s1ap_eNB_defs.h
   )
 target_link_libraries (test_epc_generate_scenario
-  -Wl,--start-group RRC_LIB S1AP_LIB S1AP_ENB X2AP_LIB X2AP_ENB F1AP_LIB F1AP GTPV1U LIB_NAS_UE SECU_CN UTIL HASHTABLE SCTP_CLIENT UDP SCHED_LIB PHY LFDS ${ITTI_LIB} ${MSC_LIB} L2 -Wl,--end-group pthread m rt crypt sctp ${LIBXML2_LIBRARIES} ${LIBXSLT_LIBRARIES} ${CRYPTO_LIBRARIES} ${OPENSSL_LIBRARIES} ${NETTLE_LIBRARIES} ${CONFIG_LIBRARIES}
+  -Wl,--start-group RRC_LIB S1AP_LIB S1AP_ENB X2AP_LIB X2AP_ENB M2AP_LIB M2AP_ENB  F1AP_LIB F1AP GTPV1U LIB_NAS_UE SECU_CN UTIL HASHTABLE SCTP_CLIENT UDP SCHED_LIB PHY LFDS ${ITTI_LIB} ${MSC_LIB} L2 -Wl,--end-group pthread m rt crypt sctp ${LIBXML2_LIBRARIES} ${LIBXSLT_LIBRARIES} ${CRYPTO_LIBRARIES} ${OPENSSL_LIBRARIES} ${NETTLE_LIBRARIES} ${CONFIG_LIBRARIES}
   )
 
 add_executable(test_epc_play_scenario
@@ -2251,7 +2319,7 @@ add_executable(test_epc_play_scenario
   )
 target_include_directories(test_epc_play_scenario PUBLIC /usr/local/share/asn1c)
 target_link_libraries (test_epc_play_scenario
-  -Wl,--start-group RRC_LIB S1AP_LIB X2AP_LIB X2AP_ENB F1AP_LIB F1AP GTPV1U LIB_NAS_UE SECU_CN UTIL HASHTABLE SCTP_CLIENT UDP SCHED_LIB PHY_COMMON PHY PHY_UE LFDS ${ITTI_LIB} ${MSC_LIB} -Wl,--end-group pthread m rt crypt sctp ${LIBXML2_LIBRARIES} ${LIBXSLT_LIBRARIES} ${CRYPTO_LIBRARIES} ${OPENSSL_LIBRARIES} ${NETTLE_LIBRARIES} ${CONFIG_LIBRARIES}
+  -Wl,--start-group RRC_LIB S1AP_LIB X2AP_LIB X2AP_ENB M2AP_LIB M2AP_ENB  F1AP_LIB F1AP GTPV1U LIB_NAS_UE SECU_CN UTIL HASHTABLE SCTP_CLIENT UDP SCHED_LIB PHY_COMMON PHY PHY_UE LFDS ${ITTI_LIB} ${MSC_LIB} -Wl,--end-group pthread m rt crypt sctp ${LIBXML2_LIBRARIES} ${LIBXSLT_LIBRARIES} ${CRYPTO_LIBRARIES} ${OPENSSL_LIBRARIES} ${NETTLE_LIBRARIES} ${CONFIG_LIBRARIES}
   )
 
 
@@ -2287,7 +2355,7 @@ if (${T_TRACER})
         dlsim_tm4 dlsim dlsim_tm7 ulsim pbchsim scansim mbmssim
         pdcchsim pucchsim prachsim syncsim ulsim cu_test du_test
         #all "add_library" definitions
-        ITTI RRC_LIB S1AP_LIB S1AP_ENB X2AP_LIB X2AP_ENB F1AP_LIB F1AP
+        ITTI RRC_LIB S1AP_LIB S1AP_ENB X2AP_LIB X2AP_ENB M2AP_LIB M2AP_ENB  F1AP_LIB F1AP
         oai_exmimodevif oai_usrpdevif oai_bladerfdevif oai_lmssdrdevif
         oai_eth_transpro
         FLPT_MSG ASYNC_IF FLEXRAN_AGENT HASHTABLE MSC UTIL OMG_SUMO SECU_OSA
