@@ -288,7 +288,7 @@ void assign_rbs_required (module_id_t Mod_id,
         while (TBS < UE_list->UE_template[pCCid][UE_id].dl_buffer_total)  {
           nb_rbs_required[CC_id][UE_id] += min_rb_unit[CC_id];
 #ifdef COORDINATED_SCHEDULING
-	  if (subframe==0 || subframe==5 || CC_total<2)//Subframes 0 and 5 are common signals that allow UEs to synchronize with the eNb.
+	  if (/*subframe==0 || subframe==5 || */CC_total<2)//Subframes 0 and 5 are common signals that allow UEs to synchronize with the eNb.
 	  {
 		if (nb_rbs_required[CC_id][UE_id] > frame_parms[CC_id]->N_RB_DL)
 		{
@@ -712,7 +712,7 @@ void dlsch_scheduler_pre_processor (module_id_t   Mod_id,
 
       if(round>0) {
 #ifdef COORDINATED_SCHEDULING
-	if (subframeP==0 || subframeP==5 || CC_total<2)
+	if (/*subframeP==0 || subframeP==5 || */CC_total<2)
 		nb_rbs_required[CC_id][UE_id] = UE_list->UE_template[CC_id][UE_id].nb_rb[harq_pid];
 	else
 	{
@@ -1213,7 +1213,7 @@ void dlsch_scheduler_pre_processor_allocate (module_id_t   Mod_id,
   UE_list_t *UE_list=&eNB_mac_inst[Mod_id].UE_list;
   UE_sched_ctrl *ue_sched_ctl = &UE_list->UE_sched_ctrl[UE_id];
 #ifdef COORDINATED_SCHEDULING
-  if (CC_total==1||subframe==0||subframe==5){
+  if (CC_total==1/*||subframe==0||subframe==5*/){
   	start=0;
 	stop=N_RBG;
 	//printf("[sf=0or5]CC_total %d,start %d,stop %d\n",CC_total,start,stop);

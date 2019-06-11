@@ -45,9 +45,9 @@
 #include "UTIL/LOG/vcd_signal_dumper.h"
 #include "RRC/LITE/extern.h"
 //#define DEBUG_DLSCH_MODULATION
+#define STATIC_COORDINATED_SCHEDULING_VISUALIZATION 1
 
 //#define is_not_pilot(pilots,re,nushift,use2ndpilots) ((pilots==0) || ((re!=nushift) && (re!=nushift+6)&&((re!=nushift+3)||(use2ndpilots==1))&&((re!=nushift+9)||(use2ndpilots==1)))?1:0)
-static  int resource_allocation[2][10][100];
 uint8_t is_not_pilot(uint8_t pilots, uint8_t re, uint8_t nushift, uint8_t use2ndpilots)
 {
 
@@ -2002,15 +2002,22 @@ int dlsch_modulation(PHY_VARS_eNB* phy_vars_eNB,
                      LTE_eNB_DLSCH_t *dlsch1)
 {
   LTE_DL_FRAME_PARMS *frame_parms = &phy_vars_eNB->frame_parms;
-  int num_UEs_total=0;
+  //int num_UEs_total=0;
+#ifdef STATIC_COORDINATED_SCHEDULING_VISUALIZATION
+  //FILE *file0;
+  //FILE *file1;
+  //file0 = fopen ("data0.txt","a");
+  //file1 = fopen ("data1.txt","a");
+  //int resource_allocation[2][10][25];
   int UE_id,UE=0;
   for (UE_id = 0; UE_id < NUMBER_OF_UE_MAX; UE_id++) {
     if (eNB_mac_inst[phy_vars_eNB->Mod_id].UE_list.active[UE_id] != TRUE) continue;
-    	num_UEs_total++;
+    	//num_UEs_total++;
 	//printf("Active: UE%d, CC_id %d\n",UE_id,UE_PCCID(0,UE_id));
     if (UE_PCCID(0,UE_id)==phy_vars_eNB->CC_id)
 	UE=UE_id;
   }
+#endif
   //printf("dlsch_modulation:CC_id %d, num_UEs_total %d, UE %d \n",UE_PCCID(0,UE_id),num_UEs_total,UE);
   //if ((num_UEs_total>0 && eNB_mac_inst[phy_vars_eNB->Mod_id].UE_list.num_UEs[phy_vars_eNB->CC_id]==0&&(subframe_offset!=0||subframe_offset!=5))) return 0;//The dlsch modulation only is valid when there is at least 1 UE per Component carrier.
   uint8_t nsymb;
@@ -2032,12 +2039,7 @@ int dlsch_modulation(PHY_VARS_eNB* phy_vars_eNB,
 
   int16_t *qam_table_s0=NULL,*qam_table_s1=NULL;
 
-  FILE *file0;
-  FILE *file1;
-  file0 = fopen ("data0.txt","w");
-  file1 = fopen ("data1.txt","w");
-
-  if (subframe_offset==0 && UE==0)
+  /*if (subframe_offset==0 && UE==0)
   {
 	for (i=0;i<2;i++)
 	{
@@ -2047,7 +2049,7 @@ int dlsch_modulation(PHY_VARS_eNB* phy_vars_eNB,
 				resource_allocation[i][j][k]=0;
 		}
 	}
-  }
+  }*/
 #if 0
   /* TODO: variable to be removed? */
   int (*allocate_REs)(PHY_VARS_eNB*,
@@ -2363,6 +2365,7 @@ int dlsch_modulation(PHY_VARS_eNB* phy_vars_eNB,
     //memset(&txdataF[aa][symbol_offset],0,frame_parms->ofdm_symbol_size<<2);
     //printf("symbol_offset %d,subframe offset %d : pilots %d\n",symbol_offset,subframe_offset,pilots);
     //printf("subframe %d, CC_id %d, num_UEs %d | \t",subframe_offset,phy_vars_eNB->CC_id,eNB_mac_inst[0].UE_list.num_UEs[phy_vars_eNB->CC_id]);
+    if (l==num_pdcch_symbols)  printf("UE %d, rb %d, subframe %d\n",UE,rb,subframe_offset);
     for (rb=0; rb<frame_parms->N_RB_DL; rb++) {
 
       if (rb < 32)
@@ -2401,7 +2404,16 @@ int dlsch_modulation(PHY_VARS_eNB* phy_vars_eNB,
       }
       if (rb_alloc_ind > 0) {
         //    printf("Allocated rb %d/symbol %d, skip_half %d, subframe_offset %d, symbol_offset %d, re_offset %d, jj %d\n",rb,l,skip_half,subframe_offset,symbol_offset,re_offset,jj);
-	resource_allocation[UE][subframe_offset][rb]=1;
+#ifdef STATIC_COORDINATED_SCHEDULING_VISUALIZATION
+	if (l==num_pdcch_symbols)
+   	{
+		printf("1 ");
+		/*if (UE==0) 
+			fprintf(file0,"1 ");
+		else 	
+			fprintf(file1,"1 ");*/
+	}
+#endif
       if (dlsch0 != NULL) {
         get_pmi_temp = get_pmi(frame_parms->N_RB_DL,
                                dlsch0->harq_processes[harq_pid]->mimo_mode,
@@ -2441,6 +2453,17 @@ int dlsch_modulation(PHY_VARS_eNB* phy_vars_eNB,
       }
       else {
         //      printf("Unallocated rb %d/symbol %d, re_offset %d, jj %d\n",rb,l,re_offset,jj);
+#ifdef STATIC_COORDINATED_SCHEDULING_VISUALIZATION
+	if (l==num_pdcch_symbols)
+   	{
+		printf("0 ");
+		/*if (UE==0) 
+			fprintf(file0,"0 ");
+		else 	
+			fprintf(file1,"0 ");*/
+	}
+#endif
+		//printf("UE %d, rb %d, subframe %d: 0\n",UE,rb,subframe_offset);
       }
       re_offset+=12; // go to next RB
 
@@ -2453,28 +2476,20 @@ int dlsch_modulation(PHY_VARS_eNB* phy_vars_eNB,
           re_offset=7;  // odd number of RBs
       }
     }
-    printf("\n");
-  }
-
-  if (subframe_offset==9)
-  {
-	printf("UE %d, subframe %d:\n",UE,subframe_offset);
-	for (j=frame_parms->N_RB_DL-1;j>=0;j--)
+#ifdef STATIC_COORDINATED_SCHEDULING_VISUALIZATION
+    if (l==num_pdcch_symbols)
+    {
+	/*if (UE==0) 
 	{
-		//printf("%d %d %d %d %d %d %d %d %d %d\n",resource_allocation[UE][0][j],resource_allocation[UE][1][j],resource_allocation[UE][2][j],resource_allocation[UE][3][j],resource_allocation[UE][4][j],resource_allocation[UE][5][j],resource_allocation[UE][6][j],resource_allocation[UE][7][j],resource_allocation[UE][8][j],resource_allocation[UE][9][j]);
-		if (UE==0)
-		{
-			fprintf(file0,"%d %d %d %d %d %d %d %d %d %d\n",resource_allocation[UE][0][j],resource_allocation[UE][1][j],resource_allocation[UE][2][j],resource_allocation[UE][3][j],resource_allocation[UE][4][j],resource_allocation[UE][5][j],resource_allocation[UE][6][j],resource_allocation[UE][7][j],resource_allocation[UE][8][j],resource_allocation[UE][9][j]);
-			fflush(file0);
-		}
-		else
-		{
-			fprintf(file1,"%d %d %d %d %d %d %d %d %d %d\n",resource_allocation[UE][0][j],resource_allocation[UE][1][j],resource_allocation[UE][2][j],resource_allocation[UE][3][j],resource_allocation[UE][4][j],resource_allocation[UE][5][j],resource_allocation[UE][6][j],resource_allocation[UE][7][j],resource_allocation[UE][8][j],resource_allocation[UE][9][j]);
-			fflush(file1);
-		}
+		fprintf(file0,"\n");
 	}
-	fclose(file0);
-	fclose(file1);
+	else 	
+	{
+		fprintf(file1,"\n");
+	}*/
+        if (l==num_pdcch_symbols) printf("\n");
+    }
+#endif
   }
 
 #ifdef DEBUG_DLSCH_MODULATION
@@ -2484,7 +2499,26 @@ int dlsch_modulation(PHY_VARS_eNB* phy_vars_eNB,
     msg("generate_dlsch : jj = %d,re_allocated = %d (G %d)\n",jj,re_allocated,get_G(frame_parms,dlsch1_harq->nb_rb,dlsch1_harq->rb_alloc,mod_order1,Nl1,2,0,subframe_offset));
   }
 #endif
-
+  /*if (subframe_offset==9)
+  {
+  //file0 = fopen ("data0.txt","w");
+  //file1 = fopen ("data1.txt","w");
+	printf("UE %d, subframe %d:\n",UE,subframe_offset);
+	for (j=frame_parms->N_RB_DL-1;j>=0;j--)
+	{
+		printf("%d %d %d %d %d %d %d %d %d %d\n",resource_allocation[UE][0][j],resource_allocation[UE][1][j],resource_allocation[UE][2][j],resource_allocation[UE][3][j],resource_allocation[UE][4][j],resource_allocation[UE][5][j],resource_allocation[UE][6][j],resource_allocation[UE][7][j],resource_allocation[UE][8][j],resource_allocation[UE][9][j]);
+		if (UE==0)
+		{
+			fprintf(file0,"%d %d %d %d %d %d %d %d %d %d\n",resource_allocation[UE][0][j],resource_allocation[UE][1][j],resource_allocation[UE][2][j],resource_allocation[UE][3][j],resource_allocation[UE][4][j],resource_allocation[UE][5][j],resource_allocation[UE][6][j],resource_allocation[UE][7][j],resource_allocation[UE][8][j],resource_allocation[UE][9][j]);
+		}
+		else
+		{
+			fprintf(file1,"%d %d %d %d %d %d %d %d %d %d\n",resource_allocation[UE][0][j],resource_allocation[UE][1][j],resource_allocation[UE][2][j],resource_allocation[UE][3][j],resource_allocation[UE][4][j],resource_allocation[UE][5][j],resource_allocation[UE][6][j],resource_allocation[UE][7][j],resource_allocation[UE][8][j],resource_allocation[UE][9][j]);
+		}
+	}
+	//fclose(file0);
+	//fclose(file1);
+  }*/
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_ENB_DLSCH_MODULATION, VCD_FUNCTION_OUT);
   return (re_allocated);
 }
