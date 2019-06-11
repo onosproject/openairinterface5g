@@ -160,7 +160,8 @@ void remove_7_5_kHz(RU_t *ru,uint8_t slot)
     }
     
     // undo 7.5 kHz offset for symbol 10 in case RU is master (for OTA synchronization)
-    if (ru->is_slave == 0 && slot == 3){
+
+/*    if (slot == 3){
       memcpy((void*)&rxdata_7_5kHz[aa][(3*frame_parms->ofdm_symbol_size)+
                                 (2*frame_parms->nb_prefix_samples)+
                                 frame_parms->nb_prefix_samples0],
@@ -169,9 +170,9 @@ void remove_7_5_kHz(RU_t *ru,uint8_t slot)
                            (2*frame_parms->nb_prefix_samples)+
                            frame_parms->nb_prefix_samples0],
              (frame_parms->ofdm_symbol_size + frame_parms->nb_prefix_samples)*sizeof(int32_t));
-    }
+    }*/
 
-/*    if (ru->is_slave == 0 && slot == 3){
+    if (slot == 3){
       memcpy((void*)&rxdata_7_5kHz[aa][(10*frame_parms->ofdm_symbol_size)+
                                 (8*frame_parms->nb_prefix_samples)+
                                 2*frame_parms->nb_prefix_samples0],
@@ -180,7 +181,7 @@ void remove_7_5_kHz(RU_t *ru,uint8_t slot)
                            (2*frame_parms->nb_prefix_samples)+
                            frame_parms->nb_prefix_samples0],
              (frame_parms->ofdm_symbol_size + frame_parms->nb_prefix_samples)*sizeof(int32_t));
-    }*/
+    }
 
 }
 }

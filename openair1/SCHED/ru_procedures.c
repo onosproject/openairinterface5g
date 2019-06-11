@@ -81,7 +81,7 @@ void feptx0(RU_t *ru,int slot) {
 
   slot_offset = subframe*fp->samples_per_tti + (slot*(fp->samples_per_tti>>1));
 
-  //LOG_D(PHY,"SFN/SF:RU:TX:%d/%d Generating slot %d\n",ru->proc.frame_tx, ru->proc.subframe_tx,slot);
+  LOG_D(PHY,"SFN/SF:RU:TX:%d/%d Generating slot %d\n",ru->proc.frame_tx, ru->proc.subframe_tx,slot);
 
   for (aa=0; aa<ru->nb_tx; aa++) {
     if (fp->Ncp == EXTENDED) PHY_ofdm_mod(&ru->common.txdataF_BF[aa][slot*slot_sizeF],
@@ -96,7 +96,7 @@ void feptx0(RU_t *ru,int slot) {
 		  fp->frame_type,ru->is_slave);
 */
       // generate_drs_pusch() generates dmrs for both slots (symbols 3,10)
-      if (ru->generate_dmrs_sync == 1 && slot == 0 && subframe == 1 && aa==0) {
+      if (ru->generate_dmrs_sync == 1 /*&& slot == 0*/ && subframe == 1 && aa==0) {
       	generate_drs_pusch((PHY_VARS_UE *)NULL,
 			   (UE_rxtx_proc_t*)NULL,
 			   fp,
@@ -218,7 +218,7 @@ void feptx_ofdm_2thread(RU_t *ru) {
   //VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_RU_FEPTX_OFDM , 1 );
 
   // The 2nd check is to force the slave RRUs to send DMRS at symbol 10-subframe 1-slot 1 
-  if (subframe_select(fp,subframe)==SF_DL || ((subframe_select(fp,subframe)==SF_DL || subframe==1) && ru->is_slave==1)) {
+  if (subframe_select(fp,subframe)==SF_DL || ((subframe_select(fp,subframe)==SF_DL || subframe==1) /*&& ru->is_slave==1*/)) {
   //  if (subframe_select(fp,subframe)==SF_DL) {
     // If this is not an S-subframe
     if (pthread_mutex_timedlock(&proc->mutex_feptx,&wait) != 0) {
@@ -532,8 +532,7 @@ void fep0(RU_t *ru,int slot) {
   LTE_DL_FRAME_PARMS *fp = &ru->frame_parms;
   int l;
 
-    //printf("fep0: slot %d\n",slot);
-
+  LOG_D(PHY,"fep0: slot %d, subframe %d\n",slot,proc->subframe_rx);
   //VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_RU_FEPRX+slot, 1);
   remove_7_5_kHz(ru,(slot&1)+(proc->subframe_rx<<1));
   for (l=0; l<fp->symbols_per_tti/2; l++) {
@@ -703,6 +702,7 @@ void ru_fep_full_2thread(RU_t *ru) {
     printf("delay in fep wait on condition in frame_rx: %d  subframe_rx: %d \n",proc->frame_rx,proc->subframe_rx);
   }
 
+
   /*  if (proc->subframe_rx==1 && ru->is_slave==0) {
 //        LOG_I(PHY,"******************** Master receives DMRS from slave\n");   
         ru->wait_check++;
@@ -802,10 +802,26 @@ void ru_fep_full_2thread(RU_t *ru) {
      				     		       ru->idx);
         if (ru->state == RU_CHECK_SYNC) {
           if ((check_sync_pos >= 0 && check_sync_pos<8) || (check_sync_pos < 0 && check_sync_pos>-8)) {
-    		  LOG_I(PHY,"~~~~~~~~~~~    check_sync_pos %d, frame %d, cnt %d\n",check_sync_pos,proc->frame_rx,ru->wait_check); 
+    		  LOG_I(PHY,"~~~~~~~~~~~    check_sync_pos %d, frame %d, cnt %d, missed %d\n",check_sync_pos,proc->frame_rx,ru->wait_check,ru->missed_synch_events); 
                   ru->wait_check++;
           }
+          else {
+            ru->missed_synch_events++;
+            LOG_I(PHY,"!!!!!!!!!!!!    check_sync_pos %d, frame %d, cnt %d, missed %d\n",check_sync_pos,proc->frame_rx,ru->wait_check,ru->missed_synch_events);
+          }
+          
+          if (ru->missed_synch_events > 2) {
+            ru->in_synch = 0;
+            if (ru->stop_rf) {
+               ru->stop_rf(ru);
+               ru->state = RU_SYNC;
+               ru->cmd   = EMPTY;
+               LOG_I(PHY,"RU %d rf device stopped\n",ru->idx);
+               LOG_M("rxdata.m","rxdata",&ru->common.rxdata[0][0], fp->samples_per_tti*2,1,1);
+               exit(-1);
+            } else AssertFatal(1==0,"ru->stop_rf doesn't exist\n");
 
+          } 
           if (ru->wait_check==20) { 
 	  	ru->state = RU_RUN;
  		ru->wait_check = 0;
@@ -815,19 +831,22 @@ void ru_fep_full_2thread(RU_t *ru) {
         	LOG_I(PHY,"Sending RRU_sync_ok to RAU\n");
         	AssertFatal((ru->ifdevice.trx_ctlsend_func(&ru->ifdevice,&rru_config_msg,rru_config_msg.len)!=-1),"Failed to send msg to RAU %d\n",ru->idx);
                 //LOG_I(PHY,"~~~~~~~~~ RU_RUN\n");
-          	/*LOG_M("dmrs_time.m","dmrstime",calibration->drs_ch_estimates_time[0], (fp->ofdm_symbol_size),1,1);
-		LOG_M("rxdataF_ext.m","rxdataFext",&calibration->rxdataF_ext[0][36*fp->N_RB_DL], 12*(fp->N_RB_DL),1,1);		
-		LOG_M("drs_seq0.m","drsseq0",ul_ref_sigs_rx[0][0][23],600,1,1);
-		LOG_M("rxdata.m","rxdata",&ru->common.rxdata[0][0], fp->samples_per_tti*2,1,1);
-		exit(-1);*/
+          	//LOG_M("dmrs_time.m","dmrstime",calibration->drs_ch_estimates_time[0], (fp->ofdm_symbol_size),1,1);
+		//LOG_M("rxdataF_ext.m","rxdataFext",&calibration->rxdataF_ext[0][36*fp->N_RB_DL], 12*(fp->N_RB_DL),1,1);		
+		//LOG_M("drs_seq0.m","drsseq0",ul_ref_sigs_rx[0][0][23],600,1,1);
+		//LOG_M("rxdata.m","rxdata",&ru->common.rxdata[0][0], fp->samples_per_tti*2,1,1);
+		//exit(-1);
 	 } 
        }
        else if (ru->state == RU_RUN) {
        	// check for synchronization error
        	if (check_sync_pos >= 8 || check_sync_pos<=-8) {
 	 	LOG_E(PHY,"~~~~~~~~~~~~~~ check_sync_pos %d, frame %d ---> LOST SYNC-EXIT\n", check_sync_pos, proc->frame_rx);
-		//LOG_M("rxdata.m","rxdata",&ru->common.rxdata[0][0], fp->samples_per_tti*2,1,1);		
+                /*
+		LOG_M("dmrs_time.m","dmrstime",calibration->drs_ch_estimates_time[0], (fp->ofdm_symbol_size),1,1);
+		LOG_M("rxdata.m","rxdata",&ru->common.rxdata[0][0], fp->samples_per_tti*2,1,1);		
 		exit(-1);
+                */
 	}
        }
     

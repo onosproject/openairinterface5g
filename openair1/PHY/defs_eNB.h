@@ -353,6 +353,8 @@ typedef struct RU_t_s{
   int wait_cnt;
   /// counter to delay start of slave RUs until stable synchronization
   int wait_check;
+  /// counter to count missed synch events during synchronization of RU
+  int missed_synch_events;
   /// Total gain of receive chain
   uint32_t             rx_total_gain_dB;
   /// number of bands that this device can support

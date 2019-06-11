@@ -138,7 +138,7 @@ void prach_procedures(PHY_VARS_eNB *eNB
     */ 
     if (eNB->frame_parms.prach_emtc_config_common.prach_ConfigInfo.prach_CElevel_enable[0]==1){ 
       if ((eNB->prach_energy_counter == 100) && 
-          (max_preamble_energy[0] > eNB->measurements.prach_I0 + 100)) {
+          (max_preamble_energy[0] > eNB->measurements.prach_I0 + 200)) {
 	eNB->UL_INFO.rach_ind_br.rach_indication_body.number_of_preambles++;
 	
 	eNB->preamble_list_br[ind].preamble_rel8.timing_advance        = max_preamble_delay[ind];//

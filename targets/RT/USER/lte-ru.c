@@ -209,7 +209,7 @@ void fh_if4p5_south_in(RU_t *ru,int *frame,int *subframe) {
   LTE_DL_FRAME_PARMS *fp = &ru->frame_parms;
   RU_proc_t *proc = &ru->proc;
   RU_CALIBRATION *calibration = &ru->calibration;
-  int f,sf,Ns,l;
+  int f,sf,Ns,l,u;
 
   uint16_t packet_type;
   uint32_t symbol_number=0;
@@ -228,6 +228,7 @@ void fh_if4p5_south_in(RU_t *ru,int *frame,int *subframe) {
     symbol_mask_full = (1<<fp->symbols_per_tti)-1; 
   }
 
+  LOG_D(PHY,"RU %d, sf %d, mask %x, full_mask %x \n",ru->idx,*subframe,proc->symbol_mask[*subframe],symbol_mask_full);
   if (proc->symbol_mask[*subframe] == symbol_mask_full) proc->symbol_mask[*subframe] = 0;
   
 
@@ -238,6 +239,7 @@ void fh_if4p5_south_in(RU_t *ru,int *frame,int *subframe) {
     if (packet_type == IF4p5_PULFFT) proc->symbol_mask[sf] = proc->symbol_mask[sf] | (1<<symbol_number);
     else if (packet_type == IF4p5_PULCALIB) {
     	proc->symbol_mask[sf] = (2<<symbol_number)-1;
+	LOG_D(PHY,"symbol_mask[%d] %d\n",sf,proc->symbol_mask[sf]);
     }
     else if (packet_type == IF4p5_PULTICK) {           
       if ((proc->first_rx==0) && (f!=*frame)) LOG_E(PHY,"rx_fh_if4p5: PULTICK received frame %d != expected %d (RU %d)\n",f,*frame, ru->idx);       
@@ -247,7 +249,7 @@ void fh_if4p5_south_in(RU_t *ru,int *frame,int *subframe) {
     } else if (packet_type == IF4p5_PRACH) {
       // nothing in RU for RAU
     }
-    LOG_D(PHY,"rx_fh_if4p5: subframe %d symbol mask %x\n",*subframe,proc->symbol_mask[*subframe]);
+    LOG_D(PHY,"rx_fh_if4p5: RU %d, subframe %d symbol %d, mask %x\n",ru->idx,sf,symbol_number,proc->symbol_mask[*subframe]);
   } while(proc->symbol_mask[*subframe] != symbol_mask_full);    
 
   T(T_RAU_INPUT_SIGNAL, T_INT(ru->idx), T_INT(f), T_INT(sf),
@@ -265,6 +267,7 @@ void fh_if4p5_south_in(RU_t *ru,int *frame,int *subframe) {
         // Estimate calibration channel estimates:
   	Ns = (ru->is_slave==0 ? 1 : 1);
 	l = (ru->is_slave==0 ? 10 : 10);
+	u = (ru->is_slave==0 ? 0 : 0);
 	ru->frame_parms.nb_antennas_rx = ru->nb_rx;		
         ulsch_extract_rbs_single(ru->common.rxdataF,
                                  calibration->rxdataF_ext,
@@ -288,7 +291,7 @@ void fh_if4p5_south_in(RU_t *ru,int *frame,int *subframe) {
                                   fp->N_RB_DL, 
                                   f,
                                   sf,
-                                  0,
+                                  u,
                                   0,
                                   0,
                                   l,
@@ -310,7 +313,7 @@ void fh_if4p5_south_in(RU_t *ru,int *frame,int *subframe) {
 /*		if (f==251 && ru->idx==0) {
 			//LOG_M("rxdataF_ext.m","rxdataFext",&calibration->rxdataF_ext[0][0], 14*12*(fp->N_RB_DL),1,1);
 			LOG_M("dmrs_time.m","dmrstime",calibration->drs_ch_estimates_time[0], fp->ofdm_symbol_size,1,1);
-			exit(-1);
+			//exit(-1);
 		}*/
   //}
  }
@@ -522,10 +525,19 @@ void fh_if4p5_north_asynch_in(RU_t *ru,int *frame,int *subframe) {
       symbol_mask_full = ((subframe_select(fp,*subframe) == SF_S) ? (1<<fp->dl_symbols_in_S_subframe) : (1<<fp->symbols_per_tti))-1;
     }
     else {
-      AssertFatal(frame_tx == *frame,
+      /*AssertFatal(frame_tx == *frame,
 	          "frame_tx %d is not what we expect %d\n",frame_tx,*frame);
       AssertFatal(subframe_tx == *subframe,
 		  "In frame_tx %d : subframe_tx %d is not what we expect %d\n",frame_tx,subframe_tx,*subframe);
+	*/
+	      if (frame_tx != *frame) { 
+        LOG_W(PHY,"frame_tx %d is not what we expect %d\n",frame_tx,*frame);
+         *frame=frame_tx;
+      }
+      if (subframe_tx != *subframe) {
+         LOG_W(PHY,"In frame_tx %d : subframe_tx %d is not what we expect %d\n",frame_tx,subframe_tx,*subframe);
+         *subframe=subframe_tx;
+      }
     }
     if (packet_type == IF4p5_PDLFFT) {
       symbol_mask = symbol_mask | (1<<symbol_number);
@@ -583,7 +595,7 @@ void fh_if4p5_north_out(RU_t *ru) {
   }
   if ((fp->frame_type == TDD) && (subframe_select(fp,subframe)!=SF_UL)) {
     /// **** in TDD during DL send_IF4 of ULTICK to RCC **** ///
-    if (subframe_select(fp,subframe)==SF_S && subframe==1 && ru->state==RU_RUN) {
+    if (subframe_select(fp,subframe)==SF_S && subframe==1 /*&& ru->state==RU_RUN*/) {
         send_IF4p5(ru, proc->frame_rx, proc->subframe_rx, IF4p5_PULCALIB);
         LOG_D(PHY,"~~~~~~******* Sending PULCALIB frame %d, subframe %d\n",proc->frame_rx,proc->subframe_rx);
 	T(T_RAU_INPUT_DMRS, T_INT(ru->idx), T_INT(proc->frame_rx), T_INT(proc->subframe_rx),
@@ -688,7 +700,7 @@ void rx_rf(RU_t *ru,int *frame,int *subframe) {
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_READ, 0 );
 
   ru->south_in_cnt++;
-  LOG_D(PHY,"south_in_cnt %d\n",ru->south_in_cnt);
+  LOG_D(PHY,"south_in_cnt %d : frame %d, subframe %d\n",ru->south_in_cnt,*frame,*subframe);
 
   if (ru->cmd==RU_FRAME_RESYNCH) {
     LOG_I(PHY,"Applying frame resynch %d => %d\n",*frame,ru->cmdval);
@@ -814,7 +826,7 @@ void tx_rf(RU_t *ru) {
       AssertFatal(txsymb>0,"illegal txsymb %d\n",txsymb);
       siglen = fp->nb_prefix_samples0 + (txsymb*fp->ofdm_symbol_size) + (txsymb-1)*fp->nb_prefix_samples;
       //siglen = fp->dl_symbols_in_S_subframe*(fp->ofdm_symbol_size+fp->nb_prefix_samples0);
-      if (ru->is_slave==1 && ru->state==RU_RUN && proc->frame_tx%ru->p==ru->tag-1) {
+      if (/*ru->is_slave==1 &&*/ ru->state==RU_RUN && proc->frame_tx%ru->p==ru->tag) {
         siglen2 = fp->ofdm_symbol_size + fp->nb_prefix_samples; // length of symbol 10
       }
       flags=3; // end of burst
@@ -886,7 +898,6 @@ void tx_rf(RU_t *ru) {
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_WRITE, 1 );
     // prepare tx buffer pointers
 
-
     txs = ru->rfdevice.trx_write_func(&ru->rfdevice,
 				      proc->timestamp_tx+ru->ts_offset-ru->openair0_cfg.tx_sample_advance-sf_extension,
 				      txp,
@@ -895,16 +906,17 @@ void tx_rf(RU_t *ru) {
 				      flags);
     LOG_D(PHY,"txs %d, siglen %d, sf_extension %d\n",txs,siglen,sf_extension);
 
-    if (ru->is_slave==1 && ru->state==RU_RUN && proc->frame_tx%ru->p==ru->tag-1 && proc->subframe_tx==1) {
+    if (/*ru->is_slave==1 &&*/ ru->state==RU_RUN && proc->frame_tx%ru->p==ru->tag && proc->subframe_tx==1) {
     	txs1 = ru->rfdevice.trx_write_func(&ru->rfdevice,
                                       proc->timestamp_tx+(ru->ts_offset+sigoff2)-ru->openair0_cfg.tx_sample_advance-sf_extension,
                                       txp1,
                                       siglen2+sf_extension,
                                       ru->nb_tx,
                                       flags);
-    
+        //LOG_M("txdata.m","txdata",&ru->common.txdata[0][0], fp->samples_per_tti*10,1,1); // save 1 frame
+	//exit(-1);
 	int se1 = dB_fixed(signal_energy(txp1[0],siglen2+sf_extension));
-        LOG_I(PHY,"******** frame %d subframe %d Slave sends DMRS of energy10 %d, energy3 %d\n",proc->frame_tx,proc->subframe_tx,se1,dB_fixed(signal_energy(txp[0],siglen+sf_extension)));
+        LOG_D(PHY,"******** frame %d subframe %d RRU sends DMRS of energy10 %d, energy3 %d\n",proc->frame_tx,proc->subframe_tx,se1,dB_fixed(signal_energy(txp[0],siglen+sf_extension)));
         //LOG_D(PHY,"txs1 %d, siglen2 %d, sf_extension %d\n",txs1,siglen2,sf_extension);
     }
 
@@ -917,7 +929,7 @@ void tx_rf(RU_t *ru) {
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_WRITE, 0 );
     
     //    AssertFatal(txs ==  siglen+sf_extension,"TX : Timeout (sent %d/%d)\n",txs, siglen);
-    if (ru->is_slave==1 && ru->state==RU_RUN && proc->frame_tx%ru->p==ru->tag-1 && proc->subframe_tx==1) {
+    if (/*ru->is_slave==1 &&*/ ru->state==RU_RUN && proc->frame_tx%ru->p==ru->tag && proc->subframe_tx==1) {
         if( (txs1!=siglen2+sf_extension) && (late_control==STATE_BURST_NORMAL) ){ /* add fail safe for late command */
                 late_control=STATE_BURST_TERMINATE;
                 LOG_E(PHY,"TX : Timeout (sent %d/%d) state =%d\n",txs1, siglen2,late_control);
@@ -1277,9 +1289,8 @@ void wakeup_L1s(RU_t *ru) {
   RU_proc_t  *ruproc    = &ru->proc;
   struct timespec t;
 
-  LOG_D(PHY,"wakeup_L1s (num %d) for RU %d ru->eNB_top:%p\n",ru->num_eNB,ru->idx, ru->eNB_top);
-
-    // call eNB function directly
+  LOG_D(PHY,"wakeup_L1s (num %d) for RU %d in %d.%d mask %x\n",ru->num_eNB,ru->idx, ruproc->frame_rx,ruproc->subframe_rx,proc->RU_mask[ru->proc.subframe_rx]);
+ 
   
     char string[20];
     sprintf(string,"Incoming RU %d",ru->idx);
@@ -1303,13 +1314,14 @@ void wakeup_L1s(RU_t *ru) {
     }
 
     for (i=0;i<eNB->num_RU;i++) {
-      if (eNB->RU_list[i]->wait_cnt==1 && ru->proc.subframe_rx!=9) eNB->RU_list[i]->wait_cnt=0;
-      LOG_D(PHY,"RU %d has frame %d and subframe %d, state %s\n",eNB->RU_list[i]->idx,eNB->RU_list[i]->proc.frame_rx, eNB->RU_list[i]->proc.subframe_rx, ru_states[eNB->RU_list[i]->state]);
+      if (eNB->RU_list[i]->wait_cnt==1 && ru->proc.subframe_rx!=9) eNB->RU_list[i]->wait_cnt=0; // commented by Ray
+      LOG_D(PHY,"RU %d has frame %d and subframe %d, state %s, wait_cnt %d\n",eNB->RU_list[i]->idx,eNB->RU_list[i]->proc.frame_rx, eNB->RU_list[i]->proc.subframe_rx, ru_states[eNB->RU_list[i]->state],eNB->RU_list[i]->wait_cnt);
       if (ru == eNB->RU_list[i] && eNB->RU_list[i]->wait_cnt == 0) {
 //	AssertFatal((proc->RU_mask&(1<<i)) == 0, "eNB %d frame %d, subframe %d : previous information from RU %d (num_RU %d,mask %x) has not been served yet!\n",eNB->Mod_id,ru->proc.frame_rx,ru->proc.subframe_rx,ru->idx,eNB->num_RU,proc->RU_mask);
         proc->RU_mask[ru->proc.subframe_rx] |= (1<<i);
       }else if (/*eNB->RU_list[i]->state == RU_SYNC || */
-                (eNB->RU_list[i]->is_slave==1 && eNB->RU_list[i]->wait_cnt>0 && ru!=eNB->RU_list[i] && ru->is_slave==0)){
+		// (eNB->RU_list[i]!=ru && eNB->RU_list[i]->is_slave==1 && eNB->RU_list[i]->wait_cnt>1 && ru!=eNB->RU_list[i] && ru->is_slave==0)){ // Ray
+               (eNB->RU_list[i]->is_slave==1 && eNB->RU_list[i]->wait_cnt>0 && ru!=eNB->RU_list[i] && ru->is_slave==0)){
       	proc->RU_mask[ru->proc.subframe_rx] |= (1<<i);
       }
       //printf("RU %d, RU_mask[%d] %d, i %d, frame %d, slave %d, ru->cnt %d, i->cnt %d\n",ru->idx,ru->proc.subframe_rx,proc->RU_mask[ru->proc.subframe_rx],i,ru->proc.frame_rx,ru->is_slave,ru->wait_cnt,eNB->RU_list[i]->wait_cnt);
@@ -1323,12 +1335,10 @@ void wakeup_L1s(RU_t *ru) {
 
       }
     }
-    //clock_gettime(CLOCK_MONOTONIC,&t);
-    //LOG_I(PHY,"RU mask is now %x, time is %lu\n",proc->RU_mask[ru->proc.subframe_rx], t.tv_nsec - proc->t[ru->proc.subframe_rx].tv_nsec);
 
     if (proc->RU_mask[ru->proc.subframe_rx] == (1<<eNB->num_RU)-1) { // all RUs have provided their information so continue on and wakeup eNB top
       LOG_D(PHY, "ru_mask is %d \n ", proc->RU_mask[ru->proc.subframe_rx]);
-      LOG_D(PHY, "the number of RU is %d, the current ru is RU %d \n ", (1<<eNB->num_RU)-1, ru->idx);
+      LOG_D(PHY, "the number of RU is %d, the current ru is RU %d \n ", eNB->num_RU, ru->idx);
       LOG_D(PHY, "ru->proc.subframe_rx is %d \n", ru->proc.subframe_rx);
       LOG_D(PHY,"Reseting mask frame %d, subframe %d, this is RU %d\n",ru->proc.frame_rx, ru->proc.subframe_rx, ru->idx);
       proc->RU_mask[ru->proc.subframe_rx] = 0;
@@ -1812,6 +1822,7 @@ static void* ru_thread( void* param ) {
     else { 
          ru->wait_cnt = 0;
 	 ru->wait_check = 0;
+         ru->missed_synch_events=0;
     }
 
 
@@ -2064,16 +2075,16 @@ void *ru_thread_synch(void *arg) {
 				   &avg);
       LOG_I(PHY,"RU synch cnt %d: %d, val %llu (%d dB,%d dB)\n",cnt,ru->rx_offset,(unsigned long long)peak_val,dB_fixed64(peak_val),dB_fixed64(avg));
       cnt++;
-      if (/*ru->rx_offset >= 0*/dB_fixed(peak_val)>=85 && cnt>10) {
+      if (ru->rx_offset >= 0 && avg>0 && dB_fixed(peak_val/avg)>=15 && cnt>10) {
 
 	LOG_I(PHY,"Estimated peak_val %d dB, avg %d => timing offset %llu\n",dB_fixed(peak_val),dB_fixed(avg),(unsigned long long int)ru->rx_offset);
 	ru->in_synch = 1;
-/*
-        LOG_M("ru_sync_rx.m","rurx",&ru->common.rxdata[0][0],LTE_NUMBER_OF_SUBFRAMES_PER_FRAME*fp->samples_per_tti,1,1);
+
+        /*LOG_M("ru_sync_rx.m","rurx",&ru->common.rxdata[0][0],LTE_NUMBER_OF_SUBFRAMES_PER_FRAME*fp->samples_per_tti,1,1);
         LOG_M("ru_sync_corr.m","sync_corr",ru->dmrs_corr,LTE_NUMBER_OF_SUBFRAMES_PER_FRAME*fp->samples_per_tti,1,6);
         LOG_M("ru_dmrs.m","rudmrs",&ru->dmrssync[0],fp->ofdm_symbol_size,1,1);
-  */      
-//exit(-1);
+        exit(-1);*/
+
       } // sync_pos > 0
       else //AssertFatal(cnt<1000,"Cannot find synch reference\n");
           { 

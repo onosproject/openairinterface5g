@@ -673,7 +673,7 @@ void schedule_response(Sched_Rsp_t *Sched_INFO)
   proc        = &eNB->proc.L1_proc;
 
   /* TODO: check that following line is correct - in the meantime it is disabled */
-  //if ((fp->frame_type == TDD) && (subframe_select(fp,subframe)==SF_UL)) return;
+  if ((fp->frame_type == TDD) && (subframe_select(fp,subframe)==SF_UL)) return;
 
   ul_subframe = pdcch_alloc2ul_subframe(fp,subframe);
   ul_frame    = pdcch_alloc2ul_frame(fp,frame,subframe);
