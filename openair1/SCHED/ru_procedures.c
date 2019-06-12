@@ -49,6 +49,9 @@
 #include "PHY/LTE_TRANSPORT/if4_tools.h"
 #include "PHY/LTE_TRANSPORT/if5_tools.h"
 #include "PHY/LTE_TRANSPORT/transport_common_proto.h"
+#include "PHY/LTE_TRANSPORT/transport_proto.h"
+#include "PHY/LTE_UE_TRANSPORT/transport_proto_ue.h"
+#include "PHY/LTE_ESTIMATION/lte_estimation.h"
 
 #include "LAYER2/MAC/mac.h"
 #include "common/utils/LOG/log.h"
@@ -95,9 +98,15 @@ void feptx0(RU_t *ru,int slot) {
 		  "ru->generate_dmrs_sync should not be set, frame_type %d, is_slave %d\n",
 		  fp->frame_type,ru->is_slave);
 */
-      // generate_drs_pusch() generates dmrs for both slots (symbols 3,10)
-      if (ru->generate_dmrs_sync == 1 /*&& slot == 0*/ && subframe == 1 && aa==0) {
-      	generate_drs_pusch((PHY_VARS_UE *)NULL,
+      int num_symb = 7;
+
+      if (subframe_select(fp,subframe) == SF_S) num_symb=fp->dl_symbols_in_S_subframe;
+   
+      if (ru->generate_dmrs_sync == 1 && slot == 0 && subframe == 1 && aa==0) {
+	//int32_t dmrs[ru->frame_parms.ofdm_symbol_size*14] __attribute__((aligned(32)));
+        //int32_t *dmrsp[2] ={dmrs,NULL}; //{&dmrs[(3-ru->frame_parms.Ncp)*ru->frame_parms.ofdm_symbol_size],NULL};
+  
+	generate_drs_pusch((PHY_VARS_UE *)NULL,
 			   (UE_rxtx_proc_t*)NULL,
 			   fp,
 			   ru->common.txdataF_BF,
@@ -111,7 +120,7 @@ void feptx0(RU_t *ru,int slot) {
 
       normal_prefix_mod(&ru->common.txdataF_BF[aa][slot*slot_sizeF],
                         (int*)&ru->common.txdata[aa][slot_offset],
-                        7,
+                        num_symb,
                         fp);
 
        
@@ -433,74 +442,46 @@ void feptx_prec(RU_t *ru) {
     for (aa=0;aa<ru->nb_tx;aa++) {
       memset(ru->common.txdataF_BF[aa],0,sizeof(int32_t)*fp->ofdm_symbol_size*fp->symbols_per_tti);
       for (p=0;p<NB_ANTENNA_PORTS_ENB;p++) {
-
-#ifdef NO_PRECODING	
-	memcpy((void*)ru->common.txdataF_BF[aa],
-	       (void*)&eNB->common_vars.txdataF[aa][subframe*fp->symbols_per_tti*fp->ofdm_symbol_size],
-	       sizeof(int32_t)*fp->ofdm_symbol_size*fp->symbols_per_tti);
-#else
-	
-	if (p<fp->nb_antenna_ports_eNB) {				
-	  // For the moment this does nothing different than below, except ignore antenna ports 5,7,8.	     
-	  for (l=0;l<pdcch_vars->num_pdcch_symbols;l++)
-	    beam_precoding(eNB->common_vars.txdataF,
-			   ru->common.txdataF_BF,
-			   subframe,
-			   fp,
-			   ru->beam_weights,
-			   l,
-			   aa,
-			   p,
-			   eNB->Mod_id);
-	} //if (p<fp->nb_antenna_ports_eNB)
-	
+	if (ru->do_precoding == 0) {	
+	  if (p==0) 
+	    memcpy((void*)ru->common.txdataF_BF[aa],
+	    (void*)&eNB->common_vars.txdataF[aa][subframe*fp->symbols_per_tti*fp->ofdm_symbol_size],
+	    sizeof(int32_t)*fp->ofdm_symbol_size*fp->symbols_per_tti);
+	} else {
+	  if (p<fp->nb_antenna_ports_eNB) {				
+	    // For the moment this does nothing different than below, except ignore antenna ports 5,7,8.	     
+	    for (l=0;l<pdcch_vars->num_pdcch_symbols;l++)
+	      beam_precoding(eNB->common_vars.txdataF,
+			     ru->common.txdataF_BF,
+			     subframe,
+			     fp,
+			     ru->beam_weights,
+			     l,
+			     aa,
+			     p,
+			     eNB->Mod_id);
+	  } //if (p<fp->nb_antenna_ports_eNB)
+	  
 	  // PDSCH region
-	if (p<fp->nb_antenna_ports_eNB || p==5 || p==7 || p==8) {
-	  for (l=pdcch_vars->num_pdcch_symbols;l<fp->symbols_per_tti;l++) {
-	    beam_precoding(eNB->common_vars.txdataF,
-			   ru->common.txdataF_BF,
-			   subframe,
-			   fp,
-			   ru->beam_weights,
-			   l,
-			   aa,
-			   p,
-                           eNB->Mod_id);			
-	  } // for (l=pdcch_vars ....)
-	} // if (p<fp->nb_antenna_ports_eNB) ...
-#endif //NO_PRECODING
-	
+	  if (p<fp->nb_antenna_ports_eNB || p==5 || p==7 || p==8) {
+	    for (l=pdcch_vars->num_pdcch_symbols;l<fp->symbols_per_tti;l++) {
+	      beam_precoding(eNB->common_vars.txdataF,
+			     ru->common.txdataF_BF,
+			     subframe,
+			     fp,
+			     ru->beam_weights,
+			     l,
+			     aa,
+			     p,
+			     eNB->Mod_id);			
+	    } // for (l=pdcch_vars ....)
+	  } // if (p<fp->nb_antenna_ports_eNB) ...
+	} // ru->do_precoding!=0	
       } // for (p=0...)
     } // for (aa=0 ...)
     
     if(ru->idx<2)
       VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_RU_FEPTX_PREC+ru->idx , 0);
-    // VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_RU_FEPTX_PREC+ru->idx,0);
-    
-	///////////////////////////////////////////////////	  
-	  
-	  
-	  /* fdragon
-    eNB = eNB_list[0];
-	bw  = ru->beam_weights[0];
-    fp  = &eNB->frame_parms;
-	int nb_antenna_ports=15;
-    
-    VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_RU_FEPTX_PREC+ru->idx , 1);
-
-	
-	beam_precoding_one_eNB(eNB->common_vars.txdataF,
-                           ru->common.txdataF_BF,
-						   bw,
-						   subframe,
-						   nb_antenna_ports,
-						   ru->nb_tx,
-						   fp);
-
-    VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_RU_FEPTX_PREC+ru->idx , 0);
-	
-	
-	*/
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_RU_FEPTX_PREC+ru->idx , 0);
   }
   else {

@@ -47,7 +47,7 @@ void send_IF4p5(RU_t *ru, int frame, int subframe, uint16_t packet_type) {
   int32_t **txdataF          = ru->common.txdataF_BF;
   int32_t **rxdataF          = ru->common.rxdataF;
   int16_t **prach_rxsigF     = ru->prach_rxsigF;  
-#if (RRC_VERSION >= MAKE_VERSION(14, 0, 0))
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
   int16_t ***prach_rxsigF_br = ru->prach_rxsigF_br;
 #endif
   void *tx_buffer            = ru->ifbuffer.tx[subframe&1];
@@ -79,17 +79,15 @@ void send_IF4p5(RU_t *ru, int frame, int subframe, uint16_t packet_type) {
     blockoffsetF = slotoffsetF + fp->ofdm_symbol_size - db_halflength - 1; 
 
 
-    if (eth->flags == ETH_RAW_IF4p5_MODE) {
-      packet_header = (IF4p5_header_t *)(tx_buffer + MAC_HEADER_SIZE_BYTES);
-      data_block = (uint16_t*)(tx_buffer + MAC_HEADER_SIZE_BYTES + sizeof_IF4p5_header_t);
-    } else {
-      packet_header = (IF4p5_header_t *)(tx_buffer);
-      data_block = (uint16_t*)(tx_buffer + sizeof_IF4p5_header_t);
-    }    
+    if (eth->flags == ETH_RAW_IF4p5_MODE) packet_header = (IF4p5_header_t *)(tx_buffer + MAC_HEADER_SIZE_BYTES);
+    else                                  packet_header = (IF4p5_header_t *)(tx_buffer);
+       
     gen_IF4p5_dl_header(packet_header, frame, subframe);
 
     AssertFatal(txdataF[0]!=NULL,"txdataF_BF[0] is null\n");
     for (symbol_id=0; symbol_id<nsym; symbol_id++) {
+      if (eth->flags == ETH_RAW_IF4p5_MODE) data_block = (uint16_t*)(tx_buffer + MAC_HEADER_SIZE_BYTES + sizeof_IF4p5_header_t);
+      else           	                    data_block = (uint16_t*)(tx_buffer + sizeof_IF4p5_header_t);    
       for (int antenna_id=0; antenna_id<ru->nb_tx; antenna_id++) {
         for (element_id=0; element_id<db_halflength; element_id++) {
           i = (uint16_t*) &txdataF[antenna_id][blockoffsetF+element_id];
@@ -98,6 +96,7 @@ void send_IF4p5(RU_t *ru, int frame, int subframe, uint16_t packet_type) {
           i = (uint16_t*) &txdataF[antenna_id][slotoffsetF+element_id];
           data_block[element_id+db_halflength] = ((uint16_t) lin2alaw_if4p5[*i]) | (lin2alaw_if4p5[*(i+1)]<<8);        
         }
+	data_block+=db_fulllength;
       }
       VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_COMPR_IF, 0 );
       packet_header->frame_status &= ~(0x7);
@@ -184,57 +183,57 @@ void send_IF4p5(RU_t *ru, int frame, int subframe, uint16_t packet_type) {
       blockoffsetF += (fp->ofdm_symbol_size*(fp->symbols_per_tti-nsym));
     }
 
-    if (eth->flags == ETH_RAW_IF4p5_MODE) {
-      packet_header = (IF4p5_header_t *)(tx_buffer + MAC_HEADER_SIZE_BYTES);
-      data_block = (uint16_t*)(tx_buffer + MAC_HEADER_SIZE_BYTES + sizeof_IF4p5_header_t);
-    } else {
-      packet_header = (IF4p5_header_t *)(tx_buffer);
-      data_block = (uint16_t*)(tx_buffer + sizeof_IF4p5_header_t);
-    }
+    if (eth->flags == ETH_RAW_IF4p5_MODE) packet_header = (IF4p5_header_t *)(tx_buffer + MAC_HEADER_SIZE_BYTES);
+    else                                  packet_header = (IF4p5_header_t *)(tx_buffer);
+    
     gen_IF4p5_ul_header(packet_header, packet_type, frame, subframe);
 
     if (packet_type == IF4p5_PULFFT) {
 
       for (symbol_id=fp->symbols_per_tti-nsym; symbol_id<fp->symbols_per_tti; symbol_id++) {
-        for (int antenna_id=0;antenna_id<ru->nb_rx;antenna_id++) {
-
-	   uint32_t *rx0 = (uint32_t*) &rxdataF[antenna_id][blockoffsetF];
-	   uint32_t *rx1 = (uint32_t*) &rxdataF[antenna_id][slotoffsetF];
-
-	   //VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME( VCD_SIGNAL_DUMPER_VARIABLES_SEND_IF4_SYMBOL, symbol_id );
-	   //VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_COMPR_IF, 1 );		
-
-	   start_meas(&ru->compression);
-
-	   for (element_id=0; element_id<db_halflength; element_id+=8) {
-	     i = (uint16_t*) &rx0[element_id];
-             d = (uint16_t*) &data_block[element_id];
-             d[0] = ((uint16_t) lin2alaw_if4p5[i[0]])  | ((uint16_t)(lin2alaw_if4p5[i[1]]<<8));
-             d[1] = ((uint16_t) lin2alaw_if4p5[i[2]])  | ((uint16_t)(lin2alaw_if4p5[i[3]]<<8));
-             d[2] = ((uint16_t) lin2alaw_if4p5[i[4]])  | ((uint16_t)(lin2alaw_if4p5[i[5]]<<8));
-             d[3] = ((uint16_t) lin2alaw_if4p5[i[6]])  | ((uint16_t)(lin2alaw_if4p5[i[7]]<<8));
-             d[4] = ((uint16_t) lin2alaw_if4p5[i[8]])  | ((uint16_t)(lin2alaw_if4p5[i[9]]<<8));
-             d[5] = ((uint16_t) lin2alaw_if4p5[i[10]]) | ((uint16_t)(lin2alaw_if4p5[i[11]]<<8));
-             d[6] = ((uint16_t) lin2alaw_if4p5[i[12]]) | ((uint16_t)(lin2alaw_if4p5[i[13]]<<8));
-             d[7] = ((uint16_t) lin2alaw_if4p5[i[14]]) | ((uint16_t)(lin2alaw_if4p5[i[15]]<<8));
-
-             i = (uint16_t*) &rx1[element_id];
-             d = (uint16_t*) &data_block[element_id+db_halflength];
-             d[0] = ((uint16_t) lin2alaw_if4p5[i[0]])  | ((uint16_t)(lin2alaw_if4p5[i[1]]<<8));
-             d[1] = ((uint16_t) lin2alaw_if4p5[i[2]])  | ((uint16_t)(lin2alaw_if4p5[i[3]]<<8));
-             d[2] = ((uint16_t) lin2alaw_if4p5[i[4]])  | ((uint16_t)(lin2alaw_if4p5[i[5]]<<8));
-             d[3] = ((uint16_t) lin2alaw_if4p5[i[6]])  | ((uint16_t)(lin2alaw_if4p5[i[7]]<<8));
-             d[4] = ((uint16_t) lin2alaw_if4p5[i[8]])  | ((uint16_t)(lin2alaw_if4p5[i[9]]<<8));
-             d[5] = ((uint16_t) lin2alaw_if4p5[i[10]]) | ((uint16_t)(lin2alaw_if4p5[i[11]]<<8));
-             d[6] = ((uint16_t) lin2alaw_if4p5[i[12]]) | ((uint16_t)(lin2alaw_if4p5[i[13]]<<8));
-             d[7] = ((uint16_t) lin2alaw_if4p5[i[14]]) | ((uint16_t)(lin2alaw_if4p5[i[15]]<<8));
-
-          }
-        }
-        stop_meas(&ru->compression);
-        //VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_COMPR_IF, 0 );   	
-        packet_header->frame_status &= ~(0x07);
-        packet_header->frame_status |= ru->nb_rx-1;
+	if (eth->flags == ETH_RAW_IF4p5_MODE)  data_block = (uint16_t*)(tx_buffer + MAC_HEADER_SIZE_BYTES + sizeof_IF4p5_header_t);
+	else 	                               data_block = (uint16_t*)(tx_buffer + sizeof_IF4p5_header_t);
+	
+	for (int aaid=0;aaid<ru->nb_rx;aaid++) {
+	  uint32_t *rx0 = (uint32_t*) &rxdataF[aaid][blockoffsetF];
+	  uint32_t *rx1 = (uint32_t*) &rxdataF[aaid][slotoffsetF];
+	  
+	  VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME( VCD_SIGNAL_DUMPER_VARIABLES_SEND_IF4_SYMBOL, symbol_id );
+	  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_COMPR_IF, 1 );		
+	  
+	  start_meas(&ru->compression);
+	  
+	  for (element_id=0; element_id<db_halflength; element_id+=8) {
+	    i = (uint16_t*) &rx0[element_id];
+	    
+	    d = (uint16_t*) &data_block[element_id];
+	    d[0] = ((uint16_t) lin2alaw_if4p5[i[0]])  | ((uint16_t)(lin2alaw_if4p5[i[1]]<<8));
+	    d[1] = ((uint16_t) lin2alaw_if4p5[i[2]])  | ((uint16_t)(lin2alaw_if4p5[i[3]]<<8));
+	    d[2] = ((uint16_t) lin2alaw_if4p5[i[4]])  | ((uint16_t)(lin2alaw_if4p5[i[5]]<<8));
+	    d[3] = ((uint16_t) lin2alaw_if4p5[i[6]])  | ((uint16_t)(lin2alaw_if4p5[i[7]]<<8));
+	    d[4] = ((uint16_t) lin2alaw_if4p5[i[8]])  | ((uint16_t)(lin2alaw_if4p5[i[9]]<<8));
+	    d[5] = ((uint16_t) lin2alaw_if4p5[i[10]]) | ((uint16_t)(lin2alaw_if4p5[i[11]]<<8));
+	    d[6] = ((uint16_t) lin2alaw_if4p5[i[12]]) | ((uint16_t)(lin2alaw_if4p5[i[13]]<<8));
+	    d[7] = ((uint16_t) lin2alaw_if4p5[i[14]]) | ((uint16_t)(lin2alaw_if4p5[i[15]]<<8));
+	    
+	    i = (uint16_t*) &rx1[element_id];
+	    d = (uint16_t*) &data_block[element_id+db_halflength];
+	    d[0] = ((uint16_t) lin2alaw_if4p5[i[0]])  | ((uint16_t)(lin2alaw_if4p5[i[1]]<<8));
+	    d[1] = ((uint16_t) lin2alaw_if4p5[i[2]])  | ((uint16_t)(lin2alaw_if4p5[i[3]]<<8));
+	    d[2] = ((uint16_t) lin2alaw_if4p5[i[4]])  | ((uint16_t)(lin2alaw_if4p5[i[5]]<<8));
+	    d[3] = ((uint16_t) lin2alaw_if4p5[i[6]])  | ((uint16_t)(lin2alaw_if4p5[i[7]]<<8));
+	    d[4] = ((uint16_t) lin2alaw_if4p5[i[8]])  | ((uint16_t)(lin2alaw_if4p5[i[9]]<<8));
+	    d[5] = ((uint16_t) lin2alaw_if4p5[i[10]]) | ((uint16_t)(lin2alaw_if4p5[i[11]]<<8));
+	    d[6] = ((uint16_t) lin2alaw_if4p5[i[12]]) | ((uint16_t)(lin2alaw_if4p5[i[13]]<<8));
+	    d[7] = ((uint16_t) lin2alaw_if4p5[i[14]]) | ((uint16_t)(lin2alaw_if4p5[i[15]]<<8));
+	    
+	  }
+	  data_block+=db_fulllength;
+	}
+	stop_meas(&ru->compression);
+	//VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_COMPR_IF, 0 );   	
+	packet_header->frame_status &= ~(0x07);
+	packet_header->frame_status |= ru->nb_rx-1;
 	packet_header->frame_status &= ~(0x000f<<26);
 	packet_header->frame_status |= (symbol_id&0x000f)<<26; 
 	//if (ru->idx<=1) VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_WRITE_IF0+ru->idx, 1 );  
@@ -281,15 +280,16 @@ void send_IF4p5(RU_t *ru, int frame, int subframe, uint16_t packet_type) {
 
     int16_t *rxF;
 
-
     for (int antenna_id=0;antenna_id<ru->nb_rx;antenna_id++) {
-#if (RRC_VERSION >= MAKE_VERSION(14, 0, 0))
+
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
       if (packet_type > IF4p5_PRACH)
-        rxF = &prach_rxsigF_br[packet_type - IF4p5_PRACH - 1][0][0];
+	rxF = &prach_rxsigF_br[packet_type - IF4p5_PRACH - 1][0][0];
       else 
 #endif
-      rxF = &prach_rxsigF[antenna_id][0];
+	rxF = &prach_rxsigF[antenna_id][0];
 
+      LOG_D(PHY,"PRACH_if4P5: rxsigF%d energy %d\n",antenna_id,dB_fixed(signal_energy(rxF,839)));
       AssertFatal(rxF!=NULL,"rxF is null\n");
       if (eth->flags == ETH_RAW_IF4p5_MODE) {
         memcpy((void *)(tx_buffer_prach + MAC_HEADER_SIZE_BYTES + sizeof_IF4p5_header_t+PRACH_BLOCK_SIZE_BYTES*antenna_id),
@@ -300,7 +300,8 @@ void send_IF4p5(RU_t *ru, int frame, int subframe, uint16_t packet_type) {
                (void *)rxF,
                PRACH_BLOCK_SIZE_BYTES);
       }
-      if (frame == 0) LOG_D(PHY,"signal energy prach %d\n",dB_fixed(signal_energy(rxF,839)));
+      LOG_D(PHY,"signal energy prach antenna %d => %d dB\n",
+	    antenna_id, dB_fixed(signal_energy((int*)rxF,839)));
     }
     if (ru->idx<=1) VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_WRITE_IF0+ru->idx, 1 );
     if ((ru->ifdevice.trx_write_func(&ru->ifdevice,
@@ -311,7 +312,7 @@ void send_IF4p5(RU_t *ru, int frame, int subframe, uint16_t packet_type) {
 				     packet_type)) < 0) {
       perror("ETHERNET write for IF4p5_PRACH\n");
     }
-
+    
     if (ru->idx<=1) VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_WRITE_IF0+ru->idx, 0 );      
   } else {    
     AssertFatal(1==0, "send_IF4p5 - Unknown packet_type %x", packet_type);     
@@ -326,7 +327,7 @@ void recv_IF4p5(RU_t *ru, int *frame, int *subframe, uint16_t *packet_type, uint
   int32_t **txdataF          = ru->common.txdataF_BF;
   int32_t **rxdataF          = ru->common.rxdataF;
   int16_t **prach_rxsigF     = ru->prach_rxsigF;  
-#if (RRC_VERSION >= MAKE_VERSION(14, 0, 0))
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
   int16_t ***prach_rxsigF_br = ru->prach_rxsigF_br;
 #endif
   void *rx_buffer            = ru->ifbuffer.rx;
@@ -336,6 +337,7 @@ void recv_IF4p5(RU_t *ru, int *frame, int *subframe, uint16_t *packet_type, uint
   int slotoffsetF=0, blockoffsetF=0; 
   eth_state_t *eth = (eth_state_t*) (ru->ifdevice.priv);
   int idx;
+
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_RECV_IF4_RU+ru->idx,1);   
   
   if (ru->function == NGFI_RRU_IF4p5) {
@@ -366,6 +368,7 @@ void recv_IF4p5(RU_t *ru, int *frame, int *subframe, uint16_t *packet_type, uint
     LOG_E(PHY,"if4p5 read_cnt %d\n",read_cnt);
   }
   if (ru->idx<=1) VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_READ_IF0+ru->idx, 0 );
+
   if (eth->flags == ETH_RAW_IF4p5_MODE) {
     packet_header = (IF4p5_header_t*) (rx_buffer+MAC_HEADER_SIZE_BYTES);
     data_block = (uint16_t*) (rx_buffer+MAC_HEADER_SIZE_BYTES+sizeof_IF4p5_header_t);
@@ -402,8 +405,10 @@ void recv_IF4p5(RU_t *ru, int *frame, int *subframe, uint16_t *packet_type, uint
         *i = alaw2lin_if4p5[ (data_block[element_id+db_halflength] & 0xff) ]; 
         *(i+1) = alaw2lin_if4p5[ (data_block[element_id+db_halflength]>>8) ];
       }
+      data_block+=db_fulllength;
     }
-    VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_DECOMPR_IF, 0 );		        
+    VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_DECOMPR_IF, 0 );
+
   } else if (*packet_type == IF4p5_PULFFT) {
     db_fulllength/=ru->nb_rx;
     db_halflength/=ru->nb_rx;         
@@ -431,6 +436,7 @@ void recv_IF4p5(RU_t *ru, int *frame, int *subframe, uint16_t *packet_type, uint
       LOG_D(PHY,"PULFFT_IF4p5: CC_id %d : frame %d, subframe %d (symbol %d)=> %d dB\n",ru->idx,*frame,*subframe,*symbol_number,
   	    dB_fixed(signal_energy((int*)&rxdataF[antenna_id][slotoffsetF],db_halflength)+
 	  	     signal_energy((int*)&rxdataF[antenna_id][blockoffsetF],db_halflength)));
+      data_block+=db_fulllength;
     }
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_DECOMPR_IF, 0 );	
   } else if (*packet_type == IF4p5_PULCALIB) {
@@ -466,32 +472,29 @@ void recv_IF4p5(RU_t *ru, int *frame, int *subframe, uint16_t *packet_type, uint
 	     *packet_type <= IF4p5_PRACH + 4) {  
 
     int16_t *rxF;
-
     for (int antenna_id=0;antenna_id<ru->nb_rx;antenna_id++) { 
-#if (RRC_VERSION >= MAKE_VERSION(14, 0, 0))
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
       if (*packet_type > IF4p5_PRACH)
         rxF = &prach_rxsigF_br[*packet_type - IF4p5_PRACH - 1][antenna_id][0];
       else 
 #endif
       rxF = &prach_rxsigF[antenna_id][0];
 
-    // FIX: hard coded prach samples length
-      db_fulllength = PRACH_NUM_SAMPLES;
-
       AssertFatal(rxF!=NULL,"rxF is null\n");
 
       if (eth->flags == ETH_RAW_IF4p5_MODE) {		
         memcpy(rxF, 
-               (int16_t*) (rx_buffer+MAC_HEADER_SIZE_BYTES+sizeof_IF4p5_header_t)+PRACH_BLOCK_SIZE_BYTES*antenna_id, 
+               (int16_t*) (rx_buffer+MAC_HEADER_SIZE_BYTES+sizeof_IF4p5_header_t+(PRACH_BLOCK_SIZE_BYTES*antenna_id)), 
                PRACH_BLOCK_SIZE_BYTES);
       } else {
         memcpy(rxF,
-               (int16_t*) (rx_buffer+sizeof_IF4p5_header_t)+PRACH_BLOCK_SIZE_BYTES*antenna_id,
+               (int16_t*) (rx_buffer+sizeof_IF4p5_header_t+(PRACH_BLOCK_SIZE_BYTES*antenna_id)),
                PRACH_BLOCK_SIZE_BYTES);
       }
     }
-    if (frame == 0) LOG_D(PHY,"PRACH_IF4p5: CC_id %d : frame %d, subframe %d => %d dB\n",ru->idx,*frame,*subframe,
-	  dB_fixed(signal_energy((int*)&prach_rxsigF[0][0],839)));
+    if (*frame == 0) LOG_D(PHY,"PRACH_IF4p5: CC_id %d : frame %d, subframe %d => (%d,%d) dB\n",ru->idx,*frame,*subframe,
+			   dB_fixed(signal_energy((int*)&prach_rxsigF[0][0],839)),
+			   dB_fixed(signal_energy((int*)&prach_rxsigF[1][0],839)));
       for (idx=0;idx<ru->num_eNB;idx++) ru->wakeup_prach_eNB(ru->eNB_list[idx],ru,*frame,*subframe);
 
   } else if (*packet_type == IF4p5_PULTICK) {

@@ -385,6 +385,8 @@ uint8_t generate_dci_top(uint8_t num_pdcch_symbols,
                          uint32_t sub_frame_offset);
 
 
+void generate_mdci_top(PHY_VARS_eNB * eNB, int frame, int subframe, int16_t amp, int32_t ** txdataF);
+
 void generate_64qam_table(void);
 void generate_16qam_table(void);
 
@@ -421,6 +423,8 @@ void fill_dci0(PHY_VARS_eNB *eNB,int frame,int subframe,L1_rxtx_proc_t *proc,DCI
 
 void fill_ulsch(PHY_VARS_eNB *eNB,int UE_id,nfapi_ul_config_ulsch_pdu *ulsch_pdu,int frame,int subframe);
 
+void fill_mpdcch_dci0 (PHY_VARS_eNB * eNB, L1_rxtx_proc_t * proc, mDCI_ALLOC_t * dci_alloc, nfapi_hi_dci0_mpdcch_dci_pdu * pdu);
+
 int generate_eNB_ulsch_params_from_rar(PHY_VARS_eNB *eNB,
 				       unsigned char *rar_pdu,
                                        uint32_t frame,
@@ -456,14 +460,6 @@ void generate_pcfich(uint8_t num_pdcch_symbols,
                      LTE_DL_FRAME_PARMS *frame_parms,
                      int32_t **txdataF,
                      uint8_t subframe);
-
-
-
-
-
-void init_transport_channels(uint8_t);
-
-
 
 void rx_ulsch(PHY_VARS_eNB *eNB,
               L1_rxtx_proc_t *proc,
@@ -557,7 +553,11 @@ uint32_t rx_pucch(PHY_VARS_eNB *phy_vars_eNB,
                   uint8_t *payload,
                   int     frame,
                   uint8_t subframe,
-                  uint8_t pucch1_thres);
+                  uint8_t pucch1_thres
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0)) 
+                  ,int     br_flag                  
+#endif
+                  );
 
 
 /*!
@@ -577,8 +577,9 @@ void rx_prach(PHY_VARS_eNB *phy_vars_eNB,RU_t *ru,
 	      uint16_t *max_preamble, 
 	      uint16_t *max_preamble_energy, 
 	      uint16_t *max_preamble_delay, 
+	      uint16_t *avg_preamble_energy, 
 	      uint16_t Nf, uint8_t tdd_mapindex
-#if (RRC_VERSION >= MAKE_VERSION(14, 0, 0))
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
 	      ,
               uint8_t br_flag
 #endif

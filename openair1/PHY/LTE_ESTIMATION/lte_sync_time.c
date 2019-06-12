@@ -34,6 +34,7 @@
 #include "LAYER2/MAC/mac.h"
 #include "RRC/LTE/rrc_extern.h"
 #include "PHY_INTERFACE/phy_interface.h"
+#include "PHY/LTE_REFSIG/lte_refsig.h"
 
 // Note: this is for prototype of generate_drs_pusch (OTA synchronization of RRUs)
 #include "PHY/LTE_UE_TRANSPORT/transport_proto_ue.h"
@@ -634,7 +635,6 @@ int lte_sync_time_eNB(int32_t **rxdata, ///rx data in time domain
 
 }
 
-
 static inline int64_t abs64(int64_t x)
 {
   return (((int64_t)((int32_t*)&x)[0])*((int64_t)((int32_t*)&x)[0]) + ((int64_t)
@@ -660,8 +660,7 @@ int ru_sync_time(RU_t *ru,
 					  (void*)&ru->common.rxdata[ar][0],
 					  frame_parms->ofdm_symbol_size);
   
-  int32_t tmp0;
-  int32_t magtmp0,maxlev0=0;
+  int32_t maxlev0=0;
   int     maxpos0=0;
   int64_t avg0=0;
   int64_t result;
@@ -720,4 +719,5 @@ int ru_sync_time(RU_t *ru,
 
 
 }
+
 

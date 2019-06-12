@@ -50,6 +50,7 @@
 
 
 
+
 typedef struct {
   /// Status Flag indicating for this DLSCH (idle,active,disabled)
   SCH_status_t status;
@@ -126,7 +127,7 @@ typedef struct {
   /// codeword this transport block is mapped to
   uint8_t codeword;
 #ifdef PHY_TX_THREAD
-#ifdef Rel14
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
   /// indicator that this DLSCH corresponds to SIB1-BR, needed for c_init for scrambling
   uint8_t sib1_br_flag;
   /// initial absolute subframe (see 36.211 Section 6.3.1), needed for c_init for scrambling
@@ -152,6 +153,8 @@ typedef struct {
 #else
   uint8_t active;
 #endif
+  /// indicator of UE type (0 = LTE, 1,2 = Cat-M)
+  int ue_type;
   /// HARQ process mask, indicates which processes are currently active
   uint16_t harq_mask;
   /// Indicator of TX activation per subframe.  Used during PUCCH detection for ACK/NAK.
@@ -183,7 +186,7 @@ typedef struct {
   /// amplitude of PDSCH (compared to RS) in symbols containing pilots
   int16_t sqrt_rho_b;
 #ifndef PHY_TX_THREAD
-#if (RRC_VERSION >= MAKE_VERSION(14, 0, 0))
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
   /// indicator that this DLSCH corresponds to SIB1-BR, needed for c_init for scrambling
   uint8_t sib1_br_flag;
   /// initial absolute subframe (see 36.211 Section 6.3.1), needed for c_init for scrambling
@@ -326,7 +329,7 @@ typedef struct {
   uint8_t     subframe;
   /// corresponding UE RNTI
   uint16_t    rnti;
-  /// Type (SR,HARQ,CQI,HARQ_SR,HARQ_CQI,SR_CQI,HARQ_SR_CQI)
+  /// Type (SR, HARQ, CQI, HARQ_SR, HARQ_CQI, SR_CQI, HARQ_SR_CQI)
   UCI_type_t  type;
   /// SRS active flag
   uint8_t     srs_active;
@@ -348,7 +351,7 @@ typedef struct {
   uint8_t     tdd_bundling;
   /// Received Energy
   uint32_t stat;
-#if (RRC_VERSION >= MAKE_VERSION(14, 0, 0))
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
   /// non BL/CE, CEmodeA, CEmodeB
   UE_type_t ue_type;
   /// Indicates the symbols that are left empty due to eMTC retuning.
@@ -443,6 +446,10 @@ typedef struct {
 } LTE_eNB_UE_stats;
 
 typedef struct {
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
+  /// UE type (normal, CEModeA, CEModeB)
+  uint8_t ue_type;
+#endif
   /// HARQ process mask, indicates which processes are currently active
   uint16_t harq_mask;
   /// Pointers to 8 HARQ processes for the ULSCH

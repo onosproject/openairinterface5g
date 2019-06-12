@@ -41,29 +41,27 @@ int32_t lte_ul_channel_estimation(PHY_VARS_eNB *eNB,
                                   unsigned char Ns) {
   RU_t *ru;
   ru = RC.ru[UE_id];
-  LTE_DL_FRAME_PARMS *frame_parms = (eNB==NULL) ? &eNB->frame_parms : &ru->frame_parms;
-  //LTE_DL_FRAME_PARMS *frame_parms = &eNB->frame_parms;
-  LTE_eNB_PUSCH *pusch_vars = eNB->pusch_vars[UE_id];
+  LTE_DL_FRAME_PARMS *frame_parms = (eNB!=NULL) ? &eNB->frame_parms : &ru->frame_parms;
+  LTE_eNB_PUSCH *pusch_vars = (eNB!=NULL) ? eNB->pusch_vars[UE_id] : NULL;
   RU_CALIBRATION *calibration = &ru->calibration;
-  //int32_t **ul_ch_estimates=pusch_vars->drs_ch_estimates;
-  int32_t **ul_ch_estimates = (eNB==NULL) ? pusch_vars->drs_ch_estimates : calibration->drs_ch_estimates;
+  int32_t **ul_ch_estimates = (eNB!=NULL) ? pusch_vars->drs_ch_estimates : calibration->drs_ch_estimates;
 
-  //int32_t **ul_ch_estimates_time=  pusch_vars->drs_ch_estimates_time;
-  int32_t **ul_ch_estimates_time = (eNB==NULL) ? pusch_vars->drs_ch_estimates_time : calibration->drs_ch_estimates_time;
-  
-  //int32_t **rxdataF_ext=  pusch_vars->rxdataF_ext;
-  int32_t **rxdataF_ext = (eNB==NULL) ? pusch_vars->rxdataF_ext : calibration->rxdataF_ext;
+  AssertFatal(ul_ch_estimates != NULL, "ul_ch_estimates is null (eNB %p, pusch %p, pusch->drs_ch_estimates %p, pusch->drs_ch_estimates[0] %p ul_ch_estimates %p UE_id %d)\n",eNB,pusch_vars,pusch_vars->drs_ch_estimates,pusch_vars->drs_ch_estimates[0],ul_ch_estimates,UE_id);
 
-  int subframe = (eNB==NULL) ? proc->subframe_rx : ru->proc.subframe_rx;
-  //int subframe = proc->subframe_rx;
+  int32_t **ul_ch_estimates_time = (eNB!=NULL) ? pusch_vars->drs_ch_estimates_time : calibration->drs_ch_estimates_time;
+ 
+  AssertFatal(ul_ch_estimates_time != NULL, "ul_ch_estimates_time is null\n");
+ 
+  int32_t **rxdataF_ext = (eNB!=NULL) ? pusch_vars->rxdataF_ext : calibration->rxdataF_ext;
 
-  uint8_t harq_pid = subframe2harq_pid(frame_parms,proc->frame_rx,subframe);
+  int subframe = (eNB!=NULL) ? proc->subframe_rx : ru->proc.subframe_rx;
 
+  uint8_t harq_pid; 
   int16_t delta_phase = 0;
   int16_t *ru1 = ru_90;
   int16_t *ru2 = ru_90;
   int16_t current_phase1,current_phase2;
-  uint16_t N_rb_alloc = eNB->ulsch[UE_id]->harq_processes[harq_pid]->nb_rb;
+
   uint16_t aa,Msc_RS,Msc_RS_idx;
   uint16_t * Msc_idx_ptr;
   int k,pilot_pos1 = 3 - frame_parms->Ncp, pilot_pos2 = 10 - 2*frame_parms->Ncp;
@@ -77,7 +75,7 @@ int32_t lte_ul_channel_estimation(PHY_VARS_eNB *eNB,
   uint32_t alpha_ind;
   uint32_t u=frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.grouphop[Ns+(subframe<<1)];
   uint32_t v=frame_parms->pusch_config_common.ul_ReferenceSignalsPUSCH.seqhop[Ns+(subframe<<1)];
-  int32_t tmp_estimates[N_rb_alloc*12] __attribute__((aligned(16)));
+
 
   int symbol_offset,i;
 
@@ -95,7 +93,19 @@ int32_t lte_ul_channel_estimation(PHY_VARS_eNB *eNB,
   int32x4_t mmtmp0,mmtmp1,mmtmp_re,mmtmp_im;
 #endif
 
-int32_t temp_in_ifft_0[2048*2] __attribute__((aligned(32)));
+  int32_t temp_in_ifft_0[2048*2] __attribute__((aligned(32)));
+
+
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
+  if (eNB->ulsch[UE_id]->ue_type > 0) harq_pid = 0;
+  else
+#endif
+    {
+      harq_pid = subframe2harq_pid(frame_parms,proc->frame_rx,subframe);
+    }
+
+  uint16_t N_rb_alloc = eNB->ulsch[UE_id]->harq_processes[harq_pid]->nb_rb;
+  int32_t tmp_estimates[N_rb_alloc*12] __attribute__((aligned(16)));
 
   Msc_RS = N_rb_alloc*12;
 
@@ -122,14 +132,11 @@ int32_t temp_in_ifft_0[2048*2] __attribute__((aligned(32)));
 
 #endif
 
-
   if (l == (3 - frame_parms->Ncp)) {
 
     symbol_offset = frame_parms->N_RB_UL*12*(l+((7-frame_parms->Ncp)*(Ns&1)));
 
     for (aa=0; aa<nb_antennas_rx; aa++) {
-      //           msg("Componentwise prod aa %d, symbol_offset %d,ul_ch_estimates %p,ul_ch_estimates[aa] %p,ul_ref_sigs_rx[0][0][Msc_RS_idx] %p\n",aa,symbol_offset,ul_ch_estimates,ul_ch_estimates[aa],ul_ref_sigs_rx[0][0][Msc_RS_idx]);
-
 #if defined(__x86_64__) || defined(__i386__)
       rxdataF128 = (__m128i *)&rxdataF_ext[aa][symbol_offset];
       ul_ch128   = (__m128i *)&ul_ch_estimates[aa][symbol_offset];

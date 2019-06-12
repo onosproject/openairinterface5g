@@ -51,6 +51,7 @@
 #include <sys/sysinfo.h>
 
 
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <malloc.h>
@@ -58,6 +59,9 @@
 #include <math.h>
 #include "common_lib.h"
 #include "msc.h"
+#include <common/utils/LOG/log.h>
+
+#include "assertions.h"
 
 
 //#include <complex.h>
@@ -159,7 +163,7 @@ typedef struct {
   PRACH_CONFIG_INFO prach_ConfigInfo;
 } PRACH_CONFIG_COMMON;
 
-#if (RRC_VERSION >= MAKE_VERSION(14, 0, 0))
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
 
 /// PRACH-eMTC-Config from 36.331 RRC spec
 typedef struct {
@@ -192,7 +196,7 @@ typedef struct {
   /// prach_Config_enabled=1 means enabled. \vr{[0..1]}
   uint8_t prach_Config_enabled;
   /// PRACH Configuration Information
-#if (RRC_VERSION >= MAKE_VERSION(14, 0, 0))
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
   PRACH_eMTC_CONFIG_INFO prach_ConfigInfo;
 #endif  
 } PRACH_eMTC_CONFIG_COMMON;
@@ -644,7 +648,7 @@ typedef struct {
   uint8_t nb_antenna_ports_eNB;
   /// PRACH_CONFIG
   PRACH_CONFIG_COMMON prach_config_common;
-#if (RRC_VERSION >= MAKE_VERSION(14, 0, 0))
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
   /// PRACH_eMTC_CONFIG
   PRACH_eMTC_CONFIG_COMMON prach_emtc_config_common;
 #endif
@@ -807,6 +811,8 @@ typedef struct {
   uint8_t harq_pid;
   /// Narrowband index
   uint8_t narrowband;
+  /// number of mdpcch repetitions
+  uint16_t reps;
   /// number of PRB pairs for MPDCCH
   uint8_t number_of_prb_pairs;
   /// mpdcch resource assignment (combinatorial index r)
@@ -821,8 +827,6 @@ typedef struct {
   uint16_t dmrs_scrambling_init;
   /// Absolute subframe of the initial transmission (0-10239)
   uint16_t i0;
-  /// number of mdpcch repetitions
-  uint16_t reps;
   /// current absolute subframe number
   uint16_t absSF;
   /// DCI pdu
@@ -862,22 +866,60 @@ typedef enum {
   RESYNCH=4
 } UE_MODE_t;
 
-/// Threading Parameter
-typedef enum {
-  PARALLEL_SINGLE_THREAD    =0,
-  PARALLEL_RU_L1_SPLIT      =1,
-  PARALLEL_RU_L1_TRX_SPLIT  =2
-}PARALLEL_CONF_t;
+#define FOREACH_PARALLEL(GEN)			\
+  GEN(PARALLEL_SINGLE_THREAD)			\
+  GEN(PARALLEL_RU_L1_SPLIT)			\
+  GEN(PARALLEL_RU_L1_TRX_SPLIT)
+
+#define GENERATE_ENUM(N) N,
+#define GENERATE_ENUMTXT(N) {(char*)#N, N},
 
 typedef enum {
-  WORKER_DISABLE            =0,
-  WORKER_ENABLE             =1
+  FOREACH_PARALLEL(GENERATE_ENUM)
+} PARALLEL_CONF_t;
+
+#define FOREACH_WORKER(GEN) GEN(WORKER_DISABLE) GEN(WORKER_ENABLE)
+typedef enum {
+  FOREACH_WORKER(GENERATE_ENUM)
 }WORKER_CONF_t;
 
 typedef struct THREAD_STRUCT_s {
   PARALLEL_CONF_t  parallel_conf;
   WORKER_CONF_t    worker_conf;
 } THREAD_STRUCT;
+extern THREAD_STRUCT  thread_struct;
+
+static inline void set_parallel_conf(char *parallel_conf) {
+  mapping config[]= {
+    FOREACH_PARALLEL(GENERATE_ENUMTXT)
+    {NULL,-1}
+  };
+  thread_struct.parallel_conf = (PARALLEL_CONF_t)map_str_to_int(config, parallel_conf);
+  if (thread_struct.parallel_conf == -1 ) {
+    LOG_E(ENB_APP,"Impossible value: %s\n", parallel_conf);
+    thread_struct.parallel_conf = PARALLEL_SINGLE_THREAD;
+  }
+}
+
+static inline void set_worker_conf(char *worker_conf) {
+  mapping config[]={
+    FOREACH_WORKER(GENERATE_ENUMTXT)
+    {NULL, -1}
+  };
+  thread_struct.worker_conf =  (WORKER_CONF_t)map_str_to_int(config, worker_conf);
+  if (thread_struct.worker_conf == -1 ) {
+    LOG_E(ENB_APP,"Impossible value: %s\n", worker_conf);
+    thread_struct.worker_conf = WORKER_DISABLE ;
+  }
+}
+
+static inline PARALLEL_CONF_t get_thread_parallel_conf(void) {
+  return thread_struct.parallel_conf;
+}
+
+static inline WORKER_CONF_t get_thread_worker_conf(void) {
+  return thread_struct.worker_conf;
+}
 
 typedef enum {SF_DL, SF_UL, SF_S} lte_subframe_t;
 
@@ -996,14 +1038,15 @@ typedef uint8_t(encoder_if_t)(uint8_t *input,
 
 
 static inline void wait_sync(char *thread_name) {
+  int rc;
 
   printf( "waiting for sync (%s,%d/%p,%p,%p)\n",thread_name,sync_var,&sync_var,&sync_cond,&sync_mutex);
-  pthread_mutex_lock( &sync_mutex );
+  AssertFatal((rc = pthread_mutex_lock( &sync_mutex ))==0,"sync mutex lock error");
   
   while (sync_var<0)
     pthread_cond_wait( &sync_cond, &sync_mutex );
   
-  pthread_mutex_unlock(&sync_mutex);
+  AssertFatal((rc = pthread_mutex_unlock( &sync_mutex ))==0,"sync mutex unlock error");
   
   printf( "got sync (%s)\n", thread_name);
   /*
@@ -1013,15 +1056,25 @@ static inline void wait_sync(char *thread_name) {
   fflush(stderr);
 }
 
-static inline int wakeup_thread(pthread_mutex_t *mutex,pthread_cond_t *cond,int *instance_cnt,char *name) {
+static inline int wakeup_thread(pthread_mutex_t *mutex,pthread_cond_t *cond,int *instance_cnt,char *name, int sleeptime,int sleep_cnt_max) {
   int rc;
-  if ((rc = pthread_mutex_lock(mutex)) != 0) {
-    LOG_E(PHY, "wakeup_thread(): error locking mutex for %s (%d %s, %p)\n",
-        name, rc, strerror(rc), (void *)mutex);
-    exit_fun("nothing to add");
-    return(-1);
+  int sleep_cnt=0;
+
+  AssertFatal((rc = pthread_mutex_lock(mutex))==0,"wakeup_thread(): error locking mutex for %s (%d %s, %p)\n", name, rc, strerror(rc), (void *)mutex);
+
+  while (*instance_cnt == 0) {
+
+    AssertFatal((rc = pthread_mutex_unlock(mutex))==0,"wakeup_thread(): error unlocking mutex for %s (%d %s, %p)\n", name, rc, strerror(rc), (void *)mutex);
+
+    sleep_cnt++;
+    if (sleep_cnt>sleep_cnt_max) return(-1);
+    usleep(sleeptime);
+    AssertFatal((rc = pthread_mutex_lock(mutex))==0,"wakeup_thread(): error locking mutex for %s (%d %s, %p)\n", name, rc, strerror(rc), (void *)mutex);
   }
   *instance_cnt = *instance_cnt + 1;
+
+  AssertFatal((rc = pthread_mutex_unlock(mutex))==0,"wakeup_thread(): error unlocking mutex for %s (%d %s, %p)\n", name, rc, strerror(rc), (void *)mutex);
+
   // the thread can now be woken up
   if (pthread_cond_signal(cond) != 0) {
     LOG_E( PHY, "ERROR pthread_cond_signal\n");
@@ -1029,18 +1082,40 @@ static inline int wakeup_thread(pthread_mutex_t *mutex,pthread_cond_t *cond,int 
     return(-1);
   }
 
-  pthread_mutex_unlock(mutex);
+  AssertFatal((rc = pthread_mutex_unlock(mutex))==0,"wakeup_thread(): error unlocking mutex for %s (%d %s, %p)\n", name, rc, strerror(rc), (void *)mutex);
+  return(0);
+}
+
+static inline int timedwait_on_condition(pthread_mutex_t *mutex,pthread_cond_t *cond,int *instance_cnt,char *name,uint32_t time_ns) {
+  int rc;
+  int waitret=0;
+  struct timespec now,abstime;
+
+  AssertFatal((rc = pthread_mutex_lock(mutex))==0,"[SCHED][eNB] timedwait_on_condition(): error locking mutex for %s (%d %s, %p)\n", name, rc, strerror(rc), (void *)mutex);
+
+  clock_gettime(CLOCK_REALTIME,&now);
+  while (*instance_cnt < 0) {
+    // most of the time the thread is waiting here
+    // proc->instance_cnt_rxtx is -1
+    abstime.tv_sec=now.tv_sec;
+    abstime.tv_nsec = now.tv_nsec + time_ns;
+    if (abstime.tv_nsec >= 1000*1000*1000)
+    {
+      abstime.tv_nsec -= 1000*1000*1000;
+      abstime.tv_sec  += 1;
+    }
+    if ((waitret = pthread_cond_timedwait(cond,mutex,&abstime)) == 0) break; // this unlocks mutex_rxtx while waiting and then locks it again
+  }
+
+  AssertFatal((rc = pthread_mutex_unlock(mutex)) == 0,"[SCHED][eNB] timedwait_on_condition(): error unlocking mutex return %d for %s\n", rc, name);
+
   return(0);
 }
 
 static inline int wait_on_condition(pthread_mutex_t *mutex,pthread_cond_t *cond,int *instance_cnt,char *name) {
   int rc;
-  if ((rc = pthread_mutex_lock(mutex)) != 0) {
-    LOG_E(PHY, "[SCHED][eNB] wait_on_condition(): error locking mutex for %s (%d %s, %p)\n",
-        name, rc, strerror(rc), (void *)mutex);
-    exit_fun("nothing to add");
-    return(-1);
-  }
+
+  AssertFatal((rc = pthread_mutex_lock(mutex))==0,"[SCHED][eNB] wait_on_condition(): error locking mutex for %s (%d %s, %p)\n", name, rc, strerror(rc), (void *)mutex);
 
   while (*instance_cnt < 0) {
     // most of the time the thread is waiting here
@@ -1048,22 +1123,14 @@ static inline int wait_on_condition(pthread_mutex_t *mutex,pthread_cond_t *cond,
     pthread_cond_wait(cond,mutex); // this unlocks mutex_rxtx while waiting and then locks it again
   }
 
-  if (pthread_mutex_unlock(mutex) != 0) {
-    LOG_E(PHY,"[SCHED][eNB] error unlocking mutex for %s\n",name);
-    exit_fun("nothing to add");
-    return(-1);
-  }
+  AssertFatal((rc = pthread_mutex_unlock(mutex))==0,"[SCHED][eNB] wait_on_condition(): error unlocking mutex return %d for %s\n", rc, name);
+
   return(0);
 }
 
 static inline int wait_on_busy_condition(pthread_mutex_t *mutex,pthread_cond_t *cond,int *instance_cnt,char *name) {
   int rc;
-  if ((rc = pthread_mutex_lock(mutex)) != 0) {
-    LOG_E(PHY, "[SCHED][eNB] wait_on_busy_condition(): error locking mutex for %s (%d %s, %p)\n",
-        name, rc, strerror(rc), (void *)mutex);
-    exit_fun("nothing to add");
-    return(-1);
-  }
+  AssertFatal((rc = pthread_mutex_lock(mutex))==0,"[SCHED][eNB] wait_on_busy_condition(): error locking mutex for %s (%d %s, %p)\n", name, rc, strerror(rc), (void *)mutex);
 
   while (*instance_cnt == 0) {
     // most of the time the thread will skip this
@@ -1071,30 +1138,20 @@ static inline int wait_on_busy_condition(pthread_mutex_t *mutex,pthread_cond_t *
     pthread_cond_wait(cond,mutex); // this unlocks mutex_rxtx while waiting and then locks it again
   }
 
-  if (pthread_mutex_unlock(mutex) != 0) {
-    LOG_E(PHY,"[SCHED][eNB] error unlocking mutex for %s\n",name);
-    exit_fun("nothing to add");
-    return(-1);
-  }
+  AssertFatal((rc = pthread_mutex_unlock(mutex))==0,"[SCHED][eNB] wait_on_busy_condition(): error unlocking mutex return %d for %s\n", rc, name);
+
   return(0);
 }
 
 static inline int release_thread(pthread_mutex_t *mutex,int *instance_cnt,char *name) {
   int rc;
-  if ((rc = pthread_mutex_lock(mutex)) != 0) {
-    LOG_E(PHY, "[SCHED][eNB] release_thread(): error locking mutex for %s (%d %s, %p)\n",
-        name, rc, strerror(rc), (void *)mutex);
-    exit_fun("nothing to add");
-    return(-1);
-  }
+
+  AssertFatal((rc = pthread_mutex_lock(mutex))==0,"[SCHED][eNB] release_thread(): error locking mutex for %s (%d %s, %p)\n", name, rc, strerror(rc), (void *)mutex);
 
   *instance_cnt=*instance_cnt-1;
 
-  if (pthread_mutex_unlock(mutex) != 0) {
-    LOG_E( PHY, "[SCHED][eNB] error unlocking mutex for %s\n",name);
-    exit_fun("nothing to add");
-    return(-1);
-  }
+  AssertFatal((rc = pthread_mutex_unlock(mutex))==0,"[SCHED][eNB] release_thread(): error unlocking mutex return %d for %s\n", rc, name);
+
   return(0);
 }
 
