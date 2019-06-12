@@ -211,6 +211,11 @@ config_req_rlc_am (
   hashtable_rc_t   h_rc;
 
   h_rc = hashtable_get(rlc_coll_p, key, (void**)&rlc_union_p);
+  
+  /***************************************/
+  printf("hashtable_get in comfig_req_rlc_am\n");
+  /***************************************/
+
 
   if (h_rc == HASH_TABLE_OK) {
     l_rlc_p = &rlc_union_p->rlc.am;
@@ -264,6 +269,10 @@ void config_req_rlc_am_asn1 (
   hashtable_rc_t   h_rc;
 
   h_rc = hashtable_get(rlc_coll_p, key, (void**)&rlc_union_p);
+
+  /***************************************/
+  printf("hashtable_get in config_req_rlc_am_asn1\n");
+  /***************************************/
 
   if (h_rc == HASH_TABLE_OK) {
     l_rlc_p = &rlc_union_p->rlc.am;

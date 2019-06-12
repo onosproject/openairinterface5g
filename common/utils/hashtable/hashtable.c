@@ -276,14 +276,23 @@ hashtable_rc_t hashtable_get(const hash_table_t * const hashtblP, const hash_key
         *dataP = NULL;
         return HASH_TABLE_BAD_PARAMETER_HASHTABLE;
     }
+
+    //printf("Hash table size :  %d\n", hashtblP->size);
+    //printf("hashfunc(keyP) :  %d\n", hashtblP->hashfunc(keyP));
     hash=hashtblP->hashfunc(keyP)%hashtblP->size;
-/*	fprintf(stderr, "hashtable_get() key=%s, hash=%d\n", key, hash);*/
+    //printf("keyP %d\n", keyP);
+	/*fprintf(stderr, "hashtable_get() key=%s, hash=%d\n", key, hash);*/
+    //printf("hash %d\n", hash);
 
     node=hashtblP->nodes[hash];
+    //printf("nodes_value %d \n", hashtblP->nodes[hash]);
 
     while(node) {
+        //printf("node_key %d \n",node->key);
         if(node->key == keyP) {
+            //printf("node_key %d \n",node->key);
             *dataP = node->data;
+            //printf("data : %p \n",node->data);
             return HASH_TABLE_OK;
         }
         node=node->next;

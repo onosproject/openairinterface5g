@@ -113,6 +113,7 @@ rlc_op_status_t rrc_rlc_config_asn1_req (const protocol_ctxt_t   * const ctxt_pP
             break;
 
           case RLC_Config_PR_am:
+          /****************************************config srb1********************************************/
             if (rrc_rlc_add_rlc (ctxt_pP, SRB_FLAG_YES, MBMS_FLAG_NO, rb_id, lc_id, RLC_MODE_AM) != NULL) {
               config_req_rlc_am_asn1 (
                 ctxt_pP,
@@ -124,6 +125,21 @@ rlc_op_status_t rrc_rlc_config_asn1_req (const protocol_ctxt_t   * const ctxt_pP
                     PROTOCOL_CTXT_ARGS(ctxt_pP),
                     rb_id);
             }
+          /***********************************************************************************************/
+          
+          /****************************************config srb1bis********************************************/
+          if (rrc_rlc_add_rlc (ctxt_pP, SRB_FLAG_YES, MBMS_FLAG_NO, 3, 3, RLC_MODE_AM) != NULL) {
+              config_req_rlc_am_asn1 (
+                ctxt_pP,
+                SRB_FLAG_YES,
+                &srb_toaddmod_p->rlc_Config->choice.explicitValue.choice.am,
+                3, 3);
+            } else {
+              LOG_E(RLC, PROTOCOL_CTXT_FMT" ERROR IN ALLOCATING SRB %d \n",
+                    PROTOCOL_CTXT_ARGS(ctxt_pP),
+                    rb_id);
+            }
+          /***************************************************************************************************/
 
             break;
 
@@ -374,6 +390,7 @@ rlc_op_status_t rrc_rlc_config_asn1_req (const protocol_ctxt_t   * const ctxt_pP
 
         h_rc = hashtable_get(rlc_coll_p, key, (void**)&rlc_union_p);
 
+
         if (h_rc == HASH_TABLE_KEY_NOT_EXISTS) {
           rlc_union_p = rrc_rlc_add_rlc   (
                           ctxt_pP,
@@ -489,7 +506,7 @@ rlc_op_status_t rrc_rlc_remove_rlc   (
   rlc_union_t           *rlc_union_p = NULL;
 #if defined(Rel10) || defined(Rel14)
   rlc_mbms_id_t         *mbms_id_p  = NULL;
-#endif
+#endif rrc_rlc_remove_rlc
 #ifdef OAI_EMU
   CHECK_CTXT_ARGS(ctxt_pP)
 
@@ -548,6 +565,7 @@ rlc_op_status_t rrc_rlc_remove_rlc   (
     }
     key_lcid = RLC_COLL_KEY_LCID_VALUE(ctxt_pP->module_id, ctxt_pP->rnti, ctxt_pP->enb_flag, lcid, srb_flagP);
     h_lcid_rc = hashtable_get(rlc_coll_p, key_lcid, (void**)&rlc_union_p);
+
   } else {
     h_lcid_rc = HASH_TABLE_KEY_NOT_EXISTS;
   }
@@ -632,7 +650,19 @@ rlc_union_t* rrc_rlc_add_rlc   (
   {
     key = RLC_COLL_KEY_VALUE(ctxt_pP->module_id, ctxt_pP->rnti, ctxt_pP->enb_flag, rb_idP, srb_flagP);
     key_lcid = RLC_COLL_KEY_LCID_VALUE(ctxt_pP->module_id, ctxt_pP->rnti, ctxt_pP->enb_flag, chan_idP, srb_flagP);
+
+    /*
+    printf("*******RLC_COLL_KEY_LCID_VALUE*********\n");
+    printf("module_id : %d\n",ctxt_pP->module_id);
+    printf("rnti : %d\n",ctxt_pP->rnti);
+    printf("enb_flag : %d\n",ctxt_pP->enb_flag );
+    printf("channel_id : %d\n",chan_idP );
+    printf("srb_flag : %d\n",srb_flagP);
+    printf("***************************************\n");
+    printf("key_lcid %d\n",key_lcid);
+    */
   }
+
 
   h_rc = hashtable_get(rlc_coll_p, key, (void**)&rlc_union_p);
 

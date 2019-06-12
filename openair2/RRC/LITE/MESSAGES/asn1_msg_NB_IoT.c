@@ -944,7 +944,6 @@ uint8_t do_RRCConnectionSetup_NB_IoT(
   SRB_ToAddModList_NB_r13_t**             SRB_configList_NB_IoT, //for both SRB1bis and SRB1
   struct PhysicalConfigDedicated_NB_r13** physicalConfigDedicated_NB_IoT)
 {
-
   asn_enc_rval_t enc_rval;
   uint8_t ecause=0;
 

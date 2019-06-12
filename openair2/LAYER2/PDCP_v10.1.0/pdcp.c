@@ -514,6 +514,7 @@ pdcp_data_ind(
                  ctxt_pP->module_id,
                  ctxt_pP->rnti);
     key = PDCP_COLL_KEY_VALUE(ctxt_pP->module_id, ctxt_pP->rnti, ctxt_pP->enb_flag, rb_id, srb_flagP);
+
     h_rc = hashtable_get(pdcp_coll_p, key, (void**)&pdcp_p);
 
     if (h_rc != HASH_TABLE_OK) {
@@ -652,6 +653,7 @@ pdcp_data_ind(
         PROTOCOL_PDCP_CTXT_FMT" DATA-IND len %u",
         PROTOCOL_PDCP_CTXT_ARGS(ctxt_pP, pdcp_p),
         sdu_buffer_sizeP - pdcp_header_len - pdcp_tailer_len);
+
       rrc_data_ind(ctxt_pP,
 		   rb_id,
 		   sdu_buffer_sizeP - pdcp_header_len - pdcp_tailer_len,

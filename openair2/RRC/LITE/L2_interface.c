@@ -604,6 +604,16 @@ rrc_data_ind(
           sdu_sizeP,
           ctxt_pP->rnti);
   }
+  /*
+  printf("....in rrc_data_ind....\n");
+  printf("module_id : %d\n",ctxt_pP->module_id);
+  printf("frame : %d\n",ctxt_pP->frame);
+  printf("DCCH_index : %d\n",DCCH_index);
+  printf("Srb_id : %d\n",Srb_id);
+  printf("sdu_sizeP : %d\n",sdu_sizeP);
+  printf("rnti : %d\n",ctxt_pP->rnti);
+  */
+
 
 #if defined(ENABLE_ITTI)
   {

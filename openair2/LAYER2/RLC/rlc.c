@@ -36,6 +36,7 @@
 
 #include "assertions.h"
 
+
 extern boolean_t pdcp_data_ind(
   const protocol_ctxt_t* const ctxt_pP,
   const srb_flag_t srb_flagP,
@@ -581,7 +582,17 @@ void rlc_data_ind     (
     T(T_ENB_RLC_UL, T_INT(ctxt_pP->module_id), T_INT(ctxt_pP->rnti), T_INT(rb_idP), T_INT(sdu_sizeP));
 #endif
 
+/*************************For SRB1bis (RLC->RRC)*****************************/
+rrc_data_ind(
+ctxt_pP,
+rb_idP,
+51,
+(uint8_t*)&sdu_pP->data[0]);
 
+/***************************************************************************/
+
+
+/*
   pdcp_data_ind (
     ctxt_pP,
     srb_flagP,
@@ -589,7 +600,9 @@ void rlc_data_ind     (
     rb_idP,
     sdu_sizeP,
     sdu_pP);
+*/
 }
+
 //-----------------------------------------------------------------------------
 void rlc_data_conf     (const protocol_ctxt_t* const ctxt_pP,
                         const srb_flag_t      srb_flagP,

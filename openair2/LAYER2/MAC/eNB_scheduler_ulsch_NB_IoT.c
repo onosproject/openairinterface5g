@@ -30,6 +30,9 @@
 #include "defs_NB_IoT.h"
 #include "proto_NB_IoT.h"
 #include "extern_NB_IoT.h"
+#include "RRC/LITE/proto.h"
+#include "RRC/LITE/extern.h"
+#include "RRC/L2_INTERFACE/openair_rrc_L2_interface.h"
 
 unsigned char str20[] = "DCI_uss";
 unsigned char str21[] = "DATA_uss";
@@ -246,16 +249,40 @@ void rx_sdu_NB_IoT(module_id_t module_id, int CC_id, frame_t frame, sub_frame_t 
                     printf("%02x ",payload_ptr[a]);
                   printf("\n");*/
                 rx_lengths[i]-=1;
+                mac_rrc_data_ind(
+                  module_id,
+                  CC_id,
+                  frame,subframe,
+                  rnti,
+                  CCCH,
+                  (uint8_t*)payload_ptr,
+                  rx_lengths[i],
+                  1,
+                  module_id,
+                  0);
                 LOG_D(MAC,"rx_lengths : %d\n", rx_lengths[i]);
                 msg4_rrc_pdu = mac_rrc_msg3_ind_NB_IoT(payload_ptr,rnti,rx_lengths[i]);
                 receive_msg3_NB_IoT(mac_inst,rnti,PHR,ul_total_buffer,first_6,msg4_rrc_pdu);
-                LOG_D(MAC,"Contention resolution ID = %02x %02x %02x %02x %02x %02x\n",first_6[0],first_6[1],first_6[2],first_6[3],first_6[4],first_6[5]);
+                LOG_I(MAC,"Contention resolution ID = %02x %02x %02x %02x %02x %02x\n",first_6[0],first_6[1],first_6[2],first_6[3],first_6[4],first_6[5]);
                 //NB_IoT_mac_rrc_data_ind(payload_ptr,mac_inst,rnti);
                 //NB_IoT_receive_msg3(mac_inst,rnti,PHR,ul_total_buffer);
           break;
             case DCCH0_NB_IoT:
             case DCCH1_NB_IoT:
                 LOG_I(MAC,"DCCH PDU Here\n");
+                mac_rlc_data_ind(
+                  module_id,
+                  rnti,
+                  module_id,
+                  frame,
+                  1,
+                  0,
+                  rx_lcids[i],
+                  //1,/* change channel_id equals 1 (SRB) */
+                  (char *)payload_ptr,
+                  rx_lengths[i],
+                  1,
+                  NULL);//(unsigned int*)crc_status);
                 // UE specific here
                 //NB_IoT_mac_rlc_data_ind(payload_ptr,mac_inst,rnti);
             

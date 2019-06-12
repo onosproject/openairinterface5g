@@ -177,6 +177,7 @@ tbs_size_t mac_rlc_data_req(
 
   h_rc = hashtable_get(rlc_coll_p, key, (void**)&rlc_union_p);
 
+ 
   if (h_rc == HASH_TABLE_OK) {
     rlc_mode = rlc_union_p->mode;
   } else {
@@ -238,8 +239,9 @@ void mac_rlc_data_ind     (
   rlc_union_t           *rlc_union_p     = NULL;
   hash_key_t             key             = HASHTABLE_NOT_A_KEY_VALUE;
   hashtable_rc_t         h_rc;
-  srb_flag_t             srb_flag        = (channel_idP <= 2) ? SRB_FLAG_YES : SRB_FLAG_NO;
+  srb_flag_t             srb_flag        = (channel_idP <= 3) ? SRB_FLAG_YES : SRB_FLAG_NO;
   protocol_ctxt_t     ctxt;
+    LOG_I(RLC,"NB-IoT: RLC PDU receive\n");
 
   PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, module_idP, enb_flagP, rntiP, frameP, 0, eNB_index);
 
@@ -282,7 +284,19 @@ void mac_rlc_data_ind     (
       return;
     }
   } else {
+
     key = RLC_COLL_KEY_LCID_VALUE(module_idP, rntiP, enb_flagP, channel_idP, srb_flag);
+    
+    /*
+    printf("*******RLC_COLL_KEY_LCID_VALUE*********\n");
+    printf("module_id : %d\n",module_idP);
+    printf("rnti : %d\n",rntiP);
+    printf("enb_flag : %d\n",enb_flagP );
+    printf("channel_id : %d\n",channel_idP );
+    printf("srb_flag : %d\n",srb_flag);
+    printf("***************************************\n");
+    */
+
   }
 
   h_rc = hashtable_get(rlc_coll_p, key, (void**)&rlc_union_p);
@@ -298,18 +312,24 @@ void mac_rlc_data_ind     (
 
   switch (rlc_mode) {
   case RLC_MODE_NONE:
+      LOG_I(RLC,"NB-IoT: No Radio bearer configure for\n");
+
     //handle_event(WARNING,"FILE %s FONCTION mac_rlc_data_ind() LINE %s : no radio bearer configured :%d\n", __FILE__, __LINE__, channel_idP);
     break;
 
   case RLC_MODE_AM:
+    LOG_I(RLC,"NB-IoT: AM\n");
     rlc_am_mac_data_indication(&ctxt, &rlc_union_p->rlc.am, data_ind);
     break;
 
   case RLC_MODE_UM:
+      LOG_I(RLC,"NB-IoT: UM\n");
     rlc_um_mac_data_indication(&ctxt, &rlc_union_p->rlc.um, data_ind);
     break;
 
   case RLC_MODE_TM:
+      LOG_I(RLC,"NB-IoT: TM\n");
+
     rlc_tm_mac_data_indication(&ctxt, &rlc_union_p->rlc.tm, data_ind);
     break;
   }
@@ -385,6 +405,7 @@ mac_rlc_status_resp_t mac_rlc_status_ind(
   }
 
   h_rc = hashtable_get(rlc_coll_p, key, (void**)&rlc_union_p);
+
 
   if (h_rc == HASH_TABLE_OK) {
     rlc_mode = rlc_union_p->mode;
@@ -468,6 +489,7 @@ rlc_buffer_occupancy_t mac_rlc_get_buffer_occupancy_ind(
 
 
   h_rc = hashtable_get(rlc_coll_p, key, (void**)&rlc_union_p);
+
 
   if (h_rc == HASH_TABLE_OK) {
     rlc_mode = rlc_union_p->mode;

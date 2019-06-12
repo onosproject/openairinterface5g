@@ -35,7 +35,6 @@
 #include "rlc.h"
 #include "extern_NB_IoT.h"
 #include "LAYER2/MAC/defs_NB_IoT.h"
-/*NOTE: no static function should be declared in this header file (e.g. init_SI_NB)*/
 
 uint8_t* generate_msg4_NB_IoT(rrc_eNB_carrier_data_NB_IoT_t *carrier);
 
