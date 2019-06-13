@@ -985,7 +985,51 @@ int nas_proc_activate_pdn(nas_user_t *user, int cid)
   LOG_FUNC_RETURN (rc);
 }
 
-/*
+/****************************************************************************
+ **                                                                        **
+ ** Name:    nas_proc_remote_ue_report()                                   **
+ **                                                                        **
+ ** Description: Ask the NAS to send a REMOTE UE REPORT                    **
+ **                                                                        **
+ ** Inputs:  cid:       Identifier of the PDN context   **
+ **      Others:    None                                       **
+ **                                                                        **
+ ** Outputs:     None                                                      **
+ **      Return:    RETURNok, RETURNerror                      **
+ **      Others:    None                                       **
+ **                                                                        **
+ ***************************************************************************/
+int nas_proc_remote_ue_report(nas_user_t *user, int cid)
+{
+  LOG_FUNC_IN;
+
+  int rc = RETURNok;
+
+  if ( !emm_main_is_attached(user->emm_data) ) {
+    /*
+     * If the UE is not attached to the network, perform EPS attach
+     * procedure prior to attempt to request any PDN connectivity
+     */
+    LOG_TRACE(WARNING, "NAS-PROC  - UE is not attached to the network");
+    rc = nas_proc_attach(user);
+  } else if (emm_main_is_emergency(user->emm_data)) {
+    /* The UE is attached for emergency bearer services; It shall not
+     * request a PDN connection to any other PDN */
+    LOG_TRACE(WARNING,"NAS-PROC  - Attached for emergency bearer services");
+    rc = RETURNerror;
+  }
+
+  if (rc != RETURNerror) {
+    if (cid > 0) {
+      /* Activate only the specified PDN context */
+      rc = _nas_proc_activate(user, cid, TRUE);
+    } else {
+    	/// log?
+    }
+  }
+
+  LOG_FUNC_RETURN (rc);
+}/*
  * --------------------------------------------------------------------------
  *      NAS procedures triggered by the network
  * --------------------------------------------------------------------------
@@ -1336,6 +1380,40 @@ static int _nas_proc_activate(nas_user_t *user, int cid, int apply_to_all)
   esm_sap.is_standalone = TRUE;
   esm_sap.data.pdn_connect.is_defined = TRUE;
   esm_sap.data.pdn_connect.cid = cid;
+  rc = esm_sap_send(user, &esm_sap);
+
+  LOG_FUNC_RETURN (rc);
+}
+
+/****************************************************************************
+ **                                                                        **
+ ** Name:    _nas_proc_remote_ue_report()                                       **
+ **                                                                        **
+ ** Description: Initiates a PDN connectivity procedure                    **
+ **                                                                        **
+ ** Inputs:  cid:       Identifier of the PDN context used to es-  **
+ **             tablished connectivity to specified PDN    **
+ **      Others:    None                                       **
+ **                                                                        **
+ ** Outputs:     None                                                      **
+ **      Return:    RETURNok, RETURNerror                      **
+ **      Others:    None                                       **
+ **                                                                        **
+ ***************************************************************************/
+static int _nas_proc_remote_ue_report(nas_user_t *user, int cid)
+{
+  LOG_FUNC_IN;
+
+  int rc = RETURNok;
+  esm_sap_t esm_sap = {};
+
+  /*
+   * Notify ESM that a default EPS bearer has to be established
+   * for the specified PDN
+   */
+  esm_sap.primitive = ESM_REMOTE_UE_REPORT_REQ;
+  esm_sap.is_standalone = TRUE;
+  esm_sap.data.remote_ue_report.dummy = 0;
   rc = esm_sap_send(user, &esm_sap);
 
   LOG_FUNC_RETURN (rc);

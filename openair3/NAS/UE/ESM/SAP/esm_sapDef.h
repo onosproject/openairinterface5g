@@ -77,6 +77,7 @@ typedef enum esm_primitive_s {
   ESM_BEARER_RESOURCE_MODIFY_REJ,
   /* ESM data indication ("raw" ESM message) */
   ESM_UNITDATA_IND,
+  ESM_REMOTE_UE_REPORT_REQ,
   ESM_END
 } esm_primitive_t;
 
@@ -137,6 +138,14 @@ typedef struct esm_eps_bearer_context_deactivate_s {
 } esm_eps_bearer_context_deactivate_t;
 
 /*
+ * ESM primitive for triggering a remote ue report procedure from ESM
+ * ---------------------------------------------------------
+ */
+typedef struct esm_remote_ue_report_s {
+  unsigned int dummy;
+} esm_remote_ue_report_t;
+
+/*
  * ------------------------------
  * Structure of ESM-SAP primitive
  * ------------------------------
@@ -145,6 +154,7 @@ typedef union {
   esm_pdn_connectivity_t pdn_connect;
   esm_pdn_disconnect_t pdn_disconnect;
   esm_eps_bearer_context_deactivate_t eps_bearer_context_deactivate;
+  esm_remote_ue_report_t remote_ue_report;
 } esm_sap_data_t;
 
 typedef struct esm_sap_s {

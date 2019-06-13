@@ -1520,6 +1520,8 @@ set(libnas_esm_msg_OBJS
   ${NAS_SRC}COMMON/ESM/MSG/PdnConnectivityRequest.c
   ${NAS_SRC}COMMON/ESM/MSG/PdnDisconnectReject.c
   ${NAS_SRC}COMMON/ESM/MSG/PdnDisconnectRequest.c
+  ${NAS_SRC}COMMON/ESM/MSG/RemoteUEReport.c
+  ${NAS_SRC}COMMON/ESM/MSG/RemoteUEReportResponse.c
 )
 
 set(libnas_ies_OBJS
@@ -1601,6 +1603,9 @@ set(libnas_ies_OBJS
   ${NAS_SRC}COMMON/IES/UeRadioCapabilityInformationUpdateNeeded.c
   ${NAS_SRC}COMMON/IES/UeSecurityCapability.c
   ${NAS_SRC}COMMON/IES/VoiceDomainPreferenceAndUeUsageSetting.c
+  ${NAS_SRC}COMMON/IES/RemoteUserID.c
+  ${NAS_SRC}COMMON/IES/RemoteUEContext.c
+  ${NAS_SRC}COMMON/IES/PKMFAddress.c
 )
 
 set (libnas_utils_OBJS
@@ -1679,6 +1684,7 @@ if(NAS_UE)
     ${NAS_SRC}UE/ESM/EsmStatusHdl.c
     ${NAS_SRC}UE/ESM/PdnConnectivity.c
     ${NAS_SRC}UE/ESM/PdnDisconnect.c
+    ${NAS_SRC}UE/ESM/RemoteUeReport.c
   )
   set(libnas_ue_esm_sap_OBJS
     ${NAS_SRC}UE/ESM/SAP/esm_recv.c

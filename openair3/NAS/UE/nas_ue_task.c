@@ -203,6 +203,16 @@ void *nas_ue_task(void *args_p)
         /* TODO not processed by NAS currently */
         break;
 
+        //for Remote UE Report
+      case NAS_REMOTE_UE_REPORT:
+    	  LOG_I(NAS, "[UE %d] Received %s: \n", Mod_id,  ITTI_MSG_NAME (msg_p));
+
+    	  // To send remote ue report to be sent by  RRC UE to CN
+    	  int nas_itti_ul_data_req(const uint32_t ue_id, void *const data, const uint32_t length, int user_id);
+
+    	          /* TODO not processed by NAS currently */
+    	          break;
+
       case NAS_CONN_ESTABLI_CNF:
         LOG_I(NAS, "[UE %d] Received %s: errCode %u, length %u\n", Mod_id,  ITTI_MSG_NAME (msg_p),
               NAS_CONN_ESTABLI_CNF (msg_p).errCode, NAS_CONN_ESTABLI_CNF (msg_p).nasMsg.length);

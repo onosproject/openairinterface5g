@@ -119,6 +119,12 @@ int esm_proc_status(nas_user_t *user, int is_standalone, int pti, OctetString *m
 
 /*
  * --------------------------------------------------------------------------
+ *          REMOTE UE REPORT procedure
+ * --------------------------------------------------------------------------
+ */
+int esm_proc_remote_ue_report(nas_user_t *user,int cid, unsigned int *pti);
+/*
+ * --------------------------------------------------------------------------
  *          PDN connectivity procedure
  * --------------------------------------------------------------------------
  */

@@ -111,6 +111,8 @@ typedef enum {
   ESM_MSG_ESM_INFORMATION_REQUEST,
   ESM_MSG_ESM_INFORMATION_RESPONSE,
   ESM_MSG_ESM_STATUS,
+  ESM_MSG_REMOTE_UE_REPORT,
+  ESM_MSG_REMOTE_UE_REPORT_RESPONSE,
 } esm_message_ids_t;
 
 typedef struct nas_raw_msg_s {

@@ -200,6 +200,14 @@ int esm_msg_decode(ESM_msg *msg, uint8_t *buffer, uint32_t len)
     decode_result = decode_esm_status(&msg->esm_status, buffer, len);
     break;
 
+  case REMOTE_UE_REPORT:
+      decode_result = decode_esm_status(&msg->remote_ue_report, buffer, len);
+      break;
+
+  case REMOTE_UE_REPORT_RESPONSE:
+        decode_result = decode_esm_status(&msg->remote_ue_report_response, buffer, len);
+        break;
+
   default:
     LOG_TRACE(ERROR, "ESM-MSG   - Unexpected message type: 0x%x",
               msg->header.message_type);
@@ -359,6 +367,14 @@ int esm_msg_encode(ESM_msg *msg, uint8_t *buffer, uint32_t len)
   case ESM_STATUS:
     encode_result = encode_esm_status(&msg->esm_status, buffer, len);
     break;
+
+  case REMOTE_UE_REPORT:
+    encode_result = encode_esm_status(&msg->remote_ue_report, buffer, len);
+        break;
+
+  case REMOTE_UE_REPORT_RESPONSE:
+      encode_result = encode_esm_status(&msg->remote_ue_report_response, buffer, len);
+          break;
 
   default:
     LOG_TRACE(ERROR, "ESM-MSG   - Unexpected message type: 0x%x",

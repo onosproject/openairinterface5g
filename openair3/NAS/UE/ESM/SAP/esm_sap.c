@@ -158,6 +158,20 @@ int esm_sap_send(nas_user_t *user, esm_sap_t *msg)
             esm_sap_primitive2str(primitive - ESM_START - 1), primitive);
 
   switch (primitive) {
+  case ESM_REMOTE_UE_REPORT_REQ:
+  {
+	  esm_remote_ue_report_t *remote_ue_report = &msg->data.remote_ue_report;
+      unsigned int pti = 0;
+      int cid;
+      /* Assign new procedure transaction identity */
+      rc = esm_proc_remote_ue_report(user, cid, &pti);
+      rc = _esm_sap_send(user, REMOTE_UE_REPORT,
+                         msg->is_standalone,
+                         pti, EPS_BEARER_IDENTITY_UNASSIGNED,
+                         &msg->data, &msg->send);
+  }
+  break;
+
   case ESM_PDN_CONNECTIVITY_REQ:
   {
     esm_pdn_connectivity_t *pdn_connect = &msg->data.pdn_connect;
@@ -755,6 +769,11 @@ static int _esm_sap_send(nas_user_t *user, int msg_type, int is_standalone,
     break;
 
   case BEARER_RESOURCE_MODIFICATION_REQUEST:
+    break;
+
+  case REMOTE_UE_REPORT:
+	  rc = esm_proc_remote_ue_report(user, pti, &esm_msg.remote_ue_report);
+	  //#error "TODO"//
     break;
 
   default:

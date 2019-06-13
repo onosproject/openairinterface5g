@@ -105,6 +105,7 @@ int nas_proc_get_pdn_addr(nas_user_t *user, int cid, int *cids, const char **add
                           const char **addr2, int n_addr_max);
 int nas_proc_deactivate_pdn(nas_user_t *user, int cid);
 int nas_proc_activate_pdn(nas_user_t *user, int cid);
+int nas_proc_remote_ue_report(nas_user_t *user, int cid);
 
 /*
  * --------------------------------------------------------------------------

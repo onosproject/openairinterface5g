@@ -266,7 +266,7 @@ extern log_t *g_log;
 #endif
 #endif
 /*--- INCLUDES ---------------------------------------------------------------*/
-#    include "log_if.h"
+#include "log_if.h"
 /*----------------------------------------------------------------------------*/
 int  logInit (void);
 void logRecord_mt(const char *file, const char *func, int line, int comp, int level, const char *format, ...) __attribute__ ((format (printf, 6, 7)));

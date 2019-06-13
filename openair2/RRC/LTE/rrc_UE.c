@@ -2370,8 +2370,13 @@ rrc_ue_decode_dcch(
             ASN_SEQUENCE_ADD(&destinationInfoList->list,sl_destination_identity);
             rrc_ue_generate_SidelinkUEInformation(ctxt_pP, eNB_indexP, destinationInfoList, NULL, SL_TRANSMIT_NON_RELAY_ONE_TO_ONE);
             send_ue_information ++;
-          }
+                    }
+          //For Remote UE Report
+#if defined(ENABLE_ITTI)
+          msg_p = itti_alloc_new_message(TASK_RRC_UE, NAS_REMOTE_UE_REPORT);
+          itti_send_msg_to_task(TASK_NAS_UE, ctxt_pP->instance, msg_p);
 
+    #endif
           break;
 
         case LTE_DL_DCCH_MessageType__c1_PR_rrcConnectionRelease:
@@ -2385,7 +2390,6 @@ rrc_ue_decode_dcch(
             NAS_CONN_RELEASE_IND(msg_p).cause =
               dl_dcch_msg->message.choice.c1.choice.rrcConnectionRelease.criticalExtensions.choice.c1.choice.rrcConnectionRelease_r8.releaseCause;
           }
-
           itti_send_msg_to_task(TASK_NAS_UE, ctxt_pP->instance, msg_p);
 #if ENABLE_RAL
           msg_p = itti_alloc_new_message(TASK_RRC_UE, RRC_RAL_CONNECTION_RELEASE_IND);
@@ -5717,6 +5721,8 @@ void *rrc_control_socket_thread_fct(void *arg)
            ptr_ctrl_msg = (struct sidelink_ctrl_element *) send_buf;
            LOG_UI(RRC,"[DirectCommunicationEstablishResponse]  msg type: %d\n",ptr_ctrl_msg->type);
            LOG_UI(RRC,"[DirectCommunicationEstablishResponse]  slrb_id: %d\n",ptr_ctrl_msg->sidelinkPrimitive.slrb_id);
+         //
+
          }
          break;
 

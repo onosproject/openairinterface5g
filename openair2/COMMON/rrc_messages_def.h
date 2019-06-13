@@ -72,3 +72,5 @@ MESSAGE_DEF(NAS_CONN_ESTABLI_CNF,       MESSAGE_PRIORITY_MED,       NasConnEstab
 MESSAGE_DEF(NAS_CONN_RELEASE_IND,       MESSAGE_PRIORITY_MED,       NasConnReleaseInd,          nas_conn_release_ind)
 MESSAGE_DEF(NAS_UPLINK_DATA_CNF,        MESSAGE_PRIORITY_MED,       NasUlDataCnf,               nas_ul_data_cnf)
 MESSAGE_DEF(NAS_DOWNLINK_DATA_IND,      MESSAGE_PRIORITY_MED,       NasDlDataInd,               nas_dl_data_ind)
+MESSAGE_DEF(NAS_REMOTE_UE_REPORT,       MESSAGE_PRIORITY_MED,       NasRemoteUeReport,          nas_remote_ue_report)
+

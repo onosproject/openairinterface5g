@@ -172,7 +172,7 @@ int s1ap_eNB_handle_nas_first_req(
 
     do {
         struct s1ap_eNB_ue_context_s *collision_p;
-        /* Peek a random value for the eNB_ue_s1ap_id */
+        /* Pick a random value for the eNB_ue_s1ap_id */
         ue_desc_p->eNB_ue_s1ap_id = (random() + random()) & 0x00ffffff;
 
         if ((collision_p = RB_INSERT(s1ap_ue_map, &instance_p->s1ap_ue_head, ue_desc_p))
@@ -321,7 +321,7 @@ int s1ap_eNB_handle_nas_first_req(
         ie->id = S1AP_ProtocolIE_ID_id_RelayNode_Indicator;
         ie->criticality = S1AP_Criticality_ignore;
         ie->value.present = S1AP_InitialUEMessage_IEs__value_PR_RelayNode_Indicator;
-        // ie->value.choice.RelayNode_Indicator =;
+        //ie->value.choice.RelayNode_Indicator = S1AP_RelayNode_Indicator_t;
         ASN_SEQUENCE_ADD(&out->protocolIEs.list, ie);
     }
 
