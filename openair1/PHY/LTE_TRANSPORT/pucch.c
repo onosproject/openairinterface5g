@@ -1374,8 +1374,12 @@ uint32_t rx_pucch(PHY_VARS_eNB *eNB,
 
       *payload = (stat_re<0) ? 1 : 2; // 1 == ACK, 2 == NAK
 
-      if (fmt==pucch_format1b)
-        *(1+payload) = (stat_im<0) ? 1 : 2;
+      if (fmt==pucch_format1b){
+        *payload = (stat_im > stat_re) ? 1 : 2;
+        *(1+payload) = (stat_im > (-1.0*stat_re)) ? 2 : 1;
+        LOG_D(PHY,"PUCCH 1b ACK/NAK subframe %d : stat %d, stat %d %d, payload %d %d\n",
+          subframe,dB_fixed(stat_max),stat_re,stat_im,*payload,*(1+payload));
+      }
     } else { // insufficient energy on PUCCH so NAK
 #if defined(USRP_REC_PLAY)
       LOG_D(PHY,"PUCCH 1a/b: NAK subframe %d : sigma2_dB %d, stat_max %d, pucch1_thres %d\n",subframe,sigma2_dB,dB_fixed(stat_max),pucch1_thres);
