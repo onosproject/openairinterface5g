@@ -1257,6 +1257,7 @@ void phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
 
   // Get scheduling info for next subframe
   // This is called all CC_id's
+  // Previously this is called only for the CC_id = 0 and triggers scheduling for all CC_id's. Now it is working each CC_id.
   if (eNB->mac_enabled==1) {
     //if (eNB->CC_id == 0) {
       mac_xface->eNB_dlsch_ulsch_scheduler(eNB->Mod_id,0,frame,subframe,eNB->CC_id);//,1);
