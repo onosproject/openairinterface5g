@@ -1180,10 +1180,12 @@ void release_UE_in_freeList(module_id_t mod_id) {
           clean_eNb_ulsch(ulsch);
         }
 
-        for (i=0; i<NUMBER_OF_UCI_VARS_MAX; i++) {
-          if(eNB_PHY->uci_vars[i].rnti == rnti) {
-            LOG_I(MAC, "clean eNb uci_vars[%d] UE %x \n",i, rnti);
-            memset(&eNB_PHY->uci_vars[i],0,sizeof(LTE_eNB_UCI));
+        for (int sf = 0; sf < 10; sf++) {
+          for (i=0; i<NUMBER_OF_UCI_VARS_MAX; i++) {
+            if(eNB_PHY->uci_vars[sf][i].rnti == rnti) {
+              LOG_I(MAC, "clean eNb uci_vars[%d][%d] UE %x \n", sf, i, rnti);
+              memset(&eNB_PHY->uci_vars[sf][i],0,sizeof(LTE_eNB_UCI));
+            }
           }
         }
 

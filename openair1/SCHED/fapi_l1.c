@@ -571,7 +571,7 @@ void handle_uci_sr_pdu(PHY_VARS_eNB *eNB,
                        uint8_t subframe,
                        uint8_t srs_active)
 {
-  LTE_eNB_UCI *uci = &eNB->uci_vars[UE_id];
+  LTE_eNB_UCI *uci = &eNB->uci_vars[subframe][UE_id];
 
   if (NFAPI_MODE==NFAPI_MODE_VNF) return;
 
@@ -599,7 +599,7 @@ void handle_uci_sr_pdu(PHY_VARS_eNB *eNB,
 }
 
 void handle_uci_sr_harq_pdu(PHY_VARS_eNB *eNB,int UE_id,nfapi_ul_config_request_pdu_t *ul_config_pdu,uint16_t frame,uint8_t subframe,uint8_t srs_active) {
-  LTE_eNB_UCI *uci = &eNB->uci_vars[UE_id];
+  LTE_eNB_UCI *uci = &eNB->uci_vars[subframe][UE_id];
 
   if (NFAPI_MODE==NFAPI_MODE_VNF) return;
 
@@ -622,7 +622,7 @@ void handle_uci_sr_harq_pdu(PHY_VARS_eNB *eNB,int UE_id,nfapi_ul_config_request_
 }
 
 void handle_uci_harq_pdu(PHY_VARS_eNB *eNB,int UE_id,nfapi_ul_config_request_pdu_t *ul_config_pdu,uint16_t frame,uint8_t subframe,uint8_t srs_active) {
-  LTE_eNB_UCI *uci = &eNB->uci_vars[UE_id];
+  LTE_eNB_UCI *uci = &eNB->uci_vars[subframe][UE_id];
 
   if (NFAPI_MODE==NFAPI_MODE_VNF) return;
 

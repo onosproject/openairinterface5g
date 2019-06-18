@@ -635,7 +635,7 @@ uci_procedures(PHY_VARS_eNB *eNB,
   LTE_DL_FRAME_PARMS *fp = &(eNB->frame_parms);
 
   for (int i = 0; i < NUMBER_OF_UCI_VARS_MAX; i++) {
-    uci = &(eNB->uci_vars[i]);
+    uci = &(eNB->uci_vars[subframe][i]);
 
     if ((uci->active == 1) && (uci->frame == frame) && (uci->subframe == subframe)) {
       LOG_D(PHY,"Frame %d, subframe %d: Running uci procedures (type %d) for %d \n",
@@ -2034,12 +2034,13 @@ void release_rnti_of_phy(module_id_t mod_id){
             LOG_I(PHY, "clean_eNb_ulsch ulsch[%d] UE %x\n", j, rnti);
             clean_eNb_ulsch(ulsch);
           }
-          for(j=0; j<NUMBER_OF_UCI_VARS_MAX; j++) {
-              if(eNB_PHY->uci_vars[j].rnti == rnti){
-                LOG_I(PHY, "clean eNb uci_vars[%d] UE %x \n",j, rnti);
-                memset(&eNB_PHY->uci_vars[i],0,sizeof(LTE_eNB_UCI));
+          for (int sf = 0; sf < 10; sf++) {
+            for(j=0; j<NUMBER_OF_UCI_VARS_MAX; j++) {
+              if(eNB_PHY->uci_vars[sf][j].rnti == rnti){
+                LOG_I(PHY, "clean eNb uci_vars[%d][%d] UE %x \n", sf, j, rnti);
+                memset(&eNB_PHY->uci_vars[sf][i],0,sizeof(LTE_eNB_UCI));
               }
-
+            }
           }
         }
     }

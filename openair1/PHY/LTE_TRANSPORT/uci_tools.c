@@ -42,11 +42,11 @@ int16_t find_uci(uint16_t rnti, int frame, int subframe, PHY_VARS_eNB *eNB,find_
   int16_t first_free_index=-1;
   AssertFatal(eNB!=NULL,"eNB is null\n");
   for (i=0; i<NUMBER_OF_UCI_VARS_MAX; i++) {
-    if ((eNB->uci_vars[i].active >0) &&
-	(eNB->uci_vars[i].rnti==rnti) &&
-	(eNB->uci_vars[i].frame==frame) &&
-	(eNB->uci_vars[i].subframe==subframe)) return(i); 
-    else if ((eNB->uci_vars[i].active == 0) && (first_free_index==-1)) first_free_index=i;
+    if ((eNB->uci_vars[subframe][i].active >0) &&
+	(eNB->uci_vars[subframe][i].rnti==rnti) &&
+	(eNB->uci_vars[subframe][i].frame==frame) &&
+	(eNB->uci_vars[subframe][i].subframe==subframe)) return(i);
+    else if ((eNB->uci_vars[subframe][i].active == 0) && (first_free_index==-1)) first_free_index=i;
   }
   if (type == SEARCH_EXIST) return(-1);
   else return(first_free_index);
