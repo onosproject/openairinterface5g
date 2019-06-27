@@ -28,7 +28,8 @@ int main(void)
           continue;
         }
         channel_simulator_add_connection(&c,
-            cm.c[i].socket, cm.c[i].rx_frequency, cm.c[i].tx_frequency);
+            cm.c[i].socket, cm.c[i].rx_frequency, cm.c[i].tx_frequency,
+            cm.c[i].rx_sample_advance, cm.c[i].tx_sample_advance);
       }
       connection_manager_clear(&cm);
     }
@@ -36,9 +37,12 @@ int main(void)
 
     for (i = 0 ; i < c.connections_count; i++) {
       connection *con = &c.connections[i];
-      channel    *ch  = &c.channels[con->rx_channel_index];
-      connection_send_rx(con, c.timestamp, ch->data, c.n_samples);
-      connection_receive_tx(&c, con, c.timestamp + c.n_samples, c.n_samples);
+      channel    *ch_rx  = &c.channels[con->rx_channel_index];
+      channel    *ch_tx  = &c.channels[con->tx_channel_index];
+      connection_send_rx(con, c.timestamp + ch_rx->sample_advance,
+                         ch_rx->data, c.n_samples);
+      connection_receive_tx(&c, con, c.timestamp + ch_tx->sample_advance
+                                                 + c.n_samples, c.n_samples);
     }
 
     cleanup_connections(&c);
@@ -46,12 +50,14 @@ int main(void)
     c.timestamp += c.n_samples;
     channel_simulate(&c);
 
+#if 0
     static int processed = 0;
     processed += c.n_samples;
     if (processed >= samplerate/1000) {
       processed -= samplerate/1000;
       usleep(2000);
     }
+#endif
   }
 
   return 0;

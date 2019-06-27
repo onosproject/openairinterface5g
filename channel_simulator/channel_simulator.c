@@ -73,12 +73,19 @@ oom:
   exit(1);
 }
 
-static int find_or_create_channel(channel_simulator *c, uint64_t freq)
+static int find_or_create_channel(channel_simulator *c, uint64_t freq,
+                                  uint32_t sample_advance)
 {
   channel *chan;
   int i;
-  for (i = 0; i < c->channels_count; i++)
-    if ( c->channels[i].frequency == freq) return i;
+  for (i = 0; i < c->channels_count; i++) {
+    if (c->channels[i].frequency != freq) continue;
+    if (c->channels[i].sample_advance != sample_advance) {
+      printf("ERROR: bad sample_advance\n");
+      exit(1);
+    }
+    return i;
+  }
 
   c->channels_count++;
   c->channels = realloc(c->channels, c->channels_count * sizeof(channel));
@@ -86,6 +93,7 @@ static int find_or_create_channel(channel_simulator *c, uint64_t freq)
 
   chan = &c->channels[i];
   chan->frequency = freq;
+  chan->sample_advance = sample_advance;
   chan->data = calloc(1, c->n_samples * 4);
   if (chan->data == NULL) goto oom;
   chan->connection_count = 0;
@@ -98,7 +106,8 @@ oom:
 }
 
 void channel_simulator_add_connection(channel_simulator *c,
-            int socket, uint64_t rx_frequency, uint64_t tx_frequency)
+            int socket, uint64_t rx_frequency, uint64_t tx_frequency,
+            uint32_t rx_sample_advance, uint32_t tx_sample_advance)
 {
   connection *con;
 
@@ -116,8 +125,10 @@ void channel_simulator_add_connection(channel_simulator *c,
   if (con->tx_buffer == NULL) goto oom;
   con->rx_frequency = rx_frequency;
   con->tx_frequency = tx_frequency;
-  con->rx_channel_index = find_or_create_channel(c, rx_frequency);
-  con->tx_channel_index = find_or_create_channel(c, tx_frequency);
+  con->rx_channel_index = find_or_create_channel(c, rx_frequency,
+                                                 rx_sample_advance);
+  con->tx_channel_index = find_or_create_channel(c, tx_frequency,
+                                                 tx_sample_advance);
 
   c->channels[con->rx_channel_index].connection_count++;
   c->channels[con->tx_channel_index].connection_count++;
@@ -152,6 +163,8 @@ void command_set_frequency(channel_simulator *cs, connection *con, int n)
   unsigned char b[8*2];
   uint64_t rx_frequency;
   uint64_t tx_frequency;
+  uint32_t rx_sample_advance;
+  uint32_t tx_sample_advance;
 
   if (n != 8*2) goto err;
   if (fullread(con->socket, b, 8*2) != 8*2) goto err;
@@ -164,10 +177,15 @@ void command_set_frequency(channel_simulator *cs, connection *con, int n)
   cs->channels[con->rx_channel_index].connection_count--;
   cs->channels[con->tx_channel_index].connection_count--;
 
+  rx_sample_advance = cs->channels[con->rx_channel_index].sample_advance;
+  tx_sample_advance = cs->channels[con->tx_channel_index].sample_advance;
+
   con->rx_frequency = rx_frequency;
   con->tx_frequency = tx_frequency;
-  con->rx_channel_index = find_or_create_channel(cs, rx_frequency);
-  con->tx_channel_index = find_or_create_channel(cs, tx_frequency);
+  con->rx_channel_index = find_or_create_channel(cs, rx_frequency,
+                                                 rx_sample_advance);
+  con->tx_channel_index = find_or_create_channel(cs, tx_frequency,
+                                                 tx_sample_advance);
   cs->channels[con->rx_channel_index].connection_count++;
   cs->channels[con->tx_channel_index].connection_count++;
 
@@ -233,6 +251,8 @@ err:
   c->socket = -1;
 }
 
+#include <immintrin.h>
+
 void channel_simulate(channel_simulator *c)
 {
   int i;
@@ -241,14 +261,15 @@ void channel_simulate(channel_simulator *c)
   channel *chan;
   int16_t *to;
   int16_t *from;
-  int32_t mix[c->channels_count][c->n_samples*2];
+  int16_t mix[c->channels_count][c->n_samples*2] __attribute__ ((aligned (32)));
 
-  memset(mix, 0, c->channels_count * c->n_samples*2 * 4);
+  memset(mix, 0, c->channels_count * c->n_samples*2 * 2);
 
   /* clear channels */
   for (i = 0; i < c->channels_count; i++)
     memset(c->channels[i].data, 0, c->n_samples * 4);
 
+#if 0
   /* basic mixing */
   for (i = 0; i < c->connections_count; i++) {
     con = &c->connections[i];
@@ -269,4 +290,24 @@ void channel_simulate(channel_simulator *c)
       to[k] = v;
     }
   }
+#else
+  /* basic mixing */
+  for (i = 0; i < c->connections_count; i++) {
+    con = &c->connections[i];
+    from = (int16_t *)con->tx_buffer;
+
+    for (k = 0; k < c->n_samples * 2; k+=16) {
+      __m256i *a, *b;
+      a = (__m256i *)&mix[con->tx_channel_index][k];
+      b = (__m256i *)&from[k];
+      *a = _mm256_adds_epi16(*a, *b);
+    }
+  }
+
+  for (i = 0; i < c->channels_count; i++) {
+    chan = &c->channels[i];
+    to = (int16_t *)chan->data;
+    memcpy(to, mix[i], c->n_samples * 2 * 2);
+  }
+#endif
 }

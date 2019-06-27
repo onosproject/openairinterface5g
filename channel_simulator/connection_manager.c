@@ -12,16 +12,20 @@
 typedef struct {
   uint64_t rx_frequency;
   uint64_t tx_frequency;
+  uint32_t rx_sample_advance;
+  uint32_t tx_sample_advance;
   uint32_t samplerate;
 } init_message;
 
 static int get_init_message(init_message *m, int s)
 {
-  unsigned char b[8*2+4];
-  if (fullread(s, b, 8*2+4) != 8*2+4) return -1;
-  m->rx_frequency = gu64(b);
-  m->tx_frequency = gu64(b+8);
-  m->samplerate   = gu32(b+8*2);
+  unsigned char b[8*2+4*3];
+  if (fullread(s, b, 8*2+4*3) != 8*2+4*3) return -1;
+  m->rx_frequency      = gu64(b);
+  m->tx_frequency      = gu64(b+8);
+  m->rx_sample_advance = gu32(b+8*2);
+  m->tx_sample_advance = gu32(b+8*2+4);
+  m->samplerate        = gu32(b+8*2+4*2);
   return 0;
 }
 
@@ -53,10 +57,12 @@ static void *connection_manager_thread(void *_cm)
       printf("ERROR: get_init_message: out of memory\n");
       exit(1);
     }
-    cm->c[cm->new_connections-1].socket       = t;
-    cm->c[cm->new_connections-1].rx_frequency = m.rx_frequency;
-    cm->c[cm->new_connections-1].tx_frequency = m.tx_frequency;
-    cm->c[cm->new_connections-1].samplerate   = m.samplerate;
+    cm->c[cm->new_connections-1].socket            = t;
+    cm->c[cm->new_connections-1].rx_frequency      = m.rx_frequency;
+    cm->c[cm->new_connections-1].tx_frequency      = m.tx_frequency;
+    cm->c[cm->new_connections-1].rx_sample_advance = m.rx_sample_advance;
+    cm->c[cm->new_connections-1].tx_sample_advance = m.tx_sample_advance;
+    cm->c[cm->new_connections-1].samplerate        = m.samplerate;
     lock_signal(&cm->l);
     connection_manager_unlock(cm);
   }

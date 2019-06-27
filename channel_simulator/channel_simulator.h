@@ -5,6 +5,7 @@
 
 typedef struct {
   uint64_t frequency;         /* unit: Hz */
+  uint32_t sample_advance;
   uint32_t *data;
   int      connection_count;
 } channel;
@@ -32,7 +33,8 @@ void init_channel_simulator(channel_simulator *c,
     uint32_t samplerate, int n_samples);
 void cleanup_connections(channel_simulator *c);
 void channel_simulator_add_connection(channel_simulator *c,
-    int socket, uint64_t rx_frequency, uint64_t tx_frequency);
+    int socket, uint64_t rx_frequency, uint64_t tx_frequency,
+    uint32_t rx_sample_advance, uint32_t tx_sample_advance);
 
 void connection_send_rx(connection *c, uint64_t timestamp,
     uint32_t *data, int n_samples);

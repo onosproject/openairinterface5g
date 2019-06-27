@@ -8,6 +8,8 @@ typedef struct {
   int      socket;
   uint64_t rx_frequency;
   uint64_t tx_frequency;
+  uint32_t tx_sample_advance;
+  uint32_t rx_sample_advance;
   uint32_t samplerate;
 } new_connection;
 

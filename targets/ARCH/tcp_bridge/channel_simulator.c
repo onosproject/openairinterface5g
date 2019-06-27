@@ -23,6 +23,8 @@ typedef struct {
   int samples_per_subframe;
   uint64_t rx_frequency;
   uint64_t tx_frequency;
+  uint32_t rx_sample_advance;
+  uint32_t tx_sample_advance;
   lock_t lock;
   buffer_t * volatile rx_head;
   buffer_t *rx_last;
@@ -31,6 +33,7 @@ typedef struct {
   volatile int first_rx_ok;
   uint64_t rx_next_timestamp;
   lock_t tx_lock;
+  lock_t tx_buf_lock;
 } channel_simulator_state_t;
 
 void add_rx_buffer(channel_simulator_state_t *c, buffer_t *b)
@@ -48,22 +51,21 @@ void add_rx_buffer(channel_simulator_state_t *c, buffer_t *b)
 
 void add_tx_buffer(channel_simulator_state_t *c, buffer_t *b)
 {
-  lock(&c->lock);
+  lock(&c->tx_buf_lock);
   if (c->tx_head == NULL) {
     c->tx_head = b;
   } else {
     c->tx_last->next = b;
   }
   c->tx_last = b;
-  lock_signal(&c->lock);
-  unlock(&c->lock);
+  unlock(&c->tx_buf_lock);
 }
 
+/* called with c->lock acquired */
 uint32_t get_rx_sample(channel_simulator_state_t *c, uint64_t timestamp)
 {
   uint32_t *b;
   uint32_t ret;
-  lock(&c->lock);
 again:
   while (c->rx_head == NULL) lock_wait(&c->lock);
   if (c->rx_head->timestamp + c->rx_head->n_samples <= timestamp) {
@@ -82,7 +84,6 @@ again:
   }
   b = c->rx_head->b;
   ret = b[timestamp - c->rx_head->timestamp];
-  unlock(&c->lock);
   return ret;
 }
 
@@ -90,7 +91,6 @@ uint32_t get_tx_sample(channel_simulator_state_t *c, uint64_t timestamp)
 {
   buffer_t *cur;
   uint32_t ret;
-  lock(&c->lock);
 again:
   if (c->tx_head == NULL) { ret = 0; goto done; }
   if (c->tx_head->timestamp + c->tx_head->n_samples <= timestamp) {
@@ -119,7 +119,6 @@ again:
     cur = cur->next;
   }
 done:
-  unlock(&c->lock);
   return ret;
 }
 
@@ -157,9 +156,14 @@ void *rx_thread(void *_c)
       if (out == NULL) goto err;
       out_size = n_samples;
     }
+    lock(&c->tx_buf_lock);
     for (i = 0; i < n_samples; i++)
-      out[i] = get_tx_sample(c, timestamp + n_samples + i);
-    pu64(b, timestamp + n_samples);
+      out[i] = get_tx_sample(c, timestamp - c->rx_sample_advance
+                                          + c->tx_sample_advance
+                                          + n_samples + i);
+    unlock(&c->tx_buf_lock);
+    pu64(b, timestamp - c->rx_sample_advance
+                      + c->tx_sample_advance + n_samples);
     pu32(b+8, n_samples);
     lock(&c->tx_lock);
     if (fullwrite(c->sock, b, 8+4) != 8+4 ||
@@ -179,14 +183,41 @@ err:
 
 void init_connection(channel_simulator_state_t *c)
 {
-  unsigned char b[8*2+4];
+  unsigned char b[8*2+4*3];
+  char *env;
+
+  env = getenv("CHANNEL_SIMULATOR_RX_SAMPLE_ADVANCE");
+  if (env != NULL) {
+    c->rx_sample_advance = atoi(env);
+    printf("channel_simulator: setting rx_sample_advance to %"PRIu32"\n",
+           c->rx_sample_advance);
+  } else {
+    c->rx_sample_advance = 0;
+    printf("channel_simulator: environment variable"
+           " CHANNEL_SIMULATOR_RX_SAMPLE_ADVANCE"
+           " not found, using 0\n");
+  }
+
+  env = getenv("CHANNEL_SIMULATOR_TX_SAMPLE_ADVANCE");
+  if (env != NULL) {
+    c->tx_sample_advance = atoi(env);
+    printf("channel_simulator: setting tx_sample_advance to %"PRIu32"\n",
+           c->tx_sample_advance);
+  } else {
+    c->tx_sample_advance = 0;
+    printf("channel_simulator: environment variable"
+           " CHANNEL_SIMULATOR_TX_SAMPLE_ADVANCE"
+           " not found, using 0\n");
+  }
 
   pu64(b, c->rx_frequency);
   pu64(b+8, c->tx_frequency);
-  pu32(b+8*2, c->samples_per_subframe * 1000);
+  pu32(b+8*2, c->rx_sample_advance);
+  pu32(b+8*2+4, c->tx_sample_advance);
+  pu32(b+8*2+4*2, c->samples_per_subframe * 1000);
 
   lock(&c->tx_lock);
-  if (fullwrite(c->sock, b, 8*2+4) != 8*2+4) {
+  if (fullwrite(c->sock, b, 8*2+4*3) != 8*2+4*3) {
     printf("ERROR: channel_simulator: init_connection failed\n");
     exit(1);
   }
@@ -257,6 +288,10 @@ int channel_simulator_set_freq(openair0_device* device, openair0_config_t *opena
   channel_simulator_state_t *c = device->priv;
   unsigned char b[8+4+8*2];
 
+  if (getenv("CHANNEL_SIMULATOR_RX_FREQUENCY") != NULL ||
+      getenv("CHANNEL_SIMULATOR_TX_FREQUENCY") != NULL)
+    return 0;
+
   pu64(b, 0);
   pu32(b+8, 8*2);
   pu64(b+8+4, openair0_cfg[0].rx_freq[0]);
@@ -316,8 +351,8 @@ int channel_simulator_read(openair0_device *device, openair0_timestamp *timestam
   uint32_t *r = (uint32_t *)(buff[0]);
   uint64_t ts = get_rx_timestamp(c);
   int i;
-  for (i = 0; i < nsamps; i++) r[i] = get_rx_sample(c, ts + i);
   lock(&c->lock);
+  for (i = 0; i < nsamps; i++) r[i] = get_rx_sample(c, ts + i);
   c->rx_next_timestamp += nsamps;
   unlock(&c->lock);
   *timestamp = ts;
@@ -329,6 +364,8 @@ __attribute__((__visibility__("default")))
 int device_init(openair0_device* device, openair0_config_t *openair0_cfg)
 {
   channel_simulator_state_t *channel_simulator = (channel_simulator_state_t*)malloc(sizeof(channel_simulator_state_t));
+  char *env;
+
   memset(channel_simulator, 0, sizeof(channel_simulator_state_t));
 
   /* only 25, 50 or 100 PRBs handled for the moment */
@@ -359,9 +396,27 @@ int device_init(openair0_device* device, openair0_config_t *openair0_cfg)
 
   init_lock(&channel_simulator->lock);
   init_lock(&channel_simulator->tx_lock);
+  init_lock(&channel_simulator->tx_buf_lock);
 
-  channel_simulator->rx_frequency = openair0_cfg[0].rx_freq[0];
-  channel_simulator->tx_frequency = openair0_cfg[0].tx_freq[0];
+  env = getenv("CHANNEL_SIMULATOR_RX_FREQUENCY");
+  if (env == NULL) {
+    printf("channel_simulator: CHANNEL_SIMULATOR_RX_FREQUENCY not set, used provided value %g\n",
+           openair0_cfg[0].rx_freq[0]);
+    channel_simulator->rx_frequency = openair0_cfg[0].rx_freq[0];
+  } else {
+    channel_simulator->rx_frequency = atoll(env);
+    printf("channel_simulator: set RX frequency to %"PRIu64"\n", channel_simulator->rx_frequency);
+  }
+
+  env = getenv("CHANNEL_SIMULATOR_TX_FREQUENCY");
+  if (env == NULL) {
+    printf("channel_simulator: CHANNEL_SIMULATOR_TX_FREQUENCY not set, used provided value %g\n",
+           openair0_cfg[0].tx_freq[0]);
+    channel_simulator->tx_frequency = openair0_cfg[0].tx_freq[0];
+  } else {
+    channel_simulator->tx_frequency = atoll(env);
+    printf("channel_simulator: set TX frequency to %"PRIu64"\n", channel_simulator->tx_frequency);
+  }
 
   /* let's pretend to be a b2x0 */
   device->type = USRP_B200_DEV;
