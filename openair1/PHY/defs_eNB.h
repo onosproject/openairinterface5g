@@ -311,9 +311,13 @@ typedef enum {
 } rru_cmd_t;
 
 typedef struct RU_t_s{
+  /// tag of this ru
+  uint32_t tag;
+  /// number of RRUs
+  uint32_t p;
   /// index of this ru
   uint32_t idx;
- /// Pointer to configuration file
+  /// Pointer to configuration file
   char *rf_config_file;
   /// southbound interface
   RU_if_south_t if_south;
@@ -345,6 +349,8 @@ typedef struct RU_t_s{
   int wait_cnt;
   /// counter to delay start of slave RUs until stable synchronization
   int wait_check;
+  /// counter to count missed synch events during synchronization of RU
+  int missed_synch_events;
   /// Total gain of receive chain
   uint32_t             rx_total_gain_dB;
   /// number of bands that this device can support
@@ -533,7 +539,10 @@ typedef struct RRU_capabilities_s {
 } RRU_capabilities_t;
 
 typedef struct RRU_config_s {
-
+  /// tag of an RU   
+  uint32_t tag;   
+  /// number of slave RRUs   
+  uint32_t p;
   /// Fronthaul format
   RU_if_south_t FH_fmt;
   /// number of EUTRA bands (<=4) configured in RRU

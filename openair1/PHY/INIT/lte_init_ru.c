@@ -46,9 +46,7 @@ int phy_init_RU(RU_t *ru) {
 
   LOG_I(PHY,"Initializing RU signal buffers (if_south %s) nb_tx %d\n",ru_if_types[ru->if_south],ru->nb_tx);
 
-  if (ru->is_slave == 1) {
- 	 generate_ul_ref_sigs_rx();
-  }
+  generate_ul_ref_sigs_rx();
 
   if (ru->if_south <= REMOTE_IF5) { // this means REMOTE_IF5 or LOCAL_RF, so allocate memory for time-domain signals 
     // Time-domain signals
@@ -62,12 +60,10 @@ int phy_init_RU(RU_t *ru) {
 	     fp->samples_per_tti*10*sizeof(int32_t));
     }
 
-    if (ru->is_slave == 1) {
         calibration->drs_ch_estimates_time = (int32_t**)malloc16_clear(ru->nb_rx*sizeof(int32_t*));
         for (i=0; i<ru->nb_rx; i++) {    
         	calibration->drs_ch_estimates_time[i] = (int32_t*)malloc16_clear(2*sizeof(int32_t)*fp->ofdm_symbol_size);
         }
-    }
 
 
     for (i=0;i<ru->nb_rx;i++) {
@@ -107,7 +103,6 @@ int phy_init_RU(RU_t *ru) {
       LOG_I(PHY,"rxdataF[%d] %p for RU %d\n",i,ru->common.rxdataF[i],ru->idx);
     }
     
-     if (ru->is_slave == 1) {
      	// allocate FFT output buffers after extraction (RX)
     	calibration->rxdataF_ext = (int32_t**)malloc16(2*sizeof(int32_t*));
 	calibration->drs_ch_estimates = (int32_t**)malloc16(2*sizeof(int32_t*));
@@ -117,7 +112,6 @@ int phy_init_RU(RU_t *ru) {
       		LOG_I(PHY,"rxdataF_ext[%d] %p for RU %d\n",i,calibration->rxdataF_ext[i],ru->idx);
                 calibration->drs_ch_estimates[i] = (int32_t*)malloc16_clear(sizeof(int32_t)*fp->N_RB_UL*12*fp->symbols_per_tti);
     	}
-     }
 
     /* number of elements of an array X is computed as sizeof(X) / sizeof(X[0]) */
     //AssertFatal(ru->nb_rx <= sizeof(ru->prach_rxsigF) / sizeof(ru->prach_rxsigF[0]),
@@ -196,12 +190,10 @@ void phy_free_RU(RU_t *ru)
   if (ru->if_south <= REMOTE_IF5) { // this means REMOTE_IF5 or LOCAL_RF, so free memory for time-domain signals
     for (i = 0; i < ru->nb_tx; i++) free_and_zero(ru->common.txdata[i]);
     for (i = 0; i < ru->nb_rx; i++) free_and_zero(ru->common.rxdata[i]);
-    if (ru->is_slave == 1) {  
-    	for (i = 0; i < ru->nb_rx; i++) {
-       		free_and_zero(calibration->drs_ch_estimates_time[i]);
-        }
-        free_and_zero(calibration->drs_ch_estimates_time);
+    for (i = 0; i < ru->nb_rx; i++) {
+       	free_and_zero(calibration->drs_ch_estimates_time[i]);
     }
+    free_and_zero(calibration->drs_ch_estimates_time);
     free_and_zero(ru->common.txdata);
     free_and_zero(ru->common.rxdata);
   } // else: IF5 or local RF -> nothing to free()
@@ -217,14 +209,12 @@ void phy_free_RU(RU_t *ru)
     // free FFT output buffers (RX)
     for (i = 0; i < ru->nb_rx; i++) free_and_zero(ru->common.rxdataF[i]);
     free_and_zero(ru->common.rxdataF);
-    if (ru->is_slave == 1) {
-    	for (i = 0; i < ru->nb_rx; i++) {
-        	free_and_zero(calibration->rxdataF_ext[i]);
-  		free_and_zero(calibration->drs_ch_estimates[i]);
-        }
-        free_and_zero(calibration->rxdataF_ext);
-        free_and_zero(calibration->drs_ch_estimates);
+    for (i = 0; i < ru->nb_rx; i++) {
+        free_and_zero(calibration->rxdataF_ext[i]);
+  	free_and_zero(calibration->drs_ch_estimates[i]);
     }
+    free_and_zero(calibration->rxdataF_ext);
+    free_and_zero(calibration->drs_ch_estimates);
 
     for (i = 0; i < ru->nb_rx; i++) {
       free_and_zero(ru->prach_rxsigF[i]);

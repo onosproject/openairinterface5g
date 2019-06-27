@@ -692,8 +692,8 @@ void rx_rf(RU_t *ru,int *frame,int *subframe) {
 void tx_rf(RU_t *ru) {
   RU_proc_t *proc = &ru->proc;
   LTE_DL_FRAME_PARMS *fp = &ru->frame_parms;
-  void *txp[ru->nb_tx];
-  unsigned int txs;
+  void *txp[ru->nb_tx],*txp1[ru->nb_tx];
+  unsigned int txs,txs1;
   int i;
   T(T_ENB_PHY_OUTPUT_SIGNAL, T_INT(0), T_INT(0), T_INT(proc->frame_tx), T_INT(proc->subframe_tx),
     T_INT(0), T_BUFFER(&ru->common.txdata[0][proc->subframe_tx * fp->samples_per_tti], fp->samples_per_tti * 4));
@@ -704,30 +704,37 @@ void tx_rf(RU_t *ru) {
 
   if ((SF_type == SF_DL) ||
       (SF_type == SF_S)) {
-    int siglen=fp->samples_per_tti,flags=1;
 
-    if (SF_type == SF_S) {
-      int txsymb = fp->dl_symbols_in_S_subframe+(ru->is_slave==0 ? 1 : 0);
-      AssertFatal(txsymb>0,"illegal txsymb %d\n",txsymb);
-      /* end_of_burst_delay is used to stop TX only "after a while".
-       * If we stop right after effective signal, with USRP B210 and
-       * B200mini, we observe a high EVM on the S subframe (on the
-       * PSS).
-       * A value of 400 (for 30.72MHz) solves this issue. This is
-       * the default.
-       */
-      siglen = (fp->ofdm_symbol_size + fp->nb_prefix_samples0)
-               + (txsymb - 1) * (fp->ofdm_symbol_size + fp->nb_prefix_samples)
-               + ru->end_of_burst_delay;
-      flags=3; // end of burst
-    }
+  	    int siglen=fp->samples_per_tti,flags=1; 
+            int siglen2=fp->samples_per_tti+fp->nb_prefix_samples; 
+            int sigoff2=2*fp->nb_prefix_samples0+8*fp->nb_prefix_samples+10*fp->ofdm_symbol_size;
 
-    if (fp->frame_type == TDD &&
-        SF_type == SF_DL &&
-        prevSF_type == SF_UL) {
-      flags = 2; // start of burst
-      sf_extension = ru->sf_extension;
-    }
+ 	if (SF_type == SF_S) {
+      		int txsymb = fp->dl_symbols_in_S_subframe+(ru->is_slave==0 ? 1 : -1);
+      		AssertFatal(txsymb>0,"illegal txsymb %d\n",txsymb);
+
+      		/* end_of_burst_delay is used to stop TX only "after a while".
+       		* If we stop right after effective signal, with USRP B210 and
+       		* B200mini, we observe a high EVM on the S subframe (on the
+       		* PSS).
+       		* A value of 400 (for 30.72MHz) solves this issue. This is
+       		* the default.
+       		*/
+      		siglen = (fp->ofdm_symbol_size + fp->nb_prefix_samples0)
+               		+ (txsymb - 1) * (fp->ofdm_symbol_size + fp->nb_prefix_samples)
+               		+ ru->end_of_burst_delay;
+		if (ru->state==RU_RUN && proc->frame_tx%ru->p==ru->tag) {        	
+			siglen2 = fp->ofdm_symbol_size + fp->nb_prefix_samples; // length of symbol 10       
+		}
+      		flags=3; // end of burst
+    	}
+
+   	 if (fp->frame_type == TDD &&
+        	SF_type == SF_DL &&
+        	prevSF_type == SF_UL) {
+      		flags = 2; // start of burst
+      		sf_extension = ru->sf_extension;
+    	}
 
 #if defined(__x86_64) || defined(__i386__)
 #ifdef __AVX2__
@@ -740,7 +747,9 @@ void tx_rf(RU_t *ru) {
 #endif
 
     for (i=0; i<ru->nb_tx; i++)
-      txp[i] = (void *)&ru->common.txdata[i][(proc->subframe_tx*fp->samples_per_tti)-sf_extension];
+      	txp[i] = (void *)&ru->common.txdata[i][(proc->subframe_tx*fp->samples_per_tti)-sf_extension];
+    	txp1[i] = (void*)&ru->common.txdata[i][(proc->subframe_tx*fp->samples_per_tti)+(sigoff2)-sf_extension]; // pointer to 1st sample of 10th symbol	
+
 
     /* add fail safe for late command */
     if(late_control!=STATE_BURST_NORMAL) { //stop burst
@@ -785,6 +794,20 @@ void tx_rf(RU_t *ru) {
 				      siglen+sf_extension,
 				      ru->nb_tx,
 				      flags);
+    if (ru->state==RU_RUN && proc->frame_tx%ru->p==ru->tag && proc->subframe_tx==1) { 
+    	txs1 = ru->rfdevice.trx_write_func(&ru->rfdevice,                                       
+					   proc->timestamp_tx+(ru->ts_offset+sigoff2)-ru->openair0_cfg.tx_sample_advance-sf_extension,                   
+                    			   txp1, 
+                                           siglen2+sf_extension,    
+                                           ru->nb_tx,       
+                                	   flags);      
+        //LOG_M("txdata.m","txdata",&ru->common.txdata[0][0], fp->samples_per_tti*10,1,1); // save 1 frame 	
+        //exit(-1); 	
+        int se1 = dB_fixed(signal_energy(txp1[0],siglen2+sf_extension));  
+        LOG_D(PHY,"******** frame %d subframe %d RRU sends DMRS of energy10 %d, energy3 %d\n",proc->frame_tx,proc->subframe_tx,se1,dB_fixed(signal_energy(txp[0],siglen+sf_extension)));    
+        LOG_D(PHY,"txs1 %d, siglen2 %d, sf_extension %d\n",txs1,siglen2,sf_extension); 
+    }
+
     ru->south_out_cnt++;
     LOG_D(PHY,"south_out_cnt %d\n",ru->south_out_cnt);
     int se = dB_fixed(signal_energy(txp[0],siglen+sf_extension));
@@ -793,7 +816,13 @@ void tx_rf(RU_t *ru) {
 	  (long long unsigned int)proc->timestamp_tx,proc->frame_tx,proc->frame_tx_unwrap,proc->subframe_tx);
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_WRITE, 0 );
 
-    //    AssertFatal(txs ==  siglen+sf_extension,"TX : Timeout (sent %d/%d)\n",txs, siglen);
+    if (ru->state==RU_RUN && proc->frame_tx%ru->p==ru->tag && proc->subframe_tx==1) { 
+        if( (txs1!=siglen2+sf_extension) && (late_control==STATE_BURST_NORMAL) ){ /* add fail safe for late command */  
+        	late_control=STATE_BURST_TERMINATE;     
+            	LOG_E(PHY,"TX : Timeout (sent %d/%d) state =%d\n",txs1, siglen2,late_control);  
+        }  
+    }
+
     if( (txs !=  siglen+sf_extension) && (late_control==STATE_BURST_NORMAL) ) { /* add fail safe for late command */
       late_control=STATE_BURST_TERMINATE;
       LOG_E(PHY,"TX : Timeout (sent %d/%d) state =%d\n",txs, siglen,late_control);
@@ -1884,8 +1913,8 @@ void *ru_thread_synch(void *arg) {
         LOG_M("ru_sync_rx.m","rurx",&ru->common.rxdata[0][0],LTE_NUMBER_OF_SUBFRAMES_PER_FRAME*fp->samples_per_tti,1,1);
         LOG_M("ru_sync_corr.m","sync_corr",ru->dmrs_corr,LTE_NUMBER_OF_SUBFRAMES_PER_FRAME*fp->samples_per_tti,1,6);
         LOG_M("ru_dmrs.m","rudmrs",&ru->dmrssync[0],fp->ofdm_symbol_size,1,1);
-  */      
-//exit(-1);
+        exit(-1);
+*/
       } // sync_pos > 0
       else //AssertFatal(cnt<1000,"Cannot find synch reference\n");
           { 
@@ -2633,7 +2662,7 @@ void init_RU(char *rf_config_file, clock_source_t clock_source,clock_source_t ti
     // NOTE: multiple CC_id are not handled here yet!
     ru->openair0_cfg.clock_source  = clock_source;
     ru->openair0_cfg.time_source = time_source;
-    ru->generate_dmrs_sync = (ru->is_slave == 0) ? 1 : 0;
+    ru->generate_dmrs_sync = (ru->is_slave == 0) ? 1 : 1;
     if (ru->generate_dmrs_sync == 1) {
       generate_ul_ref_sigs();
       ru->dmrssync = (int16_t*)malloc16_clear(ru->frame_parms.ofdm_symbol_size*2*sizeof(int16_t)); 	
