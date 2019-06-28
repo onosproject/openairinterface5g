@@ -32,8 +32,12 @@ typedef struct {
   buffer_t *tx_last;
   volatile int first_rx_ok;
   uint64_t rx_next_timestamp;
+  uint64_t first_tx_timestamp;
   lock_t tx_lock;
   lock_t tx_buf_lock;
+  /* data to pass from rx thread to tx thread */
+  uint64_t first_timestamp;
+  int samples_per_packet;
 } channel_simulator_state_t;
 
 void add_rx_buffer(channel_simulator_state_t *c, buffer_t *b)
@@ -58,6 +62,7 @@ void add_tx_buffer(channel_simulator_state_t *c, buffer_t *b)
     c->tx_last->next = b;
   }
   c->tx_last = b;
+  lock_signal(&c->tx_buf_lock);
   unlock(&c->tx_buf_lock);
 }
 
@@ -92,7 +97,9 @@ uint32_t get_tx_sample(channel_simulator_state_t *c, uint64_t timestamp)
   buffer_t *cur;
   uint32_t ret;
 again:
-  if (c->tx_head == NULL) { ret = 0; goto done; }
+  if (timestamp < c->first_tx_timestamp) { ret = 0; goto done; }
+  while (c->tx_head == NULL) lock_wait(&c->tx_buf_lock);
+  if (timestamp < c->tx_head->timestamp) { ret = 0; goto done; }
   if (c->tx_head->timestamp + c->tx_head->n_samples <= timestamp) {
     cur = c->tx_head;
     c->tx_head = cur->next;
@@ -114,7 +121,7 @@ again:
       uint32_t *b = cur->b;
       ret = b[timestamp - cur->timestamp];
       cur->used_samples++;
-      break;
+      goto done;
     }
     cur = cur->next;
   }
@@ -122,42 +129,28 @@ done:
   return ret;
 }
 
-void *rx_thread(void *_c)
+void *tx_thread(void *_c)
 {
   channel_simulator_state_t *c = _c;
   unsigned char b[8+4];
-  buffer_t *rx;
-  uint32_t *out = NULL;
-  int out_size = 0;
+  uint32_t *out;
   uint64_t timestamp;
   int n_samples;
   int i;
 
+  lock(&c->lock);
+  while (c->first_rx_ok != 1) lock_wait(&c->lock);
+  unlock(&c->lock);
+
+  timestamp = c->first_timestamp;
+  n_samples = c->samples_per_packet;
+
+  out = malloc(n_samples * 4);
+  if (out == NULL) goto err;
+
   while (1) {
-    if (fullread(c->sock, b, 8+4) != 8+4) goto err;
-    rx = calloc(1, sizeof(buffer_t)); if (rx == NULL) goto err;
-    timestamp = rx->timestamp = gu64(b);
-    n_samples = rx->n_samples = gu32(b+8);
-    rx->b = malloc(rx->n_samples * 4); if (rx->b == NULL) goto err;
-    rx->next = NULL;
-    if (fullread(c->sock, rx->b, rx->n_samples * 4) != rx->n_samples * 4)
-      goto err;
-    add_rx_buffer(c, rx);
-    lock(&c->lock);
-    if (c->first_rx_ok == 0) {
-      c->rx_next_timestamp = timestamp;
-      c->first_rx_ok = 1;
-      lock_signal(&c->lock);
-    }
-    unlock(&c->lock);
-    if (out_size < n_samples) {
-      free(out);
-      out = malloc(n_samples * 4);
-      if (out == NULL) goto err;
-      out_size = n_samples;
-    }
     lock(&c->tx_buf_lock);
-    for (i = 0; i < n_samples; i++)
+    for (i = 0; i < c->samples_per_packet; i++)
       out[i] = get_tx_sample(c, timestamp - c->rx_sample_advance
                                           + c->tx_sample_advance
                                           + n_samples + i);
@@ -172,6 +165,49 @@ void *rx_thread(void *_c)
       goto err;
     }
     unlock(&c->tx_lock);
+    timestamp += n_samples;
+  }
+
+  return NULL;
+
+err:
+  printf("ERROR: channel_simulator: tx_thread failed\n");
+  exit(1);
+}
+
+void *rx_thread(void *_c)
+{
+  channel_simulator_state_t *c = _c;
+  unsigned char b[8+4];
+  buffer_t *rx;
+  uint64_t timestamp;
+  int n_samples;
+
+  while (1) {
+    if (fullread(c->sock, b, 8+4) != 8+4) goto err;
+    rx = calloc(1, sizeof(buffer_t)); if (rx == NULL) goto err;
+    timestamp = rx->timestamp = gu64(b);
+    n_samples = rx->n_samples = gu32(b+8);
+    rx->b = malloc(rx->n_samples * 4); if (rx->b == NULL) goto err;
+    rx->next = NULL;
+    if (fullread(c->sock, rx->b, rx->n_samples * 4) != rx->n_samples * 4)
+      goto err;
+    add_rx_buffer(c, rx);
+    if (c->first_rx_ok == 0) {
+      lock(&c->lock);
+      c->rx_next_timestamp = timestamp;
+      /* first_tx_timestamp is first RX timestamp + samples per frame * 4
+       * because the eNB works as follows: it receives subframe N and
+       * generates subframe N+4. This could become configurable for if
+       * the eNB works differently in the future.
+       */
+      c->first_tx_timestamp = timestamp + c->samples_per_subframe * 4;
+      c->first_timestamp = timestamp;
+      c->samples_per_packet = n_samples;
+      c->first_rx_ok = 1;
+      lock_signal(&c->lock);
+      unlock(&c->lock);
+    }
   }
 
   return NULL;
@@ -267,6 +303,7 @@ int channel_simulator_start(openair0_device *device)
       channel_simulator->sock = sock;
       init_connection(channel_simulator);
       new_thread(rx_thread, channel_simulator);
+      new_thread(tx_thread, channel_simulator);
       return 0;
     }
 
