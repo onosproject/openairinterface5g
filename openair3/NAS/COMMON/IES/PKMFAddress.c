@@ -10,6 +10,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "PKMFAddress.h"
+#include "TLVDecoder.h"
 
 //static int encode_pkmf_address(pkmf_address_t *pkmfaddress, uint8_t iei, uint8_t *buffer, uint32_t len);
 

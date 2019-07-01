@@ -87,7 +87,7 @@ static int _pdn_connectivity_update(esm_data_t *esm_data, int pid, const OctetSt
                                     esm_proc_pdn_type_t pdn_type, const OctetString *pdn_addr, int esm_cause);
 static int _pdn_connectivity_delete(esm_data_t *esm_data, int pid);
 
-static int _pdn_connectivity_set_pti(esm_data_t *esm_data, int pid, int pti);
+int _pdn_connectivity_set_pti(esm_data_t *esm_data, int pid, int pti);
 static int _pdn_connectivity_find_apn(esm_data_t *esm_data, const OctetString *apn);
 static int _pdn_connectivity_find_pdn(esm_data_t * esm_data, const OctetString *apn,
                                       esm_proc_pdn_type_t pdn_type);
@@ -98,6 +98,7 @@ static int _pdn_connectivity_find_pdn(esm_data_t * esm_data, const OctetString *
 static void *_pdn_connectivity_t3482_handler(void *);
 
 /* Maximum value of the PDN connectivity request retransmission counter */
+
 #define ESM_PDN_CONNECTIVITY_COUNTER_MAX 5
 
 
@@ -358,7 +359,7 @@ int esm_proc_pdn_connectivity_accept(nas_user_t *user, int pti, esm_proc_pdn_typ
     int     pid = RETURNerror;
     char    apn_first_char[4];
 
-    LOG_VAR(char,    str[128]);
+    LOG_VAR(char,str[128]);
 
     if (isprint(apn->value[0])) {
         apn_first_char[0] = '\0';
@@ -914,7 +915,7 @@ static int _pdn_connectivity_delete(esm_data_t *esm_data, int pid)
  **      Return:    RETURNok, RETURNerror                      **
  **                                                                        **
  ***************************************************************************/
-static int _pdn_connectivity_set_pti(esm_data_t *esm_data, int pid, int pti)
+ int _pdn_connectivity_set_pti(esm_data_t *esm_data, int pid, int pti)
 {
     if (pid < ESM_DATA_PDN_MAX) {
         if (pid != esm_data->pdn[pid].pid) {

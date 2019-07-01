@@ -31,7 +31,6 @@ if ((decoded_result = decode_pkmf_address(&remoteuereport->pkmfaddress, 0, buffe
 return decoded;
 }
 
-
 int encode_remote_ue_report(remote_ue_report_msg *remoteuereport, uint8_t *buffer, uint32_t len)
 {
 int encoded = 0;

@@ -55,6 +55,7 @@ Description Defines functions executed at the ESM Service Access
 #include "ModifyEpsBearerContextAccept.h"
 #include "ModifyEpsBearerContextReject.h"
 #include "DeactivateEpsBearerContextAccept.h"
+#include "RemoteUEReport.h"
 
 #include "EsmInformationResponse.h"
 
@@ -92,6 +93,7 @@ int esm_send_status(int pti, int ebi, esm_status_msg *msg, int esm_cause);
  */
 int esm_send_pdn_connectivity_request(int pti, int is_emergency, int pdn_type,
                                       const char *apn, pdn_connectivity_request_msg *msg);
+
 int esm_send_pdn_disconnect_request(int pti, int ebi,
                                     pdn_disconnect_request_msg *msg);
 
@@ -101,16 +103,21 @@ int esm_send_pdn_disconnect_request(int pti, int ebi,
  */
 int esm_send_activate_default_eps_bearer_context_accept(int ebi,
     activate_default_eps_bearer_context_accept_msg *msg);
+
 int esm_send_activate_default_eps_bearer_context_reject(int ebi,
     activate_default_eps_bearer_context_reject_msg *msg, int esm_cause);
 
 int esm_send_activate_dedicated_eps_bearer_context_accept(int ebi,
     activate_dedicated_eps_bearer_context_accept_msg *msg);
+
 int esm_send_activate_dedicated_eps_bearer_context_reject(int ebi,
     activate_dedicated_eps_bearer_context_reject_msg *msg, int esm_cause);
 
 int esm_send_deactivate_eps_bearer_context_accept(int ebi,
     deactivate_eps_bearer_context_accept_msg *msg);
+
+int esm_send_remote_ue_report(int ebi,
+		remote_ue_report_msg *msg);
 
 
 #endif /* __ESM_SEND_H__*/

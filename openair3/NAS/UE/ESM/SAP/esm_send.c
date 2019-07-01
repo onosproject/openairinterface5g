@@ -456,6 +456,46 @@ int esm_send_deactivate_eps_bearer_context_accept(int ebi,
   LOG_FUNC_RETURN(RETURNok);
 }
 
+/****************************************************************************
+ **                                                                        **
+ ** Name:    esm_send_remote_ue_report()                                   **
+ **                                                                        **
+ ** Description: Builds sends Remote UE Report message                     **
+ **                                                                        **
+ **      The Remote UE Report message is sent                              **
+ **      by the UE to to send information about a mew remote UE.           **
+ **                                                                        **
+ **                                                                        **
+ ** Inputs:  ebi:       EPS bearer identity                                **
+ **      Others:    None                                                   **
+ **                                                                        **
+ ** Outputs:     msg:       The ESM message to be sent                     **
+ **      Return:    RETURNok, RETURNerror                                  **
+ **      Others:    None                                                   **
+ **                                                                        **
+ ***************************************************************************/
+int esm_send_remote_ue_report(int ebi,
+		remote_ue_report_msg *msg)
+{
+  LOG_FUNC_IN;
+
+  /* Mandatory - ESM message header */
+  msg->protocoldiscriminator = EPS_SESSION_MANAGEMENT_MESSAGE;
+  msg->epsbeareridentity = ebi;
+  //msg->messagetype = DEACTIVATE_EPS_BEARER_CONTEXT_ACCEPT;
+  msg->proceduretransactionidentity = PROCEDURE_TRANSACTION_IDENTITY_UNASSIGNED;
+  /* Optional IEs  */
+  msg->pkmfaddress.pkmfipv4address = 0;
+
+  LOG_TRACE(INFO, "ESM-SAP   - Send Remote UE Report message"
+            " message (pti=%d, ebi=%d)",
+            msg->proceduretransactionidentity, msg->epsbeareridentity);
+
+  LOG_FUNC_RETURN(RETURNok);
+}
+
+
+
 
 /****************************************************************************/
 /*********************  L O C A L    F U N C T I O N S  *********************/

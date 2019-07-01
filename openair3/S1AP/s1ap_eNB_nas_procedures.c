@@ -47,6 +47,7 @@
 #include "s1ap_eNB_nas_procedures.h"
 #include "s1ap_eNB_management_procedures.h"
 #include "msc.h"
+#include "S1AP_ProtocolIE-Field.h"
 
 //------------------------------------------------------------------------------
 int s1ap_eNB_handle_nas_first_req(
@@ -321,7 +322,7 @@ int s1ap_eNB_handle_nas_first_req(
         ie->id = S1AP_ProtocolIE_ID_id_RelayNode_Indicator;
         ie->criticality = S1AP_Criticality_ignore;
         ie->value.present = S1AP_InitialUEMessage_IEs__value_PR_RelayNode_Indicator;
-        //ie->value.choice.RelayNode_Indicator = S1AP_RelayNode_Indicator_t;
+        //ie->value.choice.RelayNode_Indicator = S1AP_InitialUEMessage_IEs_t.value.choice.S1AP_RelayNode_Indicator_t;
         ASN_SEQUENCE_ADD(&out->protocolIEs.list, ie);
     }
 

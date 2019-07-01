@@ -201,11 +201,11 @@ int esm_msg_decode(ESM_msg *msg, uint8_t *buffer, uint32_t len)
     break;
 
   case REMOTE_UE_REPORT:
-      decode_result = decode_esm_status(&msg->remote_ue_report, buffer, len);
+      decode_result = decode_remote_ue_report(&msg->remote_ue_report, buffer, len);
       break;
 
   case REMOTE_UE_REPORT_RESPONSE:
-        decode_result = decode_esm_status(&msg->remote_ue_report_response, buffer, len);
+        decode_result = decode_remote_ue_report_response(&msg->remote_ue_report_response, buffer, len);
         break;
 
   default:

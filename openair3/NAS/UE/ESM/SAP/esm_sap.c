@@ -772,12 +772,12 @@ static int _esm_sap_send(nas_user_t *user, int msg_type, int is_standalone,
     break;
 
   case REMOTE_UE_REPORT:
-	  rc = esm_proc_remote_ue_report(user, pti, &esm_msg.remote_ue_report);
+	  rc = esm_send_remote_ue_report(ebi, &esm_msg.remote_ue_report);
 	  //#error "TODO"//
     break;
 
   default:
-    LOG_TRACE(WARNING, "ESM-SAP   - Send unexpected ESM message 0x%x",
+    LOG_TRACE(WARNING, "ESM-SAP - Send unexpected ESM message 0x%x",
               msg_type);
     break;
   }

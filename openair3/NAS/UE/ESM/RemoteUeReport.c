@@ -43,10 +43,11 @@ Description
 #include "esm_proc.h"
 #include "commonDef.h"
 #include "nas_log.h"
-#include "PdnConnectivity.c"
+
 #include "esmData.h"
 #include "esm_cause.h"
 #include "esm_pt.h"
+#include "PdnConnectivity.h"
 
 #include "emm_sap.h"
 
@@ -73,6 +74,8 @@ Description
 /******************  E X P O R T E D    F U N C T I O N S  ******************/
 /****************************************************************************/
 
+
+//int _pdn_connectivity_set_pti(esm_data_t *esm_data, int pid, int pti);
 int esm_proc_remote_ue_report(nas_user_t *user,int cid, unsigned int *pti)
 {
     LOG_FUNC_IN;
@@ -91,8 +94,8 @@ int esm_proc_remote_ue_report(nas_user_t *user,int cid, unsigned int *pti)
     	}
     	//static int _pdn_connectivity_set_pti(esm_data_t *esm_data, int pid, int pti);
     	/* Update the PDN connection data */
-    	rc = _pdn_connectivity_set_pti(esm_data, pid, *pti);
 
+    	rc = _pdn_connectivity_set_pti(esm_data, pid, *pti);
     	if (rc != RETURNok) {
     		LOG_TRACE(WARNING, "ESM-PROC  - Failed to update PDN connection");
     	}

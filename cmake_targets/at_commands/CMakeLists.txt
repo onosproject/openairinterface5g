@@ -436,6 +436,7 @@ set(esm_SRC
     ${OPENAIR_NAS_DIR}/UE/ESM/EsmStatusHdl.c
     ${OPENAIR_NAS_DIR}/UE/ESM/PdnConnectivity.c
     ${OPENAIR_NAS_DIR}/UE/ESM/PdnDisconnect.c
+    ${OPENAIR_NAS_DIR}/UE/ESM/RemoteUeReport.c
     
     ${OPENAIR_NAS_DIR}/COMMON/ESM/MSG/ActivateDedicatedEpsBearerContextAccept.c
     ${OPENAIR_NAS_DIR}/COMMON/ESM/MSG/ActivateDedicatedEpsBearerContextReject.c
@@ -469,6 +470,7 @@ set(esm_SRC
 set(esm_HDR
     ${OPENAIR_TARGETS}/COMMON/openairinterface5g_limits.h
     ${OPENAIR_NAS_DIR}/UE/ESM/esm_main.h
+    ${OPENAIR_NAS_DIR}/UE/ESM/PdnConnectivity.h
     ${OPENAIR_NAS_DIR}/COMMON/ESM/MSG/ActivateDedicatedEpsBearerContextAccept.h
     ${OPENAIR_NAS_DIR}/COMMON/ESM/MSG/ActivateDedicatedEpsBearerContextReject.h
     ${OPENAIR_NAS_DIR}/COMMON/ESM/MSG/ActivateDedicatedEpsBearerContextRequest.h
