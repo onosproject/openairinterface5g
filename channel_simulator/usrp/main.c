@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include "usrp.h"
 #include "../utils.h"
 
@@ -10,6 +11,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include <pthread.h>
+#include <immintrin.h>
 
 #include <inttypes.h>
 
@@ -31,7 +33,7 @@ void receive_from_channel_simulator(int sock, buffer_t *buf)
   if (n_samples != buf->n_samples) {
     free(buf->data);
     buf->n_samples = n_samples;
-    buf->data = malloc(buf->n_samples * 4); if (buf->data == NULL) goto err;
+    if (posix_memalign((void **)&buf->data, 32, buf->n_samples * 4) != 0) goto err;
   }
   if (fullread(sock, buf->data, buf->n_samples * 4) != buf->n_samples * 4)
     goto err;
@@ -139,8 +141,7 @@ int main(void)
   receive_from_channel_simulator(sock, &buf);
   sim_timestamp = buf.timestamp - 2 * samples_per_subframe + buf.n_samples;
 
-  usrp_data = calloc(1, buf.n_samples * 4);
-  if (usrp_data == NULL) {
+  if (posix_memalign((void **)&usrp_data, 32, buf.n_samples * 4) != 0) {
     printf("ERROR: out of memory\n");
     exit(1);
   }
@@ -152,9 +153,18 @@ int main(void)
   usrp_timestamp = usrp_read(usrp_data, buf.n_samples);
 
   while (1) {
+    int i;
+    for (i = 0; i < buf.n_samples * 2; i += 16) {
+      __m256i *a = (__m256i *)&((int16_t *)buf.data)[i];
+      *a = _mm256_slli_epi16(*a, 4);
+    }
     usrp_write(buf.data, buf.n_samples,
                usrp_timestamp - buf.n_samples + 2 * samples_per_subframe - tx_sample_advance);
     usrp_timestamp = usrp_read(usrp_data, buf.n_samples);
+    for (i = 0; i < buf.n_samples * 2; i += 16) {
+      __m256i *a = (__m256i *)&((int16_t *)usrp_data)[i];
+      *a = _mm256_srai_epi16(*a, 4);
+    }
     send_to_channel_simulator(sock, usrp_data, buf.n_samples, sim_timestamp);
     sim_timestamp += buf.n_samples;
     receive_from_channel_simulator(sock, &buf);

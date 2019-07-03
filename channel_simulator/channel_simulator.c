@@ -8,6 +8,7 @@
 #include <inttypes.h>
 #include <unistd.h>
 #include <sys/socket.h>
+#include <immintrin.h>
 
 void init_channel_simulator(channel_simulator *c,
     uint32_t samplerate, int n_samples)
@@ -33,7 +34,7 @@ void cleanup_connections(channel_simulator *c)
     con = &c->connections[i];
     c->channels[con->rx_channel_index].connection_count--;
     c->channels[con->tx_channel_index].connection_count--;
-    free(con->tx_buffer);
+    free(con->iq_buffer);
     if (c->connections_count == 1) {
       free(c->connections);
       c->connections = NULL;
@@ -94,8 +95,8 @@ static int find_or_create_channel(channel_simulator *c, uint64_t freq,
   chan = &c->channels[i];
   chan->frequency = freq;
   chan->sample_advance = sample_advance;
-  chan->data = calloc(1, c->n_samples * 4);
-  if (chan->data == NULL) goto oom;
+  if (posix_memalign((void **)&chan->data, 32, c->n_samples * 4) != 0)
+    goto oom;
   chan->connection_count = 0;
 
   return i;
@@ -121,8 +122,8 @@ void channel_simulator_add_connection(channel_simulator *c,
   con = &c->connections[c->connections_count-1];
 
   con->socket = socket;
-  con->tx_buffer = calloc(1, c->n_samples * 4);
-  if (con->tx_buffer == NULL) goto oom;
+  if (posix_memalign((void **)&con->iq_buffer, 32, c->n_samples * 4) != 0)
+    goto oom;
   con->rx_frequency = rx_frequency;
   con->tx_frequency = tx_frequency;
   con->rx_channel_index = find_or_create_channel(c, rx_frequency,
@@ -132,6 +133,14 @@ void channel_simulator_add_connection(channel_simulator *c,
 
   c->channels[con->rx_channel_index].connection_count++;
   c->channels[con->tx_channel_index].connection_count++;
+
+  if (posix_memalign(&con->gain, 32, 32) != 0) {
+    printf("posix_memalign failed\n");
+    exit(1);
+  }
+
+  /* default gain = 1 (actually 1 - 1/2^15) */
+  *(__m256i *)con->gain = _mm256_set1_epi16(0x7fff);
 
   return;
 
@@ -144,13 +153,30 @@ void connection_send_rx(connection *c, uint64_t timestamp,
     uint32_t *data, int n_samples)
 {
   unsigned char b[8+4];
+  int k;
+  int16_t *from;
+  int16_t *to;
+  __m256i *gain;
 
   if (c->socket == -1) return;
+
+  /* apply gain on data to send */
+  from = (int16_t *)data;
+  to = (int16_t *)c->iq_buffer;
+  gain = (__m256i *)c->gain;
+
+  /* does: to[] = from[] * gain[] */
+  for (k = 0; k < n_samples * 2; k+=16) {
+    __m256i *a, *b;
+    a = (__m256i *)&to[k];
+    b = (__m256i *)&from[k];
+    *a = _mm256_mulhrs_epi16(*b, *gain);
+  }
 
   pu64(b, timestamp);
   pu32(b+8, n_samples);
   if (fullwrite(c->socket, b, 8+4) != 8+4 ||
-      fullwrite(c->socket, data, n_samples * 4) != n_samples * 4) {
+      fullwrite(c->socket, c->iq_buffer, n_samples * 4) != n_samples * 4) {
     printf("ERROR: connection_send_rx failed, dropping\n");
     shutdown(c->socket, SHUT_RDWR);
     close(c->socket);
@@ -198,10 +224,32 @@ err:
   con->socket = -1;
 }
 
+void command_set_gain(channel_simulator *cs, connection *con, int n)
+{
+  unsigned char b[4];
+  int v;
+  if (n != 4) goto err;
+  if (fullread(con->socket, b, 4) != 4) goto err;
+  v = gu32(b);
+
+  *(__m256i *)con->gain = _mm256_set1_epi16(v);
+
+  printf("INFO: setting gain to %d\n", v);
+
+  return;
+
+err:
+  printf("ERROR: command_set_gain failed, dropping\n");
+  shutdown(con->socket, SHUT_RDWR);
+  close(con->socket);
+  con->socket = -1;
+}
+
 void do_command(channel_simulator *cs, connection *c, uint64_t command, int n)
 {
   switch (command) {
   case 0: return command_set_frequency(cs, c, n);
+  case 1: return command_set_gain(cs, c, n);
   default:
     printf("ERROR: bad command %"PRIu64", dropping\n", command);
     shutdown(c->socket, SHUT_RDWR);
@@ -239,7 +287,7 @@ again:
            recv_n_samples, n_samples);
     goto err;
   }
-  if (fullread(c->socket, c->tx_buffer, n_samples * 4) != n_samples * 4)
+  if (fullread(c->socket, c->iq_buffer, n_samples * 4) != n_samples * 4)
     goto err;
 
   return;
@@ -250,8 +298,6 @@ err:
   close(c->socket);
   c->socket = -1;
 }
-
-#include <immintrin.h>
 
 void channel_simulate(channel_simulator *c)
 {
@@ -269,38 +315,20 @@ void channel_simulate(channel_simulator *c)
   for (i = 0; i < c->channels_count; i++)
     memset(c->channels[i].data, 0, c->n_samples * 4);
 
-#if 0
   /* basic mixing */
   for (i = 0; i < c->connections_count; i++) {
+    __m256i *gain;
     con = &c->connections[i];
-    from = (int16_t *)con->tx_buffer;
+    from = (int16_t *)con->iq_buffer;
+    gain = (__m256i *)con->gain;
 
-    for (k = 0; k < c->n_samples * 2; k++)
-      mix[con->tx_channel_index][k] += from[k];
-  }
-
-  for (i = 0; i < c->channels_count; i++) {
-    chan = &c->channels[i];
-    to = (int16_t *)chan->data;
-
-    for (k = 0; k < c->n_samples * 2; k++) {
-      int v = mix[i][k];
-      if (v > 32767) v = 32767;
-      if (v < -32768) v = -32768;
-      to[k] = v;
-    }
-  }
-#else
-  /* basic mixing */
-  for (i = 0; i < c->connections_count; i++) {
-    con = &c->connections[i];
-    from = (int16_t *)con->tx_buffer;
-
+    /* does: mix[] = mix[] + from[] * gain[] */
     for (k = 0; k < c->n_samples * 2; k+=16) {
-      __m256i *a, *b;
+      __m256i *a, *b, v;
       a = (__m256i *)&mix[con->tx_channel_index][k];
       b = (__m256i *)&from[k];
-      *a = _mm256_adds_epi16(*a, *b);
+      v = _mm256_mulhrs_epi16(*b, *gain);
+      *a = _mm256_adds_epi16(*a, v);
     }
   }
 
@@ -309,5 +337,4 @@ void channel_simulate(channel_simulator *c)
     to = (int16_t *)chan->data;
     memcpy(to, mix[i], c->n_samples * 2 * 2);
   }
-#endif
 }

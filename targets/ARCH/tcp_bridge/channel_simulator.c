@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include "common_lib.h"
 #include "channel_simulator/utils.h"
 
@@ -9,6 +10,7 @@
 #include <netinet/tcp.h>
 #include <arpa/inet.h>
 #include <inttypes.h>
+#include <math.h>
 
 typedef struct buffer_s {
   uint64_t timestamp;
@@ -39,6 +41,97 @@ typedef struct {
   uint64_t first_timestamp;
   int samples_per_packet;
 } channel_simulator_state_t;
+
+/*************************************************************************/
+/* gain setting begin                                                    */
+/*************************************************************************/
+
+void channel_simulator_set_gain(channel_simulator_state_t *c, int gain_db)
+{
+  unsigned char b[8+4+4];
+  double gain;
+  int gain_lin;
+
+  gain = exp10(gain_db/20.);
+  if (gain > 1) gain = 1;
+  gain_lin = gain * 32767;
+  if (gain_lin > 0x7fff)
+    gain_lin = 0x7fff;
+
+  printf("channel_simulator: setting gain to %d dB (%d lin)\n", gain_db, gain_lin);
+
+  pu64(b, 1);
+  pu32(b+8, 4);
+  pu32(b+8+4, gain_lin);
+
+  lock(&c->tx_lock);
+  if (fullwrite(c->sock, b, 8+4+4) != 8+4+4) {
+    printf("ERROR: channel_simulator: channel_simulator_set_gain failed\n");
+    exit(1);
+  }
+  unlock(&c->tx_lock);
+}
+
+int get_line(int s, char *l, int len)
+{
+  int pos = 0;
+  while (1) {
+    if (fullread(s, &l[pos], 1) != 1)
+      return -1;
+    if (l[pos] == '\n') {
+      l[pos] = 0;
+      break;
+    }
+    pos++;
+    if (pos == len)
+      return -1;
+  }
+  return 0;
+}
+
+void channel_simulator_gain_process(channel_simulator_state_t *c, int s)
+{
+  char line[256];
+  int gain;
+
+  if (get_line(s, line, 256) == -1) return;
+  if (sscanf(line, "%d", &gain) != 1) return;
+  channel_simulator_set_gain(c, gain);
+}
+
+void *channel_simulator_gain_thread(void *_c)
+{
+  channel_simulator_state_t *c = _c;
+  int port = 4025;
+  char *env;
+  struct sockaddr_in addr;
+  socklen_t addrlen;
+  int sock;
+
+  env = getenv("CHANNEL_SIMULATOR_GAIN_PORT");
+  if (env != NULL)
+    port = atoi(env);
+  else
+    printf("channel_simulator: environment variable CHANNEL_SIMULATOR_GAIN_PORT"
+           " not found, using default port %d\n", port);
+
+  sock = create_listen_socket("0.0.0.0", port);
+
+  while (1) {
+    int t;
+    addrlen = sizeof(addr);
+    t = accept(sock, (struct sockaddr *)&addr, &addrlen);
+    if (t == -1) { perror("accept"); exit(1); }
+    channel_simulator_gain_process(c, t);
+    close(t);
+  }
+
+  return NULL;
+}
+
+/*************************************************************************/
+/* gain setting end                                                      */
+/*************************************************************************/
 
 void add_rx_buffer(channel_simulator_state_t *c, buffer_t *b)
 {
@@ -459,6 +552,8 @@ int device_init(openair0_device* device, openair0_config_t *openair0_cfg)
   device->type = USRP_B200_DEV;
 
   device->openair0_cfg=&openair0_cfg[0];
+
+  new_thread(channel_simulator_gain_thread, channel_simulator);
 
   return 0;
 }

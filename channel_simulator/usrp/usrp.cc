@@ -32,11 +32,11 @@ void usrp_init_connection(uint64_t rx_freq, uint64_t tx_freq)
 
   usrp->set_rx_rate(7680000, 0);
   usrp->set_rx_freq(rx_freq, 0);
-  usrp->set_rx_gain(40, 0);
+  usrp->set_rx_gain(62.2, 0);
 
   usrp->set_tx_rate(7680000, 0);
   usrp->set_tx_freq(tx_freq, 0);
-  usrp->set_tx_gain(90, 0);
+  usrp->set_tx_gain(89.75, 0);
 
   uhd::stream_args_t stream_args_rx("sc16", "sc16");
   stream_args_rx.args["spp"] = str(boost::format("%d") % 768 );

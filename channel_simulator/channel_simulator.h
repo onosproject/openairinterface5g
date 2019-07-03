@@ -12,11 +12,14 @@ typedef struct {
 
 typedef struct {
   int      socket;
-  uint32_t *tx_buffer;
+  /* iq_buffer is used both in tx and rx */
+  uint32_t *iq_buffer;
   uint64_t rx_frequency;
   uint64_t tx_frequency;
   int      rx_channel_index;
   int      tx_channel_index;
+  /* gain to apply to rx and tx data */
+  void     *gain;           /* actually __m256i * */
 } connection;
 
 typedef struct {
