@@ -877,7 +877,7 @@ void init_eNB_proc(int inst) {
     proc->CC_id                    = CC_id;
     proc->first_rx                 =1;
     proc->first_tx                 =1;
-    proc->RU_mask_tx               = (1<<eNB->num_RU)-1;
+    proc->RU_mask_tx               = 0; // (1<<eNB->num_RU)-1;
     memset((void*)proc->RU_mask,0,10*sizeof(proc->RU_mask[0]));
     proc->RU_mask_prach            =0;
     pthread_mutex_init( &eNB->UL_INFO_mutex, NULL);

@@ -1541,7 +1541,7 @@ void *ru_thread_tx( void *param ) {
 
       AssertFatal((ret=pthread_mutex_lock(&eNB_proc->mutex_RU_tx))==0,"mutex_lock returns %d\n",ret);
       for (int j=0; j<eNB->num_RU; j++) {
-        if (ru == eNB->RU_list[j]) {
+        if (ru == eNB->RU_list[j] && eNB->RU_list[j]->wait_cnt == 0) {
           if ((eNB_proc->RU_mask_tx&(1<<j)) > 0)
             LOG_E(PHY,"eNB %d frame %d, subframe %d : previous information from RU tx %d (num_RU %d,mask %x) has not been served yet!\n",
                   eNB->Mod_id,eNB_proc->frame_rx,eNB_proc->subframe_rx,ru->idx,eNB->num_RU,eNB_proc->RU_mask_tx);

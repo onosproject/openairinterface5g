@@ -523,9 +523,9 @@ function main() {
           $lte_build_dir coding \
           libcoding.so $dbin/libcoding.so
 # optional libs (used when noS1 with kernel modules 
-  #  compilations \
-   #       $lte_build_dir nasmesh \
-    #      CMakeFiles/nasmesh/nasmesh.ko $dbin/nasmesh.ko
+    compilations \
+          $lte_build_dir nasmesh \
+          CMakeFiles/nasmesh/nasmesh.ko $dbin/nasmesh.ko
     compilations \
           $lte_build_dir rb_tool \
           rb_tool $dbin/rb_tool
