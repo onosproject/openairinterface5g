@@ -201,25 +201,39 @@ void fh_if5_south_in(RU_t *ru,int *frame, int *subframe) {
 void fh_if4p5_south_in(RU_t *ru,int *frame,int *subframe) {
   LTE_DL_FRAME_PARMS *fp = &ru->frame_parms;
   RU_proc_t *proc = &ru->proc;
-  int f,sf;
+  int f,sf,Ns,l,u;
+  RU_CALIBRATION *calibration = &ru->calibration;
   uint16_t packet_type;
   uint32_t symbol_number=0;
   uint32_t symbol_mask_full;
   int pultick_received=0;
 
+  if (ru->is_slave==1 && ru->wait_cnt!=0) RC.collect = 0;
 
-  if ((fp->frame_type == TDD) && (subframe_select(fp,*subframe)==SF_S))  
-    symbol_mask_full = (1<<fp->ul_symbols_in_S_subframe)-1;   
-  else     
+  if ((fp->frame_type == TDD) && (subframe_select(fp,*subframe)==SF_S)) {
+    if (*subframe == 1) {  
+    	symbol_mask_full = (1<<11)-1;
+    } else {    	
+    	symbol_mask_full = (1<<fp->ul_symbols_in_S_subframe)-1;   
+    }
+  } else {     
     symbol_mask_full = (1<<fp->symbols_per_tti)-1; 
+  }
+
   LOG_D(PHY,"fh_if4p5_south_in: RU %d, frame %d, subframe %d, ru %d, mask %x\n",ru->idx,*frame,*subframe,ru->idx,proc->symbol_mask[*subframe]);
+  if (proc->symbol_mask[*subframe] == symbol_mask_full) proc->symbol_mask[*subframe] = 0;
   AssertFatal(proc->symbol_mask[*subframe]==0 || proc->symbol_mask[*subframe]==symbol_mask_full,"rx_fh_if4p5: proc->symbol_mask[%d] = %x\n",*subframe,proc->symbol_mask[*subframe]);
+
   if (proc->symbol_mask[*subframe]==0) { // this is normal case, if not true then we received a PULTICK before the previous subframe was finished 
      do {
        recv_IF4p5(ru, &f, &sf, &packet_type, &symbol_number);
 	 LOG_D(PHY,"fh_if4p5_south_in: RU %d, frame %d, subframe %d, f %d, sf %d\n",ru->idx,*frame,*subframe,f,sf);
        if (oai_exit == 1 || ru->cmd== STOP_RU) break;
        if (packet_type == IF4p5_PULFFT) proc->symbol_mask[sf] = proc->symbol_mask[sf] | (1<<symbol_number);
+       else if (packet_type == IF4p5_PULCALIB) {
+       	proc->symbol_mask[sf] = (2<<symbol_number)-1;
+	LOG_I(PHY,"symbol_mask[%d] %d\n",sf,proc->symbol_mask[sf]);
+       }
        else if (packet_type == IF4p5_PULTICK) {           
          proc->symbol_mask[sf] = symbol_mask_full;
          pultick_received++;
@@ -277,6 +291,70 @@ void fh_if4p5_south_in(RU_t *ru,int *frame,int *subframe) {
 
   VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME(VCD_SIGNAL_DUMPER_VARIABLES_FRAME_NUMBER_IF4P5_SOUTH_IN_RU+ru->idx,f);
   VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME(VCD_SIGNAL_DUMPER_VARIABLES_SUBFRAME_NUMBER_IF4P5_SOUTH_IN_RU+ru->idx,sf);
+
+  if (ru->is_slave==1 && ru->wait_cnt==0) RC.collect = 1;
+
+  if (ru->wait_cnt==0 && packet_type == IF4p5_PULCALIB && RC.collect==1) {
+
+  	T(T_RAU_INPUT_SIGNAL, T_INT(ru->idx), T_INT(f), T_INT(sf),
+          T_BUFFER(&ru->common.rxdataF[0][0],
+          fp->symbols_per_tti*fp->ofdm_symbol_size*sizeof(int32_t)));
+
+        // Estimate calibration channel estimates:
+  	Ns = (ru->is_slave==0 ? 1 : 1);
+	l = (ru->is_slave==0 ? 10 : 10);
+	u = (ru->is_slave==0 ? 0 : 0);
+	ru->frame_parms.nb_antennas_rx = ru->nb_rx;		
+        ulsch_extract_rbs_single(ru->common.rxdataF,
+                                 calibration->rxdataF_ext,
+                                 0,
+                                 fp->N_RB_DL,
+				 3%(fp->symbols_per_tti/2),// l = symbol within slot
+                                 Ns, 
+                                 fp);
+
+	// OR should I call just: lte_ul_channel_estimation();
+   	/*lte_ul_channel_estimation((PHY_VARS_eNB *)NULL,
+                                  proc,
+                                  ru->idx,
+                                  3%(fp->symbols_per_tti/2),
+                                  Ns);
+	*/
+        lte_ul_channel_estimation_RRU(fp,
+                                  calibration->drs_ch_estimates,
+                                  calibration->drs_ch_estimates_time,
+                                  calibration->rxdataF_ext,
+                                  fp->N_RB_DL, 
+                                  f,
+                                  sf,
+                                  u,
+                                  0,
+                                  0,
+                                  l,
+                                  0,
+                                  0);
+	
+		T(T_CALIBRATION_CHANNEL_ESTIMATES, T_INT(ru->idx), T_INT(f), T_INT(sf),
+                  T_INT(l),T_BUFFER(&calibration->drs_ch_estimates[0][l*12*fp->N_RB_UL],
+                12*fp->N_RB_UL*sizeof(int32_t)));
+
+		T(T_RAU_INPUT_DMRS, T_INT(ru->idx), T_INT(f), T_INT(sf),
+                T_BUFFER(&calibration->rxdataF_ext[0][l*12*fp->N_RB_UL],
+                12*fp->N_RB_UL*sizeof(int32_t)));
+
+		T(T_CALIBRATION_CHANNEL_ESTIMATES_TIME, T_INT(ru->idx), T_INT(f), T_INT(sf),
+                T_BUFFER(calibration->drs_ch_estimates_time[0],
+                fp->ofdm_symbol_size*sizeof(int32_t)));
+
+/*		if (f==251 && ru->idx==0) {
+			//LOG_M("rxdataF_ext.m","rxdataFext",&calibration->rxdataF_ext[0][0], 14*12*(fp->N_RB_DL),1,1);
+			LOG_M("dmrs_time.m","dmrstime",calibration->drs_ch_estimates_time[0], fp->ofdm_symbol_size,1,1);
+			//exit(-1);
+		}*/
+  //}
+ }
+
+
 
   proc->symbol_mask[sf] = 0;
   VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME( VCD_SIGNAL_DUMPER_VARIABLES_TRX_TS, proc->timestamp_rx&0xffffffff );
@@ -500,7 +578,17 @@ void fh_if4p5_north_out(RU_t *ru) {
   LOG_D(PHY,"fh_if4p5_north_out: Sending IF4p5_PULFFT SFN.SF %d.%d\n",proc->frame_rx,proc->subframe_rx);
   if ((fp->frame_type == TDD) && (subframe_select(fp,subframe)!=SF_UL)) {
     /// **** in TDD during DL send_IF4 of ULTICK to RCC **** ///
-    send_IF4p5(ru, proc->frame_rx, proc->subframe_rx, IF4p5_PULTICK);
+    if (subframe_select(fp,subframe)==SF_S && subframe==1 /*&& ru->state==RU_RUN*/) {
+        send_IF4p5(ru, proc->frame_rx, proc->subframe_rx, IF4p5_PULCALIB);
+        LOG_D(PHY,"~~~~~~******* Sending PULCALIB frame %d, subframe %d\n",proc->frame_rx,proc->subframe_rx);
+	T(T_RAU_INPUT_DMRS, T_INT(ru->idx), T_INT(proc->frame_rx), T_INT(proc->subframe_rx),
+          T_BUFFER(&ru->common.rxdataF[0][proc->subframe_rx*fp->symbols_per_tti*fp->ofdm_symbol_size],
+          fp->symbols_per_tti*fp->ofdm_symbol_size*sizeof(int32_t))); 
+     } else {
+        send_IF4p5(ru, proc->frame_rx, proc->subframe_rx, IF4p5_PULTICK);
+        LOG_D(PHY,"~~~~~~******* Sending PULTICK frame %d, subframe %d\n",proc->frame_rx,proc->subframe_rx); 
+    }
+    LOG_D(PHY,"fh_if4p5_north_out: Sending IF4p5_PULCALIB SFN.SF %d.%d\n",proc->frame_rx,proc->subframe_rx);
     ru->north_out_cnt++;
     return;
   }
@@ -724,7 +812,7 @@ void tx_rf(RU_t *ru) {
                		+ (txsymb - 1) * (fp->ofdm_symbol_size + fp->nb_prefix_samples)
                		+ ru->end_of_burst_delay;
 		if (ru->state==RU_RUN && proc->frame_tx%ru->p==ru->tag) {        	
-			siglen2 = fp->ofdm_symbol_size + fp->nb_prefix_samples; // length of symbol 10       
+			siglen2 = fp->ofdm_symbol_size + fp->nb_prefix_samples + ru->end_of_burst_delay; // length of symbol 10       
 		}
       		flags=3; // end of burst
     	}
@@ -746,10 +834,10 @@ void tx_rf(RU_t *ru) {
     sf_extension = (sf_extension)&0xfffffffc;
 #endif
 
-    for (i=0; i<ru->nb_tx; i++)
+    for (i=0; i<ru->nb_tx; i++) {
       	txp[i] = (void *)&ru->common.txdata[i][(proc->subframe_tx*fp->samples_per_tti)-sf_extension];
     	txp1[i] = (void*)&ru->common.txdata[i][(proc->subframe_tx*fp->samples_per_tti)+(sigoff2)-sf_extension]; // pointer to 1st sample of 10th symbol	
-
+    }
 
     /* add fail safe for late command */
     if(late_control!=STATE_BURST_NORMAL) { //stop burst
