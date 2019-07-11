@@ -97,6 +97,7 @@ static int find_or_create_channel(channel_simulator *c, uint64_t freq,
   chan->sample_advance = sample_advance;
   if (posix_memalign((void **)&chan->data, 32, c->n_samples * 4) != 0)
     goto oom;
+  memset(chan->data, 0, c->n_samples * 4);
   chan->connection_count = 0;
 
   return i;
@@ -124,12 +125,14 @@ void channel_simulator_add_connection(channel_simulator *c,
   con->socket = socket;
   if (posix_memalign((void **)&con->iq_buffer, 32, c->n_samples * 4) != 0)
     goto oom;
+  memset(con->iq_buffer, 0, c->n_samples * 4);
   con->rx_frequency = rx_frequency;
   con->tx_frequency = tx_frequency;
   con->rx_channel_index = find_or_create_channel(c, rx_frequency,
                                                  rx_sample_advance);
   con->tx_channel_index = find_or_create_channel(c, tx_frequency,
                                                  tx_sample_advance);
+  con->running = 0;
 
   c->channels[con->rx_channel_index].connection_count++;
   c->channels[con->tx_channel_index].connection_count++;

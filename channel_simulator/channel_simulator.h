@@ -20,6 +20,8 @@ typedef struct {
   int      tx_channel_index;
   /* gain to apply to rx and tx data */
   void     *gain;           /* actually __m256i * */
+  /* running: used to synchronize eNB in time */
+  int      running;
 } connection;
 
 typedef struct {

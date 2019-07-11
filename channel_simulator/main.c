@@ -2,15 +2,35 @@
 #include "connection_manager.h"
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 #include <sys/socket.h>
+#include <signal.h>
 
-int main(void)
+void usage(void)
+{
+  printf("options:\n");
+  printf("    -no-sync\n");
+  printf("        do not synchronize eNBs in time\n");
+  exit(0);
+}
+
+int main(int n, char **v)
 {
   channel_simulator c;
   connection_manager cm;
   int i;
   int samplerate = 7680000;
+  int do_synchronize = 1;
+
+  for (i = 1; i < n; i++) {
+    if (!strcmp(v[i], "-h") || !strcmp(v[i], "--help")) usage();
+    if (!strcmp(v[i], "-no-sync")) { do_synchronize = 0; continue; }
+    usage();
+  }
+
+  signal(SIGPIPE, SIG_IGN);
 
   init_connection_manager(&cm, "0.0.0.0", 4024);
   init_channel_simulator(&c, samplerate, 512);
@@ -39,6 +59,11 @@ int main(void)
       connection *con = &c.connections[i];
       channel    *ch_rx  = &c.channels[con->rx_channel_index];
       channel    *ch_tx  = &c.channels[con->tx_channel_index];
+      if (do_synchronize && con->running == 0) {
+        if (c.timestamp % (samplerate/1000*1024*10))
+          continue;
+        con->running = 1;
+      }
       connection_send_rx(con, c.timestamp + ch_rx->sample_advance,
                          ch_rx->data, c.n_samples);
       connection_receive_tx(&c, con, c.timestamp + ch_tx->sample_advance

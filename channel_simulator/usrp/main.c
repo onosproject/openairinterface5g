@@ -128,7 +128,7 @@ int main(void)
   uint64_t sim_timestamp;
   uint64_t usrp_timestamp;
   int samples_per_subframe = 7680;
-  int tx_sample_advance = 0; //40;
+  int tx_sample_advance = 40;
   char *usrp_data;
 
   go_realtime();
@@ -145,6 +145,7 @@ int main(void)
     printf("ERROR: out of memory\n");
     exit(1);
   }
+  memset(usrp_data, 0, buf.n_samples * 4);
 
   send_to_channel_simulator(sock, usrp_data, buf.n_samples, sim_timestamp);
   sim_timestamp += buf.n_samples;
