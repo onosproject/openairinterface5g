@@ -39,7 +39,7 @@
 #define X2AP_HANDOVER_CANCEL(mSGpTR)            (mSGpTR)->ittiMsg.x2ap_handover_cancel
 
 
-#define X2AP_MAX_NB_ENB_IP_ADDRESS 2
+#define X2AP_MAX_NB_ENB_IP_ADDRESS 6
 
 // eNB application layer -> X2AP messages
 

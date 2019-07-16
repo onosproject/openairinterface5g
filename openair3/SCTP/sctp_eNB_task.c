@@ -805,7 +805,7 @@ static int sctp_create_new_listener(
         return -1;
     }
 
-    if (listen(sd, 5) < 0) {
+    if (listen(sd, 6) < 0) {
         SCTP_ERROR("listen: %s:%d\n", strerror(errno), errno);
         free(sctp_cnx);
         sctp_cnx = NULL;

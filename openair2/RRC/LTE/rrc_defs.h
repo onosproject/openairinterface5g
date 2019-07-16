@@ -816,7 +816,25 @@ typedef struct {
   uint32_t                           sizeof_paging[MAX_MOBILES_PER_ENB];
 } rrc_eNB_carrier_data_t;
 
-  
+typedef struct measurement_event_info_s{
+  uint8_t               threshold_RSRP;
+  uint8_t               maxReportCells;
+  uint8_t               reportInterval;
+  uint8_t               a3_Offset;
+  uint8_t               hysteresis;
+  uint8_t               timeToTrigger;
+}measurement_event_info_t;
+
+typedef struct rrc_eNB_measurement_data_s{
+  uint8_t               allowedMeasBandwidth;
+  measurement_event_info_t      event1_config;	
+  measurement_event_info_t      event2_config;	
+  measurement_event_info_t      event3_config;	
+  measurement_event_info_t      event4_config;	
+  measurement_event_info_t      event5_config;
+  measurement_event_info_t      event6_config;	
+}rrc_eNB_measurement_data_t;
+
 typedef struct eNB_RRC_INST_s {
   /// southbound midhaul configuration
   ngran_node_t                    node_type;
@@ -869,6 +887,7 @@ typedef struct eNB_RRC_INST_s {
   uint16_t sctp_in_streams;
   uint16_t sctp_out_streams;
 
+  rrc_eNB_measurement_data_t measurement;
 } eNB_RRC_INST;
 
 #define MAX_UE_CAPABILITY_SIZE 255

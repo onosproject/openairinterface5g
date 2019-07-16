@@ -174,6 +174,7 @@ void x2ap_eNB_handle_sctp_association_ind(instance_t instance, sctp_new_associat
     DevAssert(x2ap_enb_data_p != NULL);
     x2ap_enb_data_p->cnx_id                = x2ap_eNB_fetch_add_global_cnx_id();
     x2ap_enb_data_p->x2ap_eNB_instance = instance_p;
+    x2ap_enb_data_p->assoc_id    = sctp_new_association_ind->assoc_id;
     /* Insert the new descriptor in list of known eNB
      * but not yet associated.
      */
@@ -191,7 +192,7 @@ void x2ap_eNB_handle_sctp_association_ind(instance_t instance, sctp_new_associat
   printf("x2ap_eNB_handle_sctp_association_ind at 2\n");
   dump_trees();
   /* Update parameters */
-  x2ap_enb_data_p->assoc_id    = sctp_new_association_ind->assoc_id;
+  //x2ap_enb_data_p->assoc_id    = sctp_new_association_ind->assoc_id;
   x2ap_enb_data_p->in_streams  = sctp_new_association_ind->in_streams;
   x2ap_enb_data_p->out_streams = sctp_new_association_ind->out_streams;
   printf("x2ap_eNB_handle_sctp_association_ind at 3\n");

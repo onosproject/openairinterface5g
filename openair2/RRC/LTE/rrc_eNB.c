@@ -1574,6 +1574,7 @@ rrc_eNB_process_RRCConnectionReestablishmentComplete(
         PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP));
   T(T_ENB_RRC_CONNECTION_REESTABLISHMENT_COMPLETE, T_INT(ctxt_pP->module_id), T_INT(ctxt_pP->frame),
     T_INT(ctxt_pP->subframe), T_INT(ctxt_pP->rnti));
+  rrc_eNB_measurement_data_t             *meas_data = &RC.rrc[ctxt_pP->module_id]->measurement;
   LTE_DRB_ToAddModList_t                 *DRB_configList = ue_context_pP->ue_context.DRB_configList;
   LTE_SRB_ToAddModList_t                 *SRB_configList = ue_context_pP->ue_context.SRB_configList;
   LTE_SRB_ToAddModList_t                **SRB_configList2 = NULL;
@@ -1770,7 +1771,7 @@ rrc_eNB_process_RRCConnectionReestablishmentComplete(
   MeasObj->measObject.present = LTE_MeasObjectToAddMod__measObject_PR_measObjectEUTRA;
   MeasObj->measObject.choice.measObjectEUTRA.carrierFreq = 3350; //band 7, 2.68GHz
   //MeasObj->measObject.choice.measObjectEUTRA.carrierFreq = 36090; //band 33, 1.909GHz
-  MeasObj->measObject.choice.measObjectEUTRA.allowedMeasBandwidth = LTE_AllowedMeasBandwidth_mbw25;
+  MeasObj->measObject.choice.measObjectEUTRA.allowedMeasBandwidth = meas_data->allowedMeasBandwidth;
   MeasObj->measObject.choice.measObjectEUTRA.presenceAntennaPort1 = 1;
   MeasObj->measObject.choice.measObjectEUTRA.neighCellConfig.buf = CALLOC(1, sizeof(uint8_t));
   MeasObj->measObject.choice.measObjectEUTRA.neighCellConfig.buf[0] = 0;
@@ -1808,8 +1809,8 @@ rrc_eNB_process_RRCConnectionReestablishmentComplete(
     LTE_ReportConfigEUTRA__triggerType__periodical__purpose_reportStrongestCells;
   ReportConfig_per->reportConfig.choice.reportConfigEUTRA.triggerQuantity = LTE_ReportConfigEUTRA__triggerQuantity_rsrp;
   ReportConfig_per->reportConfig.choice.reportConfigEUTRA.reportQuantity = LTE_ReportConfigEUTRA__reportQuantity_both;
-  ReportConfig_per->reportConfig.choice.reportConfigEUTRA.maxReportCells = 2;
-  ReportConfig_per->reportConfig.choice.reportConfigEUTRA.reportInterval = LTE_ReportInterval_ms120;
+  ReportConfig_per->reportConfig.choice.reportConfigEUTRA.maxReportCells = meas_data->event1_config.maxReportCells;
+  ReportConfig_per->reportConfig.choice.reportConfigEUTRA.reportInterval = meas_data->event1_config.reportInterval;
   ReportConfig_per->reportConfig.choice.reportConfigEUTRA.reportAmount = LTE_ReportConfigEUTRA__reportAmount_infinity;
   ASN_SEQUENCE_ADD(&ReportConfig_list->list, ReportConfig_per);
   ReportConfig_A1->reportConfigId = 2;
@@ -1821,11 +1822,11 @@ rrc_eNB_process_RRCConnectionReestablishmentComplete(
   ReportConfig_A1->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.choice.eventA1.
   a1_Threshold.present = LTE_ThresholdEUTRA_PR_threshold_RSRP;
   ReportConfig_A1->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.choice.eventA1.
-  a1_Threshold.choice.threshold_RSRP = 10;
+  a1_Threshold.choice.threshold_RSRP = meas_data->event2_config.threshold_RSRP;
   ReportConfig_A1->reportConfig.choice.reportConfigEUTRA.triggerQuantity = LTE_ReportConfigEUTRA__triggerQuantity_rsrp;
   ReportConfig_A1->reportConfig.choice.reportConfigEUTRA.reportQuantity = LTE_ReportConfigEUTRA__reportQuantity_both;
-  ReportConfig_A1->reportConfig.choice.reportConfigEUTRA.maxReportCells = 2;
-  ReportConfig_A1->reportConfig.choice.reportConfigEUTRA.reportInterval = LTE_ReportInterval_ms120;
+  ReportConfig_A1->reportConfig.choice.reportConfigEUTRA.maxReportCells = meas_data->event2_config.maxReportCells;
+  ReportConfig_A1->reportConfig.choice.reportConfigEUTRA.reportInterval = meas_data->event2_config.reportInterval;
   ReportConfig_A1->reportConfig.choice.reportConfigEUTRA.reportAmount = LTE_ReportConfigEUTRA__reportAmount_infinity;
   ASN_SEQUENCE_ADD(&ReportConfig_list->list, ReportConfig_A1);
 
@@ -1841,12 +1842,12 @@ rrc_eNB_process_RRCConnectionReestablishmentComplete(
     ReportConfig_A2->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.choice.
     eventA2.a2_Threshold.present = LTE_ThresholdEUTRA_PR_threshold_RSRP;
     ReportConfig_A2->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.choice.
-    eventA2.a2_Threshold.choice.threshold_RSRP = 10;
+    eventA2.a2_Threshold.choice.threshold_RSRP = meas_data->event3_config.threshold_RSRP;
     ReportConfig_A2->reportConfig.choice.reportConfigEUTRA.triggerQuantity =
       LTE_ReportConfigEUTRA__triggerQuantity_rsrp;
     ReportConfig_A2->reportConfig.choice.reportConfigEUTRA.reportQuantity = LTE_ReportConfigEUTRA__reportQuantity_both;
-    ReportConfig_A2->reportConfig.choice.reportConfigEUTRA.maxReportCells = 2;
-    ReportConfig_A2->reportConfig.choice.reportConfigEUTRA.reportInterval = LTE_ReportInterval_ms120;
+    ReportConfig_A2->reportConfig.choice.reportConfigEUTRA.maxReportCells = meas_data->event3_config.maxReportCells;
+    ReportConfig_A2->reportConfig.choice.reportConfigEUTRA.reportInterval = meas_data->event3_config.reportInterval;
     ReportConfig_A2->reportConfig.choice.reportConfigEUTRA.reportAmount = LTE_ReportConfigEUTRA__reportAmount_infinity;
     ASN_SEQUENCE_ADD(&ReportConfig_list->list, ReportConfig_A2);
     ReportConfig_A3->reportConfigId = 4;
@@ -1855,18 +1856,18 @@ rrc_eNB_process_RRCConnectionReestablishmentComplete(
       LTE_ReportConfigEUTRA__triggerType_PR_event;
     ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.present =
       LTE_ReportConfigEUTRA__triggerType__event__eventId_PR_eventA3;
-    ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.choice.eventA3.a3_Offset = 1;   //10;
+    ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.choice.eventA3.a3_Offset = meas_data->event4_config.a3_Offset;   //10;
     ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.choice.
     eventA3.reportOnLeave = 1;
     ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.triggerQuantity =
       LTE_ReportConfigEUTRA__triggerQuantity_rsrp;
     ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.reportQuantity = LTE_ReportConfigEUTRA__reportQuantity_both;
-    ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.maxReportCells = 2;
-    ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.reportInterval = LTE_ReportInterval_ms120;
+    ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.maxReportCells = meas_data->event4_config.maxReportCells;
+    ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.reportInterval = meas_data->event4_config.reportInterval;
     ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.reportAmount = LTE_ReportConfigEUTRA__reportAmount_infinity;
-    ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.hysteresis = 0.5; // FIXME ...hysteresis is of type long!
+    ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.hysteresis = meas_data->event4_config.hysteresis; // FIXME ...hysteresis is of type long!
     ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.timeToTrigger =
-      LTE_TimeToTrigger_ms40;
+      meas_data->event4_config.timeToTrigger;
     ASN_SEQUENCE_ADD(&ReportConfig_list->list, ReportConfig_A3);
     ReportConfig_A4->reportConfigId = 5;
     ReportConfig_A4->reportConfig.present = LTE_ReportConfigToAddMod__reportConfig_PR_reportConfigEUTRA;
@@ -1877,12 +1878,12 @@ rrc_eNB_process_RRCConnectionReestablishmentComplete(
     ReportConfig_A4->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.choice.
     eventA4.a4_Threshold.present = LTE_ThresholdEUTRA_PR_threshold_RSRP;
     ReportConfig_A4->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.choice.
-    eventA4.a4_Threshold.choice.threshold_RSRP = 10;
+    eventA4.a4_Threshold.choice.threshold_RSRP = meas_data->event5_config.threshold_RSRP;
     ReportConfig_A4->reportConfig.choice.reportConfigEUTRA.triggerQuantity =
       LTE_ReportConfigEUTRA__triggerQuantity_rsrp;
     ReportConfig_A4->reportConfig.choice.reportConfigEUTRA.reportQuantity = LTE_ReportConfigEUTRA__reportQuantity_both;
-    ReportConfig_A4->reportConfig.choice.reportConfigEUTRA.maxReportCells = 2;
-    ReportConfig_A4->reportConfig.choice.reportConfigEUTRA.reportInterval = LTE_ReportInterval_ms120;
+    ReportConfig_A4->reportConfig.choice.reportConfigEUTRA.maxReportCells = meas_data->event5_config.maxReportCells;
+    ReportConfig_A4->reportConfig.choice.reportConfigEUTRA.reportInterval = meas_data->event5_config.reportInterval;
     ReportConfig_A4->reportConfig.choice.reportConfigEUTRA.reportAmount = LTE_ReportConfigEUTRA__reportAmount_infinity;
     ASN_SEQUENCE_ADD(&ReportConfig_list->list, ReportConfig_A4);
     ReportConfig_A5->reportConfigId = 6;
@@ -1896,14 +1897,14 @@ rrc_eNB_process_RRCConnectionReestablishmentComplete(
     ReportConfig_A5->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.choice.
     eventA5.a5_Threshold2.present = LTE_ThresholdEUTRA_PR_threshold_RSRP;
     ReportConfig_A5->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.choice.
-    eventA5.a5_Threshold1.choice.threshold_RSRP = 10;
+    eventA5.a5_Threshold1.choice.threshold_RSRP = meas_data->event6_config.threshold_RSRP;
     ReportConfig_A5->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.choice.
-    eventA5.a5_Threshold2.choice.threshold_RSRP = 10;
+    eventA5.a5_Threshold2.choice.threshold_RSRP = meas_data->event6_config.threshold_RSRP;
     ReportConfig_A5->reportConfig.choice.reportConfigEUTRA.triggerQuantity =
       LTE_ReportConfigEUTRA__triggerQuantity_rsrp;
     ReportConfig_A5->reportConfig.choice.reportConfigEUTRA.reportQuantity = LTE_ReportConfigEUTRA__reportQuantity_both;
-    ReportConfig_A5->reportConfig.choice.reportConfigEUTRA.maxReportCells = 2;
-    ReportConfig_A5->reportConfig.choice.reportConfigEUTRA.reportInterval = LTE_ReportInterval_ms120;
+    ReportConfig_A5->reportConfig.choice.reportConfigEUTRA.maxReportCells = meas_data->event6_config.maxReportCells;
+    ReportConfig_A5->reportConfig.choice.reportConfigEUTRA.reportInterval = meas_data->event6_config.reportInterval;
     ReportConfig_A5->reportConfig.choice.reportConfigEUTRA.reportAmount = LTE_ReportConfigEUTRA__reportAmount_infinity;
     ASN_SEQUENCE_ADD(&ReportConfig_list->list, ReportConfig_A5);
     //  LTE_RRCConnectionReconfiguration->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r8.measConfig->reportConfigToAddModList = ReportConfig_list;
@@ -2907,6 +2908,7 @@ void rrc_eNB_generate_defaultRRCConnectionReconfiguration(const protocol_ctxt_t 
   
   /* Configure SRB1/SRB2, PhysicalConfigDedicated, LTE_MAC_MainConfig for UE */
   eNB_RRC_INST                           *rrc_inst = RC.rrc[ctxt_pP->module_id];
+  rrc_eNB_measurement_data_t             *meas_data = &RC.rrc[ctxt_pP->module_id]->measurement;
   struct LTE_PhysicalConfigDedicated    **physicalConfigDedicated = &ue_context_pP->ue_context.physicalConfigDedicated;
   struct LTE_SRB_ToAddMod                *SRB2_config                      = NULL;
   struct LTE_SRB_ToAddMod__rlc_Config    *SRB2_rlc_config                  = NULL;
@@ -3303,7 +3305,7 @@ void rrc_eNB_generate_defaultRRCConnectionReconfiguration(const protocol_ctxt_t 
       to_earfcn_DL(RC.rrc[ctxt_pP->module_id]->configuration.eutra_band[0],
                    RC.rrc[ctxt_pP->module_id]->configuration.downlink_frequency[0],
                    RC.rrc[ctxt_pP->module_id]->configuration.N_RB_DL[0]);
-  MeasObj->measObject.choice.measObjectEUTRA.allowedMeasBandwidth = LTE_AllowedMeasBandwidth_mbw25;
+  MeasObj->measObject.choice.measObjectEUTRA.allowedMeasBandwidth = meas_data->allowedMeasBandwidth;
   MeasObj->measObject.choice.measObjectEUTRA.presenceAntennaPort1 = 1;
   MeasObj->measObject.choice.measObjectEUTRA.neighCellConfig.buf = CALLOC(1, sizeof(uint8_t));
   MeasObj->measObject.choice.measObjectEUTRA.neighCellConfig.buf[0] = 0;
@@ -3358,8 +3360,8 @@ void rrc_eNB_generate_defaultRRCConnectionReconfiguration(const protocol_ctxt_t 
     LTE_ReportConfigEUTRA__triggerType__periodical__purpose_reportStrongestCells;
   ReportConfig_per->reportConfig.choice.reportConfigEUTRA.triggerQuantity = LTE_ReportConfigEUTRA__triggerQuantity_rsrp;
   ReportConfig_per->reportConfig.choice.reportConfigEUTRA.reportQuantity = LTE_ReportConfigEUTRA__reportQuantity_both;
-  ReportConfig_per->reportConfig.choice.reportConfigEUTRA.maxReportCells = 2;
-  ReportConfig_per->reportConfig.choice.reportConfigEUTRA.reportInterval = LTE_ReportInterval_ms120;
+  ReportConfig_per->reportConfig.choice.reportConfigEUTRA.maxReportCells = meas_data->event1_config.maxReportCells;
+  ReportConfig_per->reportConfig.choice.reportConfigEUTRA.reportInterval = meas_data->event1_config.reportInterval;
   ReportConfig_per->reportConfig.choice.reportConfigEUTRA.reportAmount = LTE_ReportConfigEUTRA__reportAmount_infinity;
   ASN_SEQUENCE_ADD(&ReportConfig_list->list, ReportConfig_per);
   ReportConfig_A1->reportConfigId = 2;
@@ -3371,11 +3373,11 @@ void rrc_eNB_generate_defaultRRCConnectionReconfiguration(const protocol_ctxt_t 
   ReportConfig_A1->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.choice.eventA1.
   a1_Threshold.present = LTE_ThresholdEUTRA_PR_threshold_RSRP;
   ReportConfig_A1->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.choice.eventA1.
-  a1_Threshold.choice.threshold_RSRP = 10;
+  a1_Threshold.choice.threshold_RSRP = meas_data->event2_config.threshold_RSRP;
   ReportConfig_A1->reportConfig.choice.reportConfigEUTRA.triggerQuantity = LTE_ReportConfigEUTRA__triggerQuantity_rsrp;
   ReportConfig_A1->reportConfig.choice.reportConfigEUTRA.reportQuantity = LTE_ReportConfigEUTRA__reportQuantity_both;
-  ReportConfig_A1->reportConfig.choice.reportConfigEUTRA.maxReportCells = 2;
-  ReportConfig_A1->reportConfig.choice.reportConfigEUTRA.reportInterval = LTE_ReportInterval_ms120;
+  ReportConfig_A1->reportConfig.choice.reportConfigEUTRA.maxReportCells = meas_data->event2_config.maxReportCells;
+  ReportConfig_A1->reportConfig.choice.reportConfigEUTRA.reportInterval = meas_data->event2_config.reportInterval;
   ReportConfig_A1->reportConfig.choice.reportConfigEUTRA.reportAmount = LTE_ReportConfigEUTRA__reportAmount_infinity;
   ASN_SEQUENCE_ADD(&ReportConfig_list->list, ReportConfig_A1);
   //if (ho_state == 1 /*HO_MEASURMENT */ ) {
@@ -3390,12 +3392,12 @@ void rrc_eNB_generate_defaultRRCConnectionReconfiguration(const protocol_ctxt_t 
   ReportConfig_A2->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.choice.
   eventA2.a2_Threshold.present = LTE_ThresholdEUTRA_PR_threshold_RSRP;
   ReportConfig_A2->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.choice.
-  eventA2.a2_Threshold.choice.threshold_RSRP = 10;
+  eventA2.a2_Threshold.choice.threshold_RSRP = meas_data->event3_config.threshold_RSRP;
   ReportConfig_A2->reportConfig.choice.reportConfigEUTRA.triggerQuantity =
     LTE_ReportConfigEUTRA__triggerQuantity_rsrp;
   ReportConfig_A2->reportConfig.choice.reportConfigEUTRA.reportQuantity = LTE_ReportConfigEUTRA__reportQuantity_both;
-  ReportConfig_A2->reportConfig.choice.reportConfigEUTRA.maxReportCells = 2;
-  ReportConfig_A2->reportConfig.choice.reportConfigEUTRA.reportInterval = LTE_ReportInterval_ms120;
+  ReportConfig_A2->reportConfig.choice.reportConfigEUTRA.maxReportCells = meas_data->event3_config.maxReportCells;
+  ReportConfig_A2->reportConfig.choice.reportConfigEUTRA.reportInterval = meas_data->event3_config.reportInterval;
   ReportConfig_A2->reportConfig.choice.reportConfigEUTRA.reportAmount = LTE_ReportConfigEUTRA__reportAmount_infinity;
   ASN_SEQUENCE_ADD(&ReportConfig_list->list, ReportConfig_A2);
   ReportConfig_A3->reportConfigId = 4;
@@ -3404,18 +3406,18 @@ void rrc_eNB_generate_defaultRRCConnectionReconfiguration(const protocol_ctxt_t 
     LTE_ReportConfigEUTRA__triggerType_PR_event;
   ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.present =
     LTE_ReportConfigEUTRA__triggerType__event__eventId_PR_eventA3;
-  ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.choice.eventA3.a3_Offset = 0;   //10;
+  ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.choice.eventA3.a3_Offset = meas_data->event4_config.a3_Offset;   //10;
   ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.choice.
   eventA3.reportOnLeave = 1;
   ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.triggerQuantity =
     LTE_ReportConfigEUTRA__triggerQuantity_rsrp;
   ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.reportQuantity = LTE_ReportConfigEUTRA__reportQuantity_both;
-  ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.maxReportCells = 2;
-  ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.reportInterval = LTE_ReportInterval_ms120;
+  ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.maxReportCells = meas_data->event4_config.maxReportCells;
+  ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.reportInterval = meas_data->event4_config.reportInterval;
   ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.reportAmount = LTE_ReportConfigEUTRA__reportAmount_infinity;
-  ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.hysteresis = 0; // FIXME ...hysteresis is of type long!
+  ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.hysteresis = meas_data->event4_config.hysteresis; // FIXME ...hysteresis is of type long!
   ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.timeToTrigger =
-    LTE_TimeToTrigger_ms40;
+    meas_data->event4_config.timeToTrigger;
   ASN_SEQUENCE_ADD(&ReportConfig_list->list, ReportConfig_A3);
   ReportConfig_A4->reportConfigId = 5;
   ReportConfig_A4->reportConfig.present = LTE_ReportConfigToAddMod__reportConfig_PR_reportConfigEUTRA;
@@ -3426,12 +3428,12 @@ void rrc_eNB_generate_defaultRRCConnectionReconfiguration(const protocol_ctxt_t 
   ReportConfig_A4->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.choice.
   eventA4.a4_Threshold.present = LTE_ThresholdEUTRA_PR_threshold_RSRP;
   ReportConfig_A4->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.choice.
-  eventA4.a4_Threshold.choice.threshold_RSRP = 10;
+  eventA4.a4_Threshold.choice.threshold_RSRP = meas_data->event5_config.threshold_RSRP;
   ReportConfig_A4->reportConfig.choice.reportConfigEUTRA.triggerQuantity =
     LTE_ReportConfigEUTRA__triggerQuantity_rsrp;
   ReportConfig_A4->reportConfig.choice.reportConfigEUTRA.reportQuantity = LTE_ReportConfigEUTRA__reportQuantity_both;
-  ReportConfig_A4->reportConfig.choice.reportConfigEUTRA.maxReportCells = 2;
-  ReportConfig_A4->reportConfig.choice.reportConfigEUTRA.reportInterval = LTE_ReportInterval_ms120;
+  ReportConfig_A4->reportConfig.choice.reportConfigEUTRA.maxReportCells = meas_data->event5_config.maxReportCells;
+  ReportConfig_A4->reportConfig.choice.reportConfigEUTRA.reportInterval = meas_data->event5_config.reportInterval;
   ReportConfig_A4->reportConfig.choice.reportConfigEUTRA.reportAmount = LTE_ReportConfigEUTRA__reportAmount_infinity;
   ASN_SEQUENCE_ADD(&ReportConfig_list->list, ReportConfig_A4);
   ReportConfig_A5->reportConfigId = 6;
@@ -3445,14 +3447,14 @@ void rrc_eNB_generate_defaultRRCConnectionReconfiguration(const protocol_ctxt_t 
   ReportConfig_A5->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.choice.
   eventA5.a5_Threshold2.present = LTE_ThresholdEUTRA_PR_threshold_RSRP;
   ReportConfig_A5->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.choice.
-  eventA5.a5_Threshold1.choice.threshold_RSRP = 10;
+  eventA5.a5_Threshold1.choice.threshold_RSRP = meas_data->event6_config.threshold_RSRP;
   ReportConfig_A5->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.choice.
-  eventA5.a5_Threshold2.choice.threshold_RSRP = 10;
+  eventA5.a5_Threshold2.choice.threshold_RSRP = meas_data->event6_config.threshold_RSRP;
   ReportConfig_A5->reportConfig.choice.reportConfigEUTRA.triggerQuantity =
     LTE_ReportConfigEUTRA__triggerQuantity_rsrp;
   ReportConfig_A5->reportConfig.choice.reportConfigEUTRA.reportQuantity = LTE_ReportConfigEUTRA__reportQuantity_both;
-  ReportConfig_A5->reportConfig.choice.reportConfigEUTRA.maxReportCells = 2;
-  ReportConfig_A5->reportConfig.choice.reportConfigEUTRA.reportInterval = LTE_ReportInterval_ms120;
+  ReportConfig_A5->reportConfig.choice.reportConfigEUTRA.maxReportCells = meas_data->event6_config.maxReportCells;
+  ReportConfig_A5->reportConfig.choice.reportConfigEUTRA.reportInterval = meas_data->event6_config.reportInterval;
   ReportConfig_A5->reportConfig.choice.reportConfigEUTRA.reportAmount = LTE_ReportConfigEUTRA__reportAmount_infinity;
   ASN_SEQUENCE_ADD(&ReportConfig_list->list, ReportConfig_A5);
   //  LTE_RRCConnectionReconfiguration->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r8.measConfig->reportConfigToAddModList = ReportConfig_list;
@@ -5196,6 +5198,7 @@ rrc_eNB_generate_HO_RRCConnectionReconfiguration(const protocol_ctxt_t *const ct
   uint8_t                             rv[2];
   // configure SRB1/SRB2, PhysicalConfigDedicated, MAC_MainConfig for UE
   eNB_RRC_INST                       *rrc_inst = RC.rrc[ctxt_pP->module_id];
+  rrc_eNB_measurement_data_t         *meas_data = &RC.rrc[ctxt_pP->module_id]->measurement;
   struct LTE_PhysicalConfigDedicated **physicalConfigDedicated = &ue_context_pP->ue_context.physicalConfigDedicated;
   // phy config dedicated
   LTE_PhysicalConfigDedicated_t      *physicalConfigDedicated2;
@@ -5847,7 +5850,7 @@ rrc_eNB_generate_HO_RRCConnectionReconfiguration(const protocol_ctxt_t *const ct
       to_earfcn_DL(RC.rrc[ctxt_pP->module_id]->configuration.eutra_band[0],
                    RC.rrc[ctxt_pP->module_id]->configuration.downlink_frequency[0],
                    RC.rrc[ctxt_pP->module_id]->configuration.N_RB_DL[0]);
-  MeasObj->measObject.choice.measObjectEUTRA.allowedMeasBandwidth = LTE_AllowedMeasBandwidth_mbw25;
+  MeasObj->measObject.choice.measObjectEUTRA.allowedMeasBandwidth = meas_data->allowedMeasBandwidth;
   MeasObj->measObject.choice.measObjectEUTRA.presenceAntennaPort1 = 1;
   MeasObj->measObject.choice.measObjectEUTRA.neighCellConfig.buf = CALLOC(1, sizeof(uint8_t));
   MeasObj->measObject.choice.measObjectEUTRA.neighCellConfig.buf[0] = 0;
@@ -5902,8 +5905,8 @@ rrc_eNB_generate_HO_RRCConnectionReconfiguration(const protocol_ctxt_t *const ct
     LTE_ReportConfigEUTRA__triggerType__periodical__purpose_reportStrongestCells;
   ReportConfig_per->reportConfig.choice.reportConfigEUTRA.triggerQuantity = LTE_ReportConfigEUTRA__triggerQuantity_rsrp;
   ReportConfig_per->reportConfig.choice.reportConfigEUTRA.reportQuantity = LTE_ReportConfigEUTRA__reportQuantity_both;
-  ReportConfig_per->reportConfig.choice.reportConfigEUTRA.maxReportCells = 2;
-  ReportConfig_per->reportConfig.choice.reportConfigEUTRA.reportInterval = LTE_ReportInterval_ms120;
+  ReportConfig_per->reportConfig.choice.reportConfigEUTRA.maxReportCells = meas_data->event1_config.maxReportCells;
+  ReportConfig_per->reportConfig.choice.reportConfigEUTRA.reportInterval = meas_data->event1_config.reportInterval;
   ReportConfig_per->reportConfig.choice.reportConfigEUTRA.reportAmount = LTE_ReportConfigEUTRA__reportAmount_infinity;
   ASN_SEQUENCE_ADD(&ReportConfig_list->list, ReportConfig_per);
   ReportConfig_A1->reportConfigId = 2;
@@ -5915,11 +5918,11 @@ rrc_eNB_generate_HO_RRCConnectionReconfiguration(const protocol_ctxt_t *const ct
   ReportConfig_A1->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.choice.eventA1.
   a1_Threshold.present = LTE_ThresholdEUTRA_PR_threshold_RSRP;
   ReportConfig_A1->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.choice.eventA1.
-  a1_Threshold.choice.threshold_RSRP = 10;
+  a1_Threshold.choice.threshold_RSRP = meas_data->event2_config.threshold_RSRP;
   ReportConfig_A1->reportConfig.choice.reportConfigEUTRA.triggerQuantity = LTE_ReportConfigEUTRA__triggerQuantity_rsrp;
   ReportConfig_A1->reportConfig.choice.reportConfigEUTRA.reportQuantity = LTE_ReportConfigEUTRA__reportQuantity_both;
-  ReportConfig_A1->reportConfig.choice.reportConfigEUTRA.maxReportCells = 2;
-  ReportConfig_A1->reportConfig.choice.reportConfigEUTRA.reportInterval = LTE_ReportInterval_ms120;
+  ReportConfig_A1->reportConfig.choice.reportConfigEUTRA.maxReportCells = meas_data->event2_config.maxReportCells;
+  ReportConfig_A1->reportConfig.choice.reportConfigEUTRA.reportInterval = meas_data->event2_config.reportInterval;
   ReportConfig_A1->reportConfig.choice.reportConfigEUTRA.reportAmount = LTE_ReportConfigEUTRA__reportAmount_infinity;
   ASN_SEQUENCE_ADD(&ReportConfig_list->list, ReportConfig_A1);
   //  if (ho_state == 1 /*HO_MEASUREMENT */ ) {
@@ -5934,12 +5937,12 @@ rrc_eNB_generate_HO_RRCConnectionReconfiguration(const protocol_ctxt_t *const ct
   ReportConfig_A2->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.choice.
   eventA2.a2_Threshold.present = LTE_ThresholdEUTRA_PR_threshold_RSRP;
   ReportConfig_A2->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.choice.
-  eventA2.a2_Threshold.choice.threshold_RSRP = 10;
+  eventA2.a2_Threshold.choice.threshold_RSRP = meas_data->event3_config.threshold_RSRP;
   ReportConfig_A2->reportConfig.choice.reportConfigEUTRA.triggerQuantity =
     LTE_ReportConfigEUTRA__triggerQuantity_rsrp;
   ReportConfig_A2->reportConfig.choice.reportConfigEUTRA.reportQuantity = LTE_ReportConfigEUTRA__reportQuantity_both;
-  ReportConfig_A2->reportConfig.choice.reportConfigEUTRA.maxReportCells = 2;
-  ReportConfig_A2->reportConfig.choice.reportConfigEUTRA.reportInterval = LTE_ReportInterval_ms120;
+  ReportConfig_A2->reportConfig.choice.reportConfigEUTRA.maxReportCells = meas_data->event3_config.maxReportCells;
+  ReportConfig_A2->reportConfig.choice.reportConfigEUTRA.reportInterval = meas_data->event3_config.reportInterval;
   ReportConfig_A2->reportConfig.choice.reportConfigEUTRA.reportAmount = LTE_ReportConfigEUTRA__reportAmount_infinity;
   ASN_SEQUENCE_ADD(&ReportConfig_list->list, ReportConfig_A2);
   ReportConfig_A3->reportConfigId = 4;
@@ -5948,18 +5951,18 @@ rrc_eNB_generate_HO_RRCConnectionReconfiguration(const protocol_ctxt_t *const ct
     LTE_ReportConfigEUTRA__triggerType_PR_event;
   ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.present =
     LTE_ReportConfigEUTRA__triggerType__event__eventId_PR_eventA3;
-  ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.choice.eventA3.a3_Offset = 0;   //10;
+  ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.choice.eventA3.a3_Offset = meas_data->event4_config.a3_Offset;   //10;
   ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.choice.
   eventA3.reportOnLeave = 1;
   ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.triggerQuantity =
     LTE_ReportConfigEUTRA__triggerQuantity_rsrp;
   ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.reportQuantity = LTE_ReportConfigEUTRA__reportQuantity_both;
-  ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.maxReportCells = 2;
-  ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.reportInterval = LTE_ReportInterval_ms120;
+  ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.maxReportCells = meas_data->event4_config.maxReportCells;
+  ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.reportInterval = meas_data->event4_config.reportInterval;
   ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.reportAmount = LTE_ReportConfigEUTRA__reportAmount_infinity;
-  ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.hysteresis = 0; // FIXME ...hysteresis is of type long!
+  ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.hysteresis = meas_data->event4_config.hysteresis; // FIXME ...hysteresis is of type long!
   ReportConfig_A3->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.timeToTrigger =
-    LTE_TimeToTrigger_ms40;
+    meas_data->event4_config.timeToTrigger;
   ASN_SEQUENCE_ADD(&ReportConfig_list->list, ReportConfig_A3);
   ReportConfig_A4->reportConfigId = 5;
   ReportConfig_A4->reportConfig.present = LTE_ReportConfigToAddMod__reportConfig_PR_reportConfigEUTRA;
@@ -5970,12 +5973,12 @@ rrc_eNB_generate_HO_RRCConnectionReconfiguration(const protocol_ctxt_t *const ct
   ReportConfig_A4->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.choice.
   eventA4.a4_Threshold.present = LTE_ThresholdEUTRA_PR_threshold_RSRP;
   ReportConfig_A4->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.choice.
-  eventA4.a4_Threshold.choice.threshold_RSRP = 10;
+  eventA4.a4_Threshold.choice.threshold_RSRP = meas_data->event5_config.threshold_RSRP;
   ReportConfig_A4->reportConfig.choice.reportConfigEUTRA.triggerQuantity =
     LTE_ReportConfigEUTRA__triggerQuantity_rsrp;
   ReportConfig_A4->reportConfig.choice.reportConfigEUTRA.reportQuantity = LTE_ReportConfigEUTRA__reportQuantity_both;
-  ReportConfig_A4->reportConfig.choice.reportConfigEUTRA.maxReportCells = 2;
-  ReportConfig_A4->reportConfig.choice.reportConfigEUTRA.reportInterval = LTE_ReportInterval_ms120;
+  ReportConfig_A4->reportConfig.choice.reportConfigEUTRA.maxReportCells = meas_data->event5_config.maxReportCells;
+  ReportConfig_A4->reportConfig.choice.reportConfigEUTRA.reportInterval = meas_data->event5_config.reportInterval;
   ReportConfig_A4->reportConfig.choice.reportConfigEUTRA.reportAmount = LTE_ReportConfigEUTRA__reportAmount_infinity;
   ASN_SEQUENCE_ADD(&ReportConfig_list->list, ReportConfig_A4);
   ReportConfig_A5->reportConfigId = 6;
@@ -5989,14 +5992,14 @@ rrc_eNB_generate_HO_RRCConnectionReconfiguration(const protocol_ctxt_t *const ct
   ReportConfig_A5->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.choice.
   eventA5.a5_Threshold2.present = LTE_ThresholdEUTRA_PR_threshold_RSRP;
   ReportConfig_A5->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.choice.
-  eventA5.a5_Threshold1.choice.threshold_RSRP = 10;
+  eventA5.a5_Threshold1.choice.threshold_RSRP = meas_data->event6_config.threshold_RSRP;
   ReportConfig_A5->reportConfig.choice.reportConfigEUTRA.triggerType.choice.event.eventId.choice.
-  eventA5.a5_Threshold2.choice.threshold_RSRP = 10;
+  eventA5.a5_Threshold2.choice.threshold_RSRP = meas_data->event6_config.threshold_RSRP;
   ReportConfig_A5->reportConfig.choice.reportConfigEUTRA.triggerQuantity =
     LTE_ReportConfigEUTRA__triggerQuantity_rsrp;
   ReportConfig_A5->reportConfig.choice.reportConfigEUTRA.reportQuantity = LTE_ReportConfigEUTRA__reportQuantity_both;
-  ReportConfig_A5->reportConfig.choice.reportConfigEUTRA.maxReportCells = 2;
-  ReportConfig_A5->reportConfig.choice.reportConfigEUTRA.reportInterval = LTE_ReportInterval_ms120;
+  ReportConfig_A5->reportConfig.choice.reportConfigEUTRA.maxReportCells = meas_data->event6_config.maxReportCells;
+  ReportConfig_A5->reportConfig.choice.reportConfigEUTRA.reportInterval = meas_data->event6_config.reportInterval;
   ReportConfig_A5->reportConfig.choice.reportConfigEUTRA.reportAmount = LTE_ReportConfigEUTRA__reportAmount_infinity;
   ASN_SEQUENCE_ADD(&ReportConfig_list->list, ReportConfig_A5);
   //  rrcConnectionReconfiguration->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r8.measConfig->reportConfigToAddModList = ReportConfig_list;
