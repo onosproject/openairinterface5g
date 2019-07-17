@@ -255,3 +255,17 @@ x2ap_eNB_data_t  * x2ap_is_eNB_assoc_id_in_list (const uint32_t sctp_assoc_id)
   }
   return NULL;
 }
+
+void x2ap_remove_eNB(x2ap_eNB_instance_t *instance_p,x2ap_eNB_data_t *x2ap_enb_data_p) {
+  printf("x2ap_remove_eNB  (removing)\n");
+  if (instance_p == NULL) {
+    STAILQ_FOREACH(instance_p, &x2ap_eNB_internal_data.x2ap_eNB_instances_head,
+                   x2ap_eNB_entries) {
+      RB_REMOVE(x2ap_enb_map, &instance_p->x2ap_enb_head, x2ap_enb_data_p);
+    }
+  } else {
+    RB_REMOVE(x2ap_enb_map, &instance_p->x2ap_enb_head, x2ap_enb_data_p);
+  }
+  free(x2ap_enb_data_p);
+
+}
