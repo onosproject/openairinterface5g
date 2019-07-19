@@ -126,6 +126,7 @@ extern int16_t nr_dlsch_demod_shift;
 int UE_scan = 0;
 int UE_scan_carrier = 0;
 int UE_fo_compensation = 0;
+int SSB_measurements = 0;
 runmode_t mode = normal_txrx;
 openair0_config_t openair0_cfg[MAX_CARDS];
 
@@ -753,6 +754,7 @@ int main( int argc, char **argv ) {
     UE[CC_id]->UE_scan = UE_scan;
     UE[CC_id]->UE_scan_carrier = UE_scan_carrier;
     UE[CC_id]->UE_fo_compensation = UE_fo_compensation;
+    UE[CC_id]->SSB_measurements = SSB_measurements;
     UE[CC_id]->mode    = mode;
     printf("UE[%d]->mode = %d\n",CC_id,mode);
 

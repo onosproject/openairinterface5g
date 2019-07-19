@@ -53,6 +53,7 @@
 #define CONFIG_HLP_UENANTT       "set UE number of tx antennas\n"
 #define CONFIG_HLP_UESCAN        "set UE to scan around carrier\n"
 #define CONFIG_HLP_UEFO          "set UE to enable estimation and compensation of frequency offset\n"
+#define CONFIG_HLP_SSBMEAS       "set UE to enable measurements of multiple SSB received power\n"
 #define CONFIG_HLP_DUMPFRAME     "dump UE received frame to rxsig_frame0.dat and exit\n"
 #define CONFIG_HLP_DLSHIFT       "dynamic shift for LLR compuation for TM3/4 (default 0)\n"
 #define CONFIG_HLP_UELOOP        "get softmodem (UE) to loop through memory instead of acquiring from HW\n"

@@ -887,6 +887,8 @@ typedef struct {
   int UE_scan_carrier;
   /// \brief Indicator that UE should enable estimation and compensation of frequency offset
   int UE_fo_compensation;
+  /// \brief Indicator that UE should enable multiple SSB power measurements
+  int SSB_measurements;
   /// \brief Indicator that UE is synchronized to a gNB
   int is_synchronized;
   /// \brief Indicates on which frame is synchronized in a two frame synchronization
