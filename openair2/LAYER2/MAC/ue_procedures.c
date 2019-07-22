@@ -3626,14 +3626,14 @@ SLSCH_t *ue_get_slsch(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_
                     	 LOG_D(MAC,"absSF_offset %d (test %d): Checking status (%d,Dest %d) => LCID %d => %d bytes\n",absSF_offset,slsch_test,ue->sourceL2Id,ue->sl_info[i].destinationL2Id,ue->sl_info[i].LCID,rlc_status.bytes_in_buffer);
                         if (rlc_status.bytes_in_buffer > 2 || slsch_test == 1){
                            if (slsch_test == 1 && rlc_status.bytes_in_buffer <= 2) rlc_status.bytes_in_buffer = 300;
-                           LOG_I(MAC,"SFN.SF %d.%d: Scheduling for %d bytes in Sidelink buffer \n",frameP,subframeP,rlc_status.bytes_in_buffer);
+                           LOG_D(MAC,"SFN.SF %d.%d: Scheduling for %d bytes in Sidelink buffer \n",frameP,subframeP,rlc_status.bytes_in_buffer);
 
                            // Fill in group id for off-network communications
                            ue->sltx_active = 1;
                            //store LCID, destinationL2Id
                            ue->slsch_lcid =  ue->sl_info[i].LCID;
                            ue->destinationL2Id = ue->sl_info[i].destinationL2Id;
-                           LOG_I(MAC,"LCID %d, source L2ID  0x%08x, destinationL2Id: 0x%08x \n",ue->slsch_lcid, ue->sourceL2Id, ue->destinationL2Id);
+                           LOG_D(MAC,"LCID %d, source L2ID  0x%08x, destinationL2Id: 0x%08x \n",ue->slsch_lcid, ue->sourceL2Id, ue->destinationL2Id);
                            break;
                         }
                      }
