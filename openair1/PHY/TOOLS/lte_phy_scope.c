@@ -3,7 +3,7 @@
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.0  (the "License"); you may not use this file
+ * the OAI Public License, Version 1.1  (the "License"); you may not use this file
  * except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -23,6 +23,8 @@
 
 #include <stdlib.h>
 #include "lte_phy_scope.h"
+#include "PHY/defs_common.h"
+#include "PHY/LTE_UE_TRANSPORT/transport_proto_ue.h"
 
 #define TPUT_WINDOW_LENGTH 100
 int otg_enabled;
@@ -152,7 +154,7 @@ void phy_scope_eNB(FD_lte_phy_scope_enb *form,
                    PHY_VARS_eNB *phy_vars_enb,
                    int UE_id)
 {
-  int eNB_id = 0;
+
   int i,i2,arx,atx,ind,k;
   LTE_DL_FRAME_PARMS *frame_parms = &phy_vars_enb->frame_parms;
   int nsymb_ce = 12*frame_parms->N_RB_UL*frame_parms->symbols_per_tti;
@@ -162,7 +164,7 @@ void phy_scope_eNB(FD_lte_phy_scope_enb *form,
   int16_t **chest_t;
   int16_t **chest_f;
   int16_t *pusch_llr;
-  int16_t *pusch_comp;
+  int32_t *pusch_comp;
   int32_t *pucch1_comp;
   int32_t *pucch1_thres;
   int32_t *pucch1ab_comp;
@@ -176,38 +178,38 @@ void phy_scope_eNB(FD_lte_phy_scope_enb *form,
   float time[FRAME_LENGTH_COMPLEX_SAMPLES];
   float time2[2048];
   float freq[nsymb_ce*nb_antennas_rx*nb_antennas_tx];
-  int frame = phy_vars_enb->proc.proc_rxtx[0].frame_tx;
+  int frame = phy_vars_enb->proc.L1_proc.frame_tx;
   uint32_t total_dlsch_bitrate = phy_vars_enb->total_dlsch_bitrate;
   int coded_bits_per_codeword = 0;
   uint8_t harq_pid; // in TDD config 3 it is sf-2, i.e., can be 0,1,2
-  int mcs = 0;
+  int Qm = 2;
 
   // choose max MCS to compute coded_bits_per_codeword
   if (phy_vars_enb->ulsch[UE_id]!=NULL) {
     for (harq_pid=0; harq_pid<3; harq_pid++) {
-      mcs = cmax(phy_vars_enb->ulsch[UE_id]->harq_processes[harq_pid]->mcs,mcs);
+      Qm = cmax(phy_vars_enb->ulsch[UE_id]->harq_processes[harq_pid]->Qm,Qm);
     }
   }
 
-  coded_bits_per_codeword = frame_parms->N_RB_UL*12*get_Qm(mcs)*frame_parms->symbols_per_tti;
+  coded_bits_per_codeword = frame_parms->N_RB_UL*12*Qm*frame_parms->symbols_per_tti;
 
   chest_f_abs = (float*) calloc(nsymb_ce*nb_antennas_rx*nb_antennas_tx,sizeof(float));
   llr = (float*) calloc(coded_bits_per_codeword,sizeof(float)); // init to zero
   bit = malloc(coded_bits_per_codeword*sizeof(float));
 
-  rxsig_t = (int16_t**) phy_vars_enb->common_vars.rxdata[eNB_id];
+  rxsig_t = (int16_t**) phy_vars_enb->RU_list[0]->common.rxdata;
   //chest_t = (int16_t**) phy_vars_enb->pusch_vars[UE_id]->drs_ch_estimates_time[eNB_id];
-  chest_t = (int16_t**) phy_vars_enb->srs_vars[UE_id].srs_ch_estimates[eNB_id];
-  chest_f = (int16_t**) phy_vars_enb->pusch_vars[UE_id]->drs_ch_estimates[eNB_id];
+  chest_t = (int16_t**) phy_vars_enb->srs_vars[UE_id].srs_ch_estimates;
+  chest_f = (int16_t**) phy_vars_enb->pusch_vars[UE_id]->drs_ch_estimates;
   pusch_llr = (int16_t*) phy_vars_enb->pusch_vars[UE_id]->llr;
-  pusch_comp = (int16_t*) phy_vars_enb->pusch_vars[UE_id]->rxdataF_comp[eNB_id][0];
+  pusch_comp = (int32_t*) phy_vars_enb->pusch_vars[UE_id]->rxdataF_comp[0];
   pucch1_comp = (int32_t*) phy_vars_enb->pucch1_stats[UE_id];
   pucch1_thres = (int32_t*) phy_vars_enb->pucch1_stats_thres[UE_id];
   pucch1ab_comp = (int32_t*) phy_vars_enb->pucch1ab_stats[UE_id];
 
   // Received signal in time domain of receive antenna 0
   if (rxsig_t != NULL) {
-    if (rxsig_t[0] != NULL) {
+    if (rxsig_t[0] != NULL ) {
       for (i=0; i<FRAME_LENGTH_COMPLEX_SAMPLES; i++) {
         rxsig_t_dB[0][i] = 10*log10(1.0+(float) ((rxsig_t[0][2*i])*(rxsig_t[0][2*i])+(rxsig_t[0][2*i+1])*(rxsig_t[0][2*i+1])));
         time[i] = (float) i;
@@ -514,32 +516,32 @@ void phy_scope_UE(FD_lte_phy_scope_ue *form,
   int beamforming_mode = phy_vars_ue->transmission_mode[eNB_id]>6 ? phy_vars_ue->transmission_mode[eNB_id] : 0;
 
 
-  if (phy_vars_ue->dlsch[subframe&0x1][eNB_id][0]!=NULL) {
-    harq_pid = phy_vars_ue->dlsch[subframe&0x1][eNB_id][0]->current_harq_pid;
+  if (phy_vars_ue->dlsch[phy_vars_ue->current_thread_id[subframe]][eNB_id][0]!=NULL) {
+    harq_pid = phy_vars_ue->dlsch[phy_vars_ue->current_thread_id[subframe]][eNB_id][0]->current_harq_pid;
 
     if (harq_pid>=8)
       return;
 
-    mcs = phy_vars_ue->dlsch[subframe&0x1][eNB_id][0]->harq_processes[harq_pid]->mcs;
+    mcs = phy_vars_ue->dlsch[phy_vars_ue->current_thread_id[subframe]][eNB_id][0]->harq_processes[harq_pid]->mcs;
 
     // Button 0
-    if(!phy_vars_ue->dlsch[subframe&0x1][eNB_id][0]->harq_processes[harq_pid]->dl_power_off) {
+    if(!phy_vars_ue->dlsch[phy_vars_ue->current_thread_id[subframe]][eNB_id][0]->harq_processes[harq_pid]->dl_power_off) {
       // we are in TM5
       fl_show_object(form->button_0);
     }
   }
 
-  if (phy_vars_ue->pdcch_vars[subframe&0x1][eNB_id]!=NULL) {
-    num_pdcch_symbols = phy_vars_ue->pdcch_vars[subframe&0x1][eNB_id]->num_pdcch_symbols;
+  if (phy_vars_ue->pdcch_vars[phy_vars_ue->current_thread_id[subframe]][eNB_id]!=NULL) {
+    num_pdcch_symbols = phy_vars_ue->pdcch_vars[phy_vars_ue->current_thread_id[subframe]][eNB_id]->num_pdcch_symbols;
   }
 
   //    coded_bits_per_codeword = frame_parms->N_RB_DL*12*get_Qm(mcs)*(frame_parms->symbols_per_tti);
-  if (phy_vars_ue->dlsch[subframe&0x1][eNB_id][0]!=NULL) {
+  if (phy_vars_ue->dlsch[phy_vars_ue->current_thread_id[subframe]][eNB_id][0]!=NULL) {
     coded_bits_per_codeword = get_G(frame_parms,
-                                    phy_vars_ue->dlsch[subframe&0x1][eNB_id][0]->harq_processes[harq_pid]->nb_rb,
-                                    phy_vars_ue->dlsch[subframe&0x1][eNB_id][0]->harq_processes[harq_pid]->rb_alloc_even,
+                                    phy_vars_ue->dlsch[phy_vars_ue->current_thread_id[subframe]][eNB_id][0]->harq_processes[harq_pid]->nb_rb,
+                                    phy_vars_ue->dlsch[phy_vars_ue->current_thread_id[subframe]][eNB_id][0]->harq_processes[harq_pid]->rb_alloc_even,
                                     get_Qm(mcs),
-                                    phy_vars_ue->dlsch[subframe&0x1][eNB_id][0]->harq_processes[harq_pid]->Nl,
+                                    phy_vars_ue->dlsch[phy_vars_ue->current_thread_id[subframe]][eNB_id][0]->harq_processes[harq_pid]->Nl,
                                     num_pdcch_symbols,
                                     frame,
                                     subframe,
@@ -563,16 +565,16 @@ void phy_scope_UE(FD_lte_phy_scope_ue *form,
   bit_pdcch = (float*) calloc(12*frame_parms->N_RB_DL*num_pdcch_symbols*2,sizeof(float));
 
   rxsig_t = (int16_t**) phy_vars_ue->common_vars.rxdata;
-  chest_t = (int16_t**) phy_vars_ue->common_vars.common_vars_rx_data_per_thread[subframe&0x1].dl_ch_estimates_time[eNB_id];
-  chest_f = (int16_t**) phy_vars_ue->common_vars.common_vars_rx_data_per_thread[subframe&0x1].dl_ch_estimates[eNB_id];
+  chest_t = (int16_t**) phy_vars_ue->common_vars.common_vars_rx_data_per_thread[phy_vars_ue->current_thread_id[subframe]].dl_ch_estimates_time[eNB_id];
+  chest_f = (int16_t**) phy_vars_ue->common_vars.common_vars_rx_data_per_thread[phy_vars_ue->current_thread_id[subframe]].dl_ch_estimates[eNB_id];
   pbch_llr = (int8_t*) phy_vars_ue->pbch_vars[eNB_id]->llr;
   pbch_comp = (int16_t*) phy_vars_ue->pbch_vars[eNB_id]->rxdataF_comp[0];
-  pdcch_llr = (int8_t*) phy_vars_ue->pdcch_vars[subframe&0x1][eNB_id]->llr;
-  pdcch_comp = (int16_t*) phy_vars_ue->pdcch_vars[subframe&0x1][eNB_id]->rxdataF_comp[0];
-  pdsch_llr = (int16_t*) phy_vars_ue->pdsch_vars[subframe&0x1][eNB_id]->llr[0]; // stream 0
+  pdcch_llr = (int8_t*) phy_vars_ue->pdcch_vars[phy_vars_ue->current_thread_id[subframe]][eNB_id]->llr;
+  pdcch_comp = (int16_t*) phy_vars_ue->pdcch_vars[phy_vars_ue->current_thread_id[subframe]][eNB_id]->rxdataF_comp[0];
+  pdsch_llr = (int16_t*) phy_vars_ue->pdsch_vars[phy_vars_ue->current_thread_id[subframe]][eNB_id]->llr[0]; // stream 0
   //    pdsch_llr = (int16_t*) phy_vars_ue->lte_ue_pdsch_vars_SI[eNB_id]->llr[0]; // stream 0
-  pdsch_comp = (int16_t*) phy_vars_ue->pdsch_vars[subframe&0x1][eNB_id]->rxdataF_comp0[0];
-  pdsch_mag = (int16_t*) phy_vars_ue->pdsch_vars[subframe&0x1][eNB_id]->dl_ch_mag0[0];
+  pdsch_comp = (int16_t*) phy_vars_ue->pdsch_vars[phy_vars_ue->current_thread_id[subframe]][eNB_id]->rxdataF_comp0[0];
+  pdsch_mag = (int16_t*) phy_vars_ue->pdsch_vars[phy_vars_ue->current_thread_id[subframe]][eNB_id]->dl_ch_mag0[0];
 
   // Received signal in time domain of receive antenna 0
   if (rxsig_t != NULL) {

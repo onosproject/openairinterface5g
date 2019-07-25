@@ -3,7 +3,7 @@
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.0  (the "License"); you may not use this file
+ * the OAI Public License, Version 1.1  (the "License"); you may not use this file
  * except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -40,6 +40,10 @@ rlc_op_status_t mpls_rlc_data_req     (
 {
   //-----------------------------------------------------------------------------
   // third arg should be set to 1 or 0
-  return rlc_data_req(ctxtP, SRB_FLAG_NO, MBMS_FLAG_NO, rb_idP, RLC_MUI_UNDEFINED, RLC_SDU_CONFIRM_NO, sdu_sizeP, sduP);
+  return rlc_data_req(ctxtP, SRB_FLAG_NO, MBMS_FLAG_NO, rb_idP, RLC_MUI_UNDEFINED, RLC_SDU_CONFIRM_NO, sdu_sizeP, sduP
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
+                      ,NULL, NULL
+#endif
+                      );
 }
 

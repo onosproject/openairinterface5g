@@ -3,7 +3,7 @@
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.0  (the "License"); you may not use this file
+ * the OAI Public License, Version 1.1  (the "License"); you may not use this file
  * except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -193,7 +193,7 @@ int trx_lms_start(openair0_device *device){
         LMS_EnableChannel(lms_device,LMS_CH_RX,1,true);
         LMS_EnableChannel(lms_device,LMS_CH_TX,1,true);
     } */
-    LMS_VCTCXOWrite(lms_device,129);
+    LMS_VCTCXOWrite(lms_device, 129);
 
     if (LMS_SetSampleRate(lms_device,device->openair0_cfg->sample_rate,2)!=0)
     {
@@ -357,8 +357,9 @@ extern "C" {
 int device_init(openair0_device *device, openair0_config_t *openair0_cfg){
 
   device->type=LMSSDR_DEV;
-  printf("LMSSDR: Initializing openair0_device for %s ...\n", ((device->host_type == BBU_HOST) ? "BBU": "RRH"));
-  openair0_cfg[0].iq_txshift = 0;
+
+  printf("LMSSDR: Initializing openair0_device for %s ...\n", ((device->host_type == RAU_HOST) ? "RAU": "RRU"));
+
   switch ((int)openair0_cfg[0].sample_rate) {
   case 30720000:
     // from usrp_time_offset

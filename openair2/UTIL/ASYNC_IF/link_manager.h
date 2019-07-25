@@ -3,7 +3,7 @@
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.0  (the "License"); you may not use this file
+ * the OAI Public License, Version 1.1  (the "License"); you may not use this file
  * except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -31,8 +31,8 @@
 #ifndef LINK_MANAGER_H
 #define LINK_MANAGER_H
 
-//#include "message_queue.h"
-#include "ringbuffer_queue.h"
+#include "message_queue.h"
+//#include "ringbuffer_queue.h"
 #include "socket_link.h"
 
 #include <pthread.h>
@@ -45,6 +45,8 @@ typedef struct {
   message_queue_t *send_queue;
   message_queue_t *receive_queue;
   socket_link_t   *socket_link;
+  const char      *peer_addr; /* for UDP server remote IP */
+  int             peer_port;  /* for UDP server remote address */
   pthread_t       sender;
   pthread_t       receiver;
   volatile int    run;
@@ -54,6 +56,7 @@ link_manager_t *create_link_manager(
         message_queue_t *send_queue,
         message_queue_t *receive_queue,
         socket_link_t   *link);
+
 void destroy_link_manager(link_manager_t *);
 
 #ifdef __cplusplus

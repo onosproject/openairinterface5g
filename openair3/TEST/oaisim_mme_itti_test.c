@@ -3,7 +3,7 @@
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.0  (the "License"); you may not use this file
+ * the OAI Public License, Version 1.1  (the "License"); you may not use this file
  * except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -32,13 +32,12 @@
 #include "mme_config.h"
 #include "gtpv1u_sgw_defs.h"
 
-#include "intertask_interface_init.h"
+#include "intertask_interface.h"
 
 #include "sctp_primitives_server.h"
 #include "udp_primitives_server.h"
 #include "s1ap_mme.h"
 #include "log.h"
-#include "timer.h"
 #include "sgw_lite_defs.h"
 #include "ipv4_defs.h"
 
@@ -69,7 +68,7 @@ int main(int argc, char *argv[])
 
   /* Calling each layer init function */
   log_init(&mme_config);
-  itti_init(TASK_MAX, THREAD_MAX, MESSAGES_ID_MAX, tasks_info, messages_info, messages_definition_xml, NULL);
+  itti_init(TASK_MAX, THREAD_MAX, MESSAGES_ID_MAX, tasks_info, messages_info);
   sctp_init(&mme_config);
   udp_init(&mme_config);
   s1ap_mme_init(&mme_config);

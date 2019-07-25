@@ -3,7 +3,7 @@
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.0  (the "License"); you may not use this file
+ * the OAI Public License, Version 1.1  (the "License"); you may not use this file
  * except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -185,7 +185,6 @@ int pdcp_netlink_dequeue_element(const protocol_ctxt_t* const  ctxt_pP,
 void pdcp_config_set_security(const protocol_ctxt_t* const  ctxt_pP, pdcp_t *pdcp_pP, rb_id_t rb_idP,
                               uint16_t lc_idP, uint8_t security_modeP, uint8_t *kRRCenc_pP, uint8_t *kRRCint_pP, uint8_t *kUPenc_pP);
 
-#if defined(ENABLE_SECURITY)
 int pdcp_apply_security(const protocol_ctxt_t* const  ctxt_pP,
                         pdcp_t     *pdcp_entity,
                         srb_flag_t  srb_flagP,
@@ -200,10 +199,10 @@ int pdcp_validate_security(const protocol_ctxt_t* const  ctxt_pP,
                            srb_flag_t srb_flagP,
                            rb_id_t rb_id,
                            uint8_t pdcp_header_len,
-                           uint16_t current_sn,
+                           uint32_t hfn,
+                           int sn,
                            uint8_t *pdcp_pdu_buffer,
                            uint16_t sdu_buffer_size);
-#endif /* defined(ENABLE_SECURITY) */
 
 #endif
 /** @}*/

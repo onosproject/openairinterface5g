@@ -46,7 +46,7 @@
 
 #include "gtpv1u.h"
 #if defined(ENB_MODE)
-#include "UTIL/LOG/log.h"
+#include "common/utils/LOG/log.h"
 #endif
 
 #define NW_GTPV1U_EPC_SPECIFIC_HEADER_SIZE                             (12)   /**< Size of GTPv1u EPC specific header */
@@ -144,7 +144,7 @@ nwGtpv1uGpduMsgNew( NW_IN NwGtpv1uStackHandleT hGtpuStackHandle,
     AssertFatal((msgExtraLen + NW_GTPV1U_EPC_MIN_HEADER_SIZE) <= tpduOffset,
                 "Mismatch GTPU len, msgExtraLen %u tpduOffset %u",
                 msgExtraLen,
-                tpduOffset);
+                (uint32_t) tpduOffset);
     pMsg->msgBuf       = tpdu;
     pMsg->msgBufLen    = tpduLength + msgExtraLen + NW_GTPV1U_EPC_MIN_HEADER_SIZE;
     pMsg->msgBufOffset = tpduOffset - (msgExtraLen + NW_GTPV1U_EPC_MIN_HEADER_SIZE);

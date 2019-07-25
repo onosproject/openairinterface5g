@@ -3,7 +3,7 @@
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.0  (the "License"); you may not use this file
+ * the OAI Public License, Version 1.1  (the "License"); you may not use this file
  * except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -74,7 +74,9 @@ Description Defines the EMMAS Service Access Point that provides
 /*
  * String representation of EMMAS-SAP primitives
  */
-static const char *_emm_as_primitive_str[] = {
+
+char *emmas_to_str(int emmas) {
+static char *_emm_as_primitive_str[] = {
   "EMMAS_SECURITY_REQ",
   "EMMAS_SECURITY_IND",
   "EMMAS_SECURITY_RES",
@@ -92,7 +94,8 @@ static const char *_emm_as_primitive_str[] = {
   "EMMAS_CELL_INFO_RES",
   "EMMAS_CELL_INFO_IND",
 };
-
+  return _emm_as_primitive_str[emmas];
+}
 /*
  * Functions executed to process EMM procedures upon receiving
  * data from the network
@@ -195,7 +198,7 @@ int emm_as_send(nas_user_t *user, const emm_as_t *msg)
   emm_as_primitive_t primitive = msg->primitive;
 
   LOG_TRACE(INFO, "EMMAS-SAP - Received primitive %s (%d)",
-            _emm_as_primitive_str[primitive - _EMMAS_START - 1], primitive);
+            emmas_to_str(primitive - _EMMAS_START - 1), primitive);
 
   switch (primitive) {
   case _EMMAS_DATA_IND:
@@ -234,7 +237,7 @@ int emm_as_send(nas_user_t *user, const emm_as_t *msg)
     if (rc != RETURNok) {
       LOG_TRACE(ERROR, "EMMAS-SAP - "
                 "Failed to process primitive %s (%d)",
-                _emm_as_primitive_str[primitive - _EMMAS_START - 1],
+                emmas_to_str(primitive - _EMMAS_START - 1),
                 primitive);
       LOG_FUNC_RETURN (RETURNerror);
     }
@@ -266,7 +269,7 @@ int emm_as_send(nas_user_t *user, const emm_as_t *msg)
 
   if (rc != RETURNok) {
     LOG_TRACE(ERROR, "EMMAS-SAP - Failed to process primitive %s (%d)",
-              _emm_as_primitive_str[primitive - _EMMAS_START - 1],
+              emmas_to_str(primitive - _EMMAS_START - 1),
               primitive);
   }
 
@@ -434,6 +437,7 @@ static int _emm_as_data_ind(nas_user_t *user, const emm_as_data_t *msg, int *emm
         if (bytes < 0) {
           /* Failed to decrypt the message */
           *emm_cause = EMM_CAUSE_PROTOCOL_ERROR;
+          free(plain_msg);
           LOG_FUNC_RETURN (bytes);
         } else if (header.protocol_discriminator ==
                    EPS_MOBILITY_MANAGEMENT_MESSAGE) {
@@ -984,7 +988,7 @@ static int _emm_as_send(const nas_user_t *user, const emm_as_t *msg)
     LOG_TRACE(DEBUG, "EMMAS-SAP - "
               "Sending msg with id 0x%x, primitive %s (%d) to RRC layer for transmission",
               as_msg.msgID,
-              _emm_as_primitive_str[msg->primitive - _EMMAS_START - 1],
+              emmas_to_str(msg->primitive - _EMMAS_START - 1),
               msg->primitive);
 
     switch (as_msg.msgID) {

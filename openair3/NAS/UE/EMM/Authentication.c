@@ -3,7 +3,7 @@
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.0  (the "License"); you may not use this file
+ * the OAI Public License, Version 1.1  (the "License"); you may not use this file
  * except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -68,13 +68,8 @@ Description Defines the authentication EMM procedure executed by the
 #include "usim_api.h"
 #include "secu_defs.h"
 #include "Authentication.h"
+#include "targets/RT/USER/lte-softmodem.h"
 
-
-/****************************************************************************/
-/****************  E X T E R N A L    D E F I N I T I O N S  ****************/
-/****************************************************************************/
-
-extern uint8_t usim_test;
 
 /****************************************************************************/
 /*******************  L O C A L    D E F I N I T I O N S  *******************/
@@ -211,7 +206,7 @@ int emm_proc_authentication_request(nas_user_t *user, int native_ksi, int ksi,
        * of the core network by means of the received AUTN parameter and
        * request the USIM to compute RES, CK and IK for given RAND
        */
-      if(usim_test == 0)
+      if(get_softmodem_params()->usim_test == 0)
       {
         rc = usim_api_authenticate(&user->usim_data, rand, autn, &auts, &res, &ck, &ik);
       }

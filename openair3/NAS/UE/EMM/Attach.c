@@ -3,7 +3,7 @@
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.0  (the "License"); you may not use this file
+ * the OAI Public License, Version 1.1  (the "License"); you may not use this file
  * except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -79,10 +79,12 @@ Description Defines the attach related EMM procedure executed by the
 /****************************************************************************/
 
 /* String representation of the EPS attach type */
-static const char *_emm_attach_type_str[] = {
+char *emm_attach_type2str(int type) {
+static char *_emm_attach_type_str[] = {
   "EPS", "IMSI", "EMERGENCY", "RESERVED"
 };
-
+return _emm_attach_type_str[type];
+}
 /*
  * --------------------------------------------------------------------------
  *      Internal data handled by the attach procedure in the UE
@@ -140,7 +142,7 @@ int emm_proc_attach(nas_user_t *user, emm_proc_attach_type_t type)
   emm_timers_t *emm_timers = user->emm_data->emm_timers;
 
   LOG_TRACE(INFO, "EMM-PROC  - Initiate EPS attach type = %s (%d)",
-            _emm_attach_type_str[type], type);
+            emm_attach_type2str(type), type);
 
   /* Update the emergency bearer service indicator */
   if (type == EMM_ATTACH_TYPE_EMERGENCY) {

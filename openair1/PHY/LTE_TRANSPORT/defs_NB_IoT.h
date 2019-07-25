@@ -41,9 +41,13 @@
 //// maximum of 3 segments before each coding block if data length exceeds 6144 bits.
 //
 #define MAX_NUM_DLSCH_SEGMENTS_NB_IoT 16
+
 #define MAX_NUM_ULSCH_SEGMENTS_NB_IoT MAX_NUM_DLSCH_SEGMENTS_NB_IoT
  
 #define MAX_NUM_BITS_IN_DL_PER_SF_NB_IoT 284   // case one NB-IoT antenna && one LTE antenna
+
+//#define MAX_NUM_ULSCH_SEGMENTS MAX_NUM_DLSCH_SEGMENTS
+
 //#define MAX_DLSCH_PAYLOAD_BYTES (MAX_NUM_DLSCH_SEGMENTS*768)
 //#define MAX_ULSCH_PAYLOAD_BYTES (MAX_NUM_ULSCH_SEGMENTS*768)
 //
@@ -74,12 +78,75 @@
 //// for NB-IoT
 #define MAX_NUM_CHANNEL_BITS_NB_IoT 3360 			//14 symbols * 12 sub-carriers * 10 SF * 2bits/RE  // to check during real tests
 
+
 #define MAX_NUM_DL_CHANNEL_BITS_NB_IoT 2840      //284* 10 SF // case In-band operation mode witn 1 NB-IoT antenna && 1 LTE antenna //
 #define MAX_TBS_DL_SIZE_BITS_NB_IoT 680         // in release 13 // in release 14 = 2048      // ??? **** not sure
+
+
 ////#define MAX_NUM_CHANNEL_BITS_NB_IOT 3*680  			/// ??? ****not sure
 //
 //// to be created LTE_eNB_DLSCH_t --> is duplicated for each number of UE and then indexed in the table
 //
+
+//typedef struct {                              // LTE_DL_eNB_HARQ_t
+//  /// Status Flag indicating for this DLSCH (idle,active,disabled)
+//  SCH_status_t status;
+//  /// Transport block size
+//  uint32_t TBS;
+//  /// The payload + CRC size in bits, "B" from 36-212
+//  uint32_t B;        // keep this parameter
+//  /// Pointer to the payload
+//  uint8_t *b;   // keep this parameter
+//  /// Pointers to transport block segments
+//  //uint8_t *c[MAX_NUM_DLSCH_SEGMENTS];
+//  /// RTC values for each segment (for definition see 36-212 V8.6 2009-03, p.15)
+// // uint32_t RTC[MAX_NUM_DLSCH_SEGMENTS];
+//  /// Frame where current HARQ round was sent
+//  uint32_t frame;
+//  /// Subframe where current HARQ round was sent
+//  uint32_t subframe;
+//  /// Index of current HARQ round for this DLSCH
+//  uint8_t round;
+//  /// MCS format for this DLSCH
+//  uint8_t mcs;
+//  /// Redundancy-version of the current sub-frame
+//  uint8_t rvidx;
+//  /// MIMO mode for this DLSCH
+//  MIMO_mode_t mimo_mode;
+//  /// Current RB allocation
+//  uint32_t rb_alloc[4];
+//  /// distributed/localized flag
+//  vrb_t vrb_type;
+//  /// Current subband PMI allocation
+//  uint16_t pmi_alloc;
+//  /// Current subband RI allocation
+//  uint32_t ri_alloc;
+//  /// Current subband CQI1 allocation
+//  uint32_t cqi_alloc1;
+//  /// Current subband CQI2 allocation
+//  uint32_t cqi_alloc2;
+//  /// Current Number of RBs
+//  uint16_t nb_rb;
+//  /// downlink power offset field
+//  uint8_t dl_power_off;
+//  /// Concatenated "e"-sequences (for definition see 36-212 V8.6 2009-03, p.17-18)
+//  uint8_t e[MAX_NUM_CHANNEL_BITS_NB_IOT];
+//  /// data after scrambling
+//  uint8_t s_e[MAX_NUM_CHANNEL_BITS_NB_IOT];
+//  /// length of the table e
+//  uint16_t length_e                 // new parameter
+//  /// Tail-biting convolutional coding outputs
+//  uint8_t d[96+(3*(24+MAX_DL_SIZE_BITS_NB_IOT))];  // new parameter
+//  /// Sub-block interleaver outputs
+//  uint8_t w[3*3*(MAX_DL_SIZE_BITS_NB_IOT+24)];      // new parameter
+//  /// Number of MIMO layers (streams) (for definition see 36-212 V8.6 2009-03, p.17, TM3-4)
+//  uint8_t Nl;
+//  /// Number of layers for this PDSCH transmission (TM8-10)
+//  uint8_t Nlayers;
+//  /// First layer for this PSCH transmission
+//  uint8_t first_layer;
+//} NB_IoT_DL_eNB_HARQ_t;
+
 
 typedef enum {
 
@@ -107,6 +174,7 @@ typedef struct {
   /// modulation always QPSK Qm = 2 
   uint8_t               modulation;
   /// Concatenated "e"-sequences (for definition see 36-212 V8.6 2009-03, p.17-18)
+
   uint8_t               e[MAX_NUM_DL_CHANNEL_BITS_NB_IoT];
   /// data after scrambling
   uint8_t               s_e[MAX_NUM_DL_CHANNEL_BITS_NB_IoT];
@@ -116,6 +184,8 @@ typedef struct {
   uint8_t               d[96+(3*(24+MAX_TBS_DL_SIZE_BITS_NB_IoT))];  // new parameter
   /// Sub-block interleaver outputs
   uint8_t               w[3*3*(MAX_TBS_DL_SIZE_BITS_NB_IoT+24)];      // new parameter
+
+
   /// Status Flag indicating for this DLSCH (idle,active,disabled)
   //SCH_status_t status;
   /// Transport block size
@@ -140,6 +210,57 @@ typedef struct {
    uint8_t               pdu_buffer_index;
 
 } NB_IoT_DL_eNB_HARQ_t;
+
+
+
+typedef struct {                                        // LTE_eNB_DLSCH_t
+ /// TX buffers for UE-spec transmission (antenna ports 5 or 7..14, prior to precoding)
+ uint32_t               *txdataF[8];
+ /// Allocated RNTI (0 means DLSCH_t is not currently used)
+ uint16_t               rnti;
+ /// Active flag for baseband transmitter processing
+ uint8_t                active;
+ /// Indicator of TX activation per subframe.  Used during PUCCH detection for ACK/NAK.
+ uint8_t                subframe_tx[10];
+ /// First CCE of last PDSCH scheduling per subframe.  Again used during PUCCH detection for ACK/NAK.
+ uint8_t                nCCE[10];
+ /// Current HARQ process id
+ uint8_t                current_harq_pid;
+ /// Process ID's per subframe.  Used to associate received ACKs on PUSCH/PUCCH to DLSCH harq process ids
+ uint8_t                harq_ids[10];
+ /// Window size (in outgoing transport blocks) for fine-grain rate adaptation
+ uint8_t                ra_window_size;
+ /// First-round error threshold for fine-grain rate adaptation
+ uint8_t                error_threshold;
+ /// Pointers to 8 HARQ processes for the DLSCH
+ NB_IoT_DL_eNB_HARQ_t   harq_process;
+ /// circular list of free harq PIDs (the oldest come first)
+ /// (10 is arbitrary value, must be > to max number of DL HARQ processes in LTE)
+ int                    harq_pid_freelist[10];
+ /// the head position of the free list (if list is free then head=tail)
+ int                    head_freelist;
+ /// the tail position of the free list
+ int                    tail_freelist;
+ /// Number of soft channel bits
+ uint32_t               G;
+ /// Codebook index for this dlsch (0,1,2,3)
+ uint8_t                codebook_index;
+ /// Maximum number of HARQ processes (for definition see 36-212 V8.6 2009-03, p.17)
+ uint8_t                Mdlharq;
+ /// Maximum number of HARQ rounds
+ uint8_t                Mlimit;
+ /// MIMO transmission mode indicator for this sub-frame (for definition see 36-212 V8.6 2009-03, p.17)
+ uint8_t                Kmimo;
+ /// Nsoft parameter related to UE Category
+ uint32_t               Nsoft;
+ /// amplitude of PDSCH (compared to RS) in symbols without pilots
+ int16_t                sqrt_rho_a;
+ /// amplitude of PDSCH (compared to RS) in symbols containing pilots
+ int16_t                sqrt_rho_b;
+
+} NB_IoT_eNB_DLSCH_t;
+
+
 
 typedef struct {
   /// HARQ process id
@@ -363,6 +484,7 @@ typedef enum
 
 
 
+
 typedef struct{
 
   //Number of repetitions (R) for common search space (RAR and PAGING)
@@ -407,6 +529,7 @@ typedef struct {
 } DCI_PDU_NB_IoT;
 
 
+
 typedef struct {
   
   /// Allocated RNTI (0 means DLSCH_t is not currently used)
@@ -415,10 +538,12 @@ typedef struct {
   uint8_t                 active;
   /// Active flag when msg2 is transmitted 
   uint8_t                 active_msg2;
+
   /// Indicator of TX activation per subframe.  Used during PUCCH detection for ACK/NAK.
   uint8_t                 subframe_tx[10];
   /// First CCE of last PDSCH scheduling per subframe.  Again used during PUCCH detection for ACK/NAK.
   uint8_t                 nCCE[10];
+
   ///in NB-IoT there is only 1 HARQ process for each UE therefore no pid is required///
   /// The only HARQ process for the DLSCH
   NB_IoT_DL_eNB_HARQ_t    *harq_process;
@@ -443,6 +568,7 @@ typedef struct {
   /// Number of soft channel bits 
   uint32_t                G;
   
+
   ///NB-IoT
   /// may use in the npdsch_procedures
   uint16_t                scrambling_sequence_intialization;
@@ -454,7 +580,10 @@ typedef struct {
   ///indicates the starting OFDM symbol in the first slot of a subframe k for the NPDSCH transmission
   /// see FAPI/NFAPI specs Table 4-47
   uint8_t                 npdsch_start_symbol;
+
   ///SIB1-NB related parameters//
+
+
   ///flag for indicate if the current frame is the start of a new SIB1-NB repetition within the SIB1-NB period (0 = FALSE, 1 = TRUE)
   uint8_t                 sib1_rep_start;
   ///the number of the frame within the 16 continuous frame in which sib1-NB is transmitted (1-8 = 1st, 2nd ecc..) (0 = not foresees a transmission)
@@ -489,9 +618,11 @@ typedef struct {
   /// Current Number of RBs
   uint16_t              nb_rb;
 
+
   uint8_t               new_data_indication;
   /// Determined the subcarrier spacing for NPUSCH (15 kHz or 3.75 KHz)
   uint8_t               subcarrier_spacing;      /////////////////////////TODO: to be set using msg2 PDU content
+
   /// Determined the subcarrier allocation for the NPUSCH.(15, 3.75 KHz)
   uint8_t               subcarrier_indication;
   /// Determined the number of resource unit for the NPUSCH
@@ -500,8 +631,10 @@ typedef struct {
   uint8_t               scheduling_delay;
   /// The number of the repetition number for NPUSCH Transport block
   uint8_t               repetition_number;
+
   //////////    counter for repetitions ///////////////////////
   uint8_t               rep_tmp;
+
   /// Determined the repetition number value 0-3
   uint8_t               dci_subframe_repetitions;
   /// Flag indicating that this ULSCH has been allocated by a DCI (otherwise it is a retransmission based on PHICH NAK)
@@ -537,10 +670,12 @@ typedef struct {
   int8_t                o_w[(MAX_CQI_BITS_NB_IoT+8)*3];
   /// coded CQI bits
   int8_t                o_d[96+((MAX_CQI_BITS_NB_IoT+8)*3)];
+
   /// soft bits for each received segment ("w"-sequence)(for definition see 36-212 V8.6 2009-03, p.15)
   int16_t               w[MAX_NUM_ULSCH_SEGMENTS_NB_IoT][3*(6144+64)];
   /// soft bits for each received segment ("d"-sequence)(for definition see 36-212 V8.6 2009-03, p.15)
   int16_t               *d[MAX_NUM_ULSCH_SEGMENTS_NB_IoT];
+
   ///
   uint32_t              C;
   /// Number of "small" code segments (for definition see 36-212 V8.6 2009-03, p.10)
@@ -559,10 +694,12 @@ typedef struct {
   uint8_t               srs_active;
   /// Pointer to the payload
   uint8_t               *b;
+
   /// Pointers to transport block segments
   uint8_t               *c[MAX_NUM_ULSCH_SEGMENTS_NB_IoT];
   /// RTC values for each segment (for definition see 36-212 V8.6 2009-03, p.15)
   uint32_t              RTC[MAX_NUM_ULSCH_SEGMENTS_NB_IoT];
+
   /// Current Number of Symbols
   uint8_t               Nsymb_pusch;
   /// Index of current HARQ round for this ULSCH
@@ -616,7 +753,9 @@ typedef struct {
   /// Flag to indicate that eNB should decode UE Msg3
   uint8_t                 Msg3_flag;
   /// Subframe for Msg3
+
   uint32_t                Msg3_subframe;
+
   /// Frame for Msg3
   uint32_t                Msg3_frame;
   /// RNTI attributed to this ULSCH
@@ -631,6 +770,7 @@ typedef struct {
   uint8_t                 scrambling_re_intialization_batch_index;
   /// number of cell specific TX antenna ports assumed by the UE
   uint8_t                 nrs_antenna_ports;
+
   //////// nfapi param //////////////////////////////////////////
   uint16_t                C_init;
   //////// nfapi param //////////////////////////////////////////////////
@@ -645,6 +785,7 @@ typedef struct {
   uint16_t                counter_repetitions;
  // uint16_t                sf_number;
  // uint16_t                rep_number;
+
   ///////////// kept from LTE ///////////////////////////////////////////////////
 
   /// Maximum number of iterations used in eNB turbo decoder
@@ -686,6 +827,7 @@ typedef struct {
   uint8_t   *pdu;
 
 } NB_IoT_eNB_NPBCH_t;
+
 
 #define NPDCCH_A 23
 #define MAX_BITS_IN_SF 284   // maximum number of bits over one subframe

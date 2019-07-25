@@ -3,7 +3,7 @@
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.0  (the "License"); you may not use this file
+ * the OAI Public License, Version 1.1  (the "License"); you may not use this file
  * except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -35,7 +35,6 @@
 
 #include "assertions.h"
 #include "intertask_interface.h"
-#include "timer.h"
 
 #include "gtpv1u.h"
 #include "NwGtpv1u.h"
@@ -96,7 +95,7 @@ void gtpu_print_hex_octets(unsigned char* dataP, unsigned long sizeP)
   h = tv.tv_sec/3600/24;
   m = (tv.tv_sec / 60) % 60;
   s = tv.tv_sec % 60;
-  snprintf(timeofday, 64, "%02d:%02d:%02d.%06d", h,m,s,tv.tv_usec);
+  snprintf(timeofday, 64, "%02u:%02u:%02u.%06d", h,m,s,tv.tv_usec);
 
   GTPU_DEBUG("%s------+-------------------------------------------------|\n",timeofday);
   GTPU_DEBUG("%s      |  0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f |\n",timeofday);
@@ -117,7 +116,7 @@ void gtpu_print_hex_octets(unsigned char* dataP, unsigned long sizeP)
         buffer_marker = 0;
       }
 
-      buffer_marker+=snprintf(&gtpu_2_print_buffer[buffer_marker], GTPU_2_PRINT_BUFFER_LEN - buffer_marker, " %04ld |", octet_index);
+      buffer_marker+=snprintf(&gtpu_2_print_buffer[buffer_marker], GTPU_2_PRINT_BUFFER_LEN - buffer_marker, " %04lu |", octet_index);
     }
 
     /*
@@ -423,6 +422,7 @@ static void *gtpv1u_thread(void *args)
     switch (ITTI_MSG_ID(received_message_p)) {
 
     case TERMINATE_MESSAGE: {
+      GTPU_WARN(" *** Exiting GTPU thread\n");
       itti_exit_task();
     }
     break;

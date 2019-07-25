@@ -3,7 +3,7 @@
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.0  (the "License"); you may not use this file
+ * the OAI Public License, Version 1.1  (the "License"); you may not use this file
  * except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -134,10 +134,8 @@ int user_api_initialize(user_api_id_t *user_api_id, const char* host, const char
     user_api_id->endpoint = user_api_id->open(SOCKET_SERVER, host, port);
 
     if (user_api_id->endpoint == NULL) {
-      const char* error = ( (errno < 0) ?
-                            gai_strerror(errno) : strerror(errno) );
       LOG_TRACE(ERROR, "USR-API   - Failed to open connection endpoint, "
-                "%s", error);
+                "%s", ( (errno < 0) ?gai_strerror(errno) : strerror(errno) ));
       LOG_FUNC_RETURN (RETURNerror);
     }
 
@@ -278,7 +276,7 @@ int user_api_set_data(user_api_id_t *user_api_id, char *message)
 
   memset(user_api_id->recv_buffer, 0, USER_API_RECV_BUFFER_SIZE);
 
-  strncpy(user_api_id->recv_buffer, message, USER_API_RECV_BUFFER_SIZE);
+  strncpy(user_api_id->recv_buffer, message, USER_API_RECV_BUFFER_SIZE - 1);
   rbytes = strlen(user_api_id->recv_buffer);
 
   LOG_TRACE(INFO, "USR-API   - %d bytes write", rbytes);

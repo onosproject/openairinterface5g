@@ -3,7 +3,7 @@
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.0  (the "License"); you may not use this file
+ * the OAI Public License, Version 1.1  (the "License"); you may not use this file
  * except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -268,9 +268,9 @@ int usim_api_authenticate_test(usim_data_t *usim_data,
     printf("usim_data->usim_sqn_data.sqn_ms %p\n", usim_data->usim_sqn_data.sqn_ms);
     for (i = 0; i < USIM_API_SQNMS_SIZE; i++) {
       //#warning "LG:BUG HERE TODO"
-      printf("i %d:  ((uint8_t*)(usim_data->usim_sqn_data.sqn_ms))[USIM_API_SQNMS_SIZE - i] %d\n",i, ((uint8_t*)(usim_data->usim_sqn_data.sqn_ms))[USIM_API_SQNMS_SIZE - i]);
-      sqn_ms[USIM_API_SQNMS_SIZE - i] =
-        ((uint8_t*)(usim_data->usim_sqn_data.sqn_ms))[USIM_API_SQNMS_SIZE - i];
+      printf("i %d:  ((uint8_t*)(usim_data->usim_sqn_data.sqn_ms))[USIM_API_SQNMS_SIZE - 1 - i] %d\n",i, ((uint8_t*)(usim_data->usim_sqn_data.sqn_ms))[USIM_API_SQNMS_SIZE - 1 - i]);
+      sqn_ms[USIM_API_SQNMS_SIZE - 1 - i] =
+        ((uint8_t*)(usim_data->usim_sqn_data.sqn_ms))[USIM_API_SQNMS_SIZE - 1 - i];
     }
 
     u8 sqnms[USIM_API_SQNMS_SIZE];
@@ -409,7 +409,7 @@ int usim_api_authenticate(usim_data_t *usim_data, const OctetString* rand_pP, co
 
     //#define USIM_API_SQN_MS_SIZE  3
     printf("usim_data->usim_sqn.sqn_ms %p\n",usim_data->usim_sqn_data.sqn_ms);
-    for (i = 0; i < USIM_API_SQNMS_SIZE; i++) {
+    for (i = 1; i <= USIM_API_SQNMS_SIZE; i++) {
       //#warning "LG:BUG HERE TODO"
       printf("i %d:  ((uint8_t*)(usim_data->usim_sqn_data.sqn_ms))[USIM_API_SQNMS_SIZE - i] %d\n",i, ((uint8_t*)(usim_data->usim_sqn_data.sqn_ms))[USIM_API_SQNMS_SIZE - i]);
       sqn_ms[USIM_API_SQNMS_SIZE - i] =

@@ -3,7 +3,7 @@
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.0  (the "License"); you may not use this file
+ * the OAI Public License, Version 1.1  (the "License"); you may not use this file
  * except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -46,7 +46,6 @@ Description Timer utilities
 
 #if defined(ENABLE_ITTI)
 # include "intertask_interface.h"
-# include "timer.h"
 #else
 # include <signal.h>
 # include <time.h>   // clock_gettime

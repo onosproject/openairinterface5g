@@ -3,7 +3,7 @@
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.0  (the "License"); you may not use this file
+ * the OAI Public License, Version 1.1  (the "License"); you may not use this file
  * except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -35,21 +35,6 @@
 #    ifndef __RLC_UM_FSM_PROTO_EXTERN_H__
 #        define __RLC_UM_FSM_PROTO_EXTERN_H__
 //-----------------------------------------------------------------------------
-#        ifdef RLC_UM_FSM_C
-#            define private_rlc_um_fsm(x)    x
-#            define protected_rlc_um_fsm(x)  x
-#            define public_rlc_um_fsm(x)     x
-#        else
-#            ifdef RLC_UM_MODULE
-#                define private_rlc_um_fsm(x)
-#                define protected_rlc_um_fsm(x)  extern x
-#                define public_rlc_um_fsm(x)     extern x
-#            else
-#                define private_rlc_um_fsm(x)
-#                define protected_rlc_um_fsm(x)
-#                define public_rlc_um_fsm(x)     extern x
-#            endif
-#        endif
 #        include "platform_types.h"
 #        include "rlc_um_entity.h"
 //-----------------------------------------------------------------------------
@@ -65,6 +50,6 @@
 * \return     1 if no error was encountered, 0 if the event was not processed.
 * \Note       This FSM is not LTE 9.3.0 compliant, it has to be modified or removed.
 */
-protected_rlc_um_fsm(int      rlc_um_fsm_notify_event (const protocol_ctxt_t* const ctxtP, rlc_um_entity_t *rlcP, uint8_t eventP));
+int      rlc_um_fsm_notify_event (const protocol_ctxt_t* const ctxtP, rlc_um_entity_t *rlcP, uint8_t eventP);
 /** @} */
 #    endif

@@ -3,7 +3,7 @@
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.0  (the "License"); you may not use this file
+ * the OAI Public License, Version 1.1  (the "License"); you may not use this file
  * except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -195,7 +195,6 @@ void nas_mesh_init(int inst   //!< Instance ID
 
                   );
 
-void nas_mesh_timer(unsigned long data);
 
 int  nas_mesh_DC_receive(struct cx_entity *cx,struct nas_priv *gpriv);
 int  nas_mesh_GC_receive(struct nas_priv *gpriv);

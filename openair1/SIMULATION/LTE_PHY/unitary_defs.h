@@ -3,7 +3,7 @@
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.0  (the "License"); you may not use this file
+ * the OAI Public License, Version 1.1  (the "License"); you may not use this file
  * except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -20,12 +20,16 @@
  */
 
 openair0_device openair0;
-int oai_exit=0;
+volatile int oai_exit=0;
 
-void exit_fun(const char *s) { exit(-1); }
+void exit_function(const char* file, const char* function, const int line,const char *s) {
+   const char * msg= s==NULL ? "no comment": s;
+   printf("Exiting at: %s:%d %s(), %s\n", file, line, function, msg);
+   exit(-1);
+}
 
 extern unsigned int dlsch_tbs25[27][25],TBStable[27][110];
 extern unsigned char offset_mumimo_llr_drange_fix;
 
-extern unsigned short dftsizes[33];
-extern short *ul_ref_sigs[30][2][33];
+extern unsigned short dftsizes[34];
+extern short *ul_ref_sigs[30][2][34];

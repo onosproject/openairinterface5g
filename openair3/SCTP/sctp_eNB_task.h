@@ -3,7 +3,7 @@
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.0  (the "License"); you may not use this file
+ * the OAI Public License, Version 1.1  (the "License"); you may not use this file
  * except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -22,6 +22,8 @@
 #ifndef SCTP_ENB_TASK_H_
 #define SCTP_ENB_TASK_H_
 
+void  sctp_eNB_init(void);
+void *sctp_eNB_process_itti_msg(void *);
 void *sctp_eNB_task(void *arg);
 
 #endif /* SCTP_ENB_TASK_H_ */

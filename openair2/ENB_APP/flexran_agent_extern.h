@@ -3,7 +3,7 @@
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.0  (the "License"); you may not use this file
+ * the OAI Public License, Version 1.1  (the "License"); you may not use this file
  * except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -20,9 +20,9 @@
  */ 
 
 /*! \file ENB_APP/extern.h
- * \brief FlexRAN agent - mac interface primitives
- * \author Xenofon Foukas
- * \date 2016
+ * \brief FlexRAN agent - Extern VSF xfaces
+ * \author Xenofon Foukas and shahab SHARIAT BAGHERI
+ * \date 2017
  * \version 0.1
  * \mail x.foukas@sms.ed.ac.uk
  */
@@ -31,22 +31,25 @@
 #define __FLEXRAN_AGENT_EXTERN_H__
 
 #include "flexran_agent_defs.h"
+#include "flexran_agent_phy_defs.h"
 #include "flexran_agent_mac_defs.h"
+#include "flexran_agent_rrc_defs.h"
+#include "flexran_agent_pdcp_defs.h"
 
-
-//extern msg_context_t shared_ctxt[NUM_MAX_ENB][FLEXRAN_AGENT_MAX];
-
-/* full path of the local cache for storing VSFs */
-extern char local_cache[40];
+/* Control module interface for the communication of the PHY control module with the agent */
+AGENT_PHY_xface *flexran_agent_get_phy_xface(mid_t mod_id);
 
 /* Control module interface for the communication of the MAC Control Module with the agent */
-extern AGENT_MAC_xface *agent_mac_xface[NUM_MAX_ENB];
+AGENT_MAC_xface *flexran_agent_get_mac_xface(mid_t mod_id);
 
-/* Flag indicating whether the VSFs for the MAC control module have been registered */
-extern unsigned int mac_agent_registered[NUM_MAX_ENB];
+/* Control module interface for the communication of the RRC Control Module with the agent */
+AGENT_RRC_xface *flexran_agent_get_rrc_xface(mid_t mod_id);
+
+/* Control module interface for the communication of the RRC Control Module with the agent */
+AGENT_PDCP_xface *flexran_agent_get_pdcp_xface(mid_t mod_id);
 
 /* Requried to know which UEs had a harq updated over some subframe */
-extern int harq_pid_updated[NUMBER_OF_UE_MAX][8];
-extern int harq_pid_round[NUMBER_OF_UE_MAX][8];
+extern int harq_pid_updated[NUM_MAX_UE][8];
+extern int harq_pid_round[NUM_MAX_UE][8];
 
 #endif

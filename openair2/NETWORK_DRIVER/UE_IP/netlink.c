@@ -3,7 +3,7 @@
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.0  (the "License"); you may not use this file
+ * the OAI Public License, Version 1.1  (the "License"); you may not use this file
  * except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -110,7 +110,7 @@ int ue_ip_netlink_init(void)
 # if LINUX_VERSION_CODE < KERNEL_VERSION(3,8,0)
                 THIS_MODULE,
 # endif
-                &cfg
+                &cfg);
 #else /* LINUX_VERSION_CODE >= KERNEL_VERSION(3,6,0) */
   nas_nl_sk = netlink_kernel_create(
                 &init_net,
@@ -120,7 +120,7 @@ int ue_ip_netlink_init(void)
                 &nasmesh_mutex, // NULL
                 THIS_MODULE);
 #endif /* LINUX_VERSION_CODE >= KERNEL_VERSION(3,6,0) */
-              );
+
 
 
   if (nas_nl_sk == NULL) {

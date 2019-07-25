@@ -3,7 +3,7 @@
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.0  (the "License"); you may not use this file
+ * the OAI Public License, Version 1.1  (the "License"); you may not use this file
  * except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -29,8 +29,8 @@
 * \note
 * \warning
 */
-//#include "defs.h"
-#include "PHY/defs.h"
+#include "PHY/defs_eNB.h"
+#include "PHY/LTE_REFSIG/lte_refsig.h"
 
 void generate_pilots(PHY_VARS_eNB *eNB,
                      int32_t **txdataF,
@@ -140,7 +140,7 @@ int generate_pilots_slot(PHY_VARS_eNB *eNB,
   uint8_t second_pilot;
 
   if (slot<0 || slot>= 20) {
-    msg("generate_pilots_slot: slot not in range (%d)\n",slot);
+    LOG_E(PHY,"generate_pilots_slot: slot not in range (%d)\n",slot);
     return(-1);
   }
 

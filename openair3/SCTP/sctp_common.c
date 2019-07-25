@@ -3,7 +3,7 @@
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.0  (the "License"); you may not use this file
+ * the OAI Public License, Version 1.1  (the "License"); you may not use this file
  * except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -85,6 +85,12 @@ int sctp_get_sockinfo(int sock, uint16_t *instream, uint16_t *outstream,
 
   memset(&status, 0, sizeof(struct sctp_status));
   i = sizeof(struct sctp_status);
+
+  /* if sock refers to a multi SCTP endpoint, *assoc_id gives us
+   * the association ID that we want
+   */
+  if (assoc_id != NULL)
+    status.sstat_assoc_id = *assoc_id;
 
   if (getsockopt(sock, IPPROTO_SCTP, SCTP_STATUS, &status, &i) < 0) {
     SCTP_ERROR("Getsockopt SCTP_STATUS failed: %s\n", strerror(errno));

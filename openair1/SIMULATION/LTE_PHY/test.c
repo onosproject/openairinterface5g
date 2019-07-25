@@ -3,7 +3,7 @@
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.0  (the "License"); you may not use this file
+ * the OAI Public License, Version 1.1  (the "License"); you may not use this file
  * except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -281,8 +281,8 @@ int main(int argc, char **argv)
 
 #endif
 
-  write_output("rxsig0.m","rxs0",rxdata[0],lte_frame_parms->samples_per_tti>>1,1,1);
-  write_output("rxsig1.m","rxs1",rxdata[1],lte_frame_parms->samples_per_tti>>1,1,1);
+  LOG_M("rxsig0.m","rxs0",rxdata[0],lte_frame_parms->samples_per_tti>>1,1,1);
+  LOG_M("rxsig1.m","rxs1",rxdata[1],lte_frame_parms->samples_per_tti>>1,1,1);
 
 
 #ifdef IFFT_FPGA

@@ -3,7 +3,7 @@
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.0  (the "License"); you may not use this file
+ * the OAI Public License, Version 1.1  (the "License"); you may not use this file
  * except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -29,7 +29,7 @@
 #include "mac_primitives.h"
 #include "rlc_primitives.h"
 #include "list.h"
-#include "LAYER2/MAC/extern.h"
+#include "LAYER2/MAC/mac_extern.h"
 //-----------------------------------------------------------------------------
 void
 rlc_tm_send_sdu (
@@ -60,10 +60,10 @@ rlc_tm_send_sdu (
           PROTOCOL_RLC_TM_CTXT_ARGS(ctxt_pP, rlc_pP));
 
     for (index = 0; index < length_in_bytes; index++) {
-      msg ("%c", srcP[index]);
+      LOG_T (RLC,"%c", srcP[index]);
     }
 
-    msg ("\n");
+    LOG_T (RLC,"\n");
 #endif
 
     memcpy (&rlc_pP->output_sdu_in_construction->data[rlc_pP->output_sdu_size_to_write], srcP, length_in_bytes);
@@ -77,7 +77,7 @@ rlc_tm_send_sdu (
       rlc_pP->output_sdu_in_construction);
     rlc_pP->output_sdu_in_construction = NULL;
   } else {
-    msg ("[RLC_TM %p][SEND_SDU] ERROR  OUTPUT SDU IS NULL\n", rlc_pP);
+    LOG_D (RLC,"[RLC_TM %p][SEND_SDU] ERROR  OUTPUT SDU IS NULL\n", rlc_pP);
   }
 }
 //-----------------------------------------------------------------------------
@@ -161,6 +161,7 @@ rlc_tm_mac_status_indication (
   status_resp.buffer_occupancy_in_bytes = ((rlc_tm_entity_t *) rlc_pP)->buffer_occupancy;
   status_resp.buffer_occupancy_in_pdus = status_resp.buffer_occupancy_in_bytes / ((rlc_tm_entity_t *) rlc_pP)->rlc_pdu_size;
   status_resp.rlc_info.rlc_protocol_state = ((rlc_tm_entity_t *) rlc_pP)->protocol_state;
+  status_resp.head_sdu_creation_time = 0;
   return status_resp;
 }
 
@@ -185,6 +186,7 @@ rlc_tm_mac_data_request (
           PROTOCOL_RLC_TM_CTXT_ARGS(ctxt_pP, rlc_p),
           data_req.data.nb_elements);
   }
+  data_req.ue_id_type_indicator = 0;
 
   return data_req;
 }
@@ -196,11 +198,10 @@ rlc_tm_mac_data_indication (
   void * const        rlc_pP,
   struct mac_data_ind data_indP)
 {
-  rlc_tm_entity_t* rlc_p = (rlc_tm_entity_t*) rlc_pP;
 
   if (data_indP.data.nb_elements > 0) {
     LOG_D(RLC, PROTOCOL_RLC_TM_CTXT_FMT" MAC_DATA_IND %d TBs\n",
-          PROTOCOL_RLC_TM_CTXT_ARGS(ctxt_pP, rlc_p),
+          PROTOCOL_RLC_TM_CTXT_ARGS(ctxt_pP, ((rlc_tm_entity_t*) rlc_pP)),
           data_indP.data.nb_elements);
   }
 

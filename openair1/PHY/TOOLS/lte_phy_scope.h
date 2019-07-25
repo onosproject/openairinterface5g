@@ -3,7 +3,7 @@
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.0  (the "License"); you may not use this file
+ * the OAI Public License, Version 1.1  (the "License"); you may not use this file
  * except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -25,10 +25,9 @@
 #define FD_lte_scope_h_
 
 #include <forms.h>
-#include "../impl_defs_lte.h"
-#include "../impl_defs_top.h"
-#include "../defs.h"
-#include "../../SCHED/defs.h" // for OPENAIR_DAQ_VARS
+#include "PHY/defs_eNB.h"
+#include "PHY/defs_UE.h"
+#include "PHY/impl_defs_top.h"
 
 
 /* Forms and Objects */

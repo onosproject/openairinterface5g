@@ -3,7 +3,7 @@
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.0  (the "License"); you may not use this file
+ * the OAI Public License, Version 1.1  (the "License"); you may not use this file
  * except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -278,7 +278,9 @@ typedef struct {
   int32_t freq_offset;
   /// eNb_id user is synched to
   int32_t eNb_id;
-} NB_IoT_UE_COMMON; 
+
+} NB_IoT_UE_COMMON;
+
 
 typedef struct {
   /// \brief Received frequency-domain signal after extraction.
@@ -400,7 +402,9 @@ typedef struct NPRACH_Parameters_NB_IoT{
 } nprach_parameters_NB_IoT_t;
 
 typedef struct{
+
  nprach_parameters_NB_IoT_t list[3];
+
 }NPRACH_List_NB_IoT_t;
 
 typedef long RSRP_Range_t;
@@ -469,7 +473,9 @@ typedef struct {
   /// Ref signals configuration
   UL_REFERENCE_SIGNALS_NPUSCH_t ul_ReferenceSignalsNPUSCH;
 
-} NPUSCH_CONFIG_COMMON; 
+
+} NPUSCH_CONFIG_COMMON;
+
 
 
 typedef struct{
@@ -490,6 +496,12 @@ typedef struct {
 } DL_GapConfig_NB_IoT;
 
 
+
+#define NBIOT_INBAND_LTEPCI 0
+#define NBIOT_INBAND_IOTPCI 1
+#define NBIOT_INGUARD       2
+#define NBIOT_STANDALONE    3
+
 typedef struct {
 
   /// Frame type (0 FDD, 1 TDD)
@@ -506,6 +518,9 @@ typedef struct {
   NB_IoT_prefix_type_t Ncp;
   /// Cyclic Prefix for UL (0=Normal CP, 1=Extended CP)
   NB_IoT_prefix_type_t Ncp_UL;
+
+
+
   /// shift of pilot position in one RB
   uint8_t nushift;
   /// indicates if node is a UE (NODE=2) or eNB (PRIMARY_CH=0).
@@ -533,7 +548,9 @@ typedef struct {
   /// flag to indicate SISO transmission
   uint8_t mode1_flag;
   /// Indicator that 20 MHz channel uses 3/4 sampling frequency
+
   uint8_t threequarter_fs;
+
   /// Size of FFT
   uint16_t ofdm_symbol_size;
   /// Number of prefix samples in all but first symbol of slot
@@ -613,17 +630,20 @@ typedef struct {
 } NB_IoT_DL_FRAME_PARMS;
 
 typedef struct {
+
   /// \brief Holds the transmit data in time domain.
   /// For IFFT_FPGA this points to the same memory as PHY_vars->rx_vars[a].RX_DMA_BUFFER.
   /// - first index: eNB id [0..2] (hard coded)
   /// - second index: tx antenna [0..nb_antennas_tx[
   /// - third index:
   int32_t **txdata[3];
+
   /// \brief holds the transmit data in the frequency domain.
   /// For IFFT_FPGA this points to the same memory as PHY_vars->rx_vars[a].RX_DMA_BUFFER. //?
   /// - first index: eNB id [0..2] (hard coded)
   /// - second index: tx antenna [0..14[ where 14 is the total supported antenna ports.
   /// - third index: sample [0..]
+
   int32_t **txdataF[3];
   /// \brief holds the transmit data after beamforming in the frequency domain.
   /// For IFFT_FPGA this points to the same memory as PHY_vars->rx_vars[a].RX_DMA_BUFFER. //?
@@ -663,6 +683,29 @@ typedef struct {
   /// - third index: frequency [0..]
   int32_t **tdd_calib_coeffs[3];
 } NB_IoT_eNB_COMMON;
+
+typedef struct {
+  /// \brief Holds the transmit data in the frequency domain.
+  /// - first index: rx antenna [0..nb_antennas_rx[
+  /// - second index: ? [0..2*ofdm_symbol_size*frame_parms->symbols_per_tti[
+  int32_t **txdata;
+  /// \brief Holds the receive data in the frequency domain.
+  /// - first index: rx antenna [0..nb_antennas_rx[
+  /// - second index: ? [0..2*ofdm_symbol_size*frame_parms->symbols_per_tti[
+  int32_t **rxdata[3];
+  /// \brief Holds the last subframe of received data in time domain after removal of 7.5kHz frequency offset.
+  /// - first index: rx antenna [0..nb_antennas_rx[
+  /// - second index: sample [0..samples_per_tti[
+  int32_t **rxdata_7_5kHz[3];
+  /// \brief Holds the received data in the frequency domain.
+  /// - first index: rx antenna [0..nb_antennas_rx[
+  /// - second index: ? [0..2*ofdm_symbol_size*frame_parms->symbols_per_tti[
+  int32_t **rxdataF[3];
+  /// \brief Holds output of the sync correlator.
+  /// - first index: sample [0..samples_per_tti*10[
+  uint32_t *sync_corr[3];
+} NB_IoT_RU_COMMON;
+
 
 typedef struct {
   /// \brief Hold the channel estimates in frequency domain based on SRS.

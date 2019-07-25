@@ -3,7 +3,7 @@
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.0  (the "License"); you may not use this file
+ * the OAI Public License, Version 1.1  (the "License"); you may not use this file
  * except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -25,7 +25,10 @@
  * \date 2017 - 2018
  * \email: nick133371@gmail.com, sephiroth7277@gmail.com , kai-hsiang.hsu@eurecom.fr
  * \version 1.0
- *
+ * \author Navid Nikaein and Raymond Knopp
+ * \date 2010 - 2014
+ * \email navid.nikaein@eurecom.fr
+ * \version 1.0
  */
 
 #ifndef __LAYER2_MAC_PROTO_NB_IoT_H__
@@ -34,7 +37,7 @@
 #include "openair1/PHY/LTE_TRANSPORT/defs_NB_IoT.h"
 #include "LAYER2/MAC/defs_NB_IoT.h"
 #include "COMMON/platform_types.h"
-#include "openair2/RRC/LITE/defs_NB_IoT.h"
+#include "openair2/RRC/LTE/defs_NB_IoT.h"
 /** \addtogroup _mac
  *  @{
  */
@@ -65,6 +68,8 @@ void config_sib2_fapi_NB_IoT(
                         RadioResourceConfigCommonSIB_NB_r13_t   *radioResourceConfigCommon
                         );
 
+
+///config
 void rrc_mac_config_req_NB_IoT(
     module_id_t                             Mod_idP,
     int                                     CC_idP,
@@ -79,7 +84,6 @@ void rrc_mac_config_req_NB_IoT(
 
 uint32_t get_SIB23_size(void);
 
-
 ///system
 void init_mac_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst);
 //void init_rrc_NB_IoT();
@@ -91,7 +95,7 @@ uint8_t register_mac_inst(eNB_MAC_INST_NB_IoT *inst, uint8_t order);
 void init_tool(sib1_NB_IoT_sched_t *config);
 void UE_info_setting(UE_TEMPLATE_NB_IoT *UE_info);
 UE_TEMPLATE_NB_IoT *get_ue_from_rnti(eNB_MAC_INST_NB_IoT *inst, rnti_t rnti);
-    
+
 ///scheduler
 void eNB_dlsch_ulsch_scheduler_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, uint32_t abs_subframe);
 void eNB_scheduler_computing_flag_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, uint32_t abs_subframe, uint32_t *scheduler_flags, uint32_t *common_flags, uint32_t *max_subframe);
@@ -110,9 +114,9 @@ available_resource_DL_t *check_resource_DL(eNB_MAC_INST_NB_IoT *mac_inst, int ch
 void print_available_resource_DL(eNB_MAC_INST_NB_IoT *mac_inst);
 void print_schedule_result_DL(void);
 void print_schedule_result_UL(void);
-void add_ue_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, uint16_t rnti, ce_level_t ce, uint32_t PHR, uint32_t ul_total_buffer);
+void add_ue(eNB_MAC_INST_NB_IoT *mac_inst, uint16_t rnti, ce_level_t ce, uint32_t PHR, uint32_t ul_total_buffer);
 void remove_ue(eNB_MAC_INST_NB_IoT *mac_inst, uint16_t rnti, ce_level_t ce);
-//  SIBs
+//	SIBs
 void schedule_sibs(eNB_MAC_INST_NB_IoT *mac_inst, uint32_t sibs_order, int start_subframe);
 
 //RA
@@ -128,6 +132,7 @@ void fill_rar_NB_IoT(eNB_MAC_INST_NB_IoT *inst, RA_TEMPLATE_NB_IoT *ra_template,
 void receive_msg4_ack_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, rnti_t rnti);
 int fill_msg4_NB_IoT(eNB_MAC_INST_NB_IoT *inst, RA_TEMPLATE_NB_IoT *ra_template);
 int fill_msg4_NB_IoT_fixed(eNB_MAC_INST_NB_IoT *inst, RA_TEMPLATE_NB_IoT *ra_template);
+
 
 //USS
 void schedule_uss_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_inst, uint32_t subframe, uint32_t frame, uint32_t hypersfn, int index_ss);
@@ -201,6 +206,7 @@ uint32_t get_HARQ_delay(int subcarrier_spacing, uint32_t HARQ_delay_index);
 //void generate_scheduling_result_DL(sched_temp_DL_NB_IoT_t* DCI_info, sched_temp_DL_NB_IoT_t* NPDSCH_info, sched_temp_UL_NB_IoT_t* HARQ_info, DCIFormatN1_t *DCI_inst, rnti_t rnti, uint32_t TBS, uint8_t *DLSCH_pdu);
 void generate_scheduling_result_DL(uint32_t NPDCCH_sf_end, uint32_t NPDCCH_sf_start, uint32_t NPDSCH_sf_end, uint32_t NPDSCH_sf_start, uint32_t HARQ_sf_end, uint32_t HARQ_sf_start, DCIFormatN1_t *DCI_pdu, rnti_t rnti, uint32_t TBS, uint8_t *DLSCH_pdu);
 //void fill_DCI_N1(DCIFormatN1_t *DCI_N1, UE_TEMPLATE_NB_IoT *UE_info, uint32_t scheddly, uint32_t I_sf, uint32_t I_harq);
+
 //Transfrom source into hyperSF, Frame, Subframe format
 void convert_system_number(uint32_t source_sf,uint32_t *hyperSF, uint32_t *frame, uint32_t *subframe);
 //Trnasform hyperSF, Frame, Subframe format into subframe unit
@@ -226,11 +232,14 @@ void rx_sdu_NB_IoT(module_id_t module_id, int CC_id, frame_t frame, sub_frame_t 
 int output_handler(eNB_MAC_INST_NB_IoT *mac_inst, module_id_t module_id, int CC_id, uint32_t hypersfn, uint32_t frame, uint32_t subframe, uint8_t MIB_flag, uint8_t SIB1_flag, uint32_t current_time);
 // main
 
+void mac_top_init_eNB_NB_IoT(void);
+
 uint32_t to_earfcn_NB_IoT(int eutra_bandP,uint32_t dl_CarrierFreq, float m_dl);
 
 uint32_t from_earfcn_NB_IoT(int eutra_bandP,uint32_t dl_earfcn, float m_dl);
 
 int32_t get_uldl_offset_NB_IoT(int eutra_band);
+
 
 /***Preprocessor***/
 void preprocessor_uss_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_inst, uint32_t subframe, uint32_t frame, uint32_t hypersfn, int UE_list_index);
@@ -239,6 +248,5 @@ int schedule_DL_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_inst, UE_
 void fill_DCI_N0(DCIFormatN0_t *DCI_N0, UE_TEMPLATE_NB_IoT *UE_info, UE_SCHED_CTRL_NB_IoT_t *UE_sched_ctrl_info);
 void fill_DCI_N1(DCIFormatN1_t *DCI_N1, UE_TEMPLATE_NB_IoT *UE_info, UE_SCHED_CTRL_NB_IoT_t *UE_sched_ctrl_info);
 void USS_scheduling_module(eNB_MAC_INST_NB_IoT *mac_inst, uint32_t abs_subframe, uint8_t number_UE_list);
-
 
 #endif

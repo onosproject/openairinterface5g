@@ -3,7 +3,7 @@
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.0  (the "License"); you may not use this file
+ * the OAI Public License, Version 1.1  (the "License"); you may not use this file
  * except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -28,13 +28,6 @@
 */
 /*******************************************************************************/
 
-#ifndef OAI_NW_DRIVER_USE_NETLINK
-#ifdef RTAI
-#include "rtai_posix.h"
-#define RTAI_IRQ 30 //try to get this irq with RTAI
-#endif // RTAI
-#endif // OAI_NW_DRIVER_USE_NETLINK
-
 #include "constant.h"
 #include "local.h"
 #include "proto_extern.h"
@@ -58,13 +51,12 @@
 struct net_device *ue_ip_dev[UE_IP_NB_INSTANCES_MAX];
 
 #ifdef OAI_NW_DRIVER_USE_NETLINK
-extern void ue_ip_netlink_release(void);
-extern int ue_ip_netlink_init(void);
+  extern void ue_ip_netlink_release(void);
+  extern int ue_ip_netlink_init(void);
 #endif
 
 //---------------------------------------------------------------------------
-int ue_ip_find_inst(struct net_device *dev_pP)
-{
+int ue_ip_find_inst(struct net_device *dev_pP) {
   //---------------------------------------------------------------------------
   int i;
 
@@ -79,15 +71,12 @@ int ue_ip_find_inst(struct net_device *dev_pP)
 //---------------------------------------------------------------------------
 
 #ifndef OAI_NW_DRIVER_USE_NETLINK
-void *ue_ip_interrupt(void)
-{
+void *ue_ip_interrupt(void) {
   //---------------------------------------------------------------------------
   uint8_t cxi;
-
   //  ue_ip_priv_t *priv_p=netdev_priv(dev_id);
   //  unsigned int flags;
   //  priv_p->lock = SPIN_LOCK_UNLOCKED;
-
 #ifdef OAI_DRV_DEBUG_INTERRUPT
   printk("INTERRUPT - begin\n");
 #endif
@@ -106,15 +95,27 @@ void *ue_ip_interrupt(void)
 }
 #endif //NETLINK
 //---------------------------------------------------------------------------
-void ue_ip_timer(unsigned long dataP)
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 15, 0))
+  void ue_ip_timer(struct timer_list *t)
+#else
+  void ue_ip_timer(unsigned long dataP)
+#endif
 {
   //---------------------------------------------------------------------------
-  ue_ip_priv_t *priv_p=(ue_ip_priv_t *)dataP;
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 15, 0))
+  ue_ip_priv_t *priv_p = from_timer(priv_p, t, timer);
+#else
+  ue_ip_priv_t *priv_p = (ue_ip_priv_t *)dataP;
+#endif
   spin_lock(&priv_p->lock);
-  (priv_p->timer).function=ue_ip_timer;
-  (priv_p->timer).expires=jiffies+UE_IP_TIMER_TICK;
-  (priv_p->timer).data=dataP;
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 15, 0))
+  mod_timer(&priv_p->timer, jiffies + UE_IP_TIMER_TICK);
+#else
+  (priv_p->timer).function = ue_ip_timer;
+  (priv_p->timer).expires = jiffies + UE_IP_TIMER_TICK;
+  (priv_p->timer).data = dataP;
   add_timer(&priv_p->timer);
+#endif
   spin_unlock(&priv_p->lock);
   return;
   //  add_timer(&gpriv->timer);
@@ -123,11 +124,9 @@ void ue_ip_timer(unsigned long dataP)
 
 //---------------------------------------------------------------------------
 // Called by ifconfig when the device is activated by ifconfig
-int ue_ip_open(struct net_device *dev_pP)
-{
+int ue_ip_open(struct net_device *dev_pP) {
   //---------------------------------------------------------------------------
   ue_ip_priv_t *priv_p=netdev_priv(dev_pP);
-
   // Address has already been set at init
 #ifndef OAI_NW_DRIVER_USE_NETLINK
 
@@ -144,23 +143,25 @@ int ue_ip_open(struct net_device *dev_pP)
     netif_wake_queue(dev_pP);
   }
 
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 15, 0))
+  timer_setup(&(priv_p->timer), ue_ip_timer, 0);
+  (priv_p->timer).expires   = jiffies+UE_IP_TIMER_TICK;
+#else
   init_timer(&priv_p->timer);
   (priv_p->timer).expires   = jiffies+UE_IP_TIMER_TICK;
   (priv_p->timer).data      = (unsigned long)priv_p;
   (priv_p->timer).function  = ue_ip_timer;
+#endif
   //add_timer(&priv_p->timer);
-
   printk("[UE_IP_DRV][%s] name = %s\n", __FUNCTION__, dev_pP->name);
   return 0;
 }
 
 //---------------------------------------------------------------------------
 // Called by ifconfig when the device is desactivated
-int ue_ip_stop(struct net_device *dev_pP)
-{
+int ue_ip_stop(struct net_device *dev_pP) {
   //---------------------------------------------------------------------------
   ue_ip_priv_t *priv_p = netdev_priv(dev_pP);
-
   printk("[UE_IP_DRV][%s] Begin\n", __FUNCTION__);
   del_timer(&(priv_p->timer));
   netif_stop_queue(dev_pP);
@@ -170,12 +171,10 @@ int ue_ip_stop(struct net_device *dev_pP)
 }
 
 //---------------------------------------------------------------------------
-void ue_ip_teardown(struct net_device *dev_pP)
-{
+void ue_ip_teardown(struct net_device *dev_pP) {
   //---------------------------------------------------------------------------
   ue_ip_priv_t    *priv_p;
   int              inst;
-
   printk("[UE_IP_DRV][%s] Begin\n", __FUNCTION__);
 
   if (dev_pP) {
@@ -187,7 +186,6 @@ void ue_ip_teardown(struct net_device *dev_pP)
       return;
     }
 
-
     printk("[UE_IP_DRV][%s] End\n", __FUNCTION__);
   } // check dev_pP
   else {
@@ -195,8 +193,7 @@ void ue_ip_teardown(struct net_device *dev_pP)
   }
 }
 //---------------------------------------------------------------------------
-int ue_ip_set_config(struct net_device *dev_pP, struct ifmap *map_pP)
-{
+int ue_ip_set_config(struct net_device *dev_pP, struct ifmap *map_pP) {
   //---------------------------------------------------------------------------
   printk("[UE_IP_DRV][%s] Begin\n", __FUNCTION__);
 
@@ -219,8 +216,7 @@ int ue_ip_set_config(struct net_device *dev_pP, struct ifmap *map_pP)
 
 //---------------------------------------------------------------------------
 //
-int ue_ip_hard_start_xmit(struct sk_buff *skb_pP, struct net_device *dev_pP)
-{
+int ue_ip_hard_start_xmit(struct sk_buff *skb_pP, struct net_device *dev_pP) {
   //---------------------------------------------------------------------------
   int inst;
 
@@ -243,7 +239,7 @@ int ue_ip_hard_start_xmit(struct sk_buff *skb_pP, struct net_device *dev_pP)
 
     // End debug information
     netif_stop_queue(dev_pP);
-#if  LINUX_VERSION_CODE >= KERNEL_VERSION(4,7,0)
+#if  LINUX_VERSION_CODE >= KERNEL_VERSION(4,7,0) || (defined RHEL_RELEASE_CODE && RHEL_RELEASE_CODE >= 1796)
     netif_trans_update(dev_pP);
 #else
     dev_pP->trans_start = jiffies;
@@ -272,15 +268,13 @@ int ue_ip_hard_start_xmit(struct sk_buff *skb_pP, struct net_device *dev_pP)
 }
 
 //---------------------------------------------------------------------------
-struct net_device_stats *ue_ip_get_stats(struct net_device *dev_pP)
-{
+struct net_device_stats *ue_ip_get_stats(struct net_device *dev_pP) {
   //---------------------------------------------------------------------------
   ue_ip_priv_t *priv_p = netdev_priv(dev_pP);
   return &priv_p->stats;
 }
 //---------------------------------------------------------------------------
-int ue_ip_set_mac_address(struct net_device *dev_pP, void *mac_pP)
-{
+int ue_ip_set_mac_address(struct net_device *dev_pP, void *mac_pP) {
   //---------------------------------------------------------------------------
   //struct sockaddr *addr = mac_pP;
   printk("[UE_IP_DRV][%s] CHANGE MAC ADDRESS UNSUPPORTED\n", __FUNCTION__);
@@ -288,8 +282,7 @@ int ue_ip_set_mac_address(struct net_device *dev_pP, void *mac_pP)
   return 0;
 }
 //---------------------------------------------------------------------------
-int ue_ip_change_mtu(struct net_device *dev_pP, int mtuP)
-{
+int ue_ip_change_mtu(struct net_device *dev_pP, int mtuP) {
   //---------------------------------------------------------------------------
   printk("[UE_IP_DRV][%s] CHANGE MTU %d bytes\n", __FUNCTION__, mtuP);
 
@@ -301,8 +294,7 @@ int ue_ip_change_mtu(struct net_device *dev_pP, int mtuP)
   return 0;
 }
 //---------------------------------------------------------------------------
-void ue_ip_change_rx_flags(struct net_device *dev_pP, int flagsP)
-{
+void ue_ip_change_rx_flags(struct net_device *dev_pP, int flagsP) {
   //---------------------------------------------------------------------------
   ue_ip_priv_t *priv_p =  netdev_priv(dev_pP);
   printk("[UE_IP_DRV][%s] CHANGE RX FLAGS %08X\n", __FUNCTION__, flagsP);
@@ -310,16 +302,14 @@ void ue_ip_change_rx_flags(struct net_device *dev_pP, int flagsP)
 }
 
 //---------------------------------------------------------------------------
-void ue_ip_tx_timeout(struct net_device *dev_pP)
-{
+void ue_ip_tx_timeout(struct net_device *dev_pP) {
   //---------------------------------------------------------------------------
   // Transmitter timeout, serious problems.
   ue_ip_priv_t *priv_p =  netdev_priv(dev_pP);
-
   printk("[UE_IP_DRV][%s] begin\n", __FUNCTION__);
   //  (ue_ip_priv_t *)(dev_pP->priv_p)->stats.tx_errors++;
   (priv_p->stats).tx_errors++;
-#if  LINUX_VERSION_CODE >= KERNEL_VERSION(4,7,0)
+#if  LINUX_VERSION_CODE >= KERNEL_VERSION(4,7,0) || (defined RHEL_RELEASE_CODE && RHEL_RELEASE_CODE >= 1796)
   netif_trans_update(dev_pP);
 #else
   dev_pP->trans_start = jiffies;
@@ -337,7 +327,11 @@ static const struct net_device_ops ue_ip_netdev_ops = {
   .ndo_set_mac_address    = ue_ip_set_mac_address,
   .ndo_set_config         = ue_ip_set_config,
   .ndo_do_ioctl           = NULL,
-  .ndo_change_mtu         = ue_ip_change_mtu,
+#if (defined RHEL_RELEASE_CODE && RHEL_RELEASE_CODE >= 1797)
+  .extended.ndo_change_mtu         = ue_ip_change_mtu,
+#else
+  .ndo_change_mtu   = ue_ip_change_mtu,
+#endif
   .ndo_tx_timeout         = ue_ip_tx_timeout,
   .ndo_change_rx_flags    = ue_ip_change_rx_flags,
 };
@@ -345,8 +339,7 @@ static const struct net_device_ops ue_ip_netdev_ops = {
 
 //---------------------------------------------------------------------------
 // Initialisation of the network device
-void ue_ip_init(struct net_device *dev_pP)
-{
+void ue_ip_init(struct net_device *dev_pP) {
   //---------------------------------------------------------------------------
   ue_ip_priv_t *priv_p = NULL;
 
@@ -366,19 +359,16 @@ void ue_ip_init(struct net_device *dev_pP)
   }
 }
 //---------------------------------------------------------------------------
-int init_module (void)
-{
+int init_module (void) {
   //---------------------------------------------------------------------------
   int err,inst;
   char devicename[100];
-
-
   // Initialize parameters shared with RRC
   printk("[UE_IP_DRV][%s] Starting OAI IP driver", __FUNCTION__);
 
   for (inst=0; inst<UE_IP_NB_INSTANCES_MAX; inst++) {
     printk("[UE_IP_DRV][%s] begin init instance %d\n", __FUNCTION__,inst);
-    sprintf(devicename,"oip%d",inst);
+    sprintf(devicename,"oip%d",inst+1);
 #if LINUX_VERSION_CODE < KERNEL_VERSION(3, 17, 0)
     ue_ip_dev[inst]  = alloc_netdev(sizeof(ue_ip_priv_t),devicename, ue_ip_init);
 #else
@@ -407,15 +397,12 @@ int init_module (void)
   }
 
   return err;
-
 }
 
 //---------------------------------------------------------------------------
-void cleanup_module(void)
-{
+void cleanup_module(void) {
   //---------------------------------------------------------------------------
   int inst;
-
   printk("[UE_IP_DRV][CLEANUP] begin\n");
 
   for (inst=0; inst<UE_IP_NB_INSTANCES_MAX; inst++) {

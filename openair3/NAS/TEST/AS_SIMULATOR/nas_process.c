@@ -3,7 +3,7 @@
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.0  (the "License"); you may not use this file
+ * the OAI Public License, Version 1.1  (the "License"); you may not use this file
  * except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -338,14 +338,8 @@ _attach_accept(
 {
   int index = 0;
 
-#if 0
-  /* T3412 timer value */
-  index += snprintf(buffer + index, length - index, "T3412 = ");
-  index += gprsTimer(buffer + index, length - index, &msg->t3412value);
-  /* TAI list */
-  index += snprintf(buffer + index, length - index, ", ");
-  index += taiList(buffer + index, length - index, &msg->tailist);
-#endif
+  /* T3412 timer value (TBD) */
+  /* TAI list (TBD) */
 
   /* GUTI */
   if (msg->presencemask & ATTACH_ACCEPT_GUTI_PRESENT) {

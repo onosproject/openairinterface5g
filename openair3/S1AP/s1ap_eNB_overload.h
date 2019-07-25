@@ -3,7 +3,7 @@
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.0  (the "License"); you may not use this file
+ * the OAI Public License, Version 1.1  (the "License"); you may not use this file
  * except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -28,9 +28,9 @@
 // int s1ap_eNB_handle_overload_start(eNB_mme_desc_t *eNB_desc_p,
 //                                    sctp_queue_item_t *packet_p,
 //                                    struct s1ap_message_s *message_p);
-int s1ap_eNB_handle_overload_start(uint32_t               assoc_id,
-                                   uint32_t               stream,
-                                   struct s1ap_message_s *message_p);
+int s1ap_eNB_handle_overload_start(uint32_t         assoc_id,
+                                   uint32_t         stream,
+                                   S1AP_S1AP_PDU_t *pdu);
 
 /**
  * \brief Handle an overload stop message
@@ -38,8 +38,8 @@ int s1ap_eNB_handle_overload_start(uint32_t               assoc_id,
 // int s1ap_eNB_handle_overload_stop(eNB_mme_desc_t *eNB_desc_p,
 //                                   sctp_queue_item_t *packet_p,
 //                                   struct s1ap_message_s *message_p);
-int s1ap_eNB_handle_overload_stop(uint32_t               assoc_id,
-                                  uint32_t               stream,
-                                  struct s1ap_message_s *message_p);
+int s1ap_eNB_handle_overload_stop(uint32_t         assoc_id,
+                                  uint32_t         stream,
+                                  S1AP_S1AP_PDU_t *pdu);
 
 #endif /* S1AP_ENB_OVERLOAD_H_ */

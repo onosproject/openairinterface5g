@@ -3,7 +3,7 @@
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.0  (the "License"); you may not use this file
+ * the OAI Public License, Version 1.1  (the "License"); you may not use this file
  * except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -37,25 +37,10 @@
 
 #    include "UTIL/MEM/mem_block.h"
 //-----------------------------------------------------------------------------
-#        ifdef RLC_AM_INIT_C
-#            define private_rlc_am_init(x)    x
-#            define protected_rlc_am_init(x)  x
-#            define public_rlc_am_init(x)     x
-#        else
-#            ifdef RLC_AM_MODULE
-#                define private_rlc_am_init(x)
-#                define protected_rlc_am_init(x)  extern x
-#                define public_rlc_am_init(x)     extern x
-#            else
-#                define private_rlc_am_init(x)
-#                define protected_rlc_am_init(x)
-#                define public_rlc_am_init(x)     extern x
-#            endif
-#        endif
 //-----------------------------------------------------------------------------
 #include "platform_types.h"
 #include "platform_constants.h"
-#include "PHY/defs.h"
+//#include "PHY/defs.h"
 
 
 /*! \struct  rlc_am_info_t
@@ -84,13 +69,13 @@ uint32_t* enableStatusReportSN_Gap_NB_IoT; /*OPTIONAL*/
 * \param[in]  ctxtP                     Running context.
 * \param[in]  rlc_pP                    RLC AM protocol instance pointer.
 */
-public_rlc_am_init( void rlc_am_init   (const protocol_ctxt_t* const ctxtP, rlc_am_entity_t* rlc_pP);)
+void rlc_am_init   (const protocol_ctxt_t* const ctxtP, rlc_am_entity_t* rlc_pP);
 
 /*! \fn void rlc_am_cleanup(rlc_am_entity_t *const rlc_pP)
 * \brief    Free all memory resources allocated and kept by this RLC AM instance.
 * \param[in]  rlc_pP                    RLC AM protocol instance pointer.
 */
-public_rlc_am_init( void rlc_am_cleanup(rlc_am_entity_t* rlc_pP);)
+void rlc_am_cleanup(rlc_am_entity_t* rlc_pP);
 
 /*! \fn void rlc_am_configure(const protocol_ctxt_t* const ctxtP, rlc_am_entity_t * const rlc_pP,  uint16_t max_retx_thresholdP, uint16_t poll_pduP, uint16_t poll_byteP, uint32_t t_poll_retransmitP, uint32_t t_reorderingP, uint32_t t_status_prohibitP)
 * \brief    Set RLC AM protocol parameters.
@@ -104,14 +89,14 @@ AMD PDU.
 * \param[in]  t_reorderingP             This timer is used by the receiving side of an AM RLC entity in order to detect loss of RLC PDUs at lower layer, value in frames.
 * \param[in]  t_status_prohibitP        This timer is used by the receiving side of an AM RLC entity in order to prohibit transmission of a STATUS PDU, value in frames.
 */
-public_rlc_am_init( void rlc_am_configure(const protocol_ctxt_t* const ctxtP,
+void rlc_am_configure(const protocol_ctxt_t* const ctxtP,
                     rlc_am_entity_t * const rlc_pP,
                     const uint16_t max_retx_thresholdP,
                     const uint16_t poll_pduP,
                     const uint16_t poll_byteP,
                     const uint32_t t_poll_retransmitP,
                     const uint32_t t_reorderingP,
-                    const uint32_t t_status_prohibitP);)
+                    const uint32_t t_status_prohibitP);
 
 
 /*! \fn void rlc_am_set_debug_infos(const protocol_ctxt_t* const ctxtP, rlc_am_entity_t * const rlc_pP, const srb_flag_t srb_flagP, const rb_id_t rb_idP)
@@ -122,6 +107,6 @@ public_rlc_am_init( void rlc_am_configure(const protocol_ctxt_t* const ctxtP,
 * \param[in]  rb_idP                    Radio bearer identifier.
 * \param[in]  chan_idP                  Transport channel identifier.
 */
-public_rlc_am_init( void rlc_am_set_debug_infos(const protocol_ctxt_t* const ctxtP, rlc_am_entity_t * const rlc_pP, const srb_flag_t srb_flagP, const rb_id_t rb_idP, const logical_chan_id_t chan_idP);)
+void rlc_am_set_debug_infos(const protocol_ctxt_t* const ctxtP, rlc_am_entity_t * const rlc_pP, const srb_flag_t srb_flagP, const rb_id_t rb_idP, const logical_chan_id_t chan_idP);
 /** @} */
 #endif

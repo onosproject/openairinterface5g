@@ -3,7 +3,7 @@
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.0  (the "License"); you may not use this file
+ * the OAI Public License, Version 1.1  (the "License"); you may not use this file
  * except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -29,7 +29,7 @@
 #include "rlc_primitives.h"
 #include "mac_primitives.h"
 #include "list.h"
-#include "UTIL/LOG/log.h"
+#include "common/utils/LOG/log.h"
 
 //-----------------------------------------------------------------------------
 void
@@ -40,7 +40,7 @@ rlc_um_display_rx_window(
 {
   unsigned long sn = 0;
   unsigned long end_sn = 0;
-  char          str[4];
+  LOG_USEDINLOG_VAR(char,str[4]);
   char          time_out_str[11];
   int           str_index;
   char          color[32];

@@ -3,7 +3,7 @@
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.0  (the "License"); you may not use this file
+ * the OAI Public License, Version 1.1  (the "License"); you may not use this file
  * except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -679,11 +679,11 @@ void print_TOOL_pk_all(struct sk_buff *skb)
 
   switch (ntohs(skb->protocol)) {
   case ETH_P_IPV6:
-    print_TOOL_pk_ipv6((struct ipv6hdr *)skb->network_header);
+    print_TOOL_pk_ipv6((struct ipv6hdr *)skb_network_header(skb));
     break;
 
   case ETH_P_IP:
-    print_TOOL_pk_ipv4((struct iphdr *)skb->network_header);
+    print_TOOL_pk_ipv4((struct iphdr *)skb_network_header(skb));
     break;
   }
 }

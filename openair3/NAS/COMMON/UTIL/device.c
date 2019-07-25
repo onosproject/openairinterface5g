@@ -3,7 +3,7 @@
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.0  (the "License"); you may not use this file
+ * the OAI Public License, Version 1.1  (the "License"); you may not use this file
  * except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -125,6 +125,7 @@ void* device_open(int type, const char* devpath, const char* params)
       if (stty_set(fd, params) != RETURNok) {
         device_close(devid);
         devid = NULL;
+        close(fd);
       }
     }
   }
@@ -175,16 +176,6 @@ void device_close(void* id)
 ssize_t device_read(void* id, char* buffer, size_t len)
 {
   const device_id_t* devid = (device_id_t*)(id);
-#if 0
-  ssize_t rbytes = read(devid->fd, buffer, len);
-
-  if (rbytes < 0) {
-    return RETURNerror;
-  }
-
-#endif
-
-  //#if 0
   ssize_t rbytes = 0;
 
   do {
@@ -197,8 +188,6 @@ ssize_t device_read(void* id, char* buffer, size_t len)
     rbytes += size;
   } while ( (buffer[rbytes-1] != '\r') && (buffer[rbytes-1] != '\n')
             && (buffer[rbytes-1] != '\0') );
-
-  //#endif
 
   return rbytes;
 }

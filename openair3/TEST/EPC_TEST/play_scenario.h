@@ -3,7 +3,7 @@
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.0  (the "License"); you may not use this file
+ * the OAI Public License, Version 1.1  (the "License"); you may not use this file
  * except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -398,7 +398,7 @@ typedef struct et_event_s {
   } u;
 } et_event_t;
 
-inline void et_free_pointer(void *p) {if (NULL != p) {free(p); p=NULL;}};
+inline void et_free_pointer(void *p) {if (NULL != p) {free(p);}};
 
 //-------------------------
 void et_free_packet(et_packet_t* packet);

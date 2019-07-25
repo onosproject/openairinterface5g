@@ -3,7 +3,9 @@
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.0  (the "License"); you may not use this file
+
+ * the OAI Public License, Version 1.1  (the "License"); you may not use this file
+
  * except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -26,15 +28,13 @@
  * \version 0.1
  * \company Eurecom
  * \email: knopp@eurecom.fr
- * \last changes: M. Kanj, V. Savaux
- * \date: 2018
- * \company: b<>com
- * \email: matthieu.kanj@b-com.com, vincent.savaux@b-com.com
+
  * \note
  * \warning
  */
 #ifndef __LTE_TRANSPORT_PROTO_NB_IOT__H__
 #define __LTE_TRANSPORT_PROTO_NB_IOT__H__
+
 #include "PHY/defs_NB_IoT.h"
 #include "PHY/impl_defs_lte.h"
 #include "PHY/defs.h"
@@ -50,6 +50,7 @@ void init_unscrambling_lut_NB_IoT(void);
 int generate_npss_NB_IoT(int32_t                **txdataF,
                          short                  amp,
                          LTE_DL_FRAME_PARMS  *frame_parms,
+
                          unsigned short         symbol_offset,          // symbol_offset should equal to 3 for NB-IoT 
                          unsigned short         slot_offset,
                          unsigned short         RB_IoT_ID);             // new attribute (values are between 0.. Max_RB_number-1), it does not exist for LTE
@@ -58,11 +59,13 @@ int generate_npss_NB_IoT(int32_t                **txdataF,
 
 int generate_sss_NB_IoT(int32_t                **txdataF,
                         int16_t                amp,
+
                         LTE_DL_FRAME_PARMS  *frame_parms, 
                         uint16_t               symbol_offset,             // symbol_offset = 3 for NB-IoT 
                         uint16_t               slot_offset, 
                         unsigned short         frame_number,        // new attribute (Get value from higher layer), it does not exist for LTE
                         unsigned short         RB_IoT_ID);          // new attribute (values are between 0.. Max_RB_number-1), it does not exist for LTE 
+
 
 //*****************Vincent part for Cell ID estimation from NSSS ******************// 
 
@@ -75,7 +78,9 @@ int nsss_extract_NB_IoT(PHY_VARS_UE_NB_IoT *ue,
 
 //NRS
 
+
 void generate_pilots_NB_IoT(PHY_VARS_eNB  *phy_vars_eNB,
+
                             int32_t              **txdataF,
                             int16_t              amp,
                             uint16_t             Ntti,                // Ntti = 10
@@ -85,7 +90,9 @@ void generate_pilots_NB_IoT(PHY_VARS_eNB  *phy_vars_eNB,
 
 //NPBCH
 
+
 int allocate_npbch_REs_in_RB(LTE_DL_FRAME_PARMS  *frame_parms,
+
                              int32_t                **txdataF,
                              uint32_t               *jj,
                              uint32_t               symbol_offset,
@@ -94,6 +101,7 @@ int allocate_npbch_REs_in_RB(LTE_DL_FRAME_PARMS  *frame_parms,
                              int16_t                amp,
                              unsigned short         id_offset,
                              uint32_t               *re_allocated);
+
 
 // NPDSCH
 int allocate_REs_in_RB_NB_IoT(LTE_DL_FRAME_PARMS    *frame_parms,
@@ -144,9 +152,11 @@ int generate_SIB1(NB_IoT_eNB_NDLSCH_t     *sib1_struct,
                    uint8_t                operation_mode,
                    uint8_t                release_v13_5_0);
 
+
 int generate_npbch(NB_IoT_eNB_NPBCH_t     *eNB_npbch,
                    int32_t                **txdataF,
                    int                    amp,
+
                    LTE_DL_FRAME_PARMS     *frame_parms,
                    uint8_t                *npbch_pdu,
                    uint8_t                frame_mod64,
@@ -192,6 +202,7 @@ int scrambling_npbch_REs_rel_14(LTE_DL_FRAME_PARMS      *frame_parms,
                                 uint32_t                *x2,
                                 uint32_t                *s);
 */
+
 // Functions below implement 36-211 and 36-212
 
 /*Function to pack the DCI*/ 
@@ -207,6 +218,7 @@ void add_dci_NB_IoT(DCI_PDU_NB_IoT    *DCI_pdu,
 
 
 /*Use the UL DCI Information to configure PHY and also Pack the DCI*/
+
 int generate_eNB_ulsch_params_from_dci_NB_IoT(PHY_VARS_eNB            *eNB,
                                               int                     frame,
                                               uint8_t                 subframe,
@@ -220,16 +232,19 @@ int generate_eNB_ulsch_params_from_dci_NB_IoT(PHY_VARS_eNB            *eNB,
 
 /*Use the DL DCI Information to configure PHY and also Pack the DCI*/
 int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB    *eNB,
+
                                               int                    frame,
                                               uint8_t                subframe,
                                               DCI_CONTENT            *DCI_Content,
                                               uint16_t               rnti,
                                               DCI_format_NB_IoT_t    dci_format,
+
                                               NB_IoT_eNB_NPDCCH_t      *ndlcch,
                                               LTE_DL_FRAME_PARMS  *frame_parms,
                                               uint8_t                aggregation,
 									                            uint8_t                npdcch_start_symbol,
                                               uint8_t                ncce_index);
+
 
 
 /*Function for DCI encoding, scrambling, modulation*/
@@ -253,12 +268,15 @@ uint8_t generate_dci_top_NB_IoT(NB_IoT_eNB_NPDCCH_t     *npdcch,
   @param llr8_flag If 1, indicate that the 8-bit turbo decoder should be used
   @returns 0 on success
 */
+
 /*unsigned int  ulsch_decoding_NB_IoT(PHY_VARS_eNB     *phy_vars_eNB,
                                     eNB_rxtx_proc_t  *proc,
+
                                     uint8_t                 UE_id,
                                     uint8_t                 control_only_flag,
                                     uint8_t                 Nbundled,
                                     uint8_t                 llr8_flag);
+
 */
 
 //  NB_IoT_eNB_NULSCH_t *new_eNB_ulsch_NB_IoT(uint8_t abstraction_flag);
@@ -267,10 +285,12 @@ uint8_t generate_dci_top_NB_IoT(NB_IoT_eNB_NPDCCH_t     *npdcch,
 uint8_t subframe2harq_pid_NB_IoT(LTE_DL_FRAME_PARMS *frame_parms,uint32_t frame,uint8_t subframe);
 
 
+
 /** \brief Compute Q (modulation order) based on I_MCS for PUSCH.  Implements table 8.6.1-1 from 36.213.
     @param I_MCS */
 
 //uint8_t get_Qm_ul_NB_IoT(uint8_t I_MCS);
+
 
 /** \fn dlsch_encoding(PHY_VARS_eNB *eNB,
     uint8_t *input_buffer,
@@ -466,16 +486,20 @@ void ulsch_channel_compensation_NB_IoT(int32_t **rxdataF_ext,
 
 void lte_idft_NB_IoT(LTE_DL_FRAME_PARMS *frame_parms,uint32_t *z, uint16_t Msc_PUSCH);
 
+
 void extract_CQI_NB_IoT(void *o,UCI_format_NB_IoT_t uci_format,NB_IoT_eNB_UE_stats *stats,uint8_t N_RB_DL, uint16_t * crnti, uint8_t * access_mode);
 
 //*****************Vincent part for nprach ******************//
+
 uint32_t process_nprach_NB_IoT(PHY_VARS_eNB *eNB, int frame, uint8_t subframe,uint16_t *rnti, uint16_t *preamble_index, uint16_t *timing_advance); 
 
 uint32_t TA_estimation_NB_IoT(PHY_VARS_eNB *eNB, 
+
                               int16_t *Rx_sub_sampled_buffer, 
                               uint16_t sub_sampling_rate, 
                               uint16_t FRAME_LENGTH_COMPLEX_SUB_SAMPLES, 
                               uint32_t estimated_TA_coarse, 
+
                               uint8_t coarse); 
 
 uint8_t NPRACH_detection_NB_IoT(int16_t *input_buffer,uint32_t FRAME_LENGTH_COMPLEX_SAMPLESx); 
@@ -554,9 +578,11 @@ void rotate_bpsk_NB_IoT(PHY_VARS_eNB *eNB,
                         LTE_DL_FRAME_PARMS *frame_parms,
                         int32_t **rxdataF_comp,
                         uint16_t ul_sc_start, 
+
                         uint8_t UE_id,
                         uint8_t symbol); 
 //************************************************************// 
+
 
 
 int rx_npdsch_NB_IoT(PHY_VARS_UE_NB_IoT *ue,
@@ -610,6 +636,7 @@ int dlsch_qpsk_llr_NB_IoT(NB_IoT_DL_FRAME_PARMS *frame_parms,
                            uint16_t nb_rb,
                            int16_t **llr32p,
                            uint8_t beamforming_mode); 
+
 
 /// Vincent: temporary functions 
 
@@ -665,6 +692,7 @@ int get_rep_num_SIB1_NB_IoT(uint8_t scheduling_info_sib1);
 int get_start_frame_SIB1_NB_IoT(LTE_DL_FRAME_PARMS *frame_parms,uint8_t repetition);
 
 NB_IoT_eNB_NULSCH_t *new_eNB_ulsch_NB_IoT(uint8_t max_turbo_iterations,uint8_t N_RB_UL, uint8_t abstraction_flag);
+
 
 
 

@@ -3,7 +3,7 @@
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.0  (the "License"); you may not use this file
+ * the OAI Public License, Version 1.1  (the "License"); you may not use this file
  * except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -29,10 +29,8 @@
 #ifndef PHY_MESSAGES_TYPES_H_
 #define PHY_MESSAGES_TYPES_H_
 
-#include "PHY/impl_defs_lte.h"
-#if ENABLE_RAL
-#include "ral_messages_types.h" //LG: MIH moved from repository/trunk to repository/extras
-#endif
+#include "PHY/defs_common.h"
+
 //-------------------------------------------------------------------------------------------//
 // Defines to access message fields.
 #define PHY_CONFIGURATION_REQ(mSGpTR)       (mSGpTR)->ittiMsg.phy_configuration_req

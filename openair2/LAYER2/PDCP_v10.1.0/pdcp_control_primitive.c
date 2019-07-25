@@ -3,7 +3,7 @@
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.0  (the "License"); you may not use this file
+ * the OAI Public License, Version 1.1  (the "License"); you may not use this file
  * except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -45,6 +45,7 @@ configure_pdcp_req (struct pdcp_entity *pdcpP, void *rlcP, uint8_t rlc_sap_typeP
   mem_block      *mb;
 
   mb = get_free_mem_block (sizeof (struct cpdcp_primitive), __func__);
+  if(mb==NULL) return;
   ((struct cpdcp_primitive *) mb->data)->type = CPDCP_CONFIG_REQ;
   ((struct cpdcp_primitive *) mb->data)->primitive.config_req.rlc_sap = rlcP;
   ((struct cpdcp_primitive *) mb->data)->primitive.config_req.rlc_type_sap = rlc_sap_typeP;

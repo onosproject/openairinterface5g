@@ -3,7 +3,7 @@
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.0  (the "License"); you may not use this file
+ * the OAI Public License, Version 1.1  (the "License"); you may not use this file
  * except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -66,6 +66,11 @@ typedef struct s1ap_eNB_ue_context_s {
 
   /* Reference to MME data this UE is attached to */
   struct s1ap_eNB_mme_data_s *mme_ref;
+
+  /* Signaled by the UE in RRC Connection Setup Complete and used in NAS Uplink
+   * to route NAS messages correctly. 0-based, not 1-based as in TS 36.331
+   * 6.2.2 RRC Connection Setup Complete! */
+  int selected_plmn_identity;
 
   /* Reference to eNB data this UE is attached to */
   s1ap_eNB_instance_t *eNB_instance;

@@ -3,7 +3,7 @@
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.0  (the "License"); you may not use this file
+ * the OAI Public License, Version 1.1  (the "License"); you may not use this file
  * except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -19,7 +19,7 @@
  *      contact@openairinterface.org
  */
 
-#include "defs.h"
+#include "tools_defs.h"
 
 // Approximate 10*log10(x) in fixed point : x = 0...(2^32)-1
 
@@ -597,6 +597,12 @@ int16_t dB_fixed_times10(uint32_t x)
   return dB_power;
 }
 
+uint8_t dB_fixed64(uint64_t x) {
+
+  if ((x<(((uint64_t)1)<<32))) return(dB_fixed((uint32_t)x));
+  else                         return(4*dB_table[255]+dB_fixed((uint32_t)(x>>32)));
+
+}
 int8_t dB_fixed(uint32_t x)
 {
 

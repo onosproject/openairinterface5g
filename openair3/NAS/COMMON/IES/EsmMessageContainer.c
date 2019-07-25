@@ -3,7 +3,7 @@
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.0  (the "License"); you may not use this file
+ * the OAI Public License, Version 1.1  (the "License"); you may not use this file
  * except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -86,10 +86,6 @@ int encode_esm_message_container(EsmMessageContainer *esmmessagecontainer, uint8
     encoded += encode_result;
 
   ENCODE_U16(lenPtr, encode_result, encoded);
-#if 0
-  lenPtr[1] = (((encoded - 2 - ((iei > 0) ? 1: 0))) & 0x0000ff00) >> 8;
-  lenPtr[0] =  ((encoded - 2 - ((iei > 0) ? 1: 0))) & 0x000000ff;
-#endif
   return encoded;
 }
 

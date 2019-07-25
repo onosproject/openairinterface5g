@@ -3,7 +3,7 @@
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.0  (the "License"); you may not use this file
+ * the OAI Public License, Version 1.1  (the "License"); you may not use this file
  * except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -34,24 +34,16 @@
 #define EMU_PROTO_H_
 
 void init_bypass (void);
-void bypass_init ( unsigned int (*tx_handlerP) (unsigned char,char*, unsigned int*, unsigned int*),unsigned int (*rx_handlerP) (unsigned char,char*,unsigned int));
+void bypass_init ( unsigned int (*tx_handlerP) (unsigned char,char *, unsigned int *, unsigned int *),unsigned int (*rx_handlerP) (unsigned char,char *,unsigned int));
 int bypass_rx_data(unsigned int frame, unsigned int last_slot,
                    unsigned int next_slot, uint8_t is_master);
 void  bypass_signal_mac_phy(unsigned int frame, unsigned int last_slot,
                             unsigned int next_slot, uint8_t is_master);
-#ifndef USER_MODE
-int multicast_link_write_sock (int groupP, char *dataP, unsigned int sizeP);
-int bypass_tx_handler(unsigned int fifo, int rw);
-int bypass_rx_handler(unsigned int fifo, int rw);
-#else
-void bypass_rx_handler(unsigned int Num_bytes,char *Rx_buffer);
-#endif
-
 void bypass_tx_data (emu_transport_info_t Type, unsigned int frame, unsigned int next_slot);
 
 void emulation_tx_rx(void);
 
-unsigned int emul_tx_handler(unsigned char Mode,char *Tx_buffer,unsigned int* Nbytes,unsigned int *Nb_flows);
+unsigned int emul_tx_handler(unsigned char Mode,char *Tx_buffer,unsigned int *Nbytes,unsigned int *Nb_flows);
 unsigned int emul_rx_handler(unsigned char Mode,char *rx_buffer, unsigned int Nbytes);
 
 unsigned int emul_rx_data(void);
@@ -70,5 +62,6 @@ int multicast_link_read_data_from_sock(uint8_t eNB_flag);
 void clear_eNB_transport_info(uint8_t);
 void clear_UE_transport_info(uint8_t);
 int netlink_init(void);
+int netlink_init_tun(char *ifsuffix, int num_if);
 
 #endif /* EMU_PROTO_H_ */

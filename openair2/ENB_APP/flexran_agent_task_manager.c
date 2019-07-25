@@ -3,7 +3,7 @@
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.0  (the "License"); you may not use this file
+ * the OAI Public License, Version 1.1  (the "License"); you may not use this file
  * except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -77,6 +77,7 @@ flexran_agent_task_queue_t *flexran_agent_task_queue_init(mid_t mod_id, size_t c
   if (queue == NULL)
     goto error;
 
+  queue->mutex = NULL;
   /* If no comparator was given, use the default one */
   if (cmp == NULL)
     queue->cmp = _flexran_agent_task_queue_cmp;

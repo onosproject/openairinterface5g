@@ -3,7 +3,7 @@
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.0  (the "License"); you may not use this file
+ * the OAI Public License, Version 1.1  (the "License"); you may not use this file
  * except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -37,8 +37,10 @@
 extern "C" {
 #endif
 
+
 typedef struct {
   int      socket_fd;
+  int      type;
   uint64_t bytes_sent;
   uint64_t packets_sent;
   uint64_t bytes_received;
@@ -46,10 +48,16 @@ typedef struct {
 } socket_link_t;
 
 socket_link_t *new_link_server(int port);
-socket_link_t *new_link_client(char *server, int port);
-int link_send_packet(socket_link_t *link, void *data, int size);
+socket_link_t *new_link_client(const char *server, int port);
+/* setting bind_addr to NULL binds server to INADDR_ANY */
+socket_link_t *new_link_udp_server(const char *bind_addr, int bind_port);
+socket_link_t *new_link_udp_client(const char *server, int port);
+socket_link_t *new_link_sctp_server(int port);
+socket_link_t *new_link_sctp_client(const char *server, int port);
+int link_send_packet(socket_link_t *link, void *data, int size, const char *peer_addr, int port);
 int link_receive_packet(socket_link_t *link, void **data, int *size);
 int close_link(socket_link_t *link);
+
 
 #ifdef __cplusplus
 }

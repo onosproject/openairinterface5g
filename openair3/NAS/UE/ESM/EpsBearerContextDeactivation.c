@@ -3,7 +3,7 @@
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.0  (the "License"); you may not use this file
+ * the OAI Public License, Version 1.1  (the "License"); you may not use this file
  * except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -195,6 +195,8 @@ int esm_proc_eps_bearer_context_deactivate_request(nas_user_t *user, int ebi, in
   int pid, bid;
   int rc = RETURNok;
   esm_data_t *esm_data = user->esm_data;
+  bid = 0;
+  pid = 0;
 
   LOG_TRACE(INFO, "ESM-PROC  - EPS bearer context deactivation "
             "requested by the network (ebi=%d)", ebi);

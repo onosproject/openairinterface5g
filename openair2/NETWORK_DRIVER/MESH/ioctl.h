@@ -3,7 +3,7 @@
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.0  (the "License"); you may not use this file
+ * the OAI Public License, Version 1.1  (the "License"); you may not use this file
  * except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -64,7 +64,8 @@
 // Max number of entry of a message list
 #define NAS_LIST_CX_MAX 32
 #define NAS_LIST_RB_MAX 32
-#define NAS_LIST_CLASS_MAX  32
+#define NAS_LIST_CLASS_MAX 16 // 32 is too high!!:
+/* risk of  stack problems: KEEP ATTENTION TO COMPILATION WARNINGS */
 
 typedef unsigned short nasMsgType_t;
 

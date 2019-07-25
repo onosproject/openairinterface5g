@@ -3,7 +3,7 @@
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.0  (the "License"); you may not use this file
+ * the OAI Public License, Version 1.1  (the "License"); you may not use this file
  * except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -333,7 +333,7 @@ void oai_nw_drv_common_class_wireless2ip(uint16_t dlen,
 
   printk("\n");
 #endif //OAI_DRV_DEBUG_RECEIVE
-  netif_rx(skb);
+  netif_rx_ni(skb);
 #ifdef OAI_DRV_DEBUG_RECEIVE
   printk("[OAI_IP_DRV][%s] end\n",__FUNCTION__);
 #endif

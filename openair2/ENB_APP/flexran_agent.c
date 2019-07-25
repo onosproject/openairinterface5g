@@ -3,7 +3,7 @@
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.0  (the "License"); you may not use this file
+ * the OAI Public License, Version 1.1  (the "License"); you may not use this file
  * except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -21,36 +21,17 @@
 
 /*! \file flexran_agent.h
  * \brief top level flexran agent receive thread and itti task
- * \author Xenofon Foukas and Navid Nikaein
- * \date 2016
+ * \author Xenofon Foukas and Navid Nikaein and shahab SHARIAT BAGHERI
+ * \date 2017
  * \version 0.1
  */
 
-#include "flexran_agent_common.h"
-#include "log.h"
+#define _GNU_SOURCE
 #include "flexran_agent.h"
-#include "flexran_agent_mac_defs.h"
-#include "flexran_agent_mac.h"
-#include "flexran_agent_mac_internal.h"
 
-#include "flexran_agent_extern.h"
-
-#include "assertions.h"
-
-#include "flexran_agent_net_comm.h"
-#include "flexran_agent_async.h"
-
+#include <pthread.h>
 #include <arpa/inet.h>
 
-//#define TEST_TIMER
-
-flexran_agent_instance_t flexran_agent[NUM_MAX_ENB];
-
-char in_ip[40];
-static uint16_t in_port;
-char local_cache[40];
-
-void *send_thread(void *args);
 void *receive_thread(void *args);
 pthread_t new_thread(void *(*f)(void *), void *b);
 Protocol__FlexranMessage *flexran_agent_timeout(void* args);
@@ -63,15 +44,14 @@ int agent_task_created = 0;
 */
 void *flexran_agent_task(void *args){
 
-  //flexran_agent_instance_t         *d = (flexran_agent_instance_t *) args;
+  //flexran_agent_info_t         *d = (flexran_agent_info_t *) args;
   Protocol__FlexranMessage *msg;
   void *data;
   int size;
-  err_code_t err_code;
+  err_code_t err_code=0;
   int                   priority = 0;
 
   MessageDef                     *msg_p           = NULL;
-  const char                     *msg_name        = NULL;
   int                             result;
   struct flexran_agent_timer_element_s * elem = NULL;
 
@@ -81,10 +61,10 @@ void *flexran_agent_task(void *args){
     // Wait for a message
     itti_receive_msg (TASK_FLEXRAN_AGENT, &msg_p);
     DevAssert(msg_p != NULL);
-    msg_name = ITTI_MSG_NAME (msg_p);
 
     switch (ITTI_MSG_ID(msg_p)) {
     case TERMINATE_MESSAGE:
+      LOG_W(FLEXRAN_AGENT, " *** Exiting FLEXRAN thread\n");
       itti_exit_task ();
       break;
 
@@ -107,7 +87,7 @@ void *flexran_agent_task(void *args){
       break;
 
     default:
-      LOG_E(FLEXRAN_AGENT, "Received unexpected message %s\n", msg_name);
+      LOG_E(FLEXRAN_AGENT, "Received unexpected message %s\n", ITTI_MSG_NAME (msg_p));
       break;
     }
 
@@ -115,7 +95,8 @@ void *flexran_agent_task(void *args){
     AssertFatal (result == EXIT_SUCCESS, "Failed to free memory (%d)!\n", result);
     continue;
   error:
-    LOG_E(FLEXRAN_AGENT,"flexran_agent_task: error %d occured\n",err_code);
+    if (err_code != 0)
+      LOG_E(FLEXRAN_AGENT,"flexran_agent_task: error %d occured\n",err_code);
   } while (1);
 
   return NULL;
@@ -123,22 +104,23 @@ void *flexran_agent_task(void *args){
 
 void *receive_thread(void *args) {
 
-  flexran_agent_instance_t         *d = args;
+  flexran_agent_info_t  *d = args;
   void                  *data;
   int                   size;
   int                   priority;
-  err_code_t             err_code;
+  err_code_t             err_code=0;
 
   Protocol__FlexranMessage *msg;
+  pthread_setname_np(pthread_self(), "flexran_rx_thr");
   
   while (1) {
 
-    while (flexran_agent_msg_recv(d->enb_id, FLEXRAN_AGENT_DEFAULT, &data, &size, &priority) == 0) {
+    while ((size = flexran_agent_msg_recv(d->mod_id, FLEXRAN_AGENT_DEFAULT, &data, &priority)) > 0) {
       
       LOG_D(FLEXRAN_AGENT,"received message with size %d\n", size);
   
       // Invoke the message handler
-      msg=flexran_agent_handle_message(d->enb_id, data, size);
+      msg=flexran_agent_handle_message(d->mod_id, data, size);
 
       free(data);
     
@@ -146,7 +128,7 @@ void *receive_thread(void *args) {
       if (msg != NULL){
 	data=flexran_agent_pack_message(msg,&size);
 
-	if (flexran_agent_msg_send(d->enb_id, FLEXRAN_AGENT_DEFAULT, data, size, priority)) {
+	if (flexran_agent_msg_send(d->mod_id, FLEXRAN_AGENT_DEFAULT, data, size, priority)) {
 	  err_code = PROTOCOL__FLEXRAN_ERR__MSG_ENQUEUING;
 	  goto error;
 	}
@@ -159,7 +141,8 @@ void *receive_thread(void *args) {
   return NULL;
 
 error:
-  LOG_E(FLEXRAN_AGENT,"receive_thread: error %d occured\n",err_code);
+  if (err_code != 0)
+     LOG_E(FLEXRAN_AGENT,"receive_thread: error %d occured\n",err_code);
   return NULL;
 }
 
@@ -197,38 +180,18 @@ pthread_t new_thread(void *(*f)(void *), void *b) {
 }
 
 int channel_container_init = 0;
-int flexran_agent_start(mid_t mod_id, const Enb_properties_array_t* enb_properties){
-  
+int flexran_agent_start(mid_t mod_id)
+{
+  flexran_agent_info_t *flexran = RC.flexran[mod_id];
   int channel_id;
-  
-  flexran_set_enb_vars(mod_id, RAN_LTE_OAI);
-  flexran_agent[mod_id].enb_id = mod_id;
-  
-  /* 
-   * check the configuration
-   */ 
-  if (enb_properties->properties[mod_id]->flexran_agent_cache != NULL) {
-    strncpy(local_cache, enb_properties->properties[mod_id]->flexran_agent_cache, sizeof(local_cache));
-    local_cache[sizeof(local_cache) - 1] = 0;
-  } else {
-    strcpy(local_cache, DEFAULT_FLEXRAN_AGENT_CACHE);
+  char *in_ip = flexran->remote_ipv4_addr;
+  uint16_t in_port = flexran->remote_port;
+
+  /* if this agent is disabled, return and don't do anything */
+  if (!flexran->enabled) {
+    LOG_I(FLEXRAN_AGENT, "FlexRAN Agent for eNB %d is DISABLED\n", mod_id);
+    return 100;
   }
-  
-  if (enb_properties->properties[mod_id]->flexran_agent_ipv4_address != 0) {
-    inet_ntop(AF_INET, &(enb_properties->properties[mod_id]->flexran_agent_ipv4_address), in_ip, INET_ADDRSTRLEN);
-  } else {
-    strcpy(in_ip, DEFAULT_FLEXRAN_AGENT_IPv4_ADDRESS ); 
-  }
-  
-  if (enb_properties->properties[mod_id]->flexran_agent_port != 0 ) {
-    in_port = enb_properties->properties[mod_id]->flexran_agent_port;
-  } else {
-    in_port = DEFAULT_FLEXRAN_AGENT_PORT ;
-  }
-  LOG_I(FLEXRAN_AGENT,"starting enb agent client for module id %d on ipv4 %s, port %d\n",  
-	flexran_agent[mod_id].enb_id,
-	in_ip,
-	in_port);
 
   /*
    * Initialize the channel container
@@ -240,6 +203,11 @@ int flexran_agent_start(mid_t mod_id, const Enb_properties_array_t* enb_properti
   /*Create the async channel info*/
   flexran_agent_async_channel_t *channel_info = flexran_agent_async_channel_info(mod_id, in_ip, in_port);
 
+  if (!channel_info) {
+    LOG_E(FLEXRAN_AGENT, "could not create channel_info\n");
+    exit(1);
+  }
+
   /*Create a channel using the async channel info*/
   channel_id = flexran_agent_create_channel((void *) channel_info, 
 					flexran_agent_async_msg_send, 
@@ -248,12 +216,14 @@ int flexran_agent_start(mid_t mod_id, const Enb_properties_array_t* enb_properti
 
   
   if (channel_id <= 0) {
+    LOG_E(FLEXRAN_AGENT, "could not create channel\n");
     goto error;
   }
 
   flexran_agent_channel_t *channel = get_channel(channel_id);
   
   if (channel == NULL) {
+    LOG_E(FLEXRAN_AGENT, "could not get channel for channel_id %d\n", channel_id);
     goto error;
   }
 
@@ -264,44 +234,92 @@ int flexran_agent_start(mid_t mod_id, const Enb_properties_array_t* enb_properti
    *flexran_agent_register_channel(mod_id, channel, FLEXRAN_AGENT_MAC);
    */
 
-  /*Initialize the continuous MAC stats update mechanism*/
-  flexran_agent_init_cont_mac_stats_update(mod_id);
-  
-  new_thread(receive_thread, &flexran_agent[mod_id]);
+  /*Initialize the continuous stats update mechanism*/
+  if (flexran_agent_init_cont_stats_update(mod_id) < 0) {
+    LOG_E(FLEXRAN_AGENT, "could not initialize continuous stats updates\n");
+    goto error;
+  }
 
-  /*Initialize and register the mac xface. Must be modified later
-   *for more flexibility in agent management */
+  new_thread(receive_thread, flexran);
 
-  AGENT_MAC_xface *mac_agent_xface = (AGENT_MAC_xface *) malloc(sizeof(AGENT_MAC_xface));
-  flexran_agent_register_mac_xface(mod_id, mac_agent_xface);
-  
+  /* Register and initialize the control modules depending on capabilities.
+   * After registering, calling flexran_agent_get_*_xface() tells whether a
+   * control module is operational */
+  uint16_t caps = flexran_get_capabilities_mask(mod_id);
+  LOG_I(FLEXRAN_AGENT, "Agent handles BS ID %ld, capabilities=0x%x => handling%s%s%s%s%s%s%s%s\n",
+        flexran_get_bs_id(mod_id), caps,
+        FLEXRAN_CAP_LOPHY(caps) ? " LOPHY" : "",
+        FLEXRAN_CAP_HIPHY(caps) ? " HIPHY" : "",
+        FLEXRAN_CAP_LOMAC(caps) ? " LOMAC" : "",
+        FLEXRAN_CAP_HIMAC(caps) ? " HIMAC" : "",
+        FLEXRAN_CAP_RLC(caps)   ? " RLC"   : "",
+        FLEXRAN_CAP_PDCP(caps)  ? " PDCP"  : "",
+        FLEXRAN_CAP_SDAP(caps)  ? " SDAP"  : "",
+        FLEXRAN_CAP_RRC(caps)   ? " RRC"   : "");
+
+  if (FLEXRAN_CAP_LOPHY(caps) || FLEXRAN_CAP_HIPHY(caps)) {
+    flexran_agent_register_phy_xface(mod_id);
+    LOG_I(FLEXRAN_AGENT, "registered PHY interface/CM for eNB %d\n", mod_id);
+  }
+
+  if (FLEXRAN_CAP_LOMAC(caps) || FLEXRAN_CAP_HIMAC(caps)) {
+    flexran_agent_register_mac_xface(mod_id);
+    flexran_agent_init_mac_agent(mod_id);
+    LOG_I(FLEXRAN_AGENT, "registered MAC interface/CM for eNB %d\n", mod_id);
+  }
+
+  if (FLEXRAN_CAP_RRC(caps)) {
+    flexran_agent_register_rrc_xface(mod_id);
+    LOG_I(FLEXRAN_AGENT, "registered RRC interface/CM for eNB %d\n", mod_id);
+  }
+
+  if (FLEXRAN_CAP_PDCP(caps)) {
+    flexran_agent_register_pdcp_xface(mod_id);
+    LOG_I(FLEXRAN_AGENT, "registered PDCP interface/CM for eNB %d\n", mod_id);
+  }
+
   /* 
    * initilize a timer 
    */ 
   
   flexran_agent_init_timer();
 
-  /*
-   * Initialize the mac agent
-   */
-  flexran_agent_init_mac_agent(mod_id);
-  
   /* 
    * start the enb agent task for tx and interaction with the underlying network function
    */ 
   if (!agent_task_created) {
-    if (itti_create_task (TASK_FLEXRAN_AGENT, flexran_agent_task, (void *) &flexran_agent[mod_id]) < 0) {
+    if (itti_create_task (TASK_FLEXRAN_AGENT, flexran_agent_task, flexran) < 0) {
       LOG_E(FLEXRAN_AGENT, "Create task for FlexRAN Agent failed\n");
       return -1;
     }
     agent_task_created = 1;
   }
-  
-  LOG_I(FLEXRAN_AGENT,"client ends\n");
+
+  pthread_mutex_init(&flexran->mutex_node_ctrl, NULL);
+  pthread_cond_init(&flexran->cond_node_ctrl, NULL);
+
+  if (flexran->node_ctrl_state == ENB_WAIT) {
+    /* wait three seconds before showing message and waiting "for real".
+     * This way, the message is (hopefully...) the last one and the user knows
+     * what is happening. If the controller sends a reconfiguration message in
+     * the meantime, the softmodem will never wait */
+    sleep(3);
+    LOG_I(ENB_APP, " * eNB %d: Waiting for FlexRAN RTController command *\n", mod_id);
+    pthread_mutex_lock(&flexran->mutex_node_ctrl);
+    while (ENB_NORMAL_OPERATION != flexran->node_ctrl_state)
+      pthread_cond_wait(&flexran->cond_node_ctrl, &flexran->mutex_node_ctrl);
+    pthread_mutex_unlock(&flexran->mutex_node_ctrl);
+
+    /* reconfigure RRC again, the agent might have changed the configuration */
+    MessageDef *msg_p = itti_alloc_new_message(TASK_ENB_APP, RRC_CONFIGURATION_REQ);
+    RRC_CONFIGURATION_REQ(msg_p) = RC.rrc[mod_id]->configuration;
+    itti_send_msg_to_task(TASK_RRC_ENB, ENB_MODULE_ID_TO_INSTANCE(mod_id), msg_p);
+  }
+
   return 0;
 
 error:
-  LOG_I(FLEXRAN_AGENT,"there was an error\n");
+  LOG_E(FLEXRAN_AGENT, "%s(): there was an error\n", __func__);
   return 1;
 
 }
@@ -312,7 +330,7 @@ Protocol__FlexranMessage *flexran_agent_timeout(void* args){
   //memcpy (timer_args, args, sizeof(*timer_args));
   flexran_agent_timer_args_t *timer_args = (flexran_agent_timer_args_t *) args;
   
-  LOG_I(FLEXRAN_AGENT, "flexran_agent %d timeout\n", timer_args->mod_id);
+  LOG_UI(FLEXRAN_AGENT, "flexran_agent %d timeout\n", timer_args->mod_id);
   //LOG_I(FLEXRAN_AGENT, "eNB action %d ENB flags %d \n", timer_args->cc_actions,timer_args->cc_report_flags);
   //LOG_I(FLEXRAN_AGENT, "UE action %d UE flags %d \n", timer_args->ue_actions,timer_args->ue_report_flags);
   

@@ -3,7 +3,7 @@
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.0  (the "License"); you may not use this file
+ * the OAI Public License, Version 1.1  (the "License"); you may not use this file
  * except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -34,7 +34,7 @@
 #include "LAYER2/MAC/vars.h"
 #include "UTIL/LOG/log_if.h"
 #include "UTIL/LOG/log_extern.h"
-#include "RRC/LITE/vars.h"
+#include "RRC/LTE/vars.h"
 #include "PHY_INTERFACE/vars.h"
 #include "UTIL/OCG/OCG.h"
 #include "LAYER2/PDCP_v10.1.0/pdcp.h"
@@ -125,7 +125,7 @@ void pdcp_rlc_test_mac_rlc_loop (struct mac_data_ind *data_indP,  struct mac_dat
 
     if (tb_src != NULL) {
       tb_size = ((struct mac_tb_req *) (tb_src->data))->tb_size_in_bits >> 3;
-      printf("[RLC-LOOP] FOUND TB SIZE IN BITS %d IN BYTES %d sizeof (mac_rlc_max_rx_header_size_t) %d\n",
+      printf("[RLC-LOOP] FOUND TB SIZE IN BITS %d IN BYTES %u sizeof (mac_rlc_max_rx_header_size_t) %d\n",
              ((struct mac_tb_req *) (tb_src->data))->tb_size_in_bits,
              tb_size, sizeof (mac_rlc_max_rx_header_size_t));
 
@@ -148,7 +148,7 @@ void pdcp_rlc_test_mac_rlc_loop (struct mac_data_ind *data_indP,  struct mac_dat
           data_indP->no_tb  += 1;
         } else {
           printf("Out of memory error\n");
-          exit(-1);
+//          exit(-1);
         }
       } else {
         printf("[RLC-LOOP] DROPPING 1 TB\n");

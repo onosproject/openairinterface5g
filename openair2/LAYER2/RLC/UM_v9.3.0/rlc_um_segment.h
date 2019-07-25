@@ -3,7 +3,7 @@
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.0  (the "License"); you may not use this file
+ * the OAI Public License, Version 1.1  (the "License"); you may not use this file
  * except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -40,27 +40,12 @@
 #        include "rlc_um_constants.h"
 #        include "list.h"
 //-----------------------------------------------------------------------------
-#        ifdef RLC_UM_SEGMENT_C
-#            define private_rlc_um_segment(x)    x
-#            define protected_rlc_um_segment(x)  x
-#            define public_rlc_um_segment(x)     x
-#        else
-#            ifdef RLC_UM_MODULE
-#                define private_rlc_um_segment(x)
-#                define protected_rlc_um_segment(x)  extern x
-#                define public_rlc_um_segment(x)     extern x
-#            else
-#                define private_rlc_um_segment(x)
-#                define protected_rlc_um_segment(x)
-#                define public_rlc_um_segment(x)     extern x
-#            endif
-#        endif
 /*! \fn void rlc_um_segment_10 (const protocol_ctxt_t* const ctxtP, rlc_um_entity_t *rlcP)
 * \brief    Segmentation procedure with 10 bits sequence number, segment the first SDU in buffer and create a PDU of the size (nb_bytes_to_transmit) requested by MAC if possible and put it in the list "pdus_to_mac_layer".
 * \param[in]  ctxtP       Running context.
 * \param[in]  rlcP        RLC UM protocol instance pointer.
 */
-protected_rlc_um_segment(void rlc_um_segment_10 (const protocol_ctxt_t* const ctxtP, rlc_um_entity_t *rlcP));
+void rlc_um_segment_10 (const protocol_ctxt_t* const ctxtP, rlc_um_entity_t *rlcP);
 
 
 /*! \fn void rlc_um_segment_5 (const protocol_ctxt_t* const ctxtP, rlc_um_entity_t *rlcP)
@@ -68,6 +53,6 @@ protected_rlc_um_segment(void rlc_um_segment_10 (const protocol_ctxt_t* const ct
 * \param[in]  ctxtP       Running context.
 * \param[in]  rlcP        RLC UM protocol instance pointer.
 */
-protected_rlc_um_segment(void rlc_um_segment_5 (const protocol_ctxt_t* const ctxtP, rlc_um_entity_t *rlcP));
+void rlc_um_segment_5 (const protocol_ctxt_t* const ctxtP, rlc_um_entity_t *rlcP);
 /** @} */
 #    endif

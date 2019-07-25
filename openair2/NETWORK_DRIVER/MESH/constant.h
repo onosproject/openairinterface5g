@@ -3,7 +3,7 @@
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.0  (the "License"); you may not use this file
+ * the OAI Public License, Version 1.1  (the "License"); you may not use this file
  * except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -47,7 +47,8 @@
 #define NAS_INET6_ADDRSTRLEN 46
 #define NAS_INET_ADDRSTRLEN 16
 
-#define NAS_CX_MAX 128 // 32  //Identical to RRC constant
+#define NAS_CX_MAX 32 //128   //Identical to RRC constant: no you cannot
+/* increase to 128  without risking stack problems: KEEP ATTENTION TO COMPILATION WARNINGS */
 //#define NAS_CX_MULTICAST_ALLNODE 2
 
 #define NAS_RETRY_LIMIT_DEFAULT 5

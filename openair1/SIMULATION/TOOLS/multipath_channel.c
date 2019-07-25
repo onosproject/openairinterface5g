@@ -3,7 +3,7 @@
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.0  (the "License"); you may not use this file
+ * the OAI Public License, Version 1.1  (the "License"); you may not use this file
  * except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -23,10 +23,12 @@
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
-#include "defs.h"
-#include "SIMULATION/RF/defs.h"
+#include "PHY/TOOLS/tools_defs.h"
+#include "SIMULATION/RF/rf.h"
+#include "sim.h"
 
 //#define DEBUG_CH
+
 uint8_t multipath_channel_nosigconv(channel_desc_t *desc)
 {
 

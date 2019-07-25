@@ -3,7 +3,7 @@
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.0  (the "License"); you may not use this file
+ * the OAI Public License, Version 1.1  (the "License"); you may not use this file
  * except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -41,6 +41,7 @@ typedef struct message_t {
   void *data;
   int  size;
   int  priority;
+
   struct message_t *next;
 } message_t;
 
@@ -50,11 +51,13 @@ typedef struct {
   volatile int    count;
   pthread_mutex_t *mutex;
   pthread_cond_t  *cond;
+  int             exit;
 } message_queue_t;
 
 message_queue_t *new_message_queue(void);
 int message_put(message_queue_t *queue, void *data, int size, int priority);
-int message_get(message_queue_t *queue, void **data, int *size, int *priority);
+int message_get(message_queue_t *queue, void **data, int *priority);
+void message_get_unlock(message_queue_t *queue);
 void destroy_message_queue(message_queue_t *queue);
 
 #ifdef __cplusplus

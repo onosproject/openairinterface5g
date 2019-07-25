@@ -3,7 +3,7 @@
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.0  (the "License"); you may not use this file
+ * the OAI Public License, Version 1.1  (the "License"); you may not use this file
  * except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -248,14 +248,11 @@ BOOL test_pdcp_data_req(void)
        * XXX mem_block_t doesn't hold buffer size, how do we keep the size
        * information if we pass mem_block_ts via a linked list?
        */
-#if 0
 
-      if (pdcp_test_pdu_buffer_size == 0 || pdcp_test_pdu_buffer == NULL) {
+      if (pdcp_test_pdu_buffer_size == 0 ) {
         msg("[TEST] PDU created by pdcp_data_req() is invalid!\n");
         return FALSE;
       }
-
-#endif
 
       /*
        * Serialize incoming mem_block_t into an unsigned character array
