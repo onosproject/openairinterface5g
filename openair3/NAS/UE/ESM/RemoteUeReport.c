@@ -81,19 +81,22 @@ int esm_proc_remote_ue_report(nas_user_t *user,int cid, unsigned int *pti)
     LOG_FUNC_IN;
     int rc = RETURNerror;
     int pid = cid - 1;
-    if (pti != NULL) {
-        esm_data_t *esm_data = user-> esm_data;
-        esm_pt_data_t *esm_pt_data = user-> esm_pt_data;
-    	LOG_TRACE(INFO, "ESM-PROC  - Assign new procedure transaction identity ");
-    	/* Assign new procedure transaction identity */
-    	*pti = esm_pt_assign(esm_pt_data);
+    esm_data_t *esm_data = user-> esm_data;
+    esm_pt_data_t *esm_pt_data = user-> esm_pt_data;
 
-    	if (*pti == ESM_PT_UNASSIGNED) {
-    		LOG_TRACE(WARNING, "ESM-PROC  - Failed to assign new procedure transaction identity");
-    		LOG_FUNC_RETURN (RETURNerror);
+    if (pti != NULL)
+    {
+  	LOG_TRACE(INFO, "ESM-PROC  - Assign new procedure transaction identity ");
+   	/* Assign new procedure transaction identity */
+   	*pti = esm_pt_assign(esm_pt_data);
+
+   	if (*pti == ESM_PT_UNASSIGNED) {
+	LOG_TRACE(WARNING, "ESM-PROC  - Failed to assign new procedure transaction identity");
+	LOG_FUNC_RETURN (RETURNerror);
     	}
     	//static int _pdn_connectivity_set_pti(esm_data_t *esm_data, int pid, int pti);
-    	/* Update the PDN connection data */
+
+   	/* Update the PDN connection data */
 
     	rc = _pdn_connectivity_set_pti(esm_data, pid, *pti);
     	if (rc != RETURNok) {

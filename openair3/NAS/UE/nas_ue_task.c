@@ -204,13 +204,19 @@ void *nas_ue_task(void *args_p)
         break;
 
         //for Remote UE Report
-      case NAS_REMOTE_UE_REPORT:
-    	  LOG_I(NAS, "[UE %d] Received %s: \n", Mod_id,  ITTI_MSG_NAME (msg_p));
+
+      case NAS_REMOTE_UE_REPORT: {
+    	  int cid = 0; // unused now
+    	  int UEid = 0;
+    	  int ret = nas_proc_remote_ue_report_test(user, cid); // generate NAS PDU (remote ue report)
 
     	  // To send remote ue report to be sent by  RRC UE to CN
-    	  int nas_itti_ul_data_req(const uint32_t ue_id, void *const data, const uint32_t length, int user_id);
-
+    	  //int nas_itti_ul_data_req(const uint32_t ue_id, void *const data, const uint32_t length, int user_id);
+    	  uint8_t testdata [] = {0,1,2,3};
+    	  nas_itti_ul_data_req(UEid, testdata, sizeof(testdata));
+    	  LOG_I(NAS, "[UE %d] Received NAS REMOTE UE REPORT %s: \n", Mod_id,  ITTI_MSG_NAME (msg_p));
     	          /* TODO not processed by NAS currently */
+      }
     	          break;
 
       case NAS_CONN_ESTABLI_CNF:
@@ -222,7 +228,7 @@ void *nas_ue_task(void *args_p)
           nas_proc_establish_cnf(user, NAS_CONN_ESTABLI_CNF (msg_p).nasMsg.data, NAS_CONN_ESTABLI_CNF (msg_p).nasMsg.length);
 
           /* TODO checks if NAS will free the nas message, better to do it there anyway! */
-          // result = itti_free (ITTI_MSG_ORIGIN_ID(msg_p), NAS_CONN_ESTABLI_CNF(msg_p).nasMsg.data);
+          // result = itti_free (ITTI_MSG_ORIGIN_ID(msg_p), LI_CNF(mNAS_CONN_ESTABsg_p).nasMsg.data);
           // AssertFatal (result == EXIT_SUCCESS, "Failed to free memory (%d)!\n", result);
         }
 

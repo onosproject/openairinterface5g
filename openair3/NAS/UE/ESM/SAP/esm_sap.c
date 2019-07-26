@@ -95,6 +95,8 @@ static const char *_esm_sap_primitive_str[] = {
   "ESM_BEARER_RESOURCE_MODIFY_REQ",
   "ESM_BEARER_RESOURCE_MODIFY_REJ",
   "ESM_UNITDATA_IND",
+  "ESM_REMOTE_UE_REPORT_REQ",
+  "ESM_REMOTE_UE_REPORT",
 };
   return _esm_sap_primitive_str[esmsapp];
 }
@@ -683,7 +685,7 @@ static int _esm_sap_recv(nas_user_t *user, int msg_type, int is_standalone,
  **                                                                        **
  ** Name:    _esm_sap_send()                                           **
  **                                                                        **
- ** Description: Processes ESM messages to send onto the network: Encoded  **
+ ** Description: Processes ESM messages to send onto the network: Encode  **
  **      the message and execute the relevant ESM procedure.       **
  **                                                                        **
  ** Inputs:  msg_type:  Type of the ESM message to be sent         **
@@ -772,6 +774,7 @@ static int _esm_sap_send(nas_user_t *user, int msg_type, int is_standalone,
     break;
 
   case REMOTE_UE_REPORT:
+	  esm_msg.header.message_type = REMOTE_UE_REPORT;
 	  rc = esm_send_remote_ue_report(ebi, &esm_msg.remote_ue_report);
 	  //#error "TODO"//
     break;

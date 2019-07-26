@@ -106,7 +106,7 @@ int nas_proc_get_pdn_addr(nas_user_t *user, int cid, int *cids, const char **add
 int nas_proc_deactivate_pdn(nas_user_t *user, int cid);
 int nas_proc_activate_pdn(nas_user_t *user, int cid);
 int nas_proc_remote_ue_report(nas_user_t *user, int cid);
-
+int nas_proc_remote_ue_report_test(nas_user_t *user, int cid);
 /*
  * --------------------------------------------------------------------------
  *      NAS procedures triggered by the network

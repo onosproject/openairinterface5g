@@ -66,7 +66,7 @@ Description Defines internal private data handled by EPS Session
  */
 typedef struct {
   int ebi;    /* EPS bearer identity of the default EPS bearer associated
-         * to the PDN connection to be activated */
+   	   	   	   * to the PDN connection to be activated */
 } default_eps_bearer_context_data_t;
 
 /*

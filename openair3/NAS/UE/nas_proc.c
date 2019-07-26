@@ -1400,7 +1400,11 @@ static int _nas_proc_activate(nas_user_t *user, int cid, int apply_to_all)
  **      Others:    None                                       **
  **                                                                        **
  ***************************************************************************/
-static int _nas_proc_remote_ue_report(nas_user_t *user, int cid)
+int nas_proc_remote_ue_report_test(nas_user_t *user, int cid)
+{
+	_nas_proc_remote_ue_report(user, cid);
+}
+int _nas_proc_remote_ue_report(nas_user_t *user, int cid)
 {
   LOG_FUNC_IN;
 
