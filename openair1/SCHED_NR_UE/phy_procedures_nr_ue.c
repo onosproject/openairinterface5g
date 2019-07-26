@@ -2714,9 +2714,9 @@ void restart_phy(PHY_VARS_NR_UE *ue,UE_nr_rxtx_proc_t *proc, uint8_t eNB_id,uint
 #endif //(0)
 
 void nr_ue_pbch_procedures(uint8_t eNB_id,
-						   PHY_VARS_NR_UE *ue,
-						   UE_nr_rxtx_proc_t *proc,
-						   uint8_t abstraction_flag)
+			   PHY_VARS_NR_UE *ue,
+			   UE_nr_rxtx_proc_t *proc,
+			   uint8_t abstraction_flag)
 {
   //  int i;
   //int pbch_tx_ant=0;
@@ -4108,10 +4108,36 @@ int is_pbch_in_slot(fapi_nr_pbch_config_t *pbch_config, int frame, int slot, int
 }
 
 
+int phy_procedures_ssb_meas(PHY_VARS_NR_UE *ue,UE_nr_rxtx_proc_t *proc,uint8_t eNB_id) {
+
+  fapi_nr_pbch_config_t *pbch_config = &ue->nrUE_config.pbch_config;
+  uint8_t ssb_periodicity = 10;// ue->ssb_periodicity; // initialized to 5ms in nr_init_ue for scenarios where UE is not configured (otherwise acquired by cell configuration from gNB or LTE)
+  int slot_pbch = is_pbch_in_slot(pbch_config, proc->frame_rx, proc->nr_tti_rx, ssb_periodicity, ue->frame_parms.slots_per_frame);
+
+  // looking for pbch only in slot where it is supposed to be
+  if ((ue->decode_MIB == 1) && slot_pbch)
+    {
+      LOG_D(PHY," ------  PBCH ChannelComp/LLR: frame.slot %d.%d ------  \n", proc->frame_rx%1024, proc->nr_tti_rx);
+
+      for (int i=1; i<4; i++) {
+
+	nr_slot_fep(ue,
+		    (ue->symbol_offset+i)%(ue->frame_parms.symbols_per_slot),
+		    proc->nr_tti_rx,
+		    0,
+		    0);
+
+
+   	nr_pbch_channel_estimation(ue,0,proc->nr_tti_rx,(ue->symbol_offset+i)%(ue->frame_parms.symbols_per_slot),i-1,(pbch_config->ssb_index)&7,pbch_config->half_frame_bit);
+
+      
+      }
+      nr_ue_ssb_measurements(eNB_id,ue,proc,0);
+    }
+}
+
 int phy_procedures_nrUE_RX(PHY_VARS_NR_UE *ue,UE_nr_rxtx_proc_t *proc,uint8_t eNB_id,
 			   uint8_t do_pdcch_flag,runmode_t mode) {
-
-
 
   int l,l2;
   int pilot1;
