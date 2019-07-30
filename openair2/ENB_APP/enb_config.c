@@ -40,7 +40,6 @@
 #include "sctp_eNB_task.h"
 #include "common/ran_context.h"
 #include "sctp_default_values.h"
-
 #include "LTE_SystemInformationBlockType2.h"
 #include "LAYER2/MAC/mac_extern.h"
 #include "LAYER2/MAC/mac_proto.h"
@@ -82,7 +81,6 @@ void RCconfig_flexran() {
                 num_enbs * sizeof(flexran_agent_info_t *),
                 num_enbs, sizeof(flexran_agent_info_t *));
   }
-
 
   for (uint16_t i = 0; i < num_enbs; i++) {
     RC.flexran[i] = calloc(1, sizeof(flexran_agent_info_t));
@@ -202,12 +200,10 @@ void RCconfig_L1(void) {
         LOG_I(PHY,"RC.eNB[%d][%d] = %p\n",j,i,RC.eNB[j][i]);
         RC.eNB[j][i]->Mod_id  = j;
         RC.eNB[j][i]->CC_id   = i;
-
       }
     }
   }
 }
-
 
 void RCconfig_macrlc(int macrlc_has_f1[MAX_MAC_INST]) {
   int               j;
@@ -245,7 +241,6 @@ void RCconfig_macrlc(int macrlc_has_f1[MAX_MAC_INST]) {
       } else { // other midhaul
         AssertFatal(1==0,"MACRLC %d: %s unknown northbound midhaul\n",j, *(MacRLC_ParamList.paramarray[j][MACRLC_TRANSPORT_N_PREFERENCE_IDX].strptr));
       }
-
 
       if (strcmp(*(MacRLC_ParamList.paramarray[j][MACRLC_TRANSPORT_S_PREFERENCE_IDX].strptr), "local_L1") == 0) {
       } else if (strcmp(*(MacRLC_ParamList.paramarray[j][MACRLC_TRANSPORT_S_PREFERENCE_IDX].strptr), "nfapi") == 0) {
@@ -294,9 +289,14 @@ int RCconfig_RRC(uint32_t i, eNB_RRC_INST *rrc, int macrlc_has_f1) {
   ccparams_lte_t ccparams_lte;
   ccparams_sidelink_t SLconfig;
   ccparams_eMTC_t eMTCconfig;
+  // for NB-IoT
+  ccparams_NB_IoT_t NBconfig;
+  memset((void *)&NBconfig,0,sizeof(ccparams_NB_IoT_t));
+
   memset((void *)&ccparams_lte,0,sizeof(ccparams_lte_t));
   memset((void *)&SLconfig,0,sizeof(ccparams_sidelink_t));
   memset((void *)&eMTCconfig,0,sizeof(ccparams_eMTC_t));
+
   paramdef_t ENBSParams[] = ENBSPARAMS_DESC;
   paramdef_t ENBParams[]  = ENBPARAMS_DESC;
   paramlist_def_t ENBParamList = {ENB_CONFIG_STRING_ENB_LIST,NULL,0};
@@ -309,6 +309,8 @@ int RCconfig_RRC(uint32_t i, eNB_RRC_INST *rrc, int macrlc_has_f1) {
   memset((void *)&srb1_params,0,sizeof(srb1_params_t));
   paramdef_t SRB1Params[] = SRB1PARAMS_DESC(srb1_params);
   paramdef_t SLParams[]              = CCPARAMS_SIDELINK_DESC(SLconfig);
+  // for NB-IoT
+  paramdef_t NBIOTParams[]              = CCPARAMS_NB_IOT_DESC((&NBconfig));
 
   /* map parameter checking array instances to parameter definition array instances */
   for (int I=0; I< ( sizeof(CCsParams)/ sizeof(paramdef_t)  ) ; I++) {
@@ -329,11 +331,9 @@ int RCconfig_RRC(uint32_t i, eNB_RRC_INST *rrc, int macrlc_has_f1) {
     // Output a list of all eNBs.
     config_getlist( &ENBParamList,ENBParams,sizeof(ENBParams)/sizeof(paramdef_t),NULL);
 
-
     if (ENBParamList.paramarray[i][ENB_ENB_ID_IDX].uptr == NULL) {
       // Calculate a default eNB ID
       if (EPC_MODE_ENABLED) {
-
         uint32_t hash;
         hash = s1ap_generate_eNB_id ();
         enb_id = i + (hash & 0xFFFF8);
@@ -343,7 +343,6 @@ int RCconfig_RRC(uint32_t i, eNB_RRC_INST *rrc, int macrlc_has_f1) {
     } else {
       enb_id = *(ENBParamList.paramarray[i][ENB_ENB_ID_IDX].uptr);
     }
-
 
     LOG_I(RRC,"Instance %d: Southbound Transport %s\n",i,*(ENBParamList.paramarray[i][ENB_TRANSPORT_S_PREFERENCE_IDX].strptr));
 
@@ -376,7 +375,6 @@ int RCconfig_RRC(uint32_t i, eNB_RRC_INST *rrc, int macrlc_has_f1) {
       } else {
         rrc->node_type = ngran_eNB_DU;
         LOG_I(RRC,"Setting node_type to ngran_eNB_DU\n");
-
       }
     }
 
@@ -428,7 +426,6 @@ int RCconfig_RRC(uint32_t i, eNB_RRC_INST *rrc, int macrlc_has_f1) {
                       RRC_CONFIGURATION_REQ(msg_p).mnc[l]);
         }
 
-
         /* measurement reports enabled? */
         if (ENBParamList.paramarray[i][ENB_ENABLE_MEASUREMENT_REPORTS].strptr != NULL &&
             *(ENBParamList.paramarray[i][ENB_ENABLE_MEASUREMENT_REPORTS].strptr) != NULL &&
@@ -459,98 +456,95 @@ int RCconfig_RRC(uint32_t i, eNB_RRC_INST *rrc, int macrlc_has_f1) {
             //printf("Component carrier %d\n",component_carrier);
             nb_cc++;
 
-            if (1 || !NODE_IS_CU(rrc->node_type)) {
-              // Cell params, MIB/SIB1 in DU
-              RRC_CONFIGURATION_REQ (msg_p).tdd_config[j] = ccparams_lte.tdd_config;
-              AssertFatal (ccparams_lte.tdd_config <= LTE_TDD_Config__subframeAssignment_sa6,
-                           "Failed to parse eNB configuration file %s, enb %d illegal tdd_config %d (should be 0-%d)!",
-                           RC.config_file_name, i, ccparams_lte.tdd_config, LTE_TDD_Config__subframeAssignment_sa6);
-              RRC_CONFIGURATION_REQ (msg_p).tdd_config_s[j] = ccparams_lte.tdd_config_s;
-              AssertFatal (ccparams_lte.tdd_config_s <= LTE_TDD_Config__specialSubframePatterns_ssp8,
-                           "Failed to parse eNB configuration file %s, enb %d illegal tdd_config_s %d (should be 0-%d)!",
-                           RC.config_file_name, i, ccparams_lte.tdd_config_s, LTE_TDD_Config__specialSubframePatterns_ssp8);
+            // Cell params, MIB/SIB1 in DU
+            RRC_CONFIGURATION_REQ (msg_p).tdd_config[j] = ccparams_lte.tdd_config;
+            AssertFatal (ccparams_lte.tdd_config <= LTE_TDD_Config__subframeAssignment_sa6,
+                         "Failed to parse eNB configuration file %s, enb %d illegal tdd_config %d (should be 0-%d)!",
+                         RC.config_file_name, i, ccparams_lte.tdd_config, LTE_TDD_Config__subframeAssignment_sa6);
+            RRC_CONFIGURATION_REQ (msg_p).tdd_config_s[j] = ccparams_lte.tdd_config_s;
+            AssertFatal (ccparams_lte.tdd_config_s <= LTE_TDD_Config__specialSubframePatterns_ssp8,
+                         "Failed to parse eNB configuration file %s, enb %d illegal tdd_config_s %d (should be 0-%d)!",
+                         RC.config_file_name, i, ccparams_lte.tdd_config_s, LTE_TDD_Config__specialSubframePatterns_ssp8);
 
-
-              if (!ccparams_lte.prefix_type)
-                AssertFatal (0,
-                             "Failed to parse eNB configuration file %s, enb %d define %s: NORMAL,EXTENDED!\n",
-                             RC.config_file_name, i, ENB_CONFIG_STRING_PREFIX_TYPE);
-              else if (strcmp(ccparams_lte.prefix_type, "NORMAL") == 0) {
-                RRC_CONFIGURATION_REQ (msg_p).prefix_type[j] = NORMAL;
-              } else  if (strcmp(ccparams_lte.prefix_type, "EXTENDED") == 0) {
-                RRC_CONFIGURATION_REQ (msg_p).prefix_type[j] = EXTENDED;
-              } else {
-                AssertFatal (0,
-                             "Failed to parse eNB configuration file %s, enb %d unknown value \"%s\" for prefix_type choice: NORMAL or EXTENDED !\n",
-                             RC.config_file_name, i, ccparams_lte.prefix_type);
-              }
+            if (!ccparams_lte.prefix_type)
+              AssertFatal (0,
+                           "Failed to parse eNB configuration file %s, enb %d define %s: NORMAL,EXTENDED!\n",
+                           RC.config_file_name, i, ENB_CONFIG_STRING_PREFIX_TYPE);
+            else if (strcmp(ccparams_lte.prefix_type, "NORMAL") == 0) {
+              RRC_CONFIGURATION_REQ (msg_p).prefix_type[j] = NORMAL;
+            } else  if (strcmp(ccparams_lte.prefix_type, "EXTENDED") == 0) {
+              RRC_CONFIGURATION_REQ (msg_p).prefix_type[j] = EXTENDED;
+            } else {
+              AssertFatal (0,
+                           "Failed to parse eNB configuration file %s, enb %d unknown value \"%s\" for prefix_type choice: NORMAL or EXTENDED !\n",
+                           RC.config_file_name, i, ccparams_lte.prefix_type);
+            }
 
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
 
-              if (!ccparams_lte.pbch_repetition)
-                AssertFatal (0,
-                             "Failed to parse eNB configuration file %s, enb %d define %s: TRUE,FALSE!\n",
-                             RC.config_file_name, i, ENB_CONFIG_STRING_PBCH_REPETITION);
-              else if (strcmp(ccparams_lte.pbch_repetition, "TRUE") == 0) {
-                RRC_CONFIGURATION_REQ (msg_p).pbch_repetition[j] = 1;
-              } else  if (strcmp(ccparams_lte.pbch_repetition, "FALSE") == 0) {
-                RRC_CONFIGURATION_REQ (msg_p).pbch_repetition[j] = 0;
-              } else {
-                AssertFatal (0,
-                             "Failed to parse eNB configuration file %s, enb %d unknown value \"%s\" for pbch_repetition choice: TRUE or FALSE !\n",
-                             RC.config_file_name, i, ccparams_lte.pbch_repetition);
-              }
+            if (!ccparams_lte.pbch_repetition)
+              AssertFatal (0,
+                           "Failed to parse eNB configuration file %s, enb %d define %s: TRUE,FALSE!\n",
+                           RC.config_file_name, i, ENB_CONFIG_STRING_PBCH_REPETITION);
+            else if (strcmp(ccparams_lte.pbch_repetition, "TRUE") == 0) {
+              RRC_CONFIGURATION_REQ (msg_p).pbch_repetition[j] = 1;
+            } else  if (strcmp(ccparams_lte.pbch_repetition, "FALSE") == 0) {
+              RRC_CONFIGURATION_REQ (msg_p).pbch_repetition[j] = 0;
+            } else {
+              AssertFatal (0,
+                           "Failed to parse eNB configuration file %s, enb %d unknown value \"%s\" for pbch_repetition choice: TRUE or FALSE !\n",
+                           RC.config_file_name, i, ccparams_lte.pbch_repetition);
+            }
 
 #endif
-              RRC_CONFIGURATION_REQ (msg_p).eutra_band[j] = ccparams_lte.eutra_band;
-              RRC_CONFIGURATION_REQ (msg_p).downlink_frequency[j] = (uint32_t) ccparams_lte.downlink_frequency;
-              RRC_CONFIGURATION_REQ (msg_p).uplink_frequency_offset[j] = (unsigned int) ccparams_lte.uplink_frequency_offset;
-              RRC_CONFIGURATION_REQ (msg_p).Nid_cell[j]= ccparams_lte.Nid_cell;
+            RRC_CONFIGURATION_REQ (msg_p).eutra_band[j] = ccparams_lte.eutra_band;
+            RRC_CONFIGURATION_REQ (msg_p).downlink_frequency[j] = (uint32_t) ccparams_lte.downlink_frequency;
+            RRC_CONFIGURATION_REQ (msg_p).uplink_frequency_offset[j] = (unsigned int) ccparams_lte.uplink_frequency_offset;
+            RRC_CONFIGURATION_REQ (msg_p).Nid_cell[j]= ccparams_lte.Nid_cell;
 
-              if (ccparams_lte.Nid_cell>503) {
-                AssertFatal (0,
-                             "Failed to parse eNB configuration file %s, enb %d unknown value \"%d\" for Nid_cell choice: 0...503 !\n",
-                             RC.config_file_name, i, ccparams_lte.Nid_cell);
-              }
-
-              RRC_CONFIGURATION_REQ (msg_p).N_RB_DL[j]= ccparams_lte.N_RB_DL;
-
-              if ((ccparams_lte.N_RB_DL!=6) &&
-                  (ccparams_lte.N_RB_DL!=15) &&
-                  (ccparams_lte.N_RB_DL!=25) &&
-                  (ccparams_lte.N_RB_DL!=50) &&
-                  (ccparams_lte.N_RB_DL!=75) &&
-                  (ccparams_lte.N_RB_DL!=100)) {
-                AssertFatal (0,
-                             "Failed to parse eNB configuration file %s, enb %d unknown value \"%d\" for N_RB_DL choice: 6,15,25,50,75,100 !\n",
-                             RC.config_file_name, i, ccparams_lte.N_RB_DL);
-              }
-
-              if (strcmp(ccparams_lte.frame_type, "FDD") == 0) {
-                RRC_CONFIGURATION_REQ (msg_p).frame_type[j] = FDD;
-              } else  if (strcmp(ccparams_lte.frame_type, "TDD") == 0) {
-                RRC_CONFIGURATION_REQ (msg_p).frame_type[j] = TDD;
-              } else {
-                AssertFatal (0,
-                             "Failed to parse eNB configuration file %s, enb %d unknown value \"%s\" for frame_type choice: FDD or TDD !\n",
-                             RC.config_file_name, i, ccparams_lte.frame_type);
-              }
-
-              if (config_check_band_frequencies(j,
-                                                RRC_CONFIGURATION_REQ (msg_p).eutra_band[j],
-                                                RRC_CONFIGURATION_REQ (msg_p).downlink_frequency[j],
-                                                RRC_CONFIGURATION_REQ (msg_p).uplink_frequency_offset[j],
-                                                RRC_CONFIGURATION_REQ (msg_p).frame_type[j])) {
-                AssertFatal(0, "error calling enb_check_band_frequencies\n");
-              }
-
-              if ((ccparams_lte.nb_antenna_ports <1) || (ccparams_lte.nb_antenna_ports > 2))
-                AssertFatal (0,
-                             "Failed to parse eNB configuration file %s, enb %d unknown value \"%d\" for nb_antenna_ports choice: 1..2 !\n",
-                             RC.config_file_name, i, ccparams_lte.nb_antenna_ports);
-
-              RRC_CONFIGURATION_REQ (msg_p).nb_antenna_ports[j] = ccparams_lte.nb_antenna_ports;
+            if (ccparams_lte.Nid_cell>503) {
+              AssertFatal (0,
+                           "Failed to parse eNB configuration file %s, enb %d unknown value \"%d\" for Nid_cell choice: 0...503 !\n",
+                           RC.config_file_name, i, ccparams_lte.Nid_cell);
             }
+
+            RRC_CONFIGURATION_REQ (msg_p).N_RB_DL[j]= ccparams_lte.N_RB_DL;
+
+            if ((ccparams_lte.N_RB_DL!=6) &&
+                (ccparams_lte.N_RB_DL!=15) &&
+                (ccparams_lte.N_RB_DL!=25) &&
+                (ccparams_lte.N_RB_DL!=50) &&
+                (ccparams_lte.N_RB_DL!=75) &&
+                (ccparams_lte.N_RB_DL!=100)) {
+              AssertFatal (0,
+                           "Failed to parse eNB configuration file %s, enb %d unknown value \"%d\" for N_RB_DL choice: 6,15,25,50,75,100 !\n",
+                           RC.config_file_name, i, ccparams_lte.N_RB_DL);
+            }
+
+            if (strcmp(ccparams_lte.frame_type, "FDD") == 0) {
+              RRC_CONFIGURATION_REQ (msg_p).frame_type[j] = FDD;
+            } else  if (strcmp(ccparams_lte.frame_type, "TDD") == 0) {
+              RRC_CONFIGURATION_REQ (msg_p).frame_type[j] = TDD;
+            } else {
+              AssertFatal (0,
+                           "Failed to parse eNB configuration file %s, enb %d unknown value \"%s\" for frame_type choice: FDD or TDD !\n",
+                           RC.config_file_name, i, ccparams_lte.frame_type);
+            }
+
+            if (config_check_band_frequencies(j,
+                                              RRC_CONFIGURATION_REQ (msg_p).eutra_band[j],
+                                              RRC_CONFIGURATION_REQ (msg_p).downlink_frequency[j],
+                                              RRC_CONFIGURATION_REQ (msg_p).uplink_frequency_offset[j],
+                                              RRC_CONFIGURATION_REQ (msg_p).frame_type[j])) {
+              AssertFatal(0, "error calling enb_check_band_frequencies\n");
+            }
+
+            if ((ccparams_lte.nb_antenna_ports <1) || (ccparams_lte.nb_antenna_ports > 2))
+              AssertFatal (0,
+                           "Failed to parse eNB configuration file %s, enb %d unknown value \"%d\" for nb_antenna_ports choice: 1..2 !\n",
+                           RC.config_file_name, i, ccparams_lte.nb_antenna_ports);
+
+            RRC_CONFIGURATION_REQ (msg_p).nb_antenna_ports[j] = ccparams_lte.nb_antenna_ports;
 
             if (!NODE_IS_DU(rrc->node_type)) { //this is CU or eNB, SIB2-20 in CU
               // Radio Resource Configuration (SIB2)
@@ -1661,6 +1655,15 @@ int RCconfig_RRC(uint32_t i, eNB_RRC_INST *rrc, int macrlc_has_f1) {
               if (eMTCconfig.eMTC_configured > 0) fill_eMTC_configuration(msg_p,&eMTCconfig, i,j,RC.config_file_name,brparamspath);
               else                            printf("No eMTC configuration, skipping it\n");
 
+              // NB-IoT configuration
+              char NBparamspath[MAX_OPTNAME_SIZE*2 + 16];
+              sprintf(NBparamspath,"%s.%s", ccspath, ENB_CONFIG_STRING_NB_IoT_PARAMETERS);
+              config_get(NBIOTParams, sizeof(NBIOTParams)/sizeof(paramdef_t), NBparamspath);
+              NBIOTRRC_CONFIGURATION_REQ(msg_p).NB_IoT_configured = NBconfig.NB_IoT_configured&1;
+
+              if (NBconfig.NB_IoT_configured > 0) fill_NB_IoT_configuration(msg_p,&NBconfig, i,j,RC.config_file_name,NBparamspath);
+              else                            printf("No NB-IoT configuration, skipping it\n");
+
               // Sidelink configuration
               char SLparamspath[MAX_OPTNAME_SIZE*2 + 16];
               sprintf(SLparamspath,"%s.%s", ccspath, ENB_CONFIG_STRING_SL_PARAMETERS);
@@ -1747,7 +1750,6 @@ int RCconfig_RRC(uint32_t i, eNB_RRC_INST *rrc, int macrlc_has_f1) {
                 break;
 
               default:
-
                 if (srb1_params.srb1_poll_pdu >= 10000)
                   rrc->srb1_poll_pdu = LTE_PollPDU_pInfinity;
                 else
@@ -1880,7 +1882,6 @@ int RCconfig_RRC(uint32_t i, eNB_RRC_INST *rrc, int macrlc_has_f1) {
               case 40:
                 rrc->srb1_timer_reordering = LTE_T_Reordering_ms40;
                 break;
-
 
               case 45:
                 rrc->srb1_timer_reordering = LTE_T_Reordering_ms45;
@@ -2247,7 +2248,6 @@ int RCconfig_S1(
                           *(ENBParamList.paramarray[k][ENB_CELL_TYPE_IDX].strptr));
             }
 
-
             S1AP_REGISTER_ENB_REQ (msg_p).eNB_name = strdup(*(ENBParamList.paramarray[k][ENB_ENB_NAME_IDX].strptr));
             S1AP_REGISTER_ENB_REQ(msg_p).tac = *ENBParamList.paramarray[k][ENB_TRACKING_AREA_CODE_IDX].uptr;
             AssertFatal(!ENBParamList.paramarray[k][ENB_MOBILE_COUNTRY_CODE_IDX_OLD].strptr
@@ -2276,7 +2276,6 @@ int RCconfig_S1(
                           || S1AP_REGISTER_ENB_REQ(msg_p).mnc[l] < 100,
                           "MNC %d cannot be encoded in two digits as requested (change mnc_digit_length to 3)\n",
                           S1AP_REGISTER_ENB_REQ(msg_p).mnc[l]);
-
             }
 
             /* Default DRX param */
@@ -2305,12 +2304,10 @@ int RCconfig_S1(
                 break;
               }
 
-
               case 256: {
                 S1AP_REGISTER_ENB_REQ(msg_p).default_drx = 3;
                 break;
               }
-
 
               default: {
                 LOG_E(S1AP, "Default I-DRX value in conf file is invalid (%i). Should be 32, 64, 128 or 256. \
@@ -2956,12 +2953,10 @@ void read_config_and_init(void) {
                 "Number of MACRLC instances %d != number of RRC instances %d\n",
                 RC.nb_macrlc_inst, RC.nb_inst);
 
-
   RCconfig_L1();
   LOG_I(PHY, "%s() RC.nb_L1_inst: %d\n", __FUNCTION__, RC.nb_L1_inst);
   RCconfig_macrlc(macrlc_has_f1);
   LOG_I(MAC, "%s() RC.nb_macrlc_inst: %d\n", __FUNCTION__, RC.nb_macrlc_inst);
-
 
   if (RC.nb_L1_inst > 0)
     AssertFatal(l1_north_init_eNB() == 0, "could not initialize L1 north interface\n");

@@ -32,7 +32,7 @@
 
 #include "common/config/config_paramdesc.h"
 #include "RRC_paramsvalues.h"
-#include <libconfig.h>
+
 
 #define ENB_CONFIG_STRING_NB_IoT_PARAMETERS                                "NBparameters"
 //RRC parameters in the config file of merge branch
@@ -88,47 +88,47 @@
 /* init for checkedparam_t structure */
 
 typedef struct ccparams_NB_IoT_s {
-	  int32_t 			NB_IoT_configured;
-	  //RRC parameters in the config file of merge branch
-	  libconfig_int     rach_raResponseWindowSize_NB;                 
-  	libconfig_int     rach_macContentionResolutionTimer_NB;       
-  	libconfig_int     rach_powerRampingStep_NB;                     
-  	libconfig_int     rach_preambleInitialReceivedTargetPower_NB;   
-  	libconfig_int     rach_preambleTransMax_CE_NB;                  
-  	libconfig_int     bcch_modificationPeriodCoeff_NB;              
-  	libconfig_int     pcch_defaultPagingCycle_NB;                   
-  	libconfig_int     nprach_CP_Length;                             
-  	libconfig_int     nprach_rsrp_range;                            
-  	libconfig_int     npdsch_nrs_Power;                             
-  	libconfig_int     npusch_ack_nack_numRepetitions_NB;            
-  	libconfig_int     npusch_srs_SubframeConfig_NB;                 
-  	libconfig_int     npusch_threeTone_CyclicShift_r13;             
-  	libconfig_int     npusch_sixTone_CyclicShift_r13;            
+	int32_t           NB_IoT_configured;
+	//RRC parameters in the config file of merge branch
+	int               rach_raResponseWindowSize_NB;                 
+  	int               rach_macContentionResolutionTimer_NB;       
+  	int               rach_powerRampingStep_NB;                     
+  	int               rach_preambleInitialReceivedTargetPower_NB;   
+  	int               rach_preambleTransMax_CE_NB;                  
+  	int               bcch_modificationPeriodCoeff_NB;              
+  	int               pcch_defaultPagingCycle_NB;                   
+  	int               nprach_CP_Length;                             
+  	int               nprach_rsrp_range;                            
+  	int               npdsch_nrs_Power;                             
+  	int               npusch_ack_nack_numRepetitions_NB;            
+  	int               npusch_srs_SubframeConfig_NB;                 
+  	int               npusch_threeTone_CyclicShift_r13;             
+  	int               npusch_sixTone_CyclicShift_r13;            
   	const char*       npusch_groupHoppingEnabled;
-  	libconfig_int     npusch_groupAssignmentNPUSCH_r13;             
-  	libconfig_int     dl_GapThreshold_NB;                           
-  	libconfig_int     dl_GapPeriodicity_NB;                         
+  	int               npusch_groupAssignmentNPUSCH_r13;             
+  	int               dl_GapThreshold_NB;                           
+  	int               dl_GapPeriodicity_NB;                         
   	const char*       dl_GapDurationCoeff_NB;
-  	libconfig_int     npusch_p0_NominalNPUSCH;                      
+  	int               npusch_p0_NominalNPUSCH;                      
   	const char*       npusch_alpha;
-  	libconfig_int     deltaPreambleMsg3;                            
+  	int               deltaPreambleMsg3;                            
 
-  	libconfig_int     ue_TimersAndConstants_t300_NB;     
-  	libconfig_int     ue_TimersAndConstants_t301_NB;     
-  	libconfig_int     ue_TimersAndConstants_t310_NB;      
-  	libconfig_int     ue_TimersAndConstants_t311_NB;      
-  	libconfig_int     ue_TimersAndConstants_n310_NB;      
-  	libconfig_int     ue_TimersAndConstants_n311_NB;      
+  	int               ue_TimersAndConstants_t300_NB;     
+  	int               ue_TimersAndConstants_t301_NB;     
+  	int               ue_TimersAndConstants_t310_NB;      
+  	int               ue_TimersAndConstants_t311_NB;      
+  	int               ue_TimersAndConstants_n310_NB;      
+  	int               ue_TimersAndConstants_n311_NB;      
 
-  	libconfig_int     nprach_Periodicity;                 
-  	libconfig_int     nprach_StartTime;                   
-  	libconfig_int     nprach_SubcarrierOffset;            
-  	libconfig_int     nprach_NumSubcarriers;              
+  	int               nprach_Periodicity;                 
+  	int               nprach_StartTime;                   
+  	int               nprach_SubcarrierOffset;            
+  	int               nprach_NumSubcarriers;              
   	const char*       nprach_SubcarrierMSG3_RangeStart;
-  	libconfig_int     maxNumPreambleAttemptCE_NB;         
-  	libconfig_int     numRepetitionsPerPreambleAttempt;   
-  	libconfig_int     npdcch_NumRepetitions_RA;           
-  	libconfig_int     npdcch_StartSF_CSS_RA;              
+  	int               maxNumPreambleAttemptCE_NB;         
+  	int               numRepetitionsPerPreambleAttempt;   
+  	int               npdcch_NumRepetitions_RA;           
+  	int               npdcch_StartSF_CSS_RA;              
   	const char*       npdcch_Offset_RA;
 } ccparams_NB_IoT_t;
 

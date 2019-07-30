@@ -44,12 +44,14 @@
 #include "LTE_SystemInformationBlockType2-NB-r13.h"
 
 
-void enb_config_init_NB_IoT(MessageDef *msg_p,  ccparams_NB_IoT_t *NBconfig, int cell_idx, int cc_idx, char *config_fname)
+void fill_NB_IoT_configuration(MessageDef *msg_p, ccparams_NB_IoT_t *NBconfig, int cell_idx, int cc_idx, char *config_fname, char *NBparamspath)
 {
+
+  printf("Found parameters for NB-IoT from %s : %s\n",config_fname,NBparamspath);
   
         //************************************ NB-IoT part ***************************************************************
 
-    switch (NBconfig.rach_raResponseWindowSize_NB) {
+    switch (NBconfig->rach_raResponseWindowSize_NB) {
               case 2:
                 NBIOTRRC_CONFIGURATION_REQ(msg_p).rach_raResponseWindowSize_NB[cc_idx] = RACH_Info_NB_r13__ra_ResponseWindowSize_r13_pp2;
                 break;
@@ -90,7 +92,7 @@ void enb_config_init_NB_IoT(MessageDef *msg_p,  ccparams_NB_IoT_t *NBconfig, int
 
               }
 
-      switch (NBconfig.rach_macContentionResolutionTimer_NB) {
+      switch (NBconfig->rach_macContentionResolutionTimer_NB) {
               case 1:
                 NBIOTRRC_CONFIGURATION_REQ(msg_p).rach_macContentionResolutionTimer_NB[cc_idx] = RACH_Info_NB_r13__mac_ContentionResolutionTimer_r13_pp1;
                 break;
@@ -131,7 +133,7 @@ void enb_config_init_NB_IoT(MessageDef *msg_p,  ccparams_NB_IoT_t *NBconfig, int
 
               }
 
-      switch (NBconfig.rach_powerRampingStep_NB) {
+      switch (NBconfig->rach_powerRampingStep_NB) {
               case 0:
                 NBIOTRRC_CONFIGURATION_REQ(msg_p).rach_powerRampingStep_NB[cc_idx] = PowerRampingParameters__powerRampingStep_dB0;
                 break;
@@ -156,7 +158,7 @@ void enb_config_init_NB_IoT(MessageDef *msg_p,  ccparams_NB_IoT_t *NBconfig, int
 
               }
 
-      switch (NBconfig.rach_preambleInitialReceivedTargetPower_NB) {
+      switch (NBconfig->rach_preambleInitialReceivedTargetPower_NB) {
               case -120:
                 NBIOTRRC_CONFIGURATION_REQ(msg_p).rach_preambleInitialReceivedTargetPower_NB[cc_idx] = PowerRampingParameters__preambleInitialReceivedTargetPower_dBm_120;
                 break;
@@ -229,7 +231,7 @@ void enb_config_init_NB_IoT(MessageDef *msg_p,  ccparams_NB_IoT_t *NBconfig, int
 
               }
 
-      switch (NBconfig.rach_preambleTransMax_CE_NB) {
+      switch (NBconfig->rach_preambleTransMax_CE_NB) {
               case 3:
                 NBIOTRRC_CONFIGURATION_REQ(msg_p).rach_preambleTransMax_CE_NB[cc_idx] = PreambleTransMax_n3;
                 break;
@@ -282,7 +284,7 @@ void enb_config_init_NB_IoT(MessageDef *msg_p,  ccparams_NB_IoT_t *NBconfig, int
 
               }
 
-      switch (NBconfig.bcch_modificationPeriodCoeff_NB) {
+      switch (NBconfig->bcch_modificationPeriodCoeff_NB) {
               case 16:
                 NBIOTRRC_CONFIGURATION_REQ(msg_p).bcch_modificationPeriodCoeff_NB[cc_idx] = BCCH_Config_NB_r13__modificationPeriodCoeff_r13_n16;
                 break;
@@ -307,7 +309,7 @@ void enb_config_init_NB_IoT(MessageDef *msg_p,  ccparams_NB_IoT_t *NBconfig, int
 
               }
 
-      switch (NBconfig.pcch_defaultPagingCycle_NB) {
+      switch (NBconfig->pcch_defaultPagingCycle_NB) {
               case 128:
                 NBIOTRRC_CONFIGURATION_REQ(msg_p).pcch_defaultPagingCycle_NB[cc_idx] = PCCH_Config_NB_r13__defaultPagingCycle_r13_rf128;
                 break;
@@ -332,7 +334,7 @@ void enb_config_init_NB_IoT(MessageDef *msg_p,  ccparams_NB_IoT_t *NBconfig, int
 
               }
 
-      switch (NBconfig.nprach_CP_Length) {
+      switch (NBconfig->nprach_CP_Length) {
               case 0:
                 NBIOTRRC_CONFIGURATION_REQ(msg_p).nprach_CP_Length[cc_idx] = NPRACH_ConfigSIB_NB_r13__nprach_CP_Length_r13_us66dot7;
                 break;
@@ -365,7 +367,7 @@ void enb_config_init_NB_IoT(MessageDef *msg_p,  ccparams_NB_IoT_t *NBconfig, int
                              config_fname, cell_idx, npdsch_nrs_Power);
 
       
-      switch (NBconfig.npusch_ack_nack_numRepetitions_NB) {
+      switch (NBconfig->npusch_ack_nack_numRepetitions_NB) {
               case 1:
                 NBIOTRRC_CONFIGURATION_REQ(msg_p).npusch_ack_nack_numRepetitions_NB[cc_idx] = ACK_NACK_NumRepetitions_NB_r13_r1;
                 break;
@@ -406,7 +408,7 @@ void enb_config_init_NB_IoT(MessageDef *msg_p,  ccparams_NB_IoT_t *NBconfig, int
 
               }
 
-      switch (NBconfig.npusch_srs_SubframeConfig_NB) {
+      switch (NBconfig->npusch_srs_SubframeConfig_NB) {
               case 0:
                 NBIOTRRC_CONFIGURATION_REQ(msg_p).npusch_srs_SubframeConfig_NB[cc_idx] = NPUSCH_ConfigCommon_NB_r13__srs_SubframeConfig_r13_sc0;
                 break;
@@ -514,7 +516,7 @@ void enb_config_init_NB_IoT(MessageDef *msg_p,  ccparams_NB_IoT_t *NBconfig, int
                              "Failed to parse eNB configuration file %s, enb %d unknown value \"%d\" for npusch_groupAssignmentNPUSCH_r13 choice: 0..29!\n",
                              config_fname, cell_idx, npusch_groupAssignmentNPUSCH_r13);
 
-      switch (NBconfig.dl_GapThreshold_NB) {
+      switch (NBconfig->dl_GapThreshold_NB) {
               case 32:
                 NBIOTRRC_CONFIGURATION_REQ(msg_p).dl_GapThreshold_NB[cc_idx] = DL_GapConfig_NB_r13__dl_GapThreshold_r13_n32;
                 break;
@@ -539,7 +541,7 @@ void enb_config_init_NB_IoT(MessageDef *msg_p,  ccparams_NB_IoT_t *NBconfig, int
 
               }
 
-      switch (NBconfig.dl_GapPeriodicity_NB) {
+      switch (NBconfig->dl_GapPeriodicity_NB) {
               case 64:
                 NBIOTRRC_CONFIGURATION_REQ(msg_p).dl_GapPeriodicity_NB[cc_idx] = DL_GapConfig_NB_r13__dl_GapPeriodicity_r13_sf64;
                 break;
@@ -564,18 +566,18 @@ void enb_config_init_NB_IoT(MessageDef *msg_p,  ccparams_NB_IoT_t *NBconfig, int
 
               }
 
-      if (strcmp(NBconfig.dl_GapDurationCoeff_NB, "oneEighth") == 0) {
-                NBIOTRRC_CONFIGURATION_REQ(msg_p).NBconfig.dl_GapDurationCoeff_NB[cc_idx] = DL_GapConfig_NB_r13__dl_GapDurationCoeff_r13_oneEighth;
-              } else if (strcmp(NBconfig.dl_GapDurationCoeff_NB, "oneFourth") == 0) {
-                NBIOTRRC_CONFIGURATION_REQ(msg_p).NBconfig.dl_GapDurationCoeff_NB[cc_idx] = DL_GapConfig_NB_r13__dl_GapDurationCoeff_r13_oneFourth;
-              } else if (strcmp(NBconfig.dl_GapDurationCoeff_NB, "threeEighth") == 0) {
-                NBIOTRRC_CONFIGURATION_REQ(msg_p).NBconfig.dl_GapDurationCoeff_NB[cc_idx] = DL_GapConfig_NB_r13__dl_GapDurationCoeff_r13_threeEighth;
-              } else if (strcmp(NBconfig.dl_GapDurationCoeff_NB, "oneHalf") == 0) {
-                NBIOTRRC_CONFIGURATION_REQ(msg_p).NBconfig.dl_GapDurationCoeff_NB[cc_idx] = DL_GapConfig_NB_r13__dl_GapDurationCoeff_r13_oneHalf;
+      if (strcmp(NBconfig->dl_GapDurationCoeff_NB, "oneEighth") == 0) {
+                NBIOTRRC_CONFIGURATION_REQ(msg_p).NBconfig->dl_GapDurationCoeff_NB[cc_idx] = DL_GapConfig_NB_r13__dl_GapDurationCoeff_r13_oneEighth;
+              } else if (strcmp(NBconfig->dl_GapDurationCoeff_NB, "oneFourth") == 0) {
+                NBIOTRRC_CONFIGURATION_REQ(msg_p).NBconfig->dl_GapDurationCoeff_NB[cc_idx] = DL_GapConfig_NB_r13__dl_GapDurationCoeff_r13_oneFourth;
+              } else if (strcmp(NBconfig->dl_GapDurationCoeff_NB, "threeEighth") == 0) {
+                NBIOTRRC_CONFIGURATION_REQ(msg_p).NBconfig->dl_GapDurationCoeff_NB[cc_idx] = DL_GapConfig_NB_r13__dl_GapDurationCoeff_r13_threeEighth;
+              } else if (strcmp(NBconfig->dl_GapDurationCoeff_NB, "oneHalf") == 0) {
+                NBIOTRRC_CONFIGURATION_REQ(msg_p).NBconfig->dl_GapDurationCoeff_NB[cc_idx] = DL_GapConfig_NB_r13__dl_GapDurationCoeff_r13_oneHalf;
               } else
                 AssertFatal (0,
-                             "Failed to parse eNB configuration file %s, enb %d unknown value \"%s\" for NBconfig.dl_GapDurationCoeff_NB choice: oneEighth,oneFourth,threeEighth,oneHalf !\n",
-                             config_fname, cell_idx, NBconfig.dl_GapDurationCoeff_NB);
+                             "Failed to parse eNB configuration file %s, enb %d unknown value \"%s\" for NBconfig->dl_GapDurationCoeff_NB choice: oneEighth,oneFourth,threeEighth,oneHalf !\n",
+                             config_fname, cell_idx, NBconfig->dl_GapDurationCoeff_NB);
 
       NBIOTRRC_CONFIGURATION_REQ(msg_p).npusch_p0_NominalNPUSCH[cc_idx] =  npusch_p0_NominalNPUSCH;
  
@@ -584,26 +586,26 @@ void enb_config_init_NB_IoT(MessageDef *msg_p,  ccparams_NB_IoT_t *NBconfig, int
                              "Failed to parse eNB configuration file %s, enb %d unknown value \"%d\" for npusch_p0_NominalNPUSCH choice: -126..24 !\n",
                              config_fname, cell_idx, npusch_p0_NominalNPUSCH);
 
-     if (strcmp(NBconfig.npusch_alpha,"AL0")==0) {
-                NBIOTRRC_CONFIGURATION_REQ(msg_p).NBconfig.npusch_alpha[cc_idx] = UplinkPowerControlCommon_NB_r13__alpha_r13_al0;
-              } else if (strcmp(NBconfig.npusch_alpha,"AL04")==0) {
-                NBIOTRRC_CONFIGURATION_REQ(msg_p).NBconfig.npusch_alpha[cc_idx] = UplinkPowerControlCommon_NB_r13__alpha_r13_al04;
-              } else if (strcmp(NBconfig.npusch_alpha,"AL05")==0) {
-                NBIOTRRC_CONFIGURATION_REQ(msg_p).NBconfig.npusch_alpha[cc_idx] = UplinkPowerControlCommon_NB_r13__alpha_r13_al05;
-              } else if (strcmp(NBconfig.npusch_alpha,"AL06")==0) {
-                NBIOTRRC_CONFIGURATION_REQ(msg_p).NBconfig.npusch_alpha[cc_idx] = UplinkPowerControlCommon_NB_r13__alpha_r13_al06;
-              } else if (strcmp(NBconfig.npusch_alpha,"AL07")==0) {
-                NBIOTRRC_CONFIGURATION_REQ(msg_p).NBconfig.npusch_alpha[cc_idx] = UplinkPowerControlCommon_NB_r13__alpha_r13_al07;
-              } else if (strcmp(NBconfig.npusch_alpha,"AL08")==0) {
-                NBIOTRRC_CONFIGURATION_REQ(msg_p).NBconfig.npusch_alpha[cc_idx] = UplinkPowerControlCommon_NB_r13__alpha_r13_al08;
-              } else if (strcmp(NBconfig.npusch_alpha,"AL09")==0) {
-                NBIOTRRC_CONFIGURATION_REQ(msg_p).NBconfig.npusch_alpha[cc_idx] = UplinkPowerControlCommon_NB_r13__alpha_r13_al09;
-              } else if (strcmp(NBconfig.npusch_alpha,"AL1")==0) {
-                NBIOTRRC_CONFIGURATION_REQ(msg_p).NBconfig.npusch_alpha[cc_idx] = UplinkPowerControlCommon_NB_r13__alpha_r13_al1;
+     if (strcmp(NBconfig->npusch_alpha,"AL0")==0) {
+                NBIOTRRC_CONFIGURATION_REQ(msg_p).NBconfig->npusch_alpha[cc_idx] = UplinkPowerControlCommon_NB_r13__alpha_r13_al0;
+              } else if (strcmp(NBconfig->npusch_alpha,"AL04")==0) {
+                NBIOTRRC_CONFIGURATION_REQ(msg_p).NBconfig->npusch_alpha[cc_idx] = UplinkPowerControlCommon_NB_r13__alpha_r13_al04;
+              } else if (strcmp(NBconfig->npusch_alpha,"AL05")==0) {
+                NBIOTRRC_CONFIGURATION_REQ(msg_p).NBconfig->npusch_alpha[cc_idx] = UplinkPowerControlCommon_NB_r13__alpha_r13_al05;
+              } else if (strcmp(NBconfig->npusch_alpha,"AL06")==0) {
+                NBIOTRRC_CONFIGURATION_REQ(msg_p).NBconfig->npusch_alpha[cc_idx] = UplinkPowerControlCommon_NB_r13__alpha_r13_al06;
+              } else if (strcmp(NBconfig->npusch_alpha,"AL07")==0) {
+                NBIOTRRC_CONFIGURATION_REQ(msg_p).NBconfig->npusch_alpha[cc_idx] = UplinkPowerControlCommon_NB_r13__alpha_r13_al07;
+              } else if (strcmp(NBconfig->npusch_alpha,"AL08")==0) {
+                NBIOTRRC_CONFIGURATION_REQ(msg_p).NBconfig->npusch_alpha[cc_idx] = UplinkPowerControlCommon_NB_r13__alpha_r13_al08;
+              } else if (strcmp(NBconfig->npusch_alpha,"AL09")==0) {
+                NBIOTRRC_CONFIGURATION_REQ(msg_p).NBconfig->npusch_alpha[cc_idx] = UplinkPowerControlCommon_NB_r13__alpha_r13_al09;
+              } else if (strcmp(NBconfig->npusch_alpha,"AL1")==0) {
+                NBIOTRRC_CONFIGURATION_REQ(msg_p).NBconfig->npusch_alpha[cc_idx] = UplinkPowerControlCommon_NB_r13__alpha_r13_al1;
               } else
                 AssertFatal (0,
-                             "Failed to parse eNB configuration file %s, enb %d unknown value \"%s\" for NBconfig.npusch_alpha choice: AL0,AL04,AL05,AL06,AL07,AL08,AL09,AL1!\n",
-                             config_fname, cell_idx, NBconfig.npusch_alpha);
+                             "Failed to parse eNB configuration file %s, enb %d unknown value \"%s\" for NBconfig->npusch_alpha choice: AL0,AL04,AL05,AL06,AL07,AL08,AL09,AL1!\n",
+                             config_fname, cell_idx, NBconfig->npusch_alpha);
 
         NBIOTRRC_CONFIGURATION_REQ(msg_p).deltaPreambleMsg3[cc_idx] =  deltaPreambleMsg3;
  
@@ -614,7 +616,7 @@ void enb_config_init_NB_IoT(MessageDef *msg_p,  ccparams_NB_IoT_t *NBconfig, int
       
 
         //************************************************************************* NB-IoT Timer ************************************************************
-        switch (NBconfig.ue_TimersAndConstants_t300_NB) {
+        switch (NBconfig->ue_TimersAndConstants_t300_NB) {
               case 2500:
                 NBIOTRRC_CONFIGURATION_REQ(msg_p).ue_TimersAndConstants_t300_NB[cc_idx] = UE_TimersAndConstants_NB_r13__t300_r13_ms2500;
                 break;
@@ -654,7 +656,7 @@ void enb_config_init_NB_IoT(MessageDef *msg_p,  ccparams_NB_IoT_t *NBconfig, int
                 break;
 
               }
-        switch (NBconfig.ue_TimersAndConstants_t301_NB) {
+        switch (NBconfig->ue_TimersAndConstants_t301_NB) {
               case 2500:
                 NBIOTRRC_CONFIGURATION_REQ(msg_p).ue_TimersAndConstants_t301_NB[cc_idx] = UE_TimersAndConstants_NB_r13__t301_r13_ms2500;
                 break;
@@ -695,7 +697,7 @@ void enb_config_init_NB_IoT(MessageDef *msg_p,  ccparams_NB_IoT_t *NBconfig, int
 
               }
 
-        switch (NBconfig.ue_TimersAndConstants_t310_NB) {
+        switch (NBconfig->ue_TimersAndConstants_t310_NB) {
               case 0:
                 NBIOTRRC_CONFIGURATION_REQ(msg_p).ue_TimersAndConstants_t310_NB[cc_idx] = UE_TimersAndConstants_NB_r13__t310_r13_ms0;
                 break;
@@ -732,7 +734,7 @@ void enb_config_init_NB_IoT(MessageDef *msg_p,  ccparams_NB_IoT_t *NBconfig, int
 
               }
 
-        switch (NBconfig.ue_TimersAndConstants_t311_NB) {
+        switch (NBconfig->ue_TimersAndConstants_t311_NB) {
               case 1000:
                 NBIOTRRC_CONFIGURATION_REQ(msg_p).ue_TimersAndConstants_t311_NB[cc_idx] = UE_TimersAndConstants_NB_r13__t311_r13_ms1000;
                 break;
@@ -769,7 +771,7 @@ void enb_config_init_NB_IoT(MessageDef *msg_p,  ccparams_NB_IoT_t *NBconfig, int
 
               }
 
-        switch (NBconfig.ue_TimersAndConstants_n310_NB) {
+        switch (NBconfig->ue_TimersAndConstants_n310_NB) {
               case 1:
                 NBIOTRRC_CONFIGURATION_REQ(msg_p).ue_TimersAndConstants_n310_NB[cc_idx] = UE_TimersAndConstants_NB_r13__n310_r13_n1;
                 break;
@@ -810,7 +812,7 @@ void enb_config_init_NB_IoT(MessageDef *msg_p,  ccparams_NB_IoT_t *NBconfig, int
 
               }
 
-        switch (NBconfig.ue_TimersAndConstants_n311_NB) {
+        switch (NBconfig->ue_TimersAndConstants_n311_NB) {
               case 1:
                 NBIOTRRC_CONFIGURATION_REQ(msg_p).ue_TimersAndConstants_n311_NB[cc_idx] = UE_TimersAndConstants_NB_r13__n311_r13_n1;
                 break;
@@ -852,7 +854,7 @@ void enb_config_init_NB_IoT(MessageDef *msg_p,  ccparams_NB_IoT_t *NBconfig, int
               }
 
         //************************************************************************** NBPRACH NB-IoT *****************************************************
-        switch (NBconfig.nprach_Periodicity) {
+        switch (NBconfig->nprach_Periodicity) {
               case 40:
                 NBIOTRRC_CONFIGURATION_REQ(msg_p).nprach_Periodicity[cc_idx] = NPRACH_Parameters_NB_r13__nprach_Periodicity_r13_ms40;
                 break;
@@ -893,7 +895,7 @@ void enb_config_init_NB_IoT(MessageDef *msg_p,  ccparams_NB_IoT_t *NBconfig, int
                 break;
               }
 
-      switch (NBconfig.nprach_StartTime) {
+      switch (NBconfig->nprach_StartTime) {
               case 8:
                 NBIOTRRC_CONFIGURATION_REQ(msg_p).nprach_StartTime[cc_idx] = NPRACH_Parameters_NB_r13__nprach_StartTime_r13_ms8;
                 break;
@@ -934,7 +936,7 @@ void enb_config_init_NB_IoT(MessageDef *msg_p,  ccparams_NB_IoT_t *NBconfig, int
                 break;
               }
 
-        switch (NBconfig.nprach_SubcarrierOffset) {
+        switch (NBconfig->nprach_SubcarrierOffset) {
               case 40:
                 NBIOTRRC_CONFIGURATION_REQ(msg_p).nprach_SubcarrierOffset[cc_idx] = NPRACH_Parameters_NB_r13__nprach_SubcarrierOffset_r13_n0;
                 break;
@@ -975,7 +977,7 @@ void enb_config_init_NB_IoT(MessageDef *msg_p,  ccparams_NB_IoT_t *NBconfig, int
                 break;
               }
 
-        switch (NBconfig.nprach_NumSubcarriers) {
+        switch (NBconfig->nprach_NumSubcarriers) {
               case 12:
                 NBIOTRRC_CONFIGURATION_REQ(msg_p).nprach_NumSubcarriers[cc_idx] = NPRACH_Parameters_NB_r13__nprach_NumSubcarriers_r13_n12;
                 break;
@@ -1000,20 +1002,20 @@ void enb_config_init_NB_IoT(MessageDef *msg_p,  ccparams_NB_IoT_t *NBconfig, int
                 break;
               }
                 
-        if (strcmp(NBconfig.nprach_SubcarrierMSG3_RangeStart, "zero") == 0) {
+        if (strcmp(NBconfig->nprach_SubcarrierMSG3_RangeStart, "zero") == 0) {
                 NBIOTRRC_CONFIGURATION_REQ(msg_p).nprach_SubcarrierMSG3_RangeStart[cc_idx] = NPRACH_Parameters_NB_r13__nprach_SubcarrierMSG3_RangeStart_r13_zero;
-              } else if (strcmp(NBconfig.nprach_SubcarrierMSG3_RangeStart, "oneThird") == 0) {
+              } else if (strcmp(NBconfig->nprach_SubcarrierMSG3_RangeStart, "oneThird") == 0) {
                 NBIOTRRC_CONFIGURATION_REQ(msg_p).nprach_SubcarrierMSG3_RangeStart[cc_idx] = NPRACH_Parameters_NB_r13__nprach_SubcarrierMSG3_RangeStart_r13_oneThird;
-              } else if (strcmp(NBconfig.nprach_SubcarrierMSG3_RangeStart, "twoThird") == 0) {
+              } else if (strcmp(NBconfig->nprach_SubcarrierMSG3_RangeStart, "twoThird") == 0) {
                 NBIOTRRC_CONFIGURATION_REQ(msg_p).nprach_SubcarrierMSG3_RangeStart[cc_idx] = NPRACH_Parameters_NB_r13__nprach_SubcarrierMSG3_RangeStart_r13_twoThird;
-              } else if (strcmp(NBconfig.nprach_SubcarrierMSG3_RangeStart, "one") == 0) {
+              } else if (strcmp(NBconfig->nprach_SubcarrierMSG3_RangeStart, "one") == 0) {
                 NBIOTRRC_CONFIGURATION_REQ(msg_p).nprach_SubcarrierMSG3_RangeStart[cc_idx] = NPRACH_Parameters_NB_r13__nprach_SubcarrierMSG3_RangeStart_r13_one;
               } else
                 AssertFatal (0,
                              "Failed to parse eNB configuration file %s, enb %d unknown value \"%s\" for nprach_SubcarrierMSG3_RangeStart choice: zero,oneThird,twoThird,one !\n",
                              config_fname, cell_idx, nprach_SubcarrierMSG3_RangeStart);
 
-        switch (NBconfig.maxNumPreambleAttemptCE_NB) {
+        switch (NBconfig->maxNumPreambleAttemptCE_NB) {
               case 3:
                 NBIOTRRC_CONFIGURATION_REQ(msg_p).maxNumPreambleAttemptCE_NB[cc_idx] = NPRACH_Parameters_NB_r13__maxNumPreambleAttemptCE_r13_n3;
                 break;
@@ -1050,7 +1052,7 @@ void enb_config_init_NB_IoT(MessageDef *msg_p,  ccparams_NB_IoT_t *NBconfig, int
                 break;
               }
 
-        switch (NBconfig.numRepetitionsPerPreambleAttempt) {
+        switch (NBconfig->numRepetitionsPerPreambleAttempt) {
               case 1:
                 NBIOTRRC_CONFIGURATION_REQ(msg_p).numRepetitionsPerPreambleAttempt[cc_idx] = NPRACH_Parameters_NB_r13__numRepetitionsPerPreambleAttempt_r13_n1;
                 break;
@@ -1091,7 +1093,7 @@ void enb_config_init_NB_IoT(MessageDef *msg_p,  ccparams_NB_IoT_t *NBconfig, int
                 break;
               }
 
-        switch (NBconfig.npdcch_NumRepetitions_RA) {
+        switch (NBconfig->npdcch_NumRepetitions_RA) {
               case 1:
                 NBIOTRRC_CONFIGURATION_REQ(msg_p).npdcch_NumRepetitions_RA[cc_idx] = NPRACH_Parameters_NB_r13__npdcch_NumRepetitions_RA_r13_r1;
                 break;
@@ -1148,7 +1150,7 @@ void enb_config_init_NB_IoT(MessageDef *msg_p,  ccparams_NB_IoT_t *NBconfig, int
                 break;
               }
 
-      switch (NBconfig.npdcch_StartSF_CSS_RA) {
+      switch (NBconfig->npdcch_StartSF_CSS_RA) {
               case 1:
                 NBIOTRRC_CONFIGURATION_REQ(msg_p).npdcch_StartSF_CSS_RA[cc_idx] = NPRACH_Parameters_NB_r13__npdcch_StartSF_CSS_RA_r13_v1dot5;
                 break;
@@ -1189,13 +1191,13 @@ void enb_config_init_NB_IoT(MessageDef *msg_p,  ccparams_NB_IoT_t *NBconfig, int
                 break;
               }
 
-        if (strcmp(NBconfig.npdcch_Offset_RA, "zero") == 0) {
+        if (strcmp(NBconfig->npdcch_Offset_RA, "zero") == 0) {
                 NBIOTRRC_CONFIGURATION_REQ(msg_p).npdcch_Offset_RA[cc_idx] = NPRACH_Parameters_NB_r13__npdcch_Offset_RA_r13_zero;
-              } else if (strcmp(NBconfig.npdcch_Offset_RA, "oneEighth") == 0) {
+              } else if (strcmp(NBconfig->npdcch_Offset_RA, "oneEighth") == 0) {
                 NBIOTRRC_CONFIGURATION_REQ(msg_p).npdcch_Offset_RA[cc_idx] = NPRACH_Parameters_NB_r13__npdcch_Offset_RA_r13_oneEighth;
-              } else if (strcmp(NBconfig.npdcch_Offset_RA, "oneFourth") == 0) {
+              } else if (strcmp(NBconfig->npdcch_Offset_RA, "oneFourth") == 0) {
                 NBIOTRRC_CONFIGURATION_REQ(msg_p).npdcch_Offset_RA[cc_idx] = NPRACH_Parameters_NB_r13__npdcch_Offset_RA_r13_oneFourth;
-              } else if (strcmp(NBconfig.npdcch_Offset_RA, "threeEighth") == 0) {
+              } else if (strcmp(NBconfig->npdcch_Offset_RA, "threeEighth") == 0) {
                 NBIOTRRC_CONFIGURATION_REQ(msg_p).npdcch_Offset_RA[cc_idx] = NPRACH_Parameters_NB_r13__npdcch_Offset_RA_r13_threeEighth;
               } else
                 AssertFatal (0,
@@ -1207,7 +1209,6 @@ void enb_config_init_NB_IoT(MessageDef *msg_p,  ccparams_NB_IoT_t *NBconfig, int
         //****************************************************************************************************************
         //****************************************************************************************************************
 
-            }
-
+}
 
 
