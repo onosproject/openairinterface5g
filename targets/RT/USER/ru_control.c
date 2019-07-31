@@ -126,7 +126,7 @@ int send_config(RU_t *ru, RRU_CONFIG_msg_t rru_config_msg){
   rru_config_msg.type = RRU_config;
   rru_config_msg.len  = sizeof(RRU_CONFIG_msg_t)-MAX_RRU_CONFIG_SIZE+sizeof(RRU_config_t);
 
-  LOG_I(PHY,"Sending Configuration to RRU %d (num_bands %d,band0 %d,txfreq %u,rxfreq %u,att_tx %d,att_rx %d,N_RB_DL %d,N_RB_UL %d,3/4FS %d, prach_FO %d, prach_CI %d\n",ru->idx,
+  LOG_I(PHY,"Sending Configuration to RRU %d (p %d, tag %d, num_bands %d,band0 %d,txfreq %u,rxfreq %u,att_tx %d,att_rx %d,N_RB_DL %d,N_RB_UL %d,3/4FS %d, prach_FO %d, prach_CI %d\n",ru->idx,
 	((RRU_config_t *)&rru_config_msg.msg[0])->p,
 	((RRU_config_t *)&rru_config_msg.msg[0])->tag,
 	((RRU_config_t *)&rru_config_msg.msg[0])->num_bands,
@@ -236,7 +236,7 @@ int attach_rru(RU_t *ru) {
 		    
   rru_config_msg.type = RRU_config;
   rru_config_msg.len  = sizeof(RRU_CONFIG_msg_t)-MAX_RRU_CONFIG_SIZE+sizeof(RRU_config_t);
-  LOG_I(PHY,"Sending Configuration to RRU %d (num_bands %d,band0 %d,txfreq %u,rxfreq %u,att_tx %d,att_rx %d,N_RB_DL %d,N_RB_UL %d,3/4FS %d, prach_FO %d, prach_CI %d)\n",ru->idx,
+  LOG_I(PHY,"Sending Configuration to RRU %d (p %d, tag %d, num_bands %d,band0 %d,txfreq %u,rxfreq %u,att_tx %d,att_rx %d,N_RB_DL %d,N_RB_UL %d,3/4FS %d, prach_FO %d, prach_CI %d)\n",ru->idx,
 	((RRU_config_t *)&rru_config_msg.msg[0])->p,
 	((RRU_config_t *)&rru_config_msg.msg[0])->tag,
 	((RRU_config_t *)&rru_config_msg.msg[0])->num_bands,
@@ -331,7 +331,7 @@ int connect_rau(RU_t *ru) {
       LOG_I(PHY,"Waiting for configuration from RAU\n");     
     }    
     else {
-      LOG_I(PHY,"Configuration received from RAU  (num_bands %d,band0 %d,txfreq %u,rxfreq %u,att_tx %d,att_rx %d,N_RB_DL %d,N_RB_UL %d,3/4FS %d, prach_FO %d, prach_CI %d)\n",
+      LOG_I(PHY,"Configuration received from RAU  (p %d, tag %d, num_bands %d,band0 %d,txfreq %u,rxfreq %u,att_tx %d,att_rx %d,N_RB_DL %d,N_RB_UL %d,3/4FS %d, prach_FO %d, prach_CI %d)\n",
 	    ((RRU_config_t *)&rru_config_msg.msg[0])->p,
 	    ((RRU_config_t *)&rru_config_msg.msg[0])->tag,
 	    ((RRU_config_t *)&rru_config_msg.msg[0])->num_bands,
@@ -578,7 +578,7 @@ void* ru_thread_control( void* param ) {
 				
 	    case RRU_config: // RRU
 	      if (ru->if_south == LOCAL_RF){
-		LOG_I(PHY,"Configuration received from RAU  (num_bands %d,band0 %d,txfreq %u,rxfreq %u,att_tx %d,att_rx %d,N_RB_DL %d,N_RB_UL %d,3/4FS %d, prach_FO %d, prach_CI %d)\n",
+		LOG_I(PHY,"Configuration received from RAU  (p %d, tag %d, num_bands %d,band0 %d,txfreq %u,rxfreq %u,att_tx %d,att_rx %d,N_RB_DL %d,N_RB_UL %d,3/4FS %d, prach_FO %d, prach_CI %d)\n",
 		      ((RRU_config_t *)&rru_config_msg.msg[0])->p,
 		      ((RRU_config_t *)&rru_config_msg.msg[0])->tag,
 		      ((RRU_config_t *)&rru_config_msg.msg[0])->num_bands,

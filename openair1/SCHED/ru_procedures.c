@@ -750,7 +750,7 @@ void ru_fep_full_2thread(RU_t *ru) {
 
         if (ru->state == RU_CHECK_SYNC) {
           if ((check_sync_pos >= 0 && check_sync_pos<8) || (check_sync_pos < 0 && check_sync_pos>-8)) {
-    		  LOG_I(PHY,"~~~~~~~~~~~    check_sync_pos %d, frame %d, cnt %d\n",check_sync_pos,proc->frame_rx,ru->wait_check,ru->missed_synch_events); 
+    		  LOG_I(PHY,"~~~~~~~~~~~    check_sync_pos %d, frame %d, cnt %d\n",check_sync_pos,proc->frame_rx,ru->wait_check); 
                   ru->wait_check++;
           }
 	  else {
@@ -797,7 +797,7 @@ void ru_fep_full_2thread(RU_t *ru) {
 	T(T_CALIBRATION_CHANNEL_ESTIMATES, T_INT(ru->idx), T_INT(proc->frame_rx), T_INT(proc->subframe_rx),
           T_INT(l),T_BUFFER(&calibration->drs_ch_estimates[0][l*12*fp->N_RB_UL],
           12*fp->N_RB_UL*sizeof(int32_t)));
-
+/*
 	Ns = 1;
         l = 10;
 
@@ -819,14 +819,15 @@ void ru_fep_full_2thread(RU_t *ru) {
                                   proc->subframe_rx,
                                   0,//u = 0..29
                                   0,//v = 0,1
-                                  /*eNB->ulsch[ru->idx]->cyclicShift,cyclic_shift,0..7*/0,
+                                  0,
                                   l,//l
                                   0,//interpolate,
-                                  0 /*eNB->ulsch[ru->idx]->rnti rnti or ru->ulsch[eNB_id]->rnti*/);
+                                  0 );
 
 	T(T_CALIBRATION_CHANNEL_ESTIMATES, T_INT(ru->idx), T_INT(proc->frame_rx), T_INT(proc->subframe_rx),
           T_INT(l),T_BUFFER(&calibration->drs_ch_estimates[0][l*12*fp->N_RB_UL],
           12*fp->N_RB_UL*sizeof(int32_t)));
+*/
        }
     
     else {
