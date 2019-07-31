@@ -388,6 +388,7 @@ void nr_phy_config_request_sim(PHY_VARS_gNB *gNB,int N_RB_DL,int N_RB_UL,int mu,
 void phy_free_nr_gNB(PHY_VARS_gNB *gNB);
 int l1_north_init_gNB(void);
 void init_nr_transport(PHY_VARS_gNB *gNB);
+NR_UE_SSB* create_ssb_node(uint8_t  i, uint8_t  h);
 
 void init_dfts(void);
 

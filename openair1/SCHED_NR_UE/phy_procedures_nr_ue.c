@@ -48,6 +48,7 @@
 //#include <sched.h>
 //#include "targets/RT/USER/nr-softmodem.h"
 #include "PHY/NR_UE_ESTIMATION/nr_estimation.h"
+#include "PHY/INIT/phy_init.h"
 
 #ifdef EMOS
 #include "SCHED/phy_procedures_emos.h"
@@ -2466,7 +2467,6 @@ void ue_pucch_procedures(PHY_VARS_NR_UE *ue,UE_nr_rxtx_proc_t *proc,uint8_t eNB_
 void phy_procedures_nrUE_TX(PHY_VARS_NR_UE *ue,UE_nr_rxtx_proc_t *proc,uint8_t gNB_id, uint8_t thread_id) {
 
 
-  NR_DL_FRAME_PARMS *frame_parms=&ue->frame_parms;
   NR_UE_ULSCH_t *ulsch_ue;
   NR_UL_UE_HARQ_t *harq_process_ul_ue;
   //int32_t ulsch_start=0;
@@ -4111,29 +4111,46 @@ int is_pbch_in_slot(fapi_nr_pbch_config_t *pbch_config, int frame, int slot, int
 int phy_procedures_ssb_meas(PHY_VARS_NR_UE *ue,UE_nr_rxtx_proc_t *proc,uint8_t eNB_id) {
 
   fapi_nr_pbch_config_t *pbch_config = &ue->nrUE_config.pbch_config;
-  uint8_t ssb_periodicity = 10;// ue->ssb_periodicity; // initialized to 5ms in nr_init_ue for scenarios where UE is not configured (otherwise acquired by cell configuration from gNB or LTE)
-  int slot_pbch = is_pbch_in_slot(pbch_config, proc->frame_rx, proc->nr_tti_rx, ssb_periodicity, ue->frame_parms.slots_per_frame);
+  uint8_t ssb_periodicity = 10;  // initialized to 5ms in nr_init_ue for scenarios where UE is not configured (otherwise acquired by cell configuration from gNB or LTE)
+  uint64_t ssb_positions = 255;  // hardcoded for now (otherwise acquired by cell configuratgion from gNB or LTE)
+  uint8_t ssb_index;
+  int slot = proc->nr_tti_rx;
+  // to set a effective slot number between 0 to 9 in the half frame where the SSB is supposed to be
+  int rel_slot = (pbch_config->half_frame_bit)? (slot-10) : slot;
+  int symbol_diff;
+  int ssb_sync_symbol = nr_get_ssb_start_symbol(&ue->frame_parms, pbch_config->ssb_index, pbch_config->half_frame_bit);
+  int current_symbol_offset;
+  NR_UE_SSB *current_ssb;
 
-  // looking for pbch only in slot where it is supposed to be
-  if ((ue->decode_MIB == 1) && slot_pbch)
-    {
-      LOG_D(PHY," ------  PBCH ChannelComp/LLR: frame.slot %d.%d ------  \n", proc->frame_rx%1024, proc->nr_tti_rx);
+  if (!((proc->frame_rx-(pbch_config->system_frame_number))%(ssb_periodicity/10))) {  // if ssb are in current frame according to periodicity
+    if(rel_slot<10 && rel_slot>=0)  {
+      for (int i=0; i<2; i++)  {  // max two SSB per slot
+	ssb_index = i + 2*rel_slot; // computing current ssb_index
+        if ((ssb_positions >> ssb_index) & 0x01)  { // going further only if the bit of ssb_positions at current ssb index is 1
 
-      for (int i=1; i<4; i++) {
+          // computing the difference in symbols between current ssb and the one where UE is synchronized
+	  if (ssb_index == pbch_config->ssb_index)
+	    symbol_diff = 0;
+          else 
+            symbol_diff = nr_get_ssb_start_symbol(&ue->frame_parms, ssb_index, pbch_config->half_frame_bit) - ssb_sync_symbol;
 
-	nr_slot_fep(ue,
-		    (ue->symbol_offset+i)%(ue->frame_parms.symbols_per_slot),
-		    proc->nr_tti_rx,
-		    0,
-		    0);
+          current_symbol_offset = ue->symbol_offset + symbol_diff ;  
+          current_ssb = create_ssb_node(ssb_index,pbch_config->half_frame_bit);
+          for (int i=1; i<4; i++) {
 
+	    nr_slot_fep(ue,
+		        (current_symbol_offset+i)%(ue->frame_parms.symbols_per_slot),
+		        slot,
+		        0,
+		        0);
 
-   	nr_pbch_channel_estimation(ue,0,proc->nr_tti_rx,(ue->symbol_offset+i)%(ue->frame_parms.symbols_per_slot),i-1,(pbch_config->ssb_index)&7,pbch_config->half_frame_bit);
-
-      
+            nr_pbch_dmrs_correlation(ue,0,slot,(current_symbol_offset+i)%(ue->frame_parms.symbols_per_slot),i-1,current_ssb);
+          }
+          current_ssb->metric = current_ssb->c_re*current_ssb->c_re + current_ssb->c_im+current_ssb->c_re;
+        }
       }
-      nr_ue_ssb_measurements(eNB_id,ue,proc,0);
     }
+  }
 }
 
 int phy_procedures_nrUE_RX(PHY_VARS_NR_UE *ue,UE_nr_rxtx_proc_t *proc,uint8_t eNB_id,
