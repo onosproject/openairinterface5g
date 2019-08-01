@@ -29,7 +29,7 @@
 #define FAPI2_IP_DSCP 0
 
 nfapi_vnf_p7_config_t *nfapi_vnf_p7_config_create() {
-  static vnf_p7_t *_this==NULL;
+  static vnf_p7_t *_this=NULL;
 
   if (_this)
     NFAPI_TRACE(NFAPI_TRACE_ERROR, "%s: called twice\n", __FUNCTION__);

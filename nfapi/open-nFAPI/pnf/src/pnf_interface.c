@@ -21,7 +21,7 @@
 #include <unistd.h>
 
 nfapi_pnf_config_t *nfapi_pnf_config_create() {
-  static pnf_t *_this==NULL;
+  static pnf_t *_this=NULL;
 
   if (_this)
     NFAPI_TRACE(NFAPI_TRACE_ERROR, "%s: called twice\n", __FUNCTION__);
