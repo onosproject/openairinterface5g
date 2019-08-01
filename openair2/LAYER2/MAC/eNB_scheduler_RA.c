@@ -139,7 +139,7 @@ add_msg3(module_id_t module_idP, int CC_id, RA_t *ra, frame_t frameP,
     ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.n_srs = 1;
     ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.size = get_TBS_UL (ra->msg3_mcs, ra->msg3_nb_rb);
     // Re13 fields
-    ul_config_pdu->ulsch_pdu.ulsch_pdu_rel13.ue_type = ra->rach_resource_type > 2 ? 2 : 1;
+    ul_config_pdu->ulsch_pdu.ulsch_pdu_rel13.ue_type = ra->rach_resource_type > 2 ? CEmodeB : CEmodeA;
     ul_config_pdu->ulsch_pdu.ulsch_pdu_rel13.total_number_of_repetitions = 1;
     ul_config_pdu->ulsch_pdu.ulsch_pdu_rel13.repetition_number = 1;
     ul_config_pdu->ulsch_pdu.ulsch_pdu_rel13.initial_transmission_sf_io = (ra->Msg3_frame * 10) + ra->Msg3_subframe;
@@ -437,7 +437,7 @@ void generate_Msg2(module_id_t module_idP,
         /* Rel10 fields */
         dl_config_pdu->dlsch_pdu.dlsch_pdu_rel10.pdsch_start = cc[CC_idP].sib1_v13ext->bandwidthReducedAccessRelatedInfo_r13->startSymbolBR_r13;
         /* Rel13 fields */
-        dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.ue_type = (ra->rach_resource_type < 3) ? 1 : 2;;
+        dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.ue_type = (ra->rach_resource_type < 3) ? CEmodeA : CEmodeB;
         dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.pdsch_payload_type = 2;        // not SI message
         dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.initial_transmission_sf_io = (10 * frameP) + subframeP;
         dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.drms_table_flag = 0;
@@ -817,7 +817,7 @@ generate_Msg4(module_id_t module_idP,
       dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.num_bf_vector = 1;
       //      dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.bf_vector                    = ;
       dl_config_pdu->dlsch_pdu.dlsch_pdu_rel10.pdsch_start = cc[CC_idP].sib1_v13ext->bandwidthReducedAccessRelatedInfo_r13->startSymbolBR_r13;
-      dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.ue_type = (ra->rach_resource_type < 3) ? 1 : 2;
+      dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.ue_type = (ra->rach_resource_type < 3) ? CEmodeA : CEmodeB;
       dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.pdsch_payload_type = 2;        // not SI message
       dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.initial_transmission_sf_io = (10 * frameP) + subframeP;
       dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.drms_table_flag = 0;
@@ -872,7 +872,7 @@ generate_Msg4(module_id_t module_idP,
       ul_config_pdu->uci_harq_pdu.ue_information.ue_information_rel8.handle = 0;      // don't know how to use this
       ul_config_pdu->uci_harq_pdu.ue_information.ue_information_rel8.rnti = ra->rnti;
       ul_config_pdu->uci_harq_pdu.ue_information.ue_information_rel13.tl.tag = NFAPI_UL_CONFIG_REQUEST_UE_INFORMATION_REL13_TAG;
-      ul_config_pdu->uci_harq_pdu.ue_information.ue_information_rel13.ue_type = (ra->rach_resource_type < 3) ? 1 : 2;
+      ul_config_pdu->uci_harq_pdu.ue_information.ue_information_rel13.ue_type = (ra->rach_resource_type < 3) ? CEmodeA : CEmodeB;
       ul_config_pdu->uci_harq_pdu.ue_information.ue_information_rel13.empty_symbols = 0;
       ul_config_pdu->uci_harq_pdu.ue_information.ue_information_rel13.total_number_of_repetitions = pucchreps[ra->rach_resource_type - 1];
       ul_config_pdu->uci_harq_pdu.ue_information.ue_information_rel13.repetition_number = 0;

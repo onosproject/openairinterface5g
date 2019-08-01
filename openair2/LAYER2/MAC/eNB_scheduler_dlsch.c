@@ -2509,7 +2509,7 @@ schedule_ue_spec_br(module_id_t module_idP,
       dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.num_bf_vector = 1;
       //      dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.bf_vector                    = ;
       dl_config_pdu->dlsch_pdu.dlsch_pdu_rel10.pdsch_start = *UE_template->physicalConfigDedicated->ext4->epdcch_Config_r11->config_r11.choice.setup.startSymbol_r11;
-      dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.ue_type = (UE_template->rach_resource_type < 3) ? 1 : 2;
+      dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.ue_type = (UE_template->rach_resource_type < 3) ? CEmodeA : CEmodeB;
       dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.pdsch_payload_type = 2;        // not SI message
       dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.initial_transmission_sf_io = (10 * frameP) + subframeP;
       dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.drms_table_flag = 0;
@@ -2530,7 +2530,7 @@ schedule_ue_spec_br(module_id_t module_idP,
       ul_config_pdu->pdu_size = (uint8_t) (2 + sizeof (nfapi_ul_config_uci_harq_pdu));
       ul_config_pdu->uci_harq_pdu.ue_information.ue_information_rel8.handle = 0;      // don't know how to use this
       ul_config_pdu->uci_harq_pdu.ue_information.ue_information_rel8.rnti = rnti;
-      ul_config_pdu->uci_harq_pdu.ue_information.ue_information_rel13.ue_type = (UE_template->rach_resource_type < 3) ? 1 : 2;
+      ul_config_pdu->uci_harq_pdu.ue_information.ue_information_rel13.ue_type = (UE_template->rach_resource_type < 3) ? CEmodeA : CEmodeB;
       ul_config_pdu->uci_harq_pdu.ue_information.ue_information_rel13.empty_symbols = 0;
       ul_config_pdu->uci_harq_pdu.ue_information.ue_information_rel13.total_number_of_repetitions = pucchreps[UE_template->rach_resource_type - 1];
       ul_config_pdu->uci_harq_pdu.ue_information.ue_information_rel13.repetition_number = 0;
@@ -3157,7 +3157,7 @@ schedule_PCH(module_id_t module_idP,
 #endif
           // Rel13 fields
 #if (LTE_RRC_VERSION >= MAKE_VERSION(13, 0, 0))
-          dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.ue_type                               = 0; // regular UE
+          dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.ue_type                               = NOCE; // regular UE
           dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.pdsch_payload_type                    = 2; // not BR
           dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.initial_transmission_sf_io            = 0xFFFF;
 #endif

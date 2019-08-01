@@ -261,7 +261,7 @@ schedule_SIB1_MBMS(module_id_t module_idP,
 	dl_config_pdu->dlsch_pdu.dlsch_pdu_rel10.pdsch_start = 3;
 	// Rel13 fields
         dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.tl.tag = NFAPI_DL_CONFIG_REQUEST_DLSCH_PDU_REL13_TAG;
-	dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.ue_type = 1;	// CEModeA UE
+	dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.ue_type = CEMODEA;
 	dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.pdsch_payload_type = 0;	// SIB1-BR
 	dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.initial_transmission_sf_io = 0xFFFF;	// absolute SFx
 
@@ -489,7 +489,7 @@ schedule_SIB1_BR(module_id_t module_idP,
 	dl_config_pdu->dlsch_pdu.dlsch_pdu_rel10.pdsch_start = 3;
 	// Rel13 fields
         dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.tl.tag = NFAPI_DL_CONFIG_REQUEST_DLSCH_PDU_REL13_TAG;
-	dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.ue_type = 1;	// CEModeA UE
+	dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.ue_type = CEMODEA;
 	dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.pdsch_payload_type = 0;	// SIB1-BR
 	dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.initial_transmission_sf_io = 0xFFFF;	// absolute SFx
 
@@ -693,7 +693,7 @@ schedule_SI_BR(module_id_t module_idP, frame_t frameP,
             // Rel10 fields (for PDSCH starting symbol)
             dl_config_pdu->dlsch_pdu.dlsch_pdu_rel10.pdsch_start                           = cc[CC_id].sib1_v13ext->bandwidthReducedAccessRelatedInfo_r13->startSymbolBR_r13;
             // Rel13 fields
-            dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.ue_type                               = 1; // CEModeA UE
+            dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.ue_type                               = CEMODEA;
             dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.pdsch_payload_type                    = 1; // SI-BR
             dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.initial_transmission_sf_io            = absSF - sf_mod_period;
 
@@ -891,7 +891,7 @@ schedule_SI_MBMS(module_id_t module_idP, frame_t frameP,
                     dl_config_pdu->dlsch_pdu.dlsch_pdu_rel10.pdsch_start                           = 3;
                     // Rel13 fields
                     dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.tl.tag                                = NFAPI_DL_CONFIG_REQUEST_DLSCH_PDU_REL13_TAG;
-                    dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.ue_type                               = 0;   // regular UE
+                    dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.ue_type                               = NOCE;   // regular UE
                     dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.pdsch_payload_type                    = 2;        // not BR
                     dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.initial_transmission_sf_io            = 0xFFFF;   // absolute SF
 
@@ -1196,7 +1196,7 @@ schedule_SI(module_id_t module_idP, frame_t frameP, sub_frame_t subframeP)
                     dl_config_pdu->dlsch_pdu.dlsch_pdu_rel10.pdsch_start                           = 3;
                     // Rel13 fields
                     dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.tl.tag                                = NFAPI_DL_CONFIG_REQUEST_DLSCH_PDU_REL13_TAG;
-                    dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.ue_type                               = 0;   // regular UE
+                    dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.ue_type                               = NOCE;   // regular UE
                     dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.pdsch_payload_type                    = 2;        // not BR
                     dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.initial_transmission_sf_io            = 0xFFFF;   // absolute SF
 

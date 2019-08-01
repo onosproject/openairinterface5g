@@ -39,6 +39,7 @@
 #ifndef STANDALONE_COMPILE
 #include "UTIL/LISTS/list.h"
 #endif
+#include <nfapi/open-nFAPI/nfapi/public_inc/nfapi_interface.h>
 
 #define MOD_TABLE_QPSK_OFFSET 1
 #define MOD_TABLE_16QAM_OFFSET 5
@@ -137,18 +138,6 @@ typedef enum {
   SR_CQI,
   HARQ_SR_CQI  
 } UCI_type_t;
-
-#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
-typedef enum {
-  NOCE,
-  CEMODEA,
-  CEMODEB
-} UE_type_t;
-#endif
-
-
-
-
 
 typedef enum {
   SI_PDSCH=0,

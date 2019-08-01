@@ -1422,6 +1422,12 @@ typedef struct {
 } nfapi_dl_config_dlsch_pdu_rel12_t;
 #define NFAPI_DL_CONFIG_REQUEST_DLSCH_PDU_REL12_TAG 0x203D
 
+typedef enum {
+  NOCE,
+  CEMODEA,
+  CEMODEB
+} UE_type_t;
+
 typedef struct {
 	nfapi_tl_t tl;
 	uint8_t dwpts_symbols;
