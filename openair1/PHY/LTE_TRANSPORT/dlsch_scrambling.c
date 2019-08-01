@@ -125,7 +125,7 @@ void dlsch_scrambling(LTE_DL_FRAME_PARMS *frame_parms,
   for (n=0; n<(1+(G>>5)); n++) {
 
 #ifdef DEBUG_SCRAMBLING
-    for (int k=0;k<32;k++) printf("scrambling %d : %d xor %d = %d\n",k+(n<<5),e[k],(s>>k)&1,e[k]^((s>>k)&1));
+    for (int k=0;k<32;k++) printf("scrambling %d : %u xor %d = %u\n",k+(n<<5),e[k],(s>>k)&1,e[k]^((s>>k)&1));
 #endif
 
                 

@@ -174,7 +174,7 @@ int rx_pdsch(PHY_VARS_UE *ue,
         dlsch1_harq  = NULL;
         codeword_TB0 = -1;
 #ifdef DEBUG_HARQ
-        printf("[DEMOD] I am assuming only TB1 is active, it is in cw %d\n", dlsch0_harq->codeword);
+        printf("[DEMOD] I am assuming only TB1 is active, it is in cw %u\n", dlsch0_harq->codeword);
 #endif
       } else {
         LOG_E(PHY,"[UE][FATAL] Frame %d subframe %d: no active DLSCH\n",ue->proc.proc_rxtx[0].frame_rx,subframe);
@@ -251,7 +251,7 @@ int rx_pdsch(PHY_VARS_UE *ue,
 
 #endif
 #ifdef DEBUG_HARQ
-  printf("Demod  dlsch0_harq->pmi_alloc %d\n",  dlsch0_harq->pmi_alloc);
+  printf("Demod  dlsch0_harq->pmi_alloc %u\n",  dlsch0_harq->pmi_alloc);
 #endif
 
   if (frame_parms->nb_antenna_ports_eNB>1 && beamforming_mode==0) {
@@ -2204,7 +2204,7 @@ void dlsch_channel_compensation_TM56(int **rxdataF_ext,
 
     for (rb=0; rb<nb_rb; rb++) {
 #ifdef DEBUG_DLSCH_DEMOD
-      printf("mode 6 prec: rb %d, pmi->%u\n",rb,pmi_ext[rb]);
+      printf("mode 6 prec: rb %u, pmi->%u\n",rb,pmi_ext[rb]);
 #endif
       prec2A_TM56_128(pmi_ext[rb],&dl_ch0_128b[0],&dl_ch1_128b[0]);
       prec2A_TM56_128(pmi_ext[rb],&dl_ch0_128b[1],&dl_ch1_128b[1]);

@@ -38,7 +38,7 @@
 #include "mdci.h"
 #include "uci_common.h"
 #ifndef STANDALONE_COMPILE
-#include "UTIL/LISTS/list.h"
+  #include "UTIL/LISTS/list.h"
 #endif
 
 
@@ -343,7 +343,7 @@ typedef struct {
   uint16_t    n_pucch_1[4][2];
   /// two antenna n1_pucch 1_0 for SR
   uint16_t    n_pucch_1_0_sr[2];
-   /// two antenna n2_pucch
+  /// two antenna n2_pucch
   uint16_t    n_pucch_2[2];
   /// two antenna n3_pucch
   uint16_t    n_pucch_3[2];

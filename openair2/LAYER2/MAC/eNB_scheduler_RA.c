@@ -329,9 +329,7 @@ void generate_Msg2(module_id_t module_idP,
       dl_config_pdu->mpdcch_pdu.mpdcch_pdu_rel13.mpdcch_tansmission_type = 1;   // imposed (9.1.5 in 213) for Type 2 Common search space
       AssertFatal (cc[CC_idP].sib1_v13ext->bandwidthReducedAccessRelatedInfo_r13 != NULL, "cc[CC_idP].sib1_v13ext->bandwidthReducedAccessRelatedInfo_r13 is null\n");
       dl_config_pdu->mpdcch_pdu.mpdcch_pdu_rel13.start_symbol = cc[CC_idP].sib1_v13ext->bandwidthReducedAccessRelatedInfo_r13->startSymbolBR_r13;
-
       LOG_E(MAC, "start_symbol = %d \n", dl_config_pdu->mpdcch_pdu.mpdcch_pdu_rel13.start_symbol);
-
       dl_config_pdu->mpdcch_pdu.mpdcch_pdu_rel13.ecce_index = 0;        // Note: this should be dynamic
       dl_config_pdu->mpdcch_pdu.mpdcch_pdu_rel13.aggregation_level = 24;        // OK for CEModeA r1-3 (9.1.5-1b) or CEModeB r1-4
       dl_config_pdu->mpdcch_pdu.mpdcch_pdu_rel13.rnti_type = 2; // RA-RNTI
@@ -959,12 +957,10 @@ generate_Msg4(module_id_t module_idP,
                              1, // tpc, none
                              getRIV(N_RB_DL, first_rb, 4),  // resource_block_coding
                              ra->msg4_mcs,  // mcs
-				 1 - UE_list->UE_template[CC_idP][UE_id].oldNDI[ra->harq_pid],
+                             1 - UE_list->UE_template[CC_idP][UE_id].oldNDI[ra->harq_pid],
                              0, // rv
                              0);  // vrb_flag
-    	
-    	UE_list->UE_template[CC_idP][UE_id].oldNDI[ra->harq_pid] = 1 - UE_list->UE_template[CC_idP][UE_id].oldNDI[ra->harq_pid];
-
+        UE_list->UE_template[CC_idP][UE_id].oldNDI[ra->harq_pid] = 1 - UE_list->UE_template[CC_idP][UE_id].oldNDI[ra->harq_pid];
         LOG_D(MAC,
               "Frame %d, subframe %d: Msg4 DCI pdu_num %d (rnti %x,rnti_type %d,harq_pid %d, resource_block_coding (%p) %d\n",
               frameP, subframeP, dl_req_body->number_pdu,
@@ -1054,7 +1050,7 @@ generate_Msg4(module_id_t module_idP,
           mac->TX_req[CC_idP].sfn_sf =
             fill_nfapi_tx_req(&mac->TX_req[CC_idP].tx_request_body,
                               (frameP * 10) + subframeP,
-				      rrc_sdu_length+offset,
+                              rrc_sdu_length+offset,
                               mac->pdu_index[CC_idP],
                               mac->UE_list.
                               DLSCH_pdu[CC_idP][0][(unsigned char)UE_id].payload[0]);
@@ -1199,7 +1195,7 @@ check_Msg4_retransmission(module_id_t module_idP, int CC_idP,
                              1, // tpc, none
                              getRIV(N_RB_DL, first_rb, 4),  // resource_block_coding
                              ra->msg4_mcs,  // mcs
-				     UE_list->UE_template[CC_idP][UE_id].oldNDI[ra->harq_pid],
+                             UE_list->UE_template[CC_idP][UE_id].oldNDI[ra->harq_pid],
                              round & 3, // rv
                              0);  // vrb_flag
 
