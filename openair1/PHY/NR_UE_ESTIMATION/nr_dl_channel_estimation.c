@@ -31,11 +31,10 @@
 
 
 int nr_pbch_dmrs_correlation(PHY_VARS_NR_UE *ue,
-			       uint8_t eNB_offset,
-			       unsigned char Ns,
-			       unsigned char symbol,
-                               int dmrss,
-			       NR_UE_SSB *current_ssb)
+			     unsigned char Ns,
+			     unsigned char symbol,
+                             int dmrss,
+			     NR_UE_SSB *current_ssb)
 {
   int pilot[200] __attribute__((aligned(16)));
   unsigned char aarx;
@@ -65,7 +64,7 @@ int nr_pbch_dmrs_correlation(PHY_VARS_NR_UE *ue,
   k = nushift;
 
 #ifdef DEBUG_CH
-  printf("PBCH DMRS Correlation : ThreadId %d, eNB_offset %d , OFDM size %d, Ncp=%d, Ns=%d, k=%d symbol %d\n",ue->current_thread_id[Ns], eNB_offset,ue->frame_parms.ofdm_symbol_size,
+  printf("PBCH DMRS Correlation : ThreadId %d, OFDM size %d, Ncp=%d, Ns=%d, k=%d symbol %d\n",ue->current_thread_id[Ns], ue->frame_parms.ofdm_symbol_size,
          ue->frame_parms.Ncp,Ns,k, symbol);
 #endif
 
@@ -212,9 +211,6 @@ int nr_pbch_channel_estimation(PHY_VARS_NR_UE *ue,
   unsigned int pilot_cnt;
   int16_t ch[2],*pil,*rxF,*dl_ch,*fl,*fm,*fr;
   int ch_offset,symbol_offset;
-
-  //uint16_t Nid_cell = (eNB_offset == 0) ? ue->frame_parms.Nid_cell : ue->measurements.adj_cell_id[eNB_offset-1];
-
   uint8_t nushift;
   int **dl_ch_estimates  =ue->pbch_vars[eNB_offset]->dl_ch_estimates;
   int **rxdataF=ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[Ns]].rxdataF;
@@ -234,7 +230,6 @@ int nr_pbch_channel_estimation(PHY_VARS_NR_UE *ue,
 	      dmrss);
 
   symbol_offset = ue->frame_parms.ofdm_symbol_size*symbol;
-
 
   k = nushift;
 

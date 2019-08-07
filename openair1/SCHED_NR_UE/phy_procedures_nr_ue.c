@@ -4144,7 +4144,7 @@ int phy_procedures_ssb_meas(PHY_VARS_NR_UE *ue,UE_nr_rxtx_proc_t *proc,uint8_t e
 		        0,
 		        0);
 
-            nr_pbch_dmrs_correlation(ue,0,slot,(current_symbol_offset+i)%(ue->frame_parms.symbols_per_slot),i-1,current_ssb);
+            nr_pbch_dmrs_correlation(ue,slot,(current_symbol_offset+i)%(ue->frame_parms.symbols_per_slot),i-1,current_ssb);
           }
           current_ssb->metric = current_ssb->c_re*current_ssb->c_re + current_ssb->c_im+current_ssb->c_re;
         }
