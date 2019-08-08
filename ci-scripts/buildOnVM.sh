@@ -103,6 +103,13 @@ function build_on_vm {
     echo "############################################################"
     echo "sudo cp 01proxy /etc/apt/apt.conf.d/" > $VM_CMDS
     echo "touch /home/ubuntu/.hushlogin" >> $VM_CMDS
+    if [ -f /opt/web_proxy/adapt_ue_sim.txt ]
+    then
+        cat /opt/web_proxy/adapt_ue_sim.txt | while read line
+        do
+            echo $line >> $VM_CMDS
+        done
+    fi
     if [[ "$VM_NAME" == *"-cppcheck"* ]]
     then
         if [ $DAEMON -eq 0 ]
