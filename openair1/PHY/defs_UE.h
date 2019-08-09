@@ -209,7 +209,8 @@ typedef struct {
 	// This used in UE_phy_stub_single_thread_rxn_txnp4
 	pthread_mutex_t mutex_single_thread;
 	pthread_cond_t  cond_single_thread;
-	int             num_single_thread[NUMBER_OF_UE_MAX];
+	//int             num_single_thread[NUMBER_OF_UE_MAX];
+	int            *num_single_thread;
 } SF_ticking;
 
 typedef struct {

@@ -2172,6 +2172,7 @@ int init_timer_thread(void) {
   //PHY_VARS_UE *UE=PHY_vars_UE_g[0];
   PHY_VARS_UE *UE=PHY_vars_UE_g[0][0];
   phy_stub_ticking = (SF_ticking *)malloc(sizeof(SF_ticking));
+  phy_stub_ticking->num_single_thread = (int *)malloc(sizeof(int)*NUMBER_OF_UE_MAX);
   pthread_mutex_init(&UE->timer_mutex,NULL);
   pthread_cond_init(&UE->timer_cond,NULL);
   UE->instance_cnt_timer = -1;

@@ -57,7 +57,7 @@ Description Defines functions used to handle EPS bearer contexts.
 #include <arpa/inet.h>
 #ifdef UESIM_EXPANSION
   #include "openairinterface5g_limits.h"
-  extern uint16_t inst_pdcp_list[NUMBER_OF_UE_MAX];
+  extern uint16_t *inst_pdcp_list;
 #endif
 
 /****************************************************************************/

@@ -83,7 +83,7 @@ extern struct msghdr nas_msg_rx;
 
 
 #ifdef UESIM_EXPANSION
-  extern uint16_t inst_pdcp_list[NUMBER_OF_UE_MAX];
+  extern uint16_t *inst_pdcp_list;
 #endif
 
 extern Packet_OTG_List_t *otg_pdcp_buffer;

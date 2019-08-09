@@ -32,7 +32,8 @@
 #include <GL/glu.h>
 #include <stdio.h>
 
-extern struct Geo geo[NUMBER_OF_eNB_MAX+NUMBER_OF_UE_MAX];
+//extern struct Geo geo[NUMBER_OF_eNB_MAX+NUMBER_OF_UE_MAX];
+extern struct Geo *geo;
 extern int x_area;
 extern int y_area;
 extern int z_area;

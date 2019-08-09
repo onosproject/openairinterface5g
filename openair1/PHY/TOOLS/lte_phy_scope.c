@@ -30,12 +30,18 @@
 int otg_enabled;
 
 FL_COLOR rx_antenna_colors[4] = {FL_RED,FL_BLUE,FL_GREEN,FL_YELLOW};
-
+/*
 float tput_time_enb[NUMBER_OF_UE_MAX][TPUT_WINDOW_LENGTH] = {{0}};
 float tput_enb[NUMBER_OF_UE_MAX][TPUT_WINDOW_LENGTH] = {{0}};
 float tput_time_ue[NUMBER_OF_UE_MAX][TPUT_WINDOW_LENGTH] = {{0}};
 float tput_ue[NUMBER_OF_UE_MAX][TPUT_WINDOW_LENGTH] = {{0}};
 float tput_ue_max[NUMBER_OF_UE_MAX] = {0};
+*/
+float **tput_time_enb = NULL;
+float **tput_enb = NULL;
+float **tput_time_ue = NULL;
+float **tput_ue = NULL;
+float *tput_ue_max = NULL;
 
 static void ia_receiver_on_off( FL_OBJECT *button, long arg)
 {

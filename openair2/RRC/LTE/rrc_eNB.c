@@ -8537,6 +8537,8 @@ void rrc_enb_init(void) {
   pthread_mutex_init(&lock_ue_freelist, NULL);
   pthread_mutex_init(&rrc_release_freelist, NULL);
   memset(&rrc_release_info,0,sizeof(RRC_release_list_t));
+  rrc_release_info.RRC_release_ctrl = (RRC_release_ctrl_t *)malloc(sizeof(RRC_release_ctrl_t)*NUMBER_OF_UE_MAX);
+  memset(rrc_release_info.RRC_release_ctrl,0,sizeof(RRC_release_ctrl_t)*NUMBER_OF_UE_MAX);
 }
 
 //-----------------------------------------------------------------------------

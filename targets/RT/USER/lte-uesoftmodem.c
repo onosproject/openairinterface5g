@@ -100,7 +100,7 @@ int nfapi_sync_var=-1; //!< protected by mutex \ref nfapi_sync_mutex
 
 
 #ifdef UESIM_EXPANSION
-  uint16_t inst_pdcp_list[NUMBER_OF_UE_MAX];
+  uint16_t *inst_pdcp_list;
 #endif
 uint16_t sf_ahead=2;
 int tddflag;
@@ -602,9 +602,9 @@ void init_pdcp(void) {
 int main( int argc, char **argv ) {
   int CC_id;
   uint8_t  abstraction_flag=0;
-#ifdef UESIM_EXPANSION
+/*#ifdef UESIM_EXPANSION
   memset(inst_pdcp_list, 0, sizeof(inst_pdcp_list));
-#endif
+#endif */
   // Default value for the number of UEs. It will hold,
   // if not changed from the command line option --num-ues
   NB_UE_INST=1;
@@ -713,6 +713,11 @@ int main( int argc, char **argv ) {
   if (IS_SOFTMODEM_SIML1 ) {
     RCConfig_sim();
   }
+
+#ifdef UESIM_EXPANSION
+  uint16_t *inst_pdcp_list = (uint16_t *)malloc(sizeof(uint16_t)*NUMBER_OF_UE_MAX);
+  memset(inst_pdcp_list, 0, sizeof(inst_pdcp_list));
+#endif
 
   cpuf=get_cpu_freq_GHz();
 #ifndef DEADLINE_SCHEDULER
@@ -863,6 +868,9 @@ int main( int argc, char **argv ) {
 
   terminate_opt();
   logClean();
+#ifdef UESIM_EXPANSION
+  free_and_zero(inst_pdcp_list);
+#endif
   printf("Bye.\n");
   return 0;
 }

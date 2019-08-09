@@ -1154,6 +1154,22 @@ typedef struct srb1_params_s {
 #define CONFIG_HLP_PARALLEL                        "PARALLEL_SINGLE_THREAD, PARALLEL_RU_L1_SPLIT, or PARALLEL_RU_L1_TRX_SPLIT(RU_L1_TRX_SPLIT by defult)\n"
 /*-------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
+/* global params section name */
+#define CONFIG_STRING_GLOBAL_PARAMS_LIST                        "global_params"
+
+/* global params names */
+#define CONFIG_STRING_NUMBER_OF_UE_MAX              "number_of_ue_max"
+
+/*-------------------------------------------------------------------------------------------------------------------------------------------------------------*/
+/*                                                             thread configuration parameters                                                                 */
+/*   optname                                          helpstr   paramflags    XXXptr       defXXXval                                 type           numelt     */
+/*-------------------------------------------------------------------------------------------------------------------------------------------------------------*/
+#define GLOBAL_PARAMS_DESC {  \
+{CONFIG_STRING_NUMBER_OF_UE_MAX,        CONFIG_HLP_NUMBER_OF_UE_MAX,      0,       iptr:NULL,   defintval:16,   TYPE_INT,   0}          \
+}
+
+#define CONFIG_HLP_NUMBER_OF_UE_MAX                         "number_of_ue_max\n"
+
 #include "enb_paramdef_emtc.h"
 #include "enb_paramdef_sidelink.h"
 #endif

@@ -260,4 +260,3 @@ int OCG_main(char is_local_server[FILENAME_LENGTH_MAX])
   return 1;
 #endif
 }
-

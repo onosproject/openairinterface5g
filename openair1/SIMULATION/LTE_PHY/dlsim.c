@@ -87,6 +87,13 @@ int n_rx_dropped = 0; /*!< \brief initial max process time for rx */
 
 THREAD_STRUCT thread_struct;
 
+#define TPUT_WINDOW_LENGTH 100
+extern float **tput_time_enb;
+extern float **tput_enb;
+extern float **tput_time_ue;
+extern float **tput_ue;
+extern float *tput_ue_max;
+
 int emulate_rf = 0;
 
 void handler(int sig) {
@@ -339,7 +346,8 @@ void fill_DCI(PHY_VARS_eNB *eNB,
               int frame,
               int subframe,
               Sched_Rsp_t *sched_resp,
-              uint8_t input_buffer[NUMBER_OF_UE_MAX][20000],
+              //uint8_t input_buffer[NUMBER_OF_UE_MAX][20000],
+              uint8_t **input_buffer,
               int n_rnti,
               int n_users,
               int transmission_mode,
@@ -907,6 +915,23 @@ int main(int argc, char **argv) {
   // alternatively you can disable ITTI completely in CMakeLists.txt
   //itti_init(TASK_MAX, THREAD_MAX, MESSAGES_ID_MAX, tasks_info, messages_info, messages_definition_xml, NULL);
 
+  tput_time_enb = (float **)malloc(sizeof(float *)*NUMBER_OF_UE_MAX);
+  tput_enb = (float **)malloc(sizeof(float *)*NUMBER_OF_UE_MAX);
+  tput_time_ue = (float **)malloc(sizeof(float *)*NUMBER_OF_UE_MAX);
+  tput_ue = (float **)malloc(sizeof(float *)*NUMBER_OF_UE_MAX);
+  tput_ue_max = (float *)malloc(sizeof(float)*NUMBER_OF_UE_MAX);
+  memset(tput_ue_max,0,sizeof(float)*NUMBER_OF_UE_MAX);
+  for (int ii = 0; ii < NUMBER_OF_UE_MAX; ii++) {
+    tput_time_enb[ii] = (float *)malloc(sizeof(float)*TPUT_WINDOW_LENGTH);
+    tput_enb[ii] = (float *)malloc(sizeof(float)*TPUT_WINDOW_LENGTH);
+    tput_time_ue[ii] = (float *)malloc(sizeof(float)*TPUT_WINDOW_LENGTH);
+    tput_ue[ii] = (float *)malloc(sizeof(float)*TPUT_WINDOW_LENGTH);
+    memset(tput_time_enb[ii],0,sizeof(float)*TPUT_WINDOW_LENGTH);
+    memset(tput_enb[ii],0,sizeof(float)*TPUT_WINDOW_LENGTH);
+    memset(tput_time_ue[ii],0,sizeof(float)*TPUT_WINDOW_LENGTH);
+    memset(tput_ue[ii],0,sizeof(float)*TPUT_WINDOW_LENGTH);
+  }
+
   if (common_flag == 0) {
     switch (N_RB_DL) {
       case 6:
@@ -1016,7 +1041,11 @@ int main(int argc, char **argv) {
   printf("Transmission mode %d with %dx%d antenna configuration, Extended Prefix %d\n",transmission_mode,n_tx_phy,n_rx,extended_prefix_flag);
   snr1 = snr0+snr_int;
   printf("SNR0 %f, SNR1 %f\n",snr0,snr1);
-  uint8_t input_buffer[NUMBER_OF_UE_MAX][20000];
+  //uint8_t input_buffer[NUMBER_OF_UE_MAX][20000];
+  uint8_t **input_buffer = (uint8_t **)malloc(sizeof(uint8_t *)*NUMBER_OF_UE_MAX);
+  for (i = 0; i < NUMBER_OF_UE_MAX; i++) {
+    input_buffer[i] = (uint8_t  *)malloc(sizeof(uint8_t)*20000);
+  }
 
   for (i=0; i<n_users; i++)
     for (j=0; j<20000; j++) input_buffer[i][j] = (uint8_t)((taus())&255);

@@ -61,12 +61,15 @@ double cpuf;
 #define inMicroS(a) (((double)(a))/(cpu_freq_GHz*1000.0))
 //#define MCS_COUNT 23//added for PHY abstraction
 #include <openair1/SIMULATION/LTE_PHY/common_sim.h>
-channel_desc_t *eNB2UE[NUMBER_OF_eNB_MAX][NUMBER_OF_UE_MAX];
-channel_desc_t *UE2eNB[NUMBER_OF_UE_MAX][NUMBER_OF_eNB_MAX];
+//channel_desc_t *eNB2UE[NUMBER_OF_eNB_MAX][NUMBER_OF_UE_MAX];
+//channel_desc_t *UE2eNB[NUMBER_OF_UE_MAX][NUMBER_OF_eNB_MAX];
 //Added for PHY abstractionopenair1/PHY/TOOLS/lte_phy_scope.h
 node_desc_t *enb_data[NUMBER_OF_eNB_MAX];
-node_desc_t *ue_data[NUMBER_OF_UE_MAX];
+//node_desc_t *ue_data[NUMBER_OF_UE_MAX];
 //double sinr_bler_map[MCS_COUNT][2][16];
+channel_desc_t ***eNB2UE;
+channel_desc_t ***UE2eNB;
+node_desc_t **ue_data;
 
 extern uint16_t beta_ack[16],beta_ri[16],beta_cqi[16];
 //extern  char* namepointer_chMag ;
@@ -97,6 +100,13 @@ nfapi_tx_request_t TX_req;
 Sched_Rsp_t sched_resp;
 
 THREAD_STRUCT thread_struct;
+
+#define TPUT_WINDOW_LENGTH 100
+extern float **tput_time_enb;
+extern float **tput_enb;
+extern float **tput_time_ue;
+extern float **tput_ue;
+extern float *tput_ue_max;
 
 void
 fill_nfapi_ulsch_config_request(nfapi_ul_config_request_pdu_t *ul_config_pdu,
@@ -587,6 +597,22 @@ int main(int argc, char **argv) {
   if (thread_struct.parallel_conf != PARALLEL_SINGLE_THREAD)
     set_worker_conf("WORKER_ENABLE");
 
+  tput_time_enb = (float **)malloc(sizeof(float *)*NUMBER_OF_UE_MAX);
+  tput_enb = (float **)malloc(sizeof(float *)*NUMBER_OF_UE_MAX);
+  tput_time_ue = (float **)malloc(sizeof(float *)*NUMBER_OF_UE_MAX);
+  tput_ue = (float **)malloc(sizeof(float *)*NUMBER_OF_UE_MAX);
+  tput_ue_max = (float *)malloc(sizeof(float)*NUMBER_OF_UE_MAX);
+  memset(tput_ue_max,0,sizeof(float)*NUMBER_OF_UE_MAX);
+  for (int ii = 0; ii < NUMBER_OF_UE_MAX; ii++) {
+    tput_time_enb[ii] = (float *)malloc(sizeof(float)*TPUT_WINDOW_LENGTH);
+    tput_enb[ii] = (float *)malloc(sizeof(float)*TPUT_WINDOW_LENGTH);
+    tput_time_ue[ii] = (float *)malloc(sizeof(float)*TPUT_WINDOW_LENGTH);
+    tput_ue[ii] = (float *)malloc(sizeof(float)*TPUT_WINDOW_LENGTH);
+    memset(tput_time_enb[ii],0,sizeof(float)*TPUT_WINDOW_LENGTH);
+    memset(tput_enb[ii],0,sizeof(float)*TPUT_WINDOW_LENGTH);
+    memset(tput_time_ue[ii],0,sizeof(float)*TPUT_WINDOW_LENGTH);
+    memset(tput_ue[ii],0,sizeof(float)*TPUT_WINDOW_LENGTH);
+  }
   RC.nb_L1_inst = 1;
   RC.nb_RU = 1;
   lte_param_init(&eNB,&UE,&ru,

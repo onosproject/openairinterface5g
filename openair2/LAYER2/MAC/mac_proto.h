@@ -239,6 +239,16 @@ void dlsch_scheduler_pre_processor_reset(module_id_t module_idP,
                                          uint8_t MIMO_mode_indicator[NFAPI_CC_MAX][N_RBG_MAX],
                                          int *mbsfn_flag);
 
+void dlsch_scheduler_pre_processor_reset_fairRR(module_id_t module_idP,
+                                                int slice_idx,
+                                                frame_t frameP,
+                                                sub_frame_t subframeP,
+                                                int min_rb_unit[NFAPI_CC_MAX],
+                                                uint16_t **nb_rbs_required_p,
+                                                uint8_t rballoc_sub[NFAPI_CC_MAX][N_RBG_MAX],
+                                                uint8_t MIMO_mode_indicator[NFAPI_CC_MAX][N_RBG_MAX],
+                                                int *mbsfn_flag);
+
 void dlsch_scheduler_pre_processor_partitioning(module_id_t Mod_id,
                                                 int slice_idx,
                                                 const uint8_t rbs_retx[NFAPI_CC_MAX]);
@@ -290,6 +300,17 @@ void dlsch_scheduler_pre_processor_allocate(module_id_t Mod_id,
                                             uint8_t rballoc_sub[NFAPI_CC_MAX][N_RBG_MAX],
                                             uint8_t slice_allocation_mask[NFAPI_CC_MAX][N_RBG_MAX],
                                             uint8_t MIMO_mode_indicator[NFAPI_CC_MAX][N_RBG_MAX]);
+
+void dlsch_scheduler_pre_processor_allocate_fairRR(module_id_t Mod_id,
+                                                   int UE_id,
+                                                   uint8_t CC_id,
+                                                   int N_RBG,
+                                                   int min_rb_unit,
+                                                   uint16_t **nb_rbs_required_p,
+                                                   uint16_t **nb_rbs_remaining_p,
+                                                   uint8_t rballoc_sub[NFAPI_CC_MAX][N_RBG_MAX],
+                                                   uint8_t slice_allocation_mask[NFAPI_CC_MAX][N_RBG_MAX],
+                                                   uint8_t MIMO_mode_indicator[NFAPI_CC_MAX][N_RBG_MAX]);
 
 /* \brief Function to trigger the eNB scheduling procedure.  It is called by PHY at the beginning of each subframe, \f$n$\f
    and generates all DLSCH allocations for subframe \f$n\f$ and ULSCH allocations for subframe \f$n+k$\f. 
@@ -726,6 +747,7 @@ int rrc_mac_remove_ue(module_id_t Mod_id, rnti_t rntiP);
 
 void store_dlsch_buffer(module_id_t Mod_id, int slice_idx, frame_t frameP, sub_frame_t subframeP);
 void assign_rbs_required(module_id_t Mod_id, int slice_idx, frame_t frameP, sub_frame_t subframe, uint16_t nb_rbs_required[NFAPI_CC_MAX][MAX_MOBILES_PER_ENB], int min_rb_unit[NFAPI_CC_MAX]);
+void assign_rbs_required_fairRR(module_id_t Mod_id, int slice_idx, frame_t frameP, sub_frame_t subframe, uint16_t **nb_rbs_required, int min_rb_unit[NFAPI_CC_MAX]);
 
 void swap_UEs(UE_list_t * listP, int nodeiP, int nodejP, int ul_flag);
 int prev(UE_list_t * listP, int nodeP, int ul_flag);
@@ -1308,7 +1330,7 @@ void pre_scd_nb_rbs_required(    module_id_t     module_idP,
                                  frame_t         frameP,
                                  sub_frame_t     subframeP,
                                  int             min_rb_unit[MAX_NUM_CCs],
-                                 uint16_t        nb_rbs_required[MAX_NUM_CCs][NUMBER_OF_UE_MAX]);
+                                 uint16_t        *nb_rbs_required[MAX_NUM_CCs]);
 #endif
 
 /* Slice related functions */
@@ -1322,5 +1344,8 @@ void eNB_Config_Local_DRX(module_id_t Mod_id, rnti_t rnti, LTE_DRX_Config_t *drx
 
 /* from here: prototypes to get rid of compilation warnings: doc to be written by function author */
 uint8_t ul_subframe2_k_phich(COMMON_channels_t * cc, sub_frame_t ul_subframe);
+
+void ue_free_list_malloc(UE_free_list_t *ue_free_list);
+void ue_free_list_free(UE_free_list_t *ue_free_list);
 #endif
 /** @}*/

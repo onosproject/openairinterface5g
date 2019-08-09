@@ -33,7 +33,7 @@
 
 #include "openairinterface5g_limits.h"
 #ifndef __PHY_IMPLEMENTATION_DEFS_H__
-	#define Maxneighbor NUMBER_OF_UE_MAX
+//	#define Maxneighbor NUMBER_OF_UE_MAX
 	#ifndef NB_ANTENNAS_RX
 		#define NB_ANTENNAS_RX  4
 	#endif
@@ -48,7 +48,8 @@ typedef struct Geo {
   int mobility_type; // model of mobility
   int node_type;
   int Neighbors; // number of neighboring nodes (distance between the node and its neighbors < 100)
-  int Neighbor[NUMBER_OF_UE_MAX]; // array of its neighbors
+//  int Neighbor[NUMBER_OF_UE_MAX]; // array of its neighbors
+  int *Neighbor;
   //relavent to UE only
   unsigned short state;
   unsigned short rnti;
@@ -62,9 +63,13 @@ typedef struct Geo {
 
 typedef struct Data_Flow_Unit {
   // int total_num_nodes;
-  struct Geo geo[NUMBER_OF_eNB_MAX+NUMBER_OF_UE_MAX];
+  struct Geo *geo;
   int end;
 } Data_Flow_Unit;
 
+void data_flow_unit_malloc(Data_Flow_Unit *data_flow_unit);
+void data_flow_unit_free(Data_Flow_Unit *data_flow_unit);
+void struct_geo_malloc(struct Geo *geo);
+void struct_geo_free(struct Geo *geo);
 
 #endif // STRUCTURES_H

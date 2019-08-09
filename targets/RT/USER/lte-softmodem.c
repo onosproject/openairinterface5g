@@ -77,6 +77,7 @@ unsigned short config_frames[4] = {2,9,11,13};
 #include "common/utils/LOG/vcd_signal_dumper.h"
 #include "UTIL/OPT/opt.h"
 #include "enb_config.h"
+#include "UTIL/OCG/OCG.h"
 //#include "PHY/TOOLS/time_meas.h"
 
 #ifndef OPENAIR2
@@ -162,6 +163,7 @@ extern void print_opp_meas(void);
 
 
 extern void init_eNB_afterRU(void);
+extern OAI_Emulation oai_emulation;
 
 int transmission_mode=1;
 int emulate_rf = 0;
@@ -226,6 +228,165 @@ void update_difftimes(struct timespec start, struct timespec end) {
 
 #endif
 }
+
+/*------------------------------------------------------------------------*/
+void predefined_traffic_malloc(Predefined_Traffic *predefined_traffic)
+{
+  predefined_traffic->application_type = (char **)malloc(sizeof(char *)*(NUMBER_OF_eNB_MAX + NUMBER_OF_UE_MAX));
+  predefined_traffic->source_id = (char **)malloc(sizeof(char *)*(NUMBER_OF_eNB_MAX + NUMBER_OF_UE_MAX));
+  predefined_traffic->destination_id = (char **)malloc(sizeof(char *)*(NUMBER_OF_eNB_MAX + NUMBER_OF_UE_MAX));
+  predefined_traffic->background = (char **)malloc(sizeof(char *)*(NUMBER_OF_eNB_MAX + NUMBER_OF_UE_MAX));
+  predefined_traffic->aggregation_level = (unsigned int *)malloc(sizeof(unsigned int)*(NUMBER_OF_eNB_MAX + NUMBER_OF_UE_MAX));
+  predefined_traffic->flow_start = (int *)malloc(sizeof(int)*(NUMBER_OF_eNB_MAX + NUMBER_OF_UE_MAX));
+  predefined_traffic->flow_duration = (int *)malloc(sizeof(int)*(NUMBER_OF_eNB_MAX + NUMBER_OF_UE_MAX));
+}
+
+void predefined_traffic_free(Predefined_Traffic *predefined_traffic)
+{
+  free_and_zero(predefined_traffic->application_type);
+  free_and_zero(predefined_traffic->source_id);
+  free_and_zero(predefined_traffic->destination_id);
+  free_and_zero(predefined_traffic->background);
+  free_and_zero(predefined_traffic->aggregation_level);
+  free_and_zero(predefined_traffic->flow_start);
+  free_and_zero(predefined_traffic->flow_duration);
+}
+
+void customized_traffic_malloc(Customized_Traffic *customized_traffic)
+{
+  customized_traffic->application_type = (char **)malloc(sizeof(char *)*(NUMBER_OF_eNB_MAX + NUMBER_OF_UE_MAX));
+  customized_traffic->source_id = (char **)malloc(sizeof(char *)*(NUMBER_OF_eNB_MAX + NUMBER_OF_UE_MAX));
+  customized_traffic->destination_id = (char **)malloc(sizeof(char *)*(NUMBER_OF_eNB_MAX + NUMBER_OF_UE_MAX));
+  customized_traffic->traffic = (char **)malloc(sizeof(char *)*(NUMBER_OF_eNB_MAX + NUMBER_OF_UE_MAX));
+  customized_traffic->transport_protocol = (char **)malloc(sizeof(char *)*(NUMBER_OF_eNB_MAX + NUMBER_OF_UE_MAX));
+  customized_traffic->ip_version = (char **)malloc(sizeof(char *)*(NUMBER_OF_eNB_MAX + NUMBER_OF_UE_MAX));
+  customized_traffic->background = (char **)malloc(sizeof(char *)*(NUMBER_OF_eNB_MAX + NUMBER_OF_UE_MAX));
+  customized_traffic->idt_dist = (char **)malloc(sizeof(char *)*(NUMBER_OF_eNB_MAX + NUMBER_OF_UE_MAX));
+  customized_traffic->idt_min_ms = (int *)malloc(sizeof(int)*(NUMBER_OF_eNB_MAX + NUMBER_OF_UE_MAX));
+  customized_traffic->idt_max_ms = (int *)malloc(sizeof(int)*(NUMBER_OF_eNB_MAX + NUMBER_OF_UE_MAX));
+  customized_traffic->idt_standard_deviation = (double *)malloc(sizeof(double)*(NUMBER_OF_eNB_MAX + NUMBER_OF_UE_MAX));
+  customized_traffic->idt_lambda = (double *)malloc(sizeof(double)*(NUMBER_OF_eNB_MAX + NUMBER_OF_UE_MAX));
+  customized_traffic->idt_scale = (double *)malloc(sizeof(double)*(NUMBER_OF_eNB_MAX + NUMBER_OF_UE_MAX));
+  customized_traffic->idt_shape = (double *)malloc(sizeof(double)*(NUMBER_OF_eNB_MAX + NUMBER_OF_UE_MAX));
+  customized_traffic->size_dist = (char **)malloc(sizeof(char *)*(NUMBER_OF_eNB_MAX + NUMBER_OF_UE_MAX));
+  customized_traffic->size_min_byte = (int *)malloc(sizeof(int)*(NUMBER_OF_eNB_MAX + NUMBER_OF_UE_MAX));
+  customized_traffic->size_max_byte = (int *)malloc(sizeof(int)*(NUMBER_OF_eNB_MAX + NUMBER_OF_UE_MAX));
+  customized_traffic->size_standard_deviation = (double *)malloc(sizeof(double)*(NUMBER_OF_eNB_MAX + NUMBER_OF_UE_MAX));
+  customized_traffic->size_lambda = (double *)malloc(sizeof(double)*(NUMBER_OF_eNB_MAX + NUMBER_OF_UE_MAX));
+  customized_traffic->size_scale = (double *)malloc(sizeof(double)*(NUMBER_OF_eNB_MAX + NUMBER_OF_UE_MAX));
+  customized_traffic->size_shape = (double *)malloc(sizeof(double)*(NUMBER_OF_eNB_MAX + NUMBER_OF_UE_MAX));
+  customized_traffic->stream = (int *)malloc(sizeof(int)*(NUMBER_OF_eNB_MAX + NUMBER_OF_UE_MAX));
+  customized_traffic->destination_port = (int *)malloc(sizeof(int)*(NUMBER_OF_eNB_MAX + NUMBER_OF_UE_MAX));
+  customized_traffic->aggregation_level = (unsigned int *)malloc(sizeof(unsigned int)*(NUMBER_OF_eNB_MAX + NUMBER_OF_UE_MAX));
+  customized_traffic->flow_start = (int *)malloc(sizeof(int)*(NUMBER_OF_eNB_MAX + NUMBER_OF_UE_MAX));
+  customized_traffic->flow_duration = (int *)malloc(sizeof(int)*(NUMBER_OF_eNB_MAX + NUMBER_OF_UE_MAX));
+  customized_traffic->m2m = (char **)malloc(sizeof(char *)*(NUMBER_OF_eNB_MAX + NUMBER_OF_UE_MAX));
+  customized_traffic->prob_off_pu = (double *)malloc(sizeof(double)*(NUMBER_OF_eNB_MAX + NUMBER_OF_UE_MAX));
+  customized_traffic->prob_off_ed = (double *)malloc(sizeof(double)*(NUMBER_OF_eNB_MAX + NUMBER_OF_UE_MAX));
+  customized_traffic->prob_off_pe = (double *)malloc(sizeof(double)*(NUMBER_OF_eNB_MAX + NUMBER_OF_UE_MAX));
+  customized_traffic->prob_pu_ed = (double *)malloc(sizeof(double)*(NUMBER_OF_eNB_MAX + NUMBER_OF_UE_MAX));
+  customized_traffic->prob_pu_pe = (double *)malloc(sizeof(double)*(NUMBER_OF_eNB_MAX + NUMBER_OF_UE_MAX));
+  customized_traffic->prob_ed_pe = (double *)malloc(sizeof(double)*(NUMBER_OF_eNB_MAX + NUMBER_OF_UE_MAX));
+  customized_traffic->prob_ed_pu = (double *)malloc(sizeof(double)*(NUMBER_OF_eNB_MAX + NUMBER_OF_UE_MAX));
+  customized_traffic->holding_time_off_ed = (unsigned int *)malloc(sizeof(unsigned int)*(NUMBER_OF_eNB_MAX + NUMBER_OF_UE_MAX));
+  customized_traffic->holding_time_off_pu = (unsigned int *)malloc(sizeof(unsigned int)*(NUMBER_OF_eNB_MAX + NUMBER_OF_UE_MAX));
+  customized_traffic->holding_time_off_pe = (unsigned int *)malloc(sizeof(unsigned int)*(NUMBER_OF_eNB_MAX + NUMBER_OF_UE_MAX));
+  customized_traffic->holding_time_pe_off = (unsigned int *)malloc(sizeof(unsigned int)*(NUMBER_OF_eNB_MAX + NUMBER_OF_UE_MAX));
+  customized_traffic->pu_size_pkts = (unsigned int *)malloc(sizeof(unsigned int)*(NUMBER_OF_eNB_MAX + NUMBER_OF_UE_MAX));
+  customized_traffic->ed_size_pkts = (unsigned int *)malloc(sizeof(unsigned int)*(NUMBER_OF_eNB_MAX + NUMBER_OF_UE_MAX));
+}
+
+void customized_traffic_free(Customized_Traffic *customized_traffic)
+{
+  free_and_zero(customized_traffic->application_type);
+  free_and_zero(customized_traffic->source_id);
+  free_and_zero(customized_traffic->destination_id);
+  free_and_zero(customized_traffic->traffic);
+  free_and_zero(customized_traffic->transport_protocol);
+  free_and_zero(customized_traffic->ip_version);
+  free_and_zero(customized_traffic->background);
+  free_and_zero(customized_traffic->idt_dist);
+  free_and_zero(customized_traffic->idt_min_ms);
+  free_and_zero(customized_traffic->idt_max_ms);
+  free_and_zero(customized_traffic->idt_standard_deviation);
+  free_and_zero(customized_traffic->idt_lambda);
+  free_and_zero(customized_traffic->idt_scale);
+  free_and_zero(customized_traffic->idt_shape);
+  free_and_zero(customized_traffic->size_dist);
+  free_and_zero(customized_traffic->size_min_byte);
+  free_and_zero(customized_traffic->size_max_byte);
+  free_and_zero(customized_traffic->size_standard_deviation);
+  free_and_zero(customized_traffic->size_lambda);
+  free_and_zero(customized_traffic->size_scale);
+  free_and_zero(customized_traffic->size_shape);
+  free_and_zero(customized_traffic->stream);
+  free_and_zero(customized_traffic->destination_port);
+  free_and_zero(customized_traffic->aggregation_level);
+  free_and_zero(customized_traffic->flow_start);
+  free_and_zero(customized_traffic->flow_duration);
+  free_and_zero(customized_traffic->m2m);
+  free_and_zero(customized_traffic->prob_off_pu);
+  free_and_zero(customized_traffic->prob_off_ed);
+  free_and_zero(customized_traffic->prob_off_pe);
+  free_and_zero(customized_traffic->prob_pu_ed);
+  free_and_zero(customized_traffic->prob_pu_pe);
+  free_and_zero(customized_traffic->prob_ed_pe);
+  free_and_zero(customized_traffic->prob_ed_pu);
+  free_and_zero(customized_traffic->holding_time_off_ed);
+  free_and_zero(customized_traffic->holding_time_off_pu);
+  free_and_zero(customized_traffic->holding_time_off_pe);
+  free_and_zero(customized_traffic->holding_time_pe_off);
+  free_and_zero(customized_traffic->pu_size_pkts);
+  free_and_zero(customized_traffic->ed_size_pkts);
+}
+
+void application_config_malloc(Application_Config *application_config)
+{
+  predefined_traffic_malloc(&(application_config->predefined_traffic));
+  customized_traffic_malloc(&(application_config->customized_traffic));
+}
+void application_config_free(Application_Config *application_config)
+{
+  predefined_traffic_free(&(application_config->predefined_traffic));
+  customized_traffic_free(&(application_config->customized_traffic));
+}
+
+void info_malloc(Info *info)
+{
+  int i;
+  info->cli_start_ue = (unsigned char *)malloc(sizeof(unsigned char)*NUMBER_OF_UE_MAX);
+  info->oai_ifup = (unsigned char *)malloc(sizeof(unsigned char *)*(NUMBER_OF_eNB_MAX+NUMBER_OF_UE_MAX));
+  for (i = 0; i < NUMBER_OF_eNB_MAX; i++) {
+    info->eNB_ue_module_id_to_rnti[i] = (rnti_t *)malloc(sizeof(rnti_t)*NUMBER_OF_UE_MAX);
+    info->eNB_ue_local_uid_to_ue_module_id[i] = (module_id_t *)malloc(sizeof(module_id_t)*NUMBER_OF_UE_MAX);
+  }
+}
+
+void info_free(Info *info)
+{
+  int i;
+  free_and_zero(info->cli_start_ue);
+  free_and_zero(info->oai_ifup);
+  for (i = 0; i < NUMBER_OF_eNB_MAX; i++) {
+    free_and_zero(info->eNB_ue_module_id_to_rnti[i]);
+    free_and_zero(info->eNB_ue_local_uid_to_ue_module_id[i]);
+  }
+}
+
+void oai_emulation_malloc(OAI_Emulation *oai_emulation)
+{
+  oai_emulation->mac_config = (Mac_config *)malloc(sizeof(Mac_config)*NUMBER_OF_UE_MAX);
+  application_config_malloc(&(oai_emulation->application_config));
+  info_malloc(&(oai_emulation->info));
+}
+
+void oai_emulation_free(OAI_Emulation *oai_emulation)
+{
+  free_and_zero(oai_emulation->mac_config);
+  application_config_free(&(oai_emulation->application_config));
+  info_free(&(oai_emulation->info));
+}
+
 
 /*------------------------------------------------------------------------*/
 
@@ -535,6 +696,11 @@ int main( int argc, char **argv ) {
   logInit();
   printf("Reading in command-line options\n");
   get_options ();
+  if (NUMBER_OF_UE_MAX != MAX_MOBILES_PER_ENB) {
+    printf("NUMBER_OF_UE_MAX is not equal to MAX_MOBILES_PER_ENB,set to MAX_MOBILES_PER_ENB\n");
+    NUMBER_OF_UE_MAX = MAX_MOBILES_PER_ENB;
+  }
+  printf("NUMBER_OF_UE_MAX = %d\n",NUMBER_OF_UE_MAX);
 
   if (is_nos1exec(argv[0]) )
     set_softmodem_optmask(SOFTMODEM_NOS1_BIT);
@@ -638,6 +804,17 @@ int main( int argc, char **argv ) {
       pthread_cond_init(&sync_cond,NULL);
       pthread_mutex_init(&sync_mutex, NULL);
     }
+#if defined(PRE_SCD_THREAD)
+    for (i = 0; i < 2; i++) {
+      for (int j = 0; j < MAX_NUM_CCs; j++) {
+        pre_nb_rbs_required[i][j] = (uint16_t *)malloc(sizeof(uint16_t)*NUMBER_OF_UE_MAX);
+      }
+    }
+    pre_scd_activeUE = (boolean_t *)malloc(sizeof(boolean_t)*NUMBER_OF_UE_MAX);
+    for (i = 0; i < MAX_NUM_CCs; i++) {
+      pre_scd_eNB_UE_stats[i] = (eNB_UE_STATS *)malloc(sizeof(eNB_UE_STATS)*NUMBER_OF_UE_MAX);
+    }
+#endif
     
     if (NFAPI_MODE==NFAPI_MODE_VNF) {// VNF
 #if defined(PRE_SCD_THREAD)
@@ -645,7 +822,7 @@ int main( int argc, char **argv ) {
 #endif
       wait_nfapi_init("main?");
     }
-    
+ 
     LOG_I(ENB_APP,"START MAIN THREADS\n");
     // start the main threads
     number_of_cards = 1;
@@ -708,6 +885,7 @@ int main( int argc, char **argv ) {
     pthread_mutex_unlock(&sync_mutex);
     config_check_unknown_cmdlineopt(CONFIG_CHECKALLSECTIONS);
   }
+  oai_emulation_malloc(&oai_emulation);
   // wait for end of program
   LOG_UI(ENB_APP,"TYPE <CTRL-C> TO TERMINATE\n");
   // CI -- Flushing the std outputs for the previous marker to show on the eNB / DU / CU log file
@@ -766,6 +944,7 @@ int main( int argc, char **argv ) {
    
   terminate_opt();
   logClean();
+  oai_emulation_free(&oai_emulation);
   printf("Bye.\n");
   return 0;
 }
