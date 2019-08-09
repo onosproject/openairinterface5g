@@ -317,7 +317,7 @@ int do_pss_sss_extract_nr(PHY_VARS_NR_UE *ue,
                           int32_t pss_ext[NB_ANTENNAS_RX][LENGTH_PSS_NR],
                           int32_t sss_ext[NB_ANTENNAS_RX][LENGTH_SSS_NR],
                           uint8_t doPss, uint8_t doSss,
-					      uint8_t subframe) // add flag to indicate extracting only PSS, only SSS, or both
+		          uint8_t slot)
 {
   uint8_t aarx;
   int32_t *pss_rxF,*pss_rxF_ext;
@@ -331,7 +331,7 @@ int do_pss_sss_extract_nr(PHY_VARS_NR_UE *ue,
   pss_symbol = 0;
   sss_symbol = SSS_SYMBOL_NB-PSS_SYMBOL_NB;
 
-    rxdataF  =  ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].rxdataF;
+    rxdataF  =  ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[slot]].rxdataF;
 
     unsigned int ofdm_symbol_size = frame_parms->ofdm_symbol_size;
 
@@ -399,9 +399,9 @@ int do_pss_sss_extract_nr(PHY_VARS_NR_UE *ue,
 int pss_sss_extract_nr(PHY_VARS_NR_UE *phy_vars_ue,
                        int32_t pss_ext[NB_ANTENNAS_RX][LENGTH_PSS_NR],
                        int32_t sss_ext[NB_ANTENNAS_RX][LENGTH_SSS_NR],
-					   uint8_t subframe)
+		       uint8_t slot)
 {
-  return do_pss_sss_extract_nr(phy_vars_ue, pss_ext, sss_ext, 1 /* doPss */, 1 /* doSss */, subframe);
+  return do_pss_sss_extract_nr(phy_vars_ue, pss_ext, sss_ext, 1 /* doPss */, 1 /* doSss */, slot);
 }
 
 /*******************************************************************

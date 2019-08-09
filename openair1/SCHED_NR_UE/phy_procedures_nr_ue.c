@@ -49,7 +49,7 @@
 //#include "targets/RT/USER/nr-softmodem.h"
 #include "PHY/NR_UE_ESTIMATION/nr_estimation.h"
 #include "PHY/INIT/phy_init.h"
-
+#include "PHY/NR_REFSIG/sss_nr.h"
 #ifdef EMOS
 #include "SCHED/phy_procedures_emos.h"
 #endif
@@ -4111,7 +4111,7 @@ int is_pbch_in_slot(fapi_nr_pbch_config_t *pbch_config, int frame, int slot, int
 int phy_procedures_ssb_meas(PHY_VARS_NR_UE *ue,UE_nr_rxtx_proc_t *proc,uint8_t eNB_id) {
 
   fapi_nr_pbch_config_t *pbch_config = &ue->nrUE_config.pbch_config;
-  uint8_t ssb_periodicity = 10;  // initialized to 5ms in nr_init_ue for scenarios where UE is not configured (otherwise acquired by cell configuration from gNB or LTE)
+  uint8_t ssb_periodicity = 20;  // initialized to 5ms in nr_init_ue for scenarios where UE is not configured (otherwise acquired by cell configuration from gNB or LTE)
   uint64_t ssb_positions = 255;  // hardcoded for now (otherwise acquired by cell configuratgion from gNB or LTE)
   uint8_t ssb_index;
   int slot = proc->nr_tti_rx;
@@ -4120,11 +4120,15 @@ int phy_procedures_ssb_meas(PHY_VARS_NR_UE *ue,UE_nr_rxtx_proc_t *proc,uint8_t e
   int symbol_diff;
   int ssb_sync_symbol = nr_get_ssb_start_symbol(&ue->frame_parms, pbch_config->ssb_index, pbch_config->half_frame_bit);
   int current_symbol_offset;
-  NR_UE_SSB *current_ssb;
+  int32_t pss_ext[NB_ANTENNAS_RX][LENGTH_PSS_NR];
+  int32_t sss_ext[NB_ANTENNAS_RX][LENGTH_SSS_NR];
+  int16_t *sss;
+  uint64_t ssb_pow;
 
   if (!((proc->frame_rx-(pbch_config->system_frame_number))%(ssb_periodicity/10))) {  // if ssb are in current frame according to periodicity
     if(rel_slot<10 && rel_slot>=0)  {
       for (int i=0; i<2; i++)  {  // max two SSB per slot
+        ssb_pow=0;
 	ssb_index = i + 2*rel_slot; // computing current ssb_index
         if ((ssb_positions >> ssb_index) & 0x01)  { // going further only if the bit of ssb_positions at current ssb index is 1
 
@@ -4135,22 +4139,28 @@ int phy_procedures_ssb_meas(PHY_VARS_NR_UE *ue,UE_nr_rxtx_proc_t *proc,uint8_t e
             symbol_diff = nr_get_ssb_start_symbol(&ue->frame_parms, ssb_index, pbch_config->half_frame_bit) - ssb_sync_symbol;
 
           current_symbol_offset = ue->symbol_offset + symbol_diff ;  
-          current_ssb = create_ssb_node(ssb_index,pbch_config->half_frame_bit);
-          for (int i=1; i<4; i++) {
+
+          for (int sy=0; sy<4; sy++)
 
 	    nr_slot_fep(ue,
-		        (current_symbol_offset+i)%(ue->frame_parms.symbols_per_slot),
+		        (current_symbol_offset+sy)%(ue->frame_parms.symbols_per_slot),
 		        slot,
 		        0,
 		        0);
 
-            nr_pbch_dmrs_correlation(ue,slot,(current_symbol_offset+i)%(ue->frame_parms.symbols_per_slot),i-1,current_ssb);
+          do_pss_sss_extract_nr(ue, pss_ext, sss_ext, 1, 1, slot);
+          pss_ch_est_nr(ue,pss_ext,sss_ext);
+          sss = (int16_t*)&sss_ext[0][0];
+          for (int l = 0; l < LENGTH_SSS_NR; l++) {
+	    ssb_pow += (sss[2*i]*sss[2*i] + sss[2*i+1]*sss[2*i+1]);
           }
-          current_ssb->metric = current_ssb->c_re*current_ssb->c_re + current_ssb->c_im+current_ssb->c_re;
+          ssb_pow = ssb_pow/LENGTH_SSS_NR;
+          printf("%d %ld\n",ssb_index,ssb_pow);
         }
       }
     }
   }
+  return 0;
 }
 
 int phy_procedures_nrUE_RX(PHY_VARS_NR_UE *ue,UE_nr_rxtx_proc_t *proc,uint8_t eNB_id,
