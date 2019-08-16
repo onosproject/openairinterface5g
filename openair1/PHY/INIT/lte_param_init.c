@@ -78,6 +78,7 @@ void phy_measurements_eNB_malloc(PHY_MEASUREMENTS_eNB *meas)
 void phy_vars_eNB_malloc(PHY_VARS_eNB *eNB)
 {
   int i, j;
+  eNB->uci_vars = (LTE_eNB_UCI *)malloc(sizeof(LTE_eNB_UCI)*NUMBER_OF_UCI_VARS_MAX);
   eNB->srs_vars = (LTE_eNB_SRS *)malloc(sizeof(LTE_eNB_SRS)*NUMBER_OF_UE_MAX);
   eNB->pusch_vars = (LTE_eNB_PUSCH **)malloc(sizeof(LTE_eNB_PUSCH *)*NUMBER_OF_UE_MAX);
   eNB->dlsch = (LTE_eNB_DLSCH_t ***)malloc(sizeof(LTE_eNB_DLSCH_t **)*NUMBER_OF_UE_MAX);
@@ -157,6 +158,7 @@ void lte_param_init(PHY_VARS_eNB **eNBp,
   printf("Start lte_param_init\n");
   // dlsim does not read the config file to get number_of_ue_max, so we set NUMBER_OF_UE_MAX to 16
   NUMBER_OF_UE_MAX = 16;
+  NUMBER_OF_UCI_VARS_MAX = 4*10 + NUMBER_OF_UE_MAX;
   *eNBp = malloc(sizeof(PHY_VARS_eNB));
   *UEp = malloc(sizeof(PHY_VARS_UE));
   *rup = malloc(sizeof(RU_t));

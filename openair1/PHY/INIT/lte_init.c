@@ -606,6 +606,7 @@ void phy_free_lte_eNB(PHY_VARS_eNB *eNB)
 void phy_vars_eNB_free(PHY_VARS_eNB *eNB)
 {
   int i, j;
+  free_and_zero(eNB->uci_vars);
   free_and_zero(eNB->srs_vars);
   free_and_zero(eNB->pusch_vars);
   free_and_zero(eNB->ulsch);

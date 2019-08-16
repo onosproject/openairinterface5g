@@ -1635,6 +1635,8 @@ int RCconfig_RRC(uint32_t i, eNB_RRC_INST *rrc, int macrlc_has_f1) {
                                RC.config_file_name, i, ccparams_lte.N_RB_DL);
                   break;
               }
+              NUMBER_OF_UCI_VARS_MAX = NUMBER_OF_UE_MAX + 4*ccparams_lte.ue_multiple_max;
+              printf("NUMBER_OF_UCI_VARS_MAX = %d\n",NUMBER_OF_UCI_VARS_MAX);
 
               // eMBMS configuration
               RRC_CONFIGURATION_REQ(msg_p).eMBMS_configured = 0;

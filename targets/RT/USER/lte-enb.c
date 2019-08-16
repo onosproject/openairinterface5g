@@ -1309,6 +1309,7 @@ void init_eNB(int single_thread_flag,int wait_for_sync) {
 void phy_vars_eNB_malloc(PHY_VARS_eNB *eNB)
 {
   int i, j;
+  eNB->uci_vars = (LTE_eNB_UCI *)malloc(sizeof(LTE_eNB_UCI)*NUMBER_OF_UCI_VARS_MAX);
   eNB->srs_vars = (LTE_eNB_SRS *)malloc(sizeof(LTE_eNB_SRS)*NUMBER_OF_UE_MAX);
   eNB->pusch_vars = (LTE_eNB_PUSCH **)malloc(sizeof(LTE_eNB_PUSCH *)*NUMBER_OF_UE_MAX);
   eNB->dlsch = (LTE_eNB_DLSCH_t ***)malloc(sizeof(LTE_eNB_DLSCH_t **)*NUMBER_OF_UE_MAX);
