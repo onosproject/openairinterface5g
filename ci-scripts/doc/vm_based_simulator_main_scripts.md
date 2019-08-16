@@ -88,7 +88,7 @@ You can get the list of variant specific variables specifying the variant argume
     --variant enb-usrp        OR -v1     ( build and test  )
                VM_NAME=ci-enb-usrp              ARCHIVES_LOC=enb_usrp       
                VM_MEMORY=2048                   VM_CPU=4              
-               NB_PATTERN_FILES=9               BUILD_OPTIONS="--eNB -w USRP --mu"
+               NB_PATTERN_FILES=9               BUILD_OPTIONS="--eNB -w USRP"
                LOG_PATTERN=.Rel14.txt     
 
     --variant l1-sim          OR -v20    ( test  )

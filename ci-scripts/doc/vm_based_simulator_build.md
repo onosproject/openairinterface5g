@@ -110,7 +110,7 @@ VM_NAME             = RAN-CI-develop-b47-enb-usrp
 VM_CMD_FILE         = RAN-CI-develop-b47-enb-usrp_cmds.txt
 JENKINS_WKSP        = /var/jenkins/workspace/RAN-CI-develop
 ARCHIVES_LOC        = /var/jenkins/workspace/RAN-CI-develop/archives/enb_usrp
-BUILD_OPTIONS       = --eNB -w USRP --mu
+BUILD_OPTIONS       = --eNB -w USRP
 VM_MEMORY           = 2048 MBytes
 VM_CPU              = 4
 ############################################################
@@ -147,7 +147,7 @@ unzip -qq -DD ../localZip.zip
 cd /home/ubuntu/tmp
 source oaienv
 cd cmake_targets
-./build_oai -I --eNB -w USRP --mu
+./build_oai -I --eNB -w USRP
 
 #  Here wait for a few minutes 8 to 12 minutes #
 
