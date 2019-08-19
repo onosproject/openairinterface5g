@@ -105,8 +105,6 @@ int nfapi_sync_var=-1; //!< protected by mutex \ref nfapi_sync_mutex
 uint16_t sf_ahead=2;
 int tddflag;
 char *emul_iface;
-uint32_t NUMBER_OF_UE_MAX = 16;
-uint32_t NUMBER_OF_UCI_VARS_MAX = 16;
 
 pthread_cond_t sync_cond;
 pthread_mutex_t sync_mutex;
