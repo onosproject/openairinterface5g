@@ -1,8 +1,8 @@
 #ifndef OPENAIRINTERFACE5G_LIMITS_H_
 #define OPENAIRINTERFACE5G_LIMITS_H_
 
-signed int NUMBER_OF_UE_MAX;
-signed int NUMBER_OF_UCI_VARS_MAX;
+unsigned int NUMBER_OF_UE_MAX;
+unsigned int NUMBER_OF_UCI_VARS_MAX;
 
 #if defined(CBMIMO1) || defined(EXMIMO) || defined(OAI_USRP) || defined(OAI_LMSSDR)
 #        define NUMBER_OF_eNB_MAX 1

@@ -48,8 +48,7 @@
 
 
 
-//struct net_device *ue_ip_dev[UE_IP_NB_INSTANCES_MAX];
-struct net_device **ue_ip_dev;
+struct net_device *ue_ip_dev[UE_IP_NB_INSTANCES_MAX];
 
 #ifdef OAI_NW_DRIVER_USE_NETLINK
   extern void ue_ip_netlink_release(void);
@@ -367,8 +366,6 @@ int init_module (void) {
   // Initialize parameters shared with RRC
   printk("[UE_IP_DRV][%s] Starting OAI IP driver", __FUNCTION__);
 
-  UE_IP_NB_INSTANCES_MAX = NUMBER_OF_UE_MAX;
-  ue_ip_dev = (struct net_device **)malloc(sizeof(struct net_device*)*UE_IP_NB_INSTANCES_MAX);
   for (inst=0; inst<UE_IP_NB_INSTANCES_MAX; inst++) {
     printk("[UE_IP_DRV][%s] begin init instance %d\n", __FUNCTION__,inst);
     sprintf(devicename,"oip%d",inst+1);
