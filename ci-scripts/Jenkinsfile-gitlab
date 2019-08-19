@@ -162,10 +162,10 @@ pipeline {
             }
         }
 
-        stage ("Start VM -- enb-ethernet") {
+        stage ("Start VM -- phy-sim") {
             steps {
                 timeout (time: 5, unit: 'MINUTES') {
-                    sh "./ci-scripts/oai-ci-vm-tool build --workspace $WORKSPACE --variant enb-ethernet --job-name ${JOB_NAME} --build-id ${BUILD_ID} --daemon"
+                    sh "./ci-scripts/oai-ci-vm-tool build --workspace $WORKSPACE --variant phy-sim --job-name ${JOB_NAME} --build-id ${BUILD_ID} --daemon"
                 }
             }
         }
@@ -190,11 +190,11 @@ pipeline {
                         }
                     }
                 }
-                stage ("Build eNb-ethernet") {
+                stage ("Build physical simulators") {
                     steps {
-                        gitlabCommitStatus(name: "Build eNb-ethernet") {
+                        gitlabCommitStatus(name: "Build phy-sim") {
                             timeout (time: 20, unit: 'MINUTES') {
-                                sh "./ci-scripts/oai-ci-vm-tool wait --workspace $WORKSPACE --variant enb-ethernet --job-name ${JOB_NAME} --build-id ${BUILD_ID}"
+                               sh "./ci-scripts/oai-ci-vm-tool wait --workspace $WORKSPACE --variant phy-sim --job-name ${JOB_NAME} --build-id ${BUILD_ID} --keep-vm-alive"
                             }
                         }
                     }
@@ -210,10 +210,10 @@ pipeline {
             }
         }
 
-        stage ("Start VM -- phy-sim") {
+        stage ("Start VM -- enb-ethernet") {
             steps {
                 timeout (time: 5, unit: 'MINUTES') {
-                    sh "./ci-scripts/oai-ci-vm-tool build --workspace $WORKSPACE --variant phy-sim --job-name ${JOB_NAME} --build-id ${BUILD_ID} --daemon"
+                    sh "./ci-scripts/oai-ci-vm-tool build --workspace $WORKSPACE --variant enb-ethernet --job-name ${JOB_NAME} --build-id ${BUILD_ID} --daemon"
                 }
             }
         }
@@ -246,11 +246,11 @@ pipeline {
                         }
                     }
                 }
-                stage ("Build physical simulators") {
+                stage ("Build eNb-ethernet") {
                     steps {
-                        gitlabCommitStatus(name: "Build phy-sim") {
+                        gitlabCommitStatus(name: "Build eNb-ethernet") {
                             timeout (time: 20, unit: 'MINUTES') {
-                               sh "./ci-scripts/oai-ci-vm-tool wait --workspace $WORKSPACE --variant phy-sim --job-name ${JOB_NAME} --build-id ${BUILD_ID} --keep-vm-alive"
+                                sh "./ci-scripts/oai-ci-vm-tool wait --workspace $WORKSPACE --variant enb-ethernet --job-name ${JOB_NAME} --build-id ${BUILD_ID}"
                             }
                         }
                     }
