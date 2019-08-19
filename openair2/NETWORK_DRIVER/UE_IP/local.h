@@ -109,7 +109,6 @@ typedef struct pdcp_data_ind_header_s {
 
 
 
-//extern struct net_device *ue_ip_dev[UE_IP_NB_INSTANCES_MAX];
-extern struct net_device **ue_ip_dev;
+extern struct net_device *ue_ip_dev[UE_IP_NB_INSTANCES_MAX];
 
 #endif

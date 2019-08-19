@@ -100,7 +100,8 @@ pthread_cond_t nfapi_sync_cond;
 pthread_mutex_t nfapi_sync_mutex;
 int nfapi_sync_var=-1; //!< protected by mutex \ref nfapi_sync_mutex
 
-
+uint32_t NUMBER_OF_UE_MAX = 16;
+uint32_t NUMBER_OF_UCI_VARS_MAX = 16;
 uint16_t sf_ahead=4;
 
 pthread_cond_t sync_cond;
