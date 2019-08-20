@@ -420,7 +420,6 @@ typedef int(*oai_transport_initfunc_t)(openair0_device *device, openair0_config_
 
 #define OPTION_LZ4  0x00000001          // LZ4 compression (option_value is set to compressed size)
 
-#define sample_t struct complex16 // 2*16 bits complex number
 
 typedef struct {
   uint64_t magic;          // Magic value (see defines above)
@@ -446,7 +445,6 @@ typedef struct {
 
 #define OPTION_LZ4  0x00000001          // LZ4 compression (option_value is set to compressed size)
 
-#define sample_t struct complex16 // 2*16 bits complex number
 
 #ifdef __cplusplus
 extern "C"
