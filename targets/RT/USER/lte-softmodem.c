@@ -842,6 +842,10 @@ int main( int argc, char **argv ) {
   // RU thread and some L1 procedure aren't necessary in VNF or L2 FAPI simulator.
   // but RU thread deals with pre_scd and this is necessary in VNF and simulator.
   // some initialization is necessary and init_ru_vnf do this.
+  if (NFAPI_MODE == NFAPI_MODE_PNF) {
+    NUMBER_OF_UCI_VARS_MAX = 4*16 + NUMBER_OF_UE_MAX;
+    printf("PNF : NUMBER_OF_UCI_VARS_MAX = %d\n",NUMBER_OF_UCI_VARS_MAX);
+  }
   if (RC.nb_RU >0 && NFAPI_MODE!=NFAPI_MODE_VNF) {
     printf("Initializing RU threads\n");
     init_RU(get_softmodem_params()->rf_config_file,get_softmodem_params()->clock_source,get_softmodem_params()->timing_source,get_softmodem_params()->send_dmrs_sync);
