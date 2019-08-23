@@ -28,6 +28,7 @@ int main(int argc, char *argv[]) {
   usleep(100000);
   cpuCyclesMicroSec=(rdtsc()-deb)/100000;
   printf("Cycles per µs: %lu\n",cpuCyclesMicroSec);
+  printf("All measurements are in µs!\n");
   printf("Key" SEP "delay to process" SEP "processing time" SEP "delay to be read answer\n");
   notifiedFIFO_elt_t doneRequest;
 

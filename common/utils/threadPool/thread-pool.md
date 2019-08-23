@@ -65,7 +65,7 @@ A performance measurement is integrated: the pool will automacillay fill timesta
 * endProcessingTime: time the worker finished the job
 * returnTime: time the client reads the result
 
-if you set the environement variable: thread-pool-measurements to a valid file name
+if you set the environement variable: threadPoolMeasurements to a valid file name
 These measurements will be wrote to this Linux pipe.
 
 A tool to read the linux fifo and display it in ascii is provided: see the local directory Makefile for this tool and to compile the thread pool unitary tests.

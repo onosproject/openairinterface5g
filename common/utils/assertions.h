@@ -22,7 +22,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <inttypes.h>
-#include <platform_types.h>
+//#include <platform_types.h>
 
 #if defined(ENB_MODE)
 # define display_backtrace()
