@@ -241,9 +241,9 @@ uint32_t nr_dlsch_decoding(PHY_VARS_NR_UE *phy_vars_ue,
   uint16_t nb_rb = 30;
   double Coderate = 0.0;
   //nfapi_nr_config_request_t *cfg = &phy_vars_ue->nrUE_config;
-  //uint8_t dmrs_type = cfg->pdsch_config.dmrs_type.value;
-  uint8_t nb_re_dmrs = 6; //(dmrs_type==NFAPI_NR_DMRS_TYPE1)?6:4;
-  uint16_t length_dmrs = 1; //cfg->pdsch_config.dmrs_max_length.value;
+  pdsch_dmrs_type_t dmrs_type = phy_vars_ue->dmrs_DownlinkConfig.pdsch_dmrs_type; //check if this is configured properly
+  uint8_t nb_re_dmrs = (dmrs_type==pdsch_dmrs_type1)?6:4;
+  uint16_t length_dmrs = (uint16_t) phy_vars_ue->dmrs_DownlinkConfig.pdsch_maxLength;
 
   uint32_t i,j;
 
@@ -715,10 +715,10 @@ uint32_t  nr_dlsch_decoding_mthread(PHY_VARS_NR_UE *phy_vars_ue,
   uint32_t Tbslbrm = 950984;
   uint16_t nb_rb = 30;
   double Coderate = 0.0;
-  nfapi_nr_config_request_t *cfg = &phy_vars_ue->nrUE_config;
-  uint8_t dmrs_type = cfg->pdsch_config.dmrs_type.value;
-  uint8_t nb_re_dmrs = (dmrs_type==NFAPI_NR_DMRS_TYPE1)?6:4;
-  uint16_t length_dmrs = 1; //cfg->pdsch_config.dmrs_max_length.value;
+  //fapi_nr_config_request_t *cfg = &phy_vars_ue->nrUE_config;
+  pdsch_dmrs_type_t dmrs_type = phy_vars_ue->dmrs_DownlinkConfig.pdsch_dmrs_type; //check if this is configured properly
+  uint8_t nb_re_dmrs = (dmrs_type==pdsch_dmrs_type1)?6:4;
+  uint16_t length_dmrs = (uint16_t) phy_vars_ue->dmrs_DownlinkConfig.pdsch_maxLength;
 
   uint32_t i,j;
 
@@ -1240,7 +1240,7 @@ uint32_t  nr_dlsch_decoding_mthread(PHY_VARS_NR_UE *phy_vars_ue,
 #endif
 
 #ifdef UE_DLSCH_PARALLELISATION
-void *nr_dlsch_decoding_process(void *arg)
+void nr_dlsch_decoding_process(void *arg)
 {
 	nr_rxtx_thread_data_t *rxtxD= (nr_rxtx_thread_data_t *)arg;
     UE_nr_rxtx_proc_t *proc = &rxtxD->proc;
@@ -1258,7 +1258,7 @@ void *nr_dlsch_decoding_process(void *arg)
     int8_t l [68*384];
     //__m128i l;
     int16_t inv_d [68*384];
-    int16_t *p_invd =&inv_d;
+    int16_t *p_invd = inv_d;
     uint8_t kb, kc;
     uint8_t Ilbrm = 0;
     uint32_t Tbslbrm = 950984;
