@@ -79,7 +79,7 @@ extern void handle_nfapi_bch_pdu(PHY_VARS_eNB *eNB,L1_rxtx_proc_t *proc, nfapi_d
 
 
 
-nfapi_tx_request_pdu_t *tx_request_pdu[1023][10][10]; // [frame][subframe][max_num_pdus]
+nfapi_tx_request_pdu_t *tx_request_pdu[1024][10][10]; // [frame][subframe][max_num_pdus]
 
 uint8_t tx_pdus[32][8][4096];
 
@@ -796,6 +796,7 @@ int pnf_phy_dl_config_req(nfapi_pnf_p7_config_t *pnf_p7, nfapi_dl_config_request
 
         uint8_t *dlsch_sdu = tx_pdus[UE_id][harq_pid];
         memcpy(dlsch_sdu, tx_pdu->segments[0].segment_data, tx_pdu->segments[0].segment_length);
+        tx_request_pdu[sfn][sf][rel8_pdu->pdu_index] = NULL;
         //NFAPI_TRACE(NFAPI_TRACE_INFO, "%s() DLSCH:pdu_index:%d handle_nfapi_dlsch_pdu(eNB, proc_rxtx, dlsch_pdu, transport_blocks:%d sdu:%p) eNB->pdcch_vars[proc->subframe_tx & 1].num_pdcch_symbols:%d\n", __FUNCTION__, rel8_pdu->pdu_index, rel8_pdu->transport_blocks, dlsch_sdu, eNB->pdcch_vars[proc->subframe_tx & 1].num_pdcch_symbols);
         handle_nfapi_dlsch_pdu( eNB, sfn,sf, &eNB->proc.L1_proc, &dl_config_pdu_list[i], rel8_pdu->transport_blocks-1, dlsch_sdu);
       } else {
