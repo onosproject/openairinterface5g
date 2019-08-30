@@ -226,7 +226,6 @@ int32_t signal_energy_nodc(int32_t *input,uint32_t length)
   register int32x4_t tmpE;
   int32x2_t tmpE2;
   int16x4_t *in = (int16x4_t *)input;
-
   tmpE = vdupq_n_s32(0);
 
   for (i=0; i<length>>1; i++) {

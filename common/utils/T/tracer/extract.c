@@ -18,6 +18,8 @@ void usage(void)
 "                              (you can use several -f options)\n"
 "    -after <raw time> <nsec>  'event' time has to be greater than this\n"
 "    -count <n>                dump 'n' matching events (less if EOF reached)\n"
+"    -modulo <n>               dump frame which modulo <rru-count> is <n>\n"
+"    -rru-count <n>            set rru count\n"
   );
   exit(1);
 }
@@ -51,10 +53,13 @@ int main(int n, char **v)
   int filter_arg[n];
   int filter_value[n];
   int filter_count = 0;
+  int filter_frame;
   int buffer_arg;
   int found;
   int count = 1;
   int check_time = 0;
+  int modulo = 0;
+  int rru_count = 1;
   time_t sec;
   long nsec;
 
@@ -77,6 +82,10 @@ int main(int n, char **v)
     }
     if (!strcmp(v[i], "-count"))
       { if (i > n-2) usage(); count = atoi(v[++i]); continue; }
+    if (!strcmp(v[i], "-modulo"))
+      { if (i > n-2) usage(); modulo = atoi(v[++i]); continue; }
+    if (!strcmp(v[i], "-rru-count"))
+      { if (i > n-2) usage(); rru_count = atoi(v[++i]); continue; }
     if (file == NULL) { file = v[i]; continue; }
     if (event_name == NULL) { event_name = v[i]; continue; }
     if (buffer_name == NULL) { buffer_name = v[i]; continue; }
@@ -108,6 +117,8 @@ int main(int n, char **v)
   for (i = 0; i < filter_count; i++)
     filter_arg[i] = get_filter_arg(&f, filter[i], "int");
 
+  filter_frame = get_filter_arg(&f, "frame", "int");
+
   fd = open(file, O_RDONLY);
   if (fd == -1) { perror(file); exit(1); }
 
@@ -124,6 +135,8 @@ int main(int n, char **v)
       if (filter_value[i] != e.e[filter_arg[i]].i)
         break;
     if (i != filter_count)
+      continue;
+    if (e.e[filter_frame].i % rru_count != modulo)
       continue;
     if (check_time &&
         !(e.sending_time.tv_sec > sec ||

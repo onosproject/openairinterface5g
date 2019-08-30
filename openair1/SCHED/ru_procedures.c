@@ -794,10 +794,11 @@ void ru_fep_full_2thread(RU_t *ru) {
 		LOG_M("rxdata.m","rxdata",&ru->common.rxdata[0][0], fp->samples_per_tti*2,1,1);		
 		exit(-1);
 	}
-	T(T_CALIBRATION_CHANNEL_ESTIMATES, T_INT(ru->idx), T_INT(proc->frame_rx), T_INT(proc->subframe_rx),
+	/*T(T_CALIBRATION_CHANNEL_ESTIMATES, T_INT(ru->idx), T_INT(proc->frame_rx), T_INT(proc->subframe_rx),
           T_INT(l),T_BUFFER(&calibration->drs_ch_estimates[0][l*12*fp->N_RB_UL],
           12*fp->N_RB_UL*sizeof(int32_t)));
-
+	*/
+/*	
 	Ns = 1;
         l = 10;
 
@@ -819,15 +820,16 @@ void ru_fep_full_2thread(RU_t *ru) {
                                   proc->subframe_rx,
                                   0,//u = 0..29
                                   0,//v = 0,1
-                                  /*eNB->ulsch[ru->idx]->cyclicShift,cyclic_shift,0..7*/0,
+                                  0,
                                   l,//l
                                   0,//interpolate,
-                                  0 /*eNB->ulsch[ru->idx]->rnti rnti or ru->ulsch[eNB_id]->rnti*/);
+                                  0 );
 
 	T(T_CALIBRATION_CHANNEL_ESTIMATES, T_INT(ru->idx), T_INT(proc->frame_rx), T_INT(proc->subframe_rx),
           T_INT(l),T_BUFFER(&calibration->drs_ch_estimates[0][l*12*fp->N_RB_UL],
           12*fp->N_RB_UL*sizeof(int32_t)));
-       }
+*/       
+	}
     
     else {
        	 AssertFatal(1==0,"Should not get here\n");

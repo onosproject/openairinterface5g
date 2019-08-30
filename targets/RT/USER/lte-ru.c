@@ -232,7 +232,7 @@ void fh_if4p5_south_in(RU_t *ru,int *frame,int *subframe) {
        if (packet_type == IF4p5_PULFFT) proc->symbol_mask[sf] = proc->symbol_mask[sf] | (1<<symbol_number);
        else if (packet_type == IF4p5_PULCALIB) {
        	proc->symbol_mask[sf] = (2<<symbol_number)-1;
-	LOG_I(PHY,"symbol_mask[%d] %d\n",sf,proc->symbol_mask[sf]);
+	LOG_D(PHY,"symbol_mask[%d] %d\n",sf,proc->symbol_mask[sf]);
        }
        else if (packet_type == IF4p5_PULTICK) {           
          proc->symbol_mask[sf] = symbol_mask_full;
@@ -346,14 +346,40 @@ void fh_if4p5_south_in(RU_t *ru,int *frame,int *subframe) {
                 T_BUFFER(calibration->drs_ch_estimates_time[0],
                 fp->ofdm_symbol_size*sizeof(int32_t)));
 
-/*		if (f==251 && ru->idx==0) {
-			//LOG_M("rxdataF_ext.m","rxdataFext",&calibration->rxdataF_ext[0][0], 14*12*(fp->N_RB_DL),1,1);
-			LOG_M("dmrs_time.m","dmrstime",calibration->drs_ch_estimates_time[0], fp->ofdm_symbol_size,1,1);
-			//exit(-1);
-		}*/
-  //}
  }
 
+/* if (ru->wait_cnt==0 && packet_type == IF4p5_PULCALIB && RC.collect==1 && ru->is_slave==1) {
+ 	Ns = 0;
+        l = 3;
+        u = 0;
+        ru->frame_parms.nb_antennas_rx = ru->nb_rx;             
+        ulsch_extract_rbs_single(ru->common.rxdataF,
+                                 calibration->rxdataF_ext,
+                                 0,
+                                 fp->N_RB_DL,
+                                 3%(fp->symbols_per_tti/2),// l = symbol within slot
+                                 Ns, 
+                                 fp);
+
+	lte_ul_channel_estimation_RRU(fp,
+                                  calibration->drs_ch_estimates,
+                                  calibration->drs_ch_estimates_time,
+                                  calibration->rxdataF_ext,
+                                  fp->N_RB_DL, 
+                                  f,
+                                  sf,
+                                  u,
+                                  0,
+                                  0,
+                                  l,
+                                  0,
+                                  0);
+
+	T(T_CALIBRATION_CHANNEL_ESTIMATES, T_INT(ru->idx), T_INT(f), T_INT(sf),
+                  T_INT(l),T_BUFFER(&calibration->drs_ch_estimates[0][l*12*fp->N_RB_UL],
+                12*fp->N_RB_UL*sizeof(int32_t)));
+
+ }*/
 
 
   proc->symbol_mask[sf] = 0;

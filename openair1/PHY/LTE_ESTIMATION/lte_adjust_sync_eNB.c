@@ -127,7 +127,7 @@ int lte_est_timing_advance_pusch(PHY_VARS_eNB *eNB,module_id_t UE_id)
   int sync_pos = (frame_parms->ofdm_symbol_size-cyclic_shift*frame_parms->ofdm_symbol_size/12)%(frame_parms->ofdm_symbol_size);
   
   AssertFatal(frame_parms->ofdm_symbol_size > 127,"frame_parms->ofdm_symbol_size %d<128\n",frame_parms->ofdm_symbol_size);
-  AssertFatal(frame_parms->nb_antennas_rx >0 && frame_parms->nb_antennas_rx<3,"frame_parms->nb_antennas_rx %d not in [0,1]\n",
+  AssertFatal(frame_parms->nb_antennas_rx >0 && frame_parms->nb_antennas_rx<NB_PUSCH_ANT_PORTS+1,"frame_parms->nb_antennas_rx %d not in [0,1,2]\n",
 	      frame_parms->nb_antennas_rx);
   for (i = 0; i < frame_parms->ofdm_symbol_size; i++) {
     temp = 0;
