@@ -31,16 +31,6 @@
 
 #include "assertions.h"
 
-#include "PHY/defs.h"
-#include "PHY/extern.h"
-
-//#include "PHY/LTE_TRANSPORT/dci_NB_IoT.h"
-
-#include "SCHED/defs.h"
-#include "SCHED/extern.h"
-
-#include "LAYER2/MAC/defs.h"
-
 #include "targets/RT/USER/lte-softmodem.h"
 #include "LAYER2/MAC/mac.h"
 #include "LAYER2/MAC/mac_extern.h"

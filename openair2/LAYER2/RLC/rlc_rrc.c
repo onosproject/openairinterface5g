@@ -42,9 +42,10 @@
 #if (LTE_RRC_VERSION >= MAKE_VERSION(9, 0, 0))
 #include "LTE_PMCH-InfoList-r9.h"
 #endif
-
+#include "ENB_APP/enb_paramdef_NB_IoT.h"
 #include "LAYER2/MAC/mac_extern.h"
 #include "assertions.h"
+#include "RRC/LITE/proto_NB_IoT.h"
 //-----------------------------------------------------------------------------
 rlc_op_status_t rrc_rlc_config_asn1_req (const protocol_ctxt_t   * const ctxt_pP,
     const LTE_SRB_ToAddModList_t   * const srb2add_listP,
@@ -105,36 +106,36 @@ rlc_op_status_t rrc_rlc_config_asn1_req (const protocol_ctxt_t   * const ctxt_pP
           case LTE_RLC_Config_PR_NOTHING:
             break;
 
-          case RLC_Config_PR_am:
+//          case RLC_Config_PR_am:
           /****************************************config srb1********************************************/
-            if (rrc_rlc_add_rlc (ctxt_pP, SRB_FLAG_YES, MBMS_FLAG_NO, rb_id, lc_id, RLC_MODE_AM) != NULL) {
-		config_req_rlc_am_asn1 (
-                ctxt_pP,
-                SRB_FLAG_YES,
-                &srb_toaddmod_p->rlc_Config->choice.explicitValue.choice.am,
-                rb_id, lc_id);
-            } else {
-              LOG_E(RLC, PROTOCOL_CTXT_FMT" ERROR IN ALLOCATING SRB %d \n",
-                    PROTOCOL_CTXT_ARGS(ctxt_pP),
-                    rb_id);
-            }
+//            if (rrc_rlc_add_rlc (ctxt_pP, SRB_FLAG_YES, MBMS_FLAG_NO, rb_id, lc_id, RLC_MODE_AM) != NULL) {
+//		config_req_rlc_am_asn1 (
+//                ctxt_pP,
+//                SRB_FLAG_YES,
+//               &srb_toaddmod_p->rlc_Config->choice.explicitValue.choice.am,
+//               rb_id, lc_id);
+//           } else {
+//              LOG_E(RLC, PROTOCOL_CTXT_FMT" ERROR IN ALLOCATING SRB %d \n",
+//                    PROTOCOL_CTXT_ARGS(ctxt_pP),
+//                    rb_id);
+//            }
           /***********************************************************************************************/
           
           /****************************************config srb1bis********************************************/
-          if (rrc_rlc_add_rlc (ctxt_pP, SRB_FLAG_YES, MBMS_FLAG_NO, 3, 3, RLC_MODE_AM) != NULL) {
-              config_req_rlc_am_asn1 (
-                ctxt_pP,
-                SRB_FLAG_YES,
-                &srb_toaddmod_p->rlc_Config->choice.explicitValue.choice.am,
-                3, 3);
-            } else {
-              LOG_E(RLC, PROTOCOL_CTXT_FMT" ERROR IN ALLOCATING SRB %d \n",
-                    PROTOCOL_CTXT_ARGS(ctxt_pP),
-                    rb_id);
-            }
+//          if (rrc_rlc_add_rlc (ctxt_pP, SRB_FLAG_YES, MBMS_FLAG_NO, 3, 3, RLC_MODE_AM) != NULL) {
+//              config_req_rlc_am_asn1 (
+//                ctxt_pP,
+//                SRB_FLAG_YES,
+//                &srb_toaddmod_p->rlc_Config->choice.explicitValue.choice.am,
+//                3, 3);
+//            } else {
+//              LOG_E(RLC, PROTOCOL_CTXT_FMT" ERROR IN ALLOCATING SRB %d \n",
+//                    PROTOCOL_CTXT_ARGS(ctxt_pP),
+//                    rb_id);
+//            }
           /***************************************************************************************************/
 
-            break;
+//            break;
 
           case LTE_RLC_Config_PR_am:
             if (rrc_rlc_add_rlc (ctxt_pP, SRB_FLAG_YES, MBMS_FLAG_NO, rb_id, lc_id, RLC_MODE_AM
@@ -148,7 +149,20 @@ rlc_op_status_t rrc_rlc_config_asn1_req (const protocol_ctxt_t   * const ctxt_pP
                 SRB_FLAG_YES,
                 &srb_toaddmod_p->rlc_Config->choice.explicitValue.choice.am,
                 rb_id, lc_id);
-            } else {
+            }
+            /****************************************config srb1bis for NB-IoT********************************************/
+            else if(NBconfig.NB_IoT_configured > 0)
+            {
+              if (rrc_rlc_add_rlc (ctxt_pP, SRB_FLAG_YES, MBMS_FLAG_NO, 3, 3, RLC_MODE_AM) != NULL) {
+              config_req_rlc_am_asn1 (
+                ctxt_pP,
+                SRB_FLAG_YES,
+                &srb_toaddmod_p->rlc_Config->choice.explicitValue.choice.am,
+                3, 3);
+              }
+            } 
+            /************************************************************************************************************/
+            else {
               LOG_E(RLC, PROTOCOL_CTXT_FMT" ERROR IN ALLOCATING SRB %d \n",
                     PROTOCOL_CTXT_ARGS(ctxt_pP),
                     rb_id);
@@ -599,7 +613,7 @@ rlc_op_status_t rrc_rlc_remove_rlc   (
 #endif
 
 
-#if defined(Rel10) || defined(Rel14)
+#if (LTE_RRC_VERSION >= MAKE_VERSION(10, 0, 0))
   rlc_mbms_id_t         *mbms_id_p  = NULL;
 #endif rrc_rlc_remove_rlc
 #ifdef OAI_EMU

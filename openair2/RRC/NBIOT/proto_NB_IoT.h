@@ -68,7 +68,7 @@ uint8_t get_NB_IoT_SIB23_size(void);
 
 long *get_NB_IoT_SIB1_eutracontrolregionsize(void);
 
-void init_testing_NB_IoT(uint8_t Mod_id, int CC_id, rrc_eNB_carrier_data_NB_IoT_t *carrier, RrcConfigurationReq *configuration, uint32_t frame, uint32_t hyper_frame);
+void init_testing_NB_IoT(uint8_t Mod_id, int CC_id, rrc_eNB_carrier_data_NB_IoT_t *carrier, NbIoTRrcConfigurationReq *configuration, uint32_t frame, uint32_t hyper_frame);
 
 /*------------------------common_nb_iot.c----------------------------------------*/
 
@@ -414,7 +414,7 @@ void rrc_config_buffer_NB_IoT(
 
 char openair_rrc_eNB_configuration_NB_IoT(
   const module_id_t enb_mod_idP,
-  RrcConfigurationReq* configuration
+  NbIoTRrcConfigurationReq* configuration
 );
 
 //-----------------------------

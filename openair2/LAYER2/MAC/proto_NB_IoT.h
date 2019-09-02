@@ -37,7 +37,7 @@
 #include "openair1/PHY/LTE_TRANSPORT/defs_NB_IoT.h"
 #include "LAYER2/MAC/defs_NB_IoT.h"
 #include "COMMON/platform_types.h"
-#include "openair2/RRC/LTE/defs_NB_IoT.h"
+#include "openair2/RRC/LITE/defs_NB_IoT.h"
 /** \addtogroup _mac
  *  @{
  */
@@ -114,7 +114,7 @@ available_resource_DL_t *check_resource_DL(eNB_MAC_INST_NB_IoT *mac_inst, int ch
 void print_available_resource_DL(eNB_MAC_INST_NB_IoT *mac_inst);
 void print_schedule_result_DL(void);
 void print_schedule_result_UL(void);
-void add_ue(eNB_MAC_INST_NB_IoT *mac_inst, uint16_t rnti, ce_level_t ce, uint32_t PHR, uint32_t ul_total_buffer);
+void add_ue_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, uint16_t rnti, ce_level_t ce, uint32_t PHR, uint32_t ul_total_buffer);
 void remove_ue(eNB_MAC_INST_NB_IoT *mac_inst, uint16_t rnti, ce_level_t ce);
 //	SIBs
 void schedule_sibs(eNB_MAC_INST_NB_IoT *mac_inst, uint32_t sibs_order, int start_subframe);
@@ -232,7 +232,6 @@ void rx_sdu_NB_IoT(module_id_t module_id, int CC_id, frame_t frame, sub_frame_t 
 int output_handler(eNB_MAC_INST_NB_IoT *mac_inst, module_id_t module_id, int CC_id, uint32_t hypersfn, uint32_t frame, uint32_t subframe, uint8_t MIB_flag, uint8_t SIB1_flag, uint32_t current_time);
 // main
 
-void mac_top_init_eNB_NB_IoT(void);
 
 uint32_t to_earfcn_NB_IoT(int eutra_bandP,uint32_t dl_CarrierFreq, float m_dl);
 

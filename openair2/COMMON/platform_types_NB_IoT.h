@@ -20,7 +20,7 @@
  */
 
 /*
-                                 platform_types.h
+                                 platform_types_NB_IoT.h
                              -------------------
   AUTHOR  : Lionel GAUTHIER
   COMPANY : EURECOM
@@ -47,19 +47,30 @@ typedef uint16_t           rnti_NB_IoT_t;
 #ifndef _BOOLEAN_T_DEFINED_NB_IoT_
 #define _BOOLEAN_T_DEFINED_NB_IoT_
 
-typedef signed char        boolean_NB_IoT_t;
+typedef signed char        boolean_t;
 
 #if !defined(TRUE)
-#define TRUE               (boolean_NB_IoT_t)0x01
+#define TRUE               (boolean_t)0x01
 #endif
 
 #if !defined(FALSE)
-#define FALSE              (boolean_NB_IoT_t)0x00
+#define FALSE              (boolean_t)0x00
 #endif
 
 #define BOOL_NOT(b) (b^TRUE)
 
-#endif /* _BOOLEAN_T_DEFINED_ */
+#endif 
+
+///NB-IoT
+typedef boolean_t srb1bis_flag_t;
+#define SRB1BIS_FLAG_NO    FALSE
+#define SRB1BIS_FLAG_YES  TRUE
+
+typedef boolean_t mib_flag_t;
+#define MIB_FLAG_YES  TRUE
+#define MIB_FLAG_NO   FALSE
+
+/* _BOOLEAN_T_DEFINED_ */
 /*
 //-----------------------------------------------------------------------------
 // GENERIC ACCESS STRATUM TYPES

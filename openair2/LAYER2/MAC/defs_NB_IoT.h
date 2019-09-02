@@ -22,9 +22,11 @@
 #include "openair2/PHY_INTERFACE/IF_Module_NB_IoT.h"
 #include "config_NB_IoT.h"
 //  MAC definition
-#define MAX_FRAME 0xfffff
-#define NUM_FRAME 0x100000
-#define MAX_SUBFRAME 10485760
+//#define MAX_FRAME 0xfffff
+//#define NUM_FRAME 0x100000
+//#define MAX_SUBFRAME 10485760
+#define MAX_FRAME 0xfff 
+#define MAX_SUBFRAME 40960
 
 #define MAX(a, b) (((a)>(b))?(a):(b))
 
@@ -62,8 +64,8 @@
 /*!\brief DTCH DRB1  logical channel */
 #define DTCH 3 // LCID
 /*!\brief MCCH logical channel */
-//#define MCCH 4 
-#define MCCH 62
+#define MCCH 4 
+//#define MCCH 62
 /*!\brief MTCH logical channel */
 #define MTCH 1 
 // DLSCH LCHAN ID
@@ -209,9 +211,12 @@ typedef struct {
   int prev;
   // MSG4 complete
   int RRC_connected;
+  uint8_t flag_schedule_success;
   // UE active flag
   int active;
-
+  //boolean_t active;
+  
+  uint8_t allocated_data_size_ul;
 } UE_TEMPLATE_NB_IoT;
 
 // link list of uplink resource node 
@@ -327,6 +332,7 @@ typedef struct {
   /// DCI template and MAC connection parameters for UEs
   UE_TEMPLATE_NB_IoT UE_template_NB_IoT[MAX_MAX_MOBILES_PER_ENB_NB_IoT];
 
+   UE_SCHED_CTRL_NB_IoT_t UE_sched_ctrl_NB_IoT[MAX_MAX_MOBILES_PER_ENB_NB_IoT];
   /// NPDCCH Period and searching space info
   NPDCCH_config_dedicated_NB_IoT_t NPDCCH_config_dedicated;
   //int next[MAX_MAX_MOBILES_PER_ENB_NB_IoT];
@@ -630,6 +636,8 @@ typedef  struct {
 // global variables
 
 nprach_parameters_NB_IoT_t nprach_list[3];
+
+nfapi_config_request_t config;
 
 //DLSF Table
 DLSF_INFO_t DLSF_information;

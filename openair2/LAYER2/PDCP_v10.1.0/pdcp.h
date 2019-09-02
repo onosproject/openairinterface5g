@@ -415,6 +415,8 @@ void pdcp_fifo_read_input_sdus_from_otg       ( const protocol_ctxt_t *const  ct
 void pdcp_set_rlc_data_req_func(send_rlc_data_req_func_t send_rlc_data_req);
 void pdcp_set_pdcp_data_ind_func(pdcp_data_ind_func_t pdcp_data_ind);
 pdcp_data_ind_func_t get_pdcp_data_ind_func(void);
+//NB-IoT
+void pdcp_layer_init_NB_IoT(void); 
 
 //-----------------------------------------------------------------------------
 

@@ -59,64 +59,6 @@ extern RAN_CONTEXT_t RC;
 
 
 
-    ///////////////////////////// NB-IoT parameters /////////////////////////////////////
-    
-    //NB-IoT------------------------------------------------------------
-
-  //RACH
-    RRC_CONFIGURATION_REQ (msg_p).rach_raResponseWindowSize_NB[CC_id]                = enb_properties->properties[enb_id]->rach_raResponseWindowSize_NB[CC_id];
-    RRC_CONFIGURATION_REQ (msg_p).rach_macContentionResolutionTimer_NB[CC_id]        = enb_properties->properties[enb_id]->rach_macContentionResolutionTimer_NB[CC_id];
-    RRC_CONFIGURATION_REQ (msg_p).rach_powerRampingStep_NB[CC_id]                    = enb_properties->properties[enb_id]->rach_powerRampingStep_NB[CC_id];
-    RRC_CONFIGURATION_REQ (msg_p).rach_preambleInitialReceivedTargetPower_NB[CC_id]  = enb_properties->properties[enb_id]->rach_preambleInitialReceivedTargetPower_NB[CC_id];
-    RRC_CONFIGURATION_REQ (msg_p).rach_preambleTransMax_CE_NB[CC_id]                 = enb_properties->properties[enb_id]->rach_preambleTransMax_CE_NB[CC_id];
-  //BCCH
-    RRC_CONFIGURATION_REQ (msg_p).bcch_modificationPeriodCoeff_NB[CC_id]      = enb_properties->properties[enb_id]->bcch_modificationPeriodCoeff_NB[CC_id];
-  //PCCH
-    RRC_CONFIGURATION_REQ (msg_p).pcch_defaultPagingCycle_NB[CC_id]           = enb_properties->properties[enb_id]->pcch_defaultPagingCycle_NB[CC_id];
-      //NPRACH
-    RRC_CONFIGURATION_REQ (msg_p).nprach_CP_Length[CC_id]                      = enb_properties->properties[enb_id]->nprach_CP_Length[CC_id];
-    RRC_CONFIGURATION_REQ (msg_p).nprach_rsrp_range[CC_id]                   = enb_properties->properties[enb_id]->nprach_rsrp_range[CC_id];
-    RRC_CONFIGURATION_REQ (msg_p).nprach_Periodicity[CC_id]                  = enb_properties->properties[enb_id]->nprach_Periodicity[CC_id];
-    RRC_CONFIGURATION_REQ (msg_p).nprach_StartTime[CC_id]                    = enb_properties->properties[enb_id]->nprach_StartTime[CC_id];
-    RRC_CONFIGURATION_REQ (msg_p).nprach_SubcarrierOffset[CC_id]             = enb_properties->properties[enb_id]->nprach_SubcarrierOffset[CC_id];
-    RRC_CONFIGURATION_REQ (msg_p).nprach_NumSubcarriers[CC_id]               = enb_properties->properties[enb_id]->nprach_NumSubcarriers[CC_id];
-    RRC_CONFIGURATION_REQ (msg_p).nprach_SubcarrierMSG3_RangeStart[CC_id]      = enb_properties->properties[enb_id]->nprach_SubcarrierMSG3_RangeStart[CC_id];
-    RRC_CONFIGURATION_REQ (msg_p).maxNumPreambleAttemptCE_NB[CC_id]            = enb_properties->properties[enb_id]->maxNumPreambleAttemptCE_NB[CC_id];
-    RRC_CONFIGURATION_REQ (msg_p).npdcch_NumRepetitions_RA[CC_id]              = enb_properties->properties[enb_id]->npdcch_NumRepetitions_RA[CC_id];
-    RRC_CONFIGURATION_REQ (msg_p).npdcch_StartSF_CSS_RA[CC_id]                 = enb_properties->properties[enb_id]->npdcch_StartSF_CSS_RA[CC_id];
-    RRC_CONFIGURATION_REQ (msg_p).npdcch_Offset_RA[CC_id]                      = enb_properties->properties[enb_id]->npdcch_Offset_RA[CC_id];
-  //NPDSCH
-    RRC_CONFIGURATION_REQ (msg_p).npdsch_nrs_Power[CC_id]                   = enb_properties->properties[enb_id]->npdsch_nrs_Power[CC_id];
-  //NPUSCH
-    RRC_CONFIGURATION_REQ (msg_p).npusch_ack_nack_numRepetitions_NB[CC_id]         = enb_properties->properties[enb_id]->npusch_ack_nack_numRepetitions_NB[CC_id];
-    RRC_CONFIGURATION_REQ (msg_p).npusch_srs_SubframeConfig_NB[CC_id]              = enb_properties->properties[enb_id]->npusch_srs_SubframeConfig_NB[CC_id];
-    RRC_CONFIGURATION_REQ (msg_p).npusch_threeTone_CyclicShift_r13[CC_id]          = enb_properties->properties[enb_id]->npusch_threeTone_CyclicShift_r13[CC_id];
-    RRC_CONFIGURATION_REQ (msg_p).npusch_sixTone_CyclicShift_r13[CC_id]            = enb_properties->properties[enb_id]->npusch_sixTone_CyclicShift_r13[CC_id];
-    RRC_CONFIGURATION_REQ (msg_p).npusch_groupHoppingEnabled[CC_id]                = enb_properties->properties[enb_id]->npusch_groupHoppingEnabled[CC_id];
-    RRC_CONFIGURATION_REQ (msg_p).npusch_groupAssignmentNPUSCH_r13[CC_id]          = enb_properties->properties[enb_id]->npusch_groupAssignmentNPUSCH_r13[CC_id];
-  //DL_GapConfig
-    RRC_CONFIGURATION_REQ (msg_p).dl_GapThreshold_NB[CC_id]                   = enb_properties->properties[enb_id]->dl_GapThreshold_NB[CC_id];
-    RRC_CONFIGURATION_REQ (msg_p).dl_GapPeriodicity_NB[CC_id]                 = enb_properties->properties[enb_id]->dl_GapPeriodicity_NB[CC_id];
-    RRC_CONFIGURATION_REQ (msg_p).dl_GapDurationCoeff_NB[CC_id]               = enb_properties->properties[enb_id]->dl_GapDurationCoeff_NB[CC_id];
-  //Uplink power control Common
-    RRC_CONFIGURATION_REQ (msg_p).npusch_p0_NominalNPUSCH[CC_id]              = enb_properties->properties[enb_id]->npusch_p0_NominalNPUSCH[CC_id];
-    RRC_CONFIGURATION_REQ (msg_p).npusch_alpha[CC_id]                         = enb_properties->properties[enb_id]->npusch_alpha[CC_id];
-    RRC_CONFIGURATION_REQ (msg_p).deltaPreambleMsg3[CC_id]                    = enb_properties->properties[enb_id]->deltaPreambleMsg3[CC_id];
-  //UE timers and constants
-    RRC_CONFIGURATION_REQ (msg_p).ue_TimersAndConstants_t300_NB[CC_id]        = enb_properties->properties[enb_id]->ue_TimersAndConstants_t300_NB[CC_id];
-    RRC_CONFIGURATION_REQ (msg_p).ue_TimersAndConstants_t301_NB[CC_id]        = enb_properties->properties[enb_id]->ue_TimersAndConstants_t301_NB[CC_id];
-    RRC_CONFIGURATION_REQ (msg_p).ue_TimersAndConstants_t310_NB[CC_id]        = enb_properties->properties[enb_id]->ue_TimersAndConstants_t310_NB[CC_id];
-    RRC_CONFIGURATION_REQ (msg_p).ue_TimersAndConstants_t311_NB[CC_id]        = enb_properties->properties[enb_id]->ue_TimersAndConstants_t311_NB[CC_id];
-    RRC_CONFIGURATION_REQ (msg_p).ue_TimersAndConstants_n310_NB[CC_id]        = enb_properties->properties[enb_id]->ue_TimersAndConstants_n310_NB[CC_id];
-    RRC_CONFIGURATION_REQ (msg_p).ue_TimersAndConstants_n311_NB[CC_id]        = enb_properties->properties[enb_id]->ue_TimersAndConstants_n311_NB[CC_id];
-
-    ////////////////////////////////////////////////////////////////////////////////////
-  }
-
-  itti_send_msg_to_task (TASK_RRC_ENB, ENB_MODULE_ID_TO_INSTANCE(enb_id), msg_p);
-}
-
-/*------------------------------------------------------------------------------*/
 
 static uint32_t eNB_app_register(ngran_node_t node_type,uint32_t enb_id_start, uint32_t enb_id_end) {
   uint32_t         enb_id;

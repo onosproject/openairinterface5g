@@ -56,7 +56,7 @@
 #include "UTIL/OSA/osa_defs.h"
 #include "openair2/RRC/NAS/nas_config.h"
 # include "intertask_interface.h"
-
+#include "enb_paramdef.h"
 
 #  include "gtpv1u_eNB_task.h"
 #  include "gtpv1u.h"
@@ -82,13 +82,15 @@ hash_table_t  *pdcp_coll_p = NULL;
   static int mbms_socket = -1;
 #endif
 
-
-
-#ifdef NB_IOT
+ccparams_NB_IoT_t NBconfig ;
+memset((void *)&NBconfig,0,sizeof(ccparams_NB_IoT_t));
+if (NBconfig.NB_IoT_configured > 0)
+{
 #include "openair2/RRC/LITE/proto_NB_IoT.h"
 #undef maxDRB
 #define maxDRB maxDRB_NB_r13
 #endif
+}
 
 /* pdcp module parameters and related functions*/
 static pdcp_params_t pdcp_params= {0,NULL};

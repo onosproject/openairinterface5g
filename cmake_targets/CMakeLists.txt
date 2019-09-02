@@ -317,6 +317,8 @@ if (NOT ${ret} STREQUAL 0)
   message(FATAL_ERROR "${ret}: error")
 endif (NOT ${ret} STREQUAL 0)
 file(GLOB rrc_source ${RRC_FULL_DIR}/*.c)
+file(GLOB rrc_h ${RRC_FULL_DIR}/*.h)
+set(rrc_h ${rrc_h} ${RRC_FULL_DIR}/asn1_constants.h)
 add_custom_target (
   rrc_flag ALL
   ${OPENAIR_CMAKE}/tools/make_asn1c_includes.sh "${RRC_FULL_DIR}" "${RRC_GRAMMAR}" "LTE_"
@@ -373,6 +375,16 @@ if (NOT ${ret} STREQUAL 0)
   message(FATAL_ERROR "${ret}: error")
 endif (NOT ${ret} STREQUAL 0)
 file(GLOB S1AP_source ${S1AP_C_DIR}/*.c)
+
+set(S1AP_OAI_generated
+  ${S1AP_C_DIR}/s1ap_decoder.c
+  ${S1AP_C_DIR}/s1ap_encoder.c
+  ${S1AP_C_DIR}/s1ap_xer_print.c
+  ${S1AP_C_DIR}/s1ap_compare.c
+  ${S1AP_C_DIR}/s1ap_ies_defs.h
+  )
+file(GLOB s1ap_h ${S1AP_C_DIR}/*.h)
+set(s1ap_h ${s1ap_h} )
 
 add_custom_target (
   s1ap_flag ALL
@@ -1085,6 +1097,7 @@ add_dependencies(SCHED_UE_LIB rrc_flag)
 
 set(SCHED_SRC_NBIOT
   ${OPENAIR1_DIR}/SCHED_NBIOT/phy_procedures_lte_eNb_NB_IoT.c
+  ${OPENAIR1_DIR}/SCHED_NBIOT/phy_procedures_lte_eNb_nbiot.c
   ${OPENAIR1_DIR}/SCHED_NBIOT/phy_procedures_lte_common_NB_IoT.c
   ${OPENAIR1_DIR}/SCHED_NBIOT/IF_Module_L1_primitives_NB_IoT.c
   ${OPENAIR1_DIR}/SCHED_NBIOT/pusch_pc_NB_IoT.c
@@ -1147,58 +1160,39 @@ include_directories(${NFAPI_USER_DIR})
 
 # Layer 1
 #############################
-<<<<<<< HEAD
 set(PHY_SRC
   # depend on code generation from asn1c
   ${RRC_FULL_DIR}/asn1_constants.h
   # actual source
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/pss.c
-  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/npss_NB_IoT.c
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/sss.c
-  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/nsss_NB_IoT.c
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/pilots.c
-  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/pilots_NB_IoT.c
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/pilots_mbsfn.c
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/dlsch_coding.c
-  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/dlsch_coding_NB_IoT.c
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/dlsch_modulation.c
-  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/dlsch_modulation_NB_IoT.c
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/dlsch_demodulation.c
-  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/dlsch_demodulation_NB_IoT.c
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/dlsch_llr_computation.c
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/power_control.c
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/dlsch_decoding.c
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/dlsch_scrambling.c
-  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/dlsch_scrambling_NB_IoT.c
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/dci_tools.c
-  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/dci_tools_NB_IoT.c
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/uci_tools.c
-  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/uci_tools_NB_IoT.c
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/lte_mcs.c
-  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/lte_mcs_NB_IoT.c
-  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/lte_Isc_NB_IoT.c
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/pbch.c
-  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/npbch_NB_IoT.c
-  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/SIB_NB_IoT.c
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/dci.c
-  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/dci_NB_IoT.c
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/phich.c
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/pcfich.c
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/pucch.c
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/prach.c
-  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/nprach_NB_IoT.c
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/pmch.c
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/pch.c
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/group_hopping.c
-  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/group_hopping_NB_IoT.c
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/srs_modulation.c
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/drs_modulation.c
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/ulsch_modulation.c
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/ulsch_demodulation.c
-  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/ulsch_demodulation_NB_IoT.c
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/ulsch_coding.c
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/ulsch_decoding.c
-  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/ulsch_decoding_NB_IoT.c
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/rar_tools.c
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/print_stats.c
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/initial_sync.c
@@ -1212,23 +1206,52 @@ set(PHY_SRC
   ${OPENAIR1_DIR}/PHY/MODULATION/beamforming.c
   ${OPENAIR1_DIR}/PHY/MODULATION/compute_bf_weights.c
   ${OPENAIR1_DIR}/PHY/LTE_ESTIMATION/freq_equalization.c
-  ${OPENAIR1_DIR}/PHY/LTE_ESTIMATION/freq_equalization_NB_IoT.c
   ${OPENAIR1_DIR}/PHY/LTE_ESTIMATION/lte_sync_time.c
-  ${OPENAIR1_DIR}/PHY/LTE_ESTIMATION/lte_sync_time_NB_IoT.c
   ${OPENAIR1_DIR}/PHY/LTE_ESTIMATION/lte_sync_timefreq.c
-  ${OPENAIR1_DIR}/PHY/LTE_ESTIMATION/lte_sync_timefreq_NB_IoT.c
   ${OPENAIR1_DIR}/PHY/LTE_ESTIMATION/lte_adjust_sync.c
-  ${OPENAIR1_DIR}/PHY/LTE_ESTIMATION/lte_adjust_sync_NB_IoT.c
   ${OPENAIR1_DIR}/PHY/LTE_ESTIMATION/lte_dl_channel_estimation.c
   ${OPENAIR1_DIR}/PHY/LTE_ESTIMATION/lte_dl_bf_channel_estimation.c
   ${OPENAIR1_DIR}/PHY/LTE_ESTIMATION/lte_dl_mbsfn_channel_estimation.c
   ${OPENAIR1_DIR}/PHY/LTE_ESTIMATION/lte_ul_channel_estimation.c
-  ${OPENAIR1_DIR}/PHY/LTE_ESTIMATION/lte_ul_channel_estimation_NB_IoT.c
   ${OPENAIR1_DIR}/PHY/LTE_ESTIMATION/lte_est_freq_offset.c
   ${OPENAIR1_DIR}/PHY/LTE_ESTIMATION/lte_ue_measurements.c
   ${OPENAIR1_DIR}/PHY/LTE_ESTIMATION/lte_eNB_measurements.c
   ${OPENAIR1_DIR}/PHY/LTE_ESTIMATION/adjust_gain.c
-=======
+)
+  
+   # NBIOT
+set(PHY_SRC_NBIOT
+  # depend on code generation from asn1c
+  ${RRC_FULL_DIR}/asn1_constants.h
+  # actual source
+  ${OPENAIR1_DIR}/PHY/NBIoT_TRANSPORT/npss_NB_IoT.c
+  ${OPENAIR1_DIR}/PHY/NBIoT_TRANSPORT/nsss_NB_IoT.c
+  ${OPENAIR1_DIR}/PHY/NBIoT_TRANSPORT/pilots_NB_IoT.c
+  ${OPENAIR1_DIR}/PHY/NBIoT_TRANSPORT/dlsch_coding_NB_IoT.c
+  ${OPENAIR1_DIR}/PHY/NBIoT_TRANSPORT/dlsch_modulation_NB_IoT.c
+  ${OPENAIR1_DIR}/PHY/NBIoT_TRANSPORT/dlsch_demodulation_NB_IoT.c
+  ${OPENAIR1_DIR}/PHY/NBIoT_TRANSPORT/dlsch_scrambling_NB_IoT.c
+  ${OPENAIR1_DIR}/PHY/NBIoT_TRANSPORT/dci_tools_NB_IoT.c
+  ${OPENAIR1_DIR}/PHY/NBIoT_TRANSPORT/uci_tools_NB_IoT.c
+  ${OPENAIR1_DIR}/PHY/NBIoT_TRANSPORT/lte_mcs_NB_IoT.c
+  ${OPENAIR1_DIR}/PHY/NBIoT_TRANSPORT/lte_Isc_NB_IoT.c
+  ${OPENAIR1_DIR}/PHY/NBIoT_TRANSPORT/npbch_NB_IoT.c
+  ${OPENAIR1_DIR}/PHY/NBIoT_TRANSPORT/SIB_NB_IoT.c
+  ${OPENAIR1_DIR}/PHY/NBIoT_TRANSPORT/dci_NB_IoT.c
+  ${OPENAIR1_DIR}/PHY/NBIoT_TRANSPORT/nprach_NB_IoT.c
+  ${OPENAIR1_DIR}/PHY/NBIoT_TRANSPORT/group_hopping_NB_IoT.c
+  ${OPENAIR1_DIR}/PHY/NBIoT_TRANSPORT/ulsch_demodulation_NB_IoT.c
+  ${OPENAIR1_DIR}/PHY/NBIoT_TRANSPORT/ulsch_decoding_NB_IoT.c
+  ${OPENAIR1_DIR}/PHY/NBIoT_ESTIMATION/freq_equalization_NB_IoT.c
+  ${OPENAIR1_DIR}/PHY/NBIoT_ESTIMATION/lte_sync_time_NB_IoT.c
+  ${OPENAIR1_DIR}/PHY/NBIoT_ESTIMATION/lte_sync_timefreq_NB_IoT.c
+  ${OPENAIR1_DIR}/PHY/NBIoT_ESTIMATION/lte_adjust_sync_NB_IoT.c
+  ${OPENAIR1_DIR}/PHY/NBIoT_ESTIMATION/lte_ul_channel_estimation_NB_IoT.c
+  ${OPENAIR1_DIR}/PHY/NBIoT_REFSIG/lte_dl_cell_spec_NB_IoT.c  
+  ${OPENAIR1_DIR}/PHY/NBIoT_REFSIG/lte_gold_NB_IoT.c   
+  ${OPENAIR1_DIR}/PHY/NBIoT_REFSIG/lte_ul_ref_NB_IoT.c
+)
+
 set(PHY_TURBOSRC
   ${OPENAIR1_DIR}/PHY/CODING/3gpplte_sse.c
   ${OPENAIR1_DIR}/PHY/CODING/3gpplte.c
@@ -1261,16 +1284,12 @@ set(PHY_SRC_COMMON
   ${OPENAIR1_DIR}/PHY/LTE_UE_TRANSPORT/srs_modulation.c
   ${OPENAIR1_DIR}/PHY/MODULATION/ofdm_mod.c
   ${OPENAIR1_DIR}/PHY/LTE_ESTIMATION/lte_sync_time.c
->>>>>>> origin/develop
   ${OPENAIR1_DIR}/PHY/LTE_REFSIG/lte_dl_cell_spec.c
-  ${OPENAIR1_DIR}/PHY/LTE_REFSIG/lte_dl_cell_spec_NB_IoT.c
   ${OPENAIR1_DIR}/PHY/LTE_REFSIG/lte_dl_uespec.c   
-  ${OPENAIR1_DIR}/PHY/LTE_REFSIG/lte_gold.c   
-  ${OPENAIR1_DIR}/PHY/LTE_REFSIG/lte_gold_NB_IoT.c   
+  ${OPENAIR1_DIR}/PHY/LTE_REFSIG/lte_gold.c     
   ${OPENAIR1_DIR}/PHY/LTE_REFSIG/lte_gold_mbsfn.c
   ${OPENAIR1_DIR}/PHY/LTE_REFSIG/lte_dl_mbsfn.c
   ${OPENAIR1_DIR}/PHY/LTE_REFSIG/lte_ul_ref.c
-  ${OPENAIR1_DIR}/PHY/LTE_REFSIG/lte_ul_ref_NB_IoT.c
   ${OPENAIR1_DIR}/PHY/CODING/lte_segmentation.c
   ${OPENAIR1_DIR}/PHY/CODING/lte_segmentation_NB_IoT.c
   ${OPENAIR1_DIR}/PHY/CODING/ccoding_byte.c
@@ -1403,6 +1422,8 @@ add_library(PHY_UE ${PHY_SRC_UE})
 add_dependencies(PHY_UE rrc_flag)
 add_library(PHY_RU ${PHY_SRC_RU})
 add_dependencies(PHY_RU rrc_flag)
+add_library(PHY_NBIOT ${PHY_SRC_NBIOT})
+add_dependencies(PHY_NBIOT rrc_flag)
 
 #Library for mex functions
 #########################3
@@ -1440,10 +1461,21 @@ set(RLC_UM_DIR ${OPENAIR2_DIR}/LAYER2/RLC/UM_v9.3.0)
 set(RLC_AM_DIR ${OPENAIR2_DIR}/LAYER2/RLC/AM_v9.3.0)
 set(RLC_TM_DIR ${OPENAIR2_DIR}/LAYER2/RLC/TM_v9.3.0)
 set(RRC_DIR ${OPENAIR2_DIR}/RRC/LTE)
+set(RRC_NBIOT_DIR ${OPENAIR2_DIR}/RRC/NBIOT)
 set(PDCP_DIR  ${OPENAIR2_DIR}/LAYER2/PDCP_v10.1.0)
-set(L2_SRC
+
+#NBIOT
+set(L2_SRC_NBIOT
   ${PHY_INTERFACE_DIR}/IF_Module_NB_IoT.c
   ${PHY_INTERFACE_DIR}/IF_Module_L2_primitives_NB_IoT.c
+  ${RRC_DIR}/rrc_eNB_NB_IoT.c
+  ${RRC_DIR}/rrc_eNB_UE_context_NB_IoT.c
+  ${RRC_DIR}/rrc_common_NB_IoT.c
+  ${RRC_DIR}/L2_interface_NB_IoT.c
+ )
+
+
+set(L2_SRC
   ${OPENAIR2_DIR}/LAYER2/openair2_proc.c
   ${PDCP_DIR}/pdcp.c
   ${PDCP_DIR}/pdcp_fifo.c
@@ -1479,16 +1511,11 @@ set(L2_SRC
   ${RLC_DIR}/rlc.c
   ${RLC_DIR}/rlc_rrc.c
   ${RLC_DIR}/rlc_mpls.c
-#  ${RRC_DIR}/rrc_UE.c
   ${RRC_DIR}/rrc_eNB.c
-  #${RRC_DIR}/rrc_eNB_NB_IoT.c
   ${RRC_DIR}/rrc_eNB_S1AP.c
   ${RRC_DIR}/rrc_eNB_UE_context.c
-  ${RRC_DIR}/rrc_eNB_UE_context_NB_IoT.c
   ${RRC_DIR}/rrc_common.c
-  ${RRC_DIR}/rrc_common_NB_IoT.c
   ${RRC_DIR}/L2_interface.c
-  ${RRC_DIR}/L2_interface_NB_IoT.c
   ${RRC_DIR}/L2_interface_common.c
   ${RRC_DIR}/L2_interface_ue.c
   )
@@ -1534,11 +1561,25 @@ set(L2_SRC_UE
   ${RRC_DIR}/L2_interface_ue.c
   )
 
+#NBIOT
+set (MAC_SRC_NBIOT
+  ${MAC_DIR}/main_NB_IoT.c
+  ${MAC_DIR}/eNB_scheduler_NB_IoT.c
+  ${MAC_DIR}/eNB_scheduler_dlsch_NB_IoT.c
+  ${MAC_DIR}/eNB_scheduler_ulsch_NB_IoT.c
+  ${MAC_DIR}/eNB_scheduler_bch_NB_IoT.c
+  ${MAC_DIR}/output_handler_NB_IoT.c
+  ${MAC_DIR}/eNB_scheduler_RA_NB_IoT.c
+  ${MAC_DIR}/config_NB_IoT.c
+  ${MAC_DIR}/schedule_tool_NB_IoT.c
+ )
+
+
+
 set (MAC_SRC
   #${PHY_INTERFACE_DIR}/phy_stub_UE.c
   ${PHY_INTERFACE_DIR}/IF_Module.c
   ${MAC_DIR}/main.c
-  ${MAC_DIR}/main_NB_IoT.c
   #${MAC_DIR}/main_ue.c
   #${MAC_DIR}/ue_procedures.c
   #${MAC_DIR}/ra_procedures.c
@@ -1546,20 +1587,12 @@ set (MAC_SRC
   ${MAC_DIR}/rar_tools.c
   #${MAC_DIR}/rar_tools_ue.c
   ${MAC_DIR}/eNB_scheduler.c
-  ${MAC_DIR}/eNB_scheduler_NB_IoT.c
   ${MAC_DIR}/eNB_scheduler_dlsch.c
-  ${MAC_DIR}/eNB_scheduler_dlsch_NB_IoT.c
   ${MAC_DIR}/eNB_scheduler_ulsch.c
-  ${MAC_DIR}/eNB_scheduler_ulsch_NB_IoT.c
   ${MAC_DIR}/eNB_scheduler_mch.c
   ${MAC_DIR}/eNB_scheduler_bch.c
-  ${MAC_DIR}/eNB_scheduler_bch_NB_IoT.c
   ${MAC_DIR}/eNB_scheduler_primitives.c
-  ${MAC_DIR}/output_handler_NB_IoT.c
   ${MAC_DIR}/eNB_scheduler_RA.c
-  ${MAC_DIR}/eNB_scheduler_RA_NB_IoT.c
-  ${MAC_DIR}/config_NB_IoT.c
-  ${MAC_DIR}/schedule_tool_NB_IoT.c
   ${MAC_DIR}/eNB_scheduler_fairRR.c
   ${MAC_DIR}/eNB_scheduler_phytest.c
   ${MAC_DIR}/pre_processor.c
@@ -1582,12 +1615,17 @@ set (ENB_APP_SRC
   ${OPENAIR2_DIR}/ENB_APP/enb_config.c
   ${OPENAIR2_DIR}/ENB_APP/enb_config_SL.c
   ${OPENAIR2_DIR}/ENB_APP/enb_config_eMTC.c
+  ${OPENAIR2_DIR}/ENB_APP/NB_IoT_config.c
   ${OPENAIR2_DIR}/ENB_APP/RRC_config_tools.c
   )
+
+
 
 add_library(L2
   ${L2_SRC}
   ${MAC_SRC}
+  ${L2_SRC_NBIOT}
+  ${MAC_SRC_NBIOT}
   ${ENB_APP_SRC})
 #  ${OPENAIR2_DIR}/RRC/L2_INTERFACE/openair_rrc_L2_interface.c)
 add_dependencies(L2 rrc_flag s1ap_flag x2_flag)
@@ -1895,12 +1933,6 @@ if(NAS_UE)
 endif()
 
 
-# nbiot
-add_definitions("-DNUMBER_OF_UE_MAX_NB_IoT=16")
-set (NBIOT_SOURCES
-    ${OPENAIR2_DIR}/ENB_APP/NB_IoT_config.c
-)
-add_library(NB_IoT MODULE ${NBIOT_SOURCES} )
 
 # shared library loader
 set (SHLIB_LOADER_SOURCES
@@ -2159,6 +2191,7 @@ add_definitions(-DASN1_MINIMUM_VERSION=924)
 add_executable(lte-softmodem
   ${OPENAIR_TARGETS}/RT/USER/rt_wrapper.c
   ${OPENAIR_TARGETS}/RT/USER/lte-enb.c
+  ${OPENAIR_TARGETS}/RT/USER/lte-enb-nbiot.c
   ${OPENAIR_TARGETS}/RT/USER/lte-ru.c
   ${OPENAIR_TARGETS}/RT/USER/ru_control.c
   ${OPENAIR_TARGETS}/RT/USER/lte-softmodem.c
@@ -2185,10 +2218,12 @@ add_dependencies(lte-softmodem rrc_flag s1ap_flag x2_flag)
 
 target_link_libraries (lte-softmodem
   -Wl,--start-group
-  RRC_LIB S1AP_LIB S1AP_ENB F1AP_LIB F1AP X2AP_LIB X2AP_ENB GTPV1U SECU_CN SECU_OSA UTIL HASHTABLE SCTP_CLIENT UDP SCHED_LIB SCHED_RU_LIB PHY_COMMON PHY PHY_RU LFDS L2
+  RRC_LIB S1AP_LIB S1AP_ENB F1AP_LIB F1AP X2AP_LIB X2AP_ENB GTPV1U SECU_CN SECU_OSA UTIL HASHTABLE SCTP_CLIENT UDP SCHED_LIB SCHED_RU_LIB PHY_COMMON PHY PHY_NBIOT PHY_RU LFDS L2
   ${MSC_LIB} ${RAL_LIB} ${NAS_UE_LIB} ${ITTI_LIB} ${FLPT_MSG_LIB} ${ASYNC_IF_LIB} ${FLEXRAN_AGENT_LIB} ${FSPT_MSG_LIB} ${PROTO_AGENT_LIB} LFDS7
   NFAPI_COMMON_LIB NFAPI_LIB NFAPI_VNF_LIB NFAPI_PNF_LIB NFAPI_USER_LIB
   -Wl,--end-group z dl)
+
+
 
 add_executable(cu_test
   ${OPENAIR2_DIR}/LAYER2/PROTO_AGENT/cu_test.c
@@ -2328,6 +2363,7 @@ add_executable(test_epc_generate_scenario
   ${OPENAIR3_DIR}/TEST/EPC_TEST/generate_scenario.c
   ${OPENAIR3_DIR}/TEST/EPC_TEST/generate_scenario.h
   ${OPENAIR2_DIR}/ENB_APP/enb_config.h
+  ${OPENAIR2_DIR}/ENB_APP/NB_IoT_config.h
   ${OPENAIR2_DIR}/COMMON/commonDef.h
   ${OPENAIR2_DIR}/COMMON/messages_def.h
   ${OPENAIR3_DIR}/S1AP/s1ap_eNB_defs.h
@@ -2404,6 +2440,45 @@ endif (${T_TRACER})
 ##################################################
 # Generated specific cases is not regular code
 ###############################################
+
+##################""
+# itti symbolic debug print require to generate a specific include file
+########################################
+
+# retrieve the compiler options to send it to gccxml
+get_directory_property( DirDefs COMPILE_DEFINITIONS )
+foreach( d ${DirDefs} )
+    list(APPEND itti_compiler_options "-D${d}")
+endforeach()
+get_directory_property( DirDefs INCLUDE_DIRECTORIES )
+foreach( d ${DirDefs} )
+    list(APPEND itti_compiler_options "-I${d}")
+endforeach()
+
+# castxml doesn't work with c11 (gcc 5 default)
+# force castxml and clang compilation with gnu89 standard
+# we can't use cXX standard as pthread_rwlock_t is gnu standard
+list(APPEND itti_compiler_options "-std=gnu89")
+set (ITTI_H ${ITTI_DIR}/intertask_interface_types.h)
+if(EXISTS /usr/bin/gccxml)
+   set(xml_command gccxml ${itti_compiler_options} -fxml=${OPENAIR_BIN_DIR}/messages.xml ${ITTI_H})
+else()
+   set(xml_command castxml --castxml-gccxml ${itti_compiler_options} ${ITTI_H} -o ${OPENAIR_BIN_DIR}/messages.xml)
+endif()
+
+add_custom_command (
+  OUTPUT ${OPENAIR_BIN_DIR}/messages.xml
+  COMMAND ${xml_command}
+  DEPENDS ${S1AP_OAI_generated} ${RRC_FULL_DIR}/asn1_constants.h
+  )
+
+add_custom_command (
+  OUTPUT ${OPENAIR_BIN_DIR}/messages_xml.h
+  COMMAND sed -e 's/ *//'   -e 's/\"/\\\\\"/g' -e 's/^/\"/' -e 's/$$/\\\\n\"/' ${OPENAIR_BIN_DIR}/messages.xml  > ${OPENAIR_BIN_DIR}/messages_xml.h
+  DEPENDS ${OPENAIR_BIN_DIR}/messages.xml ${RRC_FULL_DIR}/asn1_constants.h
+  )
+
+
 
 ################
 # Kernel modules

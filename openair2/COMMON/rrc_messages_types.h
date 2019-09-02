@@ -280,60 +280,6 @@ typedef struct RrcConfigurationReq_s {
   long                    ue_TimersAndConstants_n310[MAX_NUM_CCs];
   long                    ue_TimersAndConstants_n311[MAX_NUM_CCs];
   long                    ue_TransmissionMode[MAX_NUM_CCs];
-
-  //NB-IoT------------------------------------------------------------
-
-  //RACH
-  long					  rach_raResponseWindowSize_NB[MAX_NUM_CCs];
-  long					  rach_macContentionResolutionTimer_NB[MAX_NUM_CCs];
-  long					  rach_powerRampingStep_NB[MAX_NUM_CCs];
-  long					  rach_preambleInitialReceivedTargetPower_NB[MAX_NUM_CCs];
-  long					  rach_preambleTransMax_CE_NB[MAX_NUM_CCs];
-  //BCCH
-  long					  bcch_modificationPeriodCoeff_NB[MAX_NUM_CCs];
-  //PCCH
-  long					  pcch_defaultPagingCycle_NB[MAX_NUM_CCs];
-  long					  pcch_nB_NB[MAX_NUM_CCs];
-  long					  pcch_npdcch_NumRepetitionPaging_NB[MAX_NUM_CCs];
-  //NPRACH
-  long					  nprach_CP_Length[MAX_NUM_CCs];
-  long					  nprach_rsrp_range[MAX_NUM_CCs];
-  long					  nprach_Periodicity[MAX_NUM_CCs];
-  long					  nprach_StartTime[MAX_NUM_CCs];
-  long					  nprach_SubcarrierOffset[MAX_NUM_CCs];
-  long					  nprach_NumSubcarriers[MAX_NUM_CCs];
-  long					  nprach_SubcarrierMSG3_RangeStart[MAX_NUM_CCs];
-  long					  maxNumPreambleAttemptCE_NB[MAX_NUM_CCs];
-  long					  numRepetitionsPerPreambleAttempt_NB[MAX_NUM_CCs];
-  long					  npdcch_NumRepetitions_RA[MAX_NUM_CCs];
-  long					  npdcch_StartSF_CSS_RA[MAX_NUM_CCs];
-  long					  npdcch_Offset_RA[MAX_NUM_CCs];
-  //NPDSCH
-  long					  npdsch_nrs_Power[MAX_NUM_CCs];
-  //NPUSCH
-  long					  npusch_ack_nack_numRepetitions_NB[MAX_NUM_CCs];
-  long					  npusch_srs_SubframeConfig_NB[MAX_NUM_CCs];
-  long					  npusch_threeTone_CyclicShift_r13[MAX_NUM_CCs];
-  long					  npusch_sixTone_CyclicShift_r13[MAX_NUM_CCs];
-  BOOLEAN_t				  npusch_groupHoppingEnabled[MAX_NUM_CCs];
-  long					  npusch_groupAssignmentNPUSCH_r13[MAX_NUM_CCs];
-
-  //DL_GapConfig
-  long					  dl_GapThreshold_NB[MAX_NUM_CCs];
-  long	 				  dl_GapPeriodicity_NB[MAX_NUM_CCs];
-  long	 				  dl_GapDurationCoeff_NB[MAX_NUM_CCs];
-  //Uplink power control Common
-  long					  npusch_p0_NominalNPUSCH[MAX_NUM_CCs];
-  long					  npusch_alpha[MAX_NUM_CCs];
-  long					  deltaPreambleMsg3[MAX_NUM_CCs];
-  //UE timers and constants
-  long					  ue_TimersAndConstants_t300_NB[MAX_NUM_CCs];
-  long					  ue_TimersAndConstants_t301_NB[MAX_NUM_CCs];
-  long					  ue_TimersAndConstants_t310_NB[MAX_NUM_CCs];
-  long					  ue_TimersAndConstants_t311_NB[MAX_NUM_CCs];
-  long					  ue_TimersAndConstants_n310_NB[MAX_NUM_CCs];
-  long					  ue_TimersAndConstants_n311_NB[MAX_NUM_CCs];
-  //---------------------------------------------------------------------------
   int                     eMBMS_configured;
   int                     eMTC_configured;
   int                     SL_configured;

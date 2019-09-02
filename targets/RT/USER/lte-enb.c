@@ -204,14 +204,14 @@ static inline int rxtx(PHY_VARS_eNB *eNB,L1_rxtx_proc_t *proc, char *thread_name
         eNB->UL_INFO.harq_ind.harq_indication_body.number_of_harqs ||
         eNB->UL_INFO.crc_ind.crc_indication_body.number_of_crcs ||
         eNB->UL_INFO.rach_ind.rach_indication_body.number_of_preambles ||
-        eNB->UL_INFO.cqi_ind.number_of_cqis
+        eNB->UL_INFO.cqi_ind.cqi_indication_body.number_of_cqis
        ) {
       LOG_D(PHY, "UL_info[rx_ind:%05d:%d harqs:%05d:%d crcs:%05d:%d preambles:%05d:%d cqis:%d] RX:%04d%d TX:%04d%d num_pdcch_symbols:%d\n",
             NFAPI_SFNSF2DEC(eNB->UL_INFO.rx_ind.sfn_sf),   eNB->UL_INFO.rx_ind.rx_indication_body.number_of_pdus,
             NFAPI_SFNSF2DEC(eNB->UL_INFO.harq_ind.sfn_sf), eNB->UL_INFO.harq_ind.harq_indication_body.number_of_harqs,
             NFAPI_SFNSF2DEC(eNB->UL_INFO.crc_ind.sfn_sf),  eNB->UL_INFO.crc_ind.crc_indication_body.number_of_crcs,
             NFAPI_SFNSF2DEC(eNB->UL_INFO.rach_ind.sfn_sf), eNB->UL_INFO.rach_ind.rach_indication_body.number_of_preambles,
-            eNB->UL_INFO.cqi_ind.number_of_cqis,
+          eNB->UL_INFO.cqi_ind.cqi_indication_body.number_of_cqis, 
             proc->frame_rx, proc->subframe_rx,
             proc->frame_tx, proc->subframe_tx, eNB->pdcch_vars[proc->subframe_tx&1].num_pdcch_symbols);
     }
@@ -233,9 +233,11 @@ static inline int rxtx(PHY_VARS_eNB *eNB,L1_rxtx_proc_t *proc, char *thread_name
     wakeup_prach_eNB_br(eNB,NULL,proc->frame_rx,proc->subframe_rx);
 #endif
   }
-
-  release_UE_in_freeList(eNB->Mod_id);
-
+  if (NFAPI_MODE!=NFAPI_MODE_PNF) {
+    release_UE_in_freeList(eNB->Mod_id);
+  } else {
+    release_rnti_of_phy(eNB->Mod_id);
+  }
   // UE-specific RX processing for subframe n
   if (NFAPI_MODE==NFAPI_MONOLITHIC || NFAPI_MODE==NFAPI_MODE_PNF) {
     phy_procedures_eNB_uespec_RX(eNB, proc);
@@ -441,7 +443,7 @@ static void *L1_thread( void *param ) {
     if (oai_exit) break;
 
     if (eNB->CC_id==0) {
-      if (rxtx(eNB,proc,thread_name) < 0) break;
+      if (rxtx_NB_IoT(eNB,proc,thread_name) < 0) break; // Call rxtx_NB_IoT
     }
 
     LOG_D(PHY,"L1 RX %d.%d done\n",proc->frame_rx,proc->subframe_rx);
@@ -481,7 +483,7 @@ void eNB_top(PHY_VARS_eNB *eNB, int frame_rx, int subframe_rx, char *string,RU_t
     L1_proc->frame_tx     = (L1_proc->subframe_rx > (9-sf_ahead)) ? (L1_proc->frame_rx+1)&1023 : L1_proc->frame_rx;
     L1_proc->subframe_tx  = (L1_proc->subframe_rx + sf_ahead)%10;
 
-    if (rxtx(eNB,L1_proc,string) < 0) LOG_E(PHY,"eNB %d CC_id %d failed during execution\n",eNB->Mod_id,eNB->CC_id);
+    if (rxtx_NB_IoT(eNB,L1_proc,string) < 0) LOG_E(PHY,"eNB %d CC_id %d failed during execution\n",eNB->Mod_id,eNB->CC_id); //Call rxtx_NB_IoT
 
     ru_proc->timestamp_tx = L1_proc->timestamp_tx;
     ru_proc->subframe_tx  = L1_proc->subframe_tx;
@@ -955,7 +957,7 @@ void init_eNB_proc(int inst) {
       pthread_create( &L1_proc_tx->pthread, attr1, L1_thread, L1_proc_tx);
     }
 
-    pthread_create( &proc->pthread_prach, attr_prach, eNB_thread_prach, eNB );
+    pthread_create( &proc->pthread_prach, attr_prach, eNB_thread_prach_NB_IoT, eNB );  // Call eNB_thread_prach_NB_IoT
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
     pthread_create( &proc->pthread_prach_br, attr_prach_br, eNB_thread_prach_br, eNB );
 #endif
@@ -1072,6 +1074,104 @@ void kill_eNB_proc(int inst) {
 }
 
 
+/******************************************Define in original NB-IoT branch*************************************************/
+
+/* this function maps the phy_vars_eNB tx and rx buffers to the available rf chains.
+   Each rf chain is is addressed by the card number and the chain on the card. The
+   rf_map specifies for each CC, on which rf chain the mapping should start. Multiple
+   antennas are mapped to successive RF chains on the same card. */
+int setup_eNB_buffers(PHY_VARS_eNB **phy_vars_eNB, openair0_config_t *openair0_cfg) {
+
+  int i,j; 
+  int CC_id,card,ant;
+
+  //uint16_t N_TA_offset = 0;
+
+  LTE_DL_FRAME_PARMS *frame_parms;
+
+  for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
+    if (phy_vars_eNB[CC_id]) {
+      frame_parms = &(phy_vars_eNB[CC_id]->frame_parms);
+      printf("setup_eNB_buffers: frame_parms = %p\n",frame_parms);
+    } else {
+      printf("phy_vars_eNB[%d] not initialized\n", CC_id);
+      return(-1);
+    }
+
+    /*
+    if (frame_parms->frame_type == TDD) {
+      if (frame_parms->N_RB_DL == 100)
+        N_TA_offset = 624;
+      else if (frame_parms->N_RB_DL == 50)
+        N_TA_offset = 624/2;
+      else if (frame_parms->N_RB_DL == 25)
+        N_TA_offset = 624/4;
+    }
+    */
+ 
+
+    if (openair0_cfg[CC_id].mmapped_dma == 1) {
+    // replace RX signal buffers with mmaped HW versions
+      
+      for (i=0; i<frame_parms->nb_antennas_rx; i++) {
+  card = i/4;
+  ant = i%4;
+  printf("Mapping eNB CC_id %d, rx_ant %d, on card %d, chain %d\n",CC_id,i,phy_vars_eNB[CC_id]->rf_map.card+card, phy_vars_eNB[CC_id]->rf_map.chain+ant);
+  free(phy_vars_eNB[CC_id]->common_vars.rxdata[0][i]);
+  phy_vars_eNB[CC_id]->common_vars.rxdata[0][i] = openair0_cfg[phy_vars_eNB[CC_id]->rf_map.card+card].rxbase[phy_vars_eNB[CC_id]->rf_map.chain+ant];
+  
+  printf("rxdata[%d] @ %p\n",i,phy_vars_eNB[CC_id]->common_vars.rxdata[0][i]);
+  for (j=0; j<16; j++) {
+    printf("rxbuffer %d: %x\n",j,phy_vars_eNB[CC_id]->common_vars.rxdata[0][i][j]);
+    phy_vars_eNB[CC_id]->common_vars.rxdata[0][i][j] = 16-j;
+  }
+      }
+      
+      for (i=0; i<frame_parms->nb_antennas_tx; i++) {
+  card = i/4;
+  ant = i%4;
+  printf("Mapping eNB CC_id %d, tx_ant %d, on card %d, chain %d\n",CC_id,i,phy_vars_eNB[CC_id]->rf_map.card+card, phy_vars_eNB[CC_id]->rf_map.chain+ant);
+  free(phy_vars_eNB[CC_id]->common_vars.txdata[0][i]);
+  phy_vars_eNB[CC_id]->common_vars.txdata[0][i] = openair0_cfg[phy_vars_eNB[CC_id]->rf_map.card+card].txbase[phy_vars_eNB[CC_id]->rf_map.chain+ant];
+  
+  printf("txdata[%d] @ %p\n",i,phy_vars_eNB[CC_id]->common_vars.txdata[0][i]);
+  
+  for (j=0; j<16; j++) {
+    printf("txbuffer %d: %x\n",j,phy_vars_eNB[CC_id]->common_vars.txdata[0][i][j]);
+    phy_vars_eNB[CC_id]->common_vars.txdata[0][i][j] = 16-j;
+  }
+      }
+    }
+    else {  // not memory-mapped DMA 
+      //nothing to do, everything already allocated in lte_init
+      /*
+      rxdata = (int32_t**)malloc16(frame_parms->nb_antennas_rx*sizeof(int32_t*));
+      txdata = (int32_t**)malloc16(frame_parms->nb_antennas_tx*sizeof(int32_t*));
+      
+      for (i=0; i<frame_parms->nb_antennas_rx; i++) {
+  free(phy_vars_eNB[CC_id]->common_vars.rxdata[0][i]);
+  rxdata[i] = (int32_t*)(32 + malloc16(32+frame_parms->samples_per_tti*10*sizeof(int32_t))); // FIXME broken memory allocation
+  phy_vars_eNB[CC_id]->common_vars.rxdata[0][i] = rxdata[i]; //-N_TA_offset; // N_TA offset for TDD         FIXME! N_TA_offset > 16 => access of unallocated memory
+  memset(rxdata[i], 0, frame_parms->samples_per_tti*10*sizeof(int32_t));
+  printf("rxdata[%d] @ %p (%p) (N_TA_OFFSET %d)\n", i, phy_vars_eNB[CC_id]->common_vars.rxdata[0][i],rxdata[i],N_TA_offset);      
+      }
+      
+      for (i=0; i<frame_parms->nb_antennas_tx; i++) {
+  free(phy_vars_eNB[CC_id]->common_vars.txdata[0][i]);
+  txdata[i] = (int32_t*)(32 + malloc16(32 + frame_parms->samples_per_tti*10*sizeof(int32_t))); // FIXME broken memory allocation
+  phy_vars_eNB[CC_id]->common_vars.txdata[0][i] = txdata[i];
+  memset(txdata[i],0, frame_parms->samples_per_tti*10*sizeof(int32_t));
+  printf("txdata[%d] @ %p\n", i, phy_vars_eNB[CC_id]->common_vars.txdata[0][i]);
+      }
+      */
+    }
+  }
+
+  return(0);
+}
+
+/**************************************************************************************************************************/
+
 
 
 void reset_opp_meas(void) {
@@ -1182,13 +1282,6 @@ void init_eNB_afterRU(void) {
     LOG_I(PHY,"RC.nb_CC[inst]:%d\n", RC.nb_CC[inst]);
 
 
-      /////// IF-Module initialization ///////////////
-
-      LOG_I(PHY,"Registering with MAC interface module start\n");
-      AssertFatal((eNB->if_inst         = IF_Module_init_NB_IoT(inst))!=NULL,"Cannot register interface");
-      eNB->if_inst->schedule_response   = schedule_response_NB_IoT;
-      eNB->if_inst->PHY_config_req      = PHY_config_req_NB_IoT;
-      LOG_I(PHY,"Registering with MAC interface module sucessfully\n");
 
     for (CC_id=0; CC_id<RC.nb_CC[inst]; CC_id++) {
       LOG_I(PHY,"RC.nb_CC[inst:%d][CC_id:%d]:%p\n", inst, CC_id, RC.eNB[inst][CC_id]);
@@ -1307,8 +1400,8 @@ void init_eNB(int single_thread_flag,int wait_for_sync) {
       eNB->UL_INFO.crc_ind.crc_indication_body.crc_pdu_list = eNB->crc_pdu_list;
       eNB->UL_INFO.sr_ind.sr_indication_body.sr_pdu_list = eNB->sr_pdu_list;
       eNB->UL_INFO.harq_ind.harq_indication_body.harq_pdu_list = eNB->harq_pdu_list;
-      eNB->UL_INFO.cqi_ind.cqi_pdu_list = eNB->cqi_pdu_list;
-      eNB->UL_INFO.cqi_ind.cqi_raw_pdu_list = eNB->cqi_raw_pdu_list;
+      eNB->UL_INFO.cqi_ind.cqi_indication_body.cqi_pdu_list = eNB->cqi_pdu_list;
+      eNB->UL_INFO.cqi_ind.cqi_indication_body.cqi_raw_pdu_list = eNB->cqi_raw_pdu_list;
       eNB->prach_energy_counter = 0;
     }
   }
@@ -1319,6 +1412,7 @@ void init_eNB(int single_thread_flag,int wait_for_sync) {
 
 
 }
+
 
 
 void stop_eNB(int nb_inst) {

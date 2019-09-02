@@ -443,7 +443,7 @@ typedef struct eNB_RRC_INST_NB_IoT_s {
   hash_table_t                      *s1ap_id2_s1ap_ids   ; // key is    content is rrc_ue_s1ap_ids_t
 
   //RRC configuration
-  RrcConfigurationReq configuration; //rrc_messages_types.h
+  NbIoTRrcConfigurationReq configuration; //rrc_messages_types.h
 
   // other PLMN parameters
   /// Mobile country code
