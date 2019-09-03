@@ -9,7 +9,7 @@ OPENAIR3 = $(OPENAIR3_DIR)
 
 CFLAGS += -DNODE_RG -DNO_UL_REF -DNB_ANTENNAS_RX=2 -DNB_ANTENNAS_TX=2 -DOPENAIR_LTE -DMAX_NUM_CCs=1
 
-ASN1_MSG_INC = $(OPENAIR2_DIR)/RRC/LITE/MESSAGES
+ASN1_MSG_INC = $(OPENAIR2_DIR)/RRC/NBIOT/MESSAGES
 
 ifdef LLR8
 CFLAGS += -DLLR8
@@ -24,7 +24,7 @@ include $(TOP_DIR)/PHY/Makefile.inc
 SCHED_OBJS = $(TOP_DIR)/SCHED/phy_procedures_lte_common.o
 include $(TOP_DIR)/SIMULATION/Makefile.inc
 include $(TOP_DIR)/../openair2/LAYER2/Makefile.inc
-include $(OPENAIR2_DIR)/RRC/LITE/MESSAGES/Makefile.inc
+include $(OPENAIR2_DIR)/RRC/NBIOT/MESSAGES/Makefile.inc
 include $(OPENAIR2_DIR)/LAYER2/Makefile.inc
 include $(OPENAIR2_DIR)/UTIL/Makefile.inc
 

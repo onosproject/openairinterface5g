@@ -43,7 +43,7 @@
 #include "UTIL/LOG/log.h"
 #include "UTIL/LOG/vcd_signal_dumper.h"
 #ifndef CELLULAR
-#include "RRC/LITE/MESSAGES/asn1_msg.h"
+#include "RRC/NBIOT/MESSAGES/asn1_msg.h"
 #endif
 #include "RRCConnectionRequest.h"
 #include "RRCConnectionReconfiguration.h"

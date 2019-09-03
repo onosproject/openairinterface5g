@@ -758,10 +758,10 @@ INPUT                  = $(OPENAIR1_DIR)/PHY/defs.h \
                          $(OPENAIR1_DIR)/SIMULATION/RF/defs.h \
                          $(OPENAIR1_DIR)/SIMULATION/TOOLS/defs.h \
                          $(OPENAIR2_DIR)/ENB_APP/enb_config.h \
-    		         $(OPENAIR2_DIR)/RRC/LITE/defs.h \
-			 $(OPENAIR2_DIR)/RRC/LITE/proto.h \
-                         $(OPENAIR2_DIR)/RRC/LITE/rrc_eNB_S1AP.h \
-                         $(OPENAIR2_DIR)/RRC/LITE/rrc_eNB_GTPV1U.h \
+    		         $(OPENAIR2_DIR)/RRC/NBIOT/defs.h \
+			 $(OPENAIR2_DIR)/RRC/NBIOT/proto.h \
+                         $(OPENAIR2_DIR)/RRC/NBIOT/rrc_eNB_S1AP.h \
+                         $(OPENAIR2_DIR)/RRC/NBIOT/rrc_eNB_GTPV1U.h \
                          $(OPENAIR2_DIR)/LAYER2/PDCP_v10.1.0/pdcp.h \
                          $(OPENAIR2_DIR)/LAYER2/PDCP_v10.1.0/pdcp_control_primitives_proto_extern.h \
                          $(OPENAIR2_DIR)/LAYER2/PDCP_v10.1.0/pdcp_primitives.h \

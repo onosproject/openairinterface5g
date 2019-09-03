@@ -1468,10 +1468,10 @@ set(PDCP_DIR  ${OPENAIR2_DIR}/LAYER2/PDCP_v10.1.0)
 set(L2_SRC_NBIOT
   ${PHY_INTERFACE_DIR}/IF_Module_NB_IoT.c
   ${PHY_INTERFACE_DIR}/IF_Module_L2_primitives_NB_IoT.c
-  ${RRC_DIR}/rrc_eNB_NB_IoT.c
-  ${RRC_DIR}/rrc_eNB_UE_context_NB_IoT.c
-  ${RRC_DIR}/rrc_common_NB_IoT.c
-  ${RRC_DIR}/L2_interface_NB_IoT.c
+  ${RRC_NBIOT_DIR}/rrc_eNB_NB_IoT.c
+  ${RRC_NBIOT_DIR}/rrc_eNB_UE_context_NB_IoT.c
+  ${RRC_NBIOT_DIR}/rrc_common_NB_IoT.c
+  ${RRC_NBIOT_DIR}/L2_interface_NB_IoT.c
  )
 
 

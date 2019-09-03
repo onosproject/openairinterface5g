@@ -38,7 +38,7 @@
 #include "extern.h"
 #include "extern_NB_IoT.h"
 #include "LAYER2/MAC/proto_NB_IoT.h"
-#include "RRC/LITE/MESSAGES/asn1_msg_NB_IoT.h"
+#include "RRC/NBIOT/MESSAGES/asn1_msg_NB_IoT.h"
 #include "RRCConnectionRequest-NB.h"
 #include "UL-CCCH-Message-NB.h"
 /***************************/
@@ -57,7 +57,7 @@
 #include "LAYER2/MAC/proto.h"
 #include "UTIL/LOG/log.h"
 #include "COMMON/mac_rrc_primitives.h"
-#include "RRC/LITE/MESSAGES/asn1_msg.h"
+#include "RRC/NBIOT/MESSAGES/asn1_msg.h"
 #include "RRCConnectionRequest.h"
 #include "RRCConnectionReestablishmentRequest.h"
 //#include "ReestablishmentCause.h"

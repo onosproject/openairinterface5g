@@ -32,7 +32,7 @@
 #include "defs_NB_IoT.h"
 #include "proto_NB_IoT.h"
 #include "extern_NB_IoT.h"
-#include "openair2/RRC/LITE/proto_NB_IoT.h"
+#include "openair2/RRC/NBIOT/proto_NB_IoT.h"
 #include "openair2/PHY_INTERFACE/IF_Module_NB_IoT.h"
 
 int output_handler(eNB_MAC_INST_NB_IoT *mac_inst, module_id_t module_id, int CC_id, uint32_t hypersfn, uint32_t frame, uint32_t subframe, uint8_t MIB_flag, uint8_t SIB1_flag, uint32_t current_time){

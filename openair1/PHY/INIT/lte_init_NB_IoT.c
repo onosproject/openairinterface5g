@@ -40,7 +40,7 @@
 //#include "RadioResourceConfigCommonSIB-NB-r13.h"
 //#include "RadioResourceConfigDedicated-NB-r13.h"
 //#include "openair2/PHY_INTERFACE/IF_Module_NB_IoT.h"
-//#include "openair2/RRC/LITE/proto_NB_IoT.h"
+//#include "openair2/RRC/NBIOT/proto_NB_IoT.h"
 
 //extern uint16_t prach_root_sequence_map0_3[838];
 //extern uint16_t prach_root_sequence_map4[138];

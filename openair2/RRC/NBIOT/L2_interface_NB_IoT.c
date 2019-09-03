@@ -40,7 +40,7 @@
 //#include "LAYER2/MAC/extern.h"
 #include "UTIL/LOG/log.h"
 #include "UTIL/OCG/OCG_vars.h"
-#include "RRC/LITE/rrc_eNB_UE_context_NB_IoT.h"
+#include "RRC/NBIOT/rrc_eNB_UE_context_NB_IoT.h"
 #include "pdcp_primitives.h"
 #include "pdcp.h"
 #include "pdcp_util.h"
@@ -1293,7 +1293,7 @@ uint8_t rrc_data_req_NB_IoT(
       ctxt_pP->enb_flag ? TASK_PDCP_ENB : TASK_PDCP_UE,
       ctxt_pP->instance,
       message_p);
-    return TRUE; // TODO should be changed to a CNF message later, currently RRC lite does not used the returned value anyway.
+    return TRUE; // TODO should be changed to a CNF message later, currently RRC NBIOT does not used the returned value anyway.
 
   }
 #else

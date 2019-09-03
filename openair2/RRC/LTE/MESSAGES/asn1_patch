@@ -1,5 +1,5 @@
-diff -cB /homes/kaltenbe/Devel/openair/openair_branches/openair_lte/openair2/RRC/LITE/MESSAGES/asn1c/asn1c/skeletons/asn_codecs_prim.c patch_dir/asn_codecs_prim.c
-*** /homes/kaltenbe/Devel/openair/openair_branches/openair_lte/openair2/RRC/LITE/MESSAGES/asn1c/asn1c/skeletons/asn_codecs_prim.c	2011-03-31 10:22:56.000000000 +0200
+diff -cB /homes/kaltenbe/Devel/openair/openair_branches/openair_lte/openair2/RRC/NBIOT/MESSAGES/asn1c/asn1c/skeletons/asn_codecs_prim.c patch_dir/asn_codecs_prim.c
+*** /homes/kaltenbe/Devel/openair/openair_branches/openair_lte/openair2/RRC/NBIOT/MESSAGES/asn1c/asn1c/skeletons/asn_codecs_prim.c	2011-03-31 10:22:56.000000000 +0200
 --- patch_dir/asn_codecs_prim.c	2011-05-31 10:28:26.000000000 +0200
 ***************
 *** 4,10 ****
@@ -11,8 +11,8 @@ diff -cB /homes/kaltenbe/Devel/openair/openair_branches/openair_lte/openair2/RRC
   /*
    * Decode an always-primitive type.
 --- 4,9 ----
-diff -cB /homes/kaltenbe/Devel/openair/openair_branches/openair_lte/openair2/RRC/LITE/MESSAGES/asn1c/asn1c/skeletons/asn_internal.h patch_dir/asn_internal.h
-*** /homes/kaltenbe/Devel/openair/openair_branches/openair_lte/openair2/RRC/LITE/MESSAGES/asn1c/asn1c/skeletons/asn_internal.h	2011-03-31 10:22:57.000000000 +0200
+diff -cB /homes/kaltenbe/Devel/openair/openair_branches/openair_lte/openair2/RRC/NBIOT/MESSAGES/asn1c/asn1c/skeletons/asn_internal.h patch_dir/asn_internal.h
+*** /homes/kaltenbe/Devel/openair/openair_branches/openair_lte/openair2/RRC/NBIOT/MESSAGES/asn1c/asn1c/skeletons/asn_internal.h	2011-03-31 10:22:57.000000000 +0200
 --- patch_dir/asn_internal.h	2011-05-31 10:28:26.000000000 +0200
 ***************
 *** 10,20 ****
@@ -98,8 +98,8 @@ diff -cB /homes/kaltenbe/Devel/openair/openair_branches/openair_lte/openair2/RRC
   #else	/* !__GNUC__ */
   void ASN_DEBUG_f(const char *fmt, ...);
   #define	ASN_DEBUG	ASN_DEBUG_f
-diff -cB /homes/kaltenbe/Devel/openair/openair_branches/openair_lte/openair2/RRC/LITE/MESSAGES/asn1c/asn1c/skeletons/asn_SET_OF.c patch_dir/asn_SET_OF.c
-*** /homes/kaltenbe/Devel/openair/openair_branches/openair_lte/openair2/RRC/LITE/MESSAGES/asn1c/asn1c/skeletons/asn_SET_OF.c	2011-03-31 10:22:56.000000000 +0200
+diff -cB /homes/kaltenbe/Devel/openair/openair_branches/openair_lte/openair2/RRC/NBIOT/MESSAGES/asn1c/asn1c/skeletons/asn_SET_OF.c patch_dir/asn_SET_OF.c
+*** /homes/kaltenbe/Devel/openair/openair_branches/openair_lte/openair2/RRC/NBIOT/MESSAGES/asn1c/asn1c/skeletons/asn_SET_OF.c	2011-03-31 10:22:56.000000000 +0200
 --- patch_dir/asn_SET_OF.c	2011-05-31 10:28:26.000000000 +0200
 ***************
 *** 4,10 ****
@@ -122,8 +122,8 @@ diff -cB /homes/kaltenbe/Devel/openair/openair_branches/openair_lte/openair2/RRC
   	if(as->count == as->size) {
   		int _newsize = as->size ? (as->size << 1) : 4;
   		void *_new_arr;
-diff -cB /homes/kaltenbe/Devel/openair/openair_branches/openair_lte/openair2/RRC/LITE/MESSAGES/asn1c/asn1c/skeletons/asn_system.h patch_dir/asn_system.h
-*** /homes/kaltenbe/Devel/openair/openair_branches/openair_lte/openair2/RRC/LITE/MESSAGES/asn1c/asn1c/skeletons/asn_system.h	2011-03-31 10:22:57.000000000 +0200
+diff -cB /homes/kaltenbe/Devel/openair/openair_branches/openair_lte/openair2/RRC/NBIOT/MESSAGES/asn1c/asn1c/skeletons/asn_system.h patch_dir/asn_system.h
+*** /homes/kaltenbe/Devel/openair/openair_branches/openair_lte/openair2/RRC/NBIOT/MESSAGES/asn1c/asn1c/skeletons/asn_system.h	2011-03-31 10:22:57.000000000 +0200
 --- patch_dir/asn_system.h	2011-05-31 10:28:26.000000000 +0200
 ***************
 *** 13,25 ****
@@ -214,8 +214,8 @@ diff -cB /homes/kaltenbe/Devel/openair/openair_branches/openair_lte/openair2/RRC
   #define	sys_ntohl(foo)	ntohl(foo)
   
   #endif	/* defined(__vxworks) */
-diff -cB /homes/kaltenbe/Devel/openair/openair_branches/openair_lte/openair2/RRC/LITE/MESSAGES/asn1c/asn1c/skeletons/ber_tlv_tag.c patch_dir/ber_tlv_tag.c
-*** /homes/kaltenbe/Devel/openair/openair_branches/openair_lte/openair2/RRC/LITE/MESSAGES/asn1c/asn1c/skeletons/ber_tlv_tag.c	2011-03-31 10:22:56.000000000 +0200
+diff -cB /homes/kaltenbe/Devel/openair/openair_branches/openair_lte/openair2/RRC/NBIOT/MESSAGES/asn1c/asn1c/skeletons/ber_tlv_tag.c patch_dir/ber_tlv_tag.c
+*** /homes/kaltenbe/Devel/openair/openair_branches/openair_lte/openair2/RRC/NBIOT/MESSAGES/asn1c/asn1c/skeletons/ber_tlv_tag.c	2011-03-31 10:22:56.000000000 +0200
 --- patch_dir/ber_tlv_tag.c	2011-05-31 10:28:26.000000000 +0200
 ***************
 *** 4,10 ****
@@ -254,8 +254,8 @@ diff -cB /homes/kaltenbe/Devel/openair/openair_branches/openair_lte/openair2/RRC
   
   ssize_t
   ber_tlv_tag_snprint(ber_tlv_tag_t tag, char *buf, size_t size) {
-diff -cB /homes/kaltenbe/Devel/openair/openair_branches/openair_lte/openair2/RRC/LITE/MESSAGES/asn1c/asn1c/skeletons/constraints.c patch_dir/constraints.c
-*** /homes/kaltenbe/Devel/openair/openair_branches/openair_lte/openair2/RRC/LITE/MESSAGES/asn1c/asn1c/skeletons/constraints.c	2011-03-31 10:22:57.000000000 +0200
+diff -cB /homes/kaltenbe/Devel/openair/openair_branches/openair_lte/openair2/RRC/NBIOT/MESSAGES/asn1c/asn1c/skeletons/constraints.c patch_dir/constraints.c
+*** /homes/kaltenbe/Devel/openair/openair_branches/openair_lte/openair2/RRC/NBIOT/MESSAGES/asn1c/asn1c/skeletons/constraints.c	2011-03-31 10:22:57.000000000 +0200
 --- patch_dir/constraints.c	2011-05-31 10:28:26.000000000 +0200
 ***************
 *** 1,4 ****
@@ -268,8 +268,8 @@ diff -cB /homes/kaltenbe/Devel/openair/openair_branches/openair_lte/openair2/RRC
   #include "constraints.h"
   
   int
-diff -cB /homes/kaltenbe/Devel/openair/openair_branches/openair_lte/openair2/RRC/LITE/MESSAGES/asn1c/asn1c/skeletons/constr_TYPE.c patch_dir/constr_TYPE.c
-*** /homes/kaltenbe/Devel/openair/openair_branches/openair_lte/openair2/RRC/LITE/MESSAGES/asn1c/asn1c/skeletons/constr_TYPE.c	2011-03-31 10:22:56.000000000 +0200
+diff -cB /homes/kaltenbe/Devel/openair/openair_branches/openair_lte/openair2/RRC/NBIOT/MESSAGES/asn1c/asn1c/skeletons/constr_TYPE.c patch_dir/constr_TYPE.c
+*** /homes/kaltenbe/Devel/openair/openair_branches/openair_lte/openair2/RRC/NBIOT/MESSAGES/asn1c/asn1c/skeletons/constr_TYPE.c	2011-03-31 10:22:56.000000000 +0200
 --- patch_dir/constr_TYPE.c	2011-05-31 10:28:26.000000000 +0200
 ***************
 *** 4,10 ****
@@ -298,8 +298,8 @@ diff -cB /homes/kaltenbe/Devel/openair/openair_branches/openair_lte/openair2/RRC
   	va_end(ap);
   }
 + #endif
-diff -cB /homes/kaltenbe/Devel/openair/openair_branches/openair_lte/openair2/RRC/LITE/MESSAGES/asn1c/asn1c/skeletons/der_encoder.c patch_dir/der_encoder.c
-*** /homes/kaltenbe/Devel/openair/openair_branches/openair_lte/openair2/RRC/LITE/MESSAGES/asn1c/asn1c/skeletons/der_encoder.c	2011-03-31 10:22:56.000000000 +0200
+diff -cB /homes/kaltenbe/Devel/openair/openair_branches/openair_lte/openair2/RRC/NBIOT/MESSAGES/asn1c/asn1c/skeletons/der_encoder.c patch_dir/der_encoder.c
+*** /homes/kaltenbe/Devel/openair/openair_branches/openair_lte/openair2/RRC/NBIOT/MESSAGES/asn1c/asn1c/skeletons/der_encoder.c	2011-03-31 10:22:56.000000000 +0200
 --- patch_dir/der_encoder.c	2011-05-31 10:28:26.000000000 +0200
 ***************
 *** 3,9 ****
@@ -393,8 +393,8 @@ diff -cB /homes/kaltenbe/Devel/openair/openair_branches/openair_lte/openair2/RRC
   	/*
   	 * Array of tags is initialized.
   	 * Now, compute the size of the TLV pairs, from right to left.
-diff -cB /homes/kaltenbe/Devel/openair/openair_branches/openair_lte/openair2/RRC/LITE/MESSAGES/asn1c/asn1c/skeletons/INTEGER.c patch_dir/INTEGER.c
-*** /homes/kaltenbe/Devel/openair/openair_branches/openair_lte/openair2/RRC/LITE/MESSAGES/asn1c/asn1c/skeletons/INTEGER.c	2011-03-31 10:22:56.000000000 +0200
+diff -cB /homes/kaltenbe/Devel/openair/openair_branches/openair_lte/openair2/RRC/NBIOT/MESSAGES/asn1c/asn1c/skeletons/INTEGER.c patch_dir/INTEGER.c
+*** /homes/kaltenbe/Devel/openair/openair_branches/openair_lte/openair2/RRC/NBIOT/MESSAGES/asn1c/asn1c/skeletons/INTEGER.c	2011-03-31 10:22:56.000000000 +0200
 --- patch_dir/INTEGER.c	2011-05-31 10:28:26.000000000 +0200
 ***************
 *** 6,12 ****
@@ -438,8 +438,8 @@ diff -cB /homes/kaltenbe/Devel/openair/openair_branches/openair_lte/openair2/RRC
   			if(plainOrXER == 0)
   				ret = snprintf(scr, scrsize,
   					"%ld (%s)", accum, el->enum_name);
-diff -cB /homes/kaltenbe/Devel/openair/openair_branches/openair_lte/openair2/RRC/LITE/MESSAGES/asn1c/asn1c/skeletons/NativeEnumerated.c patch_dir/NativeEnumerated.c
-*** /homes/kaltenbe/Devel/openair/openair_branches/openair_lte/openair2/RRC/LITE/MESSAGES/asn1c/asn1c/skeletons/NativeEnumerated.c	2011-03-31 10:22:57.000000000 +0200
+diff -cB /homes/kaltenbe/Devel/openair/openair_branches/openair_lte/openair2/RRC/NBIOT/MESSAGES/asn1c/asn1c/skeletons/NativeEnumerated.c patch_dir/NativeEnumerated.c
+*** /homes/kaltenbe/Devel/openair/openair_branches/openair_lte/openair2/RRC/NBIOT/MESSAGES/asn1c/asn1c/skeletons/NativeEnumerated.c	2011-03-31 10:22:57.000000000 +0200
 --- patch_dir/NativeEnumerated.c	2011-05-31 10:28:26.000000000 +0200
 ***************
 *** 46,51 ****
@@ -468,8 +468,8 @@ diff -cB /homes/kaltenbe/Devel/openair/openair_branches/openair_lte/openair2/RRC
   
   		er.encoded = snprintf(src, srcsize, "<%s/>", el->enum_name);
   		assert(er.encoded > 0 && (size_t)er.encoded < srcsize);
-diff -cB /homes/kaltenbe/Devel/openair/openair_branches/openair_lte/openair2/RRC/LITE/MESSAGES/asn1c/asn1c/skeletons/OCTET_STRING.c patch_dir/OCTET_STRING.c
-*** /homes/kaltenbe/Devel/openair/openair_branches/openair_lte/openair2/RRC/LITE/MESSAGES/asn1c/asn1c/skeletons/OCTET_STRING.c	2011-03-31 10:22:55.000000000 +0200
+diff -cB /homes/kaltenbe/Devel/openair/openair_branches/openair_lte/openair2/RRC/NBIOT/MESSAGES/asn1c/asn1c/skeletons/OCTET_STRING.c patch_dir/OCTET_STRING.c
+*** /homes/kaltenbe/Devel/openair/openair_branches/openair_lte/openair2/RRC/NBIOT/MESSAGES/asn1c/asn1c/skeletons/OCTET_STRING.c	2011-03-31 10:22:55.000000000 +0200
 --- patch_dir/OCTET_STRING.c	2011-05-31 10:28:26.000000000 +0200
 ***************
 *** 6,12 ****
@@ -481,8 +481,8 @@ diff -cB /homes/kaltenbe/Devel/openair/openair_branches/openair_lte/openair2/RRC
   /*
    * OCTET STRING basic type description.
 --- 6,11 ----
-diff -cB /homes/kaltenbe/Devel/openair/openair_branches/openair_lte/openair2/RRC/LITE/MESSAGES/asn1c/asn1c/skeletons/xer_encoder.c patch_dir/xer_encoder.c
-*** /homes/kaltenbe/Devel/openair/openair_branches/openair_lte/openair2/RRC/LITE/MESSAGES/asn1c/asn1c/skeletons/xer_encoder.c	2011-04-11 18:03:26.000000000 +0200
+diff -cB /homes/kaltenbe/Devel/openair/openair_branches/openair_lte/openair2/RRC/NBIOT/MESSAGES/asn1c/asn1c/skeletons/xer_encoder.c patch_dir/xer_encoder.c
+*** /homes/kaltenbe/Devel/openair/openair_branches/openair_lte/openair2/RRC/NBIOT/MESSAGES/asn1c/asn1c/skeletons/xer_encoder.c	2011-04-11 18:03:26.000000000 +0200
 --- patch_dir/xer_encoder.c	2011-05-31 10:28:26.000000000 +0200
 ***************
 *** 3,10 ****

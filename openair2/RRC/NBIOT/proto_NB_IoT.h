@@ -30,7 +30,7 @@
  *  @{
  */
 
-#include "RRC/LITE/defs_NB_IoT.h"
+#include "RRC/NBIOT/defs_NB_IoT.h"
 #include "pdcp.h"
 #include "rlc.h"
 #include "extern_NB_IoT.h"

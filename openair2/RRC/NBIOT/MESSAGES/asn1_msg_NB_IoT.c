@@ -39,7 +39,7 @@
 #include <linux/module.h>  /* Needed by all modules */
 #endif
 #ifdef USER_MODE
-//#include "RRC/LITE/defs.h"
+//#include "RRC/NBIOT/defs.h"
 //#include "COMMON/mac_rrc_primitives.h"
 #include "UTIL/LOG/log.h"
 #endif
@@ -61,7 +61,7 @@
 #include "RRCConnectionSetup-NB.h"
 #include "SRB-ToAddModList-NB-r13.h"
 #include "DRB-ToAddModList-NB-r13.h"
-#include "RRC/LITE/defs_NB_IoT.h"
+#include "RRC/NBIOT/defs_NB_IoT.h"
 #include "RRCConnectionSetupComplete-NB.h"
 #include "RRCConnectionReconfigurationComplete-NB.h"
 #include "RRCConnectionReconfiguration-NB.h"

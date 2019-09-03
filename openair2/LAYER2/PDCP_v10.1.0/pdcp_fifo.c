@@ -48,7 +48,7 @@ extern int otg_enabled;
 
 #include "../MAC/mac_extern.h"
 #include "RRC/L2_INTERFACE/openair_rrc_L2_interface.h"
-#include "NETWORK_DRIVER/LITE/constant.h"
+#include "NETWORK_DRIVER/NBIOT/constant.h"
 //#include "SIMULATION/ETH_TRANSPORT/extern.h"
 #include "UTIL/OCG/OCG.h"
 #include "UTIL/OCG/OCG_extern.h"

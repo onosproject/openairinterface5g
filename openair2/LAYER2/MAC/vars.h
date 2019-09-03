@@ -110,7 +110,7 @@ RRC_XFACE *Rrc_xface;
 MAC_xface *mac_xface;
 #else
 #include "PHY_INTERFACE/extern.h"
-#include "RRC/LITE/extern.h"
+#include "RRC/NBIOT/extern.h"
 #endif
 */
 

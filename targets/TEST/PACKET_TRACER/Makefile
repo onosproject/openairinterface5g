@@ -8,7 +8,7 @@ OPENAIR3     = $(OPENAIR3_DIR)
 
 CFLAGS += -m32 -DPHYSIM -DNB_ANTENNAS_RX=2 -DNB_ANTENNAS_TX=2 -I/usr/include/X11
 
-ASN1_MSG_INC = $(OPENAIR2_DIR)/RRC/LITE/MESSAGES
+ASN1_MSG_INC = $(OPENAIR2_DIR)/RRC/NBIOT/MESSAGES
 
 CFLAGS += -DOPENAIR_LTE #-DOFDMA_ULSCH -DIFFT_FPGA -DIFFT_FPGA_UE  
 CFLAGS += -DMAC_CONTEXT=1 -DPHY_CONTEXT=1
@@ -61,11 +61,11 @@ include $(OPENAIR1_DIR)/PHY/Makefile.inc
 include $(OPENAIR1_DIR)/SCHED/Makefile.inc
 include $(OPENAIR2_DIR)/LAYER2/Makefile.inc
 include $(OPENAIR1_DIR)/SIMULATION/ETH_TRANSPORT/Makefile.inc
-include $(OPENAIR2_DIR)/RRC/LITE/MESSAGES/Makefile.inc
+include $(OPENAIR2_DIR)/RRC/NBIOT/MESSAGES/Makefile.inc
 include $(OPENAIR2_DIR)/RRC/NAS/Makefile.inc
 include $(OPENAIR2_DIR)/UTIL/Makefile.inc
 
-ASN1_MSG_OBJS1=$(addprefix $(OPENAIR2_DIR)/RRC/LITE/MESSAGES/, $(ASN1_MSG_OBJS))
+ASN1_MSG_OBJS1=$(addprefix $(OPENAIR2_DIR)/RRC/NBIOT/MESSAGES/, $(ASN1_MSG_OBJS))
 #L2_OBJS =
 #EXTRA_CFLAGS =
 
@@ -75,11 +75,11 @@ export IS_REL8=$(shell if [ -f .lock-rel8 ] ; then  echo "1" ; else  echo "0" ; 
 ifdef Rel10
 CFLAGS += -DRel10
 ifeq ($(IS_REL10), 0)
- $(shell cd $(OPENAIR2_DIR)/RRC/LITE/MESSAGES/asn1c/ASN1_files/ ; rm EUTRA-RRC-Definitions.asn ; ln -s EUTRA-RRC-Definitions-a20.asn EUTRA-RRC-Definitions.asn ; cd $(OPENAIR_TARGETS)/TEST/PACKET_TRACER/ ; rm -f $(ASN1_MSG_OBJS1) ; rm -f $(OPENAIR2_DIR)/RRC/LITE/MESSAGES/Makefile.inc.generated ; rm -f $(L2_OBJS) ; touch .lock-rel10 ; rm .lock-rel8 ;)
+ $(shell cd $(OPENAIR2_DIR)/RRC/NBIOT/MESSAGES/asn1c/ASN1_files/ ; rm EUTRA-RRC-Definitions.asn ; ln -s EUTRA-RRC-Definitions-a20.asn EUTRA-RRC-Definitions.asn ; cd $(OPENAIR_TARGETS)/TEST/PACKET_TRACER/ ; rm -f $(ASN1_MSG_OBJS1) ; rm -f $(OPENAIR2_DIR)/RRC/NBIOT/MESSAGES/Makefile.inc.generated ; rm -f $(L2_OBJS) ; touch .lock-rel10 ; rm .lock-rel8 ;)
 endif
 else # default is rel 8
 ifeq ($(IS_REL8), 0)
- $(shell cd $(OPENAIR2_DIR)/RRC/LITE/MESSAGES/asn1c/ASN1_files/ ; rm EUTRA-RRC-Definitions.asn ; ln -s EUTRA-RRC-Definitions-86.asn EUTRA-RRC-Definitions.asn ;  cd $(OPENAIR_TARGETS)/TEST/PACKET_TRACER/ ; rm -f $(ASN1_MSG_OBJS1) ; rm -f $(OPENAIR2_DIR)/RRC/LITE/MESSAGES/Makefile.inc.generated ; rm -f $(L2_OBJS); rm -f *.o ; rm -f oaisim ; touch .lock-rel8 ; rm .lock-rel10 ; )
+ $(shell cd $(OPENAIR2_DIR)/RRC/NBIOT/MESSAGES/asn1c/ASN1_files/ ; rm EUTRA-RRC-Definitions.asn ; ln -s EUTRA-RRC-Definitions-86.asn EUTRA-RRC-Definitions.asn ;  cd $(OPENAIR_TARGETS)/TEST/PACKET_TRACER/ ; rm -f $(ASN1_MSG_OBJS1) ; rm -f $(OPENAIR2_DIR)/RRC/NBIOT/MESSAGES/Makefile.inc.generated ; rm -f $(L2_OBJS); rm -f *.o ; rm -f oaisim ; touch .lock-rel8 ; rm .lock-rel10 ; )
 endif
 endif
 export IS_REL10=$(shell if [ -f .lock-rel10 ] ; then  echo "1" ; else  echo "0" ; fi)
@@ -150,7 +150,7 @@ cleanl2:
 
 cleanasn1:
 	rm -f $(ASN1_MSG_OBJS1)
-	rm -f $(OPENAIR2_DIR)/RRC/LITE/MESSAGES/Makefile.inc.generated
+	rm -f $(OPENAIR2_DIR)/RRC/NBIOT/MESSAGES/Makefile.inc.generated
 
 print:
 	@echo $(OCG_FLAG)

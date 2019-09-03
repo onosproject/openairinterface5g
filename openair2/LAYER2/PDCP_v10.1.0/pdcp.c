@@ -86,7 +86,7 @@ ccparams_NB_IoT_t NBconfig ;
 memset((void *)&NBconfig,0,sizeof(ccparams_NB_IoT_t));
 if (NBconfig.NB_IoT_configured > 0)
 {
-#include "openair2/RRC/LITE/proto_NB_IoT.h"
+#include "openair2/RRC/NBIOT/proto_NB_IoT.h"
 #undef maxDRB
 #define maxDRB maxDRB_NB_r13
 #endif
@@ -732,7 +732,7 @@ pdcp_data_ind(
         pdcp_p->rx_hfn++;
       }
 
-      //rrc_lite_data_ind(module_id, //Modified MW - L2 Interface
+      //rrc_NBIOT_data_ind(module_id, //Modified MW - L2 Interface
       MSC_LOG_TX_MESSAGE(
         (ctxt_pP->enb_flag == ENB_FLAG_NO)? MSC_PDCP_UE:MSC_PDCP_ENB,
         (ctxt_pP->enb_flag == ENB_FLAG_NO)? MSC_RRC_UE:MSC_RRC_ENB,

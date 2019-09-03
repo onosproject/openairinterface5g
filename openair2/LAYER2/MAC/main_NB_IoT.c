@@ -13,7 +13,7 @@
 #include "LAYER2/MAC/proto_NB_IoT.h"
 #include "LAYER2/MAC/extern_NB_IoT.h"
 #include "vars_NB_IoT.h"
-#include "RRC/LITE/proto_NB_IoT.h"
+#include "RRC/NBIOT/proto_NB_IoT.h"
 
 #define NUM_USS_PP 3
 #define USER_NUM_USS 10

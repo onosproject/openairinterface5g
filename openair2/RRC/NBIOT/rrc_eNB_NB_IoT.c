@@ -32,7 +32,7 @@
 /*NB-IoT include files*/
 //#include "PHY/extern_NB_IoT.h"
 #include "LAYER2/MAC/extern_NB_IoT.h"
-//#include "RRC/LITE/proto_NB_IoT.h"
+//#include "RRC/NBIOT/proto_NB_IoT.h"
 #include "defs_NB_IoT.h"
 /**************/
 #include "vars_NB_IoT.h"
@@ -41,7 +41,7 @@
 #include "LAYER2/MAC/proto_NB_IoT.h"
 /**************/
 #include "openair1/SCHED/defs_NB_IoT.h"
-#include "RRC/LITE/MESSAGES/asn1_msg_NB_IoT.h"
+#include "RRC/NBIOT/MESSAGES/asn1_msg_NB_IoT.h"
 #include "RRCConnectionRequest-NB.h"
 #include "RRCConnectionReestablishmentRequest-NB.h"
 #include "ReestablishmentCause-NB-r13.h"

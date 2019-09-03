@@ -10,7 +10,7 @@ OPENAIR3     = $(OPENAIR3_DIR)
 
 CFLAGS += -m32 -DNB_ANTENNAS_RX=2 -DNB_ANTENNAS_TX=2 -I/usr/include/X11
 
-ASN1_MSG_INC = $(OPENAIR2_DIR)/RRC/LITE/MESSAGES
+ASN1_MSG_INC = $(OPENAIR2_DIR)/RRC/NBIOT/MESSAGES
 
 CFLAGS += -DOPENAIR_LTE #-DOFDMA_ULSCH -DIFFT_FPGA -DIFFT_FPGA_UE
 CFLAGS += -DMAC_CONTEXT=1 -DPHY_CONTEXT=1 #-DRLC_UM_TEST_TRAFFIC=1
@@ -67,11 +67,11 @@ export IS_REL8=$(shell if [ -f .lock-rel8 ] ; then  echo "1" ; else  echo "0" ; 
 ifdef  Rel10
 CFLAGS += -DRel10
 ifeq ($(IS_REL10), 0)
- $(shell cd $(OPENAIR2_DIR)/RRC/LITE/MESSAGES/asn1c/ASN1_files/ ; rm EUTRA-RRC-Definitions.asn ; ln -s EUTRA-RRC-Definitions-a20.asn EUTRA-RRC-Definitions.asn ; cd $(OPENAIR2_DIR)/RRC/LITE/MESSAGES ; ln -s asn1-86_constants.h asn1_constants.h ; cd $(OPENAIR_TARGETS)/SIMU/USER/ ; rm -f $(ASN1_MSG_OBJS1) ; rm -f $(OPENAIR2_DIR)/RRC/LITE/MESSAGES/Makefile.inc.generated ; rm -f $(L2_OBJS) ; rm -f *.o ; rm -f oaisim ; touch .lock-rel10 ; rm .lock-rel8 ;)
+ $(shell cd $(OPENAIR2_DIR)/RRC/NBIOT/MESSAGES/asn1c/ASN1_files/ ; rm EUTRA-RRC-Definitions.asn ; ln -s EUTRA-RRC-Definitions-a20.asn EUTRA-RRC-Definitions.asn ; cd $(OPENAIR2_DIR)/RRC/NBIOT/MESSAGES ; ln -s asn1-86_constants.h asn1_constants.h ; cd $(OPENAIR_TARGETS)/SIMU/USER/ ; rm -f $(ASN1_MSG_OBJS1) ; rm -f $(OPENAIR2_DIR)/RRC/NBIOT/MESSAGES/Makefile.inc.generated ; rm -f $(L2_OBJS) ; rm -f *.o ; rm -f oaisim ; touch .lock-rel10 ; rm .lock-rel8 ;)
 endif
 else # default is rel 8
 ifeq ($(IS_REL8), 0)
- $(shell cd $(OPENAIR2_DIR)/RRC/LITE/MESSAGES/asn1c/ASN1_files/ ; rm EUTRA-RRC-Definitions.asn ; ln -s EUTRA-RRC-Definitions-86.asn EUTRA-RRC-Definitions.asn ;  cd $(OPENAIR2_DIR)/RRC/LITE/MESSAGES ; ln -s asn1-a20_constants.h asn1_constants.h ; cd $(OPENAIR_TARGETS)/SIMU/USER/ ; rm -f $(ASN1_MSG_OBJS1) ; rm -f $(OPENAIR2_DIR)/RRC/LITE/MESSAGES/Makefile.inc.generated ; rm -f $(L2_OBJS); rm -f *.o ; rm -f oaisim ; touch .lock-rel8 ; rm .lock-rel10 ; )
+ $(shell cd $(OPENAIR2_DIR)/RRC/NBIOT/MESSAGES/asn1c/ASN1_files/ ; rm EUTRA-RRC-Definitions.asn ; ln -s EUTRA-RRC-Definitions-86.asn EUTRA-RRC-Definitions.asn ;  cd $(OPENAIR2_DIR)/RRC/NBIOT/MESSAGES ; ln -s asn1-a20_constants.h asn1_constants.h ; cd $(OPENAIR_TARGETS)/SIMU/USER/ ; rm -f $(ASN1_MSG_OBJS1) ; rm -f $(OPENAIR2_DIR)/RRC/NBIOT/MESSAGES/Makefile.inc.generated ; rm -f $(L2_OBJS); rm -f *.o ; rm -f oaisim ; touch .lock-rel8 ; rm .lock-rel10 ; )
 endif
 endif
 
@@ -125,7 +125,7 @@ LIST_DIR = $(OPENAIR2_TOP)/UTIL/LISTS
 MATH_DIR = $(OPENAIR2_TOP)/UTIL/MATH
 TIMER_DIR = $(OPENAIR2_TOP)/UTIL/TIMER
 PHY_INTERFACE_DIR = $(OPENAIR2_TOP)/PHY_INTERFACE
-RRC_DIR = $(OPENAIR2_TOP)/RRC/LITE
+RRC_DIR = $(OPENAIR2_TOP)/RRC/NBIOT
 L2_INTERFACE_DIR = $(OPENAIR2_TOP)/RRC/L2_INTERFACE
 MAC_DIR = $(OPENAIR2_TOP)/LAYER2/MAC
 LOG_DIR=$(OPENAIR2_TOP)/UTIL/LOG
@@ -155,14 +155,14 @@ OPT_OBJS =  $(OPT_DIR)/probe.o
 L2_OBJS=$(addsuffix .o,$(basename $(SOURCES_L2))) $(PHY_INTERFACE_OBJS) $(MAC_OBJS) $(L2_INTERFACE_OBJS) $(RRC_OBJS) $(LOG_OBJS) $(OPT_OBJS)
 
 
-L2_incl = -I$(OPENAIR2_TOP)  -I$(COMMON_DIR) -I$(RLC_DIR) -I$(RLC_AM_DIR) -I$(RLC_UM_DIR)  -I$(RLC_TM_DIR) -I$(PDCP_DIR) -I$(MEM_DIR) -I$(LIST_DIR)  -I$(LOG_DIR) -I$(MATH_DIR) -I$(TIMER_DIR) -I$(OPENAIR3)/MESH -I$(OPENAIR2_TOP)/RRC/LITE -I$(OPENAIR2_TOP)/RRC/LITE/MESSAGES -I$(OPENAIR3)/MESH/RRM -I$(OPT_DIR)
+L2_incl = -I$(OPENAIR2_TOP)  -I$(COMMON_DIR) -I$(RLC_DIR) -I$(RLC_AM_DIR) -I$(RLC_UM_DIR)  -I$(RLC_TM_DIR) -I$(PDCP_DIR) -I$(MEM_DIR) -I$(LIST_DIR)  -I$(LOG_DIR) -I$(MATH_DIR) -I$(TIMER_DIR) -I$(OPENAIR3)/MESH -I$(OPENAIR2_TOP)/RRC/NBIOT -I$(OPENAIR2_TOP)/RRC/NBIOT/MESSAGES -I$(OPENAIR3)/MESH/RRM -I$(OPT_DIR)
 
 
 
 
 
 
-ASN1_MSG_OBJS2 := $(foreach file, $(ASN1_MSG_OBJS), $(OPENAIR2_DIR)/RRC/LITE/MESSAGES/$(file))
+ASN1_MSG_OBJS2 := $(foreach file, $(ASN1_MSG_OBJS), $(OPENAIR2_DIR)/RRC/NBIOT/MESSAGES/$(file))
 
 OBJ = $(PHY_OBJS) $(SIMULATION_OBJS)  $(SCHED_OBJS) $(STATS_OBJS) $(ASN1_MSG_OBJS2)
 

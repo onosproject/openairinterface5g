@@ -61,7 +61,7 @@
 #include "LAYER2/MAC/vars.h"
 #include "LAYER2/MAC/proto.h"
 
-#include "RRC/LITE/vars.h"
+#include "RRC/NBIOT/vars.h"
 #include "PHY_INTERFACE/vars.h"
 #include "PHY_INTERFACE/defs.h"
 

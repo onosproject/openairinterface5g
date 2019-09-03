@@ -41,7 +41,7 @@
 #include "SCHED/extern_NB_IoT.h"
 //#include "PHY/LTE_TRANSPORT/if4_tools.h"
 //#include "PHY/LTE_TRANSPORT/if5_tools.h"
-#include "RRC/LITE/proto_NB_IoT.h"
+#include "RRC/NBIOT/proto_NB_IoT.h"
 #include "SIMULATION/TOOLS/defs.h"  // purpose: included for taus() function
 //#ifdef EMOS
 //#include "SCHED/phy_procedures_emos.h"
@@ -49,9 +49,9 @@
 
 // for NB-IoT
 #include "SCHED/defs_NB_IoT.h"
-#include "openair2/RRC/LITE/proto_NB_IoT.h"
-#include "openair2/RRC/LITE/extern_NB_IoT.h"
-#include "RRC/LITE/MESSAGES/asn1_msg_NB_IoT.h"
+#include "openair2/RRC/NBIOT/proto_NB_IoT.h"
+#include "openair2/RRC/NBIOT/extern_NB_IoT.h"
+#include "RRC/NBIOT/MESSAGES/asn1_msg_NB_IoT.h"
 //#define DEBUG_PHY_PROC (Already defined in cmake)
 //#define DEBUG_ULSCH
 

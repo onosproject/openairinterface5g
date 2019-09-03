@@ -30,7 +30,7 @@
 
 //#include "defs_NB_IoT.h"
 //#include "extern.h"
-//#include "RRC/LITE/extern_NB_IoT.h"
+//#include "RRC/NBIOT/extern_NB_IoT.h"
 #include "common/utils/collection/tree.h"
 #include "LAYER2/MAC/extern_NB_IoT.h"
 //#include "COMMON/openair_defs.h"
@@ -44,8 +44,8 @@
 #include "UTIL/LOG/vcd_signal_dumper.h"
 //#include "rrc_eNB_UE_context.h"
 //#include "proto_NB_IoT.h"
-#include "RRC/LITE/defs_NB_IoT.h"
-//#include "RRC/LITE/vars_NB_IoT.h"
+#include "RRC/NBIOT/defs_NB_IoT.h"
+//#include "RRC/NBIOT/vars_NB_IoT.h"
 
 #ifdef LOCALIZATION
 #include <sys/time.h>

@@ -11,7 +11,7 @@
 #include "defs_NB_IoT.h"
 #include "proto_NB_IoT.h"
 #include "extern_NB_IoT.h"
-#include "openair2/RRC/LITE/proto_NB_IoT.h"
+#include "openair2/RRC/NBIOT/proto_NB_IoT.h"
 
 char str[6][7] = { "SIBs_1", "SIBs_2", "SIBs_3", "SIBs_4", "SIBs_5", "SIBs_6" };
 

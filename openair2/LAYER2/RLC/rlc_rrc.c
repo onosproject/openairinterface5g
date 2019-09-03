@@ -45,7 +45,7 @@
 #include "ENB_APP/enb_paramdef_NB_IoT.h"
 #include "LAYER2/MAC/mac_extern.h"
 #include "assertions.h"
-#include "RRC/LITE/proto_NB_IoT.h"
+#include "RRC/NBIOT/proto_NB_IoT.h"
 //-----------------------------------------------------------------------------
 rlc_op_status_t rrc_rlc_config_asn1_req (const protocol_ctxt_t   * const ctxt_pP,
     const LTE_SRB_ToAddModList_t   * const srb2add_listP,
