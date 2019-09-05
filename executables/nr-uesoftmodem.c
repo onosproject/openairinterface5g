@@ -122,6 +122,59 @@ int32_t                  uplink_frequency_offset[MAX_NUM_CCs][4];
 
 extern int16_t nr_dlsch_demod_shift;
 
+#if LDPC_FPGA_OFFLOAD
+#include <dlfcn.h>
+#include "ldpc_decoder_offload.h"
+typedef uint8_t (*syr_ldpc_offload_initfunc_t)(void);
+typedef uint8_t (*syr_ldpc_offload_finifunc_t)(void);
+typedef uint8_t (*syr_ldpc_offload_decodefunc_t)(int16_t	*y,
+									uint8_t			*decoded_bytes,
+									uint16_t		n,
+									uint16_t		interleaver_f1,
+									uint16_t		interleaver_f2,
+									uint8_t			max_iterations,
+									uint8_t			crc_type,
+									uint8_t			F,
+									time_stats_t	*init_stats,
+									time_stats_t	*alpha_stats,
+									time_stats_t	*beta_stats,
+									time_stats_t	*gamma_stats,
+									time_stats_t	*ext_stats,
+									time_stats_t	*intl1_stats,
+									time_stats_t	*intl2_stats);
+
+syr_ldpc_offload_initfunc_t		syr_init_funct;
+syr_ldpc_offload_finifunc_t		syr_fini_funct;
+//syr_ldpc_offload_decodefunc_t	syr_ldpc_decode_funct;
+
+typedef session_t (*threegpp_nr_ldpc_decode_start_t)(session_desc_t *session_desc);
+threegpp_nr_ldpc_decode_start_t threegpp_nr_ldpc_decode_start_funct;
+
+typedef int32_t (*threegpp_nr_ldpc_decode_putq_t)(	session_t 	fd,
+													int16_t 	*y_16bits,
+													uint8_t 	*decoded_bytes,
+													uint8_t		r,
+													uint16_t 	n,
+													uint8_t		max_iterations,
+													uint8_t		crc_type);
+threegpp_nr_ldpc_decode_putq_t threegpp_nr_ldpc_decode_putq_funct;
+
+typedef int32_t (*threegpp_nr_ldpc_decode_getq_t)(	session_t 	fd,
+													uint8_t 	*decoded_bytes,
+													uint8_t		r,
+													uint8_t		crc_type,
+													uint8_t		*crc_status,
+													uint8_t		*nb_iterations
+												);
+threegpp_nr_ldpc_decode_getq_t threegpp_nr_ldpc_decode_getq_funct;
+
+typedef int32_t (*threegpp_nr_ldpc_decode_stop_t)(	session_t 	fd);
+threegpp_nr_ldpc_decode_stop_t threegpp_nr_ldpc_decode_stop_funct;
+
+typedef int32_t (*threegpp_nr_ldpc_decode_run_t)(	session_t 	fd);
+threegpp_nr_ldpc_decode_run_t threegpp_nr_ldpc_decode_run_funct;
+#endif
+
 int UE_scan = 0;
 int UE_scan_carrier = 0;
 int UE_fo_compensation = 0;
@@ -788,6 +841,105 @@ int main( int argc, char **argv ) {
     PHY_vars_UE_g[0][CC_id]->hw_timing_advance = 160;
 #endif
   }
+
+#if LDPC_FPGA_OFFLOAD
+	void	*syr_handle	= NULL;;
+	uint8_t	syr_ret		= 0;
+
+	syr_handle	= dlopen("libldpc_decoder_offload.so", RTLD_LAZY);
+	if (!syr_handle)
+	{
+		fprintf(stderr,"Unable to locate libldpc_decoder_offload.so: HW device set to NONE_DEV.\n");
+		fprintf(stderr,"%s\n",dlerror());
+		exit_fun("Error loading ldpc decoder offload device");
+	}
+
+	syr_init_funct = dlsym(syr_handle,"phy_threegppnr_ldpc_decoder_offload_init");
+	if (syr_init_funct != NULL )
+	{
+		syr_ret = syr_init_funct();
+		if (syr_ret < 0)
+		{
+			fprintf(stderr, "%s %d:ldpc decoder offload device intialization failed %s\n", __FILE__, __LINE__, dlerror());
+			exit_fun("Error loading ldpc decoder offload device");
+		}
+	}
+	else
+	{
+		fprintf(stderr, "%s %d:ldpc decoder offload device init function not found %s\n", __FILE__, __LINE__, dlerror());
+		exit_fun("Error ldpc decoder offload device init function not found");
+	}
+
+	syr_fini_funct = dlsym(syr_handle,"phy_threegppnr_ldpc_decoder_offload_fini");
+	if (syr_fini_funct == NULL )
+	{
+		fprintf(stderr, "%s %d:ldpc decoder offload device fini function not found %s\n", __FILE__, __LINE__, dlerror());
+		exit_fun("Error ldpc decoder offload device fini function not found");
+	}
+
+#if 0
+	syr_ldpc_decode_funct = dlsym(syr_handle,"phy_threegppnr_ldpc_decoder_offload");
+	if (syr_ldpc_decode_funct == NULL )
+	{
+		fprintf(stderr, "%s %d:ldpc decoder offload device decode function not found %s\n", __FILE__, __LINE__, dlerror());
+		exit_fun("Error ldpc decoder offload device decode function not found");
+	}
+#endif
+
+	threegpp_nr_ldpc_decode_start_funct = dlsym(syr_handle,"threegpp_nr_ldpc_decode_start");
+	if (threegpp_nr_ldpc_decode_start_funct == NULL )
+	{
+		printf("%s %d:threegpp_nr_ldpc_decode_start function not found %s\n", __FILE__, __LINE__, dlerror());
+		exit(-1);
+	}
+
+	threegpp_nr_ldpc_decode_putq_funct = dlsym(syr_handle,"threegpp_nr_ldpc_decode_putq");
+	if (threegpp_nr_ldpc_decode_putq_funct == NULL )
+	{
+		printf("%s %d:threegpp_nr_ldpc_decode_putq function not found %s\n", __FILE__, __LINE__, dlerror());
+		exit(-1);
+	}
+
+	threegpp_nr_ldpc_decode_getq_funct = dlsym(syr_handle,"threegpp_nr_ldpc_decode_getq");
+	if (threegpp_nr_ldpc_decode_getq_funct == NULL )
+	{
+		printf("%s %d:threegpp_nr_ldpc_decode_getq function not found %s\n", __FILE__, __LINE__, dlerror());
+		exit(-1);
+	}
+
+	threegpp_nr_ldpc_decode_stop_funct = dlsym(syr_handle,"threegpp_nr_ldpc_decode_stop");
+	if (threegpp_nr_ldpc_decode_stop_funct == NULL )
+	{
+		printf("%s %d:threegpp_nr_ldpc_decode_stop function not found %s\n", __FILE__, __LINE__, dlerror());
+		exit(-1);
+	}
+
+	threegpp_nr_ldpc_decode_run_funct = dlsym(syr_handle,"threegpp_nr_ldpc_decode_run");
+	if (threegpp_nr_ldpc_decode_run_funct == NULL )
+	{
+		printf("%s %d:threegpp_nr_ldpc_decode_run function not found %s\n", __FILE__, __LINE__, dlerror());
+		exit(-1);
+	}
+
+
+
+
+#if 0	// Test
+	int16_t		y[8448];			// 22.Zc -> 22x128 x 3 LLR16bits -> 8448 int16_t
+	uint8_t		decoded_bytes[352];	// 22.Zc bits -> 352 bytes
+	uint16_t	n	= 2816;			// code_block size = 2816
+
+	memset(y,             0x7F, 8448 * sizeof(int16_t));
+	memset(decoded_bytes, 0,  352 * sizeof(uint8_t));
+
+	syr_ret = syr_ldpc_decode_funct(y, decoded_bytes, n, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+	if (syr_ret < 0)
+	{
+		fprintf(stderr, "%s %d:ldpc decoder offload device intialization failed %s\n", __FILE__, __LINE__, dlerror());
+		exit_fun("Error loading ldpc decoder offload device");
+	}
+#endif
+#endif
 
   // wait for end of program
   printf("TYPE <CTRL-C> TO TERMINATE\n");

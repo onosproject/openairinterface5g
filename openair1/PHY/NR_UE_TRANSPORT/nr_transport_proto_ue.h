@@ -1804,6 +1804,18 @@ uint32_t  nr_dlsch_decoding(PHY_VARS_NR_UE *phy_vars_ue,
 			    uint8_t is_crnti,
 			    uint8_t llr8_flag);
 
+uint32_t  nr_dlsch_decoding_ldpc_offload(PHY_VARS_NR_UE *phy_vars_ue,
+		                         short *dlsch_llr,
+		                         NR_DL_FRAME_PARMS *frame_parms,
+		                         NR_UE_DLSCH_t *dlsch,
+		                         NR_DL_UE_HARQ_t *harq_process,
+		                         uint32_t frame,
+		                         uint16_t nb_symb_sch,
+		                         uint8_t nr_tti_rx,
+		                         uint8_t harq_pid,
+		                         uint8_t is_crnti,
+		                         uint8_t llr8_flag);
+
 int nr_extract_dci_info(PHY_VARS_NR_UE *ue,
 			uint8_t eNB_id,
 			lte_frame_type_t frame_type,

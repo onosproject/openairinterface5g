@@ -247,6 +247,7 @@ add_boolean_option(T_TRACER            True  "Activate the T tracer, a debugging
 add_boolean_option(UE_AUTOTEST_TRACE   False "Activate UE autotest specific logs")
 add_boolean_option(UE_DEBUG_TRACE      False "Activate UE debug trace")
 add_boolean_option(UE_TIMING_TRACE     False "Activate UE timing trace")
+add_boolean_option(LDPC_FPGA_OFFLOAD   False "Activate UE LDPC trace")
 add_boolean_option(DISABLE_LOG_X       False "Deactivate all LOG_* macros")
 add_boolean_option(USRP_REC_PLAY       False "Enable USRP record playback mode")
 add_boolean_option(UE_NAS_USE_TUN      False "Enable UE NAS TUN device instead of ue_ip.ko")
@@ -1425,6 +1426,7 @@ set(PHY_SRC_UE
   ${OPENAIR1_DIR}/PHY/NR_UE_TRANSPORT/nr_dlsch_demodulation.c
   ${OPENAIR1_DIR}/PHY/NR_UE_TRANSPORT/nr_ulsch_coding.c
   ${OPENAIR1_DIR}/PHY/NR_UE_TRANSPORT/nr_dlsch_decoding.c
+  ${OPENAIR1_DIR}/PHY/NR_UE_TRANSPORT/nr_dlsch_decoding_ldpc_offload.c
   ${OPENAIR1_DIR}/PHY/NR_UE_TRANSPORT/nr_dlsch_llr_computation.c
   ${OPENAIR1_DIR}/PHY/NR_TRANSPORT/nr_tbs_tools.c
   ${OPENAIR1_DIR}/PHY/NR_TRANSPORT/nr_sch_dmrs.c
@@ -2548,6 +2550,20 @@ target_link_libraries (nr-uesoftmodem ${LIBXML2_LIBRARIES})
 target_link_libraries (nr-uesoftmodem pthread m ${CONFIG_LIBRARIES} rt crypt ${CRYPTO_LIBRARIES} ${OPENSSL_LIBRARIES} ${NETTLE_LIBRARIES} sctp  ${XFORMS_LIBRARIES} ${PROTOBUF_LIB}  ${CMAKE_DL_LIBS} ${LIBYAML_LIBRARIES} ${ATLAS_LIBRARIES})
 target_link_libraries (nr-uesoftmodem ${LIB_LMS_LIBRARIES})
 target_link_libraries (nr-uesoftmodem ${T_LIB})
+
+# LDPC Decoder Offload : SYRTEM
+#####################################################
+if (${LDPC_FPGA_OFFLOAD})
+  set (LDPC_OFFLOAD_DIR ${OPENAIR_DIR}/targets/ARCH/LDPC_OFFLOAD/slib)
+  include_directories ("${LDPC_OFFLOAD_DIR}")
+  LINK_DIRECTORIES("${LDPC_OFFLOAD_DIR}")
+  set(LDPC_OFFLOAD_LIB  "ldpc_decoder_offload")
+endif (${LDPC_FPGA_OFFLOAD})
+
+if (${LDPC_FPGA_OFFLOAD})
+message( "Linking LDPC_OFFLOAD lib" )
+target_link_libraries( nr-uesoftmodem ${OPENAIR_TARGETS}/ARCH/LDPC_OFFLOAD/slib/libldpc_decoder_offload.so )
+endif (${LDPC_FPGA_OFFLOAD})
 
 # nr-uesoftmodem-nos1
 #######################################

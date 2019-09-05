@@ -3673,6 +3673,20 @@ void nr_ue_dlsch_procedures(PHY_VARS_NR_UE *ue,
 			   dlsch0->harq_processes[harq_pid]->TBS>256?1:0);
 		 LOG_T(PHY,"UE_DLSCH_PARALLELISATION is defined, ret = %d\n", ret);
 #else
+  #if LDPC_FPGA_OFFLOAD
+      ret = nr_dlsch_decoding_ldpc_offload(ue,
+			   pdsch_vars->llr[0],
+			   &ue->frame_parms,
+			   dlsch0,
+			   dlsch0->harq_processes[harq_pid],
+			   frame_rx,
+			   nb_symb_sch,
+			   nr_tti_rx,
+			   harq_pid,
+			   pdsch==PDSCH?1:0,
+			   dlsch0->harq_processes[harq_pid]->TBS>256?1:0);
+      //printf("start cW0 dlsch decoding\n");
+  #else
       ret = nr_dlsch_decoding(ue,
 			   pdsch_vars->llr[0],
 			   &ue->frame_parms,
@@ -3686,6 +3700,7 @@ void nr_ue_dlsch_procedures(PHY_VARS_NR_UE *ue,
 			   dlsch0->harq_processes[harq_pid]->TBS>256?1:0);
       LOG_T(PHY,"UE_DLSCH_PARALLELISATION is NOT defined, ret = %d\n", ret);
       //printf("start cW0 dlsch decoding\n");
+  #endif
 #endif
 
 #if UE_TIMING_TRACE

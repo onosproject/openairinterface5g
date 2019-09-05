@@ -64,6 +64,7 @@ CMAKE_CMD="$CMAKE"
 UE_AUTOTEST_TRACE="False"
 UE_DEBUG_TRACE="False"
 UE_TIMING_TRACE="False"
+LDPC_FPGA_OFFLOAD="False"
 USRP_REC_PLAY="False"
 BUILD_ECLIPSE=0
 NR="False"
@@ -143,6 +144,8 @@ Options
    Disables the T tracer.
 --disable-hardware-dependency
    Disable HW dependency during installation
+--ldpc_fpga_offload
+   Enables LDPC decoding offload in FPGA.
 --ue-autotest-trace
    Enable specific traces for UE autotest framework
 --ue-trace
@@ -331,6 +334,10 @@ function main() {
        --disable-hardware-dependency)
             echo_info "Disabling hardware dependency for compiling software"
             DISABLE_HARDWARE_DEPENDENCY="True"
+            shift 1;;
+       --ldpc_fpga_offload)
+            LDPC_FPGA_OFFLOAD="True"
+            echo_info "Enabling the usage of LDPC decoding offload in FPGA"
             shift 1;;
        --ue-autotest-trace)
             UE_AUTOTEST_TRACE="True"
@@ -563,6 +570,7 @@ function main() {
     echo "set ( UE_AUTOTEST_TRACE $UE_AUTOTEST_TRACE )"                   >> $cmake_file
     echo "set ( UE_DEBUG_TRACE $UE_DEBUG_TRACE )"                         >> $cmake_file
     echo "set ( UE_TIMING_TRACE $UE_TIMING_TRACE )"                       >> $cmake_file
+    echo "set ( LDPC_FPGA_OFFLOAD $LDPC_FPGA_OFFLOAD)"                     >> $cmake_file
     echo "set ( USRP_REC_PLAY $USRP_REC_PLAY )"                           >> $cmake_file
     echo 'include(${CMAKE_CURRENT_SOURCE_DIR}/../CMakeLists.txt)'         >> $cmake_file
     cd  $DIR/$build_dir/build
