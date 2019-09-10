@@ -167,12 +167,12 @@ typedef void (rrc_data_conf_cb_t)(
 // NB-IoT (may this stuff are no more used)
 //------------------------------------------------
 //pointer functions
-protected_rlc(void (*rlc_rrc_data_ind_NB_IoT)(
+void (*rlc_rrc_data_ind_NB_IoT)(
                 const protocol_ctxt_t* const ctxtP,
                 const rb_id_t     rb_idP,
                 const sdu_size_t  sdu_sizeP,
                 const uint8_t   * const sduP,
-				const srb1bis_flag_t srb1bis_flag);)
+				const srb1bis_flag_t srb1bis_flag);
 
 typedef void (rrc_data_ind_cb_NB_IoT_t)(
   const protocol_ctxt_t* const ctxtP,

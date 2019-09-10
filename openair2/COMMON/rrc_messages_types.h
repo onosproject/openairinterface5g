@@ -210,10 +210,10 @@ typedef struct RrcConfigurationReq_s {
 
   //PRACH
   long                    prach_root[MAX_NUM_CCs];
-  long                    prach_config_index[MAX_NUM_CCs];
+  //long                    prach_config_index[MAX_NUM_CCs];
   BOOLEAN_t               prach_high_speed[MAX_NUM_CCs];
   long                    prach_zero_correlation[MAX_NUM_CCs];
-  long                    prach_freq_offset[MAX_NUM_CCs];
+  //long                    prach_freq_offset[MAX_NUM_CCs];
   //PUCCH
   long                    pucch_delta_shift[MAX_NUM_CCs];
   long                    pucch_nRB_CQI[MAX_NUM_CCs];
@@ -249,17 +249,18 @@ typedef struct RrcConfigurationReq_s {
   long                    ul_CyclicPrefixLength[MAX_NUM_CCs];
 
   //related to UplinkPowerControl IE
-  e_DeltaFList_PUCCH__deltaF_PUCCH_Format1                    pucch_deltaF_Format1[MAX_NUM_CCs];
-  e_DeltaFList_PUCCH__deltaF_PUCCH_Format1b                   pucch_deltaF_Format1b[MAX_NUM_CCs];
-  e_DeltaFList_PUCCH__deltaF_PUCCH_Format2                    pucch_deltaF_Format2[MAX_NUM_CCs];
-  e_DeltaFList_PUCCH__deltaF_PUCCH_Format2a                   pucch_deltaF_Format2a[MAX_NUM_CCs];
-  e_DeltaFList_PUCCH__deltaF_PUCCH_Format2b                   pucch_deltaF_Format2b[MAX_NUM_CCs];
+    e_LTE_DeltaFList_PUCCH__deltaF_PUCCH_Format1                    pucch_deltaF_Format1;
+    e_LTE_DeltaFList_PUCCH__deltaF_PUCCH_Format1b                   pucch_deltaF_Format1b;
+    e_LTE_DeltaFList_PUCCH__deltaF_PUCCH_Format2                    pucch_deltaF_Format2;
+    e_LTE_DeltaFList_PUCCH__deltaF_PUCCH_Format2a                   pucch_deltaF_Format2a;
+    e_LTE_DeltaFList_PUCCH__deltaF_PUCCH_Format2b                   pucch_deltaF_Format2b;
+
 
   long                    rach_numberOfRA_Preambles[MAX_NUM_CCs];
   BOOLEAN_t               rach_preamblesGroupAConfig[MAX_NUM_CCs];
   long                    rach_sizeOfRA_PreamblesGroupA[MAX_NUM_CCs];
   long                    rach_messageSizeGroupA[MAX_NUM_CCs];
-  e_RACH_ConfigCommon__preambleInfo__preamblesGroupAConfig__messagePowerOffsetGroupB   rach_messagePowerOffsetGroupB[MAX_NUM_CCs];// not presen in NB-IoT SIB2
+  e_LTE_RACH_ConfigCommon__preambleInfo__preamblesGroupAConfig__messagePowerOffsetGroupB   rach_messagePowerOffsetGroupB[MAX_NUM_CCs];// not presen in NB-IoT SIB2
   long                    rach_powerRampingStep[MAX_NUM_CCs];
   long                    rach_preambleInitialReceivedTargetPower[MAX_NUM_CCs];
   long                    rach_preambleTransMax[MAX_NUM_CCs];

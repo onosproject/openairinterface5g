@@ -273,6 +273,8 @@ endif (${ENABLE_ITTI})
 # New C code source file, cmake must be re-run (instead of re-running make only)
 #############
 set(asn1_generated_dir ${OPENAIR_BIN_DIR})
+# set(fix_asn1c_call "${OPENAIR_CMAKE}/tools/fix_asn1")  
+# set(asn1_generated_dir ${OPENAIR_BIN_DIR})  
 
 set(protoc_call "${OPENAIR_CMAKE}/tools/generate_protobuf")
 set(protobuf_generated_dir ${OPENAIR_BIN_DIR})
@@ -318,19 +320,27 @@ if (NOT ${ret} STREQUAL 0)
 endif (NOT ${ret} STREQUAL 0)
 file(GLOB rrc_source ${RRC_FULL_DIR}/*.c)
 file(GLOB rrc_h ${RRC_FULL_DIR}/*.h)
-set(rrc_h ${rrc_h} ${RRC_FULL_DIR}/asn1_constants.h)
+set(rrc_h ${rrc_h} ${RRC_FULL_DIR}/LTE_asn_constant.h)
 add_custom_target (
   rrc_flag ALL
   ${OPENAIR_CMAKE}/tools/make_asn1c_includes.sh "${RRC_FULL_DIR}" "${RRC_GRAMMAR}" "LTE_"
   DEPENDS ${RRC_GRAMMAR}
   )
 
+
 set_source_files_properties(${rrc_source} PROPERTIES COMPILE_FLAGS -w) # suppress warnings from generated code
 add_library(RRC_LIB ${rrc_source}
     ${OPENAIR2_DIR}/RRC/LTE/MESSAGES/asn1_msg.c
-    ${OPENAIR2_DIR}/RRC/LTE/MESSAGES/asn1_msg_NB_IoT.c)
+    ${OPENAIR2_DIR}/RRC/NBIOT/MESSAGES/asn1_msg_NB_IoT.c)
 add_dependencies(RRC_LIB rrc_flag)
 include_directories ("${RRC_FULL_DIR}")
+
+add_custom_command (
+  OUTPUT ${RRC_FULL_DIR}/LTE_asn1_constant.h
+  COMMAND ${asn1c_call}  ${RRC_FULL_DIR} ${RRC_GRAMMAR}
+  COMMAND ${fix_asn1c_call}  ${RRC_FULL_DIR} RRC ${RRC_ASN1_VERSION}
+  DEPENDS ${RRC_GRAMMAR}
+  )
 
 # S1AP
 # Same limitation as described in RRC: unknown generated file list
@@ -1158,71 +1168,11 @@ add_library(NFAPI_USER_LIB ${NFAPI_USER_SRC})
 add_dependencies(NFAPI_USER_LIB rrc_flag)
 include_directories(${NFAPI_USER_DIR})
 
-# Layer 1
-#############################
-set(PHY_SRC
-  # depend on code generation from asn1c
-  ${RRC_FULL_DIR}/asn1_constants.h
-  # actual source
-  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/pss.c
-  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/sss.c
-  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/pilots.c
-  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/pilots_mbsfn.c
-  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/dlsch_coding.c
-  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/dlsch_modulation.c
-  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/dlsch_demodulation.c
-  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/dlsch_llr_computation.c
-  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/power_control.c
-  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/dlsch_decoding.c
-  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/dlsch_scrambling.c
-  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/dci_tools.c
-  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/uci_tools.c
-  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/lte_mcs.c
-  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/pbch.c
-  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/dci.c
-  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/phich.c
-  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/pcfich.c
-  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/pucch.c
-  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/prach.c
-  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/pmch.c
-  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/pch.c
-  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/group_hopping.c
-  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/srs_modulation.c
-  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/drs_modulation.c
-  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/ulsch_modulation.c
-  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/ulsch_demodulation.c
-  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/ulsch_coding.c
-  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/ulsch_decoding.c
-  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/rar_tools.c
-  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/print_stats.c
-  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/initial_sync.c
-  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/if4_tools.c
-  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/if5_tools.c
-  ${OPENAIR1_DIR}/PHY/MODULATION/ofdm_mod.c
-  ${OPENAIR1_DIR}/PHY/MODULATION/slot_fep.c
-  ${OPENAIR1_DIR}/PHY/MODULATION/slot_fep_mbsfn.c
-  ${OPENAIR1_DIR}/PHY/MODULATION/slot_fep_ul.c
-  ${OPENAIR1_DIR}/PHY/MODULATION/ul_7_5_kHz.c
-  ${OPENAIR1_DIR}/PHY/MODULATION/beamforming.c
-  ${OPENAIR1_DIR}/PHY/MODULATION/compute_bf_weights.c
-  ${OPENAIR1_DIR}/PHY/LTE_ESTIMATION/freq_equalization.c
-  ${OPENAIR1_DIR}/PHY/LTE_ESTIMATION/lte_sync_time.c
-  ${OPENAIR1_DIR}/PHY/LTE_ESTIMATION/lte_sync_timefreq.c
-  ${OPENAIR1_DIR}/PHY/LTE_ESTIMATION/lte_adjust_sync.c
-  ${OPENAIR1_DIR}/PHY/LTE_ESTIMATION/lte_dl_channel_estimation.c
-  ${OPENAIR1_DIR}/PHY/LTE_ESTIMATION/lte_dl_bf_channel_estimation.c
-  ${OPENAIR1_DIR}/PHY/LTE_ESTIMATION/lte_dl_mbsfn_channel_estimation.c
-  ${OPENAIR1_DIR}/PHY/LTE_ESTIMATION/lte_ul_channel_estimation.c
-  ${OPENAIR1_DIR}/PHY/LTE_ESTIMATION/lte_est_freq_offset.c
-  ${OPENAIR1_DIR}/PHY/LTE_ESTIMATION/lte_ue_measurements.c
-  ${OPENAIR1_DIR}/PHY/LTE_ESTIMATION/lte_eNB_measurements.c
-  ${OPENAIR1_DIR}/PHY/LTE_ESTIMATION/adjust_gain.c
-)
   
-   # NBIOT
+  # NBIOT
 set(PHY_SRC_NBIOT
   # depend on code generation from asn1c
-  ${RRC_FULL_DIR}/asn1_constants.h
+  ${RRC_FULL_DIR}/LTE_asn_constant.h
   # actual source
   ${OPENAIR1_DIR}/PHY/NBIoT_TRANSPORT/npss_NB_IoT.c
   ${OPENAIR1_DIR}/PHY/NBIoT_TRANSPORT/nsss_NB_IoT.c
@@ -2469,13 +2419,13 @@ endif()
 add_custom_command (
   OUTPUT ${OPENAIR_BIN_DIR}/messages.xml
   COMMAND ${xml_command}
-  DEPENDS ${S1AP_OAI_generated} ${RRC_FULL_DIR}/asn1_constants.h
+  DEPENDS ${S1AP_OAI_generated} ${RRC_FULL_DIR}/LTE_asn_constant.h
   )
 
 add_custom_command (
   OUTPUT ${OPENAIR_BIN_DIR}/messages_xml.h
   COMMAND sed -e 's/ *//'   -e 's/\"/\\\\\"/g' -e 's/^/\"/' -e 's/$$/\\\\n\"/' ${OPENAIR_BIN_DIR}/messages.xml  > ${OPENAIR_BIN_DIR}/messages_xml.h
-  DEPENDS ${OPENAIR_BIN_DIR}/messages.xml ${RRC_FULL_DIR}/asn1_constants.h
+  DEPENDS ${OPENAIR_BIN_DIR}/messages.xml ${RRC_FULL_DIR}/LTE_asn_constant.h
   )
 
 
