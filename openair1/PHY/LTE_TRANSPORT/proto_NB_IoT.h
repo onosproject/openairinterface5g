@@ -37,7 +37,7 @@
 
 #include "PHY/defs_NB_IoT.h"
 #include "PHY/impl_defs_lte.h"
-#include "PHY/defs.h"
+
 //#include "PHY/LTE_TRANSPORT/defs_NB_IoT.h"
 //#include <math.h>
 
@@ -428,7 +428,7 @@ void descrambling_NPUSCH_ack_NB_IoT(LTE_DL_FRAME_PARMS  *fp,
 
 uint32_t  turbo_decoding_NB_IoT(PHY_VARS_eNB           *eNB,
                                 NB_IoT_eNB_NULSCH_t    *ulsch_NB_IoT,
-                                eNB_rxtx_proc_t        *proc,
+                                eNB_rxtx_proc_NB_IoT_t        *proc,
                                 uint8_t                 npusch_format,
                                 unsigned int            G,
                                 uint8_t                 rvdx,
@@ -438,7 +438,7 @@ uint32_t  turbo_decoding_NB_IoT(PHY_VARS_eNB           *eNB,
 
 void decode_NPUSCH_msg_NB_IoT(PHY_VARS_eNB        *eNB,
                               LTE_DL_FRAME_PARMS  *fp,
-                              eNB_rxtx_proc_t     *proc,
+                              eNB_rxtx_proc_NB_IoT_t     *proc,
                               uint8_t             npusch_format,
                               uint16_t            N_SF_per_word,
                               uint16_t            Nsc_RU,
@@ -453,7 +453,7 @@ void deinterleaving_NPUSCH_data_NB_IoT(NB_IoT_UL_eNB_HARQ_t *ulsch_harq, int16_t
 
 
 uint8_t rx_ulsch_Gen_NB_IoT(PHY_VARS_eNB             *eNB,
-                             eNB_rxtx_proc_t         *proc,
+                             eNB_rxtx_proc_NB_IoT_t         *proc,
                              uint8_t                 eNB_id,  // this is the effective sector id
                              uint8_t                 UE_id,
                              uint16_t                UL_RB_ID_NB_IoT,  // 22 , to be included in // to be replaced by NB_IoT_start ??
