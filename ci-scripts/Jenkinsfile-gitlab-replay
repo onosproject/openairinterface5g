@@ -1,0 +1,171 @@
+#!/bin/groovy
+/*
+ * Licensed to the OpenAirInterface (OAI) Software Alliance under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The OpenAirInterface Software Alliance licenses this file to You under
+ * the OAI Public License, Version 1.1  (the "License"); you may not use this file
+ * except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.openairinterface.org/?page_id=698
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *-------------------------------------------------------------------------------
+ * For more information about the OpenAirInterface (OAI) Software Alliance:
+ *      contact@openairinterface.org
+ */
+
+def doFlexranCtrlTest = false
+
+// Location of the executor node
+def nodeExecutor = params.nodeExecutor
+
+// Git Infos for the replay
+def ReplayGitSrcBranch = params.replayGitSrcBranch
+def ReplayGitSrcCommit = params.replayGitSrcCommit
+def ReplayGitTgtBranch = params.replayGitTgtBranch
+def ReplayGitDoMerge   = params.replayGitDoMerge
+
+pipeline {
+    agent {
+        label nodeExecutor
+    }
+    options {
+        disableConcurrentBuilds()
+        timestamps()
+        gitLabConnection('OAI GitLab')
+        ansiColor('xterm')
+    }
+
+    stages {
+        stage ("Verify Parameters") {
+            steps {
+                script {
+                    JOB_TIMESTAMP = sh returnStdout: true, script: 'date --utc --rfc-3339=seconds | sed -e "s#+00:00##"'
+                    JOB_TIMESTAMP = JOB_TIMESTAMP.trim()
+
+                    echo '\u2705 \u001B[32mVerify Parameters\u001B[0m'
+
+                    def allParametersPresent = true
+                    if (params.replayGitSrcBranch == null) {
+                        allParametersPresent = false
+                    }
+                    if (params.replayGitSrcCommit == null) {
+                        allParametersPresent = false
+                    }
+                    if (params.replayGitTgtBranch == null) {
+                        allParametersPresent = false
+                    }
+                    if (params.replayGitDoMerge == null) {
+                        allParametersPresent = false
+                    }
+                    if (!allParametersPresent) {
+                        currentBuild.result = 'ABORTED'
+                        error('Stopping early because not enough ReplayGit parameters')
+                    }
+
+                    if (params.FlexRanRtcGitLabRepository_Credentials != null) {
+                        doFlexranCtrlTest = true
+                    }
+                    if (fileExists("flexran")) {
+                        sh "rm -Rf flexran > /dev/null 2>&1"
+                    }
+                }
+            }
+        }
+        stage ("Retrieve Git Code") {
+            steps {
+                script {
+                    checkout changelog: false, poll: false, scm: [$class: 'GitSCM', branches: [[name: "${ReplayGitSrcBranch}]], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'CleanBeforeCheckout']], submoduleCfg: [], userRemoteConfigs: [[url: 'https://gitlab.eurecom.fr/oai/openairinterface5g.git']]]
+                    sh "git checkout -f ${ReplayGitSrcCommit}"
+                    sh "git log -n1"
+                }
+            }
+            post {
+                failure {
+                    script {
+                        currentBuild.result = 'FAILURE'
+                    }
+                }
+            }
+        }
+        stage ("print latest commit info") {
+            steps {
+        	    script {
+        	        echo "Building on: "
+        	        echo "  Repository -- ${GIT_URL}"
+        	        echo "  Branch -- ${GIT_BRANCH}"
+        	        echo "  Commit -- ${GIT_COMMIT}"
+        	    }
+            }
+        }
+    }
+}
+
+// ----  Slave Job functions
+
+def triggerSlaveJob (jobName, gitlabStatusName) {
+    if ("MERGE".equals(env.gitlabActionType)) {
+        gitlabCommitStatus(name: gitlabStatusName) {
+            build job: jobName,
+                parameters: [
+                    string(name: 'eNB_Repository', value: String.valueOf(GIT_URL)),
+                    string(name: 'eNB_Branch', value: String.valueOf(env.gitlabSourceBranch)),
+                    string(name: 'eNB_CommitID', value: String.valueOf(env.gitlabMergeRequestLastCommit)),
+                    booleanParam(name: 'eNB_mergeRequest', value: true),
+                    string(name: 'eNB_TargetBranch', value: String.valueOf(env.gitlabTargetBranch))
+                ]
+        }
+    } else {
+        gitlabCommitStatus(name: gitlabStatusName) {
+            build job: jobName,
+                parameters: [
+                    string(name: 'eNB_Repository', value: String.valueOf(GIT_URL)),
+                    string(name: 'eNB_Branch', value: String.valueOf(GIT_BRANCH)),
+                    string(name: 'eNB_CommitID', value: String.valueOf(GIT_COMMIT)),
+                    booleanParam(name: 'eNB_mergeRequest', value: false)
+                ]
+       }
+    }
+}
+
+def triggerSlaveJobNoGitLab (jobName) {
+    if ("MERGE".equals(env.gitlabActionType)) {
+        build job: jobName,
+            parameters: [
+                string(name: 'eNB_Repository', value: String.valueOf(GIT_URL)),
+                string(name: 'eNB_Branch', value: String.valueOf(env.gitlabSourceBranch)),
+                string(name: 'eNB_CommitID', value: String.valueOf(env.gitlabMergeRequestLastCommit)),
+                booleanParam(name: 'eNB_mergeRequest', value: true),
+                string(name: 'eNB_TargetBranch', value: String.valueOf(env.gitlabTargetBranch))
+            ]
+    } else {
+        build job: jobName,
+            parameters: [
+                string(name: 'eNB_Repository', value: String.valueOf(GIT_URL)),
+                string(name: 'eNB_Branch', value: String.valueOf(GIT_BRANCH)),
+                string(name: 'eNB_CommitID', value: String.valueOf(GIT_COMMIT)),
+                booleanParam(name: 'eNB_mergeRequest', value: false)
+            ]
+    }
+}
+
+def finalizeSlaveJob(jobName) {
+    // In case of any non-success, we are retrieving the HTML report of the last completed
+    // slave job. The only drop-back is that we may retrieve the HTML report of a previous build
+    fileName = "test_results-${jobName}.html"
+    if (!fileExists(fileName)) {
+        copyArtifacts(projectName: jobName,
+            filter: 'test_results*.html',
+            selector: lastCompleted())
+        if (fileExists(fileName)) {
+            sh "sed -i -e 's#TEMPLATE_BUILD_TIME#${JOB_TIMESTAMP}#' ${fileName}"
+            archiveArtifacts artifacts: fileName
+        }
+    }
+}
