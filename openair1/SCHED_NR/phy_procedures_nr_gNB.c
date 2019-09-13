@@ -252,7 +252,7 @@ void nr_ulsch_procedures(PHY_VARS_gNB *gNB, int frame_rx, int slot_rx, int UE_id
                     harq_pid,
                     0);
         
-  if (ret > gNB->ulsch[UE_id+1][0]->max_ldpc_iterations)
+  if (ret > gNB->ulsch[UE_id][0]->max_ldpc_iterations)
     LOG_I(PHY, "ULSCH in error\n");
   else
     LOG_I(PHY, "ULSCH received ok\n");
