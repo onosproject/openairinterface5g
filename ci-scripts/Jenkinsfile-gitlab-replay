@@ -227,6 +227,7 @@ pipeline {
                                 expression {ReplayPhySimTests}
                             }
                             steps {
+                              gitlabBuilds(builds: ["Test phy-sim"]) {
                                 script {
                                     timeout (time: 20, unit: 'MINUTES') {
                                         try {
@@ -238,6 +239,7 @@ pipeline {
                                         }
                                     }
                                 }
+                              }
                             }
                         }
                         stage ("Build Flexran Controller") {
@@ -261,6 +263,7 @@ pipeline {
                                 expression {ReplayBasicSimTests}
                             }
                             steps {
+                              gitlabBuilds(builds: ["Test basic-sim"]) {
                                 script {
                                     timeout (time: 30, unit: 'MINUTES') {
                                         try {
@@ -272,6 +275,7 @@ pipeline {
                                         }
                                     }
                                 }
+                              }
                             }
                         }
                         stage ("Test L2 simulator") {
@@ -279,6 +283,7 @@ pipeline {
                                 expression {ReplayL2nFAPISimTests}
                             }
                             steps {
+                              gitlabBuilds(builds: ["Test L2-sim"]) {
                                 script {
                                     timeout (time: 30, unit: 'MINUTES') {
                                         try {
@@ -290,6 +295,7 @@ pipeline {
                                         }
                                     }
                                 }
+                              }
                             }
                         }
                         stage ("Destroy all Virtual Machines") {
