@@ -39,11 +39,213 @@
 #include "nrLDPC_bnProc.h"
 
 #define NR_LDPC_ENABLE_PARITY_CHECK
-//#define NR_LDPC_PROFILER_DETAIL
+#define NR_LDPC_PROFILER_DETAIL
 
 #ifdef NR_LDPC_DEBUG_MODE
 #include "nrLDPC_tools/nrLDPC_debug.h"
 #endif
+
+void memcpy_finder(uint32_t* p_lut_cn2bn,uint32_t **p_lut2,uint32_t *size_lut2,int dest0,int M) {
+
+  int dest=0,src=p_lut_cn2bn[0],len=1;
+  int size32;
+  for (int i=1;i<M;i++) {
+    if (p_lut_cn2bn[i]!= (1+p_lut_cn2bn[i-1])) {
+      printf("memcpy(%d,%d,%d)\n",dest0+dest,src,len);
+      *size_lut2=*size_lut2+(3*sizeof(uint32_t));
+      printf("new_size %d\n",*size_lut2);
+      *p_lut2=realloc((void*)*p_lut2,*size_lut2);
+      size32=*size_lut2/4;
+      (*p_lut2)[size32-3] = dest0+dest;
+      (*p_lut2)[size32-2] = src;
+      (*p_lut2)[size32-1] = len;
+      len=1;
+      dest=i;
+      src=p_lut_cn2bn[i];
+    }
+    else len++;
+    if (i==(M-1)) { 
+      printf("memcpy(%d,%d,%d)\n",dest0+dest,src,len);
+      *size_lut2=*size_lut2+(3*sizeof(uint32_t));
+      printf("*new_size %d\n",*size_lut2);
+      *p_lut2=realloc((void*)*p_lut2,*size_lut2);
+      size32=*size_lut2/4;
+      (*p_lut2)[size32-3] = dest0+dest;
+      (*p_lut2)[size32-2] = src;
+      (*p_lut2)[size32-1] = len;
+    }
+    //    printf("p_lut_cn2bn[%d] : %d\n",i,p_lut_cn2bn[i]);
+  }
+}
+
+void nrLDPC_prep_bn2cnProcBuf(uint32_t* lut_cn2bnProcBuf, 
+			      uint32_t** lut_cn2bnProcBuf2, 
+			      uint32_t *lut2_size, 
+			      uint8_t*  lut_numCnInCnGroups, 
+			      uint32_t* lut_startAddrCnGroups,
+			      uint16_t Z)
+{
+
+    uint32_t* p_lut_cn2bn,*p_lut2;
+    uint32_t bitOffsetInGroup;
+    uint32_t i;
+    uint32_t j;
+    uint32_t M;
+
+    *lut2_size=0;
+
+    // For CN groups 3 to 19 no need to send the last BN back since it's single edge
+    // and BN processing does not change the value already in the CN proc buf
+
+    // =====================================================================
+    // CN group with 3 BNs
+
+    p_lut_cn2bn = &lut_cn2bnProcBuf[0];
+    M = lut_numCnInCnGroups[0]*Z;
+    bitOffsetInGroup = lut_numCnInCnGroups_BG1_R13[0]*NR_LDPC_ZMAX;
+
+    for (j=0;j<3; j++)
+    {
+      printf("******3 BN (%d): cNProcBuf output at %d\n",j,lut_startAddrCnGroups[0] + j*bitOffsetInGroup);
+
+      memcpy_finder(p_lut_cn2bn+(j*M),lut_cn2bnProcBuf2,
+		    lut2_size,lut_startAddrCnGroups[0] + j*bitOffsetInGroup,M);
+
+    }
+
+    // =====================================================================
+    // CN group with 4 BNs
+
+    p_lut_cn2bn += (M*3); // Number of elements of previous group
+    M = lut_numCnInCnGroups[1]*Z;
+    bitOffsetInGroup = lut_numCnInCnGroups_BG1_R13[1]*NR_LDPC_ZMAX;
+
+    for (j=0; j<4; j++)
+    {
+      printf("******4 BN (%d): cNProcBuf output at %d\n",j,lut_startAddrCnGroups[1] + j*bitOffsetInGroup);
+	memcpy_finder(p_lut_cn2bn+(j*M),lut_cn2bnProcBuf2,lut2_size,lut_startAddrCnGroups[1] + j*bitOffsetInGroup,M);
+    }
+
+    // =====================================================================
+    // CN group with 5 BNs
+
+    p_lut_cn2bn += (M*4); // Number of elements of previous group
+    M = lut_numCnInCnGroups[2]*Z;
+    bitOffsetInGroup = lut_numCnInCnGroups_BG1_R13[2]*NR_LDPC_ZMAX;
+
+    for (j=0; j<5; j++)
+    {
+	printf("******5 BN (%d): cNProcBuf output at %d\n",j,lut_startAddrCnGroups[2] + j*bitOffsetInGroup);
+	memcpy_finder(p_lut_cn2bn+(j*M),lut_cn2bnProcBuf2,lut2_size,lut_startAddrCnGroups[2] + j*bitOffsetInGroup,M);
+    }
+
+    // =====================================================================
+    // CN group with 6 BNs
+
+    p_lut_cn2bn += (M*5); // Number of elements of previous group
+    M = lut_numCnInCnGroups[3]*Z;
+    bitOffsetInGroup = lut_numCnInCnGroups_BG1_R13[3]*NR_LDPC_ZMAX;
+
+    for (j=0; j<6; j++)
+    {
+	printf("******6 BN (%d): cNProcBuf output at %d\n",j,lut_startAddrCnGroups[3] + j*bitOffsetInGroup);
+	memcpy_finder(p_lut_cn2bn+(j*M),lut_cn2bnProcBuf2,lut2_size,lut_startAddrCnGroups[3] + j*bitOffsetInGroup,M);
+    }
+
+    // =====================================================================
+    // CN group with 7 BNs
+
+    p_lut_cn2bn += (M*6); // Number of elements of previous group
+    M = lut_numCnInCnGroups[4]*Z;
+    bitOffsetInGroup = lut_numCnInCnGroups_BG1_R13[4]*NR_LDPC_ZMAX;
+
+    for (j=0; j<7; j++)
+    {
+	printf("******7 BN (%d): cNProcBuf output at %d\n",j,lut_startAddrCnGroups[4] + j*bitOffsetInGroup);
+	memcpy_finder(p_lut_cn2bn+(j*M),lut_cn2bnProcBuf2,lut2_size,lut_startAddrCnGroups[4] + j*bitOffsetInGroup,M);
+    }
+
+    // =====================================================================
+    // CN group with 8 BNs
+
+    p_lut_cn2bn += (M*7); // Number of elements of previous group
+    M = lut_numCnInCnGroups[5]*Z;
+    bitOffsetInGroup = lut_numCnInCnGroups_BG1_R13[5]*NR_LDPC_ZMAX;
+
+    for (j=0; j<8; j++)
+    {
+	printf("******8 BN (%d): cNProcBuf output at %d\n",j,lut_startAddrCnGroups[5] + j*bitOffsetInGroup);
+	memcpy_finder(p_lut_cn2bn+(j*M),lut_cn2bnProcBuf2,lut2_size,lut_startAddrCnGroups[5] + j*bitOffsetInGroup,M);
+    }
+
+    // =====================================================================
+    // CN group with 9 BNs
+
+    p_lut_cn2bn += (M*8); // Number of elements of previous group
+    M = lut_numCnInCnGroups[6]*Z;
+    bitOffsetInGroup = lut_numCnInCnGroups_BG1_R13[6]*NR_LDPC_ZMAX;
+
+    for (j=0; j<9; j++)
+    {
+	printf("******9 BN (%d): cNProcBuf output at %d\n",j,lut_startAddrCnGroups[6] + j*bitOffsetInGroup);
+	memcpy_finder(p_lut_cn2bn+(j*M),lut_cn2bnProcBuf2,lut2_size,lut_startAddrCnGroups[6] + j*bitOffsetInGroup,M);
+    }
+
+    // =====================================================================
+    // CN group with 10 BNs
+
+    p_lut_cn2bn += (M*9); // Number of elements of previous group
+    M = lut_numCnInCnGroups[7]*Z;
+    bitOffsetInGroup = lut_numCnInCnGroups_BG1_R13[7]*NR_LDPC_ZMAX;
+
+    for (j=0; j<10; j++)
+    {
+	printf("******10 BN (%d): cNProcBuf output at %d\n",j,lut_startAddrCnGroups[7] + j*bitOffsetInGroup);
+	memcpy_finder(p_lut_cn2bn+(j*M),lut_cn2bnProcBuf2,lut2_size,lut_startAddrCnGroups[7] + j*bitOffsetInGroup,M);
+    }
+
+    // =====================================================================
+    // CN group with 19 BNs
+
+    p_lut_cn2bn += (M*10); // Number of elements of previous group
+    M = lut_numCnInCnGroups[8]*Z;
+    bitOffsetInGroup = lut_numCnInCnGroups_BG1_R13[8]*NR_LDPC_ZMAX;
+
+    for (j=0; j<19; j++)
+    {
+
+	printf("******19 BN (%d): cNProcBuf output at %d\n",j,lut_startAddrCnGroups[8] + j*bitOffsetInGroup);
+	memcpy_finder(p_lut_cn2bn+(j*M),lut_cn2bnProcBuf2,lut2_size,lut_startAddrCnGroups[8] + j*bitOffsetInGroup,M);
+    }
+
+}
+
+void nrLDPC_prep() {
+  nrLDPC_prep_bn2cnProcBuf(lut_cn2bnProcBuf_BG1_Z320_R13, 
+			   &lut_cn2bnProcBuf2_BG1_Z320_R13, 
+			   &lut_cn2bnProcBuf2_BG1_Z320_R13_size, 
+			   lut_numCnInCnGroups_BG1_R13, 
+			   lut_startAddrCnGroups_BG1,
+			   320);
+  printf("lut_cn2bnProcBuf2_BG1_Z320_R13_size = %d\n",lut_cn2bnProcBuf2_BG1_Z320_R13_size);
+
+ nrLDPC_prep_bn2cnProcBuf(lut_cn2bnProcBuf_BG1_Z352_R13,
+                           &lut_cn2bnProcBuf2_BG1_Z352_R13,
+                           &lut_cn2bnProcBuf2_BG1_Z352_R13_size,
+                           lut_numCnInCnGroups_BG1_R13,
+                           lut_startAddrCnGroups_BG1,
+                           352);
+  printf("lut_cn2bnProcBuf2_BG1_Z352_R13_size = %d\n",lut_cn2bnProcBuf2_BG1_Z352_R13_size);
+
+ nrLDPC_prep_bn2cnProcBuf(lut_cn2bnProcBuf_BG1_Z384_R13,
+                           &lut_cn2bnProcBuf2_BG1_Z384_R13,
+                           &lut_cn2bnProcBuf2_BG1_Z384_R13_size,
+                           lut_numCnInCnGroups_BG1_R13,
+                           lut_startAddrCnGroups_BG1,
+                           384);
+  printf("lut_cn2bnProcBuf2_BG1_Z384_R13_size = %d\n",lut_cn2bnProcBuf2_BG1_Z384_R13_size);
+
+}
 
 static inline uint32_t nrLDPC_decoder_core(int8_t* p_llr, int8_t* p_out, t_nrLDPC_procBuf* p_procBuf, uint32_t numLLR, t_nrLDPC_lut* p_lut, t_nrLDPC_dec_params* p_decParams, t_nrLDPC_time_stats* p_profiler);
 
@@ -152,9 +354,10 @@ static inline uint32_t nrLDPC_decoder_core(int8_t* p_llr, int8_t* p_out, t_nrLDP
 #ifdef NR_LDPC_PROFILER_DETAIL
     start_meas(&p_profiler->cn2bnProcBuf);
 #endif
-    if (BG == 1)
+    if (BG == 1) 
     {
-        nrLDPC_cn2bnProcBuf_BG1(p_lut, p_procBuf, Z);
+      if (p_lut->cn2bnProcBuf2 == NULL) nrLDPC_cn2bnProcBuf_BG1(p_lut, p_procBuf, Z);
+      else                              nrLDPC_cn2bnProcBuf2_BG1(p_lut,p_procBuf, Z);
     }
     else
     {
@@ -202,7 +405,8 @@ static inline uint32_t nrLDPC_decoder_core(int8_t* p_llr, int8_t* p_out, t_nrLDP
 #endif
     if (BG == 1)
     {
-        nrLDPC_bn2cnProcBuf_BG1(p_lut, p_procBuf, Z);
+      if (p_lut->cn2bnProcBuf2 == NULL) nrLDPC_bn2cnProcBuf_BG1(p_lut, p_procBuf, Z);
+      else                              nrLDPC_bn2cnProcBuf2_BG1(p_lut,p_procBuf, Z);
     }
     else
     {
@@ -253,7 +457,8 @@ static inline uint32_t nrLDPC_decoder_core(int8_t* p_llr, int8_t* p_out, t_nrLDP
 #endif
         if (BG == 1)
         {
-            nrLDPC_cn2bnProcBuf_BG1(p_lut, p_procBuf, Z);
+	  if (p_lut->cn2bnProcBuf2 == NULL) nrLDPC_cn2bnProcBuf_BG1(p_lut, p_procBuf, Z);
+	  else                              nrLDPC_cn2bnProcBuf2_BG1(p_lut,p_procBuf, Z);
         }
         else
         {
@@ -298,7 +503,8 @@ static inline uint32_t nrLDPC_decoder_core(int8_t* p_llr, int8_t* p_out, t_nrLDP
 #endif
         if (BG == 1)
         {
-            nrLDPC_bn2cnProcBuf_BG1(p_lut, p_procBuf, Z);
+	    if (p_lut->cn2bnProcBuf2 == NULL) nrLDPC_bn2cnProcBuf_BG1(p_lut, p_procBuf, Z);
+	    else                              nrLDPC_bn2cnProcBuf2_BG1(p_lut,p_procBuf, Z);
         }
         else
         {
@@ -364,7 +570,8 @@ static inline uint32_t nrLDPC_decoder_core(int8_t* p_llr, int8_t* p_out, t_nrLDP
 #endif
         if (BG == 1)
         {
-            nrLDPC_cn2bnProcBuf_BG1(p_lut, p_procBuf, Z);
+	  if (p_lut->cn2bnProcBuf2 == NULL) nrLDPC_cn2bnProcBuf_BG1(p_lut, p_procBuf, Z);
+	  else                              nrLDPC_cn2bnProcBuf2_BG1(p_lut,p_procBuf, Z);
         }
         else
         {
@@ -412,7 +619,8 @@ static inline uint32_t nrLDPC_decoder_core(int8_t* p_llr, int8_t* p_out, t_nrLDP
 #endif
         if (BG == 1)
         {
-            nrLDPC_bn2cnProcBuf_BG1(p_lut, p_procBuf, Z);
+	    if (p_lut->cn2bnProcBuf2 == NULL) nrLDPC_bn2cnProcBuf_BG1(p_lut, p_procBuf, Z);
+	    else                              nrLDPC_bn2cnProcBuf2_BG1(p_lut,p_procBuf, Z);
         }
         else
         {
