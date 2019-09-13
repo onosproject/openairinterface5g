@@ -41,6 +41,10 @@ pipeline {
         gitLabConnection('OAI GitLab')
         ansiColor('xterm')
     }
+    environment {
+        GIT_BRANCH = "${ReplayGitSrcBranch}"
+        GIT_COMMIT = "${ReplayGitSrcCommit}"
+    }
 
     stages {
         stage ("Verify Parameters") {
@@ -84,8 +88,6 @@ pipeline {
                     checkout changelog: false, poll: false, scm: [$class: 'GitSCM', branches: [[name: "${ReplayGitSrcBranch}"]], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'CleanBeforeCheckout']], submoduleCfg: [], userRemoteConfigs: [[url: 'https://gitlab.eurecom.fr/oai/openairinterface5g.git']]]
                     sh "git checkout -f ${ReplayGitSrcCommit}"
                     sh "git log -n1"
-                    env.GIT_BRANCH = ReplayGitSrcBranch
-                    env.GIT_COMMIT = ReplayGitSrcCommit
                 }
             }
             post {
