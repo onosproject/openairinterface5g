@@ -110,6 +110,7 @@ pipeline {
                     if (params.replayGitDoMerge) {
                         sh "./ci-scripts/doGitLabMerge.sh --src-branch ${ReplayGitSrcBranch} --src-commit ${ReplayGitSrcCommit} --target-branch ${ReplayGitTgtBranch} --target-commit latest"
                     }
+                    sh "git status"
                     sh "zip -r -qq localZip.zip ."
                     if (doFlexranCtrlTest) {
                         sh "mkdir flexran"
@@ -212,6 +213,89 @@ pipeline {
                     steps {
                         timeout (time: 20, unit: 'MINUTES') {
                            sh "./ci-scripts/oai-ci-vm-tool wait --workspace $WORKSPACE --variant phy-sim --job-name ${JOB_NAME} --build-id ${BUILD_ID} --keep-vm-alive"
+                        }
+                    }
+                }
+            }
+        }
+        stage ("Variant Tests") {
+            parallel {
+                stage ("VM-based tests") {
+                    stages {
+                        stage ("Test physical simulators") {
+                            when {
+                                expression {ReplayPhySimTests}
+                            }
+                            steps {
+                                script {
+                                    timeout (time: 20, unit: 'MINUTES') {
+                                        try {
+                                            gitlabCommitStatus(name: "Test phy-sim") {
+                                                sh "./ci-scripts/oai-ci-vm-tool test --workspace $WORKSPACE --variant phy-sim --job-name ${JOB_NAME} --build-id ${BUILD_ID}"
+                                            }
+                                        } catch (Exception e) {
+                                          currentBuild.result = 'FAILURE'
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        stage ("Build Flexran Controller") {
+                            when {
+                                expression {doFlexranCtrlTest && ReplayBasicSimTests}
+                            }
+                            steps {
+                                script {
+                                    timeout (time: 20, unit: 'MINUTES') {
+                                        try {
+                                            sh "./ci-scripts/oai-ci-vm-tool build --workspace $WORKSPACE --variant flexran-rtc --job-name ${JOB_NAME} --build-id ${BUILD_ID} --keep-vm-alive"
+                                        } catch (Exception e) {
+                                          currentBuild.result = 'FAILURE'
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        stage ("Test basic simulator") {
+                            when {
+                                expression {ReplayBasicSimTests}
+                            }
+                            steps {
+                                script {
+                                    timeout (time: 30, unit: 'MINUTES') {
+                                        try {
+                                            gitlabCommitStatus(name: "Test basic-sim") {
+                                                sh "./ci-scripts/oai-ci-vm-tool test --workspace $WORKSPACE --variant basic-sim --job-name ${JOB_NAME} --build-id ${BUILD_ID}"
+                                            }
+                                        } catch (Exception e) {
+                                          currentBuild.result = 'FAILURE'
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        stage ("Test L2 simulator") {
+                            when {
+                                expression {ReplayL2nFAPISimTests}
+                            }
+                            steps {
+                                script {
+                                    timeout (time: 30, unit: 'MINUTES') {
+                                        try {
+                                            gitlabCommitStatus(name: "Test L2-sim") {
+                                                sh "./ci-scripts/oai-ci-vm-tool test --workspace $WORKSPACE --variant l2-sim --job-name ${JOB_NAME} --build-id ${BUILD_ID}"
+                                            }
+                                        } catch (Exception e) {
+                                            currentBuild.result = 'FAILURE'
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        stage ("Destroy all Virtual Machines") {
+                            steps {
+                                sh "./ci-scripts/oai-ci-vm-tool destroy --job-name ${JOB_NAME} --build-id ${BUILD_ID}"
+                            }
                         }
                     }
                 }
