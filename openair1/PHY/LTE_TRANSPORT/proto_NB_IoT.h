@@ -125,7 +125,7 @@ int generate_NDLSCH_NB_IoT(PHY_VARS_eNB               *eNB,
                            int                        RB_IoT_ID,
                            uint8_t                    release_v13_5_0);
 
-int generate_NPDCCH_NB_IoT(NB_IoT_eNB_NPDCCH_t    *DCI,
+int generate_NPDCCH_NB_IoT(NB_IoT_eNB_NPDCCH_t    *DCI_pdu,
                            int32_t                **txdataF,
                            int16_t                amp,
                            LTE_DL_FRAME_PARMS     *frame_parms,

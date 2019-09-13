@@ -371,35 +371,6 @@ typedef struct{
 
 }scheduling_flag_t;
 
-typedef struct available_resource_UL_s{
-
-    ///Resource start subframe
-    uint32_t start_subframe;
-    ///Resource end subframe
-    uint32_t end_subframe;
-    // pointer to next node
-    struct available_resource_UL_s *next, *prev;
-
-}available_resource_UL_t;
-
-typedef struct available_resource_DL_s{
-  uint32_t start_subframe;
-  uint32_t end_subframe;
-
-  struct available_resource_DL_s *next, *prev;
-}available_resource_DL_t;
-
-/*Structure used for scheduling*/
-typedef struct{
-  //resource position info.
-  uint32_t sf_end,sf_start;
-  //resource position info. separate by HyperSF, Frame, Subframe
-  uint32_t start_h, end_h;
-  uint32_t start_f, end_f;
-  uint32_t start_sf, end_sf;
-  //whcih available resource node is used
-  available_resource_DL_t *node;
-}sched_temp_DL_NB_IoT_t;
 
 /*!\brief  MAC subheader short with 7bit Length field */
 typedef struct {
@@ -453,21 +424,6 @@ typedef struct {
   uint8_t E:1;
 } __attribute__((__packed__))RA_HEADER_RAPID_NB_IoT;
 
-/*Structure used for UL scheduling*/
-typedef struct{
-  //resource position info.
-  uint32_t sf_end, sf_start;
-  //resource position info. separate by HyperSF, Frame, Subframe
-  //uint32_t start_h, end_h;
-  //uint32_t start_f, end_f;
-  //uint32_t start_sf, end_sf;
-  // information for allocating the resource
-  int tone;
-  int scheduling_delay;
-  int subcarrier_indication;
-  int ACK_NACK_resource_field;
-  available_resource_UL_t *node;
-}sched_temp_UL_NB_IoT_t;
 
 typedef struct Available_available_resource_DL{
 
