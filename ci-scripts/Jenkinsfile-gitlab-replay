@@ -31,6 +31,12 @@ def ReplayGitSrcCommit = params.replayGitSrcCommit
 def ReplayGitTgtBranch = params.replayGitTgtBranch
 def ReplayGitDoMerge   = params.replayGitDoMerge
 
+
+// Tests that can be replayed
+def ReplayPhySimTests     = params.replayPhySimTests
+def ReplayBasicSimTests   = params.replayBasicSimTests
+def ReplayL2nFAPISimTests = params.replayL2nFAPISimTests
+
 pipeline {
     agent {
         label nodeExecutor
@@ -68,6 +74,15 @@ pipeline {
                     if (params.replayGitDoMerge == null) {
                         allParametersPresent = false
                     }
+                    if (params.replayPhySimTests == null) {
+                        allParametersPresent = false
+                    }
+                    if (params.replayBasicSimTests == null) {
+                        allParametersPresent = false
+                    }
+                    if (params.replayL2nFAPISimTests == null) {
+                        allParametersPresent = false
+                    }
                     if (!allParametersPresent) {
                         currentBuild.result = 'ABORTED'
                         error('Stopping early because not enough ReplayGit parameters')
@@ -87,7 +102,27 @@ pipeline {
                 script {
                     checkout changelog: false, poll: false, scm: [$class: 'GitSCM', branches: [[name: "${ReplayGitSrcBranch}"]], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'CleanBeforeCheckout']], submoduleCfg: [], userRemoteConfigs: [[url: 'https://gitlab.eurecom.fr/oai/openairinterface5g.git']]]
                     sh "git checkout -f ${ReplayGitSrcCommit}"
-                    sh "git log -n1"
+        	        echo "  Branch -- ${GIT_BRANCH}"
+        	        echo "  Commit -- ${GIT_COMMIT}"
+                    gitCommitAuthorEmailAddr = sh returnStdout: true, script: 'git log -n1 --pretty=format:%ae ${GIT_COMMIT}'
+                    gitCommitAuthorEmailAddr = gitCommitAuthorEmailAddr.trim()
+                    echo "GitLab Usermail is ${gitCommitAuthorEmailAddr}"
+                    if (params.replayGitDoMerge) {
+                        sh "./ci-scripts/doGitLabMerge.sh --src-branch ${ReplayGitSrcBranch} --src-commit ${ReplayGitSrcCommit} --target-branch ${ReplayGitTgtBranch} --target-commit latest"
+                    }
+                    sh "zip -r -qq localZip.zip ."
+                    if (doFlexranCtrlTest) {
+                        sh "mkdir flexran"
+                        dir ('flexran') {
+                            withCredentials([
+                                [$class: 'UsernamePasswordMultiBinding', credentialsId: "${params.FlexRanRtcGitLabRepository_Credentials}", usernameVariable: 'git_username', passwordVariable: 'git_password']
+                                ]) {
+                                sh "git clone https://${git_username}:${git_password}@gitlab.eurecom.fr/flexran/flexran-rtc.git . > ../git_clone.log 2>&1"
+                            }
+                            sh "sed -i -e 's#add-apt-repository.*cleishm.*neo4j#add-apt-repository ppa:cleishm/neo4j -y#' -e 's#libneo4j-client-dev#libneo4j-client-dev -y#' tools/install_dependencies"
+                            sh "zip -r -qq flexran.zip ."
+                        }
+                    }
                 }
             }
             post {
@@ -98,14 +133,88 @@ pipeline {
                 }
             }
         }
-        stage ("print latest commit info") {
+        stage ("Start VM -- basic-sim") {
+            when {
+                expression {ReplayBasicSimTests}
+            }
             steps {
-        	    script {
-        	        echo "Building on: "
-        	        echo "  Repository -- ${GIT_URL}"
-        	        echo "  Branch -- ${GIT_BRANCH}"
-        	        echo "  Commit -- ${GIT_COMMIT}"
-        	    }
+                timeout (time: 5, unit: 'MINUTES') {
+                    sh "./ci-scripts/oai-ci-vm-tool build --workspace $WORKSPACE --variant basic-sim --job-name ${JOB_NAME} --build-id ${BUILD_ID} --daemon"
+                }
+            }
+        }
+        stage ("Start VM -- enb-ethernet") {
+            when {
+                expression {ReplayL2nFAPISimTests}
+            }
+            steps {
+                timeout (time: 5, unit: 'MINUTES') {
+                    sh "./ci-scripts/oai-ci-vm-tool build --workspace $WORKSPACE --variant enb-ethernet --job-name ${JOB_NAME} --build-id ${BUILD_ID} --daemon"
+                }
+            }
+        }
+        stage ("Start VM -- ue-ethernet") {
+            when {
+                expression {ReplayL2nFAPISimTests}
+            }
+            steps {
+                timeout (time: 5, unit: 'MINUTES') {
+                    sh "./ci-scripts/oai-ci-vm-tool build --workspace $WORKSPACE --variant ue-ethernet --job-name ${JOB_NAME} --build-id ${BUILD_ID} --daemon"
+                }
+            }
+        }
+        stage ("Start VM -- phy-sim") {
+            when {
+                expression {ReplayPhySimTests}
+            }
+            steps {
+                timeout (time: 5, unit: 'MINUTES') {
+                    sh "./ci-scripts/oai-ci-vm-tool build --workspace $WORKSPACE --variant phy-sim --job-name ${JOB_NAME} --build-id ${BUILD_ID} --daemon"
+                }
+            }
+        }
+        stage ("Variant Builds") {
+            parallel {
+                stage ("Build basic simulator") {
+                    when {
+                        expression {ReplayBasicSimTests}
+                    }
+                    steps {
+                        timeout (time: 20, unit: 'MINUTES') {
+                            sh "./ci-scripts/oai-ci-vm-tool wait --workspace $WORKSPACE --variant basic-sim --job-name ${JOB_NAME} --build-id ${BUILD_ID} --keep-vm-alive"
+                        }
+                    }
+                }
+                stage ("Build eNb-ethernet") {
+                    when {
+                        expression {ReplayL2nFAPISimTests}
+                    }
+                    steps {
+                        timeout (time: 20, unit: 'MINUTES') {
+                            sh "./ci-scripts/oai-ci-vm-tool wait --workspace $WORKSPACE --variant enb-ethernet --job-name ${JOB_NAME} --build-id ${BUILD_ID} --keep-vm-alive"
+                        }
+                    }
+                }
+                stage ("Build UE-ethernet") {
+                    when {
+                        expression {ReplayL2nFAPISimTests}
+                    }
+                    steps {
+                        timeout (time: 20, unit: 'MINUTES') {
+                            sh "./ci-scripts/oai-ci-vm-tool wait --workspace $WORKSPACE --variant ue-ethernet --job-name ${JOB_NAME} --build-id ${BUILD_ID} --keep-vm-alive"
+                        }
+                    }
+                }
+                stage ("Build physical simulators") {
+                    when {
+                        expression {ReplayPhySimTests}
+                    }
+                    steps {
+                        timeout (time: 20, unit: 'MINUTES') {
+                           sh "./ci-scripts/oai-ci-vm-tool wait --workspace $WORKSPACE --variant phy-sim --job-name ${JOB_NAME} --build-id ${BUILD_ID} --keep-vm-alive"
+                        }
+                    }
+                }
             }
         }
     }
