@@ -1,4 +1,4 @@
-int32_t *lut_cn2bnProcBuf2_BG1_Z112_R13=NULL;
+uint32_t *lut_cn2bnProcBuf2_BG1_Z112_R13=NULL;
 uint32_t lut_cn2bnProcBuf2_BG1_Z112_R13_size=0;
 
 

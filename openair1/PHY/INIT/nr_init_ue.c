@@ -1014,6 +1014,7 @@ void phy_init_nr_top(PHY_VARS_NR_UE *ue)
   crcTableInit();
 
   init_dfts();
+  nrLDPC_prep();
 
   init_context_synchro_nr(frame_parms);
 

@@ -78,17 +78,16 @@ void memcpy_finder(uint32_t* p_lut_cn2bn,uint32_t **p_lut2,uint32_t *size_lut2,i
   }
 }
 
-void nrLDPC_prep_bn2cnProcBuf(uint32_t* lut_cn2bnProcBuf, 
+void nrLDPC_prep_bn2cnProcBuf(const uint32_t* lut_cn2bnProcBuf, 
 			      uint32_t** lut_cn2bnProcBuf2, 
 			      uint32_t *lut2_size, 
-			      uint8_t*  lut_numCnInCnGroups, 
-			      uint32_t* lut_startAddrCnGroups,
+			      const uint8_t*  lut_numCnInCnGroups, 
+			      const uint32_t* lut_startAddrCnGroups,
 			      uint16_t Z)
 {
 
-    uint32_t* p_lut_cn2bn,*p_lut2;
+    uint32_t* p_lut_cn2bn;
     uint32_t bitOffsetInGroup;
-    uint32_t i;
     uint32_t j;
     uint32_t M;
 
@@ -100,7 +99,7 @@ void nrLDPC_prep_bn2cnProcBuf(uint32_t* lut_cn2bnProcBuf,
     // =====================================================================
     // CN group with 3 BNs
 
-    p_lut_cn2bn = &lut_cn2bnProcBuf[0];
+    p_lut_cn2bn = (uint32_t*)&lut_cn2bnProcBuf[0];
     M = lut_numCnInCnGroups[0]*Z;
     bitOffsetInGroup = lut_numCnInCnGroups_BG1_R13[0]*NR_LDPC_ZMAX;
 
@@ -220,7 +219,7 @@ void nrLDPC_prep_bn2cnProcBuf(uint32_t* lut_cn2bnProcBuf,
 
 }
 
-void nrLDPC_prep() {
+void nrLDPC_prep(void) {
   nrLDPC_prep_bn2cnProcBuf(lut_cn2bnProcBuf_BG1_Z320_R13, 
 			   &lut_cn2bnProcBuf2_BG1_Z320_R13, 
 			   &lut_cn2bnProcBuf2_BG1_Z320_R13_size, 

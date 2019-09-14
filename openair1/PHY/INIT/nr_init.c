@@ -97,6 +97,7 @@ int phy_init_nr_gNB(PHY_VARS_gNB *gNB,
   while(gNB->configured == 0) usleep(10000);
 
   init_dfts();
+  nrLDPC_prep();
   /*
     LOG_I(PHY,"[gNB %"PRIu8"] Initializing DL_FRAME_PARMS : N_RB_DL %"PRIu8", PHICH Resource %d, PHICH Duration %d nb_antennas_tx:%u nb_antennas_rx:%u PRACH[rootSequenceIndex:%u prach_Config_enabled:%u configIndex:%u highSpeed:%u zeroCorrelationZoneConfig:%u freqOffset:%u]\n",
           gNB->Mod_id,
