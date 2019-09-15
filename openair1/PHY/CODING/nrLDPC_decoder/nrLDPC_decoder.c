@@ -51,9 +51,7 @@ void memcpy_finder(uint32_t* p_lut_cn2bn,uint32_t **p_lut2,uint32_t *size_lut2,i
   int size32;
   for (int i=1;i<M;i++) {
     if (p_lut_cn2bn[i]!= (1+p_lut_cn2bn[i-1])) {
-      printf("memcpy(%d,%d,%d)\n",dest0+dest,src,len);
       *size_lut2=*size_lut2+(3*sizeof(uint32_t));
-      printf("new_size %d\n",*size_lut2);
       *p_lut2=realloc((void*)*p_lut2,*size_lut2);
       size32=*size_lut2/4;
       (*p_lut2)[size32-3] = dest0+dest;
@@ -65,16 +63,13 @@ void memcpy_finder(uint32_t* p_lut_cn2bn,uint32_t **p_lut2,uint32_t *size_lut2,i
     }
     else len++;
     if (i==(M-1)) { 
-      printf("memcpy(%d,%d,%d)\n",dest0+dest,src,len);
       *size_lut2=*size_lut2+(3*sizeof(uint32_t));
-      printf("*new_size %d\n",*size_lut2);
       *p_lut2=realloc((void*)*p_lut2,*size_lut2);
       size32=*size_lut2/4;
       (*p_lut2)[size32-3] = dest0+dest;
       (*p_lut2)[size32-2] = src;
       (*p_lut2)[size32-1] = len;
     }
-    //    printf("p_lut_cn2bn[%d] : %d\n",i,p_lut_cn2bn[i]);
   }
 }
 
@@ -105,7 +100,6 @@ void nrLDPC_prep_bn2cnProcBuf(const uint32_t* lut_cn2bnProcBuf,
 
     for (j=0;j<3; j++)
     {
-      printf("******3 BN (%d): cNProcBuf output at %d\n",j,lut_startAddrCnGroups[0] + j*bitOffsetInGroup);
 
       memcpy_finder(p_lut_cn2bn+(j*M),lut_cn2bnProcBuf2,
 		    lut2_size,lut_startAddrCnGroups[0] + j*bitOffsetInGroup,M);
@@ -121,7 +115,6 @@ void nrLDPC_prep_bn2cnProcBuf(const uint32_t* lut_cn2bnProcBuf,
 
     for (j=0; j<4; j++)
     {
-      printf("******4 BN (%d): cNProcBuf output at %d\n",j,lut_startAddrCnGroups[1] + j*bitOffsetInGroup);
 	memcpy_finder(p_lut_cn2bn+(j*M),lut_cn2bnProcBuf2,lut2_size,lut_startAddrCnGroups[1] + j*bitOffsetInGroup,M);
     }
 
@@ -134,7 +127,6 @@ void nrLDPC_prep_bn2cnProcBuf(const uint32_t* lut_cn2bnProcBuf,
 
     for (j=0; j<5; j++)
     {
-	printf("******5 BN (%d): cNProcBuf output at %d\n",j,lut_startAddrCnGroups[2] + j*bitOffsetInGroup);
 	memcpy_finder(p_lut_cn2bn+(j*M),lut_cn2bnProcBuf2,lut2_size,lut_startAddrCnGroups[2] + j*bitOffsetInGroup,M);
     }
 
@@ -147,7 +139,6 @@ void nrLDPC_prep_bn2cnProcBuf(const uint32_t* lut_cn2bnProcBuf,
 
     for (j=0; j<6; j++)
     {
-	printf("******6 BN (%d): cNProcBuf output at %d\n",j,lut_startAddrCnGroups[3] + j*bitOffsetInGroup);
 	memcpy_finder(p_lut_cn2bn+(j*M),lut_cn2bnProcBuf2,lut2_size,lut_startAddrCnGroups[3] + j*bitOffsetInGroup,M);
     }
 
@@ -160,7 +151,6 @@ void nrLDPC_prep_bn2cnProcBuf(const uint32_t* lut_cn2bnProcBuf,
 
     for (j=0; j<7; j++)
     {
-	printf("******7 BN (%d): cNProcBuf output at %d\n",j,lut_startAddrCnGroups[4] + j*bitOffsetInGroup);
 	memcpy_finder(p_lut_cn2bn+(j*M),lut_cn2bnProcBuf2,lut2_size,lut_startAddrCnGroups[4] + j*bitOffsetInGroup,M);
     }
 
@@ -173,7 +163,6 @@ void nrLDPC_prep_bn2cnProcBuf(const uint32_t* lut_cn2bnProcBuf,
 
     for (j=0; j<8; j++)
     {
-	printf("******8 BN (%d): cNProcBuf output at %d\n",j,lut_startAddrCnGroups[5] + j*bitOffsetInGroup);
 	memcpy_finder(p_lut_cn2bn+(j*M),lut_cn2bnProcBuf2,lut2_size,lut_startAddrCnGroups[5] + j*bitOffsetInGroup,M);
     }
 
@@ -186,7 +175,6 @@ void nrLDPC_prep_bn2cnProcBuf(const uint32_t* lut_cn2bnProcBuf,
 
     for (j=0; j<9; j++)
     {
-	printf("******9 BN (%d): cNProcBuf output at %d\n",j,lut_startAddrCnGroups[6] + j*bitOffsetInGroup);
 	memcpy_finder(p_lut_cn2bn+(j*M),lut_cn2bnProcBuf2,lut2_size,lut_startAddrCnGroups[6] + j*bitOffsetInGroup,M);
     }
 
@@ -199,7 +187,6 @@ void nrLDPC_prep_bn2cnProcBuf(const uint32_t* lut_cn2bnProcBuf,
 
     for (j=0; j<10; j++)
     {
-	printf("******10 BN (%d): cNProcBuf output at %d\n",j,lut_startAddrCnGroups[7] + j*bitOffsetInGroup);
 	memcpy_finder(p_lut_cn2bn+(j*M),lut_cn2bnProcBuf2,lut2_size,lut_startAddrCnGroups[7] + j*bitOffsetInGroup,M);
     }
 
@@ -213,7 +200,6 @@ void nrLDPC_prep_bn2cnProcBuf(const uint32_t* lut_cn2bnProcBuf,
     for (j=0; j<19; j++)
     {
 
-	printf("******19 BN (%d): cNProcBuf output at %d\n",j,lut_startAddrCnGroups[8] + j*bitOffsetInGroup);
 	memcpy_finder(p_lut_cn2bn+(j*M),lut_cn2bnProcBuf2,lut2_size,lut_startAddrCnGroups[8] + j*bitOffsetInGroup,M);
     }
 
@@ -226,7 +212,6 @@ void nrLDPC_prep(void) {
 			   lut_numCnInCnGroups_BG1_R13, 
 			   lut_startAddrCnGroups_BG1,
 			   320);
-  printf("lut_cn2bnProcBuf2_BG1_Z320_R13_size = %d\n",lut_cn2bnProcBuf2_BG1_Z320_R13_size);
 
  nrLDPC_prep_bn2cnProcBuf(lut_cn2bnProcBuf_BG1_Z352_R13,
                            &lut_cn2bnProcBuf2_BG1_Z352_R13,
@@ -234,7 +219,6 @@ void nrLDPC_prep(void) {
                            lut_numCnInCnGroups_BG1_R13,
                            lut_startAddrCnGroups_BG1,
                            352);
-  printf("lut_cn2bnProcBuf2_BG1_Z352_R13_size = %d\n",lut_cn2bnProcBuf2_BG1_Z352_R13_size);
 
  nrLDPC_prep_bn2cnProcBuf(lut_cn2bnProcBuf_BG1_Z384_R13,
                            &lut_cn2bnProcBuf2_BG1_Z384_R13,
@@ -242,7 +226,6 @@ void nrLDPC_prep(void) {
                            lut_numCnInCnGroups_BG1_R13,
                            lut_startAddrCnGroups_BG1,
                            384);
-  printf("lut_cn2bnProcBuf2_BG1_Z384_R13_size = %d\n",lut_cn2bnProcBuf2_BG1_Z384_R13_size);
 
 }
 
@@ -255,7 +238,6 @@ int32_t nrLDPC_decoder(t_nrLDPC_dec_params* p_decParams, int8_t* p_llr, int8_t* 
     t_nrLDPC_lut lut;
     t_nrLDPC_lut* p_lut = &lut;
 
-    //printf("p_procBuf->cnProcBuf = %p\n", p_procBuf->cnProcBuf);
 
     // Initialize decoder core(s) with correct LUTs
     numLLR = nrLDPC_init(p_decParams, p_lut);
