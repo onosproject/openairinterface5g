@@ -47,7 +47,10 @@ void x2ap_check_timers(instance_t instance)
   int                          x2_ongoing;
 
   instance_p = x2ap_eNB_get_instance(instance);
-  DevAssert(instance_p != NULL);
+  if (instance_p == NULL) {
+	  X2AP_ERROR("%s %d: instance_p is a NULL pointer \n",__FILE__,__LINE__);
+	  return ;
+  }
 
   t = &instance_p->timers;
   m = &instance_p->id_manager;

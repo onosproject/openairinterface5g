@@ -35,7 +35,10 @@
 
 static int x2ap_eNB_decode_initiating_message(X2AP_X2AP_PDU_t *pdu)
 {
-  DevAssert(pdu != NULL);
+  if(pdu == NULL) {
+    X2AP_ERROR("%s %d: pdu is a NULL pointer \n",__FILE__,__LINE__);
+    return -1;
+  }
 
   switch(pdu->choice.initiatingMessage.procedureCode) {
 
@@ -62,8 +65,6 @@ static int x2ap_eNB_decode_initiating_message(X2AP_X2AP_PDU_t *pdu)
     default:
       X2AP_ERROR("Unknown procedure ID (%d) for initiating message\n",
                   (int)pdu->choice.initiatingMessage.procedureCode);
-      AssertFatal( 0, "Unknown procedure ID (%d) for initiating message\n",
-                   (int)pdu->choice.initiatingMessage.procedureCode);
       return -1;
   }
 
@@ -72,7 +73,10 @@ static int x2ap_eNB_decode_initiating_message(X2AP_X2AP_PDU_t *pdu)
 
 static int x2ap_eNB_decode_successful_outcome(X2AP_X2AP_PDU_t *pdu)
 {
-  DevAssert(pdu != NULL);
+  if(pdu == NULL) {
+    X2AP_ERROR("%s %d: pdu is a NULL pointer \n",__FILE__,__LINE__);
+    return -1;
+  }
 
   switch(pdu->choice.successfulOutcome.procedureCode) {
     case X2AP_ProcedureCode_id_x2Setup:
@@ -96,7 +100,10 @@ static int x2ap_eNB_decode_successful_outcome(X2AP_X2AP_PDU_t *pdu)
 
 static int x2ap_eNB_decode_unsuccessful_outcome(X2AP_X2AP_PDU_t *pdu)
 {
-  DevAssert(pdu != NULL);
+  if(pdu == NULL) {
+    X2AP_ERROR("%s %d: pdu is a NULL pointer \n",__FILE__,__LINE__);
+    return -1;
+  }
 
   switch(pdu->choice.unsuccessfulOutcome.procedureCode) {
     case X2AP_ProcedureCode_id_x2Setup:
@@ -117,7 +124,10 @@ int x2ap_eNB_decode_pdu(X2AP_X2AP_PDU_t *pdu, const uint8_t *const buffer, uint3
 {
   asn_dec_rval_t dec_ret;
 
-  DevAssert(buffer != NULL);
+  if(buffer == NULL) {
+    X2AP_ERROR("%s %d: buffer is a NULL pointer \n",__FILE__,__LINE__);
+    return -1;
+  }
 
   dec_ret = aper_decode(NULL,
                         &asn_DEF_X2AP_X2AP_PDU,

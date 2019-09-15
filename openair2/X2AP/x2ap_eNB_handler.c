@@ -177,7 +177,10 @@ int x2ap_eNB_handle_message(instance_t instance, uint32_t assoc_id, int32_t stre
   X2AP_X2AP_PDU_t pdu;
   int ret = 0;
 
-  DevAssert(data != NULL);
+  if(data == NULL) {
+    X2AP_ERROR("%s %d: data is a NULL pointer \n",__FILE__,__LINE__);
+    return -1;
+  }
 
   memset(&pdu, 0, sizeof(pdu));
 
@@ -294,7 +297,11 @@ x2ap_eNB_handle_x2_setup_request(instance_t instance,
   MessageDef                         *msg;
   uint32_t                           eNB_id = 0;
 
-  DevAssert (pdu != NULL);
+  if(pdu == NULL) {
+    X2AP_ERROR("%s %d: pdu is a NULL pointer \n",__FILE__,__LINE__);
+    return -1;
+  }
+
   x2SetupRequest = &pdu->choice.initiatingMessage.value.choice.X2SetupRequest;
 
   /*
@@ -407,7 +414,10 @@ x2ap_eNB_handle_x2_setup_request(instance_t instance,
   }
 
   instance_p = x2ap_eNB_get_instance(instance);
-  DevAssert(instance_p != NULL);
+  if(instance_p == NULL) {
+    X2AP_ERROR("%s %d: instance_p is a NULL pointer \n",__FILE__,__LINE__);
+    return -1;
+  }
 
   itti_send_msg_to_task(TASK_RRC_ENB, instance_p->instance, msg);
 
@@ -430,7 +440,11 @@ int x2ap_eNB_handle_x2_setup_response(instance_t instance,
   MessageDef                          *msg;
   uint32_t                            eNB_id = 0;
 
-  DevAssert (pdu != NULL);
+  if(pdu == NULL) {
+    X2AP_ERROR("%s %d: pdu is a NULL pointer \n",__FILE__,__LINE__);
+    return -1;
+  }
+
   x2SetupResponse = &pdu->choice.successfulOutcome.value.choice.X2SetupResponse;
 
   /*
@@ -531,7 +545,10 @@ int x2ap_eNB_handle_x2_setup_response(instance_t instance,
   x2ap_eNB_data->state = X2AP_ENB_STATE_READY;
 
   instance_p = x2ap_eNB_get_instance(instance);
-  DevAssert(instance_p != NULL);
+  if(instance_p == NULL) {
+    X2AP_ERROR("%s %d: instance_p is a NULL pointer \n",__FILE__,__LINE__);
+    return -1;
+  }
 
   instance_p->x2_target_enb_associated_nb ++;
   x2ap_handle_x2_setup_message(instance_p, x2ap_eNB_data, 0);
@@ -554,7 +571,10 @@ int x2ap_eNB_handle_x2_setup_failure(instance_t instance,
   x2ap_eNB_instance_t                *instance_p;
   x2ap_eNB_data_t                    *x2ap_eNB_data;
 
-  DevAssert(pdu != NULL);
+  if(pdu == NULL) {
+    X2AP_ERROR("%s %d: pdu is a NULL pointer \n",__FILE__,__LINE__);
+    return -1;
+  }
 
   x2SetupFailure = &pdu->choice.unsuccessfulOutcome.value.choice.X2SetupFailure;
 
@@ -594,7 +614,10 @@ int x2ap_eNB_handle_x2_setup_failure(instance_t instance,
   x2ap_eNB_data->state = X2AP_ENB_STATE_WAITING;
 
   instance_p = x2ap_eNB_get_instance(instance);
-  DevAssert(instance_p != NULL);
+  if(instance_p == NULL) {
+    X2AP_ERROR("%s %d: instance_p is a NULL pointer \n",__FILE__,__LINE__);
+    return -1;
+  }
 
   x2ap_handle_x2_setup_message(instance_p, x2ap_eNB_data, 0);
 
@@ -619,7 +642,11 @@ int x2ap_eNB_handle_handover_preparation (instance_t instance,
   MessageDef                         *msg;
   int                                ue_id;
 
-  DevAssert (pdu != NULL);
+  if(pdu == NULL) {
+    X2AP_ERROR("%s %d: pdu is a NULL pointer \n",__FILE__,__LINE__);
+    return -1;
+  }
+
   x2HandoverRequest = &pdu->choice.initiatingMessage.value.choice.HandoverRequest;
 
   if (stream == 0) {
@@ -631,10 +658,16 @@ int x2ap_eNB_handle_handover_preparation (instance_t instance,
   X2AP_DEBUG ("Received a new X2 handover request\n");
 
   x2ap_eNB_data = x2ap_get_eNB(NULL, assoc_id, 0);
-  DevAssert(x2ap_eNB_data != NULL);
+  if(x2ap_eNB_data == NULL) {
+    X2AP_ERROR("%s %d: x2ap_eNB_data is a NULL pointer \n",__FILE__,__LINE__);
+    return -1;
+  }
 
   instance_p = x2ap_eNB_get_instance(instance);
-  DevAssert(instance_p != NULL);
+  if(instance_p == NULL) {
+    X2AP_ERROR("%s %d: instance_p is a NULL pointer \n",__FILE__,__LINE__);
+    return -1;
+  }
 
   msg = itti_alloc_new_message(TASK_X2AP, X2AP_HANDOVER_REQ);
 
@@ -650,7 +683,8 @@ int x2ap_eNB_handle_handover_preparation (instance_t instance,
   if (ue_id == -1) {
     X2AP_ERROR("could not allocate a new X2AP UE ID\n");
     /* TODO: cancel handover: send HO preparation failure to source eNB */
-    exit(1);
+    //exit(1);
+    return -1;
   }
   /* rnti is unknown yet, must not be set to -1, 0 is fine */
   x2ap_set_ids(&instance_p->id_manager, ue_id, 0, ie->value.choice.UE_X2AP_ID, ue_id);
@@ -730,10 +764,6 @@ int x2ap_eNB_handle_handover_preparation (instance_t instance,
 
   X2AP_RRC_Context_t *c = &ie->value.choice.UE_ContextInformation.rRC_Context;
 
-  if (c->size > 8192 /* TODO: this is the size of rrc_buffer in struct x2ap_handover_req_s */)
-    { printf("%s:%d: fatal: buffer too big\n", __FILE__, __LINE__); abort(); }
-
-  memcpy(X2AP_HANDOVER_REQ(msg).rrc_buffer, c->buf, c->size);
   X2AP_HANDOVER_REQ(msg).rrc_buffer_size = c->size;
 
   itti_send_msg_to_task(TASK_RRC_ENB, instance_p->instance, msg);
@@ -760,7 +790,10 @@ int x2ap_eNB_handle_handover_response (instance_t instance,
   int                                           id_target;
   int                                           rnti;
 
-  DevAssert (pdu != NULL);
+  if(pdu == NULL) {
+    X2AP_ERROR("%s %d: pdu is a NULL pointer \n",__FILE__,__LINE__);
+    return -1;
+  }
   x2HandoverRequestAck = &pdu->choice.successfulOutcome.value.choice.HandoverRequestAcknowledge;
 
   if (stream == 0) {
@@ -772,10 +805,16 @@ int x2ap_eNB_handle_handover_response (instance_t instance,
   X2AP_DEBUG ("Received a new X2 handover response\n");
 
   x2ap_eNB_data = x2ap_get_eNB(NULL, assoc_id, 0);
-  DevAssert(x2ap_eNB_data != NULL);
+  if(x2ap_eNB_data == NULL) {
+    X2AP_ERROR("%s %d: x2ap_eNB_data is a NULL pointer \n",__FILE__,__LINE__);
+    return -1;
+  }
 
   instance_p = x2ap_eNB_get_instance(instance);
-  DevAssert(instance_p != NULL);
+  if(instance_p == NULL) {
+    X2AP_ERROR("%s %d: instance_p is a NULL pointer \n",__FILE__,__LINE__);
+    return -1;
+  }
 
   msg = itti_alloc_new_message(TASK_X2AP, X2AP_HANDOVER_REQ_ACK);
 
@@ -873,9 +912,6 @@ int x2ap_eNB_handle_handover_response (instance_t instance,
 
   X2AP_TargeteNBtoSource_eNBTransparentContainer_t *c = &ie->value.choice.TargeteNBtoSource_eNBTransparentContainer;
 
-  if (c->size > 1024 /* TODO: this is the size of rrc_buffer in struct x2ap_handover_req_ack_s */)
-    { printf("%s:%d: fatal: buffer too big\n", __FILE__, __LINE__); abort(); }
-
   memcpy(X2AP_HANDOVER_REQ_ACK(msg).rrc_buffer, c->buf, c->size);
   X2AP_HANDOVER_REQ_ACK(msg).rrc_buffer_size = c->size;
 
@@ -900,7 +936,10 @@ int x2ap_eNB_handle_ue_context_release (instance_t instance,
   int                                 id_source;
   int                                 id_target;
 
-  DevAssert (pdu != NULL);
+  if(pdu == NULL) {
+    X2AP_ERROR("%s %d: pdu is a NULL pointer \n",__FILE__,__LINE__);
+    return -1;
+  }
   x2UEContextRelease = &pdu->choice.initiatingMessage.value.choice.UEContextRelease;
 
   if (stream == 0) {
@@ -912,10 +951,16 @@ int x2ap_eNB_handle_ue_context_release (instance_t instance,
   X2AP_DEBUG ("Received a new X2 ue context release\n");
 
   x2ap_eNB_data = x2ap_get_eNB(NULL, assoc_id, 0);
-  DevAssert(x2ap_eNB_data != NULL);
+  if(x2ap_eNB_data == NULL) {
+    X2AP_ERROR("%s %d: x2ap_eNB_data is a NULL pointer \n",__FILE__,__LINE__);
+    return -1;
+  }
 
   instance_p = x2ap_eNB_get_instance(instance);
-  DevAssert(instance_p != NULL);
+  if(instance_p == NULL) {
+    X2AP_ERROR("%s %d: instance_p is a NULL pointer \n",__FILE__,__LINE__);
+    return -1;
+  }
 
   msg = itti_alloc_new_message(TASK_X2AP, X2AP_UE_CONTEXT_RELEASE);
 
@@ -983,7 +1028,10 @@ int x2ap_eNB_handle_handover_cancel (instance_t instance,
   int                               id_target;
   x2ap_handover_cancel_cause_t      cause;
 
-  DevAssert (pdu != NULL);
+  if(pdu == NULL) {
+    X2AP_ERROR("%s %d: pdu is a NULL pointer \n",__FILE__,__LINE__);
+    return -1;
+  }
   x2HandoverCancel = &pdu->choice.initiatingMessage.value.choice.HandoverCancel;
 
   if (stream == 0) {
@@ -994,10 +1042,16 @@ int x2ap_eNB_handle_handover_cancel (instance_t instance,
   X2AP_DEBUG ("Received a new X2 handover cancel\n");
 
   x2ap_eNB_data = x2ap_get_eNB(NULL, assoc_id, 0);
-  DevAssert(x2ap_eNB_data != NULL);
+  if(x2ap_eNB_data == NULL) {
+    X2AP_ERROR("%s %d: x2ap_eNB_data is a NULL pointer \n",__FILE__,__LINE__);
+    return -1;
+  }
 
   instance_p = x2ap_eNB_get_instance(instance);
-  DevAssert(instance_p != NULL);
+  if(instance_p == NULL) {
+    X2AP_ERROR("%s %d: instance_p is a NULL pointer \n",__FILE__,__LINE__);
+    return -1;
+  }
 
   X2AP_FIND_PROTOCOLIE_BY_ID(X2AP_HandoverCancel_IEs_t, ie, x2HandoverCancel,
                              X2AP_ProtocolIE_ID_id_Old_eNB_UE_X2AP_ID, true);
@@ -1059,7 +1113,8 @@ int x2ap_eNB_handle_handover_cancel (instance_t instance,
                id_source,
                x2ap_id_get_id_target(&instance_p->id_manager, ue_id),
                id_target);
-    exit(1);
+    //exit(1);
+    return -1;
   }
 
   msg = itti_alloc_new_message(TASK_X2AP, X2AP_HANDOVER_CANCEL);

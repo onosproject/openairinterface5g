@@ -4803,7 +4803,8 @@ void rrc_eNB_process_handoverPreparationInformation(int mod_id, x2ap_handover_re
       ho->criticalExtensions.present != LTE_HandoverPreparationInformation__criticalExtensions_PR_c1 ||
       ho->criticalExtensions.choice.c1.present != LTE_HandoverPreparationInformation__criticalExtensions__c1_PR_handoverPreparationInformation_r8) {
     LOG_E(RRC, "could not decode Handover Preparation\n");
-    abort();
+    //abort();
+    return ;
   }
 
   ho_info = &ho->criticalExtensions.choice.c1.choice.handoverPreparationInformation_r8;
@@ -4878,15 +4879,18 @@ void rrc_eNB_process_handoverCommand(
       ho->criticalExtensions.present != LTE_HandoverCommand__criticalExtensions_PR_c1 ||
       ho->criticalExtensions.choice.c1.present != LTE_HandoverCommand__criticalExtensions__c1_PR_handoverCommand_r8) {
     LOG_E(RRC, "could not decode Handover Command\n");
-    abort();
+    //abort();
+    return ;
   }
 
   unsigned char *buf = ho->criticalExtensions.choice.c1.choice.handoverCommand_r8.handoverCommandMessage.buf;
   int size = ho->criticalExtensions.choice.c1.choice.handoverCommand_r8.handoverCommandMessage.size;
 
   if (size > RRC_BUF_SIZE) {
-    printf("%s:%d: fatal\n", __FILE__, __LINE__);
-    abort();
+    //printf("%s:%d: fatal\n", __FILE__, __LINE__);
+    //abort();
+    LOG_E(RRC, "%s:%d: fatal size: %d\n", __FILE__, __LINE__,size);
+    return ;
   }
 
   memcpy(ue_context->ue_context.handover_info->buf, buf, size);
@@ -5153,7 +5157,9 @@ check_handovers(
 
             // Message buffer has been processed, free it now.
 	    result = itti_free (ITTI_MSG_ORIGIN_ID(msg_p), GTPV1U_ENB_DATA_FORWARDING_IND (msg_p).sdu_p);
-	    AssertFatal (result == EXIT_SUCCESS, "Failed to free memory (%d)!\n", result);
+            if(result != EXIT_SUCCESS) {
+              LOG_E(RRC,"Failed to free memory (%d)!\n", result);
+            }
             break;
   
 	default:
@@ -5162,7 +5168,9 @@ check_handovers(
 	}
   
 	result = itti_free (ITTI_MSG_ORIGIN_ID(msg_p), msg_p);
-	AssertFatal (result == EXIT_SUCCESS, "Failed to free memory (%d)!\n", result);
+        if(result != EXIT_SUCCESS) {
+          LOG_E(RRC,"Failed to free memory (%d)!\n", result);
+        }
       }
     } while(msg_p != NULL);
     ue_context_p->ue_context.handover_info->forwarding_state = FORWARDING_EMPTY;
@@ -5224,7 +5232,9 @@ check_handovers(
 
 	    // Message buffer has been processed, free it now.
 	    result = itti_free (ITTI_MSG_ORIGIN_ID(msg_p), GTPV1U_ENB_END_MARKER_IND (msg_p).sdu_p);
-	    AssertFatal (result == EXIT_SUCCESS, "Failed to free memory (%d)!\n", result);
+            if(result != EXIT_SUCCESS) {
+              LOG_E(RRC,"Failed to free memory (%d)!\n", result);
+            }
 	    break;
 
 	    default:
@@ -5233,7 +5243,9 @@ check_handovers(
           }
 
           result = itti_free (ITTI_MSG_ORIGIN_ID(msg_p), msg_p);
-          AssertFatal (result == EXIT_SUCCESS, "Failed to free memory (%d)!\n", result);
+          if(result != EXIT_SUCCESS) {
+            LOG_E(RRC,"Failed to free memory (%d)!\n", result);
+          }
         }
       } while(msg_p != NULL);
 
@@ -6293,8 +6305,10 @@ rrc_eNB_generate_HO_RRCConnectionReconfiguration(const protocol_ctxt_t *const ct
                                             );
 
   if (rrc_size <= 0) {
-    printf("%s:%d: fatal\n", __FILE__, __LINE__);
-    abort();
+    //printf("%s:%d: fatal\n", __FILE__, __LINE__);
+    //abort();
+    LOG_E(RRC, "%s:%d: fatal size: %d\n", __FILE__, __LINE__,size);
+    return ;
   }
 
   char *ho_buf = (char *)buffer;
@@ -8974,12 +8988,20 @@ void *rrc_enb_process_itti_msg(void *notUsed) {
         /* is it possible? */
         LOG_E(RRC, "could not find UE (rnti %x) while processing X2AP_HANDOVER_REQ_ACK\n",
               X2AP_HANDOVER_REQ_ACK(msg_p).rnti);
-        exit(1);
+        //exit(1);
+        return ;
       }
       LOG_I(RRC, "[eNB %d] source eNB receives the X2 HO ACK %s\n", instance, msg_name_p);
-      DevAssert(ue_context_p != NULL);
+      if(ue_context_p == NULL) {
+        LOG_E(RRC,"%s %d: ue_context_p is a NULL pointer \n",__FILE__,__LINE__);
+        return ;
+      }
 
-      if (ue_context_p->ue_context.handover_info->state != HO_REQUEST) abort();
+      if (ue_context_p->ue_context.handover_info->state != HO_REQUEST) {
+          //abort();
+          LOG_E(RRC, "%s:%d: the handover state is not HO_REQUEST: %d\n",__FILE__, __LINE__,ue_context_p->ue_context.handover_info->state);
+          return ;
+      }
 	  
       hash_rc = hashtable_get(RC.gtpv1u_data_g->ue_mapping, ue_context_p->ue_context.rnti, (void**)&gtpv1u_ue_data_p);
       /* set target enb gtp teid */
@@ -9027,9 +9049,16 @@ void *rrc_enb_process_itti_msg(void *notUsed) {
       struct rrc_eNB_ue_context_s        *ue_context_p = NULL;
       ue_context_p = rrc_eNB_get_ue_context(RC.rrc[instance], X2AP_UE_CONTEXT_RELEASE(msg_p).rnti);
       LOG_I(RRC, "[eNB %d] source eNB receives the X2 UE CONTEXT RELEASE %s\n", instance, msg_name_p);
-      DevAssert(ue_context_p != NULL);
+      if(ue_context_p == NULL) {
+        LOG_E(RRC,"%s %d: ue_context_p is a NULL pointer \n",__FILE__,__LINE__);
+        return ;
+      }
 
-      if (ue_context_p->ue_context.handover_info->state != HO_COMPLETE) abort();
+      if (ue_context_p->ue_context.handover_info->state != HO_COMPLETE) {
+          //abort();
+          LOG_E(RRC, "%s:%d: the handover state is not HO_COMPLETE: %d\n",__FILE__, __LINE__,ue_context_p->ue_context.handover_info->state);
+          return ;
+      }
 
       ue_context_p->ue_context.handover_info->state = HO_RELEASE;
       break;
