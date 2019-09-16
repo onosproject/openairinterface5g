@@ -47,6 +47,7 @@
 //#define DEBUG_PBCH_ENCODING
 //#define INTERFERENCE_MITIGATION 1
 
+
 #define PBCH_A 24
 
 int allocate_pbch_REs_in_RB(LTE_DL_FRAME_PARMS *frame_parms,

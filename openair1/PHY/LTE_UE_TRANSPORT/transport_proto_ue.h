@@ -87,9 +87,156 @@ int32_t dlsch_encoding_SIC(PHY_VARS_UE *ue,
 
 
 
+
 void dlsch_encoding_emul(PHY_VARS_eNB *phy_vars_eNB,
                          uint8_t *DLSCH_pdu,
                          LTE_eNB_DLSCH_t *dlsch);
+
+
+
+// Functions below implement 36-211
+
+/** \fn allocate_REs_in_RB(int32_t **txdataF,
+    uint32_t *jj,
+    uint32_t *jj2,
+    uint16_t re_offset,
+    uint32_t symbol_offset,
+    LTE_DL_eNB_HARQ_t *dlsch0_harq,
+    LTE_DL_eNB_HARQ_t *dlsch1_harq,
+    uint8_t pilots,
+    int16_t amp,
+    int16_t *qam_table_s,
+    uint32_t *re_allocated,
+    uint8_t skip_dc,
+    uint8_t skip_half,
+    uint8_t use2ndpilots,
+    LTE_DL_FRAME_PARMS *frame_parms);
+
+    \brief Fills RB with data
+    \param txdataF pointer to output data (frequency domain signal)
+    \param jj index to output (from CW 1)
+    \param jj2 index to output (from CW 2)
+    \param re_offset index of the first RE of the RB
+    \param symbol_offset index to the OFDM symbol
+    \param dlsch0_harq Pointer to Transport block 0 HARQ structure
+    \param dlsch0_harq Pointer to Transport block 1 HARQ structure
+    \param pilots =1 if symbol_offset is an OFDM symbol that contains pilots, 0 otherwise
+    \param amp Amplitude for symbols
+    \param qam_table_s0 pointer to scaled QAM table for Transport Block 0 (by rho_a or rho_b)
+    \param qam_table_s1 pointer to scaled QAM table for Transport Block 1 (by rho_a or rho_b)
+    \param re_allocated pointer to allocation counter
+    \param skip_dc offset for positive RBs
+    \param skip_half indicate that first or second half of RB must be skipped for PBCH/PSS/SSS
+    \param ue_spec_rs UE specific RS indicator
+    \param nb_antennas_tx_phy Physical antenna elements which can be different with antenna port number, especially in beamforming case
+    \param use2ndpilots Set to use the pilots from antenna port 1 for PDSCH
+    \param frame_parms Frame parameter descriptor
+*/
+
+// Functions below implement 36-211
+
+/** \fn allocate_REs_in_RB(int32_t **txdataF,
+    uint32_t *jj,
+    uint32_t *jj2,
+    uint16_t re_offset,
+    uint32_t symbol_offset,
+    LTE_DL_eNB_HARQ_t *dlsch0_harq,
+    LTE_DL_eNB_HARQ_t *dlsch1_harq,
+    uint8_t pilots,
+    int16_t amp,
+    int16_t *qam_table_s,
+    uint32_t *re_allocated,
+    uint8_t skip_dc,
+    uint8_t skip_half,
+    uint8_t use2ndpilots,
+    LTE_DL_FRAME_PARMS *frame_parms);
+
+    \brief Fills RB with data
+    \param txdataF pointer to output data (frequency domain signal)
+    \param jj index to output (from CW 1)
+    \param jj index to output (from CW 2)
+    \param re_offset index of the first RE of the RB
+    \param symbol_offset index to the OFDM symbol
+    \param dlsch0_harq Pointer to Transport block 0 HARQ structure
+    \param dlsch0_harq Pointer to Transport block 1 HARQ structure
+    \param pilots =1 if symbol_offset is an OFDM symbol that contains pilots, 0 otherwise
+    \param amp Amplitude for symbols
+    \param qam_table_s0 pointer to scaled QAM table for Transport Block 0 (by rho_a or rho_b)
+    \param qam_table_s1 pointer to scaled QAM table for Transport Block 1 (by rho_a or rho_b)
+    \param re_allocated pointer to allocation counter
+    \param skip_dc offset for positive RBs
+    \param skip_half indicate that first or second half of RB must be skipped for PBCH/PSS/SSS
+    \param use2ndpilots Set to use the pilots from antenna port 1 for PDSCH
+    \param frame_parms Frame parameter descriptor
+*/
+
+int32_t allocate_REs_in_RB(PHY_VARS_eNB* phy_vars_eNB,
+                           int32_t **txdataF,
+                           uint32_t *jj,
+                           uint32_t *jj2,
+                           uint16_t re_offset,
+                           uint32_t symbol_offset,
+                           LTE_DL_eNB_HARQ_t *dlsch0_harq,
+                           LTE_DL_eNB_HARQ_t *dlsch1_harq,
+                           uint8_t pilots,
+                           int16_t amp,
+                           uint8_t precoder_index,
+                           int16_t *qam_table_s0,
+                           int16_t *qam_table_s1,
+                           uint32_t *re_allocated,
+                           uint8_t skip_dc,
+                           uint8_t skip_half,
+                           uint8_t lprime,
+                           uint8_t mprime,
+                           uint8_t Ns,
+                           int *P1_SHIFT,
+                           int *P2_SHIFT);
+
+/** \fn int32_t dlsch_modulation(int32_t **txdataF,
+    int16_t amp,
+    uint32_t sub_frame_offset,
+    LTE_DL_FRAME_PARMS *frame_parms,
+    uint8_t num_pdcch_symbols,
+    LTE_eNB_DLSCH_t *dlsch);
+
+    \brief This function is the top-level routine for generation of the sub-frame signal (frequency-domain) for DLSCH.
+    @param txdataF Table of pointers for frequency-domain TX signals
+    @param amp Amplitude of signal
+    @param sub_frame_offset Offset of this subframe in units of subframes (usually 0)
+    @param frame_parms Pointer to frame descriptor
+    @param num_pdcch_symbols Number of PDCCH symbols in this subframe
+    @param dlsch0 Pointer to Transport Block 0 DLSCH descriptor for this allocation
+    @param dlsch1 Pointer to Transport Block 0 DLSCH descriptor for this allocation
+*/
+
+int32_t dlsch_modulation_SIC(int32_t **sic_buffer,
+                             uint32_t sub_frame_offset,
+                             LTE_DL_FRAME_PARMS *frame_parms,
+                             uint8_t num_pdcch_symbols,
+                             LTE_eNB_DLSCH_t *dlsch0,
+                             int G);
+/*
+  \brief This function is the top-level routine for generation of the sub-frame signal (frequency-domain) for MCH.
+  @param txdataF Table of pointers for frequency-domain TX signals
+  @param amp Amplitude of signal
+  @param subframe_offset Offset of this subframe in units of subframes (usually 0)
+  @param frame_parms Pointer to frame descriptor
+  @param dlsch Pointer to DLSCH descriptor for this allocation
+*/
+int mch_modulation(int32_t **txdataF,
+                   int16_t amp,
+                   uint32_t subframe_offset,
+                   LTE_DL_FRAME_PARMS *frame_parms,
+                   LTE_eNB_DLSCH_t *dlsch);
+
+/** \brief Top-level generation function for eNB TX of MBSFN
+    @param phy_vars_eNB Pointer to eNB variables
+    @param a Pointer to transport block
+    @param abstraction_flag
+
+*/
+//void generate_mch(PHY_VARS_eNB *phy_vars_eNB,eNB_rxtx_proc_NB_IoT_t *proc,uint8_t *a);
+
 
 /** \brief This function generates the frequency-domain pilots (cell-specific downlink reference signals)
     @param phy_vars_eNB Pointer to eNB variables
@@ -165,10 +312,12 @@ int32_t generate_pilots_slot(PHY_VARS_eNB *phy_vars_eNB,
                              uint16_t slot,
                              int first_pilot_only);
 
+/*
 int32_t generate_mbsfn_pilot(PHY_VARS_eNB *phy_vars_eNB,
                              eNB_rxtx_proc_NB_IoT_t *proc,
                              int32_t **txdataF,
                              int16_t amp);
+*/
 
 void generate_ue_spec_pilots(PHY_VARS_eNB *phy_vars_eNB,
                              uint8_t UE_id,

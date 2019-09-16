@@ -36,6 +36,7 @@
 #include <math.h>
 //NB-IoT
 #include "openair2/ENB_APP/NB_IoT_config.c"
+
 extern uint32_t from_earfcn(int eutra_bandP,uint32_t dl_earfcn);
 extern int32_t get_uldl_offset(int eutra_bandP);
 
@@ -85,7 +86,7 @@ l1_north_init_eNB ()
   return(0);
 }
 
-//Check with Raymond. (The question is that where to initialize RC.eNB (RC.eNB_NB_IoT) ulsim.c & dlsim.c?)
+//for NB-IoT layer1 to get informstion from layer2
 int
 l1_north_init_NB_IoT()
 {
