@@ -48,8 +48,6 @@
 //#define INTERFERENCE_MITIGATION 1
 
 
-#include "PHY/LTE_REFSIG/defs.h"
-
 #define PBCH_A 24
 
 int allocate_pbch_REs_in_RB(LTE_DL_FRAME_PARMS *frame_parms,

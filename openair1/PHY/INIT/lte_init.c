@@ -34,6 +34,8 @@
 #include "common/utils/LOG/vcd_signal_dumper.h"
 #include "assertions.h"
 #include <math.h>
+//NB-IoT
+#include "openair2/ENB_APP/NB_IoT_config.c"
 
 extern uint32_t from_earfcn(int eutra_bandP,uint32_t dl_earfcn);
 extern int32_t get_uldl_offset(int eutra_bandP);
@@ -84,7 +86,7 @@ l1_north_init_eNB ()
   return(0);
 }
 
-//Check with Raymond. (The question is that where to initialize RC.eNB (RC.eNB_NB_IoT) ulsim.c & dlsim.c?)
+//for NB-IoT layer1 to get informstion from layer2
 int
 l1_north_init_NB_IoT()
 {
@@ -96,7 +98,7 @@ l1_north_init_NB_IoT()
     LOG_I(PHY,"RC.L1_NB_IoT = %p\n",RC.L1_NB_IoT);
 
     for (j=0; j<NbIoT_L1_ParamList.numelt; j++) {
-      AssertFatal(RC.L1_NB_IoT[j]!=NULL,"RC.eNB_NB_IoT[%d] is null\n",i);
+      AssertFatal(RC.L1_NB_IoT[j]!=NULL,"RC.eNB_NB_IoT[%d] is null\n",j);
       LOG_I(PHY,"RC.L1_NB_IoT = %p\n",RC.L1_NB_IoT);
 
 

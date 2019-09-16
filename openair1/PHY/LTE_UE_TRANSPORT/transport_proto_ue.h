@@ -161,15 +161,6 @@ int32_t dlsch_encoding_SIC(PHY_VARS_UE *ue,
     @param i_stats Time statistics for interleaving
     @returns status
 */
-int32_t dlsch_encoding_2threads(PHY_VARS_eNB *eNB,
-                                uint8_t *a,
-                                uint8_t num_pdcch_symbols,
-                                LTE_eNB_DLSCH_t *dlsch,
-                                int frame,
-                                uint8_t subframe,
-                                time_stats_t *rm_stats,
-                                time_stats_t *te_stats,
-                                time_stats_t *i_stats);
 
 void dlsch_encoding_emul(PHY_VARS_eNB *phy_vars_eNB,
                          uint8_t *DLSCH_pdu,
@@ -290,13 +281,6 @@ int32_t allocate_REs_in_RB(PHY_VARS_eNB* phy_vars_eNB,
     @param dlsch0 Pointer to Transport Block 0 DLSCH descriptor for this allocation
     @param dlsch1 Pointer to Transport Block 0 DLSCH descriptor for this allocation
 */
-int32_t dlsch_modulation(PHY_VARS_eNB* phy_vars_eNB,
-                         int32_t **txdataF,
-                         int16_t amp,
-                         uint32_t sub_frame_offset,
-                         uint8_t num_pdcch_symbols,
-                         LTE_eNB_DLSCH_t *dlsch0,
-                         LTE_eNB_DLSCH_t *dlsch1);
 
 int32_t dlsch_modulation_SIC(int32_t **sic_buffer,
                              uint32_t sub_frame_offset,
@@ -324,7 +308,7 @@ int mch_modulation(int32_t **txdataF,
     @param abstraction_flag
 
 */
-void generate_mch(PHY_VARS_eNB *phy_vars_eNB,eNB_rxtx_proc_NB_IoT_t *proc,uint8_t *a);
+//void generate_mch(PHY_VARS_eNB *phy_vars_eNB,eNB_rxtx_proc_NB_IoT_t *proc,uint8_t *a);
 
 /** \brief This function generates the frequency-domain pilots (cell-specific downlink reference signals)
     @param phy_vars_eNB Pointer to eNB variables
@@ -400,10 +384,12 @@ int32_t generate_pilots_slot(PHY_VARS_eNB *phy_vars_eNB,
                              uint16_t slot,
                              int first_pilot_only);
 
+/*
 int32_t generate_mbsfn_pilot(PHY_VARS_eNB *phy_vars_eNB,
                              eNB_rxtx_proc_NB_IoT_t *proc,
                              int32_t **txdataF,
                              int16_t amp);
+*/
 
 void generate_ue_spec_pilots(PHY_VARS_eNB *phy_vars_eNB,
                              uint8_t UE_id,

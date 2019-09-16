@@ -487,12 +487,12 @@ void *te_thread(void *param) {
     /*if(opp_enabled == 1 && te_wakeup_stats0->p_time>50*3000){
       print_meas_now(te_wakeup_stats0,"coding_wakeup",stderr);
       printf("te_thread0 delay for waking up in frame_rx: %d  subframe_rx: %d \n",proc->frame_rx,proc->subframe_rx);
-    }*/
+    }
   }
 
   return(NULL);
 }
-
+*/
 
 
 int dlsch_encoding_2threads(PHY_VARS_eNB *eNB,
