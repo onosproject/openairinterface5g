@@ -277,7 +277,7 @@ int x2ap_eNB_handle_message(instance_t instance, uint32_t assoc_id, int32_t stre
     break;
   }
 
-  ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_X2AP_X2AP_PDU, &pdu);
+  //ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_X2AP_X2AP_PDU, &pdu);
   return ret;
 }
 
@@ -763,7 +763,7 @@ int x2ap_eNB_handle_handover_preparation (instance_t instance,
   }
 
   X2AP_RRC_Context_t *c = &ie->value.choice.UE_ContextInformation.rRC_Context;
-
+  memcpy(X2AP_HANDOVER_REQ(msg).rrc_buffer, c->buf, c->size);
   X2AP_HANDOVER_REQ(msg).rrc_buffer_size = c->size;
 
   itti_send_msg_to_task(TASK_RRC_ENB, instance_p->instance, msg);
