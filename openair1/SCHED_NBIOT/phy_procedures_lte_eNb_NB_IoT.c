@@ -213,7 +213,7 @@ uint32_t is_SIB1_NB_IoT(const frame_t          frameP,
 * It generates NRS/NPSS/NSSS
 *
 */
-void common_signal_procedures_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc) 
+void common_signal_procedures_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_NB_IoT_t *proc) 
 {
   //LTE_DL_FRAME_PARMS   *fp       =  &eNB->frame_parms_NB_IoT;
   LTE_DL_FRAME_PARMS   *fp       =  &eNB->frame_parms;
@@ -401,7 +401,7 @@ void common_signal_procedures_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
   
 }
 
-void phy_procedures_eNB_uespec_RX_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc) //UL_IND_NB_IoT_t *UL_INFO)
+void phy_procedures_eNB_uespec_RX_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_NB_IoT_t *proc) //UL_IND_NB_IoT_t *UL_INFO)
 {
   //RX processing for ue-specific resources (i
   //NB_IoT_DL_FRAME_PARMS     *fp=&eNB->frame_parms_NB_IoT;
@@ -437,7 +437,7 @@ void phy_procedures_eNB_uespec_RX_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc
 }
 
 /////////////////////////////////////////////////////////// backup ////////////////////////////////////////////////////////
-/*void phy_procedures_eNB_uespec_RX_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_t *proc, UL_IND_NB_IoT_t *UL_INFO)
+/*void phy_procedures_eNB_uespec_RX_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_NB_IoT_t *proc, UL_IND_NB_IoT_t *UL_INFO)
 {
   //RX processing for ue-specific resources (i
   uint32_t                  ret=0,i,j,k;
@@ -762,7 +762,7 @@ void phy_procedures_eNB_uespec_RX_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc
 /////Generate eNB ndlsch params for NB-IoT from the NPDCCH PDU of the DCI, modify the input to the Sched Rsp variable////
 */
 
-void generate_eNB_dlsch_params_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t * proc,nfapi_dl_config_request_pdu_t *dl_config_pdu) 
+void generate_eNB_dlsch_params_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_NB_IoT_t * proc,nfapi_dl_config_request_pdu_t *dl_config_pdu) 
 {
   int                      UE_id         =  -1;
   LTE_DL_FRAME_PARMS    *fp           =  &eNB->frame_parms;
@@ -911,7 +911,7 @@ void generate_eNB_dlsch_params_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t * proc,n
 
 
 
-void generate_eNB_ulsch_params_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,nfapi_hi_dci0_request_pdu_t *hi_dci0_pdu) {
+void generate_eNB_ulsch_params_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_NB_IoT_t *proc,nfapi_hi_dci0_request_pdu_t *hi_dci0_pdu) {
 
   //int UE_id = -1;
   //int harq_pid = 0;
@@ -966,7 +966,7 @@ void generate_eNB_ulsch_params_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,nf
  * ** redundancy version exist only in UL for NB-IoT and not in DL
  */
 void npdsch_procedures(PHY_VARS_eNB_NB_IoT      *eNB,
-                       eNB_rxtx_proc_t   *proc,     //Context data structure for RX/TX portion of subframe processing
+                       eNB_rxtx_proc_NB_IoT_t   *proc,     //Context data structure for RX/TX portion of subframe processing
                        NB_IoT_eNB_NDLSCH_t      *ndlsch,
                        //int num_pdcch_symbols,            //(BCOM says are not needed
                        uint8_t                  *pdu
@@ -1228,7 +1228,7 @@ extern int oai_exit;
  */
 
 void phy_procedures_eNB_TX_NB_IoT(PHY_VARS_eNB_NB_IoT     *eNB,
-                                  eNB_rxtx_proc_t  *proc,
+                                  eNB_rxtx_proc_NB_IoT_t  *proc,
                                   int                     do_meas)
 {
   int                    frame           = proc->frame_tx;
@@ -1607,7 +1607,7 @@ void fill_crc_indication_NB_IoT(PHY_VARS_eNB *eNB,int UE_id,int frame,int subfra
   pthread_mutex_unlock(&eNB->UL_INFO_mutex);
 }
 
-void fill_rx_indication_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,uint8_t data_or_control, uint8_t decode_flag)
+void fill_rx_indication_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_NB_IoT_t *proc,uint8_t data_or_control, uint8_t decode_flag)
 {
       nfapi_rx_indication_pdu_t *pdu;
       nfapi_nb_harq_indication_pdu_t *ack_ind; // &eNB->UL_INFO.nb_harq_ind.nb_harq_indication_body.nb_harq_pdu_list[0] // nb_harq_indication_fdd_rel13->harq_tb1
@@ -1680,7 +1680,7 @@ void fill_rx_indication_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,uint8_t d
 
 
 
-void npusch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
+void npusch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_NB_IoT_t *proc)
 {
   
   uint32_t i;

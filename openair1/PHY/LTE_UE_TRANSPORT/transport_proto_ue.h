@@ -35,6 +35,7 @@
 #include "PHY/LTE_TRANSPORT/transport_common_proto.h"
 #include <math.h>
 #include "nfapi_interface.h"
+#include "PHY/defs_NB_IoT.h"
 
 // Functions below implement 36-211 and 36-212
 
@@ -323,7 +324,7 @@ int mch_modulation(int32_t **txdataF,
     @param abstraction_flag
 
 */
-void generate_mch(PHY_VARS_eNB *phy_vars_eNB,eNB_rxtx_proc_t *proc,uint8_t *a);
+void generate_mch(PHY_VARS_eNB *phy_vars_eNB,eNB_rxtx_proc_NB_IoT_t *proc,uint8_t *a);
 
 /** \brief This function generates the frequency-domain pilots (cell-specific downlink reference signals)
     @param phy_vars_eNB Pointer to eNB variables
@@ -400,7 +401,7 @@ int32_t generate_pilots_slot(PHY_VARS_eNB *phy_vars_eNB,
                              int first_pilot_only);
 
 int32_t generate_mbsfn_pilot(PHY_VARS_eNB *phy_vars_eNB,
-                             eNB_rxtx_proc_t *proc,
+                             eNB_rxtx_proc_NB_IoT_t *proc,
                              int32_t **txdataF,
                              int16_t amp);
 

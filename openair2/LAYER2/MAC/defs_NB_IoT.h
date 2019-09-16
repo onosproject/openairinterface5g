@@ -593,7 +593,7 @@ typedef  struct {
 
 nprach_parameters_NB_IoT_t nprach_list[3];
 
-nfapi_config_request_t config;
+
 
 //DLSF Table
 DLSF_INFO_t DLSF_information;

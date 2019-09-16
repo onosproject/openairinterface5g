@@ -14,7 +14,7 @@
 
 
 void handle_nfapi_dlsch_pdu_NB_IoT(PHY_VARS_eNB *eNB,
-						  		   eNB_rxtx_proc_t *proc,
+						  		   eNB_rxtx_proc_NB_IoT_t *proc,
 		       	   	   	           nfapi_dl_config_request_pdu_t *dl_config_pdu,
 						   		   uint8_t *sdu);
 

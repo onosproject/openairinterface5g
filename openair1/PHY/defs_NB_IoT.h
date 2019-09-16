@@ -286,6 +286,21 @@ typedef struct {
   pthread_mutex_t       mutex_l2;
   int                   instance_cnt_l2;
   pthread_attr_t        attr_l2;
+  uint32_t              frame_msg5;
+  uint32_t              subframe_msg5;
+  int                   subframe_real;
+  uint8_t               flag_scrambling;
+  uint8_t               flag_msg3;
+  uint8_t               counter_msg3;
+  uint32_t              frame_msg3;
+  uint8_t               flag_msg4;
+  uint8_t               counter_msg4;
+  uint32_t              frame_msg4;
+  uint32_t              subframe_msg4;
+  uint8_t               counter_msg5;
+  uint8_t               flag_msg5;
+  uint32_t              frame_dscr_msg5;
+  uint32_t              subframe_dscr_msg5;
 
 } eNB_rxtx_proc_NB_IoT_t;
 /*
