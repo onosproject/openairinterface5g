@@ -139,7 +139,7 @@ static struct {
 } sync_phy_proc;
 
 extern double cpuf;
-
+int first_phy_tx = 1;
 
 void init_eNB(int,int);
 void stop_eNB(int nb_inst);
@@ -450,6 +450,41 @@ static void *L1_thread( void *param ) {
   return &eNB_thread_rxtx_status;
 }
 
+static void* L1_thread_rx( void* param ) {
+
+  static int eNB_thread_phy_rx_status;
+
+  L1_proc_t *eNB_proc  = (L1_proc_t*)param;
+  L1_rxtx_proc_t* proc = &eNB_proc->L1_proc;
+  PHY_VARS_eNB *eNB = RC.eNB[0][proc->CC_id];
+
+  char string[20];
+  sprintf(string,"RXnp4_1");
+
+  // set default return value
+  eNB_thread_phy_rx_status = 0;
+
+  thread_top_init(string,1,500000L,1000000L,20000000L);
+
+  while (!oai_exit) {
+
+    if (wait_on_condition(&proc->mutex,&proc->cond,&proc->instance_cnt,string) < 0) break;
+    if (oai_exit) break;
+
+    LOG_D(PHY,"Running L1 thread rx procedures\n");
+
+    if (rxtx(eNB,proc,string) < 0) LOG_E(PHY,"eNB %d CC_id %d failed during execution\n",eNB->Mod_id,eNB->CC_id);
+
+    if (release_thread(&proc->mutex,&proc->instance_cnt,string) < 0) break;
+
+  }
+
+  LOG_I(PHY, "Exiting L1 thread RX\n");
+
+  eNB_thread_phy_rx_status = 0;
+  return &eNB_thread_phy_rx_status;
+}
+
 void eNB_top(PHY_VARS_eNB *eNB, int frame_rx, int subframe_rx, char *string,RU_t *ru) {
   L1_proc_t *proc           = &eNB->proc;
   L1_rxtx_proc_t *L1_proc = &proc->L1_proc;
@@ -544,7 +579,7 @@ int wakeup_tx(PHY_VARS_eNB *eNB, int frame_rx,int subframe_rx,int frame_tx,int s
 
   L1_rxtx_proc_t *L1_proc = &eNB->proc.L1_proc;
   L1_rxtx_proc_t *L1_proc_tx = &eNB->proc.L1_proc_tx;
-
+  RU_proc_t *ru_proc = NULL;
   int ret;
 
   LOG_D(PHY,"ENTERED wakeup_tx (IC %d)\n",L1_proc_tx->instance_cnt);
@@ -561,18 +596,59 @@ int wakeup_tx(PHY_VARS_eNB *eNB, int frame_rx,int subframe_rx,int frame_tx,int s
   VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME(VCD_SIGNAL_DUMPER_VARIABLES_L1_PROC_TX_IC,L1_proc_tx->instance_cnt);
   L1_proc_tx->instance_cnt = 0;
   VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME(VCD_SIGNAL_DUMPER_VARIABLES_L1_PROC_TX_IC,L1_proc_tx->instance_cnt);
-  L1_proc_tx->subframe_rx   = subframe_rx;
-  L1_proc_tx->frame_rx      = frame_rx;
-  L1_proc_tx->subframe_tx   = subframe_tx;
-  L1_proc_tx->frame_tx      = frame_tx;
-  L1_proc_tx->timestamp_tx  = timestamp_tx;
-
+  if(!((get_thread_parallel_conf() == PARALLEL_RU_L1_TRX_SPLIT) && (get_thread_worker_conf() == WORKER_ENABLE))){
+    L1_proc_tx->subframe_rx   = subframe_rx;
+    L1_proc_tx->frame_rx      = frame_rx;
+    L1_proc_tx->subframe_tx   = subframe_tx;
+    L1_proc_tx->frame_tx      = frame_tx;
+    L1_proc_tx->timestamp_tx  = timestamp_tx;
+  } else {
+    if(eNB->RU_list[0] != NULL)
+      ru_proc = &eNB->RU_list[0]->proc;
+    if(ru_proc != NULL){
+      L1_proc_tx->subframe_rx   = ru_proc->subframe_rx;
+      L1_proc_tx->frame_rx      = ru_proc->frame_rx;
+      L1_proc_tx->subframe_tx   = (ru_proc->subframe_rx+(sf_ahead-1))%10;
+      L1_proc_tx->frame_tx      = (ru_proc->subframe_rx>(9-(sf_ahead-1))) ? (ru_proc->frame_rx+1)&1023 : ru_proc->frame_rx;
+      L1_proc_tx->timestamp_tx  = ru_proc->timestamp_rx+((sf_ahead-1)*eNB->frame_parms.samples_per_tti);;
+    }
+  }
   // the thread can now be woken up
   LOG_D(PHY,"L1 RX Waking up L1 TX %d.%d\n",L1_proc->frame_tx,L1_proc->subframe_tx);
   AssertFatal(pthread_cond_signal(&L1_proc_tx->cond) == 0, "ERROR pthread_cond_signal for eNB L1 thread tx\n");
 
   AssertFatal((ret=pthread_mutex_unlock(&L1_proc_tx->mutex))==0,"mutex_unlock returns %d\n",ret);
   return(0);
+}
+
+int wakeup_rx(PHY_VARS_eNB *eNB, RU_t *ru){
+    L1_proc_t *proc=&eNB->proc;
+    RU_proc_t *ru_proc=&ru->proc;
+    LTE_DL_FRAME_PARMS *fp = &eNB->frame_parms;
+
+    L1_rxtx_proc_t *L1_proc_rx=&proc->L1_proc;
+
+    if(pthread_mutex_lock(&L1_proc_rx->mutex) != 0){
+      LOG_E( PHY, "[RU] ERROR pthread_mutex_lock for phy rx thread (IC %d)\n", L1_proc_rx->instance_cnt);
+      exit_fun( "error locking mutex_rxtx" );
+    }
+    if (L1_proc_rx->instance_cnt==-1) {
+      ++L1_proc_rx->instance_cnt;
+
+      L1_proc_rx->timestamp_tx = ru_proc->timestamp_rx + (sf_ahead*fp->samples_per_tti);
+      L1_proc_rx->frame_rx     = ru_proc->frame_rx;
+      L1_proc_rx->subframe_rx  = ru_proc->subframe_rx;
+      L1_proc_rx->frame_tx     = (ru_proc->subframe_rx > (9-sf_ahead)) ? (ru_proc->frame_rx+1)&1023 : ru_proc->frame_rx;
+      L1_proc_rx->subframe_tx  = (ru_proc->subframe_rx + sf_ahead)%10;
+
+      // the thread can now be woken up
+      AssertFatal(pthread_cond_signal(&L1_proc_rx->cond) == 0, "ERROR pthread_cond_signal for L1_thread_rx thread\n");
+    }else{
+      LOG_E(PHY,"phy rx thread busy, skipping instance_cnt_phy_rx %d\n", L1_proc_rx->instance_cnt);
+    }
+    pthread_mutex_unlock( &L1_proc_rx->mutex );
+
+    return 0;
 }
 
 int wakeup_rxtx(PHY_VARS_eNB *eNB,RU_t *ru) {
@@ -583,7 +659,7 @@ int wakeup_rxtx(PHY_VARS_eNB *eNB,RU_t *ru) {
   int ret;
 
   LOG_D(PHY,"ENTERED wakeup_rxtx, %d.%d\n",ru_proc->frame_rx,ru_proc->subframe_rx);
-
+  if(!((get_thread_parallel_conf() == PARALLEL_RU_L1_TRX_SPLIT) && (get_thread_worker_conf() == WORKER_ENABLE))) {
   // wake up TX for subframe n+sl_ahead
   // lock the TX mutex and make sure the thread is ready
   AssertFatal((ret=pthread_mutex_lock(&L1_proc->mutex)) == 0,"mutex_lock returns %d\n", ret);
@@ -623,6 +699,15 @@ int wakeup_rxtx(PHY_VARS_eNB *eNB,RU_t *ru) {
   }
 
   AssertFatal((ret=pthread_mutex_unlock( &L1_proc->mutex))==0,"mutex_unlock return %d\n",ret);
+  } else {
+    wakeup_rx(eNB, ru);
+    // don't sent tx data when first time because this is no data
+    if(first_phy_tx == 0){
+      wakeup_tx(eNB, ru_proc->frame_rx, ru_proc->subframe_rx, (L1_proc->subframe_rx > (9-sf_ahead)) ? (L1_proc->frame_rx+1)&1023 : L1_proc->frame_rx, (L1_proc->subframe_rx + sf_ahead)%10, ru_proc->timestamp_rx + (sf_ahead*fp->samples_per_tti));
+    } else {
+      first_phy_tx = 0;
+    }
+  }
 
   return(0);
 }
@@ -930,7 +1015,7 @@ void init_eNB_proc(int inst) {
     if ((get_thread_parallel_conf() == PARALLEL_RU_L1_SPLIT) && NFAPI_MODE!=NFAPI_MODE_VNF) {
       pthread_create( &L1_proc->pthread, attr0, L1_thread, proc );
     } else if ((get_thread_parallel_conf() == PARALLEL_RU_L1_TRX_SPLIT) && NFAPI_MODE!=NFAPI_MODE_VNF) {
-      pthread_create( &L1_proc->pthread, attr0, L1_thread, proc );
+      pthread_create( &L1_proc->pthread, attr0, L1_thread_rx, proc );
       pthread_create( &L1_proc_tx->pthread, attr1, L1_thread_tx, proc);
     } else if (NFAPI_MODE==NFAPI_MODE_VNF) { // this is neccesary in VNF or L2 FAPI simulator.
       // Original Code from Fujitsu w/ old structure/field name

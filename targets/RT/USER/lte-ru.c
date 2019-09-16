@@ -1553,6 +1553,41 @@ void *ru_thread_tx( void *param ) {
   return 0;
 }
 
+#if defined(PRE_SCD_THREAD)
+int wakeup_prescd(RU_t* ru, int frame , int subframe){
+
+    new_dlsch_ue_select_tbl_in_use = dlsch_ue_select_tbl_in_use;
+    dlsch_ue_select_tbl_in_use = !dlsch_ue_select_tbl_in_use;
+    memcpy(&pre_scd_eNB_UE_stats,&RC.mac[ru->eNB_list[0]->Mod_id]->UE_list.eNB_UE_stats, sizeof(eNB_UE_STATS)*MAX_NUM_CCs*NUMBER_OF_UE_MAX);
+    memcpy(&pre_scd_activeUE, &RC.mac[ru->eNB_list[0]->Mod_id]->UE_list.active, sizeof(boolean_t)*NUMBER_OF_UE_MAX);
+    if (pthread_mutex_lock(&ru->proc.mutex_pre_scd)!= 0) {
+        LOG_E( PHY, "[eNB] error locking proc mutex for eNB pre scd\n");
+        exit_fun("error locking mutex_time");
+    }
+
+    ru->proc.instance_pre_scd++;
+
+    if (ru->proc.instance_pre_scd == 0) {
+        if (pthread_cond_signal(&ru->proc.cond_pre_scd) != 0) {
+            LOG_E( PHY, "[eNB] ERROR pthread_cond_signal for eNB pre scd\n" );
+            exit_fun( "ERROR pthread_cond_signal cond_pre_scd" );
+            return -1;
+        }
+    }else{
+        LOG_E( PHY, "[eNB] frame %d subframe %d rxtx busy instance_pre_scd %d\n",
+               frame,subframe,ru->proc.instance_pre_scd );
+        return -1;
+    }
+
+    if (pthread_mutex_unlock(&ru->proc.mutex_pre_scd)!= 0) {
+        LOG_E( PHY, "[eNB] error unlocking mutex_pre_scd mutex for eNB pre scd\n");
+        exit_fun("error unlocking mutex_pre_scd");
+        return -1;
+    }
+    return 0;
+}
+#endif
+
 void *ru_thread( void *param ) {
   RU_t               *ru      = (RU_t *)param;
   RU_proc_t          *proc    = &ru->proc;
@@ -1777,26 +1812,9 @@ void *ru_thread( void *param ) {
         AssertFatal((ret=pthread_mutex_unlock(&proc->mutex_eNBs))==0,"mutex_unlock returns %d\n",ret);
 	
 #if defined(PRE_SCD_THREAD)
-	new_dlsch_ue_select_tbl_in_use = dlsch_ue_select_tbl_in_use;
-	dlsch_ue_select_tbl_in_use = !dlsch_ue_select_tbl_in_use;
-	memcpy(&pre_scd_eNB_UE_stats,&RC.mac[ru->eNB_list[0]->Mod_id]->UE_list.eNB_UE_stats, sizeof(eNB_UE_STATS)*MAX_NUM_CCs*NUMBER_OF_UE_MAX);
-	memcpy(&pre_scd_activeUE, &RC.mac[ru->eNB_list[0]->Mod_id]->UE_list.active, sizeof(boolean_t)*NUMBER_OF_UE_MAX);
-        AssertFatal((ret=pthread_mutex_lock(&ru->proc.mutex_pre_scd))==0,"[eNB] error locking proc mutex for eNB pre scd\n");
-	
-	ru->proc.instance_pre_scd++;
-	
-	if (ru->proc.instance_pre_scd == 0) {
-	  if (pthread_cond_signal(&ru->proc.cond_pre_scd) != 0) {
-	    LOG_E( PHY, "[eNB] ERROR pthread_cond_signal for eNB pre scd\n" );
-	    exit_fun( "ERROR pthread_cond_signal cond_pre_scd" );
-	  }
-	}else{
-	  LOG_E( PHY, "[eNB] frame %d subframe %d rxtx busy instance_pre_scd %d\n",
-		 frame,subframe,ru->proc.instance_pre_scd );
-	}
-
-	AssertFatal((ret=pthread_mutex_unlock(&ru->proc.mutex_pre_scd))==0,"[eNB] error unlocking mutex_pre_scd mutex for eNB pre scd\n");
-
+        if (NFAPI_MODE == NFAPI_MONOLITHIC) {
+          wakeup_prescd(ru, frame, subframe);
+        }
 #endif
 	// wakeup all eNB processes waiting for this RU
 	if (ru->num_eNB>0) wakeup_L1s(ru);
@@ -2208,11 +2226,13 @@ void init_RU_proc(RU_t *ru) {
   pthread_create( &proc->pthread_FH, attr_FH, ru_thread, (void*)ru );
 
 #if defined(PRE_SCD_THREAD)
+  if (NFAPI_MODE == NFAPI_MONOLITHIC) {
   proc->instance_pre_scd = -1;
   pthread_mutex_init( &proc->mutex_pre_scd, NULL);
   pthread_cond_init( &proc->cond_pre_scd, NULL);
   pthread_create(&proc->pthread_pre_scd, NULL, pre_scd_thread, (void *)ru);
   pthread_setname_np(proc->pthread_pre_scd, "pre_scd_thread");
+  }
 #endif
 #ifdef PHY_TX_THREAD
   pthread_create( &proc->pthread_phy_tx, NULL, eNB_thread_phy_tx, (void *)ru );

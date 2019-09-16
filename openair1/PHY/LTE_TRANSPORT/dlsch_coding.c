@@ -227,14 +227,9 @@ void clean_eNb_dlsch(LTE_eNB_DLSCH_t *dlsch) {
   if (dlsch) {
     Mdlharq = dlsch->Mdlharq;
     dlsch->rnti = 0;
-#ifdef PHY_TX_THREAD
-
     for (i=0; i<10; i++)
       dlsch->active[i] = 0;
 
-#else
-    dlsch->active = 0;
-#endif
     dlsch->harq_mask = 0;
 
     for (i=0; i<20; i++)

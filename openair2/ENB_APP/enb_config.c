@@ -2131,7 +2131,7 @@ int RCconfig_gtpu(void ) {
   cidr = enb_ipv4_address_for_S1U;
   address = strtok(cidr, "/");
 
-  if (address) {
+  if (address && (RC.gtpv1u_data_g == NULL || RC.gtpv1u_data_g->enb_ip_address_for_S1u_S12_S4_up == 0)) {
     MessageDef *message;
     AssertFatal((message = itti_alloc_new_message(TASK_ENB_APP, GTPV1U_ENB_S1_REQ))!=NULL,"");
     IPV4_STR_ADDR_TO_INT_NWBO ( address, GTPV1U_ENB_S1_REQ(message).enb_ip_address_for_S1u_S12_S4_up, "BAD IP ADDRESS FORMAT FOR eNB S1_U !\n" );
