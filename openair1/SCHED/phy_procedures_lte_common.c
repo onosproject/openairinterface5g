@@ -31,6 +31,7 @@
 */
 #include "PHY/defs_eNB.h"
 #include "PHY/defs_UE.h"
+#include "PHY/phy_extern.h"
 #include "SCHED/sched_common_extern.h"
 #include "PHY/LTE_TRANSPORT/transport_common_proto.h"
 
@@ -907,7 +908,7 @@ unsigned int is_phich_subframe(LTE_DL_FRAME_PARMS *frame_parms,unsigned char sub
 
 
 
-
+/*
 LTE_eNB_UE_stats* get_UE_stats(uint8_t Mod_id, uint8_t  CC_id,uint16_t rnti)
 {
   int8_t UE_id;
@@ -940,7 +941,7 @@ int8_t find_ue(uint16_t rnti, PHY_VARS_eNB *eNB)
   }
   return(-1);
 }
-
+*/
 
 
 LTE_DL_FRAME_PARMS* get_lte_frame_parms(module_id_t Mod_id, uint8_t  CC_id)
@@ -949,7 +950,7 @@ LTE_DL_FRAME_PARMS* get_lte_frame_parms(module_id_t Mod_id, uint8_t  CC_id)
   return(&RC.eNB[Mod_id][CC_id]->frame_parms);
 
 }
-
+/*
 MU_MIMO_mode *get_mu_mimo_mode (module_id_t Mod_id, uint8_t  CC_id, rnti_t rnti)
 {
   int8_t UE_id = find_ue( rnti, RC.eNB[Mod_id][CC_id] );
@@ -959,7 +960,7 @@ MU_MIMO_mode *get_mu_mimo_mode (module_id_t Mod_id, uint8_t  CC_id, rnti_t rnti)
 
   return &RC.eNB[Mod_id][CC_id]->mu_mimo_mode[UE_id];
 }
-
+*/
 
 int is_srs_occasion_common(LTE_DL_FRAME_PARMS *frame_parms,int frame_tx,int subframe_tx)
 {

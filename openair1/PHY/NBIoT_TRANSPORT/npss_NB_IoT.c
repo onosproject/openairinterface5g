@@ -28,9 +28,10 @@
 * \warning
 */
 
-#include "PHY/defs.h"
+#include "PHY/defs_eNB.h"
+#include "PHY/defs_UE.h"
 ///////////////#include "PHY/defs_nb_iot.h"
-#include "PHY/extern.h"
+#include "PHY/phy_extern.h"
 #include <math.h>
 //#include "PHY/impl_defs_lte_NB_IoT.h"
 //#include "PHY/impl_defs_top_NB_IoT.h"

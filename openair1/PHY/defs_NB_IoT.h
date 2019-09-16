@@ -135,7 +135,7 @@ static inline void* malloc16_clear( size_t size )
 ////////////////////////////////////////////////////////////////////#ifdef OPENAIR_LTE    (check if this is required)
 
 //#include "PHY/LTE_TRANSPORT/defs.h"
-#include "PHY/LTE_TRANSPORT/defs_NB_IoT.h"
+#include "PHY/NBIoT_TRANSPORT/defs_NB_IoT.h"
 #include "openair2/PHY_INTERFACE/IF_Module_NB_IoT.h"
 
 #include <pthread.h>
@@ -286,6 +286,21 @@ typedef struct {
   pthread_mutex_t       mutex_l2;
   int                   instance_cnt_l2;
   pthread_attr_t        attr_l2;
+  uint32_t              frame_msg5;
+  uint32_t              subframe_msg5;
+  int                   subframe_real;
+  uint8_t               flag_scrambling;
+  uint8_t               flag_msg3;
+  uint8_t               counter_msg3;
+  uint32_t              frame_msg3;
+  uint8_t               flag_msg4;
+  uint8_t               counter_msg4;
+  uint32_t              frame_msg4;
+  uint32_t              subframe_msg4;
+  uint8_t               counter_msg5;
+  uint8_t               flag_msg5;
+  uint32_t              frame_dscr_msg5;
+  uint32_t              subframe_dscr_msg5;
 
 } eNB_rxtx_proc_NB_IoT_t;
 /*
@@ -1108,7 +1123,7 @@ static inline int release_thread(pthread_mutex_t *mutex,int *instance_cnt,char *
 #include "PHY/LTE_REFSIG/defs_NB_IoT.h"
 //#include "PHY/MODULATION/defs.h"
 //#include "PHY/LTE_TRANSPORT/proto.h"
-#include "PHY/LTE_TRANSPORT/proto_NB_IoT.h"
+#include "PHY/NBIoT_TRANSPORT/proto_NB_IoT.h"
 //#include "PHY/LTE_ESTIMATION/defs.h"
 //#include "SIMULATION/ETH_TRANSPORT/defs.h"
 //#endif

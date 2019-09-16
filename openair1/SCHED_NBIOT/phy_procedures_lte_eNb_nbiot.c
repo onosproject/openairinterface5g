@@ -127,7 +127,7 @@ extern int rx_sig_fifo;
 #endif
 
 
-uint8_t is_SR_subframe(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,uint8_t UE_id)
+uint8_t is_SR_subframe(PHY_VARS_eNB *eNB,eNB_rxtx_proc_NB_IoT_t *proc,uint8_t UE_id)
 {
 
   const int subframe = proc->subframe_rx;
@@ -322,7 +322,7 @@ void phy_procedures_emos_eNB_TX(unsigned char subframe, PHY_VARS_eNB *eNB)
 }
 #endif
 
-void phy_procedures_eNB_S_RX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,relaying_type_t r_type)
+void phy_procedures_eNB_S_RX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_NB_IoT_t *proc,relaying_type_t r_type)
 {
   UNUSED(r_type);
   int subframe = proc->subframe_rx;
@@ -419,7 +419,7 @@ unsigned int taus(void);
 DCI_PDU DCI_pdu_tmp;
 
 
-void pmch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,PHY_VARS_RN *rn,relaying_type_t r_type) {
+void pmch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_NB_IoT_t *proc,PHY_VARS_RN *rn,relaying_type_t r_type) {
 
 
 #if defined(Rel10) || defined(Rel14)
@@ -506,7 +506,7 @@ int16_t buffer_npusch_ext[153600];
 //int32_t llr_msg5[16]; 
 //int32_t y_msg5[16];
 
-void common_signal_procedures (PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc) {
+void common_signal_procedures (PHY_VARS_eNB *eNB,eNB_rxtx_proc_NB_IoT_t *proc) {
 
   LTE_DL_FRAME_PARMS *fp=&eNB->frame_parms;
   int **txdataF = eNB->common_vars.txdataF[0];
@@ -877,7 +877,7 @@ if(proc->flag_msg4 == 1 && proc->counter_msg4 > 0)
   /////////////////////////////////////////////////////////////////////////
 }
 
-void generate_eNB_dlsch_params(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,DCI_ALLOC_t *dci_alloc,const int UE_id) {
+void generate_eNB_dlsch_params(PHY_VARS_eNB *eNB,eNB_rxtx_proc_NB_IoT_t *proc,DCI_ALLOC_t *dci_alloc,const int UE_id) {
 
   LTE_DL_FRAME_PARMS *fp=&eNB->frame_parms;
   int frame = proc->frame_tx;
@@ -1022,7 +1022,7 @@ void generate_eNB_dlsch_params(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,DCI_ALLOC
   
 }
 
-void generate_eNB_ulsch_params(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,DCI_ALLOC_t *dci_alloc,const int UE_id) {
+void generate_eNB_ulsch_params(PHY_VARS_eNB *eNB,eNB_rxtx_proc_NB_IoT_t *proc,DCI_ALLOC_t *dci_alloc,const int UE_id) {
 
   int harq_pid;
   LTE_DL_FRAME_PARMS *fp=&eNB->frame_parms;
@@ -1118,7 +1118,7 @@ void generate_eNB_ulsch_params(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,DCI_ALLOC
 }
 
 void pdsch_procedures(PHY_VARS_eNB *eNB,
-            eNB_rxtx_proc_t *proc,
+            eNB_rxtx_proc_NB_IoT_t *proc,
             LTE_eNB_DLSCH_t *dlsch,
             LTE_eNB_DLSCH_t *dlsch1,
             LTE_eNB_UE_stats *ue_stats,
@@ -1373,7 +1373,7 @@ void pdsch_procedures(PHY_VARS_eNB *eNB,
 }
 
 void phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
-         eNB_rxtx_proc_t *proc,
+         eNB_rxtx_proc_NB_IoT_t *proc,
                            relaying_type_t r_type,
          PHY_VARS_RN *rn,
          int do_meas,
@@ -1748,7 +1748,7 @@ void phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
   
 }
 
-void process_Msg3(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,uint8_t UE_id, uint8_t harq_pid)
+void process_Msg3(PHY_VARS_eNB *eNB,eNB_rxtx_proc_NB_IoT_t *proc,uint8_t UE_id, uint8_t harq_pid)
 {
   // this prepares the demodulation of the first PUSCH of a new user, containing Msg3
   int subframe = proc->subframe_rx;
@@ -1785,7 +1785,7 @@ void process_Msg3(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,uint8_t UE_id, uint8_t
 
 void process_HARQ_feedback(uint8_t UE_id,
                            PHY_VARS_eNB *eNB,
-         eNB_rxtx_proc_t *proc,
+         eNB_rxtx_proc_NB_IoT_t *proc,
                            uint8_t pusch_flag,
                            uint8_t *pucch_payload,
                            uint8_t pucch_sel,
@@ -2058,7 +2058,7 @@ void process_HARQ_feedback(uint8_t UE_id,
 }
 
 void get_n1_pucch_eNB(PHY_VARS_eNB *eNB,
-          eNB_rxtx_proc_t *proc,
+          eNB_rxtx_proc_NB_IoT_t *proc,
                       uint8_t UE_id,
                       int16_t *n1_pucch0,
                       int16_t *n1_pucch1,
@@ -2409,7 +2409,7 @@ void prach_procedures(PHY_VARS_eNB *eNB) {
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_ENB_PRACH_RX,0);*/
 }
 
-void pucch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,int UE_id,int harq_pid,uint8_t do_srs)
+void pucch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_NB_IoT_t *proc,int UE_id,int harq_pid,uint8_t do_srs)
 {
   LTE_DL_FRAME_PARMS *fp=&eNB->frame_parms;
   uint8_t SR_payload = 0,*pucch_payload=NULL,pucch_payload0[2]= {0,0},pucch_payload1[2]= {0,0};
@@ -2750,7 +2750,7 @@ void pucch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,int UE_id,int harq
 }
 
 
-void cba_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,int UE_id,int harq_pid) {
+void cba_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_NB_IoT_t *proc,int UE_id,int harq_pid) {
 
   uint8_t access_mode;
   int num_active_cba_groups;
@@ -3013,7 +3013,7 @@ void init_te_thread(PHY_VARS_eNB *eNB,pthread_attr_t *attr_te) {
 }
 */
 
-void eNB_fep_full_2thread(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc_rxtx) {
+void eNB_fep_full_2thread(PHY_VARS_eNB *eNB,eNB_rxtx_proc_NB_IoT_t *proc_rxtx) {
 
   eNB_proc_t *proc = &eNB->proc;
 
@@ -3059,7 +3059,7 @@ void eNB_fep_full_2thread(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc_rxtx) {
 
 
 
-void eNB_fep_full(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc_rxtx) {
+void eNB_fep_full(PHY_VARS_eNB *eNB,eNB_rxtx_proc_NB_IoT_t *proc_rxtx) {
 
   int l;
   LTE_DL_FRAME_PARMS *fp=&eNB->frame_parms;
@@ -3099,7 +3099,7 @@ void eNB_fep_full(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc_rxtx) {
   }    
 }
 
-void eNB_fep_rru_if5(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc_rxtx) {
+void eNB_fep_rru_if5(PHY_VARS_eNB *eNB,eNB_rxtx_proc_NB_IoT_t *proc_rxtx) {
 
   eNB_proc_t *proc=&eNB->proc;
   uint8_t seqno=0;
@@ -3160,7 +3160,7 @@ if(frame%2==0 && subframe==9)
 
 }
 
-void phy_procedures_eNB_common_RX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc){
+void phy_procedures_eNB_common_RX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_NB_IoT_t *proc){
 
 
   //  eNB_proc_t *proc       = &eNB->proc;
@@ -3193,7 +3193,7 @@ void phy_procedures_eNB_common_RX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc){
 }
 
 /*
-void fill_rx_indication_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,uint8_t data_or_control, uint8_t msg3_flag)
+void fill_rx_indication_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_NB_IoT_t *proc,uint8_t data_or_control, uint8_t msg3_flag)
 {
       nfapi_rx_indication_pdu_t *pdu;
 
@@ -3235,7 +3235,7 @@ void fill_rx_indication_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,uint8_t d
 }
 */
 
-void phy_procedures_eNB_uespec_RX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,const relaying_type_t r_type)
+void phy_procedures_eNB_uespec_RX(PHY_VARS_eNB *eNB,eNB_rxtx_proc_NB_IoT_t *proc,const relaying_type_t r_type)
 {
   //RX processing for ue-specific resources (i
   UNUSED(r_type);

@@ -428,41 +428,43 @@ void phy_config_dedicated_eNB_NB_IoT(uint8_t 			Mod_id,
 	
 }
 
-// void phy_init_lte_top_NB_IoT(NB_IoT_DL_FRAME_PARMS *frame_parms)
-// {
+void phy_init_lte_top_NB_IoT(NB_IoT_DL_FRAME_PARMS *frame_parms)
+{
 
-// //   crcTableInit();
+  crcTableInit_NB_IoT();
 
-// //   ccodedot11_init();
-// //   ccodedot11_init_inv();
+  //ccodedot11_init();
+  //ccodedot11_init_inv();
+  ccodelte_init_NB_IoT();
+  ccodelte_init2_NB_IoT();
+  //ccodelte_init_inv();
 
-// //   ccodelte_init();
-// //   ccodelte_init_inv();
+  //treillis_table_init();
 
-// //   treillis_table_init();
+  //phy_generate_viterbi_tables();
+  //phy_generate_viterbi_tables_lte();
 
-// //   phy_generate_viterbi_tables();
-// //   phy_generate_viterbi_tables_lte();
+  //init_td8();
+ // init_td16();
+#ifdef __AVX2__
+ // init_td16avx2();
+#endif
 
-// //   init_td8();
-// //   init_td16();
-// // #ifdef __AVX2__
-// //   init_td16avx2();
-// // #endif
+  //lte_sync_time_init_NB_IoT(frame_parms);
 
-// //   lte_sync_time_init(frame_parms);
+  //generate_ul_ref_sigs();
+  //generate_ul_ref_sigs_rx();
+  generate_ul_ref_sigs_rx_NB_IoT();
 
-// //   generate_ul_ref_sigs();
-//   generate_ul_ref_sigs_rx_NB_IoT();
+ // generate_64qam_table();
+  //generate_16qam_table();
+ // generate_RIV_tables();
 
-//   // generate_64qam_table();
-//   // generate_16qam_table();
-//   // generate_RIV_tables();
+ init_unscrambling_lut_NB_IoT();
+ // init_scrambling_lut();
 
-//   // init_unscrambling_lut();
-//   // init_scrambling_lut();
-//   // //set_taus_seed(1328);
+  //set_taus_seed(1328);
 
-// }
+}
 
 

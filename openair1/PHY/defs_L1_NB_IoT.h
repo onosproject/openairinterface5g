@@ -137,7 +137,7 @@ static inline void* malloc16_clear( size_t size )
 ////////////////////////////////////////////////////////////////////#ifdef OPENAIR_LTE    (check if this is required)
 
 //#include "PHY/LTE_TRANSPORT/defs.h"
-#include "PHY/LTE_TRANSPORT/defs_NB_IoT.h"
+#include "PHY/NBIoT_TRANSPORT/defs_NB_IoT.h"
 #include <pthread.h>
 
 #include "targets/ARCH/COMMON/common_lib.h"
@@ -1033,5 +1033,5 @@ typedef struct {
 
 #include "PHY/INIT/defs_NB_IoT.h"
 #include "PHY/LTE_REFSIG/defs_NB_IoT.h"
-#include "PHY/LTE_TRANSPORT/proto_NB_IoT.h"
+#include "PHY/NBIoT_TRANSPORT/proto_NB_IoT.h"
 #endif //  __PHY_DEFS__H__

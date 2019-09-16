@@ -16,7 +16,7 @@
 //#include "COMMON/openair_defs.h"
 #include "COMMON/platform_constants.h"
 #include "COMMON/mac_rrc_primitives.h"
-#include "PHY/LTE_TRANSPORT/defs_NB_IoT.h"
+#include "PHY/NBIoT_TRANSPORT/defs_NB_IoT.h"
 //#include "PHY/defs.h"
 #include "PHY/defs_L1_NB_IoT.h"
 #include "openair2/PHY_INTERFACE/IF_Module_NB_IoT.h"
@@ -593,7 +593,7 @@ typedef  struct {
 
 nprach_parameters_NB_IoT_t nprach_list[3];
 
-nfapi_config_request_t config;
+
 
 //DLSF Table
 DLSF_INFO_t DLSF_information;
