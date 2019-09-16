@@ -673,6 +673,9 @@ typedef struct PHY_VARS_gNB_s {
   /// PUSCH DMRS
   uint32_t nr_gold_pusch[2][20][2][NR_MAX_PUSCH_DMRS_INIT_LENGTH_DWORD];
 
+  /// CSI  RS sequence
+  uint32_t ***nr_gold_csi_rs;
+
   /// Indicator set to 0 after first SR
   uint8_t first_sr[NUMBER_OF_UE_MAX];
 
