@@ -47,6 +47,8 @@ static inline uint32_t nrLDPC_init(t_nrLDPC_dec_params* p_decParams, t_nrLDPC_lu
     uint16_t Z = p_decParams->Z;
     uint8_t  R = p_decParams->R;
 
+    p_lut->cn2bnProcBuf2  = NULL;
+
     if (BG == 2)
     {
         // LUT that only depend on BG
@@ -1195,6 +1197,8 @@ static inline uint32_t nrLDPC_init(t_nrLDPC_dec_params* p_decParams, t_nrLDPC_lu
             {
                 p_lut->llr2CnProcBuf  = lut_llr2CnProcBuf_BG1_Z2_R13;
                 p_lut->cn2bnProcBuf   = lut_cn2bnProcBuf_BG1_Z2_R13;
+                p_lut->cn2bnProcBuf2  = lut_cn2bnProcBuf2_BG1_Z2_R13;
+                p_lut->cn2bnProcBuf2_size  = lut_cn2bnProcBuf2_BG1_Z2_R13_size;
                 p_lut->llr2llrProcBuf = lut_llr2llrProcBuf_BG1_Z2_R13;
             }
             else if (R == 23)
@@ -1216,6 +1220,8 @@ static inline uint32_t nrLDPC_init(t_nrLDPC_dec_params* p_decParams, t_nrLDPC_lu
             {
                 p_lut->llr2CnProcBuf  = lut_llr2CnProcBuf_BG1_Z3_R13;
                 p_lut->cn2bnProcBuf   = lut_cn2bnProcBuf_BG1_Z3_R13;
+                p_lut->cn2bnProcBuf2  = lut_cn2bnProcBuf2_BG1_Z3_R13;
+                p_lut->cn2bnProcBuf2_size  = lut_cn2bnProcBuf2_BG1_Z3_R13_size;
                 p_lut->llr2llrProcBuf = lut_llr2llrProcBuf_BG1_Z3_R13;
             }
             else if (R == 23)
@@ -1237,6 +1243,8 @@ static inline uint32_t nrLDPC_init(t_nrLDPC_dec_params* p_decParams, t_nrLDPC_lu
             {
                 p_lut->llr2CnProcBuf  = lut_llr2CnProcBuf_BG1_Z4_R13;
                 p_lut->cn2bnProcBuf   = lut_cn2bnProcBuf_BG1_Z4_R13;
+                p_lut->cn2bnProcBuf2  = lut_cn2bnProcBuf2_BG1_Z4_R13;
+                p_lut->cn2bnProcBuf2_size  = lut_cn2bnProcBuf2_BG1_Z4_R13_size;
                 p_lut->llr2llrProcBuf = lut_llr2llrProcBuf_BG1_Z4_R13;
             }
             else if (R == 23)
@@ -1258,6 +1266,8 @@ static inline uint32_t nrLDPC_init(t_nrLDPC_dec_params* p_decParams, t_nrLDPC_lu
             {
                 p_lut->llr2CnProcBuf  = lut_llr2CnProcBuf_BG1_Z5_R13;
                 p_lut->cn2bnProcBuf   = lut_cn2bnProcBuf_BG1_Z5_R13;
+                p_lut->cn2bnProcBuf2  = lut_cn2bnProcBuf2_BG1_Z5_R13;
+                p_lut->cn2bnProcBuf2_size  = lut_cn2bnProcBuf2_BG1_Z320_R13_size;
                 p_lut->llr2llrProcBuf = lut_llr2llrProcBuf_BG1_Z5_R13;
             }
             else if (R == 23)
@@ -1279,6 +1289,8 @@ static inline uint32_t nrLDPC_init(t_nrLDPC_dec_params* p_decParams, t_nrLDPC_lu
             {
                 p_lut->llr2CnProcBuf  = lut_llr2CnProcBuf_BG1_Z6_R13;
                 p_lut->cn2bnProcBuf   = lut_cn2bnProcBuf_BG1_Z6_R13;
+                p_lut->cn2bnProcBuf2  = lut_cn2bnProcBuf2_BG1_Z6_R13;
+                p_lut->cn2bnProcBuf2_size  = lut_cn2bnProcBuf2_BG1_Z6_R13_size;
                 p_lut->llr2llrProcBuf = lut_llr2llrProcBuf_BG1_Z6_R13;
             }
             else if (R == 23)
@@ -1300,6 +1312,8 @@ static inline uint32_t nrLDPC_init(t_nrLDPC_dec_params* p_decParams, t_nrLDPC_lu
             {
                 p_lut->llr2CnProcBuf  = lut_llr2CnProcBuf_BG1_Z7_R13;
                 p_lut->cn2bnProcBuf   = lut_cn2bnProcBuf_BG1_Z7_R13;
+                p_lut->cn2bnProcBuf2  = lut_cn2bnProcBuf2_BG1_Z7_R13;
+                p_lut->cn2bnProcBuf2_size  = lut_cn2bnProcBuf2_BG1_Z7_R13_size;
                 p_lut->llr2llrProcBuf = lut_llr2llrProcBuf_BG1_Z7_R13;
             }
             else if (R == 23)
@@ -1321,6 +1335,8 @@ static inline uint32_t nrLDPC_init(t_nrLDPC_dec_params* p_decParams, t_nrLDPC_lu
             {
                 p_lut->llr2CnProcBuf  = lut_llr2CnProcBuf_BG1_Z8_R13;
                 p_lut->cn2bnProcBuf   = lut_cn2bnProcBuf_BG1_Z8_R13;
+                p_lut->cn2bnProcBuf2  = lut_cn2bnProcBuf2_BG1_Z8_R13;
+                p_lut->cn2bnProcBuf2_size  = lut_cn2bnProcBuf2_BG1_Z8_R13_size;
                 p_lut->llr2llrProcBuf = lut_llr2llrProcBuf_BG1_Z8_R13;
             }
             else if (R == 23)
@@ -1342,6 +1358,8 @@ static inline uint32_t nrLDPC_init(t_nrLDPC_dec_params* p_decParams, t_nrLDPC_lu
             {
                 p_lut->llr2CnProcBuf  = lut_llr2CnProcBuf_BG1_Z9_R13;
                 p_lut->cn2bnProcBuf   = lut_cn2bnProcBuf_BG1_Z9_R13;
+                p_lut->cn2bnProcBuf2  = lut_cn2bnProcBuf2_BG1_Z9_R13;
+                p_lut->cn2bnProcBuf2_size  = lut_cn2bnProcBuf2_BG1_Z9_R13_size;
                 p_lut->llr2llrProcBuf = lut_llr2llrProcBuf_BG1_Z9_R13;
             }
             else if (R == 23)
@@ -1363,6 +1381,8 @@ static inline uint32_t nrLDPC_init(t_nrLDPC_dec_params* p_decParams, t_nrLDPC_lu
             {
                 p_lut->llr2CnProcBuf  = lut_llr2CnProcBuf_BG1_Z10_R13;
                 p_lut->cn2bnProcBuf   = lut_cn2bnProcBuf_BG1_Z10_R13;
+                p_lut->cn2bnProcBuf2  = lut_cn2bnProcBuf2_BG1_Z10_R13;
+                p_lut->cn2bnProcBuf2_size  = lut_cn2bnProcBuf2_BG1_Z10_R13_size;
                 p_lut->llr2llrProcBuf = lut_llr2llrProcBuf_BG1_Z10_R13;
             }
             else if (R == 23)
@@ -1384,6 +1404,8 @@ static inline uint32_t nrLDPC_init(t_nrLDPC_dec_params* p_decParams, t_nrLDPC_lu
             {
                 p_lut->llr2CnProcBuf  = lut_llr2CnProcBuf_BG1_Z11_R13;
                 p_lut->cn2bnProcBuf   = lut_cn2bnProcBuf_BG1_Z11_R13;
+                p_lut->cn2bnProcBuf2  = lut_cn2bnProcBuf2_BG1_Z11_R13;
+                p_lut->cn2bnProcBuf2_size  = lut_cn2bnProcBuf2_BG1_Z11_R13_size;
                 p_lut->llr2llrProcBuf = lut_llr2llrProcBuf_BG1_Z11_R13;
             }
             else if (R == 23)
@@ -1405,6 +1427,8 @@ static inline uint32_t nrLDPC_init(t_nrLDPC_dec_params* p_decParams, t_nrLDPC_lu
             {
                 p_lut->llr2CnProcBuf  = lut_llr2CnProcBuf_BG1_Z12_R13;
                 p_lut->cn2bnProcBuf   = lut_cn2bnProcBuf_BG1_Z12_R13;
+                p_lut->cn2bnProcBuf2  = lut_cn2bnProcBuf2_BG1_Z12_R13;
+                p_lut->cn2bnProcBuf2_size  = lut_cn2bnProcBuf2_BG1_Z12_R13_size;
                 p_lut->llr2llrProcBuf = lut_llr2llrProcBuf_BG1_Z12_R13;
             }
             else if (R == 23)
@@ -1426,6 +1450,8 @@ static inline uint32_t nrLDPC_init(t_nrLDPC_dec_params* p_decParams, t_nrLDPC_lu
             {
                 p_lut->llr2CnProcBuf  = lut_llr2CnProcBuf_BG1_Z13_R13;
                 p_lut->cn2bnProcBuf   = lut_cn2bnProcBuf_BG1_Z13_R13;
+                p_lut->cn2bnProcBuf2  = lut_cn2bnProcBuf2_BG1_Z13_R13;
+                p_lut->cn2bnProcBuf2_size  = lut_cn2bnProcBuf2_BG1_Z13_R13_size;
                 p_lut->llr2llrProcBuf = lut_llr2llrProcBuf_BG1_Z13_R13;
             }
             else if (R == 23)
@@ -1447,6 +1473,8 @@ static inline uint32_t nrLDPC_init(t_nrLDPC_dec_params* p_decParams, t_nrLDPC_lu
             {
                 p_lut->llr2CnProcBuf  = lut_llr2CnProcBuf_BG1_Z14_R13;
                 p_lut->cn2bnProcBuf   = lut_cn2bnProcBuf_BG1_Z14_R13;
+                p_lut->cn2bnProcBuf2  = lut_cn2bnProcBuf2_BG1_Z14_R13;
+                p_lut->cn2bnProcBuf2_size  = lut_cn2bnProcBuf2_BG1_Z14_R13_size;
                 p_lut->llr2llrProcBuf = lut_llr2llrProcBuf_BG1_Z14_R13;
             }
             else if (R == 23)
@@ -1468,6 +1496,8 @@ static inline uint32_t nrLDPC_init(t_nrLDPC_dec_params* p_decParams, t_nrLDPC_lu
             {
                 p_lut->llr2CnProcBuf  = lut_llr2CnProcBuf_BG1_Z15_R13;
                 p_lut->cn2bnProcBuf   = lut_cn2bnProcBuf_BG1_Z15_R13;
+                p_lut->cn2bnProcBuf2  = lut_cn2bnProcBuf2_BG1_Z15_R13;
+                p_lut->cn2bnProcBuf2_size  = lut_cn2bnProcBuf2_BG1_Z15_R13_size;
                 p_lut->llr2llrProcBuf = lut_llr2llrProcBuf_BG1_Z15_R13;
             }
             else if (R == 23)
@@ -1489,6 +1519,8 @@ static inline uint32_t nrLDPC_init(t_nrLDPC_dec_params* p_decParams, t_nrLDPC_lu
             {
                 p_lut->llr2CnProcBuf  = lut_llr2CnProcBuf_BG1_Z16_R13;
                 p_lut->cn2bnProcBuf   = lut_cn2bnProcBuf_BG1_Z16_R13;
+                p_lut->cn2bnProcBuf2  = lut_cn2bnProcBuf2_BG1_Z16_R13;
+                p_lut->cn2bnProcBuf2_size  = lut_cn2bnProcBuf2_BG1_Z16_R13_size;
                 p_lut->llr2llrProcBuf = lut_llr2llrProcBuf_BG1_Z16_R13;
             }
             else if (R == 23)
@@ -1510,6 +1542,8 @@ static inline uint32_t nrLDPC_init(t_nrLDPC_dec_params* p_decParams, t_nrLDPC_lu
             {
                 p_lut->llr2CnProcBuf  = lut_llr2CnProcBuf_BG1_Z18_R13;
                 p_lut->cn2bnProcBuf   = lut_cn2bnProcBuf_BG1_Z18_R13;
+                p_lut->cn2bnProcBuf2  = lut_cn2bnProcBuf2_BG1_Z18_R13;
+                p_lut->cn2bnProcBuf2_size  = lut_cn2bnProcBuf2_BG1_Z18_R13_size;
                 p_lut->llr2llrProcBuf = lut_llr2llrProcBuf_BG1_Z18_R13;
             }
             else if (R == 23)
@@ -1531,6 +1565,7 @@ static inline uint32_t nrLDPC_init(t_nrLDPC_dec_params* p_decParams, t_nrLDPC_lu
             {
                 p_lut->llr2CnProcBuf  = lut_llr2CnProcBuf_BG1_Z20_R13;
                 p_lut->cn2bnProcBuf   = lut_cn2bnProcBuf_BG1_Z20_R13;
+                p_lut->cn2bnProcBuf2  = lut_cn2bnProcBuf2_BG1_Z20_R13;
                 p_lut->llr2llrProcBuf = lut_llr2llrProcBuf_BG1_Z20_R13;
             }
             else if (R == 23)
@@ -1552,6 +1587,8 @@ static inline uint32_t nrLDPC_init(t_nrLDPC_dec_params* p_decParams, t_nrLDPC_lu
             {
                 p_lut->llr2CnProcBuf  = lut_llr2CnProcBuf_BG1_Z22_R13;
                 p_lut->cn2bnProcBuf   = lut_cn2bnProcBuf_BG1_Z22_R13;
+                p_lut->cn2bnProcBuf2  = lut_cn2bnProcBuf2_BG1_Z22_R13;
+                p_lut->cn2bnProcBuf2_size  = lut_cn2bnProcBuf2_BG1_Z22_R13_size;
                 p_lut->llr2llrProcBuf = lut_llr2llrProcBuf_BG1_Z22_R13;
             }
             else if (R == 23)
@@ -1573,6 +1610,8 @@ static inline uint32_t nrLDPC_init(t_nrLDPC_dec_params* p_decParams, t_nrLDPC_lu
             {
                 p_lut->llr2CnProcBuf  = lut_llr2CnProcBuf_BG1_Z24_R13;
                 p_lut->cn2bnProcBuf   = lut_cn2bnProcBuf_BG1_Z24_R13;
+                p_lut->cn2bnProcBuf2  = lut_cn2bnProcBuf2_BG1_Z24_R13;
+                p_lut->cn2bnProcBuf2_size  = lut_cn2bnProcBuf2_BG1_Z24_R13_size;
                 p_lut->llr2llrProcBuf = lut_llr2llrProcBuf_BG1_Z24_R13;
             }
             else if (R == 23)
@@ -1594,6 +1633,8 @@ static inline uint32_t nrLDPC_init(t_nrLDPC_dec_params* p_decParams, t_nrLDPC_lu
             {
                 p_lut->llr2CnProcBuf  = lut_llr2CnProcBuf_BG1_Z26_R13;
                 p_lut->cn2bnProcBuf   = lut_cn2bnProcBuf_BG1_Z26_R13;
+                p_lut->cn2bnProcBuf2  = lut_cn2bnProcBuf2_BG1_Z26_R13;
+                p_lut->cn2bnProcBuf2_size  = lut_cn2bnProcBuf2_BG1_Z26_R13_size;
                 p_lut->llr2llrProcBuf = lut_llr2llrProcBuf_BG1_Z26_R13;
             }
             else if (R == 23)
@@ -1615,6 +1656,8 @@ static inline uint32_t nrLDPC_init(t_nrLDPC_dec_params* p_decParams, t_nrLDPC_lu
             {
                 p_lut->llr2CnProcBuf  = lut_llr2CnProcBuf_BG1_Z28_R13;
                 p_lut->cn2bnProcBuf   = lut_cn2bnProcBuf_BG1_Z28_R13;
+                p_lut->cn2bnProcBuf2  = lut_cn2bnProcBuf2_BG1_Z28_R13;
+                p_lut->cn2bnProcBuf2_size  = lut_cn2bnProcBuf2_BG1_Z28_R13_size;
                 p_lut->llr2llrProcBuf = lut_llr2llrProcBuf_BG1_Z28_R13;
             }
             else if (R == 23)
@@ -1636,6 +1679,8 @@ static inline uint32_t nrLDPC_init(t_nrLDPC_dec_params* p_decParams, t_nrLDPC_lu
             {
                 p_lut->llr2CnProcBuf  = lut_llr2CnProcBuf_BG1_Z30_R13;
                 p_lut->cn2bnProcBuf   = lut_cn2bnProcBuf_BG1_Z30_R13;
+                p_lut->cn2bnProcBuf2  = lut_cn2bnProcBuf2_BG1_Z30_R13;
+                p_lut->cn2bnProcBuf2_size  = lut_cn2bnProcBuf2_BG1_Z30_R13_size;
                 p_lut->llr2llrProcBuf = lut_llr2llrProcBuf_BG1_Z30_R13;
             }
             else if (R == 23)
@@ -1657,6 +1702,8 @@ static inline uint32_t nrLDPC_init(t_nrLDPC_dec_params* p_decParams, t_nrLDPC_lu
             {
                 p_lut->llr2CnProcBuf  = lut_llr2CnProcBuf_BG1_Z32_R13;
                 p_lut->cn2bnProcBuf   = lut_cn2bnProcBuf_BG1_Z32_R13;
+                p_lut->cn2bnProcBuf2  = lut_cn2bnProcBuf2_BG1_Z32_R13;
+                p_lut->cn2bnProcBuf2_size  = lut_cn2bnProcBuf2_BG1_Z32_R13_size;
                 p_lut->llr2llrProcBuf = lut_llr2llrProcBuf_BG1_Z32_R13;
             }
             else if (R == 23)
@@ -1678,6 +1725,8 @@ static inline uint32_t nrLDPC_init(t_nrLDPC_dec_params* p_decParams, t_nrLDPC_lu
             {
                 p_lut->llr2CnProcBuf  = lut_llr2CnProcBuf_BG1_Z36_R13;
                 p_lut->cn2bnProcBuf   = lut_cn2bnProcBuf_BG1_Z36_R13;
+                p_lut->cn2bnProcBuf2  = lut_cn2bnProcBuf2_BG1_Z36_R13;
+                p_lut->cn2bnProcBuf2_size  = lut_cn2bnProcBuf2_BG1_Z36_R13_size;
                 p_lut->llr2llrProcBuf = lut_llr2llrProcBuf_BG1_Z36_R13;
             }
             else if (R == 23)
@@ -1699,6 +1748,8 @@ static inline uint32_t nrLDPC_init(t_nrLDPC_dec_params* p_decParams, t_nrLDPC_lu
             {
                 p_lut->llr2CnProcBuf  = lut_llr2CnProcBuf_BG1_Z40_R13;
                 p_lut->cn2bnProcBuf   = lut_cn2bnProcBuf_BG1_Z40_R13;
+                p_lut->cn2bnProcBuf2  = lut_cn2bnProcBuf2_BG1_Z40_R13;
+                p_lut->cn2bnProcBuf2_size  = lut_cn2bnProcBuf2_BG1_Z40_R13_size;
                 p_lut->llr2llrProcBuf = lut_llr2llrProcBuf_BG1_Z40_R13;
             }
             else if (R == 23)
@@ -1720,6 +1771,8 @@ static inline uint32_t nrLDPC_init(t_nrLDPC_dec_params* p_decParams, t_nrLDPC_lu
             {
                 p_lut->llr2CnProcBuf  = lut_llr2CnProcBuf_BG1_Z44_R13;
                 p_lut->cn2bnProcBuf   = lut_cn2bnProcBuf_BG1_Z44_R13;
+                p_lut->cn2bnProcBuf2  = lut_cn2bnProcBuf2_BG1_Z44_R13;
+                p_lut->cn2bnProcBuf2_size  = lut_cn2bnProcBuf2_BG1_Z44_R13_size;
                 p_lut->llr2llrProcBuf = lut_llr2llrProcBuf_BG1_Z44_R13;
             }
             else if (R == 23)
@@ -1741,6 +1794,8 @@ static inline uint32_t nrLDPC_init(t_nrLDPC_dec_params* p_decParams, t_nrLDPC_lu
             {
                 p_lut->llr2CnProcBuf  = lut_llr2CnProcBuf_BG1_Z48_R13;
                 p_lut->cn2bnProcBuf   = lut_cn2bnProcBuf_BG1_Z48_R13;
+                p_lut->cn2bnProcBuf2  = lut_cn2bnProcBuf2_BG1_Z48_R13;
+                p_lut->cn2bnProcBuf2_size  = lut_cn2bnProcBuf2_BG1_Z48_R13_size;
                 p_lut->llr2llrProcBuf = lut_llr2llrProcBuf_BG1_Z48_R13;
             }
             else if (R == 23)
@@ -1762,6 +1817,8 @@ static inline uint32_t nrLDPC_init(t_nrLDPC_dec_params* p_decParams, t_nrLDPC_lu
             {
                 p_lut->llr2CnProcBuf  = lut_llr2CnProcBuf_BG1_Z52_R13;
                 p_lut->cn2bnProcBuf   = lut_cn2bnProcBuf_BG1_Z52_R13;
+                p_lut->cn2bnProcBuf2  = lut_cn2bnProcBuf2_BG1_Z52_R13;
+                p_lut->cn2bnProcBuf2_size  = lut_cn2bnProcBuf2_BG1_Z52_R13_size;
                 p_lut->llr2llrProcBuf = lut_llr2llrProcBuf_BG1_Z52_R13;
             }
             else if (R == 23)
@@ -1783,6 +1840,8 @@ static inline uint32_t nrLDPC_init(t_nrLDPC_dec_params* p_decParams, t_nrLDPC_lu
             {
                 p_lut->llr2CnProcBuf  = lut_llr2CnProcBuf_BG1_Z56_R13;
                 p_lut->cn2bnProcBuf   = lut_cn2bnProcBuf_BG1_Z56_R13;
+                p_lut->cn2bnProcBuf2  = lut_cn2bnProcBuf2_BG1_Z56_R13;
+                p_lut->cn2bnProcBuf2_size  = lut_cn2bnProcBuf2_BG1_Z56_R13_size;
                 p_lut->llr2llrProcBuf = lut_llr2llrProcBuf_BG1_Z56_R13;
             }
             else if (R == 23)
@@ -1804,6 +1863,8 @@ static inline uint32_t nrLDPC_init(t_nrLDPC_dec_params* p_decParams, t_nrLDPC_lu
             {
                 p_lut->llr2CnProcBuf  = lut_llr2CnProcBuf_BG1_Z60_R13;
                 p_lut->cn2bnProcBuf   = lut_cn2bnProcBuf_BG1_Z60_R13;
+                p_lut->cn2bnProcBuf2  = lut_cn2bnProcBuf2_BG1_Z60_R13;
+                p_lut->cn2bnProcBuf2_size  = lut_cn2bnProcBuf2_BG1_Z60_R13_size;
                 p_lut->llr2llrProcBuf = lut_llr2llrProcBuf_BG1_Z60_R13;
             }
             else if (R == 23)
@@ -1825,6 +1886,8 @@ static inline uint32_t nrLDPC_init(t_nrLDPC_dec_params* p_decParams, t_nrLDPC_lu
             {
                 p_lut->llr2CnProcBuf  = lut_llr2CnProcBuf_BG1_Z64_R13;
                 p_lut->cn2bnProcBuf   = lut_cn2bnProcBuf_BG1_Z64_R13;
+                p_lut->cn2bnProcBuf2  = lut_cn2bnProcBuf2_BG1_Z64_R13;
+                p_lut->cn2bnProcBuf2_size  = lut_cn2bnProcBuf2_BG1_Z64_R13_size;
                 p_lut->llr2llrProcBuf = lut_llr2llrProcBuf_BG1_Z64_R13;
             }
             else if (R == 23)
@@ -1846,6 +1909,8 @@ static inline uint32_t nrLDPC_init(t_nrLDPC_dec_params* p_decParams, t_nrLDPC_lu
             {
                 p_lut->llr2CnProcBuf  = lut_llr2CnProcBuf_BG1_Z72_R13;
                 p_lut->cn2bnProcBuf   = lut_cn2bnProcBuf_BG1_Z72_R13;
+                p_lut->cn2bnProcBuf2  = lut_cn2bnProcBuf2_BG1_Z72_R13;
+                p_lut->cn2bnProcBuf2_size  = lut_cn2bnProcBuf2_BG1_Z72_R13_size;
                 p_lut->llr2llrProcBuf = lut_llr2llrProcBuf_BG1_Z72_R13;
             }
             else if (R == 23)
@@ -1867,6 +1932,8 @@ static inline uint32_t nrLDPC_init(t_nrLDPC_dec_params* p_decParams, t_nrLDPC_lu
             {
                 p_lut->llr2CnProcBuf  = lut_llr2CnProcBuf_BG1_Z80_R13;
                 p_lut->cn2bnProcBuf   = lut_cn2bnProcBuf_BG1_Z80_R13;
+                p_lut->cn2bnProcBuf2  = lut_cn2bnProcBuf2_BG1_Z80_R13;
+                p_lut->cn2bnProcBuf2_size  = lut_cn2bnProcBuf2_BG1_Z80_R13_size;
                 p_lut->llr2llrProcBuf = lut_llr2llrProcBuf_BG1_Z80_R13;
             }
             else if (R == 23)
@@ -1888,6 +1955,8 @@ static inline uint32_t nrLDPC_init(t_nrLDPC_dec_params* p_decParams, t_nrLDPC_lu
             {
                 p_lut->llr2CnProcBuf  = lut_llr2CnProcBuf_BG1_Z88_R13;
                 p_lut->cn2bnProcBuf   = lut_cn2bnProcBuf_BG1_Z88_R13;
+                p_lut->cn2bnProcBuf2  = lut_cn2bnProcBuf2_BG1_Z88_R13;
+                p_lut->cn2bnProcBuf2_size  = lut_cn2bnProcBuf2_BG1_Z88_R13_size;
                 p_lut->llr2llrProcBuf = lut_llr2llrProcBuf_BG1_Z88_R13;
             }
             else if (R == 23)
@@ -1909,6 +1978,8 @@ static inline uint32_t nrLDPC_init(t_nrLDPC_dec_params* p_decParams, t_nrLDPC_lu
             {
                 p_lut->llr2CnProcBuf  = lut_llr2CnProcBuf_BG1_Z96_R13;
                 p_lut->cn2bnProcBuf   = lut_cn2bnProcBuf_BG1_Z96_R13;
+                p_lut->cn2bnProcBuf2  = lut_cn2bnProcBuf2_BG1_Z96_R13;
+                p_lut->cn2bnProcBuf2_size  = lut_cn2bnProcBuf2_BG1_Z96_R13_size;
                 p_lut->llr2llrProcBuf = lut_llr2llrProcBuf_BG1_Z96_R13;
             }
             else if (R == 23)
@@ -1930,6 +2001,8 @@ static inline uint32_t nrLDPC_init(t_nrLDPC_dec_params* p_decParams, t_nrLDPC_lu
             {
                 p_lut->llr2CnProcBuf  = lut_llr2CnProcBuf_BG1_Z104_R13;
                 p_lut->cn2bnProcBuf   = lut_cn2bnProcBuf_BG1_Z104_R13;
+                p_lut->cn2bnProcBuf2  = lut_cn2bnProcBuf2_BG1_Z104_R13;
+                p_lut->cn2bnProcBuf2_size  = lut_cn2bnProcBuf2_BG1_Z104_R13_size;
                 p_lut->llr2llrProcBuf = lut_llr2llrProcBuf_BG1_Z104_R13;
             }
             else if (R == 23)
@@ -1951,6 +2024,8 @@ static inline uint32_t nrLDPC_init(t_nrLDPC_dec_params* p_decParams, t_nrLDPC_lu
             {
                 p_lut->llr2CnProcBuf  = lut_llr2CnProcBuf_BG1_Z112_R13;
                 p_lut->cn2bnProcBuf   = lut_cn2bnProcBuf_BG1_Z112_R13;
+                p_lut->cn2bnProcBuf2  = lut_cn2bnProcBuf2_BG1_Z112_R13;
+                p_lut->cn2bnProcBuf2_size  = lut_cn2bnProcBuf2_BG1_Z112_R13_size;
                 p_lut->llr2llrProcBuf = lut_llr2llrProcBuf_BG1_Z112_R13;
             }
             else if (R == 23)
@@ -1972,6 +2047,8 @@ static inline uint32_t nrLDPC_init(t_nrLDPC_dec_params* p_decParams, t_nrLDPC_lu
             {
                 p_lut->llr2CnProcBuf  = lut_llr2CnProcBuf_BG1_Z120_R13;
                 p_lut->cn2bnProcBuf   = lut_cn2bnProcBuf_BG1_Z120_R13;
+                p_lut->cn2bnProcBuf2  = lut_cn2bnProcBuf2_BG1_Z120_R13;
+                p_lut->cn2bnProcBuf2_size  = lut_cn2bnProcBuf2_BG1_Z120_R13_size;
                 p_lut->llr2llrProcBuf = lut_llr2llrProcBuf_BG1_Z120_R13;
             }
             else if (R == 23)
@@ -1993,6 +2070,8 @@ static inline uint32_t nrLDPC_init(t_nrLDPC_dec_params* p_decParams, t_nrLDPC_lu
             {
                 p_lut->llr2CnProcBuf  = lut_llr2CnProcBuf_BG1_Z128_R13;
                 p_lut->cn2bnProcBuf   = lut_cn2bnProcBuf_BG1_Z128_R13;
+                p_lut->cn2bnProcBuf2  = lut_cn2bnProcBuf2_BG1_Z128_R13;
+                p_lut->cn2bnProcBuf2_size  = lut_cn2bnProcBuf2_BG1_Z128_R13_size;
                 p_lut->llr2llrProcBuf = lut_llr2llrProcBuf_BG1_Z128_R13;
             }
             else if (R == 23)
@@ -2014,6 +2093,8 @@ static inline uint32_t nrLDPC_init(t_nrLDPC_dec_params* p_decParams, t_nrLDPC_lu
             {
                 p_lut->llr2CnProcBuf  = lut_llr2CnProcBuf_BG1_Z144_R13;
                 p_lut->cn2bnProcBuf   = lut_cn2bnProcBuf_BG1_Z144_R13;
+                p_lut->cn2bnProcBuf2  = lut_cn2bnProcBuf2_BG1_Z144_R13;
+                p_lut->cn2bnProcBuf2_size  = lut_cn2bnProcBuf2_BG1_Z144_R13_size;
                 p_lut->llr2llrProcBuf = lut_llr2llrProcBuf_BG1_Z144_R13;
             }
             else if (R == 23)
@@ -2035,6 +2116,8 @@ static inline uint32_t nrLDPC_init(t_nrLDPC_dec_params* p_decParams, t_nrLDPC_lu
             {
                 p_lut->llr2CnProcBuf  = lut_llr2CnProcBuf_BG1_Z160_R13;
                 p_lut->cn2bnProcBuf   = lut_cn2bnProcBuf_BG1_Z160_R13;
+                p_lut->cn2bnProcBuf2  = lut_cn2bnProcBuf2_BG1_Z160_R13;
+                p_lut->cn2bnProcBuf2_size  = lut_cn2bnProcBuf2_BG1_Z160_R13_size;
                 p_lut->llr2llrProcBuf = lut_llr2llrProcBuf_BG1_Z160_R13;
             }
             else if (R == 23)
@@ -2056,6 +2139,8 @@ static inline uint32_t nrLDPC_init(t_nrLDPC_dec_params* p_decParams, t_nrLDPC_lu
             {
                 p_lut->llr2CnProcBuf  = lut_llr2CnProcBuf_BG1_Z176_R13;
                 p_lut->cn2bnProcBuf   = lut_cn2bnProcBuf_BG1_Z176_R13;
+                p_lut->cn2bnProcBuf2  = lut_cn2bnProcBuf2_BG1_Z176_R13;
+                p_lut->cn2bnProcBuf2_size  = lut_cn2bnProcBuf2_BG1_Z176_R13_size;
                 p_lut->llr2llrProcBuf = lut_llr2llrProcBuf_BG1_Z176_R13;
             }
             else if (R == 23)
@@ -2077,6 +2162,8 @@ static inline uint32_t nrLDPC_init(t_nrLDPC_dec_params* p_decParams, t_nrLDPC_lu
             {
                 p_lut->llr2CnProcBuf  = lut_llr2CnProcBuf_BG1_Z192_R13;
                 p_lut->cn2bnProcBuf   = lut_cn2bnProcBuf_BG1_Z192_R13;
+                p_lut->cn2bnProcBuf2  = lut_cn2bnProcBuf2_BG1_Z192_R13;
+                p_lut->cn2bnProcBuf2_size  = lut_cn2bnProcBuf2_BG1_Z192_R13_size;
                 p_lut->llr2llrProcBuf = lut_llr2llrProcBuf_BG1_Z192_R13;
             }
             else if (R == 23)
@@ -2098,6 +2185,8 @@ static inline uint32_t nrLDPC_init(t_nrLDPC_dec_params* p_decParams, t_nrLDPC_lu
             {
                 p_lut->llr2CnProcBuf  = lut_llr2CnProcBuf_BG1_Z208_R13;
                 p_lut->cn2bnProcBuf   = lut_cn2bnProcBuf_BG1_Z208_R13;
+                p_lut->cn2bnProcBuf2  = lut_cn2bnProcBuf2_BG1_Z208_R13;
+                p_lut->cn2bnProcBuf2_size  = lut_cn2bnProcBuf2_BG1_Z208_R13_size;
                 p_lut->llr2llrProcBuf = lut_llr2llrProcBuf_BG1_Z208_R13;
             }
             else if (R == 23)
@@ -2119,6 +2208,8 @@ static inline uint32_t nrLDPC_init(t_nrLDPC_dec_params* p_decParams, t_nrLDPC_lu
             {
                 p_lut->llr2CnProcBuf  = lut_llr2CnProcBuf_BG1_Z224_R13;
                 p_lut->cn2bnProcBuf   = lut_cn2bnProcBuf_BG1_Z224_R13;
+                p_lut->cn2bnProcBuf2  = lut_cn2bnProcBuf2_BG1_Z224_R13;
+                p_lut->cn2bnProcBuf2_size  = lut_cn2bnProcBuf2_BG1_Z224_R13_size;
                 p_lut->llr2llrProcBuf = lut_llr2llrProcBuf_BG1_Z224_R13;
             }
             else if (R == 23)
@@ -2140,6 +2231,8 @@ static inline uint32_t nrLDPC_init(t_nrLDPC_dec_params* p_decParams, t_nrLDPC_lu
             {
                 p_lut->llr2CnProcBuf  = lut_llr2CnProcBuf_BG1_Z240_R13;
                 p_lut->cn2bnProcBuf   = lut_cn2bnProcBuf_BG1_Z240_R13;
+                p_lut->cn2bnProcBuf2  = lut_cn2bnProcBuf2_BG1_Z240_R13;
+                p_lut->cn2bnProcBuf2_size  = lut_cn2bnProcBuf2_BG1_Z240_R13_size;
                 p_lut->llr2llrProcBuf = lut_llr2llrProcBuf_BG1_Z240_R13;
             }
             else if (R == 23)
@@ -2161,6 +2254,8 @@ static inline uint32_t nrLDPC_init(t_nrLDPC_dec_params* p_decParams, t_nrLDPC_lu
             {
                 p_lut->llr2CnProcBuf  = lut_llr2CnProcBuf_BG1_Z256_R13;
                 p_lut->cn2bnProcBuf   = lut_cn2bnProcBuf_BG1_Z256_R13;
+                p_lut->cn2bnProcBuf2  = lut_cn2bnProcBuf2_BG1_Z256_R13;
+                p_lut->cn2bnProcBuf2_size  = lut_cn2bnProcBuf2_BG1_Z256_R13_size;
                 p_lut->llr2llrProcBuf = lut_llr2llrProcBuf_BG1_Z256_R13;
             }
             else if (R == 23)
@@ -2182,6 +2277,8 @@ static inline uint32_t nrLDPC_init(t_nrLDPC_dec_params* p_decParams, t_nrLDPC_lu
             {
                 p_lut->llr2CnProcBuf  = lut_llr2CnProcBuf_BG1_Z288_R13;
                 p_lut->cn2bnProcBuf   = lut_cn2bnProcBuf_BG1_Z288_R13;
+                p_lut->cn2bnProcBuf2  = lut_cn2bnProcBuf2_BG1_Z288_R13;
+                p_lut->cn2bnProcBuf2_size  = lut_cn2bnProcBuf2_BG1_Z288_R13_size;
                 p_lut->llr2llrProcBuf = lut_llr2llrProcBuf_BG1_Z288_R13;
             }
             else if (R == 23)
@@ -2203,6 +2300,8 @@ static inline uint32_t nrLDPC_init(t_nrLDPC_dec_params* p_decParams, t_nrLDPC_lu
             {
                 p_lut->llr2CnProcBuf  = lut_llr2CnProcBuf_BG1_Z320_R13;
                 p_lut->cn2bnProcBuf   = lut_cn2bnProcBuf_BG1_Z320_R13;
+                p_lut->cn2bnProcBuf2  = lut_cn2bnProcBuf2_BG1_Z320_R13;       
+		p_lut->cn2bnProcBuf2_size  = lut_cn2bnProcBuf2_BG1_Z320_R13_size;
                 p_lut->llr2llrProcBuf = lut_llr2llrProcBuf_BG1_Z320_R13;
             }
             else if (R == 23)
@@ -2224,6 +2323,8 @@ static inline uint32_t nrLDPC_init(t_nrLDPC_dec_params* p_decParams, t_nrLDPC_lu
             {
                 p_lut->llr2CnProcBuf  = lut_llr2CnProcBuf_BG1_Z352_R13;
                 p_lut->cn2bnProcBuf   = lut_cn2bnProcBuf_BG1_Z352_R13;
+                p_lut->cn2bnProcBuf2  = lut_cn2bnProcBuf2_BG1_Z352_R13;
+                p_lut->cn2bnProcBuf2_size  = lut_cn2bnProcBuf2_BG1_Z352_R13_size;
                 p_lut->llr2llrProcBuf = lut_llr2llrProcBuf_BG1_Z352_R13;
             }
             else if (R == 23)
@@ -2245,6 +2346,8 @@ static inline uint32_t nrLDPC_init(t_nrLDPC_dec_params* p_decParams, t_nrLDPC_lu
             {
                 p_lut->llr2CnProcBuf  = lut_llr2CnProcBuf_BG1_Z384_R13;
                 p_lut->cn2bnProcBuf   = lut_cn2bnProcBuf_BG1_Z384_R13;
+                p_lut->cn2bnProcBuf2  = lut_cn2bnProcBuf2_BG1_Z384_R13;
+                p_lut->cn2bnProcBuf2_size  = lut_cn2bnProcBuf2_BG1_Z384_R13_size;
                 p_lut->llr2llrProcBuf = lut_llr2llrProcBuf_BG1_Z384_R13;
             }
             else if (R == 23)
@@ -2265,5 +2368,8 @@ static inline uint32_t nrLDPC_init(t_nrLDPC_dec_params* p_decParams, t_nrLDPC_lu
 
     return numLLR;
 }
+
+
+
 
 #endif

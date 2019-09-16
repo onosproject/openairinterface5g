@@ -170,6 +170,7 @@ int test_ldpc(short No_iteration,
   *errors_bit_uncoded=0;
   *crc_misses=0;
 
+
   // generate input block
   for(j=0;j<MAX_NUM_DLSCH_SEGMENTS;j++) {
     test_input[j]=(unsigned char *)malloc16(sizeof(unsigned char) * block_length/8);
@@ -662,6 +663,8 @@ int main(int argc, char *argv[])
   AssertFatal(fd!=NULL,"cannot open %s\n",fname);
 
   fprintf(fd,"SNR BLER BER UNCODED_BER ENCODER_MEAN ENCODER_STD ENCODER_MAX DECODER_TIME_MEAN DECODER_TIME_STD DECODER_TIME_MAX DECODER_ITER_MEAN DECODER_ITER_STD DECODER_ITER_MAX\n");
+
+  nrLDPC_prep();
 
   for (SNR=SNR0;SNR<SNR0+20.0;SNR+=SNR_step)
   {
