@@ -45,8 +45,14 @@ extern "C" {
   }
 
   void free_mem_block (mem_block_t *leP, const char *caller) {
-    AssertFatal(leP!=NULL,"");
+//    AssertFatal(leP!=NULL,"");
+    if (leP != NULL) {
     free(leP);
+    LOG_I(TMR, "intertask_interface free_mem_block is called, after free leP is %d(NULL:0, notNULL:1)\n", leP==NULL?0:1);
+    leP = NULL; //prevent double free
+    } else {
+      LOG_I(TMR, "intertask_interface free_mem_block is called, but before free leP is NULL\n");
+    }
   }
 
   mem_block_t *get_free_mem_block (uint32_t sizeP, const char *caller) {
