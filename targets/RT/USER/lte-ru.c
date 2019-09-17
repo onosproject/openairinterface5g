@@ -1777,6 +1777,7 @@ void *ru_thread( void *param ) {
         AssertFatal((ret=pthread_mutex_unlock(&proc->mutex_eNBs))==0,"mutex_unlock returns %d\n",ret);
 	
 #if defined(PRE_SCD_THREAD)
+      if (NFAPI_MODE == NFAPI_MONOLITHIC) {
 	new_dlsch_ue_select_tbl_in_use = dlsch_ue_select_tbl_in_use;
 	dlsch_ue_select_tbl_in_use = !dlsch_ue_select_tbl_in_use;
 	memcpy(&pre_scd_eNB_UE_stats,&RC.mac[ru->eNB_list[0]->Mod_id]->UE_list.eNB_UE_stats, sizeof(eNB_UE_STATS)*MAX_NUM_CCs*NUMBER_OF_UE_MAX);
@@ -1796,7 +1797,7 @@ void *ru_thread( void *param ) {
 	}
 
 	AssertFatal((ret=pthread_mutex_unlock(&ru->proc.mutex_pre_scd))==0,"[eNB] error unlocking mutex_pre_scd mutex for eNB pre scd\n");
-
+      }
 #endif
 	// wakeup all eNB processes waiting for this RU
 	if (ru->num_eNB>0) wakeup_L1s(ru);
@@ -2208,11 +2209,13 @@ void init_RU_proc(RU_t *ru) {
   pthread_create( &proc->pthread_FH, attr_FH, ru_thread, (void*)ru );
 
 #if defined(PRE_SCD_THREAD)
+  if (NFAPI_MODE == NFAPI_MONOLITHIC) {
   proc->instance_pre_scd = -1;
   pthread_mutex_init( &proc->mutex_pre_scd, NULL);
   pthread_cond_init( &proc->cond_pre_scd, NULL);
   pthread_create(&proc->pthread_pre_scd, NULL, pre_scd_thread, (void *)ru);
   pthread_setname_np(proc->pthread_pre_scd, "pre_scd_thread");
+  }
 #endif
 #ifdef PHY_TX_THREAD
   pthread_create( &proc->pthread_phy_tx, NULL, eNB_thread_phy_tx, (void *)ru );
@@ -2286,6 +2289,7 @@ void kill_RU_proc(RU_t *ru) {
   int ret;
   RU_proc_t *proc = &ru->proc;
 #if defined(PRE_SCD_THREAD)
+  if (NFAPI_MODE == NFAPI_MONOLITHIC || NFAPI_MODE == NFAPI_MODE_VNF) {
   AssertFatal((ret=pthread_mutex_lock(&proc->mutex_pre_scd))==0,"mutex_lock returns %d\n",ret);
   ru->proc.instance_pre_scd = 0;
   pthread_cond_signal(&proc->cond_pre_scd);
@@ -2293,6 +2297,7 @@ void kill_RU_proc(RU_t *ru) {
   pthread_join(proc->pthread_pre_scd, NULL);
   pthread_mutex_destroy(&proc->mutex_pre_scd);
   pthread_cond_destroy(&proc->cond_pre_scd);
+  }
 #endif
 #ifdef PHY_TX_THREAD
   AssertFatal((ret=pthread_mutex_lock(&proc->mutex_phy_tx))==0,"mutex_lock returns %d\n",ret);
@@ -2698,7 +2703,7 @@ void stop_ru(RU_t *ru) {
 #endif
   printf("Stopping RU %p processing threads\n",(void*)ru);
 #if defined(PRE_SCD_THREAD)
-  if(ru){
+  if(ru && (NFAPI_MODE == NFAPI_MONOLITHIC || NFAPI_MODE == NFAPI_MODE_VNF)){
     ru->proc.instance_pre_scd = 0;
     pthread_cond_signal( &ru->proc.cond_pre_scd );
     pthread_join(ru->proc.pthread_pre_scd, (void**)&status );
