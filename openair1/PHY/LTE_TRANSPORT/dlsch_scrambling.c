@@ -243,15 +243,4 @@ void init_unscrambling_lut(void) {
   }
 }
 
-void init_scrambling_lut() {
-
-  uint32_t s;
-  int i=0,j;
-
-  for (s=0;s<=65535;s++) {
-    for (j=0;j<16;j++) {
-      scrambling_lut[i++] = (uint8_t)((s>>j)&1);
-    }
-  }
-}
 
