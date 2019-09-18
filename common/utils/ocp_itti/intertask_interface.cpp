@@ -48,7 +48,7 @@ extern "C" {
 //    AssertFatal(leP!=NULL,"");
     if (leP != NULL) {
     free(leP);
-    LOG_I(TMR, "intertask_interface free_mem_block is called, after free leP is %d(NULL:0, notNULL:1)\n", leP==NULL?0:1);
+    LOG_I(TMR, "intertask_interface free_mem_block is called, after free leP is %p\n", leP);
     leP = NULL; //prevent double free
     } else {
       LOG_I(TMR, "intertask_interface free_mem_block is called, but before free leP is NULL\n");

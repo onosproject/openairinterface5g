@@ -347,6 +347,11 @@ rlc_am_receive_process_data_pdu (
             rlc_pP->vr_x);
 
       pdu_status = rlc_am_rx_list_check_duplicate_insert_pdu(ctxt_pP, rlc_pP,tb_pP);
+      if(tb_pP == NULL){
+          LOG_E(RLC, "rnti %x tb_pP is NULL\n", ctxt_pP->rnti);
+          return;
+      }
+
       if (pdu_status != RLC_AM_DATA_PDU_STATUS_OK) {
         rlc_pP->stat_rx_data_pdu_dropped     += 1;
         rlc_pP->stat_rx_data_bytes_dropped   += tb_size_in_bytesP;
@@ -410,20 +415,24 @@ rlc_am_receive_process_data_pdu (
         }
 
         if (pdu_info_p->sn == rlc_pP->vr_r) {
-mem_block_t*       cursor_p                    = rlc_pP->receiver_buffer.head;
-rlc_am_rx_pdu_management_t * pdu_cursor_mgnt_p = (rlc_am_rx_pdu_management_t *) (cursor_p->data);
-if( (((rlc_am_rx_pdu_management_t*)(tb_pP->data))->all_segments_received) == (pdu_cursor_mgnt_p->all_segments_received)){
-          if (((rlc_am_rx_pdu_management_t*)(tb_pP->data))->all_segments_received) {
-            rlc_am_rx_update_vr_r(ctxt_pP, rlc_pP, tb_pP);
-            rlc_pP->vr_mr = (rlc_pP->vr_r + RLC_AM_WINDOW_SIZE) & RLC_AM_SN_MASK;
+          mem_block_t*       cursor_p                    = rlc_pP->receiver_buffer.head;
+          if (cursor_p != NULL) {
+            rlc_am_rx_pdu_management_t * pdu_cursor_mgnt_p = (rlc_am_rx_pdu_management_t *) (cursor_p->data);
+            if( (((rlc_am_rx_pdu_management_t*)(tb_pP->data))->all_segments_received) == (pdu_cursor_mgnt_p->all_segments_received)){
+              if (((rlc_am_rx_pdu_management_t*)(tb_pP->data))->all_segments_received) {
+                rlc_am_rx_update_vr_r(ctxt_pP, rlc_pP, tb_pP);
+                rlc_pP->vr_mr = (rlc_pP->vr_r + RLC_AM_WINDOW_SIZE) & RLC_AM_SN_MASK;
+              }
+              reassemble = rlc_am_rx_check_vr_reassemble(ctxt_pP, rlc_pP);
+              //TODO : optimization : check whether a reassembly is needed by looking at LI, FI, SO, etc...
+            }else{
+              LOG_E(RLC, "BAD all_segments_received!!! discard buffer!!!\n");
+              /* Discard received block if out of window, duplicate or header error */
+              free_mem_block (tb_pP, __func__);
+            }
+          }else{
+            LOG_E(RLC,"cursor_p is NULL!!!\n");
           }
-          reassemble = rlc_am_rx_check_vr_reassemble(ctxt_pP, rlc_pP);
-          //TODO : optimization : check whether a reassembly is needed by looking at LI, FI, SO, etc...
-}else{
-  LOG_E(RLC, "BAD all_segments_received!!! discard buffer!!!\n");
-  /* Discard received block if out of window, duplicate or header error */
-  free_mem_block (tb_pP, __func__);
-}
         }
 
         //FNA: fix check VrX out of receiving window
