@@ -269,6 +269,7 @@ rlc_am_receive_routing (
         rlc_pP->stat_rx_control_bytes += tb_size_in_bytes;
         rlc_pP->stat_rx_control_pdu += 1;
         rlc_am_receive_process_control_pdu (ctxt_pP, rlc_pP, tb_p, &first_byte_p, &tb_size_in_bytes);
+        tb_p = NULL;
         // Test if remaining bytes not processed (up to know, highest probability is bug in MAC)
 //Assertion(eNB)_PRAN_DesignDocument_annex No.767
   if(tb_size_in_bytes != 0)
@@ -347,9 +348,8 @@ rlc_am_receive_process_data_pdu (
             rlc_pP->vr_x);
 
       pdu_status = rlc_am_rx_list_check_duplicate_insert_pdu(ctxt_pP, rlc_pP,tb_pP);
-      if(tb_pP == NULL){
-          LOG_E(RLC, "rnti %x tb_pP is NULL\n", ctxt_pP->rnti);
-          return;
+      if(pdu_status == RLC_AM_DATA_PDU_STATUS_FREE_STATE){
+        tb_pP = NULL;
       }
 
       if (pdu_status != RLC_AM_DATA_PDU_STATUS_OK) {

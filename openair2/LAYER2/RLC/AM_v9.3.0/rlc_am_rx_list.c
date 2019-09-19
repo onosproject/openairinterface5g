@@ -716,7 +716,7 @@ rlc_am_rx_pdu_status_t rlc_am_rx_list_handle_pdu_segment(
 		  /* Free original PDU Segment */
 		  free_mem_block(tb_pP, __func__);
 
-		  return RLC_AM_DATA_PDU_STATUS_OK;
+		  return RLC_AM_DATA_PDU_STATUS_FREE_STATE;
 	  }
 	  else {
 		  return RLC_AM_DATA_PDU_STATUS_BUFFER_FULL;
@@ -882,7 +882,7 @@ rlc_am_rx_pdu_status_t rlc_am_rx_list_handle_pdu(
 			  /* Free original PDU */
 			  free_mem_block(tb_pP, __func__);
 
-			  return pdu_status;
+			  return RLC_AM_DATA_PDU_STATUS_FREE_STATE;
 		  }
 		  else {
 			  return RLC_AM_DATA_PDU_STATUS_BUFFER_FULL;
@@ -1107,6 +1107,7 @@ rlc_am_rx_list_reassemble_rlc_sdus(
     if (rlc_am_rx_pdu_management_p->all_segments_received > 0) {
       cursor_p = list2_remove_head(&rlc_pP->receiver_buffer);
       rlc_am_reassemble_pdu(ctxt_pP, rlc_pP, cursor_p,TRUE);
+      cursor_p = NULL;
       rlc_am_rx_old_pdu_management = rlc_am_rx_pdu_management_p;
       cursor_p = list2_get_head(&rlc_pP->receiver_buffer);
 
