@@ -32,6 +32,7 @@
 
 #define _GNU_SOURCE
 #include <pthread.h>
+#include <stdio.h>
 
 #undef MALLOC //there are two conflicting definitions, so we better make sure we don't use it at all
 
@@ -108,8 +109,10 @@ extern openair0_config_t openair0_cfg[MAX_CARDS];
 
 extern int transmission_mode;
 
-uint16_t sl_ahead=4;
-uint16_t sf_ahead=4;
+uint16_t sl_ahead=8;
+uint16_t sf_ahead=8;
+uint16_t slotsInFrame;
+uint16_t slotsInFrameFirstTime = 0;
 //pthread_t                       main_gNB_thread;
 
 time_stats_t softmodem_stats_mt; // main thread
@@ -155,6 +158,11 @@ static inline int rxtx(PHY_VARS_gNB *gNB,int frame_rx, int slot_rx, int frame_tx
   // *******************************************************************
 
   if (nfapi_mode == 1) {
+	  if(slotsInFrameFirstTime == 0){
+		  slotsInFrame = 10*pow(2,gNB->gNB_config.subframe_config.numerology_index_mu.value);
+		  slotsInFrameFirstTime = 1;
+	  }
+
     // I am a PNF and I need to let nFAPI know that we have a (sub)frame tick
     //add_subframe(&frame, &subframe, 4);
     //oai_subframe_ind(proc->frame_tx, proc->subframe_tx);
@@ -212,7 +220,6 @@ static inline int rxtx(PHY_VARS_gNB *gNB,int frame_rx, int slot_rx, int frame_tx
   //if (wait_CCs(proc)<0) return(-1);
 
   if (oai_exit) return(-1);
-
   if(get_thread_parallel_conf() != PARALLEL_RU_L1_TRX_SPLIT) {
     phy_procedures_gNB_TX(gNB, frame_tx,slot_tx, 1);
   }

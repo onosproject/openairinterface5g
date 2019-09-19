@@ -73,7 +73,7 @@ void pnf_handle_pnf_param_request(pnf_t* pnf, void *pRecvMsg, int recvMsgLen)
 	else
 	{
 		nfapi_pnf_param_request_t req;
-		
+		printf("PNF_PARAM.request is received\n");
 		NFAPI_TRACE(NFAPI_TRACE_INFO, "PNF_PARAM.request received\n");
 	
 		// unpack the message
@@ -81,6 +81,7 @@ void pnf_handle_pnf_param_request(pnf_t* pnf, void *pRecvMsg, int recvMsgLen)
 		{
 			if(pnf->_public.state == NFAPI_PNF_IDLE)
 			{
+				printf("[ANL] PNF is in IDLE STATE\n");
 				if(pnf->_public.pnf_param_req)
 				{
 					(pnf->_public.pnf_param_req)(&pnf->_public, &req);
@@ -89,7 +90,7 @@ void pnf_handle_pnf_param_request(pnf_t* pnf, void *pRecvMsg, int recvMsgLen)
 			else
 			{
 				NFAPI_TRACE(NFAPI_TRACE_ERROR, "%s: PNF not in IDLE state\n", __FUNCTION__);
-		
+				printf("[ANL] ERROR: PNF is not in IDLE STATE\n");
 				nfapi_pnf_param_response_t resp;
 				memset(&resp, 0, sizeof(resp));
 				resp.header.message_id = NFAPI_PNF_PARAM_RESPONSE;
@@ -119,7 +120,7 @@ void pnf_handle_pnf_config_request(pnf_t* pnf, void *pRecvMsg, int recvMsgLen)
 	else
 	{
 		nfapi_pnf_config_request_t req;
-
+		printf("PNF_CONFIG.request is received\n");
 		NFAPI_TRACE(NFAPI_TRACE_INFO, "PNF_CONFIG.request received\n");
 	
 		// unpack the message
@@ -183,7 +184,7 @@ void pnf_handle_pnf_start_request(pnf_t* pnf, void *pRecvMsg, int recvMsgLen)
 	else
 	{
 		nfapi_pnf_start_request_t req;
-
+		printf("PNF_START.request is received\n");
 		NFAPI_TRACE(NFAPI_TRACE_INFO, "PNF_START.request Received\n");
 	
 		// unpack the message
@@ -270,7 +271,7 @@ void pnf_handle_param_request(pnf_t* pnf, void *pRecvMsg, int recvMsgLen)
 		nfapi_param_request_t req;
 		
 		nfapi_pnf_config_t* config = &(pnf->_public);
-	
+		printf("PARAM.request is received\n");
 		NFAPI_TRACE(NFAPI_TRACE_INFO, "PARAM.request received\n");
 	
 		// unpack the message
@@ -340,13 +341,14 @@ void pnf_handle_config_request(pnf_t* pnf, void *pRecvMsg, int recvMsgLen)
 	}
 	else
 	{
-		nfapi_config_request_t req;
-
+		nfapi_nr_config_request_t req;
+		printf("CONFIG.request is received\n");
 		NFAPI_TRACE(NFAPI_TRACE_INFO, "CONFIG.request received\n");
 	
 		nfapi_pnf_config_t* config = &(pnf->_public);
 	
 		// unpack the message
+
 		if (nfapi_p5_message_unpack(pRecvMsg, recvMsgLen, &req, sizeof(req), &config->codec_config) >= 0)
 		{
 			if(config->state == NFAPI_PNF_RUNNING)
@@ -358,6 +360,7 @@ void pnf_handle_config_request(pnf_t* pnf, void *pRecvMsg, int recvMsgLen)
 					{
 						if(config->config_req)
 						{
+							printf("[ANL] Received TLVs: %u\n", req.num_tlv);
 							(config->config_req)(config, phy, &req);
 						}
 					}
@@ -393,6 +396,7 @@ void pnf_handle_config_request(pnf_t* pnf, void *pRecvMsg, int recvMsgLen)
 		}
 		else
 		{
+			printf("[ANL] Unpack message failed\n");
 			NFAPI_TRACE(NFAPI_TRACE_ERROR, "%s: Unpack message failed, ignoring\n", __FUNCTION__);
 		}
 	
@@ -413,8 +417,9 @@ void pnf_handle_start_request(pnf_t* pnf, void *pRecvMsg, int recvMsgLen)
 		nfapi_start_request_t req;
 	
 		nfapi_pnf_config_t* config = &(pnf->_public);
-	
-		NFAPI_TRACE(NFAPI_TRACE_INFO, "%s() START.request received state:%d\n", __FUNCTION__, config->state);
+		//printf("%s() START.request received state:%d\n", __FUNCTION__, config->state);
+		printf("START.request is received\n");
+		//NFAPI_TRACE(NFAPI_TRACE_INFO, "%s() START.request received state:%d\n", __FUNCTION__, config->state);
 	
 		// unpack the message
 		if (nfapi_p5_message_unpack(pRecvMsg, recvMsgLen, &req, sizeof(req), &config->codec_config) >= 0)
@@ -1076,7 +1081,7 @@ void pnf_handle_vendor_extension(void* pRecvMsg, int recvMsgLen, pnf_t* pnf, uin
 void pnf_handle_p5_message(pnf_t* pnf, void *pRecvMsg, int recvMsgLen)
 {
 	nfapi_p4_p5_message_header_t messageHeader;
-
+	printf("pnf_handle_p5_message()\n");
 	// validate the input params
 	if(pRecvMsg == NULL || recvMsgLen < NFAPI_HEADER_LENGTH)
 	{
@@ -1218,6 +1223,7 @@ int pnf_connect(pnf_t* pnf)
 	(void)memset(&servaddr, 0, sizeof(struct sockaddr_in));
 
 	NFAPI_TRACE(NFAPI_TRACE_INFO, "Starting P5 PNF connection to VNF at %s:%u\n", pnf->_public.vnf_ip_addr, pnf->_public.vnf_p5_port);
+	printf("Starting P5 PNF connection to VNF at %s:%u\n", pnf->_public.vnf_ip_addr, pnf->_public.vnf_p5_port);
 
 	// todo split the vnf address list. currently only supporting 1
 	
@@ -1260,7 +1266,7 @@ int pnf_connect(pnf_t* pnf)
 			address = inet_ntoa(addr->sin_addr);
 		}
 
-		NFAPI_TRACE(NFAPI_TRACE_NOTE, "Host address info  %d Family:%s Address:%s\n", i++, family, address);
+// 		NFAPI_TRACE(NFAPI_TRACE_NOTE, "Host address info  %d Family:%s Address:%s\n", i++, family, address);
 #endif
 
 		if (pnf->sctp)
@@ -1278,7 +1284,7 @@ int pnf_connect(pnf_t* pnf)
 			(void)memset(&initMsg, 0, sizeof(struct sctp_initmsg));
 
 			// configure the socket options
-			NFAPI_TRACE(NFAPI_TRACE_NOTE, "PNF Setting the SCTP_INITMSG\n");
+// 			NFAPI_TRACE(NFAPI_TRACE_NOTE, "PNF Setting the SCTP_INITMSG\n");
 			initMsg.sinit_num_ostreams = 5; //MAX_SCTP_STREAMS;  // number of output streams can be greater
 			initMsg.sinit_max_instreams = 5; //MAX_SCTP_STREAMS;  // number of output streams can be greater
 			if (setsockopt(pnf->p5_sock, IPPROTO_SCTP, SCTP_INITMSG, &initMsg, sizeof(initMsg)) < 0)
@@ -1319,6 +1325,7 @@ int pnf_connect(pnf_t* pnf)
 		}
 	
 		NFAPI_TRACE(NFAPI_TRACE_INFO, "P5 socket created...\n");
+		printf("P5 socket created...\n");
 	
 		if (connect(pnf->p5_sock, p->ai_addr, p->ai_addrlen ) < 0)
 		{
@@ -1347,6 +1354,7 @@ int pnf_connect(pnf_t* pnf)
 		else
 		{
 			NFAPI_TRACE(NFAPI_TRACE_INFO, "connect succeeded...\n");
+			printf("connect succeeded...\n");
 
 			connected = 1;
 		}
@@ -1361,7 +1369,7 @@ int pnf_connect(pnf_t* pnf)
 		return 0;
 
 
-	NFAPI_TRACE(NFAPI_TRACE_NOTE, "After connect loop\n");
+// 	NFAPI_TRACE(NFAPI_TRACE_NOTE, "After connect loop\n");
 	if (pnf->sctp)
 	{
 		socklen_t optLen;
@@ -1387,7 +1395,7 @@ int pnf_connect(pnf_t* pnf)
 		}
 	}
 
-	NFAPI_TRACE(NFAPI_TRACE_NOTE, "Socket %s\n", socketConnected ? "CONNECTED" : "NOT_CONNECTED");
+// 	NFAPI_TRACE(NFAPI_TRACE_NOTE, "Socket %s\n", socketConnected ? "CONNECTED" : "NOT_CONNECTED");
 	return socketConnected;
 }
 
@@ -1415,6 +1423,7 @@ int pnf_send_message(pnf_t* pnf, uint8_t *msg, uint32_t len, uint16_t stream)
 
 int pnf_read_dispatch_message(pnf_t* pnf)
 {
+	printf("pnf_read_dispatch_message()\n");
 	int socket_connected = 1;
 
 	// 1. Peek the message header
@@ -1575,6 +1584,7 @@ int pnf_message_pump(pnf_t* pnf)
 
 		if(FD_ISSET(pnf->p5_sock, &rfds))
 		{
+			printf("\n\n****** MESSAGE ******\n\n");
 			socketConnected = pnf_read_dispatch_message(pnf);
 		}
 		else

@@ -610,12 +610,15 @@ int unpack_tlv_list(unpack_tlv_t unpack_fns[], uint16_t size, uint8_t **ppReadPa
 				tl->tag = generic_tl.tag;
 				tl->length = generic_tl.length;
 
+//				printf("tag %d unpacked length %d\n", tl->tag, tl->length);
 				int result = (*unpack_fns[idx].unpack_func)(tl, ppReadPackedMsg, end);
 
 				if(result == 0)
 				{
 					return 0;
 				}
+
+
 
 				// check if the length was right;
 				if(tl->length != (*ppReadPackedMsg - pStartOfValue))

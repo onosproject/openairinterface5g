@@ -125,8 +125,10 @@ int nfapi_pnf_p7_crc_ind(nfapi_pnf_p7_config_t* config, nfapi_crc_indication_t* 
 }
 int nfapi_pnf_p7_rx_ind(nfapi_pnf_p7_config_t* config, nfapi_rx_indication_t* ind)
 {
+    printf("[DEMUX] Inside nfapi_pnf_p7_rx_ind()...\n");
 	if(config == NULL || ind == NULL)
 	{
+	    printf("[DEMUX] nfapi_pnf_p7_rx_ind(): invalid input params\n");
 		NFAPI_TRACE(NFAPI_TRACE_ERROR, "%s: invalid input params\n", __FUNCTION__);
 		return -1;
 	}
@@ -136,6 +138,7 @@ int nfapi_pnf_p7_rx_ind(nfapi_pnf_p7_config_t* config, nfapi_rx_indication_t* in
 }
 int nfapi_pnf_p7_rach_ind(nfapi_pnf_p7_config_t* config, nfapi_rach_indication_t* ind)
 {
+    printf("[ANL] inside nfapi_pnf_p7_rach_ind\n");
 	if(config == NULL || ind == NULL)
 	{
 		NFAPI_TRACE(NFAPI_TRACE_ERROR, "%s: invalid input params\n", __FUNCTION__);

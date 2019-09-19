@@ -52,6 +52,7 @@ extern RAN_CONTEXT_t RC;
 #include "openair2/LAYER2/MAC/mac_proto.h"
 
 #include "PHY/INIT/phy_init.h"
+#include "SCHED_NR/fapi_nr_l1.h"
 #include "PHY/LTE_TRANSPORT/transport_proto.h"
 
 #define NUM_P5_PHY 2
@@ -77,9 +78,9 @@ extern void handle_nfapi_hi_dci0_dci_pdu(PHY_VARS_eNB *eNB,int frame, int subfra
 extern void handle_nfapi_hi_dci0_hi_pdu(PHY_VARS_eNB *eNB,int frame, int subframe, L1_rxtx_proc_t *proc, nfapi_hi_dci0_request_pdu_t *hi_dci0_config_pdu);
 extern void handle_nfapi_bch_pdu(PHY_VARS_eNB *eNB,L1_rxtx_proc_t *proc, nfapi_dl_config_request_pdu_t *dl_config_pdu, uint8_t *sdu);
 
+extern uint8_t  nfapi_mode;
 
-
-nfapi_tx_request_pdu_t *tx_request_pdu[1023][10][10]; // [frame][subframe][max_num_pdus]
+nfapi_tx_request_pdu_t* tx_request_pdu[1023][20][10]; // [frame][subframe][max_num_pdus]
 
 uint8_t tx_pdus[32][8][4096];
 
@@ -243,14 +244,18 @@ void pnf_set_thread_priority(int priority) {
 
 void *pnf_p7_thread_start(void *ptr) {
   NFAPI_TRACE(NFAPI_TRACE_INFO, "[PNF] P7 THREAD %s\n", __FUNCTION__);
+  printf("[PNF] P7 THREAD %s\n", __FUNCTION__);
   pnf_set_thread_priority(79);
   nfapi_pnf_p7_config_t *config = (nfapi_pnf_p7_config_t *)ptr;
   nfapi_pnf_p7_start(config);
   return 0;
 }
 
-int pnf_param_request(nfapi_pnf_config_t *config, nfapi_pnf_param_request_t *req) {
-  printf("[PNF] pnf param request\n");
+int pnf_param_request(nfapi_pnf_config_t* config, nfapi_pnf_param_request_t* req) {
+
+  //printf("[PNF] pnf param request\n");
+
+  printf("[ANL] inside pnf_param_request()\n");
   nfapi_pnf_param_response_t resp;
   memset(&resp, 0, sizeof(resp));
   resp.header.message_id = NFAPI_PNF_PARAM_RESPONSE;
@@ -396,12 +401,17 @@ int pnf_param_request(nfapi_pnf_config_t *config, nfapi_pnf_param_request_t *req
   }
 
   nfapi_pnf_pnf_param_resp(config, &resp);
+  printf("PNF_PARAM.response is sent");
+
   return 0;
 }
 
-int pnf_config_request(nfapi_pnf_config_t *config, nfapi_pnf_config_request_t *req) {
-  printf("[PNF] pnf config request\n");
-  pnf_info *pnf = (pnf_info *)(config->user_data);
+int pnf_config_request(nfapi_pnf_config_t* config, nfapi_pnf_config_request_t* req) {
+
+  //printf("[PNF] pnf config request\n");
+  printf("[ANL] inside pnf_config_request()\n");
+  pnf_info* pnf = (pnf_info*)(config->user_data);
+
   phy_info *phy = pnf->phys;
   phy->id = req->pnf_phy_rf_config.phy_rf_config[0].phy_id;
   printf("[PNF] pnf config request assigned phy_id %d to phy_config_index %d\n", phy->id, req->pnf_phy_rf_config.phy_rf_config[0].phy_config_index);
@@ -410,7 +420,9 @@ int pnf_config_request(nfapi_pnf_config_t *config, nfapi_pnf_config_request_t *r
   resp.header.message_id = NFAPI_PNF_CONFIG_RESPONSE;
   resp.error_code = NFAPI_MSG_OK;
   nfapi_pnf_pnf_config_resp(config, &resp);
-  printf("[PNF] Sent pnf_config_resp\n");
+  printf("PNF_CONFIG.response is sent");
+  //printf("[PNF] Sent pnf_config_resp\n");
+
   return 0;
 }
 
@@ -424,9 +436,12 @@ void nfapi_send_pnf_start_resp(nfapi_pnf_config_t *config, uint16_t phy_id) {
   nfapi_pnf_start_resp(config, &start_resp);
 }
 
-int pnf_start_request(nfapi_pnf_config_t *config, nfapi_pnf_start_request_t *req) {
-  printf("Received NFAPI_PNF_START_REQUEST\n");
-  pnf_info *pnf = (pnf_info *)(config->user_data);
+int pnf_start_request(nfapi_pnf_config_t* config, nfapi_pnf_start_request_t* req) {
+
+  //printf("Received NFAPI_PNF_START_REQUEST\n");
+  printf("[ANL] inside pnf_start_request()\n");
+  pnf_info* pnf = (pnf_info*)(config->user_data);
+
   // start all phys that have been configured
   phy_info *phy = pnf->phys;
 
@@ -436,7 +451,8 @@ int pnf_start_request(nfapi_pnf_config_t *config, nfapi_pnf_start_request_t *req
     resp.header.message_id = NFAPI_PNF_START_RESPONSE;
     resp.error_code = NFAPI_MSG_OK;
     nfapi_pnf_pnf_start_resp(config, &resp);
-    printf("[PNF] Sent NFAPI_PNF_START_RESP\n");
+    //printf("[PNF] Sent NFAPI_PNF_START_RESP\n");
+    printf("PNF_START.response is sent");
   }
 
   return 0;
@@ -453,8 +469,10 @@ int pnf_stop_request(nfapi_pnf_config_t *config, nfapi_pnf_stop_request_t *req) 
   return 0;
 }
 
-int param_request(nfapi_pnf_config_t *config, nfapi_pnf_phy_config_t *phy, nfapi_param_request_t *req) {
-  printf("[PNF] Received NFAPI_PARAM_REQUEST phy_id:%d\n", req->header.phy_id);
+int param_request(nfapi_pnf_config_t* config, nfapi_pnf_phy_config_t* phy, nfapi_param_request_t* req) {
+
+  //printf("[PNF] Received NFAPI_PARAM_REQUEST phy_id:%d\n", req->header.phy_id);
+  printf("[ANL] inside param_request()\n");
   //pnf_info* pnf = (pnf_info*)(config->user_data);
   nfapi_param_response_t nfapi_resp;
   pnf_info *pnf = (pnf_info *)(config->user_data);
@@ -472,36 +490,44 @@ int param_request(nfapi_pnf_config_t *config, nfapi_pnf_phy_config_t *phy, nfapi
   nfapi_resp.nfapi_config.p7_pnf_port.value = 32123; // DJP - hard code alert!!!! FIXME TODO
   nfapi_resp.num_tlv++;
   nfapi_pnf_param_resp(config, &nfapi_resp);
-  printf("[PNF] Sent NFAPI_PARAM_RESPONSE phy_id:%d number_of_tlvs:%u\n", req->header.phy_id, nfapi_resp.num_tlv);
-  printf("[PNF] param request .. exit\n");
+
+  //printf("[PNF] Sent NFAPI_PARAM_RESPONSE phy_id:%d number_of_tlvs:%u\n", req->header.phy_id, nfapi_resp.num_tlv);
+  printf("PARAM.response is sent, phy_id:%d number_of_tlvs:%u\n",req->header.phy_id, nfapi_resp.num_tlv);
+  //printf("[PNF] param request .. exit\n");
+
   return 0;
 }
 
-int config_request(nfapi_pnf_config_t *config, nfapi_pnf_phy_config_t *phy, nfapi_config_request_t *req) {
-  printf("[PNF] Received NFAPI_CONFIG_REQ phy_id:%d\n", req->header.phy_id);
-  pnf_info *pnf = (pnf_info *)(config->user_data);
+int config_request(nfapi_pnf_config_t* config, nfapi_pnf_phy_config_t* phy, nfapi_nr_config_request_t* req) {
+
+  //printf("[PNF] Received NFAPI_CONFIG_REQ phy_id:%d\n", req->header.phy_id);
+  printf("[ANL] inside config_request(), phy_id:%d\n",req->header.phy_id);
+  pnf_info* pnf = (pnf_info*)(config->user_data);
   uint8_t num_tlv = 0;
   //struct PHY_VARS_eNB_s *eNB = RC.eNB[0][0];
   //  In the case of nfapi_mode = 3 (UE = PNF) we should not have dependency on any eNB var. So we aim
   // to keep only the necessary just to keep the nfapi FSM rolling by sending a dummy response.
-  LTE_DL_FRAME_PARMS *fp;
-
-  if (NFAPI_MODE!=NFAPI_UE_STUB_PNF) {
-    struct PHY_VARS_eNB_s *eNB = RC.eNB[0][0];
-    fp = &eNB->frame_parms;
-  } else {
-    fp = (LTE_DL_FRAME_PARMS *) malloc(sizeof(LTE_DL_FRAME_PARMS));
+  NR_DL_FRAME_PARMS *fp;
+  if (nfapi_mode!=3) {
+	  struct PHY_VARS_gNB_s *gNB = RC.gNB[0][0];
+	  fp = &gNB->frame_parms;
+  }
+  else{
+	  fp = (NR_DL_FRAME_PARMS*) malloc(sizeof(NR_DL_FRAME_PARMS));
   }
 
   phy_info *phy_info = pnf->phys;
 
-  if(req->nfapi_config.timing_window.tl.tag == NFAPI_NFAPI_TIMING_WINDOW_TAG) {
+  if(req->nfapi_config.timing_window.tl.tag == NFAPI_NR_NFAPI_TIMING_WINDOW_TAG) {
     phy_info->timing_window = req->nfapi_config.timing_window.value;
     printf("Phy_info:Timing window:%u NFAPI_CONFIG:timing_window:%u\n", phy_info->timing_window, req->nfapi_config.timing_window.value);
     num_tlv++;
+  } else {
+	  printf("Expected Timing window tag: %u\n", NFAPI_NR_NFAPI_TIMING_WINDOW_TAG);
+    printf("Received Timing window tag: %u\n",req->nfapi_config.timing_window.tl.tag);
   }
 
-  if(req->nfapi_config.timing_info_mode.tl.tag == NFAPI_NFAPI_TIMING_INFO_MODE_TAG) {
+  if(req->nfapi_config.timing_info_mode.tl.tag == NFAPI_NR_NFAPI_TIMING_INFO_MODE_TAG) {
     printf("timing info mode:%d\n", req->nfapi_config.timing_info_mode.value);
     phy_info->timing_info_mode = req->nfapi_config.timing_info_mode.value;
     num_tlv++;
@@ -510,7 +536,7 @@ int config_request(nfapi_pnf_config_t *config, nfapi_pnf_phy_config_t *phy, nfap
     printf("NO timing info mode provided\n");
   }
 
-  if(req->nfapi_config.timing_info_period.tl.tag == NFAPI_NFAPI_TIMING_INFO_PERIOD_TAG) {
+  if(req->nfapi_config.timing_info_period.tl.tag == NFAPI_NR_NFAPI_TIMING_INFO_PERIOD_TAG) {
     printf("timing info period provided value:%d\n", req->nfapi_config.timing_info_period.value);
     phy_info->timing_info_period = req->nfapi_config.timing_info_period.value;
     num_tlv++;
@@ -518,145 +544,227 @@ int config_request(nfapi_pnf_config_t *config, nfapi_pnf_phy_config_t *phy, nfap
     phy_info->timing_info_period = 0;
   }
 
-  if(req->rf_config.dl_channel_bandwidth.tl.tag == NFAPI_RF_CONFIG_DL_CHANNEL_BANDWIDTH_TAG) {
-    phy_info->dl_channel_bw_support = req->rf_config.dl_channel_bandwidth.value;
-    fp->N_RB_DL = req->rf_config.dl_channel_bandwidth.value;
+  if(req->rf_config.dl_carrier_bandwidth.tl.tag == NFAPI_NR_RF_CONFIG_DL_CARRIER_BANDWIDTH_TAG) {
+    phy_info->dl_channel_bw_support = req->rf_config.dl_carrier_bandwidth.value;
+    printf("req->rf_config.dl_carrier_bandwidth.value: %d\n", req->rf_config.dl_carrier_bandwidth.value);
+    fp->N_RB_DL = req->rf_config.dl_carrier_bandwidth.value;
     num_tlv++;
-    NFAPI_TRACE(NFAPI_TRACE_ERROR, "%s() NFAPI_RF_CONFIG_DL_CHANNEL_BANDWIDTH_TAG N_RB_DL:%u\n", __FUNCTION__, fp->N_RB_DL);
+    NFAPI_TRACE(NFAPI_TRACE_ERROR, "%s() NFAPI_NR_RF_CONFIG_DL_CARRIER_BANDWIDTH_TAG N_RB_DL:%u\n", __FUNCTION__, fp->N_RB_DL);
   } else {
-    NFAPI_TRACE(NFAPI_TRACE_ERROR, "%s() Missing NFAPI_RF_CONFIG_DL_CHANNEL_BANDWIDTH_TAG\n", __FUNCTION__);
+    NFAPI_TRACE(NFAPI_TRACE_ERROR, "%s() Missing NFAPI_NR_RF_CONFIG_DL_CARRIER_BANDWIDTH_TAG\n", __FUNCTION__);
   }
 
-  if(req->rf_config.ul_channel_bandwidth.tl.tag == NFAPI_RF_CONFIG_UL_CHANNEL_BANDWIDTH_TAG) {
-    phy_info->ul_channel_bw_support = req->rf_config.ul_channel_bandwidth.value;
-    fp->N_RB_UL = req->rf_config.ul_channel_bandwidth.value;
+  if(req->rf_config.ul_carrier_bandwidth.tl.tag == NFAPI_NR_RF_CONFIG_UL_CARRIER_BANDWIDTH_TAG) {
+    phy_info->ul_channel_bw_support = req->rf_config.ul_carrier_bandwidth.value;
+//     printf("req->rf_config.ul_carrier_bandwidth.value: %d\n", req->rf_config.ul_carrier_bandwidth.value);
+//     fp->N_RB_UL = req->rf_config.ul_carrier_bandwidth.value;
     num_tlv++;
   }
 
-  if(req->nfapi_config.rf_bands.tl.tag == NFAPI_NFAPI_RF_BANDS_TAG) {
+  if(req->nfapi_config.rf_bands.tl.tag == NFAPI_NR_NFAPI_RF_BANDS_TAG) {
     pnf->rfs[0].band = req->nfapi_config.rf_bands.rf_band[0];
-    fp->eutra_band = req->nfapi_config.rf_bands.rf_band[0];
+//     printf("req->nfapi_config.rf_bands.rf_band[0]: %d \n", req->nfapi_config.rf_bands.rf_band[0]);
+//     fp->eutra_band = req->nfapi_config.rf_bands.rf_band[0];
     num_tlv++;
   }
 
-  if(req->nfapi_config.earfcn.tl.tag == NFAPI_NFAPI_EARFCN_TAG) {
-    fp->dl_CarrierFreq = from_earfcn(fp->eutra_band, req->nfapi_config.earfcn.value);
-    fp->ul_CarrierFreq = fp->dl_CarrierFreq - (get_uldl_offset(fp->eutra_band) * 1e5);
+  if(req->nfapi_config.nrarfcn.tl.tag == NFAPI_NR_NFAPI_NRARFCN_TAG) {
+//     fp->dl_CarrierFreq = from_nrarfcn(fp->eutra_band, req->nfapi_config.nrarfcn.value);
+//         printf("nrarfcn %d, fp->dl_CarrierFreq: %d \n", req->nfapi_config.nrarfcn.value, fp->dl_CarrierFreq);
+//     fp->ul_CarrierFreq = fp->dl_CarrierFreq - (get_uldl_offset(fp->eutra_band) * 1e5);
+//     printf("fp->ul_CarrierFreq: %d\n", fp->ul_CarrierFreq);
     num_tlv++;
-    NFAPI_TRACE(NFAPI_TRACE_INFO, "%s() earfcn:%u dl_carrierFreq:%u ul_CarrierFreq:%u band:%u N_RB_DL:%u\n",
-                __FUNCTION__, req->nfapi_config.earfcn.value, fp->dl_CarrierFreq, fp->ul_CarrierFreq, pnf->rfs[0].band, fp->N_RB_DL);
+    NFAPI_TRACE(NFAPI_TRACE_INFO, "%s() nrarfcn:%u dl_carrierFreq:%u ul_CarrierFreq:%u band:%u N_RB_DL:%u\n",
+        __FUNCTION__, req->nfapi_config.nrarfcn.value, fp->dl_CarrierFreq, fp->ul_CarrierFreq, pnf->rfs[0].band, fp->N_RB_DL);
   }
 
-  if (req->subframe_config.duplex_mode.tl.tag == NFAPI_SUBFRAME_CONFIG_DUPLEX_MODE_TAG) {
-    fp->frame_type = req->subframe_config.duplex_mode.value==0 ? TDD : FDD;
+  if (req->subframe_config.duplex_mode.tl.tag == NFAPI_NR_SUBFRAME_CONFIG_DUPLEX_MODE_TAG) {
+//     fp->frame_type = req->subframe_config.duplex_mode.value==0 ? TDD : FDD;
     num_tlv++;
-    NFAPI_TRACE(NFAPI_TRACE_INFO, "%s() frame_type:%d\n", __FUNCTION__, fp->frame_type);
+//     NFAPI_TRACE(NFAPI_TRACE_INFO, "%s() frame_type:%d\n", __FUNCTION__, fp->frame_type);
   }
 
-  if (req->subframe_config.dl_cyclic_prefix_type.tl.tag == NFAPI_SUBFRAME_CONFIG_DL_CYCLIC_PREFIX_TYPE_TAG) {
-    fp->Ncp = req->subframe_config.dl_cyclic_prefix_type.value;
-    num_tlv++;
-  }
-
-  if (req->subframe_config.ul_cyclic_prefix_type.tl.tag == NFAPI_SUBFRAME_CONFIG_UL_CYCLIC_PREFIX_TYPE_TAG) {
-    fp->Ncp_UL = req->subframe_config.ul_cyclic_prefix_type.value;
+  if (req->subframe_config.dl_cyclic_prefix_type.tl.tag == NFAPI_NR_SUBFRAME_CONFIG_DL_CYCLIC_PREFIX_TYPE_TAG) {
+//     fp->Ncp = req->subframe_config.dl_cyclic_prefix_type.value;
+//     printf("req->subframe_config.dl_cyclic_prefix_type.value: %d\n", req->subframe_config.dl_cyclic_prefix_type.value);
     num_tlv++;
   }
 
-  fp->num_MBSFN_config = 0; // DJP - hard code alert
-
-  if (req->sch_config.physical_cell_id.tl.tag == NFAPI_SCH_CONFIG_PHYSICAL_CELL_ID_TAG) {
-    fp->Nid_cell = req->sch_config.physical_cell_id.value;
-    fp->nushift = fp->Nid_cell%6;
+  if (req->sch_config.physical_cell_id.tl.tag == NFAPI_NR_SCH_CONFIG_PHYSICAL_CELL_ID_TAG) {
+//     fp->Nid_cell = req->sch_config.physical_cell_id.value;
+//     printf("req->sch_config.physical_cell_id.value: %d\n", req->sch_config.physical_cell_id.value);
+//     fp->nushift = fp->Nid_cell%6;
     num_tlv++;
   }
 
-  if (req->rf_config.tx_antenna_ports.tl.tag == NFAPI_RF_CONFIG_TX_ANTENNA_PORTS_TAG) {
-    fp->nb_antennas_tx = req->rf_config.tx_antenna_ports.value;
-    fp->nb_antenna_ports_eNB = 1;
-    num_tlv++;
+ if (req->sch_config.ssb_scg_position_in_burst.tl.tag == NFAPI_NR_SCH_CONFIG_SSB_POSITION_IN_BURST) {
+//   fp->sch_config.ssb_scg_position_in_burst.value = req->sch_config.ssb_scg_position_in_burst.value;
+//   printf("[ABD] fp->sch_config.ssb_scg_position_in_burst : %d \n", fp->sch_config.ssb_scg_position_in_burst.value);
+  num_tlv++;
+}
+
+if (req->sch_config.ssb_periodicity.tl.tag == NFAPI_NR_SCH_CONFIG_SSB_PERIODICITY) {
+//   fp->sch_config.ssb_periodicity.value = req->sch_config.ssb_periodicity.value;
+//   printf("[ABD] fp->sch_config.ssb_periodicity : %d \n", fp->sch_config.ssb_periodicity.value);
+  num_tlv++;
+}
+
+ if (req->sch_config.ssb_subcarrier_offset.tl.tag == NFAPI_NR_SCH_CONFIG_SSB_SUBCARRIER_OFFSET_TAG) {
+//    fp->sch_config.ssb_subcarrier_offset.value = req->sch_config.ssb_subcarrier_offset.value;
+//    printf("[ABD]fp->sch_config.ssb_subcarrier_offset : %d \n", fp->sch_config.ssb_subcarrier_offset.value);
+   num_tlv++;
+ }
+
+
+// Create local variables to set req-> fields to for now. (We dont have def_nr_common entries for the prach fields)
+ uint16_t prach_RootSequenceIndex;
+ if (req->rach_config.prach_RootSequenceIndex.tl.tag = NFAPI_NR_PRACH_ROOT_SEQUENCE_INDEX){
+     prach_RootSequenceIndex = req->rach_config.prach_RootSequenceIndex.value;
+     printf("[ALGOS] req->rach_config.prach_RootSequenceIndex : %d \n", req->rach_config.prach_RootSequenceIndex.value);
+     num_tlv++;
+ }
+
+ uint16_t prach_msg1_SubcarrierSpacing;
+ if (req->rach_config.prach_msg1_SubcarrierSpacing.tl.tag = NFAPI_NR_PRACH_MSG1_SUBCARRIER_SPACING){
+     prach_msg1_SubcarrierSpacing = req->rach_config.prach_msg1_SubcarrierSpacing.value;
+     printf("[ALGOS] req->rach_config.prach_msg1_SubcarrierSpacing : %d \n", req->rach_config.prach_msg1_SubcarrierSpacing.value);
+     num_tlv++;
+ }
+
+ uint16_t restrictedSetConfig;
+ if (req->rach_config.restrictedSetConfig.tl.tag = NFAPI_NR_PRACH_RESTRICTED_SET_CONFIG){
+     restrictedSetConfig = req->rach_config.restrictedSetConfig.value;
+     printf("[ALGOS] req->rach_config.restrictedSetConfig : %d \n", req->rach_config.restrictedSetConfig.value);
+     num_tlv++;
+ }
+
+ uint16_t msg3_transformPrecoding;
+  if (req->rach_config.msg3_transformPrecoding.tl.tag = NFAPI_NR_PRACH_MSG3_TRANSFORM_PRECODING){
+      msg3_transformPrecoding = req->rach_config.msg3_transformPrecoding.value;
+      printf("[ALGOS] req->rach_config.msg3_transformPrecoding : %d \n", req->rach_config.msg3_transformPrecoding.value);
+      num_tlv++;
   }
 
-  if (req->rf_config.rx_antenna_ports.tl.tag == NFAPI_RF_CONFIG_RX_ANTENNA_PORTS_TAG) {
-    fp->nb_antennas_rx = req->rf_config.rx_antenna_ports.value;
-    num_tlv++;
+  uint16_t prach_ConfigurationIndex;
+  if (req->rach_config.prach_ConfigurationIndex.tl.tag = NFAPI_NR_PRACH_CONFIG_INDEX){
+      prach_ConfigurationIndex = req->rach_config.prach_ConfigurationIndex.value;
+      printf("[ALGOS] req->rach_config.prach_ConfigurationIndex : %d \n", req->rach_config.prach_ConfigurationIndex.value);
+      num_tlv++;
   }
 
-  if (req->phich_config.phich_resource.tl.tag == NFAPI_PHICH_CONFIG_PHICH_RESOURCE_TAG) {
-    fp->phich_config_common.phich_resource = req->phich_config.phich_resource.value;
-    num_tlv++;
+  uint16_t prach_msg1_FDM;
+  if (req->rach_config.prach_msg1_FDM.tl.tag = NFAPI_NR_PRACH_MSG1_FDM){
+      prach_msg1_FDM = req->rach_config.prach_msg1_FDM.value;
+      printf("[ALGOS] req->rach_config.prach_msg1_FDM : %d \n", req->rach_config.prach_msg1_FDM.value);
+      num_tlv++;
   }
 
-  if (req->phich_config.phich_duration.tl.tag == NFAPI_PHICH_CONFIG_PHICH_DURATION_TAG) {
-    fp->phich_config_common.phich_duration = req->phich_config.phich_duration.value;
-    num_tlv++;
+  uint16_t prach_msg1_FrequencyStart;
+  if (req->rach_config.prach_msg1_FrequencyStart.tl.tag = NFAPI_NR_PRACH_MSG1_FREQ_START){
+      prach_msg1_FrequencyStart = req->rach_config.prach_msg1_FrequencyStart.value;
+      printf("[ALGOS] req->rach_config.prach_msg1_FrequencyStart : %d \n", req->rach_config.prach_msg1_FrequencyStart.value);
+      num_tlv++;
   }
 
-  if (req->phich_config.phich_power_offset.tl.tag == NFAPI_PHICH_CONFIG_PHICH_POWER_OFFSET_TAG) {
-    LOG_E(PHY, "%s() NFAPI_PHICH_CONFIG_PHICH_POWER_OFFSET_TAG tag:%d not supported\n", __FUNCTION__, req->phich_config.phich_power_offset.tl.tag);
-    //fp->phich_config_common.phich_power_offset = req->phich_config.
-    num_tlv++;
+  uint16_t zeroCorrelationZoneConfig;
+  if (req->rach_config.zeroCorrelationZoneConfig.tl.tag = NFAPI_NR_PRACH_ZERO_CORR_ZONE_CONFIG){
+      zeroCorrelationZoneConfig = req->rach_config.zeroCorrelationZoneConfig.value;
+      printf("[ALGOS] req->rach_config.zeroCorrelationZoneConfig : %d \n", req->rach_config.zeroCorrelationZoneConfig.value);
+      num_tlv++;
   }
 
-  // UL RS Config
-  if (req->uplink_reference_signal_config.cyclic_shift_1_for_drms.tl.tag == NFAPI_UPLINK_REFERENCE_SIGNAL_CONFIG_CYCLIC_SHIFT_1_FOR_DRMS_TAG) {
-    fp->pusch_config_common.ul_ReferenceSignalsPUSCH.cyclicShift = req->uplink_reference_signal_config.cyclic_shift_1_for_drms.value;
-    num_tlv++;
+  uint16_t preambleReceivedTargetPower;
+  if (req->rach_config.preambleReceivedTargetPower.tl.tag = NFAPI_NR_PRACH_PREAMBLE_RECEIVED_TARGET_POWER){
+      preambleReceivedTargetPower = req->rach_config.preambleReceivedTargetPower.value;
+      printf("[ALGOS] req->rach_config.preambleReceivedTargetPower : %d \n", req->rach_config.preambleReceivedTargetPower.value);
+      num_tlv++;
   }
 
-  if (req->uplink_reference_signal_config.uplink_rs_hopping.tl.tag == NFAPI_UPLINK_REFERENCE_SIGNAL_CONFIG_UPLINK_RS_HOPPING_TAG) {
-    fp->pusch_config_common.ul_ReferenceSignalsPUSCH.groupHoppingEnabled = req->uplink_reference_signal_config.uplink_rs_hopping.value;
-    num_tlv++;
-  }
 
-  if (req->uplink_reference_signal_config.group_assignment.tl.tag == NFAPI_UPLINK_REFERENCE_SIGNAL_CONFIG_GROUP_ASSIGNMENT_TAG) {
-    fp->pusch_config_common.ul_ReferenceSignalsPUSCH.groupAssignmentPUSCH = req->uplink_reference_signal_config.group_assignment.value;
-    num_tlv++;
-  }
 
-  if (req->pusch_config.hopping_mode.tl.tag == NFAPI_PUSCH_CONFIG_HOPPING_MODE_TAG) {
-  }  // DJP - not being handled?
 
-  if (req->pusch_config.hopping_offset.tl.tag == NFAPI_PUSCH_CONFIG_HOPPING_OFFSET_TAG) {
-  }  // DJP - not being handled?
 
-  if (req->pusch_config.number_of_subbands.tl.tag == NFAPI_PUSCH_CONFIG_NUMBER_OF_SUBBANDS_TAG) {
-  }  // DJP - not being handled?
 
-  if (req->prach_config.configuration_index.tl.tag == NFAPI_PRACH_CONFIG_CONFIGURATION_INDEX_TAG) {
-    fp->prach_config_common.prach_ConfigInfo.prach_ConfigIndex=req->prach_config.configuration_index.value;
-    num_tlv++;
-  }
 
-  if (req->prach_config.root_sequence_index.tl.tag == NFAPI_PRACH_CONFIG_ROOT_SEQUENCE_INDEX_TAG) {
-    fp->prach_config_common.rootSequenceIndex=req->prach_config.root_sequence_index.value;
-    num_tlv++;
-  }
 
-  if (req->prach_config.zero_correlation_zone_configuration.tl.tag == NFAPI_PRACH_CONFIG_ZERO_CORRELATION_ZONE_CONFIGURATION_TAG) {
-    fp->prach_config_common.prach_ConfigInfo.zeroCorrelationZoneConfig=req->prach_config.zero_correlation_zone_configuration.value;
-    num_tlv++;
-  }
+//  if (req->phich_config.phich_resource.tl.tag == NFAPI_PHICH_CONFIG_PHICH_RESOURCE_TAG) {
+//    fp->phich_config_common.phich_resource = req->phich_config.phich_resource.value;
+//    num_tlv++;
+//  }
+//
+//  if (req->phich_config.phich_duration.tl.tag == NFAPI_PHICH_CONFIG_PHICH_DURATION_TAG) {
+//    fp->phich_config_common.phich_duration = req->phich_config.phich_duration.value;
+//    num_tlv++;
+//  }
+//
+//  if (req->phich_config.phich_power_offset.tl.tag == NFAPI_PHICH_CONFIG_PHICH_POWER_OFFSET_TAG) {
+//    LOG_E(PHY, "%s() NFAPI_PHICH_CONFIG_PHICH_POWER_OFFSET_TAG tag:%d not supported\n", __FUNCTION__, req->phich_config.phich_power_offset.tl.tag);
+//    //fp->phich_config_common.phich_power_offset = req->phich_config.
+//    num_tlv++;
+//  }
+//
+//  // UL RS Config
+//  if (req->uplink_reference_signal_config.cyclic_shift_1_for_drms.tl.tag == NFAPI_UPLINK_REFERENCE_SIGNAL_CONFIG_CYCLIC_SHIFT_1_FOR_DRMS_TAG) {
+//    fp->pusch_config_common.ul_ReferenceSignalsPUSCH.cyclicShift = req->uplink_reference_signal_config.cyclic_shift_1_for_drms.value;
+//    num_tlv++;
+//  }
+//
+//  if (req->uplink_reference_signal_config.uplink_rs_hopping.tl.tag == NFAPI_UPLINK_REFERENCE_SIGNAL_CONFIG_UPLINK_RS_HOPPING_TAG) {
+//    fp->pusch_config_common.ul_ReferenceSignalsPUSCH.groupHoppingEnabled = req->uplink_reference_signal_config.uplink_rs_hopping.value;
+//    num_tlv++;
+//  }
+//
+//  if (req->uplink_reference_signal_config.group_assignment.tl.tag == NFAPI_UPLINK_REFERENCE_SIGNAL_CONFIG_GROUP_ASSIGNMENT_TAG) {
+//    fp->pusch_config_common.ul_ReferenceSignalsPUSCH.groupAssignmentPUSCH = req->uplink_reference_signal_config.group_assignment.value;
+//    num_tlv++;
+//  }
+//
+//  if (req->pusch_config.hopping_mode.tl.tag == NFAPI_PUSCH_CONFIG_HOPPING_MODE_TAG) {
+//  }  // DJP - not being handled?
+//
+//  if (req->pusch_config.hopping_offset.tl.tag == NFAPI_PUSCH_CONFIG_HOPPING_OFFSET_TAG) {
+//  }  // DJP - not being handled?
+//
+//  if (req->pusch_config.number_of_subbands.tl.tag == NFAPI_PUSCH_CONFIG_NUMBER_OF_SUBBANDS_TAG) {
+//  }  // DJP - not being handled?
+//
+//  if (req->prach_config.configuration_index.tl.tag == NFAPI_PRACH_CONFIG_CONFIGURATION_INDEX_TAG) {
+//    fp->prach_config_common.prach_ConfigInfo.prach_ConfigIndex=req->prach_config.configuration_index.value;
+//    num_tlv++;
+//  }
+//
+//  if (req->prach_config.root_sequence_index.tl.tag == NFAPI_PRACH_CONFIG_ROOT_SEQUENCE_INDEX_TAG) {
+//    fp->prach_config_common.rootSequenceIndex=req->prach_config.root_sequence_index.value;
+//    num_tlv++;
+//  }
+//
+//  if (req->prach_config.zero_correlation_zone_configuration.tl.tag == NFAPI_PRACH_CONFIG_ZERO_CORRELATION_ZONE_CONFIGURATION_TAG) {
+//    fp->prach_config_common.prach_ConfigInfo.zeroCorrelationZoneConfig=req->prach_config.zero_correlation_zone_configuration.value;
+//    num_tlv++;
+//  }
+//
+//  if (req->prach_config.high_speed_flag.tl.tag == NFAPI_PRACH_CONFIG_HIGH_SPEED_FLAG_TAG) {
+//    fp->prach_config_common.prach_ConfigInfo.highSpeedFlag=req->prach_config.high_speed_flag.value;
+//    num_tlv++;
+//  }
+//
+//  if (req->prach_config.frequency_offset.tl.tag == NFAPI_PRACH_CONFIG_FREQUENCY_OFFSET_TAG) {
+//    fp->prach_config_common.prach_ConfigInfo.prach_FreqOffset=req->prach_config.frequency_offset.value;
+//    num_tlv++;
+//  }
 
-  if (req->prach_config.high_speed_flag.tl.tag == NFAPI_PRACH_CONFIG_HIGH_SPEED_FLAG_TAG) {
-    fp->prach_config_common.prach_ConfigInfo.highSpeedFlag=req->prach_config.high_speed_flag.value;
-    num_tlv++;
-  }
+  if(nfapi_mode!=3) {
+  printf("[PNF] CONFIG_REQUEST[num_tlv:%d] TLVs processed:%d\n", req->num_tlv, num_tlv);
 
-  if (req->prach_config.frequency_offset.tl.tag == NFAPI_PRACH_CONFIG_FREQUENCY_OFFSET_TAG) {
-    fp->prach_config_common.prach_ConfigInfo.prach_FreqOffset=req->prach_config.frequency_offset.value;
-    num_tlv++;
-  }
+  printf("[PNF] Simulating PHY CONFIG - DJP\n");
+  NR_PHY_Config_t nr_phy_config;
+  nr_phy_config.Mod_id = 0;
+  nr_phy_config.CC_id=0;
+  nr_phy_config.cfg = req;
 
-  if(NFAPI_MODE!=NFAPI_UE_STUB_PNF) {
-    printf("[PNF] CONFIG_REQUEST[num_tlv:%d] TLVs processed:%d\n", req->num_tlv, num_tlv);
-    printf("[PNF] Simulating PHY CONFIG - DJP\n");
-    PHY_Config_t phy_config;
-    phy_config.Mod_id = 0;
-    phy_config.CC_id=0;
-    phy_config.cfg = req;
-    phy_config_request(&phy_config);
-    dump_frame_parms(fp);
+  nr_phy_config_request(&nr_phy_config);
+
+  nr_dump_frame_parms(fp);
   }
 
   phy_info->remote_port = req->nfapi_config.p7_vnf_port.value;
@@ -676,6 +784,8 @@ int config_request(nfapi_pnf_config_t *config, nfapi_pnf_phy_config_t *phy, nfap
   if(NFAPI_MODE==NFAPI_UE_STUB_PNF)
     free(fp);
 
+  //printf("[PNF] Sent NFAPI_CONFIG_RESPONSE phy_id:%d\n", phy_info->id);
+  printf("CONFIG.response is sent, phy_id:%d\n" ,phy_info->id);
   return 0;
 }
 
@@ -749,23 +859,28 @@ int pnf_phy_dl_config_req(nfapi_pnf_p7_config_t *pnf_p7, nfapi_dl_config_request
   if (req->dl_config_request_body.number_dci ||
       req->dl_config_request_body.number_pdu ||
       req->dl_config_request_body.number_pdsch_rnti)
-    NFAPI_TRACE(NFAPI_TRACE_INFO, "%s() TX:%d/%d RX:%d/%d sfn_sf:%d pdcch:%u dl_cfg[dci:%u pdus:%d pdsch_rnti:%d] pcfich:%u\n",
-                __FUNCTION__, proc->frame_tx, proc->subframe_tx, proc->frame_rx, proc->subframe_rx,
-                NFAPI_SFNSF2DEC(req->sfn_sf),
-                req->dl_config_request_body.number_pdcch_ofdm_symbols,
-                req->dl_config_request_body.number_dci,
-                req->dl_config_request_body.number_pdu,
-                req->dl_config_request_body.number_pdsch_rnti,
-                req->dl_config_request_body.transmission_power_pcfich);
+  NFAPI_TRACE(NFAPI_TRACE_INFO, "%s() TX:%d/%d RX:%d/%d sfn_sf:%d pdcch:%u dl_cfg[dci:%u pdus:%d pdsch_rnti:%d] pcfich:%u\n", 
+      __FUNCTION__, proc->frame_tx, proc->subframe_tx, proc->frame_rx, proc->subframe_rx, 
+      NFAPI_SFNSF2DEC(req->sfn_sf), 
+      req->dl_config_request_body.number_pdcch_ofdm_symbols, 
+      req->dl_config_request_body.number_dci, 
+      req->dl_config_request_body.number_pdu, 
+      req->dl_config_request_body.number_pdsch_rnti, 
+      req->dl_config_request_body.transmission_power_pcfich);
 
-  for (int i=0; i<req->dl_config_request_body.number_pdu; i++) {
-    NFAPI_TRACE(NFAPI_TRACE_INFO, "%s() sfn/sf:%d PDU[%d] size:%d pdcch_vars->num_dci:%d\n", __FUNCTION__, NFAPI_SFNSF2DEC(req->sfn_sf), i, dl_config_pdu_list[i].pdu_size,pdcch_vars->num_dci);
+  for (int i=0;i<req->dl_config_request_body.number_pdu;i++) {
+	  printf("dl_config_request_body.number_pdu\n");
+    //NFAPI_TRACE(NFAPI_TRACE_INFO, "%s() sfn/sf:%d PDU[%d] size:%d pdcch_vars->num_dci:%d\n", __FUNCTION__, NFAPI_SFNSF2DEC(req->sfn_sf), i, dl_config_pdu_list[i].pdu_size,pdcch_vars->num_dci);
 
     if (dl_config_pdu_list[i].pdu_type == NFAPI_DL_CONFIG_DCI_DL_PDU_TYPE) {
       handle_nfapi_dci_dl_pdu(eNB,NFAPI_SFNSF2SFN(req->sfn_sf),NFAPI_SFNSF2SF(req->sfn_sf),proc,&dl_config_pdu_list[i]);
       pdcch_vars->num_dci++; // Is actually number of DCI PDUs
+
+      printf("NFAPI_DL_CONFIG_DCI_DL_PDU_TYPE process");
+
       NFAPI_TRACE(NFAPI_TRACE_INFO, "%s() pdcch_vars->num_dci:%d\n", __FUNCTION__, pdcch_vars->num_dci);
     } else if (dl_config_pdu_list[i].pdu_type == NFAPI_DL_CONFIG_BCH_PDU_TYPE) {
+    	LOG_I(PHY,"NFAPI_DL_CONFIG_bch_DL_PDU_TYPE process");
       nfapi_dl_config_bch_pdu *bch_pdu = &dl_config_pdu_list[i].bch_pdu;
       uint16_t pdu_index = bch_pdu->bch_pdu_rel8.pdu_index;
 
@@ -812,7 +927,170 @@ int pnf_phy_dl_config_req(nfapi_pnf_p7_config_t *pnf_p7, nfapi_dl_config_request
   return 0;
 }
 
-int pnf_phy_tx_req(nfapi_pnf_p7_config_t *pnf_p7, nfapi_tx_request_t *req) {
+int pnf_phy_nr_dl_config_req(nfapi_pnf_p7_config_t* pnf_p7, nfapi_nr_dl_config_request_t* req) {
+
+  LOG_D(PHY,"%s() pnf_phy_nr_dl_config_req\nreq->dl_config_request_body.number_pdu : %d\n",__FUNCTION__,req->dl_config_request_body.number_pdu);
+	//printf("pnf_phy_nr_dl_config_req 1\n");
+    if (RC.ru == 0) {
+        return -1;
+    }
+
+    if (RC.gNB == 0) {
+        return -2;
+    }
+
+    if (RC.gNB[0][0] == 0) {
+        return -3;
+    }
+
+    if (sync_var != 0) {
+        NFAPI_TRACE(NFAPI_TRACE_INFO, "%s() Main system not up - is this a dummy subframe?\n", __FUNCTION__);
+        return -4;
+    }
+
+    int sfn = NFAPI_SFNSF2SFN(req->sfn_sf);
+    int sf = NFAPI_SFNSF2SF(req->sfn_sf);
+
+    struct PHY_VARS_gNB_s *gNB = RC.gNB[0][0];
+    gNB_L1_rxtx_proc_t *proc = &gNB->proc.L1_proc;
+    nfapi_nr_dl_config_request_pdu_t* dl_config_pdu_list = req->dl_config_request_body.dl_config_pdu_list;
+    NR_gNB_PDCCH *pdcch_vars = &gNB->pdcch_vars;
+
+    gNB->pdcch_vars.num_dci = 0;
+    gNB->pdcch_vars.num_pdsch_rnti = 0;
+
+    //  pdcch_vars->num_pdcch_symbols = req->dl_config_request_body.number_pdcch_ofdm_symbols;
+    //  pdcch_vars->num_dci = 0;
+    //
+    //  if (req->dl_config_request_body.number_dci ||
+    //      req->dl_config_request_body.number_pdu ||
+    //      req->dl_config_request_body.number_pdsch_rnti)
+    //  NFAPI_TRACE(NFAPI_TRACE_INFO, "%s() TX:%d/%d RX:%d/%d sfn_sf:%d pdcch:%u dl_cfg[dci:%u pdus:%d pdsch_rnti:%d] pcfich:%u\n",
+    //      __FUNCTION__, proc->frame_tx, proc->subframe_tx, proc->frame_rx, proc->subframe_rx,
+    //      NFAPI_SFNSF2DEC(req->sfn_sf),
+    //      req->dl_config_request_body.number_pdcch_ofdm_symbols,
+    //      req->dl_config_request_body.number_dci,
+    //      req->dl_config_request_body.number_pdu,
+    //      req->dl_config_request_body.number_pdsch_rnti,
+    //      req->dl_config_request_body.transmission_power_pcfich);
+
+    nfapi_nr_dl_config_request_pdu_t *dl_config_pdu;
+    nfapi_nr_dl_config_request_pdu_t *dl_config_dlsch_pdu;
+
+    for (int i=0;i<req->dl_config_request_body.number_pdu;i++) {
+    	printf("dl_config_request_body.number_pdu %d\n", req->dl_config_request_body.number_pdu);
+        //NFAPI_TRACE(NFAPI_TRACE_INFO, "%s() sfn/sf:%d PDU[%d] size:%d pdcch_vars->num_dci:%d\n", __FUNCTION__, NFAPI_SFNSF2DEC(req->sfn_sf), i, dl_config_pdu_list[i].pdu_size,pdcch_vars->num_dci);
+
+        if (dl_config_pdu_list[i].pdu_type == NFAPI_NR_DL_CONFIG_BCH_PDU_TYPE) {
+          LOG_D(PHY, "%s() NFAPI_NR_DL_CONFIG_BCH_PDU_TYPE\n", __FUNCTION__);
+
+            nfapi_nr_dl_config_bch_pdu_rel15_t *bch_pdu = &dl_config_pdu_list[i].bch_pdu_rel15;
+            uint16_t pdu_index = bch_pdu->pdu_index;
+
+            printf("NFAPI_NR_DL_CONFIG_BCH_PDU_TYPE sent.");
+
+            if (tx_request_pdu[sfn][sf][pdu_index] != NULL) {
+
+              LOG_D(PHY, "tx_request_pdu[sfn][sf][pdu_index] != NULL  sfn: %d,  sf: %d,  pdu_index: %d\n",sfn, sf, pdu_index);
+              
+              
+              //NFAPI_TRACE(NFAPI_TRACE_INFO, "%s() PDU:%d BCH: pdu_index:%u pdu_length:%d sdu_length:%d BCH_SDU:%x,%x,%x\n", __FUNCTION__, i, pdu_index, bch_pdu->bch_pdu_rel8.length, tx_request_pdu[sfn][sf][pdu_index]->segments[0].segment_length, sdu[0], sdu[1], sdu[2]);
+                
+                handle_nr_nfapi_bch_pdu(gNB,&dl_config_pdu_list[i], tx_request_pdu[sfn][sf][pdu_index]->segments[0].segment_data);
+
+                gNB->pbch_configured=1;
+
+                //do not schedule any data in a subframe with SSB
+                break;
+
+            } else {
+
+                NFAPI_TRACE(NFAPI_TRACE_ERROR, "%s() BCH NULL TX PDU SFN/SF:%d PDU_INDEX:%d\n", __FUNCTION__, NFAPI_SFNSF2DEC(req->sfn_sf), pdu_index);
+            }
+        } else if (dl_config_pdu_list[i].pdu_type == NFAPI_NR_DL_CONFIG_DCI_DL_PDU_TYPE) {
+
+
+          LOG_D(PHY, "%s() NFAPI_NR_DL_CONFIG_DCI_DL_PDU_TYPE handler params\n", __FUNCTION__);
+            dl_config_pdu= &dl_config_pdu_list[i];
+
+                                 
+            handle_nfapi_nr_dci_dl_pdu(gNB, sfn, sf, &dl_config_pdu->dci_dl_pdu);
+
+            //NFAPI_TRACE(NFAPI_TRACE_INFO, "%s() pdcch_vars->num_dci:%d\n", __FUNCTION__, pdcch_vars->num_dci);
+
+        } else if (dl_config_pdu_list[i].pdu_type == NFAPI_NR_DL_CONFIG_DLSCH_PDU_TYPE) {
+        	//printf("NFAPI_NR_DL_CONFIG_DLSCH_PDU_TYPE handler params\n");
+            dl_config_dlsch_pdu = &dl_config_pdu_list[i];
+            nfapi_nr_dl_config_dlsch_pdu_rel15_t *rel15_pdu = &dl_config_dlsch_pdu->dlsch_pdu.dlsch_pdu_rel15;
+            nfapi_tx_request_pdu_t *tx_pdu = tx_request_pdu[sfn][sf][rel15_pdu->pdu_index];
+
+            //printf("accessing tx pdu with sfn %d sf %d i %d\n", sfn, sf, rel15_pdu->pdu_index);
+         
+
+
+            if (tx_pdu != NULL) {
+
+                //printf("tx pdu is found\n");
+                //printf("tx_pdu->pdu_length: %d\n", tx_pdu->pdu_length);
+                //printf("tx_pdu->pdu_index: %d\n", tx_pdu->pdu_index);
+
+                //        int UE_id = find_dlsch(rel15_pdu->rnti,eNB,SEARCH_EXIST_OR_FREE);
+                //        AssertFatal(UE_id!=-1,"no free or exiting dlsch_context\n");
+                //        AssertFatal(UE_id<NUMBER_OF_UE_MAX,"returned UE_id %d >= %d(NUMBER_OF_UE_MAX)\n",UE_id,NUMBER_OF_UE_MAX);
+                //        LTE_eNB_DLSCH_t *dlsch0 = eNB->dlsch[UE_id][0];
+                //        //LTE_eNB_DLSCH_t *dlsch1 = eNB->dlsch[UE_id][1];
+                //        int harq_pid = dlsch0->harq_ids[sfn%2][sf];
+                //        if(harq_pid >= dlsch0->Mdlharq) {
+                //          LOG_E(PHY,"pnf_phy_dl_config_req illegal harq_pid %d\n", harq_pid);
+                //          return(-1);
+                //        }
+              	NR_gNB_DLSCH_t *dlsch0, *dlsch1;
+              	dlsch0 = gNB->dlsch[0][0];
+              	dlsch1 = gNB->dlsch[0][1];
+              	int harq_pid;
+              	harq_pid        = dlsch0->harq_ids[sfn%2][sf];
+		//printf("harq pid inside pnf_phy_nr_dl_config_req %d\n", harq_pid);
+                  uint8_t *dlsch_sdu = tx_pdus[0][harq_pid]; //assume ue_id 0 and harq_pid 0 for now
+
+
+//                  printf("output of pdu is \n");
+//                  for (int i = 0; i < tx_pdu->pdu_length; i ++) {
+//                  	printf("%c", dlsch_sdu[i]);
+//                  }
+//                  printf("\n");
+
+
+//                handle_nfapi_nr_dci_dl_pdu_w_txreq(gNB, sfn, sf, proc, dl_config_pdu, dl_config_dlsch_pdu, dlsch_sdu);
+//                handle_nfapi_nr_dci_dl_pdu_w_txreq(gNB, sfn, sf, proc, dl_config_pdu, dl_config_dlsch_pdu, tx_pdu);
+
+
+                handle_nr_nfapi_dlsch_pdu(gNB, sfn, sf, &dl_config_dlsch_pdu->dlsch_pdu, dlsch_sdu);
+
+                pdcch_vars->num_dci++; // Is actually number of DCI PDUs
+                gNB->pdcch_vars.num_pdsch_rnti++;
+
+
+                //printf("total number of rnti are: %d\n", gNB->pdcch_vars.num_pdsch_rnti);
+            } else {
+
+                NFAPI_TRACE(NFAPI_TRACE_ERROR, "%s() DLSCH NULL TX PDU SFN/SF:%d PDU_INDEX:%d\n", __FUNCTION__, NFAPI_SFNSF2DEC(req->sfn_sf), rel15_pdu->pdu_index);
+            }
+
+        } else {
+            NFAPI_TRACE(NFAPI_TRACE_ERROR, "%s() UNKNOWN:%d\n", __FUNCTION__, dl_config_pdu_list[i].pdu_type);
+        }
+    }
+
+
+
+    if(req->vendor_extension)
+        free(req->vendor_extension);
+
+    return 0;
+}
+
+int pnf_phy_tx_req(nfapi_pnf_p7_config_t* pnf_p7, nfapi_tx_request_t* req) {
+	//printf("pnf_phy_tx_req 1\n");
   uint16_t sfn = NFAPI_SFNSF2SFN(req->sfn_sf);
   uint16_t sf = NFAPI_SFNSF2SF(req->sfn_sf);
 
@@ -822,14 +1100,31 @@ int pnf_phy_tx_req(nfapi_pnf_p7_config_t *pnf_p7, nfapi_tx_request_t *req) {
   if (req->tx_request_body.tl.tag==NFAPI_TX_REQUEST_BODY_TAG) {
     for (int i=0; i<req->tx_request_body.number_of_pdus; i++) {
       LOG_D(PHY,"%s() SFN/SF:%d%d number_of_pdus:%d [PDU:%d] pdu_length:%d pdu_index:%d num_segments:%d\n",
-            __FUNCTION__,
-            sfn, sf,
-            req->tx_request_body.number_of_pdus,
-            i,
-            req->tx_request_body.tx_pdu_list[i].pdu_length,
-            req->tx_request_body.tx_pdu_list[i].pdu_index,
-            req->tx_request_body.tx_pdu_list[i].num_segments
-           );
+          __FUNCTION__,
+          sfn, sf,
+          req->tx_request_body.number_of_pdus,
+          i,
+          req->tx_request_body.tx_pdu_list[i].pdu_length,
+          req->tx_request_body.tx_pdu_list[i].pdu_index,
+          req->tx_request_body.tx_pdu_list[i].num_segments
+          );
+
+      struct PHY_VARS_gNB_s *gNB = RC.gNB[0][0];
+
+  	NR_gNB_DLSCH_t *dlsch0, *dlsch1;
+  	dlsch0 = gNB->dlsch[0][0];
+    dlsch1 = gNB->dlsch[0][1];
+    LOG_D(PHY,"test1\n");
+  	int harq_pid;
+    harq_pid        = dlsch0->harq_ids[sfn%2][sf];
+    //printf("harq pid inside pnf_phy_tx_req %d\n", harq_pid);
+    LOG_D(PHY,"test2\n");
+      uint8_t *dlsch_sdu = tx_pdus[0][harq_pid]; //assume ue_id 0 and harq_pid 0 for now
+      LOG_D(PHY,"test3  sf: %d,  harq_pid: %d\n",sf, harq_pid);
+      memcpy(dlsch_sdu, req->tx_request_body.tx_pdu_list[i].segments[0].segment_data, req->tx_request_body.tx_pdu_list[i].segments[0].segment_length);
+
+      //printf("filled tx pdu with sfn %d sf %d i %d\n", sfn, sf, i);
+
       tx_request_pdu[sfn][sf][i] = &req->tx_request_body.tx_pdu_list[i];
     }
   }
@@ -995,8 +1290,10 @@ nfapi_tx_request_t dummy_tx_req;
 
 nfapi_pnf_p7_subframe_buffer_t dummy_subframe;
 
-int start_request(nfapi_pnf_config_t *config, nfapi_pnf_phy_config_t *phy, nfapi_start_request_t *req) {
-  printf("[PNF] Received NFAPI_START_REQ phy_id:%d\n", req->header.phy_id);
+int start_request(nfapi_pnf_config_t* config, nfapi_pnf_phy_config_t* phy, nfapi_start_request_t* req) {
+
+  //printf("[PNF] Received NFAPI_START_REQ phy_id:%d\n", req->header.phy_id);
+  printf("[ANL] inside start_request(), phy_id:%d\n", req->header.phy_id);
   nfapi_set_trace_level(NFAPI_TRACE_INFO);
   pnf_info *pnf = (pnf_info *)(config->user_data);
   phy_info *phy_info = pnf->phys;
@@ -1028,6 +1325,9 @@ int start_request(nfapi_pnf_config_t *config, nfapi_pnf_phy_config_t *phy, nfapi
   }
 
   p7_config->dl_config_req = &pnf_phy_dl_config_req;
+
+  p7_config->nr_dl_config_req = &pnf_phy_nr_dl_config_req;
+
   p7_config->ul_config_req = &pnf_phy_ul_config_req;
   p7_config->hi_dci0_req = &pnf_phy_hi_dci0_req;
   p7_config->tx_req = &pnf_phy_tx_req;
@@ -1045,73 +1345,108 @@ int start_request(nfapi_pnf_config_t *config, nfapi_pnf_phy_config_t *phy, nfapi
     p7_config->tx_req = &pnf_phy_tx_req;
   }
 
-  p7_config->lbt_dl_config_req = &pnf_phy_lbt_dl_config_req;
-  memset(&dummy_dl_config_req, 0, sizeof(dummy_dl_config_req));
-  dummy_dl_config_req.dl_config_request_body.tl.tag=NFAPI_DL_CONFIG_REQUEST_BODY_TAG;
-  dummy_dl_config_req.dl_config_request_body.number_pdcch_ofdm_symbols=1;
-  dummy_dl_config_req.dl_config_request_body.number_dci=0;
-  dummy_dl_config_req.dl_config_request_body.number_pdu=0;
-  dummy_dl_config_req.dl_config_request_body.number_pdsch_rnti=0;
-  dummy_dl_config_req.dl_config_request_body.transmission_power_pcfich=6000;
-  dummy_dl_config_req.dl_config_request_body.dl_config_pdu_list=0;
-  memset(&dummy_tx_req, 0, sizeof(dummy_tx_req));
-  dummy_tx_req.tx_request_body.number_of_pdus=0;
-  dummy_tx_req.tx_request_body.tl.tag=NFAPI_TX_REQUEST_BODY_TAG;
-  dummy_subframe.dl_config_req = &dummy_dl_config_req;
-  dummy_subframe.tx_req = 0;//&dummy_tx_req;
-  dummy_subframe.ul_config_req=0;
-  dummy_subframe.hi_dci0_req=0;
-  dummy_subframe.lbt_dl_config_req=0;
-  p7_config->dummy_subframe = dummy_subframe;
-  p7_config->vendor_ext = &pnf_phy_vendor_ext;
-  p7_config->allocate_p7_vendor_ext = &pnf_phy_allocate_p7_vendor_ext;
-  p7_config->deallocate_p7_vendor_ext = &pnf_phy_deallocate_p7_vendor_ext;
-  p7_config->codec_config.unpack_p7_vendor_extension = &pnf_phy_unpack_p7_vendor_extension;
-  p7_config->codec_config.pack_p7_vendor_extension = &pnf_phy_pack_p7_vendor_extension;
-  p7_config->codec_config.unpack_vendor_extension_tlv = &pnf_phy_unpack_vendor_extension_tlv;
-  p7_config->codec_config.pack_vendor_extension_tlv = &pnf_phy_pack_vendor_extention_tlv;
-  NFAPI_TRACE(NFAPI_TRACE_INFO, "[PNF] Creating P7 thread %s\n", __FUNCTION__);
-  pthread_t p7_thread;
-  pthread_create(&p7_thread, NULL, &pnf_p7_thread_start, p7_config);
-  //((pnf_phy_user_data_t*)(phy_info->fapi->user_data))->p7_config = p7_config;
-  NFAPI_TRACE(NFAPI_TRACE_INFO, "[PNF] Calling l1_north_init_eNB() %s\n", __FUNCTION__);
-  l1_north_init_eNB();
-  NFAPI_TRACE(NFAPI_TRACE_INFO, "[PNF] DJP - HACK - Set p7_config global ready for subframe ind%s\n", __FUNCTION__);
-  p7_config_g = p7_config;
+  // if (nfapi_mode==3) {
+  //     p7_config->dl_config_req = &memcpy_dl_config_req;
+  //     p7_config->ul_config_req = &memcpy_ul_config_req;
+  //     p7_config->hi_dci0_req = &memcpy_hi_dci0_req;
+  //     p7_config->tx_req = &memcpy_tx_req;
+  // }
+  // else {
+  //     p7_config->dl_config_req = &pnf_phy_dl_config_req;
 
-  // Need to wait for main thread to create RU structures
-  while(config_sync_var<0) {
-    usleep(5000000);
-    printf("[PNF] waiting for OAI to be configured (eNB/RU)\n");
-  }
+  //     p7_config->nr_dl_config_req = &pnf_phy_nr_dl_config_req;
 
-  printf("[PNF] OAI eNB/RU configured\n");
-  //printf("[PNF] About to call phy_init_RU() for RC.ru[0]:%p\n", RC.ru[0]);
-  //phy_init_RU(RC.ru[0]);
-  printf("[PNF] About to call init_eNB_afterRU()\n");
+  //     p7_config->ul_config_req = &pnf_phy_ul_config_req;
+  //     p7_config->hi_dci0_req = &pnf_phy_hi_dci0_req;
+  //     p7_config->tx_req = &pnf_phy_tx_req;
+  // }
+  // p7_config->lbt_dl_config_req = &pnf_phy_lbt_dl_config_req;
 
-  if (NFAPI_MODE!=NFAPI_UE_STUB_PNF) {
-    init_eNB_afterRU();
-  }
+    memset(&dummy_dl_config_req, 0, sizeof(dummy_dl_config_req));
+    dummy_dl_config_req.dl_config_request_body.tl.tag=NFAPI_DL_CONFIG_REQUEST_BODY_TAG;
+    dummy_dl_config_req.dl_config_request_body.number_pdcch_ofdm_symbols=1;
+    dummy_dl_config_req.dl_config_request_body.number_dci=0;
+    dummy_dl_config_req.dl_config_request_body.number_pdu=0;
+    dummy_dl_config_req.dl_config_request_body.number_pdsch_rnti=0;
+    dummy_dl_config_req.dl_config_request_body.transmission_power_pcfich=6000;
+    dummy_dl_config_req.dl_config_request_body.dl_config_pdu_list=0;
 
-  // Signal to main thread that it can carry on - otherwise RU will startup too quickly and it is not initialised
-  {
-    pthread_mutex_lock(&nfapi_sync_mutex);
-    nfapi_sync_var=0;
-    pthread_cond_broadcast(&nfapi_sync_cond);
-    pthread_mutex_unlock(&nfapi_sync_mutex);
-  }
+    memset(&dummy_tx_req, 0, sizeof(dummy_tx_req));
+    dummy_tx_req.tx_request_body.number_of_pdus=0;
+    dummy_tx_req.tx_request_body.tl.tag=NFAPI_TX_REQUEST_BODY_TAG;
 
-  while(sync_var<0) {
-    usleep(5000000);
-    printf("[PNF] waiting for OAI to be started\n");
-  }
+    dummy_subframe.dl_config_req = &dummy_dl_config_req;
+    dummy_subframe.tx_req = 0;//&dummy_tx_req;
 
-  printf("[PNF] Sending PNF_START_RESP\n");
-  nfapi_send_pnf_start_resp(config, p7_config->phy_id);
-  printf("[PNF] Sending first P7 subframe ind\n");
-  nfapi_pnf_p7_subframe_ind(p7_config, p7_config->phy_id, 0); // DJP - SFN_SF set to zero - correct???
-  printf("[PNF] Sent first P7 subframe ind\n");
+    dummy_subframe.ul_config_req=0;
+    dummy_subframe.hi_dci0_req=0;
+    dummy_subframe.lbt_dl_config_req=0;
+
+    p7_config->dummy_subframe = dummy_subframe;
+
+    p7_config->vendor_ext = &pnf_phy_vendor_ext;
+
+    p7_config->allocate_p7_vendor_ext = &pnf_phy_allocate_p7_vendor_ext;
+    p7_config->deallocate_p7_vendor_ext = &pnf_phy_deallocate_p7_vendor_ext;
+
+    p7_config->codec_config.unpack_p7_vendor_extension = &pnf_phy_unpack_p7_vendor_extension;
+    p7_config->codec_config.pack_p7_vendor_extension = &pnf_phy_pack_p7_vendor_extension;
+    p7_config->codec_config.unpack_vendor_extension_tlv = &pnf_phy_unpack_vendor_extension_tlv;
+    p7_config->codec_config.pack_vendor_extension_tlv = &pnf_phy_pack_vendor_extention_tlv;
+
+    NFAPI_TRACE(NFAPI_TRACE_INFO, "[PNF] Creating P7 thread %s\n", __FUNCTION__);
+    printf("[PNF] Creating P7 thread\n");
+    pthread_t p7_thread;
+    pthread_create(&p7_thread, NULL, &pnf_p7_thread_start, p7_config);
+
+    //((pnf_phy_user_data_t*)(phy_info->fapi->user_data))->p7_config = p7_config;
+
+    NFAPI_TRACE(NFAPI_TRACE_INFO, "[PNF] Calling l1_north_init_eNB() %s\n", __FUNCTION__);
+    printf("[PNF] Calling l1_north_init_eNB() \n");
+    l1_north_init_gNB();
+
+    NFAPI_TRACE(NFAPI_TRACE_INFO, "[PNF] DJP - HACK - Set p7_config global ready for subframe ind%s\n", __FUNCTION__);
+    printf("[PNF] DJP - HACK - Set p7_config global ready for subframe ind%s\n", __FUNCTION__);
+    p7_config_g = p7_config;
+
+    // Need to wait for main thread to create RU structures
+    while(config_sync_var<0)
+    {
+      usleep(5000000);
+      printf("[PNF] waiting for OAI to be configured (eNB/RU)\n");
+    }
+    LOG_I(PHY, "[PNF] OAI eNB/RU configured\n");
+
+    //printf("[PNF] About to call phy_init_RU() for RC.ru[0]:%p\n", RC.ru[0]);
+    //phy_init_RU(RC.ru[0]);
+
+    LOG_I(PHY, "[PNF] About to call init_eNB_afterRU()\n");
+
+    if (nfapi_mode != 3) {
+    	init_eNB_afterRU();
+    }
+
+    // Signal to main thread that it can carry on - otherwise RU will startup too quickly and it is not initialised
+    {
+      pthread_mutex_lock(&nfapi_sync_mutex);
+      nfapi_sync_var=0;
+      pthread_cond_broadcast(&nfapi_sync_cond);
+      pthread_mutex_unlock(&nfapi_sync_mutex);
+    }
+
+    while(sync_var<0)
+    {
+      usleep(5000000);
+      LOG_I(PHY, "[PNF] waiting for OAI to be started\n");
+    }
+
+    LOG_I(PHY, "[PNF] Sending PNF_START_RESP\n");
+    nfapi_send_pnf_start_resp(config, p7_config->phy_id);
+
+    LOG_I(PHY, "[PNF] Sending first P7 subframe ind\n");
+    LOG_I(PHY, "Calling nfapi_pnf_p7_subframe_ind() from start_request()...\n");
+    nfapi_pnf_p7_subframe_ind(p7_config, p7_config->phy_id, 0); // DJP - SFN_SF set to zero - correct???
+    LOG_I(PHY, "[PNF] Sent first P7 subframe ind\n");
   return 0;
 }
 
@@ -1419,25 +1754,32 @@ void configure_nfapi_pnf(char *vnf_ip_addr, int vnf_p5_port, char *pnf_ip_addr, 
   NFAPI_TRACE(NFAPI_TRACE_INFO, "[PNF] Creating PNF NFAPI start thread %s\n", __FUNCTION__);
   pthread_create(&pnf_start_pthread, NULL, &pnf_start_thread, config);
   pthread_setname_np(pnf_start_pthread, "NFAPI_PNF");
+  LOG_I(PHY,"[ANL] configure_nfapi_pnf(...) is executed\n\n\n"); // ANIL
 }
 
 void oai_subframe_ind(uint16_t sfn, uint16_t sf) {
+
+    //LOG_I(PHY, "SFN: %d, SF: %d\n",sfn,sf);
+
   //LOG_D(PHY,"%s(sfn:%d, sf:%d)\n", __FUNCTION__, sfn, sf);
 
   //TODO FIXME - HACK - DJP - using a global to bodge it in
   if (p7_config_g != NULL && sync_var==0) {
-    uint16_t sfn_sf_tx = sfn<<4 | sf;
+
+    uint16_t sfn_sf_tx = sfn<<5 | sf;
 
     if ((sfn % 100 == 0) && sf==0) {
       struct timespec ts;
       clock_gettime(CLOCK_MONOTONIC, &ts);
-      NFAPI_TRACE(NFAPI_TRACE_INFO, "[PNF] %s %d.%d (sfn:%u sf:%u) SFN/SF(TX):%u\n", __FUNCTION__, ts.tv_sec, ts.tv_nsec, sfn, sf, NFAPI_SFNSF2DEC(sfn_sf_tx));
+
+      //NFAPI_TRACE(NFAPI_TRACE_INFO, "[PNF] %s %d.%d (sfn:%u sf:%u) SFN/SF(TX):%u\n", __FUNCTION__, ts.tv_sec, ts.tv_nsec, sfn, sf, NFAPI_SFNSF2DEC(sfn_sf_tx));
     }
 
+    //printf("Calling nfapi_pnf_p7_subframe_ind() from oai_subframe_ind()...\n");
     int subframe_ret = nfapi_pnf_p7_subframe_ind(p7_config_g, p7_config_g->phy_id, sfn_sf_tx);
 
     if (subframe_ret) {
-      NFAPI_TRACE(NFAPI_TRACE_INFO, "[PNF] %s(frame:%u subframe:%u) SFN/SF(TX):%u - PROBLEM with pnf_p7_subframe_ind()\n", __FUNCTION__, sfn, sf, sfn_sf_tx, NFAPI_SFNSF2DEC(sfn_sf_tx));
+      //NFAPI_TRACE(NFAPI_TRACE_INFO, "[PNF] %s(frame:%u subframe:%u) SFN/SF(TX):%u - PROBLEM with pnf_p7_subframe_ind()\n", __FUNCTION__, sfn, sf, sfn_sf_tx, NFAPI_SFNSF2DEC(sfn_sf_tx));
     } else {
       //NFAPI_TRACE(NFAPI_TRACE_INFO, "***NFAPI subframe handler finished *** \n");
     }
@@ -1446,8 +1788,12 @@ void oai_subframe_ind(uint16_t sfn, uint16_t sf) {
 }
 
 int oai_nfapi_rach_ind(nfapi_rach_indication_t *rach_ind) {
+    //printf("[ANL] inside oai_nfapi_rach_ind\n");
+
   rach_ind->header.phy_id = 1; // DJP HACK TODO FIXME - need to pass this around!!!!
-  LOG_D(PHY, "%s() sfn_sf:%d preambles:%d\n", __FUNCTION__, NFAPI_SFNSF2DEC(rach_ind->sfn_sf), rach_ind->rach_indication_body.number_of_preambles);
+
+  //LOG_D(PHY, "%s() sfn_sf:%d preambles:%d\n", __FUNCTION__, NFAPI_SFNSF2DEC(rach_ind->sfn_sf), rach_ind->rach_indication_body.number_of_preambles);
+
   return nfapi_pnf_p7_rach_ind(p7_config_g, rach_ind);
 }
 

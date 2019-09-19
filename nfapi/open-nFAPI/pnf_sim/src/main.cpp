@@ -874,7 +874,7 @@ int fapi_subframe_ind(fapi_t* fapi, fapi_subframe_ind_t* resp)
 	
 	}
 
-
+	printf("Calling nfapi_pnf_p7_subframe_ind() from fapi_subframe_ind()...\n");
 	nfapi_pnf_p7_subframe_ind(data->p7_config, data->phy_id, resp->sfn_sf);
 	
 	return 0;

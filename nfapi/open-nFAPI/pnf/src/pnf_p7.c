@@ -32,13 +32,14 @@
 #define FAPI2_IP_DSCP	0
 
 extern uint16_t sf_ahead;
+extern uint16_t slotsInFrame;
 //uint16_t sf_ahead=4;
 
 void add_sf(uint16_t *frameP, uint16_t *subframeP, int offset)
 {
-    *frameP    = (*frameP + ((*subframeP + offset) / 10))%1024;
+    *frameP    = *frameP + ((*subframeP + offset) / (slotsInFrame));
 
-    *subframeP = ((*subframeP + offset) % 10);
+    *subframeP = ((*subframeP + offset) % slotsInFrame);
 }
 
 void subtract_sf(uint16_t *frameP, uint16_t *subframeP, int offset)
@@ -47,7 +48,7 @@ void subtract_sf(uint16_t *frameP, uint16_t *subframeP, int offset)
   {
     *frameP = (*frameP+1024-1)%1024;
   }
-  *subframeP = (*subframeP+10-offset)%10;
+  *subframeP = (*subframeP+slotsInFrame-offset)%slotsInFrame;
 }
 
 uint16_t sfnsf_add_sf(uint16_t sfnsf, int offset)
@@ -59,7 +60,7 @@ uint16_t sfnsf_add_sf(uint16_t sfnsf, int offset)
   //printf("%s() sfn:%u sf:%u\n", __FUNCTION__, sfn, sf);
   add_sf(&sfn, &sf, offset);
 
-  new_sfnsf = sfn<<4|sf;
+  new_sfnsf = sfn<<5|sf;
 
   //printf("%s() sfn:%u sf:%u offset:%d sfnsf:%d(DEC:%d) new:%d(DEC:%d)\n", __FUNCTION__, sfn, sf, offset, sfnsf, NFAPI_SFNSF2DEC(sfnsf), new_sfnsf, NFAPI_SFNSF2DEC(new_sfnsf));
 
@@ -75,7 +76,7 @@ uint16_t sfnsf_subtract_sf(uint16_t sfnsf, int offset)
   //printf("%s() sfn:%u sf:%u\n", __FUNCTION__, sfn, sf);
   subtract_sf(&sfn, &sf, offset);
 
-  new_sfnsf = sfn<<4|sf;
+  new_sfnsf = sfn<<5|sf;
 
   //printf("%s() offset:%d sfnsf:%d(DEC:%d) new:%d(DEC:%d)\n", __FUNCTION__, offset, sfnsf, NFAPI_SFNSF2DEC(sfnsf), new_sfnsf, NFAPI_SFNSF2DEC(new_sfnsf));
 
@@ -114,14 +115,14 @@ void pnf_p7_free(pnf_p7_t* pnf_p7, void* ptr)
 }
 
 // todo : for now these just malloc/free need to move to a memory cache
-nfapi_dl_config_request_t* allocate_nfapi_dl_config_request(pnf_p7_t* pnf_p7) 
+nfapi_nr_dl_config_request_t* allocate_nfapi_dl_config_request(pnf_p7_t* pnf_p7)
 { 
-	void *ptr= pnf_p7_malloc(pnf_p7, sizeof(nfapi_dl_config_request_t));
+	void *ptr= pnf_p7_malloc(pnf_p7, sizeof(nfapi_nr_dl_config_request_t));
         //printf("%s() ptr:%p\n", __FUNCTION__, ptr);
         return ptr;
 }
 
-void deallocate_nfapi_dl_config_request(nfapi_dl_config_request_t* req, pnf_p7_t* pnf_p7) 
+void deallocate_nfapi_dl_config_request(nfapi_nr_dl_config_request_t* req, pnf_p7_t* pnf_p7)
 { 
   //printf("%s() SFN/SF:%d %s req:%p pdu_list:%p\n", __FUNCTION__, NFAPI_SFNSF2DEC(req->sfn_sf), pnf_p7->_public.codec_config.deallocate ? "DEALLOCATE" : "FREE", req, req->dl_config_request_body.dl_config_pdu_list);
 	if(pnf_p7->_public.codec_config.deallocate)
@@ -137,9 +138,9 @@ void deallocate_nfapi_dl_config_request(nfapi_dl_config_request_t* req, pnf_p7_t
 	pnf_p7_free(pnf_p7, req);
 }
 
-nfapi_ul_config_request_t* allocate_nfapi_ul_config_request(pnf_p7_t* pnf_p7) 
+nfapi_nr_ul_config_request_t* allocate_nfapi_ul_config_request(pnf_p7_t* pnf_p7)
 { 
-	void *ptr= pnf_p7_malloc(pnf_p7, sizeof(nfapi_ul_config_request_t));
+	void *ptr= pnf_p7_malloc(pnf_p7, sizeof(nfapi_nr_ul_config_request_t));
         //printf("%s() ptr:%p\n", __FUNCTION__, ptr);
         return ptr;
 }
@@ -409,6 +410,7 @@ static uint32_t get_sf_time(uint32_t now_hr, uint32_t sf_start_hr)
 
 int pnf_p7_send_message(pnf_p7_t* pnf_p7, uint8_t* msg, uint32_t len)
 {
+    printf("[DEMUX] Inside pnf_p7_send_message()...\n");
 	// todo : consider how to do this only once
 	struct sockaddr_in remote_addr;
 	memset((char*)&remote_addr, 0, sizeof(struct sockaddr_in));
@@ -439,6 +441,7 @@ int pnf_p7_send_message(pnf_p7_t* pnf_p7, uint8_t* msg, uint32_t len)
 
 int pnf_p7_pack_and_send_p7_message(pnf_p7_t* pnf_p7, nfapi_p7_message_header_t* header, uint32_t msg_len)
 {
+    printf("[DEMUX] Inside pnf_p7_pack_and_send_p7_message()...\n");
 	header->m_segment_sequence = NFAPI_P7_SET_MSS(0, 0, pnf_p7->sequence_number);
 
 	// Need to guard against different threads calling the encode function at the same time
@@ -612,7 +615,7 @@ int pnf_p7_subframe_ind(pnf_p7_t* pnf_p7, uint16_t phy_id, uint16_t sfn_sf)
 	// todo : consider a more efficent lock mechasium
 	if(pthread_mutex_lock(&(pnf_p7->mutex)) != 0)
 	{
-		NFAPI_TRACE(NFAPI_TRACE_INFO, "failed to lock mutex\n");
+		//NFAPI_TRACE(NFAPI_TRACE_INFO, "failed to lock mutex\n");
 		return -1;
 	}
 
@@ -627,6 +630,7 @@ int pnf_p7_subframe_ind(pnf_p7_t* pnf_p7, uint16_t phy_id, uint16_t sfn_sf)
 	// If the subframe_buffer has been configured
 	if(pnf_p7->_public.subframe_buffer_size != 0)
 	{
+		//printf("sfn_sf_shift: %d\n", pnf_p7->sfn_sf_shift);
 
 		// apply the shift to the incoming sfn_sf
 		if(pnf_p7->sfn_sf_shift != 0)
@@ -641,7 +645,8 @@ int pnf_p7_subframe_ind(pnf_p7_t* pnf_p7, uint16_t phy_id, uint16_t sfn_sf)
 			else if(shifted_sfn_sf > NFAPI_MAX_SFNSFDEC)
 				shifted_sfn_sf -= NFAPI_MAX_SFNSFDEC;
 
-			NFAPI_TRACE(NFAPI_TRACE_INFO, "Applying shift %d to sfn/sf (%d -> %d)\n", pnf_p7->sfn_sf_shift, NFAPI_SFNSF2DEC(sfn_sf), shifted_sfn_sf);
+			//NFAPI_TRACE(NFAPI_TRACE_INFO, "Applying shift %d to sfn/sf (%d -> %d)\n", pnf_p7->sfn_sf_shift, NFAPI_SFNSF2DEC(sfn_sf), shifted_sfn_sf);
+			//printf("Applying shift %d to sfn/sf (%d -> %d)\n", pnf_p7->sfn_sf_shift, NFAPI_SFNSF2DEC(sfn_sf), shifted_sfn_sf);
 			sfn_sf = shifted_sfn_sf;
 
                         //
@@ -653,44 +658,55 @@ int pnf_p7_subframe_ind(pnf_p7_t* pnf_p7, uint16_t phy_id, uint16_t sfn_sf)
 
 		uint32_t sfn_sf_dec = NFAPI_SFNSF2DEC(sfn_sf);
 		uint8_t buffer_index = sfn_sf_dec % pnf_p7->_public.subframe_buffer_size;
+		//printf("sfn_sf_dec: %d, buffer_index: %d\nsubframe_buffer_size: %d\n", sfn_sf_dec, buffer_index,pnf_p7->_public.subframe_buffer_size );
+		////NFAPI_TRACE(NFAPI_TRACE_INFO,"sfn_sf_dec: %d, buffer_index: %d\nsubframe_buffer_size: %d\n", sfn_sf_dec, buffer_index,pnf_p7->_public.subframe_buffer_size );
 
 		nfapi_pnf_p7_subframe_buffer_t* subframe_buffer = &(pnf_p7->subframe_buffer[buffer_index]);
+		////NFAPI_TRACE(NFAPI_TRACE_INFO,"subframe_buffer.sfn_sf = %d\n", subframe_buffer->sfn_sf);
 
 		uint8_t tx_buffer_index = tx_sfn_sf_dec % pnf_p7->_public.subframe_buffer_size;
 		nfapi_pnf_p7_subframe_buffer_t* tx_subframe_buffer = &(pnf_p7->subframe_buffer[tx_buffer_index]);
+		////NFAPI_TRACE(NFAPI_TRACE_INFO,"tx_sfn_sf_dec: %d, tx_buffer_index: %d\n", tx_sfn_sf_dec, tx_buffer_index);
 
-                //printf("sfn_sf_dec:%d tx_sfn_sf_dec:%d\n", sfn_sf_dec, tx_sfn_sf_dec);
 
-                if (0) NFAPI_TRACE(NFAPI_TRACE_INFO, "%s() shift:%d subframe_buffer->sfn_sf:%d tx_subframe_buffer->sfn_sf:%d sfn_sf:%d subframe_buffer[buffer_index:%u dl_config_req:%p tx_req:%p] "
-                    "TX:sfn_sf:%d:tx_buffer_index:%d[dl_config_req:%p tx_req:%p]\n", 
-                    __FUNCTION__, 
-                    pnf_p7->sfn_sf_shift, 
-                    NFAPI_SFNSF2DEC(subframe_buffer->sfn_sf), 
-                    NFAPI_SFNSF2DEC(tx_subframe_buffer->sfn_sf), 
-                       sfn_sf_dec,    buffer_index,    subframe_buffer->dl_config_req,    subframe_buffer->tx_req, 
-                    tx_sfn_sf_dec, tx_buffer_index, tx_subframe_buffer->dl_config_req, tx_subframe_buffer->tx_req);
+		//printf("sfn_sf_dec:%d tx_sfn_sf_dec:%d\n", sfn_sf_dec, tx_sfn_sf_dec);
+
+		if (0) NFAPI_TRACE(NFAPI_TRACE_INFO, "%s() shift:%d subframe_buffer->sfn_sf:%d tx_subframe_buffer->sfn_sf:%d sfn_sf:%d subframe_buffer[buffer_index:%u dl_config_req:%p tx_req:%p] "
+				"TX:sfn_sf:%d:tx_buffer_index:%d[dl_config_req:%p tx_req:%p]\n",
+				__FUNCTION__,
+				pnf_p7->sfn_sf_shift,
+				NFAPI_SFNSF2DEC(subframe_buffer->sfn_sf),
+				NFAPI_SFNSF2DEC(tx_subframe_buffer->sfn_sf),
+				sfn_sf_dec,    buffer_index,    subframe_buffer->dl_config_req,    subframe_buffer->tx_req,
+				tx_sfn_sf_dec, tx_buffer_index, tx_subframe_buffer->dl_config_req, tx_subframe_buffer->tx_req);
 
 		// if the subframe buffer sfn sf is set then we have atlease 1 message
 		// from the vnf. 
 		// todo : how to handle the messages we don't have, send dummies for
 		// now
 
-                //printf("tx_subframe_buffer->sfn_sf:%d sfn_sf_tx:%d\n", tx_subframe_buffer->sfn_sf, sfn_sf_tx);
-                //printf("subframe_buffer->sfn_sf:%d sfn_sf:%d\n", subframe_buffer->sfn_sf, sfn_sf);
+		//NFAPI_TRACE(NFAPI_TRACE_INFO,"tx_subframe_buffer->sfn_sf:%d sfn_sf_tx:%d\n", tx_subframe_buffer->sfn_sf, sfn_sf_tx);
+		//NFAPI_TRACE(NFAPI_TRACE_INFO,"subframe_buffer->sfn_sf:%d sfn_sf:%d\n", subframe_buffer->sfn_sf, sfn_sf);
+		//NFAPI_TRACE(NFAPI_TRACE_INFO,"pnf_p7_subframe_ind right before sfn_sf_tx check \n");
 		if(tx_subframe_buffer->sfn_sf == sfn_sf_tx)
 		{
+			//NFAPI_TRACE(NFAPI_TRACE_INFO,"pnf_p7_subframe_ind right after sfn_sf_tx check \n");
 			if(tx_subframe_buffer->tx_req != 0)
 			{
-				if(pnf_p7->_public.tx_req)
+				//NFAPI_TRACE(NFAPI_TRACE_INFO,"pnf_p7_subframe_ind after tx_req check \n");
+				if(pnf_p7->_public.tx_req){
+					//NFAPI_TRACE(NFAPI_TRACE_INFO,"pnf_p7_subframe_ind after tx_req empty check \n");
 					(pnf_p7->_public.tx_req)(&(pnf_p7->_public), tx_subframe_buffer->tx_req);
-
+				}
 				//deallocate_nfapi_tx_request(subframe_buffer->tx_req, pnf_p7);
 			}
 			else
 			{
 				// send dummy
+				//NFAPI_TRACE(NFAPI_TRACE_INFO,"pnf_p7_subframe_ind before send dummy check \n");
 				if(pnf_p7->_public.tx_req && pnf_p7->_public.dummy_subframe.tx_req)
 				{
+					//NFAPI_TRACE(NFAPI_TRACE_INFO,"pnf_p7_subframe_ind after send dummy check \n");
 					pnf_p7->_public.dummy_subframe.tx_req->sfn_sf = sfn_sf_tx;
 					(pnf_p7->_public.tx_req)(&(pnf_p7->_public), pnf_p7->_public.dummy_subframe.tx_req);
 				}
@@ -698,33 +714,43 @@ int pnf_p7_subframe_ind(pnf_p7_t* pnf_p7, uint16_t phy_id, uint16_t sfn_sf)
 
 			if(tx_subframe_buffer->dl_config_req != 0)
 			{
-				if(pnf_p7->_public.dl_config_req)
-					(pnf_p7->_public.dl_config_req)(&(pnf_p7->_public), tx_subframe_buffer->dl_config_req);
+				//NFAPI_TRACE(NFAPI_TRACE_INFO,"pnf_p7_subframe_ind after dl_req check 1 \n");
+				if(pnf_p7->_public.nr_dl_config_req) {
+					//NFAPI_TRACE(NFAPI_TRACE_INFO,"pnf_p7_subframe_ind after dl_req empty check 2\n");
+				    (pnf_p7->_public.nr_dl_config_req)(&(pnf_p7->_public), tx_subframe_buffer->dl_config_req);
+				}
 
 				//deallocate_nfapi_dl_config_request(subframe_buffer->dl_config_req, pnf_p7);
 			}
 			else
 			{
+				//NFAPI_TRACE(NFAPI_TRACE_INFO,"pnf_p7_subframe_ind before send dummy check 3\n");
 				// send dummy
-				if(pnf_p7->_public.dl_config_req && pnf_p7->_public.dummy_subframe.dl_config_req)
+				if(pnf_p7->_public.nr_dl_config_req )
 				{
+					//NFAPI_TRACE(NFAPI_TRACE_INFO,"pnf_p7_subframe_ind after send dummy check 4\n");
 					pnf_p7->_public.dummy_subframe.dl_config_req->sfn_sf = sfn_sf_tx;
-					(pnf_p7->_public.dl_config_req)(&(pnf_p7->_public), pnf_p7->_public.dummy_subframe.dl_config_req);
+					(pnf_p7->_public.nr_dl_config_req)(&(pnf_p7->_public), pnf_p7->_public.dummy_subframe.dl_config_req);
 				}
 			}
 
 			if(tx_subframe_buffer->hi_dci0_req != 0)
 			{
-				if(pnf_p7->_public.hi_dci0_req)
-					(pnf_p7->_public.hi_dci0_req)(&(pnf_p7->_public), tx_subframe_buffer->hi_dci0_req);
+				//NFAPI_TRACE(NFAPI_TRACE_INFO,"pnf_p7_subframe_ind after hi_dci0 check \n");
+				if(pnf_p7->_public.hi_dci0_req){
+					//NFAPI_TRACE(NFAPI_TRACE_INFO,"pnf_p7_subframe_ind after dl_req empty check \n");
+                    (pnf_p7->_public.hi_dci0_req)(&(pnf_p7->_public), tx_subframe_buffer->hi_dci0_req);
+				}
 
 				//deallocate_nfapi_hi_dci0_request(subframe_buffer->hi_dci0_req, pnf_p7);
 			}
 			else
 			{
+				//NFAPI_TRACE(NFAPI_TRACE_INFO,"pnf_p7_subframe_ind before send dummy check \n");
 				//send dummy
 				if(pnf_p7->_public.hi_dci0_req && pnf_p7->_public.dummy_subframe.hi_dci0_req)
 				{
+					//NFAPI_TRACE(NFAPI_TRACE_INFO,"pnf_p7_subframe_ind after send dummy check \n");
 					pnf_p7->_public.dummy_subframe.hi_dci0_req->sfn_sf = sfn_sf_tx;
 					(pnf_p7->_public.hi_dci0_req)(&(pnf_p7->_public), pnf_p7->_public.dummy_subframe.hi_dci0_req);
 				}
@@ -767,25 +793,32 @@ int pnf_p7_subframe_ind(pnf_p7_t* pnf_p7, uint16_t phy_id, uint16_t sfn_sf)
                 }
 		else
 		{
+			//NFAPI_TRACE(NFAPI_TRACE_INFO,"pnf_p7_subframe_ind before send dummy check \n");
                   // If we ever need to "send" a dummy ul_config this won't work!!!
                   send_dummy_subframe(pnf_p7, sfn_sf_tx);
 		}
 
                 if(subframe_buffer->sfn_sf == sfn_sf)
 		{
-
+			//NFAPI_TRACE(NFAPI_TRACE_INFO,"pnf_p7_subframe_ind before hi_dci0 check \n");
 			if(subframe_buffer->ul_config_req != 0)
 			{
-				if(pnf_p7->_public.ul_config_req)
-					(pnf_p7->_public.ul_config_req)(&(pnf_p7->_public), subframe_buffer->ul_config_req);
+				//NFAPI_TRACE(NFAPI_TRACE_INFO,"pnf_p7_subframe_ind before hi_dci0 empty check \n");
+				if(pnf_p7->_public.ul_config_req) {
+					//NFAPI_TRACE(NFAPI_TRACE_INFO,"pnf_p7_subframe_ind after hi_dci0 empty check \n");
+				    (pnf_p7->_public.ul_config_req)(&(pnf_p7->_public), subframe_buffer->ul_config_req);
+				}
+
 
 				//deallocate_nfapi_ul_config_request(subframe_buffer->ul_config_req, pnf_p7);
 			}
 			else
 			{
+				//NFAPI_TRACE(NFAPI_TRACE_INFO,"pnf_p7_subframe_ind before send dummy check \n");
 				// send dummy
 				if(pnf_p7->_public.ul_config_req && pnf_p7->_public.dummy_subframe.ul_config_req)
 				{
+					//NFAPI_TRACE(NFAPI_TRACE_INFO,"pnf_p7_subframe_ind after send dummy check \n");
 					pnf_p7->_public.dummy_subframe.ul_config_req->sfn_sf = sfn_sf;
 					(pnf_p7->_public.ul_config_req)(&(pnf_p7->_public), pnf_p7->_public.dummy_subframe.ul_config_req);
 				}
@@ -831,6 +864,7 @@ int pnf_p7_subframe_ind(pnf_p7_t* pnf_p7, uint16_t phy_id, uint16_t sfn_sf)
                 if (subframe_buffer->dl_config_req == 0 && subframe_buffer->tx_req == 0 && subframe_buffer->ul_config_req == 0 && subframe_buffer->lbt_dl_config_req == 0 && subframe_buffer->ue_release_req == 0)
                 {
                   memset(&(pnf_p7->subframe_buffer[buffer_index]), 0, sizeof(nfapi_pnf_p7_subframe_buffer_t));
+                  //NFAPI_TRACE(NFAPI_TRACE_INFO,"subframe_buffer[%d].sfn_sf is set to -1\n",buffer_index);
                   pnf_p7->subframe_buffer[buffer_index].sfn_sf = -1;
 		}
 
@@ -866,11 +900,11 @@ int pnf_p7_subframe_ind(pnf_p7_t* pnf_p7, uint16_t phy_id, uint16_t sfn_sf)
 	if(pnf_p7->tick == 1000)
 	{
 
-		NFAPI_TRACE(NFAPI_TRACE_INFO, "[PNF P7:%d] (ONTIME/LATE) DL:(%d/%d) UL:(%d/%d) HI:(%d/%d) TX:(%d/%d)\n", pnf_p7->_public.phy_id,
-					pnf_p7->stats.dl_conf_ontime, pnf_p7->stats.dl_conf_late, 
-					pnf_p7->stats.ul_conf_ontime, pnf_p7->stats.ul_conf_late, 
-					pnf_p7->stats.hi_dci0_ontime, pnf_p7->stats.hi_dci0_late, 
-					pnf_p7->stats.tx_ontime, pnf_p7->stats.tx_late);
+		//NFAPI_TRACE(NFAPI_TRACE_INFO, "[PNF P7:%d] (ONTIME/LATE) DL:(%d/%d) UL:(%d/%d) HI:(%d/%d) TX:(%d/%d)\n", pnf_p7->_public.phy_id,
+					// pnf_p7->stats.dl_conf_ontime, pnf_p7->stats.dl_conf_late, 
+					// pnf_p7->stats.ul_conf_ontime, pnf_p7->stats.ul_conf_late, 
+					// pnf_p7->stats.hi_dci0_ontime, pnf_p7->stats.hi_dci0_late, 
+					// pnf_p7->stats.tx_ontime, pnf_p7->stats.tx_late);
 		pnf_p7->tick = 0;
 		memset(&pnf_p7->stats, 0, sizeof(pnf_p7->stats));
 	}
@@ -879,7 +913,7 @@ int pnf_p7_subframe_ind(pnf_p7_t* pnf_p7, uint16_t phy_id, uint16_t sfn_sf)
 
 	if(pthread_mutex_unlock(&(pnf_p7->mutex)) != 0)
 	{
-		NFAPI_TRACE(NFAPI_TRACE_INFO, "failed to unlock mutex\n");
+		//NFAPI_TRACE(NFAPI_TRACE_INFO, "failed to unlock mutex\n");
 		return -1;
 	}
 
@@ -895,6 +929,9 @@ uint8_t is_p7_request_in_window(uint16_t sfnsf, const char* name, pnf_p7_t* phy)
 	uint32_t recv_sfn_sf_dec = NFAPI_SFNSF2DEC(sfnsf);
 	uint32_t current_sfn_sf_dec = NFAPI_SFNSF2DEC(phy->sfn_sf);
 
+	//printf("recv_sfn_sf_dec: %d, current_sfn_sf_dec: %d\n", recv_sfn_sf_dec, current_sfn_sf_dec);
+
+
 	uint8_t in_window = 0;
 	uint8_t timing_window = phy->_public.subframe_buffer_size;
 
@@ -906,19 +943,22 @@ uint8_t is_p7_request_in_window(uint16_t sfnsf, const char* name, pnf_p7_t* phy)
 			if(recv_sfn_sf_dec > ((current_sfn_sf_dec + timing_window) % NFAPI_MAX_SFNSFDEC))
 			{
 				// out of window
-				NFAPI_TRACE(NFAPI_TRACE_NOTE, "[%d] %s is late %d (with wrap)\n", current_sfn_sf_dec, name, recv_sfn_sf_dec);
+				//printf("out of window (is_p7_request_in_window)\n");
+// 				NFAPI_TRACE(NFAPI_TRACE_NOTE, "[%d] %s is late %d (with wrap)\n", current_sfn_sf_dec, name, recv_sfn_sf_dec);
 			}
 			else
 			{
 				// ok
 				//NFAPI_TRACE(NFAPI_TRACE_NOTE, "[%d] %s is in window %d (with wrap)\n", current_sfn_sf_dec, name, recv_sfn_sf_dec);
+				//printf("in window (is_p7_request_in_window)\n");
 				in_window = 1;
 			}
 		}
 		else
 		{
 			// too late
-			NFAPI_TRACE(NFAPI_TRACE_NOTE, "[%d] %s is in late %d (delta:%d)\n", current_sfn_sf_dec, name, recv_sfn_sf_dec, (current_sfn_sf_dec - recv_sfn_sf_dec));
+			//printf("too late (is_p7_request_in_window)\n");
+			//NFAPI_TRACE(NFAPI_TRACE_NOTE, "[%d] %s is in late %d (delta:%d)\n", current_sfn_sf_dec, name, recv_sfn_sf_dec, (current_sfn_sf_dec - recv_sfn_sf_dec));
 		}
 
 	}
@@ -928,13 +968,15 @@ uint8_t is_p7_request_in_window(uint16_t sfnsf, const char* name, pnf_p7_t* phy)
 		if((recv_sfn_sf_dec - current_sfn_sf_dec) <= timing_window)
 		{
 			// in window
+			//printf("in window 2 (is_p7_request_in_window)\n");
 			//NFAPI_TRACE(NFAPI_TRACE_NOTE, "[%d] %s is in window %d\n", current_sfn_sf_dec, name, recv_sfn_sf_dec);
 			in_window = 1;
 		}
 		else
 		{
 			// too far in the future
-			NFAPI_TRACE(NFAPI_TRACE_NOTE, "[%d] %s is out of window %d (delta:%d) [max:%d]\n", current_sfn_sf_dec, name, recv_sfn_sf_dec,  (recv_sfn_sf_dec - current_sfn_sf_dec), timing_window);
+			//printf("too far in the future (is_p7_request_in_window)\n");
+			//NFAPI_TRACE(NFAPI_TRACE_NOTE, "[%d] %s is out of window %d (delta:%d) [max:%d]\n", current_sfn_sf_dec, name, recv_sfn_sf_dec,  (recv_sfn_sf_dec - current_sfn_sf_dec), timing_window);
 		}
 
 	}
@@ -948,22 +990,24 @@ uint8_t is_p7_request_in_window(uint16_t sfnsf, const char* name, pnf_p7_t* phy)
 void pnf_handle_dl_config_request(void* pRecvMsg, int recvMsgLen, pnf_p7_t* pnf_p7)
 {
 	//NFAPI_TRACE(NFAPI_TRACE_INFO, "DL_CONFIG.req Received\n");
+	printf("DL_CONFIG.req Received\n");
 
-	nfapi_dl_config_request_t* req  = allocate_nfapi_dl_config_request(pnf_p7);
+	nfapi_nr_dl_config_request_t* req  = allocate_nfapi_dl_config_request(pnf_p7);
+
 
 	if(req == NULL)
 	{
-		NFAPI_TRACE(NFAPI_TRACE_INFO, "%s failed to alloced nfapi_dl_config_request structure\n");
+		//NFAPI_TRACE(NFAPI_TRACE_INFO, "%s failed to alloced nfapi_nr_dl_config_request structure\n");
 		return;
 	}
 
-	int unpack_result = nfapi_p7_message_unpack(pRecvMsg, recvMsgLen, req, sizeof(nfapi_dl_config_request_t), &(pnf_p7->_public.codec_config));
+	int unpack_result = nfapi_p7_message_unpack(pRecvMsg, recvMsgLen, req, sizeof(nfapi_nr_dl_config_request_t), &(pnf_p7->_public.codec_config));
 
 	if(unpack_result == 0)
 	{
 		if(pthread_mutex_lock(&(pnf_p7->mutex)) != 0)
 		{
-			NFAPI_TRACE(NFAPI_TRACE_INFO, "failed to lock mutex\n");
+			//NFAPI_TRACE(NFAPI_TRACE_INFO, "failed to lock mutex\n");
 			return;
 		}
 
@@ -972,15 +1016,16 @@ void pnf_handle_dl_config_request(void* pRecvMsg, int recvMsgLen, pnf_p7_t* pnf_
                     (NFAPI_SFNSF2DEC(req->sfn_sf) % 100 ==0 ||
                      NFAPI_SFNSF2DEC(req->sfn_sf) % 105 ==0 
                     )
-                )
-                  NFAPI_TRACE(NFAPI_TRACE_INFO, "DL_CONFIG.req sfn_sf:%d pdcch:%u dci:%u pdu:%u pdsch_rnti:%u pcfich:%u\n", 
-                      NFAPI_SFNSF2DEC(req->sfn_sf),
-                      req->dl_config_request_body.number_pdcch_ofdm_symbols,
-                      req->dl_config_request_body.number_dci,
-                      req->dl_config_request_body.number_pdu,
-                      req->dl_config_request_body.number_pdsch_rnti,
-                      req->dl_config_request_body.transmission_power_pcfich
-                      );
+                ){
+                  //NFAPI_TRACE(NFAPI_TRACE_INFO, "DL_CONFIG.req sfn_sf:%d pdcch:%u dci:%u pdu:%u pdsch_rnti:%u pcfich:%u\n", 
+                      // NFAPI_SFNSF2DEC(req->sfn_sf),
+                      // //req->dl_config_request_body.number_pdcch_ofdm_symbols,
+                      // req->dl_config_request_body.number_dci,
+                      // req->dl_config_request_body.number_pdu,
+                      // req->dl_config_request_body.number_pdsch_rnti
+                      // //req->dl_config_request_body.transmission_power_pcfich
+											// );
+								}
 
                 if(is_p7_request_in_window(req->sfn_sf, "dl_config_request", pnf_p7))
                 {
@@ -990,12 +1035,12 @@ void pnf_handle_dl_config_request(void* pRecvMsg, int recvMsgLen, pnf_p7_t* pnf_
                         struct timespec t;
                         clock_gettime(CLOCK_MONOTONIC, &t);
 
-                  NFAPI_TRACE(NFAPI_TRACE_INFO,"%s() %ld.%09ld POPULATE DL_CONFIG_REQ sfn_sf:%d buffer_index:%d\n", __FUNCTION__, t.tv_sec, t.tv_nsec, sfn_sf_dec, buffer_index);
+                  //NFAPI_TRACE(NFAPI_TRACE_INFO,"%s() %ld.%09ld POPULATE DL_CONFIG_REQ sfn_sf:%d buffer_index:%d\n", __FUNCTION__, t.tv_sec, t.tv_nsec, sfn_sf_dec, buffer_index);
 
 			// if there is already an dl_config_req make sure we free it.
 			if(pnf_p7->subframe_buffer[buffer_index].dl_config_req != 0)
 			{
-				NFAPI_TRACE(NFAPI_TRACE_NOTE, "%s() is_p7_request_in_window()=TRUE buffer_index occupied - free it first sfn_sf:%d buffer_index:%d\n", __FUNCTION__, NFAPI_SFNSF2DEC(req->sfn_sf), buffer_index);
+				//NFAPI_TRACE(NFAPI_TRACE_NOTE, "%s() is_p7_request_in_window()=TRUE buffer_index occupied - free it first sfn_sf:%d buffer_index:%d\n", __FUNCTION__, NFAPI_SFNSF2DEC(req->sfn_sf), buffer_index);
 				//NFAPI_TRACE(NFAPI_TRACE_NOTE, "[%d] Freeing dl_config_req at index %d (%d/%d)", 
 				//			pMyPhyInfo->sfnSf, bufferIdx,
 				//			SFNSF2SFN(dreq->sfn_sf), SFNSF2SF(dreq->sfn_sf));
@@ -1011,6 +1056,7 @@ void pnf_handle_dl_config_request(void* pRecvMsg, int recvMsgLen, pnf_p7_t* pnf_
 		}
 		else
 		{
+			printf("dl_config_request is out of window!\n");
 			//NFAPI_TRACE(NFAPI_TRACE_NOTE, "NOT storing dl_config_req SFN/SF %d\n", req->sfn_sf);
 			deallocate_nfapi_dl_config_request(req, pnf_p7);
 
@@ -1024,13 +1070,13 @@ void pnf_handle_dl_config_request(void* pRecvMsg, int recvMsgLen, pnf_p7_t* pnf_
 
 		if(pthread_mutex_unlock(&(pnf_p7->mutex)) != 0)
 		{
-			NFAPI_TRACE(NFAPI_TRACE_INFO, "failed to unlock mutex\n");
+			//NFAPI_TRACE(NFAPI_TRACE_INFO, "failed to unlock mutex\n");
 			return;
 		}
 	}
 	else
 	{
-		NFAPI_TRACE(NFAPI_TRACE_ERROR, "Failed to unpack dl_config_req");
+		//NFAPI_TRACE(NFAPI_TRACE_ERROR, "Failed to unpack dl_config_req");
 		deallocate_nfapi_dl_config_request(req, pnf_p7);
 	}
 }
@@ -1039,21 +1085,21 @@ void pnf_handle_ul_config_request(void* pRecvMsg, int recvMsgLen, pnf_p7_t* pnf_
 {
 	//NFAPI_TRACE(NFAPI_TRACE_INFO, "UL_CONFIG.req Received\n");
 
-	nfapi_ul_config_request_t* req  = allocate_nfapi_ul_config_request(pnf_p7);
+	nfapi_nr_ul_config_request_t* req  = allocate_nfapi_ul_config_request(pnf_p7);
 
 	if(req == NULL)
 	{
-		NFAPI_TRACE(NFAPI_TRACE_INFO, "%s failed to alloced nfapi_ul_config_request structure\n");
+		//NFAPI_TRACE(NFAPI_TRACE_INFO, "%s failed to alloced nfapi_ul_config_request structure\n");
 		return;
 	}
 
-	int unpack_result = nfapi_p7_message_unpack(pRecvMsg, recvMsgLen, req, sizeof(nfapi_ul_config_request_t), &(pnf_p7->_public.codec_config));
+	int unpack_result = nfapi_p7_message_unpack(pRecvMsg, recvMsgLen, req, sizeof(nfapi_nr_ul_config_request_t), &(pnf_p7->_public.codec_config));
 
 	if(unpack_result == 0)
 	{
 		if(pthread_mutex_lock(&(pnf_p7->mutex)) != 0)
 		{
-			NFAPI_TRACE(NFAPI_TRACE_INFO, "failed to lock mutex\n");
+			//NFAPI_TRACE(NFAPI_TRACE_INFO, "failed to lock mutex\n");
 			return;
 		}
 
@@ -1065,7 +1111,7 @@ void pnf_handle_ul_config_request(void* pRecvMsg, int recvMsgLen, pnf_p7_t* pnf_
                         struct timespec t;
                         clock_gettime(CLOCK_MONOTONIC, &t);
 
-                        NFAPI_TRACE(NFAPI_TRACE_INFO,"%s() %ld.%09ld POPULATE UL_CONFIG_REQ sfn_sf:%d buffer_index:%d\n", __FUNCTION__, t.tv_sec, t.tv_nsec, sfn_sf_dec, buffer_index);
+                        //NFAPI_TRACE(NFAPI_TRACE_INFO,"%s() %ld.%09ld POPULATE UL_CONFIG_REQ sfn_sf:%d buffer_index:%d\n", __FUNCTION__, t.tv_sec, t.tv_nsec, sfn_sf_dec, buffer_index);
 
 			if(pnf_p7->subframe_buffer[buffer_index].ul_config_req != 0)
 			{
@@ -1083,7 +1129,8 @@ void pnf_handle_ul_config_request(void* pRecvMsg, int recvMsgLen, pnf_p7_t* pnf_
 		}
 		else
 		{
-			NFAPI_TRACE(NFAPI_TRACE_NOTE, "[%d] NOT storing ul_config_req OUTSIDE OF TRANSMIT BUFFER WINDOW SFN/SF %d\n", NFAPI_SFNSF2DEC(pnf_p7->sfn_sf), NFAPI_SFNSF2DEC(req->sfn_sf));
+			printf("ul_config_request is out of window!\n");
+			//NFAPI_TRACE(NFAPI_TRACE_NOTE, "[%d] NOT storing ul_config_req OUTSIDE OF TRANSMIT BUFFER WINDOW SFN/SF %d\n", NFAPI_SFNSF2DEC(pnf_p7->sfn_sf), NFAPI_SFNSF2DEC(req->sfn_sf));
 			deallocate_nfapi_ul_config_request(req, pnf_p7);
 
 			if(pnf_p7->_public.timing_info_mode_aperiodic)
@@ -1096,13 +1143,13 @@ void pnf_handle_ul_config_request(void* pRecvMsg, int recvMsgLen, pnf_p7_t* pnf_
 
 		if(pthread_mutex_unlock(&(pnf_p7->mutex)) != 0)
 		{
-			NFAPI_TRACE(NFAPI_TRACE_INFO, "failed to unlock mutex\n");
+			//NFAPI_TRACE(NFAPI_TRACE_INFO, "failed to unlock mutex\n");
 			return;
 		}
 	}
 	else
 	{
-		NFAPI_TRACE(NFAPI_TRACE_ERROR, "Failed to unpack ul_config_req\n");
+		//NFAPI_TRACE(NFAPI_TRACE_ERROR, "Failed to unpack ul_config_req\n");
 		deallocate_nfapi_ul_config_request(req, pnf_p7);
 	}
 }
@@ -1115,7 +1162,7 @@ void pnf_handle_hi_dci0_request(void* pRecvMsg, int recvMsgLen, pnf_p7_t* pnf_p7
 
 	if(req == NULL)
 	{
-		NFAPI_TRACE(NFAPI_TRACE_INFO, "%s failed to alloced nfapi_hi_dci0_request structure\n");
+		//NFAPI_TRACE(NFAPI_TRACE_INFO, "%s failed to alloced nfapi_hi_dci0_request structure\n");
 		return;
 	}
 
@@ -1125,7 +1172,7 @@ void pnf_handle_hi_dci0_request(void* pRecvMsg, int recvMsgLen, pnf_p7_t* pnf_p7
 	{
 		if(pthread_mutex_lock(&(pnf_p7->mutex)) != 0)
 		{
-			NFAPI_TRACE(NFAPI_TRACE_INFO, "failed to lock mutex\n");
+			//NFAPI_TRACE(NFAPI_TRACE_INFO, "failed to lock mutex\n");
 			return;
 		}
 
@@ -1151,6 +1198,7 @@ void pnf_handle_hi_dci0_request(void* pRecvMsg, int recvMsgLen, pnf_p7_t* pnf_p7
 		}
 		else
 		{
+			//printf("hi_dci0_request is out of window!\n");
 			//NFAPI_TRACE(NFAPI_TRACE_NOTE, "[%d] NOT storing hi_dci0_req SFN/SF %d/%d\n", pMyPhyInfo->sfnSf, SFNSF2SFN(req->sfn_sf), SFNSF2SF(req->sfn_sf));
 			deallocate_nfapi_hi_dci0_request(req, pnf_p7);
 
@@ -1204,7 +1252,7 @@ void pnf_handle_tx_request(void* pRecvMsg, int recvMsgLen, pnf_p7_t* pnf_p7)
                         struct timespec t;
                         clock_gettime(CLOCK_MONOTONIC, &t);
 
-                        NFAPI_TRACE(NFAPI_TRACE_INFO,"%s() %ld.%09ld POPULATE TX_REQ sfn_sf:%d buffer_index:%d\n", __FUNCTION__, t.tv_sec, t.tv_nsec, sfn_sf_dec, buffer_index);
+                        //NFAPI_TRACE(NFAPI_TRACE_INFO,"%s() %ld.%09ld POPULATE TX_REQ sfn_sf:%d buffer_index:%d\n", __FUNCTION__, t.tv_sec, t.tv_nsec, sfn_sf_dec, buffer_index);
 
                         if (0 && NFAPI_SFNSF2DEC(req->sfn_sf)%100==0) NFAPI_TRACE(NFAPI_TRACE_INFO, "%s() TX_REQ.req sfn_sf:%d pdus:%d - TX_REQ is within window\n",
                             __FUNCTION__,
@@ -1227,7 +1275,8 @@ void pnf_handle_tx_request(void* pRecvMsg, int recvMsgLen, pnf_p7_t* pnf_p7)
 		}
 		else
 		{
-                  NFAPI_TRACE(NFAPI_TRACE_INFO,"%s() TX_REQUEST Request is outside of window REQ:SFN_SF:%d CURR:SFN_SF:%d\n", __FUNCTION__, NFAPI_SFNSF2DEC(req->sfn_sf), NFAPI_SFNSF2DEC(pnf_p7->sfn_sf));
+			printf("tx_request is out of window!\n");
+             //     NFAPI_TRACE(NFAPI_TRACE_INFO,"%s() TX_REQUEST Request is outside of window REQ:SFN_SF:%d CURR:SFN_SF:%d\n", __FUNCTION__, NFAPI_SFNSF2DEC(req->sfn_sf), NFAPI_SFNSF2DEC(pnf_p7->sfn_sf));
 
 			deallocate_nfapi_tx_request(req, pnf_p7);
 
@@ -1290,6 +1339,7 @@ void pnf_handle_lbt_dl_config_request(void* pRecvMsg, int recvMsgLen, pnf_p7_t* 
 		}
 		else
 		{
+			printf("lbt_dl_config_request is out of window!\n");
 			deallocate_nfapi_lbt_dl_config_request(req, pnf_p7);
 
 			if(pnf_p7->_public.timing_info_mode_aperiodic)
@@ -1501,7 +1551,7 @@ void pnf_handle_dl_node_sync(void *pRecvMsg, int recvMsgLen, pnf_p7_t* pnf_p7, u
 void pnf_dispatch_p7_message(void *pRecvMsg, int recvMsgLen, pnf_p7_t* pnf_p7,  uint32_t rx_hr_time)
 {
 	nfapi_p7_message_header_t header;
-
+	printf("pnf_dispatch_p7_message\n");
 	// validate the input params
 	if(pRecvMsg == NULL || recvMsgLen < 4 || pnf_p7 == NULL)
 	{
@@ -1522,30 +1572,38 @@ void pnf_dispatch_p7_message(void *pRecvMsg, int recvMsgLen, pnf_p7_t* pnf_p7,  
 		NFAPI_TRACE(NFAPI_TRACE_WARN, "Invalid message size: %d, ignoring\n", recvMsgLen);
 		return;
 	}
+	
+	printf("pnf_dispatch_p7_message id %d\n", header.message_id);
 
 	switch (header.message_id)
 	{
 		case NFAPI_DL_NODE_SYNC:
+			printf("pnf_dispatch_p7_message NFAPI_DL_NODE_SYNC\n");
 			pnf_handle_dl_node_sync(pRecvMsg, recvMsgLen, pnf_p7, rx_hr_time);
 			break;
 
-		case NFAPI_DL_CONFIG_REQUEST:
+		case NFAPI_NR_DL_CONFIG_REQUEST:
+			printf("pnf_dispatch_p7_message NFAPI_NR_DL_CONFIG_REQUEST\n");
 			pnf_handle_dl_config_request(pRecvMsg, recvMsgLen, pnf_p7);
 			break;
 
-		case NFAPI_UL_CONFIG_REQUEST:
+		case NFAPI_NR_UL_CONFIG_REQUEST:
+			printf("pnf_dispatch_p7_message NFAPI_NR_UL_CONFIG_REQUEST\n");
 			pnf_handle_ul_config_request(pRecvMsg, recvMsgLen, pnf_p7);
 			break;
 
 		case NFAPI_HI_DCI0_REQUEST:
+			printf("pnf_dispatch_p7_message NFAPI_HI_DCI0_REQUEST\n");
 			pnf_handle_hi_dci0_request(pRecvMsg, recvMsgLen, pnf_p7);
 			break;
 
 		case NFAPI_TX_REQUEST:
+			printf("pnf_dispatch_p7_message NFAPI_TX_REQUEST\n");
 			pnf_handle_tx_request(pRecvMsg, recvMsgLen, pnf_p7);
 			break;
 
 		case NFAPI_LBT_DL_CONFIG_REQUEST:
+//			printf("pnf_dispatch_p7_message NFAPI_LBT_DL_CONFIG_REQUEST\n");
 			pnf_handle_lbt_dl_config_request(pRecvMsg, recvMsgLen, pnf_p7);
 			break;
 
@@ -1558,6 +1616,7 @@ void pnf_dispatch_p7_message(void *pRecvMsg, int recvMsgLen, pnf_p7_t* pnf_p7,  
 				if(header.message_id >= NFAPI_VENDOR_EXT_MSG_MIN &&
 				   header.message_id <= NFAPI_VENDOR_EXT_MSG_MAX)
 				{
+//					printf("pnf_dispatch_p7_message NFAPI_VENDOR_EXT_MSG_MIN\n");
 					pnf_handle_p7_vendor_extension(pRecvMsg, recvMsgLen, pnf_p7, header.message_id);
 				}
 				else
@@ -1695,7 +1754,7 @@ void pnf_nfapi_p7_read_dispatch_message(pnf_p7_t* pnf_p7, uint32_t now_hr_time)
 			// resize the buffer if we have a large segment
 			if(header.message_length > pnf_p7->rx_message_buffer_size)
 			{
-				NFAPI_TRACE(NFAPI_TRACE_NOTE, "reallocing rx buffer %d\n", header.message_length); 
+				//NFAPI_TRACE(NFAPI_TRACE_NOTE, "reallocing rx buffer %d\n", header.message_length); 
 				pnf_p7->rx_message_buffer = realloc(pnf_p7->rx_message_buffer, header.message_length);
 				pnf_p7->rx_message_buffer_size = header.message_length;
 			}
@@ -1758,6 +1817,7 @@ int pnf_p7_message_pump(pnf_p7_t* pnf_p7)
 		return -1;
 	}
 	NFAPI_TRACE(NFAPI_TRACE_INFO, "PNF P7 socket created (%d)...\n", pnf_p7->p7_sock);
+	printf("PNF P7 socket created (%d)...\n", pnf_p7->p7_sock);
 
 	// configure the UDP socket options
 	int reuseaddr_enable = 1;
@@ -1802,13 +1862,14 @@ int pnf_p7_message_pump(pnf_p7_t* pnf_p7)
 	}
 
 
-	NFAPI_TRACE(NFAPI_TRACE_INFO, "PNF P7 binding %d too %s:%d\n", pnf_p7->p7_sock, inet_ntoa(addr.sin_addr), ntohs(addr.sin_port));
+//	NFAPI_TRACE(NFAPI_TRACE_INFO, "PNF P7 binding %d too %s:%d\n", pnf_p7->p7_sock, inet_ntoa(addr.sin_addr), ntohs(addr.sin_port));
 	if (bind(pnf_p7->p7_sock, (struct sockaddr *)&addr, sizeof(addr)) < 0)
 	{
 		NFAPI_TRACE(NFAPI_TRACE_ERROR, "PNF_P7 bind error fd:%d errno: %d\n", pnf_p7->p7_sock, errno);
 		return -1;
 	}
 	NFAPI_TRACE(NFAPI_TRACE_INFO, "PNF P7 bind succeeded...\n");
+	printf("PNF P7 bind succeeded...\n");
 
 	while(pnf_p7->terminate == 0)
 	{

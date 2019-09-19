@@ -49,6 +49,7 @@
 #include "RRC/LTE/rrc_vars.h"
 #include "PHY_INTERFACE/phy_interface_vars.h"
 #include "openair1/SIMULATION/TOOLS/sim.h"
+#include "PHY/NR_UE_TRANSPORT/rlc_common_defs.h"
 
 #ifdef SMBV
 #include "PHY/TOOLS/smbv.h"
@@ -671,8 +672,40 @@ void init_openair0(void) {
   }
 }
 
+struct my_socket mySocket;
+
+int start_socket( struct my_socket *mySocket, const char* tx_address, unsigned tx_port) {
+
+  mySocket->tx_sock = socket(AF_INET, SOCK_DGRAM, 0);
+  if(mySocket < 0) {
+    printf("tx socket creation error\n");
+    return -1;
+  } 
+  mySocket->tx_addr.sin_family = AF_INET;
+  mySocket->tx_addr.sin_port = htons(tx_port);
+  mySocket->tx_addr.sin_addr.s_addr = inet_addr(tx_address);
+
+
+  //(connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
+  if( connect(mySocket->tx_sock, (struct sockaddr *)&mySocket->tx_addr, sizeof(mySocket->tx_addr)) < 0) {
+    printf("\nConnection Failed \n"); 
+    return -1;
+  }
+
+  sendto(mySocket->tx_sock , "hello\n" , strlen("hello\n") , 0, (struct sockaddr*)&(mySocket->tx_addr), sizeof(mySocket->tx_addr) );
+  
+  return 1;
+}
+
+rlc_um_entity entity;
 
 int main( int argc, char **argv ) {
+  
+  printf("****MAIN****\n");
+  printf("[LOG] creation of rlc entity\n");
+  rlc_entity_init(&entity, 6);
+  start_socket(&mySocket, "127.0.0.1", 2115);
+  
   //uint8_t beta_ACK=0,beta_RI=0,beta_CQI=2;
   PHY_VARS_NR_UE *UE[MAX_NUM_CCs];
   start_background_system();
@@ -803,6 +836,8 @@ int main( int argc, char **argv ) {
 
   while(true)
     sleep(3600);
+    
+//   rlc_entity_dest(&entity);
 
   if (ouput_vcd)
     vcd_signal_dumper_close();

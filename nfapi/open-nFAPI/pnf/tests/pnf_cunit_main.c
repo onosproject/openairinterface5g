@@ -1209,6 +1209,7 @@ void send_dl_subframe_msgs_interleaved(int p7Sock, int phy_id, struct sockaddr_i
 
 void send_subframe_indication(phy_info_t* phy_info)
 {
+	printf("Calling nfapi_pnf_p7_subframe_ind() from send_subframe_indication()...\n");
 	nfapi_pnf_p7_subframe_ind(phy_info->config, phy_info->phy_id, phy_info->sfn_sf);
 }
 

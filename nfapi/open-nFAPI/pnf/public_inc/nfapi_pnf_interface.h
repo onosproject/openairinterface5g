@@ -22,7 +22,7 @@
 extern "C" {
 #endif
 
-#include "nfapi_interface.h"
+#include "nfapi_nr_interface.h"
 #include "debug.h"
 
 #include <sys/types.h>
@@ -177,7 +177,7 @@ typedef struct nfapi_pnf_config
 	 * 	The client is expected to send the CONFIG.response after receiving the
 	 *  CONFIG.request. This can be done in the call back. 
 	 */
-	int (*config_req)(nfapi_pnf_config_t* config, nfapi_pnf_phy_config_t* phy, nfapi_config_request_t* req);
+	int (*config_req)(nfapi_pnf_config_t* config, nfapi_pnf_phy_config_t* phy, nfapi_nr_config_request_t* req);
 	
 	/*! A callback for the START.request
 	 *  \param config A pointer to the pnf configuration
@@ -541,7 +541,7 @@ typedef struct
 {
 	uint16_t sfn_sf;
 	
-	nfapi_dl_config_request_t* dl_config_req;
+	nfapi_nr_dl_config_request_t* dl_config_req;
 	nfapi_ul_config_request_t* ul_config_req;
 	nfapi_hi_dci0_request_t* hi_dci0_req;
 	nfapi_tx_request_t* tx_req;
@@ -621,6 +621,8 @@ typedef struct nfapi_pnf_p7_config
 	 */
 	int (*dl_config_req)(nfapi_pnf_p7_config_t* config, nfapi_dl_config_request_t* req);
 	
+    int (*nr_dl_config_req)(nfapi_pnf_p7_config_t* config, nfapi_nr_dl_config_request_t* req);
+
 	/*! A callback for the UL_CONFIG.request
 	 * \param config A poiner to the PNF P7 config
 	 * \param req A pointer to the ul config request message structure

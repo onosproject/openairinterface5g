@@ -49,10 +49,11 @@ void nfapi_pnf_config_destory(nfapi_pnf_config_t* config)
 
 int nfapi_pnf_start(nfapi_pnf_config_t* config)
 {
+  printf("pnf config is null check\n");
 	// Verify that config is not null
 	if(config == 0)
 		return -1;
-
+printf("pnf config is not null\n");
 	// Make sure to set the defined trace function before using NFAPI_TRACE
 	if(config->trace)
 		nfapi_trace_g = config->trace;

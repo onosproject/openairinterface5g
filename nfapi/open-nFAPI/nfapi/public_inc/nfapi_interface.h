@@ -121,20 +121,21 @@ typedef struct {
 #define NFAPI_TAG_LENGTH_PACKED_LEN 4
 
 // Convenience methods to convert between SFN/SFN formats
-#define NFAPI_SFNSF2DEC(_sfnsf) ((((_sfnsf) >> 4) * 10) + ((_sfnsf) & 0xF))
-#define NFAPI_SFNSFDEC2SFNSF(_sfnsf_dec) ((((_sfnsf_dec) / 10) << 4) | (((_sfnsf_dec) - (((_sfnsf_dec) / 10) * 10)) & 0xF))
+#define NFAPI_SFNSF2DEC(_sfnsf) ((((_sfnsf) >> 5) * 20) + ((_sfnsf) & 0x1F))
+#define NFAPI_SFNSFDEC2SFNSF(_sfnsf_dec) ((((_sfnsf_dec) / 20) << 5) | (((_sfnsf_dec) - (((_sfnsf_dec) / 20) * 20)) & 0x1F))
 
-#define NFAPI_SFNSF2SFN(_sfnsf) ((_sfnsf) >> 4)
-#define NFAPI_SFNSF2SF(_sfnsf) ((_sfnsf) & 0xF)
+#define NFAPI_SFNSF2SFN(_sfnsf) ((_sfnsf) >> 5)
+#define NFAPI_SFNSF2SF(_sfnsf) ((_sfnsf) & 0x1F)
 
-#define NFAPI_MAX_SFNSFDEC 10240
+//#define NFAPI_MAX_SFNSFDEC 10240
+#define NFAPI_MAX_SFNSFDEC 20480
 
 typedef nfapi_tl_t* nfapi_vendor_extension_tlv_t;
 
 
 // nFAPI Message IDs
 typedef enum {
-	NFAPI_DL_CONFIG_REQUEST = 0x0080,
+	NFAPI_DL_CONFIG_REQUEST = 0x0050,
 	NFAPI_UL_CONFIG_REQUEST,
 	NFAPI_SUBFRAME_INDICATION,
 	NFAPI_HI_DCI0_REQUEST,
@@ -172,8 +173,9 @@ typedef enum {
 	NFAPI_MEASUREMENT_REQUEST,
 	NFAPI_MEASUREMENT_RESPONSE,
 
-	NFAPI_UL_NODE_SYNC = 0x0180,
-	NFAPI_DL_NODE_SYNC,
+	NFAPI_DL_NODE_SYNC = 0x0180,	
+	NFAPI_UL_NODE_SYNC,
+	
 	NFAPI_TIMING_INFO,
 
 
@@ -246,8 +248,8 @@ typedef enum {
 typedef enum {
 	NFAPI_DL_CONFIG_DCI_DL_PDU_TYPE = 0,
 	NFAPI_DL_CONFIG_BCH_PDU_TYPE,
-	NFAPI_DL_CONFIG_MCH_PDU_TYPE,
 	NFAPI_DL_CONFIG_DLSCH_PDU_TYPE,
+	NFAPI_DL_CONFIG_MCH_PDU_TYPE,
 	NFAPI_DL_CONFIG_PCH_PDU_TYPE,
 	NFAPI_DL_CONFIG_PRS_PDU_TYPE,
 	NFAPI_DL_CONFIG_CSI_RS_PDU_TYPE,
