@@ -167,9 +167,9 @@ int pdcp_apply_security_NB_IoT(
 //defined in pdcp.c
 boolean_t rrc_pdcp_config_asn1_req_NB_IoT (
   const protocol_ctxt_t* const  ctxt_pP,
-  SRB_ToAddModList_NB_r13_t  *const srb2add_list_pP,
-  DRB_ToAddModList_NB_r13_t  *const drb2add_list_pP,
-  DRB_ToReleaseList_NB_r13_t *const drb2release_list_pP,
+  LTE_SRB_ToAddModList_NB_r13_t  *const srb2add_list_pP,
+  LTE_DRB_ToAddModList_NB_r13_t  *const drb2add_list_pP,
+  LTE_DRB_ToReleaseList_NB_r13_t *const drb2release_list_pP,
   const uint8_t                   security_modeP,
   uint8_t                  *const kRRCenc_pP,
   uint8_t                  *const kRRCint_pP,
@@ -238,9 +238,9 @@ void rrc_data_ind_NB_IoT(
 //defined in rlc_rrc.c
 rlc_op_status_t rrc_rlc_config_asn1_req_NB_IoT (
 	const protocol_ctxt_t   * const ctxt_pP,
-    const SRB_ToAddModList_NB_r13_t   * const srb2add_listP,
-    const DRB_ToAddModList_NB_r13_t   * const drb2add_listP,
-    const DRB_ToReleaseList_NB_r13_t  * const drb2release_listP,
+    const LTE_SRB_ToAddModList_NB_r13_t   * const srb2add_listP,
+    const LTE_DRB_ToAddModList_NB_r13_t   * const drb2add_listP,
+    const LTE_DRB_ToReleaseList_NB_r13_t  * const drb2release_listP,
 	srb1bis_flag_t							srb1bis_flag
     );
 //-------------------------------------------------------------------------
@@ -485,7 +485,7 @@ rrc_eNB_generate_dedicatedRRCConnectionReconfiguration_NB_IoT(
 void rrc_eNB_process_RRCConnectionSetupComplete_NB_IoT(
   const protocol_ctxt_t* const ctxt_pP,
   rrc_eNB_ue_context_NB_IoT_t*         ue_context_pP,
-  RRCConnectionSetupComplete_NB_r13_IEs_t * rrcConnectionSetupComplete_NB
+  LTE_RRCConnectionSetupComplete_NB_r13_IEs_t * rrcConnectionSetupComplete_NB
 );
 
 void rrc_eNB_generate_SecurityModeCommand_NB_IoT(

@@ -19,7 +19,7 @@
 #define _NFAPI_INTERFACE_H_
 
 #include "stddef.h"
-#include "ACK-NACK-NumRepetitions-NB-r13.h"
+#include "LTE_ACK-NACK-NumRepetitions-NB-r13.h"
 
 // Constants - update based on implementation
 #define NFAPI_MAX_PHY_RF_INSTANCES 2

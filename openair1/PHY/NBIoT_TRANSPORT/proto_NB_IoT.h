@@ -37,6 +37,8 @@
 
 #include "PHY/defs_NB_IoT.h"
 #include "PHY/impl_defs_lte.h"
+#include "PHY/defs_eNB.h"
+#include "PHY/defs_UE.h"
 
 //#include "PHY/LTE_TRANSPORT/defs_NB_IoT.h"
 //#include <math.h>

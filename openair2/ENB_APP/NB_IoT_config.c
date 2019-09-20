@@ -30,13 +30,13 @@
 #include <string.h>
 #include <inttypes.h>
 
-#include "log.h"
-#include "log_extern.h"
+#include "common/utils/LOG/log.h"
+#include "common/utils/LOG/log_extern.h"
 #include "assertions.h"
 #include "intertask_interface.h"
 #include "s1ap_eNB.h"
 #include "sctp_eNB_task.h"
-#include "SystemInformationBlockType2.h"
+#include "LTE_SystemInformationBlockType2.h"
 
 #include "PHY/phy_extern.h"
 #include "targets/ARCH/ETHERNET/USERSPACE/LIB/ethernet_lib.h"

@@ -31,7 +31,7 @@
  */
 //#include "PHY/defs.h"
 #include "PHY/extern_NB_IoT.h"
-#include "SCHED/defs_NB_IoT.h"
+#include "SCHED_NBIOT/defs_NB_IoT.h"
 #include "defs_NB_IoT.h"
 #include "extern_NB_IoT.h"
 #include "PHY/sse_intrin.h"

@@ -34,7 +34,7 @@ extern  char fmageren_name2[512];
 extern unsigned int RX_DMA_BUFFER[4][NB_ANTENNAS_RX];
 extern unsigned int TX_DMA_BUFFER[4][NB_ANTENNAS_TX];
 */
-#include "PHY/LTE_TRANSPORT/extern_NB_IoT.h"
+#include "PHY/NBIoT_TRANSPORT/extern_NB_IoT.h"
 //#include "SIMULATION/ETH_TRANSPORT/extern.h"
 
 extern unsigned int DAQ_MBOX_NB_IoT;

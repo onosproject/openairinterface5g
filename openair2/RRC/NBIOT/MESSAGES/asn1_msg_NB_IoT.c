@@ -36,7 +36,7 @@
 #include <sysexits.h> /* for EX_* exit codes */
 #include <errno.h>  /* for errno */
 #else
-#include <linux/module.h>  /* Needed by all modules */
+//#include <linux/module.h>  /* Needed by all modules */
 #endif
 #ifdef USER_MODE
 //#include "RRC/NBIOT/defs.h"
