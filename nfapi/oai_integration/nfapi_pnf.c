@@ -17,6 +17,15 @@
  *-------------------------------------------------------------------------------
  * For more information about the OpenAirInterface (OAI) Software Alliance:
  *      contact@openairinterface.org
+ *! \file nfapi_pnf.c
+ * \brief OAI NR PNF and NFAPI integration
+ * \author R. Knopp, F. Kaltenberger, Navid Nikaein, A. Soysal, A. Yilmaz, G. Akinci, A. Uslu
+ * \date 2019
+ * \company Eurecom, Ulak
+ * \email: knopp@eurecom.fr,florian.kaltenberger@eurecom.fr, navid.nikaein@eurecom.fr
+ * \email: akin.soysal@ulakhaberlesme.com.tr, anil.yilmaz@ulakhaberlesme.com.tr, gorkem.akinci@ulakhaberlesme.com.tr, abdurrahman.uslu@ulakhaberlesme.com.tr
+ * \note
+ * \warning
  */
 
 #define _GNU_SOURCE
