@@ -32,7 +32,6 @@
  050102
  030103 000020 040301 040504 000021 040302 000001 000022 040303 000002 040504 000023 040401 040201 030201
  050202
- 030104 000020 040301 040504 000021 040302 000001 000022 040303 000002 040504 000023 040401 040201 030201
 	</TestCaseRequestedList>
 	<TestCaseExclusionList></TestCaseExclusionList>
 
@@ -122,12 +121,6 @@
 		<class>Initialize_eNB</class>
 		<desc>Initialize eNB (FDD/Band7/5MHz) for RRC Inactivity Timer testing -- with FlexRan Ctl</desc>
 		<Initialize_eNB_args>-O ci-scripts/conf_files/enb.band7.tm1.25PRB.usrpb210.conf</Initialize_eNB_args>
-	</testCase>
-
-	<testCase id="030104">
-		<class>Initialize_eNB</class>
-		<desc>Initialize eNB (FDD/Band7/5MHz/MBMS) MBMS eNB Testing against COTS UEs</desc>
-		<Initialize_eNB_args>-O ci-scripts/conf_files/enb.band17.tm1.mbms.25PRB.usrpb210.conf --eNBs.[0].component_carriers.[0].eutra_band 7 --eNBs.[0].component_carriers.[0].downlink_frequency 2680000000 --eNBs.[0].component_carriers.[0].uplink_frequency_offset -120000000</Initialize_eNB_args>
 	</testCase>
 
 	<testCase id="030201">
