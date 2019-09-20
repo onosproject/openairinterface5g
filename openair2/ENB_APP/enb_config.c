@@ -2956,4 +2956,9 @@ void read_config_and_init(void) {
     memset((void *)RC.rrc[enb_id], 0, sizeof(eNB_RRC_INST));
     RCconfig_RRC(enb_id, RC.rrc[enb_id],macrlc_has_f1[enb_id]);
   }
+
+  RCconfig_RU();
+  LOG_I(PHY,
+        "number of L1 instances %d, number of RU %d, number of CPU cores %d\n",
+        RC.nb_L1_inst, RC.nb_RU,get_nprocs());
 }
