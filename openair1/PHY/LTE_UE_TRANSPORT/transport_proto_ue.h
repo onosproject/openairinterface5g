@@ -35,7 +35,7 @@
 #include "PHY/LTE_TRANSPORT/transport_common_proto.h"
 #include <math.h>
 #include "nfapi_interface.h"
-#include "PHY/defs_NB_IoT.h"
+#include "PHY/defs_L1_NB_IoT.h"
 
 // Functions below implement 36-211 and 36-212
 

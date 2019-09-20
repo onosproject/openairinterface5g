@@ -31,7 +31,7 @@
  */
 
 #include "PHY/defs.h"
-#include "PHY/defs_NB_IoT.h"
+#include "PHY/defs_L1_NB_IoT.h"
 #include "PHY/extern.h"
 #include "PHY/LTE_ESTIMATION/defs_NB_IoT.h"
 #include "PHY/LTE_TRANSPORT/defs_NB_IoT.h"

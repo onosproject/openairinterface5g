@@ -40,7 +40,7 @@
 #include "SCHED/extern.h"
 
 ///////// NB-IoT testing /////////////////////
-#include "PHY/defs_NB_IoT.h"
+#include "PHY/defs_L1_NB_IoT.h"
 #include "PHY/vars_NB_IoT.h"
 /////////////////////////////////////////////
 #include "PHY/LTE_TRANSPORT/if4_tools.h"

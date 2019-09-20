@@ -24,7 +24,7 @@
 
 #include "PHY/defs_eNB.h"
 #include "PHY/defs_UE.h"
-#include "PHY/defs_NB_IoT.h"
+#include "PHY/defs_L1_NB_IoT.h"
 #include "PHY/impl_defs_lte_NB_IoT.h"
 #include "LTE_SystemInformationBlockType2.h"
 //#include "RadioResourceConfigCommonSIB.h"

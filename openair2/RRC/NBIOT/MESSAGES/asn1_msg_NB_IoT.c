@@ -71,7 +71,7 @@
 #include "SIB-Type-NB-r13.h"
 #include "RRCConnectionResume-NB.h"
 #include "RRCConnectionReestablishment-NB.h"
-#include "PHY/defs_NB_IoT.h"
+#include "PHY/defs_L1_NB_IoT.h"
 //----------------------------------------
 
 //#include "PHY/defs.h"

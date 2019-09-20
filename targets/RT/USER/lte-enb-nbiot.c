@@ -72,7 +72,7 @@
 
 //NB-IoT 
 #include "PHY/defs.h"
-#include "PHY/defs_NB_IoT.h"
+#include "PHY/defs_L1_NB_IoT.h"
 //#include "PHY/defs_L1_NB_IoT.h"
 #include "SCHED/defs_NB_IoT.h"
 #include "SCHED/sched_common.h" // for calling prach_procedures_NB_IoT()

@@ -33,7 +33,7 @@
 * \brief Top-level routines for decoding  the ULSCH transport channel from 36.212 V8.6 2009-03
 * \author V. Savaux
 * \date 2017
-* \version 0.1
+* \version 0.1S
 * \company b<>com
 * \email: vincent.savaux@b-com.com
 * \note
@@ -42,7 +42,7 @@
 //#include "defs.h"
 
 //#include "PHY/defs.h"
-#include "PHY/defs_NB_IoT.h"
+#include "PHY/defs_L1_NB_IoT.h"
 #include "PHY/extern_NB_IoT.h"
 #include "PHY/LTE_TRANSPORT/vars_NB_IoT.h"
 #include "PHY/CODING/defs_NB_IoT.h"

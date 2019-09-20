@@ -14,7 +14,7 @@
 
 #include "PHY/defs_eNB.h"
 #include "PHY/defs_UE.h"
-#include "PHY/defs_NB_IoT.h"
+#include "PHY/defs_L1_NB_IoT.h"
 #include "PHY/LTE_REFSIG/defs_NB_IoT.h"
 
 void generate_pilots_NB_IoT(PHY_VARS_eNB         *phy_vars_eNB,

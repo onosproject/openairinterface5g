@@ -36,7 +36,7 @@
 #endif
 // #include "defs.h"
 #include "PHY/LTE_REFSIG/defs_NB_IoT.h"
-#include "PHY/defs_NB_IoT.h"
+#include "PHY/defs_L1_NB_IoT.h"
 
 // uint16_t dftsizes[33] = {12,24,36,48,60,72,96,108,120,144,180,192,216,240,288,300,324,360,384,432,480,540,576,600,648,720,864,900,960,972,1080,1152,1200};
 

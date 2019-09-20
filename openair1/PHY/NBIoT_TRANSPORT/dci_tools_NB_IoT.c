@@ -47,7 +47,7 @@
 
 //#include "LAYER2/MAC/extern_NB_IoT.h"
 //#include "LAYER2/MAC/defs_NB_IoT.h"
-#include "PHY/defs_NB_IoT.h"
+#include "PHY/defs_L1_NB_IoT.h"
 
 //#define DEBUG_DCI
 

@@ -29,7 +29,7 @@
 * \note
 * \warning
 */
-#include "PHY/defs_NB_IoT.h"
+#include "PHY/defs_L1_NB_IoT.h"
 #include "PHY/extern_NB_IoT.h"
 #ifdef DEBUG_UCI_TOOLS
 #include "PHY/vars_NB_IoT.h"

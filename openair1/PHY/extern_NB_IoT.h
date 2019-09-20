@@ -23,7 +23,7 @@
 #define __PHY_EXTERN_NB_IOT_H__
 
 //#include "PHY/defs.h"
-#include "PHY/defs_NB_IoT.h"
+#include "PHY/defs_L1_NB_IoT.h"
 #include "openair2/PHY_INTERFACE/defs_NB_IoT.h"
 //#include "PHY_INTERFACE/IF_Module_NB_IoT.h"
 /*

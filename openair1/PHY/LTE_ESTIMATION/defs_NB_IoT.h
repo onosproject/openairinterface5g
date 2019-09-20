@@ -22,7 +22,7 @@
 #ifndef __LTE_ESTIMATION_DEFS_NB_IOT__H__
 #define __LTE_ESTIMATION_DEFS_NB_IOT__H__
 
-#include "PHY/defs_NB_IoT.h"
+#include "PHY/defs_L1_NB_IoT.h"
 
 /*
 int lte_est_timing_advance(NB_IoT_DL_FRAME_PARMS *frame_parms,
