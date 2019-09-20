@@ -2668,7 +2668,7 @@ size_t flexran_get_splits(mid_t mod_id, Protocol__FlexBsSplit **splits) {
   if (NFAPI_MODE != NFAPI_MONOLITHIC)
     (*splits)[n++] = PROTOCOL__FLEX_BS_SPLIT__nFAPI;
   if (RC.ru && RC.ru[mod_id] && RC.ru[mod_id]->if_south == REMOTE_IF4p5)
-    (*splits)[n++] = PROTOCOL__FLEX_BS_SPLIT__IF5;
+    (*splits)[n++] = PROTOCOL__FLEX_BS_SPLIT__IF4p5;
   if (RC.ru && RC.ru[mod_id] && RC.ru[mod_id]->if_south == REMOTE_IF5)
     (*splits)[n++] = PROTOCOL__FLEX_BS_SPLIT__IF5;
   DevAssert(n == n_splits);
