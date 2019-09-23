@@ -37,6 +37,7 @@
 //NB-IoT
 #include "openair2/ENB_APP/NB_IoT_config.c"
 
+
 extern uint32_t from_earfcn(int eutra_bandP,uint32_t dl_earfcn);
 extern int32_t get_uldl_offset(int eutra_bandP);
 
@@ -91,6 +92,7 @@ int
 l1_north_init_NB_IoT()
 {
   int j;
+  paramlist_def_t NbIoT_L1_ParamList = {NBIOT_L1LIST_CONFIG_STRING,NULL,0};
 
   if (RC.L1_NB_IoT != NULL)
   {

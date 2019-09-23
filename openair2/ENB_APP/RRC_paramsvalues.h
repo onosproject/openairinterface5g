@@ -55,10 +55,10 @@
 #define FRAMETYPE_OKVALUES                                      {"FDD","TDD"}
 #define FRAMETYPE_MODVALUES                                     { FDD, TDD} 
 
-#define TDDCFG(A)                                               TDD_Config__subframeAssignment_ ## A
+#define TDDCFG(A)                                               LTE_TDD_Config__subframeAssignment_ ## A
 #define TDDCONFIG_OKRANGE                                       { TDDCFG(sa0), TDDCFG(sa6)}   
 
-#define TDDCFGS(A)                                              TDD_Config__specialSubframePatterns_ ## A
+#define TDDCFGS(A)                                              LTE_TDD_Config__specialSubframePatterns_ ## A
 #define TDDCONFIGS_OKRANGE                                      { TDDCFGS(ssp0), TDDCFGS(ssp8)}   
 
 #define PREFIX_OKVALUES                                         {"NORMAL","EXTENDED"}

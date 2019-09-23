@@ -142,8 +142,8 @@ void RCconfig_NbIoTmacrlc(void) {
 
 int RCconfig_NbIoTRRC(MessageDef *msg_p, int nbiotrrc_id,eNB_RRC_INST_NB_IoT *nbiotrrc) {
   char instprefix[MAX_OPTNAME_SIZE*3 + 32];
-  checkedparam_t NBIoTCheckParams[]  = NBIOT_RRCPARAMS_CHECK_DESC_0_14;
-  checkedparam_t NBIoTCheckParamsB[] = NBIOT_RRCPARAMS_CHECK_DESC_15_end;
+  checkedparam_t NBIoTCheckParams[]  = NBIOT_RRCPARAMS_CHECK_DESC;  //
+  checkedparam_t NBIoTCheckParamsB[] = NBIOT_RRCPARAMS_CHECK_DESC; //
   paramdef_t     NBIoTParams[]      = NBIOTRRCPARAMS_DESC;
   paramdef_t     NBIoTPrachParams[]      = NBIOTRRC_NPRACH_PARAMS_DESC;
   checkedparam_t NBIoTPrachCheckParams[] = NBIOT_RRCLIST_NPRACHPARAMSCHECK_DESC;
