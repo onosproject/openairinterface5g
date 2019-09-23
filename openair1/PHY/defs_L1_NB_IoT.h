@@ -127,7 +127,9 @@ static inline void* malloc16_clear( size_t size )
 #include "PHY/impl_defs_lte_NB_IoT.h"
 
 #include "PHY/TOOLS/time_meas.h"
+#include "PHY/TOOLS/time_meas_NB_IoT.h"
 //#include "PHY/CODING/defs.h"
+#include "defs_common.h"
 #include "PHY/CODING/defs_NB_IoT.h"
 #include "openair2/PHY_INTERFACE/IF_Module_NB_IoT.h"
 //#include "PHY/TOOLS/defs.h"
@@ -254,6 +256,8 @@ typedef struct {
 
 /// Context data structure for RX/TX portion of subframe processing
 typedef struct {
+  /// Component Carrier index   
+  uint8_t               CC_id;
   /// timestamp transmitted to HW
   openair0_timestamp    timestamp_tx;
   /// subframe to act upon for transmission
@@ -283,6 +287,21 @@ typedef struct {
   pthread_mutex_t       mutex_l2;
   int                   instance_cnt_l2;
   pthread_attr_t        attr_l2;
+  uint32_t              frame_msg5;
+  uint32_t              subframe_msg5;
+  int                   subframe_real;
+  uint8_t               flag_scrambling;
+  uint8_t               flag_msg3;
+  uint8_t               counter_msg3;
+  uint32_t              frame_msg3;
+  uint8_t               flag_msg4;
+  uint8_t               counter_msg4;
+  uint32_t              frame_msg4;
+  uint32_t              subframe_msg4;
+  uint8_t               counter_msg5;
+  uint8_t               flag_msg5;
+  uint32_t              frame_dscr_msg5;
+  uint32_t              subframe_dscr_msg5;
 
 } eNB_rxtx_proc_NB_IoT_t;
 /*
@@ -303,6 +322,8 @@ typedef struct {
 
 /// Context data structure for eNB subframe processing
 typedef struct eNB_proc_NB_IoT_t_s {
+  /// Component Carrier index   
+  uint8_t                 CC_id;
   /// thread index
   int                     thread_index;
   /// timestamp received from HW
@@ -448,6 +469,8 @@ typedef struct eNB_proc_NB_IoT_t_s {
 typedef struct {
   /// index of the current UE RX/TX proc
   int                   proc_id;
+  /// Component Carrier index   
+  uint8_t                 CC_id;
   /// timestamp transmitted to HW
   openair0_timestamp    timestamp_tx;
   /// subframe to act upon for transmission
@@ -482,6 +505,8 @@ typedef struct {
 
 /// Context data structure for eNB subframe processing
 typedef struct {
+  /// Component Carrier index   
+  uint8_t                 CC_id;
   /// Last RX timestamp
   openair0_timestamp      timestamp_rx;
   /// pthread attributes for main UE thread
@@ -514,14 +539,19 @@ typedef struct {
 typedef struct PHY_VARS_eNB_NB_IoT_s {
   /// Module ID indicator for this instance
   module_id_t                   Mod_id;
+  uint8_t                       CC_id;
   uint8_t                       configured;
   eNB_proc_NB_IoT_t             proc;
   int                           num_RU;
   RU_t                          *RU_list[MAX_NUM_RU_PER_eNB];
   /// Ethernet parameters for northbound midhaul interface (L1 to Mac)
-  eth_params_t         eth_params_n;
+  eth_params_t                  eth_params_n;
+
+  eNB_func_NB_IoT_t             node_function;
+  eNB_timing_NB_IoT_t           node_timing;
+  
   /// Ethernet parameters for fronthaul interface (upper L1 to Radio head)
-  eth_params_t         eth_params;
+  eth_params_t                  *eth_params;
   int                           single_thread_flag;
   openair0_rf_map               rf_map;
   int                           abstraction_flag;
@@ -533,7 +563,7 @@ typedef struct PHY_VARS_eNB_NB_IoT_s {
   // indicator for precoding function (eNB,3GPP_eNB_BBU)
   int                           do_precoding;
   IF_Module_NB_IoT_t            *if_inst_NB_IoT;
-  UL_IND_NB_IoT_t               UL_INFO_NB_IoT;
+  UL_IND_NB_IoT_t               UL_INFO;
   pthread_mutex_t               UL_INFO_mutex;
   void                          (*do_prach)(struct PHY_VARS_eNB_NB_IoT_s *eNB,int frame,int subframe);
   void                          (*fep)(struct PHY_VARS_eNB_NB_IoT_s *eNB,eNB_rxtx_proc_NB_IoT_t *proc);
@@ -782,6 +812,8 @@ typedef struct PHY_VARS_eNB_NB_IoT_s {
 typedef struct {
   /// \brief Module ID indicator for this instance
   uint8_t                       Mod_id;
+   /// \brief Component carrier ID for this PHY instance    
+  uint8_t                       CC_id;
   /// \brief Mapping of CC_id antennas to cards
   openair0_rf_map               rf_map;
   //uint8_t local_flag;

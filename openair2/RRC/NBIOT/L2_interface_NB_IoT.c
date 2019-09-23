@@ -27,7 +27,7 @@
  * \email: raymond.knopp@eurecom.fr
  */
 //#include "PHY/defs.h"
-#include "PHY/defs_NB_IoT.h"
+#include "PHY/defs_L1_NB_IoT.h"
 #include "openair2/LAYER2/MAC/proto_NB_IoT.h"
 #include "openair2/LAYER2/MAC/extern_NB_IoT.h"
 //#include "PHY/INIT/defs_NB_IoT.h"

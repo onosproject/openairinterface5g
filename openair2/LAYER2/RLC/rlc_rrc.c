@@ -150,18 +150,6 @@ rlc_op_status_t rrc_rlc_config_asn1_req (const protocol_ctxt_t   * const ctxt_pP
                 &srb_toaddmod_p->rlc_Config->choice.explicitValue.choice.am,
                 rb_id, lc_id);
             }
-            /****************************************config srb1bis for NB-IoT********************************************/
-            else if(NBconfig.NB_IoT_configured > 0)
-            {
-              if (rrc_rlc_add_rlc (ctxt_pP, SRB_FLAG_YES, MBMS_FLAG_NO, 3, 3, RLC_MODE_AM) != NULL) {
-              config_req_rlc_am_asn1 (
-                ctxt_pP,
-                SRB_FLAG_YES,
-                &srb_toaddmod_p->rlc_Config->choice.explicitValue.choice.am,
-                3, 3);
-              }
-            } 
-            /************************************************************************************************************/
             else {
               LOG_E(RLC, PROTOCOL_CTXT_FMT" ERROR IN ALLOCATING SRB %d \n",
                     PROTOCOL_CTXT_ARGS(ctxt_pP),

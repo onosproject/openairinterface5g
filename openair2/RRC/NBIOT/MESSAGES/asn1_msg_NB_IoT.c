@@ -36,7 +36,7 @@
 #include <sysexits.h> /* for EX_* exit codes */
 #include <errno.h>  /* for errno */
 #else
-#include <linux/module.h>  /* Needed by all modules */
+//#include <linux/module.h>  /* Needed by all modules */
 #endif
 #ifdef USER_MODE
 //#include "RRC/NBIOT/defs.h"
@@ -71,7 +71,7 @@
 #include "SIB-Type-NB-r13.h"
 #include "RRCConnectionResume-NB.h"
 #include "RRCConnectionReestablishment-NB.h"
-#include "PHY/defs_NB_IoT.h"
+#include "PHY/defs_L1_NB_IoT.h"
 //----------------------------------------
 
 //#include "PHY/defs.h"

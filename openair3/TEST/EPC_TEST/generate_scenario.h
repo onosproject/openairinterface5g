@@ -38,7 +38,7 @@
 #include "platform_constants.h"
 #include "PHY/impl_defs_lte.h"
 #include "s1ap_messages_types.h"
-#include "SystemInformationBlockType2.h"
+#include "LTE_SystemInformationBlockType2.h"
 
 #define IPV4_STR_ADDR_TO_INT_NWBO(AdDr_StR,NwBo,MeSsAgE ) do {\
             struct in_addr inp;\

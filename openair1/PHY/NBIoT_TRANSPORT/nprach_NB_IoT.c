@@ -30,7 +30,7 @@
  */
 
 //#include "PHY/sse_intrin.h"
-#include "PHY/defs_NB_IoT.h"
+#include "PHY/defs_L1_NB_IoT.h"
 #include "PHY/TOOLS/defs.h" // to take into account the dft functions
 #include "tables_nprach_NB_IoT.h"
 #include "first_sc_NB_IoT.h"

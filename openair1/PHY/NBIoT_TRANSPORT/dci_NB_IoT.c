@@ -38,7 +38,7 @@
 //#include "PHY/defs.h"
 //#include "PHY/LTE_TRANSPORT/proto_NB_IoT.h"
 //#include "PHY/CODING/defs_NB_IoT.h"
-#include "PHY/defs_NB_IoT.h"  // /LTE_TRANSPORT/defs_NB_IoT.h
+#include "PHY/defs_L1_NB_IoT.h"  // /LTE_TRANSPORT/defs_NB_IoT.h
 //#include "PHY/LTE_REFSIG/defs_NB_IoT.h"
 //#include "PHY/extern.h"
 //////////#include "PHY/extern_NB_IoT.h"

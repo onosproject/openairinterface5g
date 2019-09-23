@@ -82,15 +82,11 @@ hash_table_t  *pdcp_coll_p = NULL;
   static int mbms_socket = -1;
 #endif
 
-ccparams_NB_IoT_t NBconfig ;
-memset((void *)&NBconfig,0,sizeof(ccparams_NB_IoT_t));
-if (NBconfig.NB_IoT_configured > 0)
-{
-#include "openair2/RRC/NBIOT/proto_NB_IoT.h"
-#undef maxDRB
-#define maxDRB maxDRB_NB_r13
 
-}
+#include "openair2/RRC/NBIOT/proto_NB_IoT.h"
+#undef LTE_maxDRB
+#define LTE_maxDRB LTE_maxDRB_NB_r13
+
 
 /* pdcp module parameters and related functions*/
 static pdcp_params_t pdcp_params= {0,NULL};

@@ -30,7 +30,7 @@
 * \warning
 */
 
-#include "PHY/defs_NB_IoT.h"
+#include "PHY/defs_L1_NB_IoT.h"
 #include "PHY/extern_NB_IoT.h"
 #include "defs_NB_IoT.h"
 #include "extern_NB_IoT.h"

@@ -23,7 +23,7 @@
 #define __PHY_VARS_NB_IOT_H__
 
 #include "PHY/types_NB_IoT.h"
-#include "PHY/defs_NB_IoT.h"
+#include "PHY/defs_L1_NB_IoT.h"
 
 /*
 #ifndef USER_MODE

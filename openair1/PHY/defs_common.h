@@ -784,6 +784,28 @@ typedef struct {
   uint8_t RB_ID_NB_IoT;   // to be used
 
   uint8_t flag_free_sf;  // flag to indicate for NPDSCH and NPDCCH process if the current SF already used
+   /// Frequency index of CBMIMO1 card
+  uint8_t freq_idx;
+  /// RX Frequency for ExpressMIMO/LIME
+  uint32_t carrier_freq[4];
+  /// TX Frequency for ExpressMIMO/LIME
+  uint32_t carrier_freqtx[4];
+  /// RX gain for ExpressMIMO/LIME
+  uint32_t rxgain[4];
+  /// TX gain for ExpressMIMO/LIME
+  uint32_t txgain[4];
+  /// RF mode for ExpressMIMO/LIME
+  uint32_t rfmode[4];
+  /// RF RX DC Calibration for ExpressMIMO/LIME
+  uint32_t rxdc[4];
+  /// RF TX DC Calibration for ExpressMIMO/LIME
+  uint32_t rflocal[4];
+  /// RF VCO calibration for ExpressMIMO/LIME
+  uint32_t rfvcolocal[4];
+  /// Turns on second TX of CBMIMO1 card
+  uint8_t dual_tx;
+  /// flag to indicate SISO transmission
+  uint8_t mode1_flag;
   ///////////////////////////////////////////////////////////////////// 
 } LTE_DL_FRAME_PARMS;
 

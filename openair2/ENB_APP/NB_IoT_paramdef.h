@@ -31,14 +31,14 @@
  */
 
 #include "common/config/config_paramdesc.h"
-#include "SystemInformationBlockType2.h"
-#include "DL-GapConfig-NB-r13.h"
-#include "NPRACH-Parameters-NB-r13.h"
-#include "PowerRampingParameters.h"		  
-#include "BCCH-Config-NB-r13.h"
-#include "PCCH-Config-NB-r13.h"
-#include "ACK-NACK-NumRepetitions-NB-r13.h"
-#include "TDD-Config.h"
+#include "LTE_SystemInformationBlockType2.h"
+#include "LTE_DL-GapConfig-NB-r13.h"
+#include "LTE_NPRACH-Parameters-NB-r13.h"
+#include "LTE_PowerRampingParameters.h"		  
+#include "LTE_BCCH-Config-NB-r13.h"
+#include "LTE_PCCH-Config-NB-r13.h"
+#include "LTE_ACK-NACK-NumRepetitions-NB-r13.h"
+#include "LTE_TDD-Config.h"
 
 
 

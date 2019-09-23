@@ -20,7 +20,7 @@
  */
 
 //#include "PHY/types.h"
-#include "PHY/defs_NB_IoT.h"
+#include "PHY/defs_L1_NB_IoT.h"
 //#include "PHY/extern.h"
 
 //#include "UTIL/LOG/vcd_signal_dumper.h"

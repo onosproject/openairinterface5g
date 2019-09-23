@@ -34,7 +34,7 @@
 #ifndef __LAYER2_MAC_PROTO_NB_IoT_H__
 #define __LAYER2_MAC_PROTO_NB_IoT_H__
 
-#include "openair1/PHY/LTE_TRANSPORT/defs_NB_IoT.h"
+#include "openair1/PHY/NBIoT_TRANSPORT/defs_NB_IoT.h"
 #include "LAYER2/MAC/defs_NB_IoT.h"
 #include "COMMON/platform_types.h"
 #include "openair2/RRC/NBIOT/defs_NB_IoT.h"
@@ -60,12 +60,12 @@ void config_mib_fapi_NB_IoT(
         int                     dl_CarrierFreq,
         int                     ul_CarrierFreq,
         long                    *eutraControlRegionSize,
-        BCCH_BCH_Message_NB_t   *mib_NB_IoT
+        LTE_BCCH_BCH_Message_NB_t   *mib_NB_IoT
         );
 
 void config_sib2_fapi_NB_IoT(
                         int physCellId,
-                        RadioResourceConfigCommonSIB_NB_r13_t   *radioResourceConfigCommon
+                        LTE_RadioResourceConfigCommonSIB_NB_r13_t   *radioResourceConfigCommon
                         );
 
 
@@ -75,10 +75,10 @@ void rrc_mac_config_req_NB_IoT(
     int                                     CC_idP,
     int                                     rntiP,
     rrc_eNB_carrier_data_NB_IoT_t           *carrier,
-    SystemInformationBlockType1_NB_t        *sib1_NB_IoT,
-    RadioResourceConfigCommonSIB_NB_r13_t   *radioResourceConfigCommon,
-    PhysicalConfigDedicated_NB_r13_t        *physicalConfigDedicated,
-    LogicalChannelConfig_NB_r13_t           *logicalChannelConfig,            //FIXME: decide how to use it
+    LTE_SystemInformationBlockType1_NB_t        *sib1_NB_IoT,
+    LTE_RadioResourceConfigCommonSIB_NB_r13_t   *radioResourceConfigCommon,
+    LTE_PhysicalConfigDedicated_NB_r13_t        *physicalConfigDedicated,
+    LTE_LogicalChannelConfig_NB_r13_t           *logicalChannelConfig,            //FIXME: decide how to use it
     uint8_t                                 ded_flag,
     uint8_t                                 ue_list_ded_num);
 

@@ -36,7 +36,7 @@
 */
 
 //#include "defs.h"
-#include "PHY/defs_NB_IoT.h"
+#include "PHY/defs_L1_NB_IoT.h"
 #include "PHY/extern_NB_IoT.h"
 
 #if defined(__x86_64__) || defined(__i386__)
