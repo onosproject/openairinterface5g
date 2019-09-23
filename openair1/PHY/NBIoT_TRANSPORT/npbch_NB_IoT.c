@@ -36,7 +36,7 @@
 //#include "extern_NB_IoT.h"
 //#include "PHY/extern_NB_IoT.h"
 //#include "PHY/sse_intrin.h"
-#include "PHY/LTE_TRANSPORT/defs_NB_IoT.h"
+#include "PHY/NBIoT_TRANSPORT/defs_NB_IoT.h"
 #include "PHY/CODING/defs_NB_IoT.h"
 #include "PHY/LTE_REFSIG/defs_NB_IoT.h"
 #include "PHY/impl_defs_lte_NB_IoT.h"

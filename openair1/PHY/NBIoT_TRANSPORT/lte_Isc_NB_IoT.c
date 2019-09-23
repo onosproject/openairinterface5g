@@ -32,7 +32,7 @@
 
 //#include "PHY/defs.h"
 //#include "PHY/extern.h"
-#include "PHY/LTE_TRANSPORT/proto_NB_IoT.h"
+#include "PHY/NBIoT_TRANSPORT/proto_NB_IoT.h"
 
 uint8_t tab_ack_15khz[16]= {0,1,2,3,0,1,2,3,0,1,2,3,0,1,2,3};
 uint8_t tab_ack_3_75khz[16]= {38,39,40,41,42,43,44,45,38,39,40,41,42,43,44,45};

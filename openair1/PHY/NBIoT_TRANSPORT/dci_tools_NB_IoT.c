@@ -41,13 +41,13 @@
 */
 //#include "assertions.h"
 //#include "dlsch_tbs_full.h"
-#include "PHY/LTE_TRANSPORT/dlsch_tbs_full_NB_IoT.h"
+#include "PHY/NBIoT_TRANSPORT/dlsch_tbs_full_NB_IoT.h"
 
 //#define DEBUG_HARQ
 
 //#include "LAYER2/MAC/extern_NB_IoT.h"
 //#include "LAYER2/MAC/defs_NB_IoT.h"
-#include "PHY/defs_NB_IoT.h"
+#include "PHY/defs_L1_NB_IoT.h"
 
 //#define DEBUG_DCI
 

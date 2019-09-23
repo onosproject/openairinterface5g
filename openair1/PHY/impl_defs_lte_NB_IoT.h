@@ -33,7 +33,9 @@
 #ifndef __PHY_IMPL_DEFS_NB_IOT__H__
 #define __PHY_IMPL_DEFS_NB_IOT__H__
 
-#include "types_NB_IoT.h"
+#include "types.h"
+
+//#include "types_NB_IoT.h"
 //#include "defs.h"
 
 typedef enum {TDD_NB_IoT=1,FDD_NB_IoT=0} NB_IoT_frame_type_t;

@@ -26,17 +26,8 @@
 #define __INIT_DEFS_NB_IOT__H__
 
 //#include "PHY/defs_NB_IoT.h"
-#include "openair2/PHY_INTERFACE/IF_Module_NB_IoT.h"  
-
-#include "nfapi_interface.h"  
-
-
-//#include "SystemInformationBlockType2.h"
-//#include "RadioResourceConfigCommonSIB.h"
-//#include "RadioResourceConfigDedicated.h"
-//#include "TDD-Config.h"
-//#include "MBSFN-SubframeConfigList.h"
-//#include "MobilityControlInfo.h"
+#include "nfapi_interface.h"
+//#include "openair2/PHY_INTERFACE/IF_Module_NB_IoT.h"  
 
 //#if (LTE_RRC_VERSION >= MAKE_VERSION(10, 0, 0))
 
@@ -45,9 +36,6 @@
 
 /*brief Configure LTE_DL_FRAME_PARMS with components derived after initial synchronization (MIB-NB decoding + primary/secondary synch).*/
 void phy_config_mib_eNB_NB_IoT(int  		Mod_id,
-
-						    
-
 						       int              eutra_band,
 						       int              Nid_cell,
 						       int              Ncp,
@@ -69,11 +57,10 @@ void phy_config_mib_eNB_NB_IoT(int  		Mod_id,
 //                         );
 
 void phy_config_sib2_eNB_NB_IoT(uint8_t Mod_id,
-
                          	nfapi_nb_iot_config_t *config,
-				nfapi_rf_config_t *rf_config,
-				nfapi_uplink_reference_signal_config_t* ul_nrs_config,
-				extra_phyConfig_t* extra_phy_parms);
+							nfapi_rf_config_t *rf_config,
+							nfapi_uplink_reference_signal_config_t* ul_nrs_config,
+							extra_phyConfig_t* extra_phy_parms);
 
 void phy_config_dedicated_eNB_NB_IoT(module_id_t Mod_id,
 				     rnti_t rnti,

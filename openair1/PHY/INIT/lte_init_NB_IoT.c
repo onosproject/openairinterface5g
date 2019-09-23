@@ -198,7 +198,7 @@ void phy_config_mib_eNB_NB_IoT(int  			Mod_id,
 
 void phy_config_sib2_eNB_NB_IoT(uint8_t 								  Mod_id,
                          		int 									  CC_id,
-                         		nfapi_config_NB_IoT_t 					  *config,
+                         		nfapi_nb_iot_config_t 					  *config,
 						 		nfapi_rf_config_t 						  *rf_config,
 						 		nfapi_uplink_reference_signal_config_t	  *ul_nrs_config,
 						 		extra_phyConfig_t						  *extra_phy_parms)

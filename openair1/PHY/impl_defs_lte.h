@@ -33,6 +33,7 @@
 #ifndef __PHY_IMPLEMENTATION_DEFS_LTE_H__
 #define __PHY_IMPLEMENTATION_DEFS_LTE_H__
 
+#include "types.h"
 
 typedef struct {
   /// \brief Holds the transmit data in the frequency domain.
