@@ -117,7 +117,7 @@ int allocate_REs_in_RB_NB_IoT(LTE_DL_FRAME_PARMS    *frame_parms,
                               uint8_t               pilot_shift,
                               uint32_t              *re_allocated); 
 
-int generate_NDLSCH_NB_IoT(PHY_VARS_eNB               *eNB,
+int generate_NDLSCH_NB_IoT(PHY_VARS_eNB_NB_IoT        *eNB,
                            NB_IoT_eNB_NDLSCH_t        *RAR,
                            int32_t                    **txdataF,
                            int16_t                    amp,
@@ -127,7 +127,7 @@ int generate_NDLSCH_NB_IoT(PHY_VARS_eNB               *eNB,
                            int                        RB_IoT_ID,
                            uint8_t                    release_v13_5_0);
 
-int generate_NPDCCH_NB_IoT(NB_IoT_eNB_NPDCCH_t    *DCI_pdu,
+int generate_NPDCCH_NB_IoT(NB_IoT_eNB_NPDCCH_t    *DCI_1,
                            int32_t                **txdataF,
                            int16_t                amp,
                            LTE_DL_FRAME_PARMS     *frame_parms,
@@ -588,6 +588,7 @@ void rotate_bpsk_NB_IoT(PHY_VARS_eNB *eNB,
 
 
 int rx_npdsch_NB_IoT(PHY_VARS_UE_NB_IoT *ue,
+                      PDSCH_t type,
                       unsigned char eNB_id,
                       unsigned char eNB_id_i, //if this == ue->n_connected_eNB, we assume MU interference
                       uint32_t frame,

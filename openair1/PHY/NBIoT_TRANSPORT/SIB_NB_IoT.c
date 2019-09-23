@@ -212,7 +212,7 @@ int generate_SIB23(NB_IoT_eNB_NDLSCH_t 	  *SIB23,
 ////////////////////////////////////////////////////////////////////////
 
 
-int generate_NDLSCH_NB_IoT(PHY_VARS_eNB           *eNB,
+int generate_NDLSCH_NB_IoT(PHY_VARS_eNB_NB_IoT    *eNB,
                            NB_IoT_eNB_NDLSCH_t 	  *RAR,
 		                       int32_t 				        **txdataF,
 		                       int16_t                amp,
@@ -348,7 +348,7 @@ int generate_NDLSCH_NB_IoT(PHY_VARS_eNB           *eNB,
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////
-int generate_NPDCCH_NB_IoT(NB_IoT_eNB_NPDCCH_t 	  *DCI_pdu,
+int generate_NPDCCH_NB_IoT(NB_IoT_eNB_NPDCCH_t 	  *DCI_1,
 		                   int32_t 				  **txdataF,
 		                   int16_t                amp,
 		                   LTE_DL_FRAME_PARMS 	  *frame_parms,
@@ -364,14 +364,14 @@ int generate_NPDCCH_NB_IoT(NB_IoT_eNB_NPDCCH_t 	  *DCI_pdu,
     	uint8_t ncce_index = 0;   /// = DCI->ncce_index[i];
  	    uint8_t agr_level = 2;	  /// = DCI->aggregation_level[i];
 
-		    if( DCI->active[i] == 1)
+		    if( DCI_1->active[i] == 1)
 		    {
                 //LOG_I(PHY,"[Frame: %d][Subframe: %d]sent DCI\n",frame,subframe);
-		    	uint8_t  *DCI_pdu  = DCI->pdu[i];
-			 	uint32_t rep =  DCI->dci_repetitions[i];         /// repetition number
+		    	uint8_t  *DCI_pdu  = DCI_1->pdu[i];
+			 	uint32_t rep =  DCI_1->dci_repetitions[i];         /// repetition number
 			 	uint8_t  eutra_control_region = 3;
-			 	uint8_t num_bits_of_DCI =DCI->A[i];  //DCI->dci_bits_length;    /// value to be passed through nfapi when filling the PHY structures
-			    uint32_t counter_rep    =  DCI->counter_repetition_number[i];          ////// Buffer for repetitions 
+			 	uint8_t num_bits_of_DCI =DCI_1->A[i];  //DCI->dci_bits_length;    /// value to be passed through nfapi when filling the PHY structures
+			    uint32_t counter_rep    =  DCI_1->counter_repetition_number[i];          ////// Buffer for repetitions 
 
 		    	int G = get_G_NB_IoT(frame_parms);
 		    	////////////  uint8_t Nsf = DCI->number_of_subframes_for_resource_assignment;

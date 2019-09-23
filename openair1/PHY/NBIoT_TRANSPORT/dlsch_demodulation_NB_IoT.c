@@ -89,6 +89,7 @@ extern void print_shorts(char *s,int16_t *x);
 
 
 int rx_npdsch_NB_IoT(PHY_VARS_UE_NB_IoT *ue,
+             PDSCH_t type,
              unsigned char eNB_id,
              unsigned char eNB_id_i, //if this == ue->n_connected_eNB, we assume MU interference
              uint32_t frame,
