@@ -36,11 +36,11 @@
 #include "defs_NB_IoT.h"
 /**************/
 #include "vars_NB_IoT.h"
-#include "extern.h"
+#include "extern_NB_IoT.h"
 #include "extern_NB_IoT.h"
 #include "LAYER2/MAC/proto_NB_IoT.h"
 /**************/
-#include "openair1/SCHED/defs_NB_IoT.h"
+#include "openair1/SCHED_NBIOT/defs_NB_IoT.h"
 #include "RRC/NBIOT/MESSAGES/asn1_msg_NB_IoT.h"
 #include "RRCConnectionRequest-NB.h"
 #include "RRCConnectionReestablishmentRequest-NB.h"

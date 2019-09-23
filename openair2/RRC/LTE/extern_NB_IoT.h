@@ -57,7 +57,12 @@ extern uint16_t 							T310_NB_IoT[8];
 extern uint16_t 							T311_NB_IoT[8];
 extern uint16_t 							N310_NB_IoT[8];
 extern uint16_t 							N311_NB_IoT[8];
-extern uint8_t *get_NB_IoT_MIB(struct eNB_RRC_INST_NB_IoT_s *nb_iot_rrc);
+extern uint8_t *get_NB_IoT_MIB(
+    										rrc_eNB_carrier_data_NB_IoT_t *carrier,
+    	uint16_t 							N_RB_DL,//may not needed--> for NB_IoT only 1 PRB is used
+    	uint32_t 							subframe,
+    	uint32_t 							frame,
+    	uint32_t 							hyper_frame);
 #endif
 
 

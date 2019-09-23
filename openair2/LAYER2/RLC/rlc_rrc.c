@@ -598,11 +598,6 @@ rlc_op_status_t rrc_rlc_remove_rlc   (
 
 #if (LTE_RRC_VERSION >= MAKE_VERSION(10, 0, 0))
   rlc_mbms_id_t         *mbms_id_p  = NULL;
-#endif
-
-
-#if (LTE_RRC_VERSION >= MAKE_VERSION(10, 0, 0))
-  rlc_mbms_id_t         *mbms_id_p  = NULL;
 #endif rrc_rlc_remove_rlc
 #ifdef OAI_EMU
   CHECK_CTXT_ARGS(ctxt_pP)

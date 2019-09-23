@@ -46,7 +46,8 @@
 #include "SIMULATION/simulation_defs.h"
 #endif //PHY_EMUL
 
-#include "SCHED/defs.h"
+#include "SCHED/sched_common.h"
+#include "SCHED/sched_eNB.h"
 
 ///// NB-IoT testing
 #include "proto_NB_IoT.h"

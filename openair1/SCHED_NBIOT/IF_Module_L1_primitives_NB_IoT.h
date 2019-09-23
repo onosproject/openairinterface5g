@@ -7,7 +7,7 @@
 #ifndef __IF_MODULE_L1_PRIMITIVES_NB_IOT_H__
 #define __IF_MODULE_L1_PRIMITIVES_NB_IOT_H__
 
-#include "openair1/PHY/defs_NB_IoT.h"
+#include "openair1/PHY/defs_L1_NB_IoT.h"
 //#include "LAYER2/MAC/extern.h"
 //#include "LAYER2/MAC/proto_NB_IoT.h"
 //#include "openair2/PHY_INTERFACE/IF_Module_NB_IoT.h"

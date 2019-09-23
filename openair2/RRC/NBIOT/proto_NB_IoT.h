@@ -246,10 +246,11 @@ rlc_op_status_t rrc_rlc_config_asn1_req_NB_IoT (
 //-------------------------------------------------------------------------
 
 // defined in rlc_am.c
+
 void config_req_rlc_am_asn1_NB_IoT (
   const protocol_ctxt_t* const         ctxt_pP,
   const srb_flag_t                     srb_flagP,
-  const struct RLC_Config_NB_r13__am  * const config_am_pP, //extracted from the srb_toAddMod
+  const struct LTE_RLC_Config_NB_r13__am  * const config_am_pP, //extracted from the srb_toAddMod
   const rb_id_t                        rb_idP,
   const logical_chan_id_t              chan_idP);
 //------------------------------------------------------------

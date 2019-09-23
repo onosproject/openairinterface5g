@@ -3,10 +3,11 @@
 #ifndef __openair_SCHED_NB_IOT_H__
 #define __openair_SCHED_NB_IOT_H__
 
-#include "PHY/defs.h"
+#include "PHY/defs_eNB.h"
+#include "PHY/defs_UE.h"
 #include "PHY/defs_L1_NB_IoT.h"
 //#include "openair2/PHY_INTERFACE/IF_Module_nb_iot.h"
-#include "openair2/PHY_INTERFACE/nfapi_interface.h"
+#include "nfapi_interface.h"
 
 
 

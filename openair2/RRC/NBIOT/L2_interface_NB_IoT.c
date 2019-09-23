@@ -38,19 +38,19 @@
 //#include "LAYER2/MAC/defs.h" // MAC because see the PHY functions
 //#include "extern.h"
 //#include "LAYER2/MAC/extern.h"
-#include "UTIL/LOG/log.h"
-#include "UTIL/OCG/OCG_vars.h"
+#include "common/utils/LOG/log.h"
+#include "common/utils/OCG/OCG_vars.h"
 #include "RRC/NBIOT/rrc_eNB_UE_context_NB_IoT.h"
 #include "pdcp_primitives.h"
 #include "pdcp.h"
 #include "pdcp_util.h"
 #include "rlc.h"
 #include "msc.h"
-#include "UTIL/LOG/vcd_signal_dumper.h"
+#include "common/utils/LOG/vcd_signal_dumper.h"
 //#include "gtpv1u.h"
 #include "osa_defs.h"
 #include "pdcp_sequence_manager.h"
-#include "UTIL/OTG/otg_rx.h"
+#include "common/utils/OTG/otg_rx.h"
 #include "openair2/PHY_INTERFACE/IF_Module_NB_IoT.h"
 #include "openair1/SCHED/IF_Module_L1_primitives_NB_IoT.h"
 #include "openair3/GTPV1-U/gtpv1u.h"
@@ -1930,7 +1930,7 @@ uint32_t maxRetxThreshold_NB_tab[UL_AM_RLC_NB_r13__maxRetxThreshold_r13_t32 +1] 
 void config_req_rlc_am_asn1_NB_IoT (
   const protocol_ctxt_t* const         ctxt_pP,
   const srb_flag_t                     srb_flagP,
-  const struct RLC_Config_NB_r13__am  * const config_am_pP, //extracted from the srb_toAddMod
+  const struct LTE_RLC_Config_NB_r13__am  * const config_am_pP, //extracted from the srb_toAddMod
   const rb_id_t                        rb_idP,
   const logical_chan_id_t              chan_idP)
 {

@@ -35,7 +35,7 @@
 #include "LAYER2/RLC/rlc.h"
 #include "COMMON/mac_rrc_primitives.h"
 #include "LAYER2/MAC/defs_NB_IoT.h"
-#include "LogicalChannelConfig-NB-r13.h"
+#include "LTE_LogicalChannelConfig-NB-r13.h"
 
 //-----------------------------------------------------------------------
 // ALL what is defined here should be shared through extern_NB_IoT.h file
@@ -76,11 +76,11 @@ BOOLEAN_t logicalChannelSR_Prohibit = 1;
 long priority =1;
 
 // Default SRB configurations from 36.331 (9.2.1.1 pag 641  V14.2.1)
-struct LogicalChannelConfig_NB_r13 SRB1bis_logicalChannelConfig_defaultValue_NB_IoT = {
+struct LTE_LogicalChannelConfig_NB_r13 SRB1bis_logicalChannelConfig_defaultValue_NB_IoT = {
 		priority_r13: &priority, //priority
 		logicalChannelSR_Prohibit_r13: &logicalChannelSR_Prohibit //set to TRUE
 };
-struct LogicalChannelConfig_NB_r13 SRB1_logicalChannelConfig_defaultValue_NB_IoT = {
+struct LTE_LogicalChannelConfig_NB_r13 SRB1_logicalChannelConfig_defaultValue_NB_IoT = {
 		priority_r13: &priority, //priority
 		logicalChannelSR_Prohibit_r13: &logicalChannelSR_Prohibit //set to TRUE
 };

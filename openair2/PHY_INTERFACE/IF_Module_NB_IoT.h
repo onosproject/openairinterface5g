@@ -139,7 +139,7 @@ typedef struct{
  	/*preamble part*/
 
 
- 	nfapi_nrach_indication_body_t NRACH;
+ 	nfapi_nrach_indication_body_t nrach_ind;
 
 
  	/*Uplink data part*/
