@@ -297,8 +297,8 @@ void init_testing_NB_IoT(uint8_t Mod_id, int CC_id, rrc_eNB_carrier_data_NB_IoT_
  //copy basic parameters
   carrier[CC_id].physCellId      = configuration->Nid_cell[CC_id];
   carrier[CC_id].p_rx_eNB   = 1;
-  carrier[CC_id].Ncp             = configuration->prefix_type[CC_id]; //DL Cyclic prefix
-  carrier[CC_id].Ncp_UL           = configuration->prefix_type_UL[CC_id];//UL cyclic prefix
+  carrier[CC_id].Ncp             = configuration->prefix_type; //DL Cyclic prefix
+  carrier[CC_id].Ncp_UL           = configuration->prefix_type_UL;//UL cyclic prefix
   carrier[CC_id].dl_CarrierFreq  = configuration->downlink_frequency[CC_id];
   carrier[CC_id].ul_CarrierFreq  = configuration->downlink_frequency[CC_id]+ configuration->uplink_frequency_offset[CC_id];
 
@@ -1293,7 +1293,7 @@ rrc_eNB_generate_dedicatedRRCConnectionReconfiguration_NB_IoT(
   *DRB_configList2 = CALLOC(1, sizeof(**DRB_configList2));
 
   /* Initialize NAS list */
-  dedicatedInfoNASList_NB_IoT = CALLOC(1, sizeof(struct RRCConnectionReconfiguration_NB_r13_IEs__dedicatedInfoNASList_r13));
+  dedicatedInfoNASList_NB_IoT = CALLOC(1, sizeof(struct LTE_RRCConnectionReconfiguration_NB_r13_IEs__dedicatedInfoNASList_r13));
 
   //MP:add a check on number of setup e_rabs
   if(ue_context_pP->ue_context.setup_e_rabs > 2){
@@ -1675,7 +1675,7 @@ void rrc_eNB_generate_defaultRRCConnectionReconfiguration_NB_IoT(const protocol_
   LTE_DRB_ToAddModList_NB_r13_t**                DRB_configList                   = &ue_context_pP->ue_context.DRB_configList;
   LTE_DRB_ToAddModList_NB_r13_t**                DRB_configList2                  = NULL;
 
-  LTE_MAC_MainConfig_NB_r13_t                   *mac_MainConfig_NB_IoT           = NULL;
+  MAC_MainConfig_NB_r13_t                   *mac_MainConfig_NB_IoT           = NULL;
 
   long                *periodicBSR_Timer;
   long								*enableStatusReportSN_Gap  = NULL; //should be disabled

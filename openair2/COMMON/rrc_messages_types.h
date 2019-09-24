@@ -424,10 +424,10 @@ typedef struct NbIoTRrcConfigurationReq_s {
   lte_prefix_type_t       prefix_type;
   lte_prefix_type_t   prefix_type_UL;
   int16_t                 eutra_band;
-  uint32_t                downlink_frequency;
-  int32_t                 uplink_frequency_offset;
-  int16_t                 Nid_cell;// for testing, change later
-  int16_t                 N_RB_DL;// for testing, change later
+  uint32_t                downlink_frequency[MAX_NUM_CCs];
+  int32_t                 uplink_frequency_offset[MAX_NUM_CCs];
+  int16_t                 Nid_cell[MAX_NUM_CCs];// for testing, change later
+  int16_t                 N_RB_DL[MAX_NUM_CCs];// for testing, change later
   //RACH
   long            rach_raResponseWindowSize_NB;
   long            rach_macContentionResolutionTimer_NB;
