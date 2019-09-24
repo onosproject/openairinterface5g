@@ -772,6 +772,15 @@ ue_send_mch_sdu(module_id_t module_idP, uint8_t CC_id, frame_t frameP,
 #endif
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME
   (VCD_SIGNAL_DUMPER_FUNCTIONS_UE_SEND_MCH_SDU, VCD_FUNCTION_IN);
+  if(opt_enabled){
+	//trace_pdu(DIRECTION_UPLINK, ulsch_buffer, buflen, module_idP, WS_C_RNTI,
+        //      UE_mac_inst[module_idP].crnti,
+        //      UE_mac_inst[module_idP].txFrame,
+        //      UE_mac_inst[module_idP].txSubframe, 0, 0);
+	trace_pdu(1, sdu, sdu_len, module_idP, 6, 0xfffd/*0xFFFD*/,
+            UE_mac_inst[module_idP].txFrame,
+            UE_mac_inst[module_idP].txSubframe, 0, 0);
+  }
   LOG_D(MAC,
         "[UE %d] Frame %d : process the mch PDU for sync area %d \n",
         module_idP, frameP, sync_area);
