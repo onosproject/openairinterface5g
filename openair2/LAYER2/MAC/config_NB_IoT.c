@@ -11,9 +11,9 @@
 #include "LAYER2/MAC/defs_NB_IoT.h"
 #include "LAYER2/MAC/proto_NB_IoT.h"
 #include "LAYER2/MAC/extern_NB_IoT.h"
-#include "BCCH-DL-SCH-Message-NB.h"
-#include "RRCConnectionSetup-NB.h"
-#include "BCCH-BCH-Message-NB.h"
+#include "LTE_BCCH-DL-SCH-Message-NB.h"
+#include "LTE_RRCConnectionSetup-NB.h"
+#include "LTE_BCCH-BCH-Message-NB.h"
 //#include "SIB-Type-NB-r13.h"
 
 typedef struct eutra_bandentry_NB_s {
@@ -96,7 +96,7 @@ void config_mib_fapi_NB_IoT(int                     physCellId,
         int                     dl_CarrierFreq,
         int                     ul_CarrierFreq,
         long                    *eutraControlRegionSize,
-        BCCH_BCH_Message_NB_t   *mib_NB_IoT
+        LTE_BCCH_BCH_Message_NB_t   *mib_NB_IoT
         )
 
 {
@@ -114,7 +114,7 @@ void config_mib_fapi_NB_IoT(int                     physCellId,
   switch (mib_NB_IoT->message.operationModeInfo_r13.present)
     {
     //FAPI specs pag 135
-    case MasterInformationBlock_NB__operationModeInfo_r13_PR_inband_SamePCI_r13:
+    case LTE_MasterInformationBlock_NB__operationModeInfo_r13_PR_inband_SamePCI_r13:
       
       cfg->nb_iot_config.operating_mode.value  = 0;
       cfg->nb_iot_config.prb_index.value       = mib_NB_IoT->message.operationModeInfo_r13.choice.inband_SamePCI_r13.eutra_CRS_SequenceInfo_r13; //see TS 36.213 ch 16.0
@@ -127,7 +127,7 @@ void config_mib_fapi_NB_IoT(int                     physCellId,
       
       break;
       
-    case MasterInformationBlock_NB__operationModeInfo_r13_PR_inband_DifferentPCI_r13:
+    case LTE_MasterInformationBlock_NB__operationModeInfo_r13_PR_inband_DifferentPCI_r13:
       
       cfg->nb_iot_config.operating_mode.value = 1;
       //fapi think to define also eutra_CRS_sequenceInfo also for in band with different PCI but the problem is that we don-t have i
@@ -140,7 +140,7 @@ void config_mib_fapi_NB_IoT(int                     physCellId,
       
       break;
       
-    case MasterInformationBlock_NB__operationModeInfo_r13_PR_guardband_r13:
+    case LTE_MasterInformationBlock_NB__operationModeInfo_r13_PR_guardband_r13:
       
       cfg->nb_iot_config.operating_mode.value      = 2;
       cfg->nb_iot_config.control_region_size.value = -1; //should not being defined so we put a negative value
@@ -148,7 +148,7 @@ void config_mib_fapi_NB_IoT(int                     physCellId,
       
       break;
       
-    case MasterInformationBlock_NB__operationModeInfo_r13_PR_standalone_r13:
+    case LTE_MasterInformationBlock_NB__operationModeInfo_r13_PR_standalone_r13:
       
       cfg->nb_iot_config.operating_mode.value       = 3;
       cfg->nb_iot_config.prb_index.value            = -1;   // is not defined for this case (put a negative random value--> will be not considered for encoding, scrambling procedures)
@@ -165,7 +165,7 @@ void config_mib_fapi_NB_IoT(int                     physCellId,
 
 void config_sib2_fapi_NB_IoT(
                         int physCellId,
-                        RadioResourceConfigCommonSIB_NB_r13_t   *radioResourceConfigCommon
+                        LTE_RadioResourceConfigCommonSIB_NB_r13_t   *radioResourceConfigCommon
                         )
 {
 
@@ -180,7 +180,7 @@ void config_sib2_fapi_NB_IoT(
 
     /*NPRACH section*/
 
-    NPRACH_Parameters_NB_r13_t* nprach_parameter;
+    LTE_NPRACH_Parameters_NB_r13_t* nprach_parameter;
 
     cfg->nb_iot_config.nprach_config_0_enabled.value = 0;
     cfg->nb_iot_config.nprach_config_1_enabled.value = 0;
@@ -292,10 +292,10 @@ void rrc_mac_config_req_NB_IoT(
     int                                     CC_idP,
     int                                     rntiP,
     rrc_eNB_carrier_data_NB_IoT_t           *carrier,
-    SystemInformationBlockType1_NB_t        *sib1_NB_IoT,
-    RadioResourceConfigCommonSIB_NB_r13_t   *radioResourceConfigCommon,
-    PhysicalConfigDedicated_NB_r13_t        *physicalConfigDedicated,
-    LogicalChannelConfig_NB_r13_t           *logicalChannelConfig,  
+    LTE_LTE_SystemInformationBlockType1_NB_t        *sib1_NB_IoT,
+    LTE_RadioResourceConfigCommonSIB_NB_r13_t   *radioResourceConfigCommon,
+    LTE_PhysicalConfigDedicated_NB_r13_t        *physicalConfigDedicated,
+    LTE_LogicalChannelConfig_NB_r13_t           *logicalChannelConfig,  
     uint8_t                                 ded_flag,
     uint8_t                                 ue_list_ded_num)
 {

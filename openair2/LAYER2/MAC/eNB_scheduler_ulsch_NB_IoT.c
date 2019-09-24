@@ -30,8 +30,8 @@
 #include "defs_NB_IoT.h"
 #include "proto_NB_IoT.h"
 #include "extern_NB_IoT.h"
-#include "RRC/NBIOT/proto.h"
-#include "RRC/NBIOT/extern.h"
+#include "RRC/NBIOT/proto_NB_IoT.h"
+#include "RRC/NBIOT/extern_NB_IoT.h"
 #include "RRC/L2_INTERFACE/openair_rrc_L2_interface.h"
 
 unsigned char str20[] = "DCI_uss";

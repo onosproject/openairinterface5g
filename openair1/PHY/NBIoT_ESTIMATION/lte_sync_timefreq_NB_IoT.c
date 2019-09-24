@@ -80,8 +80,9 @@ void lte_sync_timefreq_NB_IoT(PHY_VARS_UE_NB_IoT *ue,int band,unsigned int DL_fr
     while (1) {
 
       //compute frequency-domain representation of 6144-sample chunk
+      // Nick : Not sure about scale
       dft6144((int16_t *)rxp,
-              sp);
+              sp,1);
 
 
       /*

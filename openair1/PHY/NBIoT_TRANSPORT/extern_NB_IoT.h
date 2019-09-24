@@ -38,7 +38,7 @@ extern int G_tab[18];
 extern short conjugate[8],conjugate2[8];
 extern short *ul_ref_sigs_rx_NB_IoT[30][4]; // NB-IoT: format 1 pilots
 extern short *ul_ref_sigs_f2_rx_NB_IoT[16]; // NB-IoT: format 2 pilots
-extern unsigned short dftsizes[33];
+//extern unsigned short dftsizes[33];
 
 
 extern  int16_t e_phi_re_m6[120];

@@ -39,7 +39,7 @@
 #include "PHY/NBIoT_TRANSPORT/extern_NB_IoT.h"
 //#define DEBUG_CH
 
-#include "PHY/LTE_TRANSPORT/sc_rotation_NB_IoT.h"
+#include "PHY/NBIoT_TRANSPORT/sc_rotation_NB_IoT.h"
 
 
 #include "T.h"

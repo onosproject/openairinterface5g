@@ -267,7 +267,7 @@ typedef struct eNB_RRC_UE_NB_IoT_s {
   LTE_DRB_ToAddModList_NB_r13_t*                DRB_configList2[RRC_TRANSACTION_IDENTIFIER_NUMBER]; //for the configured DRBs of a xid
   uint8_t                            		DRB_active[2];//in LTE was 8 --> at most 2 for NB-IoT
 
-  struct PhysicalConfigDedicated_NB_r13*    physicalConfigDedicated_NB_IoT;
+  struct LTE_PhysicalConfigDedicated_NB_r13*    physicalConfigDedicated_NB_IoT;
   LTE_MAC_MainConfig_NB_r13_t*           mac_MainConfig_NB_IoT;
 
   //No SPS(semi-persistent scheduling) in NB-IoT

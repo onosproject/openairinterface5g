@@ -51,14 +51,14 @@ typedef enum sib_MappingInfo{
 } sib_MappingInfo_NB_IoT;
 
 typedef enum si_TB{
-    si_TB_56=2,
-    si_TB_120=2,
-    si_TB_208=8,
-    si_TB_256=8,
-    si_TB_328=8,
-    si_TB_440=8,
-    si_TB_552=8,
-    si_TB_680=8
+    si_TB_56=0,
+    si_TB_120,
+    si_TB_208,
+    si_TB_256,
+    si_TB_328,
+    si_TB_440,
+    si_TB_552,
+    si_TB_680
 } si_TB_NB_IoT;
 
 ///RACH_ConfigCommon configuration
