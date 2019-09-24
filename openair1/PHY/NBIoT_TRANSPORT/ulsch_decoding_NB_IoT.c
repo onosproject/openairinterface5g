@@ -44,9 +44,9 @@
 //#include "PHY/defs.h"
 #include "PHY/defs_L1_NB_IoT.h"
 #include "PHY/extern_NB_IoT.h"
-#include "PHY/NBIOT_TRANSPORT/vars_NB_IoT.h"
+#include "PHY/NBIoT_TRANSPORT/vars_NB_IoT.h"
 #include "PHY/CODING/defs_NB_IoT.h"
-//#include "PHY/CODING/extern.h"
+#include "PHY/CODING/extern_NB_IoT.h"
 //#include "extern_NB_IoT.h"
 //#include "SCHED/extern.h"
 /*

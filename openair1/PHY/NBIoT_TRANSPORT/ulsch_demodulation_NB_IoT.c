@@ -35,7 +35,7 @@
 #include "defs_NB_IoT.h"
 #include "extern_NB_IoT.h"
 //#include "PHY/CODING/lte_interleaver2.h"
-//#include "PHY/CODING/extern.h"
+#include "PHY/CODING/extern_NB_IoT.h"
 //#define DEBUG_ULSCH
 //#include "PHY/sse_intrin.h"
 #include "PHY/LTE_ESTIMATION/defs_NB_IoT.h"
