@@ -100,7 +100,7 @@ typedef enum{
   DL
 }message_direction_t;
 
-#define MAX_MAX_MOBILES_PER_ENB_NB_IoT 20
+#define MAX_NUMBER_OF_UE_MAX_NB_IoT 20
 #define SCH_PAYLOAD_SIZE_MAX_NB_IoT 320
 #define MAX_NUMBER_OF_SIBs_NB_IoT 16
 #define MAX_NUMBER_OF_UE_MAX_NB_IoT 20
@@ -508,6 +508,19 @@ typedef struct RA_template_list_s{
   RA_TEMPLATE_NB_IoT *tail;
 }RA_template_list_t;
 
+/*36331 NPDCCH-ConfigDedicated-NB_IoT*/
+typedef struct{
+  //npdcch-NumRepetitions-r13
+  uint32_t R_max;
+  //npdcch-StartSF-CSS-r13
+  double G;
+  //npdcch-Offset-USS-r13
+  double a_offset;
+  //NPDCCH period
+  uint32_t T;
+  //Starting subfrane of Search Space which is mod T
+  uint32_t ss_start_css;
+}NPDCCH_config_common_NB_IoT_t;
 
 /*36331 NPDCCH-ConfigDedicated-NB_IoT*/
 typedef struct{
@@ -563,6 +576,8 @@ typedef struct mac_NB_IoT_s{
 
   uint32_t schedule_subframe_DL;
   //uint32_t schedule_subframe_UL;
+  NPDCCH_config_common_NB_IoT_t npdcch_config_common[3];
+
   NPDCCH_config_common_NB_IoT_t npdcch_config_common[3];
 
   rrc_config_NB_IoT_t rrc_config;
