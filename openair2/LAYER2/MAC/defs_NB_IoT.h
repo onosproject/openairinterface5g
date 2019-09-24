@@ -100,7 +100,7 @@ typedef enum{
   DL
 }message_direction_t;
 
-#define MAX_MAX_MOBILES_PER_ENB_NB_IoT 20
+#define MAX_NUMBER_OF_UE_MAX_NB_IoT 20
 #define SCH_PAYLOAD_SIZE_MAX_NB_IoT 320
 #define MAX_NUMBER_OF_SIBs_NB_IoT 16
 
@@ -330,9 +330,9 @@ typedef struct{
 typedef struct {
 
   /// DCI template and MAC connection parameters for UEs
-  UE_TEMPLATE_NB_IoT UE_template_NB_IoT[MAX_MAX_MOBILES_PER_ENB_NB_IoT];
+  UE_TEMPLATE_NB_IoT UE_template_NB_IoT[MAX_NUMBER_OF_UE_MAX_NB_IoT];
 
-   UE_SCHED_CTRL_NB_IoT_t UE_sched_ctrl_NB_IoT[MAX_MAX_MOBILES_PER_ENB_NB_IoT];
+   UE_SCHED_CTRL_NB_IoT_t UE_sched_ctrl_NB_IoT[MAX_NUMBER_OF_UE_MAX_NB_IoT];
   /// NPDCCH Period and searching space info
   NPDCCH_config_dedicated_NB_IoT_t NPDCCH_config_dedicated;
   //int next[MAX_MAX_MOBILES_PER_ENB_NB_IoT];
@@ -359,7 +359,7 @@ typedef struct{
   // flag to indicate scheduling type1 NPDCCH CSS with different CE level
   uint8_t flag_type1_css[3];
   // flag to indicate scheduling NPDCCH USS with UE list
-  uint8_t flag_uss[MAX_MAX_MOBILES_PER_ENB_NB_IoT];
+  uint8_t flag_uss[MAX_NUMBER_OF_UE_MAX_NB_IoT];
   // flag to indicate scheduling sib1/MIB
   uint8_t flag_fix_scheduling;
   // number of the type2 css to schedule in this period
@@ -526,6 +526,19 @@ typedef struct RA_template_list_s{
   RA_TEMPLATE_NB_IoT *tail;
 }RA_template_list_t;
 
+/*36331 NPDCCH-ConfigDedicated-NB_IoT*/
+typedef struct{
+  //npdcch-NumRepetitions-r13
+  uint32_t R_max;
+  //npdcch-StartSF-CSS-r13
+  double G;
+  //npdcch-Offset-USS-r13
+  double a_offset;
+  //NPDCCH period
+  uint32_t T;
+  //Starting subfrane of Search Space which is mod T
+  uint32_t ss_start_css;
+}NPDCCH_config_common_NB_IoT_t;
 
 /*! \brief top level eNB MAC structure */
 typedef struct eNB_MAC_INST_NB_IoT_s {
@@ -548,7 +561,7 @@ typedef struct eNB_MAC_INST_NB_IoT_s {
   RA_template_list_t RA_msg3_list;
   RA_template_list_t RA_msg4_list;
 
-  RA_TEMPLATE_NB_IoT RA_template[MAX_MAX_MOBILES_PER_ENB_NB_IoT];
+  RA_TEMPLATE_NB_IoT RA_template[MAX_NUMBER_OF_UE_MAX_NB_IoT];
 
   //int32_t last_tx_subframe;
 
@@ -570,6 +583,8 @@ typedef struct eNB_MAC_INST_NB_IoT_s {
 
   uint32_t schedule_subframe_DL;
   uint32_t schedule_subframe_UL;
+
+  NPDCCH_config_common_NB_IoT_t npdcch_config_common[3];
 
   rrc_config_NB_IoT_t rrc_config;
 

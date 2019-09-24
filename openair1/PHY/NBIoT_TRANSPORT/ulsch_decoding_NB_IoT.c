@@ -62,7 +62,7 @@
 #include "UTIL/OCG/OCG_extern.h"
 #endif
 */
-#include "UTIL/LOG/vcd_signal_dumper.h"
+#include "common/utils/LOG/vcd_signal_dumper.h"
 //#define DEBUG_ULSCH_DECODING
 
 
@@ -921,7 +921,7 @@ int ulsch_decoding_data_2thread(PHY_VARS_eNB *eNB,int UE_id,int harq_pid,int llr
 
 // NB_IoT: functions in ulsch_decoding_data_NB_IoT must be defined
 
-int ulsch_decoding_data_NB_IoT(PHY_VARS_eNB *eNB,int UE_id,int harq_pid,int llr8_flag) {
+int ulsch_decoding_data_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,int UE_id,int harq_pid,int llr8_flag) {
 
   unsigned int r,r_offset=0,Kr,Kr_bytes,iind;
   uint8_t crc_type;
