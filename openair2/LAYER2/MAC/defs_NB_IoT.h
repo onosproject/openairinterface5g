@@ -522,19 +522,7 @@ typedef struct{
   uint32_t ss_start_css;
 }NPDCCH_config_common_NB_IoT_t;
 
-/*36331 NPDCCH-ConfigDedicated-NB_IoT*/
-typedef struct{
-  //npdcch-NumRepetitions-r13
-  uint32_t R_max;
-  //npdcch-StartSF-CSS-r13
-  double G;
-  //npdcch-Offset-USS-r13
-  double a_offset;
-  //NPDCCH period
-  uint32_t T;
-  //Starting subfrane of Search Space which is mod T
-  uint32_t ss_start_css;
-}NPDCCH_config_common_NB_IoT_t;
+
 
 
 /*! \brief top level eNB MAC structure */
@@ -576,8 +564,6 @@ typedef struct mac_NB_IoT_s{
 
   uint32_t schedule_subframe_DL;
   //uint32_t schedule_subframe_UL;
-  NPDCCH_config_common_NB_IoT_t npdcch_config_common[3];
-
   NPDCCH_config_common_NB_IoT_t npdcch_config_common[3];
 
   rrc_config_NB_IoT_t rrc_config;

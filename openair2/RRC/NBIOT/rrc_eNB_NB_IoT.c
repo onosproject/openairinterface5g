@@ -56,10 +56,10 @@
 #include "asn1_conversions.h"
 #include "RRC/L2_INTERFACE/openair_rrc_L2_interface.h"
 #include "LAYER2/RLC/rlc.h"
-#include "UTIL/LOG/log.h"
+#include "common/utils/LOG/log.h"
 #include "COMMON/mac_rrc_primitives.h"
 #include "rlc.h"
-#include "SIMULATION/ETH_TRANSPORT/extern.h"
+#include "openair1/SIMULATION/ETH_TRANSPORT/extern.h"
 #include "rrc_eNB_UE_context.h" // used by NB-IoT branch
 #include "platform_types.h"
 #include "msc.h"
@@ -129,7 +129,7 @@ uint8_t* generate_msg4_NB_IoT(rrc_eNB_carrier_data_NB_IoT_t *carrier)
       
   ue_context_pP_NB_IoT = (rrc_eNB_ue_context_NB_IoT_t*)malloc(sizeof(rrc_eNB_ue_context_NB_IoT_t));
 
-  SRB_ToAddModList_NB_r13_t  **SRB_configList_NB_IoT;
+  LTE_SRB_ToAddModList_NB_r13_t  **SRB_configList_NB_IoT;
 
   SRB_configList_NB_IoT = &ue_context_pP_NB_IoT->ue_context.SRB_configList;
 
@@ -175,8 +175,8 @@ uint8_t* mac_rrc_msg3_ind_NB_IoT(uint8_t *payload_ptr, uint16_t rnti, uint32_t l
         ((uint8_t *) srb_info->Rx_buffer.Payload)[8],  
         (uint8_t *) srb_info->Rx_buffer.Payload);
 
-  RRCConnectionRequest_NB_r13_IEs_t* rrcConnectionRequest_NB = NULL;
-  UL_CCCH_Message_NB_t* ul_ccch_msg_NB = NULL;
+  LTE_RRCConnectionRequest_NB_r13_IEs_t* rrcConnectionRequest_NB = NULL;
+  LTE_UL_CCCH_Message_NB_t* ul_ccch_msg_NB = NULL;
   dec_rval = uper_decode(
                NULL,
                &asn_DEF_UL_CCCH_Message_NB,
@@ -185,11 +185,11 @@ uint8_t* mac_rrc_msg3_ind_NB_IoT(uint8_t *payload_ptr, uint16_t rnti, uint32_t l
                100,
                0,
                0);
-  if (ul_ccch_msg_NB->message.choice.c1.present==UL_CCCH_MessageType_NB__c1_PR_rrcConnectionRequest_r13)
+  if (ul_ccch_msg_NB->message.choice.c1.present==LTE_UL_CCCH_MessageType_NB__c1_PR_rrcConnectionRequest_r13)
   {
     LOG_I(RRC,"The decode CCH MSG is RRC connection Request NB\n");
     rrcConnectionRequest_NB = &ul_ccch_msg_NB->message.choice.c1.choice.rrcConnectionRequest_r13.criticalExtensions.choice.rrcConnectionRequest_r13;
-    if (rrcConnectionRequest_NB->ue_Identity_r13.present == InitialUE_Identity_PR_randomValue)
+    if (rrcConnectionRequest_NB->ue_Identity_r13.present == LTE_InitialUE_Identity_PR_randomValue)
     {
       uint8_t *da = rrcConnectionRequest_NB->ue_Identity_r13.choice.randomValue.buf;   /* BIT STRING body */
       int length = rrcConnectionRequest_NB->ue_Identity_r13.choice.randomValue.size;       /* Size of the above buffer */
@@ -197,7 +197,7 @@ uint8_t* mac_rrc_msg3_ind_NB_IoT(uint8_t *payload_ptr, uint16_t rnti, uint32_t l
       for(int a = 0; a<length;a++)
         printf("%02x ",da[a]);
       printf("\n");
-    }else if (rrcConnectionRequest_NB->ue_Identity_r13.present == InitialUE_Identity_PR_s_TMSI)
+    }else if (rrcConnectionRequest_NB->ue_Identity_r13.present == LTE_InitialUE_Identity_PR_s_TMSI)
     {
       uint8_t *da = rrcConnectionRequest_NB->ue_Identity_r13.choice.s_TMSI.m_TMSI.buf;   /* BIT STRING body */
       int length = rrcConnectionRequest_NB->ue_Identity_r13.choice.s_TMSI.m_TMSI.size;       /* Size of the above buffer */
@@ -386,8 +386,8 @@ void init_testing_NB_IoT(uint8_t Mod_id, int CC_id, rrc_eNB_carrier_data_NB_IoT_
                                   CC_id,
                                   0,
                                   carrier,
-                                  (SystemInformationBlockType1_NB_t*) carrier[CC_id].sib1_NB_IoT,
-                                  (RadioResourceConfigCommonSIB_NB_r13_t *) &carrier[CC_id].sib2_NB_IoT->radioResourceConfigCommon_r13,
+                                  (LTE_SystemInformationBlockType1_NB_t*) carrier[CC_id].sib1_NB_IoT,
+                                  (LTE_RadioResourceConfigCommonSIB_NB_r13_t *) &carrier[CC_id].sib2_NB_IoT->radioResourceConfigCommon_r13,
                                   (struct PhysicalConfigDedicated_NB_r13 *)NULL,
                                   (struct LogicalChannelConfig_NB_r13 *)NULL,
                                   0,
@@ -838,9 +838,9 @@ void rrc_eNB_generate_RRCConnectionSetup_NB_IoT(
 //  SRB_ToAddMod_NB_r13_t                     *SRB1_config; //may not needed now
 //  LogicalChannelConfig_NB_r13_t             *SRB1_logicalChannelConfig;
 
-  SRB_ToAddModList_NB_r13_t           **SRB_configList; //for both SRB1 and SRB1bis
-  SRB_ToAddMod_NB_r13_t						    *SRB1bis_config;
-  LogicalChannelConfig_NB_r13_t				*SRB1bis_logicalChannelConfig;
+  LTE_SRB_ToAddModList_NB_r13_t           **SRB_configList; //for both SRB1 and SRB1bis
+  LTE_SRB_ToAddMod_NB_r13_t						    *SRB1bis_config;
+  LTE_LogicalChannelConfig_NB_r13_t				*SRB1bis_logicalChannelConfig;
 
   int  										cnt;
 
@@ -884,7 +884,7 @@ void rrc_eNB_generate_RRCConnectionSetup_NB_IoT(
         SRB1bis_config = (*SRB_configList)->list.array[cnt];
 
         if (SRB1bis_config->logicalChannelConfig_r13) {
-          if (SRB1bis_config->logicalChannelConfig_r13->present == SRB_ToAddMod_NB_r13__logicalChannelConfig_r13_PR_explicitValue)
+          if (SRB1bis_config->logicalChannelConfig_r13->present == LTE_SRB_ToAddMod_NB_r13__logicalChannelConfig_r13_PR_explicitValue)
           {
             SRB1bis_logicalChannelConfig = &SRB1bis_config->logicalChannelConfig_r13->choice.explicitValue;
           }
@@ -981,8 +981,8 @@ void rrc_eNB_process_RRCConnectionReconfigurationComplete_NB_IoT(
   uint8_t                            *kUPenc = NULL;
 
 
-  DRB_ToAddModList_NB_r13_t*                 DRB_configList2 = ue_context_pP->ue_context.DRB_configList2[xid];
-  SRB_ToAddModList_NB_r13_t*                 SRB_configList2 = ue_context_pP->ue_context.SRB_configList2[xid];
+  LTE_DRB_ToAddModList_NB_r13_t*                 DRB_configList2 = ue_context_pP->ue_context.DRB_configList2[xid];
+  LTE_SRB_ToAddModList_NB_r13_t*                 SRB_configList2 = ue_context_pP->ue_context.SRB_configList2[xid];
 
   T(T_ENB_RRC_CONNECTION_RECONFIGURATION_COMPLETE, T_INT(ctxt_pP->module_id), T_INT(ctxt_pP->frame),
     T_INT(ctxt_pP->subframe), T_INT(ctxt_pP->rnti));
@@ -1020,7 +1020,7 @@ void rrc_eNB_process_RRCConnectionReconfigurationComplete_NB_IoT(
     ctxt_pP,
     SRB_configList2,
     DRB_configList2,
-    (DRB_ToReleaseList_NB_r13_t *) NULL,
+    (LTE_DRB_ToReleaseList_NB_r13_t *) NULL,
     0xff, //security mode already configured during the securitymodecommand --> they comes from S1AP_INITIAL_CONTEXT_SETUP_REQ(msg_p).security_capabilities
     kRRCenc,
     kRRCint,
@@ -1033,7 +1033,7 @@ void rrc_eNB_process_RRCConnectionReconfigurationComplete_NB_IoT(
     ctxt_pP,
     SRB_configList2,
     DRB_configList2,
-    (DRB_ToReleaseList_NB_r13_t *) NULL,
+    (LTE_DRB_ToReleaseList_NB_r13_t *) NULL,
 	SRB1BIS_FLAG_NO
   );
 
@@ -1271,11 +1271,11 @@ rrc_eNB_generate_dedicatedRRCConnectionReconfiguration_NB_IoT(
 
   //no UL specific parameters
 
-  DRB_ToAddModList_NB_r13_t*                DRB_configList=ue_context_pP->ue_context.DRB_configList;
-  DRB_ToAddModList_NB_r13_t**               DRB_configList2=NULL;
+  LTE_DRB_ToAddModList_NB_r13_t*                DRB_configList=ue_context_pP->ue_context.DRB_configList;
+  LTE_DRB_ToAddModList_NB_r13_t**               DRB_configList2=NULL;
 
   struct RRCConnectionReconfiguration_NB_r13_IEs__dedicatedInfoNASList_r13 *dedicatedInfoNASList_NB_IoT = NULL;
-  DedicatedInfoNAS_t                 *dedicatedInfoNas                 = NULL;
+  LTE_DedicatedInfoNAS_t                 *dedicatedInfoNas                 = NULL;
   /* for no gcc warnings */
   (void)dedicatedInfoNas;
 
@@ -1327,7 +1327,7 @@ rrc_eNB_generate_dedicatedRRCConnectionReconfiguration_NB_IoT(
     DRB_pdcp_config = CALLOC(1, sizeof(*DRB_pdcp_config));
     DRB_config->pdcp_Config_r13 = DRB_pdcp_config;
     DRB_pdcp_config->discardTimer_r13 = CALLOC(1, sizeof(long));
-    *(DRB_pdcp_config->discardTimer_r13) = PDCP_Config_NB_r13__discardTimer_r13_infinity;
+    *(DRB_pdcp_config->discardTimer_r13) = LTE_PDCP_Config_NB_r13__discardTimer_r13_infinity;
 
 
     /*XXX MP:old implementation foresee a switch case on e_context_pP->ue_context.e_rab[i].param.qos.qci (TS 36.413 and TS 23.401)
@@ -1337,17 +1337,17 @@ rrc_eNB_generate_dedicatedRRCConnectionReconfiguration_NB_IoT(
 
     // RLC conf
     //TODO: set properly the following parameters for the DRBs establishment
-    DRB_rlc_config->present = RLC_Config_NB_r13_PR_am;
-    DRB_rlc_config->choice.am.ul_AM_RLC_r13.t_PollRetransmit_r13 = T_PollRetransmit_NB_r13_ms250; //random
-    DRB_rlc_config->choice.am.ul_AM_RLC_r13.maxRetxThreshold_r13 = UL_AM_RLC_NB_r13__maxRetxThreshold_r13_t8;
+    DRB_rlc_config->present = LTE_RLC_Config_NB_r13_PR_am;
+    DRB_rlc_config->choice.am.ul_AM_RLC_r13.t_PollRetransmit_r13 = LTE_T_PollRetransmit_NB_r13_ms250; //random
+    DRB_rlc_config->choice.am.ul_AM_RLC_r13.maxRetxThreshold_r13 = LTE_UL_AM_RLC_NB_r13__maxRetxThreshold_r13_t8;
     DRB_rlc_config->choice.am.dl_AM_RLC_r13.enableStatusReportSN_Gap_r13 = CALLOC(1,sizeof(long)); /* OPTIONAL */
-    *(DRB_rlc_config->choice.am.dl_AM_RLC_r13.enableStatusReportSN_Gap_r13)= DL_AM_RLC_NB_r13__enableStatusReportSN_Gap_r13_true;
+    *(DRB_rlc_config->choice.am.dl_AM_RLC_r13.enableStatusReportSN_Gap_r13)= LTE_DL_AM_RLC_NB_r13__enableStatusReportSN_Gap_r13_true;
 
     //XXX MP: TS 36.323 v14.2.0 ch5.3.2 PDCP status report operation is not applicable for NB-IoT
     //(in any case they set to FALSE in the LTE DRBs setup in OAI)
 
     //MP: not used header compression PDCP fr DRBs in OAI
-    DRB_pdcp_config->headerCompression_r13.present = PDCP_Config_NB_r13__headerCompression_r13_PR_notUsed;
+    DRB_pdcp_config->headerCompression_r13.present = LTE_PDCP_Config_NB_r13__headerCompression_r13_PR_notUsed;
 
     DRB_lchan_config = CALLOC(1, sizeof(*DRB_lchan_config));
     DRB_config->logicalChannelConfig_r13 = DRB_lchan_config;
@@ -1379,7 +1379,7 @@ rrc_eNB_generate_dedicatedRRCConnectionReconfiguration_NB_IoT(
 
     {
       if (ue_context_pP->ue_context.e_rab[i].param.nas_pdu.buffer != NULL) {
-	dedicatedInfoNas = CALLOC(1, sizeof(DedicatedInfoNAS_t));
+	dedicatedInfoNas = CALLOC(1, sizeof(LTE_DedicatedInfoNAS_t));
 	memset(dedicatedInfoNas, 0, sizeof(OCTET_STRING_t));
 	OCTET_STRING_fromBuf(dedicatedInfoNas,
 			     (char*)ue_context_pP->ue_context.e_rab[i].param.nas_pdu.buffer,
@@ -1416,9 +1416,9 @@ rrc_eNB_generate_dedicatedRRCConnectionReconfiguration_NB_IoT(
    size = do_RRCConnectionReconfiguration_NB_IoT(ctxt_pP,
 					                                       buffer,
 					                                       xid,
-					                                       (SRB_ToAddModList_NB_r13_t*)NULL,
-					                                       (DRB_ToAddModList_NB_r13_t*)*DRB_configList2,
-					                                       (DRB_ToReleaseList_NB_r13_t*)NULL,  // DRB2_list,
+					                                       (LTE_SRB_ToAddModList_NB_r13_t*)NULL,
+					                                       (LTE_DRB_ToAddModList_NB_r13_t*)*DRB_configList2,
+					                                       (LTE_DRB_ToReleaseList_NB_r13_t*)NULL,  // DRB2_list,
 					                                       NULL, NULL, //physical an MAC config dedicated
 					                                       (struct RRCConnectionReconfiguration_NB_r13_IEs__dedicatedInfoNASList_r13*)dedicatedInfoNASList_NB_IoT
                                                 );
@@ -1481,7 +1481,7 @@ rrc_eNB_generate_dedicatedRRCConnectionReconfiguration_NB_IoT(
 void rrc_eNB_process_RRCConnectionSetupComplete_NB_IoT(
   const protocol_ctxt_t* const ctxt_pP,
   rrc_eNB_ue_context_NB_IoT_t*         ue_context_pP,
-  RRCConnectionSetupComplete_NB_r13_IEs_t * rrcConnectionSetupComplete_NB
+  LTE_RRCConnectionSetupComplete_NB_r13_IEs_t * rrcConnectionSetupComplete_NB
 )
 //-----------------------------------------------------------------------------
 {
@@ -1664,18 +1664,18 @@ void rrc_eNB_generate_defaultRRCConnectionReconfiguration_NB_IoT(const protocol_
   struct SRB_ToAddMod_NB_r13__rlc_Config_r13    	       *SRB1_rlc_config                  = NULL;
   struct SRB_ToAddMod_NB_r13__logicalChannelConfig_r13   *SRB1_lchan_config          		   = NULL;
 
-  SRB_ToAddModList_NB_r13_t                 *SRB_configList                   = ue_context_pP->ue_context.SRB_configList; //both SRB1 and SRB1bis
-  SRB_ToAddModList_NB_r13_t                 **SRB_configList2                 = NULL; //only SRB1
+  LTE_SRB_ToAddModList_NB_r13_t                 *SRB_configList                   = ue_context_pP->ue_context.SRB_configList; //both SRB1 and SRB1bis
+  LTE_SRB_ToAddModList_NB_r13_t                 **SRB_configList2                 = NULL; //only SRB1
 
   struct DRB_ToAddMod_NB_r13                *DRB_config                       = NULL;
   struct RLC_Config_NB_r13                  *DRB_rlc_config                   = NULL;
   struct PDCP_Config_NB_r13                 *DRB_pdcp_config                  = NULL;
   struct LogicalChannelConfig_NB_r13        *DRB_lchan_config                 = NULL;
 
-  DRB_ToAddModList_NB_r13_t**                DRB_configList                   = &ue_context_pP->ue_context.DRB_configList;
-  DRB_ToAddModList_NB_r13_t**                DRB_configList2                  = NULL;
+  LTE_DRB_ToAddModList_NB_r13_t**                DRB_configList                   = &ue_context_pP->ue_context.DRB_configList;
+  LTE_DRB_ToAddModList_NB_r13_t**                DRB_configList2                  = NULL;
 
-   MAC_MainConfig_NB_r13_t                   *mac_MainConfig_NB_IoT           = NULL;
+  LTE_MAC_MainConfig_NB_r13_t                   *mac_MainConfig_NB_IoT           = NULL;
 
   long                *periodicBSR_Timer;
   long								*enableStatusReportSN_Gap  = NULL; //should be disabled
@@ -1684,7 +1684,7 @@ void rrc_eNB_generate_defaultRRCConnectionReconfiguration_NB_IoT(const protocol_
   //RSRP_Range_t                       *rsrp                             = NULL; //may not used
 
   struct RRCConnectionReconfiguration_NB_r13_IEs__dedicatedInfoNASList_r13    *dedicatedInfoNASList_NB_IoT = NULL;
-  DedicatedInfoNAS_t                 									                        *dedicatedInfoNas            = NULL;
+  LTE_DedicatedInfoNAS_t                 									                        *dedicatedInfoNas            = NULL;
   /* for no gcc warnings */
   (void)dedicatedInfoNas;
 
@@ -1707,16 +1707,16 @@ void rrc_eNB_generate_defaultRRCConnectionReconfiguration_NB_IoT(const protocol_
   SRB1_config->rlc_Config_r13 = SRB1_rlc_config;
 
   //parameters values set as in the TS 36.331 specs ( pag 640)
-  SRB1_rlc_config->present = SRB_ToAddMod__rlc_Config_PR_explicitValue;
-  SRB1_rlc_config->choice.explicitValue.present = RLC_Config_NB_r13_PR_am;
-  SRB1_rlc_config->choice.explicitValue.choice.am.ul_AM_RLC_r13.t_PollRetransmit_r13 = T_PollRetransmit_NB_r13_ms25000;
-  SRB1_rlc_config->choice.explicitValue.choice.am.ul_AM_RLC_r13.maxRetxThreshold_r13 = UL_AM_RLC_NB_r13__maxRetxThreshold_r13_t4;
+  SRB1_rlc_config->present = LTE_SRB_ToAddMod__rlc_Config_PR_explicitValue;
+  SRB1_rlc_config->choice.explicitValue.present = LTE_RLC_Config_NB_r13_PR_am;
+  SRB1_rlc_config->choice.explicitValue.choice.am.ul_AM_RLC_r13.t_PollRetransmit_r13 = LTE_T_PollRetransmit_NB_r13_ms25000;
+  SRB1_rlc_config->choice.explicitValue.choice.am.ul_AM_RLC_r13.maxRetxThreshold_r13 = LTE_UL_AM_RLC_NB_r13__maxRetxThreshold_r13_t4;
   SRB1_rlc_config->choice.explicitValue.choice.am.dl_AM_RLC_r13.enableStatusReportSN_Gap_r13 = enableStatusReportSN_Gap;
 
   SRB1_lchan_config = CALLOC(1, sizeof(*SRB1_lchan_config));
   SRB1_config->logicalChannelConfig_r13 = SRB1_lchan_config;
 
-  SRB1_lchan_config->present = SRB_ToAddMod_NB_r13__logicalChannelConfig_r13_PR_explicitValue;
+  SRB1_lchan_config->present = LTE_SRB_ToAddMod_NB_r13__logicalChannelConfig_r13_PR_explicitValue;
 
   priority = CALLOC(1, sizeof(long));
   *priority = 1;
@@ -1760,7 +1760,7 @@ void rrc_eNB_generate_defaultRRCConnectionReconfiguration_NB_IoT(const protocol_
   //FIXME: MP: I'm not sure that in NB-IoT the first 0..4 eps-bearerIdentity will be reserved for NSAPI (NEtwork Service Access Point Identifier)
   *(DRB_config->eps_BearerIdentity_r13) = 5L; // LW set to first value, allowed value 5..15, value : x+4
   // NN/MP: this is the 1st DRB for this ue, so set it to 1
-  DRB_config->drb_Identity_r13 = (DRB_Identity_t) 1; //allowed values INTEGER (1..32), value: x
+  DRB_config->drb_Identity_r13 = (LTE_DRB_Identity_t) 1; //allowed values INTEGER (1..32), value: x
   DRB_config->logicalChannelIdentity_r13 = CALLOC(1, sizeof(long));
   //MP: logical channel identity =3 is reserved for SRB1bis, seee TS 36.331 pag 616
   *(DRB_config->logicalChannelIdentity_r13) = (long)4; //allowed value (4..10), value : x+3
@@ -1771,20 +1771,20 @@ void rrc_eNB_generate_defaultRRCConnectionReconfiguration_NB_IoT(const protocol_
 
   //set as TS 36.331 specs
   ///RLC-AM
-  DRB_rlc_config->present = RLC_Config_NB_r13_PR_am;
-  DRB_rlc_config->choice.am.ul_AM_RLC_r13.t_PollRetransmit_r13 = T_PollRetransmit_NB_r13_ms25000;
-  DRB_rlc_config->choice.am.ul_AM_RLC_r13.maxRetxThreshold_r13 = UL_AM_RLC_NB_r13__maxRetxThreshold_r13_t4;
+  DRB_rlc_config->present = LTE_RLC_Config_NB_r13_PR_am;
+  DRB_rlc_config->choice.am.ul_AM_RLC_r13.t_PollRetransmit_r13 = LTE_T_PollRetransmit_NB_r13_ms25000;
+  DRB_rlc_config->choice.am.ul_AM_RLC_r13.maxRetxThreshold_r13 = LTE_UL_AM_RLC_NB_r13__maxRetxThreshold_r13_t4;
   DRB_rlc_config->choice.am.dl_AM_RLC_r13.enableStatusReportSN_Gap_r13 = enableStatusReportSN_Gap;
 
   ///PDCP
   DRB_pdcp_config = CALLOC(1, sizeof(*DRB_pdcp_config));
   DRB_config->pdcp_Config_r13 = DRB_pdcp_config;
   DRB_pdcp_config->discardTimer_r13 = CALLOC(1, sizeof(long));
-  *(DRB_pdcp_config->discardTimer_r13) = PDCP_Config_NB_r13__discardTimer_r13_infinity;
+  *(DRB_pdcp_config->discardTimer_r13) = LTE_PDCP_Config_NB_r13__discardTimer_r13_infinity;
 
 //no UM modality for RLC in NB-IoT
 
-  DRB_pdcp_config->headerCompression_r13.present = PDCP_Config_NB_r13__headerCompression_r13_PR_notUsed;
+  DRB_pdcp_config->headerCompression_r13.present = LTE_PDCP_Config_NB_r13__headerCompression_r13_PR_notUsed;
 
   DRB_lchan_config = CALLOC(1, sizeof(*DRB_lchan_config));
   DRB_config->logicalChannelConfig_r13 = DRB_lchan_config;
@@ -1807,21 +1807,21 @@ void rrc_eNB_generate_defaultRRCConnectionReconfiguration_NB_IoT(const protocol_
   //no maxARQtx
 
   periodicBSR_Timer  = CALLOC(1, sizeof(long));
-  *periodicBSR_Timer = PeriodicBSR_Timer_NB_r13_pp8;
+  *periodicBSR_Timer = LTE_PeriodicBSR_Timer_NB_r13_pp8;
   mac_MainConfig_NB_IoT->ul_SCH_Config_r13->periodicBSR_Timer_r13 = periodicBSR_Timer;
-  mac_MainConfig_NB_IoT->ul_SCH_Config_r13->retxBSR_Timer_r13 = RetxBSR_Timer_NB_r13_infinity;
+  mac_MainConfig_NB_IoT->ul_SCH_Config_r13->retxBSR_Timer_r13 = LTE_RetxBSR_Timer_NB_r13_infinity;
 
-  mac_MainConfig_NB_IoT->timeAlignmentTimerDedicated_r13 = TimeAlignmentTimer_infinity;
+  mac_MainConfig_NB_IoT->timeAlignmentTimerDedicated_r13 = LTE_TimeAlignmentTimer_infinity;
 
   mac_MainConfig_NB_IoT->drx_Config_r13 = NULL;
 
   //no phr_config
 
-  mac_MainConfig_NB_IoT->logicalChannelSR_Config_r13 = CALLOC(1, sizeof(struct MAC_MainConfig_NB_r13__logicalChannelSR_Config_r13));
-  mac_MainConfig_NB_IoT->logicalChannelSR_Config_r13->present = MAC_MainConfig_NB_r13__logicalChannelSR_Config_r13_PR_setup;
+  mac_MainConfig_NB_IoT->logicalChannelSR_Config_r13 = CALLOC(1, sizeof(struct LTE_MAC_MainConfig_NB_r13__logicalChannelSR_Config_r13));
+  mac_MainConfig_NB_IoT->logicalChannelSR_Config_r13->present = LTE_MAC_MainConfig_NB_r13__logicalChannelSR_Config_r13_PR_setup;
   //depends if previously activated
   mac_MainConfig_NB_IoT->logicalChannelSR_Config_r13->choice.setup.logicalChannelSR_ProhibitTimer_r13 =
-		  MAC_MainConfig_NB_r13__logicalChannelSR_Config_r13__setup__logicalChannelSR_ProhibitTimer_r13_pp2; //value in PP=PDCCH periods
+		  LTE_MAC_MainConfig_NB_r13__logicalChannelSR_Config_r13__setup__logicalChannelSR_ProhibitTimer_r13_pp2; //value in PP=PDCCH periods
 
 
   if (*physicalConfigDedicated_NB_IoT) {
@@ -1851,12 +1851,12 @@ void rrc_eNB_generate_defaultRRCConnectionReconfiguration_NB_IoT(const protocol_
 //#if defined(ENABLE_ITTI).....
 
   /* Initialize NAS list */
-  dedicatedInfoNASList_NB_IoT = CALLOC(1, sizeof(struct RRCConnectionReconfiguration_NB_r13_IEs__dedicatedInfoNASList_r13));
+  dedicatedInfoNASList_NB_IoT = CALLOC(1, sizeof(struct LTE_RRCConnectionReconfiguration_NB_r13_IEs__dedicatedInfoNASList_r13));
 
   /* Add all NAS PDUs to the list */
   for (i = 0; i < ue_context_pP->ue_context.nb_of_e_rabs; i++) {
     if (ue_context_pP->ue_context.e_rab[i].param.nas_pdu.buffer != NULL) {
-      dedicatedInfoNas = CALLOC(1, sizeof(DedicatedInfoNAS_t));
+      dedicatedInfoNas = CALLOC(1, sizeof(LTE_DedicatedInfoNAS_t));
       memset(dedicatedInfoNas, 0, sizeof(OCTET_STRING_t));
       OCTET_STRING_fromBuf(dedicatedInfoNas,
 			   (char*)ue_context_pP->ue_context.e_rab[i].param.nas_pdu.buffer,
@@ -1889,12 +1889,12 @@ void rrc_eNB_generate_defaultRRCConnectionReconfiguration_NB_IoT(const protocol_
   size = do_RRCConnectionReconfiguration_NB_IoT(ctxt_pP,
                                                 buffer,
                                                 xid,   //Transaction_id,
-                                                (SRB_ToAddModList_NB_r13_t*)*SRB_configList2, //only SRB1
-                                                (DRB_ToAddModList_NB_r13_t*)*DRB_configList,
-                                                (DRB_ToReleaseList_NB_r13_t*)NULL,  // DRB2_list,
-                                                (struct PhysicalConfigDedicated_NB_r13*)*physicalConfigDedicated_NB_IoT,
-                                                (MAC_MainConfig_t*)mac_MainConfig_NB_IoT,
-                                                (struct RRCConnectionReconfiguration_NB_r13_IEs__dedicatedInfoNASList_r13*)dedicatedInfoNASList_NB_IoT
+                                                (LTE_SRB_ToAddModList_NB_r13_t*)*SRB_configList2, //only SRB1
+                                                (LTE_DRB_ToAddModList_NB_r13_t*)*DRB_configList,
+                                                (LTE_DRB_ToReleaseList_NB_r13_t*)NULL,  // DRB2_list,
+                                                (struct LTE_PhysicalConfigDedicated_NB_r13*)*physicalConfigDedicated_NB_IoT,
+                                                (LTE_MAC_MainConfig_t*)mac_MainConfig_NB_IoT,
+                                                (struct LTE_RRCConnectionReconfiguration_NB_r13_IEs__dedicatedInfoNASList_r13*)dedicatedInfoNASList_NB_IoT
                                                 );
 
 #ifdef RRC_MSG_PRINT
@@ -2082,7 +2082,7 @@ static void init_SI_NB_IoT(
 //aka openair_rrc_eNB_init
 char openair_rrc_eNB_configuration_NB_IoT(
   const module_id_t enb_mod_idP,
-  RrcConfigurationReq* configuration //MP: previously was insiede ITTI but actually I put it out
+  NbIoTRrcConfigurationReq* configuration //MP: previously was insiede ITTI but actually I put it out
 )
 //-----------------------------------------------------------------------------
 {
@@ -2174,8 +2174,8 @@ rrc_eNB_decode_ccch_NB_IoT(
         ((uint8_t *) Srb_info->Rx_buffer.Payload)[8],  
         (uint8_t *) Srb_info->Rx_buffer.Payload);
 
-  RRCConnectionRequest_NB_r13_IEs_t* rrcConnectionRequest_NB = NULL;
-  UL_CCCH_Message_NB_t* ul_ccch_msg_NB = NULL;
+  LTE_RRCConnectionRequest_NB_r13_IEs_t* rrcConnectionRequest_NB = NULL;
+  LTE_UL_CCCH_Message_NB_t* ul_ccch_msg_NB = NULL;
   dec_rval = uper_decode(
                NULL,
                &asn_DEF_UL_CCCH_Message_NB,
@@ -2190,11 +2190,11 @@ rrc_eNB_decode_ccch_NB_IoT(
   uint64_t                                      random_value = 0;
   int                                           stmsi_received = 0;
 
-  if (ul_ccch_msg_NB->message.present == UL_CCCH_MessageType_PR_c1) 
+  if (ul_ccch_msg_NB->message.present == LTE_UL_CCCH_MessageType_PR_c1) 
   {
     switch (ul_ccch_msg_NB->message.choice.c1.present) 
     {
-      case UL_CCCH_MessageType_NB__c1_PR_rrcConnectionRequest_r13:
+      case LTE_UL_CCCH_MessageType_NB__c1_PR_rrcConnectionRequest_r13:
               T(T_ENB_RRC_CONNECTION_REQUEST, T_INT(ctxt_pP->module_id), T_INT(ctxt_pP->frame),
         T_INT(ctxt_pP->subframe), T_INT(ctxt_pP->rnti));
 
@@ -2230,7 +2230,7 @@ rrc_eNB_decode_ccch_NB_IoT(
       } else {
         rrcConnectionRequest_NB = &ul_ccch_msg_NB->message.choice.c1.choice.rrcConnectionRequest_r13.criticalExtensions.choice.rrcConnectionRequest_r13;
         {
-          if (InitialUE_Identity_PR_randomValue == rrcConnectionRequest_NB->ue_Identity_r13.present) {
+          if (LTE_InitialUE_Identity_PR_randomValue == rrcConnectionRequest_NB->ue_Identity_r13.present) {
             AssertFatal(rrcConnectionRequest_NB->ue_Identity_r13.choice.randomValue.size == 5,
                         "wrong InitialUE-Identity randomValue size, expected 5, provided %d",
                         rrcConnectionRequest_NB->ue_Identity_r13.choice.randomValue.size);
@@ -2249,9 +2249,9 @@ rrc_eNB_decode_ccch_NB_IoT(
             } else {
               ue_context_p = rrc_eNB_get_next_free_ue_context(ctxt_pP, random_value);
             }
-          } else if (InitialUE_Identity_PR_s_TMSI == rrcConnectionRequest_NB->ue_Identity_r13.present) {
+          } else if (LTE_InitialUE_Identity_PR_s_TMSI == rrcConnectionRequest_NB->ue_Identity_r13.present) {
             /* Save s-TMSI */
-            S_TMSI_t   s_TMSI = rrcConnectionRequest_NB->ue_Identity_r13.choice.s_TMSI;
+            LTE_S_TMSI_t   s_TMSI = rrcConnectionRequest_NB->ue_Identity_r13.choice.s_TMSI;
             mme_code_t mme_code = BIT_STRING_to_uint8(&s_TMSI.mmec);
             m_tmsi_t   m_tmsi   = BIT_STRING_to_uint32(&s_TMSI.m_TMSI);
             random_value = (((uint64_t)mme_code) << 32) | m_tmsi;
@@ -2392,8 +2392,8 @@ rrc_eNB_decode_ccch_NB_IoT(
 
        rrc_pdcp_config_asn1_req_NB_IoT(ctxt_pP,
                                       ue_context_p->ue_context.SRB_configList, //contain SRB1bis but used as SRB1
-                                      (DRB_ToAddModList_NB_r13_t *) NULL,
-                                      (DRB_ToReleaseList_NB_r13_t*) NULL,
+                                      (LTE_DRB_ToAddModList_NB_r13_t *) NULL,
+                                      (LTE_DRB_ToReleaseList_NB_r13_t*) NULL,
                                       0xff,
                                       NULL,
                                       NULL,
@@ -2403,15 +2403,15 @@ rrc_eNB_decode_ccch_NB_IoT(
       //Configure RLC for SRB1bis
       rrc_rlc_config_asn1_req_NB_IoT(ctxt_pP,
                                      ue_context_p->ue_context.SRB_configList,
-                                     (DRB_ToAddModList_NB_r13_t*) NULL,
-                                     (DRB_ToReleaseList_NB_r13_t*) NULL,
+                                     (LTE_DRB_ToAddModList_NB_r13_t*) NULL,
+                                     (LTE_DRB_ToReleaseList_NB_r13_t*) NULL,
                                      SRB1BIS_FLAG_YES
                                      );
       //Configure RLC for SRB1
       rrc_rlc_config_asn1_req_NB_IoT(ctxt_pP,
                                     ue_context_p->ue_context.SRB_configList,
-                                    (DRB_ToAddModList_NB_r13_t*) NULL,
-                                    (DRB_ToReleaseList_NB_r13_t*) NULL,
+                                    (LTE_DRB_ToAddModList_NB_r13_t*) NULL,
+                                    (LTE_DRB_ToReleaseList_NB_r13_t*) NULL,
                       SRB1BIS_FLAG_NO
                                      );
 #endif //NO_RRM  
@@ -2446,8 +2446,8 @@ int rrc_eNB_decode_dcch_NB_IoT(
   
   
   asn_dec_rval_t                      dec_rval;
-  UL_DCCH_Message_NB_t                  *ul_dcch_msg_NB_IoT = NULL;
-  UE_Capability_NB_r13_t              *UE_Capability_NB = NULL;
+  LTE_UL_DCCH_Message_NB_t                  *ul_dcch_msg_NB_IoT = NULL;
+  LTE_UE_Capability_NB_r13_t              *UE_Capability_NB = NULL;
   int i;
   struct rrc_eNB_ue_context_s*        ue_context_p = NULL;
 
@@ -2505,11 +2505,11 @@ int rrc_eNB_decode_dcch_NB_IoT(
                    &eNB_rrc_inst[ctxt_pP->module_id],
                    ctxt_pP->rnti);
 
-  if (ul_dcch_msg_NB_IoT->message.present == UL_DCCH_MessageType_NB_PR_c1) {
+  if (ul_dcch_msg_NB_IoT->message.present == LTE_UL_DCCH_MessageType_NB_PR_c1) {
 
     switch (ul_dcch_msg_NB_IoT->message.choice.c1.present) {
 
-    case UL_DCCH_MessageType_NB__c1_PR_rrcConnectionSetupComplete_r13:
+    case LTE_UL_DCCH_MessageType_NB__c1_PR_rrcConnectionSetupComplete_r13:
       //MP: Ts 36.331 V14.2.1 RRCConnectionSetupComplete is transmitted over SRB1bis (pag 585)
 
 #ifdef RRC_MSG_PRINT
@@ -2540,7 +2540,7 @@ int rrc_eNB_decode_dcch_NB_IoT(
             sdu_sizeP);
 
       if (ul_dcch_msg_NB_IoT->message.choice.c1.choice.rrcConnectionSetupComplete_r13.criticalExtensions.present ==
-          RRCConnectionSetupComplete_NB__criticalExtensions_PR_rrcConnectionSetupComplete_r13) {
+          LTE_RRCConnectionSetupComplete_NB__criticalExtensions_PR_rrcConnectionSetupComplete_r13) {
 
         LOG_I(RRC,"selectedPLMN_Identity_r13 : %ld\n",ul_dcch_msg_NB_IoT->message.choice.c1.choice.rrcConnectionSetupComplete_r13.criticalExtensions.choice.rrcConnectionSetupComplete_r13.selectedPLMN_Identity_r13);
 
