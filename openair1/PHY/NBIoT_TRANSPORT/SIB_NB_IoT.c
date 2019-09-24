@@ -380,14 +380,14 @@ int generate_NPDCCH_NB_IoT(NB_IoT_eNB_NPDCCH_t 	  *DCI_1,
 		        {
 
 		            dci_encoding_NB_IoT(DCI_pdu,		     // Array of two DCI pdus, even if one DCI is to transmit , the number of DCI is indicated in dci_number
-										DCI,                  ////uint8_t    *e[2],				// *e should be e[2][G]
+										DCI_1,                  ////uint8_t    *e[2],				// *e should be e[2][G]
 										num_bits_of_DCI,       //////A = number of bits of the DCI
 										G,
 										ncce_index,
 										agr_level);
 
 		             npdcch_scrambling_NB_IoT(frame_parms,
-											  DCI,			// Input data
+											  DCI_1,			// Input data
 											  G,        	// Total number of bits to transmit in one subframe(case of DCI = G)
 											  subframe*2,	//XXX we pass the subframe	// Slot number (0..19)
 											  ncce_index,
@@ -397,7 +397,7 @@ int generate_NPDCCH_NB_IoT(NB_IoT_eNB_NPDCCH_t 	  *DCI_1,
 				if( ((counter_rep %4)== 0) && (counter_rep != rep) )
 				{
 					npdcch_scrambling_NB_IoT(frame_parms,
-											  DCI,			// Input data
+											  DCI_1,			// Input data
 											  G,        	// Total number of bits to transmit in one subframe(case of DCI = G)
 											  subframe*2,				//XXX we pass the subframe	// Slot number (0..19)
 											  ncce_index,
@@ -408,19 +408,19 @@ int generate_NPDCCH_NB_IoT(NB_IoT_eNB_NPDCCH_t 	  *DCI_1,
 									  amp,
 									  frame_parms,
 									  eutra_control_region,      // control region size for LTE , values between 0..3, (0 for stand-alone / 1, 2 or 3 for in-band)
-									  DCI,
+									  DCI_1,
 									  0,		     // npdsch_data_subframe, // subframe index of the data table of npdsch channel (G*Nsf)  , values are between 0..Nsf  			
 									  agr_level,
 									  ncce_index,
 									  subframe,
 									  RB_IoT_ID);
 
-				DCI->counter_repetition_number[i]--; 
+				DCI_1->counter_repetition_number[i]--; 
 
-		        if(DCI->counter_repetition_number[i] == 0)
+		        if(DCI_1->counter_repetition_number[i] == 0)
 		        { 	
                         //printf("DCI REP done\n");
-		        		DCI->active[i] = 0;
+		        		DCI_1->active[i] = 0;
 		        		done =1;
 		        }
 		          

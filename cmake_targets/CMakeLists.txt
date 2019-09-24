@@ -1421,7 +1421,7 @@ set(L2_SRC_NBIOT
   ${RRC_NBIOT_DIR}/rrc_eNB_NB_IoT.c
   ${RRC_NBIOT_DIR}/rrc_eNB_UE_context_NB_IoT.c
   ${RRC_NBIOT_DIR}/rrc_common_NB_IoT.c
-  ${RRC_NBIOT_DIR}/L2_interface_NB_IoT.c
+  #${RRC_NBIOT_DIR}/L2_interface_NB_IoT.c
  )
 
 

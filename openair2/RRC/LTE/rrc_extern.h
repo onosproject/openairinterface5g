@@ -35,9 +35,6 @@
 #include "LAYER2/MAC/mac.h"
 #include "LAYER2/RLC/rlc.h"
 
-///NB_IoT
-#include "defs_NB_IoT.h"
-extern eNB_RRC_INST_NB_IoT *eNB_rrc_inst_NB_IoT;
 
 extern UE_RRC_INST *UE_rrc_inst;
 

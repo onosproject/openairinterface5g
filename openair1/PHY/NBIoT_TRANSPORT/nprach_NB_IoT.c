@@ -31,7 +31,7 @@
 
 //#include "PHY/sse_intrin.h"
 #include "PHY/defs_L1_NB_IoT.h"
-#include "PHY/TOOLS/defs.h" // to take into account the dft functions
+#include "PHY/TOOLS/tools_defs.h" // to take into account the dft functions
 #include "tables_nprach_NB_IoT.h"
 #include "first_sc_NB_IoT.h"
 //#include "PHY/extern.h"
@@ -405,7 +405,7 @@ void filtering_signal(int16_t *input_buffer, int16_t *filtered_buffer, uint32_t 
 
 }
 
-uint32_t process_nprach_NB_IoT(PHY_VARS_eNB *eNB, int frame, uint8_t subframe, uint16_t *rnti, uint16_t *preamble_index, uint16_t *timing_advance){ 
+uint32_t process_nprach_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB, int frame, uint8_t subframe, uint16_t *rnti, uint16_t *preamble_index, uint16_t *timing_advance){ 
 
 
 	//uint32_t estimated_TA_coarse=0;  

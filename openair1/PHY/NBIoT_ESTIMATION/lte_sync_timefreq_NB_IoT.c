@@ -40,7 +40,7 @@
 #include "PHY/extern_NB_IoT.h"
 
 #if defined(__x86_64__) || defined(__i386__)
-#include "pss6144.h"
+#include "PHY/LTE_ESTIMATION/pss6144.h"
 extern void print_shorts(char*,__m128i*);
 #endif
 

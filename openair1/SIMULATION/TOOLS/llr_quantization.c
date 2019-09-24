@@ -23,7 +23,7 @@
 #include <math.h>
 //#include <unistd.h>
 //#include <stdlib.h>
-#include "PHY/TOOLS/defs.h"
+#include "PHY/TOOLS/tools_defs.h"
 
 //#define TEST_DEBUG
 

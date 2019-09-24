@@ -26,18 +26,19 @@
 */
 
 //#include <string.h>
-#include "defs_NB_IoT.h"
+#include "PHY/LTE_ESTIMATION/defs_NB_IoT.h"
 #include "PHY/defs_L1_NB_IoT.h"
 #include "PHY/extern_NB_IoT.h"
 // #include "SCHED/extern_NB_IoT.h"
 #include <math.h>
-
+/*
 #ifdef OPENAIR2
 #include "LAYER2/MAC/defs.h"
 #include "LAYER2/MAC/extern.h"
 #include "RRC/NBIOT/extern.h"
 #include "PHY_INTERFACE/extern.h"
 #endif
+*/
 //#define DEBUG_PHY
 
 int* sync_corr_ue0 = NULL;
