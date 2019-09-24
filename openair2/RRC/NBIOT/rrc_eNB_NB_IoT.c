@@ -31,7 +31,7 @@
 
 /*NB-IoT include files*/
 //#include "PHY/extern_NB_IoT.h"
-#include "LAYER2/MAC/extern_NB_IoT.h"
+//#include "LAYER2/MAC/extern_NB_IoT.h"
 //#include "RRC/NBIOT/proto_NB_IoT.h"
 #include "defs_NB_IoT.h"
 /**************/
@@ -39,6 +39,7 @@
 #include "extern_NB_IoT.h"
 #include "extern_NB_IoT.h"
 #include "LAYER2/MAC/proto_NB_IoT.h"
+#include "RRC/LTE/rrc_extern.h"
 /**************/
 #include "openair1/SCHED_NBIOT/defs_NB_IoT.h"
 #include "RRC/NBIOT/MESSAGES/asn1_msg_NB_IoT.h"
@@ -179,7 +180,7 @@ uint8_t* mac_rrc_msg3_ind_NB_IoT(uint8_t *payload_ptr, uint16_t rnti, uint32_t l
   LTE_UL_CCCH_Message_NB_t* ul_ccch_msg_NB = NULL;
   dec_rval = uper_decode(
                NULL,
-               &asn_DEF_UL_CCCH_Message_NB,
+               &asn_DEF_LTE_UL_CCCH_Message_NB,
                (void**)&ul_ccch_msg_NB,
                payload_ptr,
                100,
@@ -580,25 +581,25 @@ void rrc_eNB_free_mem_UE_context_NB_IoT(
   //no Scell in NB-IoT --> no DC (Dual Connectivity)
 
   if (ue_context_pP->ue_context.SRB_configList) {
-    ASN_STRUCT_FREE(asn_DEF_SRB_ToAddModList_NB_r13, ue_context_pP->ue_context.SRB_configList);
+    ASN_STRUCT_FREE(asn_DEF_LTE_SRB_ToAddModList_NB_r13, ue_context_pP->ue_context.SRB_configList);
     ue_context_pP->ue_context.SRB_configList = NULL;
   }
 
   if (ue_context_pP->ue_context.DRB_configList) {
-    ASN_STRUCT_FREE(asn_DEF_DRB_ToAddModList_NB_r13, ue_context_pP->ue_context.DRB_configList);
+    ASN_STRUCT_FREE(asn_DEF_LTE_DRB_ToAddModList_NB_r13, ue_context_pP->ue_context.DRB_configList);
     ue_context_pP->ue_context.DRB_configList = NULL;
   }
 
   memset(ue_context_pP->ue_context.DRB_active, 0, sizeof(ue_context_pP->ue_context.DRB_active));
 
   if (ue_context_pP->ue_context.physicalConfigDedicated_NB_IoT) {
-    ASN_STRUCT_FREE(asn_DEF_PhysicalConfigDedicated_NB_r13, ue_context_pP->ue_context.physicalConfigDedicated_NB_IoT);
+    ASN_STRUCT_FREE(asn_DEF_LTE_PhysicalConfigDedicated_NB_r13, ue_context_pP->ue_context.physicalConfigDedicated_NB_IoT);
     ue_context_pP->ue_context.physicalConfigDedicated_NB_IoT = NULL;
   }
 
 
   if (ue_context_pP->ue_context.mac_MainConfig_NB_IoT) {
-    ASN_STRUCT_FREE(asn_DEF_MAC_MainConfig_NB_r13, ue_context_pP->ue_context.mac_MainConfig_NB_IoT);
+    ASN_STRUCT_FREE(asn_DEF_LTE_MAC_MainConfig_NB_r13, ue_context_pP->ue_context.mac_MainConfig_NB_IoT);
     ue_context_pP->ue_context.mac_MainConfig_NB_IoT = NULL;
   }
 
@@ -2178,7 +2179,7 @@ rrc_eNB_decode_ccch_NB_IoT(
   LTE_UL_CCCH_Message_NB_t* ul_ccch_msg_NB = NULL;
   dec_rval = uper_decode(
                NULL,
-               &asn_DEF_UL_CCCH_Message_NB,
+               &asn_DEF_LTE_UL_CCCH_Message_NB,
                (void**)&ul_ccch_msg_NB,
                (uint8_t*) Srb_info->Rx_buffer.Payload,
                100,
@@ -2470,7 +2471,7 @@ int rrc_eNB_decode_dcch_NB_IoT(
         PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP));
   dec_rval = uper_decode(
                NULL,
-               &asn_DEF_UL_DCCH_Message_NB,
+               &asn_DEF_LTE_UL_DCCH_Message_NB,
                (void**)&ul_dcch_msg_NB_IoT,
                Rx_sdu,
                sdu_sizeP,

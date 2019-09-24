@@ -30,7 +30,7 @@
 
 #ifndef __BYPASS_SESSION_LAYER_EXTERN_H__
 #    define __BYPASS_SESSION_LAYER_EXTERN_H__
-
+#include "defs.h"
 #include <pthread.h>
 
 extern unsigned char Emulation_status;

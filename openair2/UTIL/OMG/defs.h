@@ -28,7 +28,7 @@
 #define  __DEFS_H__
 
 #include <stdlib.h>
-
+#include "omg_constants.h"
 // TYPEDEFS
 
 #define true 1
