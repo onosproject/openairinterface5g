@@ -54,6 +54,7 @@
 #include "common/config/config_userapi.h"
 #include "RRC_config_tools.h"
 #include "enb_paramdef.h"
+#include "enb_paramdef_NB_IoT.h"
 #include "proto_agent.h"
 
 extern uint16_t sf_ahead;
@@ -310,7 +311,7 @@ int RCconfig_RRC(uint32_t i, eNB_RRC_INST *rrc, int macrlc_has_f1) {
   paramdef_t SRB1Params[] = SRB1PARAMS_DESC(srb1_params);
   paramdef_t SLParams[]              = CCPARAMS_SIDELINK_DESC(SLconfig);
   // for NB-IoT
-  paramdef_t NBIOTParams[]              = CCPARAMS_NB_IOT_DESC((&NBconfig));
+  paramdef_t NBIOTParams[]              = CCPARAMS_NB_IOT_DESC(NBconfig);
 
   /* map parameter checking array instances to parameter definition array instances */
   for (int I=0; I< ( sizeof(CCsParams)/ sizeof(paramdef_t)  ) ; I++) {

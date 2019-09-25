@@ -35,10 +35,11 @@
 #ifdef USER_MODE
 //#include "stdio.h"
 #endif //USER_MODE
-#include "PHY/defs.h"
+#include "PHY/defs_eNB.h"
+#include "PHY/defs_UE.h"
 #include "defs.h"
 #include "defs_NB_IoT.h"
-#include "PHY_INTERFACE/defs.h"
+#include "PHY_INTERFACE/defs_NB_IoT.h"
 #include "COMMON/mac_rrc_primitives.h"
 
 

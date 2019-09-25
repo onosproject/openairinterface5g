@@ -74,13 +74,13 @@
 #include "PHY/defs.h"
 #include "PHY/defs_L1_NB_IoT.h"
 //#include "PHY/defs_L1_NB_IoT.h"
-#include "SCHED/defs_NB_IoT.h"
+#include "SCHED_NBIOT/defs_NB_IoT.h"
 #include "SCHED/sched_common.h" // for calling prach_procedures_NB_IoT()
 #include "PHY_INTERFACE/IF_Module_NB_IoT.h"
 #include "LAYER2/MAC/extern_NB_IoT.h"
 #include "PHY/extern_NB_IoT.h"
 #include "LAYER2/MAC/defs.h"
-#include "PHY_INTERFACE/extern.h"
+#include "PHY_INTERFACE/phy_interface_extern.h"
 
 #ifdef SMBV
 #include "PHY/TOOLS/smbv.h"

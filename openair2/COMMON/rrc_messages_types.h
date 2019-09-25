@@ -478,6 +478,8 @@ typedef struct NbIoTRrcConfigurationReq_s {
   long            ue_TimersAndConstants_t311_NB;
   long            ue_TimersAndConstants_n310_NB;
   long            ue_TimersAndConstants_n311_NB;
+
+  int             NB_IoT_configured;
 } NbIoTRrcConfigurationReq;
 
 
