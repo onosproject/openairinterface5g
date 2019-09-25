@@ -292,7 +292,7 @@ void rrc_mac_config_req_NB_IoT(
     int                                     CC_idP,
     int                                     rntiP,
     rrc_eNB_carrier_data_NB_IoT_t           *carrier,
-    LTE_LTE_SystemInformationBlockType1_NB_t        *sib1_NB_IoT,
+    LTE_SystemInformationBlockType1_NB_t        *sib1_NB_IoT,
     LTE_RadioResourceConfigCommonSIB_NB_r13_t   *radioResourceConfigCommon,
     LTE_PhysicalConfigDedicated_NB_r13_t        *physicalConfigDedicated,
     LTE_LogicalChannelConfig_NB_r13_t           *logicalChannelConfig,  
@@ -390,7 +390,7 @@ void rrc_mac_config_req_NB_IoT(
     if (radioResourceConfigCommon!=NULL)
     {
       //LOG_I(MAC,"[CONFIG]SIB2/3-NB radioResourceConfigCommon Contents (partial)\n");
-      NPRACH_Parameters_NB_r13_t* nprach_parameter;
+      LTE_NPRACH_Parameters_NB_r13_t* nprach_parameter;
 
       //CE level 0
       if ( radioResourceConfigCommon->nprach_Config_r13.nprach_ParametersList_r13.list.array[0] != NULL) 

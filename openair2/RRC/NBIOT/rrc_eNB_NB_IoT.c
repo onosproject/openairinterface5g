@@ -402,8 +402,8 @@ void init_testing_NB_IoT(uint8_t Mod_id, int CC_id, rrc_eNB_carrier_data_NB_IoT_
   }
 }
 
-//********************************************************************************************************************//
 
+#if 0
 
 
 
@@ -440,13 +440,7 @@ void rrc_eNB_free_UE_NB_IoT(const module_id_t enb_mod_idP,const struct rrc_eNB_u
      *  procedure, see TS 23.401 [17].
      */
 #else
-#if defined(OAI_EMU)
-    AssertFatal(ue_context_pP->local_uid < NUMBER_OF_UE_MAX_NB_IoT, "local_uid invalid (%d<%d) for UE %x!", ue_context_pP->local_uid, NUMBER_OF_UE_MAX_NB_IoT, rnti);
-    ue_module_id = oai_emulation.info.eNB_ue_local_uid_to_ue_module_id[enb_mod_idP][ue_context_pP->local_uid];
-    AssertFatal(ue_module_id < NUMBER_OF_UE_MAX_NB_IoT, "ue_module_id invalid (%d<%d) for UE %x!", ue_module_id, NUMBER_OF_UE_MAX_NB_IoT, rnti);
-    oai_emulation.info.eNB_ue_local_uid_to_ue_module_id[enb_mod_idP][ue_context_pP->local_uid] = -1;
-    oai_emulation.info.eNB_ue_module_id_to_rnti[enb_mod_idP][ue_module_id] = NOT_A_RNTI;
-#endif
+
 #endif
 
     //rrc_mac_remove_ue_NB_IoT(enb_mod_idP,rnti);
@@ -715,15 +709,12 @@ void rrc_eNB_emulation_notify_ue_module_id_NB_IoT(
                            rntiP
                          );
 
-          if (NULL != ue_context_p) {
-            oai_emulation.info.eNB_ue_local_uid_to_ue_module_id[enb_module_id][ue_context_p->local_uid] = ue_module_idP;
-          }
+
 
           //return;
         }
       }
     }
-    oai_emulation.info.eNB_ue_module_id_to_rnti[enb_module_id][ue_module_idP] = rntiP;
   }
 
   AssertFatal(enb_module_id == NUMBER_OF_eNB_MAX,
@@ -820,141 +811,6 @@ void rrc_eNB_generate_RRCConnectionReject_NB_IoT(
         PROTOCOL_RRC_CTXT_UE_FMT" [RAPROC] Logical Channel DL-CCCH, Generating RRCConnectionReject-NB (bytes %d)\n",
         PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP),
         eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].Srb0.Tx_buffer.payload_size);
-}
-
-//-----------------------------------------------------------------------------
-void rrc_eNB_generate_RRCConnectionSetup_NB_IoT(
-  const protocol_ctxt_t* const ctxt_pP,
-  rrc_eNB_ue_context_NB_IoT_t*          const ue_context_pP,
-  const int                    CC_id
-)
-//-----------------------------------------------------------------------------
-{
-	//connection setup involve the establishment of SRB1 and SRB1bis (but srb1bis is established implicitly)
-	//XXX: this message should go through SRB0 to see this--> uper_encode
-	//XXX: they are assuming that 2 RLC-AM entities are used for SRB1 and SRB1bis
-
-
-
-//  SRB_ToAddMod_NB_r13_t                     *SRB1_config; //may not needed now
-//  LogicalChannelConfig_NB_r13_t             *SRB1_logicalChannelConfig;
-
-  LTE_SRB_ToAddModList_NB_r13_t           **SRB_configList; //for both SRB1 and SRB1bis
-  LTE_SRB_ToAddMod_NB_r13_t						    *SRB1bis_config;
-  LTE_LogicalChannelConfig_NB_r13_t				*SRB1bis_logicalChannelConfig;
-
-  int  										cnt;
-
-
-  //XXX MP:warning due to function still not completed at PHY (get_lte_frame_parms)
-  //XXX this approach is gone most probably
-  NB_IoT_DL_FRAME_PARMS *fp = get_NB_IoT_frame_parms(ctxt_pP->module_id,CC_id);
-  T(T_ENB_RRC_CONNECTION_SETUP, T_INT(ctxt_pP->module_id), T_INT(ctxt_pP->frame),
-    T_INT(ctxt_pP->subframe), T_INT(ctxt_pP->rnti));
-
-  SRB_configList = &ue_context_pP->ue_context.SRB_configList;
-
-  eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].Srb0.Tx_buffer.payload_size =
-    do_RRCConnectionSetup_NB_IoT(ctxt_pP,
-                                 ue_context_pP,
-                                 CC_id,
-                                 (uint8_t*) eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].Srb0.Tx_buffer.Payload,
-                                 rrc_eNB_get_next_transaction_identifier_NB_IoT(ctxt_pP->module_id),
-                                 fp,
-                                 SRB_configList, //MP:should contain only SRb1bis for the moment
-                                 &ue_context_pP->ue_context.physicalConfigDedicated_NB_IoT);
-
-#ifdef RRC_MSG_PRINT
-  LOG_F(RRC,"[MSG] RRC Connection Setup\n");
-
-  for (cnt = 0; cnt < eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].Srb0.Tx_buffer.payload_size; cnt++) {
-    LOG_F(RRC,"%02x ", ((uint8_t*)eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].Srb0.Tx_buffer.Payload)[cnt]);
-  }
-
-  LOG_F(RRC,"\n");
-  //////////////////////////////////
-#endif
-
-  // configure SRB1bis, PhysicalConfigDedicated, MAC_MainConfig for UE
-
-  if (*SRB_configList != NULL) {
-
-	  // MP: the list should contain just one element
-	  for(cnt = 0; cnt < (*SRB_configList)->list.count; cnt++){
-
-        SRB1bis_config = (*SRB_configList)->list.array[cnt];
-
-        if (SRB1bis_config->logicalChannelConfig_r13) {
-          if (SRB1bis_config->logicalChannelConfig_r13->present == LTE_SRB_ToAddMod_NB_r13__logicalChannelConfig_r13_PR_explicitValue)
-          {
-            SRB1bis_logicalChannelConfig = &SRB1bis_config->logicalChannelConfig_r13->choice.explicitValue;
-          }
-          else {
-            SRB1bis_logicalChannelConfig = &SRB1bis_logicalChannelConfig_defaultValue_NB_IoT;
-          	  }
-        } else {
-          SRB1bis_logicalChannelConfig = &SRB1bis_logicalChannelConfig_defaultValue_NB_IoT;
-        }
-
-        LOG_D(RRC,
-              PROTOCOL_RRC_CTXT_UE_FMT" RRC_eNB --- MAC_CONFIG_REQ  (SRB1bis/SRB1) ---> MAC_eNB\n",
-              PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP));
-
-
-        //XXX: Maybe some problem if Connection Setup could be called also after security activation
-
-        //configure the MAC for SRB1bis/SRb1 (but in principle this configuration should be not LCID dependent)
-        /*rrc_mac_config_req_eNB_NB_IoT(
-          ctxt_pP->module_id,
-          ue_context_pP->ue_context.primaryCC_id,
-          ue_context_pP->ue_context.rnti,
-          0, //physCellID
-		  0, //p_eNB
-		  0, //p_rx_eNB
-		  0, //Ncp
-		  0, //Ncp_UL
-		  0, //eutraband
-		  (NS_PmaxList_NB_r13_t*) NULL,
-		  (MultiBandInfoList_NB_r13_t*) NULL,
-		  (DL_Bitmap_NB_r13_t*) NULL,
-		  (long*) NULL,//eutraControlRegionSize
-		  (long*)NULL,
-//		  (uint8_t*) NULL, //SIWindowSize
-//		  (uint16_t*)NULL, //SIperiod
-		  0, //dl_carrierFrequency
-		  0, //ul_carrierFrequency
-		  (BCCH_BCH_Message_NB_t*) NULL,
-          (RadioResourceConfigCommonSIB_NB_r13_t *) NULL,
-          (PhysicalConfigDedicated_NB_r13_t*) ue_context_pP->ue_context.physicalConfigDedicated_NB_IoT,
-          ue_context_pP->ue_context.mac_MainConfig_NB_IoT, //XXX most probably is not needed since is only at UE side
-          DCCH0_NB_IoT, //LCID  = 3 of SRB1bis
-          SRB1bis_logicalChannelConfig
-		  );*/
-        break;
-    }
-  }
-
-  MSC_LOG_TX_MESSAGE(
-    MSC_RRC_ENB,
-    MSC_RRC_UE,
-    eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].Srb0.Tx_buffer.Header, // LG WARNING
-    eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].Srb0.Tx_buffer.payload_size,
-    MSC_AS_TIME_FMT" RRCConnectionSetup-NB UE %x size %u",
-    MSC_AS_TIME_ARGS(ctxt_pP),
-    ue_context_pP->ue_context.rnti,
-    eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].Srb0.Tx_buffer.payload_size);
-
-
-  LOG_I(RRC,
-        PROTOCOL_RRC_CTXT_UE_FMT" [RAPROC] Logical Channel DL-CCCH, Generating RRCConnectionSetup-NB (bytes %d)\n",
-        PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP),
-        eNB_rrc_inst_NB_IoT[ctxt_pP->module_id].carrier[CC_id].Srb0.Tx_buffer.payload_size);
-
-  // activate release timer, if RRCSetupComplete-NB not received after 10 frames, remove UE
-  ue_context_pP->ue_context.ue_release_timer=1;
-  // remove UE after 10 frames after RRCConnectionRelease-NB is triggered
-  ue_context_pP->ue_context.ue_release_timer_thres=100;
-
 }
 
 //-----------------------------------------------------------------------------
@@ -1069,14 +925,7 @@ void rrc_eNB_process_RRCConnectionReconfigurationComplete_NB_IoT(
               ctxt_pP->rnti,
               (int)DRB_configList2->list.array[i]->drb_Identity_r13, //x
               (int)*DRB_configList2->list.array[i]->logicalChannelIdentity_r13);//x+3
-        // for pre-ci tests
-        LOG_I(RRC,
-              "[eNB %d] Frame  %d : Logical Channel UL-DCCH, Received RRCConnectionReconfigurationComplete-NB from UE %u, reconfiguring DRB %d/LCID %d\n",
-              ctxt_pP->module_id,
-              ctxt_pP->frame,
-              oai_emulation.info.eNB_ue_local_uid_to_ue_module_id[ctxt_pP->module_id][ue_context_pP->local_uid],
-              (int)DRB_configList2->list.array[i]->drb_Identity_r13,
-              (int)*DRB_configList2->list.array[i]->logicalChannelIdentity_r13);
+
 
         if (ue_context_pP->ue_context.DRB_active[drb_id] == 0) { //is a new DRB
 
@@ -1095,16 +944,12 @@ void rrc_eNB_process_RRCConnectionReconfigurationComplete_NB_IoT(
                        ctxt_pP->module_id + 1);  // fourth octet
 
           if (oip_ifup == 0) {    // interface is up --> send a config the DRB
-#      ifdef OAI_EMU
-            oai_emulation.info.oai_ifup[ctxt_pP->module_id] = 1;
-#      else
+
             dest_ip_offset = 8;
-#      endif
             LOG_I(OIP,
                   "[eNB %d] Config the oai%d to send/receive pkt on DRB %ld to/from the protocol stack\n",
                   ctxt_pP->module_id, ctxt_pP->module_id,
                   (ue_context_pP->local_uid * maxDRB_NB_r13) + DRB_configList2->list.array[i]->drb_Identity_r13);
-            ue_module_id = oai_emulation.info.eNB_ue_local_uid_to_ue_module_id[ctxt_pP->module_id][ue_context_pP->local_uid];
             rb_conf_ipv4(0, //add
                          ue_module_id,  //cx
                          ctxt_pP->module_id,    //inst
@@ -1117,9 +962,7 @@ void rrc_eNB_process_RRCConnectionReconfigurationComplete_NB_IoT(
           }
 
 #   else
-#      ifdef OAI_EMU
-          oai_emulation.info.oai_ifup[ctxt_pP->module_id] = 1;
-#      endif
+
 #   endif
 #endif
 
@@ -2730,4 +2573,5 @@ void* rrc_enb_task_NB_IoT(
 
 #ifndef USER_MODE
 EXPORT_SYMBOL(Rlc_info_am_config);
+#endif
 #endif

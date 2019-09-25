@@ -151,6 +151,7 @@ uint8_t do_MIB_NB_IoT(
 //     (uint32_t)hsfn_LSB);
 
   enc_rval = uper_encode_to_buffer(&asn_DEF_LTE_BCCH_BCH_Message_NB,
+                                    NULL,
                                    (void*)mib_NB_IoT,
                                    carrier->MIB_NB_IoT,
                                    100);
@@ -389,6 +390,7 @@ uint8_t do_SIB1_NB_IoT(uint8_t Mod_id, int CC_id,
 
   //bcch_message->message.choice.c1.choice.systemInformationBlockType1_r13 = **sib1_NB_IoT;
   enc_rval = uper_encode_to_buffer(&asn_DEF_LTE_BCCH_DL_SCH_Message_NB,
+                                    NULL,
                                    (void*)bcch_message,
                                    carrier->SIB1_NB_IoT,
                                    100);
@@ -629,6 +631,7 @@ uint8_t do_SIB1_NB_IoT_x(uint8_t Mod_id, int CC_id,
 
   //bcch_message->message.choice.c1.choice.systemInformationBlockType1_r13 = **sib1_NB_IoT;
   enc_rval = uper_encode_to_buffer(&asn_DEF_LTE_BCCH_DL_SCH_Message_NB,
+                                    NULL,
                                    (void*)bcch_message,
                                    carrier->SIB1_NB_IoT,
                                    100);
@@ -905,6 +908,7 @@ uint8_t do_SIB23_NB_IoT(uint8_t Mod_id,
   xer_fprint(stdout, &asn_DEF_LTE_BCCH_DL_SCH_Message_NB, (void*)bcch_message);
 #endif
   enc_rval = uper_encode_to_buffer(&asn_DEF_LTE_BCCH_DL_SCH_Message_NB,
+                                    NULL,
                                    (void*)bcch_message,
                                    carrier->SIB23_NB_IoT,
                                    900);
@@ -942,7 +946,7 @@ uint8_t do_RRCConnectionSetup_NB_IoT(
   uint8_t*                   const buffer, //Srb0.Tx_buffer.Payload
   const uint8_t                    Transaction_id,
   LTE_SRB_ToAddModList_NB_r13_t**             SRB_configList_NB_IoT, //for both SRB1bis and SRB1
-  struct PhysicalConfigDedicated_NB_r13** physicalConfigDedicated_NB_IoT)
+  struct LTE_PhysicalConfigDedicated_NB_r13** physicalConfigDedicated_NB_IoT)
 {
   asn_enc_rval_t enc_rval;
   uint8_t ecause=0;
@@ -1111,6 +1115,7 @@ uint8_t do_RRCConnectionSetup_NB_IoT(
  xer_fprint(stdout, &asn_DEF_LTE_DL_CCCH_Message, (void*)&dl_ccch_msg);
 #endif
  enc_rval = uper_encode_to_buffer(&asn_DEF_LTE_DL_CCCH_Message_NB,
+                                  NULL,
                                   (void*)&dl_ccch_msg_NB_IoT,
                                   buffer,
                                   100);
