@@ -133,8 +133,19 @@
 #define PREF6(A)                                                LTE_PCCH_Config_NB_r13__defaultPagingCycle_r13_ ## A 
 #define PCCH_DEFAULTPAGINGCYCLE_NB_MODVALUES                    { PREF6(rf128), PREF6(rf256), PREF6(rf512), PREF6(rf1024) }
 
+//--------for NB-IoT r15
+#define RACH_MACCONTENTIONRESOLUTIONTIMER_NB_OKVALUES_r15       {240,480,960,1920,3840,5760,7680,10240} 
+#define PREF7(A)                                                 RACH_CE_LevelInfo_r13__mac_ContentionResolutionTimer_r15_ ## A 
+#define RACH_MACCONTENTIONRESOLUTIONTIMER_NB_MODVALUES_r15      { PREF7(sf240),PREF7(sf480),PREF7(sf960),PREF7(sf1920),    \
+                                                                  PREF7(sf3840),PREF7(sf5760),PREF7(sf7680),PREF7(sf10240) }
+//-------------------------end
+
 #define NPRACH_CP_LENGTH_OKVALUES                               {0,1}
 #define NPRACH_RSRP_RANGE_OKVALUES                              {0,96}
+
+//--------------for NB-IoT r14 & r15 because the value in r14 and r15 is the smae
+#define NPRACH_RSRP_RANGE_OKVALUES_r14                          {0,112}
+//--------------------end
 
 #define MSG3RANGESTART_OKVALUES                                 {"zero","oneThird","twoThird","one"}
 #define MSG3RANGESTART_MODVALUES {LTE_NPRACH_Parameters_NB_r13__nprach_SubcarrierMSG3_RangeStart_r13_zero,     LTE_NPRACH_Parameters_NB_r13__nprach_SubcarrierMSG3_RangeStart_r13_oneThird, \
@@ -184,6 +195,74 @@
 #define DELTAPREAMBLEMSG3_OKRANGE                               {-1,6}	
 
 
+//-------------------------------------------for the parameters definition in NB_IoT_config.c-------------------------------------- 
+#define NBIOT_RRCPARAMS_CHECK_DESC_0_14 { \
+             { .s1a= { config_check_modify_integer,     RACH_RARESPONSEWINDOWSIZE_NB_OKVALUES,          RACH_RARESPONSEWINDOWSIZE_NB_MODVALUES,          8}},    \
+             { .s1a= { config_check_modify_integer,     RACH_MACCONTENTIONRESOLUTIONTIMER_NB_OKVALUES,  RACH_MACCONTENTIONRESOLUTIONTIMER_NB_MODVALUES,  8}},  \
+             { .s1a= { config_check_modify_integer,     RACH_POWERRAMPINGSTEP_NB_OKVALUES,              RACH_POWERRAMPINGSTEP_NB_MODVALUES,              4}} ,    \
+             { .s2=  { config_check_intrange,           RACH_PREAMBLEINITIALRECEIVEDTARGETPOWER_NB_OKRANGE}},             \
+             { .s1a= { config_check_modify_integer,     RACH_PREAMBLETRANSMAX_CE_NB_OKVALUES,           RACH_PREAMBLETRANSMAX_CE_NB_MODVALUES,          11}} ,    \
+             { .s1a= { config_check_modify_integer,     BCCH_MODIFICATIONPERIODCOEFF_NB_OKVALUES,       BCCH_MODIFICATIONPERIODCOEFF_NB_MODVALUES,       4}} ,    \
+             { .s1a= { config_check_modify_integer,     PCCH_DEFAULTPAGINGCYCLE_NB_OKVALUES,            PCCH_DEFAULTPAGINGCYCLE_NB_MODVALUES,            4}} ,    \
+             { .s1=  { NULL,               NPRACH_CP_LENGTH_OKVALUES ,4}} ,                   \
+             { .s2=  { config_check_intrange,         NPRACH_RSRP_RANGE_OKVALUES_r14}} ,                    \
+             { .s3a= { config_checkstr_assign_integer,  MSG3RANGESTART_OKVALUES,                        MSG3RANGESTART_MODVALUES,                       4}} ,    \
+             { .s1a= { config_check_modify_integer,     MAXNUMPREAMBLEATTEMPTCE_OKVALUES,               MAXNUMPREAMBLEATTEMPTCE_MODVALUES,              7}} ,    \
+             { .s1=  { config_check_intval,             NPDSCH_NRS_POWER_OKRANGE,4}} ,                    \
+             { .s1a= { config_check_modify_integer,     NPUSCH_ACK_NACK_NUMREPETITIONS_NB_OKVALUES,     NPUSCH_ACK_NACK_NUMREPETITIONS_NB_MODVALUES,    8}} ,    \
+             { .s2=  { config_check_intrange,           NPUSCH_SRS_SUBFRAMECONFIG_NB_OKRANGE}} ,                        \
+             { .s2=  { config_check_intrange,           NPUSCH_THREETONE_CYCLICSHIFT_R13_OKRANGE}} ,                \
+             { .s2=  { config_check_intrange,           NPUSCH_SIXTONE_CYCLICSHIFT_R13_OKRANGE}} ,                        \
+             { .s3a= { config_checkstr_assign_integer,  NPUSCH_GROUPHOPPINGENABLED_OKVALUES,          NPUSCH_GROUPHOPPINGENABLED_MODVALUES,            2}} ,    \
+             { .s2=  { config_check_intrange,           NPUSCH_GROUPASSIGNMENTNPUSCH_R13_OKRANGE}} ,                \
+             { .s1a= { config_check_modify_integer,     DLGAPTHRESHOLD_OKVALUES,                       DLGAPTHRESHOLD_MODVALUES,                        4}} ,    \
+             { .s1a= { config_check_modify_integer,     DLGAPPERIODICITY_OKVALUES,                     DLGAPPERIODICITY_MODVALUES,                      4}} ,    \
+             { .s3a= { config_checkstr_assign_integer,  DLGAPDURATION_OKVALUES,                        DLGAPDURATION_MODVALUES ,                        4}} ,    \
+             { .s2=  { config_check_intrange,           NPUSCH_P0_NOMINALNPUSCH_OKRANGE}} ,                 \
+             { .s3a= { config_checkstr_assign_integer,  NPUSCH_ALPHA_OKVALUES,                        NPUSCH_ALPHA_MODVALUES,                          8}} ,    \
+             { .s2=  { config_check_intrange,           DELTAPREAMBLEMSG3_OKRANGE}} ,                   \
+             { .s1a= { config_check_modify_integer,    UETIMER_T300_OKVALUES, UETIMER_T300_MODVALUES,8}} ,       \
+             { .s1a= { config_check_modify_integer,    UETIMER_T301_OKVALUES, UETIMER_T301_MODVALUES,8}} ,       \
+             { .s1a= { config_check_modify_integer,    UETIMER_T310_OKVALUES, UETIMER_T310_MODVALUES,7}} ,       \
+             { .s1a= { config_check_modify_integer,    UETIMER_T311_OKVALUES, UETIMER_T311_MODVALUES,7}} ,       \
+             { .s1a= { config_check_modify_integer,    UETIMER_N310_OKVALUES, UETIMER_N310_MODVALUES,8}} ,       \
+             { .s1a= { config_check_modify_integer,    UETIMER_N311_OKVALUES, UETIMER_N311_MODVALUES,8}} ,       \
+}
+
+#define NBIOT_RRCPARAMS_CHECK_DESC_15_end { \
+             { .s1a= { config_check_modify_integer,     RACH_RARESPONSEWINDOWSIZE_NB_OKVALUES,          RACH_RARESPONSEWINDOWSIZE_NB_MODVALUES,          8}},    \
+             { .s1a= { config_check_modify_integer,     RACH_MACCONTENTIONRESOLUTIONTIMER_NB_OKVALUES_r15,  RACH_MACCONTENTIONRESOLUTIONTIMER_NB_MODVALUES_r15,  8}},  \
+             { .s1a= { config_check_modify_integer,     RACH_POWERRAMPINGSTEP_NB_OKVALUES,              RACH_POWERRAMPINGSTEP_NB_MODVALUES,              4}} ,    \
+             { .s2=  { config_check_intrange,           RACH_PREAMBLEINITIALRECEIVEDTARGETPOWER_NB_OKRANGE}},             \
+             { .s1a= { config_check_modify_integer,     RACH_PREAMBLETRANSMAX_CE_NB_OKVALUES,           RACH_PREAMBLETRANSMAX_CE_NB_MODVALUES,          11}} ,    \
+             { .s1a= { config_check_modify_integer,     BCCH_MODIFICATIONPERIODCOEFF_NB_OKVALUES,       BCCH_MODIFICATIONPERIODCOEFF_NB_MODVALUES,       4}} ,    \
+             { .s1a= { config_check_modify_integer,     PCCH_DEFAULTPAGINGCYCLE_NB_OKVALUES,            PCCH_DEFAULTPAGINGCYCLE_NB_MODVALUES,            4}} ,    \
+             { .s1=  { NULL,               NPRACH_CP_LENGTH_OKVALUES ,4}} ,                   \
+             { .s2=  { config_check_intrange,         NPRACH_RSRP_RANGE_OKVALUES_r14}} ,                    \
+             { .s3a= { config_checkstr_assign_integer,  MSG3RANGESTART_OKVALUES,                        MSG3RANGESTART_MODVALUES,                       4}} ,    \
+             { .s1a= { config_check_modify_integer,     MAXNUMPREAMBLEATTEMPTCE_OKVALUES,               MAXNUMPREAMBLEATTEMPTCE_MODVALUES,              7}} ,    \
+             { .s1=  { config_check_intval,             NPDSCH_NRS_POWER_OKRANGE,4}} ,                    \
+             { .s1a= { config_check_modify_integer,     NPUSCH_ACK_NACK_NUMREPETITIONS_NB_OKVALUES,     NPUSCH_ACK_NACK_NUMREPETITIONS_NB_MODVALUES,    8}} ,    \
+             { .s2=  { config_check_intrange,           NPUSCH_SRS_SUBFRAMECONFIG_NB_OKRANGE}} ,                        \
+             { .s2=  { config_check_intrange,           NPUSCH_THREETONE_CYCLICSHIFT_R13_OKRANGE}} ,                \
+             { .s2=  { config_check_intrange,           NPUSCH_SIXTONE_CYCLICSHIFT_R13_OKRANGE}} ,                        \
+             { .s3a= { config_checkstr_assign_integer,  NPUSCH_GROUPHOPPINGENABLED_OKVALUES,          NPUSCH_GROUPHOPPINGENABLED_MODVALUES,            2}} ,    \
+             { .s2=  { config_check_intrange,           NPUSCH_GROUPASSIGNMENTNPUSCH_R13_OKRANGE}} ,                \
+             { .s1a= { config_check_modify_integer,     DLGAPTHRESHOLD_OKVALUES,                       DLGAPTHRESHOLD_MODVALUES,                        4}} ,    \
+             { .s1a= { config_check_modify_integer,     DLGAPPERIODICITY_OKVALUES,                     DLGAPPERIODICITY_MODVALUES,                      4}} ,    \
+             { .s3a= { config_checkstr_assign_integer,  DLGAPDURATION_OKVALUES,                        DLGAPDURATION_MODVALUES ,                        4}} ,    \
+             { .s2=  { config_check_intrange,           NPUSCH_P0_NOMINALNPUSCH_OKRANGE}} ,                 \
+             { .s3a= { config_checkstr_assign_integer,  NPUSCH_ALPHA_OKVALUES,                        NPUSCH_ALPHA_MODVALUES,                          8}} ,    \
+             { .s2=  { config_check_intrange,           DELTAPREAMBLEMSG3_OKRANGE}} ,                   \
+             { .s1a= { config_check_modify_integer,    UETIMER_T300_OKVALUES, UETIMER_T300_MODVALUES,8}} ,       \
+             { .s1a= { config_check_modify_integer,    UETIMER_T301_OKVALUES, UETIMER_T301_MODVALUES,8}} ,       \
+             { .s1a= { config_check_modify_integer,    UETIMER_T310_OKVALUES, UETIMER_T310_MODVALUES,7}} ,       \
+             { .s1a= { config_check_modify_integer,    UETIMER_T311_OKVALUES, UETIMER_T311_MODVALUES,7}} ,       \
+             { .s1a= { config_check_modify_integer,    UETIMER_N310_OKVALUES, UETIMER_N310_MODVALUES,8}} ,       \
+             { .s1a= { config_check_modify_integer,    UETIMER_N311_OKVALUES, UETIMER_N311_MODVALUES,8}} ,       \
+}
+
+//------------------------------------------end------------------------------------------------------------------
 
 
 
