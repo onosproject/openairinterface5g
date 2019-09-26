@@ -71,6 +71,8 @@
 
 #include "LAYER2/MAC/proto_NB_IoT.h"
 
+#include "NB_IoT_config.h"
+
 //#include "LAYER2/MAC/defs_NB_IoT.h"
 //#include "LAYER2/MAC/vars_NB_IoT.h"
 
@@ -632,6 +634,13 @@ int main( int argc, char **argv ) {
     printf("RC.nb_inst = 0, Initializing L1\n");
     RCconfig_L1();
   }
+
+  //nbiot L1 config
+  if (RC.nb_nb_iot_rrc_inst = 0){
+    printf("RC.nb_nb_iot_rrc_inst = 0, Initializing NB-IoT L1\n");
+    RCconfig_NbIoTL1();
+  }
+  ///////end
 
   if (RC.nb_inst > 0 && NODE_IS_CU(RC.rrc[0]->node_type)) {
     protocol_ctxt_t ctxt;
