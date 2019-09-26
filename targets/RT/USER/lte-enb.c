@@ -74,21 +74,6 @@
 #include "PHY/phy_extern.h"
 
 
-//NB-IoT 
-#include "PHY/defs_L1_NB_IoT.h"
-#include "SCHED_NBIOT/defs_NB_IoT.h"
-#include "PHY_INTERFACE/IF_Module_NB_IoT.h"
-#include "LAYER2/MAC/extern_NB_IoT.h"
-#include "PHY/extern_NB_IoT.h"
-#include "LAYER2/MAC/defs.h"
-#include "PHY_INTERFACE/phy_interface_extern.h"
-
-#ifdef SMBV
-#include "PHY/TOOLS/smbv.h"
-unsigned short config_frames[4] = {2,9,11,13};
-#endif
-
-//develop branch
 #include "LAYER2/MAC/mac.h"
 #include "LAYER2/MAC/mac_extern.h"
 #include "LAYER2/MAC/mac_proto.h"
@@ -111,25 +96,6 @@ unsigned short config_frames[4] = {2,9,11,13};
 #include "SIMULATION/ETH_TRANSPORT/proto.h"
 
 #include "T.h"
-
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <string.h>
-#include <sys/ioctl.h>
-#include <sys/types.h>
-#include <sys/mman.h>
-#include <sched.h>
-#include <linux/sched.h>
-#include <signal.h>
-#include <execinfo.h>
-#include <getopt.h>
-#include <sys/sysinfo.h>
-#include "msc.h"
-#include "../../SIMU/USER/init_lte.h"
-#include "SCHED/sched_common.h" // for calling prach_procedures_NB_IoT()
-
 
 //#define DEBUG_THREADS 1
 
@@ -173,106 +139,6 @@ static struct {
 } sync_phy_proc;
 
 extern double cpuf;
-
-/*******************************************************For NB-IoT************************************************************/
-
-void init_eNB_NB_IoT(eNB_func_NB_IoT_t node_function[], eNB_timing_NB_IoT_t node_timing[],int nb_inst,eth_params_t *,int,int);
-extern void eNB_fep_rru_if5(PHY_VARS_eNB_NB_IoT *eNB,L1_rxtx_proc_t *proc);
-extern void eNB_fep_full(PHY_VARS_eNB_NB_IoT *eNB,L1_rxtx_proc_t *proc);
-extern void eNB_fep_full_2thread(PHY_VARS_eNB_NB_IoT *eNB,L1_rxtx_proc_t *proc);
-extern void do_prach(PHY_VARS_eNB_NB_IoT *eNB,int frame,int subframe);
-
-//Modify for NB-IoT merge
-static inline int rxtx_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,L1_rxtx_proc_t *proc, char *thread_name) {
- ///start_meas(&softmodem_stats_rxtx_sf);
-
-  // ****************************************
-  // Common RX procedures subframe n
-
-  
-   if ((eNB->do_prach)&&((eNB->node_function != NGFI_RCC_IF4p5_NB_IoT)))
-    eNB->do_prach(eNB,proc->frame_rx,proc->subframe_rx);
-  phy_procedures_eNB_common_RX(eNB,proc);
-  
-  // UE-specific RX processing for subframe n
-  ///////////////////////////////////// for NB-IoT testing  ////////////////////////
-  // for NB-IoT testing  // activating only TX part
-  if (eNB->proc_uespec_rx) eNB->proc_uespec_rx(eNB, proc, no_relay );
-   ////////////////////////////////////END///////////////////////
-
-  //npusch_procedures(eNB,proc,data_or_control);
-  //fill_rx_indication(eNB,i,frame,subframe);
-  //////////////////////////////////// for IF Module/scheduler testing
- 
-  pthread_mutex_lock(&eNB->UL_INFO_mutex);
-
-  eNB->UL_INFO.frame     = proc->frame_rx;
-  eNB->UL_INFO.subframe  = proc->subframe_rx;
-  eNB->UL_INFO.module_id = eNB->Mod_id;
-  eNB->UL_INFO.CC_id     = eNB->CC_id;
-  eNB->UL_INFO.hypersfn  = proc->HFN;
-
-  eNB->if_inst_NB_IoT->UL_indication(&eNB->UL_INFO);
-
-  pthread_mutex_unlock(&eNB->UL_INFO_mutex);
-
-  //LOG_I(PHY,"After UL_indication\n");
-  // *****************************************
-  // TX processing for subframe n+4
-  // run PHY TX procedures the one after the other for all CCs to avoid race conditions
-  // (may be relaxed in the future for performance reasons)
-  // *****************************************
-  //if (wait_CCs(proc)<0) return(-1);
-  
-  if (oai_exit) return(-1);
-  
-  if (eNB->proc_tx) eNB->proc_tx(eNB, proc, no_relay, NULL );
-  
-  if (release_thread(&proc->mutex_rxtx,&proc->instance_cnt_rxtx,thread_name)<0) return(-1);
-
- /// stop_meas( &softmodem_stats_rxtx_sf );
-  
-  return(0);
-}
-
-
-/*!
- * \brief The prach receive thread of eNB.
- * \param param is a \ref eNB_proc_t structure which contains the info what to process.
- * \returns a pointer to an int. The storage is not on the heap and must not be freed.
- */
-static void* eNB_thread_prach_NB_IoT( void* param ) {
-  static int eNB_thread_prach_status;
-
-  PHY_VARS_eNB_NB_IoT *eNB= (PHY_VARS_eNB_NB_IoT *)param;
-  L1_proc_t *proc = &eNB->proc;
-
-  // set default return value
-  eNB_thread_prach_status = 0;
-
-  thread_top_init("eNB_thread_prach",1,500000L,1000000L,20000000L);
-
-  while (!oai_exit) {
-    
-    if (oai_exit) break;
-
-    if (wait_on_condition(&proc->mutex_prach,&proc->cond_prach,&proc->instance_cnt_prach,"eNB_prach_thread") < 0) break;
-    
-    //prach_procedures(eNB);
-    
-    ////// NB_IoT testing ///////
-    prach_procedures_NB_IoT(eNB);
-    /////////////////////////////
-    
-    if (release_thread(&proc->mutex_prach,&proc->instance_cnt_prach,"eNB_prach_thread") < 0) break;
-  }
-
-  printf( "Exiting eNB thread PRACH\n");
-
-  eNB_thread_prach_status = 0;
-  return &eNB_thread_prach_status;
-}
-/*******************************************************For NB-IoT************************************************************/
 
 
 void init_eNB(int,int);
@@ -472,7 +338,6 @@ static void *L1_thread_tx(void *param) {
 
   //wait_sync("tx_thread");
 
-
   while (!oai_exit) {
     LOG_D(PHY,"Waiting for TX (IC %d)\n",proc->instance_cnt);
     if (wait_on_condition(&proc->mutex,&proc->cond,&proc->instance_cnt,thread_name)<0) break;
@@ -562,17 +427,16 @@ static void *L1_thread( void *param ) {
     if (oai_exit) break;
 
     if (eNB->CC_id==0) {
-      if (rxtx_NB_IoT(eNB,proc,thread_name) < 0) break; // Call rxtx_NB_IoT
+      if (rxtx(eNB,proc,thread_name) < 0) break;
     }
 
     LOG_D(PHY,"L1 RX %d.%d done\n",proc->frame_rx,proc->subframe_rx);
-
-    if(get_thread_parallel_conf() == PARALLEL_RU_L1_SPLIT)              phy_procedures_eNB_TX(eNB, proc, 1);
-
-
     if (NFAPI_MODE!=NFAPI_MODE_VNF) {
-      if(get_thread_parallel_conf() == PARALLEL_RU_L1_TRX_SPLIT)      wakeup_tx(eNB,proc->frame_rx,proc->subframe_rx,proc->frame_tx,proc->subframe_tx,proc->timestamp_tx);
-      else if(get_thread_parallel_conf() == PARALLEL_RU_L1_SPLIT)     wakeup_txfh(eNB,proc,proc->frame_tx,proc->subframe_tx,proc->timestamp_tx);
+      if(get_thread_parallel_conf() == PARALLEL_RU_L1_TRX_SPLIT)     wakeup_tx(eNB,proc->frame_rx,proc->subframe_rx,proc->frame_tx,proc->subframe_tx,proc->timestamp_tx); 
+      else if(get_thread_parallel_conf() == PARALLEL_RU_L1_SPLIT) {
+        phy_procedures_eNB_TX(eNB, proc, 1);
+        wakeup_txfh(eNB,proc,proc->frame_tx,proc->subframe_tx,proc->timestamp_tx);
+      }
     }
 
     if (release_thread(&proc->mutex,&proc->instance_cnt,thread_name)<0) break;
@@ -595,14 +459,14 @@ void eNB_top(PHY_VARS_eNB *eNB, int frame_rx, int subframe_rx, char *string,RU_t
   proc->subframe_rx = subframe_rx;
 
   if (!oai_exit) {
-    T(T_ENB_MASTER_TICK, T_INT(0), T_INT(proc->frame_rx), T_INT(proc->subframe_rx));
+    T(T_ENB_MASTER_TICK, T_INT(0), T_INT(ru_proc->frame_rx), T_INT(ru_proc->subframe_rx));
     L1_proc->timestamp_tx = ru_proc->timestamp_rx + (sf_ahead*fp->samples_per_tti);
     L1_proc->frame_rx     = ru_proc->frame_rx;
     L1_proc->subframe_rx  = ru_proc->subframe_rx;
     L1_proc->frame_tx     = (L1_proc->subframe_rx > (9-sf_ahead)) ? (L1_proc->frame_rx+1)&1023 : L1_proc->frame_rx;
     L1_proc->subframe_tx  = (L1_proc->subframe_rx + sf_ahead)%10;
 
-    if (rxtx_NB_IoT(eNB,L1_proc,string) < 0) LOG_E(PHY,"eNB %d CC_id %d failed during execution\n",eNB->Mod_id,eNB->CC_id); //Call rxtx_NB_IoT
+    if (rxtx(eNB,L1_proc,string) < 0) LOG_E(PHY,"eNB %d CC_id %d failed during execution\n",eNB->Mod_id,eNB->CC_id);
 
     ru_proc->timestamp_tx = L1_proc->timestamp_tx;
     ru_proc->subframe_tx  = L1_proc->subframe_tx;
@@ -645,9 +509,9 @@ int wakeup_txfh(PHY_VARS_eNB *eNB, L1_rxtx_proc_t *proc,int frame_tx,int subfram
     if (((fp->frame_type == TDD) && (subframe_select(fp,proc->subframe_tx)==SF_UL))||
         (eNB->RU_list[ru_id]->state == RU_SYNC)||
         (eNB->RU_list[ru_id]->wait_cnt>0)){
-       AssertFatal((pthread_mutex_lock(&proc->mutex_RUs))==0, "mutex_lock returns %d\n",ret);
+       AssertFatal((ret=pthread_mutex_lock(&proc->mutex_RUs))==0, "mutex_lock returns %d\n",ret);
        proc->instance_cnt_RUs = 0;
-       AssertFatal((pthread_mutex_unlock(&proc->mutex_RUs))==0, "mutex_unlock returns %d\n",ret);
+       AssertFatal((ret=pthread_mutex_unlock(&proc->mutex_RUs))==0, "mutex_unlock returns %d\n",ret);
        continue;//hacking only works when all RU_tx works on the same subframe #TODO: adding mask stuff
     }
 
@@ -772,15 +636,12 @@ void wakeup_prach_eNB(PHY_VARS_eNB *eNB,RU_t *ru,int frame,int subframe) {
 
     AssertFatal((ret=pthread_mutex_lock(&proc->mutex_RU_PRACH))==0,"mutex_lock return %d\n",ret);
     for (i=0; i<eNB->num_RU; i++) {
-      if (ru == eNB->RU_list[i]) {
-        LOG_D(PHY,"frame %d, subframe %d: RU %d for eNB %d signals PRACH (mask %x, num_RU %d)\n",frame,subframe,i,eNB->Mod_id,proc->RU_mask_prach,eNB->num_RU);
-
-        if ((proc->RU_mask_prach&(1<<i)) > 0)
-          LOG_E(PHY,"eNB %d frame %d, subframe %d : previous information (PRACH) from RU %d (num_RU %d, mask %x) has not been served yet!\n",
-                eNB->Mod_id,frame,subframe,ru->idx,eNB->num_RU,proc->RU_mask_prach);
-
-        proc->RU_mask_prach |= (1<<i);
-      }
+      if (ru == eNB->RU_list[i] && eNB->RU_list[i]->wait_cnt == 0) {
+          LOG_D(PHY,"frame %d, subframe %d: RU %d for eNB %d signals PRACH (mask %x, num_RU %d)\n",frame,subframe,i,eNB->Mod_id,proc->RU_mask_prach,eNB->num_RU);
+    proc->RU_mask_prach |= (1<<i);
+        } else if (eNB->RU_list[i]->state == RU_SYNC || eNB->RU_list[i]->wait_cnt > 0) {
+          proc->RU_mask_prach |= (1<<i);
+        }
     }
 
     if (proc->RU_mask_prach != (1<<eNB->num_RU)-1) {  // not all RUs have provided their information so return
@@ -986,6 +847,7 @@ static void *process_stats_thread(void *param) {
   return(NULL);
 }
 
+
 void init_eNB_proc(int inst) {
   /*int i=0;*/
   int CC_id;
@@ -1065,7 +927,9 @@ void init_eNB_proc(int inst) {
 
     LOG_I(PHY,"eNB->single_thread_flag:%d\n", eNB->single_thread_flag);
 
-    if ((get_thread_parallel_conf() == PARALLEL_RU_L1_SPLIT || get_thread_parallel_conf() == PARALLEL_RU_L1_TRX_SPLIT) && NFAPI_MODE!=NFAPI_MODE_VNF) {
+    if ((get_thread_parallel_conf() == PARALLEL_RU_L1_SPLIT) && NFAPI_MODE!=NFAPI_MODE_VNF) {
+      pthread_create( &L1_proc->pthread, attr0, L1_thread, proc );
+    } else if ((get_thread_parallel_conf() == PARALLEL_RU_L1_TRX_SPLIT) && NFAPI_MODE!=NFAPI_MODE_VNF) {
       pthread_create( &L1_proc->pthread, attr0, L1_thread, proc );
       pthread_create( &L1_proc_tx->pthread, attr1, L1_thread_tx, proc);
     } else if (NFAPI_MODE==NFAPI_MODE_VNF) { // this is neccesary in VNF or L2 FAPI simulator.
@@ -1076,10 +940,12 @@ void init_eNB_proc(int inst) {
       pthread_create( &L1_proc_tx->pthread, attr1, L1_thread, L1_proc_tx);
     }
 
-    pthread_create( &proc->pthread_prach, attr_prach, eNB_thread_prach_NB_IoT, eNB );  // Call eNB_thread_prach_NB_IoT
+    if (NFAPI_MODE!=NFAPI_MODE_VNF) {
+      pthread_create( &proc->pthread_prach, attr_prach, eNB_thread_prach, eNB );
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
-    pthread_create( &proc->pthread_prach_br, attr_prach_br, eNB_thread_prach_br, eNB );
+      pthread_create( &proc->pthread_prach_br, attr_prach_br, eNB_thread_prach_br, eNB );
 #endif
+    }
     AssertFatal(proc->instance_cnt_prach == -1,"instance_cnt_prach = %d\n",proc->instance_cnt_prach);
 
     if (opp_enabled == 1) pthread_create(&proc->process_stats_thread,NULL,process_stats_thread,(void *)eNB);
@@ -1193,104 +1059,6 @@ void kill_eNB_proc(int inst) {
 }
 
 
-/******************************************Define in original NB-IoT branch*************************************************/
-
-/* this function maps the phy_vars_eNB tx and rx buffers to the available rf chains.
-   Each rf chain is is addressed by the card number and the chain on the card. The
-   rf_map specifies for each CC, on which rf chain the mapping should start. Multiple
-   antennas are mapped to successive RF chains on the same card. */
-int setup_eNB_buffers(PHY_VARS_eNB_NB_IoT **phy_vars_eNB, openair0_config_t *openair0_cfg) {
-
-  int i,j; 
-  int CC_id,card,ant;
-
-  //uint16_t N_TA_offset = 0;
-
-  LTE_DL_FRAME_PARMS *frame_parms;
-
-  for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
-    if (phy_vars_eNB[CC_id]) {
-      frame_parms = &(phy_vars_eNB[CC_id]->frame_parms);
-      printf("setup_eNB_buffers: frame_parms = %p\n",frame_parms);
-    } else {
-      printf("phy_vars_eNB[%d] not initialized\n", CC_id);
-      return(-1);
-    }
-
-    /*
-    if (frame_parms->frame_type == TDD) {
-      if (frame_parms->N_RB_DL == 100)
-        N_TA_offset = 624;
-      else if (frame_parms->N_RB_DL == 50)
-        N_TA_offset = 624/2;
-      else if (frame_parms->N_RB_DL == 25)
-        N_TA_offset = 624/4;
-    }
-    */
- 
-
-    if (openair0_cfg[CC_id].mmapped_dma == 1) {
-    // replace RX signal buffers with mmaped HW versions
-      
-      for (i=0; i<frame_parms->nb_antennas_rx; i++) {
-  card = i/4;
-  ant = i%4;
-  printf("Mapping eNB CC_id %d, rx_ant %d, on card %d, chain %d\n",CC_id,i,phy_vars_eNB[CC_id]->rf_map.card+card, phy_vars_eNB[CC_id]->rf_map.chain+ant);
-  free(phy_vars_eNB[CC_id]->common_vars.rxdata[0][i]);
-  phy_vars_eNB[CC_id]->common_vars.rxdata[0][i] = openair0_cfg[phy_vars_eNB[CC_id]->rf_map.card+card].rxbase[phy_vars_eNB[CC_id]->rf_map.chain+ant];
-  
-  printf("rxdata[%d] @ %p\n",i,phy_vars_eNB[CC_id]->common_vars.rxdata[0][i]);
-  for (j=0; j<16; j++) {
-    printf("rxbuffer %d: %x\n",j,phy_vars_eNB[CC_id]->common_vars.rxdata[0][i][j]);
-    phy_vars_eNB[CC_id]->common_vars.rxdata[0][i][j] = 16-j;
-  }
-      }
-      
-      for (i=0; i<frame_parms->nb_antennas_tx; i++) {
-  card = i/4;
-  ant = i%4;
-  printf("Mapping eNB CC_id %d, tx_ant %d, on card %d, chain %d\n",CC_id,i,phy_vars_eNB[CC_id]->rf_map.card+card, phy_vars_eNB[CC_id]->rf_map.chain+ant);
-  free(phy_vars_eNB[CC_id]->common_vars.txdata[0][i]);
-  phy_vars_eNB[CC_id]->common_vars.txdata[0][i] = openair0_cfg[phy_vars_eNB[CC_id]->rf_map.card+card].txbase[phy_vars_eNB[CC_id]->rf_map.chain+ant];
-  
-  printf("txdata[%d] @ %p\n",i,phy_vars_eNB[CC_id]->common_vars.txdata[0][i]);
-  
-  for (j=0; j<16; j++) {
-    printf("txbuffer %d: %x\n",j,phy_vars_eNB[CC_id]->common_vars.txdata[0][i][j]);
-    phy_vars_eNB[CC_id]->common_vars.txdata[0][i][j] = 16-j;
-  }
-      }
-    }
-    else {  // not memory-mapped DMA 
-      //nothing to do, everything already allocated in lte_init
-      /*
-      rxdata = (int32_t**)malloc16(frame_parms->nb_antennas_rx*sizeof(int32_t*));
-      txdata = (int32_t**)malloc16(frame_parms->nb_antennas_tx*sizeof(int32_t*));
-      
-      for (i=0; i<frame_parms->nb_antennas_rx; i++) {
-  free(phy_vars_eNB[CC_id]->common_vars.rxdata[0][i]);
-  rxdata[i] = (int32_t*)(32 + malloc16(32+frame_parms->samples_per_tti*10*sizeof(int32_t))); // FIXME broken memory allocation
-  phy_vars_eNB[CC_id]->common_vars.rxdata[0][i] = rxdata[i]; //-N_TA_offset; // N_TA offset for TDD         FIXME! N_TA_offset > 16 => access of unallocated memory
-  memset(rxdata[i], 0, frame_parms->samples_per_tti*10*sizeof(int32_t));
-  printf("rxdata[%d] @ %p (%p) (N_TA_OFFSET %d)\n", i, phy_vars_eNB[CC_id]->common_vars.rxdata[0][i],rxdata[i],N_TA_offset);      
-      }
-      
-      for (i=0; i<frame_parms->nb_antennas_tx; i++) {
-  free(phy_vars_eNB[CC_id]->common_vars.txdata[0][i]);
-  txdata[i] = (int32_t*)(32 + malloc16(32 + frame_parms->samples_per_tti*10*sizeof(int32_t))); // FIXME broken memory allocation
-  phy_vars_eNB[CC_id]->common_vars.txdata[0][i] = txdata[i];
-  memset(txdata[i],0, frame_parms->samples_per_tti*10*sizeof(int32_t));
-  printf("txdata[%d] @ %p\n", i, phy_vars_eNB[CC_id]->common_vars.txdata[0][i]);
-      }
-      */
-    }
-  }
-
-  return(0);
-}
-
-/**************************************************************************************************************************/
-
 
 
 void reset_opp_meas(void) {
@@ -1338,6 +1106,7 @@ void init_transport(PHY_VARS_eNB *eNB) {
   LTE_DL_FRAME_PARMS *fp = &eNB->frame_parms;
   LOG_I(PHY, "Initialise transport\n");
 
+if (NFAPI_MODE!=NFAPI_MODE_VNF) {
   for (i=0; i<NUMBER_OF_UE_MAX; i++) {
     LOG_D(PHY,"Allocating Transport Channel Buffers for DLSCH, UE %d\n",i);
 
@@ -1380,6 +1149,7 @@ void init_transport(PHY_VARS_eNB *eNB) {
   LOG_D(PHY,"eNB %d.%d : RA %p\n",eNB->Mod_id,eNB->CC_id,eNB->dlsch_ra);
   eNB->dlsch_MCH = new_eNB_dlsch(1,8,NSOFT,fp->N_RB_DL, 0, fp);
   LOG_D(PHY,"eNB %d.%d : MCH %p\n",eNB->Mod_id,eNB->CC_id,eNB->dlsch_MCH);
+}
   eNB->rx_total_gain_dB=130;
 
   for(i=0; i<NUMBER_OF_UE_MAX; i++)
@@ -1399,8 +1169,6 @@ void init_eNB_afterRU(void) {
 
   for (inst=0; inst<RC.nb_inst; inst++) {
     LOG_I(PHY,"RC.nb_CC[inst]:%d\n", RC.nb_CC[inst]);
-
-
 
     for (CC_id=0; CC_id<RC.nb_CC[inst]; CC_id++) {
       LOG_I(PHY,"RC.nb_CC[inst:%d][CC_id:%d]:%p\n", inst, CC_id, RC.eNB[inst][CC_id]);
@@ -1533,395 +1301,9 @@ void init_eNB(int single_thread_flag,int wait_for_sync) {
 }
 
 
-
 void stop_eNB(int nb_inst) {
   for (int inst=0; inst<nb_inst; inst++) {
     LOG_I(PHY,"Killing eNB %d processing threads\n",inst);
     kill_eNB_proc(inst);
   }
 }
-
-
-
-/*******************************************************************For NB-IoT********************************************************************/
-
-///Modify to NB-IoT merge
-void init_eNB_NB_IoT(eNB_func_NB_IoT_t node_function[], eNB_timing_NB_IoT_t node_timing[],int nb_inst,eth_params_t *eth_params,int single_thread_flag,int wait_for_sync) {
-  
-  int CC_id;
-  int inst;
-  PHY_VARS_eNB_NB_IoT *eNB;
-  int ret;
-
-  for (inst=0;inst<nb_inst;inst++) {
-    for (CC_id=0;CC_id<MAX_NUM_CCs;CC_id++) {
-      eNB = PHY_vars_eNB_g[inst][CC_id]; 
-      eNB->node_function      = node_function[CC_id];
-      eNB->node_timing        = node_timing[CC_id];
-      eNB->eth_params         = eth_params+CC_id;
-      eNB->abstraction_flag   = 0;
-      eNB->single_thread_flag = single_thread_flag;
-      eNB->ts_offset          = 0;
-      eNB->in_synch           = 0;
-      eNB->is_slave           = (wait_for_sync>0) ? 1 : 0;
-
-      /////// IF-Module initialization ///////////////
-
-      LOG_I(PHY,"Registering with MAC interface module start\n");
-      AssertFatal((eNB->if_inst_NB_IoT         = IF_Module_init_NB_IoT(inst))!=NULL,"Cannot register interface");
-      eNB->if_inst_NB_IoT->schedule_response   = schedule_response_NB_IoT;
-      eNB->if_inst_NB_IoT->PHY_config_req      = PHY_config_req_NB_IoT;
-      LOG_I(PHY,"Registering with MAC interface module sucessfully\n");
-
-
-#ifndef OCP_FRAMEWORK
-      LOG_I(PHY,"Initializing eNB %d CC_id %d : (%s,%s)\n",inst,CC_id,eNB_functions[node_function[CC_id]],eNB_timing[node_timing[CC_id]]);
-#endif
-
-      switch (node_function[CC_id]) {
-      case NGFI_RRU_IF5_NB_IoT:
-  eNB->do_prach             = NULL;
-  eNB->do_precoding         = 0;
-  eNB->fep                  = eNB_fep_rru_if5;
-  eNB->td                   = NULL;
-  eNB->te                   = NULL;
-  eNB->proc_uespec_rx       = NULL;
-  eNB->proc_tx              = NULL;
-  eNB->tx_fh                = NULL;
-  eNB->rx_fh                = rx_rf;
-  eNB->start_rf             = start_rf;
-  eNB->start_if             = start_if;
-  eNB->fh_asynch            = fh_if5_asynch_DL;
-  if (oaisim_flag == 0) {
-    ret = openair0_device_load(&eNB->rfdevice, &openair0_cfg[CC_id]);
-    if (ret<0) {
-      printf("Exiting, cannot initialize rf device\n");
-      exit(-1);
-    }
-  }
-  eNB->rfdevice.host_type   = RRH_HOST;
-  eNB->ifdevice.host_type   = RRH_HOST;
-        ret = openair0_transport_load(&eNB->ifdevice, &openair0_cfg[CC_id], eNB->eth_params);
-  printf("openair0_transport_init returns %d for CC_id %d\n",ret,CC_id);
-        if (ret<0) {
-          printf("Exiting, cannot initialize transport protocol\n");
-          exit(-1);
-        }
-  malloc_IF5_buffer(eNB);
-  break;
-      case NGFI_RRU_IF4p5_NB_IoT:
-  eNB->do_precoding         = 0;
-  eNB->do_prach             = do_prach;
-  eNB->fep                  = eNB_fep_full;//(single_thread_flag==1) ? eNB_fep_full_2thread : eNB_fep_full;
-  eNB->td                   = NULL;
-  eNB->te                   = NULL;
-  eNB->proc_uespec_rx       = NULL;
-  eNB->proc_tx              = NULL;//proc_tx_rru_if4p5;
-  eNB->tx_fh                = NULL;
-  eNB->rx_fh                = rx_rf;
-  eNB->fh_asynch            = fh_if4p5_asynch_DL;
-  eNB->start_rf             = start_rf;
-  eNB->start_if             = start_if;
-  if (oaisim_flag == 0) {
-    ret = openair0_device_load(&eNB->rfdevice, &openair0_cfg[CC_id]);
-    if (ret<0) {
-      printf("Exiting, cannot initialize rf device\n");
-      exit(-1);
-    }
-  }
-  eNB->rfdevice.host_type   = RRH_HOST;
-  eNB->ifdevice.host_type   = RRH_HOST;
-  printf("loading transport interface ...\n");
-        ret = openair0_transport_load(&eNB->ifdevice, &openair0_cfg[CC_id], eNB->eth_params);
-  printf("openair0_transport_init returns %d for CC_id %d\n",ret,CC_id);
-        if (ret<0) {
-          printf("Exiting, cannot initialize transport protocol\n");
-          exit(-1);
-        }
-
-  malloc_IF4p5_buffer(eNB);
-
-  break;
-      case eNodeB_3GPP_NB_IoT:
-  eNB->do_precoding         = eNB->frame_parms.nb_antennas_tx!=eNB->frame_parms.nb_antenna_ports_eNB;
-  eNB->do_prach             = do_prach;
-  eNB->fep                  = eNB_fep_full;//(single_thread_flag==1) ? eNB_fep_full_2thread : eNB_fep_full;
-  eNB->td                   = ulsch_decoding_data;//(single_thread_flag==1) ? ulsch_decoding_data_2thread : ulsch_decoding_data;
-  eNB->te                   = dlsch_encoding;//(single_thread_flag==1) ? dlsch_encoding_2threads : dlsch_encoding;
-  ////////////////////// NB-IoT testing ////////////////////
-  //eNB->proc_uespec_rx       = phy_procedures_eNB_uespec_RX;
-  eNB->proc_uespec_rx       = phy_procedures_eNB_uespec_RX_NB_IoT;
-
-  eNB->proc_tx              = proc_tx_full;
-  eNB->tx_fh                = NULL;
-  eNB->rx_fh                = rx_rf;
-  eNB->start_rf             = start_rf;
-  eNB->start_if             = NULL;
-        eNB->fh_asynch            = NULL;
-        if (oaisim_flag == 0) {
-      ret = openair0_device_load(&eNB->rfdevice, &openair0_cfg[CC_id]);
-          if (ret<0) {
-            printf("Exiting, cannot initialize rf device\n");
-            exit(-1);
-          }
-        }
-  eNB->rfdevice.host_type   = BBU_HOST;
-  eNB->ifdevice.host_type   = BBU_HOST;
-  break;
-      case eNodeB_3GPP_BBU_NB_IoT:
-  eNB->do_precoding         = eNB->frame_parms.nb_antennas_tx!=eNB->frame_parms.nb_antenna_ports_eNB;
-  eNB->do_prach             = do_prach;
-  eNB->fep                  = eNB_fep_full;//(single_thread_flag==1) ? eNB_fep_full_2thread : eNB_fep_full;
-  eNB->td                   = ulsch_decoding_data;//(single_thread_flag==1) ? ulsch_decoding_data_2thread : ulsch_decoding_data;
-  eNB->te                   = dlsch_encoding;//(single_thread_flag==1) ? dlsch_encoding_2threads : dlsch_encoding;
-  eNB->proc_uespec_rx       = phy_procedures_eNB_uespec_RX;
-  eNB->proc_tx              = proc_tx_full;
-        if (eNB->node_timing == synch_to_other) {
-           eNB->tx_fh             = tx_fh_if5_mobipass;
-           eNB->rx_fh             = rx_fh_slave;
-           eNB->fh_asynch         = fh_if5_asynch_UL;
-
-        }
-        else {
-           eNB->tx_fh             = tx_fh_if5;
-           eNB->rx_fh             = rx_fh_if5;
-           eNB->fh_asynch         = NULL;
-        }
-
-  eNB->start_rf             = NULL;
-  eNB->start_if             = start_if;
-  eNB->rfdevice.host_type   = BBU_HOST;
-
-  eNB->ifdevice.host_type   = BBU_HOST;
-
-        ret = openair0_transport_load(&eNB->ifdevice, &openair0_cfg[CC_id], eNB->eth_params);
-        printf("openair0_transport_init returns %d for CC_id %d\n",ret,CC_id);
-        if (ret<0) {
-          printf("Exiting, cannot initialize transport protocol\n");
-          exit(-1);
-        }
-  malloc_IF5_buffer(eNB);
-  break;
-      case NGFI_RCC_IF4p5_NB_IoT:
-  eNB->do_precoding         = 0;
-  eNB->do_prach             = do_prach;
-  eNB->fep                  = NULL;
-  eNB->td                   = ulsch_decoding_data;//(single_thread_flag==1) ? ulsch_decoding_data_2thread : ulsch_decoding_data;
-  eNB->te                   = dlsch_encoding;//(single_thread_flag==1) ? dlsch_encoding_2threads : dlsch_encoding;
-  eNB->proc_uespec_rx       = phy_procedures_eNB_uespec_RX;
-  eNB->proc_tx              = proc_tx_high;
-  eNB->tx_fh                = tx_fh_if4p5;
-  eNB->rx_fh                = rx_fh_if4p5;
-  eNB->start_rf             = NULL;
-  eNB->start_if             = start_if;
-        eNB->fh_asynch            = (eNB->node_timing == synch_to_other) ? fh_if4p5_asynch_UL : NULL;
-  eNB->rfdevice.host_type   = BBU_HOST;
-  eNB->ifdevice.host_type   = BBU_HOST;
-        ret = openair0_transport_load(&eNB->ifdevice, &openair0_cfg[CC_id], eNB->eth_params);
-        printf("openair0_transport_init returns %d for CC_id %d\n",ret,CC_id);
-        if (ret<0) {
-          printf("Exiting, cannot initialize transport protocol\n");
-          exit(-1);
-        }
-  malloc_IF4p5_buffer(eNB);
-
-  break;
-      case NGFI_RAU_IF4p5_NB_IoT:
-  eNB->do_precoding   = 0;
-  eNB->do_prach       = do_prach;
-  eNB->fep            = NULL;
-
-  eNB->td             = ulsch_decoding_data;//(single_thread_flag==1) ? ulsch_decoding_data_2thread : ulsch_decoding_data;
-  eNB->te             = dlsch_encoding;//(single_thread_flag==1) ? dlsch_encoding_2threads : dlsch_encoding;
-  eNB->proc_uespec_rx = phy_procedures_eNB_uespec_RX;
-  eNB->proc_tx        = proc_tx_high;
-  eNB->tx_fh          = tx_fh_if4p5; 
-  eNB->rx_fh          = rx_fh_if4p5; 
-        eNB->fh_asynch      = (eNB->node_timing == synch_to_other) ? fh_if4p5_asynch_UL : NULL;
-  eNB->start_rf       = NULL;
-  eNB->start_if       = start_if;
-
-  eNB->rfdevice.host_type   = BBU_HOST;
-  eNB->ifdevice.host_type   = BBU_HOST;
-        ret = openair0_transport_load(&eNB->ifdevice, &openair0_cfg[CC_id], eNB->eth_params);
-        printf("openair0_transport_init returns %d for CC_id %d\n",ret,CC_id);
-        if (ret<0) {
-          printf("Exiting, cannot initialize transport protocol\n");
-          exit(-1);
-        }
-  break;  
-  malloc_IF4p5_buffer(eNB);
-
-      }
-
-      if (setup_eNB_buffers(PHY_vars_eNB_g[inst],&openair0_cfg[CC_id])!=0) {
-  printf("Exiting, cannot initialize eNodeB Buffers\n");
-  exit(-1);
-      }
-    }
-
-    init_eNB_proc(inst);
-  }
-
-  sleep(1);
-  LOG_D(HW,"[lte-softmodem.c] eNB threads created\n");
-  
-
-}
-
-////
-void rx_rf(PHY_VARS_eNB_NB_IoT *eNB,int *frame,int *subframe) {
-
-  eNB_proc_t *proc = &eNB->proc;
-  LTE_DL_FRAME_PARMS *fp = &eNB->frame_parms;
-  void *rxp[fp->nb_antennas_rx],*txp[fp->nb_antennas_tx]; 
-  unsigned int rxs,txs;
-  int i;
-  int tx_sfoffset = (eNB->single_thread_flag == 1) ? 3 : 2;
-  openair0_timestamp ts,old_ts;
-
-  if (proc->first_rx==0) {
-    
-    // Transmit TX buffer based on timestamp from RX
-    //    printf("trx_write -> USRP TS %llu (sf %d)\n", (proc->timestamp_rx+(3*fp->samples_per_tti)),(proc->subframe_rx+2)%10);
-    VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME( VCD_SIGNAL_DUMPER_VARIABLES_TRX_TST, (proc->timestamp_rx+(tx_sfoffset*fp->samples_per_tti)-openair0_cfg[0].tx_sample_advance)&0xffffffff );
-    VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_WRITE, 1 );
-    // prepare tx buffer pointers
-
-    lte_subframe_t SF_type     = subframe_select(fp,(proc->subframe_rx+tx_sfoffset)%10);
-    lte_subframe_t prevSF_type = subframe_select(fp,(proc->subframe_rx+tx_sfoffset+9)%10);
-    lte_subframe_t nextSF_type = subframe_select(fp,(proc->subframe_rx+tx_sfoffset+1)%10);
-    if ((SF_type == SF_DL) ||
-  (SF_type == SF_S)) {
-
-      for (i=0; i<fp->nb_antennas_tx; i++)
-  txp[i] = (void*)&eNB->common_vars.txdata[0][i][((proc->subframe_rx+tx_sfoffset)%10)*fp->samples_per_tti]; 
-
-      int siglen=fp->samples_per_tti,flags=1;
-
-      if (SF_type == SF_S) {
-  siglen = fp->dl_symbols_in_S_subframe*(fp->ofdm_symbol_size+fp->nb_prefix_samples0);
-  flags=3; // end of burst
-      }
-      if ((fp->frame_type == TDD) &&
-    (SF_type == SF_DL)&&
-    (prevSF_type == SF_UL) &&
-    (nextSF_type == SF_DL))
-  flags = 2; // start of burst
-
-      if ((fp->frame_type == TDD) &&
-    (SF_type == SF_DL)&&
-    (prevSF_type == SF_UL) &&
-    (nextSF_type == SF_UL))
-  flags = 4; // start of burst and end of burst (only one DL SF between two UL)
-     
-      VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_WRITE, 1 );
-      VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME( VCD_SIGNAL_DUMPER_VARIABLES_TRX_WRITE_FLAGS,flags); 
-      txs = eNB->rfdevice.trx_write_func(&eNB->rfdevice,
-           proc->timestamp_rx+eNB->ts_offset+(tx_sfoffset*fp->samples_per_tti)-openair0_cfg[0].tx_sample_advance,
-           txp,
-           siglen,
-           fp->nb_antennas_tx,
-           flags);
-      clock_gettime( CLOCK_MONOTONIC, &end_rf);    
-      end_rf_ts = proc->timestamp_rx+eNB->ts_offset+(tx_sfoffset*fp->samples_per_tti)-openair0_cfg[0].tx_sample_advance;
-      if (recv_if_count != 0 ) {
-        recv_if_count = recv_if_count-1;
-        LOG_D(HW,"[From Timestamp %"PRId64" to Timestamp %"PRId64"] RTT_RF: %"PRId64"; RTT_RF\n", start_rf_prev_ts, end_rf_ts, clock_difftime_ns(start_rf_prev, end_rf));
-        LOG_D(HW,"[From Timestamp %"PRId64" to Timestamp %"PRId64"] RTT_RF: %"PRId64"; RTT_RF\n",start_rf_prev2_ts, end_rf_ts, clock_difftime_ns(start_rf_prev2, end_rf));
-      }
-      VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_WRITE, 0 );
-      
-      
-      
-      if (txs !=  siglen) {
-  LOG_E(PHY,"TX : Timeout (sent %d/%d)\n",txs, fp->samples_per_tti);
-  exit_fun( "problem transmitting samples" );
-      } 
-    }
-  }
-
-  for (i=0; i<fp->nb_antennas_rx; i++)
-    rxp[i] = (void*)&eNB->common_vars.rxdata[0][i][*subframe*fp->samples_per_tti];
-  
-  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_READ, 1 );
-
-  old_ts = proc->timestamp_rx;
-
-  rxs = eNB->rfdevice.trx_read_func(&eNB->rfdevice,
-            &ts,
-            rxp,
-            fp->samples_per_tti,
-            fp->nb_antennas_rx);
-  start_rf_prev2= start_rf_prev;
-  start_rf_prev2_ts= start_rf_prev_ts; 
-  start_rf_prev = start_rf_new;
-  start_rf_prev_ts = start_rf_new_ts;
-  clock_gettime( CLOCK_MONOTONIC, &start_rf_new);
-  start_rf_new_ts = ts;
-  LOG_D(PHY,"rx_rf: first_rx %d received ts %"PRId64" (sptti %d)\n",proc->first_rx,ts,fp->samples_per_tti);
-  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_READ, 0 );
-
-  proc->timestamp_rx = ts-eNB->ts_offset;
-
-  if (rxs != fp->samples_per_tti)
-    LOG_E(PHY,"rx_rf: Asked for %d samples, got %d from USRP\n",fp->samples_per_tti,rxs);
-
-  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_READ, 0 );
- 
-  if (proc->first_rx == 1) {
-    eNB->ts_offset = proc->timestamp_rx;
-    proc->timestamp_rx=0;
-  }
-  else {
-
-    if (proc->timestamp_rx - old_ts != fp->samples_per_tti) {
-      LOG_I(PHY,"rx_rf: rfdevice timing drift of %"PRId64" samples (ts_off %"PRId64")\n",proc->timestamp_rx - old_ts - fp->samples_per_tti,eNB->ts_offset);
-      eNB->ts_offset += (proc->timestamp_rx - old_ts - fp->samples_per_tti);
-      proc->timestamp_rx = ts-eNB->ts_offset;
-    }
-  }
-  proc->frame_rx    = (proc->timestamp_rx / (fp->samples_per_tti*10))&1023;
-  proc->subframe_rx = (proc->timestamp_rx / fp->samples_per_tti)%10;
-  proc->frame_rx    = (proc->frame_rx+proc->frame_offset)&1023;
-  proc->frame_tx    = proc->frame_rx;
-  if (proc->subframe_rx > 5) proc->frame_tx=(proc->frame_tx+1)&1023;
-  // synchronize first reception to frame 0 subframe 0
-
-  proc->timestamp_tx = proc->timestamp_rx+(4*fp->samples_per_tti);
-  //  printf("trx_read <- USRP TS %lu (offset %d sf %d, f %d, first_rx %d)\n", proc->timestamp_rx,eNB->ts_offset,proc->subframe_rx,proc->frame_rx,proc->first_rx);  
-  
-  if (proc->first_rx == 0) {
-    if (proc->subframe_rx != *subframe){
-      LOG_E(PHY,"rx_rf: Received Timestamp (%"PRId64") doesn't correspond to the time we think it is (proc->subframe_rx %d, subframe %d)\n",proc->timestamp_rx,proc->subframe_rx,*subframe);
-      exit_fun("Exiting");
-    }
-    int f2 = (*frame+proc->frame_offset)&1023;    
-    if (proc->frame_rx != f2) {
-      LOG_E(PHY,"rx_rf: Received Timestamp (%"PRId64") doesn't correspond to the time we think it is (proc->frame_rx %d frame %d, frame_offset %d, f2 %d)\n",proc->timestamp_rx,proc->frame_rx,*frame,proc->frame_offset,f2);
-      exit_fun("Exiting");
-    }
-  } else {
-    proc->first_rx--;
-    *frame = proc->frame_rx;
-    *subframe = proc->subframe_rx;        
-  }
-  
-  //printf("timestamp_rx %lu, frame %d(%d), subframe %d(%d)\n",proc->timestamp_rx,proc->frame_rx,frame,proc->subframe_rx,subframe);
-  
-  VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME( VCD_SIGNAL_DUMPER_VARIABLES_TRX_TS, proc->timestamp_rx&0xffffffff );
-  
-  if (rxs != fp->samples_per_tti)
-    exit_fun( "problem receiving samples" );
-  
-}
-
-int start_rf(PHY_VARS_eNB_NB_IoT *eNB) {
-  return(eNB->rfdevice.trx_start_func(&eNB->rfdevice));
-}
-
-int start_if(PHY_VARS_eNB_NB_IoT *eNB) {
-  return(eNB->ifdevice.trx_start_func(&eNB->ifdevice));
-}
-
-/*******************************************************************For NB-IoT********************************************************************/
