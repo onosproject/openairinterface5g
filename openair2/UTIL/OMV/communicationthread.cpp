@@ -69,7 +69,7 @@ char *map_int_to_str(mapping *map, int val) {
 // mobtype = map_int_to_str(omg_model_names,omv_data.geo[i].mobility_type)
 
 extern int pfd[2];
-extern struct Geo geo[NUMBER_OF_eNB_MAX+NUMBER_OF_UE_MAX];
+extern struct Geo *geo;
 extern int nb_frames;
 extern int node_number;
 extern int nb_enb;
@@ -90,6 +90,11 @@ void CommunicationThread::run()
     int counter = nb_frames;
     Data_Flow_Unit data;
 
+    data_flow_unit_malloc(&data);
+    geo = (struct Geo *)malloc(sizeof(struct Geo)*(NUMBER_OF_eNB_MAX+NUMBER_OF_UE_MAX));
+    for (int i = 0; i < (NUMBER_OF_eNB_MAX+NUMBER_OF_UE_MAX); i++) {
+      struct_geo_malloc(&(geo[i]));
+    }
     while (counter > 0 && !end){
         switch( nread = read(pfd[0], &data, sizeof(Data_Flow_Unit))) {
         case -1 :

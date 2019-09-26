@@ -454,13 +454,20 @@ typedef struct {
  *  @brief Including Application type, Source, destination, background, etc
  * @{*/
 typedef struct {
-  char *application_type[NUMBER_OF_eNB_MAX + NUMBER_OF_UE_MAX];
+/*  char *application_type[NUMBER_OF_eNB_MAX + NUMBER_OF_UE_MAX];
   char *source_id[NUMBER_OF_eNB_MAX + NUMBER_OF_UE_MAX];
   char *destination_id[NUMBER_OF_eNB_MAX + NUMBER_OF_UE_MAX];
   char *background[NUMBER_OF_eNB_MAX + NUMBER_OF_UE_MAX];
   unsigned int aggregation_level[NUMBER_OF_eNB_MAX + NUMBER_OF_UE_MAX];
   int flow_start[NUMBER_OF_eNB_MAX + NUMBER_OF_UE_MAX];
-  int flow_duration[NUMBER_OF_eNB_MAX + NUMBER_OF_UE_MAX];
+  int flow_duration[NUMBER_OF_eNB_MAX + NUMBER_OF_UE_MAX]; */
+  char **application_type;
+  char **source_id;
+  char **destination_id;
+  char **background;
+  unsigned int *aggregation_level;
+  int *flow_start;
+  int *flow_duration;
 
 } Predefined_Traffic;
 /* @}*/
@@ -489,7 +496,7 @@ typedef struct {
   //int ed;
   //double holding_time_off_pe;
 
-  char *application_type[NUMBER_OF_eNB_MAX + NUMBER_OF_UE_MAX];
+/*  char *application_type[NUMBER_OF_eNB_MAX + NUMBER_OF_UE_MAX];
   char *source_id[NUMBER_OF_eNB_MAX + NUMBER_OF_UE_MAX];
   char *destination_id[NUMBER_OF_eNB_MAX + NUMBER_OF_UE_MAX];
   char *traffic[NUMBER_OF_eNB_MAX + NUMBER_OF_UE_MAX];
@@ -530,7 +537,50 @@ typedef struct {
   unsigned int holding_time_off_pe[NUMBER_OF_eNB_MAX + NUMBER_OF_UE_MAX];
   unsigned int holding_time_pe_off[NUMBER_OF_eNB_MAX + NUMBER_OF_UE_MAX];
   unsigned int pu_size_pkts[NUMBER_OF_eNB_MAX + NUMBER_OF_UE_MAX];
-  unsigned int ed_size_pkts[NUMBER_OF_eNB_MAX + NUMBER_OF_UE_MAX];
+  unsigned int ed_size_pkts[NUMBER_OF_eNB_MAX + NUMBER_OF_UE_MAX]; */
+
+  char **application_type;
+  char **source_id;
+  char **destination_id;
+  char **traffic;
+  char **transport_protocol;
+  char **ip_version;
+  char **background;
+  char **idt_dist;
+  int *idt_min_ms;
+  int *idt_max_ms;
+  double *idt_standard_deviation;
+  double *idt_lambda;
+  double *idt_scale;
+  double *idt_shape;
+  char **size_dist;
+  int *size_min_byte;
+  int *size_max_byte;
+  double *size_standard_deviation;
+  double *size_lambda;
+  double *size_scale;
+  double *size_shape;
+  int *stream;
+  int *destination_port;
+  unsigned int *aggregation_level;
+  int *flow_start;
+  int *flow_duration;
+
+  char **m2m;
+  //M2M_Traffic m2m_traffic;
+  double *prob_off_pu;
+  double *prob_off_ed;
+  double *prob_off_pe;
+  double *prob_pu_ed;
+  double *prob_pu_pe;
+  double *prob_ed_pe;
+  double *prob_ed_pu;
+  unsigned int *holding_time_off_ed;
+  unsigned int *holding_time_off_pu;
+  unsigned int *holding_time_off_pe;
+  unsigned int *holding_time_pe_off;
+  unsigned int *pu_size_pkts;
+  unsigned int *ed_size_pkts;
 } Customized_Traffic;
 /* @}*/
 
@@ -686,8 +736,10 @@ typedef struct {
   unsigned char cli_num_enb;
   unsigned char cli_start_enb[NUMBER_OF_eNB_MAX];
   unsigned char cli_num_ue;
-  unsigned char cli_start_ue[NUMBER_OF_UE_MAX];
-  unsigned char oai_ifup[NUMBER_OF_eNB_MAX+NUMBER_OF_UE_MAX];
+//  unsigned char cli_start_ue[NUMBER_OF_UE_MAX];
+//  unsigned char oai_ifup[NUMBER_OF_eNB_MAX+NUMBER_OF_UE_MAX];
+  unsigned char *cli_start_ue;
+  unsigned char *oai_ifup;
   // emu related
   unsigned int seed;
   unsigned int frame;
@@ -717,10 +769,12 @@ typedef struct {
    */
   unsigned char slot_isr;
   int           slot_sfd;
-  rnti_t        eNB_ue_module_id_to_rnti[NUMBER_OF_eNB_MAX][NUMBER_OF_UE_MAX];/*!< \brief  used by eNB, this array can be filled:
+  rnti_t        *eNB_ue_module_id_to_rnti[NUMBER_OF_eNB_MAX];
+  module_id_t   *eNB_ue_local_uid_to_ue_module_id[NUMBER_OF_eNB_MAX];
+/*  rnti_t        eNB_ue_module_id_to_rnti[NUMBER_OF_eNB_MAX][NUMBER_OF_UE_MAX];*//*!< \brief  used by eNB, this array can be filled:
        by local virtualization: set directly by UE, or by remote UEs: TODO add signalisation on ethernet emulation link from UE to eNB*/
 
-  module_id_t   eNB_ue_local_uid_to_ue_module_id[NUMBER_OF_eNB_MAX][NUMBER_OF_UE_MAX];/*!< \brief  used by eNB, this array can be filled:
+/*  module_id_t   eNB_ue_local_uid_to_ue_module_id[NUMBER_OF_eNB_MAX][NUMBER_OF_UE_MAX];*//*!< \brief  used by eNB, this array can be filled:
        by local virtualization: set directly by UE, or by remote UEs: TODO add signalisation on ethernet emulation link from UE to eNB*/
 
 } Info;
@@ -731,7 +785,8 @@ typedef struct {
  *  @brief OAI Emulation struct for OSD_basic
  * @{*/
 typedef struct {
-  Mac_config mac_config[NUMBER_OF_UE_MAX];
+//  Mac_config mac_config[NUMBER_OF_UE_MAX];
+  Mac_config *mac_config;
   Environment_System_Config environment_system_config;  /*!< \brief Evironment configuration */
   Topology_Config topology_config;  /*!< \brief Topology configuration */
   Application_Config application_config;  /*!< \brief Applications configuration */
@@ -765,6 +820,21 @@ typedef struct {
 /* @}*/
 
 int OCG_main (char is_local_server[FILENAME_LENGTH_MAX]);
+
+void predefined_traffic_malloc(Predefined_Traffic *predefined_traffic);
+void predefined_traffic_free(Predefined_Traffic *predefined_traffic);
+
+void customized_traffic_malloc(Customized_Traffic *customized_traffic);
+void customized_traffic_free(Customized_Traffic *customized_traffic);
+
+void application_config_malloc(Application_Config *application_config);
+void application_config_free(Application_Config *application_config);
+
+void info_malloc(Info *info);
+void info_free(Info *info);
+
+void oai_emulation_malloc(OAI_Emulation *oai_emulation);
+void oai_emulation_free(OAI_Emulation *oai_emulation);
 
 //  void init_oai_emulation (void);
 //#include "UTIL/LOG/log.h"

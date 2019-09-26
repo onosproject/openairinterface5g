@@ -64,11 +64,11 @@ int last_dlsch_ue_id[MAX_NUM_CCs] = {-1};
 int last_ulsch_ue_id[MAX_NUM_CCs] = {-1};
 
 #if defined(PRE_SCD_THREAD)
-  uint16_t pre_nb_rbs_required[2][MAX_NUM_CCs][NUMBER_OF_UE_MAX];
+  uint16_t *pre_nb_rbs_required[2][MAX_NUM_CCs];
   uint8_t dlsch_ue_select_tbl_in_use;
   uint8_t new_dlsch_ue_select_tbl_in_use;
-  boolean_t pre_scd_activeUE[NUMBER_OF_UE_MAX];
-  eNB_UE_STATS pre_scd_eNB_UE_stats[MAX_NUM_CCs][NUMBER_OF_UE_MAX];
+  boolean_t *pre_scd_activeUE;
+  eNB_UE_STATS *pre_scd_eNB_UE_stats[MAX_NUM_CCs];
 #endif
 
 #define DEBUG_eNB_SCHEDULER 1
@@ -106,7 +106,7 @@ void pre_scd_nb_rbs_required(    module_id_t     module_idP,
                                  frame_t         frameP,
                                  sub_frame_t     subframeP,
                                  int             min_rb_unit[MAX_NUM_CCs],
-                                 uint16_t        nb_rbs_required[MAX_NUM_CCs][NUMBER_OF_UE_MAX]) {
+                                 uint16_t        *nb_rbs_required[MAX_NUM_CCs]) {
   int                          CC_id=0,UE_id, lc_id, N_RB_DL;
   UE_TEMPLATE                  UE_template;
   eNB_UE_STATS                 *eNB_UE_stats;
@@ -119,7 +119,10 @@ void pre_scd_nb_rbs_required(    module_id_t     module_idP,
 
   if(N_RB_DL==100) step_size=4;
 
-  memset(nb_rbs_required, 0, sizeof(uint16_t)*MAX_NUM_CCs*NUMBER_OF_UE_MAX);
+  for (int i = 0; i < MAX_NUM_CCs; i++) {
+    memset(nb_rbs_required[i],0,sizeof(uint16_t)*NUMBER_OF_UE_MAX);
+  }
+//  memset(nb_rbs_required, 0, sizeof(uint16_t)*MAX_NUM_CCs*NUMBER_OF_UE_MAX);
   UE_list_t *UE_list = &RC.mac[module_idP]->UE_list;
 
   for (UE_id = 0; UE_id <NUMBER_OF_UE_MAX; UE_id++) {
@@ -174,7 +177,7 @@ void dlsch_scheduler_pre_ue_select_fairRR(
   frame_t         frameP,
   sub_frame_t     subframeP,
   int            *mbsfn_flag,
-  uint16_t        nb_rbs_required[MAX_NUM_CCs][NUMBER_OF_UE_MAX],
+  uint16_t       **nb_rbs_required,
   DLSCH_UE_SELECT dlsch_ue_select[MAX_NUM_CCs]) {
   eNB_MAC_INST                   *eNB      = RC.mac[module_idP];
   COMMON_channels_t              *cc       = eNB->common_channels;
@@ -576,9 +579,11 @@ void dlsch_scheduler_pre_processor_fairRR (module_id_t   Mod_id,
   uint8_t slice_allocation[MAX_NUM_CCs][N_RBG_MAX];
   int                     UE_id, i;
   uint16_t                j,c;
-  uint16_t                nb_rbs_required[MAX_NUM_CCs][NUMBER_OF_UE_MAX];
-  uint16_t                nb_rbs_required_remaining[MAX_NUM_CCs][NUMBER_OF_UE_MAX];
+//  uint16_t                nb_rbs_required[MAX_NUM_CCs][NUMBER_OF_UE_MAX];
+//  uint16_t                nb_rbs_required_remaining[MAX_NUM_CCs][NUMBER_OF_UE_MAX];
   //  uint16_t                nb_rbs_required_remaining_1[MAX_NUM_CCs][NUMBER_OF_UE_MAX];
+  uint16_t              **nb_rbs_required;
+  uint16_t              **nb_rbs_required_remaining;
   uint16_t                average_rbs_per_user[MAX_NUM_CCs] = {0};
   rnti_t             rnti;
   int                min_rb_unit[MAX_NUM_CCs];
@@ -601,6 +606,12 @@ void dlsch_scheduler_pre_processor_fairRR (module_id_t   Mod_id,
 #endif
   memset(rballoc_sub[0],0,(MAX_NUM_CCs)*(N_RBG_MAX)*sizeof(unsigned char));
   memset(min_rb_unit,0,sizeof(min_rb_unit));
+  nb_rbs_required = (uint16_t **)malloc(sizeof(uint16_t *)*MAX_NUM_CCs);
+  nb_rbs_required_remaining = (uint16_t **)malloc(sizeof(uint16_t *)*MAX_NUM_CCs);
+  for (i = 0; i < MAX_NUM_CCs; i++) {
+    nb_rbs_required[i] = (uint16_t *)malloc(sizeof(uint16_t)*NUMBER_OF_UE_MAX);
+    nb_rbs_required_remaining[i] = (uint16_t *)malloc(sizeof(uint16_t)*NUMBER_OF_UE_MAX);
+  }
   memset(MIMO_mode_indicator[0], 0, MAX_NUM_CCs*N_RBG_MAX*sizeof(unsigned char));
 
   for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
@@ -615,15 +626,15 @@ void dlsch_scheduler_pre_processor_fairRR (module_id_t   Mod_id,
 
       UE_id = i;
       // Initialize scheduling information for all active UEs
-      dlsch_scheduler_pre_processor_reset(Mod_id,
-                                          0,
-                                          frameP,
-                                          subframeP,
-                                          min_rb_unit,
-                                          (uint16_t (*)[NUMBER_OF_UE_MAX])nb_rbs_required,
-                                          rballoc_sub,
-                                          MIMO_mode_indicator,
-                                          mbsfn_flag);
+      dlsch_scheduler_pre_processor_reset_fairRR(Mod_id,
+                                                 0,
+                                                 frameP,
+                                                 subframeP,
+                                                 min_rb_unit,
+                                                 nb_rbs_required,
+                                                 rballoc_sub,
+                                                 MIMO_mode_indicator,
+                                                 mbsfn_flag);
     }
   }
 
@@ -631,10 +642,13 @@ void dlsch_scheduler_pre_processor_fairRR (module_id_t   Mod_id,
   // Store the DLSCH buffer for each logical channel
   store_dlsch_buffer(Mod_id,0, frameP, subframeP);
   // Calculate the number of RBs required by each UE on the basis of logical channel's buffer
-  assign_rbs_required(Mod_id, 0, frameP, subframeP, nb_rbs_required,
-                      min_rb_unit);
+  assign_rbs_required_fairRR(Mod_id, 0, frameP, subframeP, nb_rbs_required,
+                             min_rb_unit);
 #else
-  memcpy(nb_rbs_required, pre_nb_rbs_required[dlsch_ue_select_tbl_in_use], sizeof(uint16_t)*MAX_NUM_CCs*NUMBER_OF_UE_MAX);
+//  memcpy(nb_rbs_required, pre_nb_rbs_required[dlsch_ue_select_tbl_in_use], sizeof(uint16_t)*MAX_NUM_CCs*NUMBER_OF_UE_MAX);
+  for (i = 0; i < MAX_NUM_CCs; i++) {
+    memcpy(nb_rbs_required[i],pre_nb_rbs_required[dlsch_ue_select_tbl_in_use][i],sizeof(uint16_t)*NUMBER_OF_UE_MAX);
+  }
 #endif
   dlsch_scheduler_pre_ue_select_fairRR(Mod_id,frameP,subframeP, mbsfn_flag,nb_rbs_required,dlsch_ue_select);
 
@@ -696,17 +710,17 @@ void dlsch_scheduler_pre_processor_fairRR (module_id_t   Mod_id,
         for (j = 0; j < N_RBG_MAX; ++j)
           slice_allocation[c][j] = 1;
 
-      LOG_T(MAC,"calling dlsch_scheduler_pre_processor_allocate .. \n ");
-      dlsch_scheduler_pre_processor_allocate (Mod_id,
-                                              UE_id,
-                                              CC_id,
-                                              N_RBG[CC_id],
-                                              min_rb_unit[CC_id],
-                                              (uint16_t (*)[NUMBER_OF_UE_MAX])nb_rbs_required,
-                                              (uint16_t (*)[NUMBER_OF_UE_MAX])nb_rbs_required_remaining,
-                                              rballoc_sub,
-                                              slice_allocation,
-                                              MIMO_mode_indicator);
+      LOG_T(MAC,"calling dlsch_scheduler_pre_processor_allocate_fairRR .. \n ");
+      dlsch_scheduler_pre_processor_allocate_fairRR (Mod_id,
+                                                     UE_id,
+                                                     CC_id,
+                                                     N_RBG[CC_id],
+                                                     min_rb_unit[CC_id],
+                                                     nb_rbs_required,
+                                                     nb_rbs_required_remaining,
+                                                     rballoc_sub,
+                                                     slice_allocation,
+                                                     MIMO_mode_indicator);
       temp_total_rbs_count -= ue_sched_ctl->pre_nb_available_rbs[CC_id];
       temp_total_ue_count--;
 
@@ -809,6 +823,12 @@ void dlsch_scheduler_pre_processor_fairRR (module_id_t   Mod_id,
       }
     }
   }
+  for (i = 0; i < MAX_NUM_CCs; i++) {
+    free_and_zero(nb_rbs_required[i]);
+    free_and_zero(nb_rbs_required_remaining[i]);
+  }
+  free_and_zero(nb_rbs_required);
+  free_and_zero(nb_rbs_required_remaining);
 }
 
 

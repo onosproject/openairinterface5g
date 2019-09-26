@@ -122,6 +122,7 @@ void mac_top_init_eNB(void)
           "[MAIN] ALLOCATE %zu Bytes for %d eNB_MAC_INST @ %p\n",
           sizeof(eNB_MAC_INST), RC.nb_macrlc_inst, mac);
     bzero(mac[i], sizeof(eNB_MAC_INST));
+    ue_free_list_malloc(&(mac[i]->UE_free_list));
     mac[i]->Mod_id = i;
     for (j = 0; j < MAX_NUM_CCs; j++) {
       mac[i]->DL_req[j].dl_config_request_body.dl_config_pdu_list =
@@ -222,4 +223,14 @@ int l2_init_eNB(void)
 
 
     return (1);
+}
+
+void ue_free_list_malloc(UE_free_list_t *ue_free_list)
+{
+  ue_free_list->UE_free_ctrl = (UE_free_ctrl_t *)malloc(sizeof(UE_free_ctrl_t)*(NUMBER_OF_UE_MAX+1));
+}
+
+void ue_free_list_free(UE_free_list_t *ue_free_list)
+{
+  free_and_zero(ue_free_list->UE_free_ctrl);
 }

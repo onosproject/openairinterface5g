@@ -1195,7 +1195,8 @@ typedef struct {
 /*! \brief REMOVE UE list used by eNB to order UEs/CC for deleting*/
 typedef struct {
     /// deleting control info
-    UE_free_ctrl_t UE_free_ctrl[NUMBER_OF_UE_MAX+1];
+//    UE_free_ctrl_t UE_free_ctrl[NUMBER_OF_UE_MAX+1];
+	UE_free_ctrl_t *UE_free_ctrl;
     int num_UEs;
     int head_freelist; ///the head position of the delete list
     int tail_freelist; ///the tail position of the delete list
@@ -1778,7 +1779,8 @@ typedef struct {
  
 typedef struct {
     uint16_t num_UEs;
-    RRC_release_ctrl_t RRC_release_ctrl[NUMBER_OF_UE_MAX];
+//    RRC_release_ctrl_t RRC_release_ctrl[NUMBER_OF_UE_MAX];
+    RRC_release_ctrl_t *RRC_release_ctrl;
 } RRC_release_list_t;
 
 typedef  struct {

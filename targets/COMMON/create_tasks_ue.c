@@ -46,6 +46,7 @@ int create_tasks_ue(uint32_t ue_nb) {
 
     if (ue_nb > 0) {
       nas_user_container_t *users = calloc(1, sizeof(*users));
+      users->item = (nas_user_t *)calloc(NUMBER_OF_UE_MAX,sizeof(nas_user_t));
 
       if (users == NULL) abort();
 

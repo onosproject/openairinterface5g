@@ -47,7 +47,8 @@
 
 //extern pid_t simulator_pid;
 extern int pfd[2];
-extern struct Geo geo[NUMBER_OF_eNB_MAX+NUMBER_OF_UE_MAX];
+//extern struct Geo geo[NUMBER_OF_eNB_MAX+NUMBER_OF_UE_MAX];
+extern struct Geo *geo;
 extern CommunicationThread* communication_thread;
 extern int x_area, y_area;
 extern int nb_frames;

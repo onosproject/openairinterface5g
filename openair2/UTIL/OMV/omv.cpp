@@ -36,7 +36,7 @@
 
 //pid_t simulator_pid;
 int pfd[2];
-struct Geo geo[NUMBER_OF_eNB_MAX+NUMBER_OF_UE_MAX];
+struct Geo *geo;
 int x_area, y_area, z_area;
 int nb_frames;
 int nb_enb;
@@ -78,4 +78,31 @@ int main(int argc, char *argv[]) {
   int end_value = app.exec();
   
   return end_value;
+}
+
+void struct_geo_malloc(struct Geo *geo)
+{
+  geo->Neighbor = (int *)malloc(sizeof(int)*NUMBER_OF_UE_MAX);
+}
+
+void struct_geo_free(struct Geo *geo)
+{
+  free(geo->Neighbor);
+}
+
+void data_flow_unit_malloc(Data_Flow_Unit *data_flow_unit)
+{
+  int i;
+  data_flow_unit->geo = (struct  Geo *)malloc(sizeof(struct Geo)*(NUMBER_OF_eNB_MAX+NUMBER_OF_UE_MAX));
+  for (i = 0; i < (NUMBER_OF_eNB_MAX+NUMBER_OF_UE_MAX); i++) {
+    struct_geo_malloc(&(data_flow_unit->geo[i]));
+  }
+}
+void data_flow_unit_free(Data_Flow_Unit *data_flow_unit)
+{
+  int i;
+  for (i = 0; i < (NUMBER_OF_eNB_MAX+NUMBER_OF_UE_MAX); i++) {
+    struct_geo_free(&(data_flow_unit->geo[i]));
+  }
+  free(data_flow_unit->geo);
 }

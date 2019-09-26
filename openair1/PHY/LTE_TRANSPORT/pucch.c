@@ -188,7 +188,8 @@ uint16_t pucchfmt3_ChannelEstimation( int16_t SubCarrierDeMapData[NB_ANTENNAS_RX
                                       uint8_t shortened_format,
                                       LTE_DL_FRAME_PARMS *frame_parms,
                                       uint16_t n3_pucch,
-                                      uint16_t n3_pucch_array[NUMBER_OF_UE_MAX],
+                                      //uint16_t n3_pucch_array[NUMBER_OF_UE_MAX],
+                                      uint16_t *n3_pucch_array,
                                       uint8_t ncs_cell[20][7] )
 {
     uint32_t        aa, symNo, k, slotNo, sym, i, j;
@@ -203,11 +204,16 @@ uint16_t pucchfmt3_ChannelEstimation( int16_t SubCarrierDeMapData[NB_ANTENNAS_RX
     int32_t         IP_CsData_allsfavg[NB_ANTENNAS_RX][14][4][2];
     int32_t         IP_allavg[D_NPUCCH_SF5];
     //int16_t         temp_ch[2];
-	int16_t         m[NUMBER_OF_UE_MAX], m_self=0, same_m_number;
-	uint16_t        n3_pucch_sameRB[NUMBER_OF_UE_MAX];
+	int16_t         m_self=0, same_m_number;
+/*	uint16_t        n3_pucch_sameRB[NUMBER_OF_UE_MAX];
 	int16_t         n_oc0[NUMBER_OF_UE_MAX];
 	int16_t         n_oc1[NUMBER_OF_UE_MAX];
-	int16_t         np_n_array[2][NUMBER_OF_UE_MAX]; //Cyclic shift
+	int16_t         np_n_array[2][NUMBER_OF_UE_MAX]; */ //Cyclic shift
+	int16_t        *m;
+	uint16_t       *n3_pucch_sameRB;
+	int16_t        *n_oc0;
+	int16_t        *n_oc1;
+	int16_t        *np_n_array[2];
 	uint8_t N_PUCCH_SF0 = 5;
 	uint8_t N_PUCCH_SF1 = (shortened_format==0)? 5:4;
     
@@ -221,7 +227,14 @@ uint16_t pucchfmt3_ChannelEstimation( int16_t SubCarrierDeMapData[NB_ANTENNAS_RX
     
     //double d_theta[32]={0.0};
     //int32_t temp_theta[32][2]={0};
-    
+
+    m = (int16_t *)malloc(sizeof(int16_t)*NUMBER_OF_UE_MAX);
+    n3_pucch_sameRB = (uint16_t *)malloc(sizeof(uint16_t)*NUMBER_OF_UE_MAX);
+    n_oc0 = (int16_t *)malloc(sizeof(int16_t)*NUMBER_OF_UE_MAX);
+    n_oc1 = (int16_t *)malloc(sizeof(int16_t)*NUMBER_OF_UE_MAX);
+    for (aa = 0; aa < 2; aa++) {
+      np_n_array[aa] = (int16_t *)malloc(sizeof(int16_t)*NUMBER_OF_UE_MAX);
+    }
     for (aa=0; aa<frame_parms->nb_antennas_rx; aa++) {
         for (symNo=0; symNo<D_NSYM1SF; symNo++){
             for(ip_ind=0; ip_ind<D_NPUCCH_SF5-1; ip_ind++) {
@@ -782,13 +795,22 @@ uint32_t rx_pucch(PHY_VARS_eNB *eNB,
   // TODO
   // When using PUCCH format3, it must be an argument of rx_pucch function
   uint16_t n3_pucch = 20;
-  uint16_t n3_pucch_array[NUMBER_OF_UE_MAX]={1};
-  n3_pucch_array[0]=n3_pucch;
+  //uint16_t n3_pucch_array[NUMBER_OF_UE_MAX]={1};
+  //n3_pucch_array[0]=n3_pucch;
+  uint16_t *n3_pucch_array;
   uint8_t do_sr = 1;
   uint16_t crnti=0x1234;
   int16_t DTXthreshold = 10;
   /* PUCCH format3 << */
 
+  n3_pucch_array = (uint16_t *)malloc(sizeof(uint16_t)*NUMBER_OF_UE_MAX);
+  for (i = 0; i < NUMBER_OF_UE_MAX; i++) {
+    if (i == 0) {
+      n3_pucch_array[i] = 0;
+    } else {
+      n3_pucch_array[i] = 1;
+    }
+  }
   if (first_call == 1) {
     for (i=0;i<10;i++) {
       for (j=0;j<NUMBER_OF_UE_MAX;j++) {

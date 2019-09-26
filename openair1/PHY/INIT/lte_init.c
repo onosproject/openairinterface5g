@@ -38,6 +38,8 @@
 
 extern uint32_t from_earfcn(int eutra_bandP,uint32_t dl_earfcn);
 extern int32_t get_uldl_offset(int eutra_bandP);
+void phy_vars_eNB_free(PHY_VARS_eNB *eNB);
+void phy_measurements_eNB_free(PHY_MEASUREMENTS_eNB *meas);
 
 extern uint16_t prach_root_sequence_map0_3[838];
 extern uint16_t prach_root_sequence_map4[138];
@@ -533,6 +535,7 @@ void phy_free_lte_eNB(PHY_VARS_eNB *eNB)
   LTE_eNB_PRACH* const prach_vars_br = &eNB->prach_vars_br;
 #endif
   int i, UE_id;
+  PHY_MEASUREMENTS_eNB* const meas   = &eNB->measurements;
 
   for (i = 0; i < NB_ANTENNA_PORTS_ENB; i++) {
     if (i < fp->nb_antenna_ports_eNB || i == 5) {
@@ -594,6 +597,104 @@ void phy_free_lte_eNB(PHY_VARS_eNB *eNB)
   } //UE_id
 
   for (UE_id = 0; UE_id < NUMBER_OF_UE_MAX; UE_id++) eNB->UE_stats_ptr[UE_id] = NULL;
+
+
+  phy_measurements_eNB_free(meas);
+  phy_vars_eNB_free(eNB);
+}
+
+void phy_vars_eNB_free(PHY_VARS_eNB *eNB)
+{
+  int i, j;
+  free_and_zero(eNB->uci_vars);
+  free_and_zero(eNB->srs_vars);
+  free_and_zero(eNB->pusch_vars);
+  free_and_zero(eNB->ulsch);
+  free_and_zero(eNB->UE_stats_ptr);
+  for (i = 0; i < NUMBER_OF_UE_MAX; i++) {
+    free_and_zero(eNB->dlsch[i]);
+  }
+  free_and_zero(eNB->dlsch);
+  for (i = 0; i < NUMBER_OF_UE_MAX; i++) {
+    for (j = 0; j < 20; j++) {
+      free_and_zero(eNB->lte_gold_uespec_port5_table[i][j]);
+    }
+    free_and_zero(eNB->lte_gold_uespec_port5_table[i]);
+  }
+  free_and_zero(eNB->lte_gold_uespec_port5_table);
+  free_and_zero(eNB->first_sr);
+  free_and_zero(eNB->first_run_timing_advance);
+  free_and_zero(eNB->pdsch_config_dedicated);
+  free_and_zero(eNB->pusch_config_dedicated);
+  free_and_zero(eNB->pucch_config_dedicated);
+  free_and_zero(eNB->ul_power_control_dedicated);
+  free_and_zero(eNB->tpc_pdcch_config_pucch);
+  free_and_zero(eNB->tpc_pdcch_config_pusch);
+  free_and_zero(eNB->cqi_report_config);
+  free_and_zero(eNB->soundingrs_ul_config_dedicated);
+  free_and_zero(eNB->scheduling_request_config);
+  free_and_zero(eNB->transmission_mode);
+  free_and_zero(eNB->physicalConfigDedicated);
+  free_and_zero(eNB->mu_mimo_mode);
+  for (i = 0; i < NUMBER_OF_UE_MAX; i++) {
+    free_and_zero(eNB->pucch1_stats_cnt[i]);
+    free_and_zero(eNB->pucch1_stats[i]);
+    free_and_zero(eNB->pucch1_stats_thres[i]);
+    free_and_zero(eNB->pucch1ab_stats_cnt[i]);
+    free_and_zero(eNB->pucch1ab_stats[i]);
+    free_and_zero(eNB->pusch_stats_rb[i]);
+    free_and_zero(eNB->pusch_stats_round[i]);
+    free_and_zero(eNB->pusch_stats_mcs[i]);
+    free_and_zero(eNB->pusch_stats_bsr[i]);
+    free_and_zero(eNB->pusch_stats_BO[i]);
+  }
+  free_and_zero(eNB->pucch1_stats_cnt);
+  free_and_zero(eNB->pucch1_stats);
+  free_and_zero(eNB->pucch1_stats_thres);
+  free_and_zero(eNB->pucch1ab_stats_cnt);
+  free_and_zero(eNB->pucch1ab_stats);
+  free_and_zero(eNB->pusch_stats_rb);
+  free_and_zero(eNB->pusch_stats_round);
+  free_and_zero(eNB->pusch_stats_mcs);
+  free_and_zero(eNB->pusch_stats_bsr);
+  free_and_zero(eNB->pusch_stats_BO);
+}
+
+void phy_measurements_eNB_free(PHY_MEASUREMENTS_eNB *meas)
+{
+  int i, j;
+  free_and_zero(meas->rx_rssi_dBm);
+  free_and_zero(meas->wideband_cqi_tot);
+  for (i = 0; i < NUMBER_OF_UE_MAX; i++) {
+    free_and_zero(meas->rx_correlation[i]);
+    free_and_zero(meas->rx_correlation_dB[i]);
+    free_and_zero(meas->wideband_cqi[i]);
+    free_and_zero(meas->wideband_cqi_dB[i]);
+    free_and_zero(meas->subband_cqi_tot[i]);
+    free_and_zero(meas->subband_cqi_tot_dB[i]);
+    for (j = 0; j < 2; j++){
+      free_and_zero(meas->rx_spatial_power[i][j]);
+      free_and_zero(meas->rx_spatial_power_dB[i][j]);
+    }
+	for (j = 0; j < MAX_NUM_RU_PER_eNB; j++) {
+	  free_and_zero(meas->subband_cqi[i][j]);
+	  free_and_zero(meas->subband_cqi_dB[i][j]);
+	}
+	free_and_zero(meas->rx_spatial_power[i]);
+	free_and_zero(meas->rx_spatial_power_dB[i]);
+	free_and_zero(meas->subband_cqi[i]);
+	free_and_zero(meas->subband_cqi_dB[i]);
+  }
+  free_and_zero(meas->rx_correlation);
+  free_and_zero(meas->rx_correlation_dB);
+  free_and_zero(meas->wideband_cqi);
+  free_and_zero(meas->wideband_cqi_dB);
+  free_and_zero(meas->subband_cqi_tot);
+  free_and_zero(meas->subband_cqi_tot_dB);
+  free_and_zero(meas->rx_spatial_power);
+  free_and_zero(meas->rx_spatial_power_dB);
+  free_and_zero(meas->subband_cqi);
+  free_and_zero(meas->subband_cqi_dB);
 }
 
 void install_schedule_handlers(IF_Module_t *if_inst)

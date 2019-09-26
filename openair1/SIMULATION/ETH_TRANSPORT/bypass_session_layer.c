@@ -244,6 +244,15 @@ int emu_transport_handle_ue_info(bypass_msg_header_t *messg,
   clear_UE_transport_info(oai_emulation.info.nb_ue_local+
                           oai_emulation.info.nb_ue_remote);
 
+  UE_transport_info = (UE_transport_info_t **)malloc(sizeof(UE_transport_info_t *)*NUMBER_OF_UE_MAX);
+  ue_cntl_delay = (UE_cntl ***)malloc(sizeof(UE_cntl **)*NUMBER_OF_UE_MAX);
+  for (int i = 0; i < NUMBER_OF_UE_MAX; i++) {
+    UE_transport_info[i] = (UE_transport_info_t *)malloc(sizeof(UE_transport_info_t)*MAX_NUM_CCs);
+    ue_cntl_delay[i] = (UE_cntl **)malloc(sizeof(UE_cntl *)*MAX_NUM_CCs);
+    for (int j = 0; j < 2; j++) {
+      ue_cntl_delay[i][j] = (UE_cntl *)malloc(sizeof(UE_cntl)*2);
+    }
+  }
   if (oai_emulation.info.master[messg->master_id].nb_ue > 0 ) {
     total_header += sizeof(UE_transport_info_t)-MAX_TRANSPORT_BLOCKS_BUFFER_SIZE;
 

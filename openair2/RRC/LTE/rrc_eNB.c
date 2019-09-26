@@ -2226,7 +2226,7 @@ rrc_eNB_generate_RRCConnectionReestablishmentReject(
  }
   T(T_ENB_RRC_CONNECTION_REESTABLISHMENT_REJECT, T_INT(ctxt_pP->module_id), T_INT(ctxt_pP->frame),
     T_INT(ctxt_pP->subframe), T_INT(ctxt_pP->rnti));
-
+  if (ue_context_pP != NULL) {
   eNB_RRC_UE_t *ue_p = &ue_context_pP->ue_context; 
 
   ue_p->Srb0.Tx_buffer.payload_size =
@@ -2251,6 +2251,9 @@ rrc_eNB_generate_RRCConnectionReestablishmentReject(
         PROTOCOL_RRC_CTXT_UE_FMT" [RAPROC] Logical Channel DL-CCCH, Generating LTE_RRCConnectionReestablishmentReject (bytes %d)\n",
         PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP),
         ue_p->Srb0.Tx_buffer.payload_size);
+  } else {
+    LOG_I(RRC,"rrc_eNB_generate_RRCConnectionReestablishmentReject : ue_contextpP is NULL\n");
+  }
 }
 
 //-----------------------------------------------------------------------------
@@ -8537,6 +8540,8 @@ void rrc_enb_init(void) {
   pthread_mutex_init(&lock_ue_freelist, NULL);
   pthread_mutex_init(&rrc_release_freelist, NULL);
   memset(&rrc_release_info,0,sizeof(RRC_release_list_t));
+  rrc_release_info.RRC_release_ctrl = (RRC_release_ctrl_t *)malloc(sizeof(RRC_release_ctrl_t)*NUMBER_OF_UE_MAX);
+  memset(rrc_release_info.RRC_release_ctrl,0,sizeof(RRC_release_ctrl_t)*NUMBER_OF_UE_MAX);
 }
 
 //-----------------------------------------------------------------------------

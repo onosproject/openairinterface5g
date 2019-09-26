@@ -28,7 +28,8 @@
 // XXX simple array container for multiple users
 typedef struct {
     size_t count;
-    nas_user_t item[NUMBER_OF_UE_MAX];
+//    nas_user_t item[NUMBER_OF_UE_MAX];
+    nas_user_t *item;
 } nas_user_container_t;
 
 nas_user_t *find_user_from_fd(nas_user_container_t *users, int fd);

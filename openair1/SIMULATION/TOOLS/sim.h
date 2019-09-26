@@ -184,15 +184,21 @@ typedef enum {
 #include "platform_constants.h"
 
 typedef struct {
- channel_desc_t *RU2UE[NUMBER_OF_RU_MAX][NUMBER_OF_UE_MAX][MAX_NUM_CCs];
+/* channel_desc_t *RU2UE[NUMBER_OF_RU_MAX][NUMBER_OF_UE_MAX][MAX_NUM_CCs];
  channel_desc_t *UE2RU[NUMBER_OF_UE_MAX][NUMBER_OF_RU_MAX][MAX_NUM_CCs];
  double r_re_DL[NUMBER_OF_UE_MAX][2][30720];
- double r_im_DL[NUMBER_OF_UE_MAX][2][30720];
+ double r_im_DL[NUMBER_OF_UE_MAX][2][30720]; */
+ channel_desc_t ****RU2UE;
+ channel_desc_t ****UE2RU;
+ double ***r_re_DL;
+ double ***r_im_DL;
  double r_re_UL[NUMBER_OF_eNB_MAX][2][30720];
  double r_im_UL[NUMBER_OF_eNB_MAX][2][30720];
- int RU_output_mask[NUMBER_OF_UE_MAX];
+/* int RU_output_mask[NUMBER_OF_UE_MAX]; */
+ int *RU_output_mask;
  int UE_output_mask[NUMBER_OF_RU_MAX];
- pthread_mutex_t RU_output_mutex[NUMBER_OF_UE_MAX];
+/* pthread_mutex_t RU_output_mutex[NUMBER_OF_UE_MAX]; */
+ pthread_mutex_t *RU_output_mutex;
  pthread_mutex_t UE_output_mutex[NUMBER_OF_RU_MAX];
  pthread_mutex_t subframe_mutex;
  int subframe_ru_mask;

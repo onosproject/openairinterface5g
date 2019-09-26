@@ -63,7 +63,6 @@
 
 #    define MAX_MODULES                NB_MODULES_MAX
 
-#ifndef UE_EXPANSION
 // TODO:L2 FAPI simulator.
 // UESIM_EXPANSION is used to be same value of MAX_MOBILES_PER_ENB
 // in eNB and UE.
@@ -83,11 +82,6 @@
 #    define MAX_MOBILES_PER_ENB_NB_IoT  16
 #    define MAX_eNB                      2
 # endif
-#endif
-#else
-#    define MAX_MOBILES_PER_ENB 256
-#    define MAX_MOBILES_PER_ENB_NB_IoT 256
-#    define MAX_eNB                      2
 #endif
 
 

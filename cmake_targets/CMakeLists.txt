@@ -630,9 +630,8 @@ add_boolean_option(MESSAGE_CHART_GENERATOR False         "For generating sequenc
 add_boolean_option(MESSAGE_CHART_GENERATOR_RLC_MAC False "trace RLC-MAC exchanges in sequence diagrams")
 add_boolean_option(MESSAGE_CHART_GENERATOR_PHY     False "trace some PHY exchanges in sequence diagrams")
 
-add_boolean_option(UE_EXPANSION             False         "enable UE_EXPANSION with max 256 UE")
-add_boolean_option(PHY_TX_THREAD            False         "enable UE_EXPANSION with max 256 UE")
-add_boolean_option(PRE_SCD_THREAD           False         "enable UE_EXPANSION with max 256 UE")
+add_boolean_option(PHY_TX_THREAD            False         "enable PHY_TX_THREAD with multiple UE")
+add_boolean_option(PRE_SCD_THREAD           False         "enable PRE_SCD_THREAD with multiple UE")
 add_boolean_option(UESIM_EXPANSION          False         "enable UESIM_EXPANSION with max 256 UE")
 
 ########################

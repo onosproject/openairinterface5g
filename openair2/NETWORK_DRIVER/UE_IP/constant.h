@@ -18,8 +18,7 @@
  * For more information about the OpenAirInterface (OAI) Software Alliance:
  *      contact@openairinterface.org
  */
-
-#include "openairinterface5g_limits.h"
+//#include "openairinterface5g_limits.h"
 #ifndef _UE_IP_CST
 #define _UE_IP_CST
 
@@ -52,8 +51,6 @@
 
 
 
-#define UE_IP_NB_INSTANCES_MAX       NUMBER_OF_UE_MAX /*MAX_MOBILES_PER_ENB*/
-
+#define UE_IP_NB_INSTANCES_MAX       256 /* NUMBER_OF_UE_MAX or MAX_MOBILES_PER_ENB*/
 
 #endif
-

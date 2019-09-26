@@ -1635,6 +1635,8 @@ int RCconfig_RRC(uint32_t i, eNB_RRC_INST *rrc, int macrlc_has_f1) {
                                RC.config_file_name, i, ccparams_lte.N_RB_DL);
                   break;
               }
+              NUMBER_OF_UCI_VARS_MAX = NUMBER_OF_UE_MAX + 4*ccparams_lte.ue_multiple_max;
+              printf("NUMBER_OF_UCI_VARS_MAX = %d\n",NUMBER_OF_UCI_VARS_MAX);
 
               // eMBMS configuration
               RRC_CONFIGURATION_REQ(msg_p).eMBMS_configured = 0;
@@ -2634,6 +2636,28 @@ int RCconfig_parallel(void) {
   return 0;
 }
 
+int RCconfig_set_global_params(void)
+{
+  int number_of_ue_max;
+  paramlist_def_t Global_params_list = {CONFIG_STRING_GLOBAL_PARAMS_LIST,NULL,0};
+  paramdef_t GlobalParams[] = GLOBAL_PARAMS_DESC;
+  config_getlist(&Global_params_list,NULL,0,NULL);
+  if (Global_params_list.numelt > 0) {
+    config_getlist(&Global_params_list,GlobalParams,sizeof(GlobalParams)/sizeof(paramdef_t),NULL);
+    number_of_ue_max = *(Global_params_list.paramarray[0][0].iptr);
+    if (number_of_ue_max <= 0  || number_of_ue_max > 256) {
+      printf("number_of_ue_max is not properly configured, shoule be 1-256, set to default.\n");
+      NUMBER_OF_UE_MAX = 16;
+    } else {
+      NUMBER_OF_UE_MAX = number_of_ue_max;
+    }
+  } else {
+    printf("No params found, set to default\n");
+    NUMBER_OF_UE_MAX = 16;
+  }
+  return 0;
+}
+
 void RCConfig(void) {
   paramlist_def_t MACRLCParamList = {CONFIG_STRING_MACRLC_LIST,NULL,0};
   paramlist_def_t L1ParamList = {CONFIG_STRING_L1_LIST,NULL,0};
@@ -2668,6 +2692,7 @@ void RCConfig(void) {
   config_getlist( &RUParamList,NULL,0, NULL);
   RC.nb_RU     = RUParamList.numelt;
   RCconfig_parallel();
+  RCconfig_set_global_params();
 }
 
 int check_plmn_identity(rrc_eNB_carrier_data_t *carrier,uint16_t mcc,uint16_t mnc,uint8_t mnc_digit_length) {

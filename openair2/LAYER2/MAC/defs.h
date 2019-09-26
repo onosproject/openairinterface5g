@@ -949,34 +949,48 @@ typedef struct {
 /*! \brief UE list used by eNB to order UEs/CC for scheduling*/
 typedef struct {
   /// Dedicated information for UEs
-  struct PhysicalConfigDedicated  *physicalConfigDedicated[MAX_NUM_CCs][NUMBER_OF_UE_MAX];
+//  struct PhysicalConfigDedicated  *physicalConfigDedicated[MAX_NUM_CCs][NUMBER_OF_UE_MAX];
+  struct PhysicalConfigDedicated  **physicalConfigDedicated[MAX_NUM_CCs];
   /// DLSCH pdu
-  DLSCH_PDU DLSCH_pdu[MAX_NUM_CCs][2][NUMBER_OF_UE_MAX];
+//  DLSCH_PDU DLSCH_pdu[MAX_NUM_CCs][2][NUMBER_OF_UE_MAX];
+  DLSCH_PDU *DLSCH_pdu[MAX_NUM_CCs][2];
   /// DCI template and MAC connection parameters for UEs
-  UE_TEMPLATE UE_template[MAX_NUM_CCs][NUMBER_OF_UE_MAX];
+//  UE_TEMPLATE UE_template[MAX_NUM_CCs][NUMBER_OF_UE_MAX];
+  UE_TEMPLATE *UE_template[MAX_NUM_CCs];
   /// DCI template and MAC connection for RA processes
-  int pCC_id[NUMBER_OF_UE_MAX];
+//  int pCC_id[NUMBER_OF_UE_MAX];
+  int *pCC_id;
   /// sorted downlink component carrier for the scheduler
-  int ordered_CCids[MAX_NUM_CCs][NUMBER_OF_UE_MAX];
+//  int ordered_CCids[MAX_NUM_CCs][NUMBER_OF_UE_MAX];
+  int *ordered_CCids[MAX_NUM_CCs];
   /// number of downlink active component carrier
-  int numactiveCCs[NUMBER_OF_UE_MAX];
+//  int numactiveCCs[NUMBER_OF_UE_MAX];
+  int *numactiveCCs;
   /// sorted uplink component carrier for the scheduler
-  int ordered_ULCCids[MAX_NUM_CCs][NUMBER_OF_UE_MAX];
+//  int ordered_ULCCids[MAX_NUM_CCs][NUMBER_OF_UE_MAX];
+  int *ordered_ULCCids[MAX_NUM_CCs];
   /// number of uplink active component carrier
-  int numactiveULCCs[NUMBER_OF_UE_MAX];
+//  int numactiveULCCs[NUMBER_OF_UE_MAX];
+  int *numactiveULCCs;
   /// number of downlink active component carrier
-  uint8_t dl_CC_bitmap[NUMBER_OF_UE_MAX];
+//  uint8_t dl_CC_bitmap[NUMBER_OF_UE_MAX];
+  uint8_t *dl_CC_bitmap;
   /// eNB to UE statistics
-  eNB_UE_STATS eNB_UE_stats[MAX_NUM_CCs][NUMBER_OF_UE_MAX];
+//  eNB_UE_STATS eNB_UE_stats[MAX_NUM_CCs][NUMBER_OF_UE_MAX];
+  eNB_UE_STATS *eNB_UE_stats[MAX_NUM_CCs];
   /// scheduling control info
-  UE_sched_ctrl UE_sched_ctrl[NUMBER_OF_UE_MAX];
-  int next[NUMBER_OF_UE_MAX];
+//  UE_sched_ctrl UE_sched_ctrl[NUMBER_OF_UE_MAX];
+  UE_sched_ctrl *UE_sched_ctrl;
+//  int next[NUMBER_OF_UE_MAX];
+  int *next;
   int head;
-  int next_ul[NUMBER_OF_UE_MAX];
+//  int next_ul[NUMBER_OF_UE_MAX];
+  int *next_ul;
   int head_ul;
   int avail;
   int num_UEs;
-  boolean_t active[NUMBER_OF_UE_MAX];
+//  boolean_t active[NUMBER_OF_UE_MAX];
+  boolean_t *active;
 } UE_list_t;
 
 /*! \brief eNB common channels */
@@ -1248,7 +1262,8 @@ typedef struct {
   /// Outgoing RAR pdu for PHY
   RAR_PDU RAR_pdu;
   /// Incoming DLSCH pdu for PHY
-  DLSCH_PDU DLSCH_pdu[NUMBER_OF_UE_MAX][2];
+//  DLSCH_PDU DLSCH_pdu[NUMBER_OF_UE_MAX][2];
+  DLSCH_PDU **DLSCH_pdu;
   /// number of attempt for rach
   uint8_t RA_attempt_number;
   /// Random-access procedure flag

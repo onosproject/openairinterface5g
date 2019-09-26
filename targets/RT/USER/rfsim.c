@@ -99,6 +99,7 @@ void wait_eNBs(void)
 
 void RCConfig_sim(void) {
 
+  int i,j;
   paramlist_def_t RUParamList = {CONFIG_STRING_RU_LIST,NULL,0};
 
   // Get num RU instances
@@ -107,6 +108,31 @@ void RCConfig_sim(void) {
   
   AssertFatal(RC.nb_RU>0,"we need at least 1 RU for simulation\n");
   printf("returned with %d rus\n",RC.nb_RU);
+
+  sim.RU2UE = (channel_desc_t ****)malloc(sizeof(channel_desc_t ***)*NUMBER_OF_RU_MAX);
+  sim.UE2RU = (channel_desc_t ****)malloc(sizeof(channel_desc_t ***)*NUMBER_OF_UE_MAX);
+  sim.r_re_DL = (double ***)malloc(sizeof(double **)*NUMBER_OF_UE_MAX);
+  sim.r_im_DL = (double ***)malloc(sizeof(double **)*NUMBER_OF_UE_MAX);
+  sim.RU_output_mask = (int *)malloc(sizeof(int)*NUMBER_OF_UE_MAX);
+  sim.RU_output_mutex = (pthread_mutex_t *)malloc(sizeof(pthread_mutex_t)*NUMBER_OF_UE_MAX);
+  for (i = 0; i < NUMBER_OF_UE_MAX; i++) {
+    sim.UE2RU[i] = (channel_desc_t ***)malloc(sizeof(channel_desc_t **)*NUMBER_OF_RU_MAX);
+    for (j = 0; j < NUMBER_OF_RU_MAX; j++) {
+      sim.UE2RU[i][j] = (channel_desc_t **)malloc(sizeof(channel_desc_t *)*MAX_NUM_CCs);
+    }
+    sim.r_re_DL[i] = (double **)malloc(sizeof(double *)*2);
+    sim.r_im_DL[i] = (double **)malloc(sizeof(double *)*2);
+    for (j = 0; j < 2; j++) {
+      sim.r_re_DL[i][j] = (double *)malloc(sizeof(double)*30720);
+      sim.r_im_DL[i][j] = (double *)malloc(sizeof(double)*30720);
+    }
+  }
+  for (i = 0; i < NUMBER_OF_RU_MAX; i++) {
+    sim.RU2UE[i] = (channel_desc_t ***)malloc(sizeof(channel_desc_t **)*NUMBER_OF_UE_MAX);
+    for (j = 0; j < NUMBER_OF_UE_MAX; j++) {
+      sim.RU2UE[i][j] = (channel_desc_t **)malloc(sizeof(channel_desc_t *)*MAX_NUM_CCs);
+    }
+  }
   
   init_RU(NULL,internal,internal,0);
 
