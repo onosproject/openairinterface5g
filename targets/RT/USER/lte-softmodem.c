@@ -173,22 +173,6 @@ int                      rx_input_level_dBm;
 int                             otg_enabled;
 
 
-static LTE_DL_FRAME_PARMS      *frame_parms[MAX_NUM_CCs];
-
-eNB_func_t node_function[MAX_NUM_CCs];
-eNB_timing_t node_timing[MAX_NUM_CCs];
-
-//////////////////////////////////////  NB-IoT  //////////////////////////////////////////////
-static NB_IoT_DL_FRAME_PARMS *frame_parms_NB_IoT[MAX_NUM_CCs]; // this will be still inside the PHY_VARS of LTE
-
-eNB_func_NB_IoT_t node_function_NB_IoT[MAX_NUM_CCs];
-eNB_timing_NB_IoT_t node_timing_NB_IoT[MAX_NUM_CCs];
-
-/////////////////////////////////////////END/////////////////////////////////////////////////
-
-int16_t   node_synch_ref[MAX_NUM_CCs];
-
-
 uint8_t exit_missed_slots=1;
 uint64_t num_missed_slots=0; // counter for the number of missed slots
 
@@ -438,98 +422,6 @@ void terminate_task(module_id_t mod_id, task_id_t from, task_id_t to) {
 }
 
 
-//NB_IoT-------------------------------------------------
-void set_default_frame_parms_NB_IoT(NB_IoT_DL_FRAME_PARMS *frame_parms[MAX_NUM_CCs]);
-void set_default_frame_parms_NB_IoT(NB_IoT_DL_FRAME_PARMS *frame_parms[MAX_NUM_CCs]) {
-
-    int CC_id;
-
-    for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
-        frame_parms[CC_id] = (NB_IoT_DL_FRAME_PARMS*) malloc(sizeof(NB_IoT_DL_FRAME_PARMS));
-        /* Set some default values that may be overwritten while reading options */
-        frame_parms[CC_id]->frame_type          = FDD;
-        frame_parms[CC_id]->tdd_config          = 3;
-        frame_parms[CC_id]->N_RB_DL             = 100;
-        frame_parms[CC_id]->N_RB_UL             = 100;
-        //XXX check if there are other parameters to be set
-        frame_parms[CC_id]->Ncp                 = NORMAL;
-        frame_parms[CC_id]->Ncp_UL              = NORMAL;
-        frame_parms[CC_id]->Nid_cell            = 0;
-        frame_parms[CC_id]->nb_antenna_ports_eNB  = 1;
-        frame_parms[CC_id]->nb_antennas_tx      = 1;
-        frame_parms[CC_id]->nb_antennas_rx      = 1;
-        frame_parms[CC_id]->nushift             = 0;
-        // UL RS Config
-        frame_parms[CC_id]->npusch_config_common.ul_ReferenceSignalsNPUSCH.groupHoppingEnabled = 0;
-        frame_parms[CC_id]->npusch_config_common.ul_ReferenceSignalsNPUSCH.groupAssignmentNPUSCH = 0;
-
-
-        //frame_parms[CC_id]->nprach_config_common.nprach_CP_Length
-		//frame_parms[CC_id]->nprach_config_common.nprach_ParametersList.list.array[CC_id]
-		//frame_parms[CC_id]->nprach_config_common.rsrp_ThresholdsPrachInfoList
-        downlink_frequency[CC_id][0] = 2680000000; // Use float to avoid issue with frequency over 2^31.
-        downlink_frequency[CC_id][1] = downlink_frequency[CC_id][0];
-        downlink_frequency[CC_id][2] = downlink_frequency[CC_id][0];
-        downlink_frequency[CC_id][3] = downlink_frequency[CC_id][0];
-
-		//already initialized in the set_default_frame_parms function for LTE
-
-//        downlink_frequency[CC_id][0] = 2680000000; // Use float to avoid issue with frequency over 2^31.
-//        downlink_frequency[CC_id][1] = downlink_frequency[CC_id][0];
-//        downlink_frequency[CC_id][2] = downlink_frequency[CC_id][0];
-//        downlink_frequency[CC_id][3] = downlink_frequency[CC_id][0];
-//        //printf("Downlink for CC_id %d frequency set to %u\n", CC_id, downlink_frequency[CC_id][0]);
-
-    }
-
-}
-
-
-
-
-void init_openair0(void);
-
-void init_openair0() {
-
-    int card;
-    int i;
-
-    for (card=0; card<MAX_CARDS; card++) {
-
-        openair0_cfg[card].mmapped_dma=mmapped_dma;
-        openair0_cfg[card].configFilename = NULL;
-
-        if(frame_parms[0]->N_RB_DL == 100) {
-            if (frame_parms[0]->threequarter_fs) {
-                openair0_cfg[card].sample_rate=23.04e6;
-                openair0_cfg[card].samples_per_frame = 230400;
-                openair0_cfg[card].tx_bw = 10e6;
-                openair0_cfg[card].rx_bw = 10e6;
-            } else {
-                openair0_cfg[card].sample_rate=30.72e6;
-                openair0_cfg[card].samples_per_frame = 307200;
-                openair0_cfg[card].tx_bw = 10e6;
-                openair0_cfg[card].rx_bw = 10e6;
-            }
-        } else if(frame_parms[0]->N_RB_DL == 50) {
-            openair0_cfg[card].sample_rate=15.36e6;
-            openair0_cfg[card].samples_per_frame = 153600;
-            openair0_cfg[card].tx_bw = 5e6;
-            openair0_cfg[card].rx_bw = 5e6;
-        } else if (frame_parms[0]->N_RB_DL == 25) {
-            openair0_cfg[card].sample_rate=7.68e6;
-            openair0_cfg[card].samples_per_frame = 76800;
-            openair0_cfg[card].tx_bw = 2.5e6;
-            openair0_cfg[card].rx_bw = 2.5e6;
-        } else if (frame_parms[0]->N_RB_DL == 6) {
-            openair0_cfg[card].sample_rate=1.92e6;
-            openair0_cfg[card].samples_per_frame = 19200;
-            openair0_cfg[card].tx_bw = 1.5e6;
-            openair0_cfg[card].rx_bw = 1.5e6;
-        }
-
-
-
 extern void  free_transport(PHY_VARS_eNB *);
 extern void  phy_free_RU(RU_t *);
 
@@ -661,9 +553,6 @@ int main( int argc, char **argv ) {
 
   mode = normal_txrx;
   set_latency_target();
-  
-  // set default parameters
-  set_default_frame_parms_NB_IoT(frame_parms_NB_IoT);
 
   logInit();
   printf("Reading in command-line options\n");
@@ -714,18 +603,7 @@ int main( int argc, char **argv ) {
   printf("Runtime table\n");
   fill_modeled_runtime_table(runtime_phy_rx,runtime_phy_tx);
 
-  /* Initialize parameters*/
-  for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
-
-    /////////////////////////////////////////////////////// NB-IoT //////////////////////////////////////////////////////// 
-    init_frame_parms_NB_IoT(frame_parms_NB_IoT[CC_id],1);
-    //   phy_init_top(frame_parms[CC_id]);
-    phy_init_lte_top_NB_IoT(frame_parms_NB_IoT[CC_id]);
-    /////////////////////////////////////////////////////// END //////////////////////////////////////////////////////////
-
-  }
-
-
+  
   /* Read configuration */
   if (RC.nb_inst > 0) {
     read_config_and_init();
@@ -790,36 +668,7 @@ int main( int argc, char **argv ) {
       wait_nfapi_init("main?");
     }
 
-    //////////////////////////////////////////////// NB-IoT initialize L2 and IF module //////////////////////////////////////// 
-    int eMBMS_active=0;
-    if (node_function[0] <= NGFI_RAU_IF4p5) { // don't initialize L2 for RRU
-
-      // MP, Nick: Initialization of IF module for NB-IoT should be here
- 
-   //  if_inst = malloc(sizeof(IF_Module_t));
-  //   LOG_I(PHY,"Allocate IF-Module for NB-IoT\n");
- 
-
-        //---------------------------
-
-        LOG_I(PHY,"Intializing L2\n");
-
-        mac_xface = malloc(sizeof(MAC_xface));
-        l2_init(frame_parms[0],eMBMS_active,(uecap_xer_in==1)?uecap_xer:NULL,
-                0,// cba_group_active
-                0); // HO flag
-
-//initialize L2 for NB-IoT stuff (complementary to legacy OAI initialization)
-
-        l2_init_eNB_NB_IoT();
-
-
-        mac_xface->macphy_exit = &exit_fun;
-    } else if (node_function[0] == NGFI_RRU_IF4p5) { // Initialize PRACH in this case
-
-    }
-    //////////////////////////////////////////////////////////// END ////////////////////////////////////////////////////////////
-    
+  
     LOG_I(ENB_APP,"START MAIN THREADS\n");
     // start the main threads
     number_of_cards = 1;
