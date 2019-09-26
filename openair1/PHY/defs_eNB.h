@@ -759,7 +759,12 @@ typedef struct {
   /// mutex for RXn-TXnp4 processing thread
   pthread_mutex_t mutex_RUs;
 
-  uint16_t     HFN;
+  uint16_t     HFN; //NB-IoT
+  /// mutex for RXn-TXnp4 processing thread
+  pthread_mutex_t mutex_rxtx; //NB-IoT
+
+  int      instance_cnt_rxtx;
+
 } L1_rxtx_proc_t;
 
 typedef struct {

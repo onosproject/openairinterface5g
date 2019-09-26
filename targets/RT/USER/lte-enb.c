@@ -112,6 +112,25 @@ unsigned short config_frames[4] = {2,9,11,13};
 
 #include "T.h"
 
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <string.h>
+#include <sys/ioctl.h>
+#include <sys/types.h>
+#include <sys/mman.h>
+#include <sched.h>
+#include <linux/sched.h>
+#include <signal.h>
+#include <execinfo.h>
+#include <getopt.h>
+#include <sys/sysinfo.h>
+#include "msc.h"
+#include "../../SIMU/USER/init_lte.h"
+#include "SCHED/sched_common.h" // for calling prach_procedures_NB_IoT()
+
+
 //#define DEBUG_THREADS 1
 
 //#define USRP_DEBUG 1
@@ -155,7 +174,12 @@ static struct {
 
 extern double cpuf;
 
+/*******************************************************For NB-IoT************************************************************/
+
 void init_eNB_NB_IoT(eNB_func_NB_IoT_t node_function[], eNB_timing_NB_IoT_t node_timing[],int nb_inst,eth_params_t *,int,int);
+extern void eNB_fep_rru_if5(PHY_VARS_eNB_NB_IoT *eNB,L1_rxtx_proc_t *proc);
+extern void eNB_fep_full(PHY_VARS_eNB_NB_IoT *eNB,L1_rxtx_proc_t *proc);
+extern void eNB_fep_full_2thread(PHY_VARS_eNB_NB_IoT *eNB,L1_rxtx_proc_t *proc);
 extern void do_prach(PHY_VARS_eNB_NB_IoT *eNB,int frame,int subframe);
 
 //Modify for NB-IoT merge
@@ -220,7 +244,7 @@ static inline int rxtx_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,L1_rxtx_proc_t *proc, cha
 static void* eNB_thread_prach_NB_IoT( void* param ) {
   static int eNB_thread_prach_status;
 
-  PHY_VARS_eNB *eNB= (PHY_VARS_eNB *)param;
+  PHY_VARS_eNB_NB_IoT *eNB= (PHY_VARS_eNB_NB_IoT *)param;
   L1_proc_t *proc = &eNB->proc;
 
   // set default return value
@@ -248,7 +272,7 @@ static void* eNB_thread_prach_NB_IoT( void* param ) {
   eNB_thread_prach_status = 0;
   return &eNB_thread_prach_status;
 }
-
+/*******************************************************For NB-IoT************************************************************/
 
 
 void init_eNB(int,int);
@@ -1519,14 +1543,14 @@ void stop_eNB(int nb_inst) {
 
 
 
-
+/*******************************************************************For NB-IoT********************************************************************/
 
 ///Modify to NB-IoT merge
 void init_eNB_NB_IoT(eNB_func_NB_IoT_t node_function[], eNB_timing_NB_IoT_t node_timing[],int nb_inst,eth_params_t *eth_params,int single_thread_flag,int wait_for_sync) {
   
   int CC_id;
   int inst;
-  PHY_VARS_eNB *eNB;
+  PHY_VARS_eNB_NB_IoT *eNB;
   int ret;
 
   for (inst=0;inst<nb_inst;inst++) {
@@ -1544,9 +1568,9 @@ void init_eNB_NB_IoT(eNB_func_NB_IoT_t node_function[], eNB_timing_NB_IoT_t node
       /////// IF-Module initialization ///////////////
 
       LOG_I(PHY,"Registering with MAC interface module start\n");
-      AssertFatal((eNB->if_inst         = IF_Module_init_NB_IoT(inst))!=NULL,"Cannot register interface");
-      eNB->if_inst->schedule_response   = schedule_response_NB_IoT;
-      eNB->if_inst->PHY_config_req      = PHY_config_req_NB_IoT;
+      AssertFatal((eNB->if_inst_NB_IoT         = IF_Module_init_NB_IoT(inst))!=NULL,"Cannot register interface");
+      eNB->if_inst_NB_IoT->schedule_response   = schedule_response_NB_IoT;
+      eNB->if_inst_NB_IoT->PHY_config_req      = PHY_config_req_NB_IoT;
       LOG_I(PHY,"Registering with MAC interface module sucessfully\n");
 
 
@@ -1555,7 +1579,7 @@ void init_eNB_NB_IoT(eNB_func_NB_IoT_t node_function[], eNB_timing_NB_IoT_t node
 #endif
 
       switch (node_function[CC_id]) {
-      case NGFI_RRU_IF5:
+      case NGFI_RRU_IF5_NB_IoT:
   eNB->do_prach             = NULL;
   eNB->do_precoding         = 0;
   eNB->fep                  = eNB_fep_rru_if5;
@@ -1585,7 +1609,7 @@ void init_eNB_NB_IoT(eNB_func_NB_IoT_t node_function[], eNB_timing_NB_IoT_t node
         }
   malloc_IF5_buffer(eNB);
   break;
-      case NGFI_RRU_IF4p5:
+      case NGFI_RRU_IF4p5_NB_IoT:
   eNB->do_precoding         = 0;
   eNB->do_prach             = do_prach;
   eNB->fep                  = eNB_fep_full;//(single_thread_flag==1) ? eNB_fep_full_2thread : eNB_fep_full;
@@ -1618,7 +1642,7 @@ void init_eNB_NB_IoT(eNB_func_NB_IoT_t node_function[], eNB_timing_NB_IoT_t node
   malloc_IF4p5_buffer(eNB);
 
   break;
-      case eNodeB_3GPP:
+      case eNodeB_3GPP_NB_IoT:
   eNB->do_precoding         = eNB->frame_parms.nb_antennas_tx!=eNB->frame_parms.nb_antenna_ports_eNB;
   eNB->do_prach             = do_prach;
   eNB->fep                  = eNB_fep_full;//(single_thread_flag==1) ? eNB_fep_full_2thread : eNB_fep_full;
@@ -1644,7 +1668,7 @@ void init_eNB_NB_IoT(eNB_func_NB_IoT_t node_function[], eNB_timing_NB_IoT_t node
   eNB->rfdevice.host_type   = BBU_HOST;
   eNB->ifdevice.host_type   = BBU_HOST;
   break;
-      case eNodeB_3GPP_BBU:
+      case eNodeB_3GPP_BBU_NB_IoT:
   eNB->do_precoding         = eNB->frame_parms.nb_antennas_tx!=eNB->frame_parms.nb_antenna_ports_eNB;
   eNB->do_prach             = do_prach;
   eNB->fep                  = eNB_fep_full;//(single_thread_flag==1) ? eNB_fep_full_2thread : eNB_fep_full;
@@ -1678,7 +1702,7 @@ void init_eNB_NB_IoT(eNB_func_NB_IoT_t node_function[], eNB_timing_NB_IoT_t node
         }
   malloc_IF5_buffer(eNB);
   break;
-      case NGFI_RCC_IF4p5:
+      case NGFI_RCC_IF4p5_NB_IoT:
   eNB->do_precoding         = 0;
   eNB->do_prach             = do_prach;
   eNB->fep                  = NULL;
@@ -1702,7 +1726,7 @@ void init_eNB_NB_IoT(eNB_func_NB_IoT_t node_function[], eNB_timing_NB_IoT_t node
   malloc_IF4p5_buffer(eNB);
 
   break;
-      case NGFI_RAU_IF4p5:
+      case NGFI_RAU_IF4p5_NB_IoT:
   eNB->do_precoding   = 0;
   eNB->do_prach       = do_prach;
   eNB->fep            = NULL;
@@ -1745,3 +1769,159 @@ void init_eNB_NB_IoT(eNB_func_NB_IoT_t node_function[], eNB_timing_NB_IoT_t node
 
 }
 
+////
+void rx_rf(PHY_VARS_eNB_NB_IoT *eNB,int *frame,int *subframe) {
+
+  eNB_proc_t *proc = &eNB->proc;
+  LTE_DL_FRAME_PARMS *fp = &eNB->frame_parms;
+  void *rxp[fp->nb_antennas_rx],*txp[fp->nb_antennas_tx]; 
+  unsigned int rxs,txs;
+  int i;
+  int tx_sfoffset = (eNB->single_thread_flag == 1) ? 3 : 2;
+  openair0_timestamp ts,old_ts;
+
+  if (proc->first_rx==0) {
+    
+    // Transmit TX buffer based on timestamp from RX
+    //    printf("trx_write -> USRP TS %llu (sf %d)\n", (proc->timestamp_rx+(3*fp->samples_per_tti)),(proc->subframe_rx+2)%10);
+    VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME( VCD_SIGNAL_DUMPER_VARIABLES_TRX_TST, (proc->timestamp_rx+(tx_sfoffset*fp->samples_per_tti)-openair0_cfg[0].tx_sample_advance)&0xffffffff );
+    VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_WRITE, 1 );
+    // prepare tx buffer pointers
+
+    lte_subframe_t SF_type     = subframe_select(fp,(proc->subframe_rx+tx_sfoffset)%10);
+    lte_subframe_t prevSF_type = subframe_select(fp,(proc->subframe_rx+tx_sfoffset+9)%10);
+    lte_subframe_t nextSF_type = subframe_select(fp,(proc->subframe_rx+tx_sfoffset+1)%10);
+    if ((SF_type == SF_DL) ||
+  (SF_type == SF_S)) {
+
+      for (i=0; i<fp->nb_antennas_tx; i++)
+  txp[i] = (void*)&eNB->common_vars.txdata[0][i][((proc->subframe_rx+tx_sfoffset)%10)*fp->samples_per_tti]; 
+
+      int siglen=fp->samples_per_tti,flags=1;
+
+      if (SF_type == SF_S) {
+  siglen = fp->dl_symbols_in_S_subframe*(fp->ofdm_symbol_size+fp->nb_prefix_samples0);
+  flags=3; // end of burst
+      }
+      if ((fp->frame_type == TDD) &&
+    (SF_type == SF_DL)&&
+    (prevSF_type == SF_UL) &&
+    (nextSF_type == SF_DL))
+  flags = 2; // start of burst
+
+      if ((fp->frame_type == TDD) &&
+    (SF_type == SF_DL)&&
+    (prevSF_type == SF_UL) &&
+    (nextSF_type == SF_UL))
+  flags = 4; // start of burst and end of burst (only one DL SF between two UL)
+     
+      VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_WRITE, 1 );
+      VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME( VCD_SIGNAL_DUMPER_VARIABLES_TRX_WRITE_FLAGS,flags); 
+      txs = eNB->rfdevice.trx_write_func(&eNB->rfdevice,
+           proc->timestamp_rx+eNB->ts_offset+(tx_sfoffset*fp->samples_per_tti)-openair0_cfg[0].tx_sample_advance,
+           txp,
+           siglen,
+           fp->nb_antennas_tx,
+           flags);
+      clock_gettime( CLOCK_MONOTONIC, &end_rf);    
+      end_rf_ts = proc->timestamp_rx+eNB->ts_offset+(tx_sfoffset*fp->samples_per_tti)-openair0_cfg[0].tx_sample_advance;
+      if (recv_if_count != 0 ) {
+        recv_if_count = recv_if_count-1;
+        LOG_D(HW,"[From Timestamp %"PRId64" to Timestamp %"PRId64"] RTT_RF: %"PRId64"; RTT_RF\n", start_rf_prev_ts, end_rf_ts, clock_difftime_ns(start_rf_prev, end_rf));
+        LOG_D(HW,"[From Timestamp %"PRId64" to Timestamp %"PRId64"] RTT_RF: %"PRId64"; RTT_RF\n",start_rf_prev2_ts, end_rf_ts, clock_difftime_ns(start_rf_prev2, end_rf));
+      }
+      VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_WRITE, 0 );
+      
+      
+      
+      if (txs !=  siglen) {
+  LOG_E(PHY,"TX : Timeout (sent %d/%d)\n",txs, fp->samples_per_tti);
+  exit_fun( "problem transmitting samples" );
+      } 
+    }
+  }
+
+  for (i=0; i<fp->nb_antennas_rx; i++)
+    rxp[i] = (void*)&eNB->common_vars.rxdata[0][i][*subframe*fp->samples_per_tti];
+  
+  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_READ, 1 );
+
+  old_ts = proc->timestamp_rx;
+
+  rxs = eNB->rfdevice.trx_read_func(&eNB->rfdevice,
+            &ts,
+            rxp,
+            fp->samples_per_tti,
+            fp->nb_antennas_rx);
+  start_rf_prev2= start_rf_prev;
+  start_rf_prev2_ts= start_rf_prev_ts; 
+  start_rf_prev = start_rf_new;
+  start_rf_prev_ts = start_rf_new_ts;
+  clock_gettime( CLOCK_MONOTONIC, &start_rf_new);
+  start_rf_new_ts = ts;
+  LOG_D(PHY,"rx_rf: first_rx %d received ts %"PRId64" (sptti %d)\n",proc->first_rx,ts,fp->samples_per_tti);
+  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_READ, 0 );
+
+  proc->timestamp_rx = ts-eNB->ts_offset;
+
+  if (rxs != fp->samples_per_tti)
+    LOG_E(PHY,"rx_rf: Asked for %d samples, got %d from USRP\n",fp->samples_per_tti,rxs);
+
+  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_READ, 0 );
+ 
+  if (proc->first_rx == 1) {
+    eNB->ts_offset = proc->timestamp_rx;
+    proc->timestamp_rx=0;
+  }
+  else {
+
+    if (proc->timestamp_rx - old_ts != fp->samples_per_tti) {
+      LOG_I(PHY,"rx_rf: rfdevice timing drift of %"PRId64" samples (ts_off %"PRId64")\n",proc->timestamp_rx - old_ts - fp->samples_per_tti,eNB->ts_offset);
+      eNB->ts_offset += (proc->timestamp_rx - old_ts - fp->samples_per_tti);
+      proc->timestamp_rx = ts-eNB->ts_offset;
+    }
+  }
+  proc->frame_rx    = (proc->timestamp_rx / (fp->samples_per_tti*10))&1023;
+  proc->subframe_rx = (proc->timestamp_rx / fp->samples_per_tti)%10;
+  proc->frame_rx    = (proc->frame_rx+proc->frame_offset)&1023;
+  proc->frame_tx    = proc->frame_rx;
+  if (proc->subframe_rx > 5) proc->frame_tx=(proc->frame_tx+1)&1023;
+  // synchronize first reception to frame 0 subframe 0
+
+  proc->timestamp_tx = proc->timestamp_rx+(4*fp->samples_per_tti);
+  //  printf("trx_read <- USRP TS %lu (offset %d sf %d, f %d, first_rx %d)\n", proc->timestamp_rx,eNB->ts_offset,proc->subframe_rx,proc->frame_rx,proc->first_rx);  
+  
+  if (proc->first_rx == 0) {
+    if (proc->subframe_rx != *subframe){
+      LOG_E(PHY,"rx_rf: Received Timestamp (%"PRId64") doesn't correspond to the time we think it is (proc->subframe_rx %d, subframe %d)\n",proc->timestamp_rx,proc->subframe_rx,*subframe);
+      exit_fun("Exiting");
+    }
+    int f2 = (*frame+proc->frame_offset)&1023;    
+    if (proc->frame_rx != f2) {
+      LOG_E(PHY,"rx_rf: Received Timestamp (%"PRId64") doesn't correspond to the time we think it is (proc->frame_rx %d frame %d, frame_offset %d, f2 %d)\n",proc->timestamp_rx,proc->frame_rx,*frame,proc->frame_offset,f2);
+      exit_fun("Exiting");
+    }
+  } else {
+    proc->first_rx--;
+    *frame = proc->frame_rx;
+    *subframe = proc->subframe_rx;        
+  }
+  
+  //printf("timestamp_rx %lu, frame %d(%d), subframe %d(%d)\n",proc->timestamp_rx,proc->frame_rx,frame,proc->subframe_rx,subframe);
+  
+  VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME( VCD_SIGNAL_DUMPER_VARIABLES_TRX_TS, proc->timestamp_rx&0xffffffff );
+  
+  if (rxs != fp->samples_per_tti)
+    exit_fun( "problem receiving samples" );
+  
+}
+
+int start_rf(PHY_VARS_eNB_NB_IoT *eNB) {
+  return(eNB->rfdevice.trx_start_func(&eNB->rfdevice));
+}
+
+int start_if(PHY_VARS_eNB_NB_IoT *eNB) {
+  return(eNB->ifdevice.trx_start_func(&eNB->ifdevice));
+}
+
+/*******************************************************************For NB-IoT********************************************************************/
