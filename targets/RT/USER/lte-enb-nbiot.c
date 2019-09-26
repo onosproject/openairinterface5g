@@ -46,7 +46,7 @@
 #include <sys/sysinfo.h>
 #include "rt_wrapper.h"
 
-#include "time_utils.h"
+//#include "time_utils.h"
 
 #undef MALLOC //there are two conflicting definitions, so we better make sure we don't use it at all
 
@@ -65,13 +65,14 @@
 #include "PHY/LTE_TRANSPORT/if4_tools.h"
 #include "PHY/LTE_TRANSPORT/if5_tools.h"
 
-#include "PHY/extern.h"
-#include "SCHED/extern.h"
+#include "PHY/phy_extern.h"
+//#include "SCHED/extern.h"
+#include "SCHED/sched_eNB.h"
 
 #include "../../SIMU/USER/init_lte.h"
 
 //NB-IoT 
-#include "PHY/defs.h"
+#include "PHY/defs_eNB.h"
 #include "PHY/defs_L1_NB_IoT.h"
 //#include "PHY/defs_L1_NB_IoT.h"
 #include "SCHED_NBIOT/defs_NB_IoT.h"
