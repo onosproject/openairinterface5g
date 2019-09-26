@@ -166,6 +166,7 @@ enum transmission_access_mode {
   SCHEDULED_ACCESS,
   CBA_ACCESS};
 
+
 typedef enum  {
   eNodeB_3GPP=0,   // classical eNodeB function
   eNodeB_3GPP_BBU, // eNodeB with NGFI IF5
@@ -174,6 +175,7 @@ typedef enum  {
   NGFI_RRU_IF5,    // NGFI_RRU (NGFI remote radio-unit,IF5)
   NGFI_RRU_IF4p5   // NGFI_RRU (NGFI remote radio-unit,IF4p5)
 } eNB_func_t;
+
 
 typedef enum {
   synch_to_ext_device=0,  // synch to RF or Ethernet device

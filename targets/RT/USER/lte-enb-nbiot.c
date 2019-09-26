@@ -90,7 +90,7 @@ unsigned short config_frames[4] = {2,9,11,13};
 #include "UTIL/OTG/otg_tx.h"
 #include "UTIL/OTG/otg_externs.h"
 #include "UTIL/MATH/oml.h"
-#include "UTIL/LOG/vcd_signal_dumper.h"
+#include "common/utils/LOG/vcd_signal_dumper.h"
 #include "UTIL/OPT/opt.h"
 #include "enb_config.h"
 //#include "PHY/TOOLS/time_meas.h"
@@ -109,21 +109,22 @@ unsigned short config_frames[4] = {2,9,11,13};
 #endif
 
 #include "T.h"
+extern volatile int                    oai_exit;
 
-void init_eNB_NB_IoT(eNB_func_t node_function[], eNB_timing_t node_timing[],int nb_inst,eth_params_t *,int,int);
-extern void do_prach(PHY_VARS_eNB *eNB,int frame,int subframe);
+void init_eNB_NB_IoT(eNB_func_NB_IoT_t node_function[], eNB_timing_NB_IoT_t node_timing[],int nb_inst,eth_params_t *,int,int);
+extern void do_prach(PHY_VARS_eNB_NB_IoT *eNB,int frame,int subframe);
 
 
 
 //Modify for NB-IoT merge
-static inline int rxtx_NB_IoT(PHY_VARS_eNB *eNB,L1_rxtx_proc_t *proc, char *thread_name) {
+static inline int rxtx_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,L1_rxtx_proc_t *proc, char *thread_name) {
  ///start_meas(&softmodem_stats_rxtx_sf);
 
   // ****************************************
   // Common RX procedures subframe n
 
   
-   if ((eNB->do_prach)&&((eNB->node_function != NGFI_RCC_IF4p5)))
+   if ((eNB->do_prach)&&((eNB->node_function != NGFI_RCC_IF4p5_NB_IoT)))
     eNB->do_prach(eNB,proc->frame_rx,proc->subframe_rx);
   phy_procedures_eNB_common_RX(eNB,proc);
   
@@ -145,7 +146,7 @@ static inline int rxtx_NB_IoT(PHY_VARS_eNB *eNB,L1_rxtx_proc_t *proc, char *thre
   eNB->UL_INFO.CC_id     = eNB->CC_id;
   eNB->UL_INFO.hypersfn  = proc->HFN;
 
-  eNB->if_inst->UL_indication(&eNB->UL_INFO);
+  eNB->if_inst_NB_IoT->UL_indication(&eNB->UL_INFO);
 
   pthread_mutex_unlock(&eNB->UL_INFO_mutex);
 
@@ -210,7 +211,7 @@ static void* eNB_thread_prach_NB_IoT( void* param ) {
 
 
 ///Modify to NB-IoT merge
-void init_eNB_NB_IoT(eNB_func_t node_function[], eNB_timing_t node_timing[],int nb_inst,eth_params_t *eth_params,int single_thread_flag,int wait_for_sync) {
+void init_eNB_NB_IoT(eNB_func_NB_IoT_t node_function[], eNB_timing_NB_IoT_t node_timing[],int nb_inst,eth_params_t *eth_params,int single_thread_flag,int wait_for_sync) {
   
   int CC_id;
   int inst;

@@ -758,6 +758,8 @@ typedef struct {
   pthread_cond_t cond_RUs;
   /// mutex for RXn-TXnp4 processing thread
   pthread_mutex_t mutex_RUs;
+
+  uint16_t     HFN;
 } L1_rxtx_proc_t;
 
 typedef struct {

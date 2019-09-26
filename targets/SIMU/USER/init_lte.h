@@ -21,18 +21,20 @@
 
 #include "PHY/types.h"
 #include "PHY/defs_eNB.h"
+#include "PHY/defs_L1_NB_IoT.h"
+#include "PHY/defs_common.h"
 
 PHY_VARS_eNB* init_lte_eNB(LTE_DL_FRAME_PARMS *frame_parms,
-                           uint8_t eNB_id,
-                           uint16_t Nid_cell,
-			   eNB_func_t node_function,
-                           uint8_t abstraction_flag);
+                           uint8_t            eNB_id,
+                           uint16_t           Nid_cell,
+			                     node_function_t    node_function,
+                           uint8_t            abstraction_flag);
 
 PHY_VARS_UE* init_lte_UE(LTE_DL_FRAME_PARMS *frame_parms,
                          uint8_t UE_id,
                          uint8_t abstraction_flag);
 
-PHY_VARS_RN* init_lte_RN(LTE_DL_FRAME_PARMS *frame_parms,
+PHY_VARS_RN_NB_IoT* init_lte_RN(LTE_DL_FRAME_PARMS *frame_parms,
                          uint8_t RN_id,
                          uint8_t eMBMS_active_state);
 
