@@ -174,8 +174,8 @@ pipeline {
                             sh "git checkout -f ${eNB_CommitID}"
                         }
                     } else {
-                        echo "Some parameters are missing"
-                        sh "./ci-scripts/fail.sh"
+                        currentBuild.result = 'ABORTED'
+                        error('Stopping early because some parameters are missing')
                     }
                 }
             }
