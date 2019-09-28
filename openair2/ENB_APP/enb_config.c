@@ -2242,20 +2242,6 @@ int RCconfig_M2(MessageDef *msg_p, uint32_t i) {
             M2AP_REGISTER_ENB_REQ (msg_p).tac              = *ENBParamList.paramarray[k][ENB_TRACKING_AREA_CODE_IDX].uptr;
             config_getlist(&PLMNParamList, PLMNParams, sizeof(PLMNParams)/sizeof(paramdef_t), aprefix);
 
-
-
-//            char aprefix2[MAX_OPTNAME_SIZE*80 + 8];
-//            sprintf(aprefix2,"%s.[%i].%s.[0]",ENB_CONFIG_STRING_ENB_LIST,k,ENB_CONFIG_STRING_MBMS_CONFIGURATION_DATA_LIST);
-//            config_getlist(&MBMSParamList, MBMSParams, sizeof(MBMSParams)/sizeof(paramdef_t), aprefix2);
-//         if (MBMSParamList.numelt < 1 || MBMSParamList.numelt > 8)
-//              AssertFatal(0, "The number of MBMS Areas must be in [1,8], but is %d\n",
-//                          MBMSParamList.numelt);
-//         M2AP_REGISTER_ENB_REQ (msg_p).num_mbms_service_area_list = MBMSParamList.numelt;
-//         for(J=0; J<MBMSParamList.numelt;J++){
-//             M2AP_REGISTER_ENB_REQ (msg_p).mbms_service_area_list[J] = *MBMSParamList.paramarray[J][ENB_MBMS_SERVICE_AREA_IDX].uptr;
-//         }
-//
-
             char aprefix2[MAX_OPTNAME_SIZE*80 + 8];
             sprintf(aprefix2,"%s.[%i]",ENB_CONFIG_STRING_ENB_LIST,k);
             config_getlist(&MBMSConfigParamList, MBMSConfigParams, sizeof(MBMSConfigParams)/sizeof(paramdef_t), aprefix2);
@@ -2358,25 +2344,6 @@ int RCconfig_M2(MessageDef *msg_p, uint32_t i) {
                 M2AP_REGISTER_ENB_REQ (msg_p).target_mce_m2_ip_address[l].ipv6 = 1;
               }
             }
-            // timers
-            //{
-            //  int t_reloc_prep = 0;
-            //  int tx2_reloc_overall = 0;
-            //  paramdef_t p[] = {
-            //    { "t_reloc_prep", "t_reloc_prep", 0, iptr:&t_reloc_prep, defintval:0, TYPE_INT, 0 },
-            //    { "tx2_reloc_overall", "tx2_reloc_overall", 0, iptr:&tx2_reloc_overall, defintval:0, TYPE_INT, 0 }
-            //  };
-            //  config_get(p, sizeof(p)/sizeof(paramdef_t), aprefix);
-
-            //  if (t_reloc_prep <= 0 || t_reloc_prep > 10000 ||
-            //      tx2_reloc_overall <= 0 || tx2_reloc_overall > 20000) {
-            //    LOG_E(M2AP, "timers in configuration file have wrong values. We must have [0 < t_reloc_prep <= 10000] and [0 < tx2_reloc_overall <= 20000]\n");
-            //    exit(1);
-            //  }
-
-            //  M2AP_REGISTER_ENB_REQ (msg_p).t_reloc_prep = t_reloc_prep;
-            //  M2AP_REGISTER_ENB_REQ (msg_p).tx2_reloc_overall = tx2_reloc_overall;
-            //}
             // SCTP SETTING
             M2AP_REGISTER_ENB_REQ (msg_p).sctp_out_streams = SCTP_OUT_STREAMS;
             M2AP_REGISTER_ENB_REQ (msg_p).sctp_in_streams  = SCTP_IN_STREAMS;
