@@ -2306,6 +2306,7 @@ void kill_RU_proc(RU_t *ru) {
   int ret;
   RU_proc_t *proc = &ru->proc;
 #if defined(PRE_SCD_THREAD)
+  if (NFAPI_MODE == NFAPI_MONOLITHIC || NFAPI_MODE == NFAPI_MODE_VNF) {
   AssertFatal((ret=pthread_mutex_lock(&proc->mutex_pre_scd))==0,"mutex_lock returns %d\n",ret);
   ru->proc.instance_pre_scd = 0;
   pthread_cond_signal(&proc->cond_pre_scd);
@@ -2313,6 +2314,7 @@ void kill_RU_proc(RU_t *ru) {
   pthread_join(proc->pthread_pre_scd, NULL);
   pthread_mutex_destroy(&proc->mutex_pre_scd);
   pthread_cond_destroy(&proc->cond_pre_scd);
+  }
 #endif
 #ifdef PHY_TX_THREAD
   AssertFatal((ret=pthread_mutex_lock(&proc->mutex_phy_tx))==0,"mutex_lock returns %d\n",ret);
@@ -2718,7 +2720,7 @@ void stop_ru(RU_t *ru) {
 #endif
   printf("Stopping RU %p processing threads\n",(void*)ru);
 #if defined(PRE_SCD_THREAD)
-  if(ru){
+  if(ru && (NFAPI_MODE == NFAPI_MONOLITHIC || NFAPI_MODE == NFAPI_MODE_VNF)){
     ru->proc.instance_pre_scd = 0;
     pthread_cond_signal( &ru->proc.cond_pre_scd );
     pthread_join(ru->proc.pthread_pre_scd, (void**)&status );

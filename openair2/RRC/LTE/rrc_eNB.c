@@ -7219,6 +7219,18 @@ rrc_eNB_decode_ccch(
                "reconfigurationFailure"));
         {
           uint16_t                          c_rnti = 0;
+          c_rnti = BIT_STRING_to_uint16(&rrcConnectionReestablishmentRequest->ue_Identity.c_RNTI);
+          LOG_D(RRC, "c_rnti is %x\n", c_rnti);
+          ue_context_p = rrc_eNB_get_ue_context(RC.rrc[ctxt_pP->module_id], c_rnti);
+
+          if (ue_context_p == NULL) {
+            LOG_E(RRC,
+                  PROTOCOL_RRC_CTXT_UE_FMT" LTE_RRCConnectionReestablishmentRequest without UE context, let's reject the UE\n",
+                  PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP));
+            LOG_E(RRC,PROTOCOL_RRC_CTXT_UE_FMT" ue_context_p is NULL , do not run rrc_eNB_generate_RRCConnectionReestablishmentReject\n",PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP));
+         //   rrc_eNB_generate_RRCConnectionReestablishmentReject(ctxt_pP, ue_context_p, CC_id);
+            break;
+          }
 
           if (rrcConnectionReestablishmentRequest->ue_Identity.physCellId != RC.rrc[ctxt_pP->module_id]->carrier[CC_id].physCellId) {
             LOG_E(RRC,
@@ -7241,18 +7253,6 @@ rrc_eNB_decode_ccch(
               rrcConnectionReestablishmentRequest->ue_Identity.c_RNTI.size > 2) {
             LOG_E(RRC,
                   PROTOCOL_RRC_CTXT_UE_FMT" LTE_RRCConnectionReestablishmentRequest c_RNTI range error, let's reject the UE\n",
-                  PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP));
-            rrc_eNB_generate_RRCConnectionReestablishmentReject(ctxt_pP, ue_context_p, CC_id);
-            break;
-          }
-
-          c_rnti = BIT_STRING_to_uint16(&rrcConnectionReestablishmentRequest->ue_Identity.c_RNTI);
-          LOG_D(RRC, "c_rnti is %x\n", c_rnti);
-          ue_context_p = rrc_eNB_get_ue_context(RC.rrc[ctxt_pP->module_id], c_rnti);
-
-          if (ue_context_p == NULL) {
-            LOG_E(RRC,
-                  PROTOCOL_RRC_CTXT_UE_FMT" LTE_RRCConnectionReestablishmentRequest without UE context, let's reject the UE\n",
                   PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP));
             rrc_eNB_generate_RRCConnectionReestablishmentReject(ctxt_pP, ue_context_p, CC_id);
             break;
@@ -7491,9 +7491,10 @@ rrc_eNB_decode_ccch(
 
               if ((ue_context_p = rrc_eNB_ue_context_stmsi_exist(ctxt_pP, mme_code, m_tmsi))) {
                 LOG_I(RRC," S-TMSI exists, ue_context_p %p, old rnti %x => %x\n",ue_context_p,ue_context_p->ue_context.rnti,ctxt_pP->rnti);
+                rnti_t      oldrnti = ue_context_p->ue_context.rnti;
 
                 if (!NODE_IS_CU(RC.rrc[ctxt_pP->module_id]->node_type)) {
-                  rrc_mac_remove_ue(ctxt_pP->module_id, ue_context_p->ue_context.rnti);
+                  //rrc_mac_remove_ue(ctxt_pP->module_id, ue_context_p->ue_context.rnti);
                 }
                 else {
                   MessageDef *m = itti_alloc_new_message(TASK_RRC_ENB, F1AP_UE_CONTEXT_RELEASE_CMD);
@@ -7513,6 +7514,12 @@ rrc_eNB_decode_ccch(
                 ue_context_p->ue_id_rnti = ctxt_pP->rnti;
                 ue_context_p->ue_context.rnti = ctxt_pP->rnti;
                 RB_INSERT(rrc_ue_tree_s, &RC.rrc[ctxt_pP->module_id]->rrc_ue_head, ue_context_p);
+
+                /* release old rnti */
+                if (!NODE_IS_CU(RC.rrc[ctxt_pP->module_id]->node_type)) {
+                  put_UE_in_freelist(ctxt_pP->module_id, oldrnti, 0);
+                }
+
                 /* reset timers */
                 ue_context_p->ue_context.ul_failure_timer = 0;
                 ue_context_p->ue_context.ue_release_timer = 0;

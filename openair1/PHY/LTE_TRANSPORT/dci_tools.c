@@ -81,7 +81,7 @@ int16_t find_ulsch(uint16_t rnti, PHY_VARS_eNB *eNB,find_type_t type)
   int16_t first_free_index=-1;
 
   AssertFatal(eNB!=NULL,"eNB is null\n");
-  for (i=0; i<NUMBER_OF_UE_MAX; i++) {
+  for (i=0; i<=NUMBER_OF_UE_MAX; i++) {
     AssertFatal(eNB->ulsch[i]!=NULL,"eNB->ulsch[%d] is null\n",i);
     if ((eNB->ulsch[i]->harq_mask >0) &&
         (eNB->ulsch[i]->rnti==rnti))       return i;
@@ -1739,7 +1739,7 @@ void fill_dci0(PHY_VARS_eNB *eNB,int frame,int subframe,L1_rxtx_proc_t *proc,
 
   uint32_t        ndi = pdu->dci_pdu_rel8.new_data_indication_1;
 
-  uint16_t UE_id   = -1;
+  int16_t UE_id   = -1;
 
 #ifdef T_TRACER
   T(T_ENB_PHY_ULSCH_UE_DCI, T_INT(eNB->Mod_id), T_INT(frame), T_INT(subframe),

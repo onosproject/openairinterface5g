@@ -269,8 +269,9 @@ typedef enum rlc_am_rx_pdu_status
     /** Unknown bearer */
 	RLC_AM_DATA_PDU_STATUS_INVALID_BEARER         = 6,
     /** RLC in wrong state */
-	RLC_AM_DATA_PDU_STATUS_WRONG_STATE            = 7
-
+	RLC_AM_DATA_PDU_STATUS_WRONG_STATE            = 7,
+    /*  sdu free state */
+       RLC_AM_DATA_PDU_STATUS_FREE_STATE            = 8
 } rlc_am_rx_pdu_status_t;
 
 /*! \cond PRIVATE */
