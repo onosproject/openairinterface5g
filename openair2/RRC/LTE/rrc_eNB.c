@@ -5266,7 +5266,7 @@ rrc_eNB_generate_HO_RRCConnectionReconfiguration(const protocol_ctxt_t *const ct
                                                 )
 //-----------------------------------------------------------------------------
 {
-  uint16_t                            size;
+  uint16_t                            size = 0;
   int                                 i;
   uint8_t                             rv[2];
   // configure SRB1/SRB2, PhysicalConfigDedicated, MAC_MainConfig for UE
@@ -8989,18 +8989,18 @@ void *rrc_enb_process_itti_msg(void *notUsed) {
         LOG_E(RRC, "could not find UE (rnti %x) while processing X2AP_HANDOVER_REQ_ACK\n",
               X2AP_HANDOVER_REQ_ACK(msg_p).rnti);
         //exit(1);
-        return ;
+        break ;
       }
       LOG_I(RRC, "[eNB %d] source eNB receives the X2 HO ACK %s\n", instance, msg_name_p);
       if(ue_context_p == NULL) {
         LOG_E(RRC,"%s %d: ue_context_p is a NULL pointer \n",__FILE__,__LINE__);
-        return ;
+        break ;
       }
 
       if (ue_context_p->ue_context.handover_info->state != HO_REQUEST) {
           //abort();
           LOG_E(RRC, "%s:%d: the handover state is not HO_REQUEST: %d\n",__FILE__, __LINE__,ue_context_p->ue_context.handover_info->state);
-          return ;
+          break ;
       }
 	  
       hash_rc = hashtable_get(RC.gtpv1u_data_g->ue_mapping, ue_context_p->ue_context.rnti, (void**)&gtpv1u_ue_data_p);
@@ -9051,13 +9051,13 @@ void *rrc_enb_process_itti_msg(void *notUsed) {
       LOG_I(RRC, "[eNB %d] source eNB receives the X2 UE CONTEXT RELEASE %s\n", instance, msg_name_p);
       if(ue_context_p == NULL) {
         LOG_E(RRC,"%s %d: ue_context_p is a NULL pointer \n",__FILE__,__LINE__);
-        return ;
+        break ;
       }
 
       if (ue_context_p->ue_context.handover_info->state != HO_COMPLETE) {
           //abort();
           LOG_E(RRC, "%s:%d: the handover state is not HO_COMPLETE: %d\n",__FILE__, __LINE__,ue_context_p->ue_context.handover_info->state);
-          return ;
+          break ;
       }
 
       ue_context_p->ue_context.handover_info->state = HO_RELEASE;
