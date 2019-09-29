@@ -51,10 +51,6 @@
 #include "T.h"
 
 
-#ifdef PHY_TX_THREAD
-  extern volatile int16_t phy_tx_txdataF_end;
-  extern int oai_exit;
-#endif
 extern uint16_t sfnsf_add_subframe(uint16_t frameP, uint16_t subframeP, int offset);
 extern void add_subframe(uint16_t *frameP, uint16_t *subframeP, int offset);
 
@@ -1655,17 +1651,6 @@ schedule_ue_spec_fairRR(module_id_t module_idP,
             post_padding = TBS - sdu_length_total - header_len_dcch - header_len_dtch - ta_len; // 1 is for the postpadding header
           }
 
-#ifdef PHY_TX_THREAD
-          struct timespec time_req, time_rem;
-          time_req.tv_sec = 0;
-          time_req.tv_nsec = 10000;
-
-          while((!oai_exit)&&(phy_tx_txdataF_end == 0)) {
-            nanosleep(&time_req,&time_rem);
-            continue;
-          }
-
-#endif
           offset = generate_dlsch_header((unsigned char *) UE_list->DLSCH_pdu[CC_id][0][UE_id].payload[0], num_sdus,  //num_sdus
                                          sdu_lengths, //
                                          sdu_lcids, 255,  // no drx

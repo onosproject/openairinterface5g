@@ -43,6 +43,7 @@ int oai_nfapi_hi_dci0_req(nfapi_hi_dci0_request_t *hi_dci0_req);
 int oai_nfapi_ul_config_req(nfapi_ul_config_request_t *ul_config_req);
 
 int oai_nfapi_ue_release_req(nfapi_ue_release_request_t *release_req);
+uint8_t dl_pdus[8][MAX_NUM_DL_PDU][9422];
 void handle_nfapi_dci_dl_pdu(PHY_VARS_eNB *eNB,
                              int frame, int subframe,
                              L1_rxtx_proc_t *proc,
@@ -196,24 +197,13 @@ void handle_nfapi_dlsch_pdu(PHY_VARS_eNB *eNB,int frame,int subframe,L1_rxtx_pro
   AssertFatal(dlsch0_harq!=NULL,"dlsch_harq is null\n");
   // compute DL power control parameters
   eNB->pdsch_config_dedicated[UE_id].p_a = rel8->pa;
-#ifdef PHY_TX_THREAD
 
   if (dlsch0->active[proc->subframe_tx]) {
-# else
-
-  if (dlsch0->active) {
-#endif
     computeRhoA_eNB(rel8->pa, dlsch0,dlsch0_harq->dl_power_off, eNB->frame_parms.nb_antenna_ports_eNB);
     computeRhoB_eNB(rel8->pa,eNB->frame_parms.pdsch_config_common.p_b,eNB->frame_parms.nb_antenna_ports_eNB,dlsch0,dlsch0_harq->dl_power_off);
   }
 
-#ifdef PHY_TX_THREAD
-
   if (dlsch1->active[proc->subframe_tx]) {
-#else
-
-  if (dlsch1->active) {
-#endif
     computeRhoA_eNB(rel8->pa, dlsch1,dlsch1_harq->dl_power_off, eNB->frame_parms.nb_antenna_ports_eNB);
     computeRhoB_eNB(rel8->pa,eNB->frame_parms.pdsch_config_common.p_b,eNB->frame_parms.nb_antenna_ports_eNB,dlsch1,dlsch1_harq->dl_power_off);
   }
@@ -312,11 +302,7 @@ void handle_nfapi_dlsch_pdu(PHY_VARS_eNB *eNB,int frame,int subframe,L1_rxtx_pro
         dlsch0_harq->rb_alloc[3]      = localRIV2alloc_LUT100_3[rel8->resource_block_coding];
     }
 
-#ifdef PHY_TX_THREAD
     dlsch0->active[proc->subframe_tx]= 1;
-#else
-    dlsch0->active                  = 1;
-#endif
     dlsch0_harq->nb_rb              = 6;
     dlsch0_harq->vrb_type           = LOCALIZED;
     dlsch0_harq->rvidx              = rel8->redundancy_version;
@@ -359,7 +345,7 @@ void handle_nfapi_dlsch_pdu(PHY_VARS_eNB *eNB,int frame,int subframe,L1_rxtx_pro
           rel8->length
          );
 #endif
-    dlsch0->active = 1;
+    dlsch0->active[proc->subframe_tx] = 1;
     harq_pid        = dlsch0->harq_ids[frame%2][proc->subframe_tx];
     dlsch0->harq_mask |= (1<<harq_pid);
     AssertFatal((harq_pid>=0) && (harq_pid<8),"subframe %d: harq_pid %d not in 0...7\n",proc->subframe_tx,harq_pid);
@@ -369,12 +355,12 @@ void handle_nfapi_dlsch_pdu(PHY_VARS_eNB *eNB,int frame,int subframe,L1_rxtx_pro
 
     // compute DL power control parameters
 
-    if (dlsch0->active) {
+    if (dlsch0->active[proc->subframe_tx]) {
       computeRhoA_eNB(rel8->pa,dlsch0,dlsch0_harq->dl_power_off, eNB->frame_parms.nb_antenna_ports_eNB);
       computeRhoB_eNB(rel8->pa,eNB->frame_parms.pdsch_config_common.p_b,eNB->frame_parms.nb_antenna_ports_eNB,dlsch0,dlsch0_harq->dl_power_off);
     }
 
-    if (dlsch1->active) {
+    if (dlsch1->active[proc->subframe_tx]) {
       computeRhoA_eNB(rel8->pa, dlsch1,dlsch1_harq->dl_power_off, eNB->frame_parms.nb_antenna_ports_eNB);
       computeRhoB_eNB(rel8->pa,eNB->frame_parms.pdsch_config_common.p_b,eNB->frame_parms.nb_antenna_ports_eNB,dlsch1,dlsch1_harq->dl_power_off);
     }
@@ -867,8 +853,33 @@ void schedule_response(Sched_Rsp_t *Sched_INFO) {
                     dlsch_pdu_rel8->transport_blocks);
 
         if (1) { //sdu != NULL)
-            if (NFAPI_MODE!=NFAPI_MODE_VNF)
-              handle_nfapi_dlsch_pdu(eNB,NFAPI_SFNSF2SFN(DL_req->sfn_sf),NFAPI_SFNSF2SF(DL_req->sfn_sf),proc,dl_config_pdu, dlsch_pdu_rel8->transport_blocks-1, sdu);
+            if (NFAPI_MODE!=NFAPI_MODE_VNF) {
+              if (sdu != NULL) {
+                LTE_eNB_PDCCH *pdcch_vars       = &eNB->pdcch_vars[NFAPI_SFNSF2SF(DL_req->sfn_sf)&1];
+                uint8_t harq_pid_dl = 0;
+                uint8_t k;
+                for(k=0; k < pdcch_vars->num_dci;k++){
+                  if(pdcch_vars->dci_alloc[k].rnti == dlsch_pdu_rel8->rnti){
+                    harq_pid_dl = pdcch_vars->dci_alloc[pdcch_vars->num_dci-1].harq_pid;
+                    break;
+                  }
+                }
+
+                if(k==pdcch_vars->num_dci){
+                  LOG_E(PHY, "schedule_response not find dl harq_pid rnti %x frame %d subframe %d\n", dlsch_pdu_rel8->rnti,NFAPI_SFNSF2SFN(DL_req->sfn_sf),NFAPI_SFNSF2SF(DL_req->sfn_sf));
+                }else{
+                  if (harq_pid_dl >=0 && harq_pid_dl < 8) {
+                    memset(dl_pdus[harq_pid_dl][i], 0, sizeof(uint8_t)*9422);
+                    memcpy(dl_pdus[harq_pid_dl][i], TX_req->tx_request_body.tx_pdu_list[pdu_index].segments[0].segment_data, TX_req->tx_request_body.tx_pdu_list[pdu_index].segments[0].segment_length);
+                    handle_nfapi_dlsch_pdu(eNB,NFAPI_SFNSF2SFN(DL_req->sfn_sf),NFAPI_SFNSF2SF(DL_req->sfn_sf),proc,dl_config_pdu, dlsch_pdu_rel8->transport_blocks-1, dl_pdus[harq_pid_dl][i]);
+                  } else {
+                    LOG_E(PHY, "schedule_response illegal harq_pid %d\n", harq_pid_dl);
+                  }
+                }
+              } else {
+                handle_nfapi_dlsch_pdu(eNB,NFAPI_SFNSF2SFN(DL_req->sfn_sf),NFAPI_SFNSF2SF(DL_req->sfn_sf),proc,dl_config_pdu, dlsch_pdu_rel8->transport_blocks-1, sdu);
+              }
+            }
         } else {
           dont_send=1;
           LOG_E(MAC,"%s() NFAPI_DL_CONFIG_DLSCH_PDU_TYPE sdu is NULL DL_CFG:SFN/SF:%d:pdu_index:%d TX_REQ:SFN/SF:%d:pdus:%d\n", __FUNCTION__, NFAPI_SFNSF2DEC(DL_req->sfn_sf), pdu_index,

@@ -328,12 +328,7 @@ void fill_dci_and_dlsch(PHY_VARS_eNB *eNB,int frame,int subframe,L1_rxtx_proc_t 
   }
   dlsch0_harq->ndi = rel8->new_data_indicator_1;
 
-
-#ifdef PHY_TX_THREAD
   dlsch0->active[subframe]        = 1;
-#else
-  dlsch0->active        = 1;
-#endif
   if (rel8->rnti_type == 2)
       dlsch0_harq->round    = 0;
 
@@ -515,11 +510,7 @@ void fill_dci_and_dlsch(PHY_VARS_eNB *eNB,int frame,int subframe,L1_rxtx_proc_t 
     dlsch0_harq->Qm              = 2;
     dlsch0_harq->TBS             = TBStable[I_mcs][NPRB-1];
     dlsch0->harq_ids[frame%2][subframe]   = rel8->harq_process;
-#ifdef PHY_TX_THREAD
     dlsch0->active[subframe]     = 1;
-#else
-    dlsch0->active               = 1;
-#endif
     dlsch0->rnti                 = rel8->rnti;
     //dlsch0->harq_ids[subframe]   = rel8->harq_process;
 
@@ -534,11 +525,7 @@ void fill_dci_and_dlsch(PHY_VARS_eNB *eNB,int frame,int subframe,L1_rxtx_proc_t 
   case NFAPI_DL_DCI_FORMAT_1:
 
     dci_alloc->format           = format1;
-#ifdef PHY_TX_THREAD
     dlsch0->active[subframe]    = 1;
-#else
-    dlsch0->active              = 1;
-#endif
 
     LOG_D(PHY,"SFN/SF:%04d%d proc:TX:SFN/SF:%04d%d: Programming DLSCH for Format 1 DCI, harq_pid %d\n",frame,subframe,proc->frame_tx,subframe,rel8->harq_process);
 
@@ -682,11 +669,7 @@ void fill_dci_and_dlsch(PHY_VARS_eNB *eNB,int frame,int subframe,L1_rxtx_proc_t 
 
     dlsch0_harq->dl_power_off = 1;
 
-#ifdef PHY_TX_THREAD
     dlsch0->active[subframe] = 1;
-#else
-    dlsch0->active = 1;
-#endif
 
 
 
@@ -893,32 +876,19 @@ void fill_dci_and_dlsch(PHY_VARS_eNB *eNB,int frame,int subframe,L1_rxtx_proc_t 
     // assume both TBs are active
     dlsch0_harq->Nl        = 1;
     dlsch1_harq->Nl        = 1;
-#ifdef PHY_TX_THREAD
     dlsch0->active[subframe] = 1;
     dlsch1->active[subframe] = 1;
-#else
-    dlsch0->active = 1;
-    dlsch1->active = 1;
-#endif
     dlsch0->harq_mask                         |= (1<<rel8->harq_process);
     dlsch1->harq_mask                         |= (1<<rel8->harq_process);
 
     // check if either TB is disabled (see 36-213 V11.3 Section )
     if ((dlsch0_harq->rvidx == 1) && (dlsch0_harq->mcs == 0)) {
-#ifdef PHY_TX_THREAD
       dlsch0->active[subframe] = 0;
-#else
-      dlsch0->active = 0;
-#endif
       dlsch0->harq_mask                         &= ~(1<<rel8->harq_process);
     }
 
     if ((dlsch1_harq->rvidx == 1) && (dlsch1_harq->mcs == 0)) {
-#ifdef PHY_TX_THREAD
       dlsch1->active[subframe]= 0;
-#else
-      dlsch1->active = 0;
-#endif
       dlsch1->harq_mask                         &= ~(1<<rel8->harq_process);
     }
     // dlsch0_harq->dl_power_off = 0;
@@ -929,11 +899,7 @@ void fill_dci_and_dlsch(PHY_VARS_eNB *eNB,int frame,int subframe,L1_rxtx_proc_t 
       dlsch0_harq->TBS = TBStable[get_I_TBS (dlsch0_harq->mcs)][dlsch0_harq->nb_rb - 1];
       dlsch1_harq->TBS = TBStable[get_I_TBS (dlsch1_harq->mcs)][dlsch0_harq->nb_rb - 1];
 
-#ifdef PHY_TX_THREAD
       if ((dlsch0->active[subframe]==1) && (dlsch1->active[subframe]==1)) {
-#else
-      if ((dlsch0->active==1) && (dlsch1->active==1)) {
-#endif
         dlsch0_harq->mimo_mode = LARGE_CDD;
         dlsch1_harq->mimo_mode = LARGE_CDD;
         dlsch0_harq->dl_power_off = 1;
@@ -943,11 +909,7 @@ void fill_dci_and_dlsch(PHY_VARS_eNB *eNB,int frame,int subframe,L1_rxtx_proc_t 
         dlsch1_harq->mimo_mode = ALAMOUTI;
       }
     } else if (fp->nb_antenna_ports_eNB == 4) { // 4 antenna case
-#ifdef PHY_TX_THREAD
       if ((dlsch0->active[subframe]==1) && (dlsch1->active[subframe]==1)) {
-#else
-      if ((dlsch0->active==1) && (dlsch1->active==1)) {
-#endif
         switch (rel8->precoding_information) {
         case 0:                // one layer per transport block
           dlsch0_harq->mimo_mode = LARGE_CDD;
@@ -987,11 +949,7 @@ void fill_dci_and_dlsch(PHY_VARS_eNB *eNB,int frame,int subframe,L1_rxtx_proc_t 
           LOG_E (PHY, "Illegal value (3) for TPMI in Format 2A DCI\n");
           break;
         }
-#ifdef PHY_TX_THREAD
       } else if (dlsch0->active[subframe] == 1) {
-#else
-      } else if (dlsch0->active == 1) {
-#endif
         switch (rel8->precoding_information) {
         case 0:                // one layer per transport block
           dlsch0_harq->mimo_mode = ALAMOUTI;
@@ -1011,11 +969,7 @@ void fill_dci_and_dlsch(PHY_VARS_eNB *eNB,int frame,int subframe,L1_rxtx_proc_t 
           LOG_E (PHY, "Illegal value %d for TPMI in Format 2A DCI with one transport block enabled\n", rel8->precoding_information);
           break;
         }
-#ifdef PHY_TX_THREAD
       } else if (dlsch1->active[subframe] == 1) {
-#else
-      } else if (dlsch1->active == 1) {
-#endif
         switch (rel8->precoding_information) {
         case 0:                // one layer per transport block
           dlsch0_harq->mimo_mode = ALAMOUTI;
@@ -1041,18 +995,10 @@ void fill_dci_and_dlsch(PHY_VARS_eNB *eNB,int frame,int subframe,L1_rxtx_proc_t 
     }
 
     // reset HARQ process if this is the first transmission
-#ifdef PHY_TX_THREAD
     if ((dlsch0->active[subframe]==1) && (dlsch0_harq->round == 0))
-#else
-    if ((dlsch0->active==1) && (dlsch0_harq->round == 0))
-#endif
       dlsch0_harq->status = ACTIVE;
 
-#ifdef PHY_TX_THREAD
     if ((dlsch1->active[subframe]==1) && (dlsch1_harq->round == 0))
-#else
-    if ((dlsch1->active==1) && (dlsch1_harq->round == 0))
-#endif
       dlsch1_harq->status = ACTIVE;
 
     dlsch0->rnti = rel8->rnti;
@@ -1226,13 +1172,8 @@ void fill_dci_and_dlsch(PHY_VARS_eNB *eNB,int frame,int subframe,L1_rxtx_proc_t 
     printf ("RV0 = %d, RV1 = %d. MCS0 = %d, MCS1=%d\n", rel8->redundancy_version_1, rel8->redundancy_version_2, rel8->mcs_1, rel8->mcs_2);
 #endif
     if (TB0_active && TB1_active && rel8->transport_block_to_codeword_swap_flag==0) {
-#ifdef PHY_TX_THREAD
       dlsch0->active[subframe] = 1;
       dlsch1->active[subframe] = 1;
-#else
-      dlsch0->active = 1;
-      dlsch1->active = 1;
-#endif
       dlsch0->harq_mask                         |= (1<<rel8->harq_process);
       dlsch1->harq_mask                         |= (1<<rel8->harq_process);
       dlsch0_harq = dlsch0->harq_processes[rel8->harq_process];
@@ -1253,13 +1194,8 @@ void fill_dci_and_dlsch(PHY_VARS_eNB *eNB,int frame,int subframe,L1_rxtx_proc_t 
     } else if (TB0_active && TB1_active && rel8->transport_block_to_codeword_swap_flag == 1) {
       dlsch0 = eNB->dlsch[UE_id][1];
       dlsch1 = eNB->dlsch[UE_id][0];
-#ifdef PHY_TX_THREAD
       dlsch0->active[subframe] = 1;
       dlsch1->active[subframe] = 1;
-#else
-      dlsch0->active = 1;
-      dlsch1->active = 1;
-#endif
 
       dlsch0->harq_mask |= (1 << rel8->harq_process);
       dlsch1->harq_mask |= (1 << rel8->harq_process);
@@ -1277,11 +1213,7 @@ void fill_dci_and_dlsch(PHY_VARS_eNB *eNB,int frame,int subframe,L1_rxtx_proc_t 
       dlsch1_harq->codeword=0;
     }
     else if (TB0_active && (TB1_active==0)) {
-#ifdef PHY_TX_THREAD
       dlsch0->active[subframe] = 1;
-#else
-      dlsch0->active = 1;
-#endif
       dlsch0->harq_mask                         |= (1<<rel8->harq_process);
       dlsch0_harq = dlsch0->harq_processes[rel8->harq_process];
       dlsch0_harq->mcs = rel8->mcs_1;
@@ -1296,11 +1228,7 @@ void fill_dci_and_dlsch(PHY_VARS_eNB *eNB,int frame,int subframe,L1_rxtx_proc_t 
 #endif
     }
     else if ((TB0_active==0) && TB1_active) {
-#ifdef PHY_TX_THREAD
       dlsch1->active[subframe] = 1;
-#else
-      dlsch1->active = 1;
-#endif
       dlsch1->harq_mask                         |= (1<<rel8->harq_process);
       dlsch1_harq = dlsch1->harq_processes[rel8->harq_process];
       dlsch1_harq->mcs = rel8->mcs_2;
@@ -1503,7 +1431,7 @@ void fill_dci_and_dlsch(PHY_VARS_eNB *eNB,int frame,int subframe,L1_rxtx_proc_t 
 #endif
 //printf("DCI %d.%d rnti %d harq %d TBS %d\n", frame, subframe, rel8->rnti, rel8->harq_process, dlsch0_harq->TBS);
 #if T_TRACER
-  if (dlsch0->active)
+  if (dlsch0->active[subframe])
     T(T_ENB_PHY_DLSCH_UE_DCI, T_INT(0), T_INT(frame), T_INT(subframe),
       T_INT(rel8->rnti), T_INT(rel8->dci_format), T_INT(rel8->harq_process),
       T_INT(rel8->mcs_1), T_INT(dlsch0_harq->TBS));
@@ -1772,7 +1700,7 @@ void fill_mdci_and_dlsch(PHY_VARS_eNB *eNB,L1_rxtx_proc_t *proc,mDCI_ALLOC_t *dc
     else AssertFatal(1==0,"Don't know how to set TBS (TPC %d)\n",rel13->tpc);
     LOG_D(PHY,"fill_mdci_and_dlsch : TBS = %d(%d) %p, %x\n",dlsch0_harq->TBS,dlsch0_harq->mcs,dlsch0,rel13->rnti);
   }
-  dlsch0->active = 1;
+  dlsch0->active[subframe] = 1;
   dlsch0->harq_mask |= (1 << rel13->harq_process);
 
   dlsch0_harq->frame    = (subframe >= 8) ? ((frame + 1) & 1023) : frame;
