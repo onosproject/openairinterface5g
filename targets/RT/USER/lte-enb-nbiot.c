@@ -313,6 +313,25 @@ void proc_tx_full(PHY_VARS_eNB_NB_IoT *eNB,
 
 }
 
+#if defined(ENABLE_ITTI) && defined(ENABLE_USE_MME)
+/* Wait for eNB application initialization to be complete (eNB registration to MME) */
+static void wait_system_ready (char *message, volatile int *start_flag) {
+  
+  static char *indicator[] = {".    ", "..   ", "...  ", ".... ", ".....",
+            " ....", "  ...", "   ..", "    .", "     "};
+  int i = 0;
+  
+  while ((!oai_exit) && (*start_flag == 0)) {
+    LOG_N(EMU, message, indicator[i]);
+    fflush(stdout);
+    i = (i + 1) % (sizeof(indicator) / sizeof(indicator[0]));
+    usleep(200000);
+  }
+  
+    LOG_D(EMU,"\n");
+}
+#endif
+
 
 static void* eNB_thread_single( void* param ) {
 
@@ -543,25 +562,6 @@ static void* eNB_thread_rxtx( void* param ) {
   eNB_thread_rxtx_status = 0;
   return &eNB_thread_rxtx_status;
 }
-
-#if defined(ENABLE_ITTI) && defined(ENABLE_USE_MME)
-/* Wait for eNB application initialization to be complete (eNB registration to MME) */
-static void wait_system_ready (char *message, volatile int *start_flag) {
-  
-  static char *indicator[] = {".    ", "..   ", "...  ", ".... ", ".....",
-            " ....", "  ...", "   ..", "    .", "     "};
-  int i = 0;
-  
-  while ((!oai_exit) && (*start_flag == 0)) {
-    LOG_N(EMU, message, indicator[i]);
-    fflush(stdout);
-    i = (i + 1) % (sizeof(indicator) / sizeof(indicator[0]));
-    usleep(200000);
-  }
-  
-  LOG_D(EMU,"\n");
-}
-#endif
 
 
 // asynchronous UL with IF5 (RCC,RAU,eNodeB_BBU)
