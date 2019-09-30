@@ -357,7 +357,7 @@ void pdsch_procedures(PHY_VARS_eNB *eNB,
                    subframe,
                    dlsch_harq->pdsch_start,
                    dlsch,
-                   dlsch->ue_type==NOCE ? dlsch1 : (LTE_eNB_DLSCH_t *)NULL);
+                   dlsch->ue_type==RegularLTE ? dlsch1 : (LTE_eNB_DLSCH_t *)NULL);
   stop_meas(&eNB->dlsch_modulation_stats);
   LOG_D(PHY,"Generated PDSCH dlsch_harq[round:%d]\n",dlsch_harq->round);
 }
@@ -416,7 +416,7 @@ void phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
     for (i=0; i<NUMBER_OF_UE_MAX; i++) {
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
 
-      if (eNB->ulsch[i] && eNB->ulsch[i]->ue_type >NOCE) harq_pid = 0;
+      if (eNB->ulsch[i] && eNB->ulsch[i]->ue_type >RegularLTE) harq_pid = 0;
       else
 #endif
         harq_pid = subframe2harq_pid(fp,ul_frame,ul_subframe);
@@ -510,7 +510,7 @@ void phy_procedures_eNB_TX(PHY_VARS_eNB *eNB,
       if((harq_pid < 0) || (harq_pid >= dlsch0->Mdlharq)) {
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
 
-        if (dlsch0->ue_type==NOCE)
+        if (dlsch0->ue_type==RegularLTE)
 #endif
           LOG_E(PHY,"harq_pid:%d corrupt must be 0-7 UE_id:%d frame:%d subframe:%d rnti:%x [ %1d.%1d.%1d.%1d.%1d.%1d.%1d.%1d\n", harq_pid,UE_id,frame,subframe,dlsch0->rnti,
                 dlsch0->harq_ids[frame%2][0],
@@ -677,7 +677,7 @@ uci_procedures(PHY_VARS_eNB *eNB,
       switch (uci->type) {
         case SR:
         case HARQ_SR: {
-          int pucch1_thres = (uci->ue_type == NOCE) ? eNB->pucch1_DTX_threshold : eNB->pucch1_DTX_threshold_emtc[0];
+          int pucch1_thres = (uci->ue_type == RegularLTE) ? eNB->pucch1_DTX_threshold : eNB->pucch1_DTX_threshold_emtc[0];
           metric_SR = rx_pucch(eNB,
                                uci->pucch_fmt,
                                uci->ue_id,
@@ -712,7 +712,7 @@ uci_procedures(PHY_VARS_eNB *eNB,
         }
 
         case HARQ: {
-          int pucch1ab_thres = (uci->ue_type == NOCE) ? eNB->pucch1ab_DTX_threshold : eNB->pucch1ab_DTX_threshold_emtc[0];
+          int pucch1ab_thres = (uci->ue_type == RegularLTE) ? eNB->pucch1ab_DTX_threshold : eNB->pucch1ab_DTX_threshold_emtc[0];
 
           if (fp->frame_type == FDD) {
             LOG_D(PHY,"Frame %d Subframe %d Demodulating PUCCH (UCI %d) for ACK/NAK (uci->pucch_fmt %d,uci->type %d.uci->frame %d, uci->subframe %d): n1_pucch0 %d SR_payload %d\n",
@@ -1162,7 +1162,7 @@ void pusch_procedures(PHY_VARS_eNB *eNB,L1_rxtx_proc_t *proc) {
   for (i = 0; i < NUMBER_OF_UE_MAX; i++) {
     ulsch = eNB->ulsch[i];
 
-    if (ulsch->ue_type > NOCE) harq_pid = 0;
+    if (ulsch->ue_type > RegularLTE) harq_pid = 0;
     else harq_pid=harq_pid0;
 
     ulsch_harq = ulsch->harq_processes[harq_pid];
@@ -1403,7 +1403,7 @@ void fill_rx_indication(PHY_VARS_eNB *eNB,int UE_id,int frame,int subframe) {
   uint32_t        harq_pid;
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
 
-  if (eNB->ulsch[UE_id]->ue_type > NOCE) harq_pid = 0;
+  if (eNB->ulsch[UE_id]->ue_type > RegularLTE) harq_pid = 0;
   else
 #endif
   {

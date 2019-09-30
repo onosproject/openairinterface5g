@@ -1422,7 +1422,7 @@ typedef struct {
 #define NFAPI_DL_CONFIG_REQUEST_DLSCH_PDU_REL12_TAG 0x203D
 
 typedef enum {
-  NOCE,
+  RegularLTE,
   CEMODEA,
   CEMODEB
 } UE_type_t;

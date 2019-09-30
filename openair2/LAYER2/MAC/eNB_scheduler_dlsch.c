@@ -3156,7 +3156,7 @@ schedule_PCH(module_id_t module_idP,
 #endif
           // Rel13 fields
 #if (LTE_RRC_VERSION >= MAKE_VERSION(13, 0, 0))
-          dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.ue_type                               = NOCE; // regular UE
+          dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.ue_type                               = RegularLTE; // regular UE
           dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.pdsch_payload_type                    = 2; // not BR
           dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.initial_transmission_sf_io            = 0xFFFF;
 #endif

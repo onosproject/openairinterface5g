@@ -143,7 +143,7 @@ add_msg3(module_id_t module_idP, int CC_id, RA_t *ra, frame_t frameP,
     ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.size = get_TBS_UL (ra->msg3_mcs, ra->msg3_nb_rb);
     // Re13 fields
 
-    ul_config_pdu->ulsch_pdu.ulsch_pdu_rel13.ue_type = ra->rach_resource_type > CEmodeB : CEmodeA;
+    ul_config_pdu->ulsch_pdu.ulsch_pdu_rel13.ue_type = ra->rach_resource_type > 2 ? CEmodeB : CEmodeA;
     if (ra->rach_resource_type > 0) {
 	pusch_maxNumRepetitionCEmodeA_r13= *(rrc->configuration.pusch_maxNumRepetitionCEmodeA_r13[CC_id]);
 	ul_config_pdu->ulsch_pdu.ulsch_pdu_rel13.total_number_of_repetitions= pusch_repetition_Table8_2_36213[pusch_maxNumRepetitionCEmodeA_r13][ra->pusch_repetition_levels];

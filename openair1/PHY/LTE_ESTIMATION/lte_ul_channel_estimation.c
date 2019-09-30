@@ -81,7 +81,7 @@ int32_t lte_ul_channel_estimation(PHY_VARS_eNB *eNB,
   int32_t temp_in_ifft_0[2048*2] __attribute__((aligned(32)));
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
 
-  if (eNB->ulsch[UE_id]->ue_type > NOCE) harq_pid = 0;
+  if (eNB->ulsch[UE_id]->ue_type > RegularLTE) harq_pid = 0;
   else
 #endif
   {
