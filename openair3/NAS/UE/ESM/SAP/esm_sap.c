@@ -161,17 +161,21 @@ int esm_sap_send(nas_user_t *user, esm_sap_t *msg)
 
   switch (primitive) {
   case ESM_REMOTE_UE_REPORT_REQ:
+  //case ESM_REMOTE_UE_REPORT:
   {
 	  esm_remote_ue_report_t *remote_ue_report = &msg->data.remote_ue_report;
-      unsigned int pti = 0;
+      unsigned int pti;
       int cid;
       /* Assign new procedure transaction identity */
       rc = esm_proc_remote_ue_report(user, cid, &pti);
+
+
       rc = _esm_sap_send(user, REMOTE_UE_REPORT,
                          msg->is_standalone,
                          pti, EPS_BEARER_IDENTITY_UNASSIGNED,
                          &msg->data, &msg->send);
   }
+
   break;
 
   case ESM_PDN_CONNECTIVITY_REQ:
@@ -773,12 +777,19 @@ static int _esm_sap_send(nas_user_t *user, int msg_type, int is_standalone,
   case BEARER_RESOURCE_MODIFICATION_REQUEST:
     break;
 
-  case REMOTE_UE_REPORT:
-	  esm_msg.header.message_type = REMOTE_UE_REPORT;
-	  rc = esm_send_remote_ue_report(ebi, &esm_msg.remote_ue_report);
-	  //#error "TODO"//
+  case REMOTE_UE_REPORT: {
+	  	  /*
+	       * Process Remote UE Report message to send to the MME
+	       */
+	 const esm_remote_ue_report_t *msg = &data->remote_ue_report; // test message
+	 //esm_msg.header.message_type = REMOTE_UE_REPORT;
+	 rc = esm_send_remote_ue_report(ebi, &esm_msg.remote_ue_report);
+	 /* Setup callback function used to send Remote UE Report
+	  * message onto the network */
+     esm_procedure = esm_proc_remote_ue_report_low_layer;
+	 //#error "TODO"//
     break;
-
+  }
   default:
     LOG_TRACE(WARNING, "ESM-SAP - Send unexpected ESM message 0x%x",
               msg_type);

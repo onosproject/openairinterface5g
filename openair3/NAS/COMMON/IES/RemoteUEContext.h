@@ -48,7 +48,7 @@ typedef struct remote_ue_context_s {
 #define EVEN_IDENTITY 0
 #define ODD_IDENTITY  1
 		uint8_t oddevenindic:1;
-		bool     flags_present;
+		uint8_t     flags_present;
         imsi_identity_t *imsi_identity;
 }remote_ue_context_t;
 

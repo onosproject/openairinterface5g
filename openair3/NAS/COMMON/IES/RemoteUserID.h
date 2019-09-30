@@ -47,7 +47,7 @@ typedef struct imsi_identity_s {
   uint8_t  num_digits;
 } imsi_identity_t;
 
-typedef imsi_identity_t;
+//#define imsi_identity_t;
 
 
 typedef struct remote_user_id_s {
@@ -60,8 +60,8 @@ typedef struct remote_user_id_s {
 #define REMOTE_USER_ID_MSISDN  0
   uint8_t  msisdnf:1;
 
-  bool     flags_present;
-  bool     spare_instance;
+  uint8_t     flags_present;
+  uint8_t     spare_instance;
   imsi_identity_t *imsi_identity;
 }remote_user_id_t;
 

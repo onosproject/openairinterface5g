@@ -1416,8 +1416,9 @@ int _nas_proc_remote_ue_report(nas_user_t *user, int cid)
    * for the specified PDN
    */
   esm_sap.primitive = ESM_REMOTE_UE_REPORT_REQ;
+  //esm_sap.primitive = ESM_REMOTE_UE_REPORT;
   esm_sap.is_standalone = TRUE;
-  esm_sap.data.remote_ue_report.dummy = 0;
+  esm_sap.data.remote_ue_report.pkmfaddress = 0;
   rc = esm_sap_send(user, &esm_sap);
 
   LOG_FUNC_RETURN (rc);

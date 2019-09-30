@@ -112,6 +112,7 @@ static int _deactivate_eps_bearer_context_request(char* buffer, int length, cons
 static int _deactivate_eps_bearer_context_accept(char* buffer, int length, const deactivate_eps_bearer_context_accept_msg* msg);
 
 static int _esm_status(char* buffer, int length, const esm_status_msg* msg);
+static int _remote_ue_report(char* buffer, int length, const remote_ue_report_msg* msg);
 
 /****************************************************************************/
 /******************  E X P O R T E D    F U N C T I O N S  ******************/
@@ -781,6 +782,12 @@ _nas_process_esm(
              &msg->deactivate_eps_bearer_context_accept);
     break;
 
+  case REMOTE_UE_REPORT:
+      index += _remote_ue_report(buffer + index, length - index,
+               &msg->remote_ue_report);
+      break;
+
+
   case ESM_STATUS:
     index += _esm_status(buffer + index, length - index,
                          &msg->esm_status);
@@ -1035,6 +1042,23 @@ _deactivate_eps_bearer_context_accept(
 
   return (index);
 }
+
+/*
+-----------------------------------------------------------------------------
+ *    Process Deactivate EPS Bearer Context Accept
+ *-----------------------------------------------------------------------------
+ */
+static int
+_remote_ue_report
+(char* buffer,
+	int length,
+	const remote_ue_report_msg* msg)
+{
+  int index = 0;
+
+  return (index);
+}
+
 
 /*
  *-----------------------------------------------------------------------------

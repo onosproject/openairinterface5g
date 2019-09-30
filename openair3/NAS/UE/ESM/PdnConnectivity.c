@@ -158,8 +158,7 @@ int esm_proc_pdn_connectivity(nas_user_t *user, int cid, int is_to_define,
 
         LOG_FUNC_RETURN(rc);
     } else if (pti != NULL) {
-        LOG_TRACE(INFO, "ESM-PROC  - Assign new procedure transaction identity "
-                  "(cid=%d)", cid);
+        LOG_TRACE(INFO, "ESM-PROC  - Assign new procedure transaction identity ""(cid=%d)", cid);
         /* Assign new procedure transaction identity */
         *pti = esm_pt_assign(esm_pt_data);
 

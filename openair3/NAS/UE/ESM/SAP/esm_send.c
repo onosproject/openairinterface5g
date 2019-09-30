@@ -478,14 +478,25 @@ int esm_send_remote_ue_report(int ebi,
 		remote_ue_report_msg *msg)
 {
   LOG_FUNC_IN;
-
+  //uint32_t testip [4] = {0,1,2,3};
   /* Mandatory - ESM message header */
   msg->protocoldiscriminator = EPS_SESSION_MANAGEMENT_MESSAGE;
   msg->epsbeareridentity = ebi;
-  //msg->messagetype = DEACTIVATE_EPS_BEARER_CONTEXT_ACCEPT;
+  msg->messagetype = REMOTE_UE_REPORT;
   msg->proceduretransactionidentity = PROCEDURE_TRANSACTION_IDENTITY_UNASSIGNED;
   /* Optional IEs  */
-  msg->pkmfaddress.pkmfipv4address = 0;
+  //msg->pkmfaddress   ;
+ //{
+  /* Optional IEs  */
+  msg->presencemask = 0;
+  msg->presencemask |= REMOTE_UE_CONTEXT_PRESENT;
+  msg->remoteuecontext;
+  msg->presencemask = 0;
+  msg->presencemask |= REMOTE_UE_REPORT_PKMF_ADDRESS_PRESENT;
+  msg->pkmfaddress;
+  //#define ADDRESS_TYPE_IPV4 0b001
+  //msg ->pkmfaddress.addresstype==ADDRESS_TYPE_IPV4;
+ //}
 
   LOG_TRACE(INFO, "ESM-SAP   - Send Remote UE Report message"
             " message (pti=%d, ebi=%d)",
@@ -493,9 +504,6 @@ int esm_send_remote_ue_report(int ebi,
 
   LOG_FUNC_RETURN(RETURNok);
 }
-
-
-
 
 /****************************************************************************/
 /*********************  L O C A L    F U N C T I O N S  *********************/

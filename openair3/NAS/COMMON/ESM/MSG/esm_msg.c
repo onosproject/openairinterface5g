@@ -369,8 +369,10 @@ int esm_msg_encode(ESM_msg *msg, uint8_t *buffer, uint32_t len)
     break;
 
   case REMOTE_UE_REPORT:
+	  //LOG_TRACE(INFO, "Remote UE Report is encoded");
     encode_result = encode_remote_ue_report(&msg->remote_ue_report, buffer, len);
-        break;
+    //LOG_TRACE(INFO, "Remote UE Report is encoded");
+    break;
 
   case REMOTE_UE_REPORT_RESPONSE:
       encode_result = encode_remote_ue_report_response(&msg->remote_ue_report_response, buffer, len);

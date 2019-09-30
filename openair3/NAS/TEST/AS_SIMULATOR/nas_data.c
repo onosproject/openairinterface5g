@@ -198,6 +198,8 @@ const char* esmMsgType(int type)
     return "ESM_INFORMATION_RESPONSE";
   } else if (type == ESM_STATUS) {
     return "ESM_STATUS";
+  }else if (type == REMOTE_UE_REPORT) {
+	  return "REMOTE_UE_REPORT";
   } else {
     return "Unknown ESM message type";
   }

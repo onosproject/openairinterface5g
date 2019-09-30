@@ -94,13 +94,13 @@ int encode_remote_user_id(
 		lenPtr = (buffer + encoded);
 		encoded++;
 		if(remoteuserid->spare_instance){
-		*(buffer + encoded) = 0x00 | ((remoteuserid->spare & 0x1) << 4) | (remoteuserid->instance & 0x1);
+		*(buffer + encoded) = 0x00 | ((remoteuserid->spare & 0x1f) << 4) | (remoteuserid->instance & 0x1f);
 	    encoded++;
 
 	 }
 
 		if(remoteuserid->flags_present){
-		*(buffer + encoded) =  ((remoteuserid->spare1 & 0x7) << 2) | // spare coded as zero
+		*(buffer + encoded) =  ((remoteuserid->spare1 & 0x3f) << 2) | // spare coded as zero
 		((remoteuserid->imeif  & 0x1) << 1) |
 		(remoteuserid->msisdnf & 0x1);
 		encoded++;

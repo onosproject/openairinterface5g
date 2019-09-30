@@ -83,6 +83,7 @@ static const uint8_t esm_message_ids[] = {
   ESM_INFORMATION_REQUEST,
   ESM_INFORMATION_RESPONSE,
   ESM_STATUS,
+  REMOTE_UE_REPORT,
 };
 
 

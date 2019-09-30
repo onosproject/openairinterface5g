@@ -227,6 +227,7 @@ static int _process_pdn_disconnect_request(const pdn_disconnect_request_msg* msg
 static int _process_activate_default_eps_bearer_context_accept(const activate_default_eps_bearer_context_accept_msg* msg);
 static int _process_activate_default_eps_bearer_context_reject(const activate_default_eps_bearer_context_reject_msg* msg);
 static int _process_deactivate_eps_bearer_context_accept(const deactivate_eps_bearer_context_accept_msg* msg);
+static int _process_remote_ue_report(remote_ue_report_msg* msg);
 
 static void _dump_buffer(const Byte_t* buffer, size_t len)
 {
@@ -962,6 +963,11 @@ static int _process_esm_msg(ESM_msg* msg)
            &msg->activate_default_eps_bearer_context_reject);
     break;
 
+  case REMOTE_UE_REPORT:
+      rc = _process_remote_ue_report(
+             &msg->remote_ue_report);
+      break;
+
   case DEACTIVATE_EPS_BEARER_CONTEXT_ACCEPT:
     rc = _process_deactivate_eps_bearer_context_accept(
            &msg->deactivate_eps_bearer_context_accept);
@@ -1162,6 +1168,22 @@ static int _process_activate_default_eps_bearer_context_reject(const activate_de
 
   return (0);
 }
+
+/*
+ * Process Remote UE Report ESM message
+ */
+static int _process_remote_ue_report(remote_ue_report_msg* msg)
+{
+  printf("Remote UE Report\n");
+  printf("INFO\t:\tProtocolDiscriminator\t\t= %d\n", msg->protocoldiscriminator);
+  printf("INFO\t:\tEpsBearerIdentity\t\t= %d\n", msg->epsbeareridentity);
+  printf("INFO\t:\tProcedureTransactionIdentity\t= %d\n", msg->proceduretransactionidentity);
+  //printf("INFO\t:\tMessageType\t\t\t= 0x%.2x\n", msg->messagetype);
+  //printf("INFO\t:\tESM cause\t\t\t= %d\n", msg->esmcause);
+
+  return (0);
+}
+
 
 /*
  * Process Deactivate EPS Bearer Context Accept ESM message

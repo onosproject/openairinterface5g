@@ -9,10 +9,11 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "RemoteUEContext.h"
+#include "RemoteUserID.h"
 #include "TLVEncoder.h"
 #include "TLVDecoder.h"
 #include "nas_log.h"
-//#include "RemoteUserID.h"
+
 
 
 
@@ -117,19 +118,19 @@ int encode_remote_ue_context(
 	        imsi->num_digits += 2;
 	        if (decoded < ie_len)
 	        {
-	          imsi->identity_digit4 = *(buffer + decoded) & 0xf;
-	          imsi->num_digits++;
-	          imsi->identity_digit5 = (*(buffer + decoded) >> 4) & 0xf;
-	          if ((IMSI_EVEN == imsi->oddeven)  && (imsi->identity_digit5 != 0x0f))
-	          {
-	          return (TLV_DECODE_VALUE_DOESNT_MATCH);
-	          }
-	          else
-	          {
-	           imsi->num_digits++;
-	          }
-	          decoded++;
-	          if (decoded < ie_len)
+	         imsi->identity_digit4 = *(buffer + decoded) & 0xf;
+	         imsi->num_digits++;
+	         imsi->identity_digit5 = (*(buffer + decoded) >> 4) & 0xf;
+	         if ((IMSI_EVEN == imsi->oddeven)  && (imsi->identity_digit5 != 0x0f))
+	         {
+	         return (TLV_DECODE_VALUE_DOESNT_MATCH);
+	         }
+	         else
+	         {
+	         imsi->num_digits++;
+	         }
+	         decoded++;
+	         if (decoded < ie_len)
 	          {
 	            imsi->identity_digit6 = *(buffer + decoded) & 0xf;
 	            imsi->num_digits++;
@@ -218,6 +219,7 @@ int nas_encode_imsi (imsi_identity_t * imsi, uint8_t * buffer)
   *(buffer + encoded) = 0x00 | (imsi->identity_digit3 << 4) | imsi->identity_digit2;
   encoded++;
   // Quick fix, should do a loop, but try without modifying struct!
+
   if (imsi->num_digits > 3) {
     if (imsi->oddeven != IMSI_EVEN) {
       *(buffer + encoded) = 0x00 | (imsi->identity_digit5 << 4) | imsi->identity_digit4;

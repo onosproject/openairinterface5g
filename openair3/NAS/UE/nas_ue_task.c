@@ -206,14 +206,14 @@ void *nas_ue_task(void *args_p)
         //for Remote UE Report
 
       case NAS_REMOTE_UE_REPORT: {
-    	  int cid = 0; // unused now
+    	  int cid = 1; // unused now
     	  int UEid = 0;
     	  int ret = nas_proc_remote_ue_report_test(user, cid); // generate NAS PDU (remote ue report)
 
     	  // To send remote ue report to be sent by  RRC UE to CN
     	  //int nas_itti_ul_data_req(const uint32_t ue_id, void *const data, const uint32_t length, int user_id);
-    	  uint8_t testdata [] = {0,1,2,3};
-    	  nas_itti_ul_data_req(UEid, testdata, sizeof(testdata));
+    	  //uint8_t testdata [] = {0,1,2,5};
+    	  //nas_itti_ul_data_req(UEid, testdata, sizeof(testdata));
     	  LOG_I(NAS, "[UE %d] Received NAS REMOTE UE REPORT %s: \n", Mod_id,  ITTI_MSG_NAME (msg_p));
     	          /* TODO not processed by NAS currently */
       }

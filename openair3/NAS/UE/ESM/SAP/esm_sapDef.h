@@ -78,6 +78,7 @@ typedef enum esm_primitive_s {
   /* ESM data indication ("raw" ESM message) */
   ESM_UNITDATA_IND,
   ESM_REMOTE_UE_REPORT_REQ,
+  //ESM_REMOTE_UE_REPORT,
   ESM_END
 } esm_primitive_t;
 
@@ -142,7 +143,7 @@ typedef struct esm_eps_bearer_context_deactivate_s {
  * ---------------------------------------------------------
  */
 typedef struct esm_remote_ue_report_s {
-  unsigned int dummy;
+  int pkmfaddress;
 } esm_remote_ue_report_t;
 
 /*
