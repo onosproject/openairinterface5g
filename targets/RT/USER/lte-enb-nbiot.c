@@ -167,7 +167,7 @@ void init_eNB_NB_IoT(eNB_func_NB_IoT_t node_function[], eNB_timing_NB_IoT_t node
 
   for (inst=0;inst<nb_inst;inst++) {
     for (CC_id=0;CC_id<MAX_NUM_CCs;CC_id++) {
-      eNB = PHY_vars_eNB_g[inst][CC_id]; 
+      eNB = PHY_vars_eNB_NB_IoT_g[inst][CC_id]; 
       eNB->node_function      = node_function[CC_id];
       eNB->node_timing        = node_timing[CC_id];
       eNB->eth_params         = eth_params+CC_id;
@@ -180,9 +180,9 @@ void init_eNB_NB_IoT(eNB_func_NB_IoT_t node_function[], eNB_timing_NB_IoT_t node
       /////// IF-Module initialization ///////////////
 
       LOG_I(PHY,"Registering with MAC interface module start\n");
-      AssertFatal((eNB->if_inst         = IF_Module_init_NB_IoT(inst))!=NULL,"Cannot register interface");
-      eNB->if_inst->schedule_response   = schedule_response_NB_IoT;
-      eNB->if_inst->PHY_config_req      = PHY_config_req_NB_IoT;
+      AssertFatal((eNB->if_inst_NB_IoT         = IF_Module_init_NB_IoT(inst))!=NULL,"Cannot register interface");
+      eNB->if_inst_NB_IoT->schedule_response   = schedule_response_NB_IoT;
+      eNB->if_inst_NB_IoT->PHY_config_req      = PHY_config_req_NB_IoT;
       LOG_I(PHY,"Registering with MAC interface module sucessfully\n");
 
 
@@ -191,7 +191,7 @@ void init_eNB_NB_IoT(eNB_func_NB_IoT_t node_function[], eNB_timing_NB_IoT_t node
 #endif
 
       switch (node_function[CC_id]) {
-      case NGFI_RRU_IF5:
+      case NGFI_RRU_IF5_NB_IoT:
   eNB->do_prach             = NULL;
   eNB->do_precoding         = 0;
   eNB->fep                  = eNB_fep_rru_if5;
@@ -221,7 +221,7 @@ void init_eNB_NB_IoT(eNB_func_NB_IoT_t node_function[], eNB_timing_NB_IoT_t node
         }
   malloc_IF5_buffer(eNB);
   break;
-      case NGFI_RRU_IF4p5:
+      case NGFI_RRU_IF4p5_NB_IoT:
   eNB->do_precoding         = 0;
   eNB->do_prach             = do_prach;
   eNB->fep                  = eNB_fep_full;//(single_thread_flag==1) ? eNB_fep_full_2thread : eNB_fep_full;
@@ -280,7 +280,7 @@ void init_eNB_NB_IoT(eNB_func_NB_IoT_t node_function[], eNB_timing_NB_IoT_t node
   eNB->rfdevice.host_type   = BBU_HOST;
   eNB->ifdevice.host_type   = BBU_HOST;
   break;
-      case eNodeB_3GPP_BBU:
+      case eNodeB_3GPP_BBU_NB_IoT:
   eNB->do_precoding         = eNB->frame_parms.nb_antennas_tx!=eNB->frame_parms.nb_antenna_ports_eNB;
   eNB->do_prach             = do_prach;
   eNB->fep                  = eNB_fep_full;//(single_thread_flag==1) ? eNB_fep_full_2thread : eNB_fep_full;
@@ -314,7 +314,7 @@ void init_eNB_NB_IoT(eNB_func_NB_IoT_t node_function[], eNB_timing_NB_IoT_t node
         }
   malloc_IF5_buffer(eNB);
   break;
-      case NGFI_RCC_IF4p5:
+      case NGFI_RCC_IF4p5_NB_IoT:
   eNB->do_precoding         = 0;
   eNB->do_prach             = do_prach;
   eNB->fep                  = NULL;
@@ -338,7 +338,7 @@ void init_eNB_NB_IoT(eNB_func_NB_IoT_t node_function[], eNB_timing_NB_IoT_t node
   malloc_IF4p5_buffer(eNB);
 
   break;
-      case NGFI_RAU_IF4p5:
+      case NGFI_RAU_IF4p5_NB_IoT:
   eNB->do_precoding   = 0;
   eNB->do_prach       = do_prach;
   eNB->fep            = NULL;
@@ -387,12 +387,12 @@ void init_eNB_proc_NB_IoT(int inst) {
   int i=0;
   int CC_id;
   PHY_VARS_eNB_NB_IoT *eNB;
-  eNB_proc_t *proc;
+  eNB_proc_NB_IoT_t *proc;
   L1_rxtx_proc_t *proc_rxtx;
   pthread_attr_t *attr0=NULL,*attr1=NULL,*attr_FH=NULL,*attr_prach=NULL,*attr_asynch=NULL,*attr_single=NULL,*attr_fep=NULL,*attr_td=NULL,*attr_te=NULL,*attr_synch=NULL;
 
   for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
-    eNB = PHY_vars_eNB_g[inst][CC_id];
+    eNB = PHY_vars_eNB_NB_IoT_g[inst][CC_id];
 #ifndef OCP_FRAMEWORK
     LOG_I(PHY,"Initializing eNB %d CC_id %d (%s,%s),\n",inst,CC_id,eNB_functions[eNB->node_function],eNB_timing[eNB->node_timing]);
 #endif
