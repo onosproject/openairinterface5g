@@ -283,6 +283,13 @@ uint8_t generate_dci_top_NB_IoT(NB_IoT_eNB_NPDCCH_t     *npdcch,
 
 //  NB_IoT_eNB_NULSCH_t *new_eNB_ulsch_NB_IoT(uint8_t abstraction_flag);
 
+int ulsch_decoding_data_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,
+                        int UE_id,
+                        int harq_pid,
+                        int llr8_flag);
+
+
+
 
 uint8_t subframe2harq_pid_NB_IoT(LTE_DL_FRAME_PARMS *frame_parms,uint32_t frame,uint8_t subframe);
 

@@ -36,6 +36,9 @@
 #include "nfapi_interface.h"
 #include "transport_common_proto.h"
 
+
+
+#include "PHY/defs_L1_NB_IoT.h"
 // Functions below implement 36-211 and 36-212
 
 /** @addtogroup _PHY_TRANSPORT_
@@ -120,8 +123,6 @@ int32_t dlsch_encoding(PHY_VARS_eNB *eNB,
                        time_stats_t *rm_stats,
                        time_stats_t *te_stats,
                        time_stats_t *i_stats);
-
-
 
 
 /** \fn dlsch_encoding_2threads(PHY_VARS_eNB *eNB,
@@ -514,6 +515,13 @@ int ulsch_decoding_data(PHY_VARS_eNB *eNB,
                         int UE_id,
                         int harq_pid,
                         int llr8_flag);
+/*
+int ulsch_decoding_data_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,
+                        int UE_id,
+                        int harq_pid,
+                        int llr8_flag);
+*/
+
 
 void generate_phich_top(PHY_VARS_eNB *phy_vars_eNB,
 			L1_rxtx_proc_t *proc,

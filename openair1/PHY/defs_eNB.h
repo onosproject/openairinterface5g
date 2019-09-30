@@ -762,6 +762,12 @@ typedef struct {
   uint16_t     HFN; //NB-IoT
   /// mutex for RXn-TXnp4 processing thread
   pthread_mutex_t mutex_rxtx; //NB-IoT
+  /// pthread structure for RXn-TXnp4 processing thread
+  pthread_t pthread_rxtx; //NB-IoT
+  /// pthread attributes for RXn-TXnp4 processing thread
+  pthread_attr_t attr_rxtx; //NB-IoT
+  /// condition variable for tx processing thread
+  pthread_cond_t cond_rxtx; //NB-IoT
 
   int      instance_cnt_rxtx;
 
