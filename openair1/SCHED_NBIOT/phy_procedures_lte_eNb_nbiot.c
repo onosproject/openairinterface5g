@@ -34,10 +34,10 @@
  * \warning
  */
 
-#include "PHY/defs.h"
-#include "PHY/extern.h"
-#include "SCHED/defs.h"
-#include "SCHED/extern.h"
+#include "PHY/defs_eNB.h"
+#include "PHY/phy_extern.h"
+#include "SCHED/sched_common.h"
+#include "SCHED/sched_common_extern.h"
 
 ///////// NB-IoT testing /////////////////////
 #include "PHY/defs_L1_NB_IoT.h"
@@ -45,21 +45,17 @@
 /////////////////////////////////////////////
 #include "PHY/LTE_TRANSPORT/if4_tools.h"
 #include "PHY/LTE_TRANSPORT/if5_tools.h"
-#include "openair1/SCHED/defs_NB_IoT.h"
-
-#ifdef EMOS
-#include "SCHED/phy_procedures_emos.h"
-#endif
+#include "openair1/SCHED_NBIOT/defs_NB_IoT.h"
 
 ////// NB-IoT testing /////////////
-#include "PHY/CODING/extern.h"
+#include "PHY/CODING/coding_extern.h"
 #include "PHY/LTE_ESTIMATION/defs_NB_IoT.h"
-#include "PHY/LTE_TRANSPORT/proto_NB_IoT.h"
+#include "PHY/NBIoT_TRANSPORT/proto_NB_IoT.h"
 ////////////////////////////////////
 //#define DEBUG_PHY_PROC (Already defined in cmake)
 //#define DEBUG_ULSCH
 
-#include "LAYER2/MAC/extern.h"
+#include "LAYER2/MAC/mac_extern.h"
 #include "LAYER2/MAC/defs.h"
 #include "UTIL/LOG/log.h"
 #include "UTIL/LOG/vcd_signal_dumper.h"
