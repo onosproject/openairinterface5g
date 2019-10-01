@@ -137,12 +137,10 @@ struct timespec end_fh;
 int end_fh_sf;
 
 void init_eNB_NB_IoT(eNB_func_NB_IoT_t node_function[], eNB_timing_NB_IoT_t node_timing[],int nb_inst,eth_params_t *,int,int);
-extern void do_prach(PHY_VARS_eNB_NB_IoT *eNB,int frame,int subframe);
-
 
 /**********************************************************Other structure***************************************************************/
 
-void do_OFDM_mod_rt(int subframe,PHY_VARS_eNB_NB_IoT *phy_vars_eNB)
+void do_OFDM_mod_rt_NB_IoT(int subframe,PHY_VARS_eNB_NB_IoT *phy_vars_eNB)
 {
 
   int CC_id = phy_vars_eNB->proc.CC_id;
@@ -231,7 +229,7 @@ void do_OFDM_mod_rt(int subframe,PHY_VARS_eNB_NB_IoT *phy_vars_eNB)
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_ENB_SFGEN , 0 );
 }
 
-void tx_fh_if5(PHY_VARS_eNB_NB_IoT *eNB,L1_rxtx_proc_t *proc) {
+void tx_fh_if5_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,L1_rxtx_proc_t *proc) {
   VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME( VCD_SIGNAL_DUMPER_VARIABLES_TRX_TST, proc->timestamp_tx&0xffffffff );
   if ((eNB->frame_parms.frame_type==FDD) ||
       ((eNB->frame_parms.frame_type==TDD) &&
@@ -240,7 +238,7 @@ void tx_fh_if5(PHY_VARS_eNB_NB_IoT *eNB,L1_rxtx_proc_t *proc) {
 }
 
 
-void tx_fh_if5_mobipass(PHY_VARS_eNB_NB_IoT *eNB,L1_rxtx_proc_t *proc) {
+void tx_fh_if5_mobipass_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,L1_rxtx_proc_t *proc) {
   VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME( VCD_SIGNAL_DUMPER_VARIABLES_TRX_TST, proc->timestamp_tx&0xffffffff );
   if ((eNB->frame_parms.frame_type==FDD) ||
       ((eNB->frame_parms.frame_type==TDD) &&
@@ -248,7 +246,7 @@ void tx_fh_if5_mobipass(PHY_VARS_eNB_NB_IoT *eNB,L1_rxtx_proc_t *proc) {
     send_IF5(eNB, proc->timestamp_tx, proc->subframe_tx, &seqno, IF5_MOBIPASS); 
 }
 
-void tx_fh_if4p5(PHY_VARS_eNB_NB_IoT *eNB,L1_rxtx_proc_t *proc) {
+void tx_fh_if4p5_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,L1_rxtx_proc_t *proc) {
   if ((eNB->frame_parms.frame_type==FDD) ||
       ((eNB->frame_parms.frame_type==TDD) &&
        (subframe_select(&eNB->frame_parms,proc->subframe_tx) != SF_UL)))    
@@ -256,7 +254,7 @@ void tx_fh_if4p5(PHY_VARS_eNB_NB_IoT *eNB,L1_rxtx_proc_t *proc) {
 }
 
 
-void proc_tx_high0(PHY_VARS_eNB_NB_IoT *eNB,
+void proc_tx_high0_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,
        eNB_rxtx_proc_NB_IoT_t *proc,
        relaying_type_t r_type,
        PHY_VARS_RN_NB_IoT *rn) {
@@ -266,6 +264,7 @@ void proc_tx_high0(PHY_VARS_eNB_NB_IoT *eNB,
   VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME( VCD_SIGNAL_DUMPER_VARIABLES_FRAME_NUMBER_TX0_ENB+offset, proc->frame_tx );
   VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME( VCD_SIGNAL_DUMPER_VARIABLES_SUBFRAME_NUMBER_TX0_ENB+offset, proc->subframe_tx );
 
+  // issue here
   phy_procedures_eNB_TX_NB_IoT(eNB,proc,1);
 
   /* we're done, let the next one proceed */
@@ -283,14 +282,14 @@ void proc_tx_high0(PHY_VARS_eNB_NB_IoT *eNB,
 
 }
 
-void proc_tx_high(PHY_VARS_eNB_NB_IoT *eNB,
+void proc_tx_high_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,
       L1_rxtx_proc_t *proc,
       relaying_type_t r_type,
       PHY_VARS_RN_NB_IoT *rn) {
 
 
   // do PHY high
-  proc_tx_high0(eNB,proc,r_type,rn);
+  proc_tx_high0_NB_IoT(eNB,proc,r_type,rn);
 
   // if TX fronthaul go ahead 
   if (eNB->tx_fh) eNB->tx_fh(eNB,proc);
@@ -298,16 +297,16 @@ void proc_tx_high(PHY_VARS_eNB_NB_IoT *eNB,
 }
 
 
-void proc_tx_full(PHY_VARS_eNB_NB_IoT *eNB,
+void proc_tx_full_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,
       eNB_rxtx_proc_NB_IoT_t *proc,
       relaying_type_t r_type,
       PHY_VARS_RN_NB_IoT *rn) {
 
 
   // do PHY high
-  proc_tx_high0(eNB,proc,r_type,rn);
+  proc_tx_high0_NB_IoT(eNB,proc,r_type,rn);
   // do OFDM modulation
-  do_OFDM_mod_rt(proc->subframe_tx,eNB);
+  do_OFDM_mod_rt_NB_IoT(proc->subframe_tx,eNB);
   // if TX fronthaul go ahead 
   if (eNB->tx_fh) eNB->tx_fh(eNB,proc);
 
@@ -322,18 +321,72 @@ static void wait_system_ready (char *message, volatile int *start_flag) {
   int i = 0;
   
   while ((!oai_exit) && (*start_flag == 0)) {
-    LOG_N(EMU, message, indicator[i]);
+    //LOG_N(EMU, message, indicator[i]);
     fflush(stdout);
     i = (i + 1) % (sizeof(indicator) / sizeof(indicator[0]));
     usleep(200000);
   }
   
-    LOG_D(EMU,"\n");
+    //LOG_D(EMU,"\n");
 }
 #endif
 
 
-static void* eNB_thread_single( void* param ) {
+static inline int rxtx_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_NB_IoT_t *proc, char *thread_name) {
+
+  ///start_meas(&softmodem_stats_rxtx_sf);
+
+  // ****************************************
+  // Common RX procedures subframe n
+
+  
+   if ((eNB->do_prach)&&((eNB->node_function != NGFI_RCC_IF4p5_NB_IoT)))
+    eNB->do_prach(eNB,proc->frame_rx,proc->subframe_rx);
+  phy_procedures_eNB_common_RX(eNB,proc);
+  
+  // UE-specific RX processing for subframe n
+  ///////////////////////////////////// for NB-IoT testing  ////////////////////////
+  // for NB-IoT testing  // activating only TX part
+  if (eNB->proc_uespec_rx) eNB->proc_uespec_rx(eNB, proc, no_relay );
+   ////////////////////////////////////END///////////////////////
+
+  //npusch_procedures(eNB,proc,data_or_control);
+  //fill_rx_indication(eNB,i,frame,subframe);
+  //////////////////////////////////// for IF Module/scheduler testing
+ 
+  pthread_mutex_lock(&eNB->UL_INFO_mutex);
+
+  eNB->UL_INFO.frame     = proc->frame_rx;
+  eNB->UL_INFO.subframe  = proc->subframe_rx;
+  eNB->UL_INFO.module_id = eNB->Mod_id;
+  eNB->UL_INFO.CC_id     = eNB->CC_id;
+  eNB->UL_INFO.hypersfn  = proc->HFN;
+
+  eNB->if_inst_NB_IoT->UL_indication(&eNB->UL_INFO);
+
+  pthread_mutex_unlock(&eNB->UL_INFO_mutex);
+
+  //LOG_I(PHY,"After UL_indication\n");
+  // *****************************************
+  // TX processing for subframe n+4
+  // run PHY TX procedures the one after the other for all CCs to avoid race conditions
+  // (may be relaxed in the future for performance reasons)
+  // *****************************************
+  //if (wait_CCs(proc)<0) return(-1);
+  
+  if (oai_exit) return(-1);
+  
+  if (eNB->proc_tx) eNB->proc_tx(eNB, proc, no_relay, NULL );
+  
+  if (release_thread(&proc->mutex_rxtx,&proc->instance_cnt_rxtx,thread_name)<0) return(-1);
+
+ /// stop_meas( &softmodem_stats_rxtx_sf );
+  
+  return(0);
+}
+
+
+static void* eNB_thread_single_NB_IoT( void* param ) {
 
   static int eNB_thread_single_status;
 
@@ -369,7 +422,7 @@ static void* eNB_thread_single( void* param ) {
   wait_sync("eNB_thread_single");
 
 #if defined(ENABLE_ITTI) && defined(ENABLE_USE_MME)
-  if ((eNB->node_function < NGFI_RRU_IF5) && (eNB->mac_enabled==1))
+  if ((eNB->node_function < NGFI_RRU_IF5_NB_IoT) && (eNB->mac_enabled==1))
     wait_system_ready ("Waiting for eNB application to be ready %s\r", &start_eNB);
 #endif 
 
@@ -494,8 +547,8 @@ static void* eNB_thread_single( void* param ) {
     wakeup_slaves(proc);
 
    
-    //if (rxtx_NB_IoT(eNB_NB_IoT,proc_rxtx,"eNB_thread_single") < 0) break;
-    if (rxtx(eNB,proc_rxtx,"eNB_thread_single") < 0) break;
+    if (rxtx_NB_IoT(eNB,proc_rxtx,"eNB_thread_single") < 0) break;
+    //if (rxtx(eNB,proc_rxtx,"eNB_thread_single") < 0) break;
   }
   
 
@@ -506,13 +559,12 @@ static void* eNB_thread_single( void* param ) {
 
 }
 
-
 /*!
  * \brief The RX UE-specific and TX thread of eNB.
  * \param param is a \ref eNB_proc_t structure which contains the info what to process.
  * \returns a pointer to an int. The storage is not on the heap and must not be freed.
  */
-static void* eNB_thread_rxtx( void* param ) {
+static void* eNB_thread_rxtx_NB_IoT( void* param ) {
 
   static int eNB_thread_rxtx_status;
 
@@ -546,11 +598,7 @@ static void* eNB_thread_rxtx( void* param ) {
 
     if (eNB->CC_id==0)
     {
-//#ifdef NB_IOT
-    //  if(rxtx_NB_IoT(eNB,proc,thread_name)<0) break;
-//#else
-      if (rxtx(eNB,proc,thread_name) < 0) break;
-//#endif
+      if (rxtx_NB_IoT(eNB,proc,thread_name) < 0) break;
     }
 
   } // while !oai_exit
@@ -565,7 +613,7 @@ static void* eNB_thread_rxtx( void* param ) {
 
 
 // asynchronous UL with IF5 (RCC,RAU,eNodeB_BBU)
-void fh_if5_asynch_UL(PHY_VARS_eNB_NB_IoT *eNB,int *frame,int *subframe) {
+void fh_if5_asynch_UL_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,int *frame,int *subframe) {
 
   eNB_proc_NB_IoT_t *proc       = &eNB->proc;
   LTE_DL_FRAME_PARMS *fp = &eNB->frame_parms;
@@ -605,7 +653,7 @@ void fh_if5_asynch_UL(PHY_VARS_eNB_NB_IoT *eNB,int *frame,int *subframe) {
 
 
 // asynchronous UL with IF4p5 (RCC,RAU,eNodeB_BBU)
-void fh_if4p5_asynch_UL(PHY_VARS_eNB_NB_IoT *eNB,int *frame,int *subframe) {
+void fh_if4p5_asynch_UL_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,int *frame,int *subframe) {
 
   LTE_DL_FRAME_PARMS *fp = &eNB->frame_parms;
   eNB_proc_NB_IoT_t *proc       = &eNB->proc;
@@ -648,7 +696,7 @@ void fh_if4p5_asynch_UL(PHY_VARS_eNB_NB_IoT *eNB,int *frame,int *subframe) {
 } 
 
 
-void fh_if5_asynch_DL(PHY_VARS_eNB_NB_IoT *eNB,int *frame,int *subframe) {
+void fh_if5_asynch_DL_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,int *frame,int *subframe) {
 
   LTE_DL_FRAME_PARMS *fp = &eNB->frame_parms;
   eNB_proc_NB_IoT_t *proc       = &eNB->proc;
@@ -686,7 +734,7 @@ void fh_if5_asynch_DL(PHY_VARS_eNB_NB_IoT *eNB,int *frame,int *subframe) {
   }
 }
 
-void fh_if4p5_asynch_DL(PHY_VARS_eNB_NB_IoT *eNB,int *frame,int *subframe) {
+void fh_if4p5_asynch_DL_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,int *frame,int *subframe) {
 
   LTE_DL_FRAME_PARMS *fp = &eNB->frame_parms;
   eNB_proc_NB_IoT_t *proc       = &eNB->proc;
@@ -752,7 +800,7 @@ void fh_if4p5_asynch_DL(PHY_VARS_eNB_NB_IoT *eNB,int *frame,int *subframe) {
   // intialize this to zero after we're done with the subframe
   proc->symbol_mask[*subframe] = 0;
   
-  do_OFDM_mod_rt(*subframe, eNB);
+  do_OFDM_mod_rt_NB_IoT(*subframe, eNB);
 } 
 
 
@@ -762,7 +810,7 @@ void fh_if4p5_asynch_DL(PHY_VARS_eNB_NB_IoT *eNB,int *frame,int *subframe) {
  * \param param is a \ref eNB_proc_t structure which contains the info what to process.
  * \returns a pointer to an int. The storage is not on the heap and must not be freed.
  */
-static void* eNB_thread_asynch_rxtx( void* param ) {
+static void* eNB_thread_asynch_rxtx_NB_IoT( void* param ) {
 
   static int eNB_thread_asynch_rxtx_status;
 
@@ -809,7 +857,7 @@ static void* eNB_thread_asynch_rxtx( void* param ) {
 }
 
 
-void rx_rf(PHY_VARS_eNB_NB_IoT *eNB,int *frame,int *subframe) {
+void rx_rf_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,int *frame,int *subframe) {
 
   eNB_proc_NB_IoT_t *proc = &eNB->proc;
   LTE_DL_FRAME_PARMS *fp = &eNB->frame_parms;
@@ -956,7 +1004,7 @@ void rx_rf(PHY_VARS_eNB_NB_IoT *eNB,int *frame,int *subframe) {
 }
 
 
-void rx_fh_if5(PHY_VARS_eNB_NB_IoT *eNB,int *frame, int *subframe) {
+void rx_fh_if5_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,int *frame, int *subframe) {
 
   LTE_DL_FRAME_PARMS *fp = &eNB->frame_parms;
   eNB_proc_NB_IoT_t *proc = &eNB->proc;
@@ -990,7 +1038,7 @@ void rx_fh_if5(PHY_VARS_eNB_NB_IoT *eNB,int *frame, int *subframe) {
 
 }
 
-void rx_fh_if4p5(PHY_VARS_eNB_NB_IoT *eNB,int *frame,int *subframe) {
+void rx_fh_if4p5_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,int *frame,int *subframe) {
 
   LTE_DL_FRAME_PARMS *fp = &eNB->frame_parms;
   eNB_proc_NB_IoT_t *proc = &eNB->proc;
@@ -1072,7 +1120,7 @@ void rx_fh_if4p5(PHY_VARS_eNB_NB_IoT *eNB,int *frame,int *subframe) {
 }
 
 
-void rx_fh_slave(PHY_VARS_eNB_NB_IoT *eNB,int *frame,int *subframe) {
+void rx_fh_slave_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,int *frame,int *subframe) {
   // This case is for synchronization to another thread
   // it just waits for an external event.  The actual rx_fh is handle by the asynchronous RX thread
   eNB_proc_NB_IoT_t *proc=&eNB->proc;
@@ -1088,7 +1136,7 @@ void rx_fh_slave(PHY_VARS_eNB_NB_IoT *eNB,int *frame,int *subframe) {
 uint32_t sync_corr[307200] __attribute__((aligned(32)));
 
 // This thread run the initial synchronization like a UE
-void *eNB_thread_synch(void *arg) {
+void *eNB_thread_synch_NB_IoT(void *arg) {
 
   PHY_VARS_eNB_NB_IoT *eNB = (PHY_VARS_eNB_NB_IoT*)arg;
   LTE_DL_FRAME_PARMS *fp=&eNB->frame_parms;
@@ -1177,7 +1225,7 @@ void *eNB_thread_synch(void *arg) {
  * \returns a pointer to an int. The storage is not on the heap and must not be freed.
  */
 
-static void* eNB_thread_FH( void* param ) {
+static void* eNB_thread_FH_NB_IoT( void* param ) {
   
   static int eNB_thread_FH_status;
 
@@ -1195,7 +1243,7 @@ static void* eNB_thread_FH( void* param ) {
   wait_sync("eNB_thread_FH");
 
 #if defined(ENABLE_ITTI) && defined(ENABLE_USE_MME)
-  if (eNB->node_function < NGFI_RRU_IF5)
+  if (eNB->node_function < NGFI_RRU_IF5_NB_IoT)
     wait_system_ready ("Waiting for eNB application to be ready %s\r", &start_eNB);
 #endif 
 
@@ -1261,7 +1309,7 @@ static void* eNB_thread_FH( void* param ) {
    Each rf chain is is addressed by the card number and the chain on the card. The
    rf_map specifies for each CC, on which rf chain the mapping should start. Multiple
    antennas are mapped to successive RF chains on the same card. */
-int setup_eNB_buffers(PHY_VARS_eNB_NB_IoT **phy_vars_eNB, openair0_config_t *openair0_cfg) {
+int setup_eNB_buffers_NB_IoT(PHY_VARS_eNB_NB_IoT **phy_vars_eNB, openair0_config_t *openair0_cfg) {
 
   int i,j; 
   int CC_id,card,ant;
@@ -1352,17 +1400,14 @@ int setup_eNB_buffers(PHY_VARS_eNB_NB_IoT **phy_vars_eNB, openair0_config_t *ope
 }
 
 
-int start_if(PHY_VARS_eNB_NB_IoT *eNB) {
+int start_if_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB) {
   return(eNB->ifdevice.trx_start_func(&eNB->ifdevice));
 }
 
-int start_rf(PHY_VARS_eNB_NB_IoT *eNB) {
+int start_rf_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB) {
   return(eNB->rfdevice.trx_start_func(&eNB->rfdevice));
 }
 
-
-extern void eNB_fep_rru_if5(PHY_VARS_eNB_NB_IoT *eNB,L1_rxtx_proc_t *proc);
-extern void eNB_fep_full(PHY_VARS_eNB_NB_IoT *eNB,L1_rxtx_proc_t *proc);
 
 
 
@@ -1411,6 +1456,10 @@ static void* eNB_thread_prach_NB_IoT( void* param ) {
   return &eNB_thread_prach_status;
 }
 
+extern void eNB_fep_rru_if5_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_NB_IoT_t *proc_rxtx);
+extern void eNB_fep_full_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_NB_IoT_t *proc_rxtx);
+extern void do_prach_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,int frame,int subframe);
+
 
 ///Modify to NB-IoT merge
 void init_eNB_NB_IoT(eNB_func_NB_IoT_t node_function[], eNB_timing_NB_IoT_t node_timing[],int nb_inst,eth_params_t *eth_params,int single_thread_flag,int wait_for_sync) {
@@ -1449,16 +1498,16 @@ void init_eNB_NB_IoT(eNB_func_NB_IoT_t node_function[], eNB_timing_NB_IoT_t node
       case NGFI_RRU_IF5_NB_IoT:
   eNB->do_prach             = NULL;
   eNB->do_precoding         = 0;
-  eNB->fep                  = eNB_fep_rru_if5;
+  eNB->fep                  = eNB_fep_rru_if5_NB_IoT;
   eNB->td                   = NULL;
   eNB->te                   = NULL;
   eNB->proc_uespec_rx       = NULL;
   eNB->proc_tx              = NULL;
   eNB->tx_fh                = NULL;
-  eNB->rx_fh                = rx_rf;
-  eNB->start_rf             = start_rf;
-  eNB->start_if             = start_if;
-  eNB->fh_asynch            = fh_if5_asynch_DL;
+  eNB->rx_fh                = rx_rf_NB_IoT;
+  eNB->start_rf             = start_rf_NB_IoT;
+  eNB->start_if             = start_if_NB_IoT;
+  eNB->fh_asynch            = fh_if5_asynch_DL_NB_IoT;
   if (oaisim_flag == 0) {
     ret = openair0_device_load(&eNB->rfdevice, &openair0_cfg[CC_id]);
     if (ret<0) {
@@ -1478,17 +1527,17 @@ void init_eNB_NB_IoT(eNB_func_NB_IoT_t node_function[], eNB_timing_NB_IoT_t node
   break;
       case NGFI_RRU_IF4p5_NB_IoT:
   eNB->do_precoding         = 0;
-  eNB->do_prach             = do_prach;
-  eNB->fep                  = eNB_fep_full;//(single_thread_flag==1) ? eNB_fep_full_2thread : eNB_fep_full;
+  eNB->do_prach             = do_prach_NB_IoT;
+  eNB->fep                  = eNB_fep_full_NB_IoT;//(single_thread_flag==1) ? eNB_fep_full_2thread : eNB_fep_full;
   eNB->td                   = NULL;
   eNB->te                   = NULL;
   eNB->proc_uespec_rx       = NULL;
   eNB->proc_tx              = NULL;//proc_tx_rru_if4p5;
   eNB->tx_fh                = NULL;
-  eNB->rx_fh                = rx_rf;
-  eNB->fh_asynch            = fh_if4p5_asynch_DL;
-  eNB->start_rf             = start_rf;
-  eNB->start_if             = start_if;
+  eNB->rx_fh                = rx_rf_NB_IoT;
+  eNB->fh_asynch            = fh_if4p5_asynch_DL_NB_IoT;
+  eNB->start_rf             = start_rf_NB_IoT;
+  eNB->start_if             = start_if_NB_IoT;
   if (oaisim_flag == 0) {
     ret = openair0_device_load(&eNB->rfdevice, &openair0_cfg[CC_id]);
     if (ret<0) {
@@ -1511,18 +1560,18 @@ void init_eNB_NB_IoT(eNB_func_NB_IoT_t node_function[], eNB_timing_NB_IoT_t node
   break;
       case eNodeB_3GPP_NB_IoT:
   eNB->do_precoding         = eNB->frame_parms.nb_antennas_tx!=eNB->frame_parms.nb_antenna_ports_eNB;
-  eNB->do_prach             = do_prach;
-  eNB->fep                  = eNB_fep_full;//(single_thread_flag==1) ? eNB_fep_full_2thread : eNB_fep_full;
+  eNB->do_prach             = do_prach_NB_IoT;
+  eNB->fep                  = eNB_fep_full_NB_IoT;//(single_thread_flag==1) ? eNB_fep_full_2thread : eNB_fep_full;
   eNB->td                   = ulsch_decoding_data_NB_IoT;//(single_thread_flag==1) ? ulsch_decoding_data_2thread : ulsch_decoding_data;
   eNB->te                   = dlsch_encoding_NB_IoT;//(single_thread_flag==1) ? dlsch_encoding_2threads : dlsch_encoding;
   ////////////////////// NB-IoT testing ////////////////////
   //eNB->proc_uespec_rx       = phy_procedures_eNB_uespec_RX;
   eNB->proc_uespec_rx       = phy_procedures_eNB_uespec_RX_NB_IoT;
 
-  eNB->proc_tx              = proc_tx_full;
+  eNB->proc_tx              = proc_tx_full_NB_IoT;
   eNB->tx_fh                = NULL;
-  eNB->rx_fh                = rx_rf;
-  eNB->start_rf             = start_rf;
+  eNB->rx_fh                = rx_rf_NB_IoT;
+  eNB->start_rf             = start_rf_NB_IoT;
   eNB->start_if             = NULL;
         eNB->fh_asynch            = NULL;
         if (oaisim_flag == 0) {
@@ -1537,26 +1586,26 @@ void init_eNB_NB_IoT(eNB_func_NB_IoT_t node_function[], eNB_timing_NB_IoT_t node
   break;
       case eNodeB_3GPP_BBU_NB_IoT:
   eNB->do_precoding         = eNB->frame_parms.nb_antennas_tx!=eNB->frame_parms.nb_antenna_ports_eNB;
-  eNB->do_prach             = do_prach;
-  eNB->fep                  = eNB_fep_full;//(single_thread_flag==1) ? eNB_fep_full_2thread : eNB_fep_full;
+  eNB->do_prach             = do_prach_NB_IoT;
+  eNB->fep                  = eNB_fep_full_NB_IoT;//(single_thread_flag==1) ? eNB_fep_full_2thread : eNB_fep_full;
   eNB->td                   = ulsch_decoding_data_NB_IoT;//(single_thread_flag==1) ? ulsch_decoding_data_2thread : ulsch_decoding_data;
   eNB->te                   = dlsch_encoding_NB_IoT;//(single_thread_flag==1) ? dlsch_encoding_2threads : dlsch_encoding;
   eNB->proc_uespec_rx       = phy_procedures_eNB_uespec_RX;
-  eNB->proc_tx              = proc_tx_full;
+  eNB->proc_tx              = proc_tx_full_NB_IoT;
         if (eNB->node_timing == synch_to_other) {
-           eNB->tx_fh             = tx_fh_if5_mobipass;
-           eNB->rx_fh             = rx_fh_slave;
-           eNB->fh_asynch         = fh_if5_asynch_UL;
+           eNB->tx_fh             = tx_fh_if5_mobipass_NB_IoT;
+           eNB->rx_fh             = rx_fh_slave_NB_IoT;
+           eNB->fh_asynch         = fh_if5_asynch_UL_NB_IoT;
 
         }
         else {
-           eNB->tx_fh             = tx_fh_if5;
-           eNB->rx_fh             = rx_fh_if5;
+           eNB->tx_fh             = tx_fh_if5_NB_IoT;
+           eNB->rx_fh             = rx_fh_if5_NB_IoT;
            eNB->fh_asynch         = NULL;
         }
 
   eNB->start_rf             = NULL;
-  eNB->start_if             = start_if;
+  eNB->start_if             = start_if_NB_IoT;
   eNB->rfdevice.host_type   = RRU_HOST;
 
   eNB->ifdevice.host_type   = RRU_HOST;
@@ -1571,17 +1620,17 @@ void init_eNB_NB_IoT(eNB_func_NB_IoT_t node_function[], eNB_timing_NB_IoT_t node
   break;
       case NGFI_RCC_IF4p5_NB_IoT:
   eNB->do_precoding         = 0;
-  eNB->do_prach             = do_prach;
+  eNB->do_prach             = do_prach_NB_IoT;
   eNB->fep                  = NULL;
   eNB->td                   = ulsch_decoding_data_NB_IoT;//(single_thread_flag==1) ? ulsch_decoding_data_2thread : ulsch_decoding_data;
   eNB->te                   = dlsch_encoding_NB_IoT;//(single_thread_flag==1) ? dlsch_encoding_2threads : dlsch_encoding;
-  eNB->proc_uespec_rx       = phy_procedures_eNB_uespec_RX;
-  eNB->proc_tx              = proc_tx_high;
-  eNB->tx_fh                = tx_fh_if4p5;
-  eNB->rx_fh                = rx_fh_if4p5;
+  eNB->proc_uespec_rx       = phy_procedures_eNB_uespec_RX_NB_IoT;
+  eNB->proc_tx              = proc_tx_high_NB_IoT;
+  eNB->tx_fh                = tx_fh_if4p5_NB_IoT;
+  eNB->rx_fh                = rx_fh_if4p5_NB_IoT;
   eNB->start_rf             = NULL;
-  eNB->start_if             = start_if;
-        eNB->fh_asynch            = (eNB->node_timing == synch_to_other) ? fh_if4p5_asynch_UL : NULL;
+  eNB->start_if             = start_if_NB_IoT;
+        eNB->fh_asynch            = (eNB->node_timing == synch_to_other) ? fh_if4p5_asynch_UL_NB_IoT : NULL;
   eNB->rfdevice.host_type   = RRU_HOST;
   eNB->ifdevice.host_type   = RRU_HOST;
         ret = openair0_transport_load(&eNB->ifdevice, &openair0_cfg[CC_id], eNB->eth_params);
@@ -1595,18 +1644,18 @@ void init_eNB_NB_IoT(eNB_func_NB_IoT_t node_function[], eNB_timing_NB_IoT_t node
   break;
       case NGFI_RAU_IF4p5_NB_IoT:
   eNB->do_precoding   = 0;
-  eNB->do_prach       = do_prach;
+  eNB->do_prach       = do_prach_NB_IoT;
   eNB->fep            = NULL;
 
   eNB->td             = ulsch_decoding_data_NB_IoT;//(single_thread_flag==1) ? ulsch_decoding_data_2thread : ulsch_decoding_data;
   eNB->te             = dlsch_encoding_NB_IoT;//(single_thread_flag==1) ? dlsch_encoding_2threads : dlsch_encoding;
-  eNB->proc_uespec_rx = phy_procedures_eNB_uespec_RX;
-  eNB->proc_tx        = proc_tx_high;
-  eNB->tx_fh          = tx_fh_if4p5; 
-  eNB->rx_fh          = rx_fh_if4p5; 
-        eNB->fh_asynch      = (eNB->node_timing == synch_to_other) ? fh_if4p5_asynch_UL : NULL;
+  eNB->proc_uespec_rx = phy_procedures_eNB_uespec_RX_NB_IoT;
+  eNB->proc_tx        = proc_tx_high_NB_IoT;
+  eNB->tx_fh          = tx_fh_if4p5_NB_IoT; 
+  eNB->rx_fh          = rx_fh_if4p5_NB_IoT; 
+        eNB->fh_asynch      = (eNB->node_timing == synch_to_other) ? fh_if4p5_asynch_UL_NB_IoT : NULL;
   eNB->start_rf       = NULL;
-  eNB->start_if       = start_if;
+  eNB->start_if       = start_if_NB_IoT;
 
   eNB->rfdevice.host_type   = RRU_HOST;
   eNB->ifdevice.host_type   = RRU_HOST;
@@ -1707,12 +1756,12 @@ void init_eNB_proc_NB_IoT(int inst) {
 
     if (eNB->single_thread_flag==0) {
       //the two threads that manage tw consecutive subframes
-      pthread_create( &proc_rxtx[0].pthread_rxtx, attr0, eNB_thread_rxtx, &proc_rxtx[0] );
-      pthread_create( &proc_rxtx[1].pthread_rxtx, attr1, eNB_thread_rxtx, &proc_rxtx[1] );
-      pthread_create( &proc->pthread_FH, attr_FH, eNB_thread_FH, &eNB->proc );
+      pthread_create( &proc_rxtx[0].pthread_rxtx, attr0, eNB_thread_rxtx_NB_IoT, &proc_rxtx[0] );
+      pthread_create( &proc_rxtx[1].pthread_rxtx, attr1, eNB_thread_rxtx_NB_IoT, &proc_rxtx[1] );
+      pthread_create( &proc->pthread_FH, attr_FH, eNB_thread_FH_NB_IoT, &eNB->proc );
     }
     else {
-      pthread_create(&proc->pthread_single, attr_single, eNB_thread_single, &eNB->proc);
+      pthread_create(&proc->pthread_single, attr_single, eNB_thread_single_NB_IoT, &eNB->proc);
       init_fep_thread(eNB,attr_fep);
       /*
       init_td_thread(eNB,attr_td);
@@ -1720,13 +1769,13 @@ void init_eNB_proc_NB_IoT(int inst) {
       */
     }
     pthread_create( &proc->pthread_prach, attr_prach, eNB_thread_prach_NB_IoT, &eNB->proc );
-    pthread_create( &proc->pthread_synch, attr_synch, eNB_thread_synch, eNB);
+    pthread_create( &proc->pthread_synch, attr_synch, eNB_thread_synch_NB_IoT, eNB);
     if ((eNB->node_timing == synch_to_other) ||
-  (eNB->node_function == NGFI_RRU_IF5) ||
-  (eNB->node_function == NGFI_RRU_IF4p5))
+  (eNB->node_function == NGFI_RRU_IF5_NB_IoT) ||
+  (eNB->node_function == NGFI_RRU_IF4p5_NB_IoT))
 
 
-      pthread_create( &proc->pthread_asynch_rxtx, attr_asynch, eNB_thread_asynch_rxtx, &eNB->proc );
+      pthread_create( &proc->pthread_asynch_rxtx, attr_asynch, eNB_thread_asynch_rxtx_NB_IoT, &eNB->proc );
 
     char name[16];
     if (eNB->single_thread_flag == 0) {

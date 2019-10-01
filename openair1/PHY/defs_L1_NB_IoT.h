@@ -270,6 +270,9 @@ typedef struct {
   int                   frame_tx;
   /// frame to act upon for reception
   int                   frame_rx;
+
+  uint16_t     HFN;
+
   /// \brief Instance count for RXn-TXnp4 processing thread.
   /// \internal This variable is protected by \ref mutex_rxtx.
   int                   instance_cnt_rxtx;

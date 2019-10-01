@@ -1,4 +1,4 @@
-#include "IF_Module_L2_primitives_NB_IoT.h"
+#include "PHY_INTERFACE/IF_Module_NB_IoT.h"
 #include "LAYER2/MAC/proto_NB_IoT.h"
 #include "LAYER2/MAC/extern_NB_IoT.h"
 

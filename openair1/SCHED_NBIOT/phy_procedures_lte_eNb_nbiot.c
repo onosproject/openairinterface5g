@@ -3059,7 +3059,7 @@ void eNB_fep_full_2thread(PHY_VARS_eNB *eNB,eNB_rxtx_proc_NB_IoT_t *proc_rxtx) {
 
 
 
-void eNB_fep_full(PHY_VARS_eNB *eNB,eNB_rxtx_proc_NB_IoT_t *proc_rxtx) {
+void eNB_fep_full_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_NB_IoT_t *proc_rxtx) {
 
   int l;
   LTE_DL_FRAME_PARMS *fp=&eNB->frame_parms;
@@ -3099,9 +3099,9 @@ void eNB_fep_full(PHY_VARS_eNB *eNB,eNB_rxtx_proc_NB_IoT_t *proc_rxtx) {
   }    
 }
 
-void eNB_fep_rru_if5(PHY_VARS_eNB *eNB,eNB_rxtx_proc_NB_IoT_t *proc_rxtx) {
+void eNB_fep_rru_if5_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_NB_IoT_t *proc_rxtx) {
 
-  eNB_proc_t *proc=&eNB->proc;
+  eNB_proc_NB_IoT_t *proc=&eNB->proc;
   uint8_t seqno=0;
 
   /// **** send_IF5 of rxdata to BBU **** ///       
@@ -3115,9 +3115,9 @@ void eNB_fep_rru_if5(PHY_VARS_eNB *eNB,eNB_rxtx_proc_NB_IoT_t *proc_rxtx) {
 
 }
 
-void do_prach(PHY_VARS_eNB *eNB,int frame,int subframe) {
+void do_prach_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,int frame,int subframe) {
 
-  eNB_proc_t *proc = &eNB->proc;
+  eNB_proc_NB_IoT_t *proc = &eNB->proc;
  // LTE_DL_FRAME_PARMS *fp=&eNB->frame_parms;
 
 if(frame%2==0 && subframe==9)
