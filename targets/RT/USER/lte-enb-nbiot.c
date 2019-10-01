@@ -229,7 +229,7 @@ void do_OFDM_mod_rt_NB_IoT(int subframe,PHY_VARS_eNB_NB_IoT *phy_vars_eNB)
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_ENB_SFGEN , 0 );
 }
 
-void tx_fh_if5_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,L1_rxtx_proc_t *proc) {
+void tx_fh_if5_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_NB_IoT_t *proc) {
   VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME( VCD_SIGNAL_DUMPER_VARIABLES_TRX_TST, proc->timestamp_tx&0xffffffff );
   if ((eNB->frame_parms.frame_type==FDD) ||
       ((eNB->frame_parms.frame_type==TDD) &&
@@ -238,7 +238,7 @@ void tx_fh_if5_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,L1_rxtx_proc_t *proc) {
 }
 
 
-void tx_fh_if5_mobipass_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,L1_rxtx_proc_t *proc) {
+void tx_fh_if5_mobipass_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_NB_IoT_t *proc) {
   VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME( VCD_SIGNAL_DUMPER_VARIABLES_TRX_TST, proc->timestamp_tx&0xffffffff );
   if ((eNB->frame_parms.frame_type==FDD) ||
       ((eNB->frame_parms.frame_type==TDD) &&
@@ -246,7 +246,7 @@ void tx_fh_if5_mobipass_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,L1_rxtx_proc_t *proc) {
     send_IF5(eNB, proc->timestamp_tx, proc->subframe_tx, &seqno, IF5_MOBIPASS); 
 }
 
-void tx_fh_if4p5_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,L1_rxtx_proc_t *proc) {
+void tx_fh_if4p5_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_NB_IoT_t *proc) {
   if ((eNB->frame_parms.frame_type==FDD) ||
       ((eNB->frame_parms.frame_type==TDD) &&
        (subframe_select(&eNB->frame_parms,proc->subframe_tx) != SF_UL)))    
@@ -283,7 +283,7 @@ void proc_tx_high0_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,
 }
 
 void proc_tx_high_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,
-      L1_rxtx_proc_t *proc,
+      eNB_rxtx_proc_NB_IoT_t *proc,
       relaying_type_t r_type,
       PHY_VARS_RN_NB_IoT *rn) {
 
@@ -391,7 +391,7 @@ static void* eNB_thread_single_NB_IoT( void* param ) {
   static int eNB_thread_single_status;
 
   eNB_proc_NB_IoT_t             *proc = (eNB_proc_NB_IoT_t*)param;
-  L1_rxtx_proc_t        *proc_rxtx = &proc->proc_rxtx[0];
+  eNB_rxtx_proc_NB_IoT_t        *proc_rxtx = &proc->proc_rxtx[0];
   PHY_VARS_eNB_NB_IoT *eNB = PHY_vars_eNB_NB_IoT_g[0][proc->CC_id];
   //PHY_VARS_eNB_NB_IoT *eNB_NB_IoT = PHY_vars_eNB_NB_IoT_g[0][proc->CC_id];
   LTE_DL_FRAME_PARMS *fp = &eNB->frame_parms;
@@ -568,7 +568,7 @@ static void* eNB_thread_rxtx_NB_IoT( void* param ) {
 
   static int eNB_thread_rxtx_status;
 
-  L1_rxtx_proc_t *proc = (L1_rxtx_proc_t*)param;
+  eNB_rxtx_proc_NB_IoT_t *proc = (eNB_rxtx_proc_NB_IoT_t*)param;
   ///eNB_rxtx_proc_NB_IoT_t *proc_NB_IoT = (eNB_rxtx_proc_NB_IoT_t*)param;  // to remove when eNB_thread_rxtx_status is duplicated for NB-IoT
 
   PHY_VARS_eNB_NB_IoT *eNB = PHY_vars_eNB_NB_IoT_g[0][proc->CC_id];
@@ -1692,7 +1692,7 @@ void init_eNB_proc_NB_IoT(int inst) {
   int CC_id;
   PHY_VARS_eNB_NB_IoT *eNB;
   eNB_proc_NB_IoT_t *proc;
-  L1_rxtx_proc_t *proc_rxtx;
+  eNB_rxtx_proc_NB_IoT_t *proc_rxtx;
   pthread_attr_t *attr0=NULL,*attr1=NULL,*attr_FH=NULL,*attr_prach=NULL,*attr_asynch=NULL,*attr_single=NULL,*attr_fep=NULL,*attr_td=NULL,*attr_te=NULL,*attr_synch=NULL;
 
   for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {

@@ -32,15 +32,15 @@
 //#include "PHY/LTE_TRANSPORT/dlsch_tbs_full_NB_IoT.h"
 
 #include "openair2/PHY_INTERFACE/IF_Module_NB_IoT.h"
-#include "../SCHED/IF_Module_L1_primitives_NB_IoT.h"
+#include "IF_Module_L1_primitives_NB_IoT.h"
 //#include "../SCHED/defs.h"
-#include "../SCHED/defs_NB_IoT.h"
+#include "defs_NB_IoT.h"
 #include "assertions.h"
 //#include "PHY/defs.h"
 #include "PHY/defs_L1_NB_IoT.h"
 //#include "PHY/extern.h"
 #include "PHY/extern_NB_IoT.h"
-#include "PHY/extern.h"
+#include "PHY/phy_extern.h"
 
 //#include "PHY/vars.h"
 

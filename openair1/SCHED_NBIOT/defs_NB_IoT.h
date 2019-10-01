@@ -23,21 +23,21 @@ void process_schedule_rsp_NB_IoT(Sched_Rsp_NB_IoT_t *sched_rsp,
                           		 eNB_rxtx_proc_NB_IoT_t *proc);
 
 /*Processing the ue-specific resources for uplink in NB-IoT*/
-void phy_procedures_eNB_uespec_RX_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_NB_IoT_t *proc); // UL_IND_NB_IoT_t *UL_INFO);
+void phy_procedures_eNB_uespec_RX_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_NB_IoT_t *proc); // UL_IND_NB_IoT_t *UL_INFO);
 
 /* For NB-IoT, we put NPBCH in later part, since it would be scheduled by MAC scheduler,this generates NRS/NPSS/NSSS*/
-void common_signal_procedures_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_NB_IoT_t *proc); 
+void common_signal_procedures_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_NB_IoT_t *proc); 
 
 /*Generate the ulsch params and do the mapping for the FAPI style parameters to OAI, and then do the packing*/
-void generate_eNB_ulsch_params_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_NB_IoT_t *proc,nfapi_hi_dci0_request_pdu_t *hi_dci0_pdu);
+void generate_eNB_ulsch_params_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_NB_IoT_t *proc,nfapi_hi_dci0_request_pdu_t *hi_dci0_pdu);
 
 /*Generate the dlsch params and do the mapping for the FAPI style parameters to OAI, and then do the packing*/
-void generate_eNB_dlsch_params_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_NB_IoT_t * proc,nfapi_dl_config_request_pdu_t *dl_config_pdu);
+void generate_eNB_dlsch_params_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_NB_IoT_t * proc,nfapi_dl_config_request_pdu_t *dl_config_pdu);
 
 /*Process all the scheduling result from MAC and also common signals.*/
 void phy_procedures_eNB_TX_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_NB_IoT_t *proc,int do_meas);
 
-int8_t find_ue_NB_IoT(uint16_t rnti, PHY_VARS_eNB *eNB);
+int8_t find_ue_NB_IoT(uint16_t rnti, PHY_VARS_eNB_NB_IoT *eNB);
 
 NB_IoT_DL_FRAME_PARMS *get_NB_IoT_frame_parms(module_id_t Mod_id, uint8_t CC_id);
 
@@ -49,14 +49,14 @@ uint32_t is_SIB1_NB_IoT(const frame_t          frameP,
                         NB_IoT_eNB_NDLSCH_t   *ndlsch_SIB1
                         );
 
-uint32_t rx_nprach_NB_IoT(PHY_VARS_eNB *eNB,int frame, uint8_t subframe, uint16_t *rnti, uint16_t *preamble_index, uint16_t *timing_advance);
+uint32_t rx_nprach_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,int frame, uint8_t subframe, uint16_t *rnti, uint16_t *preamble_index, uint16_t *timing_advance);
 
-void npusch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_NB_IoT_t *proc);
+void npusch_procedures(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_NB_IoT_t *proc);
 
 ////////////////// NB-IoT testing ////////////////////
-void fill_rx_indication_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_NB_IoT_t *proc,uint8_t data_or_control, uint8_t decode_flag);
+void fill_rx_indication_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_NB_IoT_t *proc,uint8_t data_or_control, uint8_t decode_flag);
 
-void fill_crc_indication_NB_IoT(PHY_VARS_eNB *eNB,int UE_id,int frame,int subframe,uint8_t decode_flag);
+void fill_crc_indication_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,int UE_id,int frame,int subframe,uint8_t decode_flag);
 
 #endif
 

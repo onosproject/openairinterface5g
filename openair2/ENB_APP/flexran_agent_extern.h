@@ -49,7 +49,7 @@ AGENT_RRC_xface *flexran_agent_get_rrc_xface(mid_t mod_id);
 AGENT_PDCP_xface *flexran_agent_get_pdcp_xface(mid_t mod_id);
 
 /* Requried to know which UEs had a harq updated over some subframe */
-extern int harq_pid_updated[NUM_MAX_UE][8];
-extern int harq_pid_round[NUM_MAX_UE][8];
+extern int harq_pid_updated[NUMBER_OF_UE_MAX][8];
+extern int harq_pid_round[NUMBER_OF_UE_MAX][8];
 
 #endif
