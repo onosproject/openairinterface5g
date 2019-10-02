@@ -1093,10 +1093,13 @@ int check_sync(RU_t *ru, RU_t *ru_master, int subframe){
 void wakeup_L1s(RU_t *ru) {
   int i;
   PHY_VARS_eNB **eNB_list = ru->eNB_list;
+  PHY_VARS_eNB_NB_IoT **eNB_nbiot_list = ru->eNB_nbiot_list;
   LOG_D(PHY,"wakeup_L1s (num %d) for RU %d (%d.%d)\n",ru->num_eNB,ru->idx, ru->proc.frame_rx,ru->proc.subframe_rx);
 
   PHY_VARS_eNB *eNB=eNB_list[0];
+  PHY_VARS_eNB *eNB_nbiot=eNB_nbiot_list[0];
   L1_proc_t *proc      = &eNB->proc;
+  L1_nbiot_proc_t *proc_nbiot      = &eNB_nbiot->proc;
   struct timespec t;
   LOG_D(PHY,"wakeup_L1s (num %d) for RU %d ru->eNB_top:%p\n",ru->num_eNB,ru->idx, ru->eNB_top);
 
@@ -1178,6 +1181,8 @@ void wakeup_L1s(RU_t *ru) {
 	    }
 	}
       }
+      // call NB-IOT RX/TX entry-point from ru_thread directly
+      if (ru->eNB_nb_iot_top != 0) ru->eNB_nb_iot_top(eNB_nb_iot_list[0],proc->frame_rx,proc->subframe_rx,string,ru);
     }
     /*
       AssertFatal(0==pthread_mutex_lock(&ruproc->mutex_eNBs),"");
