@@ -1097,9 +1097,9 @@ void wakeup_L1s(RU_t *ru) {
   LOG_D(PHY,"wakeup_L1s (num %d) for RU %d (%d.%d)\n",ru->num_eNB,ru->idx, ru->proc.frame_rx,ru->proc.subframe_rx);
 
   PHY_VARS_eNB *eNB=eNB_list[0];
-  PHY_VARS_eNB *eNB_nbiot=eNB_nbiot_list[0];
+  PHY_VARS_eNB_NB_IoT *eNB_nbiot=eNB_nbiot_list[0];
   L1_proc_t *proc      = &eNB->proc;
-  L1_nbiot_proc_t *proc_nbiot      = &eNB_nbiot->proc;
+  eNB_proc_NB_IoT_t *proc_nbiot      = &eNB_nbiot->proc;
   struct timespec t;
   LOG_D(PHY,"wakeup_L1s (num %d) for RU %d ru->eNB_top:%p\n",ru->num_eNB,ru->idx, ru->eNB_top);
 

@@ -367,6 +367,8 @@ typedef struct RU_t_s{
   int do_precoding;
   /// Frame parameters
   LTE_DL_FRAME_PARMS frame_parms;
+  /// NB-IoT frame parameters
+  NB_IoT_DL_FRAME_PARMS frame_parms;
   ///timing offset used in TDD
   int              N_TA_offset; 
   /// SF extension used in TDD (unit: number of samples at 30.72MHz) (this is an expert option)
@@ -381,6 +383,8 @@ typedef struct RU_t_s{
   int num_eNB;
   /// list of eNBs using this RU
   struct PHY_VARS_eNB_s *eNB_list[NUMBER_OF_eNB_MAX];
+  /// list of eNBs using this RU
+  struct PHY_VARS_eNB_NB_IoT_s *eNB_nbiot_list[NUMBER_OF_eNB_MAX];
   /// Mapping of antenna ports to RF chain index
   openair0_rf_map      rf_map;
   /// IF device descriptor

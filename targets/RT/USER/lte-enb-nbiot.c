@@ -500,9 +500,30 @@ static void* eNB_thread_rxtx_NB_IoT( void* param ) {
 
 */
 
-void eNB_nb_iot_top(PHY_VARS_eNB *eNB, int frame_rx, int subframe_rx, char *string,RU_t *ru) { 
+void eNB_nb_iot_top(PHY_VARS_eNB_NB_IoT *eNB, int frame_rx, int subframe_rx, char *string,RU_t *ru) {
+  eNB_proc_NB_IoT_t *proc           = &eNB->proc;
+  eNB_rxtx_proc_NB_IoT_t *L1_proc = &proc->proc_rxtx[0];
+  NB_IoT_DL_FRAME_PARMS *fp = &ru->frame_parms;
+  RU_proc_t *ru_proc_nbiot = &ru->proc;
+  proc->frame_rx    = frame_rx;
+  proc->subframe_rx = subframe_rx;
 
+  if (!oai_exit) {
+    T(T_ENB_MASTER_TICK, T_INT(0), T_INT(ru_proc_nbiot->frame_rx), T_INT(ru_proc_nbiot->subframe_rx));
+    L1_proc->timestamp_tx = ru_proc_nbiot->timestamp_rx + (sf_ahead*fp->samples_per_tti);
+    L1_proc->frame_rx     = ru_proc_nbiot->frame_rx;
+    L1_proc->subframe_rx  = ru_proc_nbiot->subframe_rx;
+    L1_proc->frame_tx     = (L1_proc->subframe_rx > (9-sf_ahead)) ? (L1_proc->frame_rx+1)&1023 : L1_proc->frame_rx;
+    L1_proc->subframe_tx  = (L1_proc->subframe_rx + sf_ahead)%10;
+
+    if (rxtx_NB_IoT(eNB,L1_proc,string) < 0) LOG_E(PHY,"eNB %d CC_id %d failed during execution\n",eNB->Mod_id,eNB->CC_id);
+
+    ru_proc_nbiot->timestamp_tx = L1_proc->timestamp_tx;
+    ru_proc_nbiot->subframe_tx  = L1_proc->subframe_tx;
+    ru_proc_nbiot->frame_tx     = L1_proc->frame_tx;
+  }
 }
+
 
 extern void do_prach_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,int frame,int subframe);
 
