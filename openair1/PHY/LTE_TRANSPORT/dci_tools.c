@@ -323,6 +323,8 @@ void fill_dci_and_dlsch(PHY_VARS_eNB *eNB,int frame,int subframe,L1_rxtx_proc_t 
   if ((dlsch0->harq_mask & (1 << rel8->harq_process)) > 0) {
     if (rel8->new_data_indicator_1 != dlsch0_harq->ndi)
       dlsch0_harq->round = 0;
+    else
+      dlsch0_harq->round++;
   } else {                      // process is inactive, so activate and set round to 0
     dlsch0_harq->round = 0;
   }
@@ -2023,6 +2025,8 @@ void fill_ulsch(PHY_VARS_eNB *eNB,int UE_id,nfapi_ul_config_ulsch_pdu *ulsch_pdu
       ulsch->harq_processes[harq_pid]->round++;
       ulsch->harq_processes[harq_pid]->TBS           = ulsch_pdu->ulsch_pdu_rel8.size<<3;
       ulsch->harq_processes[harq_pid]->Msc_initial   = 12*ulsch_pdu->ulsch_pdu_rel8.number_of_resource_blocks;
+      ulsch->harq_processes[harq_pid]->Or1           = 0;
+      ulsch->harq_processes[harq_pid]->Or2           = 0;
   }
   ulsch->rnti = ulsch_pdu->ulsch_pdu_rel8.rnti;
   LOG_D(PHY,"Filling ULSCH %x (UE_id %d) (new_ulsch %d) for Frame %d, Subframe %d : harq_pid %d, status %d, handled %d, first_rb %d, nb_rb %d, rvidx %d, Qm %d, TBS %d, round %d \n",
