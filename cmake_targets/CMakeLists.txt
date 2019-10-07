@@ -1107,7 +1107,6 @@ add_dependencies(SCHED_UE_LIB rrc_flag)
 
 set(SCHED_SRC_NBIOT
   ${OPENAIR1_DIR}/SCHED_NBIOT/phy_procedures_lte_eNb_NB_IoT.c
-  ${OPENAIR1_DIR}/SCHED_NBIOT/phy_procedures_lte_eNb_nbiot.c
   ${OPENAIR1_DIR}/SCHED_NBIOT/phy_procedures_lte_common_NB_IoT.c
   ${OPENAIR1_DIR}/SCHED_NBIOT/IF_Module_L1_primitives_NB_IoT.c
   ${OPENAIR1_DIR}/SCHED_NBIOT/pusch_pc_NB_IoT.c
