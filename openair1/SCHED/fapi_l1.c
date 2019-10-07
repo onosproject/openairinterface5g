@@ -210,7 +210,8 @@ void handle_nfapi_dlsch_pdu(PHY_VARS_eNB *eNB,int frame,int subframe,L1_rxtx_pro
 
   dlsch0_harq->pdsch_start = eNB->pdcch_vars[proc->subframe_tx & 1].num_pdcch_symbols;
 
-  if (dlsch0_harq->round==0) {  //get pointer to SDU if this a new SDU
+  //if (dlsch0_harq->round==0) {  //get pointer to SDU if this a new SDU
+  if(dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.redundancy_version == 0) {
     if(sdu == NULL) {
       LOG_E(PHY,
             "NFAPI: SFN/SF:%04d%d proc:TX:[frame %d subframe %d]: programming dlsch for round 0, rnti %x, UE_id %d, harq_pid %d : sdu is null for pdu_index %d dlsch0_harq[round:%d SFN/SF:%d%d pdu:%p mcs:%d ndi:%d pdschstart:%d]\n",
@@ -346,7 +347,7 @@ void handle_nfapi_dlsch_pdu(PHY_VARS_eNB *eNB,int frame,int subframe,L1_rxtx_pro
          );
 #endif
     dlsch0->active[proc->subframe_tx] = 1;
-    harq_pid        = dlsch0->harq_ids[frame%2][proc->subframe_tx];
+    harq_pid        = dlsch0->harq_ids[proc->frame_tx%2][proc->subframe_tx];
     dlsch0->harq_mask |= (1<<harq_pid);
     AssertFatal((harq_pid>=0) && (harq_pid<8),"subframe %d: harq_pid %d not in 0...7\n",proc->subframe_tx,harq_pid);
     dlsch0_harq     = dlsch0->harq_processes[harq_pid];
@@ -373,10 +374,18 @@ void handle_nfapi_dlsch_pdu(PHY_VARS_eNB *eNB,int frame,int subframe,L1_rxtx_pro
 #endif
       dlsch0_harq->pdsch_start = eNB->pdcch_vars[proc->subframe_tx & 1].num_pdcch_symbols;
 
-    if (dlsch0_harq->round==0) {  //get pointer to SDU if this a new SDU
+    //if (dlsch0_harq->round==0) {  //get pointer to SDU if this a new SDU
+    if(dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.redundancy_version == 0) {
       AssertFatal(sdu!=NULL,"NFAPI: frame %d, subframe %d: programming dlsch for round 0, rnti %x, UE_id %d, harq_pid %d : sdu is null for pdu_index %d\n",
                   proc->frame_tx,proc->subframe_tx,rel8->rnti,UE_id,harq_pid,
                   dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.pdu_index);
+      if(sdu == NULL) {
+        LOG_E(PHY,
+              "NFAPI: frame %d, subframe %d: programming dlsch for round 0, rnti %x, UE_id %d, harq_pid %d : sdu is null for pdu_index %d\n",
+                  proc->frame_tx,proc->subframe_tx,rel8->rnti,UE_id,harq_pid,
+                  dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.pdu_index);
+        return;
+      }
 
       if (rel8->rnti != 0xFFFF) LOG_D(PHY,"NFAPI: frame %d, subframe %d: programming dlsch for round 0, rnti %x, UE_id %d, harq_pid %d\n",
                                         proc->frame_tx,proc->subframe_tx,rel8->rnti,UE_id,harq_pid);
