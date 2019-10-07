@@ -381,7 +381,7 @@ typedef struct RU_t_s{
   int num_eNB;
   /// list of eNBs using this RU
   struct PHY_VARS_eNB_s *eNB_list[NUMBER_OF_eNB_MAX];
-  /// list of eNBs using this RU
+  /// list of NB-IoT using this RU
   struct PHY_VARS_eNB_NB_IoT_s *eNB_nbiot_list[NUMBER_OF_eNB_MAX];
   /// Mapping of antenna ports to RF chain index
   openair0_rf_map      rf_map;
@@ -425,6 +425,8 @@ typedef struct RU_t_s{
 #endif
   /// function pointer to eNB entry routine
   void (*eNB_top)(struct PHY_VARS_eNB_s *eNB, int frame_rx, int subframe_rx, char *string, struct RU_t_s *ru);
+  /// function pointer to NB-IoT entry routine
+  void (*eNB_nb_iot_top)(struct PHY_VARS_eNB_NB_IoT_s *eNB, int frame_rx, int subframe_rx, char *string, struct RU_t_s *ru);
   /// Timing statistics
   time_stats_t ofdm_demod_stats;
   /// Timing statistics (TX)

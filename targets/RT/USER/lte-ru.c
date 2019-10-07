@@ -1182,7 +1182,7 @@ void wakeup_L1s(RU_t *ru) {
 	}
       }
       // call NB-IOT RX/TX entry-point from ru_thread directly
-      if (ru->eNB_nb_iot_top != 0) ru->eNB_nb_iot_top(eNB_nb_iot_list[0],proc->frame_rx,proc->subframe_rx,string,ru);
+      if (ru->eNB_nb_iot_top != 0) ru->eNB_nb_iot_top(eNB_nbiot_list[0],proc->frame_rx,proc->subframe_rx,string,ru);
     }
     /*
       AssertFatal(0==pthread_mutex_lock(&ruproc->mutex_eNBs),"");
