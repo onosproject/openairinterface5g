@@ -4098,10 +4098,16 @@ extract_harq(module_id_t mod_idP,
           // In case of nFAPI, sometimes timing of eNB and UE become different.
           // So if nfapi_mode == 2(VNF), this function don't check assertion to avoid process exit.
           if (NFAPI_MODE != NFAPI_MODE_VNF) {
-            AssertFatal(sched_ctl->round[CC_idP][harq_pid] < 8, "Got ACK/NAK for inactive harq_pid %d for UE %d/%x\n",
-                        harq_pid,
-                        UE_id,
-                        rnti);
+            //AssertFatal(sched_ctl->round[CC_idP][harq_pid] < 8, "Got ACK/NAK for inactive harq_pid %d for UE %d/%x\n",
+            //            harq_pid,
+            //            UE_id,
+            //            rnti);
+            if(!(sched_ctl->round[CC_idP][harq_pid] < 8)) {
+              LOG_E(MAC,"Got ACK/NAK for inactive harq_pid %d for UE %d/%x\n",
+                    harq_pid,
+                    UE_id,
+                    rnti);
+            }
           } else {
             if (sched_ctl->round[CC_idP][harq_pid] == 8) {
               LOG_E(MAC,"Got ACK/NAK for inactive harq_pid %d for UE %d/%x\n",
