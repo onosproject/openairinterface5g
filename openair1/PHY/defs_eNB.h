@@ -367,8 +367,6 @@ typedef struct RU_t_s{
   int do_precoding;
   /// Frame parameters
   LTE_DL_FRAME_PARMS frame_parms;
-  /// NB-IoT frame parameters
-  NB_IoT_DL_FRAME_PARMS frame_parms;
   ///timing offset used in TDD
   int              N_TA_offset; 
   /// SF extension used in TDD (unit: number of samples at 30.72MHz) (this is an expert option)
