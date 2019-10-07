@@ -503,7 +503,7 @@ static void* eNB_thread_rxtx_NB_IoT( void* param ) {
 void eNB_nb_iot_top(PHY_VARS_eNB_NB_IoT *eNB, int frame_rx, int subframe_rx, char *string,RU_t *ru) {
   eNB_proc_NB_IoT_t *proc           = &eNB->proc;
   eNB_rxtx_proc_NB_IoT_t *L1_proc = &proc->proc_rxtx[0];
-  NB_IoT_DL_FRAME_PARMS *fp = &ru->frame_parms;
+  LTE_DL_FRAME_PARMS *fp = &ru->frame_parms;
   RU_proc_t *ru_proc_nbiot = &ru->proc;
   proc->frame_rx    = frame_rx;
   proc->subframe_rx = subframe_rx;
