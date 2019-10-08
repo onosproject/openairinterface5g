@@ -233,7 +233,7 @@ typedef struct {                                        // LTE_eNB_DLSCH_t
  /// First-round error threshold for fine-grain rate adaptation
  uint8_t                error_threshold;
  /// Pointers to 8 HARQ processes for the DLSCH
- NB_IoT_DL_eNB_HARQ_t   harq_process;
+ NB_IoT_DL_eNB_HARQ_t   harq_processes[8];
  /// circular list of free harq PIDs (the oldest come first)
  /// (10 is arbitrary value, must be > to max number of DL HARQ processes in LTE)
  int                    harq_pid_freelist[10];
@@ -451,7 +451,7 @@ typedef struct {
   /// HARQ-ACKs
   harq_status_NB_IoT_t  harq_ack;
   /// Pointers to up to 8 HARQ processes
-  NB_IoT_DL_UE_HARQ_t   *harq_process;
+  NB_IoT_DL_UE_HARQ_t   *harq_processes[8];
   /// Maximum number of HARQ processes(for definition see 36-212 V8.6 2009-03, p.17
   uint8_t               Mdlharq;
   /// MIMO transmission mode indicator for this sub-frame (for definition see 36-212 V8.6 2009-03, p.17)
@@ -546,7 +546,7 @@ typedef struct {
 
   ///in NB-IoT there is only 1 HARQ process for each UE therefore no pid is required///
   /// The only HARQ process for the DLSCH
-  NB_IoT_DL_eNB_HARQ_t    *harq_process;
+  NB_IoT_DL_eNB_HARQ_t    *harq_processes[8];
 
   // NB_IoT_DL_eNB_SIB1_t    harq_process_sib1;
 
@@ -743,7 +743,7 @@ typedef struct {
 
 typedef struct {
   /// Pointers to the HARQ processes for the NULSCH
-  NB_IoT_UL_eNB_HARQ_t    *harq_process;
+  NB_IoT_UL_eNB_HARQ_t    *harq_processes[8];
   /// Maximum number of HARQ rounds
   uint8_t                 Mlimit;
   /// Value 0 = npush format 1 (data) value 1 = npusch format 2 (ACK/NAK)

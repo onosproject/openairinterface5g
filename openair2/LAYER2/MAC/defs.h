@@ -1108,7 +1108,7 @@ typedef struct eNB_MAC_INST_s {
   time_stats_t schedule_ra;
   /// processing time of eNB ULSCH scheduler
   time_stats_t schedule_ulsch;
-  /// processing time of eNB DCI generation
+  /// processing time of eNB DCI generations
   time_stats_t fill_DLSCH_dci;
   /// processing time of eNB MAC preprocessor
   time_stats_t schedule_dlsch_preprocessor;
@@ -1118,7 +1118,7 @@ typedef struct eNB_MAC_INST_s {
   time_stats_t schedule_mch;
   /// processing time of eNB ULSCH reception
   time_stats_t rx_ulsch_sdu; // include rlc_data_ind
-} eNB_MAC_INST;
+} eNB_MAC_INST_nb_iot;
 
 /*
  * UE part

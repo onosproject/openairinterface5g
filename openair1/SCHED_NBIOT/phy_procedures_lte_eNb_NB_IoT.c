@@ -56,7 +56,7 @@
 //#define DEBUG_PHY_PROC (Already defined in cmake)
 //#define DEBUG_ULSCH
 
-//#include "LAYER2/MAC/extern.h"
+#include "LAYER2/MAC/extern_NB_IoT.h"
 #include "LAYER2/MAC/defs.h"
 #include "common/utils/LOG/log.h"
 #include "common/utils/LOG/vcd_signal_dumper.h"
@@ -74,8 +74,16 @@
 
 #include "PHY/extern_NB_IoT.h"
 
+#if defined(FLEXRAN_AGENT_SB_IF)
+//Agent-related headers
+#include "ENB_APP/flexran_agent_extern.h"
+#include "ENB_APP/CONTROL_MODULES/MAC/flexran_agent_mac.h"
+#include "LAYER2/MAC/flexran_agent_mac_proto.h"
+#endif
 
-extern eNB_MAC_INST                *eNB_mac_inst; // For NB-IoT branch
+
+extern eNB_MAC_INST_NB_IoT *eNB_mac_inst; // For NB-IoT branch
+
 
 /*
 
@@ -842,7 +850,7 @@ void generate_eNB_dlsch_params_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_NB_
         LOG_I(PHY,"Handling the DCI for ue-spec data or MSG4!\n");
         // Temp: Add UE id when Msg4 trigger
         eNB->ndlsch[0][0]= (NB_IoT_eNB_NDLSCH_t*) malloc(sizeof(NB_IoT_eNB_NDLSCH_t));
-        eNB->ndlsch[0][0]->harq_process = (NB_IoT_DL_eNB_HARQ_t*)malloc(sizeof(NB_IoT_DL_eNB_HARQ_t));
+        eNB->ndlsch[0][0]->harq_processes = (NB_IoT_DL_eNB_HARQ_t*)malloc(sizeof(NB_IoT_DL_eNB_HARQ_t));
         eNB->ndlsch[0][0]->rnti=dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.rnti; 
         //TODO target/SIMU/USER?init_lte/init_lte_eNB we should allocate the ndlsch structures
         UE_id = find_ue_NB_IoT(dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.rnti, eNB);
@@ -980,7 +988,7 @@ void npdsch_procedures(PHY_VARS_eNB_NB_IoT      *eNB,
 {
   int                     frame                   =   proc->frame_tx;
   int                     subframe                =   proc->subframe_tx;
-  NB_IoT_DL_eNB_HARQ_t    *ndlsch_harq            =   ndlsch->harq_process;
+  NB_IoT_DL_eNB_HARQ_t    *ndlsch_harq            =   ndlsch->harq_processes;
   int                     input_buffer_length     =   ndlsch_harq->TBS/8;         // get in byte //the TBS is set in generate_dlsch_param
   NB_IoT_DL_FRAME_PARMS   *fp                     =   &eNB->frame_parms_NB_IoT;
   int                     G;
@@ -1294,8 +1302,8 @@ void fill_rx_indication_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_NB_IoT_t *
            
             pdu                                    = &eNB->UL_INFO.RX_NPUSCH.rx_pdu_list[0];
             pdu->rx_ue_information.rnti            = eNB->ulsch_NB_IoT[0]->rnti;
-            pdu->rx_indication_rel8.length         = eNB->ulsch_NB_IoT[0]->harq_process->TBS; //eNB->ulsch_NB_IoT[0]->harq_process->TBS>>3;
-            pdu->data                              = eNB->ulsch_NB_IoT[0]->harq_process->b;
+            pdu->rx_indication_rel8.length         = eNB->ulsch_NB_IoT[0]->harq_processes->TBS; //eNB->ulsch_NB_IoT[0]->harq_process->TBS>>3;
+            pdu->data                              = eNB->ulsch_NB_IoT[0]->harq_processes->b;
 
       } else {             // format 2
 
@@ -1356,7 +1364,7 @@ void npusch_procedures(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_NB_IoT_t *proc)
   NB_IoT_eNB_NULSCH_t *nulsch;
   NB_IoT_UL_eNB_HARQ_t *nulsch_harq;
   nulsch = eNB->ulsch_NB_IoT[0];
-  nulsch_harq = nulsch->harq_process;
+  nulsch_harq = nulsch->harq_processes;
 
   const int rx_subframe   =   proc->subframe_rx;
   const int rx_frame      =   proc->frame_rx;
@@ -1596,7 +1604,7 @@ void common_signal_procedures (PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_NB_IoT_t *
   //////////////////////////////////////////////////////// to uncomment for LTE,      uint8_t *pbch_pdu=&eNB->pbch_pdu[0];
   int subframe = proc->subframe_tx;
   int frame = proc->frame_tx;
-  RA_TEMPLATE_NB_IoT *RA_template = (RA_TEMPLATE_NB_IoT *)&eNB_mac_inst[eNB->Mod_id].common_channels[eNB->CC_id].RA_template[0];
+  RA_TEMPLATE_NB_IoT *RA_template = (RA_TEMPLATE_NB_IoT *)&eNB_mac_inst[eNB->Mod_id].RA_template[0];
   //int                     With_NSSS=0;
   int framerx = proc->frame_rx; 
   int subframerx = proc->subframe_rx;

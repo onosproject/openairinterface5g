@@ -53,7 +53,6 @@ extern EMULATION_VARS *Emul_vars;
 
 
 
-
 //NB-IoT---------------------------------
 
 extern eNB_MAC_INST_NB_IoT *mac_inst;

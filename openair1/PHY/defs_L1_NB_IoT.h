@@ -308,6 +308,9 @@ typedef struct {
   uint32_t              frame_dscr_msg5;
   uint32_t              subframe_dscr_msg5;
 
+  uint32_t frame_dscr_msg3; //phy_procedures_lte_eNb_NB_IoT.c
+  uint32_t subframe_dscr_msg3; //phy_procedures_lte_eNb_NB_IoT.c
+
 } eNB_rxtx_proc_NB_IoT_t;
 /*
 typedef struct {
@@ -814,6 +817,9 @@ typedef struct PHY_VARS_eNB_NB_IoT_s {
   NB_IoT_eNB_NDLSCH_t       *ndlsch_SIB23;
   NB_IoT_eNB_NDLSCH_t       *ndlsch_RAR;
   NB_IoT_eNB_NPDCCH_t       *npdcch_DCI;
+
+  uint8_t                     msg3_pdu[6]; //phy_procedures_lte_eNb_NB_IoT.c
+
 
 
 } PHY_VARS_eNB_NB_IoT;

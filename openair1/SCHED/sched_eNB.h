@@ -186,7 +186,7 @@ void ra_failed(uint8_t Mod_id,uint8_t CC_id,uint8_t eNB_index);
   @param UE_id ID of UE which may be issuing the SR
   @returns 1 if TXOp is active.
 */
-uint8_t is_SR_subframe(PHY_VARS_eNB *phy_vars_eNB,L1_rxtx_proc_t *proc,uint8_t UE_id);
+//uint8_t is_SR_subframe(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_NB_IoT_t *proc,uint8_t UE_id);
 
 int8_t find_ue_dlsch(uint16_t rnti, PHY_VARS_eNB *phy_vars_eNB);
 int8_t find_ue_ulsch(uint16_t rnti, PHY_VARS_eNB *phy_vars_eNB);
