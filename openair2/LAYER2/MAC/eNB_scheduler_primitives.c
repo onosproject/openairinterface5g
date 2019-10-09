@@ -31,6 +31,9 @@
 
 #include "assertions.h"
 
+#include "PHY/NBIoT_TRANSPORT/defs_NB_IoT.h"
+#include "LAYER2/MAC/defs_NB_IoT.h"
+
 #include "LAYER2/MAC/mac.h"
 #include "LAYER2/MAC/mac_extern.h"
 
@@ -62,7 +65,7 @@ extern uint16_t frame_cnt;
 
 extern RAN_CONTEXT_t RC;
 
-
+extern eNB_MAC_INST_NB_IoT *eNB_mac_inst;
 
 //------------------------------------------------------------------------------
 int
@@ -1969,6 +1972,14 @@ get_ue_weight(module_id_t module_idP,
 //------------------------------------------------------------------------------
 {
   return (eNB_dlsch_info[module_idP][CC_idP][ue_idP].weight);
+}
+//------------------------------------------------------------------------------
+DCI_PDU_NB_IoT *get_dci_sdu(module_id_t module_idP, int CC_id,frame_t frameP, sub_frame_t subframeP)
+//------------------------------------------------------------------------------
+{
+
+  return(&eNB_mac_inst[module_idP].common_channels[CC_id].DCI_pdu);
+
 }
 
 //------------------------------------------------------------------------------

@@ -820,7 +820,7 @@ typedef struct PHY_VARS_eNB_NB_IoT_s {
 
   uint8_t                     msg3_pdu[6]; //phy_procedures_lte_eNb_NB_IoT.c
 
-
+  volatile uint16_t preamble_index_NB_IoT; //phy_procedures_lte_eNb_NB_IoT.c
 
 } PHY_VARS_eNB_NB_IoT;
 

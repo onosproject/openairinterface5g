@@ -522,6 +522,8 @@ typedef struct {
   ///indicates the starting OFDM symbol in the first slot of a subframe k for the NPDCCH transmission
   /// see FAPI/NFAPI specs Table 4-45
   uint8_t               npdcch_start_symbol;
+  uint8_t               Num_ue_spec_dci;
+  uint8_t               Num_common_dci;
   uint8_t               Num_dci;
   DCI_ALLOC_NB_IoT_t    dci_alloc[2] ;
 
@@ -590,6 +592,9 @@ typedef struct {
   //Flag  used to discern among different NDLSCH structures (SIB1,SI,RA,UE-spec)
   //(used inside the ndlsch procedure for distinguish the different type of data to manage also in term of repetitions and transmission over more subframes
   ndlsch_flag_t           ndlsch_type;
+
+  /// Maximum number of HARQ rounds
+  uint8_t Mlimit;
 
 } NB_IoT_eNB_NDLSCH_t;
 
@@ -742,6 +747,11 @@ typedef struct {
   /// This is needed for PHICH generation which
   /// is done after a new scheduling
   uint16_t previous_first_rb;
+
+  /// Subframe cba scheduling indicator (i.e. CBA Transmission opportunity indicator)
+  uint8_t subframe_cba_scheduling_flag;
+
+
 
 } NB_IoT_UL_eNB_HARQ_t;
 

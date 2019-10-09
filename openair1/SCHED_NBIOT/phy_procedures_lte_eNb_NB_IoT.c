@@ -58,6 +58,7 @@
 
 #include "LAYER2/MAC/extern_NB_IoT.h"
 #include "LAYER2/MAC/defs.h"
+#include "LAYER2/MAC/mac_proto.h"
 #include "common/utils/LOG/log.h"
 #include "common/utils/LOG/vcd_signal_dumper.h"
 
@@ -415,366 +416,7 @@ void common_signal_procedures_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_NB_I
   
 }
 
-void phy_procedures_eNB_uespec_RX_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_NB_IoT_t *proc) //UL_IND_NB_IoT_t *UL_INFO)
-{
-  //RX processing for ue-specific resources (i
-  //NB_IoT_DL_FRAME_PARMS     *fp=&eNB->frame_parms_NB_IoT;
 
-  const int subframe    =   proc->subframe_rx;
-  const int frame       =   proc->frame_rx;
-/*
-  ///////////////////// do we need this part for NB-IoT ///////////////////////////////////
-  //check if any RB using in this UL subframe
-  eNB->rb_mask_ul[0] = 0;
-  eNB->rb_mask_ul[1] = 0;
-  eNB->rb_mask_ul[2] = 0;
-  eNB->rb_mask_ul[3] = 0;
-  ////////////////////////////////////////////////////////////////////////////////////////
-  */
-  
-
-  npusch_procedures(eNB,proc);
-
-
-  //pthread_mutex_lock(&eNB->UL_INFO_mutex);
-
-  // Fix me here, these should be locked
-  //eNB->UL_INFO.RX_NPUSCH.number_of_pdus  = 0;
- // eNB->UL_INFO.crc_ind.number_of_crcs = 0;
-
- // pthread_mutex_unlock(&eNB->UL_INFO_mutex);
- // if (nfapi_mode == 0 || nfapi_mode == 1) { // If PNF or monolithic
-     
-  //}          
-
-     
-}
-
-/////////////////////////////////////////////////////////// backup ////////////////////////////////////////////////////////
-/*void phy_procedures_eNB_uespec_RX_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_NB_IoT_t *proc, UL_IND_NB_IoT_t *UL_INFO)
-{
-  //RX processing for ue-specific resources (i
-  uint32_t                  ret=0,i,j,k;
-  uint32_t                  harq_pid;   // round;
-  int                       sync_pos;
-  uint16_t                  rnti=0;
-  uint8_t                   access_mode;
-  NB_IoT_DL_FRAME_PARMS     *fp=&eNB->frame_parms_NB_IoT;
-
-  const int subframe    =   proc->subframe_rx;
-  const int frame       =   proc->frame_rx;
-
-  // add hyper subframe here
-  
-  //NB-IoT IF module Common setting//
-
-  UL_INFO->module_id    = eNB->Mod_id;
-  UL_INFO->CC_id        = eNB->CC_id;
-  UL_INFO->frame        =  frame;
-  UL_INFO->subframe     = subframe;
-
-  T(T_ENB_PHY_UL_TICK, T_INT(eNB->Mod_id), T_INT(frame), T_INT(subframe));
-
-  T(T_ENB_PHY_INPUT_SIGNAL, T_INT(eNB->Mod_id), T_INT(frame), T_INT(subframe), T_INT(0),
-    T_BUFFER(&eNB->common_vars.rxdata[0][0][subframe*eNB->frame_parms_NB_IoT.samples_per_tti],
-             eNB->frame_parms_NB_IoT.samples_per_tti * 4));
-
-  //if ((fp->frame_type == TDD) && (subframe_select(fp,subframe)!=SF_UL)) return;
-
-  //check if any RB using in this UL subframe
-  eNB->rb_mask_ul[0] = 0;
-  eNB->rb_mask_ul[1] = 0;
-  eNB->rb_mask_ul[2] = 0;
-  eNB->rb_mask_ul[3] = 0;
-
-  // Check for active processes in current subframe
-  // NB-IoT subframe2harq_pid is in dci_tools, always set the frame type to FDD, this would become simpler.
-  harq_pid = subframe2harq_pid_NB_IoT(fp,frame,subframe);
-  // delete the cba
-  // delete the srs
-  //Loop over the UE, i is the UE ID //
-  for (i=0; i<NUMBER_OF_UE_MAX_NB_IoT; i++) 
-    {
-
-      // delete srs 
-      // delete Pucch procedure
-      // check for Msg3
-      if (eNB->mac_enabled==1) 
-        {
-          if (eNB->UE_stats[i].mode == RA_RESPONSE_NB_IoT) 
-            {
-               ///Process Msg3 TODO///
-              //process_Msg3(eNB,proc,i,harq_pid);
-            }
-        }
-
-      eNB->pusch_stats_rb[i][(frame*10)+subframe]    = -63;
-      eNB->pusch_stats_round[i][(frame*10)+subframe] = 0;
-      eNB->pusch_stats_mcs[i][(frame*10)+subframe]   = -63;
-
-      //Check if this UE is has ULSCH scheduling///
-      if ((eNB->nulsch[i]) &&
-          (eNB->nulsch[i]->rnti>0) &&
-          (eNB->nulsch[i]->harq_process->subframe_scheduling_flag==1)) 
-        {
-          // UE is has ULSCH scheduling
-          //////////////////////////////////////round = eNB->nulsch[i]->harq_process->round; //commented to remove warning, to be added if round is used
-          //NB-IoT The nb_rb always set to 1 //
-          for (int rb=0;rb<=eNB->nulsch[i]->harq_process->nb_rb;rb++) 
-            {
-               int rb2 = rb+eNB->nulsch[i]->harq_process->first_rb;
-               eNB->rb_mask_ul[rb2>>5] |= (1<<(rb2&31));
-            }
-
-          //Log for what kind of the ULSCH Reception//
-
-          //Calculate for LTE C-RS//
-          //nPRS = fp->pusch_config_common.ul_ReferenceSignalsPUSCH.nPRS[subframe<<1];
-
-          //eNB->ulsch[i]->cyclicShift = (eNB->ulsch[i]->harq_processes[harq_pid]->n_DMRS2 + fp->pusch_config_common.ul_ReferenceSignalsPUSCH.cyclicShift +nPRS)%12;
-
-          if (fp->frame_type == FDD_NB_IoT ) 
-            {
-              int sf = (subframe<4) ? (subframe+6) : (subframe-4);
-              //After Downlink Data transmission, simply have a notice to received ACK from PUCCH, I think it's not use for now //
-              if (eNB->ndlsch[i]->subframe_tx[sf]>0) // we have downlink transmission
-                { 
-                  eNB->nulsch[i]->harq_process->O_ACK = 1;
-                } 
-              else 
-                {
-                  eNB->nulsch[i]->harq_process->O_ACK = 0;
-                }
-            }
-
-          eNB->pusch_stats_rb[i][(frame*10)+subframe]    = eNB->nulsch[i]->harq_process->nb_rb;
-          eNB->pusch_stats_round[i][(frame*10)+subframe] = eNB->nulsch[i]->harq_process->round;
-          eNB->pusch_stats_mcs[i][(frame*10)+subframe]   = eNB->nulsch[i]->harq_process->mcs;
-
-  
-
-          rx_ulsch_NB_IoT(eNB,
-                          proc,
-                          eNB->UE_stats[i].sector,  // this is the effective sector id
-                          i,
-                          eNB->nulsch,
-                          0);
-
-          ret = ulsch_decoding_NB_IoT(eNB,proc,
-                                      i,
-                                      0, // control_only_flag
-                                      eNB->nulsch[i]->harq_process->V_UL_DAI,
-                                      eNB->nulsch[i]->harq_process->nb_rb>20 ? 1 : 0);
-
-          //compute the expected ULSCH RX power (for the stats)
-          eNB->nulsch[(uint32_t)i]->harq_process->delta_TF = get_hundred_times_delta_IF_eNB_NB_IoT(eNB,i,harq_pid, 0); // 0 means bw_factor is not considered
-          eNB->UE_stats[i].nulsch_decoding_attempts[harq_pid][eNB->nulsch[i]->harq_process->round]++;
-          eNB->nulsch[i]->harq_process->subframe_scheduling_flag=0;
-          if (eNB->nulsch[i]->harq_process->cqi_crc_status == 1) {
-
-              extract_CQI_NB_IoT(eNB->nulsch[i]->harq_process->o,
-                                 eNB->nulsch[i]->harq_process->uci_format,
-                                 &eNB->UE_stats[i],
-                                 fp->N_RB_DL,
-                                 &rnti, &access_mode);
-            
-              eNB->UE_stats[i].rank = eNB->nulsch[i]->harq_process->o_RI[0];
-          }
-
-          if (ret == (1+MAX_TURBO_ITERATIONS)) {
-
-              T(T_ENB_PHY_ULSCH_UE_NACK,
-                T_INT(eNB->Mod_id),
-                T_INT(frame),
-                T_INT(subframe),
-                T_INT(i),
-                T_INT(eNB->nulsch[i]->rnti),
-                T_INT(harq_pid));
-
-              eNB->UE_stats[i].ulsch_round_errors[harq_pid][eNB->nulsch[i]->harq_process->round]++;
-              eNB->nulsch[i]->harq_process->phich_active = 1;
-              eNB->nulsch[i]->harq_process->phich_ACK = 0;
-              eNB->nulsch[i]->harq_process->round++;
-
-              LOG_D(PHY,"[eNB][PUSCH %d] Increasing to round %d\n",harq_pid,eNB->nulsch[i]->harq_process->round);
-
-          if (eNB->nulsch[i]->Msg3_flag == 1) 
-          {
-               ///dump_ulsch(eNB,proc,i);
-               //exit(-1);//
-
-               //In NB-IoT MSG3 //
-                // activate retransmission for Msg3 (signalled to UE PHY by DCI
-                eNB->nulsch[(uint32_t)i]->Msg3_active = 1;
-                // Need to check the procedure for NB-IoT (MSG3) retransmission
-               // get_Msg3_alloc_ret(fp,subframe,frame,&eNB->ulsch[i]->Msg3_frame,&eNB->ulsch[i]->Msg3_subframe);
-                //mac_xface->set_msg3_subframe(eNB->Mod_id, eNB->CC_id, frame, subframe, eNB->ulsch[i]->rnti,eNB->ulsch[i]->Msg3_frame, eNB->ulsch[i]->Msg3_subframe);
-                
-                T(T_ENB_PHY_MSG3_ALLOCATION, T_INT(eNB->Mod_id), T_INT(frame), T_INT(subframe),
-                  T_INT(i), T_INT(eNB->nulsch[i]->rnti), T_INT(0),
-                  T_INT(eNB->nulsch[i]->Msg3_frame), T_INT(eNB->nulsch[i]->Msg3_subframe));     
-          } // This is Msg3 error
-          else 
-          { //normal ULSCH
-              if (eNB->nulsch[i]->harq_process->round== eNB->nulsch[i]->Mlimit) 
-                {
-                  eNB->nulsch[i]->harq_process->round=0;
-                  eNB->nulsch[i]->harq_process->phich_active=0;
-                  eNB->UE_stats[i].ulsch_errors[harq_pid]++;
-                  eNB->UE_stats[i].ulsch_consecutive_errors++; 
-                  //if (eNB->ulsch[i]->harq_processes[harq_pid]->nb_rb > 20) {
-                 //   dump_ulsch(eNB,proc,i);
-                 // exit(-1);
-                  //}
-                  // indicate error to MAC
-                  if (eNB->mac_enabled == 1)
-                    {
-                      //instead rx_sdu to report The Uplink data not received successfully to MAC
-                      (UL_INFO->crc_ind.crc_pdu_list+i)->crc_indication_rel8.crc_flag = 1;
-                       UL_INFO->crc_ind.number_of_crcs++;
-                      (UL_INFO->RX_NPUSCH.rx_pdu_list+i)->rx_ue_information.rnti      = eNB->nulsch[i]->rnti;
-                      (UL_INFO->RX_NPUSCH.rx_pdu_list+i)->data                        = NULL;
-                      (UL_INFO->RX_NPUSCH.rx_pdu_list+i)->rx_indication_rel8.length   = 0;
-                      (UL_INFO->RX_NPUSCH.rx_pdu_list+i)->rx_ue_information.harq_pid  = harq_pid;
-                       UL_INFO->RX_NPUSCH.number_of_pdus++;
-                    }
-                }
-            }
-        }  // ulsch in error
-        else 
-          {
-            T(T_ENB_PHY_ULSCH_UE_ACK, T_INT(eNB->Mod_id), T_INT(frame), T_INT(subframe), T_INT(i), T_INT(eNB->nulsch[i]->rnti),
-              T_INT(harq_pid));
-
-          // Delete MSG3  log for the PHICH 
-
-          for (j=0; j<fp->nb_antennas_rx; j++)
-          //this is the RSSI per RB
-          eNB->UE_stats[i].UL_rssi[j] =
-            dB_fixed(eNB->pusch_vars[i]->ulsch_power[j] * (eNB->nulsch[i]->harq_process->nb_rb*12) / fp->ofdm_symbol_size) - eNB->rx_total_gain_dB -
-            hundred_times_log10_NPRB_NB_IoT[eNB->nulsch[i]->harq_process->nb_rb-1]/100 -
-            get_hundred_times_delta_IF_eNB_NB_IoT(eNB,i,harq_pid, 0)/100;
-          //for NB-IoT PHICH not work
-          //eNB->ulsch[i]->harq_processes[harq_pid]->phich_active = 1;
-          //eNB->ulsch[i]->harq_processes[harq_pid]->phich_ACK = 1;//
-          eNB->nulsch[i]->harq_process->round = 0;
-          eNB->UE_stats[i].ulsch_consecutive_errors = 0;
-
-          if (eNB->nulsch[i]->Msg3_flag == 1) 
-            {
-              if (eNB->mac_enabled==1) 
-                {
-                  LOG_I(PHY,"[eNB %d][RAPROC] Frame %d Terminating ra_proc for harq %d, UE %d\n",
-                        eNB->Mod_id,frame,harq_pid,i);
-                  if (eNB->mac_enabled)
-                    {
-                      // store successful MSG3 in UL_Info instead rx_sdu
-                      (UL_INFO->crc_ind.crc_pdu_list+i)->crc_indication_rel8.crc_flag  = 0;
-                      UL_INFO->crc_ind.number_of_crcs++;
-                      (UL_INFO->RX_NPUSCH.rx_pdu_list+i)->rx_ue_information.rnti       = eNB->nulsch[i]->rnti;
-                      (UL_INFO->RX_NPUSCH.rx_pdu_list+i)->data                         = eNB->nulsch[i]->harq_process->b;
-                      (UL_INFO->RX_NPUSCH.rx_pdu_list+i)->rx_indication_rel8.length    = eNB->nulsch[i]->harq_process->TBS>>3;
-                      (UL_INFO->RX_NPUSCH.rx_pdu_list+i)->rx_ue_information.harq_pid   = harq_pid;
-                      UL_INFO->RX_NPUSCH.number_of_pdus++;
-                    }
-
-                  // Need check if this needed in NB-IoT
-                  // one-shot msg3 detection by MAC: empty PDU (e.g. CRNTI)
-               //   if (eNB->ulsch[i]->Msg3_flag == 0 ) {
-              //   eNB->UE_stats[i].mode = PRACH;
-              //   mac_xface->cancel_ra_proc(eNB->Mod_id,
-              //   eNB->CC_id,
-             //    frame,
-            //     eNB->UE_stats[i].crnti);
-            //     mac_phy_remove_ue(eNB->Mod_id,eNB->UE_stats[i].crnti);
-          //       eNB->ulsch[(uint32_t)i]->Msg3_active = 0;
-           //      } // Msg3_flag == 0///
-      
-              } // mac_enabled==1
-
-            eNB->UE_stats[i].mode     = PUSCH;
-            eNB->nulsch[i]->Msg3_flag = 0;
-
-            LOG_D(PHY,"[eNB %d][RAPROC] Frame %d : RX Subframe %d Setting UE %d mode to PUSCH\n",eNB->Mod_id,frame,subframe,i);
-
-            //Init HARQ parameters, need to check//
-            for (k=0; k<8; k++) 
-              { //harq_processes
-                for (j=0; j<eNB->ndlsch[i]->Mlimit; j++) 
-                  {
-                    eNB->UE_stats[i].dlsch_NAK[k][j]    = 0;
-                    eNB->UE_stats[i].dlsch_ACK[k][j]    = 0;
-                    eNB->UE_stats[i].dlsch_trials[k][j] = 0;
-                  }
-
-                eNB->UE_stats[i].dlsch_l2_errors[k]       = 0;
-                eNB->UE_stats[i].ulsch_errors[k]          = 0;
-                eNB->UE_stats[i].ulsch_consecutive_errors = 0;
-
-                for (j=0; j<eNB->nulsch[i]->Mlimit; j++) 
-                  {
-                    eNB->UE_stats[i].nulsch_decoding_attempts[k][j]     = 0;
-                    eNB->UE_stats[i].ulsch_decoding_attempts_last[k][j] = 0;
-                    eNB->UE_stats[i].ulsch_round_errors[k][j]           = 0;
-                    eNB->UE_stats[i].ulsch_round_fer[k][j]              = 0;
-                  }
-              }
-
-            eNB->UE_stats[i].dlsch_sliding_cnt  = 0;
-            eNB->UE_stats[i].dlsch_NAK_round0   = 0;
-            eNB->UE_stats[i].dlsch_mcs_offset   = 0;
-          } // Msg3_flag==1
-         else 
-          {  // Msg3_flag == 0
-            if (eNB->mac_enabled == 1) 
-              {
-                  // store successful Uplink data in UL_Info instead rx_sdu
-                  (UL_INFO->crc_ind.crc_pdu_list+i)->crc_indication_rel8.crc_flag  = 0;
-                  UL_INFO->crc_ind.number_of_crcs++;
-                  (UL_INFO->RX_NPUSCH.rx_pdu_list+i)->rx_ue_information.rnti       = eNB->nulsch[i]->rnti;
-                  (UL_INFO->RX_NPUSCH.rx_pdu_list+i)->data                         = eNB->nulsch[i]->harq_process->b;
-                  (UL_INFO->RX_NPUSCH.rx_pdu_list+i)->rx_indication_rel8.length    = eNB->nulsch[i]->harq_process->TBS>>3;
-                  (UL_INFO->RX_NPUSCH.rx_pdu_list+i)->rx_ue_information.harq_pid   = harq_pid;
-                  UL_INFO->RX_NPUSCH.number_of_pdus++;
-      
-              } // mac_enabled==1
-          } // Msg3_flag == 0
-
-            // estimate timing advance for MAC
-              sync_pos                               = NB_IoT_est_timing_advance_pusch(eNB,i);
-              eNB->UE_stats[i].timing_advance_update = sync_pos - fp->nb_prefix_samples/4; //to check
-
-      }  // ulsch not in error
-
-
-      // Process HARQ only in NPUSCH
-      //process_HARQ_feedback(i,
-      //                      eNB,proc,
-       //                     1, // pusch_flag
-        //                    0,
-         //                   0,
-          //                  0);/
-
-
-      
-
-    } // ulsch[0] && ulsch[0]->rnti>0 && ulsch[0]->subframe_scheduling_flag == 1
-
-
-    // update ULSCH statistics for tracing
-
-
-
-
-  } // loop i=0 ... NUMBER_OF_UE_MAX-1
-
-}
-////////////////////////////////////////////////////////////////end backup ////////////////////////////////////////////////
-
-#undef DEBUG_PHY_PROC
-
-/////Generate eNB ndlsch params for NB-IoT from the NPDCCH PDU of the DCI, modify the input to the Sched Rsp variable////
-*/
 
 void generate_eNB_dlsch_params_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_NB_IoT_t * proc,nfapi_dl_config_request_pdu_t *dl_config_pdu) 
 {
@@ -850,7 +492,7 @@ void generate_eNB_dlsch_params_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_NB_
         LOG_I(PHY,"Handling the DCI for ue-spec data or MSG4!\n");
         // Temp: Add UE id when Msg4 trigger
         eNB->ndlsch[0][0]= (NB_IoT_eNB_NDLSCH_t*) malloc(sizeof(NB_IoT_eNB_NDLSCH_t));
-        eNB->ndlsch[0][0]->harq_processes = (NB_IoT_DL_eNB_HARQ_t*)malloc(sizeof(NB_IoT_DL_eNB_HARQ_t));
+        eNB->ndlsch[0][0]->harq_processes[0] = (NB_IoT_DL_eNB_HARQ_t*)malloc(sizeof(NB_IoT_DL_eNB_HARQ_t));
         eNB->ndlsch[0][0]->rnti=dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.rnti; 
         //TODO target/SIMU/USER?init_lte/init_lte_eNB we should allocate the ndlsch structures
         UE_id = find_ue_NB_IoT(dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.rnti, eNB);
@@ -982,7 +624,7 @@ void generate_eNB_ulsch_params_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_NB_
 void npdsch_procedures(PHY_VARS_eNB_NB_IoT      *eNB,
                        eNB_rxtx_proc_NB_IoT_t   *proc,     //Context data structure for RX/TX portion of subframe processing
                        NB_IoT_eNB_NDLSCH_t      *ndlsch,
-                       //int num_pdcch_symbols,            //(BCOM says are not needed
+                       //int num_npdcch_symbols,            //(BCOM says are not needed
                        uint8_t                  *pdu
                        )
 {
@@ -1129,7 +771,7 @@ void npdsch_procedures(PHY_VARS_eNB_NB_IoT      *eNB,
 
     //    eNB->te(eNB,
     //      DLSCH_pdu,
-    //      num_pdcch_symbols,
+    //      num_npdcch_symbols,
     //      dlsch,
     //      frame,subframe,
     //      &eNB->dlsch_rate_matching_stats,
@@ -1159,7 +801,7 @@ void npdsch_procedures(PHY_VARS_eNB_NB_IoT      *eNB,
       //         dlsch_harq->rb_alloc,
       //         get_Qm(dlsch_harq->mcs),
       //         dlsch_harq->Nl,
-      //         num_pdcch_symbols,
+      //         num_npdcch_symbols,
       //         frame,subframe,
       //         0),
       //         0,
@@ -1176,7 +818,7 @@ void npdsch_procedures(PHY_VARS_eNB_NB_IoT      *eNB,
     //         eNB->common_vars.txdataF[0],
     //         AMP,
     //         subframe,
-    //         num_pdcch_symbols,
+    //         num_npdcch_symbols,
     //         dlsch,
     //         dlsch1);
 
@@ -1302,8 +944,8 @@ void fill_rx_indication_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_NB_IoT_t *
            
             pdu                                    = &eNB->UL_INFO.RX_NPUSCH.rx_pdu_list[0];
             pdu->rx_ue_information.rnti            = eNB->ulsch_NB_IoT[0]->rnti;
-            pdu->rx_indication_rel8.length         = eNB->ulsch_NB_IoT[0]->harq_processes.TBS; //eNB->ulsch_NB_IoT[0]->harq_process->TBS>>3;
-            pdu->data                              = eNB->ulsch_NB_IoT[0]->harq_processes.b;
+            pdu->rx_indication_rel8.length         = eNB->ulsch_NB_IoT[0]->harq_processes[0]->TBS; //eNB->ulsch_NB_IoT[0]->harq_process->TBS>>3;
+            pdu->data                              = eNB->ulsch_NB_IoT[0]->harq_processes[0]->b;
 
       } else {             // format 2
 
@@ -1711,7 +1353,7 @@ void phy_procedures_eNB_TX_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,
   DCI_PDU_NB_IoT *DCI_pdu;
   DCI_PDU_NB_IoT DCI_pdu_tmp;
   int8_t UE_id=0;
- // uint8_t num_pdcch_symbols=0;
+ // uint8_t num_npdcch_symbols=0;
   uint8_t ul_subframe;
   uint32_t ul_frame;
   LTE_DL_FRAME_PARMS *fp=&eNB->frame_parms;
@@ -1744,7 +1386,7 @@ void phy_procedures_eNB_TX_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,
       LOG_W(PHY,"[eNB %d, CC %d] frame %d, subframe %d, UE %d: ULSCH consecutive error count reached %u, triggering UL Failure\n",
             eNB->Mod_id,eNB->CC_id,frame,subframe, i, eNB->UE_stats[i].ulsch_consecutive_errors);
       eNB->UE_stats[i].ulsch_consecutive_errors=0;
-      mac_xface->UL_failure_indication(eNB->Mod_id,
+      UL_failure_indication(eNB->Mod_id,
                eNB->CC_id,
                frame,
                eNB->UE_stats[i].crnti,
@@ -1767,7 +1409,7 @@ void phy_procedures_eNB_TX_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,
  if (eNB->mac_enabled==1) {
     // Parse DCI received from MAC
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_ENB_PDCCH_TX,1);
-    DCI_pdu = mac_xface->get_dci_sdu(eNB->Mod_id,
+    DCI_pdu = get_dci_sdu(eNB->Mod_id,
              eNB->CC_id,
              frame,
              subframe);
@@ -1826,7 +1468,7 @@ void phy_procedures_eNB_TX_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,
     eNB->num_common_dci[(subframe)&1]=0;
   }
 
-  VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME(VCD_SIGNAL_DUMPER_VARIABLES_DCI_INFO,DCI_pdu->num_pdcch_symbols);
+  VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME(VCD_SIGNAL_DUMPER_VARIABLES_DCI_INFO,DCI_pdu->num_npdcch_symbols);
 
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_ENB_PDCCH_TX,0);
 
@@ -1840,7 +1482,7 @@ void phy_procedures_eNB_TX_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,
     eNB->ulsch[(uint32_t)UE_id]->Msg3_frame,
     eNB->ulsch[(uint32_t)UE_id]->Msg3_subframe);
     
-   // pdsch_procedures(eNB,proc,eNB->dlsch_ra,(LTE_eNB_DLSCH_t*)NULL,(LTE_eNB_UE_stats*)NULL,1,num_pdcch_symbols);    
+   // pdsch_procedures(eNB,proc,eNB->dlsch_ra,(LTE_eNB_DLSCH_t*)NULL,(LTE_eNB_UE_stats*)NULL,1,num_npdcch_symbols);    
     
     eNB->dlsch_ra->active = 0;
   }
@@ -1852,7 +1494,7 @@ void phy_procedures_eNB_TX_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,
            (eNB->ndlsch[(uint8_t)UE_id][0]->rnti>0)&&
              (eNB->ndlsch[(uint8_t)UE_id][0]->active == 1)) {
 
-     //pdsch_procedures(eNB,proc,eNB->dlsch[(uint8_t)UE_id][0],eNB->dlsch[(uint8_t)UE_id][1],&eNB->UE_stats[(uint32_t)UE_id],0,num_pdcch_symbols);
+     //pdsch_procedures(eNB,proc,eNB->dlsch[(uint8_t)UE_id][0],eNB->dlsch[(uint8_t)UE_id][1],&eNB->UE_stats[(uint32_t)UE_id],0,num_npdcch_symbols);
 
   }
 
@@ -2135,7 +1777,7 @@ void process_HARQ_feedback(uint8_t UE_id,
               dlsch_harq_proc->round = 0;
               ue_stats->dlsch_l2_errors[dl_harq_pid[m]]++;
               dlsch_harq_proc->status = SCH_IDLE;
-              dlsch->harq_ids[dl_subframe] = dlsch->Mdlharq;
+              dlsch->harq_ids[0][dl_subframe] = dlsch->Mdlharq;
             }
           } else {
 #ifdef DEBUG_PHY_PROC
@@ -2151,7 +1793,7 @@ void process_HARQ_feedback(uint8_t UE_id,
             // Received ACK so set round to 0 and set dlsch_harq_pid IDLE
             dlsch_harq_proc->round  = 0;
             dlsch_harq_proc->status = SCH_IDLE;
-            dlsch->harq_ids[dl_subframe] = dlsch->Mdlharq;
+            dlsch->harq_ids[0][dl_subframe] = dlsch->Mdlharq;
 
             ue_stats->total_TBS = ue_stats->total_TBS +
         eNB->ndlsch[(uint8_t)UE_id][0]->harq_processes[dl_harq_pid[m]]->TBS;
@@ -2393,7 +2035,7 @@ void prach_procedures_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB) {
 
 
 
-void prach_procedures(PHY_VARS_eNB_NB_IoT *eNB) {
+void prach_procedures_NB_IoT_testing(PHY_VARS_eNB_NB_IoT *eNB) {
 
   int subframe = eNB->proc.subframe_prach;
   int frame = eNB->proc.frame_prach;
@@ -2411,7 +2053,7 @@ void prach_procedures(PHY_VARS_eNB_NB_IoT *eNB) {
   /////////////////////////////////////////// NB-IoT testing //////////////////////////
  if(detection == 1)
   {
-    mac_xface->initiate_ra_proc(eNB->Mod_id,
+    initiate_ra_proc(eNB->Mod_id,
             eNB->CC_id,
             frame,
             eNB->preamble_index_NB_IoT,
@@ -2756,10 +2398,10 @@ void pucch_procedures(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_NB_IoT_t *proc,int 
       }
 
       if (eNB->mac_enabled==1) {
-        mac_xface->SR_indication(eNB->Mod_id,
+        SR_indication(eNB->Mod_id,
                                  eNB->CC_id,
                                  frame,
-                                 eNB->ndlsch[UE_id][0]->rnti,subframe);
+                                 eNB->ndlsch[UE_id][0]->rnti,subframe,0);
       }
     }
   }
@@ -2897,7 +2539,7 @@ void cba_procedures(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_NB_IoT_t *proc,int UE
   // detect if there is a CBA collision
   if ((eNB->cba_last_reception[UE_id%num_active_cba_groups] == 0 ) && 
       (eNB->mac_enabled==1)) {
-    mac_xface->rx_sdu(eNB->Mod_id,
+    rx_sdu(eNB->Mod_id,
           eNB->CC_id,
           frame,subframe,
           eNB->ulsch[UE_id]->rnti,
@@ -2918,10 +2560,10 @@ void cba_procedures(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_NB_IoT_t *proc,int UE
 
     eNB->cba_last_reception[UE_id%num_active_cba_groups]+=1;
 
-    mac_xface->SR_indication(eNB->Mod_id,
+    SR_indication(eNB->Mod_id,
            eNB->CC_id,
            frame,
-           eNB->ndlsch[UE_id][0]->rnti,subframe);
+           eNB->ndlsch[UE_id][0]->rnti,subframe,0);
   }
       } // UNKNOWN_ACCESS
     } // ULSCH CBA not in error
@@ -2931,7 +2573,7 @@ void cba_procedures(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_NB_IoT_t *proc,int UE
 
 
 
-void phy_procedures_eNB_uespec_RX(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_NB_IoT_t *proc,const relaying_type_t r_type)
+void phy_procedures_eNB_uespec_RX_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_NB_IoT_t *proc,const relaying_type_t r_type)
 {
   //RX processing for ue-specific resources (i
   UNUSED(r_type);
@@ -3150,7 +2792,7 @@ void phy_procedures_eNB_uespec_RX(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_NB_IoT_
       eNB->ulsch[(uint32_t)i]->harq_processes[harq_pid]->delta_TF =
         get_hundred_times_delta_IF_eNB(eNB,i,harq_pid, 0); // 0 means bw_factor is not considered
 
-      eNB->UE_stats[i].ulsch_decoding_attempts[harq_pid][eNB->ulsch[i]->harq_processes[harq_pid]->round]++;
+      eNB->UE_stats[i].nulsch_decoding_attempts[harq_pid][eNB->ulsch[i]->harq_processes[harq_pid]->round]++;
 #ifdef DEBUG_PHY_PROC
       LOG_D(PHY,"[eNB %d][PUSCH %d] frame %d subframe %d UE %d harq_pid %d Clearing subframe_scheduling_flag\n",
             eNB->Mod_id,harq_pid,frame,subframe,i,harq_pid);
@@ -3216,7 +2858,7 @@ void phy_procedures_eNB_uespec_RX(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_NB_IoT_
                   eNB->Mod_id, i);
             eNB->UE_stats[i].mode = PRACH;
       if (eNB->mac_enabled==1) {
-        mac_xface->cancel_ra_proc(eNB->Mod_id,
+        cancel_ra_proc(eNB->Mod_id,
           eNB->CC_id,
           frame,
           eNB->UE_stats[i].crnti);
@@ -3236,7 +2878,7 @@ void phy_procedures_eNB_uespec_RX(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_NB_IoT_
                                &eNB->ulsch[i]->Msg3_frame,
                                &eNB->ulsch[i]->Msg3_subframe);
 
-            mac_xface->set_msg3_subframe(eNB->Mod_id, eNB->CC_id, frame, subframe, eNB->ulsch[i]->rnti,
+            set_msg3_subframe(eNB->Mod_id, eNB->CC_id, frame, subframe, eNB->ulsch[i]->rnti,
                                          eNB->ulsch[i]->Msg3_frame, eNB->ulsch[i]->Msg3_subframe);
 
             T(T_ENB_PHY_MSG3_ALLOCATION, T_INT(eNB->Mod_id), T_INT(frame), T_INT(subframe),
@@ -3283,7 +2925,7 @@ void phy_procedures_eNB_uespec_RX(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_NB_IoT_
            }*/
       // indicate error to MAC
       if (eNB->mac_enabled == 1)
-        mac_xface->rx_sdu(eNB->Mod_id,
+        rx_sdu(eNB->Mod_id,
         eNB->CC_id,
         frame,subframe,
         eNB->ulsch[i]->rnti,
@@ -3351,7 +2993,7 @@ void phy_procedures_eNB_uespec_RX(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_NB_IoT_
       eNB->Mod_id,
       frame,harq_pid,i);
       if (eNB->mac_enabled)
-        mac_xface->rx_sdu(eNB->Mod_id,
+        rx_sdu(eNB->Mod_id,
         eNB->CC_id,
         frame,subframe,
         eNB->ulsch[i]->rnti,
@@ -3363,7 +3005,7 @@ void phy_procedures_eNB_uespec_RX(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_NB_IoT_
       // one-shot msg3 detection by MAC: empty PDU (e.g. CRNTI)
       if (eNB->ulsch[i]->Msg3_flag == 0 ) {
         eNB->UE_stats[i].mode = PRACH;
-        mac_xface->cancel_ra_proc(eNB->Mod_id,
+        cancel_ra_proc(eNB->Mod_id,
           eNB->CC_id,
           frame,
           eNB->UE_stats[i].crnti);
@@ -3390,7 +3032,7 @@ void phy_procedures_eNB_uespec_RX(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_NB_IoT_
             eNB->UE_stats[i].ulsch_consecutive_errors=0;
 
             for (j=0; j<eNB->ulsch[i]->Mlimit; j++) {
-              eNB->UE_stats[i].ulsch_decoding_attempts[k][j]=0;
+              eNB->UE_stats[i].nulsch_decoding_attempts[k][j]=0;
               eNB->UE_stats[i].ulsch_decoding_attempts_last[k][j]=0;
               eNB->UE_stats[i].ulsch_round_errors[k][j]=0;
               eNB->UE_stats[i].ulsch_round_fer[k][j]=0;
@@ -3417,7 +3059,7 @@ void phy_procedures_eNB_uespec_RX(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_NB_IoT_
 
     if (eNB->mac_enabled==1) {
 
-      mac_xface->rx_sdu(eNB->Mod_id,
+      rx_sdu(eNB->Mod_id,
             eNB->CC_id,
             frame,subframe,
             eNB->ulsch[i]->rnti,
@@ -3481,7 +3123,7 @@ void phy_procedures_eNB_uespec_RX(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_NB_IoT_
             eNB->ulsch[i]->harq_processes[harq_pid]->o_ACK[0],
             eNB->ulsch[i]->harq_processes[harq_pid]->o_ACK[1],
             eNB->UE_stats[i].ulsch_errors[harq_pid],
-            eNB->UE_stats[i].ulsch_decoding_attempts[harq_pid][0]);
+            eNB->UE_stats[i].nulsch_decoding_attempts[harq_pid][0]);
 #endif
       
       // dump stats to VCD
@@ -3500,19 +3142,19 @@ void phy_procedures_eNB_uespec_RX(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_NB_IoT_
     if ((frame % 100 == 0) && (subframe == 4)) {
       for (harq_idx=0; harq_idx<8; harq_idx++) {
         for (round=0; round<eNB->ulsch[i]->Mlimit; round++) {
-          if ((eNB->UE_stats[i].ulsch_decoding_attempts[harq_idx][round] -
+          if ((eNB->UE_stats[i].nulsch_decoding_attempts[harq_idx][round] -
                eNB->UE_stats[i].ulsch_decoding_attempts_last[harq_idx][round]) != 0) {
             eNB->UE_stats[i].ulsch_round_fer[harq_idx][round] =
               (100*(eNB->UE_stats[i].ulsch_round_errors[harq_idx][round] -
                     eNB->UE_stats[i].ulsch_round_errors_last[harq_idx][round]))/
-              (eNB->UE_stats[i].ulsch_decoding_attempts[harq_idx][round] -
+              (eNB->UE_stats[i].nulsch_decoding_attempts[harq_idx][round] -
                eNB->UE_stats[i].ulsch_decoding_attempts_last[harq_idx][round]);
           } else {
             eNB->UE_stats[i].ulsch_round_fer[harq_idx][round] = 0;
           }
 
           eNB->UE_stats[i].ulsch_decoding_attempts_last[harq_idx][round] =
-            eNB->UE_stats[i].ulsch_decoding_attempts[harq_idx][round];
+            eNB->UE_stats[i].nulsch_decoding_attempts[harq_idx][round];
           eNB->UE_stats[i].ulsch_round_errors_last[harq_idx][round] =
             eNB->UE_stats[i].ulsch_round_errors[harq_idx][round];
         }

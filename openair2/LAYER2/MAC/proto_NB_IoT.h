@@ -183,7 +183,14 @@ void add_UL_Resource(void);
 int get_resource_field_value(int subcarrier, int k0);
 /*Get DL Repetition index*/
 uint8_t get_index_Rep_dl(uint16_t R);
-
+/* \brief Function to retrieve result of scheduling (DCI) in current subframe.  Can be called an arbitrary numeber of times after eNB_dlsch_ulsch_scheduler
+in a given subframe.
+@param Mod_id Instance ID of eNB
+@param CC_id Component Carrier Index
+@param subframe Index of current subframe
+@returns Pointer to generated DCI for subframe
+*/
+DCI_PDU_NB_IoT *get_dci_sdu(module_id_t module_idP,int CC_id,frame_t frameP,sub_frame_t subframe);
 /*******DL Scheduler********/
 //void schedule_DL_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_inst, UE_TEMPLATE_NB_IoT *UE_info, uint32_t hyperSF_start, uint32_t frame_start, uint32_t subframe_start);
 int check_resource_NPDCCH_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, uint32_t hyperSF_start, uint32_t frame_start, uint32_t subframe_start, sched_temp_DL_NB_IoT_t *NPDCCH_info, uint32_t cdd_num, uint32_t dci_rep);
