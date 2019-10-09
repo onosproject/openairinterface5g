@@ -49,7 +49,7 @@
 int Irep_to_Nrep_x[16] = {1,2,4,8,16,32,64,128,192,256,384,512,768,1024,1536,2048};
 
 
-void handle_nfapi_dlsch_pdu_NB_IoT(PHY_VARS_eNB *eNB,
+void handle_nfapi_dlsch_pdu_NB_IoT(PHy_vars_eNB_NB_IoT *eNB,
 						  		   eNB_rxtx_proc_NB_IoT_t *proc,
 		       	   	   	           nfapi_dl_config_request_pdu_t *dl_config_pdu,
 						   		   uint8_t *sdu)

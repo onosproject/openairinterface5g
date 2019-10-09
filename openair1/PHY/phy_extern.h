@@ -50,6 +50,8 @@ extern LTE_DL_FRAME_PARMS *lte_frame_parms_g;
 extern PHY_VARS_eNB * PHY_vars_eNB_g[MAX_eNB][MAX_NUM_CCs];
 #endif
 
+
+
 extern short primary_synch0[144];
 extern short primary_synch1[144];
 extern short primary_synch2[144];

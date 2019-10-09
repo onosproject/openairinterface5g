@@ -1302,8 +1302,8 @@ void fill_rx_indication_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_NB_IoT_t *
            
             pdu                                    = &eNB->UL_INFO.RX_NPUSCH.rx_pdu_list[0];
             pdu->rx_ue_information.rnti            = eNB->ulsch_NB_IoT[0]->rnti;
-            pdu->rx_indication_rel8.length         = eNB->ulsch_NB_IoT[0]->harq_processes->TBS; //eNB->ulsch_NB_IoT[0]->harq_process->TBS>>3;
-            pdu->data                              = eNB->ulsch_NB_IoT[0]->harq_processes->b;
+            pdu->rx_indication_rel8.length         = eNB->ulsch_NB_IoT[0]->harq_processes.TBS; //eNB->ulsch_NB_IoT[0]->harq_process->TBS>>3;
+            pdu->data                              = eNB->ulsch_NB_IoT[0]->harq_processes.b;
 
       } else {             // format 2
 

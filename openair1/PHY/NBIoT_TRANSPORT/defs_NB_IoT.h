@@ -185,7 +185,6 @@ typedef struct {
   /// Sub-block interleaver outputs
   uint8_t               w[3*3*(MAX_TBS_DL_SIZE_BITS_NB_IoT+24)];      // new parameter
 
-
   /// Status Flag indicating for this DLSCH (idle,active,disabled)
   //SCH_status_t status;
   /// Transport block size
@@ -547,7 +546,7 @@ typedef struct {
   ///in NB-IoT there is only 1 HARQ process for each UE therefore no pid is required///
   /// The only HARQ process for the DLSCH
   NB_IoT_DL_eNB_HARQ_t    *harq_processes[8];
-
+  NB_IoT_DL_eNB_HARQ_t    *harq_process;
   // NB_IoT_DL_eNB_SIB1_t    harq_process_sib1;
 
   SCH_status_NB_IoT_t     status;
@@ -738,12 +737,19 @@ typedef struct {
   uint16_t              I_sc; 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+  
+  /// First Allocated RB - previous scheduling
+  /// This is needed for PHICH generation which
+  /// is done after a new scheduling
+  uint16_t previous_first_rb;
+
 } NB_IoT_UL_eNB_HARQ_t;
 
 
 typedef struct {
   /// Pointers to the HARQ processes for the NULSCH
   NB_IoT_UL_eNB_HARQ_t    *harq_processes[8];
+  NB_IoT_UL_eNB_HARQ_t    *harq_process;
   /// Maximum number of HARQ rounds
   uint8_t                 Mlimit;
   /// Value 0 = npush format 1 (data) value 1 = npusch format 2 (ACK/NAK)

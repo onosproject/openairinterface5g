@@ -31,6 +31,7 @@
 #include "PHY/defs_eNB.h"
 #include "PHY/defs_UE.h"
 #include "LTE_TDD-Config.h"
+#include "PHY/defs_L1_NB_IoT.h"
 /*! \brief Function to compute subframe Number(DL and S) as a function of Frame type and TDD Configuration
   @param frame_parms Pointer to DL frame parameter descriptor
   @returns Subframe Number (DL,S)
@@ -39,7 +40,7 @@ int subframe_num(LTE_DL_FRAME_PARMS *frame_parms);
 
 
 ///////// NB_IoT testing ///////////////////////////
-void prach_procedures_NB_IoT(PHY_VARS_eNB *eNB);
+void prach_procedures_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB);
 ///////////////////////////////////////////////////
 
 /*! \brief Function to compute subframe type as a function of Frame type and TDD Configuration (implements Table 4.2.2 from 36.211, p.11 from version 8.6) and subframe index.
@@ -252,8 +253,8 @@ TDD, this routine computes the procedure described in Section 10.1 of 36.213 (th
 @param n1_pucch2 Pointer to n1_pucch2
 @param n1_pucch3 Pointer to n1_pucch3
 */
-void get_n1_pucch_eNB(PHY_VARS_eNB *phy_vars_eNB,
-		      L1_rxtx_proc_t *proc,
+void get_n1_pucch_eNB(PHY_VARS_eNB_NB_IoT *phy_vars_eNB,
+		      eNB_rxtx_proc_NB_IoT_t *proc,
                       uint8_t UE_id,
                       int16_t *n1_pucch0,
                       int16_t *n1_pucch1,
@@ -271,8 +272,8 @@ void get_n1_pucch_eNB(PHY_VARS_eNB *phy_vars_eNB,
   @param SR_payload Indication of SR presence (TDD specific)
 */
 void process_HARQ_feedback(uint8_t UE_id,
-                           PHY_VARS_eNB *phy_vars_eNB,
-			   L1_rxtx_proc_t *proc,
+                           PHY_VARS_eNB_NB_IoT *phy_vars_eNB,
+			   eNB_rxtx_proc_NB_IoT_t *proc,
                            uint8_t pusch_flag,
                            uint8_t *pucch_payload,
                            uint8_t pucch_sel,
