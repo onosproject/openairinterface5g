@@ -29,6 +29,18 @@
  * \note
  * \warning
  */
+
+/*! \function isip_ulsch_decoding_data
+ * \brief Implementation of turbo decoder paralleling
+ * \author YT Liao (Yuan-Te), TY Hsu, TH Wang(Judy)
+ * \date 2019
+ * \version 0.1
+ * \company ISIP@NCTU and Eurecom
+ * \email: ytliao.cs97g@nctu.edu.tw, tyhsu@cs.nctu.edu.tw, Tsu-Han.Wang@eurecom.fr
+ * \note
+ * \warning
+ */
+
 #ifndef __LTE_TRANSPORT_PROTO__H__
 #define __LTE_TRANSPORT_PROTO__H__
 #include "PHY/defs.h"
@@ -1902,6 +1914,12 @@ int ulsch_decoding_data(PHY_VARS_eNB *eNB,
                         int UE_id,
                         int harq_pid,
                         int llr8_flag);
+
+int isip_ulsch_decoding_data(PHY_VARS_eNB *eNB,
+                             int UE_id,
+                             int harq_pid,
+                             int llr8_flag,
+                             int current_thread_num);
 
 uint32_t ulsch_decoding_emul(PHY_VARS_eNB *phy_vars_eNB,
                              eNB_rxtx_proc_t *proc,

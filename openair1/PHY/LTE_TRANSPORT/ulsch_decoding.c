@@ -30,6 +30,17 @@
 * \warning
 */
 
+/*! \function isip_ulsch_decoding_data
+ * \brief Implementation of turbo decoder paralleling
+ * \author YT Liao (Yuan-Te), TY Hsu, TH Wang(Judy)
+ * \date 2019
+ * \version 0.1
+ * \company ISIP@NCTU and Eurecom
+ * \email: ytliao.cs97g@nctu.edu.tw, tyhsu@cs.nctu.edu.tw, Tsu-Han.Wang@eurecom.fr
+ * \note
+ * \warning
+ */
+
 //#include "defs.h"
 
 #include "PHY/defs.h"
@@ -810,6 +821,231 @@ int ulsch_decoding_data(PHY_VARS_eNB *eNB,int UE_id,int harq_pid,int llr8_flag) 
   }
 
   return(ret);
+}
+
+// ISIP Turbo Decoder
+int isip_ulsch_decoding_data(PHY_VARS_eNB *eNB, int UE_id, int harq_pid, int llr8_flag, int current_thread_num)
+{
+
+  unsigned int r, r_offset = 0, Kr, Kr_bytes, iind;
+  uint8_t crc_type;
+  int offset = 0;
+  // int ret = 1;
+  int ret = 0;
+  int16_t dummy_w[MAX_NUM_ULSCH_SEGMENTS][3 * (6144 + 64)];
+  LTE_eNB_ULSCH_t *ulsch = eNB->ulsch[UE_id];
+  LTE_UL_eNB_HARQ_t *ulsch_harq = ulsch->harq_processes[harq_pid];
+  //int Q_m = get_Qm_ul(ulsch_harq->mcs);
+  int G = ulsch_harq->G;
+  unsigned int E;
+
+  uint8_t (*tc)(int16_t * y,
+                uint8_t *,
+                uint16_t,
+                uint16_t,
+                uint16_t,
+                uint8_t,
+                uint8_t,
+                uint8_t,
+                time_stats_t *,
+                time_stats_t *,
+                time_stats_t *,
+                time_stats_t *,
+                time_stats_t *,
+                time_stats_t *,
+                time_stats_t *);
+
+  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_ENB_ISIP_THREAD0 + current_thread_num, 1);
+
+  if (llr8_flag == 0)
+    tc = phy_threegpplte_turbo_decoder16;
+  else
+    tc = phy_threegpplte_turbo_decoder8;
+
+  // for (r = 0; r < ulsch_harq->C; r++)
+  for (r = (ulsch_harq->C * current_thread_num) / (ISIP_TURBO_THREAD_NUM); r < (ulsch_harq->C * (current_thread_num + 1)) / (ISIP_TURBO_THREAD_NUM); r++)
+  {
+
+    //    printf("before subblock deinterleaving c[%d] = %p\n",r,ulsch_harq->c[r]);
+    // Get Turbo interleaver parameters
+    if (r < ulsch_harq->Cminus)
+      Kr = ulsch_harq->Kminus;
+    else
+      Kr = ulsch_harq->Kplus;
+
+    Kr_bytes = Kr >> 3;
+
+    if (Kr_bytes <= 64)
+      iind = (Kr_bytes - 5);
+    else if (Kr_bytes <= 128)
+      iind = 59 + ((Kr_bytes - 64) >> 1);
+    else if (Kr_bytes <= 256)
+      iind = 91 + ((Kr_bytes - 128) >> 2);
+    else if (Kr_bytes <= 768)
+      iind = 123 + ((Kr_bytes - 256) >> 3);
+    else
+    {
+      LOG_E(PHY, "ulsch_decoding: Illegal codeword size %d!!!\n", Kr_bytes);
+      return (-1);
+    }
+
+#ifdef DEBUG_ULSCH_DECODING
+    printf("[ISIP %d]f1 %d, f2 %d, F %d\n", current_thread_num, f1f2mat_old[2 * iind], f1f2mat_old[1 + (2 * iind)], (r == 0) ? ulsch_harq->F : 0);
+#endif
+
+    memset(&dummy_w[r][0], 0, 3 * (6144 + 64) * sizeof(short));
+    ulsch_harq->RTC[r] = generate_dummy_w(4 + (Kr_bytes * 8),
+                                          (uint8_t *)&dummy_w[r][0],
+                                          (r == 0) ? ulsch_harq->F : 0);
+
+#ifdef DEBUG_ULSCH_DECODING
+    printf("[ISIP %d]Rate Matching Segment %d (coded bits (G) %d,unpunctured/repeated bits %d, Q_m %d, nb_rb %d, Nl %d)...\n",
+           current_thread_num, r, G,
+           Kr * 3,
+           Q_m,
+           nb_rb,
+           ulsch_harq->Nl);
+#endif
+
+    start_meas(&eNB->ulsch_rate_unmatching_stats);
+
+    if (r == (ulsch_harq->C * current_thread_num) / (ISIP_TURBO_THREAD_NUM))
+    {
+      r_offset = r * E;
+    }
+
+    VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_ISIP_THREAD_TEST0 + current_thread_num, 1);
+
+    if (lte_rate_matching_turbo_rx(ulsch_harq->RTC[r],
+                                   G,
+                                   ulsch_harq->w[r],
+                                   (uint8_t *)&dummy_w[r][0],
+                                   ulsch_harq->e + r_offset,
+                                   ulsch_harq->C,
+                                   NSOFT,
+                                   0, //Uplink
+                                   1,
+                                   ulsch_harq->rvidx,
+                                   (ulsch_harq->round == 0) ? 1 : 0, // clear
+                                   get_Qm_ul(ulsch_harq->mcs),
+                                   1,
+                                   r,
+                                   &E) == -1)
+    {
+      LOG_E(PHY, "ulsch_decoding.c: Problem in rate matching\n");
+      return (-1);
+    }
+
+    VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_ISIP_THREAD_TEST0 + current_thread_num, 0);
+
+    stop_meas(&eNB->ulsch_rate_unmatching_stats);
+    r_offset += E;
+
+    start_meas(&eNB->ulsch_deinterleaving_stats);
+    sub_block_deinterleaving_turbo(4 + Kr,
+                                   &ulsch_harq->d[r][96],
+                                   ulsch_harq->w[r]);
+    stop_meas(&eNB->ulsch_deinterleaving_stats);
+
+    if (ulsch_harq->C == 1)
+      crc_type = CRC24_A;
+    else
+      crc_type = CRC24_B;
+
+    // start_meas(&eNB->ulsch_turbo_decoding_stats);
+    start_meas(&eNB->isip_ulsch_turbo_decoding_stats[current_thread_num]);
+
+    // printf("[Thread %d] ulsch_harq->F = %d \n\n", current_thread_num,ulsch_harq->F);
+
+    ret = tc(&ulsch_harq->d[r][96],
+             ulsch_harq->c[r],
+             Kr,
+             f1f2mat_old[iind * 2],
+             f1f2mat_old[(iind * 2) + 1],
+             ulsch->max_turbo_iterations, //MAX_TURBO_ITERATIONS,
+             crc_type,
+             (r == 0) ? ulsch_harq->F : 0,
+             &eNB->ulsch_tc_init_stats[current_thread_num],
+             &eNB->ulsch_tc_alpha_stats[current_thread_num],
+             &eNB->ulsch_tc_beta_stats[current_thread_num],
+             &eNB->ulsch_tc_gamma_stats[current_thread_num],
+             &eNB->ulsch_tc_ext_stats[current_thread_num],
+             &eNB->ulsch_tc_intl1_stats[current_thread_num],
+             &eNB->ulsch_tc_intl2_stats[current_thread_num]);
+
+    // stop_meas(&eNB->ulsch_turbo_decoding_stats);
+    stop_meas(&eNB->isip_ulsch_turbo_decoding_stats[current_thread_num]);
+
+    // Reassembly of Transport block here
+
+    if (ret != (1 + ulsch->max_turbo_iterations))
+    {
+      if (r < ulsch_harq->Cminus)
+        Kr = ulsch_harq->Kminus;
+      else
+        Kr = ulsch_harq->Kplus;
+
+      Kr_bytes = Kr >> 3;
+
+      // if (r == 0)
+      // {
+      //   memcpy(ulsch_harq->b,
+      //          &ulsch_harq->c[0][(ulsch_harq->F >> 3)],
+      //          Kr_bytes - (ulsch_harq->F >> 3) - ((ulsch_harq->C > 1) ? 3 : 0));
+      //   offset = Kr_bytes - (ulsch_harq->F >> 3) - ((ulsch_harq->C > 1) ? 3 : 0);
+      // }
+      // else
+      // {
+      //   memcpy(ulsch_harq->b + offset,
+      //          ulsch_harq->c[r],
+      //          Kr_bytes - ((ulsch_harq->C > 1) ? 3 : 0));
+      //   offset += (Kr_bytes - ((ulsch_harq->C > 1) ? 3 : 0));
+      // }
+      if (r == (ulsch_harq->C * current_thread_num) / (ISIP_TURBO_THREAD_NUM))
+      {
+        //fprintf(fp, "First... \n");
+        if (r == 0)
+        {
+          // fprintf(fp, "r = %d, ulsch_harq->b = %d, offset = %d, harq_pid = %d \n", r, ulsch_harq->b, offset, harq_pid);
+          memcpy(ulsch_harq->b,
+                 &ulsch_harq->c[0][(ulsch_harq->F >> 3)],
+                 Kr_bytes - (ulsch_harq->F >> 3) - ((ulsch_harq->C > 1) ? 3 : 0));
+          offset = Kr_bytes - (ulsch_harq->F >> 3) - ((ulsch_harq->C > 1) ? 3 : 0);
+          
+        }
+        else
+        {
+          offset = Kr_bytes - (ulsch_harq->F >> 3) - ((ulsch_harq->C > 1) ? 3 : 0) + (r - 1) * (Kr_bytes - ((ulsch_harq->C > 1) ? 3 : 0));
+          // fprintf(fp, "r = %d, ulsch_harq->b = %d, offset = %d, harq_pid = %d \n", r, ulsch_harq->b, offset, harq_pid);
+          memcpy(ulsch_harq->b + offset,
+                 ulsch_harq->c[r],
+                 Kr_bytes - ((ulsch_harq->C > 1) ? 3 : 0));
+          offset += (Kr_bytes - ((ulsch_harq->C > 1) ? 3 : 0));
+          
+        }
+      }
+      else
+      {
+        // TODO:    offset for parallelizing
+        /*
+        if (r)
+        */
+        // fprintf(fp, "r = %d, ulsch_harq->b = %d, offset = %d, harq_pid = %d \n", r, ulsch_harq->b, offset, harq_pid);
+        memcpy(ulsch_harq->b + offset,
+               ulsch_harq->c[r],
+               Kr_bytes - ((ulsch_harq->C > 1) ? 3 : 0));
+        offset += (Kr_bytes - ((ulsch_harq->C > 1) ? 3 : 0));
+        
+      }
+    }
+    else
+    {
+      break;
+    }
+  }
+  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_ENB_ISIP_THREAD0 + current_thread_num, 0);
+
+  return (ret);
 }
 
 static inline unsigned int lte_gold_unscram(unsigned int *x1, unsigned int *x2, unsigned char reset) __attribute__((always_inline));
@@ -1604,11 +1840,94 @@ unsigned int  ulsch_decoding(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,
 #endif
   }
 
-
   // Do ULSCH Decoding for data portion
+  // Original OAI Code
+  // ret = eNB->td(eNB,UE_id,harq_pid,llr8_flag); 
 
-  ret = eNB->td(eNB,UE_id,harq_pid,llr8_flag);
+  // ISIP Turbo Decoder Parallel Start
 
+  int isip_thread_cnt;
+  int16_t isip_turbo_complete_status = 0;
+  int turbo_complete = (1 << ISIP_TURBO_THREAD_NUM) - 1;
+
+  start_meas(&eNB->isip_turbo_stats);
+
+  for (isip_thread_cnt = 0; isip_thread_cnt < ISIP_TURBO_THREAD_NUM; isip_thread_cnt++)
+  {
+    eNB->isip_turbo_thread[isip_thread_cnt].thread_id = isip_thread_cnt;
+    eNB->isip_turbo_thread[isip_thread_cnt].UE_id = UE_id;         // ISIP Thread
+    eNB->isip_turbo_thread[isip_thread_cnt].harq_pid = harq_pid;   // ISIP Thread
+    eNB->isip_turbo_thread[isip_thread_cnt].llr8_flag = llr8_flag; // ISIP Thread
+    eNB->isip_turbo_thread[isip_thread_cnt].eNB = eNB;             // ISIP Thread
+    eNB->isip_turbo_thread[isip_thread_cnt].flag_done = 0;
+
+    pthread_cond_signal(&eNB->isip_turbo_thread[isip_thread_cnt].cond_rx); // ISIP Thread
+  }
+
+  start_meas(&eNB->isip_wait_loop);
+  do
+  {
+#if (ISIP_TURBO_THREAD_NUM == 1)
+    isip_turbo_complete_status = eNB->isip_turbo_thread[0].flag_done;
+#elif (ISIP_TURBO_THREAD_NUM == 2)
+    isip_turbo_complete_status = eNB->isip_turbo_thread[0].flag_done | eNB->isip_turbo_thread[1].flag_done;
+#elif (ISIP_TURBO_THREAD_NUM == 3)
+    isip_turbo_complete_status = eNB->isip_turbo_thread[0].flag_done | eNB->isip_turbo_thread[1].flag_done | eNB->isip_turbo_thread[2].flag_done;
+#elif (ISIP_TURBO_THREAD_NUM == 4)
+    isip_turbo_complete_status = eNB->isip_turbo_thread[0].flag_done | eNB->isip_turbo_thread[1].flag_done | eNB->isip_turbo_thread[2].flag_done | eNB->isip_turbo_thread[3].flag_done;
+#elif (ISIP_TURBO_THREAD_NUM == 5)
+    isip_turbo_complete_status = eNB->isip_turbo_thread[0].flag_done | eNB->isip_turbo_thread[1].flag_done | eNB->isip_turbo_thread[2].flag_done | eNB->isip_turbo_thread[3].flag_done | eNB->isip_turbo_thread[4].flag_done;
+#elif (ISIP_TURBO_THREAD_NUM == 6)
+    isip_turbo_complete_status = eNB->isip_turbo_thread[0].flag_done | eNB->isip_turbo_thread[1].flag_done | eNB->isip_turbo_thread[2].flag_done | eNB->isip_turbo_thread[3].flag_done | eNB->isip_turbo_thread[4].flag_done | eNB->isip_turbo_thread[5].flag_done;
+#elif (ISIP_TURBO_THREAD_NUM == 7)
+    isip_turbo_complete_status = eNB->isip_turbo_thread[0].flag_done | eNB->isip_turbo_thread[1].flag_done | eNB->isip_turbo_thread[2].flag_done | eNB->isip_turbo_thread[3].flag_done | eNB->isip_turbo_thread[4].flag_done | eNB->isip_turbo_thread[5].flag_done | eNB->isip_turbo_thread[6].flag_done;
+#elif (ISIP_TURBO_THREAD_NUM == 8)
+    isip_turbo_complete_status = eNB->isip_turbo_thread[0].flag_done | eNB->isip_turbo_thread[1].flag_done | eNB->isip_turbo_thread[2].flag_done | eNB->isip_turbo_thread[3].flag_done | eNB->isip_turbo_thread[4].flag_done | eNB->isip_turbo_thread[5].flag_done | eNB->isip_turbo_thread[6].flag_done | eNB->isip_turbo_thread[7].flag_done;
+#elif (ISIP_TURBO_THREAD_NUM == 9)
+    isip_turbo_complete_status = eNB->isip_turbo_thread[0].flag_done | eNB->isip_turbo_thread[1].flag_done | eNB->isip_turbo_thread[2].flag_done | eNB->isip_turbo_thread[3].flag_done | eNB->isip_turbo_thread[4].flag_done | eNB->isip_turbo_thread[5].flag_done | eNB->isip_turbo_thread[6].flag_done | eNB->isip_turbo_thread[7].flag_done | eNB->isip_turbo_thread[8].flag_done;
+#elif (ISIP_TURBO_THREAD_NUM == 10)
+    isip_turbo_complete_status = eNB->isip_turbo_thread[0].flag_done | eNB->isip_turbo_thread[1].flag_done | eNB->isip_turbo_thread[2].flag_done | eNB->isip_turbo_thread[3].flag_done | eNB->isip_turbo_thread[4].flag_done | eNB->isip_turbo_thread[5].flag_done | eNB->isip_turbo_thread[6].flag_done | eNB->isip_turbo_thread[7].flag_done | eNB->isip_turbo_thread[8].flag_done | eNB->isip_turbo_thread[9].flag_done;
+#elif (ISIP_TURBO_THREAD_NUM == 11)
+    isip_turbo_complete_status = eNB->isip_turbo_thread[0].flag_done | eNB->isip_turbo_thread[1].flag_done | eNB->isip_turbo_thread[2].flag_done | eNB->isip_turbo_thread[3].flag_done | eNB->isip_turbo_thread[4].flag_done | eNB->isip_turbo_thread[5].flag_done | eNB->isip_turbo_thread[6].flag_done | eNB->isip_turbo_thread[7].flag_done | eNB->isip_turbo_thread[8].flag_done | eNB->isip_turbo_thread[9].flag_done | eNB->isip_turbo_thread[10].flag_done;
+#elif (ISIP_TURBO_THREAD_NUM == 12)
+    isip_turbo_complete_status = eNB->isip_turbo_thread[0].flag_done | eNB->isip_turbo_thread[1].flag_done | eNB->isip_turbo_thread[2].flag_done | eNB->isip_turbo_thread[3].flag_done | eNB->isip_turbo_thread[4].flag_done | eNB->isip_turbo_thread[5].flag_done | eNB->isip_turbo_thread[6].flag_done | eNB->isip_turbo_thread[7].flag_done | eNB->isip_turbo_thread[8].flag_done | eNB->isip_turbo_thread[9].flag_done | eNB->isip_turbo_thread[10].flag_done | eNB->isip_turbo_thread[11].flag_done;
+#elif (ISIP_TURBO_THREAD_NUM == 13)
+    isip_turbo_complete_status = eNB->isip_turbo_thread[0].flag_done | eNB->isip_turbo_thread[1].flag_done | eNB->isip_turbo_thread[2].flag_done | eNB->isip_turbo_thread[3].flag_done | eNB->isip_turbo_thread[4].flag_done | eNB->isip_turbo_thread[5].flag_done | eNB->isip_turbo_thread[6].flag_done | eNB->isip_turbo_thread[7].flag_done | eNB->isip_turbo_thread[8].flag_done | eNB->isip_turbo_thread[9].flag_done | eNB->isip_turbo_thread[10].flag_done | eNB->isip_turbo_thread[11].flag_done | eNB->isip_turbo_thread[12].flag_done;
+#endif
+  } while (isip_turbo_complete_status != turbo_complete); 
+  
+  stop_meas(&eNB->isip_wait_loop);
+
+#if (ISIP_TURBO_THREAD_NUM == 1)
+  ret = eNB->isip_turbo_thread[0].ret;
+#elif (ISIP_TURBO_THREAD_NUM == 2)
+  ret = eNB->isip_turbo_thread[0].ret | eNB->isip_turbo_thread[1].ret;
+#elif (ISIP_TURBO_THREAD_NUM == 3)
+  ret = eNB->isip_turbo_thread[0].ret | eNB->isip_turbo_thread[1].ret | eNB->isip_turbo_thread[2].ret;
+#elif (ISIP_TURBO_THREAD_NUM == 4)
+  ret = eNB->isip_turbo_thread[0].ret | eNB->isip_turbo_thread[1].ret | eNB->isip_turbo_thread[2].ret | eNB->isip_turbo_thread[3].ret;
+#elif (ISIP_TURBO_THREAD_NUM == 5)
+  ret = eNB->isip_turbo_thread[0].ret | eNB->isip_turbo_thread[1].ret | eNB->isip_turbo_thread[2].ret | eNB->isip_turbo_thread[3].ret | eNB->isip_turbo_thread[4].ret;
+#elif (ISIP_TURBO_THREAD_NUM == 6)
+  ret = eNB->isip_turbo_thread[0].ret | eNB->isip_turbo_thread[1].ret | eNB->isip_turbo_thread[2].ret | eNB->isip_turbo_thread[3].ret | eNB->isip_turbo_thread[4].ret | eNB->isip_turbo_thread[5].ret;
+#elif (ISIP_TURBO_THREAD_NUM == 7)
+  ret = eNB->isip_turbo_thread[0].ret | eNB->isip_turbo_thread[1].ret | eNB->isip_turbo_thread[2].ret | eNB->isip_turbo_thread[3].ret | eNB->isip_turbo_thread[4].ret | eNB->isip_turbo_thread[5].ret | eNB->isip_turbo_thread[6].ret;
+#elif (ISIP_TURBO_THREAD_NUM == 8)
+  ret = eNB->isip_turbo_thread[0].ret | eNB->isip_turbo_thread[1].ret | eNB->isip_turbo_thread[2].ret | eNB->isip_turbo_thread[3].ret | eNB->isip_turbo_thread[4].ret | eNB->isip_turbo_thread[5].ret | eNB->isip_turbo_thread[6].ret | eNB->isip_turbo_thread[7].ret;
+#elif (ISIP_TURBO_THREAD_NUM == 9)
+  ret = eNB->isip_turbo_thread[0].ret | eNB->isip_turbo_thread[1].ret | eNB->isip_turbo_thread[2].ret | eNB->isip_turbo_thread[3].ret | eNB->isip_turbo_thread[4].ret | eNB->isip_turbo_thread[5].ret | eNB->isip_turbo_thread[6].ret | eNB->isip_turbo_thread[7].ret | eNB->isip_turbo_thread[8].ret;
+#elif (ISIP_TURBO_THREAD_NUM == 10)
+  ret = eNB->isip_turbo_thread[0].ret | eNB->isip_turbo_thread[1].ret | eNB->isip_turbo_thread[2].ret | eNB->isip_turbo_thread[3].ret | eNB->isip_turbo_thread[4].ret | eNB->isip_turbo_thread[5].ret | eNB->isip_turbo_thread[6].ret | eNB->isip_turbo_thread[7].ret | eNB->isip_turbo_thread[8].ret | eNB->isip_turbo_thread[9].ret;
+#elif (ISIP_TURBO_THREAD_NUM == 11)
+  ret = eNB->isip_turbo_thread[0].ret | eNB->isip_turbo_thread[1].ret | eNB->isip_turbo_thread[2].ret | eNB->isip_turbo_thread[3].ret | eNB->isip_turbo_thread[4].ret | eNB->isip_turbo_thread[5].ret | eNB->isip_turbo_thread[6].ret | eNB->isip_turbo_thread[7].ret | eNB->isip_turbo_thread[8].ret | eNB->isip_turbo_thread[9].ret | eNB->isip_turbo_thread[10].ret;
+#elif (ISIP_TURBO_THREAD_NUM == 12)
+  ret = eNB->isip_turbo_thread[0].ret | eNB->isip_turbo_thread[1].ret | eNB->isip_turbo_thread[2].ret | eNB->isip_turbo_thread[3].ret | eNB->isip_turbo_thread[4].ret | eNB->isip_turbo_thread[5].ret | eNB->isip_turbo_thread[6].ret | eNB->isip_turbo_thread[7].ret | eNB->isip_turbo_thread[8].ret | eNB->isip_turbo_thread[9].ret | eNB->isip_turbo_thread[10].ret | eNB->isip_turbo_thread[11].ret;
+#elif (ISIP_TURBO_THREAD_NUM == 13)
+  ret = eNB->isip_turbo_thread[0].ret | eNB->isip_turbo_thread[1].ret | eNB->isip_turbo_thread[2].ret | eNB->isip_turbo_thread[3].ret | eNB->isip_turbo_thread[4].ret | eNB->isip_turbo_thread[5].ret | eNB->isip_turbo_thread[6].ret | eNB->isip_turbo_thread[7].ret | eNB->isip_turbo_thread[8].ret | eNB->isip_turbo_thread[9].ret | eNB->isip_turbo_thread[10].ret | eNB->isip_turbo_thread[11].ret | eNB->isip_turbo_thread[12].ret;
+#endif
+  
+  stop_meas(&eNB->isip_turbo_stats);
+// Turbo Decoding Paralleling End
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_ENB_ULSCH_DECODING0+harq_pid,0);
 
   return(ret);

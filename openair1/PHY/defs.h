@@ -29,6 +29,17 @@
  \note
  \warning
 */
+
+/* \brief variable define for turbo decoder paralleling
+ * \author YT Liao (Yuan-Te), TY Hsu, TH Wang(Judy)
+ * \date 2019
+ * \version 0.1
+ * \company ISIP@NCTU and Eurecom
+ * \email: ytliao.cs97g@nctu.edu.tw, tyhsu@cs.nctu.edu.tw, Tsu-Han.Wang@eurecom.fr
+ * \note
+ * \warning
+ */
+
 #ifndef __PHY_DEFS__H__
 #define __PHY_DEFS__H__
 
@@ -76,6 +87,7 @@
 #define RX_NB_TH_MAX 2
 #define RX_NB_TH 2
 
+#define ISIP_TURBO_THREAD_NUM 13
 
 //#ifdef SHRLIBDEV
 //extern int rxrescale;
@@ -457,6 +469,24 @@ typedef struct {
   UE_rxtx_proc_t proc_rxtx[RX_NB_TH];
 } UE_proc_t;
 
+// ISIP TURBO THREAD
+typedef struct
+{
+  struct PHY_VARS_eNB_s *eNB;
+  int thread_id;
+  volatile int flag_wait;
+  volatile int flag_done;
+  pthread_t pthread_rx;
+  pthread_cond_t cond_rx;
+  pthread_mutex_t mutex_rx;
+  pthread_attr_t attr_turbo;
+  int UE_id;
+  int harq_pid;
+  int llr8_flag;
+  int ret;
+  //int current_cnt;
+} isip_turbo;
+
 /// Top-level PHY Data Structure for eNB
 typedef struct PHY_VARS_eNB_s {
   /// Module ID indicator for this instance
@@ -653,13 +683,23 @@ typedef struct PHY_VARS_eNB_s {
   time_stats_t ulsch_deinterleaving_stats;
   time_stats_t ulsch_demultiplexing_stats;
   time_stats_t ulsch_llr_stats;
-  time_stats_t ulsch_tc_init_stats;
-  time_stats_t ulsch_tc_alpha_stats;
-  time_stats_t ulsch_tc_beta_stats;
-  time_stats_t ulsch_tc_gamma_stats;
-  time_stats_t ulsch_tc_ext_stats;
-  time_stats_t ulsch_tc_intl1_stats;
-  time_stats_t ulsch_tc_intl2_stats;
+  // time_stats_t ulsch_tc_init_stats;
+  // time_stats_t ulsch_tc_alpha_stats;
+  // time_stats_t ulsch_tc_beta_stats;
+  // time_stats_t ulsch_tc_gamma_stats;
+  // time_stats_t ulsch_tc_ext_stats;
+  // time_stats_t ulsch_tc_intl1_stats;
+  // time_stats_t ulsch_tc_intl2_stats;
+  time_stats_t ulsch_tc_init_stats[ISIP_TURBO_THREAD_NUM];
+  time_stats_t ulsch_tc_alpha_stats[ISIP_TURBO_THREAD_NUM];
+  time_stats_t ulsch_tc_beta_stats[ISIP_TURBO_THREAD_NUM];
+  time_stats_t ulsch_tc_gamma_stats[ISIP_TURBO_THREAD_NUM];
+  time_stats_t ulsch_tc_ext_stats[ISIP_TURBO_THREAD_NUM];
+  time_stats_t ulsch_tc_intl1_stats[ISIP_TURBO_THREAD_NUM];
+  time_stats_t ulsch_tc_intl2_stats[ISIP_TURBO_THREAD_NUM];
+  time_stats_t isip_turbo_stats;
+  time_stats_t isip_ulsch_turbo_decoding_stats[ISIP_TURBO_THREAD_NUM];
+  time_stats_t isip_wait_loop;
 
 #ifdef LOCALIZATION
   /// time state for localization
@@ -682,6 +722,9 @@ typedef struct PHY_VARS_eNB_s {
   openair0_device ifdevice;
   /// Pointer for ifdevice buffer struct
   if_buffer_t ifbuffer;
+
+  //isip turbo thread
+  isip_turbo isip_turbo_thread[ISIP_TURBO_THREAD_NUM];
 
 } PHY_VARS_eNB;
 
