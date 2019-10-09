@@ -114,8 +114,9 @@ NR_gNB_DLSCH_t *new_gNB_dlsch(unsigned char Kmimo,
 
 
 int nr_generate_csi_rs(uint32_t **gold_csi_rs,
-                       int32_t *txdataF,
+                       int32_t **txdataF,
+                       int16_t amp,
                        NR_DL_FRAME_PARMS frame_parms,
-                       nfapi_nr_config_request_t config);
+                       nfapi_nr_csi_rs_pdu_t csi_params);
 
 #endif /*__NR_TRANSPORT__H__*/

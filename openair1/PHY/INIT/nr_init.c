@@ -175,13 +175,14 @@ int phy_init_nr_gNB(PHY_VARS_gNB *gNB,
   /// Transport init necessary for NR synchro
   init_nr_transport(gNB);
 
-  gNB->first_run_I0_measurements =
-    1; ///This flag used to be static. With multiple gNBs this does no longer work, hence we put it in the structure. However it has to be initialized with 1, which is performed here.
-  common_vars->rxdata  = (int32_t **)malloc16(15*sizeof(int32_t*));
-  common_vars->txdataF = (int32_t **)malloc16(15*sizeof(int32_t*));
-  common_vars->rxdataF = (int32_t **)malloc16(15*sizeof(int32_t*));
+  ///This flag used to be static. With multiple gNBs this does no longer work, hence we put it in the structure. However it has to be initialized with 1, which is performed here.
+  gNB->first_run_I0_measurements = 1; 
 
-  for (i=0;i<15;i++){
+  common_vars->rxdata  = (int32_t **)malloc16(32*sizeof(int32_t*));
+  common_vars->txdataF = (int32_t **)malloc16(32*sizeof(int32_t*));
+  common_vars->rxdataF = (int32_t **)malloc16(32*sizeof(int32_t*));
+
+  for (i=0;i<32;i++){
       common_vars->txdataF[i] = (int32_t*)malloc16_clear(fp->samples_per_frame_wCP*sizeof(int32_t)); // [hna] samples_per_frame without CP
       common_vars->rxdataF[i] = (int32_t*)malloc16_clear(fp->samples_per_frame_wCP*sizeof(int32_t));
       common_vars->rxdata[i] = (int32_t*)malloc16_clear(fp->samples_per_frame*sizeof(int32_t));
@@ -317,7 +318,7 @@ void phy_free_nr_gNB(PHY_VARS_gNB *gNB)
   LTE_eNB_PRACH *const prach_vars    = &gNB->prach_vars;*/
   uint32_t ***pdcch_dmrs             = gNB->nr_gold_pdcch_dmrs;
 
-  for (int i = 0; i < 15; i++) {
+  for (int i = 0; i < 32; i++) {
     free_and_zero(common_vars->txdataF[i]);
     /* rxdataF[i] is not allocated -> don't free */
   }
