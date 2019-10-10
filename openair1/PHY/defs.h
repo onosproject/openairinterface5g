@@ -725,7 +725,8 @@ typedef struct PHY_VARS_eNB_s {
 
   //isip turbo thread
   isip_turbo isip_turbo_thread[ISIP_TURBO_THREAD_NUM];
-
+  unsigned int isip_turbo_thread_status;
+  
 } PHY_VARS_eNB;
 
 #define debug_msg if (((mac_xface->frame%100) == 0) || (mac_xface->frame < 50)) msg
