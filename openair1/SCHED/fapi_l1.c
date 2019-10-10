@@ -675,36 +675,61 @@ void handle_nfapi_ul_pdu(PHY_VARS_eNB *eNB,L1_rxtx_proc_t *proc,
   if (ul_config_pdu->pdu_type == NFAPI_UL_CONFIG_ULSCH_PDU_TYPE) {
     //if (UE_id == find_ulsch(ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.rnti,eNB,SEARCH_EXIST_OR_FREE)<0)
     //for (int i=0;i<16;i++) if (eNB->ulsch[i]->harq_mask>0) LOG_I(PHY,"rnti %x, mask %x\n",eNB->ulsch[i]->rnti,eNB->ulsch[i]->harq_mask >0);
-    AssertFatal((UE_id = find_ulsch(ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.rnti,eNB,SEARCH_EXIST_OR_FREE))>=0,
-                "No existing UE ULSCH for rnti %x\n",rel8->rnti);
+    //AssertFatal((UE_id = find_ulsch(ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.rnti,eNB,SEARCH_EXIST_OR_FREE))>=0,
+    //            "No existing UE ULSCH for rnti %x\n",rel8->rnti);
+    UE_id = find_ulsch(ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.rnti,eNB,SEARCH_EXIST_OR_FREE);
+    if(UE_id < 0) {
+      LOG_E(PHY,"No existing UE ULSCH for rnti %x\n",rel8->rnti);
+      return;
+    }
     LOG_D(PHY,"Applying UL config for UE %d, rnti %x for frame %d, subframe %d, modulation %d, rvidx %d, first_rb %d, nb_rb %d\n", UE_id,rel8->rnti,frame,subframe,rel8->modulation_type,
           rel8->redundancy_version,
           rel8->resource_block_start,rel8->number_of_resource_blocks);
     fill_ulsch(eNB,UE_id,&ul_config_pdu->ulsch_pdu,frame,subframe);
   } else if (ul_config_pdu->pdu_type == NFAPI_UL_CONFIG_ULSCH_HARQ_PDU_TYPE) {
-    AssertFatal((UE_id = find_ulsch(ul_config_pdu->ulsch_harq_pdu.ulsch_pdu.ulsch_pdu_rel8.rnti,eNB,SEARCH_EXIST_OR_FREE))>=0,
-                "No available UE ULSCH for rnti %x\n",ul_config_pdu->ulsch_harq_pdu.ulsch_pdu.ulsch_pdu_rel8.rnti);
+    //AssertFatal((UE_id = find_ulsch(ul_config_pdu->ulsch_harq_pdu.ulsch_pdu.ulsch_pdu_rel8.rnti,eNB,SEARCH_EXIST_OR_FREE))>=0,
+    //            "No available UE ULSCH for rnti %x\n",ul_config_pdu->ulsch_harq_pdu.ulsch_pdu.ulsch_pdu_rel8.rnti);
+    UE_id = find_ulsch(ul_config_pdu->ulsch_harq_pdu.ulsch_pdu.ulsch_pdu_rel8.rnti,eNB,SEARCH_EXIST_OR_FREE);
+    if(UE_id < 0) {
+      LOG_E(PHY,"No available UE ULSCH for rnti %x\n",ul_config_pdu->ulsch_harq_pdu.ulsch_pdu.ulsch_pdu_rel8.rnti);
+      return;
+    }
     fill_ulsch(eNB,UE_id,&ul_config_pdu->ulsch_harq_pdu.ulsch_pdu,frame,subframe);
     handle_ulsch_harq_pdu(eNB, UE_id, ul_config_pdu,
                           &ul_config_pdu->ulsch_harq_pdu.harq_information, frame, subframe);
   } else if (ul_config_pdu->pdu_type == NFAPI_UL_CONFIG_ULSCH_CQI_RI_PDU_TYPE) {
-    AssertFatal((UE_id = find_ulsch(ul_config_pdu->ulsch_cqi_ri_pdu.ulsch_pdu.ulsch_pdu_rel8.rnti,
-                                    eNB,SEARCH_EXIST_OR_FREE))>=0,
-                "No available UE ULSCH for rnti %x\n",ul_config_pdu->ulsch_cqi_ri_pdu.ulsch_pdu.ulsch_pdu_rel8.rnti);
+    //AssertFatal((UE_id = find_ulsch(ul_config_pdu->ulsch_cqi_ri_pdu.ulsch_pdu.ulsch_pdu_rel8.rnti,
+    //                                eNB,SEARCH_EXIST_OR_FREE))>=0,
+    //            "No available UE ULSCH for rnti %x\n",ul_config_pdu->ulsch_cqi_ri_pdu.ulsch_pdu.ulsch_pdu_rel8.rnti);
+    UE_id = find_ulsch(ul_config_pdu->ulsch_cqi_ri_pdu.ulsch_pdu.ulsch_pdu_rel8.rnti,eNB,SEARCH_EXIST_OR_FREE);
+    if(UE_id < 0) {
+      LOG_E(PHY,"No available UE ULSCH for rnti %x\n",ul_config_pdu->ulsch_cqi_ri_pdu.ulsch_pdu.ulsch_pdu_rel8.rnti);
+      return;
+    }
     fill_ulsch(eNB,UE_id,&ul_config_pdu->ulsch_cqi_ri_pdu.ulsch_pdu,frame,subframe);
     handle_ulsch_cqi_ri_pdu(eNB,UE_id,ul_config_pdu,frame,subframe);
   } else if (ul_config_pdu->pdu_type == NFAPI_UL_CONFIG_ULSCH_CQI_HARQ_RI_PDU_TYPE) {
-    AssertFatal((UE_id = find_ulsch(ul_config_pdu->ulsch_cqi_harq_ri_pdu.ulsch_pdu.ulsch_pdu_rel8.rnti,
-                                    eNB,SEARCH_EXIST_OR_FREE))>=0,
-                "No available UE ULSCH for rnti %x\n",ul_config_pdu->ulsch_cqi_harq_ri_pdu.ulsch_pdu.ulsch_pdu_rel8.rnti);
+    //AssertFatal((UE_id = find_ulsch(ul_config_pdu->ulsch_cqi_harq_ri_pdu.ulsch_pdu.ulsch_pdu_rel8.rnti,
+    //                                eNB,SEARCH_EXIST_OR_FREE))>=0,
+    //            "No available UE ULSCH for rnti %x\n",ul_config_pdu->ulsch_cqi_harq_ri_pdu.ulsch_pdu.ulsch_pdu_rel8.rnti);
+    UE_id = find_ulsch(ul_config_pdu->ulsch_cqi_harq_ri_pdu.ulsch_pdu.ulsch_pdu_rel8.rnti,eNB,SEARCH_EXIST_OR_FREE);
+    if(UE_id < 0) {
+      LOG_E(PHY,"No available UE ULSCH for rnti %x\n",ul_config_pdu->ulsch_cqi_harq_ri_pdu.ulsch_pdu.ulsch_pdu_rel8.rnti);
+      return;
+    }
     fill_ulsch(eNB,UE_id,&ul_config_pdu->ulsch_cqi_harq_ri_pdu.ulsch_pdu,frame,subframe);
     handle_ulsch_cqi_harq_ri_pdu(eNB,UE_id,ul_config_pdu,frame,subframe);
     handle_ulsch_harq_pdu(eNB, UE_id, ul_config_pdu,
                           &ul_config_pdu->ulsch_cqi_harq_ri_pdu.harq_information, frame, subframe);
   } else if (ul_config_pdu->pdu_type == NFAPI_UL_CONFIG_UCI_HARQ_PDU_TYPE) {
-    AssertFatal((UE_id = find_uci(ul_config_pdu->uci_harq_pdu.ue_information.ue_information_rel8.rnti,
-                                  proc->frame_tx,proc->subframe_tx,eNB,SEARCH_EXIST_OR_FREE))>=0,
-                "No available UE UCI for rnti %x\n",ul_config_pdu->uci_harq_pdu.ue_information.ue_information_rel8.rnti);
+    //AssertFatal((UE_id = find_uci(ul_config_pdu->uci_harq_pdu.ue_information.ue_information_rel8.rnti,
+    //                              proc->frame_tx,proc->subframe_tx,eNB,SEARCH_EXIST_OR_FREE))>=0,
+    //            "No available UE UCI for rnti %x\n",ul_config_pdu->uci_harq_pdu.ue_information.ue_information_rel8.rnti);
+    UE_id = find_uci(ul_config_pdu->uci_harq_pdu.ue_information.ue_information_rel8.rnti,proc->frame_tx,proc->subframe_tx,eNB,SEARCH_EXIST_OR_FREE);
+    if(UE_id < 0) {
+      LOG_E(PHY,"No available UE UCI for rnti %x\n",ul_config_pdu->uci_harq_pdu.ue_information.ue_information_rel8.rnti);
+      return;
+    }
     LOG_D(PHY,"Applying UL UCI_HARQ config for UE %d, rnti %x for frame %d, subframe %d\n",
           UE_id,ul_config_pdu->uci_harq_pdu.ue_information.ue_information_rel8.rnti,frame,subframe);
     handle_uci_harq_pdu(eNB,UE_id,ul_config_pdu,frame,subframe,srs_present);
@@ -715,13 +740,23 @@ void handle_nfapi_ul_pdu(PHY_VARS_eNB *eNB,L1_rxtx_proc_t *proc,
   } else if (ul_config_pdu->pdu_type == NFAPI_UL_CONFIG_UCI_CQI_SR_PDU_TYPE) {
     AssertFatal(1==0,"NFAPI_UL_CONFIG_UCI_CQI_SR_PDU_TYPE not handled yet\n");
   } else if (ul_config_pdu->pdu_type == NFAPI_UL_CONFIG_UCI_SR_PDU_TYPE) {
-    AssertFatal((UE_id = find_uci(ul_config_pdu->uci_sr_pdu.ue_information.ue_information_rel8.rnti,
-                                  proc->frame_tx,proc->subframe_tx,eNB,SEARCH_EXIST_OR_FREE))>=0,
-                "No available UE UCI for rnti %x\n",ul_config_pdu->uci_sr_pdu.ue_information.ue_information_rel8.rnti);
+    //AssertFatal((UE_id = find_uci(ul_config_pdu->uci_sr_pdu.ue_information.ue_information_rel8.rnti,
+    //                              proc->frame_tx,proc->subframe_tx,eNB,SEARCH_EXIST_OR_FREE))>=0,
+    //            "No available UE UCI for rnti %x\n",ul_config_pdu->uci_sr_pdu.ue_information.ue_information_rel8.rnti);
+    UE_id = find_uci(ul_config_pdu->uci_sr_pdu.ue_information.ue_information_rel8.rnti,proc->frame_tx,proc->subframe_tx,eNB,SEARCH_EXIST_OR_FREE);
+    if(UE_id < 0) {
+      LOG_E(PHY,"No available UE UCI for rnti %x\n",ul_config_pdu->uci_sr_pdu.ue_information.ue_information_rel8.rnti);
+      return;
+    }
     handle_uci_sr_pdu(eNB,UE_id,ul_config_pdu,frame,subframe,srs_present);
   } else if (ul_config_pdu->pdu_type == NFAPI_UL_CONFIG_UCI_SR_HARQ_PDU_TYPE) {
-    AssertFatal((UE_id = find_uci(rel8->rnti,proc->frame_tx,proc->subframe_tx,eNB,SEARCH_EXIST_OR_FREE))>=0,
-                "No available UE UCI for rnti %x\n",ul_config_pdu->uci_sr_harq_pdu.ue_information.ue_information_rel8.rnti);
+    //AssertFatal((UE_id = find_uci(rel8->rnti,proc->frame_tx,proc->subframe_tx,eNB,SEARCH_EXIST_OR_FREE))>=0,
+    //            "No available UE UCI for rnti %x\n",ul_config_pdu->uci_sr_harq_pdu.ue_information.ue_information_rel8.rnti);
+    UE_id = find_uci(rel8->rnti,proc->frame_tx,proc->subframe_tx,eNB,SEARCH_EXIST_OR_FREE);
+    if(UE_id < 0) {
+      LOG_E(PHY,"No available UE UCI for rnti %x\n",rel8->rnti);
+      return;
+    }
     handle_uci_sr_harq_pdu(eNB,UE_id,ul_config_pdu,frame,subframe,srs_present);
   } else if (ul_config_pdu->pdu_type == NFAPI_UL_CONFIG_SRS_PDU_TYPE) {
     handle_srs_pdu(eNB,ul_config_pdu,frame,subframe);
