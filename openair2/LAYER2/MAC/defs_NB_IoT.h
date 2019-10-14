@@ -21,6 +21,7 @@
 #include "PHY/defs_L1_NB_IoT.h"
 #include "openair2/PHY_INTERFACE/IF_Module_NB_IoT.h"
 #include "config_NB_IoT.h"
+#include "LAYER2/MAC/mac.h"
 //  MAC definition
 //#define MAX_FRAME 0xfffff
 //#define NUM_FRAME 0x100000
@@ -559,6 +560,9 @@ typedef struct eNB_MAC_INST_NB_IoT_s{
   int32_t sibs_table[256];
 
   //  channel config
+
+  /// Common cell resources
+  COMMON_channels_t common_channels[MAX_NUM_CCs];
 
   //USS list
   //Number of USS period is used

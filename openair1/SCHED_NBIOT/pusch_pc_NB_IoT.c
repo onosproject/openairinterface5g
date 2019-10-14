@@ -49,16 +49,16 @@ int16_t get_hundred_times_delta_IF_eNB_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,uint8_t U
   DevAssert( UE_id < NUMBER_OF_UE_MAX_NB_IoT+1 );
   DevAssert( harq_pid < 8 );
 
-  Nre = eNB->nulsch[UE_id]->harq_process->Nsymb_initial *
-        eNB->nulsch[UE_id]->harq_process->nb_rb*12;
+  Nre = eNB->ulsch_NB_IoT[UE_id]->harq_process->Nsymb_initial *
+        eNB->ulsch_NB_IoT[UE_id]->harq_process->nb_rb*12;
 
   sumKr = 0;
 
-  for (r=0; r<eNB->nulsch[UE_id]->harq_process->C; r++) {
-    if (r<eNB->nulsch[UE_id]->harq_process->Cminus)
-      Kr = eNB->nulsch[UE_id]->harq_process->Kminus;
+  for (r=0; r<eNB->ulsch_NB_IoT[UE_id]->harq_process->C; r++) {
+    if (r<eNB->ulsch_NB_IoT[UE_id]->harq_process->Cminus)
+      Kr = eNB->ulsch_NB_IoT[UE_id]->harq_process->Kminus;
     else
-      Kr = eNB->nulsch[UE_id]->harq_process->Kplus;
+      Kr = eNB->ulsch_NB_IoT[UE_id]->harq_process->Kplus;
 
     sumKr += Kr;
   }
@@ -80,7 +80,7 @@ int16_t get_hundred_times_delta_IF_eNB_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,uint8_t U
   if (eNB->ul_power_control_dedicated[UE_id].deltaMCS_Enabled == 1) {
     // This is the formula from Section 5.1.1.1 in 36.213 10*log10(deltaIF_PUSCH = (2^(MPR*Ks)-1)*beta_offset_pusch)
     if (bw_factor == 1) {
-      uint8_t nb_rb = eNB->nulsch[UE_id]->harq_process->nb_rb;
+      uint8_t nb_rb = eNB->ulsch_NB_IoT[UE_id]->harq_process->nb_rb;
       return(hundred_times_delta_TF_NB_IoT[MPR_x100/6]+10*dB_fixed_times10((beta_offset_pusch)>>3)) + hundred_times_log10_NPRB_NB_IoT[nb_rb-1];
     } else
       return(hundred_times_delta_TF_NB_IoT[MPR_x100/6]+10*dB_fixed_times10((beta_offset_pusch)>>3));

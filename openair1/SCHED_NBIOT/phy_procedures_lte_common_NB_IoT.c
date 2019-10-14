@@ -1094,14 +1094,14 @@ int8_t find_ue(uint16_t rnti, PHY_VARS_eNB *eNB)
   return(-1);
 }
 */
-int8_t find_ue_NB_IoT(uint16_t rnti, PHY_VARS_eNB *eNB)
+int8_t find_ue_NB_IoT(uint16_t rnti, PHY_VARS_eNB_NB_IoT *eNB)
 {
 
   uint8_t i;
 
   for (i=0; i<NUMBER_OF_UE_MAX_NB_IoT; i++) {
     if ((eNB->ndlsch[i]) &&
-        (eNB->ndlsch[i]->rnti==rnti)) {
+        (eNB->ndlsch[i][0]->rnti==rnti)) {
       return(i);
     }
   }

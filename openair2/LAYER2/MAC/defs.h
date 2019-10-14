@@ -980,6 +980,7 @@ typedef struct {
 } UE_list_t;
 
 /*! \brief eNB common channels */
+/*
 typedef struct {
   int                              physCellId;
   int                              p_eNB;
@@ -1046,7 +1047,9 @@ typedef struct {
   BCCH_PDU BCCH_BR_pdu[20];
 #endif
 } COMMON_channels_t;
+*/
 /*! \brief top level eNB MAC structure */
+/*
 typedef struct eNB_MAC_INST_s {
   /// Ethernet parameters for northbound midhaul interface
   eth_params_t         eth_params_n;
@@ -1119,7 +1122,7 @@ typedef struct eNB_MAC_INST_s {
   /// processing time of eNB ULSCH reception
   time_stats_t rx_ulsch_sdu; // include rlc_data_ind
 } eNB_MAC_INST_nb_iot;
-
+*/
 /*
  * UE part
  */

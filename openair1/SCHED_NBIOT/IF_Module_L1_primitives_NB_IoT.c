@@ -235,7 +235,7 @@ void handle_nfapi_dlsch_pdu_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,
 	  	  //AssertFatal(UE_id==-1,"no existing ue specific dlsch_context\n");
 
 	  	  ndlsch           = eNB->ndlsch[(uint8_t)UE_id];
-	  	  ndlsch_harq      = eNB->ndlsch[(uint8_t)UE_id]->harq_process;
+	  	  ndlsch_harq      = eNB->ndlsch[(uint8_t)UE_id][0]->harq_process;
 	  	  AssertFatal(ndlsch_harq!=NULL,"dlsch_harq for ue specific is null\n");
 
           ndlsch->active   = 1;
@@ -322,16 +322,16 @@ void schedule_response_NB_IoT(Sched_Rsp_NB_IoT_t *Sched_INFO)
   {
 	  if(eNB->ndlsch[i])
 	  {
-		  eNB->ndlsch[i]->harq_process->round=0; // may not needed
+		  eNB->ndlsch[i][0]->harq_process->round=0; // may not needed
 		  /*clear previous allocation information for all UEs*/
-		  eNB->ndlsch[i]->subframe_tx[subframe] = 0;
+		  eNB->ndlsch[i][0]->subframe_tx[subframe] = 0;
 	  }
 
 	  /*clear the DCI allocation maps for new subframe*/
-	  if(eNB->nulsch[i])
+	  if(eNB->ulsch_NB_IoT[i])
 	  {
-		  eNB->nulsch[i]->harq_process->dci_alloc = 0; //flag for indicating that a DCI has been allocated for UL
-		  eNB->nulsch[i]->harq_process->rar_alloc = 0; //Flag indicating that this ULSCH has been allocated by a RAR (for Msg3)
+		  eNB->ulsch_NB_IoT[i]->harq_process->dci_alloc = 0; //flag for indicating that a DCI has been allocated for UL
+		  eNB->ulsch_NB_IoT[i]->harq_process->rar_alloc = 0; //Flag indicating that this ULSCH has been allocated by a RAR (for Msg3)
 		  //no phich for NB-IoT so no DMRS should be utilized
 	  }
 
