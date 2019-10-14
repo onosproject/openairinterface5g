@@ -2,16 +2,15 @@
 /*! \file config_NB_IoT.h
  * \brief configured structures used by scheduler
  * \author  NTUST BMW Lab./
- * \date 2017
+ * \date 2019
  * \email: 
- * \version 1.0
+ * \version 2.0
+
  *
  */
 
 #ifndef _CONFIG_H_
 #define _CONFIG_H_
-
-//#include "NB_IoT_Message_definitions.h"
 
 #define NUMBER_OF_SIBS_MAX_NB_IoT 6
 
@@ -22,6 +21,7 @@ typedef enum operationModeInf{
     guardband_r13               = 3,
     standalone_r13              = 4
 } operationModeInf_t;
+
 
 ///SIB1_SchedulingInfo_NB_IoT_r13
 typedef enum si_Periodicity{
@@ -51,14 +51,14 @@ typedef enum sib_MappingInfo{
 } sib_MappingInfo_NB_IoT;
 
 typedef enum si_TB{
-    si_TB_56=2,
-    si_TB_120=2,
-    si_TB_208=8,
-    si_TB_256=8,
-    si_TB_328=8,
-    si_TB_440=8,
-    si_TB_552=8,
-    si_TB_680=8
+    si_TB_56=0,
+    si_TB_120,
+    si_TB_208,
+    si_TB_256,
+    si_TB_328,
+    si_TB_440,
+    si_TB_552,
+    si_TB_680
 } si_TB_NB_IoT;
 
 ///RACH_ConfigCommon configuration
@@ -92,7 +92,7 @@ typedef enum nprach_Periodicity{
     nprach_Periodicity_ms80=80,
     nprach_Periodicity_ms160=160,
     nprach_Periodicity_ms240=240,
-	nprach_Periodicity_ms320=320,
+    nprach_Periodicity_ms320=320,
     nprach_Periodicity_ms640=640,
     nprach_Periodicity_ms1280=1280,
     nprach_Periodicity_ms2560=2560
@@ -202,7 +202,7 @@ typedef enum si_periodicity_e{
     rf128=1280,
     rf256=2560,
     rf512=5120,
-	rf1024=10240,
+    rf1024=10240,
     rf2048=20480,
     rf4096=40960
 } si_periodicity_t;
@@ -210,7 +210,7 @@ typedef enum si_periodicity_e{
 typedef enum si_repetition_pattern_e{
     every2ndRF=20,
     every4thRF=40,
-	every8thRF=80,
+    every8thRF=80,
     every16thRF=160
 } si_repetition_pattern_t;
 
@@ -225,13 +225,11 @@ typedef enum si_tb_e{
     b680=8
 } si_tb_t;
 
-
 typedef struct sibs_NB_IoT_sched_s{
-	si_periodicity_t si_periodicity;
+    si_periodicity_t si_periodicity;
     si_repetition_pattern_t si_repetition_pattern;
     sib_MappingInfo_NB_IoT sib_mapping_info;   //bit vector
     si_tb_t si_tb;
-
 } sibs_NB_IoT_sched_t;
 
 

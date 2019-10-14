@@ -54,6 +54,7 @@ typedef struct{
 	uint16_t npdcch_Offset_USS; //Alfa_offset (see TS 36.213 ch 16.6)
 
 
+
 	LTE_ACK_NACK_NumRepetitions_NB_r13_t *ack_nack_numRepetitions_MSG4; //pointer to the first cell of a list of ack_nack_num_repetitions
 
     //ulPowerControlCommon (UE side)
@@ -137,7 +138,9 @@ typedef struct{
 
  	/*preamble part*/
 
- 	nfapi_nrach_indication_body_t NRACH;
+
+ 	nfapi_nrach_indication_body_t nrach_ind;
+
 
  	/*Uplink data part*/
 
@@ -182,13 +185,16 @@ typedef struct{
 }Sched_Rsp_NB_IoT_t;
 
 
+
 /*IF_Module_t a group for gathering the Interface
 It should be allocated at the main () in lte-softmodem.c*/
 typedef struct IF_Module_NB_IoT_s{
+
 	//define the function pointer
 	void (*UL_indication)(UL_IND_NB_IoT_t *UL_INFO);
 	void (*schedule_response)(Sched_Rsp_NB_IoT_t *Sched_INFO);
 	void (*PHY_config_req)(PHY_Config_NB_IoT_t* config_INFO);
+
 }IF_Module_NB_IoT_t;
 
 /*Initial */
@@ -201,15 +207,19 @@ void schedule_response_NB_IoT(Sched_Rsp_NB_IoT_t *Sched_INFO);
  * */
 void PHY_config_req_NB_IoT(PHY_Config_NB_IoT_t* config_INFO);
 
+
 //int IF_Module_init(IF_Module_t *if_inst);
 
 /*Interface for Downlink, transmitting the DLSCH SDU, DCI SDU*/
 //void Schedule_Response_NB_IoT(Sched_Rsp_NB_IoT_t *Sched_INFO);
 
+
 /*Interface for uplink, transmitting the Preamble(list), ULSCH SDU, NAK, Tick (trigger scheduler)
 */
 void UL_indication_NB_IoT(UL_IND_NB_IoT_t *UL_INFO);
 
+
+/*Initial */
 IF_Module_NB_IoT_t *IF_Module_init_NB_IoT(int Mod_id);
 
 #endif

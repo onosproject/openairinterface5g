@@ -33,7 +33,9 @@
 #ifndef __PHY_IMPL_DEFS_NB_IOT__H__
 #define __PHY_IMPL_DEFS_NB_IOT__H__
 
-#include "types_NB_IoT.h"
+#include "types.h"
+
+//#include "types_NB_IoT.h"
 //#include "defs.h"
 
 typedef enum {TDD_NB_IoT=1,FDD_NB_IoT=0} NB_IoT_frame_type_t;
@@ -278,7 +280,9 @@ typedef struct {
   int32_t freq_offset;
   /// eNb_id user is synched to
   int32_t eNb_id;
+
 } NB_IoT_UE_COMMON;
+
 
 typedef struct {
   /// \brief Received frequency-domain signal after extraction.
@@ -400,7 +404,9 @@ typedef struct NPRACH_Parameters_NB_IoT{
 } nprach_parameters_NB_IoT_t;
 
 typedef struct{
-  nprach_parameters_NB_IoT_t list[3];
+
+ nprach_parameters_NB_IoT_t list[3];
+
 }NPRACH_List_NB_IoT_t;
 
 typedef long RSRP_Range_t;
@@ -415,7 +421,7 @@ typedef struct {
   /// nprach_CP_Length_r13, for the CP length(unit us) only 66.7 and 266.7 is implemented
   uint16_t nprach_CP_Length;
   /// The criterion for UEs to select a NPRACH resource. Up to 2 RSRP threshold values can be signalled.  \vr{[1..2]}
-  rsrp_ThresholdsNPrachInfoList *rsrp_ThresholdsPrachInfoList;
+  struct rsrp_ThresholdsNPrachInfoList *rsrp_ThresholdsPrachInfoList;
   /// NPRACH Parameters List
   NPRACH_List_NB_IoT_t nprach_ParametersList;
 
@@ -469,7 +475,9 @@ typedef struct {
   /// Ref signals configuration
   UL_REFERENCE_SIGNALS_NPUSCH_t ul_ReferenceSignalsNPUSCH;
 
+
 } NPUSCH_CONFIG_COMMON;
+
 
 
 typedef struct{
@@ -489,18 +497,32 @@ typedef struct {
 	uint16_t	 dl_GapDurationCoeff;
 } DL_GapConfig_NB_IoT;
 
+
+
 #define NBIOT_INBAND_LTEPCI 0
 #define NBIOT_INBAND_IOTPCI 1
 #define NBIOT_INGUARD       2
 #define NBIOT_STANDALONE    3
 
-
 typedef struct {
-  /// for inband, lte bandwidth
-  uint8_t LTE_N_RB_DL;
-  uint8_t LTE_N_RB_UL;
+
+  /// Frame type (0 FDD, 1 TDD)
+  NB_IoT_frame_type_t frame_type;
+  /// Number of resource blocks (RB) in DL of the LTE (for knowing the bandwidth)
+  uint8_t N_RB_DL;
+  /// Number of resource blocks (RB) in UL of the LTE ((for knowing the bandwidth)
+  uint8_t N_RB_UL;
+  /// TDD subframe assignment (0-7) (default = 3) (254=RX only, 255=TX only)
+  uint8_t tdd_config;
   /// Cell ID
   uint16_t Nid_cell;
+  /// Cyclic Prefix for DL (0=Normal CP, 1=Extended CP)
+  NB_IoT_prefix_type_t Ncp;
+  /// Cyclic Prefix for UL (0=Normal CP, 1=Extended CP)
+  NB_IoT_prefix_type_t Ncp_UL;
+
+
+
   /// shift of pilot position in one RB
   uint8_t nushift;
   /// indicates if node is a UE (NODE=2) or eNB (PRIMARY_CH=0).
@@ -528,7 +550,9 @@ typedef struct {
   /// flag to indicate SISO transmission
   uint8_t mode1_flag;
   /// Indicator that 20 MHz channel uses 3/4 sampling frequency
-  //uint8_t threequarter_fs;
+
+  uint8_t threequarter_fs;
+
   /// Size of FFT
   uint16_t ofdm_symbol_size;
   /// Number of prefix samples in all but first symbol of slot
@@ -582,6 +606,7 @@ typedef struct {
    * 3 =stand alone
    */
   uint16_t operating_mode;
+
   /*
    * Only for In-band operating mode with same PCI
    * its measured in number of OFDM symbols
@@ -607,20 +632,58 @@ typedef struct {
 } NB_IoT_DL_FRAME_PARMS;
 
 typedef struct {
-  /// \brief Pointers (dynamic) to the received data in the time domain.
-  /// - first index: rx antenna [0..nb_antennas_rx]
-  /// - second index: ? [0..2*ofdm_symbol_size*frame_parms->symbols_per_tti]
-  int32_t **rxdata;
-  /// \brief Pointers (dynamic) to the received data in the frequency domain.
-  /// - first index: rx antenna [0..nb_antennas_rx[
-  /// - second index: ? [0..2*ofdm_symbol_size*frame_parms->symbols_per_tti]
-  int32_t **rxdataF;
+
+  /// \brief Holds the transmit data in time domain.
+  /// For IFFT_FPGA this points to the same memory as PHY_vars->rx_vars[a].RX_DMA_BUFFER.
+  /// - first index: eNB id [0..2] (hard coded)
+  /// - second index: tx antenna [0..nb_antennas_tx[
+  /// - third index:
+  int32_t **txdata[3];
+
   /// \brief holds the transmit data in the frequency domain.
   /// For IFFT_FPGA this points to the same memory as PHY_vars->rx_vars[a].RX_DMA_BUFFER. //?
   /// - first index: eNB id [0..2] (hard coded)
   /// - second index: tx antenna [0..14[ where 14 is the total supported antenna ports.
   /// - third index: sample [0..]
-  int32_t **txdataF; 
+
+  int32_t **txdataF[3];
+  /// \brief holds the transmit data after beamforming in the frequency domain.
+  /// For IFFT_FPGA this points to the same memory as PHY_vars->rx_vars[a].RX_DMA_BUFFER. //?
+  /// - first index: eNB id [0..2] (hard coded)
+  /// - second index: tx antenna [0..nb_antennas_tx[
+  /// - third index: sample [0..]
+  int32_t **txdataF_BF[3];
+  /// \brief Holds the received data in time domain.
+  /// Should point to the same memory as PHY_vars->rx_vars[a].RX_DMA_BUFFER.
+  /// - first index: sector id [0..2] (hard coded)
+  /// - second index: rx antenna [0..nb_antennas_rx[
+  /// - third index: sample [0..]
+  int32_t **rxdata[3];
+  /// \brief Holds the last subframe of received data in time domain after removal of 7.5kHz frequency offset.
+  /// - first index: secotr id [0..2] (hard coded)
+  /// - second index: rx antenna [0..nb_antennas_rx[
+  /// - third index: sample [0..samples_per_tti[
+  int32_t **rxdata_7_5kHz[3];
+  /// \brief Holds the received data in the frequency domain.
+  /// - first index: sector id [0..2] (hard coded)
+  /// - second index: rx antenna [0..nb_antennas_rx[
+  /// - third index: ? [0..2*ofdm_symbol_size*frame_parms->symbols_per_tti[
+  int32_t **rxdataF[3];
+  /// \brief Holds output of the sync correlator.
+  /// - first index: sector id [0..2] (hard coded)
+  /// - second index: sample [0..samples_per_tti*10[
+  uint32_t *sync_corr[3];
+  /// \brief Holds the beamforming weights
+  /// - first index: eNB id [0..2] (hard coded)
+  /// - second index: eNB antenna port index (hard coded)
+  /// - third index: tx antenna [0..nb_antennas_tx[
+  /// - fourth index: sample [0..]
+  int32_t **beam_weights[3][15];
+  /// \brief Holds the tdd reciprocity calibration coefficients
+  /// - first index: eNB id [0..2] (hard coded)
+  /// - second index: tx antenna [0..nb_antennas_tx[
+  /// - third index: frequency [0..]
+  int32_t **tdd_calib_coeffs[3];
 } NB_IoT_eNB_COMMON;
 
 typedef struct {
@@ -644,6 +707,7 @@ typedef struct {
   /// - first index: sample [0..samples_per_tti*10[
   uint32_t *sync_corr[3];
 } NB_IoT_RU_COMMON;
+
 
 typedef struct {
   /// \brief Hold the channel estimates in frequency domain based on SRS.

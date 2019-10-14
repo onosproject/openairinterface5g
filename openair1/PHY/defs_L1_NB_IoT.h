@@ -19,7 +19,7 @@
  *      contact@openairinterface.org
  */
 
-/*! \file PHY/defs.h
+/*! \file PHY/defs_L1_NB_IoT.h
  \brief Top-level defines and structure definitions
  \author R. Knopp, F. Kaltenberger
  \date 2011
@@ -74,52 +74,6 @@
 #define openair_free(y,x) free((y))
 #define PAGE_SIZE 4096
 
-//#ifdef SHRLIBDEV
-//extern int rxrescale;
-//#define RX_IQRESCALELEN rxrescale
-//#else
-//#define RX_IQRESCALELEN 15
-//#endif
-
-//! \brief Allocate \c size bytes of memory on the heap with alignment 16 and zero it afterwards.
-//! If no more memory is available, this function will terminate the program with an assertion error.
-//******************************************************************************************************
-/*
-static inline void* malloc16_clear( size_t size )
-{
-#ifdef __AVX2__
-  void* ptr = memalign(32, size);
-#else
-  void* ptr = memalign(16, size);
-#endif
-  DevAssert(ptr);
-  memset( ptr, 0, size );
-  return ptr;
-}
-
-*/
-
-
-// #define PAGE_MASK 0xfffff000
-// #define virt_to_phys(x) (x)
-
-// #define openair_sched_exit() exit(-1)
-
-
-// #define max(a,b)  ((a)>(b) ? (a) : (b))
-// #define min(a,b)  ((a)<(b) ? (a) : (b))
-
-
-// #define bzero(s,n) (memset((s),0,(n)))
-
-// #define cmax(a,b)  ((a>b) ? (a) : (b))
-// #define cmin(a,b)  ((a<b) ? (a) : (b))
-
-// #define cmax3(a,b,c) ((cmax(a,b)>c) ? (cmax(a,b)) : (c))
-
-// /// suppress compiler warning for unused arguments
-// #define UNUSED(x) (void)x;
-
 
 #include "PHY/impl_defs_top_NB_IoT.h"
 //#include "impl_defs_top.h"
@@ -127,17 +81,17 @@ static inline void* malloc16_clear( size_t size )
 #include "PHY/impl_defs_lte_NB_IoT.h"
 
 #include "PHY/TOOLS/time_meas.h"
+#include "PHY/TOOLS/time_meas_NB_IoT.h"
 //#include "PHY/CODING/defs.h"
+#include "defs_common.h"
 #include "PHY/CODING/defs_NB_IoT.h"
 #include "openair2/PHY_INTERFACE/IF_Module_NB_IoT.h"
 //#include "PHY/TOOLS/defs.h"
 //#include "platform_types.h"
-///#include "openair1/PHY/LTE_TRANSPORT/defs_nb_iot.h"
 
-////////////////////////////////////////////////////////////////////#ifdef OPENAIR_LTE    (check if this is required)
 
 //#include "PHY/LTE_TRANSPORT/defs.h"
-#include "PHY/LTE_TRANSPORT/defs_NB_IoT.h"
+#include "PHY/NBIoT_TRANSPORT/defs_NB_IoT.h"
 #include <pthread.h>
 
 #include "targets/ARCH/COMMON/common_lib.h"
@@ -164,6 +118,7 @@ enum transmission_access_mode {
   SCHEDULED_ACCESS,
   CBA_ACCESS};
 
+
 typedef enum  {
   eNodeB_3GPP=0,   // classical eNodeB function
   eNodeB_3GPP_BBU, // eNodeB with NGFI IF5
@@ -172,6 +127,7 @@ typedef enum  {
   NGFI_RRU_IF5,    // NGFI_RRU (NGFI remote radio-unit,IF5)
   NGFI_RRU_IF4p5   // NGFI_RRU (NGFI remote radio-unit,IF4p5)
 } eNB_func_t;
+
 
 typedef enum {
   synch_to_ext_device=0,  // synch to RF or Ethernet device
@@ -254,6 +210,8 @@ typedef struct {
 
 /// Context data structure for RX/TX portion of subframe processing
 typedef struct {
+  /// Component Carrier index   
+  uint8_t               CC_id;
   /// timestamp transmitted to HW
   openair0_timestamp    timestamp_tx;
   /// subframe to act upon for transmission
@@ -264,6 +222,9 @@ typedef struct {
   int                   frame_tx;
   /// frame to act upon for reception
   int                   frame_rx;
+
+  uint16_t     HFN;
+
   /// \brief Instance count for RXn-TXnp4 processing thread.
   /// \internal This variable is protected by \ref mutex_rxtx.
   int                   instance_cnt_rxtx;
@@ -283,6 +244,24 @@ typedef struct {
   pthread_mutex_t       mutex_l2;
   int                   instance_cnt_l2;
   pthread_attr_t        attr_l2;
+  uint32_t              frame_msg5;
+  uint32_t              subframe_msg5;
+  int                   subframe_real;
+  uint8_t               flag_scrambling;
+  uint8_t               flag_msg3;
+  uint8_t               counter_msg3;
+  uint32_t              frame_msg3;
+  uint8_t               flag_msg4;
+  uint8_t               counter_msg4;
+  uint32_t              frame_msg4;
+  uint32_t              subframe_msg4;
+  uint8_t               counter_msg5;
+  uint8_t               flag_msg5;
+  uint32_t              frame_dscr_msg5;
+  uint32_t              subframe_dscr_msg5;
+
+  uint32_t frame_dscr_msg3; //phy_procedures_lte_eNb_NB_IoT.c
+  uint32_t subframe_dscr_msg3; //phy_procedures_lte_eNb_NB_IoT.c
 
 } eNB_rxtx_proc_NB_IoT_t;
 /*
@@ -303,6 +282,8 @@ typedef struct {
 
 /// Context data structure for eNB subframe processing
 typedef struct eNB_proc_NB_IoT_t_s {
+  /// Component Carrier index   
+  uint8_t                 CC_id;
   /// thread index
   int                     thread_index;
   /// timestamp received from HW
@@ -341,6 +322,10 @@ typedef struct eNB_proc_NB_IoT_t_s {
   int                     instance_cnt_asynch_rxtx;
   /// pthread structure for FH processing thread
   pthread_t               pthread_FH;
+
+   /// pthread structure for eNB single processing thread
+  pthread_t pthread_single; //NB-IoT
+
   /// pthread structure for asychronous RX/TX processing thread
   pthread_t               pthread_asynch_rxtx;
   /// flag to indicate first RX acquisition
@@ -448,6 +433,8 @@ typedef struct eNB_proc_NB_IoT_t_s {
 typedef struct {
   /// index of the current UE RX/TX proc
   int                   proc_id;
+  /// Component Carrier index   
+  uint8_t                 CC_id;
   /// timestamp transmitted to HW
   openair0_timestamp    timestamp_tx;
   /// subframe to act upon for transmission
@@ -482,6 +469,8 @@ typedef struct {
 
 /// Context data structure for eNB subframe processing
 typedef struct {
+  /// Component Carrier index   
+  uint8_t                 CC_id;
   /// Last RX timestamp
   openair0_timestamp      timestamp_rx;
   /// pthread attributes for main UE thread
@@ -514,14 +503,19 @@ typedef struct {
 typedef struct PHY_VARS_eNB_NB_IoT_s {
   /// Module ID indicator for this instance
   module_id_t                   Mod_id;
+  uint8_t                       CC_id;
   uint8_t                       configured;
   eNB_proc_NB_IoT_t             proc;
   int                           num_RU;
   RU_t                          *RU_list[MAX_NUM_RU_PER_eNB];
   /// Ethernet parameters for northbound midhaul interface (L1 to Mac)
-  eth_params_t         eth_params_n;
+  eth_params_t                  eth_params_n;
+
+  eNB_func_NB_IoT_t             node_function;
+  eNB_timing_NB_IoT_t           node_timing;
+  
   /// Ethernet parameters for fronthaul interface (upper L1 to Radio head)
-  eth_params_t         eth_params;
+  eth_params_t                  *eth_params;
   int                           single_thread_flag;
   openair0_rf_map               rf_map;
   int                           abstraction_flag;
@@ -533,7 +527,7 @@ typedef struct PHY_VARS_eNB_NB_IoT_s {
   // indicator for precoding function (eNB,3GPP_eNB_BBU)
   int                           do_precoding;
   IF_Module_NB_IoT_t            *if_inst_NB_IoT;
-  UL_IND_NB_IoT_t               UL_INFO_NB_IoT;
+  UL_IND_NB_IoT_t               UL_INFO;
   pthread_mutex_t               UL_INFO_mutex;
   void                          (*do_prach)(struct PHY_VARS_eNB_NB_IoT_s *eNB,int frame,int subframe);
   void                          (*fep)(struct PHY_VARS_eNB_NB_IoT_s *eNB,eNB_rxtx_proc_NB_IoT_t *proc);
@@ -732,47 +726,24 @@ typedef struct PHY_VARS_eNB_NB_IoT_s {
   // NB-IoT
   //------------------------
 
-  /*
-   * NUMBER_OF_UE_MAX_NB_IoT maybe in the future should be dynamic because could be very large and the memory may explode
-   * (is almost the indication of the number of UE context that we are storing at PHY layer)
-   *
-   * reasoning: the following data structure (ndlsch, nulsch ecc..) are used to store the context that should be transmitted in at least n+4 subframe later
-   * (the minimum interval between NPUSCH and the ACK for this)
-   * the problem is that in NB_IoT the ACK for the UPLINK is contained in the DCI through the NDI field (if this value change from the previous one then it means ACK)
-   * but may we could schedule this DCI long time later so may lots of contents shuld be stored (there is no concept of phich channel in NB-IoT)
-   * For the DL transmission the UE send a proper ACK/NACK message
-   *
-   * *the HARQ process should be killed when the NDI change
-   *
-   * *In the Structure for nulsch we should also store the information related to the subframe (because each time we should read it and understand what should be done
-   * in that subframe)
-   *
-   */
-
-
-  /*
-   * TIMING
-   * the entire transmission and scheduling are done for the "subframe" concept but the subframe = proc->subframe_tx (that in reality is the subframe_rx +4)
-   * (see USER/lte-enb/wakeup_rxtx )
-   *
-   * Related to FAPI:
-   * DCI and  DL_CONFIG.request (also more that 1) and MAC_PDU are transmitted in the same subframe (our assumption) so will be all contained in the schedule_response getting from the scheduler
-   * DCI0 and UL_CONFIG.request are transmitted in the same subframe (our assumption) so contained in the schedule_response
-   *
-   */
-
   //TODO: check what should be NUMBER_OF_UE_MAX_NB_IoT value
   NB_IoT_eNB_NPBCH_t        *npbch;
   NB_IoT_eNB_NPDCCH_t       *npdcch[NUMBER_OF_UE_MAX_NB_IoT];
   NB_IoT_eNB_NDLSCH_t       *ndlsch[NUMBER_OF_UE_MAX_NB_IoT][2];
-  NB_IoT_eNB_NULSCH_t       *nulsch[NUMBER_OF_UE_MAX_NB_IoT+1]; //nulsch[0] contains the RAR
+  NB_IoT_eNB_NULSCH_t       *ulsch_NB_IoT[NUMBER_OF_UE_MAX_NB_IoT+1]; //nulsch[0] contains the RAR
   NB_IoT_eNB_NDLSCH_t       *ndlsch_SI,*ndlsch_ra, *ndlsch_SIB1;
 
   NB_IoT_DL_FRAME_PARMS     frame_parms_NB_IoT;
   // DCI for at most 2 DCI pdus
   DCI_PDU_NB_IoT            *DCI_pdu;
+  
+  NB_IoT_eNB_NDLSCH_t       *ndlsch_SIB23,*dlsch_ra;
+  NB_IoT_eNB_NDLSCH_t       *ndlsch_RAR;
+  NB_IoT_eNB_NPDCCH_t       *npdcch_DCI;
 
+  uint8_t                     msg3_pdu[6]; //phy_procedures_lte_eNb_NB_IoT.c
 
+  volatile uint16_t preamble_index_NB_IoT; //phy_procedures_lte_eNb_NB_IoT.c
 
 } PHY_VARS_eNB_NB_IoT;
 
@@ -782,6 +753,8 @@ typedef struct PHY_VARS_eNB_NB_IoT_s {
 typedef struct {
   /// \brief Module ID indicator for this instance
   uint8_t                       Mod_id;
+   /// \brief Component carrier ID for this PHY instance    
+  uint8_t                       CC_id;
   /// \brief Mapping of CC_id antennas to cards
   openair0_rf_map               rf_map;
   //uint8_t local_flag;
@@ -861,66 +834,6 @@ typedef struct {
   ///
   char                            ulsch_no_allocation_counter[NUMBER_OF_CONNECTED_eNB_MAX];
 
-/*
-
-  unsigned char ulsch_Msg3_active[NUMBER_OF_CONNECTED_eNB_MAX];
-  uint32_t  ulsch_Msg3_frame[NUMBER_OF_CONNECTED_eNB_MAX];
-  unsigned char ulsch_Msg3_subframe[NUMBER_OF_CONNECTED_eNB_MAX];
-  PRACH_RESOURCES_t *prach_resources[NUMBER_OF_CONNECTED_eNB_MAX];
-  int turbo_iterations, turbo_cntl_iterations;
-  /// \brief ?.
-  /// - first index: eNB [0..NUMBER_OF_CONNECTED_eNB_MAX[ (hard coded)
-  uint32_t total_TBS[NUMBER_OF_CONNECTED_eNB_MAX];
-  /// \brief ?.
-  /// - first index: eNB [0..NUMBER_OF_CONNECTED_eNB_MAX[ (hard coded)
-  uint32_t total_TBS_last[NUMBER_OF_CONNECTED_eNB_MAX];
-  /// \brief ?.
-  /// - first index: eNB [0..NUMBER_OF_CONNECTED_eNB_MAX[ (hard coded)
-  uint32_t bitrate[NUMBER_OF_CONNECTED_eNB_MAX];
-  /// \brief ?.
-  /// - first index: eNB [0..NUMBER_OF_CONNECTED_eNB_MAX[ (hard coded)
-  uint32_t total_received_bits[NUMBER_OF_CONNECTED_eNB_MAX];
-  int dlsch_errors[NUMBER_OF_CONNECTED_eNB_MAX];
-  int dlsch_errors_last[NUMBER_OF_CONNECTED_eNB_MAX];
-  int dlsch_received[NUMBER_OF_CONNECTED_eNB_MAX];
-  int dlsch_received_last[NUMBER_OF_CONNECTED_eNB_MAX];
-  int dlsch_fer[NUMBER_OF_CONNECTED_eNB_MAX];
-  int dlsch_SI_received[NUMBER_OF_CONNECTED_eNB_MAX];
-  int dlsch_SI_errors[NUMBER_OF_CONNECTED_eNB_MAX];
-  int dlsch_ra_received[NUMBER_OF_CONNECTED_eNB_MAX];
-  int dlsch_ra_errors[NUMBER_OF_CONNECTED_eNB_MAX];
-  int dlsch_p_received[NUMBER_OF_CONNECTED_eNB_MAX];
-  int dlsch_p_errors[NUMBER_OF_CONNECTED_eNB_MAX];
-  int dlsch_mch_received_sf[MAX_MBSFN_AREA][NUMBER_OF_CONNECTED_eNB_MAX];
-  int dlsch_mch_received[NUMBER_OF_CONNECTED_eNB_MAX];
-  int dlsch_mcch_received[MAX_MBSFN_AREA][NUMBER_OF_CONNECTED_eNB_MAX];
-  int dlsch_mtch_received[MAX_MBSFN_AREA][NUMBER_OF_CONNECTED_eNB_MAX];
-  int dlsch_mcch_errors[MAX_MBSFN_AREA][NUMBER_OF_CONNECTED_eNB_MAX];
-  int dlsch_mtch_errors[MAX_MBSFN_AREA][NUMBER_OF_CONNECTED_eNB_MAX];
-  int dlsch_mcch_trials[MAX_MBSFN_AREA][NUMBER_OF_CONNECTED_eNB_MAX];
-  int dlsch_mtch_trials[MAX_MBSFN_AREA][NUMBER_OF_CONNECTED_eNB_MAX];
-  int current_dlsch_cqi[NUMBER_OF_CONNECTED_eNB_MAX];
-  unsigned char first_run_timing_advance[NUMBER_OF_CONNECTED_eNB_MAX];
-  uint8_t               generate_prach;
-  uint8_t               prach_cnt;
-  uint8_t               prach_PreambleIndex;
-  //  uint8_t               prach_timer;
-  uint8_t               decode_SIB;
-  uint8_t               decode_MIB;
-  int              rx_offset; /// Timing offset
-  int              rx_offset_diff; /// Timing adjustment for ofdm symbol0 on HW USRP
-  int              timing_advance; ///timing advance signalled from eNB
-  int              hw_timing_advance;
-  int              N_TA_offset; ///timing offset used in TDD
-  /// Flag to tell if UE is secondary user (cognitive mode)
-  unsigned char    is_secondary_ue;
-  /// Flag to tell if secondary eNB has channel estimates to create NULL-beams from.
-  unsigned char    has_valid_precoder;
-  /// hold the precoder for NULL beam to the primary eNB
-  int              **ul_precoder_S_UE;
-  /// holds the maximum channel/precoder coefficient
-  char             log2_maxp;
-*/
   /// if ==0 enables phy only test mode
   int              mac_enabled;
   /// Flag to initialize averaging of PHY measurements
@@ -935,103 +848,12 @@ typedef struct {
   double           sinr_eff;
   /// N0 (used for abstraction)
   double           N0;
-/*
-  /// PDSCH Varaibles
-  PDSCH_CONFIG_DEDICATED pdsch_config_dedicated[NUMBER_OF_CONNECTED_eNB_MAX];
 
-  /// PUSCH Varaibles
-  PUSCH_CONFIG_DEDICATED pusch_config_dedicated[NUMBER_OF_CONNECTED_eNB_MAX];
-
-  /// PUSCH contention-based access vars
-  PUSCH_CA_CONFIG_DEDICATED  pusch_ca_config_dedicated[NUMBER_OF_eNB_MAX]; // lola
-
-  /// PUCCH variables
-
-  PUCCH_CONFIG_DEDICATED pucch_config_dedicated[NUMBER_OF_CONNECTED_eNB_MAX];
-
-  uint8_t ncs_cell[20][7];
-
-  /// UL-POWER-Control
-  UL_POWER_CONTROL_DEDICATED ul_power_control_dedicated[NUMBER_OF_CONNECTED_eNB_MAX];
-
-  /// TPC
-  TPC_PDCCH_CONFIG tpc_pdcch_config_pucch[NUMBER_OF_CONNECTED_eNB_MAX];
-  TPC_PDCCH_CONFIG tpc_pdcch_config_pusch[NUMBER_OF_CONNECTED_eNB_MAX];
-
-  /// CQI reporting
-  CQI_REPORT_CONFIG cqi_report_config[NUMBER_OF_CONNECTED_eNB_MAX];
-
-  /// SRS Variables
-  SOUNDINGRS_UL_CONFIG_DEDICATED soundingrs_ul_config_dedicated[NUMBER_OF_CONNECTED_eNB_MAX];
-
-  /// Scheduling Request Config
-  SCHEDULING_REQUEST_CONFIG scheduling_request_config[NUMBER_OF_CONNECTED_eNB_MAX];
-
-  /// Transmission mode per eNB
-  uint8_t transmission_mode[NUMBER_OF_CONNECTED_eNB_MAX];
-
-  time_stats_t phy_proc;
-  time_stats_t phy_proc_tx;
-  time_stats_t phy_proc_rx[2];
-
-  uint32_t use_ia_receiver;
-
-  time_stats_t ofdm_mod_stats;
-  time_stats_t ulsch_encoding_stats;
-  time_stats_t ulsch_modulation_stats;
-  time_stats_t ulsch_segmentation_stats;
-  time_stats_t ulsch_rate_matching_stats;
-  time_stats_t ulsch_turbo_encoding_stats;
-  time_stats_t ulsch_interleaving_stats;
-  time_stats_t ulsch_multiplexing_stats;
-
-  time_stats_t generic_stat;
-  time_stats_t pdsch_procedures_stat;
-  time_stats_t dlsch_procedures_stat;
-
-  time_stats_t ofdm_demod_stats;
-  time_stats_t dlsch_rx_pdcch_stats;
-  time_stats_t rx_dft_stats;
-  time_stats_t dlsch_channel_estimation_stats;
-  time_stats_t dlsch_freq_offset_estimation_stats;
-  time_stats_t dlsch_decoding_stats[2];
-  time_stats_t dlsch_demodulation_stats;
-  time_stats_t dlsch_rate_unmatching_stats;
-  time_stats_t dlsch_turbo_decoding_stats;
-  time_stats_t dlsch_deinterleaving_stats;
-  time_stats_t dlsch_llr_stats;
-  time_stats_t dlsch_unscrambling_stats;
-  time_stats_t dlsch_rate_matching_stats;
-  time_stats_t dlsch_turbo_encoding_stats;
-  time_stats_t dlsch_interleaving_stats;
-  time_stats_t dlsch_tc_init_stats;
-  time_stats_t dlsch_tc_alpha_stats;
-  time_stats_t dlsch_tc_beta_stats;
-  time_stats_t dlsch_tc_gamma_stats;
-  time_stats_t dlsch_tc_ext_stats;
-  time_stats_t dlsch_tc_intl1_stats;
-  time_stats_t dlsch_tc_intl2_stats;
-  time_stats_t tx_prach;
-
-  /// RF and Interface devices per CC
-  openair0_device rfdevice;
-  time_stats_t dlsch_encoding_SIC_stats;
-  time_stats_t dlsch_scrambling_SIC_stats;
-  time_stats_t dlsch_modulation_SIC_stats;
-  time_stats_t dlsch_llr_stripping_unit_SIC_stats;
-  time_stats_t dlsch_unscrambling_SIC_stats;
-
-#if ENABLE_RAL
-  hash_table_t    *ral_thresholds_timed;
-  SLIST_HEAD(ral_thresholds_gen_poll_s, ral_threshold_phy_t) ral_thresholds_gen_polled[RAL_LINK_PARAM_GEN_MAX];
-  SLIST_HEAD(ral_thresholds_lte_poll_s, ral_threshold_phy_t) ral_thresholds_lte_polled[RAL_LINK_PARAM_LTE_MAX];
-#endif
-*/
 } PHY_VARS_UE_NB_IoT;
 
 
 
 #include "PHY/INIT/defs_NB_IoT.h"
 #include "PHY/LTE_REFSIG/defs_NB_IoT.h"
-#include "PHY/LTE_TRANSPORT/proto_NB_IoT.h"
+#include "PHY/NBIoT_TRANSPORT/proto_NB_IoT.h"
 #endif //  __PHY_DEFS__H__

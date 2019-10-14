@@ -325,8 +325,8 @@ add_custom_target (
 
 set_source_files_properties(${rrc_source} PROPERTIES COMPILE_FLAGS -w) # suppress warnings from generated code
 add_library(RRC_LIB ${rrc_source}
-    ${OPENAIR2_DIR}/RRC/LTE/MESSAGES/asn1_msg.c
-    ${OPENAIR2_DIR}/RRC/LTE/MESSAGES/asn1_msg_NB_IoT.c)
+    ${OPENAIR2_DIR}/RRC/LTE/MESSAGES/asn1_msg.c)
+    #${OPENAIR2_DIR}/RRC/LTE/MESSAGES/asn1_msg_NB_IoT.c
 add_dependencies(RRC_LIB rrc_flag)
 include_directories ("${RRC_FULL_DIR}")
 
@@ -770,6 +770,7 @@ include_directories("${OPENAIR2_DIR}/LAYER2/RLC/TM_v9.3.0")
 include_directories("${OPENAIR2_DIR}/LAYER2/PDCP_v10.1.0")
 include_directories("${OPENAIR2_DIR}/RRC/LTE/MESSAGES")
 include_directories("${OPENAIR2_DIR}/RRC/LTE")
+include_directories("${OPENAIR2_DIR}/RRC/NBIOT")
 include_directories("${OPENAIR_DIR}/common/utils")
 include_directories("${OPENAIR_DIR}/common/utils/ocp_itti")
 include_directories("${OPENAIR3_DIR}/NAS/COMMON")

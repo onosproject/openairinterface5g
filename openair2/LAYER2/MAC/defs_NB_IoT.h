@@ -1,4 +1,3 @@
-
 /*! \file defs_NB_IoT.c
  * \brief MAC layer structures
  * \author  NTUST BMW Lab./
@@ -17,15 +16,17 @@
 //#include "COMMON/openair_defs.h"
 #include "COMMON/platform_constants.h"
 #include "COMMON/mac_rrc_primitives.h"
-#include "PHY/LTE_TRANSPORT/defs_NB_IoT.h"
+#include "PHY/NBIoT_TRANSPORT/defs_NB_IoT.h"
 //#include "PHY/defs.h"
 #include "PHY/defs_L1_NB_IoT.h"
 #include "openair2/PHY_INTERFACE/IF_Module_NB_IoT.h"
 #include "config_NB_IoT.h"
 //  MAC definition
-#define MAX_FRAME 0xfffff
-#define NUM_FRAME 0x100000
-#define MAX_SUBFRAME 10485760
+//#define MAX_FRAME 0xfffff
+//#define NUM_FRAME 0x100000
+//#define MAX_SUBFRAME 10485760
+#define MAX_FRAME 0xfff 
+#define MAX_SUBFRAME 40960
 
 #define MAX(a, b) (((a)>(b))?(a):(b))
 
@@ -64,7 +65,7 @@
 #define DTCH 3 // LCID
 /*!\brief MCCH logical channel */
 //#define MCCH 4 
-#define MCCH 62
+//#define MCCH 62
 /*!\brief MTCH logical channel */
 #define MTCH 1 
 // DLSCH LCHAN ID
@@ -99,10 +100,10 @@ typedef enum{
   DL
 }message_direction_t;
 
-#define MAX_MAX_MOBILES_PER_ENB_NB_IoT 20
+#define MAX_NUMBER_OF_UE_MAX_NB_IoT 20
 #define SCH_PAYLOAD_SIZE_MAX_NB_IoT 320
 #define MAX_NUMBER_OF_SIBs_NB_IoT 16
-
+#define MAX_NUMBER_OF_UE_MAX_NB_IoT 20
 /*!\brief Values of BCCH0 logical channel for MIB*/
 #define BCCH0_NB_IoT 11 // MIB-NB_IoT
 /*!\brief Values of BCCH1 logical channel for SIBs */
@@ -128,33 +129,6 @@ typedef enum{
 #define DRX_COMMAND 30
 /*Index of PADDING logical channel*/
 #define PADDING 31
-
-
-/// NPRACH-ParametersList-NB_IoT-r13 from 36.331 RRC spec defined in PHY
-/*typedef struct NPRACH_Parameters_NB_IoT{
-
-    /// the period time for nprach
-    int nprach_Periodicity;
-    /// for the start time for the NPRACH resource from 40ms-2560ms
-    int nprach_StartTime;
-    /// for the subcarrier of set to the NPRACH preamble from n0 - n34
-    int nprach_SubcarrierOffset;
-    ///number of subcarriers in a NPRACH resource allowed values (n12,n24,n36,n48)
-    int nprach_NumSubcarriers;
-    /// where is the region that in NPRACH resource to indicate if this UE support MSG3 for multi-tone or not. from 0 - 1
-    int nprach_SubcarrierMSG3_RangeStart;
-    /// The max preamble transmission attempt for the CE level from 1 - 128
-    int maxNumPreambleAttemptCE;
-    /// Number of NPRACH repetitions per attempt for each NPRACH resource
-    int numRepetitionsPerPreambleAttempt;
-    /// The number of the repetition for DCI use in RAR/MSG3/MSG4 from 1 - 2048 (Rmax)
-    int npdcch_NumRepetitions_RA;
-    /// Starting subframe for NPDCCH Common searching space for (RAR/MSG3/MSG4)
-    int npdcch_StartSF_CSS_RA;
-    /// Fractional period offset of starting subframe for NPDCCH common search space
-    int npdcch_Offset_RA;
-
-} nprach_parameters_NB_IoT_t;*/
 
 /*! \brief Downlink SCH PDU Structure */
 typedef struct {
@@ -210,10 +184,104 @@ typedef struct {
   int prev;
   // MSG4 complete
   int RRC_connected;
+  uint8_t flag_schedule_success;
   // UE active flag
-  int active;
+  boolean_t active;
+  uint8_t allocated_data_size_ul;
 
 } UE_TEMPLATE_NB_IoT;
+
+// link list of uplink resource node 
+typedef struct available_resource_UL_s{
+  ///Resource start subframe
+  uint32_t start_subframe;
+  ///Resource end subframe
+  uint32_t end_subframe;
+  //pointer to next and previous node
+  struct available_resource_UL_s *next, *prev;
+}available_resource_UL_t;
+
+// link list of downlink resource node
+typedef struct available_resource_DL_s{
+  ///Resource start subframe
+  uint32_t start_subframe;
+  ///Resource end subframe
+  uint32_t end_subframe;
+  //pointer to next and previous node
+  struct available_resource_DL_s *next, *prev;
+}available_resource_DL_t;
+
+/*Structure used for scheduling*/
+typedef struct{
+  //resource position info.
+  uint32_t sf_end,sf_start;
+  //resource position info. separate by HyperSF, Frame, Subframe
+  uint32_t start_h, end_h;
+  uint32_t start_f, end_f;
+  uint32_t start_sf, end_sf;
+  //whcih available resource node is used
+  available_resource_DL_t *node;
+}sched_temp_DL_NB_IoT_t;
+
+/*Structure used for UL scheduling*/
+typedef struct{
+  //resource position info, used subframe as unit
+  uint32_t sf_end, sf_start;
+
+  // information for allocating the resource (to fill DCIN)
+  int tone;
+  int scheduling_delay;
+  int subcarrier_indication;
+  int ACK_NACK_resource_field;
+  available_resource_UL_t *node;
+}sched_temp_UL_NB_IoT_t;
+
+/*** the value of variable in this structure is able to be changed in Preprocessor**/
+typedef struct{
+  
+  uint16_t TBS;
+  uint8_t index_tbs;
+  uint32_t total_sdu_size;
+  //Repetition
+  uint16_t R_dci;
+  uint16_t R_dl_data;
+  uint16_t R_dl_harq;
+  uint16_t R_ul_data;
+  //DL relative
+  uint8_t dci_n1_index_R_dci;
+  uint8_t dci_n1_index_R_data;
+  uint8_t dci_n1_index_mcs;
+  uint8_t dci_n1_index_sf;
+  uint8_t dci_n1_index_delay;
+  uint8_t dci_n1_index_ack_nack;
+  uint32_t dci_n1_n_sf;
+  //UL relative
+  uint8_t dci_n0_index_R_dci;
+  uint8_t dci_n0_index_R_data;
+  uint8_t dci_n0_index_mcs;
+  uint8_t dci_n0_index_ru;
+  uint8_t dci_n0_index_delay;
+  uint8_t dci_n0_index_subcarrier;
+  uint32_t dci_n0_n_ru;
+  uint8_t dci_n0_index_rv;
+  uint8_t dci_n0_index_ndi;
+  // byte
+  uint16_t total_data_size_dl;
+  // byte
+  uint16_t total_data_size_ul;
+  //0:UL 1:DL 2:both
+  uint16_t transmit_direction;
+  /*resource allocation*/
+  // scheduling result for NPDCCH
+  uint32_t NPDCCH_sf_end, NPDCCH_sf_start;
+  // scheduling result for USS DL
+  uint32_t NPDSCH_sf_end, NPDSCH_sf_start;
+  uint32_t HARQ_sf_end, HARQ_sf_start;
+  // scheduling result for USS UL
+  uint32_t NPUSCH_sf_end, NPUSCH_sf_start;
+  // schedule success 1 failure 0
+  uint8_t flag_schedule_success;
+}UE_SCHED_CTRL_NB_IoT_t;
 
 /*36331 NPDCCH-ConfigDedicated-NB_IoT*/
 typedef struct{
@@ -234,23 +302,24 @@ typedef struct{
 typedef struct {
 
   /// DCI template and MAC connection parameters for UEs
-  UE_TEMPLATE_NB_IoT UE_template_NB_IoT[MAX_MAX_MOBILES_PER_ENB_NB_IoT];
+  UE_TEMPLATE_NB_IoT UE_template_NB_IoT[MAX_NUMBER_OF_UE_MAX_NB_IoT];
+
+  UE_SCHED_CTRL_NB_IoT_t UE_sched_ctrl_NB_IoT[MAX_NUMBER_OF_UE_MAX_NB_IoT];
 
   /// NPDCCH Period and searching space info
   NPDCCH_config_dedicated_NB_IoT_t NPDCCH_config_dedicated;
-  //int next[MAX_MAX_MOBILES_PER_ENB_NB_IoT];
+  //int next[MAX_NUMBER_OF_UE_MAX_NB_IoT];
   // -1:No UE in list
   int head;
   // -1:No UE in list
   int tail;
   int num_UEs;
-  //boolean_t active[MAX_MAX_MOBILES_PER_ENB_NB_IoT];
+  //boolean_t active[MAX_NUMBER_OF_UE_MAX_NB_IoT];
 
 } UE_list_NB_IoT_t;
 
-
+// scheduling flag calculated by computing flag function
 typedef struct{
-
   // flag to indicate scheduing MIB-NB_IoT
   uint8_t flag_MIB;
   // flag to indicate scheduling SIB1-NB_IoT
@@ -262,7 +331,7 @@ typedef struct{
   // flag to indicate scheduling type1 NPDCCH CSS with different CE level
   uint8_t flag_type1_css[3];
   // flag to indicate scheduling NPDCCH USS with UE list
-  uint8_t flag_uss[MAX_MAX_MOBILES_PER_ENB_NB_IoT];
+  uint8_t flag_uss[MAX_NUMBER_OF_UE_MAX_NB_IoT];
   // flag to indicate scheduling sib1/MIB
   uint8_t flag_fix_scheduling;
   // number of the type2 css to schedule in this period
@@ -271,38 +340,7 @@ typedef struct{
   uint8_t num_type1_css_run;
   // number of the uss to schedule in this period
   uint8_t num_uss_run;
-
 }scheduling_flag_t;
-
-typedef struct available_resource_UL_s{
-
-    ///Resource start subframe
-    uint32_t start_subframe;
-    ///Resource end subframe
-    uint32_t end_subframe;
-    // pointer to next node
-    struct available_resource_UL_s *next, *prev;
-
-}available_resource_UL_t;
-
-typedef struct available_resource_DL_s{
-  uint32_t start_subframe;
-  uint32_t end_subframe;
-
-  struct available_resource_DL_s *next, *prev;
-}available_resource_DL_t;
-
-/*Structure used for scheduling*/
-typedef struct{
-  //resource position info.
-  uint32_t sf_end,sf_start;
-  //resource position info. separate by HyperSF, Frame, Subframe
-  uint32_t start_h, end_h;
-  uint32_t start_f, end_f;
-  uint32_t start_sf, end_sf;
-  //whcih available resource node is used
-  available_resource_DL_t *node;
-}sched_temp_DL_NB_IoT_t;
 
 /*!\brief  MAC subheader short with 7bit Length field */
 typedef struct {
@@ -313,6 +351,7 @@ typedef struct {
   uint8_t L:7;     // octet 2 LSB
   uint8_t F:1;     // octet 2 MSB
 } __attribute__((__packed__))SCH_SUBHEADER_SHORT_NB_IoT;
+
 typedef struct {
   uint8_t LCID:5;   // octet 1 LSB
   uint8_t E:1;
@@ -322,6 +361,7 @@ typedef struct {
   uint8_t F:1;      // octet 2 MSB
   uint8_t L_LSB:8;
 } __attribute__((__packed__))SCH_SUBHEADER_LONG_NB_IoT;
+
 typedef struct {
   uint8_t LCID:5;   // octet 1 LSB
   uint8_t E:1;
@@ -330,12 +370,12 @@ typedef struct {
   uint8_t L_MSB:8;      // octet 2 MSB
   uint8_t L_LSB:8;
 } __attribute__((__packed__))SCH_SUBHEADER_LONG_EXTEND_NB_IoT;
+
 /*!\brief MAC subheader short without length field */
 typedef struct {
   uint8_t LCID:5;
-  uint8_t F2:1;
   uint8_t E:1;
-  uint8_t R:1;
+  uint8_t R:2;
 } __attribute__((__packed__))SCH_SUBHEADER_FIXED_NB_IoT;
 
 
@@ -356,38 +396,23 @@ typedef struct {
   uint8_t E:1;
 } __attribute__((__packed__))RA_HEADER_RAPID_NB_IoT;
 
-/*Structure used for UL scheduling*/
-typedef struct{
-  //resource position info.
-  uint32_t sf_end, sf_start;
-  //resource position info. separate by HyperSF, Frame, Subframe
-  //uint32_t start_h, end_h;
-  //uint32_t start_f, end_f;
-  //uint32_t start_sf, end_sf;
-  // information for allocating the resource
-  int tone;
-  int scheduling_delay;
-  int subcarrier_indication;
-  int ACK_NACK_resource_field;
-  available_resource_UL_t *node;
-}sched_temp_UL_NB_IoT_t;
 
-typedef struct Available_available_resource_DL{
+typedef struct Available_resource_tones_UL_s{
 
-    ///Available Resoruce for sixtone
-    available_resource_UL_t *sixtone_Head;//, *sixtone_npusch_frame;
+  ///Available Resoruce for sixtone
+  available_resource_UL_t *sixtone_Head;//, *sixtone_npusch_frame;
   uint32_t sixtone_end_subframe;
-    ///Available Resoruce for threetone
-    available_resource_UL_t *threetone_Head;//, *threetone_npusch_frame;
+  ///Available Resoruce for threetone
+  available_resource_UL_t *threetone_Head;//, *threetone_npusch_frame;
   uint32_t threetone_end_subframe;
-    ///Available Resoruce for singletone1
-    available_resource_UL_t *singletone1_Head;//, *singletone1_npusch_frame;
+  ///Available Resoruce for singletone1
+  available_resource_UL_t *singletone1_Head;//, *singletone1_npusch_frame;
   uint32_t singletone1_end_subframe;
-    ///Available Resoruce for singletone2
-    available_resource_UL_t *singletone2_Head;//, *singletone2_npusch_frame;
-    uint32_t singletone2_end_subframe;
+  ///Available Resoruce for singletone2
+  available_resource_UL_t *singletone2_Head;//, *singletone2_npusch_frame;
+  uint32_t singletone2_end_subframe;
   ///Available Resoruce for singletone3
-    available_resource_UL_t *singletone3_Head;//, *singletone3_npusch_frame;
+  available_resource_UL_t *singletone3_Head;//, *singletone3_npusch_frame;
   uint32_t singletone3_end_subframe;
   
 }available_resource_tones_UL_t;
@@ -422,6 +447,14 @@ typedef struct schedule_result{
   
   uint8_t *rar_buffer;
 
+  int16_t dl_sdly;
+  int16_t ul_sdly;
+  int16_t num_sf;
+  
+  int16_t harq_round;
+  // determine this uplink data is msg3 or not (different TBS table here)
+  uint8_t msg3_flag;
+  
 }schedule_result_t;
 
 /*Flag structure used for trigger each scheduler*/
@@ -465,7 +498,9 @@ typedef struct RA_TEMPLATE_NB_IoT_s{
   boolean_t wait_msg4_ack;
   boolean_t wait_msg3_ack;
   uint8_t rar_buffer[7];
-
+  uint8_t *ccch_buffer;
+  uint8_t msg4_buffer[16];
+  uint8_t *msg4_rrc_buffer;
 } RA_TEMPLATE_NB_IoT;
 
 typedef struct RA_template_list_s{
@@ -473,29 +508,46 @@ typedef struct RA_template_list_s{
   RA_TEMPLATE_NB_IoT *tail;
 }RA_template_list_t;
 
+/*36331 NPDCCH-ConfigDedicated-NB_IoT*/
+typedef struct{
+  //npdcch-NumRepetitions-r13
+  uint32_t R_max;
+  //npdcch-StartSF-CSS-r13
+  double G;
+  //npdcch-Offset-USS-r13
+  double a_offset;
+  //NPDCCH period
+  uint32_t T;
+  //Starting subfrane of Search Space which is mod T
+  uint32_t ss_start_css;
+}NPDCCH_config_common_NB_IoT_t;
+
+
+
 
 /*! \brief top level eNB MAC structure */
-typedef struct eNB_MAC_INST_NB_IoT_s {
+typedef struct eNB_MAC_INST_NB_IoT_s{
+
   /// Ethernet parameters for northbound midhaul interface
   eth_params_t         eth_params_n;
   /// Ethernet parameters for fronthaul interface
   eth_params_t         eth_params_s;
 
-  uint8_t Mod_id;
+    uint8_t Mod_id;
+
   //  System
   uint32_t hyper_system_frame;
   uint32_t system_frame;
   uint32_t sub_frame;
 
   uint32_t current_subframe;
-  /// Pointer to IF module instance for PHY
-  IF_Module_t *if_inst;
+
   //  RA
   RA_template_list_t RA_msg2_list;
   RA_template_list_t RA_msg3_list;
   RA_template_list_t RA_msg4_list;
 
-  RA_TEMPLATE_NB_IoT RA_template[MAX_MAX_MOBILES_PER_ENB_NB_IoT];
+  RA_TEMPLATE_NB_IoT RA_template[MAX_NUMBER_OF_UE_MAX_NB_IoT];
 
   //int32_t last_tx_subframe;
 
@@ -516,13 +568,18 @@ typedef struct eNB_MAC_INST_NB_IoT_s {
   scheduling_flag_t scheduling_flag;
 
   uint32_t schedule_subframe_DL;
-  uint32_t schedule_subframe_UL;
+  //uint32_t schedule_subframe_UL;
+  NPDCCH_config_common_NB_IoT_t npdcch_config_common[3];
 
   rrc_config_NB_IoT_t rrc_config;
 
   nfapi_config_request_t config;
 
-   IF_Module_NB_IoT_t            *if_inst_NB_IoT;
+
+  IF_Module_NB_IoT_t *if_inst_NB_IoT;
+
+  Sched_Rsp_NB_IoT_t Sched_INFO;
+
 } eNB_MAC_INST_NB_IoT;
 
 // actually not here, but for now put it here
