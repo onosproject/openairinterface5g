@@ -21,7 +21,7 @@ extern int extend_alpha_offset[num_flags];
 
 uint32_t get_SIB23_size(void)
 {
-  rrc_config_NB_IoT_t     *mac_config = &mac_inst->rrc_config;
+  rrc_config_NB_IoT_t     *mac_config = &eNB_mac_inst->rrc_config;
   uint32_t size_SIB23_in_MAC = 0;
 
   switch(mac_config->sibs_NB_IoT_sched[0].si_tb)

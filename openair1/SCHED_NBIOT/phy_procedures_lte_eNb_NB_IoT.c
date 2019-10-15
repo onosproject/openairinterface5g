@@ -29,7 +29,6 @@
  * \note
  * \warning
  */
-
 #include "PHY/defs_eNB.h"
 #include "PHY/defs_UE.h"
 #include "PHY/defs_L1_NB_IoT.h"
@@ -83,7 +82,7 @@
 #endif
 
 
-extern eNB_MAC_INST_NB_IoT *eNB_mac_inst; // For NB-IoT branch
+//extern eNB_MAC_INST_NB_IoT *eNB_mac_inst; // For NB-IoT branch
 
 
 /*
@@ -1239,14 +1238,14 @@ void phy_procedures_emos_eNB_RX(unsigned char subframe,PHY_VARS_eNB_NB_IoT *eNB)
 #endif
 
 
-void common_signal_procedures (PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_NB_IoT_t *proc) {
+void common_signal_procedures_nbiot (PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_NB_IoT_t *proc) {
 
   LTE_DL_FRAME_PARMS *fp=&eNB->frame_parms;
   int **txdataF = eNB->common_vars.txdataF[0];
   //////////////////////////////////////////////////////// to uncomment for LTE,      uint8_t *pbch_pdu=&eNB->pbch_pdu[0];
   int subframe = proc->subframe_tx;
   int frame = proc->frame_tx;
-  RA_TEMPLATE_NB_IoT *RA_template = (RA_TEMPLATE_NB_IoT *)&eNB_mac_inst[eNB->Mod_id].RA_template[0];
+  RA_TEMPLATE_NB_IoT *RA_template = (RA_TEMPLATE_NB_IoT *)&eNB_mac_inst[eNB->Mod_id].common_channels[eNB->CC_id].RA_template[0];
   //int                     With_NSSS=0;
   int framerx = proc->frame_rx; 
   int subframerx = proc->subframe_rx;
@@ -2477,7 +2476,7 @@ void cba_procedures(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_NB_IoT_t *proc,int UE
       print_CQI(eNB->ulsch[UE_id]->harq_processes[harq_pid]->o,eNB->ulsch[UE_id]->harq_processes[harq_pid]->uci_format,0,fp->N_RB_DL);
 #endif
       access_mode = UNKNOWN_ACCESS;
-      extract_CQI(eNB->ulsch[UE_id]->harq_processes[harq_pid]->o,
+      extract_CQI_NB_IoT(eNB->ulsch[UE_id]->harq_processes[harq_pid]->o,
       eNB->ulsch[UE_id]->harq_processes[harq_pid]->uci_format,
       &eNB->UE_stats[UE_id],
       fp->N_RB_DL,
@@ -2804,7 +2803,7 @@ void phy_procedures_eNB_uespec_RX_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_
         //if (((frame%10) == 0) || (frame < 50))
         print_CQI(eNB->ulsch[i]->harq_processes[harq_pid]->o,eNB->ulsch[i]->harq_processes[harq_pid]->uci_format,0,fp->N_RB_DL);
 #endif
-        extract_CQI(eNB->ulsch[i]->harq_processes[harq_pid]->o,
+        extract_CQI_NB_IoT(eNB->ulsch[i]->harq_processes[harq_pid]->o,
                     eNB->ulsch[i]->harq_processes[harq_pid]->uci_format,
                     &eNB->UE_stats[i],
                     fp->N_RB_DL,

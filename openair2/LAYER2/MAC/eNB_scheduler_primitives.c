@@ -36,7 +36,7 @@
 
 #include "LAYER2/MAC/mac.h"
 #include "LAYER2/MAC/mac_extern.h"
-
+#include "LAYER2/MAC/extern_NB_IoT.h"
 #include "LAYER2/MAC/mac_proto.h"
 #include "common/utils/LOG/log.h"
 #include "nfapi/oai_integration/vendor_ext.h"
@@ -64,8 +64,8 @@ extern uint16_t frame_cnt;
 #include "SCHED/sched_common.h"
 
 extern RAN_CONTEXT_t RC;
-
 extern eNB_MAC_INST_NB_IoT *eNB_mac_inst;
+
 
 //------------------------------------------------------------------------------
 int

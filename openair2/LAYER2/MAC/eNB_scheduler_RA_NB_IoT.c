@@ -379,18 +379,18 @@ void msg4_do_retransmit_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, rnti_t c_rnti){
 	return ;
 }
 
-void receive_msg3_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, rnti_t c_rnti, uint32_t phr, uint32_t ul_total_buffer, uint8_t* ccch_sdu, uint8_t* msg4_rrc_sdu){
+void receive_msg3_NB_IoT(eNB_MAC_INST_NB_IoT *eNB_mac_inst, rnti_t c_rnti, uint32_t phr, uint32_t ul_total_buffer, uint8_t* ccch_sdu, uint8_t* msg4_rrc_sdu){
 	//	since successful receive msg3, tc-rnti become c-rnti.
 
-	RA_TEMPLATE_NB_IoT *msg3_nodes = mac_inst->RA_msg3_list.head;
+	RA_TEMPLATE_NB_IoT *msg3_nodes = eNB_mac_inst->RA_msg3_list.head;
 	RA_TEMPLATE_NB_IoT *migrate_node;
 
 	if((RA_TEMPLATE_NB_IoT *)0 != msg3_nodes)
 	while((RA_TEMPLATE_NB_IoT *)0 != msg3_nodes){
 		if(msg3_nodes->ue_rnti == c_rnti){
 			LOG_D(MAC,"add ue in\n");
-			add_ue_NB_IoT(mac_inst, c_rnti, msg3_nodes->ce_level, phr, ul_total_buffer);//	rnti, ce level
-			LOG_D(MAC,"[%04d][RA scheduler][MSG3][CE%d] Receive MSG3 T-CRNTI %d Preamble Index %d \n", mac_inst->current_subframe, msg3_nodes->ce_level, msg3_nodes->ue_rnti, msg3_nodes->preamble_index);
+			add_ue_NB_IoT(eNB_mac_inst, c_rnti, msg3_nodes->ce_level, phr, ul_total_buffer);//	rnti, ce level
+			LOG_D(MAC,"[%04d][RA scheduler][MSG3][CE%d] Receive MSG3 T-CRNTI %d Preamble Index %d \n", eNB_mac_inst->current_subframe, msg3_nodes->ce_level, msg3_nodes->ue_rnti, msg3_nodes->preamble_index);
 			msg3_nodes->ccch_buffer = ccch_sdu;
 			msg3_nodes->msg4_rrc_buffer = msg4_rrc_sdu;
 			migrate_node = msg3_nodes;
@@ -398,14 +398,14 @@ void receive_msg3_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, rnti_t c_rnti, uint32_t 
 			//	maintain list
 			if((RA_TEMPLATE_NB_IoT *)0 == migrate_node->prev){
 				//	first node
-				mac_inst->RA_msg3_list.head = migrate_node->next;	//	including null
+				eNB_mac_inst->RA_msg3_list.head = migrate_node->next;	//	including null
 			}else{
 				//	not first node
 				migrate_node->prev->next = migrate_node->next;		//	including null
 			}
 			if((RA_TEMPLATE_NB_IoT *)0 == migrate_node->next){
 				//	last node
-				mac_inst->RA_msg3_list.tail = migrate_node->prev;	//	including null
+				eNB_mac_inst->RA_msg3_list.tail = migrate_node->prev;	//	including null
 			}else{
 				//	not last node
 				migrate_node->next->prev = migrate_node->prev;		//	including null
@@ -415,14 +415,14 @@ void receive_msg3_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, rnti_t c_rnti, uint32_t 
 			//	insert to end of list
 			migrate_node->next = (RA_TEMPLATE_NB_IoT *)0;
 			migrate_node->prev = (RA_TEMPLATE_NB_IoT *)0;
-			if((RA_TEMPLATE_NB_IoT *)0 == mac_inst->RA_msg4_list.head){
-				mac_inst->RA_msg4_list.head = migrate_node;
+			if((RA_TEMPLATE_NB_IoT *)0 == eNB_mac_inst->RA_msg4_list.head){
+				eNB_mac_inst->RA_msg4_list.head = migrate_node;
 			}else{
 				//	not empty
-				mac_inst->RA_msg4_list.tail->next = migrate_node;
-				migrate_node->prev = mac_inst->RA_msg4_list.tail;
+				eNB_mac_inst->RA_msg4_list.tail->next = migrate_node;
+				migrate_node->prev = eNB_mac_inst->RA_msg4_list.tail;
 			}
-			mac_inst->RA_msg4_list.tail = migrate_node;
+			eNB_mac_inst->RA_msg4_list.tail = migrate_node;
 
 			return ;
 		}
@@ -430,7 +430,7 @@ void receive_msg3_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, rnti_t c_rnti, uint32_t 
 	}
 
 	if((RA_TEMPLATE_NB_IoT *)0 == msg3_nodes){
-		LOG_D(MAC,"[%04d][RA scheduler][MSG3] receive msg3.. can't found the ue from crnti %x\n", mac_inst->current_subframe, c_rnti);
+		LOG_D(MAC,"[%04d][RA scheduler][MSG3] receive msg3.. can't found the ue from crnti %x\n", eNB_mac_inst->current_subframe, c_rnti);
 		return;
 	}
 }

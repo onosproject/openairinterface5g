@@ -36,7 +36,7 @@
 
 unsigned char str20[] = "DCI_uss";
 unsigned char str21[] = "DATA_uss";
-
+extern eNB_MAC_INST_NB_IoT *eNB_mac_inst;
 // scheduling UL
 int schedule_UL_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst,UE_TEMPLATE_NB_IoT *UE_info,uint32_t subframe, uint32_t frame, uint32_t H_SFN, UE_SCHED_CTRL_NB_IoT_t *UE_sched_ctrl_info){
 	int i,ndi = 0,check_DCI_result = 0,check_UL_result = 0,candidate;
@@ -214,7 +214,7 @@ void rx_sdu_NB_IoT(module_id_t module_id, int CC_id, frame_t frame, sub_frame_t 
         case SHORT_BSR:
             // update BSR here
         LOG_I(MAC,"Update BSR, rnti : %d\n",rnti);
-        UE_info = get_ue_from_rnti(mac_inst, rnti);
+        UE_info = get_ue_from_rnti(eNB_mac_inst, rnti);
         BSR_index = payload_ptr[0] & 0x3f;
         if(UE_info != NULL)
         {          
@@ -262,7 +262,7 @@ void rx_sdu_NB_IoT(module_id_t module_id, int CC_id, frame_t frame, sub_frame_t 
                   0);
                 LOG_D(MAC,"rx_lengths : %d\n", rx_lengths[i]);
                 msg4_rrc_pdu = mac_rrc_msg3_ind_NB_IoT(payload_ptr,rnti,rx_lengths[i]);
-                receive_msg3_NB_IoT(mac_inst,rnti,PHR,ul_total_buffer,first_6,msg4_rrc_pdu);
+                receive_msg3_NB_IoT(eNB_mac_inst,rnti,PHR,ul_total_buffer,first_6,msg4_rrc_pdu);
                 LOG_I(MAC,"Contention resolution ID = %02x %02x %02x %02x %02x %02x\n",first_6[0],first_6[1],first_6[2],first_6[3],first_6[4],first_6[5]);
                 //NB_IoT_mac_rrc_data_ind(payload_ptr,mac_inst,rnti);
                 //NB_IoT_receive_msg3(mac_inst,rnti,PHR,ul_total_buffer);

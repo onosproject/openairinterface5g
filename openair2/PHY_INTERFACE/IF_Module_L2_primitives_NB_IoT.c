@@ -77,7 +77,7 @@ void UL_indication_NB_IoT(UL_IND_NB_IoT_t *UL_INFO)
 {
     int i=0;
     uint32_t abs_subframe;
-    Sched_Rsp_NB_IoT_t *SCHED_info = &mac_inst->Sched_INFO;
+    Sched_Rsp_NB_IoT_t *SCHED_info = &eNB_mac_inst->Sched_INFO;
 
     enable_preamble_simulation(UL_INFO,0);
 
@@ -92,7 +92,7 @@ void UL_indication_NB_IoT(UL_IND_NB_IoT_t *UL_INFO)
       {
         // initiate_ra here, some useful inforamtion : 
         LOG_D(MAC,"Init_RA_NB_IoT in, index of sc = %d\n",(UL_INFO->nrach_ind.nrach_pdu_list+i)->nrach_indication_rel13.initial_sc);
-        init_RA_NB_IoT(mac_inst,
+        init_RA_NB_IoT(eNB_mac_inst,
                       (UL_INFO->nrach_ind.nrach_pdu_list+i)->nrach_indication_rel13.initial_sc,
                       (UL_INFO->nrach_ind.nrach_pdu_list+i)->nrach_indication_rel13.nrach_ce_level,
                       UL_INFO->frame,
@@ -113,7 +113,7 @@ void UL_indication_NB_IoT(UL_IND_NB_IoT_t *UL_INFO)
         if((UL_INFO->crc_ind.crc_pdu_list+i)->crc_indication_rel8.crc_flag == 0)
         {
           //unsuccessfully received this UE PDU
-          //UE_info = get_ue_from_rnti(mac_inst,((UL_INFO->crc_ind.crc_pdu_list)+i)->rx_ue_information.rnti);
+          //UE_info = get_ue_from_rnti(eNB_mac_inst,((UL_INFO->crc_ind.crc_pdu_list)+i)->rx_ue_information.rnti);
           //UE_info->HARQ_round++;
         }
       }
@@ -123,7 +123,7 @@ void UL_indication_NB_IoT(UL_IND_NB_IoT_t *UL_INFO)
     if(UL_INFO->nb_harq_ind.nb_harq_indication_body.number_of_harqs>0)
     {
       LOG_I(MAC,"Recieved Ack of DL Data, rnti : %x\n",UL_INFO->nb_harq_ind.nb_harq_indication_body.nb_harq_pdu_list[0].rx_ue_information.rnti);
-      receive_msg4_ack_NB_IoT(mac_inst,UL_INFO->nb_harq_ind.nb_harq_indication_body.nb_harq_pdu_list[0].rx_ue_information.rnti);
+      receive_msg4_ack_NB_IoT(eNB_mac_inst,UL_INFO->nb_harq_ind.nb_harq_indication_body.nb_harq_pdu_list[0].rx_ue_information.rnti);
     }
 
     UL_INFO->nb_harq_ind.nb_harq_indication_body.number_of_harqs = 0;
@@ -160,8 +160,8 @@ void UL_indication_NB_IoT(UL_IND_NB_IoT_t *UL_INFO)
     //scheduler here
     //Schedule subframe should be next four subframe, means that UL_INFO->frame*10+UL_INFO->subframe + 4
     
-    eNB_dlsch_ulsch_scheduler_NB_IoT(mac_inst,abs_subframe);
-    mac_inst->if_inst_NB_IoT->schedule_response(&mac_inst->Sched_INFO);
+    eNB_dlsch_ulsch_scheduler_NB_IoT(eNB_mac_inst,abs_subframe);
+    eNB_mac_inst->if_inst_NB_IoT->schedule_response(&eNB_mac_inst->Sched_INFO);
 
     LOG_D(MAC,"After scheduler & schedule response\n");
 

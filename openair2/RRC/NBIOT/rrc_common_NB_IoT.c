@@ -52,7 +52,6 @@
 #endif
 
 #define DEBUG_RRC 1
-extern eNB_MAC_INST *eNB_mac_inst;
 extern UE_MAC_INST *UE_mac_inst;
 
 extern mui_t rrc_eNB_mui;

@@ -56,7 +56,7 @@
 #include "UTIL/OSA/osa_defs.h"
 #include "openair2/RRC/NAS/nas_config.h"
 # include "intertask_interface.h"
-#include "ENB_APP/enb_paramdef_NB_IoT.h"
+
 
 #  include "gtpv1u_eNB_task.h"
 #  include "gtpv1u.h"

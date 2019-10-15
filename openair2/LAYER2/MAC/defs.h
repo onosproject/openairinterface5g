@@ -851,6 +851,7 @@ typedef struct {
   uint8_t       dl_cqi[NFAPI_CC_MAX];
 } UE_sched_ctrl;
 /*! \brief eNB template for the Random access information */
+/*
 typedef struct {
   /// Flag to indicate this process is active
   boolean_t RA_active;
@@ -1121,7 +1122,7 @@ typedef struct eNB_MAC_INST_s {
   time_stats_t schedule_mch;
   /// processing time of eNB ULSCH reception
   time_stats_t rx_ulsch_sdu; // include rlc_data_ind
-} eNB_MAC_INST_nb_iot;
+} eNB_MAC_INST_NB_IoT;
 */
 /*
  * UE part

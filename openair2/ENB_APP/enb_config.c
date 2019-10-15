@@ -54,7 +54,6 @@
 #include "common/config/config_userapi.h"
 #include "RRC_config_tools.h"
 #include "enb_paramdef.h"
-#include "enb_paramdef_NB_IoT.h"
 #include "proto_agent.h"
 
 extern uint16_t sf_ahead;
@@ -290,10 +289,7 @@ int RCconfig_RRC(uint32_t i, eNB_RRC_INST *rrc, int macrlc_has_f1) {
   ccparams_lte_t ccparams_lte;
   ccparams_sidelink_t SLconfig;
   ccparams_eMTC_t eMTCconfig;
-  // for NB-IoT
-  ccparams_NB_IoT_t NBconfig;
-  memset((void *)&NBconfig,0,sizeof(ccparams_NB_IoT_t));
-
+  
   memset((void *)&ccparams_lte,0,sizeof(ccparams_lte_t));
   memset((void *)&SLconfig,0,sizeof(ccparams_sidelink_t));
   memset((void *)&eMTCconfig,0,sizeof(ccparams_eMTC_t));
@@ -310,8 +306,7 @@ int RCconfig_RRC(uint32_t i, eNB_RRC_INST *rrc, int macrlc_has_f1) {
   memset((void *)&srb1_params,0,sizeof(srb1_params_t));
   paramdef_t SRB1Params[] = SRB1PARAMS_DESC(srb1_params);
   paramdef_t SLParams[]              = CCPARAMS_SIDELINK_DESC(SLconfig);
-  // for NB-IoT
-  paramdef_t NBIOTParams[]              = CCPARAMS_NB_IOT_DESC(NBconfig);
+  
 
   /* map parameter checking array instances to parameter definition array instances */
   for (int I=0; I< ( sizeof(CCsParams)/ sizeof(paramdef_t)  ) ; I++) {
@@ -1656,16 +1651,7 @@ int RCconfig_RRC(uint32_t i, eNB_RRC_INST *rrc, int macrlc_has_f1) {
               if (eMTCconfig.eMTC_configured > 0) fill_eMTC_configuration(msg_p,&eMTCconfig, i,j,RC.config_file_name,brparamspath);
               else                            printf("No eMTC configuration, skipping it\n");
 
-              // NB-IoT configuration
-              char NBparamspath[MAX_OPTNAME_SIZE*2 + 16];
-              sprintf(NBparamspath,"%s.%s", ccspath, ENB_CONFIG_STRING_NB_IoT_PARAMETERS);
-              config_get(NBIOTParams, sizeof(NBIOTParams)/sizeof(paramdef_t), NBparamspath);
-              NBIOTRRC_CONFIGURATION_REQ(msg_p).NB_IoT_configured = NBconfig.NB_IoT_configured&1;
-
-              if (NBconfig.NB_IoT_configured > 0) fill_NB_IoT_configuration(msg_p,&NBconfig, i,j,RC.config_file_name,NBparamspath);
-              else                            printf("No NB-IoT configuration, skipping it\n");
-
-              // Sidelink configuration
+                            // Sidelink configuration
               char SLparamspath[MAX_OPTNAME_SIZE*2 + 16];
               sprintf(SLparamspath,"%s.%s", ccspath, ENB_CONFIG_STRING_SL_PARAMETERS);
               config_get( SLParams, sizeof(SLParams)/sizeof(paramdef_t), SLparamspath);

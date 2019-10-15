@@ -155,7 +155,7 @@ void proc_tx_high0_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,
   VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME( VCD_SIGNAL_DUMPER_VARIABLES_SUBFRAME_NUMBER_TX0_ENB+offset, proc->subframe_tx );
 
   // issue here
-  phy_procedures_eNB_TX_NB_IoT(eNB,proc,1);
+  phy_procedures_eNB_TX_NB_IoT(eNB,proc,r_type,rn,1,1);
 
   /* we're done, let the next one proceed */
   if (pthread_mutex_lock(&sync_phy_proc.mutex_phy_proc_tx) != 0) {

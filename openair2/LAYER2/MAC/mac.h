@@ -1391,7 +1391,6 @@ typedef struct {
     BCCH_PDU BCCH_MBMS_pdu;
     uint8_t FeMBMS_flag;
 #endif
-LTE_eNB_PDCCH DCI_pdu;
 } COMMON_channels_t;
 /*! \brief top level eNB MAC structure */
 typedef struct eNB_MAC_INST_s {

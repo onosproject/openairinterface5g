@@ -34,7 +34,6 @@
 
 //#include "PHY/defs_common.h"
 #include "mac.h"
-
 #include "RRC/LTE/rrc_defs.h"
 
 extern const uint32_t BSR_TABLE[BSR_TABLE_SIZE];
@@ -55,7 +54,6 @@ extern UE_MAC_INST *UE_mac_inst;
 
 extern eNB_ULSCH_INFO eNB_ulsch_info[NUMBER_OF_eNB_MAX][MAX_NUM_CCs][MAX_MOBILES_PER_ENB];	// eNBxUE = 8x8
 extern eNB_DLSCH_INFO eNB_dlsch_info[NUMBER_OF_eNB_MAX][MAX_NUM_CCs][MAX_MOBILES_PER_ENB];	// eNBxUE = 8x8
-
 
 
 

@@ -101,7 +101,7 @@ void config_mib_fapi_NB_IoT(int                     physCellId,
 
 {
 
-  nfapi_config_request_t *cfg = &mac_inst->config;
+  nfapi_config_request_t *cfg = &eNB_mac_inst->config;
 
   cfg->sch_config.physical_cell_id.value = physCellId;
   cfg->nfapi_config.rf_bands.rf_band[0] = eutra_band;
@@ -169,7 +169,7 @@ void config_sib2_fapi_NB_IoT(
                         )
 {
 
-  nfapi_config_request_t *cfg = &mac_inst->config;
+  nfapi_config_request_t *cfg = &eNB_mac_inst->config;
     /*
      * Following the FAPI like approach:
      * 1)   fill the PHY_Config_t structure (PHY_INTERFACE/IF_Module_NB_IoT.h)
@@ -306,7 +306,7 @@ void rrc_mac_config_req_NB_IoT(
 
     mac_top_init_eNB_NB_IoT();
 
-    mac_config = &mac_inst->rrc_config;
+    mac_config = &eNB_mac_inst->rrc_config;
 
     long schedulingInfoSIB1 = carrier->mib_NB_IoT.message.schedulingInfoSIB1_r13;
 
@@ -401,10 +401,10 @@ void rrc_mac_config_req_NB_IoT(
         mac_config->mac_NPRACH_ConfigSIB[0].mac_npdcch_NumRepetitions_RA_NB_IoT         = rmax[nprach_parameter->npdcch_NumRepetitions_RA_r13];
         mac_config->mac_NPRACH_ConfigSIB[0].mac_npdcch_StartSF_CSS_RA_NB_IoT            = gvalue[nprach_parameter->npdcch_StartSF_CSS_RA_r13];
         mac_config->mac_NPRACH_ConfigSIB[0].mac_npdcch_Offset_RA_NB_IoT                 = pdcchoffset[nprach_parameter->npdcch_Offset_RA_r13];
-        mac_inst->npdcch_config_common[0].R_max                                         = rmax[nprach_parameter->npdcch_NumRepetitions_RA_r13];
-        mac_inst->npdcch_config_common[0].G                                             = gvalue[nprach_parameter->npdcch_StartSF_CSS_RA_r13];
-        mac_inst->npdcch_config_common[0].a_offset                                      = pdcchoffset[nprach_parameter->npdcch_Offset_RA_r13];
-        LOG_I(MAC,"NPRACH CE 0 setting: Rmax: %lu G: %lf a: %lf\n",mac_inst->npdcch_config_common[0].R_max,mac_inst->npdcch_config_common[0].G,mac_inst->npdcch_config_common[0].a_offset);
+        eNB_mac_inst->npdcch_config_common[0].R_max                                         = rmax[nprach_parameter->npdcch_NumRepetitions_RA_r13];
+        eNB_mac_inst->npdcch_config_common[0].G                                             = gvalue[nprach_parameter->npdcch_StartSF_CSS_RA_r13];
+        eNB_mac_inst->npdcch_config_common[0].a_offset                                      = pdcchoffset[nprach_parameter->npdcch_Offset_RA_r13];
+        LOG_I(MAC,"NPRACH CE 0 setting: Rmax: %lu G: %lf a: %lf\n",eNB_mac_inst->npdcch_config_common[0].R_max,eNB_mac_inst->npdcch_config_common[0].G,eNB_mac_inst->npdcch_config_common[0].a_offset);
       }
       //CE level 1
       if ( radioResourceConfigCommon->nprach_Config_r13.nprach_ParametersList_r13.list.array[1] != NULL) 
@@ -415,10 +415,10 @@ void rrc_mac_config_req_NB_IoT(
         mac_config->mac_NPRACH_ConfigSIB[1].mac_npdcch_NumRepetitions_RA_NB_IoT         = rmax[nprach_parameter->npdcch_NumRepetitions_RA_r13];
         mac_config->mac_NPRACH_ConfigSIB[1].mac_npdcch_StartSF_CSS_RA_NB_IoT            = gvalue[nprach_parameter->npdcch_StartSF_CSS_RA_r13];
         mac_config->mac_NPRACH_ConfigSIB[1].mac_npdcch_Offset_RA_NB_IoT                 = pdcchoffset[nprach_parameter->npdcch_Offset_RA_r13];
-        mac_inst->npdcch_config_common[1].R_max                                         = rmax[nprach_parameter->npdcch_NumRepetitions_RA_r13];
-        mac_inst->npdcch_config_common[1].G                                             = gvalue[nprach_parameter->npdcch_StartSF_CSS_RA_r13];
-        mac_inst->npdcch_config_common[1].a_offset                                      = pdcchoffset[nprach_parameter->npdcch_Offset_RA_r13];
-        LOG_I(MAC,"NPRACH CE 1 setting: Rmax: %lu G: %lf a: %lf\n",mac_inst->npdcch_config_common[1].R_max,mac_inst->npdcch_config_common[1].G,mac_inst->npdcch_config_common[1].a_offset);
+        eNB_mac_inst->npdcch_config_common[1].R_max                                         = rmax[nprach_parameter->npdcch_NumRepetitions_RA_r13];
+        eNB_mac_inst->npdcch_config_common[1].G                                             = gvalue[nprach_parameter->npdcch_StartSF_CSS_RA_r13];
+        eNB_mac_inst->npdcch_config_common[1].a_offset                                      = pdcchoffset[nprach_parameter->npdcch_Offset_RA_r13];
+        LOG_I(MAC,"NPRACH CE 1 setting: Rmax: %lu G: %lf a: %lf\n",eNB_mac_inst->npdcch_config_common[1].R_max,eNB_mac_inst->npdcch_config_common[1].G,eNB_mac_inst->npdcch_config_common[1].a_offset);
       }
       //CE level 2
       if ( radioResourceConfigCommon->nprach_Config_r13.nprach_ParametersList_r13.list.array[2] != NULL) 
@@ -429,10 +429,10 @@ void rrc_mac_config_req_NB_IoT(
         mac_config->mac_NPRACH_ConfigSIB[2].mac_npdcch_NumRepetitions_RA_NB_IoT         = rmax[nprach_parameter->npdcch_NumRepetitions_RA_r13];
         mac_config->mac_NPRACH_ConfigSIB[2].mac_npdcch_StartSF_CSS_RA_NB_IoT            = gvalue[nprach_parameter->npdcch_StartSF_CSS_RA_r13];
         mac_config->mac_NPRACH_ConfigSIB[2].mac_npdcch_Offset_RA_NB_IoT                 = pdcchoffset[nprach_parameter->npdcch_Offset_RA_r13];
-        mac_inst->npdcch_config_common[2].R_max                                         = rmax[nprach_parameter->npdcch_NumRepetitions_RA_r13];
-        mac_inst->npdcch_config_common[2].G                                             = gvalue[nprach_parameter->npdcch_StartSF_CSS_RA_r13];
-        mac_inst->npdcch_config_common[2].a_offset                                      = pdcchoffset[nprach_parameter->npdcch_Offset_RA_r13];
-        LOG_I(MAC,"NPRACH CE 2 setting: Rmax: %lu G: %lf a: %lf\n",mac_inst->npdcch_config_common[2].R_max,mac_inst->npdcch_config_common[2].G,mac_inst->npdcch_config_common[2].a_offset);
+        eNB_mac_inst->npdcch_config_common[2].R_max                                         = rmax[nprach_parameter->npdcch_NumRepetitions_RA_r13];
+        eNB_mac_inst->npdcch_config_common[2].G                                             = gvalue[nprach_parameter->npdcch_StartSF_CSS_RA_r13];
+        eNB_mac_inst->npdcch_config_common[2].a_offset                                      = pdcchoffset[nprach_parameter->npdcch_Offset_RA_r13];
+        LOG_I(MAC,"NPRACH CE 2 setting: Rmax: %lu G: %lf a: %lf\n",eNB_mac_inst->npdcch_config_common[2].R_max,eNB_mac_inst->npdcch_config_common[2].G,eNB_mac_inst->npdcch_config_common[2].a_offset);
       }
 
       config_sib2_fapi_NB_IoT(carrier->physCellId,radioResourceConfigCommon);
@@ -465,24 +465,24 @@ void rrc_mac_config_req_NB_IoT(
         }
     }
     
-    if(mac_inst->if_inst_NB_IoT!=NULL)
+    if(eNB_mac_inst->if_inst_NB_IoT!=NULL)
     {
       if (radioResourceConfigCommon!=NULL) 
       {
-        AssertFatal( mac_inst->if_inst_NB_IoT->PHY_config_req != NULL, "rrc_mac_config_req_eNB_NB_IoT: PHY_config_req pointer function is NULL\n");
+        AssertFatal( eNB_mac_inst->if_inst_NB_IoT->PHY_config_req != NULL, "rrc_mac_config_req_eNB_NB_IoT: PHY_config_req pointer function is NULL\n");
         PHY_Config_NB_IoT_t phycfg;
         phycfg.mod_id = Mod_idP;
-        phycfg.cfg    = &mac_inst->config;
+        phycfg.cfg    = &eNB_mac_inst->config;
     
-        if (mac_inst->if_inst_NB_IoT->PHY_config_req) 
-          mac_inst->if_inst_NB_IoT->PHY_config_req(&phycfg); 
+        if (eNB_mac_inst->if_inst_NB_IoT->PHY_config_req) 
+          eNB_mac_inst->if_inst_NB_IoT->PHY_config_req(&phycfg); 
       }
     }else
     {
       LOG_E(MAC,"NB-IoT IF INST is NULL, need to fix\n");
     }
 
-    init_mac_NB_IoT(mac_inst);
+    init_mac_NB_IoT(eNB_mac_inst);
     LOG_I(MAC,"[NB-IoT] Init_MAC done\n");
 
 }

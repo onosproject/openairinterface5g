@@ -31,7 +31,7 @@
 #define __MAC_EXTERN_NB_IOT_H__
 
 #include "openair2/PHY_INTERFACE/defs_NB_IoT.h" 
-
+#include "openair2/LAYER2/MAC/defs_NB_IoT.h"
 
 
 extern uint8_t Is_rrc_registered;
@@ -55,7 +55,7 @@ extern EMULATION_VARS *Emul_vars;
 
 //NB-IoT---------------------------------
 
-extern eNB_MAC_INST_NB_IoT *mac_inst;
+extern eNB_MAC_INST_NB_IoT *eNB_mac_inst;
 extern uint8_t Is_rrc_registered_NB_IoT;
 
 extern available_resource_DL_t *available_resource_DL;
