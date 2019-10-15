@@ -37,6 +37,570 @@
    \param p_procBuf Pointer to processing buffers
    \param Z Lifting size
 */
+/*
+static inline void nrLDPC_cnProcCore(t_nrLDPC_lut* p_lut, t_nrLDPC_procBuf* p_procBuf, t_nrLDPC_cnProcGroup* p_cnProcGroup, uint16_t Z)
+{
+    __m256i* p_cnProcBuf    = (__m256i*) p_cnProcGroup->cnProcBufGroup;
+    __m256i* p_cnProcBufRes = (__m256i*) p_cnProcGroup->cnProcBufResGroup;
+    const uint8_t numConnectedBn    = p_cnProcGroup->numConnectedBn;
+    const uint8_t numCnInCnGroup    = p_cnProcGroup->numCnInCnGroup;
+    const uint8_t numCnInCnGroupMax = p_cnProcGroup->numCnInCnGroupMax;
+
+    const uint16_t (*idxCnProcGroup)[numConnectedBn-1] = (uint16_t(*)[numConnectedBn-1]) p_cnProcGroup->idxCnProcGroup;
+
+    // Number of CNs in Groups
+    uint32_t M;
+    uint32_t i;
+    uint32_t j;
+    uint32_t k;
+
+    // Offset to each bit within a group in terms of 32 Byte
+    uint32_t bitOffsetInGroup;
+
+    __m256i ymm0, min, sgn;
+    __m256i* p_cnProcBufResBit;
+
+    const __m256i* p_ones   = (__m256i*) ones256_epi8;
+    const __m256i* p_maxLLR = (__m256i*) maxLLR256_epi8;
+
+    // =====================================================================
+    // Process group
+
+    if (numCnInCnGroup > 0)
+    {
+        // Number of groups of 32 CNs for parallel processing
+        // Ceil for values not divisible by 32
+        M = (numCnInCnGroup*Z + 31)>>5;
+        // Set the offset to each bit within a group in terms of 32 Byte
+        bitOffsetInGroup = (numCnInCnGroupMax*NR_LDPC_ZMAX)>>5;
+
+        // Loop over every BN
+        for (j=0; j<numConnectedBn; j++)
+        {
+            // Set of results pointer to correct BN address
+            p_cnProcBufResBit = p_cnProcBufRes + (j*bitOffsetInGroup);
+
+            // Loop over CNs
+            for (i=0; i<M; i++)
+            {
+                // Abs and sign of 32 CNs (first BN)
+                ymm0 = p_cnProcBuf[idxCnProcGroup[j][0] + i];
+                sgn  = _mm256_sign_epi8(*p_ones, ymm0);
+                min  = _mm256_abs_epi8(ymm0);
+
+                //mexPrintf("idxCnProcGroup[%d][0] = %d\n",j,idxCnProcGroup[j][0]);
+
+                // Loop over BNs
+                for (k=1; k<(numConnectedBn-1); k++)
+                {
+                    //mexPrintf("idxCnProcGroup[%d][%d] = %d\n",j,k,idxCnProcGroup[j][k]);
+                    ymm0 = p_cnProcBuf[idxCnProcGroup[j][k] + i];
+                    min  = _mm256_min_epu8(min, _mm256_abs_epi8(ymm0));
+                    sgn  = _mm256_sign_epi8(sgn, ymm0);
+                }
+
+                // Store result
+                min = _mm256_min_epu8(min, *p_maxLLR); // 128 in epi8 is -127
+                *p_cnProcBufResBit = _mm256_sign_epi8(min, sgn);
+                p_cnProcBufResBit++;
+            }
+        }
+    }
+}
+*/
+
+/**
+   \brief Performs CN processing for BG2 on the CN processing buffer and stores the results in the CN processing results buffer.
+   \param p_lut Pointer to decoder LUTs
+   \param p_procBuf Pointer to processing buffers
+   \param Z Lifting size
+*/
+static inline void nrLDPC_cnProc_BG2_CNG3(t_nrLDPC_lut* p_lut, t_nrLDPC_procBuf* p_procBuf, uint16_t Z)
+{
+    const uint8_t*  lut_numCnInCnGroups   = p_lut->numCnInCnGroups;
+    const uint32_t* lut_startAddrCnGroups = p_lut->startAddrCnGroups;
+
+    int8_t* cnProcBuf    = p_procBuf->cnProcBuf;
+    int8_t* cnProcBufRes = p_procBuf->cnProcBufRes;
+
+    __m256i* p_cnProcBuf;
+    __m256i* p_cnProcBufRes;
+
+    // Number of CNs in Groups
+    uint32_t M;
+    uint32_t i;
+    uint32_t j;
+    // Offset to each bit within a group in terms of 32 Byte
+    uint32_t bitOffsetInGroup;
+
+    __m256i ymm0, min, sgn;
+    __m256i* p_cnProcBufResBit;
+
+    const __m256i* p_ones   = (__m256i*) ones256_epi8;
+    const __m256i* p_maxLLR = (__m256i*) maxLLR256_epi8;
+
+    // LUT with offsets for bits that need to be processed
+    // 1. bit proc requires LLRs of 2. and 3. bit, 2.bits of 1. and 3. etc.
+    // Offsets are in units of bitOffsetInGroup
+    const uint8_t lut_idxCnProcG3[3][2] = {{72,144}, {0,144}, {0,72}};
+
+    if (lut_numCnInCnGroups[0] > 0)
+    {
+        // Number of groups of 32 CNs for parallel processing
+        // Ceil for values not divisible by 32
+        M = (lut_numCnInCnGroups[0]*Z + 31)>>5;
+        // Set the offset to each bit within a group in terms of 32 Byte
+        bitOffsetInGroup = (lut_numCnInCnGroups_BG2_R15[0]*NR_LDPC_ZMAX)>>5;
+
+        // Set pointers to start of group 3
+        p_cnProcBuf    = (__m256i*) &cnProcBuf   [lut_startAddrCnGroups[0]];
+        p_cnProcBufRes = (__m256i*) &cnProcBufRes[lut_startAddrCnGroups[0]];
+
+        // Loop over every BN
+        for (j=0; j<3; j++)
+        {
+            // Set of results pointer to correct BN address
+            p_cnProcBufResBit = p_cnProcBufRes + (j*bitOffsetInGroup);
+
+            // Loop over CNs
+            for (i=0; i<M; i++)
+            {
+                // Abs and sign of 32 CNs (first BN)
+                ymm0 = p_cnProcBuf[lut_idxCnProcG3[j][0] + i];
+                sgn  = _mm256_sign_epi8(*p_ones, ymm0);
+                min  = _mm256_abs_epi8(ymm0);
+
+                // 32 CNs of second BN
+                ymm0 = p_cnProcBuf[lut_idxCnProcG3[j][1] + i];
+                min  = _mm256_min_epu8(min, _mm256_abs_epi8(ymm0));
+                sgn  = _mm256_sign_epi8(sgn, ymm0);
+
+                // Store result
+                min = _mm256_min_epu8(min, *p_maxLLR); // 128 in epi8 is -127
+                *p_cnProcBufResBit = _mm256_sign_epi8(min, sgn);
+                p_cnProcBufResBit++;
+            }
+        }
+    }
+}
+
+/**
+   \brief Performs CN processing for BG2 on the CN processing buffer and stores the results in the CN processing results buffer.
+   \param p_lut Pointer to decoder LUTs
+   \param p_procBuf Pointer to processing buffers
+   \param Z Lifting size
+*/
+static inline void nrLDPC_cnProc_BG2_CNG4(t_nrLDPC_lut* p_lut, t_nrLDPC_procBuf* p_procBuf, uint16_t Z)
+{
+    const uint8_t*  lut_numCnInCnGroups   = p_lut->numCnInCnGroups;
+    const uint32_t* lut_startAddrCnGroups = p_lut->startAddrCnGroups;
+
+    int8_t* cnProcBuf    = p_procBuf->cnProcBuf;
+    int8_t* cnProcBufRes = p_procBuf->cnProcBufRes;
+
+    __m256i* p_cnProcBuf;
+    __m256i* p_cnProcBufRes;
+
+    // Number of CNs in Groups
+    uint32_t M;
+    uint32_t i;
+    uint32_t j;
+    uint32_t k;
+    // Offset to each bit within a group in terms of 32 Byte
+    uint32_t bitOffsetInGroup;
+
+    __m256i ymm0, min, sgn;
+    __m256i* p_cnProcBufResBit;
+
+    const __m256i* p_ones   = (__m256i*) ones256_epi8;
+    const __m256i* p_maxLLR = (__m256i*) maxLLR256_epi8;
+
+    // =====================================================================
+    // Process group with 4 BNs
+
+    // Offset is 20*384/32 = 240
+    const uint16_t lut_idxCnProcG4[4][3] = {{240,480,720}, {0,480,720}, {0,240,720}, {0,240,480}};
+
+    if (lut_numCnInCnGroups[1] > 0)
+    {
+        // Number of groups of 32 CNs for parallel processing
+        // Ceil for values not divisible by 32
+        M = (lut_numCnInCnGroups[1]*Z + 31)>>5;
+        // Set the offset to each bit within a group in terms of 32 Byte
+        bitOffsetInGroup = (lut_numCnInCnGroups_BG2_R15[1]*NR_LDPC_ZMAX)>>5;
+
+        // Set pointers to start of group 4
+        p_cnProcBuf    = (__m256i*) &cnProcBuf   [lut_startAddrCnGroups[1]];
+        p_cnProcBufRes = (__m256i*) &cnProcBufRes[lut_startAddrCnGroups[1]];
+
+        // Loop over every BN
+        for (j=0; j<4; j++)
+        {
+            // Set of results pointer to correct BN address
+            p_cnProcBufResBit = p_cnProcBufRes + (j*bitOffsetInGroup);
+
+            // Loop over CNs
+            for (i=0; i<M; i++)
+            {
+                // Abs and sign of 32 CNs (first BN)
+                ymm0 = p_cnProcBuf[lut_idxCnProcG4[j][0] + i];
+                sgn  = _mm256_sign_epi8(*p_ones, ymm0);
+                min  = _mm256_abs_epi8(ymm0);
+
+                // Loop over BNs
+                for (k=1; k<3; k++)
+                {
+                    ymm0 = p_cnProcBuf[lut_idxCnProcG4[j][k] + i];
+                    min  = _mm256_min_epu8(min, _mm256_abs_epi8(ymm0));
+                    sgn  = _mm256_sign_epi8(sgn, ymm0);
+                }
+
+                // Store result
+                min = _mm256_min_epu8(min, *p_maxLLR); // 128 in epi8 is -127
+                *p_cnProcBufResBit = _mm256_sign_epi8(min, sgn);
+                p_cnProcBufResBit++;
+            }
+        }
+    }
+}
+
+/**
+   \brief Performs CN processing for BG2 on the CN processing buffer and stores the results in the CN processing results buffer.
+   \param p_lut Pointer to decoder LUTs
+   \param p_procBuf Pointer to processing buffers
+   \param Z Lifting size
+*/
+static inline void nrLDPC_cnProc_BG2_CNG5(t_nrLDPC_lut* p_lut, t_nrLDPC_procBuf* p_procBuf, uint16_t Z)
+{
+    const uint8_t*  lut_numCnInCnGroups   = p_lut->numCnInCnGroups;
+    const uint32_t* lut_startAddrCnGroups = p_lut->startAddrCnGroups;
+
+    int8_t* cnProcBuf    = p_procBuf->cnProcBuf;
+    int8_t* cnProcBufRes = p_procBuf->cnProcBufRes;
+
+    __m256i* p_cnProcBuf;
+    __m256i* p_cnProcBufRes;
+
+    // Number of CNs in Groups
+    uint32_t M;
+    uint32_t i;
+    uint32_t j;
+    uint32_t k;
+    // Offset to each bit within a group in terms of 32 Byte
+    uint32_t bitOffsetInGroup;
+
+    __m256i ymm0, min, sgn;
+    __m256i* p_cnProcBufResBit;
+
+    const __m256i* p_ones   = (__m256i*) ones256_epi8;
+    const __m256i* p_maxLLR = (__m256i*) maxLLR256_epi8;
+
+    // =====================================================================
+    // Process group with 5 BNs
+
+    // Offset is 9*384/32 = 108
+    const uint16_t lut_idxCnProcG5[5][4] = {{108,216,324,432}, {0,216,324,432},
+                                            {0,108,324,432}, {0,108,216,432}, {0,108,216,324}};
+
+    if (lut_numCnInCnGroups[2] > 0)
+    {
+        // Number of groups of 32 CNs for parallel processing
+        // Ceil for values not divisible by 32
+        M = (lut_numCnInCnGroups[2]*Z + 31)>>5;
+        // Set the offset to each bit within a group in terms of 32 Byte
+        bitOffsetInGroup = (lut_numCnInCnGroups_BG2_R15[2]*NR_LDPC_ZMAX)>>5;
+
+        // Set pointers to start of group 5
+        p_cnProcBuf    = (__m256i*) &cnProcBuf   [lut_startAddrCnGroups[2]];
+        p_cnProcBufRes = (__m256i*) &cnProcBufRes[lut_startAddrCnGroups[2]];
+
+        // Loop over every BN
+        for (j=0; j<5; j++)
+        {
+            // Set of results pointer to correct BN address
+            p_cnProcBufResBit = p_cnProcBufRes + (j*bitOffsetInGroup);
+
+            // Loop over CNs
+            for (i=0; i<M; i++)
+            {
+                // Abs and sign of 32 CNs (first BN)
+                ymm0 = p_cnProcBuf[lut_idxCnProcG5[j][0] + i];
+                sgn  = _mm256_sign_epi8(*p_ones, ymm0);
+                min  = _mm256_abs_epi8(ymm0);
+
+                // Loop over BNs
+                for (k=1; k<4; k++)
+                {
+                    ymm0 = p_cnProcBuf[lut_idxCnProcG5[j][k] + i];
+                    min  = _mm256_min_epu8(min, _mm256_abs_epi8(ymm0));
+                    sgn  = _mm256_sign_epi8(sgn, ymm0);
+                }
+
+                // Store result
+                min = _mm256_min_epu8(min, *p_maxLLR); // 128 in epi8 is -127
+                *p_cnProcBufResBit = _mm256_sign_epi8(min, sgn);
+                p_cnProcBufResBit++;
+            }
+        }
+    }
+}
+
+/**
+   \brief Performs CN processing for BG2 on the CN processing buffer and stores the results in the CN processing results buffer.
+   \param p_lut Pointer to decoder LUTs
+   \param p_procBuf Pointer to processing buffers
+   \param Z Lifting size
+*/
+static inline void nrLDPC_cnProc_BG2_CNG6(t_nrLDPC_lut* p_lut, t_nrLDPC_procBuf* p_procBuf, uint16_t Z)
+{
+    const uint8_t*  lut_numCnInCnGroups   = p_lut->numCnInCnGroups;
+    const uint32_t* lut_startAddrCnGroups = p_lut->startAddrCnGroups;
+
+    int8_t* cnProcBuf    = p_procBuf->cnProcBuf;
+    int8_t* cnProcBufRes = p_procBuf->cnProcBufRes;
+
+    __m256i* p_cnProcBuf;
+    __m256i* p_cnProcBufRes;
+
+    // Number of CNs in Groups
+    uint32_t M;
+    uint32_t i;
+    uint32_t j;
+    uint32_t k;
+    // Offset to each bit within a group in terms of 32 Byte
+    uint32_t bitOffsetInGroup;
+
+    __m256i ymm0, min, sgn;
+    __m256i* p_cnProcBufResBit;
+
+    const __m256i* p_ones   = (__m256i*) ones256_epi8;
+    const __m256i* p_maxLLR = (__m256i*) maxLLR256_epi8;
+
+    // =====================================================================
+    // Process group with 6 BNs
+
+    // Offset is 3*384/32 = 36
+    const uint16_t lut_idxCnProcG6[6][5] = {{36,72,108,144,180}, {0,72,108,144,180},
+                                            {0,36,108,144,180}, {0,36,72,144,180},
+                                            {0,36,72,108,180}, {0,36,72,108,144}};
+
+    if (lut_numCnInCnGroups[3] > 0)
+    {
+        // Number of groups of 32 CNs for parallel processing
+        // Ceil for values not divisible by 32
+        M = (lut_numCnInCnGroups[3]*Z + 31)>>5;
+        // Set the offset to each bit within a group in terms of 32 Byte
+        bitOffsetInGroup = (lut_numCnInCnGroups_BG2_R15[3]*NR_LDPC_ZMAX)>>5;
+
+        // Set pointers to start of group 6
+        p_cnProcBuf    = (__m256i*) &cnProcBuf   [lut_startAddrCnGroups[3]];
+        p_cnProcBufRes = (__m256i*) &cnProcBufRes[lut_startAddrCnGroups[3]];
+
+        // Loop over every BN
+        for (j=0; j<6; j++)
+        {
+            // Set of results pointer to correct BN address
+            p_cnProcBufResBit = p_cnProcBufRes + (j*bitOffsetInGroup);
+
+            // Loop over CNs
+            for (i=0; i<M; i++)
+            {
+                // Abs and sign of 32 CNs (first BN)
+                ymm0 = p_cnProcBuf[lut_idxCnProcG6[j][0] + i];
+                sgn  = _mm256_sign_epi8(*p_ones, ymm0);
+                min  = _mm256_abs_epi8(ymm0);
+
+                // Loop over BNs
+                for (k=1; k<5; k++)
+                {
+                    ymm0 = p_cnProcBuf[lut_idxCnProcG6[j][k] + i];
+                    min  = _mm256_min_epu8(min, _mm256_abs_epi8(ymm0));
+                    sgn  = _mm256_sign_epi8(sgn, ymm0);
+                }
+
+                // Store result
+                min = _mm256_min_epu8(min, *p_maxLLR); // 128 in epi8 is -127
+                *p_cnProcBufResBit = _mm256_sign_epi8(min, sgn);
+                p_cnProcBufResBit++;
+            }
+        }
+    }
+}
+
+/**
+   \brief Performs CN processing for BG2 on the CN processing buffer and stores the results in the CN processing results buffer.
+   \param p_lut Pointer to decoder LUTs
+   \param p_procBuf Pointer to processing buffers
+   \param Z Lifting size
+*/
+static inline void nrLDPC_cnProc_BG2_CNG8(t_nrLDPC_lut* p_lut, t_nrLDPC_procBuf* p_procBuf, uint16_t Z)
+{
+    const uint8_t*  lut_numCnInCnGroups   = p_lut->numCnInCnGroups;
+    const uint32_t* lut_startAddrCnGroups = p_lut->startAddrCnGroups;
+
+    int8_t* cnProcBuf    = p_procBuf->cnProcBuf;
+    int8_t* cnProcBufRes = p_procBuf->cnProcBufRes;
+
+    __m256i* p_cnProcBuf;
+    __m256i* p_cnProcBufRes;
+
+    // Number of CNs in Groups
+    uint32_t M;
+    uint32_t i;
+    uint32_t j;
+    uint32_t k;
+    // Offset to each bit within a group in terms of 32 Byte
+    uint32_t bitOffsetInGroup;
+
+    __m256i ymm0, min, sgn;
+    __m256i* p_cnProcBufResBit;
+
+    const __m256i* p_ones   = (__m256i*) ones256_epi8;
+    const __m256i* p_maxLLR = (__m256i*) maxLLR256_epi8;
+
+    // =====================================================================
+    // Process group with 8 BNs
+
+    // Offset is 2*384/32 = 24
+    const uint8_t lut_idxCnProcG8[8][7] = {{24,48,72,96,120,144,168}, {0,48,72,96,120,144,168},
+                                           {0,24,72,96,120,144,168}, {0,24,48,96,120,144,168},
+                                           {0,24,48,72,120,144,168}, {0,24,48,72,96,144,168},
+                                           {0,24,48,72,96,120,168}, {0,24,48,72,96,120,144}};
+
+    if (lut_numCnInCnGroups[4] > 0)
+    {
+        // Number of groups of 32 CNs for parallel processing
+        // Ceil for values not divisible by 32
+        M = (lut_numCnInCnGroups[4]*Z + 31)>>5;
+        // Set the offset to each bit within a group in terms of 32 Byte
+        bitOffsetInGroup = (lut_numCnInCnGroups_BG2_R15[4]*NR_LDPC_ZMAX)>>5;
+
+        // Set pointers to start of group 8
+        p_cnProcBuf    = (__m256i*) &cnProcBuf   [lut_startAddrCnGroups[4]];
+        p_cnProcBufRes = (__m256i*) &cnProcBufRes[lut_startAddrCnGroups[4]];
+
+        // Loop over every BN
+        for (j=0; j<8; j++)
+        {
+            // Set of results pointer to correct BN address
+            p_cnProcBufResBit = p_cnProcBufRes + (j*bitOffsetInGroup);
+
+            // Loop over CNs
+            for (i=0; i<M; i++)
+            {
+                // Abs and sign of 32 CNs (first BN)
+                ymm0 = p_cnProcBuf[lut_idxCnProcG8[j][0] + i];
+                sgn  = _mm256_sign_epi8(*p_ones, ymm0);
+                min  = _mm256_abs_epi8(ymm0);
+
+                // Loop over BNs
+                for (k=1; k<7; k++)
+                {
+                    ymm0 = p_cnProcBuf[lut_idxCnProcG8[j][k] + i];
+                    min  = _mm256_min_epu8(min, _mm256_abs_epi8(ymm0));
+                    sgn  = _mm256_sign_epi8(sgn, ymm0);
+                }
+
+                // Store result
+                min = _mm256_min_epu8(min, *p_maxLLR); // 128 in epi8 is -127
+                *p_cnProcBufResBit = _mm256_sign_epi8(min, sgn);
+                p_cnProcBufResBit++;
+            }
+        }
+    }
+}
+
+/**
+   \brief Performs CN processing for BG2 on the CN processing buffer and stores the results in the CN processing results buffer.
+   \param p_lut Pointer to decoder LUTs
+   \param p_procBuf Pointer to processing buffers
+   \param Z Lifting size
+*/
+static inline void nrLDPC_cnProc_BG2_CNG10(t_nrLDPC_lut* p_lut, t_nrLDPC_procBuf* p_procBuf, uint16_t Z)
+{
+    const uint8_t*  lut_numCnInCnGroups   = p_lut->numCnInCnGroups;
+    const uint32_t* lut_startAddrCnGroups = p_lut->startAddrCnGroups;
+
+    int8_t* cnProcBuf    = p_procBuf->cnProcBuf;
+    int8_t* cnProcBufRes = p_procBuf->cnProcBufRes;
+
+    __m256i* p_cnProcBuf;
+    __m256i* p_cnProcBufRes;
+
+    // Number of CNs in Groups
+    uint32_t M;
+    uint32_t i;
+    uint32_t j;
+    uint32_t k;
+    // Offset to each bit within a group in terms of 32 Byte
+    uint32_t bitOffsetInGroup;
+
+    __m256i ymm0, min, sgn;
+    __m256i* p_cnProcBufResBit;
+
+    const __m256i* p_ones   = (__m256i*) ones256_epi8;
+    const __m256i* p_maxLLR = (__m256i*) maxLLR256_epi8;
+
+    // =====================================================================
+    // Process group with 10 BNs
+
+    // Offset is 2*384/32 = 24
+    const uint8_t lut_idxCnProcG10[10][9] = {{24,48,72,96,120,144,168,192,216}, {0,48,72,96,120,144,168,192,216},
+                                             {0,24,72,96,120,144,168,192,216}, {0,24,48,96,120,144,168,192,216},
+                                             {0,24,48,72,120,144,168,192,216}, {0,24,48,72,96,144,168,192,216},
+                                             {0,24,48,72,96,120,168,192,216}, {0,24,48,72,96,120,144,192,216},
+                                             {0,24,48,72,96,120,144,168,216}, {0,24,48,72,96,120,144,168,192}};
+
+    if (lut_numCnInCnGroups[5] > 0)
+    {
+        // Number of groups of 32 CNs for parallel processing
+        // Ceil for values not divisible by 32
+        M = (lut_numCnInCnGroups[5]*Z + 31)>>5;
+        // Set the offset to each bit within a group in terms of 32 Byte
+        bitOffsetInGroup = (lut_numCnInCnGroups_BG2_R15[5]*NR_LDPC_ZMAX)>>5;
+
+        // Set pointers to start of group 10
+        p_cnProcBuf    = (__m256i*) &cnProcBuf   [lut_startAddrCnGroups[5]];
+        p_cnProcBufRes = (__m256i*) &cnProcBufRes[lut_startAddrCnGroups[5]];
+
+        // Loop over every BN
+        for (j=0; j<10; j++)
+        {
+            // Set of results pointer to correct BN address
+            p_cnProcBufResBit = p_cnProcBufRes + (j*bitOffsetInGroup);
+
+            // Loop over CNs
+            for (i=0; i<M; i++)
+            {
+                // Abs and sign of 32 CNs (first BN)
+                ymm0 = p_cnProcBuf[lut_idxCnProcG10[j][0] + i];
+                sgn  = _mm256_sign_epi8(*p_ones, ymm0);
+                min  = _mm256_abs_epi8(ymm0);
+
+                // Loop over BNs
+                for (k=1; k<9; k++)
+                {
+                    ymm0 = p_cnProcBuf[lut_idxCnProcG10[j][k] + i];
+                    min  = _mm256_min_epu8(min, _mm256_abs_epi8(ymm0));
+                    sgn  = _mm256_sign_epi8(sgn, ymm0);
+                }
+
+                // Store result
+                min = _mm256_min_epu8(min, *p_maxLLR); // 128 in epi8 is -127
+                *p_cnProcBufResBit = _mm256_sign_epi8(min, sgn);
+                p_cnProcBufResBit++;
+            }
+        }
+    }
+}
+
+
+/**
+   \brief Performs CN processing for BG2 on the CN processing buffer and stores the results in the CN processing results buffer.
+   \param p_lut Pointer to decoder LUTs
+   \param p_procBuf Pointer to processing buffers
+   \param Z Lifting size
+*/
 static inline void nrLDPC_cnProc_BG2(t_nrLDPC_lut* p_lut, t_nrLDPC_procBuf* p_procBuf, uint16_t Z)
 {
     const uint8_t*  lut_numCnInCnGroups   = p_lut->numCnInCnGroups;
@@ -44,7 +608,7 @@ static inline void nrLDPC_cnProc_BG2(t_nrLDPC_lut* p_lut, t_nrLDPC_procBuf* p_pr
 
     int8_t* cnProcBuf    = p_procBuf->cnProcBuf;
     int8_t* cnProcBufRes = p_procBuf->cnProcBufRes;
-    
+
     __m256i* p_cnProcBuf;
     __m256i* p_cnProcBufRes;
 
@@ -373,7 +937,7 @@ static inline void nrLDPC_cnProc_BG1(t_nrLDPC_lut* p_lut, t_nrLDPC_procBuf* p_pr
 
     int8_t* cnProcBuf    = p_procBuf->cnProcBuf;
     int8_t* cnProcBufRes = p_procBuf->cnProcBufRes;
-    
+
     __m256i* p_cnProcBuf;
     __m256i* p_cnProcBufRes;
 
@@ -872,7 +1436,7 @@ static inline uint32_t nrLDPC_cnProcPc_BG1(t_nrLDPC_lut* p_lut, t_nrLDPC_procBuf
 
     int8_t* cnProcBuf    = p_procBuf->cnProcBuf;
     int8_t* cnProcBufRes = p_procBuf->cnProcBufRes;
-    
+
     __m256i* p_cnProcBuf;
     __m256i* p_cnProcBufRes;
 
@@ -1507,7 +2071,7 @@ static inline uint32_t nrLDPC_cnProcPc_BG2(t_nrLDPC_lut* p_lut, t_nrLDPC_procBuf
 
     int8_t* cnProcBuf    = p_procBuf->cnProcBuf;
     int8_t* cnProcBufRes = p_procBuf->cnProcBufRes;
-    
+
     __m256i* p_cnProcBuf;
     __m256i* p_cnProcBufRes;
 

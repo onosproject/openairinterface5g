@@ -38,7 +38,7 @@
 #include "nrLDPC_cnProc.h"
 #include "nrLDPC_bnProc.h"
 
-#define NR_LDPC_ENABLE_PARITY_CHECK
+//#define NR_LDPC_ENABLE_PARITY_CHECK
 //#define NR_LDPC_PROFILER_DETAIL
 
 #ifdef NR_LDPC_DEBUG_MODE
@@ -83,10 +83,12 @@ static inline uint32_t nrLDPC_decoder_core(int8_t* p_llr, int8_t* p_out, t_nrLDP
 
     // Minimum number of iterations is 1
     // 0 iterations means hard-decision on input LLRs
-    uint32_t i = 1;
+    uint32_t i = 0;
     // Initialize with parity check fail != 0
     int32_t pcRes = 1;
     int8_t* p_llrOut;
+
+    uint32_t l;
 
     if (outMode == nrLDPC_outMode_LLRINT8)
     {
@@ -100,6 +102,10 @@ static inline uint32_t nrLDPC_decoder_core(int8_t* p_llr, int8_t* p_out, t_nrLDP
         memset(p_llrOut,0, NR_LDPC_MAX_NUM_LLR*sizeof(int8_t));
     }
 
+    // CN processing layers for BG2
+    static const t_nrLDPC_cnProcGroup cnProcLayers_BG2[NR_LDPC_NUM_CN_GROUPS_BG2] = {nrLDPC_cnProc_BG2_CNG3, nrLDPC_cnProc_BG2_CNG4, nrLDPC_cnProc_BG2_CNG5, nrLDPC_cnProc_BG2_CNG6, nrLDPC_cnProc_BG2_CNG8, nrLDPC_cnProc_BG2_CNG10};
+    static const t_nrLDPC_cn2bnProcBufGroup cn2bnProcBufLayers_BG2[NR_LDPC_NUM_CN_GROUPS_BG2] = {nrLDPC_cn2bnProcBuf_BG2_CNG3, nrLDPC_cn2bnProcBuf_BG2_CNG4, nrLDPC_cn2bnProcBuf_BG2_CNG5, nrLDPC_cn2bnProcBuf_BG2_CNG6, nrLDPC_cn2bnProcBuf_BG2_CNG8, nrLDPC_cn2bnProcBuf_BG2_CNG10};
+    static const t_nrLDPC_bn2cnProcBufGroup bn2cnProcBufLayers_BG2[NR_LDPC_NUM_CN_GROUPS_BG2] = {nrLDPC_bn2cnProcBuf_BG2_CNG3, nrLDPC_bn2cnProcBuf_BG2_CNG4, nrLDPC_bn2cnProcBuf_BG2_CNG5, nrLDPC_bn2cnProcBuf_BG2_CNG6, nrLDPC_bn2cnProcBuf_BG2_CNG8, nrLDPC_bn2cnProcBuf_BG2_CNG10};
 
     // Initialization
 #ifdef NR_LDPC_PROFILER_DETAIL
@@ -132,15 +138,208 @@ static inline uint32_t nrLDPC_decoder_core(int8_t* p_llr, int8_t* p_out, t_nrLDP
 
 #ifdef NR_LDPC_DEBUG_MODE
     nrLDPC_debug_initBuffer2File(nrLDPC_buffers_CN_PROC);
-    nrLDPC_debug_writeBuffer2File(nrLDPC_buffers_CN_PROC, p_procBuf);
+    nrLDPC_debug_initBuffer2File(nrLDPC_buffers_CN_PROC_RES);
+    nrLDPC_debug_initBuffer2File(nrLDPC_buffers_BN_PROC);
+    nrLDPC_debug_initBuffer2File(nrLDPC_buffers_LLR_RES);
+    nrLDPC_debug_initBuffer2File(nrLDPC_buffers_BN_PROC_RES);
 #endif
 
+#ifdef NR_LDPC_ENABLE_LAYERED_DECODING
+    // Buffers have to be set to zero otherwise previous call will impact decoding with current implementation
+    memset(p_procBuf->cnProcBuf,0, NR_LDPC_SIZE_CN_PROC_BUF*sizeof(int8_t));
+    memset(p_procBuf->cnProcBufRes,0, NR_LDPC_SIZE_CN_PROC_BUF*sizeof(int8_t));
+    memset(p_procBuf->bnProcBuf,0, NR_LDPC_SIZE_BN_PROC_BUF*sizeof(int8_t));
+    memset(p_procBuf->bnProcBufRes,0, NR_LDPC_SIZE_BN_PROC_BUF*sizeof(int8_t));
+#endif
+
+    // Iterations
+    while ( (i < numMaxIter) && (pcRes != 0) )
+    {
+        //mexPrintf("i = %d, pcRes = %d\n", i, pcRes);
+
+#ifdef NR_LDPC_ENABLE_LAYERED_DECODING
+        // Processing layers
+        for (l=0; l<6; l++)
+        {
+            // CN Processing
+#ifdef NR_LDPC_DEBUG_MODE
+            nrLDPC_debug_writeBuffer2File(nrLDPC_buffers_CN_PROC, p_procBuf);
+#endif
+#ifdef NR_LDPC_PROFILER_DETAIL
+            start_meas(&p_profiler->cnProc);
+#endif
+            cnProcLayers_BG2[l](p_lut, p_procBuf, Z);
+#ifdef NR_LDPC_PROFILER_DETAIL
+            stop_meas(&p_profiler->cnProc);
+#endif
+#ifdef NR_LDPC_DEBUG_MODE
+            nrLDPC_debug_writeBuffer2File(nrLDPC_buffers_CN_PROC_RES, p_procBuf);
+#endif
+            // CN -> BN
+#ifdef NR_LDPC_PROFILER_DETAIL
+            start_meas(&p_profiler->cn2bnProcBuf);
+#endif
+            cn2bnProcBufLayers_BG2[l](p_lut, p_procBuf, Z);
+#ifdef NR_LDPC_PROFILER_DETAIL
+            stop_meas(&p_profiler->cn2bnProcBuf);
+#endif
+#ifdef NR_LDPC_DEBUG_MODE
+            nrLDPC_debug_writeBuffer2File(nrLDPC_buffers_BN_PROC, p_procBuf);
+#endif
+            // BN Processing
+#ifdef NR_LDPC_PROFILER_DETAIL
+            start_meas(&p_profiler->bnProcPc);
+#endif
+            nrLDPC_bnProcPc(p_lut, p_procBuf, Z);
+#ifdef NR_LDPC_PROFILER_DETAIL
+            stop_meas(&p_profiler->bnProcPc);
+#endif
+#ifdef NR_LDPC_DEBUG_MODE
+            nrLDPC_debug_writeBuffer2File(nrLDPC_buffers_LLR_RES, p_procBuf);
+#endif
+#ifdef NR_LDPC_PROFILER_DETAIL
+            start_meas(&p_profiler->bnProc);
+#endif
+            nrLDPC_bnProc(p_lut, p_procBuf, Z);
+#ifdef NR_LDPC_PROFILER_DETAIL
+            stop_meas(&p_profiler->bnProc);
+#endif
+#ifdef NR_LDPC_DEBUG_MODE
+            nrLDPC_debug_writeBuffer2File(nrLDPC_buffers_BN_PROC_RES, p_procBuf);
+#endif
+            // BN -> CN
+#ifdef NR_LDPC_PROFILER_DETAIL
+            start_meas(&p_profiler->bn2cnProcBuf);
+#endif
+            bn2cnProcBufLayers_BG2[l](p_lut, p_procBuf, Z);
+#ifdef NR_LDPC_PROFILER_DETAIL
+            stop_meas(&p_profiler->bn2cnProcBuf);
+#endif
+        }
+#else
+        // No layers
+        // CN Processing
+#ifdef NR_LDPC_PROFILER_DETAIL
+            start_meas(&p_profiler->cnProc);
+#endif
+            for (l=0; l<6; l++)
+            {
+                cnProcLayers_BG2[l](p_lut, p_procBuf, Z);
+            }
+#ifdef NR_LDPC_PROFILER_DETAIL
+            stop_meas(&p_profiler->cnProc);
+#endif
+            // CN -> BN
+#ifdef NR_LDPC_PROFILER_DETAIL
+            start_meas(&p_profiler->cn2bnProcBuf);
+#endif
+            for (l=0; l<6; l++)
+            {
+                cn2bnProcBufLayers_BG2[l](p_lut, p_procBuf, Z);
+            }
+#ifdef NR_LDPC_PROFILER_DETAIL
+            stop_meas(&p_profiler->cn2bnProcBuf);
+#endif
+            // BN Processing
+#ifdef NR_LDPC_PROFILER_DETAIL
+            start_meas(&p_profiler->bnProcPc);
+#endif
+            nrLDPC_bnProcPc(p_lut, p_procBuf, Z);
+#ifdef NR_LDPC_PROFILER_DETAIL
+            stop_meas(&p_profiler->bnProcPc);
+#endif
+#ifdef NR_LDPC_PROFILER_DETAIL
+            start_meas(&p_profiler->bnProc);
+#endif
+            nrLDPC_bnProc(p_lut, p_procBuf, Z);
+#ifdef NR_LDPC_PROFILER_DETAIL
+            stop_meas(&p_profiler->bnProc);
+#endif
+            // BN -> CN
+#ifdef NR_LDPC_PROFILER_DETAIL
+            start_meas(&p_profiler->bn2cnProcBuf);
+#endif
+            for (l=0; l<6; l++)
+            {
+                bn2cnProcBufLayers_BG2[l](p_lut, p_procBuf, Z);
+            }
+#ifdef NR_LDPC_PROFILER_DETAIL
+            stop_meas(&p_profiler->bn2cnProcBuf);
+#endif
+
+            // END NR_LDPC_ENABLE_LAYERED_DECODING
+#endif
+
+        // Parity Check
+#ifdef NR_LDPC_ENABLE_PARITY_CHECK
+#ifdef NR_LDPC_PROFILER_DETAIL
+        start_meas(&p_profiler->cnProcPc);
+#endif
+        if (BG == 1)
+        {
+            pcRes = nrLDPC_cnProcPc_BG1(p_lut, p_procBuf, Z);
+        }
+        else
+        {
+            pcRes = nrLDPC_cnProcPc_BG2(p_lut, p_procBuf, Z);
+        }
+#ifdef NR_LDPC_PROFILER_DETAIL
+        stop_meas(&p_profiler->cnProcPc);
+#endif
+#endif
+        // Increase iteration counter
+        i++;
+
+        //mexPrintf("pcRes = %d\n", pcRes);
+    }
+
+    // If maximum number of iterations reached an PC still fails increase number of iterations
+    // Thus, i > numMaxIter indicates that PC has failed
+
+#ifdef NR_LDPC_ENABLE_PARITY_CHECK
+    if (pcRes != 0)
+    {
+        i++;
+    }
+#endif
+
+    // Assign results from processing buffer to output
+#ifdef NR_LDPC_PROFILER_DETAIL
+    start_meas(&p_profiler->llrRes2llrOut);
+#endif
+    nrLDPC_llrRes2llrOut(p_lut, p_llrOut, p_procBuf, Z, BG);
+#ifdef NR_LDPC_PROFILER_DETAIL
+    stop_meas(&p_profiler->llrRes2llrOut);
+#endif
+
+    // Hard-decision
+#ifdef NR_LDPC_PROFILER_DETAIL
+    start_meas(&p_profiler->llr2bit);
+#endif
+    if (outMode == nrLDPC_outMode_BIT)
+    {
+        nrLDPC_llr2bitPacked(p_out, p_llrOut, numLLR);
+    }
+    else if (outMode == nrLDPC_outMode_BITINT8)
+    {
+        nrLDPC_llr2bit(p_out, p_llrOut, numLLR);
+    }
+
+#ifdef NR_LDPC_PROFILER_DETAIL
+    stop_meas(&p_profiler->llr2bit);
+#endif
+
+    return i;
+}
+
+/*
     // First iteration
 
     // CN processing
 #ifdef NR_LDPC_PROFILER_DETAIL
     start_meas(&p_profiler->cnProc);
 #endif
+
     if (BG == 1)
     {
         nrLDPC_cnProc_BG1(p_lut, p_procBuf, Z);
@@ -149,6 +348,7 @@ static inline uint32_t nrLDPC_decoder_core(int8_t* p_llr, int8_t* p_out, t_nrLDP
     {
         nrLDPC_cnProc_BG2(p_lut, p_procBuf, Z);
     }
+
 #ifdef NR_LDPC_PROFILER_DETAIL
     stop_meas(&p_profiler->cnProc);
 #endif
@@ -248,6 +448,12 @@ static inline uint32_t nrLDPC_decoder_core(int8_t* p_llr, int8_t* p_out, t_nrLDP
         {
             nrLDPC_cnProc_BG2(p_lut, p_procBuf, Z);
         }
+
+        for (k = 0; k < 6; k++)
+        {
+            cnProcLayers_BG2[k](p_lut, p_procBuf, Z);
+        }
+
 #ifdef NR_LDPC_PROFILER_DETAIL
         stop_meas(&p_profiler->cnProc);
 #endif
@@ -350,6 +556,7 @@ static inline uint32_t nrLDPC_decoder_core(int8_t* p_llr, int8_t* p_out, t_nrLDP
 #ifdef NR_LDPC_PROFILER_DETAIL
         start_meas(&p_profiler->cnProc);
 #endif
+
         if (BG == 1)
         {
             nrLDPC_cnProc_BG1(p_lut, p_procBuf, Z);
@@ -358,6 +565,7 @@ static inline uint32_t nrLDPC_decoder_core(int8_t* p_llr, int8_t* p_out, t_nrLDP
         {
             nrLDPC_cnProc_BG2(p_lut, p_procBuf, Z);
         }
+
 #ifdef NR_LDPC_PROFILER_DETAIL
         stop_meas(&p_profiler->cnProc);
 #endif
@@ -490,3 +698,4 @@ static inline uint32_t nrLDPC_decoder_core(int8_t* p_llr, int8_t* p_out, t_nrLDP
 
     return i;
 }
+*/

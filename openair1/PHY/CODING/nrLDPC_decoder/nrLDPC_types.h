@@ -103,4 +103,12 @@ typedef struct nrLDPC_procBuf {
     int8_t* llrProcBuf; /**< LLR processing buffer */
 } t_nrLDPC_procBuf;
 
+/**
+   Structure for CN processing of one CN group
+ */
+
+typedef void (*t_nrLDPC_cnProcGroup)(t_nrLDPC_lut*, t_nrLDPC_procBuf*, uint16_t);
+typedef void (*t_nrLDPC_cn2bnProcBufGroup)(t_nrLDPC_lut*, t_nrLDPC_procBuf*, uint16_t);
+typedef void (*t_nrLDPC_bn2cnProcBufGroup)(t_nrLDPC_lut*, t_nrLDPC_procBuf*, uint16_t);
+
 #endif
