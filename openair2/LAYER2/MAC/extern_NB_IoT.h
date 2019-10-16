@@ -30,7 +30,7 @@
 #ifndef __MAC_EXTERN_NB_IOT_H__
 #define __MAC_EXTERN_NB_IOT_H__
 
-#include "openair2/PHY_INTERFACE/defs_NB_IoT.h" 
+//#include "openair2/PHY_INTERFACE/defs_NB_IoT.h" 
 
 
 

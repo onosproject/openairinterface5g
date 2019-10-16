@@ -15,7 +15,7 @@
 #endif
 //#include "COMMON/openair_defs.h"
 #include "COMMON/platform_constants.h"
-#include "COMMON/mac_rrc_primitives.h"
+//#include "COMMON/mac_rrc_primitives.h"
 #include "PHY/NBIoT_TRANSPORT/defs_NB_IoT.h"
 //#include "PHY/defs.h"
 #include "PHY/defs_L1_NB_IoT.h"

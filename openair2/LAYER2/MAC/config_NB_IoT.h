@@ -229,7 +229,7 @@ typedef struct sibs_NB_IoT_sched_s{
     si_periodicity_t si_periodicity;
     si_repetition_pattern_t si_repetition_pattern;
     sib_MappingInfo_NB_IoT sib_mapping_info;   //bit vector
-    si_tb_t si_tb;
+    si_TB_NB_IoT si_tb;
 } sibs_NB_IoT_sched_t;
 
 

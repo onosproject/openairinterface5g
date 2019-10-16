@@ -44,7 +44,7 @@
 #include "COMMON/platform_constants.h"
 #include "COMMON/platform_types.h"
 
-#include "COMMON/mac_rrc_primitives.h"
+//#include "COMMON/mac_rrc_primitives.h"
 //#include "LAYER2/MAC/defs.h"
 
 //#include "COMMON/openair_defs.h"
@@ -476,7 +476,7 @@ typedef struct OAI_UECapability_NB_IoT_s {
 
 #define RRC_BUFFER_SIZE_MAX_NB_IoT 1024
 
-
+#if 0
 
 typedef struct UE_RRC_INST_NB_IoT_s {
   Rrc_State_NB_IoT_t     RrcState;
@@ -571,7 +571,7 @@ typedef struct UE_RRC_INST_NB_IoT_s {
   */
 } UE_RRC_INST_NB_IoT;
 
-
+#endif
 #include "proto_NB_IoT.h" //should be put here otherwise compilation error
 
 #endif
