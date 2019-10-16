@@ -364,6 +364,22 @@ set_ul_DAI(int module_idP,
       case 2:
         //      if ((subframeP==3)||(subframeP==8))
         //  UE_list->UE_template[CC_idP][UE_idP].DAI_ul = DAI;
+          switch (subframeP) {
+            case 0:
+            case 1:
+              UE_list->UE_template[CC_idP][UE_idP].DAI_ul[7] = DAI;
+              break;
+
+            case 4:
+            case 5:
+            case 8:
+              UE_list->UE_template[CC_idP][UE_idP].DAI_ul[2] = DAI;
+              break;
+
+            case 9:
+              UE_list->UE_template[CC_idP][UE_idP].DAI_ul[7] = DAI;
+              break;
+            }
         break;
 
       case 3:
@@ -711,11 +727,11 @@ schedule_ue_spec(module_id_t module_idP,
       harq_pid = frame_subframe2_dl_harq_pid(cc->tdd_Config,
                                              frameP,
                                              subframeP);
-      round_DL = ue_sched_ctrl->round[CC_id][harq_pid];
+      round_DL = ue_sched_ctrl->round[CC_id][harq_pid][TB1];
       eNB_UE_stats->crnti = rnti;
       eNB_UE_stats->rrc_status = mac_eNB_get_rrc_status(module_idP, rnti);
       eNB_UE_stats->harq_pid = harq_pid;
-      eNB_UE_stats->harq_round = round_DL;
+      eNB_UE_stats->harq_round[TB1] = round_DL;
 
       if (eNB_UE_stats->rrc_status < RRC_RECONFIGURED) {
         ue_sched_ctrl->uplane_inactivity_timer = 0;
@@ -736,9 +752,9 @@ schedule_ue_spec(module_id_t module_idP,
                 eNB_UE_stats->dl_cqi, MIN_CQI_VALUE, MAX_CQI_VALUE);
       */
       if (NFAPI_MODE != NFAPI_MONOLITHIC) {
-        eNB_UE_stats->dlsch_mcs1 = cqi_to_mcs[ue_sched_ctrl->dl_cqi[CC_id]];
+        eNB_UE_stats->dlsch_mcs[TB1] = cqi_to_mcs[ue_sched_ctrl->dl_cqi[CC_id]];
       } else { // this operation is also done in the preprocessor
-        eNB_UE_stats->dlsch_mcs1 = cmin(eNB_UE_stats->dlsch_mcs1,
+        eNB_UE_stats->dlsch_mcs[TB1] = cmin(eNB_UE_stats->dlsch_mcs[TB1],
                                         eNB->slice_info.dl[slice_idxP].maxmcs);  // cmin(eNB_UE_stats->dlsch_mcs1, openair_daq_vars.target_ue_dl_mcs);
       }
 
@@ -760,14 +776,14 @@ schedule_ue_spec(module_id_t module_idP,
             round_DL,
             nb_available_rb,
             ue_sched_ctrl->dl_cqi[CC_id],
-            eNB_UE_stats->dlsch_mcs1,
+            eNB_UE_stats->dlsch_mcs[TB1],
             eNB_UE_stats->rrc_status);
 
       /* Process retransmission  */
       if (round_DL != 8) {
         // get freq_allocation
         nb_rb = ue_template->nb_rb[harq_pid];
-        TBS = get_TBS_DL(ue_template->oldmcs1[harq_pid],
+        TBS = get_TBS_DL(ue_template->oldmcs[harq_pid][TB1],
                          nb_rb);
 
         if (nb_rb <= nb_available_rb) {
@@ -849,8 +865,8 @@ schedule_ue_spec(module_id_t module_idP,
               dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.transmission_power = 6000; // equal to RS power
               dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.harq_process = harq_pid;
               dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.tpc = 1; // Don't adjust power when retransmitting
-              dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.new_data_indicator_1 = ue_template->oldNDI[harq_pid];
-              dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.mcs_1 = ue_template->oldmcs1[harq_pid];
+              dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.new_data_indicator_1 = ue_template->oldNDI[harq_pid][TB1];
+              dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.mcs_1 = ue_template->oldmcs[harq_pid][TB1];
               dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.redundancy_version_1 = round_DL & 3;
 
               // TDD
@@ -862,14 +878,14 @@ schedule_ue_spec(module_id_t module_idP,
                       harq_pid,
                       round_DL,
                       ue_template->DAI - 1,
-                      ue_template->oldmcs1[harq_pid]);
+                      ue_template->oldmcs[harq_pid][TB1]);
               } else {
                 LOG_D(MAC, "[eNB %d] Retransmission CC_id %d : harq_pid %d, round %d, mcs %d\n",
                       module_idP,
                       CC_id,
                       harq_pid,
                       round_DL,
-                      ue_template->oldmcs1[harq_pid]);
+                      ue_template->oldmcs[harq_pid][TB1]);
               }
 
               if (!CCE_allocation_infeasible(module_idP,
@@ -891,7 +907,7 @@ schedule_ue_spec(module_id_t module_idP,
                                         0,    // type 0 allocation from 7.1.6 in 36.213
                                         0,    // virtual_resource_block_assignment_flag, unused here
                                         0,    // resource_block_coding, to be filled in later
-                                        getQm(ue_template->oldmcs1[harq_pid]),
+                                        getQm(ue_template->oldmcs[harq_pid][TB1]),
                                         round_DL & 3, // redundancy version
                                         1,    // transport blocks
                                         0,    // transport block to codeword swap flag
@@ -935,7 +951,7 @@ schedule_ue_spec(module_id_t module_idP,
           eNB_UE_stats->num_retransmission += 1;
           eNB_UE_stats->rbs_used_retx = nb_rb;
           eNB_UE_stats->total_rbs_used_retx += nb_rb;
-          eNB_UE_stats->dlsch_mcs2 = eNB_UE_stats->dlsch_mcs1;
+          eNB_UE_stats->dlsch_mcs[TB2] = eNB_UE_stats->dlsch_mcs[TB2];
         } else {
           LOG_D(MAC,
                 "[eNB %d] Frame %d CC_id %d : don't schedule UE %d, its retransmission takes more resources than we have\n",
@@ -949,7 +965,7 @@ schedule_ue_spec(module_id_t module_idP,
         rlc_status.bytes_in_buffer = 0;
         // Now check RLC information to compute number of required RBs
         // get maximum TBS size for RLC request
-        TBS = get_TBS_DL(eNB_UE_stats->dlsch_mcs1,
+        TBS = get_TBS_DL(eNB_UE_stats->dlsch_mcs[TB1],
                          nb_available_rb);
 
         // add the length for  all the control elements (timing adv, drx, etc) : header + payload
@@ -1283,7 +1299,7 @@ schedule_ue_spec(module_id_t module_idP,
         if (ta_len + sdu_length_total + header_length_total > 0) {
           // Now compute number of required RBs for total sdu length
           // Assume RAH format 2
-          mcs = eNB_UE_stats->dlsch_mcs1;
+          mcs = eNB_UE_stats->dlsch_mcs[TB1];
 
           if (mcs == 0) {
             nb_rb = 4;    // don't let the TBS get too small
@@ -1298,13 +1314,13 @@ schedule_ue_spec(module_id_t module_idP,
 
             if (nb_rb > nb_available_rb) {  // if we've gone beyond the maximum number of RBs
               // (can happen if N_RB_DL is odd)
-              TBS = get_TBS_DL(eNB_UE_stats->dlsch_mcs1,
+              TBS = get_TBS_DL(eNB_UE_stats->dlsch_mcs[TB1],
                                nb_available_rb);
               nb_rb = nb_available_rb;
               break;
             }
 
-            TBS = get_TBS_DL(eNB_UE_stats->dlsch_mcs1,
+            TBS = get_TBS_DL(eNB_UE_stats->dlsch_mcs[TB1],
                              nb_rb);
           }
 
@@ -1347,7 +1363,7 @@ schedule_ue_spec(module_id_t module_idP,
           }
 
           LOG_D(MAC, "dlsch_mcs before and after the rate matching = (%d, %d)\n",
-                eNB_UE_stats->dlsch_mcs1,
+                eNB_UE_stats->dlsch_mcs[TB1],
                 mcs);
 #ifdef DEBUG_eNB_SCHEDULER
           LOG_D(MAC, "[eNB %d] CC_id %d Generated DLSCH header (mcs %d, TBS %d, nb_rb %d)\n",
@@ -1367,7 +1383,7 @@ schedule_ue_spec(module_id_t module_idP,
             post_padding = 1;
           }
 
-          offset = generate_dlsch_header((unsigned char *) UE_list->DLSCH_pdu[CC_id][0][UE_id].payload[0],
+          offset = generate_dlsch_header((unsigned char *) UE_list->DLSCH_pdu[CC_id][0][UE_id].payload[0][TB1],
                                          num_sdus,    //num_sdus
                                          sdu_lengths,    //
                                          sdu_lcids,
@@ -1412,19 +1428,19 @@ schedule_ue_spec(module_id_t module_idP,
 #endif
           // cycle through SDUs and place in dlsch_buffer
           dlsch_pdu = &UE_list->DLSCH_pdu[CC_id][0][UE_id];
-          memcpy(&dlsch_pdu->payload[0][offset],
+          memcpy(&dlsch_pdu->payload[0][TB1][offset],
                  dlsch_buffer,
                  sdu_length_total);
           // memcpy(RC.mac[0].DLSCH_pdu[0][0].payload[0][offset],dcch_buffer,sdu_lengths[0]);
 
           // fill remainder of DLSCH with 0
           for (j = 0; j < (TBS - sdu_length_total - offset); j++) {
-            dlsch_pdu->payload[0][offset + sdu_length_total + j] = 0;
+            dlsch_pdu->payload[0][TB1][offset + sdu_length_total + j] = 0;
           }
 
           if (opt_enabled == 1) {
             trace_pdu(DIRECTION_DOWNLINK,
-                      (uint8_t *) dlsch_pdu->payload[0],
+                      (uint8_t *) dlsch_pdu->payload[0][TB1],
                       TBS,
                       module_idP,
                       WS_C_RNTI,
@@ -1450,7 +1466,7 @@ schedule_ue_spec(module_id_t module_idP,
             T_INT(frameP),
             T_INT(subframeP),
             T_INT(harq_pid),
-            T_BUFFER(dlsch_pdu->payload[0],
+            T_BUFFER(dlsch_pdu->payload[0][TB1],
                      TBS));
           ue_template->nb_rb[harq_pid] = nb_rb;
           add_ue_dlsch_info(module_idP,
@@ -1465,9 +1481,9 @@ schedule_ue_spec(module_id_t module_idP,
           eNB_UE_stats->rbs_used = nb_rb;
           eNB_UE_stats->num_mac_sdu_tx = num_sdus;
           eNB_UE_stats->total_rbs_used += nb_rb;
-          eNB_UE_stats->dlsch_mcs2 = mcs;
-          eNB_UE_stats->TBS = TBS;
-          eNB_UE_stats->overhead_bytes = TBS - sdu_length_total;
+          eNB_UE_stats->dlsch_mcs[TB2] = mcs;
+          eNB_UE_stats->TBS[TB1] = TBS;
+          eNB_UE_stats->overhead_bytes[TB1] = TBS - sdu_length_total;
           eNB_UE_stats->total_sdu_bytes += sdu_length_total;
           eNB_UE_stats->total_pdu_bytes += TBS;
           eNB_UE_stats->total_num_pdus += 1;
@@ -1540,7 +1556,7 @@ schedule_ue_spec(module_id_t module_idP,
           dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.transmission_power = 6000;    // equal to RS power
           dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.harq_process = harq_pid;
           dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.tpc = tpc;    // dont adjust power when retransmitting
-          dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.new_data_indicator_1 = 1 - ue_template->oldNDI[harq_pid];
+          dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.new_data_indicator_1 = 1 - ue_template->oldNDI[harq_pid][TB1];
           dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.mcs_1 = mcs;
           dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.redundancy_version_1 = 0;
           //deactivate second codeword
@@ -1572,7 +1588,7 @@ schedule_ue_spec(module_id_t module_idP,
                                          subframeP,
                                          dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.aggregation_level,
                                          rnti)) {
-            ue_sched_ctrl->round[CC_id][harq_pid] = 0;
+            ue_sched_ctrl->round[CC_id][harq_pid][TB1] = 0;
             dl_req->number_dci++;
             dl_req->number_pdu++;
             dl_req->tl.tag = NFAPI_DL_CONFIG_REQUEST_BODY_TAG;
@@ -1602,10 +1618,10 @@ schedule_ue_spec(module_id_t module_idP,
                   UE_id,
                   rnti,
                   harq_pid,
-                  ue_template->oldNDI[harq_pid]);
-            ue_template->oldNDI[harq_pid] = 1 - ue_template->oldNDI[harq_pid];
-            ue_template->oldmcs1[harq_pid] = mcs;
-            ue_template->oldmcs2[harq_pid] = 0;
+                  ue_template->oldNDI[harq_pid][TB1]);
+            ue_template->oldNDI[harq_pid][TB1] = 1 - ue_template->oldNDI[harq_pid][TB1];
+            ue_template->oldmcs[harq_pid][TB1] = mcs;
+            ue_template->oldmcs[harq_pid][TB2] = 0;
             AssertFatal(ue_template->physicalConfigDedicated != NULL, "physicalConfigDedicated is NULL\n");
             AssertFatal(ue_template->physicalConfigDedicated->pdsch_ConfigDedicated != NULL,
                         "physicalConfigDedicated->pdsch_ConfigDedicated is NULL\n");
@@ -1637,7 +1653,7 @@ schedule_ue_spec(module_id_t module_idP,
                                         (frameP * 10) + subframeP,
                                         TBS,
                                         eNB->pdu_index[CC_id],
-                                        dlsch_pdu->payload[0]);
+                                        dlsch_pdu->payload[0][TB1]);
             LOG_D(MAC, "Filled NFAPI configuration for DCI/DLSCH/TXREQ %d, new SDU\n",
                   eNB->pdu_index[CC_id]);
             eNB->pdu_index[CC_id]++;
@@ -2003,7 +2019,7 @@ schedule_ue_spec_br(module_id_t module_idP,
       continue;
     }
 
-    round_DL = ue_sched_ctl->round[CC_id][harq_pid];
+    round_DL = ue_sched_ctl->round[CC_id][harq_pid][TB1];
     AssertFatal (UE_template->physicalConfigDedicated != NULL, "UE_template->physicalConfigDedicated is null\n");
     AssertFatal (UE_template->physicalConfigDedicated->ext4 != NULL, "UE_template->physicalConfigDedicated->ext4 is null\n");
     AssertFatal (UE_template->physicalConfigDedicated->ext4->epdcch_Config_r11 != NULL, "UE_template->physicalConfigDedicated->ext4->epdcch_Config_r11 is null\n");
@@ -2305,7 +2321,7 @@ schedule_ue_spec_br(module_id_t module_idP,
             post_padding = TBS - sdu_length_total - header_len_dcch - header_len_dtch - ta_len; // 1 is for the postpadding header
           }
 
-          offset = generate_dlsch_header((unsigned char *)UE_list->DLSCH_pdu[CC_id][0][UE_id].payload[0],
+          offset = generate_dlsch_header((unsigned char *)UE_list->DLSCH_pdu[CC_id][0][UE_id].payload[0][TB1],
                                          num_sdus,              //num_sdus
                                          sdu_lengths,  //
                                          sdu_lcids,
@@ -2338,16 +2354,16 @@ schedule_ue_spec_br(module_id_t module_idP,
           }
 
           /* Cycle through SDUs and place in dlsch_buffer */
-          memcpy(&UE_list->DLSCH_pdu[CC_id][0][UE_id].payload[0][offset], dlsch_buffer, sdu_length_total);
+          memcpy(&UE_list->DLSCH_pdu[CC_id][0][UE_id].payload[0][TB1][offset], dlsch_buffer, sdu_length_total);
 
           /* Fill remainder of DLSCH with random data */
           for (j = 0; j < (TBS - sdu_length_total - offset); j++) {
-            UE_list->DLSCH_pdu[CC_id][0][UE_id].payload[0][offset + sdu_length_total + j] = (char)(taus()&0xff);
+            UE_list->DLSCH_pdu[CC_id][0][UE_id].payload[0][TB1][offset + sdu_length_total + j] = (char)(taus()&0xff);
           }
 
           if (opt_enabled == 1) {
             trace_pdu(1,
-                      (uint8_t *)UE_list->DLSCH_pdu[CC_id][0][UE_id].payload[0],
+                      (uint8_t *)UE_list->DLSCH_pdu[CC_id][0][UE_id].payload[0][TB1],
                       TBS,
                       module_idP,
                       3,
@@ -2371,7 +2387,7 @@ schedule_ue_spec_br(module_id_t module_idP,
             T_INT(frameP),
             T_INT(subframeP),
             T_INT(harq_pid),
-            T_BUFFER(UE_list->DLSCH_pdu[CC_id][0][UE_id].payload[0], TBS));
+            T_BUFFER(UE_list->DLSCH_pdu[CC_id][0][UE_id].payload[0][TB1], TBS));
           /* Do PUCCH power control */
           /* This is the snr */
           /* unit is not dBm, it's special from nfapi, convert to dBm */
@@ -2413,8 +2429,8 @@ schedule_ue_spec_br(module_id_t module_idP,
           }
 
           // Toggle NDI in first round
-          UE_template->oldNDI[harq_pid] = 1 - UE_template->oldNDI[harq_pid];
-          ue_sched_ctl->round[CC_id][harq_pid] = 0;
+          UE_template->oldNDI[harq_pid][TB1] = 1 - UE_template->oldNDI[harq_pid][TB1];
+          ue_sched_ctl->round[CC_id][harq_pid][TB1] = 0;
           round_DL = 0;
         } // if ((sdu_length_total + header_len_dcch + header_len_dtch) > 0)
       }
@@ -2444,7 +2460,7 @@ schedule_ue_spec_br(module_id_t module_idP,
         dl_config_pdu->mpdcch_pdu.mpdcch_pdu_rel13.mcs = mcs;       // adjust according to size of RAR, 208 bits with N1A_PRB=3
         dl_config_pdu->mpdcch_pdu.mpdcch_pdu_rel13.pdsch_reptition_levels = 0;    // fix to 4 for now
         dl_config_pdu->mpdcch_pdu.mpdcch_pdu_rel13.redundancy_version = rvseq[round_DL&3];
-        dl_config_pdu->mpdcch_pdu.mpdcch_pdu_rel13.new_data_indicator = UE_template->oldNDI[harq_pid];
+        dl_config_pdu->mpdcch_pdu.mpdcch_pdu_rel13.new_data_indicator = UE_template->oldNDI[harq_pid][TB1];
         dl_config_pdu->mpdcch_pdu.mpdcch_pdu_rel13.harq_process = 0;
         dl_config_pdu->mpdcch_pdu.mpdcch_pdu_rel13.tpmi_length = 0;
         dl_config_pdu->mpdcch_pdu.mpdcch_pdu_rel13.tpmi = 0;
@@ -2521,7 +2537,7 @@ schedule_ue_spec_br(module_id_t module_idP,
       TX_req->pdu_index = mac->pdu_index[CC_id]++;
       TX_req->num_segments = 1;
       TX_req->segments[0].segment_length = TX_req->pdu_length;
-      TX_req->segments[0].segment_data = mac->UE_list.DLSCH_pdu[CC_id][0][(unsigned char) UE_id].payload[0];
+      TX_req->segments[0].segment_data = mac->UE_list.DLSCH_pdu[CC_id][0][(unsigned char) UE_id].payload[0][TB1];
       mac->TX_req[CC_id].tx_request_body.number_of_pdus++;
       ackNAK_absSF = absSF + 4;
       ul_req = &mac->UL_req_tmp[CC_id][ackNAK_absSF % 10].ul_config_request_body;
@@ -2555,11 +2571,11 @@ schedule_ue_spec_br(module_id_t module_idP,
         T_INT (frameP),
         T_INT (subframeP),
         T_INT (0 /* harq_pid always 0? */ ),
-        T_BUFFER (&mac->UE_list.DLSCH_pdu[CC_id][0][UE_id].payload[0], TX_req->pdu_length));
+        T_BUFFER (&mac->UE_list.DLSCH_pdu[CC_id][0][UE_id].payload[0][TB1], TX_req->pdu_length));
 
       if (opt_enabled == 1) {
         trace_pdu(1,
-                  (uint8_t *) mac->UE_list.DLSCH_pdu[CC_id][0][(unsigned char) UE_id].payload[0],
+                  (uint8_t *) mac->UE_list.DLSCH_pdu[CC_id][0][(unsigned char) UE_id].payload[0][TB1],
                   TX_req->pdu_length,
                   UE_id,
                   3,
@@ -2711,7 +2727,7 @@ unsigned char *get_dlsch_sdu(module_id_t module_idP,
           CC_id,
           rntiP,
           UE_id);
-    return ((unsigned char *) &eNB->UE_list.DLSCH_pdu[CC_id][TBindex][UE_id].payload[0]);
+    return ((unsigned char *) &eNB->UE_list.DLSCH_pdu[CC_id][TBindex][UE_id].payload[0][TB1]);
   }
 
   LOG_E(MAC, "[eNB %d] Frame %d: CC_id %d UE with RNTI %x does not exist\n",
@@ -2775,7 +2791,7 @@ set_ue_dai(sub_frame_t subframeP,
       break;
 
     case 2:
-      if (subframeP == 4 || subframeP == 5) {
+      if (subframeP == 4 || subframeP == 9) {
         UE_list->UE_template[CC_id][UE_id].DAI = 0;
       }
 

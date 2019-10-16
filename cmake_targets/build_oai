@@ -44,6 +44,8 @@ MSC_GEN=0
 XFORMS="True"
 UE_EXPANSION="False"
 UESIM_EXPANSION="False"
+PHY_RM="False"
+UDP_1MS="False"
 PRINT_STATS="False"
 VCD_TIMING="False"
 DEADLINE_SCHEDULER_FLAG_USER="False"
@@ -209,6 +211,14 @@ function main() {
        --musim)
             UESIM_EXPANSION="True"
             echo_info "Will compile with UESIM_EXPANSION"
+            shift;;
+       --rm)
+            PHY_RM="True"
+            echo_info "Will manage phy resource"
+            shift;;
+       --UDP_1ms)
+            UDP_1MS="True"
+            echo_info "Will use udp socket for VNF-PNF synchronization"
             shift;;
        --UE-conf-nvram)
             conf_nvram_path=$(readlink -f $2)
@@ -489,6 +499,8 @@ function main() {
     echo "set ( CMAKE_BUILD_TYPE $CMAKE_BUILD_TYPE )" >> $cmake_file
     echo "set ( CFLAGS_PROCESSOR_USER \"$CFLAGS_PROCESSOR_USER\" )" >>  $cmake_file
     echo "set ( UE_EXPANSION $UE_EXPANSION )"      >>  $cmake_file
+    echo "set ( PHY_RM $PHY_RM )"      >>  $cmake_file
+    echo "set ( UDP_1MS $UDP_1MS )"    >>  $cmake_file
 #    echo "set ( PHY_TX_THREAD $UE_EXPANSION )"     >>  $cmake_file
     echo "set ( PRE_SCD_THREAD $UE_EXPANSION )"    >>  $cmake_file
     echo "set ( UESIM_EXPANSION $UESIM_EXPANSION )"      >>  $cmake_file

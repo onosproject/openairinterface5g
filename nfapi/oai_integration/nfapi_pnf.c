@@ -81,7 +81,7 @@ extern void handle_nfapi_bch_pdu(PHY_VARS_eNB *eNB,L1_rxtx_proc_t *proc, nfapi_d
 
 nfapi_tx_request_pdu_t *tx_request_pdu[1024][10][10]; // [frame][subframe][max_num_pdus]
 
-uint8_t tx_pdus[32][8][4096];
+uint8_t tx_pdus[NUMBER_OF_UE_MAX][8][9422]; //mcs:28 nb_rb:100 TBS=get_TBS_DL(28,100) = 9422
 
 nfapi_ue_release_request_body_t release_rntis;
 uint16_t phy_antenna_capability_values[] = { 1, 2, 4, 8, 16 };
@@ -243,7 +243,8 @@ void pnf_set_thread_priority(int priority) {
 
 void *pnf_p7_thread_start(void *ptr) {
   NFAPI_TRACE(NFAPI_TRACE_INFO, "[PNF] P7 THREAD %s\n", __FUNCTION__);
-  pnf_set_thread_priority(79);
+  //pnf_set_thread_priority(79);
+  pnf_set_thread_priority(sched_get_priority_max(SCHED_FIFO));
   nfapi_pnf_p7_config_t *config = (nfapi_pnf_p7_config_t *)ptr;
   nfapi_pnf_p7_start(config);
   return 0;

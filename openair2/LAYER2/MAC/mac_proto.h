@@ -1224,7 +1224,7 @@ void fill_nfapi_dlsch_config(eNB_MAC_INST * eNB,
 			     uint8_t resource_allocation_type,
 			     uint8_t
 			     virtual_resource_block_assignment_flag,
-			     uint16_t resource_block_coding,
+			     uint32_t resource_block_coding,
 			     uint8_t modulation,
 			     uint8_t redundancy_version,
 			     uint8_t transport_blocks,
@@ -1245,6 +1245,7 @@ void fill_nfapi_dlsch_config(eNB_MAC_INST * eNB,
 void fill_nfapi_harq_information(module_id_t module_idP,
 				 int CC_idP,
 				 uint16_t rntiP,
+                                 uint16_t absSFP,
 				 nfapi_ul_config_harq_information *
 				 harq_information, uint8_t cce_idxP);
 
@@ -1253,6 +1254,7 @@ void fill_nfapi_ulsch_harq_information(module_id_t module_idP,
 				       uint16_t rntiP,
 				       nfapi_ul_config_ulsch_harq_information
 				       * harq_information,
+				       frame_t frameP,
 				       sub_frame_t subframeP);
 
 uint16_t fill_nfapi_uci_acknak(module_id_t module_idP,
@@ -1267,13 +1269,25 @@ void fill_nfapi_dl_dci_1A(nfapi_dl_config_request_pdu_t * dl_config_pdu,
 			  uint8_t rnti_type,
 			  uint8_t harq_process,
 			  uint8_t tpc,
-			  uint16_t resource_block_coding,
+			  uint32_t resource_block_coding,
+			  uint8_t mcs,
+			  uint8_t ndi, uint8_t rv, uint8_t vrb_flag);
+
+void fill_nfapi_dl_dci_1(nfapi_dl_config_request_pdu_t * dl_config_pdu,
+			  uint8_t aggregation_level,
+			  uint16_t rnti,
+			  uint8_t rnti_type,
+			  uint8_t harq_process,
+			  uint8_t tpc,
+			  uint32_t resource_block_coding,
 			  uint8_t mcs,
 			  uint8_t ndi, uint8_t rv, uint8_t vrb_flag);
 
 nfapi_ul_config_request_pdu_t *has_ul_grant(module_id_t module_idP,
 					    int CC_idP, uint16_t subframeP,
 					    uint16_t rnti);
+
+void set_tmode(module_id_t module_idP, int CC_idP, int rntiP, int tm);
 
 uint8_t get_tmode(module_id_t module_idP, int CC_idP, int UE_idP);
 

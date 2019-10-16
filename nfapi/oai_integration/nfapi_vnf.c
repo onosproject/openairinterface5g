@@ -333,11 +333,11 @@ int wake_eNB_rxtx(PHY_VARS_eNB *eNB, uint16_t sfn, uint16_t sf) {
 
   // wake up TX for subframe n+sf_ahead
   // lock the TX mutex and make sure the thread is ready
-  if (pthread_mutex_timedlock(&L1_proc->mutex,&wait) != 0) {
-    LOG_E( PHY, "[eNB] ERROR pthread_mutex_lock for eNB RXTX thread %d (IC %d)\n", L1_proc->subframe_rx&1,L1_proc->instance_cnt );
-    exit_fun( "error locking mutex_rxtx" );
-    return(-1);
-  }
+//  if (pthread_mutex_timedlock(&L1_proc->mutex,&wait) != 0) {
+//    LOG_E( PHY, "[eNB] ERROR pthread_mutex_lock for eNB RXTX thread %d (IC %d)\n", L1_proc->subframe_rx&1,L1_proc->instance_cnt );
+//    exit_fun( "error locking mutex_rxtx" );
+//    return(-1);
+//  }
 
   {
     static uint16_t old_sf = 0;
@@ -351,7 +351,24 @@ int wake_eNB_rxtx(PHY_VARS_eNB *eNB, uint16_t sfn, uint16_t sf) {
     if (old_sf == 0 && old_sfn % 100==0) LOG_W( PHY,"[eNB] sfn/sf:%d%d old_sfn/sf:%d%d proc[rx:%d%d]\n", sfn, sf, old_sfn, old_sf, proc->frame_rx, proc->subframe_rx);
   }
 
-  ++L1_proc->instance_cnt;
+  // wake up TX for subframe n+sf_ahead
+  // lock the TX mutex and make sure the thread is ready
+  if (pthread_mutex_timedlock(&L1_proc->mutex,&wait) != 0) {
+      LOG_E( PHY, "[eNB] ERROR pthread_mutex_lock for eNB RXTX thread %d (IC %d)\n", L1_proc->subframe_rx&1,L1_proc->instance_cnt );
+      exit_fun( "error locking mutex_rxtx" );
+      return(-1);
+  }
+
+  if(L1_proc->instance_cnt < 0){
+    ++L1_proc->instance_cnt;
+  }else{
+    LOG_E(MAC,"RCC singal to rxtx frame %d subframe %d busy %d (frame %d subframe %d)\n",L1_proc->frame_rx,L1_proc->subframe_rx,L1_proc->instance_cnt,proc->frame_rx,proc->subframe_rx);
+    pthread_mutex_unlock( &L1_proc->mutex );
+    return(0);
+  }
+
+  pthread_mutex_unlock( &L1_proc->mutex );
+
   //LOG_D( PHY,"[VNF-subframe_ind] sfn/sf:%d:%d proc[frame_rx:%d subframe_rx:%d] L1_proc->instance_cnt_rxtx:%d \n", sfn, sf, proc->frame_rx, proc->subframe_rx, L1_proc->instance_cnt_rxtx);
   // We have just received and processed the common part of a subframe, say n.
   // TS_rx is the last received timestamp (start of 1st slot), TS_tx is the desired
@@ -374,9 +391,6 @@ int wake_eNB_rxtx(PHY_VARS_eNB *eNB, uint16_t sfn, uint16_t sf) {
     return(-1);
   }
 
-  //LOG_D(PHY,"%s() About to attempt pthread_mutex_unlock\n", __FUNCTION__);
-  pthread_mutex_unlock( &L1_proc->mutex );
-  //LOG_D(PHY,"%s() UNLOCKED pthread_mutex_unlock\n", __FUNCTION__);
   return(0);
 }
 
@@ -423,7 +437,7 @@ int phy_subframe_indication(struct nfapi_vnf_p7_config *config, uint16_t phy_id,
 int phy_rach_indication(struct nfapi_vnf_p7_config *config, nfapi_rach_indication_t *ind) {
   LOG_D(MAC, "%s() NFAPI SFN/SF:%d number_of_preambles:%u\n", __FUNCTION__, NFAPI_SFNSF2DEC(ind->sfn_sf), ind->rach_indication_body.number_of_preambles);
   struct PHY_VARS_eNB_s *eNB = RC.eNB[0][0];
-  printf("[VNF] RACH_IND eNB:%p sfn_sf:%d number_of_preambles:%d\n", eNB, NFAPI_SFNSF2DEC(ind->sfn_sf), ind->rach_indication_body.number_of_preambles);
+  //printf("[VNF] RACH_IND eNB:%p sfn_sf:%d number_of_preambles:%d\n", eNB, NFAPI_SFNSF2DEC(ind->sfn_sf), ind->rach_indication_body.number_of_preambles);
   pthread_mutex_lock(&eNB->UL_INFO_mutex);
   if(NFAPI_MODE == NFAPI_MODE_VNF){
     int8_t index = -1;
@@ -646,8 +660,12 @@ int phy_rx_indication(struct nfapi_vnf_p7_config *config, nfapi_rx_indication_t 
     nfapi_rx_indication_pdu_t *src_pdu = &ind->rx_indication_body.rx_pdu_list[i];
     memcpy(dest_pdu, src_pdu, sizeof(*src_pdu));
     // DJP - TODO FIXME - intentional memory leak
-    dest_pdu->data = malloc(dest_pdu->rx_indication_rel8.length);
-    memcpy(dest_pdu->data, src_pdu->data, dest_pdu->rx_indication_rel8.length);
+    if (dest_pdu->rx_indication_rel8.length > 0) {
+      dest_pdu->data = malloc(dest_pdu->rx_indication_rel8.length);
+      memcpy(dest_pdu->data, src_pdu->data, dest_pdu->rx_indication_rel8.length);
+    } else {
+      dest_pdu->data = NULL;
+    }
     LOG_D(PHY, "%s() NFAPI SFN/SF:%d PDUs:%d [PDU:%d] handle:%d rnti:%04x length:%d offset:%d ul_cqi:%d ta:%d data:%p\n",
           __FUNCTION__,
           NFAPI_SFNSF2DEC(ind->sfn_sf), ind->rx_indication_body.number_of_pdus, i,
@@ -902,12 +920,33 @@ int vnf_pack_p4_p5_vendor_extension(nfapi_p4_p5_message_header_t *header, uint8_
 
 static pthread_t vnf_start_pthread;
 static pthread_t vnf_p7_start_pthread;
+static pthread_t vnf_p7_time_pthread;
 
 void *vnf_p7_start_thread(void *ptr) {
   printf("%s()\n", __FUNCTION__);
   pthread_setname_np(pthread_self(), "VNF_P7");
   nfapi_vnf_p7_config_t *config = (nfapi_vnf_p7_config_t *)ptr;
   nfapi_vnf_p7_start(config);
+  return config;
+}
+
+void* vnf_p7_time_thread(void *ptr) {
+  printf("%s()\n", __FUNCTION__);
+
+  struct sched_param sp;
+  int policy, ret;
+  policy = SCHED_FIFO;
+  //sp.sched_priority = 50;//40;
+  sp.sched_priority = sched_get_priority_max(policy);
+  ret = sched_setscheduler(0, policy, &sp);
+  if (ret) {
+        perror("sched_setscheduler");
+        return NULL;
+  }
+
+  pthread_setname_np(pthread_self(), "VNF_P7");
+  nfapi_vnf_p7_config_t* config = (nfapi_vnf_p7_config_t*)ptr;
+  nfapi_vnf_p7_time(config);
   return config;
 }
 
@@ -945,6 +984,7 @@ void *vnf_p7_thread_start(void *ptr) {
   p7_vnf->config->deallocate_p7_vendor_ext = &phy_deallocate_p7_vendor_ext;
   NFAPI_TRACE(NFAPI_TRACE_INFO, "[VNF] Creating VNF NFAPI start thread %s\n", __FUNCTION__);
   pthread_create(&vnf_p7_start_pthread, NULL, &vnf_p7_start_thread, p7_vnf->config);
+  pthread_create(&vnf_p7_time_pthread, NULL, &vnf_p7_time_thread, p7_vnf->config);
   return 0;
 }
 
@@ -1236,6 +1276,22 @@ int oai_nfapi_ue_release_req(nfapi_ue_release_request_t *release_req){
       LOG_E(PHY, "%s() Problem sending retval:%d\n", __FUNCTION__, retval);
     } else {
         release_req->ue_release_request_body.number_of_TLVs = 0;
+    }
+    return retval;
+}
+
+int oai_nfapi_phy_rm_start_req(nfapi_phy_rm_start_request_t *rm_start_req){
+
+    nfapi_vnf_p7_config_t *p7_config = vnf.p7_vnfs[0].config;
+    rm_start_req->header.phy_id = 1; // DJP HACK TODO FIXME - need to pass this around!!!!
+    rm_start_req->header.message_id = NFAPI_PHY_RM_START_REQUEST;
+
+    int retval = nfapi_vnf_p7_phy_rm_start_req(p7_config, rm_start_req);
+
+    if (retval!=0) {
+        LOG_E(PHY, "%s() Problem sending retval:%d\n", __FUNCTION__, retval);
+    } else {
+        rm_start_req->sfn_sf = 0;
     }
     return retval;
 }

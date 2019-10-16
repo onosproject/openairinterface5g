@@ -200,10 +200,10 @@ rx_sdu(const module_id_t enb_mod_idP,
             UE_id,
             current_rnti);
 
-      if (ul_cqi > 200) { // too high energy pattern
+//      if (ul_cqi > 200) { // too high energy pattern
         UE_scheduling_control->pusch_snr[CC_idP] = ul_cqi;
         LOG_W(MAC, "[MAC] Too high energy pattern\n");
-      }
+//      }
 
       if (UE_scheduling_control->round_UL[CC_idP][harq_pid] == 3) {
         UE_scheduling_control->ul_scheduled &= (~(1 << harq_pid));
@@ -746,6 +746,11 @@ rx_sdu(const module_id_t enb_mod_idP,
               case 1:
                 ra->Msg4_frame = frameP + ((subframeP > 2) ? 1 : 0);
                 ra->Msg4_subframe = (subframeP + 7) % 10;
+                break;
+
+              case 2:
+                ra->Msg4_frame = (frameP + ((subframeP > 2) ? 1 : 0))%1024;
+                ra->Msg4_subframe = (subframeP + 6) % 10;
                 break;
 
               default:
@@ -1777,7 +1782,7 @@ schedule_ulsch_rnti(module_id_t   module_idP,
               ul_req_tmp_body->ul_config_pdu_list[ul_req_index].ulsch_harq_pdu.initial_transmission_parameters.initial_transmission_parameters_rel8.initial_number_of_resource_blocks = rb_table[rb_table_index];
             }
 
-            fill_nfapi_ulsch_harq_information(module_idP, CC_id,rnti, ulsch_harq_information,subframeP);
+            fill_nfapi_ulsch_harq_information(module_idP, CC_id,rnti, ulsch_harq_information, frameP, subframeP);
           } else {
             ul_req_tmp_body->number_of_pdus++;
           }
@@ -1892,7 +1897,7 @@ schedule_ulsch_rnti(module_id_t   module_idP,
                 UE_template_ptr->nb_rb_ul[harq_pid];
             }
 
-            fill_nfapi_ulsch_harq_information(module_idP, CC_id,rnti, ulsch_harq_information, subframeP);
+            fill_nfapi_ulsch_harq_information(module_idP, CC_id,rnti, ulsch_harq_information, frameP, subframeP);
           } else {
             ul_req_tmp_body->number_of_pdus++;
           }

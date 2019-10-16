@@ -43,6 +43,7 @@ int oai_nfapi_hi_dci0_req(nfapi_hi_dci0_request_t *hi_dci0_req);
 int oai_nfapi_ul_config_req(nfapi_ul_config_request_t *ul_config_req);
 
 int oai_nfapi_ue_release_req(nfapi_ue_release_request_t *release_req);
+int oai_nfapi_phy_rm_start_req(nfapi_phy_rm_start_request_t *rm_start_req);
 uint8_t dl_pdus[8][MAX_NUM_DL_PDU][9422];
 void handle_nfapi_dci_dl_pdu(PHY_VARS_eNB *eNB,
                              int frame, int subframe,
@@ -573,7 +574,7 @@ void handle_uci_sr_pdu(PHY_VARS_eNB *eNB,
   uci->frame               = frame;
   uci->subframe            = subframe;
   uci->rnti                = ul_config_pdu->uci_sr_pdu.ue_information.ue_information_rel8.rnti;
-  uci->ue_id               = find_dlsch(ul_config_pdu->uci_sr_pdu.ue_information.ue_information_rel8.rnti,eNB,SEARCH_EXIST_OR_FREE);
+  uci->ue_id               = find_ulsch(ul_config_pdu->uci_sr_pdu.ue_information.ue_information_rel8.rnti,eNB,SEARCH_EXIST_OR_FREE);
   uci->type                = SR;
   uci->pucch_fmt           = pucch_format1;
   uci->num_antenna_ports   = 1;
@@ -601,7 +602,7 @@ void handle_uci_sr_harq_pdu(PHY_VARS_eNB *eNB,int UE_id,nfapi_ul_config_request_
   uci->frame               = frame;
   uci->subframe            = subframe;
   uci->rnti                = ul_config_pdu->uci_sr_harq_pdu.ue_information.ue_information_rel8.rnti;
-  uci->ue_id               = find_dlsch(ul_config_pdu->uci_sr_harq_pdu.ue_information.ue_information_rel8.rnti,eNB,SEARCH_EXIST_OR_FREE);
+  uci->ue_id               = find_ulsch(ul_config_pdu->uci_sr_harq_pdu.ue_information.ue_information_rel8.rnti,eNB,SEARCH_EXIST_OR_FREE);
   uci->type                = HARQ_SR;
   uci->num_antenna_ports   = 1;
   uci->num_pucch_resources = 1;
@@ -625,7 +626,7 @@ void handle_uci_harq_pdu(PHY_VARS_eNB *eNB,int UE_id,nfapi_ul_config_request_pdu
   uci->frame             = frame;
   uci->subframe          = subframe;
   uci->rnti              = ul_config_pdu->uci_harq_pdu.ue_information.ue_information_rel8.rnti;
-  uci->ue_id             = find_dlsch(ul_config_pdu->uci_harq_pdu.ue_information.ue_information_rel8.rnti,eNB,SEARCH_EXIST_OR_FREE);
+  uci->ue_id             = find_ulsch(ul_config_pdu->uci_harq_pdu.ue_information.ue_information_rel8.rnti,eNB,SEARCH_EXIST_OR_FREE);
   uci->type              = HARQ;
   uci->srs_active        = srs_active;
   uci->num_antenna_ports = ul_config_pdu->uci_harq_pdu.harq_information.harq_information_rel11.num_ant_ports;
@@ -1036,6 +1037,11 @@ if (NFAPI_MODE!=NFAPI_MODE_VNF)
       handle_nfapi_ul_pdu(eNB,proc,ul_config_pdu,UL_req->sfn_sf>>4,UL_req->sfn_sf&0xf,UL_req->ul_config_request_body.srs_present);
     }
   }
+
+#ifdef PHY_RM
+  Sched_INFO->PHY_rm_start_req->sfn_sf = frame << 4 | subframe;
+  oai_nfapi_phy_rm_start_req(Sched_INFO->PHY_rm_start_req);
+#endif
 }
 
 /*Dummy functions*/
