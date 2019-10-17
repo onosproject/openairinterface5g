@@ -1710,7 +1710,6 @@ fill_nfapi_harq_information(module_id_t                      module_idP,
   ue_sched_ctl = &UE_list->UE_sched_ctrl[UE_id];
   harq_pid     = frame_subframe2_dl_harq_pid(cc->tdd_Config, frameP, subframeP);
   int  ackNAK_absSF = get_pucch1_absSF(cc, absSFP);
-  uint8_t downlink_assignment_index = (UE_list->UE_template[CC_idP][UE_id].DAI-1)&3;
 
   AssertFatal(UE_id >= 0, "UE_id cannot be found, impossible\n");
   AssertFatal(UE_list != NULL, "UE_list is null\n");
@@ -1743,17 +1742,19 @@ fill_nfapi_harq_information(module_id_t                      module_idP,
         }
 
         harq_information->harq_information_rel10_tdd.tl.tag                    = NFAPI_UL_CONFIG_REQUEST_HARQ_INFORMATION_REL10_TDD_TAG;
-        harq_information->harq_information_rel10_tdd.n_pucch_1_0
-          = getNp(cc->mib->message.dl_Bandwidth, cce_idxP, 0) + cc->radioResourceConfigCommon->pucch_ConfigCommon.n1PUCCH_AN + cce_idxP;
+        if(getM_mac(cc, (get_pucch1_absSF(cc, absSFP))%10)==1) {
+          harq_information->harq_information_rel10_tdd.n_pucch_1_0 = cc->radioResourceConfigCommon->pucch_ConfigCommon.n1PUCCH_AN + cce_idxP;
+        } else {
+          harq_information->harq_information_rel10_tdd.n_pucch_1_0               = cc->radioResourceConfigCommon->pucch_ConfigCommon.n1PUCCH_AN + cce_idxP +
+                                                                                     (getM_mac(cc,ackNAK_absSF % 10) - getm_mac(cc,subframeP) -1)*getNp(cc->mib->message.dl_Bandwidth,cce_idxP,0) +
+                                                                                     getm_mac(cc,subframeP)*getNp(cc->mib->message.dl_Bandwidth,cce_idxP,1);
+        }
         harq_information->harq_information_rel10_tdd.number_of_pucch_resources = 1;
       } else {
         harq_information->harq_information_rel9_fdd.tl.tag                     = NFAPI_UL_CONFIG_REQUEST_HARQ_INFORMATION_REL9_FDD_TAG;
         harq_information->harq_information_rel9_fdd.number_of_pucch_resources  = 1;
         harq_information->harq_information_rel9_fdd.harq_size                  = 1; // 1-bit ACK/NAK
-        harq_information->harq_information_rel10_tdd.n_pucch_1_0               = cc->radioResourceConfigCommon->pucch_ConfigCommon.n1PUCCH_AN + cce_idxP +
-                                                                                 (getM_mac(cc,ackNAK_absSF % 10) - downlink_assignment_index -1)*getNp(cc->mib->message.dl_Bandwidth,cce_idxP,0) 
-                                                                                 + getm_mac(cc,subframeP)*getNp(cc->mib->message.dl_Bandwidth,cce_idxP,1);
-        harq_information->harq_information_rel10_tdd.number_of_pucch_resources = 1;
+        harq_information->harq_information_rel9_fdd.n_pucch_1_0                = cc->radioResourceConfigCommon->pucch_ConfigCommon.n1PUCCH_AN + cce_idxP;
       }
 
       break;
@@ -1776,10 +1777,9 @@ fill_nfapi_harq_information(module_id_t                      module_idP,
           harq_information->harq_information_rel10_tdd.harq_size                = 1;
         }
 
-//      harq_information->harq_information_rel10_tdd.n_pucch_1_0                =	cc->radioResourceConfigCommon->pucch_ConfigCommon.n1PUCCH_AN + cce_idxP;
         harq_information->harq_information_rel10_tdd.n_pucch_1_0               = cc->radioResourceConfigCommon->pucch_ConfigCommon.n1PUCCH_AN + cce_idxP +
-                                                                                 (getM_mac(cc,ackNAK_absSF % 10) - downlink_assignment_index -1)*getNp(cc->mib->message.dl_Bandwidth,cce_idxP,0) +
-                                                                                 downlink_assignment_index*getNp(cc->mib->message.dl_Bandwidth,cce_idxP,1);
+                                                                                 (getM_mac(cc,ackNAK_absSF % 10) - getm_mac(cc,subframeP)-1)*getNp(cc->mib->message.dl_Bandwidth,cce_idxP,0) +
+                                                                                 getm_mac(cc,subframeP)*getNp(cc->mib->message.dl_Bandwidth,cce_idxP,1);
 
         harq_information->harq_information_rel10_tdd.number_of_pucch_resources  = 1;
       } else {
@@ -3803,8 +3803,8 @@ try_again:
             } else {
               ul_req->ul_config_pdu_list[ack_int].uci_harq_pdu.harq_information.harq_information_rel10_tdd.n_pucch_1_0 =
                 cc->radioResourceConfigCommon->pucch_ConfigCommon.n1PUCCH_AN + fCCE +
-                (getM_mac(cc,ackNAK_absSF % 10) - dl_config_pdu[i].dci_dl_pdu.dci_dl_pdu_rel8.downlink_assignment_index -1)*getNp(cc->mib->message.dl_Bandwidth,fCCE,0) +
-                dl_config_pdu[i].dci_dl_pdu.dci_dl_pdu_rel8.downlink_assignment_index*getNp(cc->mib->message.dl_Bandwidth,fCCE,1);
+                (getM_mac(cc,ackNAK_absSF % 10) - getm_mac(cc,subframeP) -1)*getNp(cc->mib->message.dl_Bandwidth,fCCE,0) +
+                getm_mac(cc,subframeP)*getNp(cc->mib->message.dl_Bandwidth,fCCE,1);
             }
           }
         }
