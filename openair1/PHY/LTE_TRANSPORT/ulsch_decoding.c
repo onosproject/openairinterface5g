@@ -541,7 +541,11 @@ int ulsch_decoding_data_2thread(PHY_VARS_eNB *eNB,int UE_id,int harq_pid,int llr
 
   // wait for worker to finish
   wait_on_busy_condition(&proc->mutex_td,&proc->cond_td,&proc->instance_cnt_td,"td thread");
-  return( (ret>proc->tdp.ret) ? ret : proc->tdp.ret );
+  if(ulsch_harq->C > 1){
+    return( (ret>proc->tdp.ret) ? ret : proc->tdp.ret );
+  }else{
+    return ret;
+  }
 }
 
 int ulsch_decoding_data(PHY_VARS_eNB *eNB,int UE_id,int harq_pid,int llr8_flag) {
@@ -665,11 +669,11 @@ int ulsch_decoding_data(PHY_VARS_eNB *eNB,int UE_id,int harq_pid,int llr8_flag) 
 
 int ulsch_decoding_data_all(PHY_VARS_eNB *eNB,int UE_id,int harq_pid,int llr8_flag) {
   int ret = 0;
-  /*if(get_thread_worker_conf() == WORKER_ENABLE)
+  if(get_thread_worker_conf() == WORKER_ENABLE)
   {
     ret = ulsch_decoding_data_2thread(eNB,UE_id,harq_pid,llr8_flag);
   }
-  else*/
+  else
   {
     ret = ulsch_decoding_data(eNB,UE_id,harq_pid,llr8_flag);
   }
