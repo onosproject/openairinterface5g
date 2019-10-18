@@ -997,11 +997,11 @@ generate_Msg4(module_id_t module_idP,
               dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.harq_process,
               &dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.resource_block_coding,
               dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.resource_block_coding);
-        AssertFatal(dl_config_pdu->dci_dl_pdu.
-                    dci_dl_pdu_rel8.resource_block_coding < 8192,
-                    "resource_block_coding %u < 8192\n",
-                    dl_config_pdu->dci_dl_pdu.
-                    dci_dl_pdu_rel8.resource_block_coding);
+        //AssertFatal(dl_config_pdu->dci_dl_pdu.
+        //            dci_dl_pdu_rel8.resource_block_coding < 8192,
+        //            "resource_block_coding %u < 8192\n",
+        //            dl_config_pdu->dci_dl_pdu.
+        //            dci_dl_pdu_rel8.resource_block_coding);
 
         if (!CCE_allocation_infeasible(module_idP, CC_idP, 1, subframeP,
                                        dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.aggregation_level, ra->rnti)) {
