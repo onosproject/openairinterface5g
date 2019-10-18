@@ -1124,10 +1124,10 @@ rrc_eNB_process_RRCConnectionSetupComplete(
 
   if (EPC_MODE_ENABLED == 1) {
     // Forward message to S1AP layer
-    rrc_eNB_send_S1AP_NAS_FIRST_REQ(
+    /*rrc_eNB_send_S1AP_NAS_FIRST_REQ(
       ctxt_pP,
       ue_context_pP,
-      rrcConnectionSetupComplete);
+      rrcConnectionSetupComplete);*/
   } else
 #endif
   {
@@ -1144,7 +1144,7 @@ rrc_eNB_process_RRCConnectionSetupComplete(
 //-----------------------------------------------------------------------------
 void rrc_eNB_process_RRCConnectionSetupComplete_NB_IoT(
   const protocol_ctxt_t* const ctxt_pP,
-  rrc_eNB_ue_context_NB_IoT_t*         ue_context_pP,
+  rrc_eNB_ue_context_t*         ue_context_pP,
   RRCConnectionSetupComplete_NB_r13_IEs_t * rrcConnectionSetupComplete_NB
 )
 //-----------------------------------------------------------------------------
@@ -1163,11 +1163,11 @@ void rrc_eNB_process_RRCConnectionSetupComplete_NB_IoT(
 
   if (EPC_MODE_ENABLED == 1) {
     // Forward message to S1AP layer we don't have S1AP functions for the moment
-    //printf("*********************Get into S1AP*********************\n");
-    //rrc_eNB_send_S1AP_NAS_FIRST_REQ(
-    //  ctxt_pP,
-    //  ue_context_pP,
-    //  rrcConnectionSetupComplete_NB);
+    printf("*********************Get into S1AP*********************\n");
+    rrc_eNB_send_S1AP_NAS_FIRST_REQ(
+      ctxt_pP,
+      ue_context_pP,
+      rrcConnectionSetupComplete_NB);
 
   } else
 #endif

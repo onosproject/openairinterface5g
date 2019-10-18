@@ -30,6 +30,7 @@
  *  @{
  */
 
+#include "RRC/LITE/defs.h"
 #include "RRC/LITE/defs_NB_IoT.h"
 #include "pdcp.h"
 #include "rlc.h"
@@ -484,7 +485,7 @@ rrc_eNB_generate_dedicatedRRCConnectionReconfiguration_NB_IoT(
 
 void rrc_eNB_process_RRCConnectionSetupComplete_NB_IoT(
   const protocol_ctxt_t* const ctxt_pP,
-  rrc_eNB_ue_context_NB_IoT_t*         ue_context_pP,
+  rrc_eNB_ue_context_t*         ue_context_pP,
   RRCConnectionSetupComplete_NB_r13_IEs_t * rrcConnectionSetupComplete_NB
 );
 

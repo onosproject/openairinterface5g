@@ -372,6 +372,7 @@ typedef struct eNB_RRC_UE_s {
   SRB_INFO                           Srb0;
   SRB_INFO_TABLE_ENTRY               Srb1;
   SRB_INFO_TABLE_ENTRY               Srb2;
+  SRB_INFO_TABLE_ENTRY               Srb1bis;
   MeasConfig_t*                      measConfig;
   HANDOVER_INFO*                     handover_info;
 

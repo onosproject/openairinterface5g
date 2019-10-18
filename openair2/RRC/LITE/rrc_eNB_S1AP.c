@@ -624,7 +624,7 @@ void
 rrc_eNB_send_S1AP_NAS_FIRST_REQ(
   const protocol_ctxt_t* const ctxt_pP,
   rrc_eNB_ue_context_t*          const ue_context_pP,
-  RRCConnectionSetupComplete_r8_IEs_t* rrcConnectionSetupComplete
+  RRCConnectionSetupComplete_NB_r13_IEs_t* rrcConnectionSetupComplete
 )
 //------------------------------------------------------------------------------
 {
@@ -661,8 +661,8 @@ rrc_eNB_send_S1AP_NAS_FIRST_REQ(
     S1AP_NAS_FIRST_REQ (message_p).establishment_cause = ue_context_pP->ue_context.establishment_cause;
 
     /* Forward NAS message */S1AP_NAS_FIRST_REQ (message_p).nas_pdu.buffer =
-    rrcConnectionSetupComplete->dedicatedInfoNAS.buf;
-    S1AP_NAS_FIRST_REQ (message_p).nas_pdu.length = rrcConnectionSetupComplete->dedicatedInfoNAS.size;
+    rrcConnectionSetupComplete->dedicatedInfoNAS_r13.buf;
+    S1AP_NAS_FIRST_REQ (message_p).nas_pdu.length = rrcConnectionSetupComplete->dedicatedInfoNAS_r13.size;
 
     /* Fill UE identities with available information */
     {
@@ -682,9 +682,9 @@ rrc_eNB_send_S1AP_NAS_FIRST_REQ(
             ue_context_pP->ue_context.rnti);
       }
 
-      if (rrcConnectionSetupComplete->registeredMME != NULL) {
+      if (rrcConnectionSetupComplete->registeredMME_r13 != NULL) {
         /* Fill GUMMEI */
-        struct RegisteredMME *r_mme = rrcConnectionSetupComplete->registeredMME;
+        struct RegisteredMME *r_mme = rrcConnectionSetupComplete->registeredMME_r13;
         //int selected_plmn_identity = rrcConnectionSetupComplete->selectedPLMN_Identity;
 
         S1AP_NAS_FIRST_REQ (message_p).ue_identity.presenceMask |= UE_IDENTITIES_gummei;
