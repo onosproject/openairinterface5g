@@ -760,14 +760,21 @@ int nr_pdsch_channel_estimation(PHY_VARS_NR_UE *ue,
     // Do the same for the 2 left over pilots if any (nb_rb_pdsch*12 mod 8)
     if ((nb_rb_pdsch*12)%8) {
       uint16_t used_pils = (nb_rb_pdsch*12)/8*4;
-      dl_ch -= 16;
-      
+
       for (uint8_t idxPil=0; idxPil<4; idxPil+=2 ) {
         rxF   = (int16_t *)&rxdataF[aarx][(symbol_offset+nushift+re_offset)];
         ch[idxPil]   = (int16_t)(((int32_t)pil[used_pils+idxPil]*rxF[0] - (int32_t)pil[used_pils*idxPil+1]*rxF[1])>>15);
         ch[idxPil+1] = (int16_t)(((int32_t)pil[used_pils+idxPil]*rxF[1] + (int32_t)pil[used_pils*idxPil+1]*rxF[0])>>15);
         re_offset = (re_offset+2)&(ue->frame_parms.ofdm_symbol_size-1);
       }
+
+      dl_ch[2] = (ch[0]+ch[2]) >> 1;
+      dl_ch[3] = (ch[1]+ch[3]) >> 1;
+      dl_ch[6] = (ch[4]+ch[5]) >> 1;
+      dl_ch[7] = (ch[6]+ch[7]) >> 1;
+
+      dl_ch[0] = ch[0]; dl_ch[1] = ch[1];
+      dl_ch[4] = ch[5]; dl_ch[4] = ch[5];
     }
   }
 
