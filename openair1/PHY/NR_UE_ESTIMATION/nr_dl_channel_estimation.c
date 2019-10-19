@@ -755,13 +755,18 @@ int nr_pdsch_channel_estimation(PHY_VARS_NR_UE *ue,
       }
       
       simple_lerp(ch, dl_ch);
+      for(uint8_t i=0; i<16; i++) {
+        printf("%d\t",dl_ch[i]);
+      }
+      printf("\n");
       dl_ch += 16;
+      re_offset = (re_offset-2)&(ue->frame_parms.ofdm_symbol_size-1);
     }
     // Do the same for the 2 left over pilots if any (nb_rb_pdsch*12 mod 8)
     if ((nb_rb_pdsch*12)%8) {
-      uint16_t used_pils = (nb_rb_pdsch*12)/8*4;
+      uint16_t used_pils = (nb_rb_pdsch*12)/8*8;
 
-      for (uint8_t idxPil=0; idxPil<4; idxPil+=2 ) {
+      for (uint8_t idxPil=0; idxPil<8; idxPil+=2 ) {
         rxF   = (int16_t *)&rxdataF[aarx][(symbol_offset+nushift+re_offset)];
         ch[idxPil]   = (int16_t)(((int32_t)pil[used_pils+idxPil]*rxF[0] - (int32_t)pil[used_pils*idxPil+1]*rxF[1])>>15);
         ch[idxPil+1] = (int16_t)(((int32_t)pil[used_pils+idxPil]*rxF[1] + (int32_t)pil[used_pils*idxPil+1]*rxF[0])>>15);
@@ -770,11 +775,11 @@ int nr_pdsch_channel_estimation(PHY_VARS_NR_UE *ue,
 
       dl_ch[2] = (ch[0]+ch[2]) >> 1;
       dl_ch[3] = (ch[1]+ch[3]) >> 1;
-      dl_ch[6] = (ch[4]+ch[5]) >> 1;
-      dl_ch[7] = (ch[6]+ch[7]) >> 1;
+      dl_ch[6] = (ch[4]+ch[6]) >> 1;
+      dl_ch[7] = (ch[5]+ch[7]) >> 1;
 
       dl_ch[0] = ch[0]; dl_ch[1] = ch[1];
-      dl_ch[4] = ch[5]; dl_ch[4] = ch[5];
+      dl_ch[4] = ch[4]; dl_ch[5] = ch[5];
     }
   }
 
@@ -783,12 +788,15 @@ int nr_pdsch_channel_estimation(PHY_VARS_NR_UE *ue,
 
 void simple_lerp(int16_t *in, int16_t *out)
 {
-  __m128i est;
+  __m128i est, sum, sign;
   __m128i *x0 = (__m128i*)in;
   __m128i *x1 = (__m128i*)(in+2);
   __m128i *y = (__m128i*)out;
 
-  est  = _mm_srli_epi16(_mm_add_epi16 (*x0, *x1), 1);
+  est  = _mm_add_epi16 (*x0, *x1);
+  //sum  = _mm_and_si128(est, _mm_set1_epi16(0x7FFF));
+  sign = _mm_and_si128(est, _mm_set1_epi16(0x8000));
+  est  = _mm_or_si128(_mm_srli_epi16(est, 1), sign);
   y[0] = _mm_unpacklo_epi32(*x0, est);
   y[1] = _mm_unpackhi_epi32(*x0, est);
 }
