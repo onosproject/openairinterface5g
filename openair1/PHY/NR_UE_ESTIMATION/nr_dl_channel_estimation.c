@@ -743,19 +743,13 @@ int nr_pdsch_channel_estimation(PHY_VARS_NR_UE *ue,
     printf("rxF addr %p p %d\n", rxF,p);
     printf("dl_ch addr %p nushift %d\n",dl_ch,nushift);
 #endif
-    //if ((ue->frame_parms.N_RB_DL&1)==0) {
     
     for (uint16_t idx8Sym=0; idx8Sym<(nb_rb_pdsch*12)/8; idx8Sym++ ) {
 
       for (uint8_t idxPil=0; idxPil<10; idxPil+=2 ) {
         rxF   = (int16_t *)&rxdataF[aarx][(symbol_offset+nushift+re_offset)];
-        ch[idxPil]   = (int16_t)(((int32_t)pil[idx8Sym*8+idxPil]*rxF[0] - (int32_t)pil[idx8Sym*8+idxPil+1]*rxF[1])>>15);
-        ch[idxPil+1] = (int16_t)(((int32_t)pil[idx8Sym*8+idxPil]*rxF[1] + (int32_t)pil[idx8Sym*8+idxPil+1]*rxF[0])>>15);
-        // Nulling estimates at DC
-        if (re_offset == 0) {
-          ch[idxPil] = 0;
-          ch[idxPil+1] = 0;
-        }
+        ch[idxPil]   = (re_offset == 0) ? 0 : (int16_t)(((int32_t)pil[idx8Sym*8+idxPil]*rxF[0] - (int32_t)pil[idx8Sym*8+idxPil+1]*rxF[1])>>15);
+        ch[idxPil+1] = (re_offset == 0) ? 0 : (int16_t)(((int32_t)pil[idx8Sym*8+idxPil]*rxF[1] + (int32_t)pil[idx8Sym*8+idxPil+1]*rxF[0])>>15);
         re_offset = (re_offset+2)&(ue->frame_parms.ofdm_symbol_size-1);
       }
       
@@ -775,13 +769,8 @@ int nr_pdsch_channel_estimation(PHY_VARS_NR_UE *ue,
 
       for (uint8_t idxPil=0; idxPil<8; idxPil+=2 ) {
         rxF   = (int16_t *)&rxdataF[aarx][(symbol_offset+nushift+re_offset)];
-        ch[idxPil]   = (int16_t)(((int32_t)pil[used_pils+idxPil]*rxF[0] - (int32_t)pil[used_pils*idxPil+1]*rxF[1])>>15);
-        ch[idxPil+1] = (int16_t)(((int32_t)pil[used_pils+idxPil]*rxF[1] + (int32_t)pil[used_pils*idxPil+1]*rxF[0])>>15);
-        // Nulling estimates at DC
-        if (re_offset == 0) {
-          ch[idxPil] = 0;
-          ch[idxPil+1] = 0;
-        }
+        ch[idxPil]   = (re_offset == 0) ? 0 : (int16_t)(((int32_t)pil[used_pils+idxPil]*rxF[0] - (int32_t)pil[used_pils*idxPil+1]*rxF[1])>>15);
+        ch[idxPil+1] = (re_offset == 0) ? 0 : (int16_t)(((int32_t)pil[used_pils+idxPil]*rxF[1] + (int32_t)pil[used_pils*idxPil+1]*rxF[0])>>15);
         re_offset = (re_offset+2)&(ue->frame_parms.ofdm_symbol_size-1);
       }
 
