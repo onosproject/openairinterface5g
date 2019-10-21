@@ -794,13 +794,16 @@ schedule_SI_MBMS(module_id_t module_idP, frame_t frameP,
 		    first_rb = 6;
 		    break;
 		case 25:
-		    first_rb = 11;
+//		    first_rb = 11;
+			first_rb = 21;
 		    break;
 		case 50:
-		    first_rb = 23;
+//		    first_rb = 23;
+			first_rb = 46;
 		    break;
 		case 100:
-		    first_rb = 48;
+//		    first_rb = 48;
+			first_rb = 96;
 		    break;
 		}
 
@@ -812,24 +815,32 @@ schedule_SI_MBMS(module_id_t module_idP, frame_t frameP,
 		// Get MCS for length of SI, 3 PRBs
 		if (bcch_sdu_length <= 7) {
 		    mcs = 0;
+		    bcch_sdu_length = 7;
 		} else if (bcch_sdu_length <= 11) {
 		    mcs = 1;
+		    bcch_sdu_length = 11;
 		} else if (bcch_sdu_length <= 18) {
 		    mcs = 2;
+		    bcch_sdu_length = 18;
 		} else if (bcch_sdu_length <= 22) {
 		    mcs = 3;
+		    bcch_sdu_length = 22;
 		} else if (bcch_sdu_length <= 26) {
 		    mcs = 4;
+		    bcch_sdu_length = 26;
 		} else if (bcch_sdu_length <= 28) {
 		    mcs = 5;
+		    bcch_sdu_length = 28;
 		} else if (bcch_sdu_length <= 32) {
 		    mcs = 6;
+		    bcch_sdu_length = 32;
 		} else if (bcch_sdu_length <= 41) {
 		    mcs = 7;
+		    bcch_sdu_length = 41;
 		} else if (bcch_sdu_length <= 49) {
 		    mcs = 8;
+		    bcch_sdu_length = 49;
 		}
-
 
 		dl_config_pdu = &dl_req->dl_config_pdu_list[dl_req->number_pdu];
 		memset((void *) dl_config_pdu, 0,
@@ -1188,6 +1199,7 @@ schedule_SI(module_id_t module_idP, frame_t frameP, sub_frame_t subframeP)
 		    dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.num_bf_prb_per_subband                 = 1;
 		    dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.num_bf_vector                          = 1;
 		    //    dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.bf_vector                    = ; 
+
 		    dl_req->number_pdu++;
 		    dl_req->tl.tag = NFAPI_DL_CONFIG_REQUEST_BODY_TAG;
 
@@ -1210,6 +1222,7 @@ schedule_SI(module_id_t module_idP, frame_t frameP, sub_frame_t subframeP)
 		    TX_req->num_segments = 1;
 		    TX_req->segments[0].segment_length = bcch_sdu_length;
 		    TX_req->segments[0].segment_data = cc->BCCH_pdu.payload;
+
 		    eNB->TX_req[CC_id].tx_request_body.number_of_pdus++;
                     eNB->TX_req[CC_id].sfn_sf = sfn_sf;
                     eNB->TX_req[CC_id].tx_request_body.tl.tag = NFAPI_TX_REQUEST_BODY_TAG;

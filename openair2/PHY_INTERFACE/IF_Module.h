@@ -131,6 +131,8 @@ typedef struct{
   nfapi_tx_request_t *TX_req;
   /// Pointers to ue_release
   nfapi_ue_release_request_t *UE_release_req;
+  /// Pointers to phy rm
+  nfapi_phy_rm_start_request_t *PHY_rm_start_req;
 }Sched_Rsp_t;
 
 typedef struct {

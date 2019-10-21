@@ -2654,6 +2654,13 @@ static uint8_t pack_timing_info(void *msg, uint8_t **ppWritePackedMsg, uint8_t *
 			pack_p7_vendor_extension_tlv(pNfapiMsg->vendor_extension, ppWritePackedMsg, end, config));
 }
 
+static uint8_t pack_phy_rm_start_request(void *msg, uint8_t **ppWritePackedMsg, uint8_t *end, nfapi_p7_codec_config_t* config)
+{
+    nfapi_phy_rm_start_request_t *pNfapiMsg = (nfapi_phy_rm_start_request_t*)msg;
+    int x = push16(pNfapiMsg->sfn_sf, ppWritePackedMsg, end);
+    int y = pack_p7_vendor_extension_tlv(pNfapiMsg->vendor_extension, ppWritePackedMsg, end, config);
+    return x && y;
+}
 
 // Main pack function - public
 
@@ -2715,6 +2722,10 @@ int nfapi_p7_message_pack(void *pMessageBuf, void *pPackedBuf, uint32_t packedBu
 		case NFAPI_UE_RELEASE_RESPONSE:
 			result =pack_ue_release_response(pMessageHeader, &pWritePackedMessage, end, config);
 			break;
+
+                case NFAPI_PHY_RM_START_REQUEST:
+                        result =pack_phy_rm_start_request(pMessageHeader, &pWritePackedMessage, end, config);
+                        break;
 
 		case NFAPI_HARQ_INDICATION:
 			result = pack_harq_indication(pMessageHeader, &pWritePackedMessage, end, config);
@@ -5946,6 +5957,17 @@ static uint8_t unpack_timing_info(uint8_t **ppReadPackedMsg, uint8_t *end, void 
 			unpack_p7_tlv_list(unpack_fns, sizeof(unpack_fns)/sizeof(unpack_tlv_t), ppReadPackedMsg, end, config, &pNfapiMsg->vendor_extension));
 }
 
+static uint8_t unpack_phy_rm_start_request(uint8_t **ppReadPackedMsg, uint8_t *end, void *msg, nfapi_p7_codec_config_t* config)
+{
+       uint8_t proceed = 1;
+       nfapi_phy_rm_start_request_t *pNfapiMsg = (nfapi_phy_rm_start_request_t*)msg;
+       if(pull16(ppReadPackedMsg, &pNfapiMsg->sfn_sf, end) == 0)
+       {
+               return 0;
+       }
+
+       return 1;
+}
 
 // unpack length check
 
@@ -6059,6 +6081,11 @@ static int check_unpack_length(nfapi_message_id_e msgId, uint32_t unpackedBufLen
 			if (unpackedBufLen >= sizeof(nfapi_ue_release_response_t))
 				retLen = sizeof(nfapi_ue_release_response_t);
 			break;
+
+                case NFAPI_PHY_RM_START_REQUEST:
+                        if (unpackedBufLen >= sizeof(nfapi_phy_rm_start_request_t))
+                                retLen = sizeof(nfapi_phy_rm_start_request_t);
+                        break;
 
 		default:
 			NFAPI_TRACE(NFAPI_TRACE_ERROR, "Unknown message ID %d\n", msgId);
@@ -6186,6 +6213,11 @@ int nfapi_p7_message_unpack(void *pMessageBuf, uint32_t messageBufLen, void *pUn
 			else
 				return -1;
 			break;
+
+                case NFAPI_PHY_RM_START_REQUEST:
+                        if (check_unpack_length(NFAPI_PHY_RM_START_REQUEST, unpackedBufLen))
+                                result = unpack_phy_rm_start_request(&pReadPackedMessage, end, pMessageHeader, config);
+                        break;
 
 		case NFAPI_HARQ_INDICATION:
 			if (check_unpack_length(NFAPI_HARQ_INDICATION, unpackedBufLen))
