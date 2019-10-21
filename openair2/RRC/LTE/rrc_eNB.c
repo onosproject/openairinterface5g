@@ -3299,8 +3299,8 @@ void rrc_eNB_generate_defaultRRCConnectionReconfiguration(const protocol_ctxt_t 
 	(*physicalConfigDedicated)->antennaInfo->choice.explicitValue.codebookSubsetRestriction->choice.n2TxAntenna_tm6.size=1;
 	(*physicalConfigDedicated)->antennaInfo->choice.explicitValue.codebookSubsetRestriction->choice.n2TxAntenna_tm6.bits_unused=4;
       }
-      LOG_I(RRC,"UE %x Transmission mode is set to %ld at defaultRRCConnectionReconfiguration because ue_Category is %d and ue_TransmissionMode in configfile is %ld!\n",
-            ue_context_pP->ue_id_rnti, (*physicalConfigDedicated)->antennaInfo->choice.explicitValue.transmissionMode+1, ue_context_pP->ue_context.UE_Capability->ue_Category, rrc_inst->configuration.radioresourceconfig[0].ue_TransmissionMode+1);
+      LOG_I(RRC,"UE %x Transmission mode is set to %ld at defaultRRCConnectionReconfiguration and ue_TransmissionMode in configfile is %ld!\n",
+            ue_context_pP->ue_id_rnti, (*physicalConfigDedicated)->antennaInfo->choice.explicitValue.transmissionMode+1, rrc_inst->configuration.radioresourceconfig[0].ue_TransmissionMode+1);
 
     } else {
       LOG_E(RRC,"antenna_info not present in physical_config_dedicated. Not reconfiguring!\n");
@@ -4053,8 +4053,8 @@ flexran_rrc_eNB_generate_defaultRRCConnectionReconfiguration(const protocol_ctxt
 	(*physicalConfigDedicated)->antennaInfo->choice.explicitValue.codebookSubsetRestriction->choice.n2TxAntenna_tm6.size=1;
 	(*physicalConfigDedicated)->antennaInfo->choice.explicitValue.codebookSubsetRestriction->choice.n2TxAntenna_tm6.bits_unused=4;
       }
-      LOG_I(RRC,"UE %x Transmission mode is set to %ld at defaultRRCConnectionReconfiguration because ue_Category is %d and ue_TransmissionMode in configfile is %ld!\n",
-            ue_context_pP->ue_id_rnti, (*physicalConfigDedicated)->antennaInfo->choice.explicitValue.transmissionMode, ue_context_pP->ue_context.UE_Capability->ue_Category, rrc_inst->configuration.radioresourceconfig[0].ue_TransmissionMode+1);
+      LOG_I(RRC,"UE %x Transmission mode is set to %ld at defaultRRCConnectionReconfiguration and ue_TransmissionMode in configfile is %ld!\n",
+            ue_context_pP->ue_id_rnti, (*physicalConfigDedicated)->antennaInfo->choice.explicitValue.transmissionMode, rrc_inst->configuration.radioresourceconfig[0].ue_TransmissionMode+1);
     } else {
       LOG_E(RRC,"antenna_info not present in physical_config_dedicated. Not reconfiguring!\n");
     }
