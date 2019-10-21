@@ -47,8 +47,8 @@
  * set as command line argument, see lte-softmodem.c
  * default value: 0
  */
-int16_t dlsch_demod_shift = 0;
-int16_t interf_unaw_shift = 13;
+int16_t dlsch_demod_shift_NB_IoT = 0;
+int16_t interf_unaw_shift_NB_IoT = 13;
 
 //#define DEBUG_HARQ
 
@@ -61,11 +61,11 @@ int16_t interf_unaw_shift = 13;
 
 
 // [MCS][i_mod (0,1,2) = (2,4,6)]
-unsigned char offset_mumimo_llr_drange_fix=0;
+unsigned char offset_mumimo_llr_drange_fix_NB_IoT=0;
 //inferference-free case
-unsigned char interf_unaw_shift_tm4_mcs[29]={5, 3, 4, 3, 3, 2, 1, 1, 2, 0, 1, 1, 1, 1, 0, 0,
+unsigned char interf_unaw_shift_tm4_mcs_NB_IoT[29]={5, 3, 4, 3, 3, 2, 1, 1, 2, 0, 1, 1, 1, 1, 0, 0,
                                              1, 1, 1, 1, 0, 2, 1, 0, 1, 0, 1, 0, 0} ;
-unsigned char interf_unaw_shift_tm1_mcs[29]={5, 5, 4, 3, 3, 3, 2, 2, 4, 4, 2, 3, 3, 3, 1, 1,
+unsigned char interf_unaw_shift_tm1_mcs_NB_IoT[29]={5, 5, 4, 3, 3, 3, 2, 2, 4, 4, 2, 3, 3, 3, 1, 1,
                                              0, 1, 1, 2, 5, 4, 4, 6, 5, 1, 0, 5, 6} ; // mcs 21, 26, 28 seem to be errorneous
 
 /*
@@ -82,7 +82,7 @@ unsigned char offset_mumimo_llr_drange[29][3]={{8,8,8},{7,7,7},{7,7,7},{7,7,7},{
  /*
    unsigned char offset_mumimo_llr_drange[29][3]={{5, 8, 7},{4, 6, 8},{3, 6, 7},{7, 7, 6},{4, 7, 8},{4, 7, 4},{6, 6, 6},{3, 6, 6},{3, 6, 6},{1, 3, 4},{1, 1, 0},{3, 3, 2},{3, 4, 1},{4, 0, 1},{4, 2, 2},{3, 1, 2},{2, 1, 0},{2, 1, 1},{1, 0, 1},{1, 0, 1},{0, 0, 0},{1, 0, 0},{0, 0, 0},{0, 1, 0},{1, 0, 0},{0, 0, 0},{0, 0, 0},{0, 0, 0},{0, 0, 0}};  w
  */
-unsigned char offset_mumimo_llr_drange[29][3]= {{0, 6, 5},{0, 4, 5},{0, 4, 5},{0, 5, 4},{0, 5, 6},{0, 5, 3},{0, 4, 4},{0, 4, 4},{0, 3, 3},{0, 1, 2},{1, 1, 0},{1, 3, 2},{3, 4, 1},{2, 0, 0},{2, 2, 2},{1, 1, 1},{2, 1, 0},{2, 1, 1},{1, 0, 1},{1, 0, 1},{0, 0, 0},{1, 0, 0},{0, 0, 0},{0, 1, 0},{1, 0, 0},{0, 0, 0},{0, 0, 0},{0, 0, 0},{0, 0, 0}};
+unsigned char offset_mumimo_llr_drange_NB_IoT[29][3]= {{0, 6, 5},{0, 4, 5},{0, 4, 5},{0, 5, 4},{0, 5, 6},{0, 5, 3},{0, 4, 4},{0, 4, 4},{0, 3, 3},{0, 1, 2},{1, 1, 0},{1, 3, 2},{3, 4, 1},{2, 0, 0},{2, 2, 2},{1, 1, 1},{2, 1, 0},{2, 1, 1},{1, 0, 1},{1, 0, 1},{0, 0, 0},{1, 0, 0},{0, 0, 0},{0, 1, 0},{1, 0, 0},{0, 0, 0},{0, 0, 0},{0, 0, 0},{0, 0, 0}};
 
 
 extern void print_shorts(char *s,int16_t *x);
@@ -374,7 +374,7 @@ int rx_npdsch_NB_IoT(PHY_VARS_UE_NB_IoT *ue,
   //////////////////////////////////////////////////////////////////
   /////////// A prirori: No need of scale channel in NB-IoT
 
-  // dlsch_scale_channel(pdsch_vars[eNB_id]->dl_ch_estimates_ext,
+  // dlsch_scale_channel_NB_IoT(pdsch_vars[eNB_id]->dl_ch_estimates_ext,
   //                     frame_parms,
   //                     dlsch,
   //                     symbol,
@@ -388,7 +388,7 @@ int rx_npdsch_NB_IoT(PHY_VARS_UE_NB_IoT *ue,
   //     (dlsch0_harq->dl_power_off==0)
   //    )  // TM5 two-user
   // {
-  //   dlsch_scale_channel(pdsch_vars[eNB_id_i]->dl_ch_estimates_ext,
+  //   dlsch_scale_channel_NB_IoT(pdsch_vars[eNB_id_i]->dl_ch_estimates_ext,
   //                       frame_parms,
   //                       dlsch,
   //                       symbol,
@@ -414,7 +414,7 @@ int rx_npdsch_NB_IoT(PHY_VARS_UE_NB_IoT *ue,
      //       ((dlsch0_harq->mimo_mode >=DUALSTREAM_UNIFORM_PRECODING1) &&
      //        (dlsch0_harq->mimo_mode <=DUALSTREAM_PUSCH_PRECODING)))
      // {
-     //  dlsch_channel_level_TM34(pdsch_vars[eNB_id]->dl_ch_estimates_ext,
+     //  dlsch_channel_level_TM34_NB_IoT(pdsch_vars[eNB_id]->dl_ch_estimates_ext,
      //                             frame_parms,
      //                             pdsch_vars[eNB_id]->pmi_ext,
      //                             avg_0,
@@ -423,14 +423,14 @@ int rx_npdsch_NB_IoT(PHY_VARS_UE_NB_IoT *ue,
      //                             nb_rb,
      //                             dlsch0_harq->mimo_mode);
 
-     //  LOG_D(PHY,"Channel Level TM34  avg_0 %d, avg_1 %d, rx_type %d, rx_standard %d, dlsch_demod_shift %d \n", avg_0[0],
-     //          avg_1[0], rx_type, rx_standard, dlsch_demod_shift);
+     //  LOG_D(PHY,"Channel Level TM34  avg_0 %d, avg_1 %d, rx_type %d, rx_standard %d, dlsch_demod_shift_NB_IoT %d \n", avg_0[0],
+     //          avg_1[0], rx_type, rx_standard, dlsch_demod_shift_NB_IoT);
      //    if (rx_type>rx_standard) {
-     //      avg_0[0] = (log2_approx(avg_0[0])/2) + dlsch_demod_shift;// + 2 ;//+ 4;
-     //      avg_1[0] = (log2_approx(avg_1[0])/2) + dlsch_demod_shift;// + 2 ;//+ 4;
+     //      avg_0[0] = (log2_approx(avg_0[0])/2) + dlsch_demod_shift_NB_IoT;// + 2 ;//+ 4;
+     //      avg_1[0] = (log2_approx(avg_1[0])/2) + dlsch_demod_shift_NB_IoT;// + 2 ;//+ 4;
      //      pdsch_vars[eNB_id]->log2_maxh0 = cmax(avg_0[0],0);
      //      pdsch_vars[eNB_id]->log2_maxh1 = cmax(avg_1[0],0);
-     //     // printf("dlsch_demod_shift  %d\n", dlsch_demod_shift);
+     //     // printf("dlsch_demod_shift_NB_IoT  %d\n", dlsch_demod_shift_NB_IoT);
      //     }
      //      else {
      //      avg_0[0] = (log2_approx(avg_0[0])/2) - 13 + interf_unaw_shift;
@@ -441,7 +441,7 @@ int rx_npdsch_NB_IoT(PHY_VARS_UE_NB_IoT *ue,
      //  }
       // else if (dlsch0_harq->mimo_mode<DUALSTREAM_UNIFORM_PRECODING1) {// single-layer precoding (TM5, TM6)
       //   if ((rx_type==rx_IC_single_stream) && (eNB_id_i==ue->n_connected_eNB) && (dlsch0_harq->dl_power_off==0)) {
-      //       dlsch_channel_level_TM56(pdsch_vars[eNB_id]->dl_ch_estimates_ext,
+      //       dlsch_channel_level_TM56_NB_IoT(pdsch_vars[eNB_id]->dl_ch_estimates_ext,
       //                           frame_parms,
       //                           pdsch_vars[eNB_id]->pmi_ext,
       //                           avg,
@@ -472,7 +472,7 @@ int rx_npdsch_NB_IoT(PHY_VARS_UE_NB_IoT *ue,
 
     }
 //     else if (beamforming_mode==7)
-//        dlsch_channel_level_TM7(pdsch_vars[eNB_id]->dl_bf_ch_estimates_ext,
+//        dlsch_channel_level_TM7_NB_IoT(pdsch_vars[eNB_id]->dl_bf_ch_estimates_ext,
 //                               frame_parms,
 //                               avg,
 //                               symbol,
@@ -545,7 +545,7 @@ int rx_npdsch_NB_IoT(PHY_VARS_UE_NB_IoT *ue,
 //     }
 //   } else if ((dlsch0_harq->mimo_mode == LARGE_CDD) || ((dlsch0_harq->mimo_mode >=DUALSTREAM_UNIFORM_PRECODING1) &&
 //             (dlsch0_harq->mimo_mode <=DUALSTREAM_PUSCH_PRECODING))){
-//       dlsch_channel_compensation_TM34(frame_parms,
+//       dlsch_channel_compensation_TM34_NB_IoT(frame_parms,
 //                                      pdsch_vars[eNB_id],
 //                                      measurements,
 //                                      eNB_id,
@@ -592,7 +592,7 @@ int rx_npdsch_NB_IoT(PHY_VARS_UE_NB_IoT *ue,
 
 //     } else if (dlsch0_harq->mimo_mode<DUALSTREAM_UNIFORM_PRECODING1) {// single-layer precoding (TM5, TM6)
 //         if ((rx_type==rx_IC_single_stream) && (eNB_id_i==ue->n_connected_eNB) && (dlsch0_harq->dl_power_off==0)) {
-//           dlsch_channel_compensation_TM56(pdsch_vars[eNB_id]->rxdataF_ext,
+//           dlsch_channel_compensation_TM56_NB_IoT(pdsch_vars[eNB_id]->rxdataF_ext,
 //                                       pdsch_vars[eNB_id]->dl_ch_estimates_ext,
 //                                       pdsch_vars[eNB_id]->dl_ch_mag0,
 //                                       pdsch_vars[eNB_id]->dl_ch_magb0,
@@ -625,7 +625,7 @@ int rx_npdsch_NB_IoT(PHY_VARS_UE_NB_IoT *ue,
 //        //  if (rb==0)
 //         //    printf("pmi %d, pmi_i %d\n",pdsch_vars[eNB_id]->pmi_ext[rb],pdsch_vars[eNB_id_i]->pmi_ext[rb]);
 //       }
-//       dlsch_channel_compensation_TM56(pdsch_vars[eNB_id_i]->rxdataF_ext,
+//       dlsch_channel_compensation_TM56_NB_IoT(pdsch_vars[eNB_id_i]->rxdataF_ext,
 //                                       pdsch_vars[eNB_id_i]->dl_ch_estimates_ext,
 //                                       pdsch_vars[eNB_id_i]->dl_ch_mag0,
 //                                       pdsch_vars[eNB_id_i]->dl_ch_magb0,
@@ -653,7 +653,7 @@ int rx_npdsch_NB_IoT(PHY_VARS_UE_NB_IoT *ue,
 //                                     pdsch_vars[eNB_id]->dl_ch_rho_ext[harq_pid][round],
 //                                     pdsch_vars[eNB_id]->log2_maxh);
 //     }  else if (dlsch0_harq->dl_power_off==1)  {
-//       dlsch_channel_compensation_TM56(pdsch_vars[eNB_id]->rxdataF_ext,
+//       dlsch_channel_compensation_TM56_NB_IoT(pdsch_vars[eNB_id]->rxdataF_ext,
 //                                       pdsch_vars[eNB_id]->dl_ch_estimates_ext,
 //                                       pdsch_vars[eNB_id]->dl_ch_mag0,
 //                                       pdsch_vars[eNB_id]->dl_ch_magb0,
@@ -697,7 +697,7 @@ int rx_npdsch_NB_IoT(PHY_VARS_UE_NB_IoT *ue,
   //       ((dlsch0_harq->mimo_mode >=DUALSTREAM_UNIFORM_PRECODING1) &&
   //        (dlsch0_harq->mimo_mode <=DUALSTREAM_PUSCH_PRECODING))){  // TM3 or TM4
   //     if (frame_parms->nb_antenna_ports_eNB == 2) {
-  //       dlsch_detection_mrc_TM34(frame_parms,
+  //       dlsch_detection_mrc_TM34_NB_IoT(frame_parms,
   //                                pdsch_vars[eNB_id],
   //                                harq_pid,
   //                                dlsch0_harq->round,
@@ -737,7 +737,7 @@ int rx_npdsch_NB_IoT(PHY_VARS_UE_NB_IoT *ue,
   //     nb_rb);
     
   // } else if (dlsch0_harq->mimo_mode == ALAMOUTI) {
-  //   dlsch_alamouti(frame_parms,
+  //   dlsch_alamouti_NB_IoT(frame_parms,
   //                  pdsch_vars[eNB_id]->rxdataF_comp0,
   //                  pdsch_vars[eNB_id]->dl_ch_mag0,
   //                  pdsch_vars[eNB_id]->dl_ch_magb0,
@@ -1612,7 +1612,7 @@ void dlsch_channel_compensation_NB_IoT(int **rxdataF_ext,
 
 #if defined(__x86_64__) || defined(__i386__)
 
-void prec2A_TM56_128(unsigned char pmi,__m128i *ch0,__m128i *ch1)
+void prec2A_TM56_128_NB_IoT(unsigned char pmi,__m128i *ch0,__m128i *ch1)
 {
 
   __m128i amp;
@@ -1656,7 +1656,7 @@ void prec2A_TM56_128(unsigned char pmi,__m128i *ch0,__m128i *ch1)
   _m_empty();
 }
 #elif defined(__arm__)
-void prec2A_TM56_128(unsigned char pmi,__m128i *ch0,__m128i *ch1) {
+void prec2A_TM56_128_NB_IoT(unsigned char pmi,__m128i *ch0,__m128i *ch1) {
 
   // sqrt(2) is already taken into account in computation sqrt_rho_a, sqrt_rho_b,
   //so removed it
@@ -1703,9 +1703,9 @@ void prec2A_TM56_128(unsigned char pmi,__m128i *ch0,__m128i *ch1) {
 //              stream 1 .5(1,-1) .5(1,1)  .5(1,-1) .5(1,1)
 // store "precoded" channel for stream 0 in ch0, stream 1 in ch1
 
-short TM3_prec[8]__attribute__((aligned(16))) = {1,1,-1,-1,1,1,-1,-1} ;
+short TM3_prec_NB_IoT[8]__attribute__((aligned(16))) = {1,1,-1,-1,1,1,-1,-1} ;
 
-void prec2A_TM3_128(__m128i *ch0,__m128i *ch1) {
+void prec2A_TM3_128_NB_IoT(__m128i *ch0,__m128i *ch1) {
 
   __m128i amp = _mm_set1_epi16(ONE_OVER_SQRT2_Q15);
 
@@ -1716,8 +1716,8 @@ void prec2A_TM3_128(__m128i *ch0,__m128i *ch1) {
   //  print_shorts("prec2A_TM3 ch1 (before):",ch1);
 
   tmp0 = ch0[0];
-  tmp1  = _mm_sign_epi16(ch1[0],((__m128i*)&TM3_prec)[0]);
-  //  print_shorts("prec2A_TM3 ch1*s (mid):",(__m128i*)TM3_prec);
+  tmp1  = _mm_sign_epi16(ch1[0],((__m128i*)&TM3_prec_NB_IoT)[0]);
+  //  print_shorts("prec2A_TM3 ch1*s (mid):",(__m128i*)TM3_prec_NB_IoT);
 
   ch0[0] = _mm_adds_epi16(ch0[0],tmp1);
   ch1[0] = _mm_subs_epi16(tmp0,tmp1);
@@ -1749,7 +1749,7 @@ void prec2A_TM3_128(__m128i *ch0,__m128i *ch1) {
 // pmi = 0 => stream 0 (1,1), stream 1 (1,-1)
 // pmi = 1 => stream 0 (1,j), stream 2 (1,-j)
 
-void prec2A_TM4_128(int pmi,__m128i *ch0,__m128i *ch1) {
+void prec2A_TM4_128_NB_IoT(int pmi,__m128i *ch0,__m128i *ch1) {
 
 // sqrt(2) is already taken into account in computation sqrt_rho_a, sqrt_rho_b,
 //so divide by 2 is replaced by divide by sqrt(2).
@@ -1796,7 +1796,7 @@ void prec2A_TM4_128(int pmi,__m128i *ch0,__m128i *ch1) {
   //print_shorts("prec2A_TM4 ch1 (end):",ch1);
 }
 
-void dlsch_channel_compensation_TM56(int **rxdataF_ext,
+void dlsch_channel_compensation_TM56_NB_IoT(int **rxdataF_ext,
                                      int **dl_ch_estimates_ext,
                                      int **dl_ch_mag,
                                      int **dl_ch_magb,
@@ -1853,12 +1853,12 @@ void dlsch_channel_compensation_TM56(int **rxdataF_ext,
 #ifdef DEBUG_DLSCH_DEMOD
       printf("mode 6 prec: rb %d, pmi->%d\n",rb,pmi_ext[rb]);
 #endif
-      prec2A_TM56_128(pmi_ext[rb],&dl_ch0_128[0],&dl_ch1_128[0]);
-      prec2A_TM56_128(pmi_ext[rb],&dl_ch0_128[1],&dl_ch1_128[1]);
+      prec2A_TM56_128_NB_IoT(pmi_ext[rb],&dl_ch0_128[0],&dl_ch1_128[0]);
+      prec2A_TM56_128_NB_IoT(pmi_ext[rb],&dl_ch0_128[1],&dl_ch1_128[1]);
 
       if (pilots==0) {
 
-        prec2A_TM56_128(pmi_ext[rb],&dl_ch0_128[2],&dl_ch1_128[2]);
+        prec2A_TM56_128_NB_IoT(pmi_ext[rb],&dl_ch0_128[2],&dl_ch1_128[2]);
       }
 
       if (mod_order>2) {
@@ -2057,11 +2057,11 @@ void dlsch_channel_compensation_TM56(int **rxdataF_ext,
 #ifdef DEBUG_DLSCH_DEMOD
       printf("mode 6 prec: rb %d, pmi->%d\n",rb,pmi_ext[rb]);
 #endif
-      prec2A_TM56_128(pmi_ext[rb],&dl_ch0_128b[0],&dl_ch1_128b[0]);
-      prec2A_TM56_128(pmi_ext[rb],&dl_ch0_128b[1],&dl_ch1_128b[1]);
+      prec2A_TM56_128_NB_IoT(pmi_ext[rb],&dl_ch0_128b[0],&dl_ch1_128b[0]);
+      prec2A_TM56_128_NB_IoT(pmi_ext[rb],&dl_ch0_128b[1],&dl_ch1_128b[1]);
 
       if (pilots==0) {
-        prec2A_TM56_128(pmi_ext[rb],&dl_ch0_128b[2],&dl_ch1_128b[2]);
+        prec2A_TM56_128_NB_IoT(pmi_ext[rb],&dl_ch0_128b[2],&dl_ch1_128b[2]);
       }
 
       if (mod_order>2) {
@@ -2187,7 +2187,7 @@ void dlsch_channel_compensation_TM56(int **rxdataF_ext,
 }
 
 
-void dlsch_channel_compensation_TM34(LTE_DL_FRAME_PARMS *frame_parms,
+void dlsch_channel_compensation_TM34_NB_IoT(LTE_DL_FRAME_PARMS *frame_parms,
                                     LTE_UE_PDSCH *pdsch_vars,
                                     PHY_MEASUREMENTS *measurements,
                                     int eNB_id,
@@ -2273,37 +2273,37 @@ void dlsch_channel_compensation_TM34(LTE_DL_FRAME_PARMS *frame_parms,
 
       // combine TX channels using precoder from pmi
       if (mimo_mode==LARGE_CDD) {
-        prec2A_TM3_128(&dl_ch0_128[0],&dl_ch1_128[0]);
-        prec2A_TM3_128(&dl_ch0_128[1],&dl_ch1_128[1]);
+        prec2A_TM3_128_NB_IoT(&dl_ch0_128[0],&dl_ch1_128[0]);
+        prec2A_TM3_128_NB_IoT(&dl_ch0_128[1],&dl_ch1_128[1]);
 
 
         if (pilots==0) {
-          prec2A_TM3_128(&dl_ch0_128[2],&dl_ch1_128[2]);
+          prec2A_TM3_128_NB_IoT(&dl_ch0_128[2],&dl_ch1_128[2]);
         }
       }
       else if (mimo_mode==DUALSTREAM_UNIFORM_PRECODING1) {
-        prec2A_TM4_128(0,&dl_ch0_128[0],&dl_ch1_128[0]);
-        prec2A_TM4_128(0,&dl_ch0_128[1],&dl_ch1_128[1]);
+        prec2A_TM4_128_NB_IoT(0,&dl_ch0_128[0],&dl_ch1_128[0]);
+        prec2A_TM4_128_NB_IoT(0,&dl_ch0_128[1],&dl_ch1_128[1]);
 
         if (pilots==0) {
-          prec2A_TM4_128(0,&dl_ch0_128[2],&dl_ch1_128[2]);
+          prec2A_TM4_128_NB_IoT(0,&dl_ch0_128[2],&dl_ch1_128[2]);
         }
       }
       else if (mimo_mode==DUALSTREAM_UNIFORM_PRECODINGj) {
-        prec2A_TM4_128(1,&dl_ch0_128[0],&dl_ch1_128[0]);
-        prec2A_TM4_128(1,&dl_ch0_128[1],&dl_ch1_128[1]);
+        prec2A_TM4_128_NB_IoT(1,&dl_ch0_128[0],&dl_ch1_128[0]);
+        prec2A_TM4_128_NB_IoT(1,&dl_ch0_128[1],&dl_ch1_128[1]);
 
         if (pilots==0) {
-          prec2A_TM4_128(1,&dl_ch0_128[2],&dl_ch1_128[2]);
+          prec2A_TM4_128_NB_IoT(1,&dl_ch0_128[2],&dl_ch1_128[2]);
         }
       }
 
         else if (mimo_mode==DUALSTREAM_PUSCH_PRECODING) {
-        prec2A_TM4_128(pmi_ext[rb],&dl_ch0_128[0],&dl_ch1_128[0]);
-        prec2A_TM4_128(pmi_ext[rb],&dl_ch0_128[1],&dl_ch1_128[1]);
+        prec2A_TM4_128_NB_IoT(pmi_ext[rb],&dl_ch0_128[0],&dl_ch1_128[0]);
+        prec2A_TM4_128_NB_IoT(pmi_ext[rb],&dl_ch0_128[1],&dl_ch1_128[1]);
 
         if (pilots==0) {
-          prec2A_TM4_128(pmi_ext[rb],&dl_ch0_128[2],&dl_ch1_128[2]);
+          prec2A_TM4_128_NB_IoT(pmi_ext[rb],&dl_ch0_128[2],&dl_ch1_128[2]);
         }
       }
 
@@ -2661,28 +2661,28 @@ void dlsch_channel_compensation_TM34(LTE_DL_FRAME_PARMS *frame_parms,
     for (rb=0; rb<nb_rb; rb++) {
       // combine TX channels using precoder from pmi
       if (mimo_mode==LARGE_CDD) {
-        prec2A_TM3_128(&dl_ch0_128[0],&dl_ch1_128[0]);
-        prec2A_TM3_128(&dl_ch0_128[1],&dl_ch1_128[1]);
+        prec2A_TM3_128_NB_IoT(&dl_ch0_128[0],&dl_ch1_128[0]);
+        prec2A_TM3_128_NB_IoT(&dl_ch0_128[1],&dl_ch1_128[1]);
 
 
         if (pilots==0) {
-          prec2A_TM3_128(&dl_ch0_128[2],&dl_ch1_128[2]);
+          prec2A_TM3_128_NB_IoT(&dl_ch0_128[2],&dl_ch1_128[2]);
         }
       }
       else if (mimo_mode==DUALSTREAM_UNIFORM_PRECODING1) {
-        prec2A_TM4_128(0,&dl_ch0_128[0],&dl_ch1_128[0]);
-        prec2A_TM4_128(0,&dl_ch0_128[1],&dl_ch1_128[1]);
+        prec2A_TM4_128_NB_IoT(0,&dl_ch0_128[0],&dl_ch1_128[0]);
+        prec2A_TM4_128_NB_IoT(0,&dl_ch0_128[1],&dl_ch1_128[1]);
 
         if (pilots==0) {
-          prec2A_TM4_128(0,&dl_ch0_128[2],&dl_ch1_128[2]);
+          prec2A_TM4_128_NB_IoT(0,&dl_ch0_128[2],&dl_ch1_128[2]);
         }
       }
       else if (mimo_mode==DUALSTREAM_UNIFORM_PRECODINGj) {
-        prec2A_TM4_128(1,&dl_ch0_128[0],&dl_ch1_128[0]);
-        prec2A_TM4_128(1,&dl_ch0_128[1],&dl_ch1_128[1]);
+        prec2A_TM4_128_NB_IoT(1,&dl_ch0_128[0],&dl_ch1_128[0]);
+        prec2A_TM4_128_NB_IoT(1,&dl_ch0_128[1],&dl_ch1_128[1]);
 
         if (pilots==0) {
-          prec2A_TM4_128(1,&dl_ch0_128[2],&dl_ch1_128[2]);
+          prec2A_TM4_128_NB_IoT(1,&dl_ch0_128[2],&dl_ch1_128[2]);
         }
       }
       else {
@@ -2886,7 +2886,7 @@ void dlsch_channel_compensation_TM34(LTE_DL_FRAME_PARMS *frame_parms,
 }
 
 
-void dlsch_dual_stream_correlation(LTE_DL_FRAME_PARMS *frame_parms,
+void dlsch_dual_stream_correlation_NB_IoT(LTE_DL_FRAME_PARMS *frame_parms,
                                    unsigned char symbol,
                                    unsigned short nb_rb,
                                    int **dl_ch_estimates_ext,
@@ -3121,7 +3121,7 @@ void dlsch_dual_stream_correlationTM34(LTE_DL_FRAME_PARMS *frame_parms,
 }
 
 
-void dlsch_detection_mrc(LTE_DL_FRAME_PARMS *frame_parms,
+void dlsch_detection_mrc_NB_IoT(LTE_DL_FRAME_PARMS *frame_parms,
                          int **rxdataF_comp,
                          int **rxdataF_comp_i,
                          int **rho,
@@ -3262,7 +3262,7 @@ void dlsch_detection_mrc(LTE_DL_FRAME_PARMS *frame_parms,
 }
 
 
-void dlsch_detection_mrc_TM34(LTE_DL_FRAME_PARMS *frame_parms,
+void dlsch_detection_mrc_TM34_NB_IoT(LTE_DL_FRAME_PARMS *frame_parms,
                               LTE_UE_PDSCH *pdsch_vars,
                               int harq_pid,
                               int round,
@@ -3342,7 +3342,7 @@ void dlsch_detection_mrc_TM34(LTE_DL_FRAME_PARMS *frame_parms,
 
 
 
-void dlsch_scale_channel(int **dl_ch_estimates_ext,
+void dlsch_scale_channel_NB_IoT(int **dl_ch_estimates_ext,
                          LTE_DL_FRAME_PARMS *frame_parms,
                          LTE_UE_DLSCH_t **dlsch_ue,
                          uint8_t symbol,
@@ -3544,7 +3544,7 @@ void dlsch_channel_level_NB_IoT(int **dl_ch_estimates_ext,
 //compute average channel_level of effective (precoded) channel
 
 //compute average channel_level of effective (precoded) channel
-void dlsch_channel_level_TM34(int **dl_ch_estimates_ext,
+void dlsch_channel_level_TM34_NB_IoT(int **dl_ch_estimates_ext,
                               LTE_DL_FRAME_PARMS *frame_parms,
                               unsigned char *pmi_ext,
                               int *avg_0,
@@ -3592,13 +3592,13 @@ void dlsch_channel_level_TM34(int **dl_ch_estimates_ext,
       dl_ch1_128_tmp = _mm_load_si128(&dl_ch1_128[0]);
 
       if (mimo_mode==LARGE_CDD)
-        prec2A_TM3_128(&dl_ch0_128_tmp,&dl_ch1_128_tmp);
+        prec2A_TM3_128_NB_IoT(&dl_ch0_128_tmp,&dl_ch1_128_tmp);
       else if (mimo_mode==DUALSTREAM_UNIFORM_PRECODING1)
-        prec2A_TM4_128(0,&dl_ch0_128_tmp,&dl_ch1_128_tmp);
+        prec2A_TM4_128_NB_IoT(0,&dl_ch0_128_tmp,&dl_ch1_128_tmp);
       else if (mimo_mode==DUALSTREAM_UNIFORM_PRECODINGj)
-        prec2A_TM4_128(1,&dl_ch0_128_tmp,&dl_ch1_128_tmp);
+        prec2A_TM4_128_NB_IoT(1,&dl_ch0_128_tmp,&dl_ch1_128_tmp);
       else if (mimo_mode==DUALSTREAM_PUSCH_PRECODING)
-        prec2A_TM4_128(pmi_ext[rb],&dl_ch0_128_tmp,&dl_ch1_128_tmp);
+        prec2A_TM4_128_NB_IoT(pmi_ext[rb],&dl_ch0_128_tmp,&dl_ch1_128_tmp);
 
       //      mmtmpD0 = _mm_madd_epi16(dl_ch0_128_tmp,dl_ch0_128_tmp);
       avg_0_128D = _mm_add_epi32(avg_0_128D,_mm_madd_epi16(dl_ch0_128_tmp,dl_ch0_128_tmp));
@@ -3609,13 +3609,13 @@ void dlsch_channel_level_TM34(int **dl_ch_estimates_ext,
       dl_ch1_128_tmp = _mm_load_si128(&dl_ch1_128[1]);
 
       if (mimo_mode==LARGE_CDD)
-        prec2A_TM3_128(&dl_ch0_128_tmp,&dl_ch1_128_tmp);
+        prec2A_TM3_128_NB_IoT(&dl_ch0_128_tmp,&dl_ch1_128_tmp);
       else if (mimo_mode==DUALSTREAM_UNIFORM_PRECODING1)
-        prec2A_TM4_128(0,&dl_ch0_128_tmp,&dl_ch1_128_tmp);
+        prec2A_TM4_128_NB_IoT(0,&dl_ch0_128_tmp,&dl_ch1_128_tmp);
       else if (mimo_mode==DUALSTREAM_UNIFORM_PRECODINGj)
-        prec2A_TM4_128(1,&dl_ch0_128_tmp,&dl_ch1_128_tmp);
+        prec2A_TM4_128_NB_IoT(1,&dl_ch0_128_tmp,&dl_ch1_128_tmp);
       else if (mimo_mode==DUALSTREAM_PUSCH_PRECODING)
-        prec2A_TM4_128(pmi_ext[rb],&dl_ch0_128_tmp,&dl_ch1_128_tmp);
+        prec2A_TM4_128_NB_IoT(pmi_ext[rb],&dl_ch0_128_tmp,&dl_ch1_128_tmp);
 
       //      mmtmpD1 = _mm_madd_epi16(dl_ch0_128_tmp,dl_ch0_128_tmp);
       avg_0_128D = _mm_add_epi32(avg_0_128D,_mm_madd_epi16(dl_ch0_128_tmp,dl_ch0_128_tmp));
@@ -3631,13 +3631,13 @@ void dlsch_channel_level_TM34(int **dl_ch_estimates_ext,
         dl_ch1_128_tmp = _mm_load_si128(&dl_ch1_128[2]);
 
         if (mimo_mode==LARGE_CDD)
-          prec2A_TM3_128(&dl_ch0_128_tmp,&dl_ch1_128_tmp);
+          prec2A_TM3_128_NB_IoT(&dl_ch0_128_tmp,&dl_ch1_128_tmp);
         else if (mimo_mode==DUALSTREAM_UNIFORM_PRECODING1)
-          prec2A_TM4_128(0,&dl_ch0_128_tmp,&dl_ch1_128_tmp);
+          prec2A_TM4_128_NB_IoT(0,&dl_ch0_128_tmp,&dl_ch1_128_tmp);
         else if (mimo_mode==DUALSTREAM_UNIFORM_PRECODINGj)
-          prec2A_TM4_128(1,&dl_ch0_128_tmp,&dl_ch1_128_tmp);
+          prec2A_TM4_128_NB_IoT(1,&dl_ch0_128_tmp,&dl_ch1_128_tmp);
         else if (mimo_mode==DUALSTREAM_PUSCH_PRECODING)
-          prec2A_TM4_128(pmi_ext[rb],&dl_ch0_128_tmp,&dl_ch1_128_tmp);
+          prec2A_TM4_128_NB_IoT(pmi_ext[rb],&dl_ch0_128_tmp,&dl_ch1_128_tmp);
         //      mmtmpD2 = _mm_madd_epi16(dl_ch0_128_tmp,dl_ch0_128_tmp);
 
         avg_1_128D = _mm_add_epi32(avg_1_128D,_mm_madd_epi16(dl_ch1_128_tmp,dl_ch1_128_tmp));
@@ -3683,7 +3683,7 @@ void dlsch_channel_level_TM34(int **dl_ch_estimates_ext,
 
 
 
-// void dlsch_channel_level_TM34(int **dl_ch_estimates_ext,
+// void dlsch_channel_level_TM34_NB_IoT(int **dl_ch_estimates_ext,
 //                               LTE_DL_FRAME_PARMS *frame_parms,
 //                               int *avg,
 //                               uint8_t symbol,
@@ -3722,11 +3722,11 @@ void dlsch_channel_level_TM34(int **dl_ch_estimates_ext,
 //       dl_ch1_128_tmp = _mm_load_si128(&dl_ch1_128[0]);
 
 //       if (mimo_mode==LARGE_CDD)
-//         prec2A_TM3_128(&dl_ch0_128_tmp,&dl_ch1_128_tmp);
+//         prec2A_TM3_128_NB_IoT(&dl_ch0_128_tmp,&dl_ch1_128_tmp);
 //       else if (mimo_mode==DUALSTREAM_UNIFORM_PRECODING1)
-//         prec2A_TM4_128(0,&dl_ch0_128_tmp,&dl_ch1_128_tmp);
+//         prec2A_TM4_128_NB_IoT(0,&dl_ch0_128_tmp,&dl_ch1_128_tmp);
 //       else if (mimo_mode==DUALSTREAM_UNIFORM_PRECODINGj)
-//         prec2A_TM4_128(1,&dl_ch0_128_tmp,&dl_ch1_128_tmp);
+//         prec2A_TM4_128_NB_IoT(1,&dl_ch0_128_tmp,&dl_ch1_128_tmp);
 
 //       //      mmtmpD0 = _mm_madd_epi16(dl_ch0_128_tmp,dl_ch0_128_tmp);
 //       avg128D = _mm_add_epi32(avg128D,_mm_madd_epi16(dl_ch0_128_tmp,dl_ch0_128_tmp));
@@ -3735,11 +3735,11 @@ void dlsch_channel_level_TM34(int **dl_ch_estimates_ext,
 //       dl_ch1_128_tmp = _mm_load_si128(&dl_ch1_128[1]);
 
 //       if (mimo_mode==LARGE_CDD)
-//         prec2A_TM3_128(&dl_ch0_128_tmp,&dl_ch1_128_tmp);
+//         prec2A_TM3_128_NB_IoT(&dl_ch0_128_tmp,&dl_ch1_128_tmp);
 //       else if (mimo_mode==DUALSTREAM_UNIFORM_PRECODING1)
-//         prec2A_TM4_128(0,&dl_ch0_128_tmp,&dl_ch1_128_tmp);
+//         prec2A_TM4_128_NB_IoT(0,&dl_ch0_128_tmp,&dl_ch1_128_tmp);
 //       else if (mimo_mode==DUALSTREAM_UNIFORM_PRECODINGj)
-//         prec2A_TM4_128(1,&dl_ch0_128_tmp,&dl_ch1_128_tmp);
+//         prec2A_TM4_128_NB_IoT(1,&dl_ch0_128_tmp,&dl_ch1_128_tmp);
 
 //       //      mmtmpD1 = _mm_madd_epi16(dl_ch0_128_tmp,dl_ch0_128_tmp);
 //       avg128D = _mm_add_epi32(avg128D,_mm_madd_epi16(dl_ch0_128_tmp,dl_ch0_128_tmp));
@@ -3753,11 +3753,11 @@ void dlsch_channel_level_TM34(int **dl_ch_estimates_ext,
 //         dl_ch1_128_tmp = _mm_load_si128(&dl_ch1_128[2]);
 
 //         if (mimo_mode==LARGE_CDD)
-//           prec2A_TM3_128(&dl_ch0_128_tmp,&dl_ch1_128_tmp);
+//           prec2A_TM3_128_NB_IoT(&dl_ch0_128_tmp,&dl_ch1_128_tmp);
 //         else if (mimo_mode==DUALSTREAM_UNIFORM_PRECODING1)
-//           prec2A_TM4_128(0,&dl_ch0_128_tmp,&dl_ch1_128_tmp);
+//           prec2A_TM4_128_NB_IoT(0,&dl_ch0_128_tmp,&dl_ch1_128_tmp);
 //         else if (mimo_mode==DUALSTREAM_UNIFORM_PRECODINGj)
-//           prec2A_TM4_128(1,&dl_ch0_128_tmp,&dl_ch1_128_tmp);
+//           prec2A_TM4_128_NB_IoT(1,&dl_ch0_128_tmp,&dl_ch1_128_tmp);
 
 //         //      mmtmpD2 = _mm_madd_epi16(dl_ch0_128_tmp,dl_ch0_128_tmp);
 //         avg128D = _mm_add_epi32(avg128D,_mm_madd_epi16(dl_ch0_128_tmp,dl_ch0_128_tmp));
@@ -3785,7 +3785,7 @@ void dlsch_channel_level_TM34(int **dl_ch_estimates_ext,
 // }
 
 //compute average channel_level of effective (precoded) channel
-void dlsch_channel_level_TM56(int **dl_ch_estimates_ext,
+void dlsch_channel_level_TM56_NB_IoT(int **dl_ch_estimates_ext,
                               LTE_DL_FRAME_PARMS *frame_parms,
                               unsigned char *pmi_ext,
                               int *avg,
@@ -3823,14 +3823,14 @@ void dlsch_channel_level_TM56(int **dl_ch_estimates_ext,
       dl_ch0_128_tmp = _mm_load_si128(&dl_ch0_128[0]);
       dl_ch1_128_tmp = _mm_load_si128(&dl_ch1_128[0]);
 
-      prec2A_TM56_128(pmi_ext[rb],&dl_ch0_128_tmp,&dl_ch1_128_tmp);
+      prec2A_TM56_128_NB_IoT(pmi_ext[rb],&dl_ch0_128_tmp,&dl_ch1_128_tmp);
       //      mmtmpD0 = _mm_madd_epi16(dl_ch0_128_tmp,dl_ch0_128_tmp);
       avg128D = _mm_add_epi32(avg128D,_mm_madd_epi16(dl_ch0_128_tmp,dl_ch0_128_tmp));
 
       dl_ch0_128_tmp = _mm_load_si128(&dl_ch0_128[1]);
       dl_ch1_128_tmp = _mm_load_si128(&dl_ch1_128[1]);
 
-      prec2A_TM56_128(pmi_ext[rb],&dl_ch0_128_tmp,&dl_ch1_128_tmp);
+      prec2A_TM56_128_NB_IoT(pmi_ext[rb],&dl_ch0_128_tmp,&dl_ch1_128_tmp);
       //      mmtmpD1 = _mm_madd_epi16(dl_ch0_128_tmp,dl_ch0_128_tmp);
       avg128D = _mm_add_epi32(avg128D,_mm_madd_epi16(dl_ch0_128_tmp,dl_ch0_128_tmp));
 
@@ -3842,7 +3842,7 @@ void dlsch_channel_level_TM56(int **dl_ch_estimates_ext,
         dl_ch0_128_tmp = _mm_load_si128(&dl_ch0_128[2]);
         dl_ch1_128_tmp = _mm_load_si128(&dl_ch1_128[2]);
 
-        prec2A_TM56_128(pmi_ext[rb],&dl_ch0_128_tmp,&dl_ch1_128_tmp);
+        prec2A_TM56_128_NB_IoT(pmi_ext[rb],&dl_ch0_128_tmp,&dl_ch1_128_tmp);
         //      mmtmpD2 = _mm_madd_epi16(dl_ch0_128_tmp,dl_ch0_128_tmp);
         avg128D = _mm_add_epi32(avg128D,_mm_madd_epi16(dl_ch0_128_tmp,dl_ch0_128_tmp));
 
@@ -3870,7 +3870,7 @@ void dlsch_channel_level_TM56(int **dl_ch_estimates_ext,
 }
 
 //compute average channel_level for TM7
-void dlsch_channel_level_TM7(int **dl_bf_ch_estimates_ext,
+void dlsch_channel_level_TM7_NB_IoT(int **dl_bf_ch_estimates_ext,
                          LTE_DL_FRAME_PARMS *frame_parms,
                          int *avg,
                          uint8_t symbol,
@@ -3940,7 +3940,7 @@ void dlsch_channel_level_TM7(int **dl_bf_ch_estimates_ext,
 #endif
 }
 //#define ONE_OVER_2_Q15 16384
-void dlsch_alamouti(LTE_DL_FRAME_PARMS *frame_parms,
+void dlsch_alamouti_NB_IoT(LTE_DL_FRAME_PARMS *frame_parms,
                     int **rxdataF_comp,
                     int **dl_ch_mag,
                     int **dl_ch_magb,

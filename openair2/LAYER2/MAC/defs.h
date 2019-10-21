@@ -937,7 +937,7 @@ typedef struct {
   uint32_t msg34_narrowband;
 #endif
 } RA_TEMPLATE;
-
+*/
 
 /*! \brief subband bitmap confguration (for ALU icic algo purpose), in test phase */
 typedef struct {
