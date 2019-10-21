@@ -1424,6 +1424,7 @@ set (MAC_SRC
   #${PHY_INTERFACE_DIR}/phy_stub_UE.c
   ${PHY_INTERFACE_DIR}/IF_Module.c
   ${MAC_DIR}/main.c
+  ${MAC_DIR}/main_NB_IoT.c
   #${MAC_DIR}/main_ue.c
   #${MAC_DIR}/ue_procedures.c
   #${MAC_DIR}/ra_procedures.c
@@ -1431,16 +1432,23 @@ set (MAC_SRC
   ${MAC_DIR}/rar_tools.c
   #${MAC_DIR}/rar_tools_ue.c
   ${MAC_DIR}/eNB_scheduler.c
+  ${MAC_DIR}/eNB_scheduler_NB_IoT.c
   ${MAC_DIR}/eNB_scheduler_dlsch.c
+  ${MAC_DIR}/eNB_scheduler_dlsch_NB_IoT.c
   ${MAC_DIR}/eNB_scheduler_ulsch.c
+  ${MAC_DIR}/eNB_scheduler_ulsch_NB_IoT.c
   ${MAC_DIR}/eNB_scheduler_mch.c
   ${MAC_DIR}/eNB_scheduler_bch.c
+  ${MAC_DIR}/eNB_scheduler_bch_NB_IoT.c
   ${MAC_DIR}/eNB_scheduler_primitives.c
   ${MAC_DIR}/eNB_scheduler_RA.c
+  ${MAC_DIR}/eNB_scheduler_RA_NB_IoT.c
   ${MAC_DIR}/eNB_scheduler_fairRR.c
   ${MAC_DIR}/eNB_scheduler_phytest.c
   ${MAC_DIR}/pre_processor.c
   ${MAC_DIR}/config.c
+  ${MAC_DIR}/config_NB_IoT.c
+  ${MAC_DIR}/schedule_tool_NB_IoT.c
   #${MAC_DIR}/config_ue.c
  )
 
