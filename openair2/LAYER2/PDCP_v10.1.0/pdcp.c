@@ -192,6 +192,7 @@ boolean_t pdcp_data_req(
         LOG_UI(PDCP, "Before rlc_data_req 1, srb_flagP: %d, rb_idP: %d \n", srb_flagP, rb_idP);
       }
 
+	LOG_D(PDCP,"rnti %x\n",ctxt_pP->rnti);
       rlc_status = pdcp_params.send_rlc_data_req_func(ctxt_pP, srb_flagP, NODE_IS_CU(RC.rrc[ctxt_pP->module_id]->node_type)?MBMS_FLAG_NO:MBMS_FLAG_YES, rb_idP, muiP,
                    confirmP, sdu_buffer_sizeP, pdcp_pdu_p,NULL,NULL);
     } else {

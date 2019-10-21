@@ -690,7 +690,7 @@ schedule_MBMS_NFAPI(module_id_t module_idP, uint8_t CC_id, frame_t frameP,
 	mbms_rab_id = cc->mbms_SessionList[0]->list.array[0]->logicalChannelIdentity_r9;
 
 	rlc_status =
-	    mac_rlc_status_ind(module_idP, 0, frameP, subframeP,
+	    mac_rlc_status_ind(module_idP, 0xfffd, frameP, subframeP,
 			       module_idP, ENB_FLAG_YES, MBMS_FLAG_YES,
 				cc->mbms_SessionList[0]->list.array[0]->logicalChannelIdentity_r9,
 			       //MTCH,
@@ -717,7 +717,7 @@ schedule_MBMS_NFAPI(module_id_t module_idP, uint8_t CC_id, frame_t frameP,
 		  TBS - header_len_mcch - header_len_msi -
 		  sdu_length_total - header_len_mtch, header_len_mtch, rlc_status.bytes_in_buffer);
 
-	    sdu_lengths[num_sdus] = mac_rlc_data_req(module_idP, 0, module_idP, frameP, ENB_FLAG_YES, MBMS_FLAG_YES,cc->mbms_SessionList[0]->list.array[0]->logicalChannelIdentity_r9, 0,	//not used
+	    sdu_lengths[num_sdus] = mac_rlc_data_req(module_idP, 0xfffd, module_idP, frameP, ENB_FLAG_YES, MBMS_FLAG_YES,cc->mbms_SessionList[0]->list.array[0]->logicalChannelIdentity_r9, 0,	//not used
 						     (char *)
 						     &mch_buffer[sdu_length_total]
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
@@ -756,6 +756,7 @@ schedule_MBMS_NFAPI(module_id_t module_idP, uint8_t CC_id, frame_t frameP,
 #if (LTE_RRC_VERSION >= MAKE_VERSION(10, 0, 0))
     //  }
 #endif
+
 
     // FINAL STEP: Prepare and multiplexe MSI, MCCH and MTCHs
     if ((sdu_length_total + header_len_msi + header_len_mcch +
@@ -1497,7 +1498,7 @@ schedule_MBMS(module_id_t module_idP, uint8_t CC_id, frame_t frameP,
 	mbms_rab_id = cc->mbms_SessionList[0]->list.array[0]->logicalChannelIdentity_r9;
 
 	rlc_status =
-	    mac_rlc_status_ind(module_idP, 0, frameP, subframeP,
+	    mac_rlc_status_ind(module_idP, 0xfffd, frameP, subframeP,
 			       module_idP, ENB_FLAG_YES, MBMS_FLAG_YES,
 				cc->mbms_SessionList[0]->list.array[0]->logicalChannelIdentity_r9,
 			       //MTCH,
@@ -1524,7 +1525,7 @@ schedule_MBMS(module_id_t module_idP, uint8_t CC_id, frame_t frameP,
 		  TBS - header_len_mcch - header_len_msi -
 		  sdu_length_total - header_len_mtch, header_len_mtch, rlc_status.bytes_in_buffer);
 
-	    sdu_lengths[num_sdus] = mac_rlc_data_req(module_idP, 0, module_idP, frameP, ENB_FLAG_YES, MBMS_FLAG_YES,cc->mbms_SessionList[0]->list.array[0]->logicalChannelIdentity_r9, 0,	//not used
+	    sdu_lengths[num_sdus] = mac_rlc_data_req(module_idP, 0xfffd, module_idP, frameP, ENB_FLAG_YES, MBMS_FLAG_YES,cc->mbms_SessionList[0]->list.array[0]->logicalChannelIdentity_r9, 0,	//not used
 						     (char *)
 						     &mch_buffer[sdu_length_total]
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
@@ -1650,14 +1651,14 @@ schedule_MBMS(module_id_t module_idP, uint8_t CC_id, frame_t frameP,
 	}
 
 	/* Tracing of PDU is done on UE side */
-	//if (opt_enabled == 1) {
-	    trace_pdu(DIRECTION_DOWNLINK, (uint8_t *) cc->MCH_pdu.payload, TBS, module_idP, WS_M_RNTI , 0xffff,	// M_RNTI = 6 in wirehsark
+ 	if (opt_enabled == 1) {
+	    trace_pdu(DIRECTION_DOWNLINK, (uint8_t *) cc->MCH_pdu.payload, TBS, module_idP, WS_M_RNTI , 0xfffd,	// M_RNTI = 6 in wirehsark
 		      RC.mac[module_idP]->frame,
 		      RC.mac[module_idP]->subframe, 0, 0);
 	    LOG_D(OPT,
 		  "[eNB %d][MCH] CC_id %d Frame %d : MAC PDU with size %d\n",
 		  module_idP, CC_id, frameP, TBS);
-	//}
+	}
 
 	/*
 	   for (j=0;j<sdu_length_total;j++)

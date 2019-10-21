@@ -2954,7 +2954,7 @@ void ue_pmch_procedures(PHY_VARS_UE *ue, UE_rxtx_proc_t *proc,int eNB_id,int abs
         //  mac_xface->macphy_exit("Why are we exiting here?");
       } else { // decoding successful
 #if (LTE_RRC_VERSION >= MAKE_VERSION(10, 0, 0))
-        LOG_D(PHY,"[UE %d] Frame %d, subframe %d: PMCH OK (%d,%d), passing to L2 (TBS %d, iter %d,G %d)\n",
+        LOG_I(PHY,"[UE %d] Frame %d, subframe %d: PMCH OK (%d,%d), passing to L2 (TBS %d, iter %d,G %d)\n",
               ue->Mod_id,
               frame_rx,subframe_rx,
               ue->dlsch_mcch_errors[sync_area][0],

@@ -124,8 +124,36 @@ void pmch_procedures(PHY_VARS_eNB *eNB,L1_rxtx_proc_t *proc) {
   int subframe = proc->subframe_tx;
   // This is DL-Cell spec pilots in Control region
   generate_pilots_slot (eNB, eNB->common_vars.txdataF, AMP, subframe << 1, 1);
-  if(eNB->dlsch_MCH->active==1)
+  if(eNB->dlsch_MCH->active==1){
   	generate_mch (eNB, proc,NULL/*, eNB->dlsch_MCH->harq_processes[0]->pdu*/);
+    	LOG_D (PHY, "[eNB/RN] Frame %d subframe %d: MCH generated \n", proc->frame_tx, subframe);
+  }else{ 
+	MCH_PDU *mch_pduP=NULL;
+	  mch_pduP= &RC.mac[eNB->Mod_id]->common_channels[eNB->CC_id].MCH_pdu;
+  if ((mch_pduP->Pdu_size > 0) && (mch_pduP->sync_area == 0)) // TEST: only transmit mcch for sync area 0
+    LOG_D(PHY,"[eNB%"PRIu8"] Frame %d subframe %d : Got MCH pdu for MBSFN (MCS %"PRIu8", TBS %d) \n",
+          eNB->Mod_id,proc->frame_tx,subframe,mch_pduP->mcs,
+          eNB->dlsch_MCH->harq_processes[0]->TBS>>3);
+  else {
+    LOG_D(PHY,"[DeNB %"PRIu8"] Frame %d subframe %d : Do not transmit MCH pdu for MBSFN sync area %"PRIu8" (%s)\n",
+          eNB->Mod_id,proc->frame_tx,subframe,mch_pduP->sync_area,
+          (mch_pduP->Pdu_size == 0)? "Empty MCH PDU":"Let RN transmit for the moment");
+    mch_pduP = NULL;
+  }
+
+  if (mch_pduP) {
+    fill_eNB_dlsch_MCH (eNB, mch_pduP->mcs, 1, 0);
+    eNB->dlsch_MCH->harq_ids[proc->frame_tx%2][subframe] = 0;
+    eNB->dlsch_MCH->harq_processes[0]->pdu=(uint8_t *) mch_pduP->payload;
+    // Generate PMCH
+    generate_mch (eNB, proc, NULL/*(uint8_t *) mch_pduP->payload*/);
+  } else {
+    LOG_D (PHY, "[eNB/RN] Frame %d subframe %d: MCH not generated \n", proc->frame_tx, subframe);
+  }
+
+	
+
+  }
   eNB->dlsch_MCH->active = 0;
 }
 #else

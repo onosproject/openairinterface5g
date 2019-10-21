@@ -205,6 +205,7 @@ static void rrc_M2AP_init_MBMS(
     PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, enb_mod_idP, ENB_FLAG_YES, NOT_A_RNTI, frameP, 0,enb_mod_idP);
     LOG_I(RRC, "[eNB %d] Frame %d : Radio Bearer config request for MBMS\n", enb_mod_idP, frameP);   //check the lcid
     // Configuring PDCP and RLC for MBMS Radio Bearer
+    ctxt.rnti = 0xfffd;
     rrc_pdcp_config_asn1_req(&ctxt,
                              (LTE_SRB_ToAddModList_t *)NULL,   // LTE_SRB_ToAddModList
                              (LTE_DRB_ToAddModList_t *)NULL,   // LTE_DRB_ToAddModList
@@ -283,7 +284,7 @@ static void rrc_M2AP_init_MCCH(
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
                            0,
 #endif
-                           0,//rnti
+                           0xfffd,//rnti
                            (LTE_BCCH_BCH_Message_t *)NULL,
                            (LTE_RadioResourceConfigCommonSIB_t *) NULL,
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
@@ -571,7 +572,7 @@ static uint8_t rrc_M2AP_do_SIB23_SIB2(
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
                            0,
 #endif
-                           0,//rnti
+                           0xfffd,//rnti
                            (LTE_BCCH_BCH_Message_t *)NULL,
                            (LTE_RadioResourceConfigCommonSIB_t *) NULL,
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
@@ -770,7 +771,7 @@ for( i=0; i < m2ap_setup_resp->num_mcch_config_per_mbsfn; i++){
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
                            0,
 #endif
-                           0,//rnti
+                           0xfffd,//rnti
                            (LTE_BCCH_BCH_Message_t *)NULL,
                            (LTE_RadioResourceConfigCommonSIB_t *) NULL,
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
@@ -1073,7 +1074,7 @@ static uint8_t rrc_M2AP_do_SIB23_SIB2_SIB13(
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
                            0,
 #endif
-                           0,//rnti
+                           0xfffd,//rnti
                            (LTE_BCCH_BCH_Message_t *)NULL,
                            (LTE_RadioResourceConfigCommonSIB_t *) NULL,
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
