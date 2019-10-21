@@ -1339,10 +1339,10 @@ int allocate_REs_in_RB(PHY_VARS_eNB* phy_vars_eNB,
           //| y1 | = .5 | 0  1 || 0  (-1)^i || 1  -1 || x1 | = .5| (-1)^i(x0 - x1)|
           // -  -        -    -  -         -  -     -  -  -       -
           // Note: Factor .5 is accounted for in amplitude when calling this function
-          ((int16_t *)&txdataF[0][tti_offset])[0]+=((xx0_re+xx1_re)>>1);
-          ((int16_t *)&txdataF[1][tti_offset])[0]+=(s*((xx0_re-xx1_re)>>1));
-          ((int16_t *)&txdataF[0][tti_offset])[1]+=((xx0_im+xx1_im)>>1);
-          ((int16_t *)&txdataF[1][tti_offset])[1]+=(s*((xx0_im-xx1_im)>>1));
+          ((int16_t *)&txdataF[0][tti_offset])[0]+=((xx0_re+xx1_re));
+          ((int16_t *)&txdataF[1][tti_offset])[0]+=(s*((xx0_re-xx1_re)));
+          ((int16_t *)&txdataF[0][tti_offset])[1]+=((xx0_im+xx1_im));
+          ((int16_t *)&txdataF[1][tti_offset])[1]+=(s*((xx0_im-xx1_im)));
           /*
           LOG_I(PHY,"CDD: xx0 (%d,%d), xx1(%d,%d), s(%d), txF[0] (%d,%d), txF[1] (%d,%d)\n",
            xx0_re,xx0_im,xx1_re,xx1_im, s, ((int16_t *)&txdataF[0][tti_offset])[0],((int16_t *)&txdataF[0][tti_offset])[1],
