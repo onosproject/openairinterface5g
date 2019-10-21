@@ -325,6 +325,10 @@ void pdsch_procedures(PHY_VARS_eNB *eNB,
   int subframe=proc->subframe_tx;
   LTE_DL_eNB_HARQ_t *dlsch_harq=dlsch->harq_processes[harq_pid];
   LTE_DL_FRAME_PARMS *fp=&eNB->frame_parms;
+  LTE_DL_eNB_HARQ_t *dlsch_harq1=NULL;
+  if(dlsch1->active[subframe] == 1){
+    dlsch_harq1=dlsch1->harq_processes[harq_pid];
+  }
   // 36-211
   start_meas(&eNB->dlsch_scrambling_stats);
   dlsch_scrambling(fp,
@@ -343,15 +347,58 @@ void pdsch_procedures(PHY_VARS_eNB *eNB,
 		   frame,
 		   subframe<<1);
   stop_meas(&eNB->dlsch_scrambling_stats);
+  if(dlsch1->active[subframe] == 1){
+    dlsch_encoding_all(eNB,
+       dlsch_harq1->pdu,
+       dlsch_harq->pdsch_start,
+       dlsch1,
+       frame,
+       subframe,
+       &eNB->dlsch_rate_matching_stats,
+       &eNB->dlsch_turbo_encoding_stats,
+       &eNB->dlsch_turbo_encoding_waiting_stats,
+      &eNB->dlsch_turbo_encoding_main_stats,
+      &eNB->dlsch_turbo_encoding_wakeup_stats0,
+      &eNB->dlsch_turbo_encoding_wakeup_stats1,
+       &eNB->dlsch_interleaving_stats);
+    
+    dlsch_scrambling(fp,
+        0,
+        dlsch1,
+        harq_pid,
+        get_G(fp,
+          dlsch_harq1->nb_rb,
+          dlsch_harq1->rb_alloc,
+          dlsch_harq1->Qm,
+          dlsch_harq1->Nl,
+          dlsch_harq1->pdsch_start,
+          frame,subframe,
+          0),
+        1,
+        frame,
+        subframe<<1);
+    }
   start_meas(&eNB->dlsch_modulation_stats);
-  dlsch_modulation(eNB,
-		   eNB->common_vars.txdataF,
-		   AMP,
-		   frame,
-		   subframe,
-		   dlsch_harq->pdsch_start,
-		   dlsch,
-		   dlsch->ue_type==0 ? dlsch1 : (LTE_eNB_DLSCH_t *)NULL);
+  if(dlsch1->active[subframe] == 1){
+    dlsch_modulation(eNB,
+  		   eNB->common_vars.txdataF,
+  		   AMP,
+  		   frame,
+  		   subframe,
+  		   dlsch_harq->pdsch_start,
+  		   dlsch,
+  		   dlsch->ue_type==0 ? dlsch1 : (LTE_eNB_DLSCH_t *)NULL);
+  }else{
+    dlsch_modulation(eNB,
+  		   eNB->common_vars.txdataF,
+  		   AMP,
+  		   frame,
+  		   subframe,
+  		   dlsch_harq->pdsch_start,
+  		   dlsch,
+  		   (LTE_eNB_DLSCH_t *)NULL);
+  }
+  dlsch1->active[subframe]=0;
   stop_meas(&eNB->dlsch_modulation_stats);
 
   LOG_D(PHY,"Generated PDSCH dlsch_harq[round:%d]\n",dlsch_harq->round);
@@ -1661,10 +1708,10 @@ void fill_ulsch_cqi_indication (PHY_VARS_eNB *eNB, uint16_t frame, uint8_t subfr
 
   // if we have RI bits, set them and if rank2 overwrite O
   if (ulsch_harq->O_RI > 0) {
-    pdu->cqi_indication_rel9.ri[0] = ulsch_harq->o_RI[0];
+    pdu->cqi_indication_rel9.ri[0] = ulsch_harq->o_RI[0]+1;
 
-    if (ulsch_harq->o_RI[0] == 2)
-      pdu->cqi_indication_rel9.length = (ulsch_harq->Or2 >> 3) + ((ulsch_harq->Or2 & 7) > 0 ? 1 : 0);
+    if (ulsch_harq->o_RI[0] == 1)
+      pdu->cqi_indication_rel9.length += (ulsch_harq->Or2 >> 3) + ((ulsch_harq->Or2 & 7) > 0 ? 1 : 0);
 
     pdu->cqi_indication_rel9.timing_advance = 0;
   }

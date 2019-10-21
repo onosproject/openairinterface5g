@@ -1344,7 +1344,7 @@ unsigned int  ulsch_decoding(PHY_VARS_eNB *eNB,L1_rxtx_proc_t *proc,
 
   // rank 1
   if ((ulsch_harq->O_RI == 1) && (Qprime_RI > 0)) {
-    ulsch_harq->o_RI[0] = ((ulsch_harq->q_RI[0] + ulsch_harq->q_RI[Q_m/2]) > 0) ? 0 : 1;
+    ulsch_harq->o_RI[0] = ((ulsch_harq->q_RI[0] + ulsch_harq->q_RI[1]) > 0) ? 1 : 0;
   }
 
   // CQI
