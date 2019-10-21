@@ -1,6 +1,10 @@
 #include "PHY_INTERFACE/IF_Module_NB_IoT.h"
 #include "LAYER2/MAC/proto_NB_IoT.h"
 #include "LAYER2/MAC/extern_NB_IoT.h"
+#include "LAYER2/MAC/defs_NB_IoT.h"
+
+eNB_MAC_INST_NB_IoT *eNB_mac_inst;
+
 
 int tmp = 0;
 

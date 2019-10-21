@@ -1129,7 +1129,7 @@ int get_ue_active_harq_pid(const uint8_t Mod_id,const uint8_t CC_id,const uint16
   LTE_eNB_ULSCH_t *ULSCH_ptr;
   uint8_t ulsch_subframe,ulsch_frame;
   int i;
-  int8_t UE_id = find_ue(rnti,PHY_vars_eNB_NB_IoT_g[Mod_id][CC_id]);
+  int8_t UE_id = find_ue_NB_IoT(rnti,PHY_vars_eNB_NB_IoT_g[Mod_id][CC_id]);
 
   if (UE_id==-1) {
     LOG_D(PHY,"Cannot find UE with rnti %x (Mod_id %d, CC_id %d)\n",rnti, Mod_id, CC_id);

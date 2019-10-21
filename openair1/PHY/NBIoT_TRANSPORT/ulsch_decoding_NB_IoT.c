@@ -47,6 +47,7 @@
 #include "PHY/NBIoT_TRANSPORT/vars_NB_IoT.h"
 #include "PHY/CODING/defs_NB_IoT.h"
 #include "PHY/CODING/extern_NB_IoT.h"
+#include "PHY/CODING/NB_IoT_interleaver.h"
 //#include "extern_NB_IoT.h"
 //#include "SCHED/extern.h"
 /*
@@ -65,7 +66,8 @@
 #include "common/utils/LOG/vcd_signal_dumper.h"
 //#define DEBUG_ULSCH_DECODING
 
-
+decoder_if_t    *decoder16;
+decoder_if_t    *decoder8;
 /////////////////////////////////////////////////// NB-IoT testing ////////////////////////////////////////
 void free_eNB_ulsch_NB_IoT(NB_IoT_eNB_NULSCH_t *ulsch)
 {
@@ -952,9 +954,9 @@ int ulsch_decoding_data_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,int UE_id,int harq_pid,i
                 time_stats_t *);
 
   if (llr8_flag == 0)
-    tc = phy_threegpplte_turbo_decoder16;
+    tc = decoder16;
   else
-    tc = phy_threegpplte_turbo_decoder8;
+    tc = decoder8;
 
 
   for (r=0; r<ulsch_harq->C; r++) {

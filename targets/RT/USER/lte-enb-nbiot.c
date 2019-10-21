@@ -58,7 +58,7 @@
 #undef MALLOC //there are two conflicting definitions, so we better make sure we don't use it at all
 //#undef FRAME_LENGTH_COMPLEX_SAMPLES //there are two conflicting definitions, so we better make sure we don't use it at all
 
-#include "../../ARCH/COMMON/common_lib.h"
+#include "targets/ARCH/COMMON/common_lib.h"
 
 //#undef FRAME_LENGTH_COMPLEX_SAMPLES //there are two conflicting definitions, so we better make sure we don't use it at all
 
@@ -115,7 +115,7 @@ unsigned short config_frames[4] = {2,9,11,13};
 extern volatile int             start_eNB;
 extern volatile int                    oai_exit;
 extern int oaisim_flag;
-extern openair0_config_t openair0_cfg[MAX_CARDS];
+openair0_config_t openair0_cfg[MAX_CARDS];
 extern uint16_t sf_ahead;
 
 uint8_t seqno; //sequence number
@@ -530,6 +530,74 @@ extern void do_prach_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,int frame,int subframe);
 
 
 ///Modify to NB-IoT merge
+
+int setup_eNB_buffers(PHY_VARS_eNB_NB_IoT **phy_vars_eNB, openair0_config_t *openair0_cfg) {
+
+  int i,j; 
+  int CC_id,card,ant;
+
+  //uint16_t N_TA_offset = 0;
+
+  LTE_DL_FRAME_PARMS *frame_parms;
+
+  for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
+    if (phy_vars_eNB[CC_id]) {
+      frame_parms = &(phy_vars_eNB[CC_id]->frame_parms);
+      printf("setup_eNB_buffers: frame_parms = %p\n",frame_parms);
+    } else {
+      printf("phy_vars_eNB_NB_IoT[%d] not initialized\n", CC_id);
+      return(-1);
+    }
+
+    /*
+    if (frame_parms->frame_type == TDD) {
+      if (frame_parms->N_RB_DL == 100)
+        N_TA_offset = 624;
+      else if (frame_parms->N_RB_DL == 50)
+        N_TA_offset = 624/2;
+      else if (frame_parms->N_RB_DL == 25)
+        N_TA_offset = 624/4;
+    }
+    */
+ 
+
+    if (openair0_cfg[CC_id].mmapped_dma == 1) {
+    // replace RX signal buffers with mmaped HW versions
+      
+      for (i=0; i<frame_parms->nb_antennas_rx; i++) {
+  card = i/4;
+  ant = i%4;
+  printf("Mapping eNB CC_id %d, rx_ant %d, on card %d, chain %d\n",CC_id,i,phy_vars_eNB[CC_id]->rf_map.card+card, phy_vars_eNB[CC_id]->rf_map.chain+ant);
+  free(phy_vars_eNB[CC_id]->common_vars.rxdata[0][i]);
+  phy_vars_eNB[CC_id]->common_vars.rxdata[0][i] = openair0_cfg[phy_vars_eNB[CC_id]->rf_map.card+card].rxbase[phy_vars_eNB[CC_id]->rf_map.chain+ant];
+  
+  printf("rxdata[%d] @ %p\n",i,phy_vars_eNB[CC_id]->common_vars.rxdata[0][i]);
+  for (j=0; j<16; j++) {
+    printf("rxbuffer %d: %x\n",j,phy_vars_eNB[CC_id]->common_vars.rxdata[0][i][j]);
+    phy_vars_eNB[CC_id]->common_vars.rxdata[0][i][j] = 16-j;
+  }
+      }
+      
+      for (i=0; i<frame_parms->nb_antennas_tx; i++) {
+  card = i/4;
+  ant = i%4;
+  printf("Mapping eNB CC_id %d, tx_ant %d, on card %d, chain %d\n",CC_id,i,phy_vars_eNB[CC_id]->rf_map.card+card, phy_vars_eNB[CC_id]->rf_map.chain+ant);
+  free(phy_vars_eNB[CC_id]->common_vars.txdata[0][i]);
+  phy_vars_eNB[CC_id]->common_vars.txdata[0][i] = openair0_cfg[phy_vars_eNB[CC_id]->rf_map.card+card].txbase[phy_vars_eNB[CC_id]->rf_map.chain+ant];
+  
+  printf("txdata[%d] @ %p\n",i,phy_vars_eNB[CC_id]->common_vars.txdata[0][i]);
+  
+  for (j=0; j<16; j++) {
+    printf("txbuffer %d: %x\n",j,phy_vars_eNB[CC_id]->common_vars.txdata[0][i][j]);
+    phy_vars_eNB[CC_id]->common_vars.txdata[0][i][j] = 16-j;
+  }
+      }
+    }
+  }
+
+  return(0);
+}
+
 void init_eNB_NB_IoT(eNB_func_NB_IoT_t node_function[], eNB_timing_NB_IoT_t node_timing[],int nb_inst,eth_params_t *eth_params,int single_thread_flag,int wait_for_sync) {
   
   int CC_id;

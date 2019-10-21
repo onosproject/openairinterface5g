@@ -385,7 +385,7 @@ void clean_eNb_dlsch(LTE_eNB_DLSCH_t *dlsch) {
   }
 }
 
-/*
+
 int dlsch_encoding_2threads0(te_params *tep) {
 
 
@@ -456,6 +456,7 @@ int dlsch_encoding_2threads0(te_params *tep) {
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_ENB_DLSCH_ENCODING_W, VCD_FUNCTION_OUT);
   return(0);
 }
+}
 
 
 extern int oai_exit;
@@ -484,15 +485,15 @@ void *te_thread(void *param) {
       return(NULL);
     }
 
-    if(opp_enabled == 1 && te_wakeup_stats0->p_time>50*3000){
+   /* if(opp_enabled == 1 && te_wakeup_stats0->p_time>50*3000){
       print_meas_now(te_wakeup_stats0,"coding_wakeup",stderr);
       printf("te_thread0 delay for waking up in frame_rx: %d  subframe_rx: %d \n",proc->frame_rx,proc->subframe_rx);
-    }
+    }*/
   }
 
   return(NULL);
 }
-*/
+
 
 
 int dlsch_encoding_2threads(PHY_VARS_eNB *eNB,

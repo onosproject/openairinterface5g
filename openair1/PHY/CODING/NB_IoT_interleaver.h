@@ -18,7 +18,7 @@
  * For more information about the OpenAirInterface (OAI) Software Alliance:
  *      contact@openairinterface.org
  */
- /*
+
 unsigned short f1f2mat_old[2*188] = {3, 10,
                                      7, 12,
                                      19,  42,
@@ -208,5 +208,3 @@ unsigned short f1f2mat_old[2*188] = {3, 10,
                                      47,  190,
                                      263, 480
                                     };
-*/
-extern unsigned short f1f2mat_old[2*188];

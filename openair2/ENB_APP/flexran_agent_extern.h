@@ -35,6 +35,7 @@
 #include "flexran_agent_mac_defs.h"
 #include "flexran_agent_rrc_defs.h"
 #include "flexran_agent_pdcp_defs.h"
+#include "targets/COMMON/openairinterface5g_limits.h"
 
 /* Control module interface for the communication of the PHY control module with the agent */
 AGENT_PHY_xface *flexran_agent_get_phy_xface(mid_t mod_id);

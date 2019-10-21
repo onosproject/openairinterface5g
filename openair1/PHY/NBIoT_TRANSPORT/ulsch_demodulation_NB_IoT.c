@@ -36,6 +36,7 @@
 #include "extern_NB_IoT.h"
 //#include "PHY/CODING/lte_interleaver2.h"
 #include "PHY/CODING/extern_NB_IoT.h"
+#include "PHY/CODING/coding_defs.h"
 //#define DEBUG_ULSCH
 //#include "PHY/sse_intrin.h"
 #include "PHY/LTE_ESTIMATION/defs_NB_IoT.h"
@@ -49,7 +50,7 @@
 //eren
 //extern int **ulchmag_eren;
 //eren
-
+decoder_if_t    *decoder16;
 static short jitter[8]  __attribute__ ((aligned(16))) = {1,0,0,1,0,1,1,0};
 static short jitterc[8] __attribute__ ((aligned(16))) = {0,1,1,0,1,0,0,1};
 
@@ -1540,7 +1541,7 @@ uint32_t  turbo_decoding_NB_IoT(PHY_VARS_eNB_NB_IoT           *eNB,
                         time_stats_t *,
                         time_stats_t *);
 
-          tc = phy_threegpplte_turbo_decoder16;
+          tc = decoder16;
 
           for (r=0; r<ulsch_harq->C; r++)
           {

@@ -118,7 +118,7 @@ static inline void* malloc16_clear( size_t size )
 // #define cmax3(a,b,c) ((cmax(a,b)>c) ? (cmax(a,b)) : (c))
 
 // /// suppress compiler warning for unused arguments
-// #define UNUSED(x) (void)x;
+#define UNUSED(x) (void)x;
 
 
 #include "PHY/impl_defs_top_NB_IoT.h"
