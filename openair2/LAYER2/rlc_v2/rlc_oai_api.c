@@ -744,12 +744,11 @@ rlc_op_status_t rrc_rlc_config_asn1_req (const protocol_ctxt_t   * const ctxt_pP
     LTE_MBMS_SessionInfo_r9_t     *MBMS_SessionInfo_p        = NULL;
     mbms_session_id_t          mbms_session_id;
     mbms_service_id_t          mbms_service_id;
-    rb_id_t 		   rb_id = 0;
+    rb_id_t 		   drb_id = 0;
     logical_chan_id_t      lc_id           = 0;
-    LTE_DRB_Identity_t     drb_id          = 0;
-    LTE_DRB_Identity_t*    pdrb_id         = NULL;
+    //LTE_DRB_Identity_t     drb_id          = 0;
+    //LTE_DRB_Identity_t*    pdrb_id         = NULL;
 	
-
     for (i=0; i<pmch_InfoList_r9_pP->list.count; i++) {
       mbms_SessionInfoList_r9_p = &(pmch_InfoList_r9_pP->list.array[i]->mbms_SessionInfoList_r9);
 
@@ -765,69 +764,26 @@ rlc_op_status_t rrc_rlc_config_asn1_req (const protocol_ctxt_t   * const ctxt_pP
 
         // can set the mch_id = i
         if (ctxt_pP->enb_flag) {
-          rb_id =  (mbms_service_id * LTE_maxSessionPerPMCH ) + mbms_session_id;//+ (LTE_maxDRB + 3) * MAX_MOBILES_PER_ENB; // 1
-          //rlc_mbms_lcid2service_session_id_eNB[ctxt_pP->module_id][lc_id].service_id                     = mbms_service_id;
-          //rlc_mbms_lcid2service_session_id_eNB[ctxt_pP->module_id][lc_id].session_id                     = mbms_session_id;
-          //rlc_mbms_enb_set_lcid_by_rb_id(ctxt_pP->module_id,rb_id,lc_id);
-
+          drb_id =  (mbms_service_id * LTE_maxSessionPerPMCH ) + mbms_session_id;//+ (LTE_maxDRB + 3) * MAX_MOBILES_PER_ENB; // 1
         } else {
-          rb_id =  (mbms_service_id * LTE_maxSessionPerPMCH ) + mbms_session_id; // + (LTE_maxDRB + 3); // 15
-          //rlc_mbms_lcid2service_session_id_ue[ctxt_pP->module_id][lc_id].service_id                    = mbms_service_id;
-          //rlc_mbms_lcid2service_session_id_ue[ctxt_pP->module_id][lc_id].session_id                    = mbms_session_id;
-          //rlc_mbms_ue_set_lcid_by_rb_id(ctxt_pP->module_id,rb_id,lc_id);
+          drb_id =  (mbms_service_id * LTE_maxSessionPerPMCH ) + mbms_session_id; // + (LTE_maxDRB + 3); // 15
         }
-
-        //key = RLC_COLL_KEY_MBMS_VALUE(ctxt_pP->module_id, ctxt_pP->module_id, ctxt_pP->enb_flag, mbms_service_id, mbms_session_id);
-
-        //h_rc = hashtable_get(rlc_coll_p, key, (void**)&rlc_union_p);
-
-        //if (h_rc == HASH_TABLE_KEY_NOT_EXISTS) {
-        //  rlc_union_p = rrc_rlc_add_rlc   (
-        //                  ctxt_pP,
-        //                  SRB_FLAG_NO,
-        //                  MBMS_FLAG_YES,
-        //                  rb_id,
-        //                  lc_id,
-        //                  RLC_MODE_UM, 0, 0);
-        //  //AssertFatal(rlc_union_p != NULL, "ADD MBMS RLC UM FAILED");
-        //  if(rlc_union_p == NULL){
-        //    LOG_E(RLC, "ADD MBMS RLC UM FAILED\n");
-        //  }
-        //}
-
+        
         LOG_I(RLC, PROTOCOL_CTXT_FMT" CONFIG REQ MBMS ASN1 LC ID %u RB ID %u SESSION ID %u SERVICE ID %u, rnti %x\n",
               PROTOCOL_CTXT_ARGS(ctxt_pP),
               lc_id,
-              rb_id,
+              drb_id,
               mbms_session_id,
               mbms_service_id,
 	      rnti
              );
-      //  dl_um_rlc.sn_FieldLength = LTE_SN_FieldLength_size5;
-      //  dl_um_rlc.t_Reordering   = LTE_T_Reordering_ms0;
-
-      //  config_req_rlc_um_asn1 (
-      //    ctxt_pP,
-      //    SRB_FLAG_NO,
-      //    MBMS_FLAG_YES,
-      //    mbms_session_id,
-      //    mbms_service_id,
-      //    NULL,
-      //    &dl_um_rlc,
-      //    rb_id, lc_id
-//#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
-      //    ,0, 0
-//#endif//
-      //         );
       }
     }
-    //LOG_E(RLC, "%s: pmch_InfoList_r9_pP not handled\n", __FUNCTION__);
-    //exit(1);
 
     rlc_entity_t            *rlc_um;
     rlc_ue_t                *ue;
 
-    drb_id = rb_id;
+    //drb_id = rb_id;
 
     rlc_manager_lock(rlc_ue_manager);
     ue = rlc_manager_get_ue(rlc_ue_manager, rnti);
@@ -841,7 +797,7 @@ rlc_op_status_t rrc_rlc_config_asn1_req (const protocol_ctxt_t   * const ctxt_pP
                                0,//LTE_T_Reordering_ms0,//t_reordering,
                                5//LTE_SN_FieldLength_size5//sn_field_length
 			       );
-     rlc_mbms_add_drb_rlc_entity(ue, drb_id, rlc_um);
+     rlc_ue_add_drb_rlc_entity(ue, drb_id, rlc_um);
 
      LOG_D(RLC, "%s:%d:%s: added drb %d to ue %d\n",
           __FILE__, __LINE__, __FUNCTION__, drb_id, rnti);
