@@ -35,8 +35,8 @@
 #include "assertions.h"
 #include <math.h>
 //NB-IoT
-#include "openair2/ENB_APP/NB_IoT_config.c"
-
+//#include "openair2/ENB_APP/NB_IoT_config.c"
+#include "openair2/ENB_APP/NB_IoT_paramdef.h"
 
 extern uint32_t from_earfcn(int eutra_bandP,uint32_t dl_earfcn);
 extern int32_t get_uldl_offset(int eutra_bandP);
