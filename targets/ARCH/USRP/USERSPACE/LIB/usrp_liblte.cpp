@@ -294,6 +294,7 @@ static int sync_to_gps(openair0_device *device) {
   char config_opt_sf_wdelay[] = CONFIG_OPT_SF_WDELAY;
   char config_hlp_sf_wdelay[] = CONFIG_HLP_SF_WDELAY;
 
+
 #endif
 
 /*! \brief Called to start the USRP transceiver. Return 0 if OK, < 0 if error
@@ -440,6 +441,7 @@ static int trx_usrp_write(openair0_device *device, openair0_timestamp timestamp,
 #endif
     usrp_state_t *s = (usrp_state_t *)device->priv;
     int nsamps2;  // aligned to upper 32 or 16 byte boundary
+
 #if defined(__x86_64) || defined(__i386__)
 #ifdef __AVX2__
     nsamps2 = (nsamps+7)>>3;
@@ -448,6 +450,7 @@ static int trx_usrp_write(openair0_device *device, openair0_timestamp timestamp,
     nsamps2 = (nsamps+3)>>2;
     __m128i buff_tx[2][nsamps2];
 #endif
+
 #elif defined(__arm__)
     nsamps2 = (nsamps+3)>>2;
     int16x8_t buff_tx[2][nsamps2];
@@ -1060,7 +1063,6 @@ extern "C" {
       LOG_I(PHY,"Checking for USRPs : UHD %s (%d.%d.%d)\n",
             uhd::get_version_string().c_str(),vers,subvers,subsubvers);
       std::string args;
-
       if (openair0_cfg[0].sdr_addrs == NULL) {
         args = "type=b200";
       } else {
