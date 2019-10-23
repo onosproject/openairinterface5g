@@ -527,11 +527,16 @@ set (SHLIB_LOADER_SOURCES
 ######################################################################
 
 include_directories("${OPENAIR_TARGETS}/ARCH/USRP/USERSPACE/LIB/")
-set(HWLIB_USRP_SOURCE
-  ${OPENAIR_TARGETS}/ARCH/USRP/USERSPACE/LIB/usrp_lib.cpp
-  )
-add_library(oai_usrpdevif MODULE ${HWLIB_USRP_SOURCE} )
-target_link_libraries(oai_usrpdevif uhd)
+file(GLOB USRPSRCVARIANT "${OPENAIR_TARGETS}/ARCH/USRP/USERSPACE/LIB/usrp_lib*.cpp")
+foreach(USRPSOURCE ${USRPSRCVARIANT})
+#  set(HWLIB_USRP_SOURCE
+#     ${OPENAIR_TARGETS}/ARCH/USRP/USERSPACE/LIB/usrp_lib${USRPVERSION}.cpp
+#     )
+  get_filename_component(USRPVERSION ${USRPSOURCE} NAME_WE)
+  string(REPLACE "usrp_lib" "" USRPVERSION ${USRPVERSION} )
+  add_library(oai_usrpdevif${USRPVERSION} MODULE ${USRPSOURCE} )
+  target_link_libraries(oai_usrpdevif${USRPVERSION} uhd)
+endforeach(USRPSOURCE)
 
 include_directories("${OPENAIR_TARGETS}/ARCH/BLADERF/USERSPACE/LIB/")
 set(HWLIB_BLADERF_SOURCE
