@@ -150,7 +150,6 @@ int check_ref_locked(usrp_state_t *s,size_t mboard) {
 }
 
 static int sync_to_gps(openair0_device *device) {
-  uhd::set_thread_priority_safe();
   //std::string args;
   //Set up program options
   //po::options_description desc("Allowed options");
@@ -312,7 +311,7 @@ static int trx_usrp_start(openair0_device *device) {
 
   if (u_sf_mode != 2) { // not replay mode
 #endif
-    uhd::set_thread_priority_safe(1.0);
+    uhd::set_thread_priority_safe();
     usrp_state_t *s = (usrp_state_t *)device->priv;
     // setup GPIO for TDD, GPIO(4) = ATR_RX
     //set data direction register (DDR) to output
@@ -937,7 +936,7 @@ int trx_usrp_reset_stats(openair0_device *device) {
 /*! \brief Set uhd priority
  */
 static void uhd_set_thread_priority(void) {
-  uhd::set_thread_priority_safe(1.0);
+  uhd::set_thread_priority_safe();
 }
 
 #if defined(USRP_REC_PLAY)
