@@ -299,12 +299,14 @@ uint32_t nr_dlsch_decoding(PHY_VARS_NR_UE *phy_vars_ue,
 
   harq_process->trials[harq_process->round]++;
 
-  harq_process->TBS = nr_compute_tbs(harq_process->Qm,harq_process->R,nb_rb,nb_symb_sch,nb_re_dmrs,length_dmrs, harq_process->Nl);
+  uint16_t nb_rb_oh = 0; // it was not computed at UE side even before and set to 0 in nr_compute_tbs
+
+  harq_process->TBS = nr_compute_tbs(harq_process->Qm,harq_process->R,nb_rb,nb_symb_sch,nb_re_dmrs*length_dmrs, nb_rb_oh, harq_process->Nl);
 
   A = harq_process->TBS;
   ret = dlsch->max_ldpc_iterations + 1;
   dlsch->last_iteration_cnt = ret;
-
+ 
   harq_process->G = nr_get_G(nb_rb, nb_symb_sch, nb_re_dmrs, length_dmrs, harq_process->Qm,harq_process->Nl);
   G = harq_process->G;
 
@@ -312,7 +314,11 @@ uint32_t nr_dlsch_decoding(PHY_VARS_NR_UE *phy_vars_ue,
 
   vcd_signal_dumper_dump_function_by_name(VCD_SIGNAL_DUMPER_FUNCTIONS_DLSCH_SEGMENTATION, VCD_FUNCTION_IN);
 
-  Coderate = (float) A /(float) G;
+  if ((harq_process->R)<1024)
+    Coderate = (float) (harq_process->R) /(float) 1024;
+  else
+    Coderate = (float) (harq_process->R) /(float) 2048;
+
   if ((A <=292) || ((A<=3824) && (Coderate <= 0.6667)) || Coderate <= 0.25)
   {
     p_decParams->BG = 2;
@@ -409,8 +415,6 @@ uint32_t nr_dlsch_decoding(PHY_VARS_NR_UE *phy_vars_ue,
 
   K_bytes_F = Kr_bytes-(harq_process->F>>3);
 
-  Tbslbrm = harq_process->TBS;
-
   for (r=0; r<harq_process->C; r++) {
 
     //printf("start rx segment %d\n",r);
@@ -453,6 +457,11 @@ uint32_t nr_dlsch_decoding(PHY_VARS_NR_UE *phy_vars_ue,
 #endif
 
     vcd_signal_dumper_dump_function_by_name(VCD_SIGNAL_DUMPER_FUNCTIONS_DLSCH_RATE_MATCHING, VCD_FUNCTION_IN);
+
+    if ((harq_process->Nl)<4)
+      Tbslbrm = nr_compute_tbslbrm(harq_process->mcs_table,nb_rb,harq_process->Nl,harq_process->C);
+    else
+      Tbslbrm = nr_compute_tbslbrm(harq_process->mcs_table,nb_rb,4,harq_process->C);
 
     if (nr_rate_matching_ldpc_rx(Ilbrm,
                                  Tbslbrm,
@@ -750,7 +759,6 @@ uint32_t  nr_dlsch_decoding_mthread(PHY_VARS_NR_UE *phy_vars_ue,
   int32_t no_iteration_ldpc,length_dec;
   /*uint8_t C;
   uint8_t Qm;
-  uint8_t Nl;
   uint8_t r_thread;
   uint32_t Er, Gp,GpmodC;*/
   t_nrLDPC_dec_params decParams;
@@ -759,7 +767,7 @@ uint32_t  nr_dlsch_decoding_mthread(PHY_VARS_NR_UE *phy_vars_ue,
   t_nrLDPC_time_stats* p_procTime =&procTime ;
   int8_t llrProcBuf[OAI_LDPC_MAX_NUM_LLR] __attribute__ ((aligned(32)));
   t_nrLDPC_procBuf* p_nrLDPC_procBuf = harq_process->p_nrLDPC_procBuf[0];
-
+  uint8_t Nl=4;
   int16_t z [68*384];
   int8_t l [68*384];
   //__m128i l;
@@ -824,7 +832,9 @@ uint32_t  nr_dlsch_decoding_mthread(PHY_VARS_NR_UE *phy_vars_ue,
   nb_rb = harq_process->nb_rb;
   harq_process->trials[harq_process->round]++;
 
-  harq_process->TBS = nr_compute_tbs(harq_process->Qm,harq_process->R,nb_rb,nb_symb_sch,nb_re_dmrs,length_dmrs, harq_process->Nl);
+  uint16_t nb_rb_oh = 0; // it was not computed at UE side even before and set to 0 in nr_compute_tbs
+
+  harq_process->TBS = nr_compute_tbs(harq_process->Qm,harq_process->R,nb_rb,nb_symb_sch,nb_re_dmrs*length_dmrs, nb_rb_oh, harq_process->Nl);
 
   A = harq_process->TBS;
 
@@ -844,7 +854,11 @@ uint32_t  nr_dlsch_decoding_mthread(PHY_VARS_NR_UE *phy_vars_ue,
 
   //  printf("DLSCH Decoding, harq_pid %d Ndi %d\n",harq_pid,harq_process->Ndi);
 
-  Coderate = (float) A /(float) G;
+  if ((harq_process->R)<1024)
+    Coderate = (float) (harq_process->R) /(float) 1024;
+  else
+    Coderate = (float) (harq_process->R) /(float) 2048;
+
   if ((A <=292) || ((A<=3824) && (Coderate <= 0.6667)) || Coderate <= 0.25)
   {
     p_decParams->BG = 2;
@@ -975,8 +989,6 @@ uint32_t  nr_dlsch_decoding_mthread(PHY_VARS_NR_UE *phy_vars_ue,
     Kr_bytes = Kr>>3;
     K_bytes_F = Kr_bytes-(harq_process->F>>3);
 
-    Tbslbrm = harq_process->TBS;
-
     E = nr_get_E(G, harq_process->C, harq_process->Qm, harq_process->Nl, r);
 
     /*
@@ -1016,6 +1028,12 @@ uint32_t  nr_dlsch_decoding_mthread(PHY_VARS_NR_UE *phy_vars_ue,
           harq_process->rvidx,
           harq_process->round);
 #endif
+
+    // for tbslbrm calculation according to 5.4.2.1 of 38.212
+    if (harq_process->Nl < Nl)
+      Nl = harq_process->Nl;
+
+    Tbslbrm = nr_compute_tbslbrm(rel15.mcs_table,nb_rb,Nl,dlsch->harq_processes[harq_pid]->C);
 
     if (nr_rate_matching_ldpc_rx(Ilbrm,
                                  Tbslbrm,
@@ -1364,8 +1382,8 @@ void *nr_dlsch_decoding_process(void *arg)
   int harq_pid              = proc->harq_pid;
   llr8_flag1                = proc->llr8_flag;
   int frame                 = proc->frame_rx;
-  int slot              = proc->nr_tti_rx;
-  r               			= proc->num_seg;
+  int slot                  = proc->nr_tti_rx;
+  r               	    = proc->num_seg;
 
   NR_UE_DLSCH_t *dlsch      = phy_vars_ue->dlsch[phy_vars_ue->current_thread_id[slot]][eNB_id][0];
   NR_DL_UE_HARQ_t *harq_process  = dlsch->harq_processes[harq_pid];
@@ -1393,7 +1411,9 @@ void *nr_dlsch_decoding_process(void *arg)
 
   harq_process->trials[harq_process->round]++;
 
-  harq_process->TBS = nr_compute_tbs(harq_process->Qm,harq_process->R,nb_rb,nb_symb_sch,nb_re_dmrs,length_dmrs, harq_process->Nl);
+  uint16_t nb_rb_oh = 0; // it was not computed at UE side even before and set to 0 in nr_compute_tbs
+
+  harq_process->TBS = nr_compute_tbs(harq_process->Qm,harq_process->R,nb_rb,nb_symb_sch,nb_re_dmrs*length_dmrs, nb_rb_oh, harq_process->Nl);
 
   A = harq_process->TBS; //2072 for QPSK 1/3
 
@@ -1405,7 +1425,11 @@ void *nr_dlsch_decoding_process(void *arg)
 
   LOG_I(PHY,"DLSCH Decoding process, harq_pid %d TBS %d G %d mcs %d Nl %d nb_symb_sch %d nb_rb %d\n",harq_pid,A,G, harq_process->mcs, harq_process->Nl, nb_symb_sch,nb_rb);
 
-  Coderate = (float) A /(float) G;
+  if ((harq_process->R)<1024)
+    Coderate = (float) (harq_process->R) /(float) 1024;
+  else
+    Coderate = (float) (harq_process->R) /(float) 2048;
+
   if ((A <=292) || ((A<=3824) && (Coderate <= 0.6667)) || Coderate <= 0.25)
   {
     p_decParams->BG = 2;
@@ -1518,9 +1542,7 @@ void *nr_dlsch_decoding_process(void *arg)
   Kr_bytes = Kr>>3;
   K_bytes_F = Kr_bytes-(harq_process->F>>3);
 
-  Tbslbrm = harq_process->TBS;
-
-    E = nr_get_E(G, harq_process->C, harq_process->Qm, harq_process->Nl, r);
+  E = nr_get_E(G, harq_process->C, harq_process->Qm, harq_process->Nl, r);
 
 #if UE_TIMING_TRACE
     start_meas(dlsch_deinterleaving_stats);
@@ -1554,6 +1576,11 @@ void *nr_dlsch_decoding_process(void *arg)
           harq_process->rvidx,
           harq_process->round);
 #endif
+
+    if (Nl<4)
+      Tbslbrm = nr_compute_tbslbrm(harq_process->mcs_table,nb_rb,Nl,harq_process->C);
+    else
+      Tbslbrm = nr_compute_tbslbrm(harq_process->mcs_table,nb_rb,4,harq_process->C);
 
     if (nr_rate_matching_ldpc_rx(Ilbrm,
                                  Tbslbrm,
