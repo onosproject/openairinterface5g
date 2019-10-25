@@ -30,9 +30,9 @@
 #include <stdio.h>
 #include <uhd/version.hpp>
 #if UHD_VERSION < 3110000
-#include <uhd/utils/thread_priority.hpp>
+  #include <uhd/utils/thread_priority.hpp>
 #else
-#include <uhd/utils/thread.hpp>
+  #include <uhd/utils/thread.hpp>
 #endif
 #include <uhd/usrp/multi_usrp.hpp>
 #include <uhd/version.hpp>
@@ -52,15 +52,15 @@
 #include <sys/resource.h>
 
 #ifdef __SSE4_1__
-#  include <smmintrin.h>
+  #include <smmintrin.h>
 #endif
 
 #ifdef __AVX2__
-#  include <immintrin.h>
+  #include <immintrin.h>
 #endif
 
 #ifdef __arm__
-#  include <arm_neon.h>
+  #include <arm_neon.h>
 #endif
 
 /** @addtogroup _USRP_PHY_RF_INTERFACE_
@@ -258,41 +258,41 @@ static int sync_to_gps(openair0_device *device) {
 }
 
 #if defined(USRP_REC_PLAY)
-#include "usrp_lib.h"
-static FILE    *pFile = NULL;
-int             mmapfd = 0;
-int             iqfd = 0;
-int             use_mmap = 1; // default is to use mmap
-struct stat     sb;
-iqrec_t        *ms_sample = NULL;                      // memory for all subframes
-unsigned int    nb_samples = 0;
-unsigned int    cur_samples = 0;
-int64_t         wrap_count = 0;
-int64_t         wrap_ts = 0;
-unsigned int    u_sf_mode = 0;                         // 1=record, 2=replay
-unsigned int    u_sf_record = 0;                       // record mode
-unsigned int    u_sf_replay = 0;                       // replay mode
-char            u_sf_filename[1024] = "";              // subframes file path
-unsigned int    u_sf_max = DEF_NB_SF;                  // max number of recorded subframes
-unsigned int    u_sf_loops = DEF_SF_NB_LOOP;           // number of loops in replay mode
-unsigned int    u_sf_read_delay = DEF_SF_DELAY_READ;   // read delay in replay mode
-unsigned int    u_sf_write_delay = DEF_SF_DELAY_WRITE; // write delay in replay mode
+  #include "usrp_lib.h"
+  static FILE    *pFile = NULL;
+  int             mmapfd = 0;
+  int             iqfd = 0;
+  int             use_mmap = 1; // default is to use mmap
+  struct stat     sb;
+  iqrec_t        *ms_sample = NULL;                      // memory for all subframes
+  unsigned int    nb_samples = 0;
+  unsigned int    cur_samples = 0;
+  int64_t         wrap_count = 0;
+  int64_t         wrap_ts = 0;
+  unsigned int    u_sf_mode = 0;                         // 1=record, 2=replay
+  unsigned int    u_sf_record = 0;                       // record mode
+  unsigned int    u_sf_replay = 0;                       // replay mode
+  char            u_sf_filename[1024] = "";              // subframes file path
+  unsigned int    u_sf_max = DEF_NB_SF;                  // max number of recorded subframes
+  unsigned int    u_sf_loops = DEF_SF_NB_LOOP;           // number of loops in replay mode
+  unsigned int    u_sf_read_delay = DEF_SF_DELAY_READ;   // read delay in replay mode
+  unsigned int    u_sf_write_delay = DEF_SF_DELAY_WRITE; // write delay in replay mode
 
-char config_opt_sf_file[] = CONFIG_OPT_SF_FILE;
-char config_def_sf_file[] = DEF_SF_FILE;
-char config_hlp_sf_file[] = CONFIG_HLP_SF_FILE;
-char config_opt_sf_rec[] = CONFIG_OPT_SF_REC;
-char config_hlp_sf_rec[] = CONFIG_HLP_SF_REC;
-char config_opt_sf_rep[] = CONFIG_OPT_SF_REP;
-char config_hlp_sf_rep[] = CONFIG_HLP_SF_REP;
-char config_opt_sf_max[] = CONFIG_OPT_SF_MAX;
-char config_hlp_sf_max[] = CONFIG_HLP_SF_MAX;
-char config_opt_sf_loops[] = CONFIG_OPT_SF_LOOPS;
-char config_hlp_sf_loops[] = CONFIG_HLP_SF_LOOPS;
-char config_opt_sf_rdelay[] = CONFIG_OPT_SF_RDELAY;
-char config_hlp_sf_rdelay[] = CONFIG_HLP_SF_RDELAY;
-char config_opt_sf_wdelay[] = CONFIG_OPT_SF_WDELAY;
-char config_hlp_sf_wdelay[] = CONFIG_HLP_SF_WDELAY;
+  char config_opt_sf_file[] = CONFIG_OPT_SF_FILE;
+  char config_def_sf_file[] = DEF_SF_FILE;
+  char config_hlp_sf_file[] = CONFIG_HLP_SF_FILE;
+  char config_opt_sf_rec[] = CONFIG_OPT_SF_REC;
+  char config_hlp_sf_rec[] = CONFIG_HLP_SF_REC;
+  char config_opt_sf_rep[] = CONFIG_OPT_SF_REP;
+  char config_hlp_sf_rep[] = CONFIG_HLP_SF_REP;
+  char config_opt_sf_max[] = CONFIG_OPT_SF_MAX;
+  char config_hlp_sf_max[] = CONFIG_HLP_SF_MAX;
+  char config_opt_sf_loops[] = CONFIG_OPT_SF_LOOPS;
+  char config_hlp_sf_loops[] = CONFIG_HLP_SF_LOOPS;
+  char config_opt_sf_rdelay[] = CONFIG_OPT_SF_RDELAY;
+  char config_hlp_sf_rdelay[] = CONFIG_HLP_SF_RDELAY;
+  char config_opt_sf_wdelay[] = CONFIG_OPT_SF_WDELAY;
+  char config_hlp_sf_wdelay[] = CONFIG_HLP_SF_WDELAY;
 
 #endif
 
@@ -350,7 +350,6 @@ static void trx_usrp_end(openair0_device *device) {
   if (done == 1) return;
 
   done = 1;
-
 
   if (u_sf_mode != 2) { // not subframes replay
 #endif
@@ -441,20 +440,19 @@ static int trx_usrp_write(openair0_device *device, openair0_timestamp timestamp,
 #endif
     usrp_state_t *s = (usrp_state_t *)device->priv;
     int nsamps2;  // aligned to upper 32 or 16 byte boundary
-
 #if defined(__x86_64) || defined(__i386__)
-  #ifdef __AVX2__
-      nsamps2 = (nsamps+7)>>3;
-      __m256i buff_tx[2][nsamps2];
-  #else
+#ifdef __AVX2__
+    nsamps2 = (nsamps+7)>>3;
+    __m256i buff_tx[2][nsamps2];
+#else
     nsamps2 = (nsamps+3)>>2;
     __m128i buff_tx[2][nsamps2];
-  #endif
+#endif
 #elif defined(__arm__)
     nsamps2 = (nsamps+3)>>2;
     int16x8_t buff_tx[2][nsamps2];
 #else
-    #error Unsupported CPU architecture, USRP device cannot be built
+#error Unsupported CPU architecture, USRP device cannot be built
 #endif
 
     // bring RX data into 12 LSBs for softmodem RX
@@ -1061,8 +1059,8 @@ extern "C" {
       sscanf(uhd::get_version_string().c_str(),"%d.%d.%d",&vers,&subvers,&subsubvers);
       LOG_I(PHY,"Checking for USRPs : UHD %s (%d.%d.%d)\n",
             uhd::get_version_string().c_str(),vers,subvers,subsubvers);
-
       std::string args;
+
       if (openair0_cfg[0].sdr_addrs == NULL) {
         args = "type=b200";
       } else {
@@ -1077,8 +1075,8 @@ extern "C" {
         return -1;
       } else if (device_adds.size() > 1) {
         LOG_E(HW,"More than one USRP Device Found. Please specify device more precisely in config file.\n");
-	free(s);
-	return -1;
+        free(s);
+        return -1;
       }
 
       LOG_I(HW,"Found USRP %s\n", device_adds[0].get("type").c_str());
@@ -1091,6 +1089,7 @@ extern "C" {
         args += boost::str(boost::format(",master_clock_rate=%f") % usrp_master_clock);
         args += ",num_send_frames=256,num_recv_frames=256, send_frame_size=7680, recv_frame_size=7680" ;
       }
+
       if (device_adds[0].get("type") == "n3xx") {
         printf("Found USRP n300\n");
         device->type=USRP_X300_DEV; //treat it as X300 for now
@@ -1111,11 +1110,11 @@ extern "C" {
       if (openair0_cfg[0].clock_source == internal) {
         s->usrp->set_clock_source("internal");
         printf("Setting clock source to internal\n");
-      }
-      else {
+      } else {
         s->usrp->set_clock_source("external");
         printf("Setting clock source to external\n");
       }
+
       if (device->type==USRP_X300_DEV) {
         openair0_cfg[0].rx_gain_calib_table = calib_table_x310;
 #if defined(USRP_REC_PLAY)

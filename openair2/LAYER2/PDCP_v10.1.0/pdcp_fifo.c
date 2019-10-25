@@ -111,7 +111,7 @@ int pdcp_fifo_flush_sdus(const protocol_ctxt_t *const  ctxt_pP) {
   int              ret=0;
 
   while ((sdu_p = list_get_head (&pdcp_sdu_list)) != NULL && ((pdcp_data_ind_header_t *)(sdu_p->data))->inst == ctxt_pP->module_id) {
-	  ((pdcp_data_ind_header_t *)(sdu_p->data))->inst = 0;
+    ((pdcp_data_ind_header_t *)(sdu_p->data))->inst = 0;
     int rb_id = ((pdcp_data_ind_header_t *)(sdu_p->data))->rb_id;
     int sizeToWrite= sizeof (pdcp_data_ind_header_t) +
                      ((pdcp_data_ind_header_t *) sdu_p->data)->data_size;
@@ -135,13 +135,6 @@ int pdcp_fifo_flush_sdus(const protocol_ctxt_t *const  ctxt_pP) {
     }  //  PDCP_USE_NETLINK
 
     AssertFatal(ret >= 0,"[PDCP_FIFOS] pdcp_fifo_flush_sdus (errno: %d %s)\n", errno, strerror(errno));
-    
-    #if defined(ENABLE_PDCP_PAYLOAD_DEBUG)
-    LOG_I(PDCP, "Printing first bytes of PDCP SDU before removing it from the list: \n");
-      for (int i=0; i<30; i++){
-    	  LOG_I(PDCP, "%x", sdu_p->data[i]);
-      }
-    #endif
     list_remove_head (&pdcp_sdu_list);
     free_mem_block (sdu_p, __func__);
     pdcp_nb_sdu_sent ++;
@@ -173,7 +166,7 @@ int pdcp_fifo_read_input_sdus_fromtun (const protocol_ctxt_t *const  ctxt_pP) {
       ctxt.rnti=pdcp_eNB_UE_instance_to_rnti[0];
       ctxt.enb_flag=ENB_FLAG_YES;
       ctxt.module_id=0;
-      key = PDCP_COLL_KEY_VALUE(ctxt.module_id, ctxt.rnti, ctxt.enb_flag, rab_id, SRB_FLAG_NO);
+      key = PDCP_COLL_KEY_VALUE(ctxt.module_id, ctxt.rnti, ctxt.enb_flag, rab_id, SRB_FLAG_YES);
       h_rc = hashtable_get(pdcp_coll_p, key, (void **)&pdcp_p);
     }
 
@@ -688,6 +681,7 @@ void pdcp_fifo_read_input_sdus_frompc5s (const protocol_ctxt_t *const  ctxt_pP) 
         break;
     } /* end of switch */
   }/* end of bytes_received > 0 */
+
   if (pc5s_header != NULL) {
     free(pc5s_header);
     pc5s_header = NULL;
@@ -722,7 +716,7 @@ void pdcp_fifo_read_input_sdus_from_otg (const protocol_ctxt_t *const  ctxt_pP) 
       ctxt_pP->subframe,
       ctxt_pP->module_id);
 
-    for (dst_id = 0; dst_id<NUMBER_OF_UE_MAX; dst_id++) {
+    for (dst_id = 0; dst_id<MAX_MOBILES_PER_ENB; dst_id++) {
       ctxt.rnti = oai_emulation.info.eNB_ue_module_id_to_rnti[ctxt.module_id][dst_id];
     }
   }

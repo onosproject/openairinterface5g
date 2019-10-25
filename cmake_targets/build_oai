@@ -26,12 +26,14 @@
 
 set -e
 
-# Include helper functions
+################################
+# include helper functions
+################################
 ORIGIN_PATH=$PWD
 THIS_SCRIPT_PATH=$(dirname $(readlink -f $0))
 source $THIS_SCRIPT_PATH/tools/build_helper
 
-# Set environment variables (OPENAIR_HOME, ...)
+# set environment variables (OPENAIR_HOME, ...)
 set_openair_env
 
 # Variables for UE data generation
@@ -44,8 +46,9 @@ UE_EXPANSION="False"
 UESIM_EXPANSION="False"
 PRINT_STATS="False"
 VCD_TIMING="False"
-DEADLINE_SCHEDULER_FLAG_USER=""
-CPU_AFFINITY_FLAG_USER="False" #Only valid when low-latency flag is set to False
+DEADLINE_SCHEDULER_FLAG_USER="False"
+FORCE_DEADLINE_SCHEDULER_FLAG_USER=""
+CPU_AFFINITY_FLAG_USER="False" #Only valid when lowlatecy flag is set to False
 REL="Rel15"
 HW="None"
 TP="None"
@@ -133,7 +136,6 @@ Options
    Enable deadline scheduler of Linux kernel (>=3.14.x). 
 --disable-cpu-affinity
    Disables CPU Affinity between UHD/TX/RX Threads (Valid only when deadline scheduler is disabled). By defaulT, CPU Affinity is enabled when not using deadline scheduler. It is enabled only with >2 CPUs. For eNB, CPU_0-> Device library (UHD), CPU_1->TX Threads, CPU_2...CPU_MAX->Rx Threads. For UE, CPU_0->Device Library(UHD), CPU_1..CPU_MAX -> All the UE threads
---enable-cpu-affinity
 --disable-T-Tracer
    Disables the T tracer.
 --disable-hardware-dependency
@@ -307,10 +309,6 @@ function main() {
             DEADLINE_SCHEDULER_FLAG_USER="True"
             echo_info "Enabling the usage of deadline scheduler"
             shift 1;;
-       --enable-cpu-affinity)
-            CPU_AFFINITY_FLAG_USER="True"
-            echo_info "Enabling CPU Affinity (only valid when not using deadline scheduler)"
-            shift 1;;
        --disable-cpu-affinity)
             CPU_AFFINITY_FLAG_USER="False"
             echo_info "Disabling CPU Affinity (only valid when not using deadline scheduler)"
@@ -428,7 +426,6 @@ function main() {
 		      ;;
       esac
   fi
-
   #Disable CPU Affinity for deadline scheduler
   if [ "$DEADLINE_SCHEDULER_FLAG_USER" = "True" ] ; then 
      CPU_AFFINITY_FLAG_USER="False"
@@ -520,15 +517,6 @@ function main() {
       build_dir=ran_build  
   fi
 
-  if [ "$gNB" = "1" ] ; then
-     exec=nr-softmodem
-  elif [ "$nrUE" = "1" ] ; then
-     exec=nr-uesoftmodem
-  elif [ "$eNB" = "1" ] ; then
-     exec=lte-softmodem
-  elif [ "$UE" = "1" ] ; then
-     exec=lte-uesoftmodem
-  fi
 
 # configuration module libraries, one currently available, using libconfig 
   config_libconfig_shlib=params_libconfig
@@ -562,28 +550,30 @@ function main() {
     cd  $DIR/$build_dir/build
     eval $CMAKE_CMD
   fi
+  
+  execlist=""
+  if [ "$eNB" = "1" ] ; then
+     execlist="$execlist lte-softmodem"
+  fi
+  if [ "$gNB" = "1" ] ; then
+     execlist="$execlist nr-softmodem"
+  fi  
+  if [ "$UE" = 1 ] ; then
+     execlist="$execlist lte-uesoftmodem"
+  fi  
+  if [ "$nrUE" = 1 ] ; then
+     execlist="$execlist nr-uesoftmodem"
+  fi  
 
-  if [ "$eNB" = "1" -o "$UE" = "1" -o "$gNB" = "1" -o "$nrUE" = "1" ] ; then
-    echo_info "Compiling $exec"
-    compilations \
-	  $build_dir $exec \
-	  $exec $dbin/$exec.$REL
-	  
-# if --eNB --UE are both provided together as build options
-	  if [ "$eNB" = "1" -a "$UE" = "1" ] ; then
-	    echo_info "Compiling lte-uesoftmodem"
-        compilations \
-	      $build_dir lte-uesoftmodem \
-	      lte-uesoftmodem $dbin/lte-uesoftmodem.$REL	  
-	  fi
-	  
-# if --gNB --nrUE are both provided together as build options
-	  if [ "$gNB" = "1" -a "$nrUE" = "1" ] ; then
-	    echo_info "Compiling nr-uesoftmodem"
-        compilations \
-	      $build_dir nr-uesoftmodem \
-	      nr-uesoftmodem $dbin/nr-uesoftmodem.$REL	  
-	  fi
+  for f in $execlist ; do
+  	  echo_info "Compiling $f..."
+      compilations \
+	$build_dir $f \
+	$f $dbin/$f.$REL
+  done
+
+
+
 
 # mandatory shared libraries common to UE and (e/g)NB
 
@@ -603,10 +593,9 @@ function main() {
 	  $build_dir rb_tool \
 	  rb_tool $dbin/rb_tool
       cp $OPENAIR_DIR/cmake_targets/tools/init_nas_nos1 $dbin
-  fi
-  
+
   if [ "$UE" = 1 ] ; then
-    # ue_ip driver compilation
+
     echo_info "Compiling UE specific part"
     compilations \
       $build_dir ue_ip \

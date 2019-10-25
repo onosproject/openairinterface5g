@@ -184,7 +184,7 @@ set(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -Wl,-rpath -Wl,${CMAKE_CU
 #########################
 # set a flag for changes in the source code
 # these changes are related to hardcoded path to include .h files
-set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS} -g -DMALLOC_CHECK_=3")
+set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS} -g3 -DMALLOC_CHECK_=3")
 set(CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS} -g3 -DMALLOC_CHECK_=3 -O2")
 
 
@@ -231,7 +231,7 @@ add_definitions("-DPACKAGE_BUGREPORT=\"openair4g-devel@lists.eurecom.fr\"")
 # Debug related options
 #########################################
 add_boolean_option(ASN_DEBUG           False "ASN1 coder/decoder Debug")
-add_boolean_option(EMIT_ASN_DEBUG      False "ASN1 coder/decoder Debug")
+add_boolean_option(ASN_EMIT_DEBUG      False "ASN1 coder/decoder Debug")
 add_boolean_option(MSG_PRINT           False "print debug messages")
 add_boolean_option(DISABLE_XER_PRINT   False "print XER Format")
 add_boolean_option(XER_PRINT           False "print XER Format")
@@ -244,16 +244,12 @@ add_boolean_option(TEST_OMG            False "???")
 add_boolean_option(DEBUG_OMG           False "???")
 add_boolean_option(PRINT_STATS         False "This adds the possibility to see the status")
 add_boolean_option(T_TRACER            True  "Activate the T tracer, a debugging/monitoring framework" )
-add_boolean_option(ENABLE_VCD          True  "always true now, time measurements of proc calls and var displays")
 add_boolean_option(UE_AUTOTEST_TRACE   False "Activate UE autotest specific logs")
 add_boolean_option(UE_DEBUG_TRACE      False "Activate UE debug trace")
 add_boolean_option(UE_TIMING_TRACE     False "Activate UE timing trace")
-add_boolean_option(DISABLE_LOG_X       False "Deactivate all LOG_* macros")
 add_boolean_option(USRP_REC_PLAY       False "Enable USRP record playback mode")
-add_boolean_option(UE_NAS_USE_TUN      False "Enable UE NAS TUN device instead of ue_ip.ko")
-add_boolean_option(NOS1                False "Allows to run without a EPC")
-add_boolean_option(BASIC_SIMULATOR     False "Has to be True when building the basic simulator, False otherwise")
-add_boolean_option(DEBUG_CONSOLE       False "makes debugging easier, disables stdout/stderr buffering")
+
+add_boolean_option(DEBUG_CONSOLE False "makes debugging easier, disables stdout/stderr buffering")
 
 add_boolean_option(ENABLE_ITTI True "ITTI is internal messaging, should remain enabled for most targets")
 set (OCP_ITTI ${OPENAIR_DIR}/common/utils/ocp_itti)
@@ -367,7 +363,7 @@ file(GLOB S1AP_source ${S1AP_C_DIR}/*.c)
 add_custom_target (
   s1ap_flag ALL
   ${OPENAIR_CMAKE}/tools/make_asn1c_includes.sh "${S1AP_C_DIR}" "${S1AP_ASN_DIR}/${S1AP_ASN_FILES}" "S1AP_" -fno-include-deps
-  DEPENDS  "${S1AP_ASN_DIR}/${S1AP_ASN_FILES}" 
+  DEPENDS  "${S1AP_ASN_DIR}/${S1AP_ASN_FILES}"
 )
 
 add_library(S1AP_LIB
@@ -496,10 +492,7 @@ add_library(F1AP
 add_list1_option(NB_ANTENNAS_RX "2" "Number of antennas in reception" "1" "2" "4")
 add_list1_option(NB_ANTENNAS_TX "4" "Number of antennas in transmission" "1" "2" "4")
 
-add_list2_option(RF_BOARD "EXMIMO" "RF head type" "None" "OAI_USRP" "OAI_BLADERF" "CPRIGW" "OAI_LMSSDR" "OAI_SIMU")
-if (NOT ${RF_BOARD} STREQUAL "None")
-   add_definitions(-DMANAGED_RF=1)
-endif()
+add_list2_option(RF_BOARD "RF head type" "None" "OAI_USRP" "OAI_BLADERF" "CPRIGW" "OAI_LMSSDR" "OAI_SIMU")
 
 
 add_list2_option(TRANSP_PRO "None" "Transport protocol type" "None" "ETHERNET")
@@ -516,7 +509,6 @@ set (CONFIG_LIBCONFIG_SOURCES
     ${CONFIG_ROOTDIR}/libconfig/config_libconfig.c
     )
 add_library(CONFIG_LIB ${CONFIG_SOURCES})
-set(CONFIG_LIBRARIES CONFIG_LIB)  
 add_library(params_libconfig MODULE ${CONFIG_LIBCONFIG_SOURCES} )
 target_link_libraries(params_libconfig config)
 # shared library loader
@@ -613,6 +605,7 @@ add_boolean_option(NAS_NETLINK False "useless ??? Must be True to compile nasmes
 add_boolean_option(OAI_NW_DRIVER_USE_NETLINK True "????")
 
 add_boolean_option(USE_MME False "this flag is used only one time in lte-softmodem.c")
+add_list_string_option(PACKAGE_NAME "NotDefined" "As per attribute name")
 add_boolean_option(MESSAGE_CHART_GENERATOR False         "For generating sequence diagrams")
 add_boolean_option(MESSAGE_CHART_GENERATOR_RLC_MAC False "trace RLC-MAC exchanges in sequence diagrams")
 add_boolean_option(MESSAGE_CHART_GENERATOR_PHY     False "trace some PHY exchanges in sequence diagrams")
@@ -1416,7 +1409,6 @@ if (${SMBV})
 endif  (${SMBV})
 
 if (${COMPILATION_AVX2} STREQUAL "True")
-  #set(PHY_SRC ${PHY_SRC} ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/dlsch_llr_computation_avx2.c)
   set(PHY_SRC_UE ${PHY_SRC_UE} ${OPENAIR1_DIR}/PHY/LTE_UE_TRANSPORT/dlsch_llr_computation_avx2.c)
 endif ()
 
@@ -1637,7 +1629,7 @@ set (MAC_SRC
   ${MAC_DIR}/eNB_scheduler_phytest.c
   ${MAC_DIR}/pre_processor.c
   ${MAC_DIR}/config.c
-  ${MAC_DIR}/config_ue.c
+  #${MAC_DIR}/config_ue.c
  )
 
 set (MAC_NR_SRC
@@ -1709,11 +1701,6 @@ add_library(L2_UE
   ${L2_SRC_UE}
   ${MAC_SRC_UE}
 )
-
-if (NOT ${NOS1})
-target_compile_definitions(L2_UE PUBLIC -DPDCP_USE_NETLINK)
-endif()
-
 add_dependencies(L2_UE rrc_flag s1ap_flag x2_flag)
 
 add_library( NR_L2_UE ${NR_L2_SRC_UE} ${MAC_NR_SRC_UE} )
@@ -2317,7 +2304,7 @@ add_executable(measurement_display
   ${OPENAIR_DIR}/common/utils/threadPool/measurement_display.c)
 target_link_libraries (measurement_display minimal_lib)
 
-# lte-softmodem is both eNB and UE implementation
+# lte-softmodem 
 ###################################################
 
 add_executable(lte-softmodem
@@ -2342,7 +2329,6 @@ add_executable(lte-softmodem
   ${GTPU_need_ITTI}
   ${XFORMSINTERFACE_SOURCE}
   ${T_SOURCE}
-  ${CONFIG_SOURCES}
   ${SHLIB_LOADER_SOURCES}
   )
 add_dependencies(lte-softmodem rrc_flag s1ap_flag x2_flag)
@@ -2355,7 +2341,7 @@ target_link_libraries (lte-softmodem
   -Wl,--end-group z dl)
   
 target_link_libraries (lte-softmodem ${LIBXML2_LIBRARIES})
-target_link_libraries (lte-softmodem pthread m ${CONFIG_LIBRARIES} rt crypt ${CRYPTO_LIBRARIES} ${OPENSSL_LIBRARIES} ${NETTLE_LIBRARIES} sctp ${PROTOBUF_LIB}  ${CMAKE_DL_LIBS} ${LIBYAML_LIBRARIES})
+target_link_libraries (lte-softmodem pthread m CONFIG_LIB rt crypt ${CRYPTO_LIBRARIES} ${OPENSSL_LIBRARIES} ${NETTLE_LIBRARIES} sctp ${PROTOBUF_LIB}  ${CMAKE_DL_LIBS} ${LIBYAML_LIBRARIES})
 target_link_libraries (lte-softmodem ${LIB_LMS_LIBRARIES})
 target_link_libraries (lte-softmodem ${T_LIB})
 
@@ -2410,7 +2396,6 @@ add_executable(lte-uesoftmodem
   ${OPENAIR_DIR}/common/utils/system.c
   ${XFORMSINTERFACE_SOURCE}
   ${T_SOURCE}
-  ${CONFIG_SOURCES}
   ${SHLIB_LOADER_SOURCES}
   )
 
@@ -2427,7 +2412,7 @@ target_link_libraries (lte-uesoftmodem
   -Wl,--end-group z dl)
 
 target_link_libraries (lte-uesoftmodem ${LIBXML2_LIBRARIES})
-target_link_libraries (lte-uesoftmodem pthread m ${CONFIG_LIBRARIES} rt crypt ${CRYPTO_LIBRARIES} ${OPENSSL_LIBRARIES} ${NETTLE_LIBRARIES} sctp ${PROTOBUF_LIB}  ${CMAKE_DL_LIBS} ${LIBYAML_LIBRARIES} ${ATLAS_LIBRARIES})
+target_link_libraries (lte-uesoftmodem pthread m CONFIG_LIB rt crypt ${CRYPTO_LIBRARIES} ${OPENSSL_LIBRARIES} ${NETTLE_LIBRARIES} sctp ${PROTOBUF_LIB}  ${CMAKE_DL_LIBS} ${LIBYAML_LIBRARIES} ${ATLAS_LIBRARIES})
 target_link_libraries (lte-uesoftmodem ${LIB_LMS_LIBRARIES})
 target_link_libraries (lte-uesoftmodem ${T_LIB})
 
@@ -2453,7 +2438,6 @@ add_executable(nr-softmodem
   ${GTPU_need_ITTI}
   ${XFORMS_SOURCE_NR}
   ${T_SOURCE}
-  ${CONFIG_SOURCES}
   ${SHLIB_LOADER_SOURCES}
   )
 
@@ -2466,7 +2450,7 @@ target_link_libraries (nr-softmodem
   -Wl,--end-group z dl)
 
 target_link_libraries (nr-softmodem ${LIBXML2_LIBRARIES})
-target_link_libraries (nr-softmodem pthread m ${CONFIG_LIBRARIES} rt crypt ${CRYPTO_LIBRARIES} ${OPENSSL_LIBRARIES} ${NETTLE_LIBRARIES} sctp  ${XFORMS_LIBRARIES} ${PROTOBUF_LIB}  ${CMAKE_DL_LIBS} ${LIBYAML_LIBRARIES} ${ATLAS_LIBRARIES})
+target_link_libraries (nr-softmodem pthread m CONFIG_LIB rt crypt ${CRYPTO_LIBRARIES} ${OPENSSL_LIBRARIES} ${NETTLE_LIBRARIES} sctp  ${XFORMS_LIBRARIES} ${PROTOBUF_LIB}  ${CMAKE_DL_LIBS} ${LIBYAML_LIBRARIES} ${ATLAS_LIBRARIES})
 target_link_libraries (nr-softmodem ${LIB_LMS_LIBRARIES})
 target_link_libraries (nr-softmodem ${T_LIB})
 
@@ -2492,7 +2476,6 @@ add_executable(nr-uesoftmodem
   ${XFORMS_SOURCE_NR}
   ${T_SOURCE}
   ${UTIL_SRC}
-  ${CONFIG_SOURCES}
   ${SHLIB_LOADER_SOURCES}
   )
 
@@ -2504,7 +2487,7 @@ target_link_libraries (nr-uesoftmodem
   -Wl,--end-group z dl)
 
 target_link_libraries (nr-uesoftmodem ${LIBXML2_LIBRARIES})
-target_link_libraries (nr-uesoftmodem pthread m ${CONFIG_LIBRARIES} rt crypt ${CRYPTO_LIBRARIES} ${OPENSSL_LIBRARIES} ${NETTLE_LIBRARIES} sctp  ${XFORMS_LIBRARIES} ${PROTOBUF_LIB}  ${CMAKE_DL_LIBS} ${LIBYAML_LIBRARIES} ${ATLAS_LIBRARIES})
+target_link_libraries (nr-uesoftmodem pthread m CONFIG_LIB rt crypt ${CRYPTO_LIBRARIES} ${OPENSSL_LIBRARIES} ${NETTLE_LIBRARIES} sctp  ${XFORMS_LIBRARIES} ${PROTOBUF_LIB}  ${CMAKE_DL_LIBS} ${LIBYAML_LIBRARIES} ${ATLAS_LIBRARIES})
 target_link_libraries (nr-uesoftmodem ${LIB_LMS_LIBRARIES})
 target_link_libraries (nr-uesoftmodem ${T_LIB})
 
@@ -2550,7 +2533,7 @@ add_executable(dlsim_tm4
   )
 target_link_libraries (dlsim_tm4
   -Wl,--start-group SIMU UTIL SCHED_LIB SCHED_RU_LIB PHY LFDS ${ITTI_LIB} -Wl,--end-group
-  pthread m rt ${CONFIG_LIBRARIES} ${ATLAS_LIBRARIES} ${T_LIB}
+  pthread m rt CONFIG_LIB ${ATLAS_LIBRARIES} ${T_LIB}
   )
 
 add_executable(polartest 
@@ -2667,13 +2650,12 @@ foreach(myExe dlsim dlsim_tm7 ulsim pbchsim scansim mbmssim pdcchsim pucchsim pr
     ${OPENAIR_DIR}/common/utils/system.c
     ${XFORMS_SOURCE}
     ${T_SOURCE}
-    ${CONFIG_SOURCES}
     ${SHLIB_LOADER_SOURCES}
     ${NFAPI_USER_DIR}/nfapi.c
     )
   target_link_libraries (${myExe}
     -Wl,--start-group SIMU UTIL SCHED_LIB SCHED_RU_LIB SCHED_UE_LIB PHY_COMMON PHY PHY_UE PHY_RU LFDS ${ITTI_LIB} LFDS7 -Wl,--end-group
-    pthread m rt ${CONFIG_LIBRARIES} ${ATLAS_LIBRARIES}  ${XFORMS_LIBRARIES} ${T_LIB} dl
+    pthread m rt CONFIG_LIB ${ATLAS_LIBRARIES}  ${XFORMS_LIBRARIES} ${T_LIB} dl
     )
 endforeach(myExe)
 
@@ -2686,7 +2668,7 @@ add_executable(test_epc_generate_scenario
   ${OPENAIR3_DIR}/S1AP/s1ap_eNB_defs.h
   )
 target_link_libraries (test_epc_generate_scenario
-  -Wl,--start-group RRC_LIB S1AP_LIB S1AP_ENB X2AP_LIB X2AP_ENB F1AP_LIB F1AP GTPV1U LIB_NAS_UE SECU_CN UTIL HASHTABLE SCTP_CLIENT UDP SCHED_LIB PHY LFDS ${ITTI_LIB} ${MSC_LIB} L2 -Wl,--end-group pthread m rt crypt sctp ${LIBXML2_LIBRARIES} ${LIBXSLT_LIBRARIES} ${CRYPTO_LIBRARIES} ${OPENSSL_LIBRARIES} ${NETTLE_LIBRARIES} ${CONFIG_LIBRARIES}
+  -Wl,--start-group RRC_LIB S1AP_LIB S1AP_ENB X2AP_LIB X2AP_ENB F1AP_LIB F1AP GTPV1U LIB_NAS_UE SECU_CN UTIL HASHTABLE SCTP_CLIENT UDP SCHED_LIB PHY LFDS ${ITTI_LIB} ${MSC_LIB} L2 -Wl,--end-group pthread m rt crypt sctp ${LIBXML2_LIBRARIES} ${LIBXSLT_LIBRARIES} ${CRYPTO_LIBRARIES} ${OPENSSL_LIBRARIES} ${NETTLE_LIBRARIES} CONFIG_LIB}
   )
 
 add_executable(test_epc_play_scenario
@@ -2705,7 +2687,7 @@ add_executable(test_epc_play_scenario
   )
 target_include_directories(test_epc_play_scenario PUBLIC /usr/local/share/asn1c)
 target_link_libraries (test_epc_play_scenario
-  -Wl,--start-group RRC_LIB S1AP_LIB X2AP_LIB X2AP_ENB F1AP_LIB F1AP GTPV1U LIB_NAS_UE SECU_CN UTIL HASHTABLE SCTP_CLIENT UDP SCHED_LIB PHY_COMMON PHY PHY_UE LFDS ${ITTI_LIB} ${MSC_LIB} -Wl,--end-group pthread m rt crypt sctp ${LIBXML2_LIBRARIES} ${LIBXSLT_LIBRARIES} ${CRYPTO_LIBRARIES} ${OPENSSL_LIBRARIES} ${NETTLE_LIBRARIES} ${CONFIG_LIBRARIES}
+  -Wl,--start-group RRC_LIB S1AP_LIB X2AP_LIB X2AP_ENB F1AP_LIB F1AP GTPV1U LIB_NAS_UE SECU_CN UTIL HASHTABLE SCTP_CLIENT UDP SCHED_LIB PHY_COMMON PHY PHY_UE LFDS ${ITTI_LIB} ${MSC_LIB} -Wl,--end-group pthread m rt crypt sctp ${LIBXML2_LIBRARIES} ${LIBXSLT_LIBRARIES} ${CRYPTO_LIBRARIES} ${OPENSSL_LIBRARIES} ${NETTLE_LIBRARIES} CONFIG_LIB}
   )
 
 
@@ -2725,7 +2707,7 @@ foreach(myExe s1ap
     ${OPENAIR3_DIR}/TEST/test_${myExe}.c
     )
   target_link_libraries (test_${myExe}
-    -Wl,--start-group SECU_CN UTIL LFDS -Wl,--end-group m rt crypt ${CRYPTO_LIBRARIES} ${OPENSSL_LIBRARIES} ${NETTLE_LIBRARIES} ${CONFIG_LIBRARIES}
+    -Wl,--start-group SECU_CN UTIL LFDS -Wl,--end-group m rt crypt ${CRYPTO_LIBRARIES} ${OPENSSL_LIBRARIES} ${NETTLE_LIBRARIES} CONFIG_LIB}
     )
 endforeach(myExe)
 
@@ -2860,3 +2842,7 @@ ADD_CUSTOM_TARGET(oarf
 )
 
 include (${OPENAIR_DIR}/common/utils/telnetsrv/telnetsrv_CMakeLists.txt)
+
+
+
+
