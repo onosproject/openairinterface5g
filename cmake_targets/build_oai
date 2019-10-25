@@ -555,6 +555,7 @@ function main() {
   fi
   [ "$CLEAN" = "1" ] && rm -rf $DIR/$build_dir/build
   mkdir -p $DIR/$build_dir/build
+
 # configuration module libraries, one currently available, using libconfig 
   config_libconfig_shlib=params_libconfig
   
@@ -587,6 +588,11 @@ function main() {
     eval $CMAKE_CMD
   
   
+  execlist=""
+  if [ "$eNB" = "1" ] ; then
+     execlist="$execlist lte-softmodem"
+  fi
+
   execlist=""
   if [ "$eNB" = "1" ] ; then
      execlist="$execlist lte-softmodem"

@@ -293,6 +293,7 @@ static int sync_to_gps(openair0_device *device) {
   char config_hlp_sf_rdelay[] = CONFIG_HLP_SF_RDELAY;
   char config_opt_sf_wdelay[] = CONFIG_OPT_SF_WDELAY;
   char config_hlp_sf_wdelay[] = CONFIG_HLP_SF_WDELAY;
+
 #endif
 
 /*! \brief Called to start the USRP transceiver. Return 0 if OK, < 0 if error
@@ -439,20 +440,19 @@ static int trx_usrp_write(openair0_device *device, openair0_timestamp timestamp,
 #endif
     usrp_state_t *s = (usrp_state_t *)device->priv;
     int nsamps2;  // aligned to upper 32 or 16 byte boundary
-
 #if defined(__x86_64) || defined(__i386__)
-  #ifdef __AVX2__
-      nsamps2 = (nsamps+7)>>3;
-      __m256i buff_tx[2][nsamps2];
-  #else
+#ifdef __AVX2__
+    nsamps2 = (nsamps+7)>>3;
+    __m256i buff_tx[2][nsamps2];
+#else
     nsamps2 = (nsamps+3)>>2;
     __m128i buff_tx[2][nsamps2];
-  #endif
+#endif
 #elif defined(__arm__)
     nsamps2 = (nsamps+3)>>2;
     int16x8_t buff_tx[2][nsamps2];
 #else
-    #error Unsupported CPU architecture, USRP device cannot be built
+#error Unsupported CPU architecture, USRP device cannot be built
 #endif
 
     // bring RX data into 12 LSBs for softmodem RX
@@ -1060,6 +1060,7 @@ extern "C" {
       LOG_I(PHY,"Checking for USRPs : UHD %s (%d.%d.%d)\n",
             uhd::get_version_string().c_str(),vers,subvers,subsubvers);
       std::string args;
+
       if (openair0_cfg[0].sdr_addrs == NULL) {
         args = "type=b200";
       } else {
@@ -1088,6 +1089,7 @@ extern "C" {
         args += boost::str(boost::format(",master_clock_rate=%f") % usrp_master_clock);
         args += ",num_send_frames=256,num_recv_frames=256, send_frame_size=7680, recv_frame_size=7680" ;
       }
+
       if (device_adds[0].get("type") == "n3xx") {
         printf("Found USRP n300\n");
         device->type=USRP_X300_DEV; //treat it as X300 for now
@@ -1112,6 +1114,7 @@ extern "C" {
         s->usrp->set_clock_source("external");
         printf("Setting clock source to external\n");
       }
+
       if (device->type==USRP_X300_DEV) {
         openair0_cfg[0].rx_gain_calib_table = calib_table_x310;
 #if defined(USRP_REC_PLAY)
