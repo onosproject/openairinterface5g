@@ -510,14 +510,17 @@ function main() {
   echo_info "3. building the compilation directives ..."
 
   DIR=$OPENAIR_DIR/cmake_targets
-
-  if [ "$T_TRACER" =  "False" ] ; then
-      build_dir=ran_build_noLOG
+  if [ "$SIMUS_PHY" = "1" -o "$SIMUS_CORE" = "1" ] ; then
+    build_dir=phy_simulators
   else
-      build_dir=ran_build  
+    if [ "$T_TRACER" =  "False" ] ; then
+        build_dir=ran_build_noLOG
+    else
+        build_dir=ran_build  
+    fi
   fi
-
-
+  [ "$CLEAN" = "1" ] && rm -rf $DIR/$build_dir/build
+  mkdir -p $DIR/$build_dir/build
 # configuration module libraries, one currently available, using libconfig 
   config_libconfig_shlib=params_libconfig
   
@@ -525,8 +528,7 @@ function main() {
   if [ "$eNB" = "1" -o "$UE" = "1" -o "$gNB" = "1" -o "$nrUE" = "1" -o "$HW" = "EXMIMO" ] ; then
 
     # softmodem compilation
-    [ "$CLEAN" = "1" ] && rm -rf $DIR/$build_dir/build
-    mkdir -p $DIR/$build_dir/build
+
     cmake_file=$DIR/$build_dir/CMakeLists.txt
     echo "cmake_minimum_required(VERSION 2.8)"                             >  $cmake_file
     echo "set ( CMAKE_BUILD_TYPE $CMAKE_BUILD_TYPE )"                     >> $cmake_file
@@ -549,7 +551,7 @@ function main() {
     echo 'include(${CMAKE_CURRENT_SOURCE_DIR}/../CMakeLists.txt)'         >> $cmake_file
     cd  $DIR/$build_dir/build
     eval $CMAKE_CMD
-  fi
+  
   
   execlist=""
   if [ "$eNB" = "1" ] ; then
@@ -634,15 +636,12 @@ function main() {
       echo_warning "not generated UE NAS files: binaries not found"
     fi
   fi
+fi 
+
 
   if [ "$SIMUS_PHY" = "1" -o "$SIMUS_CORE" = "1" ] ; then
-    cd $OPENAIR_DIR/cmake_targets/phy_simulators
-    [ "$CLEAN" = "1" ] && rm -rf build
-    mkdir -p build
-    cd build
-    rm -f *sim
+    cd  $DIR/$build_dir/build
     eval $CMAKE_CMD
-  fi
 
   ##################
   # PHY simulators #
@@ -663,7 +662,7 @@ function main() {
 #	   lte-simulators $config_libconfig_shlib \
 #	   lib$config_libconfig_shlib.so $dbin/lib$config_libconfig_shlib.so
   fi
-
+  fi
   ###################
   # Core simulators #
   ###################

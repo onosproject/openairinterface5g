@@ -2,7 +2,7 @@
 #define NR_SOFTMODEM_COMMON_H
 
 #ifndef _GNU_SOURCE
-#define _GNU_SOURCE
+  #define _GNU_SOURCE
 #endif
 
 #include <execinfo.h>
@@ -30,12 +30,9 @@
 #include "PHY/types.h"
 #include <threadPool/thread-pool.h>
 
-#if defined(ENABLE_USE_MME)
 #include "s1ap_eNB.h"
-#ifdef PDCP_USE_NETLINK
 #include "SIMULATION/ETH_TRANSPORT/proto.h"
-#endif
-#endif
+
 
 /* help strings definition for command line options, used in CMDLINE_XXX_DESC macros and printed when -h option is used */
 #define CONFIG_HLP_RFCFGF        "Configuration file for front-end (e.g. LMS7002M)\n"
@@ -110,7 +107,7 @@
     {"g" ,           CONFIG_HLP_LOGL, 0,                  uptr:&glog_level,          defintval:0,         TYPE_UINT,     0},       \
     {"G" ,           CONFIG_HLP_LOGV, 0,                  uptr:&glog_verbosity,      defintval:0,         TYPE_UINT16,   0},       \
     {"telnetsrv",    CONFIG_HLP_TELN, PARAMFLAG_BOOL,     uptr:&start_telnetsrv,     defintval:0,         TYPE_UINT,     0},       \
-	{"msc",          CONFIG_HLP_MSC,  PARAMFLAG_BOOL,     uptr:&START_MSC,           defintval:0,         TYPE_UINT,     0},       \
+    {"msc",          CONFIG_HLP_MSC,  PARAMFLAG_BOOL,     uptr:&START_MSC,           defintval:0,         TYPE_UINT,     0},       \
   }
 
 #define CMDLINE_ONLINELOG_IDX     0

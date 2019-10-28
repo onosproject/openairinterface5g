@@ -479,9 +479,6 @@ static void get_options(void) {
   paramdef_t cmdline_params[] = CMDLINE_PARAMS_DESC_GNB ;
   paramdef_t cmdline_logparams[] = CMDLINE_LOGPARAMS_DESC_NR ;
   config_process_cmdline( cmdline_params,sizeof(cmdline_params)/sizeof(paramdef_t),NULL);
-
-
-
   config_process_cmdline( cmdline_logparams,sizeof(cmdline_logparams)/sizeof(paramdef_t),NULL);
 
   if(config_isparamset(cmdline_logparams,CMDLINE_ONLINELOG_IDX)) {
@@ -513,7 +510,6 @@ static void get_options(void) {
   if(parallel_config != NULL) set_parallel_conf(parallel_config);
 
   if(worker_config != NULL) set_worker_conf(worker_config);
-
 }
 
 
@@ -526,8 +522,7 @@ static void get_options(void) {
 
 
 void set_default_frame_parms(nfapi_nr_config_request_t *config[MAX_NUM_CCs],
-		                     NR_DL_FRAME_PARMS *frame_parms[MAX_NUM_CCs])
-{
+                             NR_DL_FRAME_PARMS *frame_parms[MAX_NUM_CCs]) {
   for (int CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
     frame_parms[CC_id] = (NR_DL_FRAME_PARMS *) malloc(sizeof(NR_DL_FRAME_PARMS));
     config[CC_id] = (nfapi_nr_config_request_t *) malloc(sizeof(nfapi_nr_config_request_t));
@@ -836,30 +831,28 @@ static  void wait_nfapi_init(char *thread_name) {
 
 void init_pdcp(void) {
   //if (!NODE_IS_DU(RC.rrc[0]->node_type)) {
-    pdcp_layer_init();
-    uint32_t pdcp_initmask = (IS_SOFTMODEM_NOS1) ?
-                             (PDCP_USE_NETLINK_BIT | LINK_ENB_PDCP_TO_IP_DRIVER_BIT) : LINK_ENB_PDCP_TO_GTPV1U_BIT;
+  pdcp_layer_init();
+  uint32_t pdcp_initmask = (IS_SOFTMODEM_NOS1) ?
+                           (PDCP_USE_NETLINK_BIT | LINK_ENB_PDCP_TO_IP_DRIVER_BIT) : LINK_ENB_PDCP_TO_GTPV1U_BIT;
 
-    if (IS_SOFTMODEM_NOS1){
-    	printf("IS_SOFTMODEM_NOS1 option enabled \n");
-      pdcp_initmask = pdcp_initmask | ENB_NAS_USE_TUN_BIT | SOFTMODEM_NOKRNMOD_BIT  ;
-    }
+  if (IS_SOFTMODEM_NOS1) {
+    printf("IS_SOFTMODEM_NOS1 option enabled \n");
+    pdcp_initmask = pdcp_initmask | ENB_NAS_USE_TUN_BIT | SOFTMODEM_NOKRNMOD_BIT  ;
+  }
 
-    pdcp_module_init(pdcp_initmask);
-
-    /*if (NODE_IS_CU(RC.rrc[0]->node_type)) {
-      pdcp_set_rlc_data_req_func((send_rlc_data_req_func_t)proto_agent_send_rlc_data_req);
-    } else {*/
-      pdcp_set_rlc_data_req_func((send_rlc_data_req_func_t) rlc_data_req);
-      pdcp_set_pdcp_data_ind_func((pdcp_data_ind_func_t) pdcp_data_ind);
-    //}
+  pdcp_module_init(pdcp_initmask);
+  /*if (NODE_IS_CU(RC.rrc[0]->node_type)) {
+    pdcp_set_rlc_data_req_func((send_rlc_data_req_func_t)proto_agent_send_rlc_data_req);
+  } else {*/
+  pdcp_set_rlc_data_req_func((send_rlc_data_req_func_t) rlc_data_req);
+  pdcp_set_pdcp_data_ind_func((pdcp_data_ind_func_t) pdcp_data_ind);
+  //}
   /*} else {
     pdcp_set_pdcp_data_ind_func((pdcp_data_ind_func_t) proto_agent_send_pdcp_data_ind);
   }*/
 }
 
-int main( int argc, char **argv )
-{
+int main( int argc, char **argv ) {
   int i, ru_id, CC_id = 0;
   start_background_system();
 
@@ -887,7 +880,6 @@ int main( int argc, char **argv )
   }
 
   openair0_cfg[0].threequarter_fs = threequarter_fs;
-
 #if T_TRACER
   T_Config_Init();
 #endif
@@ -905,26 +897,8 @@ int main( int argc, char **argv )
   // initialize mscgen log after ITTI
   MSC_INIT(MSC_E_UTRAN, THREAD_MAX+TASK_MAX);
 #endif
-
-init_opt();
-
-
-#ifdef PDCP_USE_NETLINK
-  netlink_init();
-#if defined(PDCP_USE_NETLINK_QUEUES)
-  pdcp_netlink_init();
-#endif
-#endif
-#if !defined(ENABLE_ITTI)
-  // to make a graceful exit when ctrl-c is pressed
-  signal(SIGSEGV, signal_handler);
-  signal(SIGINT, signal_handler);
-#endif
-#ifndef PACKAGE_VERSION
-#  define PACKAGE_VERSION "UNKNOWN-EXPERIMENTAL"
-#endif
+  init_opt();
   LOG_I(HW, "Version: %s\n", PACKAGE_VERSION);
-#if defined(ENABLE_ITTI)
 
   if (RC.nb_nr_inst > 0)  {
     // don't create if node doesn't connect to RRC/S1/GTP
@@ -934,7 +908,6 @@ init_opt();
     RCconfig_L1();
   }
 
-#endif
   /* Start the agent. If it is turned off in the configuration, it won't start */
   RCconfig_nr_flexran();
 
@@ -943,7 +916,7 @@ init_opt();
   }
 
   if(IS_SOFTMODEM_NOS1)
-	  init_pdcp();
+    init_pdcp();
 
   // init UE_PF_PO and mutex lock
   pthread_mutex_init(&ue_pf_po_mutex, NULL);
@@ -951,37 +924,37 @@ init_opt();
   mlockall(MCL_CURRENT | MCL_FUTURE);
   pthread_cond_init(&sync_cond,NULL);
   pthread_mutex_init(&sync_mutex, NULL);
-/*#ifdef XFORMS
-  int UE_id;
+  /*#ifdef XFORMS
+    int UE_id;
 
-  if (do_forms==1) {
-    fl_initialize (&argc, argv, NULL, 0, 0);
-    form_stats_l2 = create_form_stats_form();
-    fl_show_form (form_stats_l2->stats_form, FL_PLACE_HOTSPOT, FL_FULLBORDER, "l2 stats");
-    form_stats = create_form_stats_form();
-    fl_show_form (form_stats->stats_form, FL_PLACE_HOTSPOT, FL_FULLBORDER, "stats");
+    if (do_forms==1) {
+      fl_initialize (&argc, argv, NULL, 0, 0);
+      form_stats_l2 = create_form_stats_form();
+      fl_show_form (form_stats_l2->stats_form, FL_PLACE_HOTSPOT, FL_FULLBORDER, "l2 stats");
+      form_stats = create_form_stats_form();
+      fl_show_form (form_stats->stats_form, FL_PLACE_HOTSPOT, FL_FULLBORDER, "stats");
 
-    for(UE_id=0; UE_id<scope_enb_num_ue; UE_id++) {
-      for(CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
-        form_gnb[CC_id][UE_id] = create_phy_scope_gnb();
-        sprintf (title, "LTE UL SCOPE eNB for CC_id %d, UE %d",CC_id,UE_id);
-        fl_show_form (form_gnb[CC_id][UE_id]->phy_scope_gnb, FL_PLACE_HOTSPOT, FL_FULLBORDER, title);
+      for(UE_id=0; UE_id<scope_enb_num_ue; UE_id++) {
+        for(CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
+          form_gnb[CC_id][UE_id] = create_phy_scope_gnb();
+          sprintf (title, "LTE UL SCOPE eNB for CC_id %d, UE %d",CC_id,UE_id);
+          fl_show_form (form_gnb[CC_id][UE_id]->phy_scope_gnb, FL_PLACE_HOTSPOT, FL_FULLBORDER, title);
 
-        if (otg_enabled) {
-          fl_set_button(form_gnb[CC_id][UE_id]->button_0,1);
-          fl_set_object_label(form_gnb[CC_id][UE_id]->button_0,"DL Traffic ON");
-        } else {
-          fl_set_button(form_gnb[CC_id][UE_id]->button_0,0);
-          fl_set_object_label(form_gnb[CC_id][UE_id]->button_0,"DL Traffic OFF");
-        }
-      } // CC_id
-    } // UE_id
+          if (otg_enabled) {
+            fl_set_button(form_gnb[CC_id][UE_id]->button_0,1);
+            fl_set_object_label(form_gnb[CC_id][UE_id]->button_0,"DL Traffic ON");
+          } else {
+            fl_set_button(form_gnb[CC_id][UE_id]->button_0,0);
+            fl_set_object_label(form_gnb[CC_id][UE_id]->button_0,"DL Traffic OFF");
+          }
+        } // CC_id
+      } // UE_id
 
-    threadCreate(&forms_thread, scope_thread, NULL, "scope", -1, OAI_PRIORITY_RT_LOW);
-    printf("Scope thread created, ret=%d\n",ret);
-  }
+      threadCreate(&forms_thread, scope_thread, NULL, "scope", -1, OAI_PRIORITY_RT_LOW);
+      printf("Scope thread created, ret=%d\n",ret);
+    }
 
-#endif*/
+  #endif*/
   usleep(10*1000);
 
   if (nfapi_mode) {
@@ -1086,27 +1059,27 @@ init_opt();
   printf("Terminating application - oai_exit=%d\n",oai_exit);
 #endif
   // stop threads
-/*#ifdef XFORMS
+  /*#ifdef XFORMS
 
-    printf("waiting for XFORMS thread\n");
+      printf("waiting for XFORMS thread\n");
 
-    if (do_forms==1) {
-      pthread_join(forms_thread,&status);
-      fl_hide_form(form_stats->stats_form);
-      fl_free_form(form_stats->stats_form);
+      if (do_forms==1) {
+        pthread_join(forms_thread,&status);
+        fl_hide_form(form_stats->stats_form);
+        fl_free_form(form_stats->stats_form);
 
-        fl_hide_form(form_stats_l2->stats_form);
-        fl_free_form(form_stats_l2->stats_form);
+          fl_hide_form(form_stats_l2->stats_form);
+          fl_free_form(form_stats_l2->stats_form);
 
-        for(UE_id=0; UE_id<scope_enb_num_ue; UE_id++) {
-    for(CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
-      fl_hide_form(form_enb[CC_id][UE_id]->phy_scope_gNB);
-      fl_free_form(form_enb[CC_id][UE_id]->phy_scope_gNB);
-    }
-        }
-    }
+          for(UE_id=0; UE_id<scope_enb_num_ue; UE_id++) {
+      for(CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
+        fl_hide_form(form_enb[CC_id][UE_id]->phy_scope_gNB);
+        fl_free_form(form_enb[CC_id][UE_id]->phy_scope_gNB);
+      }
+          }
+      }
 
-#endif*/
+  #endif*/
   printf("stopping MODEM threads\n");
   // cleanup
   stop_gNB(NB_gNB_INST);
@@ -1141,7 +1114,6 @@ init_opt();
     if (RC.ru[ru_id]->ifdevice.trx_end_func)
       RC.ru[ru_id]->ifdevice.trx_end_func(&RC.ru[ru_id]->ifdevice);
   }
-
 
   logClean();
   printf("Bye.\n");

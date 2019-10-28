@@ -297,8 +297,8 @@ static void *scope_thread(void *arg) {
 
   while (!oai_exit) {
     phy_scope_nrUE(form_nrue[0],
-                 PHY_vars_UE_g[0][0],
-                 0,0,1);
+                   PHY_vars_UE_g[0][0],
+                   0,0,1);
     usleep(100*1000);
   }
 
@@ -318,7 +318,6 @@ void init_scope(void) {
     fl_show_form (form_nrue[UE_id]->phy_scope_nrue, FL_PLACE_HOTSPOT, FL_FULLBORDER, title);
     threadCreate(&forms_thread, scope_thread, NULL, "scope", -1, OAI_PRIORITY_RT_LOW);
   }
-
 }
 
 
@@ -379,7 +378,6 @@ static void get_options(void) {
   paramdef_t cmdline_params[] =CMDLINE_PARAMS_DESC_UE ;
   paramdef_t cmdline_logparams[] =CMDLINE_LOGPARAMS_DESC_NR ;
   config_process_cmdline( cmdline_params,sizeof(cmdline_params)/sizeof(paramdef_t),NULL);
-
   config_process_cmdline( cmdline_logparams,sizeof(cmdline_logparams)/sizeof(paramdef_t),NULL);
 
   if(config_isparamset(cmdline_logparams,CMDLINE_ONLINELOG_IDX)) {
@@ -543,7 +541,7 @@ void init_openair0(void) {
         LOG_E(PHY,"Unsupported numerology!\n");
         exit(-1);
       }
-     }else if(frame_parms[0]->N_RB_DL == 106) {
+    } else if(frame_parms[0]->N_RB_DL == 106) {
       if (numerology==0) {
         if (frame_parms[0]->threequarter_fs) {
           openair0_cfg[card].sample_rate=23.04e6;
@@ -552,7 +550,7 @@ void init_openair0(void) {
           openair0_cfg[card].sample_rate=30.72e6;
           openair0_cfg[card].samples_per_frame = 307200;
         }
-     } else if (numerology==1) {
+      } else if (numerology==1) {
         if (frame_parms[0]->threequarter_fs) {
 	  openair0_cfg[card].sample_rate=46.08e6;
 	  openair0_cfg[card].samples_per_frame = 480800;
@@ -620,7 +618,6 @@ void init_openair0(void) {
     }
 
     if (usrp_args) openair0_cfg[card].sdr_addrs = usrp_args;
-
   }
 }
 
@@ -635,7 +632,7 @@ void init_pdcp(void) {
     pdcp_initmask = pdcp_initmask | UE_NAS_USE_TUN_BIT;
 
   /*if (rlc_module_init() != 0) {
-	  LOG_I(RLC, "Problem at RLC initiation \n");
+    LOG_I(RLC, "Problem at RLC initiation \n");
   }
   pdcp_layer_init();
   nr_ip_over_LTE_DRB_preconfiguration();*/
@@ -672,28 +669,20 @@ int main( int argc, char **argv ) {
   set_taus_seed (0);
   tpool_t pool;
   Tpool = &pool;
-  char params[]="-1,-1"; 
+  char params[]="-1,-1";
   initTpool(params, Tpool, false);
   cpuf=get_cpu_freq_GHz();
   itti_init(TASK_MAX, THREAD_MAX, MESSAGES_ID_MAX, tasks_info, messages_info);
-
   init_opt() ;
+
   if(IS_SOFTMODEM_NOS1)
-	  init_pdcp();
+    init_pdcp();
 
   if (ouput_vcd) {
     vcd_signal_dumper_init("/tmp/openair_dump_nrUE.vcd");
   }
 
-/*
-#ifdef PDCP_USE_NETLINK
-  netlink_init();
-#if defined(PDCP_USE_NETLINK_QUEUES)
-  pdcp_netlink_init();
-#endif
-#endif
-*/
-  #ifndef PACKAGE_VERSION
+#ifndef PACKAGE_VERSION
 #  define PACKAGE_VERSION "UNKNOWN-EXPERIMENTAL"
 #endif
   LOG_I(HW, "Version: %s\n", PACKAGE_VERSION);
@@ -718,7 +707,6 @@ int main( int argc, char **argv ) {
     nr_init_frame_parms_ue(frame_parms[CC_id],numerology,NORMAL,frame_parms[CC_id]->N_RB_DL,(frame_parms[CC_id]->N_RB_DL-20)>>1,0);
     PHY_vars_UE_g[0][CC_id] = init_nr_ue_vars(frame_parms[CC_id], 0,abstraction_flag);
     UE[CC_id] = PHY_vars_UE_g[0][CC_id];
-
 
     if (phy_test==1)
       UE[CC_id]->mac_enabled = 0;
