@@ -748,8 +748,8 @@ int nr_pdsch_channel_estimation(PHY_VARS_NR_UE *ue,
 
       for (uint8_t idxPil=0; idxPil<10; idxPil+=2 ) {
         rxF   = (int16_t *)&rxdataF[aarx][(symbol_offset+nushift+re_offset)];
-        ch[idxPil]   = (re_offset == 0) ? 0 : (int16_t)(((int32_t)pil[idx8Sym*8+idxPil]*rxF[0] - (int32_t)pil[idx8Sym*8+idxPil+1]*rxF[1])>>15);
-        ch[idxPil+1] = (re_offset == 0) ? 0 : (int16_t)(((int32_t)pil[idx8Sym*8+idxPil]*rxF[1] + (int32_t)pil[idx8Sym*8+idxPil+1]*rxF[0])>>15);
+        ch[idxPil]   = (int16_t)(((int32_t)pil[idx8Sym*8+idxPil]*rxF[0] - (int32_t)pil[idx8Sym*8+idxPil+1]*rxF[1])>>15);
+        ch[idxPil+1] = (int16_t)(((int32_t)pil[idx8Sym*8+idxPil]*rxF[1] + (int32_t)pil[idx8Sym*8+idxPil+1]*rxF[0])>>15);
         re_offset = (re_offset+2)&(ue->frame_parms.ofdm_symbol_size-1);
       }
       
@@ -769,8 +769,8 @@ int nr_pdsch_channel_estimation(PHY_VARS_NR_UE *ue,
 
       for (uint8_t idxPil=0; idxPil<8; idxPil+=2 ) {
         rxF   = (int16_t *)&rxdataF[aarx][(symbol_offset+nushift+re_offset)];
-        ch[idxPil]   = (re_offset == 0) ? 0 : (int16_t)(((int32_t)pil[used_pils+idxPil]*rxF[0] - (int32_t)pil[used_pils*idxPil+1]*rxF[1])>>15);
-        ch[idxPil+1] = (re_offset == 0) ? 0 : (int16_t)(((int32_t)pil[used_pils+idxPil]*rxF[1] + (int32_t)pil[used_pils*idxPil+1]*rxF[0])>>15);
+        ch[idxPil]   = (int16_t)(((int32_t)pil[used_pils+idxPil]*rxF[0] - (int32_t)pil[used_pils*idxPil+1]*rxF[1])>>15);
+        ch[idxPil+1] = (int16_t)(((int32_t)pil[used_pils+idxPil]*rxF[1] + (int32_t)pil[used_pils*idxPil+1]*rxF[0])>>15);
         re_offset = (re_offset+2)&(ue->frame_parms.ofdm_symbol_size-1);
       }
 
@@ -781,6 +781,20 @@ int nr_pdsch_channel_estimation(PHY_VARS_NR_UE *ue,
 
       dl_ch[0] = ch[0]; dl_ch[1] = ch[1];
       dl_ch[4] = ch[4]; dl_ch[5] = ch[5];
+    }
+
+    // check if PRB crosses DC and improve estimates around DC
+    if ((bwp_start_subcarrier >= ue->frame_parms.ofdm_symbol_size/2) && (bwp_start_subcarrier+nb_rb_pdsch*12 >= ue->frame_parms.ofdm_symbol_size)) {
+      dl_ch = (int16_t *)&dl_ch_estimates[aarx][ch_offset];
+      uint16_t idxDC = 2*(ue->frame_parms.ofdm_symbol_size - bwp_start_subcarrier);
+
+      // before DC
+      dl_ch[idxDC-2] = (dl_ch[idxDC-4] * 0.6667) + (dl_ch[idxDC-8] * 0.3333);
+      dl_ch[idxDC-1] = (dl_ch[idxDC-3] * 0.6667) + (dl_ch[idxDC-7] * 0.3333);
+
+      //after DC
+      dl_ch[idxDC+2] = (dl_ch[idxDC+4] * 0.6667) + (dl_ch[idxDC+8] * 0.3333);
+      dl_ch[idxDC+1] = (dl_ch[idxDC+3] * 0.6667) + (dl_ch[idxDC+7] * 0.3333);
     }
   }
 
