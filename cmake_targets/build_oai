@@ -587,7 +587,6 @@ function main() {
     cd  $DIR/$build_dir/build
     eval $CMAKE_CMD
   
-  
   execlist=""
   if [ "$eNB" = "1" ] ; then
      execlist="$execlist lte-softmodem"
