@@ -81,7 +81,7 @@ int nsss_extract_NB_IoT(PHY_VARS_UE_NB_IoT *ue,
 //NRS
 
 
-void generate_pilots_NB_IoT(PHY_VARS_eNB  *phy_vars_eNB,
+void generate_pilots_NB_IoT(PHY_VARS_eNB_NB_IoT  *phy_vars_eNB_NB_IoT,
 
                             int32_t              **txdataF,
                             int16_t              amp,
@@ -221,7 +221,7 @@ void add_dci_NB_IoT(DCI_PDU_NB_IoT    *DCI_pdu,
 
 /*Use the UL DCI Information to configure PHY and also Pack the DCI*/
 
-int generate_eNB_ulsch_params_from_dci_NB_IoT(PHY_VARS_eNB            *eNB,
+int generate_eNB_ulsch_params_from_dci_NB_IoT(PHY_VARS_eNB_NB_IoT            *eNB,
                                               int                     frame,
                                               uint8_t                 subframe,
                                               DCI_CONTENT             *DCI_Content,
@@ -233,7 +233,7 @@ int generate_eNB_ulsch_params_from_dci_NB_IoT(PHY_VARS_eNB            *eNB,
 
 
 /*Use the DL DCI Information to configure PHY and also Pack the DCI*/
-int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB    *eNB,
+int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB_NB_IoT    *eNB,
 
                                               int                    frame,
                                               uint8_t                subframe,

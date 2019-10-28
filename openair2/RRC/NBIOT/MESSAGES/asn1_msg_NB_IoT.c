@@ -951,8 +951,8 @@ uint8_t do_RRCConnectionSetup_NB_IoT(
   asn_enc_rval_t enc_rval;
   uint8_t ecause=0;
 
-  long* prioritySRB1 = NULL;
-  long* prioritySRB1bis = NULL;
+  //long* prioritySRB1 = NULL;
+  //long* prioritySRB1bis = NULL;
   BOOLEAN_t* logicalChannelSR_Prohibit = NULL; //pag 605
   BOOLEAN_t* npusch_AllSymbols = NULL;
   long* npusch_repetitions = NULL;
@@ -960,9 +960,9 @@ uint8_t do_RRCConnectionSetup_NB_IoT(
 
   // At the first moment of MSG4 testing we set NULL to those optional
 
-  struct LTE_SRB_ToAddMod_NB_r13* SRB1_config_NB_IoT = NULL;
-  struct LTE_SRB_ToAddMod_NB_r13__rlc_Config_r13* SRB1_rlc_config_NB_IoT = NULL;
-  struct LTE_SRB_ToAddMod_NB_r13__logicalChannelConfig_r13* SRB1_lchan_config_NB_IoT = NULL;
+  //struct LTE_SRB_ToAddMod_NB_r13* SRB1_config_NB_IoT = NULL;
+  //struct LTE_SRB_ToAddMod_NB_r13__rlc_Config_r13* SRB1_rlc_config_NB_IoT = NULL;
+  //struct LTE_SRB_ToAddMod_NB_r13__logicalChannelConfig_r13* SRB1_lchan_config_NB_IoT = NULL;
 
   struct LTE_SRB_ToAddMod_NB_r13* SRB1bis_config_NB_IoT = NULL;
   struct LTE_SRB_ToAddMod_NB_r13__rlc_Config_r13* SRB1bis_rlc_config_NB_IoT = NULL;
@@ -1628,7 +1628,7 @@ void cleanup_module_NB_IoT(void)
 {
   printk("Stopping asn1_msg_nb_iot module\n");
 }
-
+#if 0
 EXPORT_SYMBOL(do_SIB1_NB_IoT);
 EXPORT_SYMBOL(do_SIB23_NB_IoT);
 EXPORT_SYMBOL(do_RRCConnectionRequest_NB_IoT);
@@ -1647,7 +1647,7 @@ EXPORT_SYMBOL(uper_decode_complete);
 EXPORT_SYMBOL(uper_decode);
 EXPORT_SYMBOL(transmission_mode_rrc);
 #endif
-
+#endif
 //----------------------------------
 
 

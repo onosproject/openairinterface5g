@@ -34,4 +34,5 @@ extern void RCconfig_NbIoTL1(void) ;
 extern void RCconfig_NbIoTmacrlc(void);
 extern int  RCconfig_NbIoTRRC(MessageDef *msg_p, int nbiotrrc_id,eNB_RRC_INST_NB_IoT *nbiotrrc);
 extern void RCConfig_NbIoT(RAN_CONTEXT_t *RC);
+extern void read_config_and_init_NB_IoT(void) ;
 #endif

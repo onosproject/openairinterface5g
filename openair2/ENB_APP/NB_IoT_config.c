@@ -250,3 +250,33 @@ void RCConfig_NbIoT(RAN_CONTEXT_t *RC) {
   config_getlist( &NbIoT_L1ParamList,NULL,0, NULL);
   RC->nb_nb_iot_L1_inst = NbIoT_L1ParamList.numelt;
 }
+
+
+void read_config_and_init_NB_IoT(void) {
+  int macrlc_has_f1[MAX_MAC_INST];
+  memset(macrlc_has_f1, 0, MAX_MAC_INST*sizeof(int));
+
+  if (RC.nb_nb_iot_macrlc_inst = 0)
+    AssertFatal(RC.nb_nb_iot_macrlc_inst == RC.nb_nb_iot_rrc_inst,
+                "Number of NB-IoT MACRLC instances %d != number of NB-IoT RRC instances %d\n",
+                RC.nb_nb_iot_macrlc_inst, RC.nb_nb_iot_rrc_inst);
+
+  RCconfig_NbIoTL1();
+  LOG_I(PHY, "%s() RC.L1_NB_IoT: %d\n", __FUNCTION__, RC.L1_NB_IoT);
+  RCconfig_NbIoTmacrlc();
+  LOG_I(MAC, "%s() RC.nb_nb_iot_macrlc_inst: %d\n", __FUNCTION__, RC.nb_nb_iot_macrlc_inst);
+
+  if (RC.L1_NB_IoT > 0)
+    AssertFatal(l1_north_init_NB_IoT() == 0, "could not initialize NB-IoT L1 north interface\n");
+
+  RC.nbiotrrc = malloc(RC.nb_nb_iot_rrc_inst * sizeof(eNB_RRC_INST_NB_IoT *));
+  AssertFatal(RC.nbiotrrc, "could not allocate memory for RC.nb_iot_rrc\n");
+/*
+  for (int nbiotrrc_id = 0; nbiotrrc_id < RC.nb_nb_iot_rrc_inst; nbiotrrc_id++) {
+    RC.nbiotrrc[nbiotrrc_id] = malloc(sizeof(eNB_RRC_INST_NB_IoT));
+    AssertFatal(RC.nbiotrrc[nbiotrrc_id], "RRC context for eNB %d not allocated\n", nbiotrrc_id);
+    memset((void *)RC.nbiotrrc[nbiotrrc_id], 0, sizeof(eNB_RRC_INST_NB_IoT));
+    RCconfig_NbIoTRRC(nbiotrrc_id, RC.nbiotrrc[nbiotrrc_id],macrlc_has_f1[nbiotrrc_id]);
+  }
+*/
+}

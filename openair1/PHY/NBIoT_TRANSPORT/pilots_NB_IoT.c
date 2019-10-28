@@ -17,7 +17,7 @@
 #include "PHY/defs_L1_NB_IoT.h"
 #include "PHY/LTE_REFSIG/defs_NB_IoT.h"
 
-void generate_pilots_NB_IoT(PHY_VARS_eNB         *phy_vars_eNB,
+void generate_pilots_NB_IoT(PHY_VARS_eNB_NB_IoT         *phy_vars_eNB_NB_IoT,
                             int32_t              **txdataF,
                             int16_t              amp,
                             uint16_t             Ntti, 				// Ntti = 0..9
@@ -25,7 +25,7 @@ void generate_pilots_NB_IoT(PHY_VARS_eNB         *phy_vars_eNB,
 					        unsigned short       With_NSSS) 		// With_NSSS = 1; if the frame include a sub-Frame with NSSS signal
 {
 
-  LTE_DL_FRAME_PARMS *frame_parms = &phy_vars_eNB->frame_parms;
+  LTE_DL_FRAME_PARMS *frame_parms = &phy_vars_eNB_NB_IoT->frame_parms;
   uint16_t subframe = Ntti;
   uint32_t tti_offset,slot_offset,Nsymb,samples_per_symbol; // tti,
   uint8_t  first_pilot,second_pilot;
@@ -44,7 +44,7 @@ void generate_pilots_NB_IoT(PHY_VARS_eNB         *phy_vars_eNB,
 		//Generate Pilots for slot 0 and 1
 		
 		//antenna 0 symbol 5 slot 0
-		lte_dl_cell_spec_NB_IoT(phy_vars_eNB,
+		lte_dl_cell_spec_NB_IoT(phy_vars_eNB_NB_IoT,
 					            &txdataF[0][tti_offset + (first_pilot*samples_per_symbol)], 			// tti_offset 512 x 32 bits
                                 amp,
                                 slot_offset,
@@ -53,7 +53,7 @@ void generate_pilots_NB_IoT(PHY_VARS_eNB         *phy_vars_eNB,
                                 RB_IoT_ID);
 					 
 		//antenna 0 symbol 6 slot 0
-		lte_dl_cell_spec_NB_IoT(phy_vars_eNB,&txdataF[0][tti_offset + (second_pilot*samples_per_symbol)],
+		lte_dl_cell_spec_NB_IoT(phy_vars_eNB_NB_IoT,&txdataF[0][tti_offset + (second_pilot*samples_per_symbol)],
                                 amp,
                                 slot_offset,
                                 1,
@@ -61,7 +61,7 @@ void generate_pilots_NB_IoT(PHY_VARS_eNB         *phy_vars_eNB,
                                 RB_IoT_ID);
 
 		//antenna 0 symbol 5 slot 1
-		lte_dl_cell_spec_NB_IoT(phy_vars_eNB,&txdataF[0][tti_offset + (7*samples_per_symbol) + (first_pilot*samples_per_symbol)],
+		lte_dl_cell_spec_NB_IoT(phy_vars_eNB_NB_IoT,&txdataF[0][tti_offset + (7*samples_per_symbol) + (first_pilot*samples_per_symbol)],
                                 amp,
                                 1+slot_offset,
                                 0,
@@ -69,7 +69,7 @@ void generate_pilots_NB_IoT(PHY_VARS_eNB         *phy_vars_eNB,
                                 RB_IoT_ID);
 
 		//antenna 0 symbol 6 slot 1
-		lte_dl_cell_spec_NB_IoT(phy_vars_eNB,&txdataF[0][tti_offset + (7*samples_per_symbol) + (second_pilot*samples_per_symbol)],
+		lte_dl_cell_spec_NB_IoT(phy_vars_eNB_NB_IoT,&txdataF[0][tti_offset + (7*samples_per_symbol) + (second_pilot*samples_per_symbol)],
                                 amp,
                                 1+slot_offset,
                                 1,
@@ -79,7 +79,7 @@ void generate_pilots_NB_IoT(PHY_VARS_eNB         *phy_vars_eNB,
 		if (frame_parms->nb_antennas_tx > 1) {  																// Pilots generation with two antennas
 
 			// antenna 1 symbol 5 slot 0
-			lte_dl_cell_spec_NB_IoT(phy_vars_eNB,&txdataF[1][tti_offset + (first_pilot*samples_per_symbol)],
+			lte_dl_cell_spec_NB_IoT(phy_vars_eNB_NB_IoT,&txdataF[1][tti_offset + (first_pilot*samples_per_symbol)],
                                     amp,
                                     slot_offset,
                                     0,
@@ -87,7 +87,7 @@ void generate_pilots_NB_IoT(PHY_VARS_eNB         *phy_vars_eNB,
                                     RB_IoT_ID);
 
 			// antenna 1 symbol 6 slot 0
-			lte_dl_cell_spec_NB_IoT(phy_vars_eNB,&txdataF[1][tti_offset + (second_pilot*samples_per_symbol)],
+			lte_dl_cell_spec_NB_IoT(phy_vars_eNB_NB_IoT,&txdataF[1][tti_offset + (second_pilot*samples_per_symbol)],
                                     amp,
                                     slot_offset,
                                     1,
@@ -95,7 +95,7 @@ void generate_pilots_NB_IoT(PHY_VARS_eNB         *phy_vars_eNB,
                                     RB_IoT_ID);
 
 			//antenna 1 symbol 5 slot 1
-			lte_dl_cell_spec_NB_IoT(phy_vars_eNB,&txdataF[1][tti_offset + (7*samples_per_symbol) + (first_pilot*samples_per_symbol)],
+			lte_dl_cell_spec_NB_IoT(phy_vars_eNB_NB_IoT,&txdataF[1][tti_offset + (7*samples_per_symbol) + (first_pilot*samples_per_symbol)],
                                     amp,
                                     1+slot_offset,
                                     0,
@@ -103,7 +103,7 @@ void generate_pilots_NB_IoT(PHY_VARS_eNB         *phy_vars_eNB,
                                     RB_IoT_ID);
 
 			// antenna 1 symbol 6 slot 1
-			lte_dl_cell_spec_NB_IoT(phy_vars_eNB,&txdataF[1][tti_offset + (7*samples_per_symbol) + (second_pilot*samples_per_symbol)],
+			lte_dl_cell_spec_NB_IoT(phy_vars_eNB_NB_IoT,&txdataF[1][tti_offset + (7*samples_per_symbol) + (second_pilot*samples_per_symbol)],
                                     amp,
                                     1+slot_offset,
                                     1,

@@ -635,13 +635,39 @@ int main( int argc, char **argv ) {
     RCconfig_L1();
   }
 
+
+  //nbiot Rea configuration
+  if (RC.nb_nb_iot_rrc_inst > 0) {
+    read_config_and_init_NB_IoT();
+    /* initializes PDCP and sets correct RLC Request/PDCP Indication callbacks
+     * for monolithic/F1 modes */
+    //init_pdcp();
+
+    if (create_tasks(1) < 0) {
+      printf("cannot create ITTI tasks\n");
+      exit(-1);
+    }
+
+    for (int nbiotrrc_id = 0; nbiotrrc_id < RC.nb_nb_iot_rrc_inst; nbiotrrc_id++) {
+      MessageDef *msg_p = itti_alloc_new_message (TASK_ENB_APP, RRC_CONFIGURATION_REQ);
+      RC.nbiotrrc = malloc(RC.nb_nb_iot_rrc_inst * sizeof(eNB_RRC_INST_NB_IoT *));
+      //RRC_CONFIGURATION_REQ(msg_p) = RC.rrc[nbiotrrc_id]->configuration;
+      RCconfig_NbIoTRRC(msg_p,nbiotrrc_id,RC.nbiotrrc);
+      itti_send_msg_to_task (TASK_RRC_ENB, ENB_MODULE_ID_TO_INSTANCE(nbiotrrc_id), msg_p);
+    }
+  } else {
+    printf("RC.nb_nb_iot_rrc_inst = 0, Initializing L1\n");
+    RCconfig_NbIoTL1();
+  }
+  //end
+  #if 0
   //nbiot L1 config
   if (RC.nb_nb_iot_rrc_inst = 0){
     printf("RC.nb_nb_iot_rrc_inst = 0, Initializing NB-IoT L1\n");
     RCconfig_NbIoTL1();
   }
   ///////end
-
+  #endif
   if (RC.nb_inst > 0 && NODE_IS_CU(RC.rrc[0]->node_type)) {
     protocol_ctxt_t ctxt;
     ctxt.module_id = 0 ;

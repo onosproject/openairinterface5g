@@ -127,7 +127,7 @@ int DCIrep_to_real_rep(uint8_t DCI_rep, int Rmax)
 }
 
 
-int generate_eNB_ulsch_params_from_dci_NB_IoT(PHY_VARS_eNB            *eNB,
+int generate_eNB_ulsch_params_from_dci_NB_IoT(PHY_VARS_eNB_NB_IoT            *eNB,
                                               int                     frame,
                                               uint8_t                 subframe,
                                               DCI_CONTENT             *DCI_Content,
@@ -217,7 +217,7 @@ int generate_eNB_ulsch_params_from_dci_NB_IoT(PHY_VARS_eNB            *eNB,
 }
 
 
-int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB      *eNB,
+int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB_NB_IoT      *eNB,
                                               int                      frame,
                                               uint8_t                  subframe,
                                               DCI_CONTENT              *DCI_Content,

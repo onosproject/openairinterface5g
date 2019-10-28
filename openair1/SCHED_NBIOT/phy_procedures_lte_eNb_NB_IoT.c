@@ -231,7 +231,7 @@ void common_signal_procedures_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_NB_I
 {
   //LTE_DL_FRAME_PARMS   *fp       =  &eNB->frame_parms_NB_IoT;
   LTE_DL_FRAME_PARMS   *fp       =  &eNB->frame_parms;
-  NB_IoT_eNB_NPBCH_t   *broadcast_str = &eNB->npbch;
+  NB_IoT_eNB_NPBCH_t   *broadcast_str = eNB->npbch;
   //NB_IoT_eNB_NDLSCH_t  *sib1          = &eNB->ndlsch_SIB;
   //NB_IoT_eNB_NDLSCH_t  *ndlsch        = &eNB->ndlsch_SIB1;
   NB_IoT_eNB_NDLSCH_t *sib1          = eNB->ndlsch_SIB1;
