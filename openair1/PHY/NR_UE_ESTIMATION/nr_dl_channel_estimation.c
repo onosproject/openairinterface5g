@@ -663,7 +663,7 @@ int nr_pdsch_channel_estimation(PHY_VARS_NR_UE *ue,
                                 unsigned short bwp_start_subcarrier,
                                 unsigned short nb_rb_pdsch)
 {
-  int pilot[1320] __attribute__((aligned(16)));
+  int pilot[3276] __attribute__((aligned(16)));
   unsigned char aarx;
   unsigned short k;
   unsigned int pilot_cnt;
@@ -765,12 +765,12 @@ int nr_pdsch_channel_estimation(PHY_VARS_NR_UE *ue,
     }
     // Do the same for the 2 left over pilots if any (nb_rb_pdsch*12 mod 8)
     if ((nb_rb_pdsch*12)%8) {
-      uint16_t used_pils = (nb_rb_pdsch*12)/8*8;
+      uint16_t used_pils = (nb_rb_pdsch*12);
 
       for (uint8_t idxPil=0; idxPil<8; idxPil+=2 ) {
         rxF   = (int16_t *)&rxdataF[aarx][(symbol_offset+nushift+re_offset)];
-        ch[idxPil]   = (int16_t)(((int32_t)pil[used_pils+idxPil]*rxF[0] - (int32_t)pil[used_pils*idxPil+1]*rxF[1])>>15);
-        ch[idxPil+1] = (int16_t)(((int32_t)pil[used_pils+idxPil]*rxF[1] + (int32_t)pil[used_pils*idxPil+1]*rxF[0])>>15);
+        ch[idxPil]   = (int16_t)(((int32_t)pil[used_pils+idxPil]*rxF[0] - (int32_t)pil[used_pils+idxPil+1]*rxF[1])>>15);
+        ch[idxPil+1] = (int16_t)(((int32_t)pil[used_pils+idxPil]*rxF[1] + (int32_t)pil[used_pils+idxPil+1]*rxF[0])>>15);
         re_offset = (re_offset+2)&(ue->frame_parms.ofdm_symbol_size-1);
       }
 
@@ -789,12 +789,16 @@ int nr_pdsch_channel_estimation(PHY_VARS_NR_UE *ue,
       uint16_t idxDC = 2*(ue->frame_parms.ofdm_symbol_size - bwp_start_subcarrier);
 
       // before DC
-      dl_ch[idxDC-2] = (dl_ch[idxDC-4] * 0.6667) + (dl_ch[idxDC-8] * 0.3333);
-      dl_ch[idxDC-1] = (dl_ch[idxDC-3] * 0.6667) + (dl_ch[idxDC-7] * 0.3333);
+      dl_ch[idxDC-2] = ((dl_ch[idxDC-4] * 3072) + (dl_ch[idxDC+4] * 1024)) >> 12;
+      dl_ch[idxDC-1] = ((dl_ch[idxDC-3] * 3072) + (dl_ch[idxDC+5] * 1024)) >> 12;
 
       //after DC
-      dl_ch[idxDC+2] = (dl_ch[idxDC+4] * 0.6667) + (dl_ch[idxDC+8] * 0.3333);
-      dl_ch[idxDC+1] = (dl_ch[idxDC+3] * 0.6667) + (dl_ch[idxDC+7] * 0.3333);
+      dl_ch[idxDC+2] = ((dl_ch[idxDC+4] * 3072) + (dl_ch[idxDC-4] * 1024)) >> 12;
+      dl_ch[idxDC+3] = ((dl_ch[idxDC+5] * 3072) + (dl_ch[idxDC-3] * 1024)) >> 12;
+
+      // at DC
+      dl_ch[idxDC]   = (dl_ch[idxDC-2] + dl_ch[idxDC+2]) >> 1;
+      dl_ch[idxDC+1] = (dl_ch[idxDC-1] + dl_ch[idxDC+3]) >> 1;
     }
   }
 
