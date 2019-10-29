@@ -41,7 +41,7 @@ int nr_pusch_channel_estimation(PHY_VARS_gNB *gNB,
   unsigned char aarx;
   unsigned short k;
   unsigned int pilot_cnt;
-  int16_t ch[2],*pil,*rxF,*ul_ch,*fl,*fm,*fr,*fml,*fmr,*fmm;
+  int16_t ch[10],*pil,*rxF,*ul_ch,*fl,*fm,*fr,*fml,*fmr,*fmm;
   int ch_offset,symbol_offset, length_dmrs, UE_id = 0;
   unsigned short n_idDMRS[2] = {0,1}; //to update from pusch config
   int32_t temp_in_ifft_0[8192*2] __attribute__((aligned(16)));
@@ -119,142 +119,68 @@ int nr_pusch_channel_estimation(PHY_VARS_gNB *gNB,
     memset(ul_ch,0,4*(gNB->frame_parms.ofdm_symbol_size));
 
 #ifdef DEBUG_PUSCH
-    printf("ch est pilot addr %p RB_DL %d\n",&pilot[0], gNB->frame_parms.N_RB_DL);
+    printf("ch est pilot addr %p RB_DL %d\n",&pilot[0], gNB->frame_parms.N_RB_UL);
     printf("k %d, first_carrier %d\n",k,gNB->frame_parms.first_carrier_offset);
     printf("rxF addr %p p %d\n", rxF,p);
     printf("ul_ch addr %p nushift %d\n",ul_ch,nushift);
 #endif
-    //if ((gNB->frame_parms.N_RB_DL&1)==0) {
+    for (uint16_t idx8Sym=0; idx8Sym<(nb_rb_pusch*12)/8; idx8Sym++ ) {
 
-      // Treat first 2 pilots specially (left edge)
-      ch[0] = (int16_t)(((int32_t)pil[0]*rxF[0] - (int32_t)pil[1]*rxF[1])>>15);
-      ch[1] = (int16_t)(((int32_t)pil[0]*rxF[1] + (int32_t)pil[1]*rxF[0])>>15);
-
-#ifdef DEBUG_PUSCH
-      printf("ch 0 %d\n",((int32_t)pil[0]*rxF[0] - (int32_t)pil[1]*rxF[1]));
-      printf("pilot 0 : rxF - > (%d,%d) addr %p  ch -> (%d,%d), pil -> (%d,%d) \n",rxF[0],rxF[1],&rxF[0],ch[0],ch[1],pil[0],pil[1]);
-      printf("data 0 : rxF - > (%d,%d) addr %p  ch -> (%d,%d), pil -> (%d,%d) \n",rxF[2],rxF[3],&rxF[2],ch[0],ch[1],pil[0],pil[1]);
-#endif
-      multadd_real_vector_complex_scalar(fl,
-                                         ch,
-                                         ul_ch,
-                                         8);
-      pil+=2;
-      re_offset = (re_offset+2)&(gNB->frame_parms.ofdm_symbol_size-1);
-      rxF   = (int16_t *)&rxdataF[aarx][(symbol_offset+nushift+re_offset)];
-      //for (int i= 0; i<8; i++)
-      //printf("ul_ch addr %p %d\n", ul_ch+i, *(ul_ch+i));
-
-      ch[0] = (int16_t)(((int32_t)pil[0]*rxF[0] - (int32_t)pil[1]*rxF[1])>>15);
-      ch[1] = (int16_t)(((int32_t)pil[0]*rxF[1] + (int32_t)pil[1]*rxF[0])>>15);
-
-#ifdef DEBUG_PUSCH
-      printf("pilot 1 : rxF - > (%d,%d) ch -> (%d,%d), pil -> (%d,%d) \n",rxF[0],rxF[1],ch[0],ch[1],pil[0],pil[1]);
-#endif
-      multadd_real_vector_complex_scalar(fml,
-                                         ch,
-                                         ul_ch,
-                                         8);
-      pil+=2;
-      re_offset = (re_offset+2)&(gNB->frame_parms.ofdm_symbol_size-1);
-      rxF   = (int16_t *)&rxdataF[aarx][(symbol_offset+nushift+re_offset)];
-      //printf("ul_ch addr %p\n",ul_ch);
-      
-      ch[0] = (int16_t)(((int32_t)pil[0]*rxF[0] - (int32_t)pil[1]*rxF[1])>>15);
-      ch[1] = (int16_t)(((int32_t)pil[0]*rxF[1] + (int32_t)pil[1]*rxF[0])>>15);
-
-#ifdef DEBUG_PUSCH
-      printf("pilot 2 : rxF - > (%d,%d) ch -> (%d,%d), pil -> (%d,%d) \n",rxF[0],rxF[1],ch[0],ch[1],pil[0],pil[1]);
-#endif
-      multadd_real_vector_complex_scalar(fmm,
-                                         ch,
-                                         ul_ch,
-                                         8);
-                                         
-      //for (int i= 0; i<16; i++)
-      //printf("ul_ch addr %p %d\n", ul_ch+i, *(ul_ch+i));
-      
-      pil+=2;
-      re_offset = (re_offset+2)&(gNB->frame_parms.ofdm_symbol_size-1);
-      rxF   = (int16_t *)&rxdataF[aarx][(symbol_offset+nushift+re_offset)];
-      ul_ch+=8;
-
-      for (pilot_cnt=3; pilot_cnt<(6*nb_rb_pusch-3); pilot_cnt+=2) {
-
-        ch[0] = (int16_t)(((int32_t)pil[0]*rxF[0] - (int32_t)pil[1]*rxF[1])>>15);
-        ch[1] = (int16_t)(((int32_t)pil[0]*rxF[1] + (int32_t)pil[1]*rxF[0])>>15);
-#ifdef DEBUG_CH
-    fprintf(debug_ch_est, "pilot %d : rxF - > (%d,%d) ch -> (%d,%d), pil -> (%d,%d) \n",pilot_cnt,rxF[0],rxF[1],ch[0],ch[1],pil[0],pil[1]);
-	//printf("pilot %d : rxF - > (%d,%d) ch -> (%d,%d), pil -> (%d,%d) \n",pilot_cnt,rxF[0],rxF[1],ch[0],ch[1],pil[0],pil[1]);
-#endif
-        multadd_real_vector_complex_scalar(fm,
-                                           ch,
-                                           ul_ch,
-                                           8);
-
-        pil+=2;
-        re_offset = (re_offset+2)&(gNB->frame_parms.ofdm_symbol_size-1);
+      for (uint8_t idxPil=0; idxPil<10; idxPil+=2 ) {
         rxF   = (int16_t *)&rxdataF[aarx][(symbol_offset+nushift+re_offset)];
-      
-        ch[0] = (int16_t)(((int32_t)pil[0]*rxF[0] - (int32_t)pil[1]*rxF[1])>>15);
-        ch[1] = (int16_t)(((int32_t)pil[0]*rxF[1] + (int32_t)pil[1]*rxF[0])>>15);
-#ifdef DEBUG_PUSCH
-	printf("pilot %d : rxF - > (%d,%d) ch -> (%d,%d), pil -> (%d,%d) \n",pilot_cnt+1,rxF[0],rxF[1],ch[0],ch[1],pil[0],pil[1]);
-#endif
-        multadd_real_vector_complex_scalar(fmm,
-                                           ch,
-                                           ul_ch,
-                                           8);
-        pil+=2;
+        ch[idxPil]   = (int16_t)(((int32_t)pil[idx8Sym*8+idxPil]*rxF[0] - (int32_t)pil[idx8Sym*8+idxPil+1]*rxF[1])>>15);
+        ch[idxPil+1] = (int16_t)(((int32_t)pil[idx8Sym*8+idxPil]*rxF[1] + (int32_t)pil[idx8Sym*8+idxPil+1]*rxF[0])>>15);
         re_offset = (re_offset+2)&(gNB->frame_parms.ofdm_symbol_size-1);
-        rxF   = (int16_t *)&rxdataF[aarx][(symbol_offset+nushift+re_offset)];
-        ul_ch+=8;
-
       }
       
-      // Treat first 2 pilots specially (right edge)
-	  ch[0] = (int16_t)(((int32_t)pil[0]*rxF[0] - (int32_t)pil[1]*rxF[1])>>15);
-      ch[1] = (int16_t)(((int32_t)pil[0]*rxF[1] + (int32_t)pil[1]*rxF[0])>>15);
-#ifdef DEBUG_PUSCH
-	printf("pilot %d : rxF - > (%d,%d) ch -> (%d,%d), pil -> (%d,%d) \n",pilot_cnt,rxF[0],rxF[1],ch[0],ch[1],pil[0],pil[1]);
+      simple_lerp(ch, ul_ch);
+#ifdef DEBUG_PDSCH
+      for(uint8_t i=0; i<16; i++) {
+        printf("%d\t",ul_ch[i]);
+      }
+      printf("\n");
 #endif
-      multadd_real_vector_complex_scalar(fm,
-                                         ch,
-                                         ul_ch,
-                                         8);
-                                         
-      //for (int i= 0; i<8; i++)
-      //printf("ul_ch addr %p %d\n", ul_ch+i, *(ul_ch+i));
+      ul_ch += 16;
+      re_offset = (re_offset-2)&(gNB->frame_parms.ofdm_symbol_size-1);
+    }
 
-      pil+=2;
-      re_offset = (re_offset+2)&(gNB->frame_parms.ofdm_symbol_size-1);
-      rxF   = (int16_t *)&rxdataF[aarx][(symbol_offset+nushift+re_offset)];
-             
-      ch[0] = (int16_t)(((int32_t)pil[0]*rxF[0] - (int32_t)pil[1]*rxF[1])>>15);
-      ch[1] = (int16_t)(((int32_t)pil[0]*rxF[1] + (int32_t)pil[1]*rxF[0])>>15);
-#ifdef DEBUG_PUSCH
-      printf("ch 0 %d\n",((int32_t)pil[0]*rxF[0] - (int32_t)pil[1]*rxF[1]));
-      printf("pilot %d: rxF - > (%d,%d) addr %p  ch -> (%d,%d), pil -> (%d,%d) \n",pilot_cnt+1,rxF[0],rxF[1],&rxF[0],ch[0],ch[1],pil[0],pil[1]);
-#endif
-      multadd_real_vector_complex_scalar(fmr,
-                                         ch,
-                                         ul_ch,
-                                         8);
-                                         
-      pil+=2;
-      re_offset = (re_offset+2)&(gNB->frame_parms.ofdm_symbol_size-1);
-      rxF   = (int16_t *)&rxdataF[aarx][(symbol_offset+nushift+re_offset)];
-      ul_ch+=8;
-      
-      ch[0] = (int16_t)(((int32_t)pil[0]*rxF[0] - (int32_t)pil[1]*rxF[1])>>15);
-      ch[1] = (int16_t)(((int32_t)pil[0]*rxF[1] + (int32_t)pil[1]*rxF[0])>>15);
-#ifdef DEBUG_PUSCH
-      printf("pilot %d: rxF - > (%d,%d) ch -> (%d,%d), pil -> (%d,%d) \n",pilot_cnt+2,rxF[0],rxF[1],ch[0],ch[1],pil[0],pil[1]);
-#endif
-      multadd_real_vector_complex_scalar(fr,
-                                         ch,
-                                         ul_ch,
-                                         8);
+    // Do the same for the 2 left over pilots if any (nb_rb_pusch*12 mod 8)
+    if ((nb_rb_pusch*12)%8) {
+      uint16_t used_pils = (nb_rb_pusch*12);
+
+      for (uint8_t idxPil=0; idxPil<8; idxPil+=2 ) {
+        rxF   = (int16_t *)&rxdataF[aarx][(symbol_offset+nushift+re_offset)];
+        ch[idxPil]   = (int16_t)(((int32_t)pil[used_pils+idxPil]*rxF[0] - (int32_t)pil[used_pils+idxPil+1]*rxF[1])>>15);
+        ch[idxPil+1] = (int16_t)(((int32_t)pil[used_pils+idxPil]*rxF[1] + (int32_t)pil[used_pils+idxPil+1]*rxF[0])>>15);
+        re_offset = (re_offset+2)&(gNB->frame_parms.ofdm_symbol_size-1);
+      }
+
+      ul_ch[2] = (ch[0]+ch[2]) >> 1;
+      ul_ch[3] = (ch[1]+ch[3]) >> 1;
+      ul_ch[6] = (ch[4]+ch[6]) >> 1;
+      ul_ch[7] = (ch[5]+ch[7]) >> 1;
+
+      ul_ch[0] = ch[0]; ul_ch[1] = ch[1];
+      ul_ch[4] = ch[4]; ul_ch[5] = ch[5];
+    }
+
+    // check if PRB crosses DC and improve estimates around DC
+    if ((bwp_start_subcarrier >= gNB->frame_parms.ofdm_symbol_size/2) && (bwp_start_subcarrier+nb_rb_pusch*12 >= gNB->frame_parms.ofdm_symbol_size)) {
+      ul_ch = (int16_t *)&ul_ch_estimates[aarx][ch_offset];
+      uint16_t idxDC = 2*(gNB->frame_parms.ofdm_symbol_size - bwp_start_subcarrier);
+
+      // before DC
+      ul_ch[idxDC-2] = ((ul_ch[idxDC-4] * 3072) + (ul_ch[idxDC+4] * 1024)) >> 12;
+      ul_ch[idxDC-1] = ((ul_ch[idxDC-3] * 3072) + (ul_ch[idxDC+5] * 1024)) >> 12;
+
+      //after DC
+      ul_ch[idxDC+2] = ((ul_ch[idxDC+4] * 3072) + (ul_ch[idxDC-4] * 1024)) >> 12;
+      ul_ch[idxDC+3] = ((ul_ch[idxDC+5] * 3072) + (ul_ch[idxDC-3] * 1024)) >> 12;
+
+      // at DC
+      ul_ch[idxDC]   = (ul_ch[idxDC-2] + ul_ch[idxDC+2]) >> 1;
+      ul_ch[idxDC+1] = (ul_ch[idxDC-1] + ul_ch[idxDC+3]) >> 1;
+    }
 
     // Convert to time domain
     memset(temp_in_ifft_0, 0, gNB->frame_parms.ofdm_symbol_size*sizeof(int32_t));
@@ -323,3 +249,17 @@ int nr_pusch_channel_estimation(PHY_VARS_gNB *gNB,
 
   return(0);
 }
+
+/*void simple_lerp(int16_t *in, int16_t *out)
+{
+  __m128i est, sign;
+  __m128i *x0 = (__m128i*)in;
+  __m128i *x1 = (__m128i*)(in+2);
+  __m128i *y = (__m128i*)out;
+
+  est  = _mm_add_epi16 (*x0, *x1);
+  sign = _mm_and_si128(est, _mm_set1_epi16(0x8000));
+  est  = _mm_or_si128(_mm_srli_epi16(est, 1), sign);
+  y[0] = _mm_unpacklo_epi32(*x0, est);
+  y[1] = _mm_unpackhi_epi32(*x0, est);
+}*/
