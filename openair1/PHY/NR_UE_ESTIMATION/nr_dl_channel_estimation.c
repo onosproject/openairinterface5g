@@ -666,8 +666,7 @@ int nr_pdsch_channel_estimation(PHY_VARS_NR_UE *ue,
   int pilot[3276] __attribute__((aligned(16)));
   unsigned char aarx;
   unsigned short k;
-  unsigned int pilot_cnt;
-  int16_t ch[10],*pil,*rxF,*dl_ch,*fl,*fm,*fr,*fml,*fmr,*fmm;
+  int16_t ch[10],*pil,*rxF,*dl_ch;
   int ch_offset,symbol_offset;
 
   //uint16_t Nid_cell = (eNB_offset == 0) ? ue->frame_parms.Nid_cell : ue->measurements.adj_cell_id[eNB_offset-1];
@@ -693,31 +692,6 @@ int nr_pdsch_channel_estimation(PHY_VARS_NR_UE *ue,
   printf("PDSCH Channel Estimation : ThreadId %d, eNB_offset %d ch_offset %d, symbol_offset %d OFDM size %d, Ncp=%d, Ns=%d, k=%d symbol %d\n",ue->current_thread_id[Ns], eNB_offset,ch_offset,symbol_offset,ue->frame_parms.ofdm_symbol_size,
          ue->frame_parms.Ncp,Ns,k, symbol);
 #endif
-
-  switch (nushift) {
-   case 0:
-         fl = filt8_l0;
-         fm = filt8_m0;
-         fr = filt8_r0;
-         fmm = filt8_mm0;
-         fml = filt8_m0;
-         fmr = filt8_mr0;
-         break;
-
-   case 1:
-         fl = filt8_l1;
-         fm = filt8_m1;
-         fr = filt8_r1;
-         fmm = filt8_mm1;
-         fml = filt8_ml1;
-         fmr = filt8_m1;
-         break;
-
-   default:
-     msg("pdsch_channel_estimation: nushift=%d -> ERROR\n",nushift);
-     return(-1);
-     break;
-   }
 
 
   // generate pilot

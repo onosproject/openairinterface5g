@@ -509,7 +509,6 @@ void simple_lerp(int16_t *in,
   simd_q15_t *x1 = (__m128i*)(in+2);
   simd_q15_t *y = (__m128i*)out;
 
-
 #if defined(__x86_64__) || defined(__i386__)
   est  = _mm_add_epi16 (*x0, *x1);
   sign = _mm_and_si128(est, _mm_set1_epi16(0x8000));

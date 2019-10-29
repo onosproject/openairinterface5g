@@ -87,6 +87,16 @@ void multadd_complex_vector_real_scalar(int16_t *x,
                                         uint8_t zero_flag,
                                         uint32_t N);
 
+/*!\fn void simple_lerp(int16_t* in,int16_t* out)
+This function performs linear interpolation on a vector of 5 complex samples. The output vector contais 8 complex samples consisting of the first 4 samples from input and 4 estimated samples.
+@param in Input vector of 5 complex samples or 10 integers(real and img).
+@param out Output vector of first 4 input samples and 4 estimated samples.
+
+The function implemented is : \f$\mathbf{y_1} = (mathbf{y_0} + mathbf{y_2}) / 2\f$
+*/
+void simple_lerp(int16_t *in,
+                 int16_t *out);
+
 int rotate_cpx_vector(int16_t *x,
                       int16_t *alpha,
                       int16_t *y,

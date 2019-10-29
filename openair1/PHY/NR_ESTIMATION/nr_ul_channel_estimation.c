@@ -40,8 +40,7 @@ int nr_pusch_channel_estimation(PHY_VARS_gNB *gNB,
   int pilot[1320] __attribute__((aligned(16)));
   unsigned char aarx;
   unsigned short k;
-  unsigned int pilot_cnt;
-  int16_t ch[10],*pil,*rxF,*ul_ch,*fl,*fm,*fr,*fml,*fmr,*fmm;
+  int16_t ch[10],*pil,*rxF,*ul_ch;
   int ch_offset,symbol_offset, length_dmrs, UE_id = 0;
   unsigned short n_idDMRS[2] = {0,1}; //to update from pusch config
   int32_t temp_in_ifft_0[8192*2] __attribute__((aligned(16)));
@@ -68,36 +67,11 @@ int nr_pusch_channel_estimation(PHY_VARS_gNB *gNB,
   k = bwp_start_subcarrier;
   int re_offset = k;
 
-/*
+
 #ifdef DEBUG_CH
   printf("PUSCH Channel Estimation : gNB_offset %d ch_offset %d, symbol_offset %d OFDM size %d, Ncp=%d, l=%d, Ns=%d, k=%d symbol %d\n", gNB_offset,ch_offset,symbol_offset,gNB->frame_parms.ofdm_symbol_size,
          gNB->frame_parms.Ncp,l,Ns,k, symbol);
 #endif
-*/
-  switch (nushift) {
-   case 0:
-         fl = filt8_l0;
-         fm = filt8_m0;
-         fr = filt8_r0;
-         fmm = filt8_mm0;
-         fml = filt8_m0;
-         fmr = filt8_mr0;
-         break;
-
-   case 1:
-         fl = filt8_l1;
-         fm = filt8_m1;
-         fr = filt8_r1;
-         fmm = filt8_mm1;
-         fml = filt8_ml1;
-         fmr = filt8_m1;
-         break;
-
-   default:
-     printf("pusch_channel_estimation: nushift=%d -> ERROR\n",nushift);
-     return(-1);
-     break;
-   }
 
 
   //------------------generate DMRS------------------//
@@ -250,16 +224,3 @@ int nr_pusch_channel_estimation(PHY_VARS_gNB *gNB,
   return(0);
 }
 
-/*void simple_lerp(int16_t *in, int16_t *out)
-{
-  __m128i est, sign;
-  __m128i *x0 = (__m128i*)in;
-  __m128i *x1 = (__m128i*)(in+2);
-  __m128i *y = (__m128i*)out;
-
-  est  = _mm_add_epi16 (*x0, *x1);
-  sign = _mm_and_si128(est, _mm_set1_epi16(0x8000));
-  est  = _mm_or_si128(_mm_srli_epi16(est, 1), sign);
-  y[0] = _mm_unpacklo_epi32(*x0, est);
-  y[1] = _mm_unpackhi_epi32(*x0, est);
-}*/
