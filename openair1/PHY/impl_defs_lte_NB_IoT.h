@@ -629,6 +629,12 @@ typedef struct {
   */
   uint8_t subcarrier_spacing; 
 
+  uint8_t nb_antennas_tx_NB_IoT; // to replace with NB_IoT_frame_params
+
+
+  uint8_t flag_free_sf;  // flag to indicate for NPDSCH and NPDCCH process if the current SF already used
+
+
 } NB_IoT_DL_FRAME_PARMS;
 
 typedef struct {

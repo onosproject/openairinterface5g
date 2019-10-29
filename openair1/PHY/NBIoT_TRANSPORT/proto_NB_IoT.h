@@ -51,7 +51,7 @@ void init_unscrambling_lut_NB_IoT(void);
 
 int generate_npss_NB_IoT(int32_t                **txdataF,
                          short                  amp,
-                         LTE_DL_FRAME_PARMS  *frame_parms,
+                         NB_IoT_DL_FRAME_PARMS  *frame_parms,
 
                          unsigned short         symbol_offset,          // symbol_offset should equal to 3 for NB-IoT 
                          unsigned short         slot_offset,
@@ -62,7 +62,7 @@ int generate_npss_NB_IoT(int32_t                **txdataF,
 int generate_sss_NB_IoT(int32_t                **txdataF,
                         int16_t                amp,
 
-                        LTE_DL_FRAME_PARMS  *frame_parms, 
+                        NB_IoT_DL_FRAME_PARMS  *frame_parms, 
                         uint16_t               symbol_offset,             // symbol_offset = 3 for NB-IoT 
                         uint16_t               slot_offset, 
                         unsigned short         frame_number,        // new attribute (Get value from higher layer), it does not exist for LTE
@@ -81,7 +81,7 @@ int nsss_extract_NB_IoT(PHY_VARS_UE_NB_IoT *ue,
 //NRS
 
 
-void generate_pilots_NB_IoT(PHY_VARS_eNB  *phy_vars_eNB,
+void generate_pilots_NB_IoT(PHY_VARS_eNB_NB_IoT  *phy_vars_eNB,
 
                             int32_t              **txdataF,
                             int16_t              amp,
@@ -93,7 +93,7 @@ void generate_pilots_NB_IoT(PHY_VARS_eNB  *phy_vars_eNB,
 //NPBCH
 
 
-int allocate_npbch_REs_in_RB(LTE_DL_FRAME_PARMS  *frame_parms,
+int allocate_npbch_REs_in_RB(NB_IoT_DL_FRAME_PARMS  *frame_parms,
 
                              int32_t                **txdataF,
                              uint32_t               *jj,
@@ -106,7 +106,7 @@ int allocate_npbch_REs_in_RB(LTE_DL_FRAME_PARMS  *frame_parms,
 
 
 // NPDSCH
-int allocate_REs_in_RB_NB_IoT(LTE_DL_FRAME_PARMS    *frame_parms,
+int allocate_REs_in_RB_NB_IoT(NB_IoT_DL_FRAME_PARMS    *frame_parms,
                               int32_t               **txdataF,
                               uint32_t              *jj,
                               uint32_t              symbol_offset,
@@ -121,7 +121,7 @@ int generate_NDLSCH_NB_IoT(PHY_VARS_eNB_NB_IoT        *eNB,
                            NB_IoT_eNB_NDLSCH_t        *RAR,
                            int32_t                    **txdataF,
                            int16_t                    amp,
-                           LTE_DL_FRAME_PARMS         *frame_parms,
+                           NB_IoT_DL_FRAME_PARMS         *frame_parms,
                            uint32_t                   frame,
                            uint32_t                   subframe,
                            int                        RB_IoT_ID,
@@ -130,7 +130,7 @@ int generate_NDLSCH_NB_IoT(PHY_VARS_eNB_NB_IoT        *eNB,
 int generate_NPDCCH_NB_IoT(NB_IoT_eNB_NPDCCH_t    *DCI_1,
                            int32_t                **txdataF,
                            int16_t                amp,
-                           LTE_DL_FRAME_PARMS     *frame_parms,
+                           NB_IoT_DL_FRAME_PARMS     *frame_parms,
                            uint32_t               frame,
                            uint32_t               subframe,
                            int                    RB_IoT_ID);
@@ -138,7 +138,7 @@ int generate_NPDCCH_NB_IoT(NB_IoT_eNB_NPDCCH_t    *DCI_1,
 int generate_SIB23(NB_IoT_eNB_NDLSCH_t    *SIB23,
                    int32_t                **txdataF,
                    int16_t                amp,
-                   LTE_DL_FRAME_PARMS     *frame_parms,
+                   NB_IoT_DL_FRAME_PARMS     *frame_parms,
                    uint32_t               frame,
                    uint32_t               subframe,
                    int                    RB_IoT_ID,
@@ -147,7 +147,7 @@ int generate_SIB23(NB_IoT_eNB_NDLSCH_t    *SIB23,
 int generate_SIB1(NB_IoT_eNB_NDLSCH_t     *sib1_struct,
                    int32_t                **txdataF,
                    int16_t                amp,
-                   LTE_DL_FRAME_PARMS     *frame_parms,
+                   NB_IoT_DL_FRAME_PARMS     *frame_parms,
                    uint32_t               frame,
                    uint32_t               subframe,
                    int                    RB_IoT_ID,
@@ -159,19 +159,19 @@ int generate_npbch(NB_IoT_eNB_NPBCH_t     *eNB_npbch,
                    int32_t                **txdataF,
                    int                    amp,
 
-                   LTE_DL_FRAME_PARMS     *frame_parms,
+                   NB_IoT_DL_FRAME_PARMS     *frame_parms,
                    uint8_t                *npbch_pdu,
                    uint8_t                frame_mod64,
                    unsigned short         NB_IoT_RB_ID,
                    uint8_t                release_v13_5_0);
 
 
-void npbch_scrambling(LTE_DL_FRAME_PARMS  *frame_parms,
+void npbch_scrambling(NB_IoT_DL_FRAME_PARMS  *frame_parms,
                       uint8_t                *npbch_e,
                       uint32_t               length);
 
 
-void dlsch_scrambling_Gen_NB_IoT(LTE_DL_FRAME_PARMS         *frame_parms,
+void dlsch_scrambling_Gen_NB_IoT(NB_IoT_DL_FRAME_PARMS         *frame_parms,
                                   NB_IoT_eNB_NDLSCH_t       *dlsch,
                                   int                       tot_bits,            // total number of bits to transmit
                                   uint16_t                  Nf,                  // Nf is the frame number (0..9)
@@ -180,9 +180,9 @@ void dlsch_scrambling_Gen_NB_IoT(LTE_DL_FRAME_PARMS         *frame_parms,
                                   uint8_t                   release_v13_5_0,
                                   uint8_t                   SIB); 
 
-NB_IoT_eNB_NDLSCH_t *new_eNB_dlsch_NB_IoT(uint8_t length, LTE_DL_FRAME_PARMS* frame_parms);
+NB_IoT_eNB_NDLSCH_t *new_eNB_dlsch_NB_IoT(uint8_t length, NB_IoT_DL_FRAME_PARMS* frame_parms);
 
-NB_IoT_eNB_NPDCCH_t *new_eNB_dlcch_NB_IoT(LTE_DL_FRAME_PARMS* frame_parms);
+NB_IoT_eNB_NPDCCH_t *new_eNB_dlcch_NB_IoT(NB_IoT_DL_FRAME_PARMS* frame_parms);
 
 /*void dlsch_scrambling_Gen_NB_IoT(LTE_DL_FRAME_PARMS      *frame_parms,
                                   NB_IoT_eNB_NDLSCH_t    *dlsch,
@@ -221,7 +221,7 @@ void add_dci_NB_IoT(DCI_PDU_NB_IoT    *DCI_pdu,
 
 /*Use the UL DCI Information to configure PHY and also Pack the DCI*/
 
-int generate_eNB_ulsch_params_from_dci_NB_IoT(PHY_VARS_eNB            *eNB,
+int generate_eNB_ulsch_params_from_dci_NB_IoT(PHY_VARS_eNB_NB_IoT            *eNB,
                                               int                     frame,
                                               uint8_t                 subframe,
                                               DCI_CONTENT             *DCI_Content,
@@ -233,7 +233,7 @@ int generate_eNB_ulsch_params_from_dci_NB_IoT(PHY_VARS_eNB            *eNB,
 
 
 /*Use the DL DCI Information to configure PHY and also Pack the DCI*/
-int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB    *eNB,
+int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB_NB_IoT    *eNB,
 
                                               int                    frame,
                                               uint8_t                subframe,
@@ -291,7 +291,7 @@ int ulsch_decoding_data_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,
 
 
 
-uint8_t subframe2harq_pid_NB_IoT(LTE_DL_FRAME_PARMS *frame_parms,uint32_t frame,uint8_t subframe);
+uint8_t subframe2harq_pid_NB_IoT(NB_IoT_DL_FRAME_PARMS *frame_parms,uint32_t frame,uint8_t subframe);
 
 
 
@@ -329,7 +329,7 @@ uint8_t subframe2harq_pid_NB_IoT(LTE_DL_FRAME_PARMS *frame_parms,uint32_t frame,
 
 int dci_modulation_NB_IoT(int32_t              **txdataF,
                           int16_t              amp,
-                          LTE_DL_FRAME_PARMS   *frame_parms,
+                          NB_IoT_DL_FRAME_PARMS   *frame_parms,
                           uint8_t              control_region_size,      
                           NB_IoT_eNB_NPDCCH_t  *dlcch,            
                           unsigned int         npdsch_data_subframe,        
@@ -338,7 +338,7 @@ int dci_modulation_NB_IoT(int32_t              **txdataF,
                           unsigned int         subframe,
                           unsigned short       NB_IoT_RB_ID);
 
-int dci_allocate_REs_in_RB_NB_IoT(LTE_DL_FRAME_PARMS  *frame_parms,
+int dci_allocate_REs_in_RB_NB_IoT(NB_IoT_DL_FRAME_PARMS  *frame_parms,
                                   int32_t             **txdataF,
                                   uint32_t            *jj,
                                   uint32_t            symbol_offset,
@@ -360,7 +360,7 @@ void dci_encoding_NB_IoT(uint8_t                  *a,
                          uint8_t                  agr_level);
 
 
-void npdcch_scrambling_NB_IoT(LTE_DL_FRAME_PARMS     *frame_parms,
+void npdcch_scrambling_NB_IoT(NB_IoT_DL_FRAME_PARMS     *frame_parms,
                               NB_IoT_eNB_NPDCCH_t     *dlcch,     // Input data
                               int                     G,          // Total number of bits to transmit in one subframe(case of DCI = G)
                               uint8_t                 Ns,       //XXX we pass the subframe  // Slot number (0..19)
@@ -370,7 +370,7 @@ void npdcch_scrambling_NB_IoT(LTE_DL_FRAME_PARMS     *frame_parms,
 
 int dlsch_modulation_NB_IoT(int32_t               **txdataF,
                             int16_t               amp,
-                            LTE_DL_FRAME_PARMS    *frame_parms,
+                            NB_IoT_DL_FRAME_PARMS    *frame_parms,
                             uint8_t               control_region_size,      // control region size for LTE , values between 0..3, (0 for stand-alone / 1, 2 or 3 for in-band)
                             NB_IoT_eNB_NDLSCH_t   *dlsch0,  //NB_IoT_eNB_NDLSCH_t
                             int                   G,              // number of bits per subframe
@@ -398,7 +398,7 @@ int32_t dlsch_encoding_NB_IoT(unsigned char              *a,
 void get_pilots_position(uint8_t npusch_format,uint8_t  subcarrier_spacing,uint8_t *pilot_pos1,uint8_t *pilot_pos2,uint8_t *pilots_slot);
 
 void UL_channel_estimation_NB_IoT(PHY_VARS_eNB_NB_IoT        *eNB,
-                                  LTE_DL_FRAME_PARMS  *fp,
+                                  NB_IoT_DL_FRAME_PARMS  *fp,
                                   uint16_t            UL_RB_ID_NB_IoT,
                                   uint16_t            Nsc_RU,
                                   uint8_t             pilot_pos1,
@@ -409,7 +409,7 @@ void UL_channel_estimation_NB_IoT(PHY_VARS_eNB_NB_IoT        *eNB,
                                   uint8_t             rx_subframe);
 
 void get_llr_per_sf_NB_IoT(PHY_VARS_eNB_NB_IoT        *eNB,
-                           LTE_DL_FRAME_PARMS  *fp,
+                           NB_IoT_DL_FRAME_PARMS  *fp,
                            uint8_t             npusch_format,
                            uint8_t             counter_sf,
                            uint16_t            N_SF_per_word,
@@ -418,7 +418,7 @@ void get_llr_per_sf_NB_IoT(PHY_VARS_eNB_NB_IoT        *eNB,
                            uint16_t            ul_sc_start,
                            uint16_t            Nsc_RU);
 
-void descrambling_NPUSCH_data_NB_IoT(LTE_DL_FRAME_PARMS  *fp,
+void descrambling_NPUSCH_data_NB_IoT(NB_IoT_DL_FRAME_PARMS  *fp,
                                      int16_t             *ulsch_llr,
                                      int16_t             *y,
                                      uint8_t             Qm,
@@ -427,7 +427,7 @@ void descrambling_NPUSCH_data_NB_IoT(LTE_DL_FRAME_PARMS  *fp,
                                      uint8_t             rx_subframe,
                                      uint32_t            rx_frame);
 
-void descrambling_NPUSCH_ack_NB_IoT(LTE_DL_FRAME_PARMS  *fp,
+void descrambling_NPUSCH_ack_NB_IoT(NB_IoT_DL_FRAME_PARMS  *fp,
                                     int32_t             *y_msg5,
                                     int32_t             *llr_msg5,
                                     uint32_t            rnti_tmp,
@@ -693,13 +693,13 @@ int ul_chequal_tmp_NB_IoT(int32_t **rxdataF_ext,
 ////////////////////////////NB-IoT testing ///////////////////////////////
 void clean_eNb_ulsch_NB_IoT(NB_IoT_eNB_NULSCH_t *ulsch);
 
-int get_G_NB_IoT(LTE_DL_FRAME_PARMS *frame_parms);
+int get_G_NB_IoT(NB_IoT_DL_FRAME_PARMS *frame_parms);
 
-int get_G_SIB1_NB_IoT(LTE_DL_FRAME_PARMS *frame_parms, uint8_t operation_mode_info);
+int get_G_SIB1_NB_IoT(NB_IoT_DL_FRAME_PARMS *frame_parms, uint8_t operation_mode_info);
 
 int get_rep_num_SIB1_NB_IoT(uint8_t scheduling_info_sib1);
 
-int get_start_frame_SIB1_NB_IoT(LTE_DL_FRAME_PARMS *frame_parms,uint8_t repetition);
+int get_start_frame_SIB1_NB_IoT(NB_IoT_DL_FRAME_PARMS *frame_parms,uint8_t repetition);
 
 NB_IoT_eNB_NULSCH_t *new_eNB_ulsch_NB_IoT(uint8_t max_turbo_iterations,uint8_t N_RB_UL, uint8_t abstraction_flag);
 

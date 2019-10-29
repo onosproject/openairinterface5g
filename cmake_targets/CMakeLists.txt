@@ -1060,6 +1060,16 @@ set(SCHED_SRC
 add_library(SCHED_LIB ${SCHED_SRC})
 add_dependencies(SCHED_LIB rrc_flag)
 
+# Physical Channel Procedures Scheduling for NB-IoT
+################################"
+set(SCHED_SRC_NB_IoT
+  #${OPENAIR1_DIR}/SCHED_NBIOT/fapi_l1.c
+  ${OPENAIR1_DIR}/SCHED_NBIOT/phy_procedures_lte_eNb_NB_IoT.c
+  #${OPENAIR1_DIR}/SCHED/phy_procedures_lte_common.c
+)
+add_library(SCHED_NB_IoT_LIB ${SCHED_SRC_NB_IoT})
+add_dependencies(SCHED_NB_IoT_LIB rrc_flag)
+
 set(SCHED_SRC_RU
   ${OPENAIR1_DIR}/SCHED/ru_procedures.c
   ${OPENAIR1_DIR}/SCHED/prach_procedures.c
@@ -1146,6 +1156,7 @@ set(PHY_TURBOIF
 
 add_library(coding MODULE ${PHY_TURBOSRC} )
 set(PHY_SRC_COMMON
+  ${OPENAIR1_DIR}/PHY/NBIoT_TRANSPORT/SIB_NB_IoT.c
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/dci_tools_common.c
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/lte_mcs.c
 #  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/slss.c
