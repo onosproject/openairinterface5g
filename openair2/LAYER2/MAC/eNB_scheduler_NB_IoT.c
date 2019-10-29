@@ -111,10 +111,10 @@ void eNB_dlsch_ulsch_scheduler_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, uint32_t ab
         
 	protocol_ctxt_t ctxt;
 	convert_system_number(abs_subframe, &h, &f, &sf);
-	//printf("*************************RUN PDCP****************************\n");
+	//*************************RUN PDCP****************************
         PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, 0, ENB_FLAG_YES, NOT_A_RNTI, f, sf, 0);
         pdcp_run(&ctxt);
-        //printf("*************************************************************\n");
+        //*************************************************************
 
 
 	eNB_scheduler_computing_flag_NB_IoT(mac_inst, abs_subframe, &scheduler_flags, &common_flags, &max_subframe);

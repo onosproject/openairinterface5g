@@ -512,31 +512,6 @@ rlc_am_rx (
   }
 }
 
-
-
-//-----------------------------------------------------------------------------
-/*
-extern mac_status_resp *rlc_state;
-
-struct mac_status_resp rlc_am_mac_status_indication_NB_IoT(const uint32_t tb_sizeP)
-{
-    struct mac_status_resp status_resp;
-
-    //rlc_tb_sizeP = tb_sizeP;
-
-    status_resp.buffer_occupancy_in_bytes = rlc_state->buffer_occupancy_in_bytes;
-    status_resp.buffer_occupancy_in_pdus = rlc_state->buffer_occupancy_in_pdus;
-    status_resp.head_sdu_creation_time = rlc_state->head_sdu_creation_time;
-    status_resp.head_sdu_is_segmented = rlc_state->head_sdu_is_segmented;
-    status_resp.head_sdu_remaining_size_to_send = rlc_state->head_sdu_remaining_size_to_send;
-   // status_resp.rlc_info
-
-    return status_resp;
-}
-
-*/
-
-
 //-----------------------------------------------------------------------------
 struct mac_status_resp
 rlc_am_mac_status_indication (
