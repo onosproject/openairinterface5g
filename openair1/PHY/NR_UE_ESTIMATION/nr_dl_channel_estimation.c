@@ -805,16 +805,3 @@ int nr_pdsch_channel_estimation(PHY_VARS_NR_UE *ue,
   return(0);
 }
 
-void simple_lerp(int16_t *in, int16_t *out)
-{
-  __m128i est, sign;
-  __m128i *x0 = (__m128i*)in;
-  __m128i *x1 = (__m128i*)(in+2);
-  __m128i *y = (__m128i*)out;
-
-  est  = _mm_add_epi16 (*x0, *x1);
-  sign = _mm_and_si128(est, _mm_set1_epi16(0x8000));
-  est  = _mm_or_si128(_mm_srli_epi16(est, 1), sign);
-  y[0] = _mm_unpacklo_epi32(*x0, est);
-  y[1] = _mm_unpackhi_epi32(*x0, est);
-}

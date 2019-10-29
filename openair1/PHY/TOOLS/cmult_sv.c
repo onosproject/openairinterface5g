@@ -500,6 +500,33 @@ int complex_conjugate(int16_t *x1,
   return(0);
 }
 
+void simple_lerp(int16_t *in, 
+                 int16_t *out)
+{
+  simd_q15_t est;
+  simd_q15_t sign;
+  simd_q15_t *x0 = (__m128i*)in;
+  simd_q15_t *x1 = (__m128i*)(in+2);
+  simd_q15_t *y = (__m128i*)out;
+
+
+#if defined(__x86_64__) || defined(__i386__)
+  est  = _mm_add_epi16 (*x0, *x1);
+  sign = _mm_and_si128(est, _mm_set1_epi16(0x8000));
+  est  = _mm_or_si128(_mm_srli_epi16(est, 1), sign);
+  y[0] = _mm_unpacklo_epi32(*x0, est);
+  y[1] = _mm_unpackhi_epi32(*x0, est);
+#elif defined(__arm__)
+  est = vaddq_s16(*x0, *x1);
+  est  = vshrq_n_s16(est, 1);
+  y[0] = vzip2q_s32(*x0, est);
+  y[1] = vzip1q_s32(*x0, est);
+#endif
+
+  _mm_empty();
+  _m_empty();
+
+}
 
 #ifdef MAIN
 #define L 8
