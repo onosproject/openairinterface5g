@@ -373,7 +373,7 @@ rlc_op_status_t rlc_data_req     (const protocol_ctxt_t* const ctxt_pP,
 
   DevAssert(sdu_pP != NULL);
   DevCheck(sdu_sizeP > 0, sdu_sizeP, 0, 0);
-
+  
 #if !defined(Rel10) && !defined(Rel14)
   DevCheck(MBMS_flagP == 0, MBMS_flagP, 0, 0);
 #endif
@@ -392,7 +392,7 @@ rlc_op_status_t rlc_data_req     (const protocol_ctxt_t* const ctxt_pP,
     }
 
     key = RLC_COLL_KEY_MBMS_VALUE(ctxt_pP->module_id, ctxt_pP->rnti, ctxt_pP->enb_flag, mbms_id_p->service_id, mbms_id_p->session_id);
-  } else
+   } else
 #endif
   {
     key = RLC_COLL_KEY_VALUE(ctxt_pP->module_id, ctxt_pP->rnti, ctxt_pP->enb_flag, rb_idP, srb_flagP);
@@ -433,12 +433,12 @@ rlc_op_status_t rlc_data_req     (const protocol_ctxt_t* const ctxt_pP,
       msg("RLC_MODE_AM\n");
 #endif
       new_sdu_p = get_free_mem_block (sdu_sizeP + sizeof (struct rlc_am_data_req_alloc), __func__);
-
+      
       if (new_sdu_p != NULL) {
         // PROCESS OF COMPRESSION HERE:
         memset (new_sdu_p->data, 0, sizeof (struct rlc_am_data_req_alloc));
         memcpy (&new_sdu_p->data[sizeof (struct rlc_am_data_req_alloc)], &sdu_pP->data[0], sdu_sizeP);
-
+   
         ((struct rlc_am_data_req *) (new_sdu_p->data))->data_size = sdu_sizeP;
         ((struct rlc_am_data_req *) (new_sdu_p->data))->conf = confirmP;
         ((struct rlc_am_data_req *) (new_sdu_p->data))->mui  = muiP;

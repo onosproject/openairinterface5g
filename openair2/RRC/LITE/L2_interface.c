@@ -536,6 +536,8 @@ rrc_data_req(
 
 #if defined(ENABLE_ITTI)
   {
+    //rlc_data_req(ctxt_pP, rb_idP, MBMS_FLAG_NO, rb_idP, muiP, confirmP, sdu_sizeP, buffer_pP);
+
     MessageDef *message_p;
     // Uses a new buffer to avoid issue with PDCP buffer content that could be changed by PDCP (asynchronous message handling).
     uint8_t *message_buffer;
@@ -565,7 +567,6 @@ rrc_data_req(
       ctxt_pP->instance,
       message_p);
     return TRUE; // TODO should be changed to a CNF message later, currently RRC lite does not used the returned value anyway.
-
   }
 #else
   return pdcp_data_req (

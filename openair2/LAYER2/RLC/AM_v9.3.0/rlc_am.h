@@ -278,6 +278,9 @@ protected_rlc_am( void     rlc_am_rx (const protocol_ctxt_t* const ctxtP,void * 
 */
 public_rlc_am(    struct mac_status_resp rlc_am_mac_status_indication (const protocol_ctxt_t* const ctxtP, void * const rlc_pP, uint16_t tbs_sizeP, struct mac_status_ind tx_statusP,const eNB_flag_t enb_flagP);)
 
+public_rlc_am(    struct mac_status_resp rlc_am_mac_status_indication_NB_IoT(uint32_t tbs_sizeP);)
+
+
 /*! \fn void rlc_am_set_nb_bytes_requested_by_mac (void * const            rlc_pP,const tb_size_t         tb_sizeP)
 * \brief    Set available TBS for RLC Tx just before am_mac_data_request. Used for UE only.
 * \param[in]  rlc_pP           RLC AM protocol instance pointer.

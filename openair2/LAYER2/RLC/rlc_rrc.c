@@ -506,7 +506,7 @@ rlc_op_status_t rrc_rlc_remove_rlc   (
   rlc_union_t           *rlc_union_p = NULL;
 #if defined(Rel10) || defined(Rel14)
   rlc_mbms_id_t         *mbms_id_p  = NULL;
-#endif rrc_rlc_remove_rlc
+#endif 
 #ifdef OAI_EMU
   CHECK_CTXT_ARGS(ctxt_pP)
 

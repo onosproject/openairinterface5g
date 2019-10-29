@@ -1474,7 +1474,7 @@ uint8_t do_DLInformationTransfer_NB_IoT(
   DL_DCCH_Message_NB_t dl_dcch_msg_NB_IoT;
 
   memset(&dl_dcch_msg_NB_IoT, 0, sizeof(DL_DCCH_Message_NB_t));
-
+  
   dl_dcch_msg_NB_IoT.message.present           = DL_DCCH_MessageType_NB_PR_c1;
   dl_dcch_msg_NB_IoT.message.choice.c1.present = DL_DCCH_MessageType_NB__c1_PR_dlInformationTransfer_r13;
   dl_dcch_msg_NB_IoT.message.choice.c1.choice.dlInformationTransfer_r13.rrc_TransactionIdentifier = transaction_id;
@@ -1498,7 +1498,7 @@ uint8_t do_DLInformationTransfer_NB_IoT(
       msg_p = itti_alloc_new_message_sized (TASK_RRC_ENB, RRC_DL_DCCH, message_string_size + sizeof (IttiMsgText));
       msg_p->ittiMsg.rrc_dl_dcch.size = message_string_size;
       memcpy(&msg_p->ittiMsg.rrc_dl_dcch.text, message_string, message_string_size);
-
+      
       itti_send_msg_to_task(TASK_UNKNOWN, Mod_id, msg_p);
     }
   }

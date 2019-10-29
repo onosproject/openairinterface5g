@@ -155,6 +155,7 @@ typedef  struct {
 } mac_rlc_status_resp_t;
 
 
+
 /*! \struct  mac_rlc_max_rx_header_size_t
 * \brief Usefull only for debug scenario where we connect 2 RLC protocol instances without the help of the MAC .
 */

@@ -35,7 +35,7 @@
 /*DL scheduler*/
 int schedule_DL_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_inst, UE_TEMPLATE_NB_IoT *UE_info, uint32_t hyperSF_start, uint32_t frame_start, uint32_t subframe_start, UE_SCHED_CTRL_NB_IoT_t *UE_sched_ctrl_info)
 {
-	//number of candidate
+        //number of candidate
 	int cdd_num;
 	//Transport block size
 	int TBS;
@@ -76,6 +76,7 @@ int schedule_DL_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_inst, UE_
 	
 
 	uint32_t search_space_end_sf, h_temp, f_temp, sf_temp;
+        mac_rlc_status_resp_t rlc_status; //Declare rlc_status
 
 	I_mcs = get_I_mcs(UE_info->CE_level);
 	I_tbs = I_mcs;
@@ -101,7 +102,7 @@ int schedule_DL_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_inst, UE_
 	{
 		//Get RLC status
 		/*
-		rlc_status = mac_rlc_status_ind_NB_IoT(
+		rlc_status = mac_rlc_status_ind(
 										module_id,
 										UE_info->rnti,
 										module_id,
@@ -113,7 +114,7 @@ int schedule_DL_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_inst, UE_
 										0);
 		data_size = rlc_status.bytes_in_buffer;
 		*/
-		//data_size = 200;
+		data_size = 200;
 		data_size=0;
 		int ue_index;
 		for(ue_index=0;ue_index<UE_NUM_SIM;++ue_index)
@@ -121,7 +122,7 @@ int schedule_DL_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_inst, UE_
 			if(UE_info_sim[ue_index].tc_rnti==UE_info->rnti)
 				data_size = UE_info_sim[ue_index].data_size;
 		}
-	}
+  	}
 	/*Retransmission*/
 	else
 	{
@@ -212,7 +213,7 @@ int schedule_DL_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_inst, UE_
 		                  UE_info->I_mcs_dl = I_mcs;
 		                  /*.......
 		                  //Request data from RLC layer
-		                  rlc_status = mac_rlc_status_ind_NB_IoT(
+		                  rlc_status = mac_rlc_status_ind(
 		                        module_id,
 		                        UE_info->rnti,
 		                        module_id,

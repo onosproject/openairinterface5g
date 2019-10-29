@@ -50,6 +50,7 @@
 #include "platform_constants.h"
 #include "UTIL/LOG/vcd_signal_dumper.h"
 #include "msc.h"
+#include "openair2/LAYER2/MAC/proto_NB_IoT.h"
 
 #if defined(ENABLE_SECURITY)
 # include "UTIL/OSA/osa_defs.h"
@@ -139,7 +140,7 @@ boolean_t pdcp_data_req(
     AssertError (rb_idP < NB_RB_MBMS_MAX, return FALSE, "RB id is too high (%u/%d) %u %u!\n", rb_idP, NB_RB_MBMS_MAX, ctxt_pP->module_id, ctxt_pP->rnti);
   } else {
     if (srb_flagP) {
-      AssertError (rb_idP < 3, return FALSE, "RB id is too high (%u/%d) %u %u!\n", rb_idP, 3, ctxt_pP->module_id, ctxt_pP->rnti);
+      AssertError (rb_idP < 4, return FALSE, "RB id is too high (%u/%d) %u %u!\n", rb_idP, 3, ctxt_pP->module_id, ctxt_pP->rnti);
     } else {
       AssertError (rb_idP < maxDRB, return FALSE, "RB id is too high (%u/%d) %u %u!\n", rb_idP, maxDRB, ctxt_pP->module_id, ctxt_pP->rnti);
     }
@@ -923,13 +924,15 @@ pdcp_run (
   do {
     // Checks if a message has been sent to PDCP sub-task
     itti_poll_msg (ctxt_pP->enb_flag ? TASK_PDCP_ENB : TASK_PDCP_UE, &msg_p);
-
+    
     if (msg_p != NULL) {
       msg_name = ITTI_MSG_NAME (msg_p);
       instance = ITTI_MSG_INSTANCE (msg_p);
 
       switch (ITTI_MSG_ID(msg_p)) {
+
       case RRC_DCCH_DATA_REQ:
+
 	PROTOCOL_CTXT_SET_BY_MODULE_ID(
           &ctxt,
           RRC_DCCH_DATA_REQ (msg_p).module_id,
@@ -946,9 +949,9 @@ pdcp_run (
               RRC_DCCH_DATA_REQ (msg_p).rb_id,
               RRC_DCCH_DATA_REQ (msg_p).muip,
               RRC_DCCH_DATA_REQ (msg_p).confirmp,
-              RRC_DCCH_DATA_REQ (msg_p).mode);
-
-        result = pdcp_data_req (&ctxt,
+              RRC_DCCH_DATA_REQ (msg_p).mode);     
+        
+        result = pdcp_data_req_NB_IoT(&ctxt,
                                 SRB_FLAG_YES,
                                 RRC_DCCH_DATA_REQ (msg_p).rb_id,
                                 RRC_DCCH_DATA_REQ (msg_p).muip,
@@ -956,12 +959,14 @@ pdcp_run (
                                 RRC_DCCH_DATA_REQ (msg_p).sdu_size,
                                 RRC_DCCH_DATA_REQ (msg_p).sdu_p,
                                 RRC_DCCH_DATA_REQ (msg_p).mode);
+       
         if (result != TRUE)
           LOG_E(PDCP, "PDCP data request failed!\n");
 
         // Message buffer has been processed, free it now.
         result = itti_free (ITTI_MSG_ORIGIN_ID(msg_p), RRC_DCCH_DATA_REQ (msg_p).sdu_p);
         AssertFatal (result == EXIT_SUCCESS, "Failed to free memory (%d)!\n", result);
+       
         break;
 
       default:

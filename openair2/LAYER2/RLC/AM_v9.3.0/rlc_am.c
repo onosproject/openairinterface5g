@@ -211,12 +211,7 @@ config_req_rlc_am (
   hashtable_rc_t   h_rc;
 
   h_rc = hashtable_get(rlc_coll_p, key, (void**)&rlc_union_p);
-  
-  /***************************************/
-  printf("hashtable_get in comfig_req_rlc_am\n");
-  /***************************************/
-
-
+    
   if (h_rc == HASH_TABLE_OK) {
     l_rlc_p = &rlc_union_p->rlc.am;
     LOG_D(RLC,
@@ -269,10 +264,6 @@ void config_req_rlc_am_asn1 (
   hashtable_rc_t   h_rc;
 
   h_rc = hashtable_get(rlc_coll_p, key, (void**)&rlc_union_p);
-
-  /***************************************/
-  printf("hashtable_get in config_req_rlc_am_asn1\n");
-  /***************************************/
 
   if (h_rc == HASH_TABLE_OK) {
     l_rlc_p = &rlc_union_p->rlc.am;
@@ -520,6 +511,31 @@ rlc_am_rx (
     LOG_E(RLC, PROTOCOL_RLC_AM_CTXT_FMT" TX UNKNOWN PROTOCOL STATE 0x%02X\n", PROTOCOL_RLC_AM_CTXT_ARGS(ctxt_pP, rlc), rlc->protocol_state);
   }
 }
+
+
+
+//-----------------------------------------------------------------------------
+/*
+extern mac_status_resp *rlc_state;
+
+struct mac_status_resp rlc_am_mac_status_indication_NB_IoT(const uint32_t tb_sizeP)
+{
+    struct mac_status_resp status_resp;
+
+    //rlc_tb_sizeP = tb_sizeP;
+
+    status_resp.buffer_occupancy_in_bytes = rlc_state->buffer_occupancy_in_bytes;
+    status_resp.buffer_occupancy_in_pdus = rlc_state->buffer_occupancy_in_pdus;
+    status_resp.head_sdu_creation_time = rlc_state->head_sdu_creation_time;
+    status_resp.head_sdu_is_segmented = rlc_state->head_sdu_is_segmented;
+    status_resp.head_sdu_remaining_size_to_send = rlc_state->head_sdu_remaining_size_to_send;
+   // status_resp.rlc_info
+
+    return status_resp;
+}
+
+*/
+
 
 //-----------------------------------------------------------------------------
 struct mac_status_resp

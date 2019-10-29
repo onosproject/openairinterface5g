@@ -781,9 +781,9 @@ rrc_eNB_process_S1AP_DOWNLINK_NAS(
         msg_name,
         ue_initial_id,
         eNB_ue_s1ap_id);
-
+ 
   if (ue_context_p == NULL) {
-
+  
     MSC_LOG_RX_MESSAGE(
       MSC_RRC_ENB,
       MSC_S1AP_ENB,
@@ -819,11 +819,12 @@ rrc_eNB_process_S1AP_DOWNLINK_NAS(
 
     itti_send_msg_to_task (TASK_S1AP, instance, msg_fail_p);
     return (-1);
-  } else {
+  } else { 
     PROTOCOL_CTXT_SET_BY_INSTANCE(&ctxt, instance, ENB_FLAG_YES, ue_context_p->ue_context.rnti, 0, 0);
 
-    srb_id = ue_context_p->ue_context.Srb2.Srb_info.Srb_id;
-  
+    //srb_id = ue_context_p->ue_context.Srb1bis.Srb_info.Srb_id;
+    srb_id = 3;
+    
 
     /* Is it the first income from S1AP ? */
     if (ue_context_p->ue_context.eNB_ue_s1ap_id == 0) {
@@ -841,8 +842,8 @@ rrc_eNB_process_S1AP_DOWNLINK_NAS(
       S1AP_DOWNLINK_NAS (msg_p).eNB_ue_s1ap_id);
 
 
-    /* Create message for PDCP (DLInformationTransfer_t) */
-    length = do_DLInformationTransfer (
+    /* Create message for PDCP (DLInformationTransfer_t) */    
+    length = do_DLInformationTransfer_NB_IoT (
                instance,
                &buffer,
                rrc_eNB_get_next_transaction_identifier (instance),
@@ -870,7 +871,7 @@ rrc_eNB_process_S1AP_DOWNLINK_NAS(
 		  SDU_CONFIRM_NO,
 		  length,
 		  buffer,
-		  PDCP_TRANSMISSION_MODE_CONTROL);
+		  PDCP_TRANSMISSION_MODE_TRANSPARENT); //use pdcp transparent mode
     
     return (0);
   }

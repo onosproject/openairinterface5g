@@ -340,7 +340,7 @@ int s1ap_eNB_handle_nas_downlink(const uint32_t               assoc_id,
                                       ue_desc_p->eNB_ue_s1ap_id,
                                       downlink_NAS_transport_p->nas_pdu.buf,
                                       downlink_NAS_transport_p->nas_pdu.size);
-
+  
   // LG: Why set to 0 ??
   //ue_desc_p->ue_initial_id = 0;
 

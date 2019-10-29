@@ -793,6 +793,56 @@ rrc_eNB_get_next_transaction_identifier(
 //        return (i);
 //}
 
+//***************************************************For NB-IoT*************************************************//
+
+//-----------------------------------------------------------------------------
+void rrc_eNB_free_mem_UE_context_NB_IoT(
+  const protocol_ctxt_t*               const ctxt_pP,
+  struct rrc_eNB_ue_context_NB_IoT_s*         const ue_context_pP
+)
+//-----------------------------------------------------------------------------
+{
+  LOG_T(RRC,
+        PROTOCOL_RRC_CTXT_UE_FMT" Clearing UE context 0x%p (free internal structs)\n",
+        PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP),
+        ue_context_pP);
+
+  //no Scell in NB-IoT --> no DC (Dual Connectivity)
+
+  if (ue_context_pP->ue_context.SRB_configList) {
+    ASN_STRUCT_FREE(asn_DEF_SRB_ToAddModList_NB_r13, ue_context_pP->ue_context.SRB_configList);
+    ue_context_pP->ue_context.SRB_configList = NULL;
+  }
+
+  if (ue_context_pP->ue_context.DRB_configList) {
+    ASN_STRUCT_FREE(asn_DEF_DRB_ToAddModList_NB_r13, ue_context_pP->ue_context.DRB_configList);
+    ue_context_pP->ue_context.DRB_configList = NULL;
+  }
+
+  memset(ue_context_pP->ue_context.DRB_active, 0, sizeof(ue_context_pP->ue_context.DRB_active));
+
+  if (ue_context_pP->ue_context.physicalConfigDedicated_NB_IoT) {
+    ASN_STRUCT_FREE(asn_DEF_PhysicalConfigDedicated_NB_r13, ue_context_pP->ue_context.physicalConfigDedicated_NB_IoT);
+    ue_context_pP->ue_context.physicalConfigDedicated_NB_IoT = NULL;
+  }
+
+
+  if (ue_context_pP->ue_context.mac_MainConfig_NB_IoT) {
+    ASN_STRUCT_FREE(asn_DEF_MAC_MainConfig_NB_r13, ue_context_pP->ue_context.mac_MainConfig_NB_IoT);
+    ue_context_pP->ue_context.mac_MainConfig_NB_IoT = NULL;
+  }
+
+  //no sps in NB_IoT
+  //no meas object
+  //no report config
+  //no quantity config
+  //no meas gap config
+  //no measConfig
+
+
+}
+
+//***************************************************For NB-IoT*************************************************//
 
 //-----------------------------------------------------------------------------
 // return the ue context if there is already an UE with ue_identityP, NULL otherwise
@@ -1163,7 +1213,6 @@ void rrc_eNB_process_RRCConnectionSetupComplete_NB_IoT(
 
   if (EPC_MODE_ENABLED == 1) {
     // Forward message to S1AP layer we don't have S1AP functions for the moment
-    printf("*********************Get into S1AP*********************\n");
     rrc_eNB_send_S1AP_NAS_FIRST_REQ(
       ctxt_pP,
       ue_context_pP,
@@ -1394,6 +1443,7 @@ rrc_eNB_generate_RRCConnectionReestablishmentReject(
         PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP),
         eNB_rrc_inst[ctxt_pP->module_id].carrier[CC_id].Srb0.Tx_buffer.payload_size);
 }
+
 
 //-----------------------------------------------------------------------------
 void
@@ -5821,10 +5871,12 @@ rrc_enb_task(
       break;
     
     case S1AP_UE_CONTEXT_RELEASE_REQ:
+      printf("Do S1AP_UE_CONTEXT_RELEASE_REQ--------------\n");
       rrc_eNB_process_S1AP_UE_CONTEXT_RELEASE_REQ(msg_p, msg_name_p, instance);
       break;
 
     case S1AP_UE_CONTEXT_RELEASE_COMMAND:
+      printf("Do S1AP_UE_CONTEXT_RELEASE_COMMAND--------------\n");
       rrc_eNB_process_S1AP_UE_CONTEXT_RELEASE_COMMAND(msg_p, msg_name_p, instance);
       break;
 

@@ -36,6 +36,7 @@
 #include "hashtable.h"
 #include "assertions.h"
 #include "UTIL/LOG/vcd_signal_dumper.h"
+#include "LAYER2/MAC/defs_NB_IoT.h"
 
 //#define DEBUG_MAC_INTERFACE 1
 
@@ -284,19 +285,7 @@ void mac_rlc_data_ind     (
       return;
     }
   } else {
-
     key = RLC_COLL_KEY_LCID_VALUE(module_idP, rntiP, enb_flagP, channel_idP, srb_flag);
-    
-    /*
-    printf("*******RLC_COLL_KEY_LCID_VALUE*********\n");
-    printf("module_id : %d\n",module_idP);
-    printf("rnti : %d\n",rntiP);
-    printf("enb_flag : %d\n",enb_flagP );
-    printf("channel_id : %d\n",channel_idP );
-    printf("srb_flag : %d\n",srb_flag);
-    printf("***************************************\n");
-    */
-
   }
 
   h_rc = hashtable_get(rlc_coll_p, key, (void**)&rlc_union_p);
@@ -337,7 +326,8 @@ void mac_rlc_data_ind     (
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_MAC_RLC_DATA_IND,VCD_FUNCTION_OUT);
 
 }
-//-----------------------------------------------------------------------------
+
+//-------------------------------------------------------------------------------
 mac_rlc_status_resp_t mac_rlc_status_ind(
   const module_id_t       module_idP,
   const rnti_t            rntiP,
@@ -360,6 +350,8 @@ mac_rlc_status_resp_t mac_rlc_status_ind(
   hashtable_rc_t         h_rc;
   srb_flag_t             srb_flag    = (channel_idP <= 2) ? SRB_FLAG_YES : SRB_FLAG_NO;
   protocol_ctxt_t     ctxt;
+  
+  printf("*************************get into mac_rlc_status_ind (in rlc_mac.c)*****************************\n");
 
   PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, module_idP, enb_flagP, rntiP, frameP, subframeP, eNB_index);
 
