@@ -1343,6 +1343,7 @@ set(RLC_UM_DIR ${OPENAIR2_DIR}/LAYER2/RLC/UM_v9.3.0)
 set(RLC_AM_DIR ${OPENAIR2_DIR}/LAYER2/RLC/AM_v9.3.0)
 set(RLC_TM_DIR ${OPENAIR2_DIR}/LAYER2/RLC/TM_v9.3.0)
 set(RRC_DIR ${OPENAIR2_DIR}/RRC/LTE)
+set(RRC_NB_DIR ${OPENAIR2_DIR}/RRC/NBIOT)
 set(PDCP_DIR  ${OPENAIR2_DIR}/LAYER2/PDCP_v10.1.0)
 set(L2_SRC
   ${OPENAIR2_DIR}/LAYER2/openair2_proc.c
@@ -1380,12 +1381,16 @@ set(L2_SRC
   ${RLC_DIR}/rlc.c
   ${RLC_DIR}/rlc_rrc.c
   ${RLC_DIR}/rlc_mpls.c
-#  ${RRC_DIR}/rrc_UE.c
+  #${RRC_DIR}/rrc_UE.c
   ${RRC_DIR}/rrc_eNB.c
+  ${RRC_NB_DIR}/rrc_eNB_NB_IoT.c
   ${RRC_DIR}/rrc_eNB_S1AP.c
   ${RRC_DIR}/rrc_eNB_UE_context.c
+  ${RRC_NB_DIR}/rrc_eNB_UE_context_NB_IoT.c
   ${RRC_DIR}/rrc_common.c
+  #${RRC_NB_DIR}/rrc_common_NB_IoT.c
   ${RRC_DIR}/L2_interface.c
+  #${RRC_NB_DIR}/L2_interface_NB_IoT.c
   ${RRC_DIR}/L2_interface_common.c
   ${RRC_DIR}/L2_interface_ue.c
   )

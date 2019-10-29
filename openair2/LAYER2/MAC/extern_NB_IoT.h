@@ -31,7 +31,7 @@
 #define __MAC_EXTERN_NB_IOT_H__
 
 //#include "openair2/PHY_INTERFACE/defs_NB_IoT.h" 
-
+#include "defs_NB_IoT.h"
 
 
 extern uint8_t Is_rrc_registered;
