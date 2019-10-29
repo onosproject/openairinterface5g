@@ -2722,7 +2722,7 @@ if (${T_TRACER})
         nr_ulschsim ldpctest polartest smallblocktest cu_test du_test
         #all "add_library" definitions
         ITTI RRC_LIB NR_RRC_LIB S1AP_LIB S1AP_ENB X2AP_LIB X2AP_ENB F1AP_LIB
-        F1AP params_libconfig oai_exmimodevif oai_usrpdevif oai_bladerfdevif
+        F1AP params_libconfig CONFIG_LIB oai_exmimodevif oai_usrpdevif oai_bladerfdevif
         oai_lmssdrdevif oai_eth_transpro oai_mobipass tcp_bridge tcp_bridge_oai
         coding FLPT_MSG ASYNC_IF FLEXRAN_AGENT HASHTABLE MSC UTIL OMG_SUMO 
         SECU_OSA SECU_CN SCHED_LIB SCHED_NR_LIB SCHED_RU_LIB SCHED_UE_LIB
