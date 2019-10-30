@@ -19,13 +19,13 @@
  *      contact@openairinterface.org
  */
 
-/*! \file lte-enb.c
+/*! \file nr-gnb.c
  * \brief Top-level threads for gNodeB
  * \author R. Knopp, F. Kaltenberger, Navid Nikaein
  * \date 2012
  * \version 0.1
  * \company Eurecom
- * \email: knopp@eurecom.fr,florian.kaltenberger@eurecom.fr, navid.nikaein@eurecom.fr
+ * \email: {knopp, florian.kaltenberger, navid.nikaein}@eurecom.fr
  * \note
  * \warning
  */
@@ -100,26 +100,26 @@
 
 
 #if defined(ENABLE_ITTI)
-  extern volatile int             start_gNB;
-  extern volatile int             start_UE;
+  extern volatile int start_gNB;
+  extern volatile int start_UE;
 #endif
-extern volatile int                    oai_exit;
+extern volatile int oai_exit;
 
 extern openair0_config_t openair0_cfg[MAX_CARDS];
 
 extern int transmission_mode;
 
-uint16_t sl_ahead=8;
-uint16_t sf_ahead=8;
+uint16_t sl_ahead = 6;
+uint16_t sf_ahead = 6;
 uint16_t slotsInFrame;
 uint16_t slotsInFrameFirstTime = 0;
-//pthread_t                       main_gNB_thread;
+//pthread_t main_gNB_thread;
 
-time_stats_t softmodem_stats_mt; // main thread
-time_stats_t softmodem_stats_hw; //  hw acquisition
+time_stats_t softmodem_stats_mt;      // main thread
+time_stats_t softmodem_stats_hw;      // hw acquisition
 time_stats_t softmodem_stats_rxtx_sf; // total tx time
-time_stats_t nfapi_meas; // total tx time
-time_stats_t softmodem_stats_rx_sf; // total rx time
+time_stats_t nfapi_meas;              // total tx time
+time_stats_t softmodem_stats_rx_sf;   // total rx time
 
 /* mutex, cond and variable to serialize phy proc TX calls
  * (this mechanism may be relaxed in the future for better
@@ -136,13 +136,14 @@ extern double cpuf;
 void init_gNB(int,int);
 void stop_gNB(int nb_inst);
 
-int wakeup_txfh(PHY_VARS_gNB *gNB,gNB_L1_rxtx_proc_t *proc,int frame_tx,int slot_tx,uint64_t timestamp_tx);
-int wakeup_tx(PHY_VARS_gNB *gNB,int frame_rx,int slot_rx,int frame_tx,int slot_tx,uint64_t timestamp_tx);
-extern PARALLEL_CONF_t get_thread_parallel_conf(void);
-extern WORKER_CONF_t   get_thread_worker_conf(void);
+int wakeup_txfh(PHY_VARS_gNB *gNB, gNB_L1_rxtx_proc_t *proc, int frame_tx, int slot_tx, uint64_t timestamp_tx);
+int wakeup_tx(PHY_VARS_gNB *gNB, int frame_rx, int slot_rx, int frame_tx, int slot_tx, uint64_t timestamp_tx);
+#include "executables/thread-common.h"
+//extern PARALLEL_CONF_t get_thread_parallel_conf(void);
+//extern WORKER_CONF_t   get_thread_worker_conf(void);
 
 
-void wakeup_prach_gNB(PHY_VARS_gNB *gNB,RU_t *ru,int frame,int subframe);
+void wakeup_prach_gNB(PHY_VARS_gNB *gNB, RU_t *ru, int frame, int subframe);
 
 extern uint8_t nfapi_mode;
 extern void oai_subframe_ind(uint16_t sfn, uint16_t sf);
@@ -152,16 +153,16 @@ extern void add_subframe(uint16_t *frameP, uint16_t *subframeP, int offset);
 #define TICK_TO_US(ts) (ts.trials==0?0:ts.diff/ts.trials)
 
 
-static inline int rxtx(PHY_VARS_gNB *gNB,int frame_rx, int slot_rx, int frame_tx, int slot_tx, char *thread_name) {
+static inline int rxtx(PHY_VARS_gNB *gNB, int frame_rx, int slot_rx, int frame_tx, int slot_tx, char *thread_name) {
   start_meas(&softmodem_stats_rxtx_sf);
 
   // *******************************************************************
 
   if (nfapi_mode == 1) {
-	  if(slotsInFrameFirstTime == 0){
-		  slotsInFrame = 10*pow(2,gNB->gNB_config.subframe_config.numerology_index_mu.value);
-		  slotsInFrameFirstTime = 1;
-	  }
+    if(slotsInFrameFirstTime == 0) {
+      slotsInFrame = 10*pow(2,gNB->gNB_config.subframe_config.numerology_index_mu.value);
+      slotsInFrameFirstTime = 1;
+    }
 
     // I am a PNF and I need to let nFAPI know that we have a (sub)frame tick
     //add_subframe(&frame, &subframe, 4);
@@ -192,17 +193,20 @@ static inline int rxtx(PHY_VARS_gNB *gNB,int frame_rx, int slot_rx, int frame_tx
   // ****************************************
   // Common RX procedures subframe n
   T(T_GNB_PHY_DL_TICK, T_INT(gNB->Mod_id), T_INT(frame_tx), T_INT(slot_tx));
-  /*
-    // if this is IF5 or 3GPP_gNB
-    if (gNB && gNB->RU_list && gNB->RU_list[0] && gNB->RU_list[0]->function < NGFI_RAU_IF4p5) {
-      wakeup_prach_gNB(gNB,NULL,proc->frame_rx,proc->slot_rx);
-    }
+/*
+  // if this is IF5 or 3GPP_gNB
+  if (gNB && gNB->RU_list && gNB->RU_list[0] && gNB->RU_list[0]->function < NGFI_RAU_IF4p5) {
+    wakeup_prach_gNB(gNB,NULL,proc->frame_rx,proc->slot_rx);
+  }
 
-    // UE-specific RX processing for subframe n
-    if (nfapi_mode == 0 || nfapi_mode == 1) {
-      phy_procedures_gNB_uespec_RX(gNB, proc, no_relay );
-    }
-  */
+  // UE-specific RX processing for subframe n
+  if (nfapi_mode == 0 || nfapi_mode == 1) */
+
+  if (slot_rx == NR_UPLINK_SLOT || gNB->frame_parms.frame_type == FDD) {
+    nfapi_nr_ul_config_ulsch_pdu_rel15_t *ulsch_pdu_rel15 = &gNB->ulsch[1][0]->harq_processes[0]->ulsch_pdu.ulsch_pdu_rel15;
+    phy_procedures_gNB_uespec_RX(gNB, frame_rx, slot_rx, ulsch_pdu_rel15->start_symbol, ulsch_pdu_rel15->start_symbol + ulsch_pdu_rel15->number_symbols);
+  }
+
   pthread_mutex_lock(&gNB->UL_INFO_mutex);
   gNB->UL_INFO.frame     = frame_rx;
   gNB->UL_INFO.slot      = slot_rx;
@@ -670,11 +674,7 @@ static void* gNB_thread_prach( void* param ) {
    if (wait_on_condition(&proc->mutex_prach,&proc->cond_prach,&proc->instance_cnt_prach,"gNB_prach_thread") < 0) break;
 
    LOG_D(PHY,"Running gNB prach procedures\n");
-   prach_procedures(gNB
-#if (RRC_VERSION >= MAKE_VERSION(14, 0, 0))
-      ,0
-#endif
-      );
+   prach_procedures(gNB ,0);
 
    if (release_thread(&proc->mutex_prach,&proc->instance_cnt_prach,"gNB_prach_thread") < 0) break;
  }
