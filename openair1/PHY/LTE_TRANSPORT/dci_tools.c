@@ -2003,6 +2003,7 @@ void fill_ulsch(PHY_VARS_eNB *eNB,int UE_id,nfapi_ul_config_ulsch_pdu *ulsch_pdu
   ulsch->harq_processes[harq_pid]->Qm    = ulsch_pdu->ulsch_pdu_rel8.modulation_type;
   // Set O_ACK to 0 by default, will be set of DLSCH is scheduled and needs to be 
   ulsch->harq_processes[harq_pid]->O_ACK         = 0;
+  ulsch->harq_processes[harq_pid]->O_RI         = 0;
 
   if ((ulsch->harq_processes[harq_pid]->status == SCH_IDLE) ||
       (ulsch->harq_processes[harq_pid]->ndi    != ulsch_pdu->ulsch_pdu_rel8.new_data_indication) ||
