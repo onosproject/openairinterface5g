@@ -1262,10 +1262,14 @@ getm_mac(COMMON_channels_t * cc,unsigned char subframe)
   else {
     switch (cc->tdd_Config->subframeAssignment) {
     case 1:
-      if (subframe == 1) {
-        return(1);
-      } else if (subframe == 6) {
-        return(1); // To be updated
+      if (subframe == 0) {
+        return(0);
+      } else if (subframe == 4) {
+        return(0);
+      } else if (subframe == 5) {
+        return(0);
+      } else if (subframe == 9) {
+        return(0); // To be updated
       } else {
         LOG_E(MAC,"getm_mac illegl subframe %d\n",subframe);
         return(0);
