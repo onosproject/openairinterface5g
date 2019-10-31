@@ -91,8 +91,11 @@ Options
 -i | --install-system-files
    Install OpenAirInterface required files in Linux system
    This option will require root password
--g | --run-with-gdb
-   Add debugging symbols to compilation directives. It also disables any compiler optimization. Only for debugging. Do not use in normal operation!
+-g | --run-with-gdb <Release | RelWithDebInfo | MinSizeRel | Debug
+  specify the build mode used by cmake. defaults to Debug mode if -g is used alone, with no mode parameter
+  if -g is not specifies, Release mode is used.
+-G | --cmaketrace
+   enable cmake debugging messages
 --eNB
   Makes the LTE softmodem
 --gNB
@@ -192,12 +195,43 @@ function main() {
             INSTALL_SYSTEM_FILES=1
             echo_info "Will copy OpenAirInterface files in Linux directories"
             shift;;
-       -g | --run-with-gdb)
-            GDB=1
-            CMAKE_BUILD_TYPE="Debug"
-            echo_info "Will Compile with gdb symbols and disable compiler optimization"
-            CMAKE_CMD="$CMAKE_CMD -DCMAKE_BUILD_TYPE=Debug --trace-expand"
+       -g | --run-with-gdb) 
+            case "$2" in
+                "Release")
+                    GDB=0
+                    CMAKE_BUILD_TYPE="Release"
+                    echo_info "Will Compile without gdb symbols and with compiler optimization"
+                    CMAKE_CMD="$CMAKE_CMD -DCMAKE_BUILD_TYPE=Release"
+                    shift
+                    ;;
+                "RelWithDebInfo")
+                    GDB=0
+                    CMAKE_BUILD_TYPE="RelWithDebInfo"
+                    echo_info "Will Compile with gdb symbols"
+                    CMAKE_CMD="$CMAKE_CMD -DCMAKE_BUILD_TYPE=RelWithDebInfo"                      
+                    shift
+                    ;;
+                "MinSizeRel")
+                    GDB=0
+                    CMAKE_BUILD_TYPE="MinSizeRel"
+                    echo_info "Will Compile for minimal exec size"
+                    CMAKE_CMD="$CMAKE_CMD -DCMAKE_BUILD_TYPE=MinSizeRel"                      
+                    shift
+                    ;;                    
+                "Debug" | *)
+                    GDB=1
+                    CMAKE_BUILD_TYPE="Debug"
+                    echo_info "Will Compile with gdb symbols and disable compiler optimization"
+                    CMAKE_CMD="$CMAKE_CMD -DCMAKE_BUILD_TYPE=Debug"
+                    if [ "$1" == "Debug" ] ; then
+                    	shift
+                    fi
+                    ;;
+            esac
             shift;;
+       -G | --cmaketrace)
+       	   CMAKE_CMD="$CMAKE_CMD --trace-expand"
+       	   shift;;
        --eNB)
             eNB=1
             echo_info "Will compile eNB"

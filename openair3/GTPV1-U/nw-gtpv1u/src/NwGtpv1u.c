@@ -51,8 +51,8 @@
 
 #include "gtpv1u.h"
 #if defined(ENB_MODE)
-#include "common/utils/LOG/log.h"
-#include "common/utils/LOG/vcd_signal_dumper.h"
+  #include "common/utils/LOG/log.h"
+  #include "common/utils/LOG/vcd_signal_dumper.h"
 #endif
 
 #ifdef __cplusplus
@@ -68,8 +68,7 @@ extern "C" {
 
 
 void
-nwGtpv1uDisplayBanner(void)
-{
+nwGtpv1uDisplayBanner(void) {
   printf(" *----------------------------------------------------------------------------*\n");
   printf(" *                                                                            *\n");
   printf(" *                             n w - g t p v 2 u                              *\n");
@@ -102,7 +101,6 @@ nwGtpv1uDisplayBanner(void)
   printf(" * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF   *\n");
   printf(" * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.          *\n");
   printf(" *----------------------------------------------------------------------------*\n\n");
-
 }
 /*---------------------------------------------------------------------------
  * RBTree Search Functions
@@ -144,8 +142,7 @@ RB_GENERATE(NwGtpv1uTunnelEndPointIdentifierMap, NwGtpv1uTunnelEndPoint,
 
 static inline NwS32T
 nwGtpv1uCompareTeid(struct NwGtpv1uTunnelEndPoint *a,
-                    struct NwGtpv1uTunnelEndPoint *b)
-{
+                    struct NwGtpv1uTunnelEndPoint *b) {
   if(a->teid > b->teid) {
     return 1;
   }
@@ -167,8 +164,7 @@ nwGtpv1uCompareTeid(struct NwGtpv1uTunnelEndPoint *a,
  */
 
 static inline NwS32T
-nwGtpv1uCompareSeqNum(struct NwGtpv1uTrxn *a, struct NwGtpv1uTrxn *b)
-{
+nwGtpv1uCompareSeqNum(struct NwGtpv1uTrxn *a, struct NwGtpv1uTrxn *b) {
   if(a->seqNum > b->seqNum) {
     return 1;
   }
@@ -197,31 +193,24 @@ nwGtpv1uCompareSeqNum(struct NwGtpv1uTrxn *a, struct NwGtpv1uTrxn *b)
 
 static NwGtpv1uRcT
 nwGtpv1uCreateAndSendMsg( NwGtpv1uStackT *thiz, uint32_t peerIp, uint16_t peerPort,
-                          NwGtpv1uMsgT *pMsg)
-{
+                          NwGtpv1uMsgT *pMsg) {
   NwGtpv1uRcT rc = NW_GTPV1U_FAILURE;
   uint8_t *msgHdr;
-
   NW_ASSERT(thiz);
   NW_ASSERT(pMsg);
-
 #if defined(LOG_GTPU) && LOG_GTPU > 0
   NW_ENTER(thiz);
 #endif
-
   msgHdr = &pMsg->msgBuf[pMsg->msgBufOffset];
   NW_ASSERT(msgHdr != NULL);
-
   *(msgHdr++)         = (pMsg->version << 5)            |
                         (pMsg->protocolType << 4)       |
                         (pMsg->extHdrFlag << 2)         |
                         (pMsg->seqNumFlag << 1)         |
                         (pMsg->npduNumFlag);
-
   *(msgHdr++)         = (pMsg->msgType);
   *((uint16_t *) msgHdr) = htons(pMsg->msgLen);
   msgHdr += 2;
-
   *((uint32_t *) msgHdr) = htonl(pMsg->teid);
   msgHdr += 4;
 #if defined(LOG_GTPU) && LOG_GTPU > 0
@@ -234,10 +223,8 @@ nwGtpv1uCreateAndSendMsg( NwGtpv1uStackT *thiz, uint32_t peerIp, uint16_t peerPo
   if(pMsg->seqNumFlag || pMsg->extHdrFlag || pMsg->npduNumFlag) {
     *((uint16_t *) msgHdr) = (pMsg->seqNumFlag ? htons(pMsg->seqNum) : 0x0000);
     msgHdr += 2;
-
     *((uint8_t *) msgHdr) = (pMsg->npduNumFlag ? htons(pMsg->npduNum) : 0x00);
     msgHdr++;
-
     *((uint8_t *) msgHdr) = (pMsg->extHdrFlag ? htons(pMsg->nextExtHdrType) : 0x00);
     msgHdr++;
   }
@@ -248,7 +235,6 @@ nwGtpv1uCreateAndSendMsg( NwGtpv1uStackT *thiz, uint32_t peerIp, uint16_t peerPo
                                     pMsg->msgBufOffset,
                                     peerIp,
                                     peerPort);
-
 #if defined(LOG_GTPU) && LOG_GTPU > 0
   NW_LEAVE(thiz);
 #endif
@@ -270,15 +256,12 @@ nwGtpv1uSendUlpMessageIndication( NW_IN NwGtpv1uStackT *thiz,
                                   NW_IN uint32_t  peerIp,
                                   NW_IN uint16_t  peerPort,
                                   NW_IN uint8_t  *pMsgBuf,
-                                  NW_IN uint16_t  msgLength)
-{
+                                  NW_IN uint16_t  msgLength) {
   NwGtpv1uRcT rc = NW_GTPV1U_FAILURE;
   NwGtpv1uUlpApiT ulpApi;
-
 #if defined(LOG_GTPU) && LOG_GTPU > 0
   NW_ENTER(thiz);
 #endif
-
   ulpApi.apiType                        = apiType;
   ulpApi.apiInfo.recvMsgInfo.msgType    = msgType;
   ulpApi.apiInfo.recvMsgInfo.hUlpTrxn   = hUlpTrxn;
@@ -293,23 +276,18 @@ nwGtpv1uSendUlpMessageIndication( NW_IN NwGtpv1uStackT *thiz,
 
   rc = thiz->ulp.ulpReqCallback(thiz->ulp.hUlp, &ulpApi);
   NW_ASSERT(rc == NW_GTPV1U_OK);
-
 #if defined(LOG_GTPU) && LOG_GTPU > 0
   NW_LEAVE(thiz);
 #endif
-
   return rc;
 }
 
 NwGtpv1uRcT
-nwGtpv1uPeerRspTimeout(void *arg)
-{
+nwGtpv1uPeerRspTimeout(void *arg) {
   NwGtpv1uRcT rc = NW_GTPV1U_OK;
   NwGtpv1uTrxnT *thiz;
   NwGtpv1uTimeoutInfoT *timeoutInfo = arg;
-
   GTPU_WARNING( "Retransmission timer expired\n");
-
   thiz = ((NwGtpv1uTrxnT *)timeoutInfo->timeoutArg);
   rc = thiz->pStack->udp.udpDataReqCallback(thiz->pStack->udp.hUdp,
        thiz->pMsg->msgBuf,
@@ -346,23 +324,19 @@ static NwGtpv1uRcT
 NwGtpv1uCreateTunnelEndPoint( NW_IN  NwGtpv1uStackT *thiz,
                               NW_IN  uint32_t teid,
                               NW_IN  NwGtpv1uUlpSessionHandleT hUlpSession,
-                              NW_OUT NwGtpv1uStackSessionHandleT *phStackSession )
-{
+                              NW_OUT NwGtpv1uStackSessionHandleT *phStackSession ) {
   NwGtpv1uRcT rc = NW_GTPV1U_OK;
   NwGtpv1uTunnelEndPointT *pTunnelEndPoint;
   NwGtpv1uTunnelEndPointT *pCollision;
-
 #if defined(LOG_GTPU) && LOG_GTPU > 0
   NW_ENTER(thiz);
 #endif
   pTunnelEndPoint = nwGtpTunnelEndPointNew(thiz);
 
   if(pTunnelEndPoint) {
-
     pTunnelEndPoint->teid           = teid;
     pTunnelEndPoint->pStack         = thiz;
     pTunnelEndPoint->hUlpSession    = hUlpSession;
-
     pCollision = RB_INSERT(NwGtpv1uTunnelEndPointIdentifierMap, &(thiz->teidMap),
                            pTunnelEndPoint);
 
@@ -378,6 +352,7 @@ NwGtpv1uCreateTunnelEndPoint( NW_IN  NwGtpv1uStackT *thiz,
       *phStackSession = (NwGtpv1uStackSessionHandleT) pTunnelEndPoint;
       pTunnelEndPoint = RB_FIND(NwGtpv1uTunnelEndPointIdentifierMap,
                                 &(thiz->teidMap), pTunnelEndPoint);
+
       //NW_ASSERT(pTunnelEndPoint);
       if (!pTunnelEndPoint) {
         GTPU_ERROR("Tunnel end-point cannot be NULL");
@@ -387,7 +362,6 @@ NwGtpv1uCreateTunnelEndPoint( NW_IN  NwGtpv1uStackT *thiz,
                    pTunnelEndPoint, (unsigned int)teid, (unsigned int)teid);
       }
     }
-
   } else {
     *phStackSession = (NwGtpv1uStackSessionHandleT) NULL;
     rc = NW_GTPV1U_FAILURE;
@@ -409,10 +383,9 @@ NwGtpv1uCreateTunnelEndPoint( NW_IN  NwGtpv1uStackT *thiz,
 
 static NwGtpv1uRcT
 nwGtpv1uDestroyTunnelEndPoint( NwGtpv1uStackT *thiz,
-                               NW_IN NwGtpv1uUlpApiT *pUlpReq)
-{
+                               NW_IN NwGtpv1uUlpApiT *pUlpReq) {
   NwGtpv1uRcT rc = NW_GTPV1U_OK;
-  NwGtpv1uTunnelEndPointT *pRemovedTeid;
+  __attribute__ ((unused)) NwGtpv1uTunnelEndPointT *pRemovedTeid;
 
   if(pUlpReq->apiInfo.destroyTunnelEndPointInfo.hStackSessionHandle) {
     GTPU_DEBUG(  "Destroying Tunnel end-point '%lx'",
@@ -420,10 +393,8 @@ nwGtpv1uDestroyTunnelEndPoint( NwGtpv1uStackT *thiz,
     pRemovedTeid = RB_REMOVE(NwGtpv1uTunnelEndPointIdentifierMap, &(thiz->teidMap),
                              (NwGtpv1uTunnelEndPointT *)(
                                pUlpReq->apiInfo.destroyTunnelEndPointInfo.hStackSessionHandle));
-
     NW_ASSERT(pRemovedTeid == (NwGtpv1uTunnelEndPointT *)(
                 pUlpReq->apiInfo.destroyTunnelEndPointInfo.hStackSessionHandle));
-
     rc = nwGtpTunnelEndPointDestroy(thiz,
                                     (NwGtpv1uTunnelEndPointT *)
                                     pUlpReq->apiInfo.destroyTunnelEndPointInfo.hStackSessionHandle);
@@ -444,11 +415,9 @@ nwGtpv1uDestroyTunnelEndPoint( NwGtpv1uStackT *thiz,
  */
 
 static NwGtpv1uRcT
-nwGtpv1uInitialReq( NW_IN NwGtpv1uStackT *thiz, NW_IN NwGtpv1uUlpApiT *pUlpReq)
-{
+nwGtpv1uInitialReq( NW_IN NwGtpv1uStackT *thiz, NW_IN NwGtpv1uUlpApiT *pUlpReq) {
   NwGtpv1uRcT rc = NW_GTPV1U_FAILURE;
   NwGtpv1uTrxnT *pTrxn;
-
 #if defined(LOG_GTPU) && LOG_GTPU > 0
   NW_ENTER(thiz);
 #endif
@@ -487,23 +456,18 @@ nwGtpv1uInitialReq( NW_IN NwGtpv1uStackT *thiz, NW_IN NwGtpv1uUlpApiT *pUlpReq)
  */
 
 static NwGtpv1uRcT
-nwGtpv1uSendto( NwGtpv1uStackT *thiz,  NW_IN NwGtpv1uUlpApiT *pUlpReq)
-{
+nwGtpv1uSendto( NwGtpv1uStackT *thiz,  NW_IN NwGtpv1uUlpApiT *pUlpReq) {
   NwGtpv1uRcT rc = NW_GTPV1U_FAILURE;
-
   NW_ASSERT(thiz);
 #if defined(LOG_GTPU) && LOG_GTPU > 0
   NW_ENTER(thiz);
 #endif
-
   (void) nwGtpv1uMsgSetTeid(pUlpReq->apiInfo.sendtoInfo.hMsg,
                             pUlpReq->apiInfo.sendtoInfo.teid);
-
   rc = nwGtpv1uCreateAndSendMsg(thiz,
                                 pUlpReq->apiInfo.sendtoInfo.ipAddr,
                                 2152,
                                 (NwGtpv1uMsgT *) (NwGtpv1uMsgT *) pUlpReq->apiInfo.sendtoInfo.hMsg);
-
 #if defined(LOG_GTPU) && LOG_GTPU > 0
   NW_LEAVE(thiz);
 #endif
@@ -530,22 +494,17 @@ nwGtpv1uProcessGpdu( NwGtpv1uStackT *thiz,
   NwGtpv1uTunnelEndPointT *pTunnelEndPoint   = NULL;
   NwGtpv1uTunnelEndPointT  tunnelEndPointKey;
   //    uint16_t                   hdr_len           = 0;
-
 #if defined(LOG_GTPU) && LOG_GTPU > 0
   NW_ENTER(thiz);
 #endif
-
   // no buffer offset
   msgHdr = (NwGtpv1uMsgHeaderT *) gpdu;
-
   tunnelEndPointKey.teid = ntohl(msgHdr->teid);
-
   pTunnelEndPoint = RB_FIND(NwGtpv1uTunnelEndPointIdentifierMap,
                             &(thiz->teidMap), &tunnelEndPointKey);
 
   if(pTunnelEndPoint) {
     NwGtpv1uMsgHandleT hMsg;
-
     rc = nwGtpv1uMsgFromBufferNew( (NwGtpv1uStackHandleT)thiz,
                                    (uint8_t *)gpdu,
                                    gpduLen,
@@ -570,7 +529,6 @@ nwGtpv1uProcessGpdu( NwGtpv1uStackT *thiz,
         " G-PDU ltid %u size %u",
         tunnelEndPointKey.teid,
         gpduLen);
-
       rc = nwGtpSessionSendMsgApiToUlpEntity(pTunnelEndPoint, pMsg);
     }
   } else {
@@ -604,15 +562,12 @@ nwGtpv1uHandleEchoReq(NW_IN NwGtpv1uStackT *thiz,
                       NW_IN uint8_t *msgBuf,
                       NW_IN uint32_t msgBufLen,
                       NW_IN uint16_t peerPort,
-                      NW_IN uint32_t peerIp)
-{
+                      NW_IN uint32_t peerIp) {
   NwGtpv1uRcT           rc     = NW_GTPV1U_FAILURE;
   uint16_t                seqNum = 0;
   NwGtpv1uMsgHandleT    hMsg   = 0;
   int                   bufLen = 0;
-
   seqNum = ntohs(*(uint16_t *) (msgBuf + (((*msgBuf) & 0x02) ? 8 : 4)));
-
   MSC_LOG_RX_MESSAGE(
     (thiz->stackType == GTPU_STACK_ENB) ? MSC_GTPU_ENB:MSC_GTPU_SGW,
     (thiz->stackType == GTPU_STACK_ENB) ? MSC_GTPU_SGW:MSC_GTPU_ENB,
@@ -621,7 +576,6 @@ nwGtpv1uHandleEchoReq(NW_IN NwGtpv1uStackT *thiz,
     MSC_AS_TIME_FMT" ECHO-REQ seq %u size %u",
     0,0,seqNum, msgBufLen);
   /* Send Echo Response */
-
   rc = nwGtpv1uMsgNew( (NwGtpv1uStackHandleT)thiz,
                        NW_TRUE,         /* SeqNum flag    */
                        NW_FALSE,
@@ -632,28 +586,24 @@ nwGtpv1uHandleEchoReq(NW_IN NwGtpv1uStackT *thiz,
                        0,
                        0,
                        (&hMsg));
-
-  bufLen = sizeof(NwGtpv1uIeTv1T)+ ((NwGtpv1uMsgT*)hMsg)->msgLen;
-
-//#warning CROUX DIRTY +16, TO BE FIXED!!!
+  bufLen = sizeof(NwGtpv1uIeTv1T)+ ((NwGtpv1uMsgT *)hMsg)->msgLen;
+  //#warning CROUX DIRTY +16, TO BE FIXED!!!
   /* the +16 is there because by analyzing memory allocation with some external
    * tool, I saw that there were 6 bytes accessed after bufLen in nwGtpv1uCreateAndSendMsg
    * the value "16" has been chosen arbitrarily, just bigger than 6
    */
-  ((NwGtpv1uMsgT*)hMsg)->msgBuf = itti_malloc(
-                                    TASK_GTPV1_U,
-                                    TASK_UDP,
-                                    bufLen + 16 /* CROUX - dirty +16, to be fixed! */);
-  ((NwGtpv1uMsgT*)hMsg)->msgBufLen    = bufLen;
+  ((NwGtpv1uMsgT *)hMsg)->msgBuf = itti_malloc(
+                                     TASK_GTPV1_U,
+                                     TASK_UDP,
+                                     bufLen + 16 /* CROUX - dirty +16, to be fixed! */);
+  ((NwGtpv1uMsgT *)hMsg)->msgBufLen    = bufLen;
   NW_ASSERT(NW_GTPV1U_OK == rc);
-
   /*
    * The Restart Counter value in the Recovery information element shall
    * not be used, i.e. it shall be set to zero by the sender and shall be
    * ignored by the receiver.
    */
   rc = nwGtpv1uMsgAddIeTV1(hMsg, NW_GTPV1U_IE_RECOVERY, 0x00);
-
 #if defined(LOG_GTPU) && LOG_GTPU > 0
   GTPU_INFO("Sending NW_GTP_ECHO_RSP message to %x:%x with seq %u\n",
             peerIp,
@@ -672,10 +622,8 @@ nwGtpv1uHandleEchoReq(NW_IN NwGtpv1uStackT *thiz,
          peerIp,
          peerPort,
          (NwGtpv1uMsgT *) hMsg);
-
   rc = nwGtpv1uMsgDelete((NwGtpv1uStackHandleT)thiz, hMsg);
   NW_ASSERT(NW_GTPV1U_OK == rc);
-
   return rc;
 }
 
@@ -688,11 +636,9 @@ nwGtpv1uHandleEchoReq(NW_IN NwGtpv1uStackT *thiz,
  *--------------------------------------------------------------------------*/
 
 NwGtpv1uRcT
-nwGtpv1uInitialize( NW_INOUT NwGtpv1uStackHandleT *hGtpuStackHandle, uint32_t stackType)
-{
+nwGtpv1uInitialize( NW_INOUT NwGtpv1uStackHandleT *hGtpuStackHandle, uint32_t stackType) {
   NwGtpv1uRcT rc = NW_GTPV1U_FAILURE;
   NwGtpv1uStackT *thiz;
-
   thiz = (NwGtpv1uStackT *) malloc( sizeof(NwGtpv1uStackT));
 
   if(thiz) {
@@ -714,7 +660,6 @@ nwGtpv1uInitialize( NW_INOUT NwGtpv1uStackHandleT *hGtpuStackHandle, uint32_t st
     rc = NW_GTPV1U_FAILURE;
   }
 
-
   *hGtpuStackHandle = (NwGtpv1uStackHandleT) thiz;
   return rc;
 }
@@ -725,8 +670,7 @@ nwGtpv1uInitialize( NW_INOUT NwGtpv1uStackHandleT *hGtpuStackHandle, uint32_t st
  *--------------------------------------------------------------------------*/
 
 NwGtpv1uRcT
-nwGtpv1uFinalize( NW_IN  NwGtpv1uStackHandleT hGtpuStackHandle)
-{
+nwGtpv1uFinalize( NW_IN  NwGtpv1uStackHandleT hGtpuStackHandle) {
   NwGtpv1uRcT rc = NW_GTPV1U_FAILURE;
 
   if(hGtpuStackHandle) {
@@ -746,8 +690,7 @@ nwGtpv1uFinalize( NW_IN  NwGtpv1uStackHandleT hGtpuStackHandle)
 
 NwGtpv1uRcT
 nwGtpv1uSetUlpEntity( NW_IN NwGtpv1uStackHandleT hGtpuStackHandle,
-                      NW_IN NwGtpv1uUlpEntityT *pUlpEntity)
-{
+                      NW_IN NwGtpv1uUlpEntityT *pUlpEntity) {
   NwGtpv1uRcT rc = NW_GTPV1U_FAILURE;
   NwGtpv1uStackT *thiz = (NwGtpv1uStackT *) hGtpuStackHandle;
 
@@ -764,8 +707,7 @@ nwGtpv1uSetUlpEntity( NW_IN NwGtpv1uStackHandleT hGtpuStackHandle,
 
 NwGtpv1uRcT
 nwGtpv1uSetUdpEntity( NW_IN NwGtpv1uStackHandleT hGtpuStackHandle,
-                      NW_IN NwGtpv1uUdpEntityT *pUdpEntity)
-{
+                      NW_IN NwGtpv1uUdpEntityT *pUdpEntity) {
   NwGtpv1uRcT rc = NW_GTPV1U_FAILURE;
   NwGtpv1uStackT *thiz = (NwGtpv1uStackT *) hGtpuStackHandle;
 
@@ -781,8 +723,7 @@ nwGtpv1uSetUdpEntity( NW_IN NwGtpv1uStackHandleT hGtpuStackHandle,
 
 NwGtpv1uRcT
 nwGtpv1uSetMemMgrEntity( NW_IN NwGtpv1uStackHandleT hGtpuStackHandle,
-                         NW_IN NwGtpv1uMemMgrEntityT *pMemMgrEntity)
-{
+                         NW_IN NwGtpv1uMemMgrEntityT *pMemMgrEntity) {
   NwGtpv1uRcT rc = NW_GTPV1U_FAILURE;
   NwGtpv1uStackT *thiz = (NwGtpv1uStackT *) hGtpuStackHandle;
 
@@ -799,8 +740,7 @@ nwGtpv1uSetMemMgrEntity( NW_IN NwGtpv1uStackHandleT hGtpuStackHandle,
 
 NwGtpv1uRcT
 nwGtpv1uSetTimerMgrEntity( NW_IN NwGtpv1uStackHandleT hGtpuStackHandle,
-                           NW_IN NwGtpv1uTimerMgrEntityT *pTmrMgrEntity)
-{
+                           NW_IN NwGtpv1uTimerMgrEntityT *pTmrMgrEntity) {
   NwGtpv1uRcT rc = NW_GTPV1U_FAILURE;
   NwGtpv1uStackT *thiz = (NwGtpv1uStackT *) hGtpuStackHandle;
 
@@ -817,8 +757,7 @@ nwGtpv1uSetTimerMgrEntity( NW_IN NwGtpv1uStackHandleT hGtpuStackHandle,
 
 NwGtpv1uRcT
 nwGtpv1uSetLogMgrEntity( NW_IN NwGtpv1uStackHandleT hGtpuStackHandle,
-                         NW_IN NwGtpv1uLogMgrEntityT *pLogMgrEntity)
-{
+                         NW_IN NwGtpv1uLogMgrEntityT *pLogMgrEntity) {
   NwGtpv1uRcT rc = NW_GTPV1U_FAILURE;
   NwGtpv1uStackT *thiz = (NwGtpv1uStackT *) hGtpuStackHandle;
 
@@ -834,8 +773,7 @@ nwGtpv1uSetLogMgrEntity( NW_IN NwGtpv1uStackHandleT hGtpuStackHandle,
 
 NwGtpv1uRcT
 nwGtpv1uSetLogLevel( NW_IN NwGtpv1uStackHandleT hGtpuStackHandle,
-                     NW_IN uint32_t logLevel)
-{
+                     NW_IN uint32_t logLevel) {
   NwGtpv1uStackT *thiz = (NwGtpv1uStackT *) hGtpuStackHandle;
   thiz->logLevel = logLevel;
   return NW_GTPV1U_OK;
@@ -850,68 +788,65 @@ nwGtpv1uProcessUdpReq( NW_IN NwGtpv1uStackHandleT hGtpuStackHandle,
                        NW_IN uint8_t *udpData,
                        NW_IN uint32_t udpDataLen,
                        NW_IN uint16_t peerPort,
-                       NW_IN uint32_t peerIp)
-{
+                       NW_IN uint32_t peerIp) {
   NwGtpv1uRcT           ret = NW_GTPV1U_FAILURE;
   NwGtpv1uStackT       *thiz;
   uint16_t                msgType;
-
 #if defined(ENB_MODE)
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_GTPV1U_PROCESS_UDP_REQ, VCD_FUNCTION_IN);
 #endif
   thiz = (NwGtpv1uStackT *) hGtpuStackHandle;
-
   NW_ASSERT(thiz);
-
   msgType = *((uint8_t *)(udpData + 1));
 
   switch(msgType) {
-  case NW_GTP_ECHO_REQ:
-    GTPU_DEBUG("NW_GTP_ECHO_REQ\n");
-    ret = nwGtpv1uHandleEchoReq( thiz, udpData, udpDataLen, peerPort, peerIp);
-    break;
+    case NW_GTP_ECHO_REQ:
+      GTPU_DEBUG("NW_GTP_ECHO_REQ\n");
+      ret = nwGtpv1uHandleEchoReq( thiz, udpData, udpDataLen, peerPort, peerIp);
+      break;
 
-  case NW_GTP_ERROR_INDICATION:
-    GTPU_DEBUG("NW_GTP_ERROR_INDICATION\n");
-    ret = nwGtpv1uSendUlpMessageIndication( thiz,
-                                            0,
-                                            NW_GTPV1U_ULP_API_RECV_MSG,
-                                            msgType,
-                                            peerIp,
-                                            peerPort,
-                                            udpData,
-                                            udpDataLen);
+    case NW_GTP_ERROR_INDICATION:
+      GTPU_DEBUG("NW_GTP_ERROR_INDICATION\n");
+      ret = nwGtpv1uSendUlpMessageIndication( thiz,
+                                              0,
+                                              NW_GTPV1U_ULP_API_RECV_MSG,
+                                              msgType,
+                                              peerIp,
+                                              peerPort,
+                                              udpData,
+                                              udpDataLen);
+      NW_ASSERT(ret == NW_GTPV1U_OK);
+      break;
 
-    NW_ASSERT(ret == NW_GTPV1U_OK);
-    break;
+    case NW_GTP_ECHO_RSP:
+      GTPU_DEBUG("NW_GTP_ECHO_RSP\n");
+      ret = NW_GTPV1U_OK;
+      break;
 
-  case NW_GTP_ECHO_RSP:
-    GTPU_DEBUG("NW_GTP_ECHO_RSP\n");
-    ret = NW_GTPV1U_OK;
-    break;
-
-  case NW_GTP_GPDU:
+    case NW_GTP_GPDU:
 #if defined(LOG_GTPU) && LOG_GTPU > 0
-    GTPU_DEBUG("NW_GTP_GPDU: DATA COMING FROM UDP\n");
+      GTPU_DEBUG("NW_GTP_GPDU: DATA COMING FROM UDP\n");
 #endif
-    ret = nwGtpv1uProcessGpdu(thiz, udpData, udpDataLen, peerIp);
-    break;
+      ret = nwGtpv1uProcessGpdu(thiz, udpData, udpDataLen, peerIp);
+      break;
 
-  case NW_GTP_END_MARKER:
+    case NW_GTP_END_MARKER:
 #if defined(LOG_GTPU) && LOG_GTPU > 0
-    for(int i =1; i<= udpDataLen; i++){
-      printf("%02x ", udpData[i-1]);
-      if(i % 20 == 0)printf("\n");
-    }
-#endif  	
-    GTPU_INFO("NW_GTP_END_MARKER\n");
-    ret = nwGtpv1uProcessGpdu(thiz, udpData, udpDataLen, peerIp);
-    break;
+      for(int i =1; i<= udpDataLen; i++) {
+        printf("%02x ", udpData[i-1]);
 
-  default:
-    ret = NW_GTPV1U_FAILURE;
-    NW_ASSERT(0);
-    break;
+        if(i % 20 == 0)printf("\n");
+      }
+
+#endif
+      GTPU_INFO("NW_GTP_END_MARKER\n");
+      ret = nwGtpv1uProcessGpdu(thiz, udpData, udpDataLen, peerIp);
+      break;
+
+    default:
+      ret = NW_GTPV1U_FAILURE;
+      NW_ASSERT(0);
+      break;
   }
 
 #if defined(LOG_GTPU) && LOG_GTPU > 0
@@ -930,52 +865,49 @@ nwGtpv1uProcessUdpReq( NW_IN NwGtpv1uStackHandleT hGtpuStackHandle,
 
 NwGtpv1uRcT
 nwGtpv1uProcessUlpReq( NW_IN NwGtpv1uStackHandleT hGtpuStackHandle,
-                       NW_IN NwGtpv1uUlpApiT *pUlpReq)
-{
+                       NW_IN NwGtpv1uUlpApiT *pUlpReq) {
   NwGtpv1uRcT rc = NW_GTPV1U_FAILURE;
   NwGtpv1uStackT *thiz = (NwGtpv1uStackT *) hGtpuStackHandle;
-
   NW_ASSERT(thiz);
   NW_ASSERT(pUlpReq != NULL);
-
 #if defined(LOG_GTPU) && LOG_GTPU > 0
   NW_ENTER(thiz);
 #endif
 
   switch(pUlpReq->apiType) {
-  case NW_GTPV1U_ULP_API_CREATE_TUNNEL_ENDPOINT: {
-    GTPU_DEBUG("Received NW_GTPV1U_ULP_API_CREATE_TUNNEL_ENDPOINT from ulp\n");
-    rc = NwGtpv1uCreateTunnelEndPoint(thiz,
-                                      pUlpReq->apiInfo.createTunnelEndPointInfo.teid,
-                                      pUlpReq->apiInfo.createTunnelEndPointInfo.hUlpSession,
-                                      &(pUlpReq->apiInfo.createTunnelEndPointInfo.hStackSession));
-  }
-  break;
-
-  case NW_GTPV1U_ULP_API_DESTROY_TUNNEL_ENDPOINT: {
-    GTPU_DEBUG("Received destroy session req from ulp\n");
-    rc = nwGtpv1uDestroyTunnelEndPoint(thiz,  pUlpReq);
-  }
-  break;
-
-  case NW_GTPV1U_ULP_API_INITIAL_REQ: {
-    GTPU_DEBUG("Received initial req from ulp\n");
-    rc = nwGtpv1uInitialReq(thiz, pUlpReq);
-  }
-  break;
-
-  case NW_GTPV1U_ULP_API_SEND_TPDU: {
-#if defined(LOG_GTPU) && LOG_GTPU > 0
-    GTPU_DEBUG("Received send tpdu req from ulp\n");
-#endif
-    rc = nwGtpv1uSendto(thiz,  pUlpReq);
-  }
-  break;
-
-  default:
-    GTPU_DEBUG("Unsupported API received from ulp\n");
-    rc = NW_GTPV1U_FAILURE;
+    case NW_GTPV1U_ULP_API_CREATE_TUNNEL_ENDPOINT: {
+      GTPU_DEBUG("Received NW_GTPV1U_ULP_API_CREATE_TUNNEL_ENDPOINT from ulp\n");
+      rc = NwGtpv1uCreateTunnelEndPoint(thiz,
+                                        pUlpReq->apiInfo.createTunnelEndPointInfo.teid,
+                                        pUlpReq->apiInfo.createTunnelEndPointInfo.hUlpSession,
+                                        &(pUlpReq->apiInfo.createTunnelEndPointInfo.hStackSession));
+    }
     break;
+
+    case NW_GTPV1U_ULP_API_DESTROY_TUNNEL_ENDPOINT: {
+      GTPU_DEBUG("Received destroy session req from ulp\n");
+      rc = nwGtpv1uDestroyTunnelEndPoint(thiz,  pUlpReq);
+    }
+    break;
+
+    case NW_GTPV1U_ULP_API_INITIAL_REQ: {
+      GTPU_DEBUG("Received initial req from ulp\n");
+      rc = nwGtpv1uInitialReq(thiz, pUlpReq);
+    }
+    break;
+
+    case NW_GTPV1U_ULP_API_SEND_TPDU: {
+#if defined(LOG_GTPU) && LOG_GTPU > 0
+      GTPU_DEBUG("Received send tpdu req from ulp\n");
+#endif
+      rc = nwGtpv1uSendto(thiz,  pUlpReq);
+    }
+    break;
+
+    default:
+      GTPU_DEBUG("Unsupported API received from ulp\n");
+      rc = NW_GTPV1U_FAILURE;
+      break;
   }
 
 #if defined(LOG_GTPU) && LOG_GTPU > 0
@@ -989,25 +921,18 @@ nwGtpv1uProcessUlpReq( NW_IN NwGtpv1uStackHandleT hGtpuStackHandle,
  *--------------------------------------------------------------------------*/
 
 NwGtpv1uRcT
-nwGtpv1uProcessTimeout(void *timeoutInfo)
-{
+nwGtpv1uProcessTimeout(void *timeoutInfo) {
   NwGtpv1uRcT rc = NW_GTPV1U_FAILURE;
-  NwGtpv1uStackT *thiz;
-
+  __attribute__ ((unused)) NwGtpv1uStackT *thiz;
   NW_ASSERT(timeoutInfo != NULL);
-
   thiz = (NwGtpv1uStackT *) (((NwGtpv1uTimeoutInfoT *) timeoutInfo)->hStack);
-
   NW_ASSERT(thiz != NULL);
-
 #if defined(LOG_GTPU) && LOG_GTPU > 0
   NW_ENTER(thiz);
 #endif
   GTPU_DEBUG("Received timeout event from ULP with timeoutInfo 0x%p!\n",
              timeoutInfo);
-
   rc = (((NwGtpv1uTimeoutInfoT *) timeoutInfo)->timeoutCallbackFunc) (timeoutInfo);
-
 #if defined(LOG_GTPU) && LOG_GTPU > 0
   NW_LEAVE(thiz);
 #endif

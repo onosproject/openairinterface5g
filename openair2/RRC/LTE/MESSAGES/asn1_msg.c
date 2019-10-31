@@ -4429,7 +4429,7 @@ OAI_UECapability_t *fill_ue_capability(char *UE_EUTRA_Capability_xer_fname) {
   static LTE_InterFreqBandInfo_t InterFreqBandInfo[4][4]; // the macro ASN_SEQUENCE_ADD() does not copy the source, but only stores a reference to it
   static LTE_BandInfoEUTRA_t BandInfoEUTRA[4]; // the macro ASN_SEQUENCE_ADD() does not copy the source, but only stores a reference to it
   asn_enc_rval_t enc_rval;
-  asn_dec_rval_t dec_rval;
+  __attribute__ ((unused)) asn_dec_rval_t dec_rval; /* prevent warning: used only in assert macro */
   long maxNumberROHC_ContextSessions = LTE_PDCP_Parameters__maxNumberROHC_ContextSessions_cs16;
   int i;
   LTE_UE_EUTRA_Capability_t *UE_EUTRA_Capability;
