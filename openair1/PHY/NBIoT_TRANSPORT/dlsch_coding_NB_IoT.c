@@ -38,8 +38,7 @@
 #include "PHY/NBIoT_TRANSPORT/defs_NB_IoT.h"
 //#include "PHY/CODING/extern.h"
 //#include "PHY/CODING/lte_interleaver_inline.h"
-#include "PHY/LTE_TRANSPORT/defs_NB_IoT.h"
-#include "PHY/LTE_TRANSPORT/proto_NB_IoT.h"
+#include "PHY/NBIoT_TRANSPORT/proto_NB_IoT.h"
 //#include "SCHED/defs_NB_IoT.h"
 //#include "defs_nb_iot.h"
 //#include "UTIL/LOG/vcd_signal_dumper.h"
@@ -139,12 +138,10 @@ void ccode_encode_npdsch_NB_IoT (int32_t   numbits,
 ///////////////////////////////////////////////////////////////////////////////
 
 int32_t dlsch_encoding_NB_IoT(unsigned char              *a,
-                              NB_IoT_eNB_DLSCH_t         *dlsch,
+                              NB_IoT_eNB_NDLSCH_t         *dlsch,
                               uint8_t                    Nsf,        // number of subframes required for npdsch pdu transmission calculated from Isf (3GPP spec table)
-                              unsigned int               G,          // G (number of available RE) is implicitly multiplied by 2 (since only QPSK modulation)
-                              time_stats_t               *rm_stats,
-                              time_stats_t               *te_stats,
-                              time_stats_t               *i_stats){
+                              unsigned int               G          // G (number of available RE) is implicitly multiplied by 2 (since only QPSK modulation)
+							  ){
 	uint32_t  crc = 1;
 	//unsigned char harq_pid = dlsch->current_harq_pid;  			// to check during implementation if harq_pid is required in the NB_IoT_eNB_DLSCH_t structure  in defs_NB_IoT.h
 	//uint8_t 	  option1,option2,option3,option4;
@@ -192,7 +189,7 @@ int32_t dlsch_encoding_NB_IoT(unsigned char              *a,
 }
 
 ///////////////////////////////////////////////////////////////////////////
-NB_IoT_eNB_NDLSCH_t *new_eNB_dlsch_NB_IoT(uint32_t Nsoft, uint8_t type, NB_IoT_DL_FRAME_PARMS* frame_parms)
+NB_IoT_eNB_NDLSCH_t *new_eNB_dlsch_NB_IoT(uint8_t length, NB_IoT_DL_FRAME_PARMS* frame_parms)
 {
 
   NB_IoT_eNB_NDLSCH_t *dlsch;
@@ -260,7 +257,7 @@ NB_IoT_eNB_NDLSCH_t *new_eNB_dlsch_NB_IoT(uint32_t Nsoft, uint8_t type, NB_IoT_D
 
 
 ///////////////////////////////////////////////////////////////////////////
-NB_IoT_eNB_NPDCCH_t *new_eNB_dlcch_NB_IoT(LTE_DL_FRAME_PARMS* frame_parms)
+NB_IoT_eNB_NPDCCH_t *new_eNB_dlcch_NB_IoT(NB_IoT_DL_FRAME_PARMS* frame_parms)
 {
 
   NB_IoT_eNB_NPDCCH_t *dlcch;

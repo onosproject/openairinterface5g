@@ -37,8 +37,8 @@
 //#include "PHY/CODING/defs_nb_iot.h"
 //#include "PHY/CODING/extern.h"
 //#include "PHY/CODING/lte_interleaver_inline.h"
-#include "PHY/LTE_TRANSPORT/defs_NB_IoT.h"
-#include "PHY/LTE_TRANSPORT/proto_NB_IoT.h"
+#include "PHY/NBIoT_TRANSPORT/defs_NB_IoT.h"
+#include "PHY/NBIoT_TRANSPORT/proto_NB_IoT.h"
 #include "PHY/impl_defs_lte_NB_IoT.h"
 #include "PHY/impl_defs_top_NB_IoT.h"
 //#include "defs.h"
@@ -135,7 +135,7 @@ int allocate_REs_in_RB_NB_IoT(NB_IoT_DL_FRAME_PARMS 	    *frame_parms,
 
 int dlsch_modulation_NB_IoT(int32_t 				**txdataF,
 							int16_t 				amp,
-							LTE_DL_FRAME_PARMS 	    *frame_parms,
+							NB_IoT_DL_FRAME_PARMS 	    *frame_parms,
 							uint8_t 				control_region_size,      // control region size for LTE , values between 0..3, (0 for stand-alone / 1, 2 or 3 for in-band)
 							NB_IoT_eNB_NDLSCH_t    *dlsch0,                   //NB_IoT_eNB_NDLSCH_t
 							int 					G,						  // number of bits per subframe
