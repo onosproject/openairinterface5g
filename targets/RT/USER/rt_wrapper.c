@@ -312,7 +312,6 @@ void thread_top_init(char *thread_name,
     if (s != 0)
     {
       perror( "pthread_setaffinity_np");
-      exit_fun("Error setting processor affinity");
     }
   }
 #endif //CPU_AFFINITY
@@ -321,7 +320,6 @@ void thread_top_init(char *thread_name,
   s = pthread_getaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
   if (s != 0) {
     perror( "pthread_getaffinity_np");
-    exit_fun("Error getting processor affinity ");
   }
   memset(cpu_affinity,0,sizeof(cpu_affinity));
   for (j = 0; j < 1024; j++)
@@ -338,13 +336,11 @@ void thread_top_init(char *thread_name,
   s = pthread_setschedparam(pthread_self(), policy, &sparam);
   if (s != 0) {
     perror("pthread_setschedparam : ");
-    exit_fun("Error setting thread priority");
   }
   
   s = pthread_getschedparam(pthread_self(), &policy, &sparam);
   if (s != 0) {
     perror("pthread_getschedparam : ");
-    exit_fun("Error getting thread priority");
   }
 
   pthread_setname_np(pthread_self(), thread_name);
