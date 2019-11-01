@@ -232,7 +232,7 @@ typedef struct {                                        // LTE_eNB_DLSCH_t
  /// First-round error threshold for fine-grain rate adaptation
  uint8_t                error_threshold;
  /// Pointers to 8 HARQ processes for the DLSCH
- NB_IoT_DL_eNB_HARQ_t   harq_processes[8];
+ NB_IoT_DL_eNB_HARQ_t   *harq_process;
  /// circular list of free harq PIDs (the oldest come first)
  /// (10 is arbitrary value, must be > to max number of DL HARQ processes in LTE)
  int                    harq_pid_freelist[10];
