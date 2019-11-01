@@ -111,6 +111,8 @@ void pre_scd_nb_rbs_required(    module_id_t     module_idP,
   mac_rlc_status_resp_t        rlc_status;
   uint16_t                     step_size=2;
   N_RB_DL = to_prb(RC.mac[module_idP]->common_channels[CC_id].mib->message.dl_Bandwidth);
+  int header_length_last;
+  int header_length_total;
 
   if(N_RB_DL==50) step_size=3;
 
@@ -123,6 +125,7 @@ void pre_scd_nb_rbs_required(    module_id_t     module_idP,
     if (pre_scd_activeUE[UE_id] != TRUE)
       continue;
 
+    header_length_total = 0;
     // store dlsch buffer
     // clear logical channel interface variables
     UE_template.dl_buffer_total = 0;
@@ -137,7 +140,17 @@ void pre_scd_nb_rbs_required(    module_id_t     module_idP,
 #endif
                           );
       UE_template.dl_buffer_total += rlc_status.bytes_in_buffer; //storing the total dlsch buffer
+      if(rlc_status.bytes_in_buffer > 0){
+          header_length_last = 1 + 1 + (rlc_status.bytes_in_buffer >= 128);
+          header_length_total += header_length_last;
+       }
     }
+
+    if (header_length_total) {
+      header_length_total -= header_length_last;
+      header_length_total++;
+    }
+    UE_template.dl_buffer_total += header_length_total;
 
     // end of store dlsch buffer
     // assgin rbs required
@@ -1834,7 +1847,7 @@ schedule_ue_spec_fairRR(module_id_t module_idP,
         }
       } else {    /* This is a potentially new SDU opportunity */
           // 1st TB
-
+          first_TB_pdu_create_flg = 0;
           ue_sched_ctl->swap_flag[CC_id][harq_pid] = 0;
 
         rlc_status.bytes_in_buffer = 0;
@@ -2360,6 +2373,11 @@ schedule_ue_spec_fairRR(module_id_t module_idP,
           first_TB_pdu_create_flg = 1;
 
           }//1st TB end
+        else{
+            LOG_D(MAC,"[eNB %d][DLSCH] Frame %d Subframe %d  UE_id %x/%d sdu_length_total %d header_len_dcch %d header_len_dtch %d TBS %d\n",
+                        module_idP, frameP, subframeP, rnti, UE_id,
+                        sdu_length_total , header_len_dcch ,  header_len_dtch , TBS );
+        }
 
 //	  printf("dl sfn=%d, sf=%d, buffer=%d, TBS=%d\n", frameP, subframeP, UE_list->UE_template[CC_id][UE_id].dl_buffer_total, UE_list->eNB_UE_stats[CC_id][UE_id].TBS[select_tb]);
 

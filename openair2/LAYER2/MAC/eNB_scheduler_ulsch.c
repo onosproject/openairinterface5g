@@ -200,10 +200,10 @@ rx_sdu(const module_id_t enb_mod_idP,
             UE_id,
             current_rnti);
 
-//      if (ul_cqi > 200) { // too high energy pattern
+      if (ul_cqi > 200) { // too high energy pattern
         UE_scheduling_control->pusch_snr[CC_idP] = ul_cqi;
         LOG_W(MAC, "[MAC] Too high energy pattern\n");
-//      }
+      }
 
       if (UE_scheduling_control->round_UL[CC_idP][harq_pid] == 3) {
         UE_scheduling_control->ul_scheduled &= (~(1 << harq_pid));

@@ -1935,7 +1935,6 @@ void *pre_scd_thread( void *param ) {
   int                     CC_id;
   int                     Mod_id;
   RU_t               *ru      = (RU_t *)param;
-  int                     ret;
 
   // L2-emulator can work only one eNB
   if( NFAPI_MODE==NFAPI_MODE_VNF)
@@ -1945,20 +1944,15 @@ void *pre_scd_thread( void *param ) {
 
   frame = 0;
   subframe = 4;
-  thread_top_init("pre_scd_thread",0,870000,1000000,1000000);
+  thread_top_init("pre_scd_thread",1,870000,1000000,1000000);
 
   while (!oai_exit) {
+    if (wait_on_condition(&ru->proc.mutex_pre_scd,&ru->proc.cond_pre_scd,&ru->proc.instance_pre_scd,"pre_scd_thread") < 0) break;
+
     if(oai_exit) {
       break;
     }
 
-    AssertFatal((ret=pthread_mutex_lock(&ru->proc.mutex_pre_scd ))==0,"mutex_lock returns %d\n",ret);
-
-    if (ru->proc.instance_pre_scd < 0) {
-      pthread_cond_wait(&ru->proc.cond_pre_scd, &ru->proc.mutex_pre_scd);
-    }
-
-    AssertFatal((ret=pthread_mutex_unlock(&ru->proc.mutex_pre_scd))==0,"mutex_unlock returns %d\n",ret);
     PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, Mod_id, ENB_FLAG_YES,
                                    NOT_A_RNTI, frame, subframe,Mod_id);
     pdcp_run(&ctxt);
@@ -1978,9 +1972,7 @@ void *pre_scd_thread( void *param ) {
       subframe++;
     }
 
-    AssertFatal((ret=pthread_mutex_lock(&ru->proc.mutex_pre_scd ))==0,"mutex_lock returns %d\n",ret);
-    ru->proc.instance_pre_scd--;
-    AssertFatal((ret=pthread_mutex_unlock(&ru->proc.mutex_pre_scd))==0,"mutex_unlock returns %d\n",ret);
+    if (release_thread(&ru->proc.mutex_pre_scd,&ru->proc.instance_pre_scd,"pre_scd_thread") < 0) break;
   }
 
   eNB_pre_scd_status = 0;
