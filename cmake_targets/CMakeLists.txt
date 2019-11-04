@@ -326,7 +326,7 @@ add_custom_target (
 set_source_files_properties(${rrc_source} PROPERTIES COMPILE_FLAGS -w) # suppress warnings from generated code
 add_library(RRC_LIB ${rrc_source}
     ${OPENAIR2_DIR}/RRC/LTE/MESSAGES/asn1_msg.c)
-    #${OPENAIR2_DIR}/RRC/LTE/MESSAGES/asn1_msg_NB_IoT.c
+    #${OPENAIR2_DIR}/RRC/NBIOT/MESSAGES/asn1_msg_NB_IoT.c
 add_dependencies(RRC_LIB rrc_flag)
 include_directories ("${RRC_FULL_DIR}")
 

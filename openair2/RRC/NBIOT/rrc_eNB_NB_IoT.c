@@ -32,7 +32,7 @@
 /*NB-IoT include files*/
 //#include "PHY/extern_NB_IoT.h"
 #include "LAYER2/MAC/extern_NB_IoT.h"
-//#include "RRC/LITE/proto_NB_IoT.h"
+#include "RRC/NBIOT/proto_NB_IoT.h"
 #include "defs_NB_IoT.h"
 #include "openair1/SCHED_NBIOT/defs_NB_IoT.h"
 #include "RRC/NBIOT/MESSAGES/asn1_msg_NB_IoT.h"
@@ -115,6 +115,8 @@ extern void*                       bigphys_malloc(int);
  * with the RLC-AM-Data-conf. e.g. ((struct rlc_am_data_req *) (new_sdu_p->data))->mui (rlc_data_req_NB_IoT)
  */
 mui_t                               rrc_eNB_mui_NB_IoT = 0;
+
+
 
 
 
@@ -508,7 +510,7 @@ void rrc_eNB_generate_RRCConnectionSetup_NB_IoT(
 
   //XXX MP:warning due to function still not completed at PHY (get_lte_frame_parms)
   //XXX this approach is gone most probably
-  NB_IoT_DL_FRAME_PARMS *fp = get_NB_IoT_frame_parms(ctxt_pP->module_id,CC_id);
+  //NB_IoT_DL_FRAME_PARMS *fp = get_NB_IoT_frame_parms(ctxt_pP->module_id,CC_id);
   T(T_ENB_RRC_CONNECTION_SETUP, T_INT(ctxt_pP->module_id), T_INT(ctxt_pP->frame),
     T_INT(ctxt_pP->subframe), T_INT(ctxt_pP->rnti));
 
@@ -1965,7 +1967,7 @@ int rrc_eNB_decode_ccch_NB_IoT(
 
         	  //InitialUE-Identity randomValue size should be 40bits = 5 byte
             AssertFatal(rrcConnectionRequest_NB_IoT->ue_Identity_r13.choice.randomValue.size == 5,
-                        "wrong InitialUE-Identity randomValue size, expected 5, provided %d",
+                        "wrong InitialUE-Identity randomValue size, expected 5, provided %zd",
                         rrcConnectionRequest_NB_IoT->ue_Identity_r13.choice.randomValue.size);
 
             memcpy(((uint8_t*) & random_value) + 3,
@@ -2874,7 +2876,8 @@ void* rrc_enb_task_NB_IoT(
   }
 }
 
-
+#if 0
 #ifndef USER_MODE
 EXPORT_SYMBOL(Rlc_info_am_config);
+#endif
 #endif
