@@ -103,7 +103,7 @@ void *get_idft(int ofdm_symbol_size)
 
     default:
       printf("function get_idft : unsupported ofdm symbol size \n");
-      assert(0);
+      abort();
       break;
  }
  return idft;
@@ -160,7 +160,7 @@ void *get_dft(int ofdm_symbol_size)
 
     default:
       printf("function get_dft : unsupported ofdm symbol size \n");
-      assert(0);
+      abort();
       break;
  }
  return dft;

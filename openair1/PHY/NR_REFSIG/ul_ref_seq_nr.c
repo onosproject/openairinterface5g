@@ -80,7 +80,7 @@ int16_t *base_sequence_less_than_36(unsigned int M_ZC,
       break;
     default:
       printf("function base_sequence_less_than 36_: unsupported base sequence size : %u \n", M_ZC);
-      assert(0);
+      abort();
       break;
   }
 
@@ -88,7 +88,7 @@ int16_t *base_sequence_less_than_36(unsigned int M_ZC,
 
   if (rv_overbar == NULL) {
     msg("Fatal memory allocation problem \n");
-    assert(0);
+    abort();
   }
 
   if (M_ZC == 30) {
