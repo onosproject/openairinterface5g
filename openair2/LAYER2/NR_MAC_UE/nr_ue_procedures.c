@@ -441,10 +441,10 @@ int8_t nr_ue_decode_mib(
         float big_o;
         float big_m;
         uint32_t temp;
-        SFN_C_TYPE sfn_c;   //  only valid for mux=1
-        uint32_t n_c;
-        uint32_t number_of_search_space_per_slot;
-        uint32_t first_symbol_index;
+        SFN_C_TYPE sfn_c=0;   //  only valid for mux=1
+        uint32_t n_c=0;
+        uint32_t number_of_search_space_per_slot=0;
+        uint32_t first_symbol_index=0;
         uint32_t search_space_duration;  //  element of search space
         uint32_t coreset_duration;  //  element of coreset
         

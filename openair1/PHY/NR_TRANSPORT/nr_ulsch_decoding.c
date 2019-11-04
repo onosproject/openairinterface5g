@@ -311,7 +311,7 @@ uint32_t nr_ulsch_decoding(PHY_VARS_gNB *phy_vars_gNB,
 
   int16_t  z [68*384];
   int8_t   l [68*384];
-  uint8_t  kc;
+  uint8_t  kc=0;
   uint8_t  Ilbrm        = 0;
   uint32_t Tbslbrm     = 950984;
   double   Coderate    = 0.0;
@@ -397,7 +397,7 @@ uint32_t nr_ulsch_decoding(PHY_VARS_gNB *phy_vars_gNB,
       kc = 27;
     }
   }
-
+  AssertFatal(kc>0,"kc=%i has not been set to a consistent value",kc);
     // [hna] Perform nr_segmenation with input and output set to NULL to calculate only (B, C, K, Z, F)
     nr_segmentation(NULL,
                     NULL,
