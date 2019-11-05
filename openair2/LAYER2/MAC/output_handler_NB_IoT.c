@@ -58,7 +58,7 @@ int output_handler(eNB_MAC_INST_NB_IoT *mac_inst, module_id_t module_id, int CC_
 	SCHED_info->frame = frame;
 	SCHED_info->subframe = subframe;
 	void *DCI_pdu;
-
+         
 	// free all the memory allocate to the previous subframe
 	if(flag_malloc)
 	{

@@ -281,11 +281,11 @@ hashtable_rc_t hashtable_get(const hash_table_t * const hashtblP, const hash_key
     //printf("hashfunc(keyP) :  %d\n", hashtblP->hashfunc(keyP));
     hash=hashtblP->hashfunc(keyP)%hashtblP->size;
     //printf("keyP %d\n", keyP);
-	/*fprintf(stderr, "hashtable_get() key=%s, hash=%d\n", key, hash);*/
+    /*fprintf(stderr, "hashtable_get() key=%s, hash=%d\n", key, hash);*/
     //printf("hash %d\n", hash);
 
     node=hashtblP->nodes[hash];
-    //printf("nodes_value %d \n", hashtblP->nodes[hash]);
+   // printf("nodes_value %d \n", hashtblP->nodes[hash]);
 
     while(node) {
         //printf("node_key %d \n",node->key);

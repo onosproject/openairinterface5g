@@ -160,8 +160,8 @@ void eNB_dlsch_ulsch_scheduler_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, uint32_t ab
 		SIB1_flag = 1;
 
 	convert_system_number(abs_subframe, &h, &f, &sf);
-
 	a = output_handler(mac_inst, 0,0,h,f,sf,MIB_flag,SIB1_flag, abs_subframe);
+
 	if(a==-1)
 	LOG_I(MAC,"[%04d][SchedulerUSS] schedule result is empty------------\n", mac_inst->current_subframe);
 }
@@ -270,7 +270,6 @@ void schedule_uss_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_inst, u
 	UE_ID = mac_inst->UE_list_spec[UE_list_index].head;
   	while(UE_ID>-1)
   	{
-    
     	UE_template_temp = &(mac_inst->UE_list_spec[UE_list_index].UE_template_NB_IoT[UE_ID]);
    		UE_sched_ctrl_info = &(mac_inst->UE_list_spec[UE_list_index].UE_sched_ctrl_NB_IoT[UE_ID]);
     	LOG_D(MAC,"------Start Scheduling USS UE RNTI %d------\n", UE_template_temp->rnti);
@@ -392,10 +391,12 @@ void preprocessor_uss_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_ins
 					{
 						LOG_D(MAC,"[%04d][preprocessor_uss_NB_IoT][UE%d] DL scheduling USS is successful\n", mac_inst->current_subframe, UE_template_temp->rnti);
 						UE_sched_ctrl_info->flag_schedule_success=1;
+						printf("******************after DL scheduler (success) (in eNB_scheduler_NB_IoT.c)****************\n");
 					}
 					else
 					{
 						LOG_D(MAC,"[%04d][preprocessor_uss_NB_IoT][UE%d] DL scheduling USS is failed\n", mac_inst->current_subframe, UE_template_temp->rnti);
+						printf("**************after DL scheduler (fail) (in eNB_scheduler_NB_IoT.c)**********\n");
 					}
 					break;
 

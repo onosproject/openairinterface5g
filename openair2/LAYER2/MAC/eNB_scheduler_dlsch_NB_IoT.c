@@ -35,6 +35,7 @@
 /*DL scheduler*/
 int schedule_DL_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_inst, UE_TEMPLATE_NB_IoT *UE_info, uint32_t hyperSF_start, uint32_t frame_start, uint32_t subframe_start, UE_SCHED_CTRL_NB_IoT_t *UE_sched_ctrl_info)
 {
+	printf("***********************get into DL scheduler (in eNB_scheduler_dlsch_NB_IoT.c)***********************\n");
         //number of candidate
 	int cdd_num;
 	//Transport block size
@@ -97,11 +98,11 @@ int schedule_DL_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_inst, UE_
 	LOG_D(MAC,"[%04d][DLSchedulerUSS] Max TBS %d MCS index %d TBS index %d\n", mac_inst->current_subframe, TBS, I_mcs, I_tbs);
 	/*set UE data information*/
 	/*New transmission*/
-#if 0
+#if 1
 	if(UE_info->HARQ_round==0)
 	{
 		//Get RLC status
-		/*
+	 	printf("*****************UE_info->HARQ_round=%d (in eNB_scheduler_dlsch_NB_IoT.c)************************\n",UE_info->HARQ_round);		
 		rlc_status = mac_rlc_status_ind(
 										module_id,
 										UE_info->rnti,
@@ -113,18 +114,19 @@ int schedule_DL_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_inst, UE_
 										DCCH0_NB_IoT,
 										0);
 		data_size = rlc_status.bytes_in_buffer;
-		*/
-		data_size = 200;
+		printf("*************data_size=%d (in eNB_scheduler_dlsch_NB_IoT.c)********************\n",data_size);
+		
+		/*data_size = 200;
 		data_size=0;
 		int ue_index;
 		for(ue_index=0;ue_index<UE_NUM_SIM;++ue_index)
 		{
 			if(UE_info_sim[ue_index].tc_rnti==UE_info->rnti)
 				data_size = UE_info_sim[ue_index].data_size;
-		}
+		}*/
   	}
 	/*Retransmission*/
-	else
+	else 
 	{
 		data_size = UE_info->DLSCH_pdu_size;
 		flag_retransmission = 1;
@@ -136,7 +138,7 @@ int schedule_DL_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_inst, UE_
 	}
 #endif
 
-	data_size=200;	//for testing
+	//data_size=200;	//for testing
 
 	LOG_D(MAC,"[%04d][DLSchedulerUSS] UE data size %d\n", mac_inst->current_subframe, data_size);
 	//Have DCCH data
