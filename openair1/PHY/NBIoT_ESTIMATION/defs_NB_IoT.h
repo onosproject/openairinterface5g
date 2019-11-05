@@ -68,7 +68,7 @@ int16_t lte_ul_freq_offset_estimation_NB_IoT(NB_IoT_DL_FRAME_PARMS *frame_parms,
                                       		 int32_t *ul_ch_estimates,
                                       		 uint16_t nb_rb);
 
-void freq_equalization_NB_IoT(LTE_DL_FRAME_PARMS *frame_parms,
+void freq_equalization_NB_IoT(NB_IoT_DL_FRAME_PARMS *frame_parms,
                          		  int **rxdataF_comp,
                          		  int **ul_ch_mag,
                          		  int **ul_ch_mag_b,
