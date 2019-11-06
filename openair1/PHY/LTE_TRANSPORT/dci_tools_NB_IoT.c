@@ -422,6 +422,8 @@ int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB      *eNB,
     //ndlcch->frame[ncce_index]    = frame;
     //ndlcch->subframe[ncce_index] = subframe;
 
+    LOG_I(PHY,"DCI packing for N1 done \n");
+
     break;
 
   case DCIFormatN2_Ind: //MP: for the moment is not implemented

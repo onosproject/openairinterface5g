@@ -389,14 +389,12 @@ void preprocessor_uss_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_ins
 					//schedule_DL_NB_IoT(0, mac_inst, UE_template_temp, hypersfn, frame, subframe);
 					if(0==schedule_DL_NB_IoT(0, mac_inst, UE_template_temp, hypersfn, frame, subframe, UE_sched_ctrl_info))
 					{
-						LOG_D(MAC,"[%04d][preprocessor_uss_NB_IoT][UE%d] DL scheduling USS is successful\n", mac_inst->current_subframe, UE_template_temp->rnti);
+						LOG_N(MAC,"[%04d][preprocessor_uss_NB_IoT][UE%d] DL scheduling USS is successful\n", mac_inst->current_subframe, UE_template_temp->rnti);
 						UE_sched_ctrl_info->flag_schedule_success=1;
-						printf("******************after DL scheduler (success) (in eNB_scheduler_NB_IoT.c)****************\n");
 					}
 					else
 					{
 						LOG_D(MAC,"[%04d][preprocessor_uss_NB_IoT][UE%d] DL scheduling USS is failed\n", mac_inst->current_subframe, UE_template_temp->rnti);
-						printf("**************after DL scheduler (fail) (in eNB_scheduler_NB_IoT.c)**********\n");
 					}
 					break;
 

@@ -35,7 +35,6 @@
 /*DL scheduler*/
 int schedule_DL_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_inst, UE_TEMPLATE_NB_IoT *UE_info, uint32_t hyperSF_start, uint32_t frame_start, uint32_t subframe_start, UE_SCHED_CTRL_NB_IoT_t *UE_sched_ctrl_info)
 {
-	printf("***********************get into DL scheduler (in eNB_scheduler_dlsch_NB_IoT.c)***********************\n");
         //number of candidate
 	int cdd_num;
 	//Transport block size
@@ -101,8 +100,7 @@ int schedule_DL_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_inst, UE_
 #if 1
 	if(UE_info->HARQ_round==0)
 	{
-		//Get RLC status
-	 	printf("*****************UE_info->HARQ_round=%d (in eNB_scheduler_dlsch_NB_IoT.c)************************\n",UE_info->HARQ_round);		
+		//Get RLC status	
 		rlc_status = mac_rlc_status_ind(
 										module_id,
 										UE_info->rnti,
@@ -114,8 +112,8 @@ int schedule_DL_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_inst, UE_
 										DCCH0_NB_IoT,
 										0);
 		data_size = rlc_status.bytes_in_buffer;
-		printf("*************data_size=%d (in eNB_scheduler_dlsch_NB_IoT.c)********************\n",data_size);
-		
+
+		// for testing
 		/*data_size = 200;
 		data_size=0;
 		int ue_index;
@@ -285,7 +283,7 @@ int schedule_DL_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_inst, UE_
 		                adjust_UL_resource_list(HARQ_info);
 		                LOG_D(MAC,"[%04d][DLSchedulerUSS] Complete DL scheduling\n", mac_inst->current_subframe);
 		                //Change the UE state to idle
-		                UE_info->direction = -1;
+		                //UE_info->direction = -1;
 
 		                //LOG_D(MAC,"[%04d][DLSchedulerUSS] RNTI %d complete scheduling\n", mac_inst->current_subframe, UE_info->rnti);
 
