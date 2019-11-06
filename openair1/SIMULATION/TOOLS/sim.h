@@ -59,6 +59,10 @@ typedef struct {
   struct complex **ch;
   ///Sampled frequency response (90 kHz resolution)
   struct complex **chF;
+  ///Sampled frequency response (90 kHz resolution), but using floats instead of doubles
+  struct complexf *chFf;
+  ///Sampled PRACH frequency response (frequency analysis), but using floats instead of doubles
+  struct complexf *chFf_prach;
   ///Maximum path delay in mus.
   double Td;
   ///Channel bandwidth in MHz.

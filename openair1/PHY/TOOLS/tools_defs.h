@@ -39,8 +39,8 @@ struct complex {
 };
 
 struct complexf {
-  float r;
-  float i;
+  float x[1200];
+  float y[1200];
 };
 
 struct complex16 {
