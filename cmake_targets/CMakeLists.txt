@@ -1065,6 +1065,7 @@ add_dependencies(SCHED_LIB rrc_flag)
 set(SCHED_SRC_NB_IoT
   #${OPENAIR1_DIR}/SCHED_NBIOT/fapi_l1.c
   ${OPENAIR1_DIR}/SCHED_NBIOT/phy_procedures_lte_eNb_NB_IoT.c
+  ${OPENAIR1_DIR}/SCHED_NBIOT/IF_Module_L1_primitives_NB_IoT.c
   #${OPENAIR1_DIR}/SCHED/phy_procedures_lte_common.c
 )
 add_library(SCHED_NB_IoT_LIB ${SCHED_SRC_NB_IoT})
