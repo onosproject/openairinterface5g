@@ -1622,13 +1622,8 @@ dlsch_scheduler_pre_processor_allocate(module_id_t Mod_id,
   UE_list_t *UE_list = &RC.mac[Mod_id]->UE_list;
   UE_sched_ctrl_t *ue_sched_ctl = &UE_list->UE_sched_ctrl[UE_id];
   int N_RB_DL = to_prb(RC.mac[Mod_id]->common_channels[CC_id].mib->message.dl_Bandwidth);
-  int continue_flag=1,alloc_flag=0;
 
   for (i = 0; i < N_RBG; i++) {
-    if((alloc_flag==1)&&(continue_flag==1)){
-      break;
-    }
-    continue_flag=1;
     if (rballoc_sub[CC_id][i] != 0) continue;
 
     if (ue_sched_ctl->rballoc_sub_UE[CC_id][i] != 0) continue;
@@ -1644,8 +1639,6 @@ dlsch_scheduler_pre_processor_allocate(module_id_t Mod_id,
     if ((i == N_RBG - 1) && ((N_RB_DL == 25) || (N_RB_DL == 50))) {
       // Allocating last, smaller RBG
       if (nb_rbs_remaining[CC_id][UE_id] >= min_rb_unit - 1) {
-        alloc_flag=1;
-        continue_flag=0;
         rballoc_sub[CC_id][i] = 1;
         ue_sched_ctl->rballoc_sub_UE[CC_id][i] = 1;
         MIMO_mode_indicator[CC_id][i] = 1;
@@ -1660,8 +1653,6 @@ dlsch_scheduler_pre_processor_allocate(module_id_t Mod_id,
     } else {
       // Allocating a standard-sized RBG
       if (nb_rbs_remaining[CC_id][UE_id] >= min_rb_unit) {
-        alloc_flag=1;
-        continue_flag=0;
         rballoc_sub[CC_id][i] = 1;
         ue_sched_ctl->rballoc_sub_UE[CC_id][i] = 1;
         MIMO_mode_indicator[CC_id][i] = 1;

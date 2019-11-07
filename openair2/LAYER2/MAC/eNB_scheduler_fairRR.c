@@ -750,6 +750,11 @@ void dlsch_scheduler_pre_processor_fairRR (module_id_t   Mod_id,
                                               MIMO_mode_indicator);
       temp_total_rbs_count -= ue_sched_ctl->pre_nb_available_rbs[CC_id];
       temp_total_ue_count--;
+      
+      LOG_D(MAC,
+            "DLSCH UE Select: frame %d subframe %d pre_nb_available_rbs %d(i %d UE_id %d nb_rbs_required %d nb_rbs_required_remaining %d average_rbs_per_user %d (temp_total rbs_count %d ue_num %d) available_prbs %d)\n",
+            frameP,subframeP,ue_sched_ctl->pre_nb_available_rbs[CC_id],i,UE_id,nb_rbs_required[CC_id][UE_id],nb_rbs_required_remaining[CC_id][UE_id],
+            average_rbs_per_user[CC_id],temp_total_rbs_count,temp_total_ue_count,RC.mac[Mod_id]->eNB_stats[CC_id].available_prbs);
 
       if (ue_sched_ctl->pre_nb_available_rbs[CC_id] == 0) {
         dlsch_ue_select[CC_id].ue_num = i;
@@ -761,10 +766,6 @@ void dlsch_scheduler_pre_processor_fairRR (module_id_t   Mod_id,
         break;
       }
 
-      LOG_D(MAC,
-            "DLSCH UE Select: frame %d subframe %d pre_nb_available_rbs %d(i %d UE_id %d nb_rbs_required %d nb_rbs_required_remaining %d average_rbs_per_user %d (temp_total rbs_count %d ue_num %d) available_prbs %d)\n",
-            frameP,subframeP,ue_sched_ctl->pre_nb_available_rbs[CC_id],i,UE_id,nb_rbs_required[CC_id][UE_id],nb_rbs_required_remaining[CC_id][UE_id],
-            average_rbs_per_user[CC_id],temp_total_rbs_count,temp_total_ue_count,RC.mac[Mod_id]->eNB_stats[CC_id].available_prbs);
 #ifdef TM5
       // TODO: data channel TM5: to be re-visited
 #endif
@@ -1376,7 +1377,6 @@ schedule_ue_spec_fairRR(module_id_t module_idP,
             if (header_len_dtch == 0)
                 header_len_dtch_last = 0;
                 // there is at least one SDU
-                // if (num_sdus > 0 ){
                 if ((sdu_length_total + header_len_dcch + header_len_dtch) > 0) {
                     // Now compute number of required RBs for total sdu length
                     // Assume RAH format 2
@@ -1841,7 +1841,7 @@ schedule_ue_spec_fairRR(module_id_t module_idP,
           UE_list->eNB_UE_stats[CC_id][UE_id].dlsch_mcs[TB2] =
             eNB_UE_stats->dlsch_mcs[TB2];
         } else {
-          LOG_D(MAC,
+          LOG_E(MAC,
                 "[eNB %d] Frame %d CC_id %d : don't schedule UE %d, its retransmission takes more resources than we have\n",
                 module_idP, frameP, CC_id, UE_id);
         }
@@ -2131,7 +2131,6 @@ schedule_ue_spec_fairRR(module_id_t module_idP,
           header_len_dtch_last = 0;
 
         // there is at least one SDU
-        // if (num_sdus > 0 ){
         if ((sdu_length_total + header_len_dcch +
              header_len_dtch) > 0) {
           // Now compute number of required RBs for total sdu length
@@ -2373,11 +2372,6 @@ schedule_ue_spec_fairRR(module_id_t module_idP,
           first_TB_pdu_create_flg = 1;
 
           }//1st TB end
-        else{
-            LOG_D(MAC,"[eNB %d][DLSCH] Frame %d Subframe %d  UE_id %x/%d sdu_length_total %d header_len_dcch %d header_len_dtch %d TBS %d\n",
-                        module_idP, frameP, subframeP, rnti, UE_id,
-                        sdu_length_total , header_len_dcch ,  header_len_dtch , TBS );
-        }
 
 //	  printf("dl sfn=%d, sf=%d, buffer=%d, TBS=%d\n", frameP, subframeP, UE_list->UE_template[CC_id][UE_id].dl_buffer_total, UE_list->eNB_UE_stats[CC_id][UE_id].TBS[select_tb]);
 
@@ -2568,7 +2562,6 @@ schedule_ue_spec_fairRR(module_id_t module_idP,
             if (header_len_dtch == 0)
                 header_len_dtch_last = 0;
             // there is at least one SDU
-            // if (num_sdus > 0 ){
             if ((sdu_length_total + header_len_dcch + header_len_dtch) > 0) {
                 // Now compute number of required RBs for total sdu length
                 // Assume RAH format 2
