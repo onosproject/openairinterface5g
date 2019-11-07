@@ -298,7 +298,8 @@ void nr_fill_rx_indication(PHY_VARS_gNB *gNB, int frame, int slot_rx, int UE_id,
     // case 50:  timing_advance_update /= 8;  break;
     // case 75:  timing_advance_update /= 12; break;
     case 106: timing_advance_update /= 16; break;
-    case 217: timing_advance_update /= 32; break;
+    case 217:
+    case 273: timing_advance_update /= 32; break;
     default: abort();
   }
 
