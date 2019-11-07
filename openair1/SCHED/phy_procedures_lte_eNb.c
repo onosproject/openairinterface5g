@@ -309,7 +309,6 @@ bool dlsch_procedures(PHY_VARS_eNB *eNB,
       print_meas_now(&eNB->dlsch_encoding_stats,"total coding",stderr);
     }
     dlsch->active[subframe] = 0;
-    dlsch_harq->round++;
     LOG_D(PHY,"Generated DLSCH dlsch_harq[round:%d]\n",dlsch_harq->round);
     return true;
   }

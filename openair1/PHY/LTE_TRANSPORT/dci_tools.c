@@ -1952,11 +1952,6 @@ void fill_ulsch(PHY_VARS_eNB *eNB,int UE_id,nfapi_ul_config_ulsch_pdu *ulsch_pdu
   ulsch->ue_type = 0;
 #endif
 
-  //AssertFatal(ulsch->harq_processes[harq_pid]->nb_rb>0,"nb_rb = 0\n");
-  if(ulsch->harq_processes[harq_pid]->nb_rb == 0){
-    LOG_E(PHY, "fill_ulsch UE_id %d nb_rb = 0\n", UE_id);
-  }
-
   ulsch->harq_processes[harq_pid]->frame                                 = frame;
   ulsch->harq_processes[harq_pid]->subframe                              = subframe;
   ulsch->harq_processes[harq_pid]->handled                               = 0;
@@ -1971,6 +1966,11 @@ void fill_ulsch(PHY_VARS_eNB *eNB,int UE_id,nfapi_ul_config_ulsch_pdu *ulsch_pdu
   
   ulsch->harq_processes[harq_pid]->Nsymb_pusch                           = 12-(frame_parms->Ncp<<1)-(use_srs==0?0:1);
   ulsch->harq_processes[harq_pid]->srs_active                            = use_srs;
+
+  //AssertFatal(ulsch->harq_processes[harq_pid]->nb_rb>0,"nb_rb = 0\n");
+  if(ulsch->harq_processes[harq_pid]->nb_rb == 0){
+    LOG_E(PHY, "fill_ulsch UE_id %d nb_rb = 0\n", UE_id);
+  }
   
   //Mapping of cyclic shift field in DCI format0 to n_DMRS2 (3GPP 36.211, Table 5.5.2.1.1-1)
   if(ulsch->harq_processes[harq_pid]->n_DMRS == 0)
