@@ -168,7 +168,7 @@ int esm_proc_dedicated_eps_bearer_context_request(nas_user_t *user, int ebi, int
       default_ebi = esm_ebr_context_create(esm_data, user->ueid, pid, ebi, FALSE, qos, tft);
 
       if (default_ebi != ESM_EBI_UNASSIGNED) {
-        /* Dedicated EPS bearer contextx successfully created */
+        /* Dedicated EPS bearer context successfully created */
         rc = RETURNok;
       } else {
         /* No resource available */

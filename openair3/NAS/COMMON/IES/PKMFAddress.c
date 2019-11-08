@@ -52,7 +52,7 @@ int decode_pkmf_address(
 
         if ((ielen + 2) != decoded) {
           decoded = ielen + 1 + (iei > 0 ? 1 : 0) /* Size of header for this IE */ ;
-          //OAILOG_TRACE (LOG_NAS_EMM, "PKMFAddress then decoded=%u\n", decoded);
+
         }
         return decoded;
         }

@@ -130,7 +130,7 @@ int esm_proc_default_eps_bearer_context_request(nas_user_t *user, int pid, int e
     ebi = esm_ebr_context_create(esm_data, user->ueid, pid, ebi, TRUE, qos, NULL);
 
     if (ebi != ESM_EBI_UNASSIGNED) {
-      /* Default EPS bearer contextx successfully created */
+      /* Default EPS bearer context successfully created */
       default_eps_bearer_context_data->ebi = ebi;
       rc = RETURNok;
     } else {

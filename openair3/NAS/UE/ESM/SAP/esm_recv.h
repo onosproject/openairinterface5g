@@ -53,6 +53,7 @@ Description Defines functions executed at the ESM Service Access
 #include "ActivateDedicatedEpsBearerContextRequest.h"
 #include "ModifyEpsBearerContextRequest.h"
 #include "DeactivateEpsBearerContextRequest.h"
+#include "RemoteUEReportResponse.h"
 
 #include "EsmInformationRequest.h"
 
@@ -108,5 +109,11 @@ int esm_recv_activate_dedicated_eps_bearer_context_request(nas_user_t *user, int
 int esm_recv_deactivate_eps_bearer_context_request(nas_user_t *user, int pti, int ebi,
     const deactivate_eps_bearer_context_request_msg *msg);
 
+/*
+ * Messages related to Remote UE Report procedure
+ * ---------------------------------------
+ */
+int esm_recv_remote_ue_report_response(nas_user_t *user, int pti, int ebi,
+    const remote_ue_report_response_msg *msg);
 
 #endif /* __ESM_RECV_H__*/

@@ -474,7 +474,7 @@ int esm_send_deactivate_eps_bearer_context_accept(int ebi,
  **      Others:    None                                                   **
  **                                                                        **
  ***************************************************************************/
-int esm_send_remote_ue_report(int ebi,
+int esm_send_remote_ue_report(int pti, int ebi,
 		remote_ue_report_msg *msg)
 {
   LOG_FUNC_IN;
@@ -483,7 +483,7 @@ int esm_send_remote_ue_report(int ebi,
   msg->protocoldiscriminator = EPS_SESSION_MANAGEMENT_MESSAGE;
   msg->epsbeareridentity = ebi;
   msg->messagetype = REMOTE_UE_REPORT;
-  msg->proceduretransactionidentity = PROCEDURE_TRANSACTION_IDENTITY_UNASSIGNED;
+  msg->proceduretransactionidentity = pti;
   /* Optional IEs  */
   //msg->pkmfaddress   ;
  //{

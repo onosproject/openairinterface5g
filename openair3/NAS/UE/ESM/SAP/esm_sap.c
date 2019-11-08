@@ -160,22 +160,23 @@ int esm_sap_send(nas_user_t *user, esm_sap_t *msg)
             esm_sap_primitive2str(primitive - ESM_START - 1), primitive);
 
   switch (primitive) {
+
   case ESM_REMOTE_UE_REPORT_REQ:
-  //case ESM_REMOTE_UE_REPORT:
   {
-	  esm_remote_ue_report_t *remote_ue_report = &msg->data.remote_ue_report;
-      unsigned int pti;
-      int cid;
-      /* Assign new procedure transaction identity */
-      rc = esm_proc_remote_ue_report(user, cid, &pti);
+	 esm_remote_ue_report_t *remote_ue_report = &msg->data.remote_ue_report;
 
+	 unsigned int pti;
+#warning "TODO hardcoded EBI value 5, to read in esm_ebr_data if works"
+     int ebi = 5;
 
-      rc = _esm_sap_send(user, REMOTE_UE_REPORT,
+     /* Assign new procedure transaction identity */
+     rc = esm_proc_remote_ue_report(user, remote_ue_report->cid, ebi, &pti);
+     rc = _esm_sap_send(user, REMOTE_UE_REPORT,
                          msg->is_standalone,
-                         pti, EPS_BEARER_IDENTITY_UNASSIGNED,
+                         pti, ebi,
                          &msg->data, &msg->send);
-  }
 
+  }
   break;
 
   case ESM_PDN_CONNECTIVITY_REQ:
@@ -224,7 +225,8 @@ int esm_sap_send(nas_user_t *user, esm_sap_t *msg)
       esm_pdn_connectivity_t *pdn_connect = &msg->data.pdn_connect;
 
       if ( msg->is_standalone && pdn_connect->is_defined ) {
-        /* Undefine the specified PDN context */
+
+    	  /* Undefine the specified PDN context */
         rc = esm_proc_pdn_connectivity(user, pdn_connect->cid, FALSE,
                                        pdn_connect->pdn_type, NULL,
                                        pdn_connect->is_emergency, NULL);
@@ -783,7 +785,8 @@ static int _esm_sap_send(nas_user_t *user, int msg_type, int is_standalone,
 	       */
 	 const esm_remote_ue_report_t *msg = &data->remote_ue_report; // test message
 	 //esm_msg.header.message_type = REMOTE_UE_REPORT;
-	 rc = esm_send_remote_ue_report(ebi, &esm_msg.remote_ue_report);
+	 rc = esm_send_remote_ue_report(pti,ebi, &esm_msg.remote_ue_report);
+
 	 /* Setup callback function used to send Remote UE Report
 	  * message onto the network */
      esm_procedure = esm_proc_remote_ue_report_low_layer;

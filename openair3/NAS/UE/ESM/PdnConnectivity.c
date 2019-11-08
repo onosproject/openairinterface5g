@@ -148,17 +148,19 @@ int esm_proc_pdn_connectivity(nas_user_t *user, int cid, int is_to_define,
 
     if (!is_to_define) {
         LOG_TRACE(INFO, "ESM-PROC  - Undefine PDN connection (cid=%d)", cid);
+
         /* Delete the PDN connection entry */
         int pti = _pdn_connectivity_delete(esm_data, pid);
-
         if (pti != ESM_PT_UNASSIGNED) {
-            /* Release the procedure transaction data */
-            rc = esm_pt_release(esm_pt_data, pti);
+
+       /* Release the procedure transaction data */
+       rc = esm_pt_release(esm_pt_data, pti);
         }
 
         LOG_FUNC_RETURN(rc);
     } else if (pti != NULL) {
         LOG_TRACE(INFO, "ESM-PROC  - Assign new procedure transaction identity ""(cid=%d)", cid);
+
         /* Assign new procedure transaction identity */
         *pti = esm_pt_assign(esm_pt_data);
 
@@ -923,14 +925,21 @@ static int _pdn_connectivity_delete(esm_data_t *esm_data, int pid)
         } else if (esm_data->pdn[pid].data == NULL) {
             LOG_TRACE(ERROR,
                       "ESM-PROC  - PDN connection has not been allocated");
-        } else if (esm_data->pdn[pid].is_active) {
-            LOG_TRACE(ERROR, "ESM-PROC  - PDN connection is active");
-        } else {
-            /* Update the identity of the procedure transaction assigned to
-             * the PDN connection */
+        }
+
+        //else if (esm_data->pdn[pid].is_active) {
+         //   LOG_TRACE(ERROR, "ESM-PROC  - PDN connection is active");
+        //}
+
+
+        /* Update the identity of the procedure transaction assigned to
+                     * the PDN connection */
+        else  if (esm_data->pdn[pid].is_active) {
+        	            LOG_TRACE(ERROR, "ESM-PROC  - PDN connection is active");
+        	        }
             esm_data->pdn[pid].data->pti = pti;
             return (RETURNok);
-        }
+
     }
 
     return (RETURNerror);

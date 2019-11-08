@@ -144,7 +144,8 @@ typedef struct esm_eps_bearer_context_deactivate_s {
  */
 typedef struct esm_remote_ue_report_s {
   int pkmfaddress;
-} esm_remote_ue_report_t;
+  int cid;
+  } esm_remote_ue_report_t;
 
 /*
  * ------------------------------

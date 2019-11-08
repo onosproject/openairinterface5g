@@ -43,7 +43,7 @@ Description
 #include "esm_proc.h"
 #include "commonDef.h"
 #include "nas_log.h"
-
+#include "esm_ebr.h"
 #include "esmData.h"
 #include "esm_cause.h"
 #include "esm_pt.h"
@@ -68,47 +68,47 @@ Description
  *  Internal data handled by the PDN connectivity procedure in the UE
  * --------------------------------------------------------------------------
 
+ */
+
+  //int _pdn_connectivity_delete(esm_data_t *esm_data, int pid);
 
 
 /****************************************************************************/
 /******************  E X P O R T E D    F U N C T I O N S  ******************/
 /****************************************************************************/
 
-
-//int _pdn_connectivity_set_pti(esm_data_t *esm_data, int pid, int pti);
-int esm_proc_remote_ue_report(nas_user_t *user,int cid, unsigned int *pti)
+int esm_proc_remote_ue_report(nas_user_t *user,int cid, int ebi, unsigned int *pti)
 {
     LOG_FUNC_IN;
     int rc = RETURNerror;
-    int pid;
-    //int pid = cid - 1;
+    //int pid ;
+    int pid = cid - 1;
+
     esm_data_t *esm_data = user-> esm_data;
     esm_pt_data_t *esm_pt_data = user-> esm_pt_data;
 
-    if (pti != NULL)
-    {
-  	LOG_TRACE(INFO, "ESM-PROC  - Assign new procedure transaction identity ""(cid=%d)", cid);
-   	/* Assign new procedure transaction identity */
-   	*pti = esm_pt_assign(esm_pt_data);
+    if (pti != NULL) {
 
-   	if (*pti == ESM_PT_UNASSIGNED) {
-	LOG_TRACE(WARNING, "ESM-PROC  - Failed to assign new procedure transaction identity");
-	LOG_FUNC_RETURN (RETURNerror);
-    	}
-    	//static int _pdn_connectivity_set_pti(esm_data_t *esm_data, int pid, int pti);
+  	    LOG_TRACE(INFO, "ESM-PROC  - Assign new procedure transaction identity ""(cid=%d)", cid);
 
-   	/* Update the PDN connection data */
+  	    /* Assign new procedure transaction identity */
+  	    *pti = esm_pt_assign(esm_pt_data);
+   	    if (*pti == ESM_PT_UNASSIGNED) {
+   	    	LOG_TRACE(WARNING, "ESM-PROC  - Failed to assign new procedure transaction identity");
+	        LOG_FUNC_RETURN (RETURNerror);
+        }
 
-    	rc = _pdn_connectivity_set_pti(esm_data, pid, *pti);
+
+   	    /* Update the PDN connection data */
+        rc = _pdn_connectivity_set_pti(esm_data, pid, *pti);
+        //ebi = esm_ebr_assign(user->esm_ebr_data, ebi, pid+1, FALSE);
+
     	if (rc != RETURNok) {
     		LOG_TRACE(WARNING, "ESM-PROC  - Failed to update PDN connection");
     	}
     }
     LOG_FUNC_RETURN(rc);
 }
-
-
-
 
 /****************************************************************************
  **                                                                        **
@@ -159,3 +159,49 @@ int esm_proc_remote_ue_report_low_layer(nas_user_t *user, int is_standalone, int
     }
     LOG_FUNC_RETURN(rc);
 }
+/****************************************************************************
+ **                                                                        **
+ ** Name:    esm_proc_remote_ue_report_response                       **
+ **                                                                        **
+ ** Description: Initiates Remote UE Report response procedure					**
+ **                                                                        **
+ **                                                                        **
+ **              3GPP TS 24.301, section 6.5.1.2                           **
+ **      Network send this message to UE indicating the completion of
+ **      remote ue report procedure.                               **
+ **                                                            **
+ **                                                                        **
+ ** Inputs:  is_standalone: Indicates whether the Remote UE Report     **
+ **             procedure is initiated as part of the at-  **
+ **             tach procedure                             **
+ **      pti:       Procedure transaction identity             **
+ **      msg:       Encoded Remote UE Report response message   **
+ **                  to be sent                                 **
+ **      sent_by_ue:    Not used - Always TRUE                     **
+ **      Others:    None                                       **
+ **                                                                        **
+ ** Outputs:     None                                                      **
+ **      Return:    RETURNok, RETURNerror                      **
+ **      Others:    None                                       **
+ **                                                                        **
+ ***************************************************************************/
+int esm_proc_remote_ue_report_response(nas_user_t *user, int pti)
+{
+    LOG_FUNC_IN;
+    esm_pt_data_t *esm_pt_data = user->esm_pt_data;
+    int rc = RETURNerror;
+
+    LOG_TRACE(INFO, "ESM-PROC  - Remote UE report response");
+
+    /* Get the procedure transaction identity assigned to the PDN connection
+     * entry which is still pending in the inactive state */
+    rc = esm_pt_set_status(esm_pt_data, pti, ESM_PT_INACTIVE);
+
+    if (pti != ESM_PT_UNASSIGNED) {
+        /* Release the procedure transaction identity */
+        rc = esm_pt_release(esm_pt_data, pti);
+    }
+
+    LOG_FUNC_RETURN(rc);
+}
+

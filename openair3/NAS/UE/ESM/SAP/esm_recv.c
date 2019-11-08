@@ -685,6 +685,74 @@ int esm_recv_deactivate_eps_bearer_context_request(nas_user_t *user, int pti, in
 }
 
 
+/****************************************************************************
+ **                                                                        **
+ ** Name:    esm_recv_remote_ue_report_response()          **
+ **                                                                        **
+ ** Description: Processes Remote UE Report Response message   **
+ **                                                                        **
+ ** Inputs:  pti:       Procedure transaction identity             **
+ **      ebi:       EPS bearer identity                        **
+ **      msg:       The received ESM message                   **
+ **      Others:    None                                       **
+ **                                                                        **
+ ** Outputs:     None                                                      **
+ **      Return:    ESM cause code whenever the processing of  **
+ **             the ESM message fails                      **
+ **      Others:    None                                       **
+ **                                                                        **
+ ***************************************************************************/
+int esm_recv_remote_ue_report_response(nas_user_t *user, int pti, int ebi,
+    const remote_ue_report_response_msg *msg)
+{
+	LOG_FUNC_IN;
+
+	  int esm_cause;
+      int rc= RETURNok;
+	  LOG_TRACE(INFO, "ESM-SAP   - Received Remote UE report response message "
+	            "(pti=%d, ebi=%d, cause=%d)", pti, ebi);
+
+   	     /*
+	     * Procedure transaction identity checking
+	     */
+	    if ( (pti == ESM_PT_UNASSIGNED) || esm_pt_is_reserved(pti) ) {
+	      /* 3GPP TS 24.301, section 7.3.1, case a
+	       * Reserved or unassigned PTI value
+	       */
+	      LOG_TRACE(WARNING, "ESM-SAP   - Invalid PTI value (pti=%d)", pti);
+	      LOG_FUNC_RETURN (ESM_CAUSE_INVALID_PTI_VALUE);
+	    } else if ( esm_pt_is_not_in_use(user->esm_pt_data, pti) ) {
+	      /* 3GPP TS 24.301, section 7.3.1, case a
+	       * Assigned value that does not match any PTI in use
+	       */
+	      LOG_TRACE(WARNING, "ESM-SAP   - PTI mismatch (pti=%d)", pti);
+	      LOG_FUNC_RETURN (ESM_CAUSE_PTI_MISMATCH);
+	    }
+	    /*
+	     * EPS bearer identity checking
+	     */
+	    else if ( (ebi != ESM_EBI_UNASSIGNED) || esm_ebr_is_reserved(user->esm_ebr_data, ebi) ) {
+	      /* 3GPP TS 24.301, section 7.3.2, case a
+	       * Assigned or reserved EPS bearer identity value */
+	      LOG_TRACE(WARNING, "ESM-SAP   - Invalid EPS bearer identity (ebi=%d)",
+	                ebi);
+	      LOG_FUNC_RETURN (ESM_CAUSE_INVALID_EPS_BEARER_IDENTITY);
+	    }
+
+	    /*
+	     * Message processing
+	     */
+	    /* Get the ESM cause */
+	    //esm_cause = msg->esmcause;
+
+	  if (rc != RETURNerror) {
+	    /* Execute the EPS bearer context deactivation procedure */
+	    rc = esm_proc_remote_ue_report_response(user,pti);
+}
+}
+
+
+
 
 /****************************************************************************/
 /*********************  L O C A L    F U N C T I O N S  *********************/

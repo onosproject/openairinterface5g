@@ -116,7 +116,7 @@ int esm_send_activate_dedicated_eps_bearer_context_reject(int ebi,
 int esm_send_deactivate_eps_bearer_context_accept(int ebi,
     deactivate_eps_bearer_context_accept_msg *msg);
 
-int esm_send_remote_ue_report(int ebi,
+int esm_send_remote_ue_report(int pti, int ebi,
 		remote_ue_report_msg *msg);
 
 
