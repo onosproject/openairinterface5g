@@ -562,6 +562,16 @@ static void *emulatedRF_thread(void *param) {
   return 0;
 }
 
+volatile int rf_test_cmd=0;
+int rf_test_time=100;
+int rf_test_offset=10;
+
+void set_rf_test(int cmd,int time,int offset){
+  rf_test_cmd=cmd;
+  rf_test_time=time;
+  rf_test_offset=offset;
+}
+
 void rx_rf(RU_t *ru,int *frame,int *subframe) {
   RU_proc_t *proc = &ru->proc;
   LTE_DL_FRAME_PARMS *fp = &ru->frame_parms;
@@ -574,6 +584,40 @@ void rx_rf(RU_t *ru,int *frame,int *subframe) {
   
 
   openair0_timestamp ts=0,old_ts=0;
+  openair0_config_t *cfg   = &ru->openair0_cfg;
+  static int rf_test_stop_cnt=-1;
+  if(rf_test_cmd!=0){
+    if(rf_test_cmd==1){
+      if(rf_test_stop_cnt==-1) {
+        rf_test_stop_cnt=rf_test_time;
+        LOG_I(PHY,"stop tx for %d ms\n",rf_test_stop_cnt);
+      }else if(rf_test_stop_cnt==0) {
+        rf_test_cmd=0;
+        rf_test_stop_cnt=-1;
+      }else{
+        if((late_control==STATE_BURST_STOP_2)||(late_control==STATE_BURST_STOP_1)){
+          late_control=STATE_BURST_STOP_1;
+        }else{
+          late_control=STATE_BURST_TERMINATE;
+        }
+        rf_test_stop_cnt--;
+      }
+    }else if(rf_test_cmd==2){
+      for (i=0; i<ru->nb_tx; i++) {
+        cfg->tx_gain[i] = (double)ru->att_tx+rf_test_offset;
+      }
+      LOG_I(PHY,"set tx_att = %d\n",ru->att_tx+rf_test_offset);
+      ru->rfdevice.trx_set_gains_func(&ru->rfdevice,cfg);
+      rf_test_cmd=0;
+    }else if(rf_test_cmd==3){
+      for (i=0; i<ru->nb_tx; i++) {
+        cfg->tx_gain[i] = (double)ru->att_tx;
+      }
+      LOG_I(PHY,"set tx_att = %d\n",ru->att_tx);
+      ru->rfdevice.trx_set_gains_func(&ru->rfdevice,cfg);
+      rf_test_cmd=0;
+    }
+  }
   for (i=0; i<ru->nb_rx; i++)
     rxp[i] = (void *)&ru->common.rxdata[i][*subframe*fp->samples_per_tti];
 

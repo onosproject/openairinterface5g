@@ -117,6 +117,42 @@ telnetshell_cmddef_t  telnet_cmdarray[] = {
 };
 
 
+/* functions for telnet support, when telnet server is loaded */
+int telnet_rf_test_cmd=0;
+int telnet_rf_test_time=200;
+int telnet_rf_test_offset=10;
+void set_rf_test(int cmd,int time,int offset);
+int rf_setmod_cmd(char *buff, int debug, telnet_printfunc_t prnt)
+{
+   if (debug > 0)
+       prnt( "rf_set_cmd received %s\n",buff);
+
+      if (strcasestr(buff,"stop") != NULL) {
+         telnet_rf_test_cmd=1;
+      } else if (strcasestr(buff,"down") != NULL) {
+         telnet_rf_test_cmd=2;
+      } else if (strcasestr(buff,"up") != NULL) {
+         telnet_rf_test_cmd=3;
+      } else {
+          prnt("%s: wrong setmod parameter...\n",buff);
+      }
+   set_rf_test(telnet_rf_test_cmd,telnet_rf_test_time,telnet_rf_test_offset);
+   prnt("rf current set: mode %d time %d offset %d\n",telnet_rf_test_cmd,telnet_rf_test_time,telnet_rf_test_offset);
+   return 0;
+}
+
+telnetshell_vardef_t rf_vardef[] = {
+  {"time",TELNET_VARTYPE_INT32,&telnet_rf_test_time},
+  {"offset",TELNET_VARTYPE_INT32,&telnet_rf_test_offset},
+  {"",0,NULL}
+};
+
+static telnetshell_cmddef_t rf_cmdarray[] = {
+   {"test","[stop,down,up]",rf_setmod_cmd},
+   {"","",NULL},
+};
+
+
 void client_printf(const char *message, ...) {
   va_list va_args;
   va_start(va_args, message);
@@ -709,6 +745,9 @@ int add_sharedmodules(void) {
   return ret;
 }
 
+
+
+
 int telnetsrv_autoinit(void) {
   memset(&telnetparams,0,sizeof(telnetparams));
   config_get( telnetoptions,sizeof(telnetoptions)/sizeof(paramdef_t),"telnetsrv");
@@ -719,6 +758,7 @@ int telnetsrv_autoinit(void) {
   }
 
   add_telnetcmd("telnet", telnet_vardef, telnet_cmdarray);
+  add_telnetcmd("rf", rf_vardef, rf_cmdarray);
   add_embeddedmodules();
   return 0;
 }
@@ -774,3 +814,4 @@ int telnetsrv_getfarray(loader_shlibfunc_t  **farray) {
   (*farray)[0].fptr=(int (*)(void) )add_telnetcmd;
   return 1;
 }
+
