@@ -137,16 +137,15 @@ int rf_setmod_cmd(char *buff, int debug, telnet_printfunc_t prnt)
           prnt("%s: wrong setmod parameter...\n",buff);
       }
    set_rf_test(telnet_rf_test_cmd,telnet_rf_test_time,telnet_rf_test_offset);
-   prnt("rf current set: mode %d time %d offset %d\n",telnet_rf_test_cmd,telnet_rf_test_time,telnet_rf_test_offset);
+   prnt("rf current set: mode %d p_time %d g_offset %d\n",telnet_rf_test_cmd,telnet_rf_test_time,telnet_rf_test_offset);
    return 0;
 }
 
 telnetshell_vardef_t rf_vardef[] = {
-  {"time",TELNET_VARTYPE_INT32,&telnet_rf_test_time},
-  {"offset",TELNET_VARTYPE_INT32,&telnet_rf_test_offset},
+  {"p_time",TELNET_VARTYPE_INT32,&telnet_rf_test_time},
+  {"g_offset",TELNET_VARTYPE_INT32,&telnet_rf_test_offset},
   {"",0,NULL}
 };
-
 static telnetshell_cmddef_t rf_cmdarray[] = {
    {"test","[stop,down,up]",rf_setmod_cmd},
    {"","",NULL},
