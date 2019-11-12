@@ -738,6 +738,8 @@ void tx_rf(RU_t *ru,int frame,int slot, uint64_t timestamp) {
     else if (slot==1)
       flags=3;
 
+    flags |= (3+slot)<<8;
+    
     /*
         if (SF_type == SF_S) {
           siglen = fp->dl_symbols_in_S_subframe*(fp->ofdm_symbol_size+fp->nb_prefix_samples0);

@@ -401,8 +401,8 @@ void nr_phy_config_request_sim(PHY_VARS_gNB *gNB,
   gNB_config->subframe_config.dl_cyclic_prefix_type.value = (fp->Ncp == NORMAL) ? NFAPI_CP_NORMAL : NFAPI_CP_EXTENDED;
 
   gNB->mac_enabled   = 1;
-  fp->dl_CarrierFreq = 3500000000;//from_nrarfcn(gNB_config->nfapi_config.rf_bands.rf_band[0],gNB_config->nfapi_config.nrarfcn.value);
-  fp->ul_CarrierFreq = 3500000000;//fp->dl_CarrierFreq - (get_uldl_offset(gNB_config->nfapi_config.rf_bands.rf_band[0])*100000);
+  fp->dl_CarrierFreq = 3500000000L;//from_nrarfcn(gNB_config->nfapi_config.rf_bands.rf_band[0],gNB_config->nfapi_config.nrarfcn.value);
+  fp->ul_CarrierFreq = 3500000000L;//fp->dl_CarrierFreq - (get_uldl_offset(gNB_config->nfapi_config.rf_bands.rf_band[0])*100000);
   fp->threequarter_fs= 0;
   nr_init_frame_parms(gNB_config, fp);
   gNB->configured    = 1;
@@ -439,7 +439,7 @@ void nr_phy_config_request(NR_PHY_Config_t *phy_config)
   get_band(fp->dl_CarrierFreq, &gNB_config->nfapi_config.rf_bands.rf_band[0], &uplink_frequency_offset[CC_id][0], &fp->frame_type);
   fp->ul_CarrierFreq = fp->dl_CarrierFreq + uplink_frequency_offset[CC_id][0];
   fp->threequarter_fs                    = openair0_cfg[0].threequarter_fs;
-  LOG_I(PHY,"Configuring MIB for instance %d, CCid %d : (band %d,N_RB_DL %d, N_RB_UL %d, Nid_cell %d,DL freq %u, UL freq %u)\n",
+  LOG_I(PHY,"Configuring MIB for instance %d, CCid %d : (band %d,N_RB_DL %d, N_RB_UL %d, Nid_cell %d,DL freq %"PRIu64", UL freq %"PRIu64")\n",
         Mod_id,
         CC_id,
         gNB_config->nfapi_config.rf_bands.rf_band[0],

@@ -58,7 +58,9 @@ nr_bandentry_t nr_bandtable[] = {
   {76,     000,     000, 1427000, 1432000, 20, 285400},
   {77, 3300000, 4200000, 3300000, 4200000,  1, 620000},
   {78, 3300000, 3800000, 3300000, 3800000,  1, 620000},
-  {79, 4400000, 5000000, 4400000, 5000000,  2, 693334},
+  //{79, 4400000, 5000000, 4400000, 5000000,  2, 693334},
+  // small-change to allow IF frequencies between 5-6 GHz for FR2
+  {79, 4400000, 6000000, 4400000, 6000000,  2, 693334},
   {80, 1710000, 1785000,     000,     000, 20, 342000},
   {81,  860000,  915000,     000,     000, 20, 176000},
   {82,  832000,  862000,     000,     000, 20, 166400},
@@ -69,7 +71,7 @@ nr_bandentry_t nr_bandtable[] = {
 
 #define NR_BANDTABLE_SIZE (sizeof(nr_bandtable)/sizeof(nr_bandentry_t))
 
-void get_band(uint32_t downlink_frequency,
+void get_band(uint64_t downlink_frequency,
               uint16_t *current_band,
               int32_t *current_offset,
               lte_frame_type_t *current_type)
@@ -86,7 +88,7 @@ void get_band(uint32_t downlink_frequency,
           ind < sizeof(nr_bandtable) / sizeof(nr_bandtable[0]);
           ind++) {
 
-      LOG_I(PHY, "Scanning band %d, dl_min %"PRIu64", ul_min %"PRIu64"\n", nr_bandtable[ind].band, nr_bandtable[ind].dl_min,nr_bandtable[ind].ul_min);
+      LOG_I(PHY, "Scanning band %d for %"PRIu64", dl_min %"PRIu64", ul_min %"PRIu64"\n", nr_bandtable[ind].band, dl_freq_khz,nr_bandtable[ind].dl_min,nr_bandtable[ind].ul_min);
 
       if ( nr_bandtable[ind].dl_min <= dl_freq_khz && nr_bandtable[ind].dl_max >= dl_freq_khz ) {
 
@@ -110,7 +112,7 @@ void get_band(uint32_t downlink_frequency,
          downlink_frequency, *current_band, *current_type, downlink_frequency+*current_offset);
 
     AssertFatal(*current_band != 0,
-	    "Can't find EUTRA band for frequency %u\n", downlink_frequency);
+	    "Can't find NR band for frequency %u\n", downlink_frequency);
 }
 
 uint32_t to_nrarfcn(int nr_bandP,

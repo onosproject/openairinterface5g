@@ -221,7 +221,7 @@ typedef struct NR_DL_FRAME_PARMS {
   nfapi_nr_sch_config_t sch_config;
   /// Number of resource blocks (RB) in DL
   int N_RB_DL;
-  /// Number of resource blocks (RB) in UL
+  /// Number of resource 1blocks (RB) in UL
   int N_RB_UL;
   ///  total Number of Resource Block Groups: this is ceil(N_PRB/P)
   uint8_t N_RBG;
@@ -230,9 +230,9 @@ typedef struct NR_DL_FRAME_PARMS {
   /// EUTRA Band
   uint16_t eutra_band;
   /// DL carrier frequency
-  uint32_t dl_CarrierFreq;
+  uint64_t dl_CarrierFreq;
   /// UL carrier frequency
-  uint32_t ul_CarrierFreq;
+  uint64_t ul_CarrierFreq;
   /// TX attenuation
   uint32_t att_tx;
   /// RX attenuation
