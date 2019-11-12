@@ -1620,7 +1620,6 @@ int wakeup_prescd(RU_t* ru, int frame , int subframe){
     }else{
         LOG_E( PHY, "[eNB] frame %d subframe %d rxtx busy instance_pre_scd %d\n",
                frame,subframe,ru->proc.instance_pre_scd );
-        return -1;
     }
 
     if (pthread_mutex_unlock(&ru->proc.mutex_pre_scd)!= 0) {
