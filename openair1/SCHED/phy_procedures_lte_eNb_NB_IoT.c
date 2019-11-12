@@ -366,7 +366,8 @@ void common_signal_procedures_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
                                  release_v13_5_0);
 
       } else if(eNB->ndlsch[0] != NULL) {
-          generate_NDLSCH_NB_IoT(eNB,
+       	  //printf("Going to generate_NDLSCH_NB_IoT!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
+	  generate_NDLSCH_NB_IoT(eNB,
                                  data,
                                  txdataF,
                                  AMP,
@@ -375,6 +376,7 @@ void common_signal_procedures_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
                                  subframe,
                                  RB_IoT_ID,
                                  release_v13_5_0);
+          //printf("Finish doing generate_NDLSCH_NB_IoT!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
       }
       ///////////////////////////////////////////////////////////////////////////////////
     }
@@ -812,7 +814,7 @@ void generate_eNB_dlsch_params_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t * proc,n
 
           npdcch               =  eNB->npdcch_DCI;
            
-          LOG_D(PHY,"Generating pdcch params for DCIN1 RAR and packing DCI\n");
+          LOG_I(PHY,"Generating pdcch params for DCIN1 RAR and packing DCI\n");
           //LOG_I(PHY,"Rep of DCI is : %d\n",DCI_Content->DCIN1_RAR.RepNum);
 
           //LOG_I(PHY,"Generating dlsch params for RA_RNTI and packing DCI\n");

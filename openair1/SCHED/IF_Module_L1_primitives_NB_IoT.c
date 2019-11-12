@@ -256,6 +256,7 @@ void handle_nfapi_dlsch_pdu_NB_IoT(PHY_VARS_eNB *eNB,
           
           ndlsch_harq->TBS  = rel13->length;
 		  ndlsch_harq->pdu  = sdu;
+	  printf("sdu after handling MSG4 or ue-spec data : %u********\n", sdu);
 	  }
 
   }
@@ -344,13 +345,16 @@ void schedule_response_NB_IoT(Sched_Rsp_NB_IoT_t *Sched_INFO)
     //LOG_I(PHY, "number_dl_pdu: %d ,dl_config_pdu type: %d\n",number_dl_pdu,dl_config_pdu->pdu_type);
     switch (dl_config_pdu->pdu_type) 
     {
+        printf("In case schedule_response_NB_IoT****************************************in schedule_response_NB_IoT\n");
     	case NFAPI_DL_CONFIG_NPDCCH_PDU_TYPE:
+		//printf("NFAPI_DL_CONFIG_NPDCCH_PDU_TYPE***********************\n");
     		//Remember: there is no DCI for SI information
     		//LOG_D(PHY,"Generate DL DCI PDU information from scheduler\n");
     		//TODO: separate the ndlsch structure configuration from the DCI (here we will encode only the DCI)
       		generate_eNB_dlsch_params_NB_IoT(eNB,proc,dl_config_pdu);
       		break;
     	case NFAPI_DL_CONFIG_NBCH_PDU_TYPE:
+		//printf("NFAPI_DL_CONFIG_NBCH_PDU_TYPE***********************\n");
 
     		// for the moment we don't care about the n-bch pdu content since we need only the sdu if tx.request
     		npbch = &eNB->npbch; //in the main of the lte-softmodem they should allocate this memory of PHY_vars
@@ -366,6 +370,7 @@ void schedule_response_NB_IoT(Sched_Rsp_NB_IoT_t *Sched_INFO)
 
       		break;
     	case NFAPI_DL_CONFIG_NDLSCH_PDU_TYPE:
+		//printf("NFAPI_DL_CONFIG_NDLSCH_PDU_TYPE***********************\n");
     		//we can have three types of NDLSCH based on our assumptions: SIB1, SI, Data, RAR
     		//remember that SI messages have no DCI in NB-IoT therefore this is the only way to configure the ndlsch_SI/ndlsch_SIB1 structures ndlsch->active = 1;
 
@@ -377,11 +382,14 @@ void schedule_response_NB_IoT(Sched_Rsp_NB_IoT_t *Sched_INFO)
     		 * -for this reason the activation of the ndslch structure is done only when we receive the NDLSCH pdu (here) such the in the TX procedure only 1 ue-specific pdu
     		 * 	result active from the loop before calling the ndlsch_procedure
     		 */
+		//if(TX_req->tx_request_body.tx_pdu_list[dl_config_pdu->nbch_pdu.nbch_pdu_rel13.pdu_index].segments[0].segment_data != NULL){
     		dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13.pdu_index = 1;
     		handle_nfapi_dlsch_pdu_NB_IoT(eNB, proc,dl_config_pdu,TX_req->tx_request_body.tx_pdu_list[dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13.pdu_index].segments[0].segment_data);
-    		
+    		//}
+		
     		break;
     	default:
+		//printf("default***********************\n");
     		LOG_D(PHY, "dl_config_pdu type not for NB_IoT\n");
     		break;
    }
