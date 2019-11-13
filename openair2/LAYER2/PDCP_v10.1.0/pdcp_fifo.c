@@ -166,7 +166,7 @@ int pdcp_fifo_read_input_sdus_fromtun (const protocol_ctxt_t *const  ctxt_pP) {
       ctxt.rnti=pdcp_eNB_UE_instance_to_rnti[0];
       ctxt.enb_flag=ENB_FLAG_YES;
       ctxt.module_id=0;
-      key = PDCP_COLL_KEY_VALUE(ctxt.module_id, ctxt.rnti, ctxt.enb_flag, rab_id, SRB_FLAG_YES);
+      key = PDCP_COLL_KEY_VALUE(ctxt.module_id, ctxt.rnti, ctxt.enb_flag, rab_id, SRB_FLAG_NO);
       h_rc = hashtable_get(pdcp_coll_p, key, (void **)&pdcp_p);
     }
 
@@ -716,7 +716,7 @@ void pdcp_fifo_read_input_sdus_from_otg (const protocol_ctxt_t *const  ctxt_pP) 
       ctxt_pP->subframe,
       ctxt_pP->module_id);
 
-    for (dst_id = 0; dst_id<MAX_MOBILES_PER_ENB; dst_id++) {
+    for (dst_id = 0; dst_id<NUMBER_OF_UE_MAX; dst_id++) {
       ctxt.rnti = oai_emulation.info.eNB_ue_module_id_to_rnti[ctxt.module_id][dst_id];
     }
   }

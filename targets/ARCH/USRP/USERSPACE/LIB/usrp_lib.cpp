@@ -30,9 +30,9 @@
 #include <stdio.h>
 #include <uhd/version.hpp>
 #if UHD_VERSION < 3110000
-#include <uhd/utils/thread_priority.hpp>
+  #include <uhd/utils/thread_priority.hpp>
 #else
-#include <uhd/utils/thread.hpp>
+  #include <uhd/utils/thread.hpp>
 #endif
 #include <uhd/usrp/multi_usrp.hpp>
 #include <uhd/version.hpp>
@@ -52,15 +52,15 @@
 #include <sys/resource.h>
 
 #ifdef __SSE4_1__
-#  include <smmintrin.h>
+  #include <smmintrin.h>
 #endif
 
 #ifdef __AVX2__
-#  include <immintrin.h>
+  #include <immintrin.h>
 #endif
 
 #ifdef __arm__
-#  include <arm_neon.h>
+  #include <arm_neon.h>
 #endif
 
 /** @addtogroup _USRP_PHY_RF_INTERFACE_
@@ -128,10 +128,10 @@ int check_ref_locked(usrp_state_t *s,size_t mboard) {
 
     for (int i = 0; i < 30 and not ref_locked; i++) {
       ref_locked = s->usrp->get_mboard_sensor("ref_locked", mboard).to_bool();
-      
+
       if (not ref_locked) {
-	std::cout << "." << std::flush;
-	boost::this_thread::sleep(boost::posix_time::seconds(1));
+        std::cout << "." << std::flush;
+        boost::this_thread::sleep(boost::posix_time::seconds(1));
       }
     }
 
@@ -140,13 +140,11 @@ int check_ref_locked(usrp_state_t *s,size_t mboard) {
     } else {
       std::cout << "FAILED" << std::endl;
     }
-
   } else {
     std::cout << boost::format("ref_locked sensor not present on this board.\n");
   }
 
   return ref_locked;
-
 }
 
 static int sync_to_gps(openair0_device *device) {
@@ -179,14 +177,13 @@ static int sync_to_gps(openair0_device *device) {
 
     for (size_t mboard = 0; mboard < num_mboards; mboard++) {
       std::cout << "Synchronizing mboard " << mboard << ": " << s->usrp->get_mboard_name(mboard) << std::endl;
-
       bool ref_locked = check_ref_locked(s,mboard);
 
       if (ref_locked) {
-	std::cout << boost::format("Ref Locked\n");
+        std::cout << boost::format("Ref Locked\n");
       } else {
-	std::cout << "Failed to lock to GPSDO 10 MHz Reference. Exiting." << std::endl;
-	exit(EXIT_FAILURE);
+        std::cout << "Failed to lock to GPSDO 10 MHz Reference. Exiting." << std::endl;
+        exit(EXIT_FAILURE);
       }
 
       //Wait for GPS lock
@@ -266,41 +263,41 @@ static int sync_to_gps(openair0_device *device) {
 }
 
 #if defined(USRP_REC_PLAY)
-#include "usrp_lib.h"
-static FILE    *pFile = NULL;
-int             mmapfd = 0;
-int             iqfd = 0;
-int             use_mmap = 1; // default is to use mmap
-struct stat     sb;
-iqrec_t        *ms_sample = NULL;                      // memory for all subframes
-unsigned int    nb_samples = 0;
-unsigned int    cur_samples = 0;
-int64_t         wrap_count = 0;
-int64_t         wrap_ts = 0;
-unsigned int    u_sf_mode = 0;                         // 1=record, 2=replay
-unsigned int    u_sf_record = 0;                       // record mode
-unsigned int    u_sf_replay = 0;                       // replay mode
-char            u_sf_filename[1024] = "";              // subframes file path
-unsigned int    u_sf_max = DEF_NB_SF;                  // max number of recorded subframes
-unsigned int    u_sf_loops = DEF_SF_NB_LOOP;           // number of loops in replay mode
-unsigned int    u_sf_read_delay = DEF_SF_DELAY_READ;   // read delay in replay mode
-unsigned int    u_sf_write_delay = DEF_SF_DELAY_WRITE; // write delay in replay mode
+  #include "usrp_lib.h"
+  static FILE    *pFile = NULL;
+  int             mmapfd = 0;
+  int             iqfd = 0;
+  int             use_mmap = 1; // default is to use mmap
+  struct stat     sb;
+  iqrec_t        *ms_sample = NULL;                      // memory for all subframes
+  unsigned int    nb_samples = 0;
+  unsigned int    cur_samples = 0;
+  int64_t         wrap_count = 0;
+  int64_t         wrap_ts = 0;
+  unsigned int    u_sf_mode = 0;                         // 1=record, 2=replay
+  unsigned int    u_sf_record = 0;                       // record mode
+  unsigned int    u_sf_replay = 0;                       // replay mode
+  char            u_sf_filename[1024] = "";              // subframes file path
+  unsigned int    u_sf_max = DEF_NB_SF;                  // max number of recorded subframes
+  unsigned int    u_sf_loops = DEF_SF_NB_LOOP;           // number of loops in replay mode
+  unsigned int    u_sf_read_delay = DEF_SF_DELAY_READ;   // read delay in replay mode
+  unsigned int    u_sf_write_delay = DEF_SF_DELAY_WRITE; // write delay in replay mode
 
-char config_opt_sf_file[] = CONFIG_OPT_SF_FILE;
-char config_def_sf_file[] = DEF_SF_FILE;
-char config_hlp_sf_file[] = CONFIG_HLP_SF_FILE;
-char config_opt_sf_rec[] = CONFIG_OPT_SF_REC;
-char config_hlp_sf_rec[] = CONFIG_HLP_SF_REC;
-char config_opt_sf_rep[] = CONFIG_OPT_SF_REP;
-char config_hlp_sf_rep[] = CONFIG_HLP_SF_REP;
-char config_opt_sf_max[] = CONFIG_OPT_SF_MAX;
-char config_hlp_sf_max[] = CONFIG_HLP_SF_MAX;
-char config_opt_sf_loops[] = CONFIG_OPT_SF_LOOPS;
-char config_hlp_sf_loops[] = CONFIG_HLP_SF_LOOPS;
-char config_opt_sf_rdelay[] = CONFIG_OPT_SF_RDELAY;
-char config_hlp_sf_rdelay[] = CONFIG_HLP_SF_RDELAY;
-char config_opt_sf_wdelay[] = CONFIG_OPT_SF_WDELAY;
-char config_hlp_sf_wdelay[] = CONFIG_HLP_SF_WDELAY;
+  char config_opt_sf_file[] = CONFIG_OPT_SF_FILE;
+  char config_def_sf_file[] = DEF_SF_FILE;
+  char config_hlp_sf_file[] = CONFIG_HLP_SF_FILE;
+  char config_opt_sf_rec[] = CONFIG_OPT_SF_REC;
+  char config_hlp_sf_rec[] = CONFIG_HLP_SF_REC;
+  char config_opt_sf_rep[] = CONFIG_OPT_SF_REP;
+  char config_hlp_sf_rep[] = CONFIG_HLP_SF_REP;
+  char config_opt_sf_max[] = CONFIG_OPT_SF_MAX;
+  char config_hlp_sf_max[] = CONFIG_HLP_SF_MAX;
+  char config_opt_sf_loops[] = CONFIG_OPT_SF_LOOPS;
+  char config_hlp_sf_loops[] = CONFIG_HLP_SF_LOOPS;
+  char config_opt_sf_rdelay[] = CONFIG_OPT_SF_RDELAY;
+  char config_hlp_sf_rdelay[] = CONFIG_HLP_SF_RDELAY;
+  char config_opt_sf_wdelay[] = CONFIG_OPT_SF_WDELAY;
+  char config_hlp_sf_wdelay[] = CONFIG_HLP_SF_WDELAY;
 
 #endif
 
@@ -359,7 +356,6 @@ static void trx_usrp_end(openair0_device *device) {
   if (done == 1) return;
 
   done = 1;
-
 
   if (u_sf_mode != 2) { // not subframes replay
 #endif
@@ -449,22 +445,20 @@ static int trx_usrp_write(openair0_device *device, openair0_timestamp timestamp,
   if (u_sf_mode != 2) { // not replay mode
 #endif
     usrp_state_t *s = (usrp_state_t *)device->priv;
-
     int nsamps2;  // aligned to upper 32 or 16 byte boundary
-
 #if defined(__x86_64) || defined(__i386__)
-  #ifdef __AVX2__
-      nsamps2 = (nsamps+7)>>3;
-      __m256i buff_tx[2][nsamps2];
-  #else
+#ifdef __AVX2__
+    nsamps2 = (nsamps+7)>>3;
+    __m256i buff_tx[2][nsamps2];
+#else
     nsamps2 = (nsamps+3)>>2;
     __m128i buff_tx[2][nsamps2];
-  #endif
+#endif
 #elif defined(__arm__)
     nsamps2 = (nsamps+3)>>2;
     int16x8_t buff_tx[2][nsamps2];
 #else
-    #error Unsupported CPU architecture, USRP device cannot be built
+#error Unsupported CPU architecture, USRP device cannot be built
 #endif
 
     // bring RX data into 12 LSBs for softmodem RX
@@ -495,42 +489,40 @@ static int trx_usrp_write(openair0_device *device, openair0_timestamp timestamp,
       first_packet_state = false;
       last_packet_state  = true;
     } else if (flags == 4) { // start and end
-    //  s->tx_md.start_of_burst = true;
-    //  s->tx_md.end_of_burst = true;
+      //  s->tx_md.start_of_burst = true;
+      //  s->tx_md.end_of_burst = true;
       first_packet_state = true;
       last_packet_state  = true;
     } else if (flags==1) { // middle of burst
-    //  s->tx_md.start_of_burst = false;
-    //  s->tx_md.end_of_burst = false;
+      //  s->tx_md.start_of_burst = false;
+      //  s->tx_md.end_of_burst = false;
       first_packet_state = false;
       last_packet_state  = false;
-    }
-    else if (flags==10) { // fail safe mode
-     // s->tx_md.has_time_spec = false;
-     // s->tx_md.start_of_burst = false;
-     // s->tx_md.end_of_burst = true;
-     first_packet_state = false;
-     last_packet_state  = true;
+    } else if (flags==10) { // fail safe mode
+      // s->tx_md.has_time_spec = false;
+      // s->tx_md.start_of_burst = false;
+      // s->tx_md.end_of_burst = true;
+      first_packet_state = false;
+      last_packet_state  = true;
     }
 
     s->tx_md.has_time_spec  = true;
-    s->tx_md.start_of_burst = (s->tx_count==0) ? true : first_packet_state; 
+    s->tx_md.start_of_burst = (s->tx_count==0) ? true : first_packet_state;
     s->tx_md.end_of_burst   = last_packet_state;
     s->tx_md.time_spec      = uhd::time_spec_t::from_ticks(timestamp, s->sample_rate);
-
     s->tx_count++;
 
     if (cc>1) {
-       std::vector<void *> buff_ptrs;
+      std::vector<void *> buff_ptrs;
 
-       for (int i=0; i<cc; i++)
-         buff_ptrs.push_back(&(((int16_t*)buff_tx[i])[0]));
+      for (int i=0; i<cc; i++)
+        buff_ptrs.push_back(&(((int16_t *)buff_tx[i])[0]));
 
-       ret = (int)s->tx_stream->send(buff_ptrs, nsamps, s->tx_md);
+      ret = (int)s->tx_stream->send(buff_ptrs, nsamps, s->tx_md);
     } else ret = (int)s->tx_stream->send(&(((int16_t *)buff_tx[0])[0]), nsamps, s->tx_md);
 
-     if (ret != nsamps) LOG_E(HW,"[xmit] tx samples %d != %d\n",ret,nsamps);
- 
+    if (ret != nsamps) LOG_E(HW,"[xmit] tx samples %d != %d\n",ret,nsamps);
+
 #if defined(USRP_REC_PLAY)
   } else {
     struct timespec req;
@@ -608,15 +600,15 @@ static int trx_usrp_read(openair0_device *device, openair0_timestamp *ptimestamp
         for (int j=0; j<nsamps2; j++) {
 #if defined(__x86_64__) || defined(__i386__)
 #ifdef __AVX2__
-	  // FK: in some cases the buffer might not be 32 byte aligned, so we cannot use avx2
+          // FK: in some cases the buffer might not be 32 byte aligned, so we cannot use avx2
 
-	  if ((((uintptr_t) buff[i])&0x1F)==0) {
-	    ((__m256i *)buff[i])[j] = _mm256_srai_epi16(buff_tmp[i][j],4);
-	  }
-	  else {
-	    ((__m128i *)buff[i])[2*j] = _mm_srai_epi16(((__m128i*)buff_tmp[i])[2*j],4);
-	    ((__m128i *)buff[i])[2*j+1] = _mm_srai_epi16(((__m128i*)buff_tmp[i])[2*j+1],4);
-	  }
+          if ((((uintptr_t) buff[i])&0x1F)==0) {
+            ((__m256i *)buff[i])[j] = _mm256_srai_epi16(buff_tmp[i][j],4);
+          } else {
+            ((__m128i *)buff[i])[2*j] = _mm_srai_epi16(((__m128i *)buff_tmp[i])[2*j],4);
+            ((__m128i *)buff[i])[2*j+1] = _mm_srai_epi16(((__m128i *)buff_tmp[i])[2*j+1],4);
+          }
+
 #else
           ((__m128i *)buff[i])[j] = _mm_srai_epi16(buff_tmp[i][j],4);
 #endif
@@ -868,7 +860,6 @@ void set_rx_gain_offset(openair0_config_t *openair0_cfg, int chain_index,int bw_
 
   if (bw_gain_adjust==1) {
     switch ((int)openair0_cfg[0].sample_rate) {
-
       case 46080000:
         break;
 
@@ -1077,7 +1068,6 @@ extern "C" {
     } else {
 #endif
       usrp_state_t *s = (usrp_state_t *)calloc(sizeof(usrp_state_t),1);
-
       // Initialize USRP device
       device->openair0_cfg = openair0_cfg;
       int vers=0,subvers=0,subsubvers=0;
@@ -1092,13 +1082,13 @@ extern "C" {
       sscanf(uhd::get_version_string().c_str(),"%d.%d.%d",&vers,&subvers,&subsubvers);
       LOG_I(HW,"UHD version %s (%d.%d.%d)\n",
             uhd::get_version_string().c_str(),vers,subvers,subsubvers);
-
       std::string args;
+
       if (openair0_cfg[0].sdr_addrs == NULL) {
         args = "type=b200";
       } else {
         args = openair0_cfg[0].sdr_addrs;
-	LOG_I(HW,"Checking for USRP with args %s\n",openair0_cfg[0].sdr_addrs);
+        LOG_I(HW,"Checking for USRP with args %s\n",openair0_cfg[0].sdr_addrs);
       }
 
       uhd::device_addrs_t device_adds = uhd::device::find(args);
@@ -1109,8 +1099,8 @@ extern "C" {
         return -1;
       } else if (device_adds.size() > 1) {
         LOG_E(HW,"More than one USRP Device Found. Please specify device more precisely in config file.\n");
-	free(s);
-	return -1;
+        free(s);
+        return -1;
       }
 
       LOG_I(HW,"Found USRP %s\n", device_adds[0].get("type").c_str());
@@ -1123,6 +1113,7 @@ extern "C" {
         args += boost::str(boost::format(",master_clock_rate=%f") % usrp_master_clock);
         args += ",num_send_frames=256,num_recv_frames=256, send_frame_size=7680, recv_frame_size=7680" ;
       }
+
       if (device_adds[0].get("type") == "n3xx") {
         printf("Found USRP n300\n");
         device->type=USRP_X300_DEV; //treat it as X300 for now
@@ -1136,55 +1127,53 @@ extern "C" {
         device->type=USRP_X300_DEV;
         usrp_master_clock = 184.32e6;
         args += boost::str(boost::format(",master_clock_rate=%f") % usrp_master_clock);
+
         // USRP recommended: https://files.ettus.com/manual/page_usrp_x3x0_config.html
         if ( 0 != system("sysctl -w net.core.rmem_max=33554432 net.core.wmem_max=33554432") )
-        	LOG_W(HW,"Can't set kernel parameters for X3xx\n");
+          LOG_W(HW,"Can't set kernel parameters for X3xx\n");
       }
 
       s->usrp = uhd::usrp::multi_usrp::make(args);
       device->priv = s;
 
       if (args.find("clock_source")==std::string::npos) {
-	LOG_I(HW, "Using clock_source == '%d'\n", openair0_cfg[0].clock_source);
+        LOG_I(HW, "Using clock_source == '%d'\n", openair0_cfg[0].clock_source);
 
-	if (openair0_cfg[0].clock_source == internal) {
-	  //in UHD 3.14 we could use
-	  //s->usrp->set_sync_source("clock_source=internal","time_source=internal");
-	  s->usrp->set_time_source("internal");
-	  s->usrp->set_clock_source("internal");
-	}
-	else if (openair0_cfg[0].clock_source == external ) {
-	  //s->usrp->set_sync_source("clock_source=external","time_source=external");
-	  s->usrp->set_time_source("external");
-	  s->usrp->set_clock_source("external");
-	}
-	else if (openair0_cfg[0].clock_source==gpsdo) {
-	  s->usrp->set_clock_source("gpsdo");
-	  s->usrp->set_time_source("gpsdo");
-	}
+        if (openair0_cfg[0].clock_source == internal) {
+          //in UHD 3.14 we could use
+          //s->usrp->set_sync_source("clock_source=internal","time_source=internal");
+          s->usrp->set_time_source("internal");
+          s->usrp->set_clock_source("internal");
+        } else if (openair0_cfg[0].clock_source == external ) {
+          //s->usrp->set_sync_source("clock_source=external","time_source=external");
+          s->usrp->set_time_source("external");
+          s->usrp->set_clock_source("external");
+        } else if (openair0_cfg[0].clock_source==gpsdo) {
+          s->usrp->set_clock_source("gpsdo");
+          s->usrp->set_time_source("gpsdo");
+        }
       } else {
-	LOG_W(HW, "clock_source already specified in device arguments! Ignoring command line parameter\n");
+        LOG_W(HW, "clock_source already specified in device arguments! Ignoring command line parameter\n");
       }
 
       if (s->usrp->get_clock_source(0) == "gpsdo") {
-	s->use_gps = 1;
+        s->use_gps = 1;
+
         if (sync_to_gps(device)==EXIT_SUCCESS) {
           LOG_I(HW,"USRP synced with GPS!\n");
-	}
-	else {
+        } else {
           LOG_I(HW,"USRP fails to sync with GPS. Exiting.\n");
           exit(EXIT_FAILURE);
         }
-      }	else if (s->usrp->get_clock_source(0) == "external") {
-	if (check_ref_locked(s,0)) {
-	  LOG_I(HW,"USRP locked to external reference!\n");
-	} else {
-	  LOG_I(HW,"Failed to lock to external reference. Exiting.\n");
-	  exit(EXIT_FAILURE);
-	}
+      } else if (s->usrp->get_clock_source(0) == "external") {
+        if (check_ref_locked(s,0)) {
+          LOG_I(HW,"USRP locked to external reference!\n");
+        } else {
+          LOG_I(HW,"Failed to lock to external reference. Exiting.\n");
+          exit(EXIT_FAILURE);
+        }
       }
-      
-      
+
       if (device->type==USRP_X300_DEV) {
         openair0_cfg[0].rx_gain_calib_table = calib_table_x310;
 #if defined(USRP_REC_PLAY)
@@ -1208,7 +1197,7 @@ extern "C" {
             openair0_cfg[0].tx_bw                 = 80e6;
             openair0_cfg[0].rx_bw                 = 80e6;
             break;
-            
+
           case 61440000:
             // from usrp_time_offset
             //openair0_cfg[0].samples_per_packet    = 2048;
@@ -1218,8 +1207,13 @@ extern "C" {
             break;
 
           case 46080000:
+<<<<<<< HEAD
             //openair0_cfg[0].samples_per_packet    = 2048;
             openair0_cfg[0].tx_sample_advance     = 15;
+=======
+            //openair0_cfg[0].samples_per_packet    = 1024;
+            openair0_cfg[0].tx_sample_advance     = 115;
+>>>>>>> Try to fix LTE UE connection problem
             openair0_cfg[0].tx_bw                 = 40e6;
             openair0_cfg[0].rx_bw                 = 40e6;
             break;
@@ -1276,7 +1270,7 @@ extern "C" {
         }
 
         switch ((int)openair0_cfg[0].sample_rate) {
-	case 46080000:
+          case 46080000:
             s->usrp->set_master_clock_rate(46.08e6);
             //openair0_cfg[0].samples_per_packet    = 1024;
             openair0_cfg[0].tx_sample_advance     = 115;
@@ -1284,7 +1278,7 @@ extern "C" {
             openair0_cfg[0].rx_bw                 = 40e6;
             break;
 
-	case 30720000:
+          case 30720000:
             s->usrp->set_master_clock_rate(30.72e6);
             //openair0_cfg[0].samples_per_packet    = 1024;
             openair0_cfg[0].tx_sample_advance     = 115;
@@ -1373,7 +1367,6 @@ extern "C" {
       // display USRP settings
       LOG_I(HW,"Actual master clock: %fMHz...\n",s->usrp->get_master_clock_rate()/1e6);
       sleep(1);
-
       // create tx & rx streamer
       uhd::stream_args_t stream_args_rx("sc16", "sc16");
       int samples=openair0_cfg[0].sample_rate;
@@ -1422,7 +1415,7 @@ extern "C" {
         LOG_I(HW,"  Actual TX gain: %f...\n", s->usrp->get_tx_gain(i));
         LOG_I(HW,"  Actual TX bandwidth: %fM...\n", s->usrp->get_tx_bandwidth(i)/1e6);
         LOG_I(HW,"  Actual TX antenna: %s...\n", s->usrp->get_tx_antenna(i).c_str());
-	LOG_I(HW,"  Actual TX packet size: %lu\n",s->tx_stream->get_max_num_samps());
+        LOG_I(HW,"  Actual TX packet size: %lu\n",s->tx_stream->get_max_num_samps());
       }
 
       LOG_I(HW,"Device timestamp: %f...\n", s->usrp->get_time_now().get_real_secs());
@@ -1450,7 +1443,6 @@ extern "C" {
 
       if(is_equal(s->sample_rate, (double)7.68e6))
         s->tx_forward_nsamps = 50;
-
 
 #if defined(USRP_REC_PLAY)
     }

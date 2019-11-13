@@ -448,7 +448,6 @@ static int trx_usrp_write(openair0_device *device, openair0_timestamp timestamp,
     nsamps2 = (nsamps+3)>>2;
     __m128i buff_tx[2][nsamps2];
 #endif
-
 #elif defined(__arm__)
     nsamps2 = (nsamps+3)>>2;
     int16x8_t buff_tx[2][nsamps2];
