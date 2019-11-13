@@ -596,7 +596,7 @@ int wakeup_tx(PHY_VARS_eNB *eNB, int frame_rx,int subframe_rx,int frame_tx,int s
   VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME(VCD_SIGNAL_DUMPER_VARIABLES_L1_PROC_TX_IC,L1_proc_tx->instance_cnt);
   L1_proc_tx->instance_cnt = 0;
   VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME(VCD_SIGNAL_DUMPER_VARIABLES_L1_PROC_TX_IC,L1_proc_tx->instance_cnt);
-  if(!((get_thread_parallel_conf() == PARALLEL_RU_L1_TRX_SPLIT) && (get_thread_worker_conf() == WORKER_ENABLE))){
+  if(!(get_thread_parallel_conf() == PARALLEL_RU_L1_TRX_SPLIT)){
     L1_proc_tx->subframe_rx   = subframe_rx;
     L1_proc_tx->frame_rx      = frame_rx;
     L1_proc_tx->subframe_tx   = subframe_tx;
@@ -659,7 +659,7 @@ int wakeup_rxtx(PHY_VARS_eNB *eNB,RU_t *ru) {
   int ret;
 
   LOG_D(PHY,"ENTERED wakeup_rxtx, %d.%d\n",ru_proc->frame_rx,ru_proc->subframe_rx);
-  if(!((get_thread_parallel_conf() == PARALLEL_RU_L1_TRX_SPLIT) && (get_thread_worker_conf() == WORKER_ENABLE))) {
+  if(!(get_thread_parallel_conf() == PARALLEL_RU_L1_TRX_SPLIT)) {
   // wake up TX for subframe n+sl_ahead
   // lock the TX mutex and make sure the thread is ready
   AssertFatal((ret=pthread_mutex_lock(&L1_proc->mutex)) == 0,"mutex_lock returns %d\n", ret);
