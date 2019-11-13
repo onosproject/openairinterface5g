@@ -302,7 +302,7 @@ int schedule_DL_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_inst, UE_
 
 		                //LOG_D(MAC,"[%04d][DLSchedulerUSS] RNTI %d complete scheduling\n", mac_inst->current_subframe, UE_info->rnti);
 
-		                return;
+		                return 0;
 		              }
 		            }
 		            /*harq resource fail*/
