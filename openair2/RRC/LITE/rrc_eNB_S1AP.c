@@ -864,6 +864,12 @@ rrc_eNB_process_S1AP_DOWNLINK_NAS(
      * switch UL or DL NAS message without RRC piggybacked to SRB2 if active. 
      */
     /* Transfer data to PDCP */
+              int x;
+              for (x=0;x<length;x++){
+                printf("%02x ",buffer[x]);
+              }
+              printf("\n");
+
     rrc_data_req (
 		  &ctxt,
 		  srb_id,

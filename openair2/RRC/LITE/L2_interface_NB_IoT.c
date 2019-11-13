@@ -1426,6 +1426,11 @@ boolean_t pdcp_data_req_NB_IoT(
 	                                      (unsigned char*)&pdcp_pdu_p->data[0],
 	                                      sdu_buffer_sizeP);
 	      #endif
+	      int x;
+	      for (x=0;x<sdu_buffer_sizeP;x++){
+		printf("%02x ",pdcp_pdu_p->data[x]);
+	      }
+	      printf("\n");
 
 	      rlc_status = rlc_data_req_NB_IoT(ctxt_pP, srb_flagP, rb_idP, muiP, confirmP, sdu_buffer_sizeP, pdcp_pdu_p);
 	      //MP: if all ok rlc_status = RLC_OP_STATUS_OK
@@ -2571,6 +2576,12 @@ rlc_op_status_t rlc_data_req_NB_IoT (const protocol_ctxt_t* const ctxt_pP,
 #ifdef DEBUG_RLC_DATA_REQ
       LOG_D(RLC,"RLC_MODE_AM\n");
 #endif
+              int x;
+              for (x=0;x<sdu_sizeP;x++){
+                printf("%02x ",sdu_pP->data[x]);
+              }
+              printf("\n");
+
       new_sdu_p = get_free_mem_block (sdu_sizeP + sizeof (struct rlc_am_data_req_alloc), __func__);
 
       if (new_sdu_p != NULL) {

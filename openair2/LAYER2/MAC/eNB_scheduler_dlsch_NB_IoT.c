@@ -64,15 +64,15 @@ int schedule_DL_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_inst, UE_
 
 	int HARQ_delay=0;
 	uint32_t data_size;
-	//uint32_t mac_sdu_size;
+	//uint32_t mac_sdu_size; //
 
-	//uint8_t sdu_temp[SCH_PAYLOAD_SIZE_MAX_NB_IoT];
+	//uint8_t sdu_temp[SCH_PAYLOAD_SIZE_MAX_NB_IoT]; //
 	
-	//logical_chan_id_t logical_channel;
+	//logical_chan_id_t logical_channel; //
 
 	uint32_t subheader_length=2;
 	
-	//uint32_t payload_offset;
+	//uint32_t payload_offset; //
 	
 
 	uint32_t search_space_end_sf, h_temp, f_temp, sf_temp;
@@ -122,6 +122,16 @@ int schedule_DL_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_inst, UE_
 			if(UE_info_sim[ue_index].tc_rnti==UE_info->rnti)
 				data_size = UE_info_sim[ue_index].data_size;
 		}*/
+		/*	
+		mac_sdu_size = mac_rlc_data_req_eNB_NB_IoT(module_id, UE_info->rnti, 0, frame_start, 0, DCCH0_NB_IoT, sdu_temp);
+
+                //Generate header
+                payload_offset = generate_dlsch_header_NB_IoT(UE_info->DLSCH_pdu.payload, 1, &logical_channel, &mac_sdu_size, 0, 0, TBS);
+                //Complete MAC PDU
+                memcpy(UE_info->DLSCH_pdu.payload+payload_offset, sdu_temp, mac_sdu_size);
+
+                UE_info->DLSCH_pdu.pdu_size=TBS;
+		*/
   	}
 	/*Retransmission*/
 	else 
@@ -191,7 +201,12 @@ int schedule_DL_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_inst, UE_
 		        if(search_space_end_sf<NPDCCH_info->sf_end+get_scheduling_delay(I_delay, UE_info->R_max)+5)
 		        {
 		          end_flagSCH = check_resource_NPDSCH_NB_IoT(mac_inst, NPDSCH_info, NPDCCH_info->sf_end, I_delay, UE_info->R_max, UE_sched_ctrl_info->R_dl_data, n_sf);
-		          //Have available resource
+			  int x;
+			  for (x=0;x<data_size;x++){
+				printf("%02x ",UE_info->DLSCH_pdu.payload[x]);
+			  }
+			  printf("\n");
+			  //Have available resource
 		          /*Check HARQ resource*/
 		          if(end_flagSCH!=-1)
 		          {
@@ -553,8 +568,8 @@ void generate_scheduling_result_DL(uint32_t NPDCCH_sf_end, uint32_t NPDCCH_sf_st
 	NPDSCH_result->output_subframe = NPDSCH_sf_start;
 	NPDSCH_result->end_subframe = NPDSCH_sf_end;
 	NPDSCH_result->sdu_length = TBS;
-	//NPDSCH_result->DLSCH_pdu = DLSCH_pdu;
-	NPDSCH_result->DLSCH_pdu = NULL;
+	NPDSCH_result->DLSCH_pdu = DLSCH_pdu;
+	//NPDSCH_result->DLSCH_pdu = NULL;
 	NPDSCH_result->direction = 1;
 	NPDSCH_result->rnti_type = 3;
 	NPDSCH_result->DCI_pdu = (void*)DCI_pdu;
