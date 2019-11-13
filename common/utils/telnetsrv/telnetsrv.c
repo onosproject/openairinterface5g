@@ -510,7 +510,7 @@ int process_command(char *buf) {
   memset(cmdb,0,sizeof(cmdb));
   bufbck=strdup(buf);
   rt=CMDSTATUS_NOTFOUND;
-  j = sscanf(buf,"%9s %9s %9[^\t\n]",modulename,cmd,cmdb);
+  j = sscanf(buf,"%9s %9s %64[^\t\n]",modulename,cmd,cmdb);
 
   if (telnetparams.telnetdbg > 0)
     printf("process_command: %i words, module=%s cmd=%s, parameters= %s\n",j,modulename,cmd,cmdb);
