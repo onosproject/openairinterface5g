@@ -136,7 +136,7 @@ tbs_size_t mac_rlc_data_req(
   rlc_union_t           *rlc_union_p     = NULL;
   hash_key_t             key             = HASHTABLE_NOT_A_KEY_VALUE;
   hashtable_rc_t         h_rc;
-  srb_flag_t             srb_flag        = (channel_idP <= 2) ? SRB_FLAG_YES : SRB_FLAG_NO;
+  srb_flag_t             srb_flag        = (channel_idP <= 3) ? SRB_FLAG_YES : SRB_FLAG_NO;
   tbs_size_t             ret_tb_size         = 0;
   protocol_ctxt_t     ctxt;
 
@@ -174,6 +174,7 @@ tbs_size_t mac_rlc_data_req(
     }
   } else {
     key = RLC_COLL_KEY_LCID_VALUE(module_idP, rntiP, enb_flagP, channel_idP, srb_flag);
+  //key = RLC_COLL_KEY_LCID_VALUE(module_idP, rntiP, enb_flagP, channel_idP, 1);
   }
 
   h_rc = hashtable_get(rlc_coll_p, key, (void**)&rlc_union_p);

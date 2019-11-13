@@ -64,9 +64,9 @@ int schedule_DL_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_inst, UE_
 
 	int HARQ_delay=0;
 	uint32_t data_size;
-	//uint32_t mac_sdu_size; //
+	uint32_t mac_sdu_size; //
 
-	//uint8_t sdu_temp[SCH_PAYLOAD_SIZE_MAX_NB_IoT]; //
+	uint8_t sdu_temp[SCH_PAYLOAD_SIZE_MAX_NB_IoT]; //
 	
 	//logical_chan_id_t logical_channel; //
 
@@ -112,7 +112,21 @@ int schedule_DL_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_inst, UE_
 										DCCH0_NB_IoT,
 										0);
 		data_size = rlc_status.bytes_in_buffer;
+		LOG_N(MAC,"[NB-IoT] RLC indicate to MAC that the data size is : %d\n",data_size);
 
+		mac_sdu_size = mac_rlc_data_req(
+					      module_id,
+					      UE_info->rnti,
+					      0,
+					      frame_start,
+					      1,
+					      0,
+					      DCCH0_NB_IoT,
+						  TBS, //not used
+					      (char *)&sdu_temp[0]);
+
+
+            LOG_I(MAC,"[NB-IoT][DCCH]  Got %d bytes from RLC\n",mac_sdu_size);
 		// for testing
 		/*data_size = 200;
 		data_size=0;
@@ -202,7 +216,7 @@ int schedule_DL_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_inst, UE_
 		        {
 		          end_flagSCH = check_resource_NPDSCH_NB_IoT(mac_inst, NPDSCH_info, NPDCCH_info->sf_end, I_delay, UE_info->R_max, UE_sched_ctrl_info->R_dl_data, n_sf);
 			  int x;
-			  for (x=0;x<data_size;x++){
+			  for (x=0;x<10;x++){
 				printf("%02x ",UE_info->DLSCH_pdu.payload[x]);
 			  }
 			  printf("\n");
@@ -226,6 +240,7 @@ int schedule_DL_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_inst, UE_
 		                  UE_info->oldNDI_DL=(UE_info->oldNDI_DL+1)%2;
 		                  //New transmission need to request data from RLC and generate new MAC PDU
 		                  UE_info->I_mcs_dl = I_mcs;
+
 		                  /*.......
 		                  //Request data from RLC layer
 		                  rlc_status = mac_rlc_status_ind(
@@ -264,16 +279,16 @@ int schedule_DL_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_inst, UE_
 							UE_sched_ctrl_info->dci_n1_index_ack_nack=HARQ_info->ACK_NACK_resource_field;
 							UE_sched_ctrl_info->total_data_size_dl=data_size;
 		                }
-		                LOG_D(MAC,"[%04d][DLSchedulerUSS][%d][Success] Complete scheduling with data size %d\n", mac_inst->current_subframe, UE_info->rnti, data_size);
+		                LOG_I(MAC,"[%04d][DLSchedulerUSS][%d][Success] Complete scheduling with data size %d\n", mac_inst->current_subframe, UE_info->rnti, data_size);
 		                //LOG_D(MAC,"[%04d][DLSchedulerUSS] RNTI %d\n", mac_inst->current_subframe, UE_info->rnti);
-		                LOG_D(MAC,"[%04d][DLSchedulerUSS][%d][Success] Allocate NPDCCH subframe %d to subframe %d candidate index %d\n", mac_inst->current_subframe, UE_info->rnti, NPDCCH_info->sf_start, NPDCCH_info->sf_end, cdd_num);
-		                LOG_D(MAC,"[%04d][DLSchedulerUSS][%d][Success] Scheduling delay index: %d value: %d + 4\n", mac_inst->current_subframe, UE_info->rnti, I_delay, get_scheduling_delay(I_delay, UE_info->R_max));
-		                LOG_D(MAC,"[%04d][DLSchedulerUSS][%d][Success] Allocate NPDSCH subframe %d to subframe %d\n", mac_inst->current_subframe, UE_info->rnti, NPDSCH_info->sf_start, NPDSCH_info->sf_end);
-		                LOG_D(MAC,"[%04d][DLSchedulerUSS][%d][Success] Allocate HARQ feedback subframe %d to subframe %d\n", mac_inst->current_subframe, UE_info->rnti, HARQ_info->sf_start, HARQ_info->sf_end);
-		                LOG_D(MAC,"[%04d][DLSchedulerUSS][%d] Allocate NPDCCH subframe %d to subframe %d candidate index %d\n", mac_inst->current_subframe, UE_info->rnti, NPDCCH_info->sf_start, NPDCCH_info->sf_end, cdd_num);
-		                LOG_D(MAC,"[%04d][DLSchedulerUSS][%d] Scheduling delay index: %d value: %d + 4\n", mac_inst->current_subframe, UE_info->rnti, I_delay, get_scheduling_delay(I_delay, UE_info->R_max));
-		                LOG_D(MAC,"[%04d][DLSchedulerUSS][%d] Allocate NPDSCH subframe %d to subframe %d\n", mac_inst->current_subframe, UE_info->rnti, NPDSCH_info->sf_start, NPDSCH_info->sf_end);
-		                LOG_D(MAC,"[%04d][DLSchedulerUSS][%d] Allocate HARQ feedback subframe %d to subframe %d\n", mac_inst->current_subframe, UE_info->rnti, HARQ_info->sf_start, HARQ_info->sf_end);
+		                LOG_I(MAC,"[%04d][DLSchedulerUSS][%d][Success] Allocate NPDCCH subframe %d to subframe %d candidate index %d\n", mac_inst->current_subframe, UE_info->rnti, NPDCCH_info->sf_start, NPDCCH_info->sf_end, cdd_num);
+		                LOG_I(MAC,"[%04d][DLSchedulerUSS][%d][Success] Scheduling delay index: %d value: %d + 4\n", mac_inst->current_subframe, UE_info->rnti, I_delay, get_scheduling_delay(I_delay, UE_info->R_max));
+		                LOG_I(MAC,"[%04d][DLSchedulerUSS][%d][Success] Allocate NPDSCH subframe %d to subframe %d\n", mac_inst->current_subframe, UE_info->rnti, NPDSCH_info->sf_start, NPDSCH_info->sf_end);
+		                LOG_I(MAC,"[%04d][DLSchedulerUSS][%d][Success] Allocate HARQ feedback subframe %d to subframe %d\n", mac_inst->current_subframe, UE_info->rnti, HARQ_info->sf_start, HARQ_info->sf_end);
+		                LOG_I(MAC,"[%04d][DLSchedulerUSS][%d] Allocate NPDCCH subframe %d to subframe %d candidate index %d\n", mac_inst->current_subframe, UE_info->rnti, NPDCCH_info->sf_start, NPDCCH_info->sf_end, cdd_num);
+		                LOG_I(MAC,"[%04d][DLSchedulerUSS][%d] Scheduling delay index: %d value: %d + 4\n", mac_inst->current_subframe, UE_info->rnti, I_delay, get_scheduling_delay(I_delay, UE_info->R_max));
+		                LOG_I(MAC,"[%04d][DLSchedulerUSS][%d] Allocate NPDSCH subframe %d to subframe %d\n", mac_inst->current_subframe, UE_info->rnti, NPDSCH_info->sf_start, NPDSCH_info->sf_end);
+		                LOG_I(MAC,"[%04d][DLSchedulerUSS][%d] Allocate HARQ feedback subframe %d to subframe %d\n", mac_inst->current_subframe, UE_info->rnti, HARQ_info->sf_start, HARQ_info->sf_end);
 		                //Store PDU in UE template for retransmission
 		                //fill_DCI_N1(DCI_N1, UE_info, I_delay, I_sf, HARQ_info->ACK_NACK_resource_field);
 		                //LOG_D(MAC,"[%04d][DLSchedulerUSS] HARQ index %d\n", HARQ_info->ACK_NACK_resource_field);
