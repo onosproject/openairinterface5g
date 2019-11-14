@@ -67,14 +67,9 @@
   #include "UTIL/OSA/osa_defs.h"
 #endif
 
-#if defined(ENABLE_USE_MME)
-  #include "rrc_eNB_S1AP.h"
-  #include "rrc_eNB_GTPV1U.h"
-  #if defined(ENABLE_ITTI)
-  #else
-    #include "../../S1AP/s1ap_eNB.h"
-  #endif
-#endif
+#include "rrc_eNB_S1AP.h"
+#include "rrc_eNB_GTPV1U.h"
+#include "../../S1AP/s1ap_eNB.h"
 
 #include "pdcp.h"
 #include "gtpv1u_eNB_task.h"
@@ -337,7 +332,7 @@ void *rrc_gnb_task(void *args_p) {
       /* Messages from PDCP */
 
       /*
-      #if defined(ENABLE_USE_MME)
+      if (EPC_MODE_ENABLED) {
 
             // Messages from S1AP
           case S1AP_DOWNLINK_NAS:
@@ -389,7 +384,7 @@ void *rrc_gnb_task(void *args_p) {
             }
             break;
 
-      #endif
+      } // if (EPC_MODE_ENABLED)
       */
       /* Messages from gNB app */
       case NRRRC_CONFIGURATION_REQ:

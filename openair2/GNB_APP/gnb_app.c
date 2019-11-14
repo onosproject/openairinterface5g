@@ -67,7 +67,6 @@ static void configure_nr_rrc(uint32_t gnb_id) {
 /*------------------------------------------------------------------------------*/
 
 /*
-# if defined(ENABLE_USE_MME)
 static uint32_t gNB_app_register(uint32_t gnb_id_start, uint32_t gnb_id_end)//, const Enb_properties_array_t *enb_properties)
 {
   uint32_t         gnb_id;
@@ -98,7 +97,6 @@ static uint32_t gNB_app_register(uint32_t gnb_id_start, uint32_t gnb_id_end)//, 
 
   return register_gnb_pending;
 }
-# endif
 */
 
 

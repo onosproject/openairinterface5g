@@ -2918,8 +2918,8 @@ int decode_SIB1( const protocol_ctxt_t *const ctxt_pP, const uint8_t eNB_index, 
   LOG_I(RRC,"Setting SIStatus bit 0 to 1\n");
   UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIStatus = 1;
   UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIB1systemInfoValueTag = sib1->systemInfoValueTag;
-#if defined(ENABLE_ITTI) && defined(ENABLE_USE_MME)
-  {
+
+  if (EPC_MODE_ENABLED) {
     int cell_valid = 0;
 
     if (sib1->cellAccessRelatedInfo.cellBarred == LTE_SystemInformationBlockType1__cellAccessRelatedInfo__cellBarred_notBarred) {
@@ -2978,7 +2978,7 @@ int decode_SIB1( const protocol_ctxt_t *const ctxt_pP, const uint8_t eNB_index, 
       LOG_E(RRC, "Synched with a cell, but PLMN doesn't match our SIM, the message PHY_FIND_NEXT_CELL_REQ is sent but lost in current UE implementation! \n");
     }
   }
-#endif
+
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_RRC_UE_DECODE_SIB1, VCD_FUNCTION_OUT );
   return 0;
 }
