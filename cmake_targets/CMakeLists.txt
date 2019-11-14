@@ -326,7 +326,7 @@ add_custom_target (
 set_source_files_properties(${rrc_source} PROPERTIES COMPILE_FLAGS -w) # suppress warnings from generated code
 add_library(RRC_LIB ${rrc_source}
     ${OPENAIR2_DIR}/RRC/LTE/MESSAGES/asn1_msg.c)
-    #${OPENAIR2_DIR}/RRC/LTE/MESSAGES/asn1_msg_NB_IoT.c
+    #${OPENAIR2_DIR}/RRC/NBIOT/MESSAGES/asn1_msg_NB_IoT.c
 add_dependencies(RRC_LIB rrc_flag)
 include_directories ("${RRC_FULL_DIR}")
 
@@ -1065,6 +1065,7 @@ add_dependencies(SCHED_LIB rrc_flag)
 set(SCHED_SRC_NB_IoT
   #${OPENAIR1_DIR}/SCHED_NBIOT/fapi_l1.c
   ${OPENAIR1_DIR}/SCHED_NBIOT/phy_procedures_lte_eNb_NB_IoT.c
+  ${OPENAIR1_DIR}/SCHED_NBIOT/IF_Module_L1_primitives_NB_IoT.c
   #${OPENAIR1_DIR}/SCHED/phy_procedures_lte_common.c
 )
 add_library(SCHED_NB_IoT_LIB ${SCHED_SRC_NB_IoT})
@@ -1163,6 +1164,10 @@ set(PHY_SRC_COMMON
   ${OPENAIR1_DIR}/PHY/NBIoT_TRANSPORT/dlsch_scrambling_NB_IoT.c
   ${OPENAIR1_DIR}/PHY/NBIoT_TRANSPORT/lte_mcs_NB_IoT.c
   ${OPENAIR1_DIR}/PHY/NBIoT_TRANSPORT/ulsch_demodulation_NB_IoT.c
+  ${OPENAIR1_DIR}/PHY/NBIoT_TRANSPORT/lte_Isc_NB_IoT.c
+  ${OPENAIR1_DIR}/PHY/NBIoT_TRANSPORT/nprach_NB_IoT.c
+  ${OPENAIR1_DIR}/PHY/NBIoT_ESTIMATION/lte_ul_channel_estimation_NB_IoT.c
+  ${OPENAIR1_DIR}/PHY/CODING/lte_segmentation_NB_IoT.c
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/dci_tools_common.c
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/lte_mcs.c
 #  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/slss.c

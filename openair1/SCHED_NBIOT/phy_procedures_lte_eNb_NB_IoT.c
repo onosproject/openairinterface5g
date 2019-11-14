@@ -1347,3 +1347,63 @@ void fill_rx_indication_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,uint8_t d
 }
 
 
+void prach_procedures_NB_IoT(PHY_VARS_eNB *eNB) {
+ // LTE_DL_FRAME_PARMS *fp=&eNB->frame_parms;
+ // uint16_t preamble_energy_list[64],preamble_delay_list[64];
+ // uint16_t preamble_max,preamble_energy_max;
+  // uint16_t preamble_max=0;
+ // uint16_t i;
+ // int8_t UE_id;
+   uint16_t rnti[4],preamble_index[4],timing_advance_preamble[4];
+ //  uint16_t i;
+ //  int frame,subframe;
+
+  uint8_t subframe = eNB->proc.subframe_prach;
+  int frame = eNB->proc.frame_prach;
+ // uint8_t CC_id = eNB->CC_id;
+  uint32_t detection=0;
+  //uint16_t estimated_TA=2;
+
+  if (eNB->abstraction_flag == 0) {
+         /* rx_prach(eNB,
+                     preamble_energy_list,
+                     preamble_delay_list,
+                     frame,
+                     0);*/
+      detection = rx_nprach_NB_IoT(eNB,frame,subframe,rnti,preamble_index,timing_advance_preamble);
+  }
+ 
+ if(detection == 1)    ////////////////////////// to be moved to handle_rach_NB_IoT
+  {
+      
+
+      pthread_mutex_lock(&eNB->UL_INFO_mutex);
+                                                                                 //////////////////////////////////////////////////////////       
+      eNB->UL_INFO.nrach_ind.number_of_initial_scs_detected  = 1;            //!!!!!!!!!!!!!   // should be set to zero in every call of UL_indication !!!!!!!!!!!!!!!!!!!!!!!
+      eNB->UL_INFO.nrach_ind.nrach_pdu_list[0].nrach_indication_rel13.rnti             = rnti[0];
+      eNB->UL_INFO.nrach_ind.nrach_pdu_list[0].nrach_indication_rel13.initial_sc       = preamble_index[0];
+      eNB->UL_INFO.nrach_ind.nrach_pdu_list[0].nrach_indication_rel13.timing_advance   = timing_advance_preamble[0];
+      eNB->UL_INFO.nrach_ind.nrach_pdu_list[0].nrach_indication_rel13.nrach_ce_level   = 2;
+
+      eNB->UL_INFO.frame = frame;
+      eNB->UL_INFO.subframe = subframe;
+      eNB->UL_INFO.hypersfn = eNB->proc.proc_rxtx[0].HFN; 
+
+      pthread_mutex_unlock(&eNB->UL_INFO_mutex);
+      
+      /*initiate_ra_proc(UL_info->module_id,
+                       UL_info->CC_id,
+                       NFAPI_SFNSF2SFN(UL_info->rach_ind.sfn_sf),
+                       NFAPI_SFNSF2SF(UL_info->rach_ind.sfn_sf),
+                       UL_info->rach_ind.rach_indication_body.preamble_list[0].preamble_rel8.preamble,
+                       UL_info->rach_ind.rach_indication_body.preamble_list[0].preamble_rel8.timing_advance,
+                       UL_info->rach_ind.rach_indication_body.preamble_list[0].preamble_rel8.rnti); 
+      mac_xface->initiate_ra_proc(eNB->Mod_id,
+                                  eNB->CC_id,
+                                  frame,
+                                  preamble_index[0],
+                                  (int16_t) timing_advance_preamble[0],
+                                  0,subframe,0);*/      
+  }
+  
+}

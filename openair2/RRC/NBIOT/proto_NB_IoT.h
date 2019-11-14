@@ -35,7 +35,7 @@
 #include "rlc.h"
 #include "extern_NB_IoT.h"
 #include "LAYER2/MAC/defs_NB_IoT.h"
-//#include "platform_types_NB_IoT.h"
+#include "platform_types_NB_IoT.h"
 
 uint8_t* generate_msg4_NB_IoT(rrc_eNB_carrier_data_NB_IoT_t *carrier);
 
@@ -71,7 +71,59 @@ long *get_NB_IoT_SIB1_eutracontrolregionsize(void);
 
 void init_testing_NB_IoT(uint8_t Mod_id, int CC_id, rrc_eNB_carrier_data_NB_IoT_t *carrier, NbIoTRrcConfigurationReq *configuration, uint32_t frame, uint32_t hyper_frame);
 
+//defined in L2_interface/pdcp.c
+//FIXME SRB1bis should bypass the pdcp
+//Distinction between different SRBs will be done by means of rd_id
+uint8_t rrc_data_req_NB_IoT(
+  const protocol_ctxt_t*   const ctxt_pP,
+  const rb_id_t                  rb_idP,
+  const mui_t                    muiP,
+  const confirm_t                confirmP,
+  const sdu_size_t               sdu_sizeP,
+  uint8_t*                 const buffer_pP,
+  const pdcp_transmission_mode_t modeP //when go through SRB1bis should be set as Transparent mode
+);
+//--------------------------------------------------
 
+//XXX for the moment we not configure PDCP for SRB1bis (but used as it is SRB1)
+//defined in pdcp.c
+boolean_t rrc_pdcp_config_asn1_req_NB_IoT (
+  const protocol_ctxt_t* const  ctxt_pP,
+  LTE_SRB_ToAddModList_NB_r13_t  *const srb2add_list_pP,
+  LTE_DRB_ToAddModList_NB_r13_t  *const drb2add_list_pP,
+  LTE_DRB_ToReleaseList_NB_r13_t *const drb2release_list_pP,
+  const uint8_t                   security_modeP,
+  uint8_t                  *const kRRCenc_pP,
+  uint8_t                  *const kRRCint_pP,
+  uint8_t                  *const kUPenc_pP,
+  rb_id_t                 *const defaultDRB,
+  long                      LCID
+);
+//--------------------------------------------------
+
+//defined in rlc_rrc.c
+rlc_op_status_t rrc_rlc_config_asn1_req_NB_IoT (
+    const protocol_ctxt_t   * const ctxt_pP,
+    const LTE_SRB_ToAddModList_NB_r13_t   * const srb2add_listP,
+    const LTE_DRB_ToAddModList_NB_r13_t   * const drb2add_listP,
+    const LTE_DRB_ToReleaseList_NB_r13_t  * const drb2release_listP,
+    srb1bis_flag_t                          srb1bis_flag
+    );
+//-------------------------------------------------------------------------
+
+/*-----------eNB procedures (rrc_eNB_NB_IoT.c)---------------*/
+
+//---Initialization--------------
+void openair_eNB_rrc_on_NB_IoT(
+  const protocol_ctxt_t* const ctxt_pP
+);
+
+/// Utilities------------------------------------------------
+
+void rrc_eNB_free_mem_UE_context_NB_IoT(
+  const protocol_ctxt_t*               const ctxt_pP,
+  struct rrc_eNB_ue_context_NB_IoT_s*         const ue_context_pP
+);
 
 
 

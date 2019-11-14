@@ -9,6 +9,7 @@
 //#include "openair2/PHY_INTERFACE/IF_Module_nb_iot.h"
 #include "nfapi_interface.h"
 
+extern uint16_t hundred_times_log10_NPRB_NB_IoT[100];
 
 
 enum openair_HARQ_TYPE_NB_IoT {
