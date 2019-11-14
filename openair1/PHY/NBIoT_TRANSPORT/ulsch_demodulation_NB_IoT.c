@@ -36,6 +36,7 @@
 #include "extern_NB_IoT.h"
 #include "PHY/CODING/lte_interleaver2.h"
 #include "PHY/CODING/coding_extern.h"
+#include "PHY/LTE_REFSIG/lte_refsig.h"
 //#define DEBUG_ULSCH
 //#include "PHY/sse_intrin.h"
 #include "PHY/NBIoT_ESTIMATION/defs_NB_IoT.h"
@@ -1658,7 +1659,7 @@ uint32_t  turbo_decoding_NB_IoT(PHY_VARS_eNB_NB_IoT           *eNB,
                   printf(" MSG3 NOT OK");
               }
           }  ////////////  r loop end  ////////////
-
+return 0;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////

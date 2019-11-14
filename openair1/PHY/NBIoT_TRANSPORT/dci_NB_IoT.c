@@ -37,6 +37,7 @@
 #endif
 #include "PHY/defs_common.h"
 #include "PHY/impl_defs_lte_NB_IoT.h"
+#include "defs_NB_IoT.h"
 //#include "PHY/LTE_TRANSPORT/proto_NB_IoT.h"
 //#include "PHY/CODING/defs_NB_IoT.h"
 #include "PHY/defs_L1_NB_IoT.h"  // /LTE_TRANSPORT/defs_NB_IoT.h
@@ -338,7 +339,7 @@ int dci_modulation_NB_IoT(int32_t 				  **txdataF,
 											  txdataF,
 											  &jj,
 											  symbol_offset,
-											  &dlcch->npdcch_e[0],
+											  &dlcch->npdcch_e[0][MAX_BITS_IN_SF],
 											  pilots,
 											  pilot_shift,
 											  amp,
@@ -351,7 +352,7 @@ int dci_modulation_NB_IoT(int32_t 				  **txdataF,
 											  txdataF,
 											  &jj,
 											  symbol_offset,
-											  &dlcch->npdcch_e[ncce_index],
+											  &dlcch->npdcch_e[ncce_index][MAX_BITS_IN_SF],
 											  pilots,
 											  pilot_shift,
 											  amp,
@@ -383,9 +384,9 @@ uint8_t generate_dci_top_NB_IoT(NB_IoT_eNB_NPDCCH_t		*npdcch,
 {
 
 
-  int      i, G;
+  int      i=2, G=0;
   //temporary variable
-  uint16_t rnti[2];
+  uint16_t rnti[i];
   uint8_t  L = 0;
 
 
@@ -415,8 +416,8 @@ uint8_t generate_dci_top_NB_IoT(NB_IoT_eNB_NPDCCH_t		*npdcch,
   //First take all the DCI pdu and their corrispondent rnti
   for(i = 0; i<Num_dci;i++)
   {
-	  npdcch->pdu[i][0]=dci_alloc[i].dci_pdu;
-	  rnti[i]=dci_alloc[i].rnti;
+	  npdcch->pdu[i]= (uint8_t*)dci_alloc[i].dci_pdu;
+	  rnti[i]= dci_alloc[i].rnti;
 	  L = dci_alloc[i].L;
 
   }
