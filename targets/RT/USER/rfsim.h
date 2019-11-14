@@ -27,7 +27,7 @@
 #include "PHY/defs_UE.h"
 #include "PHY/defs_eNB.h"
 
-void init_ocm(void);
+void init_ocm(double snr_dB,double sinr_dB);
 
 void update_ocm(double snr_dB,double sinr_dB);
 
@@ -37,4 +37,4 @@ void update_ocm(double snr_dB,double sinr_dB);
 
 void init_channel_vars(void);
 
-#endif
+#endif 

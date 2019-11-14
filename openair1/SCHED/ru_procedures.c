@@ -63,6 +63,8 @@
 
 #include <time.h>
 
+#include "CUDA/CUDA_phy_procedure_def.h"
+
 extern int oai_exit;
 
 
@@ -70,6 +72,7 @@ void feptx0(RU_t *ru,
             int slot)
 {
   LTE_DL_FRAME_PARMS *fp = ru->frame_parms;
+  printf("[feptx0] %d\n", fp->samples_per_tti);
   //int dummy_tx_b[7680*2] __attribute__((aligned(32)));
 
   unsigned int aa, slot_offset;
@@ -490,9 +493,12 @@ void fep0(RU_t *ru,
   RU_proc_t *proc        = &ru->proc;
   LTE_DL_FRAME_PARMS *fp = ru->frame_parms;
 
-  //printf("fep0: slot %d\n",slot);
+
+  // printf("fep0: slot %d\n",slot);
+  //CUDA_hello();
 
   remove_7_5_kHz(ru,(slot&1)+(proc->tti_rx<<1));
+  //[WARNING]fp->symbols_per_tti = 0
   for (int l=0; l<fp->symbols_per_tti/2; l++) {
     slot_fep_ul(ru,
                 l,

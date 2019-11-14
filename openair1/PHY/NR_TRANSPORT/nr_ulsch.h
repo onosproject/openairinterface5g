@@ -75,8 +75,7 @@ void nr_ulsch_unscrambling(int16_t* llr,
 
 
 void nr_ulsch_procedures(PHY_VARS_gNB *gNB,
-                         int frame_rx,
-                         int slot_rx,
+                         gNB_L1_rxtx_proc_t *proc,
                          int UE_id,
                          uint8_t harq_pid);
 

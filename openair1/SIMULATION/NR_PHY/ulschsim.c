@@ -52,11 +52,8 @@
 PHY_VARS_gNB *gNB;
 PHY_VARS_NR_UE *UE;
 RAN_CONTEXT_t RC;
-int32_t uplink_frequency_offset[MAX_NUM_CCs][4];
-
 double cpuf;
 int nfapi_mode = 0;
-uint16_t NB_UE_INST = 1;
 
 // needed for some functions
 PHY_VARS_NR_UE *PHY_vars_UE_g[1][1] = { { NULL } };
@@ -67,7 +64,7 @@ int main(int argc, char **argv)
 {
   char c;
   int i,sf;
-  double SNR, snr0 = -2.0, snr1 = 2.0, SNR_lin;
+  double SNR, snr0 = -2.0, snr1 = 2.0; //, SNR_lin;
   double snr_step = 0.1;
   uint8_t snr1set = 0;
   FILE *output_fd = NULL;
@@ -86,7 +83,7 @@ int main(int argc, char **argv)
   //unsigned char pbch_phase = 0;
   int frame = 0, subframe = 0;
   NR_DL_FRAME_PARMS *frame_parms;
-  double sigma;
+  //double sigma;
   unsigned char qbits = 8;
   int ret;
   int loglvl = OAILOG_WARNING;
@@ -389,8 +386,8 @@ int main(int argc, char **argv)
   mod_order = nr_get_Qm(Imcs, 1);
   available_bits = nr_get_G(nb_rb, nb_symb_sch, nb_re_dmrs, length_dmrs, mod_order, 1);
   TBS = nr_compute_tbs(Imcs, nb_rb, nb_symb_sch, nb_re_dmrs, length_dmrs, Nl);
-
-  printf("\nAvailable bits %u TBS %u mod_order %d\n", available_bits, TBS, mod_order);
+  printf("\n");
+  printf("available bits %d TBS %d mod_order %d\n", available_bits, TBS, mod_order);
 
   /////////// setting rel15_ul parameters ///////////
   rel15_ul->number_rbs     = nb_rb;
@@ -452,7 +449,7 @@ int main(int argc, char **argv)
   ////////////////////////////////////////////////////////////////////////////////////////////
 
 #ifdef DEBUG_NR_ULSCHSIM
-  for (i = 0; i < TBS / 8; i++) printf("test_input[i]=%hhu \n",test_input[i]);
+  for (i = 0; i < TBS / 8; i++) printf("test_input[i]=%d \n",test_input[i]);
 #endif
 
   /////////////////////////ULSCH coding/////////////////////////
@@ -494,15 +491,11 @@ int main(int argc, char **argv)
   
         //if (i<16) printf("modulated_input[%d] = %d\n",i,modulated_input[i]);
 
-#if 1
-        SNR_lin = pow(10, SNR / 10.0);
-        sigma = 1.0 / sqrt(2 * SNR_lin);
-        channel_output_fixed[i] = (short) quantize(sigma / 4.0 / 4.0,
-                                                   modulated_input[i] + sigma * gaussdouble(0.0, 1.0),
-                                                   qbits);
-#else
+        //SNR_lin = pow(10, SNR / 10.0);
+        //sigma = 1.0 / sqrt(2 * SNR_lin);
         channel_output_fixed[i] = (short) quantize(0.01, modulated_input[i], qbits);
-#endif
+        //channel_output_fixed[i] = (short) quantize(sigma / 4.0 / 4.0, modulated_input[i] + sigma * gaussdouble(0.0, 1.0), qbits);
+        //channel_output_fixed[i] = (char)quantize8bit(sigma/4.0,(2.0*modulated_input[i]) - 1.0 + sigma*gaussdouble(0.0,1.0));
         //printf("channel_output_fixed[%d]: %d\n",i,channel_output_fixed[i]);
 
         //Uncoded BER
@@ -543,7 +536,7 @@ int main(int argc, char **argv)
       if (errors_bit > 0) {
         n_false_positive++;
         if (n_trials == 1)
-          printf("errors_bit %u (trial %d)\n", errors_bit, trial);
+          printf("errors_bit %d (trial %d)\n", errors_bit, trial);
       }
       printf("\n");
     }

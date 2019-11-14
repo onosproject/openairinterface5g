@@ -22,8 +22,8 @@
 /*!\file nrLDPC_decoder.c
  * \brief Defines the LDPC decoder
  * \author Sebastian Wagner (TCL Communications) Email: <mailto:sebastian.wagner@tcl.com>
- * \date 30-09-2019
- * \version 2.0
+ * \date 27-03-2018
+ * \version 1.0
  * \note
  * \warning
  */
@@ -96,8 +96,6 @@ static inline uint32_t nrLDPC_decoder_core(int8_t* p_llr, int8_t* p_out, t_nrLDP
     {
         // Use LLR processing buffer as temporary output buffer
         p_llrOut = p_procBuf->llrProcBuf;
-        // Clear llrProcBuf
-        memset(p_llrOut,0, NR_LDPC_MAX_NUM_LLR*sizeof(int8_t));
     }
 
 
@@ -118,14 +116,7 @@ static inline uint32_t nrLDPC_decoder_core(int8_t* p_llr, int8_t* p_out, t_nrLDP
 #ifdef NR_LDPC_PROFILER_DETAIL
     start_meas(&p_profiler->llr2CnProcBuf);
 #endif
-    if (BG == 1)
-    {
-        nrLDPC_llr2CnProcBuf_BG1(p_lut, p_llr, p_procBuf, Z);
-    }
-    else
-    {
-        nrLDPC_llr2CnProcBuf_BG2(p_lut, p_llr, p_procBuf, Z);
-    }
+    nrLDPC_llr2CnProcBuf(p_lut, p_llr, p_procBuf, numLLR, Z, BG);
 #ifdef NR_LDPC_PROFILER_DETAIL
     stop_meas(&p_profiler->llr2CnProcBuf);
 #endif
@@ -167,7 +158,7 @@ static inline uint32_t nrLDPC_decoder_core(int8_t* p_llr, int8_t* p_out, t_nrLDP
     }
     else
     {
-        nrLDPC_cn2bnProcBuf_BG2(p_lut, p_procBuf, Z);
+        nrLDPC_cn2bnProcBuf(p_lut, p_procBuf, Z);
     }
 #ifdef NR_LDPC_PROFILER_DETAIL
     stop_meas(&p_profiler->cn2bnProcBuf);
@@ -215,7 +206,7 @@ static inline uint32_t nrLDPC_decoder_core(int8_t* p_llr, int8_t* p_out, t_nrLDP
     }
     else
     {
-        nrLDPC_bn2cnProcBuf_BG2(p_lut, p_procBuf, Z);
+        nrLDPC_bn2cnProcBuf(p_lut, p_procBuf, Z);
     }
 #ifdef NR_LDPC_PROFILER_DETAIL
     stop_meas(&p_profiler->bn2cnProcBuf);
@@ -266,7 +257,7 @@ static inline uint32_t nrLDPC_decoder_core(int8_t* p_llr, int8_t* p_out, t_nrLDP
         }
         else
         {
-            nrLDPC_cn2bnProcBuf_BG2(p_lut, p_procBuf, Z);
+            nrLDPC_cn2bnProcBuf(p_lut, p_procBuf, Z);
         }
 #ifdef NR_LDPC_PROFILER_DETAIL
         stop_meas(&p_profiler->cn2bnProcBuf);
@@ -311,7 +302,7 @@ static inline uint32_t nrLDPC_decoder_core(int8_t* p_llr, int8_t* p_out, t_nrLDP
         }
         else
         {
-            nrLDPC_bn2cnProcBuf_BG2(p_lut, p_procBuf, Z);
+            nrLDPC_bn2cnProcBuf(p_lut, p_procBuf, Z);
         }
 #ifdef NR_LDPC_PROFILER_DETAIL
         stop_meas(&p_profiler->bn2cnProcBuf);
@@ -338,6 +329,7 @@ static inline uint32_t nrLDPC_decoder_core(int8_t* p_llr, int8_t* p_out, t_nrLDP
         stop_meas(&p_profiler->cnProcPc);
 #endif
 #endif
+
     }
 
     // Last iteration
@@ -376,7 +368,7 @@ static inline uint32_t nrLDPC_decoder_core(int8_t* p_llr, int8_t* p_out, t_nrLDP
         }
         else
         {
-            nrLDPC_cn2bnProcBuf_BG2(p_lut, p_procBuf, Z);
+            nrLDPC_cn2bnProcBuf(p_lut, p_procBuf, Z);
         }
 #ifdef NR_LDPC_PROFILER_DETAIL
         stop_meas(&p_profiler->cn2bnProcBuf);
@@ -424,7 +416,7 @@ static inline uint32_t nrLDPC_decoder_core(int8_t* p_llr, int8_t* p_out, t_nrLDP
         }
         else
         {
-            nrLDPC_bn2cnProcBuf_BG2(p_lut, p_procBuf, Z);
+            nrLDPC_bn2cnProcBuf(p_lut, p_procBuf, Z);
         }
 #ifdef NR_LDPC_PROFILER_DETAIL
         stop_meas(&p_profiler->bn2cnProcBuf);
@@ -452,21 +444,19 @@ static inline uint32_t nrLDPC_decoder_core(int8_t* p_llr, int8_t* p_out, t_nrLDP
 #endif
     }
 
+
     // If maximum number of iterations reached an PC still fails increase number of iterations
     // Thus, i > numMaxIter indicates that PC has failed
-
-#ifdef NR_LDPC_ENABLE_PARITY_CHECK
     if (pcRes != 0)
     {
         i++;
     }
-#endif
 
     // Assign results from processing buffer to output
 #ifdef NR_LDPC_PROFILER_DETAIL
     start_meas(&p_profiler->llrRes2llrOut);
 #endif
-    nrLDPC_llrRes2llrOut(p_lut, p_llrOut, p_procBuf, Z, BG);
+    nrLDPC_llrRes2llrOut(p_lut, p_llrOut, p_procBuf, numLLR);
 #ifdef NR_LDPC_PROFILER_DETAIL
     stop_meas(&p_profiler->llrRes2llrOut);
 #endif

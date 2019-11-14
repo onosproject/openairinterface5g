@@ -31,6 +31,7 @@ int slot_fep_ul(RU_t *ru,
                 unsigned char Ns,
                 int no_prefix)
 {
+  printf("[FUNC] slot_fep_ul\n");
 #ifdef DEBUG_FEP
   char fname[40], vname[40];
 #endif
@@ -101,6 +102,7 @@ int slot_fep_ul(RU_t *ru,
 #ifdef DEBUG_FEP
   LOG_D(PHY,"slot_fep: Ns %d offset %d, symbol %d, nb_prefix_samples %d\n",Ns,slot_offset,symbol, nb_prefix_samples);
 #endif
+  //printf("[PHY]slot_fep: Ns %d offset %d, symbol %d, nb_prefix_samples %d\n",Ns,slot_offset,symbol, nb_prefix_samples);
 
   for (aa=0; aa<ru->nb_rx; aa++) {
     rx_offset = slot_offset +nb_prefix_samples0;

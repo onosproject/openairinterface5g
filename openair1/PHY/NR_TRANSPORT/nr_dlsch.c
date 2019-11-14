@@ -90,7 +90,6 @@ uint8_t nr_generate_pdsch(NR_gNB_DLSCH_t *dlsch,
   uint8_t Qm = rel15->modulation_order;
   uint16_t encoded_length = nb_symbols*Qm;
 
-
   /// CRC, coding, interleaving and rate matching
   AssertFatal(harq->pdu!=NULL,"harq->pdu is null\n");
   start_meas(dlsch_encoding_stats);

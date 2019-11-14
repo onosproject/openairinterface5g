@@ -50,11 +50,8 @@ PHY_VARS_gNB *gNB;
 PHY_VARS_NR_UE *UE;
 RAN_CONTEXT_t RC;
 openair0_config_t openair0_cfg[MAX_CARDS];
-int32_t uplink_frequency_offset[MAX_NUM_CCs][4];
-
 double cpuf;
 int nfapi_mode=0;
-uint16_t NB_UE_INST = 1;
 
 // needed for some functions
 PHY_VARS_NR_UE * PHY_vars_UE_g[1][1]={{NULL}};
@@ -159,7 +156,7 @@ int main(int argc, char **argv)
         break;
 
       default:
-        printf("Unsupported channel model!\n");
+        msg("Unsupported channel model!\n");
         exit(-1);
       }
       break;
@@ -170,18 +167,18 @@ int main(int argc, char **argv)
 
     case 'o':
       cfo = atof(optarg);
-      printf("Setting CFO to %f Hz\n",cfo);
+      msg("Setting CFO to %f Hz\n",cfo);
       break;
 
     case 's':
       snr0 = atof(optarg);
-      printf("Setting SNR0 to %f\n",snr0);
+      msg("Setting SNR0 to %f\n",snr0);
       break;
 
     case 'S':
       snr1 = atof(optarg);
       snr1set=1;
-      printf("Setting SNR1 to %f\n",snr1);
+      msg("Setting SNR1 to %f\n",snr1);
       break;
 
       /*
@@ -211,7 +208,7 @@ int main(int argc, char **argv)
       if ((transmission_mode!=1) &&
           (transmission_mode!=2) &&
           (transmission_mode!=6)) {
-        printf("Unsupported transmission mode %d\n",transmission_mode);
+        msg("Unsupported transmission mode %d\n",transmission_mode);
         exit(-1);
       }
       break;
@@ -220,7 +217,7 @@ int main(int argc, char **argv)
       n_tx=atoi(optarg);
 
       if ((n_tx==0) || (n_tx>2)) {
-        printf("Unsupported number of tx antennas %d\n",n_tx);
+        msg("Unsupported number of tx antennas %d\n",n_tx);
         exit(-1);
       }
       break;
@@ -229,7 +226,7 @@ int main(int argc, char **argv)
       n_rx=atoi(optarg);
 
       if ((n_rx==0) || (n_rx>2)) {
-        printf("Unsupported number of rx antennas %d\n",n_rx);
+        msg("Unsupported number of rx antennas %d\n",n_rx);
         exit(-1);
       }
       break;
@@ -359,7 +356,7 @@ int main(int argc, char **argv)
   gNB2UE = new_channel_desc_scm(n_tx, n_rx, channel_model, fs, bw, 0, 0, 0);
 
   if (gNB2UE==NULL) {
-    printf("Problem generating channel model. Exiting.\n");
+    msg("Problem generating channel model. Exiting.\n");
     exit(-1);
   }
 

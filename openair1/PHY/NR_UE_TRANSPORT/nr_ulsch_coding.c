@@ -44,7 +44,8 @@
 
 void free_nr_ue_ulsch(NR_UE_ULSCH_t *ulsch)
 {
-  int i, r;
+  int i;
+  int r;
 
   if (ulsch) {
 #ifdef DEBUG_ULSCH_FREE
@@ -86,10 +87,10 @@ void free_nr_ue_ulsch(NR_UE_ULSCH_t *ulsch)
 }
 
 
-NR_UE_ULSCH_t *new_nr_ue_ulsch(unsigned char N_RB_UL,
-                               int number_of_harq_pids,
-                               uint8_t abstraction_flag)
+
+NR_UE_ULSCH_t *new_nr_ue_ulsch(unsigned char N_RB_UL, int number_of_harq_pids, uint8_t abstraction_flag)
 {
+
   NR_UE_ULSCH_t *ulsch;
   unsigned char exit_flag = 0,i,r;
   unsigned char bw_scaling =1;
@@ -186,10 +187,12 @@ NR_UE_ULSCH_t *new_nr_ue_ulsch(unsigned char N_RB_UL,
 }
 
 
+
 int nr_ulsch_encoding(NR_UE_ULSCH_t *ulsch,
-                      NR_DL_FRAME_PARMS* frame_parms,
-                      uint8_t harq_pid)
+                     NR_DL_FRAME_PARMS* frame_parms,
+                     uint8_t harq_pid)
 {
+
 /////////////////////////parameters and variables declaration/////////////////////////
 ///////////
 
@@ -314,7 +317,6 @@ int nr_ulsch_encoding(NR_UE_ULSCH_t *ulsch,
 ///////////
 /////////////////////////////////////////////////////////////////////////////////////
 
-opp_enabled=0;
 
 ///////////////////////// c---->| LDCP coding |---->d /////////////////////////
 ///////////
@@ -374,7 +376,7 @@ opp_enabled=0;
     }
 
 #ifdef DEBUG_DLSCH_CODING
-    printf("Rate Matching, Code segment %d (coded bits (G) %u, unpunctured/repeated bits per code segment %d, mod_order %d, nb_rb %d)...\n",
+    printf("Rate Matching, Code segment %d (coded bits (G) %d,unpunctured/repeated bits per code segment %d,mod_order %d, nb_rb %d)...\n",
         r,
         G,
         Kr*3,
