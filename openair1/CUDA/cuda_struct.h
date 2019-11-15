@@ -13,9 +13,9 @@ typedef float2 Complex;
 
 typedef struct cuda_cu_ru_t{
 	//beamforming precoding
-	int **d_txdataF;//14symb-port0, 14symb-port1, ......
-	int ***d_weight;//[p][tx][symb]
-	cudaStream_t *d_beam_stream;
+	int *d_txdataF;//14symb-port0, 14symb-port1, ......
+	int *d_weight;//[p * tx * fftsize]
+	int *d_res;
 
 	//ifft
 	int *d_txdataF_BF;//14symb-tx0, 14symb-tx1, ......

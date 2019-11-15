@@ -23,7 +23,7 @@
  * \brief Create and Implementation of beamforming and ifft in gpu
  * \author TY Hsu, CW Chang
  * \date 2018
- * \version 0.1
+ * \version 0.2
  * \company ISIP@NCTU and Eurecom
  * \email: tyhsu@cs.nctu.edu.tw, zhang0756107.cs07g@nctu.edu.tw
  * \note
@@ -47,23 +47,9 @@ extern "C" void init_cuda(int nb_tx, int nb_symbols, int fftsize){
 	int nb_antenna_ports = 8;
 
 	//beamforming precoding
-	cu_ru.d_txdataF = (int**)malloc(sizeof(int*) * nb_antenna_ports);
-	for(int p=0; p<nb_antenna_ports; p++){
-		gpuErrchk( cudaMalloc((void**)&cu_ru.d_txdataF[p], fftsize*sizeof(int)*nb_symbols) );
-	}
-	cu_ru.d_beam_stream = (cudaStream_t*)malloc(sizeof(cudaStream_t)*nb_tx);
-	for(int aa=0; aa<nb_tx; aa++){
-		gpuErrchk( cudaStreamCreate(&cu_ru.d_beam_stream[aa]) );	
-	}
-
-
-	cu_ru.d_weight = (int***)malloc(sizeof(int**) * nb_antenna_ports);
-	for(int p=0; p<nb_antenna_ports; p++){
-		cu_ru.d_weight[p] = (int**)malloc(sizeof(int*) * nb_tx);
-		for(int aa=0; aa<nb_tx; aa++){
-			gpuErrchk( cudaMalloc((void**)&cu_ru.d_weight[p][aa], fftsize*sizeof(int)) );
-		}
-	}
+	gpuErrchk( cudaMalloc((void**)&cu_ru.d_txdataF, sizeof(int) * nb_tx*nb_antenna_ports*nb_symbols*fftsize) );
+	gpuErrchk( cudaMalloc((void**)&cu_ru.d_weight, sizeof(int) * nb_tx*nb_antenna_ports*fftsize) );
+	gpuErrchk( cudaMalloc((void**)&cu_ru.d_res, sizeof(int) * nb_tx*nb_antenna_ports*fftsize*nb_symbols) );
 
 	//ifft	
 	gpuErrchk( cudaMalloc((void**)&cu_ru.d_txdataF_BF, fftsize*sizeof(int)*nb_symbols*nb_tx) );

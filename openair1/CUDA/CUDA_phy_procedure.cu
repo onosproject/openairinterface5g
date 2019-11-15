@@ -20,10 +20,10 @@
  */
 
  /*! \file CUDA_phy_procedure.cu
- * \brief Create and Implementation of beamforming and ifft in gpu
+ * \brief Create and Implementation of beamforming and ifft in gpu(resource allocate)
  * \author TY Hsu, CW Chang
  * \date 2018
- * \version 0.1
+ * \version 0.2
  * \company ISIP@NCTU and Eurecom
  * \email: tyhsu@cs.nctu.edu.tw, zhang0756107.cs07g@nctu.edu.tw
  * \note
@@ -143,48 +143,115 @@ extern "C" void CUDA_ifft_ofdm( int **output,
 
 }
 
-__global__ void conjMul(int *d_x1, int *d_x2, int *d_y, int aa, int div, int fftsize, int nb_symbols){
-	int id = blockIdx.x*1024 + threadIdx.x;
-	int *x1 = &d_x1[id];
-	int *x2 = &d_x2[id%fftsize];
-	int *y = &d_y[aa*fftsize*nb_symbols + id];
+__device__ inline void beamComp(int *res, int *x1, int *x2){
+	((short*)res)[0] = ((short*)x1)[0]*((short*)x2)[0] + ((short*)x1)[1]*((short*)x2)[1];
+	((short*)res)[1] = ((short*)x1)[0]*((short*)x2)[1] - ((short*)x1)[1]*((short*)x2)[0];
+}
 
-	int re, im;
-	//conj(x1) * x2
-	re = ((short*)x1)[0]*((short*)x2)[0] + ((short*)x1)[1]*((short*)x2)[1];
-	im = ((short*)x1)[0]*((short*)x2)[1] - ((short*)x1)[1]*((short*)x2)[0];
+__global__ void	conjMulAll(int* txdataF, int* weight, int* res,
+		int fftsize, int nb_symbols, int nb_tx, int nb_antenna_ports){
+	__shared__ int x1[2048*5];
+	int symbSart = blockIdx.x*5;
+	int portId = blockIdx.y;
+	int id = threadIdx.x;
+	int id2 = id+1024;
+	int aaSize = nb_antenna_ports*nb_symbols*fftsize;
+	int portSize = nb_symbols*fftsize;
 
-	re = re / div;
-	im = im / div;
-
-	((short*)y)[0] += re; 
-	((short*)y)[1] += im;	
+	int s1=0;
+	for(int symbId=symbSart; symbId<(symbSart+5)&&symbId<nb_symbols; symbId++){
+		x1[s1*fftsize+id] = txdataF[symbId*fftsize+id];
+		x1[s1*fftsize+id2] = txdataF[symbId*fftsize+id2];
+		s1++;
+	}
+	
+	for(int aa=0; aa<nb_tx; aa++){
+		for(int symbId=symbSart; symbId<(symbSart+5)&&symbId<nb_symbols; symbId++){
+			int resId = aa*aaSize+portId*portSize+symbId*fftsize;
+			s1 = symbId%5;
+			beamComp(&res[resId+id], &x1[s1*fftsize+id], &weight[portId*(nb_tx*fftsize)+aa*fftsize+id]);
+			beamComp(&res[resId+id2], &x1[s1*fftsize+id2], &weight[portId*(nb_tx*fftsize)+aa*fftsize+id2]);
+		}
+	}
 
 }
 
+__device__ inline void partAdd(int *res, int *x){
+	((short*)res)[0] += ((short*)x)[0];
+	((short*)res)[1] += ((short*)x)[1];
+}
 
+__global__ void	combine(int* res, int* txdataF_BF, int fftsize, int nb_symbols, int nb_tx, int nb_antenna_ports){
+	__shared__ int buf[2048*5];
+	
+	int symbStart = blockIdx.x;
+	int txId = blockIdx.y;
+	int id = threadIdx.x;
+	int id2 = id+1024;
+	int txSize = nb_antenna_ports*nb_symbols*fftsize;
+	int portSize = nb_symbols*fftsize;
+
+	int s1=0;
+	for(int p=0; p<nb_antenna_ports; p++){
+		for(int symbId=symbStart; symbId<symbId+5&&symbId<nb_symbols; symbId++){
+			s1 = symbId%5;
+			partAdd(&buf[s1+id], &res[txId*txSize+p*portSize+symbId*fftsize+id]);
+			partAdd(&buf[s1+id2], &res[txId*txSize+p*portSize+symbId*fftsize+id2]);
+		}
+	}
+
+	for(int symbId=symbStart; symbId<symbId+5&&symbId<nb_symbols; symbId++){
+		s1 = symbId%5;
+		res[txId*nb_symbols*fftsize+symbId*fftsize+id] = buf[s1*fftsize+id];
+		res[txId*nb_symbols*fftsize+symbId*fftsize+id2] = buf[s1*fftsize+id2];
+	}
+
+
+}
 extern "C" void CUDA_beam_precoding(int **txdataF, int ***weight, int L_ssb, int shift, int fftsize, int nb_symbols, int nb_antenna_ports, int nb_tx){
+	cudaEvent_t start, stop;
+	float time;
+	cudaEventCreate(&start);
+	cudaEventCreate(&stop);
 
 	//initial BF data;
 	gpuErrchk( cudaMemset(cu_ru.d_txdataF_BF, 0, fftsize*nb_symbols*sizeof(int)*nb_tx) );
 	//move data to gpu
+	int slotsize = fftsize*nb_symbols;
 	for(int p=0; p<nb_antenna_ports; p++){
-		gpuErrchk( cudaMemcpy(cu_ru.d_txdataF[p], txdataF[p], fftsize*sizeof(int)*nb_symbols, cudaMemcpyHostToDevice) );	
+		gpuErrchk( cudaMemcpy(&cu_ru.d_txdataF[p*slotsize], txdataF[p], slotsize*sizeof(int), cudaMemcpyHostToDevice) );	
 	}
-
 	
+	cudaEventRecord(start);
 	int threadNum = 1024;
 	int blockNum = fftsize*nb_symbols/threadNum;
 	int div = 1<<shift;
 	for(int aa=0; aa<nb_tx; aa++){
 		for(int p=0; p<nb_antenna_ports; p++){
 			if((L_ssb>>p) & 0x01){
-				gpuErrchk( cudaMemcpy(cu_ru.d_weight[p][aa], weight[p][aa], fftsize*sizeof(int), cudaMemcpyHostToDevice) );
-				conjMul<<<blockNum, threadNum>>>(cu_ru.d_txdataF[p], cu_ru.d_weight[p][aa], 
-							cu_ru.d_txdataF_BF, aa, div, fftsize, nb_symbols);
+				gpuErrchk( cudaMemcpy(&cu_ru.d_weight[p*(nb_tx*fftsize)+aa*fftsize], 
+							weight[p][aa], fftsize*sizeof(int), cudaMemcpyHostToDevice) );
 			}
 		}
 	}
+	cudaEventRecord(stop);
+	cudaEventSynchronize(stop);
+	cudaEventElapsedTime(&time,  start, stop);
+	printf("HTD: %f\n", time*1000.0);
+
+	cudaEventRecord(start);
+
+	dim3 block(3,8);
+	dim3 thread(1024);
+	conjMulAll<<<block, thread>>>(cu_ru.d_txdataF, cu_ru.d_weight, cu_ru.d_res,
+		fftsize, nb_symbols, nb_tx, nb_antenna_ports);
+	combine<<<block, thread>>>(cu_ru.d_res, cu_ru.d_txdataF_BF, 
+		fftsize, nb_symbols, nb_tx, nb_antenna_ports);
+
+	cudaEventRecord(stop);
+	cudaEventSynchronize(stop);
+	cudaEventElapsedTime(&time,  start, stop);
+	printf("conjMul+comb: %f\n", time*1000.0);
 
 
 }

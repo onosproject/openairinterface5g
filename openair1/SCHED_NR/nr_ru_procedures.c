@@ -132,7 +132,8 @@ void CUDA_prec_ofdm(RU_t *ru,int frame_tx,int tti_tx){
 			((short*)&ru->common.txdataF[p][j])[1] = 1;
 		}
     }
-	
+	clock_t start, end;	
+	start = clock();
 	CUDA_beam_precoding((int**)ru->common.txdataF, (int***)ru->beam_weights[0], fp->L_ssb, 3,
 			fp->ofdm_symbol_size, fp->symbols_per_slot, nb_antenna_ports, ru->nb_tx);
 
@@ -140,7 +141,9 @@ void CUDA_prec_ofdm(RU_t *ru,int frame_tx,int tti_tx){
 			 fp->ofdm_symbol_size, fp->symbols_per_slot, 
 			 fp->nb_prefix_samples, fp->nb_prefix_samples0, ru->nb_tx,
 			 fp->Ncp, CYCLIC_PREFIX);
-
+	end = clock();
+	double time = ((double)(end-start))/CLOCKS_PER_SEC;
+	printf("CUDA_prec_ofdm ------------------------- >%lf\n", time*1000000);
 	
 
 }
