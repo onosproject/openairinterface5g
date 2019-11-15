@@ -1,18 +1,14 @@
 #ifndef INIT_CUDA_DEF
 #define INIT_CUDA_DEF
 
-#include "cuda_struct.h"
+#include "struct.h"
 
-#if __cplusplus
-extern "C" {
-#endif
+typedef cuda_ifft_t{
+	Complex *d_signal;
+	Complex *d_output;
+	int *d_data;	
+}cuda_ifft
 
 
-void init_cuda(int nb_tx, int nb_symbols, int fftsize);
-
-
-#if __cplusplus
-}
-#endif
 
 #endif

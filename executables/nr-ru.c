@@ -2033,10 +2033,8 @@ void set_function_spec_param(RU_t *ru) {
       } else if (ru->function == gNodeB_3GPP) {
         ru->do_prach             = 0;                       // no prach processing in RU
         ru->feprx                = (get_thread_worker_conf() == WORKER_ENABLE) ? ru_fep_full_2thread : fep_full;                // RX DFTs
-        //ru->feptx_ofdm           = (get_thread_worker_conf() == WORKER_ENABLE) ? nr_feptx_ofdm_2thread : nr_feptx_ofdm;              // this is fep with idft and precoding
-        ru->feptx_ofdm           = CUDA_prec_ofdm;              // this is fep with idft and precoding
-        //ru->feptx_prec           = nr_feptx_prec;           // this is fep with idft and precoding
-        ru->feptx_prec           = NULL;           // this is fep with idft and precoding
+        ru->feptx_ofdm           = (get_thread_worker_conf() == WORKER_ENABLE) ? nr_feptx_ofdm_2thread : nr_feptx_ofdm;              // this is fep with idft and precoding
+        ru->feptx_prec           = nr_feptx_prec;           // this is fep with idft and precoding
         ru->fh_north_in          = NULL;                    // no incoming fronthaul from north
         ru->fh_north_out         = NULL;                    // no outgoing fronthaul to north
         ru->nr_start_if          = NULL;                    // no if interface

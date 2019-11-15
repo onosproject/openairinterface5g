@@ -33,7 +33,6 @@
 #include "LAYER2/MAC/mac_extern.h"
 #include "assertions.h"
 #include <math.h>
-#include "openair1/CUDA/init_cuda_def.h"
 
 #include "PHY/NR_TRANSPORT/nr_ulsch.h"
 #include "PHY/NR_REFSIG/nr_refsig.h"

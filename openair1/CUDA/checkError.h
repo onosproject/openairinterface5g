@@ -1,5 +1,12 @@
-#ifndef CHECKERROR_H
-#define CHECKERROR_H
+__global__ void gpu_hello(void){
+	printf("Hello world from GPU!\n");
+}
+
+extern "C" void CUDA_hello(void){
+	printf("ready to gpu_hello\n");
+	gpu_hello<<<1,1>>>();
+	cudaDeviceSynchronize();
+}
 
 static const char* _cudaGetErrorEnum(cufftResult error){
 	switch (error){
@@ -36,7 +43,6 @@ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=t
 
 #define CHECK_STATE(msg) {checkCudaState((msg), __FILE__, __LINE__);}
 inline void checkCudaState(const char *msg, const char *file, const int line){
-	cudaDeviceSynchronize();
 	cudaError_t err = cudaGetLastError();
 	if(err != cudaSuccess) {
 		fprintf(stderr, "[%s]gpu error: %s %s %d\n", msg, cudaGetErrorString(err), file, line);
@@ -49,4 +55,4 @@ inline void checkCudaState(const char *msg, const char *file, const int line){
 
 
 
-#endif
+

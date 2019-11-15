@@ -52,6 +52,7 @@
 #include "modulation_eNB.h"
 #include "nr_modulation.h"
 #include "common/utils/LOG/vcd_signal_dumper.h"
+#include "CUDA/CUDA_phy_procedure_def.h"
 
 
 int beam_precoding(int32_t **txdataF,
@@ -165,9 +166,16 @@ int nr_beam_precoding(int32_t **txdataF,
 	}
   }	
 
+  void (*multadd_cpx_vector_ptr)(int*, int*, int*, short, unsigned int, int);
+#ifdef CUDA
+multadd_cpx_vector_ptr = CUDA_multadd_cpx_vector;
+#else
+multadd_cpx_vector_ptr = multadd_cpx_vector;
+#endif
+
   for (p=0; p<nb_antenna_ports; p++) {
     if ((frame_parms->L_ssb >> p) & 0x01)  {
-      multadd_cpx_vector((int16_t*)&txdataF[p][symbol*frame_parms->ofdm_symbol_size],
+      multadd_cpx_vector_ptr((int16_t*)&txdataF[p][symbol*frame_parms->ofdm_symbol_size],
 			 (int16_t*)beam_weights[p][aa], 
 			 (int16_t*)&txdataF_BF[aa][symbol*frame_parms->ofdm_symbol_size], 
 			 0, 

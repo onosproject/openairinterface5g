@@ -77,8 +77,15 @@ void nr_feptx0(RU_t *ru,int tti_tx,int first_symbol, int num_symbols, int aa) {
 
   LOG_D(PHY,"SFN/SF:RU:TX:%d/%d Generating slot %d (first_symbol %d num_symbols %d)\n",ru->proc.frame_tx, ru->proc.tti_tx,slot,first_symbol,num_symbols);
 
+void (*PHY_ofdm_mod_ptr)(int*, int*, int, unsigned char, unsigned short, Extension_t);
+#ifdef CUDA
+PHY_ofdm_mod_ptr = CUDA_PHY_ofdm_mod;
+#else
+PHY_ofdm_mod_ptr = PHY_ofdm_mod;
+#endif
+
   if (fp->Ncp == 1) {
-    PHY_ofdm_mod(&ru->common.txdataF_BF[aa][slot_offsetF],
+    PHY_ofdm_mod_ptr(&ru->common.txdataF_BF[aa][slot_offsetF],
                  (int*)&ru->common.txdata[aa][slot_offset],
                  fp->ofdm_symbol_size,
                  num_symbols,
@@ -87,13 +94,13 @@ void nr_feptx0(RU_t *ru,int tti_tx,int first_symbol, int num_symbols, int aa) {
   }
   else {
     if (first_symbol==0) {
-      PHY_ofdm_mod(&ru->common.txdataF_BF[aa][slot_offsetF],
+      PHY_ofdm_mod_ptr(&ru->common.txdataF_BF[aa][slot_offsetF],
                    (int*)&ru->common.txdata[aa][slot_offset],
                    fp->ofdm_symbol_size,
                    1,
                    fp->nb_prefix_samples0,
                    CYCLIC_PREFIX);
-      PHY_ofdm_mod(&ru->common.txdataF_BF[aa][slot_offsetF+fp->ofdm_symbol_size],
+      PHY_ofdm_mod_ptr(&ru->common.txdataF_BF[aa][slot_offsetF+fp->ofdm_symbol_size],
                    (int*)&ru->common.txdata[aa][slot_offset+fp->nb_prefix_samples0+fp->ofdm_symbol_size],
                    fp->ofdm_symbol_size,
                    num_symbols-1,
@@ -101,7 +108,7 @@ void nr_feptx0(RU_t *ru,int tti_tx,int first_symbol, int num_symbols, int aa) {
                    CYCLIC_PREFIX);
     }
     else {
-      PHY_ofdm_mod(&ru->common.txdataF_BF[aa][slot_offsetF],
+      PHY_ofdm_mod_ptr(&ru->common.txdataF_BF[aa][slot_offsetF],
                    (int*)&ru->common.txdata[aa][slot_offset],
                    fp->ofdm_symbol_size,
                    num_symbols,
@@ -113,40 +120,8 @@ void nr_feptx0(RU_t *ru,int tti_tx,int first_symbol, int num_symbols, int aa) {
   //VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_RU_FEPTX_OFDM+(first_symbol!=0?1:0), 0);
 }
 
-void CUDA_prec_ofdm(RU_t *ru,int frame_tx,int tti_tx){
-  	nfapi_nr_config_request_t *cfg = &ru->gNB_list[0]->gNB_config;
-	if(nr_slot_select(cfg, tti_tx) == SF_UL) return;
-
-	int slot = tti_tx;
-	NR_DL_FRAME_PARMS *fp = ru->nr_frame_parms;
-	PHY_VARS_gNB *gNB = ru->gNB_list[0];
-	int nb_antenna_ports = 8;
-
-	//data L1 to ru
-    for(int p=0; p<nb_antenna_ports; ++p){
-		memcpy((void*)ru->common.txdataF[p], (void*)&gNB->common_vars.txdataF[p],
-				fp->ofdm_symbol_size*sizeof(int32_t)*fp->symbols_per_slot);
-		//fake data
-		for(int j=0; j<fp->ofdm_symbol_size*fp->symbols_per_slot; j++){
-			((short*)&ru->common.txdataF[p][j])[0] = 1;
-			((short*)&ru->common.txdataF[p][j])[1] = 1;
-		}
-    }
-	
-	CUDA_beam_precoding((int**)ru->common.txdataF, (int***)ru->beam_weights[0], fp->L_ssb, 3,
-			fp->ofdm_symbol_size, fp->symbols_per_slot, nb_antenna_ports, ru->nb_tx);
-
-	CUDA_ifft_ofdm((int**)ru->common.txdata, 
-			 fp->ofdm_symbol_size, fp->symbols_per_slot, 
-			 fp->nb_prefix_samples, fp->nb_prefix_samples0, ru->nb_tx,
-			 fp->Ncp, CYCLIC_PREFIX);
-
-	
-
-}
 
 void nr_feptx_ofdm_2thread(RU_t *ru,int frame_tx,int tti_tx) {
-printf("nr_feptx_ofdm_2thread : frame_tx:%d tti_tx:%d\n", frame_tx, tti_tx);return; 
 
   nfapi_nr_config_request_t *cfg = &ru->gNB_list[0]->gNB_config;
   RU_proc_t  *proc  = &ru->proc;
@@ -245,7 +220,6 @@ printf("nr_feptx_ofdm_2thread : frame_tx:%d tti_tx:%d\n", frame_tx, tti_tx);retu
 }
 
 static void *nr_feptx_thread(void *param) {
-
   RU_feptx_t *feptx = (RU_feptx_t *)param;
   RU_t       *ru;
   int         aa, slot, start, l, nb_antenna_ports, ret;

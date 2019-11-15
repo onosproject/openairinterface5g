@@ -52,9 +52,7 @@ set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -I${OPENAIR1_DIR}/ ")
 
 ### ADD CUDA LIBRARY
 CUDA_ADD_LIBRARY(PHY_CU ${OPENAIR1_DIR}/CUDA/CUDA_phy_procedure.cu
-	${OPENAIR1_DIR}/CUDA/init_cuda.cu
 	${OPENAIR1_DIR}/CUDA/struct.h 
-	${OPENAIR1_DIR}/CUDA/cuda_struct.h
 	${OPENAIR1_DIR}/CUDA/checkError.h 
 	)
 

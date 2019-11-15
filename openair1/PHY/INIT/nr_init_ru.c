@@ -31,7 +31,6 @@
 #include "assertions.h"
 #include <math.h>
 #include "openair1/PHY/defs_RU.h"
-#include "openair1/CUDA/init_cuda_def.h"
 
 int nr_phy_init_RU(RU_t *ru) {
 
@@ -42,7 +41,6 @@ int nr_phy_init_RU(RU_t *ru) {
 
   LOG_I(PHY,"Initializing RU signal buffers (if_south %s) nb_tx %d\n",ru_if_types[ru->if_south],ru->nb_tx);
 
-  init_cuda(ru->nb_tx, fp->symbols_per_slot, fp->ofdm_symbol_size);
 
   if (ru->if_south <= REMOTE_IF5) { // this means REMOTE_IF5 or LOCAL_RF, so allocate memory for time-domain signals 
     // Time-domain signals
