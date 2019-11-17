@@ -616,11 +616,12 @@ void rx_rf(RU_t *ru,int *frame,int *subframe) {
 
   proc->timestamp_rx = ts-ru->ts_offset;
 
-  //  AssertFatal(rxs == fp->samples_per_tti,
+  //AssertFatal(rxs == fp->samples_per_tti,
   //        "rx_rf: Asked for %d samples, got %d from SDR\n",fp->samples_per_tti,rxs);
   if(rxs != fp->samples_per_tti) {
     LOG_E(PHY,"rx_rf: Asked for %d samples, got %d from SDR\n",fp->samples_per_tti,rxs);
     late_control=STATE_BURST_TERMINATE;
+    ru->cmd=STOP_RU;
   }
 
   if (proc->first_rx == 1) {
@@ -1053,7 +1054,7 @@ void do_ru_synch(RU_t *ru) {
                                      fp->samples_per_tti*10,
                                      ru->nb_rx);
 
-    if (rxs != fp->samples_per_tti*10) LOG_E(PHY,"requested %d samples, got %d\n",fp->samples_per_tti*10,rxs);
+    AssertFatal(rxs == fp->samples_per_tti*10,"requested %d samples, got %d\n",fp->samples_per_tti*10,rxs);
 
     // wakeup synchronization processing thread
     wakeup_synch(ru);
