@@ -420,7 +420,8 @@ rlc_am_get_pdus (
     break;
 
   case RLC_DATA_TRANSFER_READY_STATE:
-
+    printf("rlc_pP->nb_bytes_requested_by_mac=%d\n",rlc_pP->nb_bytes_requested_by_mac);
+    printf("rlc_pP->status_requested=%u\n",rlc_pP->status_requested);
     // TRY TO SEND CONTROL PDU FIRST
     if ((rlc_pP->nb_bytes_requested_by_mac >= 2) &&
     		((rlc_pP->status_requested) && !(rlc_pP->status_requested & RLC_AM_STATUS_NO_TX_MASK))) {
@@ -552,7 +553,7 @@ rlc_am_mac_status_indication (
   rlc->last_absolute_subframe_status_indication = PROTOCOL_CTXT_TIME_MILLI_SECONDS(ctxt_pP);
 
   rlc->nb_bytes_requested_by_mac = tb_sizeP;
-
+  printf("********nb_bytes_req=%d********\n",rlc->nb_bytes_requested_by_mac);
   status_resp.buffer_occupancy_in_bytes = rlc_am_get_buffer_occupancy_in_bytes(ctxt_pP, rlc);
 
   // For eNB scheduler : Add Max RLC header size for new PDU
@@ -690,12 +691,15 @@ rlc_am_mac_data_request (
 #endif
 
   list_init (&data_req.data, NULL);
+  printf("l_rlc_p->nb_bytes_requested_by_mac=%d (in rlc_am.c)\n",l_rlc_p->nb_bytes_requested_by_mac);
   rlc_am_get_pdus (ctxt_pP, l_rlc_p);
   list_add_list (&l_rlc_p->pdus_to_mac_layer, &data_req.data);
+  printf("*******nb_elements_3=%d (in rlc_am.c)***************\n",data_req.data.nb_elements);
+  printf("***********head_3=%x (in rlc_am.c)***********\n",&l_rlc_p->pdus_to_mac_layer.head);
 
   //((rlc_am_entity_t *) rlc_pP)->tx_pdus += data_req.data.nb_elements;
   if ((nb_bytes_requested_by_mac + data_req.data.nb_elements) > 0) {
-    LOG_D(RLC, PROTOCOL_RLC_AM_CTXT_FMT" MAC_DATA_REQUEST %05d BYTES REQUESTED -> %d TBs\n",
+    LOG_I(RLC, PROTOCOL_RLC_AM_CTXT_FMT" MAC_DATA_REQUEST %05d BYTES REQUESTED -> %d TBs\n",
           PROTOCOL_RLC_AM_CTXT_ARGS(ctxt_pP,l_rlc_p),
           nb_bytes_requested_by_mac,
           data_req.data.nb_elements);
@@ -898,6 +902,7 @@ rlc_am_mac_data_request (
   }
 
 #endif
+printf("=========data_req.data=%d=======\n",data_req.data);
   return data_req;
 }
 //-----------------------------------------------------------------------------

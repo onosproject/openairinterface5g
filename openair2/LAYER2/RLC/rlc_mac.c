@@ -114,7 +114,7 @@ tbs_size_t mac_rlc_serialize_tb (char* buffer_pP, list_t transport_blocksP)
       free_mem_block(tb_p, __func__);
     }
   }
-
+  
   return tbs_size;
 }
 //-----------------------------------------------------------------------------
@@ -139,7 +139,7 @@ tbs_size_t mac_rlc_data_req(
   srb_flag_t             srb_flag        = (channel_idP <= 3) ? SRB_FLAG_YES : SRB_FLAG_NO;
   tbs_size_t             ret_tb_size         = 0;
   protocol_ctxt_t     ctxt;
-
+  //printf("***********data_request=%d (in rlc_mac.c)***********\n",data_request);
   PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, module_idP, enb_flagP, rntiP, frameP, 0,eNB_index);
 
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_MAC_RLC_DATA_REQ,VCD_FUNCTION_IN);
@@ -178,7 +178,7 @@ tbs_size_t mac_rlc_data_req(
   }
 
   h_rc = hashtable_get(rlc_coll_p, key, (void**)&rlc_union_p);
-
+ 
  
   if (h_rc == HASH_TABLE_OK) {
     rlc_mode = rlc_union_p->mode;
@@ -193,9 +193,10 @@ tbs_size_t mac_rlc_data_req(
     break;
 
   case RLC_MODE_AM:
-    if (!enb_flagP) rlc_am_set_nb_bytes_requested_by_mac(&rlc_union_p->rlc.am,tb_sizeP);
+    //if (!enb_flagP) rlc_am_set_nb_bytes_requested_by_mac(&rlc_union_p->rlc.am,tb_sizeP);
 	data_request = rlc_am_mac_data_request(&ctxt, &rlc_union_p->rlc.am,enb_flagP);
     ret_tb_size =mac_rlc_serialize_tb(buffer_pP, data_request.data);
+    printf("****************data_request=%d (in rlc_mac.c)****************\n",data_request);
     break;
 
   case RLC_MODE_UM:

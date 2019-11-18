@@ -285,15 +285,15 @@ hashtable_rc_t hashtable_get(const hash_table_t * const hashtblP, const hash_key
     //printf("hash %d\n", hash);
 
     node=hashtblP->nodes[hash];
-   // printf("nodes_value %d \n", hashtblP->nodes[hash]);
+    //printf("nodes_value %d \n", hashtblP->nodes[hash]);
 
     while(node) {
         //printf("node_key %d \n",node->key);
         if(node->key == keyP) {
             //printf("node_key %d \n",node->key);
             *dataP = node->data;
-            //printf("data : %p \n",node->data);
-            return HASH_TABLE_OK;
+            //printf("node->data : %p \n",node->data);
+	    return HASH_TABLE_OK;
         }
         node=node->next;
     }

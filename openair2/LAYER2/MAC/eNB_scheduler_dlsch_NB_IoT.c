@@ -68,11 +68,11 @@ int schedule_DL_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_inst, UE_
 
 	uint8_t sdu_temp[SCH_PAYLOAD_SIZE_MAX_NB_IoT]; //
 	
-	//logical_chan_id_t logical_channel; //
+	logical_chan_id_t logical_channel; //
 
 	uint32_t subheader_length=2;
 	
-	//uint32_t payload_offset; //
+	uint32_t payload_offset; //
 	
 
 	uint32_t search_space_end_sf, h_temp, f_temp, sf_temp;
@@ -110,14 +110,14 @@ int schedule_DL_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_inst, UE_
 										1,
 										0,
 										DCCH0_NB_IoT,
-										0);
+										83);
 		data_size = rlc_status.bytes_in_buffer;
 		LOG_N(MAC,"[NB-IoT] RLC indicate to MAC that the data size is : %d\n",data_size);
 
 		mac_sdu_size = mac_rlc_data_req(
 					      module_id,
 					      UE_info->rnti,
-					      0,
+					      module_id,
 					      frame_start,
 					      1,
 					      0,
@@ -162,7 +162,7 @@ int schedule_DL_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_inst, UE_
 
 	//data_size=200;	//for testing
 
-	LOG_D(MAC,"[%04d][DLSchedulerUSS] UE data size %d\n", mac_inst->current_subframe, data_size);
+	LOG_I(MAC,"[%04d][DLSchedulerUSS] UE data size %d\n", mac_inst->current_subframe, data_size);
 	//Have DCCH data
 	if(data_size == 0)
 	{
@@ -176,7 +176,7 @@ int schedule_DL_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_inst, UE_
 	if(TBS > data_size+subheader_length)
 	{
 		TBS = get_tbs(data_size, I_tbs, &I_sf);
-		LOG_D(MAC,"[%04d][DLSchedulerUSS] TBS change to %d because data size is smaller than previous TBS\n", mac_inst->current_subframe, TBS);
+		LOG_I(MAC,"[%04d][DLSchedulerUSS] TBS change to %d because data size is smaller than previous TBS\n", mac_inst->current_subframe, TBS);
 	}
 
   	search_space_end_sf=cal_num_dlsf(mac_inst, hyperSF_start, frame_start, subframe_start, &h_temp, &f_temp, &sf_temp, UE_info->R_max);
@@ -216,7 +216,7 @@ int schedule_DL_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_inst, UE_
 		        {
 		          end_flagSCH = check_resource_NPDSCH_NB_IoT(mac_inst, NPDSCH_info, NPDCCH_info->sf_end, I_delay, UE_info->R_max, UE_sched_ctrl_info->R_dl_data, n_sf);
 			  int x;
-			  for (x=0;x<10;x++){
+			  for (x=0;x<data_size;x++){
 				printf("%02x ",UE_info->DLSCH_pdu.payload[x]);
 			  }
 			  printf("\n");
@@ -241,7 +241,7 @@ int schedule_DL_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_inst, UE_
 		                  //New transmission need to request data from RLC and generate new MAC PDU
 		                  UE_info->I_mcs_dl = I_mcs;
 
-		                  /*.......
+		                 
 		                  //Request data from RLC layer
 		                  rlc_status = mac_rlc_status_ind(
 		                        module_id,
@@ -253,15 +253,15 @@ int schedule_DL_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_inst, UE_
 		                        0,
 		                        DCCH0_NB_IoT,
 		                        TBS-subheader_length);
-		                  */
-		                  //mac_sdu_size = mac_rlc_data_req_eNB_NB_IoT(module_id, UE_info->rnti, 0, frame_start, 0, DCCH0_NB_IoT, sdu_temp);
+		                 
+		                  mac_sdu_size = mac_rlc_data_req(module_id, UE_info->rnti, module_id, frame_start, 1, 0, DCCH0_NB_IoT, TBS, (char *)&sdu_temp[0]);
 		                  
 		                  //channel=DCCH0_NB_IoT;
 
 		                  //Generate header
-		                  //payload_offset = generate_dlsch_header_NB_IoT(UE_info->DLSCH_pdu.payload, 1, &logical_channel, &mac_sdu_size, 0, 0, TBS);
+		                  payload_offset = generate_dlsch_header_NB_IoT(UE_info->DLSCH_pdu.payload, 1, &logical_channel, &mac_sdu_size, 0, 0, TBS);
 		                  //Complete MAC PDU
-		                  //memcpy(UE_info->DLSCH_pdu.payload+payload_offset, sdu_temp, mac_sdu_size);
+		                  memcpy(UE_info->DLSCH_pdu.payload+payload_offset, sdu_temp, mac_sdu_size);
 		                  
 		                  //UE_info->DLSCH_pdu.pdu_size=TBS;
 		                  UE_sched_ctrl_info->NPDCCH_sf_end=NPDCCH_info->sf_end;
