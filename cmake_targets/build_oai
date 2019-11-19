@@ -808,9 +808,6 @@ fi
   # Build RF device and transport protocol libraries #
   ####################################################
   if [ "$eNB" = "1" -o "$UE" = "1" -o "$gNB" = "1" -o "$nrUE" = "1" -o "$HWLAT" = "1" ] ; then
-        if [ "$eNB" = "1" -o "$UE" = "1" ] ; then
-        	USRPVERSION="lte"
-        fi
       # build RF device libraries
       if [ "$HW" != "None" ] ; then
           rm -f liboai_device.so
@@ -827,11 +824,11 @@ fi
 	          echo_info "liboai_device.so is linked to EXMIMO device library"
 	      elif [ "$HW" == "OAI_USRP" ] ; then
               compilations \
-                  $build_dir oai_usrpdevif$USRPVERSION \
-                  liboai_usrpdevif$USRPVERSION.so $dbin/liboai_usrpdevif$USRPVERSION.so.$REL
+                  $build_dir oai_usrpdevif \
+                  liboai_usrpdevif.so $dbin/liboai_usrpdevif.so.$REL
                   
-              ln -sf liboai_usrpdevif$USRPVERSION.so liboai_device.so
-              ln -sf $dbin/liboai_usrpdevif$USRPVERSION.so.$REL $dbin/liboai_device.so
+              ln -sf liboai_usrpdevif.so liboai_device.so
+              ln -sf $dbin/liboai_usrpdevif.so.$REL $dbin/liboai_device.so
               echo_info "liboai_device.so is linked to USRP device library"        
           elif [ "$HW" == "OAI_BLADERF" ] ; then
               if [ -f "/usr/include/libbladeRF.h" ] ; then

@@ -47,29 +47,29 @@ uint16_t get_SLIV(uint8_t S, uint8_t L);
 
 uint8_t nr_get_S(uint8_t row_idx, uint8_t CP, uint8_t time_alloc_type, uint8_t dmrs_typeA_position);
 
-void nr_get_rbg_parms(NR_BWP_PARMS* bwp, uint8_t config_type);
+void nr_get_rbg_parms(NR_BWP_PARMS *bwp, uint8_t config_type);
 
-void nr_get_rbg_list(uint32_t bitmap, uint8_t n_rbg, uint8_t* rbg_list);
+void nr_get_rbg_list(uint32_t bitmap, uint8_t n_rbg, uint8_t *rbg_list);
 
-void nr_get_PRG_parms(NR_BWP_PARMS* bwp, NR_gNB_DCI_ALLOC_t dci_alloc, uint8_t prb_bundling_type);
+void nr_get_PRG_parms(NR_BWP_PARMS *bwp, NR_gNB_DCI_ALLOC_t dci_alloc, uint8_t prb_bundling_type);
 
 void nr_pdsch_codeword_scrambling(uint8_t *in,
                                   uint32_t size,
                                   uint8_t q,
                                   uint32_t Nid,
                                   uint32_t n_RNTI,
-                                  uint32_t* out);
+                                  uint32_t *out);
 
 void nr_fill_dlsch(PHY_VARS_gNB *gNB,
                    int frame,
                    int slot,
                    nfapi_nr_dl_config_dlsch_pdu *dlsch_pdu,
-                   unsigned char *sdu); 
+                   unsigned char *sdu);
 
 uint8_t nr_generate_pdsch(NR_gNB_DLSCH_t *dlsch,
                           NR_gNB_DCI_ALLOC_t *dci_alloc,
                           uint32_t ***pdsch_dmrs,
-                          int32_t** txdataF,
+                          int32_t **txdataF,
                           int16_t amp,
                           int frame,
                           uint8_t slot,
@@ -89,11 +89,12 @@ void clean_gNB_ulsch(NR_gNB_ULSCH_t *ulsch);
 int16_t find_nr_dlsch(uint16_t rnti, PHY_VARS_gNB *gNB,find_type_t type);
 
 int nr_dlsch_encoding(unsigned char *a,int frame,
-                     uint8_t slot,
-                     NR_gNB_DLSCH_t *dlsch,
-                     NR_DL_FRAME_PARMS* frame_parms);
+                      uint8_t slot,
+                      NR_gNB_DLSCH_t *dlsch,
+                      NR_DL_FRAME_PARMS *frame_parms);
 
 
-void nr_emulate_dlsch_payload(uint8_t* payload, uint16_t size);
+void nr_emulate_dlsch_payload(uint8_t *payload, uint16_t size);
 
+int16_t find_nr_ulsch(uint16_t rnti, PHY_VARS_gNB *gNB,find_type_t type);
 #endif
