@@ -159,7 +159,7 @@ void rlc_am_segment_10 (
   unsigned int       fi                                  = 0;
   signed int         max_li_overhead                     = 0;
 
-  LOG_T(RLC,
+  LOG_W(RLC,
         PROTOCOL_RLC_AM_CTXT_FMT"[SEGMENT] rlc_pP->current_sdu_index %d rlc_pP->next_sdu_index %d rlc_pP->input_sdus[rlc_pP->current_sdu_index].mem_block %p sdu_buffer_occupancy %d\n",
         PROTOCOL_RLC_AM_CTXT_ARGS(ctxt_pP,rlc_pP),
         rlc_pP->current_sdu_index,
@@ -179,7 +179,7 @@ void rlc_am_segment_10 (
   RLC_AM_MUTEX_LOCK(&rlc_pP->lock_input_sdus, ctxt_pP, rlc_pP);
 
   while ((rlc_pP->input_sdus[rlc_pP->current_sdu_index].mem_block) && (nb_bytes_to_transmit > 0) ) {
-    LOG_T(RLC, PROTOCOL_RLC_AM_CTXT_FMT"[SEGMENT] nb_bytes_to_transmit %d BO %d\n",
+    LOG_W(RLC, PROTOCOL_RLC_AM_CTXT_FMT"[SEGMENT] nb_bytes_to_transmit %d BO %d\n",
           PROTOCOL_RLC_AM_CTXT_ARGS(ctxt_pP,rlc_pP),
           nb_bytes_to_transmit,
           rlc_pP->sdu_buffer_occupancy);
@@ -194,30 +194,30 @@ void rlc_am_segment_10 (
         max_li_overhead = test_num_li + (test_num_li >> 1) + (test_num_li & 1);
       }
 
-      LOG_T(RLC, PROTOCOL_RLC_AM_CTXT_FMT"[SEGMENT] max_li_overhead %d\n",
+      LOG_W(RLC, PROTOCOL_RLC_AM_CTXT_FMT"[SEGMENT] max_li_overhead %d\n",
             PROTOCOL_RLC_AM_CTXT_ARGS(ctxt_pP,rlc_pP),
             max_li_overhead);
 
       if  (nb_bytes_to_transmit >= (rlc_pP->sdu_buffer_occupancy + RLC_AM_HEADER_MIN_SIZE + max_li_overhead)) {
         data_pdu_size = rlc_pP->sdu_buffer_occupancy + RLC_AM_HEADER_MIN_SIZE + max_li_overhead;
-        LOG_T(RLC, PROTOCOL_RLC_AM_CTXT_FMT"[SEGMENT] alloc PDU size %d bytes to contain not all bytes requested by MAC but all BO of RLC@1\n",
+        LOG_W(RLC, PROTOCOL_RLC_AM_CTXT_FMT"[SEGMENT] alloc PDU size %d bytes to contain not all bytes requested by MAC but all BO of RLC@1\n",
               PROTOCOL_RLC_AM_CTXT_ARGS(ctxt_pP,rlc_pP),
               data_pdu_size);
       } else {
         data_pdu_size = nb_bytes_to_transmit;
-        LOG_T(RLC, PROTOCOL_RLC_AM_CTXT_FMT"[SEGMENT] alloc PDU size %d bytes to contain all bytes requested by MAC@1\n",
+        LOG_W(RLC, PROTOCOL_RLC_AM_CTXT_FMT"[SEGMENT] alloc PDU size %d bytes to contain all bytes requested by MAC@1\n",
               PROTOCOL_RLC_AM_CTXT_ARGS(ctxt_pP,rlc_pP),
               data_pdu_size);
       }
 
       if (!(pdu_mem_p = get_free_mem_block (data_pdu_size + sizeof(struct mac_tb_req), __func__))) {
-        LOG_C(RLC, PROTOCOL_RLC_AM_CTXT_FMT"[SEGMENT] ERROR COULD NOT GET NEW PDU, EXIT\n",
+        LOG_W(RLC, PROTOCOL_RLC_AM_CTXT_FMT"[SEGMENT] ERROR COULD NOT GET NEW PDU, EXIT\n",
               PROTOCOL_RLC_AM_CTXT_ARGS(ctxt_pP,rlc_pP));
         RLC_AM_MUTEX_UNLOCK(&rlc_pP->lock_input_sdus);
         return;
       }
 
-      LOG_T(RLC, PROTOCOL_RLC_AM_CTXT_FMT"[SEGMENT] get new PDU %d bytes\n",
+      LOG_W(RLC, PROTOCOL_RLC_AM_CTXT_FMT"[SEGMENT] get new PDU %d bytes\n",
             PROTOCOL_RLC_AM_CTXT_ARGS(ctxt_pP,rlc_pP),
             data_pdu_size);
       pdu_remaining_size = data_pdu_size - RLC_AM_HEADER_MIN_SIZE;
@@ -285,7 +285,7 @@ void rlc_am_segment_10 (
           test_li_length_in_bytes = test_li_length_in_bytes ^ 3;
         }
       } else {
-        LOG_T(RLC, PROTOCOL_RLC_AM_CTXT_FMT"[SEGMENT] sdu_mngt_p->sdu_remaining_size=%d test_pdu_remaining_size=%d test_li_length_in_bytes=%d\n",
+        LOG_W(RLC, PROTOCOL_RLC_AM_CTXT_FMT"[SEGMENT] sdu_mngt_p->sdu_remaining_size=%d test_pdu_remaining_size=%d test_li_length_in_bytes=%d\n",
               PROTOCOL_RLC_AM_CTXT_ARGS(ctxt_pP,rlc_pP),
               sdu_mngt_p->sdu_remaining_size,
               test_pdu_remaining_size,
@@ -314,7 +314,7 @@ void rlc_am_segment_10 (
     //----------------------------------------
     // Do the real filling of the pdu_p
     //----------------------------------------
-    LOG_T(RLC, PROTOCOL_RLC_AM_CTXT_FMT" data shift %d Bytes num_li %d\n",
+    LOG_W(RLC, PROTOCOL_RLC_AM_CTXT_FMT" data shift %d Bytes num_li %d\n",
           PROTOCOL_RLC_AM_CTXT_ARGS(ctxt_pP,rlc_pP),
           ((test_num_li*3) +1) >> 1,
           test_num_li);
@@ -336,12 +336,12 @@ void rlc_am_segment_10 (
       sdu_mngt_p = &rlc_pP->input_sdus[rlc_pP->current_sdu_index];
 
       if (sdu_mngt_p->sdu_segmented_size == 0) {
-        LOG_T(RLC, PROTOCOL_RLC_AM_CTXT_FMT"[SEGMENT] GET NEW SDU %p AVAILABLE SIZE %d Bytes\n",
+        LOG_W(RLC, PROTOCOL_RLC_AM_CTXT_FMT"[SEGMENT] GET NEW SDU %p AVAILABLE SIZE %d Bytes\n",
               PROTOCOL_RLC_AM_CTXT_ARGS(ctxt_pP,rlc_pP),
               sdu_mngt_p,
               sdu_mngt_p->sdu_remaining_size);
       } else {
-        LOG_T(RLC, PROTOCOL_RLC_AM_CTXT_FMT"[SEGMENT] GET AGAIN SDU %p REMAINING AVAILABLE SIZE %d Bytes / %d Bytes LENGTH \n",
+        LOG_W(RLC, PROTOCOL_RLC_AM_CTXT_FMT"[SEGMENT] GET AGAIN SDU %p REMAINING AVAILABLE SIZE %d Bytes / %d Bytes LENGTH \n",
               PROTOCOL_RLC_AM_CTXT_ARGS(ctxt_pP,rlc_pP),
               sdu_mngt_p,
               sdu_mngt_p->sdu_remaining_size,
@@ -351,7 +351,7 @@ void rlc_am_segment_10 (
       data_sdu_p = &sdu_mngt_p->first_byte[sdu_mngt_p->sdu_segmented_size];
 
       if (sdu_mngt_p->sdu_remaining_size > pdu_remaining_size) {
-        LOG_T(RLC, PROTOCOL_RLC_AM_CTXT_FMT"[SEGMENT] Filling all remaining PDU with %d bytes\n",
+        LOG_W(RLC, PROTOCOL_RLC_AM_CTXT_FMT"[SEGMENT] Filling all remaining PDU with %d bytes\n",
               PROTOCOL_RLC_AM_CTXT_ARGS(ctxt_pP,rlc_pP),
               pdu_remaining_size);
         //msg ("[FRAME %05d][%s][RLC_AM][MOD %u/%u][RB %u][SEGMENT] pdu_mem_p %p pdu_p %p pdu_p->data %p data %p data_sdu_p %p pdu_remaining_size %d\n", rlc_pP->module_id, rlc_pP->rb_id, ctxt_pP->frame, pdu_mem_p, pdu_p, pdu_p->data, data, data_sdu_p,pdu_remaining_size);
@@ -365,12 +365,12 @@ void rlc_am_segment_10 (
         rlc_pP->sdu_buffer_occupancy -= pdu_remaining_size;
         continue_fill_pdu_with_sdu = 0;
         pdu_remaining_size = 0;
-        LOG_T(RLC, PROTOCOL_RLC_AM_CTXT_FMT"[SEGMENT] sdu_remaining_size %d bytes sdu_segmented_size %d bytes\n",
+        LOG_W(RLC, PROTOCOL_RLC_AM_CTXT_FMT"[SEGMENT] sdu_remaining_size %d bytes sdu_segmented_size %d bytes\n",
               PROTOCOL_RLC_AM_CTXT_ARGS(ctxt_pP,rlc_pP),
               sdu_mngt_p->sdu_remaining_size,
               sdu_mngt_p->sdu_segmented_size);
       } else if (sdu_mngt_p->sdu_remaining_size == pdu_remaining_size) {
-        LOG_T(RLC, PROTOCOL_RLC_AM_CTXT_FMT"[SEGMENT] Exactly Filling remaining PDU with %d remaining bytes of SDU\n",
+        LOG_W(RLC, PROTOCOL_RLC_AM_CTXT_FMT"[SEGMENT] Exactly Filling remaining PDU with %d remaining bytes of SDU\n",
               PROTOCOL_RLC_AM_CTXT_ARGS(ctxt_pP,rlc_pP),
               pdu_remaining_size);
         memcpy(data, data_sdu_p, pdu_remaining_size);
@@ -390,7 +390,7 @@ void rlc_am_segment_10 (
         pdu_remaining_size = 0;
       } else if ((sdu_mngt_p->sdu_remaining_size + (li_length_in_bytes ^ 3)) < pdu_remaining_size ) {
         if (fill_num_li == (RLC_AM_MAX_SDU_IN_PDU - 1)) {
-          LOG_T(RLC, PROTOCOL_RLC_AM_CTXT_FMT"[SEGMENT] [SIZE %d] REACHING RLC_AM_MAX_SDU_IN_PDU LIs -> STOP SEGMENTATION FOR THIS PDU SDU\n",
+          LOG_W(RLC, PROTOCOL_RLC_AM_CTXT_FMT"[SEGMENT] [SIZE %d] REACHING RLC_AM_MAX_SDU_IN_PDU LIs -> STOP SEGMENTATION FOR THIS PDU SDU\n",
                 PROTOCOL_RLC_AM_CTXT_ARGS(ctxt_pP,rlc_pP),
                 sdu_mngt_p->sdu_remaining_size);
           memcpy(data, data_sdu_p, sdu_mngt_p->sdu_remaining_size);
@@ -407,7 +407,7 @@ void rlc_am_segment_10 (
           continue_fill_pdu_with_sdu = 0;
           fi_last_byte_pdu_is_last_byte_sdu = 1;
         } else {
-          LOG_T(RLC, PROTOCOL_RLC_AM_CTXT_FMT"[SEGMENT] Filling  PDU with %d all remaining bytes of SDU\n",
+          LOG_W(RLC, PROTOCOL_RLC_AM_CTXT_FMT"[SEGMENT] Filling  PDU with %d all remaining bytes of SDU\n",
                 PROTOCOL_RLC_AM_CTXT_ARGS(ctxt_pP,rlc_pP),
                 sdu_mngt_p->sdu_remaining_size);
           memcpy(data, data_sdu_p, sdu_mngt_p->sdu_remaining_size);
@@ -428,7 +428,7 @@ void rlc_am_segment_10 (
             //e_li_p->li1 = sdu_mngt_p->sdu_remaining_size;
             e_li_p->b1 = e_li_p->b1 | (sdu_mngt_p->sdu_remaining_size >> 4);
             e_li_p->b2 = sdu_mngt_p->sdu_remaining_size << 4;
-            LOG_T(RLC, PROTOCOL_RLC_AM_CTXT_FMT"[SEGMENT] set e_li_p->b1=0x%02X set e_li_p->b2=0x%02X fill_num_li=%d test_num_li=%d\n",
+            LOG_W(RLC, PROTOCOL_RLC_AM_CTXT_FMT"[SEGMENT] set e_li_p->b1=0x%02X set e_li_p->b2=0x%02X fill_num_li=%d test_num_li=%d\n",
                   PROTOCOL_RLC_AM_CTXT_ARGS(ctxt_pP,rlc_pP),
                   e_li_p->b1,
                   e_li_p->b2,
@@ -443,7 +443,7 @@ void rlc_am_segment_10 (
             //e_li_p->li2 = sdu_mngt_p->sdu_remaining_size;
             e_li_p->b2 = e_li_p->b2 | (sdu_mngt_p->sdu_remaining_size >> 8);
             e_li_p->b3 = sdu_mngt_p->sdu_remaining_size & 0xFF;
-            LOG_T(RLC, PROTOCOL_RLC_AM_CTXT_FMT"[SEGMENT] set e_li_p->b2=0x%02X set e_li_p->b3=0x%02X fill_num_li=%d test_num_li=%d\n",
+            LOG_W(RLC, PROTOCOL_RLC_AM_CTXT_FMT"[SEGMENT] set e_li_p->b2=0x%02X set e_li_p->b3=0x%02X fill_num_li=%d test_num_li=%d\n",
                   PROTOCOL_RLC_AM_CTXT_ARGS(ctxt_pP,rlc_pP),
                   e_li_p->b2,
                   e_li_p->b3,
@@ -464,7 +464,7 @@ void rlc_am_segment_10 (
           rlc_pP->current_sdu_index = (rlc_pP->current_sdu_index + 1) % RLC_AM_SDU_CONTROL_BUFFER_SIZE;
         }
       } else {
-        LOG_T(RLC, PROTOCOL_RLC_AM_CTXT_FMT"[SEGMENT] Filling  PDU with %d all remaining bytes of SDU and reduce TB size by %d bytes\n",
+        LOG_W(RLC, PROTOCOL_RLC_AM_CTXT_FMT"[SEGMENT] Filling  PDU with %d all remaining bytes of SDU and reduce TB size by %d bytes\n",
               PROTOCOL_RLC_AM_CTXT_ARGS(ctxt_pP,rlc_pP),
               sdu_mngt_p->sdu_remaining_size,
               pdu_remaining_size - sdu_mngt_p->sdu_remaining_size);
@@ -505,7 +505,7 @@ void rlc_am_segment_10 (
     	RLC_AM_PDU_SET_E(pdu_p->b1);
     }
 
-    LOG_T(RLC, PROTOCOL_RLC_AM_CTXT_FMT"[SEGMENT] SEND PDU SN %04d  SIZE %d BYTES PAYLOAD SIZE %d BYTES\n",
+    LOG_W(RLC, PROTOCOL_RLC_AM_CTXT_FMT"[SEGMENT] SEND PDU SN %04d  SIZE %d BYTES PAYLOAD SIZE %d BYTES\n",
           PROTOCOL_RLC_AM_CTXT_ARGS(ctxt_pP,rlc_pP),
           rlc_pP->vt_s,
           data_pdu_size - pdu_remaining_size,

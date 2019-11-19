@@ -110,7 +110,7 @@ int output_handler(eNB_MAC_INST_NB_IoT *mac_inst, module_id_t module_id, int CC_
 	else if(SIB1_flag==1) // SIB1 flag, calculated by scheduler
 	{
 		// get SIB1 PDU from carrier and updated by time
-		uint8_t *SIB1_pdu = get_NB_IoT_SIB1(0,0,carrier,208,92,1,3584,28,2,subframe,frame,hypersfn);
+		uint8_t *SIB1_pdu = get_NB_IoT_SIB1(0,0,carrier,208,93,1,3584,28,2,subframe,frame,hypersfn);
 		// get the size of SIB1
 		SIB1_size = get_NB_IoT_SIB1_size();
 		dl_config_pdu = SCHED_info->DL_req->dl_config_request_body.dl_config_pdu_list;

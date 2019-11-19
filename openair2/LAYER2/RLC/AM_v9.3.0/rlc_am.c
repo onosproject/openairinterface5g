@@ -455,6 +455,7 @@ rlc_am_get_pdus (
 
     // THEN TRY TO SEND RETRANS PDU
       if ((rlc_pP->retrans_num_bytes_to_retransmit) && (rlc_pP->nb_bytes_requested_by_mac > 2)) {
+      LOG_I(RLC,"[NB-IoT] RLC SEND RETRANS DATA PDU\n");
 
       /* Get 1 AM data PDU or PDU segment to retransmit */
       mem_block_t* pdu_retx = rlc_am_get_pdu_to_retransmit(ctxt_pP, rlc_pP);
@@ -468,6 +469,7 @@ rlc_am_get_pdus (
 
     // THEN TRY TO SEND NEW DATA PDU
     if ((rlc_pP->nb_bytes_requested_by_mac > 2) && (rlc_pP->sdu_buffer_occupancy) && (rlc_pP->vt_s != rlc_pP->vt_ms)) {
+      LOG_I(RLC,"[NB-IoT] RLC SEND NEW DATA PDU\n");
       rlc_am_segment_10(ctxt_pP, rlc_pP);
       list_add_list (&rlc_pP->segmentation_pdu_list, &rlc_pP->pdus_to_mac_layer);
 
