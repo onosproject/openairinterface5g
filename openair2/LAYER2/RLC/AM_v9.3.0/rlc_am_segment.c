@@ -355,6 +355,16 @@ void rlc_am_segment_10 (
               PROTOCOL_RLC_AM_CTXT_ARGS(ctxt_pP,rlc_pP),
               pdu_remaining_size);
         //msg ("[FRAME %05d][%s][RLC_AM][MOD %u/%u][RB %u][SEGMENT] pdu_mem_p %p pdu_p %p pdu_p->data %p data %p data_sdu_p %p pdu_remaining_size %d\n", rlc_pP->module_id, rlc_pP->rb_id, ctxt_pP->frame, pdu_mem_p, pdu_p, pdu_p->data, data, data_sdu_p,pdu_remaining_size);
+ 	
+	/**************************/
+	printf("*****************data_sdu_p in Filling all remaining PDU***********************\n");
+        int x;
+        for (x=0;x<pdu_remaining_size;x++){
+        printf("%02x ",data_sdu_p[x]);
+        }
+        printf("\n");
+        /*************************/
+
 
         memcpy(data, data_sdu_p, pdu_remaining_size);
         pdu_mngt_p->payload_size += pdu_remaining_size;

@@ -110,7 +110,7 @@ int schedule_DL_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_inst, UE_
 										1,
 										0,
 										DCCH0_NB_IoT,
-										83);
+										0);
 		data_size = rlc_status.bytes_in_buffer;
 		LOG_N(MAC,"[NB-IoT] RLC indicate to MAC that the data size is : %d\n",data_size);
 
@@ -241,7 +241,7 @@ int schedule_DL_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_inst, UE_
 		                  //New transmission need to request data from RLC and generate new MAC PDU
 		                  UE_info->I_mcs_dl = I_mcs;
 
-		                 
+		                  
 		                  //Request data from RLC layer
 		                  rlc_status = mac_rlc_status_ind(
 		                        module_id,
@@ -253,7 +253,12 @@ int schedule_DL_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_inst, UE_
 		                        0,
 		                        DCCH0_NB_IoT,
 		                        TBS-subheader_length);
-		                 
+				
+				/***************************************************************************************/
+				 data_size = rlc_status.bytes_in_buffer;
+               			 LOG_N(MAC,"[NB-IoT] RLC indicate to MAC that the data size is : %d\n",data_size);
+            	                /***************************************************************************************/
+
 		                  mac_sdu_size = mac_rlc_data_req(module_id, UE_info->rnti, module_id, frame_start, 1, 0, DCCH0_NB_IoT, TBS, (char *)&sdu_temp[0]);
 		                  
 		                  //channel=DCCH0_NB_IoT;
@@ -262,7 +267,19 @@ int schedule_DL_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_inst, UE_
 		                  payload_offset = generate_dlsch_header_NB_IoT(UE_info->DLSCH_pdu.payload, 1, &logical_channel, &mac_sdu_size, 0, 0, TBS);
 		                  //Complete MAC PDU
 		                  memcpy(UE_info->DLSCH_pdu.payload+payload_offset, sdu_temp, mac_sdu_size);
-		                  
+				/*****************************************************************************/
+				 LOG_I(MAC,"[NB-IoT][DCCH]  Got %d bytes from RLC 2nd time\n",mac_sdu_size);
+				/*****************************************************************************/
+
+				/*******************************************************************/
+                                printf("print the payload 2nd time (mac_sdu_size) !!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
+                                int y;
+                                for (y=0;y<mac_sdu_size;y++){
+                                printf("%02x ",sdu_temp[y]);
+                                }
+                                printf("\n");
+                                /*******************************************************************/
+
 		                  //UE_info->DLSCH_pdu.pdu_size=TBS;
 		                  UE_sched_ctrl_info->NPDCCH_sf_end=NPDCCH_info->sf_end;
 							UE_sched_ctrl_info->NPDCCH_sf_start=NPDCCH_info->sf_start;
