@@ -131,6 +131,12 @@ void CUDA_prec_ofdm(RU_t *ru,int frame_tx,int tti_tx){
 			((short*)&ru->common.txdataF[p][j])[0] = 1;
 			((short*)&ru->common.txdataF[p][j])[1] = 1;
 		}
+		for(int aa=0; aa<ru->nb_tx; aa++){
+			for(int j=0; j<fp->ofdm_symbol_size; j++){
+				((short*)&ru->beam_weights[0][aa][p][j])[0] = 2;
+				((short*)&ru->beam_weights[0][aa][p][j])[1] = 2;
+			}
+		}
     }
 	clock_t start, end;	
 	start = clock();

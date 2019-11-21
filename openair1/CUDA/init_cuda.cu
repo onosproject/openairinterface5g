@@ -41,6 +41,10 @@
 
 cuda_cu_ru cu_ru;
 
+__constant__ int PORTSIZE;
+__constant__ int SUBTXSIZE;
+__constant__ int BW_PSIZE;
+
 extern "C" void init_cuda(int nb_tx, int nb_symbols, int fftsize){
 	printf("init_cuda %d %d %d  \n\n\n", nb_tx, nb_symbols, fftsize);
 
@@ -49,7 +53,7 @@ extern "C" void init_cuda(int nb_tx, int nb_symbols, int fftsize){
 	//beamforming precoding
 	gpuErrchk( cudaMalloc((void**)&cu_ru.d_txdataF, sizeof(int) * nb_tx*nb_antenna_ports*nb_symbols*fftsize) );
 	gpuErrchk( cudaMalloc((void**)&cu_ru.d_weight, sizeof(int) * nb_tx*nb_antenna_ports*fftsize) );
-	gpuErrchk( cudaMalloc((void**)&cu_ru.d_res, sizeof(int) * nb_tx*nb_antenna_ports*fftsize*nb_symbols) );
+	gpuErrchk( cudaMalloc((void**)&cu_ru.d_subtx, sizeof(int) * nb_tx*fftsize*nb_symbols*2) );
 
 	//ifft	
 	gpuErrchk( cudaMalloc((void**)&cu_ru.d_txdataF_BF, fftsize*sizeof(int)*nb_symbols*nb_tx) );
@@ -57,6 +61,11 @@ extern "C" void init_cuda(int nb_tx, int nb_symbols, int fftsize){
 	gpuErrchk( cudaMalloc((void**)&cu_ru.d_data_wCP, fftsize*(nb_symbols+1)*nb_tx*sizeof(int)) );
 	cufftErrchk( cufftPlan1d(&cu_ru.plan, fftsize, CUFFT_C2C, nb_symbols*nb_tx) );
 
-
+	int portSize  = fftsize*nb_symbols;
+	int subtxsize = nb_tx * nb_symbols * fftsize;
+	int bw_psize = nb_tx * fftsize;
+	gpuErrchk( cudaMemcpyToSymbol(PORTSIZE, &portSize, sizeof(int)) );
+	gpuErrchk( cudaMemcpyToSymbol(SUBTXSIZE, &subtxsize, sizeof(int)) );
+	gpuErrchk( cudaMemcpyToSymbol(BW_PSIZE, &bw_psize, sizeof(int)) );
 
 }
