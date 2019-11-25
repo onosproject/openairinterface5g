@@ -422,6 +422,7 @@ rlc_am_get_pdus (
   case RLC_DATA_TRANSFER_READY_STATE:
     printf("rlc_pP->nb_bytes_requested_by_mac=%d\n",rlc_pP->nb_bytes_requested_by_mac);
     printf("rlc_pP->status_requested=%u\n",rlc_pP->status_requested);
+ /*
     // TRY TO SEND CONTROL PDU FIRST
     if ((rlc_pP->nb_bytes_requested_by_mac >= 2) &&
     		((rlc_pP->status_requested) && !(rlc_pP->status_requested & RLC_AM_STATUS_NO_TX_MASK))) {
@@ -452,7 +453,7 @@ rlc_am_get_pdus (
               PROTOCOL_RLC_AM_CTXT_ARGS(ctxt_pP,rlc_pP),
 					rlc_pP->nb_bytes_requested_by_mac,rlc_pP->t_status_prohibit.ms_time_out,(rlc_pP->status_requested & RLC_AM_STATUS_TRIGGERED_DELAYED));
     }
-
+*/
     // THEN TRY TO SEND RETRANS PDU
       if ((rlc_pP->retrans_num_bytes_to_retransmit) && (rlc_pP->nb_bytes_requested_by_mac > 2)) {
       LOG_I(RLC,"[NB-IoT] RLC SEND RETRANS DATA PDU\n");

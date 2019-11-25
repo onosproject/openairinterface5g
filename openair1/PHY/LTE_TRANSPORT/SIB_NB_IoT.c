@@ -227,7 +227,6 @@ int generate_NDLSCH_NB_IoT(PHY_VARS_eNB           *eNB,
 
     if( RAR->active == 1 )
     {
-	printf("data : %p********(In RAR->active=1)\n", RAR);
     	uint8_t *RAR_pdu  = RAR->harq_process->pdu;
       
       if(RAR->active_msg2 == 1 && RAR_pdu!=NULL)
@@ -251,16 +250,11 @@ int generate_NDLSCH_NB_IoT(PHY_VARS_eNB           *eNB,
 
       if( (counter_rep == rep) && (counter_sf_rep == 0) && (pointer_to_sf == 0) )
       {
-            printf("Going to do dlsch_encoding_NB_IoT() & dlsch_scrambling_Gen_NB_IoT() in generate_NDLSCH_NB_IoT*************************************\n");
-            printf("RAR_pdu : %u********\n", RAR_pdu);
-	    printf("RAR flag : %p********\n", RAR);
-	    printf("number_of_subframes_for_resource_assignment(NSF) : %d********\n", Nsf);
-	    printf("G : %d********\n", G);
+
             dlsch_encoding_NB_IoT(RAR_pdu,
                                   RAR,
                                   Nsf,             ///// number_of_subframes_required
                                   G);              //// this vallue is fixed, should take into account in future the case of stand-alone & guard-band 
-	    printf("Finish doing generate_NDLSCH_NB_IoT() !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");        
 
              dlsch_scrambling_Gen_NB_IoT(frame_parms,
                                          RAR,
@@ -270,12 +264,10 @@ int generate_NDLSCH_NB_IoT(PHY_VARS_eNB           *eNB,
                                          RAR->rnti,
                                          release_v13_5_0,
                                          0);
-             printf("Finish doing dlsch_encoding_NB_IoT() & dlsch_scrambling_Gen_NB_IoT()\n");
       }
 
 		  if( (counter_rep != rep) && (counter_sf_rep == 0) && (pointer_to_sf == 0) )
 		  {
- 			       printf("Do dlsch_scrambling_Gen_NB_IoT when (counter_rep != rep) && (counter_sf_rep == 0) && (pointer_to_sf == 0)\n");
 
 			       dlsch_scrambling_Gen_NB_IoT(frame_parms,
                                          RAR,
@@ -321,7 +313,6 @@ int generate_NDLSCH_NB_IoT(PHY_VARS_eNB           *eNB,
 		        	}
 
 		        }
-	printf("The value after done generate_NDLSCH_NB_IoT in if : %d\n*********************",done);
 
         } else {
 
@@ -351,7 +342,6 @@ int generate_NDLSCH_NB_IoT(PHY_VARS_eNB           *eNB,
 		        	}
 
 		        }
-		printf("The value after done generate_NDLSCH_NB_IoT in else : %d\n*********************",done);
         }   
     }
 	return(done);
