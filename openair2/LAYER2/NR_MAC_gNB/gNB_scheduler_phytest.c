@@ -202,7 +202,7 @@ int configure_fapi_dl_Tx(nfapi_nr_dl_config_request_body_t *dl_req,
                                      *cfg,
                                      dl_carrier_bandwidth);
   pdu_rel15->frequency_domain_assignment = get_RIV(dlsch_pdu_rel15->start_prb, dlsch_pdu_rel15->n_prb, cfg->rf_config.dl_carrier_bandwidth.value);
-  pdu_rel15->time_domain_assignment = 3; // row index used here instead of SLIV;
+  pdu_rel15->time_domain_assignment = (dlsch_pdu_rel15->nb_symbols == 13) ? 12 : 3; // row index used here instead of SLIV; for now UE supports 9 or 13 (refer the table)
   pdu_rel15->vrb_to_prb_mapping = 1;
   pdu_rel15->mcs = dlsch_pdu_rel15->mcs_idx;
   pdu_rel15->tb_scaling = 1;
