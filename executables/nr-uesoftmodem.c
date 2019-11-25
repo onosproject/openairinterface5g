@@ -186,8 +186,7 @@ int16_t node_synch_ref[MAX_NUM_CCs];
 uint32_t target_dl_mcs = 28; //maximum allowed mcs
 uint32_t target_ul_mcs = 20;
 uint32_t timing_advance = 0;
-uint8_t exit_missed_slots=1;
-uint64_t num_missed_slots=0; // counter for the number of missed slots
+
 
 
 int transmission_mode=1;
@@ -365,33 +364,18 @@ void *l2l1_task(void *arg) {
 
 int16_t dlsch_demod_shift;
 
+
+
 static void get_options(void) {
   int CC_id;
   int tddflag=0, nonbiotflag, vcdflag=0;
   char *loopfile=NULL;
   int dumpframe=0;
-  uint32_t online_log_messages;
-  uint32_t glog_level, glog_verbosity;
-  uint32_t start_telnetsrv=0;
-  //uint32_t noS1;
-  //uint32_t nokrnmod;
-  paramdef_t cmdline_params[] =CMDLINE_PARAMS_DESC_UE ;
-  paramdef_t cmdline_logparams[] =CMDLINE_LOGPARAMS_DESC_NR ;
-  config_process_cmdline( cmdline_params,sizeof(cmdline_params)/sizeof(paramdef_t),NULL);
-  config_process_cmdline( cmdline_logparams,sizeof(cmdline_logparams)/sizeof(paramdef_t),NULL);
-
-  if(config_isparamset(cmdline_logparams,CMDLINE_ONLINELOG_IDX)) {
-    set_glog_onlinelog(online_log_messages);
-  }
-
-  if(config_isparamset(cmdline_logparams,CMDLINE_GLOGLEVEL_IDX)) {
-    set_glog(glog_level);
-  }
-
-  if (start_telnetsrv) {
-    load_module_shlib("telnetsrv",NULL,0,NULL);
-  }
-
+  set_default_frame_parms(frame_parms);
+  CONFIG_SETRTFLAG(CONFIG_NOEXITONHELP);
+  /* unknown parameters on command line will be checked in main
+     after all init have been performed                         */
+  get_common_options();
   paramdef_t cmdline_uemodeparams[] = CMDLINE_UEMODEPARAMS_DESC;
   paramdef_t cmdline_ueparams[] = CMDLINE_NRUEPARAMS_DESC;
   config_process_cmdline( cmdline_uemodeparams,sizeof(cmdline_uemodeparams)/sizeof(paramdef_t),NULL);
@@ -427,31 +411,6 @@ static void get_options(void) {
 
   if (vcdflag > 0)
     ouput_vcd = 1;
-
-  /*if (frame_parms[0]->N_RB_DL !=0) {
-      if ( frame_parms[0]->N_RB_DL < 6 ) {
-       frame_parms[0]->N_RB_DL = 6;
-       printf ( "%i: Invalid number of ressource blocks, adjusted to 6\n",frame_parms[0]->N_RB_DL);
-      }
-      if ( frame_parms[0]->N_RB_DL > 100 ) {
-       frame_parms[0]->N_RB_DL = 100;
-       printf ( "%i: Invalid number of ressource blocks, adjusted to 100\n",frame_parms[0]->N_RB_DL);
-      }
-      if ( frame_parms[0]->N_RB_DL > 50 && frame_parms[0]->N_RB_DL < 100 ) {
-       frame_parms[0]->N_RB_DL = 50;
-       printf ( "%i: Invalid number of ressource blocks, adjusted to 50\n",frame_parms[0]->N_RB_DL);
-      }
-      if ( frame_parms[0]->N_RB_DL > 25 && frame_parms[0]->N_RB_DL < 50 ) {
-       frame_parms[0]->N_RB_DL = 25;
-       printf ( "%i: Invalid number of ressource blocks, adjusted to 25\n",frame_parms[0]->N_RB_DL);
-      }
-      UE_scan = 0;
-      frame_parms[0]->N_RB_UL=frame_parms[0]->N_RB_DL;
-      for (CC_id=1; CC_id<MAX_NUM_CCs; CC_id++) {
-        frame_parms[CC_id]->N_RB_DL=frame_parms[0]->N_RB_DL;
-        frame_parms[CC_id]->N_RB_UL=frame_parms[0]->N_RB_UL;
-      }
-  }*/
 
   for (CC_id=1; CC_id<MAX_NUM_CCs; CC_id++) {
     tx_max_power[CC_id]=tx_max_power[0];
@@ -661,7 +620,10 @@ int main( int argc, char **argv ) {
   logInit();
   // get options and fill parameters from configuration file
   get_options (); //Command-line options, enb_properties
-  //get_common_options();
+
+
+  set_softmodem_optmask(SOFTMODEM_NRUE_BIT);
+
 #if T_TRACER
   T_Config_Init();
 #endif

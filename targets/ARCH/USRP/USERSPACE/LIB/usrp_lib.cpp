@@ -50,6 +50,7 @@
 #include "assertions.h"
 #include <sys/sysinfo.h>
 #include <sys/resource.h>
+#include <executables/softmodem-common.h>
 
 #ifdef __SSE4_1__
   #include <smmintrin.h>
@@ -476,50 +477,92 @@ static int trx_usrp_write(openair0_device *device, openair0_timestamp timestamp,
       }
     }
 
-    boolean_t first_packet_state=false,last_packet_state=false;
+    /* from develop branch... */
+    if ( IS_SOFTMODEM_LTE ) {
+      s->tx_md.time_spec = uhd::time_spec_t::from_ticks(timestamp, s->sample_rate);
+      s->tx_md.has_time_spec = flags;
 
-    if (flags == 2) { // start of burst
-      //      s->tx_md.start_of_burst = true;
-      //      s->tx_md.end_of_burst = false;
-      first_packet_state = true;
-      last_packet_state  = false;
-    } else if (flags == 3) { // end of burst
-      //s->tx_md.start_of_burst = false;
-      //s->tx_md.end_of_burst = true;
-      first_packet_state = false;
-      last_packet_state  = true;
-    } else if (flags == 4) { // start and end
-      //  s->tx_md.start_of_burst = true;
-      //  s->tx_md.end_of_burst = true;
-      first_packet_state = true;
-      last_packet_state  = true;
-    } else if (flags==1) { // middle of burst
-      //  s->tx_md.start_of_burst = false;
-      //  s->tx_md.end_of_burst = false;
-      first_packet_state = false;
-      last_packet_state  = false;
-    } else if (flags==10) { // fail safe mode
-      // s->tx_md.has_time_spec = false;
-      // s->tx_md.start_of_burst = false;
-      // s->tx_md.end_of_burst = true;
-      first_packet_state = false;
-      last_packet_state  = true;
-    }
+      if(flags>0)
+        s->tx_md.has_time_spec = true;
+      else
+        s->tx_md.has_time_spec = false;
 
-    s->tx_md.has_time_spec  = true;
-    s->tx_md.start_of_burst = (s->tx_count==0) ? true : first_packet_state;
-    s->tx_md.end_of_burst   = last_packet_state;
-    s->tx_md.time_spec      = uhd::time_spec_t::from_ticks(timestamp, s->sample_rate);
-    s->tx_count++;
+      if (flags == 2) { // start of burst
+        s->tx_md.start_of_burst = true;
+        s->tx_md.end_of_burst = false;
+      } else if (flags == 3) { // end of burst
+        s->tx_md.start_of_burst = false;
+        s->tx_md.end_of_burst = true;
+      } else if (flags == 4) { // start and end
+        s->tx_md.start_of_burst = true;
+        s->tx_md.end_of_burst = true;
+      } else if (flags==1) { // middle of burst
+        s->tx_md.start_of_burst = false;
+        s->tx_md.end_of_burst = false;
+      }
 
-    if (cc>1) {
-      std::vector<void *> buff_ptrs;
+      if(flags==10) { // fail safe mode
+        s->tx_md.has_time_spec = false;
+        s->tx_md.start_of_burst = false;
+        s->tx_md.end_of_burst = true;
+      }
 
-      for (int i=0; i<cc; i++)
-        buff_ptrs.push_back(&(((int16_t *)buff_tx[i])[0]));
+      if (cc>1) {
+        std::vector<void *> buff_ptrs;
 
-      ret = (int)s->tx_stream->send(buff_ptrs, nsamps, s->tx_md);
-    } else ret = (int)s->tx_stream->send(&(((int16_t *)buff_tx[0])[0]), nsamps, s->tx_md);
+        for (int i=0; i<cc; i++)
+          buff_ptrs.push_back(buff_tx[i]);
+
+        ret = (int)s->tx_stream->send(buff_ptrs, nsamps, s->tx_md,1e-3);
+      } else
+        ret = (int)s->tx_stream->send(buff_tx[0], nsamps, s->tx_md,1e-3);
+    } else {  /* => developnr code */
+      /*  */
+      boolean_t first_packet_state=false,last_packet_state=false;
+
+      if (flags == 2) { // start of burst
+        //      s->tx_md.start_of_burst = true;
+        //      s->tx_md.end_of_burst = false;
+        first_packet_state = true;
+        last_packet_state  = false;
+      } else if (flags == 3) { // end of burst
+        //s->tx_md.start_of_burst = false;
+        //s->tx_md.end_of_burst = true;
+        first_packet_state = false;
+        last_packet_state  = true;
+      } else if (flags == 4) { // start and end
+        //  s->tx_md.start_of_burst = true;
+        //  s->tx_md.end_of_burst = true;
+        first_packet_state = true;
+        last_packet_state  = true;
+      } else if (flags==1) { // middle of burst
+        //  s->tx_md.start_of_burst = false;
+        //  s->tx_md.end_of_burst = false;
+        first_packet_state = false;
+        last_packet_state  = false;
+      } else if (flags==10) { // fail safe mode
+        // s->tx_md.has_time_spec = false;
+        // s->tx_md.start_of_burst = false;
+        // s->tx_md.end_of_burst = true;
+        first_packet_state = false;
+        last_packet_state  = true;
+      }
+
+      s->tx_md.has_time_spec  = true;
+      s->tx_md.start_of_burst = (s->tx_count==0) ? true : first_packet_state;
+      s->tx_md.end_of_burst   = last_packet_state;
+      s->tx_md.time_spec      = uhd::time_spec_t::from_ticks(timestamp, s->sample_rate);
+      s->tx_count++;
+
+      if (cc>1) {
+        std::vector<void *> buff_ptrs;
+
+        for (int i=0; i<cc; i++)
+          buff_ptrs.push_back(&(((int16_t *)buff_tx[i])[0]));
+
+        ret = (int)s->tx_stream->send(buff_ptrs, nsamps, s->tx_md);
+      } else ret = (int)s->tx_stream->send(&(((int16_t *)buff_tx[0])[0]), nsamps, s->tx_md);
+    } /* end of developnr code */
 
     if (ret != nsamps) LOG_E(HW,"[xmit] tx samples %d != %d\n",ret,nsamps);
 

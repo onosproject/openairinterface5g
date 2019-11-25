@@ -30,12 +30,14 @@
  * \warning
  */
 
-#include "lte-softmodem.h"
+
 #include "UTIL/OPT/opt.h"
 #include "common/config/config_userapi.h"
 #include "common/utils/load_module_shlib.h"
 #include "executables/thread-common.h"
 #include <dlfcn.h>
+#include "softmodem-common.h"
+
 static softmodem_params_t softmodem_params;
 char *parallel_config=NULL;
 char *worker_config=NULL;
@@ -112,21 +114,10 @@ void get_common_options(void) {
     set_softmodem_optmask(SOFTMODEM_DOFORMS_BIT);
   }
 
-#if BASIC_SIMULATOR
-  set_softmodem_optmask(SOFTMODEM_BASICSIM_BIT);
-#endif
 
   if(parallel_config != NULL) set_parallel_conf(parallel_config);
 
   if(worker_config != NULL)   set_worker_conf(worker_config);
 }
 
-unsigned int is_nos1exec(char *exepath) {
-  if ( strcmp( basename(exepath), "lte-softmodem-nos1") == 0)
-    return 1;
 
-  if ( strcmp( basename(exepath), "lte-uesoftmodem-nos1") == 0)
-    return 1;
-
-  return 0;
-}

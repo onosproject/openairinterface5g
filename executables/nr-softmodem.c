@@ -177,8 +177,6 @@ int otg_enabled;
 uint32_t target_dl_mcs = 28; //maximum allowed mcs
 uint32_t target_ul_mcs = 20;
 uint32_t timing_advance = 0;
-uint8_t exit_missed_slots=1;
-uint64_t num_missed_slots=0; // counter for the number of missed slots
 
 
 extern void reset_opp_meas(void);
@@ -470,33 +468,9 @@ int create_gNB_tasks(uint32_t gnb_nb) {
 
 
 static void get_options(void) {
-  int tddflag, nonbiotflag;
-  uint32_t online_log_messages;
-  uint32_t glog_level, glog_verbosity;
-  uint32_t start_telnetsrv = 0;
-  uint32_t noS1;
-  uint32_t nokrnmod;
-  paramdef_t cmdline_params[] = CMDLINE_PARAMS_DESC_GNB ;
-  paramdef_t cmdline_logparams[] = CMDLINE_LOGPARAMS_DESC_NR ;
-  config_process_cmdline( cmdline_params,sizeof(cmdline_params)/sizeof(paramdef_t),NULL);
-  config_process_cmdline( cmdline_logparams,sizeof(cmdline_logparams)/sizeof(paramdef_t),NULL);
-
-  if(config_isparamset(cmdline_logparams,CMDLINE_ONLINELOG_IDX)) {
-    set_glog_onlinelog(online_log_messages);
-  }
-
-  if(config_isparamset(cmdline_logparams,CMDLINE_GLOGLEVEL_IDX)) {
-    set_glog(glog_level);
-  }
-
-  if (start_telnetsrv) {
-    load_module_shlib("telnetsrv",NULL,0,NULL);
-  }
-
-#if T_TRACER
-  paramdef_t cmdline_ttraceparams[] =CMDLINE_TTRACEPARAMS_DESC ;
-  config_process_cmdline( cmdline_ttraceparams,sizeof(cmdline_ttraceparams)/sizeof(paramdef_t),NULL);
-#endif
+  CONFIG_SETRTFLAG(CONFIG_NOEXITONHELP);
+  get_common_options();
+  CONFIG_CLEARRTFLAG(CONFIG_NOEXITONHELP);
 
   if ( !(CONFIG_ISFLAGSET(CONFIG_ABORT)) ) {
     memset((void *)&RC,0,sizeof(RC));
@@ -506,10 +480,6 @@ static void get_options(void) {
     NB_RU   = RC.nb_RU;
     printf("Configuration: nb_rrc_inst %d, nb_nr_L1_inst %d, nb_ru %d\n",NB_gNB_INST,RC.nb_nr_L1_inst,NB_RU);
   }
-
-  if(parallel_config != NULL) set_parallel_conf(parallel_config);
-
-  if(worker_config != NULL) set_worker_conf(worker_config);
 }
 
 
@@ -879,6 +849,7 @@ int main( int argc, char **argv ) {
     exit(-1);
   }
 
+  set_softmodem_optmask(SOFTMODEM_GNB_BIT);
   openair0_cfg[0].threequarter_fs = threequarter_fs;
 #if T_TRACER
   T_Config_Init();

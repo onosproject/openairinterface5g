@@ -169,8 +169,6 @@ int                      rx_input_level_dBm;
 
 static LTE_DL_FRAME_PARMS      *frame_parms[MAX_NUM_CCs];
 
-uint8_t exit_missed_slots=1;
-uint64_t num_missed_slots=0; // counter for the number of missed slots
 
 // prototypes from function implemented in lte-ue.c, probably should be elsewhere in a include file.
 extern void init_UE_stub_single_thread(int nb_inst,int eMBMS_active, int uecap_xer_in, char *emul_iface);
@@ -595,10 +593,7 @@ int main( int argc, char **argv ) {
   for (int i=0; i<MAX_NUM_CCs; i++) tx_max_power[i]=23;
 
   get_options ();
-
-  if (is_nos1exec(argv[0]) )
-    set_softmodem_optmask(SOFTMODEM_NOS1_BIT);
-
+  set_softmodem_optmask(SOFTMODEM_LTEUE_BIT); 
   EPC_MODE_ENABLED = !IS_SOFTMODEM_NOS1;
   printf("Running with %d UE instances\n",NB_UE_INST);
 

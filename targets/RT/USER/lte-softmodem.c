@@ -150,9 +150,6 @@ char channels[128] = "0";
 int rx_input_level_dBm;
 int otg_enabled;
 
-uint8_t exit_missed_slots=1;
-uint64_t num_missed_slots=0; // counter for the number of missed slots
-
 
 extern void reset_opp_meas(void);
 extern void print_opp_meas(void);
@@ -535,16 +532,13 @@ int main ( int argc, char **argv )
   printf("Reading in command-line options\n");
   get_options ();
 
-  if (is_nos1exec(argv[0]) )
-    set_softmodem_optmask(SOFTMODEM_NOS1_BIT);
-
   EPC_MODE_ENABLED = !IS_SOFTMODEM_NOS1;
 
   if (CONFIG_ISFLAGSET(CONFIG_ABORT) ) {
     fprintf(stderr,"Getting configuration failed\n");
     exit(-1);
   }
-
+  set_softmodem_optmask(SOFTMODEM_ENB_BIT); 
 #if T_TRACER
   T_Config_Init();
 #endif
