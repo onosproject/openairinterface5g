@@ -270,10 +270,6 @@ void rx_sdu_NB_IoT(module_id_t module_id, int CC_id, frame_t frame, sub_frame_t 
             case DCCH0_NB_IoT:
             case DCCH1_NB_IoT:
                 LOG_I(MAC,"DCCH PDU Here\n");
-		// trigger DL scheduler
-		if (UE_info != NULL){
-		  UE_info->direction = 1; //1 for DL scheduler
-		}
 
                 mac_rlc_data_ind(
                   module_id,
@@ -288,6 +284,10 @@ void rx_sdu_NB_IoT(module_id_t module_id, int CC_id, frame_t frame, sub_frame_t 
                   rx_lengths[i],
                   1,
                   NULL);//(unsigned int*)crc_status);
+                    // trigger DL scheduler
+    if (UE_info != NULL){
+      UE_info->direction = 1; //1 for DL scheduler
+    }
 	         // UE specific here
                 //NB_IoT_mac_rlc_data_ind(payload_ptr,mac_inst,rnti);
             
