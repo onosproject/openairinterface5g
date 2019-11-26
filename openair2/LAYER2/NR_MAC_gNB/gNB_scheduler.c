@@ -383,6 +383,10 @@ void gNB_dlsch_ulsch_scheduler(module_id_t module_idP,
     nr_schedule_uss_dlsch_phytest(module_idP, frame_txP, slot_txP,NULL);
   }
 
+  if (slot_txP==16) {
+    nr_schedule_uss_dlsch_phytest(module_idP, frame_txP, slot_txP, NULL);
+  }
+
   /*
   // Allocate CCEs for good after scheduling is done
   for (CC_id = 0; CC_id < MAX_NUM_CCs; CC_id++)

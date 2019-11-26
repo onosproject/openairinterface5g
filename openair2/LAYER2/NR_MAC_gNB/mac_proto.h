@@ -67,8 +67,8 @@ void clear_nr_nfapi_information(gNB_MAC_INST * gNB,
                                 sub_frame_t subframeP);
 
 void gNB_dlsch_ulsch_scheduler(module_id_t module_idP,
-			       frame_t frame_txP, sub_frame_t slot_txP,
-			       frame_t frame_rxP, sub_frame_t slot_rxP);
+                               frame_t frame_txP, sub_frame_t slot_txP,
+                               frame_t frame_rxP, sub_frame_t slot_rxP);
 
 void schedule_nr_mib(module_id_t module_idP, frame_t frameP, sub_frame_t subframeP);
 
@@ -77,12 +77,17 @@ void nr_schedule_css_dlsch_phytest(module_id_t   module_idP,
                                    sub_frame_t   subframeP);
 
 int configure_fapi_dl_Tx(nfapi_nr_dl_config_request_body_t *dl_req,
-		                  nfapi_tx_request_pdu_t *TX_req,
-						  nfapi_nr_config_request_t *cfg,
-						  nfapi_nr_coreset_t* coreset,
-						  nfapi_nr_search_space_t* search_space,
-						  int16_t pdu_index,
-                          nfapi_nr_dl_config_dlsch_pdu_rel15_t *dlsch_config);
+                         nfapi_tx_request_pdu_t *TX_req,
+                         nfapi_nr_config_request_t *cfg,
+                         nfapi_nr_coreset_t* coreset,
+                         nfapi_nr_search_space_t* search_space,
+                         int16_t pdu_index,
+                         nfapi_nr_dl_config_dlsch_pdu_rel15_t *dlsch_config);
+
+void nr_schedule_ul_dci(nfapi_nr_dl_config_request_body_t *dl_req,
+                        nfapi_nr_coreset_t *coreset,
+                        nfapi_nr_search_space_t *search_space,
+                        nfapi_nr_config_request_t *cfg);
 
 void nr_schedule_uss_dlsch_phytest(module_id_t   module_idP,
                                    frame_t       frameP,

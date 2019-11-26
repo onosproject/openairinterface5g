@@ -166,11 +166,11 @@ int configure_fapi_dl_Tx(nfapi_nr_dl_config_request_body_t *dl_req,
   int TBS;
   uint16_t rnti = 0x1234;
   int dl_carrier_bandwidth = cfg->rf_config.dl_carrier_bandwidth.value;
-  dl_config_dci_pdu = &dl_req->dl_config_pdu_list[dl_req->number_pdu];
+  dl_config_dci_pdu = &dl_req->dl_config_pdu_list[dl_req->number_pdu++];
   memset((void *)dl_config_dci_pdu,0,sizeof(nfapi_nr_dl_config_request_pdu_t));
   dl_config_dci_pdu->pdu_type = NFAPI_NR_DL_CONFIG_DCI_DL_PDU_TYPE;
   dl_config_dci_pdu->pdu_size = (uint8_t)(2+sizeof(nfapi_nr_dl_config_dci_dl_pdu));
-  dl_config_dlsch_pdu = &dl_req->dl_config_pdu_list[dl_req->number_pdu+1];
+  dl_config_dlsch_pdu = &dl_req->dl_config_pdu_list[dl_req->number_pdu++];
   memset((void *)dl_config_dlsch_pdu,0,sizeof(nfapi_nr_dl_config_request_pdu_t));
   dl_config_dlsch_pdu->pdu_type = NFAPI_NR_DL_CONFIG_DLSCH_PDU_TYPE;
   dl_config_dlsch_pdu->pdu_size = (uint8_t)(2+sizeof(nfapi_nr_dl_config_dlsch_pdu));
@@ -253,16 +253,48 @@ int configure_fapi_dl_Tx(nfapi_nr_dl_config_request_body_t *dl_req,
         TBS);
   dl_req->number_dci++;
   dl_req->number_pdsch_rnti++;
-  dl_req->number_pdu+=2;
+  //dl_req->number_pdu+=2;
   TX_req->pdu_length = dlsch_pdu_rel15->transport_block_size/8;
   TX_req->pdu_index = pdu_index++;
   TX_req->num_segments = 1;
   return TBS/8; //Return TBS in bytes
 }
 
+void nr_schedule_ul_dci(nfapi_nr_dl_config_request_body_t *dl_req,
+                        nfapi_nr_coreset_t *coreset,
+                        nfapi_nr_search_space_t *search_space,
+                        nfapi_nr_config_request_t *cfg) {
 
+  nfapi_nr_dl_config_request_pdu_t  *dl_config_dci_pdu;
+  dl_config_dci_pdu = &dl_req->dl_config_pdu_list[dl_req->number_pdu++];
+  memset((void *)dl_config_dci_pdu,0,sizeof(nfapi_nr_dl_config_request_pdu_t));
+  nfapi_nr_dl_config_dci_dl_pdu_rel15_t *pdu_rel15 = &dl_config_dci_pdu->dci_dl_pdu.dci_dl_pdu_rel15;
+  int dl_carrier_bandwidth = cfg->rf_config.dl_carrier_bandwidth.value;
+  nfapi_nr_dl_config_pdcch_parameters_rel15_t *params_rel15 = &dl_config_dci_pdu->dci_dl_pdu.pdcch_params_rel15;
+  uint16_t rnti = 0x1234;
 
+  pdu_rel15->format_indicator = 0;
+  pdu_rel15->frequency_domain_assignment = get_RIV(0, 50, cfg->rf_config.dl_carrier_bandwidth.value);
+  pdu_rel15->time_domain_assignment = 4;
+  pdu_rel15->frequency_hopping_flag = 0;
+  pdu_rel15->mcs = 9;
+  pdu_rel15->ndi = 0;
+  pdu_rel15->rv = 0;
+  pdu_rel15->harq_pid = 0;
+  pdu_rel15->tpc = 2;
+  pdu_rel15->padding = 0;
+  pdu_rel15->ul_sul_indicator = 0;
 
+  nr_configure_dci_from_pdcch_config(params_rel15,
+                                     coreset,
+                                     search_space,
+                                     *cfg,
+                                     dl_carrier_bandwidth);
+  params_rel15->rnti = rnti;
+  params_rel15->rnti_type = NFAPI_NR_RNTI_C;
+  params_rel15->dci_format = NFAPI_NR_UL_DCI_FORMAT_0_0;
+  dl_req->number_dci++;
+}
 
 
 
@@ -410,6 +442,7 @@ void nr_schedule_uss_dlsch_phytest(module_id_t   module_idP,
         }
 
         TBS_bytes = configure_fapi_dl_Tx(dl_req, TX_req, cfg, &nr_mac->coreset[CC_id][1], &nr_mac->search_space[CC_id][1], nr_mac->pdu_index[CC_id], dlsch_config);
+        nr_schedule_ul_dci(dl_req, &nr_mac->coreset[CC_id][1], &nr_mac->search_space[CC_id][1], cfg);
 #if defined(ENABLE_MAC_PAYLOAD_DEBUG)
         LOG_I(MAC, "Printing first 10 payload bytes at the gNB side, Frame: %d, slot: %d, , TBS size: %d \n \n", frameP, slotP, TBS_bytes);
 
@@ -431,6 +464,7 @@ void nr_schedule_uss_dlsch_phytest(module_id_t   module_idP,
     //occur every time that the current function is called (dlsch phytest mode)
     else {
       TBS_bytes = configure_fapi_dl_Tx(dl_req, TX_req, cfg, &nr_mac->coreset[CC_id][1], &nr_mac->search_space[CC_id][1], nr_mac->pdu_index[CC_id], dlsch_config);
+        nr_schedule_ul_dci(dl_req, &nr_mac->coreset[CC_id][1], &nr_mac->search_space[CC_id][1], cfg);
 
       for(int i = 0; i < TBS_bytes; i++) { //
         ((uint8_t *)nr_mac->UE_list.DLSCH_pdu[CC_id][0][0].payload[0])[i] = (unsigned char) rand();
@@ -527,7 +561,7 @@ void nr_schedule_uss_ulsch_phytest(nfapi_nr_ul_tti_request_t *UL_tti_req,
     pusch_pdu->uplink_frequency_shift_7p5khz = 0;
     //Resource Allocation in time domain
     pusch_pdu->start_symbol_index = 2;
-    pusch_pdu->nr_of_symbols = 12;
+    pusch_pdu->nr_of_symbols = 10;
     //Optional Data only included if indicated in pduBitmap
     pusch_pdu->pusch_data.rv_index = 0;
     pusch_pdu->pusch_data.harq_process_id = 0;
