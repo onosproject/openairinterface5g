@@ -67,7 +67,6 @@ int last_ulsch_ue_id[MAX_NUM_CCs] = {-1};
   eNB_UE_STATS pre_scd_eNB_UE_stats[MAX_NUM_CCs][NUMBER_OF_UE_MAX];
 #endif
 
-#define	TPC_ADJUSTMENT_STEP	1
 #define DEBUG_eNB_SCHEDULER 1
 #define DEBUG_HEADER_PARSING 1
 //#define DEBUG_PACKET_TRACE 1
@@ -2339,10 +2338,10 @@ schedule_ue_spec_fairRR(module_id_t module_idP,
               UE_list->UE_template[CC_id][UE_id].pucch_tpc_tx_frame=frameP;
               UE_list->UE_template[CC_id][UE_id].pucch_tpc_tx_subframe=subframeP;
 
-              if (snr > target_snr + TPC_ADJUSTMENT_STEP) {
+              if (snr > target_snr + 4) {
                 tpc = 0; //-1
                 tpc_accumulated--;
-              } else if (snr < target_snr - TPC_ADJUSTMENT_STEP) {
+              } else if (snr < target_snr - 4) {
                 tpc = 2; //+1
                 tpc_accumulated++;
               } else {
