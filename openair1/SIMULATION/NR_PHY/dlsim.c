@@ -469,7 +469,7 @@ int main(int argc, char **argv)
     fs = 122.88e6;
     bw = 90e6;
   }
-  else if (mu == 1 && N_RB_DL == 273) {
+  else if (mu == 1 && N_RB_DL == 272) {
     fs = 122.88e6;
     bw = 100e6;
   }
