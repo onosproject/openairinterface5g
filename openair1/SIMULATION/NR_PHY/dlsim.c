@@ -422,8 +422,8 @@ int main(int argc, char **argv)
       printf("-o CORESET offset\n");
       printf("-a Start PRB for PDSCH\n");
       printf("-b Number of PRB for PDSCH\n");
-      printf("-c Start symbol for PDSCH (fixed for now)\n");
-      printf("-j Number of symbols for PDSCH (fixed for now)\n");
+//    printf("-c Start symbol for PDSCH (2 or 1)\n");
+      printf("-j Number of symbols for PDSCH (9 or 13)\n");
       printf("-e MSC index\n");
       exit (-1);
       break;
