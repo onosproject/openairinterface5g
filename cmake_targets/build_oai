@@ -69,6 +69,7 @@ UE_AUTOTEST_TRACE="False"
 UE_DEBUG_TRACE="False"
 UE_TIMING_TRACE="False"
 USRP_REC_PLAY="False"
+PHYSIM="False"
 BUILD_ECLIPSE=0
 OPTIONAL_LIBRARIES="telnetsrv enbscope uescope msc"
 trap handle_ctrl_c INT
@@ -246,6 +247,7 @@ function main() {
             shift 2;;
        --phy_simulators)
             SIMUS_PHY=1
+            PHYSIM="True"
             echo_info "Will compile dlsim, ulsim, ..."
             shift;;
        --core_simulators)
@@ -501,7 +503,7 @@ function main() {
     echo "set ( UE_EXPANSION $UE_EXPANSION )"      >>  $cmake_file
     echo "set ( PHY_RM $PHY_RM )"      >>  $cmake_file
     echo "set ( UDP_1MS $UDP_1MS )"    >>  $cmake_file
-#    echo "set ( PHY_TX_THREAD $UE_EXPANSION )"     >>  $cmake_file
+    echo "set ( PHYSIM $PHYSIM )"     >>  $cmake_file
     echo "set ( PRE_SCD_THREAD $UE_EXPANSION )"    >>  $cmake_file
     echo "set ( UESIM_EXPANSION $UESIM_EXPANSION )"      >>  $cmake_file
     echo "set ( RRC_ASN1_VERSION \"${REL}\")"      >>  $cmake_file

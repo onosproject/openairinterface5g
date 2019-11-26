@@ -900,6 +900,7 @@ void schedule_response(Sched_Rsp_t *Sched_INFO) {
         if (1) { //sdu != NULL)
             if (NFAPI_MODE!=NFAPI_MODE_VNF) {
               if (sdu != NULL) {
+#ifdef PHYSIM
                 LTE_eNB_PDCCH *pdcch_vars       = &eNB->pdcch_vars[NFAPI_SFNSF2SF(DL_req->sfn_sf)&1];
                 uint8_t harq_pid_dl = 0;
                 uint8_t k;
@@ -921,6 +922,24 @@ void schedule_response(Sched_Rsp_t *Sched_INFO) {
                     LOG_E(PHY, "schedule_response illegal harq_pid %d\n", harq_pid_dl);
                   }
                 }
+#else
+                LTE_TDD_Config_t *tdd_Config = NULL;
+
+                if (fp->frame_type == TDD) {
+                  tdd_Config = CALLOC(1,sizeof(struct LTE_TDD_Config));
+                  tdd_Config->subframeAssignment = fp->tdd_config;
+                  tdd_Config->specialSubframePatterns = fp->tdd_config_S;
+                }
+
+                uint8_t harq_pid_dl = frame_subframe2_dl_harq_pid(tdd_Config, NFAPI_SFNSF2SFN(DL_req->sfn_sf), NFAPI_SFNSF2SF(DL_req->sfn_sf));
+                if (harq_pid_dl >=0 && harq_pid_dl < 8) {
+                  memset(dl_pdus[harq_pid_dl][i], 0, sizeof(uint8_t)*9422);
+                  memcpy(dl_pdus[harq_pid_dl][i], TX_req->tx_request_body.tx_pdu_list[pdu_index].segments[0].segment_data, TX_req->tx_request_body.tx_pdu_list[pdu_index].segments[0].segment_length);
+                  handle_nfapi_dlsch_pdu(eNB,NFAPI_SFNSF2SFN(DL_req->sfn_sf),NFAPI_SFNSF2SF(DL_req->sfn_sf),proc,dl_config_pdu, dlsch_pdu_rel8->transport_blocks-1, dl_pdus[harq_pid_dl][i]);
+                } else {
+                  LOG_E(PHY, "schedule_response illegal harq_pid %d\n", harq_pid_dl);
+                }
+#endif
               } else {
                 handle_nfapi_dlsch_pdu(eNB,NFAPI_SFNSF2SFN(DL_req->sfn_sf),NFAPI_SFNSF2SF(DL_req->sfn_sf),proc,dl_config_pdu, dlsch_pdu_rel8->transport_blocks-1, sdu);
               }
