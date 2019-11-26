@@ -74,6 +74,10 @@ int nr_phy_init_RU(RU_t *ru) {
     }
   
 
+    // allocate precoding input buffers (TX)
+    ru->common.txdataF = (int32_t **)malloc16(15*sizeof(int32_t*));
+    for(i=0; i< 15; ++i)  ru->common.txdataF[i] = (int32_t*)malloc16_clear(fp->samples_per_frame_wCP*sizeof(int32_t)); // [hna] samples_per_frame without CP
+
     // allocate IFFT input buffers (TX)
     ru->common.txdataF_BF = (int32_t **)malloc16(ru->nb_tx*sizeof(int32_t*));
     LOG_I(PHY,"[INIT] common.txdata_BF= %p (%lu bytes)\n",ru->common.txdataF_BF,
@@ -157,6 +161,10 @@ void nr_phy_free_RU(RU_t *ru)
   if (ru->function != NGFI_RRU_IF5) { // we need to do RX/TX RU processing
     for (i = 0; i < ru->nb_rx; i++) free_and_zero(ru->common.rxdata_7_5kHz[i]);
     free_and_zero(ru->common.rxdata_7_5kHz);
+
+    // free beamforming input buffers (TX)
+    for (i = 0; i < 15; i++) free_and_zero(ru->common.txdataF[i]);
+    free_and_zero(ru->common.txdataF);
 
     // free IFFT input buffers (TX)
     for (i = 0; i < ru->nb_tx; i++) free_and_zero(ru->common.txdataF_BF[i]);
