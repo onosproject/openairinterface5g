@@ -38,7 +38,7 @@
 #include "common/utils/LOG/log.h"
 #include "openair2/LAYER2/MAC/mac.h"
 
-#define DEBUG_MIB
+//#define DEBUG_MIB
 
 #include <stdio.h>
 #include <math.h>

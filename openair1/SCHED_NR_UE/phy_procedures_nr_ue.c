@@ -4142,7 +4142,7 @@ int phy_procedures_nrUE_RX(PHY_VARS_NR_UE *ue,
   uint16_t nb_symb_sch = dlsch0_harq->nb_symbols;
   uint16_t start_symb_sch = dlsch0_harq->start_symbol;
   uint8_t nb_symb_pdcch = pdcch_vars->coreset[0].duration;
-  uint8_t ssb_periodicity = 10;// ue->ssb_periodicity; // initialized to 5ms in nr_init_ue for scenarios where UE is not configured (otherwise acquired by cell configuration from gNB or LTE)
+  uint8_t ssb_periodicity = 20;// ue->ssb_periodicity; // initialized to 5ms in nr_init_ue for scenarios where UE is not configured (otherwise acquired by cell configuration from gNB or LTE)
   uint8_t dci_cnt = 0;
   fapi_nr_pbch_config_t *pbch_config = &ue->nrUE_config.pbch_config;
   

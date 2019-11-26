@@ -297,6 +297,9 @@ int8_t nr_ue_process_spcell_config(NR_SpCellConfig_t *spcell_config){
     return 0;
 }
 
+// this is a local variable that holds a fake MIB to workaround the problem with Runel
+NR_MIB_t mib_runel;
+
 /*brief decode BCCH-BCH (MIB) message*/
 int8_t nr_rrc_ue_decode_NR_BCCH_BCH_Message(
     const module_id_t module_id,
@@ -333,10 +336,26 @@ int8_t nr_rrc_ue_decode_NR_BCCH_BCH_Message(
       return -1;
     }
     else if (bcch_message->message.present != NR_BCCH_BCH_MessageType_PR_mib) {
-      printf("NR_BCCH_BCH message type is not MIB\n");
-      mib = NULL;
+      printf("NR_BCCH_BCH message type is not MIB, using dummy MIB\n");
       SEQUENCE_free( &asn_DEF_NR_BCCH_BCH_Message, (void *)bcch_message, 1 );
-      return -1;
+
+      if (mib_runel.systemFrameNumber.buf==NULL) { 
+	uint8_t sfn_msb = 0;
+	mib_runel.systemFrameNumber.buf = CALLOC(1,sizeof(uint8_t));
+	mib_runel.systemFrameNumber.buf[0] = sfn_msb << 2;
+	mib_runel.systemFrameNumber.size = 1;
+	mib_runel.systemFrameNumber.bits_unused=2;
+      }
+      mib_runel.subCarrierSpacingCommon = 1;
+      mib_runel.ssb_SubcarrierOffset = 0;
+      mib_runel.dmrs_TypeA_Position = 0;
+      mib_runel.pdcch_ConfigSIB1.controlResourceSetZero = 0;
+      mib_runel.pdcch_ConfigSIB1.searchSpaceZero = 0;
+      mib_runel.cellBarred = 1;
+      mib_runel.intraFreqReselection = 1;
+      
+      mib = &mib_runel;
+      nr_rrc_mac_config_req_ue( 0, 0, 0, mib, NULL, NULL, NULL);
     }
     else {
       //  link to rrc instance
