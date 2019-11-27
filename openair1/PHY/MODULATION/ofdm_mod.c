@@ -86,8 +86,6 @@ void PHY_ofdm_mod(int *input,                       /// pointer to complex input
                  )
 {
 
-  if(nb_symbols == 0) return;
-
   short temp[4096*4] __attribute__((aligned(32)));
   unsigned short i,j;
   short k;
