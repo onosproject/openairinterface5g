@@ -1,6 +1,10 @@
 #ifndef SOFTMODEM_COMMON_H
 #define SOFTMODEM_COMMON_H
 #include "PHY/defs_common.h"
+#ifdef __cplusplus
+extern "C"
+{
+#endif
 /* help strings definition for command line options, used in CMDLINE_XXX_DESC macros and printed when -h option is used */
 #define CONFIG_HLP_RFCFGF        "Configuration file for front-end (e.g. LMS7002M)\n"
 #define CONFIG_HLP_ULMAXE        "set the eNodeB max ULSCH erros\n"
@@ -189,5 +193,7 @@ extern uint64_t set_softmodem_optmask(uint64_t bitmask);
 extern softmodem_params_t *get_softmodem_params(void);
 extern void get_common_options(void);
 extern uint32_t downlink_frequency[MAX_NUM_CCs][4];
-
+#ifdef __cplusplus
+}
+#endif
 #endif

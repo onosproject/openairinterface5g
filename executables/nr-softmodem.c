@@ -842,7 +842,6 @@ int main( int argc, char **argv ) {
   configure_linux();
   printf("Reading in command-line options\n");
   get_options ();
-  get_common_options();
 
   if (CONFIG_ISFLAGSET(CONFIG_ABORT) ) {
     fprintf(stderr,"Getting configuration failed\n");
