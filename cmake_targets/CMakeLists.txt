@@ -1063,10 +1063,11 @@ add_dependencies(SCHED_LIB rrc_flag)
 # Physical Channel Procedures Scheduling for NB-IoT
 ################################"
 set(SCHED_SRC_NB_IoT
-  #${OPENAIR1_DIR}/SCHED_NBIOT/fapi_l1.c
+# ${OPENAIR1_DIR}/SCHED_NBIOT/fapi_l1.c
   ${OPENAIR1_DIR}/SCHED_NBIOT/phy_procedures_lte_eNb_NB_IoT.c
   ${OPENAIR1_DIR}/SCHED_NBIOT/IF_Module_L1_primitives_NB_IoT.c
-  #${OPENAIR1_DIR}/SCHED/phy_procedures_lte_common.c
+  ${OPENAIR1_DIR}/SCHED_NBIOT/phy_procedures_lte_common_NB_IoT.c
+# ${OPENAIR1_DIR}/SCHED/phy_procedures_lte_common.c
 )
 add_library(SCHED_NB_IoT_LIB ${SCHED_SRC_NB_IoT})
 add_dependencies(SCHED_NB_IoT_LIB rrc_flag)
@@ -1157,17 +1158,6 @@ set(PHY_TURBOIF
 
 add_library(coding MODULE ${PHY_TURBOSRC} )
 set(PHY_SRC_COMMON
-  ${OPENAIR1_DIR}/PHY/NBIoT_TRANSPORT/SIB_NB_IoT.c
-  ${OPENAIR1_DIR}/PHY/NBIoT_TRANSPORT/dci_NB_IoT.c
-  ${OPENAIR1_DIR}/PHY/NBIoT_TRANSPORT/dlsch_coding_NB_IoT.c
-  ${OPENAIR1_DIR}/PHY/NBIoT_TRANSPORT/dlsch_modulation_NB_IoT.c
-  ${OPENAIR1_DIR}/PHY/NBIoT_TRANSPORT/dlsch_scrambling_NB_IoT.c
-  ${OPENAIR1_DIR}/PHY/NBIoT_TRANSPORT/lte_mcs_NB_IoT.c
-  ${OPENAIR1_DIR}/PHY/NBIoT_TRANSPORT/ulsch_demodulation_NB_IoT.c
-  ${OPENAIR1_DIR}/PHY/NBIoT_TRANSPORT/lte_Isc_NB_IoT.c
-  ${OPENAIR1_DIR}/PHY/NBIoT_TRANSPORT/nprach_NB_IoT.c
-  ${OPENAIR1_DIR}/PHY/NBIoT_ESTIMATION/lte_ul_channel_estimation_NB_IoT.c
-  ${OPENAIR1_DIR}/PHY/CODING/lte_segmentation_NB_IoT.c
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/dci_tools_common.c
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/lte_mcs.c
 #  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/slss.c
@@ -1187,16 +1177,24 @@ set(PHY_SRC_COMMON
   ${OPENAIR1_DIR}/PHY/MODULATION/ofdm_mod.c
   ${OPENAIR1_DIR}/PHY/LTE_ESTIMATION/lte_sync_time.c
   ${OPENAIR1_DIR}/PHY/LTE_REFSIG/lte_dl_cell_spec.c
+  ${OPENAIR1_DIR}/PHY/LTE_REFSIG/lte_dl_cell_spec_NB_IoT.c
   ${OPENAIR1_DIR}/PHY/LTE_REFSIG/lte_dl_uespec.c
   ${OPENAIR1_DIR}/PHY/LTE_REFSIG/lte_gold.c
   ${OPENAIR1_DIR}/PHY/LTE_REFSIG/lte_gold_mbsfn.c
   ${OPENAIR1_DIR}/PHY/LTE_REFSIG/lte_dl_mbsfn.c
   ${OPENAIR1_DIR}/PHY/LTE_REFSIG/lte_ul_ref.c
+  ${OPENAIR1_DIR}/PHY/LTE_REFSIG/lte_ul_ref_NB_IoT.c
+  ${OPENAIR1_DIR}/PHY/LTE_REFSIG/lte_gold_NB_IoT.c
   ${OPENAIR1_DIR}/PHY/CODING/lte_segmentation.c
   ${OPENAIR1_DIR}/PHY/CODING/ccoding_byte.c
   ${OPENAIR1_DIR}/PHY/CODING/ccoding_byte_lte.c
-  ${OPENAIR1_DIR}/PHY/CODING/3gpplte_sse.c
+  ${OPENAIR1_DIR}/PHY/CODING/ccoding_byte_NB_IoT.c
+  ${OPENAIR1_DIR}/PHY/CODING/lte_rate_matching_NB_IoT.c 
   ${OPENAIR1_DIR}/PHY/CODING/crc_byte.c
+  ${OPENAIR1_DIR}/PHY/CODING/crc_byte_NB_IoT.c
+  ${OPENAIR1_DIR}/PHY/CODING/3gpplte_sse.c
+  ${OPENAIR1_DIR}/PHY/CODING/3gpplte_turbo_decoder_sse_16bit.c
+  ${OPENAIR1_DIR}/PHY/CODING/3gpplte.c
   ${PHY_TURBOIF}
   ${OPENAIR1_DIR}/PHY/CODING/lte_rate_matching.c
   ${OPENAIR1_DIR}/PHY/CODING/viterbi.c
@@ -1218,6 +1216,22 @@ set(PHY_SRC_COMMON
   )
 
 set(PHY_SRC
+  ${OPENAIR1_DIR}/PHY/NBIoT_TRANSPORT/SIB_NB_IoT.c
+  ${OPENAIR1_DIR}/PHY/NBIoT_TRANSPORT/dci_NB_IoT.c
+  ${OPENAIR1_DIR}/PHY/NBIoT_TRANSPORT/dlsch_coding_NB_IoT.c
+  ${OPENAIR1_DIR}/PHY/NBIoT_TRANSPORT/dlsch_modulation_NB_IoT.c
+  ${OPENAIR1_DIR}/PHY/NBIoT_TRANSPORT/dlsch_scrambling_NB_IoT.c
+  ${OPENAIR1_DIR}/PHY/NBIoT_TRANSPORT/lte_mcs_NB_IoT.c
+  ${OPENAIR1_DIR}/PHY/NBIoT_TRANSPORT/ulsch_demodulation_NB_IoT.c
+  ${OPENAIR1_DIR}/PHY/NBIoT_TRANSPORT/lte_Isc_NB_IoT.c
+  ${OPENAIR1_DIR}/PHY/NBIoT_TRANSPORT/nprach_NB_IoT.c
+  ${OPENAIR1_DIR}/PHY/NBIoT_TRANSPORT/nsss_NB_IoT.c
+  ${OPENAIR1_DIR}/PHY/NBIoT_TRANSPORT/npbch_NB_IoT.c
+  ${OPENAIR1_DIR}/PHY/NBIoT_TRANSPORT/pilots_NB_IoT.c
+  ${OPENAIR1_DIR}/PHY/NBIoT_TRANSPORT/npss_NB_IoT.c
+  ${OPENAIR1_DIR}/PHY/NBIoT_TRANSPORT/dci_tools_NB_IoT.c
+  ${OPENAIR1_DIR}/PHY/NBIoT_ESTIMATION/lte_ul_channel_estimation_NB_IoT.c
+  ${OPENAIR1_DIR}/PHY/CODING/lte_segmentation_NB_IoT.c
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/pss.c
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/sss.c
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/sss_gen.c
@@ -2125,7 +2139,7 @@ add_dependencies(lte-softmodem rrc_flag s1ap_flag x2_flag)
 
 target_link_libraries (lte-softmodem
   -Wl,--start-group
-  RRC_LIB S1AP_LIB S1AP_ENB F1AP_LIB F1AP X2AP_LIB X2AP_ENB GTPV1U SECU_CN SECU_OSA UTIL HASHTABLE SCTP_CLIENT UDP SCHED_LIB SCHED_RU_LIB PHY_COMMON PHY PHY_RU LFDS L2
+  RRC_LIB S1AP_LIB S1AP_ENB F1AP_LIB F1AP X2AP_LIB X2AP_ENB GTPV1U SECU_CN SECU_OSA UTIL HASHTABLE SCTP_CLIENT UDP SCHED_NB_IoT_LIB SCHED_LIB SCHED_RU_LIB PHY PHY_COMMON PHY_RU LFDS L2
   ${MSC_LIB} ${RAL_LIB} ${NAS_UE_LIB} ${ITTI_LIB} ${FLPT_MSG_LIB} ${ASYNC_IF_LIB} ${FLEXRAN_AGENT_LIB} ${FSPT_MSG_LIB} ${PROTO_AGENT_LIB} LFDS7
   NFAPI_COMMON_LIB NFAPI_LIB NFAPI_VNF_LIB NFAPI_PNF_LIB NFAPI_USER_LIB
   -Wl,--end-group z dl)

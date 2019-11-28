@@ -33,8 +33,9 @@
 //#include "PHY/defs.h"
 //#include "PHY/extern.h"
 #include "PHY/impl_defs_lte_NB_IoT.h"
-#include "PHY/NBIoT_TRANSPORT/proto_NB_IoT.h"
+#include "proto_NB_IoT.h"
 #include "PHY/NBIoT_TRANSPORT/extern_NB_IoT.h"
+#include "vars_NB_IoT.h"
 
 
 uint8_t get_Qm_UL_NB_IoT(unsigned char I_mcs, uint8_t N_sc_RU, uint8_t I_sc, uint8_t Msg3_flag)

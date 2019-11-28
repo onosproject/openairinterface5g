@@ -32,8 +32,9 @@
 
 #include "PHY/defs_eNB.h"
 #include "PHY/defs_L1_NB_IoT.h"
-#include "PHY/extern.h"
-#include "PHY/LTE_ESTIMATION/defs_NB_IoT.h"
+#include "PHY/phy_extern.h"
+#include "PHY/defs_common.h"
+#include "PHY/NBIoT_ESTIMATION/defs_NB_IoT.h"
 #include "PHY/NBIoT_TRANSPORT/defs_NB_IoT.h"
 #include "PHY/NBIoT_TRANSPORT/proto_NB_IoT.h"
 //#include "PHY/extern_NB_IoT.h" //where we get the global Sched_Rsp_t structure filled
@@ -45,10 +46,10 @@
 #include "SCHED_NBIOT/defs_NB_IoT.h"
 #include "openair2/RRC/NBIOT/proto_NB_IoT.h"
 #include "openair2/RRC/NBIOT/extern_NB_IoT.h"
-#include "RRC/LITE/MESSAGES/asn1_msg_NB_IoT.h"
+//#include "RRC/LITE/MESSAGES/asn1_msg_NB_IoT.h"
 
-#include "UTIL/LOG/log.h"
-#include "UTIL/LOG/vcd_signal_dumper.h"
+//#include "UTIL/LOG/log.h"
+//#include "UTIL/LOG/vcd_signal_dumper.h"
 
 #include "T.h"
 
@@ -430,7 +431,7 @@ void phy_procedures_eNB_uespec_RX_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_
 
 // the function called by l1 IF-Module 
 
-void generate_eNB_dlsch_params_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_NB_IOT_t * proc,nfapi_dl_config_request_pdu_t *dl_config_pdu) 
+void generate_eNB_dlsch_params_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_NB_IoT_t * proc,nfapi_dl_config_request_pdu_t *dl_config_pdu)
 {
   int                      UE_id         =  -1;
   NB_IoT_DL_FRAME_PARMS    *fp           =  &eNB->frame_parms_NB_IoT;
@@ -852,7 +853,7 @@ void npdsch_procedures(PHY_VARS_eNB_NB_IoT      *eNB,
 }
 
 
-extern int oai_exit;
+extern volatile int oai_exit;
 
 /*
  * ASSUMPTION
@@ -1116,6 +1117,7 @@ void phy_procedures_eNB_TX_NB_IoT(PHY_VARS_eNB_NB_IoT     *eNB,
       //this should give only 1 result (since only 1 ndlsch procedure is activated at once) so we brak after the transmission
       for (UE_id = 0; UE_id < NUMBER_OF_UE_MAX_NB_IoT; UE_id++)
       {
+
         if(eNB->ndlsch[(uint8_t)UE_id] != NULL && eNB->ndlsch[(uint8_t)UE_id]->active == 1 && (eNB->ndlsch_SIB1->harq_process->status != ACTIVE_NB_IoT || subframe != 4)) //condition on sib1-NB
         {
           if(frame%2 == 0)//condition on NSSS (subframe 9 not available)
@@ -1229,7 +1231,7 @@ void phy_procedures_eNB_TX_NB_IoT(PHY_VARS_eNB_NB_IoT     *eNB,
 
 }
 
-uint32_t rx_nprach_NB_IoT(PHY_VARS_eNB *eNB, int frame, uint8_t subframe, uint16_t *rnti, uint16_t *preamble_index, uint16_t *timing_advance) {
+uint32_t rx_nprach_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB, int frame, uint8_t subframe, uint16_t *rnti, uint16_t *preamble_index, uint16_t *timing_advance) {
 
   uint32_t estimated_TA; 
   //int frame,frame_mod;    // subframe,
@@ -1242,8 +1244,7 @@ uint32_t rx_nprach_NB_IoT(PHY_VARS_eNB *eNB, int frame, uint8_t subframe, uint16
 }
 
 
-void fill_crc_indication_NB_IoT(PHY_VARS_eNB *eNB,int UE_id,int frame,int subframe,uint8_t decode_flag) {
-
+void fill_crc_indication_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,int UE_id,int frame,int subframe,uint8_t decode_flag) {
 
   pthread_mutex_lock(&eNB->UL_INFO_mutex);
   
@@ -1275,7 +1276,7 @@ void fill_crc_indication_NB_IoT(PHY_VARS_eNB *eNB,int UE_id,int frame,int subfra
   pthread_mutex_unlock(&eNB->UL_INFO_mutex);
 }
 
-void fill_rx_indication_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,uint8_t data_or_control, uint8_t decode_flag)
+void fill_rx_indication_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_NB_IoT_t *proc,uint8_t data_or_control, uint8_t decode_flag)
 {
       nfapi_rx_indication_pdu_t *pdu;
       nfapi_nb_harq_indication_pdu_t *ack_ind; // &eNB->UL_INFO.nb_harq_ind.nb_harq_indication_body.nb_harq_pdu_list[0] // nb_harq_indication_fdd_rel13->harq_tb1
@@ -1347,7 +1348,7 @@ void fill_rx_indication_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,uint8_t d
 }
 
 
-void prach_procedures_NB_IoT(PHY_VARS_eNB *eNB) {
+void prach_procedures_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB) {
  // LTE_DL_FRAME_PARMS *fp=&eNB->frame_parms;
  // uint16_t preamble_energy_list[64],preamble_delay_list[64];
  // uint16_t preamble_max,preamble_energy_max;

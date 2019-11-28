@@ -40,7 +40,7 @@ extern int number_of_cards;
 
 
 #ifndef OCP_FRAMEWORK
-//extern PHY_VARS_eNB ***PHY_vars_eNB_g;
+extern PHY_VARS_eNB ***PHY_vars_eNB_g;
 extern RAN_CONTEXT_t RC;
 extern LTE_DL_FRAME_PARMS *lte_frame_parms_g;
 #else

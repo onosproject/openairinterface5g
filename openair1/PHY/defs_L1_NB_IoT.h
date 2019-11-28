@@ -103,6 +103,7 @@
 
 #define NB_BANDS_MAX_NB_IoT 8
 
+#define bzero(s,n) (memset((s),0,(n)))
 
 #ifdef OCP_FRAMEWORK
 #include <enums.h>
@@ -729,7 +730,7 @@ typedef struct PHY_VARS_eNB_NB_IoT_s {
   //TODO: check what should be NUMBER_OF_UE_MAX_NB_IoT value
   NB_IoT_eNB_NPBCH_t        *npbch;
   NB_IoT_eNB_NPDCCH_t       *npdcch[NUMBER_OF_UE_MAX_NB_IoT];
-  NB_IoT_eNB_NDLSCH_t       *ndlsch[NUMBER_OF_UE_MAX_NB_IoT][2];
+  NB_IoT_eNB_NDLSCH_t       *ndlsch[NUMBER_OF_UE_MAX_NB_IoT];
   NB_IoT_eNB_NULSCH_t       *ulsch_NB_IoT[NUMBER_OF_UE_MAX_NB_IoT+1]; //nulsch[0] contains the RAR
   NB_IoT_eNB_NDLSCH_t       *ndlsch_SI,*ndlsch_ra, *ndlsch_SIB1;
 

@@ -768,6 +768,8 @@ static void *eNB_thread_prach( void *param ) {
 #endif
                     );
 
+    prach_procedures_NB_IoT(eNB);
+
     if (release_thread(&proc->mutex_prach,&proc->instance_cnt_prach,"eNB_prach_thread") < 0) break;
   }
 

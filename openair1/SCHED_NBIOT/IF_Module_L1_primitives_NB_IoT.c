@@ -41,7 +41,7 @@
 //#include "PHY/extern.h"
 #include "PHY/extern_NB_IoT.h"
 #include "PHY/phy_extern.h"
-
+#include "PHY/defs_eNB.h"
 //#include "PHY/vars.h"
 
 #include "PHY/INIT/defs_NB_IoT.h"
@@ -281,8 +281,8 @@ void schedule_response_NB_IoT(Sched_Rsp_NB_IoT_t *Sched_INFO)
 {
   //LOG_I(PHY,"schedule_response_NB_IoT\n");
   //XXX check if correct to take eNB like this
-  PHY_VARS_eNB 		*eNB     = PHY_vars_eNB_g[0][Sched_INFO->CC_id];
-  eNB_rxtx_proc_t 	*proc 	 = &eNB->proc.proc_rxtx[0];
+  PHY_VARS_eNB_NB_IoT 		*eNB     = PHY_vars_eNB_NB_IoT_g[0][Sched_INFO->CC_id];
+  eNB_rxtx_proc_NB_IoT_t 	*proc 	 = &eNB->proc.proc_rxtx[0];
   NB_IoT_eNB_NPBCH_t 		*npbch;
   ///
   int 						i;
@@ -328,10 +328,10 @@ void schedule_response_NB_IoT(Sched_Rsp_NB_IoT_t *Sched_INFO)
 	  }
 
 	  /*clear the DCI allocation maps for new subframe*/
-	  if(eNB->nulsch[i])
+	  if(eNB->ulsch_NB_IoT[i])
 	  {
-		  eNB->nulsch[i]->harq_process->dci_alloc = 0; //flag for indicating that a DCI has been allocated for UL
-		  eNB->nulsch[i]->harq_process->rar_alloc = 0; //Flag indicating that this ULSCH has been allocated by a RAR (for Msg3)
+		  eNB->ulsch_NB_IoT[i]->harq_process->dci_alloc = 0; //flag for indicating that a DCI has been allocated for UL
+		  eNB->ulsch_NB_IoT[i]->harq_process->rar_alloc = 0; //Flag indicating that this ULSCH has been allocated by a RAR (for Msg3)
 		  //no phich for NB-IoT so no DMRS should be utilized
 	  }
 
@@ -536,7 +536,6 @@ void PHY_config_req_NB_IoT(PHY_Config_NB_IoT_t* config_INFO){
 
 		//MIB-NB configuration
 		phy_config_mib_eNB_NB_IoT(config_INFO->mod_id,
-								  config_INFO->CC_id,
 							  	  config_INFO->cfg->nfapi_config.rf_bands.rf_band[0],//eutraband
 							  	  config_INFO->cfg->sch_config.physical_cell_id.value,
 							      config_INFO->cfg->subframe_config.dl_cyclic_prefix_type.value,
@@ -554,7 +553,6 @@ void PHY_config_req_NB_IoT(PHY_Config_NB_IoT_t* config_INFO){
 	{
 		//Common Configuration included in SIB2-NB
 		phy_config_sib2_eNB_NB_IoT(config_INFO->mod_id,
-								   config_INFO->CC_id,
 						       	   &config_INFO->cfg->nb_iot_config, // FIXME to be evaluated is should be passed a pointer
 						       	   &config_INFO->cfg->rf_config,
 							   	   &config_INFO->cfg->uplink_reference_signal_config,

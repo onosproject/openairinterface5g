@@ -32,8 +32,8 @@
  * \note
  * \warning
  */
-#ifndef __LTE_TRANSPORT_PROTO_NB_IOT__H__
-#define __LTE_TRANSPORT_PROTO_NB_IOT__H__
+#ifndef __NBIOT_TRANSPORT_PROTO__H__
+#define __NBIOT_TRANSPORT_PROTO__H__
 
 #include "PHY/defs_L1_NB_IoT.h"
 #include "PHY/impl_defs_lte.h"
