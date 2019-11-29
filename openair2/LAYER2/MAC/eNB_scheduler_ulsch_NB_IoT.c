@@ -264,8 +264,6 @@ void rx_sdu_NB_IoT(module_id_t module_id, int CC_id, frame_t frame, sub_frame_t 
                 msg4_rrc_pdu = mac_rrc_msg3_ind_NB_IoT(payload_ptr,rnti,rx_lengths[i]);
                 receive_msg3_NB_IoT(mac_inst,rnti,PHR,ul_total_buffer,first_6,msg4_rrc_pdu);
                 LOG_I(MAC,"Contention resolution ID = %02x %02x %02x %02x %02x %02x\n",first_6[0],first_6[1],first_6[2],first_6[3],first_6[4],first_6[5]);
-                //NB_IoT_mac_rrc_data_ind(payload_ptr,mac_inst,rnti);
-                //NB_IoT_receive_msg3(mac_inst,rnti,PHR,ul_total_buffer);
           break;
             case DCCH0_NB_IoT:
             case DCCH1_NB_IoT:
@@ -285,12 +283,12 @@ void rx_sdu_NB_IoT(module_id_t module_id, int CC_id, frame_t frame, sub_frame_t 
                   1,
                   NULL);//(unsigned int*)crc_status);
                     // trigger DL scheduler
-    if (UE_info != NULL){
-      UE_info->direction = 1; //1 for DL scheduler
-    }
-	         // UE specific here
-                //NB_IoT_mac_rlc_data_ind(payload_ptr,mac_inst,rnti);
-            
+                if (UE_info != NULL)
+                {
+                  UE_info->direction = 1; //1 for DL scheduler
+                  LOG_I(MAC,"After receive Msg5, change the UE scheduling direction to DL\n");
+                }
+
           break;
             // all the DRBS
             case DTCH0_NB_IoT:

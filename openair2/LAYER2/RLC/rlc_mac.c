@@ -244,7 +244,7 @@ void mac_rlc_data_ind     (
   hashtable_rc_t         h_rc;
   srb_flag_t             srb_flag        = (channel_idP <= 3) ? SRB_FLAG_YES : SRB_FLAG_NO;
   protocol_ctxt_t     ctxt;
-    LOG_I(RLC,"NB-IoT: RLC PDU receive\n");
+  LOG_I(RLC,"NB-IoT: RLC PDU receive\n");
 
   PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, module_idP, enb_flagP, rntiP, frameP, 0, eNB_index);
 

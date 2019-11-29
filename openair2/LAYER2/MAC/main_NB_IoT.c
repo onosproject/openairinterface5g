@@ -152,7 +152,7 @@ void init_mac_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst)
     //(mac_inst->UE_list_spec+i)->NPDCCH_config_dedicated.R_max = mac_inst->rrc_config.npdcch_ConfigDedicated[i].R_max;
     //(mac_inst->UE_list_spec+i)->NPDCCH_config_dedicated.G = mac_inst->rrc_config.npdcch_ConfigDedicated[i].G;
     //(mac_inst->UE_list_spec+i)->NPDCCH_config_dedicated.a_offset = mac_inst->rrc_config.npdcch_ConfigDedicated[i].a_offset;
-    (mac_inst->UE_list_spec+i)->NPDCCH_config_dedicated.R_max = 16;
+    (mac_inst->UE_list_spec+i)->NPDCCH_config_dedicated.R_max = 4;
     (mac_inst->UE_list_spec+i)->NPDCCH_config_dedicated.G = 4;
     (mac_inst->UE_list_spec+i)->NPDCCH_config_dedicated.a_offset = 0;
     (mac_inst->UE_list_spec+i)->NPDCCH_config_dedicated.T = (uint32_t)((double)(mac_inst->UE_list_spec+i)->NPDCCH_config_dedicated.R_max * (mac_inst->UE_list_spec+i)->NPDCCH_config_dedicated.G);

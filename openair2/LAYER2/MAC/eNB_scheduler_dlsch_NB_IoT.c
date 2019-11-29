@@ -94,7 +94,7 @@ int schedule_DL_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_inst, UE_
 		data_size=UE_info->DLSCH_pdu_size;
 	}
 
-	LOG_D(MAC,"[%04d][DLSchedulerUSS] Max TBS %d MCS index %d TBS index %d\n", mac_inst->current_subframe, TBS, I_mcs, I_tbs);
+	LOG_I(MAC,"[%04d][DLSchedulerUSS] Max TBS %d MCS index %d TBS index %d\n", mac_inst->current_subframe, TBS, I_mcs, I_tbs);
 	/*set UE data information*/
 	/*New transmission*/
 #if 1
@@ -150,19 +150,19 @@ int schedule_DL_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_inst, UE_
 		if((UE_info->HARQ_round>0)&&(TBS<data_size))
 		{
 			LOG_D(MAC,"[%04d][DLSchedulerUSS][Fail] TBS is not enough for retransmission\n", mac_inst->current_subframe);
-			return;
+			return -1;
 		}
 	}
 #endif
 
 	//data_size=200;	//for testing
 
-	LOG_I(MAC,"[%04d][DLSchedulerUSS] UE data size %d\n", mac_inst->current_subframe, data_size);
+	//LOG_I(MAC,"[%04d][DLSchedulerUSS] UE data size %d\n", mac_inst->current_subframe, data_size);
 	//Have DCCH data
 	if(data_size == 0)
 	{
 		LOG_D(MAC,"[%04d][DLSchedulerUSS][Fail] No data in DCCH0_NB_IoT\n", mac_inst->current_subframe);
-		return;
+		return -1;
 	}
 	if(data_size>127)
 	{
@@ -180,7 +180,7 @@ int schedule_DL_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_inst, UE_
 	/*Loop all NPDCCH candidate position*/
 	for(cdd_num=0;cdd_num<UE_info->R_max/UE_sched_ctrl_info->R_dci;++cdd_num)
 	{
-		//LOG_D(MAC,"[%04d][DLSchedulerUSS] Candidate num %d DCI Rep %d\n",mac_inst->current_subframe, cdd_num, UE_sched_ctrl_info->R_dci);
+		LOG_I(MAC,"[%04d][DLSchedulerUSS] Candidate num %d DCI Rep %d DCI Rmax: %d\n",mac_inst->current_subframe, cdd_num, UE_sched_ctrl_info->R_dci,UE_info->R_max);
 		/*Check NPDCCH Resource*/
 		end_flagCCH = check_resource_NPDCCH_NB_IoT(mac_inst, hyperSF_start, frame_start, subframe_start, NPDCCH_info, cdd_num, UE_info->R_dci);
 
@@ -190,14 +190,14 @@ int schedule_DL_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_inst, UE_
 		{
 		  //LOG_D(MAC,"[%04d][DLSchedulerUSS] Candidate num %d allocate success\n",mac_inst->current_subframe, cdd_num);
 			//LOG_D(MAC,"[%04d][DLSchedulerUSS] Allocate NPDCCH subframe %d to subframe %d cdd index %d\n", mac_inst->current_subframe, NPDCCH_info->sf_start, NPDCCH_info->sf_end, cdd_num);
-			
+			/*
 			//Max DL TBS
 			if(TBS > data_size+subheader_length)
 			{
 				TBS = get_tbs(data_size, I_tbs, &I_sf);
 				LOG_D(MAC,"[%04d][DLSchedulerUSS] [%d] data_size %d TBS change to %d \n", mac_inst->current_subframe,UE_info->rnti, data_size, TBS);
 			}
-			
+			*/
 
 			//Get number of subframe this UE need per repetition
 			n_sf = get_num_sf(I_sf);

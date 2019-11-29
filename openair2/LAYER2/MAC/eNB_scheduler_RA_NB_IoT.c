@@ -388,9 +388,9 @@ void receive_msg3_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, rnti_t c_rnti, uint32_t 
 	if((RA_TEMPLATE_NB_IoT *)0 != msg3_nodes)
 	while((RA_TEMPLATE_NB_IoT *)0 != msg3_nodes){
 		if(msg3_nodes->ue_rnti == c_rnti){
-			LOG_D(MAC,"add ue in\n");
+			LOG_I(MAC,"add ue in\n");
 			add_ue_NB_IoT(mac_inst, c_rnti, msg3_nodes->ce_level, phr, ul_total_buffer);//	rnti, ce level
-			LOG_D(MAC,"[%04d][RA scheduler][MSG3][CE%d] Receive MSG3 T-CRNTI %d Preamble Index %d \n", mac_inst->current_subframe, msg3_nodes->ce_level, msg3_nodes->ue_rnti, msg3_nodes->preamble_index);
+			LOG_I(MAC,"[%04d][RA scheduler][MSG3][CE%d] Receive MSG3 T-CRNTI %d Preamble Index %d \n", mac_inst->current_subframe, msg3_nodes->ce_level, msg3_nodes->ue_rnti, msg3_nodes->preamble_index);
 			msg3_nodes->ccch_buffer = ccch_sdu;
 			msg3_nodes->msg4_rrc_buffer = msg4_rrc_sdu;
 			migrate_node = msg3_nodes;
@@ -739,7 +739,7 @@ void schedule_msg4_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, int abs_subframe){
     		r = rmax/num_candidate;
     		num_dci_subframe = r;
     		dci_subframe = abs_subframe;//mac_inst->current_subframe;
-
+    		LOG_N(MAC,"In Msg4 scheduling, we have rmax:%d, candidiate:%d, r:%d \n",rmax, num_candidate,r);
 			for(dci_candidate=0; dci_candidate<num_candidate; ++dci_candidate){
 	            while(!is_dlsf(mac_inst, dci_subframe)){
                     ++dci_subframe;

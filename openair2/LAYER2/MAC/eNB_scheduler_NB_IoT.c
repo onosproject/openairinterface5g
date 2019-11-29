@@ -346,10 +346,12 @@ void preprocessor_uss_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_ins
     	//Set repetition number of downlink transmission
 		if(UE_template_temp->direction==1)
 		{
+					//UE_sched_ctrl_info->R_dci=UE_template_temp->R_dci;
+
 			UE_sched_ctrl_info->R_dl_data=UE_template_temp->R_dl;
 			UE_sched_ctrl_info->R_dl_harq=UE_template_temp->R_harq;
 			UE_sched_ctrl_info->dci_n1_index_mcs=UE_template_temp->I_mcs_dl;
-			LOG_D(MAC,"[%04d][preprocessor_uss_NB_IoT][UE%d] Initialze R_dci %d R_data_dl %d R_harq %d \n", mac_inst->current_subframe, UE_template_temp->rnti, UE_sched_ctrl_info->R_dci=UE_template_temp->R_dci, UE_sched_ctrl_info->R_dl_data, UE_sched_ctrl_info->R_dl_harq=UE_template_temp->R_harq);
+			LOG_N(MAC,"[%04d][preprocessor_uss_NB_IoT][UE%d] Initialze R_dci %d R_data_dl %d R_harq %d \n", mac_inst->current_subframe, UE_template_temp->rnti, UE_sched_ctrl_info->R_dci=UE_template_temp->R_dci, UE_sched_ctrl_info->R_dl_data, UE_sched_ctrl_info->R_dl_harq=UE_template_temp->R_harq);
 			//determine how many SF for data transmission
 			//store_rlc_logical_channel_info_dl();
 		}
