@@ -78,6 +78,8 @@ void UL_indication_NB_IoT(UL_IND_NB_IoT_t *UL_INFO)
     int i=0;
     uint32_t abs_subframe;
     Sched_Rsp_NB_IoT_t *SCHED_info = &mac_inst->Sched_INFO;
+    UE_TEMPLATE_NB_IoT *ue_info = (UE_TEMPLATE_NB_IoT *)0;
+
 
     enable_preamble_simulation(UL_INFO,0);
 
@@ -122,8 +124,26 @@ void UL_indication_NB_IoT(UL_IND_NB_IoT_t *UL_INFO)
     // Check if there is any feed back of HARQ
     if(UL_INFO->nb_harq_ind.nb_harq_indication_body.number_of_harqs>0)
     {
-      LOG_I(MAC,"Recieved Ack of DL Data, rnti : %x\n",UL_INFO->nb_harq_ind.nb_harq_indication_body.nb_harq_pdu_list[0].rx_ue_information.rnti);
-      receive_msg4_ack_NB_IoT(mac_inst,UL_INFO->nb_harq_ind.nb_harq_indication_body.nb_harq_pdu_list[0].rx_ue_information.rnti);
+      //LOG_I(MAC,"Recieved Ack of DL Data, rnti : %x\n",UL_INFO->nb_harq_ind.nb_harq_indication_body.nb_harq_pdu_list[0].rx_ue_information.rnti);
+      ue_info = get_ue_from_rnti(mac_inst,UL_INFO->nb_harq_ind.nb_harq_indication_body.nb_harq_pdu_list[0].rx_ue_information.rnti);
+      if (ue_info->direction==3)
+      {
+        if(UL_INFO->nb_harq_ind.nb_harq_indication_body.nb_harq_pdu_list[0].nb_harq_indication_fdd_rel13.harq_tb1==1)
+        {  
+          LOG_I(MAC,"This UE get the response of HARQ DL : ACK\n");
+          ue_info->direction=0;
+        }else
+        {
+          ue_info->direction=1;
+          ue_info->HARQ_round++;
+          LOG_I(MAC,"This UE get the response of HARQ DL : NACK, and will start the next harq round : %d\n",ue_info->HARQ_round);  
+
+        }      
+      }
+      else
+      { 
+        receive_msg4_ack_NB_IoT(mac_inst,UL_INFO->nb_harq_ind.nb_harq_indication_body.nb_harq_pdu_list[0].rx_ue_information.rnti);
+      }
     }
 
     UL_INFO->nb_harq_ind.nb_harq_indication_body.number_of_harqs = 0;

@@ -1794,13 +1794,13 @@ void decode_NPUSCH_msg_NB_IoT(PHY_VARS_eNB        *eNB,
             {      
                   //fill_crc_indication_NB_IoT(eNB,0,rx_frame,rx_subframe,1);                               // indicate ACK to MAC
                   fill_rx_indication_NB_IoT(eNB,proc,npusch_format,1);
-                  printf("  decoded ACK of msg4: ACK  \n");
+                  printf("  decoded ACK of DL Data (include MSG4): ACK  \n");
 
             } else if (counter_ack<8) {     //hard decision
 
                   //fill_crc_indication_NB_IoT(eNB,0,rx_frame,rx_subframe,0);                              // indicate NAK to MAC
                   fill_rx_indication_NB_IoT(eNB,proc,npusch_format,0);
-                  printf("  decoded ACK of msg4: NACK  \n"); 
+                  printf("  decoded ACK of DL Data (include MSG4): NACK  \n"); 
 
             } else  {  //when equality (8 bits 0 vs 8 bits 1), soft decision
            

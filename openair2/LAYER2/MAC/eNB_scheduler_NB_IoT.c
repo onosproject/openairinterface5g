@@ -293,6 +293,7 @@ void schedule_uss_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_inst, u
 	      			UE_template_temp->DLSCH_pdu_size=UE_sched_ctrl_info->TBS;
 	      			if(UE_template_temp->HARQ_round==0)
 	      				UE_template_temp->oldNDI_DL=(UE_template_temp->oldNDI_DL+1)%2;
+	      			UE_template_temp->direction = 3;
 	      			break;
 	    		case 0:		//	Uplink
 	    			LOG_D(MAC,"[%04d][schedule_uss_NB_IoT][UE%d] USS UL Final scheduling\n", mac_inst->current_subframe, UE_template_temp->rnti);
@@ -312,6 +313,9 @@ void schedule_uss_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_inst, u
 				    }
 
 				    UE_template_temp->direction = -1;
+	      			break;
+	      		case 3:
+	      			LOG_D(MAC,"This UE is already scheduled, wait for the response\n");
 	      			break;
 				case -1:	//	Idle
 					//DEBUG("current idle.. \n");
@@ -416,6 +420,9 @@ void preprocessor_uss_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_ins
           			break;
 				case -1:	//	Idle state, no data wait to send
 					//sDEBUG("current idle.. \n");
+				case 3:
+	      			LOG_D(MAC,"This UE is already scheduled, wait for the response\n");
+	      			break;
 				default:
 					break;
       		}
