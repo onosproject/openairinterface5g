@@ -101,7 +101,7 @@ int nr_beam_precoding(int32_t **txdataF,
                       int slot,
                       int symbol,
                       int aa,
-                      int nb_antenna_ports
+                      int nb_logical_ports
 );
 
 #endif

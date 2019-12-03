@@ -170,22 +170,21 @@ typedef struct RU_prec_t_s{
 } RU_prec_t;
 
 typedef struct RU_feptx_t_s{
-  /// \internal This variable is protected by \ref mutex_feptx_prec
+  /// \internal This variable is protected by \ref mutex_feptx
   int instance_cnt_feptx;
-  /// pthread struct for RU TX FEP PREC worker thread
+  /// pthread struct for RU TX FEP thread
   pthread_t pthread_feptx;
-  /// pthread attributes for worker feptx prec thread
+  /// pthread attributes for feptx thread
   pthread_attr_t attr_feptx;
-  /// condition varible for RU TX FEP PREC thread
+  /// condition varible for RU TX FEP thread
   pthread_cond_t cond_feptx;
-  /// mutex for fep PREC TX worker thread
+  /// mutex for fep TX thread
   pthread_mutex_t mutex_feptx;
   struct RU_t_s *ru;
-  int aa;//physical MAX nb_tx
-  int half_slot;//first or second half of a slot
+  int aa;//number of physical antenna port (MAX nb_tx)
   int slot;//current slot
   int symbol;//current symbol
-  int nb_antenna_ports;//number of logical port
+  int nb_logical_ports;//number of logical antenna port (MAX Lmax)
   int index;
 }RU_feptx_t;
 

@@ -126,6 +126,7 @@ typedef struct {
 } NR_DL_gNB_HARQ_t;
 
 
+
 typedef struct {
   /// Pointers to 16 HARQ processes for the DLSCH
   NR_DL_gNB_HARQ_t *harq_processes[NR_MAX_NB_HARQ_PROCESSES];

@@ -150,13 +150,16 @@ void nr_common_signal_procedures (PHY_VARS_gNB *gNB,int frame, int slot) {
 void phy_procedures_gNB_TX(PHY_VARS_gNB *gNB,
                            int frame,int slot,
                            int do_meas) {
-  int aa;
+  int p;
   uint8_t num_dci=0,num_pdsch_rnti;
   NR_DL_FRAME_PARMS *fp=&gNB->frame_parms;
   nfapi_nr_config_request_t *cfg = &gNB->gNB_config;
   int offset = gNB->CC_id;
   uint8_t ssb_frame_periodicity;  // every how many frames SSB are generated
   int txdataF_offset = (slot%2)*fp->samples_per_slot_wCP;
+
+  num_dci = gNB->pdcch_vars.num_dci;
+  num_pdsch_rnti = gNB->pdcch_vars.num_pdsch_rnti;
 
   if (cfg->sch_config.ssb_periodicity.value < 20)
     ssb_frame_periodicity = 1;
@@ -170,8 +173,8 @@ void phy_procedures_gNB_TX(PHY_VARS_gNB *gNB,
   if (do_meas==1) start_meas(&gNB->phy_proc_tx);
 
   // clear the transmit data array for the current subframe
-  for (aa=0; aa<fp->Lmax; aa++) {
-    memset(&gNB->common_vars.txdataF[aa][txdataF_offset],0,fp->samples_per_slot_wCP*sizeof(int32_t));
+  for (p=0; p<fp->Lmax; p++) {
+    memset(&gNB->common_vars.txdataF[p][txdataF_offset],0,fp->samples_per_slot_wCP*sizeof(int32_t));
   }
 
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_ENB_COMMON_TX,1);
@@ -181,8 +184,6 @@ void phy_procedures_gNB_TX(PHY_VARS_gNB *gNB,
   }
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_ENB_COMMON_TX,0);
 
-  num_dci = gNB->pdcch_vars.num_dci;
-  num_pdsch_rnti = gNB->pdcch_vars.num_pdsch_rnti;
 
   if (num_dci) {
     LOG_D(PHY, "[gNB %d] Frame %d slot %d \
