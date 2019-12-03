@@ -163,8 +163,23 @@ mac_rrc_data_req(
   if( (Srb_id & RAB_OFFSET ) == CCCH) {
 
     struct rrc_eNB_ue_context_s *ue_context_p = rrc_eNB_get_ue_context(RC.rrc[Mod_idP],rnti);
-
-    if (ue_context_p == NULL) return(0);
+    rnti_t old_rnti = 0;
+    if (ue_context_p == NULL) {
+        for (uint16_t i = 0; i < MAX_MOBILES_PER_ENB; i++) {
+          if (reestablish_rnti_map[i][0] == rnti) {
+            old_rnti = reestablish_rnti_map[i][1];
+            break;
+          }
+        }
+        if (old_rnti != 0) {
+          ue_context_p = rrc_eNB_get_ue_context(RC.rrc[Mod_idP],old_rnti);
+          if (ue_context_p == NULL) {
+            return(0);
+          }
+        } else {
+           return(0);
+        }
+    }
     eNB_RRC_UE_t *ue_p = &ue_context_p->ue_context;
     LOG_T(RRC,"[eNB %d] Frame %d CCCH request (Srb_id %d, rnti %x)\n",Mod_idP,frameP, Srb_id,rnti);
 
