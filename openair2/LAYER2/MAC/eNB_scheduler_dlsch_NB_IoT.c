@@ -497,7 +497,7 @@ uint32_t generate_dlsch_header_NB_IoT(uint8_t *pdu, uint32_t num_sdu, logical_ch
         {		
             if(sdu_length[i]<128)
             {
-                ((SCH_SUBHEADER_SHORT_NB_IoT*)mac_header)->LCID = logical_channel[i];
+                ((SCH_SUBHEADER_SHORT_NB_IoT*)mac_header)->LCID = DCCH0_NB_IoT;
                 ((SCH_SUBHEADER_SHORT_NB_IoT*)mac_header)->F2=0;
                 ((SCH_SUBHEADER_SHORT_NB_IoT*)mac_header)->R=0;
                 ((SCH_SUBHEADER_SHORT_NB_IoT*)mac_header)->E=1;
