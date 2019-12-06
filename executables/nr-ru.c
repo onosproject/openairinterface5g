@@ -1704,7 +1704,7 @@ void init_RU_proc(RU_t *ru) {
   threadCreate( &proc->pthread_FH, ru_thread, (void *)ru, "thread_FH", -1, OAI_PRIORITY_RT_MAX );
 
   if (get_thread_parallel_conf() == PARALLEL_RU_L1_SPLIT || get_thread_parallel_conf() == PARALLEL_RU_L1_TRX_SPLIT)
-    threadCreate( &proc->pthread_FH1, ru_thread_tx, (void *)ru, "thread_FH1", -1, OAI_PRIORITY_RT );
+    threadCreate( &proc->pthread_FH1, ru_thread_tx, (void *)ru, "thread_FH_TX", -1, OAI_PRIORITY_RT );
 
   if(emulate_rf)
     threadCreate( &proc->pthread_emulateRF, emulatedRF_thread, (void *)proc, "emulateRF", -1, OAI_PRIORITY_RT );

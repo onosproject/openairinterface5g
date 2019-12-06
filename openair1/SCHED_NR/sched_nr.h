@@ -53,6 +53,8 @@ void nr_fep_full(RU_t *ru, int slot);
 void nr_fep_full_2thread(RU_t *ru, int slot);
 void feptx_prec(RU_t *ru,int frame_tx,int tti_tx);
 int nr_phy_init_RU(RU_t *ru);
+void nr_init_pdsch_thread(PHY_VARS_gNB *gNB);
+void nr_kill_pdsch_thread(PHY_VARS_gNB *gNB);
 
 void nr_configure_css_dci_initial(nfapi_nr_dl_config_pdcch_parameters_rel15_t* pdcch_params,
 				  nr_scs_e scs_common,

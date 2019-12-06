@@ -323,6 +323,7 @@ void nr_init_feptx_thread(RU_t *ru) {
   RU_proc_t  *proc  = &ru->proc;
   RU_feptx_t *feptx = proc->feptx;
   int i = 0;
+  char name[40];
 
   for(i=0; i<16; i++){
     feptx[i].instance_cnt_feptx         = -1;
@@ -330,7 +331,8 @@ void nr_init_feptx_thread(RU_t *ru) {
     pthread_mutex_init( &feptx[i].mutex_feptx, NULL);
     pthread_cond_init( &feptx[i].cond_feptx, NULL);
 
-    threadCreate(&feptx[i].pthread_feptx, nr_feptx_thread, (void*)&feptx[i], "feptx", -1, OAI_PRIORITY_RT);
+    snprintf( name, sizeof(name)/sizeof(name[0]), "feptx_%d", i );
+    threadCreate(&feptx[i].pthread_feptx, nr_feptx_thread, (void*)&feptx[i], name, -1, OAI_PRIORITY_RT);
     LOG_I(PHY,"init feptx thread %d\n", i);
   }
 

@@ -39,6 +39,8 @@
 #include "PHY/MODULATION/nr_modulation.h"
 #include "T.h"
 
+#include <common/utils/system.h>
+
 #include "assertions.h"
 #include "msc.h"
 
@@ -48,6 +50,7 @@
   #include "intertask_interface.h"
 #endif
 
+extern int oai_exit;
 extern uint8_t nfapi_mode;
 /*
 int return_ssb_type(nfapi_config_request_t *cfg)
@@ -154,12 +157,15 @@ void phy_procedures_gNB_TX(PHY_VARS_gNB *gNB,
   uint8_t num_dci=0,num_pdsch_rnti;
   NR_DL_FRAME_PARMS *fp=&gNB->frame_parms;
   nfapi_nr_config_request_t *cfg = &gNB->gNB_config;
+  NR_gNB_DLSCH_thread_t  *dlsch_thread = &gNB->dlsch_thread;
   int offset = gNB->CC_id;
   uint8_t ssb_frame_periodicity;  // every how many frames SSB are generated
   int txdataF_offset = (slot%2)*fp->samples_per_slot_wCP;
+  int ret = 0;
 
   num_dci = gNB->pdcch_vars.num_dci;
   num_pdsch_rnti = gNB->pdcch_vars.num_pdsch_rnti;
+
 
   if (cfg->sch_config.ssb_periodicity.value < 20)
     ssb_frame_periodicity = 1;
@@ -175,6 +181,19 @@ void phy_procedures_gNB_TX(PHY_VARS_gNB *gNB,
   // clear the transmit data array for the current subframe
   for (p=0; p<fp->Lmax; p++) {
     memset(&gNB->common_vars.txdataF[p][txdataF_offset],0,fp->samples_per_slot_wCP*sizeof(int32_t));
+  }
+
+  if (num_dci && (nfapi_mode == 0 || nfapi_mode == 1) && num_pdsch_rnti) {
+    LOG_D(PHY, "PDSCH generation started (%d)\n", num_pdsch_rnti);
+    ret = pthread_mutex_lock(&dlsch_thread->mutex_dlsch);
+    AssertFatal(ret==0,"mutex_lock return %d\n",ret);
+    dlsch_thread->instance_cnt_dlsch = 0;
+    dlsch_thread->frame              = frame;
+    dlsch_thread->slot               = slot;
+    ret = pthread_cond_signal(&dlsch_thread->cond_dlsch);
+    AssertFatal(ret==0,"ERROR pthread_cond_signal for nr_pdsch_thread\n");
+    ret = pthread_mutex_unlock(&dlsch_thread->mutex_dlsch);
+    AssertFatal(ret==0,"mutex_unlock return %d\n",ret);
   }
 
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_ENB_COMMON_TX,1);
@@ -195,8 +214,8 @@ void phy_procedures_gNB_TX(PHY_VARS_gNB *gNB,
                           gNB->nr_gold_pdcch_dmrs[slot],
                           &gNB->common_vars.txdataF[0][txdataF_offset],  // hardcoded to beam 0
                           AMP, *fp, *cfg);
-  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_ENB_PDCCH_TX,0);
-      if (num_pdsch_rnti) {
+    VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_ENB_PDCCH_TX,0);
+      /*if (num_pdsch_rnti) {
 	VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_GENERATE_DLSCH,1);
         LOG_D(PHY, "PDSCH generation started (%d)\n", num_pdsch_rnti);
         nr_generate_pdsch(gNB->dlsch[0][0],
@@ -209,13 +228,89 @@ void phy_procedures_gNB_TX(PHY_VARS_gNB *gNB,
                           &gNB->dlsch_modulation_stats);
 
 	VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_GENERATE_DLSCH,0);
-      }
+      }*/
     }
   }
+
+  // wait pdsch thread to finish
+  if (wait_on_busy_condition(&dlsch_thread->mutex_dlsch,&dlsch_thread->cond_dlsch,&dlsch_thread->instance_cnt_dlsch,"NR pdsch thread")<0) return;
+
 
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_ENB_TX+offset,0);
 }
 
+static void *nr_pdsch_thread(void *param) {
+
+  PHY_VARS_gNB *gNB              = (PHY_VARS_gNB *)param;
+  NR_gNB_DLSCH_thread_t *dlsch;
+  NR_DL_FRAME_PARMS *fp;
+  nfapi_nr_config_request_t *cfg;
+  int frame, slot;
+  int ret   = 0;
+
+  while(!oai_exit)
+  {
+    dlsch   = &gNB->dlsch_thread;
+    fp      = &gNB->frame_parms;
+    cfg     = &gNB->gNB_config;
+    frame   = dlsch->frame;
+    slot    = dlsch->slot;
+
+    if (wait_on_condition(&dlsch->mutex_dlsch,&dlsch->cond_dlsch,&dlsch->instance_cnt_dlsch,"NR pdsch thread")<0)   break;
+
+    VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_GENERATE_DLSCH,1);
+    nr_generate_pdsch(gNB->dlsch[0][0],
+                          &gNB->pdcch_vars.dci_alloc[0],
+                          gNB->nr_gold_pdsch_dmrs[slot],
+                          gNB->common_vars.txdataF,
+                          AMP, frame, slot, fp, cfg,
+                          &gNB->dlsch_encoding_stats,
+                          &gNB->dlsch_scrambling_stats,
+                          &gNB->dlsch_modulation_stats);
+
+
+    ret = pthread_mutex_lock(&dlsch->mutex_dlsch);
+    AssertFatal(ret==0,"mutex_lock return %d\n",ret);
+    dlsch->instance_cnt_dlsch = -1;
+    ret = pthread_cond_broadcast(&dlsch->cond_dlsch);
+    AssertFatal(ret==0,"ERROR pthread_cond_signal for nr_pdsch_thread\n");
+    ret = pthread_mutex_unlock(&dlsch->mutex_dlsch);
+    AssertFatal(ret==0,"mutex_unlock return %d\n",ret);
+    VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_GENERATE_DLSCH,0);
+  }
+  return (NULL);
+}
+
+void nr_init_pdsch_thread(PHY_VARS_gNB *gNB) {
+
+  printf("init pdsch thread start\n");
+  NR_gNB_DLSCH_thread_t  *dlsch  = &gNB->dlsch_thread;
+  
+  dlsch->instance_cnt_dlsch         = -1;
+    
+  pthread_mutex_init( &dlsch->mutex_dlsch, NULL);
+  pthread_cond_init( &dlsch->cond_dlsch, NULL);
+
+  printf("create pdsch thread start\n");
+  threadCreate(&dlsch->pthread_dlsch, nr_pdsch_thread, (void*)gNB, "pdsch", -1, OAI_PRIORITY_RT);
+  LOG_I(PHY,"init pdsch thread\n");
+  
+}
+
+void nr_kill_pdsch_thread(PHY_VARS_gNB *gNB) {
+
+  NR_gNB_DLSCH_thread_t  *dlsch  = &gNB->dlsch_thread;
+  
+  pthread_mutex_lock(&dlsch->mutex_dlsch);
+  dlsch->instance_cnt_dlsch         = 0;
+  pthread_cond_signal(&dlsch->cond_dlsch);
+  pthread_mutex_unlock(&dlsch->mutex_dlsch);
+
+  pthread_mutex_destroy( &dlsch->mutex_dlsch);
+  pthread_cond_destroy( &dlsch->cond_dlsch);
+
+  LOG_I(PHY,"Destroying dlsch mutex/cond\n");
+}
 
 void nr_ulsch_procedures(PHY_VARS_gNB *gNB, int frame_rx, int slot_rx, int UE_id, uint8_t harq_pid)
 {

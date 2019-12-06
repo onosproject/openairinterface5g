@@ -125,6 +125,22 @@ typedef struct {
   uint32_t F;
 } NR_DL_gNB_HARQ_t;
 
+typedef struct NR_gNB_DLSCH_thread_t_s{
+  /// \internal This variable is protected by \ref mutex_feptx_prec
+  int instance_cnt_dlsch;
+  /// pthread struct for RU TX FEP PREC worker thread
+  pthread_t pthread_dlsch;
+  /// pthread attributes for worker feptx prec thread
+  pthread_attr_t attr_dlsch;
+  /// condition varible for RU TX FEP PREC thread
+  pthread_cond_t cond_dlsch;
+  /// mutex for fep PREC TX worker thread
+  pthread_mutex_t mutex_dlsch;
+  /// current frame
+  int frame;
+  /// current slot
+  int slot;
+}NR_gNB_DLSCH_thread_t;
 
 
 typedef struct {
@@ -647,6 +663,7 @@ typedef struct PHY_VARS_gNB_s {
   // LTE_eNB_ULSCH_t     *ulsch[NUMBER_OF_UE_MAX+1];     // Nusers + number of RA
   NR_gNB_DLSCH_t     *dlsch_SI,*dlsch_ra,*dlsch_p;
   NR_gNB_DLSCH_t     *dlsch_PCH;
+  NR_gNB_DLSCH_thread_t  dlsch_thread; //dlsch thread structure;
 /*
   LTE_eNB_UE_stats    UE_stats[NUMBER_OF_UE_MAX];
   LTE_eNB_UE_stats   *UE_stats_ptr[NUMBER_OF_UE_MAX];

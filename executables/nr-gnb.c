@@ -722,6 +722,7 @@ void init_gNB_proc(int inst) {
   PHY_VARS_gNB *gNB;
   gNB_L1_proc_t *proc;
   gNB_L1_rxtx_proc_t *L1_proc,*L1_proc_tx;
+
   LOG_I(PHY,"%s(inst:%d) RC.nb_nr_CC[inst]:%d \n",__FUNCTION__,inst,RC.nb_nr_CC[inst]);
 
   for (CC_id=0; CC_id<RC.nb_nr_CC[inst]; CC_id++) {
@@ -743,7 +744,7 @@ void init_gNB_proc(int inst) {
     proc->first_tx                 =1;
     proc->RU_mask                  =0;
     proc->RU_mask_tx               = (1<<gNB->num_RU)-1;
-    proc->RU_mask_prach            =0;
+    proc->RU_mask_prach            =0;  
     pthread_mutex_init( &gNB->UL_INFO_mutex, NULL);
     pthread_mutex_init( &L1_proc->mutex, NULL);
     pthread_mutex_init( &L1_proc_tx->mutex, NULL);
@@ -759,8 +760,9 @@ void init_gNB_proc(int inst) {
     LOG_I(PHY,"gNB->single_thread_flag:%d\n", gNB->single_thread_flag);
 
     if (get_thread_parallel_conf() == PARALLEL_RU_L1_SPLIT || get_thread_parallel_conf() == PARALLEL_RU_L1_TRX_SPLIT) {
-      threadCreate( &L1_proc->pthread, gNB_L1_thread, gNB, "L1_proc", -1, OAI_PRIORITY_RT );
-      threadCreate( &L1_proc_tx->pthread, gNB_L1_thread_tx, gNB,"L1_proc_tx", -1, OAI_PRIORITY_RT);
+      threadCreate( &L1_proc->pthread, gNB_L1_thread, (void*)gNB, "L1_proc", -1, OAI_PRIORITY_RT );
+      threadCreate( &L1_proc_tx->pthread, gNB_L1_thread_tx, (void*)gNB, "L1_proc_tx", -1, OAI_PRIORITY_RT);
+      nr_init_pdsch_thread(gNB);
     }
 
     if(opp_enabled == 1) threadCreate(&proc->L1_stats_thread, process_stats_thread,(void *)gNB, "time_meas", -1, OAI_PRIORITY_RT_LOW);
@@ -810,6 +812,7 @@ void kill_gNB_proc(int inst) {
       L1_proc_tx->instance_cnt = 0;
       pthread_cond_signal(&L1_proc_tx->cond);
       pthread_mutex_unlock(&L1_proc_tx->mutex);
+      nr_kill_pdsch_thread(gNB);
     }
 
     proc->instance_cnt_prach = 0;
