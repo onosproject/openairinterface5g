@@ -1320,7 +1320,7 @@ static inline int wakeup_prach_ru(RU_t *ru) {
 }
 
 
-inline int wakeup_prach_ru_br(RU_t *ru) {
+static inline int wakeup_prach_ru_br(RU_t *ru) {
   int ret;
   struct timespec wait;
   int time_ns = 5000000L;

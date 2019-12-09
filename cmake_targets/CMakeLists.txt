@@ -186,7 +186,7 @@ set(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -Wl,-rpath -Wl,${CMAKE_CU
 # these changes are related to hardcoded path to include .h files
 set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS} -g3 -DMALLOC_CHECK_=3")
 set(CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS} -g3 -DMALLOC_CHECK_=3 -O2")
-
+set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS}  -O3")
 
 set(GIT_BRANCH        "UNKNOWN")
 set(GIT_COMMIT_HASH   "UNKNOWN")
@@ -531,7 +531,9 @@ foreach(USRPSOURCE ${USRPSRCVARIANT})
 #     )
   get_filename_component(USRPVERSION ${USRPSOURCE} NAME_WE)
   string(REPLACE "usrp_lib" "" USRPVERSION ${USRPVERSION} )
-  add_library(oai_usrpdevif${USRPVERSION} MODULE ${USRPSOURCE} )
+  
+  add_library(oai_usrpdevif${USRPVERSION} MODULE ${USRPSOURCE} ${OPENAIR_TARGETS}/ARCH/USRP/USERSPACE/LIB/usrp_lib_config.c)
+
   target_link_libraries(oai_usrpdevif${USRPVERSION} uhd)
 endforeach(USRPSOURCE)
 

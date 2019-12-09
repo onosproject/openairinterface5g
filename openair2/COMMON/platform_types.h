@@ -241,7 +241,7 @@ typedef struct protocol_ctxt_s {
   sub_frame_t subframe;      /*!< \brief  LTE sub frame number.*/
   eNB_index_t eNB_index;     /*!< \brief  valid for UE indicating the index of connected eNB(s)      */
   boolean_t   configured;  /*!< \brief  flag indicating whether the instance is configured or not  */
-  boolean_t		brOption;
+  boolean_t   brOption;
 } protocol_ctxt_t;
 // warning time hardcoded
 #define PROTOCOL_CTXT_TIME_MILLI_SECONDS(CtXt_h) ((CtXt_h)->frame*10+(CtXt_h)->subframe)
@@ -302,5 +302,12 @@ typedef struct protocol_ctxt_s {
 #define CHECK_CTXT_ARGS(CTXT_Pp)
 
 #define exit_fun(msg) exit_function(__FILE__,__FUNCTION__,__LINE__,msg)
+#ifdef __cplusplus
+extern "C"
+{
+#endif
 void exit_function(const char *file, const char *function, const int line, const char *s);
+#ifdef __cplusplus
+}
+#endif
 #endif
