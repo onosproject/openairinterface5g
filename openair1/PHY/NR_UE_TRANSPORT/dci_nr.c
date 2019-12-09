@@ -2663,6 +2663,12 @@ uint8_t nr_dci_decoding_procedure(int s,
   }
 
   coreset_nbr_rb = 6 * coreset_nbr_rb;
+
+#ifdef NR_PDCCH_DCI_DEBUG
+  printf("PDCCH_DMRS_Scrambling_ID %d coreset_nbr_rb %d coreset_freq_dom %lx coreset_time_dur %d\n",
+    pdcch_DMRS_scrambling_id,coreset_nbr_rb,coreset_freq_dom,coreset_time_dur);
+#endif
+
   // coreset_time_dur,coreset_nbr_rb,
   NR_DL_FRAME_PARMS *frame_parms = &ue->frame_parms;
   //uint8_t mi;// = get_mi(&ue->frame_parms, nr_tti_rx);

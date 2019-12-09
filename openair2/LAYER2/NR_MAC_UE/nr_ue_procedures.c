@@ -420,13 +420,19 @@ int8_t nr_ue_decode_mib(
 
         //mac->type0_pdcch_dci_config.coreset.rb_start = rb_offset;
         //mac->type0_pdcch_dci_config.coreset.rb_end = rb_offset + num_rbs - 1;
+        //changed for runel test
+        num_rbs = 24;
+        num_symbols = 1;
+        rb_offset = 120;
         uint64_t mask = 0x0;
         uint8_t i;
         for(i=0; i<(num_rbs/6); ++i){   //  38.331 Each bit corresponds a group of 6 RBs
             mask = mask >> 1;
             mask = mask | 0x100000000000;
         }
-        //LOG_I(MAC,">>>>>>>>mask %x num_rbs %d rb_offset %d\n", mask, num_rbs, rb_offset);
+        uint16_t UE_rb_offset_count = rb_offset/6;
+        mask = mask >> UE_rb_offset_count;
+        LOG_I(MAC,">>>>>>>>mask %x num_rbs %d rb_offset %d\n", mask, num_rbs, rb_offset);
         mac->type0_pdcch_dci_config.coreset.frequency_domain_resource = mask;
         mac->type0_pdcch_dci_config.coreset.rb_offset = rb_offset;  //  additional parameter other than coreset
 
