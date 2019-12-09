@@ -540,9 +540,6 @@ rrc_pdcp_config_security(
   derive_key_rrc_int(ue_context_pP->ue_context.integrity_algorithm,
                      ue_context_pP->ue_context.kenb,
                      &kRRCint);
-#if !defined(USRP_REC_PLAY)
-  SET_LOG_DUMP(DEBUG_SECURITY) ;
-#endif
 
   if ( LOG_DUMPFLAG( DEBUG_SECURITY ) ) {
     if (print_keys ==1 ) {

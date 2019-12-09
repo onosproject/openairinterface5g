@@ -115,7 +115,6 @@ typedef struct {
   size_t          mapsize;
   iqrec_t        *ms_sample;                      // memory for all subframes
   unsigned int    nb_samples;
-  unsigned int    u_sf_mode;                         // 1=record, 2=replay
   char            u_sf_filename[1024];              // subframes file path
   unsigned int    u_sf_max ;                  // max number of recorded subframes
   unsigned int    u_sf_loops ;           // number of loops in replay mode

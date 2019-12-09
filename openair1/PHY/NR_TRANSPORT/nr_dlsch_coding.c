@@ -48,10 +48,10 @@
 //#define DEBUG_DLSCH_CODING
 //#define DEBUG_DLSCH_FREE 1
 
-void free_gNB_dlsch(NR_gNB_DLSCH_t *dlsch)
-{
+void free_gNB_dlsch(NR_gNB_DLSCH_t **dlschptr) {
   int i;
   int r;
+  NR_gNB_DLSCH_t *dlsch=*dlschptr;
 
   if (dlsch) {
 #ifdef DEBUG_DLSCH_FREE
@@ -81,7 +81,6 @@ void free_gNB_dlsch(NR_gNB_DLSCH_t *dlsch)
 #endif
 
         for (r=0; r<MAX_NUM_DLSCH_SEGMENTS; r++) {
-
 #ifdef DEBUG_DLSCH_FREE
           printf("Freeing dlsch process %d c[%d] (%p)\n",i,r,dlsch->harq_processes[i]->c[r]);
 #endif
@@ -90,21 +89,21 @@ void free_gNB_dlsch(NR_gNB_DLSCH_t *dlsch)
             free16(dlsch->harq_processes[i]->c[r],1056);
             dlsch->harq_processes[i]->c[r] = NULL;
           }
+
           if (dlsch->harq_processes[i]->d[r]) {
             free16(dlsch->harq_processes[i]->d[r],3*8448);
             dlsch->harq_processes[i]->d[r] = NULL;
           }
+        }
 
-	    }
-	free16(dlsch->harq_processes[i],sizeof(NR_DL_gNB_HARQ_t));
-	dlsch->harq_processes[i] = NULL;
+        free16(dlsch->harq_processes[i],sizeof(NR_DL_gNB_HARQ_t));
+        dlsch->harq_processes[i] = NULL;
       }
     }
 
     free16(dlsch,sizeof(NR_gNB_DLSCH_t));
-    dlsch = NULL;
+    *dlschptr = NULL;
   }
-
 }
 
 NR_gNB_DLSCH_t *new_gNB_dlsch(unsigned char Kmimo,
@@ -112,9 +111,7 @@ NR_gNB_DLSCH_t *new_gNB_dlsch(unsigned char Kmimo,
                               uint32_t Nsoft,
                               uint8_t abstraction_flag,
                               NR_DL_FRAME_PARMS *frame_parms,
-                              nfapi_nr_config_request_t *config)
-{
-
+                              nfapi_nr_config_request_t *config) {
   NR_gNB_DLSCH_t *dlsch;
   unsigned char exit_flag = 0,i,r,aa,layer;
   int re;
@@ -122,14 +119,13 @@ NR_gNB_DLSCH_t *new_gNB_dlsch(unsigned char Kmimo,
   uint16_t N_RB = config->rf_config.dl_carrier_bandwidth.value;
 
   switch (N_RB) {
+    case 106:
+      bw_scaling =2;
+      break;
 
-  case 106:
-    bw_scaling =2;
-    break;
-
-  default:
-    bw_scaling =1;
-    break;
+    default:
+      bw_scaling =1;
+      break;
   }
 
   dlsch = (NR_gNB_DLSCH_t *)malloc16(sizeof(NR_gNB_DLSCH_t));
@@ -142,14 +138,15 @@ NR_gNB_DLSCH_t *new_gNB_dlsch(unsigned char Kmimo,
     dlsch->Nsoft = Nsoft;
 
     for (layer=0; layer<NR_MAX_NB_LAYERS; layer++) {
-      dlsch->ue_spec_bf_weights[layer] = (int32_t**)malloc16(64*sizeof(int32_t*));
+      dlsch->ue_spec_bf_weights[layer] = (int32_t **)malloc16(64*sizeof(int32_t *));
 
-       for (aa=0; aa<64; aa++) {
-         dlsch->ue_spec_bf_weights[layer][aa] = (int32_t *)malloc16(OFDM_SYMBOL_SIZE_COMPLEX_SAMPLES*sizeof(int32_t));
-         for (re=0;re<OFDM_SYMBOL_SIZE_COMPLEX_SAMPLES; re++) {
-           dlsch->ue_spec_bf_weights[layer][aa][re] = 0x00007fff;
-         }
-       }
+      for (aa=0; aa<64; aa++) {
+        dlsch->ue_spec_bf_weights[layer][aa] = (int32_t *)malloc16(OFDM_SYMBOL_SIZE_COMPLEX_SAMPLES*sizeof(int32_t));
+
+        for (re=0; re<OFDM_SYMBOL_SIZE_COMPLEX_SAMPLES; re++) {
+          dlsch->ue_spec_bf_weights[layer][aa][re] = 0x00007fff;
+        }
+      }
 
       dlsch->txdataF[layer] = (int32_t *)malloc16((NR_MAX_PDSCH_ENCODED_LENGTH/NR_MAX_NB_LAYERS)*sizeof(int32_t)); // NR_MAX_NB_LAYERS is already included in NR_MAX_PDSCH_ENCODED_LENGTH
     }
@@ -157,11 +154,11 @@ NR_gNB_DLSCH_t *new_gNB_dlsch(unsigned char Kmimo,
     for (int q=0; q<NR_MAX_NB_CODEWORDS; q++)
       dlsch->mod_symbs[q] = (int32_t *)malloc16(NR_MAX_PDSCH_ENCODED_LENGTH*sizeof(int32_t));
 
-     dlsch->calib_dl_ch_estimates = (int32_t**)malloc16(64*sizeof(int32_t*));
-     for (aa=0; aa<64; aa++) {
-       dlsch->calib_dl_ch_estimates[aa] = (int32_t *)malloc16(OFDM_SYMBOL_SIZE_COMPLEX_SAMPLES*sizeof(int32_t));
+    dlsch->calib_dl_ch_estimates = (int32_t **)malloc16(64*sizeof(int32_t *));
 
-     }
+    for (aa=0; aa<64; aa++) {
+      dlsch->calib_dl_ch_estimates[aa] = (int32_t *)malloc16(OFDM_SYMBOL_SIZE_COMPLEX_SAMPLES*sizeof(int32_t));
+    }
 
     for (i=0; i<20; i++) {
       dlsch->harq_ids[0][i] = 0;
@@ -171,13 +168,14 @@ NR_gNB_DLSCH_t *new_gNB_dlsch(unsigned char Kmimo,
     for (i=0; i<Mdlharq; i++) {
       dlsch->harq_processes[i] = (NR_DL_gNB_HARQ_t *)malloc16(sizeof(NR_DL_gNB_HARQ_t));
       LOG_T(PHY, "Required mem size %d (bw scaling %d), dlsch->harq_processes[%d] %p\n",
-    		  MAX_NR_DLSCH_PAYLOAD_BYTES/bw_scaling,bw_scaling, i,dlsch->harq_processes[i]);
+            MAX_NR_DLSCH_PAYLOAD_BYTES/bw_scaling,bw_scaling, i,dlsch->harq_processes[i]);
 
       if (dlsch->harq_processes[i]) {
         bzero(dlsch->harq_processes[i],sizeof(NR_DL_gNB_HARQ_t));
         //    dlsch->harq_processes[i]->first_tx=1;
-        dlsch->harq_processes[i]->b = (unsigned char*)malloc16(MAX_NR_DLSCH_PAYLOAD_BYTES/bw_scaling);
-        dlsch->harq_processes[i]->pdu = (uint8_t*)malloc16(MAX_NR_DLSCH_PAYLOAD_BYTES/bw_scaling);
+        dlsch->harq_processes[i]->b = (unsigned char *)malloc16(MAX_NR_DLSCH_PAYLOAD_BYTES/bw_scaling);
+        dlsch->harq_processes[i]->pdu = (uint8_t *)malloc16(MAX_NR_DLSCH_PAYLOAD_BYTES/bw_scaling);
+
         if (dlsch->harq_processes[i]->pdu) {
           bzero(dlsch->harq_processes[i]->pdu,MAX_NR_DLSCH_PAYLOAD_BYTES/bw_scaling);
           nr_emulate_dlsch_payload(dlsch->harq_processes[i]->pdu, (MAX_NR_DLSCH_PAYLOAD_BYTES/bw_scaling)>>3);
@@ -199,14 +197,16 @@ NR_gNB_DLSCH_t *new_gNB_dlsch(unsigned char Kmimo,
             // [hna] 8448 is the maximum CB size in NR
             //       68*348 = 68*(maximum size of Zc)
             //       In section 5.3.2 in 38.212, the for loop is up to N + 2*Zc (maximum size of N is 66*Zc, therefore 68*Zc)
-            dlsch->harq_processes[i]->c[r] = (uint8_t*)malloc16(8448);
-            dlsch->harq_processes[i]->d[r] = (uint8_t*)malloc16(68*384); //max size for coded output
+            dlsch->harq_processes[i]->c[r] = (uint8_t *)malloc16(8448);
+            dlsch->harq_processes[i]->d[r] = (uint8_t *)malloc16(68*384); //max size for coded output
+
             if (dlsch->harq_processes[i]->c[r]) {
               bzero(dlsch->harq_processes[i]->c[r],8448);
             } else {
               printf("Can't get c\n");
               exit_flag=2;
             }
+
             if (dlsch->harq_processes[i]->d[r]) {
               bzero(dlsch->harq_processes[i]->d[r],(3*8448));
             } else {
@@ -231,16 +231,12 @@ NR_gNB_DLSCH_t *new_gNB_dlsch(unsigned char Kmimo,
   }
 
   LOG_D(PHY,"new_gNB_dlsch exit flag %d, size of  %ld\n",
-	exit_flag, sizeof(NR_gNB_DLSCH_t));
-  free_gNB_dlsch(dlsch);
+        exit_flag, sizeof(NR_gNB_DLSCH_t));
+  free_gNB_dlsch(&dlsch);
   return(NULL);
-
-
 }
 
-void clean_gNB_dlsch(NR_gNB_DLSCH_t *dlsch)
-{
-
+void clean_gNB_dlsch(NR_gNB_DLSCH_t *dlsch) {
   unsigned char Mdlharq;
   unsigned char i,j,r;
 
@@ -253,17 +249,17 @@ void clean_gNB_dlsch(NR_gNB_DLSCH_t *dlsch)
       dlsch->harq_ids[0][i] = Mdlharq;
       dlsch->harq_ids[1][i] = Mdlharq;
     }
+
     for (i=0; i<Mdlharq; i++) {
       if (dlsch->harq_processes[i]) {
         //  dlsch->harq_processes[i]->Ndi    = 0;
         //dlsch->harq_processes[i]->status = 0;
         dlsch->harq_processes[i]->round  = 0;
 
-	for (j=0; j<96; j++)
-	  for (r=0; r<MAX_NUM_DLSCH_SEGMENTS; r++)
-	    if (dlsch->harq_processes[i]->d[r])
-	      dlsch->harq_processes[i]->d[r][j] = NR_NULL;
-
+        for (j=0; j<96; j++)
+          for (r=0; r<MAX_NUM_DLSCH_SEGMENTS; r++)
+            if (dlsch->harq_processes[i]->d[r])
+              dlsch->harq_processes[i]->d[r][j] = NR_NULL;
       }
     }
   }
@@ -273,9 +269,7 @@ int nr_dlsch_encoding(unsigned char *a,
                       int frame,
                       uint8_t slot,
                       NR_gNB_DLSCH_t *dlsch,
-                      NR_DL_FRAME_PARMS* frame_parms)
-{
-
+                      NR_DL_FRAME_PARMS *frame_parms) {
   unsigned int G;
   unsigned int crc=1;
   uint8_t harq_pid = dlsch->harq_ids[frame&2][slot];
@@ -298,26 +292,21 @@ int nr_dlsch_encoding(unsigned char *a,
   uint16_t length_dmrs = 1;
   float Coderate = 0.0;
   uint8_t Nl = 4;
-
   /*
   uint8_t *channel_input[MAX_NUM_DLSCH_SEGMENTS]; //unsigned char
   for(j=0;j<MAX_NUM_DLSCH_SEGMENTS;j++) {
     channel_input[j] = (unsigned char *)malloc16(sizeof(unsigned char) * 68*384);
   }
   */
-  
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_ENB_DLSCH_ENCODING, VCD_FUNCTION_IN);
-
   A = rel15.transport_block_size;
-
   G = nr_get_G(nb_rb, nb_symb_sch, nb_re_dmrs, length_dmrs,mod_order,rel15.nb_layers);
-
   LOG_D(PHY,"dlsch coding A %d G %d mod_order %d\n", A,G, mod_order);
 
   //  if (dlsch->harq_processes[harq_pid]->Ndi == 1) {  // this is a new packet
   if (dlsch->harq_processes[harq_pid]->round == 0) {  // this is a new packet
 #ifdef DEBUG_DLSCH_CODING
-  printf("encoding thinks this is a new packet \n");
+    printf("encoding thinks this is a new packet \n");
 #endif
     /*
     int i;
@@ -330,55 +319,47 @@ int nr_dlsch_encoding(unsigned char *a,
     if (A > 3824) {
       // Add 24-bit crc (polynomial A) to payload
       crc = crc24a(a,A)>>8;
-      a[A>>3] = ((uint8_t*)&crc)[2];
-      a[1+(A>>3)] = ((uint8_t*)&crc)[1];
-      a[2+(A>>3)] = ((uint8_t*)&crc)[0];
+      a[A>>3] = ((uint8_t *)&crc)[2];
+      a[1+(A>>3)] = ((uint8_t *)&crc)[1];
+      a[2+(A>>3)] = ((uint8_t *)&crc)[0];
       //printf("CRC %x (A %d)\n",crc,A);
       //printf("a0 %d a1 %d a2 %d\n", a[A>>3], a[1+(A>>3)], a[2+(A>>3)]);
-  
       dlsch->harq_processes[harq_pid]->B = A+24;
       //    dlsch->harq_processes[harq_pid]->b = a;
-   
       AssertFatal((A/8)+4 <= MAX_DLSCH_PAYLOAD_BYTES,"A %d is too big (A/8+4 = %d > %d)\n",A,(A/8)+4,MAX_DLSCH_PAYLOAD_BYTES);
-
       memcpy(dlsch->harq_processes[harq_pid]->b,a,(A/8)+4);  // why is this +4 if the CRC is only 3 bytes?
-    }
-    else {
+    } else {
       // Add 16-bit crc (polynomial A) to payload
       crc = crc16(a,A)>>16;
-      a[A>>3] = ((uint8_t*)&crc)[1];
-      a[1+(A>>3)] = ((uint8_t*)&crc)[0];
+      a[A>>3] = ((uint8_t *)&crc)[1];
+      a[1+(A>>3)] = ((uint8_t *)&crc)[0];
       //printf("CRC %x (A %d)\n",crc,A);
       //printf("a0 %d a1 %d \n", a[A>>3], a[1+(A>>3)]);
-  
       dlsch->harq_processes[harq_pid]->B = A+16;
       //    dlsch->harq_processes[harq_pid]->b = a;
-   
       AssertFatal((A/8)+3 <= MAX_DLSCH_PAYLOAD_BYTES,"A %d is too big (A/8+3 = %d > %d)\n",A,(A/8)+3,MAX_DLSCH_PAYLOAD_BYTES);
-
       memcpy(dlsch->harq_processes[harq_pid]->b,a,(A/8)+3);  // using 3 bytes to mimic the case of 24 bit crc
     }
+
     if (R<1000)
       Coderate = (float) R /(float) 1024;
     else  // to scale for mcs 20 and 26 in table 5.1.3.1-2 which are decimal and input 2* in nr_tbs_tools
       Coderate = (float) R /(float) 2048;
 
     if ((A <=292) || ((A<=3824) && (Coderate <= 0.6667)) || Coderate <= 0.25)
-		BG = 2;
+      BG = 2;
     else
-		BG = 1;
+      BG = 1;
 
     Kb = nr_segmentation(dlsch->harq_processes[harq_pid]->b,
-		         dlsch->harq_processes[harq_pid]->c,
-		         dlsch->harq_processes[harq_pid]->B,
-		         &dlsch->harq_processes[harq_pid]->C,
-		         &dlsch->harq_processes[harq_pid]->K,
-		         Zc, 
-		         &dlsch->harq_processes[harq_pid]->F,
+                         dlsch->harq_processes[harq_pid]->c,
+                         dlsch->harq_processes[harq_pid]->B,
+                         &dlsch->harq_processes[harq_pid]->C,
+                         &dlsch->harq_processes[harq_pid]->K,
+                         Zc,
+                         &dlsch->harq_processes[harq_pid]->F,
                          BG);
-
     F = dlsch->harq_processes[harq_pid]->F;
-
     Kr = dlsch->harq_processes[harq_pid]->K;
 #ifdef DEBUG_DLSCH_CODING
     uint16_t Kr_bytes;
@@ -393,51 +374,48 @@ int nr_dlsch_encoding(unsigned char *a,
 #ifdef DEBUG_DLSCH_CODING
       printf("Encoder: B %d F %d \n",dlsch->harq_processes[harq_pid]->B, dlsch->harq_processes[harq_pid]->F);
       printf("start ldpc encoder segment %d/%d\n",r,dlsch->harq_processes[harq_pid]->C);
-      printf("input %d %d %d %d %d \n", dlsch->harq_processes[harq_pid]->c[r][0], dlsch->harq_processes[harq_pid]->c[r][1], dlsch->harq_processes[harq_pid]->c[r][2],dlsch->harq_processes[harq_pid]->c[r][3], dlsch->harq_processes[harq_pid]->c[r][4]);
-      for (int cnt =0 ; cnt < 22*(*Zc)/8; cnt ++){
-      printf("%d ", dlsch->harq_processes[harq_pid]->c[r][cnt]);
-      }
-      printf("\n");
+      printf("input %d %d %d %d %d \n", dlsch->harq_processes[harq_pid]->c[r][0], dlsch->harq_processes[harq_pid]->c[r][1], dlsch->harq_processes[harq_pid]->c[r][2],dlsch->harq_processes[harq_pid]->c[r][3],
+             dlsch->harq_processes[harq_pid]->c[r][4]);
 
+      for (int cnt =0 ; cnt < 22*(*Zc)/8; cnt ++) {
+        printf("%d ", dlsch->harq_processes[harq_pid]->c[r][cnt]);
+      }
+
+      printf("\n");
 #endif
       //ldpc_encoder_orig((unsigned char*)dlsch->harq_processes[harq_pid]->c[r],dlsch->harq_processes[harq_pid]->d[r],*Zc,Kb,Kr,BG,0);
       //ldpc_encoder_optim((unsigned char*)dlsch->harq_processes[harq_pid]->c[r],(unsigned char*)&dlsch->harq_processes[harq_pid]->d[r][0],*Zc,Kb,Kr,BG,NULL,NULL,NULL,NULL);
     }
 
-    for(int j=0;j<(dlsch->harq_processes[harq_pid]->C/8+1);j++) {
+    for(int j=0; j<(dlsch->harq_processes[harq_pid]->C/8+1); j++) {
       ldpc_encoder_optim_8seg_multi(dlsch->harq_processes[harq_pid]->c,dlsch->harq_processes[harq_pid]->d,*Zc,Kb,Kr,BG,dlsch->harq_processes[harq_pid]->C,j,NULL,NULL,NULL,NULL);
     }
 
-
 #ifdef DEBUG_DLSCH_CODING
-      write_output("enc_input0.m","enc_in0",&dlsch->harq_processes[harq_pid]->c[0][0],Kr_bytes,1,4);
-      write_output("enc_output0.m","enc0",&dlsch->harq_processes[harq_pid]->d[0][0],(3*8*Kr_bytes)+12,1,4);
+    write_output("enc_input0.m","enc_in0",&dlsch->harq_processes[harq_pid]->c[0][0],Kr_bytes,1,4);
+    write_output("enc_output0.m","enc0",&dlsch->harq_processes[harq_pid]->d[0][0],(3*8*Kr_bytes)+12,1,4);
 #endif
-
   }
 
   for (r=0; r<dlsch->harq_processes[harq_pid]->C; r++) {
-
     if (dlsch->harq_processes[harq_pid]->F>0) {
       for (int k=(Kr-F-2*(*Zc)); k<Kr-2*(*Zc); k++) {
         dlsch->harq_processes[harq_pid]->d[r][k] = NR_NULL;
-	//if (k<(Kr-F+8))
-	//printf("r %d filler bits [%d] = %d \n", r,k, dlsch->harq_processes[harq_pid]->d[r][k]);
+        //if (k<(Kr-F+8))
+        //printf("r %d filler bits [%d] = %d \n", r,k, dlsch->harq_processes[harq_pid]->d[r][k]);
       }
     }
 
 #ifdef DEBUG_DLSCH_CODING
     printf("Rate Matching, Code segment %d (coded bits (G) %u, unpunctured/repeated bits per code segment %d, mod_order %d, nb_rb %d)...\n",
-        r,
-        G,
-        Kr*3,
-        mod_order,nb_rb);
+           r,
+           G,
+           Kr*3,
+           mod_order,nb_rb);
 #endif
-
 #ifdef DEBUG_DLSCH_CODING
-  printf("rvidx in encoding = %d\n", rel15.redundancy_version);
+    printf("rvidx in encoding = %d\n", rel15.redundancy_version);
 #endif
-
     E = nr_get_E(G, dlsch->harq_processes[harq_pid]->C, mod_order, rel15.nb_layers, r);
 
     // for tbslbrm calculation according to 5.4.2.1 of 38.212
@@ -445,7 +423,6 @@ int nr_dlsch_encoding(unsigned char *a,
       Nl = rel15.nb_layers;
 
     Tbslbrm = nr_compute_tbslbrm(rel15.mcs_table,nb_rb,Nl,dlsch->harq_processes[harq_pid]->C);
-
     nr_rate_matching_ldpc(Ilbrm,
                           Tbslbrm,
                           BG,
@@ -455,30 +432,28 @@ int nr_dlsch_encoding(unsigned char *a,
                           dlsch->harq_processes[harq_pid]->C,
                           rel15.redundancy_version,
                           E);
-
 #ifdef DEBUG_DLSCH_CODING
+
     for (int i =0; i<16; i++)
       printf("output ratematching e[%d]= %d r_offset %d\n", i,dlsch->harq_processes[harq_pid]->e[i+r_offset], r_offset);
+
 #endif
-
-	nr_interleaving_ldpc(E,
-			     mod_order,
-			     dlsch->harq_processes[harq_pid]->e+r_offset,
-			     dlsch->harq_processes[harq_pid]->f+r_offset);
-
-
+    nr_interleaving_ldpc(E,
+                         mod_order,
+                         dlsch->harq_processes[harq_pid]->e+r_offset,
+                         dlsch->harq_processes[harq_pid]->f+r_offset);
 #ifdef DEBUG_DLSCH_CODING
+
     for (int i =0; i<16; i++)
       printf("output interleaving f[%d]= %d r_offset %d\n", i,dlsch->harq_processes[harq_pid]->f[i+r_offset], r_offset);
 
     if (r==dlsch->harq_processes[harq_pid]->C-1)
       write_output("enc_output.m","enc",dlsch->harq_processes[harq_pid]->f,G,1,4);
-#endif
 
+#endif
     r_offset += E;
   }
 
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_ENB_DLSCH_ENCODING, VCD_FUNCTION_OUT);
-
   return 0;
 }

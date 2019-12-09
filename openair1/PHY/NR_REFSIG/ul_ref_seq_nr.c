@@ -56,8 +56,7 @@
 
 int16_t *base_sequence_less_than_36(unsigned int M_ZC,
                                     unsigned int u,
-                                    unsigned int scaling)
-{
+                                    unsigned int scaling) {
   char *phi_table;
   int16_t *rv_overbar;
   double x;
@@ -67,17 +66,22 @@ int16_t *base_sequence_less_than_36(unsigned int M_ZC,
     case 6:
       phi_table = (char *)phi_M_ZC_6;
       break;
+
     case 12:
       phi_table = (char *)phi_M_ZC_12;
       break;
+
     case 18:
       phi_table = (char *)phi_M_ZC_18;
       break;
+
     case 24:
       phi_table = (char *)phi_M_ZC_24;
       break;
+
     case 30:
       break;
+
     default:
       printf("function base_sequence_less_than 36_: unsupported base sequence size : %u \n", M_ZC);
       abort();
@@ -97,14 +101,14 @@ int16_t *base_sequence_less_than_36(unsigned int M_ZC,
       rv_overbar[2*n]   =(int16_t)(floor(scaling*cos(x)));
       rv_overbar[2*n+1] =(int16_t)(floor(scaling*sin(x)));
     }
-  }
-  else {
+  } else {
     for (n=0; n<M_ZC; n++) {
       x = (double)phi_table[n + u*M_ZC] * (M_PI/4);
       rv_overbar[2*n]   = (int16_t)(floor(scaling*cos(x)));
       rv_overbar[2*n+1] = (int16_t)(floor(scaling*sin(x)));
     }
   }
+
   return rv_overbar;
 }
 
@@ -126,22 +130,20 @@ int16_t *base_sequence_less_than_36(unsigned int M_ZC,
 int16_t *base_sequence_36_or_larger(unsigned int Msc_RS,
                                     unsigned int u,
                                     unsigned int v,
-                                    unsigned int scaling)
-{
+                                    unsigned int scaling) {
   int16_t *rv_overbar;
   unsigned int N_ZC;
   double q_overbar, x;
   unsigned int q,m,n;
   unsigned int M_ZC = ul_allocated_re[Msc_RS];
-
   rv_overbar = malloc16(IQ_SIZE*M_ZC);
+
   if (rv_overbar == NULL) {
     msg("Fatal memory allocation problem \n");
     assert(0);
   }
 
   N_ZC = ref_ul_primes[Msc_RS]; /* The length N_ZC is given by the largest prime number such that N_ZC < M_ZC */
-
   q_overbar = N_ZC * (u+1)/(double)31;
 
   /*  q = (q_overbar + 1/2) + v.(-1)^(2q_overbar) */
@@ -156,6 +158,7 @@ int16_t *base_sequence_36_or_larger(unsigned int Msc_RS,
     rv_overbar[2*n]   =  (int16_t)(floor(scaling*cos(M_PI*x)));   /* cos(-x) = cos(x) */
     rv_overbar[2*n+1] = -(int16_t)(floor(scaling*sin(M_PI*x)));   /* sin(-x) = -sin(x) */
   }
+
   return rv_overbar;
 }
 
@@ -173,19 +176,16 @@ int16_t *base_sequence_36_or_larger(unsigned int Msc_RS,
 *
 *********************************************************************/
 
-void generate_ul_reference_signal_sequences(unsigned int scaling)
-{
-	unsigned int u,v,Msc_RS;
-
+void generate_ul_reference_signal_sequences(unsigned int scaling) {
+  unsigned int u,v,Msc_RS;
 #if 0
-
-    char output_file[255];
-    char sequence_name[255];
-
+  char output_file[255];
+  char sequence_name[255];
 #endif
 
   for (Msc_RS=0; Msc_RS <= INDEX_SB_LESS_32; Msc_RS++) {
-	v = 0;
+    v = 0;
+
     for (u=0; u < U_GROUP_NUMBER; u++) {
       rv_ul_ref_sig[u][v][Msc_RS] = base_sequence_less_than_36(ul_allocated_re[Msc_RS], u, scaling);
 #if 0
@@ -193,7 +193,6 @@ void generate_ul_reference_signal_sequences(unsigned int scaling)
       sprintf(sequence_name, "rv_seq_%d_%d_%d.m", u, v, ul_allocated_re[Msc_RS]);
       printf("u %d Msc_RS %d allocate memory %x of size %d \n", u, Msc_RS, rv_ul_ref_sig[u][v][Msc_RS], (IQ_SIZE* ul_allocated_re[Msc_RS]));
       write_output(output_file, sequence_name,  rv_ul_ref_sig[u][v][Msc_RS], ul_allocated_re[Msc_RS], 1, 1);
-
 #endif
     }
   }
@@ -207,7 +206,6 @@ void generate_ul_reference_signal_sequences(unsigned int scaling)
         sprintf(sequence_name, "rv_seq_%d_%d_%d.m", u, v, ul_allocated_re[Msc_RS]);
         printf("u %d Msc_RS %d allocate memory %x of size %d \n", u, Msc_RS, rv_ul_ref_sig[u][v][Msc_RS], (IQ_SIZE* ul_allocated_re[Msc_RS]));
         write_output(output_file, sequence_name,  rv_ul_ref_sig[u][v][Msc_RS], ul_allocated_re[Msc_RS], 1, 1);
-
 #endif
       }
     }
@@ -225,9 +223,9 @@ void generate_ul_reference_signal_sequences(unsigned int scaling)
 * DESCRIPTION :  free of uplink reference signal sequences
 *
 *********************************************************************/
-void free_ul_reference_signal_sequences(void)
-{
+void free_ul_reference_signal_sequences(void) {
   unsigned int u,v,Msc_RS;
+
   for (Msc_RS=0; Msc_RS < SRS_SB_CONF; Msc_RS++) {
     for (u=0; u < U_GROUP_NUMBER; u++) {
       for (v=0; v < V_BASE_SEQUENCE_NUMBER; v++) {

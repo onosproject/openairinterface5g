@@ -314,7 +314,6 @@ static void get_options(void) {
   int timingadv = 0;
   uint8_t nfapi_mode = NFAPI_MONOLITHIC;
   int simL1flag = 0;
-
   set_default_frame_parms(frame_parms);
   CONFIG_SETRTFLAG(CONFIG_NOEXITONHELP);
   /* unknown parameters on command line will be checked in main
@@ -593,7 +592,7 @@ int main( int argc, char **argv ) {
   for (int i=0; i<MAX_NUM_CCs; i++) tx_max_power[i]=23;
 
   get_options ();
-  set_softmodem_optmask(SOFTMODEM_LTEUE_BIT); 
+  set_softmodem_optmask(SOFTMODEM_LTEUE_BIT);
   EPC_MODE_ENABLED = !IS_SOFTMODEM_NOS1;
   printf("Running with %d UE instances\n",NB_UE_INST);
 
@@ -622,7 +621,6 @@ int main( int argc, char **argv ) {
   cpuf=get_cpu_freq_GHz();
   pthread_cond_init(&sync_cond,NULL);
   pthread_mutex_init(&sync_mutex, NULL);
-
   printf("ITTI init\n");
   itti_init(TASK_MAX, THREAD_MAX, MESSAGES_ID_MAX, tasks_info, messages_info);
 
@@ -680,10 +678,7 @@ int main( int argc, char **argv ) {
   }
 
   cpuf=get_cpu_freq_GHz();
-  
-  
 #if 0 // #ifndef DEADLINE_SCHEDULER
-  
   printf("NO deadline scheduler\n");
   /* Currently we set affinity for UHD to CPU 0 for eNB/UE and only if number of CPUS >2 */
   cpu_set_t cpuset;
@@ -692,16 +687,18 @@ int main( int argc, char **argv ) {
   CPU_ZERO(&cpuset);
 #ifdef CPU_AFFINITY
   int j;
+
   if (get_nprocs() > 2) {
     for (j = 2; j < get_nprocs(); j++)
       CPU_SET(j, &cpuset);
-    
+
     s = pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
 
     if (s != 0) {
       perror( "pthread_setaffinity_np");
       exit_fun("Error setting processor affinity");
     }
+
     LOG_I(HW, "Setting the affinity of main function to all CPUs, for device library to use CPU 0 only!\n");
   }
 

@@ -80,7 +80,7 @@ unsigned short config_frames[4] = {2,9,11,13};
 //#include "PHY/TOOLS/time_meas.h"
 
 #ifndef OPENAIR2
-#include "UTIL/OTG/otg_vars.h"
+  #include "UTIL/OTG/otg_vars.h"
 #endif
 
 
@@ -256,6 +256,7 @@ void exit_function(const char *file, const char *function, const int line, const
   if (s != NULL) {
     printf("%s:%d %s() Exiting OAI softmodem: %s\n",file,line, function, s);
   }
+
   close_log_mem();
   oai_exit = 1;
 
@@ -515,8 +516,7 @@ static  void wait_nfapi_init(char *thread_name) {
   printf( "NFAPI: got sync (%s)\n", thread_name);
 }
 
-int main ( int argc, char **argv )
-{
+int main ( int argc, char **argv ) {
   int i;
   int CC_id = 0;
   int ru_id;
@@ -531,14 +531,14 @@ int main ( int argc, char **argv )
   logInit();
   printf("Reading in command-line options\n");
   get_options ();
-
   EPC_MODE_ENABLED = !IS_SOFTMODEM_NOS1;
 
   if (CONFIG_ISFLAGSET(CONFIG_ABORT) ) {
     fprintf(stderr,"Getting configuration failed\n");
     exit(-1);
   }
-  set_softmodem_optmask(SOFTMODEM_ENB_BIT); 
+
+  set_softmodem_optmask(SOFTMODEM_ENB_BIT);
 #if T_TRACER
   T_Config_Init();
 #endif
@@ -598,6 +598,7 @@ int main ( int argc, char **argv )
       RRC_CONFIGURATION_REQ(msg_p) = RC.rrc[enb_id]->configuration;
       itti_send_msg_to_task (TASK_RRC_ENB, ENB_MODULE_ID_TO_INSTANCE(enb_id), msg_p);
     }
+
     node_type = RC.rrc[0]->node_type;
   } else {
     printf("RC.nb_inst = 0, Initializing L1\n");
@@ -614,7 +615,7 @@ int main ( int argc, char **argv )
     ctxt.subframe = 0;
     pdcp_run(&ctxt);
   }
-    
+
   /* start threads if only L1 or not a CU */
   if (RC.nb_inst == 0 || !NODE_IS_CU(node_type) || NFAPI_MODE == NFAPI_MODE_PNF || NFAPI_MODE == NFAPI_MODE_VNF) {
     // init UE_PF_PO and mutex lock
@@ -623,27 +624,26 @@ int main ( int argc, char **argv )
     mlockall(MCL_CURRENT | MCL_FUTURE);
     pthread_cond_init(&sync_cond,NULL);
     pthread_mutex_init(&sync_mutex, NULL);
-
     rt_sleep_ns(10*100000000ULL);
-    
+
     if (NFAPI_MODE!=NFAPI_MONOLITHIC) {
       LOG_I(ENB_APP,"NFAPI*** - mutex and cond created - will block shortly for completion of PNF connection\n");
       pthread_cond_init(&sync_cond,NULL);
       pthread_mutex_init(&sync_mutex, NULL);
     }
-    
+
     if (NFAPI_MODE==NFAPI_MODE_VNF) {// VNF
 #if defined(PRE_SCD_THREAD)
       init_ru_vnf();  // ru pointer is necessary for pre_scd.
 #endif
       wait_nfapi_init("main?");
     }
-    
+
     LOG_I(ENB_APP,"START MAIN THREADS\n");
     // start the main threads
     number_of_cards = 1;
     printf("RC.nb_L1_inst:%d\n", RC.nb_L1_inst);
-    
+
     if (RC.nb_L1_inst > 0) {
       printf("Initializing eNB threads single_thread_flag:%d wait_for_sync:%d\n", get_softmodem_params()->single_thread_flag,get_softmodem_params()->wait_for_sync);
       init_eNB(get_softmodem_params()->single_thread_flag,get_softmodem_params()->wait_for_sync);
@@ -655,25 +655,25 @@ int main ( int argc, char **argv )
   printf("wait_eNBs()\n");
   wait_eNBs();
   printf("About to Init RU threads RC.nb_RU:%d\n", RC.nb_RU);
-  
+
   // RU thread and some L1 procedure aren't necessary in VNF or L2 FAPI simulator.
   // but RU thread deals with pre_scd and this is necessary in VNF and simulator.
   // some initialization is necessary and init_ru_vnf do this.
   if (RC.nb_RU >0 && NFAPI_MODE!=NFAPI_MODE_VNF) {
     printf("Initializing RU threads\n");
     init_RU(get_softmodem_params()->rf_config_file,get_softmodem_params()->clock_source,get_softmodem_params()->timing_source,get_softmodem_params()->send_dmrs_sync);
-    
+
     for (ru_id=0; ru_id<RC.nb_RU; ru_id++) {
       RC.ru[ru_id]->rf_map.card=0;
       RC.ru[ru_id]->rf_map.chain=CC_id+(get_softmodem_params()->chain_offset);
     }
-    
+
     config_sync_var=0;
-    
+
     if (NFAPI_MODE==NFAPI_MODE_PNF) { // PNF
       wait_nfapi_init("main?");
     }
-    
+
     printf("wait RUs\n");
     // CI -- Flushing the std outputs for the previous marker to show on the eNB / RRU log file
     fflush(stdout);
@@ -701,15 +701,18 @@ int main ( int argc, char **argv )
     pthread_mutex_unlock(&sync_mutex);
     config_check_unknown_cmdlineopt(CONFIG_CHECKALLSECTIONS);
   }
+
   // wait for end of program
   LOG_UI(ENB_APP,"TYPE <CTRL-C> TO TERMINATE\n");
   // CI -- Flushing the std outputs for the previous marker to show on the eNB / DU / CU log file
   fflush(stdout);
   fflush(stderr);
+
   // end of CI modifications
   //getchar();
   if(IS_SOFTMODEM_DOFORMS)
-     load_softscope("enb");
+    load_softscope("enb");
+
   itti_wait_tasks_end();
   oai_exit=1;
   LOG_I(ENB_APP,"oai_exit=%d\n",oai_exit);
@@ -727,8 +730,8 @@ int main ( int argc, char **argv )
      * threads have been stopped (they partially use the same memory) */
     for (int inst = 0; inst < NB_eNB_INST; inst++) {
       for (int cc_id = 0; cc_id < RC.nb_CC[inst]; cc_id++) {
-	free_transport(RC.eNB[inst][cc_id]);
-	phy_free_lte_eNB(RC.eNB[inst][cc_id]);
+        free_transport(RC.eNB[inst][cc_id]);
+        phy_free_lte_eNB(RC.eNB[inst][cc_id]);
       }
     }
 
@@ -746,17 +749,17 @@ int main ( int argc, char **argv )
 
     for(ru_id=0; ru_id<RC.nb_RU; ru_id++) {
       if (RC.ru[ru_id]->rfdevice.trx_end_func) {
-	RC.ru[ru_id]->rfdevice.trx_end_func(&RC.ru[ru_id]->rfdevice);
-	RC.ru[ru_id]->rfdevice.trx_end_func = NULL;
+        RC.ru[ru_id]->rfdevice.trx_end_func(&RC.ru[ru_id]->rfdevice);
+        RC.ru[ru_id]->rfdevice.trx_end_func = NULL;
       }
 
       if (RC.ru[ru_id]->ifdevice.trx_end_func) {
-	RC.ru[ru_id]->ifdevice.trx_end_func(&RC.ru[ru_id]->ifdevice);
-	RC.ru[ru_id]->ifdevice.trx_end_func = NULL;
+        RC.ru[ru_id]->ifdevice.trx_end_func(&RC.ru[ru_id]->ifdevice);
+        RC.ru[ru_id]->ifdevice.trx_end_func = NULL;
       }
     }
   }
-   
+
   terminate_opt();
   logClean();
   printf("Bye.\n");

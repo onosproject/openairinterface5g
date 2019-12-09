@@ -94,7 +94,7 @@ void get_common_options(void) {
   }
 
   if (nokrnmod) {
-	  printf("nokrnmod bit enabled \n");
+    printf("nokrnmod bit enabled \n");
     set_softmodem_optmask(SOFTMODEM_NOKRNMOD_BIT);
   }
 
@@ -113,7 +113,6 @@ void get_common_options(void) {
   if (do_forms) {
     set_softmodem_optmask(SOFTMODEM_DOFORMS_BIT);
   }
-
 
   if(parallel_config != NULL) set_parallel_conf(parallel_config);
 

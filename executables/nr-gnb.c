@@ -187,7 +187,6 @@ static inline int rxtx(PHY_VARS_gNB *gNB, int frame_rx, int slot_rx, int frame_t
 
     // UE-specific RX processing for subframe n
     if (nfapi_mode == 0 || nfapi_mode == 1) */
-
   pthread_mutex_lock(&gNB->UL_INFO_mutex);
   gNB->UL_INFO.frame     = frame_rx;
   gNB->UL_INFO.slot      = slot_rx;
@@ -206,8 +205,8 @@ static inline int rxtx(PHY_VARS_gNB *gNB, int frame_rx, int slot_rx, int frame_t
 
   if (oai_exit) return(-1);
 
-  //if (slot_rx == NR_UPLINK_SLOT || gNB->frame_parms.frame_type == FDD) 
-    phy_procedures_gNB_uespec_RX(gNB, frame_rx, slot_rx);
+  //if (slot_rx == NR_UPLINK_SLOT || gNB->frame_parms.frame_type == FDD)
+  phy_procedures_gNB_uespec_RX(gNB, frame_rx, slot_rx);
 
   if(get_thread_parallel_conf() != PARALLEL_RU_L1_TRX_SPLIT) {
     phy_procedures_gNB_TX(gNB, frame_tx,slot_tx, 1);
@@ -907,7 +906,6 @@ void init_gNB(int single_thread_flag,int wait_for_sync) {
       gNB->UL_INFO.harq_ind.harq_indication_body.harq_pdu_list = gNB->harq_pdu_list;
       gNB->UL_INFO.cqi_ind.cqi_pdu_list = gNB->cqi_pdu_list;
       gNB->UL_INFO.cqi_ind.cqi_raw_pdu_list = gNB->cqi_raw_pdu_list;
-      
       gNB->prach_energy_counter = 0;
     }
   }
