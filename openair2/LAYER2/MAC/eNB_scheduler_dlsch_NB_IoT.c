@@ -80,7 +80,7 @@ int schedule_DL_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_inst, UE_
 	
 	logical_chan_id_t logical_channel; //
 
-	uint32_t subheader_length=2;
+	uint32_t subheader_length=3;
 	
 	uint32_t payload_offset; //
 	
@@ -88,8 +88,8 @@ int schedule_DL_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_inst, UE_
 	uint32_t search_space_end_sf, h_temp, f_temp, sf_temp;
         mac_rlc_status_resp_t rlc_status; //Declare rlc_status
 
-	//I_mcs = get_I_mcs(UE_info->CE_level);
-	I_mcs = 6;
+	I_mcs = get_I_mcs(UE_info->CE_level);
+	//I_mcs = 6;
 	I_tbs = I_mcs;
 	//get max TBS
 	TBS = get_max_tbs(I_tbs);
@@ -145,7 +145,7 @@ int schedule_DL_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_inst, UE_
 		    memcpy(UE_info->DLSCH_pdu.payload+payload_offset, sdu_temp, mac_sdu_size);
 
 
-            printf("print the MAC DATA PDU including length payload \n");
+            printf("print the MAC DATA PDU including length payload, we have header %d byte \n",payload_offset);
             int y;
             for (y=0;y<mac_sdu_size+payload_offset;y++){
             printf("%02x ",UE_info->DLSCH_pdu.payload[y]);
@@ -509,10 +509,21 @@ uint32_t generate_dlsch_header_NB_IoT(uint8_t *pdu, uint32_t num_sdu, logical_ch
         {		
             if(sdu_length[i]<128)
             {
+            	LOG_N(MAC,"Pack the header here\n");
+           		/*mac_header->E=0;
+            	mac_header->LCID = DCCH0_NB_IoT;
+            	//mac_header->LCID = 1;
+
+            	//mac_header->F2=0;
+            	mac_header->R=0;
+            	offset++;
+            	mac_header+=1;*/
+
+            	
                 ((SCH_SUBHEADER_SHORT_NB_IoT*)mac_header)->LCID = DCCH0_NB_IoT;
                 ((SCH_SUBHEADER_SHORT_NB_IoT*)mac_header)->F2=0;
                 ((SCH_SUBHEADER_SHORT_NB_IoT*)mac_header)->R=0;
-                ((SCH_SUBHEADER_SHORT_NB_IoT*)mac_header)->E=0;
+                ((SCH_SUBHEADER_SHORT_NB_IoT*)mac_header)->E=1;
                 //((SCH_SUBHEADER_SHORT_NB_IoT*)mac_header)->E=1;
                
                 ((SCH_SUBHEADER_SHORT_NB_IoT*)mac_header)->F=0;
@@ -520,6 +531,8 @@ uint32_t generate_dlsch_header_NB_IoT(uint8_t *pdu, uint32_t num_sdu, logical_ch
                 num_subheader--;
                 mac_header+=2;
                 offset+=2;
+                
+
             }
             else
             {
@@ -536,7 +549,7 @@ uint32_t generate_dlsch_header_NB_IoT(uint8_t *pdu, uint32_t num_sdu, logical_ch
             }
         }
 	}
-	/*
+	
 	if(flag_end_padding==1)
 	{
 		mac_header->LCID=PADDING;
@@ -546,7 +559,7 @@ uint32_t generate_dlsch_header_NB_IoT(uint8_t *pdu, uint32_t num_sdu, logical_ch
 		mac_header++;
 		offset++;
 	}
-	*/
+	
 	return offset;
 }
 void fill_DCI_N1(DCIFormatN1_t *DCI_N1, UE_TEMPLATE_NB_IoT *UE_info, UE_SCHED_CTRL_NB_IoT_t *UE_sched_ctrl_info)
@@ -576,7 +589,7 @@ void generate_scheduling_result_DL(uint32_t NPDCCH_sf_end, uint32_t NPDCCH_sf_st
 	NPDCCH_result->rnti=rnti;
 	NPDCCH_result->output_subframe = NPDCCH_sf_start;
 	NPDCCH_result->end_subframe = NPDCCH_sf_end;
-	NPDCCH_result->sdu_length = TBS;
+	NPDCCH_result->sdu_length = 0;
 	NPDCCH_result->direction = 1;
 	NPDCCH_result->rnti_type = 3;
 	NPDCCH_result->DLSCH_pdu = NULL;
@@ -591,7 +604,7 @@ void generate_scheduling_result_DL(uint32_t NPDCCH_sf_end, uint32_t NPDCCH_sf_st
 	//NPDSCH_result->output_subframe = NPDSCH_subframe;
 	NPDSCH_result->output_subframe = NPDSCH_sf_start;
 	NPDSCH_result->end_subframe = NPDSCH_sf_end;
-	NPDSCH_result->sdu_length = TBS;
+	NPDSCH_result->sdu_length = TBS*8;
 	NPDSCH_result->DLSCH_pdu = DLSCH_pdu;
 	//NPDSCH_result->DLSCH_pdu = NULL;
 	NPDSCH_result->direction = 1;

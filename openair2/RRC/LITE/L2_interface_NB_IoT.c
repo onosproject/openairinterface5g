@@ -1426,13 +1426,14 @@ boolean_t pdcp_data_req_NB_IoT(
 	                                      (unsigned char*)&pdcp_pdu_p->data[0],
 	                                      sdu_buffer_sizeP);
 	      #endif
+    /*          
 	      int x;
 	      printf("print the data in pdcp_data_req_NB_IoT\n");
 	      for (x=0;x<sdu_buffer_sizeP;x++){
 		printf("%02x ",pdcp_pdu_p->data[x]);
 	      }
 	      printf("\n");
-
+    */
 	      rlc_status = rlc_data_req_NB_IoT(ctxt_pP, srb_flagP, rb_idP, muiP, confirmP, sdu_buffer_sizeP, pdcp_pdu_p);
 	      //MP: if all ok rlc_status = RLC_OP_STATUS_OK
 
@@ -2578,12 +2579,14 @@ rlc_op_status_t rlc_data_req_NB_IoT (const protocol_ctxt_t* const ctxt_pP,
 #ifdef DEBUG_RLC_DATA_REQ
       LOG_D(RLC,"RLC_MODE_AM\n");
 #endif
+
+      /*
 	      printf("print the data in AM before new_sdu_p in rlc_data_req_NB_IoT\n");
               for (x=0;x<sdu_sizeP;x++){
                 printf("%02x ",sdu_pP->data[x]);
               }
               printf("\n");
-
+      */
       new_sdu_p = get_free_mem_block (sdu_sizeP + sizeof (struct rlc_am_data_req_alloc), __func__);
 
       if (new_sdu_p != NULL) {
@@ -2596,20 +2599,23 @@ rlc_op_status_t rlc_data_req_NB_IoT (const protocol_ctxt_t* const ctxt_pP,
         ((struct rlc_am_data_req *) (new_sdu_p->data))->mui  = muiP;
         ((struct rlc_am_data_req *) (new_sdu_p->data))->data_offset = sizeof (struct rlc_am_data_req_alloc);
         free_mem_block(sdu_pP, __func__);
+
+      /*
 	     printf("print the data after new_sdu_p in rlc_data_req_NB_IoT\n");
              for (x=0;x<sdu_sizeP;x++){
                 printf("%02x ",new_sdu_p->data[x]);
               }
               printf("\n");
-
+      */
         rlc_am_data_req(ctxt_pP, &rlc_union_p->rlc.am, new_sdu_p);
         VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_RLC_DATA_REQ,VCD_FUNCTION_OUT);
+        /*
 	      printf("printf the data after rlc_am_data_req (in L2_interface_NB_IoT)\n");
               for (x=0;x<sdu_sizeP;x++){
                 printf("%02x ",new_sdu_p->data[x]);
               }
               printf("\n");
-
+        */
         return RLC_OP_STATUS_OK;
       } else {
         VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_RLC_DATA_REQ,VCD_FUNCTION_OUT);
