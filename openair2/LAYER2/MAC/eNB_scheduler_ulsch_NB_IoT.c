@@ -57,7 +57,7 @@ int schedule_UL_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst,UE_TEMPLATE_NB_IoT *UE_info
     }
 
     TBS=get_TBS_UL_NB_IoT(mcs,UE_info->multi_tone,Iru);
-    LOG_D(MAC,"Initial TBS : %d UL_buffer: %d\n", TBS, UE_info->ul_total_buffer);
+    LOG_I(MAC,"Initial TBS : %d UL_buffer: %d\n", TBS, UE_info->ul_total_buffer);
 
     sched_temp_UL_NB_IoT_t *NPUSCH_info = (sched_temp_UL_NB_IoT_t*)malloc(sizeof(sched_temp_UL_NB_IoT_t));
 

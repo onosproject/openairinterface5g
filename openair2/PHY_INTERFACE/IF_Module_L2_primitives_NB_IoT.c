@@ -3,6 +3,7 @@
 #include "LAYER2/MAC/extern_NB_IoT.h"
 
 int tmp = 0;
+int block_rach = 0;
 
 void simulate_preamble(UL_IND_NB_IoT_t *UL_INFO, int CE, int sc)
 {
@@ -92,15 +93,18 @@ void UL_indication_NB_IoT(UL_IND_NB_IoT_t *UL_INFO)
       //for(i=0;i<UL_INFO->nrach_ind.number_of_initial_scs_detected;i++)
       for(i=0;i<1;i++)
       {
-        // initiate_ra here, some useful inforamtion : 
-        LOG_D(MAC,"Init_RA_NB_IoT in, index of sc = %d\n",(UL_INFO->nrach_ind.nrach_pdu_list+i)->nrach_indication_rel13.initial_sc);
-        init_RA_NB_IoT(mac_inst,
+        if(block_rach == 0)
+        {
+          // initiate_ra here, some useful inforamtion : 
+          LOG_D(MAC,"Init_RA_NB_IoT in, index of sc = %d\n",(UL_INFO->nrach_ind.nrach_pdu_list+i)->nrach_indication_rel13.initial_sc);
+          init_RA_NB_IoT(mac_inst,
                       (UL_INFO->nrach_ind.nrach_pdu_list+i)->nrach_indication_rel13.initial_sc,
                       (UL_INFO->nrach_ind.nrach_pdu_list+i)->nrach_indication_rel13.nrach_ce_level,
                       UL_INFO->frame,
                       //timing_offset = Timing_advance * 16
                       (UL_INFO->nrach_ind.nrach_pdu_list+i)->nrach_indication_rel13.timing_advance*16
                       );
+        }
       }
     }
     
@@ -134,10 +138,13 @@ void UL_indication_NB_IoT(UL_IND_NB_IoT_t *UL_INFO)
           ue_info->direction=0;
         }else
         {
-          ue_info->direction=1;
-          ue_info->HARQ_round++;
-          LOG_I(MAC,"This UE get the response of HARQ DL : NACK, and will start the next harq round : %d\n",ue_info->HARQ_round);  
-
+          LOG_I(MAC,"This UE get the response of HARQ DL : ACK, update the UL buffer for next message\n");
+          ue_info->direction=0;
+          ue_info->ul_total_buffer = 64;
+          block_rach = 1;
+          //LOG_I(MAC,"This UE get the response of HARQ DL : NACK, and will start the next harq round : %d\n",ue_info->HARQ_round);  
+          //ue_info->direction=1;
+          //ue_info->HARQ_round++;
         }      
       }
       else

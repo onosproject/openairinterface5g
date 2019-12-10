@@ -196,7 +196,7 @@ tbs_size_t mac_rlc_data_req(
     //if (!enb_flagP) rlc_am_set_nb_bytes_requested_by_mac(&rlc_union_p->rlc.am,tb_sizeP);
 	data_request = rlc_am_mac_data_request(&ctxt, &rlc_union_p->rlc.am,enb_flagP);
     ret_tb_size =mac_rlc_serialize_tb(buffer_pP, data_request.data);
-    printf("****************data_request=%d (in rlc_mac.c)****************\n",data_request);
+    //printf("****************data_request=%d (in rlc_mac.c)****************\n",data_request);
     break;
 
   case RLC_MODE_UM:

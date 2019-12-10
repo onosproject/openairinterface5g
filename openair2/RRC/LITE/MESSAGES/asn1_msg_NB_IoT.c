@@ -953,6 +953,7 @@ uint8_t do_RRCConnectionSetup_NB_IoT(
   BOOLEAN_t* npusch_AllSymbols = NULL;
   long* npusch_repetitions = NULL;
   long* group_hopping_disabled = NULL;
+  long* srpro = NULL;
 
   // At the first moment of MSG4 testing we set NULL to those optional
 
@@ -1037,9 +1038,13 @@ uint8_t do_RRCConnectionSetup_NB_IoT(
 
 	SRB1bis_lchan_config_NB_IoT = CALLOC(1,sizeof(*SRB1bis_lchan_config_NB_IoT));
 	SRB1bis_config_NB_IoT->logicalChannelConfig_r13  = SRB1bis_lchan_config_NB_IoT;
-
+  //SRB1bis_lchan_config_NB_IoT->present = SRB_ToAddMod_NB_r13__logicalChannelConfig_r13_PR_explicitValue;
   SRB1bis_lchan_config_NB_IoT->present = SRB_ToAddMod_NB_r13__logicalChannelConfig_r13_PR_defaultValue;
-
+/*
+  srpro = CALLOC(1,sizeof(long));
+  *srpro = 3;
+  SRB1bis_lchan_config_NB_IoT->choice.explicitValue.priority_r13 = srpro;
+*/
 	//prioritySRB1bis = CALLOC(1, sizeof(long));
 	//*prioritySRB1bis = 1; //same as SRB1?
 	//SRB1bis_lchan_config_NB_IoT->choice.explicitValue.priority_r13 = prioritySRB1bis;

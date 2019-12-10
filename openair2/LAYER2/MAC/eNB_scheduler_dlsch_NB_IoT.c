@@ -75,9 +75,11 @@ int schedule_DL_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_inst, UE_
 	int HARQ_delay=0;
 	uint32_t data_size;
 	uint32_t mac_sdu_size; //
+	uint32_t mac_sdu_size2; //
 
 	uint8_t sdu_temp[SCH_PAYLOAD_SIZE_MAX_NB_IoT]; //
-	
+	uint8_t sdu_temp2[SCH_PAYLOAD_SIZE_MAX_NB_IoT]; //
+
 	logical_chan_id_t logical_channel; //
 
 	uint32_t subheader_length=3;
@@ -87,6 +89,7 @@ int schedule_DL_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_inst, UE_
 
 	uint32_t search_space_end_sf, h_temp, f_temp, sf_temp;
         mac_rlc_status_resp_t rlc_status; //Declare rlc_status
+        mac_rlc_status_resp_t rlc_status2; //Declare rlc_status
 
 	I_mcs = get_I_mcs(UE_info->CE_level);
 	//I_mcs = 6;
@@ -139,15 +142,46 @@ int schedule_DL_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_inst, UE_
 
             LOG_I(MAC,"[NB-IoT][DCCH]  Got %d bytes from RLC\n",mac_sdu_size);
 
+		//Get RLC status	
+		rlc_status2 = mac_rlc_status_ind(
+										module_id,
+										UE_info->rnti,
+										module_id,
+										frame_start,
+										subframe_start,
+										1,
+										0,
+										DCCH0_NB_IoT,
+										TBS-subheader_length-mac_sdu_size);
+         mac_sdu_size2 = mac_rlc_data_req(
+					      module_id,
+					      UE_info->rnti,
+					      module_id,
+					      frame_start,
+					      1,
+					      0,
+					      DCCH0_NB_IoT,
+						  TBS, //not used
+					      (char *)&sdu_temp2[0]);
+
+          	printf("print the second RLC DATA PDU payload, we have  %d byte \n",mac_sdu_size2);
+            int y;
+            for (y=0;y<mac_sdu_size2;y++){
+            printf("%02x ",sdu_temp2[y]);
+            }
+            printf("\n");
+
 		    //Generate header
-		    payload_offset = generate_dlsch_header_NB_IoT(UE_info->DLSCH_pdu.payload, 1, &logical_channel, &mac_sdu_size, 0, 0, TBS);
+		    payload_offset = generate_dlsch_header_NB_IoT(UE_info->DLSCH_pdu.payload, 1, &logical_channel, &mac_sdu_size2, 0, 0, TBS);
 		    //Complete MAC PDU
-		    memcpy(UE_info->DLSCH_pdu.payload+payload_offset, sdu_temp, mac_sdu_size);
+		    memcpy(UE_info->DLSCH_pdu.payload+payload_offset, sdu_temp, mac_sdu_size);		    
+		    memcpy(UE_info->DLSCH_pdu.payload+payload_offset+mac_sdu_size, sdu_temp2, mac_sdu_size2);
 
 
             printf("print the MAC DATA PDU including length payload, we have header %d byte \n",payload_offset);
-            int y;
-            for (y=0;y<mac_sdu_size+payload_offset;y++){
+            //int y;
+            for (y=0;y<mac_sdu_size+payload_offset+mac_sdu_size2;y++){
+            //for (y=0;y<payload_offset+mac_sdu_size2;y++){
             printf("%02x ",UE_info->DLSCH_pdu.payload[y]);
             }
             printf("\n");
@@ -519,6 +553,17 @@ uint32_t generate_dlsch_header_NB_IoT(uint8_t *pdu, uint32_t num_sdu, logical_ch
             	offset++;
             	mac_header+=1;*/
 
+                ((SCH_SUBHEADER_SHORT_NB_IoT*)mac_header)->LCID = DCCH0_NB_IoT;
+                ((SCH_SUBHEADER_SHORT_NB_IoT*)mac_header)->F2=0;
+                ((SCH_SUBHEADER_SHORT_NB_IoT*)mac_header)->R=0;
+                ((SCH_SUBHEADER_SHORT_NB_IoT*)mac_header)->E=1;
+                //((SCH_SUBHEADER_SHORT_NB_IoT*)mac_header)->E=1;
+               
+                ((SCH_SUBHEADER_SHORT_NB_IoT*)mac_header)->F=0;
+                ((SCH_SUBHEADER_SHORT_NB_IoT*)mac_header)->L=2;
+                //num_subheader--;
+                mac_header+=2;
+                offset+=2;
             	
                 ((SCH_SUBHEADER_SHORT_NB_IoT*)mac_header)->LCID = DCCH0_NB_IoT;
                 ((SCH_SUBHEADER_SHORT_NB_IoT*)mac_header)->F2=0;
