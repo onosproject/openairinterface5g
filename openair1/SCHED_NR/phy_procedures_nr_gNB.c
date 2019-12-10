@@ -157,7 +157,7 @@ void phy_procedures_gNB_TX(PHY_VARS_gNB *gNB,
   uint8_t num_dci=0,num_pdsch_rnti;
   NR_DL_FRAME_PARMS *fp=&gNB->frame_parms;
   nfapi_nr_config_request_t *cfg = &gNB->gNB_config;
-  NR_gNB_DLSCH_thread_t  *dlsch_thread = &gNB->dlsch_thread;
+  NR_gNB_DLSCH_thread_t  *dlsch_thread = gNB->dlsch_thread;
   int offset = gNB->CC_id;
   uint8_t ssb_frame_periodicity;  // every how many frames SSB are generated
   int txdataF_offset = (slot%2)*fp->samples_per_slot_wCP;
@@ -165,7 +165,6 @@ void phy_procedures_gNB_TX(PHY_VARS_gNB *gNB,
 
   num_dci = gNB->pdcch_vars.num_dci;
   num_pdsch_rnti = gNB->pdcch_vars.num_pdsch_rnti;
-
 
   if (cfg->sch_config.ssb_periodicity.value < 20)
     ssb_frame_periodicity = 1;
@@ -250,7 +249,7 @@ static void *nr_pdsch_thread(void *param) {
 
   while(!oai_exit)
   {
-    dlsch   = &gNB->dlsch_thread;
+    dlsch   = gNB->dlsch_thread;
     fp      = &gNB->frame_parms;
     cfg     = &gNB->gNB_config;
     frame   = dlsch->frame;
@@ -283,31 +282,31 @@ static void *nr_pdsch_thread(void *param) {
 
 void nr_init_pdsch_thread(PHY_VARS_gNB *gNB) {
 
-  printf("init pdsch thread start\n");
-  NR_gNB_DLSCH_thread_t  *dlsch  = &gNB->dlsch_thread;
+  gNB->dlsch_thread = (NR_gNB_DLSCH_thread_t *)malloc16(sizeof(NR_gNB_DLSCH_thread_t));
   
-  dlsch->instance_cnt_dlsch         = -1;
+  gNB->dlsch_thread->instance_cnt_dlsch         = -1;
+  gNB->dlsch_thread->frame                      = 0;
+  gNB->dlsch_thread->slot                       = 0;
     
-  pthread_mutex_init( &dlsch->mutex_dlsch, NULL);
-  pthread_cond_init( &dlsch->cond_dlsch, NULL);
+  pthread_mutex_init( &gNB->dlsch_thread->mutex_dlsch, NULL);
+  pthread_cond_init( &gNB->dlsch_thread->cond_dlsch, NULL);
 
-  printf("create pdsch thread start\n");
-  threadCreate(&dlsch->pthread_dlsch, nr_pdsch_thread, (void*)gNB, "pdsch", -1, OAI_PRIORITY_RT);
+  threadCreate(&gNB->dlsch_thread->pthread_dlsch, nr_pdsch_thread, (void*)gNB, "pdsch", -1, OAI_PRIORITY_RT);
   LOG_I(PHY,"init pdsch thread\n");
   
 }
 
 void nr_kill_pdsch_thread(PHY_VARS_gNB *gNB) {
-
-  NR_gNB_DLSCH_thread_t  *dlsch  = &gNB->dlsch_thread;
   
-  pthread_mutex_lock(&dlsch->mutex_dlsch);
-  dlsch->instance_cnt_dlsch         = 0;
-  pthread_cond_signal(&dlsch->cond_dlsch);
-  pthread_mutex_unlock(&dlsch->mutex_dlsch);
+  pthread_mutex_lock(&gNB->dlsch_thread->mutex_dlsch);
+  gNB->dlsch_thread->instance_cnt_dlsch         = 0;
+  pthread_cond_signal(&gNB->dlsch_thread->cond_dlsch);
+  pthread_mutex_unlock(&gNB->dlsch_thread->mutex_dlsch);
 
-  pthread_mutex_destroy( &dlsch->mutex_dlsch);
-  pthread_cond_destroy( &dlsch->cond_dlsch);
+  pthread_mutex_destroy( &gNB->dlsch_thread->mutex_dlsch);
+  pthread_cond_destroy( &gNB->dlsch_thread->cond_dlsch);
+
+  free16(gNB->dlsch_thread,sizeof(NR_gNB_DLSCH_t));
 
   LOG_I(PHY,"Destroying dlsch mutex/cond\n");
 }

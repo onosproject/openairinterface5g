@@ -663,7 +663,7 @@ typedef struct PHY_VARS_gNB_s {
   // LTE_eNB_ULSCH_t     *ulsch[NUMBER_OF_UE_MAX+1];     // Nusers + number of RA
   NR_gNB_DLSCH_t     *dlsch_SI,*dlsch_ra,*dlsch_p;
   NR_gNB_DLSCH_t     *dlsch_PCH;
-  NR_gNB_DLSCH_thread_t  dlsch_thread; //dlsch thread structure;
+  NR_gNB_DLSCH_thread_t  *dlsch_thread; //dlsch thread structure;
 /*
   LTE_eNB_UE_stats    UE_stats[NUMBER_OF_UE_MAX];
   LTE_eNB_UE_stats   *UE_stats_ptr[NUMBER_OF_UE_MAX];
