@@ -58,6 +58,7 @@
 #include "PHY/INIT/phy_init.h"
 
 #include "PHY/defs_eNB.h"
+#include "PHY/defs_L1_NB_IoT.h"
 #include "SCHED/sched_eNB.h"
 #include "PHY/LTE_TRANSPORT/transport_proto.h"
 #include "nfapi/oai_integration/vendor_ext.h"
@@ -748,8 +749,11 @@ void wakeup_prach_eNB_br(PHY_VARS_eNB *eNB,RU_t *ru,int frame,int subframe) {
  */
 static void *eNB_thread_prach( void *param ) {
   static int eNB_thread_prach_status;
-  PHY_VARS_eNB *eNB= (PHY_VARS_eNB *)param;
-  L1_proc_t *proc = &eNB->proc;
+  eNBs_t *eNBs= (eNBs_t *)param;
+  PHY_VARS_eNB *eNB= &eNBs->eNB;
+  PHY_VARS_eNB_NB_IoT *eNB_NB_IoT= &eNBs->eNB_NB_IoT;//Ann
+
+  L1_proc_t *proc = &eNBs->eNB->proc;
   // set default return value
   eNB_thread_prach_status = 0;
   thread_top_init("eNB_thread_prach",1,500000,1000000,20000000);
@@ -768,7 +772,7 @@ static void *eNB_thread_prach( void *param ) {
 #endif
                     );
 
-    prach_procedures_NB_IoT(eNB);
+    prach_procedures_NB_IoT(eNB_NB_IoT);//Ann
 
     if (release_thread(&proc->mutex_prach,&proc->instance_cnt_prach,"eNB_prach_thread") < 0) break;
   }
@@ -854,6 +858,8 @@ void init_eNB_proc(int inst) {
   /*int i=0;*/
   int CC_id;
   PHY_VARS_eNB *eNB;
+  // PHY_VARS_eNB_NB_IoT *eNB_NB_IoT;//Ann
+  eNBs_t *eNBs;//Ann
   L1_proc_t *proc;
   L1_rxtx_proc_t *L1_proc, *L1_proc_tx;
   pthread_attr_t *attr0=NULL,*attr1=NULL,*attr_prach=NULL;
@@ -861,9 +867,10 @@ void init_eNB_proc(int inst) {
   pthread_attr_t *attr_prach_br=NULL;
 #endif
   LOG_I(PHY,"%s(inst:%d) RC.nb_CC[inst]:%d \n",__FUNCTION__,inst,RC.nb_CC[inst]);
-
+    eNBs->eNB_NB_IoT = RC.L1_NB_IoT[inst];//[CC_id];//Ann
   for (CC_id=0; CC_id<RC.nb_CC[inst]; CC_id++) {
-    eNB = RC.eNB[inst][CC_id];
+    eNBs->eNB = RC.eNB[inst][CC_id];
+    
 #ifndef OCP_FRAMEWORK
     LOG_I(PHY,"Initializing eNB processes instance:%d CC_id %d \n",inst,CC_id);
 #endif
@@ -943,7 +950,7 @@ void init_eNB_proc(int inst) {
     }
 
     if (NFAPI_MODE!=NFAPI_MODE_VNF) {
-      pthread_create( &proc->pthread_prach, attr_prach, eNB_thread_prach, eNB );
+      pthread_create( &proc->pthread_prach, attr_prach, eNB_thread_prach, eNBs );
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
       pthread_create( &proc->pthread_prach_br, attr_prach_br, eNB_thread_prach_br, eNB );
 #endif

@@ -48,7 +48,7 @@
 #include "targets/ARCH/ETHERNET/USERSPACE/LIB/ethernet_lib.h"
 #include "nfapi_vnf.h"
 #include "nfapi_pnf.h"
-
+#include "../../openair1/PHY/defs_L1_NB_IoT.h"
 #include "L1_paramdef.h"
 #include "MACRLC_paramdef.h"
 #include "common/config/config_userapi.h"
@@ -112,6 +112,7 @@ void RCconfig_L1(void) {
 
   if (RC.eNB == NULL) {
     RC.eNB                       = (PHY_VARS_eNB ** *)malloc((1+NUMBER_OF_eNB_MAX)*sizeof(PHY_VARS_eNB **));
+    RC.L1_NB_IoT                 = (PHY_VARS_eNB_NB_IoT **)malloc((1+NUMBER_OF_eNB_MAX)*sizeof(PHY_VARS_eNB_NB_IoT *));//Ann
     LOG_I(PHY,"RC.eNB = %p\n",RC.eNB);
     memset(RC.eNB,0,(1+NUMBER_OF_eNB_MAX)*sizeof(PHY_VARS_eNB **));
     RC.nb_L1_CC = malloc((1+RC.nb_L1_inst)*sizeof(int));
@@ -120,6 +121,14 @@ void RCconfig_L1(void) {
   config_getlist( &L1_ParamList,L1_Params,sizeof(L1_Params)/sizeof(paramdef_t), NULL);
 
   if (L1_ParamList.numelt > 0) {
+    for (j = 0; j < RC.nb_nb_iot_L1_inst; j++) {//Ann
+      if (RC.L1_NB_IoT[j] == NULL) { 
+        RC.L1_NB_IoT[j]                       = (PHY_VARS_eNB_NB_IoT *)malloc((1+MAX_NUM_CCs)*sizeof(PHY_VARS_eNB_NB_IoT ));
+        LOG_I(PHY,"RC.L1_NB_IoT[%d] = %p\n",j,RC.L1_NB_IoT[j]);
+        memset(RC.L1_NB_IoT[j],0,(1+MAX_NUM_CCs)*sizeof(PHY_VARS_eNB_NB_IoT));
+      }
+    }
+
     for (j = 0; j < RC.nb_L1_inst; j++) {
       RC.nb_L1_CC[j] = *(L1_ParamList.paramarray[j][L1_CC_IDX].uptr);
 

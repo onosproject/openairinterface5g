@@ -109,7 +109,7 @@
 
 #include "defs_eNB.h"
 #include "types.h"
-
+#include "LTE_UE_TRANSPORT/transport_ue.h"
 
 
 /** @addtogroup _PHY_STRUCTURES_
@@ -269,6 +269,20 @@ typedef struct {
   /// RAW RX sample buffer
   int *RX_DMA_BUFFER[2];
 } TX_RX_VARS;
+
+/// Top-level PHY Data Structure for RN
+typedef struct {
+  /// Module ID indicator for this instance
+  uint8_t Mod_id;
+  uint32_t frame;
+  // phy_vars_eNB
+  // phy_vars ue
+  // cuurently only used to store and forward the PMCH
+  uint8_t mch_avtive[10];
+  uint8_t sync_area[10]; // num SF
+  LTE_UE_DLSCH_t   *dlsch_rn_MCH[10];
+
+} PHY_VARS_RN;
 
 /// Measurement Variables
 

@@ -36,7 +36,7 @@
 #define CRC8 3
 
 #define MAX_TURBO_ITERATIONS_MBSFN 8
-#define MAX_TURBO_ITERATIONS max_turbo_iterations
+#define MAX_TURBO_ITERATIONS 4
 
 typedef struct {
   unsigned short nb_bits;

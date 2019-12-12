@@ -73,7 +73,6 @@
 
 #include "openair2/PHY_INTERFACE/IF_Module.h"
 
-
 typedef struct RU_proc_t_s {
   /// Pointer to associated RU descriptor
   struct RU_t_s *ru;
@@ -763,6 +762,7 @@ typedef struct {
   /// mutex for RXn-TXnp4 processing thread
   pthread_mutex_t mutex_RUs;
 } L1_rxtx_proc_t;
+
 
 typedef struct {
   struct PHY_VARS_eNB_s *eNB;

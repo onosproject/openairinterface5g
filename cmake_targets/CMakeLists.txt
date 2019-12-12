@@ -1223,6 +1223,7 @@ set(PHY_SRC
   ${OPENAIR1_DIR}/PHY/NBIoT_TRANSPORT/dlsch_scrambling_NB_IoT.c
   ${OPENAIR1_DIR}/PHY/NBIoT_TRANSPORT/lte_mcs_NB_IoT.c
   ${OPENAIR1_DIR}/PHY/NBIoT_TRANSPORT/ulsch_demodulation_NB_IoT.c
+  ${OPENAIR1_DIR}/PHY/NBIoT_TRANSPORT/ulsch_decoding_NB_IoT.c
   ${OPENAIR1_DIR}/PHY/NBIoT_TRANSPORT/lte_Isc_NB_IoT.c
   ${OPENAIR1_DIR}/PHY/NBIoT_TRANSPORT/nprach_NB_IoT.c
   ${OPENAIR1_DIR}/PHY/NBIoT_TRANSPORT/nsss_NB_IoT.c
@@ -2116,6 +2117,7 @@ add_executable(lte-softmodem
   ${OPENAIR_TARGETS}/RT/USER/lte-ru.c
   ${OPENAIR_TARGETS}/RT/USER/ru_control.c
   ${OPENAIR_TARGETS}/RT/USER/lte-softmodem.c
+  ${OPENAIR_TARGETS}/RT/USER/init_lte.c
   ${OPENAIR_TARGETS}/RT/USER/lte-softmodem-common.c
   ${OPENAIR2_DIR}/ENB_APP/NB_IoT_interface.c
   ${OPENAIR1_DIR}/SIMULATION/TOOLS/taus.c

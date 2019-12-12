@@ -119,7 +119,6 @@ enum transmission_access_mode {
   SCHEDULED_ACCESS,
   CBA_ACCESS};
 
-
 typedef enum  {
   eNodeB_3GPP=0,   // classical eNodeB function
   eNodeB_3GPP_BBU, // eNodeB with NGFI IF5
@@ -128,7 +127,6 @@ typedef enum  {
   NGFI_RRU_IF5,    // NGFI_RRU (NGFI remote radio-unit,IF5)
   NGFI_RRU_IF4p5   // NGFI_RRU (NGFI remote radio-unit,IF4p5)
 } eNB_func_t;
-
 
 typedef enum {
   synch_to_ext_device=0,  // synch to RF or Ethernet device
@@ -747,6 +745,11 @@ typedef struct PHY_VARS_eNB_NB_IoT_s {
   volatile uint16_t preamble_index_NB_IoT; //phy_procedures_lte_eNb_NB_IoT.c
 
 } PHY_VARS_eNB_NB_IoT;
+
+typedef struct{
+  PHY_VARS_eNB *eNB;
+  PHY_VARS_eNB_NB_IoT *eNB_NB_IoT;
+} eNBs_t;
 
 //#define debug_msg if (((mac_xface->frame%100) == 0) || (mac_xface->frame < 50)) msg
 

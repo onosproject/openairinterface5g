@@ -31,7 +31,6 @@
 */
 #ifndef __TRANSPORT_UE__H__
 #define __TRANSPORT_UE__H__
-#include "PHY/defs_UE.h"
 #include "PHY/impl_defs_lte.h"
 #include "../LTE_TRANSPORT/dci.h"
 #include "../LTE_TRANSPORT/mdci.h"
