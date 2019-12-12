@@ -155,7 +155,7 @@ uint8_t* generate_msg4_NB_IoT(rrc_eNB_carrier_data_NB_IoT_t *carrier)
 
   for (cnt = 0; cnt < carrier[0].Srb0.Tx_buffer.payload_size; cnt++) 
   {
-    printf("%02x ", carrier[0].Srb0.Tx_buffer.Payload[cnt]);
+    printf("%02x ", (uint8_t)carrier[0].Srb0.Tx_buffer.Payload[cnt]);
   }
   printf("\n");
 

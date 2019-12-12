@@ -1655,7 +1655,7 @@ uint32_t  turbo_decoding_NB_IoT(PHY_VARS_eNB           *eNB,
               } else { 
                   fill_crc_indication_NB_IoT(eNB,0,rx_frame,rx_subframe,0);   // indicate NAK to MAC 
                   fill_rx_indication_NB_IoT(eNB,proc,npusch_format,0);
-                  printf(" NPSUCH NOT OK\n");
+                  printf(" NPUSCH NOT OK\n");
               }
           }  ////////////  r loop end  ////////////
 
@@ -1789,18 +1789,18 @@ void decode_NPUSCH_msg_NB_IoT(PHY_VARS_eNB        *eNB,
                                            ulsch_NB_IoT->Msg3_frame);
 
             ///////////////////////////////// Decision ACK/NACK /////////////////////////////////////
-            printf("\n\n\n");
+            //printf("\n\n\n");
             if (counter_ack>8)   //hard decision
             {      
                   //fill_crc_indication_NB_IoT(eNB,0,rx_frame,rx_subframe,1);                               // indicate ACK to MAC
                   fill_rx_indication_NB_IoT(eNB,proc,npusch_format,1);
-                  printf("  decoded ACK of DL Data (include MSG4)  \n");
+                  LOG_I(PHY,"  decoded ACK of DL Data (include MSG4)  \n");
 
             } else if (counter_ack<8) {     //hard decision
 
                   //fill_crc_indication_NB_IoT(eNB,0,rx_frame,rx_subframe,0);                              // indicate NAK to MAC
                   fill_rx_indication_NB_IoT(eNB,proc,npusch_format,0);
-                  printf("  decoded ACK of DL Data (include MSG4)  \n"); 
+                  LOG_I(PHY,"  decoded ACK of DL Data (include MSG4)  \n"); 
 
             } else  {  //when equality (8 bits 0 vs 8 bits 1), soft decision
            
@@ -1814,14 +1814,14 @@ void decode_NPUSCH_msg_NB_IoT(PHY_VARS_eNB        *eNB,
                   {
                        // fill_crc_indication_NB_IoT(eNB,0,rx_frame,rx_subframe,1); // indicate ACK to MAC
                         fill_rx_indication_NB_IoT(eNB,proc,npusch_format,1);
-                        printf("  decoded msg5 (soft): ACK  ");
+                        LOG_I(PHY,"  decoded msg5 (soft): ACK  ");
                   } else {
                         //fill_crc_indication_NB_IoT(eNB,0,rx_frame,rx_subframe,0);   // indicate NAK to MAC
                         fill_rx_indication_NB_IoT(eNB,proc,npusch_format,0);
-                        printf("  decoded msg5 (soft): NACK ");  
+                        LOG_I(PHY,"  decoded msg5 (soft): NACK ");  
                   }
             }
-            printf("\n\n\n");  // end decision for ACK/NACK
+            //printf("\n\n\n");  // end decision for ACK/NACK
       } 
 
       /////  if last sf of the word

@@ -763,9 +763,9 @@ void schedule_msg4_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, int abs_subframe){
 			}
 			//	check msg4 resource
 			rep = dl_rep[msg4_nodes->ce_level];
-		    msg4_length = fill_msg4_NB_IoT(mac_inst,msg4_nodes);
-			I_mcs = get_I_mcs(msg4_nodes->ce_level);
-			//I_mcs = 1;
+		    msg4_length = fill_msg4_NB_IoT_dedicated(mac_inst,msg4_nodes);
+			//I_mcs = get_I_mcs(msg4_nodes->ce_level);
+			I_mcs = 5;
 			I_tbs = I_mcs;
 			TBS = get_max_tbs(I_tbs);
 			if(TBS > msg4_length)
@@ -1018,6 +1018,58 @@ int fill_msg4_NB_IoT(
 	return length;
 }
 
+//  Generate MSG4 MAC PDU
+int fill_msg4_NB_IoT_dedicated(
+	eNB_MAC_INST_NB_IoT *inst, 
+	RA_TEMPLATE_NB_IoT *ra_template
+)
+{
+	int length = 0;
+	uint8_t *dlsch_buffer = &ra_template->msg4_buffer[0];
+	// we have three subheader here: 1 for Control element of Contention resolution, 2 for CCCH
+	SCH_SUBHEADER_FIXED_NB_IoT *msg4_sub_1 = (SCH_SUBHEADER_FIXED_NB_IoT*)dlsch_buffer;
+	msg4_sub_1->R = 0;
+	msg4_sub_1->E = 1;
+	msg4_sub_1->LCID = UE_CONTENTION_RESOLUTION;
+	length+=1;
+
+	SCH_SUBHEADER_FIXED_NB_IoT *msg4_sub_2 = (SCH_SUBHEADER_FIXED_NB_IoT *) (msg4_sub_1 +1);
+	msg4_sub_2->R= 0;
+	msg4_sub_2->E= 0;
+	msg4_sub_2->LCID = CCCH_NB_IoT;
+	length+=1;
+
+	uint8_t *con_res = (uint8_t *)(dlsch_buffer+2);
+
+	con_res[0] = ra_template->ccch_buffer[0];
+	con_res[1] = ra_template->ccch_buffer[1];
+	con_res[2] = ra_template->ccch_buffer[2];
+	con_res[3] = ra_template->ccch_buffer[3];
+	con_res[4] = ra_template->ccch_buffer[4];
+	con_res[5] = ra_template->ccch_buffer[5];
+	length+=6;
+
+	uint8_t *msg4_rrc_sdu = (uint8_t *) (dlsch_buffer+8);
+
+	msg4_rrc_sdu[0] = ra_template->msg4_rrc_buffer[0];
+	msg4_rrc_sdu[1] = ra_template->msg4_rrc_buffer[1];
+	msg4_rrc_sdu[2] = ra_template->msg4_rrc_buffer[2];
+	msg4_rrc_sdu[3] = ra_template->msg4_rrc_buffer[3];
+	msg4_rrc_sdu[4] = ra_template->msg4_rrc_buffer[4];
+	msg4_rrc_sdu[5] = ra_template->msg4_rrc_buffer[5];
+	msg4_rrc_sdu[6] = ra_template->msg4_rrc_buffer[6];
+	msg4_rrc_sdu[7] = ra_template->msg4_rrc_buffer[7];
+	msg4_rrc_sdu[8] = ra_template->msg4_rrc_buffer[8];
+	msg4_rrc_sdu[9] = ra_template->msg4_rrc_buffer[9];
+	length+=10;
+/*
+	printf("MSG4 PDU = ");
+	for(int i=0; i<length;i++)
+		printf("%02x ",dlsch_buffer[i]);
+	printf("\n");
+*/
+	return length;
+}
 //  Generate MSG4 MAC PDU
 int fill_msg4_NB_IoT_fixed(
 	eNB_MAC_INST_NB_IoT *inst, 

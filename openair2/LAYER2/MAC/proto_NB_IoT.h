@@ -128,6 +128,8 @@ void fill_rar_NB_IoT(eNB_MAC_INST_NB_IoT *inst, RA_TEMPLATE_NB_IoT *ra_template,
 void receive_msg4_ack_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, rnti_t rnti);
 int fill_msg4_NB_IoT(eNB_MAC_INST_NB_IoT *inst, RA_TEMPLATE_NB_IoT *ra_template);
 int fill_msg4_NB_IoT_fixed(eNB_MAC_INST_NB_IoT *inst, RA_TEMPLATE_NB_IoT *ra_template);
+int fill_msg4_NB_IoT_dedicated(eNB_MAC_INST_NB_IoT *inst, RA_TEMPLATE_NB_IoT *ra_template);
+
 
 //USS
 void schedule_uss_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_inst, uint32_t subframe, uint32_t frame, uint32_t hypersfn, int index_ss);

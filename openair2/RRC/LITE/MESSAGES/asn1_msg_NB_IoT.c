@@ -954,7 +954,7 @@ uint8_t do_RRCConnectionSetup_NB_IoT(
   long* npusch_repetitions = NULL;
   long* group_hopping_disabled = NULL;
   long* srpro = NULL;
-
+  long* periodicBSR_Timer = NULL;
   // At the first moment of MSG4 testing we set NULL to those optional
 
   struct SRB_ToAddMod_NB_r13* SRB1_config_NB_IoT = NULL;
@@ -965,6 +965,9 @@ uint8_t do_RRCConnectionSetup_NB_IoT(
   struct SRB_ToAddMod_NB_r13__rlc_Config_r13* SRB1bis_rlc_config_NB_IoT = NULL;
   struct SRB_ToAddMod_NB_r13__logicalChannelConfig_r13* SRB1bis_lchan_config_NB_IoT = NULL;
 
+  struct RadioResourceConfigDedicated_NB_r13__mac_MainConfig_r13 *mac_main_config_NB_IoT = NULL;
+  struct MAC_MainConfig_NB_r13__logicalChannelSR_Config_r13 *logicalChannelSR_Config = NULL;
+  struct MAC_MainConfig_NB_r13__ul_SCH_Config_r13 *ul_SCH_Config = NULL;
   PhysicalConfigDedicated_NB_r13_t* physicalConfigDedicated2_NB_IoT = NULL;
   DL_CCCH_Message_NB_t dl_ccch_msg_NB_IoT;
   RRCConnectionSetup_NB_t* rrcConnectionSetup_NB_IoT = NULL;
@@ -1099,6 +1102,35 @@ uint8_t do_RRCConnectionSetup_NB_IoT(
 
  // UplinkPowerControlDedicated
  physicalConfigDedicated2_NB_IoT->uplinkPowerControlDedicated_r13->p0_UE_NPUSCH_r13 = 0;
+ 
+ mac_main_config_NB_IoT = CALLOC(1, sizeof(*mac_main_config_NB_IoT));
+ mac_main_config_NB_IoT->present = RadioResourceConfigDedicated_NB_r13__mac_MainConfig_r13_PR_explicitValue_r13;
+ //mac_main_config_NB_IoT->present = RadioResourceConfigDedicated_NB_r13__mac_MainConfig_r13_PR_defaultValue_r13;
+ //mac_main_config_NB_IoT->choice.explicitValue_r13.ul_SCH_Config_r13 =NULL;
+ mac_main_config_NB_IoT->choice.explicitValue_r13.ul_SCH_Config_r13 = CALLOC(1,sizeof(*mac_main_config_NB_IoT->choice.explicitValue_r13.ul_SCH_Config_r13));
+ mac_main_config_NB_IoT->choice.explicitValue_r13.logicalChannelSR_Config_r13 = CALLOC(1,sizeof(* mac_main_config_NB_IoT->choice.explicitValue_r13.logicalChannelSR_Config_r13));
+ //mac_main_config_NB_IoT->choice.explicitValue_r13.logicalChannelSR_Config_r13 = NULL;
+
+ //periodicBSR_Timer = CALLOC(1,sizeof(*periodicBSR_Timer));
+ //*periodicBSR_Timer = 2; // PeriodicBSR_Timer_NB_r13_pp8
+
+ //logicalChannelSR_Config = CALLOC(1,sizeof(*logicalChannelSR_Config));
+ mac_main_config_NB_IoT->choice.explicitValue_r13.logicalChannelSR_Config_r13->choice.setup.logicalChannelSR_ProhibitTimer_r13 = 6;//MAC_MainConfig_NB_r13__logicalChannelSR_Config_r13__setup__logicalChannelSR_ProhibitTimer_r13_pp8
+ mac_main_config_NB_IoT->choice.explicitValue_r13.logicalChannelSR_Config_r13->present = MAC_MainConfig_NB_r13__logicalChannelSR_Config_r13_PR_setup;
+
+ //ul_SCH_Config = CALLOC(1,sizeof(*ul_SCH_Config));
+ mac_main_config_NB_IoT->choice.explicitValue_r13.ul_SCH_Config_r13->periodicBSR_Timer_r13 = CALLOC(1,sizeof(*mac_main_config_NB_IoT->choice.explicitValue_r13.ul_SCH_Config_r13->periodicBSR_Timer_r13));
+ *(mac_main_config_NB_IoT->choice.explicitValue_r13.ul_SCH_Config_r13->periodicBSR_Timer_r13) = 2;
+ mac_main_config_NB_IoT->choice.explicitValue_r13.ul_SCH_Config_r13->retxBSR_Timer_r13 = 6; // RetxBSR_Timer_NB_r13_pp512, 6 = iffinitiy
+
+ //mac_main_config_NB_IoT->present = RadioResourceConfigDedicated_NB_r13__mac_MainConfig_r13_PR_explicitValue_r13;
+ //mac_main_config_NB_IoT->choice.explicitValue_r13.ul_SCH_Config_r13= NULL; //ul_SCH_Config
+ //mac_main_config_NB_IoT->choice.explicitValue_r13.timeAlignmentTimerDedicated_r13 = 0;//7= TimeAlignmentTimer_infinity
+ //mac_main_config_NB_IoT->choice.explicitValue_r13.logicalChannelSR_Config_r13 = logicalChannelSR_Config; // logicalChannelSR_Config
+ //mac_main_config_NB_IoT->choice.explicitValue_r13.ext1 = NULL;
+ //mac_main_config_NB_IoT->choice.explicitValue_r13.ext2 = NULL;
+ //mac_main_config_NB_IoT->choice.explicitValue_r13.drx_Config_r13 = NULL;
+
 
  //Fill the rrcConnectionSetup-NB message
  rrcConnectionSetup_NB_IoT->rrc_TransactionIdentifier = Transaction_id; //input value
@@ -1110,7 +1142,7 @@ uint8_t do_RRCConnectionSetup_NB_IoT(
  rrcConnectionSetup_NB_IoT->criticalExtensions.choice.c1.choice.rrcConnectionSetup_r13.radioResourceConfigDedicated_r13.drb_ToReleaseList_r13 = NULL;
  rrcConnectionSetup_NB_IoT->criticalExtensions.choice.c1.choice.rrcConnectionSetup_r13.radioResourceConfigDedicated_r13.rlf_TimersAndConstants_r13 = NULL;
  rrcConnectionSetup_NB_IoT->criticalExtensions.choice.c1.choice.rrcConnectionSetup_r13.radioResourceConfigDedicated_r13.physicalConfigDedicated_r13 = physicalConfigDedicated2_NB_IoT;
- rrcConnectionSetup_NB_IoT->criticalExtensions.choice.c1.choice.rrcConnectionSetup_r13.radioResourceConfigDedicated_r13.mac_MainConfig_r13 = NULL;
+ rrcConnectionSetup_NB_IoT->criticalExtensions.choice.c1.choice.rrcConnectionSetup_r13.radioResourceConfigDedicated_r13.mac_MainConfig_r13 = mac_main_config_NB_IoT; // mac_main_config_NB_IoT 
 
 #ifdef XER_PRINT
  xer_fprint(stdout, &asn_DEF_DL_CCCH_Message, (void*)&dl_ccch_msg);
@@ -1118,15 +1150,22 @@ uint8_t do_RRCConnectionSetup_NB_IoT(
  enc_rval = uper_encode_to_buffer(&asn_DEF_DL_CCCH_Message_NB,
                                   (void*)&dl_ccch_msg_NB_IoT,
                                   buffer,
-                                  100);
+                                  255);
  AssertFatal (enc_rval.encoded > 0, "ASN1 message encoding failed (%s, %lu)!\n",
               enc_rval.failed_type->name, enc_rval.encoded);
 
+  LOG_I(RRC,"[MSG] RRC Connection Setup NB-IoT: ");
 
-#ifdef USER_MODE
- LOG_D(RRC,"RRCConnectionSetup-NB Encoded %d bits (%d bytes), ecause %d\n",
+  int                                 cnt;
+
+  for (cnt = 0; cnt <((enc_rval.encoded+7)/8); cnt++) 
+  {
+    printf("%02x ", buffer[cnt]);
+  }
+  printf("\n");
+
+ LOG_I(RRC,"RRCConnectionSetup-NB Encoded %d bits (%d bytes), ecause %d\n",
        enc_rval.encoded,(enc_rval.encoded+7)/8,ecause);
-#endif
 
  return((enc_rval.encoded+7)/8);
 }

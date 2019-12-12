@@ -345,7 +345,7 @@ void schedule_response_NB_IoT(Sched_Rsp_NB_IoT_t *Sched_INFO)
     //LOG_I(PHY, "number_dl_pdu: %d ,dl_config_pdu type: %d\n",number_dl_pdu,dl_config_pdu->pdu_type);
     switch (dl_config_pdu->pdu_type) 
     {
-        printf("In case schedule_response_NB_IoT****************************************in schedule_response_NB_IoT\n");
+        //printf("In case schedule_response_NB_IoT****************************************in schedule_response_NB_IoT\n");
     	case NFAPI_DL_CONFIG_NPDCCH_PDU_TYPE:
 		//printf("NFAPI_DL_CONFIG_NPDCCH_PDU_TYPE***********************\n");
     		//Remember: there is no DCI for SI information
@@ -444,8 +444,9 @@ void schedule_response_NB_IoT(Sched_Rsp_NB_IoT_t *Sched_INFO)
 		
 	       ///////////////////////////////////////////////////////////////////////////////////////////
            //maybe this condition should be replaced by another test ?!
-           if(nfapi_parameters_rel13->size < 80)    // msg3 data
+           if((nfapi_parameters_rel13->size < 80)&&(nfapi_parameters_rel13->size != 41))   // msg3 data
            {
+           		LOG_I(PHY,"MSG3 process at PHY\n");
 			        nulsch = eNB->ulsch_NB_IoT[0];
 					nulsch_harq = nulsch->harq_process;
 			
@@ -468,6 +469,8 @@ void schedule_response_NB_IoT(Sched_Rsp_NB_IoT_t *Sched_INFO)
 					nulsch_harq->new_data_indication     = nfapi_parameters_rel13->new_data_indication;   // valid only for DCI N0
 					nulsch_harq->TBS                     = nfapi_parameters_rel13->size;  /// check if needed *8 or /8 or nothing to do
 			} else{    // other npusch data 
+				           		LOG_I(PHY,"UL data process at PHY\n");
+
 					nulsch = eNB->ulsch_NB_IoT[0];
 					nulsch_harq = nulsch->harq_process;
 			

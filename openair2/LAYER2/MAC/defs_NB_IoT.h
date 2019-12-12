@@ -258,7 +258,8 @@ typedef struct{
 
 /*** the value of variable in this structure is able to be changed in Preprocessor**/
 typedef struct{
-  
+    uint8_t resent_flag;
+
   uint16_t TBS;
   uint8_t index_tbs;
   uint32_t total_sdu_size;

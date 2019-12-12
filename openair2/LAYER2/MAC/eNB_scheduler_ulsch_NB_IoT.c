@@ -145,11 +145,25 @@ int schedule_UL_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst,UE_TEMPLATE_NB_IoT *UE_info
                 return 0;
                 */
                 //Fill result to Output structure
+                    if(UE_info->ul_total_buffer==39)
+                    {
+                      UE_sched_ctrl_info->NPDCCH_sf_end=NPDCCH_info->sf_end+200;
+                      UE_sched_ctrl_info->NPDCCH_sf_start=NPDCCH_info->sf_start+200;
+                      UE_sched_ctrl_info->NPUSCH_sf_end=NPUSCH_info->sf_end+200;
+                      UE_sched_ctrl_info->NPUSCH_sf_start=NPUSCH_info->sf_start+200;
+                      UE_sched_ctrl_info->resent_flag = 1;
+                      LOG_N(MAC,"Delay sending the DCI, and receive command\n");
+                                          UE_sched_ctrl_info->dci_n0_index_ndi=0;
 
-                    UE_sched_ctrl_info->NPDCCH_sf_end=NPDCCH_info->sf_end;
-                    UE_sched_ctrl_info->NPDCCH_sf_start=NPDCCH_info->sf_start;
-                    UE_sched_ctrl_info->NPUSCH_sf_end=NPUSCH_info->sf_end;
-                    UE_sched_ctrl_info->NPUSCH_sf_start=NPUSCH_info->sf_start;
+                    }else
+                    {
+                      UE_sched_ctrl_info->NPDCCH_sf_end=NPDCCH_info->sf_end;
+                      UE_sched_ctrl_info->NPDCCH_sf_start=NPDCCH_info->sf_start;
+                      UE_sched_ctrl_info->NPUSCH_sf_end=NPUSCH_info->sf_end;
+                      UE_sched_ctrl_info->NPUSCH_sf_start=NPUSCH_info->sf_start;
+                                          UE_sched_ctrl_info->dci_n0_index_ndi=ndi;
+
+                    }
                     UE_sched_ctrl_info->TBS=TBS;
                     UE_sched_ctrl_info->dci_n0_index_mcs=mcs;
                     UE_sched_ctrl_info->index_tbs=mcs;
@@ -157,7 +171,7 @@ int schedule_UL_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst,UE_TEMPLATE_NB_IoT *UE_info
                     UE_sched_ctrl_info->dci_n0_n_ru=Nru;
                     UE_sched_ctrl_info->dci_n0_index_delay=dly;
                     UE_sched_ctrl_info->dci_n0_index_subcarrier=NPUSCH_info->subcarrier_indication;
-                    UE_sched_ctrl_info->dci_n0_index_ndi=ndi;
+                    //UE_sched_ctrl_info->dci_n0_index_ndi=ndi;
                     //UE_sched_ctrl_info->dci_n0_index_R_dci=get_DCI_REP(UE_sched_ctrl_info->R_dci->R_dci,UE_info->R_max);
                     UE_sched_ctrl_info->dci_n0_index_R_data=I_rep;
 
