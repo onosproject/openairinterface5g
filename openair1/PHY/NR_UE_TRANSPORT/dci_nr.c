@@ -1352,14 +1352,14 @@ void nr_dci_decoding_procedure0(int s,
             *format_found=_format_1_0_found;
             //      LOG_DDD("a format1_0=%d and dci_cnt=%d\n",*format_found,*dci_cnt);
           } else {
-            if ((dci_estimation[0]&1) == 0) {
+            if ((dci_estimation[0]>>(sizeof_bits-1)) == 0) {
               dci_alloc[*dci_cnt].format = format0_0;
               *dci_cnt = *dci_cnt + 1;
               *format_found=_format_0_0_found;
               //        LOG_DDD("b format0_0=%d and dci_cnt=%d\n",*format_found,*dci_cnt);
             }
 
-            if ((dci_estimation[0]&1) == 1) {
+            if ((dci_estimation[0]>>(sizeof_bits-1)) == 1) {
               dci_alloc[*dci_cnt].format = format1_0;
               *dci_cnt = *dci_cnt + 1;
               *format_found=_format_1_0_found;
@@ -2782,13 +2782,13 @@ uint8_t nr_dci_decoding_procedure(int s,
       format_0_0_1_0_size_bits = nr_dci_format_size(ue,eNB_id,nr_tti_rx,p,_c_rnti,n_RB_ULBWP,n_RB_DLBWP,dci_fields_sizes,0);
       format_0_0_1_0_size_bytes = (format_0_0_1_0_size_bits%8 == 0) ? (uint8_t)floor(format_0_0_1_0_size_bits/8) : (uint8_t)(floor(format_0_0_1_0_size_bits/8) + 1);
       LOG_DD("calculating dci format size for UE-specific searchSpaces with format uss_dci_format=%d, format_0_0_1_0_size_bits=%d, format_0_0_1_0_size_bytes=%d\n",
-             css_dci_format,format_0_0_1_0_size_bits,format_0_0_1_0_size_bytes);
+             uss_dci_format,format_0_0_1_0_size_bits,format_0_0_1_0_size_bytes);
 
       for (int aggregationLevel = 0; aggregationLevel<5 ; aggregationLevel++) { // We fix aggregationLevel to 3 for testing=> nbr of CCE=8
         //for (int aggregationLevel = 2; aggregationLevel<5 ; aggregationLevel++) {
         // for aggregation level aggregationLevel. The number of candidates (for L2= 2^aggregationLevel) will be calculated in function nr_dci_decoding_procedure0
-        LOG_DD("common searchSpaces with format css_dci_format=%d and aggregation_level=%d\n",
-               css_dci_format,(1<<aggregationLevel));
+        LOG_DD("UE-specific searchSpaces with format uss_dci_format=%d and aggregation_level=%d\n",
+               uss_dci_format,(1<<aggregationLevel));
         old_dci_cnt = dci_cnt;
         nr_dci_decoding_procedure0(s,p,coreset_time_dur,coreset_nbr_rb,pdcch_vars, 0, nr_tti_rx, dci_alloc, eNB_id, ue->current_thread_id[nr_tti_rx], frame_parms,
                                    crc_scrambled_values, aggregationLevel,
