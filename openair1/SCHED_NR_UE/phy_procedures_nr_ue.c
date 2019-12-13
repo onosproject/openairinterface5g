@@ -2834,7 +2834,7 @@ int nr_ue_pdcch_procedures(uint8_t eNB_id,
   // Higher layers have updated the number of searchSpaces with are active in the current slot and this value is stored in variable nb_searchspace_total
   int nb_searchspace_total = pdcch_vars2->nb_search_space;
 
-  pdcch_vars[eNB_id]->crnti = 1000; //to be check how to set when using loop memory
+  pdcch_vars[eNB_id]->crnti = 1000;// 0x1234; //to be check how to set when using loop memory
 
   uint16_t c_rnti=pdcch_vars[eNB_id]->crnti;
   uint16_t cs_rnti=0,new_rnti=0,tc_rnti=0;

@@ -164,7 +164,7 @@ int configure_fapi_dl_Tx(nfapi_nr_dl_config_request_body_t *dl_req,
   nfapi_nr_dl_config_request_pdu_t  *dl_config_dci_pdu;
   nfapi_nr_dl_config_request_pdu_t  *dl_config_dlsch_pdu;
   int TBS;
-  uint16_t rnti = 0x1234;
+  uint16_t rnti = 1000; //0x1234;
   int dl_carrier_bandwidth = cfg->rf_config.dl_carrier_bandwidth.value;
   dl_config_dci_pdu = &dl_req->dl_config_pdu_list[dl_req->number_pdu];
   memset((void *)dl_config_dci_pdu,0,sizeof(nfapi_nr_dl_config_request_pdu_t));
