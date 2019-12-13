@@ -51,8 +51,8 @@ void set_cset_offset(uint16_t offset_bits) {
 void nr_init_coreset(nfapi_nr_coreset_t *coreset) {
 
   coreset->coreset_id = 1;
-  coreset->frequency_domain_resources = 0x1E0000000000;//0x1FFFE0000000; // 96 RB starting from CRB0
-  coreset->duration = 2;
+  coreset->frequency_domain_resources = 0x1E00000;//0x1FFFE0000000; // 96 RB starting from CRB0
+  coreset->duration = 1;
   coreset->cce_reg_mapping_type = NFAPI_NR_CCE_REG_MAPPING_NON_INTERLEAVED;
   coreset->reg_bundle_size = 6;
   coreset->interleaver_size = 2;

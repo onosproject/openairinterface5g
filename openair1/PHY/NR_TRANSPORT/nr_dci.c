@@ -213,7 +213,7 @@ uint8_t nr_generate_dci_top(NR_gNB_DCI_ALLOC_t dci_alloc,
                  pdcch_params.scrambling_id : config.sch_config.physical_cell_id.value;
   t_nrPolar_params *currentPtr = nr_polar_params(NR_POLAR_DCI_MESSAGE_TYPE, dci_alloc.size, dci_alloc.L);
   printf("DCI PDU old: %lx\n",dci_alloc.dci_pdu[0]);
-  //dci_alloc.dci_pdu[0] = 0x90B478F0000; // To test runel DCI with UE
+  dci_alloc.dci_pdu[0] = 0x90B478F0000; // To test runel DCI with UE
   printf("DCI PDU new: %lx\n",dci_alloc.dci_pdu[0]);
 //  dci_alloc.dci_pdu[1] = 0x0;
   polar_encoder_fast(dci_alloc.dci_pdu, encoder_output, pdcch_params.rnti, 1, currentPtr);

@@ -683,9 +683,9 @@ int main(int argc, char **argv)
   
   uint64_t mask = 0x0;
   uint16_t num_rbs=24;
-  uint16_t rb_offset=gNB->pdcch_vars.dci_alloc[0].pdcch_params.rb_offset;
+  uint16_t rb_offset=120;//gNB->pdcch_vars.dci_alloc[0].pdcch_params.rb_offset;
   uint16_t cell_id=47;
-  uint16_t num_symbols=2;
+  uint16_t num_symbols=1;
   for(i=0; i<(num_rbs/6); ++i){   //  38.331 Each bit corresponds a group of 6 RBs
     mask = mask >> 1;
     mask = mask | 0x100000000000;
