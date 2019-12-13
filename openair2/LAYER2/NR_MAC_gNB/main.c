@@ -58,7 +58,7 @@ void nr_init_coreset(nfapi_nr_coreset_t *coreset) {
   coreset->interleaver_size = 2;
   coreset->precoder_granularity = NFAPI_NR_CSET_SAME_AS_REG_BUNDLE;
   coreset->tci_present_in_dci = 0;
-  coreset->dmrs_scrambling_id = 0;
+  coreset->dmrs_scrambling_id = 47;
 }
 
 void nr_init_search_space(nfapi_nr_search_space_t *search_space)
