@@ -105,6 +105,18 @@ void UL_indication_NB_IoT(UL_IND_NB_IoT_t *UL_INFO)
                       //timing_offset = Timing_advance * 16
                       (UL_INFO->nrach_ind.nrach_pdu_list+i)->nrach_indication_rel13.timing_advance*16
                       );
+        }else if (block_rach == 1)
+        {
+          LOG_N(MAC,"It is the second time that this UE try to rach\n");
+                    init_RA_NB_IoT(mac_inst,
+                      (UL_INFO->nrach_ind.nrach_pdu_list+i)->nrach_indication_rel13.initial_sc,
+                      (UL_INFO->nrach_ind.nrach_pdu_list+i)->nrach_indication_rel13.nrach_ce_level,
+                      UL_INFO->frame,
+                      //timing_offset = Timing_advance * 16
+                      (UL_INFO->nrach_ind.nrach_pdu_list+i)->nrach_indication_rel13.timing_advance*16
+                      );
+          //block_rach = 2;
+
         }
       }
     }
@@ -140,8 +152,8 @@ void UL_indication_NB_IoT(UL_IND_NB_IoT_t *UL_INFO)
         }else
         {
           LOG_I(MAC,"This UE get the response of HARQ DL : ACK, update the UL buffer for next message\n");
-          ue_info->direction=0;
-          ue_info->ul_total_buffer = 39;
+          ue_info->direction=-1;
+          //ue_info->ul_total_buffer = 11;
           block_rach = 1;
           //LOG_I(MAC,"This UE get the response of HARQ DL : NACK, and will start the next harq round : %d\n",ue_info->HARQ_round);  
           //ue_info->direction=1;

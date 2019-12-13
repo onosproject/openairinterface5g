@@ -444,7 +444,7 @@ void schedule_response_NB_IoT(Sched_Rsp_NB_IoT_t *Sched_INFO)
 		
 	       ///////////////////////////////////////////////////////////////////////////////////////////
            //maybe this condition should be replaced by another test ?!
-           if((nfapi_parameters_rel13->size < 80)&&(nfapi_parameters_rel13->size != 41))   // msg3 data
+           if((nfapi_parameters_rel13->size == 11))   // msg3 data
            {
            		LOG_I(PHY,"MSG3 process at PHY\n");
 			        nulsch = eNB->ulsch_NB_IoT[0];

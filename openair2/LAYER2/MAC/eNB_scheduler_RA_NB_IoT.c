@@ -302,7 +302,7 @@ void schedule_rar_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, int abs_subframe){
 
 			migrate_node = msg2_nodes;
 			//migrate_node->ue_rnti = tc_rnti;
-			tc_rnti++;
+			//tc_rnti++;
 	        msg2_nodes = msg2_nodes->next;
 
 			//	maintain list

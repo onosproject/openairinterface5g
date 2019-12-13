@@ -168,6 +168,7 @@ typedef struct {
   uint32_t R_dci;
   // MAX repetition
   uint32_t R_max;
+  uint32_t special_mcs;
 
   // HARQ round
   uint32_t HARQ_round;
