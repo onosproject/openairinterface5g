@@ -920,7 +920,9 @@ int vnf_pack_p4_p5_vendor_extension(nfapi_p4_p5_message_header_t *header, uint8_
 
 static pthread_t vnf_start_pthread;
 static pthread_t vnf_p7_start_pthread;
+#ifdef PHY_RM
 static pthread_t vnf_p7_time_pthread;
+#endif
 
 void *vnf_p7_start_thread(void *ptr) {
   printf("%s()\n", __FUNCTION__);
@@ -929,7 +931,7 @@ void *vnf_p7_start_thread(void *ptr) {
   nfapi_vnf_p7_start(config);
   return config;
 }
-
+#ifdef PHY_RM
 void* vnf_p7_time_thread(void *ptr) {
   printf("%s()\n", __FUNCTION__);
 
@@ -949,7 +951,7 @@ void* vnf_p7_time_thread(void *ptr) {
   nfapi_vnf_p7_time(config);
   return config;
 }
-
+#endif
 void set_thread_priority(int priority);
 
 void *vnf_p7_thread_start(void *ptr) {
@@ -984,7 +986,9 @@ void *vnf_p7_thread_start(void *ptr) {
   p7_vnf->config->deallocate_p7_vendor_ext = &phy_deallocate_p7_vendor_ext;
   NFAPI_TRACE(NFAPI_TRACE_INFO, "[VNF] Creating VNF NFAPI start thread %s\n", __FUNCTION__);
   pthread_create(&vnf_p7_start_pthread, NULL, &vnf_p7_start_thread, p7_vnf->config);
+#ifdef PHY_RM
   pthread_create(&vnf_p7_time_pthread, NULL, &vnf_p7_time_thread, p7_vnf->config);
+#endif
   return 0;
 }
 
@@ -1279,7 +1283,7 @@ int oai_nfapi_ue_release_req(nfapi_ue_release_request_t *release_req){
     }
     return retval;
 }
-
+#ifdef PHY_RM
 int oai_nfapi_phy_rm_start_req(nfapi_phy_rm_start_request_t *rm_start_req){
 
     nfapi_vnf_p7_config_t *p7_config = vnf.p7_vnfs[0].config;
@@ -1295,3 +1299,4 @@ int oai_nfapi_phy_rm_start_req(nfapi_phy_rm_start_request_t *rm_start_req){
     }
     return retval;
 }
+#endif

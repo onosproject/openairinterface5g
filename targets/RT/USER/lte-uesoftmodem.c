@@ -691,9 +691,9 @@ int main( int argc, char **argv ) {
     frame_parms[CC_id]->nb_antennas_rx     = nb_antenna_rx;
     frame_parms[CC_id]->nb_antenna_ports_eNB = 1; //initial value overwritten by initial sync later
   }
-
+#ifndef OPENAIR2
   NB_INST=1;
-
+#endif
   if(NFAPI_MODE==NFAPI_UE_STUB_PNF) {
     PHY_vars_UE_g = malloc(sizeof(PHY_VARS_UE **)*NB_UE_INST);
 

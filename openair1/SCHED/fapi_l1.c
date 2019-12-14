@@ -43,7 +43,9 @@ int oai_nfapi_hi_dci0_req(nfapi_hi_dci0_request_t *hi_dci0_req);
 int oai_nfapi_ul_config_req(nfapi_ul_config_request_t *ul_config_req);
 
 int oai_nfapi_ue_release_req(nfapi_ue_release_request_t *release_req);
+#ifdef PHY_RM
 int oai_nfapi_phy_rm_start_req(nfapi_phy_rm_start_request_t *rm_start_req);
+#endif
 uint8_t dl_pdus[8][MAX_NUM_DL_PDU][9422];
 void handle_nfapi_dci_dl_pdu(PHY_VARS_eNB *eNB,
                              int frame, int subframe,

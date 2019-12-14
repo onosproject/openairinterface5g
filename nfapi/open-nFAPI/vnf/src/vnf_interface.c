@@ -27,6 +27,7 @@
 #include <errno.h>
 
 #include <stdio.h>
+#ifdef PHY_RM
 #include <stdint.h>
 #include <sys/un.h>
 #include <sys/signalfd.h>
@@ -35,8 +36,9 @@
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <pthread.h>
-
+#endif
 #include "vnf.h"
+#ifdef PHY_RM
 #include "vnf_p7.h"
 
 typedef struct {
@@ -160,7 +162,7 @@ typedef struct {
   vnf_p7_info p7_vnfs[2];
 
 } vnf_info;
-
+#endif
 
 nfapi_vnf_config_t* nfapi_vnf_config_create()
 {
@@ -192,7 +194,7 @@ void nfapi_vnf_config_destory(nfapi_vnf_config_t* config)
 {
 	free(config);
 }
-
+#ifdef PHY_RM
 void init_server_eventfd(int *watch_fd_list, int client_num, char *path)
 {
 	// eventfd server
@@ -267,7 +269,7 @@ void init_server_eventfd(int *watch_fd_list, int client_num, char *path)
 		}
 	}
 }
-
+#endif
 int nfapi_vnf_start(nfapi_vnf_config_t* config)
 {
 	// Verify that config is not null
@@ -585,7 +587,7 @@ int nfapi_vnf_start(nfapi_vnf_config_t* config)
 						}
 					}
 				}
-
+#ifdef PHY_RM
 				int fd[6];
 				const char	*path = "/tmp/oai_fapi_1ms";
 				char		idx[2];
@@ -608,6 +610,7 @@ int nfapi_vnf_start(nfapi_vnf_config_t* config)
 				vnf_p7->maxfd = vnf_p7->fapi_1ms_fd_list[0];
 
 				FD_SET(vnf_p7->fapi_1ms_fd_list[0], &(vnf_p7->watchset));
+#endif
 			}
 			else
 			{
@@ -894,8 +897,11 @@ int nfapi_vnf_allocate_phy(nfapi_vnf_config_t* config, int p5_idx, uint16_t* phy
 
 	info->timing_window = 30;       // This seems to override what gets set by the user - why???
 	info->timing_info_mode = 0x03;
-	info->timing_info_period = 32;
-
+#ifdef PHY_RM
+        info->timing_info_period = 32
+#else;
+	info->timing_info_period = 128;
+#endif
 	nfapi_vnf_phy_info_list_add(config, info);
 
 	(*phy_id) = info->phy_id;

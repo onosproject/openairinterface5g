@@ -1452,9 +1452,10 @@ typedef struct eNB_MAC_INST_s {
   nfapi_tx_request_t TX_req[NFAPI_CC_MAX];
   /// NFAPI UE_release_req structure
   nfapi_ue_release_request_t UE_release_req;
+#ifdef PHY_RM
   /// NFAPI phy rm start structure
   nfapi_phy_rm_start_request_t PHY_rm_start_req;
-
+#endif
   /// UL handle
   uint32_t ul_handle;
   UE_list_t UE_list;

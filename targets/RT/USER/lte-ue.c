@@ -971,7 +971,7 @@ static void *UE_phy_stub_single_thread_rxn_txnp4(void *arg) {
   UE = rtd->UE;
 
   if(ue_thread_id == 0) {
-    phy_stub_ticking->ticking_var = -1;
+//    phy_stub_ticking->ticking_var = -1;
     proc->subframe_rx=proc->sub_frame_start;
     // Initializations for nfapi-L2-emulator mode
     dl_config_req = NULL;
@@ -1224,7 +1224,10 @@ static void *UE_phy_stub_single_thread_rxn_txnp4(void *arg) {
         oai_nfapi_rx_ind(&UL_INFO->rx_ind);
 
         for(uint8_t num_pdu = 0; num_pdu < UL_INFO->rx_ind.rx_indication_body.number_of_pdus; num_pdu++) {
-          free(UL_INFO->rx_ind.rx_indication_body.rx_pdu_list[num_pdu].data);
+          if (UL_INFO->rx_ind.rx_indication_body.rx_pdu_list[num_pdu].data) {
+            free(UL_INFO->rx_ind.rx_indication_body.rx_pdu_list[num_pdu].data);
+            UL_INFO->rx_ind.rx_indication_body.rx_pdu_list[num_pdu].data = NULL;
+          }
         }
 
         //LOG_I(MAC, "ul_config_req_UE_MAC 2.31 \n");
@@ -1246,22 +1249,22 @@ static void *UE_phy_stub_single_thread_rxn_txnp4(void *arg) {
       }
 
       // Free UL_INFO messages
-      //if(UL_INFO->crc_ind.crc_indication_body.crc_pdu_list != NULL){
+      if(UL_INFO->crc_ind.crc_indication_body.crc_pdu_list != NULL){
       free(UL_INFO->crc_ind.crc_indication_body.crc_pdu_list);
       UL_INFO->crc_ind.crc_indication_body.crc_pdu_list = NULL;
-      //}
-      //if(UL_INFO->rx_ind.rx_indication_body.rx_pdu_list != NULL){
+      }
+      if(UL_INFO->rx_ind.rx_indication_body.rx_pdu_list != NULL){
       free(UL_INFO->rx_ind.rx_indication_body.rx_pdu_list);
       UL_INFO->rx_ind.rx_indication_body.rx_pdu_list = NULL;
-      //}
-      //if(UL_INFO->harq_ind.harq_indication_body.harq_pdu_list !=NULL){
+      }
+      if(UL_INFO->harq_ind.harq_indication_body.harq_pdu_list !=NULL){
       free(UL_INFO->harq_ind.harq_indication_body.harq_pdu_list);
       UL_INFO->harq_ind.harq_indication_body.harq_pdu_list = NULL;
-      //}
-      //if(UL_INFO->sr_ind.sr_indication_body.sr_pdu_list!=NULL){
+      }
+      if(UL_INFO->sr_ind.sr_indication_body.sr_pdu_list!=NULL){
       free(UL_INFO->sr_ind.sr_indication_body.sr_pdu_list);
       UL_INFO->sr_ind.sr_indication_body.sr_pdu_list = NULL;
-      //}
+      }
       free(UL_INFO->cqi_ind.cqi_indication_body.cqi_pdu_list);
       UL_INFO->cqi_ind.cqi_indication_body.cqi_pdu_list = NULL;
       free(UL_INFO->cqi_ind.cqi_indication_body.cqi_raw_pdu_list);
