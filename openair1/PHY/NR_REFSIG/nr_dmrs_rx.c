@@ -30,17 +30,17 @@
  * \warning
  */
 
-//#define NR_PBCH_DMRS_LENGTH_DWORD 5
-//#define NR_PBCH_DMRS_LENGTH 144
-//#define DEBUG_PDCCH
+#define NR_PBCH_DMRS_LENGTH_DWORD 5
+#define NR_PBCH_DMRS_LENGTH 144
+#define DEBUG_PDCCH
 
 #include "refsig_defs_ue.h"
 #include "PHY/defs_nr_UE.h"
 
 /*Table 7.4.1.1.2-1/2 from 38.211 */
-int wf1[8][2] = {{1,1},{1,-1},{1,1},{1,-1},{1,1},{1,-1},{1,1},{1,1}};
+int wf1[8][2] = {{1,1},{1,-1},{1,1},{1,-1},{1,1},{1,-1},{1,1},{1,-1}};    //////-----src572   Table_is_wrong  changed it /*Table 7.4.1.1.2-1/2 from 38.211 */
 int wt1[8][2] = {{1,1},{1,1},{1,1},{1,1},{1,-1},{1,-1},{1,-1},{1,-1}};
-int wf2[12][2] = {{1,1},{1,-1},{1,1},{1,-1},{1,1},{1,-1},{1,1},{1,1},{1,1},{1,-1},{1,1},{1,1}};
+int wf2[12][2] = {{1,1},{1,-1},{1,1},{1,-1},{1,1},{1,-1},{1,1},{1,-1},{1,1},{1,-1},{1,1},{1,-1}};
 int wt2[12][2] = {{1,1},{1,1},{1,1},{1,1},{1,1},{1,1},{1,-1},{1,-1},{1,-1},{1,-1},{1,-1},{1,-1}};
 
 
@@ -65,7 +65,7 @@ int nr_pdsch_dmrs_rx(PHY_VARS_NR_UE *ue,
   array_of_w *wf;
   array_of_w *wt;
 
-  config_type = 0; //to be updated by higher layer
+  config_type = 0; //to be updated by higher layer     ///-----src572
 
   wf = (config_type==0) ? wf1 : wf2;
   wt = (config_type==0) ? wt1 : wt2;

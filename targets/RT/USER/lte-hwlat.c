@@ -433,7 +433,7 @@ int main(void)
 		openair0_cfg[0].configFilename = malloc(strlen(openair_dir) + strlen(ini_file) + 2);
 		sprintf(openair0_cfg[0].configFilename, "%s/%s", openair_dir, ini_file);
 	}
-//	printf("openair0_cfg[0].configFilename:%s\n", openair0_cfg[0].configFilename);
+	printf("openair0_cfg[0].configFilename:%s\n", openair0_cfg[0].configFilename);
 
 	ret = openair0_device_load( &rf_device, &openair0_cfg[0] );
 	if (ret != 0){

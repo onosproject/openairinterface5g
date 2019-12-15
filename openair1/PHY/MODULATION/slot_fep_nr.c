@@ -46,14 +46,19 @@ int nr_slot_fep(PHY_VARS_NR_UE *ue,
   unsigned char aa;
   unsigned int nb_prefix_samples;
   unsigned int nb_prefix_samples0;
-  if (ue->is_synchronized) {
+  // fprintf(stderr, "value of Ns in  function call nr_slot_fep %d\n", Ns);     //----src572
+
+  // if (ue->is_synchronized) {
+  //   nb_prefix_samples = (no_prefix ? 0 : frame_parms->nb_prefix_samples);
+  //   nb_prefix_samples0 = (no_prefix ? 0 : frame_parms->nb_prefix_samples0);
+  // }
+  // else {
+  //   nb_prefix_samples = (no_prefix ? 0 : frame_parms->nb_prefix_samples);
+  //   nb_prefix_samples0 = (no_prefix ? 0 : frame_parms->nb_prefix_samples);
+  // }
+
     nb_prefix_samples = (no_prefix ? 0 : frame_parms->nb_prefix_samples);
-    nb_prefix_samples0 = (no_prefix ? 0 : frame_parms->nb_prefix_samples0);
-  }
-  else {
-    nb_prefix_samples = (no_prefix ? 0 : frame_parms->nb_prefix_samples);
-    nb_prefix_samples0 = (no_prefix ? 0 : frame_parms->nb_prefix_samples);
-  }
+    nb_prefix_samples0 = (no_prefix ? 0 : frame_parms->nb_prefix_samples0);    //--src572
   //unsigned int subframe_offset;//,subframe_offset_F;
   unsigned int slot_offset;
   //int i;
@@ -117,8 +122,8 @@ int nr_slot_fep(PHY_VARS_NR_UE *ue,
     return(-1);
     }*/
 
-  if (Ns<0 || Ns>=20) {
-    printf("slot_fep: Ns must be between 0 and 19\n");
+  if (Ns<0 || Ns>=80) {
+    fprintf(stderr,"slot_fep: Ns must be between 0 and 79\n");
     return(-1);
   }
 
@@ -131,7 +136,7 @@ int nr_slot_fep(PHY_VARS_NR_UE *ue,
 
 #ifdef DEBUG_FEP
       //  if (ue->frame <100)
-    /*LOG_I(PHY,*/printf("slot_fep: frame %d: slot %d, symbol %d, nb_prefix_samples %d, nb_prefix_samples0 %d, slot_offset %d,  sample_offset %d,rx_offset %d, frame_length_samples %d\n", ue->proc.proc_rxtx[(Ns)&1].frame_rx,Ns, symbol,
+    /*LOG_I(PHY,*/fprintf(stderr,"\n######   slot_fep: frame %d: slot %d, symbol %d, nb_prefix_samples %d, nb_prefix_samples0 %d, slot_offset %d,  sample_offset %d,rx_offset %d, frame_length_samples %d   #######\n", ue->proc.proc_rxtx[(Ns)&1].frame_rx,Ns, symbol,
           nb_prefix_samples,nb_prefix_samples0,slot_offset,sample_offset,rx_offset,frame_length_samples);
 #endif
 
@@ -192,7 +197,7 @@ int nr_slot_fep(PHY_VARS_NR_UE *ue,
 
     #ifdef DEBUG_FEP
         //  if (ue->frame <100)
-        printf("slot_fep: frame %d: symbol %d rx_offset %d\n", ue->proc.proc_rxtx[(Ns)&1].frame_rx, symbol,rx_offset);
+        fprintf(stderr,"\n $$$$$$   slot_fep: frame %d: symbol %d rx_offset %d   $$$$$\n", ue->proc.proc_rxtx[(Ns)&1].frame_rx, symbol,rx_offset);
     #endif
   }
 
@@ -261,7 +266,7 @@ int nr_slot_fep_ul(NR_DL_FRAME_PARMS *frame_parms,
   slot_offset   = Ns * frame_parms->samples_per_slot;
 
   
-  if(symbol == 0)
+  if(symbol == 0)       /////   check this calculation
     rxdata_offset = slot_offset + nb_prefix_samples0 - SOFFSET;
   else
     rxdata_offset = slot_offset + nb_prefix_samples0 + (symbol * (frame_parms->ofdm_symbol_size + nb_prefix_samples)) - SOFFSET;

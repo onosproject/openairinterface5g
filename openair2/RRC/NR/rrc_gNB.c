@@ -112,7 +112,7 @@ mui_t                               rrc_gNB_mui = 0;
 
 void openair_nr_rrc_on(const protocol_ctxt_t* const ctxt_pP){
   
-  LOG_I(NR_RRC, PROTOCOL_NR_RRC_CTXT_FMT" gNB:OPENAIR NR RRC IN....\n",PROTOCOL_NR_RRC_CTXT_ARGS(ctxt_pP));
+  LOG_I(NR_RRC, PROTOCOL_NR_RRC_CTXT_FMT" gNB:OPENAIR NR RRC ON....\n",PROTOCOL_NR_RRC_CTXT_ARGS(ctxt_pP));
 
   for (int CC_id = 0; CC_id < MAX_NUM_CCs; CC_id++) {
     rrc_config_nr_buffer (&RC.nrrrc[ctxt_pP->module_id]->carrier[CC_id].SI, BCCH, 1);
@@ -254,14 +254,17 @@ static void init_NR_SI(const protocol_ctxt_t* const ctxt_pP,
                              );
   
   LOG_I(NR_RRC,"Done init_NR_SI\n");
+  LOG_I(NR_RRC,"Value of nr_band in openairinterface5g/openair2/RRC/NR/rrc_gNB.c is %d \n",configuration->nr_band[CC_id]);
+
+  fprintf(stderr, "$$$$$$$$\nvalue of SSB_Periodicity = %d\n$$$$$$$$\n",configuration->ServingCellConfigCommon_ssb_periodicityServingCell[CC_id]);
 
   rrc_mac_config_req_gNB(ctxt_pP->module_id,
                          CC_id,
-			 RC.nrrrc[ctxt_pP->module_id]->carrier[CC_id].physCellId,
+			                   RC.nrrrc[ctxt_pP->module_id]->carrier[CC_id].physCellId,
                          RC.nrrrc[ctxt_pP->module_id]->carrier[CC_id].p_gNB,
                          configuration->nr_band[CC_id],
-			 configuration->ServingCellConfigCommon_ssb_PositionsInBurst_PR[CC_id],
-			 configuration->ServingCellConfigCommon_ssb_periodicityServingCell[CC_id],
+			                   configuration->ServingCellConfigCommon_ssb_PositionsInBurst_PR[CC_id],
+			                   configuration->ServingCellConfigCommon_ssb_periodicityServingCell[CC_id],
                          RC.nrrrc[ctxt_pP->module_id]->carrier[CC_id].dl_CarrierFreq,
                          configuration->N_RB_DL[CC_id],
                          (NR_BCCH_BCH_Message_t *)&RC.nrrrc[ctxt_pP->module_id]->carrier[CC_id].mib,
@@ -270,7 +273,8 @@ static void init_NR_SI(const protocol_ctxt_t* const ctxt_pP,
 }
 
 
-char openair_rrc_gNB_configuration(const module_id_t gnb_mod_idP, gNB_RrcConfigurationReq* configuration){
+char openair_rrc_gNB_configuration(const module_id_t gnb_mod_idP, gNB_RrcConfigurationReq* configuration)
+{
   protocol_ctxt_t      ctxt;
   int                  CC_id;
 
@@ -447,6 +451,8 @@ void* rrc_gnb_task(void* args_p){
 */
     /* Messages from gNB app */
     case NRRRC_CONFIGURATION_REQ:
+      //LOG_I(NR_RRC, "---------------------------------------------------------------------------------------------------------------------\n");
+      LOG_I(NR_RRC, " %d\n", NRRRC_CONFIGURATION_REQ(msg_p).nr_band[0]);
       LOG_I(NR_RRC, "[gNB %d] Received %s : %p\n", instance, msg_name_p,&NRRRC_CONFIGURATION_REQ(msg_p));
       openair_rrc_gNB_configuration(GNB_INSTANCE_TO_MODULE_ID(instance), &NRRRC_CONFIGURATION_REQ(msg_p));
       break;

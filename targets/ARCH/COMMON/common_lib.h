@@ -309,7 +309,7 @@ struct openair0_device_t {
   /*! \brief Called to start the transceiver. Return 0 if OK, < 0 if error
       @param device pointer to the device structure specific to the RF hardware target
   */
-  int (*trx_start_func)(openair0_device *device);
+  int (*trx_start_func  )(openair0_device *device);
 
  /*! \brief Called to configure the device
       @param device pointer to the device structure specific to the RF hardware target  

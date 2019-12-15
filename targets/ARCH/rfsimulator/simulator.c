@@ -30,7 +30,7 @@
 #include <openair1/SIMULATION/TOOLS/sim.h>
 
 #define PORT 4043 //TCP port for this simulator
-#define CirSize 3072000 // 100ms is enough
+#define CirSize 30720000*4 // 100ms is enough   // *4 since sampleperframe 1228800  *100
 #define sampleToByte(a,b) ((a)*(b)*sizeof(sample_t))
 #define byteToSample(a,b) ((a)/(sizeof(sample_t)*(b)))
 
@@ -114,6 +114,9 @@ void rxAddInput( struct complex16 *input_sig,
   const int dd = abs(channelDesc->channel_offset);
   const int nbTx = channelDesc->nb_tx;
 
+  // fprintf(stderr, "\n %s \n","$$$### entered rxAddInput() in simulator.c ###$$$" );      ////   src572
+
+
   for (int i=0; i<((int)nbSamples-dd); i++) {
     struct complex16 *out_ptr=after_channel_sig+dd+i;
     struct complex rx_tmp= {0};
@@ -165,6 +168,9 @@ void allocCirBuf(rfsimulator_state_t *bridge, int sock) {
   ev.events = EPOLLIN | EPOLLRDHUP;
   ev.data.fd = sock;
   AssertFatal(epoll_ctl(bridge->epollfd, EPOLL_CTL_ADD,  sock, &ev) != -1, "");
+
+  // fprintf(stderr, "\n %s \n","$$$### entered allocCirBuf() in simulator.c ###$$$" );      ////   src572
+
   // create channel simulation model for this mode reception
   // snr_dB is pure global, coming from configuration paramter "-s"
   // Fixme: referenceSignalPower should come from the right place
@@ -239,7 +245,7 @@ void fullwrite(int fd, void *_buf, ssize_t count, rfsimulator_state_t *t) {
     if (write(t->saveIQfile, _buf, count) != count )
       LOG_E(HW,"write in save iq file failed (%s)\n",strerror(errno));
   }
-
+  // fprintf(stderr, "\n %s \n","$$$### entered fullwrite( in simulator.c ###$$$" );      ////   src572
   AssertFatal(fd>=0 && _buf && count >0 && t,
               "Bug: %d/%p/%zd/%p", fd, _buf, count, t);
   char *buf = _buf;
@@ -287,6 +293,8 @@ sin_addr:
   ev.events = EPOLLIN;
   ev.data.fd = t->listen_sock;
   AssertFatal(epoll_ctl(t->epollfd, EPOLL_CTL_ADD,  t->listen_sock, &ev) != -1, "");
+
+  // fprintf(stderr, "\n %s \n","$$$### entered server_start() in simulator.c ###$$$" );      ////   src572
   return 0;
 }
 
@@ -305,6 +313,8 @@ sin_addr:
   };
   addr.sin_addr.s_addr = inet_addr(t->ip);
   bool connected=false;
+
+  // fprintf(stderr, "\n %s \n","$$$### entered rfsimulator_write( in simulator.c ###$$$" );      ////   src572
 
   while(!connected) {
     LOG_I(HW,"rfsimulator: trying to connect to %s:%d\n", t->ip, PORT);
@@ -326,6 +336,8 @@ sin_addr:
 int rfsimulator_write(openair0_device *device, openair0_timestamp timestamp, void **samplesVoid, int nsamps, int nbAnt, int flags) {
   rfsimulator_state_t *t = device->priv;
   LOG_D(HW,"sending %d samples at time: %ld\n", nsamps, timestamp);
+  
+  // fprintf(stderr, "\n %s \n","$$$### entered rfsimulator_write( in simulator.c ###$$$" );      ////   src572
 
 
   for (int i=0; i<FD_SETSIZE; i++) {
@@ -361,7 +373,8 @@ int rfsimulator_write(openair0_device *device, openair0_timestamp timestamp, voi
   return nsamps;
 }
 
-static bool flushInput(rfsimulator_state_t *t, int timeout) {
+static bool flushInput(rfsimulator_state_t *t, int timeout) 
+{
   // Process all incoming events on sockets
   // store the data in lists
   struct epoll_event events[FD_SETSIZE]= {0};
@@ -373,6 +386,8 @@ static bool flushInput(rfsimulator_state_t *t, int timeout) {
     } else
       AssertFatal(false,"error in epoll_wait\n");
   }
+
+  // fprintf(stderr, "\n %s \n","$$$### entered flushInput in simulator.c ###$$$" );      ////   src572
 
   for (int nbEv = 0; nbEv < nfds; ++nbEv) {
     int fd=events[nbEv].data.fd;
@@ -477,10 +492,13 @@ int rfsimulator_read(openair0_device *device, openair0_timestamp *ptimestamp, vo
 
   pthread_mutex_lock(&Sockmutex);
   rfsimulator_state_t *t = device->priv;
+  //fprintf(stderr, "%s\n","rfsimulator_read() in targets/ARCH/rfsimulator/simulator.c" );
   LOG_D(HW, "Enter rfsimulator_read, expect %d samples, will release at TS: %ld\n", nsamps, t->nextTimestamp+nsamps);
   // deliver data from received data
   // check if a UE is connected
   int first_sock;
+
+  // fprintf(stderr, "%s\n", "\n$$$$$$$ Entering into rfsimulator_read() in targets/ARCH/rfsimulator/simulator.c $$$$$$$\n");    //----src572
 
   for (first_sock=0; first_sock<FD_SETSIZE; first_sock++)
     if (t->buf[first_sock].circularBuf != NULL )
@@ -494,11 +512,13 @@ int rfsimulator_read(openair0_device *device, openair0_timestamp *ptimestamp, vo
 
       t->nextTimestamp+=nsamps;
       LOG_W(HW,"Generated void samples for Rx: %ld\n", t->nextTimestamp);
+      //fprintf(stderr, "%s\n","rfsimulator_read() in targets/ARCH/rfsimulator/simulator.c" );
       *ptimestamp = t->nextTimestamp-nsamps;
       pthread_mutex_unlock(&Sockmutex);
       return nsamps;
     }
-  } else {
+  } else 
+  {
     
     bool have_to_wait;
 
@@ -606,6 +626,8 @@ int device_init(openair0_device *device, openair0_config_t *openair0_cfg) {
   // (for phy layer, replace "hw" by "phy")
   rfsimulator_state_t *rfsimulator = (rfsimulator_state_t *)calloc(sizeof(rfsimulator_state_t),1);
 
+  fprintf(stderr, "\n$$$$$#####   device_init in rfsimulator  $$$$$#####\n");
+
   if ((rfsimulator->ip=getenv("RFSIMULATOR")) == NULL ) {
     LOG_E(HW,helpTxt);
     exit(1);
@@ -645,7 +667,9 @@ int device_init(openair0_device *device, openair0_config_t *openair0_cfg) {
   device->trx_read_func      = rfsimulator_read;
   device->uhd_set_thread_priority = NULL;
   /* let's pretend to be a b2x0 */
-  device->type = USRP_B200_DEV;
+  // device->type = USRP_B200_DEV;               /////  can we use this for 100MHz ,will this create any problems for simulation  ---src572
+  // SRC 572
+  device->type = USRP_X300_DEV; 
   device->openair0_cfg=&openair0_cfg[0];
   device->priv = rfsimulator;
 

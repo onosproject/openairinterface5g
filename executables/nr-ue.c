@@ -172,7 +172,7 @@ static void UE_synch(void *arg) {
 
   if (UE->UE_scan == 0) {
     get_band(downlink_frequency[CC_id][0], &UE->frame_parms.eutra_band,   &uplink_frequency_offset[CC_id][0], &UE->frame_parms.frame_type);
-    LOG_I( PHY, "[SCHED][UE] Check absolute frequency DL %"PRIu32", UL %"PRIu32" (oai_exit %d, rx_num_channels %d)\n",
+    LOG_I( PHY, "[SCHED][UE] Check absolute frequency DL %"PRIu64", UL %"PRIu64" (oai_exit %d, rx_num_channels %d)\n",
            downlink_frequency[0][0], downlink_frequency[0][0]+uplink_frequency_offset[0][0],
            oai_exit, openair0_cfg[0].rx_num_channels);
 
@@ -183,9 +183,16 @@ static void UE_synch(void *arg) {
       openair0_cfg[UE->rf_map.card].autocal[UE->rf_map.chain+i] = 1;
 
       if (uplink_frequency_offset[CC_id][i] != 0) //
+      {
         openair0_cfg[UE->rf_map.card].duplex_mode = duplex_mode_FDD;
+        // fprintf(stderr, "\n\n$$$$$$$$ In UE_synch %s  $$$$$$ \n\n", "duplex_mode_FDD");  //----src572
+      }
       else //FDD
-        openair0_cfg[UE->rf_map.card].duplex_mode = duplex_mode_TDD;
+        {
+          openair0_cfg[UE->rf_map.card].duplex_mode = duplex_mode_TDD;
+          // fprintf(stderr, "\n\n$$$$$$$$ In UE_synch %s  $$$$$$ \n\n", "duplex_mode_TDD");  //----src572
+
+        }
     }
 
     sync_mode = pbch;
@@ -239,8 +246,10 @@ static void UE_synch(void *arg) {
     */
     case pbch:
       LOG_I(PHY, "[UE thread Synch] Running Initial Synch (mode %d)\n",UE->mode);
-
-      if (nr_initial_sync( &syncD->proc, UE, UE->mode,2) == 0) {
+	fprintf(stderr, "Line 249\n\n\nggggggggg\n");	
+      if (nr_initial_sync( &syncD->proc, UE, UE->mode,2) == 0)     ////----src572 why 2 frames?
+      {
+        // fprintf(stderr, "\n\n###########%s ######\n\n","Entering if condition of nr_initial sync" );
         freq_offset = UE->common_vars.freq_offset; // frequency offset computed with pss in initial sync
         hw_slot_offset = (UE->rx_offset<<1) / UE->frame_parms.samples_per_slot;
         LOG_I(PHY,"Got synch: hw_slot_offset %d, carrier off %d Hz, rxgain %d (DL %u, UL %u), UE_scan_carrier %d\n",
@@ -252,7 +261,8 @@ static void UE_synch(void *arg) {
               UE->UE_scan_carrier );
 
         // rerun with new cell parameters and frequency-offset
-        for (i=0; i<openair0_cfg[UE->rf_map.card].rx_num_channels; i++) {
+        for (i=0; i<openair0_cfg[UE->rf_map.card].rx_num_channels; i++) 
+        {
           openair0_cfg[UE->rf_map.card].rx_gain[UE->rf_map.chain+i] = UE->rx_total_gain_dB;//-USRP_GAIN_OFFSET;
 
           if (freq_offset >= 0)
@@ -294,6 +304,13 @@ static void UE_synch(void *arg) {
             openair0_cfg[UE->rf_map.card].tx_bw=10.0e6;
             //            openair0_cfg[0].rx_gain[0] -= 0;
             break;
+            case 66:               //   --src572 added this. How was this working for 106PRB for band 78????
+            // fprintf(stderr, "\n\n $$$$$$$$$$$$$$$$$ Added case for PRB 66 in nr-ue.c %s\n","$$$$$$$$\n\n" );
+            openair0_cfg[UE->rf_map.card].sample_rate=122.88e6;
+            openair0_cfg[UE->rf_map.card].rx_bw=100.0e6;
+            openair0_cfg[UE->rf_map.card].tx_bw=100.0e6;
+            //            openair0_cfg[0].rx_gain[0] -= 0;
+            break;
         }
 
         if (UE->mode != loop_through_memory) {
@@ -313,14 +330,18 @@ static void UE_synch(void *arg) {
         } else {
           UE->is_synchronized = 1;
         }
-      } else {
+      } 
+      else 
+      {
         // initial sync failed
         // calculate new offset and try again
-        if (UE->UE_scan_carrier == 1) {
-          if (freq_offset >= 0)
-            freq_offset += 100;
+          fprintf(stderr, "\n\n ########### %s ###### \n\n","Entering else condition of nr_initial sync" );
 
-          freq_offset *= -1;
+           if (UE->UE_scan_carrier == 1) {
+             if (freq_offset >= 0)
+                freq_offset += 100;
+
+            freq_offset *= -1;
           LOG_I(PHY, "[initial_sync] trying carrier off %d Hz, rxgain %d (DL %u, UL %u)\n",
                 freq_offset,
                 UE->rx_total_gain_dB,
@@ -342,20 +363,25 @@ static void UE_synch(void *arg) {
 
         break;
 
-      case si:
-      default:
-        break;
+        case si:
+          default:
+         break;
       }
   }
 }
 
-void processSlotRX( PHY_VARS_NR_UE *UE, UE_nr_rxtx_proc_t *proc) {
+//src5555
+//:q!#define UE_SLOT_PARALLELISATION 
+//srccc
+void processSlotRX( PHY_VARS_NR_UE *UE, UE_nr_rxtx_proc_t *proc) 
+{
 
   nr_dcireq_t dcireq;
   nr_scheduled_response_t scheduled_response;
 
   // Process Rx data for one sub-frame
-  if (slot_select_nr(&UE->frame_parms, proc->frame_tx, proc->nr_tti_tx) & NR_DOWNLINK_SLOT) {
+    if (slot_select_nr(&UE->frame_parms, proc->frame_tx, proc->nr_tti_tx) & NR_DOWNLINK_SLOT)
+    {
     //TODO: all of this has to be moved to the MAC!!!
     dcireq.module_id = UE->Mod_id;
     dcireq.gNB_index = 0;
@@ -373,15 +399,15 @@ void processSlotRX( PHY_VARS_NR_UE *UE, UE_nr_rxtx_proc_t *proc) {
     scheduled_response.slot  = proc->nr_tti_rx;
     nr_ue_scheduled_response(&scheduled_response);
 
-#ifdef UE_SLOT_PARALLELISATION
+    #ifdef UE_SLOT_PARALLELISATION
     phy_procedures_slot_parallelization_nrUE_RX( UE, proc, 0, 0, 1, UE->mode, no_relay, NULL );
-#else
+    #else
     uint64_t a=rdtsc();
     phy_procedures_nrUE_RX( UE, proc, 0, 1, UE->mode);
     LOG_D(PHY,"phy_procedures_nrUE_RX: slot:%d, time %lu\n", proc->nr_tti_rx, (rdtsc()-a)/3500);
-    //printf(">>> nr_ue_pdcch_procedures ended\n");
-#endif
-  }
+    fprintf(stderr, "[$$!!$$!!$$!!$$!!] >>> nr_ue_pdcch_procedures ended\n");
+    #endif
+    }
 
   
   // no UL for now
@@ -414,27 +440,27 @@ typedef struct processingData_s {
   PHY_VARS_NR_UE    *UE;
 }  processingData_t;
 
-void UE_processing(void *arg) {
+void UE_processing(void *arg) 
+{
   processingData_t *rxtxD=(processingData_t *) arg;
   UE_nr_rxtx_proc_t *proc = &rxtxD->proc;
   PHY_VARS_NR_UE    *UE   = rxtxD->UE;
   processSlotRX(UE, proc);
-  //printf(">>> mac ended\n");
+  fprintf(stderr, ">>> mac ended\n");
   // Prepare the future Tx data
-#if 0
-#ifndef NO_RAT_NR
+   #if 0
+   #ifndef NO_RAT_NR
 
-  if (slot_select_nr(&UE->frame_parms, proc->frame_tx, proc->nr_tti_tx) & NR_UPLINK_SLOT)
-#else
-  if ((subframe_select( &UE->frame_parms, proc->subframe_tx) == SF_UL) ||
+     if (slot_select_nr(&UE->frame_parms, proc->frame_tx, proc->nr_tti_tx) & NR_UPLINK_SLOT)
+     if ((subframe_select( &UE->frame_parms, proc->subframe_tx) == SF_UL) ||
       (UE->frame_parms.frame_type == FDD) )
-#endif
+    #endif
     if (UE->mode != loop_through_memory)
       phy_procedures_nrUE_TX(UE,proc,0,0,UE->mode,no_relay);
 
   //phy_procedures_UE_TX(UE,proc,0,0,UE->mode,no_relay);
-#endif
-#if 0
+    #endif
+    #if 0
 
   if ((subframe_select( &UE->frame_parms, proc->subframe_tx) == SF_S) &&
       (UE->frame_parms.frame_type == TDD))
@@ -442,10 +468,11 @@ void UE_processing(void *arg) {
       //phy_procedures_UE_S_TX(UE,0,0,no_relay);
       updateTimes(current, &t3, 10000, timing_proc_name);
 
-#endif
+     #endif
 }
 
-void readFrame(PHY_VARS_NR_UE *UE,  openair0_timestamp *timestamp) {
+void readFrame(PHY_VARS_NR_UE *UE,  openair0_timestamp *timestamp) 
+{
   void *rxp[NB_ANTENNAS_RX];
   void *dummy_tx[UE->frame_parms.nb_antennas_tx];
 
@@ -495,7 +522,8 @@ void trashFrame(PHY_VARS_NR_UE *UE, openair0_timestamp *timestamp) {
     free(dummy_rx[i]);
 }
 
-void syncInFrame(PHY_VARS_NR_UE *UE, openair0_timestamp *timestamp) {
+void syncInFrame(PHY_VARS_NR_UE *UE, openair0_timestamp *timestamp) 
+{
 
     LOG_I(PHY,"Resynchronizing RX by %d samples (mode = %d)\n",UE->rx_offset,UE->mode);
     void *dummy_tx[UE->frame_parms.nb_antennas_tx];
@@ -503,7 +531,8 @@ void syncInFrame(PHY_VARS_NR_UE *UE, openair0_timestamp *timestamp) {
     for (int i=0; i<UE->frame_parms.nb_antennas_tx; i++)
       dummy_tx[i]=malloc16_clear(UE->frame_parms.samples_per_subframe*4);
 
-    for ( int size=UE->rx_offset ; size > 0 ; size -= UE->frame_parms.samples_per_subframe ) {
+    for ( int size=UE->rx_offset ; size > 0 ; size -= UE->frame_parms.samples_per_subframe ) 
+    {
       int unitTransfer=size>UE->frame_parms.samples_per_subframe ? UE->frame_parms.samples_per_subframe : size ;
       AssertFatal(unitTransfer ==
                   UE->rfdevice.trx_read_func(&UE->rfdevice,
@@ -548,10 +577,14 @@ void *UE_thread(void *arg) {
   openair0_timestamp timestamp;
   void *rxp[NB_ANTENNAS_RX], *txp[NB_ANTENNAS_TX];
   int start_rx_stream = 0;
-  const uint16_t table_sf_slot[20] = {0,0,1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9};
+  //const uint16_t table_sf_slot[20] = {0,0,1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9};
+  const uint16_t table_sf_slot[80] = {0,0,1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9,10,10,11,11,12,12,13,13,14,14,15,15,16,16,17,17,18,18,19,19,20,20,21,21,22,22,23,23,
+  24,24,25,25,26,26,27,27,28,28,29,29,30,30,31,31,32,32,33,33,34,34,35,35,36,36,37,37,38,38,39,39};                 ////----src572 
+
   AssertFatal(0== openair0_device_load(&(UE->rfdevice), &openair0_cfg[0]), "");
   UE->rfdevice.host_type = RAU_HOST;
-  AssertFatal(UE->rfdevice.trx_start_func(&UE->rfdevice) == 0, "Could not start the device\n");
+  AssertFatal(UE->rfdevice.trx_start_func(&UE->rfdevice) == 0, "Could not start the device%d\n");
+  fprintf(stderr, "SRC572!!!!!!!! - %d\n", UE->rfdevice.trx_start_func(&UE->rfdevice));
   notifiedFIFO_t nf;
   initNotifiedFIFO(&nf);
   int nbSlotProcessing=0;
@@ -588,7 +621,7 @@ void *UE_thread(void *arg) {
 
     if (!UE->is_synchronized) {
       readFrame(UE, &timestamp);
-      notifiedFIFO_elt_t *Msg=newNotifiedFIFO_elt(sizeof(syncData_t),0,&nf,UE_synch);
+      notifiedFIFO_elt_t *Msg=newNotifiedFIFO_elt(sizeof(syncData_t),0,&nf,UE_synch);				// src572 - Synchronization Begin here.
       syncData_t *syncMsg=(syncData_t *)NotifiedFifoData(Msg);
       syncMsg->UE=UE;
       memset(&syncMsg->proc, 0, sizeof(syncMsg->proc));

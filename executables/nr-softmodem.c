@@ -113,8 +113,8 @@ int single_thread_flag=1;
 
 static int8_t threequarter_fs=0;
 
-uint32_t downlink_frequency[MAX_NUM_CCs][4];
-int32_t uplink_frequency_offset[MAX_NUM_CCs][4];
+uint64_t downlink_frequency[MAX_NUM_CCs][4];                 //   ----src572   changed from 32 to 64
+int64_t uplink_frequency_offset[MAX_NUM_CCs][4];             //    ---src572 changed from 32 to 64
 
 //Temp fix for inexisting NR upper layer
 unsigned char NB_gNB_INST = 1;
@@ -143,12 +143,12 @@ double rx_gain[MAX_NUM_CCs][4] = {{110,0,0,0},{20,0,0,0}};
 
 double rx_gain_off = 0.0;
 
-double sample_rate=30.72e6;
-double bw = 10.0e6;
+double sample_rate=122.88e6;//30.72e6;      -----src572
+double bw = 100e6;//10.0e6;                 -----src572
 
 static int tx_max_power[MAX_NUM_CCs]; /* =  {0,0}*/;
 
-char rf_config_file[1024]="/usr/local/etc/syriq/ue.band7.tm1.PRB100.NR40.dat";
+char rf_config_file[1024];//"/usr/local/etc/syriq/ue.band7.tm1.PRB100.NR40.dat";
 
 int chain_offset=0;
 int phy_test = 0;
@@ -378,7 +378,7 @@ void *l2l1_task(void *arg) {
   itti_set_task_real_time(TASK_L2L1);
   itti_mark_task_ready(TASK_L2L1);
   /* Wait for the initialize message */
-  printf("Wait for the ITTI initialize message\n");
+  printf("Wait for the ITTI initialize message l2l1_task\n");       //-----src572
 
   do {
     if (message_p != NULL) {
@@ -504,7 +504,8 @@ int create_gNB_tasks(uint32_t gnb_nb) {
 }
 
 
-static void get_options(void) {
+static void get_options(void) 
+{
   int tddflag, nonbiotflag;
   uint32_t online_log_messages;
   uint32_t glog_level, glog_verbosity;
@@ -539,10 +540,10 @@ static void get_options(void) {
     load_module_shlib("telnetsrv",NULL,0,NULL);
   }
 
-#if T_TRACER
-  paramdef_t cmdline_ttraceparams[] =CMDLINE_TTRACEPARAMS_DESC ;
-  config_process_cmdline( cmdline_ttraceparams,sizeof(cmdline_ttraceparams)/sizeof(paramdef_t),NULL);
-#endif
+  #if T_TRACER
+    paramdef_t cmdline_ttraceparams[] =CMDLINE_TTRACEPARAMS_DESC ;
+    config_process_cmdline( cmdline_ttraceparams,sizeof(cmdline_ttraceparams)/sizeof(paramdef_t),NULL);
+  #endif
 
   if ( !(CONFIG_ISFLAGSET(CONFIG_ABORT)) ) {
     memset((void *)&RC,0,sizeof(RC));
@@ -556,29 +557,30 @@ static void get_options(void) {
   if(parallel_config != NULL) set_parallel_conf(parallel_config);
 
   if(worker_config != NULL) set_worker_conf(worker_config);
-}
 
-
+} 
 #if T_TRACER
   int T_nowait = 0;     /* by default we wait for the tracer */
   int T_port = 2021;    /* default port to listen to to wait for the tracer */
   int T_dont_fork = 0;  /* default is to fork, see 'T_init' to understand */
-#endif
+ #endif
 
 
 
 void set_default_frame_parms(nfapi_nr_config_request_t *config[MAX_NUM_CCs],
 		                     NR_DL_FRAME_PARMS *frame_parms[MAX_NUM_CCs])
 {
+ 
   for (int CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
     frame_parms[CC_id] = (NR_DL_FRAME_PARMS *) malloc(sizeof(NR_DL_FRAME_PARMS));
     config[CC_id] = (nfapi_nr_config_request_t *) malloc(sizeof(nfapi_nr_config_request_t));
-    config[CC_id]->subframe_config.numerology_index_mu.value =1;
-    config[CC_id]->subframe_config.duplex_mode.value = 1; //FDD
+    config[CC_id]->subframe_config.numerology_index_mu.value = 3;//3;//1;
+    config[CC_id]->subframe_config.duplex_mode.value = 1;//TDD;//1; //FDD
     config[CC_id]->subframe_config.dl_cyclic_prefix_type.value = 0; //NORMAL
-    config[CC_id]->rf_config.dl_carrier_bandwidth.value = 106;
-    config[CC_id]->rf_config.ul_carrier_bandwidth.value = 106;
+    config[CC_id]->rf_config.dl_carrier_bandwidth.value = 66;
+    config[CC_id]->rf_config.ul_carrier_bandwidth.value = 66;
     config[CC_id]->sch_config.physical_cell_id.value = 0;
+    //fprintf(stderr,"%s","default frame parms in openairinterface5g/executables/nr-softmodem.c\n");
     ///dl frequency to be filled in
     /*  //Set some default values that may be overwritten while reading options
         frame_parms[CC_id]->frame_type          = FDD;
@@ -904,6 +906,9 @@ int main( int argc, char **argv )
   }
 
   openair0_cfg[0].threequarter_fs = threequarter_fs;
+  printf("openair0_cfg[0].configFilename is %s",openair0_cfg[0].configFilename);
+
+
 
 #if T_TRACER
   T_Config_Init();
@@ -917,6 +922,7 @@ int main( int argc, char **argv )
   }
 
   cpuf=get_cpu_freq_GHz();
+  // fprintf(stderr, "%s\n"," In main--nr-softmodem.c line 925 " );          //---src572
 #if defined(ENABLE_ITTI)
   itti_init(TASK_MAX, THREAD_MAX, MESSAGES_ID_MAX, tasks_info, messages_info);
   // initialize mscgen log after ITTI
@@ -950,7 +956,7 @@ int main( int argc, char **argv )
     AssertFatal(create_gNB_tasks(1) == 0,"cannot create ITTI tasks\n");
   } else {
     printf("No ITTI, Initializing L1\n");
-    RCconfig_L1();
+    RCconfig_L1();     //---- this one is still in enb_app enb_config.c no function in gNB. This one is not called now
   }
 
 #endif

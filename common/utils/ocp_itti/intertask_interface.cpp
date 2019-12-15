@@ -284,8 +284,8 @@ extern "C" {
 		               void *(*start_routine)(void *),
 					   void *args_p)
   {
-    task_list_t *t=&tasks[task_id];
-    threadCreate (&t->thread, start_routine, args_p, (char*)itti_get_task_name(task_id),-1,OAI_PRIORITY_RT);
+    task_list_t *t=&tasks[task_id];                          //--------src572
+    threadCreate (&t->thread, start_routine, args_p, (char*)itti_get_task_name(task_id),-1,OAI_PRIORITY_RT);    //-- this creates a pthread
     LOG_I(TMR,"Created Posix thread %s\n",  itti_get_task_name(task_id) );
     return 0;
   }
@@ -309,6 +309,8 @@ extern "C" {
   {
     AssertFatal(TASK_MAX<UINT16_MAX, "Max itti tasks");
 
+    fprintf(stderr, "%s\n","itti_init() in openairinterface5g/common/utils/ocp_itti/intertask_interface.cpp line 313 \n" );    //  ---src572
+
     for(int i=0; i<task_max; ++i) {
       LOG_I(TMR,"Starting itti queue: %s as task %d\n", tasks_info[i].name, i);
       pthread_mutex_init(&tasks[i].queue_cond_lock, NULL);
@@ -318,7 +320,11 @@ extern "C" {
       itti_subscribe_event_fd((task_id_t)i, tasks[i].sem_fd);
 
       if (tasks[i].admin.threadFunc != NULL)
-        itti_create_task((task_id_t)i, tasks[i].admin.threadFunc, NULL);
+        {
+          itti_create_task((task_id_t)i, tasks[i].admin.threadFunc, NULL);
+          fprintf(stderr, "%s\n","itti_init()  line 325 checking if threads get created\n" );    //  ---src572
+
+        }
     }
 
     return 0;

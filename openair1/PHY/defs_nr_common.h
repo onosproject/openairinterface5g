@@ -97,7 +97,8 @@
 #define NR_MAX_NB_RBG 18
 #define NR_MAX_NB_LAYERS 8 // SU-MIMO (3GPP TS 38.211 V15.4.0 section 7.3.1.3)
 #define NR_MAX_NB_CODEWORDS 2
-#define NR_MAX_NB_HARQ_PROCESSES 16
+#define NR_MAX_NB_HARQ_PROCESSES 255        // src572;;Changed from 16 to 255
+
 #define NR_MAX_PDSCH_ENCODED_LENGTH NR_MAX_NB_RB*NR_SYMBOLS_PER_SLOT*NR_NB_SC_PER_RB*8*NR_MAX_NB_LAYERS // 8 is the maximum modulation order (it was 950984 before !!) 
 #define NR_MAX_PUSCH_ENCODED_LENGTH NR_MAX_PDSCH_ENCODED_LENGTH
 #define NR_MAX_PDSCH_TBS 3824
@@ -228,11 +229,13 @@ typedef struct NR_DL_FRAME_PARMS {
   /// Total Number of Resource Block Groups SubSets: this is P
   uint8_t N_RBGS;
   /// EUTRA Band
-  uint8_t eutra_band;
+  uint16_t eutra_band;
+  //// NR BAND
+  uint16_t nr_band;
   /// DL carrier frequency
-  uint32_t dl_CarrierFreq;
+  uint64_t dl_CarrierFreq;                //-----   src572
   /// UL carrier frequency
-  uint32_t ul_CarrierFreq;
+  uint64_t ul_CarrierFreq;                // ------ src572
   /// TX attenuation
   uint32_t att_tx;
   /// RX attenuation

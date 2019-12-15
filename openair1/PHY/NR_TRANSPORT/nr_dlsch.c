@@ -95,6 +95,7 @@ uint8_t nr_generate_pdsch(NR_gNB_DLSCH_t *dlsch,
   start_meas(dlsch_encoding_stats);
   nr_dlsch_encoding(harq->pdu, frame, slot, dlsch, frame_parms);
   stop_meas(dlsch_encoding_stats);
+  // fprintf(stderr, "%s\n","\n $$$$$  -----src572 ---- in nr_generate_pdsch() in openair1/PHY/NR_TRANSPORT/nr_dlsch.c\n $$$$$$$$$$\n" );
 #ifdef DEBUG_DLSCH
 printf("PDSCH encoding:\nPayload:\n");
 for (int i=0; i<harq->B>>7; i++) {

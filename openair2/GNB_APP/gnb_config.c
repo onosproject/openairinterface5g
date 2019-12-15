@@ -266,7 +266,8 @@ void RCconfig_nr_flexran()
   }
 }
 
-void RCconfig_NR_L1(void) {
+void RCconfig_NR_L1(void)
+ {
   int               i,j;
   paramdef_t L1_Params[] = L1PARAMS_DESC;
   paramlist_def_t L1_ParamList = {CONFIG_STRING_L1_LIST,NULL,0};
@@ -281,7 +282,8 @@ void RCconfig_NR_L1(void) {
 
   config_getlist( &L1_ParamList,L1_Params,sizeof(L1_Params)/sizeof(paramdef_t), NULL);
 
-  if (L1_ParamList.numelt > 0) {
+  if (L1_ParamList.numelt > 0) 
+  {
 
     for (j = 0; j < RC.nb_nr_L1_inst; j++) {
       RC.nb_nr_L1_CC[j] = *(L1_ParamList.paramarray[j][L1_CC_IDX].uptr);
@@ -427,6 +429,11 @@ void RCconfig_nr_macrlc() {
   }
 
 }
+// 
+/*void my_RCconfig_NRRRC(MessageDef *msg_p, uint32_t i, gNB_RRC_INST *rrc)
+{
+
+}*/
 
 void RCconfig_NRRRC(MessageDef *msg_p, uint32_t i, gNB_RRC_INST *rrc) {
 
@@ -623,7 +630,7 @@ void RCconfig_NRRRC(MessageDef *msg_p, uint32_t i, gNB_RRC_INST *rrc) {
   int32_t                RateMatchPatternLTE_CRS_radioframeAllocationOffset            = 0;
   char*                  RateMatchPatternLTE_CRS_subframeAllocation_choice             = NULL;
 
-
+  //LOG_I(NR_RRC,"[0]-----------------------------------------------------------------\n\n%d\n\n", nr_band); 
   /*int32_t                srb1_timer_poll_retransmit    = 0;
   int32_t                srb1_timer_reordering         = 0;
   int32_t                srb1_timer_status_prohibit    = 0;
@@ -703,6 +710,7 @@ void RCconfig_NRRRC(MessageDef *msg_p, uint32_t i, gNB_RRC_INST *rrc) {
 
     // search if in active list
 
+    //LOG_I(NR_RRC,"[1]-----------------------------------------------------------------\n\n%d\n\n", nr_band); 
     for (k=0; k <num_gnbs ; k++) {
       if (strcmp(GNBSParams[GNB_ACTIVE_GNBS_IDX].strlistptr[k], *(GNBParamList.paramarray[i][GNB_GNB_NAME_IDX].strptr) )== 0) {
         
@@ -745,6 +753,7 @@ void RCconfig_NRRRC(MessageDef *msg_p, uint32_t i, gNB_RRC_INST *rrc) {
 		      (NRRRC_CONFIGURATION_REQ (msg_p).mnc_digit_length[l] == 3),"BAD MNC DIGIT LENGTH %d",
 		      NRRRC_CONFIGURATION_REQ (msg_p).mnc_digit_length[l]);
 	}
+  //LOG_I(NR_RRC,"[2]-----------------------------------------------------------------\n\n%d\n\n", nr_band); 
 	
         // Parse optional physical parameters
         sprintf(gnbpath,"%s.[%i]",GNB_CONFIG_STRING_GNB_LIST,k),
@@ -759,7 +768,8 @@ void RCconfig_NRRRC(MessageDef *msg_p, uint32_t i, gNB_RRC_INST *rrc) {
           for (j = 0; j < CCsParamList.numelt ;j++) {
             
             sprintf(ccspath,"%s.%s.[%i]",gnbpath,GNB_CONFIG_STRING_COMPONENT_CARRIERS,j);
-            config_get( CCsParams,sizeof(CCsParams)/sizeof(paramdef_t),ccspath);        
+            config_get(CCsParams,sizeof(CCsParams)/sizeof(paramdef_t),ccspath);     
+  //LOG_I(NR_RRC,"[3]-----------------------------------------------------------------\n\n%d\n\n", nr_band);   
  
             nb_cc++;
 
@@ -784,6 +794,7 @@ void RCconfig_NRRRC(MessageDef *msg_p, uint32_t i, gNB_RRC_INST *rrc) {
               AssertFatal (0,"Failed to parse gNB configuration file %s, gnb %d unknown value \"%s\" for DL_prefix_type choice: NORMAL or EXTENDED !\n",
                            RC.config_file_name, i, DL_prefix_type);
             }
+  //LOG_I(NR_RRC,"[4]-----------------------------------------------------------------\n\n%d\n\n", nr_band);   
 
             if (!UL_prefix_type){
               AssertFatal (0,"Failed to parse gNB configuration file %s, gnb %d define %s: NORMAL,EXTENDED!\n",
@@ -795,9 +806,12 @@ void RCconfig_NRRRC(MessageDef *msg_p, uint32_t i, gNB_RRC_INST *rrc) {
             }else {
               AssertFatal (0,"Failed to parse gNB configuration file %s, gnb %d unknown value \"%s\" for UL_prefix_type choice: NORMAL or EXTENDED !\n",
                            RC.config_file_name, i, UL_prefix_type);
-            }            
+            }         
+  //LOG_I(NR_RRC,"[5]-----------------------------------------------------------------\n\n%d\n\n", nr_band);      
+            //nr_band = 257;
 
             NRRRC_CONFIGURATION_REQ (msg_p).nr_band[j] = nr_band;
+
             NRRRC_CONFIGURATION_REQ (msg_p).downlink_frequency[j] = (uint64_t) downlink_frequency;
             NRRRC_CONFIGURATION_REQ (msg_p).uplink_frequency_offset[j] = (unsigned int) uplink_frequency_offset;
             NRRRC_CONFIGURATION_REQ (msg_p).Nid_cell[j]= Nid_cell;
@@ -913,6 +927,9 @@ void RCconfig_NRRRC(MessageDef *msg_p, uint32_t i, gNB_RRC_INST *rrc) {
             }
 
             NRRRC_CONFIGURATION_REQ (msg_p).SIB1_ssb_PeriodicityServingCell[j] = SIB1_ssb_PeriodicityServingCell;
+            // ---src572 shouldn't this be a logical or (||) instead of and (&&) 
+            // fprintf(stderr, "\n$$$$$$$$$$$$\nThe value of SIB1_ssb_PeriodicityServingCell is %d \n$$$$$$$$$$$$$$\n", SIB1_ssb_PeriodicityServingCell);
+
             if ((SIB1_ssb_PeriodicityServingCell !=5)  && 
                 (SIB1_ssb_PeriodicityServingCell !=10) && 
                 (SIB1_ssb_PeriodicityServingCell !=20) && 
@@ -1137,17 +1154,17 @@ void RCconfig_NRRRC(MessageDef *msg_p, uint32_t i, gNB_RRC_INST *rrc) {
 
 
 	    uint64_t t_freq;
-	    if(nr_band == 41 || (nr_band > 76 && nr_band < 80))
-		t_freq = 2400000000;
+	    if(nr_band == 41 || (nr_band > 76 && nr_band < 300))
+      		t_freq = 2400000000;
 	    else
-		t_freq = 3000000000;
+      		t_freq = 3000000000;
 		
-            if (downlink_frequency<t_freq && (ServingCellConfigCommon_ssb_PositionsInBurst_PR > 15))
-		AssertFatal (0,"Failed to parse gNB configuration file %s, gnb %d unvalid value \"%ld\" for ssb_PositionsInBurst at DL frequency %ld !\n",
+      if (downlink_frequency<t_freq && (ServingCellConfigCommon_ssb_PositionsInBurst_PR > 15))
+		    AssertFatal (0,"Failed to parse gNB configuration file %s, gnb %d unvalid value \"%ld\" for ssb_PositionsInBurst at DL frequency %ld !\n",
                            RC.config_file_name, i, ServingCellConfigCommon_ssb_PositionsInBurst_PR, downlink_frequency);
 	    else {
-		if(downlink_frequency<6000000000 && (ServingCellConfigCommon_ssb_PositionsInBurst_PR > 255))
-			AssertFatal (0,"Failed to parse gNB configuration file %s, gnb %d unvalid value \"%ld\" for ssb_PositionsInBurst at DL frequency %ld !\n",
+      		if(downlink_frequency<6000000000 && (ServingCellConfigCommon_ssb_PositionsInBurst_PR > 255))
+			      AssertFatal (0,"Failed to parse gNB configuration file %s, gnb %d unvalid value \"%ld\" for ssb_PositionsInBurst at DL frequency %ld !\n",
                            RC.config_file_name, i, ServingCellConfigCommon_ssb_PositionsInBurst_PR, downlink_frequency);
 		else
 			NRRRC_CONFIGURATION_REQ (msg_p).ServingCellConfigCommon_ssb_PositionsInBurst_PR[j] = ServingCellConfigCommon_ssb_PositionsInBurst_PR;

@@ -56,13 +56,17 @@ extern openair0_config_t openair0_cfg[MAX_CARDS];
 
 extern int oai_exit;
 
-void nr_feptx0(RU_t *ru,int tti_tx,int first_symbol, int num_symbols) {
+void nr_feptx0(RU_t *ru,int tti_tx,int first_symbol, int num_symbols) 
+{
 
   NR_DL_FRAME_PARMS *fp = ru->nr_frame_parms;
 
+  int mu=3;      ////// src572 just used to see if it works
+
   unsigned int aa,slot_offset,slot_offsetF;
   int slot = tti_tx;
-
+  
+  // fprintf(stderr, "\n $$$### In function nr_feptx0 fp->ofdm_symbol_size = %d , num_symbols = %d,fp->nb_prefix_samples = %d ,(fp->Ncp == 1) = %d, slot = %d $$$###\n", fp->ofdm_symbol_size,num_symbols,fp->nb_prefix_samples,fp->Ncp,slot);   //----src572 
 
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_RU_FEPTX_OFDM+(first_symbol!=0?1:0) , 1 );
 
@@ -73,39 +77,44 @@ void nr_feptx0(RU_t *ru,int tti_tx,int first_symbol, int num_symbols) {
 
   LOG_D(PHY,"SFN/SF:RU:TX:%d/%d Generating slot %d (first_symbol %d num_symbols %d)\n",ru->proc.frame_tx, ru->proc.tti_tx,slot,first_symbol,num_symbols);
 
-  for (aa=0; aa<ru->nb_tx; aa++) {
-    if (fp->Ncp == 1) {
-      PHY_ofdm_mod(&ru->common.txdataF_BF[aa][slot_offsetF],
-		   (int*)&ru->common.txdata[aa][slot_offset],
-		   fp->ofdm_symbol_size,
-		   num_symbols,
-		   fp->nb_prefix_samples,
-		   CYCLIC_PREFIX);
+  for (aa=0; aa<ru->nb_tx; aa++) 
+  {
+     if (fp->Ncp == 1) 
+     {
+         // fprintf(stderr, "\n $$$###  Entering if(fp->Ncp == 1) %d ###$$$ \n", fp->Ncp );  ///----src572
+         PHY_ofdm_mod(&ru->common.txdataF_BF[aa][slot_offsetF], (int*)&ru->common.txdata[aa][slot_offset],
+                		   fp->ofdm_symbol_size,
+                		   num_symbols,
+                		   fp->nb_prefix_samples,
+                		   CYCLIC_PREFIX);
     }
-    else {
-      if (first_symbol==0) {
-	PHY_ofdm_mod(&ru->common.txdataF_BF[aa][slot_offsetF],
-		     (int*)&ru->common.txdata[aa][slot_offset],
-                     fp->ofdm_symbol_size,
-                     1,
-                     fp->nb_prefix_samples0,
-                     CYCLIC_PREFIX);
-	PHY_ofdm_mod(&ru->common.txdataF_BF[aa][slot_offsetF+fp->ofdm_symbol_size],
-		     (int*)&ru->common.txdata[aa][slot_offset+fp->nb_prefix_samples0+fp->ofdm_symbol_size],
-                     fp->ofdm_symbol_size,
-                     num_symbols-1,
-                     fp->nb_prefix_samples,
-                     CYCLIC_PREFIX);
+    else 
+    {
+      //if (first_symbol==0) 
+      if ((slot== 0) || slot ==((1<<mu)*10/2))       ////   -src572  
+      {
+        	// fprintf(stderr,"\n $$$###  Entering if((slot== 0 || slot == (1<<mu)*10/2)) %d ###$$$ \n", slot);  ///----src572
+          PHY_ofdm_mod(&ru->common.txdataF_BF[aa][slot_offsetF],(int*)&ru->common.txdata[aa][slot_offset],
+                             fp->ofdm_symbol_size,
+                             1,
+                             fp->nb_prefix_samples0,
+                             CYCLIC_PREFIX);
+        	PHY_ofdm_mod(&ru->common.txdataF_BF[aa][slot_offsetF+fp->ofdm_symbol_size],(int*)&ru->common.txdata[aa][slot_offset+fp->nb_prefix_samples0+fp->ofdm_symbol_size],
+                             fp->ofdm_symbol_size,
+                             num_symbols-1,
+                             fp->nb_prefix_samples,
+                             CYCLIC_PREFIX);
       }
-      else {
-	PHY_ofdm_mod(&ru->common.txdataF_BF[aa][slot_offsetF],
-		     (int*)&ru->common.txdata[aa][slot_offset],
+      else 
+      { 	
+           // fprintf(stderr,"\n $$$### Entering else in slot %d  ###$$$ \n",slot);    ////----src572
+           PHY_ofdm_mod(&ru->common.txdataF_BF[aa][slot_offsetF],(int*)&ru->common.txdata[aa][slot_offset],
                      fp->ofdm_symbol_size,
                      num_symbols,
                      fp->nb_prefix_samples,
                      CYCLIC_PREFIX);
       }
-    }
+   }
   }
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_RU_FEPTX_OFDM+(first_symbol!=0?1:0), 0);
 }
@@ -120,6 +129,9 @@ void nr_feptx_ofdm_2thread(RU_t *ru,int frame_tx,int tti_tx) {
 
   wait.tv_sec=0;
   wait.tv_nsec=5000000L;
+
+
+  // fprintf(stderr, "\n $$$### In nr_feptx_ofdm_2thread \n" );     //----src572
 
   start_meas(&ru->ofdm_mod_stats);
 
@@ -186,7 +198,11 @@ static void *nr_feptx_thread(void *param) {
     int slot=proc->slot_feptx;
     if (release_thread(&proc->mutex_feptx,&proc->instance_cnt_feptx,"NR feptx thread")<0) break;
 
-    nr_feptx0(ru,slot,ru->nr_frame_parms->symbols_per_slot>>1,ru->nr_frame_parms->symbols_per_slot>>1);
+    // fprintf(stderr, "\n $$$$$#### In thread nr_feptx_thread  calling %s #####$$$\n","nr_feptx0" );     //--src572
+
+    // fprintf(stderr, " \n $$$### slot =%d ,ru->nr_frame_parms->symbols_per_slot>>1 = %d ,ru->nr_frame_parms->symbols_per_slot>>1 = %d )  $$$### ", ru,slot,ru->nr_frame_parms->symbols_per_slot>>1,ru->nr_frame_parms->symbols_per_slot>>1);    ////---src572
+
+    nr_feptx0(ru,slot,ru->nr_frame_parms->symbols_per_slot>>1,ru->nr_frame_parms->symbols_per_slot>>1);   //---src572 why same parameter ntwo times????
 
     if (pthread_cond_signal(&proc->cond_feptx) != 0) {
       LOG_E(PHY,"[gNB] ERROR pthread_cond_signal for NR feptx thread exit\n");
@@ -208,6 +224,8 @@ void nr_init_feptx_thread(RU_t *ru) {
 
   threadCreate(&proc->pthread_feptx, nr_feptx_thread, (void*)ru, "feptx", -1, OAI_PRIORITY_RT);
 
+  // fprintf(stderr, "\n $$$$$#### created %s #####$$$\n","nr_feptx_thread" );     //--src572
+
 
 }
 
@@ -224,6 +242,9 @@ void nr_feptx_ofdm(RU_t *ru,int frame_tx,int tti_tx) {
   int slot = tti_tx;
   int *txdata = &ru->common.txdata[aa][slot*fp->samples_per_slot];
 
+  // fprintf(stderr, "\n $$$### In function nr_feptx_ofdm $$$####\n $$$$### The value of fp->Ncp = %d (cfg->subframe_config.dl_cyclic_prefix_type.value == 1) ? 12 : 14) * ofdm_symbol_size= %d , and slot_sizeF = %d in function nr_feptx_ofdm  $$$### \n", cfg->subframe_config.dl_cyclic_prefix_type.value,fp->ofdm_symbol_size,slot_sizeF);  //---src572
+
+
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_RU_FEPTX_OFDM , 1 );
   start_meas(&ru->ofdm_mod_stats);
 
@@ -233,9 +254,11 @@ void nr_feptx_ofdm(RU_t *ru,int frame_tx,int tti_tx) {
 	   (void*)ru->gNB_list[0]->common_vars.txdataF[aa], fp->samples_per_slot_wCP*sizeof(int32_t));
 
   if ((nr_slot_select(cfg,slot)==SF_DL)||
-      ((nr_slot_select(cfg,slot)==SF_S))) {
+      ((nr_slot_select(cfg,slot)==SF_S))) 
+  {
     //    LOG_D(HW,"Frame %d: Generating slot %d\n",frame,next_slot);
 
+    // fprintf(stderr, "\n $$$### Calling nr_feptx0 fp->symbols_per_slot = %d, slot = %d $$$#### \n", fp->symbols_per_slot,slot);   ////----src572
     nr_feptx0(ru,slot,0,fp->symbols_per_slot);
 
   }

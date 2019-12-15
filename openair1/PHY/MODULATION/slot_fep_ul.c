@@ -103,7 +103,7 @@ int slot_fep_ul(RU_t *ru,
 #endif
 
   for (aa=0; aa<ru->nb_rx; aa++) {
-    rx_offset = slot_offset +nb_prefix_samples0;
+    rx_offset = slot_offset + nb_prefix_samples0;
     if (l==0) {
 #ifdef DEBUG_FEP
       LOG_D(PHY,"slot_fep: symbol 0 %d dB\n",

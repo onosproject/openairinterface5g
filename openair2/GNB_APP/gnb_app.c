@@ -65,12 +65,12 @@ static void configure_nr_rrc(uint32_t gnb_id)
 {
   MessageDef *msg_p = NULL;
   //  int CC_id;
-
+LOG_I(GNB_APP,"+++++++++++++++3208912903290312\n");
   msg_p = itti_alloc_new_message (TASK_GNB_APP, NRRRC_CONFIGURATION_REQ);
 
   if (RC.nrrrc[gnb_id]) {
     RCconfig_NRRRC(msg_p,gnb_id, RC.nrrrc[gnb_id]);
-    
+    // my_RCconfig_NRRRC(msg_p,gnb_id, RC.nrrrc[gnb_id]);
 
     LOG_I(GNB_APP,"Sending configuration message to NR_RRC task\n");
     itti_send_msg_to_task (TASK_RRC_GNB, GNB_MODULE_ID_TO_INSTANCE(gnb_id), msg_p);
@@ -119,7 +119,8 @@ static uint32_t gNB_app_register(uint32_t gnb_id_start, uint32_t gnb_id_end)//, 
 
 
 /*------------------------------------------------------------------------------*/
-void *gNB_app_task(void *args_p)
+void *gNB_app_task(void *args_p)            //----  
+
 {
 #if defined(ENABLE_ITTI)
   uint32_t                        gnb_nb = RC.nb_nr_inst; 
@@ -138,7 +139,7 @@ void *gNB_app_task(void *args_p)
   /* for no gcc warnings */
   (void)instance;
 
-  itti_mark_task_ready (TASK_GNB_APP);
+  itti_mark_task_ready (TASK_GNB_APP);           ///---- its void nothing being done -----src572
 
   LOG_I(PHY, "%s() Task ready initialise structures\n", __FUNCTION__);
 

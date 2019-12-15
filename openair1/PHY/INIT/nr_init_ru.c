@@ -108,7 +108,7 @@ int nr_phy_init_RU(RU_t *ru) {
 
     for (i=0; i<RC.nb_nr_L1_inst; i++) {
       for (p=0;p<15;p++) {
-	if (p == 0|| p==5) {
+	if (p == 0|| p==5) {   //  --src572 should this be nrbeam_weights
 	  ru->beam_weights[i][p] = (int32_t **)malloc16_clear(ru->nb_tx*sizeof(int32_t*));
 	  for (j=0; j<ru->nb_tx; j++) {
 	    ru->beam_weights[i][p][j] = (int32_t *)malloc16_clear(fp->ofdm_symbol_size*sizeof(int32_t));

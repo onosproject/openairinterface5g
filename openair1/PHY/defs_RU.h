@@ -74,7 +74,8 @@ enum transmission_access_mode {
   CANCELED_ACCESS,
   UNKNOWN_ACCESS,
   SCHEDULED_ACCESS,
-  CBA_ACCESS};
+  CBA_ACCESS
+};
 
 typedef enum {
   eNodeB_3GPP=0,   // classical eNodeB function
@@ -544,7 +545,7 @@ typedef struct RU_t_s{
   /// beamforming weight vectors per eNB
   int32_t **beam_weights[NUMBER_OF_eNB_MAX+1][15];
   /// beamforming weight vectors per gNB
-  int32_t **nrbeam_weights[NUMBER_OF_gNB_MAX+1][16];
+  int32_t **nrbeam_weights[NUMBER_OF_gNB_MAX+1][16];         // -----  src572 where is this used?
   /// received frequency-domain signal for PRACH (IF4p5 RRU) 
   int16_t **prach_rxsigF;
   /// received frequency-domain signal for PRACH BR (IF4p5 RRU) 

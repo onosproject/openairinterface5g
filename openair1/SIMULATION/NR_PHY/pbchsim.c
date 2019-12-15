@@ -99,7 +99,7 @@ int main(int argc, char **argv)
   SCM_t channel_model=AWGN;//Rayleigh1_anticorr;
 
 
-  int N_RB_DL=273,mu=1;
+  int N_RB_DL=66,u=3;    //---check these
 
   //unsigned char frame_type = 0;
   unsigned char pbch_phase = 0;
@@ -361,28 +361,59 @@ int main(int argc, char **argv)
 
   double fs,bw,scs,eps;
   
-  switch (mu) {
-    case 1:
-	scs = 30000;
-	if (N_RB_DL == 217) { 
-	    fs = 122.88e6;
-	    bw = 80e6;
-	    
-	}					       
-	else if (N_RB_DL == 245) {
-	    fs = 122.88e6;
-	    bw = 90e6;
-	}
-	else if (N_RB_DL == 273) {
-	    fs = 122.88e6;
-	    bw = 100e6;
-	}
-	else if (N_RB_DL == 106) { 
-	    fs = 61.44e6;
-	    bw = 40e6;
-	}
-	else AssertFatal(1==0,"Unsupported numerology for mu %d, N_RB %d\n",mu, N_RB_DL);
-	break;
+  switch (mu) 
+  {
+      case 1:
+      	scs = 30000;
+        if (N_RB_DL == 217) 
+        { 
+        	    fs = 122.88e6;
+               bw = 80e6;
+
+	      }					       
+	     else if (N_RB_DL == 245)
+        {
+	         fs = 122.88e6;
+           bw = 90e6;
+      	}
+	     else if (N_RB_DL == 273) 
+       {
+	         fs = 122.88e6;
+	         bw = 100e6;
+	     }
+	    else if (N_RB_DL == 106) 
+      { 
+	         fs = 61.44e6;
+	         bw = 40e6;
+	    }
+	   else AssertFatal(1==0,"Unsupported numerology for mu %d, N_RB %d\n",mu, N_RB_DL);
+	   break;
+     case 3:
+      scs=120000;
+      if (N_RB_DL == 32) 
+        { 
+              fs = 61.44e6;
+               bw = 50e6;
+
+        }                
+       else if (N_RB_DL == 66)
+        {
+           fs = 122.88e6;
+           bw = 1006;
+        }
+       else if (N_RB_DL == 132) 
+       {
+           fs = 245.76e6;
+           bw = 200e6;
+       }
+      else if (N_RB_DL == 264) 
+      { 
+           fs = 491.52e6;
+           bw = 400e6;
+      }
+     else AssertFatal(1==0,"Unsupported numerology for mu %d, N_RB %d\n",mu, N_RB_DL);
+     break;
+
   }
 
   // cfo with respect to sub-carrier spacing
@@ -402,8 +433,8 @@ int main(int argc, char **argv)
   gNB2UE = new_channel_desc_scm(n_tx,
                                 n_rx,
                                 channel_model,
- 				fs, 
-				bw, 
+ 				                        fs, 
+				                        bw, 
                                 0,
                                 0,
                                 0);
@@ -577,6 +608,7 @@ int main(int argc, char **argv)
 
       if (UE->is_synchronized == 0) {
 	UE_nr_rxtx_proc_t proc={0};
+	fprintf(stderr, "My Line is 585 Bitch\n\n\n\\####\n")
 	ret = nr_initial_sync(&proc, UE, normal_txrx,1);
 	printf("nr_initial_sync1 returns %d\n",ret);
 	if (ret<0) n_errors++;
@@ -601,12 +633,12 @@ int main(int argc, char **argv)
 
         ret = nr_rx_pbch(UE,
 	                 &proc,
-		         UE->pbch_vars[0],
-		         frame_parms,
-		         0,
-		         ssb_index%8,
-                         SISO,
-                         UE->high_speed_flag);
+                   UE->pbch_vars[0],
+                   frame_parms,
+                   0,
+                   ssb_index%8,
+                   SISO,
+                    UE->high_speed_flag);
 
 	if (ret==0) {
 	  //UE->rx_ind.rx_indication_body->mib_pdu.ssb_index;  //not yet detected automatically

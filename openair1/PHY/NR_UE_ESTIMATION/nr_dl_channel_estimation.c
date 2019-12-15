@@ -26,9 +26,10 @@
 #include "PHY/NR_REFSIG/refsig_defs_ue.h"
 #include "filt16a_32.h"
 
-//#define DEBUG_PDSCH
-//#define DEBUG_PDCCH
-
+#define DEBUG_PDSCH
+#define DEBUG_PDCCH
+#define DEBUG_CH
+//SRC572
 
 int nr_pbch_dmrs_correlation(PHY_VARS_NR_UE *ue,
 			       uint8_t eNB_offset,
@@ -275,14 +276,18 @@ int nr_pbch_channel_estimation(PHY_VARS_NR_UE *ue,
   }
 
   // generate pilot
+	//SRC segfault
   nr_pbch_dmrs_rx(dmrss,ue->nr_gold_pbch[n_hf][ssb_index], &pilot[0]);
 
+  printf("TARAM TARAM TARAM\n");
   int re_offset = ssb_offset;
   for (aarx=0; aarx<ue->frame_parms.nb_antennas_rx; aarx++) {
 
     pil   = (int16_t *)&pilot[0];
     rxF   = (int16_t *)&rxdataF[aarx][(symbol_offset+k+re_offset)];
     dl_ch = (int16_t *)&dl_ch_estimates[aarx][ch_offset];
+	printf("TURUM TURUM TURUM: ");
+	printf("%d %d %d %d\n", pil, aarx, symbol_offset+k+re_offset, ch_offset);
 
     memset(dl_ch,0,4*(ue->frame_parms.ofdm_symbol_size));
     if (ue->high_speed_flag==0) // multiply previous channel estimate by ch_est_alpha

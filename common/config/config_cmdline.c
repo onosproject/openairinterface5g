@@ -74,7 +74,7 @@ int processoption(paramdef_t *cfgoptions, char *value) {
 
   if ( value == NULL) {
     if( (cfgoptions->paramflags &PARAMFLAG_BOOL) == 0 ) { /* not a boolean, argument required */
-      CONFIG_PRINTF_ERROR("[CONFIG] command line, option %s requires an argument\n",cfgoptions->optname);
+      fprintf(stderr, "[CONFIG] command line, option %s requires an argument\n",cfgoptions->optname);
     } else {        /* boolean value option without argument, set value to true*/
       tmpval = defbool;
     }
@@ -91,7 +91,7 @@ int processoption(paramdef_t *cfgoptions, char *value) {
         sprintf( (char *)(cfgoptions->strptr), "%s",tmpval);
       }
 
-      printf_cmdl("[CONFIG] %s set to  %s from command line\n", cfgoptions->optname, tmpval);
+      fprintf(stderr, "[CONFIG] %s set to  %s from command line\n", cfgoptions->optname, tmpval);
       optisset=1;
       break;
 
@@ -208,6 +208,10 @@ int config_process_cmdline(paramdef_t *cfgoptions,int numoptions, char *prefix) 
   char cfgpath[CONFIG_MAXOPTLENGTH];
   j = 0;
   i = 0;
+  if (prefix == NULL)
+    fprintf(stderr,"-###-\nNULL\n-###-\n");
+  else
+    fprintf(stderr,"-###-\n%s\n-###-\n",prefix);
 
   while (c > 0 ) {
     char *oneargv = strdup(config_get_if()->argv[i]);          /* we use strtok_r which modifies its string paramater, and we don't want argv to be modified */
@@ -291,6 +295,6 @@ int config_process_cmdline(paramdef_t *cfgoptions,int numoptions, char *prefix) 
     c--;
   }   /* fin du while */
 
-  printf_cmdl("[CONFIG] %s %i options set from command line\n",((prefix == NULL) ? "(root)":prefix),j);
+  fprintf(stderr, "[CONFIG] %s %i options set from command line\n",((prefix == NULL) ? "(root)":prefix),j);
   return j;
 }  /* parse_cmdline*/

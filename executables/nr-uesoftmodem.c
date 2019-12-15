@@ -108,6 +108,8 @@ static pthread_t                forms_thread; //xforms
 
 RAN_CONTEXT_t RC;
 volatile int             start_eNB = 0;
+volatile int             start_gNB = 0;    // ----src572
+
 volatile int             start_UE = 0;
 volatile int             oai_exit = 0;
 
@@ -117,8 +119,11 @@ static double            snr_dB=20;
 
 int                      threequarter_fs=0;
 
-uint32_t                 downlink_frequency[MAX_NUM_CCs][4];
-int32_t                  uplink_frequency_offset[MAX_NUM_CCs][4];
+//uint32_t                 downlink_frequency[MAX_NUM_CCs][4];
+
+uint64_t                 downlink_frequency[MAX_NUM_CCs][4] ={{28100000000,0,0,0}};//28100000000,28100000000,28100000000}};      //  -------src572
+
+int64_t                  uplink_frequency_offset[MAX_NUM_CCs][4]={{0,0,0,0}};
 
 
 extern int16_t nr_dlsch_demod_shift;
@@ -142,8 +147,8 @@ double rx_gain[MAX_NUM_CCs][4] = {{110,0,0,0},{20,0,0,0}};
 
 double rx_gain_off = 0.0;
 
-double sample_rate=30.72e6;
-double bw = 10.0e6;
+double sample_rate=122.88e6;//30.72e6;             -----src572
+double bw = 100.0e6;//10e6                          -----src572
 
 static int  tx_max_power[MAX_NUM_CCs] = {0};
 
@@ -221,7 +226,7 @@ uint64_t num_missed_slots=0; // counter for the number of missed slots
 
 
 int transmission_mode=1;
-int numerology = 0;
+int numerology = 3;
 
 /* flag set by eNB conf file to specify if the radio head is local or remote (default option is local) */
 //uint8_t local_remote_radio = BBU_LOCAL_RADIO_HEAD;
@@ -398,7 +403,7 @@ int16_t dlsch_demod_shift;
 
 static void get_options(void) {
   int CC_id;
-  int tddflag=0, nonbiotflag, vcdflag=0;
+  int tddflag=0, nonbiotflag, vcdflag=0;    //changed tddflag=1---src572 ---no effect
   char *loopfile=NULL;
   int dumpframe=0;
   uint32_t online_log_messages;
@@ -461,6 +466,8 @@ static void get_options(void) {
   }
 
   UE_scan=0;
+
+  fprintf(stderr, "\n\n $$$$$$$  The vale of tdd flag =%d\n $$$$$$$$$$$$$$$$$\n\n", tddflag);
 
   if (tddflag > 0) {
     for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++)
@@ -527,12 +534,14 @@ void set_default_frame_parms(NR_DL_FRAME_PARMS *frame_parms[MAX_NUM_CCs]) {
   for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
     /* Set some default values that may be overwritten while reading options */
     frame_parms[CC_id] = (NR_DL_FRAME_PARMS *) calloc(sizeof(NR_DL_FRAME_PARMS),1);
-    frame_parms[CC_id]->eutra_band          = 78;
-    frame_parms[CC_id]->frame_type          = FDD;
+    frame_parms[CC_id]->eutra_band          =  257;
+    frame_parms[CC_id]->nr_band             =  257;          // -------src572 added this line
+
+    frame_parms[CC_id]->frame_type          = 1;TDD;//TDD;//FDD;
     frame_parms[CC_id]->tdd_config          = 3;
     //frame_parms[CC_id]->tdd_config_S        = 0;
-    frame_parms[CC_id]->N_RB_DL             = 106;
-    frame_parms[CC_id]->N_RB_UL             = 106;
+    frame_parms[CC_id]->N_RB_DL             = 66;//106;    ///---src572 Hardcoded
+    frame_parms[CC_id]->N_RB_UL             = 66;//106;
     frame_parms[CC_id]->Ncp                 = NORMAL;
     //frame_parms[CC_id]->Ncp_UL              = NORMAL;
     frame_parms[CC_id]->Nid_cell            = 0;
@@ -542,74 +551,83 @@ void set_default_frame_parms(NR_DL_FRAME_PARMS *frame_parms[MAX_NUM_CCs]) {
     frame_parms[CC_id]->nb_antennas_rx      = 1;
     //frame_parms[CC_id]->nushift             = 0;
     // NR: Init to legacy LTE 20Mhz params
-    frame_parms[CC_id]->numerology_index  = 0;
+    frame_parms[CC_id]->numerology_index  = 3;//0;   //---hardcoded   //----- src572
     frame_parms[CC_id]->ttis_per_subframe = 1;
     frame_parms[CC_id]->slots_per_tti   = 2;
   }
 }
 
-void init_openair0(void) {
+void init_openair0(void) 
+{
   int card;
   int i;
+  numerology=3;
 
-  for (card=0; card<MAX_CARDS; card++) {
+  for (card=0; card<MAX_CARDS; card++) 
+  {
     openair0_cfg[card].configFilename = NULL;
     openair0_cfg[card].threequarter_fs = frame_parms[0]->threequarter_fs;
 
-    if(frame_parms[0]->N_RB_DL == 217) {
-      if (numerology==1) {
-        if (frame_parms[0]->threequarter_fs) {
+       if(frame_parms[0]->N_RB_DL == 217) {
+         if (numerology==1) {
+           if (frame_parms[0]->threequarter_fs) {
           openair0_cfg[card].sample_rate=92.16e6;
           openair0_cfg[card].samples_per_frame = 921600;
           openair0_cfg[card].tx_bw = 40e6;
           openair0_cfg[card].rx_bw = 40e6;
-        }
-        else {
+            }
+            else {
           openair0_cfg[card].sample_rate=122.88e6;
           openair0_cfg[card].samples_per_frame = 1228800;
           openair0_cfg[card].tx_bw = 40e6;
           openair0_cfg[card].rx_bw = 40e6;
-        } 
-      } else {
+          } 
+           } else {
         LOG_E(PHY,"Unsupported numerology!\n");
         exit(-1);
-      }
-     }else if(frame_parms[0]->N_RB_DL == 106) {
-      if (numerology==0) {
-        if (frame_parms[0]->threequarter_fs) {
+        }
+       } 
+      else if(frame_parms[0]->N_RB_DL == 106) {
+         if (numerology==0) {
+          if (frame_parms[0]->threequarter_fs) {
           openair0_cfg[card].sample_rate=23.04e6;
           openair0_cfg[card].samples_per_frame = 230400;
           openair0_cfg[card].tx_bw = 10e6;
           openair0_cfg[card].rx_bw = 10e6;
-        } else {
+          } else {
           openair0_cfg[card].sample_rate=30.72e6;
           openair0_cfg[card].samples_per_frame = 307200;
           openair0_cfg[card].tx_bw = 10e6;
           openair0_cfg[card].rx_bw = 10e6;
-        }
-     } else if (numerology==1) {
-        if (frame_parms[0]->threequarter_fs) {
-	  openair0_cfg[card].sample_rate=46.08e6;
-	  openair0_cfg[card].samples_per_frame = 480800;
-	  openair0_cfg[card].tx_bw = 20e6;
-	  openair0_cfg[card].rx_bw = 20e6;
-	}
-	else {
-	  openair0_cfg[card].sample_rate=61.44e6;
-	  openair0_cfg[card].samples_per_frame = 614400;
-	  openair0_cfg[card].tx_bw = 20e6;
-	  openair0_cfg[card].rx_bw = 20e6;
-	}
-      } else if (numerology==2) {
-        openair0_cfg[card].sample_rate=122.88e6;
-        openair0_cfg[card].samples_per_frame = 1228800;
-        openair0_cfg[card].tx_bw = 40e6;
-        openair0_cfg[card].rx_bw = 40e6;
-      } else {
-        LOG_E(PHY,"Unsupported numerology!\n");
-        exit(-1);
-      }
-    } else if(frame_parms[0]->N_RB_DL == 50) {
+          }
+         } else if (numerology==1) 
+           {
+             if (frame_parms[0]->threequarter_fs) 
+              {
+          	  openair0_cfg[card].sample_rate=46.08e6;
+              openair0_cfg[card].samples_per_frame = 480800;
+              openair0_cfg[card].tx_bw = 20e6;
+              openair0_cfg[card].rx_bw = 20e6;
+              }
+	           else 
+            {
+       	       openair0_cfg[card].sample_rate=61.44e6;
+              openair0_cfg[card].samples_per_frame = 614400;
+       	      openair0_cfg[card].tx_bw = 20e6;
+              openair0_cfg[card].rx_bw = 20e6;
+	          }
+           } 
+          else if (numerology==2) {        //----src572 no 106 in FR1 or FR2
+            openair0_cfg[card].sample_rate=122.88e6;
+            openair0_cfg[card].samples_per_frame = 1228800;
+             openair0_cfg[card].tx_bw = 40e6;
+            openair0_cfg[card].rx_bw = 40e6;
+           } else {
+                LOG_E(PHY,"Unsupported numerology!\n");
+                     exit(-1);
+            }
+         } 
+        else if(frame_parms[0]->N_RB_DL == 50) {      // ----src572 no 50 in FR1 or FR2
       openair0_cfg[card].sample_rate=15.36e6;
       openair0_cfg[card].samples_per_frame = 153600;
       openair0_cfg[card].tx_bw = 5e6;
@@ -625,17 +643,45 @@ void init_openair0(void) {
       openair0_cfg[card].tx_bw = 1.5e6;
       openair0_cfg[card].rx_bw = 1.5e6;
     }
+    
+   ///////////////////////////////
+
+     else if(frame_parms[0]->N_RB_DL == 66) {
+      fprintf(stderr, "the value of numerology is %d\n", numerology);
+         if (numerology==3) {            
+          openair0_cfg[card].sample_rate=122.88e6;
+          openair0_cfg[card].samples_per_frame = 1228800;
+          openair0_cfg[card].tx_bw = 100e6;
+          openair0_cfg[card].rx_bw = 100e6;
+          } 
+           else {
+        LOG_E(PHY,"Unsupported numerology!\n");
+        exit(-1);
+        }
+       } 
+
+
+
+   /////////////////////////////////
     else {
       LOG_E(PHY,"Unknown NB_RB %d!\n",frame_parms[0]->N_RB_DL);
       exit(-1);
     }
 
     if (frame_parms[0]->frame_type==TDD)
+    {
       openair0_cfg[card].duplex_mode = duplex_mode_TDD;
-    else //FDD
-      openair0_cfg[card].duplex_mode = duplex_mode_FDD;
+      fprintf(stderr, "\n\n $$$$$$$$  %s$$$$$$  \n\n", "Setting UE frame type as TDD");
 
-    printf("HW: Configuring card %d, nb_antennas_tx/rx %d/%d\n",card,
+    }
+    else //FDD
+      {
+        openair0_cfg[card].duplex_mode = duplex_mode_FDD;
+        fprintf(stderr, "\n\n $$$$$$$$  %s $$$$$$  \n\n", "Setting UE frame type as FDD");
+      }
+
+
+    fprintf(stderr,"\n $$$$  HW: Configuring card %d, nb_antennas_tx/rx %d/%d   $$$$ \n",card,
            PHY_vars_UE_g[0][0]->frame_parms.nb_antennas_tx,
            PHY_vars_UE_g[0][0]->frame_parms.nb_antennas_rx);
     openair0_cfg[card].Mod_id = 0;
@@ -689,7 +735,7 @@ int main( int argc, char **argv ) {
   // initialize logging
   logInit();
   // get options and fill parameters from configuration file
-  get_options (); //Command-line options, enb_properties
+  get_options (); //Command-line options, enb_properties     ---- where is the frequency loading to ----src572
 #if T_TRACER
   T_Config_Init();
 #endif
@@ -721,6 +767,7 @@ int main( int argc, char **argv ) {
 #  define PACKAGE_VERSION "UNKNOWN-EXPERIMENTAL"
 #endif
   LOG_I(HW, "Version: %s\n", PACKAGE_VERSION);
+  //downlink_frequency[0][0] = 28100000000L;
 
   // init the parameters
   for (int CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
@@ -728,8 +775,13 @@ int main( int argc, char **argv ) {
     frame_parms[CC_id]->nb_antennas_rx     = nb_antenna_rx;
     frame_parms[CC_id]->nb_antenna_ports_eNB = 1; //initial value overwritten by initial sync later
     frame_parms[CC_id]->threequarter_fs = threequarter_fs;
+    fprintf(stderr, "\n The value of dl_freq in main()is %lu value of band in main() is %d \n",downlink_frequency[CC_id][0],frame_parms[CC_id]->nr_band);   //// -----src572 
     LOG_I(PHY,"Set nb_rx_antenna %d , nb_tx_antenna %d \n",frame_parms[CC_id]->nb_antennas_rx, frame_parms[CC_id]->nb_antennas_tx);
-    get_band(downlink_frequency[CC_id][0], &frame_parms[CC_id]->eutra_band,   &uplink_frequency_offset[CC_id][0], &frame_parms[CC_id]->frame_type);
+    //get_band(downlink_frequency[CC_id][0], &frame_parms[CC_id]->eutra_band,   &uplink_frequency_offset[CC_id][0], &frame_parms[CC_id]->frame_type);
+    get_band(downlink_frequency[CC_id][0], &frame_parms[CC_id]->nr_band, &uplink_frequency_offset[CC_id][0], &frame_parms[CC_id]->frame_type);
+
+    //get_band(28100000000, &frame_parms[CC_id]->eutra_band,   &uplink_frequency_offset[CC_id][0], &frame_parms[CC_id]->frame_type);
+
   }
 
   NB_UE_INST=1;
@@ -737,9 +789,13 @@ int main( int argc, char **argv ) {
   PHY_vars_UE_g = malloc(sizeof(PHY_VARS_NR_UE **));
   PHY_vars_UE_g[0] = malloc(sizeof(PHY_VARS_NR_UE *)*MAX_NUM_CCs);
 
+  // fprintf(stderr, "\n$$$$$######  the value of numerology in main() is %d  $$$$$#####\n",numerology );   //---src572
+
   for (int CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
-    printf("frame_parms %d\n",frame_parms[CC_id]->ofdm_symbol_size);
-    nr_init_frame_parms_ue(frame_parms[CC_id],numerology,NORMAL,frame_parms[CC_id]->N_RB_DL,(frame_parms[CC_id]->N_RB_DL-20)>>1,0);
+    fprintf(stderr,"\n$$$  frame_parms %d  $$$$\n",frame_parms[CC_id]->ofdm_symbol_size);
+    nr_init_frame_parms_ue(frame_parms[CC_id],3,NORMAL,frame_parms[CC_id]->N_RB_DL,(frame_parms[CC_id]->N_RB_DL-20)>>1,0);   //----src572 
+    //nr_init_frame_parms_ue(frame_parms[CC_id],numerology,NORMAL,frame_parms[CC_id]->N_RB_DL,(frame_parms[CC_id]->N_RB_DL-20)>>1,0);
+
     PHY_vars_UE_g[0][CC_id] = init_nr_ue_vars(frame_parms[CC_id], 0,abstraction_flag);
     UE[CC_id] = PHY_vars_UE_g[0][CC_id];
 
@@ -753,7 +809,7 @@ int main( int argc, char **argv ) {
     UE[CC_id]->UE_fo_compensation = UE_fo_compensation;
     UE[CC_id]->mode    = mode;
     UE[CC_id]->no_timing_correction = UE_no_timing_correction;
-    printf("UE[%d]->mode = %d\n",CC_id,mode);
+    fprintf(stderr,"\n $$$$  UE[%d]->mode = %d  $$$$\n",CC_id,mode);
 
     for (uint8_t i=0; i<RX_NB_TH_MAX; i++) {
       if (UE[CC_id]->mac_enabled == 1)
@@ -765,7 +821,7 @@ int main( int argc, char **argv ) {
     UE[CC_id]->rx_total_gain_dB =  (int)rx_gain[CC_id][0] + rx_gain_off;
     UE[CC_id]->tx_power_max_dBm = tx_max_power[CC_id];
 
-    if (frame_parms[CC_id]->frame_type==FDD) {
+    if (frame_parms[CC_id]->frame_type==FDD) {            /////-----have to do TA_OFFSET
       UE[CC_id]->N_TA_offset = 0;
     } else {
       if (frame_parms[CC_id]->N_RB_DL == 100)

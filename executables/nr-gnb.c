@@ -149,7 +149,8 @@ extern void add_subframe(uint16_t *frameP, uint16_t *subframeP, int offset);
 #define TICK_TO_US(ts) (ts.trials==0?0:ts.diff/ts.trials)
 
 
-static inline int rxtx(PHY_VARS_gNB *gNB,int frame_rx, int slot_rx, int frame_tx, int slot_tx, char *thread_name) {
+static inline int rxtx(PHY_VARS_gNB *gNB,int frame_rx, int slot_rx, int frame_tx, int slot_tx, char *thread_name) 
+{
   start_meas(&softmodem_stats_rxtx_sf);
 
   // *******************************************************************
@@ -212,6 +213,7 @@ static inline int rxtx(PHY_VARS_gNB *gNB,int frame_rx, int slot_rx, int frame_tx
   //if (wait_CCs(proc)<0) return(-1);
 
   if (oai_exit) return(-1);
+  // fprintf(stderr, "%s\n","\n $$$$$$$\n  in line 218 ----src572 rxtx() in executables/nr-gnb.c\n $$$$$$$$\n" );
 
   if(get_thread_parallel_conf() != PARALLEL_RU_L1_TRX_SPLIT) {
     phy_procedures_gNB_TX(gNB, frame_tx,slot_tx, 1);
@@ -269,8 +271,13 @@ static void *gNB_L1_thread_tx(void *param) {
   char thread_name[100];
 
   sprintf(thread_name,"gNB_L1_thread_tx\n");
+  // fprintf(stderr, "%s\n", "\n $$$$$$ \n ----src572----  in gNB_L1_thread_tx() in executables/nr_gnb.c\n $$$$$$$$\n");
 
-  while (!oai_exit) {
+
+  while (!oai_exit)
+   {
+    // fprintf(stderr, "%s\n", "\n $$$$$$ \n ----src572----  in gNB_L1_thread_tx() in executables/nr_gnb.c\n $$$$$$$$\n");
+
     if (wait_on_condition(&L1_proc_tx->mutex,&L1_proc_tx->cond,&L1_proc_tx->instance_cnt,thread_name)<0) break;
 
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_gNB_PROC_RXTX1, 1 );
@@ -287,6 +294,7 @@ static void *gNB_L1_thread_tx(void *param) {
     uint64_t timestamp_tx = L1_proc_tx->timestamp_tx;
     VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME(VCD_SIGNAL_DUMPER_VARIABLES_SLOT_NUMBER_TX1_GNB,slot_tx);
     VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME(VCD_SIGNAL_DUMPER_VARIABLES_FRAME_NUMBER_TX1_GNB,frame_tx);
+    // fprintf(stderr, "%s\n", "in gNB_L1_thread_tx() line 291 in executables/nr-gnb.c");
     phy_procedures_gNB_TX(gNB, frame_tx,slot_tx, 1);
     pthread_mutex_lock( &L1_proc_tx->mutex );
     L1_proc_tx->instance_cnt = -1;
@@ -323,9 +331,11 @@ static void *gNB_L1_thread( void *param ) {
   gNB_thread_rxtx_status = 0;
 
   sprintf(thread_name,"gNB_L1_thread");
+  // fprintf(stderr, "%s\n", "\n $$$$$$ \n ----src572----  in gNB_L1_thread() in executables/nr_gnb.c\n $$$$$$$$\n");
 
 
   while (!oai_exit) {
+    // fprintf(stderr, "%s\n", "\n $$$$$$ \n ----src572----  in gNB_L1_thread() in executables/nr_gnb.c\n $$$$$$$$\n");
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_gNB_PROC_RXTX0, 0 );
     if (wait_on_condition(&L1_proc->mutex,&L1_proc->cond,&L1_proc->instance_cnt,thread_name)<0) break;
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_gNB_PROC_RXTX0, 1 );
@@ -387,11 +397,13 @@ void gNB_top(PHY_VARS_gNB *gNB, int frame_rx, int slot_rx, char *string, struct 
   gNB_L1_proc_t *proc           = &gNB->proc;
   gNB_L1_rxtx_proc_t *L1_proc = &proc->L1_proc;
   NR_DL_FRAME_PARMS *fp = ru->nr_frame_parms;
-  RU_proc_t *ru_proc=&ru->proc;
+  RU_proc_t *ru_proc = &ru->proc;
   proc->frame_rx    = frame_rx;
   proc->slot_rx = slot_rx;
+  // fprintf(stderr, "%s\n","\n$$$$$$  ----src572 ----- in gNB_top() line 403 in executables/nr-gnb.c\n $$$$$$\n" );
 
-  if (!oai_exit) {
+  if (!oai_exit) 
+  {
     T(T_ENB_MASTER_TICK, T_INT(0), T_INT(proc->frame_rx), T_INT(proc->slot_rx));
     L1_proc->timestamp_tx = ru_proc->timestamp_rx + (sl_ahead*fp->samples_per_slot);
     L1_proc->frame_rx     = ru_proc->frame_rx;
@@ -537,7 +549,7 @@ int wakeup_rxtx(PHY_VARS_gNB *gNB,RU_t *ru) {
   }
   else { // all RUs have provided their information so continue on and wakeup gNB processing
     proc->RU_mask = 0;
-    AssertFatal((ret=pthread_mutex_unlock(&proc->mutex_RU))==0,"muex_unlock returns %d\n",ret);
+    AssertFatal((ret=pthread_mutex_unlock(&proc->mutex_RU))==0,"mutex_unlock returns %d\n",ret);
   }
 
 
@@ -862,13 +874,16 @@ void init_eNB_afterRU(void) {
   PHY_VARS_gNB *gNB;
   LOG_I(PHY,"%s() RC.nb_nr_inst:%d\n", __FUNCTION__, RC.nb_nr_inst);
 
-  for (inst=0; inst<RC.nb_nr_inst; inst++) {
+  for (inst=0; inst<RC.nb_nr_inst; inst++) 
+  {
     LOG_I(PHY,"RC.nb_nr_CC[inst]:%d\n", RC.nb_nr_CC[inst]);
 
-    for (CC_id=0; CC_id<RC.nb_nr_CC[inst]; CC_id++) {
+    for (CC_id=0; CC_id<RC.nb_nr_CC[inst]; CC_id++) 
+    {
       LOG_I(PHY,"RC.nb_nr_CC[inst:%d][CC_id:%d]:%p\n", inst, CC_id, RC.gNB[inst][CC_id]);
-      gNB                                  =  RC.gNB[inst][CC_id];
+        gNB          =  RC.gNB[inst][CC_id];
       phy_init_nr_gNB(gNB,0,0);
+      fprintf(stderr, "%s\n","in init_eNB_afterRU line 878 in executables/nr-gnb.c" );
 
       // map antennas and PRACH signals to gNB RX
       if (0) AssertFatal(gNB->num_RU>0,"Number of RU attached to gNB %d is zero\n",gNB->Mod_id);

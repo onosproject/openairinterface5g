@@ -308,7 +308,7 @@ typedef struct {
   TASK_DEF(TASK_DU_F1,    TASK_PRIORITY_MED,  200, NULL, NULL) \
   TASK_DEF(TASK_MAX,      TASK_PRIORITY_MED,  200, NULL, NULL)
 
-#define TASK_DEF(TaskID, pRIO, qUEUEsIZE, FuNc, ThreadFunc)          { pRIO, qUEUEsIZE, #TaskID, FuNc, ThreadFunc },
+#define TASK_DEF(TaskID, pRIO, qUEUEsIZE, FuNc, ThreadFunc)          { pRIO, qUEUEsIZE, #TaskID, FuNc, ThreadFunc },     
 
 /* Map task id to printable name. */
 static const task_info_t tasks_info[] = {

@@ -184,8 +184,7 @@ int attach_rru(RU_t *ru)
     }
   }
 
-  configure_ru(ru->idx,
-               (RRU_capabilities_t *)&rru_config_msg.msg[0]);
+  configure_ru(ru->idx,(RRU_capabilities_t *)&rru_config_msg.msg[0]);
   rru_config_msg.type = RRU_config;
   rru_config_msg.len  = sizeof(RRU_CONFIG_msg_t)-MAX_RRU_CONFIG_SIZE+sizeof(RRU_config_t);
   LOG_I(PHY,"Sending Configuration to RRU %d (num_bands %d,band0 %d,txfreq %u,rxfreq %u,att_tx %d,att_rx %d,N_RB_DL %d,N_RB_UL %d,3/4FS %d, prach_FO %d, prach_CI %d)\n",ru->idx,
@@ -994,6 +993,7 @@ void wakeup_gNB_L1s(RU_t *ru) {
     sprintf(string,"Incoming RU %d",ru->idx);
     LOG_D(PHY,"RU %d Call gNB_top\n",ru->idx);
     ru->gNB_top(gNB_list[0],ru->proc.frame_rx,ru->proc.tti_rx,string,ru);
+    // fprintf(stderr, "\n%s\n", "$$$### In nr-ru.c / wakeup_gNB_L1s() calling gNB_top() $$$###");   /// --src572
   } else {
     LOG_D(PHY,"ru->num_gNB:%d\n", ru->num_gNB);
 
@@ -1045,9 +1045,14 @@ void fill_rf_config(RU_t *ru, char *rf_config_file) {
   nfapi_nr_config_request_t *gNB_config = &ru->gNB_list[0]->gNB_config; //tmp index
   openair0_config_t *cfg   = &ru->openair0_cfg;
   int N_RB = gNB_config->rf_config.dl_carrier_bandwidth.value;
+  //int mu =3;      
+  // fprintf(stderr, "\n $$$$$$$ \n%s\n $$$$$$$$$$$\n\n", "nr_ru.c check mu here if code not running\n");   //      -src572
   int mu = gNB_config->subframe_config.numerology_index_mu.value;
+  // fprintf(stderr, "%s\n", "openairinterface5g/executables/nr-ru.c\n");    //--src572
+  printf("%s \n",rf_config_file);
 
-  if (mu == NR_MU_0) { //or if LTE
+  if (mu == NR_MU_0) 
+  { //or if LTE
     if(N_RB == 100) {
       if (fp->threequarter_fs) {
         cfg->sample_rate=23.04e6;
@@ -1076,17 +1081,22 @@ void fill_rf_config(RU_t *ru, char *rf_config_file) {
       cfg->tx_bw = 1.5e6;
       cfg->rx_bw = 1.5e6;
     } else AssertFatal(1==0,"Unknown N_RB %d\n",N_RB);
-  } else if (mu == NR_MU_1) {
-    if(N_RB == 273) {
-      if (fp->threequarter_fs) {
+  } 
+  else if (mu == NR_MU_1) 
+  {
+    if(N_RB == 273) 
+    {
+        if (fp->threequarter_fs) {
         AssertFatal(0 == 1,"three quarter sampling not supported for N_RB 273\n");
-      } else {
+        } 
+        else {
         cfg->sample_rate=122.88e6;
         cfg->samples_per_frame = 1228800;
         cfg->tx_bw = 100e6;
         cfg->rx_bw = 100e6;
       }
-    } else if(N_RB == 217) {
+    }
+     else if(N_RB == 217) {
       if (fp->threequarter_fs) {
         cfg->sample_rate=92.16e6;
         cfg->samples_per_frame = 921600;
@@ -1098,30 +1108,74 @@ void fill_rf_config(RU_t *ru, char *rf_config_file) {
         cfg->tx_bw = 80e6;
         cfg->rx_bw = 80e6;
       }
-    } else if(N_RB == 106) {
-      if (fp->threequarter_fs) {
-	cfg->sample_rate=46.08e6;
-	cfg->samples_per_frame = 460800;
-	cfg->tx_bw = 40e6;
-	cfg->rx_bw = 40e6;
-      }
-      else {
-	cfg->sample_rate=61.44e6;
-	cfg->samples_per_frame = 614400;
-	cfg->tx_bw = 40e6;
-	cfg->rx_bw = 40e6;
-      }
-    } else {
+    } else if(N_RB == 106) 
+    {
+          if (fp->threequarter_fs) {
+          	cfg->sample_rate=46.08e6;
+            cfg->samples_per_frame = 460800;
+            cfg->tx_bw = 40e6;
+            cfg->rx_bw = 40e6;
+            }
+            else {
+            	cfg->sample_rate=61.44e6;
+              cfg->samples_per_frame = 614400;
+              cfg->tx_bw = 40e6;
+              cfg->rx_bw = 40e6;
+              }
+    } 
+    else 
+    {
       AssertFatal(0==1,"N_RB %d not yet supported for numerology %d\n",N_RB,mu);
     }
-  } else {
+  }
+  else if (mu == NR_MU_2) 
+  {
+    if(N_RB == 132) {
+      
+        cfg->sample_rate=122.88e6;
+        cfg->samples_per_frame = 1228800;
+        cfg->tx_bw = 100e6;
+        cfg->rx_bw = 100e6;
+      }
+      else
+    {
+      AssertFatal(0==1,"N_RB %d not yet supported for numerology %d\n",N_RB,mu);
+    }
+  }
+
+ else if (mu == NR_MU_3) 
+  {
+    if(N_RB == 66) {
+      printf("Test statement when setting mu=3 and NRB=66 in openairinterface5g/executables/nr-ru.c\n");
+        cfg->sample_rate=122.88e6;
+        cfg->samples_per_frame = 1228800;
+        cfg->tx_bw = 100e6;
+        cfg->rx_bw = 100e6;
+      }
+      else
+    {
+      AssertFatal(0==1,"N_RB %d not yet supported for numerology %d\n",N_RB,mu);
+    }
+  }
+
+  else {
     AssertFatal(0 == 1,"Numerology %d not supported for the moment\n",mu);
   }
 
   if (gNB_config->subframe_config.duplex_mode.value==TDD)
-    cfg->duplex_mode = duplex_mode_TDD;
+    {
+      cfg->duplex_mode = duplex_mode_TDD;   ////----src572 changes the values in FDD adn TDD
+      // fprintf(stderr, "\n\n $$$$$$$  The duplex_mode set to TDD %s\\nn","duplex_mode_TDD" );     //---src572
+    }
   else //FDD
-    cfg->duplex_mode = duplex_mode_FDD;
+    {
+      cfg->duplex_mode = duplex_mode_FDD;
+      // fprintf(stderr, "\n\n $$$$$$$  The duplex_mode set to FDD %s\\nn","duplex_mode_FDD" );
+
+    }
+
+    // set it to TDD and check
+    cfg->duplex_mode = duplex_mode_TDD;  //-----src572
 
   cfg->Mod_id = 0;
   cfg->num_rb_dl=N_RB;
@@ -1349,7 +1403,8 @@ static void *ru_thread_tx( void *param ) {
   return 0;
 }
 
-static void *ru_thread( void *param ) {
+static void *ru_thread( void *param ) 
+{
   static int ru_thread_status;
   RU_t               *ru      = (RU_t *)param;
   RU_proc_t          *proc    = &ru->proc;
@@ -1440,7 +1495,8 @@ static void *ru_thread( void *param ) {
   pthread_cond_signal(&proc->cond_FH1);
 
   // This is a forever while loop, it loops over subframes which are scheduled by incoming samples from HW devices
-  while (!oai_exit) {
+  while (!oai_exit) 
+  {
     // these are local subframe/frame counters to check that we are in synch with the fronthaul timing.
     // They are set on the first rx/tx in the underly FH routines.
     if (slot==(fp->slots_per_frame-1)) {
@@ -1451,6 +1507,7 @@ static void *ru_thread( void *param ) {
       slot++;
     }
 
+    // fprintf(stderr, "\n $$$### In ru_thread in nr_ru.c ###$$$ \n");     //   ---src572
     // synchronization on input FH interface, acquire signals/data and block
     if (ru->fh_south_in) ru->fh_south_in(ru,&frame,&slot);
     else AssertFatal(1==0, "No fronthaul interface at south port");
@@ -1476,19 +1533,38 @@ static void *ru_thread( void *param ) {
     if (ru->idx!=0) proc->frame_tx = (proc->frame_tx+proc->frame_offset)&1023;
 
     // do RX front-end processing (frequency-shift, dft) if needed
-    if (ru->feprx) ru->feprx(ru,proc->tti_rx);
+    if (ru->feprx)
+    {
+       // fprintf(stderr, "\n %s\n","$$$### calling feprx() in ru_thread in nr_ru.c ###$$$" );   //----src572
+       ru->feprx(ru,proc->tti_rx);
+
+
+     } 
 
     // At this point, all information for subframe has been received on FH interface
 
     // wakeup all gNB processes waiting for this RU
-    if (ru->num_gNB>0) wakeup_gNB_L1s(ru);
+    if (ru->num_gNB>0) 
+      {
+        // fprintf(stderr, "\n%s\n","$$$## calling wakeup_gNB_L1s(ru)  in ru_thread in nr_ru.c ###$$$" );
+        wakeup_gNB_L1s(ru);
+      }
 
-    if(get_thread_parallel_conf() == PARALLEL_SINGLE_THREAD || ru->num_gNB==0) {
+    if(get_thread_parallel_conf() == PARALLEL_SINGLE_THREAD || ru->num_gNB==0)
+     {
       // do TX front-end processing if needed (precoding and/or IDFTs)
-      if (ru->feptx_prec) ru->feptx_prec(ru,proc->frame_tx,proc->tti_tx);
+          if (ru->feptx_prec)
+          {
+            // fprintf(stderr, "\n %s\n","$$$### calling feptx_prec() in ru_thread in nr_ru.c ###$$$" );   //----src572
+           ru->feptx_prec(ru,proc->frame_tx,proc->tti_tx);
+         }
 
       // do OFDM if needed
-      if ((ru->fh_north_asynch_in == NULL) && (ru->feptx_ofdm)) ru->feptx_ofdm(ru,proc->frame_tx,proc->tti_tx);
+      if ((ru->fh_north_asynch_in == NULL) && (ru->feptx_ofdm))
+        {
+          // fprintf(stderr, "\n %s\n","$$$### calling feptx_ofdm() in ru_thread in nr_ru.c ###$$$" );   //----src572
+          ru->feptx_ofdm(ru,proc->frame_tx,proc->tti_tx);
+        }
 
       if(!emulate_rf) {
         // do outgoing fronthaul (south) if needed
@@ -1634,13 +1710,14 @@ extern void feptx_prec(RU_t *ru, int frame_tx,int tti_tx);
 extern void init_fep_thread(RU_t *ru);
 extern void nr_init_feptx_thread(RU_t *ru);
 
-void init_RU_proc(RU_t *ru) {
+void init_RU_proc(RU_t *ru)
+{
   int i=0;
   RU_proc_t *proc;
   char name[100];
-#ifndef OCP_FRAMEWORK
+  #ifndef OCP_FRAMEWORK
   LOG_I(PHY,"Initializing RU proc %d (%s,%s),\n",ru->idx,NB_functions[ru->function],NB_timing[ru->if_timing]);
-#endif
+  #endif
   proc = &ru->proc;
   memset((void *)proc,0,sizeof(RU_proc_t));
   proc->ru = ru;
@@ -1674,39 +1751,72 @@ void init_RU_proc(RU_t *ru) {
   pthread_cond_init( &proc->cond_synch,NULL);
   pthread_cond_init( &proc->cond_gNBs, NULL);
   threadCreate( &proc->pthread_FH, ru_thread, (void *)ru, "thread_FH", -1, OAI_PRIORITY_RT_MAX );
+  // fprintf(stderr, "\n$$$$$#### created ru_thread #####$$$\n");     //---src572
+
 
   if (get_thread_parallel_conf() == PARALLEL_RU_L1_SPLIT || get_thread_parallel_conf() == PARALLEL_RU_L1_TRX_SPLIT)
-    threadCreate( &proc->pthread_FH1, ru_thread_tx, (void *)ru, "thread_FH1", -1, OAI_PRIORITY_RT );
+    {
+      threadCreate( &proc->pthread_FH1, ru_thread_tx, (void *)ru, "thread_FH1", -1, OAI_PRIORITY_RT );
+      // fprintf(stderr, "\n $$$$$#### created %s #####$$$\n","ru_thread_tx" );    //----src572
+    }
 
   if(emulate_rf)
-    threadCreate( &proc->pthread_emulateRF, emulatedRF_thread, (void *)proc, "emulateRF", -1, OAI_PRIORITY_RT );
+    {
+      threadCreate( &proc->pthread_emulateRF, emulatedRF_thread, (void *)proc, "emulateRF", -1, OAI_PRIORITY_RT );
+      // fprintf(stderr, "\n $$$$$#### created %s #####$$$\n","emulatedRF_thread" );     //--src572
 
+    }
+    ////  redundant if else. either case creates the thread   // ----src572
   if (ru->function == NGFI_RRU_IF4p5) {
     threadCreate( &proc->pthread_prach, ru_thread_prach, (void *)ru, "RACH", -1, OAI_PRIORITY_RT );
+    // fprintf(stderr, "\n $$$$#####  Executed if condition  %s created thread %s   ####$$$$ \n", "NGFI_RRU_IF4p5","ru_thread_prach");  //---src572   //---src572
     ///tmp deactivation of synch thread
     //    if (ru->is_slave == 1) pthread_create( &proc->pthread_synch, attr_synch, ru_thread_synch, (void*)ru);
 
-    if ((ru->if_timing == synch_to_other) ||
-        (ru->function == NGFI_RRU_IF5) ||
-        (ru->function == NGFI_RRU_IF4p5)) threadCreate( &proc->pthread_asynch_rxtx, ru_thread_asynch_rxtx, (void *)ru, "asynch_rxtx", -1, OAI_PRIORITY_RT );
+    if ((ru->if_timing == synch_to_other) || (ru->function == NGFI_RRU_IF5) ||(ru->function == NGFI_RRU_IF4p5))
+    { 
+      threadCreate( &proc->pthread_asynch_rxtx, ru_thread_asynch_rxtx, (void *)ru, "asynch_rxtx", -1, OAI_PRIORITY_RT );
+      // fprintf(stderr, "\n $$$$$#### created %s #####$$$\n","ru_thread_asynch_rxtx" );     //--src572
+
+    }
 
     snprintf( name, sizeof(name), "ru_thread_FH %d", ru->idx );
     pthread_setname_np( proc->pthread_FH, name );
-  } else if (ru->function == gNodeB_3GPP && ru->if_south == LOCAL_RF) { // DJP - need something else to distinguish between monolithic and PNF
-    LOG_I(PHY,"%s() DJP - added creation of pthread_prach\n", __FUNCTION__);
-    threadCreate( &proc->pthread_prach, ru_thread_prach, (void *)ru,"RACH", -1, OAI_PRIORITY_RT );
+  } 
+  else if (ru->function == gNodeB_3GPP && ru->if_south == LOCAL_RF) 
+  { // DJP - need something else to distinguish between monolithic and PNF
+      LOG_I(PHY,"%s() DJP - added creation of pthread_prach\n", __FUNCTION__);
+      threadCreate( &proc->pthread_prach, ru_thread_prach, (void *)ru, "RACH", -1, OAI_PRIORITY_RT );
+      // fprintf(stderr, "\n $$$$#####  Executed Else condition  %s created thread %s   ####$$$$ \n", "NGFI_RRU_IF4p5","ru_thread_prach");  //---src572   //---src572
+
+       //void threadCreate(pthread_t* t, void * (*func)(void*), void * param, char* name, int affinity, int priority)
   }
 
-  if (get_thread_worker_conf() == WORKER_ENABLE) {
-    if (ru->feprx) init_fep_thread(ru);
+  if (get_thread_worker_conf() == WORKER_ENABLE) 
+  {
+    if (ru->feprx) 
+    {
+      // fprintf(stderr, "\n $$$$$#### Entering function  %s #####$$$\n","init_fep_thread(ru)" );     //--src572
 
-    if (ru->feptx_ofdm) nr_init_feptx_thread(ru);
+      init_fep_thread(ru);
+    }
+
+    if (ru->feptx_ofdm) 
+      { 
+        
+        // fprintf(stderr, "\n $$$$$#### Entering function  %s #####$$$\n","nr_init_feptx_thread(ru)" );     //--src572
+        nr_init_feptx_thread(ru);
+      }
   }
 
-  if (opp_enabled == 1) threadCreate(&ru->ru_stats_thread,ru_stats_thread,(void *)ru, "emulateRF", -1, OAI_PRIORITY_RT_LOW);
+  if (opp_enabled == 1)
+    { 
+      threadCreate(&ru->ru_stats_thread,ru_stats_thread,(void *)ru, "emulateRF", -1, OAI_PRIORITY_RT_LOW);
+     }
 }
 
-void kill_NR_RU_proc(int inst) {
+void kill_NR_RU_proc(int inst) 
+{
   RU_t *ru = RC.ru[inst];
   RU_proc_t *proc = &ru->proc;
   pthread_mutex_lock(&proc->mutex_FH);
@@ -1893,27 +2003,33 @@ void configure_rru(int idx,
   RU_t         *ru         = RC.ru[idx];
   nfapi_nr_config_request_t *gNB_config = &ru->gNB_list[0]->gNB_config;
   ru->nr_frame_parms->eutra_band                                          = config->band_list[0];
+  //// add nr_band   src572
   ru->nr_frame_parms->dl_CarrierFreq                                      = config->tx_freq[0];
   ru->nr_frame_parms->ul_CarrierFreq                                      = config->rx_freq[0];
 
-  if (ru->nr_frame_parms->dl_CarrierFreq == ru->nr_frame_parms->ul_CarrierFreq) {
+  if (ru->nr_frame_parms->dl_CarrierFreq == ru->nr_frame_parms->ul_CarrierFreq) 
+  {
     gNB_config->subframe_config.duplex_mode.value                         = TDD;
     //ru->nr_frame_parms->tdd_config                                        = config->tdd_config[0];
     //ru->nr_frame_parms->tdd_config_S                                      = config->tdd_config_S[0];
+
+    // fprintf(stderr, "\n $$### Set duplex mode in configure_rru to %s  ###$$$\n", "TDD");     //--- src572
   } else
     gNB_config->subframe_config.duplex_mode.value                         = FDD;
 
-  ru->att_tx                                                              = config->att_tx[0];
-  ru->att_rx                                                              = config->att_rx[0];
-  gNB_config->rf_config.dl_carrier_bandwidth.value                        = config->N_RB_DL[0];
-  gNB_config->rf_config.ul_carrier_bandwidth.value                        = config->N_RB_UL[0];
-  ru->nr_frame_parms->threequarter_fs                                     = config->threequarter_fs[0];
+    // fprintf(stderr, "\n $$### Set duplex mode in configure_rru to %s  ###$$$\n", "FDD");     //--- src572
 
-  //ru->nr_frame_parms->pdsch_config_common.referenceSignalPower                 = ru->max_pdschReferenceSignalPower-config->att_tx[0];
-  if (ru->function==NGFI_RRU_IF4p5) {
-    ru->nr_frame_parms->att_rx = ru->att_rx;
-    ru->nr_frame_parms->att_tx = ru->att_tx;
-    /*
+      ru->att_tx                                                              = config->att_tx[0];
+      ru->att_rx                                                              = config->att_rx[0];
+      gNB_config->rf_config.dl_carrier_bandwidth.value                        = config->N_RB_DL[0];
+      gNB_config->rf_config.ul_carrier_bandwidth.value                        = config->N_RB_UL[0];
+      ru->nr_frame_parms->threequarter_fs                                     = config->threequarter_fs[0];
+
+      //ru->nr_frame_parms->pdsch_config_common.referenceSignalPower                 = ru->max_pdschReferenceSignalPower-config->att_tx[0];
+      if (ru->function==NGFI_RRU_IF4p5) {
+        ru->nr_frame_parms->att_rx = ru->att_rx;
+        ru->nr_frame_parms->att_tx = ru->att_tx;
+        /*
         LOG_I(PHY,"Setting ru->function to NGFI_RRU_IF4p5, prach_FrequOffset %d, prach_ConfigIndex %d, att (%d,%d)\n",
         config->prach_FreqOffset[0],config->prach_ConfigIndex[0],ru->att_tx,ru->att_rx);
         ru->nr_frame_parms->prach_config_common.prach_ConfigInfo.prach_FreqOffset  = config->prach_FreqOffset[0];
@@ -1985,7 +2101,8 @@ void set_function_spec_param(RU_t *ru) {
           printf("Exiting, cannot initialize transport protocol\n");
           exit(-1);
         }
-      } else if (ru->function == NGFI_RRU_IF4p5) {
+      } 
+      else if (ru->function == NGFI_RRU_IF4p5) {
         ru->do_prach              = 1;                        // do part of prach processing in RU
         ru->fh_north_in           = NULL;                     // no synchronous incoming fronthaul from north
         ru->fh_north_out          = fh_if4p5_north_out;       // send_IF4p5 on reception
@@ -2003,7 +2120,8 @@ void set_function_spec_param(RU_t *ru) {
         reset_meas(&ru->compression);
         reset_meas(&ru->transport);
         ret = openair0_transport_load(&ru->ifdevice,&ru->openair0_cfg,&ru->eth_params);
-        printf("openair0_transport_init returns %d for ru_id %d\n", ret, ru->idx);
+        // fprintf(stderr,"\n$$$### openair0_transport_load in ru->function == NGFI_RRU_IF4p5 in nr-ru.c  returns %d for ru_id %d   ###$$$ \n", ret, ru->idx);    ///   ----src572
+        //printf("openair0_transport_init returns %d for ru_id %d\n", ret, ru->idx);
 
         if (ret<0) {
           printf("Exiting, cannot initialize transport protocol\n");
@@ -2026,7 +2144,8 @@ void set_function_spec_param(RU_t *ru) {
       ru->fh_south_out           = tx_rf;                               // local synchronous RF TX
       ru->start_rf               = start_rf;                            // need to start the local RF interface
       ru->stop_rf                = stop_rf;
-      printf("configuring ru_id %d (start_rf %p)\n", ru->idx, start_rf);
+      // fprintf(stderr,"\n $$$### in ru->function == gNodeB_3GPP --configuring ru_id %d (start_rf %p)  ###$$$ \n", ru->idx, start_rf);    // ---src572
+      //printf("configuring ru_id %d (start_rf %p)\n", ru->idx, start_rf);
       /*
           if (ru->function == gNodeB_3GPP) { // configure RF parameters only for 3GPP eNodeB, we need to get them from RAU otherwise
             fill_rf_config(ru,rf_config_file);
@@ -2098,7 +2217,7 @@ void set_function_spec_param(RU_t *ru) {
   } // switch on interface type
 }
 
-extern void RCconfig_RU(void);
+extern void RCconfig_RU(void);     /////----src572 why extern?  its definition is in the same file?
 
 void init_NR_RU(char *rf_config_file)
 {

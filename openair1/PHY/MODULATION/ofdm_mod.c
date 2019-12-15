@@ -43,7 +43,8 @@ void normal_prefix_mod(int32_t *txdataF,int32_t *txdata,uint8_t nsymb,LTE_DL_FRA
 {
 
 
-  
+  ///////  Check this .. this assumes the slot size as 7 symbols and does longer CP every 7 symbols
+  // fprintf(stderr, "\n $$$$####  in function normal_prefix_mod nsymb = %d,frame_parms->nb_prefix_samples0 =%d ,frame_parms->nb_prefix_samples $$$#### \n", nsymb,frame_parms->nb_prefix_samples0,frame_parms->nb_prefix_samples);  ///---src572
   PHY_ofdm_mod(txdataF,        // input
 	       txdata,         // output
 	       frame_parms->ofdm_symbol_size,                
@@ -63,6 +64,8 @@ void normal_prefix_mod(int32_t *txdataF,int32_t *txdata,uint8_t nsymb,LTE_DL_FRA
 
 void nr_normal_prefix_mod(int32_t *txdataF,int32_t *txdata,uint8_t nsymb,NR_DL_FRAME_PARMS *frame_parms)
 {
+  // fprintf(stderr, "\n $$$$####  in function nr_normal_prefix_mod nsymb = %d,frame_parms->nb_prefix_samples0 =%d ,frame_parms->nb_prefix_samples $$$#### \n", nsymb,frame_parms->nb_prefix_samples0,frame_parms->nb_prefix_samples);  ///---src572
+
   PHY_ofdm_mod(txdataF,        // input
 	       txdata,         // output
 	       frame_parms->ofdm_symbol_size,                
@@ -131,108 +134,109 @@ void PHY_ofdm_mod(int *input,                       /// pointer to complex input
     break;
   }
 
-#ifdef DEBUG_OFDM_MOD
-  printf("[PHY] OFDM mod (size %d,prefix %d) Symbols %d, input %p, output %p\n",
-      fftsize,nb_prefix_samples,nb_symbols,input,output);
-#endif
+     #ifdef DEBUG_OFDM_MOD     //---src572 
+     printf("[PHY] OFDM mod (size %d,prefix %d) Symbols %d, input %p, output %p\n",
+       fftsize,nb_prefix_samples,nb_symbols,input,output);
+    #endif
+
+     // fprintf(stderr,"[PHY] OFDM mod (size %d,prefix %d) Symbols %d, input %p, output %p\n",
+        // fftsize,nb_prefix_samples,nb_symbols,input,output);    ///src572 
 
 
 
-  for (i=0; i<nb_symbols; i++) {
+  for (i=0; i<nb_symbols; i++) 
+  {
+      #ifdef DEBUG_OFDM_MOD
+          printf("[PHY] symbol %d/%d offset %d (%p,%p -> %p)\n",i,nb_symbols,i*fftsize+(i*nb_prefix_samples),input,&input[i*fftsize],&output[(i*fftsize) + ((i)*nb_prefix_samples)]);
+      #endif
 
-#ifdef DEBUG_OFDM_MOD
-    printf("[PHY] symbol %d/%d offset %d (%p,%p -> %p)\n",i,nb_symbols,i*fftsize+(i*nb_prefix_samples),input,&input[i*fftsize],&output[(i*fftsize) + ((i)*nb_prefix_samples)]);
-#endif
+      #ifndef __AVX2__
+          // handle 128-bit alignment for 128-bit SIMD (SSE4,NEON,AltiVEC)
+          idft((int16_t *)&input[i*fftsize],
+               (fftsize==128) ? (int16_t *)temp : (int16_t *)&output[(i*fftsize) + ((1+i)*nb_prefix_samples)],
+               1);
+      #else
+          // on AVX2 need 256-bit alignment
+          idft((int16_t *)&input[i*fftsize],
+               (int16_t *)temp,
+               1);
 
-#ifndef __AVX2__
-    // handle 128-bit alignment for 128-bit SIMD (SSE4,NEON,AltiVEC)
-    idft((int16_t *)&input[i*fftsize],
-         (fftsize==128) ? (int16_t *)temp : (int16_t *)&output[(i*fftsize) + ((1+i)*nb_prefix_samples)],
-         1);
-#else
-    // on AVX2 need 256-bit alignment
-    idft((int16_t *)&input[i*fftsize],
-         (int16_t *)temp,
-         1);
+      #endif
 
-#endif
+          // Copy to frame buffer with Cyclic Extension
+          // Note:  will have to adjust for synchronization offset!
 
-    // Copy to frame buffer with Cyclic Extension
-    // Note:  will have to adjust for synchronization offset!
-
-    switch (etype) {
-    case CYCLIC_PREFIX:
-      output_ptr = &output[(i*fftsize) + ((1+i)*nb_prefix_samples)];
-      temp_ptr = (int *)temp;
-
-
-      //      msg("Doing cyclic prefix method\n");
-
-#ifndef __AVX2__
-      if (fftsize==128) 
-#endif
+      switch (etype) 
       {
-        /*for (j=0; j<fftsize ; j++) {
-          output_ptr[j] = temp_ptr[j];
-        }*/
-        memcpy((void*)output_ptr,(void*)temp_ptr,fftsize<<2);
-      }
-
-      j=fftsize;
-
-      for (k=-1; k>=-nb_prefix_samples; k--) {
-        output_ptr[k] = output_ptr[--j];
-      }
-
-      break;
-
-    case CYCLIC_SUFFIX:
+         case CYCLIC_PREFIX:
+            output_ptr = &output[(i*fftsize) + ((1+i)*nb_prefix_samples)];
+            temp_ptr = (int *)temp;
 
 
-      output_ptr = &output[(i*fftsize)+ (i*nb_prefix_samples)];
+            //      msg("Doing cyclic prefix method\n");
 
-      temp_ptr = (int *)temp;
+              #ifndef __AVX2__
+                if (fftsize==128) 
+             #endif
+                {
+                   /*for (j=0; j<fftsize ; j++) {
+                    output_ptr[j] = temp_ptr[j];
+                }*/
+                memcpy((void*)output_ptr,(void*)temp_ptr,fftsize<<2);
+                }
 
-      //      msg("Doing cyclic suffix method\n");
+               j=fftsize;
 
-      for (j=0; j<fftsize ; j++) {
-        output_ptr[j] = temp_ptr[2*j];
-      }
+              for (k=-1; k>=-nb_prefix_samples; k--) 
+                  {
+                      output_ptr[k] = output_ptr[--j];
+                  }
 
+              break;
 
-      for (j=0; j<nb_prefix_samples; j++)
-        output_ptr[fftsize+j] = output_ptr[j];
+         case CYCLIC_SUFFIX:
 
-      break;
+                    output_ptr = &output[(i*fftsize)+ (i*nb_prefix_samples)];
 
-    case ZEROS:
+                    temp_ptr = (int *)temp;
 
-      break;
+                    //      msg("Doing cyclic suffix method\n");
 
-    case NONE:
-
-      //      msg("NO EXTENSION!\n");
-      output_ptr = &output[fftsize];
-
-      temp_ptr = (int *)temp;
-
-      for (j=0; j<fftsize ; j++) {
-        output_ptr[j] = temp_ptr[2*j];
-
-
-      }
-
-      break;
-
-    default:
-      break;
-
-    }
+                    for (j=0; j<fftsize ; j++) {
+                      output_ptr[j] = temp_ptr[2*j];
+                    }
 
 
+                    for (j=0; j<nb_prefix_samples; j++)
+                      output_ptr[fftsize+j] = output_ptr[j];
+
+                    break;
+
+          case ZEROS:
+
+                    break;
+
+          case NONE:
+
+                    //      msg("NO EXTENSION!\n");
+                    output_ptr = &output[fftsize];
+
+                    temp_ptr = (int *)temp;
+
+                    for (j=0; j<fftsize ; j++) {
+                      output_ptr[j] = temp_ptr[2*j];
+
+
+                    }
+
+                    break;
+
+              default:
+                    break;
+
+       }
 
   }
-
 
 }
 

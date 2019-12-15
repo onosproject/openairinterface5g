@@ -94,6 +94,8 @@ int phy_init_nr_gNB(PHY_VARS_gNB *gNB,
   gNB->total_system_throughput = 0;
   gNB->check_for_MUMIMO_transmissions=0;
 
+  fprintf(stderr, "%s\n","in phy_init_nr_gNB() line 97 in openair1/PHY/INIT/nr_init.c" );
+
   while(gNB->configured == 0) usleep(10000);
 
   init_dfts();
@@ -112,7 +114,7 @@ int phy_init_nr_gNB(PHY_VARS_gNB *gNB,
           );*/
   LOG_D(PHY,"[MSC_NEW][FRAME 00000][PHY_gNB][MOD %02"PRIu8"][]\n", gNB->Mod_id);
   crcTableInit();
-  init_dfts();
+  init_dfts();     // why two times?
   // PBCH DMRS gold sequences generation
   nr_init_pbch_dmrs(gNB);
   //PDCCH DMRS init
@@ -156,8 +158,7 @@ int phy_init_nr_gNB(PHY_VARS_gNB *gNB,
   /// Transport init necessary for NR synchro
   init_nr_transport(gNB);
 
-  gNB->first_run_I0_measurements =
-    1; ///This flag used to be static. With multiple gNBs this does no longer work, hence we put it in the structure. However it has to be initialized with 1, which is performed here.
+  gNB->first_run_I0_measurements =    1; ///This flag used to be static. With multiple gNBs this does no longer work, hence we put it in the structure. However it has to be initialized with 1, which is performed here.
   common_vars->rxdata  = (int32_t **)malloc16(15*sizeof(int32_t*));
   common_vars->txdataF = (int32_t **)malloc16(15*sizeof(int32_t*));
   common_vars->rxdataF = (int32_t **)malloc16(15*sizeof(int32_t*));
@@ -364,12 +365,14 @@ void nr_phy_config_request_sim(PHY_VARS_gNB *gNB,
                                int Nid_cell,
                                uint64_t position_in_burst)
 {
+  LOG_I(PHY,"entered  nr_phy_config_request_sim in openairinterface5g/openair1/PHY/INIT/nr_init.c\n");
+
   NR_DL_FRAME_PARMS *fp                                   = &gNB->frame_parms;
   nfapi_nr_config_request_t *gNB_config                   = &gNB->gNB_config;
   //overwrite for new NR parameters
-  gNB_config->nfapi_config.rf_bands.rf_band[0]            = 78;
-  gNB_config->nfapi_config.nrarfcn.value                  = 620000;
-  gNB_config->subframe_config.numerology_index_mu.value   = mu;
+  gNB_config->nfapi_config.rf_bands.rf_band[0]            = 257;            // why hardcodeds to 78?   --src572
+  gNB_config->nfapi_config.nrarfcn.value                  = 620000;      ///   what is this vale??  ---src572
+  gNB_config->subframe_config.numerology_index_mu.value   = 3;//mu;
   gNB_config->subframe_config.duplex_mode.value           = TDD;
   gNB_config->rf_config.dl_carrier_bandwidth.value        = N_RB_DL;
   gNB_config->rf_config.ul_carrier_bandwidth.value        = N_RB_UL;
@@ -381,9 +384,9 @@ void nr_phy_config_request_sim(PHY_VARS_gNB *gNB,
   gNB_config->sch_config.ssb_scg_position_in_burst.value  = position_in_burst;
   gNB_config->subframe_config.dl_cyclic_prefix_type.value = (fp->Ncp == NORMAL) ? NFAPI_CP_NORMAL : NFAPI_CP_EXTENDED;
 
-  gNB->mac_enabled   = 1;
-  fp->dl_CarrierFreq = 3500000000;//from_nrarfcn(gNB_config->nfapi_config.rf_bands.rf_band[0],gNB_config->nfapi_config.nrarfcn.value);
-  fp->ul_CarrierFreq = 3500000000;//fp->dl_CarrierFreq - (get_uldl_offset(gNB_config->nfapi_config.rf_bands.rf_band[0])*100000);
+  gNB->mac_enabled   = 1;      ////    -changed src572
+  fp->dl_CarrierFreq = 28100000000;//3500000000;//from_nrarfcn(gNB_config->nfapi_config.rf_bands.rf_band[0],gNB_config->nfapi_config.nrarfcn.value);
+  fp->ul_CarrierFreq = 28100000000;//fp->dl_CarrierFreq - (get_uldl_offset(gNB_config->nfapi_config.rf_bands.rf_band[0])*100000);
   fp->threequarter_fs= 0;
   nr_init_frame_parms(gNB_config, fp);
   gNB->configured    = 1;
@@ -408,6 +411,9 @@ void nr_phy_config_request(NR_PHY_Config_t *phy_config)
   gNB_config->sch_config.physical_cell_id.value         = phy_config->cfg->sch_config.physical_cell_id.value;
   gNB_config->sch_config.ssb_scg_position_in_burst.value= phy_config->cfg->sch_config.ssb_scg_position_in_burst.value;
   gNB_config->sch_config.ssb_periodicity.value		    = phy_config->cfg->sch_config.ssb_periodicity.value;
+  LOG_I(PHY,"entered  nr_phy_config_request in openairinterface5g/openair1/PHY/INIT/nr_init.c\n");
+  // fprintf(stderr, "\n\n $$$$$$$$$$$$$$$$$$$$$$$$$$  %d the vale of mu and %d band in same file as above is \n $$$$$$$$$$$$$$$$$$$$$$$$$$\n\n", gNB_config->subframe_config.numerology_index_mu.value,phy_config->cfg->nfapi_config.rf_bands.rf_band[0]);
+
 
   if (phy_config->cfg->subframe_config.duplex_mode.value == 0) {
     gNB_config->subframe_config.duplex_mode.value    = TDD;
@@ -431,7 +437,7 @@ void nr_phy_config_request(NR_PHY_Config_t *phy_config)
   nr_init_frame_parms(gNB_config, fp);
 
   if (RC.gNB[Mod_id][CC_id]->configured == 1) {
-    LOG_E(PHY,"Already gNB already configured, do nothing\n");
+    LOG_E(PHY,"Already gNB  configured, do nothing\n");
     return;
   }
 
@@ -445,6 +451,7 @@ void init_nr_transport(PHY_VARS_gNB *gNB) {
   NR_DL_FRAME_PARMS *fp = &gNB->frame_parms;
   nfapi_nr_config_request_t *cfg = &gNB->gNB_config;
   LOG_I(PHY, "Initialise nr transport\n");
+  fprintf(stderr, "%s\n", "in init_nr_transport() line 455 in openair1/PHY/INIT/nr_init.c");
 
   for (i=0; i<NUMBER_OF_NR_DLSCH_MAX; i++) {
 

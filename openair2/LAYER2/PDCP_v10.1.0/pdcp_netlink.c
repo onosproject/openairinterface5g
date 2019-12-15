@@ -88,10 +88,7 @@ time_stats_t ip_pdcp_stats_tmp;
 static void *pdcp_netlink_thread_fct(void *arg);
 
 //-----------------------------------------------------------------------------
-int
-pdcp_netlink_init(
-  void
-)
+int pdcp_netlink_init (void)
 //-----------------------------------------------------------------------------
 {
   int                i;
@@ -101,7 +98,7 @@ pdcp_netlink_init(
   reset_meas(&ip_pdcp_stats_tmp);
   nb_inst_enb = 1;
   nb_inst_ue  = 1;
-
+  fprintf(stderr, "%s\n", "In pdcp_netlink_init() in openairinterface/openair2/LAYER2/PDCP_v10.1.0/pdcp_netlink.c LIne 101\n");    
   if (LINK_ENB_PDCP_TO_GTPV1U) {
     nb_inst_enb = 0;
     LOG_I(PDCP, "[NETLINK] Creating 0 queues for eNB Netlink -> PDCP communication\n");

@@ -4130,8 +4130,10 @@ int phy_procedures_nrUE_RX(PHY_VARS_NR_UE *ue,
   NR_DL_UE_HARQ_t *dlsch0_harq = dlsch[0]->harq_processes[harq_pid];
   uint16_t nb_symb_sch = dlsch0_harq->nb_symbols;
   uint8_t nb_symb_pdcch = pdcch_vars->coreset[0].duration;
-  uint8_t ssb_periodicity = 10;// ue->ssb_periodicity; // initialized to 5ms in nr_init_ue for scenarios where UE is not configured (otherwise acquired by cell configuration from gNB or LTE)
+  uint8_t ssb_periodicity = 20;// ue->ssb_periodicity; // initialized to 5ms in nr_init_ue for scenarios where UE is not configured (otherwise acquired by cell configuration from gNB or LTE)
+  // SRC572 was here
   uint8_t dci_cnt = 0;
+
   fapi_nr_pbch_config_t *pbch_config = &ue->nrUE_config.pbch_config;
   
   LOG_D(PHY," ****** start RX-Chain for Frame.Slot %d.%d ******  \n", frame_rx%1024, nr_tti_rx);
@@ -4166,7 +4168,8 @@ int phy_procedures_nrUE_RX(PHY_VARS_NR_UE *ue,
     start_meas(&ue->ofdm_demod_stats);
 #endif
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_UE_SLOT_FEP, VCD_FUNCTION_IN);
-    nr_slot_fep(ue,
+    fprintf(stderr, "line: 4169\r\n");
+	nr_slot_fep(ue,
     		    l,
 				nr_tti_rx,
 				0,
@@ -4184,13 +4187,13 @@ int phy_procedures_nrUE_RX(PHY_VARS_NR_UE *ue,
     stop_meas(&ue->ofdm_demod_stats);
 #endif
     
-    //printf("phy procedure pdcch start measurement l =%d\n",l);
+   fprintf(stderr, "phy procedure pdcch start measurement l =%d\n",l);
     //nr_ue_measurement_procedures(l,ue,proc,eNB_id,(nr_tti_rx),mode);
       
   }
 
   dci_cnt = nr_ue_pdcch_procedures(eNB_id, ue, proc);
-
+  fprintf(stderr, "OK\n");
   if (dci_cnt > 0) {
 
     LOG_I(PHY,"[UE  %d] Frame %d, nr_tti_rx %d: found %d DCIs\n",ue->Mod_id,frame_rx,nr_tti_rx,dci_cnt);
@@ -4218,7 +4221,8 @@ int phy_procedures_nrUE_RX(PHY_VARS_NR_UE *ue,
     nb_symb_sch = dlsch0_harq->nb_symbols;
     
     for (uint16_t m=nb_symb_pdcch;m<=(nb_symb_sch+nb_symb_pdcch-1) ; m++){
-      nr_slot_fep(ue,
+    fprintf(stderr, "Line: 4222\r\n");
+	  nr_slot_fep(ue,
 		  m,  //to be updated from higher layer
 		  nr_tti_rx,
 		  0,
@@ -4307,7 +4311,7 @@ int phy_procedures_nrUE_RX(PHY_VARS_NR_UE *ue,
       LOG_D(PHY," ------  PBCH ChannelComp/LLR: frame.slot %d.%d ------  \n", frame_rx%1024, nr_tti_rx);
 
       for (int i=1; i<4; i++) {
-
+	fprintf(stderr, "Line: 4311\r\n");
 	nr_slot_fep(ue,
 		    (ue->symbol_offset+i)%(ue->frame_parms.symbols_per_slot),
 		    nr_tti_rx,

@@ -1,0 +1,1225 @@
+executables/nr-gnb.c:396:    L1_proc->timestamp_tx = ru_proc->timestamp_rx + (sl_ahead*fp->samples_per_slot);
+executables/nr-gnb.c:399:    L1_proc->frame_tx     = (L1_proc->slot_rx > (fp->slots_per_frame-1-sl_ahead)) ? (L1_proc->frame_rx+1)&1023 : L1_proc->frame_rx;
+executables/nr-gnb.c:400:    L1_proc->slot_tx      = (L1_proc->slot_rx + sl_ahead)%fp->slots_per_frame;
+executables/nr-gnb.c:561:  L1_proc->timestamp_tx = ru_proc->timestamp_rx + (sl_ahead*fp->samples_per_slot);
+executables/nr-gnb.c:564:  L1_proc->frame_tx     = (L1_proc->slot_rx > (fp->slots_per_frame-1-sl_ahead)) ? (L1_proc->frame_rx+1)&1023 : L1_proc->frame_rx;
+executables/nr-gnb.c:565:  L1_proc->slot_tx  = (L1_proc->slot_rx + sl_ahead)%fp->slots_per_frame;
+executables/nr-ru.c:342:  proc->frame_rx    = (proc->timestamp_rx / (fp->samples_per_slot*20))&1023;
+executables/nr-ru.c:343:  proc->tti_rx = (proc->timestamp_rx / fp->samples_per_slot)%20;
+executables/nr-ru.c:377:    if ((fp->frame_type == TDD) && (subframe_select(fp,*slot)==SF_S))
+executables/nr-ru.c:378:      symbol_mask_full = (1<<fp->ul_symbols_in_S_subframe)-1;
+executables/nr-ru.c:380:      symbol_mask_full = (1<<fp->symbols_per_slot)-1;
+executables/nr-ru.c:403:  proc->timestamp_rx = ((proc->frame_rx * fp->slots_per_frame)  + proc->tti_rx ) * fp->samples_per_slot ;
+executables/nr-ru.c:404:  //  proc->timestamp_tx = proc->timestamp_rx +  (4*fp->samples_per_subframe);
+executables/nr-ru.c:405:  proc->tti_tx  = (sl+sl_ahead)%fp->slots_per_frame;
+executables/nr-ru.c:406:  proc->frame_tx     = (sl>(fp->slots_per_frame-sl_ahead)) ? (f+1)&1023 : f;
+executables/nr-ru.c:444:  symbol_mask   = (1<<(fp->symbols_per_slot))-1;
+executables/nr-ru.c:513:  tti_tx = (timestamp_tx/fp->samples_per_slot)%fp->slots_per_frame;
+executables/nr-ru.c:514:  frame_tx    = (timestamp_tx/(fp->samples_per_slot*fp->slots_per_frame))&1023;
+executables/nr-ru.c:539:  //  symbol_mask_full = ((subframe_select(fp,*slot) == SF_S) ? (1<<fp->dl_symbols_in_S_subframe) : (1<<fp->symbols_per_slot))-1;
+executables/nr-ru.c:552:      //symbol_mask_full = ((subframe_select(fp,*slot) == SF_S) ? (1<<fp->dl_symbols_in_S_subframe) : (1<<fp->symbols_per_slot))-1;
+executables/nr-ru.c:572:  proc->timestamp_tx = ((((uint64_t)frame_tx + (uint64_t)proc->frame_tx_unwrap) * fp->slots_per_frame) + (uint64_t)slot_tx) * (uint64_t)fp->samples_per_slot;
+executables/nr-ru.c:604:    if ((fp->frame_type == TDD) && (subframe_select(fp,subframe)!=SF_UL)) {
+executables/nr-ru.c:640:  AssertFatal(*slot<fp->slots_per_frame && *slot>=0, "slot %d is illegal (%d)\n",*slot,fp->slots_per_frame);
+executables/nr-ru.c:643:    rxp[i] = (void *)&ru->common.rxdata[i][*slot*fp->samples_per_slot];
+executables/nr-ru.c:647:  LOG_D(PHY,"Reading %d samples for slot %d (%p)\n",fp->samples_per_slot,*slot,rxp[0]);
+executables/nr-ru.c:652:    rxs = fp->samples_per_slot;
+executables/nr-ru.c:658:                                     fp->samples_per_slot,
+executables/nr-ru.c:665:  //AssertFatal(rxs == fp->samples_per_subframe,
+executables/nr-ru.c:666:  //"rx_rf: Asked for %d samples, got %d from USRP\n",fp->samples_per_subframe,rxs);
+executables/nr-ru.c:667:  if (rxs != fp->samples_per_slot) LOG_E(PHY, "rx_rf: Asked for %d samples, got %d from USRP\n",fp->samples_per_slot,rxs);
+executables/nr-ru.c:673:    if (proc->timestamp_rx - old_ts != fp->samples_per_slot) {
+executables/nr-ru.c:674:      LOG_D(PHY,"rx_rf: rfdevice timing drift of %"PRId64" samples (ts_off %"PRId64")\n",proc->timestamp_rx - old_ts - fp->samples_per_slot,ru->ts_offset);
+executables/nr-ru.c:675:      ru->ts_offset += (proc->timestamp_rx - old_ts - fp->samples_per_slot);
+executables/nr-ru.c:680:  proc->frame_rx     = (proc->timestamp_rx / (fp->samples_per_slot*fp->slots_per_frame))&1023;
+executables/nr-ru.c:681:  proc->tti_rx       = (proc->timestamp_rx / fp->samples_per_slot)%fp->slots_per_frame;
+executables/nr-ru.c:683:  proc->timestamp_tx = proc->timestamp_rx+(sl_ahead*fp->samples_per_slot);
+executables/nr-ru.c:684:  proc->tti_tx  = (proc->tti_rx+sl_ahead)%fp->slots_per_frame;
+executables/nr-ru.c:685:  proc->frame_tx     = (proc->tti_rx>(fp->slots_per_frame-1-sl_ahead)) ? (proc->frame_rx+1)&1023 : proc->frame_rx;
+executables/nr-ru.c:690:        (int)ru->ts_offset,proc->frame_rx,proc->tti_rx,proc->tti_tx,fp->slots_per_frame);
+executables/nr-ru.c:717:  if (rxs != fp->samples_per_slot) {
+executables/nr-ru.c:732:    T_INT(0), T_BUFFER(&ru->common.txdata[0][slot * fp->samples_per_slot], fp->samples_per_slot * 4));
+executables/nr-ru.c:733:  nr_subframe_t SF_type     = nr_slot_select(cfg,slot%fp->slots_per_frame);
+executables/nr-ru.c:738:    int siglen=fp->samples_per_slot,flags=1;
+executables/nr-ru.c:741:          siglen = fp->dl_symbols_in_S_subframe*(fp->ofdm_symbol_size+fp->nb_prefix_samples0);
+executables/nr-ru.c:744:        if ((fp->frame_type == TDD) &&
+executables/nr-ru.c:763:      txp[i] = (void *)&ru->common.txdata[i][(slot*fp->samples_per_slot)-sf_extension];
+executables/nr-ru.c:917:  int32_t dummy_rx[ru->nb_rx][fp->samples_per_subframe] __attribute__((aligned(32)));
+executables/nr-ru.c:940:                                     fp->samples_per_subframe*10,
+executables/nr-ru.c:943:    if (rxs != fp->samples_per_subframe*10) LOG_E(PHY,"requested %d samples, got %d\n",fp->samples_per_subframe*10,rxs);
+executables/nr-ru.c:959:                                         fp->samples_per_subframe,
+executables/nr-ru.c:1052:      if (fp->threequarter_fs) {
+executables/nr-ru.c:1081:      if (fp->threequarter_fs) {
+executables/nr-ru.c:1090:      if (fp->threequarter_fs) {
+executables/nr-ru.c:1102:      if (fp->threequarter_fs) {
+executables/nr-ru.c:1132:    cfg->tx_freq[i] = (double)fp->dl_CarrierFreq;
+executables/nr-ru.c:1133:    cfg->rx_freq[i] = (double)fp->ul_CarrierFreq;
+executables/nr-ru.c:1287:          LOG_M(filename,"txdataF_frame",&ru->common.txdataF_BF[i][0],fp->samples_per_subframe_wCP, 1, 1);
+executables/nr-ru.c:1291:            LOG_M(filename,"txdata_frame",&ru->common.txdata[i][0],fp->samples_per_frame, 1, 1);
+executables/nr-ru.c:1298:                     fp->samples_per_frame,
+executables/nr-ru.c:1358:  int                slot = fp->slots_per_frame-1;
+executables/nr-ru.c:1446:    if (slot==(fp->slots_per_frame-1)) {
+executables/nr-ru.c:1502:            LOG_M(filename,"txdataF_frame",&ru->common.txdataF_BF[i][0],fp->samples_per_slot_wCP, 1, 1);
+executables/nr-ru.c:1506:              LOG_M(filename,"txdata_frame",&ru->common.txdata[i][0],fp->samples_per_frame, 1, 1);
+executables/nr-ru.c:1513:                       fp->samples_per_frame,
+executables/nr-ru.c:1569:           fp->samples_per_subframe*5,
+executables/nr-ru.c:1575:  if (sync_pos >= fp->nb_prefix_samples)
+executables/nr-ru.c:1576:    sync_pos2 = sync_pos - fp->nb_prefix_samples;
+executables/nr-ru.c:1578:    sync_pos2 = sync_pos + (fp->samples_per_subframe*10) - fp->nb_prefix_samples;
+executables/nr-ru.c:1580:  if (fp->frame_type == FDD) {
+executables/nr-ru.c:1583:    int sync_pos_slot = (fp->samples_per_subframe>>1) - fp->ofdm_symbol_size - fp->nb_prefix_samples;
+executables/nr-ru.c:1588:      ru->rx_offset = (fp->samples_per_subframe*10) + sync_pos2 - sync_pos_slot;
+executables/nr-ru.c:1598:  write_output("ru_sync.m","sync",(void*)&sync_corr[0],fp->samples_per_subframe*5,1,2);
+executables/nr-ru.c:1599:  write_output("ru_rx.m","rxs",(void*)ru->ru_time.rxdata[0][0],fp->samples_per_subframe*10,1,1);
+executables/nr-ru.c:1949:    dlsch->ue_spec_bf_weights[layer][aa] = (int32_t *)malloc16(fp->ofdm_symbol_size*sizeof(int32_t));
+executables/nr-ru.c:1950:    for (re=0;re<fp->ofdm_symbol_size; re++) {
+openair1/SCHED_NR/phy_procedures_nr_gNB.c:85:  fp->ssb_start_subcarrier = (12 * cfg->sch_config.n_ssb_crb.value + cfg->sch_config.ssb_subcarrier_offset.value)/(1<<cfg->subframe_config.numerology_index_mu.value);
+openair1/SCHED_NR/phy_procedures_nr_gNB.c:86:  LOG_D(PHY, "SSB first subcarrier %d (%d,%d)\n", fp->ssb_start_subcarrier,cfg->sch_config.n_ssb_crb.value,cfg->sch_config.ssb_subcarrier_offset.value);
+openair1/SCHED_NR/phy_procedures_nr_gNB.c:116:	if ((fp->L_ssb >> ssb_index) & 0x01)  { // generating the ssb only if the bit of L_ssb at current ssb index is 1
+openair1/SCHED_NR/phy_procedures_nr_gNB.c:127:	  if (fp->Lmax == 4)
+openair1/SCHED_NR/phy_procedures_nr_gNB.c:138:                      n_hf,fp->Lmax,ssb_index,
+openair1/SCHED_NR/phy_procedures_nr_gNB.c:168:    memset(gNB->common_vars.txdataF[aa],0,fp->samples_per_slot_wCP*sizeof(int32_t));
+openair1/SCHED_NR/nr_ru_procedures.c:69:  slot_offset  = slot*fp->samples_per_slot;
+openair1/SCHED_NR/nr_ru_procedures.c:70:  slot_offsetF = first_symbol*fp->ofdm_symbol_size;
+openair1/SCHED_NR/nr_ru_procedures.c:72:  if (first_symbol>0) slot_offset += (fp->ofdm_symbol_size*first_symbol) + (fp->nb_prefix_samples0) + (fp->nb_prefix_samples*(first_symbol-1));
+openair1/SCHED_NR/nr_ru_procedures.c:77:    if (fp->Ncp == 1) {
+openair1/SCHED_NR/nr_ru_procedures.c:80:		   fp->ofdm_symbol_size,
+openair1/SCHED_NR/nr_ru_procedures.c:82:		   fp->nb_prefix_samples,
+openair1/SCHED_NR/nr_ru_procedures.c:89:                     fp->ofdm_symbol_size,
+openair1/SCHED_NR/nr_ru_procedures.c:91:                     fp->nb_prefix_samples0,
+openair1/SCHED_NR/nr_ru_procedures.c:93:	PHY_ofdm_mod(&ru->common.txdataF_BF[aa][slot_offsetF+fp->ofdm_symbol_size],
+openair1/SCHED_NR/nr_ru_procedures.c:94:		     (int*)&ru->common.txdata[aa][slot_offset+fp->nb_prefix_samples0+fp->ofdm_symbol_size],
+openair1/SCHED_NR/nr_ru_procedures.c:95:                     fp->ofdm_symbol_size,
+openair1/SCHED_NR/nr_ru_procedures.c:97:                     fp->nb_prefix_samples,
+openair1/SCHED_NR/nr_ru_procedures.c:103:                     fp->ofdm_symbol_size,
+openair1/SCHED_NR/nr_ru_procedures.c:105:                     fp->nb_prefix_samples,
+openair1/SCHED_NR/nr_ru_procedures.c:132:	   (void*)ru->gNB_list[0]->common_vars.txdataF[aa], fp->samples_per_slot_wCP*sizeof(int32_t));
+openair1/SCHED_NR/nr_ru_procedures.c:166:  nr_feptx0(ru,slot,0,fp->symbols_per_slot>>1);
+openair1/SCHED_NR/nr_ru_procedures.c:222:  int slot_sizeF = (fp->ofdm_symbol_size)*
+openair1/SCHED_NR/nr_ru_procedures.c:225:  int *txdata = &ru->common.txdata[aa][slot*fp->samples_per_slot];
+openair1/SCHED_NR/nr_ru_procedures.c:233:	   (void*)ru->gNB_list[0]->common_vars.txdataF[aa], fp->samples_per_slot_wCP*sizeof(int32_t));
+openair1/SCHED_NR/nr_ru_procedures.c:239:    nr_feptx0(ru,slot,0,fp->symbols_per_slot);
+openair1/SCHED_NR/nr_ru_procedures.c:247:	frame_tx,slot,txdata,dB_fixed(signal_energy((int32_t*)txdata,fp->samples_per_slot)),
+openair1/SCHED/ru_procedures.c:76:  int slot_sizeF = (fp->ofdm_symbol_size) * ((fp->Ncp==1) ? 6 : 7);
+openair1/SCHED/ru_procedures.c:81:  slot_offset = slot*(fp->samples_per_tti>>1); //slot_offset = subframe*fp->samples_per_tti + (slot*(fp->samples_per_tti>>1));
+openair1/SCHED/ru_procedures.c:86:    if (fp->Ncp == EXTENDED) PHY_ofdm_mod(&ru->common.txdataF_BF[aa][(slot&1)*slot_sizeF],
+openair1/SCHED/ru_procedures.c:88:                                          fp->ofdm_symbol_size,
+openair1/SCHED/ru_procedures.c:90:                                          fp->nb_prefix_samples,
+openair1/SCHED/ru_procedures.c:93:       /* AssertFatal(ru->generate_dmrs_sync==1 && (fp->frame_type != TDD || ru->is_slave == 1),
+openair1/SCHED/ru_procedures.c:95:		  fp->frame_type,ru->is_slave);
+openair1/SCHED/ru_procedures.c:99:      if (subframe_select(fp,subframe) == SF_S) num_symb=fp->dl_symbols_in_S_subframe+1;
+openair1/SCHED/ru_procedures.c:112:                           fp->N_RB_DL,
+openair1/SCHED/ru_procedures.c:123:    len = fp->samples_per_tti>>1;
+openair1/SCHED/ru_procedures.c:125:    if ((slot_offset+len)>(LTE_NUMBER_OF_SUBFRAMES_PER_FRAME*fp->samples_per_tti)) {
+openair1/SCHED/ru_procedures.c:128:      len2 = -tx_offset+LTE_NUMBER_OF_SUBFRAMES_PER_FRAME*fp->samples_per_tti;
+openair1/SCHED/ru_procedures.c:145:        (fp->frame_type == TDD) && 
+openair1/SCHED/ru_procedures.c:146:        ((fp->tdd_config==0) ||
+openair1/SCHED/ru_procedures.c:147:         (fp->tdd_config==1) ||
+openair1/SCHED/ru_procedures.c:148:         (fp->tdd_config==2) ||
+openair1/SCHED/ru_procedures.c:149:         (fp->tdd_config==6)) &&  
+openair1/SCHED/ru_procedures.c:154:	  tx_offset += LTE_NUMBER_OF_SUBFRAMES_PER_FRAME*fp->samples_per_tti;
+openair1/SCHED/ru_procedures.c:156:	if (tx_offset>=(LTE_NUMBER_OF_SUBFRAMES_PER_FRAME*fp->samples_per_tti))
+openair1/SCHED/ru_procedures.c:157:	  tx_offset -= LTE_NUMBER_OF_SUBFRAMES_PER_FRAME*fp->samples_per_tti;
+openair1/SCHED/ru_procedures.c:268:  int slot_sizeF = (fp->ofdm_symbol_size) * ((fp->Ncp==1) ? 6 : 7);
+openair1/SCHED/ru_procedures.c:277:  slot_offset = subframe*fp->samples_per_tti;
+openair1/SCHED/ru_procedures.c:286:      if (fp->Ncp == EXTENDED) {
+openair1/SCHED/ru_procedures.c:289:                     fp->ofdm_symbol_size,
+openair1/SCHED/ru_procedures.c:291:                     fp->nb_prefix_samples,
+openair1/SCHED/ru_procedures.c:294:                     dummy_tx_b+(fp->samples_per_tti>>1),
+openair1/SCHED/ru_procedures.c:295:                     fp->ofdm_symbol_size,
+openair1/SCHED/ru_procedures.c:297:                     fp->nb_prefix_samples,
+openair1/SCHED/ru_procedures.c:307:			    dummy_tx_b+(fp->samples_per_tti>>1),
+openair1/SCHED/ru_procedures.c:314:	len = fp->samples_per_tti>>1;
+openair1/SCHED/ru_procedures.c:316:	len = fp->samples_per_tti;
+openair1/SCHED/ru_procedures.c:326:	txdata = (int16_t*)&ru->common.txdata[aa][(LTE_NUMBER_OF_SUBFRAMES_PER_FRAME*fp->samples_per_tti)+tx_offset];
+openair1/SCHED/ru_procedures.c:339:      else if ((slot_offset+len)>(LTE_NUMBER_OF_SUBFRAMES_PER_FRAME*fp->samples_per_tti)) {
+openair1/SCHED/ru_procedures.c:342:	len2 = -tx_offset+LTE_NUMBER_OF_SUBFRAMES_PER_FRAME*fp->samples_per_tti;
+openair1/SCHED/ru_procedures.c:370://     if ((fp->frame_type == TDD) &&
+openair1/SCHED/ru_procedures.c:371://         ((fp->tdd_config==0) ||
+openair1/SCHED/ru_procedures.c:372://	   (fp->tdd_config==1) ||
+openair1/SCHED/ru_procedures.c:373://	   (fp->tdd_config==2) ||
+openair1/SCHED/ru_procedures.c:374://	   (fp->tdd_config==6)) &&
+openair1/SCHED/ru_procedures.c:381://           tx_offset += LTE_NUMBER_OF_SUBFRAMES_PER_FRAME*fp->samples_per_tti;
+openair1/SCHED/ru_procedures.c:383://         if (tx_offset>=(LTE_NUMBER_OF_SUBFRAMES_PER_FRAME*fp->samples_per_tti))
+openair1/SCHED/ru_procedures.c:384://           tx_offset -= LTE_NUMBER_OF_SUBFRAMES_PER_FRAME*fp->samples_per_tti;
+openair1/SCHED/ru_procedures.c:392:	   ru->proc.frame_tx,subframe,txdata,dB_fixed(signal_energy((int32_t*)txdata,fp->samples_per_tti)),
+openair1/SCHED/ru_procedures.c:419:      memset(ru->common.txdataF_BF[aa],0,sizeof(int32_t)*fp->ofdm_symbol_size*fp->symbols_per_tti);
+openair1/SCHED/ru_procedures.c:424:	        (void*)&eNB->common_vars.txdataF[aa][subframe*fp->symbols_per_tti*fp->ofdm_symbol_size],
+openair1/SCHED/ru_procedures.c:425:	        sizeof(int32_t)*fp->ofdm_symbol_size*fp->symbols_per_tti);
+openair1/SCHED/ru_procedures.c:427:    	  if (p<fp->nb_antenna_ports_eNB) {
+openair1/SCHED/ru_procedures.c:439:	      } //if (p<fp->nb_antenna_ports_eNB)
+openair1/SCHED/ru_procedures.c:442:    	  if (p<fp->nb_antenna_ports_eNB || p==5 || p==7 || p==8) {
+openair1/SCHED/ru_procedures.c:443:	        for (l=pdcch_vars->num_pdcch_symbols;l<fp->symbols_per_tti;l++) {
+openair1/SCHED/ru_procedures.c:454:	      } // if (p<fp->nb_antenna_ports_eNB) ...
+openair1/SCHED/ru_procedures.c:469:      for (l=0;l<fp->symbols_per_tti;l++) {
+openair1/SCHED/ru_procedures.c:496:  for (int l=0; l<fp->symbols_per_tti/2; l++) {
+openair1/SCHED/ru_procedures.c:603:  if ((fp->frame_type == TDD) && (subframe_select(fp,subframe) != SF_UL)) return;
+openair1/SCHED/ru_procedures.c:654:                             fp->N_RB_DL,
+openair1/SCHED/ru_procedures.c:655:                             3%(fp->symbols_per_tti/2),// l = symbol within slot
+openair1/SCHED/ru_procedures.c:656:                             3/(fp->symbols_per_tti/2),// Ns = slot number
+openair1/SCHED/ru_procedures.c:662:                                3%(fp->symbols_per_tti/2),
+openair1/SCHED/ru_procedures.c:663:                                3/(fp->symbols_per_tti/2));
+openair1/SCHED/ru_procedures.c:669:                                  fp->N_RB_DL, //N_rb_alloc,
+openair1/SCHED/ru_procedures.c:695:          	/*LOG_M("dmrs_time.m","dmrstime",calibration->drs_ch_estimates_time[0], (fp->ofdm_symbol_size),1,1);
+openair1/SCHED/ru_procedures.c:696:		LOG_M("rxdataF_ext.m","rxdataFext",&calibration->rxdataF_ext[0][36*fp->N_RB_DL], 12*(fp->N_RB_DL),1,1);		
+openair1/SCHED/ru_procedures.c:698:		LOG_M("rxdata.m","rxdata",&ru->common.rxdata[0][0], fp->samples_per_tti*2,1,1);
+openair1/SCHED/ru_procedures.c:705:            LOG_M("rxdata.m","rxdata",&ru->common.rxdata[0][0], fp->samples_per_tti*2,1,1);
+openair1/SCHED/ru_procedures.c:724:  if ((fp->frame_type == TDD) && 
+openair1/SCHED/ru_procedures.c:733:  for (l=0; l<fp->symbols_per_tti/2; l++) {
+openair1/SCHED/phy_procedures_lte_eNb.c:166:  //LOG_D(PHY,"common_signal_procedures: frame %d, subframe %d fdd:%s dir:%s\n",frame,subframe,fp->frame_type == FDD?"FDD":"TDD", subframe_select(fp,subframe) == SF_DL?"DL":"UL?");
+openair1/SCHED/phy_procedures_lte_eNb.c:189:    if (fp->frame_type == FDD) {
+openair1/SCHED/phy_procedures_lte_eNb.c:190:      generate_pss (txdataF, AMP, fp, (fp->Ncp == NORMAL) ? 6 : 5, 0);
+openair1/SCHED/phy_procedures_lte_eNb.c:191:      generate_sss (txdataF, AMP, fp, (fp->Ncp == NORMAL) ? 5 : 4, 0);
+openair1/SCHED/phy_procedures_lte_eNb.c:196:    if (fp->frame_type == TDD) {
+openair1/SCHED/phy_procedures_lte_eNb.c:197:      generate_sss (txdataF, AMP, fp, (fp->Ncp == NORMAL) ? 6 : 5, 1);
+openair1/SCHED/phy_procedures_lte_eNb.c:213:  } else if ((subframe == 1) && (fp->frame_type == TDD)) {
+openair1/SCHED/phy_procedures_lte_eNb.c:217:  else if ((subframe == 5) && (fp->frame_type == FDD)) {
+openair1/SCHED/phy_procedures_lte_eNb.c:218:    generate_pss (txdataF, AMP, &eNB->frame_parms, (fp->Ncp == NORMAL) ? 6 : 5, 10);
+openair1/SCHED/phy_procedures_lte_eNb.c:219:    generate_sss (txdataF, AMP, &eNB->frame_parms, (fp->Ncp == NORMAL) ? 5 : 4, 10);
+openair1/SCHED/phy_procedures_lte_eNb.c:222:  else if ((subframe == 5) && (fp->frame_type == TDD)) {
+openair1/SCHED/phy_procedures_lte_eNb.c:223:    generate_sss (txdataF, AMP, fp, (fp->Ncp == NORMAL) ? 6 : 5, 11);
+openair1/SCHED/phy_procedures_lte_eNb.c:226:  else if ((subframe == 6) && (fp->frame_type == TDD)) {
+openair1/SCHED/phy_procedures_lte_eNb.c:385:  if ((fp->frame_type == TDD) && (subframe_select (fp, subframe) == SF_UL))
+openair1/SCHED/phy_procedures_lte_eNb.c:395:  for (aa = 0; aa < fp->nb_antenna_ports_eNB; aa++) {
+openair1/SCHED/phy_procedures_lte_eNb.c:396:    memset (&eNB->common_vars.txdataF[aa][subframe * fp->ofdm_symbol_size * (fp->symbols_per_tti)], 0, fp->ofdm_symbol_size * (fp->symbols_per_tti) * sizeof (int32_t));
+openair1/SCHED/phy_procedures_lte_eNb.c:651:      switch (fp->N_RB_UL) {
+openair1/SCHED/phy_procedures_lte_eNb.c:674:          LOG_E(PHY,"Unknown number for N_RB_UL %d\n", fp->N_RB_UL);
+openair1/SCHED/phy_procedures_lte_eNb.c:720:          if (fp->frame_type == FDD) {
+openair1/SCHED/phy_procedures_lte_eNb.c:1190:      nPRS = fp->pusch_config_common.ul_ReferenceSignalsPUSCH.nPRS[subframe<<1];
+openair1/SCHED/phy_procedures_lte_eNb.c:1192:                            fp->pusch_config_common.ul_ReferenceSignalsPUSCH.cyclicShift +
+openair1/SCHED/phy_procedures_lte_eNb.c:1208:            fp->pusch_config_common.ul_ReferenceSignalsPUSCH.cyclicShift,
+openair1/SCHED/phy_procedures_lte_eNb.c:1243:          print_CQI(ulsch_harq->o,ulsch_harq->uci_format,0,fp->N_RB_DL);
+openair1/SCHED/phy_procedures_lte_eNb.c:1976:  if ((fp->frame_type == TDD) && (subframe_select(fp,subframe)!=SF_UL)) return;
+openair1/SCHED/fapi_l1.c:760:  //if ((fp->frame_type == TDD) && (subframe_select(fp,subframe)==SF_UL)) return;
+openair1/PHY/MODULATION/slot_fep_ul.c:40:  unsigned char symbol = l+((7-fp->Ncp)*(Ns&1)); ///symbol within sub-frame
+openair1/PHY/MODULATION/slot_fep_ul.c:41:  unsigned int nb_prefix_samples = (no_prefix ? 0 : fp->nb_prefix_samples);
+openair1/PHY/MODULATION/slot_fep_ul.c:42:  unsigned int nb_prefix_samples0 = (no_prefix ? 0 : fp->nb_prefix_samples0);
+openair1/PHY/MODULATION/slot_fep_ul.c:50:  unsigned int frame_length_samples = fp->samples_per_tti * 10;
+openair1/PHY/MODULATION/slot_fep_ul.c:53:  switch (fp->ofdm_symbol_size) {
+openair1/PHY/MODULATION/slot_fep_ul.c:85:    slot_offset = fp->ofdm_symbol_size * (fp->symbols_per_tti>>1) * (Ns&1);
+openair1/PHY/MODULATION/slot_fep_ul.c:88:    slot_offset = (fp->samples_per_tti>>1) * (Ns&1);
+openair1/PHY/MODULATION/slot_fep_ul.c:91:  if (l<0 || l>=7-fp->Ncp) {
+openair1/PHY/MODULATION/slot_fep_ul.c:92:    LOG_E(PHY,"slot_fep: l must be between 0 and %d\n",7-fp->Ncp);
+openair1/PHY/MODULATION/slot_fep_ul.c:110:	    dB_fixed(signal_energy(&common->rxdata_7_5kHz[aa][rx_offset],fp->ofdm_symbol_size)));
+openair1/PHY/MODULATION/slot_fep_ul.c:113:           (int16_t *)&common->rxdataF[aa][fp->ofdm_symbol_size*symbol],
+openair1/PHY/MODULATION/slot_fep_ul.c:118:      rx_offset += (fp->ofdm_symbol_size+nb_prefix_samples)*l;
+openair1/PHY/MODULATION/slot_fep_ul.c:123:	       fp->ofdm_symbol_size*sizeof(int));
+openair1/PHY/MODULATION/slot_fep_ul.c:125:             (short*)  &common->rxdataF[aa][fp->ofdm_symbol_size*symbol],
+openair1/PHY/MODULATION/slot_fep_ul.c:131:           (short*)&common->rxdataF[aa][fp->ofdm_symbol_size*symbol],
+openair1/PHY/NR_UE_TRANSPORT/pss_nr.c:185:  AssertFatal(fp->ofdm_symbol_size > 127,"Illegal ofdm_symbol_size %d\n",fp->ofdm_symbol_size);
+openair1/PHY/NR_UE_TRANSPORT/pss_nr.c:190:  unsigned int length = fp->ofdm_symbol_size;
+openair1/PHY/NR_UE_TRANSPORT/pss_nr.c:268:  unsigned int  k = fp->first_carrier_offset + fp->ssb_start_subcarrier + 56; //and
+openair1/PHY/NR_UE_TRANSPORT/pss_nr.c:269:  if (k>= fp->ofdm_symbol_size) k-=fp->ofdm_symbol_size;
+openair1/PHY/NR_UE_TRANSPORT/pucch_nr.c:960:  //x2 = (rnti) + ((uint32_t)(1+nr_tti_tx)<<16)*(1+(fp->Nid_cell<<1));
+openair1/PHY/NR_UE_TRANSPORT/nr_prach.c:114:  return(tdd_preamble_map[fp->prach_config_common.prach_ConfigInfo.prach_ConfigIndex][fp->tdd_config].num_prach);
+openair1/PHY/NR_UE_TRANSPORT/nr_prach.c:120:  return(tdd_preamble_map[fp->prach_config_common.prach_ConfigInfo.prach_ConfigIndex][fp->tdd_config].map[tdd_map_index].f_ra);
+openair1/PHY/NR_UE_TRANSPORT/nr_initial_sync.c:218:  int n_ssb_crb=(fp->N_RB_DL-20);
+openair1/PHY/NR_UE_TRANSPORT/nr_initial_sync.c:220:  fp->Ncp=NORMAL;
+openair1/PHY/NR_UE_TRANSPORT/nr_initial_sync.c:221:  fp->frame_type=TDD;
+openair1/PHY/NR_UE_TRANSPORT/nr_initial_sync.c:223:  nr_init_frame_parms_ue(fp,NR_MU_1,NORMAL,fp->N_RB_DL,n_ssb_crb,0);
+openair1/PHY/NR_UE_TRANSPORT/nr_initial_sync.c:224:  LOG_D(PHY,"nr_initial sync ue RB_DL %d\n", fp->N_RB_DL);
+openair1/PHY/NR_UE_TRANSPORT/nr_initial_sync.c:252:    if (sync_pos >= fp->nb_prefix_samples)
+openair1/PHY/NR_UE_TRANSPORT/nr_initial_sync.c:253:      ue->ssb_offset = sync_pos - fp->nb_prefix_samples;
+openair1/PHY/NR_UE_TRANSPORT/nr_initial_sync.c:255:      ue->ssb_offset = sync_pos + (fp->samples_per_subframe * 10) - fp->nb_prefix_samples;
+openair1/PHY/NR_UE_TRANSPORT/nr_initial_sync.c:264:	double s_time = 1/(1.0e3*fp->samples_per_subframe);  // sampling time
+openair1/PHY/NR_UE_TRANSPORT/nr_initial_sync.c:268:  	int end = start + 4*(fp->ofdm_symbol_size + fp->nb_prefix_samples);  // loop over samples in 4 symbols (ssb size), including prefix  
+openair1/PHY/NR_UE_TRANSPORT/nr_initial_sync.c:271:	  for (int ar=0; ar<fp->nb_antennas_rx; ar++) {
+openair1/PHY/NR_UE_TRANSPORT/nr_initial_sync.c:281:    if (sync_pos < (NR_NUMBER_OF_SUBFRAMES_PER_FRAME*fp->samples_per_subframe - (NB_SYMBOLS_PBCH * fp->ofdm_symbol_size))) {
+openair1/PHY/NR_UE_TRANSPORT/nr_initial_sync.c:314:        sync_pos_frame = (fp->ofdm_symbol_size + fp->nb_prefix_samples0)+((ue->symbol_offset)-1)*(fp->ofdm_symbol_size + fp->nb_prefix_samples);
+openair1/PHY/NR_UE_TRANSPORT/nr_initial_sync.c:320:    int nb_prefix_samples0 = fp->nb_prefix_samples0;
+openair1/PHY/NR_UE_TRANSPORT/nr_initial_sync.c:321:    fp->nb_prefix_samples0 = fp->nb_prefix_samples;
+openair1/PHY/NR_UE_TRANSPORT/nr_initial_sync.c:325:    fp->nb_prefix_samples0 = nb_prefix_samples0;	
+openair1/PHY/NR_UE_TRANSPORT/nr_initial_sync.c:337:            fp->Nid_cell,metric_tdd_ncp,phase_tdd_ncp,ret);
+openair1/PHY/NR_UE_TRANSPORT/nr_initial_sync.c:403:	  duplex_string[fp->frame_type],
+openair1/PHY/NR_UE_TRANSPORT/nr_initial_sync.c:404:	  prefix_string[fp->Ncp],
+openair1/PHY/NR_UE_TRANSPORT/nr_initial_sync.c:405:	  fp->Nid_cell,
+openair1/PHY/NR_UE_TRANSPORT/nr_initial_sync.c:406:	  fp->N_RB_DL,
+openair1/PHY/NR_UE_TRANSPORT/nr_initial_sync.c:407:	  fp->phich_config_common.phich_duration,
+openair1/PHY/NR_UE_TRANSPORT/nr_initial_sync.c:408:	  phich_string[fp->phich_config_common.phich_resource],
+openair1/PHY/NR_UE_TRANSPORT/nr_initial_sync.c:409:	  fp->nb_antenna_ports_eNB);*/
+openair1/PHY/NR_UE_TRANSPORT/nr_initial_sync.c:449:    ue->measurements.rx_power_avg[0] = rx_power/fp->nb_antennas_rx;
+openair1/PHY/NR_REFSIG/nr_gold.c:35:  Lmax = fp->Lmax;
+openair1/PHY/NR_REFSIG/nr_gold.c:64:  for (uint8_t slot=0; slot<fp->slots_per_frame; slot++) {
+openair1/PHY/NR_REFSIG/nr_gold.c:65:    for (uint8_t symb=0; symb<fp->symbols_per_slot; symb++) {
+openair1/PHY/NR_REFSIG/nr_gold.c:90:  for (uint8_t slot=0; slot<fp->slots_per_frame; slot++) {
+openair1/PHY/NR_REFSIG/nr_gold.c:91:    for (uint8_t symb=0; symb<fp->symbols_per_slot; symb++) {
+openair1/PHY/NR_REFSIG/nr_gold.c:93:        x2 = ((1<<17) * (fp->symbols_per_slot*slot+symb+1) * ((N_n_scid[n_scid]<<1)+1) +((N_n_scid[n_scid]<<1)+n_scid));
+openair1/PHY/NR_REFSIG/nr_gold_ue.c:175:  for (slot=0; slot<fp->slots_per_frame; slot++) {
+openair1/PHY/NR_REFSIG/nr_gold_ue.c:177:    for (symb=0; symb<fp->symbols_per_slot; symb++) {
+openair1/PHY/NR_REFSIG/nr_gold_ue.c:180:      x2 = ((1<<17) * (fp->symbols_per_slot*slot+symb+1) * ((N_n_scid[n_scid]<<1)+1) +((N_n_scid[n_scid]<<1)+n_scid));
+openair1/PHY/LTE_TRANSPORT/edci.c:283:  int nsymb = (fp->Ncp==0) ? 14:12;
+openair1/PHY/LTE_TRANSPORT/edci.c:285:  int symbol_offset = (uint32_t)fp->ofdm_symbol_size*(subframe*nsymb);
+openair1/PHY/LTE_TRANSPORT/edci.c:295:    AssertFatal(fp->frame_type == FDD, "TDD is not yet supported for MPDCCH\n");
+openair1/PHY/LTE_TRANSPORT/edci.c:296:    AssertFatal(fp->Ncp == NORMAL, "Extended Prefix not yet supported for MPDCCH\n");
+openair1/PHY/LTE_TRANSPORT/edci.c:298:    AssertFatal(fp->N_RB_DL == 50 || fp->N_RB_DL == 100, "Only N_RB_DL=50,100 for MPDCCH\n");
+openair1/PHY/LTE_TRANSPORT/edci.c:344:    if (fp->nb_antenna_ports_eNB == 1)
+openair1/PHY/LTE_TRANSPORT/edci.c:359:    switch (fp->N_RB_DL) {
+openair1/PHY/LTE_TRANSPORT/edci.c:374:      AssertFatal(1 == 0, "Illegal N_RB_DL %d\n", fp->N_RB_DL);
+openair1/PHY/LTE_TRANSPORT/edci.c:378:    int             re_offset = fp->first_carrier_offset + (12 * nb_i0) + (mdci->narrowband * 12 * 6);
+openair1/PHY/LTE_TRANSPORT/edci.c:379:    if (re_offset > fp->ofdm_symbol_size)
+openair1/PHY/LTE_TRANSPORT/edci.c:380:      re_offset -= (fp->ofdm_symbol_size - 1);
+openair1/PHY/LTE_TRANSPORT/edci.c:393:	    frame,subframe,i,mpdcchtab[i]+re_offset,mpdcchtab[i]/fp->ofdm_symbol_size,
+openair1/PHY/LTE_TRANSPORT/edci.c:406:      Nacc = fp->frame_type == FDD ? 4 : 10;
+openair1/PHY/LTE_TRANSPORT/edci.c:410:    if (fp->frame_type == FDD || Nacc == 1)
+openair1/PHY/LTE_TRANSPORT/edci.c:436:	if (nprb<fp->N_RB_DL) {
+openair1/PHY/LTE_TRANSPORT/edci.c:437:	  re_offset = fp->first_carrier_offset + (12 * nprb);
+openair1/PHY/LTE_TRANSPORT/edci.c:438:	  if (re_offset > fp->ofdm_symbol_size)
+openair1/PHY/LTE_TRANSPORT/edci.c:439:	    re_offset -= (fp->ofdm_symbol_size - 1);
+openair1/PHY/LTE_TRANSPORT/edci.c:440:	  txF = &txdataF[0][symbol_offset + re_offset + fp->ofdm_symbol_size*soffset[lprime]];
+openair1/PHY/LTE_TRANSPORT/edci.c:469:		  re_offset + fp->ofdm_symbol_size*soffset[lprime]+(5*mprime), 
+openair1/PHY/LTE_TRANSPORT/prach.c:101:    nb_rx = fp->nb_antennas_rx;
+openair1/PHY/LTE_TRANSPORT/prach.c:108:  frame_type          = fp->frame_type;
+openair1/PHY/LTE_TRANSPORT/prach.c:113:    AssertFatal(fp->prach_emtc_config_common.prach_Config_enabled==1,
+openair1/PHY/LTE_TRANSPORT/prach.c:115:    AssertFatal(fp->prach_emtc_config_common.prach_ConfigInfo.prach_CElevel_enable[ce_level]==1,
+openair1/PHY/LTE_TRANSPORT/prach.c:117:    rootSequenceIndex   = fp->prach_emtc_config_common.rootSequenceIndex;
+openair1/PHY/LTE_TRANSPORT/prach.c:118:    prach_ConfigIndex   = fp->prach_emtc_config_common.prach_ConfigInfo.prach_ConfigIndex[ce_level];
+openair1/PHY/LTE_TRANSPORT/prach.c:119:    Ncs_config          = fp->prach_emtc_config_common.prach_ConfigInfo.zeroCorrelationZoneConfig;
+openair1/PHY/LTE_TRANSPORT/prach.c:120:    restricted_set      = fp->prach_emtc_config_common.prach_ConfigInfo.highSpeedFlag;
+openair1/PHY/LTE_TRANSPORT/prach.c:122:                          fp->prach_emtc_config_common.prach_ConfigInfo.prach_FreqOffset[ce_level],
+openair1/PHY/LTE_TRANSPORT/prach.c:131:    rootSequenceIndex   = fp->prach_config_common.rootSequenceIndex;
+openair1/PHY/LTE_TRANSPORT/prach.c:132:    prach_ConfigIndex   = fp->prach_config_common.prach_ConfigInfo.prach_ConfigIndex;
+openair1/PHY/LTE_TRANSPORT/prach.c:133:    Ncs_config          = fp->prach_config_common.prach_ConfigInfo.zeroCorrelationZoneConfig;
+openair1/PHY/LTE_TRANSPORT/prach.c:134:    restricted_set      = fp->prach_config_common.prach_ConfigInfo.highSpeedFlag;
+openair1/PHY/LTE_TRANSPORT/prach.c:136:                          fp->prach_config_common.prach_ConfigInfo.prach_FreqOffset,
+openair1/PHY/LTE_TRANSPORT/prach.c:156:				     fp->prach_emtc_config_common.prach_ConfigInfo.prach_FreqOffset[ce_level],
+openair1/PHY/LTE_TRANSPORT/prach.c:159:				     fp->prach_emtc_config_common.prach_ConfigInfo.prach_numRepetitionPerPreambleAttempt[ce_level]);
+openair1/PHY/LTE_TRANSPORT/prach.c:169:          if (((eNB->proc.frame_prach)&1023) < 20) LOG_I(PHY,"PRACH (eNB) : running rx_prach for subframe %d, prach_FreqOffset %d, prach_ConfigIndex %d , rootSequenceIndex %d\n", subframe,fp->prach_config_common.prach_ConfigInfo.prach_FreqOffset,prach_ConfigIndex,rootSequenceIndex);
+openair1/PHY/LTE_TRANSPORT/prach.c:181:              br_flag,ce_level,ru->proc.frame_prach,subframe,fp->prach_emtc_config_common.prach_ConfigInfo.prach_FreqOffset[ce_level],prach_ConfigIndex);
+openair1/PHY/LTE_TRANSPORT/prach.c:191:              subframe,fp->prach_config_common.prach_ConfigInfo.prach_FreqOffset,prach_ConfigIndex);
+openair1/PHY/LTE_TRANSPORT/prach.c:201:      prach[aa] = (int16_t *)&ru->common.rxdata[aa][(subframe*fp->samples_per_tti)-ru->N_TA_offset];
+openair1/PHY/LTE_TRANSPORT/prach.c:204:        int32_t en0=signal_energy((int32_t *)prach[aa],fp->samples_per_tti);
+openair1/PHY/LTE_TRANSPORT/prach.c:212:          LOG_M(buffer,"prach_rx",prach[0],fp->samples_per_tti,1,13);
+openair1/PHY/LTE_TRANSPORT/prach.c:218:          if (prach[0]!= NULL) LOG_M("prach_rx","prach_rx",prach[0],fp->samples_per_tti,1,1);
+openair1/PHY/LTE_TRANSPORT/prach.c:221:                ru->idx,br_flag,ce_level,ru->proc.frame_prach,subframe,fp->samples_per_tti,
+openair1/PHY/LTE_TRANSPORT/prach.c:223:                (subframe*fp->samples_per_tti)-ru->N_TA_offset);
+openair1/PHY/LTE_TRANSPORT/prach.c:274:  switch (fp->N_RB_UL) {
+openair1/PHY/LTE_TRANSPORT/prach.c:296:      if (fp->threequarter_fs == 1)
+openair1/PHY/LTE_TRANSPORT/prach.c:306:      LOG_D(PHY,"rx_prach: Doing FFT for N_RB_UL %d nb_rx:%d Ncp:%d\n",fp->N_RB_UL, nb_rx, Ncp);
+openair1/PHY/LTE_TRANSPORT/prach.c:314:      switch (fp->N_RB_UL) {
+openair1/PHY/LTE_TRANSPORT/prach.c:380:          if (fp->threequarter_fs==0) {
+openair1/PHY/LTE_TRANSPORT/prach.c:403:      k = (12*n_ra_prb) - 6*fp->N_RB_UL;
+openair1/PHY/LTE_TRANSPORT/prach.c:406:        k+=(fp->ofdm_symbol_size);
+openair1/PHY/LTE_TRANSPORT/prach.c:412:      int dftsize_x2 = fp->ofdm_symbol_size*24;
+openair1/PHY/LTE_TRANSPORT/prach.c:605:          if (k==(12*2*fp->ofdm_symbol_size))
+openair1/PHY/LTE_TRANSPORT/prach.c:678:      k = (12*n_ra_prb) - 6*fp->N_RB_UL;
+openair1/PHY/LTE_TRANSPORT/prach.c:680:      if (k<0) k+=fp->ofdm_symbol_size;
+openair1/PHY/LTE_TRANSPORT/dci_tools.c:116:  switch (fp->N_RB_DL) {
+openair1/PHY/LTE_TRANSPORT/dci_tools.c:118:    if (fp->frame_type == TDD) {
+openair1/PHY/LTE_TRANSPORT/dci_tools.c:147:    if (fp->frame_type == TDD) {
+openair1/PHY/LTE_TRANSPORT/dci_tools.c:176:    if (fp->frame_type == TDD) {
+openair1/PHY/LTE_TRANSPORT/dci_tools.c:206:    if (fp->frame_type == TDD) {
+openair1/PHY/LTE_TRANSPORT/dci_tools.c:255:    switch (fp->N_RB_DL) {
+openair1/PHY/LTE_TRANSPORT/dci_tools.c:361:    switch (fp->N_RB_DL) {
+openair1/PHY/LTE_TRANSPORT/dci_tools.c:363:      if (fp->frame_type == TDD) {
+openair1/PHY/LTE_TRANSPORT/dci_tools.c:397:      if (fp->frame_type == TDD) {
+openair1/PHY/LTE_TRANSPORT/dci_tools.c:429:      if (fp->frame_type == TDD) {
+openair1/PHY/LTE_TRANSPORT/dci_tools.c:463:      if (fp->frame_type == TDD) {
+openair1/PHY/LTE_TRANSPORT/dci_tools.c:514:    dlsch0_harq->mimo_mode     = (fp->nb_antenna_ports_eNB == 1) ? SISO : ALAMOUTI;
+openair1/PHY/LTE_TRANSPORT/dci_tools.c:550:    switch (fp->N_RB_DL) {
+openair1/PHY/LTE_TRANSPORT/dci_tools.c:552:      if (fp->frame_type == TDD) {
+openair1/PHY/LTE_TRANSPORT/dci_tools.c:579:      if (fp->frame_type == TDD) {
+openair1/PHY/LTE_TRANSPORT/dci_tools.c:606:      if (fp->frame_type == TDD) {
+openair1/PHY/LTE_TRANSPORT/dci_tools.c:632:      if (fp->frame_type == TDD) {
+openair1/PHY/LTE_TRANSPORT/dci_tools.c:668:    conv_rballoc (rel8->resource_allocation_type, rel8->resource_block_coding, fp->N_RB_DL, dlsch0_harq->rb_alloc);
+openair1/PHY/LTE_TRANSPORT/dci_tools.c:670:    dlsch0_harq->nb_rb = conv_nprb (rel8->resource_allocation_type, rel8->resource_block_coding, fp->N_RB_DL);
+openair1/PHY/LTE_TRANSPORT/dci_tools.c:682:      dlsch0_harq->mimo_mode = (fp->nb_antenna_ports_eNB == 1) ? SISO : ALAMOUTI;
+openair1/PHY/LTE_TRANSPORT/dci_tools.c:723:    switch (fp->N_RB_DL) {
+openair1/PHY/LTE_TRANSPORT/dci_tools.c:725:      if (fp->frame_type == TDD) {
+openair1/PHY/LTE_TRANSPORT/dci_tools.c:759:      if (fp->frame_type == TDD) {
+openair1/PHY/LTE_TRANSPORT/dci_tools.c:793:      if (fp->frame_type == TDD) {
+openair1/PHY/LTE_TRANSPORT/dci_tools.c:826:      if (fp->frame_type == TDD) {
+openair1/PHY/LTE_TRANSPORT/dci_tools.c:883:    conv_rballoc (rel8->resource_allocation_type, rel8->resource_block_coding, fp->N_RB_DL, dlsch0_harq->rb_alloc);
+openair1/PHY/LTE_TRANSPORT/dci_tools.c:886:    dlsch0_harq->nb_rb = conv_nprb (rel8->resource_allocation_type, rel8->resource_block_coding, fp->N_RB_DL);
+openair1/PHY/LTE_TRANSPORT/dci_tools.c:933:    if (fp->nb_antenna_ports_eNB == 2) {
+openair1/PHY/LTE_TRANSPORT/dci_tools.c:950:    } else if (fp->nb_antenna_ports_eNB == 4) { // 4 antenna case
+openair1/PHY/LTE_TRANSPORT/dci_tools.c:982:          if (fp->N_RB_DL <= 56) {
+openair1/PHY/LTE_TRANSPORT/dci_tools.c:1045:      LOG_E (PHY, "Illegal number of antennas for eNB %d\n", fp->nb_antenna_ports_eNB);
+openair1/PHY/LTE_TRANSPORT/dci_tools.c:1072:    switch (fp->N_RB_DL) {
+openair1/PHY/LTE_TRANSPORT/dci_tools.c:1074:      if (fp->frame_type == TDD) {
+openair1/PHY/LTE_TRANSPORT/dci_tools.c:1108:      if (fp->frame_type == TDD) {
+openair1/PHY/LTE_TRANSPORT/dci_tools.c:1144:      if (fp->frame_type == TDD) {
+openair1/PHY/LTE_TRANSPORT/dci_tools.c:1179:      if (fp->frame_type == TDD) {
+openair1/PHY/LTE_TRANSPORT/dci_tools.c:1335:      conv_rballoc (rel8->resource_allocation_type, rel8->resource_block_coding, fp->N_RB_DL, dlsch0_harq->rb_alloc);
+openair1/PHY/LTE_TRANSPORT/dci_tools.c:1337:      dlsch0_harq->nb_rb = conv_nprb (rel8->resource_allocation_type, rel8->resource_block_coding, fp->N_RB_DL);
+openair1/PHY/LTE_TRANSPORT/dci_tools.c:1344:      conv_rballoc (rel8->resource_allocation_type, rel8->resource_block_coding, fp->N_RB_DL, dlsch1_harq->rb_alloc);
+openair1/PHY/LTE_TRANSPORT/dci_tools.c:1346:      dlsch1_harq->nb_rb = conv_nprb (rel8->resource_allocation_type, rel8->resource_block_coding, fp->N_RB_DL);
+openair1/PHY/LTE_TRANSPORT/dci_tools.c:1358:    if (fp->nb_antenna_ports_eNB == 2) {
+openair1/PHY/LTE_TRANSPORT/dci_tools.c:1454:    } else if (fp->nb_antenna_ports_eNB == 4) {
+openair1/PHY/LTE_TRANSPORT/dci_tools.c:1560:  AssertFatal (fp->frame_type == FDD, "TDD is not supported yet for eMTC\n");
+openair1/PHY/LTE_TRANSPORT/dci_tools.c:1561:  AssertFatal (fp->N_RB_DL == 25 || fp->N_RB_DL == 50 || fp->N_RB_DL == 100, "eMTC only with N_RB_DL = 25,50,100\n");
+openair1/PHY/LTE_TRANSPORT/dci_tools.c:1568:    switch (fp->N_RB_DL) {
+openair1/PHY/LTE_TRANSPORT/dci_tools.c:1638:    switch (fp->N_RB_DL) {
+openair1/PHY/LTE_TRANSPORT/dci_tools.c:1677:    switch (fp->N_RB_DL) {
+openair1/PHY/LTE_TRANSPORT/dci_tools.c:1735:		     fp->N_RB_DL,
+openair1/PHY/LTE_TRANSPORT/dci_tools.c:1746:  dlsch0_harq->mimo_mode = (fp->nb_antenna_ports_eNB == 1) ? SISO : ALAMOUTI;
+openair1/PHY/LTE_TRANSPORT/if4_tools.c:67:  int nsym = fp->symbols_per_tti;
+openair1/PHY/LTE_TRANSPORT/if4_tools.c:75:      nsym=fp->dl_symbols_in_S_subframe;
+openair1/PHY/LTE_TRANSPORT/if4_tools.c:78:    db_fulllength = 12*fp->N_RB_DL;
+openair1/PHY/LTE_TRANSPORT/if4_tools.c:80:    slotoffsetF = 1;//(subframe)*(fp->ofdm_symbol_size)*((fp->Ncp==1) ? 12 : 14) + 1;
+openair1/PHY/LTE_TRANSPORT/if4_tools.c:81:    blockoffsetF = slotoffsetF + fp->ofdm_symbol_size - db_halflength - 1; 
+openair1/PHY/LTE_TRANSPORT/if4_tools.c:119:      slotoffsetF  += fp->ofdm_symbol_size;
+openair1/PHY/LTE_TRANSPORT/if4_tools.c:120:      blockoffsetF += fp->ofdm_symbol_size;    
+openair1/PHY/LTE_TRANSPORT/if4_tools.c:124:    db_fulllength = 12*fp->N_RB_UL;
+openair1/PHY/LTE_TRANSPORT/if4_tools.c:127:    blockoffsetF = slotoffsetF + fp->ofdm_symbol_size - db_halflength; 
+openair1/PHY/LTE_TRANSPORT/if4_tools.c:132:      nsym=fp->ul_symbols_in_S_subframe;
+openair1/PHY/LTE_TRANSPORT/if4_tools.c:133:      slotoffsetF  += (fp->ofdm_symbol_size*(fp->symbols_per_tti-nsym));
+openair1/PHY/LTE_TRANSPORT/if4_tools.c:134:      blockoffsetF += (fp->ofdm_symbol_size*(fp->symbols_per_tti-nsym));
+openair1/PHY/LTE_TRANSPORT/if4_tools.c:144:      for (symbol_id=fp->symbols_per_tti-nsym; symbol_id<fp->symbols_per_tti; symbol_id++) {
+openair1/PHY/LTE_TRANSPORT/if4_tools.c:202:	slotoffsetF  += fp->ofdm_symbol_size;
+openair1/PHY/LTE_TRANSPORT/if4_tools.c:203:	blockoffsetF += fp->ofdm_symbol_size;
+openair1/PHY/LTE_TRANSPORT/if4_tools.c:301:    db_fulllength = (12*fp->N_RB_DL)*ru->nb_tx; 
+openair1/PHY/LTE_TRANSPORT/if4_tools.c:303:    db_fulllength = (12*fp->N_RB_UL)*ru->nb_rx;     
+openair1/PHY/LTE_TRANSPORT/if4_tools.c:350:    slotoffsetF = (*symbol_number)*(fp->ofdm_symbol_size)+1;// + (*subframe)*(fp->ofdm_symbol_size)*((fp->Ncp==1) ? 12 : 14) + 1;
+openair1/PHY/LTE_TRANSPORT/if4_tools.c:351:    blockoffsetF = slotoffsetF + fp->ofdm_symbol_size - db_halflength - 1; 
+openair1/PHY/LTE_TRANSPORT/if4_tools.c:377:    slotoffsetF = (*symbol_number)*(fp->ofdm_symbol_size);
+openair1/PHY/LTE_TRANSPORT/if4_tools.c:378:    blockoffsetF = slotoffsetF + fp->ofdm_symbol_size - db_halflength;
+openair1/PHY/LTE_TRANSPORT/prach_common.c:382:  return(tdd_preamble_map[fp->prach_config_common.prach_ConfigInfo.prach_ConfigIndex][fp->tdd_config].num_prach);
+openair1/PHY/LTE_TRANSPORT/prach_common.c:388:  return(tdd_preamble_map[fp->prach_config_common.prach_ConfigInfo.prach_ConfigIndex][fp->tdd_config].map[tdd_map_index].f_ra);
+openair1/PHY/LTE_TRANSPORT/if5_tools.c:73:  int32_t *txp[fp->nb_antennas_tx], *rxp[fp->nb_antennas_rx]; 
+openair1/PHY/LTE_TRANSPORT/if5_tools.c:76:  int8_t dummy_buffer[fp->samples_per_tti*2];
+openair1/PHY/LTE_TRANSPORT/if5_tools.c:99:        for (i=0; i < fp->nb_antennas_tx; i++) {
+openair1/PHY/LTE_TRANSPORT/if5_tools.c:101:            j = (uint16_t*) &ru->common.txdata[i][subframe*fp->samples_per_tti+packet_id*spp_eth+element_id];
+openair1/PHY/LTE_TRANSPORT/if5_tools.c:114:				    fp->nb_antennas_tx,
+openair1/PHY/LTE_TRANSPORT/if5_tools.c:122:      for (i=0; i < fp->nb_antennas_tx; i++)
+openair1/PHY/LTE_TRANSPORT/if5_tools.c:123:        txp[i] = (void*)&ru->common.txdata[i][subframe*fp->samples_per_tti];
+openair1/PHY/LTE_TRANSPORT/if5_tools.c:133:				    fp->nb_antennas_tx,
+openair1/PHY/LTE_TRANSPORT/if5_tools.c:138:        for (i=0; i < fp->nb_antennas_tx; i++)
+openair1/PHY/LTE_TRANSPORT/if5_tools.c:154:        for (i=0; i < fp->nb_antennas_rx; i++) {
+openair1/PHY/LTE_TRANSPORT/if5_tools.c:156:            j = (uint16_t*) &ru->common.rxdata[i][subframe*fp->samples_per_tti+packet_id*spp_eth+element_id];
+openair1/PHY/LTE_TRANSPORT/if5_tools.c:169:                                     fp->nb_antennas_rx,
+openair1/PHY/LTE_TRANSPORT/if5_tools.c:176:      for (i=0; i < fp->nb_antennas_rx; i++)
+openair1/PHY/LTE_TRANSPORT/if5_tools.c:177:        rxp[i] = (void*)&ru->common.rxdata[i][subframe*fp->samples_per_tti];
+openair1/PHY/LTE_TRANSPORT/if5_tools.c:187:				    fp->nb_antennas_rx,
+openair1/PHY/LTE_TRANSPORT/if5_tools.c:192:        for (i=0; i < fp->nb_antennas_rx; i++)
+openair1/PHY/LTE_TRANSPORT/if5_tools.c:224:      for (packet_id=0; packet_id<fp->samples_per_tti/db_fulllength; packet_id++) {
+openair1/PHY/LTE_TRANSPORT/if5_tools.c:269:      for (packet_id=0; packet_id<fp->samples_per_tti/db_fulllength; packet_id++) {
+openair1/PHY/LTE_TRANSPORT/if5_tools.c:301:      txe = dB_fixed(signal_energy(txp[0],fp->samples_per_tti));
+openair1/PHY/LTE_TRANSPORT/if5_tools.c:303:        LOG_D(PHY,"[Mobipass] frame:%d, subframe:%d, energy %d\n", (proc_timestamp/(10*fp->samples_per_tti))&1023,subframe, txe);
+openair1/PHY/LTE_TRANSPORT/if5_tools.c:316:      LOG_M("txsigmb.m","txs",(void*)dummy_buffer, fp->samples_per_tti,1, 5); 
+openair1/PHY/LTE_TRANSPORT/if5_tools.c:330:  int32_t *txp[fp->nb_antennas_tx], *rxp[fp->nb_antennas_rx]; 
+openair1/PHY/LTE_TRANSPORT/if5_tools.c:334:  //int8_t dummy_buffer_rx[fp->samples_per_tti*2];
+openair1/PHY/LTE_TRANSPORT/if5_tools.c:366:				   fp->nb_antennas_tx);
+openair1/PHY/LTE_TRANSPORT/if5_tools.c:373:        for (i=0; i < fp->nb_antennas_tx; i++) {
+openair1/PHY/LTE_TRANSPORT/if5_tools.c:375:            j      = (uint16_t*) &ru->common.txdata[i][subframe*fp->samples_per_tti+packet_id*spp_eth+element_id];
+openair1/PHY/LTE_TRANSPORT/if5_tools.c:385:      for (i=0; i < fp->nb_antennas_tx; i++)
+openair1/PHY/LTE_TRANSPORT/if5_tools.c:386:        txp[i] = (void*)&ru->common.txdata[i][subframe*fp->samples_per_tti];
+openair1/PHY/LTE_TRANSPORT/if5_tools.c:396:				   fp->nb_antennas_tx);
+openair1/PHY/LTE_TRANSPORT/if5_tools.c:400:        for (i=0; i < fp->nb_antennas_tx; i++)
+openair1/PHY/LTE_TRANSPORT/if5_tools.c:422:				   fp->nb_antennas_rx);
+openair1/PHY/LTE_TRANSPORT/if5_tools.c:428:        for (i=0; i < fp->nb_antennas_rx; i++) {
+openair1/PHY/LTE_TRANSPORT/if5_tools.c:430:            j      = (uint16_t*) &ru->common.rxdata[i][subframe*fp->samples_per_tti+packet_id*spp_eth+element_id];
+openair1/PHY/LTE_TRANSPORT/if5_tools.c:440:      for (i=0; i < fp->nb_antennas_rx; i++)
+openair1/PHY/LTE_TRANSPORT/if5_tools.c:441:        rxp[i] = (void*)&ru->common.rxdata[i][subframe*fp->samples_per_tti];
+openair1/PHY/LTE_TRANSPORT/if5_tools.c:451:				   fp->nb_antennas_rx);
+openair1/PHY/LTE_TRANSPORT/if5_tools.c:455:        for (i=0; i < fp->nb_antennas_rx; i++)
+openair1/PHY/LTE_TRANSPORT/if5_tools.c:465:      openair0_timestamp timestamp_mobipass[fp->samples_per_tti/db_fulllength];
+openair1/PHY/LTE_TRANSPORT/if5_tools.c:479:      while(packet_id<fp->samples_per_tti/db_fulllength) {
+openair1/PHY/LTE_TRANSPORT/if5_tools.c:504:      openair0_timestamp timestamp_mobipass[fp->samples_per_tti/db_fulllength];
+openair1/PHY/LTE_TRANSPORT/if5_tools.c:526:   //   while(packet_id<fp->samples_per_tti/db_fulllength) {
+openair1/PHY/LTE_TRANSPORT/if5_tools.c:545:          packet_id = packet_id % (fp->samples_per_tti/db_fulllength);
+openair1/PHY/LTE_TRANSPORT/if5_tools.c:566:      while(packet_id<fp->samples_per_tti/db_fulllength) {
+openair1/PHY/LTE_TRANSPORT/if5_tools.c:617:	  rxe = dB_fixed(signal_energy(rxp[0],fp->samples_per_tti)); 
+openair1/PHY/LTE_TRANSPORT/if5_tools.c:619:	    LOG_I(PHY,"[Mobipass] frame:%d, subframe:%d, energy %d\n", (*proc_timestamp/(10*fp->samples_per_tti))&1023,subframe, rxe);
+openair1/PHY/LTE_TRANSPORT/if5_tools.c:621:	    //    LOG_M("rxsigmb.m","rxs",(void*)dummy_buffer_rx, fp->samples_per_tti,1, 5); 
+openair1/PHY/INIT/lte_init.c:126:  fp->N_RB_DL                            = dl_Bandwidth;
+openair1/PHY/INIT/lte_init.c:127:  fp->N_RB_UL                            = ul_Bandwidth;
+openair1/PHY/INIT/lte_init.c:128:  fp->Nid_cell                           = Nid_cell;
+openair1/PHY/INIT/lte_init.c:129:  fp->nushift                            = fp->Nid_cell%6;
+openair1/PHY/INIT/lte_init.c:130:  fp->eutra_band                         = eutra_band;
+openair1/PHY/INIT/lte_init.c:131:  fp->Ncp                                = Ncp;
+openair1/PHY/INIT/lte_init.c:132:  fp->Ncp_UL                             = Ncp;
+openair1/PHY/INIT/lte_init.c:133:  fp->nb_antenna_ports_eNB               = p_eNB;
+openair1/PHY/INIT/lte_init.c:135:  fp->threequarter_fs = 0;
+openair1/PHY/INIT/lte_init.c:139:  fp->phich_config_common.phich_resource = phich_resource_table[cfg->phich_config.phich_resource.value];
+openair1/PHY/INIT/lte_init.c:140:  fp->phich_config_common.phich_duration = cfg->phich_config.phich_duration.value;
+openair1/PHY/INIT/lte_init.c:142:  fp->dl_CarrierFreq = from_earfcn (eutra_band, dl_CarrierFreq);
+openair1/PHY/INIT/lte_init.c:143:  fp->ul_CarrierFreq = fp->dl_CarrierFreq - (get_uldl_offset (eutra_band) * 100000);
+openair1/PHY/INIT/lte_init.c:145:  fp->tdd_config = 0;
+openair1/PHY/INIT/lte_init.c:146:  fp->tdd_config_S = 0;
+openair1/PHY/INIT/lte_init.c:148:  if (fp->dl_CarrierFreq == fp->ul_CarrierFreq)
+openair1/PHY/INIT/lte_init.c:149:    fp->frame_type = TDD;
+openair1/PHY/INIT/lte_init.c:151:    fp->frame_type = FDD;
+openair1/PHY/INIT/lte_init.c:157:    fp->tdd_config = cfg->tdd_frame_structure_config.subframe_assignment.value;
+openair1/PHY/INIT/lte_init.c:158:    fp->tdd_config_S = cfg->tdd_frame_structure_config.special_subframe_patterns.value;
+openair1/PHY/INIT/lte_init.c:159:    fp->frame_type = TDD;
+openair1/PHY/INIT/lte_init.c:161:    fp->frame_type = FDD;
+openair1/PHY/INIT/lte_init.c:164:  fp->prach_config_common.rootSequenceIndex = cfg->prach_config.root_sequence_index.value;
+openair1/PHY/INIT/lte_init.c:167:  fp->prach_config_common.prach_Config_enabled = 1;
+openair1/PHY/INIT/lte_init.c:169:  fp->prach_config_common.prach_ConfigInfo.prach_ConfigIndex = cfg->prach_config.configuration_index.value;
+openair1/PHY/INIT/lte_init.c:172:  fp->prach_config_common.prach_ConfigInfo.highSpeedFlag = cfg->prach_config.high_speed_flag.value;
+openair1/PHY/INIT/lte_init.c:174:  fp->prach_config_common.prach_ConfigInfo.zeroCorrelationZoneConfig = cfg->prach_config.zero_correlation_zone_configuration.value;
+openair1/PHY/INIT/lte_init.c:176:  fp->prach_config_common.prach_ConfigInfo.prach_FreqOffset = cfg->prach_config.frequency_offset.value;
+openair1/PHY/INIT/lte_init.c:180:  compute_prach_seq (fp->prach_config_common.rootSequenceIndex,
+openair1/PHY/INIT/lte_init.c:181:                     fp->prach_config_common.prach_ConfigInfo.prach_ConfigIndex,
+openair1/PHY/INIT/lte_init.c:182:                     fp->prach_config_common.prach_ConfigInfo.zeroCorrelationZoneConfig, fp->prach_config_common.prach_ConfigInfo.highSpeedFlag, fp->frame_type, RC.eNB[Mod_id][CC_id]->X_u);
+openair1/PHY/INIT/lte_init.c:187:    fp->prach_emtc_config_common.prach_Config_enabled = 1;
+openair1/PHY/INIT/lte_init.c:189:    fp->prach_emtc_config_common.rootSequenceIndex = cfg->emtc_config.prach_catm_root_sequence_index.value;
+openair1/PHY/INIT/lte_init.c:191:    fp->prach_emtc_config_common.prach_ConfigInfo.highSpeedFlag = cfg->emtc_config.prach_catm_high_speed_flag.value;
+openair1/PHY/INIT/lte_init.c:192:    fp->prach_emtc_config_common.prach_ConfigInfo.zeroCorrelationZoneConfig = cfg->emtc_config.prach_catm_zero_correlation_zone_configuration.value;
+openair1/PHY/INIT/lte_init.c:195:    fp->prach_emtc_config_common.prach_ConfigInfo.prach_CElevel_enable[3] = cfg->emtc_config.prach_ce_level_3_enable.value;
+openair1/PHY/INIT/lte_init.c:196:    fp->prach_emtc_config_common.prach_ConfigInfo.prach_starting_subframe_periodicity[3] = cfg->emtc_config.prach_ce_level_3_starting_subframe_periodicity.value;
+openair1/PHY/INIT/lte_init.c:197:    fp->prach_emtc_config_common.prach_ConfigInfo.prach_numRepetitionPerPreambleAttempt[3] = cfg->emtc_config.prach_ce_level_3_number_of_repetitions_per_attempt.value;
+openair1/PHY/INIT/lte_init.c:198:    AssertFatal (fp->prach_emtc_config_common.prach_ConfigInfo.prach_starting_subframe_periodicity[3] >= fp->prach_emtc_config_common.prach_ConfigInfo.prach_numRepetitionPerPreambleAttempt[3],
+openair1/PHY/INIT/lte_init.c:202:    fp->prach_emtc_config_common.prach_ConfigInfo.prach_ConfigIndex[3] = cfg->emtc_config.prach_ce_level_3_configuration_index.value;
+openair1/PHY/INIT/lte_init.c:203:    fp->prach_emtc_config_common.prach_ConfigInfo.prach_FreqOffset[3] = cfg->emtc_config.prach_ce_level_3_frequency_offset.value;
+openair1/PHY/INIT/lte_init.c:204:    fp->prach_emtc_config_common.prach_ConfigInfo.prach_hopping_enable[3] = cfg->emtc_config.prach_ce_level_3_hopping_enable.value;
+openair1/PHY/INIT/lte_init.c:205:    fp->prach_emtc_config_common.prach_ConfigInfo.prach_hopping_offset[3] = cfg->emtc_config.prach_ce_level_3_hopping_offset.value;
+openair1/PHY/INIT/lte_init.c:206:    if (fp->prach_emtc_config_common.prach_ConfigInfo.prach_CElevel_enable[3] == 1)
+openair1/PHY/INIT/lte_init.c:207:      compute_prach_seq (fp->prach_emtc_config_common.rootSequenceIndex,
+openair1/PHY/INIT/lte_init.c:208:                         fp->prach_emtc_config_common.prach_ConfigInfo.prach_ConfigIndex[3],
+openair1/PHY/INIT/lte_init.c:209:                         fp->prach_emtc_config_common.prach_ConfigInfo.zeroCorrelationZoneConfig,
+openair1/PHY/INIT/lte_init.c:210:                         fp->prach_emtc_config_common.prach_ConfigInfo.highSpeedFlag, fp->frame_type, RC.eNB[Mod_id][CC_id]->X_u_br[3]);
+openair1/PHY/INIT/lte_init.c:213:    fp->prach_emtc_config_common.prach_ConfigInfo.prach_CElevel_enable[2] = cfg->emtc_config.prach_ce_level_2_enable.value;
+openair1/PHY/INIT/lte_init.c:214:    fp->prach_emtc_config_common.prach_ConfigInfo.prach_starting_subframe_periodicity[2] = cfg->emtc_config.prach_ce_level_2_starting_subframe_periodicity.value;
+openair1/PHY/INIT/lte_init.c:215:    fp->prach_emtc_config_common.prach_ConfigInfo.prach_numRepetitionPerPreambleAttempt[2] = cfg->emtc_config.prach_ce_level_2_number_of_repetitions_per_attempt.value;
+openair1/PHY/INIT/lte_init.c:216:    AssertFatal (fp->prach_emtc_config_common.prach_ConfigInfo.prach_starting_subframe_periodicity[2] >= fp->prach_emtc_config_common.prach_ConfigInfo.prach_numRepetitionPerPreambleAttempt[2],
+openair1/PHY/INIT/lte_init.c:218:    fp->prach_emtc_config_common.prach_ConfigInfo.prach_ConfigIndex[2] = cfg->emtc_config.prach_ce_level_2_configuration_index.value;
+openair1/PHY/INIT/lte_init.c:219:    fp->prach_emtc_config_common.prach_ConfigInfo.prach_FreqOffset[2] = cfg->emtc_config.prach_ce_level_2_frequency_offset.value;
+openair1/PHY/INIT/lte_init.c:220:    fp->prach_emtc_config_common.prach_ConfigInfo.prach_hopping_enable[2] = cfg->emtc_config.prach_ce_level_2_hopping_enable.value;
+openair1/PHY/INIT/lte_init.c:221:    fp->prach_emtc_config_common.prach_ConfigInfo.prach_hopping_offset[2] = cfg->emtc_config.prach_ce_level_2_hopping_offset.value;
+openair1/PHY/INIT/lte_init.c:222:    if (fp->prach_emtc_config_common.prach_ConfigInfo.prach_CElevel_enable[2] == 1)
+openair1/PHY/INIT/lte_init.c:223:      compute_prach_seq (fp->prach_emtc_config_common.rootSequenceIndex,
+openair1/PHY/INIT/lte_init.c:224:                         fp->prach_emtc_config_common.prach_ConfigInfo.prach_ConfigIndex[3],
+openair1/PHY/INIT/lte_init.c:225:                         fp->prach_emtc_config_common.prach_ConfigInfo.zeroCorrelationZoneConfig,
+openair1/PHY/INIT/lte_init.c:226:                         fp->prach_emtc_config_common.prach_ConfigInfo.highSpeedFlag, fp->frame_type, RC.eNB[Mod_id][CC_id]->X_u_br[2]);
+openair1/PHY/INIT/lte_init.c:229:    fp->prach_emtc_config_common.prach_ConfigInfo.prach_CElevel_enable[1] = cfg->emtc_config.prach_ce_level_1_enable.value;
+openair1/PHY/INIT/lte_init.c:230:    fp->prach_emtc_config_common.prach_ConfigInfo.prach_starting_subframe_periodicity[1] = cfg->emtc_config.prach_ce_level_1_starting_subframe_periodicity.value;
+openair1/PHY/INIT/lte_init.c:231:    fp->prach_emtc_config_common.prach_ConfigInfo.prach_numRepetitionPerPreambleAttempt[1] = cfg->emtc_config.prach_ce_level_1_number_of_repetitions_per_attempt.value;
+openair1/PHY/INIT/lte_init.c:232:    AssertFatal (fp->prach_emtc_config_common.prach_ConfigInfo.prach_starting_subframe_periodicity[1] >= fp->prach_emtc_config_common.prach_ConfigInfo.prach_numRepetitionPerPreambleAttempt[1],
+openair1/PHY/INIT/lte_init.c:235:    fp->prach_emtc_config_common.prach_ConfigInfo.prach_ConfigIndex[1] = cfg->emtc_config.prach_ce_level_1_configuration_index.value;
+openair1/PHY/INIT/lte_init.c:236:    fp->prach_emtc_config_common.prach_ConfigInfo.prach_FreqOffset[1] = cfg->emtc_config.prach_ce_level_1_frequency_offset.value;
+openair1/PHY/INIT/lte_init.c:237:    fp->prach_emtc_config_common.prach_ConfigInfo.prach_hopping_enable[1] = cfg->emtc_config.prach_ce_level_1_hopping_enable.value;
+openair1/PHY/INIT/lte_init.c:238:    fp->prach_emtc_config_common.prach_ConfigInfo.prach_hopping_offset[1] = cfg->emtc_config.prach_ce_level_1_hopping_offset.value;
+openair1/PHY/INIT/lte_init.c:239:    if (fp->prach_emtc_config_common.prach_ConfigInfo.prach_CElevel_enable[1] == 1)
+openair1/PHY/INIT/lte_init.c:240:      compute_prach_seq (fp->prach_emtc_config_common.rootSequenceIndex,
+openair1/PHY/INIT/lte_init.c:241:                         fp->prach_emtc_config_common.prach_ConfigInfo.prach_ConfigIndex[3],
+openair1/PHY/INIT/lte_init.c:242:                         fp->prach_emtc_config_common.prach_ConfigInfo.zeroCorrelationZoneConfig,
+openair1/PHY/INIT/lte_init.c:243:                         fp->prach_emtc_config_common.prach_ConfigInfo.highSpeedFlag, fp->frame_type, RC.eNB[Mod_id][CC_id]->X_u_br[1]);
+openair1/PHY/INIT/lte_init.c:246:    fp->prach_emtc_config_common.prach_ConfigInfo.prach_CElevel_enable[0] = cfg->emtc_config.prach_ce_level_0_enable.value;
+openair1/PHY/INIT/lte_init.c:247:    fp->prach_emtc_config_common.prach_ConfigInfo.prach_starting_subframe_periodicity[0] = cfg->emtc_config.prach_ce_level_0_starting_subframe_periodicity.value;
+openair1/PHY/INIT/lte_init.c:248:    fp->prach_emtc_config_common.prach_ConfigInfo.prach_numRepetitionPerPreambleAttempt[0] = cfg->emtc_config.prach_ce_level_0_number_of_repetitions_per_attempt.value;
+openair1/PHY/INIT/lte_init.c:249:    AssertFatal (fp->prach_emtc_config_common.prach_ConfigInfo.prach_starting_subframe_periodicity[0] >= fp->prach_emtc_config_common.prach_ConfigInfo.prach_numRepetitionPerPreambleAttempt[0],
+openair1/PHY/INIT/lte_init.c:251:                 fp->prach_emtc_config_common.prach_ConfigInfo.prach_starting_subframe_periodicity[0], fp->prach_emtc_config_common.prach_ConfigInfo.prach_numRepetitionPerPreambleAttempt[0]);
+openair1/PHY/INIT/lte_init.c:252:    AssertFatal (fp->prach_emtc_config_common.prach_ConfigInfo.prach_numRepetitionPerPreambleAttempt[0] > 0, "prach_emtc_config_common.prach_ConfigInfo.prach_numRepetitionPerPreambleAttempt[0]==0\n");
+openair1/PHY/INIT/lte_init.c:253:    fp->prach_emtc_config_common.prach_ConfigInfo.prach_ConfigIndex[0] = cfg->emtc_config.prach_ce_level_0_configuration_index.value;
+openair1/PHY/INIT/lte_init.c:254:    fp->prach_emtc_config_common.prach_ConfigInfo.prach_FreqOffset[0] = cfg->emtc_config.prach_ce_level_0_frequency_offset.value;
+openair1/PHY/INIT/lte_init.c:255:    fp->prach_emtc_config_common.prach_ConfigInfo.prach_hopping_enable[0] = cfg->emtc_config.prach_ce_level_0_hopping_enable.value;
+openair1/PHY/INIT/lte_init.c:256:    fp->prach_emtc_config_common.prach_ConfigInfo.prach_hopping_offset[0] = cfg->emtc_config.prach_ce_level_0_hopping_offset.value;
+openair1/PHY/INIT/lte_init.c:257:    if (fp->prach_emtc_config_common.prach_ConfigInfo.prach_CElevel_enable[0] == 1) {
+openair1/PHY/INIT/lte_init.c:258:      compute_prach_seq (fp->prach_emtc_config_common.rootSequenceIndex,
+openair1/PHY/INIT/lte_init.c:259:                         fp->prach_emtc_config_common.prach_ConfigInfo.prach_ConfigIndex[3],
+openair1/PHY/INIT/lte_init.c:260:                         fp->prach_emtc_config_common.prach_ConfigInfo.zeroCorrelationZoneConfig,
+openair1/PHY/INIT/lte_init.c:261:                         fp->prach_emtc_config_common.prach_ConfigInfo.highSpeedFlag, fp->frame_type, RC.eNB[Mod_id][CC_id]->X_u_br[0]);
+openair1/PHY/INIT/lte_init.c:270:  fp->pucch_config_common.deltaPUCCH_Shift = 1 + cfg->pucch_config.delta_pucch_shift.value;
+openair1/PHY/INIT/lte_init.c:271:  fp->pucch_config_common.nRB_CQI = cfg->pucch_config.n_cqi_rb.value;
+openair1/PHY/INIT/lte_init.c:272:  fp->pucch_config_common.nCS_AN = cfg->pucch_config.n_an_cs.value;
+openair1/PHY/INIT/lte_init.c:273:  fp->pucch_config_common.n1PUCCH_AN = cfg->pucch_config.n1_pucch_an.value;
+openair1/PHY/INIT/lte_init.c:275:  fp->pdsch_config_common.referenceSignalPower = cfg->rf_config.reference_signal_power.value;
+openair1/PHY/INIT/lte_init.c:276:  fp->pdsch_config_common.p_b = cfg->subframe_config.pb.value;
+openair1/PHY/INIT/lte_init.c:278:  fp->pusch_config_common.n_SB = cfg->pusch_config.number_of_subbands.value;
+openair1/PHY/INIT/lte_init.c:279:  LOG_I (PHY, "pusch_config_common.n_SB = %d\n", fp->pusch_config_common.n_SB);
+openair1/PHY/INIT/lte_init.c:281:  fp->pusch_config_common.hoppingMode = cfg->pusch_config.hopping_mode.value;
+openair1/PHY/INIT/lte_init.c:282:  LOG_I (PHY, "pusch_config_common.hoppingMode = %d\n", fp->pusch_config_common.hoppingMode);
+openair1/PHY/INIT/lte_init.c:284:  fp->pusch_config_common.pusch_HoppingOffset = cfg->pusch_config.hopping_offset.value;
+openair1/PHY/INIT/lte_init.c:285:  LOG_I (PHY, "pusch_config_common.pusch_HoppingOffset = %d\n", fp->pusch_config_common.pusch_HoppingOffset);
+openair1/PHY/INIT/lte_init.c:287:  fp->pusch_config_common.enable64QAM                                  = 0;//radioResourceConfigCommon->pusch_ConfigCommon.pusch_ConfigBasic.enable64QAM;
+openair1/PHY/INIT/lte_init.c:288:  LOG_I(PHY,"pusch_config_common.enable64QAM = %d\n",fp->pusch_config_common.enable64QAM );
+openair1/PHY/INIT/lte_init.c:289:  fp->pusch_config_common.ul_ReferenceSignalsPUSCH.groupHoppingEnabled     = 0;
+openair1/PHY/INIT/lte_init.c:290:  fp->pusch_config_common.ul_ReferenceSignalsPUSCH.sequenceHoppingEnabled  = 0;
+openair1/PHY/INIT/lte_init.c:292:      fp->pusch_config_common.ul_ReferenceSignalsPUSCH.groupHoppingEnabled = 1;
+openair1/PHY/INIT/lte_init.c:294:      fp->pusch_config_common.ul_ReferenceSignalsPUSCH.sequenceHoppingEnabled = 1;
+openair1/PHY/INIT/lte_init.c:295:  LOG_I(PHY,"pusch_config_common.ul_ReferenceSignalsPUSCH.groupHoppingEnabled = %d\n",fp->pusch_config_common.ul_ReferenceSignalsPUSCH.groupHoppingEnabled);
+openair1/PHY/INIT/lte_init.c:296:  fp->pusch_config_common.ul_ReferenceSignalsPUSCH.groupAssignmentPUSCH   =  cfg->uplink_reference_signal_config.group_assignment.value;
+openair1/PHY/INIT/lte_init.c:297:  LOG_I(PHY,"pusch_config_common.ul_ReferenceSignalsPUSCH.groupAssignmentPUSCH = %d\n",fp->pusch_config_common.ul_ReferenceSignalsPUSCH.groupAssignmentPUSCH);
+openair1/PHY/INIT/lte_init.c:299:  LOG_I (PHY, "pusch_config_common.ul_ReferenceSignalsPUSCH.sequenceHoppingEnabled = %d\n", fp->pusch_config_common.ul_ReferenceSignalsPUSCH.sequenceHoppingEnabled);
+openair1/PHY/INIT/lte_init.c:301:  fp->pusch_config_common.ul_ReferenceSignalsPUSCH.cyclicShift = dmrs1_tab[cfg->uplink_reference_signal_config.cyclic_shift_1_for_drms.value];
+openair1/PHY/INIT/lte_init.c:302:  LOG_I (PHY, "pusch_config_common.ul_ReferenceSignalsPUSCH.cyclicShift = %d\n", fp->pusch_config_common.ul_ReferenceSignalsPUSCH.cyclicShift);
+openair1/PHY/INIT/lte_init.c:306:  fp->soundingrs_ul_config_common.enabled_flag = 0;     // 1; Don't know how to turn this off in NFAPI
+openair1/PHY/INIT/lte_init.c:307:  fp->soundingrs_ul_config_common.srs_BandwidthConfig = cfg->srs_config.bandwidth_configuration.value;
+openair1/PHY/INIT/lte_init.c:308:  fp->soundingrs_ul_config_common.srs_SubframeConfig = cfg->srs_config.srs_subframe_configuration.value;
+openair1/PHY/INIT/lte_init.c:309:  fp->soundingrs_ul_config_common.ackNackSRS_SimultaneousTransmission = cfg->srs_config.srs_acknack_srs_simultaneous_transmission.value;
+openair1/PHY/INIT/lte_init.c:310:  fp->soundingrs_ul_config_common.srs_MaxUpPts = cfg->srs_config.max_up_pts.value;
+openair1/PHY/INIT/lte_init.c:312:  fp->num_MBSFN_config = 0;
+openair1/PHY/INIT/lte_init.c:314:  fp->NonMBSFN_config_flag =cfg->fembms_config.non_mbsfn_config_flag.value;
+openair1/PHY/INIT/lte_init.c:315:  fp->NonMBSFN_config.non_mbsfn_SubframeConfig = cfg->fembms_config.non_mbsfn_subframeconfig.value;
+openair1/PHY/INIT/lte_init.c:316:  fp->NonMBSFN_config.radioframeAllocationPeriod = cfg->fembms_config.radioframe_allocation_period.value;
+openair1/PHY/INIT/lte_init.c:317:  fp->NonMBSFN_config.radioframeAllocationOffset = cfg->fembms_config.radioframe_allocation_offset.value;
+openair1/PHY/INIT/lte_init.c:318:  LOG_D(PHY,"eNB %d/%d frame NonMBSFN configured: %d (%x) %d/%d\n",Mod_id,CC_id,fp->NonMBSFN_config_flag,fp->NonMBSFN_config.non_mbsfn_SubframeConfig,fp->NonMBSFN_config.radioframeAllocationPeriod,fp->NonMBSFN_config.radioframeAllocationOffset);
+openair1/PHY/INIT/lte_init.c:340:    fp->Nid_cell_mbsfn = (uint16_t)mbsfn_AreaId_r9;
+openair1/PHY/INIT/lte_init.c:344:  lte_gold_mbsfn (fp, RC.eNB[Mod_id][CC_id]->lte_gold_mbsfn_table, fp->Nid_cell_mbsfn);
+openair1/PHY/INIT/lte_init.c:347:  lte_gold_mbsfn_khz_1dot25 (fp, RC.eNB[Mod_id][CC_id]->lte_gold_mbsfn_khz_1dot25_table, fp->Nid_cell_mbsfn);
+openair1/PHY/INIT/lte_init.c:377:        fp->N_RB_DL,fp->phich_config_common.phich_resource,
+openair1/PHY/INIT/lte_init.c:378:        fp->phich_config_common.phich_duration,
+openair1/PHY/INIT/lte_init.c:379:        fp->nb_antennas_tx, fp->nb_antennas_rx, fp->nb_antenna_ports_eNB,
+openair1/PHY/INIT/lte_init.c:380:        fp->prach_config_common.rootSequenceIndex,
+openair1/PHY/INIT/lte_init.c:381:        fp->prach_config_common.prach_Config_enabled,
+openair1/PHY/INIT/lte_init.c:382:        fp->prach_config_common.prach_ConfigInfo.prach_ConfigIndex,
+openair1/PHY/INIT/lte_init.c:383:        fp->prach_config_common.prach_ConfigInfo.highSpeedFlag,
+openair1/PHY/INIT/lte_init.c:384:        fp->prach_config_common.prach_ConfigInfo.zeroCorrelationZoneConfig,
+openair1/PHY/INIT/lte_init.c:385:        fp->prach_config_common.prach_ConfigInfo.prach_FreqOffset
+openair1/PHY/INIT/lte_init.c:390:         eNB->Mod_id, fp->N_RB_DL, fp->phich_config_common.phich_resource, fp->phich_config_common.phich_duration);
+openair1/PHY/INIT/lte_init.c:395:  lte_gold (fp, eNB->lte_gold_table, fp->Nid_cell);
+openair1/PHY/INIT/lte_init.c:418:  LOG_I(PHY,"[INIT] NB_ANTENNA_PORTS_ENB:%d fp->nb_antenna_ports_eNB:%d\n", NB_ANTENNA_PORTS_ENB, fp->nb_antenna_ports_eNB);
+openair1/PHY/INIT/lte_init.c:421:    if (i<fp->nb_antenna_ports_eNB || i==5) {
+openair1/PHY/INIT/lte_init.c:422:      common_vars->txdataF[i] = (int32_t*)malloc16_clear(fp->ofdm_symbol_size*fp->symbols_per_tti*10*sizeof(int32_t) );
+openair1/PHY/INIT/lte_init.c:426:	    fp->ofdm_symbol_size*fp->symbols_per_tti*10*sizeof(int32_t));
+openair1/PHY/INIT/lte_init.c:438:      srs_vars[UE_id].srs_ch_estimates[i] = (int32_t *) malloc16_clear (sizeof (int32_t) * fp->ofdm_symbol_size);
+openair1/PHY/INIT/lte_init.c:439:      srs_vars[UE_id].srs_ch_estimates_time[i] = (int32_t *) malloc16_clear (sizeof (int32_t) * fp->ofdm_symbol_size * 2);
+openair1/PHY/INIT/lte_init.c:450:    srs_vars[UE_id].srs = (int32_t *) malloc16_clear (2 * fp->ofdm_symbol_size * sizeof (int32_t));
+openair1/PHY/INIT/lte_init.c:476:  AssertFatal(fp->nb_antennas_rx <= sizeof(prach_vars->rxsigF) / sizeof(prach_vars->rxsigF[0]),
+openair1/PHY/INIT/lte_init.c:478:  for (i=0; i<fp->nb_antennas_rx; i++) {
+openair1/PHY/INIT/lte_init.c:479:    prach_vars->rxsigF[i] = (int16_t*)malloc16_clear( fp->ofdm_symbol_size*12*2*sizeof(int16_t) );
+openair1/PHY/INIT/lte_init.c:496:    AssertFatal (fp->ofdm_symbol_size > 127, "fp->ofdm_symbol_size %d<128\n", fp->ofdm_symbol_size);
+openair1/PHY/INIT/lte_init.c:497:    AssertFatal (fp->symbols_per_tti > 11, "fp->symbols_per_tti %d < 12\n", fp->symbols_per_tti);
+openair1/PHY/INIT/lte_init.c:498:    AssertFatal (fp->N_RB_UL > 5, "fp->N_RB_UL %d < 6\n", fp->N_RB_UL);
+openair1/PHY/INIT/lte_init.c:502:      pusch_vars[UE_id]->rxdataF_ext[i]      = (int32_t*)malloc16_clear( sizeof(int32_t)*fp->N_RB_UL*12*fp->symbols_per_tti );
+openair1/PHY/INIT/lte_init.c:503:      pusch_vars[UE_id]->rxdataF_ext2[i]     = (int32_t*)malloc16_clear( sizeof(int32_t)*fp->N_RB_UL*12*fp->symbols_per_tti );
+openair1/PHY/INIT/lte_init.c:504:      pusch_vars[UE_id]->drs_ch_estimates[i] = (int32_t*)malloc16_clear( sizeof(int32_t)*fp->N_RB_UL*12*fp->symbols_per_tti );
+openair1/PHY/INIT/lte_init.c:505:      pusch_vars[UE_id]->drs_ch_estimates_time[i] = (int32_t*)malloc16_clear( 2*sizeof(int32_t)*fp->ofdm_symbol_size );
+openair1/PHY/INIT/lte_init.c:506:      pusch_vars[UE_id]->rxdataF_comp[i]     = (int32_t*)malloc16_clear( sizeof(int32_t)*fp->N_RB_UL*12*fp->symbols_per_tti );
+openair1/PHY/INIT/lte_init.c:507:      pusch_vars[UE_id]->ul_ch_mag[i]  = (int32_t*)malloc16_clear( fp->symbols_per_tti*sizeof(int32_t)*fp->N_RB_UL*12 );
+openair1/PHY/INIT/lte_init.c:508:      pusch_vars[UE_id]->ul_ch_magb[i] = (int32_t*)malloc16_clear( fp->symbols_per_tti*sizeof(int32_t)*fp->N_RB_UL*12 );
+openair1/PHY/INIT/lte_init.c:539:    if (i < fp->nb_antenna_ports_eNB || i == 5) {
+openair1/PHY/INIT/nr_init.c:103:          fp->N_RB_DL,fp->phich_config_common.phich_resource,
+openair1/PHY/INIT/nr_init.c:104:          fp->phich_config_common.phich_duration,
+openair1/PHY/INIT/nr_init.c:105:          fp->nb_antennas_tx, fp->nb_antennas_rx,
+openair1/PHY/INIT/nr_init.c:106:          fp->prach_config_common.rootSequenceIndex,
+openair1/PHY/INIT/nr_init.c:107:          fp->prach_config_common.prach_Config_enabled,
+openair1/PHY/INIT/nr_init.c:108:          fp->prach_config_common.prach_ConfigInfo.prach_ConfigIndex,
+openair1/PHY/INIT/nr_init.c:109:          fp->prach_config_common.prach_ConfigInfo.highSpeedFlag,
+openair1/PHY/INIT/nr_init.c:110:          fp->prach_config_common.prach_ConfigInfo.zeroCorrelationZoneConfig,
+openair1/PHY/INIT/nr_init.c:111:          fp->prach_config_common.prach_ConfigInfo.prach_FreqOffset
+openair1/PHY/INIT/nr_init.c:119:  gNB->nr_gold_pdcch_dmrs = (uint32_t ***)malloc16(fp->slots_per_frame*sizeof(uint32_t **));
+openair1/PHY/INIT/nr_init.c:123:  for (int slot=0; slot<fp->slots_per_frame; slot++) {
+openair1/PHY/INIT/nr_init.c:124:    pdcch_dmrs[slot] = (uint32_t **)malloc16(fp->symbols_per_slot*sizeof(uint32_t *));
+openair1/PHY/INIT/nr_init.c:127:    for (int symb=0; symb<fp->symbols_per_slot; symb++) {
+openair1/PHY/INIT/nr_init.c:136:  gNB->nr_gold_pdsch_dmrs = (uint32_t ****)malloc16(fp->slots_per_frame*sizeof(uint32_t ***));
+openair1/PHY/INIT/nr_init.c:139:  for (int slot=0; slot<fp->slots_per_frame; slot++) {
+openair1/PHY/INIT/nr_init.c:140:    pdsch_dmrs[slot] = (uint32_t ***)malloc16(fp->symbols_per_slot*sizeof(uint32_t **));
+openair1/PHY/INIT/nr_init.c:143:    for (int symb=0; symb<fp->symbols_per_slot; symb++) {
+openair1/PHY/INIT/nr_init.c:166:      common_vars->txdataF[i] = (int32_t*)malloc16_clear(fp->samples_per_frame_wCP*sizeof(int32_t)); // [hna] samples_per_frame without CP
+openair1/PHY/INIT/nr_init.c:167:      common_vars->rxdataF[i] = (int32_t*)malloc16_clear(fp->samples_per_frame_wCP*sizeof(int32_t));
+openair1/PHY/INIT/nr_init.c:168:      common_vars->rxdata[i] = (int32_t*)malloc16_clear(fp->samples_per_frame*sizeof(int32_t));
+openair1/PHY/INIT/nr_init.c:172:            fp->samples_per_frame_wCP*sizeof(int32_t));
+openair1/PHY/INIT/nr_init.c:182:      srs_vars[UE_id].srs_ch_estimates[i]      = (int32_t *)malloc16_clear( sizeof(int32_t)*fp->ofdm_symbol_size );
+openair1/PHY/INIT/nr_init.c:183:      srs_vars[UE_id].srs_ch_estimates_time[i] = (int32_t *)malloc16_clear( sizeof(int32_t)*fp->ofdm_symbol_size*2 );
+openair1/PHY/INIT/nr_init.c:194:    srs_vars[UE_id].srs = (int32_t *)malloc16_clear(2*fp->ofdm_symbol_size*sizeof(int32_t));
+openair1/PHY/INIT/nr_init.c:221:      pusch_vars[UE_id]->rxdataF_ext[i]           = (int32_t *)malloc16_clear( sizeof(int32_t)*cfg->rf_config.ul_carrier_bandwidth.value*12*fp->symbols_per_slot );
+openair1/PHY/INIT/nr_init.c:222:      pusch_vars[UE_id]->rxdataF_ext2[i]          = (int32_t *)malloc16_clear( sizeof(int32_t)*cfg->rf_config.ul_carrier_bandwidth.value*12*fp->symbols_per_slot );
+openair1/PHY/INIT/nr_init.c:223:      pusch_vars[UE_id]->drs_ch_estimates[i]      = (int32_t *)malloc16_clear( sizeof(int32_t)*cfg->rf_config.ul_carrier_bandwidth.value*12*fp->symbols_per_slot );
+openair1/PHY/INIT/nr_init.c:224:      pusch_vars[UE_id]->drs_ch_estimates_time[i] = (int32_t *)malloc16_clear( 2*sizeof(int32_t)*fp->ofdm_symbol_size );
+openair1/PHY/INIT/nr_init.c:225:      pusch_vars[UE_id]->rxdataF_comp[i]          = (int32_t *)malloc16_clear( sizeof(int32_t)*cfg->rf_config.ul_carrier_bandwidth.value*12*fp->symbols_per_slot );
+openair1/PHY/INIT/nr_init.c:226:      pusch_vars[UE_id]->ul_ch_mag[i]             = (int32_t *)malloc16_clear( fp->symbols_per_slot*sizeof(int32_t)*cfg->rf_config.ul_carrier_bandwidth.value*12 );
+openair1/PHY/INIT/nr_init.c:227:      pusch_vars[UE_id]->ul_ch_magb[i]            = (int32_t *)malloc16_clear( fp->symbols_per_slot*sizeof(int32_t)*cfg->rf_config.ul_carrier_bandwidth.value*12 );
+openair1/PHY/INIT/nr_init.c:274:  fp->threequarter_fs                    = 0;
+openair1/PHY/INIT/nr_init.c:382:  gNB_config->subframe_config.dl_cyclic_prefix_type.value = (fp->Ncp == NORMAL) ? NFAPI_CP_NORMAL : NFAPI_CP_EXTENDED;
+openair1/PHY/INIT/nr_init.c:385:  fp->dl_CarrierFreq = 3500000000;//from_nrarfcn(gNB_config->nfapi_config.rf_bands.rf_band[0],gNB_config->nfapi_config.nrarfcn.value);
+openair1/PHY/INIT/nr_init.c:386:  fp->ul_CarrierFreq = 3500000000;//fp->dl_CarrierFreq - (get_uldl_offset(gNB_config->nfapi_config.rf_bands.rf_band[0])*100000);
+openair1/PHY/INIT/nr_init.c:387:  fp->threequarter_fs= 0;
+openair1/PHY/INIT/nr_init.c:419:  fp->dl_CarrierFreq = from_nrarfcn(gNB_config->nfapi_config.rf_bands.rf_band[0],gNB_config->nfapi_config.nrarfcn.value);
+openair1/PHY/INIT/nr_init.c:420:  fp->ul_CarrierFreq = fp->dl_CarrierFreq - (get_nr_uldl_offset(gNB_config->nfapi_config.rf_bands.rf_band[0])*100000);
+openair1/PHY/INIT/nr_init.c:421:  fp->threequarter_fs                    = openair0_cfg[0].threequarter_fs;
+openair1/PHY/INIT/nr_init.c:429:        fp->dl_CarrierFreq );
+openair1/PHY/INIT/nr_init.c:473:        gNB->ulsch[i][j] = new_gNB_ulsch(MAX_LDPC_ITERATIONS, fp->N_RB_UL, 0);
+openair1/PHY/INIT/nr_init.c:482:      gNB->ulsch[i+1][j] = new_gNB_ulsch(MAX_LDPC_ITERATIONS, fp->N_RB_UL, 0);
+openair1/PHY/INIT/nr_init.c:493:    //gNB->transmission_mode[i] = fp->nb_antenna_ports_gNB==1 ? 1 : 2;
+openair1/PHY/INIT/nr_init.c:509:  //fp->pucch_config_common.deltaPUCCH_Shift = 1;
+openair1/PHY/INIT/nr_init_ue.c:55:    fp->tdd_config    = tdd_Config->subframeAssignment;
+openair1/PHY/INIT/nr_init_ue.c:56:    fp->tdd_config_S  = tdd_Config->specialSubframePatterns;
+openair1/PHY/INIT/nr_init_ue.c:59:  fp->SIwindowsize  = SIwindowsize;
+openair1/PHY/INIT/nr_init_ue.c:60:  fp->SIPeriod      = SIperiod;
+openair1/PHY/INIT/nr_init_ue.c:80:  fp->prach_config_common.rootSequenceIndex                           =radioResourceConfigCommon->prach_Config.rootSequenceIndex;
+openair1/PHY/INIT/nr_init_ue.c:82:  fp->prach_config_common.prach_Config_enabled=1;
+openair1/PHY/INIT/nr_init_ue.c:83:  fp->prach_config_common.prach_ConfigInfo.prach_ConfigIndex          =radioResourceConfigCommon->prach_Config.prach_ConfigInfo.prach_ConfigIndex;
+openair1/PHY/INIT/nr_init_ue.c:84:  fp->prach_config_common.prach_ConfigInfo.highSpeedFlag              =radioResourceConfigCommon->prach_Config.prach_ConfigInfo.highSpeedFlag;
+openair1/PHY/INIT/nr_init_ue.c:85:  fp->prach_config_common.prach_ConfigInfo.zeroCorrelationZoneConfig  =radioResourceConfigCommon->prach_Config.prach_ConfigInfo.zeroCorrelationZoneConfig;
+openair1/PHY/INIT/nr_init_ue.c:86:  fp->prach_config_common.prach_ConfigInfo.prach_FreqOffset           =radioResourceConfigCommon->prach_Config.prach_ConfigInfo.prach_FreqOffset;
+openair1/PHY/INIT/nr_init_ue.c:88:  compute_prach_seq(fp->prach_config_common.rootSequenceIndex,
+openair1/PHY/INIT/nr_init_ue.c:89:		    fp->prach_config_common.prach_ConfigInfo.prach_ConfigIndex,
+openair1/PHY/INIT/nr_init_ue.c:90:		    fp->prach_config_common.prach_ConfigInfo.zeroCorrelationZoneConfig,
+openair1/PHY/INIT/nr_init_ue.c:91:		    fp->prach_config_common.prach_ConfigInfo.highSpeedFlag,
+openair1/PHY/INIT/nr_init_ue.c:92:		    fp->frame_type,ue->X_u);
+openair1/PHY/INIT/nr_init_ue.c:96:  fp->pucch_config_common.deltaPUCCH_Shift = 1+radioResourceConfigCommon->pucch_ConfigCommon.deltaPUCCH_Shift;
+openair1/PHY/INIT/nr_init_ue.c:97:  fp->pucch_config_common.nRB_CQI          = radioResourceConfigCommon->pucch_ConfigCommon.nRB_CQI;
+openair1/PHY/INIT/nr_init_ue.c:98:  fp->pucch_config_common.nCS_AN           = radioResourceConfigCommon->pucch_ConfigCommon.nCS_AN;
+openair1/PHY/INIT/nr_init_ue.c:99:  fp->pucch_config_common.n1PUCCH_AN       = radioResourceConfigCommon->pucch_ConfigCommon.n1PUCCH_AN;
+openair1/PHY/INIT/nr_init_ue.c:103:  fp->pdsch_config_common.referenceSignalPower = radioResourceConfigCommon->pdsch_ConfigCommon.referenceSignalPower;
+openair1/PHY/INIT/nr_init_ue.c:104:  fp->pdsch_config_common.p_b                  = radioResourceConfigCommon->pdsch_ConfigCommon.p_b;
+openair1/PHY/INIT/nr_init_ue.c:107:  fp->pusch_config_common.n_SB                                         = radioResourceConfigCommon->pusch_ConfigCommon.pusch_ConfigBasic.n_SB;
+openair1/PHY/INIT/nr_init_ue.c:108:  fp->pusch_config_common.hoppingMode                                  = radioResourceConfigCommon->pusch_ConfigCommon.pusch_ConfigBasic.hoppingMode;
+openair1/PHY/INIT/nr_init_ue.c:109:  fp->pusch_config_common.pusch_HoppingOffset                          = radioResourceConfigCommon->pusch_ConfigCommon.pusch_ConfigBasic.pusch_HoppingOffset;
+openair1/PHY/INIT/nr_init_ue.c:110:  fp->pusch_config_common.enable64QAM                                  = radioResourceConfigCommon->pusch_ConfigCommon.pusch_ConfigBasic.enable64QAM;
+openair1/PHY/INIT/nr_init_ue.c:111:  fp->pusch_config_common.ul_ReferenceSignalsPUSCH.groupHoppingEnabled    = radioResourceConfigCommon->pusch_ConfigCommon.ul_ReferenceSignalsPUSCH.groupHoppingEnabled;
+openair1/PHY/INIT/nr_init_ue.c:112:  fp->pusch_config_common.ul_ReferenceSignalsPUSCH.groupAssignmentPUSCH   = radioResourceConfigCommon->pusch_ConfigCommon.ul_ReferenceSignalsPUSCH.groupAssignmentPUSCH;
+openair1/PHY/INIT/nr_init_ue.c:113:  fp->pusch_config_common.ul_ReferenceSignalsPUSCH.sequenceHoppingEnabled = radioResourceConfigCommon->pusch_ConfigCommon.ul_ReferenceSignalsPUSCH.sequenceHoppingEnabled;
+openair1/PHY/INIT/nr_init_ue.c:114:  fp->pusch_config_common.ul_ReferenceSignalsPUSCH.cyclicShift            = dmrs1_tab_ue[radioResourceConfigCommon->pusch_ConfigCommon.ul_ReferenceSignalsPUSCH.cyclicShift];
+openair1/PHY/INIT/nr_init_ue.c:118:  fp->soundingrs_ul_config_common.enabled_flag                        = 0;
+openair1/PHY/INIT/nr_init_ue.c:121:    fp->soundingrs_ul_config_common.enabled_flag                        = 1;
+openair1/PHY/INIT/nr_init_ue.c:122:    fp->soundingrs_ul_config_common.srs_BandwidthConfig                 = radioResourceConfigCommon->soundingRS_UL_ConfigCommon.choice.setup.srs_BandwidthConfig;
+openair1/PHY/INIT/nr_init_ue.c:123:    fp->soundingrs_ul_config_common.srs_SubframeConfig                  = radioResourceConfigCommon->soundingRS_UL_ConfigCommon.choice.setup.srs_SubframeConfig;
+openair1/PHY/INIT/nr_init_ue.c:124:    fp->soundingrs_ul_config_common.ackNackSRS_SimultaneousTransmission = radioResourceConfigCommon->soundingRS_UL_ConfigCommon.choice.setup.ackNackSRS_SimultaneousTransmission;
+openair1/PHY/INIT/nr_init_ue.c:127:      fp->soundingrs_ul_config_common.srs_MaxUpPts                      = 1;
+openair1/PHY/INIT/nr_init_ue.c:129:      fp->soundingrs_ul_config_common.srs_MaxUpPts                      = 0;
+openair1/PHY/INIT/nr_init_ue.c:134:  fp->ul_power_control_config_common.p0_NominalPUSCH   = radioResourceConfigCommon->uplinkPowerControlCommon.p0_NominalPUSCH;
+openair1/PHY/INIT/nr_init_ue.c:135:  fp->ul_power_control_config_common.alpha             = radioResourceConfigCommon->uplinkPowerControlCommon.alpha;
+openair1/PHY/INIT/nr_init_ue.c:136:  fp->ul_power_control_config_common.p0_NominalPUCCH   = radioResourceConfigCommon->uplinkPowerControlCommon.p0_NominalPUCCH;
+openair1/PHY/INIT/nr_init_ue.c:137:  fp->ul_power_control_config_common.deltaPreambleMsg3 = radioResourceConfigCommon->uplinkPowerControlCommon.deltaPreambleMsg3;
+openair1/PHY/INIT/nr_init_ue.c:138:  fp->ul_power_control_config_common.deltaF_PUCCH_Format1  = radioResourceConfigCommon->uplinkPowerControlCommon.deltaFList_PUCCH.deltaF_PUCCH_Format1;
+openair1/PHY/INIT/nr_init_ue.c:139:  fp->ul_power_control_config_common.deltaF_PUCCH_Format1b  = radioResourceConfigCommon->uplinkPowerControlCommon.deltaFList_PUCCH.deltaF_PUCCH_Format1b;
+openair1/PHY/INIT/nr_init_ue.c:140:  fp->ul_power_control_config_common.deltaF_PUCCH_Format2  = radioResourceConfigCommon->uplinkPowerControlCommon.deltaFList_PUCCH.deltaF_PUCCH_Format2;
+openair1/PHY/INIT/nr_init_ue.c:141:  fp->ul_power_control_config_common.deltaF_PUCCH_Format2a  = radioResourceConfigCommon->uplinkPowerControlCommon.deltaFList_PUCCH.deltaF_PUCCH_Format2a;
+openair1/PHY/INIT/nr_init_ue.c:142:  fp->ul_power_control_config_common.deltaF_PUCCH_Format2b  = radioResourceConfigCommon->uplinkPowerControlCommon.deltaFList_PUCCH.deltaF_PUCCH_Format2b;
+openair1/PHY/INIT/nr_init_ue.c:144:  fp->maxHARQ_Msg3Tx = radioResourceConfigCommon->rach_ConfigCommon.maxHARQ_Msg3Tx;
+openair1/PHY/INIT/nr_init_ue.c:159:    fp->num_MBSFN_config = mbsfn_SubframeConfigList->list.count;
+openair1/PHY/INIT/nr_init_ue.c:162:      fp->MBSFN_config[i].radioframeAllocationPeriod = mbsfn_SubframeConfigList->list.array[i]->radioframeAllocationPeriod;
+openair1/PHY/INIT/nr_init_ue.c:163:      fp->MBSFN_config[i].radioframeAllocationOffset = mbsfn_SubframeConfigList->list.array[i]->radioframeAllocationOffset;
+openair1/PHY/INIT/nr_init_ue.c:166:        fp->MBSFN_config[i].fourFrames_flag = 0;
+openair1/PHY/INIT/nr_init_ue.c:167:        fp->MBSFN_config[i].mbsfn_SubframeConfig = mbsfn_SubframeConfigList->list.array[i]->subframeAllocation.choice.oneFrame.buf[0]; // 6-bit subframe configuration
+openair1/PHY/INIT/nr_init_ue.c:169:              fp->MBSFN_config[i].mbsfn_SubframeConfig);
+openair1/PHY/INIT/nr_init_ue.c:171:        fp->MBSFN_config[i].fourFrames_flag = 1;
+openair1/PHY/INIT/nr_init_ue.c:172:        fp->MBSFN_config[i].mbsfn_SubframeConfig =
+openair1/PHY/INIT/nr_init_ue.c:178:              fp->MBSFN_config[i].mbsfn_SubframeConfig);
+openair1/PHY/INIT/nr_init_ue.c:197:    fp->Nid_cell_mbsfn = (uint16_t)mbsfn_AreaId_r9;
+openair1/PHY/INIT/nr_init_ue.c:201:  lte_gold_mbsfn(fp,PHY_vars_UE_g[Mod_id][CC_id]->lte_gold_mbsfn_table,fp->Nid_cell_mbsfn);
+openair1/PHY/INIT/nr_init_ue.c:229:    fp->prach_config_common.rootSequenceIndex                           =radioResourceConfigCommon->prach_Config.rootSequenceIndex;
+openair1/PHY/INIT/nr_init_ue.c:230:    fp->prach_config_common.prach_Config_enabled=1;
+openair1/PHY/INIT/nr_init_ue.c:231:    fp->prach_config_common.prach_ConfigInfo.prach_ConfigIndex          =radioResourceConfigCommon->prach_Config.prach_ConfigInfo->prach_ConfigIndex;
+openair1/PHY/INIT/nr_init_ue.c:232:    fp->prach_config_common.prach_ConfigInfo.highSpeedFlag              =radioResourceConfigCommon->prach_Config.prach_ConfigInfo->highSpeedFlag;
+openair1/PHY/INIT/nr_init_ue.c:233:    fp->prach_config_common.prach_ConfigInfo.zeroCorrelationZoneConfig  =radioResourceConfigCommon->prach_Config.prach_ConfigInfo->zeroCorrelationZoneConfig;
+openair1/PHY/INIT/nr_init_ue.c:234:    fp->prach_config_common.prach_ConfigInfo.prach_FreqOffset           =radioResourceConfigCommon->prach_Config.prach_ConfigInfo->prach_FreqOffset;
+openair1/PHY/INIT/nr_init_ue.c:236:    //     prach_fmt = get_prach_fmt(radioResourceConfigCommon->prach_Config.prach_ConfigInfo->prach_ConfigIndex,fp->frame_type);
+openair1/PHY/INIT/nr_init_ue.c:238:    //     u = (prach_fmt < 4) ? prach_root_sequence_map0_3[fp->prach_config_common.rootSequenceIndex] :
+openair1/PHY/INIT/nr_init_ue.c:239:    //       prach_root_sequence_map4[fp->prach_config_common.rootSequenceIndex];
+openair1/PHY/INIT/nr_init_ue.c:246:                      fp->frame_type,
+openair1/PHY/INIT/nr_init_ue.c:250:    fp->pucch_config_common.deltaPUCCH_Shift = 1+radioResourceConfigCommon->pucch_ConfigCommon->deltaPUCCH_Shift;
+openair1/PHY/INIT/nr_init_ue.c:251:    fp->pucch_config_common.nRB_CQI          = radioResourceConfigCommon->pucch_ConfigCommon->nRB_CQI;
+openair1/PHY/INIT/nr_init_ue.c:252:    fp->pucch_config_common.nCS_AN           = radioResourceConfigCommon->pucch_ConfigCommon->nCS_AN;
+openair1/PHY/INIT/nr_init_ue.c:253:    fp->pucch_config_common.n1PUCCH_AN       = radioResourceConfigCommon->pucch_ConfigCommon->n1PUCCH_AN;
+openair1/PHY/INIT/nr_init_ue.c:254:    fp->pdsch_config_common.referenceSignalPower = radioResourceConfigCommon->pdsch_ConfigCommon->referenceSignalPower;
+openair1/PHY/INIT/nr_init_ue.c:255:    fp->pdsch_config_common.p_b                  = radioResourceConfigCommon->pdsch_ConfigCommon->p_b;
+openair1/PHY/INIT/nr_init_ue.c:258:    fp->pusch_config_common.n_SB                                         = radioResourceConfigCommon->pusch_ConfigCommon.pusch_ConfigBasic.n_SB;
+openair1/PHY/INIT/nr_init_ue.c:259:    fp->pusch_config_common.hoppingMode                                  = radioResourceConfigCommon->pusch_ConfigCommon.pusch_ConfigBasic.hoppingMode;
+openair1/PHY/INIT/nr_init_ue.c:260:    fp->pusch_config_common.pusch_HoppingOffset                          = radioResourceConfigCommon->pusch_ConfigCommon.pusch_ConfigBasic.pusch_HoppingOffset;
+openair1/PHY/INIT/nr_init_ue.c:261:    fp->pusch_config_common.enable64QAM                                  = radioResourceConfigCommon->pusch_ConfigCommon.pusch_ConfigBasic.enable64QAM;
+openair1/PHY/INIT/nr_init_ue.c:262:    fp->pusch_config_common.ul_ReferenceSignalsPUSCH.groupHoppingEnabled    = radioResourceConfigCommon->pusch_ConfigCommon.ul_ReferenceSignalsPUSCH.groupHoppingEnabled;
+openair1/PHY/INIT/nr_init_ue.c:263:    fp->pusch_config_common.ul_ReferenceSignalsPUSCH.groupAssignmentPUSCH   = radioResourceConfigCommon->pusch_ConfigCommon.ul_ReferenceSignalsPUSCH.groupAssignmentPUSCH;
+openair1/PHY/INIT/nr_init_ue.c:264:    fp->pusch_config_common.ul_ReferenceSignalsPUSCH.sequenceHoppingEnabled = radioResourceConfigCommon->pusch_ConfigCommon.ul_ReferenceSignalsPUSCH.sequenceHoppingEnabled;
+openair1/PHY/INIT/nr_init_ue.c:265:    fp->pusch_config_common.ul_ReferenceSignalsPUSCH.cyclicShift            = radioResourceConfigCommon->pusch_ConfigCommon.ul_ReferenceSignalsPUSCH.cyclicShift;
+openair1/PHY/INIT/nr_init_ue.c:268:    fp->soundingrs_ul_config_common.enabled_flag                        = 0;
+openair1/PHY/INIT/nr_init_ue.c:271:      fp->soundingrs_ul_config_common.enabled_flag                        = 1;
+openair1/PHY/INIT/nr_init_ue.c:272:      fp->soundingrs_ul_config_common.srs_BandwidthConfig                 = radioResourceConfigCommon->soundingRS_UL_ConfigCommon->choice.setup.srs_BandwidthConfig;
+openair1/PHY/INIT/nr_init_ue.c:273:      fp->soundingrs_ul_config_common.srs_SubframeConfig                  = radioResourceConfigCommon->soundingRS_UL_ConfigCommon->choice.setup.srs_SubframeConfig;
+openair1/PHY/INIT/nr_init_ue.c:274:      fp->soundingrs_ul_config_common.ackNackSRS_SimultaneousTransmission = radioResourceConfigCommon->soundingRS_UL_ConfigCommon->choice.setup.ackNackSRS_SimultaneousTransmission;
+openair1/PHY/INIT/nr_init_ue.c:277:        fp->soundingrs_ul_config_common.srs_MaxUpPts                      = 1;
+openair1/PHY/INIT/nr_init_ue.c:279:        fp->soundingrs_ul_config_common.srs_MaxUpPts                      = 0;
+openair1/PHY/INIT/nr_init_ue.c:282:    fp->ul_power_control_config_common.p0_NominalPUSCH   = radioResourceConfigCommon->uplinkPowerControlCommon->p0_NominalPUSCH;
+openair1/PHY/INIT/nr_init_ue.c:283:    fp->ul_power_control_config_common.alpha             = radioResourceConfigCommon->uplinkPowerControlCommon->alpha;
+openair1/PHY/INIT/nr_init_ue.c:284:    fp->ul_power_control_config_common.p0_NominalPUCCH   = radioResourceConfigCommon->uplinkPowerControlCommon->p0_NominalPUCCH;
+openair1/PHY/INIT/nr_init_ue.c:285:    fp->ul_power_control_config_common.deltaPreambleMsg3 = radioResourceConfigCommon->uplinkPowerControlCommon->deltaPreambleMsg3;
+openair1/PHY/INIT/nr_init_ue.c:286:    fp->ul_power_control_config_common.deltaF_PUCCH_Format1  = radioResourceConfigCommon->uplinkPowerControlCommon->deltaFList_PUCCH.deltaF_PUCCH_Format1;
+openair1/PHY/INIT/nr_init_ue.c:287:    fp->ul_power_control_config_common.deltaF_PUCCH_Format1b  = radioResourceConfigCommon->uplinkPowerControlCommon->deltaFList_PUCCH.deltaF_PUCCH_Format1b;
+openair1/PHY/INIT/nr_init_ue.c:288:    fp->ul_power_control_config_common.deltaF_PUCCH_Format2  = radioResourceConfigCommon->uplinkPowerControlCommon->deltaFList_PUCCH.deltaF_PUCCH_Format2;
+openair1/PHY/INIT/nr_init_ue.c:289:    fp->ul_power_control_config_common.deltaF_PUCCH_Format2a  = radioResourceConfigCommon->uplinkPowerControlCommon->deltaFList_PUCCH.deltaF_PUCCH_Format2a;
+openair1/PHY/INIT/nr_init_ue.c:290:    fp->ul_power_control_config_common.deltaF_PUCCH_Format2b  = radioResourceConfigCommon->uplinkPowerControlCommon->deltaFList_PUCCH.deltaF_PUCCH_Format2b;
+openair1/PHY/INIT/nr_init_ue.c:292:    fp->maxHARQ_Msg3Tx = radioResourceConfigCommon->rach_ConfigCommon->maxHARQ_Msg3Tx;
+openair1/PHY/INIT/nr_init_ue.c:296:      fp->nb_antennas_tx                     = (1<<radioResourceConfigCommon->antennaInfoCommon->antennaPortsCount);
+openair1/PHY/INIT/nr_init_ue.c:298:      fp->nb_antennas_tx                     = 1;
+openair1/PHY/INIT/nr_init_ue.c:302:      fp->phich_config_common.phich_resource = radioResourceConfigCommon->phich_Config->phich_Resource;
+openair1/PHY/INIT/nr_init_ue.c:303:      fp->phich_config_common.phich_duration = radioResourceConfigCommon->phich_Config->phich_Duration;
+openair1/PHY/INIT/nr_init_ue.c:307:    fp->Nid_cell = mobilityControlInfo->targetPhysCellId;
+openair1/PHY/INIT/nr_init_ue.c:308:    fp->nushift  = fp->Nid_cell%6;
+openair1/PHY/INIT/nr_init_ue.c:604:  pdsch->pmi_ext = (uint8_t*)malloc16_clear( fp->N_RB_DL );
+openair1/PHY/INIT/nr_init_ue.c:615:  pdsch->rho                    = (int32_t**)malloc16_clear( fp->nb_antennas_rx*sizeof(int32_t*) );
+openair1/PHY/INIT/nr_init_ue.c:627:  AssertFatal( fp->nb_antennas_rx <= 2, "nb_antennas_rx > 2" );
+openair1/PHY/INIT/nr_init_ue.c:629:  for (int i=0; i<fp->nb_antennas_rx; i++) {
+openair1/PHY/INIT/nr_init_ue.c:630:    pdsch->rho[i]     = (int32_t*)malloc16_clear( sizeof(int32_t)*(fp->N_RB_DL*12*7*2) );
+openair1/PHY/INIT/nr_init_ue.c:632:    for (int j=0; j<4; j++) { //fp->nb_antennas_tx; j++)
+openair1/PHY/INIT/nr_init_ue.c:634:      const size_t num = 7*2*fp->N_RB_DL*12;
+openair1/PHY/INIT/nr_init_ue.c:636:      pdsch->rxdataF_uespec_pilots[idx]   = (int32_t*)malloc16_clear( sizeof(int32_t) * fp->N_RB_DL*12);
+openair1/PHY/INIT/nr_init_ue.c:638:      pdsch->dl_ch_estimates[idx]         = (int32_t*)malloc16_clear( sizeof(int32_t) * fp->ofdm_symbol_size*7*2);
+openair1/PHY/INIT/nr_init_ue.c:640:      pdsch->dl_bf_ch_estimates[idx]      = (int32_t*)malloc16_clear( sizeof(int32_t) * fp->ofdm_symbol_size*7*2);
+openair1/PHY/INIT/nr_init_ue.c:679:  int n_ssb_crb=(fp->N_RB_DL-20);
+openair1/PHY/INIT/nr_init_ue.c:685:  fp->nb_antennas_tx = 1;
+openair1/PHY/INIT/nr_init_ue.c:686:  fp->nb_antennas_rx=1;
+openair1/PHY/INIT/nr_init_ue.c:689:  printf("Initializing UE vars (abstraction %"PRIu8") for eNB TXant %"PRIu8", UE RXant %"PRIu8"\n",abstraction_flag,fp->nb_antennas_tx,fp->nb_antennas_rx);
+openair1/PHY/INIT/nr_init_ue.c:692:  nr_init_frame_parms_ue(fp,NR_MU_1,NORMAL,fp->N_RB_DL,n_ssb_crb,k_ssb);
+openair1/PHY/INIT/nr_init_ue.c:696:  AssertFatal( fp->nb_antennas_rx <= 2, "hard coded allocation for ue_common_vars->dl_ch_estimates[eNB_id]" );
+openair1/PHY/INIT/nr_init_ue.c:747:   ue->nr_gold_pusch_dmrs = (uint32_t ****)malloc16(fp->slots_per_frame*sizeof(uint32_t***));
+openair1/PHY/INIT/nr_init_ue.c:751:   for (slot=0; slot<fp->slots_per_frame; slot++) {
+openair1/PHY/INIT/nr_init_ue.c:752:    pusch_dmrs[slot] = (uint32_t ***)malloc16(fp->symbols_per_slot*sizeof(uint32_t**));
+openair1/PHY/INIT/nr_init_ue.c:754:    for (symb=0; symb<fp->symbols_per_slot; symb++){
+openair1/PHY/INIT/nr_init_ue.c:775:    common_vars->txdata  = (int32_t**)malloc16( fp->nb_antennas_tx*sizeof(int32_t*) );
+openair1/PHY/INIT/nr_init_ue.c:776:    common_vars->txdataF = (int32_t **)malloc16( fp->nb_antennas_tx*sizeof(int32_t*) );
+openair1/PHY/INIT/nr_init_ue.c:778:    for (i=0; i<fp->nb_antennas_tx; i++) {
+openair1/PHY/INIT/nr_init_ue.c:780:      common_vars->txdata[i]  = (int32_t*)malloc16_clear( fp->samples_per_subframe*10*sizeof(int32_t) );
+openair1/PHY/INIT/nr_init_ue.c:781:      common_vars->txdataF[i] = (int32_t *)malloc16_clear( fp->samples_per_slot_wCP*sizeof(int32_t) );
+openair1/PHY/INIT/nr_init_ue.c:785:    common_vars->rxdata   = (int32_t**)malloc16( fp->nb_antennas_rx*sizeof(int32_t*) );
+openair1/PHY/INIT/nr_init_ue.c:787:        common_vars->common_vars_rx_data_per_thread[th_id].rxdataF  = (int32_t**)malloc16( fp->nb_antennas_rx*sizeof(int32_t*) );
+openair1/PHY/INIT/nr_init_ue.c:790:    for (i=0; i<fp->nb_antennas_rx; i++) {
+openair1/PHY/INIT/nr_init_ue.c:791:      common_vars->rxdata[i] = (int32_t*) malloc16_clear( (2*(fp->samples_per_frame)+2048)*sizeof(int32_t) );
+openair1/PHY/INIT/nr_init_ue.c:793:          common_vars->common_vars_rx_data_per_thread[th_id].rxdataF[i] = (int32_t*)malloc16_clear( sizeof(int32_t)*(fp->samples_per_slot_wCP) );
+openair1/PHY/INIT/nr_init_ue.c:822:        ue->pdsch_vars[th_id][eNB_id]->llr_shifts      = (uint8_t*)malloc16_clear(7*2*fp->N_RB_DL*12);
+openair1/PHY/INIT/nr_init_ue.c:827:        ue->pdsch_vars[th_id][eNB_id]->rho                 = (int32_t**)malloc16_clear( fp->nb_antennas_rx*sizeof(int32_t*) );
+openair1/PHY/INIT/nr_init_ue.c:830:      for (int i=0; i<fp->nb_antennas_rx; i++){
+openair1/PHY/INIT/nr_init_ue.c:832:            ue->pdsch_vars[th_id][eNB_id]->rho[i]     = (int32_t*)malloc16_clear( 7*2*sizeof(int32_t)*(fp->N_RB_DL*12) );
+openair1/PHY/INIT/nr_init_ue.c:840:      for (i=0; i<fp->nb_antennas_rx; i++)
+openair1/PHY/INIT/nr_init_ue.c:843:          const size_t num = 7*2*fp->N_RB_DL*12+4;
+openair1/PHY/INIT/nr_init_ue.c:850:      //const size_t num = 7*2*fp->N_RB_DL*12+4;
+openair1/PHY/INIT/nr_init_ue.c:861:          for (int i=0; i<fp->nb_antennas_rx; i++)
+openair1/PHY/INIT/nr_init_ue.c:865:                  ue->pdsch_vars[th_id][eNB_id]->dl_ch_rho_ext[k][l][idx] = (int32_t*)malloc16_clear( 7*2*sizeof(int32_t)*(fp->N_RB_DL*12) );
+openair1/PHY/INIT/nr_init_ue.c:866:                  ue->pdsch_vars[th_id][eNB_id]->rxdataF_comp1[k][l][idx] = (int32_t*)malloc16_clear( 7*2*sizeof(int32_t)*(fp->N_RB_DL*12) );
+openair1/PHY/INIT/nr_init_ue.c:867:                  ue->pdsch_vars[th_id][eNB_id]->dl_ch_mag1[k][l][idx] = (int32_t*)malloc16_clear( 7*2*sizeof(int32_t)*(fp->N_RB_DL*12) );
+openair1/PHY/INIT/nr_init_ue.c:868:                  ue->pdsch_vars[th_id][eNB_id]->dl_ch_magb1[k][l][idx] = (int32_t*)malloc16_clear( 7*2*sizeof(int32_t)*(fp->N_RB_DL*12) );
+openair1/PHY/INIT/nr_init_ue.c:888:          ue->pdcch_vars[th_id][eNB_id]->rho                 = (int32_t**)malloc16( fp->nb_antennas_rx*sizeof(int32_t*) );
+openair1/PHY/INIT/nr_init_ue.c:896:	  for (i=0; i<fp->nb_antennas_rx; i++) {
+openair1/PHY/INIT/nr_init_ue.c:900:	      ue->pdcch_vars[th_id][eNB_id]->dl_ch_estimates[idx] = (int32_t*)malloc16_clear( sizeof(int32_t)*fp->symbols_per_slot*(fp->ofdm_symbol_size+LTE_CE_FILTER_LENGTH) );
+openair1/PHY/INIT/nr_init_ue.c:901:	      ue->pdcch_vars[th_id][eNB_id]->dl_ch_estimates_time[idx] = (int32_t*)malloc16_clear( sizeof(int32_t)*fp->ofdm_symbol_size*2 );
+openair1/PHY/INIT/nr_init_ue.c:903:	      //  size_t num = 7*2*fp->N_RB_DL*12;
+openair1/PHY/INIT/nr_init_ue.c:914:      pbch_vars[eNB_id]->rxdataF_ext         = (int32_t**)malloc16( fp->nb_antennas_rx*sizeof(int32_t*) );
+openair1/PHY/INIT/nr_init_ue.c:919:      prach_vars[eNB_id]->prachF             = (int16_t*)malloc16_clear( sizeof(int)*(7*2*sizeof(int)*(fp->ofdm_symbol_size*12)) );
+openair1/PHY/INIT/nr_init_ue.c:920:      prach_vars[eNB_id]->prach              = (int16_t*)malloc16_clear( sizeof(int)*(7*2*sizeof(int)*(fp->ofdm_symbol_size*12)) );
+openair1/PHY/INIT/nr_init_ue.c:922:      for (i=0; i<fp->nb_antennas_rx; i++) {
+openair1/PHY/INIT/nr_init_ue.c:925:        for (j=0; j<4; j++) {//fp->nb_antennas_tx;j++) {
+openair1/PHY/INIT/nr_init_ue.c:928:          pbch_vars[eNB_id]->dl_ch_estimates[idx]     = (int32_t*)malloc16_clear( sizeof(int32_t)*7*2*sizeof(int)*(fp->ofdm_symbol_size) );
+openair1/PHY/INIT/nr_init_ue.c:954:    ue->sinr_dB = (double*) malloc16_clear( fp->N_RB_DL*12*sizeof(double) );
+openair1/PHY/INIT/nr_init_ue.c:957:  ue->sinr_CQI_dB = (double*) malloc16_clear( fp->N_RB_DL*12*sizeof(double) );
+openair1/PHY/INIT/nr_init_ue.c:961:  if (fp->nb_antenna_ports_eNB==2)
+openair1/PHY/INIT/lte_init_ue.c:51:    fp->tdd_config    = tdd_Config->subframeAssignment;
+openair1/PHY/INIT/lte_init_ue.c:52:    fp->tdd_config_S  = tdd_Config->specialSubframePatterns;
+openair1/PHY/INIT/lte_init_ue.c:55:  fp->SIwindowsize  = SIwindowsize;
+openair1/PHY/INIT/lte_init_ue.c:56:  fp->SIPeriod      = SIperiod;
+openair1/PHY/INIT/lte_init_ue.c:71:  fp->prach_config_common.rootSequenceIndex                           =radioResourceConfigCommon->prach_Config.rootSequenceIndex;
+openair1/PHY/INIT/lte_init_ue.c:72:  fp->prach_config_common.prach_Config_enabled=1;
+openair1/PHY/INIT/lte_init_ue.c:73:  fp->prach_config_common.prach_ConfigInfo.prach_ConfigIndex          =radioResourceConfigCommon->prach_Config.prach_ConfigInfo.prach_ConfigIndex;
+openair1/PHY/INIT/lte_init_ue.c:74:  fp->prach_config_common.prach_ConfigInfo.highSpeedFlag              =radioResourceConfigCommon->prach_Config.prach_ConfigInfo.highSpeedFlag;
+openair1/PHY/INIT/lte_init_ue.c:75:  fp->prach_config_common.prach_ConfigInfo.zeroCorrelationZoneConfig  =radioResourceConfigCommon->prach_Config.prach_ConfigInfo.zeroCorrelationZoneConfig;
+openair1/PHY/INIT/lte_init_ue.c:76:  fp->prach_config_common.prach_ConfigInfo.prach_FreqOffset           =radioResourceConfigCommon->prach_Config.prach_ConfigInfo.prach_FreqOffset;
+openair1/PHY/INIT/lte_init_ue.c:77:  compute_prach_seq(fp->prach_config_common.rootSequenceIndex,
+openair1/PHY/INIT/lte_init_ue.c:78:                    fp->prach_config_common.prach_ConfigInfo.prach_ConfigIndex,
+openair1/PHY/INIT/lte_init_ue.c:79:                    fp->prach_config_common.prach_ConfigInfo.zeroCorrelationZoneConfig,
+openair1/PHY/INIT/lte_init_ue.c:80:                    fp->prach_config_common.prach_ConfigInfo.highSpeedFlag,
+openair1/PHY/INIT/lte_init_ue.c:81:                    fp->frame_type,ue->X_u);
+openair1/PHY/INIT/lte_init_ue.c:82:  fp->pucch_config_common.deltaPUCCH_Shift = 1+radioResourceConfigCommon->pucch_ConfigCommon.deltaPUCCH_Shift;
+openair1/PHY/INIT/lte_init_ue.c:83:  fp->pucch_config_common.nRB_CQI          = radioResourceConfigCommon->pucch_ConfigCommon.nRB_CQI;
+openair1/PHY/INIT/lte_init_ue.c:84:  fp->pucch_config_common.nCS_AN           = radioResourceConfigCommon->pucch_ConfigCommon.nCS_AN;
+openair1/PHY/INIT/lte_init_ue.c:85:  fp->pucch_config_common.n1PUCCH_AN       = radioResourceConfigCommon->pucch_ConfigCommon.n1PUCCH_AN;
+openair1/PHY/INIT/lte_init_ue.c:86:  fp->pdsch_config_common.referenceSignalPower = radioResourceConfigCommon->pdsch_ConfigCommon.referenceSignalPower;
+openair1/PHY/INIT/lte_init_ue.c:87:  fp->pdsch_config_common.p_b                  = radioResourceConfigCommon->pdsch_ConfigCommon.p_b;
+openair1/PHY/INIT/lte_init_ue.c:88:  fp->pusch_config_common.n_SB                                         = radioResourceConfigCommon->pusch_ConfigCommon.pusch_ConfigBasic.n_SB;
+openair1/PHY/INIT/lte_init_ue.c:89:  fp->pusch_config_common.hoppingMode                                  = radioResourceConfigCommon->pusch_ConfigCommon.pusch_ConfigBasic.hoppingMode;
+openair1/PHY/INIT/lte_init_ue.c:90:  fp->pusch_config_common.pusch_HoppingOffset                          = radioResourceConfigCommon->pusch_ConfigCommon.pusch_ConfigBasic.pusch_HoppingOffset;
+openair1/PHY/INIT/lte_init_ue.c:91:  fp->pusch_config_common.enable64QAM                                  = radioResourceConfigCommon->pusch_ConfigCommon.pusch_ConfigBasic.enable64QAM;
+openair1/PHY/INIT/lte_init_ue.c:92:  fp->pusch_config_common.ul_ReferenceSignalsPUSCH.groupHoppingEnabled    = radioResourceConfigCommon->pusch_ConfigCommon.ul_ReferenceSignalsPUSCH.groupHoppingEnabled;
+openair1/PHY/INIT/lte_init_ue.c:93:  fp->pusch_config_common.ul_ReferenceSignalsPUSCH.groupAssignmentPUSCH   = radioResourceConfigCommon->pusch_ConfigCommon.ul_ReferenceSignalsPUSCH.groupAssignmentPUSCH;
+openair1/PHY/INIT/lte_init_ue.c:94:  fp->pusch_config_common.ul_ReferenceSignalsPUSCH.sequenceHoppingEnabled = radioResourceConfigCommon->pusch_ConfigCommon.ul_ReferenceSignalsPUSCH.sequenceHoppingEnabled;
+openair1/PHY/INIT/lte_init_ue.c:95:  fp->pusch_config_common.ul_ReferenceSignalsPUSCH.cyclicShift            = dmrs1_tab_ue[radioResourceConfigCommon->pusch_ConfigCommon.ul_ReferenceSignalsPUSCH.cyclicShift];
+openair1/PHY/INIT/lte_init_ue.c:97:  fp->soundingrs_ul_config_common.enabled_flag                        = 0;
+openair1/PHY/INIT/lte_init_ue.c:100:    fp->soundingrs_ul_config_common.enabled_flag                        = 1;
+openair1/PHY/INIT/lte_init_ue.c:101:    fp->soundingrs_ul_config_common.srs_BandwidthConfig                 = radioResourceConfigCommon->soundingRS_UL_ConfigCommon.choice.setup.srs_BandwidthConfig;
+openair1/PHY/INIT/lte_init_ue.c:102:    fp->soundingrs_ul_config_common.srs_SubframeConfig                  = radioResourceConfigCommon->soundingRS_UL_ConfigCommon.choice.setup.srs_SubframeConfig;
+openair1/PHY/INIT/lte_init_ue.c:103:    fp->soundingrs_ul_config_common.ackNackSRS_SimultaneousTransmission = radioResourceConfigCommon->soundingRS_UL_ConfigCommon.choice.setup.ackNackSRS_SimultaneousTransmission;
+openair1/PHY/INIT/lte_init_ue.c:106:      fp->soundingrs_ul_config_common.srs_MaxUpPts                      = 1;
+openair1/PHY/INIT/lte_init_ue.c:108:      fp->soundingrs_ul_config_common.srs_MaxUpPts                      = 0;
+openair1/PHY/INIT/lte_init_ue.c:111:  fp->ul_power_control_config_common.p0_NominalPUSCH   = radioResourceConfigCommon->uplinkPowerControlCommon.p0_NominalPUSCH;
+openair1/PHY/INIT/lte_init_ue.c:112:  fp->ul_power_control_config_common.alpha             = radioResourceConfigCommon->uplinkPowerControlCommon.alpha;
+openair1/PHY/INIT/lte_init_ue.c:113:  fp->ul_power_control_config_common.p0_NominalPUCCH   = radioResourceConfigCommon->uplinkPowerControlCommon.p0_NominalPUCCH;
+openair1/PHY/INIT/lte_init_ue.c:114:  fp->ul_power_control_config_common.deltaPreambleMsg3 = radioResourceConfigCommon->uplinkPowerControlCommon.deltaPreambleMsg3;
+openair1/PHY/INIT/lte_init_ue.c:115:  fp->ul_power_control_config_common.deltaF_PUCCH_Format1  = radioResourceConfigCommon->uplinkPowerControlCommon.deltaFList_PUCCH.deltaF_PUCCH_Format1;
+openair1/PHY/INIT/lte_init_ue.c:116:  fp->ul_power_control_config_common.deltaF_PUCCH_Format1b  = radioResourceConfigCommon->uplinkPowerControlCommon.deltaFList_PUCCH.deltaF_PUCCH_Format1b;
+openair1/PHY/INIT/lte_init_ue.c:117:  fp->ul_power_control_config_common.deltaF_PUCCH_Format2  = radioResourceConfigCommon->uplinkPowerControlCommon.deltaFList_PUCCH.deltaF_PUCCH_Format2;
+openair1/PHY/INIT/lte_init_ue.c:118:  fp->ul_power_control_config_common.deltaF_PUCCH_Format2a  = radioResourceConfigCommon->uplinkPowerControlCommon.deltaFList_PUCCH.deltaF_PUCCH_Format2a;
+openair1/PHY/INIT/lte_init_ue.c:119:  fp->ul_power_control_config_common.deltaF_PUCCH_Format2b  = radioResourceConfigCommon->uplinkPowerControlCommon.deltaFList_PUCCH.deltaF_PUCCH_Format2b;
+openair1/PHY/INIT/lte_init_ue.c:120:  fp->maxHARQ_Msg3Tx = radioResourceConfigCommon->rach_ConfigCommon.maxHARQ_Msg3Tx;
+openair1/PHY/INIT/lte_init_ue.c:131:    fp->num_MBSFN_config = mbsfn_SubframeConfigList->list.count;
+openair1/PHY/INIT/lte_init_ue.c:134:      fp->MBSFN_config[i].radioframeAllocationPeriod = mbsfn_SubframeConfigList->list.array[i]->radioframeAllocationPeriod;
+openair1/PHY/INIT/lte_init_ue.c:135:      fp->MBSFN_config[i].radioframeAllocationOffset = mbsfn_SubframeConfigList->list.array[i]->radioframeAllocationOffset;
+openair1/PHY/INIT/lte_init_ue.c:138:        fp->MBSFN_config[i].fourFrames_flag = 0;
+openair1/PHY/INIT/lte_init_ue.c:139:        fp->MBSFN_config[i].mbsfn_SubframeConfig = mbsfn_SubframeConfigList->list.array[i]->subframeAllocation.choice.oneFrame.buf[0]; // 6-bit subframe configuration
+openair1/PHY/INIT/lte_init_ue.c:141:              fp->MBSFN_config[i].mbsfn_SubframeConfig);
+openair1/PHY/INIT/lte_init_ue.c:143:        fp->MBSFN_config[i].fourFrames_flag = 1;
+openair1/PHY/INIT/lte_init_ue.c:144:        fp->MBSFN_config[i].mbsfn_SubframeConfig =
+openair1/PHY/INIT/lte_init_ue.c:149:              fp->MBSFN_config[i].mbsfn_SubframeConfig);
+openair1/PHY/INIT/lte_init_ue.c:163:    fp->Nid_cell_mbsfn = (uint16_t)mbsfn_AreaId_r9;
+openair1/PHY/INIT/lte_init_ue.c:167:  lte_gold_mbsfn(fp,PHY_vars_UE_g[Mod_id][CC_id]->lte_gold_mbsfn_table,fp->Nid_cell_mbsfn);
+openair1/PHY/INIT/lte_init_ue.c:171:  lte_gold_mbsfn_khz_1dot25(fp,PHY_vars_UE_g[Mod_id][CC_id]->lte_gold_mbsfn_khz_1dot25_table,fp->Nid_cell_mbsfn);
+openair1/PHY/INIT/lte_init_ue.c:183:    fp->NonMBSFN_config_flag = 0;
+openair1/PHY/INIT/lte_init_ue.c:184:    fp->NonMBSFN_config.radioframeAllocationPeriod=nonMBSFN_SubframeConfig->radioFrameAllocationPeriod_r14;
+openair1/PHY/INIT/lte_init_ue.c:185:    fp->NonMBSFN_config.radioframeAllocationOffset=nonMBSFN_SubframeConfig->radioFrameAllocationOffset_r14;
+openair1/PHY/INIT/lte_init_ue.c:186:    fp->NonMBSFN_config.non_mbsfn_SubframeConfig=(nonMBSFN_SubframeConfig->subframeAllocation_r14.buf[0]<<1 | nonMBSFN_SubframeConfig->subframeAllocation_r14.buf[0]>>7);
+openair1/PHY/INIT/lte_init_ue.c:210:    fp->prach_config_common.rootSequenceIndex                           =radioResourceConfigCommon->prach_Config.rootSequenceIndex;
+openair1/PHY/INIT/lte_init_ue.c:211:    fp->prach_config_common.prach_Config_enabled=1;
+openair1/PHY/INIT/lte_init_ue.c:212:    fp->prach_config_common.prach_ConfigInfo.prach_ConfigIndex          =radioResourceConfigCommon->prach_Config.prach_ConfigInfo->prach_ConfigIndex;
+openair1/PHY/INIT/lte_init_ue.c:213:    fp->prach_config_common.prach_ConfigInfo.highSpeedFlag              =radioResourceConfigCommon->prach_Config.prach_ConfigInfo->highSpeedFlag;
+openair1/PHY/INIT/lte_init_ue.c:214:    fp->prach_config_common.prach_ConfigInfo.zeroCorrelationZoneConfig  =radioResourceConfigCommon->prach_Config.prach_ConfigInfo->zeroCorrelationZoneConfig;
+openair1/PHY/INIT/lte_init_ue.c:215:    fp->prach_config_common.prach_ConfigInfo.prach_FreqOffset           =radioResourceConfigCommon->prach_Config.prach_ConfigInfo->prach_FreqOffset;
+openair1/PHY/INIT/lte_init_ue.c:216:    //     prach_fmt = get_prach_fmt(radioResourceConfigCommon->prach_Config.prach_ConfigInfo->prach_ConfigIndex,fp->frame_type);
+openair1/PHY/INIT/lte_init_ue.c:218:    //     u = (prach_fmt < 4) ? prach_root_sequence_map0_3[fp->prach_config_common.rootSequenceIndex] :
+openair1/PHY/INIT/lte_init_ue.c:219:    //       prach_root_sequence_map4[fp->prach_config_common.rootSequenceIndex];
+openair1/PHY/INIT/lte_init_ue.c:225:                      fp->frame_type,
+openair1/PHY/INIT/lte_init_ue.c:227:    fp->pucch_config_common.deltaPUCCH_Shift = 1+radioResourceConfigCommon->pucch_ConfigCommon->deltaPUCCH_Shift;
+openair1/PHY/INIT/lte_init_ue.c:228:    fp->pucch_config_common.nRB_CQI          = radioResourceConfigCommon->pucch_ConfigCommon->nRB_CQI;
+openair1/PHY/INIT/lte_init_ue.c:229:    fp->pucch_config_common.nCS_AN           = radioResourceConfigCommon->pucch_ConfigCommon->nCS_AN;
+openair1/PHY/INIT/lte_init_ue.c:230:    fp->pucch_config_common.n1PUCCH_AN       = radioResourceConfigCommon->pucch_ConfigCommon->n1PUCCH_AN;
+openair1/PHY/INIT/lte_init_ue.c:231:    fp->pdsch_config_common.referenceSignalPower = radioResourceConfigCommon->pdsch_ConfigCommon->referenceSignalPower;
+openair1/PHY/INIT/lte_init_ue.c:232:    fp->pdsch_config_common.p_b                  = radioResourceConfigCommon->pdsch_ConfigCommon->p_b;
+openair1/PHY/INIT/lte_init_ue.c:233:    fp->pusch_config_common.n_SB                                         = radioResourceConfigCommon->pusch_ConfigCommon.pusch_ConfigBasic.n_SB;
+openair1/PHY/INIT/lte_init_ue.c:234:    fp->pusch_config_common.hoppingMode                                  = radioResourceConfigCommon->pusch_ConfigCommon.pusch_ConfigBasic.hoppingMode;
+openair1/PHY/INIT/lte_init_ue.c:235:    fp->pusch_config_common.pusch_HoppingOffset                          = radioResourceConfigCommon->pusch_ConfigCommon.pusch_ConfigBasic.pusch_HoppingOffset;
+openair1/PHY/INIT/lte_init_ue.c:236:    fp->pusch_config_common.enable64QAM                                  = radioResourceConfigCommon->pusch_ConfigCommon.pusch_ConfigBasic.enable64QAM;
+openair1/PHY/INIT/lte_init_ue.c:237:    fp->pusch_config_common.ul_ReferenceSignalsPUSCH.groupHoppingEnabled    = radioResourceConfigCommon->pusch_ConfigCommon.ul_ReferenceSignalsPUSCH.groupHoppingEnabled;
+openair1/PHY/INIT/lte_init_ue.c:238:    fp->pusch_config_common.ul_ReferenceSignalsPUSCH.groupAssignmentPUSCH   = radioResourceConfigCommon->pusch_ConfigCommon.ul_ReferenceSignalsPUSCH.groupAssignmentPUSCH;
+openair1/PHY/INIT/lte_init_ue.c:239:    fp->pusch_config_common.ul_ReferenceSignalsPUSCH.sequenceHoppingEnabled = radioResourceConfigCommon->pusch_ConfigCommon.ul_ReferenceSignalsPUSCH.sequenceHoppingEnabled;
+openair1/PHY/INIT/lte_init_ue.c:240:    fp->pusch_config_common.ul_ReferenceSignalsPUSCH.cyclicShift            = radioResourceConfigCommon->pusch_ConfigCommon.ul_ReferenceSignalsPUSCH.cyclicShift;
+openair1/PHY/INIT/lte_init_ue.c:242:    fp->soundingrs_ul_config_common.enabled_flag                        = 0;
+openair1/PHY/INIT/lte_init_ue.c:245:      fp->soundingrs_ul_config_common.enabled_flag                        = 1;
+openair1/PHY/INIT/lte_init_ue.c:246:      fp->soundingrs_ul_config_common.srs_BandwidthConfig                 = radioResourceConfigCommon->soundingRS_UL_ConfigCommon->choice.setup.srs_BandwidthConfig;
+openair1/PHY/INIT/lte_init_ue.c:247:      fp->soundingrs_ul_config_common.srs_SubframeConfig                  = radioResourceConfigCommon->soundingRS_UL_ConfigCommon->choice.setup.srs_SubframeConfig;
+openair1/PHY/INIT/lte_init_ue.c:248:      fp->soundingrs_ul_config_common.ackNackSRS_SimultaneousTransmission = radioResourceConfigCommon->soundingRS_UL_ConfigCommon->choice.setup.ackNackSRS_SimultaneousTransmission;
+openair1/PHY/INIT/lte_init_ue.c:251:        fp->soundingrs_ul_config_common.srs_MaxUpPts                      = 1;
+openair1/PHY/INIT/lte_init_ue.c:253:        fp->soundingrs_ul_config_common.srs_MaxUpPts                      = 0;
+openair1/PHY/INIT/lte_init_ue.c:256:    fp->ul_power_control_config_common.p0_NominalPUSCH   = radioResourceConfigCommon->uplinkPowerControlCommon->p0_NominalPUSCH;
+openair1/PHY/INIT/lte_init_ue.c:257:    fp->ul_power_control_config_common.alpha             = radioResourceConfigCommon->uplinkPowerControlCommon->alpha;
+openair1/PHY/INIT/lte_init_ue.c:258:    fp->ul_power_control_config_common.p0_NominalPUCCH   = radioResourceConfigCommon->uplinkPowerControlCommon->p0_NominalPUCCH;
+openair1/PHY/INIT/lte_init_ue.c:259:    fp->ul_power_control_config_common.deltaPreambleMsg3 = radioResourceConfigCommon->uplinkPowerControlCommon->deltaPreambleMsg3;
+openair1/PHY/INIT/lte_init_ue.c:260:    fp->ul_power_control_config_common.deltaF_PUCCH_Format1  = radioResourceConfigCommon->uplinkPowerControlCommon->deltaFList_PUCCH.deltaF_PUCCH_Format1;
+openair1/PHY/INIT/lte_init_ue.c:261:    fp->ul_power_control_config_common.deltaF_PUCCH_Format1b  = radioResourceConfigCommon->uplinkPowerControlCommon->deltaFList_PUCCH.deltaF_PUCCH_Format1b;
+openair1/PHY/INIT/lte_init_ue.c:262:    fp->ul_power_control_config_common.deltaF_PUCCH_Format2  = radioResourceConfigCommon->uplinkPowerControlCommon->deltaFList_PUCCH.deltaF_PUCCH_Format2;
+openair1/PHY/INIT/lte_init_ue.c:263:    fp->ul_power_control_config_common.deltaF_PUCCH_Format2a  = radioResourceConfigCommon->uplinkPowerControlCommon->deltaFList_PUCCH.deltaF_PUCCH_Format2a;
+openair1/PHY/INIT/lte_init_ue.c:264:    fp->ul_power_control_config_common.deltaF_PUCCH_Format2b  = radioResourceConfigCommon->uplinkPowerControlCommon->deltaFList_PUCCH.deltaF_PUCCH_Format2b;
+openair1/PHY/INIT/lte_init_ue.c:265:    fp->maxHARQ_Msg3Tx = radioResourceConfigCommon->rach_ConfigCommon->maxHARQ_Msg3Tx;
+openair1/PHY/INIT/lte_init_ue.c:269:      fp->nb_antennas_tx                     = (1<<radioResourceConfigCommon->antennaInfoCommon->antennaPortsCount);
+openair1/PHY/INIT/lte_init_ue.c:271:      fp->nb_antennas_tx                     = 1;
+openair1/PHY/INIT/lte_init_ue.c:275:      fp->phich_config_common.phich_resource = radioResourceConfigCommon->phich_Config->phich_Resource;
+openair1/PHY/INIT/lte_init_ue.c:276:      fp->phich_config_common.phich_duration = radioResourceConfigCommon->phich_Config->phich_Duration;
+openair1/PHY/INIT/lte_init_ue.c:280:    fp->Nid_cell = mobilityControlInfo->targetPhysCellId;
+openair1/PHY/INIT/lte_init_ue.c:281:    fp->nushift  = fp->Nid_cell%6;
+openair1/PHY/INIT/lte_init_ue.c:550:  pdsch->pmi_ext = (uint8_t *)malloc16_clear( fp->N_RB_DL );
+openair1/PHY/INIT/lte_init_ue.c:558:  pdsch->rho                    = (int32_t **)malloc16_clear( fp->nb_antennas_rx*sizeof(int32_t *) );
+openair1/PHY/INIT/lte_init_ue.c:567:  AssertFatal( fp->nb_antennas_rx <= 2, "nb_antennas_rx > 2" );
+openair1/PHY/INIT/lte_init_ue.c:569:  for (int i=0; i<fp->nb_antennas_rx; i++) {
+openair1/PHY/INIT/lte_init_ue.c:570:    pdsch->rho[i]     = (int32_t *)malloc16_clear( sizeof(int32_t)*(fp->N_RB_DL*12*7*2) );
+openair1/PHY/INIT/lte_init_ue.c:572:    for (int j=0; j<4; j++) { //fp->nb_antennas_tx; j++)
+openair1/PHY/INIT/lte_init_ue.c:574:      const size_t num = 7*2*fp->N_RB_DL*12;
+openair1/PHY/INIT/lte_init_ue.c:576:      pdsch->rxdataF_uespec_pilots[idx]   = (int32_t *)malloc16_clear( sizeof(int32_t) * fp->N_RB_DL*12);
+openair1/PHY/INIT/lte_init_ue.c:579:      pdsch->dl_bf_ch_estimates[idx]      = (int32_t *)malloc16_clear( sizeof(int32_t) * fp->ofdm_symbol_size*7*2);
+openair1/PHY/INIT/lte_init_ue.c:606:  LOG_D(PHY,"Initializing UE vars (abstraction %"PRIu8") for eNB TXant %"PRIu8", UE RXant %"PRIu8"\n",abstraction_flag,fp->nb_antennas_tx,fp->nb_antennas_rx);
+openair1/PHY/INIT/lte_init_ue.c:615:  AssertFatal( fp->nb_antennas_rx <= 2, "hard coded allocation for ue_common_vars->dl_ch_estimates[eNB_id]" );
+openair1/PHY/INIT/lte_init_ue.c:638:  common_vars->txdata  = (int32_t **)malloc16( fp->nb_antennas_tx*sizeof(int32_t *) );
+openair1/PHY/INIT/lte_init_ue.c:639:  common_vars->txdataF = (int32_t **)malloc16( fp->nb_antennas_tx*sizeof(int32_t *) );
+openair1/PHY/INIT/lte_init_ue.c:641:  for (i=0; i<fp->nb_antennas_tx; i++) {
+openair1/PHY/INIT/lte_init_ue.c:642:    common_vars->txdata[i]  = (int32_t *)malloc16_clear( fp->samples_per_tti*10*sizeof(int32_t) );
+openair1/PHY/INIT/lte_init_ue.c:643:    common_vars->txdataF[i] = (int32_t *)malloc16_clear( fp->ofdm_symbol_size*fp->symbols_per_tti*10*sizeof(int32_t) );
+openair1/PHY/INIT/lte_init_ue.c:647:  common_vars->rxdata   = (int32_t **)malloc16( fp->nb_antennas_rx*sizeof(int32_t *) );
+openair1/PHY/INIT/lte_init_ue.c:648:  common_vars->common_vars_rx_data_per_thread[0].rxdataF  = (int32_t **)malloc16( fp->nb_antennas_rx*sizeof(int32_t *) );
+openair1/PHY/INIT/lte_init_ue.c:649:  common_vars->common_vars_rx_data_per_thread[1].rxdataF  = (int32_t **)malloc16( fp->nb_antennas_rx*sizeof(int32_t *) );
+openair1/PHY/INIT/lte_init_ue.c:651:  for (i=0; i<fp->nb_antennas_rx; i++) {
+openair1/PHY/INIT/lte_init_ue.c:652:    common_vars->rxdata[i] = (int32_t *) malloc16_clear( (fp->samples_per_tti*10+2048)*sizeof(int32_t) );
+openair1/PHY/INIT/lte_init_ue.c:654:    common_vars->common_vars_rx_data_per_thread[0].rxdataF[i] = (int32_t *)malloc16_clear( sizeof(int32_t)*(fp->ofdm_symbol_size*14) );
+openair1/PHY/INIT/lte_init_ue.c:655:    common_vars->common_vars_rx_data_per_thread[1].rxdataF[i] = (int32_t *)malloc16_clear( sizeof(int32_t)*(fp->ofdm_symbol_size*14) );
+openair1/PHY/INIT/lte_init_ue.c:665:    for (i=0; i<fp->nb_antennas_rx; i++)
+openair1/PHY/INIT/lte_init_ue.c:670:          common_vars->common_vars_rx_data_per_thread[th_id].dl_ch_estimates[eNB_id][idx] = (int32_t *)malloc16_clear( sizeof(int32_t)*fp->symbols_per_tti*(fp->ofdm_symbol_size+LTE_CE_FILTER_LENGTH) );
+openair1/PHY/INIT/lte_init_ue.c:671:          common_vars->common_vars_rx_data_per_thread[th_id].dl_ch_estimates_time[eNB_id][idx] = (int32_t *)malloc16_clear( sizeof(int32_t)*fp->ofdm_symbol_size*2 );
+openair1/PHY/INIT/lte_init_ue.c:698:      (*pdsch_vars_th)[th_id][eNB_id]->llr_shifts      = (uint8_t *)malloc16_clear(7*2*fp->N_RB_DL*12);
+openair1/PHY/INIT/lte_init_ue.c:702:      (*pdsch_vars_th)[th_id][eNB_id]->rho                 = (int32_t **)malloc16_clear( fp->nb_antennas_rx*sizeof(int32_t *) );
+openair1/PHY/INIT/lte_init_ue.c:705:    for (int i=0; i<fp->nb_antennas_rx; i++) {
+openair1/PHY/INIT/lte_init_ue.c:707:        (*pdsch_vars_th)[th_id][eNB_id]->rho[i]     = (int32_t *)malloc16_clear( 7*2*sizeof(int32_t)*(fp->N_RB_DL*12) );
+openair1/PHY/INIT/lte_init_ue.c:715:    for (i=0; i<fp->nb_antennas_rx; i++)
+openair1/PHY/INIT/lte_init_ue.c:718:        const size_t num = 7*2*fp->N_RB_DL*12+4;
+openair1/PHY/INIT/lte_init_ue.c:725:    //const size_t num = 7*2*fp->N_RB_DL*12+4;
+openair1/PHY/INIT/lte_init_ue.c:735:        for (int i=0; i<fp->nb_antennas_rx; i++)
+openair1/PHY/INIT/lte_init_ue.c:740:              (*pdsch_vars_th)[th_id][eNB_id]->dl_ch_rho_ext[k][l][idx] = (int32_t *)malloc16_clear( 7*2*sizeof(int32_t)*(fp->N_RB_DL*12) );
+openair1/PHY/INIT/lte_init_ue.c:741:              (*pdsch_vars_th)[th_id][eNB_id]->rxdataF_comp1[k][l][idx] = (int32_t *)malloc16_clear( 7*2*sizeof(int32_t)*(fp->N_RB_DL*12) );
+openair1/PHY/INIT/lte_init_ue.c:742:              (*pdsch_vars_th)[th_id][eNB_id]->dl_ch_mag1[k][l][idx] = (int32_t *)malloc16_clear( 7*2*sizeof(int32_t)*(fp->N_RB_DL*12) );
+openair1/PHY/INIT/lte_init_ue.c:743:              (*pdsch_vars_th)[th_id][eNB_id]->dl_ch_magb1[k][l][idx] = (int32_t *)malloc16_clear( 7*2*sizeof(int32_t)*(fp->N_RB_DL*12) );
+openair1/PHY/INIT/lte_init_ue.c:762:      (*pdcch_vars_th)[th_id][eNB_id]->rho                 = (int32_t **)malloc16( fp->nb_antennas_rx*sizeof(int32_t *) );
+openair1/PHY/INIT/lte_init_ue.c:767:    for (i=0; i<fp->nb_antennas_rx; i++) {
+openair1/PHY/INIT/lte_init_ue.c:768:      //ue_pdcch_vars[eNB_id]->rho[i] = (int32_t*)malloc16_clear( sizeof(int32_t)*(fp->N_RB_DL*12*7*2) );
+openair1/PHY/INIT/lte_init_ue.c:773:      for (j=0; j<4; j++) { //fp->nb_antennas_tx; j++)
+openair1/PHY/INIT/lte_init_ue.c:775:        //  size_t num = 7*2*fp->N_RB_DL*12;
+openair1/PHY/INIT/lte_init_ue.c:800:      (*pdcch_vars_th)[th_id][eNB_id]->rho                 = (int32_t **)malloc16( fp->nb_antennas_rx*sizeof(int32_t *) );
+openair1/PHY/INIT/lte_init_ue.c:807:    for (i=0; i<fp->nb_antennas_rx; i++) {
+openair1/PHY/INIT/lte_init_ue.c:808:      //ue_pdcch_vars[eNB_id]->rho[i] = (int32_t*)malloc16_clear( sizeof(int32_t)*(fp->N_RB_DL*12*7*2) );
+openair1/PHY/INIT/lte_init_ue.c:813:      for (j=0; j<4; j++) { //fp->nb_antennas_tx; j++)
+openair1/PHY/INIT/lte_init_ue.c:815:        //  size_t num = 7*2*fp->N_RB_DL*12;
+openair1/PHY/INIT/lte_init_ue.c:828:    pbch_vars[eNB_id]->rxdataF_ext         = (int32_t **)malloc16( fp->nb_antennas_rx*sizeof(int32_t *) );
+openair1/PHY/INIT/lte_init_ue.c:832:    prach_vars[eNB_id]->prachF             = (int16_t *)malloc16_clear( sizeof(int)*(7*2*sizeof(int)*(fp->ofdm_symbol_size*12)) );
+openair1/PHY/INIT/lte_init_ue.c:833:    prach_vars[eNB_id]->prach              = (int16_t *)malloc16_clear( sizeof(int)*(7*2*sizeof(int)*(fp->ofdm_symbol_size*12)) );
+openair1/PHY/INIT/lte_init_ue.c:835:    for (i=0; i<fp->nb_antennas_rx; i++) {
+openair1/PHY/INIT/lte_init_ue.c:838:      for (j=0; j<4; j++) {//fp->nb_antennas_tx;j++) {
+openair1/PHY/INIT/lte_init_ue.c:862:  ue->sinr_CQI_dB = (double *) malloc16_clear( fp->N_RB_DL*12*sizeof(double) );
+openair1/PHY/INIT/lte_init_ue.c:866:  if (fp->nb_antenna_ports_eNB==2)
+openair1/PHY/INIT/lte_init_ru.c:58:      ru->common.txdata[i]  = (int32_t*)malloc16_clear( fp->samples_per_tti*10*sizeof(int32_t) );
+openair1/PHY/INIT/lte_init_ru.c:60:	     fp->samples_per_tti*10*sizeof(int32_t));
+openair1/PHY/INIT/lte_init_ru.c:66:        	calibration->drs_ch_estimates_time[i] = (int32_t*)malloc16_clear(2*sizeof(int32_t)*fp->ofdm_symbol_size);
+openair1/PHY/INIT/lte_init_ru.c:72:      ru->common.rxdata[i] = (int32_t*)malloc16_clear( fp->samples_per_tti*10*sizeof(int32_t) );
+openair1/PHY/INIT/lte_init_ru.c:87:      ru->common.rxdata_7_5kHz[i] = (int32_t*)malloc16_clear( 2*fp->samples_per_tti*2*sizeof(int32_t) );
+openair1/PHY/INIT/lte_init_ru.c:97:      ru->common.txdataF_BF[i] = (int32_t*)malloc16_clear(fp->symbols_per_tti*fp->ofdm_symbol_size*sizeof(int32_t) );
+openair1/PHY/INIT/lte_init_ru.c:104:      ru->common.rxdataF[i] = (int32_t*)malloc16_clear(sizeof(int32_t)*(2*fp->ofdm_symbol_size*fp->symbols_per_tti) ); 
+openair1/PHY/INIT/lte_init_ru.c:114:      		calibration->rxdataF_ext[i] = (int32_t*)malloc16_clear(sizeof(int32_t)*fp->N_RB_UL*12*fp->symbols_per_tti ); 
+openair1/PHY/INIT/lte_init_ru.c:116:                calibration->drs_ch_estimates[i] = (int32_t*)malloc16_clear(sizeof(int32_t)*fp->N_RB_UL*12*fp->symbols_per_tti);
+openair1/PHY/INIT/lte_init_ru.c:127:      ru->prach_rxsigF[i] = (int16_t*)malloc16_clear( fp->ofdm_symbol_size*12*2*sizeof(int16_t) );
+openair1/PHY/INIT/lte_init_ru.c:131:	ru->prach_rxsigF_br[j][i] = (int16_t*)malloc16_clear( fp->ofdm_symbol_size*12*2*sizeof(int16_t) );
+openair1/PHY/INIT/lte_init_ru.c:152:	    ru->beam_weights[i][p][j] = (int32_t *)malloc16_clear(fp->ofdm_symbol_size*sizeof(int32_t));
+openair1/PHY/INIT/lte_init_ru.c:161:	      for (re=0; re<fp->ofdm_symbol_size; re++) 
+openair1/PHY/INIT/lte_init_ru.c:169:	      for (re=0; re<fp->ofdm_symbol_size; re++) 
+openair1/PHY/INIT/lte_init_ru.c:175:	    //LOG_D(PHY,"[INIT] lte_common_vars->beam_weights[%d][%d] = %p (%lu bytes)\n", i,j,ru->beam_weights[i][p][j], fp->ofdm_symbol_size*sizeof(int32_t)); 
+openair1/PHY/INIT/lte_init_ru.c:181:  ru->common.sync_corr = (uint32_t*)malloc16_clear( LTE_NUMBER_OF_SUBFRAMES_PER_FRAME*sizeof(uint32_t)*fp->samples_per_tti );
+openair1/PHY/INIT/lte_parms.c:30:  int X = fp->srsX;
+openair1/PHY/INIT/lte_parms.c:31:  fp->ul_symbols_in_S_subframe=(1+X);
+openair1/PHY/INIT/lte_parms.c:33:  if ((fp->Ncp==EXTENDED) && (fp->tdd_config_S>7))
+openair1/PHY/INIT/lte_parms.c:36:  fp->dl_symbols_in_S_subframe = (fp->Ncp==NORMAL)?dl_S_table_normal[fp->tdd_config_S] : dl_S_table_extended[fp->tdd_config_S];
+openair1/PHY/INIT/nr_parms.c:33:  int mu = fp->numerology_index;
+openair1/PHY/INIT/nr_parms.c:36:  nr_ssb_type_e type = fp->ssb_type;
+openair1/PHY/INIT/nr_parms.c:77:    symbol += (5 * fp->symbols_per_slot * fp->slots_per_subframe);
+openair1/PHY/INIT/nr_parms.c:99:  fp->numerology_index = mu;
+openair1/PHY/INIT/nr_parms.c:100:  fp->Ncp = Ncp;
+openair1/PHY/INIT/nr_parms.c:101:  fp->N_RB_DL = N_RB_DL;
+openair1/PHY/INIT/nr_parms.c:106:      fp->subcarrier_spacing = nr_subcarrier_spacing[NR_MU_0];
+openair1/PHY/INIT/nr_parms.c:107:      fp->slots_per_subframe = nr_slots_per_subframe[NR_MU_0];
+openair1/PHY/INIT/nr_parms.c:108:      fp->ssb_type = nr_ssb_type_A;
+openair1/PHY/INIT/nr_parms.c:112:      fp->subcarrier_spacing = nr_subcarrier_spacing[NR_MU_1];
+openair1/PHY/INIT/nr_parms.c:113:      fp->slots_per_subframe = nr_slots_per_subframe[NR_MU_1];
+openair1/PHY/INIT/nr_parms.c:116:      if (fp->eutra_band == 5 || fp->eutra_band == 66) 
+openair1/PHY/INIT/nr_parms.c:117:	      fp->ssb_type = nr_ssb_type_B;
+openair1/PHY/INIT/nr_parms.c:119:      	if (fp->eutra_band == 41 || ( fp->eutra_band > 76 && fp->eutra_band < 80) )
+openair1/PHY/INIT/nr_parms.c:120:		fp->ssb_type = nr_ssb_type_C;
+openair1/PHY/INIT/nr_parms.c:122:		AssertFatal(1==0,"NR Operating Band n%d not available for SS block SCS with mu=%d\n", fp->eutra_band, mu);
+openair1/PHY/INIT/nr_parms.c:134:          if (fp->threequarter_fs) {
+openair1/PHY/INIT/nr_parms.c:135:            fp->ofdm_symbol_size = 1536;
+openair1/PHY/INIT/nr_parms.c:136:            fp->first_carrier_offset = 900; //1536 - ( (106*12) / 2 )
+openair1/PHY/INIT/nr_parms.c:137:            fp->nb_prefix_samples0 = 132;
+openair1/PHY/INIT/nr_parms.c:138:            fp->nb_prefix_samples = 108;
+openair1/PHY/INIT/nr_parms.c:141:            fp->ofdm_symbol_size = 2048;
+openair1/PHY/INIT/nr_parms.c:142:            fp->first_carrier_offset = 1412; //2048 - ( (106*12) / 2 )
+openair1/PHY/INIT/nr_parms.c:143:            fp->nb_prefix_samples0 = 176;
+openair1/PHY/INIT/nr_parms.c:144:            fp->nb_prefix_samples = 144;
+openair1/PHY/INIT/nr_parms.c:153:          if (fp->threequarter_fs) {
+openair1/PHY/INIT/nr_parms.c:154:            fp->ofdm_symbol_size = 3072;
+openair1/PHY/INIT/nr_parms.c:155:            fp->first_carrier_offset = 1770; //3072 - ( (217*12) / 2 )
+openair1/PHY/INIT/nr_parms.c:156:            fp->nb_prefix_samples0 = 264;
+openair1/PHY/INIT/nr_parms.c:157:            fp->nb_prefix_samples = 216;
+openair1/PHY/INIT/nr_parms.c:160:	    fp->ofdm_symbol_size = 4096;
+openair1/PHY/INIT/nr_parms.c:161:	    fp->first_carrier_offset = 2794; //4096 - ( (217*12) / 2 )
+openair1/PHY/INIT/nr_parms.c:162:	    fp->nb_prefix_samples0 = 352;
+openair1/PHY/INIT/nr_parms.c:163:	    fp->nb_prefix_samples = 288;
+openair1/PHY/INIT/nr_parms.c:168:	  AssertFatal(fp->threequarter_fs==0,"3/4 sampling impossible for N_RB %d and MU %d\n",N_RB_DL,mu); 
+openair1/PHY/INIT/nr_parms.c:169:	  fp->ofdm_symbol_size = 4096;
+openair1/PHY/INIT/nr_parms.c:170:	  fp->first_carrier_offset = 2626; //4096 - ( (245*12) / 2 )
+openair1/PHY/INIT/nr_parms.c:171:	  fp->nb_prefix_samples0 = 352;
+openair1/PHY/INIT/nr_parms.c:172:	  fp->nb_prefix_samples = 288;
+openair1/PHY/INIT/nr_parms.c:175:	  AssertFatal(fp->threequarter_fs==0,"3/4 sampling impossible for N_RB %d and MU %d\n",N_RB_DL,mu); 
+openair1/PHY/INIT/nr_parms.c:176:	  fp->ofdm_symbol_size = 4096;
+openair1/PHY/INIT/nr_parms.c:177:	  fp->first_carrier_offset = 2458; //4096 - ( (273*12) / 2 )
+openair1/PHY/INIT/nr_parms.c:178:	  fp->nb_prefix_samples0 = 352;
+openair1/PHY/INIT/nr_parms.c:179:	  fp->nb_prefix_samples = 288;
+openair1/PHY/INIT/nr_parms.c:187:      fp->subcarrier_spacing = nr_subcarrier_spacing[NR_MU_2];
+openair1/PHY/INIT/nr_parms.c:188:      fp->slots_per_subframe = nr_slots_per_subframe[NR_MU_2];
+openair1/PHY/INIT/nr_parms.c:209:      fp->subcarrier_spacing = nr_subcarrier_spacing[NR_MU_3];
+openair1/PHY/INIT/nr_parms.c:210:      fp->slots_per_subframe = nr_slots_per_subframe[NR_MU_3];
+openair1/PHY/INIT/nr_parms.c:211:      fp->ssb_type = nr_ssb_type_D;
+openair1/PHY/INIT/nr_parms.c:215:      fp->subcarrier_spacing = nr_subcarrier_spacing[NR_MU_4];
+openair1/PHY/INIT/nr_parms.c:216:      fp->slots_per_subframe = nr_slots_per_subframe[NR_MU_4];
+openair1/PHY/INIT/nr_parms.c:217:      fp->ssb_type = nr_ssb_type_E;
+openair1/PHY/INIT/nr_parms.c:224:  fp->slots_per_frame = 10* fp->slots_per_subframe;
+openair1/PHY/INIT/nr_parms.c:226:  fp->nb_antenna_ports_eNB = 1; // default value until overwritten by RRCConnectionReconfiguration
+openair1/PHY/INIT/nr_parms.c:228:  fp->symbols_per_slot = ((Ncp == NORMAL)? 14 : 12); // to redefine for different slot formats
+openair1/PHY/INIT/nr_parms.c:229:  fp->samples_per_subframe_wCP = fp->ofdm_symbol_size * fp->symbols_per_slot * fp->slots_per_subframe;
+openair1/PHY/INIT/nr_parms.c:230:  fp->samples_per_frame_wCP = 10 * fp->samples_per_subframe_wCP;
+openair1/PHY/INIT/nr_parms.c:231:  fp->samples_per_slot_wCP = fp->symbols_per_slot*fp->ofdm_symbol_size; 
+openair1/PHY/INIT/nr_parms.c:232:  fp->samples_per_slot = fp->nb_prefix_samples0 + ((fp->symbols_per_slot-1)*fp->nb_prefix_samples) + (fp->symbols_per_slot*fp->ofdm_symbol_size); 
+openair1/PHY/INIT/nr_parms.c:233:  fp->samples_per_subframe = (fp->samples_per_subframe_wCP + (fp->nb_prefix_samples0 * fp->slots_per_subframe) +
+openair1/PHY/INIT/nr_parms.c:234:                                      (fp->nb_prefix_samples * fp->slots_per_subframe * (fp->symbols_per_slot - 1)));
+openair1/PHY/INIT/nr_parms.c:235:  fp->samples_per_frame = 10 * fp->samples_per_subframe;
+openair1/PHY/INIT/nr_parms.c:236:  fp->freq_range = (fp->dl_CarrierFreq < 6e9)? nr_FR1 : nr_FR2;
+openair1/PHY/INIT/nr_parms.c:239:  if (fp->dl_CarrierFreq < 6e9){
+openair1/PHY/INIT/nr_parms.c:240:	if(fp->frame_type && (fp->ssb_type==2))
+openair1/PHY/INIT/nr_parms.c:241:		fp->Lmax = (fp->dl_CarrierFreq < 2.4e9)? 4 : 8;
+openair1/PHY/INIT/nr_parms.c:243:		fp->Lmax = (fp->dl_CarrierFreq < 3e9)? 4 : 8;
+openair1/PHY/INIT/nr_parms.c:246:    fp->Lmax = 64;
+openair1/PHY/INIT/nr_parms.c:256:  fp->eutra_band = config->nfapi_config.rf_bands.rf_band[0];
+openair1/PHY/INIT/nr_parms.c:257:  fp->frame_type = !(config->subframe_config.duplex_mode.value);
+openair1/PHY/INIT/nr_parms.c:258:  fp->L_ssb = config->sch_config.ssb_scg_position_in_burst.value;
+openair1/PHY/INIT/nr_parms.c:274:  fp->ssb_start_subcarrier = (12 * n_ssb_crb + ssb_subcarrier_offset)/(1<<mu);
+openair1/PHY/INIT/nr_parms.c:280:  LOG_I(PHY,"fp->scs=%d\n",fp->subcarrier_spacing);
+openair1/PHY/INIT/nr_parms.c:281:  LOG_I(PHY,"fp->ofdm_symbol_size=%d\n",fp->ofdm_symbol_size);
+openair1/PHY/INIT/nr_parms.c:282:  LOG_I(PHY,"fp->nb_prefix_samples0=%d\n",fp->nb_prefix_samples0);
+openair1/PHY/INIT/nr_parms.c:283:  LOG_I(PHY,"fp->nb_prefix_samples=%d\n",fp->nb_prefix_samples);
+openair1/PHY/INIT/nr_parms.c:284:  LOG_I(PHY,"fp->slots_per_subframe=%d\n",fp->slots_per_subframe);
+openair1/PHY/INIT/nr_parms.c:285:  LOG_I(PHY,"fp->samples_per_subframe_wCP=%d\n",fp->samples_per_subframe_wCP);
+openair1/PHY/INIT/nr_parms.c:286:  LOG_I(PHY,"fp->samples_per_frame_wCP=%d\n",fp->samples_per_frame_wCP);
+openair1/PHY/INIT/nr_parms.c:287:  LOG_I(PHY,"fp->samples_per_subframe=%d\n",fp->samples_per_subframe);
+openair1/PHY/INIT/nr_parms.c:288:  LOG_I(PHY,"fp->samples_per_frame=%d\n",fp->samples_per_frame);
+openair1/PHY/INIT/nr_init_ru.c:52:      ru->common.txdata[i]  = (int32_t*)malloc16_clear( fp->samples_per_frame*sizeof(int32_t) );
+openair1/PHY/INIT/nr_init_ru.c:55:	     fp->samples_per_frame*sizeof(int32_t));
+openair1/PHY/INIT/nr_init_ru.c:59:      ru->common.rxdata[i] = (int32_t*)malloc16_clear( fp->samples_per_frame*sizeof(int32_t) );
+openair1/PHY/INIT/nr_init_ru.c:72:      ru->common.rxdata_7_5kHz[i] = (int32_t*)malloc16_clear( 2*fp->samples_per_subframe*2*sizeof(int32_t) );
+openair1/PHY/INIT/nr_init_ru.c:82:      ru->common.txdataF_BF[i] = (int32_t*)malloc16_clear(fp->samples_per_subframe_wCP*sizeof(int32_t) );
+openair1/PHY/INIT/nr_init_ru.c:89:      ru->common.rxdataF[i] = (int32_t*)malloc16_clear(sizeof(int32_t)*(2*fp->samples_per_subframe_wCP) ); 
+openair1/PHY/INIT/nr_init_ru.c:100:      ru->prach_rxsigF[i] = (int16_t*)malloc16_clear( fp->ofdm_symbol_size*12*2*sizeof(int16_t) );
+openair1/PHY/INIT/nr_init_ru.c:114:	    ru->beam_weights[i][p][j] = (int32_t *)malloc16_clear(fp->ofdm_symbol_size*sizeof(int32_t));
+openair1/PHY/INIT/nr_init_ru.c:119:	      for (re=0; re<fp->ofdm_symbol_size; re++) 
+openair1/PHY/INIT/nr_init_ru.c:127:	      for (re=0; re<fp->ofdm_symbol_size; re++) 
+openair1/PHY/INIT/nr_init_ru.c:133:	    //LOG_D(PHY,"[INIT] lte_common_vars->beam_weights[%d][%d] = %p (%lu bytes)\n", i,j,ru->beam_weights[i][p][j], fp->ofdm_symbol_size*sizeof(int32_t)); 
+openair1/PHY/INIT/nr_init_ru.c:139:  ru->common.sync_corr = (uint32_t*)malloc16_clear( LTE_NUMBER_OF_SUBFRAMES_PER_FRAME*sizeof(uint32_t)*fp->samples_per_subframe_wCP );
+openair1/PHY/LTE_UE_TRANSPORT/pucch_ue.c:346:  x2 = (rnti) + ((uint32_t)(1+subframe)<<16)*(1+(fp->Nid_cell<<1)); //this is c_init in 36.211 Sec 6.3.1
+openair1/PHY/LTE_UE_TRANSPORT/pucch_ue.c:388:  uint8_t deltaPUCCH_Shift          = fp->pucch_config_common.deltaPUCCH_Shift;
+openair1/PHY/LTE_UE_TRANSPORT/pucch_ue.c:389:  uint8_t NRB2                      = fp->pucch_config_common.nRB_CQI;
+openair1/PHY/LTE_UE_TRANSPORT/pucch_ue.c:390:  uint8_t Ncs1                      = fp->pucch_config_common.nCS_AN;
+openair1/PHY/LTE_UE_TRANSPORT/pucch_ue.c:392:  uint32_t u0 = fp->pucch_config_common.grouphop[subframe<<1];
+openair1/PHY/LTE_UE_TRANSPORT/pucch_ue.c:393:  uint32_t u1 = fp->pucch_config_common.grouphop[1+(subframe<<1)];
+openair1/PHY/LTE_UE_TRANSPORT/pucch_ue.c:394:  uint32_t v0 = fp->pusch_config_common.ul_ReferenceSignalsPUSCH.seqhop[subframe<<1];
+openair1/PHY/LTE_UE_TRANSPORT/pucch_ue.c:395:  uint32_t v1 = fp->pusch_config_common.ul_ReferenceSignalsPUSCH.seqhop[1+(subframe<<1)];
+openair1/PHY/LTE_UE_TRANSPORT/pucch_ue.c:456:  N_UL_symb = (fp->Ncp==0) ? 7 : 6;
+openair1/PHY/LTE_UE_TRANSPORT/pucch_ue.c:522:  nsymb_slot0  = ((fp->Ncp==0) ? 7 : 6);
+openair1/PHY/LTE_UE_TRANSPORT/pucch_ue.c:531:      re_offset = (m*6) + fp->first_carrier_offset;
+openair1/PHY/LTE_UE_TRANSPORT/pucch_ue.c:533:      re_offset = fp->first_carrier_offset + (fp->N_RB_DL - (m>>1) - 1)*12;
+openair1/PHY/LTE_UE_TRANSPORT/pucch_ue.c:535:      re_offset = fp->first_carrier_offset + (fp->N_RB_DL - (m>>1) - 1)*12;
+openair1/PHY/LTE_UE_TRANSPORT/pucch_ue.c:537:      re_offset = ((m-1)*6) + fp->first_carrier_offset;
+openair1/PHY/LTE_UE_TRANSPORT/pucch_ue.c:539:    if (re_offset > fp->ofdm_symbol_size)
+openair1/PHY/LTE_UE_TRANSPORT/pucch_ue.c:540:      re_offset -= (fp->ofdm_symbol_size);
+openair1/PHY/LTE_UE_TRANSPORT/pucch_ue.c:544:    symbol_offset = (unsigned int)fp->ofdm_symbol_size*(l+(subframe*nsymb_pertti));
+openair1/PHY/LTE_UE_TRANSPORT/pucch_ue.c:547:    //LOG_I(PHY,"ofdmSymb %d/%d, firstCarrierOffset %d, symbolOffset[sfn %d] %d, reOffset %d, &txptr: %x \n", l, nsymb, fp->first_carrier_offset, subframe, symbol_offset, re_offset, &txptr[0]);
+openair1/PHY/LTE_UE_TRANSPORT/pucch_ue.c:554:      if (re_offset==fp->ofdm_symbol_size)
+openair1/PHY/LTE_UE_TRANSPORT/pucch_ue.c:555:          re_offset -= (fp->ofdm_symbol_size);
+openair1/PHY/LTE_UE_TRANSPORT/pch_ue.c:45:     ue->PO = (fp->frame_type==FDD) ? 9 : 0; 
+openair1/PHY/LTE_UE_TRANSPORT/pch_ue.c:47:     ue->PO = (fp->frame_type==FDD) ? (4+(5*i_s)) : (5*i_s); 
+openair1/PHY/LTE_UE_TRANSPORT/pch_ue.c:49:     ue->PO = (fp->frame_type==FDD) ? (4*(i_s&1)+(5*(i_s>>1))) : ((i_s&1)+(5*(i_s>>1))); 
+openair1/PHY/LTE_UE_TRANSPORT/drs_modulation.c:74:    cyclic_shift0 = (fp->pusch_config_common.ul_ReferenceSignalsPUSCH.cyclicShift +
+openair1/PHY/LTE_UE_TRANSPORT/drs_modulation.c:76:		     fp->pusch_config_common.ul_ReferenceSignalsPUSCH.nPRS[subframe<<1]+
+openair1/PHY/LTE_UE_TRANSPORT/drs_modulation.c:80:    cyclic_shift1 = (fp->pusch_config_common.ul_ReferenceSignalsPUSCH.cyclicShift +
+openair1/PHY/LTE_UE_TRANSPORT/drs_modulation.c:82:		     fp->pusch_config_common.ul_ReferenceSignalsPUSCH.nPRS[(subframe<<1)+1]+
+openair1/PHY/LTE_UE_TRANSPORT/drs_modulation.c:85:    u0=fp->pusch_config_common.ul_ReferenceSignalsPUSCH.grouphop[subframe<<1];
+openair1/PHY/LTE_UE_TRANSPORT/drs_modulation.c:86:    u1=fp->pusch_config_common.ul_ReferenceSignalsPUSCH.grouphop[1+(subframe<<1)];
+openair1/PHY/LTE_UE_TRANSPORT/drs_modulation.c:87:    v0=fp->pusch_config_common.ul_ReferenceSignalsPUSCH.seqhop[subframe<<1];
+openair1/PHY/LTE_UE_TRANSPORT/drs_modulation.c:88:    v1=fp->pusch_config_common.ul_ReferenceSignalsPUSCH.seqhop[1+(subframe<<1)];
+openair1/PHY/LTE_UE_TRANSPORT/drs_modulation.c:105:  for (l = (3 - fp->Ncp),u=u0,v=v0,cyclic_shift=cyclic_shift0;
+openair1/PHY/LTE_UE_TRANSPORT/drs_modulation.c:106:       l<fp->symbols_per_tti;
+openair1/PHY/LTE_UE_TRANSPORT/drs_modulation.c:107:       l += (7 - fp->Ncp),u=u1,v=v1,cyclic_shift=cyclic_shift1) {
+openair1/PHY/LTE_UE_TRANSPORT/drs_modulation.c:115:    re_offset = fp->first_carrier_offset;
+openair1/PHY/LTE_UE_TRANSPORT/drs_modulation.c:116:    subframe_offset = subframe*fp->symbols_per_tti*fp->ofdm_symbol_size;
+openair1/PHY/LTE_UE_TRANSPORT/drs_modulation.c:117:    symbol_offset = subframe_offset + fp->ofdm_symbol_size*l;
+openair1/PHY/LTE_UE_TRANSPORT/drs_modulation.c:124:    for (rb=0; rb<fp->N_RB_UL; rb++) {
+openair1/PHY/LTE_UE_TRANSPORT/drs_modulation.c:161:          if (re_offset >= fp->ofdm_symbol_size)
+openair1/PHY/LTE_UE_TRANSPORT/drs_modulation.c:170:        if (re_offset >= fp->ofdm_symbol_size) {
+openair1/PHY/LTE_UE_TRANSPORT/drs_modulation.c:171:          if (fp->N_RB_DL&1)  // odd number of RBs
+nfapi/oai_integration/nfapi_vnf.c:362:  L1_proc->timestamp_tx = proc->timestamp_rx + (sf_ahead*fp->samples_per_tti);
+nfapi/oai_integration/nfapi_pnf.c:523:    fp->N_RB_DL = req->rf_config.dl_channel_bandwidth.value;
+nfapi/oai_integration/nfapi_pnf.c:525:    NFAPI_TRACE(NFAPI_TRACE_ERROR, "%s() NFAPI_RF_CONFIG_DL_CHANNEL_BANDWIDTH_TAG N_RB_DL:%u\n", __FUNCTION__, fp->N_RB_DL);
+nfapi/oai_integration/nfapi_pnf.c:532:    fp->N_RB_UL = req->rf_config.ul_channel_bandwidth.value;
+nfapi/oai_integration/nfapi_pnf.c:538:    fp->eutra_band = req->nfapi_config.rf_bands.rf_band[0];
+nfapi/oai_integration/nfapi_pnf.c:543:    fp->dl_CarrierFreq = from_earfcn(fp->eutra_band, req->nfapi_config.earfcn.value);
+nfapi/oai_integration/nfapi_pnf.c:544:    fp->ul_CarrierFreq = fp->dl_CarrierFreq - (get_uldl_offset(fp->eutra_band) * 1e5);
+nfapi/oai_integration/nfapi_pnf.c:547:                __FUNCTION__, req->nfapi_config.earfcn.value, fp->dl_CarrierFreq, fp->ul_CarrierFreq, pnf->rfs[0].band, fp->N_RB_DL);
+nfapi/oai_integration/nfapi_pnf.c:551:    fp->frame_type = req->subframe_config.duplex_mode.value==0 ? TDD : FDD;
+nfapi/oai_integration/nfapi_pnf.c:553:    NFAPI_TRACE(NFAPI_TRACE_INFO, "%s() frame_type:%d\n", __FUNCTION__, fp->frame_type);
+nfapi/oai_integration/nfapi_pnf.c:557:    fp->Ncp = req->subframe_config.dl_cyclic_prefix_type.value;
+nfapi/oai_integration/nfapi_pnf.c:562:    fp->Ncp_UL = req->subframe_config.ul_cyclic_prefix_type.value;
+nfapi/oai_integration/nfapi_pnf.c:566:  fp->num_MBSFN_config = 0; // DJP - hard code alert
+nfapi/oai_integration/nfapi_pnf.c:569:    fp->Nid_cell = req->sch_config.physical_cell_id.value;
+nfapi/oai_integration/nfapi_pnf.c:570:    fp->nushift = fp->Nid_cell%6;
+nfapi/oai_integration/nfapi_pnf.c:575:    fp->nb_antennas_tx = req->rf_config.tx_antenna_ports.value;
+nfapi/oai_integration/nfapi_pnf.c:576:    fp->nb_antenna_ports_eNB = 1;
+nfapi/oai_integration/nfapi_pnf.c:581:    fp->nb_antennas_rx = req->rf_config.rx_antenna_ports.value;
+nfapi/oai_integration/nfapi_pnf.c:586:    fp->phich_config_common.phich_resource = req->phich_config.phich_resource.value;
+nfapi/oai_integration/nfapi_pnf.c:591:    fp->phich_config_common.phich_duration = req->phich_config.phich_duration.value;
+nfapi/oai_integration/nfapi_pnf.c:597:    //fp->phich_config_common.phich_power_offset = req->phich_config.
+nfapi/oai_integration/nfapi_pnf.c:603:    fp->pusch_config_common.ul_ReferenceSignalsPUSCH.cyclicShift = req->uplink_reference_signal_config.cyclic_shift_1_for_drms.value;
+nfapi/oai_integration/nfapi_pnf.c:608:    fp->pusch_config_common.ul_ReferenceSignalsPUSCH.groupHoppingEnabled = req->uplink_reference_signal_config.uplink_rs_hopping.value;
+nfapi/oai_integration/nfapi_pnf.c:613:    fp->pusch_config_common.ul_ReferenceSignalsPUSCH.groupAssignmentPUSCH = req->uplink_reference_signal_config.group_assignment.value;
+nfapi/oai_integration/nfapi_pnf.c:627:    fp->prach_config_common.prach_ConfigInfo.prach_ConfigIndex=req->prach_config.configuration_index.value;
+nfapi/oai_integration/nfapi_pnf.c:632:    fp->prach_config_common.rootSequenceIndex=req->prach_config.root_sequence_index.value;
+nfapi/oai_integration/nfapi_pnf.c:637:    fp->prach_config_common.prach_ConfigInfo.zeroCorrelationZoneConfig=req->prach_config.zero_correlation_zone_configuration.value;
+nfapi/oai_integration/nfapi_pnf.c:642:    fp->prach_config_common.prach_ConfigInfo.highSpeedFlag=req->prach_config.high_speed_flag.value;
+nfapi/oai_integration/nfapi_pnf.c:647:    fp->prach_config_common.prach_ConfigInfo.prach_FreqOffset=req->prach_config.frequency_offset.value;
+cmake_targets/ran_build/build/logg.txt:139:[0m[0m[PHY]   fp->scs=30000
+cmake_targets/ran_build/build/logg.txt:140:[0m[0m[PHY]   fp->ofdm_symbol_size=2048
+cmake_targets/ran_build/build/logg.txt:141:[0m[0m[PHY]   fp->nb_prefix_samples0=176
+cmake_targets/ran_build/build/logg.txt:142:[0m[0m[PHY]   fp->nb_prefix_samples=144
+cmake_targets/ran_build/build/logg.txt:143:[0m[0m[PHY]   fp->slots_per_subframe=2
+cmake_targets/ran_build/build/logg.txt:144:[0m[0m[PHY]   fp->samples_per_subframe_wCP=57344
+cmake_targets/ran_build/build/logg.txt:145:[0m[0m[PHY]   fp->samples_per_frame_wCP=573440
+cmake_targets/ran_build/build/logg.txt:146:[0m[0m[PHY]   fp->samples_per_subframe=61440
+cmake_targets/ran_build/build/logg.txt:147:[0m[0m[PHY]   fp->samples_per_frame=614400
+openair2/DOCS/DOXYGEN/images/Transmission.ps:395:-GJm%[r6HWg\1Aig\1T\Du5%Ps*juts6m`&s8W)!s8Q+!?Fp-&oXuoXlBQKbd\TT9WD]Rk~>
+targets/RT/USER/lte-enb.c:476:    L1_proc->timestamp_tx = ru_proc->timestamp_rx + (sf_ahead*fp->samples_per_tti);
+targets/RT/USER/lte-enb.c:528:    if (((fp->frame_type == TDD) && (subframe_select(fp,proc->subframe_tx)==SF_UL))||
+targets/RT/USER/lte-enb.c:633:  L1_proc->timestamp_tx = ru_proc->timestamp_rx + (sf_ahead*fp->samples_per_tti);
+targets/RT/USER/lte-enb.c:1157:      eNB->dlsch[i][j] = new_eNB_dlsch(1,8,NSOFT,fp->N_RB_DL,0,fp);
+targets/RT/USER/lte-enb.c:1169:    eNB->ulsch[1+i] = new_eNB_ulsch(MAX_TURBO_ITERATIONS,fp->N_RB_UL, 0);
+targets/RT/USER/lte-enb.c:1178:    eNB->transmission_mode[i] = fp->nb_antenna_ports_eNB==1 ? 1 : 2;
+targets/RT/USER/lte-enb.c:1182:  eNB->ulsch[0] = new_eNB_ulsch(MAX_TURBO_ITERATIONS, fp->N_RB_UL, 0);
+targets/RT/USER/lte-enb.c:1189:  eNB->dlsch_SI  = new_eNB_dlsch(1,8,NSOFT,fp->N_RB_DL, 0, fp);
+targets/RT/USER/lte-enb.c:1191:  eNB->dlsch_ra  = new_eNB_dlsch(1,8,NSOFT,fp->N_RB_DL, 0, fp);
+targets/RT/USER/lte-enb.c:1193:  eNB->dlsch_MCH = new_eNB_dlsch(1,8,NSOFT,fp->N_RB_DL, 0, fp);
+targets/RT/USER/lte-enb.c:1205:  fp->pucch_config_common.deltaPUCCH_Shift = 1;
+targets/RT/USER/lte-ru.c:188:  proc->frame_rx    = (proc->timestamp_rx / (fp->samples_per_tti*10))&1023;
+targets/RT/USER/lte-ru.c:189:  proc->tti_rx = (proc->timestamp_rx / fp->samples_per_tti)%10;
+targets/RT/USER/lte-ru.c:224:  if ((fp->frame_type == TDD) && (subframe_select(fp,*subframe)==SF_S))  
+targets/RT/USER/lte-ru.c:225:    symbol_mask_full = (1<<fp->ul_symbols_in_S_subframe)-1;   
+targets/RT/USER/lte-ru.c:227:    symbol_mask_full = (1<<fp->symbols_per_tti)-1; 
+targets/RT/USER/lte-ru.c:258:  proc->timestamp_rx = ((proc->frame_rx * 10)  + proc->tti_rx ) * fp->samples_per_tti ;
+targets/RT/USER/lte-ru.c:259:  //  proc->timestamp_tx = proc->timestamp_rx +  (4*fp->samples_per_tti);
+targets/RT/USER/lte-ru.c:335:  proc->tti_rx = ((proc->timestamp_rx-offset_mobipass)/fp->samples_per_tti)%10;
+targets/RT/USER/lte-ru.c:336:  proc->frame_rx    = ((proc->timestamp_rx-offset_mobipass)/(fp->samples_per_tti*10))&1023;
+targets/RT/USER/lte-ru.c:338:  proc->tti_rx = (proc->timestamp_rx/fp->samples_per_tti)%10;
+targets/RT/USER/lte-ru.c:339:  proc->frame_rx    = (proc->timestamp_rx/(10*fp->samples_per_tti))&1023;
+targets/RT/USER/lte-ru.c:379:  symbol_mask   = (1<<fp->symbols_per_tti)-1;
+targets/RT/USER/lte-ru.c:466:  tti_tx = (timestamp_tx/fp->samples_per_tti)%10;
+targets/RT/USER/lte-ru.c:467:  frame_tx    = (timestamp_tx/(fp->samples_per_tti*10))&1023;
+targets/RT/USER/lte-ru.c:497:  symbol_mask_full = ((subframe_select(fp,*subframe) == SF_S) ? (1<<fp->dl_symbols_in_S_subframe) : (1<<fp->symbols_per_tti))-1;
+targets/RT/USER/lte-ru.c:520:      symbol_mask_full = ((subframe_select(fp,*subframe) == SF_S) ? (1<<fp->dl_symbols_in_S_subframe) : (1<<fp->symbols_per_tti))-1;
+targets/RT/USER/lte-ru.c:544:  proc->timestamp_tx = ((((uint64_t)frame_tx + (uint64_t)proc->frame_tx_unwrap) * 10) + (uint64_t)tti_tx) * (uint64_t)fp->samples_per_tti;
+targets/RT/USER/lte-ru.c:586:  if ((fp->frame_type == TDD) && (subframe_select(fp,subframe)!=SF_UL)) {
+targets/RT/USER/lte-ru.c:665:    rxp[i] = (void *)&ru->common.rxdata[i][*subframe*fp->samples_per_tti];
+targets/RT/USER/lte-ru.c:673:    rxs = fp->samples_per_tti;
+targets/RT/USER/lte-ru.c:678:                                     fp->samples_per_tti,
+targets/RT/USER/lte-ru.c:689:    if (proc->frame_rx>ru->cmdval) ru->ts_offset += (proc->frame_rx - ru->cmdval)*fp->samples_per_tti*10;
+targets/RT/USER/lte-ru.c:690:    else ru->ts_offset -= (-proc->frame_rx + ru->cmdval)*fp->samples_per_tti*10;
+targets/RT/USER/lte-ru.c:698:  //  AssertFatal(rxs == fp->samples_per_tti,
+targets/RT/USER/lte-ru.c:699:  //        "rx_rf: Asked for %d samples, got %d from SDR\n",fp->samples_per_tti,rxs);
+targets/RT/USER/lte-ru.c:700:  if(rxs != fp->samples_per_tti) {
+targets/RT/USER/lte-ru.c:701:    LOG_E(PHY,"rx_rf: Asked for %d samples, got %d from SDR\n",fp->samples_per_tti,rxs);
+targets/RT/USER/lte-ru.c:709:  else if (resynch==0 && (proc->timestamp_rx - old_ts != fp->samples_per_tti)) {
+targets/RT/USER/lte-ru.c:710:    LOG_I(PHY,"rx_rf: rfdevice timing drift of %"PRId64" samples (ts_off %"PRId64")\n",proc->timestamp_rx - old_ts - fp->samples_per_tti,ru->ts_offset);
+targets/RT/USER/lte-ru.c:711:    ru->ts_offset += (proc->timestamp_rx - old_ts - fp->samples_per_tti);
+targets/RT/USER/lte-ru.c:716:  proc->frame_rx     = (proc->timestamp_rx / (fp->samples_per_tti*10))&1023;
+targets/RT/USER/lte-ru.c:717:  proc->tti_rx  = (proc->timestamp_rx / fp->samples_per_tti)%10;
+targets/RT/USER/lte-ru.c:723:  proc->timestamp_phy_tx = proc->timestamp_rx+((sf_ahead-1)*fp->samples_per_tti);
+targets/RT/USER/lte-ru.c:727:  proc->timestamp_tx = proc->timestamp_rx+(sf_ahead*fp->samples_per_tti);
+targets/RT/USER/lte-ru.c:731:  //proc->timestamp_tx = proc->timestamp_rx+(sf_ahead*fp->samples_per_tti);
+targets/RT/USER/lte-ru.c:782:  if (rxs != fp->samples_per_tti) {
+targets/RT/USER/lte-ru.c:805:    T_INT(0), T_BUFFER(&ru->common.txdata[0][subframe * fp->samples_per_tti], fp->samples_per_tti * 4));
+targets/RT/USER/lte-ru.c:815:    int siglen=fp->samples_per_tti,flags=1;
+targets/RT/USER/lte-ru.c:818:      int txsymb = fp->dl_symbols_in_S_subframe+(ru->is_slave==0 ? 1 : 0);
+targets/RT/USER/lte-ru.c:827:      siglen = (fp->ofdm_symbol_size + fp->nb_prefix_samples0)
+targets/RT/USER/lte-ru.c:828:               + (txsymb - 1) * (fp->ofdm_symbol_size + fp->nb_prefix_samples)
+targets/RT/USER/lte-ru.c:833:    if (fp->frame_type == TDD &&
+targets/RT/USER/lte-ru.c:851:      txp[i] = (void*)&ru->common.txdata[i][(subframe*fp->samples_per_tti)-sf_extension];
+targets/RT/USER/lte-ru.c:1148:  int32_t dummy_rx[ru->nb_rx][fp->samples_per_tti] __attribute__((aligned(32)));
+targets/RT/USER/lte-ru.c:1168:                                     fp->samples_per_tti*10,
+targets/RT/USER/lte-ru.c:1171:    if (rxs != fp->samples_per_tti*10) LOG_E(PHY,"requested %d samples, got %d\n",fp->samples_per_tti*10,rxs);
+targets/RT/USER/lte-ru.c:1186:                                         fp->samples_per_tti,
+targets/RT/USER/lte-ru.c:1406:  if(fp->N_RB_DL == 100) {
+targets/RT/USER/lte-ru.c:1408:      if (fp->threequarter_fs) {
+targets/RT/USER/lte-ru.c:1436:  } else if(fp->N_RB_DL == 50) {
+targets/RT/USER/lte-ru.c:1441:  } else if (fp->N_RB_DL == 25) {
+targets/RT/USER/lte-ru.c:1446:  } else if (fp->N_RB_DL == 6) {
+targets/RT/USER/lte-ru.c:1451:  } else AssertFatal(1==0,"Unknown N_RB_DL %d\n",fp->N_RB_DL);
+targets/RT/USER/lte-ru.c:1454:  if (fp->frame_type==TDD)
+targets/RT/USER/lte-ru.c:1460:  cfg->num_rb_dl=fp->N_RB_DL;
+targets/RT/USER/lte-ru.c:1466:    cfg->tx_freq[i] = (double)fp->dl_CarrierFreq;
+targets/RT/USER/lte-ru.c:1467:    cfg->rx_freq[i] = (double)fp->ul_CarrierFreq;
+targets/RT/USER/lte-ru.c:1644:          LOG_M(filename,"txdataF_frame",ru->common.txdataF_BF[i],fp->symbols_per_tti*fp->ofdm_symbol_size, 1, 1);
+targets/RT/USER/lte-ru.c:1648:          LOG_M(filename,"txdata_frame",ru->common.txdata[i],fp->samples_per_tti*10, 1, 1);
+targets/RT/USER/lte-ru.c:2033:        LOG_M("ru_sync_rx.m","rurx",&ru->common.rxdata[0][0],LTE_NUMBER_OF_SUBFRAMES_PER_FRAME*fp->samples_per_tti,1,1);
+targets/RT/USER/lte-ru.c:2034:        LOG_M("ru_sync_corr.m","sync_corr",ru->dmrs_corr,LTE_NUMBER_OF_SUBFRAMES_PER_FRAME*fp->samples_per_tti,1,6);
+targets/RT/USER/lte-ru.c:2035:        LOG_M("ru_dmrs.m","rudmrs",&ru->dmrssync[0],fp->ofdm_symbol_size,1,1);
+targets/RT/USER/lte-ru.c:2042:                 LOG_M("ru_sync_rx.m","rurx",&ru->common.rxdata[0][0],LTE_NUMBER_OF_SUBFRAMES_PER_FRAME*fp->samples_per_tti,1,1);
+targets/RT/USER/lte-ru.c:2043:                 LOG_M("ru_sync_corr.m","sync_corr",ru->dmrs_corr,LTE_NUMBER_OF_SUBFRAMES_PER_FRAME*fp->samples_per_tti,1,6);
+targets/RT/USER/lte-ru.c:2044:                 LOG_M("ru_dmrs.m","rudmrs",&ru->dmrssync[0],fp->ofdm_symbol_size,1,1);
+targets/RT/USER/lte-ru.c:2589:          dlsch->ue_spec_bf_weights[layer][aa] = (int32_t *)malloc16(fp->ofdm_symbol_size*sizeof(int32_t));
+targets/RT/USER/lte-ru.c:2591:          for (re=0; re<fp->ofdm_symbol_size; re++) {
+targets/RT/USER/lte-ue.c:333:    if (fp->frame_type == TDD) {
+targets/RT/USER/lte-ue.c:334:      switch (fp->N_RB_DL) {
+targets/RT/USER/lte-ue.c:336:          if (fp->threequarter_fs) UE->N_TA_offset = (624*3)/4;
+targets/RT/USER/lte-ue.c:362:          AssertFatal(1==0,"illegal N_RB_DL %d\n",fp->N_RB_DL);

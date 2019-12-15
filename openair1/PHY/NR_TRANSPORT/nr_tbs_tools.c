@@ -182,9 +182,12 @@ uint32_t nr_get_E(uint32_t G, uint8_t C, uint8_t Qm, uint8_t Nl, uint8_t r) {
   uint32_t E;
   uint8_t Cprime = C; //assume CBGTI not present
 
+  // fprintf(stderr, "%s\n","commented the below lines in openair1/PHY/NR_TRANSPORT/nr_tbs_tools.c line 185" );      ////   ---src572
   AssertFatal(Nl>0,"Nl is 0\n");
   AssertFatal(Qm>0,"Qm is 0\n");
-
+  // Nl=1;
+  // Qm=2;
+  
   if (r <= Cprime - ((G/(Nl*Qm))%Cprime) - 1)
       E = Nl*Qm*(G/(Nl*Qm*Cprime));
   else

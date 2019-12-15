@@ -24,7 +24,7 @@
 
 /// Subcarrier spacings in Hz indexed by numerology index
 uint32_t nr_subcarrier_spacing[MAX_NUM_SUBCARRIER_SPACING] = {15e3, 30e3, 60e3, 120e3, 240e3};
-uint16_t nr_slots_per_subframe[MAX_NUM_SUBCARRIER_SPACING] = {1, 2, 4, 16, 32};
+uint16_t nr_slots_per_subframe[MAX_NUM_SUBCARRIER_SPACING] = {1, 2, 4, 8, 16};       //-----src572 corrected
 
 
 int nr_get_ssb_start_symbol(NR_DL_FRAME_PARMS *fp, uint8_t i_ssb, uint8_t half_frame_index)
@@ -38,6 +38,8 @@ int nr_get_ssb_start_symbol(NR_DL_FRAME_PARMS *fp, uint8_t i_ssb, uint8_t half_f
   int case_BD[4] = {4,8,16,20};
   int case_E[8] = {8, 12, 16, 20, 32, 36, 40, 44};
 
+  // fprintf(stderr, "\n$$$$$$$$$\n  The value of  mu in nr_get_ssb_start_symbol is %d  \n$$$$$\n", mu);
+
   switch(mu) {
 
 	case NR_MU_0: // case A
@@ -47,11 +49,11 @@ int nr_get_ssb_start_symbol(NR_DL_FRAME_PARMS *fp, uint8_t i_ssb, uint8_t half_f
 
 	case NR_MU_1: 
 	    if (type == 1){ // case B
-		n = i_ssb >> 2;
+		     n = i_ssb >> 2;
 	    	symbol = case_BD[i_ssb % 4] + 28*n;
 	    }
 	    if (type == 2){ // case C
-		n = i_ssb >> 1;
+		   n = i_ssb >> 1;
 		symbol = case_AC[i_ssb % 2] + 14*n;
 	    }
 	 break;
@@ -85,7 +87,10 @@ int nr_init_frame_parms0(NR_DL_FRAME_PARMS *fp,
 			 int Ncp,
 			 int N_RB_DL)
 
-{
+{ 
+//mu=3;       //////hard coded to test
+//fprintf(stderr,"chnged mu to 3 in function nr_init_frame_params0 in openairinterface5g/openair1/PHY/INIT/nr_parms.c\n");
+  // fprintf(stderr, "\n\n$$$$####### The vales of mu= %d N_RB = %d Ncp = %d \n $$$$$#####\n", mu, N_RB_DL, Ncp);   //----src572
 
 #if DISABLE_LOG_X
   printf("Initializing frame parms for mu %d, N_RB %d, Ncp %d\n",mu, N_RB_DL, Ncp);
@@ -117,16 +122,16 @@ int nr_init_frame_parms0(NR_DL_FRAME_PARMS *fp,
 	      fp->ssb_type = nr_ssb_type_B;
       else{  
       	if (fp->eutra_band == 41 || ( fp->eutra_band > 76 && fp->eutra_band < 80) )
-		fp->ssb_type = nr_ssb_type_C;
-	else
-		AssertFatal(1==0,"NR Operating Band n%d not available for SS block SCS with mu=%d\n", fp->eutra_band, mu);
-      }
+		     fp->ssb_type = nr_ssb_type_C;
+	     else
+		     AssertFatal(1==0,"NR Operating Band n%d not available for SS block SCS with mu=%d\n", fp->eutra_band, mu);
+         }
 
       switch(N_RB_DL){
         case 11:
         case 24:
         case 38:
-        case 78:
+        case 78:   //do we have this in mu=1?
         case 51:
         case 65:
 
@@ -147,7 +152,7 @@ int nr_init_frame_parms0(NR_DL_FRAME_PARMS *fp,
 
         case 133:
         case 162:
-        case 189:
+        case 189:    //Do we have this mu=1?
 
         case 217: //80 MHz
           if (fp->threequarter_fs) {
@@ -156,39 +161,39 @@ int nr_init_frame_parms0(NR_DL_FRAME_PARMS *fp,
             fp->nb_prefix_samples0 = 264;
             fp->nb_prefix_samples = 216;
           }
-	  else {
-	    fp->ofdm_symbol_size = 4096;
-	    fp->first_carrier_offset = 2794; //4096 - ( (217*12) / 2 )
-	    fp->nb_prefix_samples0 = 352;
-	    fp->nb_prefix_samples = 288;
-	  }
-          break;
+	        else {
+          	    fp->ofdm_symbol_size = 4096;
+                fp->first_carrier_offset = 2794; //4096 - ( (217*12) / 2 )
+                fp->nb_prefix_samples0 = 352;
+                fp->nb_prefix_samples = 288;
+      	  }
+        break;
 
-        case 245:
-	  AssertFatal(fp->threequarter_fs==0,"3/4 sampling impossible for N_RB %d and MU %d\n",N_RB_DL,mu); 
-	  fp->ofdm_symbol_size = 4096;
-	  fp->first_carrier_offset = 2626; //4096 - ( (245*12) / 2 )
-	  fp->nb_prefix_samples0 = 352;
-	  fp->nb_prefix_samples = 288;
-	  break;
+        case 245:    // is this there in mu=1? or in any mu?
+        	  AssertFatal(fp->threequarter_fs==0,"3/4 sampling impossible for N_RB %d and MU %d\n",N_RB_DL,mu); 
+            	  fp->ofdm_symbol_size = 4096;
+                fp->first_carrier_offset = 2626; //4096 - ( (245*12) / 2 )
+                fp->nb_prefix_samples0 = 352;
+                fp->nb_prefix_samples = 288;
+        break;
         case 273:
-	  AssertFatal(fp->threequarter_fs==0,"3/4 sampling impossible for N_RB %d and MU %d\n",N_RB_DL,mu); 
-	  fp->ofdm_symbol_size = 4096;
-	  fp->first_carrier_offset = 2458; //4096 - ( (273*12) / 2 )
-	  fp->nb_prefix_samples0 = 352;
-	  fp->nb_prefix_samples = 288;
-	  break;
-      default:
-        AssertFatal(1==0,"Number of resource blocks %d undefined for mu %d, frame parms = %p\n", N_RB_DL, mu, fp);
-      }
-      break;
+        	  AssertFatal(fp->threequarter_fs==0,"3/4 sampling impossible for N_RB %d and MU %d\n",N_RB_DL,mu); 
+            fp->ofdm_symbol_size = 4096;
+            fp->first_carrier_offset = 2458; //4096 - ( (273*12) / 2 )
+            fp->nb_prefix_samples0 = 352;
+            fp->nb_prefix_samples = 288;
+    	  break;
+        default:
+              AssertFatal(1==0,"Number of resource blocks %d undefined for mu %d, frame parms = %p\n", N_RB_DL, mu, fp);
+       }
+    break;
 
-    case NR_MU_2: //60kHz scs
+    case NR_MU_2: //60kHz scs   what about ssb_type for mu=2?
       fp->subcarrier_spacing = nr_subcarrier_spacing[NR_MU_2];
       fp->slots_per_subframe = nr_slots_per_subframe[NR_MU_2];
 
-      switch(N_RB_DL){ //FR1 bands only
-        case 11:
+      switch(N_RB_DL) //FR1 bands only   // Do we have 38,93,121?  Also for FR2 scs 60khz what will be the mu value?
+      { case 11:
         case 18:
         case 38:
         case 24:
@@ -199,23 +204,47 @@ int nr_init_frame_parms0(NR_DL_FRAME_PARMS *fp,
         case 93:
         case 107:
         case 121:
-        case 135:
-      default:
+        case 132:     //// copied the below one from mu=1 ;case 106   ... Asuming no 3/4 sampling here   135*12=1620 nearest fft 2048
+                  AssertFatal(fp->threequarter_fs==0,"3/4 sampling impossible for N_RB %d and MU %d\n",N_RB_DL,mu); 
+                  fp->ofdm_symbol_size = 2048;
+                  fp->first_carrier_offset = 1238; //2048 - ( (135*12) / 2 )
+                  fp->nb_prefix_samples0 = 208;
+                  fp->nb_prefix_samples = 144;
+        break;
+
+        default:
         AssertFatal(1==0,"Number of resource blocks %d undefined for mu %d, frame parms = %p\n", N_RB_DL, mu, fp);
       }
-      break;
+    break;
 
     case NR_MU_3:
       fp->subcarrier_spacing = nr_subcarrier_spacing[NR_MU_3];
       fp->slots_per_subframe = nr_slots_per_subframe[NR_MU_3];
       fp->ssb_type = nr_ssb_type_D;
-      break;
+      // fprintf(stderr,"\n $$$$###@@@TEST STATEMENT TO CHECK WHEN ENABLING MU=3 in gNB and UE openairinterface5g/opeanair1/PHY/INIT/nr_params.c $$$###@@@ \n"); 
+      switch(N_RB_DL) //
+      {
+        case 32:
+        case 132:
+        case 264:
+        case 66:     //// calculated the below one assuming ofdm size as 4096 .. Asuming no 3/4 sampling here
+                  AssertFatal(fp->threequarter_fs==0,"3/4 sampling impossible for N_RB %d and MU %d\n",N_RB_DL,mu); 
+                  fp->ofdm_symbol_size = 1024;   //  src572 
+                  fp->first_carrier_offset = 628; //1024 - ( (66*12) / 2 )   src572
+                  fp->nb_prefix_samples0 = 136;///544;    //----src572
+                  fp->nb_prefix_samples = 72;////288;
+        break;
+
+        default:
+        AssertFatal(1==0,"Number of resource blocks %d undefined for mu %d, frame parms = %p\n", N_RB_DL, mu, fp);
+      }
+    break;
 
     case NR_MU_4:
       fp->subcarrier_spacing = nr_subcarrier_spacing[NR_MU_4];
       fp->slots_per_subframe = nr_slots_per_subframe[NR_MU_4];
       fp->ssb_type = nr_ssb_type_E;
-      break;
+    break;
 
   default:
     AssertFatal(1==0,"Invalid numerology index %d", mu);
@@ -223,27 +252,47 @@ int nr_init_frame_parms0(NR_DL_FRAME_PARMS *fp,
 
   fp->slots_per_frame = 10* fp->slots_per_subframe;
 
-  fp->nb_antenna_ports_eNB = 1; // default value until overwritten by RRCConnectionReconfiguration
+  fp->nb_antenna_ports_eNB = 1;    // default value until overwritten by RRCConnectionReconfiguration
 
-  fp->symbols_per_slot = ((Ncp == NORMAL)? 14 : 12); // to redefine for different slot formats
+  fp->symbols_per_slot = ((Ncp == NORMAL)? 14 : 12);  // to redefine for different slot formats
+
+  fprintf(stderr, "\n $$$###  fp->symbols_per_slot  = %d  ###$$$ \n",  fp->symbols_per_slot );   ///---src572
+
+
   fp->samples_per_subframe_wCP = fp->ofdm_symbol_size * fp->symbols_per_slot * fp->slots_per_subframe;
   fp->samples_per_frame_wCP = 10 * fp->samples_per_subframe_wCP;
   fp->samples_per_slot_wCP = fp->symbols_per_slot*fp->ofdm_symbol_size; 
   fp->samples_per_slot = fp->nb_prefix_samples0 + ((fp->symbols_per_slot-1)*fp->nb_prefix_samples) + (fp->symbols_per_slot*fp->ofdm_symbol_size); 
-  fp->samples_per_subframe = (fp->samples_per_subframe_wCP + (fp->nb_prefix_samples0 * fp->slots_per_subframe) +
-                                      (fp->nb_prefix_samples * fp->slots_per_subframe * (fp->symbols_per_slot - 1)));
+  
+ //fp->samples_per_subframe = (fp->samples_per_subframe_wCP + (fp->nb_prefix_samples0 * fp->slots_per_subframe) +
+               //                       (fp->nb_prefix_samples * fp->slots_per_subframe * (fp->symbols_per_slot - 1)));
+
+
+
+
+  fp->samples_per_subframe = (fp->samples_per_subframe_wCP + fp->nb_prefix_samples0 * 2 +
+                                     (fp->nb_prefix_samples * (fp->slots_per_subframe * fp->symbols_per_slot - 2)));   ////----Modified this nb_prefix_samples0  are not for every slot instead they are for every o.5 ms which is half of subframe. 
+  //hence there will be two symbols with nb_prefix_samples0 and the rest will be with nb_prefix_samples     ----src572
+
+  fprintf(stderr, "$$$###  Number of samples_per_subframe = %u \n",  fp->samples_per_subframe );
+
+fprintf(stderr, "  The value should be  %d \n", (fp->samples_per_subframe_wCP + fp->nb_prefix_samples0 * 2 +
+                                                 (fp->nb_prefix_samples * (fp->slots_per_subframe * fp->symbols_per_slot - 2))) );
+
   fp->samples_per_frame = 10 * fp->samples_per_subframe;
+
   fp->freq_range = (fp->dl_CarrierFreq < 6e9)? nr_FR1 : nr_FR2;
 
   // definition of Lmax according to ts 38.213 section 4.1
-  if (fp->dl_CarrierFreq < 6e9){
-	if(fp->frame_type && (fp->ssb_type==2))
-		fp->Lmax = (fp->dl_CarrierFreq < 2.4e9)? 4 : 8;
-	else
-		fp->Lmax = (fp->dl_CarrierFreq < 3e9)? 4 : 8;
+  if (fp->dl_CarrierFreq < 6e9)
+  {
+	      if(fp->frame_type && (fp->ssb_type==2))
+		       fp->Lmax = (fp->dl_CarrierFreq < 2.4e9)? 4 : 8;
+	      else
+		       fp->Lmax = (fp->dl_CarrierFreq < 3e9)? 4 : 8;
   }  
   else
-    fp->Lmax = 64;
+      fp->Lmax = 64;
 
 
   return 0;
@@ -254,8 +303,12 @@ int nr_init_frame_parms(nfapi_nr_config_request_t* config,
 {
 
   fp->eutra_band = config->nfapi_config.rf_bands.rf_band[0];
+  fp->nr_band = config->nfapi_config.rf_bands.rf_band[0];
+
   fp->frame_type = !(config->subframe_config.duplex_mode.value);
   fp->L_ssb = config->sch_config.ssb_scg_position_in_burst.value;
+
+  fprintf(stderr, "\n $$$$####  The value of L_ssb is %d  $$$###\n", fp->L_ssb);   ///-- what is the difference between LMax and L_ssb
   return nr_init_frame_parms0(fp,
 			      config->subframe_config.numerology_index_mu.value,
 			      config->subframe_config.dl_cyclic_prefix_type.value,

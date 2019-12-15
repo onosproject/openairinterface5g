@@ -53,13 +53,13 @@
 #include "common/utils/LOG/vcd_signal_dumper.h"
 
 int beam_precoding(int32_t **txdataF,
-	           int32_t **txdataF_BF,
-		   int subframe,
+	                 int32_t **txdataF_BF,
+		               int subframe,
                    LTE_DL_FRAME_PARMS *frame_parms,
                    int32_t **beam_weights[NUMBER_OF_eNB_MAX+1][15],
                    int symbol,
-		   int aa,
-		   int p,
+		               int aa,
+		               int p,
                    int l1_id)
 {
   int rb_offset_neg0 = frame_parms->ofdm_symbol_size - (6*frame_parms->N_RB_DL);

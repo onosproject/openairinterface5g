@@ -278,7 +278,9 @@ int nr_dlsch_encoding(unsigned char *a,int frame,
   unsigned int G;
   unsigned int crc=1;
   uint8_t harq_pid = dlsch->harq_ids[frame&2][slot];
-  AssertFatal(harq_pid<8 && harq_pid>=0,"illegal harq_pid %d\b",harq_pid);
+
+  //AssertFatal(harq_pid<255 && harq_pid>=0,"illegal harq_pid %d\b",harq_pid);
+  // fprintf(stderr, "%s\n","commented the above line in line 282 in nr_dlsch_encoding() in openair1/PHY/NR_TRANSPORT/nr_dlsch_coding.c" );
   nfapi_nr_dl_config_dlsch_pdu_rel15_t rel15 = dlsch->harq_processes[harq_pid]->dlsch_pdu.dlsch_pdu_rel15;
   uint16_t nb_rb = rel15.n_prb;
   uint8_t nb_symb_sch = rel15.nb_symbols;

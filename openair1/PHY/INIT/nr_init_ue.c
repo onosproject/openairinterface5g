@@ -689,7 +689,7 @@ int init_nr_ue_signal(PHY_VARS_NR_UE *ue,
   printf("Initializing UE vars (abstraction %"PRIu8") for eNB TXant %"PRIu8", UE RXant %"PRIu8"\n",abstraction_flag,fp->nb_antennas_tx,fp->nb_antennas_rx);
   //LOG_D(PHY,"[MSC_NEW][FRAME 00000][PHY_UE][MOD %02u][]\n", ue->Mod_id+NB_eNB_INST);
   
-  nr_init_frame_parms_ue(fp,NR_MU_1,NORMAL,fp->N_RB_DL,n_ssb_crb,k_ssb);
+  nr_init_frame_parms_ue(fp,NR_MU_3,NORMAL,fp->N_RB_DL,n_ssb_crb,k_ssb);    //////----src572
   phy_init_nr_top(ue);
 
   // many memory allocation sizes are hard coded
@@ -972,7 +972,7 @@ int init_nr_ue_signal(PHY_VARS_NR_UE *ue,
   ue->decode_MIB = 1;
   ue->decode_SIB = 1;
 
-  ue->ssb_periodicity = 5; // initialization of ssb periodicity to 5ms according to TS38.213 section 4.1
+  ue->ssb_periodicity = 20;//5; // initialization of ssb periodicity to 5ms according to TS38.213 section 4.1   ----src572
 
   init_prach_tables(839);
 
@@ -1047,17 +1047,17 @@ void set_default_frame_parms_single(nfapi_nr_config_request_t *config,
         frame_parms = (NR_DL_FRAME_PARMS*) malloc(sizeof(NR_DL_FRAME_PARMS));
         config = (nfapi_nr_config_request_t*) malloc(sizeof(nfapi_nr_config_request_t));
         config->subframe_config.numerology_index_mu.value =1;
-        config->subframe_config.duplex_mode.value = 1; //FDD
+        config->subframe_config.duplex_mode.value = 0;//1; //FDD
         config->subframe_config.dl_cyclic_prefix_type.value = 0; //NORMAL
-        config->rf_config.dl_carrier_bandwidth.value = 106;
-        config->rf_config.ul_carrier_bandwidth.value = 106;
+        config->rf_config.dl_carrier_bandwidth.value = 100;
+        config->rf_config.ul_carrier_bandwidth.value = 100;
         config->sch_config.physical_cell_id.value = 0;
 
-        frame_parms->frame_type          = FDD;
+        frame_parms->frame_type          = TDD;//FDD;
         frame_parms->tdd_config          = 3;
         //frame_parms[CC_id]->tdd_config_S        = 0;
-        frame_parms->N_RB_DL             = 100;
-        frame_parms->N_RB_UL             = 100;
+        frame_parms->N_RB_DL             = 66;//100;
+        frame_parms->N_RB_UL             = 66;//100;
         frame_parms->Ncp                 = NORMAL;
         //frame_parms[CC_id]->Ncp_UL              = NORMAL;
         frame_parms->Nid_cell            = 0;
@@ -1089,7 +1089,7 @@ void set_default_frame_parms_single(nfapi_nr_config_request_t *config,
         frame_parms[CC_id]->prach_config_common.prach_ConfigInfo.prach_FreqOffset=0;*/
 
         // NR: Init to legacy LTE 20Mhz params
-        frame_parms->numerology_index	= 0;
+        frame_parms->numerology_index	= 3;
         frame_parms->ttis_per_subframe	= 1;
         frame_parms->slots_per_tti		= 2;
 

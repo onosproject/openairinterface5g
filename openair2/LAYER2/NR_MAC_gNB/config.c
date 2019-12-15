@@ -89,7 +89,7 @@ void config_common(int Mod_idP,
 {
   nfapi_nr_config_request_t *cfg = &RC.nrmac[Mod_idP]->config[CC_idP];
 
-  int mu = 1;
+  int mu = 3;                     //----src572 why is it hard coded?
 
   cfg->sch_config.physical_cell_id.value = cellid;
   cfg->sch_config.ssb_scg_position_in_burst.value = ssb_pattern;
@@ -105,8 +105,9 @@ void config_common(int Mod_idP,
   cfg->nfapi_config.rf_bands.rf_band[0]            = nr_bandP;  
   cfg->nfapi_config.rf_bands.tl.tag = NFAPI_PHY_RF_BANDS_TAG;
   cfg->num_tlv++;
-
-  cfg->nfapi_config.nrarfcn.value                   = to_nrarfcn(nr_bandP,dl_CarrierFreqP,dl_BandwidthP*180000*(1+mu));
+  // fprintf(stderr, "in config_common() in openair2/LAYER2/NR_MAC_gNB/config.c value of BW in RB = %d\n", dl_BandwidthP);
+  cfg->nfapi_config.nrarfcn.value  = to_nrarfcn(nr_bandP,dl_CarrierFreqP,dl_BandwidthP*180000*(1<<mu));    //-----src572 what is this 180k*4 //15k*12=1RB=180k
+  //cfg->nfapi_config.nrarfcn.value  = to_nrarfcn(nr_bandP,dl_CarrierFreqP,dl_BandwidthP*120000*12);   ///--- PRB*12*scs
   cfg->nfapi_config.nrarfcn.tl.tag = NFAPI_NR_NFAPI_NRARFCN_TAG;
   cfg->num_tlv++;
 
@@ -134,18 +135,20 @@ void config_common(int Mod_idP,
 
 int rrc_mac_config_req_gNB(module_id_t Mod_idP, 
                            int CC_idP,
-						   int cellid,
+						               int cellid,
                            int p_gNB,
                            int nr_bandP,
-						   uint64_t ssb_pattern,
+						               uint64_t ssb_pattern,
                            uint16_t ssb_enum_periodicity,
                            uint64_t dl_CarrierFreqP,
                            int dl_BandwidthP,
                            NR_BCCH_BCH_Message_t *mib,
                            NR_ServingCellConfigCommon_t *servingcellconfigcommon)
 {
-  uint16_t ssb_periodicity=0;
+  uint16_t ssb_periodicity;    // -------src572          changed from 0 to 1 to make ssb_periodicity to 10
 
+  // fprintf(stderr, "value of ssb_enum_periodicity = %d \n", ssb_enum_periodicity);
+  //ssb_enum_periodicity =2;
   switch (ssb_enum_periodicity) {
     case 0:
       ssb_periodicity = 5;
@@ -165,6 +168,8 @@ int rrc_mac_config_req_gNB(module_id_t Mod_idP,
     case 5:
       ssb_periodicity = 160;
       break;
+      default :
+      fprintf(stderr, "%s\n","Not a correct value of ssb_periodicity in rrc_mac_config_req_gNB()" );      //----src572
   }      
 
   if( mib != NULL ){
@@ -174,11 +179,11 @@ int rrc_mac_config_req_gNB(module_id_t Mod_idP,
                mib->message.choice.mib->subCarrierSpacingCommon,
                mib->message.choice.mib->ssb_SubcarrierOffset,
                mib->message.choice.mib->dmrs_TypeA_Position,
-#if (NR_RRC_VERSION >= MAKE_VERSION(15, 3, 0))
+               #if (NR_RRC_VERSION >= MAKE_VERSION(15, 3, 0))
                mib->message.choice.mib->pdcch_ConfigSIB1.controlResourceSetZero * 16 + mib->message.choice.mib->pdcch_ConfigSIB1.searchSpaceZero,
-#else
+               #else
                mib->message.choice.mib->pdcch_ConfigSIB1,
-#endif
+                #endif
                mib->message.choice.mib->cellBarred,
                mib->message.choice.mib->intraFreqReselection
                );
@@ -188,9 +193,9 @@ int rrc_mac_config_req_gNB(module_id_t Mod_idP,
   if( servingcellconfigcommon != NULL ){
     config_common(Mod_idP, 
                   CC_idP,
-				  cellid,
+				          cellid,
                   nr_bandP,
-				  ssb_pattern,
+				          ssb_pattern,
                   ssb_periodicity,
                   dl_CarrierFreqP,
                   dl_BandwidthP
