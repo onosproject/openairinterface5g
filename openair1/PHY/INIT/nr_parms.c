@@ -24,7 +24,7 @@
 
 /// Subcarrier spacings in Hz indexed by numerology index
 uint32_t nr_subcarrier_spacing[MAX_NUM_SUBCARRIER_SPACING] = {15e3, 30e3, 60e3, 120e3, 240e3};
-uint16_t nr_slots_per_subframe[MAX_NUM_SUBCARRIER_SPACING] = {1, 2, 4, 16, 32};
+uint16_t nr_slots_per_subframe[MAX_NUM_SUBCARRIER_SPACING] = {1, 2, 4, 8, 16};
 
 
 int nr_get_ssb_start_symbol(NR_DL_FRAME_PARMS *fp, uint8_t i_ssb, uint8_t half_frame_index)
@@ -241,9 +241,16 @@ int nr_init_frame_parms0(NR_DL_FRAME_PARMS *fp,
       break;
 
     case NR_MU_3:
-      fp->subcarrier_spacing = nr_subcarrier_spacing[NR_MU_3];
-      fp->slots_per_subframe = nr_slots_per_subframe[NR_MU_3];
-      fp->ssb_type = nr_ssb_type_D;
+      switch(N_RB_DL){
+        case 66:
+          fp->ofdm_symbol_size = 1024;
+          fp->first_carrier_offset = 628; //1024 - ( (66*12) / 2 )
+          fp->nb_prefix_samples0 = 88;
+          fp->nb_prefix_samples = 72;
+          fp->subcarrier_spacing = nr_subcarrier_spacing[NR_MU_3];
+          fp->slots_per_subframe = nr_slots_per_subframe[NR_MU_3];
+          fp->ssb_type = nr_ssb_type_D;
+      }
       break;
 
     case NR_MU_4:

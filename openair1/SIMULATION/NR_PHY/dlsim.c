@@ -164,7 +164,7 @@ int main(int argc, char **argv)
 
   //double pbch_sinr;
   //int pbch_tx_ant;
-  int N_RB_DL=106,mu=1;
+  int N_RB_DL=66,mu=3;
   nfapi_nr_dl_config_dlsch_pdu_rel15_t dlsch_config;
   dlsch_config.start_prb = 0;
   dlsch_config.n_prb = 50;
@@ -476,6 +476,10 @@ int main(int argc, char **argv)
   else if (mu == 1 && N_RB_DL == 106) { 
     fs = 61.44e6;
     bw = 40e6;
+  }
+  else if (mu == 3 && N_RB_DL == 66) {
+    fs = 122.88e6;
+    bw = 100e6;
   }
   else AssertFatal(1==0,"Unsupported numerology for mu %d, N_RB %d\n",mu, N_RB_DL);
 

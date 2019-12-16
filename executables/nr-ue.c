@@ -603,7 +603,16 @@ void *UE_thread(void *arg) {
   openair0_timestamp timestamp;
   void *rxp[NB_ANTENNAS_RX], *txp[NB_ANTENNAS_TX];
   int start_rx_stream = 0;
-  const uint16_t table_sf_slot[20] = {0,0,1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9};
+  const uint16_t table_sf_slot[80] = {0,0,0,0,0,0,0,0,
+                                      1,1,1,1,1,1,1,1,
+                                      2,2,2,2,2,2,2,2,
+                                      3,3,3,3,3,3,3,3,
+                                      4,4,4,4,4,4,4,4,
+                                      5,5,5,5,5,5,5,5,
+                                      6,6,6,6,6,6,6,6,
+                                      7,7,7,7,7,7,7,7,
+                                      8,8,8,8,8,8,8,8,
+                                      9,9,9,9,9,9,9,9};
   AssertFatal(0== openair0_device_load(&(UE->rfdevice), &openair0_cfg[0]), "");
   UE->rfdevice.host_type = RAU_HOST;
   AssertFatal(UE->rfdevice.trx_start_func(&UE->rfdevice) == 0, "Could not start the device\n");

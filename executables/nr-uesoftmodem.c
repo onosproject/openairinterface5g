@@ -487,12 +487,12 @@ void set_default_frame_parms(NR_DL_FRAME_PARMS *frame_parms[MAX_NUM_CCs]) {
   for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
     /* Set some default values that may be overwritten while reading options */
     frame_parms[CC_id] = (NR_DL_FRAME_PARMS *) calloc(sizeof(NR_DL_FRAME_PARMS),1);
-    frame_parms[CC_id]->eutra_band          = 78;
+    frame_parms[CC_id]->eutra_band          = 257;
     frame_parms[CC_id]->frame_type          = FDD;
     frame_parms[CC_id]->tdd_config          = 3;
     //frame_parms[CC_id]->tdd_config_S        = 0;
-    frame_parms[CC_id]->N_RB_DL             = 106;
-    frame_parms[CC_id]->N_RB_UL             = 106;
+    frame_parms[CC_id]->N_RB_DL             = 66;
+    frame_parms[CC_id]->N_RB_UL             = 66;
     frame_parms[CC_id]->Ncp                 = NORMAL;
     //frame_parms[CC_id]->Ncp_UL              = NORMAL;
     frame_parms[CC_id]->Nid_cell            = 0;
@@ -502,7 +502,7 @@ void set_default_frame_parms(NR_DL_FRAME_PARMS *frame_parms[MAX_NUM_CCs]) {
     frame_parms[CC_id]->nb_antennas_rx      = 1;
     //frame_parms[CC_id]->nushift             = 0;
     // NR: Init to legacy LTE 20Mhz params
-    frame_parms[CC_id]->numerology_index  = 0;
+    frame_parms[CC_id]->numerology_index  = 3;
     frame_parms[CC_id]->ttis_per_subframe = 1;
     frame_parms[CC_id]->slots_per_tti   = 2;
   }
@@ -516,7 +516,15 @@ void init_openair0(void) {
     openair0_cfg[card].configFilename = NULL;
     openair0_cfg[card].threequarter_fs = frame_parms[0]->threequarter_fs;
 
-    if(frame_parms[0]->N_RB_DL == 217) {
+    if(frame_param[0]->N_RB_DL == 66) {
+      if (numerology==3) {
+          openair0_cfg[card].sample_rate=122.88e6;
+          openair0_cfg[card].samples_per_frame = 1228800;
+        } else {
+          LOG_E(PHY,"Unsupported numerology! FR2 supports only 120KHz SCS for now.\n");
+          exit(-1);
+        }
+    }else if(frame_parms[0]->N_RB_DL == 217) {
       if (numerology==1) {
         if (frame_parms[0]->threequarter_fs) {
           openair0_cfg[card].sample_rate=92.16e6;

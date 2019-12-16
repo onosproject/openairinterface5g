@@ -659,7 +659,7 @@ int init_nr_ue_signal(PHY_VARS_NR_UE *ue,
   fp->nb_antennas_rx=1;
   printf("Initializing UE vars (abstraction %"PRIu8") for eNB TXant %"PRIu8", UE RXant %"PRIu8"\n",abstraction_flag,fp->nb_antennas_tx,fp->nb_antennas_rx);
   //LOG_D(PHY,"[MSC_NEW][FRAME 00000][PHY_UE][MOD %02u][]\n", ue->Mod_id+NB_eNB_INST);
-  nr_init_frame_parms_ue(fp,NR_MU_1,NORMAL,fp->N_RB_DL,n_ssb_crb,k_ssb);
+  nr_init_frame_parms_ue(fp,NR_MU_3,NORMAL,fp->N_RB_DL,n_ssb_crb,k_ssb);
   phy_init_nr_top(ue);
   // many memory allocation sizes are hard coded
   AssertFatal( fp->nb_antennas_rx <= 2, "hard coded allocation for ue_common_vars->dl_ch_estimates[eNB_id]" );
