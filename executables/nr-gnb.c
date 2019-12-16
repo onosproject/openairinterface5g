@@ -555,8 +555,8 @@ int wakeup_rxtx(PHY_VARS_gNB *gNB,RU_t *ru) {
     abstime.tv_sec  += 1;
   }
 
-  // wake up TX for subframe n+sl_ahead
-  // lock the TX mutex and make sure the thread is ready
+  // wake up RX for subframe n
+  // lock the RX mutex and make sure the thread is ready
   AssertFatal((ret=pthread_mutex_timedlock(&L1_proc->mutex, &abstime)) == 0,"mutex_lock returns %d\n", ret);
 
   if (L1_proc->instance_cnt == 0) { // L1_thread is busy so abort the subframe
