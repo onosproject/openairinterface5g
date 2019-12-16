@@ -33,7 +33,9 @@
 # include "extern.h"
 # include "RRC/L2_INTERFACE/openair_rrc_L2_interface.h"
 # include "RRC/LITE/MESSAGES/asn1_msg.h"
+# include "RRC/LITE/MESSAGES/asn1_msg_NB_IoT.h"
 # include "RRC/LITE/defs.h"
+# include "RRC/LITE/defs_NB_IoT.h"
 # include "rrc_eNB_UE_context.h"
 # include "rrc_eNB_S1AP.h"
 # include "enb_config.h"
@@ -507,29 +509,23 @@ void
 rrc_eNB_send_S1AP_UPLINK_NAS(
   const protocol_ctxt_t*    const ctxt_pP,
   rrc_eNB_ue_context_t*             const ue_context_pP,
-  UL_DCCH_Message_t*        const ul_dcch_msg
+  UL_DCCH_Message_NB_t*        const ul_dcch_msg  //UL_DCCH_Message_t
 )
 //------------------------------------------------------------------------------
 {
+
 #if defined(ENABLE_ITTI)
   {
-    ULInformationTransfer_t *ulInformationTransfer = &ul_dcch_msg->message.choice.c1.choice.ulInformationTransfer;
+    ULInformationTransfer_NB_t *ulInformationTransfer = &ul_dcch_msg->message.choice.c1.choice.ulInformationTransfer_r13;
 
-    if ((ulInformationTransfer->criticalExtensions.present == ULInformationTransfer__criticalExtensions_PR_c1)
-    && (ulInformationTransfer->criticalExtensions.choice.c1.present
-    == ULInformationTransfer__criticalExtensions__c1_PR_ulInformationTransfer_r8)
-    && (ulInformationTransfer->criticalExtensions.choice.c1.choice.ulInformationTransfer_r8.dedicatedInfoType.present
-    == ULInformationTransfer_r8_IEs__dedicatedInfoType_PR_dedicatedInfoNAS)) {
-      /* This message hold a dedicated info NAS payload, forward it to NAS */
-      struct ULInformationTransfer_r8_IEs__dedicatedInfoType *dedicatedInfoType =
-          &ulInformationTransfer->criticalExtensions.choice.c1.choice.ulInformationTransfer_r8.dedicatedInfoType;
+    if (ulInformationTransfer->criticalExtensions.present == ULInformationTransfer_NB__criticalExtensions_PR_ulInformationTransfer_r13) {
+      struct ULInformationTransfer_NB_r13_IEs *ULInformationTransfer_NB_r13_IEs_t =
+          &ulInformationTransfer->criticalExtensions.choice.ulInformationTransfer_r13;
       uint32_t pdu_length;
       uint8_t *pdu_buffer;
       MessageDef *msg_p;
-
-      pdu_length = dedicatedInfoType->choice.dedicatedInfoNAS.size;
-      pdu_buffer = dedicatedInfoType->choice.dedicatedInfoNAS.buf;
-
+      pdu_length = ULInformationTransfer_NB_r13_IEs_t->dedicatedInfoNAS_r13.size;
+      pdu_buffer = ULInformationTransfer_NB_r13_IEs_t->dedicatedInfoNAS_r13.buf;
       msg_p = itti_alloc_new_message (TASK_RRC_ENB, S1AP_UPLINK_NAS);
       S1AP_UPLINK_NAS (msg_p).eNB_ue_s1ap_id = ue_context_pP->ue_context.eNB_ue_s1ap_id;
       S1AP_UPLINK_NAS (msg_p).nas_pdu.length = pdu_length;
@@ -540,33 +536,22 @@ rrc_eNB_send_S1AP_UPLINK_NAS(
   }
 #else
   {
-    ULInformationTransfer_t *ulInformationTransfer;
+    ULInformationTransfer_NB_t *ulInformationTransfer;
     ulInformationTransfer =
     &ul_dcch_msg->message.choice.c1.choice.
     ulInformationTransfer;
 
     if (ulInformationTransfer->criticalExtensions.present ==
-    ULInformationTransfer__criticalExtensions_PR_c1) {
-      if (ulInformationTransfer->criticalExtensions.choice.c1.present ==
-      ULInformationTransfer__criticalExtensions__c1_PR_ulInformationTransfer_r8) {
-
-        ULInformationTransfer_r8_IEs_t
-        *ulInformationTransferR8;
-        ulInformationTransferR8 =
+    ULInformationTransfer_NB__criticalExtensions_PR_ulInformationTransfer_r13) {
+        ULInformationTransfer_NB_r13_IEs_t
+        *ulInformationTransferR13;
+        ulInformationTransferR13 =
         &ulInformationTransfer->criticalExtensions.choice.
-        c1.choice.ulInformationTransfer_r8;
+        ulInformationTransfer_r13;
 
-        if (ulInformationTransferR8->dedicatedInfoType.
-        present ==
-        ULInformationTransfer_r8_IEs__dedicatedInfoType_PR_dedicatedInfoNAS)
           s1ap_eNB_new_data_request (mod_id, ue_index,
-          ulInformationTransferR8->
-          dedicatedInfoType.choice.
-          dedicatedInfoNAS.buf,
-          ulInformationTransferR8->
-          dedicatedInfoType.choice.
-          dedicatedInfoNAS.size);
-      }
+          ulInformationTransferR13.buf,
+          ulInformationTransferR13.size);
     }
   }
 #endif

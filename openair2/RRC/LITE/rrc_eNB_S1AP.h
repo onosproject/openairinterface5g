@@ -35,6 +35,9 @@
 
 #include "defs.h"
 #include "UL-DCCH-Message.h"
+// NB-IoT Section
+#include "UL-DCCH-Message-NB.h"
+
 
 /* Up link procedures */
 
@@ -102,7 +105,7 @@ void
 rrc_eNB_send_S1AP_UPLINK_NAS(
   const protocol_ctxt_t*    const ctxt_pP,
   rrc_eNB_ue_context_t*          const ue_context_pP,
-  UL_DCCH_Message_t* const ul_dcch_msg
+  UL_DCCH_Message_NB_t* const ul_dcch_msg
 );
 
 /*! \fn void rrc_eNB_send_S1AP_UE_CAPABILITIES_IND(const protocol_ctxt_t   * const ctxt_pP, eNB_RRC_UE_t * const ue_context_pP, UL_DCCH_Message_t *ul_dcch_msg)

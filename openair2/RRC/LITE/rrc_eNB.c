@@ -5037,8 +5037,7 @@ int rrc_eNB_decode_dcch_NB_IoT(
 )
 //-----------------------------------------------------------------------------
 {
-  
-  
+ 
   asn_dec_rval_t                      dec_rval;
   UL_DCCH_Message_NB_t                  *ul_dcch_msg_NB_IoT = NULL;
   UE_Capability_NB_r13_t              *UE_Capability_NB = NULL;
@@ -5105,7 +5104,7 @@ int rrc_eNB_decode_dcch_NB_IoT(
 
     case UL_DCCH_MessageType_NB__c1_PR_rrcConnectionSetupComplete_r13:
       //MP: Ts 36.331 V14.2.1 RRCConnectionSetupComplete is transmitted over SRB1bis (pag 585)
-
+      
 #ifdef RRC_MSG_PRINT
       LOG_F(RRC,"[MSG] RRCConnectionSetupComplete-NB\n");
 
@@ -5151,6 +5150,255 @@ int rrc_eNB_decode_dcch_NB_IoT(
       }
 
       ue_context_p->ue_context.ue_release_timer=0;
+
+      break;
+
+      case UL_DCCH_MessageType_NB__c1_PR_ulInformationTransfer_r13:
+      
+        T(T_ENB_RRC_UL_INFORMATION_TRANSFER, T_INT(ctxt_pP->module_id), T_INT(ctxt_pP->frame),
+          T_INT(ctxt_pP->subframe), T_INT(ctxt_pP->rnti));
+
+#ifdef RRC_MSG_PRINT
+        LOG_F(RRC,"[MSG] RRC UL Information Transfer \n");
+
+        for (i = 0; i < sdu_sizeP; i++) {
+          LOG_F(RRC,"%02x ", ((uint8_t*)Rx_sdu)[i]);
+        }
+
+        LOG_F(RRC,"\n");
+#endif
+
+        MSC_LOG_RX_MESSAGE(
+          MSC_RRC_ENB,
+          MSC_RRC_UE,
+          Rx_sdu,
+          sdu_sizeP,
+          MSC_AS_TIME_FMT" ulInformationTransfer UE %x size %u",
+          MSC_AS_TIME_ARGS(ctxt_pP),
+          ue_context_p->ue_context.rnti,
+          sdu_sizeP);
+
+#if defined(ENABLE_USE_MME)
+
+        if (EPC_MODE_ENABLED == 1) {
+          rrc_eNB_send_S1AP_UPLINK_NAS(ctxt_pP,
+                                       ue_context_p,
+                                       ul_dcch_msg_NB_IoT);
+        }
+
+#endif
+
+      break;
+
+      case UL_DCCH_MessageType_NB__c1_PR_rrcConnectionReconfigurationComplete_r13:
+      
+#ifdef RRC_MSG_PRINT
+        LOG_F(RRC,"[MSG] RRC Connection Reconfiguration Complete\n");
+
+        for (i = 0; i < sdu_sizeP; i++) {
+          LOG_F(RRC,"%02x ", ((uint8_t*)Rx_sdu)[i]);
+        }
+
+        LOG_F(RRC,"\n");
+#endif
+
+        MSC_LOG_RX_MESSAGE(
+          MSC_RRC_ENB,
+          MSC_RRC_UE,
+          Rx_sdu,
+          sdu_sizeP,
+          MSC_AS_TIME_FMT" RRCConnectionReconfigurationComplete UE %x size %u",
+          MSC_AS_TIME_ARGS(ctxt_pP),
+          ue_context_p->ue_context.rnti,
+          sdu_sizeP);
+
+        LOG_D(RRC,
+              PROTOCOL_RRC_CTXT_UE_FMT" RLC RB %02d --- RLC_DATA_IND %d bytes "
+              "(RRCConnectionReconfigurationComplete) ---> RRC_eNB]\n",
+              PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP),
+              DCCH0_NB_IoT,
+              sdu_sizeP);
+
+        if (ul_dcch_msg_NB_IoT->message.choice.c1.choice.rrcConnectionReconfigurationComplete_r13.criticalExtensions.
+            present ==
+            RRCConnectionReconfigurationComplete_NB__criticalExtensions_PR_rrcConnectionReconfigurationComplete_r13) {
+    /*NN: revise the condition */
+          if (ue_context_p->ue_context.Status == RRC_RECONFIGURED_NB_IoT){
+            dedicated_DRB = 1;
+            LOG_I(RRC,
+            PROTOCOL_RRC_CTXT_UE_FMT" UE State = RRC_RECONFIGURED (dedicated DRB, xid %ld)\n",
+            PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP),ul_dcch_msg_NB_IoT->message.choice.c1.choice.rrcConnectionReconfigurationComplete_r13.rrc_TransactionIdentifier);
+          }else {
+            dedicated_DRB = 0;
+            ue_context_p->ue_context.Status = RRC_RECONFIGURED_NB_IoT;
+            LOG_I(RRC,
+            PROTOCOL_RRC_CTXT_UE_FMT" UE State = RRC_RECONFIGURED (default DRB, xid %ld)\n",
+            PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP),ul_dcch_msg_NB_IoT->message.choice.c1.choice.rrcConnectionReconfigurationComplete_r13.rrc_TransactionIdentifier);
+          }
+          rrc_eNB_process_RRCConnectionReconfigurationComplete(
+            ctxt_pP,
+            ue_context_p,
+            ul_dcch_msg_NB_IoT->message.choice.c1.choice.rrcConnectionReconfigurationComplete_r13.rrc_TransactionIdentifier);
+
+#if defined(FLEXRAN_AGENT_SB_IF)
+  //WARNING:Inform the controller about the UE activation. Should be moved to RRC agent in the future
+          if (mac_agent_registered[ctxt_pP->module_id]) {
+            agent_mac_xface[ctxt_pP->eNB_index]->flexran_agent_notify_ue_state_change(ctxt_pP->module_id,
+                      ue_context_p->ue_id_rnti,
+                      PROTOCOL__FLEX_UE_STATE_CHANGE_TYPE__FLUESC_UPDATED);
+          }
+#endif
+      }
+#if defined(ENABLE_ITTI)
+#   if defined(ENABLE_USE_MME)
+        if (EPC_MODE_ENABLED == 1) {
+          if (dedicated_DRB == 1){
+            rrc_eNB_send_S1AP_E_RAB_SETUP_RESP(ctxt_pP,
+                 ue_context_p,
+                 ul_dcch_msg_NB_IoT->message.choice.c1.choice.rrcConnectionReconfigurationComplete_r13.rrc_TransactionIdentifier);
+          }else {
+            rrc_eNB_send_S1AP_INITIAL_CONTEXT_SETUP_RESP(ctxt_pP,
+                     ue_context_p);
+          }
+        }    
+#else  // establish a dedicated bearer 
+        if (dedicated_DRB == 0 ) {
+          //  ue_context_p->ue_context.e_rab[0].status = E_RAB_STATUS_ESTABLISHED;
+          rrc_eNB_reconfigure_DRBs(ctxt_pP,ue_context_p);
+        }
+      
+#endif
+#endif 
+      break;
+
+      case UL_DCCH_MessageType_NB__c1_PR_securityModeComplete_r13:
+    
+        T(T_ENB_RRC_SECURITY_MODE_COMPLETE, T_INT(ctxt_pP->module_id), T_INT(ctxt_pP->frame),
+          T_INT(ctxt_pP->subframe), T_INT(ctxt_pP->rnti));
+//NOT SURE becasue the pussch_vars
+#ifdef RRC_MSG_PRINT
+        LOG_F(RRC,"[MSG] NB-IoT RRC Security Mode Complete\n");
+
+        for (i = 0; i < sdu_sizeP; i++) eNB->pusch_vars[UE_id]{
+          LOG_F(RRC,"%02x ", ((uint8_t*)Rx_sdu)[i]);
+        }
+
+        LOG_F(RRC,"\n");
+#endif
+        MSC_LOG_RX_MESSAGE(
+          MSC_RRC_ENB,
+          MSC_RRC_UE,
+          Rx_sdu,
+          sdu_sizeP,
+          MSC_AS_TIME_FMT" securityModeComplete-NB UE %x size %u",
+          MSC_AS_TIME_ARGS(ctxt_pP),
+          ue_context_p->ue_context.rnti,
+          sdu_sizeP);
+
+        LOG_I(RRC,
+              PROTOCOL_RRC_CTXT_UE_FMT" received securityModeComplete on UL-DCCH-NB %d from UE\n",
+              PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP),
+              DCCH0_NB_IoT);
+        LOG_D(RRC,
+              PROTOCOL_RRC_CTXT_UE_FMT" RLC RB %02d --- RLC_DATA_IND %d bytes "
+              "(securityModeComplete-NB) ---> RRC_eNB\n",
+              PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP),
+              DCCH0_NB_IoT,
+              sdu_sizeP);
+#ifdef XER_PRINT
+        xer_fprint(stdout, &asn_DEF_UL_DCCH_Message_NB, (void *)ul_dcch_msg_NB_IoT);
+#endif
+        // confirm with PDCP about the security mode for DCCH
+        //rrc_pdcp_config_req (enb_mod_idP, frameP, 1,CONFIG_ACTION_SET_SECURITY_MODE, (ue_mod_idP * NB_RB_MAX) + DCCH, 0x77);
+        // continue the procedure
+        rrc_eNB_generate_UECapabilityEnquiry(
+          ctxt_pP,
+          ue_context_p);
+
+      break;
+
+      case UL_DCCH_MessageType_NB__c1_PR_ueCapabilityInformation_r13:
+      
+        T(T_ENB_RRC_UE_CAPABILITY_INFORMATION, T_INT(ctxt_pP->module_id), T_INT(ctxt_pP->frame),
+          T_INT(ctxt_pP->subframe), T_INT(ctxt_pP->rnti));
+
+#ifdef RRC_MSG_PRINT
+        LOG_F(RRC,"[MSG] RRC UECapablility Information \n");
+
+        for (i = 0; i < sdu_sizeP; i++) {
+          LOG_F(RRC,"%02x ", ((uint8_t*)Rx_sdu)[i]);
+        }
+
+        LOG_F(RRC,"\n");
+#endif
+
+        MSC_LOG_RX_MESSAGE(
+          MSC_RRC_ENB,
+          MSC_RRC_UE,
+          Rx_sdu,
+          sdu_sizeP,
+          MSC_AS_TIME_FMT" ueCapabilityInformation UE %x size %u",
+          MSC_AS_TIME_ARGS(ctxt_pP),
+          ue_context_p->ue_context.rnti,
+          sdu_sizeP);
+
+        LOG_I(RRC,
+              PROTOCOL_RRC_CTXT_UE_FMT" received ueCapabilityInformation on UL-DCCH %d from UE\n",
+              PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP),
+              DCCH);
+        LOG_D(RRC,
+              PROTOCOL_RRC_CTXT_UE_FMT" RLC RB %02d --- RLC_DATA_IND %d bytes "
+              "(UECapabilityInformation) ---> RRC_eNB\n",
+              PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP),
+              DCCH,
+              sdu_sizeP);
+#ifdef XER_PRINT
+        xer_fprint(stdout, &asn_DEF_UL_DCCH_Message_NB, (void *)ul_dcch_msg_NB_IoT);
+#endif
+        LOG_I(RRC, "got UE capabilities for UE %x\n", ctxt_pP->rnti);
+        //dec_rval = uper_decode(NULL,
+        //                       &asn_DEF_UE_EUTRA_Capability,
+        //                       (void **)&UE_Capability_NB,
+        //                       ul_dcch_msg_NB_IoT->message.choice.c1.choice.ueCapabilityInformation_r13.criticalExtensions.
+        //                       choice.ueCapabilityInformation_r13.ue_Capability_Container_r13.rf_Parameters_r13.
+        //                       supportedBandList_r13.list.array[0]->SupportedBand_NB_r13.buf,
+        //                       ul_dcch_msg_NB_IoT->message.choice.c1.choice.ueCapabilityInformation_r13.criticalExtensions.
+        //                       choice.ueCapabilityInformation_r13.ue_Capability_Container_r13.rf_Parameters_r13.
+        //                       supportedBandList_r13.list.array[0]->SupportedBand_NB_r13.size, 0, 0);
+        //FIXME
+        dec_rval = uper_decode(
+               NULL,
+               &asn_DEF_UL_DCCH_Message_NB,
+               (void**)&ul_dcch_msg_NB_IoT,
+               Rx_sdu,
+               sdu_sizeP,
+               0,
+               0);
+
+        //#ifdef XER_PRINT
+        //xer_fprint(stdout, &asn_DEF_UE_EUTRA_Capability, (void *)UE_EUTRA_Capability);
+        //#endif
+
+#if defined(ENABLE_USE_MME)
+
+        if (EPC_MODE_ENABLED == 1) {
+          rrc_eNB_send_S1AP_UE_CAPABILITIES_IND(ctxt_pP,
+                                                ue_context_p,
+                                                ul_dcch_msg_NB_IoT);
+        }
+#else 
+        ue_context_p->ue_context.nb_of_e_rabs = 1;
+        for (i = 0; i < ue_context_p->ue_context.nb_of_e_rabs; i++){
+          ue_context_p->ue_context.e_rab[i].status = E_RAB_STATUS_NEW;
+          ue_context_p->ue_context.e_rab[i].param.e_rab_id = 1+i;
+          ue_context_p->ue_context.e_rab[i].param.qos.qci=9;
+        }
+        ue_context_p->ue_context.setup_e_rabs =ue_context_p->ue_context.nb_of_e_rabs;
+#endif
+
+        rrc_eNB_generate_defaultRRCConnectionReconfiguration(ctxt_pP,
+            ue_context_p,
+            eNB_rrc_inst[ctxt_pP->module_id].HO_flag);
 
       break;
 

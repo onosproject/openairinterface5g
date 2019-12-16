@@ -294,8 +294,8 @@ void schedule_uss_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_inst, u
 	      			UE_template_temp->R_dl=UE_sched_ctrl_info->R_dl_data;
 	      			UE_template_temp->I_mcs_dl=UE_sched_ctrl_info->dci_n1_index_mcs;
 	      			UE_template_temp->DLSCH_pdu_size=UE_sched_ctrl_info->TBS;
-	      			if(UE_template_temp->HARQ_round==0)
-	      				UE_template_temp->oldNDI_DL=(UE_template_temp->oldNDI_DL+1)%2;
+	      			//if(UE_template_temp->HARQ_round==0)
+	      				//UE_template_temp->oldNDI_DL=(UE_template_temp->oldNDI_DL+1)%2;
 	      			UE_template_temp->direction = 3;
 	      			break;
 	    		case 0:		//	Uplink

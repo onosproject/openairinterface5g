@@ -421,8 +421,8 @@ rlc_am_get_pdus (
 
   case RLC_DATA_TRANSFER_READY_STATE:
 
-    printf("rlc_pP->nb_bytes_requested_by_mac=%d\n",rlc_pP->nb_bytes_requested_by_mac);
-    printf("rlc_pP->status_requested=%u\n",rlc_pP->status_requested);
+    //printf("rlc_pP->nb_bytes_requested_by_mac=%d\n",rlc_pP->nb_bytes_requested_by_mac);
+    //printf("rlc_pP->status_requested=%u\n",rlc_pP->status_requested);
 
 /*
     if ((rlc_pP->nb_bytes_requested_by_mac > 2) && (rlc_pP->sdu_buffer_occupancy) && (rlc_pP->vt_s != rlc_pP->vt_ms)) {
@@ -710,7 +710,7 @@ rlc_am_mac_data_request (
 #endif
 
   list_init (&data_req.data, NULL);
-  printf("l_rlc_p->nb_bytes_requested_by_mac=%d (in rlc_am.c)\n",l_rlc_p->nb_bytes_requested_by_mac);
+  //printf("l_rlc_p->nb_bytes_requested_by_mac=%d (in rlc_am.c)\n",l_rlc_p->nb_bytes_requested_by_mac);
   rlc_am_get_pdus (ctxt_pP, l_rlc_p);
   list_add_list (&l_rlc_p->pdus_to_mac_layer, &data_req.data);
   //printf("*******nb_elements_3=%d (in rlc_am.c)***************\n",data_req.data.nb_elements);
@@ -921,7 +921,7 @@ rlc_am_mac_data_request (
   }
 
 #endif
-printf("=========data_req.data=%d=======\n",data_req.data);
+//printf("=========data_req.data=%d=======\n",data_req.data);
   return data_req;
 }
 //-----------------------------------------------------------------------------

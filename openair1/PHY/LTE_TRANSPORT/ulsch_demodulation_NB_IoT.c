@@ -1653,6 +1653,32 @@ uint32_t  turbo_decoding_NB_IoT(PHY_VARS_eNB           *eNB,
                   fill_rx_indication_NB_IoT(eNB,proc,npusch_format,1);
                   printf(" NPUSCH OK\n");
               } else { 
+
+                  if (r<ulsch_harq->Cminus)       
+                  {
+                      Kr = ulsch_harq->Kminus;
+                  } else {                        
+                      Kr = ulsch_harq->Kplus; 
+                      Kr_bytes = Kr>>3;
+                  }
+                  if (r==0)                       
+                  {
+                      memcpy(ulsch_harq->b,
+                            &ulsch_harq->c[0][(ulsch_harq->F>>3)],
+                            Kr_bytes - (ulsch_harq->F>>3) - ((ulsch_harq->C>1)?3:0));
+                            offset = Kr_bytes - (ulsch_harq->F>>3) - ((ulsch_harq->C>1)?3:0);
+                  } else {
+                      memcpy(ulsch_harq->b+offset,
+                             ulsch_harq->c[r],
+                             Kr_bytes - ((ulsch_harq->C>1)?3:0));
+                             offset += (Kr_bytes- ((ulsch_harq->C>1)?3:0));
+                  }
+
+                  int x = 0;
+                  LOG_N(PHY,"Show the undecoded data: ");
+                  for (x = 0; x < 18; x ++)
+                    printf("%02x ",ulsch_harq->b[x]);
+                  printf("\n");
                   fill_crc_indication_NB_IoT(eNB,0,rx_frame,rx_subframe,0);   // indicate NAK to MAC 
                   fill_rx_indication_NB_IoT(eNB,proc,npusch_format,0);
                   printf(" NPUSCH NOT OK\n");

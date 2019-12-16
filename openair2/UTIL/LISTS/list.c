@@ -234,7 +234,7 @@ list_add_list (list_t * sublistP, list_t * listP)
       sublistP->head = NULL;
       sublistP->tail = NULL;
       listP->nb_elements = listP->nb_elements + sublistP->nb_elements;
-      printf("=============listp->nb_elements=%d (in list.c)=============\n",listP->nb_elements);
+      //printf("=============listp->nb_elements=%d (in list.c)=============\n",listP->nb_elements);
       sublistP->nb_elements = 0;
     }
   }
