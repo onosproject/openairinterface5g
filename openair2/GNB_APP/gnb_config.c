@@ -78,7 +78,7 @@
 
 extern uint16_t sf_ahead;
 
-extern int config_check_band_frequencies(int ind, int16_t band, uint32_t downlink_frequency,
+extern int config_check_band_frequencies(int ind, int16_t band, uint64_t downlink_frequency,
                                          int32_t uplink_frequency_offset, uint32_t  frame_type);
 
 void RCconfig_nr_flexran()

@@ -175,7 +175,7 @@ static void UE_synch(void *arg) {
 
   if (UE->UE_scan == 0) {
     get_band(downlink_frequency[CC_id][0], &UE->frame_parms.eutra_band,   &uplink_frequency_offset[CC_id][0], &UE->frame_parms.frame_type);
-    LOG_I( PHY, "[SCHED][UE] Check absolute frequency DL %"PRIu32", UL %"PRIu32" (oai_exit %d, rx_num_channels %d)\n",
+    LOG_I( PHY, "[SCHED][UE] Check absolute frequency DL %"PRIu64", UL %"PRIu64" (oai_exit %d, rx_num_channels %d)\n",
            downlink_frequency[0][0], downlink_frequency[0][0]+uplink_frequency_offset[0][0],
            oai_exit, openair0_cfg[0].rx_num_channels);
 
