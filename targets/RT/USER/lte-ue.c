@@ -87,7 +87,7 @@ int init_timer_thread(void);
 extern void oai_subframe_ind(uint16_t sfn, uint16_t sf);
 extern void multicast_link_start(void (*rx_handlerP) (unsigned int, char *),
                                  unsigned char _multicast_group, char *multicast_ifname);
-extern int oai_nfapi_crc_indication(nfapi_crc_indication_t *crc_ind);
+extern int oai_nfapi_cqi_indication(nfapi_cqi_indication_t *cqi_ind);
 extern int oai_nfapi_crc_indication(nfapi_crc_indication_t *crc_ind);
 extern int oai_nfapi_harq_indication(nfapi_harq_indication_t *harq_ind);
 extern int oai_nfapi_sr_indication(nfapi_sr_indication_t *ind);
@@ -1246,6 +1246,11 @@ static void *UE_phy_stub_single_thread_rxn_txnp4(void *arg) {
         oai_nfapi_sr_indication(&UL_INFO->sr_ind);
         //LOG_I(MAC, "ul_config_req_UE_MAC 2.51 \n");
         UL_INFO->sr_ind.sr_indication_body.number_of_srs = 0;
+      }
+
+      if(UL_INFO->cqi_ind.cqi_indication_body.number_of_cqis > 0){
+        oai_nfapi_cqi_indication(&UL_INFO->cqi_ind);
+        UL_INFO->cqi_ind.cqi_indication_body.number_of_cqis = 0;
       }
 
       // Free UL_INFO messages

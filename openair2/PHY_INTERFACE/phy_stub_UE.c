@@ -239,6 +239,12 @@ void fill_ulsch_cqi_indication_UE_MAC(int Mod_id, uint16_t frame,uint8_t subfram
 	nfapi_cqi_indication_pdu_t *pdu         = &UL_INFO->cqi_ind.cqi_indication_body.cqi_pdu_list[UL_INFO->cqi_ind.cqi_indication_body.number_of_cqis];
 	nfapi_cqi_indication_raw_pdu_t *raw_pdu = &UL_INFO->cqi_ind.cqi_indication_body.cqi_raw_pdu_list[UL_INFO->cqi_ind.cqi_indication_body.number_of_cqis];
 
+	UL_INFO->cqi_ind.header.message_id = NFAPI_RX_CQI_INDICATION;
+	UL_INFO->cqi_ind.sfn_sf = frame<<4 | subframe;
+	UL_INFO->cqi_ind.vendor_extension = ul_config_req->vendor_extension;
+	UL_INFO->cqi_ind.cqi_indication_body.tl.tag = NFAPI_CQI_INDICATION_BODY_TAG;
+	pdu->instance_length = 0;
+
 	pdu->rx_ue_information.tl.tag          = NFAPI_RX_UE_INFORMATION_TAG;
 	pdu->rx_ue_information.rnti = rnti;
 	// Since we assume that CRC flag is always 0 (ACK) I guess that data_offset should always be 0.
@@ -254,6 +260,8 @@ void fill_ulsch_cqi_indication_UE_MAC(int Mod_id, uint16_t frame,uint8_t subfram
 
 	pdu->cqi_indication_rel9.timing_advance = 0;
   pdu->cqi_indication_rel9.number_of_cc_reported = 1;
+
+  pdu->ul_cqi_information.tl.tag =  NFAPI_UL_CQI_INFORMATION_TAG;
   pdu->ul_cqi_information.channel = 1; // PUSCH
 
   // Not sure how to substitute this. This should be the actual CQI value? So can
@@ -890,6 +898,9 @@ int memcpy_ul_config_req (nfapi_pnf_p7_config_t* pnf_p7, nfapi_ul_config_request
 	ul_config_req->ul_config_request_body.tl.length = req->ul_config_request_body.tl.length;
 
 	//LOG_D(MAC, "memcpy_ul_config_req 1 #ofULPDUs: %d \n", UE_mac_inst[Mod_id].ul_config_req->ul_config_request_body.number_of_pdus); //req->ul_config_request_body.number_of_pdus);
+    if(ul_config_req->ul_config_request_body.number_of_pdus > NB_UE_INST){
+      ul_config_req->ul_config_request_body.number_of_pdus = NB_UE_INST;
+    }
 	ul_config_req->ul_config_request_body.ul_config_pdu_list = (nfapi_ul_config_request_pdu_t*) malloc(req->ul_config_request_body.number_of_pdus*sizeof(nfapi_ul_config_request_pdu_t));
 	for(int i=0; i<ul_config_req->ul_config_request_body.number_of_pdus; i++) {
 			ul_config_req->ul_config_request_body.ul_config_pdu_list[i] = req->ul_config_request_body.ul_config_pdu_list[i];
