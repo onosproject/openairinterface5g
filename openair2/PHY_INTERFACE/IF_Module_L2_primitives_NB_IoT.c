@@ -81,6 +81,7 @@ void UL_indication_NB_IoT(UL_IND_NB_IoT_t *UL_INFO)
     uint32_t abs_subframe;
     Sched_Rsp_NB_IoT_t *SCHED_info = &mac_inst->Sched_INFO;
     UE_TEMPLATE_NB_IoT *ue_info = (UE_TEMPLATE_NB_IoT *)0;
+    uint16_t tmp_rnti;
 
 
     enable_preamble_simulation(UL_INFO,0);
@@ -197,6 +198,13 @@ void UL_indication_NB_IoT(UL_IND_NB_IoT_t *UL_INFO)
       LOG_D(MAC,"IF L2 hypersfn:%d frame: %d ,subframe: %d \n",UL_INFO->hypersfn,UL_INFO->frame,UL_INFO->subframe);
     }
     
+    if (waiting_flag_from_RLC == 1)
+    {
+      tmp_rnti = 0x0101;
+      ue_info = get_ue_from_rnti(mac_inst,tmp_rnti);
+      ue_info->direction=1;
+      waiting_flag_from_RLC = 2;
+    }
     abs_subframe = UL_INFO->hypersfn*10240+UL_INFO->frame*10+UL_INFO->subframe +4;
     //abs_subframe = UL_INFO->frame*10+UL_INFO->subframe +4;
 

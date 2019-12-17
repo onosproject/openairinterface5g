@@ -56,6 +56,7 @@ int schedule_UL_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst,UE_TEMPLATE_NB_IoT *UE_info
         return -1;
     }
 
+
     TBS=get_TBS_UL_NB_IoT(mcs,UE_info->multi_tone,Iru);
     LOG_I(MAC,"Initial TBS : %d UL_buffer: %d\n", TBS, UE_info->ul_total_buffer);
 
@@ -98,6 +99,11 @@ int schedule_UL_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst,UE_TEMPLATE_NB_IoT *UE_info
                 }*/
 
             mcs = mapped_mcs[UE_info->CE_level][mappedMcsIndex];
+
+            if ((UE_state_machine == rach_for_next) && (UE_info->ul_total_buffer==22))
+            {
+              mcs = 6;
+            }
 
             //mcs = 2;
             while((TBS<UE_info->ul_total_buffer)&&(Iru<=7))
@@ -300,7 +306,7 @@ void rx_sdu_NB_IoT(module_id_t module_id, int CC_id, frame_t frame, sub_frame_t 
                       // trigger DL scheduler
                   if (UE_info != NULL)
                   {
-                    UE_info->direction = 1; //1 for DL scheduler
+                    //UE_info->direction = 1; //1 for DL scheduler
                     LOG_I(MAC,"After receive Msg5, change the UE scheduling direction to DL\n");
                   }
                 }else if (UE_state_machine == rach_for_auth_rsp)

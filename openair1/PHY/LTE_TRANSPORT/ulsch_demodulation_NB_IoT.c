@@ -1676,7 +1676,7 @@ uint32_t  turbo_decoding_NB_IoT(PHY_VARS_eNB           *eNB,
 
                   int x = 0;
                   LOG_N(PHY,"Show the undecoded data: ");
-                  for (x = 0; x < 18; x ++)
+                  for (x = 0; x < ulsch_harq->TBS; x ++)
                     printf("%02x ",ulsch_harq->b[x]);
                   printf("\n");
                   fill_crc_indication_NB_IoT(eNB,0,rx_frame,rx_subframe,0);   // indicate NAK to MAC 
