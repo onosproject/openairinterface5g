@@ -3345,6 +3345,8 @@ void ulsch_scheduler_pre_processor_fairRR(module_id_t module_idP,
   uint8_t            average_rbs;
   uint16_t           first_rb[MAX_NUM_CCs];
   uint8_t            mcs;
+  uint8_t            snr;
+  uint8_t            snr2mcs_offset = 4;
   uint8_t            rb_table_index;
   uint8_t            num_pucch_rb;
   uint32_t           tbs;
@@ -3439,7 +3441,13 @@ void ulsch_scheduler_pre_processor_fairRR(module_id_t module_idP,
         UE_template = &UE_list->UE_template[CC_id][UE_id];
 
         if ( UE_list->UE_sched_ctrl[UE_id].phr_received == 1 ) {
-          mcs = 20;
+          snr = (5 * UE_list->UE_sched_ctrl[UE_id].pusch_snr[CC_id] - 640) / 10;
+          if((snr + snr2mcs_offset) >= 20) {
+            mcs = 20;
+          }
+          else {
+            mcs = snr + snr2mcs_offset;
+          }
         } else {
           mcs = 10;
         }
@@ -3860,7 +3868,7 @@ void schedule_ulsch_rnti_fairRR(module_id_t   module_idP,
       //power control
       //compute the expected ULSCH RX power (for the stats)
       // this is the normalized RX power and this should be constant (regardless of mcs
-      snr = (5 * UE_sched_ctrl->pusch_snr[CC_id] - 640) / 10;
+      snr = (5 * UE_sched_ctrl->pusch_snr_avg[CC_id] - 640) / 10;
       target_snr = eNB->puSch10xSnr / 10;
       // this assumes accumulated tpc
       // make sure that we are only sending a tpc update once a frame, otherwise the control loop will freak out
