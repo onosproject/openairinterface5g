@@ -3,7 +3,7 @@
 #include "LAYER2/MAC/extern_NB_IoT.h"
 
 int tmp = 0;
-int block_rach = 0;
+//int block_rach = 0;
 int first_msg4 = 0;
 
 void simulate_preamble(UL_IND_NB_IoT_t *UL_INFO, int CE, int sc)
@@ -94,7 +94,7 @@ void UL_indication_NB_IoT(UL_IND_NB_IoT_t *UL_INFO)
       //for(i=0;i<UL_INFO->nrach_ind.number_of_initial_scs_detected;i++)
       for(i=0;i<1;i++)
       {
-        if(block_rach == 0 )
+        if(UE_state_machine == initial_access )
         {
           // initiate_ra here, some useful inforamtion : 
           LOG_D(MAC,"Init_RA_NB_IoT in, index of sc = %d\n",(UL_INFO->nrach_ind.nrach_pdu_list+i)->nrach_indication_rel13.initial_sc);
@@ -105,7 +105,7 @@ void UL_indication_NB_IoT(UL_IND_NB_IoT_t *UL_INFO)
                       //timing_offset = Timing_advance * 16
                       (UL_INFO->nrach_ind.nrach_pdu_list+i)->nrach_indication_rel13.timing_advance*16
                       );
-        }else if (block_rach == 1)
+        }else if (UE_state_machine == rach_for_auth_rsp)
         {
           LOG_N(MAC,"It is the second time that this UE try to rach\n");
                     init_RA_NB_IoT(mac_inst,
@@ -154,7 +154,7 @@ void UL_indication_NB_IoT(UL_IND_NB_IoT_t *UL_INFO)
           LOG_I(MAC,"This UE get the response of HARQ DL : ACK, update the UL buffer for next message\n");
           ue_info->direction=-1;
           //ue_info->ul_total_buffer = 11;
-          block_rach = 1;
+          UE_state_machine = rach_for_auth_rsp;
           //LOG_I(MAC,"This UE get the response of HARQ DL : NACK, and will start the next harq round : %d\n",ue_info->HARQ_round);  
           //ue_info->direction=1;
           //ue_info->HARQ_round++;

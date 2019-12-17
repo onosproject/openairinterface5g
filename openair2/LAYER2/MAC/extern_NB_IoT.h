@@ -113,6 +113,8 @@ extern const int dl_rep[3];
 extern const uint32_t dci_rep[3];
 extern const uint32_t harq_rep[3];
 
+extern rach_state_t UE_state_machine;
+
 //SIBs
 extern int extend_space[2];
 extern int extend_alpha_offset[2];

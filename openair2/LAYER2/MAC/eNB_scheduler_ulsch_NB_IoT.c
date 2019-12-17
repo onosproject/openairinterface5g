@@ -36,7 +36,6 @@
 
 unsigned char str20[] = "DCI_uss";
 unsigned char str21[] = "DATA_uss";
-int second_flag = 0;
 
 // scheduling UL
 int schedule_UL_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst,UE_TEMPLATE_NB_IoT *UE_info,uint32_t subframe, uint32_t frame, uint32_t H_SFN, UE_SCHED_CTRL_NB_IoT_t *UE_sched_ctrl_info){
@@ -235,10 +234,6 @@ void rx_sdu_NB_IoT(module_id_t module_id, int CC_id, frame_t frame, sub_frame_t 
         {          
           LOG_I(MAC,"Find UE in CE 2 list, update ul_total_buffer to %d bytes\n",BSR_table[BSR_index]);
           UE_info->ul_total_buffer = BSR_table[BSR_index];
-          if (UE_info->ul_total_buffer >= 10 && UE_info->ul_total_buffer <= 20)
-          {
-            second_flag = 1;
-          }
         }
         else
           LOG_E(MAC,"UE info empty\n"); 
@@ -287,7 +282,7 @@ void rx_sdu_NB_IoT(module_id_t module_id, int CC_id, frame_t frame, sub_frame_t 
             case DCCH0_NB_IoT:
             case DCCH1_NB_IoT:
                 LOG_I(MAC,"DCCH PDU Here\n");
-                if(second_flag == 0)
+                if((UE_state_machine == initial_access)||(UE_state_machine == rach_for_next))
                 {
                   mac_rlc_data_ind(
                     module_id,
@@ -308,7 +303,7 @@ void rx_sdu_NB_IoT(module_id_t module_id, int CC_id, frame_t frame, sub_frame_t 
                     UE_info->direction = 1; //1 for DL scheduler
                     LOG_I(MAC,"After receive Msg5, change the UE scheduling direction to DL\n");
                   }
-                }else if (second_flag == 1)
+                }else if (UE_state_machine == rach_for_auth_rsp)
                 {
                   LOG_N(MAC,"Here we are for the DCI N0 generating \n");
                   if (UE_info != NULL)
@@ -316,7 +311,7 @@ void rx_sdu_NB_IoT(module_id_t module_id, int CC_id, frame_t frame, sub_frame_t 
                     UE_info->direction = 0; //1 for DL scheduler
                     LOG_I(MAC,"Change direction into 0\n");
                   }
-                  second_flag = 0;
+                  UE_state_machine = rach_for_next;
                 }
 
           break;

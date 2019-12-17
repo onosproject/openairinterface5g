@@ -140,6 +140,8 @@ int extend_alpha_offset[2] = {10, 10};
 int uss_space = 320;
 int uss_alpha_offset = 10;
 
+rach_state_t UE_state_machine = initial_access;
+
 const int si_repetition_pattern[4] = {20, 40, 80, 160};
 
 #endif
