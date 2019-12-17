@@ -631,6 +631,8 @@ typedef struct {
   uint8_t srsX;
   /// indicates if node is a UE (NODE=2) or eNB (PRIMARY_CH=0).
   uint8_t node_id;
+  /// flag to indicate SISO transmission
+  uint8_t mode1_flag;  
   /// Indicator that 20 MHz channel uses 3/4 sampling frequency
   uint8_t threequarter_fs;
   /// Size of FFT

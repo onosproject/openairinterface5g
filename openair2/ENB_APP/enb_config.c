@@ -112,7 +112,6 @@ void RCconfig_L1(void) {
 
   if (RC.eNB == NULL) {
     RC.eNB                       = (PHY_VARS_eNB ** *)malloc((1+NUMBER_OF_eNB_MAX)*sizeof(PHY_VARS_eNB **));
-    RC.L1_NB_IoT                 = (PHY_VARS_eNB_NB_IoT **)malloc((1+NUMBER_OF_eNB_MAX)*sizeof(PHY_VARS_eNB_NB_IoT *));//Ann
     LOG_I(PHY,"RC.eNB = %p\n",RC.eNB);
     memset(RC.eNB,0,(1+NUMBER_OF_eNB_MAX)*sizeof(PHY_VARS_eNB **));
     RC.nb_L1_CC = malloc((1+RC.nb_L1_inst)*sizeof(int));
@@ -121,13 +120,6 @@ void RCconfig_L1(void) {
   config_getlist( &L1_ParamList,L1_Params,sizeof(L1_Params)/sizeof(paramdef_t), NULL);
 
   if (L1_ParamList.numelt > 0) {
-    for (j = 0; j < RC.nb_nb_iot_L1_inst; j++) {//Ann
-      if (RC.L1_NB_IoT[j] == NULL) { 
-        RC.L1_NB_IoT[j]                       = (PHY_VARS_eNB_NB_IoT *)malloc((1+MAX_NUM_CCs)*sizeof(PHY_VARS_eNB_NB_IoT ));
-        LOG_I(PHY,"RC.L1_NB_IoT[%d] = %p\n",j,RC.L1_NB_IoT[j]);
-        memset(RC.L1_NB_IoT[j],0,(1+MAX_NUM_CCs)*sizeof(PHY_VARS_eNB_NB_IoT));
-      }
-    }
 
     for (j = 0; j < RC.nb_L1_inst; j++) {
       RC.nb_L1_CC[j] = *(L1_ParamList.paramarray[j][L1_CC_IDX].uptr);
@@ -2949,6 +2941,7 @@ void read_config_and_init(void) {
                 RC.nb_macrlc_inst, RC.nb_inst);
 
   RCconfig_L1();
+  RCconfig_NbIoTL1();
   LOG_I(PHY, "%s() RC.nb_L1_inst: %d\n", __FUNCTION__, RC.nb_L1_inst);
   RCconfig_macrlc(macrlc_has_f1);
   LOG_I(MAC, "%s() RC.nb_macrlc_inst: %d\n", __FUNCTION__, RC.nb_macrlc_inst);

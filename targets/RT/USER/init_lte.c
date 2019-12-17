@@ -37,6 +37,8 @@
 //#include "PHY_INTERFACE/extern.h"
 #include "../../../openair1/PHY/defs_eNB.h"
 #include "../../../openair1/PHY/defs_common.h"
+#include "../../../openair1/PHY/vars.h"
+#include "../../../openair1/PHY/phy_vars.h"
 
 PHY_VARS_eNB* init_lte_eNB(LTE_DL_FRAME_PARMS *frame_parms,
                            uint8_t eNB_id,
@@ -92,9 +94,7 @@ PHY_VARS_eNB* init_lte_eNB(LTE_DL_FRAME_PARMS *frame_parms,
     
     LOG_I(PHY,"Allocating Transport Channel Buffer for ULSCH, UE %d\n", i);
     PHY_vars_eNB->ulsch[1+i] = new_eNB_ulsch(MAX_TURBO_ITERATIONS,frame_parms->N_RB_UL, abstraction_flag);
-    //////////////// NB-IoT testing ////////////////////////////
-    PHY_vars_eNB->ulsch_NB_IoT[1+i] = new_eNB_ulsch_NB_IoT(MAX_TURBO_ITERATIONS,frame_parms->N_RB_UL, abstraction_flag);
-    //////////////////////////////////////////////////////////////
+
     if (!PHY_vars_eNB->ulsch[1+i]) {
       LOG_E(PHY,"Can't get eNB ulsch structures\n");
       exit(-1);
@@ -128,18 +128,13 @@ PHY_VARS_eNB* init_lte_eNB(LTE_DL_FRAME_PARMS *frame_parms,
   
   // ULSCH for RA
   PHY_vars_eNB->ulsch[0] = new_eNB_ulsch(MAX_TURBO_ITERATIONS, frame_parms->N_RB_UL, abstraction_flag);
-  //////////////// NB-IoT testing ////////////////////////////
-  PHY_vars_eNB->ulsch_NB_IoT[0] = new_eNB_ulsch_NB_IoT(MAX_TURBO_ITERATIONS, frame_parms->N_RB_UL, abstraction_flag);
-  ////////////////////////////////////////////////////////////
+
   
   if (!PHY_vars_eNB->ulsch[0]) {
     LOG_E(PHY,"Can't get eNB ulsch structures\n");
     exit(-1);
   }
-  if (!PHY_vars_eNB->ulsch_NB_IoT[0]) {
-    LOG_E(PHY,"Can't get eNB ulsch structures\n");
-    exit(-1);
-  }
+
   PHY_vars_eNB->dlsch_SI  = new_eNB_dlsch(1,8,NSOFT,frame_parms->N_RB_DL, abstraction_flag, frame_parms);
   LOG_D(PHY,"eNB %d : SI %p\n",eNB_id,PHY_vars_eNB->dlsch_SI);
   PHY_vars_eNB->dlsch_ra  = new_eNB_dlsch(1,8,NSOFT,frame_parms->N_RB_DL, abstraction_flag, frame_parms);
@@ -147,25 +142,7 @@ PHY_VARS_eNB* init_lte_eNB(LTE_DL_FRAME_PARMS *frame_parms,
   PHY_vars_eNB->dlsch_MCH = new_eNB_dlsch(1,8,NSOFT,frame_parms->N_RB_DL, 0, frame_parms);
   LOG_D(PHY,"eNB %d : MCH %p\n",eNB_id,PHY_vars_eNB->dlsch_MCH);
 
-  ///// NB-IoT ////////////
-  PHY_vars_eNB->ndlsch_SIB1  = new_eNB_dlsch_NB_IoT(1,frame_parms);   // frame_parms is not used , to be removed is not used in futur
-  PHY_vars_eNB->ndlsch_SIB23  = new_eNB_dlsch_NB_IoT(1,frame_parms);
-  PHY_vars_eNB->ndlsch_RAR  = new_eNB_dlsch_NB_IoT(1,frame_parms);
 
-  PHY_vars_eNB->npdcch_DCI  = new_eNB_dlcch_NB_IoT(frame_parms);
-
-  PHY_vars_eNB->UL_INFO.nrach_ind.nrach_pdu_list  = (nfapi_nrach_indication_pdu_t *)malloc16(sizeof(nfapi_nrach_indication_pdu_t));
-  PHY_vars_eNB->UL_INFO.crc_ind.crc_pdu_list  = (nfapi_crc_indication_pdu_t *)malloc16(sizeof(nfapi_crc_indication_pdu_t));
-  PHY_vars_eNB->UL_INFO.RX_NPUSCH.rx_pdu_list  = (nfapi_rx_indication_pdu_t *)malloc16(sizeof(nfapi_rx_indication_pdu_t));
-  PHY_vars_eNB->UL_INFO.RX_NPUSCH.rx_pdu_list[0].data  = (unsigned char*)malloc(300);
-  
-  PHY_vars_eNB->UL_INFO.nb_harq_ind.nb_harq_indication_body.nb_harq_pdu_list = (nfapi_nb_harq_indication_pdu_t*)malloc16(sizeof(nfapi_nb_harq_indication_pdu_t));
-
-  
-  //nfapi_nb_harq_indication_t nb_harq_ind
- 
-  PHY_vars_eNB->ndlsch_SIB1->rnti = 0xffff;
-  PHY_vars_eNB->ndlsch_SIB23->rnti = 0xffff;
  
   PHY_vars_eNB->rx_total_gain_dB=130;
   
@@ -242,6 +219,13 @@ PHY_VARS_eNB_NB_IoT* init_lte_eNB_NB_IoT(NB_IoT_DL_FRAME_PARMS *frame_parms,
     LOG_I(PHY,"Allocating Transport Channel Buffer for ULSCH, UE %d\n", i);
     PHY_vars_eNB->ulsch[1+i] = new_eNB_ulsch(MAX_TURBO_ITERATIONS,frame_parms->N_RB_UL, abstraction_flag);
     
+    //////////////// NB-IoT testing ////////////////////////////
+    PHY_vars_eNB->ulsch_NB_IoT[1+i] = new_eNB_ulsch_NB_IoT(MAX_TURBO_ITERATIONS,frame_parms->N_RB_UL, abstraction_flag);
+    //////////////////////////////////////////////////////////////
+    //////////////// NB-IoT testing ////////////////////////////
+    PHY_vars_eNB->ulsch_NB_IoT[0] = new_eNB_ulsch_NB_IoT(MAX_TURBO_ITERATIONS, frame_parms->N_RB_UL, abstraction_flag);
+    ////////////////////////////////////////////////////////////
+
     if (!PHY_vars_eNB->ulsch[1+i]) {
       LOG_E(PHY,"Can't get eNB ulsch structures\n");
       exit(-1);
@@ -290,7 +274,25 @@ PHY_VARS_eNB_NB_IoT* init_lte_eNB_NB_IoT(NB_IoT_DL_FRAME_PARMS *frame_parms,
   PHY_vars_eNB->dlsch_MCH = new_eNB_dlsch(1,8,NSOFT,frame_parms->N_RB_DL, 0, frame_parms);
   LOG_D(PHY,"eNB %d : MCH %p\n",eNB_id,PHY_vars_eNB->dlsch_MCH);
   */
+    ///// NB-IoT ////////////
+  PHY_vars_eNB->ndlsch_SIB1  = new_eNB_dlsch_NB_IoT(1,frame_parms);   // frame_parms is not used , to be removed is not used in futur
+  PHY_vars_eNB->ndlsch_SIB23  = new_eNB_dlsch_NB_IoT(1,frame_parms);
+  PHY_vars_eNB->ndlsch_RAR  = new_eNB_dlsch_NB_IoT(1,frame_parms);
+
+  PHY_vars_eNB->npdcch_DCI  = new_eNB_dlcch_NB_IoT(frame_parms);
+
+  PHY_vars_eNB->UL_INFO.nrach_ind.nrach_pdu_list  = (nfapi_nrach_indication_pdu_t *)malloc16(sizeof(nfapi_nrach_indication_pdu_t));
+  PHY_vars_eNB->UL_INFO.crc_ind.crc_pdu_list  = (nfapi_crc_indication_pdu_t *)malloc16(sizeof(nfapi_crc_indication_pdu_t));
+  PHY_vars_eNB->UL_INFO.RX_NPUSCH.rx_pdu_list  = (nfapi_rx_indication_pdu_t *)malloc16(sizeof(nfapi_rx_indication_pdu_t));
+  PHY_vars_eNB->UL_INFO.RX_NPUSCH.rx_pdu_list[0].data  = (unsigned char*)malloc(300);
   
+  PHY_vars_eNB->UL_INFO.nb_harq_ind.nb_harq_indication_body.nb_harq_pdu_list = (nfapi_nb_harq_indication_pdu_t*)malloc16(sizeof(nfapi_nb_harq_indication_pdu_t));
+
+  
+  //nfapi_nb_harq_indication_t nb_harq_ind
+ 
+  PHY_vars_eNB->ndlsch_SIB1->rnti = 0xffff;
+  PHY_vars_eNB->ndlsch_SIB23->rnti = 0xffff;
   PHY_vars_eNB->rx_total_gain_dB=130;
   
  /* for(i=0; i<NUMBER_OF_UE_MAX; i++)

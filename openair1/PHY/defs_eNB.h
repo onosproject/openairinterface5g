@@ -604,6 +604,12 @@ typedef struct {
   /// - first index: tx antenna [0..14[ where 14 is the total supported antenna ports.
   /// - second index: sample [0..]
   int32_t **txdataF;
+  /// \brief Holds the beamforming weights
+  /// - first index: eNB id [0..2] (hard coded)
+  /// - second index: eNB antenna port index (hard coded)
+  /// - third index: tx antenna [0..nb_antennas_tx[
+  /// - fourth index: sample [0..]
+  int32_t **beam_weights[3][15];
 } LTE_eNB_COMMON;
 
 typedef struct {
@@ -1109,7 +1115,7 @@ typedef struct PHY_VARS_eNB_s {
 
   uint32_t max_peak_val;
   int max_eNB_id, max_sync_pos;
-
+  int              N_TA_offset; ///timing offset used in TDD
   /// \brief sinr for all subcarriers of the current link (used only for abstraction).
   /// first index: ? [0..N_RB_DL*12[
   double *sinr_dB;
@@ -1120,7 +1126,8 @@ typedef struct PHY_VARS_eNB_s {
   unsigned char first_run_timing_advance[NUMBER_OF_UE_MAX];
   unsigned char first_run_I0_measurements;
 
-  
+  unsigned char cooperation_flag; // for cooperative communication
+    
   unsigned char    is_secondary_eNB; // primary by default
   unsigned char    is_init_sync;     /// Flag to tell if initial synchronization is performed. This affects how often the secondary eNB will listen to the PSS from the primary system.
   unsigned char    has_valid_precoder; /// Flag to tell if secondary eNB has channel estimates to create NULL-beams from, and this B/F vector is created.

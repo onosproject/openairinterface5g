@@ -111,7 +111,7 @@
 typedef enum {normal_txrx_NB_IoT=0,rx_calib_ue_NB_IoT=1,rx_calib_ue_med_NB_IoT=2,rx_calib_ue_byp_NB_IoT=3,debug_prach_NB_IoT=4,no_L2_connect_NB_IoT=5,calib_prach_tx_NB_IoT=6,rx_dump_frame_NB_IoT=7,loop_through_memory_NB_IoT=8} runmode_NB_IoT_t;
 #endif
 /*
-enum transmission_access_mode {
+enum transmission_access_mode_NB_IoT {
   NO_ACCESS=0,
   POSTPONED_ACCESS,
   CANCELED_ACCESS,

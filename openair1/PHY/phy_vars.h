@@ -47,8 +47,8 @@ PHY_VARS_UE ***PHY_vars_UE_g;
 RAN_CONTEXT_t RC;
 UL_RCC_IND_t  UL_RCC_INFO;
 
-//PHY_VARS_eNB ***PHY_vars_eNB_g;
-//PHY_VARS_RN **PHY_vars_RN_g;
+PHY_VARS_eNB ***PHY_vars_eNB_g;
+PHY_VARS_RN **PHY_vars_RN_g;
 LTE_DL_FRAME_PARMS *lte_frame_parms_g;
 #else
 PHY_VARS_UE * PHY_vars_UE_g[MAX_UE][MAX_NUM_CCs]={NULL};

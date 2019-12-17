@@ -857,7 +857,7 @@ static void *process_stats_thread(void *param) {
 void init_eNB_proc(int inst) {
   /*int i=0;*/
   int CC_id;
-  PHY_VARS_eNB *eNB;
+  //PHY_VARS_eNB *eNB;
   // PHY_VARS_eNB_NB_IoT *eNB_NB_IoT;//Ann
   eNBs_t *eNBs;//Ann
   L1_proc_t *proc;
@@ -867,14 +867,14 @@ void init_eNB_proc(int inst) {
   pthread_attr_t *attr_prach_br=NULL;
 #endif
   LOG_I(PHY,"%s(inst:%d) RC.nb_CC[inst]:%d \n",__FUNCTION__,inst,RC.nb_CC[inst]);
-    eNBs->eNB_NB_IoT = RC.L1_NB_IoT[inst];//[CC_id];//Ann
+    eNBs->eNB_NB_IoT = RC.L1_NB_IoT[inst];//Ann
   for (CC_id=0; CC_id<RC.nb_CC[inst]; CC_id++) {
     eNBs->eNB = RC.eNB[inst][CC_id];
     
 #ifndef OCP_FRAMEWORK
     LOG_I(PHY,"Initializing eNB processes instance:%d CC_id %d \n",inst,CC_id);
 #endif
-    proc = &eNB->proc;
+    proc = &eNBs->eNB->proc;
     L1_proc                        = &proc->L1_proc;
     L1_proc_tx                     = &proc->L1_proc_tx;
     L1_proc->instance_cnt          = -1;
@@ -887,10 +887,10 @@ void init_eNB_proc(int inst) {
     proc->CC_id                    = CC_id;
     proc->first_rx                 =1;
     proc->first_tx                 =1;
-    proc->RU_mask_tx               = (1<<eNB->num_RU)-1;
+    proc->RU_mask_tx               = (1<<eNBs->eNB->num_RU)-1;
     memset((void*)proc->RU_mask,0,10*sizeof(proc->RU_mask[0]));
     proc->RU_mask_prach            =0;
-    pthread_mutex_init( &eNB->UL_INFO_mutex, NULL);
+    pthread_mutex_init( &eNBs->eNB->UL_INFO_mutex, NULL);
     pthread_mutex_init( &L1_proc->mutex, NULL);
     pthread_mutex_init( &L1_proc_tx->mutex, NULL);
     pthread_cond_init( &L1_proc->cond, NULL);
@@ -930,11 +930,11 @@ void init_eNB_proc(int inst) {
 #endif
 
     if(get_thread_worker_conf() == WORKER_ENABLE) {
-      init_te_thread(eNB);
-      init_td_thread(eNB);
+      init_te_thread(eNBs->eNB);
+      init_td_thread(eNBs->eNB);
     }
 
-    LOG_I(PHY,"eNB->single_thread_flag:%d\n", eNB->single_thread_flag);
+    LOG_I(PHY,"eNBs->eNB->single_thread_flag:%d\n", eNBs->eNB->single_thread_flag);
 
     if ((get_thread_parallel_conf() == PARALLEL_RU_L1_SPLIT) && NFAPI_MODE!=NFAPI_MODE_VNF) {
       pthread_create( &L1_proc->pthread, attr0, L1_thread, proc );
@@ -952,26 +952,26 @@ void init_eNB_proc(int inst) {
     if (NFAPI_MODE!=NFAPI_MODE_VNF) {
       pthread_create( &proc->pthread_prach, attr_prach, eNB_thread_prach, eNBs );
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
-      pthread_create( &proc->pthread_prach_br, attr_prach_br, eNB_thread_prach_br, eNB );
+      pthread_create( &proc->pthread_prach_br, attr_prach_br, eNB_thread_prach_br, eNBs->eNB );
 #endif
     }
     AssertFatal(proc->instance_cnt_prach == -1,"instance_cnt_prach = %d\n",proc->instance_cnt_prach);
 
-    if (opp_enabled == 1) pthread_create(&proc->process_stats_thread,NULL,process_stats_thread,(void *)eNB);
+    if (opp_enabled == 1) pthread_create(&proc->process_stats_thread,NULL,process_stats_thread,(void *)eNBs->eNB);
   }
 
   //for multiple CCs: setup master and slaves
   /*
      for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
-     eNB = PHY_vars_eNB_g[inst][CC_id];
+     eNBs->eNB = PHY_vars_eNB_g[inst][CC_id];
 
-     if (eNB->node_timing == synch_to_ext_device) { //master
-     eNB->proc.num_slaves = MAX_NUM_CCs-1;
-     eNB->proc.slave_proc = (L1_proc_t**)malloc(eNB->proc.num_slaves*sizeof(L1_proc_t*));
+     if (eNBs->eNB->node_timing == synch_to_ext_device) { //master
+     eNBs->eNB->proc.num_slaves = MAX_NUM_CCs-1;
+     eNBs->eNB->proc.slave_proc = (L1_proc_t**)malloc(eNBs->eNB->proc.num_slaves*sizeof(L1_proc_t*));
 
-     for (i=0; i< eNB->proc.num_slaves; i++) {
-     if (i < CC_id)  eNB->proc.slave_proc[i] = &(PHY_vars_eNB_g[inst][i]->proc);
-     if (i >= CC_id)  eNB->proc.slave_proc[i] = &(PHY_vars_eNB_g[inst][i+1]->proc);
+     for (i=0; i< eNBs->eNB->proc.num_slaves; i++) {
+     if (i < CC_id)  eNBs->eNB->proc.slave_proc[i] = &(PHY_vars_eNB_g[inst][i]->proc);
+     if (i >= CC_id)  eNBs->eNB->proc.slave_proc[i] = &(PHY_vars_eNB_g[inst][i+1]->proc);
      }
      }
      }

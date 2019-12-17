@@ -36,7 +36,7 @@
 
 //typedef char bool;
 #include <stdbool.h>
-
+#include "omg_constants.h"
 #ifdef STANDALONE
 typedef struct {
   char *name; /*!< \brief string name of item */
