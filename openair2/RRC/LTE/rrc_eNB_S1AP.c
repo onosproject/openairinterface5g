@@ -561,7 +561,7 @@ rrc_pdcp_config_security(
   key = PDCP_COLL_KEY_VALUE(ctxt_pP->module_id, ctxt_pP->rnti, ctxt_pP->enb_flag, DCCH, SRB_FLAG_YES);
   h_rc = hashtable_get(pdcp_coll_p, key, (void **)&pdcp_p);
 
-  if (h_rc == HASH_TABLE_OK) {
+  if (1 || h_rc == HASH_TABLE_OK) {
     pdcp_config_set_security(
       ctxt_pP,
       pdcp_p,

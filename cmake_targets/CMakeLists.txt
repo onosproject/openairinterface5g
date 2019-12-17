@@ -1372,13 +1372,18 @@ set(RRC_DIR ${OPENAIR2_DIR}/RRC/LTE)
 set(PDCP_DIR  ${OPENAIR2_DIR}/LAYER2/PDCP_v10.1.0)
 set(L2_SRC
   ${OPENAIR2_DIR}/LAYER2/openair2_proc.c
-  ${PDCP_DIR}/pdcp.c
-  ${PDCP_DIR}/pdcp_fifo.c
-  ${PDCP_DIR}/pdcp_sequence_manager.c
-  ${PDCP_DIR}/pdcp_primitives.c
-  ${PDCP_DIR}/pdcp_util.c
-  ${PDCP_DIR}/pdcp_security.c
-  ${PDCP_DIR}/pdcp_netlink.c
+#  ${PDCP_DIR}/pdcp.c
+#  ${PDCP_DIR}/pdcp_fifo.c
+#  ${PDCP_DIR}/pdcp_sequence_manager.c
+#  ${PDCP_DIR}/pdcp_primitives.c
+#  ${PDCP_DIR}/pdcp_util.c
+#  ${PDCP_DIR}/pdcp_security.c
+#  ${PDCP_DIR}/pdcp_netlink.c
+  ${OPENAIR2_DIR}/LAYER2/pdcp_v2/pdcp_oai_api.c
+  ${OPENAIR2_DIR}/LAYER2/pdcp_v2/pdcp_ue_manager.c
+  ${OPENAIR2_DIR}/LAYER2/pdcp_v2/pdcp_entity.c
+  ${OPENAIR2_DIR}/LAYER2/pdcp_v2/pdcp_entity_srb.c
+  ${OPENAIR2_DIR}/LAYER2/pdcp_v2/pdcp_entity_drb_am.c
   ${RLC_V2}
 #  ${RRC_DIR}/rrc_UE.c
   ${RRC_DIR}/rrc_eNB.c
