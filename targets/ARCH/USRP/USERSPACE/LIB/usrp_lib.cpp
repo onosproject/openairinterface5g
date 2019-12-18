@@ -928,9 +928,38 @@ int trx_usrp_get_stats(openair0_device *device) {
   usrp_state_t *s = (usrp_state_t*) device->priv;
   uhd::async_metadata_t async_metadata;
 
-  s->tx_stream->recv_async_msg(async_metadata,0.0001);
-  
-  return(async_metadata.event_code);
+  if(s->tx_stream->recv_async_msg(async_metadata,0.0001))
+    {
+      switch(async_metadata.event_code) {
+      case uhd::async_metadata_t::EVENT_CODE_BURST_ACK:
+	//A burst was successfully transmitted.
+	return(0);
+      case uhd::async_metadata_t::EVENT_CODE_UNDERFLOW:
+	//An internal send buffer has emptied.
+	return(1);
+      case uhd::async_metadata_t::EVENT_CODE_SEQ_ERROR:
+	//Packet loss between host and device.
+	return(2);
+      case uhd::async_metadata_t::EVENT_CODE_TIME_ERROR:
+	//Packet had time that was late.
+	return(3);
+      case uhd::async_metadata_t::EVENT_CODE_UNDERFLOW_IN_PACKET:
+	//Underflow occurred inside a packet.
+	return(4);
+      case uhd::async_metadata_t::EVENT_CODE_SEQ_ERROR_IN_BURST:
+	//Packet loss within a burst.
+	return(5);
+      case uhd::async_metadata_t::EVENT_CODE_USER_PAYLOAD:
+	//Some kind of custom user payload. 
+	return(6);
+      default:
+	return(-1);
+      }
+    }
+  else
+    {
+      return(-1);
+    }
 }
 
 /*! \brief Reset the USRP statistics
