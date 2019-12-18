@@ -36,6 +36,7 @@
 #endif
 #include <uhd/usrp/multi_usrp.hpp>
 #include <uhd/version.hpp>
+#include <uhd/types/metadata.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/thread.hpp>
@@ -923,7 +924,13 @@ void set_rx_gain_offset(openair0_config_t *openair0_cfg, int chain_index,int bw_
 * \returns  0 on success
 */
 int trx_usrp_get_stats(openair0_device *device) {
-  return(0);
+
+  usrp_state_t *s = (usrp_state_t*) device->priv;
+  uhd::async_metadata_t async_metadata;
+
+  s->tx_stream->recv_async_msg(async_metadata,0.0001);
+  
+  return(async_metadata.event_code);
 }
 
 /*! \brief Reset the USRP statistics
