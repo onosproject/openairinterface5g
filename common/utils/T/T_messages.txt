@@ -2055,6 +2055,11 @@ ID = VCD_VARIABLE_RU_TX_OFDM_MASK
     GROUP = ALL:VCD:ENB:VCD_VARIABLE
     FORMAT = ulong,value
     VCD_NAME = ru_tx_ofdm_mask
+ID = VCD_VARIABLE_RU_TRX_WRITE_EVENT
+    DESC = VCD variable RU_TRX_WRITE_EVENT
+    GROUP = ALL:VCD:ENB:VCD_VARIABLE
+    FORMAT = ulong,value
+    VCD_NAME = trx_write_event
 
 #functions
 

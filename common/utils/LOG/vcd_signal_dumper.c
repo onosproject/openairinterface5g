@@ -248,7 +248,8 @@ const char* eurecomVariablesNames[] = {
   "slot_number_TX1_gNB",
   "slot_number_RX0_gNB",
   "slot_number_RX1_gNB",
-  "ru_tx_ofdm_mask"
+  "ru_tx_ofdm_mask",
+  "trx_write_event"
 };
 
 const char* eurecomFunctionsNames[] = {

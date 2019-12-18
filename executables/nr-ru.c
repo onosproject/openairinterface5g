@@ -782,6 +782,9 @@ void tx_rf(RU_t *ru,int frame,int slot, uint64_t timestamp) {
           (long long unsigned int)timestamp,frame,proc->frame_tx_unwrap,slot);
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_WRITE, 0 );
     AssertFatal(txs ==  siglen+sf_extension,"TX : Timeout (sent %u/%d)\n", txs, siglen);
+
+    int event = ru->rfdevice.trx_get_stats_func(&ru->rfdevice);
+    VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME( VCD_SIGNAL_DUMPER_VARIABLES_RU_TRX_WRITE_EVENT, event );
   }
 }
 
