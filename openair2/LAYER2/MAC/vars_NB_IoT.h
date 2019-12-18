@@ -145,6 +145,7 @@ rach_state_t UE_state_machine = initial_access;
 const int si_repetition_pattern[4] = {20, 40, 80, 160};
 
 int waiting_flag_from_RLC = 0;
+int block_RLC = 0;
 
 #endif
 

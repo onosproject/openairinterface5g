@@ -290,6 +290,7 @@ void rx_sdu_NB_IoT(module_id_t module_id, int CC_id, frame_t frame, sub_frame_t 
                 LOG_I(MAC,"DCCH PDU Here\n");
                 if((UE_state_machine == initial_access)||(UE_state_machine == rach_for_next))
                 {
+                  block_RLC = 0;
                   mac_rlc_data_ind(
                     module_id,
                     rnti,
