@@ -178,13 +178,13 @@ int configure_fapi_dl_Tx(nfapi_nr_dl_config_request_body_t *dl_req,
   nfapi_nr_dl_config_pdcch_parameters_rel15_t *params_rel15 = &dl_config_dci_pdu->dci_dl_pdu.pdcch_params_rel15;
   nfapi_nr_dl_config_dlsch_pdu_rel15_t *dlsch_pdu_rel15 = &dl_config_dlsch_pdu->dlsch_pdu.dlsch_pdu_rel15;
   dlsch_pdu_rel15->start_prb = 0;
-  dlsch_pdu_rel15->n_prb = 50;
+  dlsch_pdu_rel15->n_prb = 100;
   dlsch_pdu_rel15->start_symbol = 2;
   dlsch_pdu_rel15->nb_symbols = 9;
   dlsch_pdu_rel15->rnti = rnti;
   dlsch_pdu_rel15->nb_layers =1;
   dlsch_pdu_rel15->nb_codewords = 1;
-  dlsch_pdu_rel15->mcs_idx = 9;
+  dlsch_pdu_rel15->mcs_idx = 26;
   dlsch_pdu_rel15->ndi = 1;
   dlsch_pdu_rel15->redundancy_version = 0;
 

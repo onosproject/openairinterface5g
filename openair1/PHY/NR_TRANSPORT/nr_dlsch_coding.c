@@ -278,7 +278,7 @@ int nr_dlsch_encoding(unsigned char *a,
 
   unsigned int G;
   unsigned int crc=1;
-  uint8_t harq_pid = dlsch->harq_ids[frame&2][slot];
+  uint8_t harq_pid = dlsch->harq_ids[frame%2][slot];
   AssertFatal(harq_pid<8 && harq_pid>=0,"illegal harq_pid %d\b",harq_pid);
   nfapi_nr_dl_config_dlsch_pdu_rel15_t rel15 = dlsch->harq_processes[harq_pid]->dlsch_pdu.dlsch_pdu_rel15;
   uint16_t nb_rb = rel15.n_prb;
@@ -339,7 +339,7 @@ int nr_dlsch_encoding(unsigned char *a,
       dlsch->harq_processes[harq_pid]->B = A+24;
       //    dlsch->harq_processes[harq_pid]->b = a;
    
-      AssertFatal((A/8)+4 <= MAX_DLSCH_PAYLOAD_BYTES,"A %d is too big (A/8+4 = %d > %d)\n",A,(A/8)+4,MAX_DLSCH_PAYLOAD_BYTES);
+      AssertFatal((A/8)+4 <= MAX_NR_DLSCH_PAYLOAD_BYTES,"A %d is too big (A/8+4 = %d > %d)\n",A,(A/8)+4,MAX_NR_DLSCH_PAYLOAD_BYTES);
 
       memcpy(dlsch->harq_processes[harq_pid]->b,a,(A/8)+4);  // why is this +4 if the CRC is only 3 bytes?
     }
@@ -354,7 +354,7 @@ int nr_dlsch_encoding(unsigned char *a,
       dlsch->harq_processes[harq_pid]->B = A+16;
       //    dlsch->harq_processes[harq_pid]->b = a;
    
-      AssertFatal((A/8)+3 <= MAX_DLSCH_PAYLOAD_BYTES,"A %d is too big (A/8+3 = %d > %d)\n",A,(A/8)+3,MAX_DLSCH_PAYLOAD_BYTES);
+      AssertFatal((A/8)+3 <= MAX_NR_DLSCH_PAYLOAD_BYTES,"A %d is too big (A/8+3 = %d > %d)\n",A,(A/8)+3,MAX_NR_DLSCH_PAYLOAD_BYTES);
 
       memcpy(dlsch->harq_processes[harq_pid]->b,a,(A/8)+3);  // using 3 bytes to mimic the case of 24 bit crc
     }
