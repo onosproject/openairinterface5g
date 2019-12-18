@@ -89,7 +89,7 @@ void config_common(int Mod_idP,
 {
   nfapi_nr_config_request_t *cfg = &RC.nrmac[Mod_idP]->config[CC_idP];
 
-  int mu = 1;
+  int mu = 3;
 
   cfg->sch_config.physical_cell_id.value = cellid;
   cfg->sch_config.ssb_scg_position_in_burst.value = ssb_pattern;

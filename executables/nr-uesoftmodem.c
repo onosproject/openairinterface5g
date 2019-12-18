@@ -516,7 +516,7 @@ void init_openair0(void) {
     openair0_cfg[card].configFilename = NULL;
     openair0_cfg[card].threequarter_fs = frame_parms[0]->threequarter_fs;
 
-    if(frame_param[0]->N_RB_DL == 66) {
+    if(frame_parms[0]->N_RB_DL == 66) {
       if (numerology==3) {
           openair0_cfg[card].sample_rate=122.88e6;
           openair0_cfg[card].samples_per_frame = 1228800;

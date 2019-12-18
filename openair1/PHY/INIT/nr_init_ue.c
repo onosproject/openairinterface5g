@@ -992,8 +992,8 @@ void set_default_frame_parms_single(nfapi_nr_config_request_t *config,
   frame_parms->frame_type          = FDD;
   frame_parms->tdd_config          = 3;
   //frame_parms[CC_id]->tdd_config_S        = 0;
-  frame_parms->N_RB_DL             = 100;
-  frame_parms->N_RB_UL             = 100;
+  frame_parms->N_RB_DL             = 66;
+  frame_parms->N_RB_UL             = 66;
   frame_parms->Ncp                 = NORMAL;
   //frame_parms[CC_id]->Ncp_UL              = NORMAL;
   frame_parms->Nid_cell            = 0;
@@ -1021,7 +1021,7 @@ void set_default_frame_parms_single(nfapi_nr_config_request_t *config,
   frame_parms[CC_id]->prach_config_common.prach_ConfigInfo.highSpeedFlag=0;
   frame_parms[CC_id]->prach_config_common.prach_ConfigInfo.prach_FreqOffset=0;*/
   // NR: Init to legacy LTE 20Mhz params
-  frame_parms->numerology_index = 0;
+  frame_parms->numerology_index = 3;
   frame_parms->ttis_per_subframe  = 1;
   frame_parms->slots_per_tti    = 2;
   //}
