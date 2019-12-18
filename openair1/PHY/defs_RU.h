@@ -508,7 +508,7 @@ typedef struct RU_t_s {
   /// function pointer to synchronous RX fronthaul function (RRU,3GPP_eNB/3GPP_gNB)
   void (*fh_south_in)(struct RU_t_s *ru, int *frame, int *subframe);
   /// function pointer to synchronous TX fronthaul function
-  void (*fh_south_out)(struct RU_t_s *ru, int frame_tx, int tti_tx, uint64_t timestamp_tx);
+  void (*fh_south_out)(struct RU_t_s *ru, int frame_tx, int tti_tx, int64_t timestamp_tx);
   /// function pointer to synchronous RX fronthaul function (RRU)
   void (*fh_north_in)(struct RU_t_s *ru, int *frame, int *subframe);
   /// function pointer to synchronous RX fronthaul function (RRU)

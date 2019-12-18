@@ -300,7 +300,7 @@ int connect_rau(RU_t *ru)
 /* Southbound Fronthaul functions, RCC/RAU                   */
 
 // southbound IF5 fronthaul for 16-bit OAI format
-static inline void fh_if5_south_out(RU_t *ru, int frame, int slot, uint64_t timestamp)
+static inline void fh_if5_south_out(RU_t *ru, int frame, int slot, int64_t timestamp)
 {
   if (ru == RC.ru[0]) VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME( VCD_SIGNAL_DUMPER_VARIABLES_TRX_TST, ru->proc.timestamp_tx&0xffffffff );
 
@@ -308,7 +308,7 @@ static inline void fh_if5_south_out(RU_t *ru, int frame, int slot, uint64_t time
 }
 
 // southbound IF5 fronthaul for Mobipass packet format
-static inline void fh_if5_mobipass_south_out(RU_t *ru, int frame, int slot, uint64_t timestamp)
+static inline void fh_if5_mobipass_south_out(RU_t *ru, int frame, int slot, int64_t timestamp)
 {
   if (ru == RC.ru[0]) VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME( VCD_SIGNAL_DUMPER_VARIABLES_TRX_TST, ru->proc.timestamp_tx&0xffffffff );
 
@@ -316,7 +316,7 @@ static inline void fh_if5_mobipass_south_out(RU_t *ru, int frame, int slot, uint
 }
 
 // southbound IF4p5 fronthaul
-static inline void fh_if4p5_south_out(RU_t *ru, int frame, int slot, uint64_t timestamp)
+static inline void fh_if4p5_south_out(RU_t *ru, int frame, int slot, int64_t timestamp)
 {
   if (ru == RC.ru[0]) VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME( VCD_SIGNAL_DUMPER_VARIABLES_TRX_TST, ru->proc.timestamp_tx&0xffffffff );
 
@@ -716,7 +716,7 @@ void rx_rf(RU_t *ru,int *frame,int *slot) {
 }
 
 
-void tx_rf(RU_t *ru,int frame,int slot, uint64_t timestamp) { 
+void tx_rf(RU_t *ru,int frame,int slot, int64_t timestamp) { 
   RU_proc_t *proc = &ru->proc;
   NR_DL_FRAME_PARMS *fp = ru->nr_frame_parms;
   //nfapi_nr_config_request_t *cfg = &ru->gNB_list[0]->gNB_config;
