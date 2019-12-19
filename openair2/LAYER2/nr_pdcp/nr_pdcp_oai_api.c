@@ -147,7 +147,6 @@ void nr_ip_over_LTE_DRB_preconfiguration(void)
 
 int pdcp_fifo_flush_sdus(const protocol_ctxt_t *const ctxt_pP)
 {
-  TODO;
   return 0;
 }
 
@@ -346,7 +345,7 @@ boolean_t rrc_pdcp_config_asn1_req(
   int rnti = ctxt_pP->rnti;
   int i;
 
-  if (ctxt_pP->enb_flag != 1 ||
+  if (//ctxt_pP->enb_flag != 1 ||
       ctxt_pP->module_id != 0 ||
       ctxt_pP->instance != 0 ||
       ctxt_pP->eNB_index != 0 ||
