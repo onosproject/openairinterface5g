@@ -1259,6 +1259,7 @@ void nr_dci_decoding_procedure0(int s,
       //crc = (crc16(&dci_decoded_output[current_thread_id][0], sizeof_bits) >> 16) ^ extract_crc(&dci_decoded_output[current_thread_id][0], sizeof_bits);
       LOG_DDD("... we end function dci_decoding() with crc=%x\n",crc);
       LOG_DDD("... we have to replace this part of the code by polar decoding\n");
+      LOG_DDD("dci_estimation %lx\n",dci_estimation[0]);
 #ifdef DEBUG_DCI_DECODING
       LOG_DDD("(nr_dci_decoding_procedure0: crc =>%d\n",crc);
 #endif //uint16_t tc_rnti, uint16_t int_rnti, uint16_t sfi_rnti, uint16_t tpc_pusch_rnti, uint16_t tpc_pucch_rnti, uint16_t tpc_srs__rnti
