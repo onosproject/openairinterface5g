@@ -130,7 +130,7 @@ void pre_scd_nb_rbs_required(    module_id_t     module_idP,
     UE_template.dl_buffer_total = 0;
     rnti = UE_RNTI(module_idP, UE_id);
 
-    for (lc_id = DCCH; lc_id <= DTCH; lc_id++) {
+    for (lc_id = DCCH; lc_id <= MAX_NUM_LCID; lc_id++) {
       rlc_status =
         mac_rlc_status_ind(module_idP, rnti, module_idP, frameP, subframeP,
                            ENB_FLAG_YES, MBMS_FLAG_NO, lc_id, 0
@@ -1311,8 +1311,7 @@ schedule_ue_spec_fairRR(module_id_t module_idP,
             header_len_dtch      = 0;
             header_len_dtch_last = 0;           // the header length of the last mac sdu
             // lcid has to be sorted before the actual allocation (similar struct as ue_list).
-            /* TODO limited lcid for performance */
-            for (lcid = DTCH; lcid >= DTCH; lcid--) {
+            for (lcid = NB_RB_MAX - 1; lcid >= DTCH; lcid--) {
                 // TBD: check if the lcid is active
 
                 header_len_dtch     += 3;
@@ -2043,8 +2042,7 @@ schedule_ue_spec_fairRR(module_id_t module_idP,
         header_len_dtch_last = 0; // the header length of the last mac sdu
 
         // lcid has to be sorted before the actual allocation (similar struct as ue_list).
-        /* TODO limited lcid for performance */
-        for (lcid = DTCH; lcid >= DTCH; lcid--) {
+        for (lcid = NB_RB_MAX - 1; lcid >= DTCH; lcid--) {
           // TBD: check if the lcid is active
           header_len_dtch += 3;
           header_len_dtch_last = 3;
@@ -2497,8 +2495,7 @@ schedule_ue_spec_fairRR(module_id_t module_idP,
             header_len_dtch = 0;
             header_len_dtch_last = 0;   // the header length of the last mac sdu
             // lcid has to be sorted before the actual allocation (similar struct as ue_list).
-            /* TODO limited lcid for performance */
-            for (lcid = DTCH; lcid >= DTCH; lcid--) {
+            for (lcid = NB_RB_MAX - 1; lcid >= DTCH; lcid--) {
                 // TBD: check if the lcid is active
 
                 header_len_dtch     += 3;
