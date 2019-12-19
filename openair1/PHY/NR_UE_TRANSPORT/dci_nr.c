@@ -842,12 +842,12 @@ int32_t nr_rx_pdcch(PHY_VARS_NR_UE *ue,
                                   s,
                                   log2_maxh,
                                   coreset_nbr_rb); // log2_maxh+I0_shift
-#ifdef DEBUG_PHY
+//#ifdef DEBUG_PHY
 
-    if (nr_tti_rx==5)
+ //   if (nr_tti_rx==5)
       write_output("rxF_comp_d.m","rxF_c_d",&pdcch_vars[eNB_id]->rxdataF_comp[0][s*frame_parms->N_RB_DL*12],frame_parms->N_RB_DL*12,1,1);
 
-#endif
+//#endif
 
     if (frame_parms->nb_antennas_rx > 1) {
       LOG_DD("we enter pdcch_detection_mrc(frame_parms->nb_antennas_rx=%d)\n",

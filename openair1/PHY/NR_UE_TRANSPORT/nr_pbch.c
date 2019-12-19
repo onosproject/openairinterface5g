@@ -517,9 +517,9 @@ int nr_rx_pbch( PHY_VARS_NR_UE *ue,
     }
   }
 
-#ifdef DEBUG_PBCH
+//#ifdef DEBUG_PBCH
   write_output("rxdataF_comp.m","rxFcomp",&nr_ue_pbch_vars->rxdataF_comp[0][240],240*3,1,1);
-#endif
+//#endif
   pbch_e_rx = nr_ue_pbch_vars->llr;
   //demod_pbch_e = nr_ue_pbch_vars->demod_pbch_e;
   pbch_a = nr_ue_pbch_vars->pbch_a;
