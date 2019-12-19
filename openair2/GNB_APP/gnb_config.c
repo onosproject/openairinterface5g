@@ -448,7 +448,7 @@ void RCconfig_NRRRC(MessageDef *msg_p, uint32_t i, gNB_RRC_INST *rrc) {
   //MIB
   int32_t                MIB_subCarrierSpacingCommon                                   = 0;
   int32_t                MIB_ssb_SubcarrierOffset                                      = 0;
-  int32_t                MIB_dmrs_TypeA_Position                                       = 0;
+  int32_t                MIB_dmrs_TypeA_Position                                       = 2;
   int32_t                pdcch_ConfigSIB1                                              = 0;
 
   //SIB1

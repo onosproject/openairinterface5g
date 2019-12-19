@@ -2834,7 +2834,7 @@ int nr_ue_pdcch_procedures(uint8_t eNB_id,
   // Higher layers have updated the number of searchSpaces with are active in the current slot and this value is stored in variable nb_searchspace_total
   int nb_searchspace_total = pdcch_vars2->nb_search_space;
 
-  pdcch_vars[eNB_id]->crnti = 0x1234; //to be check how to set when using loop memory
+  pdcch_vars[eNB_id]->crnti = 1000;// 0x1234; //to be check how to set when using loop memory
 
   uint16_t c_rnti=pdcch_vars[eNB_id]->crnti;
   uint16_t cs_rnti=0,new_rnti=0,tc_rnti=0;
@@ -4142,7 +4142,7 @@ int phy_procedures_nrUE_RX(PHY_VARS_NR_UE *ue,
   uint16_t nb_symb_sch = dlsch0_harq->nb_symbols;
   uint16_t start_symb_sch = dlsch0_harq->start_symbol;
   uint8_t nb_symb_pdcch = pdcch_vars->coreset[0].duration;
-  uint8_t ssb_periodicity = 10;// ue->ssb_periodicity; // initialized to 5ms in nr_init_ue for scenarios where UE is not configured (otherwise acquired by cell configuration from gNB or LTE)
+  uint8_t ssb_periodicity = 20;// ue->ssb_periodicity; // initialized to 5ms in nr_init_ue for scenarios where UE is not configured (otherwise acquired by cell configuration from gNB or LTE)
   uint8_t dci_cnt = 0;
   fapi_nr_pbch_config_t *pbch_config = &ue->nrUE_config.pbch_config;
   

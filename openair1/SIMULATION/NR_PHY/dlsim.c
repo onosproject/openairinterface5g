@@ -422,8 +422,8 @@ int main(int argc, char **argv)
       printf("-o CORESET offset\n");
       printf("-a Start PRB for PDSCH\n");
       printf("-b Number of PRB for PDSCH\n");
-      printf("-c Start symbol for PDSCH (fixed for now)\n");
-      printf("-j Number of symbols for PDSCH (fixed for now)\n");
+//    printf("-c Start symbol for PDSCH (2 or 1)\n");
+      printf("-j Number of symbols for PDSCH (9 or 13)\n");
       printf("-e MSC index\n");
       exit (-1);
       break;
@@ -469,7 +469,7 @@ int main(int argc, char **argv)
     fs = 122.88e6;
     bw = 90e6;
   }
-  else if (mu == 1 && N_RB_DL == 273) {
+  else if (mu == 1 && N_RB_DL == 272) {
     fs = 122.88e6;
     bw = 100e6;
   }
@@ -683,9 +683,9 @@ int main(int argc, char **argv)
   
   uint64_t mask = 0x0;
   uint16_t num_rbs=24;
-  uint16_t rb_offset=gNB->pdcch_vars.dci_alloc[0].pdcch_params.rb_offset;
-  uint16_t cell_id=0;
-  uint16_t num_symbols=2;
+  uint16_t rb_offset=120;//gNB->pdcch_vars.dci_alloc[0].pdcch_params.rb_offset;
+  uint16_t cell_id=47;
+  uint16_t num_symbols=1;
   for(i=0; i<(num_rbs/6); ++i){   //  38.331 Each bit corresponds a group of 6 RBs
     mask = mask >> 1;
     mask = mask | 0x100000000000;

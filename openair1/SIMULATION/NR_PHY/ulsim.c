@@ -126,6 +126,7 @@ openair0_config_t openair0_cfg[MAX_CARDS];
 int main(int argc, char **argv)
 {
   char c;
+  float target_error_rate = 0.1;
   int i,sf;
   double SNR, snr0 = -2.0, snr1 = 2.0;
   double sigma, sigma_dB;
@@ -655,30 +656,28 @@ int main(int argc, char **argv)
         }
 
         if (errors_decoding > 0) {
-          is_frame_in_error = 1;
           n_false_positive++;
           printf("\x1B[31m""[frame %d][trial %d]\tnumber of errors in decoding     = %d\n" "\x1B[0m", frame, trial, errors_decoding);
-        } else {
-          is_frame_in_error = 0;
-          break;
         }
         ////////////////////////////////////////////////////////////
       } // trial loop
 
-      if (is_frame_in_error == 1)
+      if((float)n_false_positive/(float)n_trials > target_error_rate) {
+        is_frame_in_error = 1;
         break;
+      } else {
+        is_frame_in_error = 0;
+      }
     } // frame loop
 
-    if(is_frame_in_error == 0 || number_of_frames==1)
+    if(is_frame_in_error == 0) {
+      printf("\n");
+      printf("*************\n");
+      printf("PUSCH test OK\n");
+      printf("*************\n");
       break;
+    }
   } // SNR loop
-
-  if(is_frame_in_error == 0) {
-    printf("\n");
-    printf("*************\n");
-    printf("PUSCH test OK\n");
-    printf("*************\n");
-  }
 
   printf("\n");
 

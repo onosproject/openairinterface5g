@@ -516,7 +516,25 @@ void init_openair0(void) {
     openair0_cfg[card].configFilename = NULL;
     openair0_cfg[card].threequarter_fs = frame_parms[0]->threequarter_fs;
 
-    if(frame_parms[0]->N_RB_DL == 217) {
+    if(frame_parms[0]->N_RB_DL == 272) {
+      if (numerology==1) {
+        if (frame_parms[0]->threequarter_fs) {
+          openair0_cfg[card].sample_rate=92.16e6;
+          openair0_cfg[card].samples_per_frame = 921600;
+          openair0_cfg[card].tx_bw = 40e6;
+          openair0_cfg[card].rx_bw = 40e6;
+        }
+        else {
+          openair0_cfg[card].sample_rate=122.88e6;
+          openair0_cfg[card].samples_per_frame = 1228800;
+          openair0_cfg[card].tx_bw = 40e6;
+          openair0_cfg[card].rx_bw = 40e6;
+        } 
+      } else {
+        LOG_E(PHY,"Unsupported numerology!\n");
+        exit(-1);
+      }
+    }else if(frame_parms[0]->N_RB_DL == 217) {
       if (numerology==1) {
         if (frame_parms[0]->threequarter_fs) {
           openair0_cfg[card].sample_rate=92.16e6;

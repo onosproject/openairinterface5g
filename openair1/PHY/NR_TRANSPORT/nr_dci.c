@@ -36,8 +36,8 @@
 #include "PHY/MODULATION/nr_modulation.h"
 
 //#define DEBUG_PDCCH_DMRS
-//#define DEBUG_DCI
-//#define DEBUG_CHANNEL_CODING
+#define DEBUG_DCI
+#define DEBUG_CHANNEL_CODING
 
 
 uint16_t nr_get_dci_size(nfapi_nr_dci_format_e format,
@@ -212,6 +212,10 @@ uint8_t nr_generate_dci_top(NR_gNB_DCI_ALLOC_t dci_alloc,
   uint16_t Nid = (pdcch_params.search_space_type == NFAPI_NR_SEARCH_SPACE_TYPE_UE_SPECIFIC)?
                  pdcch_params.scrambling_id : config.sch_config.physical_cell_id.value;
   t_nrPolar_params *currentPtr = nr_polar_params(NR_POLAR_DCI_MESSAGE_TYPE, dci_alloc.size, dci_alloc.L);
+  printf("DCI PDU old: %lx\n",dci_alloc.dci_pdu[0]);
+  dci_alloc.dci_pdu[0] = 0x90B478F0000; // To test runel DCI with UE
+  printf("DCI PDU new: %lx\n",dci_alloc.dci_pdu[0]);
+//  dci_alloc.dci_pdu[1] = 0x0;
   polar_encoder_fast(dci_alloc.dci_pdu, encoder_output, pdcch_params.rnti, 1, currentPtr);
 #ifdef DEBUG_CHANNEL_CODING
   printf("polar rnti %d\n",pdcch_params.rnti);
