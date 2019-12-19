@@ -511,8 +511,9 @@ int nr_pdcch_channel_estimation(PHY_VARS_NR_UE *ue,
 
 
   // generate pilot 
-  nr_pdcch_dmrs_rx(ue,eNB_offset,Ns,ue->nr_gold_pdcch[eNB_offset][Ns][symbol], &pilot[0],2000,nb_rb_coreset);
-
+  uint16_t rb_offset = (coreset_start_subcarrier - ue->frame_parms.first_carrier_offset) / 12;
+  
+  nr_pdcch_dmrs_rx(ue,eNB_offset,Ns,ue->nr_gold_pdcch[eNB_offset][Ns][symbol], &pilot[0],2000,nb_rb_coreset,rb_offset);
 
   for (aarx=0; aarx<ue->frame_parms.nb_antennas_rx; aarx++) {
 
@@ -652,7 +653,7 @@ int nr_pdsch_channel_estimation(PHY_VARS_NR_UE *ue,
                                 unsigned short bwp_start_subcarrier,
                                 unsigned short nb_rb_pdsch)
 {
-  int pilot[3280] __attribute__((aligned(16)));
+  int pilot[1638] __attribute__((aligned(16)));
   unsigned char aarx;
   unsigned short k;
   unsigned int pilot_cnt;
@@ -721,11 +722,11 @@ int nr_pdsch_channel_estimation(PHY_VARS_NR_UE *ue,
   // generate pilot
   uint16_t rb_offset = (bwp_start_subcarrier - ue->frame_parms.first_carrier_offset) / 12;
   int config_type = 0; // needs to be updated from higher layer
-  nr_pdsch_dmrs_rx(ue,Ns,ue->nr_gold_pdsch[eNB_offset][Ns][0], &pilot[0],1000,0,nb_rb_pdsch+rb_offset);
+  nr_pdsch_dmrs_rx(ue,Ns,ue->nr_gold_pdsch[eNB_offset][Ns][0], &pilot[0],1000,0,nb_rb_pdsch,rb_offset);
 
   for (aarx=0; aarx<ue->frame_parms.nb_antennas_rx; aarx++) {
 
-    pil   = (int16_t *)&pilot[rb_offset*((config_type==0) ? 6:4)];
+    pil   = (int16_t *)&pilot[0];
     k     = k % ue->frame_parms.ofdm_symbol_size;
     rxF   = (int16_t *)&rxdataF[aarx][(symbol_offset+k+nushift)];
     dl_ch = (int16_t *)&dl_ch_estimates[aarx][ch_offset];
