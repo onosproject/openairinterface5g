@@ -364,6 +364,7 @@ int main(int argc, char **argv)
     case 'I':
       run_initial_sync=1;
       target_error_rate=0.1;
+      slot = 0;
       break;
 
     case 'L':
@@ -599,9 +600,10 @@ int main(int argc, char **argv)
     Sched_INFO.TX_req    = &gNB_mac->TX_req[0];
     nr_schedule_response(&Sched_INFO);
 
-    phy_procedures_gNB_TX(gNB,frame,slot,0);
-    
-    //nr_common_signal_procedures (gNB,frame,subframe);
+    if(!run_initial_sync)
+      phy_procedures_gNB_TX(gNB,frame,slot,0);
+    else
+      nr_common_signal_procedures (gNB,frame,slot);
     int txdataF_offset = (slot%2) * frame_parms->samples_per_slot_wCP;
 
     LOG_M("txsigF0.m","txsF0", gNB->common_vars.txdataF[0],frame_length_complex_samples_no_prefix,1,1);
@@ -752,12 +754,13 @@ int main(int argc, char **argv)
       sigma2    = pow(10, sigma2_dB/10);
       // printf("sigma2 %f (%f dB)\n",sigma2,sigma2_dB);
 
-      for (i=0; i<frame_length_complex_samples; i++) {
+      /*for (i=0; i<frame_length_complex_samples; i++) {
 	for (aa=0; aa<frame_parms->nb_antennas_rx; aa++) {
 	  ((short*) UE->common_vars.rxdata[aa])[2*i]   = (short) ((r_re[aa][i] + sqrt(sigma2/2)*gaussdouble(0.0,1.0)));
 	  ((short*) UE->common_vars.rxdata[aa])[2*i+1] = (short) ((r_im[aa][i] + sqrt(sigma2/2)*gaussdouble(0.0,1.0)));
 	}
-      }
+      }*/
+      memcpy(UE->common_vars.rxdata[0],txdata[0],frame_length_complex_samples*sizeof(int32_t));
 
       if (n_trials == 1) {
 
