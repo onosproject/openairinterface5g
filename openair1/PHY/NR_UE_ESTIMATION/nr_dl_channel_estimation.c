@@ -481,6 +481,7 @@ int nr_pdcch_channel_estimation(PHY_VARS_NR_UE *ue,
   unsigned int pilot_cnt;
   int16_t ch[2],*pil,*rxF,*dl_ch,*fl,*fm,*fr;
   int ch_offset,symbol_offset;
+  int coreset_config_pbch = 1; // TODO: To be updated from PBCH decoder
 
   //uint16_t Nid_cell = (eNB_offset == 0) ? ue->frame_parms.Nid_cell : ue->measurements.adj_cell_id[eNB_offset-1];
 
@@ -513,7 +514,7 @@ int nr_pdcch_channel_estimation(PHY_VARS_NR_UE *ue,
   // generate pilot 
   uint16_t rb_offset = (coreset_start_subcarrier - ue->frame_parms.first_carrier_offset) / 12;
   
-  nr_pdcch_dmrs_rx(ue,eNB_offset,Ns,ue->nr_gold_pdcch[eNB_offset][Ns][symbol], &pilot[0],2000,nb_rb_coreset,rb_offset);
+  nr_pdcch_dmrs_rx(ue,eNB_offset,Ns,ue->nr_gold_pdcch[eNB_offset][Ns][symbol], &pilot[0],2000,nb_rb_coreset,coreset_config_pbch?0:rb_offset);
 
   for (aarx=0; aarx<ue->frame_parms.nb_antennas_rx; aarx++) {
 
