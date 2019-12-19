@@ -1505,6 +1505,16 @@ set(LTE_RLC_SRC
   ${RLC_DIR}/rlc_mpls.c
   )
 
+set(LTE_PDCP_SRC
+  ${PDCP_DIR}/pdcp.c
+  ${PDCP_DIR}/pdcp_fifo.c
+  ${PDCP_DIR}/pdcp_sequence_manager.c
+  ${PDCP_DIR}/pdcp_primitives.c
+  ${PDCP_DIR}/pdcp_util.c
+  ${PDCP_DIR}/pdcp_security.c
+  ${PDCP_DIR}/pdcp_netlink.c
+  )
+
 set(NR_RLC_SRC
   ${OPENAIR2_DIR}/LAYER2/nr_rlc/asn1_utils.c
   ${OPENAIR2_DIR}/LAYER2/nr_rlc/nr_rlc_entity.c
@@ -1517,15 +1527,12 @@ set(NR_RLC_SRC
   ${OPENAIR2_DIR}/LAYER2/nr_rlc/nr_rlc_ue_manager.c
   )
 
+set(NR_PDCP_SRC
+  ${OPENAIR2_DIR}/LAYER2/nr_pdcp/nr_pdcp_oai_api.c
+  )
+
 set(L2_SRC
   ${OPENAIR2_DIR}/LAYER2/openair2_proc.c
-  ${PDCP_DIR}/pdcp.c
-  ${PDCP_DIR}/pdcp_fifo.c
-  ${PDCP_DIR}/pdcp_sequence_manager.c
-  ${PDCP_DIR}/pdcp_primitives.c
-  ${PDCP_DIR}/pdcp_util.c
-  ${PDCP_DIR}/pdcp_security.c
-  ${PDCP_DIR}/pdcp_netlink.c
 #  ${RRC_DIR}/rrc_UE.c
   ${RRC_DIR}/rrc_eNB.c
   ${RRC_DIR}/rrc_eNB_S1AP.c
@@ -1538,10 +1545,12 @@ set(L2_SRC
 
 set(L2_LTE_SRC
   ${LTE_RLC_SRC}
+  ${LTE_PDCP_SRC}
   )
 
 set(L2_NR_SRC
   ${NR_RLC_SRC}
+  ${NR_PDCP_SRC}
   ${NR_RRC_DIR}/rrc_gNB.c
   ${NR_RRC_DIR}/nr_rrc_common.c
   ${NR_RRC_DIR}/L2_nr_interface.c
@@ -1549,13 +1558,6 @@ set(L2_NR_SRC
   )
 
 set(L2_SRC_UE
-  ${PDCP_DIR}/pdcp.c
-  ${PDCP_DIR}/pdcp_fifo.c
-  ${PDCP_DIR}/pdcp_sequence_manager.c
-  ${PDCP_DIR}/pdcp_primitives.c
-  ${PDCP_DIR}/pdcp_util.c
-  ${PDCP_DIR}/pdcp_security.c
-  ${PDCP_DIR}/pdcp_netlink.c
   ${RRC_DIR}/rrc_UE.c
   ${RRC_DIR}/rrc_common.c
   ${RRC_DIR}/L2_interface_common.c
@@ -1571,10 +1573,12 @@ set(LTE_NR_L2_SRC_UE
   ${PDCP_DIR}/pdcp_security.c
   ${PDCP_DIR}/pdcp_netlink.c
   ${LTE_RLC_SRC}
+  ${LTE_PDCP_SRC}
   )
 
 set(NR_L2_SRC_UE
   ${NR_RLC_SRC}
+  ${NR_PDCP_SRC}
   ${NR_UE_RRC_DIR}/L2_interface_ue.c
   ${NR_UE_RRC_DIR}/main_ue.c
   ${NR_UE_RRC_DIR}/rrc_UE.c
