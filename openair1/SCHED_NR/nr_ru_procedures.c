@@ -123,11 +123,12 @@ void nr_feptx_ofdm_2thread(RU_t *ru,int frame_tx,int tti_tx) {
   int j    = 0;
   int p   = 0;
   int ret  = 0;
-  int nb_logical_ports = fp->N_ssb;
+  int nb_logical_ports = fp->Lmax;
   int ofdm_mask_full   = (1<<(ru->nb_tx*2))-1;
+  int txdataF_offset = (tti_tx%2)*fp->samples_per_slot_wCP;
 
   if (nr_slot_select(cfg,slot) == SF_UL) return;
-  for (p=0; p<fp->Lmax; p++) {
+  for (p=0; p<nb_logical_ports; p++) {
     memset(ru->common.txdataF[p],0,fp->samples_per_slot_wCP*sizeof(int32_t));
   }
 
@@ -141,7 +142,7 @@ void nr_feptx_ofdm_2thread(RU_t *ru,int frame_tx,int tti_tx) {
 
       for(i=0; i<nb_logical_ports; ++i){
         memcpy((void*)&ru->common.txdataF[i][j*fp->ofdm_symbol_size],
-           (void*)&gNB->common_vars.txdataF[i][j*fp->ofdm_symbol_size + ((tti_tx%2)*fp->samples_per_slot_wCP)],
+           (void*)&gNB->common_vars.txdataF[i][j*fp->ofdm_symbol_size + txdataF_offset],
            fp->ofdm_symbol_size*sizeof(int32_t));
       }
 
@@ -241,7 +242,7 @@ static void *nr_feptx_thread(void *param) {
     start_meas(&ru->precoding_stats);
     if (ru->nb_tx == 1) {
       AssertFatal(fp->N_ssb==ru->nb_tx,"Attempting to transmit %d SSB while Nb_tx = %d",fp->N_ssb,ru->nb_tx);
-      for (int p=0; p<fp->Lmax; p++) {
+      for (int p=0; p<nb_logical_ports; p++) {
         if ((fp->L_ssb >> p) & 0x01){
           memcpy((void*)&ru->common.txdataF_BF[0][l*fp->ofdm_symbol_size],
                  (void*)&ru->common.txdataF[p][l*fp->ofdm_symbol_size],
