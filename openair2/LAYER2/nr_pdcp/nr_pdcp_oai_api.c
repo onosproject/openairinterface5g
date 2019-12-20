@@ -426,6 +426,14 @@ uint64_t pdcp_module_init(uint64_t _pdcp_optmask)
 static void deliver_sdu_drb(void *_ue, nr_pdcp_entity_t *entity,
                             char *buf, int size)
 {
+  extern int nas_sock_fd[];
+  int len;
+
+  len = write(nas_sock_fd[0], buf, size);
+  if (len != size) {
+    LOG_E(PDCP, "%s:%d:%s: fatal\n", __FILE__, __LINE__, __FUNCTION__);
+    exit(1);
+  }
 }
 
 static void deliver_pdu_drb(void *_ue, nr_pdcp_entity_t *entity,
@@ -477,7 +485,51 @@ boolean_t pdcp_data_ind(
   const sdu_size_t sdu_buffer_size,
   mem_block_t *const sdu_buffer)
 {
-  TODO;
+  nr_pdcp_ue_t *ue;
+  nr_pdcp_entity_t *rb;
+  int rnti = ctxt_pP->rnti;
+
+  if (ctxt_pP->module_id != 0 ||
+      //ctxt_pP->enb_flag != 1 ||
+      ctxt_pP->instance != 0 ||
+      ctxt_pP->eNB_index != 0 ||
+      ctxt_pP->configured != 1 ||
+      ctxt_pP->brOption != 0) {
+    LOG_E(PDCP, "%s:%d:%s: fatal\n", __FILE__, __LINE__, __FUNCTION__);
+    exit(1);
+  }
+
+  if (ctxt_pP->enb_flag)
+    T(T_ENB_PDCP_UL, T_INT(ctxt_pP->module_id), T_INT(rnti),
+      T_INT(rb_id), T_INT(sdu_buffer_size));
+
+  nr_pdcp_manager_lock(nr_pdcp_ue_manager);
+  ue = nr_pdcp_manager_get_ue(nr_pdcp_ue_manager, rnti);
+
+  if (srb_flagP == 1) {
+    if (rb_id < 1 || rb_id > 2)
+      rb = NULL;
+    else
+      rb = ue->srb[rb_id - 1];
+  } else {
+    if (rb_id < 1 || rb_id > 5)
+      rb = NULL;
+    else
+      rb = ue->drb[rb_id - 1];
+  }
+
+  if (rb != NULL) {
+    rb->recv_pdu(rb, (char *)sdu_buffer->data, sdu_buffer_size);
+  } else {
+    LOG_E(PDCP, "%s:%d:%s: fatal: no RB found (rb_id %ld, srb_flag %d)\n",
+          __FILE__, __LINE__, __FUNCTION__, rb_id, srb_flagP);
+    exit(1);
+  }
+
+  nr_pdcp_manager_unlock(nr_pdcp_ue_manager);
+
+  free_mem_block(sdu_buffer, __FUNCTION__);
+
   return 1;
 }
 
