@@ -305,6 +305,22 @@ int RCconfig_RRC(uint32_t i, eNB_RRC_INST *rrc, int macrlc_has_f1) {
   paramdef_t SRB1Params[] = SRB1PARAMS_DESC(srb1_params);
   paramdef_t SLParams[]              = CCPARAMS_SIDELINK_DESC(SLconfig);
 
+  uint8_t   allowedMeasBandwidth      = 0;
+  measurement_event_info_t event1_config;
+  measurement_event_info_t event2_config;
+  measurement_event_info_t event3_config;
+  measurement_event_info_t event4_config;
+  measurement_event_info_t event5_config;
+  measurement_event_info_t event6_config;
+
+  paramdef_t MEASParams[] = MEASPARAMS_DESC;
+  paramdef_t MEAS_ENVENT1_Params[] = MEAS_EVENT1_PARAMS_DESC;
+  paramdef_t MEAS_ENVENT2_Params[] = MEAS_EVENT2_PARAMS_DESC;
+  paramdef_t MEAS_ENVENT3_Params[] = MEAS_EVENT3_PARAMS_DESC;
+  paramdef_t MEAS_ENVENT4_Params[] = MEAS_EVENT4_PARAMS_DESC;
+  paramdef_t MEAS_ENVENT5_Params[] = MEAS_EVENT5_PARAMS_DESC;
+  paramdef_t MEAS_ENVENT6_Params[] = MEAS_EVENT6_PARAMS_DESC;
+
   /* map parameter checking array instances to parameter definition array instances */
   for (int I=0; I< ( sizeof(CCsParams)/ sizeof(paramdef_t)  ) ; I++) {
     CCsParams[I].chkPptr = &(config_check_CCparams[I]);
@@ -1658,6 +1674,146 @@ int RCconfig_RRC(uint32_t i, eNB_RRC_INST *rrc, int macrlc_has_f1) {
               if (SLconfig.sidelink_configured==1) fill_SL_configuration(msg_p,&SLconfig,i,j,RC.config_file_name);
               else                                 printf("No SL configuration skipping it\n");
             } // !NODE_IS_DU(node_type)
+
+            char measpath[MAX_OPTNAME_SIZE*2 + 8];
+            sprintf(measpath,"%s.%s", enbpath, ENB_CONFIG_STRING_MEAS);
+            LOG_D(RRC, "enb_config::RCconfig_RRC() measurement info, measpath: %s \n \n", measpath);
+            int npar = config_get( MEASParams,sizeof(MEASParams)/sizeof(paramdef_t), measpath);
+                
+            if (npar == sizeof(MEASParams)/sizeof(paramdef_t)) {
+              LOG_D(RRC, "allowedMeasBandwidth %d \n", allowedMeasBandwidth);
+              rrc->measurement.allowedMeasBandwidth = allowedMeasBandwidth;
+            }
+
+            char meas_event1_path[MAX_OPTNAME_SIZE*2 + 8];
+            sprintf(meas_event1_path,"%s.%s.%s", enbpath, ENB_CONFIG_STRING_MEAS, ENB_CONFIG_STRING_MEAS_EVENT1);
+            LOG_D(RRC, "enb_config::RCconfig_RRC() measurement event1 info, meas_event1_path: %s \n \n", meas_event1_path);
+            npar = config_get( MEAS_ENVENT1_Params,sizeof(MEAS_ENVENT1_Params)/sizeof(paramdef_t), meas_event1_path);
+                
+            if (npar == sizeof(MEAS_ENVENT1_Params)/sizeof(paramdef_t)) {
+              LOG_D(RRC, "threshold_RSRP %d \n", event1_config.threshold_RSRP);
+              LOG_D(RRC, "maxReportCells %d \n", event1_config.maxReportCells);
+              LOG_D(RRC, "reportInterval %d \n", event1_config.reportInterval);
+              LOG_D(RRC, "a3_Offset %d \n", event1_config.a3_Offset);
+              LOG_D(RRC, "hysteresis %d \n", event1_config.hysteresis);
+              LOG_D(RRC, "timeToTrigger %d \n", event1_config.timeToTrigger);
+            	
+              rrc->measurement.event1_config.threshold_RSRP 	= event1_config.threshold_RSRP;
+              rrc->measurement.event1_config.maxReportCells 	= event1_config.maxReportCells;
+              rrc->measurement.event1_config.reportInterval 	= event1_config.reportInterval;
+              rrc->measurement.event1_config.a3_Offset 		= event1_config.a3_Offset;
+              rrc->measurement.event1_config.hysteresis 		= event1_config.hysteresis;
+              rrc->measurement.event1_config.timeToTrigger 	= event1_config.timeToTrigger;
+            }
+
+            char meas_event2_path[MAX_OPTNAME_SIZE*2 + 8];
+            sprintf(meas_event2_path,"%s.%s.%s", enbpath, ENB_CONFIG_STRING_MEAS, ENB_CONFIG_STRING_MEAS_EVENT2);
+            LOG_D(RRC, "enb_config::RCconfig_RRC() measurement event2 info, meas_event2_path: %s \n \n", meas_event2_path);
+            npar = config_get( MEAS_ENVENT2_Params,sizeof(MEAS_ENVENT2_Params)/sizeof(paramdef_t), meas_event2_path);
+                
+            if (npar == sizeof(MEAS_ENVENT2_Params)/sizeof(paramdef_t)) {
+              LOG_D(RRC, "threshold_RSRP %d \n", event2_config.threshold_RSRP);
+              LOG_D(RRC, "maxReportCells %d \n", event2_config.maxReportCells);
+              LOG_D(RRC, "reportInterval %d \n", event2_config.reportInterval);
+              LOG_D(RRC, "a3_Offset %d \n", event2_config.a3_Offset);
+              LOG_D(RRC, "hysteresis %d \n", event2_config.hysteresis);
+              LOG_D(RRC, "timeToTrigger %d \n", event2_config.timeToTrigger);
+            	
+              rrc->measurement.event2_config.threshold_RSRP 	= event2_config.threshold_RSRP;
+              rrc->measurement.event2_config.maxReportCells 	= event2_config.maxReportCells;
+              rrc->measurement.event2_config.reportInterval 	= event2_config.reportInterval;
+              rrc->measurement.event2_config.a3_Offset 		= event2_config.a3_Offset;
+              rrc->measurement.event2_config.hysteresis 		= event2_config.hysteresis;
+              rrc->measurement.event2_config.timeToTrigger 	= event2_config.timeToTrigger;
+            }
+
+            char meas_event3_path[MAX_OPTNAME_SIZE*2 + 8];
+            sprintf(meas_event3_path,"%s.%s.%s", enbpath, ENB_CONFIG_STRING_MEAS, ENB_CONFIG_STRING_MEAS_EVENT3);
+            LOG_D(RRC, "enb_config::RCconfig_RRC() measurement event3 info, meas_event3_path: %s \n \n", meas_event3_path);
+            npar = config_get( MEAS_ENVENT3_Params,sizeof(MEAS_ENVENT3_Params)/sizeof(paramdef_t), meas_event3_path);
+                
+            if (npar == sizeof(MEAS_ENVENT3_Params)/sizeof(paramdef_t)) {
+              LOG_D(RRC, "threshold_RSRP %d \n", event3_config.threshold_RSRP);
+              LOG_D(RRC, "maxReportCells %d \n", event3_config.maxReportCells);
+              LOG_D(RRC, "reportInterval %d \n", event3_config.reportInterval);
+              LOG_D(RRC, "a3_Offset %d \n", event3_config.a3_Offset);
+              LOG_D(RRC, "hysteresis %d \n", event3_config.hysteresis);
+              LOG_D(RRC, "timeToTrigger %d \n", event3_config.timeToTrigger);
+            	
+              rrc->measurement.event3_config.threshold_RSRP 	= event3_config.threshold_RSRP;
+              rrc->measurement.event3_config.maxReportCells 	= event3_config.maxReportCells;
+              rrc->measurement.event3_config.reportInterval 	= event3_config.reportInterval;
+              rrc->measurement.event3_config.a3_Offset 		= event3_config.a3_Offset;
+              rrc->measurement.event3_config.hysteresis 		= event3_config.hysteresis;
+              rrc->measurement.event3_config.timeToTrigger 	= event3_config.timeToTrigger;
+            }
+
+            char meas_event4_path[MAX_OPTNAME_SIZE*2 + 8];
+            sprintf(meas_event4_path,"%s.%s.%s", enbpath, ENB_CONFIG_STRING_MEAS, ENB_CONFIG_STRING_MEAS_EVENT4);
+            LOG_D(RRC, "enb_config::RCconfig_RRC() measurement event4 info, meas_event4_path: %s \n \n", meas_event4_path);
+            npar = config_get( MEAS_ENVENT4_Params,sizeof(MEAS_ENVENT4_Params)/sizeof(paramdef_t), meas_event4_path);
+                
+            if (npar == sizeof(MEAS_ENVENT4_Params)/sizeof(paramdef_t)) {
+              LOG_D(RRC, "threshold_select %s \n", event4_config.threshold_select);
+              LOG_D(RRC, "threshold_RSRP %d \n", event4_config.threshold_RSRP);
+              LOG_D(RRC, "threshold_RSRQ %d \n", event4_config.threshold_RSRQ);
+              LOG_D(RRC, "maxReportCells %d \n", event4_config.maxReportCells);
+              LOG_D(RRC, "reportInterval %d \n", event4_config.reportInterval);
+              LOG_D(RRC, "a3_Offset %d \n", event4_config.a3_Offset);
+              LOG_D(RRC, "hysteresis %d \n", event4_config.hysteresis);
+              LOG_D(RRC, "timeToTrigger %d \n", event4_config.timeToTrigger);
+            
+              rrc->measurement.event4_config.threshold_select   = event4_config.threshold_select;
+              rrc->measurement.event4_config.threshold_RSRP 	= event4_config.threshold_RSRP;
+              rrc->measurement.event4_config.threshold_RSRP 	= event4_config.threshold_RSRQ;
+              rrc->measurement.event4_config.maxReportCells 	= event4_config.maxReportCells;
+              rrc->measurement.event4_config.reportInterval 	= event4_config.reportInterval;
+              rrc->measurement.event4_config.a3_Offset 		= event4_config.a3_Offset;
+              rrc->measurement.event4_config.hysteresis 		= event4_config.hysteresis;
+              rrc->measurement.event4_config.timeToTrigger 	= event4_config.timeToTrigger;
+            }
+
+            char meas_event5_path[MAX_OPTNAME_SIZE*2 + 8];
+            sprintf(meas_event5_path,"%s.%s.%s", enbpath, ENB_CONFIG_STRING_MEAS, ENB_CONFIG_STRING_MEAS_EVENT5);
+            LOG_D(RRC, "enb_config::RCconfig_RRC() measurement event5 info, meas_event5_path: %s \n \n", meas_event5_path);
+            npar = config_get( MEAS_ENVENT5_Params,sizeof(MEAS_ENVENT5_Params)/sizeof(paramdef_t), meas_event5_path);
+                
+            if (npar == sizeof(MEAS_ENVENT5_Params)/sizeof(paramdef_t)) {
+              LOG_D(RRC, "threshold_RSRP %d \n", event5_config.threshold_RSRP);
+              LOG_D(RRC, "maxReportCells %d \n", event5_config.maxReportCells);
+              LOG_D(RRC, "reportInterval %d \n", event5_config.reportInterval);
+              LOG_D(RRC, "a3_Offset %d \n", event5_config.a3_Offset);
+              LOG_D(RRC, "hysteresis %d \n", event5_config.hysteresis);
+              LOG_D(RRC, "timeToTrigger %d \n", event5_config.timeToTrigger);
+            	
+              rrc->measurement.event5_config.threshold_RSRP 	= event5_config.threshold_RSRP;
+              rrc->measurement.event5_config.maxReportCells 	= event5_config.maxReportCells;
+              rrc->measurement.event5_config.reportInterval 	= event5_config.reportInterval;
+              rrc->measurement.event5_config.a3_Offset 		= event5_config.a3_Offset;
+              rrc->measurement.event5_config.hysteresis 		= event5_config.hysteresis;
+              rrc->measurement.event5_config.timeToTrigger 	= event5_config.timeToTrigger;
+            }
+
+            char meas_event6_path[MAX_OPTNAME_SIZE*2 + 8];
+            sprintf(meas_event6_path,"%s.%s.%s", enbpath, ENB_CONFIG_STRING_MEAS, ENB_CONFIG_STRING_MEAS_EVENT6);
+            LOG_D(RRC, "enb_config::RCconfig_RRC() measurement event6 info, meas_event6_path: %s \n \n", meas_event6_path);
+            npar = config_get( MEAS_ENVENT6_Params,sizeof(MEAS_ENVENT6_Params)/sizeof(paramdef_t), meas_event6_path);
+                
+            if (npar == sizeof(MEAS_ENVENT6_Params)/sizeof(paramdef_t)) {
+              LOG_D(RRC, "threshold_RSRP %d \n", event6_config.threshold_RSRP);
+              LOG_D(RRC, "maxReportCells %d \n", event6_config.maxReportCells);
+              LOG_D(RRC, "reportInterval %d \n", event6_config.reportInterval);
+              LOG_D(RRC, "a3_Offset %d \n", event6_config.a3_Offset);
+              LOG_D(RRC, "hysteresis %d \n", event6_config.hysteresis);
+              LOG_D(RRC, "timeToTrigger %d \n", event6_config.timeToTrigger);
+            	
+              rrc->measurement.event6_config.threshold_RSRP 	= event6_config.threshold_RSRP;
+              rrc->measurement.event6_config.maxReportCells 	= event6_config.maxReportCells;
+              rrc->measurement.event6_config.reportInterval 	= event6_config.reportInterval;
+              rrc->measurement.event6_config.a3_Offset 		= event6_config.a3_Offset;
+              rrc->measurement.event6_config.hysteresis 		= event6_config.hysteresis;
+              rrc->measurement.event6_config.timeToTrigger 	= event6_config.timeToTrigger;
+            }
           }
 
           if (!NODE_IS_DU(rrc->node_type)) {
