@@ -188,3 +188,11 @@ void nr_pdcp_ue_add_drb_pdcp_entity(nr_pdcp_ue_t *ue, int drb_id, nr_pdcp_entity
 
   ue->drb[drb_id] = entity;
 }
+
+int nr_pdcp_get_first_rnti(nr_pdcp_ue_manager_t *_m)
+{
+  nr_pdcp_ue_manager_internal_t *m = _m;
+  if (m->ue_count == 0)
+    return -1;
+  return m->ue_list[0]->rnti;
+}

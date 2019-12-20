@@ -55,4 +55,11 @@ void nr_pdcp_ue_add_srb_pdcp_entity(nr_pdcp_ue_t *ue, int srb_id,
 void nr_pdcp_ue_add_drb_pdcp_entity(nr_pdcp_ue_t *ue, int drb_id,
                                     nr_pdcp_entity_t *entity);
 
+/***********************************************************************/
+/* hacks                                                               */
+/***********************************************************************/
+
+/* returns -1 if no UE */
+int nr_pdcp_get_first_rnti(nr_pdcp_ue_manager_t *m);
+
 #endif /* _NR_PDCP_UE_MANAGER_H_ */

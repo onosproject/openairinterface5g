@@ -39,12 +39,133 @@ static uint64_t pdcp_optmask;
 /* rlc_data_req queue - begin                                               */
 /****************************************************************************/
 
+#include <pthread.h>
+
+/* NR PDCP and RLC both use "big locks". In some cases a thread may do
+ * lock(rlc) followed by lock(pdcp) (typically when running 'rx_sdu').
+ * Another thread may first do lock(pdcp) and then lock(rlc) (typically
+ * the GTP module calls 'pdcp_data_req' that, in a previous implementation
+ * was indirectly calling 'rlc_data_req' which does lock(rlc)).
+ * To avoid the resulting deadlock it is enough to ensure that a call
+ * to lock(pdcp) will never be followed by a call to lock(rlc). So,
+ * here we chose to have a separate thread that deals with rlc_data_req,
+ * out of the PDCP lock. Other solutions may be possible.
+ * So instead of calling 'rlc_data_req' directly we have a queue and a
+ * separate thread emptying it.
+ */
+
+typedef struct {
+  protocol_ctxt_t ctxt_pP;
+  srb_flag_t      srb_flagP;
+  MBMS_flag_t     MBMS_flagP;
+  rb_id_t         rb_idP;
+  mui_t           muiP;
+  confirm_t       confirmP;
+  sdu_size_t      sdu_sizeP;
+  mem_block_t     *sdu_pP;
+} rlc_data_req_queue_item;
+
+#define RLC_DATA_REQ_QUEUE_SIZE 10000
+
+typedef struct {
+  rlc_data_req_queue_item q[RLC_DATA_REQ_QUEUE_SIZE];
+  volatile int start;
+  volatile int length;
+  pthread_mutex_t m;
+  pthread_cond_t c;
+} rlc_data_req_queue;
+
+static rlc_data_req_queue q;
+
+static void *rlc_data_req_thread(void *_)
+{
+  int i;
+
+  while (1) {
+    if (pthread_mutex_lock(&q.m) != 0) abort();
+    while (q.length == 0)
+      if (pthread_cond_wait(&q.c, &q.m) != 0) abort();
+    i = q.start;
+    if (pthread_mutex_unlock(&q.m) != 0) abort();
+
+    rlc_data_req(&q.q[i].ctxt_pP,
+                 q.q[i].srb_flagP,
+                 q.q[i].MBMS_flagP,
+                 q.q[i].rb_idP,
+                 q.q[i].muiP,
+                 q.q[i].confirmP,
+                 q.q[i].sdu_sizeP,
+                 q.q[i].sdu_pP,
+                 NULL,
+                 NULL);
+
+    if (pthread_mutex_lock(&q.m) != 0) abort();
+
+    q.length--;
+    q.start = (q.start + 1) % RLC_DATA_REQ_QUEUE_SIZE;
+
+    if (pthread_cond_signal(&q.c) != 0) abort();
+    if (pthread_mutex_unlock(&q.m) != 0) abort();
+  }
+}
+
 static void init_nr_rlc_data_req_queue(void)
 {
+  pthread_t t;
+
+  pthread_mutex_init(&q.m, NULL);
+  pthread_cond_init(&q.c, NULL);
+
+  if (pthread_create(&t, NULL, rlc_data_req_thread, NULL) != 0) {
+    LOG_E(PDCP, "%s:%d:%s: fatal\n", __FILE__, __LINE__, __FUNCTION__);
+    exit(1);
+  }
+}
+
+static void enqueue_rlc_data_req(const protocol_ctxt_t *const ctxt_pP,
+                                 const srb_flag_t   srb_flagP,
+                                 const MBMS_flag_t  MBMS_flagP,
+                                 const rb_id_t      rb_idP,
+                                 const mui_t        muiP,
+                                 confirm_t    confirmP,
+                                 sdu_size_t   sdu_sizeP,
+                                 mem_block_t *sdu_pP,
+                                 void *_unused1, void *_unused2)
+{
+  int i;
+  int logged = 0;
+
+  if (pthread_mutex_lock(&q.m) != 0) abort();
+  while (q.length == RLC_DATA_REQ_QUEUE_SIZE) {
+    if (!logged) {
+      logged = 1;
+      LOG_W(PDCP, "%s: rlc_data_req queue is full\n", __FUNCTION__);
+    }
+    if (pthread_cond_wait(&q.c, &q.m) != 0) abort();
+  }
+
+  i = (q.start + q.length) % RLC_DATA_REQ_QUEUE_SIZE;
+  q.length++;
+
+  q.q[i].ctxt_pP    = *ctxt_pP;
+  q.q[i].srb_flagP  = srb_flagP;
+  q.q[i].MBMS_flagP = MBMS_flagP;
+  q.q[i].rb_idP     = rb_idP;
+  q.q[i].muiP       = muiP;
+  q.q[i].confirmP   = confirmP;
+  q.q[i].sdu_sizeP  = sdu_sizeP;
+  q.q[i].sdu_pP     = sdu_pP;
+
+  if (pthread_cond_signal(&q.c) != 0) abort();
+  if (pthread_mutex_unlock(&q.m) != 0) abort();
 }
 
 /****************************************************************************/
 /* rlc_data_req queue - end                                                 */
+/****************************************************************************/
+
+/****************************************************************************/
+/* hacks to be cleaned up at some point - begin                             */
 /****************************************************************************/
 
 #include "LAYER2/MAC/mac_extern.h"
@@ -145,6 +266,84 @@ void nr_ip_over_LTE_DRB_preconfiguration(void)
                  );
 }
 
+static void reblock_tun_socket(void)
+{
+  extern int nas_sock_fd[];
+  int f;
+
+  f = fcntl(nas_sock_fd[0], F_GETFL, 0);
+  f &= ~(O_NONBLOCK);
+  if (fcntl(nas_sock_fd[0], F_SETFL, f) == -1) {
+    LOG_E(PDCP, "reblock_tun_socket failed\n");
+    exit(1);
+  }
+}
+
+static void *enb_tun_read_thread(void *_)
+{
+  extern int nas_sock_fd[];
+  char rx_buf[NL_MAX_PAYLOAD];
+  int len;
+  int rnti;
+  protocol_ctxt_t ctxt;
+
+  int rb_id = 1;
+
+  while (1) {
+    len = read(nas_sock_fd[0], &rx_buf, NL_MAX_PAYLOAD);
+    if (len == -1) {
+      LOG_E(PDCP, "%s:%d:%s: fatal\n", __FILE__, __LINE__, __FUNCTION__);
+      exit(1);
+    }
+
+printf("\n\n\n########## nas_sock_fd read returns len %d\n", len);
+
+    nr_pdcp_manager_lock(nr_pdcp_ue_manager);
+    rnti = nr_pdcp_get_first_rnti(nr_pdcp_ue_manager);
+    nr_pdcp_manager_unlock(nr_pdcp_ue_manager);
+
+    if (rnti == -1) continue;
+
+    ctxt.module_id = 0;
+    ctxt.enb_flag = 1;
+    ctxt.instance = 0;
+    ctxt.frame = 0;
+    ctxt.subframe = 0;
+    ctxt.eNB_index = 0;
+    ctxt.configured = 1;
+    ctxt.brOption = 0;
+
+    ctxt.rnti = rnti;
+
+    pdcp_data_req(&ctxt, SRB_FLAG_NO, rb_id, RLC_MUI_UNDEFINED,
+                  RLC_SDU_CONFIRM_NO, len, (unsigned char *)rx_buf,
+                  PDCP_TRANSMISSION_MODE_DATA, NULL, NULL);
+  }
+
+  return NULL;
+}
+
+static void start_pdcp_tun_enb(void)
+{
+  pthread_t t;
+
+  reblock_tun_socket();
+
+  if (pthread_create(&t, NULL, enb_tun_read_thread, NULL) != 0) {
+    LOG_E(PDCP, "%s:%d:%s: fatal\n", __FILE__, __LINE__, __FUNCTION__);
+    exit(1);
+  }
+}
+
+static void start_pdcp_tun_ue(void)
+{
+  reblock_tun_socket();
+}
+
+/****************************************************************************/
+/* hacks to be cleaned up at some point - end                               */
+/****************************************************************************/
+
 int pdcp_fifo_flush_sdus(const protocol_ctxt_t *const ctxt_pP)
 {
   return 0;
@@ -152,7 +351,7 @@ int pdcp_fifo_flush_sdus(const protocol_ctxt_t *const ctxt_pP)
 
 void pdcp_layer_init(void)
 {
-  /* be sure to initialize only once */
+  /* hack: be sure to initialize only once */
   static pthread_mutex_t m = PTHREAD_MUTEX_INITIALIZER;
   static int initialized = 0;
   if (pthread_mutex_lock(&m) != 0) abort();
@@ -173,6 +372,16 @@ void pdcp_layer_init(void)
 
 uint64_t pdcp_module_init(uint64_t _pdcp_optmask)
 {
+  /* hack: be sure to initialize only once */
+  static pthread_mutex_t m = PTHREAD_MUTEX_INITIALIZER;
+  static int initialized = 0;
+  if (pthread_mutex_lock(&m) != 0) abort();
+  if (initialized) {
+    abort();
+  }
+  initialized = 1;
+  if (pthread_mutex_unlock(&m) != 0) abort();
+
 #if 0
   pdcp_optmask = _pdcp_optmask;
   return pdcp_optmask;
@@ -199,12 +408,15 @@ uint64_t pdcp_module_init(uint64_t _pdcp_optmask)
       if (IS_SOFTMODEM_NOS1)
           nas_config(1, 1, 2, "ue");
       LOG_I(PDCP, "UE pdcp will use tun interface\n");
+      start_pdcp_tun_ue();
     } else if(ENB_NAS_USE_TUN) {
       netlink_init_tun("enb",1);
       nas_config(1, 1, 1, "enb");
       LOG_I(PDCP, "ENB pdcp will use tun interface\n");
+      start_pdcp_tun_enb();
     } else {
       LOG_I(PDCP, "pdcp will use kernel modules\n");
+      abort();
       netlink_init();
     }
   }
@@ -219,6 +431,42 @@ static void deliver_sdu_drb(void *_ue, nr_pdcp_entity_t *entity,
 static void deliver_pdu_drb(void *_ue, nr_pdcp_entity_t *entity,
                             char *buf, int size, int sdu_id)
 {
+  nr_pdcp_ue_t *ue = _ue;
+  int rb_id;
+  protocol_ctxt_t ctxt;
+  int i;
+  mem_block_t *memblock;
+
+  for (i = 0; i < 5; i++) {
+    if (entity == ue->drb[i]) {
+      rb_id = i+1;
+      goto rb_found;
+    }
+  }
+
+  LOG_E(PDCP, "%s:%d:%s: fatal, no RB found for ue %d\n",
+        __FILE__, __LINE__, __FUNCTION__, ue->rnti);
+  exit(1);
+
+rb_found:
+  ctxt.module_id = 0;
+  ctxt.enb_flag = 1;
+  ctxt.instance = 0;
+  ctxt.frame = 0;
+  ctxt.subframe = 0;
+  ctxt.eNB_index = 0;
+  ctxt.configured = 1;
+  ctxt.brOption = 0;
+
+  ctxt.rnti = ue->rnti;
+
+  memblock = get_free_mem_block(size, __FUNCTION__);
+  memcpy(memblock->data, buf, size);
+
+printf("!!!!!!! deliver_pdu_drb (srb %d) calling rlc_data_req size %d: ", rb_id, size);
+//for (i = 0; i < size; i++) printf(" %2.2x", (unsigned char)memblock->data[i]);
+printf("\n");
+  enqueue_rlc_data_req(&ctxt, 0, MBMS_FLAG_NO, rb_id, sdu_id, 0, size, memblock, NULL, NULL);
 }
 
 boolean_t pdcp_data_ind(
@@ -287,7 +535,7 @@ static void add_drb_am(int rnti, struct LTE_DRB_ToAddMod *s)
 
   int drb_id = s->drb_Identity;
 
-printf("\n\n################# add drb %d\n\n\n", drb_id);
+printf("\n\n################# rnti %d add drb %d\n\n\n", rnti, drb_id);
 
   if (drb_id != 1) {
     LOG_E(PDCP, "%s:%d:%s: fatal, bad drb id %d\n",
@@ -404,6 +652,50 @@ void pdcp_config_set_security(const protocol_ctxt_t* const  ctxt_pP, pdcp_t *pdc
   TODO;
 }
 
+static boolean_t pdcp_data_req_drb(
+  protocol_ctxt_t  *ctxt_pP,
+  const rb_id_t rb_id,
+  const mui_t muiP,
+  const confirm_t confirmP,
+  const sdu_size_t sdu_buffer_size,
+  unsigned char *const sdu_buffer)
+{
+  nr_pdcp_ue_t *ue;
+  nr_pdcp_entity_t *rb;
+  int rnti = ctxt_pP->rnti;
+
+  if (ctxt_pP->module_id != 0 ||
+      ctxt_pP->enb_flag != 1 ||
+      ctxt_pP->instance != 0 ||
+      ctxt_pP->eNB_index != 0 /*||
+      ctxt_pP->configured != 1 ||
+      ctxt_pP->brOption != 0*/) {
+    LOG_E(PDCP, "%s:%d:%s: fatal\n", __FILE__, __LINE__, __FUNCTION__);
+    exit(1);
+  }
+
+  nr_pdcp_manager_lock(nr_pdcp_ue_manager);
+
+  ue = nr_pdcp_manager_get_ue(nr_pdcp_ue_manager, rnti);
+
+  if (rb_id < 1 || rb_id > 5)
+    rb = NULL;
+  else
+    rb = ue->drb[rb_id - 1];
+
+  if (rb == NULL) {
+    LOG_E(PDCP, "%s:%d:%s: fatal: no DRB found (rnti %d, rb_id %ld)\n",
+          __FILE__, __LINE__, __FUNCTION__, rnti, rb_id);
+    exit(1);
+  }
+
+  rb->recv_sdu(rb, (char *)sdu_buffer, sdu_buffer_size, muiP);
+
+  nr_pdcp_manager_unlock(nr_pdcp_ue_manager);
+
+  return 1;
+}
+
 boolean_t pdcp_data_req(
   protocol_ctxt_t  *ctxt_pP,
   const srb_flag_t srb_flagP,
@@ -419,8 +711,9 @@ boolean_t pdcp_data_req(
 #endif
   )
 {
-  TODO;
-  return 1;
+  if (srb_flagP) { TODO; }
+  return pdcp_data_req_drb(ctxt_pP, rb_id, muiP, confirmP, sdu_buffer_size,
+                           sdu_buffer);
 }
 
 void pdcp_set_pdcp_data_ind_func(pdcp_data_ind_func_t pdcp_data_ind)
