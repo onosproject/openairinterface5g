@@ -323,6 +323,50 @@ printf("\n\n\n########## nas_sock_fd read returns len %d\n", len);
   return NULL;
 }
 
+static void *ue_tun_read_thread(void *_)
+{
+  extern int nas_sock_fd[];
+  char rx_buf[NL_MAX_PAYLOAD];
+  int len;
+  int rnti;
+  protocol_ctxt_t ctxt;
+
+  int rb_id = 1;
+
+  while (1) {
+    len = read(nas_sock_fd[0], &rx_buf, NL_MAX_PAYLOAD);
+    if (len == -1) {
+      LOG_E(PDCP, "%s:%d:%s: fatal\n", __FILE__, __LINE__, __FUNCTION__);
+      exit(1);
+    }
+
+printf("\n\n\n########## nas_sock_fd read returns len %d\n", len);
+
+    nr_pdcp_manager_lock(nr_pdcp_ue_manager);
+    rnti = nr_pdcp_get_first_rnti(nr_pdcp_ue_manager);
+    nr_pdcp_manager_unlock(nr_pdcp_ue_manager);
+
+    if (rnti == -1) continue;
+
+    ctxt.module_id = 0;
+    ctxt.enb_flag = 0;
+    ctxt.instance = 0;
+    ctxt.frame = 0;
+    ctxt.subframe = 0;
+    ctxt.eNB_index = 0;
+    ctxt.configured = 1;
+    ctxt.brOption = 0;
+
+    ctxt.rnti = rnti;
+
+    pdcp_data_req(&ctxt, SRB_FLAG_NO, rb_id, RLC_MUI_UNDEFINED,
+                  RLC_SDU_CONFIRM_NO, len, (unsigned char *)rx_buf,
+                  PDCP_TRANSMISSION_MODE_DATA, NULL, NULL);
+  }
+
+  return NULL;
+}
+
 static void start_pdcp_tun_enb(void)
 {
   pthread_t t;
@@ -337,7 +381,14 @@ static void start_pdcp_tun_enb(void)
 
 static void start_pdcp_tun_ue(void)
 {
+  pthread_t t;
+
   reblock_tun_socket();
+
+  if (pthread_create(&t, NULL, ue_tun_read_thread, NULL) != 0) {
+    LOG_E(PDCP, "%s:%d:%s: fatal\n", __FILE__, __LINE__, __FUNCTION__);
+    exit(1);
+  }
 }
 
 /****************************************************************************/
@@ -712,12 +763,13 @@ static boolean_t pdcp_data_req_drb(
   const sdu_size_t sdu_buffer_size,
   unsigned char *const sdu_buffer)
 {
+printf("pdcp_data_req called size %d\n", sdu_buffer_size);
   nr_pdcp_ue_t *ue;
   nr_pdcp_entity_t *rb;
   int rnti = ctxt_pP->rnti;
 
   if (ctxt_pP->module_id != 0 ||
-      ctxt_pP->enb_flag != 1 ||
+      //ctxt_pP->enb_flag != 1 ||
       ctxt_pP->instance != 0 ||
       ctxt_pP->eNB_index != 0 /*||
       ctxt_pP->configured != 1 ||
