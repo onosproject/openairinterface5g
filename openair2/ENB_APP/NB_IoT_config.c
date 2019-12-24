@@ -30,13 +30,13 @@
 #include <string.h>
 #include <inttypes.h>
 
-#include "log.h"
-#include "log_extern.h"
+#include "common/utils/LOG/log.h"
+#include "common/utils/LOG/log_extern.h"
 #include "assertions.h"
 #include "intertask_interface.h"
 #include "s1ap_eNB.h"
 #include "sctp_eNB_task.h"
-#include "SystemInformationBlockType2.h"
+//#include "SystemInformationBlockType2.h"
 
 #include "PHY/phy_extern.h"
 #include "targets/ARCH/ETHERNET/USERSPACE/LIB/ethernet_lib.h"
@@ -47,6 +47,7 @@
 #include "L1_paramdef.h"
 #include "MACRLC_paramdef.h"
 #include "LAYER2/MAC/proto_NB_IoT.h"
+#include "PHY/INIT/defs_NB_IoT.h"
 
 
 void RCconfig_NbIoTL1(void) {
@@ -90,7 +91,7 @@ void RCconfig_NbIoTL1(void) {
     LOG_I(PHY,"No " NBIOT_L1LIST_CONFIG_STRING " configuration found");
   }
 }
-
+#if 0 //Ann
 void RCconfig_NbIoTmacrlc(void) {
   paramdef_t NbIoT_MacRLC_Params[] = MACRLCPARAMS_DESC;
   paramlist_def_t NbIoT_MacRLC_ParamList = {NBIOT_MACRLCLIST_CONFIG_STRING,NULL,0};
@@ -250,3 +251,4 @@ void RCConfig_NbIoT(RAN_CONTEXT_t *RC) {
   config_getlist( &NbIoT_L1ParamList,NULL,0, NULL);
   RC->nb_nb_iot_L1_inst = NbIoT_L1ParamList.numelt;
 }
+#endif //Ann

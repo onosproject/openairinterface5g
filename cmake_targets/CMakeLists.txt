@@ -1201,6 +1201,7 @@ set(PHY_SRC_COMMON
   ${OPENAIR1_DIR}/PHY/CODING/viterbi_lte.c
   ${OPENAIR1_DIR}/PHY/INIT/init_top.c
   ${OPENAIR1_DIR}/PHY/INIT/lte_parms.c
+  ${OPENAIR1_DIR}/PHY/INIT/lte_parms_NB_IoT.c
   ${OPENAIR1_DIR}/PHY/INIT/lte_param_init.c
   ${OPENAIR1_DIR}/PHY/TOOLS/cadd_vv.c
   ${OPENAIR1_DIR}/PHY/TOOLS/lte_dfts.c
@@ -1257,6 +1258,7 @@ set(PHY_SRC
 #  ${OPENAIR1_DIR}/PHY/LTE_ESTIMATION/lte_ul_channel_estimation.c
   ${OPENAIR1_DIR}/PHY/LTE_ESTIMATION/lte_eNB_measurements.c
   ${OPENAIR1_DIR}/PHY/INIT/lte_init.c
+  ${OPENAIR1_DIR}/PHY/INIT/lte_init_NB_IoT.c
   )
 
 set(PHY_SRC_RU
@@ -1510,6 +1512,7 @@ set (ENB_APP_SRC
   ${OPENAIR2_DIR}/ENB_APP/enb_config_SL.c
   ${OPENAIR2_DIR}/ENB_APP/enb_config_eMTC.c
   ${OPENAIR2_DIR}/ENB_APP/RRC_config_tools.c
+  ${OPENAIR2_DIR}/ENB_APP/NB_IoT_config.c
   )
 
 add_library(L2
@@ -2117,7 +2120,6 @@ add_executable(lte-softmodem
   ${OPENAIR_TARGETS}/RT/USER/lte-ru.c
   ${OPENAIR_TARGETS}/RT/USER/ru_control.c
   ${OPENAIR_TARGETS}/RT/USER/lte-softmodem.c
-  ${OPENAIR_TARGETS}/RT/USER/init_lte.c
   ${OPENAIR_TARGETS}/RT/USER/lte-softmodem-common.c
   ${OPENAIR2_DIR}/ENB_APP/NB_IoT_interface.c
   ${OPENAIR1_DIR}/SIMULATION/TOOLS/taus.c

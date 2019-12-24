@@ -635,174 +635,44 @@ int main( int argc, char **argv ) {
   }
 
   // init the parameters
-  for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
-
     if (UE_flag==1) {
-      frame_parms[CC_id]->nb_antennas_tx     = nb_antenna_tx;
-      frame_parms[CC_id]->nb_antennas_rx     = nb_antenna_rx;
-      frame_parms[CC_id]->nb_antenna_ports_eNB = 1; //initial value overwritten by initial sync later
-
-      LOG_I(PHY,"Set nb_rx_antenna %d , nb_tx_antenna %d \n",frame_parms[CC_id]->nb_antennas_rx, frame_parms[CC_id]->nb_antennas_tx);
 
 //#ifdef NB_IOT     /////////////// for NB-IoT testing  ///////////////////////////
-      frame_parms_NB_IoT[CC_id]->nb_antennas_tx     = nb_antenna_tx;
-      frame_parms_NB_IoT[CC_id]->nb_antennas_rx     = nb_antenna_rx;
-      frame_parms_NB_IoT[CC_id]->nb_antenna_ports_eNB = 1; //initial value overwritten by initial sync later
+      frame_parms_NB_IoT[0]->nb_antennas_tx     = nb_antenna_tx;
+      frame_parms_NB_IoT[0]->nb_antennas_rx     = nb_antenna_rx;
+      frame_parms_NB_IoT[0]->nb_antenna_ports_eNB = 1; //initial value overwritten by initial sync later
 
-      LOG_I(PHY,"[NB-IoT] Set nb_rx_antenna %d , nb_tx_antenna %d \n",frame_parms_NB_IoT[CC_id]->nb_antennas_rx, frame_parms_NB_IoT[CC_id]->nb_antennas_tx);
+      LOG_I(PHY,"[NB-IoT] Set nb_rx_antenna %d , nb_tx_antenna %d \n",frame_parms_NB_IoT[0]->nb_antennas_rx, frame_parms_NB_IoT[0]->nb_antennas_tx);
 
 //#endif     //////////////////////////// END //////////////////////////////////
     }
 
 
-    //XXXX we need to modify it for NB-IoT????
-    init_ul_hopping(frame_parms[CC_id]);
-    init_frame_parms(frame_parms[CC_id],1);
-    //   phy_init_top(frame_parms[CC_id]);
-    phy_init_lte_top(frame_parms[CC_id]);
-
-
-    // for testing
-    //XXXX we need to modify it for NB-IoT????
-    //init_ul_hopping(frame_parms[CC_id]);
-
    /////////////////////////////////////////////////////// NB-IoT //////////////////////////////////////////////////////// 
-    init_frame_parms_NB_IoT(frame_parms_NB_IoT[CC_id],1);
+    init_frame_parms_NB_IoT(frame_parms_NB_IoT[0],1);
     //   phy_init_top(frame_parms[CC_id]);
-    phy_init_lte_top_NB_IoT(frame_parms_NB_IoT[CC_id]);
+    phy_init_lte_top_NB_IoT(frame_parms_NB_IoT[0]);
     /////////////////////////////////////////////////////// END //////////////////////////////////////////////////////////
-
-  }
-
-
-
-    for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
-        //init prach for openair1 test
-
-        // prach_fmt = get_prach_fmt(frame_parms->prach_config_common.prach_ConfigInfo.prach_ConfigIndex, frame_parms->frame_type);
-        // N_ZC = (prach_fmt <4)?839:139;
-    }
 
     if (UE_flag==1) {
         NB_UE_INST=1;
         NB_INST=1;
 
-        PHY_vars_UE_g = malloc(sizeof(PHY_VARS_UE**));
-        PHY_vars_UE_g[0] = malloc(sizeof(PHY_VARS_UE*)*MAX_NUM_CCs);
-
-        for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
-
-            PHY_vars_UE_g[0][CC_id] = init_lte_UE(frame_parms[CC_id], 0,abstraction_flag);
-            UE[CC_id] = PHY_vars_UE_g[0][CC_id];
-            printf("PHY_vars_UE_g[0][%d] = %p\n",CC_id,UE[CC_id]);
-
-            if (phy_test==1)
-                UE[CC_id]->mac_enabled = 0;
-            else
-                UE[CC_id]->mac_enabled = 1;
-
-            if (UE[CC_id]->mac_enabled == 0) {  //set default UL parameters for testing mode
-                for (i=0; i<NUMBER_OF_CONNECTED_eNB_MAX; i++) {
-                    UE[CC_id]->pusch_config_dedicated[i].betaOffset_ACK_Index = beta_ACK;
-                    UE[CC_id]->pusch_config_dedicated[i].betaOffset_RI_Index  = beta_RI;
-                    UE[CC_id]->pusch_config_dedicated[i].betaOffset_CQI_Index = beta_CQI;
-
-                    UE[CC_id]->scheduling_request_config[i].sr_PUCCH_ResourceIndex = 0;
-                    UE[CC_id]->scheduling_request_config[i].sr_ConfigIndex = 7+(0%3);
-                    UE[CC_id]->scheduling_request_config[i].dsr_TransMax = sr_n4;
-                }
-            }
-
-            UE[CC_id]->UE_scan = UE_scan;
-            UE[CC_id]->UE_scan_carrier = UE_scan_carrier;
-            UE[CC_id]->mode    = mode;
-            printf("UE[%d]->mode = %d\n",CC_id,mode);
-
-            compute_prach_seq(&UE[CC_id]->frame_parms.prach_config_common,
-                              UE[CC_id]->frame_parms.frame_type,
-                              UE[CC_id]->X_u);
-
-            if (UE[CC_id]->mac_enabled == 1)
-            {
-                UE[CC_id]->pdcch_vars[0][0]->crnti = 0x1234;
-                UE[CC_id]->pdcch_vars[1][0]->crnti = 0x1234;
-            }
-            else
-            {
-                UE[CC_id]->pdcch_vars[0][0]->crnti = 0x1235;
-                UE[CC_id]->pdcch_vars[1][0]->crnti = 0x1235;
-            }
-
-            UE[CC_id]->rx_total_gain_dB =  (int)rx_gain[CC_id][0] + rx_gain_off;
-            UE[CC_id]->tx_power_max_dBm = tx_max_power[CC_id];
-
-            if (frame_parms[CC_id]->frame_type==FDD) {
-                UE[CC_id]->N_TA_offset = 0;
-            } else {
-                if (frame_parms[CC_id]->N_RB_DL == 100)
-                    UE[CC_id]->N_TA_offset = 624;
-                else if (frame_parms[CC_id]->N_RB_DL == 50)
-                    UE[CC_id]->N_TA_offset = 624/2;
-                else if (frame_parms[CC_id]->N_RB_DL == 25)
-                    UE[CC_id]->N_TA_offset = 624/4;
-            }
-
-        }
-
-        //  printf("tx_max_power = %d -> amp %d\n",tx_max_power,get_tx_amp(tx_max_poHwer,tx_max_power));
     } else {
-      /////////////////////////////////////////////////// this is eNB /////////////////////////////////////////////////////////////
-        PHY_vars_eNB_g = malloc(sizeof(PHY_VARS_eNB**)); //global PHY_vars --> is a matrix
-        PHY_vars_eNB_g[0] = malloc(sizeof(PHY_VARS_eNB*));
-
+//Ann
         ///////////////////////// for NB-IoT testing ////////////////////////
         PHY_vars_eNB_NB_IoT_g = malloc(sizeof(PHY_VARS_eNB_NB_IoT*)); //global PHY_vars --> is a matrix
         PHY_vars_eNB_NB_IoT_g[0] = malloc(sizeof(PHY_VARS_eNB_NB_IoT));
         ///////////////////////////// END //////////////////////////////////
-
-        for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
-          //we initialiaze DL/UL buffer and HARQ (inside the LTE_eNB_DLSCH)
-
-            PHY_vars_eNB_g[0][CC_id] = init_lte_eNB(frame_parms[CC_id],0,frame_parms[CC_id]->Nid_cell,node_function[CC_id],abstraction_flag);
 
             // for NB-IoT testing
              PHY_vars_eNB_NB_IoT_g[0][0] = init_lte_eNB_NB_IoT(frame_parms_NB_IoT[0],0,frame_parms_NB_IoT[0]->Nid_cell,node_function_NB_IoT[0],abstraction_flag);
 
             //this is a complementary function for just initialize manage NB_ioT stuff inside the PHY_Vars
 #ifdef NB_IOT
-            //init_lte_eNB_NB(PHY_vars_eNB_g[0][CC_id],frame_parms_NB_IoT[CC_id], 0, frame_parms_NB_IoT[CC_id]->Nid_cell,node_function[CC_id],abstraction_flag);
+            //init_lte_eNB_NB(PHY_vars_eNB_g[0][CC_id],frame_parms_NB_IoT[0], 0, frame_parms_NB_IoT[0]->Nid_cell,node_function[CC_id],abstraction_flag);
 #endif
 
-            PHY_vars_eNB_g[0][CC_id]->ue_dl_rb_alloc=0x1fff;
-            PHY_vars_eNB_g[0][CC_id]->target_ue_dl_mcs=target_dl_mcs;
-            PHY_vars_eNB_g[0][CC_id]->ue_ul_nb_rb=6;
-            PHY_vars_eNB_g[0][CC_id]->target_ue_ul_mcs=target_ul_mcs;
-            // initialization for phy-test
-            for (k=0; k<NUMBER_OF_UE_MAX; k++) {
-                PHY_vars_eNB_g[0][CC_id]->transmission_mode[k] = transmission_mode;
-                if (transmission_mode==7)
-                    lte_gold_ue_spec_port5(PHY_vars_eNB_g[0][CC_id]->lte_gold_uespec_port5_table[k],frame_parms[CC_id]->Nid_cell,0x1235+k);
-            }
-            if ((transmission_mode==1) || (transmission_mode==7)) {
-                for (j=0; j<frame_parms[CC_id]->nb_antennas_tx; j++)
-                    for (re=0; re<frame_parms[CC_id]->ofdm_symbol_size; re++)
-                        PHY_vars_eNB_g[0][CC_id]->common_vars.beam_weights[0][0][j][re] = 0x00007fff/frame_parms[CC_id]->nb_antennas_tx;
-            }
-
-            if (phy_test==1) PHY_vars_eNB_g[0][CC_id]->mac_enabled = 0;
-            else PHY_vars_eNB_g[0][CC_id]->mac_enabled = 1;
-
-            if (PHY_vars_eNB_g[0][CC_id]->mac_enabled == 0) { //set default parameters for testing mode
-                for (i=0; i<NUMBER_OF_UE_MAX; i++) {
-                    PHY_vars_eNB_g[0][CC_id]->pusch_config_dedicated[i].betaOffset_ACK_Index = beta_ACK;
-                    PHY_vars_eNB_g[0][CC_id]->pusch_config_dedicated[i].betaOffset_RI_Index  = beta_RI;
-                    PHY_vars_eNB_g[0][CC_id]->pusch_config_dedicated[i].betaOffset_CQI_Index = beta_CQI;
-
-                    PHY_vars_eNB_g[0][CC_id]->scheduling_request_config[i].sr_PUCCH_ResourceIndex = i;
-                    PHY_vars_eNB_g[0][CC_id]->scheduling_request_config[i].sr_ConfigIndex = 7+(i%3);
-                    PHY_vars_eNB_g[0][CC_id]->scheduling_request_config[i].dsr_TransMax = sr_n4;
-                }
-            }
 
             // for NB-IoT testing
 
@@ -821,25 +691,6 @@ int main( int argc, char **argv ) {
                 }
             }
 
-            // No need to do for  NB-IoT
-            compute_prach_seq(&PHY_vars_eNB_g[0][CC_id]->frame_parms.prach_config_common,
-                              PHY_vars_eNB_g[0][CC_id]->frame_parms.frame_type,
-                              PHY_vars_eNB_g[0][CC_id]->X_u);
-
-
-            PHY_vars_eNB_g[0][CC_id]->rx_total_gain_dB = (int)rx_gain[CC_id][0];
-
-            if (frame_parms[CC_id]->frame_type==FDD) {
-                PHY_vars_eNB_g[0][CC_id]->N_TA_offset = 0;
-            } else {
-                if (frame_parms[CC_id]->N_RB_DL == 100)
-                    PHY_vars_eNB_g[0][CC_id]->N_TA_offset = 624;
-                else if (frame_parms[CC_id]->N_RB_DL == 50)
-                    PHY_vars_eNB_g[0][CC_id]->N_TA_offset = 624/2;
-                else if (frame_parms[CC_id]->N_RB_DL == 25)
-                    PHY_vars_eNB_g[0][CC_id]->N_TA_offset = 624/4;
-            }
-
             // for NB-IoT testing 
 
             PHY_vars_eNB_NB_IoT_g[0][0]->rx_total_gain_dB = (int)rx_gain[0][0];
@@ -855,14 +706,11 @@ int main( int argc, char **argv ) {
                     PHY_vars_eNB_NB_IoT_g[0][0]->N_TA_offset = 624/4;
             }
 
-        }
-
-
         NB_eNB_INST=1;
         NB_INST=1;
+        }
 
-    }
-
+        
 
   if (RC.nb_inst > 0 && NODE_IS_CU(node_type)) {
     protocol_ctxt_t ctxt;

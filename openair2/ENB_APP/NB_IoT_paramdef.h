@@ -31,14 +31,15 @@
  */
 
 #include "common/config/config_paramdesc.h"
-#include "SystemInformationBlockType2.h"
-#include "DL-GapConfig-NB-r13.h"
-#include "NPRACH-Parameters-NB-r13.h"
-#include "PowerRampingParameters.h"		  
-#include "BCCH-Config-NB-r13.h"
-#include "PCCH-Config-NB-r13.h"
-#include "ACK-NACK-NumRepetitions-NB-r13.h"
-#include "TDD-Config.h"
+#if 0 //Ann
+#include "LTE_SystemInformationBlockType2.h"
+#include "LTE_DL-GapConfig-NB-r13.h"
+#include "LTE_NPRACH-Parameters-NB-r13.h"
+#include "LTE_PowerRampingParameters.h"		  
+#include "LTE_BCCH-Config-NB-r13.h"
+#include "LTE_PCCH-Config-NB-r13.h"
+#include "LTE_ACK-NACK-NumRepetitions-NB-r13.h"
+#include "LTE_TDD-Config.h"
 
 
 
@@ -393,8 +394,7 @@
 /*-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 /* NB IoT MACRLC configuration list section name   */
 #define NBIOT_MACRLCLIST_CONFIG_STRING                          "NB-IoT_MACRLCs"
-
-
+#endif //Ann
 /*-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 /* NB IoT L1 configuration list section name   */
 #define NBIOT_L1LIST_CONFIG_STRING                          "NB-IoT_L1s"
