@@ -1115,7 +1115,7 @@ uint8_t do_RRCConnectionSetup_NB_IoT(
  //*periodicBSR_Timer = 2; // PeriodicBSR_Timer_NB_r13_pp8
 
  //logicalChannelSR_Config = CALLOC(1,sizeof(*logicalChannelSR_Config));
- mac_main_config_NB_IoT->choice.explicitValue_r13.logicalChannelSR_Config_r13->choice.setup.logicalChannelSR_ProhibitTimer_r13 = 4;//MAC_MainConfig_NB_r13__logicalChannelSR_Config_r13__setup__logicalChannelSR_ProhibitTimer_r13_pp8
+ mac_main_config_NB_IoT->choice.explicitValue_r13.logicalChannelSR_Config_r13->choice.setup.logicalChannelSR_ProhibitTimer_r13 = 3;//MAC_MainConfig_NB_r13__logicalChannelSR_Config_r13__setup__logicalChannelSR_ProhibitTimer_r13_pp8
  mac_main_config_NB_IoT->choice.explicitValue_r13.logicalChannelSR_Config_r13->present = MAC_MainConfig_NB_r13__logicalChannelSR_Config_r13_PR_setup;
 
  //ul_SCH_Config = CALLOC(1,sizeof(*ul_SCH_Config));

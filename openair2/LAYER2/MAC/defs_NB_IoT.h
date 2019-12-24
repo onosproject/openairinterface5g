@@ -182,6 +182,7 @@ typedef struct {
   /*Downlink information*/
 
   DLSCH_PDU_NB_IoT Security_pdu;
+  DLSCH_PDU_NB_IoT Attach_pdu;
 
   /// DLSCH pdu
   DLSCH_PDU_NB_IoT DLSCH_pdu;

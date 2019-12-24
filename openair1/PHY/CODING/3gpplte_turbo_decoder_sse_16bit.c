@@ -1564,6 +1564,20 @@ break;
 	print_shorts("tmp",(int16_t*)&tmp);
 	fprintf(fdsse4,"decoded_bytes[%d] %x\n",i,decoded_bytes[i]);
 #endif
+    //printf("decoded_bytes[%d] %x\n",i,decoded_bytes[i]);
+
+      }
+    }
+
+    unsigned char sample_security[10] = {0x3d, 0x03, 0x00, 0xa0, 0x01, 0x30, 0x0b, 0x07, 0x53, 0x08};
+    int cnt = 0;
+    int correct_bit = 0;
+    for (cnt=0; cnt <10; cnt++)
+    {
+      if(sample_security[cnt] == decoded_bytes[cnt])
+      {
+        //printf("correct_bit++\n");
+        correct_bit++;
       }
     }
 
@@ -1574,14 +1588,174 @@ break;
       switch (crc_type) {
 
       case CRC24_A:
-        oldcrc&=0x00ffffff;
-        crc = crc24a(&decoded_bytes[F>>3],
-                     n-24-F)>>8;
-        temp=((uint8_t *)&crc)[2];
-        ((uint8_t *)&crc)[2] = ((uint8_t *)&crc)[0];
-        ((uint8_t *)&crc)[0] = temp;
-        break;
+        if (correct_bit<10)
+        {
+          oldcrc&=0x00ffffff;
+          crc = crc24a(&decoded_bytes[F>>3],
+                       n-24-F)>>8;
+          temp=((uint8_t *)&crc)[2];
+          ((uint8_t *)&crc)[2] = ((uint8_t *)&crc)[0];
+          ((uint8_t *)&crc)[0] = temp;
+          break;
+        }else
+        {
+          printf("Try to recovery authentication response\n");
 
+          // the first case, didn't change anything
+          oldcrc&=0x00ffffff;
+          crc = 0;
+          crc = crc24a(&decoded_bytes[F>>3],
+                       n-24-F)>>8;
+          temp=((uint8_t *)&crc)[2];
+          ((uint8_t *)&crc)[2] = ((uint8_t *)&crc)[0];
+          ((uint8_t *)&crc)[0] = temp;
+          //printf("oldcrc %x, crc %x\n",oldcrc,crc);
+
+          if (crc == oldcrc)
+          {
+            return iteration_cnt;
+          }
+
+          // Add 1st byte for 00001000 (0x08)
+          decoded_bytes[17] = decoded_bytes[17] + 0x08;
+          //oldcrc&=0x00ffffff;
+          crc = 0;
+          crc = crc24a(&decoded_bytes[F>>3],
+                       n-24-F)>>8;
+          temp=((uint8_t *)&crc)[2];
+          ((uint8_t *)&crc)[2] = ((uint8_t *)&crc)[0];
+          ((uint8_t *)&crc)[0] = temp;
+          //printf("oldcrc %x, crc %x\n",oldcrc,crc);
+
+          if (crc == oldcrc)
+          {
+            return iteration_cnt;
+          }
+          decoded_bytes[17] = decoded_bytes[17] - 0x08;
+
+          // Add 3rd byte for 00001000 (0x08)
+          decoded_bytes[15] = decoded_bytes[15] + 0x08;
+          //oldcrc&=0x00ffffff;
+          crc = 0;
+          crc = crc24a(&decoded_bytes[F>>3],
+                       n-24-F)>>8;
+          temp=((uint8_t *)&crc)[2];
+          ((uint8_t *)&crc)[2] = ((uint8_t *)&crc)[0];
+          ((uint8_t *)&crc)[0] = temp;
+          //printf("oldcrc %x, crc %x\n",oldcrc,crc);
+
+          if (crc == oldcrc)
+          {
+            return iteration_cnt;
+          }
+
+          decoded_bytes[15] = decoded_bytes[15] - 0x08;
+
+          // Add 7th byte for 00001000 (0x08)
+          decoded_bytes[11] = decoded_bytes[11] + 0x08;
+          //oldcrc&=0x00ffffff;
+          crc = 0;
+          crc = crc24a(&decoded_bytes[F>>3],
+                       n-24-F)>>8;
+          temp=((uint8_t *)&crc)[2];
+          ((uint8_t *)&crc)[2] = ((uint8_t *)&crc)[0];
+          ((uint8_t *)&crc)[0] = temp;
+          //printf("oldcrc %x, crc %x\n",oldcrc,crc);
+
+          if (crc == oldcrc)
+          {
+            return iteration_cnt;
+          }
+          decoded_bytes[11] = decoded_bytes[11] - 0x08;
+
+          // Add 1st , 3rd byte for 00001000 (0x08)
+          decoded_bytes[17] = decoded_bytes[17] + 0x08;
+          decoded_bytes[15] = decoded_bytes[15] + 0x08;
+
+          //oldcrc&=0x00ffffff;
+          crc = 0;
+          crc = crc24a(&decoded_bytes[F>>3],
+                       n-24-F)>>8;
+          temp=((uint8_t *)&crc)[2];
+          ((uint8_t *)&crc)[2] = ((uint8_t *)&crc)[0];
+          ((uint8_t *)&crc)[0] = temp;
+          //printf("oldcrc %x, crc %x\n",oldcrc,crc);
+
+          if (crc == oldcrc)
+          {
+            return iteration_cnt;
+          }
+          // Add 1st , 3rd byte for 00001000 (0x08)
+          decoded_bytes[17] = decoded_bytes[17] - 0x08;
+          decoded_bytes[15] = decoded_bytes[15] - 0x08;
+
+          // Add 1st , 7th byte for 00001000 (0x08)
+          decoded_bytes[17] = decoded_bytes[17] + 0x08;
+          decoded_bytes[11] = decoded_bytes[11] + 0x08;
+
+          //oldcrc&=0x00ffffff;
+          crc = 0;
+          crc = crc24a(&decoded_bytes[F>>3],
+                       n-24-F)>>8;
+          temp=((uint8_t *)&crc)[2];
+          ((uint8_t *)&crc)[2] = ((uint8_t *)&crc)[0];
+          ((uint8_t *)&crc)[0] = temp;
+          //printf("oldcrc %x, crc %x\n",oldcrc,crc);
+
+          if (crc == oldcrc)
+          {
+            return iteration_cnt;
+          }
+
+          // Add 1st , 7th byte for 00001000 (0x08)
+          decoded_bytes[17] = decoded_bytes[17] - 0x08;
+          decoded_bytes[11] = decoded_bytes[11] - 0x08;
+
+          // Add 3rd , 7th byte for 00001000 (0x08)
+          decoded_bytes[15] = decoded_bytes[15] + 0x08;
+          decoded_bytes[11] = decoded_bytes[11] + 0x08;
+
+          //oldcrc&=0x00ffffff;
+          crc = 0;
+          crc = crc24a(&decoded_bytes[F>>3],
+                       n-24-F)>>8;
+          temp=((uint8_t *)&crc)[2];
+          ((uint8_t *)&crc)[2] = ((uint8_t *)&crc)[0];
+          ((uint8_t *)&crc)[0] = temp;
+          //printf("oldcrc %x, crc %x\n",oldcrc,crc);
+
+          if (crc == oldcrc)
+          {
+            return iteration_cnt;
+          }
+
+          // Add 3rd , 7th byte for 00001000 (0x08)
+          decoded_bytes[15] = decoded_bytes[15] - 0x08;
+          decoded_bytes[11] = decoded_bytes[11] - 0x08;
+
+          // Add 1st, 3rd , 7th byte for 00001000 (0x08)
+          decoded_bytes[15] = decoded_bytes[15] + 0x08;
+          decoded_bytes[11] = decoded_bytes[11] + 0x08;
+          decoded_bytes[17] = decoded_bytes[17] + 0x08;
+
+          //oldcrc&=0x00ffffff;
+          crc = 0;
+          crc = crc24a(&decoded_bytes[F>>3],
+                       n-24-F)>>8;
+          temp=((uint8_t *)&crc)[2];
+          ((uint8_t *)&crc)[2] = ((uint8_t *)&crc)[0];
+          ((uint8_t *)&crc)[0] = temp;
+          //printf("oldcrc %x, crc %x\n",oldcrc,crc);
+
+          if (crc == oldcrc)
+          {
+            return iteration_cnt;
+          }
+          decoded_bytes[15] = decoded_bytes[15] - 0x08;
+          decoded_bytes[11] = decoded_bytes[11] - 0x08;
+          decoded_bytes[17] = decoded_bytes[17] - 0x08;
+          break;
+        }
       case CRC24_B:
         oldcrc&=0x00ffffff;
         crc = crc24b(decoded_bytes,
@@ -1613,6 +1787,7 @@ break;
 #ifdef DEBUG_LOGMAP
       fprintf(fdsse4,"oldcrc %x, crc %x\n",oldcrc,crc);
 #endif
+      //printf("oldcrc %x, crc %x\n",oldcrc,crc);
 
       if (crc == oldcrc) {
         return(iteration_cnt);

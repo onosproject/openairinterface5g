@@ -401,7 +401,7 @@ int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB      *eNB,
       DCI_flip[i] = 0x0;
     }
 
-    DCI_flip[0] = (type << 7) | (orderIndicator << 6) | (Sched_delay<<2) | ResAssign ;
+    DCI_flip[0] = (type << 7) | (orderIndicator << 6) | (Sched_delay<<3) | ResAssign ;
     DCI_flip[1] = (mcs << 4) | RepNum;
     DCI_flip[2] = (ndi << 7) | (HARQackRes << 3) | (DCIRep <<1);
     //DCI_flip[0]        = 129;

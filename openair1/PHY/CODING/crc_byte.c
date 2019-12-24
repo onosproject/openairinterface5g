@@ -116,7 +116,7 @@ crc24a (unsigned char * inptr, int bitlen)
   resbit = (bitlen % 8);
 
   while (octetlen-- > 0) {
-    //    printf("in %x => crc %x\n",crc,*inptr);
+    //printf("in %x => crc %x\n",crc,*inptr);
     crc = (crc << 8) ^ crc24aTable[(*inptr++) ^ (crc >> 24)];
   }
 

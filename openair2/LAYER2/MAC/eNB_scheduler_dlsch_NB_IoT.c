@@ -32,6 +32,8 @@
 #include "extern_NB_IoT.h"   
 
 int Security_flag = 0;
+int Attach_flag = 0;
+
 
 uint8_t from_R_dl_to_idx(uint8_t R)
 {
@@ -111,7 +113,7 @@ int schedule_DL_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_inst, UE_
 #if 1
 	if(UE_info->HARQ_round==0)
 	{
-		if (Security_flag == 0)
+		if (Security_flag == 0 & Attach_flag == 0 )
 		{
 		//Get RLC status	
 		rlc_status = mac_rlc_status_ind(
@@ -204,7 +206,7 @@ int schedule_DL_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_inst, UE_
             printf("\n");
 
 			}
-			else
+			else if (Security_flag == 1)
 			{
 				memcpy(UE_info->DLSCH_pdu.payload,UE_info->Security_pdu.payload,UE_info->Security_pdu.pdu_size);
 				UE_info->DLSCH_pdu_size= UE_info->Security_pdu.pdu_size;
@@ -214,10 +216,7 @@ int schedule_DL_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_inst, UE_
 					LOG_D(MAC,"[%04d][DLSchedulerUSS][Fail] No data in DCCH0_NB_IoT\n", mac_inst->current_subframe);
 					return -1;
 				}
-				if(data_size>127)
-				{
-					subheader_length=3;
-				}
+
 				if(TBS > data_size) // control and data
 				{
 					TBS = get_tbs(data_size, I_tbs, &I_sf);
@@ -232,13 +231,45 @@ int schedule_DL_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_inst, UE_
             	}
             	printf("\n");
 
+			}else if (Attach_flag == 1)
+			{
+				memcpy(UE_info->DLSCH_pdu.payload,UE_info->Attach_pdu.payload,UE_info->Attach_pdu.pdu_size);
+				UE_info->DLSCH_pdu_size= UE_info->Attach_pdu.pdu_size;
+				data_size = UE_info->DLSCH_pdu_size;
+				if(data_size == 0)
+				{
+					LOG_D(MAC,"[%04d][DLSchedulerUSS][Fail] No data in DCCH0_NB_IoT\n", mac_inst->current_subframe);
+					return -1;
+				}
+
+				if(TBS >= data_size) // control and data
+				{
+					TBS = get_tbs(data_size, I_tbs, &I_sf);
+					LOG_I(MAC,"[%04d][DLSchedulerUSS] TBS change to %d because data size is smaller than previous TBS\n", mac_inst->current_subframe, TBS);
+				}
+				printf("print the MAC DATA PDU including length payload, we have header %d byte \n",data_size);
+            	//int y;
+            	for (y=0;y<TBS;y++)
+            	{
+            		//for (y=0;y<payload_offset+mac_sdu_size2;y++){
+            		printf("%02x ",UE_info->DLSCH_pdu.payload[y]);
+            	}
+            	printf("\n");				
 			}
 
 		    if (rlc_data_pdu_size == 20 && Security_flag == 0)
 		    {
-		    	memcpy(UE_info->Security_pdu.payload,UE_info->DLSCH_pdu.payload,data_size);
-		    	UE_info->Security_pdu.pdu_size = data_size;
+		    	memcpy(UE_info->Security_pdu.payload,UE_info->DLSCH_pdu.payload,TBS);
+		    	UE_info->Security_pdu.pdu_size = TBS;
 		    	Security_flag = 1;
+		    	return -1;
+		    }
+
+		   	if (rlc_data_pdu_size == 73 && Attach_flag == 0)
+		    {
+		    	memcpy(UE_info->Attach_pdu.payload,UE_info->DLSCH_pdu.payload,TBS);
+		    	UE_info->Attach_pdu.pdu_size = TBS;
+		    	Attach_flag = 1;
 		    	return -1;
 		    }
 
@@ -290,7 +321,7 @@ int schedule_DL_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_inst, UE_
 			//LOG_D(MAC,"[%04d][DLSchedulerUSS] Require total %d DL SF Rep %d\n", n_sf*UE_sched_ctrl_info->R_dl, UE_sched_ctrl_info->R_dl);
 			//Check have enough NPDSCH resource or not
 			//loop 8 scheduling delay index
-			for(I_delay=0;I_delay<8;++I_delay)
+			for(I_delay=0;I_delay<1;++I_delay)
 			{
 		        if(search_space_end_sf<NPDCCH_info->sf_end+get_scheduling_delay(I_delay, UE_info->R_max)+5)
 		        {
@@ -361,6 +392,8 @@ int schedule_DL_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_inst, UE_
 
 		                if (Security_flag == 1)
 		                	Security_flag = 0;
+		               	if (Attach_flag == 1)
+		                	Attach_flag = 0;
 		                LOG_I(MAC,"[%04d][DLSchedulerUSS][%d][Success] Complete scheduling with data size %d\n", mac_inst->current_subframe, UE_info->rnti, data_size);
 		                //LOG_D(MAC,"[%04d][DLSchedulerUSS] RNTI %d\n", mac_inst->current_subframe, UE_info->rnti);
 		                LOG_I(MAC,"[%04d][DLSchedulerUSS][%d][Success] Allocate NPDCCH subframe %d to subframe %d candidate index %d\n", mac_inst->current_subframe, UE_info->rnti, NPDCCH_info->sf_start, NPDCCH_info->sf_end, cdd_num);
@@ -671,7 +704,7 @@ void fill_DCI_N1(DCIFormatN1_t *DCI_N1, UE_TEMPLATE_NB_IoT *UE_info, UE_SCHED_CT
 	DCI_N1->HARQackRes = UE_sched_ctrl_info->dci_n1_index_ack_nack;
 	//DCI_N1->DCIRep = 3-UE_info->R_max/UE_info->R_dci/2;
 	DCI_N1->DCIRep=get_DCI_REP(UE_sched_ctrl_info->R_dci, UE_info->R_max);
-	LOG_D(MAC,"[fill_DCI_N1] Type %d order %d I_delay %d I_SF %d I_mcs %d I_rep %d I_harq %d I_dci %d\n", DCI_N1->type, DCI_N1->orderIndicator, DCI_N1->Scheddly, DCI_N1->ResAssign, DCI_N1->mcs, DCI_N1->RepNum, DCI_N1->HARQackRes, DCI_N1->DCIRep);
+	LOG_I(MAC,"[fill_DCI_N1] Type %d order %d I_delay %d I_SF %d I_mcs %d I_rep %d I_harq %d I_dci %d\n", DCI_N1->type, DCI_N1->orderIndicator, DCI_N1->Scheddly, DCI_N1->ResAssign, DCI_N1->mcs, DCI_N1->RepNum, DCI_N1->HARQackRes, DCI_N1->DCIRep);
 }
 	
 
