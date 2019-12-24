@@ -316,7 +316,18 @@ static int trx_usrp_start(openair0_device *device) {
     uhd::stream_cmd_t cmd(uhd::stream_cmd_t::STREAM_MODE_START_CONTINUOUS);
     LOG_I(PHY,"Time in secs now: %llu \n", s->usrp->get_time_now().to_ticks(s->sample_rate));
     LOG_I(PHY,"Time in secs last pps: %llu \n", s->usrp->get_time_last_pps().to_ticks(s->sample_rate));
+    struct timespec req;
+    req.tv_sec = 0;
+    req.tv_nsec = 1 * 1000;
 
+    nanosleep(&req, NULL);
+    const uhd::time_spec_t last_pps_time = s->usrp->get_time_last_pps();
+    while (last_pps_time == s->usrp->get_time_last_pps()){
+        //nanosleep(&req, NULL);
+    }
+    // This command will be processed fairly soon after the last PPS edge:
+    s->usrp->set_time_next_pps(uhd::time_spec_t(0.0)); 
+    
     if (s->use_gps == 1 || device->openair0_cfg[0].time_source == external) {
       s->wait_for_first_pps = 1;
       cmd.time_spec = s->usrp->get_time_last_pps() + uhd::time_spec_t(1.0);
@@ -609,7 +620,17 @@ static int trx_usrp_read(openair0_device *device, openair0_timestamp *ptimestamp
         samples_received = s->rx_stream->recv(buff_ptrs, nsamps, s->rx_md);
       } else {
         // receive a single channel (e.g. from connector RF A)
-        samples_received = s->rx_stream->recv(buff[0], nsamps, s->rx_md);
+        samples_received=0;
+        while (samples_received != nsamps) {
+          // receive a single channel (e.g. from connector RF A)
+          samples_received += s->rx_stream->recv(buff[0], nsamps, s->rx_md);
+          if  ((s->wait_for_first_pps == 0) && (s->rx_md.error_code!=uhd::rx_metadata_t::ERROR_CODE_NONE))
+            break;
+
+          if ((s->wait_for_first_pps == 1) && (samples_received != nsamps)) {
+            printf("sleep...\n"); //usleep(100);
+          }
+        }
       }
     }
 
@@ -1112,8 +1133,9 @@ extern "C" {
         s->usrp->set_clock_source("internal");
         printf("Setting clock source to internal\n");
       }
-      else {
+      else if (openair0_cfg[0].clock_source == external) {
         s->usrp->set_clock_source("external");
+        s->usrp->set_time_source("external");
         printf("Setting clock source to external\n");
       }
       if (device->type==USRP_X300_DEV) {
