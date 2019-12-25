@@ -36,7 +36,7 @@
 #include "common/config/config_userapi.h"
 #include "PHY/TOOLS/lte_phy_scope.h"
 #include "targets/RT/USER/stats.h"
-#include "PHY/phy_vars.h"
+#include "PHY/phy_vars_ue.h"
 // current status is that every UE has a DL scope for a SINGLE eNB (eNB_id=0)
 // at eNB 0, an UL scope for every UE
 FD_lte_phy_scope_ue  *form_ue[NUMBER_OF_UE_MAX];
