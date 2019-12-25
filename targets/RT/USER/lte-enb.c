@@ -867,9 +867,9 @@ void init_eNB_proc(int inst) {
   pthread_attr_t *attr_prach_br=NULL;
 #endif
   LOG_I(PHY,"%s(inst:%d) RC.nb_CC[inst]:%d \n",__FUNCTION__,inst,RC.nb_CC[inst]);
-    eNBs.eNB_NB_IoT = RC.L1_NB_IoT[inst];//Ann
+    eNBs.eNB_NB_IoT =&RC.L1_NB_IoT[inst];//Ann
   for (CC_id=0; CC_id<RC.nb_CC[inst]; CC_id++) {
-    eNBs.eNB = RC.eNB[inst][CC_id];
+    eNBs.eNB = &RC.eNB[inst][CC_id];
     
 #ifndef OCP_FRAMEWORK
     LOG_I(PHY,"Initializing eNB processes instance:%d CC_id %d \n",inst,CC_id);
