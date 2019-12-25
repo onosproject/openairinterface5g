@@ -100,10 +100,7 @@ int schedule_UL_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst,UE_TEMPLATE_NB_IoT *UE_info
 
             mcs = mapped_mcs[UE_info->CE_level][mappedMcsIndex];
 
-            if ((UE_state_machine == rach_for_next) && (UE_info->ul_total_buffer==22))
-            {
-              mcs = 6;
-            }
+
 
             //mcs = 2;
             while((TBS<UE_info->ul_total_buffer)&&(Iru<=7))
@@ -159,7 +156,7 @@ int schedule_UL_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst,UE_TEMPLATE_NB_IoT *UE_info
                       UE_sched_ctrl_info->NPUSCH_sf_start=NPUSCH_info->sf_start;
                       //UE_sched_ctrl_info->resent_flag = 1;
                       LOG_N(MAC,"Key resent \n");
-                                          UE_sched_ctrl_info->dci_n0_index_ndi=1;
+                                          UE_sched_ctrl_info->dci_n0_index_ndi=0;
 
                     }else
                     {
@@ -260,7 +257,7 @@ void rx_sdu_NB_IoT(module_id_t module_id, int CC_id, frame_t frame, sub_frame_t 
                 PHR = ((payload_ptr[0] >> 5) & 0x01)*2+((payload_ptr[0]>>4) & 0x01);
                 DVI_index = (payload_ptr[0] >>3 & 0x01)*8+ (payload_ptr[0] >>2 & 0x01)*4 + (payload_ptr[0] >>1 & 0x01)*2 +(payload_ptr[0] >>0 & 0x01);
                 ul_total_buffer = DV_table[DVI_index];
-                LOG_D(MAC,"PHR = %d, ul_total_buffer = %d\n",PHR,ul_total_buffer);
+                LOG_I(MAC,"PHR = %d, ul_total_buffer = %d\n",PHR,ul_total_buffer);
                 // go to payload
                 payload_ptr+=1; 
 		            // Note that the first 6 byte (48 bits) of this CCCH SDU should be encoded in the MSG4 for contention resolution 
@@ -310,7 +307,7 @@ void rx_sdu_NB_IoT(module_id_t module_id, int CC_id, frame_t frame, sub_frame_t 
                     //UE_info->direction = 1; //1 for DL scheduler
                     LOG_I(MAC,"After receive Msg5, change the UE scheduling direction to DL\n");
                   }
-                }else if (UE_state_machine == rach_for_auth_rsp)
+                }else if (UE_state_machine == rach_for_auth_rsp || UE_state_machine == rach_for_TAU)
                 {
                   LOG_N(MAC,"Here we are for the DCI N0 generating \n");
                   if (UE_info != NULL)

@@ -5,6 +5,7 @@
 int tmp = 0;
 //int block_rach = 0;
 int first_msg4 = 0;
+int rach_count = 0;
 
 void simulate_preamble(UL_IND_NB_IoT_t *UL_INFO, int CE, int sc)
 {
@@ -118,6 +119,22 @@ void UL_indication_NB_IoT(UL_IND_NB_IoT_t *UL_INFO)
                       );
           //block_rach = 2;
 
+        }else if (UE_state_machine == rach_for_next || UE_state_machine == rach_for_TAU)
+        {
+          rach_count++;
+          if (rach_count == 4)
+          {
+          LOG_N(MAC,"It is the third time that this UE try to rach\n");
+                    init_RA_NB_IoT(mac_inst,
+                      (UL_INFO->nrach_ind.nrach_pdu_list+i)->nrach_indication_rel13.initial_sc,
+                      (UL_INFO->nrach_ind.nrach_pdu_list+i)->nrach_indication_rel13.nrach_ce_level,
+                      UL_INFO->frame,
+                      //timing_offset = Timing_advance * 16
+                      (UL_INFO->nrach_ind.nrach_pdu_list+i)->nrach_indication_rel13.timing_advance*16
+                      );
+
+          UE_state_machine = rach_for_TAU;
+          }
         }
       }
     }

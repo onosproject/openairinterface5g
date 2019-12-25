@@ -1682,7 +1682,7 @@ uint32_t  turbo_decoding_NB_IoT(PHY_VARS_eNB           *eNB,
 
                   if (ulsch_harq->b[14] == 0x00 && ulsch_harq->b[15] == 0x07 && ulsch_harq->b[16] == 0x5e)
                   {
-                    printf("try to recovery Security mode complete, show the 11 th byte : %02x \n",ulsch_harq->b[11]);
+                    printf("Try to recovery Security mode complete, show the 11 th byte : %02x \n",ulsch_harq->b[11]);
                     //ulsch_harq->b[11] = ulsch_harq->b[11] + 0x08;
                     ulsch_harq->b[17] = 0x00;
                     fill_crc_indication_NB_IoT(eNB,0,rx_frame,rx_subframe,1); // indicate ACK to MAC

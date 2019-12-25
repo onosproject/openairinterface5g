@@ -103,7 +103,8 @@ typedef enum rach_state_e
 {
   initial_access = 0,
   rach_for_auth_rsp,
-  rach_for_next,
+  rach_for_TAU,
+  rach_for_next
 }rach_state_t;
 
 
