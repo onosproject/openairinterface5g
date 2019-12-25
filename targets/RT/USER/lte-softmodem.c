@@ -122,7 +122,7 @@ int UE_scan_carrier = 0;
 runmode_t mode = normal_txrx;
 
 FILE *input_fd=NULL;
-static char              UE_flag=0;
+static char              UE_flag=1;
 
 #if MAX_NUM_CCs == 1
 rx_gain_t                rx_gain_mode[MAX_NUM_CCs][4] = {{max_gain,max_gain,max_gain,max_gain}};
@@ -635,9 +635,12 @@ int main( int argc, char **argv ) {
   }
 
   // init the parameters
-    if (UE_flag==1) {
+    if (UE_flag==1) {//samuel : i don't know what need to set this flag?
 
 //#ifdef NB_IOT     /////////////// for NB-IoT testing  ///////////////////////////
+      for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
+          frame_parms_NB_IoT[CC_id] = (NB_IoT_DL_FRAME_PARMS *) malloc(sizeof(NB_IoT_DL_FRAME_PARMS));
+        }
       frame_parms_NB_IoT[0]->nb_antennas_tx     = nb_antenna_tx;
       frame_parms_NB_IoT[0]->nb_antennas_rx     = nb_antenna_rx;
       frame_parms_NB_IoT[0]->nb_antenna_ports_eNB = 1; //initial value overwritten by initial sync later
