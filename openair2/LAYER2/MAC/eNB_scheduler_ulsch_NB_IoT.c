@@ -279,7 +279,14 @@ void rx_sdu_NB_IoT(module_id_t module_id, int CC_id, frame_t frame, sub_frame_t 
                   0);
                 LOG_D(MAC,"rx_lengths : %d\n", rx_lengths[i]);
                 msg4_rrc_pdu = mac_rrc_msg3_ind_NB_IoT(payload_ptr,rnti,rx_lengths[i]);
-                receive_msg3_NB_IoT(mac_inst,rnti,PHR,ul_total_buffer,first_6,msg4_rrc_pdu);
+                if (Valid_msg3 == 1)
+                {
+                  receive_msg3_NB_IoT(mac_inst,rnti,PHR,ul_total_buffer,first_6,msg4_rrc_pdu);
+                }else
+                {
+                  LOG_E(MAC,"Not available RA here\n");
+                  Valid_msg3 = 1;
+                }
                 LOG_I(MAC,"Contention resolution ID = %02x %02x %02x %02x %02x %02x\n",first_6[0],first_6[1],first_6[2],first_6[3],first_6[4],first_6[5]);
           break;
             case DCCH0_NB_IoT:

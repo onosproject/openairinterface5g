@@ -38,6 +38,7 @@
 #include "extern.h"
 #include "extern_NB_IoT.h"
 #include "LAYER2/MAC/proto_NB_IoT.h"
+#include "LAYER2/MAC/extern_NB_IoT.h"
 #include "RRC/LITE/MESSAGES/asn1_msg_NB_IoT.h"
 #include "RRCConnectionRequest-NB.h"
 #include "UL-CCCH-Message-NB.h"
@@ -223,7 +224,10 @@ uint8_t* mac_rrc_msg3_ind_NB_IoT(uint8_t *payload_ptr, uint16_t rnti, uint32_t l
     msg4_rrc_sdu = generate_msg4_NB_IoT(&eNB_rrc_inst_NB_IoT->carrier[0]);
   }
   else
+  {
 	 LOG_E(RRC,"unknown MSG3 format for NB-IoT for current test\n");
+   Valid_msg3 = 0;
+  }
   return msg4_rrc_sdu;
 }
 

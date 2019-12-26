@@ -122,4 +122,5 @@ extern int extend_alpha_offset[2];
 extern const int si_repetition_pattern[4];
 extern int waiting_flag_from_RLC;
 extern int block_RLC;
+extern int Valid_msg3;
 #endif //DEF_H
