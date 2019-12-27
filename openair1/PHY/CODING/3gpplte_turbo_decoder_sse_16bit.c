@@ -1569,12 +1569,16 @@ break;
       }
     }
 
+#ifdef NB_IOT_CRC_REVOVERY
+
     unsigned char auth_rsp[10] = {0x3d, 0x03, 0x00, 0xa0, 0x01, 0x30, 0x0b, 0x07, 0x53, 0x08};
     unsigned char attach_complete[8] = {0x01, 0x07, 0x43, 0x00, 0x03, 0x52, 0x00, 0xc2};
-
+    unsigned char security_complte[3] = {0x00, 0x07, 0x5e};
     int cnt = 0;
     int correct_bit = 0;
     int correct_bit_attach = 0;
+    int correct_bit_security = 0;
+    //unsigned char padding = 0x00;
 
     for (cnt=0; cnt <10; cnt++)
     {
@@ -1592,7 +1596,15 @@ break;
         correct_bit_attach++;
       }
     }
-   
+    for (cnt=0; cnt <3; cnt++)
+    {
+      if(security_complte[cnt] == decoded_bytes[cnt+14])
+      {
+        //printf("correct_bit_security++\n");
+        correct_bit_security++;
+      }
+    }
+#endif
     // check status on output
     if (iteration_cnt>1) {
       oldcrc= *((unsigned int *)(&decoded_bytes[(n>>3)-crc_len]));
@@ -1600,7 +1612,8 @@ break;
       switch (crc_type) {
 
       case CRC24_A:
-        if ((correct_bit<10) && (correct_bit_attach<8))
+#ifdef NB_IOT_CRC_REVOVERY
+        if ((correct_bit<10) && (correct_bit_attach<8)&&(correct_bit_security<3))
         {
           oldcrc&=0x00ffffff;
           crc = crc24a(&decoded_bytes[F>>3],
@@ -1767,6 +1780,7 @@ break;
           decoded_bytes[11] = decoded_bytes[11] - 0x08;
           decoded_bytes[17] = decoded_bytes[17] - 0x08;
           break;
+
         }else if(correct_bit_attach==8)
         {
           printf("Try to recovery attach complete\n");
@@ -1803,7 +1817,96 @@ break;
           }
           decoded_bytes[7] = decoded_bytes[7] - 0x08;  
           break;        
+        }else if (correct_bit_security == 3)
+        {
+          printf("Try to recovery security complete\n");
+
+          // the first case, didn't change anything
+          oldcrc&=0x00ffffff;
+          crc = 0;
+          crc = crc24a(&decoded_bytes[F>>3],
+                       n-24-F)>>8;
+          temp=((uint8_t *)&crc)[2];
+          ((uint8_t *)&crc)[2] = ((uint8_t *)&crc)[0];
+          ((uint8_t *)&crc)[0] = temp;
+          //printf("oldcrc %x, crc %x\n",oldcrc,crc);
+
+          if (crc == oldcrc)
+          {
+            decoded_bytes[17] = 0x00;            
+            return iteration_cnt;
+          }
+
+          // Add 1st byte for 00001000 (0x08)
+          decoded_bytes[11] = decoded_bytes[11] + 0x08;
+          //oldcrc&=0x00ffffff;
+          crc = 0;
+          crc = crc24a(&decoded_bytes[F>>3],
+                       n-24-F)>>8;
+          temp=((uint8_t *)&crc)[2];
+          ((uint8_t *)&crc)[2] = ((uint8_t *)&crc)[0];
+          ((uint8_t *)&crc)[0] = temp;
+          //printf("oldcrc %x, crc %x\n",oldcrc,crc);
+
+          if (crc == oldcrc)
+          {
+            decoded_bytes[17] = 0x00;            
+            return iteration_cnt;
+          }
+          decoded_bytes[11] = decoded_bytes[11] - 0x08;
+
+          // Add 1st byte for 00001000 (0x08)
+          //padding = decoded_bytes[17];
+          decoded_bytes[17] = decoded_bytes[17] + 0x08;
+          //oldcrc&=0x00ffffff;
+          crc = 0;
+          crc = crc24a(&decoded_bytes[F>>3],
+                       n-24-F)>>8;
+          temp=((uint8_t *)&crc)[2];
+          ((uint8_t *)&crc)[2] = ((uint8_t *)&crc)[0];
+          ((uint8_t *)&crc)[0] = temp;
+          //printf("oldcrc %x, crc %x\n",oldcrc,crc);
+
+          if (crc == oldcrc)
+          {
+            decoded_bytes[17] = 0x00;            
+            return iteration_cnt;
+          }
+          decoded_bytes[17] = decoded_bytes[17] - 0x08;
+
+          // Add 1st byte for 00001000 (0x08)
+          decoded_bytes[11] = decoded_bytes[11] + 0x08;
+          decoded_bytes[17] = decoded_bytes[17] + 0x08;
+          //oldcrc&=0x00ffffff;
+          crc = 0;
+          crc = crc24a(&decoded_bytes[F>>3],
+                       n-24-F)>>8;
+          temp=((uint8_t *)&crc)[2];
+          ((uint8_t *)&crc)[2] = ((uint8_t *)&crc)[0];
+          ((uint8_t *)&crc)[0] = temp;
+          //printf("oldcrc %x, crc %x\n",oldcrc,crc);
+
+          if (crc == oldcrc)
+          {
+            //decoded_bytes[17] = 0x00;            
+            return iteration_cnt;
+          }
+          decoded_bytes[17] = decoded_bytes[17] - 0x08;
+          decoded_bytes[11] = decoded_bytes[11] - 0x08;
+
         }
+          break;
+
+#else
+          oldcrc&=0x00ffffff;
+          crc = 0;
+          crc = crc24a(&decoded_bytes[F>>3],
+                       n-24-F)>>8;
+          temp=((uint8_t *)&crc)[2];
+          ((uint8_t *)&crc)[2] = ((uint8_t *)&crc)[0];
+          ((uint8_t *)&crc)[0] = temp;
+          break;
+#endif
       case CRC24_B:
         oldcrc&=0x00ffffff;
         crc = crc24b(decoded_bytes,

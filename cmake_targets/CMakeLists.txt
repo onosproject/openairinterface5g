@@ -571,6 +571,7 @@ add_boolean_option(FLEXRAN_AGENT_SB_IF             False         "enable FlexRAN
 # NB-IOT
 ################################################################
 add_boolean_option(NB_IOT True "Enabling NB-IoT code")
+add_boolean_option(NB_IOT_CRC_REVOVERY True "Enabling NB-IoT CRC Recovery for some specific data")
 
 
 ########################

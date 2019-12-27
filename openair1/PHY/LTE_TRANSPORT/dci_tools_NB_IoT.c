@@ -183,9 +183,9 @@ int generate_eNB_ulsch_params_from_dci_NB_IoT(PHY_VARS_eNB            *eNB,
   ndlcch->rnti[ncce_index] = rnti; //we store the RNTI (e.g. for RNTI will be used later)
   ndlcch->active[ncce_index] = 1; //will be activated by the corresponding NDSLCH pdu
 
-  ndlcch->dci_repetitions[ncce_index]          = DCIrep_to_real_rep(DCIRep,16);        ////??????? should be repalce by the value in spec table 16.6-3, check also Rmax
+  ndlcch->dci_repetitions[ncce_index]          = DCIrep_to_real_rep(DCIRep,4);        ////??????? should be repalce by the value in spec table 16.6-3, check also Rmax
 
-  printf("dci_repetitions: %d, A = %d\n",ndlcch->dci_repetitions[ncce_index],ndlcch->A[ncce_index]);
+  //printf("dci_repetitions: %d, A = %d\n",ndlcch->dci_repetitions[ncce_index],ndlcch->A[ncce_index]);
 
   DCI_flip = (uint8_t*)malloc(3*sizeof(uint8_t));
 
@@ -209,7 +209,7 @@ int generate_eNB_ulsch_params_from_dci_NB_IoT(PHY_VARS_eNB            *eNB,
      * ISF = ResAssign
      */
 
-    ndlcch->counter_repetition_number[ncce_index] = DCIrep_to_real_rep(DCIRep,16);          ////??????? should be repalce by the value in spec table 16.6-3, check also Rmax
+    ndlcch->counter_repetition_number[ncce_index] = DCIrep_to_real_rep(DCIRep,4);          ////??????? should be repalce by the value in spec table 16.6-3, check also Rmax
 
 
     LOG_I(PHY,"DCI packing for N0 done \n");
@@ -319,7 +319,7 @@ int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB      *eNB,
       DCI_flip[i] = 0x0;
     }
 
-    DCI_flip[0] = (type << 7) | (orderIndicator << 6) | (Sched_delay<<2) | ResAssign ;
+    DCI_flip[0] = (type << 7) | (orderIndicator << 6) | (Sched_delay<<3) | ResAssign ;
     DCI_flip[1] = (mcs << 4) | RepNum;
     DCI_flip[2] = (ndi << 7) | (HARQackRes << 3) | (DCIRep <<1);
     
