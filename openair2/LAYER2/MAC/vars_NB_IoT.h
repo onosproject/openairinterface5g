@@ -147,6 +147,7 @@ const int si_repetition_pattern[4] = {20, 40, 80, 160};
 int waiting_flag_from_RLC = 0;
 int block_RLC = 0;
 int Valid_msg3 = 1;
+int RLC_RECEIVE_MSG5_FAILED = 0;
 
 #endif
 

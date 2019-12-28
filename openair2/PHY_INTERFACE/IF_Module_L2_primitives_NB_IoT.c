@@ -121,9 +121,9 @@ void UL_indication_NB_IoT(UL_IND_NB_IoT_t *UL_INFO)
 
         }else if (UE_state_machine == rach_for_next || UE_state_machine == rach_for_TAU)
         {
-          rach_count++;
-          if (rach_count == 4)
-          {
+          //rach_count++;
+          //if (rach_count%3==0)
+          //{
           LOG_N(MAC,"It is the third time that this UE try to rach\n");
                     init_RA_NB_IoT(mac_inst,
                       (UL_INFO->nrach_ind.nrach_pdu_list+i)->nrach_indication_rel13.initial_sc,
@@ -134,7 +134,7 @@ void UL_indication_NB_IoT(UL_IND_NB_IoT_t *UL_INFO)
                       );
 
           UE_state_machine = rach_for_TAU;
-          }
+          //}
         }
       }
     }
@@ -195,6 +195,14 @@ void UL_indication_NB_IoT(UL_IND_NB_IoT_t *UL_INFO)
     {
       for(i=0;i<UL_INFO->RX_NPUSCH.number_of_pdus;i++)
       {
+        printf("The Receive MAC PDU:");
+        int x = 0;
+        for (x = 0; x < (UL_INFO->RX_NPUSCH.rx_pdu_list+i)->rx_indication_rel8.length; x ++)
+        {
+          printf("%02x ", (UL_INFO->RX_NPUSCH.rx_pdu_list+i)->data[x]);
+        }
+
+        printf("\n");
         //For MSG3, Normal Uplink Data, NAK
         rx_sdu_NB_IoT(UL_INFO->module_id,
                       UL_INFO->CC_id,

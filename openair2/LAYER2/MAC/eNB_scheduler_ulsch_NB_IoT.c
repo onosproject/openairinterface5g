@@ -295,6 +295,12 @@ void rx_sdu_NB_IoT(module_id_t module_id, int CC_id, frame_t frame, sub_frame_t 
                 if((UE_state_machine == initial_access)||(UE_state_machine == rach_for_next))
                 {
                   block_RLC = 0;
+                  int x = 0;
+                  LOG_N(MAC,"Length: %d\n",rx_lengths[i]);
+
+                    for (x=0;x<rx_lengths[i];x++)
+                      printf("%02x ",payload_ptr[x]);
+                    printf("\n");
                   mac_rlc_data_ind(
                     module_id,
                     rnti,
@@ -309,6 +315,26 @@ void rx_sdu_NB_IoT(module_id_t module_id, int CC_id, frame_t frame, sub_frame_t 
                     1,
                     NULL);//(unsigned int*)crc_status);
                       // trigger DL scheduler
+                  if (RLC_RECEIVE_MSG5_FAILED == 1)
+                  {
+                    payload_ptr = payload_ptr+20;
+
+                    LOG_N(MAC,"RLC Decoded data discard because of SN wrong\n");
+                    //int x = 0;
+                    for (x=0;x<49;x++)
+                      printf("%02x ",payload_ptr[x]);
+                    printf("\n");
+                    protocol_ctxt_t     ctxt;
+                    PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, module_id, 1, rnti, frame, 0, module_id);
+                    rrc_data_ind(
+                    &ctxt,
+                    rx_lcids[i],
+                    49,
+                    (char *)payload_ptr);
+                    RLC_RECEIVE_MSG5_FAILED = 0;
+
+
+                  }
                   if (UE_info != NULL)
                   {
                     //UE_info->direction = 1; //1 for DL scheduler

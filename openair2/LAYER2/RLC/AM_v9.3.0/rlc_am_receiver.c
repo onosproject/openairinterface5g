@@ -30,7 +30,7 @@
 #include "list.h"
 #include "LAYER2/MAC/extern.h"
 #include "UTIL/LOG/log.h"
-
+#include "LAYER2/MAC/extern_NB_IoT.h"
 
 //-----------------------------------------------------------------------------
 signed int
@@ -447,6 +447,7 @@ rlc_am_receive_process_data_pdu (
       rlc_pP->stat_rx_data_pdu_out_of_window     += 1;
       rlc_pP->stat_rx_data_bytes_out_of_window   += tb_size_in_bytesP;
       pdu_status = RLC_AM_DATA_PDU_STATUS_SN_OUTSIDE_WINDOW;
+      RLC_RECEIVE_MSG5_FAILED = 1;
       LOG_D(RLC, PROTOCOL_RLC_AM_CTXT_FMT"[PROCESS RX PDU]  PDU OUT OF RX WINDOW, DISCARDED, SN=%d\n",
             PROTOCOL_RLC_AM_CTXT_ARGS(ctxt_pP,rlc_pP),pdu_info_p->sn);
     }

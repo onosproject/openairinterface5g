@@ -1571,7 +1571,8 @@ break;
 
 #ifdef NB_IOT_CRC_REVOVERY
 
-    unsigned char auth_rsp[10] = {0x3d, 0x03, 0x00, 0xa0, 0x01, 0x30, 0x0b, 0x07, 0x53, 0x08};
+    unsigned char auth_rsp[5] = {0x30, 0x0b, 0x07, 0x53, 0x08};
+
     unsigned char attach_complete[8] = {0x01, 0x07, 0x43, 0x00, 0x03, 0x52, 0x00, 0xc2};
     unsigned char security_complte[3] = {0x00, 0x07, 0x5e};
     int cnt = 0;
@@ -1580,9 +1581,9 @@ break;
     int correct_bit_security = 0;
     //unsigned char padding = 0x00;
 
-    for (cnt=0; cnt <10; cnt++)
+    for (cnt=0; cnt <5; cnt++)
     {
-      if(auth_rsp[cnt] == decoded_bytes[cnt])
+      if(auth_rsp[cnt] == decoded_bytes[cnt+5])
       {
         //printf("correct_bit++\n");
         correct_bit++;
@@ -1613,7 +1614,7 @@ break;
 
       case CRC24_A:
 #ifdef NB_IOT_CRC_REVOVERY
-        if ((correct_bit<10) && (correct_bit_attach<8)&&(correct_bit_security<3))
+        if ((correct_bit<5) && (correct_bit_attach<8)&&(correct_bit_security<3))
         {
           oldcrc&=0x00ffffff;
           crc = crc24a(&decoded_bytes[F>>3],
@@ -1622,7 +1623,7 @@ break;
           ((uint8_t *)&crc)[2] = ((uint8_t *)&crc)[0];
           ((uint8_t *)&crc)[0] = temp;
           break;
-        }else if(correct_bit==10)
+        }else if(correct_bit==5)
         {
           printf("Try to recovery authentication response\n");
 

@@ -5070,14 +5070,14 @@ int rrc_eNB_decode_dcch_NB_IoT(
                &asn_DEF_UL_DCCH_Message_NB,
                (void**)&ul_dcch_msg_NB_IoT,
                Rx_sdu,
-               sdu_sizeP,
+               100,
                0,
                0);
-/*
-  printf("....after uper_decode....\n");
-  printf("Rx_sdu : %d\n",Rx_sdu);
-  printf("sdu_sizeP : %d\n", sdu_sizeP);
-*/
+
+  //printf("....after uper_decode....\n");
+  //printf("Rx_sdu : %d\n",Rx_sdu);
+  //printf("sdu_sizeP : %d\n", sdu_sizeP);
+
 
 //#if defined(ENABLE_ITTI)
 //#   if defined(DISABLE_ITTI_XER_PRINT)

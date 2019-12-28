@@ -123,4 +123,5 @@ extern const int si_repetition_pattern[4];
 extern int waiting_flag_from_RLC;
 extern int block_RLC;
 extern int Valid_msg3;
+extern int RLC_RECEIVE_MSG5_FAILED;
 #endif //DEF_H

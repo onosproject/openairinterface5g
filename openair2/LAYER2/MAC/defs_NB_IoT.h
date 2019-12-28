@@ -129,7 +129,7 @@ typedef enum{
   DL
 }message_direction_t;
 
-#define MAX_NUMBER_OF_UE_MAX_NB_IoT 20
+#define MAX_NUMBER_OF_UE_MAX_NB_IoT 50
 #define SCH_PAYLOAD_SIZE_MAX_NB_IoT 320
 #define MAX_NUMBER_OF_SIBs_NB_IoT 16
 
@@ -184,7 +184,7 @@ typedef struct {
 
   DLSCH_PDU_NB_IoT Security_pdu;
   DLSCH_PDU_NB_IoT Attach_pdu;
-
+  DLSCH_PDU_NB_IoT Attach2_pdu;
   /// DLSCH pdu
   DLSCH_PDU_NB_IoT DLSCH_pdu;
   // PDU size

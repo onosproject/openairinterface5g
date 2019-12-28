@@ -582,11 +582,13 @@ void rlc_data_ind     (
     T(T_ENB_RLC_UL, T_INT(ctxt_pP->module_id), T_INT(ctxt_pP->rnti), T_INT(rb_idP), T_INT(sdu_sizeP));
 #endif
 
+  LOG_N(RLC,"sdu_size: %d\n",sdu_sizeP);
+
 /*************************For SRB1bis (RLC->RRC)*****************************/
 rrc_data_ind(
 ctxt_pP,
 rb_idP,
-51,
+sdu_sizeP,
 (uint8_t*)&sdu_pP->data[0]);
 
 /***************************************************************************/
