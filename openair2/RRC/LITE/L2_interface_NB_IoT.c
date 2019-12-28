@@ -2621,6 +2621,8 @@ rlc_op_status_t rlc_data_req_NB_IoT (const protocol_ctxt_t* const ctxt_pP,
           waiting_flag_from_RLC = 1;
           block_RLC = 1;
          }
+                   waiting_flag_from_RLC = 1;
+
         return RLC_OP_STATUS_OK;
       } else {
         VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_RLC_DATA_REQ,VCD_FUNCTION_OUT);
