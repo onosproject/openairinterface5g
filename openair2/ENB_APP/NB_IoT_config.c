@@ -58,7 +58,9 @@ void RCconfig_NbIoTL1(void) {
   config_getlist( &NbIoT_L1_ParamList,NbIoT_L1_Params,sizeof(NbIoT_L1_Params)/sizeof(paramdef_t), NULL);
 
   if (NbIoT_L1_ParamList.numelt > 0) {
+    printf("NbIoT_L1_ParamList.numelt==============================================================\n\n\n");
     if (RC.L1_NB_IoT == NULL) {
+      printf("RC.L1_NB_IoT==============================================================\n\n\n");
       RC.L1_NB_IoT                         = (PHY_VARS_eNB_NB_IoT **)malloc(RC.nb_nb_iot_L1_inst*sizeof(PHY_VARS_eNB_NB_IoT *));
       LOG_I(PHY,"RC.L1_NB_IoT = %p\n",RC.L1_NB_IoT);
       memset(RC.L1_NB_IoT,0,RC.nb_nb_iot_L1_inst*sizeof(PHY_VARS_eNB_NB_IoT *));
