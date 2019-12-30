@@ -92,6 +92,8 @@ void ccode_encode_NB_IoT (int32_t numbits,
 \brief This function initializes the generator polynomials for an LTE convolutional code.*/
 void ccodelte_init_NB_IoT(void);
 
+void ccodelte_init2_NB_IoT(void);
+
 /*!\fn void crcTableInit(void)
 \brief This function initializes the different crc tables.*/
 void crcTableInit_NB_IoT (void);

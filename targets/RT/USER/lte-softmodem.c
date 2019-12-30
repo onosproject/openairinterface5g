@@ -46,6 +46,8 @@
 
 #include "PHY/defs_eNB.h"
 #include "PHY/defs_common.h"
+#include "PHY/defs_L1_NB_IoT.h"
+#include "PHY/INIT/phy_init_NB_IoT.h"
 #include "common/ran_context.h"
 #include "common/config/config_userapi.h"
 #include "common/utils/load_module_shlib.h"
@@ -95,6 +97,7 @@ unsigned short config_frames[4] = {2,9,11,13};
 #include "lte-softmodem.h"
 #include "NB_IoT_interface.h"
 #include "PHY/vars_NB_IoT.h"
+#include "openair2/ENB_APP/NB_IoT_config.h"
 
 pthread_cond_t nfapi_sync_cond;
 pthread_mutex_t nfapi_sync_mutex;

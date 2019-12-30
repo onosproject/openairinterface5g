@@ -747,11 +747,12 @@ void wakeup_prach_eNB_br(PHY_VARS_eNB *eNB,RU_t *ru,int frame,int subframe) {
  * \param param is a \ref L1_proc_t structure which contains the info what to process.
  * \returns a pointer to an int. The storage is not on the heap and must not be freed.
  */
-static void *eNB_thread_prach( void *param ) {
+static void *eNB_thread_prach( void *param ){
   static int eNB_thread_prach_status;
-  eNBs_t *eNBs= (eNBs_t *)param;
-  PHY_VARS_eNB *eNB= &eNBs->eNB;
-  PHY_VARS_eNB_NB_IoT *eNB_NB_IoT= &eNBs->eNB_NB_IoT;//Ann
+  eNBs_t *eNBs;//Ann
+  eNBs = (eNBs_t *)param;//Ann
+  PHY_VARS_eNB *eNB= eNBs->eNB;//Ann
+  PHY_VARS_eNB_NB_IoT *eNB_NB_IoT= eNBs->eNB_NB_IoT;//Ann
 
   L1_proc_t *proc = &eNBs->eNB->proc;
   // set default return value
@@ -857,8 +858,6 @@ static void *process_stats_thread(void *param) {
 void init_eNB_proc(int inst) {
   /*int i=0;*/
   int CC_id;
-  //PHY_VARS_eNB *eNB;
-  // PHY_VARS_eNB_NB_IoT *eNB_NB_IoT;//Ann
   eNBs_t eNBs;//Ann
   L1_proc_t *proc;
   L1_rxtx_proc_t *L1_proc, *L1_proc_tx;
@@ -949,9 +948,9 @@ void init_eNB_proc(int inst) {
     }
 
     if (NFAPI_MODE!=NFAPI_MODE_VNF) {
-      pthread_create( &proc->pthread_prach, attr_prach, eNB_thread_prach, &eNBs );
+      pthread_create( &proc->pthread_prach, attr_prach, eNB_thread_prach, &eNBs );//Ann
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
-      pthread_create( &proc->pthread_prach_br, attr_prach_br, eNB_thread_prach_br, &eNBs.eNB );
+      pthread_create( &proc->pthread_prach_br, attr_prach_br, eNB_thread_prach_br, eNBs.eNB );
 #endif
     }
     AssertFatal(proc->instance_cnt_prach == -1,"instance_cnt_prach = %d\n",proc->instance_cnt_prach);

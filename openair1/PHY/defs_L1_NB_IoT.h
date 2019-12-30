@@ -751,6 +751,12 @@ typedef struct{
   PHY_VARS_eNB_NB_IoT *eNB_NB_IoT;
 } eNBs_t;
 
+///////// NB_IoT testing ///////////////////////////
+void prach_procedures_NB_IoT(PHY_VARS_eNB_NB_IoT *);
+void phy_init_lte_top_NB_IoT(NB_IoT_DL_FRAME_PARMS *);
+int init_frame_parms_NB_IoT(NB_IoT_DL_FRAME_PARMS *,uint8_t);
+///////////////////////////////////////////////////
+
 //#define debug_msg if (((mac_xface->frame%100) == 0) || (mac_xface->frame < 50)) msg
 
 /// Top-level PHY Data Structure for UE

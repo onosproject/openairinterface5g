@@ -8,6 +8,8 @@
 #include "common/config/config_paramdesc.h"
 #include "openair2/ENB_APP/NB_IoT_paramdef.h"
 #include "PHY/phy_vars.h"
+#include "openair1/PHY/LTE_REFSIG/lte_refsig.h"
+#include "openair1/PHY/CODING/defs_NB_IoT.h"
 
 PHY_VARS_eNB_NB_IoT* init_lte_eNB_NB_IoT(NB_IoT_DL_FRAME_PARMS *frame_parms,
                                          uint8_t eNB_id,

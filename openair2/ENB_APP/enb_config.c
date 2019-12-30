@@ -55,6 +55,7 @@
 #include "RRC_config_tools.h"
 #include "enb_paramdef.h"
 #include "proto_agent.h"
+#include "NB_IoT_config.h"
 
 extern uint16_t sf_ahead;
 extern void set_parallel_conf(char *parallel_conf);

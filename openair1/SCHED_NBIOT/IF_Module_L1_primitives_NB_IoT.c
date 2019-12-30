@@ -62,7 +62,7 @@ void handle_nfapi_dlsch_pdu_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,
 	NB_IoT_DL_eNB_HARQ_t *ndlsch_harq23;
 	nfapi_dl_config_ndlsch_pdu_rel13_t *rel13 = &dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13;
 	int UE_id= -1;
-	int flag_malloc = 0;
+	int flag_malloc;
 	ndlsch= eNB->ndlsch_SIB1;
 	ndlsch23= eNB->ndlsch_SIB23;
 	
@@ -353,7 +353,7 @@ void schedule_response_NB_IoT(Sched_Rsp_NB_IoT_t *Sched_INFO)
     	case NFAPI_DL_CONFIG_NBCH_PDU_TYPE:
 
     		// for the moment we don't care about the n-bch pdu content since we need only the sdu if tx.request
-    		npbch = &eNB->npbch; //in the main of the lte-softmodem they should allocate this memory of PHY_vars
+    		npbch = eNB->npbch; //in the main of the lte-softmodem they should allocate this memory of PHY_vars
     		npbch->h_sfn_lsb = dl_config_pdu->nbch_pdu.nbch_pdu_rel13.hyper_sfn_2_lsbs;
     		//LOG_I(PHY,"npbch->pdu\n");
     		dl_config_pdu->nbch_pdu.nbch_pdu_rel13.pdu_index = 1;

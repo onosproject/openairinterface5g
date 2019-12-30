@@ -184,11 +184,8 @@ uint32_t is_SIB1_NB_IoT(const frame_t          frameP,
 */
 void common_signal_procedures_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_NB_IoT_t *proc) 
 {
-  //LTE_DL_FRAME_PARMS   *fp       =  &eNB->frame_parms_NB_IoT;
   NB_IoT_DL_FRAME_PARMS   *fp       =  &eNB->frame_parms_NB_IoT;
-  NB_IoT_eNB_NPBCH_t   *broadcast_str = &eNB->npbch;
-  //NB_IoT_eNB_NDLSCH_t  *sib1          = &eNB->ndlsch_SIB;
-  //NB_IoT_eNB_NDLSCH_t  *ndlsch        = &eNB->ndlsch_SIB1;
+  NB_IoT_eNB_NPBCH_t   *broadcast_str = eNB->npbch;
   NB_IoT_eNB_NDLSCH_t *sib1          = eNB->ndlsch_SIB1;
   NB_IoT_eNB_NDLSCH_t  *sib23         = eNB->ndlsch_SIB23;
 
@@ -375,7 +372,7 @@ void npusch_procedures(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_NB_IoT_t *proc)
 {
   
   uint32_t i;
-  LTE_DL_FRAME_PARMS *fp=&eNB->frame_parms;
+  //NB_IoT_DL_FRAME_PARMS *fp=&eNB->frame_parms;
   NB_IoT_eNB_NULSCH_t *nulsch;
   NB_IoT_UL_eNB_HARQ_t *nulsch_harq;
   nulsch = eNB->ulsch_NB_IoT[0];
@@ -645,7 +642,7 @@ void npdsch_procedures(PHY_VARS_eNB_NB_IoT      *eNB,
   int                     subframe                =   proc->subframe_tx;
   NB_IoT_DL_eNB_HARQ_t    *ndlsch_harq            =   ndlsch->harq_process;
   int                     input_buffer_length     =   ndlsch_harq->TBS/8;         // get in byte //the TBS is set in generate_dlsch_param
-  NB_IoT_DL_FRAME_PARMS   *fp                     =   &eNB->frame_parms_NB_IoT;
+  //NB_IoT_DL_FRAME_PARMS   *fp                     =   &eNB->frame_parms_NB_IoT;
   int                     G;
   uint8_t                 *DLSCH_pdu              =   NULL;
   uint8_t                 DLSCH_pdu_tmp[input_buffer_length+4];                   //[768*8];
@@ -906,7 +903,7 @@ void phy_procedures_eNB_TX_NB_IoT(PHY_VARS_eNB_NB_IoT     *eNB,
   DCI_PDU_NB_IoT         *dci_pdu        = eNB->DCI_pdu;
   NB_IoT_DL_FRAME_PARMS  *fp             = &eNB->frame_parms_NB_IoT;
   int8_t                 UE_id           = 0;
-  int                    **txdataF       = eNB->common_vars.txdataF[0];
+  //int                    **txdataF       = eNB->common_vars.txdataF[0];
   uint32_t               sib1_startFrame = -1;
   //NB_IoT_eNB_NPDCCH_t*npdcch;
 
