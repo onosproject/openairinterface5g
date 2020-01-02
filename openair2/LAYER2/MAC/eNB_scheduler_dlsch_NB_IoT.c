@@ -408,11 +408,12 @@ int schedule_DL_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_inst, UE_
 		                //toggle NDI
 		                if(flag_retransmission==0)
 		                {
-		                  if(TBS==26 || ping_flag ==1)
-		                  {
-		                  	UE_info->oldNDI_DL=1;
-		                  }else
+
 		                  	UE_info->oldNDI_DL=(UE_info->oldNDI_DL+1)%2;
+
+		                  //if (Security_flag==1)
+		                  	//UE_info->oldNDI_DL=0;
+
 		                  //New transmission need to request data from RLC and generate new MAC PDU
 		                  UE_info->I_mcs_dl = I_mcs;
 
