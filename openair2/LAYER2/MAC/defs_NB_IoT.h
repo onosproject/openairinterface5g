@@ -181,11 +181,8 @@ typedef struct {
   // HARQ round
   uint32_t HARQ_round;
   /*Downlink information*/
+  DLSCH_PDU_NB_IoT MAC_pdu;
 
-  DLSCH_PDU_NB_IoT Security_pdu;
-  DLSCH_PDU_NB_IoT Attach_pdu;
-  DLSCH_PDU_NB_IoT ping_pdu;
-  DLSCH_PDU_NB_IoT Attach2_pdu;
   /// DLSCH pdu
   DLSCH_PDU_NB_IoT DLSCH_pdu;
   // PDU size
