@@ -237,6 +237,17 @@ int s1ap_eNB_handle_nas_first_req(
     0,0,//MSC_AS_TIME_ARGS(ctxt_pP),
     initial_ue_message_p->eNB_UE_S1AP_ID);
 
+  printf("Print the encoded data of S1AP\n");
+  int x = 0;
+  for (x = 0; x< length;x++)
+    printf("%02x ",buffer[x]);
+  printf("\n");
+
+  if (buffer[45] == 0xd1)
+  {
+    printf("We don't have the ESM information procedure now, so try to recovery it \n");
+    buffer[45] = 0xd0;
+  }
   /* Send encoded message over sctp */
   s1ap_eNB_itti_send_sctp_data_req(instance_p->instance, mme_desc_p->assoc_id,
                                    buffer, length, ue_desc_p->tx_stream);

@@ -100,7 +100,8 @@ int schedule_UL_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst,UE_TEMPLATE_NB_IoT *UE_info
 
             mcs = mapped_mcs[UE_info->CE_level][mappedMcsIndex];
 
-
+            if (UE_info->ul_total_buffer == 31)
+              mcs = 8;
 
             //mcs = 2;
             while((TBS<UE_info->ul_total_buffer)&&(Iru<=7))
