@@ -297,6 +297,12 @@ static void UE_synch(void *arg) {
             openair0_cfg[UE->rf_map.card].tx_bw=10.0e6;
             //            openair0_cfg[0].rx_gain[0] -= 0;
             break;
+
+          case 66:
+            openair0_cfg[UE->rf_map.card].sample_rate=122.88e6;
+            openair0_cfg[UE->rf_map.card].rx_bw=100.e6;
+            openair0_cfg[UE->rf_map.card].tx_bw=100.e6;
+            break;
         }
 
         if (UE->mode != loop_through_memory) {

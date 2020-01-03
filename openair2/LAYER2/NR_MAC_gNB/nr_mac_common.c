@@ -56,7 +56,7 @@ nr_bandentry_t nr_bandtable[] = {
   {74, 1427000, 1470000, 1475000, 1518000, 20, 295000},
   {75,     000,     000, 1432000, 1517000, 20, 286400},
   {76,     000,     000, 1427000, 1432000, 20, 285400},
-  {77, 3300000, 4200000, 3300000, 4200000,  1, 620000},
+  //{77, 3300000, 4200000, 3300000, 4200000,  1, 620000},
   {78, 3300000, 3800000, 3300000, 3800000,  1, 620000},
   {79, 4400000, 5000000, 4400000, 5000000,  2, 693334},
   {80, 1710000, 1785000,     000,     000, 20, 342000},
@@ -64,53 +64,46 @@ nr_bandentry_t nr_bandtable[] = {
   {82,  832000,  862000,     000,     000, 20, 166400},
   {83,  703000,  748000,     000,     000, 20, 140600},
   {84, 1920000, 1980000,     000,     000, 20, 384000},
-  {86, 1710000, 1785000,     000,     000, 20, 342000}
+  {86, 1710000, 1785000,     000,     000, 20, 342000},
+  {257, 26500000, 29500000,26500000,29500000, 1, 2054167}    ///// Added this line ---- src572
 };
 
 #define NR_BANDTABLE_SIZE (sizeof(nr_bandtable)/sizeof(nr_bandentry_t))
 
-void get_band(uint64_t downlink_frequency,
-              uint16_t *current_band,
+void get_band(uint64_t downlink_frequency,                     /////   -----src572
+              uint16_t *current_band,                        /////   ----src572 changed from 8 to 16 bit to hold 257 band
               int32_t *current_offset,
               lte_frame_type_t *current_type)
 {
     int ind;
-    uint64_t center_frequency_khz;
-    uint64_t center_freq_diff_khz;
-    uint64_t dl_freq_khz = downlink_frequency/1000;
-
-    center_freq_diff_khz = 999999999999999999; // 2^64
-    *current_band = 0;
-
+    int64_t dl_freq_khz = downlink_frequency/1000;
+    fprintf(stderr, "The value of dl_freq_khz in get_band() is %llu size of nr_bandtable = %d \n",(long long unsigned int)dl_freq_khz,sizeof(nr_bandtable) / sizeof(nr_bandtable[0]));
     for ( ind=0;
           ind < sizeof(nr_bandtable) / sizeof(nr_bandtable[0]);
-          ind++) {
+          ind++) 
+    {
 
-      LOG_I(PHY, "Scanning band %d, dl_min %"PRIu64", ul_min %"PRIu64"\n", nr_bandtable[ind].band, nr_bandtable[ind].dl_min,nr_bandtable[ind].ul_min);
+      *current_band = nr_bandtable[ind].band;
+      LOG_I(PHY, "Scanning band %d,current_band %d, dl_min %"PRIu64", ul_max %"PRIu64"\n",*current_band, nr_bandtable[ind].band, nr_bandtable[ind].dl_min,nr_bandtable[ind].dl_max);
 
-      if ( nr_bandtable[ind].dl_min <= dl_freq_khz && nr_bandtable[ind].dl_max >= dl_freq_khz ) {
+      if ( nr_bandtable[ind].dl_min <= dl_freq_khz && nr_bandtable[ind].dl_max >= dl_freq_khz ) 
+      {
+      	fprintf(stderr, "entering loop to find band() is %d \n", *current_band );
+        *current_offset = (nr_bandtable[ind].ul_min - nr_bandtable[ind].dl_min)*1000;
+        if (*current_offset == 0)
+          *current_type = TDD;
+        else
+        	  *current_type = FDD;
 
-        center_frequency_khz = (nr_bandtable[ind].dl_max + nr_bandtable[ind].dl_min)/2;
-
-        if (abs(dl_freq_khz - center_frequency_khz) < center_freq_diff_khz){
-
-          *current_band = nr_bandtable[ind].band;
-	        *current_offset = (nr_bandtable[ind].ul_min - nr_bandtable[ind].dl_min)*1000;
-          center_freq_diff_khz = abs(dl_freq_khz - center_frequency_khz);
-
-	        if (*current_offset == 0)
-	          *current_type = TDD;
-	        else
-	          *current_type = FDD;
-        }
+	       LOG_I( PHY, "DL frequency %"PRIu64": band %d, frame_type %d,TDD %d UL frequency %"PRIu64"\n",
+          downlink_frequency, *current_band, *current_type, TDD, downlink_frequency+*current_offset);
+        break;
       }
     }
 
-    LOG_I( PHY, "DL frequency %"PRIu32": band %d, frame_type %d, UL frequency %"PRIu32"\n",
-         downlink_frequency, *current_band, *current_type, downlink_frequency+*current_offset);
-
-    AssertFatal(*current_band != 0,
+    AssertFatal(ind != (sizeof(nr_bandtable) / sizeof(nr_bandtable[0])),
 	    "Can't find EUTRA band for frequency %u\n", downlink_frequency);
+
 }
 
 uint32_t to_nrarfcn(int nr_bandP,
@@ -122,9 +115,9 @@ uint32_t to_nrarfcn(int nr_bandP,
 
   int i;
 
-  LOG_I(MAC,"Searching for nr band %d DL Carrier frequency %llu bw %u\n",nr_bandP,(long long unsigned int)dl_CarrierFreq,bw);
-  AssertFatal(nr_bandP < 86, "nr_band %d > 86\n", nr_bandP);
-  for (i = 0; i < 30 && nr_bandtable[i].band != nr_bandP; i++);
+  LOG_I(MAC,"Searching for nr band %d DL Carrier frequency %llu bw %d\n",nr_bandP,(long long unsigned int)dl_CarrierFreq,bw);
+  //AssertFatal(nr_bandP < 86, "nr_band %d > 86\n", nr_bandP);
+  for (i = 0; i < 33 && nr_bandtable[i].band != nr_bandP; i++);   //the loop was till 30. why?
 
   AssertFatal(dl_CarrierFreq_by_1k >= nr_bandtable[i].dl_min,
         "Band %d, bw %u : DL carrier frequency %llu kHz < %llu\n",
@@ -156,8 +149,8 @@ uint64_t from_nrarfcn(int nr_bandP,
   if (nr_bandP < 77 || nr_bandP > 79) deltaFglobal = 5;
   else                                deltaFglobal = 15;
   
-  AssertFatal(nr_bandP < 87, "nr_band %d > 86\n", nr_bandP);
-  for (i = 0; i < 31 && nr_bandtable[i].band != nr_bandP; i++);
+  //AssertFatal(nr_bandP < 87, "nr_band %d > 86\n", nr_bandP);
+  for (i = 0; i < 33 && nr_bandtable[i].band != nr_bandP; i++);
   AssertFatal(dl_nrarfcn>=nr_bandtable[i].N_OFFs_DL,"dl_nrarfcn %u < N_OFFs_DL %llu\n",dl_nrarfcn, (long long unsigned int)nr_bandtable[i].N_OFFs_DL);
  
   return 1000*(nr_bandtable[i].dl_min + (dl_nrarfcn - nr_bandtable[i].N_OFFs_DL) * deltaFglobal);
