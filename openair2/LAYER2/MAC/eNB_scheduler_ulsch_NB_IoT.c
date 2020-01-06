@@ -100,6 +100,9 @@ int schedule_UL_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst,UE_TEMPLATE_NB_IoT *UE_info
 
             mcs = mapped_mcs[UE_info->CE_level][mappedMcsIndex];
 
+            if (UE_info->ul_total_buffer == 10)
+              mcs = 8;
+
             if (UE_info->ul_total_buffer == 31)
               mcs = 8;
 
@@ -442,7 +445,7 @@ void fill_DCI_N0(DCIFormatN0_t *DCI_N0, UE_TEMPLATE_NB_IoT *UE_info, UE_SCHED_CT
     DCI_N0->ndi = UE_sched_ctrl_info->dci_n0_index_ndi;
     DCI_N0->Scheddly = UE_sched_ctrl_info->dci_n0_index_delay;
     DCI_N0->RepNum = UE_sched_ctrl_info->dci_n0_index_R_data;
-    DCI_N0->rv = (UE_info->HARQ_round%2==0)?0:1; // rv will loop 0 & 2
+    DCI_N0->rv = 0; // rv will loop 0 & 2
     DCI_N0->DCIRep = get_DCI_REP(UE_sched_ctrl_info->R_dci,UE_info->R_max);
     //DCI_N0->DCIRep = UE_sched_ctrl_info->dci_n0_index_R_dci;
     LOG_I(MAC,"[fill_DCI_N0] Type %d scind %d I_ru %d I_mcs %d ndi %d I_delay %d I_rep %d RV %d I_dci %d\n", DCI_N0->type, DCI_N0->scind, DCI_N0->ResAssign, DCI_N0->mcs, DCI_N0->ndi, DCI_N0->Scheddly, DCI_N0->RepNum, DCI_N0->rv, DCI_N0->DCIRep);

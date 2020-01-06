@@ -245,11 +245,11 @@ int s1ap_eNB_handle_nas_first_req(
 
   if (buffer[45] == 0xd1)
   {
-    printf("We don't have the ESM information procedure now, so try to recovery it \n");
+    printf("[1st]We don't have the ESM information procedure now, so try to recovery it \n");
     buffer[45] = 0xd0;
   }else if (buffer[48] == 0xd1)
   {
-    printf("We don't have the ESM information procedure now, so try to recovery it \n");
+    printf("[2nd]We don't have the ESM information procedure now, so try to recovery it \n");
     buffer[48] = 0xd0;
 
   }
