@@ -159,6 +159,7 @@ extern void add_subframe(uint16_t *frameP, uint16_t *subframeP, int offset);
 //#define TICK_TO_US(ts) (ts.diff)
 #define TICK_TO_US(ts) (ts.trials==0?0:ts.diff/ts.trials)
 
+eNBs_t eNBs;//Ann and samuel
 
 static inline int rxtx(PHY_VARS_eNB *eNB,L1_rxtx_proc_t *proc, char *thread_name) {
   int ret;
@@ -772,7 +773,6 @@ static void *eNB_thread_prach( void *param ){
                      ,0
 #endif
                     );
-
     prach_procedures_NB_IoT(eNB_NB_IoT);//Ann
 
     if (release_thread(&proc->mutex_prach,&proc->instance_cnt_prach,"eNB_prach_thread") < 0) break;
@@ -858,7 +858,6 @@ static void *process_stats_thread(void *param) {
 void init_eNB_proc(int inst) {
   /*int i=0;*/
   int CC_id;
-  eNBs_t eNBs;//Ann
   L1_proc_t *proc;
   L1_rxtx_proc_t *L1_proc, *L1_proc_tx;
   pthread_attr_t *attr0=NULL,*attr1=NULL,*attr_prach=NULL;

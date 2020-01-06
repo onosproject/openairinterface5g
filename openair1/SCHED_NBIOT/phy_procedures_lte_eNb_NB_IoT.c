@@ -1355,13 +1355,11 @@ void prach_procedures_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB) {
    uint16_t rnti[4],preamble_index[4],timing_advance_preamble[4];
  //  uint16_t i;
  //  int frame,subframe;
-
   uint8_t subframe = eNB->proc.subframe_prach;
   int frame = eNB->proc.frame_prach;
  // uint8_t CC_id = eNB->CC_id;
   uint32_t detection=0;
   //uint16_t estimated_TA=2;
-
   if (eNB->abstraction_flag == 0) {
          /* rx_prach(eNB,
                      preamble_energy_list,
