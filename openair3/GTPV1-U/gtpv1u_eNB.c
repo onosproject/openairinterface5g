@@ -280,7 +280,7 @@ NwGtpv1uRcT gtpv1u_eNB_process_stack_req(
     ue_context_p = rrc_eNB_get_ue_context(RC.rrc[ctxt.module_id], ctxt.rnti);
     if((ue_context_p != NULL) && 
        (ue_context_p->ue_context.handover_info != NULL) &&
-       (ue_context_p->ue_context.handover_info->state < HO_FORWARDING_COMPLETE)) {
+        (HO_COMPLETE <= ue_context_p->ue_context.handover_info->state && ue_context_p->ue_context.handover_info->state < HO_FORWARDING_COMPLETE)) {
 
       if(msgType == NW_GTP_END_MARKER){
         /* in the source enb, UE in RRC_HO_EXECUTION mode */
@@ -389,18 +389,20 @@ NwGtpv1uRcT gtpv1u_eNB_process_stack_req(
           return NW_GTPV1U_OK;
         }
 
-          /* target eNB. x2ho forwarding is processing. spgw message save to TASK_END_MARKER */
-          if(ue_context_p->ue_context.handover_info->state != HO_COMPLETE &&
-             ue_context_p->ue_context.handover_info->state != HO_END_MARKER )
-          {
-            LOG_I(GTPU, "x2ho forwarding is processing. Received a spgw message. length %d\n", buffer_len);
-#if defined(LOG_GTPU) && LOG_GTPU > 0				
-	  LOG_T(GTPU, "spgw data info:\n", buffer_len);			
-	  for(int i=1;i<=buffer_len; i++){
-	    LOG_T(GTPU, "%02x ", buffer[i-1]);
-	    if(i%20 == 0)LOG_T(GTPU, "\n");
-	  }
-	  LOG_T(GTPU, "\n");
+                /* target eNB. x2ho forwarding is processing. spgw message save to TASK_END_MARKER */
+                if(ue_context_p->ue_context.handover_info->state != HO_COMPLETE &&
+                    (ue_context_p->ue_context.handover_info->state != HO_END_MARKER ||
+                    ue_context_p->ue_context.handover_info->forwarding_state != FORWARDING_EMPTY ||
+                    ue_context_p->ue_context.handover_info->endmark_state != ENDMARK_EMPTY))
+                {
+                    LOG_I(GTPU, "x2ho forwarding is processing. Received a spgw message. length %d\n", buffer_len);
+#if defined(LOG_GTPU) && LOG_GTPU > 0
+                    LOG_T(GTPU, "spgw data info:\n", buffer_len);
+                    for(int i=1;i<=buffer_len; i++){
+                      LOG_T(GTPU, "%02x ", buffer[i-1]);
+                      if(i%20 == 0)LOG_T(GTPU, "\n");
+                    }
+                    LOG_T(GTPU, "\n");
 #endif
 			
 	  result = gtpv_data_req(

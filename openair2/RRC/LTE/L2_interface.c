@@ -164,6 +164,7 @@ mac_rrc_data_req(
 
     struct rrc_eNB_ue_context_s *ue_context_p = rrc_eNB_get_ue_context(RC.rrc[Mod_idP],rnti);
     rnti_t old_rnti = 0;
+    uint8_t flag= 0;
     if (ue_context_p == NULL) {
         for (uint16_t i = 0; i < MAX_MOBILES_PER_ENB; i++) {
           if (reestablish_rnti_map[i][0] == rnti) {
@@ -177,14 +178,24 @@ mac_rrc_data_req(
             return(0);
           }
         } else {
-           return(0);
+           if(RC.rrc[Mod_idP]->carrier[CC_id].Srb0.Active==0) {
+             LOG_E(RRC,"[eNB %d] CCCH Not active\n",Mod_idP);
+             return(0);
+           }
+
+           Srb_info=&RC.rrc[Mod_idP]->carrier[CC_id].Srb0;
+           if(Srb_info->Tx_buffer.payload_size <= 0){
+             return(0);
+           }
+           flag = 1;
         }
     }
-    eNB_RRC_UE_t *ue_p = &ue_context_p->ue_context;
-    LOG_T(RRC,"[eNB %d] Frame %d CCCH request (Srb_id %d, rnti %x)\n",Mod_idP,frameP, Srb_id,rnti);
+    if(flag == 0){
+      eNB_RRC_UE_t *ue_p = &ue_context_p->ue_context;
+      LOG_T(RRC,"[eNB %d] Frame %d CCCH request (Srb_id %d, rnti %x)\n",Mod_idP,frameP, Srb_id,rnti);
 
-    Srb_info=&ue_p->Srb0;
-
+      Srb_info=&ue_p->Srb0;
+    }
     // check if data is there for MAC
     if(Srb_info->Tx_buffer.payload_size>0) { //Fill buffer
       LOG_D(RRC,"[eNB %d] CCCH (%p) has %d bytes (dest: %p, src %p)\n",Mod_idP,Srb_info,Srb_info->Tx_buffer.payload_size,buffer_pP,Srb_info->Tx_buffer.Payload);
@@ -192,7 +203,10 @@ mac_rrc_data_req(
       Sdu_size = Srb_info->Tx_buffer.payload_size;
       Srb_info->Tx_buffer.payload_size=0;
     }
-
+    if(flag == 1){
+      Srb_info->Tx_buffer.payload_size = 0;
+      RC.rrc[Mod_idP]->carrier[CC_id].Srb0.Active = 0;
+    }
     return (Sdu_size);
   }
 

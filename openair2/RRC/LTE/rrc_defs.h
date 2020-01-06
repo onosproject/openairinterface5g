@@ -342,11 +342,13 @@ typedef enum UE_STATE_e {
 
 typedef enum HO_STATE_e {
   HO_IDLE=0,
+  // initiated by the src eNB
   HO_MEASUREMENT,
-  HO_PREPARE,
-  HO_CMD, // initiated by the src eNB
-  HO_COMPLETE, // initiated by the target eNB
   HO_REQUEST,
+  HO_PREPARE,
+  HO_CMD,
+  HO_COMPLETE,
+  // initiated by the target eNB
   HO_ACK,
   HO_FORWARDING,
   HO_CONFIGURED,
@@ -812,6 +814,7 @@ typedef struct {
   LTE_SystemInformationBlockType21_r14_t *sib21;
   // End - TTN
   SRB_INFO                          SI;
+  SRB_INFO                          Srb0;
   uint8_t                           *paging[MAX_MOBILES_PER_ENB];
   uint32_t                           sizeof_paging[MAX_MOBILES_PER_ENB];
 } rrc_eNB_carrier_data_t;

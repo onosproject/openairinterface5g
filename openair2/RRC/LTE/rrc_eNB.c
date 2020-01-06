@@ -2227,31 +2227,37 @@ rrc_eNB_generate_RRCConnectionReestablishmentReject(
  }
   T(T_ENB_RRC_CONNECTION_REESTABLISHMENT_REJECT, T_INT(ctxt_pP->module_id), T_INT(ctxt_pP->frame),
     T_INT(ctxt_pP->subframe), T_INT(ctxt_pP->rnti));
-
-  eNB_RRC_UE_t *ue_p = &ue_context_pP->ue_context; 
-
-  ue_p->Srb0.Tx_buffer.payload_size =
+  SRB_INFO *Srb_info;
+  if(ue_context_pP == NULL){
+    RC.rrc[ctxt_pP->module_id]->carrier[CC_id].Srb0.Active = 1;
+    RC.rrc[ctxt_pP->module_id]->carrier[CC_id].Srb0.Tx_buffer.payload_size = 0;
+    Srb_info = &RC.rrc[ctxt_pP->module_id]->carrier[CC_id].Srb0;
+  }else{
+    //eNB_RRC_UE_t *ue_p = &ue_context_pP->ue_context;
+    Srb_info = &ue_context_pP->ue_context.Srb0;
+  }
+  Srb_info->Tx_buffer.payload_size =
     do_RRCConnectionReestablishmentReject(ctxt_pP->module_id,
-                          (uint8_t*) ue_p->Srb0.Tx_buffer.Payload);
+                          (uint8_t*) Srb_info->Tx_buffer.Payload);
 
   LOG_DUMPMSG(RRC,DEBUG_RRC,
-              (char *)(ue_p->Srb0.Tx_buffer.Payload),
-              ue_p->Srb0.Tx_buffer.payload_size,
+              (char *)(Srb_info->Tx_buffer.Payload),
+              Srb_info->Tx_buffer.payload_size,
               "[MSG] RRCConnectionReestablishmentReject\n");
   MSC_LOG_TX_MESSAGE(
     MSC_RRC_ENB,
     MSC_RRC_UE,
-    ue_p->Srb0.Tx_buffer.Header,
-    ue_p->Srb0.Tx_buffer.payload_size,
+    Srb_info->Tx_buffer.Header,
+    Srb_info->Tx_buffer.payload_size,
     MSC_AS_TIME_FMT" LTE_RRCConnectionReestablishmentReject UE %x size %u",
     MSC_AS_TIME_ARGS(ctxt_pP),
     ue_context_pP == NULL ? -1 : ue_context_pP->ue_context.rnti,
-    ue_p->Srb0.Tx_buffer.payload_size);
+    Srb_info->Tx_buffer.payload_size);
 
   LOG_I(RRC,
         PROTOCOL_RRC_CTXT_UE_FMT" [RAPROC] Logical Channel DL-CCCH, Generating LTE_RRCConnectionReestablishmentReject (bytes %d)\n",
         PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP),
-        ue_p->Srb0.Tx_buffer.payload_size);
+        Srb_info->Tx_buffer.payload_size);
 }
 
 //-----------------------------------------------------------------------------
@@ -7261,8 +7267,7 @@ rrc_eNB_decode_ccch(
             LOG_E(RRC,
                   PROTOCOL_RRC_CTXT_UE_FMT" LTE_RRCConnectionReestablishmentRequest without UE context, let's reject the UE\n",
                   PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP));
-            LOG_E(RRC,PROTOCOL_RRC_CTXT_UE_FMT" ue_context_p is NULL , do not run rrc_eNB_generate_RRCConnectionReestablishmentReject\n",PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP));
-         //   rrc_eNB_generate_RRCConnectionReestablishmentReject(ctxt_pP, ue_context_p, CC_id);
+            rrc_eNB_generate_RRCConnectionReestablishmentReject(ctxt_pP, ue_context_p, CC_id);
             break;
           }
 
@@ -7890,14 +7895,20 @@ rrc_eNB_decode_dcch(
                 break;
               }
 
+              if(ue_context_p->ue_context.handover_info && ue_context_p->ue_context.handover_info->state == HO_COMPLETE) {
+                LOG_E(RRC,
+                    PROTOCOL_RRC_CTXT_UE_FMT" RRCConnectionReconfigurationComplete ho state %d error, fault\n",
+                    PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP), ue_context_p->ue_context.handover_info->state);
+                break;
+              }
+
               flexran_agent_handover = 1;
               RC.rrc[ctxt_pP->module_id]->Nb_ue++;
               dedicated_DRB = 3;
               RC.mac[ctxt_pP->module_id]->UE_list.UE_sched_ctrl[UE_id].crnti_reconfigurationcomplete_flag = 0;
               ue_context_p->ue_context.Status = RRC_RECONFIGURED;
-	      if(ue_context_p->ue_context.handover_info){
-	        ue_context_p->ue_context.handover_info->state = HO_CONFIGURED;
-	      }
+              ue_context_p->ue_context.handover_info->state = HO_CONFIGURED;
+
               LOG_I(RRC,
                     PROTOCOL_RRC_CTXT_UE_FMT" UE State = RRC_HO_EXECUTION (xid %ld)\n",
                     PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP),ul_dcch_msg->message.choice.c1.choice.rrcConnectionReconfigurationComplete.rrc_TransactionIdentifier);
@@ -9037,6 +9048,11 @@ void *rrc_enb_process_itti_msg(void *notUsed) {
         LOG_E(RRC,"%s %d: ue_context_p is a NULL pointer \n",__FILE__,__LINE__);
         break ;
       }
+      if (ue_context_p->ue_context.handover_info == NULL) {
+        /* is it possible? */
+        LOG_E(RRC, "could not find handover_info while processing X2AP_HANDOVER_REQ_ACK\n");
+        break;
+      }
 
       if (ue_context_p->ue_context.handover_info->state != HO_REQUEST) {
           //abort();
@@ -9094,7 +9110,10 @@ void *rrc_enb_process_itti_msg(void *notUsed) {
         LOG_E(RRC,"%s %d: ue_context_p is a NULL pointer \n",__FILE__,__LINE__);
         break ;
       }
-
+      if (ue_context_p->ue_context.handover_info == NULL) {
+       LOG_E(RRC,"%s %d: handover_info is a NULL pointer \n",__FILE__,__LINE__);
+       break;
+      }
       if (ue_context_p->ue_context.handover_info->state != HO_COMPLETE) {
           //abort();
           LOG_E(RRC, "%s:%d: the handover state is not HO_COMPLETE: %d\n",__FILE__, __LINE__,ue_context_p->ue_context.handover_info->state);
@@ -9128,15 +9147,39 @@ void *rrc_enb_process_itti_msg(void *notUsed) {
               cause,
               msg_name_p);
         if (X2AP_HANDOVER_CANCEL(msg_p).cause == X2AP_T_RELOC_PREP_TIMEOUT) {
-          /* for prep timeout, simply return to normal state */
-          /* TODO: be sure that it's correct to set Status to RRC_RECONFIGURED */
-          ue_context_p->ue_context.Status = RRC_RECONFIGURED;
-          /* TODO: be sure free is enough here (check memory leaks) */
-          free(ue_context_p->ue_context.handover_info);
-          ue_context_p->ue_context.handover_info = NULL;
+
+          /* in the source eNB */
+          if(ue_context_p->ue_context.handover_info->state == HO_REQUEST){
+            /* for prep timeout, simply return to normal state */
+            /* TODO: be sure that it's correct to set Status to RRC_RECONFIGURED */
+            ue_context_p->ue_context.Status = RRC_RECONFIGURED;
+            /* TODO: be sure free is enough here (check memory leaks) */
+            free(ue_context_p->ue_context.handover_info);
+            ue_context_p->ue_context.handover_info = NULL;
+
+          /* in the target eNB */
+          }else{
+
+            if(ue_context_p->ue_context.handover_info->state == HO_FORWARDING){
+                ue_context_p->ue_context.handover_info->state = HO_RELEASE;
+            }else{
+                free(ue_context_p->ue_context.handover_info);
+                ue_context_p->ue_context.handover_info = NULL;
+
+                free(ue_context_p);
+                ue_context_p = NULL;
+            }
+          }
         } else {
           /* for overall timeout, remove UE entirely */
-          ue_context_p->ue_context.handover_info->state = HO_CANCEL;
+          /* in the source eNB */
+          if(ue_context_p->ue_context.handover_info->state == HO_COMPLETE){
+            ue_context_p->ue_context.handover_info->state = HO_RELEASE;
+
+          /* in the target eNB */
+          }else{
+            ue_context_p->ue_context.handover_info->state = HO_RELEASE;
+          }
         }
       } else {
         char *failure_cause;
