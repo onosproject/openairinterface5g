@@ -160,9 +160,9 @@ int phy_init_nr_gNB(PHY_VARS_gNB *gNB,
 
   gNB->first_run_I0_measurements =
     1; ///This flag used to be static. With multiple gNBs this does no longer work, hence we put it in the structure. However it has to be initialized with 1, which is performed here.
-  common_vars->rxdata  = (int32_t **)malloc16((fp->Lmax+1)*sizeof(int32_t*));
-  common_vars->txdataF = (int32_t **)malloc16((fp->Lmax+1)*sizeof(int32_t*));
-  common_vars->rxdataF = (int32_t **)malloc16((fp->Lmax+1)*sizeof(int32_t*));
+  common_vars->rxdata  = (int32_t **)malloc16(fp->Lmax*sizeof(int32_t*));
+  common_vars->txdataF = (int32_t **)malloc16(fp->Lmax*sizeof(int32_t*));
+  common_vars->rxdataF = (int32_t **)malloc16(fp->Lmax*sizeof(int32_t*));
 
   for (i=0;i<fp->Lmax;i++){
       common_vars->txdataF[i] = (int32_t*)malloc16_clear(fp->samples_per_frame_wCP*sizeof(int32_t)); // [hna] samples_per_frame without CP
