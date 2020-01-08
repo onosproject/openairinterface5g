@@ -853,11 +853,167 @@ static void *process_stats_thread(void *param) {
 
   return(NULL);
 }
-/* Samuel
+// Samuel
 void copy_eNB_content(PHY_VARS_eNB *eNB , PHY_VARS_eNB_NB_IoT *eNB_copy){
 
+  eNB_copy->phy_proc_tx = eNB->phy_proc_tx;
+  eNB_copy->phy_proc_rx = eNB->phy_proc_rx;
+  eNB_copy->rx_prach = eNB->rx_prach;
+  eNB_copy->ofdm_mod_stats = eNB->ofdm_mod_stats;
+  eNB_copy->dlsch_encoding_stats = eNB->dlsch_encoding_stats;
+  eNB_copy->dlsch_modulation_stats = eNB->dlsch_modulation_stats;
+  eNB_copy->dlsch_scrambling_stats = eNB->dlsch_scrambling_stats;
+  eNB_copy->dlsch_rate_matching_stats = eNB->dlsch_rate_matching_stats;
+  eNB_copy->dlsch_turbo_encoding_stats = eNB->dlsch_turbo_encoding_stats;
+  eNB_copy->dlsch_interleaving_stats = eNB->dlsch_interleaving_stats;
+  eNB_copy->rx_dft_stats = eNB->rx_dft_stats;
+  eNB_copy->ulsch_channel_estimation_stats = eNB->ulsch_channel_estimation_stats;
+  eNB_copy->ulsch_freq_offset_estimation_stats = eNB->ulsch_freq_offset_estimation_stats;
+  eNB_copy->ulsch_decoding_stats = eNB->ulsch_decoding_stats;
+  eNB_copy->ulsch_demodulation_stats = eNB->ulsch_demodulation_stats;
+  eNB_copy->ulsch_rate_unmatching_stats = eNB->ulsch_rate_unmatching_stats;
+  eNB_copy->ulsch_turbo_decoding_stats = eNB->ulsch_turbo_decoding_stats;
+  eNB_copy->ulsch_deinterleaving_stats = eNB->ulsch_deinterleaving_stats;
+  eNB_copy->ulsch_demultiplexing_stats = eNB->ulsch_demultiplexing_stats;
+  eNB_copy->ulsch_llr_stats = eNB->ulsch_llr_stats;
+  eNB_copy->ulsch_tc_init_stats = eNB->ulsch_tc_init_stats;
+  eNB_copy->ulsch_tc_alpha_stats = eNB->ulsch_tc_alpha_stats;
+  eNB_copy->ulsch_tc_beta_stats = eNB->ulsch_tc_beta_stats;
+  eNB_copy->ulsch_tc_gamma_stats = eNB->ulsch_tc_gamma_stats;
+  eNB_copy->ulsch_tc_ext_stats = eNB->ulsch_tc_ext_stats;
+  eNB_copy->ulsch_tc_intl1_stats = eNB->ulsch_tc_intl1_stats;
+  eNB_copy->ulsch_tc_intl2_stats = eNB->ulsch_tc_intl2_stats;
+  memcpy(eNB_copy->pucch1_stats_cnt,eNB->pucch1_stats_cnt,sizeof(eNB->pucch1_stats_cnt));
+  memcpy(eNB_copy->pucch1_stats,eNB->pucch1_stats,sizeof(eNB->pucch1_stats));
+  memcpy(eNB_copy->pucch1_stats_thres,eNB->pucch1_stats_thres,sizeof(eNB->pucch1_stats_thres));
+  memcpy(eNB_copy->pucch1ab_stats_cnt,eNB->pucch1ab_stats_cnt,sizeof(eNB->pucch1ab_stats_cnt));
+  memcpy(eNB_copy->pucch1ab_stats,eNB->pucch1ab_stats,sizeof(eNB->pucch1ab_stats));
+  memcpy(eNB_copy->pusch_stats_rb,eNB->pusch_stats_rb,sizeof(eNB->pusch_stats_rb));
+  memcpy(eNB_copy->pusch_stats_round,eNB->pusch_stats_round,sizeof(eNB->pusch_stats_round));
+  memcpy(eNB_copy->pusch_stats_mcs,eNB->pusch_stats_mcs,sizeof(eNB->pusch_stats_mcs));
+  memcpy(eNB_copy->pusch_stats_bsr,eNB->pusch_stats_bsr,sizeof(eNB->pusch_stats_bsr));
+  memcpy(eNB_copy->pusch_stats_BO,eNB->pusch_stats_BO,sizeof(eNB->pusch_stats_BO));
+  eNB_copy->hw_timing_advance=eNB->hw_timing_advance;
+  eNB_copy->total_system_throughput=eNB->total_system_throughput;
+  eNB_copy->total_transmitted_bits=eNB->total_transmitted_bits;
+  eNB_copy->total_dlsch_bitrate=eNB->total_dlsch_bitrate;
+  eNB_copy->FULL_MUMIMO_transmissions=eNB->FULL_MUMIMO_transmissions;
+  eNB_copy->check_for_SUMIMO_transmissions=eNB->check_for_SUMIMO_transmissions;
+  eNB_copy->check_for_MUMIMO_transmissions=eNB->check_for_MUMIMO_transmissions;
+  eNB_copy->check_for_total_transmissions=eNB->check_for_total_transmissions;
+  eNB_copy->ue_ul_nb_rb=eNB->ue_ul_nb_rb;
+  eNB_copy->ue_dl_rb_alloc=eNB->ue_dl_rb_alloc;
+  eNB_copy->target_ue_ul_mcs=eNB->target_ue_ul_mcs;
+  eNB_copy->target_ue_dl_mcs=eNB->target_ue_dl_mcs;
+  memcpy(eNB_copy->mu_mimo_mode,eNB->mu_mimo_mode,sizeof(eNB->mu_mimo_mode));
+  memcpy(eNB_copy->rb_mask_ul,eNB->rb_mask_ul,sizeof(eNB->rb_mask_ul));
+  memcpy(eNB_copy->cba_last_reception,eNB->cba_last_reception,sizeof(eNB->cba_last_reception));
+  memcpy(eNB_copy->transmission_mode,eNB->transmission_mode,sizeof(eNB->transmission_mode));
+  memcpy(eNB_copy->ncs_cell,eNB->ncs_cell,sizeof(eNB->ncs_cell));
+/* samuel edited 
+    // PDSCH Variables
+  PDSCH_CONFIG_DEDICATED_NB_IoT             pdsch_config_dedicated[NUMBER_OF_UE_MAX_NB_IoT];//don't need to copy
+  // PUSCH Variables
+  PUSCH_CONFIG_DEDICATED_NB_IoT             pusch_config_dedicated[NUMBER_OF_UE_MAX_NB_IoT];//don't need to copy
+  // PUCCH variables
+  PUCCH_CONFIG_DEDICATED_NB_IoT             pucch_config_dedicated[NUMBER_OF_UE_MAX_NB_IoT];//don't need to copy
+  // UL-POWER-Control
+  UL_POWER_CONTROL_DEDICATED_NB_IoT         ul_power_control_dedicated[NUMBER_OF_UE_MAX_NB_IoT];//don't need to copy
+  // TPC
+  TPC_PDCCH_CONFIG_NB_IoT                   tpc_pdcch_config_pucch[NUMBER_OF_UE_MAX_NB_IoT];//don't need to copy
+  ///
+  TPC_PDCCH_CONFIG_NB_IoT                   tpc_pdcch_config_pusch[NUMBER_OF_UE_MAX_NB_IoT];//don't need to copy
+  // CQI reporting
+  CQI_REPORT_CONFIG_NB_IoT                  cqi_report_config[NUMBER_OF_UE_MAX_NB_IoT];//don't need to copy
+  // SRS Variables
+  SOUNDINGRS_UL_CONFIG_DEDICATED_NB_IoT     soundingrs_ul_config_dedicated[NUMBER_OF_UE_MAX_NB_IoT];//don't need to copy
+  ///
+  uint8_t                                   ncs_cell[20][7];
+  // Scheduling Request Config
+  SCHEDULING_REQUEST_CONFIG_NB_IoT          scheduling_request_config[NUMBER_OF_UE_MAX_NB_IoT];//don't need to copy
+  // Transmission mode per UE
+  uint8_t                                   transmission_mode[NUMBER_OF_UE_MAX_NB_IoT];
+  /// cba_last successful reception for each group, used for collision detection
+  uint8_t                                   cba_last_reception[4];
+  // Pointers for active physicalConfigDedicated to be applied in current subframe
+  struct                                    PhysicalConfigDedicated                         *physicalConfigDedicated[NUMBER_OF_UE_MAX_NB_IoT];//waitting for handle.
+  //Pointers for actve physicalConfigDedicated for NB-IoT to be applied in current subframe
+  struct                                    PhysicalConfigDedicated_NB_r13                  *phy_config_dedicated_NB_IoT[NUMBER_OF_UE_MAX_NB_IoT];
+  ///
+  uint32_t                                  rb_mask_ul[4];
+  /// Information regarding TM5
+  MU_MIMO_mode_NB_IoT                       mu_mimo_mode[NUMBER_OF_UE_MAX_NB_IoT];//type name are different but content same as LTE.samuel
+  /// target_ue_dl_mcs : only for debug purposes
+  uint32_t                                  target_ue_dl_mcs;
+  /// target_ue_ul_mcs : only for debug purposes
+  uint32_t                                  target_ue_ul_mcs;
+  /// target_ue_dl_rballoc : only for debug purposes
+  uint32_t                                  ue_dl_rb_alloc;
+  /// target ul PRBs : only for debug
+  uint32_t                                  ue_ul_nb_rb;
+  ///check for Total Transmissions
+  uint32_t                                  check_for_total_transmissions;
+  ///check for MU-MIMO Transmissions
+  uint32_t                                  check_for_MUMIMO_transmissions;
+  ///check for SU-MIMO Transmissions
+  uint32_t                                  check_for_SUMIMO_transmissions;
+  ///check for FULL MU-MIMO Transmissions
+  uint32_t                                  FULL_MUMIMO_transmissions;
+  /// Counter for total bitrate, bits and throughput in downlink
+  uint32_t                                  total_dlsch_bitrate;
+  ///
+  uint32_t                                  total_transmitted_bits;
+  ///
+  uint32_t                                  total_system_throughput;
+  ///
+  int                                       hw_timing_advance;
+  ///
+
+  time_stats_t                       phy_proc; //loss
+  time_stats_t                       phy_proc_tx;
+  time_stats_t                       phy_proc_rx;
+  time_stats_t                       rx_prach;
+
+  time_stats_t                       ofdm_mod_stats;
+  time_stats_t                       dlsch_encoding_stats;
+  time_stats_t                       dlsch_modulation_stats;
+  time_stats_t                       dlsch_scrambling_stats;
+  time_stats_t                       dlsch_rate_matching_stats;
+  time_stats_t                       dlsch_turbo_encoding_stats;
+  time_stats_t                       dlsch_interleaving_stats;
+
+  time_stats_t                       ofdm_demod_stats;//lose
+  time_stats_t                       rx_dft_stats;
+  time_stats_t                       ulsch_channel_estimation_stats;
+  time_stats_t                       ulsch_freq_offset_estimation_stats;
+  time_stats_t                       ulsch_decoding_stats;
+  time_stats_t                       ulsch_demodulation_stats;
+  time_stats_t                       ulsch_rate_unmatching_stats;
+  time_stats_t                       ulsch_turbo_decoding_stats;
+  time_stats_t                       ulsch_deinterleaving_stats;
+  time_stats_t                       ulsch_demultiplexing_stats;
+  time_stats_t                       ulsch_llr_stats;
+  time_stats_t                       ulsch_tc_init_stats;
+  time_stats_t                       ulsch_tc_alpha_stats;
+  time_stats_t                       ulsch_tc_beta_stats;
+  time_stats_t                       ulsch_tc_gamma_stats;
+  time_stats_t                       ulsch_tc_ext_stats;
+  time_stats_t                       ulsch_tc_intl1_stats;
+  time_stats_t                       ulsch_tc_intl2_stats;
+
+  int32_t                                   pucch1_stats_cnt[NUMBER_OF_UE_MAX_NB_IoT][10];
+  int32_t                                   pucch1_stats[NUMBER_OF_UE_MAX_NB_IoT][10*1024];
+  int32_t                                   pucch1_stats_thres[NUMBER_OF_UE_MAX_NB_IoT][10*1024];
+  int32_t                                   pucch1ab_stats_cnt[NUMBER_OF_UE_MAX_NB_IoT][10];
+  int32_t                                   pucch1ab_stats[NUMBER_OF_UE_MAX_NB_IoT][2*10*1024];
+  int32_t                                   pusch_stats_rb[NUMBER_OF_UE_MAX_NB_IoT][10240];
+  int32_t                                   pusch_stats_round[NUMBER_OF_UE_MAX_NB_IoT][10240];
+  int32_t                                   pusch_stats_mcs[NUMBER_OF_UE_MAX_NB_IoT][10240];
+  int32_t                                   pusch_stats_bsr[NUMBER_OF_UE_MAX_NB_IoT][10240];
+  int32_t                                   pusch_stats_BO[NUMBER_OF_UE_MAX_NB_IoT][10240];
+  */
 }
-*/
+
 void init_eNB_proc(int inst) {
   /*int i=0;*/
   int CC_id;
@@ -1048,7 +1204,7 @@ void init_eNB_proc_NB_IoT(int inst , eNBs_t *eNBs) { //Ann create
     attr_td     = &proc->attr_td;
     attr_te     = &proc->attr_te; 
 #endif
-
+    copy_eNB_content(RC.eNB[inst][0],eNBs->eNB_NB_IoT );//samuel
 }
 
 /*!
