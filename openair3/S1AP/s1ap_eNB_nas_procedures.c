@@ -112,34 +112,43 @@ int s1ap_eNB_handle_nas_first_req(
             }
         }
     }
-
-    if (mme_desc_p == NULL) {
-        /* Select MME based on the selected PLMN identity, received through RRC
-         * Connection Setup Complete */
-        mme_desc_p = s1ap_eNB_nnsf_select_mme_by_plmn_id(
-                         instance_p,
-                         s1ap_nas_first_req_p->establishment_cause,
-                         s1ap_nas_first_req_p->selected_plmn_identity);
-
-        if (mme_desc_p) {
-            S1AP_INFO("[eNB %d] Chose MME '%s' (assoc_id %d) through selected PLMN Identity index %d MCC %d MNC %d\n",
-                      instance,
-                      mme_desc_p->mme_name,
-                      mme_desc_p->assoc_id,
-                      s1ap_nas_first_req_p->selected_plmn_identity,
-                      instance_p->mcc[s1ap_nas_first_req_p->selected_plmn_identity],
-                      instance_p->mnc[s1ap_nas_first_req_p->selected_plmn_identity]);
-        }
-    }
+/* ----- %%%%% KDDI DEMO KCN 削除 ここから ----- */
+//    if (mme_desc_p == NULL) {
+//        /* Select MME based on the selected PLMN identity, received through RRC
+//         * Connection Setup Complete */
+//        mme_desc_p = s1ap_eNB_nnsf_select_mme_by_plmn_id(
+//                         instance_p,
+//                         s1ap_nas_first_req_p->establishment_cause,
+//                         s1ap_nas_first_req_p->selected_plmn_identity);
+//
+//        if (mme_desc_p) {
+//            S1AP_INFO("[eNB %d] Chose MME '%s' (assoc_id %d) through selected PLMN Identity index %d MCC %d MNC %d\n",
+//                      instance,
+//                      mme_desc_p->mme_name,
+//                      mme_desc_p->assoc_id,
+//                      s1ap_nas_first_req_p->selected_plmn_identity,
+//                      instance_p->mcc[s1ap_nas_first_req_p->selected_plmn_identity],
+//                      instance_p->mnc[s1ap_nas_first_req_p->selected_plmn_identity]);
+//        }
+//    }
+/* ----- %%%%% KDDI DEMO KCN 削除 ここまで ----- */
 
     if (mme_desc_p == NULL) {
         /*
          * If no MME corresponds to the GUMMEI, the s-TMSI, or the selected PLMN
          * identity, selects the MME with the highest capacity.
          */
+/* ----- %%%%% KDDI DEMO KCN 削除 ここから ----- */
+//        mme_desc_p = s1ap_eNB_nnsf_select_mme(
+//                         instance_p,
+//                         s1ap_nas_first_req_p->establishment_cause);
+/* ----- %%%%% KDDI DEMO KCN 削除 ここまで ----- */
+/* ----- %%%%% KDDI DEMO KCN 追加 ここから ----- */
         mme_desc_p = s1ap_eNB_nnsf_select_mme(
-                         instance_p,
-                         s1ap_nas_first_req_p->establishment_cause);
+                       instance_p,
+                       s1ap_nas_first_req_p->establishment_cause,
+                       s1ap_nas_first_req_p->selected_plmn_identity);
+/* ----- %%%%% KDDI DEMO KCN 追加 ここまで ----- */
 
         if (mme_desc_p) {
             S1AP_INFO("[eNB %d] Chose MME '%s' (assoc_id %d) through highest relative capacity\n",
@@ -232,10 +241,18 @@ int s1ap_eNB_handle_nas_first_req(
     MACRO_ENB_ID_TO_CELL_IDENTITY(instance_p->eNB_id,
                                   0, // Cell ID
                                   &ie->value.choice.EUTRAN_CGI.cell_ID);
-    MCC_MNC_TO_TBCD(instance_p->mcc[ue_desc_p->selected_plmn_identity],
-                    instance_p->mnc[ue_desc_p->selected_plmn_identity],
-                    instance_p->mnc_digit_length[ue_desc_p->selected_plmn_identity],
+/* ----- %%%%% KDDI DEMO KCN 削除 ここから ----- */
+//    MCC_MNC_TO_TBCD(instance_p->mcc[ue_desc_p->selected_plmn_identity],
+//                    instance_p->mnc[ue_desc_p->selected_plmn_identity],
+//                    instance_p->mnc_digit_length[ue_desc_p->selected_plmn_identity],
+//                    &ie->value.choice.EUTRAN_CGI.pLMNidentity);
+/* ----- %%%%% KDDI DEMO KCN 削除 ここまで ----- */
+/* ----- %%%%% KDDI DEMO KCN 追加 ここから ----- */
+    MCC_MNC_TO_TBCD(instance_p->mcc[mme_desc_p->broadcast_plmn_index[0]],
+                    instance_p->mnc[mme_desc_p->broadcast_plmn_index[0]],
+                    instance_p->mnc_digit_length[mme_desc_p->broadcast_plmn_index[0]],
                     &ie->value.choice.EUTRAN_CGI.pLMNidentity);
+/* ----- %%%%% KDDI DEMO KCN 追加 ここまで ----- */
     ASN_SEQUENCE_ADD(&out->protocolIEs.list, ie);
     /* Set the establishment cause according to those provided by RRC */
     DevCheck(s1ap_nas_first_req_p->establishment_cause < RRC_CAUSE_LAST,
@@ -636,11 +653,20 @@ int s1ap_eNB_nas_uplink(instance_t instance, s1ap_uplink_nas_t *s1ap_uplink_nas_
     ie->id = S1AP_ProtocolIE_ID_id_EUTRAN_CGI;
     ie->criticality = S1AP_Criticality_ignore;
     ie->value.present = S1AP_UplinkNASTransport_IEs__value_PR_EUTRAN_CGI;
+/* ----- %%%%% KDDI DEMO KCN 削除 ここから ----- */
+//    MCC_MNC_TO_PLMNID(
+//        s1ap_eNB_instance_p->mcc[ue_context_p->selected_plmn_identity],
+//        s1ap_eNB_instance_p->mnc[ue_context_p->selected_plmn_identity],
+//        s1ap_eNB_instance_p->mnc_digit_length[ue_context_p->selected_plmn_identity],
+//        &ie->value.choice.EUTRAN_CGI.pLMNidentity);
+/* ----- %%%%% KDDI DEMO KCN 削除 ここまで ----- */
+/* ----- %%%%% KDDI DEMO KCN 追加 ここから ----- */
     MCC_MNC_TO_PLMNID(
-        s1ap_eNB_instance_p->mcc[ue_context_p->selected_plmn_identity],
-        s1ap_eNB_instance_p->mnc[ue_context_p->selected_plmn_identity],
-        s1ap_eNB_instance_p->mnc_digit_length[ue_context_p->selected_plmn_identity],
+        s1ap_eNB_instance_p->mcc[ue_context_p->mme_ref->broadcast_plmn_index[0]],
+        s1ap_eNB_instance_p->mnc[ue_context_p->mme_ref->broadcast_plmn_index[0]],
+        s1ap_eNB_instance_p->mnc_digit_length[ue_context_p->mme_ref->broadcast_plmn_index[0]],
         &ie->value.choice.EUTRAN_CGI.pLMNidentity);
+/* ----- %%%%% KDDI DEMO KCN 追加 ここまで ----- */
     //#warning "TODO get cell id from RRC"
     MACRO_ENB_ID_TO_CELL_IDENTITY(s1ap_eNB_instance_p->eNB_id,
                                   0,
