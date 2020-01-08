@@ -98,6 +98,8 @@ void nr_common_signal_procedures (PHY_VARS_gNB *gNB,int frame, int slot) {
   int ssb_start_symbol, rel_slot;
   int txdataF_offset = (slot%2)*fp->samples_per_slot_wCP;
   uint16_t slots_per_hf = fp->slots_per_frame / 2;
+  uint8_t is_ssb_gap;
+  uint8_t ssb_index_neg;
 
   n_hf = cfg->sch_config.half_frame_index.value;
 
@@ -109,15 +111,21 @@ void nr_common_signal_procedures (PHY_VARS_gNB *gNB,int frame, int slot) {
       n_hf=1;
   }
 
-  // to set a effective slot number between 0 to 9 in the half frame where the SSB is supposed to be
+  // to set a effective slot number between 0 to slots_per_frame/2 in the half frame where the SSB is supposed to be
   rel_slot = (n_hf)? (slot-slots_per_hf) : slot; 
 
   LOG_D(PHY,"common_signal_procedures: frame %d, slot %d\n",frame,slot);
 
-  if(rel_slot<slots_per_hf && rel_slot>=0)  {
-     for (int i=0; i<2; i++)  {  // max two SSB per frame
+  // no ssb for 2 slots for every 8 slots
+  is_ssb_gap = ((rel_slot&0x1e)==0x1c)||((rel_slot&0x1e)==0x12)||((rel_slot&0x1e)==0x8); 
+  if (rel_slot>29) ssb_index_neg=12;
+  else if (rel_slot>19) ssb_index_neg=8;
+  else if (rel_slot>9) ssb_index_neg=4;
+
+  if(rel_slot<slots_per_hf && rel_slot>=0 && !is_ssb_gap)  {
+     for (int i=0; i<2; i++)  {  // max two SSB per slot
      
-	ssb_index = i + 2*rel_slot; // computing the ssb_index
+	ssb_index = i + 2*rel_slot - ssb_index_neg; // computing the ssb_index
 	if ((fp->L_ssb >> ssb_index) & 0x01)  { // generating the ssb only if the bit of L_ssb at current ssb index is 1
 	
 	  int ssb_start_symbol_abs = nr_get_ssb_start_symbol(fp, ssb_index, n_hf); // computing the starting symbol for current ssb
