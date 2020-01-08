@@ -144,7 +144,7 @@ extern double cpuf;
 
 void init_eNB(int,int);
 void stop_eNB(int nb_inst);
-
+void init_eNB_proc_NB_IoT(int inst , eNBs_t *eNBs);
 int wakeup_tx(PHY_VARS_eNB *eNB ,int frame_rx,int subframe_rx,int frame_tx,int subframe_tx,uint64_t timestamp_tx);
 int wakeup_txfh(PHY_VARS_eNB *eNB, L1_rxtx_proc_t *proc,int frame_tx,int subframe_tx,uint64_t timestamp_tx);
 void wakeup_prach_eNB(PHY_VARS_eNB *eNB,RU_t *ru,int frame,int subframe);
@@ -853,8 +853,11 @@ static void *process_stats_thread(void *param) {
 
   return(NULL);
 }
+/* Samuel
+void copy_eNB_content(PHY_VARS_eNB *eNB , PHY_VARS_eNB_NB_IoT *eNB_copy){
 
-
+}
+*/
 void init_eNB_proc(int inst) {
   /*int i=0;*/
   int CC_id;
@@ -866,7 +869,8 @@ void init_eNB_proc(int inst) {
   pthread_attr_t *attr_prach_br=NULL;
 #endif
   LOG_I(PHY,"%s(inst:%d) RC.nb_CC[inst]:%d \n",__FUNCTION__,inst,RC.nb_CC[inst]);
-    eNBs.eNB_NB_IoT = RC.L1_NB_IoT[inst];//Ann
+    //eNBs.eNB_NB_IoT = RC.L1_NB_IoT[inst];//Ann
+  init_eNB_proc_NB_IoT( inst , &eNBs); //Ann 
   for (CC_id=0; CC_id<RC.nb_CC[inst]; CC_id++) {
     eNBs.eNB = RC.eNB[inst][CC_id];
 #ifndef OCP_FRAMEWORK
@@ -980,7 +984,73 @@ void init_eNB_proc(int inst) {
   sync_phy_proc.phy_proc_CC_id = 0;
 }
 
+void init_eNB_proc_NB_IoT(int inst , eNBs_t *eNBs) { //Ann create
+  
+  int i=0;
+  int CC_id;
+  eNB_proc_NB_IoT_t *proc;
+  eNB_rxtx_proc_NB_IoT_t *proc_rxtx;
+  pthread_attr_t *attr0=NULL,*attr1=NULL,*attr_FH=NULL,*attr_prach=NULL,*attr_asynch=NULL,*attr_single=NULL,*attr_fep=NULL,*attr_td=NULL,*attr_te=NULL,*attr_synch=NULL;
 
+  eNBs->eNB_NB_IoT = RC.L1_NB_IoT[inst];//Ann
+#ifndef OCP_FRAMEWORK
+    LOG_I(PHY,"Initializing eNB_NB_IoT %d CC_id %d (%s,%s),\n",inst,CC_id,eNB_functions[eNBs->eNB_NB_IoT->node_function],eNB_timing[eNBs->eNB_NB_IoT->node_timing]);
+#endif
+    proc = &eNBs->eNB_NB_IoT->proc;//Ann
+
+    proc_rxtx = proc->proc_rxtx;
+    proc_rxtx[0].instance_cnt_rxtx = -1;
+    proc_rxtx[1].instance_cnt_rxtx = -1;
+    proc->instance_cnt_prach       = -1;
+    proc->instance_cnt_FH          = -1;
+    proc->instance_cnt_asynch_rxtx = -1;
+    proc->CC_id = CC_id;    
+    proc->instance_cnt_synch        =  -1;
+
+    proc->first_rx=1;
+    proc->first_tx=1;
+    proc->frame_offset = 0;
+
+    for (i=0;i<10;i++) proc->symbol_mask[i]=0;
+
+    pthread_mutex_init( &proc_rxtx[0].mutex_rxtx, NULL);
+    pthread_mutex_init( &proc_rxtx[1].mutex_rxtx, NULL);
+    pthread_cond_init( &proc_rxtx[0].cond_rxtx, NULL);
+    pthread_cond_init( &proc_rxtx[1].cond_rxtx, NULL);
+
+    pthread_mutex_init( &proc->mutex_prach, NULL);
+    pthread_mutex_init( &proc->mutex_asynch_rxtx, NULL);
+    pthread_mutex_init( &proc->mutex_synch,NULL);
+
+    pthread_cond_init( &proc->cond_prach, NULL);
+    pthread_cond_init( &proc->cond_FH, NULL);
+    pthread_cond_init( &proc->cond_asynch_rxtx, NULL);
+    pthread_cond_init( &proc->cond_synch,NULL);
+
+    pthread_attr_init( &proc->attr_FH);
+    pthread_attr_init( &proc->attr_prach);
+    pthread_attr_init( &proc->attr_synch);
+    pthread_attr_init( &proc->attr_asynch_rxtx);
+    pthread_attr_init( &proc->attr_single);
+    pthread_attr_init( &proc->attr_fep);
+    pthread_attr_init( &proc->attr_td);
+    pthread_attr_init( &proc->attr_te);
+    pthread_attr_init( &proc_rxtx[0].attr_rxtx);
+    pthread_attr_init( &proc_rxtx[1].attr_rxtx);
+#ifndef DEADLINE_SCHEDULER
+    attr0       = &proc_rxtx[0].attr_rxtx;
+    attr1       = &proc_rxtx[1].attr_rxtx;
+    attr_FH     = &proc->attr_FH;
+    attr_prach  = &proc->attr_prach;
+    attr_synch  = &proc->attr_synch;
+    attr_asynch = &proc->attr_asynch_rxtx;
+    attr_single = &proc->attr_single;
+    attr_fep    = &proc->attr_fep;
+    attr_td     = &proc->attr_td;
+    attr_te     = &proc->attr_te; 
+#endif
+
+}
 
 /*!
  * \brief Terminate eNB TX and RX threads.
