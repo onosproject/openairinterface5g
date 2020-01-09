@@ -423,6 +423,7 @@ uint32_t process_nprach_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB, int frame, uint8_t subf
 	//// 1. Coarse TA estimation using sub sampling rate = 128, i.e. fs = 240 kHz  
 
 	FRAME_LENGTH_COMPLEX_SAMPLESx = 10*eNB->frame_parms.samples_per_tti; 
+	printf("FRAME_LENGTH_COMPLEX_SAMPLESx=%u.................\n",FRAME_LENGTH_COMPLEX_SAMPLESx );
 	Rx_buffer = (int16_t*)&eNB->common_vars.rxdata[0][0][0]; // get the whole frame
 
         memcpy(&buffer_nprach[0],&Rx_buffer[0],307200);

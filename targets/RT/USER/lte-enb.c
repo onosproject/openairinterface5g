@@ -89,7 +89,7 @@
 #include "enb_config.h"
 #include "structures.h"
 #include "openair1/PHY/impl_defs_lte_NB_IoT.h"
-
+#include "PHY/vars_NB_IoT.h"
 #ifndef OPENAIR2
   #include "UTIL/OTG/otg_extern.h"
 #endif
@@ -357,7 +357,7 @@ static void *L1_thread_tx(void *param) {
     VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME(VCD_SIGNAL_DUMPER_VARIABLES_SUBFRAME_NUMBER_RX1_ENB,proc->subframe_rx);
     VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME(VCD_SIGNAL_DUMPER_VARIABLES_FRAME_NUMBER_TX1_ENB,proc->frame_tx);
     VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME(VCD_SIGNAL_DUMPER_VARIABLES_FRAME_NUMBER_RX1_ENB,proc->frame_rx);
-    LOG_D(PHY,"L1 TX processing %d.%d\n",proc->frame_tx,proc->subframe_tx);
+    LOG_I(PHY,"L1 TX processing %d.%d\n",proc->frame_tx,proc->subframe_tx);
     phy_procedures_eNB_TX(eNB, proc, 1);
     AssertFatal((ret= pthread_mutex_lock( &proc->mutex ))==0,"error locking L1_proc_tx mutex, return %d\n",ret);
     VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME(VCD_SIGNAL_DUMPER_VARIABLES_L1_PROC_TX_IC,proc->instance_cnt);
@@ -368,9 +368,9 @@ static void *L1_thread_tx(void *param) {
 
     proc->instance_cnt = -1;
 
-    LOG_D(PHY,"L1 TX signaling done for %d.%d\n",proc->frame_tx,proc->subframe_tx);
+    LOG_I(PHY,"L1 TX signaling done for %d.%d\n",proc->frame_tx,proc->subframe_tx);
     // the thread can now be woken up
-    LOG_D(PHY,"L1_thread_tx: signaling completion in %d.%d\n",proc->frame_tx,proc->subframe_tx);
+    LOG_I(PHY,"L1_thread_tx: signaling completion in %d.%d\n",proc->frame_tx,proc->subframe_tx);
     if (pthread_cond_signal(&proc->cond) != 0) {
       LOG_E( PHY, "[eNB] ERROR pthread_cond_signal for eNB TXnp4 thread\n");
       exit_fun( "ERROR pthread_cond_signal" );
@@ -878,6 +878,8 @@ void copy_eNB_content(PHY_VARS_eNB_NB_IoT *eNB_copy , PHY_VARS_eNB *eNB){
   eNB_copy->frame_parms.Nid_cell = eNB->frame_parms.Nid_cell;
   eNB_copy->frame_parms.nushift = eNB->frame_parms.nushift;
   eNB_copy->frame_parms.node_id = eNB->frame_parms.node_id;
+  eNB_copy->frame_parms.samples_per_tti = eNB->frame_parms.samples_per_tti;
+  eNB_copy->frame_parms.ofdm_symbol_size = eNB->frame_parms.ofdm_symbol_size;
   // eNB_copy->measurements.n0_power_tot = eNB->measurements.n0_power_tot;
   // eNB_copy->measurements.n0_power_tot_dB = eNB->measurements.n0_power_tot_dB;
   // eNB_copy->measurements.n0_power_tot_dBm = eNB->measurements.n0_power_tot_dBm;
@@ -1158,7 +1160,7 @@ void init_eNB_proc(int inst) {
     //    attr_td     = &proc->attr_td;
     //    attr_te     = &proc->attr_te;
 #endif    
-    copy_eNB_content(eNBs.eNB_NB_IoT , RC.eNB[inst][0]);//samuel
+    //copy_eNB_content(eNBs.eNB_NB_IoT , RC.eNB[inst][0]);//samuel
 
     if(get_thread_worker_conf() == WORKER_ENABLE) {
       init_te_thread(eNBs.eNB);
@@ -1181,7 +1183,7 @@ void init_eNB_proc(int inst) {
     }
 
     if (NFAPI_MODE!=NFAPI_MODE_VNF) {
-      pthread_create( &proc->pthread_prach, attr_prach, eNB_thread_prach, &eNBs );//Ann
+     pthread_create( &proc->pthread_prach, attr_prach, eNB_thread_prach, &eNBs );//Ann
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
       pthread_create( &proc->pthread_prach_br, attr_prach_br, eNB_thread_prach_br, eNBs.eNB );
 #endif
@@ -1220,8 +1222,8 @@ void init_eNB_proc_NB_IoT(int inst) { //Ann create
   eNB_proc_NB_IoT_t *proc;
   eNB_rxtx_proc_NB_IoT_t *proc_rxtx;
   pthread_attr_t *attr0=NULL,*attr1=NULL,*attr_FH=NULL,*attr_prach=NULL,*attr_asynch=NULL,*attr_single=NULL,*attr_fep=NULL,*attr_td=NULL,*attr_te=NULL,*attr_synch=NULL;
-
-  eNBs.eNB_NB_IoT = RC.L1_NB_IoT[inst];//Ann
+  eNBs.eNB_NB_IoT = PHY_vars_eNB_NB_IoT_g[0][0];
+  //eNBs.eNB_NB_IoT = RC.L1_NB_IoT[inst];//Ann
 #ifndef OCP_FRAMEWORK
     LOG_I(PHY,"Initializing eNB_NB_IoT %d CC_id %d (%s,%s),\n",inst,CC_id,eNB_functions[eNBs.eNB_NB_IoT->node_function],eNB_timing[eNBs.eNB_NB_IoT->node_timing]);
 #endif
