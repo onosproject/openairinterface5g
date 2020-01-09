@@ -194,7 +194,7 @@ NB_IoT_eNB_NDLSCH_t *new_eNB_dlsch_NB_IoT(uint8_t type, LTE_DL_FRAME_PARMS* fram
 {
 
   NB_IoT_eNB_NDLSCH_t *dlsch;
-  unsigned char exit_flag = 0,r;
+  unsigned char exit_flag = 0;
 
   dlsch = (NB_IoT_eNB_NDLSCH_t *)malloc16(sizeof(NB_IoT_eNB_NDLSCH_t));
 

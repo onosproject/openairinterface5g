@@ -196,7 +196,7 @@ rrc_mac_config_req(
     }
     else {
       if (UE_id == -1) {
-        LOG_E(MAC,"%s:%d:%s: ERROR, UE_id == -1\n", __FILE__, __LINE__, __FUNCTION__);
+        LOG_D(MAC,"%s:%d:%s: ERROR, UE_id == -1\n", __FILE__, __LINE__, __FUNCTION__);
       } else {
         if (logicalChannelConfig)
 	  UE_list->UE_template[CC_idP][UE_id].lcgidmap[logicalChannelIdentity] = *logicalChannelConfig->ul_SpecificParameters->logicalChannelGroup;
@@ -301,7 +301,7 @@ rrc_mac_config_req(
   if (physicalConfigDedicated != NULL) {
     if (eNB_flagP==1) {
       if (UE_id == -1)
-        LOG_E(MAC,"%s:%d:%s: ERROR, UE_id == -1\n", __FILE__, __LINE__, __FUNCTION__);
+        LOG_D(MAC,"%s:%d:%s: ERROR, UE_id == -1\n", __FILE__, __LINE__, __FUNCTION__);
       else
         mac_xface->phy_config_dedicated_eNB(Mod_idP, CC_idP, UE_RNTI(Mod_idP, UE_id), physicalConfigDedicated);
     } else {

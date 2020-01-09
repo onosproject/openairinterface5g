@@ -80,7 +80,6 @@ void UL_indication_NB_IoT(UL_IND_NB_IoT_t *UL_INFO)
 {
     int i=0;
     uint32_t abs_subframe;
-    Sched_Rsp_NB_IoT_t *SCHED_info = &mac_inst->Sched_INFO;
     UE_TEMPLATE_NB_IoT *ue_info = (UE_TEMPLATE_NB_IoT *)0;
     uint16_t tmp_rnti;
 
@@ -169,7 +168,7 @@ void UL_indication_NB_IoT(UL_IND_NB_IoT_t *UL_INFO)
           ue_info->direction=0;
         }else
         {
-          LOG_I(MAC,"This UE get the response of HARQ DL : ACK, update the UL buffer for next message\n");
+          LOG_I(MAC,"This UE get the response of HARQ DL : ACK\n");
           ue_info->direction=-1;
           //ue_info->ul_total_buffer = 11;
           UE_state_machine = rach_for_auth_rsp;

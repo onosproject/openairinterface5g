@@ -20,66 +20,19 @@
 #include "openair2/COMMON/platform_types.h"
 //#include "dci.h"
 #include "PHY/LTE_TRANSPORT/uci_NB_IoT.h"
-//#include "dci.h"
-//#include "uci.h"
-//#ifndef STANDALONE_COMPILE
-//#include "UTIL/LISTS/list.h"
-//#endif
- 
-//#include "dci_nb_iot.h"
 
-//#define MOD_TABLE_QPSK_OFFSET 1
-//#define MOD_TABLE_16QAM_OFFSET 5
-//#define MOD_TABLE_64QAM_OFFSET 21
-//#define MOD_TABLE_PSS_OFFSET 85
-//
-//// structures below implement 36-211 and 36-212
-//
-//#define NSOFT 1827072
 #define LTE_NULL_NB_IoT 2
-//
-//// maximum of 3 segments before each coding block if data length exceeds 6144 bits.
-//
+
 #define MAX_NUM_DLSCH_SEGMENTS_NB_IoT 16
 #define MAX_NUM_ULSCH_SEGMENTS_NB_IoT MAX_NUM_DLSCH_SEGMENTS_NB_IoT
  
 #define MAX_NUM_BITS_IN_DL_PER_SF_NB_IoT 284   // case one NB-IoT antenna && one LTE antenna
-//#define MAX_DLSCH_PAYLOAD_BYTES (MAX_NUM_DLSCH_SEGMENTS*768)
-//#define MAX_ULSCH_PAYLOAD_BYTES (MAX_NUM_ULSCH_SEGMENTS*768)
-//
-//#define MAX_NUM_CHANNEL_BITS_NB_IOT (14*1200*6)  // 14 symbols, 1200 REs, 12 bits/RE
-//#define MAX_NUM_RE (14*1200)
-//
-//#if !defined(SI_RNTI)
-//#define SI_RNTI  (rnti_t)0xffff
-//#endif
-//#if !defined(M_RNTI)
-//#define M_RNTI   (rnti_t)0xfffd
-//#endif
-//#if !defined(P_RNTI)
-//#define P_RNTI   (rnti_t)0xfffe
-//#endif
-//#if !defined(CBA_RNTI)
-//#define CBA_RNTI (rnti_t)0xfff4
-//#endif
-//#if !defined(C_RNTI)
-//#define C_RNTI   (rnti_t)0x1234
-//#endif
-//
-//#define PMI_2A_11 0
-//#define PMI_2A_1m1 1
-//#define PMI_2A_1j 2
-//#define PMI_2A_1mj 3
-//
+
 //// for NB-IoT
 #define MAX_NUM_CHANNEL_BITS_NB_IoT 3360 			//14 symbols * 12 sub-carriers * 10 SF * 2bits/RE  // to check during real tests
 
 #define MAX_NUM_DL_CHANNEL_BITS_NB_IoT 2840      //284* 10 SF // case In-band operation mode witn 1 NB-IoT antenna && 1 LTE antenna //
 #define MAX_TBS_DL_SIZE_BITS_NB_IoT 680         // in release 13 // in release 14 = 2048      // ??? **** not sure
-////#define MAX_NUM_CHANNEL_BITS_NB_IOT 3*680  			/// ??? ****not sure
-//
-//// to be created LTE_eNB_DLSCH_t --> is duplicated for each number of UE and then indexed in the table
-//
 
 typedef enum {
 

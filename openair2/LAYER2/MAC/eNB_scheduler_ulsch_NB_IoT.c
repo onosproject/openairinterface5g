@@ -62,10 +62,6 @@ int schedule_UL_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst,UE_TEMPLATE_NB_IoT *UE_info
 
     sched_temp_UL_NB_IoT_t *NPUSCH_info = (sched_temp_UL_NB_IoT_t*)malloc(sizeof(sched_temp_UL_NB_IoT_t));
 
-    //DCIFormatN0_t *DCI_N0 = (DCIFormatN0_t*)malloc(sizeof(DCIFormatN0_t));
-
-    //available_resource_DL_t *node;
-
     // setting of the NDI
     /*
     if(UE_info->HARQ_round == 0)
@@ -78,17 +74,10 @@ int schedule_UL_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst,UE_TEMPLATE_NB_IoT *UE_info
     ndi = 1;
 
     for (i = 0; i < candidate; i++)
-	{
-		/*step 1 : Check DL resource is available for DCI N0 or not*/
-		check_DCI_result = check_resource_NPDCCH_NB_IoT(mac_inst,H_SFN, frame, subframe, NPDCCH_info, i, UE_sched_ctrl_info->R_dci);
+	  {
+		    /*step 1 : Check DL resource is available for DCI N0 or not*/
+		    check_DCI_result = check_resource_NPDCCH_NB_IoT(mac_inst,H_SFN, frame, subframe, NPDCCH_info, i, UE_sched_ctrl_info->R_dci);
 
-        //node = check_resource_DL(mac_inst,);
-
-        //just use to check when there is no DL function
-        //NPDCCH_info->sf_start = H_SFN*10240+frame*10 +subframe + i * UE_sched_ctrl_info->R_dci;
-        //NPDCCH_info->sf_end = NPDCCH_info->sf_start + (i+1) * UE_sched_ctrl_info->R_dci;
-
-        //LOG_D(MAC,"UE : %5d, NPDCCH result: %d ,NPDCCH start: %d,NPDCCH end : %d\n",UE_info->rnti,check_DCI_result,NPDCCH_info->sf_start,NPDCCH_info->sf_end);
         if( check_DCI_result != -1)
 		    {
 			     /*step 2 : Determine MCS / TBS / REP / RU number*/
@@ -114,7 +103,7 @@ int schedule_UL_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst,UE_TEMPLATE_NB_IoT *UE_info
                 }
 
 
-            //LOG_D(MAC,"TBS : %d MCS %d I_RU %d\n", TBS, UE_info->ul_total_buffer, mcs, Iru);
+            LOG_D(MAC,"TBS : %d MCS %d I_RU %d\n", TBS, UE_info->ul_total_buffer, mcs, Iru);
 
             Nru = RU_table[Iru];
             DL_end = NPDCCH_info->sf_end;
@@ -124,8 +113,7 @@ int schedule_UL_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst,UE_TEMPLATE_NB_IoT *UE_info
 
             LOG_D(MAC,"[%04d][ULSchedulerUSS][UE:%05d] Multi-tone:%d,MCS:%d,TBS:%d,UL_buffer:%d,DL_start:%d,DL_end:%d,N_rep:%d,N_ru:%d,Total_ru:%d,Iru:%d\n", mac_inst->current_subframe,UE_info->rnti,UE_info->multi_tone,mcs,TBS,UE_info->ul_total_buffer,NPDCCH_info->sf_start,DL_end,N_rep,Nru,total_ru,Iru);
 
-            /*step 3 Check UL resource for Uplink data*/
-      			// we will loop the scheduling delay here
+            /*step 3 Check UL resource for Uplink data, we will loop the scheduling delay here */
             for(dly=0;dly<4;dly++)
             {
                 uplink_time = DL_end +scheduling_delay[dly]+1;
@@ -146,11 +134,7 @@ int schedule_UL_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst,UE_TEMPLATE_NB_IoT *UE_info
                 maintain_resource_DL(mac_inst,NPDCCH_info,NULL);
 
                 adjust_UL_resource_list(NPUSCH_info);
-                /*
-                //Change the UE state to idle
-                UE_info->direction = -1;
-                return 0;
-                */
+
                 //Fill result to Output structure
                     if(UE_info->ul_total_buffer==14)
                     {
@@ -159,16 +143,15 @@ int schedule_UL_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst,UE_TEMPLATE_NB_IoT *UE_info
                       UE_sched_ctrl_info->NPUSCH_sf_end=NPUSCH_info->sf_end;
                       UE_sched_ctrl_info->NPUSCH_sf_start=NPUSCH_info->sf_start;
                       //UE_sched_ctrl_info->resent_flag = 1;
-                      LOG_N(MAC,"Key resent \n");
-                                          UE_sched_ctrl_info->dci_n0_index_ndi=0;
-
+                      LOG_D(MAC,"Key resent \n");
+                      UE_sched_ctrl_info->dci_n0_index_ndi=0;
                     }else
                     {
                       UE_sched_ctrl_info->NPDCCH_sf_end=NPDCCH_info->sf_end;
                       UE_sched_ctrl_info->NPDCCH_sf_start=NPDCCH_info->sf_start;
                       UE_sched_ctrl_info->NPUSCH_sf_end=NPUSCH_info->sf_end;
                       UE_sched_ctrl_info->NPUSCH_sf_start=NPUSCH_info->sf_start;
-                                          UE_sched_ctrl_info->dci_n0_index_ndi=ndi;
+                     UE_sched_ctrl_info->dci_n0_index_ndi=ndi;
 
                     }
                     UE_sched_ctrl_info->TBS=TBS;
@@ -178,8 +161,6 @@ int schedule_UL_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst,UE_TEMPLATE_NB_IoT *UE_info
                     UE_sched_ctrl_info->dci_n0_n_ru=Nru;
                     UE_sched_ctrl_info->dci_n0_index_delay=dly;
                     UE_sched_ctrl_info->dci_n0_index_subcarrier=NPUSCH_info->subcarrier_indication;
-                    //UE_sched_ctrl_info->dci_n0_index_ndi=ndi;
-                    //UE_sched_ctrl_info->dci_n0_index_R_dci=get_DCI_REP(UE_sched_ctrl_info->R_dci->R_dci,UE_info->R_max);
                     UE_sched_ctrl_info->dci_n0_index_R_data=I_rep;
 
                     LOG_D(MAC,"[%04d][ULSchedulerUSS][%d][Success] Finish UL USS scheduling \n", mac_inst->current_subframe, UE_info->rnti);
@@ -222,7 +203,7 @@ void rx_sdu_NB_IoT(module_id_t module_id, int CC_id, frame_t frame, sub_frame_t 
   // note: if lcid < 25 this is sdu, otherwise this is CE
   payload_ptr = parse_ulsch_header_NB_IoT(sdu, &num_ce, &num_sdu,rx_ces, rx_lcids, rx_lengths, length);
 
-  LOG_I(MAC,"num_CE= %d, num_sdu= %d, rx_ces[0] = %d, rx_lcids =  %d, rx_lengths[0] = %d, length = %d\n",num_ce,num_sdu,rx_ces[0],rx_lcids[0],rx_lengths[0],length);
+  LOG_D(MAC,"num_CE= %d, num_sdu= %d, rx_ces[0] = %d, rx_lcids =  %d, rx_lengths[0] = %d, length = %d\n",num_ce,num_sdu,rx_ces[0],rx_lcids[0],rx_lengths[0],length);
 
   for (i = 0; i < num_ce; i++)
   {
@@ -261,7 +242,7 @@ void rx_sdu_NB_IoT(module_id_t module_id, int CC_id, frame_t frame, sub_frame_t 
                 PHR = ((payload_ptr[0] >> 5) & 0x01)*2+((payload_ptr[0]>>4) & 0x01);
                 DVI_index = (payload_ptr[0] >>3 & 0x01)*8+ (payload_ptr[0] >>2 & 0x01)*4 + (payload_ptr[0] >>1 & 0x01)*2 +(payload_ptr[0] >>0 & 0x01);
                 ul_total_buffer = DV_table[DVI_index];
-                LOG_I(MAC,"PHR = %d, ul_total_buffer = %d\n",PHR,ul_total_buffer);
+                LOG_D(MAC,"PHR = %d, ul_total_buffer = %d\n",PHR,ul_total_buffer);
                 // go to payload
                 payload_ptr+=1; 
 		            // Note that the first 6 byte (48 bits) of this CCCH SDU should be encoded in the MSG4 for contention resolution 
@@ -291,7 +272,7 @@ void rx_sdu_NB_IoT(module_id_t module_id, int CC_id, frame_t frame, sub_frame_t 
                   LOG_E(MAC,"Not available RA here\n");
                   Valid_msg3 = 1;
                 }
-                LOG_I(MAC,"Contention resolution ID = %02x %02x %02x %02x %02x %02x\n",first_6[0],first_6[1],first_6[2],first_6[3],first_6[4],first_6[5]);
+                LOG_D(MAC,"Contention resolution ID = %02x %02x %02x %02x %02x %02x\n",first_6[0],first_6[1],first_6[2],first_6[3],first_6[4],first_6[5]);
           break;
             case DCCH0_NB_IoT:
             case DCCH1_NB_IoT:
@@ -300,11 +281,12 @@ void rx_sdu_NB_IoT(module_id_t module_id, int CC_id, frame_t frame, sub_frame_t 
                 {
                   block_RLC = 0;
                   int x = 0;
-                  LOG_N(MAC,"Length: %d\n",rx_lengths[i]);
-
+                  LOG_D(MAC,"Length: %d\n",rx_lengths[i]);
+                  /*
                     for (x=0;x<rx_lengths[i];x++)
                       printf("%02x ",payload_ptr[x]);
                     printf("\n");
+                  */
                   mac_rlc_data_ind(
                     module_id,
                     rnti,
@@ -336,21 +318,19 @@ void rx_sdu_NB_IoT(module_id_t module_id, int CC_id, frame_t frame, sub_frame_t 
                     49,
                     (char *)payload_ptr);
                     RLC_RECEIVE_MSG5_FAILED = 0;
-
-
                   }
                   if (UE_info != NULL)
                   {
                     //UE_info->direction = 1; //1 for DL scheduler
-                    LOG_I(MAC,"After receive Msg5, change the UE scheduling direction to DL\n");
+                    LOG_D(MAC,"After receive Msg5, change the UE scheduling direction to DL\n");
                   }
                 }else if (UE_state_machine == rach_for_auth_rsp || UE_state_machine == rach_for_TAU)
                 {
-                  LOG_N(MAC,"Here we are for the DCI N0 generating \n");
+                  LOG_D(MAC,"Here we are for the DCI N0 generating \n");
                   if (UE_info != NULL)
                   {
                     UE_info->direction = 0; //1 for DL scheduler
-                    LOG_I(MAC,"Change direction into 0\n");
+                    LOG_D(MAC,"Change direction into 0\n");
                   }
                   UE_state_machine = rach_for_next;
                 }
@@ -448,5 +428,5 @@ void fill_DCI_N0(DCIFormatN0_t *DCI_N0, UE_TEMPLATE_NB_IoT *UE_info, UE_SCHED_CT
     DCI_N0->rv = 0; // rv will loop 0 & 2
     DCI_N0->DCIRep = get_DCI_REP(UE_sched_ctrl_info->R_dci,UE_info->R_max);
     //DCI_N0->DCIRep = UE_sched_ctrl_info->dci_n0_index_R_dci;
-    LOG_I(MAC,"[fill_DCI_N0] Type %d scind %d I_ru %d I_mcs %d ndi %d I_delay %d I_rep %d RV %d I_dci %d\n", DCI_N0->type, DCI_N0->scind, DCI_N0->ResAssign, DCI_N0->mcs, DCI_N0->ndi, DCI_N0->Scheddly, DCI_N0->RepNum, DCI_N0->rv, DCI_N0->DCIRep);
+    LOG_D(MAC,"[fill_DCI_N0] Type %d scind %d I_ru %d I_mcs %d ndi %d I_delay %d I_rep %d RV %d I_dci %d\n", DCI_N0->type, DCI_N0->scind, DCI_N0->ResAssign, DCI_N0->mcs, DCI_N0->ndi, DCI_N0->Scheddly, DCI_N0->RepNum, DCI_N0->rv, DCI_N0->DCIRep);
 }

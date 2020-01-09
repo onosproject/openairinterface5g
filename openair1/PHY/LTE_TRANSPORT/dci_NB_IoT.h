@@ -19,22 +19,19 @@
  *      contact@openairinterface.org
  */
 
-/*! \file PHY/LTE_TRANSPORT/dci.h
-* \brief typedefs for LTE DCI structures from 36-212, V8.6 2009-03.  Limited to 5 MHz formats for the moment.Current LTE compliance V8.6 2009-03.
-* \author R. Knopp
-* \date 2011
+/*! \file PHY/LTE_TRANSPORT/dci_NB_IoT.h
+* \brief typedefs for NB-IoT DCI structures (DCI N0, N1 and N2) from 36-212, V13.2 Follow the spec V13.2
+* \author Nick Ho
+* \date 2019
 * \version 0.1
-* \company Eurecom
-* \email: knopp@eurecom.fr
+* \company NTUST
+* \email: nick133371@gmail.com
 * \note
 * \warning
 */
 #ifndef __DCI_NB_IOT_H__
 #define __DCI_NB_IOT_H__
 
-//#ifndef USER_MODE
-//#include "PHY/types.h"
-//#else
 #include <stdint.h>
 //#endif
 

@@ -24,7 +24,7 @@
 * \author R. Knopp
 * \date 2011
 * \version 0.1
-* \company Eurecom
+* \company Eurecom, B-COM
 * \email: knopp@eurecom.fr
 * \note
 * \warning
@@ -35,20 +35,9 @@
 #include <stdlib.h>
 #include <string.h>
 #endif
-//#include "PHY/defs.h"
-//#include "PHY/LTE_TRANSPORT/proto_NB_IoT.h"
-//#include "PHY/CODING/defs_NB_IoT.h"
+
 #include "PHY/defs_NB_IoT.h"  // /LTE_TRANSPORT/defs_NB_IoT.h
-//#include "PHY/LTE_REFSIG/defs_NB_IoT.h"
-//#include "PHY/extern.h"
-//////////#include "PHY/extern_NB_IoT.h"
-//#include "SCHED/defs.h"
-/////////////////////////////#include "SCHED/defs_nb_iot.h"
-//#include "SIMULATION/TOOLS/defs.h" // for taus 
-//#include "PHY/sse_intrin.h"
-//#include "assertions.h" 
-//#include "T.h"
-/////////////////////////////////////////////////////////////////////
+
 
 //static uint8_t d[2][3*(MAX_DCI_SIZE_BITS_NB_IoT + 16) + 96];
 //static uint8_t w[2][3*3*(MAX_DCI_SIZE_BITS_NB_IoT+16)];

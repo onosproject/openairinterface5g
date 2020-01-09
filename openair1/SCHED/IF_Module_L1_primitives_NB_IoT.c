@@ -62,14 +62,10 @@ void handle_nfapi_dlsch_pdu_NB_IoT(PHY_VARS_eNB *eNB,
 	NB_IoT_DL_eNB_HARQ_t *ndlsch_harq23;
 	nfapi_dl_config_ndlsch_pdu_rel13_t *rel13 = &dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13;
 	int UE_id= -1;
-	int flag_malloc = 0;
 	ndlsch= eNB->ndlsch_SIB1;
 	ndlsch23= eNB->ndlsch_SIB23;
 	
-//	if(flag_malloc) free (ndlsch->harq_process);
 
-//	ndlsch->harq_process = (NB_IoT_DL_eNB_HARQ_t*) malloc (sizeof(NB_IoT_DL_eNB_HARQ_t));
-	flag_malloc = 1 ;
   //Check for SI PDU since in NB-IoT there is no DCI for that
   //SIB1 (type 0), other DLSCH data (type 1) (include the SI messages) based on our ASSUMPTIONs
 
@@ -105,21 +101,12 @@ void handle_nfapi_dlsch_pdu_NB_IoT(PHY_VARS_eNB *eNB,
 		//LOG_I(PHY,"B content_sib1:%d\n",sdu);
 		/////ndlsch->content_sib1.pdu = sdu;
 		ndlsch_harq->pdu = sdu;
-		//LOG_I(PHY,"A content_sib1:%d\n",ndlsch->content_sib1.pdu);
-		
-		//should be from 1 to 8
 		
 		ndlsch->resource_assignment_SIB1 = rel13->number_of_subframes_for_resource_assignment;//maybe we don't care about it since a fixed schedule
 		ndlsch->repetition_number_SIB1 = rel13->repetition_number; //is the schedulingInfoSIB1 (value 1-15) of MIB that is mapped into value 4-8-16 (see NDLSCH fapi specs Table 4-47)
 		ndlsch->modulation = rel13->modulation;
 		ndlsch->status = ACTIVE_NB_IoT;
 
-		//ndlsch->
-		
-		//SI information in reality have no feedback (so there is no retransmission from the HARQ view point since no ack and nack)
-//        ndlsch_harq->frame = frame;
-//        ndlsch_harq->subframe = subframe;
-		
         ndlsch->nrs_antenna_ports = rel13->nrs_antenna_ports_assumed_by_the_ue;
         ndlsch->scrambling_sequence_intialization = rel13->scrambling_sequence_initialization_cinit;
 		
@@ -256,7 +243,6 @@ void handle_nfapi_dlsch_pdu_NB_IoT(PHY_VARS_eNB *eNB,
           
           ndlsch_harq->TBS  = rel13->length;
 		  ndlsch_harq->pdu  = sdu;
-	  printf("sdu after handling MSG4 or ue-spec data : %u********\n", sdu);
 	  }
 
   }
@@ -533,9 +519,7 @@ void schedule_response_NB_IoT(Sched_Rsp_NB_IoT_t *Sched_INFO)
 
   //XXX problem: although we may have nothing to transmit this function should be always triggered in order to allow the PHY layer to complete the repetitions
   //of previous Transport Blocks
-  //phy_procedures_eNB_TX_NB_IoT(eNB,proc,NULL);
-  
-  //phy_procedures_eNB_TX_NB_IoT(eNB,proc,0); // check if 0 or NULL ?!
+
   LOG_D(PHY,"Schedule response has been done\n");
 }
 

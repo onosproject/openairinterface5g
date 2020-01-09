@@ -170,6 +170,7 @@ int rx_nsss_NB_IoT(PHY_VARS_UE_NB_IoT *ue,int32_t *tot_metric)
 	// this could be changed in further version
 	for (l=0;l<11;l++){
 		toto = nsss_extract_NB_IoT(ue,frame_parms,nsss_ext,l);  
+		LOG_D(PHY,"toto is %d\n",toto);
 	} 
 
 	// now do the Cell ID estimation based on the precomputed sequences in PHY/LTE_TRANSPORT/nsss_NB_IoT.h

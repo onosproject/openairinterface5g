@@ -20,9 +20,9 @@
  */
 /*! \file eNB_scheduler_dlsch_NB_IoT.c
  * \brief handle DL UE-specific scheduling
- * \author  NTUST BMW Lab./Xavier LIU
- * \date 2017 - 2018
- * \email: sephiroth7277@gmail.com 
+ * \author  NTUST BMW Lab
+ * \date 2017 - 2049
+ * \email: sephiroth7277@gmail.com, nick133371@gmail.com
  * \version 1.0
  *
  */
@@ -69,9 +69,9 @@ int schedule_DL_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_inst, UE_
 	int HARQ_delay=0;
 	uint32_t size_indicated_from_rlc=0;
 	uint32_t data_size=0;
-	uint32_t rlc_control_pdu_size=0; //
-	uint32_t rlc_data_pdu_size=0; //
-	uint32_t padding_size=0; //
+	uint32_t rlc_control_pdu_size=0; 
+	uint32_t rlc_data_pdu_size=0; 
+	uint32_t padding_size=0; 
 
 	uint8_t sdu_temp[SCH_PAYLOAD_SIZE_MAX_NB_IoT]; //
 	uint8_t sdu_temp2[SCH_PAYLOAD_SIZE_MAX_NB_IoT]; //
@@ -110,9 +110,10 @@ int schedule_DL_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_inst, UE_
 #if 1
 	if(UE_info->HARQ_round==0)
 	{
+		// Note: The flag Receive from RLC will set to 1 when there is a downlink data to be scheduled, and returned to 0 when the scheduling is done
 		if (Receive_From_RLC == 0)
 		{
-		//Get RLC status	
+		// Request the RLC for status PDU size
 		rlc_status = mac_rlc_status_ind(
 										module_id,
 										UE_info->rnti,
@@ -124,8 +125,8 @@ int schedule_DL_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_inst, UE_
 										DCCH0_NB_IoT,
 										TBS-3);
 		size_indicated_from_rlc = rlc_status.bytes_in_buffer;
-		LOG_D(MAC,"[NB-IoT] RLC indicate to MAC that the data size is : %d\n",size_indicated_from_rlc);
-
+		LOG_D(MAC,"[NB-IoT] RLC indicate to MAC that the status PDU data size is : %d\n",size_indicated_from_rlc);
+		// Request the RLC for status PDU itself
 		rlc_control_pdu_size = mac_rlc_data_req(
 					      module_id,
 					      UE_info->rnti,
@@ -140,7 +141,7 @@ int schedule_DL_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_inst, UE_
 
         //LOG_I(MAC,"[NB-IoT][DCCH]  Got %d bytes from RLC\n",rlc_control_pdu_size);
 
-		//Get RLC status	
+		// Request the RLC for DATA PDU size
 		rlc_status2 = mac_rlc_status_ind(
 										module_id,
 										UE_info->rnti,
@@ -151,6 +152,7 @@ int schedule_DL_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_inst, UE_
 										0,
 										DCCH0_NB_IoT,
 										TBS-3-rlc_control_pdu_size);
+		// Request the RLC for DATA PDU itself
          rlc_data_pdu_size = mac_rlc_data_req(
 					      module_id,
 					      UE_info->rnti,
@@ -189,12 +191,11 @@ int schedule_DL_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_inst, UE_
 
 		    //Generate header
 		    payload_offset = generate_dlsch_header_NB_IoT(UE_info->DLSCH_pdu.payload, 1, &logical_channel, &rlc_data_pdu_size, 0, 0, TBS, padding_size);
-		    //Complete MAC PDU
-
+		    
+		    //Generate the whole MAC PDU contain header, status pdu, data pdu
 		    memcpy(UE_info->DLSCH_pdu.payload+payload_offset, sdu_temp, rlc_control_pdu_size);		    
 		    memcpy(UE_info->DLSCH_pdu.payload+payload_offset+rlc_control_pdu_size, sdu_temp2, rlc_data_pdu_size);
 
-		    printf("print the MAC DATA PDU including length payload, we have header %d byte \n",payload_offset);
             //int y;
             for (y=0;y<TBS;y++){
             //for (y=0;y<payload_offset+mac_sdu_size2;y++){
@@ -219,7 +220,7 @@ int schedule_DL_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_inst, UE_
 					TBS = get_tbs(data_size, I_tbs, &I_sf);
 					LOG_I(MAC,"[%04d][DLSchedulerUSS] TBS change to %d because data size is smaller than previous TBS\n", mac_inst->current_subframe, TBS);
 				}
-				printf("print the MAC DATA PDU including length payload, we have header %d byte \n",data_size);
+				LOG_D(MAC,"print the MAC DATA PDU including length payload, we have header %d byte \n",data_size);
             	//int y;
             	for (y=0;y<TBS;y++)
             	{
@@ -232,6 +233,7 @@ int schedule_DL_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_inst, UE_
 
 		    if (Receive_From_RLC == 0)
 		    {
+		    	// store the PDU into MAC_pdu structure
 		    	memcpy(UE_info->MAC_pdu.payload,UE_info->DLSCH_pdu.payload,TBS);
 		    	UE_info->MAC_pdu.pdu_size = TBS;
 		    	Receive_From_RLC = 1;
@@ -268,30 +270,21 @@ int schedule_DL_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_inst, UE_
 		/*Check NPDSCH Resource*/
 		if(end_flagCCH!=-1)
 		{
-		  //LOG_D(MAC,"[%04d][DLSchedulerUSS] Candidate num %d allocate success\n",mac_inst->current_subframe, cdd_num);
-			//LOG_D(MAC,"[%04d][DLSchedulerUSS] Allocate NPDCCH subframe %d to subframe %d cdd index %d\n", mac_inst->current_subframe, NPDCCH_info->sf_start, NPDCCH_info->sf_end, cdd_num);
-			/*
-			//Max DL TBS
-			if(TBS > data_size+subheader_length)
-			{
-				TBS = get_tbs(data_size, I_tbs, &I_sf);
-				LOG_D(MAC,"[%04d][DLSchedulerUSS] [%d] data_size %d TBS change to %d \n", mac_inst->current_subframe,UE_info->rnti, data_size, TBS);
-			}
-			*/
 
 			//Get number of subframe this UE need per repetition
 			n_sf = get_num_sf(I_sf);
 			//LOG_D(MAC,"[%04d][DLSchedulerUSS] Number SF %d index SF %d\n",mac_inst->current_subframe, n_sf, I_sf);
 			//LOG_D(MAC,"[%04d][DLSchedulerUSS] Require total %d DL SF Rep %d\n", n_sf*UE_sched_ctrl_info->R_dl, UE_sched_ctrl_info->R_dl);
-			//Check have enough NPDSCH resource or not
-			//loop 8 scheduling delay index
+
+			//Check have enough NPDSCH resource or not, loop 8 scheduling delay index
 			for(I_delay=0;I_delay<1;++I_delay)
 			{
 		        if(search_space_end_sf<NPDCCH_info->sf_end+get_scheduling_delay(I_delay, UE_info->R_max)+5)
 		        {
 		          end_flagSCH = check_resource_NPDSCH_NB_IoT(mac_inst, NPDSCH_info, NPDCCH_info->sf_end, I_delay, UE_info->R_max, UE_sched_ctrl_info->R_dl_data, n_sf);
 
-			  //Have available resource
+			  	  //Have available NPDSCH resource
+
 		          /*Check HARQ resource*/
 		          if(end_flagSCH!=-1)
 		          {
@@ -308,37 +301,12 @@ int schedule_DL_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_inst, UE_
 		                //toggle NDI
 		                if(flag_retransmission==0)
 		                {
+		                    //very important for DCI toggle 
+		                    UE_info->oldNDI_DL=(UE_info->oldNDI_DL+1)%2;
+		                    //New transmission need to request data from RLC and generate new MAC PDU
+		                    UE_info->I_mcs_dl = I_mcs;
 
-		                  	UE_info->oldNDI_DL=(UE_info->oldNDI_DL+1)%2;
-
-		                  //if (Security_flag==1)
-		                  	//UE_info->oldNDI_DL=0;
-
-		                  //New transmission need to request data from RLC and generate new MAC PDU
-		                  UE_info->I_mcs_dl = I_mcs;
-
-/*               
-		                  //Request data from RLC layer
-		                  rlc_status = mac_rlc_status_ind(
-		                        module_id,
-		                        UE_info->rnti,
-		                        module_id,
-		                        frame_start,
-		                        subframe_start,
-		                        1,
-		                        0,
-		                        DCCH0_NB_IoT,
-		                        TBS-subheader_length);
-				
-				 data_size = rlc_status.bytes_in_buffer;
-               			 LOG_N(MAC,"[NB-IoT] RLC indicate to MAC that the data size is : %d\n",data_size);
-
-		                  mac_sdu_size = mac_rlc_data_req(module_id, UE_info->rnti, module_id, frame_start, 1, 0, DCCH0_NB_IoT, TBS, (char *)&sdu_temp[0]);
-*/		                  
-		                  //channel=DCCH0_NB_IoT;
-
-		                  //UE_info->DLSCH_pdu.pdu_size=TBS;
-		                  UE_sched_ctrl_info->NPDCCH_sf_end=NPDCCH_info->sf_end;
+		                    UE_sched_ctrl_info->NPDCCH_sf_end=NPDCCH_info->sf_end;
 							UE_sched_ctrl_info->NPDCCH_sf_start=NPDCCH_info->sf_start;
 							UE_sched_ctrl_info->NPDSCH_sf_end=NPDSCH_info->sf_end;
 							UE_sched_ctrl_info->NPDSCH_sf_start=NPDSCH_info->sf_start;
@@ -359,41 +327,22 @@ int schedule_DL_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_inst, UE_
 		                	Receive_From_RLC = 0;
 		                LOG_I(MAC,"[%04d][DLSchedulerUSS][%d][Success] Complete scheduling with data size %d\n", mac_inst->current_subframe, UE_info->rnti, data_size);
 		                //LOG_D(MAC,"[%04d][DLSchedulerUSS] RNTI %d\n", mac_inst->current_subframe, UE_info->rnti);
-		                LOG_I(MAC,"[%04d][DLSchedulerUSS][%d][Success] Allocate NPDCCH subframe %d to subframe %d candidate index %d\n", mac_inst->current_subframe, UE_info->rnti, NPDCCH_info->sf_start, NPDCCH_info->sf_end, cdd_num);
-		                LOG_I(MAC,"[%04d][DLSchedulerUSS][%d][Success] Scheduling delay index: %d value: %d + 4\n", mac_inst->current_subframe, UE_info->rnti, I_delay, get_scheduling_delay(I_delay, UE_info->R_max));
-		                LOG_I(MAC,"[%04d][DLSchedulerUSS][%d][Success] Allocate NPDSCH subframe %d to subframe %d\n", mac_inst->current_subframe, UE_info->rnti, NPDSCH_info->sf_start, NPDSCH_info->sf_end);
-		                LOG_I(MAC,"[%04d][DLSchedulerUSS][%d][Success] Allocate HARQ feedback subframe %d to subframe %d\n", mac_inst->current_subframe, UE_info->rnti, HARQ_info->sf_start, HARQ_info->sf_end);
-		                LOG_I(MAC,"[%04d][DLSchedulerUSS][%d] Allocate NPDCCH subframe %d to subframe %d candidate index %d\n", mac_inst->current_subframe, UE_info->rnti, NPDCCH_info->sf_start, NPDCCH_info->sf_end, cdd_num);
-		                LOG_I(MAC,"[%04d][DLSchedulerUSS][%d] Scheduling delay index: %d value: %d + 4\n", mac_inst->current_subframe, UE_info->rnti, I_delay, get_scheduling_delay(I_delay, UE_info->R_max));
-		                LOG_I(MAC,"[%04d][DLSchedulerUSS][%d] Allocate NPDSCH subframe %d to subframe %d\n", mac_inst->current_subframe, UE_info->rnti, NPDSCH_info->sf_start, NPDSCH_info->sf_end);
-		                LOG_I(MAC,"[%04d][DLSchedulerUSS][%d] Allocate HARQ feedback subframe %d to subframe %d\n", mac_inst->current_subframe, UE_info->rnti, HARQ_info->sf_start, HARQ_info->sf_end);
+		                LOG_D(MAC,"[%04d][DLSchedulerUSS][%d][Success] Allocate NPDCCH subframe %d to subframe %d candidate index %d\n", mac_inst->current_subframe, UE_info->rnti, NPDCCH_info->sf_start, NPDCCH_info->sf_end, cdd_num);
+		                LOG_D(MAC,"[%04d][DLSchedulerUSS][%d][Success] Scheduling delay index: %d value: %d + 4\n", mac_inst->current_subframe, UE_info->rnti, I_delay, get_scheduling_delay(I_delay, UE_info->R_max));
+		                LOG_D(MAC,"[%04d][DLSchedulerUSS][%d][Success] Allocate NPDSCH subframe %d to subframe %d\n", mac_inst->current_subframe, UE_info->rnti, NPDSCH_info->sf_start, NPDSCH_info->sf_end);
+		                LOG_D(MAC,"[%04d][DLSchedulerUSS][%d][Success] Allocate HARQ feedback subframe %d to subframe %d\n", mac_inst->current_subframe, UE_info->rnti, HARQ_info->sf_start, HARQ_info->sf_end);
+		                LOG_D(MAC,"[%04d][DLSchedulerUSS][%d] Allocate NPDCCH subframe %d to subframe %d candidate index %d\n", mac_inst->current_subframe, UE_info->rnti, NPDCCH_info->sf_start, NPDCCH_info->sf_end, cdd_num);
+		                LOG_D(MAC,"[%04d][DLSchedulerUSS][%d] Scheduling delay index: %d value: %d + 4\n", mac_inst->current_subframe, UE_info->rnti, I_delay, get_scheduling_delay(I_delay, UE_info->R_max));
+		                LOG_D(MAC,"[%04d][DLSchedulerUSS][%d] Allocate NPDSCH subframe %d to subframe %d\n", mac_inst->current_subframe, UE_info->rnti, NPDSCH_info->sf_start, NPDSCH_info->sf_end);
+		                LOG_D(MAC,"[%04d][DLSchedulerUSS][%d] Allocate HARQ feedback subframe %d to subframe %d\n", mac_inst->current_subframe, UE_info->rnti, HARQ_info->sf_start, HARQ_info->sf_end);
 		                //Store PDU in UE template for retransmission
-		                //fill_DCI_N1(DCI_N1, UE_info, I_delay, I_sf, HARQ_info->ACK_NACK_resource_field);
-		                //LOG_D(MAC,"[%04d][DLSchedulerUSS] HARQ index %d\n", HARQ_info->ACK_NACK_resource_field);
-		                
-		                //LOG_D(MAC,"[%04d][DLSchedulerUSS][%d] DCI N1 type:%d order:%d MCS:%d HARQ index:%d R:%d RscAssign:%d scheddly:%d DCI_R:%d\n", mac_inst->current_subframe, UE_info->rnti, DCI_N1->type, DCI_N1->orderIndicator, DCI_N1->mcs, DCI_N1->HARQackRes, DCI_N1->RepNum, DCI_N1->ResAssign, DCI_N1->Scheddly, DCI_N1->DCIRep);
 
-		                //Generate Scheduling result for this UE
-		                //generate_scheduling_result_DL(NPDCCH_info->sf_start, NPDSCH_info->sf_start, HARQ_info->sf_start, DCI_N1, UE_info->rnti, TBS, UE_info->DLSCH_pdu.payload);
-		                //generate_scheduling_result_DL(NPDCCH_info, NPDSCH_info, HARQ_info, DCI_N1, UE_info->rnti, TBS, UE_info->DLSCH_pdu.payload);
-		                //LOG_D(MAC,"[%04d][DLSchedulerUSS] finish generate scheduling result\n");
 		                //matain DL avialable resource
 		                maintain_resource_DL(mac_inst, NPDCCH_info, NPDSCH_info);
-		                //available_resource_DL_t *temp = available_resource_DL;
-		                /*
-		                while(temp!=NULL)
-		                {
-		                  LOG_D(MAC,"[%04d][DLSchedulerUSS] Available resource node subframe start %d end %d\n", mac_inst->current_subframe, temp->start_subframe, temp->end_subframe);
-		                  temp=temp->next;
-		                }
-		                */
+
 		                //Do maintain UL resource
 		                adjust_UL_resource_list(HARQ_info);
 		                LOG_D(MAC,"[%04d][DLSchedulerUSS] Complete DL scheduling\n", mac_inst->current_subframe);
-		                //Change the UE state to idle
-		                //UE_info->direction = -1;
-
-		                //LOG_D(MAC,"[%04d][DLSchedulerUSS] RNTI %d complete scheduling\n", mac_inst->current_subframe, UE_info->rnti);
 
 		                return 0;
 		              }
@@ -533,7 +482,7 @@ uint32_t generate_dlsch_header_NB_IoT(uint8_t *pdu, uint32_t num_sdu, logical_ch
 		return -1;
 	}
 	//LOG_D(MAC,"total SDU size %d\n", total_sdu_size);
-	LOG_I(MAC,"padding size %d\n", padding_size);
+	LOG_D(MAC,"padding size %d\n", padding_size);
 	if(padding_size>2)
 	{
 		flag_end_padding=1;
@@ -581,7 +530,7 @@ uint32_t generate_dlsch_header_NB_IoT(uint8_t *pdu, uint32_t num_sdu, logical_ch
         {		
             if(sdu_length[i]<128)
             {
-            	LOG_N(MAC,"Pack the header here\n");
+            	LOG_D(MAC,"Pack the header here\n");
            		/*mac_header->E=0;
             	mac_header->LCID = DCCH0_NB_IoT;
             	//mac_header->LCID = 1;
@@ -668,7 +617,7 @@ void fill_DCI_N1(DCIFormatN1_t *DCI_N1, UE_TEMPLATE_NB_IoT *UE_info, UE_SCHED_CT
 	DCI_N1->ndi = UE_info->oldNDI_DL;
 	//DCI_N1->DCIRep = 3-UE_info->R_max/UE_info->R_dci/2;
 	DCI_N1->DCIRep=get_DCI_REP(UE_sched_ctrl_info->R_dci, UE_info->R_max);
-	LOG_I(MAC,"[fill_DCI_N1] Type %d order %d I_delay %d I_SF %d I_mcs %d I_rep %d I_harq %d I_dci %d\n", DCI_N1->type, DCI_N1->orderIndicator, DCI_N1->Scheddly, DCI_N1->ResAssign, DCI_N1->mcs, DCI_N1->RepNum, DCI_N1->HARQackRes, DCI_N1->DCIRep);
+	LOG_D(MAC,"[fill_DCI_N1] Type %d order %d I_delay %d I_SF %d I_mcs %d I_rep %d I_harq %d I_dci %d\n", DCI_N1->type, DCI_N1->orderIndicator, DCI_N1->Scheddly, DCI_N1->ResAssign, DCI_N1->mcs, DCI_N1->RepNum, DCI_N1->HARQackRes, DCI_N1->DCIRep);
 }
 	
 

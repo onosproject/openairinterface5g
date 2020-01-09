@@ -180,7 +180,7 @@ int output_handler(eNB_MAC_INST_NB_IoT *mac_inst, module_id_t module_id, int CC_
 						dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.harq_ack_resource                     = ((DCIFormatN1_t *)DCI_pdu)->HARQackRes;
 						dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.npdcch_order_indication               = ((DCIFormatN1_t *)DCI_pdu)->orderIndicator;
 						dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.dci_subframe_repetition_number        = ((DCIFormatN1_t *)DCI_pdu)->DCIRep;
-						LOG_I(MAC,"[hypersfn:%2d][frame:%2d][subframe:%2d]NB-IoT fill DL DCI, res:%d, rep:%d\n",hypersfn,frame,subframe,dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.resource_assignment,((DCIFormatN1_t *)DCI_pdu)->RepNum);
+						LOG_D(MAC,"[hypersfn:%2d][frame:%2d][subframe:%2d]NB-IoT fill DL DCI, res:%d, rep:%d\n",hypersfn,frame,subframe,dl_config_pdu->npdcch_pdu.npdcch_pdu_rel13.resource_assignment,((DCIFormatN1_t *)DCI_pdu)->RepNum);
 
 					}else if(schedule_result_list_DL->direction == UL) // DCI for uplink
 					{
@@ -227,7 +227,7 @@ int output_handler(eNB_MAC_INST_NB_IoT *mac_inst, module_id_t module_id, int CC_
 							LOG_D(MAC,"[hypersfn:%2d][frame:%2d][subframe:%2d]NB-IoT fill SIBs\n",hypersfn,frame,subframe);
 
 						}else
-							LOG_I(MAC,"[hypersfn:%2d][frame:%2d][subframe:%2d]NB-IoT fill DL Data, length = %d number of sf for a data = %d\n",hypersfn,frame,subframe,dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13.length,dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13.number_of_subframes_for_resource_assignment);
+							LOG_D(MAC,"[hypersfn:%2d][frame:%2d][subframe:%2d]NB-IoT fill DL Data, length = %d number of sf for a data = %d\n",hypersfn,frame,subframe,dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13.length,dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13.number_of_subframes_for_resource_assignment);
 					break;
 				default:
 					break;

@@ -194,18 +194,6 @@ int scrambling_npbch_REs_rel_14(LTE_DL_FRAME_PARMS      *frame_parms,
 */
 // Functions below implement 36-211 and 36-212
 
-/*Function to pack the DCI*/ 
-// newly added function for NB-IoT , does not exist for LTE
-void add_dci_NB_IoT(DCI_PDU_NB_IoT    *DCI_pdu,
-                    void              *pdu,
-                    rnti_t            rnti,
-                    unsigned char     dci_size_bytes,
-                    unsigned char     aggregation, 
-                    unsigned char     dci_size_bits,
-                    unsigned char     dci_fmt,
-                    uint8_t           npdcch_start_symbol);
-
-
 /*Use the UL DCI Information to configure PHY and also Pack the DCI*/
 int generate_eNB_ulsch_params_from_dci_NB_IoT(PHY_VARS_eNB            *eNB,
                                               int                     frame,
