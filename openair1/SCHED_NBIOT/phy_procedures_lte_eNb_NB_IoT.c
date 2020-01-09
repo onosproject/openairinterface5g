@@ -405,8 +405,8 @@ void phy_procedures_eNB_uespec_RX_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_rxtx_proc_
   //RX processing for ue-specific resources (i
   //NB_IoT_DL_FRAME_PARMS     *fp=&eNB->frame_parms_NB_IoT;
 
-  const int subframe    =   proc->subframe_rx;
-  const int frame       =   proc->frame_rx;
+  // const int subframe    =   proc->subframe_rx;
+  // const int frame       =   proc->frame_rx;
 
 
   npusch_procedures(eNB,proc);

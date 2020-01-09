@@ -936,10 +936,10 @@ int ulsch_decoding_data_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,int UE_id,int harq_pid,i
   int G = ulsch_harq->G;
   unsigned int E;
 
-  uint8_t (*tc)(int16_t *y,
+  uint8_t (*tc)(int16_t *,
+                int16_t *,
                 uint8_t *,
-                uint16_t,
-                uint16_t,
+                uint8_t *,
                 uint16_t,
                 uint8_t,
                 uint8_t,
@@ -1038,9 +1038,9 @@ int ulsch_decoding_data_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,int UE_id,int harq_pid,i
    // start_meas(&eNB->ulsch_turbo_decoding_stats);
     
     ret = tc(&ulsch_harq->d[r][96],
-	     ulsch_harq->c[r],
-	     Kr,
-	     f1f2mat_old[iind*2],
+	     &ulsch_harq->c[r],
+	     &Kr,
+	     &f1f2mat_old[iind*2],
 	     f1f2mat_old[(iind*2)+1],
 	     ulsch->max_turbo_iterations,//MAX_TURBO_ITERATIONS,
 	     crc_type,

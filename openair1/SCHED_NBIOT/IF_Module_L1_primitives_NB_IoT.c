@@ -62,14 +62,14 @@ void handle_nfapi_dlsch_pdu_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,
 	NB_IoT_DL_eNB_HARQ_t *ndlsch_harq23;
 	nfapi_dl_config_ndlsch_pdu_rel13_t *rel13 = &dl_config_pdu->ndlsch_pdu.ndlsch_pdu_rel13;
 	int UE_id= -1;
-	int flag_malloc;
+	// int flag_malloc;
 	ndlsch= eNB->ndlsch_SIB1;
 	ndlsch23= eNB->ndlsch_SIB23;
 	
 //	if(flag_malloc) free (ndlsch->harq_process);
 
 //	ndlsch->harq_process = (NB_IoT_DL_eNB_HARQ_t*) malloc (sizeof(NB_IoT_DL_eNB_HARQ_t));
-	flag_malloc = 1 ;
+	// flag_malloc = 1 ;
   //Check for SI PDU since in NB-IoT there is no DCI for that
   //SIB1 (type 0), other DLSCH data (type 1) (include the SI messages) based on our ASSUMPTIONs
 

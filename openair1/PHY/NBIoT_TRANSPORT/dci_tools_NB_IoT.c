@@ -480,7 +480,7 @@ uint8_t subframe2harq_pid_NB_IoT(NB_IoT_DL_FRAME_PARMS *frame_parms,uint32_t fra
 
   uint8_t ret = 255;
 
-  if (frame_parms->frame_type == FDD) {
+  if (frame_parms->frame_type == FDD_NB_IoT) {
     ret = (((frame<<1)+subframe)&7);
   } else {
 

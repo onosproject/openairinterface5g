@@ -384,7 +384,7 @@ uint8_t generate_dci_top_NB_IoT(NB_IoT_eNB_NPDCCH_t		*npdcch,
 {
 
 
-  int      i=2, G=0;
+  int      i, G;
   //temporary variable
   uint16_t rnti[i];
   uint8_t  L = 0;

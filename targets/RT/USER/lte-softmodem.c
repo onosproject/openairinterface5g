@@ -154,12 +154,10 @@ char channels[128] = "0";
 int                      rx_input_level_dBm;
 
 int                             otg_enabled;
-static int                      tx_max_power[MAX_NUM_CCs]; /* =  {0,0}*/;
 
 uint8_t exit_missed_slots=1;
 uint64_t num_missed_slots=0; // counter for the number of missed slots
 
-static LTE_DL_FRAME_PARMS      *frame_parms[MAX_NUM_CCs];
 
 node_function_t node_function[MAX_NUM_CCs];
 node_timing_t node_timing[MAX_NUM_CCs];
@@ -543,12 +541,11 @@ static  void wait_nfapi_init(char *thread_name) {
 }
 
 int main( int argc, char **argv ) {
-  int i,j,k,re;
+  int i;
   int CC_id;
   int ru_id;
   int node_type = ngran_eNB;
   uint8_t beta_ACK=0,beta_RI=0,beta_CQI=2;
-  PHY_VARS_UE *UE[MAX_NUM_CCs];
 
   if ( load_configmodule(argc,argv,0) == NULL) {
     exit_fun("[SOFTMODEM] Error, configuration module init failed\n");
@@ -693,7 +690,7 @@ int main( int argc, char **argv ) {
 
             PHY_vars_eNB_NB_IoT_g[0][0]->rx_total_gain_dB = (int)rx_gain[0][0];
 
-            if (frame_parms_NB_IoT[0]->frame_type==FDD) {
+            if (frame_parms_NB_IoT[0]->frame_type==FDD_NB_IoT) {
                 PHY_vars_eNB_NB_IoT_g[0][0]->N_TA_offset = 0;
             } else {
                 if (frame_parms_NB_IoT[0]->N_RB_DL == 100)

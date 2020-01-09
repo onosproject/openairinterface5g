@@ -1526,10 +1526,10 @@ uint32_t  turbo_decoding_NB_IoT(PHY_VARS_eNB_NB_IoT           *eNB,
           int            ret = 1;
           unsigned int   E; 
 
-          uint8_t (*tc)(int16_t *y,
+          uint8_t (*tc)(int16_t *,
+                        int16_t *,
                         uint8_t *,
-                        uint16_t,
-                        uint16_t,
+                        uint8_t *,
                         uint16_t,
                         uint8_t,
                         uint8_t,
@@ -1614,9 +1614,9 @@ uint32_t  turbo_decoding_NB_IoT(PHY_VARS_eNB_NB_IoT           *eNB,
               }
               // turbo decoding and CRC 
               ret = tc(&ulsch_harq->d[r][96],
-                       ulsch_harq->c[r],
-                       Kr,
-                       f1f2mat_old[iind*2],
+                       &ulsch_harq->c[r],
+                       &Kr,
+                       &f1f2mat_old[iind*2],
                        f1f2mat_old[(iind*2)+1],
                        ulsch_NB_IoT->max_turbo_iterations, // MAX_TURBO_ITERATIONS,
                        crc_type,
