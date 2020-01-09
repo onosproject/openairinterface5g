@@ -333,7 +333,7 @@ void nr_dump_frame_parms(NR_DL_FRAME_PARMS *fp)
   LOG_I(PHY,"fp->samples_per_frame_wCP=%d\n",fp->samples_per_frame_wCP);
   LOG_I(PHY,"fp->samples_per_subframe=%d\n",fp->samples_per_subframe);
   LOG_I(PHY,"fp->samples_per_frame=%d\n",fp->samples_per_frame);
-  LOG_I(PHY,"fp->dl_CarrierFreq=%u\n",fp->dl_CarrierFreq);
+  LOG_I(PHY,"fp->dl_CarrierFreq=%lu\n",fp->dl_CarrierFreq);
   LOG_I(PHY,"fp->ul_CarrierFreq=%u\n",fp->ul_CarrierFreq);
 }
 
