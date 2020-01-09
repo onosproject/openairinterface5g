@@ -898,8 +898,8 @@ int nfapi_vnf_allocate_phy(nfapi_vnf_config_t* config, int p5_idx, uint16_t* phy
 	info->timing_window = 30;       // This seems to override what gets set by the user - why???
 	info->timing_info_mode = 0x03;
 #ifdef PHY_RM
-        info->timing_info_period = 32
-#else;
+        info->timing_info_period = 32;
+#else
 	info->timing_info_period = 128;
 #endif
 	nfapi_vnf_phy_info_list_add(config, info);
