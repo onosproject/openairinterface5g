@@ -87,7 +87,8 @@
 #include "common/utils/LOG/vcd_signal_dumper.h"
 #include "UTIL/OPT/opt.h"
 #include "enb_config.h"
-
+#include "structures.h"
+#include "openair1/PHY/impl_defs_lte_NB_IoT.h"
 
 #ifndef OPENAIR2
   #include "UTIL/OTG/otg_extern.h"
@@ -144,7 +145,7 @@ extern double cpuf;
 
 void init_eNB(int,int);
 void stop_eNB(int nb_inst);
-void init_eNB_proc_NB_IoT(int inst , eNBs_t *eNBs);
+void init_eNB_proc_NB_IoT(int inst);
 int wakeup_tx(PHY_VARS_eNB *eNB ,int frame_rx,int subframe_rx,int frame_tx,int subframe_tx,uint64_t timestamp_tx);
 int wakeup_txfh(PHY_VARS_eNB *eNB, L1_rxtx_proc_t *proc,int frame_tx,int subframe_tx,uint64_t timestamp_tx);
 void wakeup_prach_eNB(PHY_VARS_eNB *eNB,RU_t *ru,int frame,int subframe);
@@ -853,11 +854,87 @@ static void *process_stats_thread(void *param) {
 
   return(NULL);
 }
-/* Samuel
-void copy_eNB_content(PHY_VARS_eNB *eNB , PHY_VARS_eNB_NB_IoT *eNB_copy){
+
+void copy_eNB_content(PHY_VARS_eNB_NB_IoT *eNB_copy , PHY_VARS_eNB *eNB){
+eNB_copy->Mod_id = eNB->Mod_id;
+eNB_copy->CC_id = eNB->CC_id;
+eNB_copy->configured = eNB->configured;
+eNB_copy->num_RU = eNB->num_RU;
+// eNB_copy->RU_list = eNB->RU_list;
+eNB_copy->eth_params_n = eNB->eth_params_n;
+eNB_copy->single_thread_flag = eNB->single_thread_flag;
+eNB_copy->abstraction_flag = eNB->abstraction_flag;
+eNB_copy->UL_INFO.module_id = eNB->UL_INFO.module_id;
+eNB_copy->UL_INFO.CC_id = eNB->UL_INFO.CC_id;
+eNB_copy->UL_INFO.frame = eNB->UL_INFO.frame;
+eNB_copy->UL_INFO.subframe = eNB->UL_INFO.subframe;
+eNB_copy->UL_INFO_mutex = eNB->UL_INFO_mutex;
+eNB_copy->local_flag = eNB->local_flag;
+eNB_copy->rx_total_gain_dB = eNB->rx_total_gain_dB;
+eNB_copy->frame_parms.N_RB_DL = eNB->frame_parms.N_RB_DL;
+eNB_copy->frame_parms.N_RB_UL = eNB->frame_parms.N_RB_UL;
+eNB_copy->frame_parms.tdd_config = eNB->frame_parms.tdd_config;
+eNB_copy->frame_parms.Nid_cell = eNB->frame_parms.Nid_cell;
+eNB_copy->frame_parms.nushift = eNB->frame_parms.nushift;
+eNB_copy->frame_parms.node_id = eNB->frame_parms.node_id;
+// eNB_copy->measurements.n0_power_tot = eNB->measurements.n0_power_tot;
+// eNB_copy->measurements.n0_power_tot_dB = eNB->measurements.n0_power_tot_dB;
+// eNB_copy->measurements.n0_power_tot_dBm = eNB->measurements.n0_power_tot_dBm;
+// memcpy(eNB_copy->measurements.n0_subband_power,eNB->measurements.n0_subband_power,sizeof(unsigned short)*NB_ANTENNAS_RX*100);
+// memcpy(eNB_copy->measurements.n0_subband_power_dB,eNB->measurements.n0_subband_power_dB,sizeof(unsigned short)*NB_ANTENNAS_RX*100);
+// memcpy(eNB_copy->measurements.n0_subband_power_tot_dB,eNB->measurements.n0_subband_power_tot_dB,sizeof(short)*100);
+// memcpy(eNB_copy->measurements.n0_subband_power_tot_dBm,eNB->measurements.n0_subband_power_tot_dBm,sizeof(short)*100);
+// memcpy(eNB_copy->measurements.rx_spatial_power,eNB->measurements.rx_spatial_power,sizeof(unsigned int)*NB_ANTENNAS_RX*2*2);
+// memcpy(eNB_copy->measurements.rx_spatial_power_dB,eNB->measurements.rx_spatial_power_dB,sizeof(unsigned short)*NB_ANTENNAS_RX*2*2);
+// memcpy(eNB_copy->measurements.rx_rssi_dBm,eNB->measurements.rx_rssi_dBm,sizeof(short)*NUMBER_OF_UE_MAX_NB_IoT);
+// memcpy(eNB_copy->measurements.rx_correlation,eNB->measurements.rx_correlation,sizeof(int)*NUMBER_OF_UE_MAX_NB_IoT*2);
+// memcpy(eNB_copy->measurements.rx_correlation_dB,eNB->measurements.rx_correlation_dB,sizeof(int)*NUMBER_OF_UE_MAX_NB_IoT*2);
+// memcpy(eNB_copy->measurements.wideband_cqi,eNB->measurements.wideband_cqi,sizeof(int)*NUMBER_OF_UE_MAX_NB_IoT*NB_ANTENNAS_RX);
+// memcpy(eNB_copy->measurements.wideband_cqi_dB,eNB->measurements.wideband_cqi_dB,sizeof(int)*NUMBER_OF_UE_MAX_NB_IoT*NB_ANTENNAS_RX);
+// memcpy(eNB_copy->measurements.wideband_cqi_tot,eNB->measurements.wideband_cqi_tot,sizeof(char)*NUMBER_OF_UE_MAX_NB_IoT);
+// memcpy(eNB_copy->measurements.subband_cqi,eNB->measurements.subband_cqi,sizeof(int)*NUMBER_OF_UE_MAX_NB_IoT*NB_ANTENNAS_RX*100);
+// memcpy(eNB_copy->measurements.subband_cqi_tot,eNB->measurements.subband_cqi_tot,sizeof(int)*NUMBER_OF_UE_MAX_NB_IoT*100);
+// memcpy(eNB_copy->measurements.subband_cqi_dB,eNB->measurements.subband_cqi_dB,sizeof(int)*NUMBER_OF_UE_MAX_NB_IoT*NB_ANTENNAS_RX*100);
+// memcpy(eNB_copy->measurements.subband_cqi_tot_dB,eNB->measurements.subband_cqi_tot_dB,sizeof(int)*NUMBER_OF_UE_MAX_NB_IoT*100);
+// eNB_copy->common_vars.txdataF = eNB->common_vars.txdataF;
+// eNB_copy->common_vars.rxdata = eNB->common_vars.rxdata;
+// eNB_copy->common_vars.rxdataF = eNB->common_vars.rxdataF;
+// eNB_copy->common_vars.beam_weights = eNB->common_vars.beam_weights;
+memcpy(eNB_copy->lte_gold_table_NB_IoT,eNB->lte_gold_table,sizeof(uint32_t)*20*2*14);
+memcpy(eNB_copy->lte_gold_uespec_port5_table,eNB->lte_gold_uespec_port5_table,sizeof(uint32_t)*NUMBER_OF_UE_MAX_NB_IoT*20*38);
+memcpy(eNB_copy->lte_gold_uespec_table,eNB->lte_gold_uespec_table,sizeof(uint32_t)*2*20*2*21);
+memcpy(eNB_copy->lte_gold_mbsfn_table,eNB->lte_gold_mbsfn_table,sizeof(uint32_t)*10*3*42);
+#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
+  /// mbsfn reference symbols
+memcpy(eNB_copy->lte_gold_mbsfn_khz_1dot25_table,eNB->lte_gold_mbsfn_khz_1dot25_table,sizeof(uint32_t)*10*150);
+#endif
+memcpy(eNB_copy->X_u,eNB->X_u,sizeof(uint32_t)*64*839);
+memcpy(eNB_copy->pbch_pdu,eNB->pbch_pdu,sizeof(uint8_t)*4);
+eNB_copy->eNB_generate_rar = eNB->eNB_generate_rar;
+memcpy(eNB_copy->first_sr,eNB->first_sr,sizeof(uint8_t)*NUMBER_OF_UE_MAX_NB_IoT);
+eNB_copy->max_peak_val = eNB->max_peak_val;
+eNB_copy->max_eNB_id = eNB->max_eNB_id;
+eNB_copy->max_sync_pos = eNB->max_sync_pos;
+eNB_copy->N_TA_offset = eNB->N_TA_offset;
+eNB_copy->sinr_dB = eNB->sinr_dB;
+eNB_copy->N0 = eNB->N0;
+memcpy(eNB_copy->first_run_timing_advance,eNB->first_run_timing_advance,sizeof(unsigned char)*NUMBER_OF_UE_MAX_NB_IoT);
+eNB_copy->first_run_I0_measurements = eNB->first_run_I0_measurements;
+eNB_copy->cooperation_flag = eNB->cooperation_flag;
+eNB_copy->is_secondary_eNB = eNB->is_secondary_eNB;
+eNB_copy->is_init_sync = eNB->is_init_sync;
+eNB_copy->has_valid_precoder = eNB->has_valid_precoder;
+eNB_copy->PeNB_id = eNB->PeNB_id;
+// eNB_copy->dl_precoder_SeNB = eNB->dl_precoder_SeNB;
+eNB_copy->log2_maxp = eNB->log2_maxp;
+eNB_copy->mac_enabled = eNB->mac_enabled;
+
+
+
+
 
 }
-*/
+
 void init_eNB_proc(int inst) {
   /*int i=0;*/
   int CC_id;
@@ -869,7 +946,7 @@ void init_eNB_proc(int inst) {
 #endif
   LOG_I(PHY,"%s(inst:%d) RC.nb_CC[inst]:%d \n",__FUNCTION__,inst,RC.nb_CC[inst]);
     //eNBs.eNB_NB_IoT = RC.L1_NB_IoT[inst];//Ann
-  init_eNB_proc_NB_IoT( inst , &eNBs); //Ann 
+  init_eNB_proc_NB_IoT( inst ); //Ann 
   for (CC_id=0; CC_id<RC.nb_CC[inst]; CC_id++) {
     eNBs.eNB = RC.eNB[inst][CC_id];
 #ifndef OCP_FRAMEWORK
@@ -983,7 +1060,7 @@ void init_eNB_proc(int inst) {
   sync_phy_proc.phy_proc_CC_id = 0;
 }
 
-void init_eNB_proc_NB_IoT(int inst , eNBs_t *eNBs) { //Ann create
+void init_eNB_proc_NB_IoT(int inst) { //Ann create
   
   int i=0;
   int CC_id;
@@ -991,11 +1068,11 @@ void init_eNB_proc_NB_IoT(int inst , eNBs_t *eNBs) { //Ann create
   eNB_rxtx_proc_NB_IoT_t *proc_rxtx;
   pthread_attr_t *attr0=NULL,*attr1=NULL,*attr_FH=NULL,*attr_prach=NULL,*attr_asynch=NULL,*attr_single=NULL,*attr_fep=NULL,*attr_td=NULL,*attr_te=NULL,*attr_synch=NULL;
 
-  eNBs->eNB_NB_IoT = RC.L1_NB_IoT[inst];//Ann
+  eNBs.eNB_NB_IoT = RC.L1_NB_IoT[inst];//Ann
 #ifndef OCP_FRAMEWORK
-    LOG_I(PHY,"Initializing eNB_NB_IoT %d CC_id %d (%s,%s),\n",inst,CC_id,eNB_functions[eNBs->eNB_NB_IoT->node_function],eNB_timing[eNBs->eNB_NB_IoT->node_timing]);
+    LOG_I(PHY,"Initializing eNB_NB_IoT %d CC_id %d (%s,%s),\n",inst,CC_id,eNB_functions[eNBs.eNB_NB_IoT->node_function],eNB_timing[eNBs.eNB_NB_IoT->node_timing]);
 #endif
-    proc = &eNBs->eNB_NB_IoT->proc;//Ann
+    proc = &eNBs.eNB_NB_IoT->proc;//Ann
 
     proc_rxtx = proc->proc_rxtx;
     proc_rxtx[0].instance_cnt_rxtx = -1;

@@ -125,7 +125,6 @@ int UE_scan_carrier = 0;
 runmode_t mode = normal_txrx;
 
 FILE *input_fd=NULL;
-static char              UE_flag=1;
 
 #if MAX_NUM_CCs == 1
 rx_gain_t                rx_gain_mode[MAX_NUM_CCs][4] = {{max_gain,max_gain,max_gain,max_gain}};
@@ -638,8 +637,6 @@ int main( int argc, char **argv ) {
   }
 
   // init the parameters
-    if (UE_flag==1) {//samuel : i don't know what need to set this flag?
-
 //#ifdef NB_IOT     /////////////// for NB-IoT testing  ///////////////////////////
       for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
           frame_parms_NB_IoT[CC_id] = (NB_IoT_DL_FRAME_PARMS *) malloc(sizeof(NB_IoT_DL_FRAME_PARMS));
@@ -651,7 +648,7 @@ int main( int argc, char **argv ) {
       LOG_I(PHY,"[NB-IoT] Set nb_rx_antenna %d , nb_tx_antenna %d \n",frame_parms_NB_IoT[0]->nb_antennas_rx, frame_parms_NB_IoT[0]->nb_antennas_tx);
 
 //#endif     //////////////////////////// END //////////////////////////////////
-    }
+    
 
 
    /////////////////////////////////////////////////////// NB-IoT //////////////////////////////////////////////////////// 
@@ -660,12 +657,7 @@ int main( int argc, char **argv ) {
     phy_init_lte_top_NB_IoT(frame_parms_NB_IoT[0]);
     /////////////////////////////////////////////////////// END //////////////////////////////////////////////////////////
 
-    if (UE_flag==1) {
-        NB_UE_INST=1;
-        NB_INST=1;
 
-    } else {
-//Ann
         ///////////////////////// for NB-IoT testing ////////////////////////
         PHY_vars_eNB_NB_IoT_g = malloc(sizeof(PHY_VARS_eNB_NB_IoT*)); //global PHY_vars --> is a matrix
         PHY_vars_eNB_NB_IoT_g[0] = malloc(sizeof(PHY_VARS_eNB_NB_IoT));
@@ -714,7 +706,7 @@ int main( int argc, char **argv ) {
 
         NB_eNB_INST=1;
         NB_INST=1;
-        }
+        
 
         
 
