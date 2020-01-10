@@ -76,7 +76,7 @@ void get_band(uint64_t downlink_frequency,                     /////   -----src5
               lte_frame_type_t *current_type)
 {
     int ind;
-    int64_t dl_freq_khz = downlink_frequency/1000;
+    uint64_t dl_freq_khz = downlink_frequency/1000;
     fprintf(stderr, "The value of dl_freq_khz in get_band() is %llu size of nr_bandtable = %d \n",(long long unsigned int)dl_freq_khz,sizeof(nr_bandtable) / sizeof(nr_bandtable[0]));
     for ( ind=0;
           ind < sizeof(nr_bandtable) / sizeof(nr_bandtable[0]);
@@ -102,7 +102,7 @@ void get_band(uint64_t downlink_frequency,                     /////   -----src5
     }
 
     AssertFatal(ind != (sizeof(nr_bandtable) / sizeof(nr_bandtable[0])),
-	    "Can't find EUTRA band for frequency %u\n", downlink_frequency);
+	    "Can't find EUTRA band for frequency %llu\n", downlink_frequency);
 
 }
 
