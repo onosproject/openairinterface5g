@@ -2491,7 +2491,13 @@ rrc_eNB_generate_dedicatedRRCConnectionReconfiguration(const protocol_ctxt_t *co
     DRB_ul_SpecificParameters->bucketSizeDuration =
       LTE_LogicalChannelConfig__ul_SpecificParameters__bucketSizeDuration_ms50;
     logicalchannelgroup_drb = CALLOC(1, sizeof(long));
-    *logicalchannelgroup_drb = 1;//(i+1) % 3;
+    if (DRB_ul_SpecificParameters->priority < 5) {
+      *logicalchannelgroup_drb = 0;
+    } else if (DRB_ul_SpecificParameters->priority == 5) {
+      *logicalchannelgroup_drb = 1;
+    } else {
+      *logicalchannelgroup_drb = 3;
+    }
     DRB_ul_SpecificParameters->logicalChannelGroup = logicalchannelgroup_drb;
     ASN_SEQUENCE_ADD(&DRB_configList->list, DRB_config);
     ASN_SEQUENCE_ADD(&(*DRB_configList2)->list, DRB_config);
@@ -2619,6 +2625,7 @@ rrc_eNB_modify_dedicatedRRCConnectionReconfiguration(const protocol_ctxt_t *cons
   (void)dedicatedInfoNas;
   uint8_t xid = rrc_eNB_get_next_transaction_identifier(ctxt_pP->module_id);   // Transaction_id,
   DRB_configList2 = CALLOC(1, sizeof(*DRB_configList2));
+  long  *logicalchannelgroup_drb;
   /* Initialize NAS list */
   dedicatedInfoNASList = CALLOC(1, sizeof(struct LTE_RRCConnectionReconfiguration_r8_IEs__dedicatedInfoNASList));
 
@@ -2751,6 +2758,15 @@ rrc_eNB_modify_dedicatedRRCConnectionReconfiguration(const protocol_ctxt_t *cons
     DRB_ul_SpecificParameters->prioritisedBitRate = LTE_LogicalChannelConfig__ul_SpecificParameters__prioritisedBitRate_kBps8;
     DRB_ul_SpecificParameters->bucketSizeDuration =
       LTE_LogicalChannelConfig__ul_SpecificParameters__bucketSizeDuration_ms50;
+    logicalchannelgroup_drb = CALLOC(1, sizeof(long));
+    if (DRB_ul_SpecificParameters->priority < 5) {
+      *logicalchannelgroup_drb = 0;
+    } else if (DRB_ul_SpecificParameters->priority == 5) {
+      *logicalchannelgroup_drb = 1;
+    } else {
+      *logicalchannelgroup_drb = 3;
+    }
+    DRB_ul_SpecificParameters->logicalChannelGroup = logicalchannelgroup_drb;
     ASN_SEQUENCE_ADD(&(DRB_configList2)->list, DRB_config);
     LOG_I(RRC, "EPS ID %ld, DRB ID %ld (index %d), QCI %d, priority %ld, LCID %ld LCGID %ld \n",
           *DRB_config->eps_BearerIdentity,
@@ -3171,7 +3187,7 @@ void rrc_eNB_generate_defaultRRCConnectionReconfiguration(const protocol_ctxt_t 
   DRB_ul_SpecificParameters->bucketSizeDuration = LTE_LogicalChannelConfig__ul_SpecificParameters__bucketSizeDuration_ms50;
   // LCG for DTCH can take the value from 1 to 3 as defined in 36331: normally controlled by upper layers (like RRM)
   logicalchannelgroup_drb = CALLOC(1, sizeof(long));
-  *logicalchannelgroup_drb = 1;
+  *logicalchannelgroup_drb = 3;
   DRB_ul_SpecificParameters->logicalChannelGroup = logicalchannelgroup_drb;
   
   ASN_SEQUENCE_ADD(&(*DRB_configList)->list, DRB_config);
@@ -5527,7 +5543,7 @@ rrc_eNB_generate_HO_RRCConnectionReconfiguration(const protocol_ctxt_t *const ct
     LTE_LogicalChannelConfig__ul_SpecificParameters__bucketSizeDuration_ms50;
   // LCG for DTCH can take the value from 1 to 3 as defined in 36331: normally controlled by upper layers (like RRM)
   logicalchannelgroup_drb = CALLOC(1, sizeof(long));
-  *logicalchannelgroup_drb = 1;
+  *logicalchannelgroup_drb = 3;
   DRB_ul_SpecificParameters->logicalChannelGroup = logicalchannelgroup_drb;
   ASN_SEQUENCE_ADD(&(*DRB_configList)->list, DRB_config);
   ASN_SEQUENCE_ADD(&(*DRB_configList2)->list, DRB_config);
@@ -5862,14 +5878,14 @@ rrc_eNB_generate_HO_RRCConnectionReconfiguration(const protocol_ctxt_t *const ct
   DRB_config->logicalChannelConfig = DRB_lchan_config;
   DRB_ul_SpecificParameters = CALLOC(1, sizeof(*DRB_ul_SpecificParameters));
   DRB_lchan_config->ul_SpecificParameters = DRB_ul_SpecificParameters;
-  DRB_ul_SpecificParameters->priority = 2;    // lower priority than srb1, srb2
+  DRB_ul_SpecificParameters->priority = 12;    // lower priority than srb1, srb2
   DRB_ul_SpecificParameters->prioritisedBitRate =
     LTE_LogicalChannelConfig__ul_SpecificParameters__prioritisedBitRate_infinity;
   DRB_ul_SpecificParameters->bucketSizeDuration =
     LTE_LogicalChannelConfig__ul_SpecificParameters__bucketSizeDuration_ms50;
   // LCG for DTCH can take the value from 1 to 3 as defined in 36331: normally controlled by upper layers (like RRM)
   logicalchannelgroup_drb = CALLOC(1, sizeof(long));
-  *logicalchannelgroup_drb = 1;
+  *logicalchannelgroup_drb = 3;
   DRB_ul_SpecificParameters->logicalChannelGroup = logicalchannelgroup_drb;
   ASN_SEQUENCE_ADD(&(*DRB_configList2)->list, DRB_config);
   mac_MainConfig = CALLOC(1, sizeof(*mac_MainConfig));

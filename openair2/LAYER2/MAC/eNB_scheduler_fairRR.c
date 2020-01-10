@@ -103,15 +103,18 @@ void pre_scd_nb_rbs_required(    module_id_t     module_idP,
                                  sub_frame_t     subframeP,
                                  int             min_rb_unit[MAX_NUM_CCs],
                                  uint16_t        nb_rbs_required[MAX_NUM_CCs][NUMBER_OF_UE_MAX]) {
-  int                          CC_id=0,UE_id, lc_id, N_RB_DL;
+  int                          CC_id=0,UE_id, lc_id, N_RB_DL, drb_id;
   UE_TEMPLATE                  UE_template;
   eNB_UE_STATS                 *eNB_UE_stats;
   rnti_t                       rnti;
   mac_rlc_status_resp_t        rlc_status;
   uint16_t                     step_size=2;
+  rrc_eNB_ue_context_t         *ue_contextP = NULL;
   N_RB_DL = to_prb(RC.mac[module_idP]->common_channels[CC_id].mib->message.dl_Bandwidth);
   int header_length_last;
   int header_length_total;
+  int dl_dtch_num;
+  int dl_dtch_list[MAX_NUM_DTCH];
 
   if(N_RB_DL==50) step_size=3;
 
@@ -128,9 +131,21 @@ void pre_scd_nb_rbs_required(    module_id_t     module_idP,
     // store dlsch buffer
     // clear logical channel interface variables
     UE_template.dl_buffer_total = 0;
+
+    dl_dtch_num = 0;
+
     rnti = UE_RNTI(module_idP, UE_id);
+    ue_contextP = rrc_eNB_get_ue_context(RC.rrc[module_idP], rnti);
+    if (ue_contextP == NULL)
+      continue;
 
     for (lc_id = DCCH; lc_id <= MAX_NUM_LCID; lc_id++) {
+      if (lc_id >= DTCH) {
+        drb_id = lc_id - 2;
+        if (ue_contextP->ue_context.DRB_active[drb_id] == 0) {
+          continue;
+        }
+      }
       rlc_status =
         mac_rlc_status_ind(module_idP, rnti, module_idP, frameP, subframeP,
                            ENB_FLAG_YES, MBMS_FLAG_NO, lc_id, 0
@@ -142,8 +157,15 @@ void pre_scd_nb_rbs_required(    module_id_t     module_idP,
       if(rlc_status.bytes_in_buffer > 0){
           header_length_last = 1 + 1 + (rlc_status.bytes_in_buffer >= 128);
           header_length_total += header_length_last;
+
+          if (lc_id >= DTCH) {
+            dl_dtch_list[dl_dtch_num] = lc_id;
+            dl_dtch_num++;
+          }
        }
     }
+
+    sort_lcid_priority(module_idP, UE_id, dl_dtch_num, &dl_dtch_list[0]);
 
     if (header_length_total) {
       header_length_total -= header_length_last;
@@ -889,6 +911,7 @@ schedule_ue_spec_fairRR(module_id_t module_idP,
   int N_RB_DL[MAX_NUM_CCs];
   int total_nb_available_rb[MAX_NUM_CCs];
   int N_RBG[MAX_NUM_CCs];
+  int dtch, dtch_max_num;
   nfapi_dl_config_request_body_t *dl_req;
   nfapi_dl_config_request_pdu_t *dl_config_pdu;
   int tdd_sfa;
@@ -1310,10 +1333,10 @@ schedule_ue_spec_fairRR(module_id_t module_idP,
             // assume the max dtch header size, and adjust it later
             header_len_dtch      = 0;
             header_len_dtch_last = 0;           // the header length of the last mac sdu
-            // lcid has to be sorted before the actual allocation (similar struct as ue_list).
-            for (lcid = NB_RB_MAX - 1; lcid >= DTCH; lcid--) {
-                // TBD: check if the lcid is active
 
+            dtch_max_num = UE_list->UE_template[CC_id][UE_id].dl_dtch_num;
+            for (dtch = 0; dtch < dtch_max_num; dtch++) {
+                lcid = UE_list->UE_template[CC_id][UE_id].dl_dtch_list_priority[dtch];
                 header_len_dtch     += 3;
                 header_len_dtch_last = 3;
 
@@ -2041,9 +2064,9 @@ schedule_ue_spec_fairRR(module_id_t module_idP,
         header_len_dtch = 0;
         header_len_dtch_last = 0; // the header length of the last mac sdu
 
-        // lcid has to be sorted before the actual allocation (similar struct as ue_list).
-        for (lcid = NB_RB_MAX - 1; lcid >= DTCH; lcid--) {
-          // TBD: check if the lcid is active
+        dtch_max_num = UE_list->UE_template[CC_id][UE_id].dl_dtch_num;
+        for (dtch = 0; dtch < dtch_max_num; dtch++) {
+          lcid = UE_list->UE_template[CC_id][UE_id].dl_dtch_list_priority[dtch];
           header_len_dtch += 3;
           header_len_dtch_last = 3;
           LOG_D(MAC, "[eNB %d], Frame %d, DTCH%d->DLSCH, Checking RLC status (tbs %d, len %d)\n",
@@ -2494,10 +2517,9 @@ schedule_ue_spec_fairRR(module_id_t module_idP,
             // assume the max dtch header size, and adjust it later
             header_len_dtch = 0;
             header_len_dtch_last = 0;   // the header length of the last mac sdu
-            // lcid has to be sorted before the actual allocation (similar struct as ue_list).
-            for (lcid = NB_RB_MAX - 1; lcid >= DTCH; lcid--) {
-                // TBD: check if the lcid is active
-
+            dtch_max_num = UE_list->UE_template[CC_id][UE_id].dl_dtch_num;
+            for (dtch = 0; dtch < dtch_max_num; dtch++) {
+                lcid = UE_list->UE_template[CC_id][UE_id].dl_dtch_list_priority[dtch];
                 header_len_dtch     += 3;
                 header_len_dtch_last = 3;
 

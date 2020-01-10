@@ -103,6 +103,8 @@ store_dlsch_buffer(module_id_t Mod_id,
   mac_rlc_status_resp_t rlc_status;
   UE_list_t *UE_list = &RC.mac[Mod_id]->UE_list;
   UE_TEMPLATE *UE_template;
+  int dl_dtch_num;
+  int dl_dtch_list[MAX_NUM_DTCH];
 
   for (UE_id = 0; UE_id < MAX_MOBILES_PER_ENB; UE_id++) {
     if (UE_list->active[UE_id] != TRUE)
@@ -115,6 +117,7 @@ store_dlsch_buffer(module_id_t Mod_id,
     // clear logical channel interface variables
     UE_template->dl_buffer_total = 0;
     UE_template->dl_pdus_total = 0;
+    dl_dtch_num = 0;
 
     for (lcid = 0; lcid < MAX_NUM_LCID; ++lcid) {
       UE_template->dl_buffer_info[lcid] = 0;
@@ -142,6 +145,11 @@ store_dlsch_buffer(module_id_t Mod_id,
       UE_template->dl_buffer_total += UE_template->dl_buffer_info[lcid];    //storing the total dlsch buffer
       UE_template->dl_pdus_total += UE_template->dl_pdus_in_buffer[lcid];
 
+      if ((rlc_status.bytes_in_buffer > 0) && (lcid >= DTCH)) {
+          dl_dtch_list[dl_dtch_num] = lcid;
+          dl_dtch_num++;
+       }
+
       #ifdef DEBUG_eNB_SCHEDULER
       /* note for dl_buffer_head_sdu_remaining_size_to_send[lcid] :
        * 0 if head SDU has not been segmented (yet), else remaining size not already segmented and sent
@@ -158,6 +166,8 @@ store_dlsch_buffer(module_id_t Mod_id,
       #endif
 
     }
+
+    sort_lcid_priority(Mod_id, UE_id, dl_dtch_num, &dl_dtch_list[0]);
 
     if (UE_template->dl_buffer_total > 0)
       LOG_D(MAC,
@@ -2092,4 +2102,40 @@ void sort_ue_ul(module_id_t module_idP,
   } else { // No element
     UE_list->head_ul = -1;
   }
+}
+
+static int lcid_priority_compare(const void *_a, const void *_b, void *_lcgidpriority) {
+  long *lcgidpriority = (long*)_lcgidpriority;
+  int lcid1 = *(const int *) _a;
+  int lcid2 = *(const int *) _b;
+  int priority1 = (int)lcgidpriority[lcid1];
+  int priority2 = (int)lcgidpriority[lcid2];
+
+  return priority1 - priority2;
+}
+
+//-----------------------------------------------------------------------------
+/*
+ * This function sorts the LCIDs in order
+ */
+void sort_lcid_priority(module_id_t module_id,
+                        int UE_id,
+                        int dl_dtch_num,
+                        int *dl_dtch_list)
+//-----------------------------------------------------------------------------
+{
+  int i;
+  UE_list_t *UE_list = &RC.mac[module_id]->UE_list;
+  UE_TEMPLATE *UE_template;
+
+  UE_template = &UE_list->UE_template[UE_PCCID(module_id, UE_id)][UE_id];
+
+  qsort_r(dl_dtch_list, dl_dtch_num, sizeof(int), lcid_priority_compare, &UE_template->lcgidpriority[0]);
+  
+  UE_template->dl_dtch_num = (uint8_t)dl_dtch_num;
+  for (i = 0; i < dl_dtch_num; i++) {
+    UE_template->dl_dtch_list_priority[i] = (uint8_t)dl_dtch_list[i];
+  }
+
+  return;
 }
