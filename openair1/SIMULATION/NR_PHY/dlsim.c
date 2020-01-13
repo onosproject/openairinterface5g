@@ -172,7 +172,7 @@ int main(int argc, char **argv)
   dlsch_config.nb_symbols = 9;
   dlsch_config.mcs_idx = 9;
 
-  uint16_t ssb_periodicity = 10;
+  uint16_t ssb_periodicity = 20;
 
   //unsigned char frame_type = 0;
   unsigned char pbch_phase = 0;
@@ -560,8 +560,12 @@ int main(int argc, char **argv)
   mac_top_init_gNB();
   gNB_mac = RC.nrmac[0];
 
-  config_common(0,0,Nid_cell,78,SSB_positions,ssb_periodicity,(uint64_t)3640000000L,N_RB_DL);
-  config_nr_mib(0,0,1,kHz30,0,0,0,0,0);
+  //config_common(0,0,Nid_cell,78,SSB_positions,ssb_periodicity,(uint64_t)3640000000L,N_RB_DL);
+  config_common(0,0,Nid_cell,257,SSB_positions,ssb_periodicity,(uint64_t)28100000000L,N_RB_DL);
+
+  //config_nr_mib(0,0,1,kHz30,0,0,0,0,0);
+  config_nr_mib(0,0,1,kHz120,0,0,0,0,0);
+
 
   nr_l2_init_ue();
   UE_mac = get_mac_inst(0);
