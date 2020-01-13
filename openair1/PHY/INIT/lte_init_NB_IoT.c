@@ -402,8 +402,8 @@ void phy_config_dedicated_eNB_NB_IoT(uint8_t 			Mod_id,
 {
 	PHY_VARS_eNB_NB_IoT *eNB = PHY_vars_eNB_NB_IoT_g[Mod_id][CC_id];
 	NB_IoT_eNB_NPDCCH_t *npdcch;
-	uint8_t UE_id = find_ue_NB_IoT(rnti,eNB);
-	
+	//uint8_t UE_id = find_ue_NB_IoT(rnti,eNB);
+	uint8_t UE_id = 0;
 	if (UE_id == -1) {
 
 		LOG_E( PHY, "[eNB %"PRIu8"] find_ue() returns -1\n", Mod_id);

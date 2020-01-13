@@ -1848,7 +1848,7 @@ int main( int argc, char **argv ) {
 
             PHY_vars_eNB_NB_IoT_g[0][CC_id]->rx_total_gain_dB = (int)rx_gain[CC_id][0];
 
-            if (frame_parms_NB_IoT[CC_id]->frame_type==FDD) {
+            if (frame_parms_NB_IoT[CC_id]->frame_type==FDD_NB_IoT) {
                 PHY_vars_eNB_NB_IoT_g[0][CC_id]->N_TA_offset = 0;
             } else {
                 if (frame_parms_NB_IoT[CC_id]->N_RB_DL == 100)

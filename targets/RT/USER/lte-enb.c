@@ -649,7 +649,7 @@ static inline int rxtx(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc, char *thread_nam
   // UE-specific RX processing for subframe n
   ///////////////////////////////////// for NB-IoT testing  ////////////////////////
   // for NB-IoT testing  // activating only TX part
-  if (eNB->proc_uespec_rx) eNB->proc_uespec_rx(eNB, proc, no_relay );
+  if (eNB->proc_uespec_rx) eNB->proc_uespec_rx(eNB, proc );
    ////////////////////////////////////END///////////////////////
 
   //npusch_procedures(eNB,proc,data_or_control);
@@ -2246,7 +2246,7 @@ void init_eNB(eNB_func_t node_function[], eNB_timing_t node_timing[],int nb_inst
 	eNB->fep                  = eNB_fep_full;//(single_thread_flag==1) ? eNB_fep_full_2thread : eNB_fep_full;
 	eNB->td                   = ulsch_decoding_data;//(single_thread_flag==1) ? ulsch_decoding_data_2thread : ulsch_decoding_data;
 	eNB->te                   = dlsch_encoding;//(single_thread_flag==1) ? dlsch_encoding_2threads : dlsch_encoding;
-	eNB->proc_uespec_rx       = phy_procedures_eNB_uespec_RX;
+	eNB->proc_uespec_rx       = phy_procedures_eNB_uespec_RX_NB_IoT;
 	eNB->proc_tx              = proc_tx_full;
         if (eNB->node_timing == synch_to_other) {
            eNB->tx_fh             = tx_fh_if5_mobipass;
@@ -2280,7 +2280,7 @@ void init_eNB(eNB_func_t node_function[], eNB_timing_t node_timing[],int nb_inst
 	eNB->fep                  = NULL;
 	eNB->td                   = ulsch_decoding_data;//(single_thread_flag==1) ? ulsch_decoding_data_2thread : ulsch_decoding_data;
 	eNB->te                   = dlsch_encoding;//(single_thread_flag==1) ? dlsch_encoding_2threads : dlsch_encoding;
-	eNB->proc_uespec_rx       = phy_procedures_eNB_uespec_RX;
+	eNB->proc_uespec_rx       = phy_procedures_eNB_uespec_RX_NB_IoT;
 	eNB->proc_tx              = proc_tx_high;
 	eNB->tx_fh                = tx_fh_if4p5;
 	eNB->rx_fh                = rx_fh_if4p5;
@@ -2305,7 +2305,7 @@ void init_eNB(eNB_func_t node_function[], eNB_timing_t node_timing[],int nb_inst
 
 	eNB->td             = ulsch_decoding_data;//(single_thread_flag==1) ? ulsch_decoding_data_2thread : ulsch_decoding_data;
 	eNB->te             = dlsch_encoding;//(single_thread_flag==1) ? dlsch_encoding_2threads : dlsch_encoding;
-	eNB->proc_uespec_rx = phy_procedures_eNB_uespec_RX;
+	eNB->proc_uespec_rx = phy_procedures_eNB_uespec_RX_NB_IoT;
 	eNB->proc_tx        = proc_tx_high;
 	eNB->tx_fh          = tx_fh_if4p5; 
 	eNB->rx_fh          = rx_fh_if4p5; 
