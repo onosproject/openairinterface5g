@@ -220,15 +220,7 @@ int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB    *eNB,
                                               uint8_t                ncce_index);
 
 
-/*Function for DCI encoding, scrambling, modulation*/
-uint8_t generate_dci_top_NB_IoT(NB_IoT_eNB_NPDCCH_t     *npdcch,
-						                    uint8_t                 Num_dci,
-                                DCI_ALLOC_NB_IoT_t      *dci_alloc,
-                                int16_t                 amp,
-                                NB_IoT_DL_FRAME_PARMS   *fp,
-                                int32_t                 **txdataF,
-                                uint32_t                subframe,
-						                    uint8_t                 npdcch_start_symbol);
+
 
 /*!
   \brief Decoding of PUSCH/ACK/RI/ACK from 36-212.
@@ -394,7 +386,7 @@ void descrambling_NPUSCH_ack_NB_IoT(LTE_DL_FRAME_PARMS  *fp,
                                     uint8_t             rx_subframe,
                                     uint32_t            rx_frame);
 
-uint32_t  turbo_decoding_NB_IoT(PHY_VARS_eNB           *eNB,
+void  turbo_decoding_NB_IoT(PHY_VARS_eNB           *eNB,
                                 NB_IoT_eNB_NULSCH_t    *ulsch_NB_IoT,
                                 eNB_rxtx_proc_t        *proc,
                                 uint8_t                 npusch_format,

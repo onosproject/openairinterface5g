@@ -2479,7 +2479,7 @@ rlc_op_status_t rlc_data_req_NB_IoT (const protocol_ctxt_t* const ctxt_pP,
   rlc_union_t           *rlc_union_p = NULL;
   hash_key_t             key         = HASHTABLE_NOT_A_KEY_VALUE;
   hashtable_rc_t         h_rc;
-  int x;
+  //int x;
 
 #if defined(Rel10) || defined(Rel14)
 

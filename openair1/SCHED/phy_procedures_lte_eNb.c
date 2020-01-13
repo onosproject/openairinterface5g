@@ -506,13 +506,6 @@ int16_t buffer_npusch_ext[153600];
 //int32_t llr_msg5[16]; 
 //int32_t y_msg5[16];
 
-void common_signal_procedures (PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc) 
-{
-  // NB-IoT function here
-  NB_IoT_TX_procedure(eNB,proc);
-
-}
-
 void generate_eNB_dlsch_params(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,DCI_ALLOC_t *dci_alloc,const int UE_id) {
 
   LTE_DL_FRAME_PARMS *fp=&eNB->frame_parms;

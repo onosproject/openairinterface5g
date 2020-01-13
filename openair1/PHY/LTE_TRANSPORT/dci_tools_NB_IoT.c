@@ -181,6 +181,7 @@ int generate_eNB_ulsch_params_from_dci_NB_IoT(PHY_VARS_eNB            *eNB,
     ndlcch->counter_repetition_number[ncce_index] = DCIrep_to_real_rep(DCIRep,4);//Rmax set to 4 at the moment, need to check the configuation for setting it
 
     LOG_I(PHY,"DCI packing for N0 done \n");
+    return(0);
 
 }
 
@@ -382,7 +383,8 @@ int generate_eNB_dlsch_params_from_dci_NB_IoT(PHY_VARS_eNB      *eNB,
     directIndInf       = DCI_Content->DCIN2_Ind.directIndInf; 
     resInfoBits        = DCI_Content->DCIN2_Ind.resInfoBits; 
 
-
+    directIndInf = directIndInf;
+    resInfoBits = resInfoBits;
 
     //add_dci_NB_IoT(eNB->DCI_pdu,DLSCH_DCI_NB_IoT,rnti,sizeof(DCIN2_Ind_t),aggregation,sizeof_DCIN2_Ind_t,DCIFormatN2_Ind,npdcch_start_symbol);
 

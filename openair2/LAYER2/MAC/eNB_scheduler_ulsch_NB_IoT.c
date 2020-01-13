@@ -103,7 +103,7 @@ int schedule_UL_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst,UE_TEMPLATE_NB_IoT *UE_info
                 }
 
 
-            LOG_D(MAC,"TBS : %d MCS %d I_RU %d\n", TBS, UE_info->ul_total_buffer, mcs, Iru);
+            LOG_D(MAC,"TBS : %d MCS %d I_RU %d\n", TBS, mcs, Iru);
 
             Nru = RU_table[Iru];
             DL_end = NPDCCH_info->sf_end;
@@ -316,7 +316,7 @@ void rx_sdu_NB_IoT(module_id_t module_id, int CC_id, frame_t frame, sub_frame_t 
                     &ctxt,
                     rx_lcids[i],
                     49,
-                    (char *)payload_ptr);
+                    (uint8_t *)payload_ptr);
                     RLC_RECEIVE_MSG5_FAILED = 0;
                   }
                   if (UE_info != NULL)

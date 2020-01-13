@@ -252,8 +252,6 @@ void schedule_uss_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_inst, u
 	UE_TEMPLATE_NB_IoT *UE_template_temp;
 	DCIFormatN1_t *DCI_N1;
 	DCIFormatN0_t *DCI_N0;
-	DCIFormatN0_t *DCI_N0_1;
-	DCIFormatN0_t *DCI_N0_2;
 
 	//SCHEDULE_NB_IoT_t *scheduler =  &eNB->scheduler;
 	mac_inst->scheduling_flag.flag_uss[0]=1;
@@ -306,23 +304,7 @@ void schedule_uss_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_inst, u
 	    			//generate DCI-N0 content
                     fill_DCI_N0(DCI_N0, UE_template_temp, UE_sched_ctrl_info);
 	    			generate_scheduling_result_UL(UE_sched_ctrl_info->NPDCCH_sf_start, UE_sched_ctrl_info->NPDCCH_sf_end,UE_sched_ctrl_info->NPUSCH_sf_start+3, UE_sched_ctrl_info->NPUSCH_sf_end+3,DCI_N0, UE_template_temp->rnti, str22, str23, 0);
-	    			/*
-	    			if (UE_sched_ctrl_info->resent_flag==1)
-	    			{	
-	    				DCI_N0_1 = (DCIFormatN0_t*)malloc(sizeof(DCIFormatN0_t));
-	    				UE_sched_ctrl_info->dci_n0_index_ndi = 1;
-                    	fill_DCI_N0(DCI_N0_1, UE_template_temp, UE_sched_ctrl_info);
 
-	    				generate_scheduling_result_UL(UE_sched_ctrl_info->NPDCCH_sf_start+800, UE_sched_ctrl_info->NPDCCH_sf_end+800,UE_sched_ctrl_info->NPUSCH_sf_start+803, UE_sched_ctrl_info->NPUSCH_sf_end+803,DCI_N0_1, UE_template_temp->rnti, str22, str23, 0);
-	    				
-	    				DCI_N0_2 = (DCIFormatN0_t*)malloc(sizeof(DCIFormatN0_t));	    				
-	    				UE_sched_ctrl_info->dci_n0_index_ndi = 0;
-
-	    				fill_DCI_N0(DCI_N0_2, UE_template_temp, UE_sched_ctrl_info);
-	    				generate_scheduling_result_UL(UE_sched_ctrl_info->NPDCCH_sf_start+1000, UE_sched_ctrl_info->NPDCCH_sf_end+1000,UE_sched_ctrl_info->NPUSCH_sf_start+1003, UE_sched_ctrl_info->NPUSCH_sf_end+1003,DCI_N0_2, UE_template_temp->rnti, str22, str23, 0);
-
-	    			}
-	    			*/		    			
 	      			//sotre UE_template
 	      			UE_template_temp->R_dci=UE_sched_ctrl_info->R_dci;
 	      			UE_template_temp->R_ul=UE_sched_ctrl_info->R_ul_data;

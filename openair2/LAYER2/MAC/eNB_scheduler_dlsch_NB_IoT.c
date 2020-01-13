@@ -152,6 +152,7 @@ int schedule_DL_NB_IoT(module_id_t module_id, eNB_MAC_INST_NB_IoT *mac_inst, UE_
 										0,
 										DCCH0_NB_IoT,
 										TBS-3-rlc_control_pdu_size);
+		rlc_status2 = rlc_status2;
 		// Request the RLC for DATA PDU itself
          rlc_data_pdu_size = mac_rlc_data_req(
 					      module_id,

@@ -303,7 +303,7 @@ void freq_equalization_NB_IoT(LTE_DL_FRAME_PARMS *frame_parms,
   ul_ch_mag128      = (int16x8_t*)&ul_ch_mag[0][symbol*frame_parms->N_RB_DL*12];
   ul_ch_magb128     = (int16x8_t*)&ul_ch_magb[0][symbol*frame_parms->N_RB_DL*12];
 #endif
-
+    ul_ch_magb128 = ul_ch_magb128;
   for (re=0; re<(Msc_RS>>2); re++) {
 
     amp=(*((int16_t*)&ul_ch_mag128[re]));

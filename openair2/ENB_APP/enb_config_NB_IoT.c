@@ -549,7 +549,7 @@ static int enb_check_band_frequencies(char* lib_config_file_name_pP,
     for (band_index = 0; band_index < sizeof (eutra_bands) / sizeof (eutra_bands[0]); band_index++) {
       if (band == eutra_bands[band_index].band) {
         uint32_t uplink_frequency = downlink_frequency + uplink_frequency_offset;
-
+        uplink_frequency = uplink_frequency;
         AssertError (eutra_bands[band_index].dl_min < downlink_frequency, errors ++,
                      "Failed to parse eNB configuration file %s, enb %d downlink frequency %u too low (%u) for band %d!",
                      lib_config_file_name_pP, enb_properties_index, downlink_frequency, eutra_bands[band_index].dl_min, band);

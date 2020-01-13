@@ -997,7 +997,7 @@ set(PHY_SRC
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/dlsch_modulation.c
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/dlsch_modulation_NB_IoT.c
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/dlsch_demodulation.c
-  ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/dlsch_demodulation_NB_IoT.c
+  #${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/dlsch_demodulation_NB_IoT.c
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/dlsch_llr_computation.c
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/power_control.c
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/dlsch_decoding.c

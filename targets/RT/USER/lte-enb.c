@@ -1882,6 +1882,8 @@ void init_eNB_proc(int inst) {
     else {
       pthread_create(&proc->pthread_single, attr_single, eNB_thread_single, &eNB->proc);
       init_fep_thread(eNB,attr_fep);
+      attr_td = attr_td;
+      attr_te = attr_te;
       /*
       init_td_thread(eNB,attr_td);
       init_te_thread(eNB,attr_te);

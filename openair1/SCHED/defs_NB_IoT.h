@@ -33,7 +33,7 @@ void generate_eNB_ulsch_params_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc,nf
 /*Generate the dlsch params and do the mapping for the FAPI style parameters to OAI, and then do the packing*/
 void generate_eNB_dlsch_params_NB_IoT(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t * proc,nfapi_dl_config_request_pdu_t *dl_config_pdu);
 
-int8_t find_ue_NB_IoT(uint16_t rnti, PHY_VARS_eNB *eNB);
+int8_t find_ue_NB_IoT(uint16_t rnti, PHY_VARS_eNB_NB_IoT *eNB);
 
 NB_IoT_DL_FRAME_PARMS *get_NB_IoT_frame_parms(module_id_t Mod_id, uint8_t CC_id);
 

@@ -749,8 +749,8 @@ void npusch_procedures(PHY_VARS_eNB *eNB,eNB_rxtx_proc_t *proc)
 {
   
   uint32_t i;
-  NB_IoT_eNB_NULSCH_t *nulsch;
-  nulsch = eNB->ulsch_NB_IoT[0];
+  //NB_IoT_eNB_NULSCH_t *nulsch;
+  //nulsch = eNB->ulsch_NB_IoT[0];
 
   const int rx_subframe   =   proc->subframe_rx;
   const int rx_frame      =   proc->frame_rx;

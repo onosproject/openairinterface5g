@@ -225,10 +225,10 @@ int rx_npdsch_NB_IoT(PHY_VARS_UE_NB_IoT *ue,
   //   return(-1);
   // }
 
-  if (symbol>=7)
-    rballoc = dlsch0_harq->rb_alloc_odd;
-  else
-    rballoc = dlsch0_harq->rb_alloc_even;
+  //if (symbol>=7)
+    //rballoc = dlsch0_harq->rb_alloc_odd;
+  //else
+    //rballoc = dlsch0_harq->rb_alloc_even;
 
 
   // if (dlsch0_harq->mimo_mode>DUALSTREAM_PUSCH_PRECODING) {

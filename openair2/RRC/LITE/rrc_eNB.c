@@ -145,7 +145,7 @@ uint8_t* generate_msg4_NB_IoT(rrc_eNB_carrier_data_NB_IoT_t *carrier)
 
   carrier[0].Srb0.Tx_buffer.payload_size = do_RRCConnectionSetup_NB_IoT(ue_context_pP_NB_IoT,
                                                                                 0,
-                                                                                carrier[0].Srb0.Tx_buffer.Payload,
+                                                                                (uint8_t*)carrier[0].Srb0.Tx_buffer.Payload,
                                                                                 0,
                                                                                 SRB_configList_NB_IoT,
                                                                                 &ue_context_pP_NB_IoT->ue_context.physicalConfigDedicated_NB_IoT);
@@ -160,14 +160,14 @@ uint8_t* generate_msg4_NB_IoT(rrc_eNB_carrier_data_NB_IoT_t *carrier)
   }
   printf("\n");
 
-  return carrier[0].Srb0.Tx_buffer.Payload;
+  return (uint8_t*)carrier[0].Srb0.Tx_buffer.Payload;
 }
 
 uint8_t* mac_rrc_msg3_ind_NB_IoT(uint8_t *payload_ptr, uint16_t rnti, uint32_t length)
 {
   LOG_D(RRC,"recieve MSG3 CCCH SDU from MAC\n");
   asn_dec_rval_t                      dec_rval;
-  struct rrc_eNB_ue_context_NB_IoT_s  *ue_context_p = NULL;
+  //struct rrc_eNB_ue_context_NB_IoT_s  *ue_context_p = NULL;
   uint8_t* msg4_rrc_sdu = NULL;
   SRB_INFO_NB_IoT *srb_info = NULL;
   srb_info = &eNB_rrc_inst_NB_IoT->carrier[0].Srb0;
@@ -195,6 +195,7 @@ uint8_t* mac_rrc_msg3_ind_NB_IoT(uint8_t *payload_ptr, uint16_t rnti, uint32_t l
                100,
                0,
                0);
+  dec_rval = dec_rval;
   if (ul_ccch_msg_NB->message.choice.c1.present==UL_CCCH_MessageType_NB__c1_PR_rrcConnectionRequest_r13)
   {
     LOG_I(RRC,"The decode CCH MSG is RRC connection Request NB\n");
@@ -4409,13 +4410,14 @@ rrc_eNB_decode_ccch_NB_IoT(
                100,
                0,
                0);
+  dec_rval = dec_rval;
   module_id_t                                   Idx;
-  int                                 i, rval;
+  int                                  rval;
   struct rrc_eNB_ue_context_s*                  ue_context_p = NULL;
   uint64_t                                      random_value = 0;
   int                                           stmsi_received = 0;
 
-  if (ul_ccch_msg_NB->message.present == UL_CCCH_MessageType_PR_c1) 
+  if (ul_ccch_msg_NB->message.present == UL_CCCH_MessageType_NB_PR_c1) 
   {
     switch (ul_ccch_msg_NB->message.choice.c1.present) 
     {
@@ -4639,6 +4641,9 @@ rrc_eNB_decode_ccch_NB_IoT(
 #endif //NO_RRM
 
       break;
+      default:
+        LOG_I(RRC,"unknown error at RRC\n");
+        break;
     }
 
     rval = 0;
@@ -5044,7 +5049,7 @@ int rrc_eNB_decode_dcch_NB_IoT(
  
   asn_dec_rval_t                      dec_rval;
   UL_DCCH_Message_NB_t                  *ul_dcch_msg_NB_IoT = NULL;
-  UE_Capability_NB_r13_t              *UE_Capability_NB = NULL;
+  //UE_Capability_NB_r13_t              *UE_Capability_NB = NULL;
   int i;
   struct rrc_eNB_ue_context_s*        ue_context_p = NULL;
 
@@ -5141,7 +5146,7 @@ int rrc_eNB_decode_dcch_NB_IoT(
 
         LOG_I(RRC,"selectedPLMN_Identity_r13 : %ld\n",ul_dcch_msg_NB_IoT->message.choice.c1.choice.rrcConnectionSetupComplete_r13.criticalExtensions.choice.rrcConnectionSetupComplete_r13.selectedPLMN_Identity_r13);
 
-        LOG_I(RRC,"dedicatedInfoNAS_r13 : %02x\n",ul_dcch_msg_NB_IoT->message.choice.c1.choice.rrcConnectionSetupComplete_r13.criticalExtensions.choice.rrcConnectionSetupComplete_r13.dedicatedInfoNAS_r13);
+        //LOG_I(RRC,"dedicatedInfoNAS_r13 : %02x\n",ul_dcch_msg_NB_IoT->message.choice.c1.choice.rrcConnectionSetupComplete_r13.criticalExtensions.choice.rrcConnectionSetupComplete_r13.dedicatedInfoNAS_r13);
 
           rrc_eNB_process_RRCConnectionSetupComplete_NB_IoT(
             ctxt_pP,

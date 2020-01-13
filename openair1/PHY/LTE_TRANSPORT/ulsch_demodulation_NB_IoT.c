@@ -1504,7 +1504,7 @@ void descrambling_NPUSCH_ack_NB_IoT(LTE_DL_FRAME_PARMS  *fp,
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
-uint32_t  turbo_decoding_NB_IoT(PHY_VARS_eNB           *eNB,
+void  turbo_decoding_NB_IoT(PHY_VARS_eNB           *eNB,
                                 NB_IoT_eNB_NULSCH_t    *ulsch_NB_IoT,
                                 eNB_rxtx_proc_t        *proc,
                                 uint8_t                 npusch_format,

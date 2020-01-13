@@ -183,7 +183,7 @@ void schedule_rar_NB_IoT(eNB_MAC_INST_NB_IoT *mac_inst, int abs_subframe){
 		
 		uint32_t Iru = 0, mcs, Nru;
 		uint32_t Nrep_UL = 0; // need a table here
-		uint32_t mappedMcsIndex = 4;  //  assume all ue supported multi-tone
+		//uint32_t mappedMcsIndex = 4;  //  assume all ue supported multi-tone
 		//mcs = mapped_mcs[msg2_nodes->ce_level][mappedMcsIndex]; //  assume all ue supported multi-tone
 		mcs = 2;
 		Nrep_UL = ULrep[rep];	

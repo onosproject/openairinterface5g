@@ -130,7 +130,7 @@ int output_handler(eNB_MAC_INST_NB_IoT *mac_inst, module_id_t module_id, int CC_
 		LOG_D(MAC,"[hypersfn:%2d][frame:%2d][subframe:%2d]NB-IoT fill SIB1\n",hypersfn,frame,subframe);
 	}else if(schedule_result_list_DL == NULL){
 		DL_empty = 1;
-		LOG_D(MAC,"no remaining node of DL scheduling result\n");
+		LOG_D(MAC,"no remaining node of DL scheduling result, DL EMPTY : %d\n",DL_empty);
 	}else{
 		//	here shouldn't be run into, to prevent DL scheduling result node is less than curent time
 		if(schedule_result_list_DL->output_subframe < current_time)
@@ -246,7 +246,7 @@ int output_handler(eNB_MAC_INST_NB_IoT *mac_inst, module_id_t module_id, int CC_
 	if(schedule_result_list_UL==NULL)
 	{
 		UL_empty = 1;
-		LOG_D(MAC,"no remaining node of UL scheduling result\n");
+		LOG_D(MAC,"no remaining node of UL scheduling result, UL_empty:%d\n",UL_empty);
 	}else
 	{
 		//	here shouldn't be run into
