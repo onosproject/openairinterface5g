@@ -147,7 +147,7 @@ int main(int argc, char **argv)
   int trial, n_trials = 1, n_errors = 0, n_false_positive = 0;
   //int n_errors2, n_alamouti;
   uint8_t transmission_mode = 1,n_tx=1,n_rx=1;
-  uint16_t Nid_cell=0;
+  uint16_t Nid_cell=47;
   uint64_t SSB_positions=0x01;
 
   channel_desc_t *gNB2UE;
@@ -452,6 +452,7 @@ int main(int argc, char **argv)
   frame_parms->nb_antennas_rx = n_rx;
   frame_parms->N_RB_DL = N_RB_DL;
   frame_parms->N_RB_UL = N_RB_DL;
+  frame_parms->Nid_cell = Nid_cell;
 
   // stub to configure frame_parms
   nr_phy_config_request_sim(gNB,N_RB_DL,N_RB_DL,mu,Nid_cell,SSB_positions);
