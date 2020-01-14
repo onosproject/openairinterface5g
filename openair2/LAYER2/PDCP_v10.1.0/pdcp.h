@@ -73,7 +73,12 @@ typedef struct {
   pdcp_data_ind_func_t pdcp_data_ind_func;
 } pdcp_params_t;
 
-
+/*
+ * SN size
+ */
+#define PDCP_SN_5BIT  5
+#define PDCP_SN_7BIT  7
+#define PDCP_SN_12BIT 12
 
 #define PDCP_USE_NETLINK            ( get_pdcp_optmask() & PDCP_USE_NETLINK_BIT)
 #define LINK_ENB_PDCP_TO_IP_DRIVER  ( get_pdcp_optmask() & LINK_ENB_PDCP_TO_IP_DRIVER_BIT)
@@ -200,6 +205,7 @@ typedef struct pdcp_s {
    */
   pdcp_hfn_t tx_hfn;
   pdcp_hfn_t rx_hfn;
+  pdcp_hfn_offset_t rx_hfn_offset; // related to sn mismatch
 
   /*
    * SN of the last PDCP SDU delivered to upper layers

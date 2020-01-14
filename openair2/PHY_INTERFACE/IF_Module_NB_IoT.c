@@ -1,6 +1,6 @@
 #include "openair2/PHY_INTERFACE/IF_Module_NB_IoT.h"
 #include "openair2/PHY_INTERFACE/IF_Module_L2_primitives_NB_IoT.h"
-#include "openair1/SCHED/IF_Module_L1_primitives_NB_IoT.h"
+#include "openair1/SCHED_NBIOT/IF_Module_L1_primitives_NB_IoT.h"
 #include "LAYER2/MAC/extern_NB_IoT.h"
 //#include "LAYER2/MAC/proto_NB_IoT.h"
 

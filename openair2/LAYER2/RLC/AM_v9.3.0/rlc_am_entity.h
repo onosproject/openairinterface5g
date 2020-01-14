@@ -135,6 +135,16 @@ typedef struct rlc_am_entity_s {
   uint16_t           poll_pdu;           /*!< \brief This parameter is used by the transmitting side of each AM RLC entity to trigger a poll for every pollPDU PDUs. */
   uint32_t           poll_byte;          /*!< \brief This parameter is used by the transmitting side of each AM RLC entity to trigger a poll for every pollByte bytes. */
 
+  //----------------------------------------------------
+  // NB-IOT RLC Parameters
+  //----------------------------------------------------
+
+  //DL-AM-RLC Config NB-IoT parameter
+  uint32_t      *enableStatusReportSN_Gap_NB_IoT;
+  //UL-AM-RLC Config. NB-IoT parameter
+  uint16_t       max_retx_threshold_NB_IoT;
+  rlc_am_timer_t t_poll_retransmit_NB_IoT; //TIMER
+  
   //---------------------------------------------------------------------
   // STATISTICS
   //---------------------------------------------------------------------

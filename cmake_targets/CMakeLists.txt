@@ -1418,7 +1418,7 @@ set(L2_SRC
   ${RRC_DIR}/rrc_common.c
   #${RRC_NB_DIR}/rrc_common_NB_IoT.c
   ${RRC_DIR}/L2_interface.c
-  #${RRC_NB_DIR}/L2_interface_NB_IoT.c
+  ${RRC_NB_DIR}/L2_interface_NB_IoT.c
   ${RRC_DIR}/L2_interface_common.c
   ${RRC_DIR}/L2_interface_ue.c
   )
@@ -1467,6 +1467,8 @@ set(L2_SRC_UE
 set (MAC_SRC
   #${PHY_INTERFACE_DIR}/phy_stub_UE.c
   ${PHY_INTERFACE_DIR}/IF_Module.c
+  ${PHY_INTERFACE_DIR}/IF_Module_NB_IoT.c
+  ${PHY_INTERFACE_DIR}/IF_Module_L2_primitives_NB_IoT.c
   ${MAC_DIR}/main.c
   ${MAC_DIR}/main_NB_IoT.c
   #${MAC_DIR}/main_ue.c

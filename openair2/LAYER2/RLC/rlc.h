@@ -36,6 +36,7 @@
 #    define __RLC_H__
 
 #    include "platform_types.h"
+#    include "platform_types_NB_IoT.h"
 #    include "platform_constants.h"
 #    include "hashtable.h"
 #    include "rlc_am.h"
@@ -61,6 +62,45 @@
 
 typedef uint64_t hash_key_t;
 #define HASHTABLE_NOT_A_KEY_VALUE ((uint64_t)-1)
+
+//-----------------------------------------------------------------------------
+#    ifdef RLC_MAC_C
+#        define private_rlc_mac(x) x
+#        define public_rlc_mac(x) x
+#    else
+#        define private_rlc_mac(x)
+#        define public_rlc_mac(x) extern x
+#    endif
+
+#    ifdef RLC_MPLS_C
+#        define private_rlc_mpls(x) x
+#        define public_rlc_mpls(x) x
+#    else
+#        define private_rlc_mpls(x)
+#        define public_rlc_mpls(x) extern x
+#    endif
+
+#    ifdef RLC_RRC_C
+#        define private_rlc_rrc(x) x
+#        define public_rlc_rrc(x) x
+#    else
+#        define private_rlc_rrc(x)
+#        define public_rlc_rrc(x) extern x
+#    endif
+
+#    ifdef RLC_C
+#        define private_rlc(x) x
+#        define protected_rlc(x) x
+#        define public_rlc(x) x
+#    else
+#        define private_rlc(x)
+#        if defined(RLC_MAC_C) || defined(RLC_MPLS_C) || defined(RLC_RRC_C) || defined(RLC_AM_C) || defined(RLC_TM_C) || defined(RLC_UM_C) || defined (PDCP_C)
+#            define protected_rlc(x) extern x
+#        else
+#            define protected_rlc(x)
+#        endif
+#        define public_rlc(x) extern x
+#    endif
 
 //-----------------------------------------------------------------------------
 #define  RLC_OP_STATUS_OK                1
@@ -96,6 +136,7 @@ typedef volatile struct {
   rlc_mode_t             rlc_mode;
   union {
     rlc_am_info_t              rlc_am_info; /*!< \sa rlc_am.h. */
+    rlc_am_info_NB_IoT_t       rlc_am_info_NB_IoT; //integrate NB-IoT
     rlc_tm_info_t              rlc_tm_info; /*!< \sa rlc_tm.h. */
     rlc_um_info_t              rlc_um_info; /*!< \sa rlc_um.h. */
   } rlc;
@@ -158,6 +199,28 @@ typedef void (rrc_data_conf_cb_t)(
   const rb_id_t         rb_idP,
   const mui_t           muiP,
   const rlc_tx_status_t statusP);
+
+
+//------------------------------------------------
+// NB-IoT (may this stuff are no more used)
+//------------------------------------------------
+//pointer functions
+protected_rlc(void (*rlc_rrc_data_ind_NB_IoT)(
+                const protocol_ctxt_t* const ctxtP,
+                const rb_id_t     rb_idP,
+                const sdu_size_t  sdu_sizeP,
+                const uint8_t   * const sduP,
+        const srb1bis_flag_t srb1bis_flag);)
+
+typedef void (rrc_data_ind_cb_NB_IoT_t)(
+  const protocol_ctxt_t* const ctxtP,
+  const rb_id_t     rb_idP,
+  const sdu_size_t  sdu_sizeP,
+  const uint8_t   * const sduP,
+  const srb1bis_flag_t srb1bis_flag);
+
+
+//------------------------------------------------
 
 
 /*! \struct  rlc_t

@@ -42,7 +42,7 @@
 //------------------------------------------------------------------------
 
 
-//UE_RRC_INST_NB_IoT *UE_rrc_inst_NB_IoT; //MP: may not used for the moment
+UE_RRC_INST_NB_IoT *UE_rrc_inst_NB_IoT; //MP: may not used for the moment
 #ifndef USER_MODE
 
 #ifndef NO_RRM

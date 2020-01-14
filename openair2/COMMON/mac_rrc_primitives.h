@@ -30,6 +30,8 @@
 #include "COMMON/platform_types.h"
 #include "COMMON/platform_constants.h"
 
+#include "openair2/RRC/LTE/rrc_defs.h"
+
 #include "LTE_RadioResourceConfigCommonSIB.h"
 #include "LTE_RadioResourceConfigDedicated.h"
 #include "LTE_MeasGapConfig.h"

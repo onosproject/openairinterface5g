@@ -55,6 +55,14 @@ typedef volatile struct {
   uint32_t t_status_prohibit;   /*!< \brief t-StatusProhibit timer initial value. */
 } rlc_am_info_t;
 
+typedef volatile struct {
+//UL-AM-RLC Configurations
+uint16_t max_retx_threshold_NB_IoT;
+uint32_t t_poll_retransmit_NB_IoT;
+//DL-AM-RLC Configurations
+uint32_t* enableStatusReportSN_Gap_NB_IoT; /*OPTIONAL*/
+}rlc_am_info_NB_IoT_t;
+
 //-----------------------------------------------------------------------------
 /*! \fn void rlc_am_init   (const protocol_ctxt_t* const ctxtP, rlc_am_entity_t * const rlc_pP)
 * \brief    Initialize the RLC AM protocol instance, reset variables, allocate buffers, lists, then, the next step in order have a running RLC AM instance is to configure and set debug informations for this RLC instance.

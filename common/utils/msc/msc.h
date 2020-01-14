@@ -110,7 +110,7 @@ void msc_log_message(
 
 #else
 
-#define MESSAGE_CHART_GENERATOR  msc_interface.msc_loaded
+#define MESSAGE_CHART_GENERATOR msc_interface.msc_loaded
 
 msc_interface_t msc_interface;
 #define MSC_INIT(arg1,arg2)                                     if(msc_interface.msc_loaded) msc_interface.msc_init(arg1,arg2)

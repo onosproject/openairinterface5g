@@ -1,10 +1,12 @@
 #include "IF_Module_L2_primitives_NB_IoT.h"
 #include "LAYER2/MAC/proto_NB_IoT.h"
 #include "LAYER2/MAC/extern_NB_IoT.h"
+#include "openair2/LAYER2/MAC/vars_NB_IoT.h"
 
 int tmp = 0;
 //int block_rach = 0;
 int first_msg4 = 0;
+int rach_count = 0;
 
 void simulate_preamble(UL_IND_NB_IoT_t *UL_INFO, int CE, int sc)
 {
@@ -41,8 +43,8 @@ void enable_preamble_simulation(UL_IND_NB_IoT_t *UL_INFO,int i)
 
 void simulate_msg3(UL_IND_NB_IoT_t *UL_INFO)
 {
-	uint8_t *msg3 = NULL;
-	msg3 = (uint8_t *) malloc (11*sizeof(uint8_t));
+  uint8_t *msg3 = NULL;
+  msg3 = (uint8_t *) malloc (11*sizeof(uint8_t));
   msg3[0] = 0;
   msg3[1] = 58;
   msg3[2] = 42; // 2A
@@ -54,24 +56,24 @@ void simulate_msg3(UL_IND_NB_IoT_t *UL_INFO)
   msg3[8] = 64; // 40
   msg3[9] = 0;
   msg3[10] = 0;
-	UL_INFO->RX_NPUSCH.number_of_pdus = 1;
-	UL_INFO->module_id = 0;
-	UL_INFO->CC_id = 0;
-	UL_INFO->frame = 521;
-	UL_INFO->subframe = 1;
-	UL_INFO->RX_NPUSCH.rx_pdu_list = (nfapi_rx_indication_pdu_t * )malloc(sizeof(nfapi_rx_indication_pdu_t));
-	UL_INFO->RX_NPUSCH.rx_pdu_list->rx_ue_information.rnti = 0x0101;
-	UL_INFO->RX_NPUSCH.rx_pdu_list->data = msg3;
-	UL_INFO->RX_NPUSCH.rx_pdu_list->rx_indication_rel8.length = 11; 
+  UL_INFO->RX_NPUSCH.number_of_pdus = 1;
+  UL_INFO->module_id = 0;
+  UL_INFO->CC_id = 0;
+  UL_INFO->frame = 521;
+  UL_INFO->subframe = 1;
+  UL_INFO->RX_NPUSCH.rx_pdu_list = (nfapi_rx_indication_pdu_t * )malloc(sizeof(nfapi_rx_indication_pdu_t));
+  UL_INFO->RX_NPUSCH.rx_pdu_list->rx_ue_information.rnti = 0x0101;
+  UL_INFO->RX_NPUSCH.rx_pdu_list->data = msg3;
+  UL_INFO->RX_NPUSCH.rx_pdu_list->rx_indication_rel8.length = 11; 
 }
 void enable_msg3_simulation(UL_IND_NB_IoT_t *UL_INFO, int i)
 {
   if(i==1)
   {
-	if(UL_INFO->frame==521 && UL_INFO->subframe==1)
-	{
-		simulate_msg3(UL_INFO);
-	}
+  if(UL_INFO->frame==521 && UL_INFO->subframe==1)
+  {
+    simulate_msg3(UL_INFO);
+  }
   }
 }
 // Sched_INFO as a input for the scheduler
@@ -79,7 +81,6 @@ void UL_indication_NB_IoT(UL_IND_NB_IoT_t *UL_INFO)
 {
     int i=0;
     uint32_t abs_subframe;
-    Sched_Rsp_NB_IoT_t *SCHED_info = &mac_inst->Sched_INFO;
     UE_TEMPLATE_NB_IoT *ue_info = (UE_TEMPLATE_NB_IoT *)0;
     uint16_t tmp_rnti;
 
@@ -118,6 +119,22 @@ void UL_indication_NB_IoT(UL_IND_NB_IoT_t *UL_INFO)
                       );
           //block_rach = 2;
 
+        }else if (UE_state_machine == rach_for_next || UE_state_machine == rach_for_TAU)
+        {
+          //rach_count++;
+          //if (rach_count%3==0)
+          //{
+          LOG_N(MAC,"It is the third time that this UE try to rach\n");
+                    init_RA_NB_IoT(mac_inst,
+                      (UL_INFO->nrach_ind.nrach_pdu_list+i)->nrach_indication_rel13.initial_sc,
+                      (UL_INFO->nrach_ind.nrach_pdu_list+i)->nrach_indication_rel13.nrach_ce_level,
+                      UL_INFO->frame,
+                      //timing_offset = Timing_advance * 16
+                      (UL_INFO->nrach_ind.nrach_pdu_list+i)->nrach_indication_rel13.timing_advance*16
+                      );
+
+          UE_state_machine = rach_for_TAU;
+          //}
         }
       }
     }
@@ -138,7 +155,7 @@ void UL_indication_NB_IoT(UL_IND_NB_IoT_t *UL_INFO)
         }
       }
     }
-	 */
+   */
     // Check if there is any feed back of HARQ
     if(UL_INFO->nb_harq_ind.nb_harq_indication_body.number_of_harqs>0)
     {
@@ -152,7 +169,7 @@ void UL_indication_NB_IoT(UL_IND_NB_IoT_t *UL_INFO)
           ue_info->direction=0;
         }else
         {
-          LOG_I(MAC,"This UE get the response of HARQ DL : ACK, update the UL buffer for next message\n");
+          LOG_I(MAC,"This UE get the response of HARQ DL : ACK\n");
           ue_info->direction=-1;
           //ue_info->ul_total_buffer = 11;
           UE_state_machine = rach_for_auth_rsp;
@@ -178,6 +195,14 @@ void UL_indication_NB_IoT(UL_IND_NB_IoT_t *UL_INFO)
     {
       for(i=0;i<UL_INFO->RX_NPUSCH.number_of_pdus;i++)
       {
+        printf("The Receive MAC PDU:");
+        int x = 0;
+        for (x = 0; x < (UL_INFO->RX_NPUSCH.rx_pdu_list+i)->rx_indication_rel8.length; x ++)
+        {
+          printf("%02x ", (UL_INFO->RX_NPUSCH.rx_pdu_list+i)->data[x]);
+        }
+
+        printf("\n");
         //For MSG3, Normal Uplink Data, NAK
         rx_sdu_NB_IoT(UL_INFO->module_id,
                       UL_INFO->CC_id,
@@ -191,7 +216,7 @@ void UL_indication_NB_IoT(UL_IND_NB_IoT_t *UL_INFO)
       }
     }
 
-	  UL_INFO->RX_NPUSCH.number_of_pdus = 0;
+    UL_INFO->RX_NPUSCH.number_of_pdus = 0;
 
     if(UL_INFO->hypersfn==1 && UL_INFO->frame==0)
     {
