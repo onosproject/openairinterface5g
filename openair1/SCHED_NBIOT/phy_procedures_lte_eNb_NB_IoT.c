@@ -1403,3 +1403,48 @@ void prach_procedures_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB) {
   }
   
 }
+//samuel
+void do_prach_NB_IoT(PHY_VARS_eNB *eNB,int frame,int subframe) {
+
+  eNB_proc_t *proc = &eNB->proc;
+ // LTE_DL_FRAME_PARMS *fp=&eNB->frame_parms;
+
+if(frame%2==0 && subframe==9)
+{
+  // check if we have to detect PRACH first
+  //if (is_prach_subframe(fp,frame,subframe)>0) { 
+    /* accept some delay in processing - up to 5ms */
+    int i;
+    for (i = 0; i < 10 && proc->instance_cnt_prach == 0; i++) {
+      LOG_W(PHY,"[eNB] Frame %d Subframe %d, eNB PRACH thread busy (IC %d)!!\n", frame,subframe,proc->instance_cnt_prach);
+      usleep(500);
+    }
+    if (proc->instance_cnt_prach == 0) {
+      exit_fun( "PRACH thread busy" );
+      return;
+    }
+    
+    // wake up thread for PRACH RX
+    if (pthread_mutex_lock(&proc->mutex_prach) != 0) {
+      LOG_E( PHY, "[eNB] ERROR pthread_mutex_lock for eNB PRACH thread %d (IC %d)\n", proc->thread_index, proc->instance_cnt_prach);
+      exit_fun( "error locking mutex_prach" );
+      return;
+    }
+    
+    ++proc->instance_cnt_prach;
+    // set timing for prach thread
+    proc->frame_prach = frame;
+    proc->subframe_prach = subframe;
+    
+    // the thread can now be woken up
+    if (pthread_cond_signal(&proc->cond_prach) != 0) {
+      LOG_E( PHY, "[eNB] ERROR pthread_cond_signal for eNB PRACH thread %d\n", proc->thread_index);
+      exit_fun( "ERROR pthread_cond_signal" );
+      return;
+    }
+    
+    pthread_mutex_unlock( &proc->mutex_prach );
+  //}
+ }
+
+}
