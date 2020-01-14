@@ -157,11 +157,64 @@ void wakeup_prach_eNB(PHY_VARS_eNB *eNB,RU_t *ru,int frame,int subframe);
 extern void oai_subframe_ind(uint16_t sfn, uint16_t sf);
 extern void add_subframe(uint16_t *frameP, uint16_t *subframeP, int offset);
 
+//samuel
+extern void do_prach_NB_IoT(PHY_VARS_eNB *eNB,int frame,int subframe);
 //#define TICK_TO_US(ts) (ts.diff)
 #define TICK_TO_US(ts) (ts.trials==0?0:ts.diff/ts.trials)
 
 eNBs_t eNBs;//Ann and samuel
+static inline int rxtx_NB_IoT(PHY_VARS_eNB_NB_IoT *eNB,eNB_proc_NB_IoT_t *proc, char *thread_name) {
 
+  ///start_meas(&softmodem_stats_rxtx_sf);
+
+  // ****************************************
+  // Common RX procedures subframe n
+
+  
+   if ((eNB->do_prach)&&((eNB->node_function != NGFI_RCC_IF4p5_NB_IoT)))
+    eNB->do_prach(eNB,proc->frame_rx,proc->subframe_rx);
+  //phy_procedures_eNB_common_RX(eNB,proc);//samuel
+  
+  // UE-specific RX processing for subframe n
+  ///////////////////////////////////// for NB-IoT testing  ////////////////////////
+  // for NB-IoT testing  // activating only TX part
+  //if (eNB->proc_uespec_rx) eNB->proc_uespec_rx(eNB, proc );//samuel
+   ////////////////////////////////////END///////////////////////
+
+  //npusch_procedures(eNB,proc,data_or_control);
+  //fill_rx_indication(eNB,i,frame,subframe);
+  //////////////////////////////////// for IF Module/scheduler testing
+ 
+  pthread_mutex_lock(&eNB->UL_INFO_mutex);
+
+  eNB->UL_INFO.frame     = proc->frame_rx;
+  eNB->UL_INFO.subframe  = proc->subframe_rx;
+  eNB->UL_INFO.module_id = eNB->Mod_id;
+  eNB->UL_INFO.CC_id     = eNB->CC_id;
+  eNB->UL_INFO.hypersfn  = proc->HFN;
+
+  eNB->if_inst_NB_IoT->UL_indication(&eNB->UL_INFO);
+
+  pthread_mutex_unlock(&eNB->UL_INFO_mutex);
+
+  //LOG_I(PHY,"After UL_indication\n");
+  // *****************************************
+  // TX processing for subframe n+4
+  // run PHY TX procedures the one after the other for all CCs to avoid race conditions
+  // (may be relaxed in the future for performance reasons)
+  // *****************************************
+  //if (wait_CCs(proc)<0) return(-1);
+  
+  if (oai_exit) return(-1);
+  
+  //if (eNB->proc_tx) eNB->proc_tx(eNB, proc, no_relay, NULL );//samuel
+  
+  if (release_thread(&proc->mutex_rxtx,&proc->instance_cnt_rxtx,thread_name)<0) return(-1);
+
+ /// stop_meas( &softmodem_stats_rxtx_sf );
+  
+  return(0);
+}
 static inline int rxtx(PHY_VARS_eNB *eNB,L1_rxtx_proc_t *proc, char *thread_name) {
   int ret;
   start_meas(&softmodem_stats_rxtx_sf);
@@ -431,6 +484,7 @@ static void *L1_thread( void *param ) {
 
     if (eNB->CC_id==0) {
       if (rxtx(eNB,proc,thread_name) < 0) break;
+      if (rxtx_NB_IoT(eNBs.eNB_NB_IoT,&(eNBs.eNB_NB_IoT->proc),thread_name));
     }
 
     LOG_D(PHY,"L1 RX %d.%d done\n",proc->frame_rx,proc->subframe_rx);

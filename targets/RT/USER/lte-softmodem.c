@@ -627,6 +627,7 @@ int main( int argc, char **argv ) {
       itti_send_msg_to_task (TASK_RRC_ENB, ENB_MODULE_ID_TO_INSTANCE(enb_id), msg_p);
     }
     node_type = RC.rrc[0]->node_type;
+    RCconfig_NbIoTL1();//samuel
   } else {
     printf("RC.nb_inst = 0, Initializing L1\n");
     RCconfig_L1();

@@ -424,7 +424,10 @@ typedef struct eNB_proc_NB_IoT_t_s {
   /// set of scheduling variables RXn-TXnp4 threads
   // newly added for NB_IoT
   eNB_rxtx_proc_NB_IoT_t  proc_rxtx[2];
-
+  //samuel
+  uint16_t     HFN;
+  pthread_mutex_t mutex_rxtx;
+  int instance_cnt_rxtx;
 } eNB_proc_NB_IoT_t;
 
 
