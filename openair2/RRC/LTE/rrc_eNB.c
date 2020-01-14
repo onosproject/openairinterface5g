@@ -9134,6 +9134,9 @@ void *rrc_enb_process_itti_msg(void *notUsed) {
       case X2AP_TX2_RELOC_OVERALL_TIMEOUT:
         cause = "Tx2_RelocOverall timeout";
         break;
+      case X2AP_UNKNOWN_CAUSE:
+        cause = "UNKNOWN timeout";
+        break;
       default:
         /* cannot come here */
         exit(1);

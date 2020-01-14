@@ -63,7 +63,8 @@ typedef struct x2ap_ue_context_release_s {
 
 typedef enum {
   X2AP_T_RELOC_PREP_TIMEOUT,
-  X2AP_TX2_RELOC_OVERALL_TIMEOUT
+  X2AP_TX2_RELOC_OVERALL_TIMEOUT,
+  X2AP_UNKNOWN_CAUSE
 } x2ap_handover_cancel_cause_t;
 
 typedef struct x2ap_handover_cancel_s {

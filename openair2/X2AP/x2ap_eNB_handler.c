@@ -1087,9 +1087,14 @@ int x2ap_eNB_handle_handover_cancel (instance_t instance,
         ie->value.choice.Cause.choice.radioNetwork ==
             X2AP_CauseRadioNetwork_tx2relocoverall_expiry)) {
     X2AP_ERROR("%s %d: Cause not supported (only T_reloc_prep and TX2_reloc_overall handled)\n",__FILE__,__LINE__);
-    return -1;
+    X2AP_ERROR("\tie->value.present=%u\n"
+               "\tie->value.choice.Cause.present=%u\n"
+               "\tie->value.choice.Cause.choice.radioNetwork=%ld\n"
+               "\tie->value.choice.Cause.choice.radioNetwork=%ld\n",ie->value.present,ie->value.choice.Cause.present,
+               ie->value.choice.Cause.choice.radioNetwork,ie->value.choice.Cause.choice.radioNetwork);
+    //return -1;
   }
-
+  cause = X2AP_UNKNOWN_CAUSE;
   switch (ie->value.choice.Cause.choice.radioNetwork) {
   case X2AP_CauseRadioNetwork_trelocprep_expiry:
     cause = X2AP_T_RELOC_PREP_TIMEOUT;
@@ -1097,7 +1102,8 @@ int x2ap_eNB_handle_handover_cancel (instance_t instance,
   case X2AP_CauseRadioNetwork_tx2relocoverall_expiry:
     cause = X2AP_TX2_RELOC_OVERALL_TIMEOUT;
     break;
-  default: /* can't come here */ exit(1);
+  default: /* can't come here */ //exit(1);
+    break;
   }
 
   ue_id = x2ap_find_id_from_id_source(&instance_p->id_manager, id_source);
