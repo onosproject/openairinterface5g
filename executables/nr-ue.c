@@ -609,16 +609,6 @@ void *UE_thread(void *arg) {
   openair0_timestamp timestamp;
   void *rxp[NB_ANTENNAS_RX], *txp[NB_ANTENNAS_TX];
   int start_rx_stream = 0;
-  const uint16_t table_sf_slot[80] = {0,0,0,0,0,0,0,0,
-                                      1,1,1,1,1,1,1,1,
-                                      2,2,2,2,2,2,2,2,
-                                      3,3,3,3,3,3,3,3,
-                                      4,4,4,4,4,4,4,4,
-                                      5,5,5,5,5,5,5,5,
-                                      6,6,6,6,6,6,6,6,
-                                      7,7,7,7,7,7,7,7,
-                                      8,8,8,8,8,8,8,8,
-                                      9,9,9,9,9,9,9,9};
   AssertFatal(0== openair0_device_load(&(UE->rfdevice), &openair0_cfg[0]), "");
   UE->rfdevice.host_type = RAU_HOST;
   AssertFatal(UE->rfdevice.trx_start_func(&UE->rfdevice) == 0, "Could not start the device\n");
@@ -704,7 +694,7 @@ void *UE_thread(void *arg) {
     curMsg->UE->current_thread_id[slot_nr] = thread_idx;
     curMsg->proc.CC_id = 0;
     curMsg->proc.nr_tti_rx= slot_nr;
-    curMsg->proc.subframe_rx=table_sf_slot[slot_nr];
+    curMsg->proc.subframe_rx=slot_nr/(nb_slot_frame/10);
     curMsg->proc.nr_tti_tx = (absolute_slot + DURATION_RX_TO_TX) % nb_slot_frame;
     curMsg->proc.subframe_tx=curMsg->proc.nr_tti_rx;
     curMsg->proc.frame_rx = ( absolute_slot/nb_slot_frame ) % MAX_FRAME_NUMBER;

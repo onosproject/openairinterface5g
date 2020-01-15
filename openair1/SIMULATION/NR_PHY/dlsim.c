@@ -560,13 +560,14 @@ int main(int argc, char **argv)
   mac_top_init_gNB();
   gNB_mac = RC.nrmac[0];
 
-  if(mu<3) {
-    config_common(0,0,Nid_cell,78,SSB_positions,ssb_periodicity,(uint64_t)3640000000L,N_RB_DL,mu);
+  if(mu==1) {
+    config_common(0,0,Nid_cell,78,SSB_positions,ssb_periodicity,(uint64_t)3640000000L,N_RB_DL,1);
     config_nr_mib(0,0,1,kHz30,0,0,0,0,0);
-  } else {
-    config_common(0,0,Nid_cell,257,SSB_positions,ssb_periodicity,(uint64_t)28100000000L,N_RB_DL,mu);
+  } else if(mu==3) {
+    config_common(0,0,Nid_cell,257,SSB_positions,ssb_periodicity,(uint64_t)28100000000L,N_RB_DL,3);
     config_nr_mib(0,0,1,kHz120,0,0,0,0,0);
-  }
+  } else 
+    exit(-1);
 
 
 
