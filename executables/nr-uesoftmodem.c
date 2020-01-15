@@ -487,8 +487,8 @@ void set_default_frame_parms(NR_DL_FRAME_PARMS *frame_parms[MAX_NUM_CCs]) {
   for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
     /* Set some default values that may be overwritten while reading options */
     frame_parms[CC_id] = (NR_DL_FRAME_PARMS *) calloc(sizeof(NR_DL_FRAME_PARMS),1);
-    frame_parms[CC_id]->eutra_band          = 257;
-    frame_parms[CC_id]->frame_type          = TDD; //FDD;   // TDD?
+    frame_parms[CC_id]->eutra_band          = 78;
+    frame_parms[CC_id]->frame_type          = FDD;
     frame_parms[CC_id]->tdd_config          = 3;
     //frame_parms[CC_id]->tdd_config_S        = 0;
     frame_parms[CC_id]->N_RB_DL             = 66;
