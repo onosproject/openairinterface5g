@@ -743,7 +743,7 @@ void ru_fep_full_2thread(RU_t *ru) {
        	if (check_sync_pos >= 8 || check_sync_pos<=-8) {
 	 	LOG_E(PHY,"~~~~~~~~~~~~~~ check_sync_pos %d, frame %d ---> LOST SYNC-EXIT\n", check_sync_pos, proc->frame_rx);
 LOG_M("rxdata.m","rxdata",&ru->common.rxdata[0][0], fp->samples_per_tti*2,1,1);		
-exit(-1);
+exit_fun("ru_fep_full_2thread rxdata error" );
 	}
        }
     

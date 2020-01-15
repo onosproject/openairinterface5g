@@ -670,5 +670,7 @@ int is_x2ap_enabled(void)
 
 mutex_error:
   LOG_E(X2AP, "mutex error\n");
-  exit(1);
+  //exit(1);
+  exit_fun("is_x2ap_enabled mutex error" );
+  return(-1);
 }

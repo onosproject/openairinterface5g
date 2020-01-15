@@ -689,14 +689,14 @@ void rx_prach0(PHY_VARS_eNB *eNB,
         LOG_M("prach_rxF_comp0.m","prach_rxF_comp0",prachF,1024,1,1);
         LOG_M("Xu.m","xu",Xu,N_ZC,1,1);
         LOG_M("prach_ifft0.m","prach_t0",prach_ifft,1024,1,1);
-	exit(-1);
+        exit_fun("rx_prach0 prach_ifft0.m" );
       } else {
         LOG_E(PHY,"Dumping prach (br_flag %d), k = %d (n_ra_prb %d)\n",br_flag,k,n_ra_prb);
         LOG_M("rxsigF_br.m","prach_rxF_br",&rxsigF[0][0],12288,1,1);
         LOG_M("prach_rxF_comp0_br.m","prach_rxF_comp0_br",prachF,1024,1,1);
         LOG_M("Xu_br.m","xu_br",Xu,N_ZC,1,1);
         LOG_M("prach_ifft0_br.m","prach_t0_br",prach_ifft,1024,1,1);
-        exit(-1);
+        exit_fun("rx_prach0 prach_ifft0_br.m" );
       }
     }
   } /* LOG_DUMPFLAG(PRACH) */

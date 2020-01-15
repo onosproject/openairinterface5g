@@ -1047,7 +1047,8 @@ int x2ap_eNB_generate_x2_handover_cancel (x2ap_eNB_instance_t *instance_p, x2ap_
   default:
     /* we can't come here */
     X2AP_ERROR("unhandled cancel cause\n");
-    exit(1);
+    exit_fun("x2ap_eNB_generate_x2_handover_cancel unhandled cancel cause" );
+    break;
   }
   ASN_SEQUENCE_ADD(&out->protocolIEs.list, ie);
 

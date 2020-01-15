@@ -1102,7 +1102,8 @@ int x2ap_eNB_handle_handover_cancel (instance_t instance,
   case X2AP_CauseRadioNetwork_tx2relocoverall_expiry:
     cause = X2AP_TX2_RELOC_OVERALL_TIMEOUT;
     break;
-  default: /* can't come here */ //exit(1);
+  default: /* can't come here */ 
+    exit_fun("x2ap_eNB_handle_handover_cancel unhandled cancel cause" );
     break;
   }
 

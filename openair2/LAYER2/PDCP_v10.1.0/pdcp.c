@@ -613,7 +613,7 @@ pdcp_data_ind(
               PROTOCOL_PDCP_CTXT_FMT"wrong sequence number  (%d) for this pdcp entity \n",
               PROTOCOL_PDCP_CTXT_ARGS(ctxt_pP, pdcp_p),
               pdcp_p->seq_num_size);
-        exit(1);
+        exit_fun("pdcp_data_ind wrong sequence number" );
       }
 
       //uint8_t dc = pdcp_get_dc_filed((unsigned char*)sdu_buffer_pP->data);
@@ -902,7 +902,8 @@ pdcp_data_ind(
 
       default:
         LOG_E(PDCP, "bad RLC mode, cannot happen.\n");
-        exit(1);
+        exit_fun("pdcp_data_ind bad RLC mode, cannot happen" );
+        break;
     } /* switch (pdcp_p->rlc_mode) */
   } else { /* MBMS_flagP == 0 */
     payload_offset=0;

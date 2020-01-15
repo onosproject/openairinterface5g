@@ -8619,7 +8619,7 @@ int add_ue_to_remove(struct rrc_eNB_ue_context_s **ue_to_be_removed,
 
   if (removed_ue_count == NUMBER_OF_UE_MAX) {
     LOG_E(RRC, "fatal: ue_to_be_removed is full\n");
-    exit(1);
+    exit_fun("add_ue_to_remove fatal: ue_to_be_removed is full" );
   }
 
   ue_to_be_removed[removed_ue_count] = ue_context_p;
@@ -9139,7 +9139,7 @@ void *rrc_enb_process_itti_msg(void *notUsed) {
         break;
       default:
         /* cannot come here */
-        exit(1);
+        exit_fun("rrc_enb_process_itti_msg X2AP_HANDOVER_CANCEL cause error" );
       }
       ue_context_p = rrc_eNB_get_ue_context(RC.rrc[instance], X2AP_HANDOVER_CANCEL(msg_p).rnti);
       if (ue_context_p != NULL &&

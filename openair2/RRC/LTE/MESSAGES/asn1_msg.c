@@ -1384,17 +1384,17 @@ uint8_t do_SIB23(uint8_t Mod_id,
     memset(bcch_message,0,sizeof(LTE_BCCH_DL_SCH_Message_t));
   } else {
     LOG_E(RRC,"[eNB %d] BCCH_MESSAGE is null, exiting\n", Mod_id);
-    exit(-1);
+    exit_fun("do_SIB23 BCCH_MESSAGE is null" );
   }
 
   if (!sib2) {
     LOG_E(RRC,"[eNB %d] sib2 is null, exiting\n", Mod_id);
-    exit(-1);
+    exit_fun("do_SIB23 sib2 is null" );
   }
 
   if (!sib3) {
     LOG_E(RRC,"[eNB %d] sib3 is null, exiting\n", Mod_id);
-    exit(-1);
+    exit_fun("do_SIB23 sib3 is null" );
   }
 
 
