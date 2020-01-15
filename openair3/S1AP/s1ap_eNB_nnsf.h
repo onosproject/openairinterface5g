@@ -22,17 +22,10 @@
 #ifndef S1AP_ENB_NNSF_H_
 #define S1AP_ENB_NNSF_H_
 
-/* ----- %%%%% KDDI DEMO KCN 削除 ここから ----- */
-//struct s1ap_eNB_mme_data_s *
-//s1ap_eNB_nnsf_select_mme(s1ap_eNB_instance_t       *instance_p,
-//                         rrc_establishment_cause_t  cause);
-/* ----- %%%%% KDDI DEMO KCN 削除 ここまで ----- */
-/* ----- %%%%% KDDI DEMO KCN 追加 ここから ----- */
 struct s1ap_eNB_mme_data_s *
 s1ap_eNB_nnsf_select_mme(s1ap_eNB_instance_t       *instance_p,
                          rrc_establishment_cause_t  cause,
                          uint32_t                   plmn_id);
-/* ----- %%%%% KDDI DEMO KCN 追加 ここまで ----- */
 
 struct s1ap_eNB_mme_data_s *
 s1ap_eNB_nnsf_select_mme_by_plmn_id(s1ap_eNB_instance_t       *instance_p,

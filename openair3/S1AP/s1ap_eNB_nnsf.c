@@ -36,24 +36,13 @@
 #include "s1ap_eNB_defs.h"
 #include "s1ap_eNB_nnsf.h"
 
-/* ----- %%%%% KDDI DEMO KCN 削除 ここから ----- */
-//struct s1ap_eNB_mme_data_s *
-//s1ap_eNB_nnsf_select_mme(s1ap_eNB_instance_t       *instance_p,
-//                         rrc_establishment_cause_t  cause)
-/* ----- %%%%% KDDI DEMO KCN 削除 ここまで ----- */
-/* ----- %%%%% KDDI DEMO KCN 追加 ここから ----- */
 struct s1ap_eNB_mme_data_s *
 s1ap_eNB_nnsf_select_mme(s1ap_eNB_instance_t       *instance_p,
                          rrc_establishment_cause_t  cause,
                          uint32_t                   plmn_id)
-/* ----- %%%%% KDDI DEMO KCN 追加 ここまで ----- */
 {
   struct s1ap_eNB_mme_data_s *mme_data_p = NULL;
   struct s1ap_eNB_mme_data_s *mme_highest_capacity_p = NULL;
-/* ----- %%%%% KDDI DEMO KCN 削除 ここから ----- */
-//  uint8_t current_capacity = 0;
-/* ----- %%%%% KDDI DEMO KCN 削除 ここまで ----- */
-/* ----- %%%%% KDDI DEMO KCN 追加 ここから ----- */
   typedef struct MME_nnsf_inf {
     struct s1ap_eNB_mme_data_s *mme_p;
     uint64_t weight;
@@ -66,13 +55,10 @@ s1ap_eNB_nnsf_select_mme(s1ap_eNB_instance_t       *instance_p,
   uint64_t  weight = 0;
   
   memset(mme_inf, 0, sizeof(mme_inf));
-/* ----- %%%%% KDDI DEMO KCN 追加 ここまで ----- */
 
   RB_FOREACH(mme_data_p, s1ap_mme_map, &instance_p->s1ap_mme_head) {
-/* ----- %%%%% KDDI DEMO KCN 追加 ここから ----- */
     struct served_gummei_s *gummei_p = NULL;
     capacity_sum = capacity_sum + mme_data_p->relative_mme_capacity;
-/* ----- %%%%% KDDI DEMO KCN 追加 ここまで ----- */
     if (mme_data_p->state != S1AP_ENB_STATE_CONNECTED) {
       /* The association between MME and eNB is not ready for the moment,
        * go to the next known MME.
@@ -107,14 +93,6 @@ s1ap_eNB_nnsf_select_mme(s1ap_eNB_instance_t       *instance_p,
       }
     }
 
-/* ----- %%%%% KDDI DEMO KCN 削除 ここから ----- */
-//    if (current_capacity < mme_data_p->relative_mme_capacity) {
-//      /* We find a better MME, keep a reference to it */
-//      current_capacity = mme_data_p->relative_mme_capacity;
-//      mme_highest_capacity_p = mme_data_p;
-//    }
-/* ----- %%%%% KDDI DEMO KCN 削除 ここまで ----- */
-/* ----- %%%%% KDDI DEMO KCN 追加 ここから ----- */
     gummei_p = mme_data_p->served_gummei.stqh_first;
     if( gummei_p != NULL )
     {
@@ -138,9 +116,7 @@ s1ap_eNB_nnsf_select_mme(s1ap_eNB_instance_t       *instance_p,
         served_plmns_p = served_plmns_p->next.stqe_next;
       }
     }
-/* ----- %%%%% KDDI DEMO KCN 追加 ここまで ----- */
   }
-/* ----- %%%%% KDDI DEMO KCN 追加 ここから ----- */
   if( nb_mme != 0 )
   {
     for( cnt = 0 ; cnt < nb_mme ; cnt++ )
@@ -167,7 +143,6 @@ s1ap_eNB_nnsf_select_mme(s1ap_eNB_instance_t       *instance_p,
   {
     mme_highest_capacity_p->nb_calls++;
   }
-/* ----- %%%%% KDDI DEMO KCN 追加 ここまで ----- */
 
   return mme_highest_capacity_p;
 }

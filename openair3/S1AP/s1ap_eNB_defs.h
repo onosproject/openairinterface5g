@@ -161,10 +161,8 @@ typedef struct s1ap_eNB_mme_data_s {
 
   /* Only meaningfull in virtual mode */
   struct s1ap_eNB_instance_s *s1ap_eNB_instance;
-/* ----- %%%%% KDDI DEMO KCN 追加 ここから ----- */
-  /* 接続呼数 */
+  
   uint32_t nb_calls;
-/* ----- %%%%% KDDI DEMO KCN 追加 ここまで ----- */
 } s1ap_eNB_mme_data_t;
 
 typedef struct s1ap_eNB_instance_s {
