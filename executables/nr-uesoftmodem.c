@@ -191,7 +191,7 @@ uint64_t num_missed_slots=0; // counter for the number of missed slots
 
 
 int transmission_mode=1;
-int numerology = 3;
+int numerology = 0;
 
 /* flag set by eNB conf file to specify if the radio head is local or remote (default option is local) */
 //uint8_t local_remote_radio = BBU_LOCAL_RADIO_HEAD;
@@ -487,12 +487,12 @@ void set_default_frame_parms(NR_DL_FRAME_PARMS *frame_parms[MAX_NUM_CCs]) {
   for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
     /* Set some default values that may be overwritten while reading options */
     frame_parms[CC_id] = (NR_DL_FRAME_PARMS *) calloc(sizeof(NR_DL_FRAME_PARMS),1);
-    frame_parms[CC_id]->eutra_band          = 257;
-    frame_parms[CC_id]->frame_type          = TDD; //FDD;   // TDD?
+    frame_parms[CC_id]->eutra_band          = 78;
+    frame_parms[CC_id]->frame_type          = FDD;
     frame_parms[CC_id]->tdd_config          = 3;
     //frame_parms[CC_id]->tdd_config_S        = 0;
-    frame_parms[CC_id]->N_RB_DL             = 66;
-    frame_parms[CC_id]->N_RB_UL             = 66;
+    frame_parms[CC_id]->N_RB_DL             = 106;
+    frame_parms[CC_id]->N_RB_UL             = 106;
     frame_parms[CC_id]->Ncp                 = NORMAL;
     //frame_parms[CC_id]->Ncp_UL              = NORMAL;
     frame_parms[CC_id]->Nid_cell            = 0;
@@ -502,7 +502,7 @@ void set_default_frame_parms(NR_DL_FRAME_PARMS *frame_parms[MAX_NUM_CCs]) {
     frame_parms[CC_id]->nb_antennas_rx      = 1;
     //frame_parms[CC_id]->nushift             = 0;
     // NR: Init to legacy LTE 20Mhz params
-    frame_parms[CC_id]->numerology_index  = 3;
+    frame_parms[CC_id]->numerology_index  = 0;
     frame_parms[CC_id]->ttis_per_subframe = 1;
     frame_parms[CC_id]->slots_per_tti   = 2;
   }
@@ -511,8 +511,7 @@ void set_default_frame_parms(NR_DL_FRAME_PARMS *frame_parms[MAX_NUM_CCs]) {
 void init_openair0(void) {
   int card;
   int i;
-  fprintf(stderr, " The value of numerology in init_openair0 is %d\n",numerology );  //why is it 1 here?
-  numerology = 3;   // Hardcoded for testing
+
   for (card=0; card<MAX_CARDS; card++) {
     openair0_cfg[card].configFilename = NULL;
     openair0_cfg[card].threequarter_fs = frame_parms[0]->threequarter_fs;
@@ -721,12 +720,10 @@ int main( int argc, char **argv ) {
   NB_INST=1;
   PHY_vars_UE_g = malloc(sizeof(PHY_VARS_NR_UE **));
   PHY_vars_UE_g[0] = malloc(sizeof(PHY_VARS_NR_UE *)*MAX_NUM_CCs);
-  fprintf(stderr, "$$ The value of numerology in uesoftmodem main is %d $$\n",numerology );
 
   for (int CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
     printf("frame_parms %d\n",frame_parms[CC_id]->ofdm_symbol_size);
-    //nr_init_frame_parms_ue(frame_parms[CC_id],numerology,NORMAL,frame_parms[CC_id]->N_RB_DL,(frame_parms[CC_id]->N_RB_DL-20)>>1,0);
-    nr_init_frame_parms_ue(frame_parms[CC_id],3,NORMAL,frame_parms[CC_id]->N_RB_DL,(frame_parms[CC_id]->N_RB_DL-20)>>1,0);    //I dont understand why the numerology is still 1?
+    nr_init_frame_parms_ue(frame_parms[CC_id],numerology,NORMAL,frame_parms[CC_id]->N_RB_DL,(frame_parms[CC_id]->N_RB_DL-20)>>1,0);
     PHY_vars_UE_g[0][CC_id] = init_nr_ue_vars(frame_parms[CC_id], 0,abstraction_flag);
     UE[CC_id] = PHY_vars_UE_g[0][CC_id];
 
@@ -756,7 +753,7 @@ int main( int argc, char **argv ) {
     if (frame_parms[CC_id]->frame_type==FDD) {
       UE[CC_id]->N_TA_offset = 0;
     } else {
-      if (frame_parms[CC_id]->N_RB_DL == 100)     // for TDD for N_RB_DL 66 what is the value?
+      if (frame_parms[CC_id]->N_RB_DL == 100)
         UE[CC_id]->N_TA_offset = 624;
       else if (frame_parms[CC_id]->N_RB_DL == 50)
         UE[CC_id]->N_TA_offset = 624/2;

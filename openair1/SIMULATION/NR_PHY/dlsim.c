@@ -71,7 +71,7 @@ lte_subframe_t subframe_select(LTE_DL_FRAME_PARMS *frame_parms, unsigned char su
 int rlc_module_init (int enb) {return(0);}
 void pdcp_layer_init (void) {}
 int rrc_init_nr_global_param (void) {return(0);}
-void config_common(int Mod_idP,int CC_idP,int Nid_cell,int nr_bandP,uint64_t SSB_positions,uint16_t ssb_periodicity,uint64_t dl_CarrierFreqP,uint32_t dl_BandwidthP);
+void config_common(int Mod_idP,int CC_idP,int Nid_cell,int nr_bandP,uint64_t SSB_positions,uint16_t ssb_periodicity,uint64_t dl_CarrierFreqP,uint32_t dl_BandwidthP,mu);
 int8_t nr_mac_rrc_data_ind_ue(const module_id_t module_id, const int CC_id, const uint8_t gNB_index,
                               const int8_t channel, const uint8_t* pduP, const sdu_size_t pdu_len) {return(0);}
 uint64_t get_softmodem_optmask(void) {return 0;}
@@ -164,7 +164,7 @@ int main(int argc, char **argv)
 
   //double pbch_sinr;
   //int pbch_tx_ant;
-  int N_RB_DL=66,mu=3;
+  int N_RB_DL=106,mu=1;
   nfapi_nr_dl_config_dlsch_pdu_rel15_t dlsch_config;
   dlsch_config.start_prb = 0;
   dlsch_config.n_prb = 50;
@@ -560,11 +560,14 @@ int main(int argc, char **argv)
   mac_top_init_gNB();
   gNB_mac = RC.nrmac[0];
 
-  //config_common(0,0,Nid_cell,78,SSB_positions,ssb_periodicity,(uint64_t)3640000000L,N_RB_DL);
-  config_common(0,0,Nid_cell,257,SSB_positions,ssb_periodicity,(uint64_t)28100000000L,N_RB_DL);
+  if(mu<3) {
+    config_common(0,0,Nid_cell,78,SSB_positions,ssb_periodicity,(uint64_t)3640000000L,N_RB_DL,mu);
+    config_nr_mib(0,0,1,kHz30,0,0,0,0,0);
+  } else {
+    config_common(0,0,Nid_cell,257,SSB_positions,ssb_periodicity,(uint64_t)28100000000L,N_RB_DL,mu);
+    config_nr_mib(0,0,1,kHz120,0,0,0,0,0);
+  }
 
-  //config_nr_mib(0,0,1,kHz30,0,0,0,0,0);
-  config_nr_mib(0,0,1,kHz120,0,0,0,0,0);
 
 
   nr_l2_init_ue();

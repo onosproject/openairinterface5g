@@ -117,8 +117,8 @@ int nr_slot_fep(PHY_VARS_NR_UE *ue,
     return(-1);
     }*/
 
-  if (Ns<0 || Ns>=80) {
-    printf("slot_fep: Ns must be between 0 and 79\n");
+  if (Ns<0 || Ns>=160) { // Max possible slot index is 159
+    printf("slot_fep: Ns must be between 0 and 159\n");
     return(-1);
   }
 

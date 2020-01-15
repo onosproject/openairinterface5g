@@ -102,7 +102,7 @@ int main(int argc, char **argv)
   SCM_t channel_model=AWGN;//Rayleigh1_anticorr;
 
 
-  int N_RB_DL=273,mu=3;  //mu=1 here
+  int N_RB_DL=273,mu=1;
 
   //unsigned char frame_type = 0;
   unsigned char pbch_phase = 0;

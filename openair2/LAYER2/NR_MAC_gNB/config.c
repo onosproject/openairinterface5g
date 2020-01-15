@@ -85,11 +85,10 @@ void config_common(int Mod_idP,
                    uint64_t ssb_pattern,
 				   uint16_t ssb_periodicity,
 				   uint64_t dl_CarrierFreqP,
-                   uint32_t dl_BandwidthP)
+                   uint32_t dl_BandwidthP,
+                   uint8_t mu)
 {
   nfapi_nr_config_request_t *cfg = &RC.nrmac[Mod_idP]->config[CC_idP];
-
-  int mu = 3;
 
   cfg->sch_config.physical_cell_id.value = cellid;
   cfg->sch_config.ssb_scg_position_in_burst.value = ssb_pattern;
