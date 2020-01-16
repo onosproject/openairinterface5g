@@ -126,7 +126,7 @@ void nr_common_signal_procedures (PHY_VARS_gNB *gNB,int frame, int slot) {
      for (int i=0; i<2; i++)  {  // max two SSB per slot
      
 	ssb_index = i + 2*rel_slot - ssb_index_neg; // computing the ssb_index
-	if ((fp->L_ssb >> ssb_index) & 0x01)  { // generating the ssb only if the bit of L_ssb at current ssb index is 1
+	if (((fp->L_ssb >> ssb_index) & 0x01) && (ssb_index<64))  { // generating the ssb only if the bit of L_ssb at current ssb index is 1
 	
 	  int ssb_start_symbol_abs = nr_get_ssb_start_symbol(fp, ssb_index, n_hf); // computing the starting symbol for current ssb
 	  ssb_start_symbol = ssb_start_symbol_abs % 14;  // start symbol wrt slot
