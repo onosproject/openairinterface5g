@@ -573,6 +573,7 @@ int main( int argc, char **argv ) {
   signal(SIGINT, signal_handler);
   signal(SIGTERM, signal_handler);
   signal(SIGABRT, signal_handler);
+  signal(SIGPIPE, signal_handler);
   check_clock();
 #ifndef PACKAGE_VERSION
 #  define PACKAGE_VERSION "UNKNOWN-EXPERIMENTAL"
