@@ -453,8 +453,11 @@ int phy_rach_indication(struct nfapi_vnf_p7_config *config, nfapi_rach_indicatio
     }
     UL_RCC_INFO.rach_ind[index] = *ind;
 
-    if (ind->rach_indication_body.number_of_preambles > 0)
+    if (ind->rach_indication_body.number_of_preambles > 0){
       UL_RCC_INFO.rach_ind[index].rach_indication_body.preamble_list = malloc(sizeof(nfapi_preamble_pdu_t)*ind->rach_indication_body.number_of_preambles );
+    }else{
+      UL_RCC_INFO.rach_ind[index].header.message_id = 0;
+    }
 
     for (int i=0; i<ind->rach_indication_body.number_of_preambles; i++) {
       if (ind->rach_indication_body.preamble_list[i].preamble_rel8.tl.tag == NFAPI_PREAMBLE_REL8_TAG) {
@@ -517,8 +520,12 @@ int phy_harq_indication(struct nfapi_vnf_p7_config *config, nfapi_harq_indicatio
     }
     UL_RCC_INFO.harq_ind[index] = *ind;
 
-    if (ind->harq_indication_body.number_of_harqs > 0)
+    if (ind->harq_indication_body.number_of_harqs > 0){
       UL_RCC_INFO.harq_ind[index].harq_indication_body.harq_pdu_list = malloc(sizeof(nfapi_harq_indication_pdu_t)*ind->harq_indication_body.number_of_harqs );
+    }else{
+      UL_RCC_INFO.harq_ind[index].header.message_id = 0;
+    }
+
     for (int i=0; i<ind->harq_indication_body.number_of_harqs; i++) {
         memcpy(&UL_RCC_INFO.harq_ind[index].harq_indication_body.harq_pdu_list[i], &ind->harq_indication_body.harq_pdu_list[i], sizeof(nfapi_harq_indication_pdu_t));
     }
@@ -556,9 +563,11 @@ int phy_crc_indication(struct nfapi_vnf_p7_config *config, nfapi_crc_indication_
     }
     UL_RCC_INFO.crc_ind[index] = *ind;
 
-    if (ind->crc_indication_body.number_of_crcs > 0)
+    if (ind->crc_indication_body.number_of_crcs > 0){
       UL_RCC_INFO.crc_ind[index].crc_indication_body.crc_pdu_list = malloc(sizeof(nfapi_crc_indication_pdu_t)*ind->crc_indication_body.number_of_crcs );
-
+    }else{
+      UL_RCC_INFO.crc_ind[index].header.message_id = 0;
+    }
     for (int i=0; i<ind->crc_indication_body.number_of_crcs; i++) {
       memcpy(&UL_RCC_INFO.crc_ind[index].crc_indication_body.crc_pdu_list[i], &ind->crc_indication_body.crc_pdu_list[i], sizeof(ind->crc_indication_body.crc_pdu_list[0]));
 
@@ -621,8 +630,11 @@ int phy_rx_indication(struct nfapi_vnf_p7_config *config, nfapi_rx_indication_t 
     }
     UL_RCC_INFO.rx_ind[index] = *ind;
 
-    if (ind->rx_indication_body.number_of_pdus > 0)
+    if (ind->rx_indication_body.number_of_pdus > 0){
       UL_RCC_INFO.rx_ind[index].rx_indication_body.rx_pdu_list = malloc(sizeof(nfapi_rx_indication_pdu_t)*ind->rx_indication_body.number_of_pdus );
+    }else{
+      UL_RCC_INFO.rx_ind[index].header.message_id = 0;
+    }
 
     for (int i=0; i<ind->rx_indication_body.number_of_pdus; i++) {
       nfapi_rx_indication_pdu_t *dest_pdu = &UL_RCC_INFO.rx_ind[index].rx_indication_body.rx_pdu_list[i];
@@ -708,9 +720,11 @@ int phy_sr_indication(struct nfapi_vnf_p7_config *config, nfapi_sr_indication_t 
     }
     UL_RCC_INFO.sr_ind[index] = *ind;
     LOG_D(MAC,"%s() UL_INFO[%d].sr_ind.sr_indication_body.number_of_srs:%d\n", __FUNCTION__, index, eNB->UL_INFO.sr_ind.sr_indication_body.number_of_srs);
-    if (ind->sr_indication_body.number_of_srs > 0)
+    if (ind->sr_indication_body.number_of_srs > 0){
       UL_RCC_INFO.sr_ind[index].sr_indication_body.sr_pdu_list = malloc(sizeof(nfapi_sr_indication_pdu_t)*ind->sr_indication_body.number_of_srs );
-
+    }else{
+      UL_RCC_INFO.sr_ind[index].header.message_id = 0;
+    }
     for (int i=0; i<ind->sr_indication_body.number_of_srs; i++) {
         nfapi_sr_indication_pdu_t *dest_pdu = &UL_RCC_INFO.sr_ind[index].sr_indication_body.sr_pdu_list[i];
         nfapi_sr_indication_pdu_t *src_pdu = &ind->sr_indication_body.sr_pdu_list[i];
@@ -761,7 +775,10 @@ int phy_cqi_indication(struct nfapi_vnf_p7_config *config, nfapi_cqi_indication_
     if (ind->cqi_indication_body.number_of_cqis > 0){
       UL_RCC_INFO.cqi_ind[index].cqi_indication_body.cqi_pdu_list = malloc(sizeof(nfapi_cqi_indication_pdu_t)*ind->cqi_indication_body.number_of_cqis );
       UL_RCC_INFO.cqi_ind[index].cqi_indication_body.cqi_raw_pdu_list = malloc(sizeof(nfapi_cqi_indication_raw_pdu_t)*ind->cqi_indication_body.number_of_cqis );
+    }else{
+      UL_RCC_INFO.cqi_ind[index].header.message_id = 0;
     }
+
     for (int i=0; i<ind->cqi_indication_body.number_of_cqis; i++) {
         nfapi_cqi_indication_pdu_t *src_pdu = &ind->cqi_indication_body.cqi_pdu_list[i];
         LOG_D(MAC, "SR_IND[PDU:%d][rnti:%x cqi:%d channel:%d]\n", i, src_pdu->rx_ue_information.rnti,
