@@ -36,6 +36,8 @@
 #include <string.h>
 #include <pthread.h>
 
+extern void exit_function(const char *file, const char *function, const int line, const char *s);
+
 message_queue_t *new_message_queue(void)
 {
   message_queue_t *ret = NULL;
@@ -102,11 +104,13 @@ int message_put(message_queue_t *queue, void *data, int size, int priority)
   if (pthread_cond_signal(queue->cond)) {
     LOG_E(MAC, "%s:%d:%s: fatal error\n", __FILE__, __LINE__, __FUNCTION__);
     pthread_mutex_unlock(queue->mutex);
-    exit(1);
+    //exit(1);
+    exit_function(__FILE__, __FUNCTION__, __LINE__, "message_put fatal: pthread_cond_signal error");
   }
   if (pthread_mutex_unlock(queue->mutex)) {
     LOG_E(MAC, "%s:%d:%s: fatal error\n", __FILE__, __LINE__, __FUNCTION__);
-    exit(1);
+    //exit(1);
+    exit_function(__FILE__, __FUNCTION__, __LINE__, "message_put fatal: pthread_mutex_unlock error");
   }
 
   return 0;

@@ -3151,7 +3151,8 @@ void dft128(int16_t *x,int16_t *y,int scale)
   }
   if (LOG_DUMPFLAG(DEBUG_DFT)) {
      LOG_M("dft128out.m","dft128",y,128,1,1);
-     exit(-1);
+     //exit(-1);
+     exit_fun("DEBUG DFT128out.m");
   }
   _mm_empty();
   _m_empty();
@@ -3222,7 +3223,8 @@ void dft128(int16_t *x,int16_t *y,int scale)
   }
   if (LOG_DUMPFLAG(DEBUG_DFT)) {  
    LOG_M("dft128.m","dft",y256,128,1,1);
-   exit(-1);
+   //exit(-1);
+   exit_fun("DEBUG DFT128.m");
   }
 }
 

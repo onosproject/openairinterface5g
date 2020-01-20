@@ -1200,7 +1200,8 @@ if (NFAPI_MODE!=NFAPI_MODE_VNF) {
 
       if (!eNB->dlsch[i][j]) {
         LOG_E(PHY,"Can't get eNB dlsch structures for UE %d \n", i);
-        exit(-1);
+        //exit(-1);
+        exit_fun("Can't get eNB dlsch structures" );
       } else {
         eNB->dlsch[i][j]->rnti=0;
         LOG_D(PHY,"dlsch[%d][%d] => %p rnti:%d\n",i,j,eNB->dlsch[i][j], eNB->dlsch[i][j]->rnti);
@@ -1212,7 +1213,8 @@ if (NFAPI_MODE!=NFAPI_MODE_VNF) {
 
     if (!eNB->ulsch[1+i]) {
       LOG_E(PHY,"Can't get eNB ulsch structures\n");
-      exit(-1);
+      //exit(-1);
+      exit_fun("Can't get eNB ulsch structures" );
     }
 
     // this is the transmission mode for the signalling channels
@@ -1225,7 +1227,8 @@ if (NFAPI_MODE!=NFAPI_MODE_VNF) {
 
   if (!eNB->ulsch[0]) {
     LOG_E(PHY,"Can't get eNB ulsch structures\n");
-    exit(-1);
+    //exit(-1);
+    exit_fun("Can't get eNB ulsch structures" );
   }
 
   eNB->dlsch_SI  = new_eNB_dlsch(1,8,NSOFT,fp->N_RB_DL, 0, fp);

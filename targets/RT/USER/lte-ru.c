@@ -1661,7 +1661,8 @@ void *ru_thread( void *param ) {
     
     if (setup_RU_buffers(ru)!=0) {
       printf("Exiting, cannot initialize RU Buffers\n");
-      exit(-1);
+      //exit(-1);
+      exit_fun("Exiting, cannot initialize RU Buffers" );
     }
     
     LOG_I(PHY, "Signaling main thread that RU %d is ready\n",ru->idx);
@@ -1684,8 +1685,9 @@ void *ru_thread( void *param ) {
       openair0_device_load(&ru->rfdevice,&ru->openair0_cfg);
       
       if (setup_RU_buffers(ru)!=0) {
-	printf("Exiting, cannot initialize RU Buffers\n");
-	exit(-1);
+        printf("Exiting, cannot initialize RU Buffers\n");
+        //exit(-1);
+        exit_fun("Exiting, cannot initialize RU Buffers" );
       }
       AssertFatal((ret=pthread_mutex_lock(&RC.ru_mutex))==0,"mutex_lock returns %d\n",ret);
       RC.ru_mask &= ~(1<<ru->idx);
@@ -1955,7 +1957,8 @@ void *ru_thread_synch(void *arg) {
                  LOG_M("ru_sync_corr.m","sync_corr",ru->dmrs_corr,LTE_NUMBER_OF_SUBFRAMES_PER_FRAME*fp->samples_per_tti,1,6);
                  LOG_M("ru_dmrs.m","rudmrs",&ru->dmrssync[0],fp->ofdm_symbol_size,1,1);
 
-                 exit(-1);
+                 //exit(-1);
+                 exit_fun("Exiting, Cannot find synch reference" );
               }
           }
     } // ru->in_synch==0
@@ -2318,7 +2321,8 @@ void init_RU_proc(RU_t *ru) {
 
     if (setup_RU_buffers(ru)!=0) {
       printf("Exiting, cannot initialize RU Buffers\n");
-      exit(-1);
+      //exit(-1);
+      exit_fun("Exiting, cannot initialize RU Buffers" );
     }
   }
 
@@ -2527,8 +2531,9 @@ void set_function_spec_param(RU_t *ru) {
       printf("openair0_transport_init returns %d for ru_id %d\n", ret, ru->idx);
       
       if (ret<0) {
-	printf("Exiting, cannot initialize transport protocol\n");
-	exit(-1);
+        printf("Exiting, cannot initialize transport protocol\n");
+        //exit(-1);
+        exit_fun("Exiting, cannot initialize transport protocol" );
       }
     } else if (ru->function == NGFI_RRU_IF4p5) {
       ru->do_prach              = 1;                        // do part of prach processing in RU
@@ -2551,8 +2556,9 @@ void set_function_spec_param(RU_t *ru) {
       printf("openair0_transport_init returns %d for ru_id %d\n", ret, ru->idx);
       
       if (ret<0) {
-	printf("Exiting, cannot initialize transport protocol\n");
-	exit(-1);
+        printf("Exiting, cannot initialize transport protocol\n");
+        //exit(-1);
+        exit_fun("Exiting, cannot initialize transport protocol" );
       }
       
       malloc_IF4p5_buffer(ru);
@@ -2611,7 +2617,8 @@ void set_function_spec_param(RU_t *ru) {
     
     if (ret<0) {
       printf("Exiting, cannot initialize transport protocol\n");
-      exit(-1);
+      //exit(-1);
+      exit_fun("Exiting, cannot initialize transport protocol" );
     }
     
     break;
@@ -2637,7 +2644,8 @@ void set_function_spec_param(RU_t *ru) {
     
     if (ret<0) {
       printf("Exiting, cannot initialize transport protocol\n");
-      exit(-1);
+      //exit(-1);
+      exit_fun("Exiting, cannot initialize transport protocol" );
     }
     malloc_IF4p5_buffer(ru);
     break;

@@ -202,7 +202,8 @@ configmodule_interface_t *load_configmodule(int argc, char **argv, uint32_t init
 
     if ( strstr(argv[i], "help_config") != NULL  ) {
       config_printhelp(Config_Params,CONFIG_PARAMLENGTH(Config_Params),CONFIG_SECTIONNAME);
-      exit(0);
+      //exit(0);
+      exit_fun("exit0");
     }
 
     if ( (strcmp(argv[i]+1, "h") == 0) || (strstr(argv[i]+1, "help_") != NULL ) ) {
@@ -236,7 +237,8 @@ configmodule_interface_t *load_configmodule(int argc, char **argv, uint32_t init
 
   if (i< 0) {
     fprintf(stderr,"[CONFIG] %s, %d, sscanf error parsing config source  %s: %s\n", __FILE__, __LINE__,cfgparam, strerror(errno));
-    exit(-1) ;
+    //exit(-1) ;
+    exit_fun("sscanf error");
   } else if ( i == 1 ) {
     /* -O argument doesn't contain ":" separator, assume -O <conf file> option, default cfgmode to libconfig
        with one parameter, the path to the configuration file cfgmode must not be NULL */

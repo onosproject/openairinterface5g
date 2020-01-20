@@ -1276,7 +1276,7 @@ schedule_ulsch(module_id_t module_idP,
     case 25:  first_rb[CC_id] = 1; break; // leave out first RB for PUCCH
     case 50:  first_rb[CC_id] = 2; break; // leave out first RB for PUCCH
     case 100: first_rb[CC_id] = 3; break; // leave out first RB for PUCCH
-    default: LOG_E(MAC, "nb RBs not handled, todo.\n"); exit(1);
+    default: LOG_E(MAC, "nb RBs not handled, todo.\n"); exit_fun("RB set error. not in [25, 50, 100]"); //exit(1);
     }
 #endif
     RA_t *ra_ptr = cc->ra;
@@ -1416,7 +1416,7 @@ schedule_ulsch_rnti(module_id_t   module_idP,
     case 25:  n_rb_ul_tab[CC_id] -= 1; break;
     case 50:  n_rb_ul_tab[CC_id] -= 2; break;
     case 100: n_rb_ul_tab[CC_id] -= 3; break;
-    default: LOG_E(MAC, "RBs setting not handled. Todo.\n"); exit(1);
+    default: LOG_E(MAC, "RBs setting not handled. Todo.\n"); exit_fun("RB set error. not in [25, 50, 100]"); //exit(1);
     }
     UE_list->first_rb_offset[CC_id][slice_idx] = cmin(n_rb_ul_tab[CC_id], sli->ul[slice_idx].first_rb);
   }
