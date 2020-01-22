@@ -814,7 +814,7 @@ int rrc_mac_config_req_eNB(module_id_t Mod_idP,
 #endif
                            )) == -1) {
       LOG_E(MAC, "%s:%d: fatal\n", __FILE__, __LINE__);
-      abort();
+      return(-1);
     }
   }
 
