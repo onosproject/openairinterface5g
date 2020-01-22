@@ -291,9 +291,9 @@ void vnf_p7_rx_reassembly_queue_remove_old_msgs(vnf_p7_t* vnf_p7, vnf_p7_rx_reas
 			
 			NFAPI_TRACE(NFAPI_TRACE_INFO, "Deleting stale reassembly message (%u %u %d)\n", iterator->rx_hr_time, rx_hr_time, delta);
 
-			//vnf_p7_rx_message_t* to_delete = iterator;
 			iterator = iterator->next;
 #ifndef PHY_RM
+			vnf_p7_rx_message_t* to_delete = iterator;
 			// delete the message
 			uint16_t i;
 			for(i = 0; i < 128; ++i)
