@@ -1105,13 +1105,16 @@ schedule_SI(module_id_t module_idP, frame_t frameP, sub_frame_t subframeP)
 		    first_rb = 6;
 		    break;
 		case 25:
-		    first_rb = 11;
+		    //first_rb = 11;
+                    first_rb = 21;
 		    break;
 		case 50:
-		    first_rb = 23;
+		    //first_rb = 23;
+                    first_rb = 46;
 		    break;
 		case 100:
-		    first_rb = 48;
+		    //first_rb = 48;
+                    first_rb = 96;
 		    break;
 		}
 
@@ -1123,24 +1126,34 @@ schedule_SI(module_id_t module_idP, frame_t frameP, sub_frame_t subframeP)
 		// Get MCS for length of SI, 3 PRBs
 		if (bcch_sdu_length <= 7) {
 		    mcs = 0;
+                    bcch_sdu_length = 7;
 		} else if (bcch_sdu_length <= 11) {
 		    mcs = 1;
+                    bcch_sdu_length = 11;
 		} else if (bcch_sdu_length <= 18) {
 		    mcs = 2;
+                    bcch_sdu_length = 18;
 		} else if (bcch_sdu_length <= 22) {
 		    mcs = 3;
+                    bcch_sdu_length = 22;
 		} else if (bcch_sdu_length <= 26) {
 		    mcs = 4;
+                    bcch_sdu_length = 26;
 		} else if (bcch_sdu_length <= 28) {
 		    mcs = 5;
+                    bcch_sdu_length = 28;
 		} else if (bcch_sdu_length <= 32) {
 		    mcs = 6;
+                    bcch_sdu_length = 32;
 		} else if (bcch_sdu_length <= 41) {
 		    mcs = 7;
+                    bcch_sdu_length = 41;
 		} else if (bcch_sdu_length <= 49) {
 		    mcs = 8;
+                    bcch_sdu_length = 49;
 		} else if (bcch_sdu_length <= 59) {
                     mcs = 9;
+                    bcch_sdu_length = 59;
                 } 
                 else AssertFatal(1==0,"Cannot Assign mcs for bcch_sdu_length %d (max mcs 9)\n",bcch_sdu_length);
 
