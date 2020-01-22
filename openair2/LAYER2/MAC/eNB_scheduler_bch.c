@@ -1105,17 +1105,24 @@ schedule_SI(module_id_t module_idP, frame_t frameP, sub_frame_t subframeP)
 		    first_rb = 6;
 		    break;
 		case 25:
-		    //first_rb = 11;
-                    first_rb = 21;
+#ifndef PHY_RM
+		    first_rb = 11;
+#else
+        first_rb = 21;
+#endif
 		    break;
 		case 50:
-		    //first_rb = 23;
-                    first_rb = 46;
-		    break;
+#ifndef PHY_RM
+		    first_rb = 23;
+#else
+        first_rb = 46;
+#endif		    break;
 		case 100:
-		    //first_rb = 48;
-                    first_rb = 96;
-		    break;
+#ifndef PHY_RM
+		    first_rb = 48;
+#else
+        first_rb = 96;
+#endif		    break;
 		}
 
 		vrb_map[first_rb] = 1;
@@ -1126,34 +1133,54 @@ schedule_SI(module_id_t module_idP, frame_t frameP, sub_frame_t subframeP)
 		// Get MCS for length of SI, 3 PRBs
 		if (bcch_sdu_length <= 7) {
 		    mcs = 0;
-                    bcch_sdu_length = 7;
+#ifdef PHY_RM
+        bcch_sdu_length = 7;
+#endif
 		} else if (bcch_sdu_length <= 11) {
 		    mcs = 1;
-                    bcch_sdu_length = 11;
+#ifdef PHY_RM
+        bcch_sdu_length = 11;
+#endif
 		} else if (bcch_sdu_length <= 18) {
 		    mcs = 2;
-                    bcch_sdu_length = 18;
+#ifdef PHY_RM
+        bcch_sdu_length = 18;
+#endif
 		} else if (bcch_sdu_length <= 22) {
 		    mcs = 3;
-                    bcch_sdu_length = 22;
+#ifdef PHY_RM
+        bcch_sdu_length = 22;
+#endif
 		} else if (bcch_sdu_length <= 26) {
 		    mcs = 4;
-                    bcch_sdu_length = 26;
+#ifdef PHY_RM
+        bcch_sdu_length = 26;
+#endif
 		} else if (bcch_sdu_length <= 28) {
 		    mcs = 5;
-                    bcch_sdu_length = 28;
+#ifdef PHY_RM
+        bcch_sdu_length = 28;
+#endif
 		} else if (bcch_sdu_length <= 32) {
 		    mcs = 6;
-                    bcch_sdu_length = 32;
+#ifdef PHY_RM
+        bcch_sdu_length = 32;
+#endif
 		} else if (bcch_sdu_length <= 41) {
 		    mcs = 7;
-                    bcch_sdu_length = 41;
+#ifdef PHY_RM
+        bcch_sdu_length = 41;
+#endif
 		} else if (bcch_sdu_length <= 49) {
 		    mcs = 8;
-                    bcch_sdu_length = 49;
+#ifdef PHY_RM
+        bcch_sdu_length = 49;
+#endif
 		} else if (bcch_sdu_length <= 59) {
-                    mcs = 9;
-                    bcch_sdu_length = 59;
+        mcs = 9;
+#ifdef PHY_RM
+        bcch_sdu_length = 59;
+#endif
                 } 
                 else AssertFatal(1==0,"Cannot Assign mcs for bcch_sdu_length %d (max mcs 9)\n",bcch_sdu_length);
 
