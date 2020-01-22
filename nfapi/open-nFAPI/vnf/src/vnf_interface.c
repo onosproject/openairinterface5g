@@ -215,8 +215,7 @@ void init_server_eventfd(int *watch_fd_list, int client_num, char *path)
 	if ((conn_socket = socket(AF_UNIX, SOCK_STREAM, 0)) < 0)
 	{
 		perror("socket (init_server_eventfd)\n");
-		//exit(1);
-    exit_fun("init_server_eventfd fatal: socket err");
+                exit_fun("init_server_eventfd fatal: socket err");
 	}
 
 	addr.sun_family = AF_UNIX;
@@ -227,8 +226,7 @@ void init_server_eventfd(int *watch_fd_list, int client_num, char *path)
 	if (bind(conn_socket, (const struct sockaddr *)&addr, sizeof(struct sockaddr_un)) == -1)
 	{
 		perror("bind (init_server_eventfd)\n");
-		//exit(1);
-    exit_fun("init_server_eventfd fatal: bind err");
+                exit_fun("init_server_eventfd fatal: bind err");
 	}
 	printf("bind completed (init_server_eventfd) \n");
 
@@ -237,8 +235,7 @@ void init_server_eventfd(int *watch_fd_list, int client_num, char *path)
 	if (listen(conn_socket, 16) == -1)
 	{
 		perror("listen (init_server_eventfd)");
-		//exit(1);
-    exit_fun("init_server_eventfd fatal: listen err");
+                exit_fun("init_server_eventfd fatal: listen err");
 	}
 
 	printf("init_server_eventfd : now listening\n");
@@ -248,8 +245,7 @@ void init_server_eventfd(int *watch_fd_list, int client_num, char *path)
 		if ((fd = accept(conn_socket, NULL, NULL)) == -1)
 		{
 			perror("accept (init_server_eventfd)\n");
-			exit(1);
-      exit_fun("init_server_eventfd fatal: accept err");
+                        exit_fun("init_server_eventfd fatal: accept err");
 		}
 		printf("accept completed (init_server_eventfd)\n");
 
