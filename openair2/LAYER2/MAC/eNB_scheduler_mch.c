@@ -717,16 +717,18 @@ schedule_MBMS_NFAPI(module_id_t module_idP, uint8_t CC_id, frame_t frameP,
 
 	mbms_rab_id = cc->mbms_SessionList[0]->list.array[0]->logicalChannelIdentity_r9;
 
-	rlc_status =
-	    mac_rlc_status_ind(module_idP, 0/*0xfffd*/, frameP, subframeP,
-			       module_idP, ENB_FLAG_YES, MBMS_FLAG_YES,
-				cc->mbms_SessionList[0]->list.array[0]->logicalChannelIdentity_r9,
-			       //MTCH,
-			       TBS - header_len_mcch - header_len_msi -
-			       sdu_length_total - header_len_mtch
-                                    ,0, 0
-                                    );
-	bytes_in_buffer = rlc_status.bytes_in_buffer;
+        rlc_status = mac_rlc_status_ind(
+            module_idP,
+            0 /*0xfffd*/,
+            frameP,
+            subframeP,
+            module_idP,
+            ENB_FLAG_YES,
+            MBMS_FLAG_YES,
+            cc->mbms_SessionList[0]->list.array[0]->logicalChannelIdentity_r9, // MTCH,
+            0,
+            0);
+        bytes_in_buffer = rlc_status.bytes_in_buffer;
 
 
 	if( !(mcch_flag==1 || msi_flag==1) )
@@ -777,12 +779,18 @@ schedule_MBMS_NFAPI(module_id_t module_idP, uint8_t CC_id, frame_t frameP,
 		  TBS - header_len_mcch - header_len_msi -
 		  sdu_length_total - header_len_mtch, header_len_mtch, rlc_status.bytes_in_buffer);
 
-	    sdu_lengths[num_sdus] = mac_rlc_data_req(module_idP, 0/*0xfffd*/, module_idP, frameP, ENB_FLAG_YES, MBMS_FLAG_YES,cc->mbms_SessionList[0]->list.array[0]->logicalChannelIdentity_r9, 0,	//not used
-						     (char *)
-						     &mch_buffer[sdu_length_total]
-                                ,0,
-                                 0
-                                 );
+            sdu_lengths[num_sdus] = mac_rlc_data_req(
+                module_idP,
+                0,
+                module_idP,
+                frameP,
+                ENB_FLAG_YES,
+                MBMS_FLAG_YES,
+                cc->mbms_SessionList[0]->list.array[0]->logicalChannelIdentity_r9,
+                TBS - header_len_mcch - header_len_msi - sdu_length_total - header_len_mtch,
+                (char *)&mch_buffer[sdu_length_total],
+                0,
+                0);
 
 	   // LOG_I(MAC,"RLC %x:",(unsigned char)mch_buffer[sdu_length_total]);
 	   // for (int kk = 7; kk >= 0; kk--)
@@ -1557,16 +1565,18 @@ schedule_MBMS(module_id_t module_idP, uint8_t CC_id, frame_t frameP,
 
 	mbms_rab_id = cc->mbms_SessionList[0]->list.array[0]->logicalChannelIdentity_r9;
 
-	rlc_status =
-	    mac_rlc_status_ind(module_idP, 0/*0xfffd*/, frameP, subframeP,
-			       module_idP, ENB_FLAG_YES, MBMS_FLAG_YES,
-				cc->mbms_SessionList[0]->list.array[0]->logicalChannelIdentity_r9,
-			       //MTCH,
-			       TBS - header_len_mcch - header_len_msi -
-			       sdu_length_total - header_len_mtch
-                                    ,0, 0
-                                    );
-	bytes_in_buffer = rlc_status.bytes_in_buffer;
+        rlc_status = mac_rlc_status_ind(
+            module_idP,
+            0 /*0xfffd*/,
+            frameP,
+            subframeP,
+            module_idP,
+            ENB_FLAG_YES,
+            MBMS_FLAG_YES,
+            cc->mbms_SessionList[0]->list.array[0]->logicalChannelIdentity_r9, // MTCH,
+            0,
+            0);
+        bytes_in_buffer = rlc_status.bytes_in_buffer;
 
 
 	msi_sfs = rlc_status.bytes_in_buffer/TBS+(rlc_status.bytes_in_buffer%TBS?1:0);
@@ -1583,14 +1593,19 @@ schedule_MBMS(module_id_t module_idP, uint8_t CC_id, frame_t frameP,
 		  TBS - header_len_mcch - header_len_msi -
 		  sdu_length_total - header_len_mtch, header_len_mtch, rlc_status.bytes_in_buffer);
 
-	    sdu_lengths[num_sdus] = mac_rlc_data_req(module_idP, 0/*0xfffd*/, module_idP, frameP, ENB_FLAG_YES, MBMS_FLAG_YES,cc->mbms_SessionList[0]->list.array[0]->logicalChannelIdentity_r9, 0,	//not used
-						     (char *)
-						     &mch_buffer[sdu_length_total]
-                                ,0,
-                                 0
-                                 );
-	
-	    //sdu_lengths[num_sdus] = mac_rlc_data_req(module_idP,frameP, MBMS_FLAG_NO,  MTCH+(MAX_NUM_RB*(MAX_MOBILES_PER_ENB+1)), (char*)&mch_buffer[sdu_length_total]);
+            sdu_lengths[num_sdus] = mac_rlc_data_req(
+                module_idP,
+                0,
+                module_idP,
+                frameP,
+                ENB_FLAG_YES,
+                MBMS_FLAG_YES,
+                cc->mbms_SessionList[0]->list.array[0]->logicalChannelIdentity_r9,
+                TBS - header_len_mcch - header_len_msi - sdu_length_total - header_len_mtch,
+                (char *)&mch_buffer[sdu_length_total],
+                0,
+                0);
+
 	    LOG_I(MAC,
 		  "[eNB %d][MBMS USER-PLANE] CC_id %d Got %d bytes for MTCH %d msi_pmch_stop %d msi_sfs %d sdu_lengths[num_sdus] %d\n",
 		  module_idP, CC_id, sdu_lengths[num_sdus], MTCH,msi_pmch_stop,msi_sfs, sdu_lengths[num_sdus]);

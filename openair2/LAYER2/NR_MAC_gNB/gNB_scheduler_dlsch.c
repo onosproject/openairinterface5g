@@ -228,16 +228,15 @@ void nr_schedule_ue_spec(module_id_t module_idP, frame_t frameP, sub_frame_t slo
       break;
 
     mac_rlc_status_resp_t rlc_status = mac_rlc_status_ind(module_idP,
-                                    rnti,
-                                    module_idP,
-                                    frameP,
-                                    slotP,
-                                    ENB_FLAG_YES,
-                                    MBMS_FLAG_NO,
-                                    lcid,
-                                    TBS_bytes - ta_len - header_length_total - sdu_length_total - 3,
-                                    0,
-                                    0);
+                                                          rnti,
+                                                          module_idP,
+                                                          frameP,
+                                                          slotP,
+                                                          ENB_FLAG_YES,
+                                                          MBMS_FLAG_NO,
+                                                          lcid,
+                                                          0,
+                                                          0);
 
     if (rlc_status.bytes_in_buffer <= 0)
       continue;
@@ -253,7 +252,7 @@ void nr_schedule_ue_spec(module_id_t module_idP, frame_t frameP, sub_frame_t slo
                                              ENB_FLAG_YES,
                                              MBMS_FLAG_NO,
                                              lcid,
-                                             TBS_bytes,
+                                             TBS_bytes - ta_len - header_length_total - sdu_length_total - 3,
                                              (char *)&mac_sdus[sdu_length_total],
                                              0,
                                              0);

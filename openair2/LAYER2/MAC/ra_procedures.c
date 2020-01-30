@@ -387,11 +387,17 @@ PRACH_RESOURCES_t *ue_get_rach(module_id_t module_idP, int CC_id,
                                            [DCCH]] > 0) {
         // This is for triggering a transmission on DCCH using PRACH (during handover, or sending SR for example)
         dcch_header_len = 2 + 2;  /// SHORT Subheader + C-RNTI control element
-        LOG_USEDINLOG_VAR(mac_rlc_status_resp_t,rlc_status)=mac_rlc_status_ind(module_idP,
-            UE_mac_inst[module_idP].crnti,
-            eNB_indexP, frameP, subframeP,
-            ENB_FLAG_NO, MBMS_FLAG_NO, DCCH, 6,0, 0
-                                                                              );
+        LOG_USEDINLOG_VAR(mac_rlc_status_resp_t, rlc_status) =
+            mac_rlc_status_ind(module_idP,
+                               UE_mac_inst[module_idP].crnti,
+                               eNB_indexP,
+                               frameP,
+                               subframeP,
+                               ENB_FLAG_NO,
+                               MBMS_FLAG_NO,
+                               DCCH,
+                               0,
+                               0);
 
         if (UE_mac_inst[module_idP].crnti_before_ho)
           LOG_D(MAC,
@@ -406,7 +412,7 @@ PRACH_RESOURCES_t *ue_get_rach(module_id_t module_idP, int CC_id,
                 module_idP, frameP, rlc_status.bytes_in_buffer,
                 dcch_header_len);
 
-        sdu_lengths = mac_rlc_data_req(module_idP, UE_mac_inst[module_idP].crnti, eNB_indexP, frameP, ENB_FLAG_NO, MBMS_FLAG_NO, DCCH, 6, //not used
+        sdu_lengths = mac_rlc_data_req(module_idP, UE_mac_inst[module_idP].crnti, eNB_indexP, frameP, ENB_FLAG_NO, MBMS_FLAG_NO, DCCH, 6,
                                        (char *) &ulsch_buff[0],0,
                                        0
                                       );
