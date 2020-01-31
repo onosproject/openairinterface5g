@@ -756,8 +756,14 @@ void tx_rf(RU_t *ru,int frame,int slot, uint64_t timestamp) {
     }
 
     // the beam index is written in bits 8-10 of the flags
-    // the following choice cycles through the beams every slot, starting with beam 3
-    flags |= ((3+slot)&7)<<8;
+    // beam index>3 will be ignored for now
+    int beam=7;
+    if (slot==0) beam=0;
+    if (slot==10) beam=1;
+    if (slot==20) beam=2;
+    if (slot==40) beam=3;
+
+    flags |= beam<<8;
    
     VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME( VCD_SIGNAL_DUMPER_VARIABLES_TRX_WRITE_FLAGS, flags ); 
     VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME( VCD_SIGNAL_DUMPER_VARIABLES_FRAME_NUMBER_TX0_RU, frame );

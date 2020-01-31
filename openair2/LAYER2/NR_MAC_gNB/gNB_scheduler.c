@@ -384,7 +384,7 @@ void gNB_dlsch_ulsch_scheduler(module_id_t module_idP,
 
   if (is_nr_UL_slot(cc->ServingCellConfigCommon,slot_rxP)) { 
     if (phy_test && slot_rxP==8){
-      nr_schedule_uss_ulsch_phytest(module_idP, frame_rxP, slot_rxP);
+      //nr_schedule_uss_ulsch_phytest(module_idP, frame_rxP, slot_rxP);
     }
   }
 

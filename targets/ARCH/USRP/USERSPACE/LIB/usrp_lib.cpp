@@ -285,7 +285,7 @@ static int trx_usrp_start(openair0_device *device) {
   // (we use full duplex here, because our RX is on all the time - this might need to change later)
   s->usrp->set_gpio_attr("FP0", "ATR_XX", (1<<5), 0x7f);
   // set the output pins to 0
-  s->usrp->set_gpio_attr("FP0", "OUT", 3<<7, 0xf80);
+  s->usrp->set_gpio_attr("FP0", "OUT", 7<<7, 0xf80);
 
   // init recv and send streaming
   uhd::stream_cmd_t cmd(uhd::stream_cmd_t::STREAM_MODE_START_CONTINUOUS);
@@ -482,8 +482,6 @@ static int trx_usrp_write(openair0_device *device,
      last_packet_state  = true;
     }
 
-    // push GPIO bits 7-9 from flags_msb
-    int gpio789=(flags_msb&7)<<7;
     
     s->tx_md.has_time_spec  = true;
     s->tx_md.start_of_burst = (s->tx_count==0) ? true : first_packet_state;
@@ -491,10 +489,14 @@ static int trx_usrp_write(openair0_device *device,
     s->tx_md.time_spec      = uhd::time_spec_t::from_ticks(timestamp, s->sample_rate);
     s->tx_count++;
 
-    s->usrp->set_command_time(s->tx_md.time_spec);
-    s->usrp->set_gpio_attr("FP0", "OUT", gpio789, 0xfff);
-    s->usrp->clear_command_time();
-    
+    if (flags_msb<4) {
+      // push GPIO bits 7-9 from flags_msb
+      int gpio789=(flags_msb&7)<<7;
+      s->usrp->set_command_time(s->tx_md.time_spec);
+      s->usrp->set_gpio_attr("FP0", "OUT", gpio789, 0x380);
+      s->usrp->clear_command_time();
+    }
+
     if (cc>1) {
       std::vector<void *> buff_ptrs;
 
@@ -502,7 +504,11 @@ static int trx_usrp_write(openair0_device *device,
         buff_ptrs.push_back(&(((int16_t *)buff_tx[i])[0]));
 
       ret = (int)s->tx_stream->send(buff_ptrs, nsamps, s->tx_md);
-    } else ret = (int)s->tx_stream->send(&(((int16_t *)buff_tx[0])[0]), nsamps, s->tx_md);
+    } 
+    else {
+      ret = (int)s->tx_stream->send(&(((int16_t *)buff_tx[0])[0]), nsamps, s->tx_md);
+    }
+
   if (ret != nsamps) LOG_E(HW,"[xmit] tx samples %d != %d\n",ret,nsamps);
 
   return ret;
