@@ -4748,7 +4748,7 @@ extract_harq(module_id_t mod_idP,
                   sched_ctl->rsn[CC_idP][harq_pid][swap_flg] = 0;
               }
         } else
-            AssertFatal(1 == 0,
+            LOG_E(MAC,
                 "Illegal ACK/NAK/round combination (%d,%d,%d,%d,%d,%d,%d,%d,%d) for harq_pid %d, UE %d/%x\n",
                 frameP,
                 subframeP,
