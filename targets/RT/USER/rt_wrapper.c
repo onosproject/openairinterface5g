@@ -333,8 +333,8 @@ void thread_top_init(char *thread_name,
     }
 
   memset(&sparam, 0, sizeof(sparam));
-//  sparam.sched_priority = sched_get_priority_max(SCHED_FIFO);
-  sparam.sched_priority = 30;
+  sparam.sched_priority = sched_get_priority_max(SCHED_FIFO);
+//  sparam.sched_priority = 30;
   policy = SCHED_FIFO ; 
   
   s = pthread_setschedparam(pthread_self(), policy, &sparam);

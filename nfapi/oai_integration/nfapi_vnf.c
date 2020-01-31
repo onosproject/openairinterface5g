@@ -987,7 +987,7 @@ void* vnf_p7_time_thread(void *ptr) {
 void set_thread_priority(int priority);
 
 void *vnf_p7_thread_start(void *ptr) {
-  set_thread_priority(79);
+  set_thread_priority(sched_get_priority_max(SCHED_FIFO)-1);
   vnf_p7_info *p7_vnf = (vnf_p7_info *)ptr;
   p7_vnf->config->port = p7_vnf->local_port;
   p7_vnf->config->sync_indication = &phy_sync_indication;
