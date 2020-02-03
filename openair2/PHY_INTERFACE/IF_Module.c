@@ -351,7 +351,6 @@ static int maxsize = SMAX;
 static void put(char x) {
   if (size == maxsize) {
     printf("incrase SMAX\n");
-    //exit(1);
     exit_fun("incrase SMAX");    
   }
 

@@ -1661,7 +1661,6 @@ void *ru_thread( void *param ) {
     
     if (setup_RU_buffers(ru)!=0) {
       printf("Exiting, cannot initialize RU Buffers\n");
-      //exit(-1);
       exit_fun("Exiting, cannot initialize RU Buffers" );
     }
     
@@ -1686,7 +1685,6 @@ void *ru_thread( void *param ) {
       
       if (setup_RU_buffers(ru)!=0) {
         printf("Exiting, cannot initialize RU Buffers\n");
-        //exit(-1);
         exit_fun("Exiting, cannot initialize RU Buffers" );
       }
       AssertFatal((ret=pthread_mutex_lock(&RC.ru_mutex))==0,"mutex_lock returns %d\n",ret);
@@ -1957,7 +1955,6 @@ void *ru_thread_synch(void *arg) {
                  LOG_M("ru_sync_corr.m","sync_corr",ru->dmrs_corr,LTE_NUMBER_OF_SUBFRAMES_PER_FRAME*fp->samples_per_tti,1,6);
                  LOG_M("ru_dmrs.m","rudmrs",&ru->dmrssync[0],fp->ofdm_symbol_size,1,1);
 
-                 //exit(-1);
                  exit_fun("Exiting, Cannot find synch reference" );
               }
           }
@@ -2321,7 +2318,6 @@ void init_RU_proc(RU_t *ru) {
 
     if (setup_RU_buffers(ru)!=0) {
       printf("Exiting, cannot initialize RU Buffers\n");
-      //exit(-1);
       exit_fun("Exiting, cannot initialize RU Buffers" );
     }
   }
@@ -2532,7 +2528,6 @@ void set_function_spec_param(RU_t *ru) {
       
       if (ret<0) {
         printf("Exiting, cannot initialize transport protocol\n");
-        //exit(-1);
         exit_fun("Exiting, cannot initialize transport protocol" );
       }
     } else if (ru->function == NGFI_RRU_IF4p5) {
@@ -2557,7 +2552,6 @@ void set_function_spec_param(RU_t *ru) {
       
       if (ret<0) {
         printf("Exiting, cannot initialize transport protocol\n");
-        //exit(-1);
         exit_fun("Exiting, cannot initialize transport protocol" );
       }
       
@@ -2617,7 +2611,6 @@ void set_function_spec_param(RU_t *ru) {
     
     if (ret<0) {
       printf("Exiting, cannot initialize transport protocol\n");
-      //exit(-1);
       exit_fun("Exiting, cannot initialize transport protocol" );
     }
     
@@ -2644,7 +2637,6 @@ void set_function_spec_param(RU_t *ru) {
     
     if (ret<0) {
       printf("Exiting, cannot initialize transport protocol\n");
-      //exit(-1);
       exit_fun("Exiting, cannot initialize transport protocol" );
     }
     malloc_IF4p5_buffer(ru);

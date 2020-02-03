@@ -104,12 +104,10 @@ int message_put(message_queue_t *queue, void *data, int size, int priority)
   if (pthread_cond_signal(queue->cond)) {
     LOG_E(MAC, "%s:%d:%s: fatal error\n", __FILE__, __LINE__, __FUNCTION__);
     pthread_mutex_unlock(queue->mutex);
-    //exit(1);
     exit_function(__FILE__, __FUNCTION__, __LINE__, "message_put fatal: pthread_cond_signal error");
   }
   if (pthread_mutex_unlock(queue->mutex)) {
     LOG_E(MAC, "%s:%d:%s: fatal error\n", __FILE__, __LINE__, __FUNCTION__);
-    //exit(1);
     exit_function(__FILE__, __FUNCTION__, __LINE__, "message_put fatal: pthread_mutex_unlock error");
   }
 

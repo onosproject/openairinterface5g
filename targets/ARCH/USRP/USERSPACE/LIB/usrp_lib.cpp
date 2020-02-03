@@ -698,7 +698,6 @@ static int trx_usrp_read(openair0_device *device, openair0_timestamp *ptimestamp
         free(ms_sample);
         ms_sample = NULL;
         iqfd = 0;
-        //exit(-1);
         exit_fun("USRP read failure");
       }
 
@@ -805,7 +804,6 @@ int trx_usrp_set_gains(openair0_device *device,
   if (openair0_cfg[0].rx_gain[0]-openair0_cfg[0].rx_gain_offset[0] > gain_range.stop()) {
     LOG_E(PHY,"RX Gain 0 too high, reduce by %f dB\n",
           openair0_cfg[0].rx_gain[0]-openair0_cfg[0].rx_gain_offset[0] - gain_range.stop());
-    //exit(-1);
     exit_fun("fatal: RX Gain 0 too high" );
   }
 
@@ -1383,7 +1381,6 @@ extern "C" {
       if (s->use_gps == 1) {
         if (sync_to_gps(device)) {
           LOG_I(PHY,"USRP fails to sync with GPS...\n");
-          //exit(0);
           exit_fun("fatal: USRP fails to sync with GPS..." );
         }
       }
@@ -1399,7 +1396,6 @@ extern "C" {
 
       if (ms_sample == NULL) {
         std::cerr<< "Memory allocation failed for subframe record or replay mode." << std::endl;
-        //exit(-1);
         exit_fun("fatal: Memory allocation failed for subframe record or replay mode." );
       }
 
@@ -1424,18 +1420,15 @@ extern "C" {
             if (aligned == 0) {
               std::cerr<< "mmap address is not 32 bytes aligned, exiting." << std::endl;
               close(mmapfd);
-              //exit(-1);
               exit_fun("fatal: mmap address is not 32 bytes aligned, exiting." );
             }
           } else {
             std::cerr << "Cannot mmap file, exiting." << std::endl;
             close(mmapfd);
-            //exit(-1);
             exit_fun("fatal: Cannot mmap file, exiting." );
           }
         } else {
           std::cerr << "Cannot open " << u_sf_filename << " , exiting." << std::endl;
-          //exit(-1);
           exit_fun("fatal: open error , exiting." );
         }
       } else {
@@ -1452,7 +1445,6 @@ extern "C" {
           if (ms_sample == NULL) {
             std::cerr<< "Memory allocation failed for individual subframe replay mode." << std::endl;
             close(iqfd);
-            //exit(-1);
             exit_fun("fatal: Memory allocation failed for individual subframe replay mode." );
           }
 
@@ -1466,7 +1458,6 @@ extern "C" {
           }
         } else {
           std::cerr << "Cannot open " << u_sf_filename << " , exiting." << std::endl;
-          //exit(-1);
           exit_fun("fatal: open error , exiting." );
         }
       }

@@ -246,7 +246,6 @@ void  log_getconfig(log_t *g_log) {
         break;
       } else if (log_options[j+1].name == NULL) {
         fprintf(stderr,"Unknown log option: %s\n",logparams_defaults[LOG_OPTIONS_IDX].strlistptr[i]);
-        //exit(-1);
         exit_fun("log_getconfig Unknown log option");
       }
     }

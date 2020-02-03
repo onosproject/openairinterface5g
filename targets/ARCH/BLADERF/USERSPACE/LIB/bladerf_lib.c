@@ -236,7 +236,6 @@ void trx_brf_end(openair0_device *device) {
         fprintf(stderr, "Failed to disable TX module: %s\n",  bladerf_strerror(status));
     }
     bladerf_close(brf->dev);
-    //exit(1);
     exit_fun("trx_brf_end exiting." );
 }
 

@@ -1200,7 +1200,6 @@ if (NFAPI_MODE!=NFAPI_MODE_VNF) {
 
       if (!eNB->dlsch[i][j]) {
         LOG_E(PHY,"Can't get eNB dlsch structures for UE %d \n", i);
-        //exit(-1);
         exit_fun("Can't get eNB dlsch structures" );
       } else {
         eNB->dlsch[i][j]->rnti=0;
@@ -1213,7 +1212,6 @@ if (NFAPI_MODE!=NFAPI_MODE_VNF) {
 
     if (!eNB->ulsch[1+i]) {
       LOG_E(PHY,"Can't get eNB ulsch structures\n");
-      //exit(-1);
       exit_fun("Can't get eNB ulsch structures" );
     }
 
@@ -1227,7 +1225,6 @@ if (NFAPI_MODE!=NFAPI_MODE_VNF) {
 
   if (!eNB->ulsch[0]) {
     LOG_E(PHY,"Can't get eNB ulsch structures\n");
-    //exit(-1);
     exit_fun("Can't get eNB ulsch structures" );
   }
 

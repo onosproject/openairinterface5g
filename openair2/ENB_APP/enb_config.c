@@ -2715,7 +2715,6 @@ int RCconfig_X2(MessageDef *msg_p, uint32_t i) {
               if (t_reloc_prep <= 0 || t_reloc_prep > 10000 ||
                   tx2_reloc_overall <= 0 || tx2_reloc_overall > 20000) {
                 LOG_E(X2AP, "timers in configuration file have wrong values. We must have [0 < t_reloc_prep <= 10000] and [0 < tx2_reloc_overall <= 20000]\n");
-                //exit(1);
                 exit_fun("X2AP config error. t_reloc_prep or tx2_reloc_overall error");
               }
 
@@ -2740,7 +2739,6 @@ int RCconfig_X2(MessageDef *msg_p, uint32_t i) {
 
             if ((NETParams[ENB_IPV4_ADDR_FOR_X2C_IDX].strptr == NULL) || (X2AP_REGISTER_ENB_REQ (msg_p).enb_port_for_X2C == 0)) {
               LOG_E(RRC,"Add eNB IPv4 address and/or port for X2C in the CONF file!\n");
-              //exit(1);
               exit_fun("X2AP config error. target ip format invalid");
             }
 

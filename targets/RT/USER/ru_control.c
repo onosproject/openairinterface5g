@@ -598,7 +598,6 @@ void* ru_thread_control( void* param ) {
 
 		if (setup_RU_buffers(ru)!=0) {
 		  printf("Exiting, cannot initialize RU Buffers\n");
-		  //exit(-1);
       exit_fun("Exiting, cannot initialize RU Buffers" );
 		}
 
@@ -622,7 +621,6 @@ void* ru_thread_control( void* param ) {
 
 		if (setup_RU_buffers(ru)!=0) {
 		  printf("Exiting, cannot initialize RU Buffers\n");
-		  //exit(-1);
       exit_fun("Exiting, cannot initialize RU Buffers" );
 		}
 
