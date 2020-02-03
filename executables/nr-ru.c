@@ -758,10 +758,10 @@ void tx_rf(RU_t *ru,int frame,int slot, uint64_t timestamp) {
     // the beam index is written in bits 8-10 of the flags
     // beam index>3 will be ignored for now
     int beam=7;
-    if (slot==0) beam=0;
-    if (slot==10) beam=1;
-    if (slot==20) beam=2;
-    if (slot==40) beam=3;
+    if (slot==0 || slot==40) beam=0;
+    if (slot==10 || slot==50) beam=1;
+    if (slot==20 || slot==60) beam=2;
+    if (slot==30 || slot==70) beam=3;
 
     flags |= beam<<8;
    
