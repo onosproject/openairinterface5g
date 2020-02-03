@@ -47,6 +47,7 @@
 
 log_mem_cnt_t log_mem_d[2];
 int log_mem_flag=0;
+int log_mem_initflag=0;
 int log_mem_multi=1;
 volatile int log_mem_side=0;
 pthread_mutex_t log_mem_lock;
@@ -877,6 +878,7 @@ int logInit_log_mem (void)
     log_mem_d[1].enable_flag=0;
   }
 
+  log_mem_initflag = 1;
   printf("log init done\n");
   
   return 0;
