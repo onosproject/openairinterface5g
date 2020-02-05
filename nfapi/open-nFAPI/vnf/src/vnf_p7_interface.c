@@ -388,9 +388,6 @@ int nfapi_vnf_p7_time(nfapi_vnf_p7_config_t* config){
   uint8_t buf_1ms[32];
   struct sockaddr_in addr;
   int sock_1ms;
-  struct timeval tv;
-  tv.tv_sec = 0;
-  tv.tv_usec = 1200;
   fd_set fds, readfds;
   int retval;
   int ret;
@@ -459,12 +456,18 @@ int nfapi_vnf_p7_time(nfapi_vnf_p7_config_t* config){
 	{
 		sf_duration.tv_nsec = 1000000;
 	}
+  
+  nfapi_vnf_p7_connection_info_t* curr = vnf_p7->p7_connections;
+
 #ifndef UDP_1MS
   memcpy(&fds, &readfds, sizeof(fd_set));  
   if(!sync) {
     retval = select(vnf_p7->fapi_1ms_fd_list[0]+1, &fds, NULL, NULL, NULL);
   }
   else {
+    struct timeval tv;
+    tv.tv_sec = 0;
+    tv.tv_usec = 1200;
     retval = select(vnf_p7->fapi_1ms_fd_list[0]+1, &fds, NULL, NULL, &tv);
   }
   
@@ -488,7 +491,6 @@ int nfapi_vnf_p7_time(nfapi_vnf_p7_config_t* config){
     vnf_p7->sf_start_time_hr_old = vnf_p7->sf_start_time_hr;
     vnf_p7->sf_start_time_hr = vnf_get_current_time_hr();
     // pselect timed out
-    nfapi_vnf_p7_connection_info_t* curr = vnf_p7->p7_connections;
 
 #ifdef LOG
  	fp = fopen(LOGFILE_PATH, "a");
