@@ -388,12 +388,22 @@ int nfapi_vnf_p7_time(nfapi_vnf_p7_config_t* config){
   uint8_t buf_1ms[32];
   struct sockaddr_in addr;
   int sock_1ms;
+  struct timeval tv;
+  tv.tv_sec = 0;
+  tv.tv_usec = 1200;
+  fd_set fds, readfds;
+  int retval;
+  int ret;
+  static int sync = 0;
 
   sock_1ms = socket(AF_INET,SOCK_DGRAM,0);
   addr.sin_family = AF_INET;
   addr.sin_port = htons(50040);
   addr.sin_addr.s_addr = INADDR_ANY;
   bind(sock_1ms, (struct sockaddr *) &addr,sizeof(addr));
+
+  FD_ZERO(&readfds);
+  FD_SET(vnf_p7->fapi_1ms_fd_list[0], &readfds);
 
   clock_gettime(CLOCK_MONOTONIC, &sf_start);
   //long millisecond = sf_start.tv_nsec / 1e6;
@@ -450,7 +460,27 @@ int nfapi_vnf_p7_time(nfapi_vnf_p7_config_t* config){
 		sf_duration.tv_nsec = 1000000;
 	}
 #ifndef UDP_1MS
-	recv(vnf_p7->fapi_1ms_fd_list[0], &data, sizeof(data), 0);
+  memcpy(&fds, &readfds, sizeof(fd_set));  
+  if(!sync) {
+    retval = select(vnf_p7->fapi_1ms_fd_list[0]+1, &fds, NULL, NULL, NULL);
+  }
+  else {
+    retval = select(vnf_p7->fapi_1ms_fd_list[0]+1, &fds, NULL, NULL, &tv);
+  }
+  
+  if(retval == 1) {
+    while(1) {
+      ret = recv(vnf_p7->fapi_1ms_fd_list[0], &data, sizeof(data), 0);
+      if(ret < 1) {
+        break;
+      }
+    }
+  }
+  else {
+     NFAPI_TRACE(NFAPI_TRACE_ERROR, "recv timeout sfnsf = 0x%x\n", curr->sfn_sf);
+  }
+  sync = 1;
+    
 #else
 	recv(sock_1ms,buf_1ms,sizeof(buf_1ms),0);
 #endif

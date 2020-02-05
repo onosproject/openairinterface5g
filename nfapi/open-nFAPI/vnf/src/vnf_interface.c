@@ -36,6 +36,7 @@
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <pthread.h>
+#include <sys/ioctl.h>
 #endif
 #include "vnf.h"
 #ifdef PHY_RM
@@ -594,6 +595,7 @@ int nfapi_vnf_start(nfapi_vnf_config_t* config)
 				int			cell_id = 0;
 				char		Buffer[64];
 				char		cell[64];
+			    int         attr;
 
 				vnf_info*              vnf       = (vnf_info*)(config->user_data);
 				vnf_p7_info*           p7_vnf    = vnf->p7_vnfs;
@@ -606,6 +608,9 @@ int nfapi_vnf_start(nfapi_vnf_config_t* config)
 				strcat(Buffer, cell);
 
 				init_server_eventfd(vnf_p7->fapi_1ms_fd_list, 1, Buffer);
+			  
+			  attr=1; /* non blocking */
+			  ioctl(vnf_p7->fapi_1ms_fd_list[0], FIONBIO, &attr);
 
 				vnf_p7->maxfd = vnf_p7->fapi_1ms_fd_list[0];
 
