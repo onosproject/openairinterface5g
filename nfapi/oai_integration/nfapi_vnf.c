@@ -459,7 +459,7 @@ int phy_rach_indication(struct nfapi_vnf_p7_config *config, nfapi_rach_indicatio
     UL_RCC_INFO.rach_ind[index] = *ind;
 
     if (ind->rach_indication_body.number_of_preambles > 0){
-      UL_RCC_INFO.rach_ind[index].rach_indication_body.preamble_list = malloc(sizeof(nfapi_preamble_pdu_t)*ind->rach_indication_body.number_of_preambles );
+      UL_RCC_INFO.rach_ind[index].rach_indication_body.preamble_list = ind->rach_indication_body.preamble_list;
     }
 
     for (int i=0; i<ind->rach_indication_body.number_of_preambles; i++) {
@@ -475,8 +475,6 @@ int phy_rach_indication(struct nfapi_vnf_p7_config *config, nfapi_rach_indicatio
       if(ind->rach_indication_body.preamble_list[i].preamble_rel13.tl.tag == NFAPI_PREAMBLE_REL13_TAG) {
         printf("RACH PREAMBLE REL13 present\n");
       }
-
-      UL_RCC_INFO.rach_ind[index].rach_indication_body.preamble_list[i] = ind->rach_indication_body.preamble_list[i];
     }
   }else{
   pthread_mutex_lock(&eNB->UL_INFO_mutex);
@@ -510,7 +508,6 @@ int phy_harq_indication(struct nfapi_vnf_p7_config *config, nfapi_harq_indicatio
   struct PHY_VARS_eNB_s *eNB = RC.eNB[0][0];
   LOG_D(MAC, "%s() NFAPI SFN/SF:%d number_of_harqs:%u\n", __FUNCTION__, NFAPI_SFNSF2DEC(ind->sfn_sf), ind->harq_indication_body.number_of_harqs);
   if(NFAPI_MODE == NFAPI_MODE_VNF){
-  pthread_mutex_lock(&eNB->UL_INFO_mutex);
     if (ind->harq_indication_body.number_of_harqs == 0){
       return 1;
     }
@@ -528,13 +525,10 @@ int phy_harq_indication(struct nfapi_vnf_p7_config *config, nfapi_harq_indicatio
     UL_RCC_INFO.harq_ind[index] = *ind;
 
     if (ind->harq_indication_body.number_of_harqs > 0){
-      UL_RCC_INFO.harq_ind[index].harq_indication_body.harq_pdu_list = malloc(sizeof(nfapi_harq_indication_pdu_t)*ind->harq_indication_body.number_of_harqs );
-    }
-
-    for (int i=0; i<ind->harq_indication_body.number_of_harqs; i++) {
-        memcpy(&UL_RCC_INFO.harq_ind[index].harq_indication_body.harq_pdu_list[i], &ind->harq_indication_body.harq_pdu_list[i], sizeof(nfapi_harq_indication_pdu_t));
+      UL_RCC_INFO.harq_ind[index].harq_indication_body.harq_pdu_list = ind->harq_indication_body.harq_pdu_list;
     }
   }else{
+  pthread_mutex_lock(&eNB->UL_INFO_mutex);
   eNB->UL_INFO.harq_ind = *ind;
   eNB->UL_INFO.harq_ind.harq_indication_body.harq_pdu_list = eNB->harq_pdu_list;
 
@@ -571,11 +565,9 @@ int phy_crc_indication(struct nfapi_vnf_p7_config *config, nfapi_crc_indication_
     UL_RCC_INFO.crc_ind[index] = *ind;
 
     if (ind->crc_indication_body.number_of_crcs > 0){
-      UL_RCC_INFO.crc_ind[index].crc_indication_body.crc_pdu_list = malloc(sizeof(nfapi_crc_indication_pdu_t)*ind->crc_indication_body.number_of_crcs );
+      UL_RCC_INFO.crc_ind[index].crc_indication_body.crc_pdu_list = ind->crc_indication_body.crc_pdu_list;
     }
     for (int i=0; i<ind->crc_indication_body.number_of_crcs; i++) {
-      memcpy(&UL_RCC_INFO.crc_ind[index].crc_indication_body.crc_pdu_list[i], &ind->crc_indication_body.crc_pdu_list[i], sizeof(ind->crc_indication_body.crc_pdu_list[0]));
-
       LOG_D(MAC, "%s() NFAPI SFN/SF:%d CRC_IND:number_of_crcs:%u UL_INFO:crcs:%d PDU[%d] rnti:%04x UL_INFO:rnti:%04x\n",
           __FUNCTION__,
           NFAPI_SFNSF2DEC(ind->sfn_sf), ind->crc_indication_body.number_of_crcs, UL_RCC_INFO.crc_ind[index].crc_indication_body.number_of_crcs,
@@ -639,21 +631,12 @@ int phy_rx_indication(struct nfapi_vnf_p7_config *config, nfapi_rx_indication_t 
     UL_RCC_INFO.rx_ind[index] = *ind;
 
     if (ind->rx_indication_body.number_of_pdus > 0){
-      UL_RCC_INFO.rx_ind[index].rx_indication_body.rx_pdu_list = malloc(sizeof(nfapi_rx_indication_pdu_t)*ind->rx_indication_body.number_of_pdus );
+      UL_RCC_INFO.rx_ind[index].rx_indication_body.rx_pdu_list = ind->rx_indication_body.rx_pdu_list;
     }
 
     for (int i=0; i<ind->rx_indication_body.number_of_pdus; i++) {
       nfapi_rx_indication_pdu_t *dest_pdu = &UL_RCC_INFO.rx_ind[index].rx_indication_body.rx_pdu_list[i];
       nfapi_rx_indication_pdu_t *src_pdu = &ind->rx_indication_body.rx_pdu_list[i];
-
-      memcpy(dest_pdu, src_pdu, sizeof(*src_pdu));
-      // DJP - TODO FIXME - intentional memory leak
-      if(dest_pdu->rx_indication_rel8.length > 0){
-        dest_pdu->data = malloc(dest_pdu->rx_indication_rel8.length);
-        memcpy(dest_pdu->data, src_pdu->data, dest_pdu->rx_indication_rel8.length);
-      }else{
-        dest_pdu->data = NULL;
-      }
 
       LOG_D(PHY, "%s() NFAPI SFN/SF:%d PDUs:%d [PDU:%d] handle:%d rnti:%04x length:%d offset:%d ul_cqi:%d ta:%d data:%p\n",
           __FUNCTION__,
@@ -730,15 +713,13 @@ int phy_sr_indication(struct nfapi_vnf_p7_config *config, nfapi_sr_indication_t 
     UL_RCC_INFO.sr_ind[index] = *ind;
     LOG_D(MAC,"%s() UL_INFO[%d].sr_ind.sr_indication_body.number_of_srs:%d\n", __FUNCTION__, index, eNB->UL_INFO.sr_ind.sr_indication_body.number_of_srs);
     if (ind->sr_indication_body.number_of_srs > 0){
-      UL_RCC_INFO.sr_ind[index].sr_indication_body.sr_pdu_list = malloc(sizeof(nfapi_sr_indication_pdu_t)*ind->sr_indication_body.number_of_srs );
+      UL_RCC_INFO.sr_ind[index].sr_indication_body.sr_pdu_list = UL_RCC_INFO.sr_ind[index].sr_indication_body.sr_pdu_list;
     }
     for (int i=0; i<ind->sr_indication_body.number_of_srs; i++) {
         nfapi_sr_indication_pdu_t *dest_pdu = &UL_RCC_INFO.sr_ind[index].sr_indication_body.sr_pdu_list[i];
         nfapi_sr_indication_pdu_t *src_pdu = &ind->sr_indication_body.sr_pdu_list[i];
 
         LOG_D(MAC, "SR_IND[PDU:%d %d][rnti:%x cqi:%d channel:%d]\n", index, i, src_pdu->rx_ue_information.rnti, src_pdu->ul_cqi_information.ul_cqi, src_pdu->ul_cqi_information.channel);
-
-        memcpy(dest_pdu, src_pdu, sizeof(*src_pdu));
     }
   }else{
   pthread_mutex_lock(&eNB->UL_INFO_mutex);
@@ -783,19 +764,14 @@ int phy_cqi_indication(struct nfapi_vnf_p7_config *config, nfapi_cqi_indication_
     }
     UL_RCC_INFO.cqi_ind[index] = *ind;
     if (ind->cqi_indication_body.number_of_cqis > 0){
-      UL_RCC_INFO.cqi_ind[index].cqi_indication_body.cqi_pdu_list = malloc(sizeof(nfapi_cqi_indication_pdu_t)*ind->cqi_indication_body.number_of_cqis );
-      UL_RCC_INFO.cqi_ind[index].cqi_indication_body.cqi_raw_pdu_list = malloc(sizeof(nfapi_cqi_indication_raw_pdu_t)*ind->cqi_indication_body.number_of_cqis );
+      UL_RCC_INFO.cqi_ind[index].cqi_indication_body.cqi_pdu_list = ind->cqi_indication_body.cqi_pdu_list;
+      UL_RCC_INFO.cqi_ind[index].cqi_indication_body.cqi_raw_pdu_list = ind->cqi_indication_body.cqi_raw_pdu_list;
     }
 
     for (int i=0; i<ind->cqi_indication_body.number_of_cqis; i++) {
         nfapi_cqi_indication_pdu_t *src_pdu = &ind->cqi_indication_body.cqi_pdu_list[i];
         LOG_D(MAC, "SR_IND[PDU:%d][rnti:%x cqi:%d channel:%d]\n", i, src_pdu->rx_ue_information.rnti,
                     src_pdu->ul_cqi_information.ul_cqi, src_pdu->ul_cqi_information.channel);
-        memcpy(&UL_RCC_INFO.cqi_ind[index].cqi_indication_body.cqi_pdu_list[i],
-               src_pdu, sizeof(nfapi_cqi_indication_pdu_t));
-
-        memcpy(&UL_RCC_INFO.cqi_ind[index].cqi_indication_body.cqi_raw_pdu_list[i],
-               &ind->cqi_indication_body.cqi_raw_pdu_list[i], sizeof(nfapi_cqi_indication_raw_pdu_t));
     }
   }else{
   pthread_mutex_lock(&eNB->UL_INFO_mutex);
