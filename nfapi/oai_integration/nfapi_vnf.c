@@ -441,10 +441,8 @@ int phy_rach_indication(struct nfapi_vnf_p7_config *config, nfapi_rach_indicatio
   LOG_D(MAC, "%s() NFAPI SFN/SF:%d number_of_preambles:%u\n", __FUNCTION__, NFAPI_SFNSF2DEC(ind->sfn_sf), ind->rach_indication_body.number_of_preambles);
   struct PHY_VARS_eNB_s *eNB = RC.eNB[0][0];
   //printf("[VNF] RACH_IND eNB:%p sfn_sf:%d number_of_preambles:%d\n", eNB, NFAPI_SFNSF2DEC(ind->sfn_sf), ind->rach_indication_body.number_of_preambles);
-  pthread_mutex_lock(&eNB->UL_INFO_mutex);
   if(NFAPI_MODE == NFAPI_MODE_VNF){
     if (ind->rach_indication_body.number_of_preambles == 0){
-      pthread_mutex_unlock(&eNB->UL_INFO_mutex);
       return 1;
     }
     int8_t index = -1;
@@ -481,6 +479,7 @@ int phy_rach_indication(struct nfapi_vnf_p7_config *config, nfapi_rach_indicatio
       UL_RCC_INFO.rach_ind[index].rach_indication_body.preamble_list[i] = ind->rach_indication_body.preamble_list[i];
     }
   }else{
+  pthread_mutex_lock(&eNB->UL_INFO_mutex);
   eNB->UL_INFO.rach_ind = *ind;
   eNB->UL_INFO.rach_ind.rach_indication_body.preamble_list = eNB->preamble_list;
 
@@ -500,8 +499,8 @@ int phy_rach_indication(struct nfapi_vnf_p7_config *config, nfapi_rach_indicatio
 
     eNB->preamble_list[i] = ind->rach_indication_body.preamble_list[i];
   }
-  }
   pthread_mutex_unlock(&eNB->UL_INFO_mutex);
+  }
   // vnf_p7_info* p7_vnf = (vnf_p7_info*)(config->user_data);
   //mac_rach_ind(p7_vnf->mac, ind);
   return 1;
@@ -510,10 +509,9 @@ int phy_rach_indication(struct nfapi_vnf_p7_config *config, nfapi_rach_indicatio
 int phy_harq_indication(struct nfapi_vnf_p7_config *config, nfapi_harq_indication_t *ind) {
   struct PHY_VARS_eNB_s *eNB = RC.eNB[0][0];
   LOG_D(MAC, "%s() NFAPI SFN/SF:%d number_of_harqs:%u\n", __FUNCTION__, NFAPI_SFNSF2DEC(ind->sfn_sf), ind->harq_indication_body.number_of_harqs);
-  pthread_mutex_lock(&eNB->UL_INFO_mutex);
   if(NFAPI_MODE == NFAPI_MODE_VNF){
+  pthread_mutex_lock(&eNB->UL_INFO_mutex);
     if (ind->harq_indication_body.number_of_harqs == 0){
-      pthread_mutex_unlock(&eNB->UL_INFO_mutex);
       return 1;
     }
     int8_t index = -1;
@@ -543,8 +541,8 @@ int phy_harq_indication(struct nfapi_vnf_p7_config *config, nfapi_harq_indicatio
   for (int i=0; i<ind->harq_indication_body.number_of_harqs; i++) {
     memcpy(&eNB->UL_INFO.harq_ind.harq_indication_body.harq_pdu_list[i], &ind->harq_indication_body.harq_pdu_list[i], sizeof(eNB->UL_INFO.harq_ind.harq_indication_body.harq_pdu_list[i]));
   }
-  }
   pthread_mutex_unlock(&eNB->UL_INFO_mutex);
+  }
   // vnf_p7_info* p7_vnf = (vnf_p7_info*)(config->user_data);
   //mac_harq_ind(p7_vnf->mac, ind);
   return 1;
@@ -552,10 +550,8 @@ int phy_harq_indication(struct nfapi_vnf_p7_config *config, nfapi_harq_indicatio
 
 int phy_crc_indication(struct nfapi_vnf_p7_config *config, nfapi_crc_indication_t *ind) {
   struct PHY_VARS_eNB_s *eNB = RC.eNB[0][0];
-  pthread_mutex_lock(&eNB->UL_INFO_mutex);
   if(NFAPI_MODE == NFAPI_MODE_VNF){
     if (ind->crc_indication_body.number_of_crcs == 0){
-      pthread_mutex_unlock(&eNB->UL_INFO_mutex);
       return 1;
     }
     int8_t index = -1;
@@ -588,6 +584,7 @@ int phy_crc_indication(struct nfapi_vnf_p7_config *config, nfapi_crc_indication_
           UL_RCC_INFO.crc_ind[index].crc_indication_body.crc_pdu_list[i].rx_ue_information.rnti);
     }
   }else{
+  pthread_mutex_lock(&eNB->UL_INFO_mutex);
   eNB->UL_INFO.crc_ind = *ind;
   nfapi_crc_indication_t *dest_ind = &eNB->UL_INFO.crc_ind;
   nfapi_crc_indication_pdu_t *dest_pdu_list = eNB->crc_pdu_list;
@@ -607,8 +604,8 @@ int phy_crc_indication(struct nfapi_vnf_p7_config *config, nfapi_crc_indication_
           ind->crc_indication_body.crc_pdu_list[i].rx_ue_information.rnti,
           eNB->UL_INFO.crc_ind.crc_indication_body.crc_pdu_list[i].rx_ue_information.rnti);
   }
-  }
   pthread_mutex_unlock(&eNB->UL_INFO_mutex);
+  }
   // vnf_p7_info* p7_vnf = (vnf_p7_info*)(config->user_data);
   //mac_crc_ind(p7_vnf->mac, ind);
   return 1;
@@ -621,10 +618,8 @@ int phy_rx_indication(struct nfapi_vnf_p7_config *config, nfapi_rx_indication_t 
     LOG_D(MAC, "%s() NFAPI SFN/SF:%d number_of_pdus:%u\n", __FUNCTION__, NFAPI_SFNSF2DEC(ind->sfn_sf), ind->rx_indication_body.number_of_pdus);
   }
 
-  pthread_mutex_lock(&eNB->UL_INFO_mutex);
   if(NFAPI_MODE == NFAPI_MODE_VNF){
     if (ind->rx_indication_body.number_of_pdus == 0){
-      pthread_mutex_unlock(&eNB->UL_INFO_mutex);
       return 1;
     }
     int8_t index = -1;
@@ -673,6 +668,7 @@ int phy_rx_indication(struct nfapi_vnf_p7_config *config, nfapi_rx_indication_t 
           );
     }
   }else{
+  pthread_mutex_lock(&eNB->UL_INFO_mutex);
   nfapi_rx_indication_t *dest_ind = &eNB->UL_INFO.rx_ind;
   nfapi_rx_indication_pdu_t *dest_pdu_list = eNB->rx_pdu_list;
   *dest_ind = *ind;
@@ -701,8 +697,8 @@ int phy_rx_indication(struct nfapi_vnf_p7_config *config, nfapi_rx_indication_t 
           dest_pdu->data
          );
   }
-  }
   pthread_mutex_unlock(&eNB->UL_INFO_mutex);
+  }
   // vnf_p7_info* p7_vnf = (vnf_p7_info*)(config->user_data);
   //mac_rx_ind(p7_vnf->mac, ind);
   return 1;
@@ -716,10 +712,8 @@ int phy_srs_indication(struct nfapi_vnf_p7_config *config, nfapi_srs_indication_
 int phy_sr_indication(struct nfapi_vnf_p7_config *config, nfapi_sr_indication_t *ind) {
   struct PHY_VARS_eNB_s *eNB = RC.eNB[0][0];
   LOG_D(MAC, "%s() NFAPI SFN/SF:%d srs:%d\n", __FUNCTION__, NFAPI_SFNSF2DEC(ind->sfn_sf), ind->sr_indication_body.number_of_srs);
-  pthread_mutex_lock(&eNB->UL_INFO_mutex);
   if(NFAPI_MODE == NFAPI_MODE_VNF){
     if (ind->sr_indication_body.number_of_srs == 0){
-      pthread_mutex_unlock(&eNB->UL_INFO_mutex);;
       return 1;
     }
     int8_t index = -1;
@@ -747,6 +741,7 @@ int phy_sr_indication(struct nfapi_vnf_p7_config *config, nfapi_sr_indication_t 
         memcpy(dest_pdu, src_pdu, sizeof(*src_pdu));
     }
   }else{
+  pthread_mutex_lock(&eNB->UL_INFO_mutex);
   nfapi_sr_indication_t *dest_ind = &eNB->UL_INFO.sr_ind;
   nfapi_sr_indication_pdu_t *dest_pdu_list = eNB->sr_pdu_list;
   *dest_ind = *ind;
@@ -759,8 +754,8 @@ int phy_sr_indication(struct nfapi_vnf_p7_config *config, nfapi_sr_indication_t 
     LOG_D(MAC, "SR_IND[PDU:%d][rnti:%x cqi:%d channel:%d]\n", i, src_pdu->rx_ue_information.rnti, src_pdu->ul_cqi_information.ul_cqi, src_pdu->ul_cqi_information.channel);
     memcpy(dest_pdu, src_pdu, sizeof(*src_pdu));
   }
-  }
   pthread_mutex_unlock(&eNB->UL_INFO_mutex);
+  }
   // vnf_p7_info* p7_vnf = (vnf_p7_info*)(config->user_data);
   //mac_sr_ind(p7_vnf->mac, ind);
   return 1;
@@ -771,10 +766,8 @@ int phy_cqi_indication(struct nfapi_vnf_p7_config *config, nfapi_cqi_indication_
   //mac_cqi_ind(p7_vnf->mac, ind);
   struct PHY_VARS_eNB_s *eNB = RC.eNB[0][0];
   LOG_D(MAC, "%s() NFAPI SFN/SF:%d number_of_cqis:%u\n", __FUNCTION__, NFAPI_SFNSF2DEC(ind->sfn_sf), ind->cqi_indication_body.number_of_cqis);
-  pthread_mutex_lock(&eNB->UL_INFO_mutex);
   if(NFAPI_MODE == NFAPI_MODE_VNF){
     if (ind->cqi_indication_body.number_of_cqis == 0){
-      pthread_mutex_unlock(&eNB->UL_INFO_mutex);
       return 1;
     }
     int8_t index = -1;
@@ -805,6 +798,7 @@ int phy_cqi_indication(struct nfapi_vnf_p7_config *config, nfapi_cqi_indication_
                &ind->cqi_indication_body.cqi_raw_pdu_list[i], sizeof(nfapi_cqi_indication_raw_pdu_t));
     }
   }else{
+  pthread_mutex_lock(&eNB->UL_INFO_mutex);
   nfapi_cqi_indication_t *dest_ind = &eNB->UL_INFO.cqi_ind;
   *dest_ind = *ind;
   dest_ind->cqi_indication_body.cqi_pdu_list = ind->cqi_indication_body.cqi_pdu_list;
@@ -818,8 +812,8 @@ int phy_cqi_indication(struct nfapi_vnf_p7_config *config, nfapi_cqi_indication_
     memcpy(&dest_ind->cqi_indication_body.cqi_raw_pdu_list[i],
            &ind->cqi_indication_body.cqi_raw_pdu_list[i], sizeof(nfapi_cqi_indication_raw_pdu_t));
   }
-  }
   pthread_mutex_unlock(&eNB->UL_INFO_mutex);
+  }
   return 1;
 }
 
