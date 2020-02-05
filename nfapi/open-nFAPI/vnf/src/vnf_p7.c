@@ -673,14 +673,6 @@ void vnf_handle_rx_ulsch_indication(void *pRecvMsg, int recvMsgLen, vnf_p7_t* vn
 				(vnf_p7->_public.rx_indication)(&(vnf_p7->_public), &ind);
 			}
 		}
-
-		uint16_t i = 0;
-		for(i = 0; i < ind.rx_indication_body.number_of_pdus; ++i)
-		{
-			vnf_p7_codec_free(vnf_p7, ind.rx_indication_body.rx_pdu_list[i].data);
-		}
-		vnf_p7_codec_free(vnf_p7, ind.rx_indication_body.rx_pdu_list);
-		vnf_p7_codec_free(vnf_p7, ind.vendor_extension);
 	}
 
 }
@@ -707,10 +699,6 @@ void vnf_handle_rach_indication(void *pRecvMsg, int recvMsgLen, vnf_p7_t* vnf_p7
 				(vnf_p7->_public.rach_indication)(&vnf_p7->_public, &ind);
 			}
 		}
-#ifndef PHY_RM	
-		vnf_p7_codec_free(vnf_p7, ind.rach_indication_body.preamble_list);
-		vnf_p7_codec_free(vnf_p7, ind.vendor_extension);
-#endif
 	}
 }
 
@@ -736,10 +724,6 @@ void vnf_handle_srs_indication(void *pRecvMsg, int recvMsgLen, vnf_p7_t* vnf_p7)
 				(vnf_p7->_public.srs_indication)(&(vnf_p7->_public), &ind);
 			}
 		}
-#ifndef PHY_RM	
-		vnf_p7_codec_free(vnf_p7, ind.srs_indication_body.srs_pdu_list);
-		vnf_p7_codec_free(vnf_p7, ind.vendor_extension);	
-#endif
 	}
 }
 
@@ -765,10 +749,6 @@ void vnf_handle_rx_sr_indication(void *pRecvMsg, int recvMsgLen, vnf_p7_t* vnf_p
 				(vnf_p7->_public.sr_indication)(&(vnf_p7->_public), &ind);
 			}
 		}
-#ifndef PHY_RM	
-		vnf_p7_codec_free(vnf_p7, ind.sr_indication_body.sr_pdu_list);
-		vnf_p7_codec_free(vnf_p7, ind.vendor_extension);	
-#endif
 	}
 }
 void vnf_handle_rx_cqi_indication(void *pRecvMsg, int recvMsgLen, vnf_p7_t* vnf_p7)
@@ -793,11 +773,6 @@ void vnf_handle_rx_cqi_indication(void *pRecvMsg, int recvMsgLen, vnf_p7_t* vnf_
 				(vnf_p7->_public.cqi_indication)(&(vnf_p7->_public), &ind);
 			}
 		}
-#ifndef PHY_RM	
-		vnf_p7_codec_free(vnf_p7, ind.cqi_indication_body.cqi_pdu_list);
-		vnf_p7_codec_free(vnf_p7, ind.cqi_indication_body.cqi_raw_pdu_list);
-		vnf_p7_codec_free(vnf_p7, ind.vendor_extension);	
-#endif		
 	}
 
 }
@@ -824,10 +799,6 @@ void vnf_handle_lbt_dl_indication(void *pRecvMsg, int recvMsgLen, vnf_p7_t* vnf_
 				(vnf_p7->_public.lbt_dl_indication)(&(vnf_p7->_public), &ind);
 			}
 		}
-#ifndef PHY_RM	
-		vnf_p7_codec_free(vnf_p7, ind.lbt_dl_indication_body.lbt_indication_pdu_list);
-		vnf_p7_codec_free(vnf_p7, ind.vendor_extension);
-#endif
 	}
 }
 
@@ -853,10 +824,6 @@ void vnf_handle_nb_harq_indication(void *pRecvMsg, int recvMsgLen, vnf_p7_t* vnf
 				(vnf_p7->_public.nb_harq_indication)(&(vnf_p7->_public), &ind);
 			}
 		}
-#ifndef PHY_RM	
-		vnf_p7_codec_free(vnf_p7, ind.nb_harq_indication_body.nb_harq_pdu_list);
-		vnf_p7_codec_free(vnf_p7, ind.vendor_extension);
-#endif
 	}
 }
 
@@ -882,10 +849,6 @@ void vnf_handle_nrach_indication(void *pRecvMsg, int recvMsgLen, vnf_p7_t* vnf_p
 				(vnf_p7->_public.nrach_indication)(&(vnf_p7->_public), &ind);
 			}
 		}
-#ifndef PHY_RM	
-		vnf_p7_codec_free(vnf_p7, ind.nrach_indication_body.nrach_pdu_list);
-		vnf_p7_codec_free(vnf_p7, ind.vendor_extension);
-#endif
 	}
 }
 
