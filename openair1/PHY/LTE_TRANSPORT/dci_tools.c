@@ -852,6 +852,8 @@ void fill_dci_and_dlsch(PHY_VARS_eNB *eNB,int frame,int subframe,L1_rxtx_proc_t 
 
     dlsch0_harq = dlsch0->harq_processes[rel8->harq_process];
     dlsch1_harq = dlsch1->harq_processes[rel8->harq_process];
+    dlsch0_harq->codeword                     = 0;
+    dlsch1_harq->codeword                     = 1;
 
     dlsch0->subframe_tx[subframe] = 1;
 
@@ -893,8 +895,8 @@ void fill_dci_and_dlsch(PHY_VARS_eNB *eNB,int frame,int subframe,L1_rxtx_proc_t 
       dlsch1->active[subframe]= 0;
       dlsch1->harq_mask                         &= ~(1<<rel8->harq_process);
     }
-    // dlsch0_harq->dl_power_off = 0;
-    // dlsch1_harq->dl_power_off = 0;
+    dlsch0_harq->dl_power_off = 1;
+    dlsch1_harq->dl_power_off = 1;
 
 
     if (fp->nb_antenna_ports_eNB == 2) {
@@ -904,8 +906,8 @@ void fill_dci_and_dlsch(PHY_VARS_eNB *eNB,int frame,int subframe,L1_rxtx_proc_t 
       if ((dlsch0->active[subframe]==1) && (dlsch1->active[subframe]==1)) {
         dlsch0_harq->mimo_mode = LARGE_CDD;
         dlsch1_harq->mimo_mode = LARGE_CDD;
-        dlsch0_harq->dl_power_off = 1;
-        dlsch1_harq->dl_power_off = 1;
+        dlsch0_harq->dl_power_off = 0;
+        dlsch1_harq->dl_power_off = 0;
       } else {
         dlsch0_harq->mimo_mode = ALAMOUTI;
         dlsch1_harq->mimo_mode = ALAMOUTI;

@@ -52,9 +52,6 @@ double computeRhoA_eNB(uint8_t pa,
   if(!dl_power_off) //if dl_power_offset is 0, this is for MU-interference, TM5
     rho_a_dB-=10*log10(2);
 
-  if(n_antenna_port==2)
-    rho_a_dB-=10*log10(2);
-
   if(n_antenna_port==4) // see TS 36.213 Section 5.2
     rho_a_dB+=10*log10(2);
 
