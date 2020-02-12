@@ -4671,9 +4671,7 @@ extract_harq(module_id_t mod_idP,
 
             /* CDRX: PUCCH gives an ACK, so reset corresponding HARQ RTT */
             sched_ctl->harq_rtt_timer[CC_idP][harq_pid] = 0;
-          }
-
-          if ((num_ack_nak == 2)
+          } else if ((num_ack_nak == 2)
               && (sched_ctl->round[CC_idP][harq_pid][select_tb] < 8)
               && (sched_ctl->round[CC_idP][harq_pid][oppose_tb] < 8)
               && ((pdu[select_tb] == 2) || (pdu[select_tb] == 4))
