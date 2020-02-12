@@ -412,14 +412,19 @@ void polar_encoder_fast(uint64_t *A,
                         int32_t crcmask,
                         uint8_t ones_flag,
                         t_nrPolar_params *polarParams) {
+  struct timespec tt1, tt2;
+  clock_gettime(CLOCK_REALTIME, &tt1);
   AssertFatal(polarParams->K > 32, "K = %d < 33, is not supported yet\n",polarParams->K);
   AssertFatal(polarParams->K < 129, "K = %d > 128, is not supported yet\n",polarParams->K);
   AssertFatal(polarParams->payloadBits < 65, "payload bits = %d > 64, is not supported yet\n",polarParams->payloadBits);
   uint64_t B[4]= {0,0,0,0},Cprime[4]= {0,0,0,0};
   int bitlen = polarParams->payloadBits;
+  
   // append crc
   AssertFatal(bitlen<129,"support for payloads <= 128 bits\n");
   AssertFatal(polarParams->crcParityBits == 24,"support for 24-bit crc only for now\n");
+  clock_gettime(CLOCK_REALTIME, &tt2);
+  //printf("AssertFatal consumes %ld nanoseconds!\n", tt2.tv_nsec - tt1.tv_nsec);
   //int bitlen0=bitlen;
   uint64_t tcrc=0;
   uint8_t offset = 0;
@@ -432,6 +437,7 @@ void polar_encoder_fast(uint64_t *A,
 
   // First flip A bitstring byte endian for CRC routines (optimized for DLSCH/ULSCH, not PBCH/PDCCH)
   // CRC reads in each byte in bit positions 7 down to 0, for PBCH/PDCCH we need to read in a_{A-1} down to a_{0}, A = length of bit string (e.g. 32 for PBCH)
+  clock_gettime(CLOCK_REALTIME, &tt1);
   if (bitlen<=32) {
     uint8_t A32_flip[4+offset];
     if (ones_flag) {
@@ -481,7 +487,8 @@ void polar_encoder_fast(uint64_t *A,
     A128_flip[14+offset]=((uint8_t*)&Aprime)[1];	  A128_flip[15+offset]=((uint8_t*)&Aprime)[0];
     tcrc = (uint64_t)((crcmask^(crc24c(A128_flip,8*offset+bitlen)>>8)));
   }
-
+  clock_gettime(CLOCK_REALTIME, &tt2);
+  //printf("First flip A bitstring consumes %ld nanoseconds!\n", tt2.tv_nsec - tt1.tv_nsec);
   int n;
   // this is number of quadwords in the bit string
   int quadwlen = (polarParams->K>>6);
@@ -492,13 +499,15 @@ void polar_encoder_fast(uint64_t *A,
   // 0, 0, ..., 0, a'_0, a'_1, ..., a'_A-1, p_0, p_1, ..., p_{N_parity-1}
 
   //??? b_{N'-1} b_{N'-2} ... b_{N'-A} b_{N'-A-1} ... b_{N'-A-Nparity} = a_{N-1} a_{N-2} ... a_{N-A} p_{N_parity-1} ... p_0
-
+  clock_gettime(CLOCK_REALTIME, &tt1);
   for (n=0; n<quadwlen; n++) if (n==0) B[n] = (A[n] << polarParams->crcParityBits) | tcrc;
                              else      B[n] = (A[n] << polarParams->crcParityBits) | (A[n-1]>>(64-polarParams->crcParityBits));
-
+  clock_gettime(CLOCK_REALTIME, &tt2);
+  //printf("for loop quadwlen %ld nanoseconds!\n", tt2.tv_nsec - tt1.tv_nsec);
   uint8_t *Bbyte = (uint8_t *)B;
 
   // for each byte of B, lookup in corresponding table for 64-bit word corresponding to that byte and its position
+  clock_gettime(CLOCK_REALTIME, &tt1);
   if (polarParams->K<65)
     Cprime[0] = polarParams->cprime_tab0[0][Bbyte[0]] |
                 polarParams->cprime_tab0[1][Bbyte[1]] |
@@ -514,14 +523,16 @@ void polar_encoder_fast(uint64_t *A,
       Cprime[1] |= polarParams->cprime_tab1[i][Bbyte[i]];
     }
   }
-
+  clock_gettime(CLOCK_REALTIME, &tt2);
+ // printf("for (int i=0; i<1+(polarParams->K/8) %ld nanoseconds!\n", tt2.tv_nsec - tt1.tv_nsec);
 #ifdef DEBUG_POLAR_MATLAB
   // Cprime = pbchCprime
   for (int i = 0; i < quadwlen; i++) printf("[polar_encoder_fast]C'[%d]= 0x%llx\n", i, (unsigned long long)(Cprime[i]));
+  printf("DEBUG_POLAR_MATLAB\n");
 #endif
 
 #ifdef DEBUG_POLAR_ENCODER
-
+   printf("DEBUG_POLAR_ENCODER\n");
   if (polarParams->K<65)
     printf("A %llx B %llx Cprime %llx (payload bits %d,crc %x)\n",
            (unsigned long long)(A[0]&(((uint64_t)1<<bitlen)-1)),
@@ -571,7 +582,7 @@ void polar_encoder_fast(uint64_t *A,
   uint64_t D[8]= {0,0,0,0,0,0,0,0};
   int off=0;
   int len=polarParams->K;
-
+  clock_gettime(CLOCK_REALTIME, &tt1);
   if (polarParams->N==512) {
     for (int j=0; j<(1+(polarParams->K>>6)); j++,off+=64,len-=64) {
       for (int i=0; i<((len>63) ? 64 : len); i++) {
@@ -670,6 +681,11 @@ void polar_encoder_fast(uint64_t *A,
       }
     }
   }
+  clock_gettime(CLOCK_REALTIME, &tt2);
+ // printf("aaaaaaaaaaaaaaa %ld nanoseconds!\n", tt2.tv_nsec - tt1.tv_nsec);
+  clock_gettime(CLOCK_REALTIME, &tt1);
   memset((void*)out,0,polarParams->encoderLength>>3);
   polar_rate_matching(polarParams,(void *)D,(void *)out);
+  clock_gettime(CLOCK_REALTIME, &tt2);
+ // printf("polar_rate_matching %ld nanoseconds!\n", tt2.tv_nsec - tt1.tv_nsec);
 }

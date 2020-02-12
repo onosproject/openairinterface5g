@@ -64,8 +64,9 @@ int nr_generate_pss(  int16_t *d_pss,
     if (k>= frame_parms->ofdm_symbol_size) k-=frame_parms->ofdm_symbol_size;
 
     l = ssb_start_symbol;
-
+	printf("NR_PSS_LENGTH = %d\n",NR_PSS_LENGTH);
     for (m = 0; m < NR_PSS_LENGTH; m++) {
+		
       //      printf("pss: writing position k %d / %d\n",k,frame_parms->ofdm_symbol_size);
       ((int16_t*)txdataF)[2*(l*frame_parms->ofdm_symbol_size + k)] = (a * d_pss[m]) >> 15;
       k++;

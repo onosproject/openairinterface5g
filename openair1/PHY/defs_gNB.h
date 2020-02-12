@@ -169,6 +169,8 @@ typedef struct {
   int16_t sqrt_rho_a;
   /// amplitude of PDSCH (compared to RS) in symbols containing pilots
   int16_t sqrt_rho_b;
+  // to signal 
+  volatile int complete_modulation;
 } NR_gNB_DLSCH_t;
 
 
@@ -288,6 +290,24 @@ typedef struct {
   int16_t w[MAX_NUM_ULSCH_SEGMENTS][3*(6144+64)];
   //////////////////////////////////////////////////////////////
 } NR_UL_gNB_HARQ_t;
+
+typedef struct{
+	pthread_t pthread_scrambling;
+	pthread_cond_t cond_tx;
+	pthread_mutex_t mutex_tx;
+	//=====//
+	relaying_type_t r_type;
+	pthread_attr_t attr_scrambling;
+}scrambling_channel;
+
+typedef struct{
+	pthread_t pthread_modulation;
+	pthread_cond_t cond_tx;
+	pthread_mutex_t mutex_tx;
+	//=====//
+	relaying_type_t r_type;
+	pthread_attr_t attr_modulation;
+}modulation_channel;
 
 
 typedef struct {
@@ -815,7 +835,7 @@ typedef struct PHY_VARS_gNB_s {
   /// time state for localization
   time_stats_t localization_stats;
 #endif
-
+  
   int32_t pucch1_stats_cnt[NUMBER_OF_UE_MAX][10];
   int32_t pucch1_stats[NUMBER_OF_UE_MAX][10*1024];
   int32_t pucch1_stats_thres[NUMBER_OF_UE_MAX][10*1024];
@@ -826,6 +846,13 @@ typedef struct PHY_VARS_gNB_s {
   int32_t pusch_stats_mcs[NUMBER_OF_UE_MAX][10240];
   int32_t pusch_stats_bsr[NUMBER_OF_UE_MAX][10240];
   int32_t pusch_stats_BO[NUMBER_OF_UE_MAX][10240];
+  
+  scrambling_channel thread_scrambling;
+  modulation_channel thread_modulation;
+  volatile int complete_modulation;
+  volatile int complete_scrambling;
+  uint32_t scrambled_output[NR_MAX_NB_CODEWORDS][NR_MAX_PDSCH_ENCODED_LENGTH>>5];
+  volatile int q_scrambling[13];
 } PHY_VARS_gNB;
 
 #endif

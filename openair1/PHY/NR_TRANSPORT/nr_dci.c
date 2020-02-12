@@ -34,7 +34,7 @@
 #include "nr_dlsch.h"
 #include "nr_sch_dmrs.h"
 #include "PHY/MODULATION/nr_modulation.h"
-
+#include <time.h>
 //#define DEBUG_PDCCH_DMRS
 //#define DEBUG_DCI
 //#define DEBUG_CHANNEL_CODING
@@ -169,7 +169,7 @@ uint8_t nr_generate_dci_top(NR_gNB_DCI_ALLOC_t dci_alloc,
   nr_reg_t reg;
   nr_reg_t reg_mapping_list[NR_MAX_PDCCH_AGG_LEVEL*NR_NB_REG_PER_CCE];
   nfapi_nr_dl_config_pdcch_parameters_rel15_t pdcch_params = dci_alloc.pdcch_params;
-
+  struct timespec tt1, tt2;
   /*The coreset is initialised
   * in frequency: the first subcarrier is obtained by adding the first CRB overlapping the SSB and the rb_offset for coreset 0
   * or the rb_offset for other coresets
@@ -192,6 +192,7 @@ uint8_t nr_generate_dci_top(NR_gNB_DCI_ALLOC_t dci_alloc,
   dmrs_length += pdcch_params.rb_offset*6; // To accommodate more DMRS symbols in case of rb offset
 
   /// DMRS QPSK modulation
+  clock_gettime(CLOCK_REALTIME, &tt1);
   for (int symb=cset_start_symb; symb<cset_start_symb + pdcch_params.n_symb; symb++) {
    
     nr_modulation(gold_pdcch_dmrs[symb], dmrs_length, DMRS_MOD_ORDER, mod_dmrs[symb]); //Qm = 2 as DMRS is QPSK modulated
@@ -204,15 +205,22 @@ uint8_t nr_generate_dci_top(NR_gNB_DCI_ALLOC_t dci_alloc,
 
 #endif
   }
-
+  clock_gettime(CLOCK_REALTIME, &tt2);
+ // printf("DMRS QPSK modulation nr_modulation consumes %ld nanoseconds!\n", tt2.tv_nsec - tt1.tv_nsec);
   /// DCI payload processing
   // CRC attachment + Scrambling + Channel coding + Rate matching
   uint32_t encoder_output[NR_MAX_DCI_SIZE_DWORD];
   uint16_t n_RNTI = (pdcch_params.search_space_type == NFAPI_NR_SEARCH_SPACE_TYPE_UE_SPECIFIC)? pdcch_params.rnti:0;
   uint16_t Nid = (pdcch_params.search_space_type == NFAPI_NR_SEARCH_SPACE_TYPE_UE_SPECIFIC)?
                  pdcch_params.scrambling_id : config.sch_config.physical_cell_id.value;
+  clock_gettime(CLOCK_REALTIME, &tt1);				 
   t_nrPolar_params *currentPtr = nr_polar_params(NR_POLAR_DCI_MESSAGE_TYPE, dci_alloc.size, dci_alloc.L);
+  clock_gettime(CLOCK_REALTIME, &tt2);
+ // printf(" DCI nr_polar_params consumes %ld nanoseconds!\n", tt2.tv_nsec - tt1.tv_nsec);
+  clock_gettime(CLOCK_REALTIME, &tt1);		
   polar_encoder_fast(dci_alloc.dci_pdu, encoder_output, pdcch_params.rnti, 1, currentPtr);
+  clock_gettime(CLOCK_REALTIME, &tt2);		
+//  printf("DCI polar_encoder_fast consumes %ld nanoseconds!\n", tt2.tv_nsec - tt1.tv_nsec);
 #ifdef DEBUG_CHANNEL_CODING
   printf("polar rnti %d\n",pdcch_params.rnti);
   printf("DCI PDU: [0]->0x%lx \t [1]->0x%lx\n",
@@ -226,7 +234,10 @@ uint8_t nr_generate_dci_top(NR_gNB_DCI_ALLOC_t dci_alloc,
 #endif
   /// Scrambling
   uint32_t scrambled_output[NR_MAX_DCI_SIZE_DWORD]= {0};
+  clock_gettime(CLOCK_REALTIME, &tt1);
   nr_pdcch_scrambling(encoder_output, encoded_length, Nid, n_RNTI, scrambled_output);
+  clock_gettime(CLOCK_REALTIME, &tt2);
+ // printf("nr_pdcch_scrambling consumes %ld nanoseconds!\n", tt2.tv_nsec - tt1.tv_nsec);
 #ifdef DEBUG_CHANNEL_CODING
   printf("scrambled output: [0]->0x%08x \t [1]->0x%08x \t [2]->0x%08x \t [3]->0x%08x\t [4]->0x%08x\t [5]->0x%08x\t \
 [6]->0x%08x \t [7]->0x%08x \t [8]->0x%08x \t [9]->0x%08x\t [10]->0x%08x\t [11]->0x%08x\n",
@@ -235,7 +246,10 @@ uint8_t nr_generate_dci_top(NR_gNB_DCI_ALLOC_t dci_alloc,
 #endif
   /// QPSK modulation
   int16_t mod_dci[NR_MAX_DCI_SIZE>>1];
+  clock_gettime(CLOCK_REALTIME, &tt1);
   nr_modulation(scrambled_output, encoded_length, DMRS_MOD_ORDER, mod_dci); //Qm = 2 as DMRS is QPSK modulated
+  clock_gettime(CLOCK_REALTIME, &tt2);
+ // printf("QPSK modulation consumes %ld nanoseconds!\n", tt2.tv_nsec - tt1.tv_nsec);
 #ifdef DEBUG_DCI
 
   for (int i=0; i<encoded_length>>1; i++)
