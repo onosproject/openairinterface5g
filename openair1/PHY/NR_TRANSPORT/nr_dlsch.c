@@ -29,7 +29,7 @@
 * \note
 * \warning
 */
-
+//pipeline scrambling and modulation from Ian
 #include "PHY/phy_extern.h"
 #include "PHY/defs_gNB.h"
 #include "common/ran_context.h"
