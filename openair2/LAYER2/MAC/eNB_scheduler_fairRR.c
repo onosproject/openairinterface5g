@@ -139,7 +139,7 @@ void pre_scd_nb_rbs_required(    module_id_t     module_idP,
     if (ue_contextP == NULL)
       continue;
 
-    for (lc_id = DCCH; lc_id <= MAX_NUM_LCID; lc_id++) {
+    for (lc_id = DCCH; lc_id < MAX_NUM_LCID; lc_id++) {
       if (lc_id >= DTCH) {
         drb_id = lc_id - 2;
         if (ue_contextP->ue_context.DRB_active[drb_id] == 0) {
