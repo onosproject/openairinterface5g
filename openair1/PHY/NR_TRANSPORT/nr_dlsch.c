@@ -88,15 +88,15 @@ uint8_t nr_generate_pdsch(NR_gNB_DLSCH_t *dlsch,
   PHY_VARS_gNB *gNB = RC.gNB[0][0];
   NR_DL_gNB_HARQ_t *harq = dlsch->harq_processes[dci_alloc->harq_pid];
   nfapi_nr_dl_config_dlsch_pdu_rel15_t *rel15 = &harq->dlsch_pdu.dlsch_pdu_rel15;
-  nfapi_nr_dl_config_pdcch_parameters_rel15_t pdcch_params = dci_alloc->pdcch_params;
-  uint32_t scrambled_output[NR_MAX_NB_CODEWORDS][NR_MAX_PDSCH_ENCODED_LENGTH>>5];
+  //nfapi_nr_dl_config_pdcch_parameters_rel15_t pdcch_params = dci_alloc->pdcch_params;
+  //uint32_t scrambled_output[NR_MAX_NB_CODEWORDS][NR_MAX_PDSCH_ENCODED_LENGTH>>5];
   int16_t **mod_symbs = (int16_t**)dlsch->mod_symbs;
   int16_t **tx_layers = (int16_t**)dlsch->txdataF;
   int8_t Wf[2], Wt[2], l0, l_prime[2], delta;
   uint16_t nb_symbols = rel15->nb_mod_symbols;
-  uint8_t Qm = rel15->modulation_order;
-  uint32_t encoded_length = nb_symbols*Qm;
-  printf("encoded_length = %d\n",encoded_length);
+  //uint8_t Qm = rel15->modulation_order;
+  //uint32_t encoded_length = nb_symbols*Qm;
+  //printf("encoded_length = %d\n",encoded_length);
   gNB->complete_scrambling = 0;
   gNB->complete_modulation = 0;
   for(int q = 0 ;q<13;q++){
@@ -109,6 +109,7 @@ uint8_t nr_generate_pdsch(NR_gNB_DLSCH_t *dlsch,
   stop_meas(dlsch_encoding_stats);
 #ifdef DEBUG_DLSCH
 printf("PDSCH encoding:\nPayload:\n");
+uint32_t encoded_length = nb_symbols*Qm;
 for (int i=0; i<harq->B>>7; i++) {
   for (int j=0; j<16; j++)
     printf("0x%02x\t", harq->pdu[(i<<4)+j]);
@@ -225,7 +226,7 @@ for (int i=0; i<n_dmrs>>4; i++) {
  printf("PDSCH resource mapping started (start SC %d\tstart symbol %d\tN_PRB %d\tnb_symbols %d)\n",
 	start_sc, rel15->start_symbol, rel15->n_prb, rel15->nb_symbols);
 #endif
-  printf("nb_layers = %d\n",rel15->nb_layers);
+  //printf("nb_layers = %d\n",rel15->nb_layers);
   for (int ap=0; ap<rel15->nb_layers; ap++) {
 
     // DMRS params for this ap

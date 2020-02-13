@@ -133,7 +133,7 @@ static void *scrambling_proc(void *ptr){
 	//printf("cch_proc consumes %ld nanoseconds!\n",eNB->tt17.tv_nsec-eNB->tt13.tv_nsec);
 	static int scrambling_channel_status;
 	scrambling_channel_status=0;
-	scrambling_channel *cch=(scrambling_channel*)ptr;
+	//scrambling_channel *scrambling_proc=(scrambling_channel*)ptr;
 	//PHY_VARS_eNB *eNB = PHY_vars_eNB_g[0][0];
 	/**********************************************************************/
 
@@ -147,7 +147,7 @@ static void *scrambling_proc(void *ptr){
 		nfapi_nr_config_request_t *config = &gNB->gNB_config;
 		nfapi_nr_dl_config_pdcch_parameters_rel15_t pdcch_params = dci_alloc->pdcch_params;
 		//uint32_t scrambled_output[NR_MAX_NB_CODEWORDS][NR_MAX_PDSCH_ENCODED_LENGTH>>5];
-		int16_t **mod_symbs = (int16_t**)dlsch->mod_symbs;
+		//int16_t **mod_symbs = (int16_t**)dlsch->mod_symbs;
 		//int16_t **tx_layers = (int16_t**)dlsch->txdataF;
 		//int8_t Wf[2], Wt[2], l0, l_prime[2], delta;
 		uint16_t nb_symbols = rel15->nb_mod_symbols;
@@ -183,7 +183,7 @@ static void *scrambling_proc(void *ptr){
  
  
 
-	printf("complete_scrambling\n");
+	//printf("complete_scrambling\n");
 	gNB->complete_scrambling=1;
 	}
 	printf( "Exiting gNB thread scrambling_channel\n");
@@ -198,7 +198,7 @@ static void *modulation_proc(void *ptr){
 	//printf("cch_proc consumes %ld nanoseconds!\n",eNB->tt17.tv_nsec-eNB->tt13.tv_nsec);
 	static int modulation_channel_status;
 	modulation_channel_status=0;
-	modulation_channel *modulation_proc=(modulation_channel*)ptr;
+	//modulation_channel *modulation_proc=(modulation_channel*)ptr;
 	//PHY_VARS_eNB *eNB = PHY_vars_eNB_g[0][0];
 	/**********************************************************************/
 
@@ -212,7 +212,7 @@ static void *modulation_proc(void *ptr){
 		NR_DL_gNB_HARQ_t *harq = dlsch->harq_processes[dci_alloc->harq_pid];
 		nfapi_nr_dl_config_dlsch_pdu_rel15_t *rel15 = &harq->dlsch_pdu.dlsch_pdu_rel15;
 		//nfapi_nr_config_request_t *config = &gNB->gNB_config;
-		nfapi_nr_dl_config_pdcch_parameters_rel15_t pdcch_params = dci_alloc->pdcch_params;
+		//nfapi_nr_dl_config_pdcch_parameters_rel15_t pdcch_params = dci_alloc->pdcch_params;
 		//uint32_t scrambled_output[NR_MAX_NB_CODEWORDS][NR_MAX_PDSCH_ENCODED_LENGTH>>5];
 		int16_t **mod_symbs = (int16_t**)dlsch->mod_symbs;
 		//int16_t **tx_layers = (int16_t**)dlsch->txdataF;
@@ -243,7 +243,7 @@ static void *modulation_proc(void *ptr){
 		printf("\n");
 		}
 #endif
-	printf("complete_modulation\n");
+	//printf("complete_modulation\n");
 	gNB->complete_modulation=1;
 	}
 	printf( "Exiting gNB thread modulation_channel\n");
@@ -740,7 +740,7 @@ int main(int argc, char **argv)
       LOG_M("txsigF1.m","txsF1", gNB->common_vars.txdataF[1],frame_length_complex_samples_no_prefix,1,1);
 
     int tx_offset = slot*frame_parms->samples_per_slot;
-    printf("samples_per_slot_wCP = %d\n", frame_parms->samples_per_slot_wCP);
+  //  printf("samples_per_slot_wCP = %d\n", frame_parms->samples_per_slot_wCP);
 
     //TODO: loop over slots
     for (aa=0; aa<gNB->frame_parms.nb_antennas_tx; aa++) {

@@ -102,7 +102,7 @@ void nr_common_signal_procedures (PHY_VARS_gNB *gNB,int frame, int slot) {
   //printf("slots_per_hf = %d\n",slots_per_hf);
   n_hf = cfg->sch_config.half_frame_index.value;
   struct timespec tt1, tt2;
-  int result;
+  //int result;
   //printf("n_hf = %d\n",n_hf);
   // if SSB periodicity is 5ms, they are transmitted in both half frames
   if ( cfg->sch_config.ssb_periodicity.value == 5) {
