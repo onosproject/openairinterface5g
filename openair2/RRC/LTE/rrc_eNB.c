@@ -167,7 +167,7 @@ if(configuration->radioresourceconfig[CC_id].mbms_dedicated_serving_cell == TRUE
 #endif
          ,0);
   RC.rrc[ctxt_pP->module_id]->carrier[CC_id].sizeof_SIB1_MBMS = 0;
-  RC.rrc[ctxt_pP->module_id]->carrier[CC_id].SIB1_MBMS = (uint8_t *) malloc16(32);
+  RC.rrc[ctxt_pP->module_id]->carrier[CC_id].SIB1_MBMS = (uint8_t *) malloc16(RRC_BUF_SIZE);
   AssertFatal(RC.rrc[ctxt_pP->module_id]->carrier[CC_id].SIB1_MBMS!=NULL,PROTOCOL_RRC_CTXT_FMT" init_SI: FATAL, no memory for SIB1_MBMS allocated\n",
               PROTOCOL_RRC_CTXT_ARGS(ctxt_pP));
   RC.rrc[ctxt_pP->module_id]->carrier[CC_id].sizeof_SIB1_MBMS = do_SIB1_MBMS(&RC.rrc[ctxt_pP->module_id]->carrier[CC_id],ctxt_pP->module_id,CC_id
@@ -252,7 +252,7 @@ if(configuration->radioresourceconfig[CC_id].mbms_dedicated_serving_cell == TRUE
   carrier->MIB = (uint8_t*) malloc16(4);
   carrier->sizeof_SIB1 = 0;
   carrier->sizeof_SIB23 = 0;
-  carrier->SIB1 = (uint8_t*) malloc16(32);
+  carrier->SIB1 = (uint8_t*) malloc16(RRC_BUF_SIZE);
   
   AssertFatal(carrier->SIB1!=NULL,PROTOCOL_RRC_CTXT_FMT" init_SI: FATAL, no memory for SIB1 allocated\n",
 	      PROTOCOL_RRC_CTXT_ARGS(ctxt_pP));
@@ -312,7 +312,7 @@ if(configuration->radioresourceconfig[CC_id].mbms_dedicated_serving_cell == TRUE
 
   }
   if (!NODE_IS_DU(rrc->node_type)) {
-    carrier->SIB23 = (uint8_t*) malloc16(64);
+    carrier->SIB23 = (uint8_t*) malloc16(RRC_BUF_SIZE);
     AssertFatal(carrier->SIB23!=NULL,"cannot allocate memory for SIB");
     carrier->sizeof_SIB23 = do_SIB23(ctxt_pP->module_id,
                                      CC_id
@@ -1317,8 +1317,9 @@ rrc_eNB_generate_SecurityModeCommand(
 )
 //-----------------------------------------------------------------------------
 {
-  uint8_t                             buffer[100];
+  uint8_t                             buffer[RRC_BUF_SIZE];
   uint8_t                             size;
+  memset(buffer, 0, RRC_BUF_SIZE);
   T(T_ENB_RRC_SECURITY_MODE_COMMAND, T_INT(ctxt_pP->module_id), T_INT(ctxt_pP->frame),
     T_INT(ctxt_pP->subframe), T_INT(ctxt_pP->rnti));
   size = do_SecurityModeCommand(
@@ -1370,8 +1371,9 @@ rrc_eNB_generate_UECapabilityEnquiry(
 )
 //-----------------------------------------------------------------------------
 {
-  uint8_t                             buffer[100];
+  uint8_t                             buffer[RRC_BUF_SIZE];
   uint8_t                             size;
+  memset(buffer, 0, RRC_BUF_SIZE);
   T(T_ENB_RRC_UE_CAPABILITY_ENQUIRY, T_INT(ctxt_pP->module_id), T_INT(ctxt_pP->frame),
     T_INT(ctxt_pP->subframe), T_INT(ctxt_pP->rnti));
   size = do_UECapabilityEnquiry(
@@ -4473,7 +4475,7 @@ rrc_eNB_generate_RRCConnectionReconfiguration_SCell(
 //-----------------------------------------------------------------------------
 {
   uint8_t size;
-  uint8_t buffer[100];
+  uint8_t buffer[RRC_BUF_SIZE];
 #if (LTE_RRC_VERSION >= MAKE_VERSION(10, 0, 0))
   uint8_t sCellIndexToAdd = 0; //one SCell so far
 
@@ -6300,7 +6302,7 @@ rrc_eNB_generate_HO_RRCConnectionReconfiguration(const protocol_ctxt_t *const ct
                          RC.rrc[ENB_INSTANCE_TO_MODULE_ID(ctxt_pP->instance)]->configuration.enable_measurement_reports;
 
   memset(buffer, 0, RRC_BUF_SIZE);
-  char rrc_buf[1000 /* arbitrary, should be big enough, has to be less than size of return buf by a few bits/bytes */];
+  char rrc_buf[RRC_BUF_SIZE /* arbitrary, should be big enough, has to be less than size of return buf by a few bits/bytes */];
   int rrc_size;
   rrc_size = do_RRCConnectionReconfiguration(ctxt_pP,
              (unsigned char *)rrc_buf,

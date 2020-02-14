@@ -609,7 +609,7 @@ uint8_t do_SIB1_MBMS(rrc_eNB_carrier_data_t *carrier,
                                    NULL,
                                    (void *)bcch_message,
                                    buffer,
-                                   100);
+                                   RRC_BUF_SIZE);
   AssertFatal (enc_rval.encoded > 0, "ASN1 message encoding failed (%s, %lu)!\n",
                enc_rval.failed_type->name, enc_rval.encoded);
   LOG_D(RRC,"[eNB] SystemInformationBlockType1_MBMS Encoded %zd bits (%zd bytes)\n",enc_rval.encoded,(enc_rval.encoded+7)/8);
@@ -1301,7 +1301,7 @@ uint8_t do_SIB1(rrc_eNB_carrier_data_t *carrier,
                                    NULL,
                                    (void *)bcch_message,
                                    buffer,
-                                   100);
+                                   RRC_BUF_SIZE);
   AssertFatal (enc_rval.encoded > 0, "ASN1 message encoding failed (%s, %lu)!\n",
                enc_rval.failed_type->name, enc_rval.encoded);
   LOG_D(RRC,"[eNB] SystemInformationBlockType1 Encoded %zd bits (%zd bytes)\n",enc_rval.encoded,(enc_rval.encoded+7)/8);
@@ -2442,7 +2442,7 @@ uint8_t do_SIB23(uint8_t Mod_id,
                                    NULL,
                                    (void *)bcch_message,
                                    buffer,
-                                   900);
+                                   RRC_BUF_SIZE);
   AssertFatal (enc_rval.encoded > 0, "ASN1 message encoding failed (%s, %lu)!\n",
                enc_rval.failed_type->name, enc_rval.encoded);
 
@@ -3150,7 +3150,7 @@ do_RRCConnectionSetup(
                                    NULL,
                                    (void *)&dl_ccch_msg,
                                    buffer,
-                                   100);
+                                   RRC_BUF_SIZE);
 
   if(enc_rval.encoded == -1) {
     LOG_I(RRC, "[eNB AssertFatal]ASN1 message encoding failed (%s, %lu)!\n",
@@ -3574,7 +3574,7 @@ uint8_t do_RRCConnectionSetup_BR(
 				   NULL,
 				   (void*)&dl_ccch_msg,
 				   buffer,
-				   100);
+				   RRC_BUF_SIZE);
   AssertFatal (enc_rval.encoded > 0, "ASN1 message encoding failed (%s, %lu)!\n",
 	       enc_rval.failed_type->name, enc_rval.encoded);
 
@@ -3648,7 +3648,7 @@ uint8_t do_SecurityModeCommand(
                                    NULL,
                                    (void *)&dl_dcch_msg,
                                    buffer,
-                                   100);
+                                   RRC_BUF_SIZE);
 
   if(enc_rval.encoded == -1) {
     LOG_I(RRC, "[eNB AssertFatal]ASN1 message encoding failed (%s, %lu)!\n",
@@ -3702,7 +3702,7 @@ uint8_t do_UECapabilityEnquiry( const protocol_ctxt_t *const ctxt_pP,
                                    NULL,
                                    (void *)&dl_dcch_msg,
                                    buffer,
-                                   100);
+                                   RRC_BUF_SIZE);
 
   if(enc_rval.encoded == -1) {
     LOG_I(RRC, "[eNB AssertFatal]ASN1 message encoding failed (%s, %lu)!\n",
@@ -4236,7 +4236,7 @@ do_RRCConnectionReestablishment(
                                    NULL,
                                    (void *)&dl_ccch_msg,
                                    buffer,
-                                   100);
+                                   RRC_BUF_SIZE);
 
   if(enc_rval.encoded == -1) {
     LOG_E(RRC, "[eNB AssertFatal]ASN1 message encoding failed (%s, %lu)!\n",
@@ -4272,7 +4272,7 @@ uint8_t do_RRCConnectionReestablishmentReject(uint8_t                    Mod_id,
                                    NULL,
                                    (void *)&dl_ccch_msg,
                                    buffer,
-                                   100);
+                                   RRC_BUF_SIZE);
 
   if(enc_rval.encoded == -1) {
     LOG_E(RRC, "[eNB AssertFatal]ASN1 message encoding failed (%s, %lu)!\n",
@@ -4311,7 +4311,7 @@ uint8_t do_RRCConnectionReject(uint8_t                    Mod_id,
                                    NULL,
                                    (void *)&dl_ccch_msg,
                                    buffer,
-                                   100);
+                                   RRC_BUF_SIZE);
 
   if(enc_rval.encoded == -1) {
     LOG_E(RRC, "[eNB AssertFatal]ASN1 message encoding failed (%s, %lu)!\n",
