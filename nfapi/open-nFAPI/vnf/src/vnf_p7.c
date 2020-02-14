@@ -1170,19 +1170,19 @@ void vnf_handle_ul_node_sync(void *pRecvMsg, int recvMsgLen, vnf_p7_t* vnf_p7)
 					if(phy->in_sync)
 					{
 						// in sync
-						if(phy->sf_offset_filtered > 250)
-						{
-							// VNF is slow
-							phy->insync_minor_adjustment = insync_minor_adjustment_1; //25;
-							phy->insync_minor_adjustment_duration = ((phy->sf_offset_filtered) / insync_minor_adjustment_1);
-						}
-						else if(phy->sf_offset_filtered < -250)
-						{
-							// VNF is fast
-							phy->insync_minor_adjustment = -(insync_minor_adjustment_1); //25;
-							phy->insync_minor_adjustment_duration = (((phy->sf_offset_filtered) / -(insync_minor_adjustment_1)));
-						}
-						else
+						//if(phy->sf_offset_filtered > 250)
+						//{
+						//	// VNF is slow
+						//	phy->insync_minor_adjustment = insync_minor_adjustment_1; //25;
+						//	phy->insync_minor_adjustment_duration = ((phy->sf_offset_filtered) / insync_minor_adjustment_1);
+						//}
+						//else if(phy->sf_offset_filtered < -250)
+						//{
+						//	// VNF is fast
+						//	phy->insync_minor_adjustment = -(insync_minor_adjustment_1); //25;
+						//	phy->insync_minor_adjustment_duration = (((phy->sf_offset_filtered) / -(insync_minor_adjustment_1)));
+						//}
+						//else
 						{
 							phy->insync_minor_adjustment = 0;
 						}
@@ -1211,22 +1211,22 @@ void vnf_handle_ul_node_sync(void *pRecvMsg, int recvMsgLen, vnf_p7_t* vnf_p7)
 						{
 							// VNF is slow
 							//if(phy->adjustment == 1)
-							{
-								//
-								if(phy->sf_offset_filtered > 250)
-								{
-									// VNF is slow
-									phy->insync_minor_adjustment = insync_minor_adjustment_2;
-									phy->insync_minor_adjustment_duration = 2 * ((phy->sf_offset_filtered - 250) / insync_minor_adjustment_2);
-								}
-								else if(phy->sf_offset_filtered < -250)
-								{
-									// VNF is fast
-									phy->insync_minor_adjustment = -(insync_minor_adjustment_2);
-									phy->insync_minor_adjustment_duration = 2 * ((phy->sf_offset_filtered + 250) / -(insync_minor_adjustment_2));
-								}
-							
-							}
+							//{
+							//	
+							//	if(phy->sf_offset_filtered > 250)
+							//	{
+							//		// VNF is slow
+							//		phy->insync_minor_adjustment = insync_minor_adjustment_2;
+							//		phy->insync_minor_adjustment_duration = 2 * ((phy->sf_offset_filtered - 250) / insync_minor_adjustment_2);
+							//	}
+							//	else if(phy->sf_offset_filtered < -250)
+							//	{
+							//		// VNF is fast
+							//		phy->insync_minor_adjustment = -(insync_minor_adjustment_2);
+							//		phy->insync_minor_adjustment_duration = 2 * ((phy->sf_offset_filtered + 250) / -(insync_minor_adjustment_2));
+							//	}
+							//
+							//}
 							//else
 							{
 								// out of sync?
@@ -1245,21 +1245,21 @@ void vnf_handle_ul_node_sync(void *pRecvMsg, int recvMsgLen, vnf_p7_t* vnf_p7)
 						{
 							// VNF is fast
 							//if(phy->adjustment == -1)
-							{
-								//
-								if(phy->sf_offset_filtered > 250)
-								{
-									// VNF is slow
-									phy->insync_minor_adjustment = insync_minor_adjustment_2;
-									phy->insync_minor_adjustment_duration = 2 * ((phy->sf_offset_filtered - 250) / insync_minor_adjustment_2);
-								}
-								else if(phy->sf_offset_filtered < -250)
-								{
-									// VNF is fast
-									phy->insync_minor_adjustment = -(insync_minor_adjustment_2);
-									phy->insync_minor_adjustment_duration = 2 * ((phy->sf_offset_filtered + 250) / -(insync_minor_adjustment_2));
-								}
-							}
+							//{
+							//	//
+							//	if(phy->sf_offset_filtered > 250)
+							//	{
+							//		// VNF is slow
+							//		phy->insync_minor_adjustment = insync_minor_adjustment_2;
+							//		phy->insync_minor_adjustment_duration = 2 * ((phy->sf_offset_filtered - 250) / insync_minor_adjustment_2);
+							//	}
+							//	else if(phy->sf_offset_filtered < -250)
+							//	{
+							//		// VNF is fast
+							//		phy->insync_minor_adjustment = -(insync_minor_adjustment_2);
+							//		phy->insync_minor_adjustment_duration = 2 * ((phy->sf_offset_filtered + 250) / -(insync_minor_adjustment_2));
+							//	}
+							//}
 							//else
 							{
 								// out of sync?
