@@ -2855,17 +2855,24 @@ get_tmode(module_id_t module_idP,
     return (cc->p_eNB);
   }
 
-  AssertFatal(physicalConfigDedicated->antennaInfo != NULL,
-              "antennaInfo (mod_id %d) is null for CCId %d, UEid %d, physicalConfigDedicated %p\n",
-              module_idP,
+  if(physicalConfigDedicated->antennaInfo == NULL){
+    LOG_E(MAC,"antennaInfo (mod_id %d) is null for CCId %d, UEid %d, physicalConfigDedicated %p\n",              module_idP,
               CC_idP,
               UE_idP,
               physicalConfigDedicated);
-  AssertFatal(physicalConfigDedicated->antennaInfo->present != LTE_PhysicalConfigDedicated__antennaInfo_PR_NOTHING,
-              "antennaInfo (mod_id %d, CC_id %d) is set to NOTHING\n",
+    AssertFatal(cc->p_eNB <= 2, "p_eNB is %d, should be <2\n",
+                cc->p_eNB);
+    return (cc->p_eNB);
+  }
+  if(physicalConfigDedicated->antennaInfo->present == LTE_PhysicalConfigDedicated__antennaInfo_PR_NOTHING){
+    LOG_E(MAC,"antennaInfo (mod_id %d, CC_id %d) is set to NOTHING\n",
               module_idP,
               CC_idP);
-
+    AssertFatal(cc->p_eNB <= 2, "p_eNB is %d, should be <2\n",
+                cc->p_eNB);
+    return (cc->p_eNB);
+  }
+  
   if (physicalConfigDedicated->antennaInfo->present == LTE_PhysicalConfigDedicated__antennaInfo_PR_explicitValue) {
     return UE_list->UE_template[CC_idP][UE_idP].tm;
   }
