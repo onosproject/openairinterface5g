@@ -1092,6 +1092,11 @@ int x2ap_eNB_handle_handover_cancel (instance_t instance,
                "\tie->value.choice.Cause.choice.radioNetwork=%ld\n"
                "\tie->value.choice.Cause.choice.radioNetwork=%ld\n",ie->value.present,ie->value.choice.Cause.present,
                ie->value.choice.Cause.choice.radioNetwork,ie->value.choice.Cause.choice.radioNetwork);
+    X2AP_ERROR("\tX2AP_HandoverCancel_IEs__value_PR_Cause=%d\n"
+               "\tX2AP_Cause_PR_radioNetwork=%d\n"
+               "\tX2AP_CauseRadioNetwork_trelocprep_expiry=%d\n"
+               "\tX2AP_CauseRadioNetwork_tx2relocoverall_expiry=%d\n",X2AP_HandoverCancel_IEs__value_PR_Cause,X2AP_Cause_PR_radioNetwork,
+			   X2AP_CauseRadioNetwork_trelocprep_expiry,X2AP_CauseRadioNetwork_tx2relocoverall_expiry);
     //return -1;
   }
   cause = X2AP_UNKNOWN_CAUSE;
