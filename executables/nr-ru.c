@@ -625,55 +625,80 @@ void *emulatedRF_thread(void *param) {
 void rx_rf(RU_t *ru,int *frame,int *slot) {
   RU_proc_t *proc = &ru->proc;
   NR_DL_FRAME_PARMS *fp = ru->nr_frame_parms;
+  nfapi_nr_config_request_scf_t *cfg = &ru->gNB_list[0]->gNB_config;
   void *rxp[ru->nb_rx];
-  unsigned int rxs;
+  unsigned int rxs, siglen;
   int i;
   uint32_t samples_per_slot = fp->get_samples_per_slot(*slot,fp);
-  openair0_timestamp ts,old_ts;
+  openair0_timestamp ts;
+
   AssertFatal(*slot<fp->slots_per_frame && *slot>=0, "slot %d is illegal (%d)\n",*slot,fp->slots_per_frame);
+
+  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_READ, 1 );
 
   for (i=0; i<ru->nb_rx; i++)
     rxp[i] = (void *)&ru->common.rxdata[i][fp->get_samples_slot_timestamp(*slot,fp,0)];
 
-  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_READ, 1 );
-  old_ts = proc->timestamp_rx;
-  LOG_D(PHY,"Reading %d samples for slot %d (%p)\n",samples_per_slot,*slot,rxp[0]);
-
-  if(emulate_rf) {
-    wait_on_condition(&proc->mutex_emulateRF,&proc->cond_emulateRF,&proc->instance_cnt_emulateRF,"emulatedRF_thread");
-    release_thread(&proc->mutex_emulateRF,&proc->instance_cnt_emulateRF,"emulatedRF_thread");
-    rxs = samples_per_slot;
-    ts = old_ts + rxs;
-  } else {
-    rxs = ru->rfdevice.trx_read_func(&ru->rfdevice,
-                                     &ts,
-                                     rxp,
-                                     samples_per_slot,
-                                     ru->nb_rx);
+  //when the USRP starts, it initializes the timestamp to 0. We wait 1 frames until we program the first rx. 
+  if (proc->first_rx==1) {
+    proc->timestamp_rx = fp->samples_per_frame;
+    proc->first_rx = 0;
   }
+  else {
+    //we always advance the timestamp by samples_per_slot, even if we have not read the (full) slot. This is to keep the timestamp updated even when there is no RX.
+    proc->timestamp_rx += fp->get_samples_per_slot(*slot%fp->slots_per_frame,fp);
+  }
+  
+  int slot_type         = nr_slot_select(cfg,*frame,*slot%fp->slots_per_frame);
 
+  if (slot_type == NR_UPLINK_SLOT || slot_type == NR_MIXED_SLOT || IS_SOFTMODEM_RFSIM) {
+      
+    if (slot_type == NR_MIXED_SLOT) {
+      uint16_t rxsymb = 0;
+      for(uint16_t symbol_count =0;symbol_count<fp->symbols_per_slot;symbol_count++) {
+	if (cfg->tdd_table.max_tdd_periodicity_list[*slot].max_num_of_symbol_per_slot_list[symbol_count].slot_config.value==1)
+	  rxsymb++;
+      }
+      AssertFatal(rxsymb>0,"illegal rxsymb %d\n",rxsymb);
+      //TODO: this has to be adapted for numerology!=1
+      siglen = (fp->ofdm_symbol_size + fp->nb_prefix_samples0) + (rxsymb - 1) * (fp->ofdm_symbol_size + fp->nb_prefix_samples);
+      proc->timestamp_rx += fp->get_samples_per_slot(*slot%fp->slots_per_frame,fp) - siglen;
+
+      //TODO: the 3rd parameter has to be adapted for arbitrary TDD configurations
+      ru->rfdevice.trx_issue_stream_cmd(&ru->rfdevice,
+					proc->timestamp_rx,
+					siglen+2*fp->get_samples_per_slot(*slot,fp));
+      
+    }
+    else {
+      siglen = samples_per_slot;
+    }
+
+    LOG_D(PHY,"Reading %d samples for slot %d at timestamp %ld\n",siglen,*slot,proc->timestamp_rx);
+
+    if(emulate_rf) {
+      wait_on_condition(&proc->mutex_emulateRF,&proc->cond_emulateRF,&proc->instance_cnt_emulateRF,"emulatedRF_thread");
+      release_thread(&proc->mutex_emulateRF,&proc->instance_cnt_emulateRF,"emulatedRF_thread");
+      rxs = siglen;
+    }
+    else {
+      rxs = ru->rfdevice.trx_read_func(&ru->rfdevice,
+				       &ts,
+				       rxp,
+				       siglen,
+				       ru->nb_rx);
+    }
+
+    //AssertFatal(rxs == siglen,"rx_rf: Asked for %d samples, got %d from USRP\n",siglen,rxs);
+    if (rxs != siglen) LOG_E(PHY, "rx_rf: Asked for %d samples, got %d from USRP\n",siglen,rxs);
+
+  }
 
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_READ, 0 );
-  proc->timestamp_rx = ts-ru->ts_offset;
 
-  //AssertFatal(rxs == fp->samples_per_subframe,
-  //"rx_rf: Asked for %d samples, got %d from USRP\n",fp->samples_per_subframe,rxs);
-  if (rxs != samples_per_slot) LOG_E(PHY, "rx_rf: Asked for %d samples, got %d from USRP\n",samples_per_slot,rxs);
+  proc->frame_rx     = *frame; 
+  proc->tti_rx       = *slot; 
 
-  if (proc->first_rx == 1) {
-    ru->ts_offset = proc->timestamp_rx;
-    proc->timestamp_rx = 0;
-  } else {
-    if (proc->timestamp_rx - old_ts != fp->get_samples_per_slot((*slot-1)%fp->slots_per_frame,fp)) {
-      LOG_D(PHY,"rx_rf: rfdevice timing drift of %"PRId64" samples (ts_off %"PRId64")\n",proc->timestamp_rx - old_ts - samples_per_slot,ru->ts_offset);
-      ru->ts_offset += (proc->timestamp_rx - old_ts - samples_per_slot);
-      proc->timestamp_rx = ts-ru->ts_offset;
-    }
-  }
-
-  proc->frame_rx    = (proc->timestamp_rx / (fp->samples_per_subframe*10))&1023;
-  uint32_t idx_sf = proc->timestamp_rx / fp->samples_per_subframe;
-  proc->tti_rx = (idx_sf * fp->slots_per_subframe + (int)round((float)(proc->timestamp_rx % fp->samples_per_subframe) / fp->samples_per_slot0))%(fp->slots_per_frame);
   // synchronize first reception to frame 0 subframe 0
   LOG_D(PHY,"RU %d/%d TS %llu (off %d), frame %d, slot %d.%d / %d\n",
         ru->idx,
@@ -687,29 +712,9 @@ void rx_rf(RU_t *ru,int *frame,int *slot) {
     VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME( VCD_SIGNAL_DUMPER_VARIABLES_TTI_NUMBER_RX0_RU, proc->tti_rx );
   }
 
-  if (proc->first_rx == 0) {
-    if (proc->tti_rx != *slot) {
-      LOG_E(PHY,"Received Timestamp (%llu) doesn't correspond to the time we think it is (proc->tti_rx %d, slot %d)\n",(long long unsigned int)proc->timestamp_rx,proc->tti_rx,*slot);
-      exit_fun("Exiting");
-    }
-
-    if (proc->frame_rx != *frame) {
-      LOG_E(PHY,"Received Timestamp (%llu) doesn't correspond to the time we think it is (proc->frame_rx %d frame %d)\n",(long long unsigned int)proc->timestamp_rx,proc->frame_rx,*frame);
-      exit_fun("Exiting");
-    }
-  } else {
-    proc->first_rx = 0;
-    *frame = proc->frame_rx;
-    *slot  = proc->tti_rx;
-  }
-
   //printf("timestamp_rx %lu, frame %d(%d), subframe %d(%d)\n",ru->timestamp_rx,proc->frame_rx,frame,proc->tti_rx,subframe);
   VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME( VCD_SIGNAL_DUMPER_VARIABLES_TRX_TS, proc->timestamp_rx&0xffffffff );
 
-  if (rxs != samples_per_slot) {
-    //exit_fun( "problem receiving samples" );
-    LOG_E(PHY, "problem receiving samples\n");
-  }
 }
 
 
@@ -735,7 +740,7 @@ void tx_rf(RU_t *ru,int frame,int slot, uint64_t timestamp) {
 
     if(slot_type == NR_MIXED_SLOT) {
       txsymb = 0;
-      for(int symbol_count =0;symbol_count<NR_NUMBER_OF_SYMBOLS_PER_SLOT;symbol_count++) {
+      for(int symbol_count =0;symbol_count<fp->symbols_per_slot;symbol_count++) {
         if (cfg->tdd_table.max_tdd_periodicity_list[slot].max_num_of_symbol_per_slot_list[symbol_count].slot_config.value==0)
           txsymb++;
       }
@@ -920,6 +925,7 @@ int wakeup_synch(RU_t *ru) {
   return(0);
 }
 
+/*
 void do_ru_synch(RU_t *ru) {
   NR_DL_FRAME_PARMS *fp  = ru->nr_frame_parms;
   RU_proc_t *proc         = &ru->proc;
@@ -991,7 +997,7 @@ void do_ru_synch(RU_t *ru) {
 
   ru->rfdevice.trx_set_freq_func(&ru->rfdevice,ru->rfdevice.openair0_cfg,0);
 }
-
+*/
 
 
 void wakeup_gNB_L1s(RU_t *ru) {
@@ -1150,6 +1156,9 @@ void fill_rf_config(RU_t *ru, char *rf_config_file) {
   cfg->num_rb_dl=N_RB;
   cfg->tx_num_channels=ru->nb_tx;
   cfg->rx_num_channels=ru->nb_rx;
+  cfg->clock_source=get_softmodem_params()->clock_source;
+  cfg->use_single_antenna_port_for_tdd=1; //TODO: make this parameterzable
+
 
   for (i=0; i<ru->nb_tx; i++) {
     if (ru->if_frequency == 0) {
@@ -1481,7 +1490,7 @@ void *ru_thread( void *param ) {
     } else LOG_I(PHY,"RU %d no asynch_south interface\n",ru->idx);
 
     // if this is a slave RRU, try to synchronize on the DL frequency
-    if ((ru->is_slave) && (ru->if_south == LOCAL_RF)) do_ru_synch(ru);
+    //if ((ru->is_slave) && (ru->if_south == LOCAL_RF)) do_ru_synch(ru);
   }
 
   pthread_mutex_lock(&proc->mutex_FH1);

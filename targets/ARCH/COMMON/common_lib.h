@@ -235,6 +235,8 @@ typedef struct {
   double tx_sample_rate;
   //! check for threequarter sampling rate
   int8_t threequarter_fs;
+  //! flag to indicate use of same antenna port for RX and TX (for TDD)
+  int8_t use_single_antenna_port_for_tdd;
 } openair0_config_t;
 
 /*! \brief RF mapping */
@@ -356,6 +358,8 @@ struct openair0_device_t {
    * \returns the number of sample read
    */
   int (*trx_read_func)(openair0_device *device, openair0_timestamp *ptimestamp, void **buff, int nsamps,int antenna_id);
+
+  int (*trx_issue_stream_cmd)(openair0_device *device, openair0_timestamp ptimestamp, int nsamps);
 
   /*! \brief print the device statistics
    * \param device the hardware to use
