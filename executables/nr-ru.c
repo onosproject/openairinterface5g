@@ -640,8 +640,9 @@ void rx_rf(RU_t *ru,int *frame,int *slot) {
 
   LOG_D(PHY,"Reading %d samples for slot %d (%p)\n",samples_per_slot,*slot,rxp[0]);
 
+  //when the USRP starts, it initializes the timestamp to 0. We wait 10 frames until we program the first rx. 
   if (proc->first_rx==1) {
-    proc->timestamp_rx = 0;
+    proc->timestamp_rx = fp->samples_per_frame*10;
     proc->first_rx = 0;
   }
   

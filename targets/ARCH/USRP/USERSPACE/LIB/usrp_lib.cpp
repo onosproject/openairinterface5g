@@ -288,27 +288,18 @@ static int trx_usrp_start(openair0_device *device) {
   // set the output pins to 1
   s->usrp->set_gpio_attr("FP0", "OUT", 7<<7, 0xf80);
 
-  // init recv and send streaming
-  uhd::stream_cmd_t cmd(uhd::stream_cmd_t::STREAM_MODE_START_CONTINUOUS);
-  LOG_I(HW,"Time in secs now: %llu \n", s->usrp->get_time_now().to_ticks(s->sample_rate));
-  LOG_I(HW,"Time in secs last pps: %llu \n", s->usrp->get_time_last_pps().to_ticks(s->sample_rate));
-  
   if (s->use_gps == 1 || device->openair0_cfg[0].time_source == external) {
     s->wait_for_first_pps = 1;
-    cmd.time_spec = s->usrp->get_time_last_pps() + uhd::time_spec_t(1.0);
   } else {
     s->wait_for_first_pps = 0;
-    cmd.time_spec = s->usrp->get_time_now() + uhd::time_spec_t(0.005);
   }
 
-  cmd.stream_now = false; // start at constant delay
-  s->rx_stream->issue_stream_cmd(cmd);
-  /*s->tx_md.time_spec = cmd.time_spec + uhd::time_spec_t(1-(double)s->tx_forward_nsamps/s->sample_rate);
-  s->tx_md.has_time_spec = true;
-  s->tx_md.start_of_burst = true;
-  s->tx_md.end_of_burst = false;*/
+  s->usrp->set_time_now(uhd::time_spec_t(0.0));
+
   s->rx_count = 0;
   s->tx_count = 0;
+  s->first_tx = 0;
+  s->first_rx = 0;
   s->rx_timestamp = 0;
   return 0;
 }
@@ -325,12 +316,14 @@ static void trx_usrp_end(openair0_device *device) {
     return;
 
   if (s->recplay_mode != RECPLAY_REPLAYMODE) { // not subframes replay
+    /*
     s->rx_stream->issue_stream_cmd(uhd::stream_cmd_t::STREAM_MODE_STOP_CONTINUOUS);
     //send a mini EOB packet
     s->tx_md.end_of_burst = true;
     s->tx_stream->send("", 0, s->tx_md);
     s->tx_md.end_of_burst = false;
     sleep(1);
+    */
   }
 
   if (s->recplay_mode == RECPLAY_RECORDMODE) { // subframes store
@@ -644,9 +637,6 @@ static int trx_usrp_read(openair0_device *device, openair0_timestamp ptimestamp,
   int16x8_t buff_tmp[2][nsamps2];
 #endif
 
-  if (ptimestamp==0)
-    s->usrp->set_time_now(uhd::time_spec_t(0.0));
-  
   uhd::stream_cmd_t stream_cmd(uhd::stream_cmd_t::STREAM_MODE_NUM_SAMPS_AND_DONE);
   stream_cmd.num_samps = nsamps;
   stream_cmd.stream_now = false;
