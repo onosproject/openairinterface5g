@@ -294,12 +294,10 @@ static int trx_usrp_start(openair0_device *device) {
     s->wait_for_first_pps = 0;
   }
 
-  s->usrp->set_time_now(uhd::time_spec_t(0.0));
-
   s->rx_count = 0;
   s->tx_count = 0;
-  s->first_tx = 0;
-  s->first_rx = 0;
+  s->first_tx = 1;
+  s->first_rx = 1;
   s->rx_timestamp = 0;
   return 0;
 }
@@ -637,12 +635,20 @@ static int trx_usrp_read(openair0_device *device, openair0_timestamp ptimestamp,
   int16x8_t buff_tmp[2][nsamps2];
 #endif
 
+  if (s->first_rx==1) {
+    s->usrp->set_time_now(uhd::time_spec_t(0.0));
+    s->first_rx=0;
+  }
+
   uhd::stream_cmd_t stream_cmd(uhd::stream_cmd_t::STREAM_MODE_NUM_SAMPS_AND_DONE);
   stream_cmd.num_samps = nsamps;
   stream_cmd.stream_now = false;
   stream_cmd.time_spec = uhd::time_spec_t(ptimestamp,s->sample_rate);
 
   s->rx_stream->issue_stream_cmd(stream_cmd);
+
+  LOG_I(HW,"Time in ticks now: %llu \n", s->usrp->get_time_now().to_ticks(s->sample_rate));
+  LOG_I(HW,"rx_timestamp in ticks: %llu \n", ptimestamp);
   
     if (cc>1) {
       // receive multiple channels (e.g. RF A and RF B)
@@ -693,8 +699,9 @@ static int trx_usrp_read(openair0_device *device, openair0_timestamp ptimestamp,
       }
     }
 
-  if (samples_received < nsamps)
-    LOG_E(HW,"[recv] received %d samples out of %d\n",samples_received,nsamps);
+    if (samples_received < nsamps) {
+      LOG_E(HW,"[recv] received %d samples out of %d\n",samples_received,nsamps);
+    }
 
   if ( s->rx_md.error_code != uhd::rx_metadata_t::ERROR_CODE_NONE)
     LOG_E(HW, "%s\n", s->rx_md.to_pp_string(true).c_str());

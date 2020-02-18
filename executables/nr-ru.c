@@ -640,10 +640,14 @@ void rx_rf(RU_t *ru,int *frame,int *slot) {
 
   LOG_D(PHY,"Reading %d samples for slot %d (%p)\n",samples_per_slot,*slot,rxp[0]);
 
-  //when the USRP starts, it initializes the timestamp to 0. We wait 10 frames until we program the first rx. 
+  //when the USRP starts, it initializes the timestamp to 0. We wait 1 frames until we program the first rx. 
   if (proc->first_rx==1) {
-    proc->timestamp_rx = fp->samples_per_frame*10;
+    proc->timestamp_rx = fp->samples_per_frame;
     proc->first_rx = 0;
+  }
+  else {
+    //we always advance the timestamp by samples_per_slot, even if we have not read the (full) slot. This is to keep the timestamp updated even when there is no RX.
+    proc->timestamp_rx += samples_per_slot;
   }
   
   int slot_type         = nr_slot_select(cfg,*frame,*slot%fp->slots_per_frame);
@@ -683,8 +687,6 @@ void rx_rf(RU_t *ru,int *frame,int *slot) {
 
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_READ, 0 );
 
-  //we always advance the timestamp by samples_per_slot, even if we have not read the (full) slot. This is to keep the timestamp updated even when there is no RX.
-  proc->timestamp_rx += samples_per_slot;
   proc->frame_rx     = *frame; 
   proc->tti_rx       = *slot; 
 
