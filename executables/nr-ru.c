@@ -647,12 +647,12 @@ void rx_rf(RU_t *ru,int *frame,int *slot) {
   }
   else {
     //we always advance the timestamp by samples_per_slot, even if we have not read the (full) slot. This is to keep the timestamp updated even when there is no RX.
-    proc->timestamp_rx += samples_per_slot;
+    proc->timestamp_rx += fp->get_samples_per_slot((*slot-1)%fp->slots_per_frame,fp);
   }
   
   int slot_type         = nr_slot_select(cfg,*frame,*slot%fp->slots_per_frame);
 
-  if (slot_type == NR_DOWNLINK_SLOT || slot_type == NR_MIXED_SLOT || IS_SOFTMODEM_RFSIM) {
+  if (slot_type == NR_UPLINK_SLOT || slot_type == NR_MIXED_SLOT || IS_SOFTMODEM_RFSIM) {
       
     if (slot_type == NR_MIXED_SLOT) {
       uint16_t rxsymb = 0;
