@@ -186,7 +186,8 @@ void fill_ulsch_dci(PHY_VARS_eNB *eNB,
                     uint8_t beta_RI,
                     uint8_t cqi_size) {
   nfapi_ul_config_request_body_t *ul_req=&sched_resp->UL_req->ul_config_request_body;
-  int harq_pid = ((frame*10)+subframe)&7;
+  //int harq_pid = ((frame*10)+subframe)&7;
+  int harq_pid = subframe2harq_pid(&eNB->frame_parms,frame,subframe);
 
   //printf("ulsch in frame %d, subframe %d => harq_pid %d, mcs %d, ndi %d\n",frame,subframe,harq_pid,mcs,ndi);
 
@@ -729,7 +730,7 @@ int main(int argc, char **argv) {
   UE2eNB->max_Doppler = maxDoppler;
 
   // NN: N_RB_UL has to be defined in ulsim
-  for (int k=0; k<NUMBER_OF_UE_MAX; k++) eNB->ulsch[k] = new_eNB_ulsch(max_turbo_iterations,N_RB_DL,0);
+  for (int k=0; k<=NUMBER_OF_UE_MAX; k++) eNB->ulsch[k] = new_eNB_ulsch(max_turbo_iterations,N_RB_DL,0);
 
   UE->ulsch[0]   = new_ue_ulsch(N_RB_DL,0);
   printf("ULSCH %p\n",UE->ulsch[0]);
