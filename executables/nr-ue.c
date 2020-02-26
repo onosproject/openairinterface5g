@@ -635,6 +635,7 @@ int computeSamplesShift(PHY_VARS_NR_UE *UE) {
 }
 
 void *UE_thread(void *arg) {
+  int f_name_idx = 0;
   //this thread should be over the processing thread to keep in real time
   PHY_VARS_NR_UE *UE = (PHY_VARS_NR_UE *) arg;
   //  int tx_enabled = 0;
@@ -680,6 +681,18 @@ void *UE_thread(void *arg) {
 
     if (!UE->is_synchronized) {
       readFrame(UE, &timestamp, false);
+      char filename[40];
+      sprintf(filename,"rxdata_frame_ue_%d.dat",f_name_idx);
+      FILE *output_fd = fopen(filename,"w");
+
+      if (output_fd) {
+        fwrite(&UE->common_vars.rxdata[0][0],
+               sizeof(int32_t),
+               UE->frame_parms.samples_per_subframe*20,
+               output_fd);
+        fclose(output_fd);
+      }
+      f_name_idx++;
       notifiedFIFO_elt_t *Msg=newNotifiedFIFO_elt(sizeof(syncData_t),0,&nf,UE_synch);
       syncData_t *syncMsg=(syncData_t *)NotifiedFifoData(Msg);
       syncMsg->UE=UE;

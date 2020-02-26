@@ -334,6 +334,7 @@ int do_pss_sss_extract_nr(PHY_VARS_NR_UE *ue,
     rxdataF  =  ue->common_vars.common_vars_rx_data_per_thread[ue->current_thread_id[subframe]].rxdataF;
 
     unsigned int ofdm_symbol_size = frame_parms->ofdm_symbol_size;
+  write_output("pss_rxF.m","pss_rxF",rxdataF[aarx],ofdm_symbol_size,1,1);
 
     pss_rxF  =  &rxdataF[aarx][pss_symbol*ofdm_symbol_size];
     sss_rxF  =  &rxdataF[aarx][sss_symbol*ofdm_symbol_size];
@@ -437,6 +438,7 @@ int rx_sss_nr(PHY_VARS_NR_UE *ue, int32_t *tot_metric,uint8_t *phase_max)
                      sss_ext,
                      0);          /* subframe */
 
+  write_output("pss_ext.m","pss_ext",pss_ext,LENGTH_PSS_NR,1,1);
 #ifdef DEBUG_PLOT_SSS
 
   write_output("rxsig0.m","rxs0",&ue->common_vars.rxdata[0][0],ue->frame_parms.samples_per_subframe,1,1);

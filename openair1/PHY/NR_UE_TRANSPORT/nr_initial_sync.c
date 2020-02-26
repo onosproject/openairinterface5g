@@ -245,10 +245,10 @@ int nr_initial_sync(UE_nr_rxtx_proc_t *proc, PHY_VARS_NR_UE *ue, runmode_t mode,
     else
       ue->ssb_offset = sync_pos + (fp->samples_per_subframe * 10) - fp->nb_prefix_samples;
 
-#ifdef DEBUG_INITIAL_SYNCH
+//#ifdef DEBUG_INITIAL_SYNCH
     LOG_I(PHY,"[UE%d] Initial sync : Estimated PSS position %d, Nid2 %d\n", ue->Mod_id, sync_pos,ue->common_vars.eNb_id);
-    LOG_I(PHY,"sync_pos %d ssb_offset %d \n",sync_pos,ue->ssb_offset);
-#endif
+    LOG_I(PHY,"sync_pos %d ssb_offset %d frame %d\n",sync_pos,ue->ssb_offset,is);
+//#endif
 
     // digital compensation of FFO for SSB symbols
     if (ue->UE_fo_compensation){  
