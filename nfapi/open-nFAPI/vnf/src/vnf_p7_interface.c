@@ -180,7 +180,7 @@ int nfapi_vnf_p7_start(nfapi_vnf_p7_config_t* config)
 	sf_duration.tv_nsec = 1e6; // We want 1ms pause
 
 	struct timespec sf_start;
-	clock_gettime(CLOCK_MONOTONIC, &sf_start);
+	clock_gettime(CLOCK_MONOTONIC_RAW, &sf_start);
 	long millisecond = sf_start.tv_nsec / 1e6;
 	sf_start = timespec_add(sf_start, sf_duration);
 	NFAPI_TRACE(NFAPI_TRACE_INFO, "next subframe will start at %d.%d\n", sf_start.tv_sec, sf_start.tv_nsec);
@@ -241,7 +241,7 @@ int nfapi_vnf_p7_start(nfapi_vnf_p7_config_t* config)
 			}
 		}
 #else
-	clock_gettime(CLOCK_MONOTONIC, &pselect_start);
+	clock_gettime(CLOCK_MONOTONIC_RAW, &pselect_start);
 	//long millisecond = pselect_start.tv_nsec / 1e6;
 
 	if((last_millisecond == -1) || (millisecond == last_millisecond) || (millisecond == (last_millisecond + 1) % 1000) )
@@ -258,7 +258,7 @@ int nfapi_vnf_p7_start(nfapi_vnf_p7_config_t* config)
 		}
 		selectRetval = pselect(maxSock+1, &rfds, NULL, NULL, &pselect_timeout, NULL);
 
-		clock_gettime(CLOCK_MONOTONIC, &pselect_stop);
+		clock_gettime(CLOCK_MONOTONIC_RAW, &pselect_stop);
 
 		nfapi_vnf_p7_connection_info_t* phy = vnf_p7->p7_connections;
 
@@ -402,7 +402,7 @@ int nfapi_vnf_p7_time(nfapi_vnf_p7_config_t* config){
   FD_ZERO(&readfds);
   FD_SET(vnf_p7->fapi_1ms_fd_list[0], &readfds);
 
-  clock_gettime(CLOCK_MONOTONIC, &sf_start);
+  clock_gettime(CLOCK_MONOTONIC_RAW, &sf_start);
   //long millisecond = sf_start.tv_nsec / 1e6;
   sf_start = timespec_add(sf_start, sf_duration);
   NFAPI_TRACE(NFAPI_TRACE_INFO, "next subframe will start at %d.%d\n", sf_start.tv_sec, sf_start.tv_nsec);
@@ -440,7 +440,7 @@ int nfapi_vnf_p7_time(nfapi_vnf_p7_config_t* config){
 	usleep_time = sf_duration.tv_nsec / 1000;
 //	usleep(usleep_time);
 
-	clock_gettime(CLOCK_MONOTONIC, &p1);
+	clock_gettime(CLOCK_MONOTONIC_RAW, &p1);
 	p3 = timespec_sub(p1,p2);
 	p2=p1;
 
