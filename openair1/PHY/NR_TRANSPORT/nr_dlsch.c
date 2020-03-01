@@ -37,7 +37,7 @@
 #include "nr_dci.h"
 #include "nr_sch_dmrs.h"
 #include "PHY/MODULATION/nr_modulation.h"
-
+#define thread_for_scrambling_modulation
 //#define DEBUG_DLSCH
 //#define DEBUG_DLSCH_MAPPING
 
@@ -88,20 +88,23 @@ uint8_t nr_generate_pdsch(NR_gNB_DLSCH_t *dlsch,
   PHY_VARS_gNB *gNB = RC.gNB[0][0];
   NR_DL_gNB_HARQ_t *harq = dlsch->harq_processes[dci_alloc->harq_pid];
   nfapi_nr_dl_config_dlsch_pdu_rel15_t *rel15 = &harq->dlsch_pdu.dlsch_pdu_rel15;
-  //nfapi_nr_dl_config_pdcch_parameters_rel15_t pdcch_params = dci_alloc->pdcch_params;
-  //uint32_t scrambled_output[NR_MAX_NB_CODEWORDS][NR_MAX_PDSCH_ENCODED_LENGTH>>5];
+  nfapi_nr_dl_config_pdcch_parameters_rel15_t pdcch_params = dci_alloc->pdcch_params;
+  uint32_t scrambled_output[NR_MAX_NB_CODEWORDS][NR_MAX_PDSCH_ENCODED_LENGTH>>5];
   int16_t **mod_symbs = (int16_t**)dlsch->mod_symbs;
   int16_t **tx_layers = (int16_t**)dlsch->txdataF;
   int8_t Wf[2], Wt[2], l0, l_prime[2], delta;
   uint16_t nb_symbols = rel15->nb_mod_symbols;
-  //uint8_t Qm = rel15->modulation_order;
-  //uint32_t encoded_length = nb_symbols*Qm;
-  //printf("encoded_length = %d\n",encoded_length);
+  struct timespec tt1, tt2, tt3, tt4, tt5;
+  uint8_t Qm = rel15->modulation_order;
+  uint32_t encoded_length = nb_symbols*Qm;
+  gNB->complete_scrambling_and_modulation = 0;
   gNB->complete_scrambling = 0;
   gNB->complete_modulation = 0;
-  for(int q = 0 ;q<13;q++){
+  /*
+  for(int q = 0 ;q<NR_MAX_NB_CODEWORDS;q++){
 	gNB->q_scrambling[q] = 0;
   }
+  */
   /// CRC, coding, interleaving and rate matching
   AssertFatal(harq->pdu!=NULL,"harq->pdu is null\n");
   start_meas(dlsch_encoding_stats);
@@ -123,16 +126,34 @@ for (int i=0; i<encoded_length>>3; i++) {
 }
 printf("\n");
 #endif
-
-	pthread_cond_signal(&gNB->thread_modulation.cond_tx);
-	pthread_cond_signal(&gNB->thread_scrambling.cond_tx);
-	while(gNB->complete_scrambling != 1);
+	long sum  = 0;
+#ifdef thread_for_scrambling_modulation
+//	for(int j = 0;j<100;j++){
+		gNB->complete_scrambling_and_modulation = 0;
+		gNB->complete_modulation = 0;
+		clock_gettime(CLOCK_REALTIME, &tt3);
+		//clock_gettime(CLOCK_REALTIME, &tt1);
+		//pthread_cond_signal(&gNB->thread_modulation.cond_tx);
+		for (int q=0; q<rel15->nb_codewords; q++)
+			pthread_cond_signal(&gNB->thread_scrambling[q].cond_tx);
+		//clock_gettime(CLOCK_REALTIME, &tt2);
+		//printf("pthread_cond_signal thread_scrambling [%d]  consumes %ld nanoseconds!\n",j,tt2.tv_nsec - tt1.tv_nsec);
+		//while(gNB->complete_modulation != 1);
+		//clock_gettime(CLOCK_REALTIME, &tt1);
+		while(gNB->complete_scrambling_and_modulation != 1);
+		//clock_gettime(CLOCK_REALTIME, &tt2);
+		//printf(" busy waiting for  [%d]  consumes %ld nanoseconds!\n",j,tt2.tv_nsec - tt1.tv_nsec);
+		clock_gettime(CLOCK_REALTIME, &tt4);
+		//usleep(100000);
+	//	printf("scrambling_proc[] for all consumes %ld nanoseconds!%%%%%%%%%%%%%%%\n",tt4.tv_nsec - tt3.tv_nsec);
+//		sum += (tt4.tv_nsec - tt3.tv_nsec);
+//	}
+//	printf("averge time = %ld\n",sum/100);
 	
-	while(gNB->complete_modulation != 1);
-	/*
+#else
   /// scrambling
   start_meas(dlsch_scrambling_stats);
-  printf("nb_codewords = %d encoded_length = %d\n",rel15->nb_codewords,encoded_length);
+  //printf("nb_codewords = %d encoded_length = %d\n",rel15->nb_codewords,encoded_length);
   for (int q=0; q<rel15->nb_codewords; q++)
     memset((void*)scrambled_output[q], 0, (encoded_length>>5)*sizeof(uint32_t));
   uint16_t n_RNTI = (pdcch_params.search_space_type == NFAPI_NR_SEARCH_SPACE_TYPE_UE_SPECIFIC)? \
@@ -174,8 +195,8 @@ for (int i=0; i<nb_symbols>>3; i++) {
   printf("\n");
 }
 #endif
-*/
 
+#endif
   /// Layer mapping
   nr_layer_mapping(mod_symbs,
                          rel15->nb_layers,
