@@ -15,12 +15,12 @@
 
 FROM ubuntu:16.04 AS oai-base
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
-    sudo \
     vim-common \
     git \
-    build-essential \
-    cmake \
  && rm -rf /var/lib/apt/lists/*
+
+# In Eurecom env we need a git proxy
+RUN if [[ -v EURECOM_PROXY ]]; then git config --global http.proxy http://proxy.eurecom.fr:8080; fi
 RUN git clone https://gitlab.eurecom.fr/oai/openairinterface5g/ /openairinterface5g -b develop
 
 

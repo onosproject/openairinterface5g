@@ -40,7 +40,14 @@ esac
 KERNEL_VERSION=$(uname -r | cut -d '.' -f1)
 KERNEL_MAJOR=$(uname -r | cut -d '.' -f2)
 
-SUDO='sudo -E'
+IS_CONTAINER=`egrep -c "docker|kubepods" /proc/self/cgroup`
+
+if [ $IS_CONTAINER -eq 0 ]
+then
+  SUDO='sudo -E'
+else
+  SUDO=''
+fi
 
 ###############################
 ## echo and  family
