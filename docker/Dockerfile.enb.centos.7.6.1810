@@ -1,0 +1,71 @@
+#
+# Copyright 2019-present Open Networking Foundation
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+ARG build_base
+
+FROM $build_base AS enb-builder
+WORKDIR /openairinterface5g
+ENV USER=root
+RUN /bin/bash -c "source oaienv" && cd cmake_targets && ./build_oai --eNB -w USRP --verbose-compile
+
+#FROM ubuntu:16.04 AS lte-softmodem
+FROM centos:7.6.1810 AS lte-softmodem
+RUN yum install nettle.x86_64 -y
+RUN yum install lksctp-tools.x86_64 -y
+RUN yum install libyaml.x86_64 -y
+RUN yum install linux-headers-4.15.0-74-generic -y
+RUN yum install iperf3.x86_64 -y
+RUN yum install blas.x86_64 -y
+RUN yum install atlas.x86_64 -y
+RUN yum install atlas-devel.x86_64 -y
+
+RUN yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm \
+    && REPOLIST="rhel-7-server-optional-rpms" \
+    && PKGLIST="boost libconfig lksctp-tools protobuf-c iproute iputils procps-ng bind-utils xforms nettle libyaml libusb" \
+    # && yum -y upgrade-minimal --setopt=tsflags=nodocs --security --sec-severity=Critical --sec-severity=Important && \
+    && yum -y install --enablerepo ${REPOLIST} --setopt=tsflag=nodocs ${PKGLIST} \
+    && yum -y clean all \
+    && rm -rf /var/cache/yum
+
+#RUN apt-get update && apt-get install -y \
+    #libssl1.0.0 \
+    #libnettle6 \
+    #libsctp1 \
+    #libforms2 \
+    #libprotobuf-c1 \
+    #libyaml-0-2 \
+    #libconfig9 \
+    #dnsutils \
+    #iproute2 \
+    #iputils-ping \
+ #&& rm -rf /var/lib/apt/lists/*
+
+WORKDIR /openairinterface5g/cmake_targets
+COPY --from=enb-builder /openairinterface5g/cmake_targets/ .
+
+# Label image
+ARG org_label_schema_version=unknown
+ARG org_label_schema_vcs_url=unknown
+ARG org_label_schema_vcs_ref=unknown
+ARG org_label_schema_build_date=unknown
+ARG org_opencord_vcs_commit_date=unknown
+
+LABEL org.label-schema.schema-version=1.0 \
+      org.label-schema.name=lte-softmodem \
+      org.label-schema.version=$org_label_schema_version \
+      org.label-schema.vcs-url=$org_label_schema_vcs_url \
+      org.label-schema.vcs-ref=$org_label_schema_vcs_ref \
+      org.label-schema.build-date=$org_label_schema_build_date \
+      org.opencord.vcs-commit-date=$org_opencord_vcs_commit_date
