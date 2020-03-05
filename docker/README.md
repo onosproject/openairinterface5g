@@ -13,9 +13,13 @@ sudo make docker-build-ubuntu-1804
 
 sudo docker run --net=host  --cap-add=NET_ADMIN --device /dev/net/tun:/dev/net/tun --env RFSIMULATOR=enb -it lte-softmodem:1.0.0_ubuntu.16.04 ran_build/build/lte-softmodem -O ../ci-scripts/conf_files/lte-fdd-mbms-basic-sim.conf --rfsim  --noS1 --nokrnmod 1
 
+sudo docker run --net=host --cap-add=NET_ADMIN --device /dev/net/tun:/dev/net/tun --env RFSIMULATOR=127.0.0.1 -it --privileged lte-uesoftmodem:1.0.0_ubuntu.16.04 ran_build/build/lte-uesoftmodem -r 25 --ue-rxgain 140 --ue-txgain 120 --rfsim --noS1 --nokrnmod 1
+
 * ubuntu 18.04 target
 
 sudo docker run --net=host  --cap-add=NET_ADMIN --device /dev/net/tun:/dev/net/tun --env RFSIMULATOR=enb -it lte-softmodem:1.0.0_ubuntu.18.04 ran_build/build/lte-softmodem -O ../ci-scripts/conf_files/lte-fdd-mbms-basic-sim.conf --rfsim  --noS1 --nokrnmod 1
+
+sudo docker run --net=host --cap-add=NET_ADMIN --device /dev/net/tun:/dev/net/tun --env RFSIMULATOR=127.0.0.1 -it --privileged lte-uesoftmodem:1.0.0_ubuntu.18.04 ran_build/build/lte-uesoftmodem -r 25 --ue-rxgain 140 --ue-txgain 120 --rfsim --noS1 --nokrnmod 1
 
 ## Authors
 
