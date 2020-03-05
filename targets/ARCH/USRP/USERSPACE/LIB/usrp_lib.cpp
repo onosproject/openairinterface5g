@@ -445,7 +445,7 @@ static int trx_usrp_write(openair0_device *device, openair0_timestamp timestamp,
   pthread_mutex_lock(&write_thread->mutex_write);
 
   if(write_thread->count_write >= MAX_WRITE_THREAD_PACKAGE){
-    LOG_W("Buffer overflow, count_write = %d, start = %d end = %d, resetting write package\n", write_thread->count_write, write_thread->start, write_thread->end);
+    LOG_W(HW,"Buffer overflow, count_write = %d, start = %d end = %d, resetting write package\n", write_thread->count_write, write_thread->start, write_thread->end);
     write_thread->end = write_thread->start;
     write_thread->count_write = 0;
   }
