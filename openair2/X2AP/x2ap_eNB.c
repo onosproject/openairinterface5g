@@ -474,7 +474,7 @@ void x2ap_eNB_handle_sgNB_add_req(instance_t instance,
   x2ap_set_ids(id_manager, ue_id, x2ap_ENDC_sgnb_addition_req->rnti, ue_id, -1);
   x2ap_id_set_state(id_manager, ue_id, X2ID_STATE_NSA_PREPARE);
 
-  x2ap_eNB_generate_ENDC_x2_SgNB_addition_request(instance_p, x2ap_eNB_data, ue_id);
+  x2ap_eNB_generate_ENDC_x2_SgNB_addition_request(instance_p, x2ap_ENDC_sgnb_addition_req, x2ap_eNB_data, ue_id);
 }
 
 static

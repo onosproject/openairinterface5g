@@ -4372,6 +4372,16 @@ rrc_eNB_process_MeasurementReport(
 
       msg = itti_alloc_new_message(TASK_RRC_ENB, X2AP_ENDC_SGNB_ADDITION_REQ);
       X2AP_ENDC_SGNB_ADDITION_REQ(msg).rnti = ctxt_pP->rnti;
+      //For the moment we have a single E-RAB which will be the one to be added to the gNB
+      //Not sure how to select bearers to be added if there are multiple.
+      X2AP_ENDC_SGNB_ADDITION_REQ(msg).nb_e_rabs_tobeadded = 1;
+      for (int e_rab=0; i< X2AP_ENDC_SGNB_ADDITION_REQ(msg).nb_e_rabs_tobeadded; e_rab++){
+    	  X2AP_ENDC_SGNB_ADDITION_REQ(msg).e_rabs_tobeadded[e_rab].e_rab_id = ue_context_pP->ue_context.e_rab[e_rab].param.e_rab_id;
+    	  X2AP_ENDC_SGNB_ADDITION_REQ(msg).e_rabs_tobeadded[e_rab].gtp_teid = ue_context_pP->ue_context.e_rab[e_rab].param.gtp_teid;
+    	        memcpy(&X2AP_ENDC_SGNB_ADDITION_REQ(msg).e_rabs_tobeadded[e_rab].sgw_addr,
+    	               &ue_context_pP->ue_context.e_rab[e_rab].param.sgw_addr,
+    	               sizeof(transport_layer_addr_t));
+      }
       LOG_I(RRC,
             "[eNB %d] frame %d subframe %d: UE rnti %x switching to NSA mode\n",
             ctxt_pP->module_id, ctxt_pP->frame, ctxt_pP->subframe, ctxt_pP->rnti);
@@ -8543,11 +8553,11 @@ void rrc_eNB_process_AdditionResponseInformation(const module_id_t enb_mod_idP, 
     while(j < m->nb_e_rabs_admitted_tobeadded){
         	for (int e_rab_idx=0; e_rab_idx<ue_context->ue_context.setup_e_rabs; e_rab_idx++){
         		//Update ue_context information with gNB's address and new GTP tunnel ID
-        		if( ue_context->ue_context.e_rab[e_rab_idx].param.e_rab_id == m->e_rabs_admitted_tobeadded[j].drb_ID){
+        		if( ue_context->ue_context.e_rab[e_rab_idx].param.e_rab_id == m->e_rabs_admitted_tobeadded[j].e_rab_id){
         			memcpy(ue_context->ue_context.gnb_gtp_endc_addrs[e_rab_idx].buffer,
-        					m->e_rabs_admitted_tobeadded[j].eNB_addr.buffer,
-        					m->e_rabs_admitted_tobeadded[j].eNB_addr.length);
-        			ue_context->ue_context.gnb_gtp_endc_addrs[e_rab_idx].length = m->e_rabs_admitted_tobeadded[j].eNB_addr.length;
+        					m->e_rabs_admitted_tobeadded[j].gnb_addr.buffer,
+        					m->e_rabs_admitted_tobeadded[j].gnb_addr.length);
+        			ue_context->ue_context.gnb_gtp_endc_addrs[e_rab_idx].length = m->e_rabs_admitted_tobeadded[j].gnb_addr.length;
         			ue_context->ue_context.gnb_gtp_endc_teid[e_rab_idx] = m->e_rabs_admitted_tobeadded[j].gtp_teid;
         			ue_context->ue_context.e_rab[e_rab_idx].status = E_RAB_STATUS_TOMODIFY;
         			break;
