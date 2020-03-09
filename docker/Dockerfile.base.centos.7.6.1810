@@ -24,6 +24,7 @@
 #
 
 FROM centos:7.6.1810 AS oai-base
+ARG EURECOM_PROXY
 RUN yum update -y && yum install -y \
 vim-common 	\
 git \
@@ -46,7 +47,7 @@ gcc-c++
 ENV USER=root
 
 # In Eurecom env we need a git proxy
-RUN if [[ -v EURECOM_PROXY ]]; then git config --global http.proxy http://proxy.eurecom.fr:8080; fi
+RUN /bin/bash -c "if [[ -v EURECOM_PROXY ]]; then git config --global http.proxy http://proxy.eurecom.fr:8080; fi"
 RUN GIT_SSL_NO_VERIFY=true git clone https://gitlab.eurecom.fr/oai/openairinterface5g.git /openairinterface5g -b develop
 
 WORKDIR /openairinterface5g
