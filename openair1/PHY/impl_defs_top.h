@@ -175,7 +175,7 @@
 #define SLOT_TIME_NS         (SLOT_LENGTH_SAMPLES*(1e3)/7.68)            // slot time in ns
 
 #define NB_ANTENNA_PORTS_ENB  6                                         // total number of eNB antenna ports
-#define NB_PUSCH_ANT_PORTS  4                                         // total number of eNB pusch antenna ports
+#define NB_PUSCH_ANT_PORTS  6                                         // total number of eNB pusch antenna ports
 
 #ifdef EXMIMO
 #define TARGET_RX_POWER 55    // Target digital power for the AGC

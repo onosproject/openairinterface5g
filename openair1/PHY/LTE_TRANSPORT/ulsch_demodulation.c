@@ -731,8 +731,8 @@ void ulsch_extract_rbs_single(int32_t **rxdataF,
   //uint8_t symbol = l+Ns*frame_parms->symbols_per_tti/2;
   uint8_t symbol = l+((7-frame_parms->Ncp)*(Ns&1)); ///symbol within sub-frame
 
-  AssertFatal((frame_parms->nb_antennas_rx>0) && (frame_parms->nb_antennas_rx<5),
-	      "nb_antennas_rx not in (1-4)\n");
+  AssertFatal((frame_parms->nb_antennas_rx>0) && (frame_parms->nb_antennas_rx<7),
+	      "nb_antennas_rx not in (1-6)\n");
 
   for (aarx=0; aarx<frame_parms->nb_antennas_rx; aarx++) {
 

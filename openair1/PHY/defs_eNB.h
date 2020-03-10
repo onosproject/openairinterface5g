@@ -689,7 +689,7 @@ typedef struct {
   /// - second index: ? [0..12*N_RB_UL*frame_parms->symbols_per_tti[
   int32_t **ul_ch_magb;
   /// measured RX power based on DRS
-  int ulsch_power[4];
+  int ulsch_power[6];
   /// \brief llr values.
   /// - first index: ? [0..1179743] (hard coded)
   int16_t *llr;
