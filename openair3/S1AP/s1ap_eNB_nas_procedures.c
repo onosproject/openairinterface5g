@@ -1650,7 +1650,6 @@ int s1ap_eNB_generate_E_RAB_Modification_Indication(
   DevAssert(s1ap_eNB_instance_p != NULL);
   DevAssert(e_rab_modification_ind != NULL);
 
-  // Currently hardcoded (dummy) values filling the fields of E_RAB_Modification_Indication message. To be substituted
   int num_e_rabs_tobemodified = e_rab_modification_ind->nb_of_e_rabs_tobemodified;
   int num_e_rabs_nottobemodified = e_rab_modification_ind->nb_of_e_rabs_nottobemodified;
 

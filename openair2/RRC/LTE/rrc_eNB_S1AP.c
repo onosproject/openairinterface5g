@@ -2312,6 +2312,7 @@ int rrc_eNB_send_E_RAB_Modification_Indication(const protocol_ctxt_t *const ctxt
 	  for (e_rab = 0; e_rab <  ue_context_pP->ue_context.setup_e_rabs ; e_rab++) {
 		  //Add E-RAB in the list of E-RABs to be modified
 		  if (ue_context_pP->ue_context.e_rab[e_rab].status == E_RAB_STATUS_TOMODIFY) {
+			  S1AP_E_RAB_MODIFICATION_IND (msg_p).e_rabs_tobemodified[e_rab_modify_index].e_rab_id = ue_context_pP->ue_context.e_rab[e_rab].param.e_rab_id;
 			  memcpy(S1AP_E_RAB_MODIFICATION_IND (msg_p).e_rabs_tobemodified[e_rab_modify_index].eNB_addr.buffer,
 					  ue_context_pP->ue_context.gnb_gtp_endc_addrs[e_rab].buffer,
 					  ue_context_pP->ue_context.gnb_gtp_endc_addrs[e_rab].length);
@@ -2321,6 +2322,7 @@ int rrc_eNB_send_E_RAB_Modification_Indication(const protocol_ctxt_t *const ctxt
 		  }
 		  //Add E-RAB in the list of E-RABs NOT to be modified
 		  else{
+			  S1AP_E_RAB_MODIFICATION_IND (msg_p).e_rabs_nottobemodified[e_rab_notmodify_index].e_rab_id = ue_context_pP->ue_context.e_rab[e_rab].param.e_rab_id;
 			  memcpy(S1AP_E_RAB_MODIFICATION_IND (msg_p).e_rabs_nottobemodified[e_rab_notmodify_index].eNB_addr.buffer,
 					  ue_context_pP->ue_context.gnb_gtp_endc_addrs[e_rab].buffer,
 					  ue_context_pP->ue_context.gnb_gtp_endc_addrs[e_rab].length);
