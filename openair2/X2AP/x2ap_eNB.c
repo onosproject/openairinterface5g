@@ -359,7 +359,7 @@ void x2ap_eNB_handle_sctp_init_msg_multi_cnf(
    * Failure means multi_sd < 0.
    */
   if (instance->multi_sd < 0) {
-    X2AP_ERROR("Error: be sure to properly configure X2 in your configuration file.\n");
+    X2AP_ERROR("Error: be sure to properly configure X22 in your configuration file.\n");
     DevAssert(instance->multi_sd >= 0);
   }
 
