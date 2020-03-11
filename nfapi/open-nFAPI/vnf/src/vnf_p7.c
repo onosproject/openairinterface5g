@@ -615,10 +615,6 @@ void vnf_handle_harq_indication(void *pRecvMsg, int recvMsgLen, vnf_p7_t* vnf_p7
 				(vnf_p7->_public.harq_indication)(&(vnf_p7->_public), &ind);
 			}
 		}
-#ifndef PHY_RM	
-		vnf_p7_codec_free(vnf_p7, ind.harq_indication_body.harq_pdu_list);
-		vnf_p7_codec_free(vnf_p7, ind.vendor_extension);
-#endif
 	}
 }
 
@@ -644,10 +640,6 @@ void vnf_handle_crc_indication(void *pRecvMsg, int recvMsgLen, vnf_p7_t* vnf_p7)
 				(vnf_p7->_public.crc_indication)(&(vnf_p7->_public), &ind);
 			}
 		}
-#ifndef PHY_RM	
-		vnf_p7_codec_free(vnf_p7, ind.crc_indication_body.crc_pdu_list);
-		vnf_p7_codec_free(vnf_p7, ind.vendor_extension);
-#endif
 	}
 }
 
