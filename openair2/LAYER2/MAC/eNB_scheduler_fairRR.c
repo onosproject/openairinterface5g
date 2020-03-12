@@ -1816,7 +1816,7 @@ schedule_ue_spec_fairRR(module_id_t module_idP,
                                      cce_idx);
                 // No TX request for retransmission (check if null request for FAPI)
               } else {
-                LOG_W(MAC,
+                LOG_I(MAC,
                       "Frame %d, Subframe %d: Dropping DLSCH allocation for UE %d\%x, infeasible CCE allocation\n",
                       frameP, subframeP, UE_id, rnti);
               }
@@ -1840,7 +1840,7 @@ schedule_ue_spec_fairRR(module_id_t module_idP,
           UE_list->eNB_UE_stats[CC_id][UE_id].dlsch_mcs[TB2] =
             eNB_UE_stats->dlsch_mcs[TB2];
         } else {
-          LOG_E(MAC,
+          LOG_I(MAC,
                 "[eNB %d] Frame %d CC_id %d : don't schedule UE %d, its retransmission takes more resources than we have\n",
                 module_idP, frameP, CC_id, UE_id);
         }

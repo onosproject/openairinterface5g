@@ -692,12 +692,15 @@ void flush_mem_to_file(void)
       }
       snprintf(f_name,1024, "%s_%d.log",log_mem_filename,log_mem_file_cnt);
       fp=open(f_name, O_WRONLY | O_CREAT, 0666);
-      int ret = write(fp, log_mem_d[log_mem_write_side].buf_p, log_mem_d[log_mem_write_side].buf_index);
-      if ( ret < 0) {
+      if(fp==-1){
+        fprintf(stderr,"{LOG} %s %d Couldn't file open in %s \n",__FILE__,__LINE__,f_name);
+      }else{
+        int ret = write(fp, log_mem_d[log_mem_write_side].buf_p, log_mem_d[log_mem_write_side].buf_index);
+        if ( ret < 0) {
           fprintf(stderr,"{LOG} %s %d Couldn't write in %s \n",__FILE__,__LINE__,f_name);
-          exit(EXIT_FAILURE);
+        }
+        close(fp);
       }
-      close(fp);
       log_mem_file_cnt++;
       log_mem_d[log_mem_write_side].buf_index=0;
       log_mem_d[log_mem_write_side].enable_flag=1;
