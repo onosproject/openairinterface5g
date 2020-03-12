@@ -1025,11 +1025,15 @@ void vnf_handle_ul_node_sync(void *pRecvMsg, int recvMsgLen, vnf_p7_t* vnf_p7)
 
         if (phy->filtered_adjust && (phy->sf_offset_filtered > 1e6 || phy->sf_offset_filtered < -1e6))
         {
+#ifndef PHY_RM
           phy->filtered_adjust = 0;
           phy->zero_count=0;
           phy->min_sync_cycle_count = 2;
           phy->in_sync = 0;
-          NFAPI_TRACE(NFAPI_TRACE_ERROR, "%s - ADJUST TOO BAD - go out of filtered phy->sf_offset_filtered:%d\n", __FUNCTION__, phy->sf_offset_filtered);
+#endif
+           NFAPI_TRACE(NFAPI_TRACE_ERROR, "%s - ADJUST TOO BAD - filtered:%d (%4d/%d) PNF to VNF !sync phy_id:%d (t1/2/3/4:%8u, %8u, %8u, %8u) txrx:%4u procT:%3u latency(us):%4d\n"
+                       , __FUNCTION__, phy->sf_offset_filtered,NFAPI_SFNSF2SFN(phy->sfn_sf), NFAPI_SFNSF2SF(phy->sfn_sf), ind.header.phy_id, ind.t1, ind.t2, ind.t3, t4
+                       ,tx_2_rx, pnf_proc_time, latency);
         }
 
 	if(phy->min_sync_cycle_count)
@@ -1161,24 +1165,24 @@ void vnf_handle_ul_node_sync(void *pRecvMsg, int recvMsgLen, vnf_p7_t* vnf_p7)
 
 					if(phy->in_sync)
 					{
+#ifndef PHY_RM
 						// in sync
-						//if(phy->sf_offset_filtered > 250)
-						//{
-						//	// VNF is slow
-						//	phy->insync_minor_adjustment = insync_minor_adjustment_1; //25;
-						//	phy->insync_minor_adjustment_duration = ((phy->sf_offset_filtered) / insync_minor_adjustment_1);
-						//}
-						//else if(phy->sf_offset_filtered < -250)
-						//{
-						//	// VNF is fast
-						//	phy->insync_minor_adjustment = -(insync_minor_adjustment_1); //25;
-						//	phy->insync_minor_adjustment_duration = (((phy->sf_offset_filtered) / -(insync_minor_adjustment_1)));
-						//}
-						//else
+						if(phy->sf_offset_filtered > 250)
+						{
+							// VNF is slow
+							phy->insync_minor_adjustment = insync_minor_adjustment_1; //25;
+							phy->insync_minor_adjustment_duration = ((phy->sf_offset_filtered) / insync_minor_adjustment_1);
+						}
+						else if(phy->sf_offset_filtered < -250)
+						{
+							// VNF is fast
+							phy->insync_minor_adjustment = -(insync_minor_adjustment_1); //25;
+							phy->insync_minor_adjustment_duration = (((phy->sf_offset_filtered) / -(insync_minor_adjustment_1)));
+						}
+						else
 						{
 							phy->insync_minor_adjustment = 0;
 						}
-
 						if(phy->insync_minor_adjustment != 0)
 						{
 							NFAPI_TRACE(NFAPI_TRACE_INFO, "(%4d/%d) VNF phy_id:%d Apply minor insync adjustment %dus for %d subframes (sf_offset_filtered:%d) %d %d %d NEW:%d CURR:%d adjustment:%d\n", 
@@ -1190,6 +1194,7 @@ void vnf_handle_ul_node_sync(void *pRecvMsg, int recvMsgLen, vnf_p7_t* vnf_p7)
                                                                                 NFAPI_SFNSF2DEC(curr_sfn_sf),
                                                                                 phy->adjustment); 
 						}
+#endif
 					}
 				}
 				else
@@ -1201,25 +1206,26 @@ void vnf_handle_ul_node_sync(void *pRecvMsg, int recvMsgLen, vnf_p7_t* vnf_p7)
 						}
 						else if(phy->adjustment > 0)
 						{
+#ifndef PHY_RM
 							// VNF is slow
-							//if(phy->adjustment == 1)
-							//{
-							//	
-							//	if(phy->sf_offset_filtered > 250)
-							//	{
-							//		// VNF is slow
-							//		phy->insync_minor_adjustment = insync_minor_adjustment_2;
-							//		phy->insync_minor_adjustment_duration = 2 * ((phy->sf_offset_filtered - 250) / insync_minor_adjustment_2);
-							//	}
-							//	else if(phy->sf_offset_filtered < -250)
-							//	{
-							//		// VNF is fast
-							//		phy->insync_minor_adjustment = -(insync_minor_adjustment_2);
-							//		phy->insync_minor_adjustment_duration = 2 * ((phy->sf_offset_filtered + 250) / -(insync_minor_adjustment_2));
-							//	}
-							//
-							//}
-							//else
+							if(phy->adjustment == 1)
+							{
+								
+								if(phy->sf_offset_filtered > 250)
+								{
+									// VNF is slow
+									phy->insync_minor_adjustment = insync_minor_adjustment_2;
+									phy->insync_minor_adjustment_duration = 2 * ((phy->sf_offset_filtered - 250) / insync_minor_adjustment_2);
+								}
+								else if(phy->sf_offset_filtered < -250)
+								{
+									// VNF is fast
+									phy->insync_minor_adjustment = -(insync_minor_adjustment_2);
+									phy->insync_minor_adjustment_duration = 2 * ((phy->sf_offset_filtered + 250) / -(insync_minor_adjustment_2));
+								}
+							
+							}
+							else
 							{
 								// out of sync?
 							}
@@ -1231,28 +1237,29 @@ void vnf_handle_ul_node_sync(void *pRecvMsg, int recvMsgLen, vnf_p7_t* vnf_p7)
                                                                                 NFAPI_SFNSF2DEC(new_sfn_sf),
                                                                                 NFAPI_SFNSF2DEC(curr_sfn_sf),
                                                                                 phy->adjustment); 
-							
+#endif
 						}
 						else if(phy->adjustment < 0)
 						{
+#ifndef PHY_RM
 							// VNF is fast
-							//if(phy->adjustment == -1)
-							//{
-							//	//
-							//	if(phy->sf_offset_filtered > 250)
-							//	{
-							//		// VNF is slow
-							//		phy->insync_minor_adjustment = insync_minor_adjustment_2;
-							//		phy->insync_minor_adjustment_duration = 2 * ((phy->sf_offset_filtered - 250) / insync_minor_adjustment_2);
-							//	}
-							//	else if(phy->sf_offset_filtered < -250)
-							//	{
-							//		// VNF is fast
-							//		phy->insync_minor_adjustment = -(insync_minor_adjustment_2);
-							//		phy->insync_minor_adjustment_duration = 2 * ((phy->sf_offset_filtered + 250) / -(insync_minor_adjustment_2));
-							//	}
-							//}
-							//else
+							if(phy->adjustment == -1)
+							{
+								//
+								if(phy->sf_offset_filtered > 250)
+								{
+									// VNF is slow
+									phy->insync_minor_adjustment = insync_minor_adjustment_2;
+									phy->insync_minor_adjustment_duration = 2 * ((phy->sf_offset_filtered - 250) / insync_minor_adjustment_2);
+								}
+								else if(phy->sf_offset_filtered < -250)
+								{
+									// VNF is fast
+									phy->insync_minor_adjustment = -(insync_minor_adjustment_2);
+									phy->insync_minor_adjustment_duration = 2 * ((phy->sf_offset_filtered + 250) / -(insync_minor_adjustment_2));
+								}
+							}
+							else
 							{
 								// out of sync?
 							}
@@ -1261,6 +1268,7 @@ void vnf_handle_ul_node_sync(void *pRecvMsg, int recvMsgLen, vnf_p7_t* vnf_p7)
 										NFAPI_SFNSF2SFN(phy->sfn_sf), NFAPI_SFNSF2SF(phy->sfn_sf), ind.header.phy_id,
 										phy->insync_minor_adjustment, phy->insync_minor_adjustment_duration, phy->adjustment, phy->sf_offset_filtered,
 										insync_minor_adjustment_1, insync_minor_adjustment_2, phy->sf_offset_trend); 
+#endif
 						}
 
 						/*
