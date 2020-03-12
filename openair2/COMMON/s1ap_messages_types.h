@@ -533,10 +533,10 @@ typedef struct s1ap_paging_ind_s {
   plmn_identity_t plmn_identity[256];
 
   /* TAC in TAIList of Paging*/
-  int16_t tac[256];
+  uint16_t tac[256];
 
   /* size of TAIList*/
-  int16_t tai_size;
+  uint16_t tai_size;
 
   /* Optional fields */
   paging_drx_t paging_drx;
