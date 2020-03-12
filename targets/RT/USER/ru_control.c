@@ -424,9 +424,9 @@ void configure_ru(int idx,
   config->tdd_config_S[0]        = ru->frame_parms->tdd_config_S;
   config->att_tx[0]              = ru->att_tx;
   config->att_rx[0]              = ru->att_rx;
-  config->N_RB_DL[0]             = ru->frame_parms.N_RB_DL;
-  config->N_RB_UL[0]             = ru->frame_parms.N_RB_UL;
-  config->threequarter_fs[0]     = ru->frame_parms.threequarter_fs;
+  config->N_RB_DL[0]             = ru->frame_parms->N_RB_DL;
+  config->N_RB_UL[0]             = ru->frame_parms->N_RB_UL;
+  config->threequarter_fs[0]     = ru->frame_parms->threequarter_fs;
   config->tag			 = idx;
   config->p			 = RC.nb_RU;
   if (ru->if_south==REMOTE_IF4p5) {
@@ -455,14 +455,14 @@ void configure_rru(int idx,
 
   ru->tag						   		   = config->tag;
   ru->p									   = config->p;
-  ru->frame_parms.eutra_band                                               = config->band_list[0];
-  ru->frame_parms.dl_CarrierFreq                                           = config->tx_freq[0];
-  ru->frame_parms.ul_CarrierFreq                                           = config->rx_freq[0];
-  if (ru->frame_parms.dl_CarrierFreq == ru->frame_parms.ul_CarrierFreq) {
+  ru->frame_parms->eutra_band                                               = config->band_list[0];
+  ru->frame_parms->dl_CarrierFreq                                           = config->tx_freq[0];
+  ru->frame_parms->ul_CarrierFreq                                           = config->rx_freq[0];
+  if (ru->frame_parms->dl_CarrierFreq == ru->frame_parms->ul_CarrierFreq) {
 	 LOG_I(PHY,"Setting RRU to TDD frame type\n");
-    ru->frame_parms.frame_type                                            = TDD;
-    ru->frame_parms.tdd_config                                            = config->tdd_config[0];
-    ru->frame_parms.tdd_config_S                                          = config->tdd_config_S[0]; 
+    ru->frame_parms->frame_type                                            = TDD;
+    ru->frame_parms->tdd_config                                            = config->tdd_config[0];
+    ru->frame_parms->tdd_config_S                                          = config->tdd_config_S[0]; 
   }
   else ru->frame_parms->frame_type                                         = FDD;
 

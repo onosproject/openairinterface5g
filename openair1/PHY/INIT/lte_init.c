@@ -459,7 +459,7 @@ int phy_init_lte_eNB(PHY_VARS_eNB *eNB,
       prach_vars_br->prach_ifft[ce_level][i] = (int32_t *) malloc16_clear (1024 * 2 * sizeof (int32_t));
     prach_vars->rxsigF[ce_level] = (int16_t **) malloc16_clear (64 * sizeof (int16_t *));
   }
-#endif
+
 
   /* number of elements of an array X is computed as sizeof(X) / sizeof(X[0]) 
   AssertFatal(fp->nb_antennas_rx <= sizeof(prach_vars->rxsigF) / sizeof(prach_vars->rxsigF[0]),
@@ -498,11 +498,8 @@ int phy_init_lte_eNB(PHY_VARS_eNB *eNB,
       }
     
     pusch_vars[UE_id]->llr = (int16_t*)malloc16_clear( (8*((3*8*6144)+12))*sizeof(int16_t) );
-LOG_I(PHY,"llr[0] %p\n",pusch_vars[UE_id]->llr);
+//LOG_I(PHY,"llr[0] %p\n",pusch_vars[UE_id]->llr);
   } //UE_id
-
-      pusch_vars[UE_id]->llr = (int16_t *)malloc16_clear( (8*((3*8*6144)+12))*sizeof(int16_t) );
-    } //UE_id
 
     for (UE_id = 0; UE_id < NUMBER_OF_UE_MAX; UE_id++)
       eNB->UE_stats_ptr[UE_id] = &eNB->UE_stats[UE_id];
