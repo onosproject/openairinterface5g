@@ -34,132 +34,128 @@
 #include <dlfcn.h>
 #include <errno.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include "common_lib.h"
 #include "common/utils/load_module_shlib.h"
+#include "common/utils/LOG/log.h"
 #include "targets/RT/USER/lte-softmodem.h"
 
-int set_device(openair0_device *device) {
-  switch (device->type) {
-    case EXMIMO_DEV:
-      printf("[%s] has loaded EXPRESS MIMO device.\n",((device->host_type == RAU_HOST) ? "RAU": "RRU"));
-      break;
+char *get_devname(int devtype) {
+char *devnames[MAX_RF_DEV_TYPE]=DEVTYPE_NAMES;
+  if (devtype < MAX_RF_DEV_TYPE && devtype !=MIN_RF_DEV_TYPE )
+  	  return devnames[devtype];
+  return "none";
+}
 
-    case USRP_B200_DEV:
-      printf("[%s] has loaded USRP B200 device.\n",((device->host_type == RAU_HOST) ? "RAU": "RRU"));
-      break;
-
-    case USRP_X300_DEV:
-      printf("[%s] has loaded USRP X300 device.\n",((device->host_type == RAU_HOST) ? "RAU": "RRU"));
-      break;
-
-    case BLADERF_DEV:
-      printf("[%s] has loaded BLADERF device.\n",((device->host_type == RAU_HOST) ? "RAU": "RRU"));
-      break;
-
-    case LMSSDR_DEV:
-      printf("[%s] has loaded LMSSDR device.\n",((device->host_type == RAU_HOST) ? "RAU": "RRU"));
-      break;
-
-    case IRIS_DEV:
-      printf("[%s] has loaded Iris device.\n",((device->host_type == RAU_HOST) ? "RAU": "RRU"));
-      break;
-
-    case NONE_DEV:
-      printf("[%s] has not loaded a HW device.\n",((device->host_type == RAU_HOST) ? "RAU": "RRU"));
-      break;
-
-    default:
-      printf("[%s] invalid HW device.\n",((device->host_type == RAU_HOST) ? "RAU": "RRU"));
+int set_device(openair0_device *device)
+{
+  char *devname = get_devname(device->type);
+    if (strcmp(devname,"none") != 0) {
+      LOG_I(HW,"[%s] has loaded %s device.\n",((device->host_type == RAU_HOST) ? "RAU": "RRU"),devname);
+    } else {
+      LOG_E(HW,"[%s] invalid HW device.\n",((device->host_type == RAU_HOST) ? "RAU": "RRU"));
       return -1;
-  }
-
+    }
   return 0;
 }
 
-int set_transport(openair0_device *device) {
+int set_transport(openair0_device *device)
+{
   switch (device->transp_type) {
     case ETHERNET_TP:
-      printf("[%s] has loaded ETHERNET trasport protocol.\n",((device->host_type == RAU_HOST) ? "RAU": "RRU"));
+      LOG_I(HW,"[%s] has loaded ETHERNET trasport protocol.\n",((device->host_type == RAU_HOST) ? "RAU": "RRU"));
       return 0;
       break;
 
     case NONE_TP:
-      printf("[%s] has not loaded a transport protocol.\n",((device->host_type == RAU_HOST) ? "RAU": "RRU"));
+      LOG_I(HW,"[%s] has not loaded a transport protocol.\n",((device->host_type == RAU_HOST) ? "RAU": "RRU"));
       return 0;
       break;
 
     default:
-      printf("[%s] invalid transport protocol.\n",((device->host_type == RAU_HOST) ? "RAU": "RRU"));
+      LOG_E(HW,"[%s] invalid transport protocol.\n",((device->host_type == RAU_HOST) ? "RAU": "RRU"));
       return -1;
       break;
   }
 }
+
 typedef int(*devfunc_t)(openair0_device *, openair0_config_t *, eth_params_t *);
+
+
 /* look for the interface library and load it */
-int load_lib(openair0_device *device, openair0_config_t *openair0_cfg, eth_params_t *cfg, uint8_t flag) {
+int load_lib(openair0_device *device,
+             openair0_config_t *openair0_cfg,
+             eth_params_t *cfg,
+             uint8_t flag)
+{
   loader_shlibfunc_t shlib_fdesc[1];
   int ret=0;
   char *libname;
+  
+  openair0_cfg->recplay_mode = read_recplayconfig(&(openair0_cfg->recplay_conf),&(device->recplay_state));
 
-  if ( IS_SOFTMODEM_BASICSIM ) {
-    libname=OAI_BASICSIM_LIBNAME;
-    shlib_fdesc[0].fname="device_init";
-  } else if ( IS_SOFTMODEM_RFSIM ) {
-    libname=OAI_RFSIM_LIBNAME;
-    shlib_fdesc[0].fname="device_init";
+  if ( openair0_cfg->recplay_mode == RECPLAY_REPLAYMODE ) {
+  	  libname=OAI_IQPLAYER_LIBNAME;
+  	  shlib_fdesc[0].fname="device_init";
+  	  set_softmodem_optmask(SOFTMODEM_RECPLAY_BIT);  // softmodem has to know we use the iqplayer to workaround randomized algorithms
+  } else  if ( IS_SOFTMODEM_BASICSIM ) {
+	  libname=OAI_BASICSIM_LIBNAME;
+	  shlib_fdesc[0].fname="device_init";
+  } else if (IS_SOFTMODEM_RFSIM && flag == RAU_LOCAL_RADIO_HEAD) {
+	  libname=OAI_RFSIM_LIBNAME;
+	  shlib_fdesc[0].fname="device_init";
   } else if (flag == RAU_LOCAL_RADIO_HEAD) {
-    libname=OAI_RF_LIBNAME;
-    shlib_fdesc[0].fname="device_init";
+	  if (IS_SOFTMODEM_RFSIM)
+		  libname="rfsimulator";
+	  else
+          libname=OAI_RF_LIBNAME;
+      shlib_fdesc[0].fname="device_init";
   } else {
-    libname=OAI_TP_LIBNAME;
-    shlib_fdesc[0].fname="transport_init";
+	  libname=OAI_TP_LIBNAME;
+	  shlib_fdesc[0].fname="transport_init";
   }
-
   ret=load_module_shlib(libname,shlib_fdesc,1,NULL);
 
   if (ret < 0) {
-    fprintf(stderr,"Library %s couldn't be loaded\n",libname);
+    LOG_E(HW,"Library %s couldn't be loaded\n",libname);
   } else {
     ret=((devfunc_t)shlib_fdesc[0].fptr)(device,openair0_cfg,cfg);
   }
-
   return ret;
 }
 
 
-
-int openair0_device_load(openair0_device *device, openair0_config_t *openair0_cfg) {
+int openair0_device_load(openair0_device *device,
+                         openair0_config_t *openair0_cfg)
+{
   int rc=0;
   rc=load_lib(device, openair0_cfg, NULL,RAU_LOCAL_RADIO_HEAD );
 
   if ( rc >= 0) {
     if ( set_device(device) < 0) {
-      fprintf(stderr, "%s %d:Unsupported radio head\n",__FILE__, __LINE__);
+      LOG_E(HW, "%s %d:Unsupported radio head\n", __FILE__, __LINE__);
       return -1;
-    }
+	}
   }
 
   return rc;
 }
 
-int openair0_transport_load(openair0_device *device, openair0_config_t *openair0_cfg, eth_params_t *eth_params) {
+
+int openair0_transport_load(openair0_device *device,
+                            openair0_config_t *openair0_cfg,
+                            eth_params_t *eth_params)
+{
   int rc;
   rc=load_lib(device, openair0_cfg, eth_params, RAU_REMOTE_RADIO_HEAD);
 
   if ( rc >= 0) {
     if ( set_transport(device) < 0) {
-      fprintf(stderr, "%s %d:Unsupported transport protocol\n",__FILE__, __LINE__);
+      LOG_E(HW, "%s %d:Unsupported transport protocol\n", __FILE__, __LINE__);
       return -1;
     }
   }
 
   return rc;
 }
-
-
-
-
-
-
-

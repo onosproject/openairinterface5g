@@ -24,6 +24,7 @@
 	<htmlTabRef>test-05-tm1-tunnel</htmlTabRef>
 	<htmlTabName>Test-05MHz-TM1-tunnel</htmlTabName>
 	<htmlTabIcon>tasks</htmlTabIcon>
+	<repeatCount>2</repeatCount>
 	<TestCaseRequestedList>
  030201 090109
  030102 000001 090102 000002 040503 000001 040603 040604 040643 040644 000001 090109 030201
@@ -95,8 +96,8 @@
 
 	<testCase id="040644">
 		<class>Iperf</class>
-		<desc>iperf (5MHz - UL/8Mbps/UDP)(30 sec)</desc>
-		<iperf_args>-u -b 8M -t 30 -i 1 -fm -R</iperf_args>
+		<desc>iperf (5MHz - UL/4Mbps/UDP)(30 sec)</desc>
+		<iperf_args>-u -b 4M -t 30 -i 1 -fm -R</iperf_args>
 		<iperf_packetloss_threshold>50</iperf_packetloss_threshold>
 		<iperf_profile>balanced</iperf_profile>
 	</testCase>

@@ -44,6 +44,7 @@
 
 #include "RRC/LTE/rrc_extern.h"
 #include "RRC/L2_INTERFACE/openair_rrc_L2_interface.h"
+#include "openair2/RRC/LTE/rrc_eNB_UE_context.h"
 
 //#include "LAYER2/MAC/pre_processor.c"
 #include "pdcp.h"
@@ -52,9 +53,7 @@
 
 #include "assertions.h"
 
-#if defined(ENABLE_ITTI)
-  #include "intertask_interface.h"
-#endif
+#include "intertask_interface.h"
 
 #include <dlfcn.h>
 
@@ -480,7 +479,7 @@ schedule_ue_spec(module_id_t module_idP,
   eNB_UE_STATS *eNB_UE_stats = NULL;
   UE_TEMPLATE *ue_template = NULL;
   eNB_STATS *eNB_stats = NULL;
-  RRC_release_ctrl *release_ctrl = NULL;
+  RRC_release_ctrl_t *release_ctrl = NULL;
   DLSCH_PDU *dlsch_pdu = NULL;
   RA_t *ra = NULL;
   int sdu_length_total = 0;
@@ -488,9 +487,9 @@ schedule_ue_spec(module_id_t module_idP,
   COMMON_channels_t *cc = eNB->common_channels;
   UE_list_t *UE_list = &eNB->UE_list;
   int continue_flag = 0;
-  int32_t normalized_rx_power, target_rx_power;
+  int32_t snr, target_snr;
   int tpc = 1;
-  UE_sched_ctrl *ue_sched_ctrl;
+  UE_sched_ctrl_t *ue_sched_ctrl;
   int mcs;
   int i;
   int min_rb_unit[NFAPI_CC_MAX];
@@ -506,6 +505,13 @@ schedule_ue_spec(module_id_t module_idP,
   rrc_eNB_ue_context_t *ue_contextP = NULL;
   int nb_mac_CC = RC.nb_mac_CC[module_idP];
   long dl_Bandwidth;
+
+  if(is_pmch_subframe(frameP,subframeP,&RC.eNB[module_idP][0]->frame_parms)){
+       //LOG_E(MAC,"Frame[%d] SF:%d This SF should not be allocated\n",frameP,subframeP);
+       return ;
+  }
+
+
   start_meas(&eNB->schedule_dlsch);
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_SCHEDULE_DLSCH,
                                           VCD_FUNCTION_IN);
@@ -565,7 +571,6 @@ schedule_ue_spec(module_id_t module_idP,
     dl_Bandwidth = cc[CC_id].mib->message.dl_Bandwidth;
     N_RB_DL[CC_id] = to_prb(dl_Bandwidth);
     min_rb_unit[CC_id] = get_min_rb_unit(module_idP, CC_id);
-
     // get number of PRBs less those used by common channels
     total_nb_available_rb[CC_id] = N_RB_DL[CC_id];
 
@@ -622,7 +627,6 @@ schedule_ue_spec(module_id_t module_idP,
       LOG_D(MAC, "doing schedule_ue_spec for CC_id %d UE %d\n",
             CC_id,
             UE_id);
-
       continue_flag = 0; // reset the flag to allow allocation for the remaining UEs
       rnti = UE_RNTI(module_idP, UE_id);
       ue_sched_ctrl = &UE_list->UE_sched_ctrl[UE_id];
@@ -717,9 +721,12 @@ schedule_ue_spec(module_id_t module_idP,
       eNB_UE_stats->harq_pid = harq_pid;
       eNB_UE_stats->harq_round = round_DL;
 
+      if (eNB_UE_stats->rrc_status < RRC_RECONFIGURED) {
+        ue_sched_ctrl->uplane_inactivity_timer = 0;
+      }
+
       if (eNB_UE_stats->rrc_status < RRC_CONNECTED) {
-        LOG_D(MAC, "UE %d is not in RRC_CONNECTED\n",
-              UE_id);
+        LOG_D(MAC, "UE %d is not in RRC_CONNECTED\n", UE_id);
         continue;
       }
 
@@ -733,7 +740,7 @@ schedule_ue_spec(module_id_t module_idP,
                 eNB_UE_stats->dl_cqi, MIN_CQI_VALUE, MAX_CQI_VALUE);
       */
       if (NFAPI_MODE != NFAPI_MONOLITHIC) {
-        eNB_UE_stats->dlsch_mcs1 = 10; // cqi_to_mcs[ue_sched_ctrl->dl_cqi[CC_id]];
+        eNB_UE_stats->dlsch_mcs1 = cqi_to_mcs[ue_sched_ctrl->dl_cqi[CC_id]];
       } else { // this operation is also done in the preprocessor
         eNB_UE_stats->dlsch_mcs1 = cmin(eNB_UE_stats->dlsch_mcs1,
                                         eNB->slice_info.dl[slice_idxP].maxmcs);  // cmin(eNB_UE_stats->dlsch_mcs1, openair_daq_vars.target_ue_dl_mcs);
@@ -773,7 +780,8 @@ schedule_ue_spec(module_id_t module_idP,
 
           if (ue_sched_ctrl->cdrx_configured) {
             ue_sched_ctrl->drx_retransmission_timer[harq_pid] = 0; // stop drx retransmission
-            /* 
+
+            /*
              * Note: contrary to the spec drx_retransmission_timer[harq_pid] is reset not stop.
              */
             if (harq_pid == 0) {
@@ -977,11 +985,7 @@ schedule_ue_spec(module_id_t module_idP,
                                           ENB_FLAG_YES,
                                           MBMS_FLAG_NO,
                                           DCCH,
-                                          TBS - ta_len - header_length_total - sdu_length_total - 3
-#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
-                                          , 0
-                                          , 0
-#endif
+                                          TBS - ta_len - header_length_total - sdu_length_total - 3, 0, 0
                                          );
           sdu_lengths[0] = 0;
 
@@ -1000,15 +1004,14 @@ schedule_ue_spec(module_id_t module_idP,
                                               MBMS_FLAG_NO,
                                               DCCH,
                                               TBS, //not used
-                                              (char *)&dlsch_buffer[0]
-#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
-                                              , 0
-                                              , 0
-#endif
+                                              (char *)&dlsch_buffer[0], 0, 0
                                              );
-            pthread_mutex_lock(&rrc_release_freelist);
 
             if((rrc_release_info.num_UEs > 0) && (rlc_am_mui.rrc_mui_num > 0)) {
+              while(pthread_mutex_trylock(&rrc_release_freelist)) {
+                /* spin... */
+              }
+
               uint16_t release_total = 0;
 
               for (release_num = 0, release_ctrl = &rrc_release_info.RRC_release_ctrl[0];
@@ -1055,9 +1058,9 @@ schedule_ue_spec(module_id_t module_idP,
                 if(release_total >= rrc_release_info.num_UEs)
                   break;
               }
-            }
 
-            pthread_mutex_unlock(&rrc_release_freelist);
+              pthread_mutex_unlock(&rrc_release_freelist);
+            }
 
             for (ra_ii = 0, ra = &eNB->common_channels[CC_id].ra[0]; ra_ii < NB_RA_PROC_MAX; ra_ii++, ra++) {
               if ((ra->rnti == rnti) && (ra->state == MSGCRNTI)) {
@@ -1119,11 +1122,7 @@ schedule_ue_spec(module_id_t module_idP,
                                           ENB_FLAG_YES,
                                           MBMS_FLAG_NO,
                                           DCCH + 1,
-                                          TBS - ta_len - header_length_total - sdu_length_total - 3
-#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
-                                          , 0
-                                          , 0
-#endif
+                                          TBS - ta_len - header_length_total - sdu_length_total - 3, 0, 0
                                          );
           // DCCH SDU
           sdu_lengths[num_sdus] = 0;
@@ -1139,11 +1138,7 @@ schedule_ue_spec(module_id_t module_idP,
                                      ENB_FLAG_YES,
                                      MBMS_FLAG_NO, DCCH + 1,
                                      TBS, //not used
-                                     (char *) &dlsch_buffer[sdu_length_total]
-#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
-                                     , 0
-                                     , 0
-#endif
+                                     (char *) &dlsch_buffer[sdu_length_total], 0, 0
                                                      );
             T(T_ENB_MAC_UE_DL_SDU,
               T_INT(module_idP),
@@ -1198,11 +1193,7 @@ schedule_ue_spec(module_id_t module_idP,
                                             ENB_FLAG_YES,
                                             MBMS_FLAG_NO,
                                             lcid,
-                                            TBS - ta_len - header_length_total - sdu_length_total - 3
-#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
-                                            , 0
-                                            , 0
-#endif
+                                            TBS - ta_len - header_length_total - sdu_length_total - 3, 0, 0
                                            );
 
             if (rlc_status.bytes_in_buffer > 0) {
@@ -1220,11 +1211,7 @@ schedule_ue_spec(module_id_t module_idP,
                                       MBMS_FLAG_NO,
                                       lcid,
                                       TBS, //not used
-                                      (char *) &dlsch_buffer[sdu_length_total]
-#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
-                                      , 0
-                                      , 0
-#endif
+                                      (char *) &dlsch_buffer[sdu_length_total], 0, 0
                                                       );
               T(T_ENB_MAC_UE_DL_SDU,
                 T_INT(module_idP),
@@ -1249,7 +1236,6 @@ schedule_ue_spec(module_id_t module_idP,
               header_length_total += header_length_last;
               num_sdus++;
               ue_sched_ctrl->uplane_inactivity_timer = 0;
-
               // reset RRC inactivity timer after uplane activity
               ue_contextP = rrc_eNB_get_ue_context(RC.rrc[module_idP], rnti);
 
@@ -1417,27 +1403,17 @@ schedule_ue_spec(module_id_t module_idP,
             dlsch_pdu->payload[0][offset + sdu_length_total + j] = 0;
           }
 
-          if (opt_enabled == 1) {
-            trace_pdu(DIRECTION_DOWNLINK,
-                      (uint8_t *) dlsch_pdu->payload[0],
-                      TBS,
-                      module_idP,
-                      WS_C_RNTI,
-                      UE_RNTI(module_idP,
-                              UE_id),
-                      eNB->frame,
-                      eNB->subframe,
-                      0,
-                      0);
-            LOG_D(OPT, "[eNB %d][DLSCH] CC_id %d Frame %d  rnti %x  with size %d\n",
-                  module_idP,
-                  CC_id,
-                  frameP,
-                  UE_RNTI(module_idP,
-                          UE_id),
-                  TBS);
-          }
-
+          trace_pdu(DIRECTION_DOWNLINK,
+                    (uint8_t *) dlsch_pdu->payload[0],
+                    TBS,
+                    module_idP,
+                    WS_C_RNTI,
+                    UE_RNTI(module_idP,
+                            UE_id),
+                    eNB->frame,
+                    eNB->subframe,
+                    0,
+                    0);
           T(T_ENB_MAC_UE_DL_PDU_WITH_DATA,
             T_INT(module_idP),
             T_INT(CC_id),
@@ -1477,11 +1453,11 @@ schedule_ue_spec(module_id_t module_idP,
           }
 
           // do PUCCH power control
-          // this is the normalized RX power
+          // this is the snr
           // unit is not dBm, it's special from nfapi
-          // converting to dBm: ToDo: Noise power hard coded to 30
-          normalized_rx_power = (((5 * ue_sched_ctrl->pucch1_snr[CC_id]) - 640) / 10) + 30;
-          target_rx_power= (eNB->puCch10xSnr / 10) + 30;
+          // converting to dBm
+          snr = (5 * ue_sched_ctrl->pucch1_snr[CC_id] - 640) / 10;
+          target_snr = eNB->puCch10xSnr / 10;
           // this assumes accumulated tpc
           // make sure that we are only sending a tpc update once a frame, otherwise the control loop will freak out
           int32_t framex10psubframe = ue_template->pucch_tpc_tx_frame * 10 + ue_template->pucch_tpc_tx_subframe;
@@ -1493,22 +1469,22 @@ schedule_ue_spec(module_id_t module_idP,
               ue_template->pucch_tpc_tx_frame = frameP;
               ue_template->pucch_tpc_tx_subframe = subframeP;
 
-              if (normalized_rx_power > (target_rx_power + 4)) {
+              if (snr > target_snr + 4) {
                 tpc = 0;  //-1
-              } else if (normalized_rx_power < (target_rx_power - 4)) {
+              } else if (snr < target_snr - 4) {
                 tpc = 2;  //+1
               } else {
                 tpc = 1;  //0
               }
 
-              LOG_D(MAC, "[eNB %d] DLSCH scheduler: frame %d, subframe %d, harq_pid %d, tpc %d, normalized/target rx power %d/%d\n",
+              LOG_D(MAC, "[eNB %d] DLSCH scheduler: frame %d, subframe %d, harq_pid %d, tpc %d, snr/target snr %d/%d (normal case)\n",
                     module_idP,
                     frameP,
                     subframeP,
                     harq_pid,
                     tpc,
-                    normalized_rx_power,
-                    target_rx_power);
+                    snr,
+                    target_snr);
             } // Po_PUCCH has been updated
             else {
               tpc = 1;  //0
@@ -1573,17 +1549,17 @@ schedule_ue_spec(module_id_t module_idP,
             dl_req->tl.tag = NFAPI_DL_CONFIG_REQUEST_BODY_TAG;
             eNB->DL_req[CC_id].sfn_sf = frameP << 4 | subframeP;
             eNB->DL_req[CC_id].header.message_id = NFAPI_DL_CONFIG_REQUEST;
-
             /* CDRX */
             ue_sched_ctrl->harq_rtt_timer[CC_id][harq_pid] = 1; // restart HARQ RTT timer
 
             if (ue_sched_ctrl->cdrx_configured) {
               ue_sched_ctrl->drx_inactivity_timer = 1; // restart drx inactivity timer when new transmission
               ue_sched_ctrl->drx_retransmission_timer[harq_pid] = 0; // stop drx retransmission
-              /* 
+              /*
                * Note: contrary to the spec drx_retransmission_timer[harq_pid] is reset not stop.
                */
               VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME(VCD_SIGNAL_DUMPER_VARIABLES_DRX_INACTIVITY, (unsigned long) ue_sched_ctrl->drx_inactivity_timer);
+
               if (harq_pid == 0) {
                 VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME(VCD_SIGNAL_DUMPER_VARIABLES_DRX_RETRANSMISSION_HARQ0, (unsigned long) ue_sched_ctrl->drx_retransmission_timer[0]);
               }
@@ -1688,7 +1664,7 @@ dlsch_scheduler_interslice_multiplexing(module_id_t Mod_id,
   int nb_mac_CC = RC.nb_mac_CC[Mod_id];
   UE_list_t *UE_list = &eNB->UE_list;
   slice_info_t *sli = &eNB->slice_info;
-  UE_sched_ctrl *ue_sched_ctl;
+  UE_sched_ctrl_t *ue_sched_ctl;
   COMMON_channels_t *cc;
   int N_RBG[NFAPI_CC_MAX];
   int slice_sorted_list[MAX_NUM_SLICES];
@@ -1870,8 +1846,6 @@ void dlsch_scheduler_qos_multiplexing(module_id_t Mod_id, int frameP, sub_frame_
   }
 }
 
-
-#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
 //------------------------------------------------------------------------------
 /*
  * Default DLSCH scheduler for LTE-M
@@ -1889,8 +1863,8 @@ schedule_ue_spec_br(module_id_t module_idP,
   int round_DL = 0;
   int ta_update = 0;
   int32_t tpc = 1;
-  int32_t normalized_rx_power = 0;
-  int32_t target_rx_power = 0;
+  int32_t snr = 0;
+  int32_t target_snr = 0;
   uint16_t TBS = 0;
   uint16_t j = 0;
   uint16_t sdu_lengths[NB_RB_MAX];
@@ -1914,7 +1888,7 @@ schedule_ue_spec_br(module_id_t module_idP,
   COMMON_channels_t *cc = mac->common_channels;
   UE_list_t *UE_list = &mac->UE_list;
   UE_TEMPLATE *UE_template = NULL;
-  UE_sched_ctrl *ue_sched_ctl = NULL;
+  UE_sched_ctrl_t *ue_sched_ctl = NULL;
   nfapi_dl_config_request_pdu_t *dl_config_pdu = NULL;
   nfapi_ul_config_request_pdu_t *ul_config_pdu = NULL;
   nfapi_tx_request_pdu_t *TX_req = NULL;
@@ -2340,25 +2314,16 @@ schedule_ue_spec_br(module_id_t module_idP,
             UE_list->DLSCH_pdu[CC_id][0][UE_id].payload[0][offset + sdu_length_total + j] = (char)(taus()&0xff);
           }
 
-          if (opt_enabled == 1) {
-            trace_pdu(1,
-                      (uint8_t *)UE_list->DLSCH_pdu[CC_id][0][UE_id].payload[0],
-                      TBS,
-                      module_idP,
-                      3,
-                      UE_RNTI(module_idP,UE_id),
-                      mac->frame,
-                      mac->subframe,
-                      0,
-                      0);
-            LOG_D(OPT,"[eNB %d][DLSCH] CC_id %d Frame %d  rnti %x  with size %d\n",
-                  module_idP,
-                  CC_id,
-                  frameP,
-                  UE_RNTI(module_idP, UE_id),
-                  TBS);
-          }
-
+          trace_pdu(DIRECTION_DOWNLINK,
+                    (uint8_t *)UE_list->DLSCH_pdu[CC_id][0][UE_id].payload[0],
+                    TBS,
+                    module_idP,
+                    3,
+                    UE_RNTI(module_idP,UE_id),
+                    mac->frame,
+                    mac->subframe,
+                    0,
+                    0);
           T(T_ENB_MAC_UE_DL_PDU_WITH_DATA,
             T_INT(module_idP),
             T_INT(CC_id),
@@ -2368,10 +2333,10 @@ schedule_ue_spec_br(module_id_t module_idP,
             T_INT(harq_pid),
             T_BUFFER(UE_list->DLSCH_pdu[CC_id][0][UE_id].payload[0], TBS));
           /* Do PUCCH power control */
-          /* This is the normalized RX power */
-          /* TODO: fix how we deal with power, unit is not dBm, it's special from nfapi */
-          normalized_rx_power = (5 * ue_sched_ctl->pucch1_snr[CC_id]-640) / 10 + 30;
-          target_rx_power = mac->puCch10xSnr / 10 + 30;
+          /* This is the snr */
+          /* unit is not dBm, it's special from nfapi, convert to dBm */
+          snr = (5 * ue_sched_ctl->pucch1_snr[CC_id] - 640) / 10;
+          target_snr = mac->puCch10xSnr / 10;
           /* This assumes accumulated tpc */
           /* Make sure that we are only sending a tpc update once a frame, otherwise the control loop will freak out */
           int32_t framex10psubframe = UE_list->UE_template[CC_id][UE_id].pucch_tpc_tx_frame * 10 + UE_list->UE_template[CC_id][UE_id].pucch_tpc_tx_subframe;
@@ -2384,22 +2349,22 @@ schedule_ue_spec_br(module_id_t module_idP,
               UE_list->UE_template[CC_id][UE_id].pucch_tpc_tx_frame = frameP;
               UE_list->UE_template[CC_id][UE_id].pucch_tpc_tx_subframe = subframeP;
 
-              if (normalized_rx_power > (target_rx_power + 4)) {
+              if (snr > target_snr + 4) {
                 tpc = 0; //-1
-              } else if (normalized_rx_power<(target_rx_power - 4)) {
+              } else if (snr < target_snr - 4) {
                 tpc = 2; //+1
               } else {
                 tpc = 1; //0
               }
 
-              LOG_D(MAC,"[eNB %d] DLSCH scheduler: frame %d, subframe %d, harq_pid %d, tpc %d, normalized/target rx power %d/%d\n",
+              LOG_D(MAC,"[eNB %d] DLSCH scheduler: frame %d, subframe %d, harq_pid %d, tpc %d, snr/target snr %d/%d\n",
                     module_idP,
                     frameP,
                     subframeP,
                     harq_pid,
                     tpc,
-                    normalized_rx_power,
-                    target_rx_power);
+                    snr,
+                    target_snr);
             } else { // Po_PUCCH has been updated
               tpc = 1; // 0
             }
@@ -2551,29 +2516,19 @@ schedule_ue_spec_br(module_id_t module_idP,
         T_INT (subframeP),
         T_INT (0 /* harq_pid always 0? */ ),
         T_BUFFER (&mac->UE_list.DLSCH_pdu[CC_id][0][UE_id].payload[0], TX_req->pdu_length));
-
-      if (opt_enabled == 1) {
-        trace_pdu(1,
-                  (uint8_t *) mac->UE_list.DLSCH_pdu[CC_id][0][(unsigned char) UE_id].payload[0],
-                  TX_req->pdu_length,
-                  UE_id,
-                  3,
-                  rnti,
-                  frameP,
-                  subframeP,
-                  0,
-                  0);
-        LOG_D(OPT, "[eNB %d][DLSCH] CC_id %d Frame %d trace pdu for rnti %x with size %d\n",
-              module_idP,
-              CC_id,
-              frameP,
-              rnti,
-              TX_req->pdu_length);
-      }
+      trace_pdu(1,
+                (uint8_t *) mac->UE_list.DLSCH_pdu[CC_id][0][(unsigned char) UE_id].payload[0],
+                TX_req->pdu_length,
+                UE_id,
+                3,
+                rnti,
+                frameP,
+                subframeP,
+                0,
+                0);
     } // end else if ((subframeP == 7) && (round_DL < 8))
   } // end loop on UE_id
 }
-#endif
 
 //------------------------------------------------------------------------------
 void
@@ -3084,11 +3039,9 @@ schedule_PCH(module_id_t module_idP,
         dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.dci_format                  = NFAPI_DL_DCI_FORMAT_1A;
         dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.harq_process                = 0;
         dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.tpc                         = 1; // no TPC
-        dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.new_data_indicator_1        = 1;
-        dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.redundancy_version_1        = 1;
-        dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.resource_block_coding       = getRIV(n_rb_dl,
-            first_rb,
-            4);
+        dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.new_data_indicator_1        = 0;
+        dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.redundancy_version_1        = 0;
+        dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.resource_block_coding = getRIV(n_rb_dl, first_rb, 4);
         dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.virtual_resource_block_assignment_flag = 0;
 #endif
         dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.aggregation_level           = 4;
@@ -3138,7 +3091,6 @@ schedule_PCH(module_id_t module_idP,
           dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.transmission_scheme                    = (cc->p_eNB==1 ) ? 0 : 1;
           dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.number_of_layers                       = 1;
           dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.number_of_subbands                     = 1;
-          // dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.codebook_index                         = ;
           dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.ue_category_capacity                   = 1;
           dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.pa                                     = 4; // 0 dB
           dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.delta_power_offset_index               = 0;
@@ -3147,17 +3099,10 @@ schedule_PCH(module_id_t module_idP,
           dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.transmission_mode                      = (cc->p_eNB==1 ) ? 1 : 2;
           dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.num_bf_prb_per_subband                 = 1;
           dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.num_bf_vector                          = 1;
-          // dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.bf_vector                    = ;
-          // Rel10 fields
-#if (LTE_RRC_VERSION >= MAKE_VERSION(10, 0, 0))
           dl_config_pdu->dlsch_pdu.dlsch_pdu_rel10.pdsch_start                           = 3;
-#endif
-          // Rel13 fields
-#if (LTE_RRC_VERSION >= MAKE_VERSION(13, 0, 0))
           dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.ue_type                               = 0; // regular UE
           dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.pdsch_payload_type                    = 2; // not BR
           dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.initial_transmission_sf_io            = 0xFFFF;
-#endif
           dl_req->number_pdu++;
           eNB->TX_req[CC_id].sfn_sf                                                      = (frameP<<4)+subframeP;
           TX_req = &eNB->TX_req[CC_id].tx_request_body.tx_pdu_list[eNB->TX_req[CC_id].tx_request_body.number_of_pdus];
@@ -3177,25 +3122,16 @@ schedule_PCH(module_id_t module_idP,
           continue;
         }
 
-        if (opt_enabled == 1) {
-          trace_pdu(DIRECTION_DOWNLINK,
-                    &eNB->common_channels[CC_id].PCCH_pdu.payload[0],
-                    pcch_sdu_length,
-                    0xffff,
-                    PCCH,
-                    P_RNTI,
-                    eNB->frame,
-                    eNB->subframe,
-                    0,
-                    0);
-          LOG_D(OPT,"[eNB %d][PCH] Frame %d trace pdu for CC_id %d rnti %x with size %d\n",
-                module_idP,
-                frameP,
-                CC_id,
-                0xffff,
-                pcch_sdu_length);
-        }
-
+        trace_pdu(DIRECTION_DOWNLINK,
+                  &eNB->common_channels[CC_id].PCCH_pdu.payload[0],
+                  pcch_sdu_length,
+                  0xffff,
+                  PCCH,
+                  P_RNTI,
+                  eNB->frame,
+                  eNB->subframe,
+                  0,
+                  0);
         eNB->eNB_stats[CC_id].total_num_pcch_pdu++;
         eNB->eNB_stats[CC_id].pcch_buffer = pcch_sdu_length;
         eNB->eNB_stats[CC_id].total_pcch_buffer += pcch_sdu_length;

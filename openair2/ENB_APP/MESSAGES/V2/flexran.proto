@@ -6,8 +6,7 @@ import "header.proto";
 import "time_common.proto";
 import "config_messages.proto";
 import "controller_commands.proto";
-import "control_delegation.proto";
-
+import "config_common.proto";
 
 message flexran_message {
        optional flexran_direction msg_dir = 100;
@@ -32,6 +31,7 @@ message flexran_message {
 	      flex_rrc_triggering rrc_triggering = 18;
 	      flex_ul_mac_config ul_mac_config_msg = 19;
               flex_disconnect disconnect_msg = 20;
+              flex_ho_command ho_command_msg = 21;
 	}
 }
 
@@ -74,12 +74,22 @@ enum flex_bs_capability {
     PDCP  = 5;
     SDAP  = 6;
     RRC   = 7;
+    S1AP  = 8;
+}
+
+enum flex_bs_split {
+  F1    = 0;
+  nFAPI = 1;
+  IF4   = 2;
+  IF4p5 = 3;
+  IF5   = 4;
 }
 
 message flex_hello {
     optional flex_header header = 1;
     optional uint64 bs_id = 2;        // Unique id to distinguish the eNB
     repeated flex_bs_capability capabilities = 3;
+    repeated flex_bs_split splits = 4;
 }
 
 message flex_echo_request {
@@ -146,6 +156,7 @@ message flex_enb_config_reply {
 	optional flex_header header = 1;
 	repeated flex_cell_config cell_config = 3;
         optional uint32 device_spec = 4;
+        optional flex_s1ap_config s1ap = 5;
 }
 
 message flex_ue_config_request {
@@ -188,7 +199,14 @@ message flex_ul_mac_config {
 message flex_rrc_triggering {
 
 	optional flex_header header = 1;
-	optional string rrc_trigger = 2;	
+	optional string rrc_trigger = 2;
+        optional flex_measurement_info meas_info = 3;
+}
+
+message flex_ho_command {
+  optional flex_header header = 1;
+  optional uint32 rnti = 2;
+  optional uint32 target_phy_cell_id = 3;
 }
 
 //

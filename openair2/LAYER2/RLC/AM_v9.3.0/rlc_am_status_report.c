@@ -26,9 +26,7 @@
 //-----------------------------------------------------------------------------
 #include "platform_types.h"
 //-----------------------------------------------------------------------------
-#if ENABLE_ITTI
-  #include "intertask_interface.h"
-#endif
+#include "intertask_interface.h"
 #include "assertions.h"
 #include "list.h"
 #include "rlc_am.h"
@@ -235,7 +233,7 @@ rlc_am_receive_process_control_pdu(
   rlc_sn_t        ack_sn    = RLC_AM_NEXT_SN(rlc_pP->vt_a);
   rlc_sn_t        sn_cursor = rlc_pP->vt_a;
   rlc_sn_t    vt_a_new  = rlc_pP->vt_a;
-  rlc_sn_t    sn_data_cnf;
+  rlc_sn_t    sn_data_cnf = (rlc_sn_t) 0;
   rlc_sn_t        nack_sn,prev_nack_sn;
   sdu_size_t    data_cnf_so_stop = 0x7FFF;
   unsigned int nack_index;

@@ -376,9 +376,11 @@ int send_mac_subframe_indications(vnf_p7_t* vnf_p7)
 		if(curr->in_sync == 1)
 		{
 			// ask for subframes in the future
-			uint16_t sfn_sf_adv = increment_sfn_sf_by(curr->sfn_sf, 2);
+			//uint16_t sfn_sf_adv = increment_sfn_sf_by(curr->sfn_sf, 2);
 
-			vnf_p7->_public.subframe_indication(&(vnf_p7->_public), curr->phy_id, sfn_sf_adv);
+			//vnf_p7->_public.subframe_indication(&(vnf_p7->_public), curr->phy_id, sfn_sf_adv);
+            // suggestion fix by Haruki NAOI
+			vnf_p7->_public.subframe_indication(&(vnf_p7->_public), curr->phy_id, curr->sfn_sf);
 		}
 
 		curr = curr->next;
@@ -819,6 +821,28 @@ void vnf_handle_nrach_indication(void *pRecvMsg, int recvMsgLen, vnf_p7_t* vnf_p
 	
 		vnf_p7_codec_free(vnf_p7, ind.nrach_indication_body.nrach_pdu_list);
 		vnf_p7_codec_free(vnf_p7, ind.vendor_extension);
+	}
+}
+
+void vnf_handle_ue_release_resp(void *pRecvMsg, int recvMsgLen, vnf_p7_t* vnf_p7)
+{
+
+	// ensure it's valid
+	if (pRecvMsg == NULL || vnf_p7 == NULL)
+	{
+		NFAPI_TRACE(NFAPI_TRACE_ERROR, "%s: NULL parameters\n", __FUNCTION__);
+	}
+	else
+	{
+		nfapi_ue_release_response_t resp;
+
+		if(nfapi_p7_message_unpack(pRecvMsg, recvMsgLen, &resp, sizeof(resp), &vnf_p7->_public.codec_config) < 0)
+		{
+			NFAPI_TRACE(NFAPI_TRACE_ERROR, "%s: Failed to unpack message\n", __FUNCTION__);
+		}
+
+
+		vnf_p7_codec_free(vnf_p7, resp.vendor_extension);
 	}
 }
 
@@ -1334,6 +1358,10 @@ void vnf_dispatch_p7_message(void *pRecvMsg, int recvMsgLen, vnf_p7_t* vnf_p7)
 			vnf_handle_nrach_indication(pRecvMsg, recvMsgLen, vnf_p7);
 			break;			
 
+		case NFAPI_UE_RELEASE_RESPONSE:
+			vnf_handle_ue_release_resp(pRecvMsg, recvMsgLen, vnf_p7);
+			break;
+
 		default:
 			{
 				if(header.message_id >= NFAPI_VENDOR_EXT_MSG_MIN &&
@@ -1430,7 +1458,7 @@ void vnf_handle_p7_message(void *pRecvMsg, int recvMsgLen, vnf_p7_t* vnf_p7)
 						NFAPI_TRACE(NFAPI_TRACE_NOTE, "Failed to allocate VNF_P7 reassemby buffer len:%d\n", length);
 						return;
 					}
-
+                                       memset(phy->reassembly_buffer, 0, length);
 					phy->reassembly_buffer_size = length;
 				}
 

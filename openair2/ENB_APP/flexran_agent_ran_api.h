@@ -44,6 +44,7 @@
 #include "RRC/LTE/rrc_eNB_UE_context.h"
 #include "PHY/phy_extern.h"
 #include "common/utils/LOG/log.h"
+#include "nfapi/oai_integration/vendor_ext.h"
 
 /****************************
  * get generic info from RAN
@@ -63,7 +64,7 @@ sub_frame_t flexran_get_current_subframe(mid_t mod_id);
 
 /*Return the frame and subframe number in compact 16-bit format.
   Bits 0-3 subframe, rest for frame. Required by FlexRAN protocol*/
-uint16_t flexran_get_sfn_sf(mid_t mod_id);
+uint32_t flexran_get_sfn_sf(mid_t mod_id);
 
 /* Return a future frame and subframe number that is ahead_of_time
    subframes later in compact 16-bit format. Bits 0-3 subframe,
@@ -498,6 +499,12 @@ uint32_t flexran_get_pdcp_rx_aiat_w(mid_t mod_id, uint16_t uid, lcid_t lcid);
 uint32_t flexran_get_pdcp_rx_oo(mid_t mod_id, uint16_t uid, lcid_t lcid);
 
 /*********************RRC**********************/
+/* Call RRC Reconfiguration wrapper function */
+int flexran_call_rrc_reconfiguration (mid_t mod_id, rnti_t rnti);
+
+/* Call RRC to trigger handover wrapper function */
+int flexran_call_rrc_trigger_handover (mid_t mod_id, rnti_t rnti, int target_cell_id);
+
 /*Get primary cell measuremeant id flexRAN*/
 LTE_MeasId_t flexran_get_rrc_pcell_measid(mid_t mod_id, rnti_t rnti);
 
@@ -510,8 +517,29 @@ float flexran_get_rrc_pcell_rsrq(mid_t mod_id, rnti_t rnti);
 /* Get RRC neighbouring measurement */
 int flexran_get_rrc_num_ncell(mid_t mod_id, rnti_t rnti);
 
-/* Get physical cell id */
+/* Get neighbouring physical cell id */
 long flexran_get_rrc_neigh_phy_cell_id(mid_t mod_id, rnti_t rnti, long cell_id);
+
+/* Get neighbouring cgi */
+int flexran_get_rrc_neigh_cgi(mid_t mod_id, rnti_t rnti, long cell_id);
+
+/* Get neighbouring cgi info cell id */
+uint32_t flexran_get_rrc_neigh_cgi_cell_id(mid_t mod_id, rnti_t rnti, long cell_id);
+
+/* Get neighbouring cgi info tac */
+uint32_t flexran_get_rrc_neigh_cgi_tac(mid_t mod_id, rnti_t rnti, long cell_id);
+
+/* Get the number of neighbouring cgi mnc */
+int flexran_get_rrc_neigh_cgi_num_mnc(mid_t mod_id, rnti_t rnti, long cell_id);
+
+/* Get the number of neighbouring cgi mcc */
+int flexran_get_rrc_neigh_cgi_num_mcc(mid_t mod_id, rnti_t rnti, long cell_id);
+
+/* Get neighbouring cgi mnc */
+uint32_t flexran_get_rrc_neigh_cgi_mnc(mid_t mod_id, rnti_t rnti, long cell_id, int mnc_id);
+
+/* Get neighbouring cgi mcc */
+uint32_t flexran_get_rrc_neigh_cgi_mcc(mid_t mod_id, rnti_t rnti, long cell_id, int mcc_id);
 
 /* Get RSRP of neighbouring Cell */
 float flexran_get_rrc_neigh_rsrp(mid_t mod_id, rnti_t rnti, long cell_id);
@@ -519,13 +547,77 @@ float flexran_get_rrc_neigh_rsrp(mid_t mod_id, rnti_t rnti, long cell_id);
 /* Get RSRQ of neighbouring Cell */
 float flexran_get_rrc_neigh_rsrq(mid_t mod_id, rnti_t rnti, long cell_id);
 
-/*Get MCC PLMN identity neighbouring Cell*/
-/* currently not implemented
-int flexran_get_rrc_neigh_plmn_mcc(mid_t mod_id, rnti_t rnti, int cell_id); */
+/* Get ofp offset */
+long flexran_get_rrc_ofp(mid_t mod_id, rnti_t rnti);
 
-/*Get MNC PLMN identity neighbouring Cell*/
-/* currently not implemented
-int flexran_get_rrc_neigh_plmn_mnc(mid_t mod_id, mid_t ue_id, int cell_id); */
+/* Get ofn offset */
+long flexran_get_rrc_ofn(mid_t mod_id, rnti_t rnti);
+
+/* Get ocp offset */
+long flexran_get_rrc_ocp(mid_t mod_id, rnti_t rnti);
+
+/* Get ocn offset */
+long flexran_get_rrc_ocn(mid_t mod_id, rnti_t rnti, long cell_id);
+
+/* Get Periodic Event max reported cells */
+long flexran_get_rrc_per_event_maxReportCells(mid_t mod_id, rnti_t rnti);
+
+/* Get A3 Event hysteresis */
+long flexran_get_rrc_a3_event_hysteresis(mid_t mod_id, rnti_t rnti);
+
+/* Get A3 Event time to trigger */
+long flexran_get_rrc_a3_event_timeToTrigger(mid_t mod_id, rnti_t rnti);
+
+/* Get A3 Event max reported cells */
+long flexran_get_rrc_a3_event_maxReportCells(mid_t mod_id, rnti_t rnti);
+
+/* Get A3 Event a3 offset */
+long flexran_get_rrc_a3_event_a3_offset(mid_t mod_id, rnti_t rnti);
+
+/* Get A3 Event report on leave */
+int flexran_get_rrc_a3_event_reportOnLeave(mid_t mod_id, rnti_t rnti);
+
+/* Get filter coefficient for rsrp */
+long flexran_get_filter_coeff_rsrp(mid_t mod_id, rnti_t rnti);
+
+/* Get filter coefficient for rsrq */
+long flexran_get_filter_coeff_rsrq(mid_t mod_id, rnti_t rnti);
+
+/* Set ofp offset */
+int flexran_set_rrc_ofp(mid_t mod_id, rnti_t rnti, long offsetFreq);
+
+/* Set ofn offset */
+int flexran_set_rrc_ofn(mid_t mod_id, rnti_t rnti, long offsetFreq);
+
+/* Set ocp offset */
+int flexran_set_rrc_ocp(mid_t mod_id, rnti_t rnti, long cellIndividualOffset);
+
+/* Set ocn offset */
+int flexran_set_rrc_ocn(mid_t mod_id, rnti_t rnti, long cell_id, long cellIndividualOffset);
+
+/* Set Periodic Event max reported cells */
+int flexran_set_rrc_per_event_maxReportCells(mid_t mod_id, rnti_t rnti, long maxReportCells);
+
+/* Set A3 Event hysteresis */
+int flexran_set_rrc_a3_event_hysteresis(mid_t mod_id, rnti_t rnti, long hysteresis);
+
+/* Set A3 Event time to trigger */
+int flexran_set_rrc_a3_event_timeToTrigger(mid_t mod_id, rnti_t rnti, long timeToTrigger);
+
+/* Set A3 Event max reported cells */
+int flexran_set_rrc_a3_event_maxReportCells(mid_t mod_id, rnti_t rnti, long maxReportCells);
+
+/* Set A3 Event a3 offset */
+int flexran_set_rrc_a3_event_a3_offset(mid_t mod_id, rnti_t rnti, long a3_offset);
+
+/* Set A3 Event report on leave */
+int flexran_set_rrc_a3_event_reportOnLeave(mid_t mod_id, rnti_t rnti, int reportOnLeave);
+
+/* Set filter coefficient for rsrp */
+int flexran_set_filter_coeff_rsrp(mid_t mod_id, rnti_t rnti, long filterCoefficientRSRP);
+
+/* Set filter coefficient for rsrq */
+int flexran_set_filter_coeff_rsrq(mid_t mod_id, rnti_t rnti, long filterCoefficientRSRQ);
 
 /* Get number of PLMNs that is broadcasted in SIB1 */
 uint8_t flexran_get_rrc_num_plmn_ids(mid_t mod_id);
@@ -538,6 +630,30 @@ uint16_t flexran_get_rrc_mnc(mid_t mod_id, uint8_t index);
 
 /* Get index'th MNC's digit length broadcasted in SIB1 */
 uint8_t flexran_get_rrc_mnc_digit_length(mid_t mod_id, uint8_t index);
+
+/* Get X2 handover controlled by network */
+int flexran_get_x2_ho_net_control(mid_t mod_id);
+
+/* Set X2 handover controlled by network */
+int flexran_set_x2_ho_net_control(mid_t mod_id, int x2_ho_net_control);
+
+/* Get number of adjacent cells via X2 interface */
+int flexran_get_rrc_num_adj_cells(mid_t mod_id);
+
+/* Get the number of E-RABs for UE */
+int flexran_agent_rrc_gtp_num_e_rab(mid_t mod_id, rnti_t rnti);
+
+/* Get the e-RAB ID for UE */
+int flexran_agent_rrc_gtp_get_e_rab_id(mid_t mod_id, rnti_t rnti, int index);
+
+/* Get the TEID at the eNB for UE */
+int flexran_agent_rrc_gtp_get_teid_enb(mid_t mod_id, rnti_t rnti, int index);
+
+/* Get the TEID at the SGW for UE */
+int flexran_agent_rrc_gtp_get_teid_sgw(mid_t mod_id, rnti_t rnti, int index);
+
+/* gets the UEs S1AP ID at eNodeB, stored in RRC */
+uint32_t flexran_get_rrc_enb_ue_s1ap_id(mid_t mod_id, rnti_t rnti);
 
 /************************** Slice configuration **************************/
 
@@ -691,6 +807,31 @@ char *flexran_get_ul_slice_scheduler(mid_t mod_id, int slice_idx);
 /* Set the scheduler name for a slice in UL */
 int flexran_set_ul_slice_scheduler(mid_t mod_id, int slice_idx, char *name);
 
+/************************** S1AP **************************/
+/* Get the number of MMEs to be connected */
+int flexran_get_s1ap_mme_pending(mid_t mod_id);
+
+/* Get the number of connected MMEs */
+int flexran_get_s1ap_mme_connected(mid_t mod_id);
+
+/* Get the eNB S1AP IP address */
+char* flexran_get_s1ap_enb_s1_ip(mid_t mod_id);
+
+/* Get the name of the eNB */
+char* flexran_get_s1ap_enb_name(mid_t mod_id);
+
+/* Get the number of connected MMEs to this eNB */
+int flexran_get_s1ap_nb_mme(mid_t mod_id);
+
+/* Get the number of connected UEs to this eNB */
+int flexran_get_s1ap_nb_ue(mid_t mod_id);
+
+/* Get the S1AP MME conf */
+int flexran_get_s1ap_mme_conf(mid_t mod_id, mid_t mme_index, Protocol__FlexS1apMme * mme_conf);
+
+/* Get the S1AP UE conf */
+int flexran_get_s1ap_ue(mid_t mod_id, rnti_t rnti, Protocol__FlexS1apUe * ue_conf);
+
 /********************* general information *****************/
 /* get an ID for this BS (or part of a BS) */
 uint64_t flexran_get_bs_id(mid_t mod_id);
@@ -702,4 +843,9 @@ size_t flexran_get_capabilities(mid_t mod_id, Protocol__FlexBsCapability **caps)
 
 /* get the capabilities supported by the underlying network function as a bit
  * mask. */
-uint16_t flexran_get_capabilities_mask(mid_t mod_id);
+uint32_t flexran_get_capabilities_mask(mid_t mod_id);
+
+/* get the splits used by the underlying network function,
+ * return the number and stores list of this length in splits. If there are
+ * zero capabilities, splits will be NULL */
+size_t flexran_get_splits(mid_t mod_id, Protocol__FlexBsSplit **splits);

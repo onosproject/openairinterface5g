@@ -37,9 +37,7 @@
 #include "msc.h"
 
 
-#if defined(ENABLE_ITTI)
-  #include "intertask_interface.h"
-#endif
+#include "intertask_interface.h"
 
 //#define RRC_DATA_REQ_DEBUG
 
@@ -59,9 +57,8 @@ mac_rrc_data_req_ue(
 )
 //--------------------------------------------------------------------------
 {
-  LOG_D(RRC,"[eNB %d] mac_rrc_data_req to SRB ID=%d\n",Mod_idP,Srb_id);
-#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
-  LOG_D(RRC,"[UE %d] Frame %d Filling SL DISCOVERY SRB_ID %d\n",Mod_idP,frameP,Srb_id);
+  LOG_D(RRC,"[eNB %d] mac_rrc_data_req to SRB ID=%ld\n",Mod_idP,Srb_id);
+  LOG_D(RRC,"[UE %d] Frame %d Filling SL DISCOVERY SRB_ID %ld\n",Mod_idP,frameP,Srb_id);
   LOG_D(RRC,"[UE %d] Frame %d buffer_pP status %d,\n",Mod_idP,frameP, UE_rrc_inst[Mod_idP].SL_Discovery[eNB_index].Tx_buffer.payload_size);
 
   //TTN (for D2D)
@@ -73,12 +70,10 @@ mac_rrc_data_req_ue(
     return(Ret_size);
   }
 
-#endif
-  LOG_D(RRC,"[UE %d] Frame %d Filling CCCH SRB_ID %d\n",Mod_idP,frameP,Srb_id);
+  LOG_D(RRC,"[UE %d] Frame %d Filling CCCH SRB_ID %ld\n",Mod_idP,frameP,Srb_id);
   LOG_D(RRC,"[UE %d] Frame %d buffer_pP status %d,\n",Mod_idP,frameP, UE_rrc_inst[Mod_idP].Srb0[eNB_index].Tx_buffer.payload_size);
 
   if( (UE_rrc_inst[Mod_idP].Srb0[eNB_index].Tx_buffer.payload_size > 0) ) {
-#if defined(ENABLE_ITTI)
     {
       MessageDef *message_p;
       int ccch_size = UE_rrc_inst[Mod_idP].Srb0[eNB_index].Tx_buffer.payload_size;
@@ -98,7 +93,6 @@ mac_rrc_data_req_ue(
 
       itti_send_msg_to_task (TASK_MAC_UE, UE_MODULE_ID_TO_INSTANCE(Mod_idP), message_p);
     }
-#endif
     memcpy(&buffer_pP[0],&UE_rrc_inst[Mod_idP].Srb0[eNB_index].Tx_buffer.Payload[0],UE_rrc_inst[Mod_idP].Srb0[eNB_index].Tx_buffer.payload_size);
     uint8_t Ret_size=UE_rrc_inst[Mod_idP].Srb0[eNB_index].Tx_buffer.payload_size;
     //   UE_rrc_inst[Mod_id].Srb0[eNB_index].Tx_buffer.payload_size=0;
@@ -138,43 +132,34 @@ mac_rrc_data_ind_ue(
    */
   PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, module_idP, 0, rntiP, frameP, sub_frameP,eNB_indexP);
 
-#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
-   if(srb_idP == BCCH_SI_MBMS) {
-      LOG_D(RRC,"[UE %d] Received SDU for BCCH on MBMS SRB %d from eNB %d\n",module_idP,srb_idP,eNB_indexP);
+  if(srb_idP == BCCH_SI_MBMS) {
+    LOG_D(RRC,"[UE %d] Received SDU for BCCH on MBMS SRB %ld from eNB %d\n",module_idP,srb_idP,eNB_indexP);
+    {
+      MessageDef *message_p;
+      int msg_sdu_size = sizeof(RRC_MAC_BCCH_MBMS_DATA_IND (message_p).sdu);
 
-#if defined(ENABLE_ITTI)
-      {
-        MessageDef *message_p;
-        int msg_sdu_size = sizeof(RRC_MAC_BCCH_MBMS_DATA_IND (message_p).sdu);
-
-        if (sdu_lenP > msg_sdu_size) {
-          LOG_E(RRC, "SDU larger than BCCH SDU buffer size (%d, %d)", sdu_lenP, msg_sdu_size);
-          sdu_size = msg_sdu_size;
-        } else {
-          sdu_size = sdu_lenP;
-        }
-
-        message_p = itti_alloc_new_message (TASK_MAC_UE, RRC_MAC_BCCH_MBMS_DATA_IND);
-        memset (RRC_MAC_BCCH_MBMS_DATA_IND (message_p).sdu, 0, BCCH_SDU_MBMS_SIZE);
-        RRC_MAC_BCCH_MBMS_DATA_IND (message_p).frame     = frameP;
-        RRC_MAC_BCCH_MBMS_DATA_IND (message_p).sub_frame = sub_frameP;
-        RRC_MAC_BCCH_MBMS_DATA_IND (message_p).sdu_size  = sdu_size;
-        memcpy (RRC_MAC_BCCH_MBMS_DATA_IND (message_p).sdu, sduP, sdu_size);
-        RRC_MAC_BCCH_MBMS_DATA_IND (message_p).enb_index = eNB_indexP;
-        RRC_MAC_BCCH_MBMS_DATA_IND (message_p).rsrq      = 30 /* TODO change phy to report rspq */;
-        RRC_MAC_BCCH_MBMS_DATA_IND (message_p).rsrp      = 45 /* TODO change phy to report rspp */;
-
-        itti_send_msg_to_task (TASK_RRC_UE, ctxt.instance, message_p);
+      if (sdu_lenP > msg_sdu_size) {
+        LOG_E(RRC, "SDU larger than BCCH SDU buffer size (%d, %d)", sdu_lenP, msg_sdu_size);
+        sdu_size = msg_sdu_size;
+      } else {
+        sdu_size = sdu_lenP;
       }
-#else
-      decode_BCCH_MBMS_DLSCH_Message(&ctxt,eNB_indexP,(uint8_t*)sduP,sdu_lenP, 0, 0);
-#endif
+
+      message_p = itti_alloc_new_message (TASK_MAC_UE, RRC_MAC_BCCH_MBMS_DATA_IND);
+      memset (RRC_MAC_BCCH_MBMS_DATA_IND (message_p).sdu, 0, BCCH_SDU_MBMS_SIZE);
+      RRC_MAC_BCCH_MBMS_DATA_IND (message_p).frame     = frameP;
+      RRC_MAC_BCCH_MBMS_DATA_IND (message_p).sub_frame = sub_frameP;
+      RRC_MAC_BCCH_MBMS_DATA_IND (message_p).sdu_size  = sdu_size;
+      memcpy (RRC_MAC_BCCH_MBMS_DATA_IND (message_p).sdu, sduP, sdu_size);
+      RRC_MAC_BCCH_MBMS_DATA_IND (message_p).enb_index = eNB_indexP;
+      RRC_MAC_BCCH_MBMS_DATA_IND (message_p).rsrq      = 30 /* TODO change phy to report rspq */;
+      RRC_MAC_BCCH_MBMS_DATA_IND (message_p).rsrp      = 45 /* TODO change phy to report rspp */;
+      itti_send_msg_to_task (TASK_RRC_UE, ctxt.instance, message_p);
     }
-#endif
+  }
 
   if(srb_idP == BCCH) {
-    LOG_D(RRC,"[UE %d] Received SDU for BCCH on SRB %d from eNB %d\n",module_idP,srb_idP,eNB_indexP);
-#if defined(ENABLE_ITTI)
+    LOG_D(RRC,"[UE %d] Received SDU for BCCH on SRB %ld from eNB %d\n",module_idP,srb_idP,eNB_indexP);
     {
       MessageDef *message_p;
       int msg_sdu_size = sizeof(RRC_MAC_BCCH_DATA_IND (message_p).sdu);
@@ -197,20 +182,16 @@ mac_rrc_data_ind_ue(
       RRC_MAC_BCCH_DATA_IND (message_p).rsrp      = 45 /* TODO change phy to report rspp */;
       itti_send_msg_to_task (TASK_RRC_UE, ctxt.instance, message_p);
     }
-#else
-    decode_BCCH_DLSCH_Message(&ctxt,eNB_indexP,(uint8_t *)sduP,sdu_lenP, 0, 0);
-#endif
   }
 
   if(srb_idP == PCCH) {
-    LOG_D(RRC,"[UE %d] Received SDU for PCCH on SRB %d from eNB %d\n",module_idP,srb_idP,eNB_indexP);
+    LOG_D(RRC,"[UE %d] Received SDU for PCCH on SRB %ld from eNB %d\n",module_idP,srb_idP,eNB_indexP);
     decode_PCCH_DLSCH_Message(&ctxt,eNB_indexP,(uint8_t *)sduP,sdu_lenP);
   }
 
   if((srb_idP & RAB_OFFSET) == CCCH) {
     if (sdu_lenP>0) {
-      LOG_T(RRC,"[UE %d] Received SDU for CCCH on SRB %d from eNB %d\n",module_idP,srb_idP & RAB_OFFSET,eNB_indexP);
-#if defined(ENABLE_ITTI)
+      LOG_T(RRC,"[UE %d] Received SDU for CCCH on SRB %ld from eNB %d\n",module_idP,srb_idP & RAB_OFFSET,eNB_indexP);
       {
         MessageDef *message_p;
         int msg_sdu_size = CCCH_SDU_SIZE;
@@ -232,22 +213,12 @@ mac_rrc_data_ind_ue(
         RRC_MAC_CCCH_DATA_IND (message_p).rnti      = rntiP;
         itti_send_msg_to_task (TASK_RRC_UE, ctxt.instance, message_p);
       }
-#else
-      SRB_INFO *Srb_info;
-      Srb_info = &UE_rrc_inst[module_idP].Srb0[eNB_indexP];
-      memcpy(Srb_info->Rx_buffer.Payload,sduP,sdu_lenP);
-      Srb_info->Rx_buffer.payload_size = sdu_lenP;
-      rrc_ue_decode_ccch(&ctxt, Srb_info, eNB_indexP);
-#endif
     }
   }
 
-#if (LTE_RRC_VERSION >= MAKE_VERSION(10, 0, 0))
-
   if ((srb_idP & RAB_OFFSET) == MCCH) {
-    LOG_T(RRC,"[UE %d] Frame %d: Received SDU on MBSFN sync area %d for MCCH on SRB %d from eNB %d\n",
+    LOG_T(RRC,"[UE %d] Frame %d: Received SDU on MBSFN sync area %d for MCCH on SRB %ld from eNB %d\n",
           module_idP,frameP, mbsfn_sync_areaP, srb_idP & RAB_OFFSET,eNB_indexP);
-#if defined(ENABLE_ITTI)
     {
       MessageDef *message_p;
       int msg_sdu_size = sizeof(RRC_MAC_MCCH_DATA_IND (message_p).sdu);
@@ -267,18 +238,14 @@ mac_rrc_data_ind_ue(
       RRC_MAC_MCCH_DATA_IND (message_p).mbsfn_sync_area = mbsfn_sync_areaP;
       itti_send_msg_to_task (TASK_RRC_UE, ctxt.instance, message_p);
     }
-#else
-    decode_MCCH_Message(&ctxt, eNB_indexP, sduP, sdu_lenP, mbsfn_sync_areaP);
-#endif
   }
 
   //TTN (for D2D)
   if(srb_idP == SL_DISCOVERY) {
-    LOG_I(RRC,"[UE %d] Received SDU (%d bytes) for SL_DISCOVERY on SRB %d from eNB %d\n",module_idP, sdu_lenP, srb_idP,eNB_indexP);
+    LOG_I(RRC,"[UE %d] Received SDU (%d bytes) for SL_DISCOVERY on SRB %ld from eNB %d\n",module_idP, sdu_lenP, srb_idP,eNB_indexP);
     decode_SL_Discovery_Message(&ctxt, eNB_indexP, sduP, sdu_lenP);
   }
 
-#endif // #if (LTE_RRC_VERSION >= MAKE_VERSION(10, 0, 0))
   return(0);
 }
 
@@ -306,7 +273,6 @@ rrc_data_req_ue(
     ctxt_pP->rnti,
     muiP,
     sdu_sizeP);
-#if defined(ENABLE_ITTI)
   {
     MessageDef *message_p;
     // Uses a new buffer to avoid issue with PDCP buffer content that could be changed by PDCP (asynchronous message handling).
@@ -334,21 +300,6 @@ rrc_data_req_ue(
       message_p);
     return TRUE; // TODO should be changed to a CNF message later, currently RRC lite does not used the returned value anyway.
   }
-#else
-  return pdcp_data_req (
-           ctxt_pP,
-           SRB_FLAG_YES,
-           rb_idP,
-           muiP,
-           confirmP,
-           sdu_sizeP,
-           buffer_pP,
-           modeP
-#if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
-           ,NULL, NULL
-#endif
-         );
-#endif
 }
 
 //------------------------------------------------------------------------------
@@ -362,9 +313,8 @@ rrc_data_ind_ue(
 //------------------------------------------------------------------------------
 {
   rb_id_t    DCCH_index = Srb_id;
-  LOG_I(RRC, "[UE %x] Frame %d: received a DCCH %d message on SRB %d with Size %d from eNB %d\n",
+  LOG_I(RRC, "[UE %x] Frame %d: received a DCCH %ld message on SRB %ld with Size %d from eNB %d\n",
         ctxt_pP->module_id, ctxt_pP->frame, DCCH_index,Srb_id,sdu_sizeP,  ctxt_pP->eNB_index);
-#if defined(ENABLE_ITTI)
   {
     MessageDef *message_p;
     // Uses a new buffer to avoid issue with PDCP buffer content that could be changed by PDCP (asynchronous message handling).
@@ -381,20 +331,11 @@ rrc_data_ind_ue(
     RRC_DCCH_DATA_IND (message_p).eNB_index  = ctxt_pP->eNB_index;
     itti_send_msg_to_task (TASK_RRC_UE, ctxt_pP->instance, message_p);
   }
-#else
-  //#warning "LG put 0 to arg4 that is eNB index"
-  rrc_ue_decode_dcch(
-    ctxt_pP,
-    DCCH_index,
-    buffer_pP,
-    0);
-#endif
 }
 
 //-------------------------------------------------------------------------------------------//
 void rrc_in_sync_ind(module_id_t Mod_idP, frame_t frameP, uint16_t eNB_index) {
   //-------------------------------------------------------------------------------------------//
-#if defined(ENABLE_ITTI)
   {
     MessageDef *message_p;
     //LOG_I(RRC,"sending a message to task_mac_ue\n");
@@ -403,14 +344,6 @@ void rrc_in_sync_ind(module_id_t Mod_idP, frame_t frameP, uint16_t eNB_index) {
     RRC_MAC_IN_SYNC_IND (message_p).enb_index = eNB_index;
     itti_send_msg_to_task (TASK_RRC_UE, UE_MODULE_ID_TO_INSTANCE(Mod_idP), message_p);
   }
-#else
-  UE_rrc_inst[Mod_idP].Info[eNB_index].N310_cnt=0;
-
-  if (UE_rrc_inst[Mod_idP].Info[eNB_index].T310_active==1) {
-    UE_rrc_inst[Mod_idP].Info[eNB_index].N311_cnt++;
-  }
-
-#endif
 }
 
 //-------------------------------------------------------------------------------------------//
@@ -424,7 +357,6 @@ void rrc_out_of_sync_ind(module_id_t Mod_idP, frame_t frameP, uint16_t eNB_index
           UE_rrc_inst[Mod_idP].Info[eNB_index].N310_cnt,
           UE_rrc_inst[Mod_idP].Info[eNB_index].N311_cnt);
 
-#if defined(ENABLE_ITTI)
   {
     MessageDef *message_p;
     message_p = itti_alloc_new_message (TASK_MAC_UE, RRC_MAC_OUT_OF_SYNC_IND);
@@ -432,9 +364,6 @@ void rrc_out_of_sync_ind(module_id_t Mod_idP, frame_t frameP, uint16_t eNB_index
     RRC_MAC_OUT_OF_SYNC_IND (message_p).enb_index = eNB_index;
     itti_send_msg_to_task (TASK_RRC_UE, UE_MODULE_ID_TO_INSTANCE(Mod_idP), message_p);
   }
-#else
-  UE_rrc_inst[Mod_idP].Info[eNB_index].N310_cnt++;
-#endif
 }
 
 //------------------------------------------------------------------------------
@@ -454,16 +383,11 @@ mac_UE_get_rrc_status(
 //-------------------------------------------------------------------------------------------//
 int mac_ue_ccch_success_ind(module_id_t Mod_idP, uint8_t eNB_index) {
   //-------------------------------------------------------------------------------------------//
-#if defined(ENABLE_ITTI)
   {
     MessageDef *message_p;
     message_p = itti_alloc_new_message (TASK_MAC_UE, RRC_MAC_CCCH_DATA_CNF);
     RRC_MAC_CCCH_DATA_CNF (message_p).enb_index = eNB_index;
     itti_send_msg_to_task (TASK_RRC_UE, UE_MODULE_ID_TO_INSTANCE(Mod_idP), message_p);
   }
-#else
-  // reset the tx buffer to indicate RRC that ccch was successfully transmitted (for example if contention resolution succeeds)
-  UE_rrc_inst[Mod_idP].Srb0[eNB_index].Tx_buffer.payload_size=0;
-#endif
   return 0;
 }

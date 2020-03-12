@@ -28,18 +28,30 @@
 //-------------------------------------------------------------------------------------------//
 // Defines to access message fields.
 
-#define X2AP_REGISTER_ENB_REQ(mSGpTR)           (mSGpTR)->ittiMsg.x2ap_register_enb_req
-#define X2AP_HANDOVER_REQ(mSGpTR)               (mSGpTR)->ittiMsg.x2ap_handover_req
-#define X2AP_HANDOVER_REQ_ACK(mSGpTR)           (mSGpTR)->ittiMsg.x2ap_handover_req_ack
-#define X2AP_REGISTER_ENB_CNF(mSGpTR)           (mSGpTR)->ittiMsg.x2ap_register_enb_cnf
-#define X2AP_DEREGISTERED_ENB_IND(mSGpTR)       (mSGpTR)->ittiMsg.x2ap_deregistered_enb_ind
-#define X2AP_UE_CONTEXT_RELEASE(mSGpTR)         (mSGpTR)->ittiMsg.x2ap_ue_context_release
-#define X2AP_HANDOVER_CANCEL(mSGpTR)            (mSGpTR)->ittiMsg.x2ap_handover_cancel
-
+#define X2AP_REGISTER_ENB_REQ(mSGpTR)           	(mSGpTR)->ittiMsg.x2ap_register_enb_req
+#define X2AP_SETUP_REQ(mSGpTR)                  	(mSGpTR)->ittiMsg.x2ap_setup_req
+#define X2AP_SETUP_RESP(mSGpTR)                 	(mSGpTR)->ittiMsg.x2ap_setup_resp
+#define X2AP_HANDOVER_REQ(mSGpTR)               	(mSGpTR)->ittiMsg.x2ap_handover_req
+#define X2AP_HANDOVER_REQ_ACK(mSGpTR)           	(mSGpTR)->ittiMsg.x2ap_handover_req_ack
+#define X2AP_REGISTER_ENB_CNF(mSGpTR)           	(mSGpTR)->ittiMsg.x2ap_register_enb_cnf
+#define X2AP_DEREGISTERED_ENB_IND(mSGpTR)       	(mSGpTR)->ittiMsg.x2ap_deregistered_enb_ind
+#define X2AP_UE_CONTEXT_RELEASE(mSGpTR)         	(mSGpTR)->ittiMsg.x2ap_ue_context_release
+#define X2AP_HANDOVER_CANCEL(mSGpTR)            	(mSGpTR)->ittiMsg.x2ap_handover_cancel
+#define X2AP_SENB_ADDITION_REQ(mSGpTR)              (mSGpTR)->ittiMsg.x2ap_senb_addition_req
 
 #define X2AP_MAX_NB_ENB_IP_ADDRESS 2
 
 // eNB application layer -> X2AP messages
+
+typedef struct x2ap_setup_req_s {
+  uint32_t Nid_cell[MAX_NUM_CCs];
+  int num_cc;
+} x2ap_setup_req_t;
+
+typedef struct x2ap_setup_resp_s {
+  uint32_t Nid_cell[MAX_NUM_CCs];
+  int num_cc;
+} x2ap_setup_resp_t;
 
 /* X2AP UE CONTEXT RELEASE */
 typedef struct x2ap_ue_context_release_s {
@@ -95,6 +107,8 @@ typedef struct x2ap_register_enb_req_s {
   lte_frame_type_t        frame_type[MAX_NUM_CCs];
   uint32_t                fdd_earfcn_DL[MAX_NUM_CCs];
   uint32_t                fdd_earfcn_UL[MAX_NUM_CCs];
+  uint32_t                subframeAssignment[MAX_NUM_CCs];
+  uint32_t                specialSubframe[MAX_NUM_CCs];
   int                     num_cc;
 
   /* To be considered for TDD */
@@ -193,7 +207,7 @@ typedef struct x2ap_handover_req_s {
 
   x2ap_lastvisitedcell_info_t lastvisitedcell_info;
 
-  uint8_t rrc_buffer[1024 /* arbitrary, big enough */];
+  uint8_t rrc_buffer[8192 /* arbitrary, big enough */];
   int rrc_buffer_size;
 
   int target_assoc_id;
@@ -221,5 +235,72 @@ typedef struct x2ap_handover_req_ack_s {
 
   uint32_t mme_ue_s1ap_id;
 } x2ap_handover_req_ack_t;
+
+typedef struct x2ap_senb_addition_req_s {
+
+	/* MeNB UE X2AP ID*/
+	int x2_MeNB_UE_id;
+
+	/*SCG Bearer option*/
+	security_capabilities_t UE_security_capabilities;
+
+	/*SCG Bearer option*/
+	uint8_t SeNB_security_key[256];
+
+	/*SeNB UE aggregate maximum bitrate */
+	ambr_t SeNB_ue_ambr;
+
+	uint8_t total_nb_e_rabs_tobeadded;
+
+	uint8_t nb_sCG_e_rabs_tobeadded;
+
+	uint8_t nb_split_e_rabs_tobeadded;
+
+	/*list of total e_rabs (SCG or split) to be added*/
+    //e_rab_setup_t total_e_rabs_tobeadded[S1AP_MAX_E_RAB];
+
+	/* list of SCG e_rab to be added by RRC layers */
+	e_rab_setup_t e_sCG_rabs_tobeadded[S1AP_MAX_E_RAB];
+
+	/* list of split e_rab to be added by RRC layers */
+	e_rab_setup_t e_split_rabs_tobeadded[S1AP_MAX_E_RAB];
+
+	/* list of SCG e_rab to be added by RRC layers */
+	e_rab_t  e_sCG_rab_param[S1AP_MAX_E_RAB];
+
+	/* list of split e_rab to be added by RRC layers */
+	e_rab_t  e_split_rab_param[S1AP_MAX_E_RAB];
+
+	/*Used for the MeNB to SeNB Container to include the SCG-ConfigInfo as per 36.331*/
+	uint8_t rrc_buffer[1024 /* arbitrary, big enough */];
+
+	int rrc_buffer_size;
+
+}x2ap_senb_addition_req_t;
+
+
+
+
+//Panos: Have to see what should be the additional/different elements comparing to handover req ack
+typedef struct x2ap_senb_addition_req_ack_s {
+
+  int MeNB_UE_X2_id;
+
+  int SeNB_UE_X2_id;
+
+  uint8_t nb_sCG_e_rabs_tobeadded;
+
+  uint8_t nb_split_e_rabs_tobeadded;
+
+ /* list of SCG e_rab to be added by RRC layers */
+  e_rab_setup_t e_sCG_rabs_tobeadded[S1AP_MAX_E_RAB];
+
+  /* list of split e_rab to be added by RRC layers */
+  e_rab_setup_t e_split_rabs_tobeadded[S1AP_MAX_E_RAB];
+
+  uint8_t rrc_buffer[1024 /* arbitrary, big enough */];
+  int rrc_buffer_size;
+
+} x2ap_senb_addition_req_ack_t;
 
 #endif /* X2AP_MESSAGES_TYPES_H_ */
