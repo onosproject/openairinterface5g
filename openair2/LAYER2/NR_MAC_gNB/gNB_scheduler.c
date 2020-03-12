@@ -310,90 +310,68 @@ void gNB_dlsch_ulsch_scheduler(module_id_t module_idP,
   //printf("gNB_dlsch_ulsch_scheduler frameRX %d slotRX %d frameTX %d slotTX %d\n",frame_rxP,slot_rxP,frame_txP,slot_txP);
 			       
   protocol_ctxt_t   ctxt;
-  int CC_id, i = -1, UE_id = 0;
+  int CC_id, UE_id = 0;
   gNB_MAC_INST *gNB = RC.nrmac[module_idP];
   NR_UE_list_t *UE_list = &gNB->UE_list;
-  rnti_t rnti;
   UE_sched_ctrl_t *ue_sched_ctl = &UE_list->UE_sched_ctrl[UE_id];
   NR_COMMON_channels_t *cc = gNB->common_channels;
 
   start_meas(&RC.nrmac[module_idP]->eNB_scheduler);
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_ENB_DLSCH_ULSCH_SCHEDULER,VCD_FUNCTION_IN);
 
+  // This originally followed the pdcp_run() call, so it might be useless
+  //PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, module_idP, ENB_FLAG_YES,NOT_A_RNTI, frame_txP, slot_txP,module_idP);
   pdcp_run(&ctxt);
   //rrc_rx_tx(&ctxt, CC_id);
 
   RC.nrmac[module_idP]->frame    = frame_rxP;
   RC.nrmac[module_idP]->slot     = slot_rxP;
 
-  // Check if there are downlink symbols in the slot, 
-  if (is_nr_DL_slot(cc->ServingCellConfigCommon,slot_txP)) {
-
   memset(RC.nrmac[module_idP]->cce_list[1][0],0,MAX_NUM_CCE*sizeof(int));
   for (CC_id = 0; CC_id < MAX_NUM_CCs; CC_id++) {
-    //mbsfn_status[CC_id] = 0;
-
-    // clear vrb_maps
     memset(cc[CC_id].vrb_map, 0, 100);
     memset(cc[CC_id].vrb_map_UL, 0, 100);
-
     clear_nr_nfapi_information(RC.nrmac[module_idP], CC_id, frame_txP, slot_txP);
   }
 
-  // refresh UE list based on UEs dropped by PHY in previous subframe
-  /*
-  for (i = 0; i < MAX_MOBILES_PER_GNB; i++) {
-    if (UE_list->active[i]) {
-
-      nfapi_nr_config_request_t *cfg = &RC.nrmac[module_idP]->config[CC_id];
-      
-      
-      rnti = 0;//UE_RNTI(module_idP, i);
-      CC_id = 0;//UE_PCCID(module_idP, i);
-      
-    } //END if (UE_list->active[i])
-  } //END for (i = 0; i < MAX_MOBILES_PER_GNB; i++)
-  */
-  PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, module_idP, ENB_FLAG_YES,NOT_A_RNTI, frame_txP, slot_txP,module_idP);
-  
-  // This schedules MIB
-  if((slot_txP == 0) && (frame_txP & 7) == 0){
-    schedule_nr_mib(module_idP, frame_txP, slot_txP);
-  }
-
-  // TbD once RACH is available, start ta_timer when UE is connected
-  if (ue_sched_ctl->ta_timer) ue_sched_ctl->ta_timer--;
-
-  if (ue_sched_ctl->ta_timer == 0) {
-    gNB->ta_command = ue_sched_ctl->ta_update;
-    /* if time is up, then set the timer to not send it for 5 frames
-    // regardless of the TA value */
-    ue_sched_ctl->ta_timer = 100;
-    /* reset ta_update */
-    ue_sched_ctl->ta_update = 31;
-    /* MAC CE flag indicating TA length */
-    gNB->ta_len = 2;
-  }
-
-  // Phytest scheduling
-  if (get_softmodem_params()->phy_test && slot_txP==1){
-    nr_schedule_uss_dlsch_phytest(module_idP, frame_txP, slot_txP,NULL);
-    // resetting ta flag
-    gNB->ta_len = 0;
-  }
-
-  /*
-  // Allocate CCEs for good after scheduling is done
-  for (CC_id = 0; CC_id < MAX_NUM_CCs; CC_id++)
-    allocate_CCEs(module_idP, CC_id, subframeP, 0);
-  */
-
-  } //is_nr_DL_slot
-
-  if (is_nr_UL_slot(cc->ServingCellConfigCommon,slot_rxP)) { 
-    if (get_softmodem_params()->phy_test && slot_rxP==8){
-      nr_schedule_uss_ulsch_phytest(module_idP, frame_rxP, slot_rxP);
+  // Check if there are downlink symbols in the slot,
+  if (is_nr_DL_slot(cc->ServingCellConfigCommon, slot_txP)) {
+    // This schedules MIB
+    if ((slot_txP == 0) && (frame_txP & 7) == 0) {
+      schedule_nr_mib(module_idP, frame_txP, slot_txP);
     }
+
+    // TODO once RACH is available, start ta_timer when UE is connected
+    if (ue_sched_ctl->ta_timer)
+      ue_sched_ctl->ta_timer--;
+
+    if (ue_sched_ctl->ta_timer == 0) {
+      gNB->ta_command = ue_sched_ctl->ta_update;
+      /* if time is up, then set the timer to not send it for 5 frames
+      // regardless of the TA value */
+      ue_sched_ctl->ta_timer = 100;
+      /* reset ta_update */
+      ue_sched_ctl->ta_update = 31;
+      /* MAC CE flag indicating TA length */
+      gNB->ta_len = 2;
+    }
+
+    if (slot_txP == 1) {
+      //if (get_softmodem_params()->phy_test)
+      //  nr_schedule_uss_dlsch_phytest(module_idP, frame_txP, slot_txP, NULL);
+      //else
+      nr_schedule_uss_dlsch_phytest(module_idP, frame_txP, slot_txP);
+
+      // resetting ta flag
+      gNB->ta_len = 0;
+    }
+  } // is_nr_DL_slot
+
+  if (is_nr_UL_slot(cc->ServingCellConfigCommon, slot_rxP) && slot_rxP == 8) {
+    //if (get_softmodem_params()->phy_test)
+    //  nr_schedule_uss_ulsch_phytest(module_idP, frame_rxP, slot_rxP);
+    //else
+    nr_schedule_uss_ulsch_phytest(module_idP, frame_rxP, slot_rxP);
   }
 
   stop_meas(&RC.nrmac[module_idP]->eNB_scheduler);
