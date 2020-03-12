@@ -247,38 +247,6 @@ void nr_schedule_css_dlsch_phytest(module_id_t   module_idP,
   }
 }
 
-void config_uldci(NR_BWP_Uplink_t *ubwp,nfapi_nr_pusch_pdu_t *pusch_pdu,nfapi_nr_dl_tti_pdcch_pdu_rel15_t *pdcch_pdu_rel15, dci_pdu_rel15_t *dci_pdu_rel15, int *dci_formats, int *rnti_types) {
-
-  dci_pdu_rel15->frequency_domain_assignment = PRBalloc_to_locationandbandwidth0(pusch_pdu->rb_size, 
-										 pusch_pdu->rb_start, 
-										 NRRIV2BW(ubwp->bwp_Common->genericParameters.locationAndBandwidth,275));
-
-  dci_pdu_rel15->time_domain_assignment = 2; // row index used here instead of SLIV;
-  dci_pdu_rel15->frequency_hopping_flag = 0;
-  dci_pdu_rel15->mcs = 9;
-  
-  dci_pdu_rel15->format_indicator = 0;
-  dci_pdu_rel15->ndi = 1;
-  dci_pdu_rel15->rv = 0;
-  dci_pdu_rel15->harq_pid = 0;
-  dci_pdu_rel15->tpc = 2;
-  
-  LOG_D(MAC, "[gNB scheduler phytest] ULDCI type 0 payload: PDCCH CCEIndex %d, freq_alloc %d, time_alloc %d, freq_hop_flag %d, mcs %d tpc %d ndi %d rv %d\n",
-	pdcch_pdu_rel15->CceIndex[pdcch_pdu_rel15->numDlDci],
-	dci_pdu_rel15->frequency_domain_assignment,
-	dci_pdu_rel15->time_domain_assignment,
-	dci_pdu_rel15->frequency_hopping_flag,
-	dci_pdu_rel15->mcs,
-	dci_pdu_rel15->tpc,
-	dci_pdu_rel15->ndi, 
-	dci_pdu_rel15->rv);
-  
-  dci_formats[pdcch_pdu_rel15->numDlDci] = NR_UL_DCI_FORMAT_0_0;
-  rnti_types[pdcch_pdu_rel15->numDlDci]  = NR_RNTI_C;
-  pdcch_pdu_rel15->numDlDci++;
-
-}
-    
 void nr_schedule_uss_dlsch_phytest(module_id_t   module_idP,
                                    frame_t       frameP,
                                    sub_frame_t   slotP,
