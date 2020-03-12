@@ -376,7 +376,7 @@ void gNB_dlsch_ulsch_scheduler(module_id_t module_idP,
   }
 
   // Phytest scheduling
-  if (get_softmodem_params()->phy_test && slot_txP==1){
+  if (get_softmodem_params()->phy_test && slot_txP>0){
     nr_schedule_uss_dlsch_phytest(module_idP, frame_txP, slot_txP,NULL);
     // resetting ta flag
     gNB->ta_len = 0;
@@ -391,7 +391,7 @@ void gNB_dlsch_ulsch_scheduler(module_id_t module_idP,
   } //is_nr_DL_slot
 
   if (is_nr_UL_slot(cc->ServingCellConfigCommon,slot_rxP)) { 
-    if (get_softmodem_params()->phy_test && slot_rxP==8){
+    if (get_softmodem_params()->phy_test ){
       nr_schedule_uss_ulsch_phytest(module_idP, frame_rxP, slot_rxP);
     }
   }

@@ -62,4 +62,6 @@ void init_gNB_afterRU(void);
 extern int stop_L1L2(module_id_t gnb_id);
 extern int restart_L1L2(module_id_t gnb_id);
 
+extern uint32_t target_dl_mcs;
+
 #endif

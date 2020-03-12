@@ -35,6 +35,7 @@
 #include "PHY/NR_TRANSPORT/nr_dlsch.h"
 #include "PHY/NR_TRANSPORT/nr_dci.h"
 #include "executables/softmodem-common.h"
+#include "executables/nr-softmodem.h"
 
 #include "NR_SCS-SpecificCarrier.h"
 #include "NR_TDD-UL-DL-ConfigCommon.h"
@@ -117,7 +118,7 @@ void nr_schedule_css_dlsch_phytest(module_id_t   module_idP,
     pdsch_pdu_rel15->SubcarrierSpacing = scc->downlinkConfigCommon->initialDownlinkBWP->genericParameters.subcarrierSpacing;
     pdsch_pdu_rel15->CyclicPrefix = 0;
     pdsch_pdu_rel15->NrOfCodewords = 1;
-    int mcsIndex = 9;
+    int mcsIndex = target_dl_mcs; //9;
     pdsch_pdu_rel15->targetCodeRate[0] = nr_get_code_rate_dl(mcsIndex,0);
     pdsch_pdu_rel15->qamModOrder[0] = 2;
     pdsch_pdu_rel15->mcsIndex[0] = mcsIndex;
@@ -298,7 +299,7 @@ int configure_fapi_dl_pdu(int Mod_idP,
   else pdsch_pdu_rel15->CyclicPrefix=0;
 
   pdsch_pdu_rel15->NrOfCodewords = 1;
-  int mcs = (mcsIndex!=NULL) ? *mcsIndex : 9;
+  int mcs = (mcsIndex!=NULL) ? *mcsIndex : target_dl_mcs; //9;
   pdsch_pdu_rel15->targetCodeRate[0] = nr_get_code_rate_dl(mcs,0);
   pdsch_pdu_rel15->qamModOrder[0] = 2;
   pdsch_pdu_rel15->mcsIndex[0] = mcs;
