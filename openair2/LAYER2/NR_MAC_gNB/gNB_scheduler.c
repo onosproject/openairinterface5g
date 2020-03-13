@@ -390,11 +390,12 @@ void gNB_dlsch_ulsch_scheduler(module_id_t module_idP,
 
   } //is_nr_DL_slot
 
-  if (is_nr_UL_slot(cc->ServingCellConfigCommon,slot_rxP)) { 
+/*  if (is_nr_UL_slot(cc->ServingCellConfigCommon,slot_rxP)) { 
     if (get_softmodem_params()->phy_test ){
       nr_schedule_uss_ulsch_phytest(module_idP, frame_rxP, slot_rxP);
     }
   }
+*/
 
   stop_meas(&RC.nrmac[module_idP]->eNB_scheduler);
   
