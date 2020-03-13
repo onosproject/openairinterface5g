@@ -373,7 +373,9 @@ void gNB_dlsch_ulsch_scheduler(module_id_t module_idP,
     //if (get_softmodem_params()->phy_test)
     //  nr_schedule_uss_ulsch_phytest(module_idP, frame_rxP, slot_rxP);
     //else
-    nr_schedule_uss_ulsch_phytest(module_idP, frame_rxP, slot_rxP);
+    // at the moment, phy_test has to be enabled. Therefore, always schedule
+    // using nr_schedule_ulsch_rnti()
+    nr_schedule_ulsch_rnti(module_idP, frame_rxP, slot_rxP);
   }
 
   stop_meas(&RC.nrmac[module_idP]->eNB_scheduler);

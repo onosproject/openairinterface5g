@@ -102,6 +102,8 @@ void nr_schedule_uss_dlsch_phytest(module_id_t   module_idP,
                                    sub_frame_t   slotP,
                                    nfapi_nr_dl_tti_pdsch_pdu_rel15_t *pdsch_config);
 
+void nr_schedule_ulsch_rnti(module_id_t module_idP, frame_t frameP, sub_frame_t slotP);
+
 void nr_schedule_uss_ulsch_phytest(int Mod_idP,
                                    frame_t       frameP,
                                    sub_frame_t   slotP);
