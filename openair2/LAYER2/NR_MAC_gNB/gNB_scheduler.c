@@ -360,7 +360,9 @@ void gNB_dlsch_ulsch_scheduler(module_id_t module_idP,
       //if (get_softmodem_params()->phy_test)
       //  nr_schedule_uss_dlsch_phytest(module_idP, frame_txP, slot_txP, NULL);
       //else
-      nr_schedule_uss_dlsch_phytest(module_idP, frame_txP, slot_txP);
+      // at the moment, phy_test has to be enabled. Therefore, always schedule
+      // using nr_schedule_ulsch_rnti()
+      nr_schedule_ue_spec(module_idP, frame_txP, slot_txP);
 
       // resetting ta flag
       gNB->ta_len = 0;

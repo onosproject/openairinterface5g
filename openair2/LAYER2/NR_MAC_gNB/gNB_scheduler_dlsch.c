@@ -37,7 +37,7 @@
 #include "LAYER2/NR_MAC_COMMON/nr_mac.h"
 #include "LAYER2/NR_MAC_gNB/nr_mac_gNB.h"
 #include "LAYER2/NR_MAC_COMMON/nr_mac_extern.h"
-#include "LAYER2/MAC/mac.h"
+#include "LAYER2/NR_MAC_gNB/mac_proto.h"
 
 /*NFAPI*/
 #include "nfapi_nr_interface.h"
@@ -176,6 +176,128 @@ int nr_generate_dlsch_pdu(module_id_t module_idP,
   return offset;
 }
 
-/* functionalities of this function have been moved to nr_schedule_uss_dlsch_phytest */
 void nr_schedule_ue_spec(module_id_t module_idP, frame_t frameP, sub_frame_t slotP){
+  const int UE_id = 0;
+  const int CC_id = 0;
+
+  gNB_MAC_INST *gNB_mac = RC.nrmac[module_idP];
+  nfapi_nr_dl_tti_request_body_t *dl_req = &gNB_mac->DL_req[CC_id].dl_tti_request_body;
+  nfapi_nr_pdu_t *tx_req = &gNB_mac->TX_req[CC_id].pdu_list[gNB_mac->TX_req[CC_id].Number_of_PDUs];
+
+  NR_UE_list_t *UE_list = &gNB_mac->UE_list;
+
+  if (UE_list->num_UEs ==0) return;
+
+  unsigned char sdu_lcids[NB_RB_MAX] = {0};
+  uint16_t sdu_lengths[NB_RB_MAX] = {0};
+  uint16_t rnti = UE_list->rnti[UE_id];
+
+  uint8_t mac_sdus[MAX_NR_DLSCH_PAYLOAD_BYTES];
+
+  LOG_D(MAC, "Scheduling UE specific search space DCI type 1\n");
+
+  int CCEIndex = allocate_nr_CCEs(gNB_mac,
+                              1, // bwp_id
+                              0, // coreset_id
+                              4, // aggregation,
+                              1, // search_space, 0 common, 1 ue-specific
+                              UE_id,
+                              0); // m
+  if (CCEIndex < 0) {
+    LOG_E(MAC, "%d.%d can not allocate CCE for UE %d\n", frameP, slotP, UE_id);
+    return;
+  }
+
+  int CCEIndices[2] = {CCEIndex, 0};
+  int TBS_bytes =
+      configure_fapi_dl_pdu(module_idP, CCEIndices, dl_req, NULL, NULL, NULL);
+
+  int ta_len = gNB_mac->ta_len;
+  int header_length_total = 0;
+  int sdu_length_total = 0;
+  int num_sdus = 0;
+  int header_length_last;
+  for (int lcid = NB_RB_MAX - 1; lcid >= DTCH; lcid--) {
+
+    // TODO: check if the lcid is active
+
+    LOG_D(MAC, "[gNB %d], Frame %d, DTCH%d->DLSCH, Checking RLC status (TBS %d bytes, len %d)\n",
+      module_idP, frameP, lcid, TBS_bytes, TBS_bytes - ta_len - header_length_total - sdu_length_total - 3);
+
+    if (TBS_bytes - ta_len - header_length_total - sdu_length_total - 3 <= 0)
+      break;
+
+    mac_rlc_status_resp_t rlc_status = mac_rlc_status_ind(module_idP,
+                                    rnti,
+                                    module_idP,
+                                    frameP,
+                                    slotP,
+                                    ENB_FLAG_YES,
+                                    MBMS_FLAG_NO,
+                                    lcid,
+                                    TBS_bytes - ta_len - header_length_total - sdu_length_total - 3,
+                                    0,
+                                    0);
+
+    if (rlc_status.bytes_in_buffer <= 0)
+      continue;
+
+    LOG_D(MAC, "[gNB %d][USER-PLANE DEFAULT DRB] Frame %d : DTCH->DLSCH, Requesting %d bytes from RLC (lcid %d total hdr len %d), TBS_bytes: %d \n \n",
+      module_idP, frameP, TBS_bytes - ta_len - header_length_total - sdu_length_total - 3,
+      lcid, header_length_total, TBS_bytes);
+
+    sdu_lengths[num_sdus] = mac_rlc_data_req(module_idP,
+                                             rnti,
+                                             module_idP,
+                                             frameP,
+                                             ENB_FLAG_YES,
+                                             MBMS_FLAG_NO,
+                                             lcid,
+                                             TBS_bytes,
+                                             (char *)&mac_sdus[sdu_length_total],
+                                             0,
+                                             0);
+
+    LOG_D(MAC, "[gNB %d][USER-PLANE DEFAULT DRB] Got %d bytes for DTCH %d \n", module_idP, sdu_lengths[num_sdus], lcid);
+
+    sdu_lcids[num_sdus] = lcid;
+    sdu_length_total += sdu_lengths[num_sdus];
+    header_length_last = 1 + 1 + (sdu_lengths[num_sdus] >= 128);
+    header_length_total += header_length_last;
+
+    num_sdus++;
+
+    //ue_sched_ctl->uplane_inactivity_timer = 0;
+  }
+
+  // check if there is at least one SDU or TA command
+  if (ta_len + sdu_length_total + header_length_total <= 0)
+    return;
+
+  // Check if we have to consider padding
+  int post_padding = TBS_bytes >= 2 + header_length_total + sdu_length_total + ta_len;
+
+  int offset = nr_generate_dlsch_pdu(module_idP,
+                                 (unsigned char *) mac_sdus,
+                                 (unsigned char *) gNB_mac->UE_list.DLSCH_pdu[0][0].payload[0], //(unsigned char *) mac_pdu,
+                                 num_sdus, //num_sdus
+                                 sdu_lengths,
+                                 sdu_lcids,
+                                 255, // no drx
+                                 NULL, // contention res id
+                                 post_padding);
+
+  // Padding: fill remainder of DLSCH with 0
+  if (post_padding > 0)
+    for (int j = 0; j < (TBS_bytes - offset); j++)
+      gNB_mac->UE_list.DLSCH_pdu[0][UE_id].payload[0][offset + j] = 0;
+
+  configure_fapi_dl_Tx(module_idP, frameP, slotP, dl_req, tx_req, TBS_bytes, gNB_mac->pdu_index[CC_id]);
+
+#if defined(ENABLE_MAC_PAYLOAD_DEBUG)
+  LOG_I(MAC, "%d.%d first 10 payload bytes UE %d TBSsize %d:", frameP, slotP, UE_id, TBS_bytes);
+  for(int i = 0; i < 10; i++)
+    printf(" %02x.", gNB_mac->UE_list.DLSCH_pdu[0][UE_id].payload[0][i]);
+  prinf("..\n");
+#endif
 }
