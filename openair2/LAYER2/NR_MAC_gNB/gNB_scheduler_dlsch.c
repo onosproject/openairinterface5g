@@ -176,8 +176,21 @@ int nr_generate_dlsch_pdu(module_id_t module_idP,
   return offset;
 }
 
+uint16_t getBWPsize(module_id_t Mod_id, int UE_id, int bwp_id, int N_RB) {
+  NR_UE_list_t *UE_list = &RC.nrmac[Mod_id]->UE_list;
+  NR_CellGroupConfig_t *secondaryCellGroup = UE_list->secondaryCellGroup[UE_id];
+  struct NR_ServingCellConfig__downlinkBWP_ToAddModList *BWP_ToAddModList =
+    secondaryCellGroup->spCellConfig->spCellConfigDedicated->downlinkBWP_ToAddModList;
+  AssertFatal(BWP_ToAddModList->list.count == 1,
+              "downlinkBWP_ToAddModList has %d BWP!\n",
+              BWP_ToAddModList->list.count);
+  NR_BWP_Downlink_t *bwp = BWP_ToAddModList->list.array[bwp_id - 1];
+  return NRRIV2BW(bwp->bwp_Common->genericParameters.locationAndBandwidth, N_RB);
+}
+
 void nr_schedule_ue_spec(module_id_t module_idP, frame_t frameP, sub_frame_t slotP){
   const int UE_id = 0;
+  const int bwp_id = 1;
   const int CC_id = 0;
 
   gNB_MAC_INST *gNB_mac = RC.nrmac[module_idP];
@@ -197,7 +210,7 @@ void nr_schedule_ue_spec(module_id_t module_idP, frame_t frameP, sub_frame_t slo
   LOG_D(MAC, "Scheduling UE specific search space DCI type 1\n");
 
   int CCEIndex = allocate_nr_CCEs(gNB_mac,
-                              1, // bwp_id
+                              bwp_id, // bwp_id
                               0, // coreset_id
                               4, // aggregation,
                               1, // search_space, 0 common, 1 ue-specific
@@ -208,9 +221,18 @@ void nr_schedule_ue_spec(module_id_t module_idP, frame_t frameP, sub_frame_t slo
     return;
   }
 
-  int CCEIndices[2] = {CCEIndex, 0};
-  int TBS_bytes =
-      configure_fapi_dl_pdu(module_idP, CCEIndices, dl_req, NULL, NULL, NULL);
+  const int mcsIndex = 9;
+  const int N_RB = 275;
+  const uint16_t rbSize = getBWPsize(module_idP, UE_id, bwp_id, N_RB);
+  const uint16_t rbStart = 0;
+  int TBS_bytes = configure_fapi_dl_pdu(gNB_mac,
+                                        CC_id,
+                                        UE_id,
+                                        bwp_id,
+                                        CCEIndex,
+                                        mcsIndex,
+                                        rbSize,
+                                        rbStart);
 
   int ta_len = gNB_mac->ta_len;
   int header_length_total = 0;

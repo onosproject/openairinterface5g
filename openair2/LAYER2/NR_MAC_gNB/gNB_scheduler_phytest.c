@@ -291,15 +291,15 @@ void nr_schedule_uss_dlsch_phytest(module_id_t   module_idP,
   if (CCEIndex == -1) return;
 
   AssertFatal(CCEIndex>0,"CCEIndex is negative\n");
-  int CCEIndices[2];
-  CCEIndices[0] = CCEIndex;
 
-  TBS_bytes = configure_fapi_dl_pdu(module_idP,
-                                    CCEIndices,
-                                    dl_req, 
-                                    dlsch_config!=NULL ? dlsch_config->mcsIndex : NULL,
-                                    dlsch_config!=NULL ? &dlsch_config->rbSize : NULL,
-                                    dlsch_config!=NULL ? &dlsch_config->rbStart : NULL);
+  TBS_bytes = configure_fapi_dl_pdu(gNB_mac,
+                                    CC_id,
+                                    UE_id,
+                                    1, // bwp_id
+                                    CCEIndex,
+                                    dlsch_config!=NULL ? dlsch_config->mcsIndex[0] : 9,
+                                    dlsch_config!=NULL ? dlsch_config->rbSize : 106,
+                                    dlsch_config!=NULL ? dlsch_config->rbStart : 0);
  
   //The --NOS1 use case currently schedules DLSCH transmissions only when there is IP traffic arriving
   //through the LTE stack
