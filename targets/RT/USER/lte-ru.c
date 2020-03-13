@@ -888,7 +888,7 @@ void tx_rf(RU_t *ru,
            int subframe,
            uint64_t timestamp) {
   RU_proc_t *proc = &ru->proc;
-  LTE_DL_FRAME_PARMS *fp = &ru->frame_parms;
+  LTE_DL_FRAME_PARMS *fp = ru->frame_parms;
   void *txp[ru->nb_tx],*txp1[ru->nb_tx];
   unsigned int txs,txs1;
   int i;
