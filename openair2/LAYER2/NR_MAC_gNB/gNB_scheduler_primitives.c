@@ -971,6 +971,19 @@ dump_nr_ue_list(NR_UE_list_t *listP,
   return;
 }
 
+void add_nr_ue_list(NR_UE_list_t *listP, int UE_id) {
+  if (listP->head == -1) {
+    listP->head = UE_id;
+    listP->next[UE_id] = -1;
+  } else {
+    int i = listP->head;
+    while (listP->next[i] >= 0)
+      i = listP->next[i];
+    listP->next[i] = UE_id;
+    listP->next[UE_id] = -1;
+  }
+}
+
 int find_nr_UE_id(module_id_t mod_idP, rnti_t rntiP)
 //------------------------------------------------------------------------------
 {
@@ -993,10 +1006,9 @@ int add_new_nr_ue(module_id_t mod_idP, rnti_t rntiP){
   int UE_id;
   int i;
   NR_UE_list_t *UE_list = &RC.nrmac[mod_idP]->UE_list;
-  LOG_I(MAC, "[gNB %d] Adding UE with rnti %x (next avail %d, num_UEs %d)\n",
+  LOG_I(MAC, "[gNB %d] Adding UE with rnti %x (num_UEs %d)\n",
         mod_idP,
         rntiP,
-        UE_list->avail,
         UE_list->num_UEs);
   dump_nr_ue_list(UE_list, 0);
 
@@ -1008,6 +1020,7 @@ int add_new_nr_ue(module_id_t mod_idP, rnti_t rntiP){
     UE_list->num_UEs++;
     UE_list->active[UE_id] = TRUE;
     UE_list->rnti[UE_id] = rntiP;
+    add_nr_ue_list(UE_list, UE_id);
     memset((void *) &UE_list->UE_sched_ctrl[UE_id],
            0,
            sizeof(NR_UE_sched_ctrl_t));

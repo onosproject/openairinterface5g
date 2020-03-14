@@ -107,17 +107,12 @@ void mac_top_init_gNB(void)
     UE_list->num_UEs = 0;
     UE_list->head = -1;
     UE_list->head_ul = -1;
-    UE_list->avail = 0;
 
-    for (list_el = 0; list_el < MAX_MOBILES_PER_GNB - 1; list_el++) {
-       UE_list->next[list_el] = list_el + 1;
-      UE_list->next_ul[list_el] = list_el + 1;
+    for (list_el = 0; list_el < MAX_MOBILES_PER_GNB; list_el++) {
+      UE_list->next[list_el] = -1;
+      UE_list->next_ul[list_el] = -1;
       UE_list->active[list_el] = FALSE;
     }
-
-    UE_list->next[list_el] = -1;
-    UE_list->next_ul[list_el] = -1;
-    UE_list->active[list_el] = FALSE;
   }
 
   srand48(0);

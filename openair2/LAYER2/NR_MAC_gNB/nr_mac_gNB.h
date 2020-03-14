@@ -117,7 +117,6 @@ typedef struct {
   int head;
   int next_ul[MAX_MOBILES_PER_GNB];
   int head_ul;
-  int avail;
   int num_UEs;
   boolean_t active[MAX_MOBILES_PER_GNB];
   rnti_t rnti[MAX_MOBILES_PER_GNB];
