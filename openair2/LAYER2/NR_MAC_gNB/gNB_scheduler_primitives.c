@@ -1024,6 +1024,9 @@ int add_new_nr_ue(module_id_t mod_idP, rnti_t rntiP){
     memset((void *) &UE_list->UE_sched_ctrl[UE_id],
            0,
            sizeof(NR_UE_sched_ctrl_t));
+    // hard code single DL DRB 3 to check in the scheduler
+    UE_list->UE_sched_ctrl[UE_id].dl_lc_num = 1;
+    UE_list->UE_sched_ctrl[UE_id].dl_lc_ids[0] = DTCH;
     LOG_I(MAC, "gNB %d] Add NR UE_id %d : rnti %x\n",
           mod_idP,
           UE_id,

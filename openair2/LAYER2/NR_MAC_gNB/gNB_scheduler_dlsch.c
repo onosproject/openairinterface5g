@@ -188,24 +188,88 @@ uint16_t getBWPsize(module_id_t Mod_id, int UE_id, int bwp_id, int N_RB) {
   return NRRIV2BW(bwp->bwp_Common->genericParameters.locationAndBandwidth, N_RB);
 }
 
-void nr_schedule_ue_spec(module_id_t module_idP, frame_t frameP, sub_frame_t slotP){
+void nr_dlsch_buffer_update(module_id_t Mod_id, frame_t frame, sub_frame_t slot) {
+  NR_UE_list_t *UE_list = &RC.nrmac[Mod_id]->UE_list;
+
+  for (int UE_id = UE_list->head; UE_id >= 0; UE_id = UE_list->next[UE_id]) {
+    const rnti_t rnti = UE_list->rnti[UE_id];
+    UE_sched_ctrl_t *sched_ctrl = &UE_list->UE_sched_ctrl[UE_id];
+    sched_ctrl->dl_buffer_total = 0;
+
+    for (int i = 0; i < sched_ctrl->dl_lc_num; i++) {
+      const uint8_t lcid = sched_ctrl->dl_lc_ids[i];
+      mac_rlc_status_resp_t resp = mac_rlc_status_ind(Mod_id,
+                                                      rnti,
+                                                      Mod_id,
+                                                      frame,
+                                                      slot,
+                                                      ENB_FLAG_YES,
+                                                      MBMS_FLAG_NO,
+                                                      lcid,
+                                                      0,
+                                                      0);
+      sched_ctrl->dl_buffer_total += resp.bytes_in_buffer;
+      sched_ctrl->dl_lc_bytes[lcid] = resp.bytes_in_buffer;
+
+      LOG_D(MAC,
+            "[gNB %d] %d.%d, UE %d RNTI %04x, LC %d, total buffer %d\n",
+            Mod_id,
+            frame,
+            slot,
+            UE_id,
+            rnti,
+            lcid,
+            sched_ctrl->dl_buffer_total);
+    }
+  }
+}
+
+void nr_dlsch_pre_processor(module_id_t Mod_id, frame_t f, sub_frame_t s) {
+  NR_UE_list_t *UE_list = &RC.nrmac[Mod_id]->UE_list;
+  AssertFatal(UE_list->num_UEs == 1,
+              "the scheduler handles only one UE at the moment, but found %d\n",
+              UE_list->num_UEs);
+
+  const int N_RB = 275;
   const int UE_id = 0;
+  const int CC_id = 0;
+  const int bwp_id = 1;
+  UE_sched_ctrl_t *sched_ctrl = &UE_list->UE_sched_ctrl[UE_id];
+
+  sched_ctrl->pre_nb_available_rbs[CC_id] = 0;
+  if (sched_ctrl->dl_buffer_total == 0)
+    return;
+
+  // give all available RBs to this UE, start is implicit (0)
+  const uint16_t rbSize = getBWPsize(Mod_id, UE_id, bwp_id, N_RB);
+  sched_ctrl->pre_nb_available_rbs[CC_id] = rbSize;
+  sched_ctrl->dlsch_mcs = 9;
+}
+
+void nr_schedule_ue_spec(module_id_t module_idP, frame_t frameP, sub_frame_t slotP){
+  NR_UE_list_t *UE_list = &RC.nrmac[module_idP]->UE_list;
+  if (UE_list->num_UEs == 0)
+    return;
+
+  nr_dlsch_buffer_update(module_idP, frameP, slotP);
+
+  // for every user, defines frequency allocation, MCS, etc
+  nr_dlsch_pre_processor(module_idP, frameP, slotP);
+
   const int bwp_id = 1;
   const int CC_id = 0;
 
   gNB_MAC_INST *gNB_mac = RC.nrmac[module_idP];
-
-  NR_UE_list_t *UE_list = &gNB_mac->UE_list;
-
-  if (UE_list->num_UEs ==0) return;
-
-  unsigned char sdu_lcids[NB_RB_MAX] = {0};
-  uint16_t sdu_lengths[NB_RB_MAX] = {0};
-  uint16_t rnti = UE_list->rnti[UE_id];
-
-  uint8_t mac_sdus[MAX_NR_DLSCH_PAYLOAD_BYTES];
+  nfapi_nr_dl_tti_request_body_t *dl_req = &gNB_mac->DL_req[CC_id].dl_tti_request_body;
+  nfapi_nr_pdu_t *tx_req = &gNB_mac->TX_req[CC_id].pdu_list[gNB_mac->TX_req[CC_id].Number_of_PDUs];
 
   LOG_D(MAC, "Scheduling UE specific search space DCI type 1\n");
+
+  int rbStart = 0;
+  int UE_id = 0;
+  UE_sched_ctrl_t *sched_ctrl = &UE_list->UE_sched_ctrl[UE_id];
+  if (sched_ctrl->pre_nb_available_rbs[CC_id] == 0)
+    return;
 
   int CCEIndex = allocate_nr_CCEs(gNB_mac,
                               bwp_id, // bwp_id
@@ -219,51 +283,42 @@ void nr_schedule_ue_spec(module_id_t module_idP, frame_t frameP, sub_frame_t slo
     return;
   }
 
-  const int mcsIndex = 9;
-  const int N_RB = 275;
-  const uint16_t rbSize = getBWPsize(module_idP, UE_id, bwp_id, N_RB);
-  const uint16_t rbStart = 0;
   int TBS_bytes = configure_fapi_dl_pdu(gNB_mac,
                                         CC_id,
                                         UE_id,
                                         bwp_id,
                                         CCEIndex,
-                                        mcsIndex,
-                                        rbSize,
+                                        sched_ctrl->dlsch_mcs,
+                                        sched_ctrl->pre_nb_available_rbs[CC_id],
                                         rbStart);
 
+  unsigned char sdu_lcids[NB_RB_MAX] = {0};
+  uint16_t sdu_lengths[NB_RB_MAX] = {0};
+  uint8_t mac_sdus[MAX_NR_DLSCH_PAYLOAD_BYTES];
+  uint16_t rnti = UE_list->rnti[UE_id];
   int ta_len = gNB_mac->ta_len;
   int header_length_total = 0;
   int sdu_length_total = 0;
   int num_sdus = 0;
   int header_length_last;
-  for (int lcid = NB_RB_MAX - 1; lcid >= DTCH; lcid--) {
-
-    // TODO: check if the lcid is active
-
-    LOG_D(MAC, "[gNB %d], Frame %d, DTCH%d->DLSCH, Checking RLC status (TBS %d bytes, len %d)\n",
-      module_idP, frameP, lcid, TBS_bytes, TBS_bytes - ta_len - header_length_total - sdu_length_total - 3);
-
-    if (TBS_bytes - ta_len - header_length_total - sdu_length_total - 3 <= 0)
-      break;
-
-    mac_rlc_status_resp_t rlc_status = mac_rlc_status_ind(module_idP,
-                                                          rnti,
-                                                          module_idP,
-                                                          frameP,
-                                                          slotP,
-                                                          ENB_FLAG_YES,
-                                                          MBMS_FLAG_NO,
-                                                          lcid,
-                                                          0,
-                                                          0);
-
-    if (rlc_status.bytes_in_buffer <= 0)
+  for (int i = 0; i < sched_ctrl->dl_lc_num; i++) {
+    int lcid = sched_ctrl->dl_lc_ids[i];
+    // if nothing is allocated for this RB, continue
+    if (sched_ctrl->dl_lc_bytes[lcid] == 0)
       continue;
 
-    LOG_D(MAC, "[gNB %d][USER-PLANE DEFAULT DRB] Frame %d : DTCH->DLSCH, Requesting %d bytes from RLC (lcid %d total hdr len %d), TBS_bytes: %d \n \n",
-      module_idP, frameP, TBS_bytes - ta_len - header_length_total - sdu_length_total - 3,
-      lcid, header_length_total, TBS_bytes);
+    int req_data =
+        min(TBS_bytes - ta_len - header_length_total - sdu_length_total - 3,
+            sched_ctrl->dl_lc_bytes[lcid]);
+    LOG_D(MAC,
+          "[gNB %d][USER-PLANE DEFAULT DRB] Frame %d : DTCH->DLSCH, Requesting "
+          "%d bytes from RLC (lcid %d total hdr len %d), TBS_bytes: %d \n \n",
+          module_idP,
+          frameP,
+          req_data,
+          lcid,
+          header_length_total,
+          TBS_bytes);
 
     sdu_lengths[num_sdus] = mac_rlc_data_req(module_idP,
                                              rnti,
@@ -272,12 +327,16 @@ void nr_schedule_ue_spec(module_id_t module_idP, frame_t frameP, sub_frame_t slo
                                              ENB_FLAG_YES,
                                              MBMS_FLAG_NO,
                                              lcid,
-                                             TBS_bytes - ta_len - header_length_total - sdu_length_total - 3,
+                                             req_data,
                                              (char *)&mac_sdus[sdu_length_total],
                                              0,
                                              0);
 
-    LOG_D(MAC, "[gNB %d][USER-PLANE DEFAULT DRB] Got %d bytes for DTCH %d \n", module_idP, sdu_lengths[num_sdus], lcid);
+    LOG_D(MAC,
+          "[gNB %d][USER-PLANE DEFAULT DRB] Got %d bytes for DTCH %d \n",
+          module_idP,
+          sdu_lengths[num_sdus],
+          lcid);
 
     sdu_lcids[num_sdus] = lcid;
     sdu_length_total += sdu_lengths[num_sdus];
@@ -287,6 +346,9 @@ void nr_schedule_ue_spec(module_id_t module_idP, frame_t frameP, sub_frame_t slo
     num_sdus++;
 
     //ue_sched_ctl->uplane_inactivity_timer = 0;
+
+    if (TBS_bytes - ta_len - header_length_total - sdu_length_total - 3 <= 0)
+      break;
   }
 
   // check if there is at least one SDU or TA command

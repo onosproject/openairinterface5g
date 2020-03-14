@@ -939,7 +939,17 @@ typedef struct {
 
   uint16_t priority[MAX_NUM_LCID];
 
+  /// number of active DL LCs
+  uint8_t dl_lc_num;
+  /// order in which DLSCH scheduler should allocate LCs
+  uint8_t dl_lc_ids[NB_RB_MAX];
+  /// number of bytes to schedule for each LC
+  uint32_t dl_lc_bytes[NB_RB_MAX];
+  /// Total number of bytes to schedule
+  uint32_t dl_buffer_total;
+
   // resource scheduling information
+  int dlsch_mcs;
 
   /// Current DL harq round per harq_pid on each CC
   uint8_t round[NFAPI_CC_MAX][10];
