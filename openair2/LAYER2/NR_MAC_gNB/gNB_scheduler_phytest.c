@@ -261,8 +261,6 @@ void nr_schedule_uss_dlsch_phytest(module_id_t   module_idP,
   gNB_MAC_INST *gNB_mac = RC.nrmac[module_idP];
   //NR_COMMON_channels_t                *cc           = nr_mac->common_channels;
   //NR_ServingCellConfigCommon_t *scc=cc->ServingCellConfigCommon;
-  nfapi_nr_dl_tti_request_body_t *dl_req = &gNB_mac->DL_req[CC_id].dl_tti_request_body;
-  nfapi_nr_pdu_t *tx_req = &gNB_mac->TX_req[CC_id].pdu_list[gNB_mac->TX_req[CC_id].Number_of_PDUs];
 
   mac_rlc_status_resp_t rlc_status;
 
@@ -422,7 +420,7 @@ void nr_schedule_uss_dlsch_phytest(module_id_t   module_idP,
         gNB_mac->UE_list.DLSCH_pdu[0][0].payload[0][offset + j] = 0; // mac_pdu[offset + j] = 0;
     }
 
-    configure_fapi_dl_Tx(module_idP, frameP, slotP, dl_req, tx_req, TBS_bytes, gNB_mac->pdu_index[CC_id]);
+    configure_fapi_dl_Tx(gNB_mac, CC_id, frameP, slotP, TBS_bytes, gNB_mac->UE_list.DLSCH_pdu[0][0].payload[0]);
 
     if(IS_SOFTMODEM_NOS1){
       #if defined(ENABLE_MAC_PAYLOAD_DEBUG)

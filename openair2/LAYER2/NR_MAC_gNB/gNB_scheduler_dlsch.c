@@ -194,8 +194,6 @@ void nr_schedule_ue_spec(module_id_t module_idP, frame_t frameP, sub_frame_t slo
   const int CC_id = 0;
 
   gNB_MAC_INST *gNB_mac = RC.nrmac[module_idP];
-  nfapi_nr_dl_tti_request_body_t *dl_req = &gNB_mac->DL_req[CC_id].dl_tti_request_body;
-  nfapi_nr_pdu_t *tx_req = &gNB_mac->TX_req[CC_id].pdu_list[gNB_mac->TX_req[CC_id].Number_of_PDUs];
 
   NR_UE_list_t *UE_list = &gNB_mac->UE_list;
 
@@ -313,7 +311,8 @@ void nr_schedule_ue_spec(module_id_t module_idP, frame_t frameP, sub_frame_t slo
     for (int j = 0; j < (TBS_bytes - offset); j++)
       gNB_mac->UE_list.DLSCH_pdu[0][UE_id].payload[0][offset + j] = 0;
 
-  configure_fapi_dl_Tx(module_idP, frameP, slotP, dl_req, tx_req, TBS_bytes, gNB_mac->pdu_index[CC_id]);
+  configure_fapi_dl_Tx(
+      gNB_mac, CC_id, frameP, slotP, TBS_bytes, UE_list->DLSCH_pdu[0][0].payload[0]);
 
 #if defined(ENABLE_MAC_PAYLOAD_DEBUG)
   LOG_I(MAC, "%d.%d first 10 payload bytes UE %d TBSsize %d:", frameP, slotP, UE_id, TBS_bytes);

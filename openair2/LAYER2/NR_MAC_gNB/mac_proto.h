@@ -91,13 +91,12 @@ uint32_t configure_fapi_dl_pdu(gNB_MAC_INST *nr_mac,
 
 void config_uldci(NR_BWP_Uplink_t *ubwp,nfapi_nr_pusch_pdu_t *pusch_pdu,nfapi_nr_dl_tti_pdcch_pdu_rel15_t *pdcch_pdu_rel15, dci_pdu_rel15_t *dci_pdu_rel15, int *dci_formats, int *rnti_types);
 
-void configure_fapi_dl_Tx(module_id_t Mod_idP,
+void configure_fapi_dl_Tx(gNB_MAC_INST *nr_mac,
+                          int CC_id,
                           frame_t frameP,
                           sub_frame_t slotP,
-                          nfapi_nr_dl_tti_request_body_t *dl_req,
-                          nfapi_nr_pdu_t *tx_req,
                           int tbs_bytes,
-                          int16_t pdu_index);
+                          uint8_t *mac_pdu);
 
 void nr_schedule_uss_dlsch_phytest(module_id_t   module_idP,
                                    frame_t       frameP,

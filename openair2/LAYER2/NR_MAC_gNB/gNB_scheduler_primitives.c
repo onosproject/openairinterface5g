@@ -1525,18 +1525,16 @@ uint32_t configure_fapi_dl_pdu(gNB_MAC_INST *nr_mac,
   return TBS; //Return TBS in bytes
 }
 
-void configure_fapi_dl_Tx(module_id_t Mod_idP,
+void configure_fapi_dl_Tx(gNB_MAC_INST *nr_mac,
+                          int CC_id,
                           frame_t frameP,
                           sub_frame_t slotP,
-                          nfapi_nr_dl_tti_request_body_t *dl_req,
-                          nfapi_nr_pdu_t *tx_req,
                           int tbs_bytes,
-                          int16_t pdu_index) {
-  int CC_id = 0;
-
+                          uint8_t *mac_pdu) {
+  nfapi_nr_dl_tti_request_body_t *dl_req = &nr_mac->DL_req[CC_id].dl_tti_request_body;
+  nfapi_nr_pdu_t *tx_req = &nr_mac->TX_req[CC_id].pdu_list[nr_mac->TX_req[CC_id].Number_of_PDUs];
   nfapi_nr_dl_tti_request_pdu_t  *dl_tti_pdsch_pdu = &dl_req->dl_tti_pdu_list[dl_req->nPDUs+1];
   nfapi_nr_dl_tti_pdsch_pdu_rel15_t *pdsch_pdu_rel15 = &dl_tti_pdsch_pdu->pdsch_pdu.pdsch_pdu_rel15;
-  gNB_MAC_INST *nr_mac  = RC.nrmac[Mod_idP];
 
   LOG_D(MAC, "DLSCH PDU: start PRB %d n_PRB %d start symbol %d nb_symbols %d nb_layers %d nb_codewords %d mcs %d TBS (bytes): %d\n",
         pdsch_pdu_rel15->rbStart,
@@ -1555,7 +1553,7 @@ void configure_fapi_dl_Tx(module_id_t Mod_idP,
   tx_req->num_TLV = 1;
   tx_req->TLVs[0].length = tbs_bytes +2;
 
-  memcpy((void*)&tx_req->TLVs[0].value.direct[0], (void*)&nr_mac->UE_list.DLSCH_pdu[0][0].payload[0], tbs_bytes);;
+  memcpy(tx_req->TLVs[0].value.direct, mac_pdu, tbs_bytes);
 
   nr_mac->TX_req[CC_id].Number_of_PDUs++;
   nr_mac->TX_req[CC_id].SFN = frameP;
