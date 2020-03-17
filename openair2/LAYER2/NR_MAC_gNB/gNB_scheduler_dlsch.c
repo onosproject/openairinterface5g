@@ -247,139 +247,149 @@ void nr_dlsch_pre_processor(module_id_t Mod_id, frame_t f, sub_frame_t s) {
 }
 
 void nr_schedule_ue_spec(module_id_t module_idP, frame_t frameP, sub_frame_t slotP){
-  NR_UE_list_t *UE_list = &RC.nrmac[module_idP]->UE_list;
+  const int bwp_id = 1;
+  const int CC_id = 0;
+
+  gNB_MAC_INST *gNB_mac = RC.nrmac[module_idP];
+  NR_UE_list_t *UE_list = &gNB_mac->UE_list;
   if (UE_list->num_UEs == 0)
     return;
 
   nr_dlsch_buffer_update(module_idP, frameP, slotP);
 
-  // for every user, defines frequency allocation, MCS, etc
+  /* the preprocessor determines resource block allocation, MCS, etc. for all
+   * UEs.  Currently, these values are kept in the (LTE) UE_sched_ctrl_t
+   * structure */
   nr_dlsch_pre_processor(module_idP, frameP, slotP);
 
-  const int bwp_id = 1;
-  const int CC_id = 0;
-
-  gNB_MAC_INST *gNB_mac = RC.nrmac[module_idP];
-  nfapi_nr_dl_tti_request_body_t *dl_req = &gNB_mac->DL_req[CC_id].dl_tti_request_body;
-  nfapi_nr_pdu_t *tx_req = &gNB_mac->TX_req[CC_id].pdu_list[gNB_mac->TX_req[CC_id].Number_of_PDUs];
-
   LOG_D(MAC, "Scheduling UE specific search space DCI type 1\n");
-
   int rbStart = 0;
-  int UE_id = 0;
-  UE_sched_ctrl_t *sched_ctrl = &UE_list->UE_sched_ctrl[UE_id];
-  if (sched_ctrl->pre_nb_available_rbs[CC_id] == 0)
-    return;
-
-  int CCEIndex = allocate_nr_CCEs(gNB_mac,
-                              bwp_id, // bwp_id
-                              0, // coreset_id
-                              4, // aggregation,
-                              1, // search_space, 0 common, 1 ue-specific
-                              UE_id,
-                              0); // m
-  if (CCEIndex < 0) {
-    LOG_E(MAC, "%d.%d can not allocate CCE for UE %d\n", frameP, slotP, UE_id);
-    return;
-  }
-
-  int TBS_bytes = configure_fapi_dl_pdu(gNB_mac,
-                                        CC_id,
-                                        UE_id,
-                                        bwp_id,
-                                        CCEIndex,
-                                        sched_ctrl->dlsch_mcs,
-                                        sched_ctrl->pre_nb_available_rbs[CC_id],
-                                        rbStart);
-
-  unsigned char sdu_lcids[NB_RB_MAX] = {0};
-  uint16_t sdu_lengths[NB_RB_MAX] = {0};
-  uint8_t mac_sdus[MAX_NR_DLSCH_PAYLOAD_BYTES];
-  uint16_t rnti = UE_list->rnti[UE_id];
-  int ta_len = gNB_mac->ta_len;
-  int header_length_total = 0;
-  int sdu_length_total = 0;
-  int num_sdus = 0;
-  int header_length_last;
-  for (int i = 0; i < sched_ctrl->dl_lc_num; i++) {
-    int lcid = sched_ctrl->dl_lc_ids[i];
-    // if nothing is allocated for this RB, continue
-    if (sched_ctrl->dl_lc_bytes[lcid] == 0)
+  for (int UE_id = UE_list->head; UE_id >= 0; UE_id = UE_list->next[UE_id]) {
+    UE_sched_ctrl_t *sched_ctrl = &UE_list->UE_sched_ctrl[UE_id];
+    if (sched_ctrl->pre_nb_available_rbs[CC_id] == 0)
       continue;
 
-    int req_data =
-        min(TBS_bytes - ta_len - header_length_total - sdu_length_total - 3,
-            sched_ctrl->dl_lc_bytes[lcid]);
-    LOG_D(MAC,
-          "[gNB %d][USER-PLANE DEFAULT DRB] Frame %d : DTCH->DLSCH, Requesting "
-          "%d bytes from RLC (lcid %d total hdr len %d), TBS_bytes: %d \n \n",
-          module_idP,
-          frameP,
-          req_data,
-          lcid,
-          header_length_total,
-          TBS_bytes);
+    int CCEIndex = allocate_nr_CCEs(gNB_mac,
+                                    bwp_id, // bwp_id
+                                    0, // coreset_id
+                                    4, // aggregation,
+                                    1, // search_space, 0 common, 1 ue-specific
+                                    UE_id,
+                                    0); // m
+    if (CCEIndex < 0) {
+      LOG_E(MAC, "%d.%d can not allocate CCE for UE %d\n", frameP, slotP, UE_id);
+      continue;
+    }
 
-    sdu_lengths[num_sdus] = mac_rlc_data_req(module_idP,
-                                             rnti,
-                                             module_idP,
-                                             frameP,
-                                             ENB_FLAG_YES,
-                                             MBMS_FLAG_NO,
-                                             lcid,
-                                             req_data,
-                                             (char *)&mac_sdus[sdu_length_total],
-                                             0,
-                                             0);
+    /* this pre-fills the PDCCH and PDSCH PDUs of FAPI. At the same time, it
+     * calculates the TBS. We could do the latter in a separate step first, but
+     * this involves multiple variables (like code rate, etc) that we'd need to
+     * carry along the TBS so we avoid this for the moment since at this point
+     * we can be sure that (a) resource blocks have been allocated and (b) this
+     * UE's CCEs can be allocated, hence this will run until the end */
+    int TBS_bytes = configure_fapi_dl_pdu(gNB_mac,
+                                          CC_id,
+                                          UE_id,
+                                          bwp_id,
+                                          CCEIndex,
+                                          sched_ctrl->dlsch_mcs,
+                                          sched_ctrl->pre_nb_available_rbs[CC_id],
+                                          rbStart);
 
-    LOG_D(MAC,
-          "[gNB %d][USER-PLANE DEFAULT DRB] Got %d bytes for DTCH %d \n",
-          module_idP,
-          sdu_lengths[num_sdus],
-          lcid);
+    unsigned char sdu_lcids[NB_RB_MAX] = {0};
+    uint16_t sdu_lengths[NB_RB_MAX] = {0};
+    uint8_t mac_sdus[MAX_NR_DLSCH_PAYLOAD_BYTES];
+    const uint16_t rnti = UE_list->rnti[UE_id];
+    int ta_len = gNB_mac->ta_len; /* TODO needs to be UE specific? */
+    int header_length_total = 0;
+    int sdu_length_total = 0;
+    int num_sdus = 0;
+    for (int i = 0; i < sched_ctrl->dl_lc_num; i++) {
+      int lcid = sched_ctrl->dl_lc_ids[i];
+      // if nothing is allocated for this RB, continue
+      if (sched_ctrl->dl_lc_bytes[lcid] == 0)
+        continue;
 
-    sdu_lcids[num_sdus] = lcid;
-    sdu_length_total += sdu_lengths[num_sdus];
-    header_length_last = 1 + 1 + (sdu_lengths[num_sdus] >= 128);
-    header_length_total += header_length_last;
+      int req_data =
+          min(TBS_bytes - ta_len - header_length_total - sdu_length_total - 3,
+              sched_ctrl->dl_lc_bytes[lcid]);
+      LOG_D(MAC,
+            "[gNB %d][USER-PLANE DEFAULT DRB] Frame %d : DTCH->DLSCH, Requesting "
+            "%d bytes from RLC (lcid %d total hdr len %d), TBS_bytes: %d \n \n",
+            module_idP,
+            frameP,
+            req_data,
+            lcid,
+            header_length_total,
+            TBS_bytes);
 
-    num_sdus++;
+      sdu_lengths[num_sdus] = mac_rlc_data_req(module_idP,
+                                               rnti,
+                                               module_idP,
+                                               frameP,
+                                               ENB_FLAG_YES,
+                                               MBMS_FLAG_NO,
+                                               lcid,
+                                               req_data,
+                                               (char *)&mac_sdus[sdu_length_total],
+                                               0,
+                                               0);
 
-    //ue_sched_ctl->uplane_inactivity_timer = 0;
+      LOG_D(MAC,
+            "[gNB %d][USER-PLANE DEFAULT DRB] Got %d bytes for DTCH %d \n",
+            module_idP,
+            sdu_lengths[num_sdus],
+            lcid);
 
-    if (TBS_bytes - ta_len - header_length_total - sdu_length_total - 3 <= 0)
-      break;
-  }
+      sdu_lcids[num_sdus] = lcid;
+      sdu_length_total += sdu_lengths[num_sdus];
+      header_length_total += 1 + 1 + (sdu_lengths[num_sdus] >= 128);
 
-  // check if there is at least one SDU or TA command
-  if (ta_len + sdu_length_total + header_length_total <= 0)
-    return;
+      num_sdus++;
 
-  // Check if we have to consider padding
-  int post_padding = TBS_bytes >= 2 + header_length_total + sdu_length_total + ta_len;
+      //ue_sched_ctl->uplane_inactivity_timer = 0;
 
-  int offset = nr_generate_dlsch_pdu(module_idP,
-                                 (unsigned char *) mac_sdus,
-                                 (unsigned char *) gNB_mac->UE_list.DLSCH_pdu[0][0].payload[0], //(unsigned char *) mac_pdu,
-                                 num_sdus, //num_sdus
-                                 sdu_lengths,
-                                 sdu_lcids,
-                                 255, // no drx
-                                 NULL, // contention res id
-                                 post_padding);
+      if (TBS_bytes - ta_len - header_length_total - sdu_length_total - 3 <= 0)
+        break;
+    }
 
-  // Padding: fill remainder of DLSCH with 0
-  if (post_padding > 0)
-    for (int j = 0; j < (TBS_bytes - offset); j++)
-      gNB_mac->UE_list.DLSCH_pdu[0][UE_id].payload[0][offset + j] = 0;
+    /* check if there is at least one SDU or TA command. Actually this should
+     * never be true (a UE is only allocated resource blocks if it has data to
+     * transmit), but leave it as a final check */
+    if (ta_len + sdu_length_total + header_length_total <= 0)
+      continue;
 
-  configure_fapi_dl_Tx(
-      gNB_mac, CC_id, frameP, slotP, TBS_bytes, UE_list->DLSCH_pdu[0][0].payload[0]);
+    // Check if we have to consider padding
+    int post_padding = TBS_bytes >= 2 + header_length_total + sdu_length_total + ta_len;
+
+    int offset = nr_generate_dlsch_pdu(
+        module_idP,
+        (unsigned char *)mac_sdus,
+        (unsigned char *)UE_list->DLSCH_pdu[0][UE_id].payload[0],
+        num_sdus, // num_sdus
+        sdu_lengths,
+        sdu_lcids,
+        255, // no drx
+        NULL, // contention res id
+        post_padding);
+
+    // Padding: fill remainder of DLSCH with 0
+    if (post_padding > 0)
+      for (int j = 0; j < (TBS_bytes - offset); j++)
+        UE_list->DLSCH_pdu[0][UE_id].payload[0][offset + j] = 0;
+
+    configure_fapi_dl_Tx(gNB_mac,
+                         CC_id,
+                         frameP,
+                         slotP,
+                         TBS_bytes,
+                         UE_list->DLSCH_pdu[0][UE_id].payload[0]);
 
 #if defined(ENABLE_MAC_PAYLOAD_DEBUG)
-  LOG_I(MAC, "%d.%d first 10 payload bytes UE %d TBSsize %d:", frameP, slotP, UE_id, TBS_bytes);
-  for(int i = 0; i < 10; i++)
-    printf(" %02x.", gNB_mac->UE_list.DLSCH_pdu[0][UE_id].payload[0][i]);
-  prinf("..\n");
+    LOG_I(MAC, "%d.%d first 10 payload bytes UE %d TBSsize %d:", frameP, slotP, UE_id, TBS_bytes);
+    for(int i = 0; i < 10; i++)
+      printf(" %02x.", UE_list->DLSCH_pdu[0][UE_id].payload[0][i]);
+    prinf("..\n");
 #endif
+  }
 }
