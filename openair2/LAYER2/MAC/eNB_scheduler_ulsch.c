@@ -548,6 +548,7 @@ rx_sdu(const module_id_t enb_mod_idP,
             UE_template_ptr->ul_buffer_info[LCGID1] +
             UE_template_ptr->ul_buffer_info[LCGID2] +
             UE_template_ptr->ul_buffer_info[LCGID3];
+          UE_template_ptr->scheduled_ul_bytes = 0;
 
           RC.eNB[enb_mod_idP][CC_idP]->pusch_stats_bsr[UE_id][(frameP * 10) + subframeP] = (payload_ptr[0] & 0x3f);
 
@@ -595,6 +596,7 @@ rx_sdu(const module_id_t enb_mod_idP,
             UE_template_ptr->ul_buffer_info[LCGID1] +
             UE_template_ptr->ul_buffer_info[LCGID2] +
             UE_template_ptr->ul_buffer_info[LCGID3];
+          UE_template_ptr->scheduled_ul_bytes = 0;
 
           LOG_D(MAC, "[eNB %d] CC_id %d MAC CE_LCID %d: Received long BSR. Size is LCGID0 = %u LCGID1 = %u LCGID2 = %u LCGID3 = %u\n",
             enb_mod_idP,
@@ -805,6 +807,9 @@ rx_sdu(const module_id_t enb_mod_idP,
               UE_template_ptr->ul_buffer_info[1] +
               UE_template_ptr->ul_buffer_info[2] +
               UE_template_ptr->ul_buffer_info[3];
+              if (UE_template_ptr->estimated_ul_buffer == 0) {
+                UE_template_ptr->scheduled_ul_bytes = 0;
+              }
             //UE_template_ptr->estimated_ul_buffer += UE_template_ptr->estimated_ul_buffer / 4;
           }
 
@@ -870,6 +875,9 @@ rx_sdu(const module_id_t enb_mod_idP,
                 UE_template_ptr->ul_buffer_info[1] +
                 UE_template_ptr->ul_buffer_info[2] +
                 UE_template_ptr->ul_buffer_info[3];
+              if (UE_template_ptr->estimated_ul_buffer == 0) {
+                UE_template_ptr->scheduled_ul_bytes = 0;
+              }
             }
 
             if ((rx_lengths[i] < SCH_PAYLOAD_SIZE_MAX) && (rx_lengths[i] > 0)) {  // MAX SIZE OF transport block
