@@ -3110,6 +3110,7 @@ schedule_PCH(module_id_t module_idP,
         dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.resource_block_coding = getRIV(n_rb_dl, first_rb, 4);
         dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.virtual_resource_block_assignment_flag = 0;
 #endif
+        dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.tl.tag                      = NFAPI_DL_CONFIG_REQUEST_DCI_DL_PDU_REL8_TAG;
         dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.aggregation_level           = 4;
         dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.rnti                        = 0xFFFE; // P-RNTI
         dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.rnti_type                   = 2;    // P-RNTI : see Table 4-10 from SCF082 - nFAPI specifications
@@ -3138,6 +3139,8 @@ schedule_PCH(module_id_t module_idP,
           dl_config_pdu->pdu_size                                                        = (uint8_t)(2 + sizeof(nfapi_dl_config_dlsch_pdu));
           dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.pdu_index                              = eNB->pdu_index[CC_id];
           dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.rnti                                   = 0xFFFE;
+          dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.tl.tag                                 = NFAPI_DL_CONFIG_REQUEST_DCI_DL_PDU_REL8_TAG;
+          dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.length                                 = pcch_sdu_length;
 #ifdef FORMAT1C
           dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.resource_allocation_type               = 3;   // format 1C
           dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.resource_block_coding                  = getRIV(n_vrb_dl / n_rb_step,
