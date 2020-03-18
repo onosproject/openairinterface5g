@@ -1362,6 +1362,14 @@ schedule_ue_spec_fairRR(module_id_t module_idP,
 
                         num_sdus++;
                         UE_list->UE_sched_ctrl[UE_id].uplane_inactivity_timer = 0;
+                        rrc_eNB_ue_context_t *ue_contextP = NULL;
+                        ue_contextP = rrc_eNB_get_ue_context(RC.rrc[module_idP], rnti);
+                        if (ue_contextP != NULL) {
+                          ue_contextP->ue_context.ue_rrc_inactivity_timer = 1;
+                        } else {
+                          LOG_E(MAC, "[eNB %d] CC_id %d Couldn't find the context associated to UE (RNTI %d) and reset RRC inactivity timer\n",
+                                     module_idP, CC_id, rnti);
+                        }
                     }   // no data for this LCID
                     else {
                         header_len_dtch -= 3;
@@ -2117,6 +2125,14 @@ schedule_ue_spec_fairRR(module_id_t module_idP,
 
               num_sdus++;
               UE_list->UE_sched_ctrl[UE_id].uplane_inactivity_timer = 0;
+              rrc_eNB_ue_context_t *ue_contextP = NULL;
+              ue_contextP = rrc_eNB_get_ue_context(RC.rrc[module_idP], rnti);
+              if (ue_contextP != NULL) {
+                ue_contextP->ue_context.ue_rrc_inactivity_timer = 1;
+              } else {
+                LOG_E(MAC, "[eNB %d] CC_id %d Couldn't find the context associated to UE (RNTI %d) and reset RRC inactivity timer\n",
+                           module_idP, CC_id, rnti);
+              }
             } else { // no data for this LCID
               header_len_dtch -= 3;
             }
@@ -2548,6 +2564,14 @@ schedule_ue_spec_fairRR(module_id_t module_idP,
 
                         num_sdus++;
                         UE_list->UE_sched_ctrl[UE_id].uplane_inactivity_timer = 0;
+                        rrc_eNB_ue_context_t *ue_contextP = NULL;
+                        ue_contextP = rrc_eNB_get_ue_context(RC.rrc[module_idP], rnti);
+                        if (ue_contextP != NULL) {
+                          ue_contextP->ue_context.ue_rrc_inactivity_timer = 1;
+                        } else {
+                          LOG_E(MAC, "[eNB %d] CC_id %d Couldn't find the context associated to UE (RNTI %d) and reset RRC inactivity timer\n",
+                                     module_idP, CC_id, rnti);
+                        }
                     }   // no data for this LCID
                     else {
                         header_len_dtch -= 3;
