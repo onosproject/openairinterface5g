@@ -1848,7 +1848,7 @@ schedule_ue_spec_fairRR(module_id_t module_idP,
           UE_list->eNB_UE_stats[CC_id][UE_id].dlsch_mcs[TB2] =
             eNB_UE_stats->dlsch_mcs[TB2];
         } else {
-          LOG_I(MAC,
+          LOG_D(MAC,
                 "[eNB %d] Frame %d CC_id %d : don't schedule UE %d, its retransmission takes more resources than we have\n",
                 module_idP, frameP, CC_id, UE_id);
         }
