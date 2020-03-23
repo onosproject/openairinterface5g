@@ -1317,6 +1317,7 @@ uint32_t from_earfcn(int eutra_bandP, uint32_t dl_earfcn);
 int32_t get_uldl_offset(int eutra_bandP);
 int l2_init_ue(int eMBMS_active, char *uecap_xer, uint8_t cba_group_active,
 	       uint8_t HO_active);
+void sort_lcid_priority(module_id_t module_id, int UE_id, int dl_dtch_num, int *dl_dtch_list);
 #if defined(PRE_SCD_THREAD)
 void pre_scd_nb_rbs_required(    module_id_t     module_idP,
                                  frame_t         frameP,

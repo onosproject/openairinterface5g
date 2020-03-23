@@ -134,6 +134,8 @@
 #define LCGID3 3
 /*!\brief Maximum number of logical chanels */
 #define MAX_NUM_LCID 11
+/*!\brief Maximum number of logical chanels for DTCH */
+#define MAX_NUM_DTCH (MAX_NUM_LCID - 3)
 /*!\brief Maximum number od control elemenets */
 #define MAX_NUM_CE 5
 /*!\brief Maximum number of random access process */
@@ -901,6 +903,10 @@ typedef struct {
     uint8_t dl_buffer_head_sdu_is_segmented[MAX_NUM_LCID];
     /// size of remaining size to send for the downlink head SDU
     uint32_t dl_buffer_head_sdu_remaining_size_to_send[MAX_NUM_LCID];
+    /// number of not empty DTCHs 
+    uint8_t dl_dtch_num;
+    /// list of DTCHs sorted by priority
+    uint8_t dl_dtch_list_priority[MAX_NUM_DTCH];
 
     /// uplink buffer creation time for each LCID
     uint32_t ul_buffer_creation_time[MAX_NUM_LCGID];
