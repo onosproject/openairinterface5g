@@ -1178,8 +1178,26 @@ void pusch_procedures(PHY_VARS_eNB *eNB,L1_rxtx_proc_t *proc) {
                             fp->pusch_config_common.ul_ReferenceSignalsPUSCH.cyclicShift +
                             nPRS)%12;
       AssertFatal(ulsch_harq->TBS>0,"illegal TBS %d\n",ulsch_harq->TBS);
+      uint8_t ul_mcs = 0;
+      uint8_t mcs_start = 0, msc_end = 0;
+      if (ulsch_harq->Qm == 2) {
+        mcs_start = 0;
+        msc_end = 11;
+      } else if (ulsch_harq->Qm == 4) {
+        mcs_start = 11;
+        msc_end = 21;
+      } else if (ulsch_harq->Qm == 6) {
+        mcs_start = 21;
+        msc_end = 29;
+      }
+      for (ul_mcs = mcs_start; ul_mcs < msc_end; ul_mcs++) {
+        if (ulsch_harq->TBS == (get_TBS_UL(ul_mcs,ulsch_harq->nb_rb)<<3)) {
+          break;
+        }
+      }
+
       LOG_D(PHY,
-            "[eNB %d][PUSCH %d] Frame %d Subframe %d Demodulating PUSCH: dci_alloc %d, rar_alloc %d, round %d, first_rb %d, nb_rb %d, Qm %d, TBS %d, rv %d, cyclic_shift %d (n_DMRS2 %d, cyclicShift_common %d, ), O_ACK %d, beta_cqi %d \n",
+            "[eNB %d][PUSCH %d] Frame %d Subframe %d Demodulating PUSCH: dci_alloc %d, rar_alloc %d, round %d, first_rb %d, nb_rb %d, Qm %d, TBS %d, mcs %d, rv %d, cyclic_shift %d (n_DMRS2 %d, cyclicShift_common %d, ), O_ACK %d, beta_cqi %d \n",
             eNB->Mod_id,harq_pid,frame,subframe,
             ulsch_harq->dci_alloc,
             ulsch_harq->rar_alloc,
@@ -1188,6 +1206,7 @@ void pusch_procedures(PHY_VARS_eNB *eNB,L1_rxtx_proc_t *proc) {
             ulsch_harq->nb_rb,
             ulsch_harq->Qm,
             ulsch_harq->TBS,
+            ul_mcs,
             ulsch_harq->rvidx,
             ulsch->cyclicShift,
             ulsch_harq->n_DMRS2,
@@ -1205,7 +1224,7 @@ void pusch_procedures(PHY_VARS_eNB *eNB,L1_rxtx_proc_t *proc) {
                            ulsch_harq->nb_rb>20 ? 1 : 0);
       stop_meas(&eNB->ulsch_decoding_stats);
       LOG_D(PHY,
-            "[eNB %d][PUSCH %d] frame %d subframe %d RNTI %x RX power (%d,%d) N0 (%d,%d) dB ACK (%d,%d), decoding iter %d ulsch_harq->cqi_crc_status:%d ackBits:%d ulsch_decoding_stats[t:%lld max:%lld]\n",
+            "[eNB %d][PUSCH %d] frame %d subframe %d RNTI %x RX power (%d,%d) N0 (%d,%d) dB ACK (%d,%d), decoding iter %d ulsch_harq->cqi_crc_status:%d ackBits:%d ulsch_decoding_stats[t:%lld max:%lld] dci_alloc %d, rar_alloc %d, round %d, first_rb %d, nb_rb %d, Qm %d, TBS %d, mcs %d, rv %d, cyclic_shift %d (n_DMRS2 %d, cyclicShift_common %d, ), O_ACK %d, beta_cqi %d\n",
             eNB->Mod_id,harq_pid,
             frame,subframe,
             ulsch->rnti,
@@ -1218,7 +1237,21 @@ void pusch_procedures(PHY_VARS_eNB *eNB,L1_rxtx_proc_t *proc) {
             ret,
             ulsch_harq->cqi_crc_status,
             ulsch_harq->O_ACK,
-            eNB->ulsch_decoding_stats.p_time, eNB->ulsch_decoding_stats.max);
+            eNB->ulsch_decoding_stats.p_time, eNB->ulsch_decoding_stats.max,
+            ulsch_harq->dci_alloc,
+            ulsch_harq->rar_alloc,
+            ulsch_harq->round,
+            ulsch_harq->first_rb,
+            ulsch_harq->nb_rb,
+            ulsch_harq->Qm,
+            ulsch_harq->TBS,
+            ul_mcs,
+            ulsch_harq->rvidx,
+            ulsch->cyclicShift,
+            ulsch_harq->n_DMRS2,
+            fp->pusch_config_common.ul_ReferenceSignalsPUSCH.cyclicShift,
+            ulsch_harq->O_ACK,
+            ulsch->beta_offset_cqi_times8);
       //compute the expected ULSCH RX power (for the stats)
       ulsch_harq->delta_TF = get_hundred_times_delta_IF_eNB(eNB,i,harq_pid, 0); // 0 means bw_factor is not considered
 
