@@ -322,7 +322,7 @@ typedef struct gNB_RRC_UE_s {
   uint32_t                           gnb_gtp_teid[S1AP_MAX_E_RAB];
   transport_layer_addr_t             gnb_gtp_addrs[S1AP_MAX_E_RAB];
   rb_id_t                            gnb_gtp_ebi[S1AP_MAX_E_RAB];
-//#endif
+
   uint32_t                           ul_failure_timer;
   uint32_t                           ue_release_timer;
   uint32_t                           ue_release_timer_thres;
