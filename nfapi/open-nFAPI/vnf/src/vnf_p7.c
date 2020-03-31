@@ -85,7 +85,6 @@ void vnf_p7_free(vnf_p7_t* vnf_p7, void* ptr)
 	else
 	{
 		free(ptr);
-		ptr = 0;
 	}
 }
 
@@ -101,7 +100,6 @@ void vnf_p7_codec_free(vnf_p7_t* vnf_p7, void* ptr)
 	else
 	{
 		free(ptr);
-		ptr = 0;
 	}
 }
 
@@ -250,6 +248,7 @@ void vnf_p7_rx_reassembly_queue_remove_msg(vnf_p7_t* vnf_p7, vnf_p7_rx_reassembl
 					vnf_p7_free(vnf_p7, iterator->segments[i].buffer);
 			}
 			vnf_p7_free(vnf_p7, iterator);
+			iterator = 0;
 #endif
 			break;
 		}
@@ -302,6 +301,7 @@ void vnf_p7_rx_reassembly_queue_remove_old_msgs(vnf_p7_t* vnf_p7, vnf_p7_rx_reas
 					vnf_p7_free(vnf_p7, to_delete->segments[i].buffer);
 			}
 			vnf_p7_free(vnf_p7, to_delete);
+			to_delete = 0;
 #endif
 		}
 		else
@@ -863,6 +863,7 @@ void vnf_handle_ue_release_resp(void *pRecvMsg, int recvMsgLen, vnf_p7_t* vnf_p7
 
 
 		vnf_p7_codec_free(vnf_p7, resp.vendor_extension);
+		resp.vendor_extension = 0;
 	}
 }
 
@@ -1648,11 +1649,13 @@ void vnf_p7_release_msg(vnf_p7_t* vnf_p7, nfapi_p7_message_header_t* header)
 		case NFAPI_HARQ_INDICATION:
 			{
 				vnf_p7_codec_free(vnf_p7, ((nfapi_harq_indication_t*)(header))->harq_indication_body.harq_pdu_list);
+				((nfapi_harq_indication_t*)(header))->harq_indication_body.harq_pdu_list = 0;
 			}
 			break;
 		case NFAPI_CRC_INDICATION:
 			{
 				vnf_p7_codec_free(vnf_p7, ((nfapi_crc_indication_t*)(header))->crc_indication_body.crc_pdu_list);
+				((nfapi_crc_indication_t*)(header))->crc_indication_body.crc_pdu_list = 0;
 			}
 			break;
 		case NFAPI_RX_ULSCH_INDICATION:
@@ -1665,27 +1668,33 @@ void vnf_p7_release_msg(vnf_p7_t* vnf_p7, nfapi_p7_message_header_t* header)
 				}
 
 				vnf_p7_codec_free(vnf_p7, rx_ind->rx_indication_body.rx_pdu_list);
+				vnf_p7, rx_ind->rx_indication_body.rx_pdu_list = 0;
 			}
 			break;
 		case NFAPI_RACH_INDICATION:
 			{
 				vnf_p7_codec_free(vnf_p7, ((nfapi_rach_indication_t*)(header))->rach_indication_body.preamble_list);
+				((nfapi_rach_indication_t*)(header))->rach_indication_body.preamble_list = 0;
 			}
 			break;
 		case NFAPI_SRS_INDICATION:
 			{
 				vnf_p7_codec_free(vnf_p7, ((nfapi_srs_indication_t*)(header))->srs_indication_body.srs_pdu_list);
+				((nfapi_srs_indication_t*)(header))->srs_indication_body.srs_pdu_list = 0;
 			}
 			break;
 		case NFAPI_RX_SR_INDICATION:
 			{
 				vnf_p7_codec_free(vnf_p7, ((nfapi_sr_indication_t*)(header))->sr_indication_body.sr_pdu_list);
+				((nfapi_sr_indication_t*)(header))->sr_indication_body.sr_pdu_list = 0;
 			}
 			break;
 		case NFAPI_RX_CQI_INDICATION:
 			{
 				vnf_p7_codec_free(vnf_p7, ((nfapi_cqi_indication_t*)(header))->cqi_indication_body.cqi_pdu_list);
+				((nfapi_cqi_indication_t*)(header))->cqi_indication_body.cqi_pdu_list = 0;
 				vnf_p7_codec_free(vnf_p7, ((nfapi_cqi_indication_t*)(header))->cqi_indication_body.cqi_raw_pdu_list);
+				((nfapi_cqi_indication_t*)(header))->cqi_indication_body.cqi_raw_pdu_list = 0;
 			}
 			break;
 	}

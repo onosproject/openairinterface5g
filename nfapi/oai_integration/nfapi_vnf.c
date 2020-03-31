@@ -713,7 +713,7 @@ int phy_sr_indication(struct nfapi_vnf_p7_config *config, nfapi_sr_indication_t 
     UL_RCC_INFO.sr_ind[index] = *ind;
     LOG_D(MAC,"%s() UL_INFO[%d].sr_ind.sr_indication_body.number_of_srs:%d\n", __FUNCTION__, index, eNB->UL_INFO.sr_ind.sr_indication_body.number_of_srs);
     if (ind->sr_indication_body.number_of_srs > 0){
-      UL_RCC_INFO.sr_ind[index].sr_indication_body.sr_pdu_list = UL_RCC_INFO.sr_ind[index].sr_indication_body.sr_pdu_list;
+      UL_RCC_INFO.sr_ind[index].sr_indication_body.sr_pdu_list = ind->sr_indication_body.sr_pdu_list;
     }
     for (int i=0; i<ind->sr_indication_body.number_of_srs; i++) {
         nfapi_sr_indication_pdu_t *dest_pdu = &UL_RCC_INFO.sr_ind[index].sr_indication_body.sr_pdu_list[i];

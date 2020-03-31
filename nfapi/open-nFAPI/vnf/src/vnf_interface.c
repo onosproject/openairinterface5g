@@ -188,7 +188,7 @@ nfapi_vnf_config_t* nfapi_vnf_config_create()
 	_this->_public.codec_config.deallocate = &free;
 	
 
-	return &(_this->_public);
+	return (nfapi_vnf_config_t*)(_this);
 }
 
 void nfapi_vnf_config_destory(nfapi_vnf_config_t* config)

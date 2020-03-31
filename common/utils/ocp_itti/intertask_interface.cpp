@@ -35,6 +35,7 @@ int timer_expired(int fd);
 task_list_t tasks[TASK_MAX];
 
 extern "C" {
+#if 0
   void *pool_buffer_init (void) {
     return 0;
   }
@@ -63,7 +64,7 @@ extern "C" {
     ptr->size=sizeP;
     return ptr;
   }
-
+#endif
   void *itti_malloc(task_id_t origin_task_id, task_id_t destination_task_id, ssize_t size) {
     void *ptr = NULL;
     AssertFatal ((ptr=malloc (size)) != NULL, "Memory allocation of %zu bytes failed (%d -> %d)!\n",

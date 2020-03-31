@@ -1116,13 +1116,15 @@ schedule_SI(module_id_t module_idP, frame_t frameP, sub_frame_t subframeP)
 		    first_rb = 23;
 #else
         first_rb = 46;
-#endif		    break;
+#endif
+		    break;
 		case 100:
 #ifndef PHY_RM
 		    first_rb = 48;
 #else
         first_rb = 96;
-#endif		    break;
+#endif
+		    break;
 		}
 
 		vrb_map[first_rb] = 1;

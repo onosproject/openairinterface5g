@@ -951,7 +951,7 @@ schedule_ue_spec(module_id_t module_idP,
           eNB_UE_stats->num_retransmission += 1;
           eNB_UE_stats->rbs_used_retx = nb_rb;
           eNB_UE_stats->total_rbs_used_retx += nb_rb;
-          eNB_UE_stats->dlsch_mcs[TB2] = eNB_UE_stats->dlsch_mcs[TB2];
+          //eNB_UE_stats->dlsch_mcs[TB2] = eNB_UE_stats->dlsch_mcs[TB2];
         } else {
           LOG_D(MAC,
                 "[eNB %d] Frame %d CC_id %d : don't schedule UE %d, its retransmission takes more resources than we have\n",
