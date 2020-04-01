@@ -299,6 +299,9 @@ static int trx_usrp_start(openair0_device *device) {
   s->first_tx = 1;
   s->first_rx = 1;
   s->rx_timestamp = 0;
+
+  s->usrp->set_time_now(uhd::time_spec_t(0.0));
+
   return 0;
 }
 /*! \brief Terminate operation of the USRP transceiver -- free all associated resources
@@ -518,7 +521,7 @@ static int trx_usrp_write(openair0_device *device,
  * \param antenna_id Index of antenna for which to receive samples
  * \returns the number of sample read
 */
-static int trx_usrp_read_recplay(openair0_device *device, openair0_timestamp ptimestamp, void **buff, int nsamps, int cc) {
+static int trx_usrp_read_recplay(openair0_device *device, openair0_timestamp *ptimestamp, void **buff, int nsamps, int cc) {
   int samples_received=0;
   static unsigned int    cur_samples;
   static int64_t         wrap_count;
@@ -547,11 +550,11 @@ static int trx_usrp_read_recplay(openair0_device *device, openair0_timestamp pti
 
   if (s->recplay_state->use_mmap) {
     if (cur_samples < s->recplay_state->nb_samples) {
-      //*ptimestamp = (s->recplay_state->ms_sample[0].ts + (cur_samples * (((int)(device->openair0_cfg[0].sample_rate)) / 1000))) + wrap_ts;
+      *ptimestamp = (s->recplay_state->ms_sample[0].ts + (cur_samples * (((int)(device->openair0_cfg[0].sample_rate)) / 1000))) + wrap_ts;
 
       if (cur_samples == 0) {
         std::cerr << "starting subframes file with wrap_count=" << wrap_count << " wrap_ts=" << wrap_ts
-                  << " ts=" << ptimestamp << std::endl;
+                  << " ts=" << *ptimestamp << std::endl;
       }
 
       memcpy(buff[0], &s->recplay_state->ms_sample[cur_samples].samples[0], nsamps*4);
@@ -575,7 +578,7 @@ static int trx_usrp_read_recplay(openair0_device *device, openair0_timestamp pti
         ts0 = s->recplay_state->ms_sample->ts;
       }
 
-      //*ptimestamp = ts0 + (cur_samples * (((int)(device->openair0_cfg[0].sample_rate)) / 1000)) + wrap_ts;
+      *ptimestamp = ts0 + (cur_samples * (((int)(device->openair0_cfg[0].sample_rate)) / 1000)) + wrap_ts;
 
       if (cur_samples == 0) {
         std::cerr << "starting subframes file with wrap_count=" << wrap_count << " wrap_ts=" << wrap_ts
@@ -618,7 +621,7 @@ static int trx_usrp_read_recplay(openair0_device *device, openair0_timestamp pti
  * \param antenna_id Index of antenna for which to receive samples
  * \returns the number of sample read
 */
-static int trx_usrp_read(openair0_device *device, openair0_timestamp ptimestamp, void **buff, int nsamps, int cc) {
+static int trx_usrp_read(openair0_device *device, openair0_timestamp *ptimestamp, void **buff, int nsamps, int cc) {
   usrp_state_t *s = (usrp_state_t *)device->priv;
   int samples_received=0;
   int nsamps2;  // aligned to upper 32 or 16 byte boundary
@@ -635,21 +638,6 @@ static int trx_usrp_read(openair0_device *device, openair0_timestamp ptimestamp,
   int16x8_t buff_tmp[2][nsamps2];
 #endif
 
-  if (s->first_rx==1) {
-    s->usrp->set_time_now(uhd::time_spec_t(0.0));
-    s->first_rx=0;
-  }
-
-  uhd::stream_cmd_t stream_cmd(uhd::stream_cmd_t::STREAM_MODE_NUM_SAMPS_AND_DONE);
-  stream_cmd.num_samps = nsamps;
-  stream_cmd.stream_now = false;
-  stream_cmd.time_spec = uhd::time_spec_t::from_ticks(ptimestamp,s->sample_rate);
-
-  s->rx_stream->issue_stream_cmd(stream_cmd);
-
-  LOG_I(HW,"Time in ticks now: %lld \n", s->usrp->get_time_now().to_ticks(s->sample_rate));
-  LOG_I(HW,"rx_timestamp in ticks: %lld \n", ptimestamp);
-  
     if (cc>1) {
       // receive multiple channels (e.g. RF A and RF B)
       std::vector<void *> buff_ptrs;
@@ -709,18 +697,32 @@ static int trx_usrp_read(openair0_device *device, openair0_timestamp ptimestamp,
 
   s->rx_count += nsamps;
   s->rx_timestamp = s->rx_md.time_spec.to_ticks(s->sample_rate);
-
+  *ptimestamp = s->rx_timestamp;
+ 
   if (s->recplay_mode == RECPLAY_RECORDMODE) { // record mode
     // Copy subframes to memory (later dump on a file)
     if (s->recplay_state->nb_samples < s->recplay_state->u_sf_max) {
       (s->recplay_state->ms_sample+s->recplay_state->nb_samples)->header = BELL_LABS_IQ_HEADER;
-      (s->recplay_state->ms_sample+s->recplay_state->nb_samples)->ts = ptimestamp;
+      (s->recplay_state->ms_sample+s->recplay_state->nb_samples)->ts = *ptimestamp;
       memcpy((s->recplay_state->ms_sample+s->recplay_state->nb_samples)->samples, buff[0], nsamps*4);
       s->recplay_state->nb_samples++;
     } else     exit_function(__FILE__, __FUNCTION__, __LINE__,"Recording reaches max iq limit\n");
   }
 
   return samples_received;
+}
+
+static int trx_usrp_issue_stream_cmd(openair0_device *device, openair0_timestamp ptimestamp, int nsamps){
+  usrp_state_t *s = (usrp_state_t *)device->priv;
+
+  uhd::stream_cmd_t stream_cmd(uhd::stream_cmd_t::STREAM_MODE_NUM_SAMPS_AND_DONE);
+  stream_cmd.num_samps = nsamps;
+  stream_cmd.stream_now = false;
+  stream_cmd.time_spec = uhd::time_spec_t::from_ticks(ptimestamp,s->sample_rate);
+
+  s->rx_stream->issue_stream_cmd(stream_cmd);
+
+  return 0;
 }
 
 /*! \brief Compares two variables within precision
@@ -1305,6 +1307,7 @@ extern "C" {
       LOG_I(HW,"Device timestamp: %f...\n", s->usrp->get_time_now().get_real_secs());
       device->trx_write_func = trx_usrp_write;
       device->trx_read_func  = trx_usrp_read;
+      device->trx_issue_stream_cmd  = trx_usrp_issue_stream_cmd;
       s->sample_rate = openair0_cfg[0].sample_rate;
 
       // TODO:

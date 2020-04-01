@@ -355,7 +355,9 @@ struct openair0_device_t {
    * \param antenna_id Index of antenna for which to receive samples
    * \returns the number of sample read
    */
-  int (*trx_read_func)(openair0_device *device, openair0_timestamp ptimestamp, void **buff, int nsamps,int antenna_id);
+  int (*trx_read_func)(openair0_device *device, openair0_timestamp *ptimestamp, void **buff, int nsamps,int antenna_id);
+
+  int (*trx_issue_stream_cmd)(openair0_device *device, openair0_timestamp ptimestamp, int nsamps);
 
   /*! \brief print the device statistics
    * \param device the hardware to use

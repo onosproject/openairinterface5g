@@ -630,6 +630,7 @@ void rx_rf(RU_t *ru,int *frame,int *slot) {
   unsigned int rxs, siglen;
   int i;
   uint32_t samples_per_slot = fp->get_samples_per_slot(*slot,fp);
+  openair0_timestamp ts;
 
   AssertFatal(*slot<fp->slots_per_frame && *slot>=0, "slot %d is illegal (%d)\n",*slot,fp->slots_per_frame);
 
@@ -662,6 +663,11 @@ void rx_rf(RU_t *ru,int *frame,int *slot) {
       //TODO: this has to be adapted for numerology!=1
       siglen = (fp->ofdm_symbol_size + fp->nb_prefix_samples0) + (rxsymb - 1) * (fp->ofdm_symbol_size + fp->nb_prefix_samples);
       proc->timestamp_rx += fp->get_samples_per_slot(*slot%fp->slots_per_frame,fp) - siglen;
+
+      ru->rfdevice.trx_issue_stream_cmd(&ru->rfdevice,
+				       proc->timestamp_rx,
+				       siglen);
+      
     }
     else {
       siglen = samples_per_slot;
@@ -676,7 +682,7 @@ void rx_rf(RU_t *ru,int *frame,int *slot) {
     }
     else {
       rxs = ru->rfdevice.trx_read_func(&ru->rfdevice,
-				       proc->timestamp_rx,
+				       &ts,
 				       rxp,
 				       siglen,
 				       ru->nb_rx);
