@@ -643,12 +643,12 @@ static int trx_usrp_read(openair0_device *device, openair0_timestamp ptimestamp,
   uhd::stream_cmd_t stream_cmd(uhd::stream_cmd_t::STREAM_MODE_NUM_SAMPS_AND_DONE);
   stream_cmd.num_samps = nsamps;
   stream_cmd.stream_now = false;
-  stream_cmd.time_spec = uhd::time_spec_t(ptimestamp,s->sample_rate);
+  stream_cmd.time_spec = uhd::time_spec_t::from_ticks(ptimestamp,s->sample_rate);
 
   s->rx_stream->issue_stream_cmd(stream_cmd);
 
-  LOG_I(HW,"Time in ticks now: %llu \n", s->usrp->get_time_now().to_ticks(s->sample_rate));
-  LOG_I(HW,"rx_timestamp in ticks: %llu \n", ptimestamp);
+  LOG_I(HW,"Time in ticks now: %lld \n", s->usrp->get_time_now().to_ticks(s->sample_rate));
+  LOG_I(HW,"rx_timestamp in ticks: %lld \n", ptimestamp);
   
     if (cc>1) {
       // receive multiple channels (e.g. RF A and RF B)
