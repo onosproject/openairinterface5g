@@ -18,42 +18,67 @@ ARG build_base
 FROM $build_base AS enb-builder
 WORKDIR /openairinterface5g
 ENV USER=root
-RUN /bin/bash -c "source oaienv" && cd cmake_targets && ./build_oai --eNB -w USRP --verbose-compile
+RUN ln -sf /usr/local/bin/cmake /usr/local/bin/cmake3
 
-#FROM ubuntu:16.04 AS lte-softmodem
+RUN cd /openairinterface5g/cmake_targets \
+    && ln -sf /usr/local/bin/asn1c_oai /usr/local/bin/asn1c \
+    && ln -sf /usr/local/share/asn1c_oai /usr/local/share/asn1c \
+    && ./build_oai -c --eNB -w USRP --verbose-compile
+
 FROM centos:7.6.1810 AS lte-softmodem
-RUN yum install nettle.x86_64 -y
-RUN yum install lksctp-tools.x86_64 -y
-RUN yum install libyaml.x86_64 -y
-RUN yum install linux-headers-4.15.0-74-generic -y
-RUN yum install iperf3.x86_64 -y
-RUN yum install blas.x86_64 -y
-RUN yum install atlas.x86_64 -y
-RUN yum install atlas-devel.x86_64 -y
+RUN yum update -y && yum install -y nettle.x86_64 \
+ 	        lksctp-tools.x86_64 \
+		 libyaml.x86_64 \
+		 iperf3.x86_64 \
+		 blas.x86_64 \
+		 atlas.x86_64 \
+		 atlas-devel.x86_64 \
+		 libconfig-devel.x86_64 \
+		 iptables.x86_64 \
+		 lapack-devel.x86_64 \
+		 && yum clean all -y \
+    		 && rm -rf /var/cache/yum 
 
-RUN yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm \
-    && REPOLIST="rhel-7-server-optional-rpms" \
-    && PKGLIST="boost libconfig lksctp-tools protobuf-c iproute iputils procps-ng bind-utils xforms nettle libyaml libusb" \
-    # && yum -y upgrade-minimal --setopt=tsflags=nodocs --security --sec-severity=Critical --sec-severity=Important && \
-    && yum -y install --enablerepo ${REPOLIST} --setopt=tsflag=nodocs ${PKGLIST} \
-    && yum -y clean all \
-    && rm -rf /var/cache/yum
-
-#RUN apt-get update && apt-get install -y \
-    #libssl1.0.0 \
-    #libnettle6 \
-    #libsctp1 \
-    #libforms2 \
-    #libprotobuf-c1 \
-    #libyaml-0-2 \
-    #libconfig9 \
-    #dnsutils \
-    #iproute2 \
-    #iputils-ping \
- #&& rm -rf /var/lib/apt/lists/*
-
+WORKDIR /openairinterface5g/ci-scripts
+COPY --from=enb-builder /openairinterface5g/ci-scripts/ .
 WORKDIR /openairinterface5g/cmake_targets
 COPY --from=enb-builder /openairinterface5g/cmake_targets/ .
+
+COPY --from=enb-builder /usr/local/bin/uhd_* /usr/local/bin/
+COPY --from=enb-builder /usr/local/share/uhd/ /usr/local/share/uhd/
+COPY --from=enb-builder /usr/local/lib64/libuhd* /usr/local/lib64/
+COPY --from=enb-builder /usr/lib64/libboost_* /usr/lib64/
+COPY --from=enb-builder /usr/lib64/libusb* /usr/lib64/
+COPY --from=enb-builder /usr/lib/libboost_* /usr/lib/
+COPY --from=enb-builder /usr/local/lib/libproto* /usr/local/lib/
+
+
+RUN find . -name "*.h" -type f -delete
+RUN find . -name "*.c" -type f -delete
+RUN find / -name "*.a" -type f -delete
+RUN find / -name "*.tar.gz" -type f -delete
+RUN rm -rf ./ran_build/build/CMakeFiles/
+
+ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib64/:/usr/local/lib:/usr/lib
+
+# S1U, GTP/UDP
+EXPOSE 2152/udp  
+# ?
+EXPOSE 22100/tcp 
+# S1C, SCTP/UDP
+EXPOSE 36412/udp 
+# X2C, SCTP/UDP
+EXPOSE 36422/udp 
+# M2C, SCTP/UDP
+EXPOSE 36443/udp 
+# M3C, SCTP/UDP
+EXPOSE 36444/udp 
+# IF5 / ORI (control)
+EXPOSE 50000/udp 
+# IF5 / ECPRI (data)
+EXPOSE 50001/udp 
+
+
 
 # Label image
 ARG org_label_schema_version=unknown

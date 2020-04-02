@@ -16,37 +16,49 @@
 ARG build_base
 
 FROM $build_base AS ue-builder
-#RUN apt-get update && apt-get install -y \
-    #linux-headers-`uname -r` \
- #&& rm -rf /var/lib/apt/lists/*
-
 WORKDIR /openairinterface5g
 ENV USER=root
-RUN /bin/bash -c "source oaienv" && cd cmake_targets && ./build_oai --UE -w USRP
+RUN ln -sf /usr/local/bin/cmake /usr/local/bin/cmake3
 
-#FROM ubuntu:16.04 AS lte-uesoftmodem
+RUN cd /openairinterface5g/cmake_targets \
+    && ln -sf /usr/local/bin/asn1c_oai /usr/local/bin/asn1c \
+    && ln -sf /usr/local/share/asn1c_oai /usr/local/share/asn1c \
+    && ./build_oai -c --UE -w USRP --verbose-compile
+
 FROM centos:7.6.1810 AS lte-uesoftmodem
-#yum install linux-headers-4.15.0-74-generic -y
-##RUN apt-get update && apt-get install -y \
-##    libssl1.0.0 \
-##    libnettle6 \
-##    libsctp1 \
-##    libforms2 \
-##    libconfig9 \
-##    libblas3 \
-##    liblapacke \
-##    sudo \
-##    dnsutils \
-##    iproute2 \
-##    iputils-ping \
-##    net-tools \
-## && rm -rf /var/lib/apt/lists/*
+RUN yum update -y && yum install -y nettle.x86_64 \
+ 	        lksctp-tools.x86_64 \
+		 libyaml.x86_64 \
+		 iperf3.x86_64 \
+		 blas.x86_64 \
+		 atlas.x86_64 \
+		 atlas-devel.x86_64 \
+		 libconfig-devel.x86_64 \
+		 iptables.x86_64 \
+		 lapack-devel.x86_64 \
+		 && yum clean all -y \
+    		 && rm -rf /var/cache/yum 
 
+WORKDIR /openairinterface5g/ci-scripts
+COPY --from=ue-builder /openairinterface5g/ci-scripts/ .
 WORKDIR /openairinterface5g/cmake_targets
-COPY --from=ue-builder /openairinterface5g/cmake_targets .
-COPY --from=ue-builder /openairinterface5g/targets/bin/nvram .
-COPY --from=ue-builder /openairinterface5g/targets/bin/usim .
-COPY --from=ue-builder /openairinterface5g/targets ../targets
+COPY --from=ue-builder /openairinterface5g/cmake_targets/ .
+
+COPY --from=ue-builder /usr/local/bin/uhd_* /usr/local/bin/
+COPY --from=ue-builder /usr/local/share/uhd/ /usr/local/share/uhd/
+COPY --from=ue-builder /usr/local/lib64/libuhd* /usr/local/lib64/
+COPY --from=ue-builder /usr/lib64/libboost_* /usr/lib64/
+COPY --from=ue-builder /usr/lib64/libusb* /usr/lib64/
+COPY --from=ue-builder /usr/lib/libboost_* /usr/lib/
+COPY --from=ue-builder /usr/local/lib/libproto* /usr/local/lib/
+
+RUN find . -name "*.h" -type f -delete
+RUN find . -name "*.c" -type f -delete
+RUN find / -name "*.a" -type f -delete
+RUN find / -name "*.tar.gz" -type f -delete
+RUN rm -rf ./ran_build/build/CMakeFiles/
+
+ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib64/:/usr/local/lib:/usr/lib
 
 # Label image
 ARG org_label_schema_version=unknown

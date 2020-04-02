@@ -13,51 +13,99 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-##FROM ubuntu:16.04 AS oai-base
-##RUN apt-get update && apt-get install -y \
-##    sudo \
-##    vim-common \
-##    git \
-##    build-essential \
-##    cmake \
-## && rm -rf /var/lib/apt/lists/*
-#
 
 FROM centos:7.6.1810 AS oai-base
 ARG EURECOM_PROXY
-RUN yum update -y && yum install -y \
-vim-common 	\
-git \
-make \
-cmake3 \
-autoconf \
-automake \
-bc \
-bison \
-flex \
-libtool \
-patch \
-devtoolset-7 \
-sudo \
-openssl \
-gcc-c++ 
+RUN yum update -y \
+	&& yum install centos-release-scl -y \
+	&& yum-config-manager --enable rhel-server-rhscl-7-rpms -y \
+   	&& yum install -y \
+	wget \
+	vim-common \
+	git \
+	make \
+	autoconf \
+	automake \
+	bc \
+	bison \
+	flex \
+	libtool \
+	patch \
+	#sudo \
+	openssl \
+	gcc-c++ \
+	devtoolset-7 \
+        atlas-devel \
+        blas \
+        blas-devel \
+        bzip2-devel \
+        check \
+        check-devel \
+        elfutils-libelf-devel \
+        gflags-devel \
+        glog-devel \
+        gmp-devel \
+        gnutls-devel \
+        guile-devel \
+        kernel-devel \
+        kernel-headers \
+        lapack \
+        lapack-devel \
+        libasan \
+        libconfig-devel \
+        libevent-devel \
+        libffi-devel \
+        libgcrypt-devel \
+        libidn-devel \
+        libidn2-devel  \
+        libtool \
+        libusb-devel \
+        libusbx-devel \
+        libxml2-devel \
+        libXpm-devel \
+        libxslt-devel \
+        libyaml-devel \
+        lksctp-tools \
+        lksctp-tools-devel \
+        lz4-devel \
+        mariadb-devel \
+        nettle-devel \
+        openssh-clients \
+        openssh-server \
+        openssl \
+        openssl-devel \
+        pkgconfig \
+        psmisc \
+        python3-pip.noarch \
+	python-devel \
+	python-mako \
+        unzip \
+        vim-common \
+        xforms-devel \
+        xz-devel \
+        zlib-devel \
+	scl-utils \
+	bzip2 \
+	#boost-devel \
+    && yum clean all -y \
+    && rm -rf /var/cache/yum \
+    && pip3 install --user mako pexpect \ 
+    && pip3 install six \
+    && pip3 install requests
 
 
-#ENV GIT_SSL_NO_VERIFY=true
-ENV USER=root
+COPY scripts scripts/
+RUN scl enable devtoolset-7 scripts/build_missing_packages 
+RUN rm -rf /tmp/*
 
 # In Eurecom env we need a git proxy
 RUN /bin/bash -c "if [[ -v EURECOM_PROXY ]]; then git config --global http.proxy http://proxy.eurecom.fr:8080; fi"
-RUN GIT_SSL_NO_VERIFY=true git clone https://gitlab.eurecom.fr/oai/openairinterface5g.git /openairinterface5g -b develop
+RUN git clone https://gitlab.eurecom.fr/oai/openairinterface5g/ /openairinterface5g -b develop
 
 WORKDIR /openairinterface5g
 COPY nasmesh.patch nasmesh.patch
 RUN git apply nasmesh.patch
-RUN /bin/bash -c "source oaienv" && cd cmake_targets && ./build_oai -I
-
-
-COPY scripts scripts/
-RUN scl enable devtoolset-7 scripts/build_missing_packages
+#RUN /bin/bash -c "source oaienv" && cd cmake_targets && ./build_oai -I
 
 ARG org_label_schema_version=unknown
 ARG org_label_schema_vcs_url=unknown

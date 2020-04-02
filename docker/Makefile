@@ -52,7 +52,7 @@ docker-build-centos.7.6.1810:
                 .
 	docker build $(DOCKER_BUILD_ARGS) \
 		--target ${ENB_NAME} \
-		--tag ${ENB_IMAGENAME} \
+		--tag ${ENB_IMAGENAME}_centos.7.6.1810  \
 		--file Dockerfile.enb.centos.7.6.1810 \
 		--build-arg build_base=${BASE_IMAGENAME}_centos.7.6.1810 \
 		--build-arg org_label_schema_version="${VERSION}" \
@@ -63,7 +63,7 @@ docker-build-centos.7.6.1810:
 		.
 	docker build $(DOCKER_BUILD_ARGS) \
 		--target ${UE_NAME} \
-		--tag ${UE_IMAGENAME} \
+		--tag ${UE_IMAGENAME}_centos.7.6.1810 \
 		--file Dockerfile.ue.centos.7.6.1810 \
 		--build-arg build_base=${BASE_IMAGENAME}_centos.7.6.1810 \
 		--build-arg org_label_schema_version="${VERSION}" \
