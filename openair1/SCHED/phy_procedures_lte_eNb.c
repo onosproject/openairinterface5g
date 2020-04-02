@@ -1224,14 +1224,15 @@ void pusch_procedures(PHY_VARS_eNB *eNB,L1_rxtx_proc_t *proc) {
                            ulsch_harq->nb_rb>20 ? 1 : 0);
       stop_meas(&eNB->ulsch_decoding_stats);
       LOG_D(PHY,
-            "[eNB %d][PUSCH %d] frame %d subframe %d RNTI %x RX power (%d,%d) N0 (%d,%d) dB ACK (%d,%d), decoding iter %d ulsch_harq->cqi_crc_status:%d ackBits:%d ulsch_decoding_stats[t:%lld max:%lld] dci_alloc %d, rar_alloc %d, round %d, first_rb %d, nb_rb %d, Qm %d, TBS %d, mcs %d, rv %d, cyclic_shift %d (n_DMRS2 %d, cyclicShift_common %d, ), O_ACK %d, beta_cqi %d\n",
+            "[eNB %d][PUSCH %d] frame %d subframe %d RNTI %x RX power (%d,%d) N0 (%d,%d) SNR %d dB ACK (%d,%d), decoding iter %d ulsch_harq->cqi_crc_status:%d ackBits:%d ulsch_decoding_stats[t:%lld max:%lld] dci_alloc %d, rar_alloc %d, round %d, first_rb %d, nb_rb %d, Qm %d, TBS %d, mcs %d, rv %d, cyclic_shift %d (n_DMRS2 %d, cyclicShift_common %d, ), O_ACK %d, beta_cqi %d\n",
             eNB->Mod_id,harq_pid,
             frame,subframe,
             ulsch->rnti,
             dB_fixed(eNB->pusch_vars[i]->ulsch_power[0]),
             dB_fixed(eNB->pusch_vars[i]->ulsch_power[1]),
-            30,//eNB->measurements.n0_power_dB[0],
-            30,//eNB->measurements.n0_power_dB[1],
+            dB_fixed(eNB->pusch_vars[i]->ulsch_interference_power[0]),
+            dB_fixed(eNB->pusch_vars[i]->ulsch_interference_power[1]),
+            dB_fixed(eNB->pusch_vars[i]->ulsch_power[0])-dB_fixed(eNB->pusch_vars[i]->ulsch_interference_power[0]),
             ulsch_harq->o_ACK[0],
             ulsch_harq->o_ACK[1],
             ret,
