@@ -1279,12 +1279,16 @@ extern "C" {
       s->tx_stream = s->usrp->get_tx_stream(stream_args_tx);
 
       /* Setting TX/RX BW after streamers are created due to USRP calibration issue */
-      for(int i=0; i<((int) s->usrp->get_tx_num_channels()) && i<openair0_cfg[0].tx_num_channels; i++)
+      for(int i=0; i<((int) s->usrp->get_tx_num_channels()) && i<openair0_cfg[0].tx_num_channels; i++) {
         s->usrp->set_tx_bandwidth(openair0_cfg[0].tx_bw,i);
-
-      for(int i=0; i<((int) s->usrp->get_rx_num_channels()) && i<openair0_cfg[0].rx_num_channels; i++)
+	s->usrp->set_tx_antenna("TX/RX",i);
+      }
+      
+      for(int i=0; i<((int) s->usrp->get_rx_num_channels()) && i<openair0_cfg[0].rx_num_channels; i++) {
         s->usrp->set_rx_bandwidth(openair0_cfg[0].rx_bw,i);
-
+	s->usrp->set_rx_antenna("TX/RX",i);
+      }
+      
       for (int i=0; i<openair0_cfg[0].rx_num_channels; i++) {
         LOG_I(HW,"RX Channel %d\n",i);
         LOG_I(HW,"  Actual RX sample rate: %fMSps...\n",s->usrp->get_rx_rate(i)/1e6);

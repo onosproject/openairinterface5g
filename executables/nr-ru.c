@@ -664,16 +664,17 @@ void rx_rf(RU_t *ru,int *frame,int *slot) {
       siglen = (fp->ofdm_symbol_size + fp->nb_prefix_samples0) + (rxsymb - 1) * (fp->ofdm_symbol_size + fp->nb_prefix_samples);
       proc->timestamp_rx += fp->get_samples_per_slot(*slot%fp->slots_per_frame,fp) - siglen;
 
+      //TODO: the 3rd parameter has to be adapted for arbitrary TDD configurations
       ru->rfdevice.trx_issue_stream_cmd(&ru->rfdevice,
-				       proc->timestamp_rx,
-				       siglen);
+					proc->timestamp_rx,
+					siglen+2*fp->get_samples_per_slot(*slot,fp));
       
     }
     else {
       siglen = samples_per_slot;
     }
 
-    LOG_I(PHY,"Reading %d samples for slot %d at timestamp %ld\n",siglen,*slot,proc->timestamp_rx);
+    LOG_D(PHY,"Reading %d samples for slot %d at timestamp %ld\n",siglen,*slot,proc->timestamp_rx);
 
     if(emulate_rf) {
       wait_on_condition(&proc->mutex_emulateRF,&proc->cond_emulateRF,&proc->instance_cnt_emulateRF,"emulatedRF_thread");
@@ -787,15 +788,12 @@ void tx_rf(RU_t *ru,int frame,int slot, uint64_t timestamp) {
       VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME( VCD_SIGNAL_DUMPER_VARIABLES_TRX_TST, (timestamp-ru->openair0_cfg.tx_sample_advance)&0xffffffff );
       VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_WRITE, 1 );
       // prepare tx buffer pointers
-      /*
       txs = ru->rfdevice.trx_write_func(&ru->rfdevice,
 					timestamp+ru->ts_offset-ru->openair0_cfg.tx_sample_advance-sf_extension,
 					txp,
 					siglen+sf_extension,
 					ru->nb_tx,
 					flags);
-      */
-      txs=siglen+sf_extension;
       LOG_D(PHY,"[TXPATH] RU %d tx_rf, writing to TS %llu, frame %d, unwrapped_frame %d, slot %d\n",ru->idx,
 	    (long long unsigned int)timestamp,frame,proc->frame_tx_unwrap,slot);
       VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_WRITE, 0 );
