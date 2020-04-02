@@ -288,11 +288,11 @@ static int trx_usrp_start(openair0_device *device) {
   // set the output pins to 1
   s->usrp->set_gpio_attr("FP0", "OUT", 7<<7, 0xf80);
 
-  if (s->use_gps == 1 || device->openair0_cfg[0].time_source == external) {
+  //if (s->use_gps == 1 || device->openair0_cfg[0].time_source == external) {
     s->wait_for_first_pps = 1;
-  } else {
+    /*} else {
     s->wait_for_first_pps = 0;
-  }
+    }*/
 
   s->rx_count = 0;
   s->tx_count = 0;
@@ -300,7 +300,13 @@ static int trx_usrp_start(openair0_device *device) {
   s->first_rx = 1;
   s->rx_timestamp = 0;
 
-  s->usrp->set_time_now(uhd::time_spec_t(0.0));
+
+  s->usrp->set_time_next_pps(uhd::time_spec_t(0.0));
+  // wait for the pps to change
+  uhd::time_spec_t time_last_pps = s->usrp->get_time_last_pps();
+  while (time_last_pps == s->usrp->get_time_last_pps()) {
+    boost::this_thread::sleep(boost::posix_time::milliseconds(1));
+  } 
 
   return 0;
 }
@@ -649,11 +655,10 @@ static int trx_usrp_read(openair0_device *device, openair0_timestamp *ptimestamp
       // receive a single channel (e.g. from connector RF A)
       samples_received=0;
 
-      //while (samples_received != nsamps) {
+      while (samples_received != nsamps) {
         samples_received += s->rx_stream->recv((void*)((int32_t*)buff_tmp[0]+samples_received),
                                                nsamps-samples_received, s->rx_md);
 
-	/*
         if  ((s->wait_for_first_pps == 0) && (s->rx_md.error_code!=uhd::rx_metadata_t::ERROR_CODE_NONE))
           break;
 
@@ -661,7 +666,6 @@ static int trx_usrp_read(openair0_device *device, openair0_timestamp *ptimestamp
           printf("sleep...\n"); //usleep(100);
         }
       }
-	*/
       if (samples_received == nsamps) s->wait_for_first_pps=0;
     }
 
