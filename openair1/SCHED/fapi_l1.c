@@ -1003,6 +1003,13 @@ void schedule_response(Sched_Rsp_t *Sched_INFO) {
     oai_nfapi_dl_config_req(Sched_INFO->DL_req); // DJP - .dl_config_request_body.dl_config_pdu_list[0]); // DJP - FIXME TODO - yuk - only copes with 1 pdu
     Sched_INFO->UE_release_req->sfn_sf = frame << 4 | subframe;
     oai_nfapi_ue_release_req(Sched_INFO->UE_release_req);
+  }else if((NFAPI_MODE!=NFAPI_MONOLITHIC) && !do_oai){
+    if (subframe_select (fp, subframe) != SF_UL){
+      DL_req->sfn_sf = frame << 4 | subframe;
+      DL_req->dl_config_request_body.tl.tag = NFAPI_DL_CONFIG_REQUEST_BODY_TAG;
+      DL_req->header.message_id = NFAPI_DL_CONFIG_REQUEST;
+      oai_nfapi_dl_config_req(Sched_INFO->DL_req);
+    }
   }
 
   if ((NFAPI_MODE!=NFAPI_MONOLITHIC) && number_hi_dci0_pdu!=0) {
