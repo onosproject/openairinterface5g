@@ -1156,6 +1156,9 @@ void fill_rf_config(RU_t *ru, char *rf_config_file) {
   cfg->num_rb_dl=N_RB;
   cfg->tx_num_channels=ru->nb_tx;
   cfg->rx_num_channels=ru->nb_rx;
+  cfg->clock_source=get_softmodem_params()->clock_source;
+  cfg->use_single_antenna_port_for_tdd=1; //TODO: make this parameterzable
+
 
   for (i=0; i<ru->nb_tx; i++) {
     if (ru->if_frequency == 0) {

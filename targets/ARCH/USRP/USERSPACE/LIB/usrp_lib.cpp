@@ -105,8 +105,8 @@ typedef struct {
   int64_t rx_count;
   int wait_for_first_pps;
   int use_gps;
-  int first_tx;
-  int first_rx;
+  //int first_tx;
+  //int first_rx;
   //! timestamp of RX packet
   openair0_timestamp rx_timestamp;
   uint32_t recplay_mode;
@@ -288,16 +288,11 @@ static int trx_usrp_start(openair0_device *device) {
   // set the output pins to 1
   s->usrp->set_gpio_attr("FP0", "OUT", 7<<7, 0xf80);
 
-  //if (s->use_gps == 1 || device->openair0_cfg[0].time_source == external) {
-    s->wait_for_first_pps = 1;
-    /*} else {
-    s->wait_for_first_pps = 0;
-    }*/
-
+  s->wait_for_first_pps = 1;
   s->rx_count = 0;
   s->tx_count = 0;
-  s->first_tx = 1;
-  s->first_rx = 1;
+  //s->first_tx = 1;
+  //s->first_rx = 1;
   s->rx_timestamp = 0;
 
 
@@ -307,6 +302,16 @@ static int trx_usrp_start(openair0_device *device) {
   while (time_last_pps == s->usrp->get_time_last_pps()) {
     boost::this_thread::sleep(boost::posix_time::milliseconds(1));
   } 
+
+  // init recv and send streaming command
+  if (device->openair0_cfg->use_single_antenna_port_for_tdd==0) {
+    uhd::stream_cmd_t cmd(uhd::stream_cmd_t::STREAM_MODE_START_CONTINUOUS);
+    cmd.time_spec = uhd::time_spec_t(1.0);    
+    cmd.stream_now = false; // start at constant delay
+    s->rx_stream->issue_stream_cmd(cmd);
+  }
+  // else the issue stream mode command needs to be called every TDD period
+  
 
   return 0;
 }
@@ -322,15 +327,15 @@ static void trx_usrp_end(openair0_device *device) {
   if (s == NULL)
     return;
 
-  if (s->recplay_mode != RECPLAY_REPLAYMODE) { // not subframes replay
-    /*
+  if ((s->recplay_mode != RECPLAY_REPLAYMODE) &&
+      (device->openair0_cfg->use_single_antenna_port_for_tdd==0)) { 
+
     s->rx_stream->issue_stream_cmd(uhd::stream_cmd_t::STREAM_MODE_STOP_CONTINUOUS);
     //send a mini EOB packet
     s->tx_md.end_of_burst = true;
     s->tx_stream->send("", 0, s->tx_md);
     s->tx_md.end_of_burst = false;
     sleep(1);
-    */
   }
 
   if (s->recplay_mode == RECPLAY_RECORDMODE) { // subframes store
@@ -588,7 +593,7 @@ static int trx_usrp_read_recplay(openair0_device *device, openair0_timestamp *pt
 
       if (cur_samples == 0) {
         std::cerr << "starting subframes file with wrap_count=" << wrap_count << " wrap_ts=" << wrap_ts
-                  << " ts=" << ptimestamp << std::endl;
+                  << " ts=" << *ptimestamp << std::endl;
       }
 
       memcpy(buff[0], &s->recplay_state->ms_sample->samples[0], nsamps*4);
@@ -1285,12 +1290,14 @@ extern "C" {
       /* Setting TX/RX BW after streamers are created due to USRP calibration issue */
       for(int i=0; i<((int) s->usrp->get_tx_num_channels()) && i<openair0_cfg[0].tx_num_channels; i++) {
         s->usrp->set_tx_bandwidth(openair0_cfg[0].tx_bw,i);
-	s->usrp->set_tx_antenna("TX/RX",i);
+	if (device->openair0_cfg->use_single_antenna_port_for_tdd==1)
+	  s->usrp->set_tx_antenna("TX/RX",i);
       }
       
       for(int i=0; i<((int) s->usrp->get_rx_num_channels()) && i<openair0_cfg[0].rx_num_channels; i++) {
         s->usrp->set_rx_bandwidth(openair0_cfg[0].rx_bw,i);
-	s->usrp->set_rx_antenna("TX/RX",i);
+	if (device->openair0_cfg->use_single_antenna_port_for_tdd==1)
+	  s->usrp->set_rx_antenna("TX/RX",i);
       }
       
       for (int i=0; i<openair0_cfg[0].rx_num_channels; i++) {

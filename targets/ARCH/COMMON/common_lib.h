@@ -236,6 +236,8 @@ typedef struct {
   double tx_sample_rate;
   //! check for threequarter sampling rate
   int8_t threequarter_fs;
+  //! flag to indicate use of same antenna port for RX and TX (for TDD)
+  int8_t use_single_antenna_port_for_tdd;
 } openair0_config_t;
 
 /*! \brief RF mapping */
