@@ -660,14 +660,14 @@ void rx_rf(RU_t *ru,int *frame,int *slot) {
 	  rxsymb++;
       }
       AssertFatal(rxsymb>0,"illegal rxsymb %d\n",rxsymb);
-      //TODO: this has to be adapted for numerology!=1
-      siglen = (fp->ofdm_symbol_size + fp->nb_prefix_samples0) + (rxsymb - 1) * (fp->ofdm_symbol_size + fp->nb_prefix_samples);
+        
+      siglen = (fp->nb_prefix_samples + fp->ofdm_symbol_size) * (rxsymb);
       proc->timestamp_rx += fp->get_samples_per_slot(*slot%fp->slots_per_frame,fp) - siglen;
 
       //TODO: the 3rd parameter has to be adapted for arbitrary TDD configurations
       ru->rfdevice.trx_issue_stream_cmd(&ru->rfdevice,
 					proc->timestamp_rx,
-					siglen+2*fp->get_samples_per_slot(*slot,fp));
+					siglen + fp->get_samples_per_tdd_rx_period((*slot +1)%fp->slots_per_frame,fp));
       
     }
     else {

@@ -227,6 +227,8 @@ typedef struct NR_DL_FRAME_PARMS NR_DL_FRAME_PARMS;
 
 typedef uint32_t (*get_samples_per_slot_t)(int slot, NR_DL_FRAME_PARMS* fp);
 
+typedef uint32_t (*get_samples_per_tdd_rx_period_t)(int slot, NR_DL_FRAME_PARMS* fp);
+
 typedef uint32_t (*get_samples_slot_timestamp_t)(int slot, NR_DL_FRAME_PARMS* fp, uint8_t sl_ahead);
 
 struct NR_DL_FRAME_PARMS {
@@ -282,6 +284,8 @@ struct NR_DL_FRAME_PARMS {
   uint32_t samples_per_subframe;
   /// Number of samples in current slot
   get_samples_per_slot_t get_samples_per_slot;
+  /// Number of samples in the tdd rx period
+  get_samples_per_tdd_rx_period_t get_samples_per_tdd_rx_period;
   /// Number of samples before slot
   get_samples_slot_timestamp_t get_samples_slot_timestamp;
   /// Number of samples in 0th and center slot of a subframe
