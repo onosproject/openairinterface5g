@@ -233,6 +233,16 @@ uint32_t get_samples_per_slot(int slot, NR_DL_FRAME_PARMS* fp)
   return samp_count;
 }
 
+uint32_t get_samples_per_tdd_rx_period(int slot, NR_DL_FRAME_PARMS* fp)
+{
+  uint32_t samp_count = 0;
+  for (uint8_t idx_slot = slot; idx_slot < slot + fp->p_tdd_UL_DL_Configuration->nrofUplinkSlots; idx_slot++) {
+    samp_count += fp->get_samples_per_slot(idx_slot, fp);
+  }
+  
+  return samp_count;
+}
+
 uint32_t get_samples_slot_timestamp(int slot, NR_DL_FRAME_PARMS* fp, uint8_t sl_ahead)
 {
   uint32_t samp_count = 0;
@@ -257,6 +267,7 @@ int nr_init_frame_parms(nfapi_nr_config_request_scf_t* cfg,
   fp->N_RB_UL = cfg->carrier_config.ul_grid_size[cfg->ssb_config.scs_common.value].value;
 
   int Ncp = NFAPI_CP_NORMAL;
+  int nrofDownlinkSlots = 0, nrofUplinkSlots = 0, symbol_count = 0,nb_periods_per_frame; 
   int mu = cfg!= NULL ?  cfg->ssb_config.scs_common.value : 0;
 
 #if DISABLE_LOG_X
@@ -288,6 +299,7 @@ int nr_init_frame_parms(nfapi_nr_config_request_scf_t* cfg,
   fp->samples_per_subframe = (fp->nb_prefix_samples0 + fp->ofdm_symbol_size) * 2 + 
                              (fp->nb_prefix_samples + fp->ofdm_symbol_size) * (fp->symbols_per_slot * fp->slots_per_subframe - 2); 
   fp->get_samples_per_slot = &get_samples_per_slot;
+  fp->get_samples_per_tdd_rx_period = &get_samples_per_tdd_rx_period;
   fp->get_samples_slot_timestamp = &get_samples_slot_timestamp;
   fp->samples_per_frame = 10 * fp->samples_per_subframe;
   fp->freq_range = (fp->dl_CarrierFreq < 6e9)? nr_FR1 : nr_FR2;
@@ -309,6 +321,72 @@ int nr_init_frame_parms(nfapi_nr_config_request_scf_t* cfg,
 
   for (int p=0; p<num_tx_ant; p++)
     fp->N_ssb += ((fp->L_ssb >> p) & 0x01);
+
+
+ switch(cfg->tdd_table.tdd_period.value) {
+    case 0:
+      nb_periods_per_frame = 20; // 10ms/0p5ms
+      break;
+
+    case 1:
+      nb_periods_per_frame = 16; // 10ms/0p625ms
+      break;
+
+    case 2:
+      nb_periods_per_frame = 10; // 10ms/1ms
+      break;
+
+    case 3:
+      nb_periods_per_frame = 8; // 10ms/1p25ms
+      break;
+
+    case 4:
+      nb_periods_per_frame = 5; // 10ms/2ms
+      break;
+
+    case 5:
+      nb_periods_per_frame = 4; // 10ms/2p5ms
+      break;
+
+    case 6:
+      nb_periods_per_frame = 2; // 10ms/5ms
+      break;
+
+    case 7:
+      nb_periods_per_frame = 1; // 10ms/10ms
+      break;
+
+    default:
+      AssertFatal(1==0,"Undefined tdd period %d\n", cfg->tdd_table.tdd_period.value);
+  }
+
+  int nb_slots_per_period = ((1<<mu) * NR_NUMBER_OF_SUBFRAMES_PER_FRAME)/nb_periods_per_frame;
+
+  for (int slot_number=0; slot_number < nb_slots_per_period; slot_number++) {
+  	for (int symbol_number=0; symbol_number < fp->symbols_per_slot; symbol_number++) {
+    		if(cfg->tdd_table.max_tdd_periodicity_list[slot_number].max_num_of_symbol_per_slot_list[symbol_number].slot_config.value == 0) {
+		  symbol_count++;	
+		  if(symbol_count == fp->symbols_per_slot){
+		   nrofDownlinkSlots++; 
+		  }
+		}
+	}
+    		symbol_count = 0;
+
+  	for (int symbol_number=0; symbol_number < fp->symbols_per_slot; symbol_number++){
+		if(cfg->tdd_table.max_tdd_periodicity_list[slot_number].max_num_of_symbol_per_slot_list[symbol_number].slot_config.value == 1) {
+		  symbol_count++;	
+		  if(symbol_count == fp->symbols_per_slot){
+		   nrofUplinkSlots++; 
+		  }
+		}
+	}
+		
+   }
+
+  fp->p_tdd_UL_DL_Configuration = calloc( 1, sizeof(TDD_UL_DL_SlotConfig_t));
+  fp->p_tdd_UL_DL_Configuration->nrofDownlinkSlots = nrofDownlinkSlots;
+  fp->p_tdd_UL_DL_Configuration->nrofUplinkSlots = nrofUplinkSlots;
 
   return 0;
 
@@ -364,6 +442,7 @@ int nr_init_frame_parms_ue(NR_DL_FRAME_PARMS *fp,
   fp->samples_per_subframe = (fp->nb_prefix_samples0 + fp->ofdm_symbol_size) * 2 + 
                              (fp->nb_prefix_samples + fp->ofdm_symbol_size) * (fp->symbols_per_slot * fp->slots_per_subframe - 2); 
   fp->get_samples_per_slot = &get_samples_per_slot;
+  fp->get_samples_per_tdd_rx_period = &get_samples_per_tdd_rx_period;
   fp->get_samples_slot_timestamp = &get_samples_slot_timestamp;
   fp->samples_per_frame = 10 * fp->samples_per_subframe;
   fp->freq_range = (fp->dl_CarrierFreq < 6e9)? nr_FR1 : nr_FR2;
