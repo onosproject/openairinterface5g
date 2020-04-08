@@ -363,7 +363,7 @@ uint64_t flexran_get_total_TBS_ul(mid_t mod_id, mid_t ue_id, int cc_id)
 int flexran_get_harq_round(mid_t mod_id, uint8_t cc_id, mid_t ue_id)
 {
   if (!mac_is_present(mod_id)) return 0;
-  return RC.mac[mod_id]->UE_list.eNB_UE_stats[cc_id][ue_id].harq_round;
+  return RC.mac[mod_id]->UE_list.eNB_UE_stats[cc_id][ue_id].harq_round[TB1];
 }
 
 uint32_t flexran_get_num_mac_sdu_tx(mid_t mod_id, mid_t ue_id, int cc_id)

@@ -164,15 +164,15 @@ int dump_eNB_l2_stats(char *buffer, int length) {
                                UE_list->eNB_UE_stats[CC_id][UE_id].ncce_used_retx
                               );
                 len += sprintf(&buffer[len],
-                               "[MAC] DLSCH bitrate (TTI %d, avg %d), Transmitted bytes "
-                               "(TTI %d, total %"PRIu64"), Total Transmitted PDU %d, Overhead "
+                               "[MAC] DLSCH bitrate (TTI %u, avg %u), Transmitted bytes "
+                               "(TTI %u, total %"PRIu64"), Total Transmitted PDU %u, Overhead "
                                "(TTI %"PRIu64", total %"PRIu64", avg %"PRIu64")\n",
                                UE_list->eNB_UE_stats[CC_id][UE_id].dlsch_bitrate,
                                UE_list->eNB_UE_stats[CC_id][UE_id].total_dlsch_bitrate,
-                               UE_list->eNB_UE_stats[CC_id][UE_id].TBS,
+                               UE_list->eNB_UE_stats[CC_id][UE_id].TBS[TB1],
                                UE_list->eNB_UE_stats[CC_id][UE_id].total_pdu_bytes,
                                UE_list->eNB_UE_stats[CC_id][UE_id].total_num_pdus,
-                               UE_list->eNB_UE_stats[CC_id][UE_id].overhead_bytes,
+                               UE_list->eNB_UE_stats[CC_id][UE_id].overhead_bytes[TB1],
                                UE_list->eNB_UE_stats[CC_id][UE_id].total_overhead_bytes,
                                UE_list->eNB_UE_stats[CC_id][UE_id].avg_overhead_bytes
                               );

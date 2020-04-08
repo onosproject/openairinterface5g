@@ -4101,7 +4101,7 @@ frame_subframe2_dl_harq_pid(LTE_TDD_Config_t *tdd_Config,
           return harq_pid;
 
       default:
-        LOG_E(MAC,"TDD config error %d\n",
+        LOG_E(MAC,"TDD config error %ld\n",
                    tdd_Config->subframeAssignment);
         break;
     }
@@ -4391,7 +4391,7 @@ extract_harq(module_id_t mod_idP,
                 if(harq_indication_tdd->harq_data[0].bundling.value_0==1){ //ack
                   sched_ctl->round[CC_idP][harq_pid][TB1] = 8; // release HARQ process
                   sched_ctl->tbcnt[CC_idP][harq_pid] = 0;
-                  LOG_D(MAC,"frame %d subframe %d Acking (%d,%d) harq_pid %d round %d\n",frameP,subframeP,frame_tx,subframe_tx,harq_pid,sched_ctl->round[CC_idP][harq_pid]);
+                  LOG_D(MAC,"frame %u subframe %u Acking (%d,%u) harq_pid %hhu round %hhu\n",frameP,subframeP,frame_tx,subframe_tx,harq_pid,sched_ctl->round[CC_idP][harq_pid][TB1]);
                 }else{ //nack
                   if( sched_ctl->round[CC_idP][harq_pid][TB1]<8)
                     sched_ctl->round[CC_idP][harq_pid][TB1]++;
@@ -4399,7 +4399,7 @@ extract_harq(module_id_t mod_idP,
                     sched_ctl->round[CC_idP][harq_pid][TB1] = 8;     // release HARQ process
                     sched_ctl->tbcnt[CC_idP][harq_pid] = 0;
                   }
-                  LOG_D(MAC,"frame %d subframe %d Nacking (%d,%d) harq_pid %d round %d\n",frameP,subframeP,frame_tx,subframe_tx,harq_pid,sched_ctl->round[CC_idP][harq_pid]);
+                  LOG_D(MAC,"frame %u subframe %u Nacking (%d,%u) harq_pid %hhu round %hhu\n",frameP,subframeP,frame_tx,subframe_tx,harq_pid,sched_ctl->round[CC_idP][harq_pid][TB1]);
                   if(sched_ctl->round[CC_idP][harq_pid][TB1] == 8){
                     for (uint8_t ra_i = 0; ra_i < NB_RA_PROC_MAX; ra_i++) {
                       if((ra[ra_i].rnti == rnti) && (ra[ra_i].state == WAITMSG4ACK) && (ra[ra_i].harq_pid == harq_pid)){
@@ -4415,7 +4415,7 @@ extract_harq(module_id_t mod_idP,
 
               for (uint8_t ra_i = 0; ra_i < NB_RA_PROC_MAX; ra_i++) {
                 if ((ra[ra_i].rnti == rnti) && (ra[ra_i].state == MSGCRNTI_ACK) && (ra[ra_i].crnti_harq_pid == harq_pid)) {
-                  LOG_D(MAC,"CRNTI Reconfiguration: ACK %d rnti %x round %d frame %d subframe %d \n",harq_indication_tdd->harq_data[0].bundling.value_0,rnti,sched_ctl->round[CC_idP][harq_pid],frameP,subframeP);
+                  LOG_D(MAC,"CRNTI Reconfiguration: ACK %hhu rnti %x round %hhu frame %u subframe %u \n",harq_indication_tdd->harq_data[0].bundling.value_0,rnti,sched_ctl->round[CC_idP][harq_pid][TB1],frameP,subframeP);
                   if(num_ack_nak == 1 && harq_indication_tdd->harq_data[0].bundling.value_0 == 1) {
                     cancel_ra_proc(mod_idP, CC_idP, frameP, ra[ra_i].rnti);
                   }else{
@@ -4510,7 +4510,7 @@ extract_harq(module_id_t mod_idP,
           RA_t *ra = &RC.mac[mod_idP]->common_channels[CC_idP].ra[0];
           for (uint8_t ra_i = 0; ra_i < NB_RA_PROC_MAX; ra_i++) {
             if ((ra[ra_i].rnti == rnti) && (ra[ra_i].state == MSGCRNTI_ACK) && (ra[ra_i].crnti_harq_pid == harq_pid)) {
-              LOG_D(MAC,"CRNTI Reconfiguration: ACK %d rnti %x round %d frame %d subframe %d \n",harq_indication_tdd->harq_data[0].bundling.value_0,rnti,sched_ctl->round[CC_idP][harq_pid],frameP,subframeP);
+              LOG_D(MAC,"CRNTI Reconfiguration: ACK %hhu rnti %x round %hhu frame %u subframe %u \n",harq_indication_tdd->harq_data[0].bundling.value_0,rnti,sched_ctl->round[CC_idP][harq_pid][select_tb],frameP,subframeP);
               if( harq_indication_tdd->harq_data[select_tb].bundling.value_0 == 1) {
                 cancel_ra_proc(mod_idP, CC_idP, frameP, ra[ra_i].rnti);
               }else{
@@ -4538,14 +4538,14 @@ extract_harq(module_id_t mod_idP,
     num_ack_nak         = harq_indication_fdd->number_of_ack_nack;
     pdu                 = &harq_indication_fdd->harq_tb_n[0];
     harq_pid = ((10 * frameP) + subframeP + 10236) & 7;
-    LOG_D(MAC, "frame %d subframe %d harq_pid %d mode %d tmode[0] %d num_ack_nak %d round %d\n",
+    LOG_D(MAC, "frame %u subframe %u harq_pid %hhu mode %hhu tmode[0] %d num_ack_nak %d round %hhu\n",
           frameP,
           subframeP,
           harq_pid,
           harq_indication_fdd->mode,
           tmode[0],
           num_ack_nak,
-          sched_ctl->round[CC_idP][harq_pid]);
+          sched_ctl->round[CC_idP][harq_pid][TB1]);
 
     // use 1 HARQ proces of BL/CE UE for now
     if (UE_list->UE_template[pCCid][UE_id].rach_resource_type > 0) harq_pid = 0;
@@ -4602,10 +4602,10 @@ extract_harq(module_id_t mod_idP,
 
           for (uint8_t ra_i = 0; ra_i < NB_RA_PROC_MAX; ra_i++) {
             if (ra[ra_i].rnti == rnti && ra[ra_i].state == MSGCRNTI_ACK && ra[ra_i].crnti_harq_pid == harq_pid) {
-              LOG_D(MAC,"CRNTI Reconfiguration: ACK %d rnti %x round %d frame %d subframe %d \n",
+              LOG_D(MAC,"CRNTI Reconfiguration: ACK %hhu rnti %x round %hhu frame %u subframe %u \n",
                     pdu[0],
                     rnti,
-                    sched_ctl->round[CC_idP][harq_pid],
+                    sched_ctl->round[CC_idP][harq_pid][TB1],
                     frameP,
                     subframeP);
 

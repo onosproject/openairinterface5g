@@ -3395,7 +3395,7 @@ void ulsch_scheduler_pre_processor_fairRR(module_id_t module_idP,
   uint16_t           first_rb[MAX_NUM_CCs];
   int8_t             mcs;
   uint8_t            snr;
-  uint8_t            snr2mcs_offset = 3;
+  //uint8_t            snr2mcs_offset = 3;
   double             bler_filter=0.9;
   double             bler;
   uint8_t            rb_table_index;
@@ -3589,7 +3589,7 @@ void ulsch_scheduler_pre_processor_fairRR(module_id_t module_idP,
               UE_list->UE_template[CC_id][UE_id].pre_assigned_mcs_ul = mcs;
             }
             
-            LOG_D(MAC,"[eNB %d] frame %d subframe %d, UE %d/%x CC %d snr %d snr_inst %d mcs %d mcs_offset %d bler %lf total_bler %lf ( %d %d ) rb_num %d phr_info %d tx_power %d bsr %d estimated_ul_buffer %d scheduled_ul_bytes %d\n",
+            LOG_D(MAC,"[eNB %hu] frame %u subframe %u, UE %d/%x CC %d snr %hhu snr_inst %hhu mcs %c mcs_offset %hhu bler %lf total_bler %lf ( %lu %lu ) rb_num %hhu phr_info %c tx_power %hd bsr %d estimated_ul_buffer %d scheduled_ul_bytes %d\n",
                   module_idP,frameP,subframeP,UE_id,UE_RNTI(CC_id,UE_id),CC_id, snr, UE_list->UE_sched_ctrl[UE_id].pusch_snr[CC_id], mcs, UE_list->UE_sched_ctrl[UE_id].mcs_offset[CC_id], UE_list->UE_sched_ctrl[UE_id].pusch_bler[CC_id], 
                   total_bler, UE_list->UE_sched_ctrl[UE_id].pusch_rx_num[CC_id], UE_list->UE_sched_ctrl[UE_id].pusch_rx_error_num[CC_id], rb_table[rb_table_index-1], UE_template->phr_info, tx_power, bytes_to_schedule, UE_template->estimated_ul_buffer, UE_template->scheduled_ul_bytes);
             

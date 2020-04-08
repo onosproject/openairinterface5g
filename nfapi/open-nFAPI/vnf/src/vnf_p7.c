@@ -1670,7 +1670,7 @@ void vnf_p7_release_msg(vnf_p7_t* vnf_p7, nfapi_p7_message_header_t* header)
 				}
 
 				vnf_p7_codec_free(vnf_p7, rx_ind->rx_indication_body.rx_pdu_list);
-				vnf_p7, rx_ind->rx_indication_body.rx_pdu_list = 0;
+				rx_ind->rx_indication_body.rx_pdu_list = 0;
 			}
 			break;
 		case NFAPI_RACH_INDICATION:
