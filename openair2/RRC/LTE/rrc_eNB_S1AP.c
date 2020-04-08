@@ -749,12 +749,18 @@ rrc_eNB_send_S1AP_NAS_FIRST_REQ(
     }
 
     /* Assume that cause is coded in the same way in RRC and S1ap, just check that the value is in S1ap range */
-    if(ue_context_pP->ue_context.establishment_cause >= RRC_CAUSE_LAST) {
-      LOG_E(S1AP,"Establishment cause invalid (%jd/%d) for eNB %d!",ue_context_pP->ue_context.establishment_cause,RRC_CAUSE_LAST,ctxt_pP->module_id);
-      return;
+    if(ue_context_pP->ue_context.establishment_cause < RRC_CAUSE_LAST)
+    {
+      S1AP_NAS_FIRST_REQ (message_p).establishment_cause = ue_context_pP->ue_context.establishment_cause;
     }
-
-    S1AP_NAS_FIRST_REQ (message_p).establishment_cause = ue_context_pP->ue_context.establishment_cause;
+    else
+    {
+      LOG_E(S1AP, "Establishment cause invalid (%jd/%d) for eNB %d!",
+                ue_context_pP->ue_context.establishment_cause,
+                RRC_CAUSE_LAST,
+                ctxt_pP->module_id);
+      S1AP_NAS_FIRST_REQ (message_p).establishment_cause = RRC_CAUSE_EMERGENCY;
+    }
     /* Forward NAS message */
     S1AP_NAS_FIRST_REQ (message_p).nas_pdu.buffer = rrcConnectionSetupComplete->dedicatedInfoNAS.buf;
     S1AP_NAS_FIRST_REQ (message_p).nas_pdu.length = rrcConnectionSetupComplete->dedicatedInfoNAS.size;
