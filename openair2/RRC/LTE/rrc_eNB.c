@@ -7925,7 +7925,9 @@ rrc_eNB_decode_dcch(
               dedicated_DRB = 3;
               RC.mac[ctxt_pP->module_id]->UE_list.UE_sched_ctrl[UE_id].crnti_reconfigurationcomplete_flag = 0;
               ue_context_p->ue_context.Status = RRC_RECONFIGURED;
-              ue_context_p->ue_context.handover_info->state = HO_CONFIGURED;
+              if(ue_context_p->ue_context.handover_info->state != HO_END_MARKER) {
+                ue_context_p->ue_context.handover_info->state = HO_CONFIGURED;
+              }
 
               LOG_I(RRC,
                     PROTOCOL_RRC_CTXT_UE_FMT" UE State = RRC_HO_EXECUTION (xid %ld)\n",
