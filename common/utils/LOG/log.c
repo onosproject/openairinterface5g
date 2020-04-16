@@ -474,6 +474,7 @@ void logRecord_mt(const char *file, const char *func, int line, int comp, int le
   } else {
   log_header(log_buffer,MAX_LOG_TOTAL,comp, level,format);
   g_log->log_component[comp].vprint(g_log->log_component[comp].stream,log_buffer, args);
+  fflush(g_log->log_component[comp].stream);
   }
   va_end(args);
 }
@@ -485,6 +486,7 @@ void vlogRecord_mt(const char *file, const char *func, int line, int comp, int l
   } else {
   log_header(log_buffer,MAX_LOG_TOTAL,comp, level,format);
   g_log->log_component[comp].vprint(g_log->log_component[comp].stream,log_buffer, args);
+  fflush(g_log->log_component[comp].stream);
   }
 }
 
