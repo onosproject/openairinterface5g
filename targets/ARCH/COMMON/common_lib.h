@@ -228,11 +228,7 @@ typedef struct {
   uint32_t       recplay_mode;
   recplay_conf_t *recplay_conf;
   //! number of samples per tti
-  unsigned int  samples_per_tti;
-  //! the sample rate for receive.
-  double rx_sample_rate;
-  //! the sample rate for transmit.
-  double tx_sample_rate;
+  //unsigned int  samples_per_tti;
   //! check for threequarter sampling rate
   int8_t threequarter_fs;
   //! flag to indicate use of same antenna port for RX and TX (for TDD)

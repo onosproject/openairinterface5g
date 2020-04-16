@@ -691,7 +691,7 @@ void rx_rf(RU_t *ru,int *frame,int *slot) {
 				       ru->nb_rx);
       // we might also apply some low pass filter here
       ts_cpu_us =    ((double)rdtsc_oai())/cpuf/1000.0;
-      ts_rx_us = ((double)ts)/ru->openair0_cfg.rx_sample_rate/1e6;
+      ts_rx_us = ((double)ts)/(ru->openair0_cfg.sample_rate/1e6);
       time_offset_us = ts_rx_us- ts_cpu_us;
       LOG_D(PHY,"rx_rf(): setting time_offset_us %f (ts_rx_us %f, ts_cpu_us %f)\n",time_offset_us,ts_rx_us,ts_cpu_us);
     }
@@ -704,7 +704,7 @@ void rx_rf(RU_t *ru,int *frame,int *slot) {
     //this is a DL slot, so we don't need to read from rfdevice. But in order to keep (approximate) timing we sleep until the time we would expect the slot
     if (time_offset_us) {
       ts_cpu_us =    ((double)rdtsc_oai())/cpuf/1000.0;
-      ts_rx_us = ((double)proc->timestamp_rx)/ru->openair0_cfg.rx_sample_rate/1e6;
+      ts_rx_us = ((double)proc->timestamp_rx)/(ru->openair0_cfg.sample_rate/1e6);
       LOG_D(PHY,"rx_rf(): sleeping for %f (ts_rx_us %f, ts_cpu_us %f)\n",ts_rx_us-(ts_cpu_us+time_offset_us),ts_rx_us,ts_cpu_us);
       if (ts_cpu_us+time_offset_us<ts_rx_us) 
 	usleep(ts_rx_us-(ts_cpu_us+time_offset_us));
