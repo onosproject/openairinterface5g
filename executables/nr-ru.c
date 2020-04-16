@@ -79,6 +79,8 @@
 #include "common/utils/LOG/log.h"
 #include "common/utils/LOG/vcd_signal_dumper.h"
 
+#include "PHY/TOOLS/time_meas.h"
+
 #include "enb_config.h"
 #include <executables/softmodem-common.h>
 
@@ -629,7 +631,9 @@ void rx_rf(RU_t *ru,int *frame,int *slot) {
   int i;
   uint32_t samples_per_slot = fp->get_samples_per_slot(*slot,fp);
   openair0_timestamp ts;
-
+  double ts_cpu_us, ts_rx_us;
+  static double time_offset_us=0; //time offset in us between usrp time and cpu time. this is just a course estimate updated every time we get a timestamp from the radio (UL slots) and is used to keep approximate real time when we are in a DL slot.
+  
   AssertFatal(*slot<fp->slots_per_frame && *slot>=0, "slot %d is illegal (%d)\n",*slot,fp->slots_per_frame);
 
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_READ, 1 );
@@ -685,11 +689,26 @@ void rx_rf(RU_t *ru,int *frame,int *slot) {
 				       rxp,
 				       siglen,
 				       ru->nb_rx);
+      // we might also apply some low pass filter here
+      ts_cpu_us =    ((double)rdtsc_oai())/cpuf/1000.0;
+      ts_rx_us = ((double)ts)/ru->openair0_cfg.rx_sample_rate/1e6;
+      time_offset_us = ts_rx_us- ts_cpu_us;
+      LOG_D(PHY,"rx_rf(): setting time_offset_us %f (ts_rx_us %f, ts_cpu_us %f)\n",time_offset_us,ts_rx_us,ts_cpu_us);
     }
 
     //AssertFatal(rxs == siglen,"rx_rf: Asked for %d samples, got %d from USRP\n",siglen,rxs);
     if (rxs != siglen) LOG_E(PHY, "rx_rf: Asked for %d samples, got %d from USRP\n",siglen,rxs);
 
+  }
+  else {
+    //this is a DL slot, so we don't need to read from rfdevice. But in order to keep (approximate) timing we sleep until the time we would expect the slot
+    if (time_offset_us) {
+      ts_cpu_us =    ((double)rdtsc_oai())/cpuf/1000.0;
+      ts_rx_us = ((double)proc->timestamp_rx)/ru->openair0_cfg.rx_sample_rate/1e6;
+      LOG_D(PHY,"rx_rf(): sleeping for %f (ts_rx_us %f, ts_cpu_us %f)\n",ts_rx_us-(ts_cpu_us+time_offset_us),ts_rx_us,ts_cpu_us);
+      if (ts_cpu_us+time_offset_us<ts_rx_us) 
+	usleep(ts_rx_us-(ts_cpu_us+time_offset_us));
+    }
   }
 
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_READ, 0 );
