@@ -468,7 +468,7 @@ int s1ap_eNB_handle_nas_downlink(uint32_t         assoc_id,
     if (stream == 0) {
         S1AP_ERROR("[SCTP %d] Received UE-related procedure on stream == 0\n",
                    assoc_id);
-        return -1;
+        //return -1;
     }
 
     if ((mme_desc_p = s1ap_eNB_get_MME(NULL, assoc_id, 0)) == NULL) {
