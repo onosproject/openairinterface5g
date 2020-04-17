@@ -3024,7 +3024,7 @@ do_RRCConnectionSetup(
   physicalConfigDedicated2->antennaInfo->choice.explicitValue.ue_TransmitAntennaSelection.choice.release = 0;
   // SchedulingRequestConfig
   physicalConfigDedicated2->schedulingRequestConfig->present = LTE_SchedulingRequestConfig_PR_setup;
-
+  int sr_base=carrier->sib2->radioResourceConfigCommon.pucch_ConfigCommon.n1PUCCH_AN-1;
   if (carrier->sib1->tdd_Config == NULL) {
     physicalConfigDedicated2->schedulingRequestConfig->choice.setup.sr_PUCCH_ResourceIndex = 71 - ue_context_pP->local_uid/10;//ue_context_pP->local_uid;
   } else {
@@ -3032,15 +3032,15 @@ do_RRCConnectionSetup(
       case 1:
         switch(frame_parms->N_RB_UL) {
           case 25:
-            physicalConfigDedicated2->schedulingRequestConfig->choice.setup.sr_PUCCH_ResourceIndex = 15 - ue_context_pP->local_uid/4;
+            physicalConfigDedicated2->schedulingRequestConfig->choice.setup.sr_PUCCH_ResourceIndex = sr_base - ue_context_pP->local_uid/4;
             break;
 
           case 50:
-            physicalConfigDedicated2->schedulingRequestConfig->choice.setup.sr_PUCCH_ResourceIndex = 31 - ue_context_pP->local_uid/4;
+            physicalConfigDedicated2->schedulingRequestConfig->choice.setup.sr_PUCCH_ResourceIndex = sr_base - ue_context_pP->local_uid/4;
             break;
 
           case 100:
-            physicalConfigDedicated2->schedulingRequestConfig->choice.setup.sr_PUCCH_ResourceIndex = 63 - ue_context_pP->local_uid/4;
+            physicalConfigDedicated2->schedulingRequestConfig->choice.setup.sr_PUCCH_ResourceIndex = sr_base - ue_context_pP->local_uid/4;
             break;
         }
 
@@ -3049,15 +3049,15 @@ do_RRCConnectionSetup(
       case 2:
         switch(frame_parms->N_RB_UL) {
           case 25:
-            physicalConfigDedicated2->schedulingRequestConfig->choice.setup.sr_PUCCH_ResourceIndex = 31 - ue_context_pP->local_uid/2;
+            physicalConfigDedicated2->schedulingRequestConfig->choice.setup.sr_PUCCH_ResourceIndex = sr_base - ue_context_pP->local_uid/2;
             break;
 
           case 50:
-            physicalConfigDedicated2->schedulingRequestConfig->choice.setup.sr_PUCCH_ResourceIndex = 63 - ue_context_pP->local_uid/2;
+            physicalConfigDedicated2->schedulingRequestConfig->choice.setup.sr_PUCCH_ResourceIndex = sr_base - ue_context_pP->local_uid/2;
             break;
 
           case 100:
-            physicalConfigDedicated2->schedulingRequestConfig->choice.setup.sr_PUCCH_ResourceIndex = 127 - ue_context_pP->local_uid/2;
+            physicalConfigDedicated2->schedulingRequestConfig->choice.setup.sr_PUCCH_ResourceIndex = sr_base - ue_context_pP->local_uid/2;
             break;
         }
 
