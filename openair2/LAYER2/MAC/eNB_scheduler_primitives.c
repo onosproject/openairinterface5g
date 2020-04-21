@@ -3471,10 +3471,10 @@ getmi(COMMON_channels_t *cc,
 
     case 2:
       if (subframe == 3 || subframe == 8) {
-        return 0;
+        return 1;
       }
 
-      return 1;
+      return 0;
 
     case 3:
       if (subframe == 0 || subframe == 8 || subframe == 9) {
