@@ -4685,7 +4685,7 @@ rrc_eNB_process_MeasurementReport(
   LOG_D(RRC, "A3 event is triggered...\n");
 
   /* if the UE is not in handover mode, start handover procedure */
-  if (ue_context_pP->ue_context.Status != RRC_HO_EXECUTION) {
+  if (ue_context_pP->ue_context.Status != RRC_HO_EXECUTION && ue_context_pP->ue_context.handover_info == NULL) {
     MessageDef      *msg;
     LOG_I(RRC, "Send HO preparation message at frame %d and subframe %d \n", ctxt_pP->frame, ctxt_pP->subframe);
     /* HO info struct may not be needed anymore */
@@ -7921,6 +7921,7 @@ rrc_eNB_decode_dcch(
               }
             } else if (ue_context_p->ue_context.Status == RRC_HO_EXECUTION) {
               int16_t UE_id = find_UE_id(ctxt_pP->module_id, ctxt_pP->rnti);
+              int32_t dedicated_DRB_tmp = 3;
 
               if(UE_id == -1) {
                 LOG_E(RRC,
@@ -7929,16 +7930,27 @@ rrc_eNB_decode_dcch(
                 break;
               }
 
-              if(ue_context_p->ue_context.handover_info && ue_context_p->ue_context.handover_info->state == HO_COMPLETE) {
-                LOG_E(RRC,
+              if(ue_context_p->ue_context.handover_info &&
+                 (ue_context_p->ue_context.handover_info->state == HO_COMPLETE ||
+                  ue_context_p->ue_context.handover_info->state == HO_REQUEST)) {
+                if(RC.mac[ctxt_pP->module_id]->UE_list.UE_sched_ctrl[UE_id].crnti_reconfigurationcomplete_flag == 1) {
+                  LOG_I(RRC,
+                        PROTOCOL_RRC_CTXT_UE_FMT" UE State = RRC_HO_EXECUTION (dedicated DRB, xid %ld) ho state %d, C-RNTI Complete\n",
+                        PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP),
+                        ul_dcch_msg->message.choice.c1.choice.rrcConnectionReconfigurationComplete.rrc_TransactionIdentifier,
+                        ue_context_p->ue_context.handover_info->state);
+                  dedicated_DRB_tmp = 2;
+                }else {
+                  LOG_E(RRC,
                     PROTOCOL_RRC_CTXT_UE_FMT" RRCConnectionReconfigurationComplete ho state %d error, fault\n",
                     PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP), ue_context_p->ue_context.handover_info->state);
-                break;
+                  break;
+                }
               }
 
               flexran_agent_handover = 1;
               RC.rrc[ctxt_pP->module_id]->Nb_ue++;
-              dedicated_DRB = 3;
+              dedicated_DRB = dedicated_DRB_tmp;
               RC.mac[ctxt_pP->module_id]->UE_list.UE_sched_ctrl[UE_id].crnti_reconfigurationcomplete_flag = 0;
               ue_context_p->ue_context.Status = RRC_RECONFIGURED;
               if(ue_context_p->ue_context.handover_info->state != HO_END_MARKER) {

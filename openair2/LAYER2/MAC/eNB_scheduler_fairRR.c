@@ -179,6 +179,9 @@ void pre_scd_nb_rbs_required(    module_id_t     module_idP,
     //update CQI information across component carriers
     eNB_UE_stats = &pre_scd_eNB_UE_stats[CC_id][UE_id];
     eNB_UE_stats->dlsch_mcs[TB1] = cqi_to_mcs[UE_list->UE_sched_ctrl[UE_id].dl_cqi[CC_id]];
+    if (UE_list->eNB_UE_stats[CC_id][UE_id].rrc_status == RRC_HO_EXECUTION) {
+       eNB_UE_stats->dlsch_mcs[TB1] = 6;
+    }
 
     if (UE_template.dl_buffer_total > 0) {
       nb_rbs_required[CC_id][UE_id] = search_rbs_required(eNB_UE_stats->dlsch_mcs[TB1], UE_template.dl_buffer_total, N_RB_DL, step_size);
@@ -1110,6 +1113,12 @@ schedule_ue_spec_fairRR(module_id_t module_idP,
           eNB_UE_stats->dlsch_mcs[TB1] = cqi_to_mcs[ue_sched_ctl->dl_cqi[CC_id]];
           eNB_UE_stats->dlsch_mcs[TB2] = cqi_to_mcs[ue_sched_ctl->dl_cqi[CC_id]];
         }
+      if (UE_list->eNB_UE_stats[CC_id][UE_id].rrc_status == RRC_HO_EXECUTION) {
+        eNB_UE_stats->dlsch_mcs[TB1] = 6;
+        eNB_UE_stats->dlsch_mcs[TB2] = 6;
+        ue_sched_ctl->aperiodic_ri_received[CC_id]=SINGLE_RI;
+        LOG_I(MAC,"%d %d %d Set mcs = 6 cause HO %d\n",frameP,subframeP,UE_id,nb_available_rb);
+      }
 
       //eNB_UE_stats->dlsch_mcs1 = cmin(eNB_UE_stats->dlsch_mcs1, openair_daq_vars.target_ue_dl_mcs);
 
@@ -2073,6 +2082,10 @@ schedule_ue_spec_fairRR(module_id_t module_idP,
         header_len_dtch_last = 0; // the header length of the last mac sdu
 
         dtch_max_num = UE_list->UE_template[CC_id][UE_id].dl_dtch_num;
+        if (UE_list->eNB_UE_stats[CC_id][UE_id].rrc_status == RRC_HO_EXECUTION) {
+          dtch_max_num=0;
+          LOG_I(MAC,"%d %d %d Skip dtch scheduling %d %d %d %d\n",frameP,subframeP,UE_id,TBS,ta_len,header_len_dcch,sdu_length_total);
+        }
         for (dtch = 0; dtch < dtch_max_num; dtch++) {
           lcid = UE_list->UE_template[CC_id][UE_id].dl_dtch_list_priority[dtch];
           header_len_dtch += 3;
@@ -3541,6 +3554,10 @@ void ulsch_scheduler_pre_processor_fairRR(module_id_t module_idP,
           mcs = 6;
         }
 
+        if (mac_eNB_get_rrc_status(module_idP,UE_RNTI(module_idP, UE_id)) == RRC_HO_EXECUTION){
+          mcs = 6;
+        }
+
         if ( ulsch_ue_select[CC_id].list[ulsch_ue_num].ue_priority  == SCH_UL_FIRST ) {
           int bytes_to_schedule = UE_template->estimated_ul_buffer - UE_template->scheduled_ul_bytes;
 
@@ -3615,6 +3632,11 @@ void ulsch_scheduler_pre_processor_fairRR(module_id_t module_idP,
           UE_list->UE_template[CC_id][UE_id].pre_allocated_rb_table_index_ul = 2;
           UE_list->UE_template[CC_id][UE_id].pre_assigned_mcs_ul = 10;
         }
+
+        if (mac_eNB_get_rrc_status(module_idP,UE_RNTI(module_idP, UE_id)) == RRC_HO_EXECUTION){
+          UE_list->UE_template[CC_id][UE_id].pre_assigned_mcs_ul = 6;
+        }
+
       }
 
       ue_num_temp--;
