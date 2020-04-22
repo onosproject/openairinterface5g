@@ -170,7 +170,6 @@ int dl_dtch_num;
     dl_buffer_total[CC_id][UE_id] += header_length_total;
   }
 }
-#endif
 
 void dlsch_scheduler_nb_rbs_required_lcid( module_id_t    module_idP,
                                           frame_t         frameP,
@@ -250,6 +249,7 @@ void dlsch_scheduler_nb_rbs_required_lcid( module_id_t    module_idP,
     dl_buffer_total[CC_id][UE_id] += header_length_total;
   }
 }
+#endif
 
 int cc_id_end(uint8_t *cc_id_flag ) {
   int end_flag = 1;
@@ -1017,8 +1017,10 @@ void dlsch_scheduler_pre_processor_fairRR (module_id_t   Mod_id,
   uint8_t CC_id;
   UE_list_t *UE_list = &RC.mac[Mod_id]->UE_list;
   int N_RB_DL;
+#if defined(PRE_SCD_THREAD)
   eNB_UE_STATS            *eNB_UE_stats;
   uint16_t                step_size;
+#endif
   UE_sched_ctrl_t *ue_sched_ctl;
   //  int rrc_status           = RRC_IDLE;
   COMMON_channels_t *cc;
@@ -3596,7 +3598,6 @@ void ulsch_scheduler_pre_ue_select_fairRR(
   uint8_t ulsch_ue_max_num[MAX_NUM_CCs];
   uint8_t ulsch_ue_max_num_volte[MAX_NUM_CCs];
   uint8_t ulsch_ue_max_num_normal[MAX_NUM_CCs];
-  uint8_t ulsch_ue_num_volte[MAX_NUM_CCs];
   uint16_t saved_ulsch_dci[MAX_NUM_CCs];
   rnti_t rnti;
   UE_sched_ctrl_t *UE_sched_ctl = NULL;
