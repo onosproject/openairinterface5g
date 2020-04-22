@@ -165,9 +165,6 @@ static inline int rxtx(PHY_VARS_eNB *eNB,L1_rxtx_proc_t *proc, char *thread_name
 
   //L1_rxtx_proc_t *L1_proc_tx = &eNB->proc.L1_proc_tx;
   // *******************************************************************
-#if defined(PRE_SCD_THREAD)
-  RU_t *ru = RC.ru[0];
-#endif
 
   if (eNB ==NULL) {
     LOG_D(PHY,"%s:%d: rxtx invalid argument, eNB pointer is NULL",__FILE__,__LINE__);
@@ -232,38 +229,9 @@ static inline int rxtx(PHY_VARS_eNB *eNB,L1_rxtx_proc_t *proc, char *thread_name
 #if defined(PRE_SCD_THREAD)
 
   if (NFAPI_MODE==NFAPI_MODE_VNF) {
-    new_dlsch_ue_select_tbl_in_use = dlsch_ue_select_tbl_in_use;
-    dlsch_ue_select_tbl_in_use = !dlsch_ue_select_tbl_in_use;
-    // L2-emulator can work only one eNB.
-    //      memcpy(&pre_scd_eNB_UE_stats,&RC.mac[ru->eNB_list[0]->Mod_id]->UE_list.eNB_UE_stats, sizeof(eNB_UE_STATS)*MAX_NUM_CCs*NUMBER_OF_UE_MAX);
-    //      memcpy(&pre_scd_activeUE, &RC.mac[ru->eNB_list[0]->Mod_id]->UE_list.active, sizeof(boolean_t)*NUMBER_OF_UE_MAX);
     memcpy(&pre_scd_eNB_UE_stats,&RC.mac[0]->UE_list.eNB_UE_stats, sizeof(eNB_UE_STATS)*MAX_NUM_CCs*NUMBER_OF_UE_MAX);
     memcpy(&pre_scd_activeUE, &RC.mac[0]->UE_list.active, sizeof(boolean_t)*NUMBER_OF_UE_MAX);
-
-    if ((ret= pthread_mutex_lock(&ru->proc.mutex_pre_scd))!=0) {
-      LOG_E(PHY,"[eNB] error locking proc mutex for eNB pre scd, return %d\n",ret);
-      return -1;
     }
-
-    ru->proc.instance_pre_scd++;
-
-    if (ru->proc.instance_pre_scd == 0) {
-      if (pthread_cond_signal(&ru->proc.cond_pre_scd) != 0) {
-        LOG_E( PHY, "[eNB] ERROR pthread_cond_signal for eNB pre scd\n" );
-        exit_fun( "ERROR pthread_cond_signal cond_pre_scd" );
-      }
-    } else {
-      LOG_E( PHY, "[eNB] frame %d subframe %d rxtx busy instance_pre_scd %d\n",
-             proc->frame_rx,proc->subframe_rx,ru->proc.instance_pre_scd );
-    }
-
-    if ((ret= pthread_mutex_unlock(&ru->proc.mutex_pre_scd))!=0) {
-      LOG_E(PHY,"[eNB] error unlocking proc mutex for eNB pre scd, return %d\n",ret);
-      return -1;
-    }
-
-  }
-
 #endif
   if ((ret= pthread_mutex_lock(&eNB->UL_INFO_mutex))!=0) {
     LOG_E(PHY,"error locking UL_INFO_mutex, return %d\n",ret);

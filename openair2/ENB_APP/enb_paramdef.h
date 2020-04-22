@@ -397,6 +397,9 @@ typedef enum {
 #define ENB_CONFIG_STRING_UETIMERS_N311                                 "ue_TimersAndConstants_n311"
 #define ENB_CONFIG_STRING_UE_TRANSMISSION_MODE                          "ue_TransmissionMode"
 #define ENB_CONFIG_STRING_UE_MULTIPLE_MAX                               "ue_multiple_max"
+#define ENB_CONFIG_STRING_VOLTE_UL_CYCLE                                "volte_ul_cycle"
+#define ENB_CONFIG_STRING_VOLTE_DL_CYCLE                                "volte_dl_cycle"
+#define ENB_CONFIG_STRING_VOLTE_UL_BUFFERSIZE                           "volte_ul_buffersize"
 //SIB1-MBMS 
 #define ENB_CONFIG_STRING_MBMS_DEDICATED_SERVING_CELL  			"mbms_dedicated_serving_cell"
 
@@ -540,6 +543,9 @@ typedef struct ccparams_lte_s {
   int32_t           ue_TimersAndConstants_n311;
   int32_t           ue_TransmissionMode;
   int32_t           ue_multiple_max;
+  int32_t           volte_ul_cycle;
+  int32_t           volte_dl_cycle;
+  int32_t           volte_ul_buffersize;
   char             *mbms_dedicated_serving_cell;
   int32_t           srb1_timer_poll_retransmit;
   int32_t           srb1_timer_reordering;
@@ -750,7 +756,8 @@ typedef struct ccparams_lte_s {
 {ENB_CONFIG_STRING_UETIMERS_N311,                                NULL,   0,           iptr:&ccparams.ue_TimersAndConstants_n311,               defintval:1,               TYPE_UINT,       0},  \
 {ENB_CONFIG_STRING_UE_TRANSMISSION_MODE,                         NULL,   0,           iptr:&ccparams.ue_TransmissionMode,                      defintval:1,               TYPE_UINT,       0},  \
 {ENB_CONFIG_STRING_UE_MULTIPLE_MAX,                              NULL,   0,           iptr:&ccparams.ue_multiple_max,                          defintval:4,               TYPE_UINT,       0},  \
-{ENB_CONFIG_STRING_MBMS_DEDICATED_SERVING_CELL,                  NULL,   0,           strptr:&ccparams.mbms_dedicated_serving_cell,  defstrval:"DISABLE",       TYPE_STRING,       0}  \
+{ENB_CONFIG_STRING_VOLTE_UL_BUFFERSIZE,                          NULL,   0,           iptr:&ccparams.volte_ul_buffersize,                      defintval:38,              TYPE_UINT,       0},  \
+{ENB_CONFIG_STRING_MBMS_DEDICATED_SERVING_CELL,                  NULL,   0,           strptr:&ccparams.mbms_dedicated_serving_cell,            defstrval:"DISABLE",       TYPE_STRING,     0}   \
 }
 
 

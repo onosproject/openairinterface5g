@@ -2657,6 +2657,9 @@ add_new_ue(module_id_t mod_idP,
     UE_list->UE_sched_ctrl[UE_id].pusch_bler[cc_idP] = 0;
     UE_list->UE_sched_ctrl[UE_id].mcs_offset[cc_idP] = 0;
     
+    UE_list->UE_sched_ctrl[UE_id].volte_configured = FALSE;
+    UE_list->UE_sched_ctrl[UE_id].ul_periodic_timer_exp_flag = FALSE;
+
     for (j = 0; j < 8; j++) {
         UE_list->UE_template[cc_idP][UE_id].oldNDI[j][TB1] = (j == 0) ? 1 : 0;    // 1 because first transmission is with format1A (Msg4) for harq_pid 0
         UE_list->UE_template[cc_idP][UE_id].oldNDI[j][TB2] = 1;
@@ -2816,7 +2819,6 @@ rrc_mac_remove_ue(module_id_t mod_idP,
     pthread_mutex_unlock(&rrc_release_freelist);
   }
 
-  pthread_mutex_unlock(&rrc_release_freelist);
   return 0;
 }
 

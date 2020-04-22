@@ -419,6 +419,7 @@ int stop_L1L2(module_id_t enb_id) {
 
   /* these tasks need to pick up new configuration */
   terminate_task(enb_id, TASK_ENB_APP, TASK_RRC_ENB);
+  terminate_task(enb_id, TASK_ENB_APP, TASK_MAC_ENB_PRE_SCD);
   oai_exit = 1;
   LOG_I(ENB_APP, "calling kill_RU_proc() for instance %d\n", enb_id);
   kill_RU_proc(RC.ru[enb_id]);
@@ -469,6 +470,15 @@ int restart_L1L2(module_id_t enb_id) {
   } else {
     LOG_I(RRC, "Re-created task for RRC eNB successfully\n");
   }
+
+#if defined(PRE_SCD_THREAD)
+  if (itti_create_task (TASK_MAC_ENB_PRE_SCD, pre_scd_task, NULL) < 0) {
+    LOG_E(MAC,"Create task for MAC eNB PreSCD failed\n");
+    return -1;
+  } else {
+    LOG_I(RRC, "Re-created task for MAC eNB PreSCD successfully\n");
+  }
+#endif
 
   /* pass a reconfiguration request which will configure everything down to
    * RC.eNB[i][j]->frame_parms, too */

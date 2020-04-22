@@ -1683,39 +1683,6 @@ void *ru_thread_tx( void *param ) {
   return 0;
 }
 
-#if defined(PRE_SCD_THREAD)
-int wakeup_prescd(RU_t* ru, int frame , int subframe){
-
-    new_dlsch_ue_select_tbl_in_use = dlsch_ue_select_tbl_in_use;
-    dlsch_ue_select_tbl_in_use = !dlsch_ue_select_tbl_in_use;
-    memcpy(&pre_scd_eNB_UE_stats,&RC.mac[ru->eNB_list[0]->Mod_id]->UE_list.eNB_UE_stats, sizeof(eNB_UE_STATS)*MAX_NUM_CCs*NUMBER_OF_UE_MAX);
-    memcpy(&pre_scd_activeUE, &RC.mac[ru->eNB_list[0]->Mod_id]->UE_list.active, sizeof(boolean_t)*NUMBER_OF_UE_MAX);
-    if (pthread_mutex_lock(&ru->proc.mutex_pre_scd)!= 0) {
-        LOG_E( PHY, "[eNB] error locking proc mutex for eNB pre scd\n");
-        exit_fun("error locking mutex_time");
-    }
-
-    ru->proc.instance_pre_scd++;
-
-    if (ru->proc.instance_pre_scd == 0) {
-        if (pthread_cond_signal(&ru->proc.cond_pre_scd) != 0) {
-            LOG_E( PHY, "[eNB] ERROR pthread_cond_signal for eNB pre scd\n" );
-            exit_fun( "ERROR pthread_cond_signal cond_pre_scd" );
-            return -1;
-        }
-    }else{
-        LOG_E( PHY, "[eNB] frame %d subframe %d rxtx busy instance_pre_scd %d\n",
-               frame,subframe,ru->proc.instance_pre_scd );
-    }
-
-    if (pthread_mutex_unlock(&ru->proc.mutex_pre_scd)!= 0) {
-        LOG_E( PHY, "[eNB] error unlocking mutex_pre_scd mutex for eNB pre scd\n");
-        exit_fun("error unlocking mutex_pre_scd");
-        return -1;
-    }
-    return 0;
-}
-#endif
 
 void *ru_thread( void *param ) {
   RU_t               *ru      = (RU_t *)param;
@@ -1725,13 +1692,11 @@ void *ru_thread( void *param ) {
   int                frame    =1023;
   int                   resynch_done = 0;
   int                ret;
+
   cpu_set_t cpuset;
   CPU_ZERO(&cpuset);
   // set default return value
 
-#if defined(PRE_SCD_THREAD)
-  dlsch_ue_select_tbl_in_use = 1;
-#endif
   // set default return value
   thread_top_init("ru_thread",1,400000,500000,500000);
   //CPU_SET(1, &cpuset);
@@ -2013,11 +1978,6 @@ void *ru_thread( void *param ) {
           return NULL;
         }
 	
-#if defined(PRE_SCD_THREAD)
-        if (NFAPI_MODE == NFAPI_MONOLITHIC) {
-          wakeup_prescd(ru, frame, subframe);
-        }
-#endif
 	// wakeup all eNB processes waiting for this RU
 	if (ru->num_eNB>0) wakeup_L1s(ru);
 	
@@ -2130,35 +2090,62 @@ void *ru_thread_synch(void *arg) {
 }
 
 #if defined(PRE_SCD_THREAD)
-void *pre_scd_thread( void *param ) {
+void *pre_scd_task( void *param ) {
   static int              eNB_pre_scd_status;
   protocol_ctxt_t         ctxt;
-  int                     frame;
-  int                     subframe;
   int                     min_rb_unit[MAX_NUM_CCs];
   int                     CC_id;
   int                     Mod_id;
-  RU_t               *ru      = (RU_t *)param;
+  int                     old_subframe;
+  eNB_MAC_INST            *eNB;
+  UE_list_t               *UE_list;
+  MessageDef              *msg_p = NULL;
+
+  /* init */
+  old_subframe = 0x7FFFFFFF;
+
+  itti_mark_task_ready (TASK_MAC_ENB_PRE_SCD);
+  LOG_I(MAC,"Entering main loop of eNB MAC PreSCD task\n");
 
   // L2-emulator can work only one eNB
   if( NFAPI_MODE==NFAPI_MODE_VNF)
     Mod_id = 0;
   else
-    Mod_id = ru->eNB_list[0]->Mod_id;
+    Mod_id = RC.ru[0]->eNB_list[0]->Mod_id;
 
-  frame = 0;
-  subframe = 4;
-  thread_top_init("pre_scd_thread",1,870000,1000000,1000000);
+  eNB = RC.mac[Mod_id];
+  UE_list = &eNB->UE_list;
 
   while (!oai_exit) {
-    if (wait_on_condition(&ru->proc.mutex_pre_scd,&ru->proc.cond_pre_scd,&ru->proc.instance_pre_scd,"pre_scd_thread") < 0) break;
 
     if(oai_exit) {
       break;
     }
 
+    // Wait for a message
+    itti_poll_msg(TASK_MAC_ENB_PRE_SCD, &msg_p);     /* reception of one message, non-blocking */
+
+    if (msg_p != NULL) {
+      switch (ITTI_MSG_ID(msg_p)) {
+        case TERMINATE_MESSAGE:
+          LOG_W(MAC, " *** Exiting eNB MAC PreSCD thread\n");
+          itti_exit_task();
+          break;
+
+        default:
+          break;
+      }
+    }
+
+    if(old_subframe == eNB->subframe){
+      continue;
+    }
+
+    memcpy(&pre_scd_eNB_UE_stats,&UE_list->eNB_UE_stats, sizeof(eNB_UE_STATS)*MAX_NUM_CCs*NUMBER_OF_UE_MAX);
+    memcpy(&pre_scd_activeUE, &UE_list->active, sizeof(boolean_t)*NUMBER_OF_UE_MAX);
+
     PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, Mod_id, ENB_FLAG_YES,
-                                   NOT_A_RNTI, frame, subframe,Mod_id);
+                                   NOT_A_RNTI, eNB->frame, eNB->subframe,Mod_id);
     pdcp_run(&ctxt);
 
     for (CC_id = 0; CC_id < MAX_NUM_CCs; CC_id++) {
@@ -2170,17 +2157,9 @@ void *pre_scd_thread( void *param ) {
       }
     }
 
-    pre_scd_nb_rbs_required(Mod_id, frame, subframe,min_rb_unit,pre_nb_rbs_required[new_dlsch_ue_select_tbl_in_use]);
+    pre_scd_nb_rbs_required(Mod_id, eNB->frame, eNB->subframe,min_rb_unit);
 
-    if (subframe==9) {
-      subframe=0;
-      frame++;
-      frame&=1023;
-    } else {
-      subframe++;
-    }
-
-    if (release_thread(&ru->proc.mutex_pre_scd,&ru->proc.instance_pre_scd,"pre_scd_thread") < 0) break;
+    old_subframe = eNB->subframe;
   }
 
   eNB_pre_scd_status = 0;
@@ -2442,13 +2421,13 @@ void init_RU_proc(RU_t *ru) {
 
 #if defined(PRE_SCD_THREAD)
   if (NFAPI_MODE == NFAPI_MONOLITHIC) {
-  proc->instance_pre_scd = -1;
-  pthread_mutex_init( &proc->mutex_pre_scd, NULL);
-  pthread_cond_init( &proc->cond_pre_scd, NULL);
-  pthread_create(&proc->pthread_pre_scd, NULL, pre_scd_thread, (void *)ru);
-  pthread_setname_np(proc->pthread_pre_scd, "pre_scd_thread");
+    int rc;
+    LOG_I(MAC,"Creating MAC eNB PreSCD Task\n");
+    rc = itti_create_task (TASK_MAC_ENB_PRE_SCD, pre_scd_task, (void *)ru);
+    AssertFatal(rc >= 0, "Create task for MAC eNB PreSCD failed\n");
   }
 #endif
+
 #ifdef PHY_TX_THREAD
   pthread_create( &proc->pthread_phy_tx, NULL, eNB_thread_phy_tx, (void *)ru );
   pthread_setname_np( proc->pthread_phy_tx, "phy_tx_thread" );
@@ -2531,23 +2510,6 @@ void init_RU_proc(RU_t *ru) {
 void kill_RU_proc(RU_t *ru) {
   int ret;
   RU_proc_t *proc = &ru->proc;
-#if defined(PRE_SCD_THREAD)
-  if (NFAPI_MODE == NFAPI_MONOLITHIC || NFAPI_MODE == NFAPI_MODE_VNF) {
-  if ((ret=pthread_mutex_lock(&proc->mutex_pre_scd))!=0) {
-    LOG_E(PHY,"mutex_lock returns %d\n",ret);
-    return;
-  }
-  ru->proc.instance_pre_scd = 0;
-  pthread_cond_signal(&proc->cond_pre_scd);
-  if ((ret=pthread_mutex_unlock(&proc->mutex_pre_scd))!=0) {
-    LOG_E(PHY,"mutex_unlock returns %d\n",ret);
-    return;
-  }
-  pthread_join(proc->pthread_pre_scd, NULL);
-  pthread_mutex_destroy(&proc->mutex_pre_scd);
-  pthread_cond_destroy(&proc->cond_pre_scd);
-  }
-#endif
 #ifdef PHY_TX_THREAD
   if ((ret=pthread_mutex_lock(&proc->mutex_phy_tx))!=0) {
     LOG_E(PHY,"mutex_lock returns %d\n",ret);
@@ -3008,19 +2970,10 @@ void init_RU(char *rf_config_file, clock_source_t clock_source,clock_source_t ti
 
 void stop_ru(RU_t *ru) {
 
-#if defined(PRE_SCD_THREAD) || defined(PHY_TX_THREAD)
+#if defined(PHY_TX_THREAD)
   int *status;
 #endif
   printf("Stopping RU %p processing threads\n",(void*)ru);
-#if defined(PRE_SCD_THREAD)
-  if(ru && (NFAPI_MODE == NFAPI_MONOLITHIC || NFAPI_MODE == NFAPI_MODE_VNF)){
-    ru->proc.instance_pre_scd = 0;
-    pthread_cond_signal( &ru->proc.cond_pre_scd );
-    pthread_join(ru->proc.pthread_pre_scd, (void**)&status );
-    pthread_mutex_destroy(&ru->proc.mutex_pre_scd );
-    pthread_cond_destroy(&ru->proc.cond_pre_scd );
-  }
-#endif
 #ifdef PHY_TX_THREAD
   if(ru){
       ru->proc.instance_cnt_phy_tx = 0;
@@ -3051,11 +3004,9 @@ void stop_RU(int nb_ru)
 void init_ru_vnf(void) {
   int ru_id;
   RU_t *ru;
-  RU_proc_t *proc;
   //  PHY_VARS_eNB *eNB0= (PHY_VARS_eNB *)NULL;
   int i;
   int CC_id;
-  dlsch_ue_select_tbl_in_use = 1;
   // create status mask
   RC.ru_mask = 0;
   pthread_mutex_init(&RC.ru_mutex,NULL);
@@ -3120,17 +3071,13 @@ void init_ru_vnf(void) {
           }
         }
     */
-    LOG_I(PHY,"Initializing RRU descriptor %d : (%s,%s,%d)\n",ru_id,ru_if_types[ru->if_south],eNB_timing[ru->if_timing],ru->function);
-    //    set_function_spec_param(ru);
-    LOG_I(PHY,"Starting ru_thread %d\n",ru_id);
-    //    init_RU_proc(ru);
-    proc = &ru->proc;
-    memset((void *)proc,0,sizeof(RU_proc_t));
-    proc->instance_pre_scd = -1;
-    pthread_mutex_init( &proc->mutex_pre_scd, NULL);
-    pthread_cond_init( &proc->cond_pre_scd, NULL);
-    pthread_create(&proc->pthread_pre_scd, NULL, pre_scd_thread, (void *)ru);
-    pthread_setname_np(proc->pthread_pre_scd, "pre_scd_thread");
+
+    {
+      int rc;
+      LOG_I(MAC,"Creating MAC eNB PreSCD Task\n");
+      rc = itti_create_task (TASK_MAC_ENB_PRE_SCD, pre_scd_task, (void *)ru);
+      AssertFatal(rc >= 0, "Create task for MAC eNB PreSCD failed\n");
+    }
   } // for ru_id
 
   //  sleep(1);

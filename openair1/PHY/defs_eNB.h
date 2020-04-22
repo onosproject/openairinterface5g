@@ -274,14 +274,6 @@ typedef struct RU_proc_t_s {
   /// \internal This variable is protected by \ref mutex_rf_tx.
   int instance_cnt_rf_tx;
 #endif
-#if defined(PRE_SCD_THREAD)
-  pthread_t pthread_pre_scd;
-  /// condition variable for time processing thread
-  pthread_cond_t cond_pre_scd;
-  /// mutex for time thread
-  pthread_mutex_t mutex_pre_scd;
-  int instance_pre_scd;
-#endif
   int emulate_rf_busy;
 } RU_proc_t;
 

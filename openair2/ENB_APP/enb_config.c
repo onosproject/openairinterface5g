@@ -279,6 +279,14 @@ void RCconfig_macrlc(int macrlc_has_f1[MAX_MAC_INST]) {
         global_scheduler_mode=SCHED_MODE_DEFAULT;
         printf("sched mode = default %d [%s]\n",global_scheduler_mode,*(MacRLC_ParamList.paramarray[j][MACRLC_SCHED_MODE_IDX].strptr));
       }
+
+
+      // Volte cycle num
+      for (int CC_id = 0; CC_id < MAX_NUM_CCs; CC_id++){
+        RC.mac[j]->volte_ul_cycle[CC_id] = 0;
+        RC.mac[j]->volte_dl_cycle[CC_id] = 0;
+      }
+
     }// j=0..num_inst
   } /*else {// MacRLC_ParamList.numelt > 0 // ignore it
 
@@ -1815,6 +1823,28 @@ int RCconfig_RRC(uint32_t i, eNB_RRC_INST *rrc, int macrlc_has_f1) {
                         RC.config_file_name, i, ccparams_lte.N_RB_DL);
                   exit_fun("Failed to parse eNB configuration file");
               }
+
+              // VoLTE configuration
+//              RRC_CONFIGURATION_REQ (msg_p).radioresourceconfig[j].volte_ul_cycle= ccparams_lte.volte_ul_cycle;
+//              if ((ccparams_lte.volte_ul_cycle < 10) ||
+//                      (ccparams_lte.volte_ul_cycle > 200))
+//                    AssertFatal (0,
+//                                 "Failed to parse eNB configuration file %s, enb %d unknown value \"%d\" for volte_ul_cycle choice: 10..200!\n",
+//                                 RC.config_file_name, i, ccparams_lte.volte_ul_cycle);
+
+//              RRC_CONFIGURATION_REQ (msg_p).radioresourceconfig[j].volte_dl_cycle= ccparams_lte.volte_dl_cycle;
+//             if ((ccparams_lte.volte_dl_cycle < 10) ||
+//                      (ccparams_lte.volte_dl_cycle > 200))
+//                    AssertFatal (0,
+//                                 "Failed to parse eNB configuration file %s, enb %d unknown value \"%d\" for volte_dl_cycle choice: 10..200!\n",
+//                                 RC.config_file_name, i, ccparams_lte.volte_dl_cycle);
+
+              RRC_CONFIGURATION_REQ (msg_p).radioresourceconfig[j].volte_ul_buffersize= ccparams_lte.volte_ul_buffersize;
+              if ((ccparams_lte.volte_ul_buffersize < 0) ||
+                      (ccparams_lte.volte_ul_buffersize > 255))
+                    AssertFatal (0,
+                                 "Failed to parse eNB configuration file %s, enb %d unknown value \"%d\" for volte_ul_buffersize choice: 0..255!\n",
+                                RC.config_file_name, i, ccparams_lte.volte_ul_buffersize);
 
               // eMBMS configuration
               RRC_CONFIGURATION_REQ(msg_p).eMBMS_configured = 0;

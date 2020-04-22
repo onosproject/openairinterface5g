@@ -1321,6 +1321,42 @@ int rrc_eNB_previous_SRB2(rrc_eNB_ue_context_t*         ue_context_pP)
 }
 //-----------------------------------------------------------------------------
 /*
+* Check if e_rab_id is for voice.
+* return : voice (1), not (0)
+*/
+uint8_t rrc_eNB_get_voice_flg(rrc_eNB_ue_context_t* ue_context_pP, uint8_t e_rab_idP, const uint8_t xid)
+//-----------------------------------------------------------------------------
+{
+  uint8_t i;
+  uint8_t ret = 0;
+  uint8_t qci = 0;
+
+  if (ue_context_pP->ue_context.nb_of_modify_e_rabs > 0) {
+    for (i = 0; i < ue_context_pP->ue_context.nb_of_modify_e_rabs; i++) {
+      if (e_rab_idP == ue_context_pP->ue_context.modify_e_rab[i].param.e_rab_id) {
+        if (xid == ue_context_pP->ue_context.modify_e_rab[i].xid) {
+          qci = ue_context_pP->ue_context.modify_e_rab[i].param.qos.qci;
+          break;
+        }
+      }
+    }
+  } else {
+    for (i = 0; i < ue_context_pP->ue_context.setup_e_rabs; i++) {
+      if (ue_context_pP->ue_context.e_rab[i].param.e_rab_id == e_rab_idP) {
+        qci = ue_context_pP->ue_context.e_rab[i].param.qos.qci;
+        break;
+      }
+    }
+  }
+
+  if (qci == 1){
+    ret = 1;
+  }
+
+  return ret;
+}
+//-----------------------------------------------------------------------------
+/*
 * Process the rrc connection setup complete message from UE (SRB1 Active)
 */
 void
@@ -3991,7 +4027,7 @@ flexran_rrc_eNB_generate_defaultRRCConnectionReconfiguration(const protocol_ctxt
   DRB_ul_SpecificParameters->bucketSizeDuration = LTE_LogicalChannelConfig__ul_SpecificParameters__bucketSizeDuration_ms50;
   // LCG for DTCH can take the value from 1 to 3 as defined in 36331: normally controlled by upper layers (like RRM)
   logicalchannelgroup_drb = CALLOC(1, sizeof(long));
-  *logicalchannelgroup_drb = 1;
+  *logicalchannelgroup_drb = 3;
   DRB_ul_SpecificParameters->logicalChannelGroup = logicalchannelgroup_drb;
 
   ASN_SEQUENCE_ADD(&(*DRB_configList)->list, DRB_config);
@@ -6636,6 +6672,8 @@ rrc_eNB_process_RRCConnectionReconfigurationComplete(
   uint8_t                            *kRRCenc = NULL;
   uint8_t                            *kRRCint = NULL;
   uint8_t                            *kUPenc = NULL;
+  uint8_t                            e_rab_id;
+  uint8_t                            voice_flg;
   LTE_DRB_ToAddModList_t             *DRB_configList = ue_context_pP->ue_context.DRB_configList2[xid];
   LTE_SRB_ToAddModList_t             *SRB_configList = ue_context_pP->ue_context.SRB_configList2[xid];
   LTE_DRB_ToReleaseList_t            *DRB_Release_configList2 = ue_context_pP->ue_context.DRB_Release_configList2[xid];
@@ -6854,8 +6892,15 @@ rrc_eNB_process_RRCConnectionReconfigurationComplete(
                         (LTE_SystemInformationBlockType1_MBMS_r14_t *) NULL,
                         (LTE_MBSFN_AreaInfoList_r9_t *) NULL
 #endif
-          );
-	 }
+            );
+            e_rab_id = (u_int8_t)*DRB_configList->list.array[i]->eps_BearerIdentity;
+            voice_flg = rrc_eNB_get_voice_flg(ue_context_pP, e_rab_id, xid);
+            eNB_mac_config_VoLTE(ctxt_pP->module_id,
+                                 ue_context_pP->ue_context.rnti,
+                                 voice_flg,
+                                 (u_int8_t)*DRB_configList->list.array[i]->logicalChannelConfig->ul_SpecificParameters->logicalChannelGroup,
+                                 DRB2LCHAN[i]);
+          }
         } else {        // remove LCHAN from MAC/PHY
 #if 0
           if (ue_context_pP->ue_context.DRB_active[drb_id] == 1) {
@@ -6934,6 +6979,11 @@ rrc_eNB_process_RRCConnectionReconfigurationComplete(
                         (LTE_MBSFN_AreaInfoList_r9_t *) NULL
 #endif
                                    );
+            eNB_mac_config_VoLTE(ctxt_pP->module_id,
+                                 ue_context_pP->ue_context.rnti,
+                                 0,
+                                 0,
+                                 (u_int8_t)(drb_id + 2));
           }
         } // end else of if (ue_context_pP->ue_context.DRB_active[drb_id] == 0)
       } // end if (DRB_configList->list.array[i])
@@ -6962,6 +7012,13 @@ rrc_eNB_process_RRCConnectionReconfigurationComplete(
 
         if (ue_context_pP->ue_context.DRB_active[drb_id] == 1) {
           ue_context_pP->ue_context.DRB_active[drb_id] = 0;
+          if (NODE_IS_MONOLITHIC(RC.rrc[ctxt_pP->module_id]->node_type)) {
+            eNB_mac_config_VoLTE(ctxt_pP->module_id,
+                                 ue_context_pP->ue_context.rnti,
+                                 0,
+                                 0,
+                                 (u_int8_t)(drb_id + 2));
+          }
         }
       }
     }
@@ -8843,8 +8900,6 @@ void rrc_subframe_process(protocol_ctxt_t *const ctxt_pP, const int CC_id)
     }
 
     if (ue_context_p->ue_context.ul_failure_timer > 0) {
-      ue_context_p->ue_context.ul_failure_timer++;
-
       if (ue_context_p->ue_context.ul_failure_timer >= 20000) {
         // remove UE after 20 seconds after MAC (or else) has indicated UL failure
         LOG_I(RRC, "Removing UE %x instance, because of uplink failure timer timeout\n",
@@ -8855,8 +8910,6 @@ void rrc_subframe_process(protocol_ctxt_t *const ctxt_pP, const int CC_id)
     }
 
     if (ue_context_p->ue_context.ue_release_timer_s1 > 0) {
-      ue_context_p->ue_context.ue_release_timer_s1++;
-
       if (ue_context_p->ue_context.ue_release_timer_s1 >= ue_context_p->ue_context.ue_release_timer_thres_s1) {
         LOG_I(RRC, "Removing UE %x instance, because of UE_CONTEXT_RELEASE_COMMAND not received after %d ms from sending request\n",
               ue_context_p->ue_context.rnti,
@@ -8873,8 +8926,6 @@ void rrc_subframe_process(protocol_ctxt_t *const ctxt_pP, const int CC_id)
     } // end if timer_s1 > 0 (S1 UE_CONTEXT_RELEASE_REQ ongoing)
 
     if (ue_context_p->ue_context.ue_release_timer_rrc > 0) {
-      ue_context_p->ue_context.ue_release_timer_rrc++;
-
       if (ue_context_p->ue_context.ue_release_timer_rrc >= ue_context_p->ue_context.ue_release_timer_thres_rrc) {
         LOG_I(RRC, "Removing UE %x instance after UE_CONTEXT_RELEASE_Complete (ue_release_timer_rrc timeout)\n",
               ue_context_p->ue_context.rnti);
@@ -8954,8 +9005,6 @@ void rrc_subframe_process(protocol_ctxt_t *const ctxt_pP, const int CC_id)
     pthread_mutex_unlock(&rrc_release_freelist);
 
     if ((ue_context_p->ue_context.ue_rrc_inactivity_timer > 0) && (RC.rrc[ctxt_pP->module_id]->configuration.rrc_inactivity_timer_thres > 0)) {
-      ue_context_p->ue_context.ue_rrc_inactivity_timer++;
-
       if (ue_context_p->ue_context.ue_rrc_inactivity_timer >= RC.rrc[ctxt_pP->module_id]->configuration.rrc_inactivity_timer_thres) {
         LOG_I(RRC, "Removing UE %x instance because of rrc_inactivity_timer timeout\n",
               ue_context_p->ue_context.rnti);
@@ -8965,8 +9014,6 @@ void rrc_subframe_process(protocol_ctxt_t *const ctxt_pP, const int CC_id)
     }
 
     if (ue_context_p->ue_context.ue_reestablishment_timer > 0) {
-      ue_context_p->ue_context.ue_reestablishment_timer++;
-
       if (ue_context_p->ue_context.ue_reestablishment_timer >= ue_context_p->ue_context.ue_reestablishment_timer_thres) {
         LOG_I(RRC, "Removing UE %x instance because of reestablishment_timer timeout\n",
               ue_context_p->ue_context.rnti);
@@ -8978,8 +9025,6 @@ void rrc_subframe_process(protocol_ctxt_t *const ctxt_pP, const int CC_id)
     }
 
     if (ue_context_p->ue_context.ue_release_timer > 0) {
-      ue_context_p->ue_context.ue_release_timer++;
-
       if (ue_context_p->ue_context.ue_release_timer >= ue_context_p->ue_context.ue_release_timer_thres) {
         LOG_I(RRC, "Removing UE %x instance because of RRC Connection Setup timer timeout\n",
               ue_context_p->ue_context.rnti);

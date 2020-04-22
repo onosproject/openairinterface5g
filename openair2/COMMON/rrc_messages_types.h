@@ -158,6 +158,7 @@ typedef struct RadioResourceConfig_s {
   long                    ue_TimersAndConstants_n311;
   long                    ue_TransmissionMode;
   long                    ue_multiple_max;
+  long                    volte_ul_buffersize;
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
   //SIB2 BR Options
   long*			  preambleTransMax_CE_r13;
