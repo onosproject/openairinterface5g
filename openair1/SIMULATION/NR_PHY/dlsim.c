@@ -28,11 +28,9 @@
 #include "common/ran_context.h"
 #include "common/config/config_userapi.h"
 #include "common/utils/LOG/log.h"
-#include "openair2/LAYER2/NR_MAC_gNB/mac_proto.h"
-#include "openair2/LAYER2/NR_MAC_gNB/nr_mac_gNB.h"
-#include "openair2/LAYER2/NR_MAC_UE/mac_defs.h"
-#include "openair2/LAYER2/NR_MAC_UE/mac_extern.h"
-#include "openair2/LAYER2/NR_MAC_UE/mac_proto.h"
+#include "LAYER2/NR_MAC_gNB/nr_mac_gNB.h"
+#include "LAYER2/NR_MAC_UE/mac_defs.h"
+#include "LAYER2/NR_MAC_UE/mac_extern.h"
 #include "PHY/defs_gNB.h"
 #include "PHY/defs_nr_common.h"
 #include "PHY/defs_nr_UE.h"
@@ -55,7 +53,7 @@
 #include "LAYER2/NR_MAC_UE/mac_proto.h"
 //#include "LAYER2/NR_MAC_gNB/mac_proto.h"
 //#include "openair2/LAYER2/NR_MAC_UE/mac_proto.h"
-#include "openair2/LAYER2/NR_MAC_gNB/mac_proto.h"
+#include "LAYER2/NR_MAC_gNB/mac_proto.h"
 #include "NR_asn_constant.h"
 #include "RRC/NR/MESSAGES/asn1_msg.h"
 #include "openair1/SIMULATION/RF/rf.h"
@@ -415,6 +413,7 @@ int main(int argc, char **argv)
       printf("-c Start symbol for PDSCH (fixed for now)\n");
       printf("-j Number of symbols for PDSCH (fixed for now)\n");
       printf("-e MSC index\n");
+      printf("-P Print DLSCH performances\n");
       exit (-1);
       break;
     }
@@ -917,7 +916,6 @@ int main(int argc, char **argv)
       printf("PDSCH test OK\n");
       break;
     }
-
 
     if (print_perf==1) {
       printf("\ngNB TX function statistics (per %d us slot, NPRB %d, mcs %d, TBS %d, Kr %d (Zc %d))\n",

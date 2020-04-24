@@ -46,6 +46,7 @@
 #include "PHY/NR_TRANSPORT/nr_ulsch.h"
 #include "PHY/NR_UE_TRANSPORT/nr_transport_proto_ue.h"
 #include "PHY/TOOLS/tools_defs.h"
+#include "SCHED_NR/fapi_nr_l1.h"
 #include "SCHED_NR/sched_nr.h"
 #include "SCHED_NR_UE/defs.h"
 #include "SCHED_NR_UE/fapi_nr_ue_l1.h"
@@ -53,8 +54,12 @@
 #include "openair1/SIMULATION/RF/rf.h"
 #include "openair1/SIMULATION/NR_PHY/nr_unitary_defs.h"
 #include "openair2/RRC/NR/MESSAGES/asn1_msg.h"
+//#include "openair1/SIMULATION/NR_PHY/nr_dummy_functions.c"
 #include "openair2/LAYER2/NR_MAC_UE/mac_proto.h"
 #include "openair2/LAYER2/NR_MAC_gNB/mac_proto.h"
+
+#define inMicroS(a) (((double)(a))/(cpu_freq_GHz*1000.0))
+#include "SIMULATION/LTE_PHY/common_sim.h"
 
 //#define DEBUG_ULSIM
 
@@ -140,7 +145,7 @@ int main(int argc, char **argv)
   int start_rb = 0;
   int UE_id =0; // [hna] only works for UE_id = 0 because NUMBER_OF_NR_UE_MAX is set to 1 (phy_init_nr_gNB causes segmentation fault)
   float target_error_rate = 0.01;
-  
+  int print_perf = 0;
   cpuf = get_cpu_freq_GHz();
 
 
@@ -155,7 +160,7 @@ int main(int argc, char **argv)
   //logInit();
   randominit(0);
 
-  while ((c = getopt(argc, argv, "d:f:g:h:i:j:l:m:n:p:r:s:y:z:F:M:N:P:R:S:L:")) != -1) {
+  while ((c = getopt(argc, argv, "d:f:g:h:i:j:l:m:n:p:r:s:y:z:F:M:N:PR:S:L:")) != -1) {
     switch (c) {
 
       /*case 'd':
@@ -309,9 +314,14 @@ int main(int argc, char **argv)
         printf("Setting SNR1 to %f\n", snr1);
         break;
 
-    case 'L':
-      loglvl = atoi(optarg);
-      break;	
+      case 'P':
+        print_perf=1;
+        opp_enabled=1;
+        break;
+
+      case 'L':
+        loglvl = atoi(optarg);
+        break;
 
       default:
         case 'h':
@@ -340,6 +350,7 @@ int main(int argc, char **argv)
           printf("-O oversampling factor (1,2,4,8,16)\n");
           printf("-R N_RB_DL\n");
           printf("-S Ending SNR, runs from SNR0 to SNR1\n");
+          printf("-P Print ULSCH performances\n");
           exit(-1);
           break;
     }
@@ -350,7 +361,8 @@ int main(int argc, char **argv)
   T_stdout = 1;
 
   get_softmodem_params()->phy_test = 1;
-    
+  get_softmodem_params()->do_ra = 0;
+
   if (snr1set == 0)
     snr1 = snr0 + 10;
 
@@ -370,10 +382,10 @@ int main(int argc, char **argv)
   //gNB_config = &gNB->gNB_config;
 
   //memset((void *)&gNB->UL_INFO,0,sizeof(gNB->UL_INFO));
-  gNB->UL_INFO.rx_ind.rx_indication_body.rx_pdu_list = (nfapi_rx_indication_pdu_t *)malloc(NB_UE_INST*sizeof(nfapi_rx_indication_pdu_t));
-  gNB->UL_INFO.crc_ind.crc_indication_body.crc_pdu_list = (nfapi_crc_indication_pdu_t *)malloc(NB_UE_INST*sizeof(nfapi_crc_indication_pdu_t));
-  gNB->UL_INFO.rx_ind.rx_indication_body.number_of_pdus = 0;
-  gNB->UL_INFO.crc_ind.crc_indication_body.number_of_crcs = 0;
+  gNB->UL_INFO.rx_ind.pdu_list = (nfapi_nr_rx_data_pdu_t *)malloc(NB_UE_INST*sizeof(nfapi_nr_rx_data_pdu_t));
+  gNB->UL_INFO.crc_ind.crc_list = (nfapi_nr_crc_t *)malloc(NB_UE_INST*sizeof(nfapi_nr_crc_t));
+  gNB->UL_INFO.rx_ind.number_of_pdus = 0;
+  gNB->UL_INFO.crc_ind.number_crcs = 0;
   frame_parms = &gNB->frame_parms; //to be initialized I suppose (maybe not necessary for PBCH)
   frame_parms->nb_antennas_tx = n_tx;
   frame_parms->nb_antennas_rx = n_rx;
@@ -479,7 +491,11 @@ int main(int argc, char **argv)
 
   NR_gNB_ULSCH_t *ulsch_gNB = gNB->ulsch[UE_id][0];
   //nfapi_nr_ul_config_ulsch_pdu *rel15_ul = &ulsch_gNB->harq_processes[harq_pid]->ulsch_pdu;
-  nfapi_nr_ul_tti_request_t     *UL_tti_req  = &gNB->UL_tti_req;
+  nfapi_nr_ul_tti_request_t     *UL_tti_req  = malloc(sizeof(*UL_tti_req));
+  NR_Sched_Rsp_t *Sched_INFO = malloc(sizeof(*Sched_INFO));
+  memset((void*)Sched_INFO,0,sizeof(*Sched_INFO));
+  Sched_INFO->UL_tti_req=UL_tti_req;
+
   nfapi_nr_pusch_pdu_t  *pusch_pdu = &UL_tti_req->pdus_list[0].pusch_pdu;
 
   NR_UE_ULSCH_t **ulsch_ue = UE->ulsch[0][0];
@@ -496,33 +512,36 @@ int main(int argc, char **argv)
   fapi_nr_ul_config_request_t ul_config;
 
   unsigned int TBS;
-  uint16_t number_dmrs_symbols = 0;
+  uint16_t number_dmrs_symbols = 1;
   unsigned int available_bits;
-  uint8_t nb_re_dmrs;
-  uint8_t length_dmrs = UE->pusch_config.dmrs_UplinkConfig.pusch_maxLength;
+
+  uint8_t nb_re_dmrs=12; // no PUSCH REs 
+  uint8_t length_dmrs = 1;
   unsigned char mod_order;
   uint16_t code_rate;
 
-  for (i = start_symbol; i < nb_symb_sch; i++)
-      number_dmrs_symbols += is_dmrs_symbol(i,
-                                            0,
-                                            0,
-                                            0,
-                                            0,
-                                            0,
-                                            nb_symb_sch,
-                                            UE->pusch_config.dmrs_UplinkConfig.pusch_dmrs_type,
-                                            frame_parms->ofdm_symbol_size);
 
   mod_order      = nr_get_Qm_ul(Imcs, 0);
-  nb_re_dmrs     = ((UE->pusch_config.dmrs_UplinkConfig.pusch_dmrs_type == pusch_dmrs_type1) ? 6 : 4) * number_dmrs_symbols;
+
   code_rate      = nr_get_code_rate_ul(Imcs, 0);
   available_bits = nr_get_G(nb_rb, nb_symb_sch, nb_re_dmrs, length_dmrs, mod_order, 1);
-  TBS            = nr_compute_tbs(mod_order, code_rate, nb_rb, nb_symb_sch, nb_re_dmrs*length_dmrs, 0, precod_nbr_layers);
+  TBS            = nr_compute_tbs(mod_order, code_rate, nb_rb, nb_symb_sch, nb_re_dmrs*length_dmrs, 0, 0, precod_nbr_layers);
 
   printf("\n");
 
   for (SNR = snr0; SNR < snr1; SNR += snr_step) {
+
+      varArray_t *table_rx=initVarArray(1000,sizeof(double));
+      reset_meas(&gNB->phy_proc_rx);
+      reset_meas(&gNB->ulsch_decoding_stats);
+      reset_meas(&gNB->ulsch_deinterleaving_stats);
+      reset_meas(&gNB->ulsch_rate_unmatching_stats);
+      reset_meas(&gNB->ulsch_ldpc_decoding_stats);
+      reset_meas(&gNB->ulsch_unscrambling_stats);
+      reset_meas(&gNB->ulsch_channel_estimation_stats);
+      reset_meas(&gNB->ulsch_llr_stats);
+      reset_meas(&gNB->ulsch_channel_compensation_stats);
+      reset_meas(&gNB->ulsch_rbs_extraction_stats);
 
       UE_proc.nr_tti_tx = slot;
       UE_proc.frame_tx = frame;
@@ -578,6 +597,8 @@ int main(int argc, char **argv)
       pusch_pdu->pusch_data.tb_size = TBS>>3;
       pusch_pdu->pusch_data.num_cb = 0;
 
+      // prepare ULSCH/PUSCH reception
+      nr_schedule_response(Sched_INFO);
 
       // --------- setting parameters for UE --------
 
@@ -620,10 +641,10 @@ int main(int argc, char **argv)
       ////////////////////////////////////////////////////
       tx_offset = frame_parms->get_samples_slot_timestamp(slot,frame_parms,0);
 
-      txlev = signal_energy_amp_shift(&UE->common_vars.txdata[0][tx_offset + 5*frame_parms->ofdm_symbol_size + 4*frame_parms->nb_prefix_samples + frame_parms->nb_prefix_samples0],
+      txlev = signal_energy(&UE->common_vars.txdata[0][tx_offset + 5*frame_parms->ofdm_symbol_size + 4*frame_parms->nb_prefix_samples + frame_parms->nb_prefix_samples0],
               frame_parms->ofdm_symbol_size + frame_parms->nb_prefix_samples);
 
-      txlev_float = (double)txlev/(double)AMP; // output of signal_energy is fixed point representation
+      txlev_float = (double)txlev; // output of signal_energy is fixed point representation
 
       n_errors = 0;
       n_false_positive = 0;
@@ -642,8 +663,8 @@ int main(int argc, char **argv)
         //----------------------------------------------------------
         for (i=0; i<frame_length_complex_samples; i++) {
           for (ap=0; ap<frame_parms->nb_antennas_rx; ap++) {
-            ((short*) gNB->common_vars.rxdata[ap])[(2*i) + (delay*2)]   = (((int16_t *)UE->common_vars.txdata[ap])[(i<<1)])   + (int16_t)(sqrt(sigma/2)*gaussdouble(0.0,1.0)*(double)AMP); // convert to fixed point
-            ((short*) gNB->common_vars.rxdata[ap])[2*i+1 + (delay*2)]   = (((int16_t *)UE->common_vars.txdata[ap])[(i<<1)+1]) + (int16_t)(sqrt(sigma/2)*gaussdouble(0.0,1.0)*(double)AMP);
+            ((short*) gNB->common_vars.rxdata[ap])[(2*i) + (delay*2)]   = (((int16_t *)UE->common_vars.txdata[ap])[(i<<1)])   + (int16_t)(sqrt(sigma/2)*gaussdouble(0.0,1.0)); // convert to fixed point
+            ((short*) gNB->common_vars.rxdata[ap])[2*i+1 + (delay*2)]   = (((int16_t *)UE->common_vars.txdata[ap])[(i<<1)+1]) + (int16_t)(sqrt(sigma/2)*gaussdouble(0.0,1.0));
           }
         }
         ////////////////////////////////////////////////////////////
@@ -651,15 +672,17 @@ int main(int argc, char **argv)
         //----------------------------------------------------------
         //------------------- gNB phy procedures -------------------
         //----------------------------------------------------------
-        gNB->UL_INFO.rx_ind.rx_indication_body.number_of_pdus = 0;
-        gNB->UL_INFO.crc_ind.crc_indication_body.number_of_crcs = 0;
+        gNB->UL_INFO.rx_ind.number_of_pdus = 0;
+        gNB->UL_INFO.crc_ind.number_crcs = 0;
 
+        start_meas(&gNB->phy_proc_rx);
         phy_procedures_gNB_common_RX(gNB, frame, slot);
 
 	if (n_trials==1)
 	  LOG_M("rxsigF0.m","rxsF0",gNB->common_vars.rxdataF[0],frame_length_complex_samples_no_prefix,1,1);
 
         phy_procedures_gNB_uespec_RX(gNB, frame, slot);
+        start_meas(&gNB->phy_proc_rx);
         ////////////////////////////////////////////////////////////
 
 	if (gNB->ulsch[0][0]->last_iteration_cnt >= 
@@ -712,6 +735,20 @@ int main(int argc, char **argv)
       printf("SNR %f: Channel BLER %e, Channel BER %e\n", SNR,(double)n_errors/n_trials,(double)errors_scrambling/available_bits/n_trials);
       printf("*****************************************\n");
       printf("\n");
+
+      if (print_perf==1) {
+        printDistribution(&gNB->phy_proc_rx,table_rx,"Total PHY proc rx");
+        printStatIndent(&gNB->ulsch_channel_estimation_stats,"ULSCH channel estimation time");
+        printStatIndent(&gNB->ulsch_rbs_extraction_stats,"ULSCH rbs extraction time");
+        printStatIndent(&gNB->ulsch_channel_compensation_stats,"ULSCH channel compensation time");
+        printStatIndent(&gNB->ulsch_llr_stats,"ULSCH llr computation");
+        printStatIndent(&gNB->ulsch_unscrambling_stats,"ULSCH unscrambling");
+        printStatIndent(&gNB->ulsch_decoding_stats,"ULSCH total decoding time");
+        printStatIndent2(&gNB->ulsch_deinterleaving_stats,"ULSCH deinterleaving");
+        printStatIndent2(&gNB->ulsch_rate_unmatching_stats,"ULSCH rate matching rx");
+        printStatIndent2(&gNB->ulsch_ldpc_decoding_stats,"ULSCH ldpc decoding");
+        printf("\n");
+      }
 
       if(n_trials==1)
 	break;

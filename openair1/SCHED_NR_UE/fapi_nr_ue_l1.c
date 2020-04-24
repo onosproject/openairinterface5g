@@ -34,34 +34,31 @@
 
 #include "fapi_nr_ue_interface.h"
 #include "fapi_nr_ue_l1.h"
+<<<<<<< HEAD
 #include "harq_nr.h"
 //#include "PHY/phy_vars_nr_ue.h"
+=======
+>>>>>>> NR_RRC_harq
 
 #include "PHY/defs_nr_UE.h"
 #include "PHY/impl_defs_nr.h"
+
 extern PHY_VARS_NR_UE ***PHY_vars_UE_g;
 
-int8_t nr_ue_scheduled_response(nr_scheduled_response_t *scheduled_response)
-{
-
+int8_t nr_ue_scheduled_response(nr_scheduled_response_t *scheduled_response){
 
   if(scheduled_response != NULL){
-    /// module id
-    module_id_t module_id = scheduled_response->module_id; 
-    /// component carrier id
-    uint8_t cc_id = scheduled_response->CC_id;
+
+    module_id_t module_id = scheduled_response->module_id;
+    uint8_t cc_id = scheduled_response->CC_id, thread_id;
     uint32_t i;
-    int slot = scheduled_response->slot; 	
+    int slot = scheduled_response->slot;
+
     // Note: we have to handle the thread IDs for this. To be revisited completely.
-    uint8_t thread_id = PHY_vars_UE_g[module_id][cc_id]->current_thread_id[slot];
+    thread_id = PHY_vars_UE_g[module_id][cc_id]->current_thread_id[slot];
     NR_UE_PDCCH *pdcch_vars = PHY_vars_UE_g[module_id][cc_id]->pdcch_vars[thread_id][0];
     NR_UE_DLSCH_t *dlsch0 = PHY_vars_UE_g[module_id][cc_id]->dlsch[thread_id][0][0];
     NR_UE_ULSCH_t *ulsch0 = PHY_vars_UE_g[module_id][cc_id]->ulsch[thread_id][0][0];
-    //NR_DL_FRAME_PARMS frame_parms = PHY_vars_UE_g[module_id][cc_id]->frame_parms;
-    PRACH_RESOURCES_t *prach_resources = PHY_vars_UE_g[module_id][cc_id]->prach_resources[0];
-        
-    //        PUCCH_ConfigCommon_nr_t    *pucch_config_common = PHY_vars_UE_g[module_id][cc_id]->pucch_config_common_nr[0];
-    //        PUCCH_Config_t             *pucch_config_dedicated = PHY_vars_UE_g[module_id][cc_id]->pucch_config_dedicated_nr[0];
 
     if(scheduled_response->dl_config != NULL){
       fapi_nr_dl_config_request_t *dl_config = scheduled_response->dl_config;
@@ -108,82 +105,106 @@ ACTIVE;
 
 	}
       }
-    }else{
+    } else {
       pdcch_vars->nb_search_space = 0;
     }
 
-    if(scheduled_response->ul_config != NULL){
+    if (scheduled_response->ul_config != NULL){
+
       fapi_nr_ul_config_request_t *ul_config = scheduled_response->ul_config;
-      for(i=0; i<ul_config->number_pdus; ++i){
-	if(ul_config->ul_config_list[i].pdu_type == FAPI_NR_UL_CONFIG_TYPE_PUSCH){
-	  // pusch config pdu
-	  fapi_nr_ul_config_pusch_pdu_rel15_t *pusch_config_pdu = &ul_config->ul_config_list[i].ulsch_config_pdu.ulsch_pdu_rel15;
-	  uint8_t current_harq_pid = pusch_config_pdu->harq_process_nbr;
-	  ulsch0->harq_processes[current_harq_pid]->nb_rb = pusch_config_pdu->number_rbs;
-	  ulsch0->harq_processes[current_harq_pid]->first_rb = pusch_config_pdu->start_rb;
-	  ulsch0->harq_processes[current_harq_pid]->number_of_symbols = pusch_config_pdu->number_symbols;
-	  ulsch0->harq_processes[current_harq_pid]->start_symbol = pusch_config_pdu->start_symbol;
-	  ulsch0->harq_processes[current_harq_pid]->mcs = pusch_config_pdu->mcs;
-	  ulsch0->harq_processes[current_harq_pid]->DCINdi = pusch_config_pdu->ndi;
-	  ulsch0->harq_processes[current_harq_pid]->rvidx = pusch_config_pdu->rv;
-	  ulsch0->harq_processes[current_harq_pid]->Nl = pusch_config_pdu->n_layers;
-	  ulsch0->f_pusch = pusch_config_pdu->absolute_delta_PUSCH;
-	}
-	if(ul_config->ul_config_list[i].pdu_type == FAPI_NR_UL_CONFIG_TYPE_PUCCH){
-	  // pucch config pdu
-	  fapi_nr_ul_config_pucch_pdu *pucch_config_pdu = &ul_config->ul_config_list[i].pucch_config_pdu;
-	  uint8_t pucch_resource_id = 0; //FIXME!!!
-	  uint8_t format = 1; // FIXME!!!
-	  PHY_vars_UE_g[module_id][cc_id]->pucch_config_dedicated_nr[0].PUCCH_Resource[pucch_resource_id]->format_parameters.initialCyclicShift = pucch_config_pdu->initialCyclicShift;
-	  PHY_vars_UE_g[module_id][cc_id]->pucch_config_dedicated_nr[0].PUCCH_Resource[pucch_resource_id]->format_parameters.nrofSymbols = pucch_config_pdu->nrofSymbols;
-	  PHY_vars_UE_g[module_id][cc_id]->pucch_config_dedicated_nr[0].PUCCH_Resource[pucch_resource_id]->format_parameters.startingSymbolIndex = pucch_config_pdu->startingSymbolIndex;
-	  PHY_vars_UE_g[module_id][cc_id]->pucch_config_dedicated_nr[0].PUCCH_Resource[pucch_resource_id]->format_parameters.nrofPRBs = pucch_config_pdu->nrofPRBs;
-	  PHY_vars_UE_g[module_id][cc_id]->pucch_config_dedicated_nr[0].PUCCH_Resource[pucch_resource_id]->startingPRB = pucch_config_pdu->startingPRB;
-	  PHY_vars_UE_g[module_id][cc_id]->pucch_config_dedicated_nr[0].PUCCH_Resource[pucch_resource_id]->format_parameters.timeDomainOCC = pucch_config_pdu->timeDomainOCC;
-	  PHY_vars_UE_g[module_id][cc_id]->pucch_config_dedicated_nr[0].PUCCH_Resource[pucch_resource_id]->format_parameters.occ_length = pucch_config_pdu->occ_length;
-	  PHY_vars_UE_g[module_id][cc_id]->pucch_config_dedicated_nr[0].PUCCH_Resource[pucch_resource_id]->format_parameters.occ_Index = pucch_config_pdu->occ_Index;
-	  PHY_vars_UE_g[module_id][cc_id]->pucch_config_dedicated_nr[0].PUCCH_Resource[pucch_resource_id]->intraSlotFrequencyHopping = pucch_config_pdu->intraSlotFrequencyHopping;
-	  PHY_vars_UE_g[module_id][cc_id]->pucch_config_dedicated_nr[0].PUCCH_Resource[pucch_resource_id]->secondHopPRB = pucch_config_pdu->secondHopPRB; // Not sure this parameter is used
-	  PHY_vars_UE_g[module_id][cc_id]->pucch_config_dedicated_nr[0].formatConfig[format-1]->additionalDMRS = pucch_config_pdu->additionalDMRS; // At this point we need to know which format is going to be used
-	  PHY_vars_UE_g[module_id][cc_id]->pucch_config_dedicated_nr[0].formatConfig[format-1]->pi2PBSK = pucch_config_pdu->pi2PBSK;
-	  PHY_vars_UE_g[module_id][cc_id]->pucch_config_common_nr[0].pucch_GroupHopping = pucch_config_pdu->pucch_GroupHopping;
-	  PHY_vars_UE_g[module_id][cc_id]->pucch_config_common_nr[0].hoppingId = pucch_config_pdu->hoppingId;
-	  PHY_vars_UE_g[module_id][cc_id]->pucch_config_common_nr[0].p0_nominal = pucch_config_pdu->p0_nominal;
-	  /*                     pucch_config_dedicated->PUCCH_Resource[pucch_resource_id]->format_parameters.initialCyclicShift = pucch_config_pdu->initialCyclicShift;
-				 pucch_config_dedicated->PUCCH_Resource[pucch_resource_id]->format_parameters.nrofSymbols = pucch_config_pdu->nrofSymbols;
-				 pucch_config_dedicated->PUCCH_Resource[pucch_resource_id]->format_parameters.startingSymbolIndex = pucch_config_pdu->startingSymbolIndex;
-				 pucch_config_dedicated->PUCCH_Resource[pucch_resource_id]->format_parameters.nrofPRBs = pucch_config_pdu->nrofPRBs;
-				 pucch_config_dedicated->PUCCH_Resource[pucch_resource_id]->startingPRB = pucch_config_pdu->startingPRB;
-				 pucch_config_dedicated->PUCCH_Resource[pucch_resource_id]->format_parameters.timeDomainOCC = pucch_config_pdu->timeDomainOCC;
-				 pucch_config_dedicated->PUCCH_Resource[pucch_resource_id]->format_parameters.occ_length = pucch_config_pdu->occ_length;
-				 pucch_config_dedicated->PUCCH_Resource[pucch_resource_id]->format_parameters.occ_Index = pucch_config_pdu->occ_Index;
-				 pucch_config_dedicated->PUCCH_Resource[pucch_resource_id]->intraSlotFrequencyHopping = pucch_config_pdu->intraSlotFrequencyHopping;
-				 pucch_config_dedicated->PUCCH_Resource[pucch_resource_id]->secondHopPRB = pucch_config_pdu->secondHopPRB; // Not sure this parameter is used
-				 pucch_config_dedicated->formatConfig[format-1]->additionalDMRS = pucch_config_pdu->additionalDMRS; // At this point we need to know which format is going to be used
-				 pucch_config_dedicated->formatConfig[format-1]->pi2PBSK = pucch_config_pdu->pi2PBSK;
-				 pucch_config_common->pucch_GroupHopping = pucch_config_pdu->pucch_GroupHopping;
-				 pucch_config_common->hoppingId = pucch_config_pdu->hoppingId;
-				 pucch_config_common->p0_nominal = pucch_config_pdu->p0_nominal;*/
-	}
-	if(ul_config->ul_config_list[i].pdu_type == FAPI_NR_UL_CONFIG_TYPE_PRACH){
-	  // prach config pdu
-	  fapi_nr_ul_config_prach_pdu *prach_config_pdu = &ul_config->ul_config_list[i].prach_config_pdu;
-	  /*frame_parms.prach_config_common.rootSequenceIndex = prach_config_pdu->root_sequence_index;
-	  frame_parms.prach_config_common.prach_ConfigInfo.prach_ConfigIndex = prach_config_pdu->prach_configuration_index;
-	  frame_parms.prach_config_common.prach_ConfigInfo.zeroCorrelationZoneConfig = prach_config_pdu->zero_correlation_zone_config;
-	  frame_parms.prach_config_common.prach_ConfigInfo.highSpeedFlag = prach_config_pdu->restrictedset_config;
-	  frame_parms.prach_config_common.prach_ConfigInfo.prach_FreqOffset = prach_config_pdu->prach_freq_offset;*/
-	  prach_resources->ra_PreambleIndex = prach_config_pdu->preamble_index;
-	}
+
+      for (i = 0; i < ul_config->number_pdus; ++i){
+
+        uint8_t pdu_type = ul_config->ul_config_list[i].pdu_type, pucch_resource_id, current_harq_pid, format, gNB_id = 0;
+        /* PRACH */
+        NR_PRACH_RESOURCES_t *prach_resources;
+        fapi_nr_ul_config_prach_pdu *prach_config_pdu;
+        /* PUSCH */
+        fapi_nr_ul_config_pusch_pdu_rel15_t *pusch_config_pdu;
+        /* PUCCH */
+        fapi_nr_ul_config_pucch_pdu *pucch_config_pdu;
+        PUCCH_ConfigCommon_nr_t *pucch_config_common_nr;
+        PUCCH_Config_t *pucch_config_dedicated_nr;
+        PUCCH_format_t *format_params;
+
+        switch (pdu_type){
+
+        case (FAPI_NR_UL_CONFIG_TYPE_PUSCH):
+          // pusch config pdu
+          pusch_config_pdu = &ul_config->ul_config_list[i].ulsch_config_pdu.ulsch_pdu_rel15;
+          current_harq_pid = pusch_config_pdu->harq_process_nbr;
+          ulsch0->harq_processes[current_harq_pid]->nb_rb = pusch_config_pdu->number_rbs;
+          ulsch0->harq_processes[current_harq_pid]->first_rb = pusch_config_pdu->start_rb;
+          ulsch0->harq_processes[current_harq_pid]->number_of_symbols = pusch_config_pdu->number_symbols;
+          ulsch0->harq_processes[current_harq_pid]->start_symbol = pusch_config_pdu->start_symbol;
+          ulsch0->harq_processes[current_harq_pid]->mcs = pusch_config_pdu->mcs;
+          ulsch0->harq_processes[current_harq_pid]->DCINdi = pusch_config_pdu->ndi;
+          ulsch0->harq_processes[current_harq_pid]->rvidx = pusch_config_pdu->rv;
+          ulsch0->harq_processes[current_harq_pid]->Nl = pusch_config_pdu->n_layers;
+          ulsch0->f_pusch = pusch_config_pdu->absolute_delta_PUSCH;
+        break;
+
+        case (FAPI_NR_UL_CONFIG_TYPE_PUCCH):
+          // pucch config pdu
+          pucch_config_pdu = &ul_config->ul_config_list[i].pucch_config_pdu;
+          pucch_resource_id = 0; //FIXME!!!
+          format = 1; // FIXME!!!
+          pucch_config_common_nr = &PHY_vars_UE_g[module_id][cc_id]->pucch_config_common_nr[0];
+          pucch_config_dedicated_nr = &PHY_vars_UE_g[module_id][cc_id]->pucch_config_dedicated_nr[0];
+          format_params = &pucch_config_dedicated_nr->PUCCH_Resource[pucch_resource_id]->format_parameters;
+
+          format_params->initialCyclicShift = pucch_config_pdu->initialCyclicShift;
+          format_params->nrofSymbols = pucch_config_pdu->nrofSymbols;
+          format_params->startingSymbolIndex = pucch_config_pdu->startingSymbolIndex;
+          format_params->nrofPRBs = pucch_config_pdu->nrofPRBs;
+          format_params->timeDomainOCC = pucch_config_pdu->timeDomainOCC;
+          format_params->occ_length = pucch_config_pdu->occ_length;
+          format_params->occ_Index = pucch_config_pdu->occ_Index;
+
+          pucch_config_dedicated_nr->PUCCH_Resource[pucch_resource_id]->startingPRB = pucch_config_pdu->startingPRB;
+          pucch_config_dedicated_nr->PUCCH_Resource[pucch_resource_id]->intraSlotFrequencyHopping = pucch_config_pdu->intraSlotFrequencyHopping;
+          pucch_config_dedicated_nr->PUCCH_Resource[pucch_resource_id]->secondHopPRB = pucch_config_pdu->secondHopPRB; // Not sure this parameter is used
+          pucch_config_dedicated_nr->formatConfig[format - 1]->additionalDMRS = pucch_config_pdu->additionalDMRS; // At this point we need to know which format is going to be used
+          pucch_config_dedicated_nr->formatConfig[format - 1]->pi2PBSK = pucch_config_pdu->pi2PBSK;
+
+          pucch_config_common_nr->pucch_GroupHopping = pucch_config_pdu->pucch_GroupHopping;
+          pucch_config_common_nr->hoppingId = pucch_config_pdu->hoppingId;
+          pucch_config_common_nr->p0_nominal = pucch_config_pdu->p0_nominal;
+
+          /* pucch_config_dedicated->PUCCH_Resource[pucch_resource_id]->format_parameters.initialCyclicShift = pucch_config_pdu->initialCyclicShift;
+          pucch_config_dedicated->PUCCH_Resource[pucch_resource_id]->format_parameters.nrofSymbols = pucch_config_pdu->nrofSymbols;
+          pucch_config_dedicated->PUCCH_Resource[pucch_resource_id]->format_parameters.startingSymbolIndex = pucch_config_pdu->startingSymbolIndex;
+          pucch_config_dedicated->PUCCH_Resource[pucch_resource_id]->format_parameters.nrofPRBs = pucch_config_pdu->nrofPRBs;
+          pucch_config_dedicated->PUCCH_Resource[pucch_resource_id]->startingPRB = pucch_config_pdu->startingPRB;
+          pucch_config_dedicated->PUCCH_Resource[pucch_resource_id]->format_parameters.timeDomainOCC = pucch_config_pdu->timeDomainOCC;
+          pucch_config_dedicated->PUCCH_Resource[pucch_resource_id]->format_parameters.occ_length = pucch_config_pdu->occ_length;
+          pucch_config_dedicated->PUCCH_Resource[pucch_resource_id]->format_parameters.occ_Index = pucch_config_pdu->occ_Index;
+          pucch_config_dedicated->PUCCH_Resource[pucch_resource_id]->intraSlotFrequencyHopping = pucch_config_pdu->intraSlotFrequencyHopping;
+          pucch_config_dedicated->PUCCH_Resource[pucch_resource_id]->secondHopPRB = pucch_config_pdu->secondHopPRB; // Not sure this parameter is used
+          pucch_config_dedicated->formatConfig[format-1]->additionalDMRS = pucch_config_pdu->additionalDMRS; // At this point we need to know which format is going to be used
+          pucch_config_dedicated->formatConfig[format-1]->pi2PBSK = pucch_config_pdu->pi2PBSK;
+          pucch_config_common->pucch_GroupHopping = pucch_config_pdu->pucch_GroupHopping;
+          pucch_config_common->hoppingId = pucch_config_pdu->hoppingId;
+          pucch_config_common->p0_nominal = pucch_config_pdu->p0_nominal;*/
+        break;
+
+        case (FAPI_NR_UL_CONFIG_TYPE_PRACH):
+          // prach config pdu
+          prach_resources = PHY_vars_UE_g[module_id][cc_id]->prach_resources[gNB_id];
+          prach_config_pdu = &ul_config->ul_config_list[i].prach_config_pdu;
+          memcpy((void*)&(PHY_vars_UE_g[module_id][cc_id]->prach_vars[gNB_id]->prach_pdu), (void*)prach_config_pdu, sizeof(fapi_nr_ul_config_prach_pdu));
+          PHY_vars_UE_g[module_id][cc_id]->prach_vars[gNB_id]->prach_Config_enabled = 1;
+        break;
+
+        default:
+        break;
+        }
       }
-    }else{
-            
+    } else {
     }
 
-    if(scheduled_response->tx_request != NULL){
-
-    }else{
-            
+    if (scheduled_response->tx_request != NULL){
+    } else {
     }
   }
 
@@ -194,10 +215,10 @@ ACTIVE;
 int8_t nr_ue_phy_config_request(nr_phy_config_t *phy_config){
 
   fapi_nr_config_request_t *nrUE_config = &PHY_vars_UE_g[phy_config->Mod_id][phy_config->CC_id]->nrUE_config;
-  
+
   if(phy_config != NULL)
       memcpy(nrUE_config,&phy_config->config_req,sizeof(fapi_nr_config_request_t));
-    
+
   return 0;
 }
 
