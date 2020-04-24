@@ -43,6 +43,10 @@ Description Memory access utilities
 #include <stdio.h>  // fopen, fread, fclose
 #include <stdlib.h> // getenv, malloc, free
 #include <string.h> // strlen
+#include <unistd.h> //access
+#include <sys/types.h>//creat
+#include <sys/stat.h>//creat
+#include <fcntl.h>//creat
 
 /****************************************************************************/
 /****************  E X T E R N A L    D E F I N I T I O N S  ****************/

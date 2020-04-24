@@ -379,6 +379,11 @@ static void trx_usrp_end(openair0_device *device) {
 #if defined(USRP_REC_PLAY)
 
   if (u_sf_mode == 1) { // subframes store
+    if(-1 == (access(u_sf_filename,F_OK))){
+        creat(u_sf_filename, 0644);
+    }else{
+        chmod(u_sf_filename, 0644);
+    }
     pFile = fopen (u_sf_filename,"wb+");
 
     if (pFile == NULL) {

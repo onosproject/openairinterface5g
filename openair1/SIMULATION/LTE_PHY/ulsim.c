@@ -643,6 +643,11 @@ int main(int argc, char **argv) {
   txdata = UE->common_vars.txdata;
   nsymb = (eNB->frame_parms.Ncp == NORMAL) ? 14 : 12;
   sprintf(bler_fname,"ULbler_mcs%d_nrb%d_ChannelModel%d_nsim%d.csv",mcs,nb_rb,chMod,n_frames);
+  if(-1 == (access(bler_fname,F_OK))){
+    creat(bler_fname, 0644);
+  }else{
+    chmod(bler_fname, 0644);
+  }
   bler_fd = fopen(bler_fname,"w");
 
   if (bler_fd==NULL) {
@@ -662,6 +667,11 @@ int main(int argc, char **argv) {
     //mkdir(dirname, 0777);
     sprintf(time_meas_fname,"time_meas_prb%d_mcs%d_antrx%d_channel%s_tx%d.csv",
             N_RB_DL,mcs,n_rx,channel_model_input,transmission_m);
+    if(-1 == (access(time_meas_fname,F_OK))){
+      creat(time_meas_fname, 0644);
+    }else{
+      chmod(time_meas_fname, 0644);
+    }
     time_meas_fd = fopen(time_meas_fname,"w");
 
     if (time_meas_fd==NULL) {
@@ -673,6 +683,11 @@ int main(int argc, char **argv) {
   if(abstx) {
     // CSV file
     sprintf(csv_fname,"EULdataout_tx%d_mcs%d_nbrb%d_chan%d_nsimus%d_eren.m",transmission_m,mcs,nb_rb,chMod,n_frames);
+    if(-1 == (access(csv_fname,F_OK))){
+      creat(csv_fname, 0644);
+    }else{
+      chmod(csv_fname, 0644);
+    }
     csv_fdUL = fopen(csv_fname,"w");
 
     if (csv_fdUL == NULL) {
@@ -859,6 +874,11 @@ int main(int argc, char **argv) {
       //      printf("UL frame %d/subframe %d, harq_pid %d\n",UE->frame,subframe,harq_pid);
       if (input_fdUL == NULL) {
         if (n_frames == 1) {
+          if(-1 == (access("ulsch_trchUL.txt",F_OK))){
+            creat("ulsch_trchUL.txt", 0644);
+          }else{
+            chmod("ulsch_trchUL.txt", 0644);
+          }
           trch_out_fdUL= fopen("ulsch_trchUL.txt","w");
 
           for (i=0; i<input_buffer_length; i++) {

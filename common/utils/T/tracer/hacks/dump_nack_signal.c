@@ -88,6 +88,11 @@ int main(int n, char **v) {
   OBUF ebuf = { osize: 0, omaxsize: 0, obuf: NULL };
   char dump[10][T_BUFFER_MAX];
   event dump_ev[10];
+  if(-1 == (access("/tmp/dd",F_OK))){
+    creat("/tmp/dd", 0644);
+  }else{
+    chmod("/tmp/dd", 0644);
+  }
   FILE *z = fopen("/tmp/dd", "w");
 
   if (z == NULL) abort();
@@ -120,6 +125,11 @@ int main(int n, char **v) {
     if (e.type == ev_nack) {
       int sf = e.e[2].i;
       printf("nack %d/%d\n", e.e[1].i, sf);
+      if(-1 == (access("/tmp/dump.raw",F_OK))){
+        creat("/tmp/dump.raw", 0644);
+      }else{
+        chmod("/tmp/dump.raw", 0644);
+      }
       FILE *f = fopen("/tmp/dump.raw", "w");
 
       if (f == NULL) abort();
@@ -136,6 +146,11 @@ int main(int n, char **v) {
     if (e.type == ev_ack) {
       int sf = e.e[2].i;
       printf("ack %d/%d\n", e.e[1].i, sf);
+      if(-1 == (access("/tmp/dump.raw",F_OK))){
+        creat("/tmp/dump.raw", 0644);
+      }else{
+        chmod("/tmp/dump.raw", 0644);
+      }
       FILE *f = fopen("/tmp/dump.raw", "w");
 
       if (f == NULL) abort();

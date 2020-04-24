@@ -1032,6 +1032,11 @@ int main(int argc, char **argv) {
   else
     sprintf(bler_fname,"bler_tx%d_chan%d_nrx%d_mcs%d.csv",transmission_mode,channel_model,n_rx,mcs1);
 
+  if(-1 == (access(bler_fname,F_OK))){
+    creat(bler_fname, 0644);
+  }else{
+    chmod(bler_fname, 0644);
+  }
   bler_fd = fopen(bler_fname,"w");
 
   if (bler_fd==NULL) {
@@ -1051,6 +1056,11 @@ int main(int argc, char **argv) {
     sprintf(time_meas_fname,"time_meas_prb%d_mcs%d_anttx%d_antrx%d_pdcch%d_channel%s_tx%d.csv",
             N_RB_DL,mcs1,n_tx_phy,n_rx,num_pdcch_symbols,channel_model_input,transmission_mode);
     //mkdir(dirname,0777);
+    if(-1 == (access(time_meas_fname,F_OK))){
+      creat(time_meas_fname, 0644);
+    }else{
+      chmod(time_meas_fname, 0644);
+    }
     time_meas_fd = fopen(time_meas_fname,"w");
 
     if (time_meas_fd==NULL) {
@@ -1062,6 +1072,11 @@ int main(int argc, char **argv) {
   if(abstx) {
     // CSV file
     sprintf(csv_fname,"dataout_tx%d_u2%d_mcs%d_chan%d_nsimus%d_R%d.m",transmission_mode,dual_stream_UE,mcs1,channel_model,n_frames,num_rounds);
+    if(-1 == (access(csv_fname,F_OK))){
+      creat(csv_fname, 0644);
+    }else{
+      chmod(csv_fname, 0644);
+    }
     csv_fd = fopen(csv_fname,"w");
 
     if (csv_fd==NULL) {
@@ -1075,6 +1090,11 @@ int main(int argc, char **argv) {
   /*
   //sprintf(tikz_fname, "second_bler_tx%d_u2=%d_mcs%d_chan%d_nsimus%d.tex",transmission_mode,dual_stream_UE,mcs,channel_model,n_frames);
   sprintf(tikz_fname, "second_bler_tx%d_u2%d_mcs%d_chan%d_nsimus%d",transmission_mode,dual_stream_UE,mcs,channel_model,n_frames);
+  if(-1 == (access(tikz_fname,F_OK)){
+    creat(tikz_fname, 0644);
+  }else{
+    chmod(tikz_fname, 0644);
+  }
   tikz_fd = fopen(tikz_fname,"w");
   //fprintf(tikz_fd,"\\addplot[color=red, mark=o] plot coordinates {");
   switch (mcs)

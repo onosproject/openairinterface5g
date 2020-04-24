@@ -133,6 +133,11 @@ int main(int n, char **v)
 
   in = fopen(input_filename, "r");
   if (in == NULL) { perror(input_filename); abort(); }
+  if(-1 == (access(output_filename,F_OK))){
+    creat(output_filename, 0644);
+  }else{
+    chmod(output_filename, 0644);
+  }
   out = fopen(output_filename, "w");
   if (out == NULL) { perror(output_filename); abort(); }
 

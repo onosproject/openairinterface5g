@@ -37,6 +37,11 @@ int start_time_inited;
 
 void vcd_init(char *file)
 {
+  if(-1 == (access(file,F_OK))){
+    creat(file, 0644);
+  }else{
+    chmod(file, 0644);
+  }
   out = fopen(file, "w"); if (out == NULL) { perror(file); exit(1); }
 }
 

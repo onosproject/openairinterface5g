@@ -29,6 +29,11 @@ Ftrunk8  = floor(32767*[F((2041-filter_length/2):2048) F(1:-8+filter_length/2)])
 
 plot(Ftrunk0,'r',Ftrunk2,'b')
 
+if(-1 == (access("filt96_32.h",F_OK))){
+  creat("filt96_32.h", 0644);
+}else{
+  chmod("filt96_32.h", 0644);
+}
 fd = fopen("filt96_32.h","w");
 fprintf(fd,"short filt96_32_0[96] = {\n");
 fprintf(fd,"%d,",real(Ftrunk0(1:length(Ftrunk0)-1)));

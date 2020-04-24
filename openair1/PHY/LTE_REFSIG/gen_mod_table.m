@@ -95,6 +95,11 @@ table2 = zeros(1,length(table)*2);
 table2(1:2:end) = real(table);
 table2(2:2:end) = imag(table);
 
+if(-1 == (access("mod_table.h",F_OK))){
+  creat("mod_table.h", 0644);
+}else{
+  chmod("mod_table.h", 0644);
+}
 fd = fopen("mod_table.h","w");
 fprintf(fd,"#define MOD_TABLE_SIZE_SHORT %d\n", length(table)*2);
 fprintf(fd,"#define MOD_TABLE_QPSK_OFFSET %d\n", 1);

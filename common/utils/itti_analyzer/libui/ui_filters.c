@@ -445,6 +445,11 @@ int ui_filters_file_write(const char *file_name)
         return RC_FAIL;
     }
 
+    if(-1 == (access(file_name,F_OK))){
+        creat(file_name, 0644);
+    }else{
+        chmod(file_name, 0644);
+    }
     filter_file = fopen (file_name, "w");
     if (filter_file == NULL)
     {
