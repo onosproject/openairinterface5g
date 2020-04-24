@@ -3177,7 +3177,7 @@ void ulsch_scheduler_pre_ue_select_fairRR(
 
       if ( ((UE_sched_ctl->ul_inactivity_timer>64)&&(UE_sched_ctl->ul_scheduled==0))  ||
            ((UE_sched_ctl->ul_inactivity_timer>10)&&(UE_sched_ctl->ul_scheduled==0)&&(rrc_status < RRC_CONNECTED)) ||
-           ((UE_sched_ctl->cqi_req_timer>64)&&((rrc_status >= RRC_CONNECTED))) ) {
+           ((UE_sched_ctl->cqi_req_timer>64)&&(UE_sched_ctl->ul_scheduled==0)&&(!(is_S_sf(&eNB->common_channels[CC_id],subframeP)))&&(rrc_status >= RRC_CONNECTED)) ) {
         first_ue_id[CC_id][ue_first_num[CC_id]]= UE_id;
         first_ue_total[CC_id] [ue_first_num[CC_id]] = 0;
         ue_first_num[CC_id]++;
@@ -3289,7 +3289,7 @@ void ulsch_scheduler_pre_ue_select_fairRR(
     if ( (bytes_to_schedule > 0) || (UE_list->UE_template[CC_id][UE_id].ul_SR > 0) ||
          ((UE_sched_ctl->ul_inactivity_timer>64)&&(UE_sched_ctl->ul_scheduled==0))  ||
          ((UE_sched_ctl->ul_inactivity_timer>10)&&(UE_sched_ctl->ul_scheduled==0)&&(rrc_status < RRC_CONNECTED)) ||
-         ((UE_sched_ctl->cqi_req_timer>64)&&((rrc_status >= RRC_CONNECTED))) ) {
+         ((UE_sched_ctl->cqi_req_timer>64)&&(UE_sched_ctl->ul_scheduled==0)&&(!(is_S_sf(&eNB->common_channels[CC_id],subframeP)))&&(rrc_status >= RRC_CONNECTED)) ) {
       hi_dci0_pdu   = &HI_DCI0_req->hi_dci0_pdu_list[HI_DCI0_req->number_of_dci+HI_DCI0_req->number_of_hi];
       format_flag = 2;
 
@@ -3919,45 +3919,23 @@ void schedule_ulsch_rnti_fairRR(module_id_t   module_idP,
       VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME(VCD_SIGNAL_DUMPER_VARIABLES_UE0_BO,RC.eNB[module_idP][CC_id]->pusch_stats_BO[UE_id][(frameP*10)+subframeP]);
       status = mac_eNB_get_rrc_status(module_idP,rnti);
 
-      if (status < RRC_CONNECTED)
+      if (status < RRC_CONNECTED){
         cqi_req = 0;
-      else if (UE_sched_ctrl->cqi_received == 1){
+      }else if (UE_sched_ctrl->cqi_received == 1){
         LOG_D(MAC,"Clearing CQI request timer\n");
         UE_sched_ctrl->cqi_req_flag = 0;
         UE_sched_ctrl->cqi_received = 0;
         UE_sched_ctrl->cqi_req_timer = 0;
         cqi_req = 0;
-      }else if (UE_sched_ctrl->cqi_req_timer>64) {
-        cqi_req = 1;
-
+      }else if ((UE_sched_ctrl->cqi_req_timer>64)&&(!(is_S_sf(&eNB->common_channels[CC_id],subframeP)))) {
         // To be safe , do not ask CQI in special SFs:36.213/7.2.3 CQI definition
-        if (cc->tdd_Config) {
-          switch (cc->tdd_Config->subframeAssignment) {
-            case 1:
-              if( subframeP == 1 || subframeP == 6 ) cqi_req=0;
-
-              break;
-
-            case 2:
-              if( subframeP == 1 || subframeP == 6 ) cqi_req=0;
-              break;
-
-            case 3:
-              if( subframeP == 1 ) cqi_req=0;
-
-              break;
-
-            default:
-              LOG_E(MAC," TDD config not supported\n");
-              break;
-          }
-        }
-
-        if(cqi_req == 1) {
-          UE_sched_ctrl->cqi_req_flag |= 1 << sched_subframeP;
-        }
-      } else
+        cqi_req = 1;
+        UE_sched_ctrl->cqi_req_flag |= 1 << sched_subframeP;
+        LOG_D(MAC,"[eNB %d] frame %d subframe %d,cqi_req 1 UE %d/%x\n",
+            module_idP,frameP,subframeP,UE_id,rnti);
+      } else {
         cqi_req = 0;
+        }
 
       //power control
       //compute the expected ULSCH RX power (for the stats)
