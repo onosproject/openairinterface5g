@@ -644,6 +644,7 @@ typedef struct eNB_RRC_UE_s {
   SRB_INFO_TABLE_ENTRY               Srb1;
   SRB_INFO_TABLE_ENTRY               Srb2;
   LTE_MeasConfig_t                  *measConfig;
+  pthread_mutex_t                    handover_cond_lock;
   HANDOVER_INFO                     *handover_info;
   MEASUREMENT_INFO                  *measurement_info;
   LTE_MeasResults_t                 *measResults;

@@ -2258,7 +2258,19 @@ int rrc_eNB_process_S1AP_PATH_SWITCH_REQ_ACK (MessageDef *msg_p, const char *msg
 	     S1AP_PATH_SWITCH_REQ_ACK (msg_p).next_security_key,
 	     SECURITY_KEY_LENGTH);
 
-    rrc_eNB_send_X2AP_UE_CONTEXT_RELEASE(&ctxt, ue_context_p);
+    pthread_mutex_lock(&ue_context_p->ue_context.handover_cond_lock);
+    if(ue_context_p->ue_context.handover_info != NULL) {
+      rrc_eNB_send_X2AP_UE_CONTEXT_RELEASE(&ctxt, ue_context_p);
+
+      if(ue_context_p->ue_context.handover_info->state == HO_END_MARKER || 
+        ue_context_p->ue_context.handover_info->state == HO_FORWARDING_COMPLETE) {
+        LOG_I(RRC,"Handover finish,free handover_info\n");
+        free(ue_context_p->ue_context.handover_info);
+        ue_context_p->ue_context.handover_info = NULL;
+      }
+    }
+    
+    pthread_mutex_unlock(&ue_context_p->ue_context.handover_cond_lock);
 
     return (0);
   }

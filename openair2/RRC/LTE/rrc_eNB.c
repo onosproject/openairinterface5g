@@ -975,11 +975,13 @@ rrc_eNB_free_mem_UE_context(
       ASN_STRUCT_FREE(asn_DEF_LTE_MeasGapConfig, ue_context_pP->ue_context.measGapConfig);
       ue_context_pP->ue_context.measGapConfig = NULL;
     }*/
+  pthread_mutex_lock(&ue_context_pP->ue_context.handover_cond_lock);
   if (ue_context_pP->ue_context.handover_info) {
     /* TODO: be sure free is enough here (check memory leaks) */
     free(ue_context_pP->ue_context.handover_info);
     ue_context_pP->ue_context.handover_info = NULL;
   }
+  pthread_mutex_unlock(&ue_context_pP->ue_context.handover_cond_lock);
 
   if (ue_context_pP->ue_context.measurement_info) {
     /* TODO: be sure free is enough here (check memory leaks) */
@@ -5088,7 +5090,12 @@ check_handovers(
   RB_FOREACH(ue_context_p, rrc_ue_tree_s, &(RC.rrc[ctxt_pP->module_id]->rrc_ue_head)) {
     ctxt_pP->rnti  = ue_context_p->ue_id_rnti;
 
-    if (ue_context_p->ue_context.Status == RRC_HO_EXECUTION && ue_context_p->ue_context.handover_info != NULL) {
+    if(ue_context_p->ue_context.handover_info != NULL) {
+      pthread_mutex_lock(&ue_context_p->ue_context.handover_cond_lock);
+
+      if (ue_context_p->ue_context.Status == RRC_HO_EXECUTION &&
+          ue_context_p->ue_context.handover_info != NULL) {
+        
       /* in the source, UE in HO_PREPARE mode */
       if (ue_context_p->ue_context.handover_info->state == HO_PREPARE) {
         LOG_D(RRC,
@@ -5242,17 +5249,17 @@ check_handovers(
 		GTPV1U_ENB_END_MARKER_IND (msg_p).frame,
 		0,
 		GTPV1U_ENB_END_MARKER_IND (msg_p).eNB_index);
-	    LOG_I(RRC, PROTOCOL_CTXT_FMT"[check_handovers]Received %s from %s: instance %d, rb_id %d, muiP %d, confirmP %d, mode %d\n",
+	    LOG_D(RRC, PROTOCOL_CTXT_FMT"[check_handovers]Received %s from %s: instance %d, rb_id %d, muiP %d, confirmP %d, mode %d\n",
 		  PROTOCOL_CTXT_ARGS(&ctxt),
 		  ITTI_MSG_NAME (msg_p),
 		  ITTI_MSG_ORIGIN_NAME(msg_p),
 		  ITTI_MSG_INSTANCE (msg_p),
-		  GTPV1U_ENB_DATA_FORWARDING_IND (msg_p).rb_id,
-		  GTPV1U_ENB_DATA_FORWARDING_IND (msg_p).muip,
-		  GTPV1U_ENB_DATA_FORWARDING_IND (msg_p).confirmp,
-		  GTPV1U_ENB_DATA_FORWARDING_IND (msg_p).mode);
+		  GTPV1U_ENB_END_MARKER_IND (msg_p).rb_id,
+		  GTPV1U_ENB_END_MARKER_IND (msg_p).muip,
+		  GTPV1U_ENB_END_MARKER_IND (msg_p).confirmp,
+		  GTPV1U_ENB_END_MARKER_IND (msg_p).mode);
 
-	    LOG_D(RRC, "Before calling pdcp_data_req from check_handovers! GTPV1U_ENB_DATA_FORWARDING_IND (msg_p).rb_id: %d \n", GTPV1U_ENB_DATA_FORWARDING_IND (msg_p).rb_id);
+	    LOG_I(RRC, "Before calling pdcp_data_req from check_handovers! GTPV1U_ENB_END_MARKER_IND (msg_p).rb_id: %d \n", GTPV1U_ENB_DATA_FORWARDING_IND (msg_p).rb_id);
 	    result = pdcp_data_req (&ctxt,
 		  		    SRB_FLAG_NO,
 		  		    GTPV1U_ENB_END_MARKER_IND (msg_p).rb_id,
@@ -5294,6 +5301,9 @@ check_handovers(
       ue_context_p->ue_context.handover_info->state = HO_FORWARDING_COMPLETE;
 
 #endif
+      }
+
+      pthread_mutex_unlock(&ue_context_p->ue_context.handover_cond_lock);
     }
   }
 }
@@ -9165,6 +9175,8 @@ void *rrc_enb_process_itti_msg(void *notUsed) {
       ue_context_p = rrc_eNB_get_ue_context(RC.rrc[instance], X2AP_HANDOVER_CANCEL(msg_p).rnti);
       if (ue_context_p != NULL &&
           ue_context_p->ue_context.handover_info != NULL) {
+       pthread_mutex_lock(&ue_context_p->ue_context.handover_cond_lock);
+       if(ue_context_p->ue_context.handover_info != NULL) {
         LOG_I(RRC, "[eNB %d] eNB receives X2 HANDOVER CANCEL for rnti %x, cause %s [%s]\n",
               instance,
               X2AP_HANDOVER_CANCEL(msg_p).rnti,
@@ -9205,6 +9217,8 @@ void *rrc_enb_process_itti_msg(void *notUsed) {
             ue_context_p->ue_context.handover_info->state = HO_RELEASE;
           }
         }
+       }
+       pthread_mutex_unlock(&ue_context_p->ue_context.handover_cond_lock);
       } else {
         char *failure_cause;
         if (ue_context_p == NULL)

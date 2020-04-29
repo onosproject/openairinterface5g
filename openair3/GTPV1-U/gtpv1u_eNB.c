@@ -279,12 +279,17 @@ NwGtpv1uRcT gtpv1u_eNB_process_stack_req(
 
     ue_context_p = rrc_eNB_get_ue_context(RC.rrc[ctxt.module_id], ctxt.rnti);
     if((ue_context_p != NULL) && 
-       (ue_context_p->ue_context.handover_info != NULL) &&
-        (HO_COMPLETE <= ue_context_p->ue_context.handover_info->state && ue_context_p->ue_context.handover_info->state < HO_FORWARDING_COMPLETE)) {
+       (ue_context_p->ue_context.handover_info != NULL) ) {
+       
+       pthread_mutex_lock(&ue_context_p->ue_context.handover_cond_lock);
+       
+        if((ue_context_p->ue_context.handover_info != NULL) &&
+           (HO_COMPLETE <= ue_context_p->ue_context.handover_info->state) && 
+           (ue_context_p->ue_context.handover_info->state < HO_FORWARDING_COMPLETE)) {
 
       if(msgType == NW_GTP_END_MARKER){
         /* in the source enb, UE in RRC_HO_EXECUTION mode */
-        if (ue_context_p->ue_context.Status == RRC_HO_EXECUTION && ue_context_p->ue_context.handover_info->state == HO_COMPLETE) {
+        if (ue_context_p->ue_context.handover_info->state == HO_COMPLETE) {
           /* set handover state */
           //ue_context_p->ue_context.handover_info->state = HO_END_MARKER;
                 
@@ -299,6 +304,7 @@ NwGtpv1uRcT gtpv1u_eNB_process_stack_req(
           GTPV1U_ENB_END_MARKER_REQ(msg).offset = GTPU_HEADER_OVERHEAD_MAX;
           LOG_I(GTPU, "Send End Marker to GTPV1-U at frame %d and subframe %d \n", ctxt.frame,ctxt.subframe);
           itti_send_msg_to_task(TASK_GTPV1_U, ENB_MODULE_ID_TO_INSTANCE(ctxt.module_id), msg);
+          pthread_mutex_unlock(&ue_context_p->ue_context.handover_cond_lock);
           return NW_GTPV1U_OK;
 	}
       }
@@ -323,6 +329,7 @@ NwGtpv1uRcT gtpv1u_eNB_process_stack_req(
           memset(&delete_tunnel_req, 0 , sizeof(delete_tunnel_req));
           delete_tunnel_req.rnti = ctxt.rnti;
     	  gtpv1u_delete_x2u_tunnel(ctxt.module_id, &delete_tunnel_req, GTPV1U_TARGET_ENB);
+        pthread_mutex_unlock(&ue_context_p->ue_context.handover_cond_lock);
 	  return NW_GTPV1U_OK;
 	}
 
@@ -353,10 +360,10 @@ NwGtpv1uRcT gtpv1u_eNB_process_stack_req(
 				);
 			
           if ( result == FALSE ) {
-	    LOG_W(GTPU, "DATA FORWARDING message save failed\n");	
-	    return NW_GTPV1U_FAILURE;
+	    LOG_W(GTPU, "DATA FORWARDING message save failed\n");
 	  }
 	  ue_context_p->ue_context.handover_info->forwarding_state = FORWARDING_NO_EMPTY;
+          pthread_mutex_unlock(&ue_context_p->ue_context.handover_cond_lock);
           return NW_GTPV1U_OK;
 	}
         /* from epc message */
@@ -386,11 +393,12 @@ NwGtpv1uRcT gtpv1u_eNB_process_stack_req(
 
           LOG_I(GTPU, "Send data forwarding to GTPV1-U at frame %d and subframe %d \n", ctxt.frame,ctxt.subframe);
           itti_send_msg_to_task(TASK_GTPV1_U, ENB_MODULE_ID_TO_INSTANCE(ctxt.module_id), msg);
+          pthread_mutex_unlock(&ue_context_p->ue_context.handover_cond_lock);
           return NW_GTPV1U_OK;
         }
 
                 /* target eNB. x2ho forwarding is processing. spgw message save to TASK_END_MARKER */
-                if(ue_context_p->ue_context.handover_info->state != HO_COMPLETE &&
+                if((ue_context_p->ue_context.handover_info->state != HO_COMPLETE) &&
                     (ue_context_p->ue_context.handover_info->state != HO_END_MARKER ||
                     ue_context_p->ue_context.handover_info->forwarding_state != FORWARDING_EMPTY ||
                     ue_context_p->ue_context.handover_info->endmark_state != ENDMARK_EMPTY))
@@ -418,10 +426,10 @@ NwGtpv1uRcT gtpv1u_eNB_process_stack_req(
 
 	if ( result == FALSE ) {
 	  LOG_W(GTPU, "DATA FORWARDING message save failed\n");
-	  return NW_GTPV1U_FAILURE;
         }
 
 	ue_context_p->ue_context.handover_info->endmark_state = ENDMARK_NO_EMPTY;
+        pthread_mutex_unlock(&ue_context_p->ue_context.handover_cond_lock);
         return NW_GTPV1U_OK;
       }
 
@@ -429,6 +437,8 @@ NwGtpv1uRcT gtpv1u_eNB_process_stack_req(
 
     }
 
+  }
+  pthread_mutex_unlock(&ue_context_p->ue_context.handover_cond_lock);
   }
         result = pdcp_data_req(
                    &ctxt,
