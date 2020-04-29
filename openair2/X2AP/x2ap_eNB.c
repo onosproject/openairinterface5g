@@ -447,6 +447,22 @@ void x2ap_eNB_handle_sctp_init_msg_multi_cnf(
   }
 }
 
+static void x2ap_eNB_ho_cancel_rrc_notify(x2ap_eNB_instance_t *instance_p, x2ap_handover_cancel_cause_t cause, int rnti)
+{
+  instance_t instance = 0;
+  MessageDef *msg;
+
+  if(instance_p) {
+    instance = instance_p->instance;
+  }
+  
+  /* inform RRC of cancellation */
+  msg = itti_alloc_new_message(TASK_X2AP, X2AP_HANDOVER_CANCEL);
+  X2AP_HANDOVER_CANCEL(msg).rnti  = rnti;
+  X2AP_HANDOVER_CANCEL(msg).cause = cause;
+  itti_send_msg_to_task(TASK_RRC_ENB, instance, msg);
+}
+
 static
 void x2ap_eNB_handle_handover_req(instance_t instance,
                                   x2ap_handover_req_t *x2ap_handover_req)
@@ -461,13 +477,15 @@ void x2ap_eNB_handle_handover_req(instance_t instance,
   instance_p = x2ap_eNB_get_instance(instance);
   if (instance_p == NULL) {
 	  X2AP_ERROR("%s %d: instance_p is a NULL pointer \n",__FILE__,__LINE__);
+    x2ap_eNB_ho_cancel_rrc_notify(instance_p, X2AP_T_RELOC_PREP_TIMEOUT, x2ap_handover_req->rnti);
 	  return ;
   }
 
   target = x2ap_is_eNB_pci_in_list(target_pci);
   if (target == NULL) {
-	  X2AP_ERROR("%s %d: target is a NULL pointer \n",__FILE__,__LINE__);
-	  return ;
+	  X2AP_ERROR("%s %d: target is a NULL pointer, target_pci %d\n",__FILE__,__LINE__, target_pci);
+    x2ap_eNB_ho_cancel_rrc_notify(instance_p, X2AP_T_RELOC_PREP_TIMEOUT, x2ap_handover_req->rnti);
+    return ;
   }
 
   /* allocate x2ap ID */
@@ -476,6 +494,7 @@ void x2ap_eNB_handle_handover_req(instance_t instance,
   if (ue_id == -1) {
     X2AP_ERROR("could not allocate a new X2AP UE ID\n");
     /* TODO: cancel handover: send (to be defined) message to RRC */
+    x2ap_eNB_ho_cancel_rrc_notify(instance_p, X2AP_T_RELOC_PREP_TIMEOUT, x2ap_handover_req->rnti);
     //exit(1);
     return ;
   }
