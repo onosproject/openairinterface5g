@@ -1789,7 +1789,7 @@ schedule_ue_spec_fairRR(module_id_t module_idP,
                                 ue_sched_ctl->dl_cqi[CC_id],
                                 format1);
               if (UE_list->eNB_UE_stats[CC_id][UE_id].rrc_status == RRC_HO_EXECUTION) {
-                dci_dl_pdu_rel8.aggregation_level = 4;
+                dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.aggregation_level = 4;
               }
               dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.rnti =
                 rnti;
