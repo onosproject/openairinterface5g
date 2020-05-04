@@ -290,6 +290,9 @@ void dlsch_scheduler_pre_ue_select_fairRR(
             aggregation = 2;
             break;
         }
+        if (UE_list->eNB_UE_stats[CC_id][UE_id].rrc_status == RRC_HO_EXECUTION) {
+          aggregation=4;
+        }
 
         format_flag = 1;
 
@@ -422,6 +425,9 @@ void dlsch_scheduler_pre_ue_select_fairRR(
             aggregation = 2;
             break;
         }
+        if (UE_list->eNB_UE_stats[CC_id][UE_id].rrc_status == RRC_HO_EXECUTION) {
+          aggregation=4;
+        }
 
         format_flag = 1;
 
@@ -548,6 +554,9 @@ void dlsch_scheduler_pre_ue_select_fairRR(
             LOG_W(MAC,"Unsupported transmission mode %d\n", get_tmode(module_idP,CC_id,UE_id));
             aggregation = 2;
             break;
+        }
+        if (UE_list->eNB_UE_stats[CC_id][UE_id].rrc_status == RRC_HO_EXECUTION) {
+          aggregation=4;
         }
 
         format_flag = 1;
@@ -1538,6 +1547,9 @@ schedule_ue_spec_fairRR(module_id_t module_idP,
                                                                                                                  ue_sched_ctl->dl_cqi[CC_id],
                                                                                                                  format2A
                                                                                                                 );
+              if (UE_list->eNB_UE_stats[CC_id][UE_id].rrc_status == RRC_HO_EXECUTION) {
+                dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.aggregation_level = 4;
+              }
               dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.rnti                                  = rnti;
               dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.rnti_type                             = 1;    // CRNTI : see Table 4-10 from SCF082 - nFAPI specifications
               dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.transmission_power                    = 6000; // equal to RS power
@@ -1776,6 +1788,9 @@ schedule_ue_spec_fairRR(module_id_t module_idP,
                                 (module_idP, CC_id),
                                 ue_sched_ctl->dl_cqi[CC_id],
                                 format1);
+              if (UE_list->eNB_UE_stats[CC_id][UE_id].rrc_status == RRC_HO_EXECUTION) {
+                dci_dl_pdu_rel8.aggregation_level = 4;
+              }
               dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.rnti =
                 rnti;
               dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.rnti_type = 1;  // CRNTI : see Table 4-10 from SCF082 - nFAPI specifications
@@ -2711,6 +2726,9 @@ schedule_ue_spec_fairRR(module_id_t module_idP,
                     dl_config_pdu->pdu_size                                               = (uint8_t)(2+sizeof(nfapi_dl_config_dci_dl_pdu));
                     dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.dci_format                  = NFAPI_DL_DCI_FORMAT_2A;
                     dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.aggregation_level           = get_aggregation(get_bw_index(module_idP,CC_id),ue_sched_ctl->dl_cqi[CC_id],format2A);
+                    if (UE_list->eNB_UE_stats[CC_id][UE_id].rrc_status == RRC_HO_EXECUTION) {
+                      dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.aggregation_level = 4;
+                    }
                     dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.rnti                        = rnti;
                     dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.rnti_type                   = 1;    // CRNTI : see Table 4-10 from SCF082 - nFAPI specifications
                     dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.transmission_power          = 6000; // equal to RS power
@@ -2866,6 +2884,9 @@ schedule_ue_spec_fairRR(module_id_t module_idP,
 	  dl_config_pdu->pdu_size                                               = (uint8_t)(2+sizeof(nfapi_dl_config_dci_dl_pdu));
 	  dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.dci_format                  = NFAPI_DL_DCI_FORMAT_1;
 	  dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.aggregation_level           = get_aggregation(get_bw_index(module_idP,CC_id),ue_sched_ctl->dl_cqi[CC_id],format1);
+    if (UE_list->eNB_UE_stats[CC_id][UE_id].rrc_status == RRC_HO_EXECUTION) {
+      dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.aggregation_level = 4;
+    }
 	  dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.rnti                        = rnti;
 	  dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.rnti_type                   = 1;    // CRNTI : see Table 4-10 from SCF082 - nFAPI specifications
 	  dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.transmission_power          = 6000; // equal to RS power
@@ -3135,6 +3156,11 @@ void ulsch_scheduler_pre_ue_select_fairRR(
       }
     }
 
+    if (UE_list->eNB_UE_stats[CC_id][UE_id].rrc_status == RRC_HO_EXECUTION) {
+      aggregation = 4;
+    }else{
+      aggregation = 2;
+    }
     cc = &eNB->common_channels[CC_id];
     //harq_pid
     harq_pid = subframe2harqpid(cc,(frameP+(sched_subframeP<subframeP ? 1 : 0)),sched_subframeP);
@@ -3928,6 +3954,11 @@ void schedule_ulsch_rnti_fairRR(module_id_t   module_idP,
       UE_sched_ctrl = &UE_list->UE_sched_ctrl[UE_id];
       harq_pid      = subframe2harqpid(cc,sched_frame,sched_subframeP);
       rnti = UE_RNTI(CC_id,UE_id);
+      if (UE_list->eNB_UE_stats[CC_id][UE_id].rrc_status == RRC_HO_EXECUTION) {
+        aggregation = 4;
+      }else{
+        aggregation = 2;
+      }
       LOG_D(MAC,"[eNB %d] frame %d subframe %d,Checking PUSCH %d for UE %d/%x CC %d : aggregation level %d, N_RB_UL %d\n",
             module_idP,frameP,subframeP,harq_pid,UE_id,rnti,CC_id, aggregation,N_RB_UL);
       int bytes_to_schedule = UE_template->estimated_ul_buffer - UE_template->scheduled_ul_bytes;
