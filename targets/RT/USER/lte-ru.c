@@ -645,12 +645,17 @@ void rx_rf(RU_t *ru,
   int i;
   int resynch=0;
   openair0_timestamp ts=0,old_ts=0;
+  lte_subframe_t SF_type     = subframe_select(fp,*subframe%10);
+  lte_subframe_t SubFrame_type;
+  lte_subframe_t prevSF_type = subframe_select(fp,(*subframe+9)%10);
 
   for (i=0; i<ru->nb_rx; i++)
     rxp[i] = (void *)&ru->common.rxdata[i][*subframe*fp->samples_per_tti];
-
-  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_READ, 1 );
+  
   old_ts = proc->timestamp_rx;
+
+  if (fp->frame_type == FDD) {
+  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_READ, 1 );
 
   if(get_softmodem_params()->emulate_rf) {
     wait_on_condition(&proc->mutex_emulateRF,&proc->cond_emulateRF,&proc->instance_cnt_emulateRF,"emulatedRF_thread");
@@ -666,7 +671,7 @@ void rx_rf(RU_t *ru,
 
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_READ, 0 );
   ru->south_in_cnt++;
-  LOG_D(PHY,"south_in_cnt %d\n",ru->south_in_cnt);
+  LOG_I(PHY,"south_in_cnt %d\n",ru->south_in_cnt);
 
   if (ru->cmd==RU_FRAME_RESYNCH) {
     LOG_I(PHY,"Applying frame resynch %d => %d\n",*frame,ru->cmdval);
@@ -681,8 +686,6 @@ void rx_rf(RU_t *ru,
 
   proc->timestamp_rx = ts-ru->ts_offset;
 
-  //  AssertFatal(rxs == fp->samples_per_tti,
-  //        "rx_rf: Asked for %d samples, got %d from SDR\n",fp->samples_per_tti,rxs);
   if(rxs != fp->samples_per_tti) {
     LOG_E(PHY,"rx_rf: Asked for %d samples, got %d from SDR\n",fp->samples_per_tti,rxs);
     late_control=STATE_BURST_TERMINATE;
@@ -711,17 +714,14 @@ void rx_rf(RU_t *ru,
     proc->tti_tx       = (proc->tti_rx+sf_ahead)%10;
     proc->frame_tx     = (proc->tti_rx>(9-sf_ahead)) ? (proc->frame_rx+1)&1023 : proc->frame_rx;
 #endif
-    //proc->timestamp_tx = proc->timestamp_rx+(sf_ahead*fp->samples_per_tti);
-    //proc->subframe_tx  = (proc->tti_rx+sf_ahead)%10;
-    //proc->frame_tx     = (proc->tti_rx>(9-sf_ahead)) ? (proc->frame_rx+1)&1023 : proc->frame_rx;
-    LOG_D(PHY,"RU %d/%d TS %llu (off %d), frame %d, subframe %d\n",
+    LOG_I(PHY,"RU %d/%d TS %llu (off %d), frame %d, subframe %d\n",
           ru->idx,
           0,
           (unsigned long long int)proc->timestamp_rx,
           (int)ru->ts_offset,
           proc->frame_rx,
           proc->tti_rx);
-    LOG_D(PHY,"south_in/rx_rf: RU %d/%d TS %llu (off %d), frame %d, subframe %d\n",
+    LOG_I(PHY,"south_in/rx_rf: RU %d/%d TS %llu (off %d), frame %d, subframe %d\n",
           ru->idx,
           0,
           (unsigned long long int)proc->timestamp_rx,
@@ -757,7 +757,7 @@ void rx_rf(RU_t *ru,
     *subframe = proc->tti_rx;
   }
 
-  //printf("timestamp_rx %lu, frame %d(%d), subframe %d(%d)\n",ru->timestamp_rx,proc->frame_rx,frame,proc->tti_rx,subframe);
+  //printf("timestamp_rx %lu, frame %d(%d), subframe %d(%d),ts %lu \n",proc->timestamp_rx,proc->frame_rx,frame,proc->tti_rx,subframe,ts);
   VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME( VCD_SIGNAL_DUMPER_VARIABLES_TRX_TS, proc->timestamp_rx&0xffffffff );
 
   if (rxs != fp->samples_per_tti) {
@@ -767,6 +767,141 @@ void rx_rf(RU_t *ru,
     //exit_fun( "problem receiving samples" );
     LOG_E(PHY, "problem receiving samples");
 #endif
+  }
+  } else if(fp->frame_type == TDD) {
+
+  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_READ, 1 );
+  //when the USRP starts, it initializes the timestamp to 0. We wait 1 frames until we program the first rx.
+  if (proc->first_rx==1) {
+    proc->timestamp_rx = fp->samples_per_subframe*LTE_NUMBER_OF_SUBFRAMES_PER_FRAME;
+    proc->first_rx = 0;
+  }
+  else {
+    //we always advance the timestamp by samples_per_slot, even if we have not read the (full) slot. This is to keep the timestamp updated even when there is no RX.
+    proc->timestamp_rx += fp->samples_per_subframe;
+  }
+  
+  int siglen;
+  if ( SF_type == SF_UL || SF_type == SF_S || IS_SOFTMODEM_RFSIM) {
+	 
+    if (SF_type == SF_S) {
+        
+      int subframe_ul_count = 0; 
+      siglen = (fp->nb_prefix_samples + fp->ofdm_symbol_size) * fp->ul_symbols_in_S_subframe;
+      proc->timestamp_rx += fp->samples_per_subframe - siglen;
+
+      for (int subframe_number = *subframe+1; subframe_number < LTE_NUMBER_OF_SUBFRAMES_PER_FRAME; subframe_number++) {
+  	  SubFrame_type     = subframe_select(fp,subframe_number%10);
+	  if(SubFrame_type == SF_UL) { 
+		subframe_ul_count++;
+	  } else break;
+      }
+      ru->rfdevice.trx_issue_stream_cmd(&ru->rfdevice,
+					proc->timestamp_rx,
+					siglen + subframe_ul_count*fp->samples_per_subframe);
+      
+    } else {
+      siglen = fp->samples_per_subframe;
+    }
+
+    LOG_I(PHY,"Reading %d samples for subframe %d at timestamp %ld\n",siglen,*subframe,proc->timestamp_rx);
+
+    if(emulate_rf) {
+      wait_on_condition(&proc->mutex_emulateRF,&proc->cond_emulateRF,&proc->instance_cnt_emulateRF,"emulatedRF_thread");
+      release_thread(&proc->mutex_emulateRF,&proc->instance_cnt_emulateRF,"emulatedRF_thread");
+      rxs = siglen;
+    }
+    else {
+      rxs = ru->rfdevice.trx_read_func(&ru->rfdevice,
+				       &ts,
+				       rxp,
+				       siglen,
+				       ru->nb_rx);
+    }
+  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_READ, 0 );
+
+    ru->south_in_cnt++;
+    LOG_D(PHY,"south_in_cnt %d\n",ru->south_in_cnt);
+    LOG_I(PHY,"ts_offset %lu, ts %lu ,timestamp_rx %lu\n",ru->ts_offset,ts,proc->timestamp_rx);
+
+    if (ru->cmd==RU_FRAME_RESYNCH) {
+      LOG_I(PHY,"Applying frame resynch %d => %d\n",*frame,ru->cmdval);
+
+    if (proc->frame_rx>ru->cmdval) ru->ts_offset += (proc->frame_rx - ru->cmdval)*fp->samples_per_tti*10;
+    else ru->ts_offset -= (-proc->frame_rx + ru->cmdval)*fp->samples_per_tti*10;
+
+    *frame = ru->cmdval;
+    ru->cmd=EMPTY;
+    resynch=1;
+    }
+
+    proc->timestamp_rx = ts-ru->ts_offset;
+
+    if (rxs != siglen) LOG_E(PHY, "rx_rf: Asked for %d samples, got %d from USRP\n",siglen,rxs);
+
+  }
+
+  if (ru->fh_north_asynch_in == NULL) {
+	  
+#ifdef PHY_TX_THREAD
+    proc->timestamp_phy_tx = proc->timestamp_rx+((sf_ahead-1)*fp->samples_per_tti);
+    proc->subframe_phy_tx  = (proc->tti_rx+(sf_ahead-1))%10;
+    proc->frame_phy_tx     = (proc->tti_rx>(9-(sf_ahead-1))) ? (proc->frame_rx+1)&1023 : proc->frame_rx;
+#else
+    proc->timestamp_tx = proc->timestamp_rx+(sf_ahead*fp->samples_per_tti);
+    proc->tti_tx       = (proc->tti_rx+sf_ahead)%10;
+    proc->frame_tx     = (proc->tti_rx>(9-sf_ahead)) ? (proc->frame_rx+1)&1023 : proc->frame_rx;
+#endif
+
+    LOG_I(PHY,"RU %d/%d TS %llu (off %d), frame %d, subframe %d\n",
+          ru->idx,
+          0,
+          (unsigned long long int)proc->timestamp_rx,
+          (int)ru->ts_offset,
+          proc->frame_rx,
+          proc->tti_rx);
+    LOG_I(PHY,"south_in/rx_rf: RU %d/%d TS %llu (off %d), frame %d, subframe %d\n",
+          ru->idx,
+          0,
+          (unsigned long long int)proc->timestamp_rx,
+          (int)ru->ts_offset,
+          proc->frame_rx,
+          proc->tti_rx);
+
+    // dump VCD output for first RU in list
+    if (ru == RC.ru[0]) {
+      VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME( VCD_SIGNAL_DUMPER_VARIABLES_FRAME_NUMBER_RX0_RU, proc->frame_rx );
+      VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME( VCD_SIGNAL_DUMPER_VARIABLES_TTI_NUMBER_RX0_RU, proc->tti_rx );
+
+      if (ru->fh_north_asynch_in == NULL) {
+        VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME( VCD_SIGNAL_DUMPER_VARIABLES_FRAME_NUMBER_TX0_RU, proc->frame_tx );
+        VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME( VCD_SIGNAL_DUMPER_VARIABLES_TTI_NUMBER_TX0_RU, proc->tti_tx );
+      }
+    }
+  }
+
+  proc->frame_rx     = *frame;
+  proc->tti_rx       = *subframe;
+
+  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_READ, 0 );
+
+
+  // synchronize first reception to frame 0 subframe 0
+  LOG_I(PHY,"RU %d/%d TS %llu (off %d), frame %d, subframe %d.%d / \n",
+        ru->idx,
+        0,
+        (unsigned long long int)proc->timestamp_rx,
+        (int)ru->ts_offset,proc->frame_rx,proc->tti_rx,proc->tti_tx);
+
+  // dump VCD output for first RU in list
+  if (ru == RC.ru[0]) {
+    VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME( VCD_SIGNAL_DUMPER_VARIABLES_FRAME_NUMBER_RX0_RU, proc->frame_rx );
+    VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME( VCD_SIGNAL_DUMPER_VARIABLES_TTI_NUMBER_RX0_RU, proc->tti_rx );
+  }
+
+
+  //printf("timestamp_rx %lu, frame %d(%d), subframe %d(%d),ts %lu \n",proc->timestamp_rx,proc->frame_rx,frame,proc->tti_rx,subframe,ts);
+  VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME( VCD_SIGNAL_DUMPER_VARIABLES_TRX_TS, proc->timestamp_rx&0xffffffff );
   }
 }
 
