@@ -5093,8 +5093,7 @@ check_handovers(
     if(ue_context_p->ue_context.handover_info != NULL) {
       pthread_mutex_lock(&ue_context_p->ue_context.handover_cond_lock);
 
-      if (ue_context_p->ue_context.Status == RRC_HO_EXECUTION &&
-          ue_context_p->ue_context.handover_info != NULL) {
+      if (ue_context_p->ue_context.handover_info != NULL) {
         
       /* in the source, UE in HO_PREPARE mode */
       if (ue_context_p->ue_context.handover_info->state == HO_PREPARE) {
