@@ -283,18 +283,6 @@ static void *dlsch_encoding_proc(void *ptr){
 
 
 static void *scrambling_proc(void *ptr){
-
-	
-/*! \file openair1/SIMULATION/NR_PHY/dlsim.c
- * \brief parallel_architecture of 5G NR V2
- * \author Terng-Yin Hsu, WEI-YING,LIN (OpInConnect_NCTU)
- * \email tyhsu@cs.nctu.edu.tw
- * \date 13-05-2020
- * \version 1.3
- * \note
- * \warning
- */
-
 	
 	scrambling_channel *test =(scrambling_channel*) ptr;
 	int q_id = test->q_id;
@@ -420,15 +408,6 @@ static void *modulation_proc(void *ptr){
 	struct timespec tt1, tt2;
 	PHY_VARS_gNB *gNB = RC.gNB[0][0];
 	NR_gNB_DLSCH_t *dlsch = gNB->dlsch[0][0];
-/*! \file openair1/SIMULATION/NR_PHY/dlsim.c
- * \brief parallel_architecture of 5G NR V2
- * \author Terng-Yin Hsu, WEI-YING,LIN (OpInConnect_NCTU)
- * \email tyhsu@cs.nctu.edu.tw
- * \date 13-05-2020
- * \version 1.3
- * \note
- * \warning
- */
 	
 	
 

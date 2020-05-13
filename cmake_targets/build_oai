@@ -24,6 +24,15 @@
 # brief OAI automated build tool that can be used to install, compile, run OAI.
 # author  Navid Nikaein, Lionel GAUTHIER, Laurent Thomas
 
+# file build_oai
+# brief Adjust simlist
+# author Terngyin, NY, GK, KM (ISIP)
+# email tyhsu@cs.nctu.edu.tw
+# date 07-04-2020
+# version 1.0
+# note
+# warning
+
 set -e
 
 # Include helper functions
@@ -661,7 +670,7 @@ function main() {
   if [ "$SIMUS_PHY" = "1" ] ; then
     echo_info "Compiling physical unitary tests simulators"
     # TODO: fix: dlsim_tm4 pucchsim prachsim pdcchsim pbchsim mbmssim
-	simlist="nr_dlsim "
+	simlist="nr_dlsim ldpctest"
     #simlist="dlsim ulsim ldpctest polartest smallblocktest nr_pbchsim nr_dlschsim nr_ulschsim nr_dlsim nr_ulsim nr_pucchsim"
     for f in $simlist ; do
       compilations \

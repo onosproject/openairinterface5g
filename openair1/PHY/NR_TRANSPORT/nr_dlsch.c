@@ -125,16 +125,6 @@ for (int i=0; i<encoded_length>>3; i++) {
   printf("\t");
 }
 printf("\n");
-/*! \file openair1/PHY/NR_TRANSPORT/nr_dlsch.c
- * \brief parallel_architecture of 5G NR V2
- * \author Terng-Yin Hsu, WEI-YING,LIN (OpInConnect_NCTU)
- * \email tyhsu@cs.nctu.edu.tw
- * \date 13-05-2020
- * \version 1.3
- * \note
- * \warning
- */
-
 #endif
 	long sum  = 0;
 #ifdef thread_for_scrambling_modulation

@@ -19,6 +19,16 @@
  *      contact@openairinterface.org
  */
 
+/*!\file ldpctest.c
+ * \brief Implementation of multi_ldpc_encoder
+ * \author Terngyin, NY, GK, KM (ISIP)
+ * \email tyhsu@cs.nctu.edu.tw
+ * \date 07-04-2020
+ * \version 1.0
+ * \note
+ * \warning
+ */
+
 #include <stdlib.h>
 #include <math.h>
 #include <stdio.h>
@@ -28,6 +38,11 @@
 #include "PHY/CODING/nrLDPC_encoder/defs.h"
 #include "PHY/CODING/nrLDPC_decoder/nrLDPC_decoder.h"
 #include "openair1/SIMULATION/NR_PHY/nr_unitary_defs.h"
+#include <time.h>
+
+//#include "T.h"
+//#include "common/utils/LOG/log.h"
+#include "common/utils/LOG/vcd_signal_dumper.h"				 
 
 #define MAX_NUM_DLSCH_SEGMENTS 16
 #define MAX_BLOCK_LENGTH 8448
@@ -88,6 +103,80 @@ uint16_t NB_UE_INST = 1;
 
 short lift_size[51]= {2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,18,20,22,24,26,28,30,32,36,40,44,48,52,56,60,64,72,80,88,96,104,112,120,128,144,160,176,192,208,224,240,256,288,320,352,384};
 
+/*! \file openair1/PHY/CODING/TESTBENCH/ldpctest.c
+ * \brief NCTU OpInConnect
+ * \author Terngyin Hsu, Sendren Xu, Nungyi Kuo, Kuankai Hsiung, Kaimi Yang (OpInConnect_NCTU)
+ * \email tyhsu@cs.nctu.edu.tw
+ * \date 13-05-2020
+ * \version 2.0
+ * \note
+ * \warning
+ */
+
+
+// ==[START]multi_lpdc_encoder
+struct timespec start_ts, end_ts, start_per_ts, end_per_ts, start_enc_ts[thread_num_max], end_enc_ts[thread_num_max], start_perenc_ts[thread_num_max], end_perenc_ts[thread_num_max];
+multi_ldpc_encoder ldpc_enc[thread_num_max];
+int thread_num = 2; //Craete 2 threads
+int ifRand = 0;
+int vcd = 0;
+// unsigned char *test_input0[MAX_NUM_DLSCH_SEGMENTS]={NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL};;
+// unsigned char *test_input1[MAX_NUM_DLSCH_SEGMENTS]={NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL};;
+// unsigned char *channel_input_optim0[MAX_NUM_DLSCH_SEGMENTS];
+// unsigned char *channel_input_optim1[MAX_NUM_DLSCH_SEGMENTS];
+
+static void *multi_ldpc_encoder_proc(void *ptr){
+  //ldpc_encoder_optim_8seg_multi(dlsch->harq_processes[harq_pid]->c,dlsch->harq_processes[harq_pid]->d,*Zc,Kb,Kr,BG,dlsch->harq_processes[harq_pid]->C,j,NULL,NULL,NULL,NULL);
+  //ldpc_encoder_optim_8seg_multi(unsigned char **test_input,unsigned char **channel_input,int Zc,int Kb,short block_length, short BG, int n_segments,unsigned int macro_num, time_stats_t *tinput,time_stats_t *tprep,time_stats_t *tparity,time_stats_t *toutput)
+  multi_ldpc_encoder *test =(multi_ldpc_encoder*) ptr;
+  printf("[READY] : %d\n", test->id);  
+  while(pthread_cond_wait(&ldpc_enc[test->id].cond,&ldpc_enc[test->id].mutex)!=0);  
+
+  //Print params of multi_ldpc_enc
+  // printf("[b]ldpc_encoder_optim_8seg: BG %d, Zc %d, Kb %d, block_length %d, segments %d\n",
+  //       ldpc_enc[test->id].BG,
+  //       ldpc_enc[test->id].Zc,
+  //       ldpc_enc[test->id].Kb,
+  //       ldpc_enc[test->id].block_length,
+  //       ldpc_enc[test->id].n_segments);
+
+  int j_start, j_end; //Check if our situation((n_segments == 15)&(thread_num == 2))
+  if((ldpc_enc[test->id].n_segments == 15)&&(thread_num == 2)){
+    j_start = test->id;
+    j_end = j_start + 1;
+  }else{
+    j_start = 0;
+    j_end = (ldpc_enc[test->id].n_segments/8+1);
+  }
+  int offset = test->id>7?7:test->id;
+  //printf("[OFFSET] : %d %d\n", offset, test->id); 
+  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_MULTI_ENC_0 + offset,1);
+  clock_gettime(CLOCK_MONOTONIC, &start_enc_ts[test->id]);  //timing
+  for(int j=j_start;j<j_end;j++){
+    //printf("  Movement    No.    Round    Cost time  \n");
+    printf("   Active      %d       %d\n", test->id, j);
+    clock_gettime(CLOCK_MONOTONIC, &start_perenc_ts[test->id]);  //timing
+    ldpc_encoder_optim_8seg_multi(ldpc_enc[test->id].test_input,
+                                  ldpc_enc[test->id].channel_input_optim,
+                                  ldpc_enc[test->id].Zc,
+                                  ldpc_enc[test->id].Kb,
+                                  ldpc_enc[test->id].block_length,
+                                  ldpc_enc[test->id].BG,
+                                  ldpc_enc[test->id].n_segments,
+                                  j,
+                                  NULL, NULL, NULL, NULL);
+    clock_gettime(CLOCK_MONOTONIC, &end_perenc_ts[test->id]);  //timing
+    //printf("  Movement    No.    Round    Cost time  \n");
+    printf("    Done       %d       %d      %.2f usec\n", test->id, j, (end_perenc_ts[test->id].tv_nsec - start_perenc_ts[test->id].tv_nsec) *1.0 / 1000);
+  }
+  clock_gettime(CLOCK_MONOTONIC, &end_enc_ts[test->id]);  //timing
+  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_MULTI_ENC_0 + offset,0);
+  //printf("[OK] : %d : %.2f usec\n", test->id, (end_perenc_ts[test->id].tv_nsec - start_perenc_ts[test->id].tv_nsec) *1.0 / 1000);
+  ldpc_enc[test->id].complete = 1;
+  return 0;
+}
+// ==[END]multi_lpdc_encoder
+
 int test_ldpc(short No_iteration,
               int nom_rate,
               int denom_rate,
@@ -119,6 +208,7 @@ int test_ldpc(short No_iteration,
   cpu_freq_GHz = get_cpu_freq_GHz();
   //short test_input[block_length];
   unsigned char *test_input[MAX_NUM_DLSCH_SEGMENTS]={NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL};;
+  unsigned char *test_input_multi[thread_num_max][MAX_NUM_DLSCH_SEGMENTS];// ==For multi_ldpc_enc ==																								
   //short *c; //padded codeword
   unsigned char *estimated_output[MAX_NUM_DLSCH_SEGMENTS];
   unsigned char *estimated_output_bit[MAX_NUM_DLSCH_SEGMENTS];
@@ -126,6 +216,7 @@ int test_ldpc(short No_iteration,
   unsigned char *channel_input[MAX_NUM_DLSCH_SEGMENTS];
   unsigned char *channel_output_uncoded[MAX_NUM_DLSCH_SEGMENTS];
   unsigned char *channel_input_optim[MAX_NUM_DLSCH_SEGMENTS];
+  unsigned char *channel_input_optim_multi[thread_num_max][MAX_NUM_DLSCH_SEGMENTS];																				   
   double *channel_output;
   double *modulated_input[MAX_NUM_DLSCH_SEGMENTS];
   char *channel_output_fixed[MAX_NUM_DLSCH_SEGMENTS];
@@ -159,6 +250,10 @@ int test_ldpc(short No_iteration,
     test_input[j]=(unsigned char *)malloc16(sizeof(unsigned char) * block_length/8);
     channel_input[j] = (unsigned char *)malloc16(sizeof(unsigned char) * 68*384);
     channel_input_optim[j] = (unsigned char *)malloc16(sizeof(unsigned char) * 68*384);
+	for(int th=0;th<thread_num;th++){// ==For multi_ldpc_enc ==
+      test_input_multi[th][j]=(unsigned char *)malloc16(sizeof(unsigned char) * block_length/8);
+      channel_input_optim_multi[th][j] = (unsigned char *)malloc16(sizeof(unsigned char) * 68*384);
+    }
     channel_output_uncoded[j] = (unsigned char *)malloc16(sizeof(unsigned char) * 68*384);
     estimated_output[j] = (unsigned char*) malloc16(sizeof(unsigned char) * block_length);
     estimated_output_bit[j] = (unsigned char*) malloc16(sizeof(unsigned char) * block_length);
@@ -202,8 +297,24 @@ int test_ldpc(short No_iteration,
   for (j=0;j<MAX_NUM_DLSCH_SEGMENTS;j++) {
     for (i=0; i<block_length/8; i++) {
       test_input[j][i]=(unsigned char) rand();
-      //test_input[j][i]=j%256;
-      //test_input[j][i]=252;
+	  for(int th = 0;th<thread_num;th++){
+        if(ifRand){
+          test_input_multi[th][j][i] = (unsigned char) rand();  // use rand value
+        }else{
+          test_input_multi[th][j][i] = test_input[j][i];  // use the same value
+        }        
+      }
+    }
+  }
+  //Print out test_input
+  printf("===============[test_input]================\n");
+  for (j=0;j<1;j++) {
+    for (i=0; i<10; i++) {      
+      printf("%u", test_input[j][i]);
+      for(int th = 0;th<thread_num;th++){
+        printf(", %u", test_input_multi[th][j][i]);
+      }
+      printf("\n");
     }
   }
 
@@ -281,7 +392,7 @@ int test_ldpc(short No_iteration,
       break;
     }
   }
-
+  printf("============== Check params ===============\n");
   printf("ldpc_test: codeword_length %d, n_segments %d, block_length %d, BG %d, Zc %d, Kb %d\n",n_segments *block_length, n_segments, block_length, BG, Zc, Kb);
   no_punctured_columns=(int)((nrows-2)*Zc+block_length-block_length*(1/((float)nom_rate/(float)denom_rate)))/Zc;
   //  printf("puncture:%d\n",no_punctured_columns);
@@ -305,21 +416,103 @@ int test_ldpc(short No_iteration,
       ldpc_encoder_optim(test_input[j],channel_input_optim[j],Zc,Kb,block_length,BG,&tinput,&tprep,&tparity,&toutput);
       }
     stop_meas(time_optim);*/
+	// unsigned char c_extension_try[2*22*384*32] __attribute__((aligned(32)));      //double size matrix of c
+
+    // ==[START]multi_ldpc_enc
+    printf("============== Multi threads ==============\n");
+    printf(" [Movement]  [No.]  [Part]   [Cost time] \n");
+    for(int th = 0;th<thread_num;th++){      
+      ldpc_enc[th].Zc = Zc;
+      ldpc_enc[th].Kb = Kb;
+      ldpc_enc[th].block_length = block_length;
+      ldpc_enc[th].BG = BG;
+      ldpc_enc[th].n_segments = n_segments; // ==Do all n_segments ==
+      //ldpc_enc[th].n_segments = th+1; // ==Do n_segments increasing ==
+      //ldpc_enc[th].n_segments = 1; // ==Just do first segment ==
+      ldpc_enc[th].test_input = test_input_multi[th]; // It's a ptr @ the head of "th"th line
+      ldpc_enc[th].channel_input_optim = channel_input_optim_multi[th]; // It's a ptr @ the head of "th"th line
+    }    
+    VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_MULTI_ENC,1);
+    clock_gettime(CLOCK_MONOTONIC, &start_ts);//timing  
+    for(int th = 0;th<thread_num;th++){
+      pthread_cond_signal(&ldpc_enc[th].cond);
+    }
+    for(int th = 0;th<thread_num;th++){
+      while(ldpc_enc[th].complete!=1);  // ==check if multi_ldpc_enc done ==
+      VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME(VCD_SIGNAL_DUMPER_VARIABLES_MULTI_ENC_FINISH,th);
+    }
+    clock_gettime(CLOCK_MONOTONIC, &end_ts);//timing
+    VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_MULTI_ENC,0);
+    for(int th = 0;th<thread_num;th++){
+      pthread_mutex_destroy(&ldpc_enc[th].mutex);
+      pthread_join(ldpc_enc[th].pthread, NULL);
+    }    
+    printf("========== Time of Multi threads ==========\n");
+    printf(" [No.]  [Total time] \n");
+    for(int th = 0;th<thread_num;th++){
+    printf("   %d     %.2f usec\n", th, (end_enc_ts[th].tv_nsec - start_enc_ts[th].tv_nsec) *1.0 / 1000);
+    }
+    // printf("   t      %.2f usec\n", (end_enc_ts[0].tv_nsec - start_enc_ts[0].tv_nsec) *1.0 / 1000);
+    // printf("   t      %.2f usec\n", (end_enc_ts[1].tv_nsec - start_enc_ts[0].tv_nsec) *1.0 / 1000);
+    // printf("   t      %.2f usec\n", (end_enc_ts[0].tv_nsec - start_enc_ts[1].tv_nsec) *1.0 / 1000);
+    // printf("   t      %.2f usec\n", (end_enc_ts[1].tv_nsec - start_enc_ts[1].tv_nsec) *1.0 / 1000);
+    printf(" Total   %.2f usec\n", (end_ts.tv_nsec - start_ts.tv_nsec) *1.0 / 1000);    
+    // ==[END]multi_ldpc_enc
+    printf("============== Single thread ==============\n");
+    printf(" [Movement]  [No.]  [Part]   [Cost time] \n");
+    clock_gettime(CLOCK_MONOTONIC, &start_ts);//timing																										  
 
     for(j=0;j<(n_segments/8+1);j++) {
+		printf("   Active    Single    %d\n", j);									   
     	start_meas(time_optim);
+		clock_gettime(CLOCK_MONOTONIC, &start_per_ts);//timing													
     	ldpc_encoder_optim_8seg_multi(test_input,channel_input_optim,Zc,Kb,block_length, BG, n_segments,j,&tinput,&tprep,&tparity,&toutput);
+		clock_gettime(CLOCK_MONOTONIC, &end_per_ts);//timing												  
     	stop_meas(time_optim);
+		printf("    Done     Single    %d      %.2f usec\n", j, (end_per_ts.tv_nsec - start_per_ts.tv_nsec) *1.0 / 1000);      																													 
     }
-    
+    clock_gettime(CLOCK_MONOTONIC, &end_ts);//timing
+    printf("========== Time of Single thread ==========\n");
+    printf(" [No.]  [Total time] \n");
+    printf(" Total   %.2f usec\n", (end_ts.tv_nsec - start_ts.tv_nsec) *1.0 / 1000);
+    if((n_segments != 15)||(thread_num != 2))  //if not our situation
+      printf("Total*%d  %.2f usec\n", thread_num, (end_ts.tv_nsec - start_ts.tv_nsec) *1.0*thread_num / 1000);
+
+    //Print out channel_input
+    // printf("[channel_input]:\n");
+    // for (j=0;j<n_segments;j++){
+    //   for (i = 0; i < 10; i++){
+    //     printf("%u,%u\n", channel_input[j][i], channel_input_optim_multi[0][j][i]);
+    //   }
+    // }
+
+    // ==dec here ==    
     if (ntrials==1)    
       for (j=0;j<n_segments;j++)
         for (i = 0; i < block_length+(nrows-no_punctured_columns) * Zc - removed_bit; i++)
           if (channel_input[j][i]!=channel_input_optim[j][i]) {
-            printf("differ in seg %u pos %u (%u,%u)\n", j, i, channel_input[j][i], channel_input_optim[j][i]);
+            printf("[ERROR][Single]differ in seg %u pos %u (%u,%u)\n", j, i, channel_input[j][i], channel_input_optim[j][i]);
             free(channel_output);
             return (-1);
           }
+	//[START]Check the value of channel_input and channel_input_multi
+    if((n_segments != 15)||(thread_num != 2)){  //if not our situation
+      if (ntrials==1)
+        for(int th=0;th<thread_num;th++)    
+          for (j=0;j<n_segments;j++)
+            for (i = 0; i < block_length+(nrows-no_punctured_columns) * Zc - removed_bit; i++)
+              if (channel_input[j][i]!=channel_input_optim_multi[0][j][i]) {
+                printf("[ERROR][Multi(%d)]differ in seg %u pos %u (%u,%u)\n", th, j, i, channel_input[j][i], channel_input_optim_multi[th][j][i]);
+                free(channel_output);
+                return (-1);
+              }
+      printf("============ [OK]Result compare ===========\n");
+    }else{
+      printf("=================== [OK] ==================\n");
+    }
+    
+    
+    //[END]Check the value of channel_input and channel_input_multi																 
       //else{
            // printf("NOT differ in seg %d pos %d (%d,%d)\n",j,i,channel_input[j][i],channel_input_optim[j][i]);
      // }
@@ -345,12 +538,17 @@ int test_ldpc(short No_iteration,
         if ((i&0xf)==0)
           printf("\ne %u..%u:    ",i,i+15);
 #endif
-
+		// ==dec here ==
         if (channel_input_optim[j][i-2*Zc]==0)
           modulated_input[j][i]=1.0;///sqrt(2);  //QPSK
         else
           modulated_input[j][i]=-1.0;///sqrt(2);
 
+		// if (channel_input_optim_multi[0][i-2*Zc]==0)
+        //   modulated_input[j][i]=1.0;///sqrt(2);  //QPSK
+        // else
+        //   modulated_input[j][i]=-1.0;///sqrt(2);
+											   
         ///channel_output[i] = modulated_input[i] + gaussdouble(0.0,1.0) * 1/sqrt(2*SNR);
         //channel_output_fixed[i] = (char) ((channel_output[i]*128)<0?(channel_output[i]*128-0.5):(channel_output[i]*128+0.5)); //fixed point 9-7
         //printf("llr[%d]=%d\n",i,channel_output_fixed[i]);
@@ -369,10 +567,11 @@ int test_ldpc(short No_iteration,
             channel_output_uncoded[j][i]=1;  //QPSK demod
         else
             channel_output_uncoded[j][i]=0;
-
+// ==dec here ==
         if (channel_output_uncoded[j][i] != channel_input_optim[j][i-2*Zc])
 	  *errors_bit_uncoded = (*errors_bit_uncoded) + 1;
-
+	//     if (channel_output_uncoded[j][i] != channel_input_optim_multi[0][j][i-2*Zc])
+    // *errors_bit_uncoded = (*errors_bit_uncoded) + 1;
 	}
       } // End segments
 
@@ -416,18 +615,27 @@ int test_ldpc(short No_iteration,
          /// printf("i: %d \n",i);
           ///printf("estimated_output[%d]: %d \n",i,estimated_output[i]);
           ///printf("test_input[0][%d]: %d \n",i,test_input[0][i]);
+	// ==dec here ==				  
         if (estimated_output[j][i] != test_input[j][i])
         {
       //////printf("error pos %d (%d, %d)\n\n",i,estimated_output[i],test_input[0][i]);
           segment_bler = segment_bler + 1;
           break;
         }
+	  //   if (estimated_output[j][i] != test_input_multi[0][j][i])
+      //   {
+      // //////printf("error pos %d (%d, %d)\n\n",i,estimated_output[i],test_input[0][i]);
+      //     segment_bler = segment_bler + 1;
+      //     break;
+      //   }
       }
 
       for (i=0; i<block_length; i++)
         {
           estimated_output_bit[j][i] = (estimated_output[j][i/8]&(1<<(i&7)))>>(i&7);
+		  // ==dec here ==			  
           test_input_bit[i] = (test_input[j][i/8]&(1<<(i&7)))>>(i&7); // Further correct for multiple segments
+		  // test_input_bit[i] = (test_input_multi[0][j][i/8]&(1<<(i&7)))>>(i&7); // Further correct for multiple segments																											  
           if (estimated_output_bit[j][i] != test_input_bit[i])
           {
             *errors_bit = (*errors_bit) + 1;
@@ -465,6 +673,10 @@ int test_ldpc(short No_iteration,
     free(channel_input[j]);
     free(channel_output_uncoded[j]);
     free(channel_input_optim[j]);
+	for(int th = 0;th<thread_num;th++){// ==For multi_ldpc_enc ==
+      free(test_input_multi[th][j]);
+      free(channel_input_optim_multi[th][j]);
+    }															 
     free(modulated_input[j]);
     free(channel_output_fixed[j]);
     free(estimated_output[j]);
@@ -507,7 +719,8 @@ int main(int argc, char *argv[])
   short block_length=8448; // decoder supports length: 1201 -> 1280, 2401 -> 2560
 
   short No_iteration=5;
-  int n_segments=1;
+  //int n_segments=1;
+  int n_segments=15;  //Set n_segments for test
   //double rate=0.333;
   int nom_rate=1;
   int denom_rate=3;
@@ -525,9 +738,9 @@ int main(int argc, char *argv[])
   time_stats_t time_optim[10], time_decoder[10];
   n_iter_stats_t dec_iter[3];
 
-  short BG=0,Zc,Kb;
+  short BG=0,Zc,Kb;	
 
-  while ((c = getopt (argc, argv, "q:r:s:S:l:n:d:i:t:u:h")) != -1)
+  while ((c = getopt (argc, argv, "q:r:R:s:S:l:n:d:i:t:T:V:u:h")) != -1)
     switch (c)
     {
       case 'q':
@@ -538,6 +751,12 @@ int main(int argc, char *argv[])
         nom_rate = atoi(optarg);
         break;
 
+	  case 'R':
+        ifRand = atoi(optarg);
+        if(ifRand)
+          printf("[WARNING]It will cause ERROR when comparing results\n");
+        break;
+	   
       case 'd':
         denom_rate = atoi(optarg);
         break;
@@ -562,6 +781,21 @@ int main(int argc, char *argv[])
         SNR_step = atof(optarg);
         break;
 
+	  case 'T':
+        thread_num = atoi(optarg);
+        if(thread_num > 8){
+          thread_num = 8;
+          printf("[WARNING]Too many threads !!! Set thread_num 8\n");
+        }else if(thread_num < 0){
+          thread_num = 0;
+          printf("[WARNING]Too less threads !!! Set thread_num 0\n");
+        }
+        break;
+
+      case 'V':
+        vcd = atoi(optarg);
+        break;
+	   
       case 'i':
         No_iteration = atoi(optarg);
         break;
@@ -578,6 +812,7 @@ int main(int argc, char *argv[])
               printf("-h This message\n");
               printf("-q Quantization bits, Default: 8\n");
               printf("-r Nominator rate, (1, 2, 22), Default: 1\n");
+			        printf("-R Will test_input be different for each thread, Default: 0\n");																		  
               printf("-d Denominator rate, (3, 5, 25), Default: 1\n");
               printf("-l Block length (l > 3840 -> BG1, rest BG2 ), Default: 8448\n");
               printf("-n Number of simulation trials, Default: 1\n");
@@ -585,11 +820,32 @@ int main(int argc, char *argv[])
               printf("-s SNR per information bit (EbNo) in dB, Default: -2\n");
               printf("-S Number of segments (Maximum: 8), Default: 1\n");
               printf("-t SNR simulation step, Default: 0.1\n");
+			        printf("-T Number of threads, Default: 2\n");
+              printf("-V VCD ON(1), OFF(0), Default: 0\n");										   
               printf("-i Max decoder iterations, Default: 5\n");
               printf("-u Set SNR per coded bit, Default: 0\n");
               exit(1);
               break;
     }
+
+	// ==[START]VCD ==
+  if(vcd == 1){
+    T_init(2021, 1, 0);
+  }
+  // ==[END]VCD ==
+
+  // ==[START]Create multi_ldpc_encoder ==    
+  for(int th=0;th<thread_num;th++){
+    pthread_attr_init(&ldpc_enc[th].attr);
+    pthread_mutex_init(&ldpc_enc[th].mutex, NULL);
+    pthread_cond_init(&ldpc_enc[th].cond, NULL);
+    ldpc_enc[th].id = th;
+    ldpc_enc[th].flag_wait = 1;
+    ldpc_enc[th].complete = 0;
+    pthread_create(&(ldpc_enc[th].pthread), &ldpc_enc[th].attr, multi_ldpc_encoder_proc, &ldpc_enc[th]);    
+    printf("[CREATE] LDPC encoder thread %d \n",ldpc_enc[th].id);
+  }
+  // ==[END]Create multi_ldpc_encoder ==					   
   cpu_freq_GHz = get_cpu_freq_GHz();
   //printf("the decoder supports BG2, Kb=10, Z=128 & 256\n");
   //printf(" range of blocklength: 1201 -> 1280, 2401 -> 2560\n");
