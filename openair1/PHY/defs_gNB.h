@@ -30,16 +30,6 @@
  \warning
 */
 
-/*! \file PHY/defs_gNB.h
- * \brief Add thread_num_pdsch to parameterize dual thread
- * \author Terngyin, NY, GK, KM (OpInConnect_NCTU)
- * \email tyhsu@cs.nctu.edu.tw
- * \date 01-05-2020
- * \version 1.2
- * \note
- * \warning
- */
-
 #ifndef __PHY_DEFS_GNB__H__
 #define __PHY_DEFS_GNB__H__
 
@@ -87,6 +77,12 @@ typedef struct{
   uint16_t Nid;
   uint16_t n_RNTI;
   uint8_t Qm;
+  /*pressure test*/
+  uint8_t *c_test[MAX_NUM_NR_DLSCH_SEGMENTS];
+  uint8_t *d_test[MAX_NUM_NR_DLSCH_SEGMENTS];
+  uint8_t f_test[MAX_NUM_NR_CHANNEL_BITS] __attribute__((aligned(32)));
+  int32_t *mod_symbs_test[NR_MAX_NB_CODEWORDS];
+  uint32_t scrambled_output_test[NR_MAX_NB_CODEWORDS][NR_MAX_PDSCH_ENCODED_LENGTH>>5];
 }multi_ldpc_encoder_gNB;
 
 typedef struct {
@@ -919,6 +915,7 @@ typedef struct PHY_VARS_gNB_s {
   dlsch_encoding_ISIP thread_encode[4];
   ldpc_encoding_ISIP ldpc_encode;
   multi_ldpc_encoder_gNB multi_encoder[thread_num_pdsch];
+  multi_ldpc_encoder_gNB pressure_test[2];
   
   volatile uint8_t complete_encode[4];
   

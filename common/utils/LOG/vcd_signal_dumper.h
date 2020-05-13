@@ -32,16 +32,6 @@
  * \warning
  */
 
-/*!\file vcd_signal_dumper.h
- * \brief Add some VCD signals of multi_ldpc_encoder
- * \author Terngyin, NY, GK, KM (ISIP)
- * \email tyhsu@cs.nctu.edu.tw
- * \date 07-04-2020
- * \version 1.0
- * \note
- * \warning
- */
-
 #ifndef VCD_SIGNAL_DUMPER_H_
 #define VCD_SIGNAL_DUMPER_H_
 

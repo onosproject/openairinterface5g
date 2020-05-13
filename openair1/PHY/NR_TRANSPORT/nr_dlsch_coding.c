@@ -30,16 +30,6 @@
 * \warning
 */
 
-/*!\file PHY/NR_TRANSPORT/dlsch_coding.c
- * \brief Add triggers for parameterized dual thread
- * \author Terngyin, NY, GK, KM (OpInConnect_NCTU)
- * \email tyhsu@cs.nctu.edu.tw
- * \date 01-05-2020
- * \version 1.2
- * \note
- * \warning
- */
-
 #include "PHY/defs_gNB.h"
 #include "PHY/phy_extern.h"
 #include "PHY/CODING/coding_extern.h"
@@ -459,20 +449,28 @@ int nr_dlsch_encoding(unsigned char *a, //harq->pdu => dlsch->harq_processes[har
       gNB->multi_encoder[th].BG = BG;
       gNB->multi_encoder[th].n_segments = dlsch->harq_processes[harq_pid]->C;
     }
-
-    /*cpy c to c_test*/
-    // unsigned char bw_scaling =2; // ==Need to change ==***
+    /*cpy original data to pressure data*/
+    unsigned char bw_scaling =2; // ==Need to change ==***
     // for(int r=0;r<MAX_NUM_NR_DLSCH_SEGMENTS/bw_scaling;r++){
     //   dlsch->harq_processes[i]->c[r] = (uint8_t*)malloc16(8448);
     //   dlsch->harq_processes[i]->d[r] = (uint8_t*)malloc16(68*384); //max size for coded output
-    // }    
-    // for(int th=0;th<thread_num_pdsch;th++){
-    //   for(int j=0;j<MAX_NUM_NR_DLSCH_SEGMENTS/bw_scaling;j++){  // ==Why can not just be MAX_NUM_NR_DLSCH_SEGMENTS ==???
-    //     gNB->multi_encoder[th].c_test[j]=(uint8_t*)malloc16(8448);//(unsigned char *)malloc16(sizeof(unsigned char) * Kr/8);
-    //     gNB->multi_encoder[th].d_test[j]=(uint8_t*)malloc16(68*384);//(unsigned char *)malloc16(sizeof(unsigned char) * 68*384);
-    //     memcpy(gNB->multi_encoder[th].c_test[j], dlsch->harq_processes[harq_pid]->c[j], 8448);  // ==Check 8448 ==***
-    //   }
     // }
+    for(int th=0;th<2;th++){
+      for(int j=0;j<MAX_NUM_NR_DLSCH_SEGMENTS/bw_scaling;j++){  // ==Why can not just be MAX_NUM_NR_DLSCH_SEGMENTS ==???
+        gNB->pressure_test[th].c_test[j]=(uint8_t*)malloc16(8448);//(unsigned char *)malloc16(sizeof(unsigned char) * Kr/8);
+        gNB->pressure_test[th].d_test[j]=(uint8_t*)malloc16(68*384);//(unsigned char *)malloc16(sizeof(unsigned char) * 68*384);
+        memcpy(gNB->pressure_test[th].c_test[j], dlsch->harq_processes[harq_pid]->c[j], 8448);  // ==Check 8448 ==***
+      }
+    }
+    for(int th=0;th<2;th++){
+      //gNB->pressure_test[th].test_input = dlsch->harq_processes[harq_pid]->c;
+      //gNB->pressure_test[th].channel_input_optim = dlsch->harq_processes[harq_pid]->d;
+      gNB->pressure_test[th].Zc = *Zc;
+      gNB->pressure_test[th].Kb = Kb;
+      gNB->pressure_test[th].block_length = Kr;
+      gNB->pressure_test[th].BG = BG;
+      gNB->pressure_test[th].n_segments = dlsch->harq_processes[harq_pid]->C;
+    }
     /*Show c_test*/    
     // printf("c_test :\n");
     // for (int i=0; i<3; i++){
@@ -485,17 +483,26 @@ int nr_dlsch_encoding(unsigned char *a, //harq->pdu => dlsch->harq_processes[har
     //   printf("/%p\n", &gNB->multi_encoder[0].c_test[0][i]);
     // }
 
+    //Awake threads & Wait threads finish
     printf("================[Encoder]================\n");
     printf(" [Movement]  [No.]  [Round]  [Cost time] \n");
     
+    VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_MULTI_ENC,1);
     clock_gettime(CLOCK_MONOTONIC, &start_ts);  //timing
     for(int th=0;th<thread_num_pdsch;th++){
       pthread_cond_signal(&(gNB->multi_encoder[th].cond));
     }
+    for(int th=0;th<2;th++){
+      pthread_cond_signal(&(gNB->pressure_test[th].cond));
+    }
     for(int th = 0;th<thread_num_pdsch;th++){
       while(gNB->multi_encoder[th].complete!=1);  // ==check if multi_ldpc_enc done ==
     }
+    for(int th = 0;th<2;th++){
+      while(gNB->pressure_test[th].complete!=1);  // ==check if multi_ldpc_enc done ==
+    }
     clock_gettime(CLOCK_MONOTONIC, &end_ts);  //timing
+    VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_MULTI_ENC,0);
     //printf("  Movement    No.    Round    Cost time  \n");
     printf("   Total                      %.2f usec\n", (end_ts.tv_nsec - start_ts.tv_nsec) *1.0 / 1000);
     // for(int th = 0;th<thread_num_pdsch;th++){

@@ -19,16 +19,6 @@
  *      contact@openairinterface.org
  */
 
-/*!\file T_defs.h
- * \brief Update VCD_NUM_FUNCTIONS and VCD_NUM_VARIABLES
- * \author Terngyin, NY, GK, KM (ISIP)
- * \email tyhsu@cs.nctu.edu.tw
- * \date 07-04-2020
- * \version 1.0
- * \note
- * \warning
- */
-
 #ifndef _T_defs_H_
 #define _T_defs_H_
 

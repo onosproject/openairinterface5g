@@ -29,16 +29,6 @@
  * \warning
  */
 
-/*!\file defs.h
- * \brief Declarations of parameters of multi_ldpc_encoder
- * \author Terngyin, NY, GK, KM (ISIP)
- * \email tyhsu@cs.nctu.edu.tw
- * \date 07-04-2020
- * \version 1.0
- * \note
- * \warning
- */
-
 #include "PHY/TOOLS/time_meas.h"
 
 // ==[START]multi_ldpc_encoder
