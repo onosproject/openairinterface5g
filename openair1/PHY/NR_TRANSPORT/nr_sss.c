@@ -69,8 +69,9 @@ int nr_generate_sss(  int16_t *d_sss,
     // SSS occupies a predefined position (subcarriers 56-182, symbol 2) within the SSB block starting from
     k = frame_parms->first_carrier_offset + frame_parms->ssb_start_subcarrier + 56; //and
     l = ssb_start_symbol + 2;
-
+	printf("NR_SSS_LENGTH = %d\n",NR_SSS_LENGTH);
     for (int m = 0; m < NR_SSS_LENGTH; m++) {
+		
       ((int16_t*)txdataF)[2*(l*frame_parms->ofdm_symbol_size + k)] = (amp * d_sss[m]) >> 15;
       k++;
 

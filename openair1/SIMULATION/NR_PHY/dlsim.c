@@ -19,6 +19,18 @@
  *      contact@openairinterface.org
  */
 
+/*! \file openair1/SIMULATION/NR_PHY/dlsim.c
+ * \brief pipeline scrambling and modulaiton
+ * \author Terng-Yin Hsu, WEI-YING,LIN (OpInConnect_NCTU)
+ * \email tyhsu@cs.nctu.edu.tw
+ * \date 13-05-2020
+ * \version 1
+ * \note
+ * \warning
+ */
+
+
+#include "PHY/phy_extern.h"
 #include <fcntl.h>
 #include <math.h>
 #include <string.h>
@@ -124,6 +136,131 @@ void mac_rlc_data_ind     (
 // needed for some functions
 openair0_config_t openair0_cfg[MAX_CARDS];
 
+static void *scrambling_proc(void *ptr){
+	PHY_VARS_gNB *gNB = RC.gNB[0][0];
+	NR_gNB_DLSCH_t *dlsch = gNB->dlsch[0][0];
+	
+	//clock_gettime(CLOCK_REALTIME, &eNB->tt17);
+	//printf("cch_proc consumes %ld nanoseconds!\n",eNB->tt17.tv_nsec-eNB->tt13.tv_nsec);
+	static int scrambling_channel_status;
+	scrambling_channel_status=0;
+	scrambling_channel *cch=(scrambling_channel*)ptr;
+	//PHY_VARS_eNB *eNB = PHY_vars_eNB_g[0][0];
+	/**********************************************************************/
+
+	while(!oai_exit)
+	{
+	   	while(pthread_cond_wait(&gNB->thread_scrambling.cond_tx, &gNB->thread_scrambling.mutex_tx)!=0);
+		//VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_ENB_CONTROL_CHANNEL_THREAD_TX,1);		
+		NR_gNB_DCI_ALLOC_t *dci_alloc = &gNB->pdcch_vars.dci_alloc[0];
+		NR_DL_gNB_HARQ_t *harq = dlsch->harq_processes[dci_alloc->harq_pid];
+		nfapi_nr_dl_config_dlsch_pdu_rel15_t *rel15 = &harq->dlsch_pdu.dlsch_pdu_rel15;
+		nfapi_nr_config_request_t *config = &gNB->gNB_config;
+		nfapi_nr_dl_config_pdcch_parameters_rel15_t pdcch_params = dci_alloc->pdcch_params;
+		//uint32_t scrambled_output[NR_MAX_NB_CODEWORDS][NR_MAX_PDSCH_ENCODED_LENGTH>>5];
+		int16_t **mod_symbs = (int16_t**)dlsch->mod_symbs;
+		//int16_t **tx_layers = (int16_t**)dlsch->txdataF;
+		//int8_t Wf[2], Wt[2], l0, l_prime[2], delta;
+		uint16_t nb_symbols = rel15->nb_mod_symbols;
+		uint8_t Qm = rel15->modulation_order;
+		uint32_t encoded_length = nb_symbols*Qm;
+		
+		//VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_ENB_PMCH_PBCH_TX,1);
+		/// scrambling
+		
+		for (int q=0; q<rel15->nb_codewords; q++)
+			memset((void*)(gNB->scrambled_output[q]), 0, (encoded_length>>5)*sizeof(uint32_t));
+		uint16_t n_RNTI = (pdcch_params.search_space_type == NFAPI_NR_SEARCH_SPACE_TYPE_UE_SPECIFIC)? \
+		((pdcch_params.scrambling_id==0)?pdcch_params.rnti:0) : 0;
+		uint16_t Nid = (pdcch_params.search_space_type == NFAPI_NR_SEARCH_SPACE_TYPE_UE_SPECIFIC)? \
+		pdcch_params.scrambling_id : config->sch_config.physical_cell_id.value;
+		for (int q=0; q<rel15->nb_codewords; q++){
+			nr_pdsch_codeword_scrambling(harq->f,
+									encoded_length,
+									q,
+									Nid,
+									n_RNTI,
+									gNB->scrambled_output[q]);
+			gNB->q_scrambling[q] = 1;
+		}
+#ifdef DEBUG_DLSCH
+		printf("PDSCH scrambling:\n");
+		for (int i=0; i<encoded_length>>8; i++) {
+			for (int j=0; j<8; j++)
+				printf("0x%08x\t", scrambled_output[0][(i<<3)+j]);
+				printf("\n");
+		}
+#endif
+ 
+ 
+
+	printf("complete_scrambling\n");
+	gNB->complete_scrambling=1;
+	}
+	printf( "Exiting gNB thread scrambling_channel\n");
+	return &scrambling_channel_status;
+}
+
+static void *modulation_proc(void *ptr){
+//	PHY_VARS_gNB *gNB = RC.gNB[0][0];
+//	NR_gNB_DLSCH_t *dlsch = gNB->dlsch[0][0];
+	
+	//clock_gettime(CLOCK_REALTIME, &eNB->tt17);
+	//printf("cch_proc consumes %ld nanoseconds!\n",eNB->tt17.tv_nsec-eNB->tt13.tv_nsec);
+	static int modulation_channel_status;
+	modulation_channel_status=0;
+	modulation_channel *modulation_proc=(modulation_channel*)ptr;
+	//PHY_VARS_eNB *eNB = PHY_vars_eNB_g[0][0];
+	/**********************************************************************/
+
+	while(!oai_exit)
+	{
+	   	while(pthread_cond_wait(&gNB->thread_modulation.cond_tx, &gNB->thread_modulation.mutex_tx)!=0);
+		//VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_ENB_CONTROL_CHANNEL_THREAD_TX,1);		
+		PHY_VARS_gNB *gNB = RC.gNB[0][0];
+		NR_gNB_DLSCH_t *dlsch = gNB->dlsch[0][0];
+		NR_gNB_DCI_ALLOC_t *dci_alloc = &gNB->pdcch_vars.dci_alloc[0];
+		NR_DL_gNB_HARQ_t *harq = dlsch->harq_processes[dci_alloc->harq_pid];
+		nfapi_nr_dl_config_dlsch_pdu_rel15_t *rel15 = &harq->dlsch_pdu.dlsch_pdu_rel15;
+		//nfapi_nr_config_request_t *config = &gNB->gNB_config;
+		nfapi_nr_dl_config_pdcch_parameters_rel15_t pdcch_params = dci_alloc->pdcch_params;
+		//uint32_t scrambled_output[NR_MAX_NB_CODEWORDS][NR_MAX_PDSCH_ENCODED_LENGTH>>5];
+		int16_t **mod_symbs = (int16_t**)dlsch->mod_symbs;
+		//int16_t **tx_layers = (int16_t**)dlsch->txdataF;
+		//int8_t Wf[2], Wt[2], l0, l_prime[2], delta;
+		uint16_t nb_symbols = rel15->nb_mod_symbols;
+		uint8_t Qm = rel15->modulation_order;
+		uint32_t encoded_length = nb_symbols*Qm;
+		
+		//VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_ENB_PMCH_PBCH_TX,1);
+		/// scrambling
+  /// Modulation
+		//start_meas(dlsch_modulation_stats);
+		for (int q=0; q<rel15->nb_codewords; q++){
+			while(gNB->q_scrambling[q] != 1);
+			nr_modulation(gNB->scrambled_output[q],
+							encoded_length,
+							Qm,
+							mod_symbs[q]);
+			gNB->q_scrambling[q] = 0;				
+		}					
+		//stop_meas(dlsch_modulation_stats);
+#ifdef DEBUG_DLSCH
+		printf("PDSCH Modulation: Qm %d(%d)\n", Qm, nb_symbols);
+		for (int i=0; i<nb_symbols>>3; i++) {
+			for (int j=0; j<8; j++) {
+				printf("%d %d\t", mod_symbs[0][((i<<3)+j)<<1], mod_symbs[0][(((i<<3)+j)<<1)+1]);
+			}
+		printf("\n");
+		}
+#endif
+	printf("complete_modulation\n");
+	gNB->complete_modulation=1;
+	}
+	printf( "Exiting gNB thread modulation_channel\n");
+	return &modulation_channel_status;
+}
+
 int main(int argc, char **argv)
 {
   char c;
@@ -196,7 +333,7 @@ int main(int argc, char **argv)
   float target_error_rate = 0.01;
 
   cpuf = get_cpu_freq_GHz();
-
+  
   if ( load_configmodule(argc,argv,CONFIG_ENABLECMDLINEONLY) == 0) {
     exit_fun("[NR_DLSIM] Error, configuration module init failed\n");
   }
@@ -543,7 +680,14 @@ int main(int argc, char **argv)
     printf("Error at UE NR initialisation\n");
     exit(-1);
   }
-
+  pthread_mutex_init( &(gNB->thread_scrambling.mutex_tx), NULL);
+  pthread_cond_init( &(gNB->thread_scrambling.cond_tx), NULL);
+  pthread_create(&(gNB->thread_scrambling.pthread_scrambling),&gNB->thread_scrambling.attr_scrambling,scrambling_proc,&gNB->thread_scrambling);
+  printf("[CREATE] scrambling_channel thread \n");
+  pthread_mutex_init( &(gNB->thread_modulation.mutex_tx), NULL);
+  pthread_cond_init( &(gNB->thread_modulation.cond_tx), NULL);
+  pthread_create(&(gNB->thread_modulation.pthread_modulation),&gNB->thread_modulation.attr_modulation,modulation_proc,&gNB->thread_modulation);
+  printf("[CREATE] modulation_channel thread \n");
   init_nr_ue_transport(UE,0);
 
   nr_gold_pbch(UE);

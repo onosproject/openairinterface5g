@@ -29,7 +29,10 @@
 * \note
 * \warning
 */
-
+//pipeline scrambling and modulation from Ian
+#include "PHY/phy_extern.h"
+#include "PHY/defs_gNB.h"
+#include "common/ran_context.h"
 #include "nr_dlsch.h"
 #include "nr_dci.h"
 #include "nr_sch_dmrs.h"
@@ -50,12 +53,15 @@ void nr_pdsch_codeword_scrambling(uint8_t *in,
 
   reset = 1;
   x2 = (n_RNTI<<15) + (q<<14) + Nid;
-
+  int a = 0;
   for (int i=0; i<size; i++) {
     b_idx = i&0x1f;
     if (b_idx==0) {
+	//  printf("bedore s = %d x1 = %d x2 = %d a = %d\n",s,x1,x2,a);	
       s = lte_gold_generic(&x1, &x2, reset);
+	//  printf("after ~~~~~s = %d x1 = %d x2 = %d a = %d\n",s,x1,x2,a);
       reset = 0;
+	  a++;
       if (i)
         out++;
     }
@@ -79,6 +85,7 @@ uint8_t nr_generate_pdsch(NR_gNB_DLSCH_t *dlsch,
                           time_stats_t *dlsch_scrambling_stats,
                           time_stats_t *dlsch_modulation_stats) {
 
+  PHY_VARS_gNB *gNB = RC.gNB[0][0];
   NR_DL_gNB_HARQ_t *harq = dlsch->harq_processes[dci_alloc->harq_pid];
   nfapi_nr_dl_config_dlsch_pdu_rel15_t *rel15 = &harq->dlsch_pdu.dlsch_pdu_rel15;
   nfapi_nr_dl_config_pdcch_parameters_rel15_t pdcch_params = dci_alloc->pdcch_params;
@@ -89,8 +96,12 @@ uint8_t nr_generate_pdsch(NR_gNB_DLSCH_t *dlsch,
   uint16_t nb_symbols = rel15->nb_mod_symbols;
   uint8_t Qm = rel15->modulation_order;
   uint32_t encoded_length = nb_symbols*Qm;
-
-
+  printf("encoded_length = %d\n",encoded_length);
+  gNB->complete_scrambling = 0;
+  gNB->complete_modulation = 0;
+  for(int q = 0 ;q<13;q++){
+	gNB->q_scrambling[q] = 0;
+  }
   /// CRC, coding, interleaving and rate matching
   AssertFatal(harq->pdu!=NULL,"harq->pdu is null\n");
   start_meas(dlsch_encoding_stats);
@@ -112,8 +123,15 @@ for (int i=0; i<encoded_length>>3; i++) {
 printf("\n");
 #endif
 
+	pthread_cond_signal(&gNB->thread_modulation.cond_tx);
+	pthread_cond_signal(&gNB->thread_scrambling.cond_tx);
+	while(gNB->complete_scrambling != 1);
+	
+	while(gNB->complete_modulation != 1);
+	/*
   /// scrambling
   start_meas(dlsch_scrambling_stats);
+  printf("nb_codewords = %d encoded_length = %d\n",rel15->nb_codewords,encoded_length);
   for (int q=0; q<rel15->nb_codewords; q++)
     memset((void*)scrambled_output[q], 0, (encoded_length>>5)*sizeof(uint32_t));
   uint16_t n_RNTI = (pdcch_params.search_space_type == NFAPI_NR_SEARCH_SPACE_TYPE_UE_SPECIFIC)? \
@@ -155,7 +173,7 @@ for (int i=0; i<nb_symbols>>3; i++) {
   printf("\n");
 }
 #endif
-
+*/
 
   /// Layer mapping
   nr_layer_mapping(mod_symbs,
@@ -207,6 +225,7 @@ for (int i=0; i<n_dmrs>>4; i++) {
  printf("PDSCH resource mapping started (start SC %d\tstart symbol %d\tN_PRB %d\tnb_symbols %d)\n",
 	start_sc, rel15->start_symbol, rel15->n_prb, rel15->nb_symbols);
 #endif
+  printf("nb_layers = %d\n",rel15->nb_layers);
   for (int ap=0; ap<rel15->nb_layers; ap++) {
 
     // DMRS params for this ap

@@ -239,8 +239,10 @@ int nr_generate_pbch(NR_gNB_PBCH *pbch,
   uint8_t nushift;
   uint32_t unscrambling_mask;
   uint64_t a_reversed=0;
+  struct timespec tt1, tt2;
   LOG_D(PHY, "PBCH generation started\n");
   ///Payload generation
+  
   memset((void *)pbch, 0, sizeof(NR_gNB_PBCH));
   pbch->pbch_a=0;
 
@@ -287,10 +289,13 @@ int nr_generate_pbch(NR_gNB_PBCH *pbch,
   M = (Lmax == 64)? (NR_POLAR_PBCH_PAYLOAD_BITS - 6) : (NR_POLAR_PBCH_PAYLOAD_BITS - 3);
   nushift = (((sfn>>2)&1)<<1) ^ ((sfn>>1)&1);
   pbch->pbch_a_prime = 0;
+  clock_gettime(CLOCK_REALTIME, &tt1);
   nr_pbch_scrambling(pbch, (uint32_t)config->sch_config.physical_cell_id.value, nushift, M, NR_POLAR_PBCH_PAYLOAD_BITS, 0, unscrambling_mask);
+  clock_gettime(CLOCK_REALTIME, &tt2);
+ // printf("nr_pbch_scrambling consumes %ld nanoseconds!\n", tt2.tv_nsec - tt1.tv_nsec);
 #ifdef DEBUG_PBCH_ENCODING
-  printf("Payload scrambling: nushift %d M %d sfn3 %d sfn2 %d\n", nushift, M, (sfn>>2)&1, (sfn>>1)&1);
-  printf("pbch_a_prime: 0x%08x\n", pbch->pbch_a_prime);
+ // printf("Payload scrambling: nushift %d M %d sfn3 %d sfn2 %d\n", nushift, M, (sfn>>2)&1, (sfn>>1)&1);
+ // printf("pbch_a_prime: 0x%08x\n", pbch->pbch_a_prime);
 #endif
 
   // Encoder reversal
@@ -298,9 +303,12 @@ int nr_generate_pbch(NR_gNB_PBCH *pbch,
     a_reversed |= (((uint64_t)pbch->pbch_a_prime>>i)&1)<<(31-i);
 
   /// CRC, coding and rate matching
+  clock_gettime(CLOCK_REALTIME, &tt1);
   polar_encoder_fast (&a_reversed, (uint32_t *)pbch->pbch_e, 0, 0,
                       nr_polar_params( NR_POLAR_PBCH_MESSAGE_TYPE, NR_POLAR_PBCH_PAYLOAD_BITS, NR_POLAR_PBCH_AGGREGATION_LEVEL)
                      );
+  clock_gettime(CLOCK_REALTIME, &tt2);
+ // printf("polar_encoder_fast consumes %ld nanoseconds!\n", tt2.tv_nsec - tt1.tv_nsec);
 #ifdef DEBUG_PBCH_ENCODING
   printf("Channel coding:\n");
 
@@ -312,7 +320,10 @@ int nr_generate_pbch(NR_gNB_PBCH *pbch,
   /// Scrambling
   M =  NR_POLAR_PBCH_E;
   nushift = (Lmax==4)? ssb_index&3 : ssb_index&7;
+  clock_gettime(CLOCK_REALTIME, &tt1);
   nr_pbch_scrambling(pbch, (uint32_t)config->sch_config.physical_cell_id.value, nushift, M, NR_POLAR_PBCH_E, 1, 0);
+  clock_gettime(CLOCK_REALTIME, &tt2);
+ // printf("nr_pbch_scrambling2 consumes %ld nanoseconds!\n", tt2.tv_nsec - tt1.tv_nsec);
 #ifdef DEBUG_PBCH_ENCODING
   printf("Scrambling:\n");
 
@@ -323,6 +334,7 @@ int nr_generate_pbch(NR_gNB_PBCH *pbch,
 #endif
 
   /// QPSK modulation
+  clock_gettime(CLOCK_REALTIME, &tt1);
   for (int i=0; i<NR_POLAR_PBCH_E>>1; i++) {
     idx = (((pbch->pbch_e[(i<<1)>>5]>>((i<<1)&0x1f))&1)<<1) ^ ((pbch->pbch_e[((i<<1)+1)>>5]>>(((i<<1)+1)&0x1f))&1);
     mod_pbch_e[i<<1] = nr_mod_table[(NR_MOD_TABLE_QPSK_OFFSET + idx)<<1];
@@ -331,7 +343,9 @@ int nr_generate_pbch(NR_gNB_PBCH *pbch,
     printf("i %d idx %d  mod_pbch %d %d\n", i, idx, mod_pbch_e[2*i], mod_pbch_e[2*i+1]);
 #endif
   }
-
+  clock_gettime(CLOCK_REALTIME, &tt2);
+ // printf("QPSK modulation consumes %ld nanoseconds!\n", tt2.tv_nsec - tt1.tv_nsec);
+  clock_gettime(CLOCK_REALTIME, &tt1);
   /// Resource mapping
   nushift = config->sch_config.physical_cell_id.value &3;
   // PBCH modulated symbols are mapped  within the SSB block on symbols 1, 2, 3 excluding the subcarriers used for the PBCH DMRS
@@ -357,7 +371,9 @@ int nr_generate_pbch(NR_gNB_PBCH *pbch,
     if (k >= frame_parms->ofdm_symbol_size)
       k-=frame_parms->ofdm_symbol_size;
   }
-
+  clock_gettime(CLOCK_REALTIME, &tt2);
+ // printf("/symbol 1  [0:239] -- 180 mod symbols() consumes %ld nanoseconds!\n", tt2.tv_nsec - tt1.tv_nsec);
+  clock_gettime(CLOCK_REALTIME, &tt1);
   ///symbol 2  [0:47 ; 192:239] -- 72 mod symbols
   k = frame_parms->first_carrier_offset + frame_parms->ssb_start_subcarrier;
   l++;
@@ -380,7 +396,9 @@ int nr_generate_pbch(NR_gNB_PBCH *pbch,
     if (k >= frame_parms->ofdm_symbol_size)
       k-=frame_parms->ofdm_symbol_size;
   }
-
+  clock_gettime(CLOCK_REALTIME, &tt2);
+ // printf("/symbol 2  [0:47] ; consumes %ld nanoseconds!\n", tt2.tv_nsec - tt1.tv_nsec);
+  clock_gettime(CLOCK_REALTIME, &tt1);
   k += 144;
 
   if (k >= frame_parms->ofdm_symbol_size)
@@ -405,8 +423,10 @@ int nr_generate_pbch(NR_gNB_PBCH *pbch,
     if (k >= frame_parms->ofdm_symbol_size)
       k-=frame_parms->ofdm_symbol_size;
   }
-
+  clock_gettime(CLOCK_REALTIME, &tt2);
+ // printf("/symbol 2  192:239 ; consumes %ld nanoseconds!\n", tt2.tv_nsec - tt1.tv_nsec);
   ///symbol 3  [0:239] -- 180 mod symbols
+  clock_gettime(CLOCK_REALTIME, &tt1);
   k = frame_parms->first_carrier_offset + frame_parms->ssb_start_subcarrier;
   l++;
   m=252;
@@ -428,8 +448,8 @@ int nr_generate_pbch(NR_gNB_PBCH *pbch,
 
     if (k >= frame_parms->ofdm_symbol_size)
       k-=frame_parms->ofdm_symbol_size;
-  }
-
-
+  }  
+	clock_gettime(CLOCK_REALTIME, &tt2);
+ //   printf("symbol 3  [0:239] -- 180 mod symbols consumes %ld nanoseconds!\n", tt2.tv_nsec - tt1.tv_nsec);
   return 0;
 }

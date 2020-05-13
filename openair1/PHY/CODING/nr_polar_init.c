@@ -184,18 +184,26 @@ void nr_polar_print_polarParams(t_nrPolar_params *polarParams) {
 t_nrPolar_params *nr_polar_params (int8_t messageType,
                                    uint16_t messageLength,
                                    uint8_t aggregation_level) {
+	struct timespec tt1, tt2;
+  	
   static t_nrPolar_params *polarList = NULL;
+  clock_gettime(CLOCK_REALTIME, &tt1);	
   nr_polar_init(&polarList, messageType,messageLength,aggregation_level);
+  clock_gettime(CLOCK_REALTIME, &tt2);	
+ // printf("nr_polar_init consumes %ld nanoseconds!\n", tt2.tv_nsec - tt1.tv_nsec);  
   t_nrPolar_params *polarParams=polarList;
   const int tag=messageType * messageLength * nr_polar_aggregation_prime(aggregation_level);
-
+  
+  clock_gettime(CLOCK_REALTIME, &tt1);	
   while (polarParams != NULL) {
-    if (polarParams->idx == tag)
+    if (polarParams->idx == tag){
+		
       return polarParams;
-
+	}
     polarParams = polarParams->nextPtr;
   }
-
+  clock_gettime(CLOCK_REALTIME, &tt2);	
+ // printf("nr_polar_params while consumes %ld nanoseconds!\n", tt2.tv_nsec - tt1.tv_nsec);  
   AssertFatal(false,"Polar Init tables internal failure\n");
   return NULL;
 }

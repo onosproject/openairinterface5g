@@ -18,7 +18,7 @@
  * For more information about the OpenAirInterface (OAI) Software Alliance:
  *      contact@openairinterface.org
  */
-
+#include <time.h>
 #include "PHY/phy_extern.h"
 #include "PHY/defs_gNB.h"
 #include "sched_nr.h"
@@ -99,9 +99,11 @@ void nr_common_signal_procedures (PHY_VARS_gNB *gNB,int frame, int slot) {
   int ssb_start_symbol, rel_slot;
   int txdataF_offset = (slot%2)*fp->samples_per_slot_wCP;
   uint16_t slots_per_hf = fp->slots_per_frame / 2;
-
+  //printf("slots_per_hf = %d\n",slots_per_hf);
   n_hf = cfg->sch_config.half_frame_index.value;
-
+  struct timespec tt1, tt2;
+  int result;
+  //printf("n_hf = %d\n",n_hf);
   // if SSB periodicity is 5ms, they are transmitted in both half frames
   if ( cfg->sch_config.ssb_periodicity.value == 5) {
     if (slot<slots_per_hf)
@@ -112,12 +114,12 @@ void nr_common_signal_procedures (PHY_VARS_gNB *gNB,int frame, int slot) {
 
   // to set a effective slot number between 0 to 9 in the half frame where the SSB is supposed to be
   rel_slot = (n_hf)? (slot-slots_per_hf) : slot; 
-
+  //printf("rel_slot = %d\n",rel_slot);
   LOG_D(PHY,"common_signal_procedures: frame %d, slot %d\n",frame,slot);
 
   if(rel_slot<slots_per_hf && rel_slot>=0)  {
      for (int i=0; i<2; i++)  {  // max two SSB per frame
-     
+      //  printf("@@@@@@@@@@@@@@@@@@@@\n");
 	ssb_index = i + 2*rel_slot; // computing the ssb_index
 	if ((fp->L_ssb >> ssb_index) & 0x01)  { // generating the ssb only if the bit of L_ssb at current ssb index is 1
 	
@@ -125,17 +127,29 @@ void nr_common_signal_procedures (PHY_VARS_gNB *gNB,int frame, int slot) {
 	  ssb_start_symbol = ssb_start_symbol_abs % 14;  // start symbol wrt slot
 
 	  nr_set_ssb_first_subcarrier(cfg, fp);  // setting the first subcarrier
-	  
+	//  printf("nr_set_ssb_first_subcarrier\n");
 	  // it is supposed that each logical antenna port correspont to a different beam so each SSB is stored into its own index of txdataF
     	  LOG_D(PHY,"SS TX: frame %d, slot %d, start_symbol %d\n",frame,slot, ssb_start_symbol);
-    	  nr_generate_pss(gNB->d_pss, &txdataF[ssb_index][txdataF_offset], AMP, ssb_start_symbol, cfg, fp);
+    	//  nr_generate_pss(gNB->d_pss, &txdataF[ssb_index][txdataF_offset], AMP, ssb_start_symbol, cfg, fp);
+		  clock_gettime(CLOCK_REALTIME, &tt1);
     	  nr_generate_sss(gNB->d_sss, &txdataF[ssb_index][txdataF_offset], AMP, ssb_start_symbol, cfg, fp);
-
-	  if (fp->Lmax == 4)
+		  clock_gettime(CLOCK_REALTIME, &tt2);
+	//	  printf("nr_generate_sss() consumes %ld nanoseconds!\n", tt2.tv_nsec - tt1.tv_nsec);
+			clock_gettime(CLOCK_REALTIME, &tt1);
+		  nr_generate_pss(gNB->d_pss, &txdataF[ssb_index][txdataF_offset], AMP, ssb_start_symbol, cfg, fp);	
+		    clock_gettime(CLOCK_REALTIME, &tt2);
+	//		printf("nr_generate_pss() consumes %ld nanoseconds!\n", tt2.tv_nsec - tt1.tv_nsec);
+	  if (fp->Lmax == 4){
 	    nr_generate_pbch_dmrs(gNB->nr_gold_pbch_dmrs[n_hf][ssb_index],&txdataF[ssb_index][txdataF_offset], AMP, ssb_start_symbol, cfg, fp);
-	  else
+	//	printf("nr_generate_pbch_dmrs\n");
+	  }
+	  else{
+		  clock_gettime(CLOCK_REALTIME, &tt1);
 	    nr_generate_pbch_dmrs(gNB->nr_gold_pbch_dmrs[0][ssb_index],&txdataF[ssb_index][txdataF_offset], AMP, ssb_start_symbol, cfg, fp);
-
+	      clock_gettime(CLOCK_REALTIME, &tt2);
+	//	  printf("nr_generate_pbch_dmrs() consumes %ld nanoseconds!\n", tt2.tv_nsec - tt1.tv_nsec);
+	  }
+	      clock_gettime(CLOCK_REALTIME, &tt1);
     	  nr_generate_pbch(&gNB->pbch,
                       pbch_pdu,
                       gNB->nr_pbch_interleaver,
@@ -144,6 +158,9 @@ void nr_common_signal_procedures (PHY_VARS_gNB *gNB,int frame, int slot) {
                       ssb_start_symbol,
                       n_hf,fp->Lmax,ssb_index,
                       frame, cfg, fp);
+		  clock_gettime(CLOCK_REALTIME, &tt2);		
+	//		printf("nr_generate_pbch() consumes %ld nanoseconds!\n", tt2.tv_nsec - tt1.tv_nsec);
+	//	printf("nr_generate_pbch\n");		  
 	}
      }
   }
@@ -159,7 +176,7 @@ void phy_procedures_gNB_TX(PHY_VARS_gNB *gNB,
   int offset = gNB->CC_id;
   uint8_t ssb_frame_periodicity;  // every how many frames SSB are generated
   int txdataF_offset = (slot%2)*fp->samples_per_slot_wCP;
-
+  struct timespec tt1, tt2;
   if (cfg->sch_config.ssb_periodicity.value < 20)
     ssb_frame_periodicity = 1;
   else 
@@ -179,7 +196,11 @@ void phy_procedures_gNB_TX(PHY_VARS_gNB *gNB,
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_ENB_COMMON_TX,1);
   if (nfapi_mode == 0 || nfapi_mode == 1) { 
     if (!(frame%ssb_frame_periodicity))  // generate SSB only for given frames according to SSB periodicity
+	  clock_gettime(CLOCK_REALTIME, &tt1);	
       nr_common_signal_procedures(gNB,frame, slot);
+	  clock_gettime(CLOCK_REALTIME, &tt2);	
+	//   printf("nr_common_signal_procedures consumes %ld nanoseconds!\n", tt2.tv_nsec - tt1.tv_nsec);
+	//  printf("nr_common_signal_procedures\n");
   }
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_ENB_COMMON_TX,0);
 
@@ -191,15 +212,17 @@ void phy_procedures_gNB_TX(PHY_VARS_gNB *gNB,
     Calling nr_generate_dci_top (number of DCI %d)\n", gNB->Mod_id, frame, slot, num_dci);
 
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_ENB_PDCCH_TX,1);
-
+    clock_gettime(CLOCK_REALTIME, &tt1);	
     nr_generate_dci_top(gNB->pdcch_vars.dci_alloc[i],
                         gNB->nr_gold_pdcch_dmrs[slot],
                         &gNB->common_vars.txdataF[0][txdataF_offset],  // hardcoded to beam 0
                         AMP, *fp, *cfg);
-
+	clock_gettime(CLOCK_REALTIME, &tt2);
+//	printf("nr_generate_dci_top consumes %ld nanoseconds!\n", tt2.tv_nsec - tt1.tv_nsec);	
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_ENB_PDCCH_TX,0);
   }
-      
+  
+    clock_gettime(CLOCK_REALTIME, &tt1);  
   for (int i=0; i<num_pdsch_rnti; i++) {
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_GENERATE_DLSCH,1);
     LOG_D(PHY, "PDSCH generation started (%d)\n", num_pdsch_rnti);
@@ -211,9 +234,11 @@ void phy_procedures_gNB_TX(PHY_VARS_gNB *gNB,
 		      &gNB->dlsch_encoding_stats,
 		      &gNB->dlsch_scrambling_stats,
 		      &gNB->dlsch_modulation_stats);
+			  
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_GENERATE_DLSCH,0);
   }
-
+  clock_gettime(CLOCK_REALTIME, &tt2);
+ // printf("nr_generate_pdsch consumes %ld nanoseconds!\n", tt2.tv_nsec - tt1.tv_nsec);	
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_ENB_TX+offset,0);
 }
 
