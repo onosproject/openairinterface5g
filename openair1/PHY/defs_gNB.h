@@ -31,11 +31,11 @@
 */
 
 /*! \file PHY/defs_gNB.h
- * \brief Add defines and structure for dual thread
+ * \brief Add thread_num_pdsch to parameterize dual thread
  * \author Terngyin, NY, GK, KM (OpInConnect_NCTU)
  * \email tyhsu@cs.nctu.edu.tw
- * \date 24-04-2020
- * \version 1.1
+ * \date 01-05-2020
+ * \version 1.2
  * \note
  * \warning
  */
@@ -56,6 +56,7 @@
 #include "common/utils/LOG/vcd_signal_dumper.h" //VCD
 
 #define MAX_NUM_RU_PER_gNB MAX_NUM_RU_PER_eNB
+#define thread_num_pdsch 2  // ==Change thread_num_pdsch here. Don't greater than 2 ==
 
 typedef struct{
   /*params of thread*/
@@ -917,8 +918,8 @@ typedef struct PHY_VARS_gNB_s {
   //**************************DLSCH ENCODING**************************//
   dlsch_encoding_ISIP thread_encode[4];
   ldpc_encoding_ISIP ldpc_encode;
-  multi_ldpc_encoder_gNB multi_encoder[2];
-
+  multi_ldpc_encoder_gNB multi_encoder[thread_num_pdsch];
+  
   volatile uint8_t complete_encode[4];
   
   //**************************DLSCH ENCODING**************************//

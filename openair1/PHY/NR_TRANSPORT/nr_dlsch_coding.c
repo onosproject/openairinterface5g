@@ -31,11 +31,11 @@
 */
 
 /*!\file PHY/NR_TRANSPORT/dlsch_coding.c
- * \brief Add triggers for dual thread
+ * \brief Add triggers for parameterized dual thread
  * \author Terngyin, NY, GK, KM (OpInConnect_NCTU)
  * \email tyhsu@cs.nctu.edu.tw
- * \date 24-04-2020
- * \version 1.1
+ * \date 01-05-2020
+ * \version 1.2
  * \note
  * \warning
  */
@@ -450,7 +450,7 @@ int nr_dlsch_encoding(unsigned char *a, //harq->pdu => dlsch->harq_processes[har
     // printf("   Total     Single           %.2f usec\n", (end_ts.tv_nsec - start_ts.tv_nsec) *1.0 / 1000);
 
     /*get value*/
-    for(int th=0;th<2;th++){
+    for(int th=0;th<thread_num_pdsch;th++){
       gNB->multi_encoder[th].test_input = dlsch->harq_processes[harq_pid]->c;
       gNB->multi_encoder[th].channel_input_optim = dlsch->harq_processes[harq_pid]->d;
       gNB->multi_encoder[th].Zc = *Zc;
@@ -466,7 +466,7 @@ int nr_dlsch_encoding(unsigned char *a, //harq->pdu => dlsch->harq_processes[har
     //   dlsch->harq_processes[i]->c[r] = (uint8_t*)malloc16(8448);
     //   dlsch->harq_processes[i]->d[r] = (uint8_t*)malloc16(68*384); //max size for coded output
     // }    
-    // for(int th=0;th<2;th++){
+    // for(int th=0;th<thread_num_pdsch;th++){
     //   for(int j=0;j<MAX_NUM_NR_DLSCH_SEGMENTS/bw_scaling;j++){  // ==Why can not just be MAX_NUM_NR_DLSCH_SEGMENTS ==???
     //     gNB->multi_encoder[th].c_test[j]=(uint8_t*)malloc16(8448);//(unsigned char *)malloc16(sizeof(unsigned char) * Kr/8);
     //     gNB->multi_encoder[th].d_test[j]=(uint8_t*)malloc16(68*384);//(unsigned char *)malloc16(sizeof(unsigned char) * 68*384);
@@ -489,16 +489,16 @@ int nr_dlsch_encoding(unsigned char *a, //harq->pdu => dlsch->harq_processes[har
     printf(" [Movement]  [No.]  [Round]  [Cost time] \n");
     
     clock_gettime(CLOCK_MONOTONIC, &start_ts);  //timing
-    for(int th=0;th<2;th++){
+    for(int th=0;th<thread_num_pdsch;th++){
       pthread_cond_signal(&(gNB->multi_encoder[th].cond));
     }
-    for(int th = 0;th<2;th++){
+    for(int th = 0;th<thread_num_pdsch;th++){
       while(gNB->multi_encoder[th].complete!=1);  // ==check if multi_ldpc_enc done ==
     }
     clock_gettime(CLOCK_MONOTONIC, &end_ts);  //timing
     //printf("  Movement    No.    Round    Cost time  \n");
     printf("   Total                      %.2f usec\n", (end_ts.tv_nsec - start_ts.tv_nsec) *1.0 / 1000);
-    // for(int th = 0;th<2;th++){
+    // for(int th = 0;th<thread_num_pdsch;th++){
     //   pthread_mutex_destroy(&gNB->multi_encoder[th].mutex);
     //   pthread_join(gNB->multi_encoder[th].pthread, NULL);
     // }

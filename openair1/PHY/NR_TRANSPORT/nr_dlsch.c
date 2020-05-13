@@ -31,11 +31,11 @@
 */
 
 /*!\file PHY/NR_TRANSPORT/dlsch_decoding.c
- * \brief Add triggers for dual thread
+ * \brief Add triggers for parameterized dual thread
  * \author Terngyin, NY, GK, KM (OpInConnect_NCTU)
  * \email tyhsu@cs.nctu.edu.tw
- * \date 24-04-2020
- * \version 1.1
+ * \date 01-05-2020
+ * \version 1.2
  * \note
  * \warning
  */
@@ -220,7 +220,7 @@ uint16_t Nid = (pdcch_params.search_space_type == NFAPI_NR_SEARCH_SPACE_TYPE_UE_
 printf("================[Scr_Mod]================\n");
 printf(" [Movement]  [No.]  [Round]  [Cost time] \n");
 //Get value
-for (int q=0; q<2; q++){
+for (int q=0; q<thread_num_pdsch; q++){
   gNB->multi_encoder[q].f = harq->f;
   gNB->multi_encoder[q].encoded_length = encoded_length;
   gNB->multi_encoder[q].Nid = Nid;
@@ -231,11 +231,11 @@ for (int q=0; q<2; q++){
 }
 //Awake threads
 clock_gettime(CLOCK_MONOTONIC, &start_ts);  //timing
-for (int q=0; q<2; q++){
+for (int q=0; q<thread_num_pdsch; q++){
   pthread_cond_signal(&(gNB->multi_encoder[q].cond_scr_mod));
 }
 //Wait threads
-for (int q=0; q<2; q++){
+for (int q=0; q<thread_num_pdsch; q++){
   while(gNB->multi_encoder[q].complete_scr_mod!=1);
 }
 clock_gettime(CLOCK_MONOTONIC, &end_ts);  //timing
