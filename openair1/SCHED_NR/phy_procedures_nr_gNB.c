@@ -222,7 +222,7 @@ void phy_procedures_gNB_TX(PHY_VARS_gNB *gNB,
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_ENB_PDCCH_TX,0);
   }
   
-    clock_gettime(CLOCK_REALTIME, &tt1);  
+   // clock_gettime(CLOCK_REALTIME, &tt1);  
   for (int i=0; i<num_pdsch_rnti; i++) {
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_GENERATE_DLSCH,1);
     LOG_D(PHY, "PDSCH generation started (%d)\n", num_pdsch_rnti);
@@ -237,7 +237,7 @@ void phy_procedures_gNB_TX(PHY_VARS_gNB *gNB,
 			  
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_GENERATE_DLSCH,0);
   }
-  clock_gettime(CLOCK_REALTIME, &tt2);
+ // clock_gettime(CLOCK_REALTIME, &tt2);
  // printf("nr_generate_pdsch consumes %ld nanoseconds!\n", tt2.tv_nsec - tt1.tv_nsec);	
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_ENB_TX+offset,0);
 }

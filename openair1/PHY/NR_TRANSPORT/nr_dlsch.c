@@ -125,16 +125,18 @@ for (int i=0; i<encoded_length>>3; i++) {
   printf("\t");
 }
 printf("\n");
-#endif
 /*! \file openair1/PHY/NR_TRANSPORT/nr_dlsch.c
- * \brief pipeline scrambling and modulaiton
+ * \brief parallel_architecture of 5G NR V2
  * \author Terng-Yin Hsu, WEI-YING,LIN (OpInConnect_NCTU)
  * \email tyhsu@cs.nctu.edu.tw
- * \date 07-05-2020
+ * \date 13-05-2020
  * \version 1.3
  * \note
  * \warning
-*/
+ */
+
+#endif
+	long sum  = 0;
 #ifdef thread_for_scrambling_modulation
 //	for(int j = 0;j<100;j++){
 		gNB->complete_scrambling_and_modulation = 0;
