@@ -29,6 +29,17 @@
 * \note
 * \warning
 */
+
+/*!\file PHY/NR_TRANSPORT/dlsch_decoding.c
+ * \brief Add triggers for dual thread
+ * \author Terngyin, NY, GK, KM (OpInConnect_NCTU)
+ * \email tyhsu@cs.nctu.edu.tw
+ * \date 24-04-2020
+ * \version 1.1
+ * \note
+ * \warning
+ */
+
 //pipeline scrambling and modulation from Ian
 #include "PHY/phy_extern.h"
 #include "PHY/defs_gNB.h"
@@ -43,10 +54,10 @@
 
 void nr_pdsch_codeword_scrambling(uint8_t *in,
                                   uint32_t size,
-                                  uint8_t q,
+                                  uint8_t q,  //use q
                                   uint32_t Nid,
                                   uint32_t n_RNTI,
-                                  uint32_t* out) {
+                                  uint32_t* out) {  //use q => scrambled_output[q]
 
   uint8_t reset, b_idx;
   uint32_t x1, x2, s=0;
@@ -89,7 +100,7 @@ uint8_t nr_generate_pdsch(NR_gNB_DLSCH_t *dlsch,
   NR_DL_gNB_HARQ_t *harq = dlsch->harq_processes[dci_alloc->harq_pid];
   nfapi_nr_dl_config_dlsch_pdu_rel15_t *rel15 = &harq->dlsch_pdu.dlsch_pdu_rel15;
   nfapi_nr_dl_config_pdcch_parameters_rel15_t pdcch_params = dci_alloc->pdcch_params;
-  uint32_t scrambled_output[NR_MAX_NB_CODEWORDS][NR_MAX_PDSCH_ENCODED_LENGTH>>5];
+  uint32_t scrambled_output[NR_MAX_NB_CODEWORDS][NR_MAX_PDSCH_ENCODED_LENGTH>>5]; //NR_MAX_NB_CODEWORDS 2
   int16_t **mod_symbs = (int16_t**)dlsch->mod_symbs;
   int16_t **tx_layers = (int16_t**)dlsch->txdataF;
   int8_t Wf[2], Wt[2], l0, l_prime[2], delta;
@@ -108,9 +119,10 @@ uint8_t nr_generate_pdsch(NR_gNB_DLSCH_t *dlsch,
   /// CRC, coding, interleaving and rate matching
   AssertFatal(harq->pdu!=NULL,"harq->pdu is null\n");
   start_meas(dlsch_encoding_stats);
-  nr_dlsch_encoding(harq->pdu, frame, slot, dlsch, frame_parms);
+  nr_dlsch_encoding(harq->pdu, frame, slot, dlsch, frame_parms);  //the way to encoder
   stop_meas(dlsch_encoding_stats);
-#ifdef DEBUG_DLSCH
+  //printf("rel15->nb_codewords : %d\n", rel15->nb_codewords);
+#ifdef DEBUG_DLSCH  // ==Show original payload & encoded payload ==***
 printf("PDSCH encoding:\nPayload:\n");
 uint32_t encoded_length = nb_symbols*Qm;
 for (int i=0; i<harq->B>>7; i++) {
@@ -127,7 +139,8 @@ for (int i=0; i<encoded_length>>3; i++) {
 printf("\n");
 #endif
 	long sum  = 0;
-#ifdef thread_for_scrambling_modulation
+#if 0
+//#ifdef thread_for_scrambling_modulation //the way to scrambling & modulation
 //	for(int j = 0;j<100;j++){
 		gNB->complete_scrambling_and_modulation = 0;
 		gNB->complete_modulation = 0;
@@ -150,7 +163,7 @@ printf("\n");
 //	}
 //	printf("averge time = %ld\n",sum/100);
 	
-#else
+#elseif 0//original
   /// scrambling
   start_meas(dlsch_scrambling_stats);
   //printf("nb_codewords = %d encoded_length = %d\n",rel15->nb_codewords,encoded_length);
@@ -195,8 +208,41 @@ for (int i=0; i<nb_symbols>>3; i++) {
   printf("\n");
 }
 #endif
-
 #endif
+
+//[START]multi_genetate_pdsch_proc
+struct timespec start_ts, end_ts;
+
+for (int q=0; q<rel15->nb_codewords; q++) // ==Look out!NR_MAX_NB_CODEWORDS is 2!So we can't let q>2 until spec change
+  memset((void*)scrambled_output[q], 0, (encoded_length>>5)*sizeof(uint32_t));
+uint16_t n_RNTI = (pdcch_params.search_space_type == NFAPI_NR_SEARCH_SPACE_TYPE_UE_SPECIFIC) ? ((pdcch_params.scrambling_id==0)?pdcch_params.rnti:0) : 0;
+uint16_t Nid = (pdcch_params.search_space_type == NFAPI_NR_SEARCH_SPACE_TYPE_UE_SPECIFIC) ? pdcch_params.scrambling_id : config->sch_config.physical_cell_id.value;
+printf("================[Scr_Mod]================\n");
+printf(" [Movement]  [No.]  [Round]  [Cost time] \n");
+//Get value
+for (int q=0; q<2; q++){
+  gNB->multi_encoder[q].f = harq->f;
+  gNB->multi_encoder[q].encoded_length = encoded_length;
+  gNB->multi_encoder[q].Nid = Nid;
+  gNB->multi_encoder[q].n_RNTI = n_RNTI;
+  gNB->multi_encoder[q].scrambled_output = scrambled_output[q]; // ==Need to change ==***
+  gNB->multi_encoder[q].Qm = Qm;
+  gNB->multi_encoder[q].mod_symbs = mod_symbs[q]; // ==Need to change ==***
+}
+//Awake threads
+clock_gettime(CLOCK_MONOTONIC, &start_ts);  //timing
+for (int q=0; q<2; q++){
+  pthread_cond_signal(&(gNB->multi_encoder[q].cond_scr_mod));
+}
+//Wait threads
+for (int q=0; q<2; q++){
+  while(gNB->multi_encoder[q].complete_scr_mod!=1);
+}
+clock_gettime(CLOCK_MONOTONIC, &end_ts);  //timing
+//printf("  Movement    No.    Round    Cost time  \n");
+printf("   Total                      %.2f usec\n", (end_ts.tv_nsec - start_ts.tv_nsec) *1.0 / 1000);
+//[END]multi_genetate_pdsch_proc
+
   /// Layer mapping
   nr_layer_mapping(mod_symbs,
                          rel15->nb_layers,

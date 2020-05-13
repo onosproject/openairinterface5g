@@ -103,17 +103,6 @@ uint16_t NB_UE_INST = 1;
 
 short lift_size[51]= {2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,18,20,22,24,26,28,30,32,36,40,44,48,52,56,60,64,72,80,88,96,104,112,120,128,144,160,176,192,208,224,240,256,288,320,352,384};
 
-/*! \file openair1/PHY/CODING/TESTBENCH/ldpctest.c
- * \brief NCTU OpInConnect
- * \author Terngyin Hsu, Sendren Xu, Nungyi Kuo, Kuankai Hsiung, Kaimi Yang (OpInConnect_NCTU)
- * \email tyhsu@cs.nctu.edu.tw
- * \date 13-05-2020
- * \version 2.0
- * \note
- * \warning
- */
-
-
 // ==[START]multi_lpdc_encoder
 struct timespec start_ts, end_ts, start_per_ts, end_per_ts, start_enc_ts[thread_num_max], end_enc_ts[thread_num_max], start_perenc_ts[thread_num_max], end_perenc_ts[thread_num_max];
 multi_ldpc_encoder ldpc_enc[thread_num_max];

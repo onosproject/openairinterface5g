@@ -30,6 +30,16 @@
  \warning
 */
 
+/*! \file PHY/defs_gNB.h
+ * \brief Add defines and structure for dual thread
+ * \author Terngyin, NY, GK, KM (OpInConnect_NCTU)
+ * \email tyhsu@cs.nctu.edu.tw
+ * \date 24-04-2020
+ * \version 1.1
+ * \note
+ * \warning
+ */
+
 #ifndef __PHY_DEFS_GNB__H__
 #define __PHY_DEFS_GNB__H__
 
@@ -43,7 +53,40 @@
 #include "PHY/CODING/nrLDPC_decoder/nrLDPC_decoder.h"
 #include "PHY/CODING/nrLDPC_decoder/nrLDPC_types.h"
 
+#include "common/utils/LOG/vcd_signal_dumper.h" //VCD
+
 #define MAX_NUM_RU_PER_gNB MAX_NUM_RU_PER_eNB
+
+typedef struct{
+  /*params of thread*/
+  int id;
+  volatile int flag_wait;
+  pthread_t pthread;
+  pthread_cond_t cond;
+  pthread_cond_t cond_scr_mod;
+  pthread_mutex_t mutex;
+  pthread_mutex_t mutex_scr_mod;
+  pthread_attr_t attr;
+  volatile uint8_t complete;
+  volatile uint8_t complete_scr_mod;
+  /*encoder*/
+  unsigned char **test_input;
+  unsigned char **channel_input_optim;
+  int Zc;
+  int Kb;
+  short block_length;
+  short BG;
+  int n_segments;
+  //unsigned int macro_num; //Not necessary to do
+  /*scrambling & modulation*/
+  uint8_t *f;
+  uint32_t *scrambled_output;
+  int16_t *mod_symbs;
+  uint32_t encoded_length;
+  uint16_t Nid;
+  uint16_t n_RNTI;
+  uint8_t Qm;
+}multi_ldpc_encoder_gNB;
 
 typedef struct {
   uint32_t pbch_a;
@@ -874,7 +917,8 @@ typedef struct PHY_VARS_gNB_s {
   //**************************DLSCH ENCODING**************************//
   dlsch_encoding_ISIP thread_encode[4];
   ldpc_encoding_ISIP ldpc_encode;
-  
+  multi_ldpc_encoder_gNB multi_encoder[2];
+
   volatile uint8_t complete_encode[4];
   
   //**************************DLSCH ENCODING**************************//

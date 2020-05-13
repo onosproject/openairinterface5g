@@ -30,6 +30,16 @@
 * \warning
 */
 
+/*!\file PHY/NR_TRANSPORT/dlsch_coding.c
+ * \brief Add triggers for dual thread
+ * \author Terngyin, NY, GK, KM (OpInConnect_NCTU)
+ * \email tyhsu@cs.nctu.edu.tw
+ * \date 24-04-2020
+ * \version 1.1
+ * \note
+ * \warning
+ */
+
 #include "PHY/defs_gNB.h"
 #include "PHY/phy_extern.h"
 #include "PHY/CODING/coding_extern.h"
@@ -44,6 +54,9 @@
 #include "common/utils/LOG/vcd_signal_dumper.h"
 #include "common/utils/LOG/log.h"
 #include <syscall.h>
+#include <time.h>
+
+//multi_ldpc_encoder ldpc_enc[thread_num_max];  //things in ldpc_encoder
 
 //#define DEBUG_DLSCH_CODING
 //#define DEBUG_DLSCH_FREE 1
@@ -273,22 +286,30 @@ void clean_gNB_dlsch(NR_gNB_DLSCH_t *dlsch)
   }
 }
 
-int nr_dlsch_encoding(unsigned char *a,
+int nr_dlsch_encoding(unsigned char *a, //harq->pdu => dlsch->harq_processes[harq_pid]->b
                       int frame,
                       uint8_t slot,
                       NR_gNB_DLSCH_t *dlsch,
                       NR_DL_FRAME_PARMS* frame_parms)
 {
+  /*
   PHY_VARS_gNB *gNB = RC.gNB[0][0];	
   gNB->complete_encode[0] = 0;
 	gNB->complete_encode[1] = 0;
 	gNB->complete_encode[2] = 0;
 	gNB->complete_encode[3] = 0;
+  clock_gettime(CLOCK_MONOTONIC, &start_ts);//timing
 	for (int t = 0; t < 4; t++){
 		pthread_cond_signal(&gNB->thread_encode[t].cond_encode);
 	}
 	while((gNB->complete_encode[0] != 1) || (gNB->complete_encode[1] != 1) || (gNB->complete_encode[2] != 1) || (gNB->complete_encode[3] != 1));
-  /*
+  clock_gettime(CLOCK_MONOTONIC, &end_ts);//timing
+  printf("%.2f usec\n", (end_ts.tv_nsec - start_ts.tv_nsec) *1.0 / 1000);
+  */
+  
+  PHY_VARS_gNB *gNB = RC.gNB[0][0]; // ==check it! ==***
+  
+  struct timespec start_ts, end_ts;
   unsigned int G;
   unsigned int crc=1;
   uint8_t harq_pid = dlsch->harq_ids[frame&2][slot];
@@ -311,14 +332,14 @@ int nr_dlsch_encoding(unsigned char *a,
   uint16_t length_dmrs = 1;
   float Coderate = 0.0;
   uint8_t Nl = 4;
-  */
+  
   /*
   uint8_t *channel_input[MAX_NUM_DLSCH_SEGMENTS]; //unsigned char
   for(j=0;j<MAX_NUM_DLSCH_SEGMENTS;j++) {
     channel_input[j] = (unsigned char *)malloc16(sizeof(unsigned char) * 68*384);
   }
   */
-  /*
+  
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_ENB_DLSCH_ENCODING, VCD_FUNCTION_IN);
 
   A = rel15.transport_block_size;
@@ -332,7 +353,7 @@ int nr_dlsch_encoding(unsigned char *a,
 #ifdef DEBUG_DLSCH_CODING
   printf("encoding thinks this is a new packet \n");
 #endif
-*/
+
     /*
     int i;
     printf("dlsch (tx): \n");
@@ -340,7 +361,7 @@ int nr_dlsch_encoding(unsigned char *a,
       printf("%02x.",a[i]);
     printf("\n");
     */
-/*
+
     if (A > 3824) {
       // Add 24-bit crc (polynomial A) to payload
       crc = crc24a(a,A)>>8;
@@ -418,9 +439,70 @@ int nr_dlsch_encoding(unsigned char *a,
       //ldpc_encoder_optim((unsigned char*)dlsch->harq_processes[harq_pid]->c[r],(unsigned char*)&dlsch->harq_processes[harq_pid]->d[r][0],*Zc,Kb,Kr,BG,NULL,NULL,NULL,NULL);
     }
 
-    for(int j=0;j<(dlsch->harq_processes[harq_pid]->C/8+1);j++) {
-      ldpc_encoder_optim_8seg_multi(dlsch->harq_processes[harq_pid]->c,dlsch->harq_processes[harq_pid]->d,*Zc,Kb,Kr,BG,dlsch->harq_processes[harq_pid]->C,j,NULL,NULL,NULL,NULL);
+    //[START]Get value & Awake threads & Wait threads finish
+    // clock_gettime(CLOCK_MONOTONIC, &start_ts);  //timing
+    // for(int i=0;i<2;i++)
+    // for(int j=0;j<(dlsch->harq_processes[harq_pid]->C/8+1);j++) {
+    //   ldpc_encoder_optim_8seg_multi(dlsch->harq_processes[harq_pid]->c,dlsch->harq_processes[harq_pid]->d,*Zc,Kb,Kr,BG,dlsch->harq_processes[harq_pid]->C,j,NULL,NULL,NULL,NULL);
+    // }
+    // clock_gettime(CLOCK_MONOTONIC, &end_ts);  //timing
+    // //printf("  Movement    No.    Round    Cost time  \n");
+    // printf("   Total     Single           %.2f usec\n", (end_ts.tv_nsec - start_ts.tv_nsec) *1.0 / 1000);
+
+    /*get value*/
+    for(int th=0;th<2;th++){
+      gNB->multi_encoder[th].test_input = dlsch->harq_processes[harq_pid]->c;
+      gNB->multi_encoder[th].channel_input_optim = dlsch->harq_processes[harq_pid]->d;
+      gNB->multi_encoder[th].Zc = *Zc;
+      gNB->multi_encoder[th].Kb = Kb;
+      gNB->multi_encoder[th].block_length = Kr;
+      gNB->multi_encoder[th].BG = BG;
+      gNB->multi_encoder[th].n_segments = dlsch->harq_processes[harq_pid]->C;
     }
+
+    /*cpy c to c_test*/
+    // unsigned char bw_scaling =2; // ==Need to change ==***
+    // for(int r=0;r<MAX_NUM_NR_DLSCH_SEGMENTS/bw_scaling;r++){
+    //   dlsch->harq_processes[i]->c[r] = (uint8_t*)malloc16(8448);
+    //   dlsch->harq_processes[i]->d[r] = (uint8_t*)malloc16(68*384); //max size for coded output
+    // }    
+    // for(int th=0;th<2;th++){
+    //   for(int j=0;j<MAX_NUM_NR_DLSCH_SEGMENTS/bw_scaling;j++){  // ==Why can not just be MAX_NUM_NR_DLSCH_SEGMENTS ==???
+    //     gNB->multi_encoder[th].c_test[j]=(uint8_t*)malloc16(8448);//(unsigned char *)malloc16(sizeof(unsigned char) * Kr/8);
+    //     gNB->multi_encoder[th].d_test[j]=(uint8_t*)malloc16(68*384);//(unsigned char *)malloc16(sizeof(unsigned char) * 68*384);
+    //     memcpy(gNB->multi_encoder[th].c_test[j], dlsch->harq_processes[harq_pid]->c[j], 8448);  // ==Check 8448 ==***
+    //   }
+    // }
+    /*Show c_test*/    
+    // printf("c_test :\n");
+    // for (int i=0; i<3; i++){
+    //   printf("%d", dlsch->harq_processes[harq_pid]->c[0][i]);
+    //   printf("/%d\n", gNB->multi_encoder[0].c_test[0][i]);
+    // }
+    // printf("c_test ptr :\n");
+    // for (int i=0; i<3; i++){
+    //   printf("%p", &dlsch->harq_processes[harq_pid]->c[0][i]);
+    //   printf("/%p\n", &gNB->multi_encoder[0].c_test[0][i]);
+    // }
+
+    printf("================[Encoder]================\n");
+    printf(" [Movement]  [No.]  [Round]  [Cost time] \n");
+    
+    clock_gettime(CLOCK_MONOTONIC, &start_ts);  //timing
+    for(int th=0;th<2;th++){
+      pthread_cond_signal(&(gNB->multi_encoder[th].cond));
+    }
+    for(int th = 0;th<2;th++){
+      while(gNB->multi_encoder[th].complete!=1);  // ==check if multi_ldpc_enc done ==
+    }
+    clock_gettime(CLOCK_MONOTONIC, &end_ts);  //timing
+    //printf("  Movement    No.    Round    Cost time  \n");
+    printf("   Total                      %.2f usec\n", (end_ts.tv_nsec - start_ts.tv_nsec) *1.0 / 1000);
+    // for(int th = 0;th<2;th++){
+    //   pthread_mutex_destroy(&gNB->multi_encoder[th].mutex);
+    //   pthread_join(gNB->multi_encoder[th].pthread, NULL);
+    // }
+    //[END]Get value & Awake threads & Wait threads finish
 
 
 #ifdef DEBUG_DLSCH_CODING
@@ -493,6 +575,6 @@ int nr_dlsch_encoding(unsigned char *a,
   }
 
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_ENB_DLSCH_ENCODING, VCD_FUNCTION_OUT);
-  */
+
   return 0;
 }

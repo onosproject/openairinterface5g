@@ -18,6 +18,8 @@
  * For more information about the OpenAirInterface (OAI) Software Alliance:
  *      contact@openairinterface.org
  */
+
+
 #define _GNU_SOURCE
 #include <sched.h>
 #include <time.h>
@@ -60,6 +62,10 @@
 #include "openair1/SIMULATION/NR_PHY/nr_unitary_defs.h"
 #include "openair1/SIMULATION/NR_PHY/nr_dummy_functions.c"
 #define CPU_AFF
+
+#include "PHY/CODING/nrLDPC_encoder/defs.h"
+struct timespec start_enc_ts[4], end_enc_ts[4];	//timespec
+
 PHY_VARS_gNB *gNB;
 PHY_VARS_NR_UE *UE;
 RAN_CONTEXT_t RC;
@@ -151,7 +157,7 @@ static void *dlsch_encoding_proc(void *ptr){
 	
 	while(!oai_exit){
 		while(pthread_cond_wait(&gNB->thread_encode[num].cond_encode, &gNB->thread_encode[num].mutex_encode) != 0);
-		
+	clock_gettime(CLOCK_MONOTONIC, &start_enc_ts[num]);//timing
 	//	TICK(TIME_DLSCH_ENCODING_THREAD);
 		
 		test->flag_wait = 0;
@@ -275,12 +281,106 @@ static void *dlsch_encoding_proc(void *ptr){
 		}
 		gNB->complete_encode[num] = 1;
 	//	TOCK(TIME_DLSCH_ENCODING_THREAD);
+	clock_gettime(CLOCK_MONOTONIC, &end_enc_ts[num]);//timing
+	printf("%d : %.2f usec\n", num, (end_enc_ts[num].tv_nsec - start_enc_ts[num].tv_nsec) *1.0 / 1000);
 	}
 	encode_status = 0;
 	return &encode_status;
 }
-  
 
+/*! \file openair1/SIMULATION/NR_PHY/dlsim.c
+ * \brief dual thread for pdsch
+ * \author Terngyin Hsu, Sendren Xu, Nungyi Kuo, Kuankai Hsiung, Kaimi Yang (OpInConnect_NCTU)
+ * \email tyhsu@cs.nctu.edu.tw
+ * \date 13-05-2020
+ * \version 2.1
+ * \note
+ * \warning
+ */
+  
+//[START]multi_genetate_pdsch_proc
+struct timespec start_encoder_ts[2], end_encoder_ts[2], start_perenc_ts[2], end_perenc_ts[2];
+// int ifRand = 0;
+int vcd = 0;
+static void *multi_genetate_pdsch_proc(void *ptr){
+  //ldpc_encoder_optim_8seg_multi(dlsch->harq_processes[harq_pid]->c,dlsch->harq_processes[harq_pid]->d,*Zc,Kb,Kr,BG,dlsch->harq_processes[harq_pid]->C,j,NULL,NULL,NULL,NULL);
+  //ldpc_encoder_optim_8seg_multi(unsigned char **test_input,unsigned char **channel_input,int Zc,int Kb,short block_length, short BG, int n_segments,unsigned int macro_num, time_stats_t *tinput,time_stats_t *tprep,time_stats_t *tparity,time_stats_t *toutput)
+  multi_ldpc_encoder_gNB *test =(multi_ldpc_encoder_gNB*) ptr;
+  printf("[READY] : %d\n", test->id);
+  while(!oai_exit){
+  	while(pthread_cond_wait(&(gNB->multi_encoder[test->id].cond),&(gNB->multi_encoder[test->id].mutex))!=0);
+  	  if(oai_exit){	//If oai_exit, KILL this thread!
+  	  	pthread_mutex_destroy(&gNB->multi_encoder[test->id].mutex);
+  	  	pthread_mutex_destroy(&gNB->multi_encoder[test->id].mutex_scr_mod);
+      	pthread_join(gNB->multi_encoder[test->id].pthread, NULL);
+      	return 0;
+  	  }
+	  //Print params of multi_ldpc_enc
+	  // printf("[b]ldpc_encoder_optim_8seg: BG %d, Zc %d, Kb %d, block_length %d, segments %d\n",
+	  //       ldpc_enc[test->id].BG,
+	  //       ldpc_enc[test->id].Zc,
+	  //       ldpc_enc[test->id].Kb,
+	  //       ldpc_enc[test->id].block_length,
+	  //       ldpc_enc[test->id].n_segments);
+
+	  int j_start, j_end;
+	  j_start = 0;
+	  j_end = (gNB->multi_encoder[test->id].n_segments/8+1);
+	  int offset = test->id>7?7:test->id;
+	  //printf("[OFFSET] : %d %d\n", offset, test->id);
+	  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_MULTI_ENC_0 + offset,1);
+	  clock_gettime(CLOCK_MONOTONIC, &start_encoder_ts[test->id]);  //timing
+	  for(int j=j_start;j<j_end;j++){
+	    //printf("  Movement    No.    Round    Cost time  \n");
+	    printf("   Active      %d       %d\n", test->id, j);
+	    clock_gettime(CLOCK_MONOTONIC, &start_perenc_ts[test->id]);  //timing
+	    ldpc_encoder_optim_8seg_multi(gNB->multi_encoder[test->id].test_input,//gNB->multi_encoder[0].c_test,
+	                                  gNB->multi_encoder[test->id].channel_input_optim,//gNB->multi_encoder[0].d_test,
+	                                  gNB->multi_encoder[test->id].Zc,
+	                                  gNB->multi_encoder[test->id].Kb,
+	                                  gNB->multi_encoder[test->id].block_length,
+	                                  gNB->multi_encoder[test->id].BG,
+	                                  gNB->multi_encoder[test->id].n_segments,
+	                                  j,
+	                                  NULL, NULL, NULL, NULL);
+	    clock_gettime(CLOCK_MONOTONIC, &end_perenc_ts[test->id]);  //timing
+	    //printf("  Movement    No.    Round    Cost time  \n");
+	    printf("    Done       %d       %d      %.2f usec\n", test->id, j, (end_perenc_ts[test->id].tv_nsec - start_perenc_ts[test->id].tv_nsec) *1.0 / 1000);
+	  }
+	  clock_gettime(CLOCK_MONOTONIC, &end_encoder_ts[test->id]);  //timing
+	  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_MULTI_ENC_0 + offset,0);
+	  printf("  All done     %d              %.2f usec\n", test->id, (end_encoder_ts[test->id].tv_nsec - start_encoder_ts[test->id].tv_nsec) *1.0 / 1000);
+	  gNB->multi_encoder[test->id].complete = 1;
+	  //==================================================
+	while(pthread_cond_wait(&(gNB->multi_encoder[test->id].cond_scr_mod),&(gNB->multi_encoder[test->id].mutex_scr_mod))!=0);
+	VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_MULTI_ENC_0 + offset,1);
+	clock_gettime(CLOCK_MONOTONIC, &start_encoder_ts[test->id]);  //timing
+	for (int q=0; q<1; q++){	//Need to change by codewords
+	  printf("   Active      %d       %d\n", test->id, q);
+	  clock_gettime(CLOCK_MONOTONIC, &start_perenc_ts[test->id]);  //timing
+	  nr_pdsch_codeword_scrambling(gNB->multi_encoder[test->id].f,
+	                               gNB->multi_encoder[test->id].encoded_length,
+	                               q,
+	                               gNB->multi_encoder[test->id].Nid,
+	                               gNB->multi_encoder[test->id].n_RNTI,
+	                               gNB->multi_encoder[test->id].scrambled_output);	  
+	  nr_modulation(gNB->multi_encoder[test->id].scrambled_output,
+	                gNB->multi_encoder[test->id].encoded_length,
+	                gNB->multi_encoder[test->id].Qm,
+	                gNB->multi_encoder[test->id].mod_symbs);
+	  clock_gettime(CLOCK_MONOTONIC, &end_perenc_ts[test->id]);  //timing
+	  //printf("  Movement    No.    Round    Cost time  \n");
+	  printf("    Done       %d       %d      %.2f usec\n", test->id, q, (end_perenc_ts[test->id].tv_nsec - start_perenc_ts[test->id].tv_nsec) *1.0 / 1000);
+	}
+	clock_gettime(CLOCK_MONOTONIC, &end_encoder_ts[test->id]);  //timing
+	VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_MULTI_ENC_0 + offset,0);
+	printf("  All done     %d              %.2f usec\n", test->id, (end_encoder_ts[test->id].tv_nsec - start_encoder_ts[test->id].tv_nsec) *1.0 / 1000);
+	gNB->multi_encoder[test->id].complete_scr_mod = 1;
+  }
+  return 0;
+}
+
+//[END]multi_genetate_pdsch_proc
 
 static void *scrambling_proc(void *ptr){
 	
@@ -594,7 +694,7 @@ int main(int argc, char **argv)
 
   randominit(0);
 
-  while ((c = getopt (argc, argv, "f:hA:pf:g:i:j:n:s:S:t:x:y:z:M:N:F:GR:dP:IL:o:a:b:c:j:e:")) != -1) {
+  while ((c = getopt (argc, argv, "f:hA:pf:g:i:j:n:s:S:t:x:y:z:M:N:F:GR:dP:IL:o:a:b:c:j:e:V:")) != -1) {
     switch (c) {
     /*case 'f':
       write_output_file=1;
@@ -783,6 +883,12 @@ int main(int argc, char **argv)
       dlsch_config.mcs_idx = atoi(optarg);
       break;
 
+    case 'V':
+      vcd = atoi(optarg);
+      if(vcd)
+      	T_init(2021, 1, 0);	//VCD init
+      break;
+
     default:
     case 'h':
       printf("%s -h(elp) -p(extended_prefix) -N cell_id -f output_filename -F input_filename -g channel_model -n n_frames -t Delayspread -s snr0 -S snr1 -x transmission_mode -y TXant -z RXant -i Intefrence0 -j Interference1 -A interpolation_file -C(alibration offset dB) -N CellId\n",
@@ -817,7 +923,7 @@ int main(int argc, char **argv)
       exit (-1);
       break;
     }
-  }
+  }  
 
   logInit();
   set_glog(loglvl);
@@ -935,28 +1041,44 @@ int main(int argc, char **argv)
     exit(-1);
   }
   
-  for (int t = 0; t < 4; t++){
-	gNB->thread_encode[t].id = t;
-	gNB->thread_encode[t].flag_wait = 1;
-	pthread_mutex_init( &(gNB->thread_encode[t].mutex_encode), NULL);
-	pthread_cond_init( &(gNB->thread_encode[t].cond_encode), NULL);
-	pthread_create(&(gNB->thread_encode[t].pthread_encode),&gNB->thread_encode[t].attr_encode,dlsch_encoding_proc,&gNB->thread_encode[t]);
-	printf("[CREATE] DLSCH ENCODER Thread %d\n", gNB->thread_encode[t].id);
+ //  for (int t = 0; t < 4; t++){	//create threads
+	// gNB->thread_encode[t].id = t;
+	// gNB->thread_encode[t].flag_wait = 1;
+	// pthread_mutex_init( &(gNB->thread_encode[t].mutex_encode), NULL);
+	// pthread_cond_init( &(gNB->thread_encode[t].cond_encode), NULL);
+	// pthread_create(&(gNB->thread_encode[t].pthread_encode),&gNB->thread_encode[t].attr_encode,dlsch_encoding_proc,&gNB->thread_encode[t]);
+	// printf("[CREATE] DLSCH ENCODER Thread %d\n", gNB->thread_encode[t].id);
+ //  }
+
+  //[START]multi_genetate_pdsch_proc:create thread
+  for(int th=0;th<2;th++){
+    pthread_attr_init(&(gNB->multi_encoder[th].attr));
+    pthread_mutex_init(&(gNB->multi_encoder[th].mutex), NULL);
+    pthread_mutex_init(&(gNB->multi_encoder[th].mutex_scr_mod), NULL);
+    pthread_cond_init(&(gNB->multi_encoder[th].cond), NULL);
+    pthread_cond_init(&(gNB->multi_encoder[th].cond_scr_mod), NULL);
+    gNB->multi_encoder[th].id = th;
+    gNB->multi_encoder[th].flag_wait = 1;
+    gNB->multi_encoder[th].complete = 0;
+    gNB->multi_encoder[th].complete_scr_mod = 0;
+    pthread_create(&(gNB->multi_encoder[th].pthread), &(gNB->multi_encoder[th].attr), multi_genetate_pdsch_proc, &(gNB->multi_encoder[th]));    
+    printf("[CREATE] LDPC encoder thread %d \n",gNB->multi_encoder[th].id);
   }
-  
-  for(int aa = 0;aa<1;aa++){
-	pthread_attr_init( &gNB->thread_scrambling[aa].attr_scrambling);
-	pthread_mutex_init(&(gNB->thread_scrambling[aa].mutex_tx), NULL);
-	pthread_cond_init(&(gNB->thread_scrambling[aa].cond_tx), NULL);
-	gNB->thread_scrambling[aa].q_id = aa;
-	pthread_create(&(gNB->thread_scrambling[aa].pthread_scrambling),&gNB->thread_scrambling[aa].attr_scrambling,scrambling_proc,&gNB->thread_scrambling[aa]);
-	printf("[CREATE] scrambling_channel thread[%d] \n",aa);
-  }
+  //[END]multi_genetate_pdsch_proc:create thread
+
+ //  for(int aa = 0;aa<1;aa++){
+	// pthread_attr_init( &gNB->thread_scrambling[aa].attr_scrambling);
+	// pthread_mutex_init(&(gNB->thread_scrambling[aa].mutex_tx), NULL);
+	// pthread_cond_init(&(gNB->thread_scrambling[aa].cond_tx), NULL);
+	// gNB->thread_scrambling[aa].q_id = aa;
+	// pthread_create(&(gNB->thread_scrambling[aa].pthread_scrambling),&gNB->thread_scrambling[aa].attr_scrambling,scrambling_proc,&gNB->thread_scrambling[aa]);
+	// printf("[CREATE] scrambling_channel thread[%d] \n",aa);
+ //  }
 	
-  pthread_mutex_init( &(gNB->thread_modulation.mutex_tx), NULL);
-  pthread_cond_init( &(gNB->thread_modulation.cond_tx), NULL);
-  pthread_create(&(gNB->thread_modulation.pthread_modulation),&gNB->thread_modulation.attr_modulation,modulation_proc,&gNB->thread_modulation);
-  printf("[CREATE] modulation_channel thread \n");
+  // pthread_mutex_init( &(gNB->thread_modulation.mutex_tx), NULL);
+  // pthread_cond_init( &(gNB->thread_modulation.cond_tx), NULL);
+  // pthread_create(&(gNB->thread_modulation.pthread_modulation),&gNB->thread_modulation.attr_modulation,modulation_proc,&gNB->thread_modulation);
+  // printf("[CREATE] modulation_channel thread \n");
   init_nr_ue_transport(UE,0);
   usleep(1000000);
   nr_gold_pbch(UE);
@@ -1010,7 +1132,7 @@ int main(int argc, char **argv)
     Sched_INFO.TX_req    = &gNB_mac->TX_req[0];
     nr_schedule_response(&Sched_INFO);
 
-    phy_procedures_gNB_TX(gNB,frame,slot,0);
+    phy_procedures_gNB_TX(gNB,frame,slot,0);	// ==the way to downlink ==
     
     //nr_common_signal_procedures (gNB,frame,subframe);
     int txdataF_offset = (slot%2) * frame_parms->samples_per_slot_wCP;
@@ -1303,6 +1425,14 @@ int main(int argc, char **argv)
     }
 
   } // NSR
+
+//[START]Send Kill massage
+  oai_exit = 1;	// ==We should do for threading ==***
+  printf("Kill them all!\n");
+  for(int th=0; th<2; th++){
+  	  pthread_cond_signal(&(gNB->multi_encoder[th].cond));
+	}
+//[END]Send Kill massage
 
   for (i = 0; i < 2; i++) {
     free(s_re[i]);
