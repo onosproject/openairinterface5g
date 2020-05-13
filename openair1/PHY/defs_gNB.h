@@ -133,6 +133,8 @@ typedef struct {
   int32_t *txdataF[NR_MAX_NB_LAYERS];
   /// Modulated symbols buffer
   int32_t *mod_symbs[NR_MAX_NB_CODEWORDS];
+  /// Modulated symbols buffer for test
+  int32_t *mod_symbs_test[NR_MAX_NB_CODEWORDS];
   /// beamforming weights for UE-spec transmission (antenna ports 5 or 7..14), for each codeword, maximum 4 layers?
   int32_t **ue_spec_bf_weights[NR_MAX_NB_LAYERS];
   /// dl channel estimates (estimated from ul channel estimates)
@@ -298,8 +300,21 @@ typedef struct{
 	//=====//
 	relaying_type_t r_type;
 	pthread_attr_t attr_scrambling;
+	int q_id;
 }scrambling_channel;
 
+typedef struct{
+	pthread_t pthread_encode;
+	pthread_cond_t cond_encode;
+	pthread_mutex_t mutex_encode;
+	pthread_attr_t attr_encode;
+	volatile int flag_wait;
+	int id;
+}dlsch_encoding_ISIP;
+
+typedef struct{
+	int seg;
+}ldpc_encoding_ISIP;
 typedef struct{
 	pthread_t pthread_modulation;
 	pthread_cond_t cond_tx;
@@ -847,12 +862,22 @@ typedef struct PHY_VARS_gNB_s {
   int32_t pusch_stats_bsr[NUMBER_OF_UE_MAX][10240];
   int32_t pusch_stats_BO[NUMBER_OF_UE_MAX][10240];
   
-  scrambling_channel thread_scrambling;
+  scrambling_channel thread_scrambling[NR_MAX_NB_CODEWORDS];
   modulation_channel thread_modulation;
-  volatile int complete_modulation;
-  volatile int complete_scrambling;
+  volatile uint8_t complete_modulation;
+  volatile uint8_t complete_scrambling;
+  volatile uint8_t complete_scrambling_and_modulation;
   uint32_t scrambled_output[NR_MAX_NB_CODEWORDS][NR_MAX_PDSCH_ENCODED_LENGTH>>5];
-  volatile int q_scrambling[13];
+  uint32_t scrambled_output_test[NR_MAX_NB_CODEWORDS][NR_MAX_PDSCH_ENCODED_LENGTH>>5];
+  volatile int q_scrambling[NR_MAX_NB_CODEWORDS];
+  pthread_mutex_t complete_scrambling_modulation_mutex;
+  //**************************DLSCH ENCODING**************************//
+  dlsch_encoding_ISIP thread_encode[4];
+  ldpc_encoding_ISIP ldpc_encode;
+  
+  volatile uint8_t complete_encode[4];
+  
+  //**************************DLSCH ENCODING**************************//
 } PHY_VARS_gNB;
 
 #endif

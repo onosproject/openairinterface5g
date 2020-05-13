@@ -18,18 +18,9 @@
  * For more information about the OpenAirInterface (OAI) Software Alliance:
  *      contact@openairinterface.org
  */
-
-/*! \file openair1/SIMULATION/NR_PHY/dlsim.c
- * \brief pipeline scrambling and modulaiton
- * \author Terng-Yin Hsu, WEI-YING,LIN (OpInConnect_NCTU)
- * \email tyhsu@cs.nctu.edu.tw
- * \date 13-05-2020
- * \version 1
- * \note
- * \warning
- */
-
-
+#define _GNU_SOURCE
+#include <sched.h>
+#include <time.h>
 #include "PHY/phy_extern.h"
 #include <fcntl.h>
 #include <math.h>
@@ -68,7 +59,7 @@
 #include "openair1/SIMULATION/TOOLS/sim.h"
 #include "openair1/SIMULATION/NR_PHY/nr_unitary_defs.h"
 #include "openair1/SIMULATION/NR_PHY/nr_dummy_functions.c"
-
+#define CPU_AFF
 PHY_VARS_gNB *gNB;
 PHY_VARS_NR_UE *UE;
 RAN_CONTEXT_t RC;
@@ -136,53 +127,244 @@ void mac_rlc_data_ind     (
 // needed for some functions
 openair0_config_t openair0_cfg[MAX_CARDS];
 
-static void *scrambling_proc(void *ptr){
-	PHY_VARS_gNB *gNB = RC.gNB[0][0];
-	NR_gNB_DLSCH_t *dlsch = gNB->dlsch[0][0];
+
+uint32_t nr_get_G(uint16_t nb_rb, uint16_t nb_symb_sch, uint8_t nb_re_dmrs, uint16_t length_dmrs, uint8_t Qm, uint8_t Nl);
+uint32_t nr_get_E(uint32_t G, uint8_t C, uint8_t Qm, uint8_t Nl, uint8_t r);
+uint32_t nr_compute_tbslbrm(uint16_t table, uint16_t nb_rb, uint8_t Nl, uint8_t C);
+void nr_interleaving_ldpc(uint32_t E, uint8_t Qm, uint8_t *e,uint8_t *f);
+int nr_rate_matching_ldpc(uint8_t Ilbrm, uint32_t Tbslbrm, uint8_t BG, uint16_t Z, uint8_t *w, uint8_t *e, uint8_t C, uint8_t rvidx, uint32_t E);
+int32_t nr_segmentation(unsigned char *input_buffer, unsigned char **output_buffers, unsigned int B, unsigned int *C, unsigned int *K, unsigned int *Zout, unsigned int *F, uint8_t BG);
+int ldpc_encoder_optim_8seg_multi(unsigned char **test_input,unsigned char **channel_input,int Zc,int Kb,short block_length, short BG, int n_segments,unsigned int macro_num, time_stats_t *tinput,time_stats_t *tprep,time_stats_t *tparity,time_stats_t *toutput);
+
+							
+static void *dlsch_encoding_proc(void *ptr){
+	dlsch_encoding_ISIP *test = (dlsch_encoding_ISIP*) ptr;
+	int num = test->id;
+	static int encode_status = 0;
+	uint8_t Nl = 4, Ilbrm = 1, BG = 1;
+	uint16_t r, Kr = 0, R;
+	uint32_t A, E, Z, Kb;
+	uint32_t *Zc = &Z, Tbslbrm = 950984, r_offset = 0, F = 0;
+	int frame = 0, slot = 1;
+	float Coderate = 0.0;
+	unsigned int crc = 1;
 	
+	while(!oai_exit){
+		while(pthread_cond_wait(&gNB->thread_encode[num].cond_encode, &gNB->thread_encode[num].mutex_encode) != 0);
+		
+	//	TICK(TIME_DLSCH_ENCODING_THREAD);
+		
+		test->flag_wait = 0;
+		uint8_t num_pdsch_rnti = gNB->pdcch_vars.num_pdsch_rnti;
+		
+		for (int i = 0; i < num_pdsch_rnti; i++) {
+			NR_gNB_DLSCH_t *nr_gnb_dlsch = gNB->dlsch[i][0];
+			NR_gNB_DCI_ALLOC_t *dci_alloc = &gNB->pdcch_vars.dci_alloc[i];
+			NR_DL_gNB_HARQ_t *harq = nr_gnb_dlsch->harq_processes[dci_alloc->harq_pid];
+			uint8_t harq_pid = nr_gnb_dlsch->harq_ids[frame&2][slot];
+			nfapi_nr_dl_config_dlsch_pdu_rel15_t rel15 = nr_gnb_dlsch->harq_processes[harq_pid]->dlsch_pdu.dlsch_pdu_rel15;
+			uint16_t nb_rb = rel15.n_prb;
+			uint8_t nb_symb_sch = rel15.nb_symbols;
+			uint8_t mod_order = rel15.modulation_order;
+			uint8_t nb_re_dmrs = rel15.nb_re_dmrs;
+			uint16_t length_dmrs = 1;
+			unsigned int G = nr_get_G(nb_rb, nb_symb_sch, nb_re_dmrs, length_dmrs, mod_order, rel15.nb_layers);
+			unsigned char *a = harq->pdu;
+			A = rel15.transport_block_size;
+			R = rel15.coding_rate;
+			
+			if (A > 3824) {
+				// Add 24-bit crc (polynomial A) to payload
+				crc = crc24a(a,A)>>8;
+				a[A>>3] = ((uint8_t*)&crc)[2];
+				a[1+(A>>3)] = ((uint8_t*)&crc)[1];
+				a[2+(A>>3)] = ((uint8_t*)&crc)[0];
+				//printf("CRC %x (A %d)\n",crc,A);
+				//printf("a0 %d a1 %d a2 %d\n", a[A>>3], a[1+(A>>3)], a[2+(A>>3)]);
+	
+				nr_gnb_dlsch->harq_processes[harq_pid]->B = A+24;
+				//    nr_gnb_dlsch->harq_processes[harq_pid]->b = a;
+   
+				AssertFatal((A/8)+4 <= MAX_DLSCH_PAYLOAD_BYTES,"A %d is too big (A/8+4 = %d > %d)\n",A,(A/8)+4,MAX_DLSCH_PAYLOAD_BYTES);
+
+				memcpy(nr_gnb_dlsch->harq_processes[harq_pid]->b,a,(A/8)+4);  // why is this +4 if the CRC is only 3 bytes?
+			}
+			else {
+				// Add 16-bit crc (polynomial A) to payload
+				crc = crc16(a,A)>>16;
+				a[A>>3] = ((uint8_t*)&crc)[1];
+				a[1+(A>>3)] = ((uint8_t*)&crc)[0];
+				//printf("CRC %x (A %d)\n",crc,A);
+				//printf("a0 %d a1 %d \n", a[A>>3], a[1+(A>>3)]);
+  
+				nr_gnb_dlsch->harq_processes[harq_pid]->B = A+16;
+				//    nr_gnb_dlsch->harq_processes[harq_pid]->b = a;
+   
+				AssertFatal((A/8)+3 <= MAX_DLSCH_PAYLOAD_BYTES,"A %d is too big (A/8+3 = %d > %d)\n",A,(A/8)+3,MAX_DLSCH_PAYLOAD_BYTES);
+
+				memcpy(nr_gnb_dlsch->harq_processes[harq_pid]->b,a,(A/8)+3);  // using 3 bytes to mimic the case of 24 bit crc
+			}
+			
+			if (R < 1000)
+				Coderate = (float) R /(float) 1024;
+			else  // to scale for mcs 20 and 26 in table 5.1.3.1-2 which are decimal and input 2* in nr_tbs_tools
+				Coderate = (float) R /(float) 2048;
+			if ((A <=292) || ((A<=3824) && (Coderate <= 0.6667)) || Coderate <= 0.25)
+				BG = 2;
+			else
+				BG = 1;
+			
+			Kb = nr_segmentation(nr_gnb_dlsch->harq_processes[harq_pid]->b,
+		        nr_gnb_dlsch->harq_processes[harq_pid]->c,
+		        nr_gnb_dlsch->harq_processes[harq_pid]->B,
+		        &nr_gnb_dlsch->harq_processes[harq_pid]->C,
+		        &nr_gnb_dlsch->harq_processes[harq_pid]->K,
+		        Zc,
+		        &nr_gnb_dlsch->harq_processes[harq_pid]->F,
+                BG);
+			
+			F = nr_gnb_dlsch->harq_processes[harq_pid]->F;
+			Kr = nr_gnb_dlsch->harq_processes[harq_pid]->K;
+			
+			//for(int j = 0; j < (nr_gnb_dlsch->harq_processes[harq_pid]->C/8 + 1); j++) {
+			//ldpc_encoder_optim_8seg_multi(nr_gnb_dlsch->harq_processes[harq_pid]->c,nr_gnb_dlsch->harq_processes[harq_pid]->d,*Zc,Kb,Kr,BG,nr_gnb_dlsch->harq_processes[harq_pid]->C,(gNB->ldpc_encode).seg,NULL,NULL,NULL,NULL);
+			ldpc_encoder_optim_8seg_multi(nr_gnb_dlsch->harq_processes[harq_pid]->c,nr_gnb_dlsch->harq_processes[harq_pid]->d,*Zc,Kb,Kr,BG,nr_gnb_dlsch->harq_processes[harq_pid]->C,0,NULL,NULL,NULL,NULL);
+			//}
+			
+			for (r = 0; r < nr_gnb_dlsch->harq_processes[harq_pid]->C; r++) {
+
+				if (nr_gnb_dlsch->harq_processes[harq_pid]->F > 0) {
+					for (int k=(Kr-F-2*(*Zc)); k<Kr-2*(*Zc); k++) {
+						nr_gnb_dlsch->harq_processes[harq_pid]->d[r][k] = NR_NULL;
+					}
+				}
+
+				E = nr_get_E(G, nr_gnb_dlsch->harq_processes[harq_pid]->C, mod_order, rel15.nb_layers, r);
+
+				// for tbslbrm calculation according to 5.4.2.1 of 38.212
+				if (rel15.nb_layers < Nl)
+					Nl = rel15.nb_layers;
+
+				Tbslbrm = nr_compute_tbslbrm(rel15.mcs_table, nb_rb, Nl, nr_gnb_dlsch->harq_processes[harq_pid]->C);
+
+				//TICK(TIME_NR_RATE_MATCH_LDPC);
+				
+				nr_rate_matching_ldpc(Ilbrm,
+                    Tbslbrm,
+                    BG,
+                    *Zc,
+                    nr_gnb_dlsch->harq_processes[harq_pid]->d[r],
+                    nr_gnb_dlsch->harq_processes[harq_pid]->e + r_offset,
+                    nr_gnb_dlsch->harq_processes[harq_pid]->C,
+                    rel15.redundancy_version,
+                    E);
+				
+				//TOCK(TIME_NR_RATE_MATCH_LDPC);
+	
+				//TICK(TIME_NR_INTERLEAVING_LDPC);
+	
+				nr_interleaving_ldpc(E,
+					mod_order,
+					nr_gnb_dlsch->harq_processes[harq_pid]->e + r_offset,
+					nr_gnb_dlsch->harq_processes[harq_pid]->f + r_offset);
+	
+				//TOCK(TIME_NR_INTERLEAVING_LDPC);
+
+				r_offset += E;
+			}
+		}
+		gNB->complete_encode[num] = 1;
+	//	TOCK(TIME_DLSCH_ENCODING_THREAD);
+	}
+	encode_status = 0;
+	return &encode_status;
+}
+  
+
+/*! \file  openair1/SIMULATION/NR_PHY/dlsim.c
+ * \brief pipeline scrambling and modulaiton
+ * \author Terng-Yin Hsu, WEI-YING,LIN (OpInConnect_NCTU)
+ * \email tyhsu@cs.nctu.edu.tw
+ * \date 13-05-2020
+ * \version 1.3
+ * \note
+ * \warning
+ */
+
+static void *scrambling_proc(void *ptr){
+	
+	scrambling_channel *test =(scrambling_channel*) ptr;
+	int q_id = test->q_id;
+	struct timespec tt1, tt2, tt3, tt4;
 	//clock_gettime(CLOCK_REALTIME, &eNB->tt17);
 	//printf("cch_proc consumes %ld nanoseconds!\n",eNB->tt17.tv_nsec-eNB->tt13.tv_nsec);
 	static int scrambling_channel_status;
 	scrambling_channel_status=0;
-	scrambling_channel *cch=(scrambling_channel*)ptr;
+	//scrambling_channel *scrambling_proc=(scrambling_channel*)ptr;
 	//PHY_VARS_eNB *eNB = PHY_vars_eNB_g[0][0];
 	/**********************************************************************/
-
+#ifdef CPU_AFF	
+	cpu_set_t cpuset;	
+	int cpu = 0;
+	int s;
+	CPU_ZERO(&cpuset);       //clears the cpuset
+	CPU_SET( cpu , &cpuset); //set CPU 0~7 on cpuset
+	s = pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
+	if (s != 0)
+	{
+		perror( "pthread_setaffinity_np");
+		exit_fun("Error setting processor affinity");
+	}
+	s = pthread_getaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
+	if (s != 0) {
+		perror( "pthread_getaffinity_np");
+		exit_fun("Error getting processor affinity ");
+	}
+	printf("[SCHED][gNB] scrambling_proc scheduler thread started on CPU %d TID %ld\n",sched_getcpu(),gettid());
+#endif	
+	/**********************************************************************/
 	while(!oai_exit)
 	{
-	   	while(pthread_cond_wait(&gNB->thread_scrambling.cond_tx, &gNB->thread_scrambling.mutex_tx)!=0);
+	   	while(pthread_cond_wait(&gNB->thread_scrambling[test->q_id].cond_tx, &gNB->thread_scrambling[test->q_id].mutex_tx)!=0);
 		//VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_ENB_CONTROL_CHANNEL_THREAD_TX,1);		
+		//clock_gettime(CLOCK_REALTIME, &tt1);
+		PHY_VARS_gNB *gNB = RC.gNB[0][0];
+		NR_gNB_DLSCH_t *dlsch =gNB->dlsch[0][0];
 		NR_gNB_DCI_ALLOC_t *dci_alloc = &gNB->pdcch_vars.dci_alloc[0];
 		NR_DL_gNB_HARQ_t *harq = dlsch->harq_processes[dci_alloc->harq_pid];
 		nfapi_nr_dl_config_dlsch_pdu_rel15_t *rel15 = &harq->dlsch_pdu.dlsch_pdu_rel15;
 		nfapi_nr_config_request_t *config = &gNB->gNB_config;
 		nfapi_nr_dl_config_pdcch_parameters_rel15_t pdcch_params = dci_alloc->pdcch_params;
-		//uint32_t scrambled_output[NR_MAX_NB_CODEWORDS][NR_MAX_PDSCH_ENCODED_LENGTH>>5];
+		uint32_t scrambled_output[NR_MAX_NB_CODEWORDS][NR_MAX_PDSCH_ENCODED_LENGTH>>5];
 		int16_t **mod_symbs = (int16_t**)dlsch->mod_symbs;
+		
 		//int16_t **tx_layers = (int16_t**)dlsch->txdataF;
 		//int8_t Wf[2], Wt[2], l0, l_prime[2], delta;
 		uint16_t nb_symbols = rel15->nb_mod_symbols;
 		uint8_t Qm = rel15->modulation_order;
 		uint32_t encoded_length = nb_symbols*Qm;
-		
+		//clock_gettime(CLOCK_REALTIME, &tt2);
+		//printf("scrambling_proc initial for q = %d  consumes %ld nanoseconds!!!!!!!!!!!\n", q_id,tt2.tv_nsec - tt1.tv_nsec);
 		//VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_ENB_PMCH_PBCH_TX,1);
 		/// scrambling
-		
+		clock_gettime(CLOCK_REALTIME, &tt3);
+		clock_gettime(CLOCK_REALTIME, &tt1);
 		for (int q=0; q<rel15->nb_codewords; q++)
-			memset((void*)(gNB->scrambled_output[q]), 0, (encoded_length>>5)*sizeof(uint32_t));
+			memset((void*)(scrambled_output[q]), 0, (encoded_length>>5)*sizeof(uint32_t));
 		uint16_t n_RNTI = (pdcch_params.search_space_type == NFAPI_NR_SEARCH_SPACE_TYPE_UE_SPECIFIC)? \
 		((pdcch_params.scrambling_id==0)?pdcch_params.rnti:0) : 0;
 		uint16_t Nid = (pdcch_params.search_space_type == NFAPI_NR_SEARCH_SPACE_TYPE_UE_SPECIFIC)? \
 		pdcch_params.scrambling_id : config->sch_config.physical_cell_id.value;
-		for (int q=0; q<rel15->nb_codewords; q++){
+		
 			nr_pdsch_codeword_scrambling(harq->f,
 									encoded_length,
-									q,
+									q_id,
 									Nid,
 									n_RNTI,
-									gNB->scrambled_output[q]);
-			gNB->q_scrambling[q] = 1;
-		}
+									scrambled_output[q_id]);
+			
+		clock_gettime(CLOCK_REALTIME, &tt2);
+//		printf("scrambling for q = %d  consumes %ld nanoseconds!\n", q_id,tt2.tv_nsec - tt1.tv_nsec);
 #ifdef DEBUG_DLSCH
 		printf("PDSCH scrambling:\n");
 		for (int i=0; i<encoded_length>>8; i++) {
@@ -192,10 +374,33 @@ static void *scrambling_proc(void *ptr){
 		}
 #endif
  
- 
+	
+			clock_gettime(CLOCK_REALTIME, &tt1);
+			nr_modulation(scrambled_output[q_id],
+							encoded_length,
+							Qm,
+							mod_symbs[q_id]);
+			//gNB->q_scrambling[q] = 0;				
+			clock_gettime(CLOCK_REALTIME, &tt2);	
+//			printf("modulation for q = %d  consumes %ld nanoseconds!\n", q_id,tt2.tv_nsec - tt1.tv_nsec);		
+		//stop_meas(dlsch_modulation_stats);
+#ifdef DEBUG_DLSCH
+		printf("PDSCH Modulation: Qm %d(%d)\n", Qm, nb_symbols);
+		for (int i=0; i<nb_symbols>>3; i++) {
+			for (int j=0; j<8; j++) {
+				printf("%d %d\t", mod_symbs[0][((i<<3)+j)<<1], mod_symbs[0][(((i<<3)+j)<<1)+1]);
+			}
+		printf("\n");
+		}
+#endif
 
-	printf("complete_scrambling\n");
-	gNB->complete_scrambling=1;
+	//printf("complete_scrambling\n");
+	//pthread_mutex_lock(&gNB->complete_scrambling_modulation_mutex);
+	//gNB->complete_scrambling_and_modulation++;
+	//pthread_mutex_unlock(&gNB->complete_scrambling_modulation_mutex);
+	clock_gettime(CLOCK_REALTIME, &tt4);
+//	printf("scrambling&modulation for q = %d  consumes %ld nanoseconds!\n", q_id,tt4.tv_nsec - tt3.tv_nsec);
+	gNB->complete_scrambling_and_modulation++;
 	}
 	printf( "Exiting gNB thread scrambling_channel\n");
 	return &scrambling_channel_status;
@@ -209,41 +414,103 @@ static void *modulation_proc(void *ptr){
 	//printf("cch_proc consumes %ld nanoseconds!\n",eNB->tt17.tv_nsec-eNB->tt13.tv_nsec);
 	static int modulation_channel_status;
 	modulation_channel_status=0;
-	modulation_channel *modulation_proc=(modulation_channel*)ptr;
-	//PHY_VARS_eNB *eNB = PHY_vars_eNB_g[0][0];
-	/**********************************************************************/
+	struct timespec tt1, tt2;
+	PHY_VARS_gNB *gNB = RC.gNB[0][0];
+	NR_gNB_DLSCH_t *dlsch = gNB->dlsch[0][0];
+	
+/*! \file  openair1/SIMULATION/NR_PHY/dlsim.c
+ * \brief pipeline scrambling and modulaiton
+ * \author Terng-Yin Hsu, WEI-YING,LIN (OpInConnect_NCTU)
+ * \email tyhsu@cs.nctu.edu.tw
+ * \date 13-05-2020
+ * \version 1.3
+ * \note
+ * \warning
+ */
 
+
+	/**********************************************************************/
+#ifdef CPU_AFF
+	cpu_set_t cpuset;	
+	int cpu = 1;
+	int s;
+	CPU_ZERO(&cpuset);       //clears the cpuset
+	CPU_SET( cpu , &cpuset); //set CPU 0~7 on cpuset
+	s = pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
+	if (s != 0)
+	{
+		perror( "pthread_setaffinity_np");
+		exit_fun("Error setting processor affinity");
+	}
+	s = pthread_getaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
+	if (s != 0) {
+		perror( "pthread_getaffinity_np");
+		exit_fun("Error getting processor affinity ");
+	}
+	printf("[SCHED][gNB] scrambling_proc scheduler thread started on CPU %d TID %ld\n",sched_getcpu(),gettid());
+#endif 
+	/*
+	NR_gNB_DCI_ALLOC_t *dci_alloc = &gNB->pdcch_vars.dci_alloc[0];
+	NR_DL_gNB_HARQ_t *harq = dlsch->harq_processes[dci_alloc->harq_pid];
+	nfapi_nr_dl_config_dlsch_pdu_rel15_t *rel15 = &harq->dlsch_pdu.dlsch_pdu_rel15;
+	nfapi_nr_config_request_t *config = &gNB->gNB_config;
+	nfapi_nr_dl_config_pdcch_parameters_rel15_t pdcch_params = dci_alloc->pdcch_params;
+	uint32_t scrambled_output[NR_MAX_NB_CODEWORDS][NR_MAX_PDSCH_ENCODED_LENGTH>>5];
+	*/
 	while(!oai_exit)
 	{
 	   	while(pthread_cond_wait(&gNB->thread_modulation.cond_tx, &gNB->thread_modulation.mutex_tx)!=0);
+		clock_gettime(CLOCK_REALTIME, &tt1);
 		//VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_ENB_CONTROL_CHANNEL_THREAD_TX,1);		
-		PHY_VARS_gNB *gNB = RC.gNB[0][0];
-		NR_gNB_DLSCH_t *dlsch = gNB->dlsch[0][0];
+		gNB->complete_modulation = 0;
 		NR_gNB_DCI_ALLOC_t *dci_alloc = &gNB->pdcch_vars.dci_alloc[0];
 		NR_DL_gNB_HARQ_t *harq = dlsch->harq_processes[dci_alloc->harq_pid];
 		nfapi_nr_dl_config_dlsch_pdu_rel15_t *rel15 = &harq->dlsch_pdu.dlsch_pdu_rel15;
-		//nfapi_nr_config_request_t *config = &gNB->gNB_config;
+		nfapi_nr_config_request_t *config = &gNB->gNB_config;
 		nfapi_nr_dl_config_pdcch_parameters_rel15_t pdcch_params = dci_alloc->pdcch_params;
-		//uint32_t scrambled_output[NR_MAX_NB_CODEWORDS][NR_MAX_PDSCH_ENCODED_LENGTH>>5];
-		int16_t **mod_symbs = (int16_t**)dlsch->mod_symbs;
-		//int16_t **tx_layers = (int16_t**)dlsch->txdataF;
-		//int8_t Wf[2], Wt[2], l0, l_prime[2], delta;
+		uint32_t scrambled_output[NR_MAX_NB_CODEWORDS][NR_MAX_PDSCH_ENCODED_LENGTH>>5];
+		int16_t **mod_symbs = (int16_t**)dlsch->mod_symbs_test;
+		
+		
+		//int16_t **mod_symbs ;/*= (int16_t**)dlsch->mod_symbs;*/
 		uint16_t nb_symbols = rel15->nb_mod_symbols;
 		uint8_t Qm = rel15->modulation_order;
 		uint32_t encoded_length = nb_symbols*Qm;
 		
 		//VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_ENB_PMCH_PBCH_TX,1);
 		/// scrambling
+		for (int q=0; q<rel15->nb_codewords; q++)
+			memset((void*)(scrambled_output[q]), 0, (encoded_length>>5)*sizeof(uint32_t));
+		uint16_t n_RNTI = (pdcch_params.search_space_type == NFAPI_NR_SEARCH_SPACE_TYPE_UE_SPECIFIC)? \
+		((pdcch_params.scrambling_id==0)?pdcch_params.rnti:0) : 0;
+		uint16_t Nid = (pdcch_params.search_space_type == NFAPI_NR_SEARCH_SPACE_TYPE_UE_SPECIFIC)? \
+		pdcch_params.scrambling_id : config->sch_config.physical_cell_id.value;
+	
+			nr_pdsch_codeword_scrambling(harq->f,
+									encoded_length,
+									0,
+									Nid,
+									n_RNTI,
+									scrambled_output[0]);
+		
+		printf("nr_pdsch_codeword_scrambling in test\n");
+#ifdef DEBUG_DLSCH
+		printf("PDSCH scrambling:\n");
+		for (int i=0; i<encoded_length>>8; i++) {
+			for (int j=0; j<8; j++)
+				printf("0x%08x\t", scrambled_output[0][(i<<3)+j]);
+				printf("\n");
+		}
+#endif
   /// Modulation
 		//start_meas(dlsch_modulation_stats);
-		for (int q=0; q<rel15->nb_codewords; q++){
-			while(gNB->q_scrambling[q] != 1);
-			nr_modulation(gNB->scrambled_output[q],
+			nr_modulation(gNB->scrambled_output[0],
 							encoded_length,
 							Qm,
-							mod_symbs[q]);
-			gNB->q_scrambling[q] = 0;				
-		}					
+							mod_symbs[0]);
+			
+		
+		//printf("nr_modulation in test\n");
 		//stop_meas(dlsch_modulation_stats);
 #ifdef DEBUG_DLSCH
 		printf("PDSCH Modulation: Qm %d(%d)\n", Qm, nb_symbols);
@@ -254,8 +521,11 @@ static void *modulation_proc(void *ptr){
 		printf("\n");
 		}
 #endif
-	printf("complete_modulation\n");
-	gNB->complete_modulation=1;
+	//printf("complete_modulation\n");
+	gNB->complete_modulation ++;
+	//printf("complete_modulation = %d\n",gNB->complete_modulation);
+	clock_gettime(CLOCK_REALTIME, &tt2);
+	//printf("scrambling_proc for test consumes %ld nanoseconds!\n",tt2.tv_nsec - tt1.tv_nsec);
 	}
 	printf( "Exiting gNB thread modulation_channel\n");
 	return &modulation_channel_status;
@@ -296,6 +566,8 @@ int main(int argc, char **argv)
   //uint8_t frame_mod4,num_pdcch_symbols = 0;
 
   SCM_t channel_model=AWGN;//Rayleigh1_anticorr;
+
+
 
   //double pbch_sinr;
   //int pbch_tx_ant;
@@ -680,16 +952,31 @@ int main(int argc, char **argv)
     printf("Error at UE NR initialisation\n");
     exit(-1);
   }
-  pthread_mutex_init( &(gNB->thread_scrambling.mutex_tx), NULL);
-  pthread_cond_init( &(gNB->thread_scrambling.cond_tx), NULL);
-  pthread_create(&(gNB->thread_scrambling.pthread_scrambling),&gNB->thread_scrambling.attr_scrambling,scrambling_proc,&gNB->thread_scrambling);
-  printf("[CREATE] scrambling_channel thread \n");
+  
+  for (int t = 0; t < 4; t++){
+	gNB->thread_encode[t].id = t;
+	gNB->thread_encode[t].flag_wait = 1;
+	pthread_mutex_init( &(gNB->thread_encode[t].mutex_encode), NULL);
+	pthread_cond_init( &(gNB->thread_encode[t].cond_encode), NULL);
+	pthread_create(&(gNB->thread_encode[t].pthread_encode),&gNB->thread_encode[t].attr_encode,dlsch_encoding_proc,&gNB->thread_encode[t]);
+	printf("[CREATE] DLSCH ENCODER Thread %d\n", gNB->thread_encode[t].id);
+  }
+  
+  for(int aa = 0;aa<1;aa++){
+	pthread_attr_init( &gNB->thread_scrambling[aa].attr_scrambling);
+	pthread_mutex_init(&(gNB->thread_scrambling[aa].mutex_tx), NULL);
+	pthread_cond_init(&(gNB->thread_scrambling[aa].cond_tx), NULL);
+	gNB->thread_scrambling[aa].q_id = aa;
+	pthread_create(&(gNB->thread_scrambling[aa].pthread_scrambling),&gNB->thread_scrambling[aa].attr_scrambling,scrambling_proc,&gNB->thread_scrambling[aa]);
+	printf("[CREATE] scrambling_channel thread[%d] \n",aa);
+  }
+	
   pthread_mutex_init( &(gNB->thread_modulation.mutex_tx), NULL);
   pthread_cond_init( &(gNB->thread_modulation.cond_tx), NULL);
   pthread_create(&(gNB->thread_modulation.pthread_modulation),&gNB->thread_modulation.attr_modulation,modulation_proc,&gNB->thread_modulation);
   printf("[CREATE] modulation_channel thread \n");
   init_nr_ue_transport(UE,0);
-
+  usleep(1000000);
   nr_gold_pbch(UE);
   nr_gold_pdcch(UE,0,2);
 
@@ -751,7 +1038,7 @@ int main(int argc, char **argv)
       LOG_M("txsigF1.m","txsF1", gNB->common_vars.txdataF[1],frame_length_complex_samples_no_prefix,1,1);
 
     int tx_offset = slot*frame_parms->samples_per_slot;
-    printf("samples_per_slot_wCP = %d\n", frame_parms->samples_per_slot_wCP);
+  //  printf("samples_per_slot_wCP = %d\n", frame_parms->samples_per_slot_wCP);
 
     //TODO: loop over slots
     for (aa=0; aa<gNB->frame_parms.nb_antennas_tx; aa++) {

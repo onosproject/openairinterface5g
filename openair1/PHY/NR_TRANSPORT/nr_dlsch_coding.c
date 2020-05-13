@@ -157,6 +157,9 @@ NR_gNB_DLSCH_t *new_gNB_dlsch(unsigned char Kmimo,
 
     for (int q=0; q<NR_MAX_NB_CODEWORDS; q++)
       dlsch->mod_symbs[q] = (int32_t *)malloc16(NR_MAX_PDSCH_ENCODED_LENGTH*sizeof(int32_t));
+  
+    for (int q=0; q<NR_MAX_NB_CODEWORDS; q++)
+      dlsch->mod_symbs_test[q] = (int32_t *)malloc16(NR_MAX_PDSCH_ENCODED_LENGTH*sizeof(int32_t));
 
      dlsch->calib_dl_ch_estimates = (int32_t**)malloc16(64*sizeof(int32_t*));
      for (aa=0; aa<64; aa++) {
@@ -276,7 +279,16 @@ int nr_dlsch_encoding(unsigned char *a,
                       NR_gNB_DLSCH_t *dlsch,
                       NR_DL_FRAME_PARMS* frame_parms)
 {
-
+  PHY_VARS_gNB *gNB = RC.gNB[0][0];	
+  gNB->complete_encode[0] = 0;
+	gNB->complete_encode[1] = 0;
+	gNB->complete_encode[2] = 0;
+	gNB->complete_encode[3] = 0;
+	for (int t = 0; t < 4; t++){
+		pthread_cond_signal(&gNB->thread_encode[t].cond_encode);
+	}
+	while((gNB->complete_encode[0] != 1) || (gNB->complete_encode[1] != 1) || (gNB->complete_encode[2] != 1) || (gNB->complete_encode[3] != 1));
+  /*
   unsigned int G;
   unsigned int crc=1;
   uint8_t harq_pid = dlsch->harq_ids[frame&2][slot];
@@ -299,14 +311,14 @@ int nr_dlsch_encoding(unsigned char *a,
   uint16_t length_dmrs = 1;
   float Coderate = 0.0;
   uint8_t Nl = 4;
-
+  */
   /*
   uint8_t *channel_input[MAX_NUM_DLSCH_SEGMENTS]; //unsigned char
   for(j=0;j<MAX_NUM_DLSCH_SEGMENTS;j++) {
     channel_input[j] = (unsigned char *)malloc16(sizeof(unsigned char) * 68*384);
   }
   */
-  
+  /*
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_ENB_DLSCH_ENCODING, VCD_FUNCTION_IN);
 
   A = rel15.transport_block_size;
@@ -320,6 +332,7 @@ int nr_dlsch_encoding(unsigned char *a,
 #ifdef DEBUG_DLSCH_CODING
   printf("encoding thinks this is a new packet \n");
 #endif
+*/
     /*
     int i;
     printf("dlsch (tx): \n");
@@ -327,7 +340,7 @@ int nr_dlsch_encoding(unsigned char *a,
       printf("%02x.",a[i]);
     printf("\n");
     */
-
+/*
     if (A > 3824) {
       // Add 24-bit crc (polynomial A) to payload
       crc = crc24a(a,A)>>8;
@@ -480,6 +493,6 @@ int nr_dlsch_encoding(unsigned char *a,
   }
 
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_ENB_DLSCH_ENCODING, VCD_FUNCTION_OUT);
-
+  */
   return 0;
 }
