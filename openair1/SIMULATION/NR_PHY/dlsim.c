@@ -520,17 +520,17 @@ static void *modulation_proc(void *ptr){
 }
 
 /*! \file openair1/SIMULATION/NR_PHY/dlsim.c
- * \brief dual thread for pdsch with pressure test
+ * \brief dual thread for pdsch with parameterized pressure test
  * \author Terngyin Hsu, Sendren Xu, Nungyi Kuo, Kuankai Hsiung, Kaimi Yang (OpInConnect_NCTU)
  * \email tyhsu@cs.nctu.edu.tw
- * \date 13-05-2020
- * \version 2.3
+ * \date 14-05-2020
+ * \version 2.4
  * \note
  * \warning
  */
   
 //[START]multi_genetate_pdsch_proc
-struct timespec start_encoder_ts[thread_num_pdsch], end_encoder_ts[thread_num_pdsch], start_perenc_ts[thread_num_pdsch], end_perenc_ts[thread_num_pdsch], start_pressure_ts[2], end_pressure_ts[2], start_perpre_ts[2], end_perpre_ts[2];
+struct timespec start_encoder_ts[thread_num_pdsch], end_encoder_ts[thread_num_pdsch], start_perenc_ts[thread_num_pdsch], end_perenc_ts[thread_num_pdsch], start_pressure_ts[thread_num_pressure], end_pressure_ts[thread_num_pressure], start_perpre_ts[thread_num_pressure], end_perpre_ts[thread_num_pressure];
 //int thread_num_pdsch = 2; //Craete 2 threads for temp
 // int ifRand = 0;
 int vcd = 0;
@@ -566,11 +566,13 @@ static void *multi_genetate_pdsch_proc(void *ptr){
 	  int offset = test->id>7?7:test->id;
 	  //printf("[OFFSET] : %d %d\n", offset, test->id);
 	  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_MULTI_ENC_0 + offset,1);
-	  clock_gettime(CLOCK_MONOTONIC, &start_encoder_ts[test->id]);  //timing
+	  if(check_time)
+	  	clock_gettime(CLOCK_MONOTONIC, &start_encoder_ts[test->id]);  //timing	  
 	  for(int j=j_start;j<j_end;j++){	  	
-	    //printf("  Movement    No.    Round    Cost time  \n");
-	    printf("   Active      %d       %d\n", test->id, j);
-	    clock_gettime(CLOCK_MONOTONIC, &start_perenc_ts[test->id]);  //timing
+	  	if(check_time){
+	  		printf("   Active      %d       %d\n", test->id, j);
+	    	clock_gettime(CLOCK_MONOTONIC, &start_perenc_ts[test->id]);  //timing
+	  	}	    
 	    ldpc_encoder_optim_8seg_multi(gNB->multi_encoder[test->id].test_input,//gNB->multi_encoder[0].c_test,
 	                                  gNB->multi_encoder[test->id].channel_input_optim,//gNB->multi_encoder[0].d_test,
 	                                  gNB->multi_encoder[test->id].Zc,
@@ -580,21 +582,27 @@ static void *multi_genetate_pdsch_proc(void *ptr){
 	                                  gNB->multi_encoder[test->id].n_segments,
 	                                  j,
 	                                  NULL, NULL, NULL, NULL);
-	    clock_gettime(CLOCK_MONOTONIC, &end_perenc_ts[test->id]);  //timing
-	    //printf("  Movement    No.    Round    Cost time  \n");
-	    printf("    Done       %d       %d      %.2f usec\n", test->id, j, (end_perenc_ts[test->id].tv_nsec - start_perenc_ts[test->id].tv_nsec) *1.0 / 1000);
+	    if(check_time){
+	    	clock_gettime(CLOCK_MONOTONIC, &end_perenc_ts[test->id]);  //timing
+	    	printf("    Done       %d       %d      %.2f usec\n", test->id, j, (end_perenc_ts[test->id].tv_nsec - start_perenc_ts[test->id].tv_nsec) *1.0 / 1000);
+	    }	    
 	  }
-	  clock_gettime(CLOCK_MONOTONIC, &end_encoder_ts[test->id]);  //timing
-	  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_MULTI_ENC_0 + offset,0);
-	  printf("  All done     %d              %.2f usec\n", test->id, (end_encoder_ts[test->id].tv_nsec - start_encoder_ts[test->id].tv_nsec) *1.0 / 1000);
+	  if(check_time){
+	  	clock_gettime(CLOCK_MONOTONIC, &end_encoder_ts[test->id]);  //timing
+	  	printf("  All done     %d              %.2f usec\n", test->id, (end_encoder_ts[test->id].tv_nsec - start_encoder_ts[test->id].tv_nsec) *1.0 / 1000);
+	  }	  
+	  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_MULTI_ENC_0 + offset,0);	  
 	  gNB->multi_encoder[test->id].complete = 1;
 	  //==================================================
 	while(pthread_cond_wait(&(gNB->multi_encoder[test->id].cond_scr_mod),&(gNB->multi_encoder[test->id].mutex_scr_mod))!=0);
 	VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_MULTI_ENC_0 + offset,1);
-	clock_gettime(CLOCK_MONOTONIC, &start_encoder_ts[test->id]);  //timing
+	if(check_time)
+		clock_gettime(CLOCK_MONOTONIC, &start_encoder_ts[test->id]);  //timing	
 	for (int q=0; q<1; q++){	//Need to change by codewords
-	  printf("   Active      %d       %d\n", test->id, q);
-	  clock_gettime(CLOCK_MONOTONIC, &start_perenc_ts[test->id]);  //timing
+	  if(check_time){
+	  	printf("   Active      %d       %d\n", test->id, q);
+	  	clock_gettime(CLOCK_MONOTONIC, &start_perenc_ts[test->id]);  //timing
+	  }	  
 	  nr_pdsch_codeword_scrambling(gNB->multi_encoder[test->id].f,
 	                               gNB->multi_encoder[test->id].encoded_length,
 	                               q,
@@ -605,13 +613,16 @@ static void *multi_genetate_pdsch_proc(void *ptr){
 	                gNB->multi_encoder[test->id].encoded_length,
 	                gNB->multi_encoder[test->id].Qm,
 	                gNB->multi_encoder[test->id].mod_symbs);
-	  clock_gettime(CLOCK_MONOTONIC, &end_perenc_ts[test->id]);  //timing
-	  //printf("  Movement    No.    Round    Cost time  \n");
-	  printf("    Done       %d       %d      %.2f usec\n", test->id, q, (end_perenc_ts[test->id].tv_nsec - start_perenc_ts[test->id].tv_nsec) *1.0 / 1000);
+	  if(check_time){
+	  	clock_gettime(CLOCK_MONOTONIC, &end_perenc_ts[test->id]);  //timing
+	  	printf("    Done       %d       %d      %.2f usec\n", test->id, q, (end_perenc_ts[test->id].tv_nsec - start_perenc_ts[test->id].tv_nsec) *1.0 / 1000);
+	  }
 	}
-	clock_gettime(CLOCK_MONOTONIC, &end_encoder_ts[test->id]);  //timing
-	VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_MULTI_ENC_0 + offset,0);
-	printf("  All done     %d              %.2f usec\n", test->id, (end_encoder_ts[test->id].tv_nsec - start_encoder_ts[test->id].tv_nsec) *1.0 / 1000);
+	if(check_time){
+		clock_gettime(CLOCK_MONOTONIC, &end_encoder_ts[test->id]);  //timing
+		printf("  All done     %d              %.2f usec\n", test->id, (end_encoder_ts[test->id].tv_nsec - start_encoder_ts[test->id].tv_nsec) *1.0 / 1000);
+	}	
+	VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_MULTI_ENC_0 + offset,0);	
 	gNB->multi_encoder[test->id].complete_scr_mod = 1;
   }
   return 0;
@@ -637,19 +648,27 @@ static void *multi_genetate_pdsch_pressure(void *ptr){
 	  //       ldpc_enc[test->id].block_length,
 	  //       ldpc_enc[test->id].n_segments);
 
-	  int j_start, j_end;
-	  j_start = 0;
-	  j_end = (gNB->pressure_test[test->id].n_segments/8+1);
+	  int j_start, j_end; //Check if our situation((n_segments > 7)&(thread_num_pdsch == 2))
+	  if((gNB->pressure_test[test->id].n_segments > 7)&&(thread_num_pdsch == 2)){
+	    j_start = test->id;
+	    j_end = j_start + 1;
+	  }else{
+	    j_start = 0;
+	    j_end = (gNB->pressure_test[test->id].n_segments/8+1);
+	  }
 	  int offset = test->id+thread_num_pdsch;
 	  if(offset>7){
 	  	offset = 7;
 	  }
 	  //printf("[OFFSET] : %d %d\n", offset, test->id);
 	  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_MULTI_ENC_0 + offset,1);
-	  clock_gettime(CLOCK_MONOTONIC, &start_pressure_ts[test->id]);  //timing
+	  if(check_time)
+	  	clock_gettime(CLOCK_MONOTONIC, &start_pressure_ts[test->id]);  //timing	  
 	  for(int j=j_start;j<j_end;j++){
-	  	printf("   Active      %d(p)    %d\n", test->id, j);
-	    clock_gettime(CLOCK_MONOTONIC, &start_perpre_ts[test->id]);  //timing
+	  	if(check_time){
+	  		printf("   Active      %d(p)    %d\n", test->id, j);
+	    	clock_gettime(CLOCK_MONOTONIC, &start_perpre_ts[test->id]);  //timing
+	  	}
 	    ldpc_encoder_optim_8seg_multi(gNB->pressure_test[test->id].c_test,
 	                                  gNB->pressure_test[test->id].d_test,
 	                                  gNB->pressure_test[test->id].Zc,
@@ -659,21 +678,27 @@ static void *multi_genetate_pdsch_pressure(void *ptr){
 	                                  gNB->pressure_test[test->id].n_segments,
 	                                  j,
 	                                  NULL, NULL, NULL, NULL);
-	    clock_gettime(CLOCK_MONOTONIC, &end_perpre_ts[test->id]);  //timing
-	    //printf("  Movement    No.    Round    Cost time  \n");
-	    printf("    Done       %d(p)    %d      %.2f usec\n", test->id, j, (end_perpre_ts[test->id].tv_nsec - start_perpre_ts[test->id].tv_nsec) *1.0 / 1000);
+	    if(check_time){
+	    	clock_gettime(CLOCK_MONOTONIC, &end_perpre_ts[test->id]);  //timing
+	    	printf("    Done       %d(p)    %d      %.2f usec\n", test->id, j, (end_perpre_ts[test->id].tv_nsec - start_perpre_ts[test->id].tv_nsec) *1.0 / 1000);
+	    }
 	  }
-	  clock_gettime(CLOCK_MONOTONIC, &end_pressure_ts[test->id]);  //timing
-	  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_MULTI_ENC_0 + offset,0);
-	  printf("  All done     %d(p)           %.2f usec\n", test->id, (end_pressure_ts[test->id].tv_nsec - start_pressure_ts[test->id].tv_nsec) *1.0 / 1000);
+	  if(check_time){
+	  	clock_gettime(CLOCK_MONOTONIC, &end_pressure_ts[test->id]);  //timing
+	  	printf("  All done     %d(p)           %.2f usec\n", test->id, (end_pressure_ts[test->id].tv_nsec - start_pressure_ts[test->id].tv_nsec) *1.0 / 1000);
+	  }	  
+	  VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_MULTI_ENC_0 + offset,0);	  
 	  gNB->pressure_test[test->id].complete = 1;
 	  //==================================================
 	while(pthread_cond_wait(&(gNB->pressure_test[test->id].cond_scr_mod),&(gNB->pressure_test[test->id].mutex_scr_mod))!=0);
 	VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_MULTI_ENC_0 + offset,1);
-	clock_gettime(CLOCK_MONOTONIC, &start_pressure_ts[test->id]);  //timing
+	if(check_time)
+		clock_gettime(CLOCK_MONOTONIC, &start_pressure_ts[test->id]);  //timing	
 	for (int q=0; q<1; q++){	//Need to change by codewords
-	  printf("   Active      %d(p)    %d\n", test->id, q);
-	  clock_gettime(CLOCK_MONOTONIC, &start_perpre_ts[test->id]);  //timing
+	  if(check_time){
+	  	printf("   Active      %d(p)    %d\n", test->id, q);
+	  	clock_gettime(CLOCK_MONOTONIC, &start_perpre_ts[test->id]);  //timing
+	  }	  
 	  nr_pdsch_codeword_scrambling(gNB->pressure_test[test->id].f_test,
 	                               gNB->pressure_test[test->id].encoded_length,
 	                               q,
@@ -684,13 +709,16 @@ static void *multi_genetate_pdsch_pressure(void *ptr){
 	                gNB->pressure_test[test->id].encoded_length,
 	                gNB->pressure_test[test->id].Qm,
 	                gNB->pressure_test[test->id].mod_symbs_test);
-	  clock_gettime(CLOCK_MONOTONIC, &end_perpre_ts[test->id]);  //timing
-	  //printf("  Movement    No.    Round    Cost time  \n");
-	  printf("    Done       %d(p)    %d      %.2f usec\n", test->id, q, (end_perpre_ts[test->id].tv_nsec - start_perpre_ts[test->id].tv_nsec) *1.0 / 1000);
+	  if(check_time){
+	  	clock_gettime(CLOCK_MONOTONIC, &end_perpre_ts[test->id]);  //timing
+	  	printf("    Done       %d(p)    %d      %.2f usec\n", test->id, q, (end_perpre_ts[test->id].tv_nsec - start_perpre_ts[test->id].tv_nsec) *1.0 / 1000);
+	  }
 	}
-	clock_gettime(CLOCK_MONOTONIC, &end_pressure_ts[test->id]);  //timing
-	VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_MULTI_ENC_0 + offset,0);
-	printf("  All done     %d(p)           %.2f usec\n", test->id, (end_pressure_ts[test->id].tv_nsec - start_pressure_ts[test->id].tv_nsec) *1.0 / 1000);
+	if(check_time){
+		clock_gettime(CLOCK_MONOTONIC, &end_pressure_ts[test->id]);  //timing
+		printf("  All done     %d(p)           %.2f usec\n", test->id, (end_pressure_ts[test->id].tv_nsec - start_pressure_ts[test->id].tv_nsec) *1.0 / 1000);
+	}	
+	VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_MULTI_ENC_0 + offset,0);	
 	gNB->pressure_test[test->id].complete_scr_mod = 1;
   }
   return 0;
@@ -1162,7 +1190,7 @@ int main(int argc, char **argv)
     pthread_create(&(gNB->multi_encoder[th].pthread), &(gNB->multi_encoder[th].attr), multi_genetate_pdsch_proc, &(gNB->multi_encoder[th]));    
     printf("[CREATE] LDPC encoder thread %d \n",gNB->multi_encoder[th].id);
   }
-  for(int th=0;th<2;th++){
+  for(int th=0;th<thread_num_pressure;th++){
     pthread_attr_init(&(gNB->pressure_test[th].attr));
     pthread_mutex_init(&(gNB->pressure_test[th].mutex), NULL);
     pthread_mutex_init(&(gNB->pressure_test[th].mutex_scr_mod), NULL);
@@ -1530,12 +1558,12 @@ int main(int argc, char **argv)
   for(int th=0; th<thread_num_pdsch; th++){
   	pthread_cond_signal(&(gNB->multi_encoder[th].cond));
   }
-  for(int th=0; th<2; th++){
+  for(int th=0; th<thread_num_pressure; th++){
   	pthread_cond_signal(&(gNB->pressure_test[th].cond));
   }
 //free memorys
 	unsigned char bw_scaling =2; // ==Need to change ==***
-  for(int th=0;th<2;th++){
+  for(int th=0;th<thread_num_pressure;th++){
   	for(int j=0;j<MAX_NUM_NR_DLSCH_SEGMENTS/bw_scaling;j++){
   	  free(gNB->pressure_test[th].c_test[j]);
   	  free(gNB->pressure_test[th].d_test[j]);

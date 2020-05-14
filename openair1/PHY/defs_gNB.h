@@ -47,6 +47,8 @@
 
 #define MAX_NUM_RU_PER_gNB MAX_NUM_RU_PER_eNB
 #define thread_num_pdsch 2  // ==Change thread_num_pdsch here. Don't greater than 2 ==
+#define thread_num_pressure 3  // ==Change thread_num_pressure here ==
+#define check_time 0  // ==Change if you wnat to check time of threads ==
 
 typedef struct{
   /*params of thread*/
@@ -915,7 +917,7 @@ typedef struct PHY_VARS_gNB_s {
   dlsch_encoding_ISIP thread_encode[4];
   ldpc_encoding_ISIP ldpc_encode;
   multi_ldpc_encoder_gNB multi_encoder[thread_num_pdsch];
-  multi_ldpc_encoder_gNB pressure_test[2];
+  multi_ldpc_encoder_gNB pressure_test[thread_num_pressure];
   
   volatile uint8_t complete_encode[4];
   

@@ -219,7 +219,7 @@ for (int q=0; q<thread_num_pdsch; q++){
   gNB->multi_encoder[q].mod_symbs = mod_symbs[q]; // ==Need to change ==***
 }
 //Get value for pressure
-for (int q=0; q<2; q++){
+for (int q=0; q<thread_num_pressure; q++){
   //gNB->pressure_test[q].f = harq->f;
   gNB->pressure_test[q].encoded_length = encoded_length;
   gNB->pressure_test[q].Nid = Nid;
@@ -228,7 +228,7 @@ for (int q=0; q<2; q++){
   gNB->pressure_test[q].Qm = Qm;
   //gNB->pressure_test[q].mod_symbs = mod_symbs[q]; // ==Need to change ==***
 }
-for(int th=0;th<2;th++){
+for(int th=0;th<thread_num_pressure;th++){
   for (int q=0; q<NR_MAX_NB_CODEWORDS; q++){
     gNB->pressure_test[th].mod_symbs_test[q] = (int32_t *)malloc16(NR_MAX_PDSCH_ENCODED_LENGTH*sizeof(int32_t));
   }
@@ -258,14 +258,14 @@ clock_gettime(CLOCK_MONOTONIC, &start_ts);  //timing
 for (int q=0; q<thread_num_pdsch; q++){
   pthread_cond_signal(&(gNB->multi_encoder[q].cond_scr_mod));
 }
-for (int q=0; q<2; q++){
+for (int q=0; q<thread_num_pressure; q++){
   pthread_cond_signal(&(gNB->pressure_test[q].cond_scr_mod));
 }
 //Wait threads
 for (int q=0; q<thread_num_pdsch; q++){
   while(gNB->multi_encoder[q].complete_scr_mod!=1);
 }
-for (int q=0; q<2; q++){
+for (int q=0; q<thread_num_pressure; q++){
   while(gNB->pressure_test[q].complete_scr_mod!=1);
 }
 clock_gettime(CLOCK_MONOTONIC, &end_ts);  //timing

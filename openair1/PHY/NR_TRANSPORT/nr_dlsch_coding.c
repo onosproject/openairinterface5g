@@ -455,14 +455,14 @@ int nr_dlsch_encoding(unsigned char *a, //harq->pdu => dlsch->harq_processes[har
     //   dlsch->harq_processes[i]->c[r] = (uint8_t*)malloc16(8448);
     //   dlsch->harq_processes[i]->d[r] = (uint8_t*)malloc16(68*384); //max size for coded output
     // }
-    for(int th=0;th<2;th++){
+    for(int th=0;th<thread_num_pressure;th++){
       for(int j=0;j<MAX_NUM_NR_DLSCH_SEGMENTS/bw_scaling;j++){  // ==Why can not just be MAX_NUM_NR_DLSCH_SEGMENTS ==???
         gNB->pressure_test[th].c_test[j]=(uint8_t*)malloc16(8448);//(unsigned char *)malloc16(sizeof(unsigned char) * Kr/8);
         gNB->pressure_test[th].d_test[j]=(uint8_t*)malloc16(68*384);//(unsigned char *)malloc16(sizeof(unsigned char) * 68*384);
         memcpy(gNB->pressure_test[th].c_test[j], dlsch->harq_processes[harq_pid]->c[j], 8448);  // ==Check 8448 ==***
       }
     }
-    for(int th=0;th<2;th++){
+    for(int th=0;th<thread_num_pressure;th++){
       //gNB->pressure_test[th].test_input = dlsch->harq_processes[harq_pid]->c;
       //gNB->pressure_test[th].channel_input_optim = dlsch->harq_processes[harq_pid]->d;
       gNB->pressure_test[th].Zc = *Zc;
@@ -492,13 +492,13 @@ int nr_dlsch_encoding(unsigned char *a, //harq->pdu => dlsch->harq_processes[har
     for(int th=0;th<thread_num_pdsch;th++){
       pthread_cond_signal(&(gNB->multi_encoder[th].cond));
     }
-    for(int th=0;th<2;th++){
+    for(int th=0;th<thread_num_pressure;th++){
       pthread_cond_signal(&(gNB->pressure_test[th].cond));
     }
     for(int th = 0;th<thread_num_pdsch;th++){
       while(gNB->multi_encoder[th].complete!=1);  // ==check if multi_ldpc_enc done ==
     }
-    for(int th = 0;th<2;th++){
+    for(int th = 0;th<thread_num_pressure;th++){
       while(gNB->pressure_test[th].complete!=1);  // ==check if multi_ldpc_enc done ==
     }
     clock_gettime(CLOCK_MONOTONIC, &end_ts);  //timing
