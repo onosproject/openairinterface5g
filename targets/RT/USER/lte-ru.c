@@ -2138,6 +2138,7 @@ void *pre_scd_task( void *param ) {
     }
 
     if(old_subframe == eNB->subframe){
+      usleep(100);
       continue;
     }
 
