@@ -647,7 +647,6 @@ void rx_rf(RU_t *ru,
   openair0_timestamp ts=0,old_ts=0;
   lte_subframe_t SF_type     = subframe_select(fp,*subframe%10);
   lte_subframe_t SubFrame_type;
-  lte_subframe_t prevSF_type = subframe_select(fp,(*subframe+9)%10);
 
   for (i=0; i<ru->nb_rx; i++)
     rxp[i] = (void *)&ru->common.rxdata[i][*subframe*fp->samples_per_tti];
@@ -900,7 +899,7 @@ void rx_rf(RU_t *ru,
   }
 
 
-  //printf("timestamp_rx %lu, frame %d(%d), subframe %d(%d),ts %lu \n",proc->timestamp_rx,proc->frame_rx,frame,proc->tti_rx,subframe,ts);
+  //printf("timestamp_rx %lu, frame %d(%d), subframe %d(%d),ts %lu,diff %lu \n",proc->timestamp_rx,proc->frame_rx,frame,proc->tti_rx,subframe,ts,proc->timestamp_rx - old_ts);
   VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME( VCD_SIGNAL_DUMPER_VARIABLES_TRX_TS, proc->timestamp_rx&0xffffffff );
   }
 }
@@ -1531,9 +1530,10 @@ void fill_rf_config(RU_t *ru,
     cfg->rx_bw = 1.5e6;
   } else AssertFatal(1==0,"Unknown N_RB_DL %d\n",fp->N_RB_DL);
 
-  if (fp->frame_type==TDD)
+  if (fp->frame_type==TDD) {
     cfg->duplex_mode = duplex_mode_TDD;
-  else //FDD
+    cfg->use_single_antenna_port_for_tdd=1;
+  } else //FDD
     cfg->duplex_mode = duplex_mode_FDD;
 
   cfg->Mod_id = 0;

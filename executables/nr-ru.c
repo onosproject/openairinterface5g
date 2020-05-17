@@ -628,6 +628,7 @@ void rx_rf(RU_t *ru,int *frame,int *slot) {
   unsigned int rxs, siglen;
   int i;
   uint32_t samples_per_slot = fp->get_samples_per_slot(*slot,fp);
+  int slot_type         = nr_slot_select(cfg,*frame,*slot%fp->slots_per_frame);
   openair0_timestamp ts;
 
   AssertFatal(*slot<fp->slots_per_frame && *slot>=0, "slot %d is illegal (%d)\n",*slot,fp->slots_per_frame);
@@ -647,7 +648,6 @@ void rx_rf(RU_t *ru,int *frame,int *slot) {
     proc->timestamp_rx += fp->get_samples_per_slot(*slot%fp->slots_per_frame,fp);
   }
   
-  int slot_type         = nr_slot_select(cfg,*frame,*slot%fp->slots_per_frame);
 
   if (slot_type == NR_UPLINK_SLOT || slot_type == NR_MIXED_SLOT || IS_SOFTMODEM_RFSIM) {
       
@@ -767,13 +767,11 @@ void tx_rf(RU_t *ru,int frame,int slot, uint64_t timestamp) {
       // the beam index is written in bits 8-10 of the flags
       // bit 11 enables the gpio programming
       int beam=0;
-      if (slot==0) beam = 11; //3 for boresight & 8 to enable
-      /*
+      //if (slot==0) beam = 11; //3 for boresight & 8 to enable
       if (slot==0 || slot==40) beam=0&8;
       if (slot==10 || slot==50) beam=1&8;
       if (slot==20 || slot==60) beam=2&8;
       if (slot==30 || slot==70) beam=3&8;
-      */
       flags |= beam<<8;
     }
     
