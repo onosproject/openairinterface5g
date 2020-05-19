@@ -10,22 +10,42 @@
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# See the License for the specific language governing permissions and limitations under the License.
 
 ARG build_base
 
 FROM $build_base AS ue-builder
-RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
-    linux-headers-`uname -r` \
- && rm -rf /var/lib/apt/lists/*
+MAINTAINER Luis Ariza "lfarizav@idtolu.com"
+RUN apt-get update && apt-get install software-properties-common -y
+RUN add-apt-repository -y ppa:myriadrf/drivers
+RUN apt-get update
+RUN apt-get install sudo -y
+RUN apt-get update && apt-get install -y linux-headers-$(uname -r)
+RUN rm -rf /var/lib/apt/lists/*
+
+RUN apt-get update && apt-get install software-properties-common -y
+RUN add-apt-repository -y ppa:myriadrf/drivers && apt-get update && apt-get install -y limesuite \
+liblimesuite-dev \
+limesuite-udev \
+limesuite-images
+RUN apt-get install -y soapysdr-tools \
+soapysdr-module-lms7 \
+git
 
 WORKDIR /openairinterface5g
 ENV USER=root
-RUN /bin/bash -c "source oaienv" && cd cmake_targets && ./build_oai --UE -w USRP
+RUN apt-get update
+RUN apt-get install sudo
+RUN /bin/bash -c "source oaienv" && cd cmake_targets && ./build_oai -I -i --UE -w LMSSDR #--build-lib enbscope
+RUN git branch
+WORKDIR /
+COPY enb.band7.tm1.25PRB.lmssdr.conf /openairinterface5g/ci-scripts/conf_files/
 
 FROM ubuntu:18.04 AS lte-uesoftmodem
-RUN apt-get update && apt-get install -y \
+MAINTAINER Luis Ariza "lfarizav@idtolu.com"
+RUN apt-get update
+RUN apt-get install sudo -y
+RUN apt-get install -y apt-utils \
     libssl1.0.0 \
     libnettle6 \
     libsctp1 \
@@ -41,8 +61,17 @@ RUN apt-get update && apt-get install -y \
     libblas3 \
     libatlas-base-dev \ 
     libblas-dev \
-    iperf \
- && rm -rf /var/lib/apt/lists/*
+    iperf 
+RUN rm -rf /var/lib/apt/lists/*
+
+RUN apt-get update && apt-get install software-properties-common -y
+RUN add-apt-repository -y ppa:myriadrf/drivers && apt-get update && apt-get install -y limesuite \
+liblimesuite-dev \
+limesuite-udev \
+limesuite-images
+RUN apt-get install -y soapysdr-tools \
+soapysdr-module-lms7 \
+git
 
 WORKDIR /openairinterface5g/cmake_targets
 COPY --from=ue-builder /openairinterface5g/cmake_targets .

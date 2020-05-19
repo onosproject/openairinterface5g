@@ -14,22 +14,41 @@
 # limitations under the License.
 
 FROM ubuntu:16.04 AS oai-base
+MAINTAINER Luis Ariza "lfarizav@idtolu.com"
 ARG EURECOM_PROXY
-RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
-    vim-common \
-    git \
- && rm -rf /var/lib/apt/lists/*
+ENV TZ=Europe
+RUN apt-get update && apt-get install software-properties-common -y
+RUN add-apt-repository -y ppa:myriadrf/drivers
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+RUN apt-get update
+RUN apt-get install sudo -y
+RUN apt-get install apt-utils -y
+RUN apt-get install vim-common -y
+RUN apt-get install git -y
+RUN rm -rf /var/lib/apt/lists/*
 
 # In Eurecom env we need a git proxy
 RUN /bin/bash -c "if [[ -v EURECOM_PROXY ]]; then git config --global http.proxy http://proxy.eurecom.fr:8080; fi"
 RUN git clone https://gitlab.eurecom.fr/oai/openairinterface5g/ /openairinterface5g -b develop
-
+RUN cd openairinterface5g && git branch
+#RUN apt-get update && apt-get install software-properties-common -y
+RUN add-apt-repository -y ppa:myriadrf/drivers && apt-get update && apt-get install -y limesuite \
+liblimesuite-dev \
+limesuite-udev \
+limesuite-images
+RUN apt-get install -y soapysdr-tools \
+soapysdr-module-lms7
 
 WORKDIR /openairinterface5g
 COPY nasmesh.patch nasmesh.patch
 RUN git apply nasmesh.patch
 ENV USER=root
-RUN /bin/bash -c "source oaienv" && cd cmake_targets && ./build_oai -I -w USRP
+RUN apt-get update
+RUN apt-get install sudo -y
+RUN /bin/bash -c "source oaienv" && cd cmake_targets && ./build_oai -I -i -w LMSSDR #--build-lib enbscope
+RUN git branch
+WORKDIR /
+COPY enb.band7.tm1.25PRB.lmssdr.conf /openairinterface5g/ci-scripts/conf_files/
 
 ARG org_label_schema_version=unknown
 ARG org_label_schema_vcs_url=unknown

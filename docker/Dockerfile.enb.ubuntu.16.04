@@ -16,12 +16,32 @@
 ARG build_base
 
 FROM $build_base AS enb-builder
+MAINTAINER Luis Ariza "lfarizav@idtolu.com"
+
+RUN apt-get update && apt-get install software-properties-common -y
+RUN add-apt-repository -y ppa:myriadrf/drivers && apt-get update
+RUN apt-get install -y limesuite \
+liblimesuite-dev \
+limesuite-udev \
+limesuite-images
+RUN apt-get install -y soapysdr-tools \
+soapysdr-module-lms7 \
+git
+
 WORKDIR /openairinterface5g
 ENV USER=root
-RUN /bin/bash -c "source oaienv" && cd cmake_targets && ./build_oai --eNB -w USRP
+RUN apt-get update
+RUN apt-get install sudo -y
+RUN /bin/bash -c "source oaienv" && cd cmake_targets && ./build_oai -I -i --eNB -w LMSSDR #--build-lib enbscope
+RUN git branch
+WORKDIR /
+COPY enb.band7.tm1.25PRB.lmssdr.conf /openairinterface5g/ci-scripts/conf_files/
 
 FROM ubuntu:16.04 AS lte-softmodem
-RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
+MAINTAINER Luis Ariza "lfarizav@idtolu.com"
+RUN apt-get update
+RUN apt-get install sudo -y
+RUN apt-get install -y apt-utils \
     libssl1.0.0 \
     libnettle6 \
     libsctp1 \
@@ -32,12 +52,25 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
     dnsutils \
     iproute2 \
     iputils-ping \
+    libblas3 \
+    libatlas-base-dev \ 
     libblas-dev \
-    iperf \
- && rm -rf /var/lib/apt/lists/*
+    iperf
+RUN rm -rf /var/lib/apt/lists/*
+
+RUN apt-get update && apt-get install software-properties-common -y
+RUN add-apt-repository -y ppa:myriadrf/drivers && apt-get update && apt-get install -y limesuite \
+liblimesuite-dev \
+limesuite-udev \
+limesuite-images
+RUN apt-get install -y soapysdr-tools \
+soapysdr-module-lms7 \
+git
 
 WORKDIR /openairinterface5g/ci-scripts
 COPY --from=enb-builder /openairinterface5g/ci-scripts/ .
+WORKDIR /openairinterface5g/targets
+COPY --from=enb-builder /openairinterface5g/targets .
 
 WORKDIR /openairinterface5g/cmake_targets
 COPY --from=enb-builder /openairinterface5g/cmake_targets/ .
