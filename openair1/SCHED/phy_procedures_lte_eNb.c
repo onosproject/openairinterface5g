@@ -92,9 +92,9 @@ int16_t get_hundred_times_delta_IF_eNB(PHY_VARS_eNB *eNB,uint16_t UE_id,uint8_t 
     // This is the formula from Section 5.1.1.1 in 36.213 10*log10(deltaIF_PUSCH = (2^(MPR*Ks)-1)*beta_offset_pusch)
     if (bw_factor == 1) {
       uint8_t nb_rb = eNB->ulsch[UE_id]->harq_processes[harq_pid]->nb_rb;
-      return(hundred_times_delta_TF[MPR_x100/6]+10*dB_fixed_times10((beta_offset_pusch)>>3)) + hundred_times_log10_NPRB[nb_rb-1];
+      return(hundred_times_delta_TF[MPR_x100/6]+10*dB_fixed_x10((beta_offset_pusch)>>3)) + hundred_times_log10_NPRB[nb_rb-1];
     } else
-      return(hundred_times_delta_TF[MPR_x100/6]+10*dB_fixed_times10((beta_offset_pusch)>>3));
+      return(hundred_times_delta_TF[MPR_x100/6]+10*dB_fixed_x10((beta_offset_pusch)>>3));
   } else {
     return(0);
   }
@@ -602,7 +602,7 @@ void fill_sr_indication(PHY_VARS_eNB *eNB,uint16_t rnti,int frame,int subframe,u
   //  pdu->rx_ue_information.handle                       = handle;
   pdu->rx_ue_information.tl.tag                       = NFAPI_RX_UE_INFORMATION_TAG;
   pdu->rx_ue_information.rnti                         = rnti;
-  int SNRtimes10 = dB_fixed_times10(stat) - 10 * eNB->measurements.n0_subband_power_dB[0][0];
+  int SNRtimes10 = dB_fixed_x10(stat) - 10 * eNB->measurements.n0_subband_power_dB[0][0];
   pdu->ul_cqi_information.tl.tag = NFAPI_UL_CQI_INFORMATION_TAG;
 
   if      (SNRtimes10 < -640) pdu->ul_cqi_information.ul_cqi=0;
@@ -1505,9 +1505,9 @@ void fill_rx_indication(PHY_VARS_eNB *eNB,int UE_id,int frame,int subframe) {
 
   pdu->rx_indication_rel8.timing_advance = timing_advance_update;
   // estimate UL_CQI for MAC (from antenna port 0 only)
-  int SNRtimes10 = dB_fixed_times10(eNB->pusch_vars[UE_id]->ulsch_power[0]) - dB_fixed_times10(eNB->pusch_vars[UE_id]->ulsch_interference_power[0]);
+  int SNRtimes10 = dB_fixed_x10(eNB->pusch_vars[UE_id]->ulsch_power[0]) - dB_fixed_x10(eNB->pusch_vars[UE_id]->ulsch_interference_power[0]);
   
-  if(dB_fixed_times10(eNB->pusch_vars[UE_id]->ulsch_power[0]) > eNB->pusch_signal_threshold) {
+  if(dB_fixed_x10(eNB->pusch_vars[UE_id]->ulsch_power[0]) > eNB->pusch_signal_threshold) {
     SNRtimes10 = 300;
   }
 
@@ -1519,7 +1519,7 @@ void fill_rx_indication(PHY_VARS_eNB *eNB,int UE_id,int frame,int subframe) {
     pdu->rx_indication_rel8.ul_cqi = (640 + SNRtimes10) / 5;
 
   LOG_D(PHY,"[PUSCH %d] Frame %d Subframe %d Filling RX_indication with SNR %d (%d) signal %d noise %d, timing_advance %d (update %d)\n",
-        harq_pid,frame,subframe,SNRtimes10,pdu->rx_indication_rel8.ul_cqi,dB_fixed_times10(eNB->pusch_vars[UE_id]->ulsch_power[0]),dB_fixed_times10(eNB->pusch_vars[UE_id]->ulsch_interference_power[0]),pdu->rx_indication_rel8.timing_advance,
+        harq_pid,frame,subframe,SNRtimes10,pdu->rx_indication_rel8.ul_cqi,dB_fixed_x10(eNB->pusch_vars[UE_id]->ulsch_power[0]),dB_fixed_x10(eNB->pusch_vars[UE_id]->ulsch_interference_power[0]),pdu->rx_indication_rel8.timing_advance,
         timing_advance_update);
   eNB->UL_INFO.rx_ind.rx_indication_body.number_of_pdus++;
   eNB->UL_INFO.rx_ind.sfn_sf = frame<<4 | subframe;
@@ -1837,7 +1837,7 @@ void fill_uci_harq_indication (PHY_VARS_eNB *eNB, LTE_eNB_UCI *uci, int frame, i
   pdu->rx_ue_information.rnti                         = uci->rnti;
   // estimate UL_CQI for MAC (from antenna port 0 only)
   pdu->ul_cqi_information.tl.tag = NFAPI_UL_CQI_INFORMATION_TAG;
-  int SNRtimes10 = dB_fixed_times10(uci->stat) - 10 * eNB->measurements.n0_subband_power_dB[0][0];
+  int SNRtimes10 = dB_fixed_x10(uci->stat) - 10 * eNB->measurements.n0_subband_power_dB[0][0];
 
   if (SNRtimes10 < -100)
     LOG_I (PHY, "uci->stat %d \n", uci->stat);
