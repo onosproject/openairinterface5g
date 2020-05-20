@@ -3621,7 +3621,12 @@ void ulsch_scheduler_pre_ue_select_fairRR(
     saved_ulsch_dci[CC_id] = eNB->HI_DCI0_req[CC_id][subframeP].hi_dci0_request_body.number_of_dci;
     // maximum multiplicity number
     ulsch_ue_max_num[CC_id] =RC.rrc[module_idP]->configuration.radioresourceconfig[CC_id].ue_multiple_max;
+
+    if(eNB->volte_ul_cycle[CC_id] != 0){
     ulsch_ue_max_num_volte[CC_id] = (uint16_t)(ulsch_ue_max_num[CC_id] / 2);
+    }else{
+        ulsch_ue_max_num_volte[CC_id]  = 0;
+	}
     ulsch_ue_max_num_normal[CC_id] = ulsch_ue_max_num[CC_id] - ulsch_ue_max_num_volte[CC_id];
     cc_id_flag[CC_id] = 0;
     ue_first_num[CC_id] = 0;
