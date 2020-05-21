@@ -1103,7 +1103,9 @@ void dlsch_scheduler_pre_processor_fairRR (module_id_t   Mod_id,
       eNB_UE_stats = &pre_scd_eNB_UE_stats[CC_id][UE_id];
       eNB_UE_stats->dlsch_mcs[TB1] = cqi_to_mcs[UE_list->UE_sched_ctrl[UE_id].dl_cqi[CC_id]];
 
-      if (dl_buffer_total[CC_id][UE_id] > 0) {
+      ue_sched_ctl = &UE_list->UE_sched_ctrl[UE_id];
+
+      if ((dl_buffer_total[CC_id][UE_id] > 0) || (ue_sched_ctl->ta_update != 31 )) {
         nb_rbs_required[CC_id][UE_id] = search_rbs_required(eNB_UE_stats->dlsch_mcs[TB1], dl_buffer_total[CC_id][UE_id], N_RB_DL, step_size);
       }
     }
