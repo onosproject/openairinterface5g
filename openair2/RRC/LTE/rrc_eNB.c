@@ -5258,7 +5258,7 @@ check_handovers(
       MessageDef	 *msg_p;
       int		 result;
       protocol_ctxt_t  ctxt;
-
+      int df_count = 0;
       do {
         // Checks if a message has been sent to PDCP sub-task
 	itti_poll_msg (TASK_DATA_FORWARDING, &msg_p);
@@ -5285,7 +5285,8 @@ check_handovers(
 		  GTPV1U_ENB_DATA_FORWARDING_IND (msg_p).confirmp,
 		  GTPV1U_ENB_DATA_FORWARDING_IND (msg_p).mode);
   
-	    LOG_I(RRC, "Before calling pdcp_data_req from check_handovers! GTPV1U_ENB_DATA_FORWARDING_IND (msg_p).rb_id: %d \n", GTPV1U_ENB_DATA_FORWARDING_IND (msg_p).rb_id);
+	    //LOG_I(RRC, "Before calling pdcp_data_req from check_handovers! GTPV1U_ENB_DATA_FORWARDING_IND (msg_p).rb_id: %d \n", GTPV1U_ENB_DATA_FORWARDING_IND (msg_p).rb_id);
+            df_count++;
             result = pdcp_data_req (&ctxt,
 				    SRB_FLAG_NO,
 			            GTPV1U_ENB_DATA_FORWARDING_IND (msg_p).rb_id,
@@ -5322,6 +5323,7 @@ check_handovers(
         }
       }
     } while(msg_p != NULL);
+    LOG_I(RRC, "Before calling pdcp_data_req from check_handovers! GTPV1U_ENB_DATA_FORWARDING_IND, count %d, rnti %x\n", df_count, ue_context_p->ue_id_rnti);
     ue_context_p->ue_context.handover_info->forwarding_state = FORWARDING_EMPTY;
     }
     if( ue_context_p->ue_context.Status == RRC_RECONFIGURED &&
