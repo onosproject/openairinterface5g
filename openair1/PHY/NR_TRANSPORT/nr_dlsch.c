@@ -206,7 +206,7 @@ for (int q=0; q<rel15->nb_codewords; q++) // ==Look out!NR_MAX_NB_CODEWORDS is 2
   memset((void*)scrambled_output[q], 0, (encoded_length>>5)*sizeof(uint32_t));
 uint16_t n_RNTI = (pdcch_params.search_space_type == NFAPI_NR_SEARCH_SPACE_TYPE_UE_SPECIFIC) ? ((pdcch_params.scrambling_id==0)?pdcch_params.rnti:0) : 0;
 uint16_t Nid = (pdcch_params.search_space_type == NFAPI_NR_SEARCH_SPACE_TYPE_UE_SPECIFIC) ? pdcch_params.scrambling_id : config->sch_config.physical_cell_id.value;
-printf("================[Scr_Mod]================\n");
+printf("==================[Scr]==================\n");
 printf(" [Movement]  [No.]  [Round]  [Cost time] \n");
 //Get value for dual thread
 for (int q=0; q<thread_num_pdsch; q++){
@@ -239,6 +239,29 @@ for(int th=0;th<thread_num_pressure;th++){
   for (int q=0; q<rel15->nb_codewords; q++) // ==Look out!NR_MAX_NB_CODEWORDS is 2!So we can't let q>2 until spec change
     memset((void*)gNB->pressure_test[th].scrambled_output_test[q], 0, (encoded_length>>5)*sizeof(uint32_t));
 }
+//Get value for multi pdsch
+//scrambling
+for (int th=0; th<2; th++){
+  for (int i=0; i<encoded_length>>3; i++) {
+    for (int j=0; j<8; j++)
+      gNB->multi_pdsch.f[th][(i<<3)+j] = harq->f[(i<<3)+j];
+  }
+  for (int q=0; q<rel15->nb_codewords; q++) // ==Look out!NR_MAX_NB_CODEWORDS is 2!So we can't let q>2 until spec change
+    memset((void*)gNB->multi_pdsch.scrambled_output_scr[th][q], 0, (encoded_length>>5)*sizeof(uint32_t));
+  gNB->multi_pdsch.encoded_length_scr[th] = encoded_length;
+  gNB->multi_pdsch.Nid[th] = Nid;
+  gNB->multi_pdsch.n_RNTI[th] = n_RNTI;
+}
+//modulation
+for (int th=0; th<2; th++){
+  for (int q=0; q<rel15->nb_codewords; q++) // ==Look out!NR_MAX_NB_CODEWORDS is 2!So we can't let q>2 until spec change
+    memset((void*)gNB->multi_pdsch.scrambled_output_mod[th][q], 0, (encoded_length>>5)*sizeof(uint32_t));
+  for (int q=0; q<NR_MAX_NB_CODEWORDS; q++){
+    gNB->multi_pdsch.mod_symbs[th][q] = (int32_t *)malloc16(NR_MAX_PDSCH_ENCODED_LENGTH*sizeof(int32_t));
+  }
+  gNB->multi_pdsch.encoded_length_mod[th] = encoded_length;
+  gNB->multi_pdsch.Qm[th] = Qm;
+}
 //Show value for pressure
 // printf("\nEncoded payload:\n");
 // for (int i=0; i<10; i++) {
@@ -252,7 +275,7 @@ for(int th=0;th<thread_num_pressure;th++){
 //     printf("%d", gNB->pressure_test[0].f_test[(i<<3)+j]);
 //   printf("\t");
 // }
-//Awake threads
+//Awake scrambling threads(or scr_mod threads)
 VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_MULTI_ENC,1);
 clock_gettime(CLOCK_MONOTONIC, &start_ts);  //timing
 for (int q=0; q<thread_num_pdsch; q++){
@@ -261,12 +284,31 @@ for (int q=0; q<thread_num_pdsch; q++){
 for (int q=0; q<thread_num_pressure; q++){
   pthread_cond_signal(&(gNB->pressure_test[q].cond_scr_mod));
 }
-//Wait threads
+for (int th=0; th<2; th++){
+  pthread_cond_signal(&(gNB->multi_pdsch.cond_scr[th]));
+}
+//Wait scrambling threads(or scr_mod threads)
 for (int q=0; q<thread_num_pdsch; q++){
   while(gNB->multi_encoder[q].complete_scr_mod!=1);
 }
 for (int q=0; q<thread_num_pressure; q++){
   while(gNB->pressure_test[q].complete_scr_mod!=1);
+}
+for (int th=0; th<2; th++){
+  while(gNB->multi_pdsch.complete_scr[th]!=1);
+}
+clock_gettime(CLOCK_MONOTONIC, &end_ts);  //timing
+printf("   Total                      %.2f usec\n", (end_ts.tv_nsec - start_ts.tv_nsec) *1.0 / 1000);
+printf("==================[Mod]==================\n");
+printf(" [Movement]  [No.]  [Round]  [Cost time] \n");
+clock_gettime(CLOCK_MONOTONIC, &start_ts);  //timing
+//Awake modulation threads
+for (int th=0; th<2; th++){
+  pthread_cond_signal(&(gNB->multi_pdsch.cond_mod[th]));
+}
+//Wait modulation threads
+for (int th=0; th<2; th++){
+  while(gNB->multi_pdsch.complete_mod[th]!=1);
 }
 clock_gettime(CLOCK_MONOTONIC, &end_ts);  //timing
 VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_MULTI_ENC,0);

@@ -471,6 +471,19 @@ int nr_dlsch_encoding(unsigned char *a, //harq->pdu => dlsch->harq_processes[har
       gNB->pressure_test[th].BG = BG;
       gNB->pressure_test[th].n_segments = dlsch->harq_processes[harq_pid]->C;
     }
+    /*cpy original data to multi pdsch*/
+    for(int th=0;th<2;th++){
+      for(int j=0;j<MAX_NUM_NR_DLSCH_SEGMENTS/bw_scaling;j++){  // ==Why can not just be MAX_NUM_NR_DLSCH_SEGMENTS ==???
+        gNB->multi_pdsch.c[th][j]=(uint8_t*)malloc16(8448);//(unsigned char *)malloc16(sizeof(unsigned char) * Kr/8);
+        gNB->multi_pdsch.d[th][j]=(uint8_t*)malloc16(68*384);//(unsigned char *)malloc16(sizeof(unsigned char) * 68*384);
+        memcpy(gNB->multi_pdsch.c[th][j], dlsch->harq_processes[harq_pid]->c[j], 8448);  // ==Check 8448 ==***
+      }
+      gNB->multi_pdsch.Zc[th] = *Zc;
+      gNB->multi_pdsch.Kb[th] = Kb;
+      gNB->multi_pdsch.block_length[th] = Kr;
+      gNB->multi_pdsch.BG[th] = BG;
+      gNB->multi_pdsch.n_segments[th] = dlsch->harq_processes[harq_pid]->C;
+    }
     /*Show c_test*/    
     // printf("c_test :\n");
     // for (int i=0; i<3; i++){
@@ -495,11 +508,17 @@ int nr_dlsch_encoding(unsigned char *a, //harq->pdu => dlsch->harq_processes[har
     for(int th=0;th<thread_num_pressure;th++){
       pthread_cond_signal(&(gNB->pressure_test[th].cond));
     }
+    for(int th=0;th<2;th++){
+      pthread_cond_signal(&(gNB->multi_pdsch.cond_enc[th]));
+    }
     for(int th = 0;th<thread_num_pdsch;th++){
       while(gNB->multi_encoder[th].complete!=1);  // ==check if multi_ldpc_enc done ==
     }
     for(int th = 0;th<thread_num_pressure;th++){
       while(gNB->pressure_test[th].complete!=1);  // ==check if multi_ldpc_enc done ==
+    }
+    for(int th = 0;th<2;th++){
+      while(gNB->multi_pdsch.complete_enc[th]!=1);  // ==check if multi_ldpc_enc done ==
     }
     clock_gettime(CLOCK_MONOTONIC, &end_ts);  //timing
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_MULTI_ENC,0);
