@@ -657,6 +657,10 @@ int main( int argc, char **argv ) {
     if (NFAPI_MODE==NFAPI_MODE_VNF) {// VNF
 #if defined(PRE_SCD_THREAD)
       init_ru_vnf();  // ru pointer is necessary for pre_scd.
+      int rc;
+      LOG_I(MAC,"Creating MAC eNB PreSCD Task\n");
+      rc = itti_create_task (TASK_MAC_ENB_PRE_SCD, pre_scd_task, NULL);
+      AssertFatal(rc >= 0, "Create task for MAC eNB PreSCD failed\n");
 #endif
       wait_nfapi_init("main?");
     }
@@ -689,7 +693,16 @@ int main( int argc, char **argv ) {
   if (RC.nb_RU >0 && NFAPI_MODE!=NFAPI_MODE_VNF) {
     printf("Initializing RU threads\n");
     init_RU(get_softmodem_params()->rf_config_file,get_softmodem_params()->clock_source,get_softmodem_params()->timing_source,get_softmodem_params()->send_dmrs_sync);
-    
+
+#if defined(PRE_SCD_THREAD)
+    if (NFAPI_MODE == NFAPI_MONOLITHIC) {
+      int rc;
+      LOG_I(MAC,"Creating MAC eNB PreSCD Task\n");
+      rc = itti_create_task (TASK_MAC_ENB_PRE_SCD, pre_scd_task, NULL);
+      AssertFatal(rc >= 0, "Create task for MAC eNB PreSCD failed\n");
+    }
+#endif
+
     for (ru_id=0; ru_id<RC.nb_RU; ru_id++) {
       RC.ru[ru_id]->rf_map.card=0;
       RC.ru[ru_id]->rf_map.chain=CC_id+(get_softmodem_params()->chain_offset);

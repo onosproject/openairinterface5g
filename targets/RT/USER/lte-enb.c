@@ -1519,3 +1519,90 @@ void stop_eNB(int nb_inst) {
     kill_eNB_proc(inst);
   }
 }
+
+#if defined(PRE_SCD_THREAD)
+void *pre_scd_task( void *param ) {
+  static int              eNB_pre_scd_status;
+  protocol_ctxt_t         ctxt;
+  int                     min_rb_unit[MAX_NUM_CCs];
+  int                     CC_id;
+  int                     Mod_id;
+  int                     old_subframe;
+  eNB_MAC_INST            *eNB;
+  UE_list_t               *UE_list;
+  MessageDef              *msg_p = NULL;
+
+  /* init */
+  old_subframe = 0x7FFFFFFF;
+
+  itti_mark_task_ready (TASK_MAC_ENB_PRE_SCD);
+  LOG_I(MAC,"Entering main loop of eNB MAC PreSCD task\n");
+
+  // L2-emulator can work only one eNB
+  if( NFAPI_MODE==NFAPI_MODE_VNF)
+    Mod_id = 0;
+  else
+    Mod_id = RC.ru[0]->eNB_list[0]->Mod_id;
+
+  eNB = RC.mac[Mod_id];
+  UE_list = &eNB->UE_list;
+
+  if(g_dact_collection)
+  {
+    uint32_t meas_ret;
+    meas_ret =  fjt_meas_ringbuff_create(PRE_THREAD_FLAG);
+    if( meas_ret == FJT_MEAS_RET_FATAL )
+    {
+      LOG_E(GTPU, "fjt_meas_ringbuff_create NG in pre_scd_thread.[ret=%u]",meas_ret);
+      oai_exit = 1;
+      return 0;
+    }
+  }
+  while (!oai_exit) {
+
+    if(oai_exit) {
+      break;
+    }
+
+    // Wait for a message
+    itti_poll_msg(TASK_MAC_ENB_PRE_SCD, &msg_p);     /* reception of one message, non-blocking */
+
+    if (msg_p != NULL) {
+      switch (ITTI_MSG_ID(msg_p)) {
+        case TERMINATE_MESSAGE:
+          LOG_W(MAC, " *** Exiting eNB MAC PreSCD thread\n");
+          itti_exit_task();
+          break;
+
+        default:
+          break;
+      }
+    }
+
+    if(old_subframe == eNB->subframe){
+      usleep(100);
+      continue;
+    }
+
+    memcpy(&pre_scd_eNB_UE_stats,&UE_list->eNB_UE_stats, sizeof(eNB_UE_STATS)*MAX_NUM_CCs*NUMBER_OF_UE_MAX);
+    memcpy(&pre_scd_activeUE, &UE_list->active, sizeof(boolean_t)*NUMBER_OF_UE_MAX);
+
+    PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, Mod_id, ENB_FLAG_YES,
+                                   NOT_A_RNTI, eNB->frame, eNB->subframe,Mod_id);
+    pdcp_run(&ctxt);
+
+    for (CC_id = 0; CC_id < MAX_NUM_CCs; CC_id++) {
+      rrc_rx_tx(&ctxt, CC_id);
+      min_rb_unit[CC_id] = get_min_rb_unit(Mod_id, CC_id);
+    }
+
+    pre_scd_nb_rbs_required(Mod_id, eNB->frame, eNB->subframe,min_rb_unit);
+
+    old_subframe = eNB->subframe;
+  }
+
+  eNB_pre_scd_status = 0;
+  return &eNB_pre_scd_status;
+}
+#endif
+
