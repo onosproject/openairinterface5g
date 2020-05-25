@@ -70,6 +70,10 @@ void rx_phich(PHY_VARS_UE *ue,
 
   //  uint8_t HI;
   uint8_t harq_pid = phich_subframe_to_harq_pid(frame_parms,proc->frame_rx,subframe);
+  if (harq_pid == 255) {
+    LOG_E(PHY,"FATAL ERROR: illegal harq_pid, returning\n");
+    return;
+  }
   LTE_UE_ULSCH_t *ulsch = ue->ulsch[eNB_id];
   int16_t phich_d[24],*phich_d_ptr,HI16;
   //  unsigned int i,aa;

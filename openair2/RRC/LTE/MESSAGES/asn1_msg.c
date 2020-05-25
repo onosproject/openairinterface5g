@@ -220,7 +220,8 @@ uint8_t do_MIB_FeMBMS(rrc_eNB_carrier_data_t *carrier, uint32_t N_RB_DL, uint32_
       break;
 
     default:
-      AssertFatal(1==0,"Unknown dl_Bandwidth %d\n",N_RB_DL);
+      LOG_E(RRC,"Unknown dl_Bandwidth %d\n",N_RB_DL);
+      return(-1);
   }
   LOG_I(RRC,"[MIB] systemBandwidth %x, additional non MBMS subframes %x, sfn %x\n",
         (uint32_t)mib_fembms->message.dl_Bandwidth_MBMS_r14,
@@ -254,8 +255,11 @@ uint8_t do_MIB_FeMBMS(rrc_eNB_carrier_data_t *carrier, uint32_t N_RB_DL, uint32_
                                    (void *)mib_fembms,
                                    carrier->MIB_FeMBMS,
                                    24);
-  AssertFatal (enc_rval.encoded > 0, "ASN1 message encoding failed (%s, %lu)!\n",
-               enc_rval.failed_type->name, enc_rval.encoded);
+			   
+  if(enc_rval.encoded <= 0) {
+    LOG_E(RRC,"ASN1 message encoding failed (%s, %lu)!\n",enc_rval.failed_type->name, enc_rval.encoded);
+    return(-1);
+  }
 
   if (enc_rval.encoded==-1) {
     return(-1);
@@ -306,12 +310,23 @@ uint8_t do_MIB(rrc_eNB_carrier_data_t *carrier, uint32_t N_RB_DL, uint32_t phich
       break;
 
     default:
-      AssertFatal(1==0,"Unknown dl_Bandwidth %d\n",N_RB_DL);
+      LOG_E(RRC,"Unknown dl_Bandwidth %d\n",N_RB_DL);
+	  free(spare);
+	  spare = NULL;
+      return(-1);
   }
 
-  AssertFatal(phich_Resource <= LTE_PHICH_Config__phich_Resource_two,"Illegal phich_Resource\n");
+  if(phich_Resource > LTE_PHICH_Config__phich_Resource_two) {
+    LOG_E(RRC,"Illegal phich_Resource\n");
+    return(-1);
+  }
+
   mib->message.phich_Config.phich_Resource = phich_Resource;
-  AssertFatal(phich_duration <= LTE_PHICH_Config__phich_Duration_extended,"Illegal phich_Duration\n");
+  if(phich_duration > LTE_PHICH_Config__phich_Duration_extended) {
+    LOG_E(RRC,"Illegal phich_Duration\n");
+    return(-1);
+  }
+
   mib->message.phich_Config.phich_Duration = phich_duration;
   LOG_I(RRC,"[MIB] systemBandwidth %x, phich_duration %x, phich_resource %x, sfn %x\n",
         (uint32_t)mib->message.dl_Bandwidth,
@@ -338,8 +353,10 @@ uint8_t do_MIB(rrc_eNB_carrier_data_t *carrier, uint32_t N_RB_DL, uint32_t phich
                                    (void *)mib,
                                    carrier->MIB,
                                    24);
-  AssertFatal (enc_rval.encoded > 0, "ASN1 message encoding failed (%s, %lu)!\n",
-               enc_rval.failed_type->name, enc_rval.encoded);
+  if(enc_rval.encoded <= 0) {
+    LOG_E(RRC,"ASN1 message encoding failed (%s, %lu)!\n",enc_rval.failed_type->name, enc_rval.encoded);
+    return(-1);
+  }
 
   if (enc_rval.encoded==-1) {
     return(-1);
@@ -396,8 +413,11 @@ uint8_t do_MIB_SL(const protocol_ctxt_t *const ctxt_pP, const uint8_t eNB_index,
                                    (void *)mib_sl,
                                    UE_rrc_inst[ctxt_pP->module_id].MIB,
                                    24);
-  AssertFatal (enc_rval.encoded > 0, "ASN1 message encoding failed (%s, %lu)!\n",
-               enc_rval.failed_type->name, enc_rval.encoded);
+
+  if(enc_rval.encoded <= 0) {
+    LOG_E(RRC,"ASN1 message encoding failed (%s, %lu)!\n",enc_rval.failed_type->name, enc_rval.encoded);
+    return(-1);
+  }
 
   if (enc_rval.encoded==-1) {
     return(-1);
@@ -610,8 +630,11 @@ uint8_t do_SIB1_MBMS(rrc_eNB_carrier_data_t *carrier,
                                    (void *)bcch_message,
                                    buffer,
                                    RRC_BUF_SIZE);
-  AssertFatal (enc_rval.encoded > 0, "ASN1 message encoding failed (%s, %lu)!\n",
-               enc_rval.failed_type->name, enc_rval.encoded);
+
+  if(enc_rval.encoded <= 0) {
+    LOG_E(RRC,"ASN1 message encoding failed (%s, %lu)!\n",enc_rval.failed_type->name, enc_rval.encoded);
+    return(-1);
+  }
   LOG_D(RRC,"[eNB] SystemInformationBlockType1_MBMS Encoded %zd bits (%zd bytes)\n",enc_rval.encoded,(enc_rval.encoded+7)/8);
 
   if (enc_rval.encoded==-1) {
@@ -1302,8 +1325,11 @@ uint8_t do_SIB1(rrc_eNB_carrier_data_t *carrier,
                                    (void *)bcch_message,
                                    buffer,
                                    RRC_BUF_SIZE);
-  AssertFatal (enc_rval.encoded > 0, "ASN1 message encoding failed (%s, %lu)!\n",
-               enc_rval.failed_type->name, enc_rval.encoded);
+
+  if(enc_rval.encoded <= 0) {
+    LOG_E(RRC,"ASN1 message encoding failed (%s, %lu)!\n",enc_rval.failed_type->name, enc_rval.encoded);
+    return(-1);
+  }
   LOG_D(RRC,"[eNB] SystemInformationBlockType1 Encoded %zd bits (%zd bytes)\n",enc_rval.encoded,(enc_rval.encoded+7)/8);
 
   if (enc_rval.encoded==-1) {
@@ -1766,16 +1792,21 @@ uint8_t do_SIB23(uint8_t Mod_id,
 
       int num_prach_parameters_ce = configuration->prach_parameters_list_size[CC_id];
       int prach_parameters_index;
-      AssertFatal(num_prach_parameters_ce > 0, "PRACH CE parameter list is empty\n");
+      if(num_prach_parameters_ce <= 0) {
+        LOG_E(RRC,"PRACH CE parameter list is empty\n");
+        return(-1);
+      }
 
       for (prach_parameters_index = 0; prach_parameters_index < num_prach_parameters_ce; ++prach_parameters_index) {
           prach_parametersce_r13 = CALLOC(1, sizeof(LTE_PRACH_ParametersCE_r13_t));
           prach_parametersce_r13->prach_ConfigIndex_r13 = configuration->prach_config_index[CC_id][prach_parameters_index];
           prach_parametersce_r13->prach_FreqOffset_r13 = configuration->prach_freq_offset[CC_id][prach_parameters_index];
 
-          AssertFatal(configuration->prach_StartingSubframe_r13[CC_id][prach_parameters_index]!=NULL,
-                      "configuration->prach_StartingSubframe_r13[%d][%d] is null",
-                      (int)CC_id,(int)prach_parameters_index);
+          if(configuration->prach_StartingSubframe_r13[CC_id][prach_parameters_index] == NULL) {
+            LOG_E(RRC,"configuration->prach_StartingSubframe_r13[%d][%d] is null",(int)CC_id,(int)prach_parameters_index);
+            return(-1);
+          }
+
           if (configuration->prach_StartingSubframe_r13[CC_id][prach_parameters_index]){
               prach_parametersce_r13->prach_StartingSubframe_r13 = CALLOC(1, sizeof(long));
               *prach_parametersce_r13->prach_StartingSubframe_r13 = *configuration->prach_StartingSubframe_r13[CC_id][prach_parameters_index];
@@ -2443,8 +2474,11 @@ uint8_t do_SIB23(uint8_t Mod_id,
                                    (void *)bcch_message,
                                    buffer,
                                    RRC_BUF_SIZE);
-  AssertFatal (enc_rval.encoded > 0, "ASN1 message encoding failed (%s, %lu)!\n",
-               enc_rval.failed_type->name, enc_rval.encoded);
+
+  if(enc_rval.encoded <= 0) {
+    LOG_E(RRC,"ASN1 message encoding failed (%s, %lu)!\n",enc_rval.failed_type->name, enc_rval.encoded);
+    return(-1);
+  }
 
   LOG_D(RRC,"[eNB] SystemInformation Encoded %zd bits (%zd bytes)\n",enc_rval.encoded,(enc_rval.encoded+7)/8);
 
@@ -2506,8 +2540,10 @@ uint8_t do_RRCConnectionRequest(uint8_t Mod_id, uint8_t *buffer,uint8_t *rv) {
                                    (void *)&ul_ccch_msg,
                                    buffer,
                                    100);
-  AssertFatal (enc_rval.encoded > 0, "ASN1 message encoding failed (%s, %lu)!\n",
-	       enc_rval.failed_type->name, enc_rval.encoded);
+  if(enc_rval.encoded <= 0) {
+    LOG_E(RRC,"ASN1 message encoding failed (%s, %lu)!\n",enc_rval.failed_type->name, enc_rval.encoded);
+    return(-1);
+  }
   LOG_D(RRC,"[UE] RRCConnectionRequest Encoded %zd bits (%zd bytes) \n",enc_rval.encoded,(enc_rval.encoded+7)/8);
   return((enc_rval.encoded+7)/8);
 }
@@ -2651,8 +2687,10 @@ uint8_t do_SidelinkUEInformation(uint8_t Mod_id, uint8_t *buffer,  LTE_SL_Destin
                                    (void *)&ul_dcch_msg,
                                    buffer,
                                    100);
-  AssertFatal (enc_rval.encoded > 0, "ASN1 message encoding failed (%s, %lu)!\n",
-               enc_rval.failed_type->name, enc_rval.encoded);
+  if(enc_rval.encoded <= 0) {
+    LOG_E(RRC,"ASN1 message encoding failed (%s, %lu)!\n",enc_rval.failed_type->name, enc_rval.encoded);
+    return(-1);
+  }
   LOG_D(RRC,"SidelinkUEInformation Encoded %d bits (%d bytes)\n",(uint32_t)enc_rval.encoded,(uint32_t)((enc_rval.encoded+7)/8));
   return((enc_rval.encoded+7)/8);
 }
@@ -2701,8 +2739,10 @@ uint8_t do_RRCConnectionSetupComplete(uint8_t Mod_id, uint8_t *buffer, const uin
                                    (void *)&ul_dcch_msg,
                                    buffer,
                                    100);
-  AssertFatal (enc_rval.encoded > 0, "ASN1 message encoding failed (%s, %lu)!\n",
-               enc_rval.failed_type->name, enc_rval.encoded);
+  if(enc_rval.encoded <= 0) {
+    LOG_E(RRC,"ASN1 message encoding failed (%s, %lu)!\n",enc_rval.failed_type->name, enc_rval.encoded);
+    return(-1);
+  }
   LOG_D(RRC,"RRCConnectionSetupComplete Encoded %zd bits (%zd bytes)\n",enc_rval.encoded,(enc_rval.encoded+7)/8);
   return((enc_rval.encoded+7)/8);
 }
@@ -2737,8 +2777,10 @@ do_RRCConnectionReconfigurationComplete(
                                    (void *)&ul_dcch_msg,
                                    buffer,
                                    100);
-  AssertFatal (enc_rval.encoded > 0, "ASN1 message encoding failed (%s, %lu)!\n",
-               enc_rval.failed_type->name, enc_rval.encoded);
+  if(enc_rval.encoded <= 0) {
+    LOG_E(RRC,"ASN1 message encoding failed (%s, %lu)!\n",enc_rval.failed_type->name, enc_rval.encoded);
+    return(-1);
+  }
   LOG_D(RRC,"RRCConnectionReconfigurationComplete Encoded %zd bits (%zd bytes)\n",enc_rval.encoded,(enc_rval.encoded+7)/8);
   return((enc_rval.encoded+7)/8);
 }
@@ -3575,8 +3617,10 @@ uint8_t do_RRCConnectionSetup_BR(
 				   (void*)&dl_ccch_msg,
 				   buffer,
 				   RRC_BUF_SIZE);
-  AssertFatal (enc_rval.encoded > 0, "ASN1 message encoding failed (%s, %lu)!\n",
-	       enc_rval.failed_type->name, enc_rval.encoded);
+  if(enc_rval.encoded <= 0) {
+    LOG_E(RRC,"ASN1 message encoding failed (%s, %lu)!\n",enc_rval.failed_type->name, enc_rval.encoded);
+    return(-1);
+  }
 
 #if defined(ENABLE_ITTI)
 # if !defined(DISABLE_XER_SPRINT)
@@ -3841,8 +3885,10 @@ uint16_t do_RRCConnectionReconfiguration_BR(const protocol_ctxt_t*        const 
 				   (void*)&dl_dcch_msg,
 				   buffer,
 				   RRC_BUF_SIZE);
-  AssertFatal (enc_rval.encoded > 0, "ASN1 message encoding failed %s, %lu!\n",
-	       enc_rval.failed_type->name, enc_rval.encoded);
+  if(enc_rval.encoded <= 0) {
+    LOG_E(RRC,"ASN1 message encoding failed (%s, %lu)!\n",enc_rval.failed_type->name, enc_rval.encoded);
+    return(-1);
+  }
 
 #ifdef XER_PRINT
   xer_fprint(stdout,&asn_DEF_DL_DCCH_Message,(void*)&dl_dcch_msg);
@@ -4698,8 +4744,10 @@ int do_HandoverPreparation(char *ho_buf, int ho_size, LTE_UE_EUTRA_Capability_t 
 
   /* TODO: free the OCTET_STRING */
 
-  AssertFatal (enc_rval.encoded > 0, "ASN1 message encoding failed (%s, %lu)!\n",
-               enc_rval.failed_type->name, enc_rval.encoded);
+  if(enc_rval.encoded <= 0) {
+    LOG_E(RRC,"ASN1 message encoding failed (%s, %lu)!\n",enc_rval.failed_type->name, enc_rval.encoded);
+    return(-1);
+  }
 
 
   memset(&ho, 0, sizeof(ho));
@@ -4712,9 +4760,10 @@ int do_HandoverPreparation(char *ho_buf, int ho_size, LTE_UE_EUTRA_Capability_t 
       ue_cap_rat_container = (LTE_UE_CapabilityRAT_Container_t *)calloc(1,sizeof(LTE_UE_CapabilityRAT_Container_t));
       ue_cap_rat_container->rat_Type = LTE_RAT_Type_eutra;
 
-      AssertFatal (OCTET_STRING_fromBuf(
-                   &ue_cap_rat_container->ueCapabilityRAT_Container,
-                   rrc_buf, rrc_size) != -1, "fatal: OCTET_STRING_fromBuf failed\n");
+      if(OCTET_STRING_fromBuf(&ue_cap_rat_container->ueCapabilityRAT_Container,rrc_buf, rrc_size) == -1) {
+        LOG_E(RRC,"fatal: OCTET_STRING_fromBuf failed\n");
+        return(-1);
+      }
 
       ASN_SEQUENCE_ADD(&ho_info->ue_RadioAccessCapabilityInfo.list, ue_cap_rat_container);
   }
@@ -4727,8 +4776,10 @@ int do_HandoverPreparation(char *ho_buf, int ho_size, LTE_UE_EUTRA_Capability_t 
 
   /* TODO: free the OCTET_STRING */
 
-  AssertFatal (enc_rval.encoded > 0, "ASN1 message encoding failed (%s, %lu)!\n",
-               enc_rval.failed_type->name, enc_rval.encoded);
+  if(enc_rval.encoded <= 0) {
+    LOG_E(RRC,"ASN1 message encoding failed (%s, %lu)!\n",enc_rval.failed_type->name, enc_rval.encoded);
+    return(-1);
+  }
 
   return((enc_rval.encoded+7)/8);
 }
@@ -4743,9 +4794,10 @@ int do_HandoverCommand(char *ho_buf, int ho_size, char *rrc_buf, int rrc_size)
   ho.criticalExtensions.present = LTE_HandoverCommand__criticalExtensions_PR_c1;
   ho.criticalExtensions.choice.c1.present = LTE_HandoverCommand__criticalExtensions__c1_PR_handoverCommand_r8;
 
-  AssertFatal (OCTET_STRING_fromBuf(
-               &ho.criticalExtensions.choice.c1.choice.handoverCommand_r8.handoverCommandMessage,
-               rrc_buf, rrc_size) != -1, "fatal: OCTET_STRING_fromBuf failed\n");
+  if(OCTET_STRING_fromBuf(&ho.criticalExtensions.choice.c1.choice.handoverCommand_r8.handoverCommandMessage,rrc_buf, rrc_size) == -1) {
+    LOG_E(RRC,"fatal: OCTET_STRING_fromBuf failed\n");
+    return(-1);
+  }
 
   enc_rval = uper_encode_to_buffer(&asn_DEF_LTE_HandoverCommand,
                                    NULL,
@@ -4755,8 +4807,10 @@ int do_HandoverCommand(char *ho_buf, int ho_size, char *rrc_buf, int rrc_size)
 
   /* TODO: free the OCTET_STRING */
 
-  AssertFatal (enc_rval.encoded > 0, "ASN1 message encoding failed (%s, %lu)!\n",
-               enc_rval.failed_type->name, enc_rval.encoded);
+  if(enc_rval.encoded <= 0) {
+    LOG_E(RRC,"ASN1 message encoding failed (%s, %lu)!\n",enc_rval.failed_type->name, enc_rval.encoded);
+    return(-1);
+  }
 
   return((enc_rval.encoded+7)/8);
 }
@@ -4887,8 +4941,10 @@ OAI_UECapability_t *fill_ue_capability(char *UE_EUTRA_Capability_xer_fname) {
                                    (void *)UE_EUTRA_Capability,
                                    &UECapability.sdu[0],
                                    MAX_UE_CAPABILITY_SIZE);
-  AssertFatal (enc_rval.encoded > 0, "ASN1 message encoding failed (%s, %lu)!\n",
-	       enc_rval.failed_type->name, enc_rval.encoded);
+  if(enc_rval.encoded <= 0) {
+    LOG_E(RRC,"ASN1 message encoding failed (%s, %lu)!\n",enc_rval.failed_type->name, enc_rval.encoded);
+    return(NULL);
+  }
 
   UECapability.sdu_size = (enc_rval.encoded + 7) / 8;
   LOG_I(PHY, "[RRC]UE Capability encoded, %d bytes (%zd bits)\n",

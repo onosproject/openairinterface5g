@@ -37,6 +37,7 @@
 
 #include "assertions.h"
 #include "conversions.h"
+#include <common/utils/LOG/log.h>
 
 #define SECU_DEBUG
 
@@ -57,10 +58,22 @@ int nas_stream_encrypt_eia2(nas_stream_cipher_t *stream_cipher, uint8_t out[4])
   uint32_t          m_length;
   int               ret;
 
-  DevAssert(stream_cipher != NULL);
-  DevAssert(stream_cipher->key != NULL);
-  DevAssert(stream_cipher->key_length > 0);
-  DevAssert(out != NULL);
+  if(stream_cipher == NULL) {
+    LOG_E(NAS, "stream_cipher == NULL\n");
+    return -1;
+  }
+  if(stream_cipher->key == NULL) {
+    LOG_E(NAS, "stream_cipher->key == NULL\n");
+    return -1;
+  }
+  if(stream_cipher->key_length <= 0) {
+    LOG_E(NAS, "stream_cipher->key_length != 16\n");
+    return -1;
+  }
+  if(out == NULL) {
+    LOG_E(NAS, "out == NULL\n");
+    return -1;
+  }
 
   memset(data, 0, 16);
 

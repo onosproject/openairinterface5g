@@ -93,8 +93,10 @@ void x2ap_eNB_handle_sctp_data_ind(instance_t instance, sctp_data_ind_t *sctp_da
     X2AP_ERROR("%s %d: sctp_data_ind is a NULL pointer \n",__FILE__,__LINE__);
     return ;
   }
-  x2ap_eNB_handle_message(instance, sctp_data_ind->assoc_id, sctp_data_ind->stream,
-                          sctp_data_ind->buffer, sctp_data_ind->buffer_length);
+  if (x2ap_eNB_handle_message(instance, sctp_data_ind->assoc_id, sctp_data_ind->stream,
+                          sctp_data_ind->buffer, sctp_data_ind->buffer_length) == -1) {
+    X2AP_ERROR("Failed to handle x2ap eNB message\n");
+  }
   result = itti_free(TASK_UNKNOWN, sctp_data_ind->buffer);
   if(result != EXIT_SUCCESS) {
 	  X2AP_ERROR("Failed to free memory (%d)!\n", result);

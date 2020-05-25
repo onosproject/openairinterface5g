@@ -134,7 +134,10 @@ int pdcp_fifo_flush_sdus(const protocol_ctxt_t *const  ctxt_pP) {
       ret = sendmsg(nas_sock_fd[0],&nas_msg_tx,0);
     }  //  PDCP_USE_NETLINK
 
-    AssertFatal(ret >= 0,"[PDCP_FIFOS] pdcp_fifo_flush_sdus (errno: %d %s)\n", errno, strerror(errno));
+    if(ret < 0) {
+      LOG_E(PDCP,"[PDCP_FIFOS] pdcp_fifo_flush_sdus (errno: %d %s)\n", errno, strerror(errno));
+      return 0;
+    }
     list_remove_head (&pdcp_sdu_list);
     free_mem_block (sdu_p, __func__);
     pdcp_nb_sdu_sent ++;

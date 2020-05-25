@@ -416,7 +416,10 @@ static void *gtpv1u_thread(void *args)
      */
     MessageDef *received_message_p = NULL;
     itti_receive_msg(TASK_GTPV1_U, &received_message_p);
-    DevAssert(received_message_p != NULL);
+    if (received_message_p == NULL) {
+      GTPU_ERROR("received_message_p == NULL\n");
+      return NULL;
+    }
 
 
     switch (ITTI_MSG_ID(received_message_p)) {

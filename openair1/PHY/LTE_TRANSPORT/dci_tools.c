@@ -58,10 +58,21 @@ int16_t find_dlsch(uint16_t rnti, PHY_VARS_eNB *eNB,find_type_t type)
   uint16_t i;
   int16_t first_free_index=-1;
 
-  AssertFatal(eNB!=NULL,"eNB is null\n");
+  if (eNB == NULL) {
+    LOG_E(PHY, "eNB is null\n");
+    return -1;
+  }
+
   for (i=0; i<NUMBER_OF_UE_MAX; i++) {
-    AssertFatal(eNB->dlsch[i]!=NULL,"eNB->dlsch[%d] is null\n",i);
-    AssertFatal(eNB->dlsch[i]!=NULL,"eNB->dlsch[%d][0] is null\n",i);
+    if (eNB->dlsch[i] == NULL) {
+      LOG_E(PHY, "eNB->dlsch[%d] is null\n",i);
+      return -1;
+    }
+    if (eNB->dlsch[i][0] == NULL) {
+      LOG_E(PHY, "eNB->dlsch[%d][0] is null\n",i);
+      return -1;
+    }
+
     LOG_D(PHY,"searching for rnti %x : UE index %d=> harq_mask %x, rnti %x, first_free_index %d\n", rnti,i,eNB->dlsch[i][0]->harq_mask,eNB->dlsch[i][0]->rnti,first_free_index);
     if ((eNB->dlsch[i][0]->harq_mask >0) &&
         (eNB->dlsch[i][0]->rnti==rnti))       return i;
@@ -80,9 +91,15 @@ int16_t find_ulsch(uint16_t rnti, PHY_VARS_eNB *eNB,find_type_t type)
   uint16_t i;
   int16_t first_free_index=-1;
 
-  AssertFatal(eNB!=NULL,"eNB is null\n");
+  if (eNB == NULL) {
+    LOG_E(PHY, "eNB is null\n");
+    return -1;
+  }
   for (i=0; i<=NUMBER_OF_UE_MAX; i++) {
-    AssertFatal(eNB->ulsch[i]!=NULL,"eNB->ulsch[%d] is null\n",i);
+    if (eNB->ulsch[i] == NULL) {
+      LOG_E(PHY, "eNB->ulsch[%d] is null\n",i);
+      return -1;
+    }
     if ((eNB->ulsch[i]->harq_mask >0) &&
         (eNB->ulsch[i]->rnti==rnti))       return i;
     else if ((eNB->ulsch[i]->harq_mask == 0) && (first_free_index==-1)) first_free_index=i;
@@ -295,8 +312,7 @@ void fill_dci_and_dlsch(PHY_VARS_eNB *eNB,int frame,int subframe,L1_rxtx_proc_t 
     LOG_E(PHY,"illegal UE_id found!!! rnti %04x UE_id %d\n",rel8->rnti,UE_id);
     return;
   }
-  //AssertFatal(UE_id!=-1,"no free or exiting dlsch_context\n");
-  //AssertFatal(UE_id<NUMBER_OF_UE_MAX,"returned UE_id %d >= %d(NUMBER_OF_UE_MAX)\n",UE_id,NUMBER_OF_UE_MAX);
+
   dlsch0 = eNB->dlsch[UE_id][0];
   dlsch1 = eNB->dlsch[UE_id][1];
 
@@ -343,10 +359,11 @@ void fill_dci_and_dlsch(PHY_VARS_eNB *eNB,int frame,int subframe,L1_rxtx_proc_t 
   switch (rel8->dci_format) {
 
   case NFAPI_DL_DCI_FORMAT_1A:
-
-    AssertFatal(rel8->resource_block_coding < 8192, "SFN/SF:%04d%d proc:TX:SFN/SF:%04d%d: rel8->resource_block_coding (%p) %u >= 8192 (rnti %x, rnti_type %d, format %d, harq_id %d\n",
-                frame,subframe,proc->frame_tx,subframe,
-                &rel8->resource_block_coding,rel8->resource_block_coding,rel8->rnti,rel8->rnti_type,rel8->dci_format,rel8->harq_process);
+    if (rel8->resource_block_coding >= 8192) {
+      LOG_E(PHY, "SFN/SF:%04d%d proc:TX:SFN/SF:%04d%d: rel8->resource_block_coding (%p) %u >= 8192 (rnti %x, rnti_type %d, format %d, harq_id %d\n",
+	        frame,subframe,proc->frame_tx,subframe,&rel8->resource_block_coding,rel8->resource_block_coding,rel8->rnti,rel8->rnti_type,rel8->dci_format,rel8->harq_process);
+      return;
+    }
   
     dci_alloc->format = format1A;
 
@@ -380,7 +397,11 @@ void fill_dci_and_dlsch(PHY_VARS_eNB *eNB,int frame,int subframe,L1_rxtx_proc_t 
 
         //      printf("FDD 1A: mcs %d, rballoc %x,rv %d, NPRB %d\n",mcs,rballoc,rv,NPRB);
       }
-      AssertFatal (rel8->virtual_resource_block_assignment_flag == LOCALIZED, "Distributed RB allocation not done yet\n");
+      if (rel8->virtual_resource_block_assignment_flag != LOCALIZED) {
+        LOG_E(PHY, "Distributed RB allocation not done yet\n");
+        return;
+      }
+
       dlsch0_harq->rb_alloc[0] = localRIV2alloc_LUT6[rel8->resource_block_coding];
       dlsch0_harq->vrb_type = rel8->virtual_resource_block_assignment_flag;
       dlsch0_harq->nb_rb = RIV2nb_rb_LUT6[rel8->resource_block_coding]; //NPRB;
@@ -412,7 +433,11 @@ void fill_dci_and_dlsch(PHY_VARS_eNB *eNB,int frame,int subframe,L1_rxtx_proc_t 
         ((DCI1A_5MHz_FDD_t *)dci_pdu)->padding        = 0;
         //      printf("FDD 1A: mcs %d, rballoc %x,rv %d, NPRB %d\n",mcs,rballoc,rv,NPRB);
       }
-      AssertFatal (rel8->virtual_resource_block_assignment_flag == LOCALIZED, "Distributed RB allocation not done yet\n");
+      if (rel8->virtual_resource_block_assignment_flag != LOCALIZED) {
+        LOG_E(PHY, "Distributed RB allocation not done yet\n");
+        return;
+      }
+
       dlsch0_harq->rb_alloc[0] = localRIV2alloc_LUT25[rel8->resource_block_coding];
       dlsch0_harq->vrb_type = rel8->virtual_resource_block_assignment_flag;
       dlsch0_harq->nb_rb = RIV2nb_rb_LUT25[rel8->resource_block_coding];        //NPRB;
@@ -445,7 +470,11 @@ void fill_dci_and_dlsch(PHY_VARS_eNB *eNB,int frame,int subframe,L1_rxtx_proc_t 
         ((DCI1A_10MHz_FDD_t *)dci_pdu)->padding       = 0;
 	//      printf("FDD 1A: mcs %d, rballoc %x,rv %d, NPRB %d\n",mcs,rballoc,rv,NPRB);
       }
-      AssertFatal (rel8->virtual_resource_block_assignment_flag == LOCALIZED, "Distributed RB allocation not done yet\n");
+      if (rel8->virtual_resource_block_assignment_flag != LOCALIZED) {
+        LOG_E(PHY, "Distributed RB allocation not done yet\n");
+        return;
+      }
+
       dlsch0_harq->rb_alloc[0] = localRIV2alloc_LUT50_0[rel8->resource_block_coding];
       dlsch0_harq->rb_alloc[1] = localRIV2alloc_LUT50_1[rel8->resource_block_coding];
       dlsch0_harq->vrb_type = rel8->virtual_resource_block_assignment_flag;
@@ -479,7 +508,11 @@ void fill_dci_and_dlsch(PHY_VARS_eNB *eNB,int frame,int subframe,L1_rxtx_proc_t 
         ((DCI1A_20MHz_FDD_t *)dci_pdu)->padding       = 0;
 	//      printf("FDD 1A: mcs %d, rballoc %x,rv %d, NPRB %d\n",mcs,rballoc,rv,NPRB);
       }
-      AssertFatal (rel8->virtual_resource_block_assignment_flag == LOCALIZED, "Distributed RB allocation not done yet\n");
+      if (rel8->virtual_resource_block_assignment_flag != LOCALIZED) {
+        LOG_E(PHY, "Distributed RB allocation not done yet\n");
+        return;
+      }
+
       dlsch0_harq->rb_alloc[0] = localRIV2alloc_LUT100_0[rel8->resource_block_coding];
       dlsch0_harq->rb_alloc[1] = localRIV2alloc_LUT100_1[rel8->resource_block_coding];
       dlsch0_harq->rb_alloc[2] = localRIV2alloc_LUT100_2[rel8->resource_block_coding];
@@ -500,7 +533,11 @@ void fill_dci_and_dlsch(PHY_VARS_eNB *eNB,int frame,int subframe,L1_rxtx_proc_t 
       NPRB      = dlsch0_harq->nb_rb;
       I_mcs     = get_I_TBS(rel8->mcs_1);
     }
-    AssertFatal(NPRB>0,"DCI 1A: NPRB = 0 (rnti %x, rnti type %d, tpc %d, round %d, resource_block_coding %d, harq process %d)\n",rel8->rnti,rel8->rnti_type,rel8->tpc,dlsch0_harq->round,rel8->resource_block_coding,rel8->harq_process);
+    if (NPRB <= 0) {
+      LOG_E(PHY, "DCI 1A: NPRB = 0 (rnti %x, rnti type %d, tpc %d, round %d, resource_block_coding %d, harq process %d)\n",
+	        rel8->rnti,rel8->rnti_type,rel8->tpc,dlsch0_harq->round,rel8->resource_block_coding,rel8->harq_process);
+      return;
+    }
     dlsch0_harq->rvidx         = rel8->redundancy_version_1;
     dlsch0_harq->Nl            = 1;
     dlsch0_harq->mimo_mode     = (fp->nb_antenna_ports_eNB == 1) ? SISO : ALAMOUTI;
@@ -640,7 +677,10 @@ void fill_dci_and_dlsch(PHY_VARS_eNB *eNB,int frame,int subframe,L1_rxtx_proc_t 
       break;
     }
 
-    AssertFatal (rel8->harq_process < 8, "Format 1: harq_pid=%d >= 8\n", rel8->harq_process);
+    if (rel8->harq_process >= 8) {
+      LOG_E(PHY, "Format 1: harq_pid=%d >= 8\n", rel8->harq_process);
+      return;
+    }
 
 
     dlsch0_harq = dlsch0->harq_processes[rel8->harq_process];
@@ -656,7 +696,10 @@ void fill_dci_and_dlsch(PHY_VARS_eNB *eNB,int frame,int subframe,L1_rxtx_proc_t 
     NPRB = dlsch0_harq->nb_rb;
 
 
-    AssertFatal (NPRB > 0, "NPRB == 0\n");
+    if (NPRB <= 0) {
+      LOG_E(PHY, "NPRB == 0\n");
+      return;
+    }
 
     dlsch0_harq->rvidx = rel8->redundancy_version_1;
 
@@ -838,8 +881,10 @@ void fill_dci_and_dlsch(PHY_VARS_eNB *eNB,int frame,int subframe,L1_rxtx_proc_t 
 
     }
 
-    AssertFatal (rel8->harq_process < 8, "Format 2_2A: harq_pid=%d >= 8\n", rel8->harq_process);
-
+    if (rel8->harq_process >= 8) {
+      LOG_E(PHY, "Format 2_2A: harq_pid=%d >= 8\n", rel8->harq_process);
+      return;
+    }
 
     // Flip the TB to codeword mapping as described in 5.3.3.1.5 of 36-212 V11.3.0
     // note that we must set tbswap=0 in eNB scheduler if one TB is deactivated
@@ -866,7 +911,10 @@ void fill_dci_and_dlsch(PHY_VARS_eNB *eNB,int frame,int subframe,L1_rxtx_proc_t 
     dlsch0_harq->nb_rb = conv_nprb (rel8->resource_allocation_type, rel8->resource_block_coding, fp->N_RB_DL);
     dlsch1_harq->nb_rb = dlsch0_harq->nb_rb;
 
-    AssertFatal (dlsch0_harq->nb_rb > 0, "nb_rb=0\n");
+    if (dlsch0_harq->nb_rb <= 0) {
+      LOG_E(PHY, "nb_rb=0\n");
+      return;
+    }
 
     dlsch0_harq->mcs = rel8->mcs_1;
     dlsch1_harq->mcs = rel8->mcs_2;
@@ -1156,8 +1204,10 @@ void fill_dci_and_dlsch(PHY_VARS_eNB *eNB,int frame,int subframe,L1_rxtx_proc_t 
 
     }
 
-    AssertFatal (rel8->harq_process >= 8, "Format 2_2A: harq_pid=%d >= 8\n", rel8->harq_process);
-
+    if (rel8->harq_process < 8) {
+      LOG_E(PHY, "Format 2_2A: harq_pid=%d >= 8\n", rel8->harq_process);
+      return;
+    }
 
     // Flip the TB to codeword mapping as described in 5.3.3.1.5 of 36-212 V11.3.0
     // note that we must set tbswap=0 in eNB scheduler if one TB is deactivated
@@ -1471,8 +1521,14 @@ void fill_mdci_and_dlsch(PHY_VARS_eNB *eNB,L1_rxtx_proc_t *proc,mDCI_ALLOC_t *dc
 
 
   UE_id = find_dlsch (rel13->rnti, eNB, SEARCH_EXIST_OR_FREE);
-  AssertFatal (UE_id != -1, "no free or exiting dlsch_context\n");
-  AssertFatal (UE_id < NUMBER_OF_UE_MAX, "returned UE_id %d >= %d(NUMBER_OF_UE_MAX)\n", UE_id, NUMBER_OF_UE_MAX);
+  if (UE_id == -1) {
+    LOG_E(PHY, "no free or exiting dlsch_context\n");
+    return;
+  }
+  if (UE_id >= NUMBER_OF_UE_MAX) {
+    LOG_E(PHY, "returned UE_id %d >= %d(NUMBER_OF_UE_MAX)\n", UE_id, NUMBER_OF_UE_MAX);
+    return;
+  }
   dlsch0 = eNB->dlsch[UE_id][0];
   dlsch0_harq = dlsch0->harq_processes[rel13->harq_process];
 
@@ -1482,8 +1538,14 @@ void fill_mdci_and_dlsch(PHY_VARS_eNB *eNB,L1_rxtx_proc_t *proc,mDCI_ALLOC_t *dc
     dci_alloc->ra_flag = 1;
   }
 
-  AssertFatal (fp->frame_type == FDD, "TDD is not supported yet for eMTC\n");
-  AssertFatal (fp->N_RB_DL == 25 || fp->N_RB_DL == 50 || fp->N_RB_DL == 100, "eMTC only with N_RB_DL = 25,50,100\n");
+  if (fp->frame_type != FDD) {
+    LOG_E(PHY, "TDD is not supported yet for eMTC\n");
+    return;
+  }
+  if (fp->N_RB_DL != 25 && fp->N_RB_DL != 50 && fp->N_RB_DL != 100) {
+    LOG_E(PHY, "eMTC only with N_RB_DL = 25,50,100\n");
+    return;
+  }
 
   switch (rel13->dci_format) {
 
@@ -1645,7 +1707,10 @@ void fill_mdci_and_dlsch(PHY_VARS_eNB *eNB,L1_rxtx_proc_t *proc,mDCI_ALLOC_t *dc
       break;
     }
   }
-  AssertFatal (rel13->harq_process < 8, "ERROR: Format 6_1A: harq_pid=%d >= 8\n", rel13->harq_process);
+  if (rel13->harq_process >= 8) {
+    LOG_E(PHY, "ERROR: Format 6_1A: harq_pid=%d >= 8\n", rel13->harq_process);
+    return;
+  }
 
   dlsch0->ue_type = rel13->ce_mode;
 
@@ -1699,7 +1764,10 @@ void fill_mdci_and_dlsch(PHY_VARS_eNB *eNB,L1_rxtx_proc_t *proc,mDCI_ALLOC_t *dc
       dlsch0_harq->TBS         = TBStable[get_I_TBS(dlsch0_harq->mcs)][1];
     else if (rel13->tpc == 1)  //N1A_PRB=3, get TBS from table using mcs and nb_rb=3
       dlsch0_harq->TBS         = TBStable[get_I_TBS(dlsch0_harq->mcs)][2];
-    else AssertFatal(1==0,"Don't know how to set TBS (TPC %d)\n",rel13->tpc);
+    else {
+      LOG_E(PHY, "Don't know how to set TBS (TPC %d)\n",rel13->tpc);
+      return;
+	}
     LOG_D(PHY,"fill_mdci_and_dlsch : TBS = %d(%d) %p, %x\n",dlsch0_harq->TBS,dlsch0_harq->mcs,dlsch0,rel13->rnti);
   }
   dlsch0->active[subframe] = 1;
@@ -1909,16 +1977,22 @@ int get_narrowband_index(int N_RB_UL,int rb) {
   case 50: // 50 PRBs, N_NB=8, i_0=1
   case 75: // 75 PRBs, N_NB=12, i_0=1
   case 15: // 15 PRBs, N_NB=2, i_0=1
-    AssertFatal(rb>=1,"rb %d is not possible for %d PRBs\n",rb,N_RB_UL);
+    if (rb < 1) {
+      LOG_E(PHY, "rb %d is not possible for %d PRBs\n",rb,N_RB_UL);
+      return -1;
+    }
     return((rb-1)/6);
     break;
   case 100: // 100 PRBs, N_NB=16, i_0=2
-    AssertFatal(rb>=2,"rb %d is not possible for %d PRBs\n",rb,N_RB_UL);
+    if (rb < 2) {
+      LOG_E(PHY, "rb %d is not possible for %d PRBs\n",rb,N_RB_UL);
+      return -1;
+    }
     return(rb-2/6);
     break;
   default:
-    AssertFatal(1==0,"Impossible N_RB_UL %d\n",N_RB_UL);
-    break;
+    LOG_E(PHY, "Impossible N_RB_UL %d\n",N_RB_UL);
+    return -1;
   }
 
 }
@@ -1929,9 +2003,6 @@ void fill_ulsch(PHY_VARS_eNB *eNB,int UE_id,nfapi_ul_config_ulsch_pdu *ulsch_pdu
   uint8_t harq_pid;
   //uint8_t UE_id;
   boolean_t new_ulsch = (find_ulsch(ulsch_pdu->ulsch_pdu_rel8.rnti,eNB,SEARCH_EXIST)==-1) ? TRUE : FALSE;
-
-  //AssertFatal((UE_id=find_ulsch(ulsch_pdu->ulsch_pdu_rel8.rnti,eNB,SEARCH_EXIST_OR_FREE))>=0,
-  //        "No existing/free UE ULSCH for rnti %x\n",ulsch_pdu->ulsch_pdu_rel8.rnti);
 
   LTE_eNB_ULSCH_t *ulsch=eNB->ulsch[UE_id];
   LTE_DL_FRAME_PARMS *frame_parms = &eNB->frame_parms;
@@ -1945,7 +2016,10 @@ void fill_ulsch(PHY_VARS_eNB *eNB,int UE_id,nfapi_ul_config_ulsch_pdu *ulsch_pdu
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
   LOG_D(PHY,"Filling ULSCH : ue_type %d, harq_pid %d\n",ulsch->ue_type,harq_pid);
   ulsch->ue_type = ulsch_pdu->ulsch_pdu_rel13.ue_type;
-  AssertFatal(harq_pid ==0 || ulsch->ue_type == NOCE, "Harq PID is not zero for BL/CE UE\n");
+  if (harq_pid !=0 && ulsch->ue_type != NOCE) {
+    LOG_E(PHY, "Harq PID is not zero for BL/CE UE\n");
+    return;
+  }
 
 
 #else
@@ -1967,7 +2041,6 @@ void fill_ulsch(PHY_VARS_eNB *eNB,int UE_id,nfapi_ul_config_ulsch_pdu *ulsch_pdu
   ulsch->harq_processes[harq_pid]->Nsymb_pusch                           = 12-(frame_parms->Ncp<<1)-(use_srs==0?0:1);
   ulsch->harq_processes[harq_pid]->srs_active                            = use_srs;
 
-  //AssertFatal(ulsch->harq_processes[harq_pid]->nb_rb>0,"nb_rb = 0\n");
   if(ulsch->harq_processes[harq_pid]->nb_rb == 0){
     LOG_E(PHY, "fill_ulsch UE_id %d nb_rb = 0\n", UE_id);
   }
@@ -2059,16 +2132,22 @@ int get_first_rb_in_narrowband(int N_RB_UL,int rb) {
   case 50: // 50 PRBs, N_NB=8, i_0=1
   case 75: // 75 PRBs, N_NB=12, i_0=1
   case 15: // 15 PRBs, N_NB=2, i_0=1
-    AssertFatal(rb>=1,"rb %d is not possible for %d PRBs\n",rb,N_RB_UL);
+    if (rb < 1) {
+      LOG_E(PHY, "rb %d is not possible for %d PRBs\n",rb,N_RB_UL);
+      return -1;
+    }
     return(rb-1-(6*((rb-1)/6)));
     break;
   case 100: // 100 PRBs, N_NB=16, i_0=2
-    AssertFatal(rb>=2,"rb %d is not possible for %d PRBs\n",rb,N_RB_UL);
+    if (rb < 2) {
+      LOG_E(PHY, "rb %d is not possible for %d PRBs\n",rb,N_RB_UL);
+      return -1;
+    }
     return(rb-2-(6*((rb-2)/6)));
     break;
   default:
-    AssertFatal(1==0,"Impossible N_RB_UL %d\n",N_RB_UL);
-    break;
+    LOG_E(PHY, "Impossible N_RB_UL %d\n",N_RB_UL);
+    return -1;
   }
 }
 
@@ -2082,8 +2161,17 @@ void fill_mpdcch_dci0 (PHY_VARS_eNB * eNB, L1_rxtx_proc_t * proc, mDCI_ALLOC_t *
   uint32_t        mcs = rel13->mcs;
   uint32_t        hopping = rel13->frequency_hopping_flag;
   uint32_t        narrowband = get_narrowband_index(frame_parms->N_RB_UL,rel13->resource_block_start);
+  if (narrowband == -1) {
+    LOG_E(PHY, "get_narrowband_index return -1\n");
+    return;
+  }
+  int first_rb = get_first_rb_in_narrowband(frame_parms->N_RB_UL,rel13->resource_block_start);
+  if (first_rb == -1) {
+    LOG_E(PHY, "get_first_rb_in_narrowband return -1\n");
+    return;
+  }
   uint32_t        rballoc = computeRIV (6,
-                                        get_first_rb_in_narrowband(frame_parms->N_RB_UL,rel13->resource_block_start),
+                                        first_rb,
                                         rel13->number_of_resource_blocks);
 
   uint32_t        ndi = rel13->new_data_indication;
@@ -2099,8 +2187,10 @@ void fill_mpdcch_dci0 (PHY_VARS_eNB * eNB, L1_rxtx_proc_t * proc, mDCI_ALLOC_t *
 
   void           *dci_pdu = (void *) dci_alloc->dci_pdu;
 
-  AssertFatal(rel13->ce_mode == 1 && rel13->dci_format == 4, "dci format 5 (CE_modeB) not supported yet\n");
-
+  if (rel13->ce_mode != 1 || rel13->dci_format != 4) {
+    LOG_E(PHY, "dci format 5 (CE_modeB) not supported yet\n");
+    return;
+  }
 
   LOG_D (PHY, "Filling DCI6-0A with cqi %d, mcs %d, hopping %d, rballoc %x (%d,%d) ndi %d TPC %d\n", cqi_req,
          mcs, hopping, rballoc, rel13->resource_block_start, rel13->number_of_resource_blocks, ndi, TPC);
@@ -2123,16 +2213,19 @@ void fill_mpdcch_dci0 (PHY_VARS_eNB * eNB, L1_rxtx_proc_t * proc, mDCI_ALLOC_t *
   switch (frame_parms->N_RB_DL) {
   case 6:
     if (frame_parms->frame_type == TDD) {
-      AssertFatal(1==0,"TDD not supported for eMTC yet\n");
+      LOG_E(PHY, "TDD not supported for eMTC yet\n");
+      return;
     } else {
-      AssertFatal(1==0,"6 PRBS not supported for eMTC\n");
+      LOG_E(PHY, "6 PRBS not supported for eMTC\n");
+      return;
     }
 
     break;
 
   case 25:
     if (frame_parms->frame_type == TDD) {
-      AssertFatal(1==0,"TDD not supported for eMTC yet\n");
+      LOG_E(PHY, "TDD not supported for eMTC yet\n");
+      return;
     } else {
       dci_alloc->dci_length = sizeof_DCI6_0A_5MHz_t;
       ((DCI6_0A_5MHz_t *) dci_pdu)->type = 0;
@@ -2155,7 +2248,8 @@ void fill_mpdcch_dci0 (PHY_VARS_eNB * eNB, L1_rxtx_proc_t * proc, mDCI_ALLOC_t *
 
   case 50:
     if (frame_parms->frame_type == TDD) {
-      AssertFatal(1==0,"TDD not supported for eMTC yet\n");
+      LOG_E(PHY, "TDD not supported for eMTC yet\n");
+      return;
     } else {
       dci_alloc->dci_length = sizeof_DCI6_0A_10MHz_t;
       ((DCI6_0A_10MHz_t *) dci_pdu)->type = 0;
@@ -2194,7 +2288,8 @@ void fill_mpdcch_dci0 (PHY_VARS_eNB * eNB, L1_rxtx_proc_t * proc, mDCI_ALLOC_t *
 
   case 100:
     if (frame_parms->frame_type == TDD) {
-      AssertFatal(1==0,"TDD not supported for eMTC yet\n");
+      LOG_E(PHY, "TDD not supported for eMTC yet\n");
+      return;
     } else {
       dci_alloc->dci_length = sizeof_DCI6_0A_20MHz_t;
       ((DCI6_0A_20MHz_t *) dci_pdu)->type = 0;

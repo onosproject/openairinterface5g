@@ -70,11 +70,14 @@ get_prach_resources(module_id_t module_idP,
   int sizeOfRA_PreamblesGroupA;
   int messagePowerOffsetGroupB;
   int PLThreshold;
-  AssertFatal(CC_id == 0,
-              "Transmission on secondary CCs is not supported yet\n");
-  AssertFatal(UE_mac_inst[module_idP].radioResourceConfigCommon != NULL,
-              "[UE %d] FATAL  radioResourceConfigCommon is NULL !!!\n",
-              module_idP);
+  if(CC_id != 0) {
+    LOG_E(MAC, "Transmission on secondary CCs is not supported yet\n");
+    return;
+  }
+  if(UE_mac_inst[module_idP].radioResourceConfigCommon == NULL) {
+    LOG_E(MAC, "[UE %d] FATAL  radioResourceConfigCommon is NULL !!!\n",module_idP);
+    return;
+  }
   rach_ConfigCommon =
     &UE_mac_inst[module_idP].radioResourceConfigCommon->
     rach_ConfigCommon;
@@ -158,6 +161,14 @@ get_prach_resources(module_id_t module_idP,
         break;
     }
 
+    if (get_DELTA_PREAMBLE(module_idP, CC_id) == -1) {
+      LOG_E(MAC, "get_DELTA_PREAMBLE failed\n");
+      return;
+    }
+    if (get_Po_NOMINAL_PUSCH(module_idP, CC_id) == -1) {
+      LOG_E(MAC, "get_Po_NOMINAL_PUSCH failed\n");
+      return;
+    }
     PLThreshold =
       0 - get_DELTA_PREAMBLE(module_idP,
                              CC_id) -
@@ -251,8 +262,10 @@ get_prach_resources(module_id_t module_idP,
 void
 Msg1_transmitted(module_id_t module_idP, uint8_t CC_id,
                  frame_t frameP, uint8_t eNB_id) {
-  AssertFatal(CC_id == 0,
-              "Transmission on secondary CCs is not supported yet\n");
+  if(CC_id != 0) {
+    LOG_E(MAC, "Transmission on secondary CCs is not supported yet\n");
+    return;
+  }
   // start contention resolution timer
   UE_mac_inst[module_idP].RA_attempt_number++;
 
@@ -272,8 +285,10 @@ Msg1_transmitted(module_id_t module_idP, uint8_t CC_id,
 void
 Msg3_transmitted(module_id_t module_idP, uint8_t CC_id,
                  frame_t frameP, uint8_t eNB_id) {
-  AssertFatal(CC_id == 0,
-              "Transmission on secondary CCs is not supported yet\n");
+  if(CC_id != 0) {
+    LOG_E(MAC, "Transmission on secondary CCs is not supported yet\n");
+    return;
+  }
   // start contention resolution timer
   LOG_D(MAC,
         "[UE %d][RAPROC] Frame %d : Msg3_tx: Setting contention resolution timer\n",
@@ -318,8 +333,10 @@ PRACH_RESOURCES_t *ue_get_rach(module_id_t module_idP, int CC_id,
   uint8_t dcch_header_len = 0;
   uint16_t sdu_lengths;
   uint8_t ulsch_buff[MAX_ULSCH_PAYLOAD_BYTES];
-  AssertFatal(CC_id == 0,
-              "Transmission on secondary CCs is not supported yet\n");
+  if(CC_id != 0) {
+    LOG_E(MAC, "Transmission on secondary CCs is not supported yet\n");
+    return (NULL);
+  }
 
   if (UE_mode == PRACH) {
     LOG_D(MAC, "ue_get_rach 3, RA_active value: %d", UE_mac_inst[module_idP].RA_active);
@@ -364,9 +381,10 @@ PRACH_RESOURCES_t *ue_get_rach(module_id_t module_idP, int CC_id,
         UE_mac_inst[module_idP].RA_prach_resources.Msg3 =
           UE_mac_inst[module_idP].CCCH_pdu.payload;
         UE_mac_inst[module_idP].RA_backoff_cnt = 0; // add the backoff condition here if we have it from a previous RA reponse which failed (i.e. backoff indicator)
-        AssertFatal(rach_ConfigCommon != NULL,
-                    "[UE %d] FATAL Frame %d: rach_ConfigCommon is NULL !!!\n",
-                    module_idP, frameP);
+        if(rach_ConfigCommon == NULL) {
+          LOG_E(MAC, "[UE %d] FATAL Frame %d: rach_ConfigCommon is NULL !!!\n",module_idP, frameP);
+          return (NULL);
+        }
         UE_mac_inst[module_idP].RA_window_cnt =
           2 +
           rach_ConfigCommon->ra_SupervisionInfo.
@@ -459,9 +477,10 @@ PRACH_RESOURCES_t *ue_get_rach(module_id_t module_idP, int CC_id,
         UE_mac_inst[module_idP].RA_prach_resources.Msg3 =
           ulsch_buff;
         UE_mac_inst[module_idP].RA_backoff_cnt = 0; // add the backoff condition here if we have it from a previous RA reponse which failed (i.e. backoff indicator)
-        AssertFatal(rach_ConfigCommon != NULL,
-                    "[UE %d] FATAL Frame %d: rach_ConfigCommon is NULL !!!\n",
-                    module_idP, frameP);
+        if(rach_ConfigCommon == NULL) {
+          LOG_E(MAC, "[UE %d] FATAL Frame %d: rach_ConfigCommon is NULL !!!\n",module_idP, frameP);
+          return (NULL);
+        }
         UE_mac_inst[module_idP].RA_window_cnt =
           2 +
           rach_ConfigCommon->ra_SupervisionInfo.
@@ -601,6 +620,10 @@ PRACH_RESOURCES_t *ue_get_rach(module_id_t module_idP, int CC_id,
           UE_mac_inst[module_idP].
           RA_prach_resources.ra_PREAMBLE_RECEIVED_TARGET_POWER
             = get_Po_NOMINAL_PUSCH(module_idP, CC_id);
+          if (UE_mac_inst[module_idP].RA_prach_resources.ra_PREAMBLE_RECEIVED_TARGET_POWER == -1) {
+            LOG_E(MAC, "get_Po_NOMINAL_PUSCH failed \n");
+            return (NULL);
+          }
         }
 
         UE_mac_inst[module_idP].RA_window_cnt =
@@ -618,7 +641,7 @@ PRACH_RESOURCES_t *ue_get_rach(module_id_t module_idP, int CC_id,
     LOG_D(MAC,
           "[UE %d] FATAL: Should not have checked for RACH in PUSCH yet ...",
           module_idP);
-    AssertFatal(1 == 0, "");
+    return (NULL);
   }
 
   return (NULL);

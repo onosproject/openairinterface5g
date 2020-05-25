@@ -401,7 +401,10 @@ void lte_param_init(  unsigned char transmission_mode,
   lte_frame_parms->phich_config_common.phich_resource = oneSixth;
   lte_frame_parms->phich_config_common.phich_duration = normal;
 
-  init_frame_parms(lte_frame_parms,osf);
+  if (init_frame_parms(lte_frame_parms,osf) == -1) {
+    LOG_E(PHY, "init_frame_parms failed\n");
+    return;
+  }
 
 
   phy_init_top(lte_frame_parms); //allocation
@@ -453,7 +456,10 @@ void lte_param_init(  unsigned char transmission_mode,
 
   phy_init_lte_ue(PHY_vars_UE_g[0],1,0);
 
-  phy_init_lte_eNB(PHY_vars_eNB_g[0],0,0,0);
+  if (phy_init_lte_eNB(PHY_vars_eNB_g[0],0,0) == -1) {
+    LOG_E(PHY, "lte_param_init:phy_init_lte_eNB failed.\n");
+	return;
+  }
 
   LOG_I(PHY,"Done lte_param_init\n");
 

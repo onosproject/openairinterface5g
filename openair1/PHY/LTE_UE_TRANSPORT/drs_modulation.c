@@ -69,6 +69,10 @@ int generate_drs_pusch(PHY_VARS_UE *ue,
 
   int32_t ref_re,ref_im;
   uint8_t harq_pid = (proc == NULL) ? 0: subframe2harq_pid(fp,proc->frame_tx,subframe);
+  if (harq_pid == 255) {
+    LOG_E(PHY,"FATAL ERROR: illegal harq_pid, returning\n");
+    return -1;
+  }
 
   if (ue!=NULL) {
     cyclic_shift0 = (fp->pusch_config_common.ul_ReferenceSignalsPUSCH.cyclicShift +

@@ -232,8 +232,14 @@ int stream_compute_integrity_eia2(stream_cipher_t *stream_cipher, uint8_t out[4]
   uint32_t zero_bit = 0;
   uint32_t m_length;
 
-  DevAssert(stream_cipher != NULL);
-  DevAssert(stream_cipher->key != NULL);
+  if(stream_cipher == NULL) {
+    LOG_E(OSA, "stream_cipher == NULL\n");
+    return -1;
+  }
+  if(stream_cipher->key == NULL) {
+    LOG_E(OSA, "stream_cipher->key == NULL\n");
+    return -1;
+  }
 
   memset(data, 0, 16);
 

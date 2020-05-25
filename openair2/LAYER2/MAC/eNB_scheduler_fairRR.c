@@ -111,9 +111,13 @@ void pre_scd_nb_rbs_required(    module_id_t     module_idP,
   uint16_t                     step_size=2;
   rrc_eNB_ue_context_t         *ue_contextP = NULL;
   N_RB_DL = to_prb(RC.mac[module_idP]->common_channels[CC_id].mib->message.dl_Bandwidth);
-  int header_length_last;
-  int header_length_total;
-  int dl_dtch_num;
+  if (N_RB_DL == -1) {
+    LOG_E(MAC, "pre_scd_nb_rbs_required:to_prb failed, N_RB_DL == -1 \n");
+    return;
+  }
+int header_length_last;
+int header_length_total;
+int dl_dtch_num;
   int dl_dtch_list[MAX_NUM_DTCH];
 
   if(N_RB_DL==50) step_size=3;
@@ -271,15 +275,26 @@ void dlsch_scheduler_pre_ue_select_fairRR(
         }
 
         switch (get_tmode(module_idP, CC_id, UE_id)) {
+          case 0: 
+            LOG_E(MAC, "get_tmode failed\n");
+            return;
           case 1:
           case 2:
           case 7:
+            if (get_bw_index(module_idP, CC_id) == -1) {
+              LOG_E(MAC, "get_bw_index failed\n");
+              return;
+            }
             aggregation = get_aggregation(get_bw_index(module_idP, CC_id),
                                           ue_sched_ctl->dl_cqi[CC_id],
                                           format1);
             break;
 
           case 3:
+            if (get_bw_index(module_idP, CC_id) == -1) {
+              LOG_E(MAC, "get_bw_index failed\n");
+              return;
+            }
             aggregation = get_aggregation(get_bw_index(module_idP,CC_id),
                                           ue_sched_ctl->dl_cqi[CC_id],
                                           format2A);
@@ -406,15 +421,26 @@ void dlsch_scheduler_pre_ue_select_fairRR(
         }
 
         switch (get_tmode(module_idP, CC_id, UE_id)) {
+          case 0: 
+            LOG_E(MAC, "get_tmode failed\n");
+            return;
           case 1:
           case 2:
           case 7:
+            if (get_bw_index(module_idP, CC_id) == -1) {
+              LOG_E(MAC, "get_bw_index failed\n");
+              return;
+            }
             aggregation = get_aggregation(get_bw_index(module_idP, CC_id),
                                           ue_sched_ctl->dl_cqi[CC_id],
                                           format1);
             break;
 
           case 3:
+            if (get_bw_index(module_idP, CC_id) == -1) {
+              LOG_E(MAC, "get_bw_index failed\n");
+              return;
+            }
             aggregation = get_aggregation(get_bw_index(module_idP,CC_id),
                                           ue_sched_ctl->dl_cqi[CC_id],
                                           format2A);
@@ -536,15 +562,26 @@ void dlsch_scheduler_pre_ue_select_fairRR(
         }
 
         switch (get_tmode(module_idP, CC_id, UE_id)) {
+          case 0: 
+            LOG_E(MAC, "get_tmode failed\n");
+            return;
           case 1:
           case 2:
           case 7:
+            if (get_bw_index(module_idP, CC_id) == -1) {
+              LOG_E(MAC, "get_bw_index failed\n");
+              return;
+            }
             aggregation = get_aggregation(get_bw_index(module_idP, CC_id),
                                           ue_sched_ctl->dl_cqi[CC_id],
                                           format1);
             break;
 
           case 3:
+            if (get_bw_index(module_idP, CC_id) == -1) {
+              LOG_E(MAC, "get_bw_index failed\n");
+              return;
+            }
             aggregation = get_aggregation(get_bw_index(module_idP,CC_id),
                                           ue_sched_ctl->dl_cqi[CC_id],
                                           format2A);
@@ -665,6 +702,10 @@ void dlsch_scheduler_pre_processor_fairRR (module_id_t   Mod_id,
       continue;
 
     min_rb_unit[CC_id] = get_min_rb_unit(Mod_id, CC_id);
+    if (min_rb_unit[CC_id] == -1) {
+      LOG_E(MAC, "get_min_rb_unit failed\n");
+      return;
+    }
     cc = &RC.mac[Mod_id]->common_channels[CC_id];
     for (i = 0; i < NUMBER_OF_UE_MAX; i++) {
       if (UE_list->active[i] != TRUE)
@@ -709,6 +750,10 @@ void dlsch_scheduler_pre_processor_fairRR (module_id_t   Mod_id,
     cc = &RC.mac[Mod_id]->common_channels[CC_id];
     // Get total available RBS count and total UE count
     N_RB_DL = to_prb(cc->mib->message.dl_Bandwidth);
+    if (N_RB_DL == -1) {
+      LOG_E(MAC, "dlsch_scheduler_pre_processor_fairRR:to_prb failed, N_RB_DL == -1\n");
+      return;
+    }
     temp_total_rbs_count = 0;
     for(uint8_t rbg_i = 0;rbg_i < N_RBG[CC_id];rbg_i++ ){
       if(rballoc_sub[CC_id][rbg_i] == 0){
@@ -1001,7 +1046,15 @@ schedule_ue_spec_fairRR(module_id_t module_idP,
   //    aggregation = 2;
   for (CC_id = 0; CC_id < MAX_NUM_CCs; CC_id++) {
     N_RB_DL[CC_id] = to_prb(cc[CC_id].mib->message.dl_Bandwidth);
+    if (N_RB_DL[CC_id] == -1) {
+      LOG_E(MAC, "schedule_ue_spec_fairRR:to_prb failed, N_RB_DL[CC_id] == -1\n");
+      return;
+    }
     min_rb_unit[CC_id] = get_min_rb_unit(module_idP, CC_id);
+    if (min_rb_unit[CC_id] == -1) {
+      LOG_E(MAC, "get_min_rb_unit failed\n");
+      return;
+    }
     // get number of PRBs less those used by common channels
     total_nb_available_rb[CC_id] = N_RB_DL[CC_id];
 
@@ -1010,6 +1063,10 @@ schedule_ue_spec_fairRR(module_id_t module_idP,
         total_nb_available_rb[CC_id]--;
 
     N_RBG[CC_id] = to_rbg(cc[CC_id].mib->message.dl_Bandwidth);
+    if (N_RBG[CC_id] < 0) {
+      LOG_E(MAC, "schedule_ue_spec_fairRR:to_rbg failed, N_RBG[CC_id] < 0 \n");
+      return;
+    }
     // store the global enb stats:
     eNB->eNB_stats[CC_id].num_dlactive_UEs = UE_list->num_UEs;
     eNB->eNB_stats[CC_id].available_prbs =
@@ -1060,14 +1117,25 @@ schedule_ue_spec_fairRR(module_id_t module_idP,
 
       /*
             switch(get_tmode(module_idP,CC_id,UE_id)){
+            case 0: 
+              LOG_E(MAC, "get_tmode failed\n");
+              return;
             case 1:
             case 2:
             case 7:
+              if (get_bw_index(module_idP, CC_id) == -1) {
+                LOG_E(MAC, "get_bw_index failed\n");
+                return;
+              }
               aggregation = get_aggregation(get_bw_index(module_idP,CC_id),
                                             ue_sched_ctl->dl_cqi[CC_id],
                                             format1);
               break;
             case 3:
+              if (get_bw_index(module_idP, CC_id) == -1) {
+                LOG_E(MAC, "get_bw_index failed\n");
+                return;
+              }
               aggregation = get_aggregation(get_bw_index(module_idP,CC_id),
                                             ue_sched_ctl->dl_cqi[CC_id],
                                             format2A);
@@ -1482,6 +1550,10 @@ schedule_ue_spec_fairRR(module_id_t module_idP,
                                                      padding,
                                                      post_padding
                                                     );
+                    if (offset < 0) {
+                      LOG_E(MAC, "schedule_ue_spec_fairRR:generate_dlsch_header failed, offset < 0 \n");
+                      return;
+                    }
 
                     // cycle through SDUs and place in dlsch_buffer
                     memcpy(&UE_list->DLSCH_pdu[CC_id][0][UE_id].payload[0][oppose_tb][offset],dlsch_buffer,sdu_length_total);
@@ -1526,6 +1598,9 @@ schedule_ue_spec_fairRR(module_id_t module_idP,
         }
 
           switch (get_tmode(module_idP, CC_id, UE_id)) {
+          case 0: 
+            LOG_E(MAC, "get_tmode failed\n");
+            return;
           case 3:
 
               if((UE_list->UE_template[CC_id][UE_id].oldmcs[harq_pid][select_tb] == 0) && ((UE_list->UE_sched_ctrl[UE_id].rsn[CC_id][harq_pid][select_tb] & 3) == 1)){
@@ -1543,6 +1618,10 @@ schedule_ue_spec_fairRR(module_id_t module_idP,
               dl_config_pdu->pdu_type = NFAPI_DL_CONFIG_DCI_DL_PDU_TYPE;
               dl_config_pdu->pdu_size =  (uint8_t) (2 + sizeof(nfapi_dl_config_dci_dl_pdu));
               dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.dci_format                            = NFAPI_DL_DCI_FORMAT_2A;
+              if (get_bw_index(module_idP, CC_id) == -1) {
+                LOG_E(MAC, "get_bw_index failed\n");
+                return;
+              }
               dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.aggregation_level                     = get_aggregation( get_bw_index(module_idP, CC_id),
                                                                                                                  ue_sched_ctl->dl_cqi[CC_id],
                                                                                                                  format2A
@@ -1782,6 +1861,10 @@ schedule_ue_spec_fairRR(module_id_t module_idP,
               dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.tl.tag = NFAPI_DL_CONFIG_REQUEST_DCI_DL_PDU_REL8_TAG;
               dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.
               dci_format = NFAPI_DL_DCI_FORMAT_1;
+              if (get_bw_index(module_idP, CC_id) == -1) {
+                LOG_E(MAC, "get_bw_index failed\n");
+                return;
+              }
               dl_config_pdu->dci_dl_pdu.
               dci_dl_pdu_rel8.aggregation_level =
                 get_aggregation(get_bw_index
@@ -2321,6 +2404,10 @@ schedule_ue_spec_fairRR(module_id_t module_idP,
                                          ta_update, // timing advance
                                          NULL,  // contention res id
                                          padding, post_padding);
+          if (offset < 0) {
+            LOG_E(MAC, "schedule_ue_spec_fairRR:generate_dlsch_header failed, offset < 0 \n");
+            return;
+          }
 
           //#ifdef DEBUG_eNB_SCHEDULER
           if (ta_update != 31) {
@@ -2689,6 +2776,10 @@ schedule_ue_spec_fairRR(module_id_t module_idP,
                                                 NULL,           // contention res id
                                                 padding,
                                                 post_padding);
+                if (offset < 0) {
+                  LOG_E(MAC, "schedule_ue_spec_fairRR:generate_dlsch_header failed, offset < 0 \n");
+                  return;
+                }
 
                 // cycle through SDUs and place in dlsch_buffer
                 memcpy(&UE_list->DLSCH_pdu[CC_id][0][UE_id].payload[0][oppose_tb][offset],dlsch_buffer,sdu_length_total);
@@ -2718,6 +2809,9 @@ schedule_ue_spec_fairRR(module_id_t module_idP,
         if(first_TB_pdu_create_flg == 1){
 
             switch (get_tmode(module_idP, CC_id, UE_id)) {
+                case 0: 
+                    LOG_E(MAC, "get_tmode failed\n");
+                    return;
                 case 3:
 
                     dl_config_pdu                                                         = &dl_req->dl_config_pdu_list[dl_req->number_pdu];
@@ -2725,6 +2819,10 @@ schedule_ue_spec_fairRR(module_id_t module_idP,
                     dl_config_pdu->pdu_type                                               = NFAPI_DL_CONFIG_DCI_DL_PDU_TYPE;
                     dl_config_pdu->pdu_size                                               = (uint8_t)(2+sizeof(nfapi_dl_config_dci_dl_pdu));
                     dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.dci_format                  = NFAPI_DL_DCI_FORMAT_2A;
+                    if (get_bw_index(module_idP, CC_id) == -1) {
+                      LOG_E(MAC, "get_bw_index failed\n");
+                      return;
+                    }
                     dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.aggregation_level           = get_aggregation(get_bw_index(module_idP,CC_id),ue_sched_ctl->dl_cqi[CC_id],format2A);
                     if (UE_list->eNB_UE_stats[CC_id][UE_id].rrc_status == RRC_HO_EXECUTION) {
                       dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.aggregation_level = 4;
@@ -2781,9 +2879,14 @@ schedule_ue_spec_fairRR(module_id_t module_idP,
 
                         UE_list->UE_template[CC_id][UE_id].oldNDI[harq_pid][select_tb] = 1 - UE_list->UE_template[CC_id][UE_id].oldNDI[harq_pid][select_tb];
                         UE_list->UE_template[CC_id][UE_id].oldmcs[harq_pid][select_tb] = UE_list->eNB_UE_stats[CC_id][UE_id].dlsch_mcs[select_tb];
-                        AssertFatal(UE_list->UE_template[CC_id][UE_id].physicalConfigDedicated!=NULL,"physicalConfigDedicated is NULL\n");
-                        AssertFatal(UE_list->UE_template[CC_id][UE_id].physicalConfigDedicated->pdsch_ConfigDedicated!=NULL,"physicalConfigDedicated->pdsch_ConfigDedicated is NULL\n");
-
+                        if(UE_list->UE_template[CC_id][UE_id].physicalConfigDedicated == NULL) {
+                          LOG_E(MAC, "physicalConfigDedicated is NULL\n");
+                          return;
+                        }
+                        if(UE_list->UE_template[CC_id][UE_id].physicalConfigDedicated->pdsch_ConfigDedicated == NULL) {
+                          LOG_E(MAC, "physicalConfigDedicated->pdsch_ConfigDedicated is NULL\n");
+                          return;
+                        }
                         fill_nfapi_dlsch_config( eNB,
                                                  dl_req,
                                                  UE_list->eNB_UE_stats[CC_id][UE_id].TBS[select_tb],
@@ -2827,8 +2930,14 @@ schedule_ue_spec_fairRR(module_id_t module_idP,
 
                             UE_list->UE_template[CC_id][UE_id].oldNDI[harq_pid][oppose_tb] = 1 - UE_list->UE_template[CC_id][UE_id].oldNDI[harq_pid][oppose_tb];
                             UE_list->UE_template[CC_id][UE_id].oldmcs[harq_pid][oppose_tb] = UE_list->eNB_UE_stats[CC_id][UE_id].dlsch_mcs[oppose_tb];
-                            AssertFatal(UE_list->UE_template[CC_id][UE_id].physicalConfigDedicated!=NULL,"physicalConfigDedicated is NULL\n");
-                            AssertFatal(UE_list->UE_template[CC_id][UE_id].physicalConfigDedicated->pdsch_ConfigDedicated!=NULL,"physicalConfigDedicated->pdsch_ConfigDedicated is NULL\n");
+                            if(UE_list->UE_template[CC_id][UE_id].physicalConfigDedicated == NULL) {
+                              LOG_E(MAC, "physicalConfigDedicated is NULL\n");
+                              return;
+                            }
+                            if(UE_list->UE_template[CC_id][UE_id].physicalConfigDedicated->pdsch_ConfigDedicated == NULL) {
+                              LOG_E(MAC, "physicalConfigDedicated->pdsch_ConfigDedicated is NULL\n");
+                              return;
+                            }
 
                             fill_nfapi_dlsch_config( eNB,
                                                      dl_req,
@@ -2883,6 +2992,10 @@ schedule_ue_spec_fairRR(module_id_t module_idP,
 	  dl_config_pdu->pdu_type                                               = NFAPI_DL_CONFIG_DCI_DL_PDU_TYPE; 
 	  dl_config_pdu->pdu_size                                               = (uint8_t)(2+sizeof(nfapi_dl_config_dci_dl_pdu));
 	  dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.dci_format                  = NFAPI_DL_DCI_FORMAT_1;
+    if (get_bw_index(module_idP, CC_id) == -1) {
+      LOG_E(MAC, "get_bw_index failed\n");
+      return;
+    }
 	  dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.aggregation_level           = get_aggregation(get_bw_index(module_idP,CC_id),ue_sched_ctl->dl_cqi[CC_id],format1);
     if (UE_list->eNB_UE_stats[CC_id][UE_id].rrc_status == RRC_HO_EXECUTION) {
       dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.aggregation_level = 4;
@@ -2930,8 +3043,14 @@ schedule_ue_spec_fairRR(module_id_t module_idP,
         UE_list->UE_template[CC_id][UE_id].oldNDI[harq_pid][TB1]=1-UE_list->UE_template[CC_id][UE_id].oldNDI[harq_pid][TB1];
         UE_list->UE_template[CC_id][UE_id].oldmcs[harq_pid][TB1] = UE_list->eNB_UE_stats[CC_id][UE_id].dlsch_mcs[TB1];
         UE_list->UE_template[CC_id][UE_id].oldmcs[harq_pid][TB2] = 0;
-	    AssertFatal(UE_list->UE_template[CC_id][UE_id].physicalConfigDedicated!=NULL,"physicalConfigDedicated is NULL\n");
-	    AssertFatal(UE_list->UE_template[CC_id][UE_id].physicalConfigDedicated->pdsch_ConfigDedicated!=NULL,"physicalConfigDedicated->pdsch_ConfigDedicated is NULL\n");
+        if(UE_list->UE_template[CC_id][UE_id].physicalConfigDedicated == NULL) {
+          LOG_E(MAC, "physicalConfigDedicated is NULL\n");
+          return;
+        }
+        if(UE_list->UE_template[CC_id][UE_id].physicalConfigDedicated->pdsch_ConfigDedicated == NULL) {
+          LOG_E(MAC, "physicalConfigDedicated->pdsch_ConfigDedicated is NULL\n");
+          return;
+        }
 	    
 	    fill_nfapi_dlsch_config(eNB,dl_req,
                     UE_list->eNB_UE_stats[CC_id][UE_id].TBS[TB1],
@@ -3026,7 +3145,15 @@ fill_DLSCH_dci_fairRR(
 
     cc              = &eNB->common_channels[CC_id];
     N_RBG           = to_rbg(cc->mib->message.dl_Bandwidth);
+    if (N_RBG < 0) {
+      LOG_E(MAC, "fill_DLSCH_dci_fairRR:to_rbg failed, N_RBG < 0 \n");
+      return;
+    }
     N_RB_DL         = to_prb(cc->mib->message.dl_Bandwidth);
+    if (N_RB_DL == -1) {
+      LOG_E(MAC, "fill_DLSCH_dci_fairRR:to_prb failed, N_RB_DL == -1 \n");
+      return;
+    }
 
     // UE specific DCIs
     for (j = 0; j < dlsch_ue_select[CC_id].ue_num; j++) {
@@ -3164,6 +3291,10 @@ void ulsch_scheduler_pre_ue_select_fairRR(
     cc = &eNB->common_channels[CC_id];
     //harq_pid
     harq_pid = subframe2harqpid(cc,(frameP+(sched_subframeP<subframeP ? 1 : 0)),sched_subframeP);
+    if (harq_pid == 255) {
+      LOG_E(MAC, "ulsch_scheduler_pre_ue_select_fairRR:subframe2harqpid failed, harq_pid == 255\n");
+      return;
+    }
     //round
     round = UE_list->UE_sched_ctrl[UE_id].round_UL[CC_id][harq_pid];
 
@@ -3873,6 +4004,10 @@ void schedule_ulsch_rnti_fairRR(module_id_t   module_idP,
     cc  = &eNB->common_channels[CC_id];
     // This is the actual CC_id in the list
     N_RB_UL      = to_prb(cc->mib->message.dl_Bandwidth);
+    if (N_RB_UL == -1) {
+      LOG_E(MAC, "schedule_ulsch_rnti_fairRR:to_prb failed, N_RB_UL == -1\n");
+      return;
+    }
 
     //leave out first RB for PUCCH
     if (cc->tdd_Config == NULL) {
@@ -3953,6 +4088,10 @@ void schedule_ulsch_rnti_fairRR(module_id_t   module_idP,
       UE_template   = &UE_list->UE_template[CC_id][UE_id];
       UE_sched_ctrl = &UE_list->UE_sched_ctrl[UE_id];
       harq_pid      = subframe2harqpid(cc,sched_frame,sched_subframeP);
+      if (harq_pid == 255) {
+        LOG_E(MAC, "schedule_ulsch_rnti_fairRR:subframe2harqpid failed, harq_pid == 255\n");
+        return;
+      }
       rnti = UE_RNTI(CC_id,UE_id);
       if (UE_list->eNB_UE_stats[CC_id][UE_id].rrc_status == RRC_HO_EXECUTION) {
         aggregation = 4;
@@ -4132,6 +4271,10 @@ void schedule_ulsch_rnti_fairRR(module_id_t   module_idP,
         }
 
         // Add UL_config PDUs
+        if (get_tmode(module_idP,CC_id,UE_id) == 0) {
+          LOG_E(MAC, "get_tmode failed\n");
+          return;
+        }
         fill_nfapi_ulsch_config_request_rel8(&ul_req_tmp->ul_config_pdu_list[ul_req_index],
                                              cqi_req,
                                              cc,
@@ -4286,6 +4429,10 @@ void schedule_ulsch_rnti_fairRR(module_id_t   module_idP,
           }
         }
 
+        if (get_tmode(module_idP,CC_id,UE_id) == 0) {
+          LOG_E(MAC, "get_tmode failed\n");
+          return;
+        }
         fill_nfapi_ulsch_config_request_rel8(&ul_req_tmp->ul_config_pdu_list[ul_req_index],
                                              cqi_req,
                                              cc,

@@ -49,10 +49,6 @@ void rlc_am_free_in_sdu(
              index_in_bufferP,rlcP->channel_id);
       return;
     }
-/*
-	  AssertFatal(rlcP->input_sdus[index_in_bufferP].mem_block == NULL, "RLC AM Tx SDU Conf: Data Part is not empty index=%d LcId=%d\n",
-				index_in_bufferP,rlcP->channel_id);
-*/
 	/*
     if (rlcP->input_sdus[index_in_bufferP].mem_block != NULL) {
       free_mem_block(rlcP->input_sdus[index_in_bufferP].mem_block, __func__);
@@ -130,8 +126,6 @@ rlc_am_pdu_sdu_data_cnf(
 
       for (pdu_sdu_index = 0; pdu_sdu_index < rlc_pP->tx_data_pdu_buffer[snP % RLC_AM_WINDOW_SIZE].nb_sdus; pdu_sdu_index++) {
         sdu_index = rlc_pP->tx_data_pdu_buffer[snP % RLC_AM_WINDOW_SIZE].sdus_index[pdu_sdu_index];
-        //assert(sdu_index >= 0);
-        //assert(sdu_index < RLC_AM_SDU_CONTROL_BUFFER_SIZE);
         if(sdu_index < 0 || sdu_index >= RLC_AM_SDU_CONTROL_BUFFER_SIZE) {
           LOG_E(RLC, "sdu_index error. sdu_index %d, pdu_sdu_index %d\n", sdu_index, pdu_sdu_index);
           continue;

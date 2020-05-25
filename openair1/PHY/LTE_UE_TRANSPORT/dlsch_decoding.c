@@ -790,7 +790,8 @@ int dlsch_encoding_SIC(PHY_VARS_UE *ue,
 #ifdef DEBUG_DLSCH_CODING
     printf("rvidx in SIC encoding = %d\n", dlsch->harq_processes[harq_pid]->rvidx);
 #endif
-    r_offset += lte_rate_matching_turbo(dlsch->harq_processes[harq_pid]->RTC[r],
+    uint32_t lte_rate_matching_turbo_val = 0;
+    lte_rate_matching_turbo_val = lte_rate_matching_turbo(dlsch->harq_processes[harq_pid]->RTC[r],
                                         G,  //G
                                         dlsch->harq_processes[harq_pid]->w[r],
                                         dlsch->harq_processes[harq_pid]->e+r_offset,
@@ -804,6 +805,11 @@ int dlsch_encoding_SIC(PHY_VARS_UE *ue,
                                         r,
                                         nb_rb);
     //                                        m);                       // r
+	if (lte_rate_matching_turbo_val == -1) {
+      LOG_E(PHY, "dlsch_encoding_SIC:lte_rate_matching_turbo failed.\n");
+      return(-1);
+	}
+	r_offset += lte_rate_matching_turbo_val;
     stop_meas(rm_stats);
 #ifdef DEBUG_DLSCH_CODING
 

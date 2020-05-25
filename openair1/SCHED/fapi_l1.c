@@ -125,8 +125,10 @@ void handle_nfapi_hi_dci0_hi_pdu(PHY_VARS_eNB *eNB,int frame,int subframe,L1_rxt
   phich->config[phich->num_hi].first_rb = hi_dci0_config_pdu->hi_pdu.hi_pdu_rel8.resource_block_start;
   phich->config[phich->num_hi].n_DMRS   = hi_dci0_config_pdu->hi_pdu.hi_pdu_rel8.cyclic_shift_2_for_drms;
   phich->num_hi++;
-  AssertFatal(phich->num_hi<32,"Maximum number of phich reached in subframe\n");
-
+  if (phich->num_hi >= 32) {
+    LOG_E(PHY, "Maximum number of phich reached in subframe\n");
+    return;
+  }
 }
 
 void handle_nfapi_bch_pdu(PHY_VARS_eNB *eNB,L1_rxtx_proc_t *proc,
@@ -136,7 +138,10 @@ void handle_nfapi_bch_pdu(PHY_VARS_eNB *eNB,L1_rxtx_proc_t *proc,
 
   if (NFAPI_MODE==NFAPI_MODE_VNF) return;
 
-  AssertFatal(rel8->length == 3, "BCH PDU has length %d != 3\n",rel8->length);
+  if (rel8->length != 3) {
+    LOG_E(PHY, "BCH PDU has length %d != 3\n",rel8->length);
+    return;
+  }
   //LOG_D(PHY,"bch_pdu: %x,%x,%x\n",sdu[0],sdu[1],sdu[2]);
   eNB->pbch_pdu[0] = sdu[2];
   eNB->pbch_pdu[1] = sdu[1];
@@ -180,8 +185,6 @@ void handle_nfapi_dlsch_pdu(PHY_VARS_eNB *eNB,int frame,int subframe,L1_rxtx_pro
     return;
   }
 
-  //AssertFatal(UE_id!=-1,"no free or exiting dlsch_context\n");
-  //AssertFatal(UE_id<NUMBER_OF_UE_MAX,"returned UE_id %d >= %d(NUMBER_OF_UE_MAX)\n",UE_id,NUMBER_OF_UE_MAX);
   dlsch0 = eNB->dlsch[UE_id][0];
   dlsch1 = eNB->dlsch[UE_id][1];
 #if (LTE_RRC_VERSION >= MAKE_VERSION(13, 0, 0))
@@ -197,7 +200,11 @@ void handle_nfapi_dlsch_pdu(PHY_VARS_eNB *eNB,int frame,int subframe,L1_rxtx_pro
 
   dlsch0_harq     = dlsch0->harq_processes[harq_pid];
   dlsch1_harq     = dlsch1->harq_processes[harq_pid];
-  AssertFatal(dlsch0_harq!=NULL,"dlsch_harq is null\n");
+  if (dlsch0_harq == NULL) {
+    LOG_E(PHY, "dlsch_harq is null\n");
+    return;
+  }
+
   // compute DL power control parameters
   eNB->pdsch_config_dedicated[UE_id].p_a = rel8->pa;
 
@@ -224,10 +231,6 @@ void handle_nfapi_dlsch_pdu(PHY_VARS_eNB *eNB,int frame,int subframe,L1_rxtx_pro
       return;
     }
 
-    //AssertFatal(sdu!=NULL,"NFAPI: SFN/SF:%04d%d proc:TX:[frame %d subframe %d]: programming dlsch for round 0, rnti %x, UE_id %d, harq_pid %d : sdu is null for pdu_index %d dlsch0_harq[round:%d SFN/SF:%d%d pdu:%p mcs:%d ndi:%d pdschstart:%d]\n",
-    //            frame,subframe,
-    //            proc->frame_tx,proc->subframe_tx,rel8->rnti,UE_id,harq_pid,
-    //            dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.pdu_index,dlsch0_harq->round,dlsch0_harq->frame,dlsch0_harq->subframe,dlsch0_harq->pdu,dlsch0_harq->mcs,dlsch0_harq->ndi,dlsch0_harq->pdsch_start);
     if (rel8->rnti != 0xFFFF) LOG_D(PHY,"NFAPI: SFN/SF:%04d%d proc:TX:[frame %d, subframe %d]: programming dlsch for round 0, rnti %x, UE_id %d, harq_pid %d\n",
                                       frame,subframe,proc->frame_tx,proc->subframe_tx,rel8->rnti,UE_id,harq_pid);
 
@@ -248,8 +251,10 @@ void handle_nfapi_dlsch_pdu(PHY_VARS_eNB *eNB,int frame,int subframe,L1_rxtx_pro
 
   if ((rel13->pdsch_payload_type <2) && (rel13->ue_type>0)) { // this is a BR/CE UE and SIB1-BR/SI-BR
     UE_id = find_dlsch(rel8->rnti,eNB,SEARCH_EXIST_OR_FREE);
-    AssertFatal(UE_id!=-1,"no free or exiting dlsch_context\n");
-    AssertFatal(UE_id<NUMBER_OF_UE_MAX,"returned UE_id %d >= %d(NUMBER_OF_UE_MAX)\n",UE_id,NUMBER_OF_UE_MAX);
+    if( (UE_id<0) || (UE_id>=NUMBER_OF_UE_MAX) ) {
+      LOG_E(PHY,"illegal UE_id found!!! rnti %04x UE_id %d\n",rel8->rnti,UE_id);
+      return;
+    }
     dlsch0 = eNB->dlsch[UE_id][0];
     dlsch0->harq_mask = 1;
     dlsch0_harq     = dlsch0->harq_processes[0];
@@ -283,8 +288,8 @@ void handle_nfapi_dlsch_pdu(PHY_VARS_eNB *eNB,int frame,int subframe,L1_rxtx_pro
         break;
 
       case 15:
-        AssertFatal(1==0,"15 PRBs not supported for now\n");
-        break;
+        LOG_E(PHY,"15 PRBs not supported for now\n");
+        return;
 
       case 25:
         dlsch0_harq->rb_alloc[0]      = localRIV2alloc_LUT25[rel8->resource_block_coding];
@@ -296,8 +301,8 @@ void handle_nfapi_dlsch_pdu(PHY_VARS_eNB *eNB,int frame,int subframe,L1_rxtx_pro
         break;
 
       case 75:
-        AssertFatal(1==0,"75 PRBs not supported for now\n");
-        break;
+        LOG_E(PHY,"75 PRBs not supported for now\n");
+        return;
 
       case 100:
         dlsch0_harq->rb_alloc[0]      = localRIV2alloc_LUT100_0[rel8->resource_block_coding];
@@ -323,8 +328,10 @@ void handle_nfapi_dlsch_pdu(PHY_VARS_eNB *eNB,int frame,int subframe,L1_rxtx_pro
 #endif
   {
     UE_id = find_dlsch(rel8->rnti,eNB,SEARCH_EXIST_OR_FREE);
-    AssertFatal(UE_id!=-1,"no free or exiting dlsch_context\n");
-    AssertFatal(UE_id<NUMBER_OF_UE_MAX,"returned UE_id %d >= %d(NUMBER_OF_UE_MAX)\n",UE_id,NUMBER_OF_UE_MAX);
+    if( (UE_id<0) || (UE_id>=NUMBER_OF_UE_MAX) ) {
+      LOG_E(PHY,"illegal UE_id found!!! rnti %04x UE_id %d\n",rel8->rnti,UE_id);
+      return;
+    }
     dlsch0 = eNB->dlsch[UE_id][0];
     dlsch1 = eNB->dlsch[UE_id][1];
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
@@ -352,10 +359,16 @@ void handle_nfapi_dlsch_pdu(PHY_VARS_eNB *eNB,int frame,int subframe,L1_rxtx_pro
     dlsch0->active[proc->subframe_tx] = 1;
     harq_pid        = dlsch0->harq_ids[proc->frame_tx%2][proc->subframe_tx];
     dlsch0->harq_mask |= (1<<harq_pid);
-    AssertFatal((harq_pid>=0) && (harq_pid<8),"subframe %d: harq_pid %d not in 0...7\n",proc->subframe_tx,harq_pid);
+    if ((harq_pid < 0) || (harq_pid >= 8)) {
+      LOG_E(PHY, "subframe %d: harq_pid %d not in 0...7\n",proc->subframe_tx,harq_pid);
+      return;
+    }
     dlsch0_harq     = dlsch0->harq_processes[harq_pid];
     dlsch1_harq     = dlsch1->harq_processes[harq_pid];
-    AssertFatal(dlsch0_harq!=NULL,"dlsch_harq is null\n");
+    if (dlsch0_harq == NULL) {
+      LOG_E(PHY, "dlsch_harq is null\n");
+      return;
+    }
 
     // compute DL power control parameters
 
@@ -379,9 +392,12 @@ void handle_nfapi_dlsch_pdu(PHY_VARS_eNB *eNB,int frame,int subframe,L1_rxtx_pro
 
     //if (dlsch0_harq->round==0) {  //get pointer to SDU if this a new SDU
     if(dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.redundancy_version == 0) {
-      AssertFatal(sdu!=NULL,"NFAPI: frame %d, subframe %d: programming dlsch for round 0, rnti %x, UE_id %d, harq_pid %d : sdu is null for pdu_index %d\n",
-                  proc->frame_tx,proc->subframe_tx,rel8->rnti,UE_id,harq_pid,
-                  dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.pdu_index);
+      if (sdu == NULL) {
+        LOG_E(PHY, "NFAPI: frame %d, subframe %d: programming dlsch for round 0, rnti %x, UE_id %d, harq_pid %d : sdu is null for pdu_index %d\n",
+		      proc->frame_tx,proc->subframe_tx,rel8->rnti,UE_id,harq_pid,dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.pdu_index);
+        return;
+      }
+
       if(sdu == NULL) {
         LOG_E(PHY,
               "NFAPI: frame %d, subframe %d: programming dlsch for round 0, rnti %x, UE_id %d, harq_pid %d : sdu is null for pdu_index %d\n",
@@ -527,7 +543,10 @@ void handle_uci_harq_information(PHY_VARS_eNB *eNB, LTE_eNB_UCI *uci,nfapi_ul_co
       uci->pucch_fmt =  pucch_format3;
       uci->n_pucch_3[0] = harq_information->harq_information_rel9_fdd.n_pucch_1_0;
       uci->n_pucch_3[1] = harq_information->harq_information_rel11.n_pucch_2_0;
-    } else AssertFatal(1==0,"unsupported FDD HARQ mode %d size %d\n",harq_information->harq_information_rel9_fdd.ack_nack_mode,harq_information->harq_information_rel9_fdd.harq_size);
+    } else {
+	  LOG_E(PHY, "unsupported FDD HARQ mode %d size %d\n",harq_information->harq_information_rel9_fdd.ack_nack_mode,harq_information->harq_information_rel9_fdd.harq_size);
+      return;
+	}
   } else { // TDD
     uci->num_pucch_resources = harq_information->harq_information_rel10_tdd.number_of_pucch_resources;
 
@@ -558,7 +577,10 @@ void handle_uci_harq_information(PHY_VARS_eNB *eNB, LTE_eNB_UCI *uci,nfapi_ul_co
       uci->pucch_fmt =  pucch_format3;
       uci->n_pucch_3[0] = harq_information->harq_information_rel10_tdd.n_pucch_1_0;
       uci->n_pucch_3[1] = harq_information->harq_information_rel11.n_pucch_2_0;
-    } else AssertFatal(1==0,"unsupported HARQ mode %d\n",harq_information->harq_information_rel10_tdd.ack_nack_mode);
+    } else {
+      LOG_E(PHY, "unsupported HARQ mode %d\n",harq_information->harq_information_rel10_tdd.ack_nack_mode);
+      return;
+	}
   }
 }
 
@@ -662,7 +684,10 @@ void handle_srs_pdu(PHY_VARS_eNB *eNB,nfapi_ul_config_request_pdu_t *ul_config_p
     break;
   }
 
-  AssertFatal(i<NUMBER_OF_UE_MAX,"No room for SRS processing\n");
+  if (i >= NUMBER_OF_UE_MAX) {
+    LOG_E(PHY, "No room for SRS processing\n");
+    return;
+  }
 }
 
 void handle_nfapi_ul_pdu(PHY_VARS_eNB *eNB,L1_rxtx_proc_t *proc,
@@ -678,8 +703,6 @@ void handle_nfapi_ul_pdu(PHY_VARS_eNB *eNB,L1_rxtx_proc_t *proc,
   if (ul_config_pdu->pdu_type == NFAPI_UL_CONFIG_ULSCH_PDU_TYPE) {
     //if (UE_id == find_ulsch(ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.rnti,eNB,SEARCH_EXIST_OR_FREE)<0)
     //for (int i=0;i<16;i++) if (eNB->ulsch[i]->harq_mask>0) LOG_I(PHY,"rnti %x, mask %x\n",eNB->ulsch[i]->rnti,eNB->ulsch[i]->harq_mask >0);
-    //AssertFatal((UE_id = find_ulsch(ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.rnti,eNB,SEARCH_EXIST_OR_FREE))>=0,
-    //            "No existing UE ULSCH for rnti %x\n",rel8->rnti);
     UE_id = find_ulsch(ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.rnti,eNB,SEARCH_EXIST_OR_FREE);
     if(UE_id < 0) {
       LOG_E(PHY,"No existing UE ULSCH for rnti %x\n",rel8->rnti);
@@ -690,8 +713,6 @@ void handle_nfapi_ul_pdu(PHY_VARS_eNB *eNB,L1_rxtx_proc_t *proc,
           rel8->resource_block_start,rel8->number_of_resource_blocks);
     fill_ulsch(eNB,UE_id,&ul_config_pdu->ulsch_pdu,frame,subframe);
   } else if (ul_config_pdu->pdu_type == NFAPI_UL_CONFIG_ULSCH_HARQ_PDU_TYPE) {
-    //AssertFatal((UE_id = find_ulsch(ul_config_pdu->ulsch_harq_pdu.ulsch_pdu.ulsch_pdu_rel8.rnti,eNB,SEARCH_EXIST_OR_FREE))>=0,
-    //            "No available UE ULSCH for rnti %x\n",ul_config_pdu->ulsch_harq_pdu.ulsch_pdu.ulsch_pdu_rel8.rnti);
     UE_id = find_ulsch(ul_config_pdu->ulsch_harq_pdu.ulsch_pdu.ulsch_pdu_rel8.rnti,eNB,SEARCH_EXIST_OR_FREE);
     if(UE_id < 0) {
       LOG_E(PHY,"No available UE ULSCH for rnti %x\n",ul_config_pdu->ulsch_harq_pdu.ulsch_pdu.ulsch_pdu_rel8.rnti);
@@ -701,9 +722,6 @@ void handle_nfapi_ul_pdu(PHY_VARS_eNB *eNB,L1_rxtx_proc_t *proc,
     handle_ulsch_harq_pdu(eNB, UE_id, ul_config_pdu,
                           &ul_config_pdu->ulsch_harq_pdu.harq_information, frame, subframe);
   } else if (ul_config_pdu->pdu_type == NFAPI_UL_CONFIG_ULSCH_CQI_RI_PDU_TYPE) {
-    //AssertFatal((UE_id = find_ulsch(ul_config_pdu->ulsch_cqi_ri_pdu.ulsch_pdu.ulsch_pdu_rel8.rnti,
-    //                                eNB,SEARCH_EXIST_OR_FREE))>=0,
-    //            "No available UE ULSCH for rnti %x\n",ul_config_pdu->ulsch_cqi_ri_pdu.ulsch_pdu.ulsch_pdu_rel8.rnti);
     UE_id = find_ulsch(ul_config_pdu->ulsch_cqi_ri_pdu.ulsch_pdu.ulsch_pdu_rel8.rnti,eNB,SEARCH_EXIST_OR_FREE);
     if(UE_id < 0) {
       LOG_E(PHY,"No available UE ULSCH for rnti %x\n",ul_config_pdu->ulsch_cqi_ri_pdu.ulsch_pdu.ulsch_pdu_rel8.rnti);
@@ -712,9 +730,6 @@ void handle_nfapi_ul_pdu(PHY_VARS_eNB *eNB,L1_rxtx_proc_t *proc,
     fill_ulsch(eNB,UE_id,&ul_config_pdu->ulsch_cqi_ri_pdu.ulsch_pdu,frame,subframe);
     handle_ulsch_cqi_ri_pdu(eNB,UE_id,ul_config_pdu,frame,subframe);
   } else if (ul_config_pdu->pdu_type == NFAPI_UL_CONFIG_ULSCH_CQI_HARQ_RI_PDU_TYPE) {
-    //AssertFatal((UE_id = find_ulsch(ul_config_pdu->ulsch_cqi_harq_ri_pdu.ulsch_pdu.ulsch_pdu_rel8.rnti,
-    //                                eNB,SEARCH_EXIST_OR_FREE))>=0,
-    //            "No available UE ULSCH for rnti %x\n",ul_config_pdu->ulsch_cqi_harq_ri_pdu.ulsch_pdu.ulsch_pdu_rel8.rnti);
     UE_id = find_ulsch(ul_config_pdu->ulsch_cqi_harq_ri_pdu.ulsch_pdu.ulsch_pdu_rel8.rnti,eNB,SEARCH_EXIST_OR_FREE);
     if(UE_id < 0) {
       LOG_E(PHY,"No available UE ULSCH for rnti %x\n",ul_config_pdu->ulsch_cqi_harq_ri_pdu.ulsch_pdu.ulsch_pdu_rel8.rnti);
@@ -725,9 +740,6 @@ void handle_nfapi_ul_pdu(PHY_VARS_eNB *eNB,L1_rxtx_proc_t *proc,
     handle_ulsch_harq_pdu(eNB, UE_id, ul_config_pdu,
                           &ul_config_pdu->ulsch_cqi_harq_ri_pdu.harq_information, frame, subframe);
   } else if (ul_config_pdu->pdu_type == NFAPI_UL_CONFIG_UCI_HARQ_PDU_TYPE) {
-    //AssertFatal((UE_id = find_uci(ul_config_pdu->uci_harq_pdu.ue_information.ue_information_rel8.rnti,
-    //                              proc->frame_tx,proc->subframe_tx,eNB,SEARCH_EXIST_OR_FREE))>=0,
-    //            "No available UE UCI for rnti %x\n",ul_config_pdu->uci_harq_pdu.ue_information.ue_information_rel8.rnti);
     UE_id = find_uci(ul_config_pdu->uci_harq_pdu.ue_information.ue_information_rel8.rnti,proc->frame_tx,proc->subframe_tx,eNB,SEARCH_EXIST_OR_FREE);
     if(UE_id < 0) {
       LOG_E(PHY,"No available UE UCI for rnti %x\n",ul_config_pdu->uci_harq_pdu.ue_information.ue_information_rel8.rnti);
@@ -737,15 +749,15 @@ void handle_nfapi_ul_pdu(PHY_VARS_eNB *eNB,L1_rxtx_proc_t *proc,
           UE_id,ul_config_pdu->uci_harq_pdu.ue_information.ue_information_rel8.rnti,frame,subframe);
     handle_uci_harq_pdu(eNB,UE_id,ul_config_pdu,frame,subframe,srs_present);
   } else if (ul_config_pdu->pdu_type == NFAPI_UL_CONFIG_UCI_CQI_PDU_TYPE) {
-    AssertFatal(1==0,"NFAPI_UL_CONFIG_UCI_CQI_PDU_TYPE not handled yet\n");
+    LOG_E(PHY,"NFAPI_UL_CONFIG_UCI_CQI_PDU_TYPE not handled yet\n");
+    return;
   } else if (ul_config_pdu->pdu_type == NFAPI_UL_CONFIG_UCI_CQI_HARQ_PDU_TYPE) {
-    AssertFatal(1==0,"NFAPI_UL_CONFIG_UCI_CQI_HARQ_PDU_TYPE not handled yet\n");
+    LOG_E(PHY,"NFAPI_UL_CONFIG_UCI_CQI_HARQ_PDU_TYPE not handled yet\n");
+    return;
   } else if (ul_config_pdu->pdu_type == NFAPI_UL_CONFIG_UCI_CQI_SR_PDU_TYPE) {
-    AssertFatal(1==0,"NFAPI_UL_CONFIG_UCI_CQI_SR_PDU_TYPE not handled yet\n");
+    LOG_E(PHY,"NFAPI_UL_CONFIG_UCI_CQI_SR_PDU_TYPE not handled yet\n");
+    return;
   } else if (ul_config_pdu->pdu_type == NFAPI_UL_CONFIG_UCI_SR_PDU_TYPE) {
-    //AssertFatal((UE_id = find_uci(ul_config_pdu->uci_sr_pdu.ue_information.ue_information_rel8.rnti,
-    //                              proc->frame_tx,proc->subframe_tx,eNB,SEARCH_EXIST_OR_FREE))>=0,
-    //            "No available UE UCI for rnti %x\n",ul_config_pdu->uci_sr_pdu.ue_information.ue_information_rel8.rnti);
     UE_id = find_uci(ul_config_pdu->uci_sr_pdu.ue_information.ue_information_rel8.rnti,proc->frame_tx,proc->subframe_tx,eNB,SEARCH_EXIST_OR_FREE);
     if(UE_id < 0) {
       LOG_E(PHY,"No available UE UCI for rnti %x\n",ul_config_pdu->uci_sr_pdu.ue_information.ue_information_rel8.rnti);
@@ -753,8 +765,6 @@ void handle_nfapi_ul_pdu(PHY_VARS_eNB *eNB,L1_rxtx_proc_t *proc,
     }
     handle_uci_sr_pdu(eNB,UE_id,ul_config_pdu,frame,subframe,srs_present);
   } else if (ul_config_pdu->pdu_type == NFAPI_UL_CONFIG_UCI_SR_HARQ_PDU_TYPE) {
-    //AssertFatal((UE_id = find_uci(rel8->rnti,proc->frame_tx,proc->subframe_tx,eNB,SEARCH_EXIST_OR_FREE))>=0,
-    //            "No available UE UCI for rnti %x\n",ul_config_pdu->uci_sr_harq_pdu.ue_information.ue_information_rel8.rnti);
     UE_id = find_uci(rel8->rnti,proc->frame_tx,proc->subframe_tx,eNB,SEARCH_EXIST_OR_FREE);
     if(UE_id < 0) {
       LOG_E(PHY,"No available UE UCI for rnti %x\n",rel8->rnti);
@@ -783,9 +793,19 @@ void schedule_response(Sched_Rsp_t *Sched_INFO) {
   int                       ul_frame;
   int                       harq_pid;
   LTE_UL_eNB_HARQ_t         *ulsch_harq;
-  AssertFatal(RC.eNB!=NULL,"RC.eNB is null\n");
-  AssertFatal(RC.eNB[Mod_id]!=NULL,"RC.eNB[%d] is null\n",Mod_id);
-  AssertFatal(RC.eNB[Mod_id][CC_id]!=NULL,"RC.eNB[%d][%d] is null\n",Mod_id,CC_id);
+  if (RC.eNB == NULL) {
+    LOG_E(PHY, "RC.eNB is null\n");
+    return;
+  }
+  if (RC.eNB[Mod_id] == NULL) {
+    LOG_E(PHY, "RC.eNB[%d] is null\n",Mod_id);
+    return;
+  }
+  if (RC.eNB[Mod_id][CC_id] == NULL) {
+    LOG_E(PHY, "RC.eNB[%d][%d] is null\n",Mod_id,CC_id);
+    return;
+  }
+
   eNB         = RC.eNB[Mod_id][CC_id];
   fp          = &eNB->frame_parms;
   proc        = &eNB->proc.L1_proc;
@@ -793,9 +813,7 @@ void schedule_response(Sched_Rsp_t *Sched_INFO) {
   //if ((fp->frame_type == TDD) && (subframe_select(fp,subframe)==SF_UL)) return;
   ul_subframe = pdcch_alloc2ul_subframe(fp,subframe);
   ul_frame    = pdcch_alloc2ul_frame(fp,frame,subframe);
-  // DJP - subframe assert will fail - not sure why yet
-  // DJP - AssertFatal(proc->subframe_tx == subframe, "Current subframe %d != NFAPI subframe %d\n",proc->subframe_tx,subframe);
-  // DJP - AssertFatal(proc->subframe_tx == subframe, "Current frame %d != NFAPI frame %d\n",proc->frame_tx,frame);
+
   uint8_t number_pdcch_ofdm_symbols = DL_req->dl_config_request_body.number_pdcch_ofdm_symbols;
   uint8_t number_dl_pdu             = DL_req->dl_config_request_body.number_pdu;
   uint8_t number_hi_dci0_pdu        = HI_DCI0_req->hi_dci0_request_body.number_of_dci+HI_DCI0_req->hi_dci0_request_body.number_of_hi;
@@ -833,6 +851,10 @@ void schedule_response(Sched_Rsp_t *Sched_INFO) {
   if (ul_subframe<10) { // This means that there is an ul_subframe that can be configured here
     LOG_D(PHY,"NFAPI: Clearing dci allocations for potential UL subframe %d\n",ul_subframe);
     harq_pid = subframe2harq_pid(fp,ul_frame,ul_subframe);
+    if (harq_pid == 255) {
+      LOG_E(PHY,"FATAL ERROR: illegal harq_pid, returning\n");
+      return;
+    }
 
     // clear DCI allocation maps for new subframe
     if (NFAPI_MODE!=NFAPI_MODE_VNF)
@@ -859,10 +881,12 @@ void schedule_response(Sched_Rsp_t *Sched_INFO) {
         break;
 
       case NFAPI_DL_CONFIG_BCH_PDU_TYPE:
-        AssertFatal(dl_config_pdu->bch_pdu.bch_pdu_rel8.pdu_index<TX_req->tx_request_body.number_of_pdus,
-                    "bch_pdu_rel8.pdu_index>=TX_req->number_of_pdus (%d>%d)\n",
-                    dl_config_pdu->bch_pdu.bch_pdu_rel8.pdu_index,
-                    TX_req->tx_request_body.number_of_pdus);
+        if (dl_config_pdu->bch_pdu.bch_pdu_rel8.pdu_index >= TX_req->tx_request_body.number_of_pdus) {
+          LOG_E(PHY, "bch_pdu_rel8.pdu_index>=TX_req->number_of_pdus (%d>%d)\n",
+		        dl_config_pdu->bch_pdu.bch_pdu_rel8.pdu_index,TX_req->tx_request_body.number_of_pdus);
+          return;
+        }
+
         eNB->pbch_configured=1;
         do_oai=1;
         //LOG_D(PHY,"%s() NFAPI_DL_CONFIG_BCH_PDU_TYPE TX:%d/%d RX:%d/%d TXREQ:%d/%d\n",
@@ -888,16 +912,11 @@ void schedule_response(Sched_Rsp_t *Sched_INFO) {
               proc->frame_tx, proc->subframe_tx,
               proc->frame_rx, proc->subframe_rx,
               dlsch_pdu_rel8->transport_blocks, pdu_index, sdu);
-        /*
-        AssertFatal(dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.pdu_index<TX_req->tx_request_body.number_of_pdus,
-                    "dlsch_pdu_rel8.pdu_index>=TX_req->number_of_pdus (%d>%d)\n",
-                    dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.pdu_index,
-                    TX_req->tx_request_body.number_of_pdus);
-        */
-        AssertFatal((dlsch_pdu_rel8->transport_blocks<3) &&
-                    (dlsch_pdu_rel8->transport_blocks>0),
-                    "dlsch_pdu_rel8->transport_blocks = %d not in [1,2]\n",
-                    dlsch_pdu_rel8->transport_blocks);
+
+        if ((dlsch_pdu_rel8->transport_blocks >= 3) || (dlsch_pdu_rel8->transport_blocks <= 0)) {
+          LOG_E(PHY, "dlsch_pdu_rel8->transport_blocks = %d not in [1,2]\n",dlsch_pdu_rel8->transport_blocks);
+          return;
+        }
 
         if (1) { //sdu != NULL)
             if (NFAPI_MODE!=NFAPI_MODE_VNF) {
@@ -1053,15 +1072,17 @@ if (NFAPI_MODE!=NFAPI_MODE_VNF)
     for (i=0; i<number_ul_pdu; i++) {
       ul_config_pdu = &UL_req->ul_config_request_body.ul_config_pdu_list[i];
       LOG_D(PHY,"NFAPI: ul_pdu %d : type %d\n",i,ul_config_pdu->pdu_type);
-      AssertFatal(ul_config_pdu->pdu_type == NFAPI_UL_CONFIG_ULSCH_PDU_TYPE ||
-                  ul_config_pdu->pdu_type == NFAPI_UL_CONFIG_ULSCH_HARQ_PDU_TYPE ||
-                  ul_config_pdu->pdu_type == NFAPI_UL_CONFIG_ULSCH_CQI_RI_PDU_TYPE ||
-                  ul_config_pdu->pdu_type == NFAPI_UL_CONFIG_ULSCH_CQI_HARQ_RI_PDU_TYPE ||
-                  ul_config_pdu->pdu_type == NFAPI_UL_CONFIG_UCI_HARQ_PDU_TYPE ||
-                  ul_config_pdu->pdu_type == NFAPI_UL_CONFIG_UCI_SR_PDU_TYPE ||
-                  ul_config_pdu->pdu_type == NFAPI_UL_CONFIG_UCI_SR_HARQ_PDU_TYPE
-                  ,
-                  "Optional UL_PDU type %d not supported\n",ul_config_pdu->pdu_type);
+      if (ul_config_pdu->pdu_type != NFAPI_UL_CONFIG_ULSCH_PDU_TYPE &&
+          ul_config_pdu->pdu_type != NFAPI_UL_CONFIG_ULSCH_HARQ_PDU_TYPE &&
+          ul_config_pdu->pdu_type != NFAPI_UL_CONFIG_ULSCH_CQI_RI_PDU_TYPE &&
+          ul_config_pdu->pdu_type != NFAPI_UL_CONFIG_ULSCH_CQI_HARQ_RI_PDU_TYPE &&
+          ul_config_pdu->pdu_type != NFAPI_UL_CONFIG_UCI_HARQ_PDU_TYPE &&
+          ul_config_pdu->pdu_type != NFAPI_UL_CONFIG_UCI_SR_PDU_TYPE &&
+          ul_config_pdu->pdu_type != NFAPI_UL_CONFIG_UCI_SR_HARQ_PDU_TYPE) {
+        LOG_E(PHY, "Optional UL_PDU type %d not supported\n",ul_config_pdu->pdu_type);
+        return;
+      }
+
       handle_nfapi_ul_pdu(eNB,proc,ul_config_pdu,UL_req->sfn_sf>>4,UL_req->sfn_sf&0xf,UL_req->ul_config_request_body.srs_present);
     }
   }

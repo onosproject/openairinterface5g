@@ -103,8 +103,10 @@ mac_rrc_data_req(
     }
 
     // All even frames transmit SIB in SF 5
-    AssertFatal(RC.rrc[Mod_idP]->carrier[CC_id].sizeof_SIB1 != 255,
-                "[eNB %d] MAC Request for SIB1 and SIB1 not initialized\n",Mod_idP);
+    if(RC.rrc[Mod_idP]->carrier[CC_id].sizeof_SIB1 == 255) {
+      LOG_E(RRC,"[eNB %d] MAC Request for SIB1 and SIB1 not initialized\n",Mod_idP);
+      return 0;
+    }
 
     if ((frameP%2) == 0) {
       memcpy(&buffer_pP[0],
@@ -155,8 +157,10 @@ mac_rrc_data_req(
     buffer_pP[0]=carrier->MIB[0];
     buffer_pP[1]=carrier->MIB[1];
     buffer_pP[2]=carrier->MIB[2];
-    AssertFatal (enc_rval.encoded > 0, "ASN1 message encoding failed (%s, %lu)!\n",
-                 enc_rval.failed_type->name, enc_rval.encoded);
+    if(enc_rval.encoded <= 0) {
+      LOG_E(RRC,"ASN1 message encoding failed (%s, %lu)!\n",enc_rval.failed_type->name, enc_rval.encoded);
+      return 0;
+    }
     return(3);
   }
 
@@ -330,7 +334,12 @@ mac_rrc_data_ind(
       Srb_info->Rx_buffer.payload_size = sdu_lenP;
       rrc_eNB_decode_ccch(&ctxt, Srb_info, CC_id);
     }*/
-    if (sdu_lenP > 0)  rrc_eNB_decode_ccch(&ctxt, sduP, sdu_lenP, CC_id);
+    if (sdu_lenP > 0)  {
+      if (rrc_eNB_decode_ccch(&ctxt, sduP, sdu_lenP, CC_id) == -1) {
+        LOG_E(RRC, "rrc_eNB_decode_ccch failed\n");
+        return -2;
+      }
+    }
   }
 
   if((srb_idP & RAB_OFFSET) == DCCH) {
@@ -394,7 +403,7 @@ void mac_eNB_rrc_ul_failure(const module_id_t Mod_instP,
     flexran_agent_get_rrc_xface(Mod_instP)->flexran_agent_notify_ue_state_change(Mod_instP,
 								     rntiP, PROTOCOL__FLEX_UE_STATE_CHANGE_TYPE__FLUESC_DEACTIVATED);
   }
-  //rrc_mac_remove_ue(Mod_instP,rntiP);
+  //if (rrc_mac_remove_ue(Mod_instP,rntiP) == -1) return;
 }
 
 void mac_eNB_rrc_uplane_failure(const module_id_t Mod_instP,

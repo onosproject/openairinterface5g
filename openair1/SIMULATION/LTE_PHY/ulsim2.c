@@ -97,7 +97,10 @@ int main(int argc, char **argv)
   lte_frame_parms->kTC = 0;
   lte_frame_parms->n_RRC = 0;
 
-  init_frame_parms(lte_frame_parms);
+  if (init_frame_parms(lte_frame_parms) == -1) {
+    LOG_E(PHY, "init_frame_parms failed\n");
+    return -1;
+  }
 
   copy_lte_parms_to_phy_framing(lte_frame_parms, &(PHY_config->PHY_framing));
 
@@ -133,7 +136,10 @@ int main(int argc, char **argv)
   bzero(txdataF[1],FRAME_LENGTH_COMPLEX_SAMPLES_NO_PREFIX*sizeof(mod_sym_t));
   */
 
-  phy_init_lte_eNB(lte_frame_parms,lte_eNB_common_vars,lte_eNB_ulsch_vars);
+  if (phy_init_lte_eNB(lte_frame_parms,lte_eNB_common_vars,lte_eNB_ulsch_vars) == -1) {
+    LOG_E(PHY, "main:phy_init_lte_eNB failed.\n");
+	return -1;
+  }
 
 #ifdef IFFT_FPGA
   txdata    = (int **)malloc16(2*sizeof(int*));

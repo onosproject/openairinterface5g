@@ -304,10 +304,14 @@ void freq_equalization(LTE_DL_FRAME_PARMS *frame_parms,
   ul_ch_magb128     = (int16x8_t*)&ul_ch_magb[0][symbol*frame_parms->N_RB_DL*12];
 #endif
 
-  AssertFatal(symbol<frame_parms->symbols_per_tti,"symbol %d >= %d\n",
-	      symbol,frame_parms->symbols_per_tti);
-  AssertFatal(Msc_RS<=frame_parms->N_RB_UL*12,"Msc_RS %d >= %d\n",
-	      Msc_RS,frame_parms->N_RB_UL*12);
+  if (symbol>=frame_parms->symbols_per_tti) {
+    LOG_E(PHY, "symbol %d >= %d\n", symbol,frame_parms->symbols_per_tti);
+    return;
+  }
+  if (Msc_RS>frame_parms->N_RB_UL*12) {
+    LOG_E(PHY, "Msc_RS %d >= %d\n", Msc_RS,frame_parms->N_RB_UL*12);
+    return;
+  }
 
   for (re=0; re<(Msc_RS>>2); re++) {
 

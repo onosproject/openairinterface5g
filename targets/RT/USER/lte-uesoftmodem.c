@@ -700,7 +700,12 @@ int main( int argc, char **argv ) {
     for (int i=0; i<NB_UE_INST; i++) {
       for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
         PHY_vars_UE_g[i] = malloc(sizeof(PHY_VARS_UE *)*MAX_NUM_CCs);
-        PHY_vars_UE_g[i][CC_id] = init_ue_vars(frame_parms[CC_id], i,abstraction_flag);
+	    PHY_VARS_UE *phy_vars_ue = init_ue_vars(frame_parms[CC_id], i,abstraction_flag);
+	    if (phy_vars_ue == NULL) {
+          LOG_E(HW, "lte_uesoftmodem.c:main:init_ue_vars failed.\n");
+	      return -1;
+	    }
+        PHY_vars_UE_g[i][CC_id] = phy_vars_ue;
 
         if (get_softmodem_params()->phy_test==1)
           PHY_vars_UE_g[i][CC_id]->mac_enabled = 0;

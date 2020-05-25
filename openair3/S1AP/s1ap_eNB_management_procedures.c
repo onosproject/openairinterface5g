@@ -83,7 +83,10 @@ void s1ap_eNB_prepare_internal_data(void)
 
 void s1ap_eNB_insert_new_instance(s1ap_eNB_instance_t *new_instance_p)
 {
-  DevAssert(new_instance_p != NULL);
+  if (new_instance_p == NULL) {
+    S1AP_ERROR("new_instance_p == NULL\n");
+    return;
+  }
 
   STAILQ_INSERT_TAIL(&s1ap_eNB_internal_data.s1ap_eNB_instances_head,
                      new_instance_p, s1ap_eNB_entries);

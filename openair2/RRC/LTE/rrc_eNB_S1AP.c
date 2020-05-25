@@ -749,11 +749,11 @@ rrc_eNB_send_S1AP_NAS_FIRST_REQ(
     }
 
     /* Assume that cause is coded in the same way in RRC and S1ap, just check that the value is in S1ap range */
-    AssertFatal(ue_context_pP->ue_context.establishment_cause < RRC_CAUSE_LAST,
-                "Establishment cause invalid (%jd/%d) for eNB %d!",
-                ue_context_pP->ue_context.establishment_cause,
-                RRC_CAUSE_LAST,
-                ctxt_pP->module_id);
+    if(ue_context_pP->ue_context.establishment_cause >= RRC_CAUSE_LAST) {
+      LOG_E(S1AP,"Establishment cause invalid (%jd/%d) for eNB %d!",ue_context_pP->ue_context.establishment_cause,RRC_CAUSE_LAST,ctxt_pP->module_id);
+      return;
+    }
+
     S1AP_NAS_FIRST_REQ (message_p).establishment_cause = ue_context_pP->ue_context.establishment_cause;
     /* Forward NAS message */
     S1AP_NAS_FIRST_REQ (message_p).nas_pdu.buffer = rrcConnectionSetupComplete->dedicatedInfoNAS.buf;
@@ -2048,10 +2048,13 @@ int rrc_eNB_send_PATH_SWITCH_REQ(const protocol_ctxt_t *const ctxt_pP,
   S1AP_PATH_SWITCH_REQ (msg_p).nb_of_e_rabs = e_rabs_done;
   create_tunnel_req.rnti           = ue_context_pP->ue_context.rnti;
   create_tunnel_req.num_tunnels    = e_rabs_done;
-  gtpv1u_create_s1u_tunnel(
+  if (gtpv1u_create_s1u_tunnel(
       ctxt_pP->instance,
       &create_tunnel_req,
-      &create_tunnel_resp);
+      &create_tunnel_resp) == -1) {
+        LOG_E(RRC,"gtpv1u_create_s1u_tunnel failed\n");
+        return -1;
+      }
   rrc_eNB_process_GTPV1U_CREATE_TUNNEL_RESP(
         ctxt_pP,
         &create_tunnel_resp,
@@ -2131,10 +2134,15 @@ int rrc_eNB_process_X2AP_TUNNEL_SETUP_REQ(instance_t instance, rrc_eNB_ue_contex
       create_tunnel_req.rnti           = ue_context_target_p->ue_context.rnti; // warning put zero above
       create_tunnel_req.num_tunnels    = e_rab_done;
       // NN: not sure if we should create a new tunnel: need to check teid, etc.
-      gtpv1u_create_x2u_tunnel(
+      int ret = gtpv1u_create_x2u_tunnel(
         instance,
         &create_tunnel_req,
         &create_tunnel_resp);
+		
+      if (ret == -1) {
+		  LOG_E(RRC, "gtpv1u_create_x2u_tunnel return -1.");
+		  return (-1);
+	  }
 
           ue_context_target_p->ue_context.nb_x2u_e_rabs = create_tunnel_resp.num_tunnels;
 	  for (i = 0; i < create_tunnel_resp.num_tunnels; i++) {
@@ -2293,7 +2301,11 @@ int s1ap_ue_context_release(instance_t instance, const uint32_t eNB_ue_s1ap_id){
   struct s1ap_eNB_ue_context_s *ue_context_p = NULL;
 
   s1ap_eNB_instance_p = s1ap_eNB_get_instance(instance);
-  DevAssert(s1ap_eNB_instance_p != NULL);
+  
+  if(s1ap_eNB_instance_p == NULL) {
+    LOG_E(RRC,"s1ap_eNB_instance_p is NULL\n");
+    return -1;
+  }
 
   if ((ue_context_p = s1ap_eNB_get_ue_context(s1ap_eNB_instance_p,
                       eNB_ue_s1ap_id)) == NULL) {

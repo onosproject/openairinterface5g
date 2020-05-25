@@ -434,14 +434,17 @@ void init_SL_preconfig(UE_RRC_INST *UE, const uint8_t eNB_index ) {
   #endif
                              ,NULL);
 
-    rrc_rlc_config_asn1_req(&ctxt,
+    if (rrc_rlc_config_asn1_req(&ctxt,
           (SRB_ToAddModList_t*)NULL,
           UE->DRB_configList,
           (DRB_ToReleaseList_t*)NULL
   #if (LTE_RRC_VERSION >= MAKE_VERSION(10, 0, 0))
           ,(LTE_PMCH_InfoList_r9_t *)NULL
   #endif
-          );
+          ) == -1) {
+            LOG_E(RRC, "rrc_rlc_config_asn1_req failed\n");
+            return;
+            }
   */
 }
 
@@ -625,6 +628,10 @@ static void rrc_ue_generate_RRCConnectionSetupComplete( const protocol_ctxt_t *c
   }
 
   size = do_RRCConnectionSetupComplete(ctxt_pP->module_id, buffer, Transaction_id, nas_msg_length, nas_msg);
+  if (size == -1) {
+    LOG_E(RRC,"do_RRCConnectionSetupComplete failed\n");
+    return;
+  }
   LOG_I(RRC,"[UE %d][RAPROC] Frame %d : Logical Channel UL-DCCH (SRB1), Generating RRCConnectionSetupComplete (bytes%d, eNB %d)\n",
         ctxt_pP->module_id,ctxt_pP->frame, size, eNB_index);
   LOG_D(RLC,
@@ -644,6 +651,10 @@ static void rrc_ue_generate_RRCConnectionSetupComplete( const protocol_ctxt_t *c
 void rrc_ue_generate_RRCConnectionReconfigurationComplete( const protocol_ctxt_t *const ctxt_pP, const uint8_t eNB_index, const uint8_t Transaction_id ) {
   uint8_t buffer[32], size;
   size = do_RRCConnectionReconfigurationComplete(ctxt_pP, buffer, Transaction_id);
+  if (size == -1) {
+    LOG_E(RRC, "do_RRCConnectionReconfigurationComplete failed\n");
+    return;
+  }
   LOG_I(RRC,PROTOCOL_RRC_CTXT_UE_FMT" Logical Channel UL-DCCH (SRB1), Generating RRCConnectionReconfigurationComplete (bytes %d, eNB_index %d)\n",
         PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP), size, eNB_index);
   LOG_D(RLC,
@@ -1345,7 +1356,7 @@ rrc_ue_process_radioResourceConfigDedicated(
 #endif
                              ,NULL);
     // Refresh SRBs
-    rrc_rlc_config_asn1_req(ctxt_pP,
+    if (rrc_rlc_config_asn1_req(ctxt_pP,
                             radioResourceConfigDedicated->srb_ToAddModList,
                             (LTE_DRB_ToAddModList_t *)NULL,
                             (LTE_DRB_ToReleaseList_t *)NULL
@@ -1353,7 +1364,10 @@ rrc_ue_process_radioResourceConfigDedicated(
                             ,(LTE_PMCH_InfoList_r9_t *)NULL
                             , 0, 0
 #endif
-                           );
+                           ) == -1) {
+                             LOG_E(RRC, "rrc_rlc_config_asn1_req failed\n");
+                             return;
+                           }
 #if ENABLE_RAL
     // first msg that includes srb config
     UE_rrc_inst[ctxt_pP->module_id].num_srb=radioResourceConfigDedicated->srb_ToAddModList->list.count;
@@ -1543,7 +1557,7 @@ rrc_ue_process_radioResourceConfigDedicated(
 #endif
                              , UE_rrc_inst[ctxt_pP->module_id].defaultDRB);
     // Refresh DRBs
-    rrc_rlc_config_asn1_req(ctxt_pP,
+    if (rrc_rlc_config_asn1_req(ctxt_pP,
                             (LTE_SRB_ToAddModList_t *)NULL,
                             radioResourceConfigDedicated->drb_ToAddModList,
                             (LTE_DRB_ToReleaseList_t *)NULL
@@ -1551,7 +1565,10 @@ rrc_ue_process_radioResourceConfigDedicated(
                             ,(LTE_PMCH_InfoList_r9_t *)NULL
                             , 0, 0
 #endif
-                           );
+                           ) == -1) {
+                             LOG_E(RRC, "rrc_rlc_config_asn1_req failed\n");
+                             return;
+                           }
 
     for (i=0; i<radioResourceConfigDedicated->drb_ToAddModList->list.count; i++) {
       DRB_id   = radioResourceConfigDedicated->drb_ToAddModList->list.array[i]->drb_Identity-1;
@@ -2057,14 +2074,17 @@ rrc_ue_process_mobilityControlInfo(
   #endif
          ,NULL);
 
-  rrc_rlc_config_asn1_req(NB_eNB_INST+ue_mod_idP, frameP,0,eNB_index,
+  if (rrc_rlc_config_asn1_req(NB_eNB_INST+ue_mod_idP, frameP,0,eNB_index,
         NULL,// SRB_ToAddModList
         NULL,// DRB_ToAddModList
         drb2release_list // DRB_ToReleaseList
   #if (LTE_RRC_VERSION >= MAKE_VERSION(10, 0, 0))
         ,NULL
   #endif
-        ,NULL);
+        ,NULL) == -1) {
+          LOG_E(RRC, "rrc_rlc_config_asn1_req failed\n");
+          return;
+          }
    */
   //A little cleanup at RRC...
   //Copying current queue config to free RRC index
@@ -2390,7 +2410,10 @@ rrc_ue_decode_dcch(
             sl_destination_identity->buf[2] = 0x01;
             sl_destination_identity->bits_unused = 0;
             ASN_SEQUENCE_ADD(&destinationInfoList->list,sl_destination_identity);
-            rrc_ue_generate_SidelinkUEInformation(ctxt_pP, eNB_indexP, destinationInfoList, NULL, SL_TRANSMIT_NON_RELAY_ONE_TO_ONE);
+            if (rrc_ue_generate_SidelinkUEInformation(ctxt_pP, eNB_indexP, destinationInfoList, NULL, SL_TRANSMIT_NON_RELAY_ONE_TO_ONE) == -1) {
+              LOG_E(RRC, "rrc_ue_generate_SidelinkUEInformation failed\n");
+              return;
+            }
             send_ue_information ++;
           }
 
@@ -5058,7 +5081,7 @@ void decode_MBSFNAreaConfiguration( module_id_t ue_mod_idP, uint8_t eNB_index, f
                            ,&(UE_rrc_inst[ue_mod_idP].mcch_message[eNB_index]->pmch_InfoList_r9)
 #endif
                            ,NULL);
-  rrc_rlc_config_asn1_req(&ctxt,
+  if (rrc_rlc_config_asn1_req(&ctxt,
                           NULL,// SRB_ToAddModList
                           NULL,// DRB_ToAddModList
                           NULL,// DRB_ToReleaseList
@@ -5066,7 +5089,10 @@ void decode_MBSFNAreaConfiguration( module_id_t ue_mod_idP, uint8_t eNB_index, f
                           &(UE_rrc_inst[ue_mod_idP].mcch_message[eNB_index]->pmch_InfoList_r9)
                           , 0, 0
 #endif
-                         );
+                         ) == -1) {
+                           LOG_E(RRC, "rrc_rlc_config_asn1_req failed\n");
+                           return;
+                         }
   // */
 }
 
@@ -5590,6 +5616,10 @@ uint8_t rrc_ue_generate_SidelinkUEInformation( const protocol_ctxt_t *const ctxt
   //Generate SidelinkUEInformation
   if (((UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIStatus&8192) > 0) && (destinationInfoList != NULL)) {//if SIB18 is available
     size = do_SidelinkUEInformation(ctxt_pP->module_id, buffer, destinationInfoList, NULL, mode);
+    if (size == -1) {
+      LOG_E(RRC, "do_SidelinkUEInformation failed\n");
+      return -1;
+    }
     LOG_I(RRC,"[UE %d][RRC_UE] Frame %d : Logical Channel UL-DCCH, Generating SidelinkUEInformation (bytes%d, eNB %d)\n",
           ctxt_pP->module_id,ctxt_pP->frame, size, eNB_index);
     //return size;
@@ -5597,6 +5627,10 @@ uint8_t rrc_ue_generate_SidelinkUEInformation( const protocol_ctxt_t *const ctxt
 
   if (((UE_rrc_inst[ctxt_pP->module_id].Info[eNB_index].SIStatus&16384) > 0) && (discTxResourceReq != NULL)) {//if SIB19 is available
     size = do_SidelinkUEInformation(ctxt_pP->module_id, buffer, NULL, discTxResourceReq, mode);
+    if (size == -1) {
+      LOG_E(RRC, "do_SidelinkUEInformation failed\n");
+      return -1;
+    }
     LOG_I(RRC,"[UE %d][RRC_UE] Frame %d : Logical Channel UL-DCCH, Generating SidelinkUEInformation (bytes%d, eNB %d)\n",
           ctxt_pP->module_id,ctxt_pP->frame, size, eNB_index);
     //return size;
@@ -6023,7 +6057,7 @@ void *rrc_control_socket_thread_fct(void *arg) {
                                  , (LTE_PMCH_InfoList_r9_t *) NULL
 #endif
                                  ,NULL);
-        rrc_rlc_config_asn1_req(&ctxt,
+        if (rrc_rlc_config_asn1_req(&ctxt,
                                 (LTE_SRB_ToAddModList_t *)NULL,
                                 UE->DRB_configList,
                                 (LTE_DRB_ToReleaseList_t *)NULL
@@ -6031,8 +6065,11 @@ void *rrc_control_socket_thread_fct(void *arg) {
                                 ,(LTE_PMCH_InfoList_r9_t *)NULL
                                 , 0, 0
 #endif
-                               );
-        rrc_rlc_config_asn1_req(&ctxt,
+                               ) == -1) {
+                                 LOG_E(RRC, "rrc_rlc_config_asn1_req failed\n");
+                                 return NULL;
+                               }
+        if (rrc_rlc_config_asn1_req(&ctxt,
                                 (LTE_SRB_ToAddModList_t *)NULL,
                                 UE->DRB_configList,
                                 (LTE_DRB_ToReleaseList_t *)NULL
@@ -6040,7 +6077,10 @@ void *rrc_control_socket_thread_fct(void *arg) {
                                 ,(LTE_PMCH_InfoList_r9_t *)NULL
                                 , sourceL2Id, groupL2Id
 #endif
-                               );
+                               ) == -1) {
+                                 LOG_E(RRC, "rrc_rlc_config_asn1_req failed\n");
+                                 return NULL;
+                               }
         //configure MAC with sourceL2Id/groupL2ID
         rrc_mac_config_req_ue(module_id,0,0, //eNB_index =0
                               (LTE_RadioResourceConfigCommonSIB_t *)NULL,
@@ -6266,7 +6306,7 @@ void *rrc_control_socket_thread_fct(void *arg) {
                                  , (LTE_PMCH_InfoList_r9_t *) NULL
 #endif
                                  ,NULL);
-        rrc_rlc_config_asn1_req(&ctxt,
+        if (rrc_rlc_config_asn1_req(&ctxt,
                                 (LTE_SRB_ToAddModList_t *)NULL,
                                 UE->DRB_configList,
                                 (LTE_DRB_ToReleaseList_t *)NULL
@@ -6274,8 +6314,11 @@ void *rrc_control_socket_thread_fct(void *arg) {
                                 ,(LTE_PMCH_InfoList_r9_t *)NULL
                                 , 0, 0
 #endif
-                               );
-        rrc_rlc_config_asn1_req(&ctxt,
+                               ) == -1) {
+                                 LOG_E(RRC, "rrc_rlc_config_asn1_req failed\n");
+                                 return NULL;
+                               }
+        if (rrc_rlc_config_asn1_req(&ctxt,
                                 (LTE_SRB_ToAddModList_t *)NULL,
                                 UE->DRB_configList,
                                 (LTE_DRB_ToReleaseList_t *)NULL
@@ -6283,7 +6326,10 @@ void *rrc_control_socket_thread_fct(void *arg) {
                                 ,(LTE_PMCH_InfoList_r9_t *)NULL
                                 , sourceL2Id, destinationL2Id
 #endif
-                               );
+                               ) == -1) {
+                                 LOG_E(RRC, "rrc_rlc_config_asn1_req failed\n");
+                                 return NULL;
+                               }
         //configure MAC with sourceL2Id/destinationL2Id
         rrc_mac_config_req_ue(module_id,0,0, //eNB_index =0
                               (LTE_RadioResourceConfigCommonSIB_t *)NULL,
@@ -6443,7 +6489,7 @@ void *rrc_control_socket_thread_fct(void *arg) {
                                  , (LTE_PMCH_InfoList_r9_t *) NULL
 #endif
                                  ,NULL);
-        rrc_rlc_config_asn1_req(&ctxt,
+        if (rrc_rlc_config_asn1_req(&ctxt,
                                 (LTE_SRB_ToAddModList_t *)NULL,
                                 UE->DRB_configList,
                                 (LTE_DRB_ToReleaseList_t *)NULL
@@ -6451,11 +6497,14 @@ void *rrc_control_socket_thread_fct(void *arg) {
                                 ,(LTE_PMCH_InfoList_r9_t *)NULL
                                 , 0, 0
 #endif
-                               );
+                               ) == -1) {
+                                 LOG_E(RRC, "rrc_rlc_config_asn1_req failed\n");
+                                 return NULL;
+                               }
 
         //TX
         if (type > 0) {
-          rrc_rlc_config_asn1_req(&ctxt,
+          if (rrc_rlc_config_asn1_req(&ctxt,
                                   (LTE_SRB_ToAddModList_t *)NULL,
                                   UE->DRB_configList,
                                   (LTE_DRB_ToReleaseList_t *)NULL
@@ -6463,7 +6512,10 @@ void *rrc_control_socket_thread_fct(void *arg) {
                                   ,(LTE_PMCH_InfoList_r9_t *)NULL
                                   , sourceL2Id, destinationL2Id
 #endif
-                                 );
+                                 ) == -1) {
+                                   LOG_E(RRC, "rrc_rlc_config_asn1_req failed\n");
+                                   return NULL;
+                                 }
           //configure MAC with sourceL2Id/groupL2ID
           rrc_mac_config_req_ue(module_id,0,0, //eNB_index =0
                                 (LTE_RadioResourceConfigCommonSIB_t *)NULL,

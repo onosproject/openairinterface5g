@@ -301,8 +301,7 @@ uint8_t get_Msg3_harq_pid(LTE_DL_FRAME_PARMS *frame_parms,
 
     default:
       LOG_E(PHY,"get_Msg3_harq_pid: Unsupported TDD configuration %d\n",frame_parms->tdd_config);
-      AssertFatal(1==0,"get_Msg3_harq_pid: Unsupported TDD configuration");
-      break;
+      return 255;
     }
   }
 
@@ -929,7 +928,9 @@ int subframe_num(LTE_DL_FRAME_PARMS *frame_parms){
         return 9;
     default:
       LOG_E(PHY,"Unsupported TDD configuration %d\n",frame_parms->tdd_config);
-      AssertFatal(frame_parms->tdd_config==1 || frame_parms->tdd_config==3 || frame_parms->tdd_config==4 || frame_parms->tdd_config==5,"subframe x Unsupported TDD configuration");
+      if (frame_parms->tdd_config != 1 && frame_parms->tdd_config != 3 && frame_parms->tdd_config != 4 && frame_parms->tdd_config != 5) {
+        LOG_E(PHY,"subframe x Unsupported TDD configuration");
+      }
       return(255);
     }
 }
@@ -1022,7 +1023,7 @@ lte_subframe_t subframe_select(LTE_DL_FRAME_PARMS *frame_parms,unsigned char sub
     break;
 
   default:
-    AssertFatal(1==0,"subframe %d Unsupported TDD configuration %d\n",subframe,frame_parms->tdd_config);
+    LOG_E(PHY,"subframe %d Unsupported TDD configuration %d\n",subframe,frame_parms->tdd_config);
     return(255);
 
   }
@@ -1042,9 +1043,14 @@ dci_detect_mode_t dci_detect_mode_select(LTE_DL_FRAME_PARMS *frame_parms,uint8_t
       {DL_DCI   , DL_DCI    , NO_DCI    , DL_DCI    , DL_DCI    , DL_DCI    , DL_DCI    , DL_DCI, UL_DL_DCI , DL_DCI    },  // tdd5
       {UL_DL_DCI, UL_DL_DCI , NO_DCI    , NO_DCI    , NO_DCI    , UL_DL_DCI , UL_DL_DCI , NO_DCI, NO_DCI    , UL_DL_DCI }}; // tdd6
 
-
-  DevAssert(subframe>=0 && subframe<=9);
-  DevAssert((frame_parms->tdd_config)>=0 && (frame_parms->tdd_config)<=6);
+  if (subframe < 0 || subframe > 9) {
+    LOG_E(PHY,"subframe < 0 || subframe > 9\n");
+    return ret;
+  }
+  if ((frame_parms->tdd_config) < 0 || (frame_parms->tdd_config) > 6) {
+    LOG_E(PHY,"(frame_parms->tdd_config) < 0 || (frame_parms->tdd_config) > 6\n");
+    return ret;
+  }
 
   if (frame_parms->frame_type == FDD) {
     ret = UL_DL_DCI;
@@ -1205,7 +1211,10 @@ void compute_srs_pos(lte_frame_type_t frameType,uint16_t isrs,uint16_t *psrsPeri
 {
     if(TDD == frameType)
     {
-      AssertFatal(isrs>=10,"2 ms SRS periodicity not supported");
+      if(isrs < 10) {
+        LOG_E(PHY,"2 ms SRS periodicity not supported");
+        return;
+      }
 
       if((isrs>9)&&(isrs<15))
         {
@@ -1242,8 +1251,11 @@ void compute_srs_pos(lte_frame_type_t frameType,uint16_t isrs,uint16_t *psrsPeri
 	  *psrsPeriodicity=320;
 	  *psrsOffset=isrs-325;
         }
-      
-      AssertFatal(isrs<=644,"Isrs out of range %d>644\n",isrs);
+
+      if(isrs > 644) {
+        LOG_E(PHY,"Isrs out of range %d>644\n",isrs);
+        return;
+      }
       
     }
     else
@@ -1288,7 +1300,10 @@ void compute_srs_pos(lte_frame_type_t frameType,uint16_t isrs,uint16_t *psrsPeri
             *psrsPeriodicity=320;
             *psrsOffset=isrs-317;
 	  }
-	AssertFatal(isrs<=636,"Isrs out of range %d>636\n",isrs);
+    if(isrs > 636) {
+      LOG_E(PHY,"Isrs out of range %d>636\n",isrs);
+      return;
+    }
 	
       }
 }

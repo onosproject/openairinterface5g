@@ -31,6 +31,7 @@
 #include "assertions.h"
 #include "conversions.h"
 #include "secu_defs.h"
+#include <common/utils/LOG/log.h>
 
 // #define SECU_DEBUG
 
@@ -45,8 +46,14 @@ int nas_stream_encrypt_eea2(nas_stream_cipher_t *stream_cipher, uint8_t *out)
   uint32_t zero_bit = 0;
   uint32_t byte_length;
 
-  DevAssert(stream_cipher != NULL);
-  DevAssert(out != NULL);
+  if(stream_cipher == NULL) {
+    LOG_E(NAS, "stream_cipher == NULL\n");
+    return -1;
+  }
+  if(out == NULL) {
+    LOG_E(NAS, "out == NULL\n");
+    return -1;
+  }
 
   zero_bit = stream_cipher->blength & 0x7;
 

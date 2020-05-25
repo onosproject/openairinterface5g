@@ -215,9 +215,11 @@ void schedule_CSI(module_id_t module_idP,
         continue;
       }
 
-      AssertFatal(UE_list->UE_template[CC_id][UE_id].physicalConfigDedicated != NULL,
-                  "physicalConfigDedicated is null for UE %d\n",
-                  UE_id);
+      if(UE_list->UE_template[CC_id][UE_id].physicalConfigDedicated == NULL) {
+        LOG_E(MAC, "physicalConfigDedicated is null for UE %d\n",UE_id);
+        return;
+      }
+
       /*
       * CDRX condition on Active Time and CSI report on PUCCH (36.321 5.7).
       * Here we consider classic periodic reports on PUCCH without PUSCH simultaneous transmission condition.
@@ -268,7 +270,15 @@ void schedule_CSI(module_id_t module_idP,
               ul_config_pdu->uci_cqi_pdu.ue_information.ue_information_rel8.rnti               = UE_list->UE_template[CC_id][UE_id].rnti;
               ul_config_pdu->uci_cqi_pdu.cqi_information.cqi_information_rel8.tl.tag           = NFAPI_UL_CONFIG_REQUEST_CQI_INFORMATION_REL8_TAG;
               ul_config_pdu->uci_cqi_pdu.cqi_information.cqi_information_rel8.pucch_index      = cqi_ReportPeriodic->choice.setup.cqi_PUCCH_ResourceIndex;
+              if (get_tmode(module_idP, CC_id, UE_id) == 0) {
+                LOG_E(MAC, "get_tmode failed\n");
+                return;
+              }
               ul_config_pdu->uci_cqi_pdu.cqi_information.cqi_information_rel8.dl_cqi_pmi_size  = get_rel8_dl_cqi_pmi_size(&UE_list->UE_sched_ctrl[UE_id], CC_id, cc, get_tmode(module_idP, CC_id, UE_id), cqi_ReportPeriodic);
+              if (ul_config_pdu->uci_cqi_pdu.cqi_information.cqi_information_rel8.dl_cqi_pmi_size == 0) {
+				LOG_E(MAC, "ul_config_pdu->uci_cqi_pdu.cqi_information.cqi_information_rel8.dl_cqi_pmi_size == 0\n");
+                return;
+              }
               ul_req->number_of_pdus++;
               ul_req->tl.tag                                                                   = NFAPI_UL_CONFIG_REQUEST_BODY_TAG;
 
@@ -451,15 +461,20 @@ check_ul_failure(module_id_t module_idP, int CC_id, int UE_id,
       dl_config_pdu->pdu_size                                         = (uint8_t) (2 + sizeof(nfapi_dl_config_dci_dl_pdu));
       dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.tl.tag                = NFAPI_DL_CONFIG_REQUEST_DCI_DL_PDU_REL8_TAG;
       dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.dci_format            = NFAPI_DL_DCI_FORMAT_1A;
+      if (get_bw_index(module_idP, CC_id) == -1) {
+        LOG_E(MAC, "get_bw_index failed\n");
+        return;
+      }
       dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.aggregation_level     = get_aggregation(get_bw_index(module_idP, CC_id),
           UE_list->UE_sched_ctrl[UE_id].
           dl_cqi[CC_id], format1A);
       dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.rnti                  = rnti;
       dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.rnti_type             = 1;  // CRNTI : see Table 4-10 from SCF082 - nFAPI specifications
       dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.transmission_power    = 6000; // equal to RS power
-      AssertFatal((cc[CC_id].mib->message.dl_Bandwidth >= 0) && (cc[CC_id].mib->message.dl_Bandwidth < 6),
-                  "illegal dl_Bandwidth %d\n",
-                  (int) cc[CC_id].mib->message.dl_Bandwidth);
+      if((cc[CC_id].mib->message.dl_Bandwidth < 0) || (cc[CC_id].mib->message.dl_Bandwidth >= 6)) {
+        LOG_E(MAC, "illegal dl_Bandwidth %d\n",(int) cc[CC_id].mib->message.dl_Bandwidth);
+        return;
+      }
       dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.resource_block_coding = pdcch_order_table[cc[CC_id].mib->message.dl_Bandwidth];
       DL_req[CC_id].dl_config_request_body.number_dci++;
       DL_req[CC_id].dl_config_request_body.number_pdu++;
@@ -920,7 +935,10 @@ eNB_dlsch_ulsch_scheduler(module_id_t module_idP,
             } // end if (ul_req_tmp)
           } // end for j
 
-          rrc_mac_remove_ue(module_idP,rnti);
+          if (rrc_mac_remove_ue(module_idP,rnti) == -1) {
+            LOG_E(MAC, "rrc_mac_remove_ue failed\n");
+            return;
+          }
 
         } // end if (UE_scheduling_control->ue_reestablishment_reject_timer >= UE_scheduling_control->ue_reestablishment_reject_timer_thres)
       } // end if (UE_scheduling_control->ue_reestablishment_reject_timer > 0)
@@ -940,6 +958,10 @@ eNB_dlsch_ulsch_scheduler(module_id_t module_idP,
     if (cc[CC_id].MBMS_flag > 0) {
       start_meas(&RC.mac[module_idP]->schedule_mch);
       mbsfn_status[CC_id] = schedule_MBMS(module_idP, CC_id, frameP, subframeP);
+      if (mbsfn_status[CC_id] < 0) {
+		  LOG_E(MAC,"mbsfn_status[%d] < 0\n", CC_id);
+		  return;
+	  }
       stop_meas(&RC.mac[module_idP]->schedule_mch);
     }
   }
@@ -1013,8 +1035,15 @@ eNB_dlsch_ulsch_scheduler(module_id_t module_idP,
 
   /* Allocate CCEs for good after scheduling is done */
   for (CC_id = 0; CC_id < MAX_NUM_CCs; CC_id++) {
+    if (is_UL_sf(&cc[CC_id],subframeP) < 0) {
+      LOG_E(MAC,"is_UL_sf(&cc[%d],subframeP) < 0\n", CC_id);
+	  return;
+    }
     if (cc[CC_id].tdd_Config == NULL || !(is_UL_sf(&cc[CC_id],subframeP))) {
-      allocate_CCEs(module_idP, CC_id, frameP, subframeP, 2);
+      if (allocate_CCEs(module_idP, CC_id, frameP, subframeP, 2) == -1) {
+		LOG_E(MAC,"allocate_CCEs failed.\n");
+        return;
+      }
     }
   }
 

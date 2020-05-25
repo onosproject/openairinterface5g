@@ -249,7 +249,7 @@ int DU_handle_DL_RRC_MESSAGE_TRANSFER(instance_t       instance,
             }
           }
         } // for
-        rrc_rlc_config_asn1_req(&ctxt,
+        if (rrc_rlc_config_asn1_req(&ctxt,
           SRB_configList,
           (LTE_DRB_ToAddModList_t*) NULL,
           (LTE_DRB_ToReleaseList_t*) NULL
@@ -257,7 +257,10 @@ int DU_handle_DL_RRC_MESSAGE_TRANSFER(instance_t       instance,
           , (LTE_PMCH_InfoList_r9_t *) NULL,
           0,0
 #   endif
-          );
+          ) == -1) {
+			  LOG_E(F1AP, "rrc_rlc_config_asn1_req failed\n");
+			  return -1;
+		  }
 
       // This should be somewhere in the f1ap_cudu_ue_inst_t
       /*int macrlc_instance = 0; 
@@ -405,7 +408,7 @@ int DU_handle_DL_RRC_MESSAGE_TRANSFER(instance_t       instance,
                 mac_MainConfig = &rrcConnectionReconfiguration_r8->radioResourceConfigDedicated->mac_MainConfig->choice.explicitValue;
               LTE_MeasGapConfig_t     *measGapConfig   = NULL;
               struct LTE_PhysicalConfigDedicated* physicalConfigDedicated = rrcConnectionReconfiguration_r8->radioResourceConfigDedicated->physicalConfigDedicated;
-              rrc_rlc_config_asn1_req(
+              if (rrc_rlc_config_asn1_req(
                 &ctxt,
                 SRB_configList, // NULL,  //LG-RK 14/05/2014 SRB_configList,
                 DRB_configList,
@@ -414,7 +417,10 @@ int DU_handle_DL_RRC_MESSAGE_TRANSFER(instance_t       instance,
                 , (LTE_PMCH_InfoList_r9_t *) NULL
                 , 0, 0
       #endif
-                );
+                ) == -1) {
+					LOG_E(F1AP, "rrc_rlc_config_asn1_req failed\n");
+					return -1;
+				}
 
               if (SRB_configList != NULL) {
                 for (i = 0; (i < SRB_configList->list.count) && (i < 3); i++) {

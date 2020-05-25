@@ -188,6 +188,10 @@ void fill_ulsch_dci(PHY_VARS_eNB *eNB,
   nfapi_ul_config_request_body_t *ul_req=&sched_resp->UL_req->ul_config_request_body;
   //int harq_pid = ((frame*10)+subframe)&7;
   int harq_pid = subframe2harq_pid(&eNB->frame_parms,frame,subframe);
+  if (harq_pid == 255) {
+    LOG_E(SIM,"FATAL ERROR: illegal harq_pid, returning\n");
+    return;
+  }
 
   //printf("ulsch in frame %d, subframe %d => harq_pid %d, mcs %d, ndi %d\n",frame,subframe,harq_pid,mcs,ndi);
 
@@ -841,6 +845,10 @@ int main(int argc, char **argv) {
       round=0;
       //randominit(0);
       harq_pid = subframe2harq_pid(&UE->frame_parms,proc_rxtx_ue->frame_tx,subframe);
+      if (harq_pid == 255) {
+        LOG_E(SIM,"FATAL ERROR: illegal harq_pid, returning\n");
+        exit(-1);
+      }
       input_buffer_length = UE->ulsch[0]->harq_processes[harq_pid]->TBS/8;
 
       if ( input_buffer != NULL )

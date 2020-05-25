@@ -38,7 +38,10 @@
 
 static int s1ap_eNB_decode_initiating_message(S1AP_S1AP_PDU_t *pdu) {
   asn_encode_to_new_buffer_result_t res = { NULL, {0, NULL, NULL} };
-  DevAssert(pdu != NULL);
+  if (pdu == NULL) {
+    S1AP_ERROR("pdu == NULL\n");
+    return -1;
+  }
 
   switch(pdu->choice.initiatingMessage.procedureCode) {
     case S1AP_ProcedureCode_id_downlinkNASTransport:
@@ -97,7 +100,10 @@ static int s1ap_eNB_decode_initiating_message(S1AP_S1AP_PDU_t *pdu) {
 
 static int s1ap_eNB_decode_successful_outcome(S1AP_S1AP_PDU_t *pdu) {
   asn_encode_to_new_buffer_result_t res = { NULL, {0, NULL, NULL} };
-  DevAssert(pdu != NULL);
+  if (pdu == NULL) {
+    S1AP_ERROR("pdu == NULL\n");
+    return -1;
+  }
 
   switch(pdu->choice.successfulOutcome.procedureCode) {
     case S1AP_ProcedureCode_id_S1Setup:
@@ -121,7 +127,10 @@ static int s1ap_eNB_decode_successful_outcome(S1AP_S1AP_PDU_t *pdu) {
 
 static int s1ap_eNB_decode_unsuccessful_outcome(S1AP_S1AP_PDU_t *pdu) {
   asn_encode_to_new_buffer_result_t res = { NULL, {0, NULL, NULL} };
-  DevAssert(pdu != NULL);
+  if (pdu == NULL) {
+    S1AP_ERROR("pdu == NULL\n");
+    return -1;
+  }
 
   switch(pdu->choice.unsuccessfulOutcome.procedureCode) {
     case S1AP_ProcedureCode_id_S1Setup:
@@ -145,8 +154,14 @@ static int s1ap_eNB_decode_unsuccessful_outcome(S1AP_S1AP_PDU_t *pdu) {
 int s1ap_eNB_decode_pdu(S1AP_S1AP_PDU_t *pdu, const uint8_t *const buffer,
                         const uint32_t length) {
   asn_dec_rval_t dec_ret;
-  DevAssert(pdu != NULL);
-  DevAssert(buffer != NULL);
+  if (pdu == NULL) {
+    S1AP_ERROR("pdu == NULL\n");
+    return -1;
+  }
+  if (buffer == NULL) {
+    S1AP_ERROR("buffer == NULL\n");
+    return -1;
+  }
   dec_ret = aper_decode(NULL,
                         &asn_DEF_S1AP_S1AP_PDU,
                         (void **)&pdu,

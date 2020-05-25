@@ -542,6 +542,14 @@ int config_request(nfapi_pnf_config_t *config, nfapi_pnf_phy_config_t *phy, nfap
 
   if(req->nfapi_config.earfcn.tl.tag == NFAPI_NFAPI_EARFCN_TAG) {
     fp->dl_CarrierFreq = from_earfcn(fp->eutra_band, req->nfapi_config.earfcn.value);
+    if (fp->dl_CarrierFreq == -1) {
+	  NFAPI_TRACE(NFAPI_TRACE_ERROR, "%s() from_earfcn failed\n", __FUNCTION__);
+      return -1;
+    }
+    if (get_uldl_offset(fp->eutra_band) == -1) {
+	  NFAPI_TRACE(NFAPI_TRACE_ERROR, "%s() get_uldl_offset failed\n", __FUNCTION__);
+      return -1;
+    }
     fp->ul_CarrierFreq = fp->dl_CarrierFreq - (get_uldl_offset(fp->eutra_band) * 1e5);
     num_tlv++;
     NFAPI_TRACE(NFAPI_TRACE_INFO, "%s() earfcn:%u dl_carrierFreq:%u ul_CarrierFreq:%u band:%u N_RB_DL:%u\n",
@@ -1083,7 +1091,10 @@ int start_request(nfapi_pnf_config_t *config, nfapi_pnf_phy_config_t *phy, nfapi
   pthread_create(&p7_thread, NULL, &pnf_p7_thread_start, p7_config);
   //((pnf_phy_user_data_t*)(phy_info->fapi->user_data))->p7_config = p7_config;
   NFAPI_TRACE(NFAPI_TRACE_INFO, "[PNF] Calling l1_north_init_eNB() %s\n", __FUNCTION__);
-  l1_north_init_eNB();
+  if (l1_north_init_eNB() < 0) {
+	NFAPI_TRACE(NFAPI_TRACE_ERROR, "%s() l1_north_init_eNB() failed\n", __FUNCTION__);
+    return (-1);
+  }
   NFAPI_TRACE(NFAPI_TRACE_INFO, "[PNF] DJP - HACK - Set p7_config global ready for subframe ind%s\n", __FUNCTION__);
   p7_config_g = p7_config;
 

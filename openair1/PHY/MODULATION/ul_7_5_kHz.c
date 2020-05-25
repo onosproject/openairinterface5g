@@ -83,8 +83,10 @@ void remove_7_5_kHz(RU_t *ru,uint8_t slot)
 
   len = frame_parms->samples_per_tti/2;
 
-  AssertFatal(slot_offset<10*frame_parms->samples_per_tti,
-	      "slot_offset %d >= %d\n",slot_offset,10*frame_parms->samples_per_tti);
+  if (slot_offset>=10*frame_parms->samples_per_tti) {
+    LOG_E(PHY, "slot_offset %d >= %d\n",slot_offset,10*frame_parms->samples_per_tti);
+    return;
+  }
 
   for (aa=0; aa<ru->nb_rx; aa++) {
 

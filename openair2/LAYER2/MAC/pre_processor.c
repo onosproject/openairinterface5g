@@ -220,7 +220,10 @@ assign_rbs_required(module_id_t Mod_id,
       eNB_UE_stats_i = &UE_list->eNB_UE_stats[UE_list->ordered_CCids[i][UE_id]][UE_id];
 
       for (j = i + 1; j < UE_list->numactiveCCs[UE_id]; j++) {
-        DevAssert(j < NFAPI_CC_MAX);
+        if(j >= NFAPI_CC_MAX) {
+          LOG_E(MAC, "j >= NFAPI_CC_MAX\n");
+          return;
+        }
         eNB_UE_stats_j = &UE_list->eNB_UE_stats[UE_list->ordered_CCids[j][UE_id]][UE_id];
 
         if (eNB_UE_stats_j->dlsch_mcs[TB1] > eNB_UE_stats_i->dlsch_mcs[TB1]) {
@@ -252,6 +255,10 @@ assign_rbs_required(module_id_t Mod_id,
               nb_rbs_required[CC_id][UE_id],
               eNB_UE_stats->dlsch_mcs[TB1], TBS);
         N_RB_DL = to_prb(RC.mac[Mod_id]->common_channels[CC_id].mib->message.dl_Bandwidth);
+        if (N_RB_DL == -1) {
+          LOG_E(MAC, "to_prb failed\n");
+          return;
+        }
         UE_list->UE_sched_ctrl[UE_id].max_rbs_allowed_slice[CC_id][slice_idx] =
           nb_rbs_allowed_slice(sli->dl[slice_idx].pct, N_RB_DL);
 
@@ -322,6 +329,10 @@ maxround_ul(module_id_t Mod_id, uint16_t rnti, int sched_frame,
     if(UE_id == -1)
       continue;
     harq_pid = subframe2harqpid(cc, sched_frame, sched_subframe);
+    if (harq_pid == 255) {
+      LOG_E(MAC, "maxround_ul:subframe2harqpid failed\n");
+      return -1;
+    }
     round = UE_list->UE_sched_ctrl[UE_id].round_UL[CC_id][harq_pid];
 
     if (round > round_max) {
@@ -576,6 +587,10 @@ void dlsch_scheduler_pre_processor_partitioning(module_id_t Mod_id,
     for (i = 0; i < UE_num_active_CC(UE_list, UE_id); ++i) {
       CC_id = UE_list->ordered_CCids[i][UE_id];
       N_RB_DL = to_prb(RC.mac[Mod_id]->common_channels[CC_id].mib->message.dl_Bandwidth);
+      if (N_RB_DL == -1) {
+        LOG_E(MAC, "to_prb failed\n");
+        return;
+      }
       available_rbs = nb_rbs_allowed_slice(RC.mac[Mod_id]->slice_info.dl[slice_idx].pct, N_RB_DL);
 
       if (rbs_retx[CC_id] < available_rbs)
@@ -791,6 +806,10 @@ void dlsch_scheduler_pre_processor_positioning(module_id_t Mod_id,
   for (CC_id = 0; CC_id < RC.nb_mac_CC[Mod_id]; CC_id++) {
     COMMON_channels_t *cc = &RC.mac[Mod_id]->common_channels[CC_id];
     N_RBG[CC_id] = to_rbg(cc->mib->message.dl_Bandwidth);
+    if (N_RBG[CC_id] < 0) {
+      LOG_E(MAC, "dlsch_scheduler_pre_processor_positioning:to_rbg failed \n");
+      return;
+    }
   }
 
   // Try to allocate accounted RBs
@@ -807,6 +826,10 @@ void dlsch_scheduler_pre_processor_positioning(module_id_t Mod_id,
 
       #ifdef TM5
       transmission_mode = get_tmode(Mod_id, CC_id, UE_id);
+      if (transmission_mode == 0) {
+        LOG_E(MAC, "get_tmode failed\n");
+        return;
+      }
       #endif
 
       if (nb_rbs_required[CC_id][UE_id] > 0)
@@ -871,6 +894,10 @@ void dlsch_scheduler_pre_processor_positioning(module_id_t Mod_id,
                 eNB_UE_stats[CC_id][UE_id2];
               //mac_xface->get_ue_active_harq_pid(Mod_id,CC_id,rnti2,frameP,subframeP,&harq_pid2,&round2,0);
 
+              if (get_tmode(Mod_id, CC_id, UE_id2) == 0) {
+                LOG_E(MAC, "get_tmode failed\n");
+                return;
+              }
               if ((mac_eNB_get_rrc_status
                    (Mod_id,
                     rnti2) >= RRC_RECONFIGURED)
@@ -1015,6 +1042,10 @@ void dlsch_scheduler_pre_processor_intraslice_sharing(module_id_t Mod_id,
   for (CC_id = 0; CC_id < RC.nb_mac_CC[Mod_id]; CC_id++) {
     COMMON_channels_t *cc = &RC.mac[Mod_id]->common_channels[CC_id];
     N_RBG[CC_id] = to_rbg(cc->mib->message.dl_Bandwidth);
+    if (N_RBG[CC_id] < 0) {
+      LOG_E(MAC, "dlsch_scheduler_pre_processor_intraslice_sharing:to_rbg failed \n");
+      return;
+    }
   }
 
   // Remaining RBs are allocated to high priority UEs
@@ -1035,6 +1066,10 @@ void dlsch_scheduler_pre_processor_intraslice_sharing(module_id_t Mod_id,
 
       #ifdef TM5
       transmission_mode = get_tmode(Mod_id, CC_id, UE_id);
+      if (transmission_mode == 0) {
+        LOG_E(MAC, "get_tmode failed\n");
+        return;
+      }
       #endif
 
       if (nb_rbs_required[CC_id][UE_id] > 0)
@@ -1099,6 +1134,10 @@ void dlsch_scheduler_pre_processor_intraslice_sharing(module_id_t Mod_id,
                 eNB_UE_stats[CC_id][UE_id2];
               //mac_xface->get_ue_active_harq_pid(Mod_id,CC_id,rnti2,frameP,subframeP,&harq_pid2,&round2,0);
 
+              if (get_tmode(Mod_id, CC_id, UE_id2) == 0) {
+                LOG_E(MAC, "get_tmode failed\n");
+                return;
+              }
               if ((mac_eNB_get_rrc_status
                    (Mod_id,
                     rnti2) >= RRC_RECONFIGURED)
@@ -1325,6 +1364,10 @@ dlsch_scheduler_pre_processor(module_id_t Mod_id,
   for (CC_id = 0; CC_id < RC.nb_mac_CC[Mod_id]; CC_id++) {
     COMMON_channels_t *cc = &eNB->common_channels[CC_id];
     int N_RBG = to_rbg(cc->mib->message.dl_Bandwidth);
+    if (N_RBG < 0) {
+      LOG_E(MAC, "dlsch_scheduler_pre_processor:to_rbg failed \n");
+      return;
+    }
     i1 = 0;
     i2 = 0;
     i3 = 0;
@@ -1362,6 +1405,10 @@ dlsch_scheduler_pre_processor(module_id_t Mod_id,
       //PHY_vars_eNB_g[Mod_id]->mu_mimo_mode[UE_id].dl_pow_off = dl_pow_off[UE_id];
       COMMON_channels_t *cc = &eNB->common_channels[CC_id];
       int N_RBG = to_rbg(cc->mib->message.dl_Bandwidth);
+      if (N_RBG < 0) {
+        LOG_E(MAC, "dlsch_scheduler_pre_processor:to_rbg failed \n");
+        return;
+      }
 
       if (ue_sched_ctl->pre_nb_available_rbs[CC_id] > 0) {
         LOG_D(MAC, "******************DL Scheduling Information for UE%d ************************\n",
@@ -1421,7 +1468,15 @@ dlsch_scheduler_pre_processor_reset(module_id_t module_idP,
     // initialize harq_pid and round
     cc = &RC.mac[module_idP]->common_channels[CC_id];
     N_RBG[CC_id] = to_rbg(cc->mib->message.dl_Bandwidth);
+    if (N_RBG[CC_id] < 0) {
+      LOG_E(MAC, "dlsch_scheduler_pre_processor_reset:to_rbg failed \n");
+      return;
+    }
     min_rb_unit[CC_id] = get_min_rb_unit(module_idP, CC_id);
+    if (min_rb_unit[CC_id] == -1) {
+      LOG_E(MAC, "get_min_rb_unit failed\n");
+      return;
+    }
 
     if (mbsfn_flag[CC_id] > 0)    // If this CC is allocated for MBSFN skip it here
       continue;
@@ -1513,6 +1568,10 @@ dlsch_scheduler_pre_processor_reset(module_id_t module_idP,
     }
 
     N_RB_DL = to_prb(RC.mac[module_idP]->common_channels[CC_id].mib->message.dl_Bandwidth);
+    if (N_RB_DL == -1) {
+      LOG_E(MAC, "to_prb failed\n");
+      return;
+    }
 #ifdef SF0_LIMIT
 
     switch (N_RBG[CC_id]) {
@@ -1542,7 +1601,8 @@ dlsch_scheduler_pre_processor_reset(module_id_t module_idP,
         break;
 
       default:
-        AssertFatal(1 == 0, "unsupported RBs (%d)\n", N_RB_DL);
+        LOG_E(MAC, "unsupported RBs (%d)\n", N_RB_DL);
+        return;
     }
 
 #endif
@@ -1579,7 +1639,8 @@ dlsch_scheduler_pre_processor_reset(module_id_t module_idP,
         break;
 
       default:
-        AssertFatal(1 == 0, "unsupported RBs (%d)\n", N_RB_DL);
+        LOG_E(MAC, "unsupported RBs (%d)\n", N_RB_DL);
+        return;
     }
 
     vrb_map = RC.mac[module_idP]->common_channels[CC_id].vrb_map;
@@ -1629,9 +1690,17 @@ dlsch_scheduler_pre_processor_allocate(module_id_t Mod_id,
                                        uint8_t MIMO_mode_indicator[NFAPI_CC_MAX][N_RBG_MAX]) {
   int i;
   int tm = get_tmode(Mod_id, CC_id, UE_id);
+  if (tm == 0) {
+    LOG_E(MAC, "get_tmode failed\n");
+    return;
+  }
   UE_list_t *UE_list = &RC.mac[Mod_id]->UE_list;
   UE_sched_ctrl_t *ue_sched_ctl = &UE_list->UE_sched_ctrl[UE_id];
   int N_RB_DL = to_prb(RC.mac[Mod_id]->common_channels[CC_id].mib->message.dl_Bandwidth);
+  if (N_RB_DL == -1) {
+    LOG_E(MAC, "to_prb failed\n");
+    return;
+  }
 
   for (i = 0; i < N_RBG; i++) {
     if (rballoc_sub[CC_id][i] != 0) continue;
@@ -1757,6 +1826,10 @@ void ulsch_scheduler_pre_processor(module_id_t module_idP,
           max_num_ue_to_be_scheduled+=1;
           } */
       N_RB_UL = to_prb(eNB->common_channels[CC_id].ul_Bandwidth);
+      if (N_RB_UL == -1) {
+        LOG_E(MAC, "to_prb failed\n");
+        return;
+      }
       ue_sched_ctl = &UE_list->UE_sched_ctrl[UE_id];
       ue_sched_ctl->max_rbs_allowed_slice_uplink[CC_id][slice_idx] =
         nb_rbs_allowed_slice(sli->ul[slice_idx].pct, N_RB_UL);
@@ -1803,6 +1876,10 @@ void ulsch_scheduler_pre_processor(module_id_t module_idP,
       UE_template = &UE_list->UE_template[CC_id][UE_id];
       harq_pid = subframe2harqpid(&RC.mac[module_idP]->common_channels[CC_id],
                                   sched_frameP, sched_subframeP);
+      if (harq_pid == 255) {
+        LOG_E(MAC, "ulsch_scheduler_pre_processor:subframe2harqpid failed \n");
+        return;
+      }
 
       //      mac_xface->get_ue_active_harq_pid(module_idP,CC_id,rnti,frameP,subframeP,&harq_pid,&round,openair_harq_UL);
 
@@ -1834,6 +1911,10 @@ void ulsch_scheduler_pre_processor(module_id_t module_idP,
       CC_id = UE_list->ordered_ULCCids[n][UE_id];
       UE_template = &UE_list->UE_template[CC_id][UE_id];
       N_RB_UL = to_prb(eNB->common_channels[CC_id].ul_Bandwidth);
+      if (N_RB_UL == -1) {
+        LOG_E(MAC, "to_prb failed\n");
+        return;
+      }
       first_rb_offset = UE_list->first_rb_offset[CC_id][slice_idx];
       available_rbs = cmin(ue_sched_ctl->max_rbs_allowed_slice_uplink[CC_id][slice_idx], N_RB_UL - first_rb[CC_id] - first_rb_offset);
       total_remaining_rbs[CC_id] = available_rbs - total_allocated_rbs[CC_id];
@@ -1900,17 +1981,20 @@ assign_max_mcs_min_rb(module_id_t module_idP,
     for (n = 0; n < UE_list->numactiveULCCs[UE_id]; n++) {
       // This is the actual CC_id in the list
       CC_id = UE_list->ordered_ULCCids[n][UE_id];
-      AssertFatal(CC_id < RC.nb_mac_CC[module_idP], "CC_id %u should be < %u, loop n=%u < numactiveULCCs[%u]=%u",
-                  CC_id,
-                  NFAPI_CC_MAX,
-                  n,
-                  UE_id,
-                  UE_list->numactiveULCCs[UE_id]);
+      if(CC_id >= RC.nb_mac_CC[module_idP]) {
+        LOG_E(MAC, "CC_id %u should be < %u, loop n=%u < numactiveULCCs[%u]=%u",
+		      CC_id, NFAPI_CC_MAX, n, UE_id, UE_list->numactiveULCCs[UE_id]);
+        return;
+      }
       UE_template = &UE_list->UE_template[CC_id][UE_id];
       UE_template->pre_assigned_mcs_ul = mcs;
       ue_sched_ctl = &UE_list->UE_sched_ctrl[UE_id];
       Ncp = eNB->common_channels[CC_id].Ncp;
       N_RB_UL = to_prb(eNB->common_channels[CC_id].ul_Bandwidth);
+      if (N_RB_UL == -1) {
+        LOG_E(MAC, "to_prb failed\n");
+        return;
+      }
       ue_sched_ctl->max_rbs_allowed_slice_uplink[CC_id][slice_idx] = nb_rbs_allowed_slice(sli->ul[slice_idx].pct, N_RB_UL);
 
       int bytes_to_schedule = UE_template->estimated_ul_buffer - UE_template->scheduled_ul_bytes;
@@ -1998,10 +2082,18 @@ static int ue_ul_compare(const void *_a, const void *_b, void *_params) {
   int pCCid1 = UE_PCCID(params->module_idP, UE_id1);
   int round1 = maxround_ul(params->module_idP, rnti1, params->sched_frameP,
                            params->sched_subframeP);
+  if (round1 == -1) {
+    LOG_E(MAC, "round1 == -1, maxround_ul failed\n");
+    return 0;
+  }
   int rnti2 = UE_RNTI(params->module_idP, UE_id2);
   int pCCid2 = UE_PCCID(params->module_idP, UE_id2);
   int round2 = maxround_ul(params->module_idP, rnti2, params->sched_frameP,
                            params->sched_subframeP);
+  if (round2 == -1) {
+    LOG_E(MAC, "round2 == -1, maxround_ul failed\n");
+    return 0;
+  }
 
   if (round1 > round2)
     return -1;

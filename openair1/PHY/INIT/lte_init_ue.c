@@ -602,7 +602,11 @@ int init_lte_ue_signal(PHY_VARS_UE *ue,
   int th_id;
   LOG_D(PHY,"Initializing UE vars (abstraction %"PRIu8") for eNB TXant %"PRIu8", UE RXant %"PRIu8"\n",abstraction_flag,fp->nb_antennas_tx,fp->nb_antennas_rx);
   init_dfts();
-  init_frame_parms(&ue->frame_parms,1);
+  if (init_frame_parms(&ue->frame_parms,1) == -1) {
+    LOG_E(PHY, "lte_init_ue.c:init_lte_ue_signal:init_frame_parms failed.\n");
+	return -1;
+  }
+
   lte_sync_time_init(&ue->frame_parms);
   init_lte_top(&ue->frame_parms);
   init_7_5KHz();

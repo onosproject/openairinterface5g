@@ -94,10 +94,6 @@ void feptx0(RU_t *ru,int slot) {
 					                      fp->nb_prefix_samples,
 					                      CYCLIC_PREFIX);
     else {
-     /* AssertFatal(ru->generate_dmrs_sync==1 && (fp->frame_type != TDD || ru->is_slave == 1),
-		  "ru->generate_dmrs_sync should not be set, frame_type %d, is_slave %d\n",
-		  fp->frame_type,ru->is_slave);
-*/
       int num_symb = 7;
 
       if (subframe_select(fp,subframe) == SF_S) num_symb=fp->dl_symbols_in_S_subframe+1;
@@ -482,7 +478,8 @@ void feptx_prec(RU_t *ru) {
     VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_RU_FEPTX_PREC+ru->idx , 0);
   }
   else {
-    AssertFatal(1==0,"Handling of multi-L1 case not ready yet\n");
+    LOG_E(PHY, "Handling of multi-L1 case not ready yet\n");
+    return;
     for (i=0;i<ru->num_eNB;i++) {
       eNB = eNB_list[i];
       fp  = &eNB->frame_parms;
@@ -698,7 +695,7 @@ void ru_fep_full_2thread(RU_t *ru) {
                                   3%(fp->symbols_per_tti/2),
                                   3/(fp->symbols_per_tti/2));
         */
-	lte_ul_channel_estimation_RRU(fp,
+	if (lte_ul_channel_estimation_RRU(fp,
                                   calibration->drs_ch_estimates,
                                   calibration->drs_ch_estimates_time,
                                   calibration->rxdataF_ext,
@@ -710,12 +707,19 @@ void ru_fep_full_2thread(RU_t *ru) {
 				  /*eNB->ulsch[ru->idx]->cyclicShift,cyclic_shift,0..7*/0,
 				  3,//l,
  			          0,//interpolate,
-				  0 /*eNB->ulsch[ru->idx]->rnti rnti or ru->ulsch[eNB_id]->rnti*/);
+				  0 /*eNB->ulsch[ru->idx]->rnti rnti or ru->ulsch[eNB_id]->rnti*/) < 0) {
+    LOG_E(PHY, "lte_ul_channel_estimation_RRU failed.\n");
+    return;
+  }
  
         
 
         check_sync_pos = lte_est_timing_advance_pusch((PHY_VARS_eNB *)NULL,
      				     		       ru->idx);
+        if (check_sync_pos < 0) {
+          LOG_E(PHY, "lte_est_timing_advance_pusch failed.\n");
+		  return;
+        }
         if (ru->state == RU_CHECK_SYNC) {
           if ((check_sync_pos >= 0 && check_sync_pos<8) || (check_sync_pos < 0 && check_sync_pos>-8)) {
     		  LOG_I(PHY,"~~~~~~~~~~~    check_sync_pos %d, frame %d, cnt %d\n",check_sync_pos,proc->frame_rx,ru->wait_check); 
@@ -729,14 +733,17 @@ void ru_fep_full_2thread(RU_t *ru) {
                 rru_config_msg.type = RRU_sync_ok;
         	rru_config_msg.len  = sizeof(RRU_CONFIG_msg_t); // TODO: set to correct msg len
         	LOG_I(PHY,"Sending RRU_sync_ok to RAU\n");
-        	AssertFatal((ru->ifdevice.trx_ctlsend_func(&ru->ifdevice,&rru_config_msg,rru_config_msg.len)!=-1),"Failed to send msg to RAU %d\n",ru->idx);
+            if ((ru->ifdevice.trx_ctlsend_func(&ru->ifdevice,&rru_config_msg,rru_config_msg.len) == -1)) {
+              LOG_E(PHY, "Failed to send msg to RAU %d\n",ru->idx);
+              return;
+            }
                 //LOG_I(PHY,"~~~~~~~~~ RU_RUN\n");
           	/*LOG_M("dmrs_time.m","dmrstime",calibration->drs_ch_estimates_time[0], (fp->ofdm_symbol_size),1,1);
 		LOG_M("rxdataF_ext.m","rxdataFext",&calibration->rxdataF_ext[0][36*fp->N_RB_DL], 12*(fp->N_RB_DL),1,1);		
 		LOG_M("drs_seq0.m","drsseq0",ul_ref_sigs_rx[0][0][23],600,1,1);
 		LOG_M("rxdata.m","rxdata",&ru->common.rxdata[0][0], fp->samples_per_tti*2,1,1);
 		exit(-1);*/
-	 } 
+	 }
        }
        else if (ru->state == RU_RUN) {
        	// check for synchronization error
@@ -748,7 +755,7 @@ exit_fun("ru_fep_full_2thread rxdata error" );
        }
     
     else {
-       	 AssertFatal(1==0,"Should not get here\n");
+		 LOG_E(PHY, "Should not get here\n");
     }
  }
 

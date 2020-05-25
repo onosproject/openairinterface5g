@@ -227,7 +227,7 @@ get_free_mem_block (uint32_t sizeP, const char* caller)
   if (sizeP > MEM_MNGT_MB12_BLOCK_SIZE) {
     LOG_E (RLC,"[MEM_MNGT][ERROR][FATAL] size requested %d out of bounds\n", sizeP);
     display_mem_load ();
-    AssertFatal(1==0,"get_free_mem_block size requested out of bounds");
+    LOG_E (RLC,"get_free_mem_block size requested out of bounds");
     return NULL;
   }
 
@@ -259,8 +259,10 @@ get_free_mem_block (uint32_t sizeP, const char* caller)
 #ifdef DEBUG_MEM_MNGT_ALLOC_SIZE
       LOG_D (RLC,"[MEM_MNGT][INFO] ALLOC MEM_BLOCK SIZE %d bytes pool %d (%p)\n", sizeP, pool_selected,le);
 #endif
-
-      AssertFatal(le->pool_id == pool_selected, "Unexpected pool ID!");
+      if(le->pool_id != pool_selected) {
+        LOG_E(RLC, "Unexpected pool ID!");
+        return NULL;
+      }
 
 #ifdef MEMBLOCK_BIG_LOCK
   if (pthread_mutex_unlock(&mtex)) abort();
@@ -278,7 +280,6 @@ get_free_mem_block (uint32_t sizeP, const char* caller)
 
   LOG_E(PHY, "[MEM_MNGT][ERROR][FATAL] failed allocating MEM_BLOCK size %d byes (pool_selected=%d size=%d)\n", sizeP, pool_selected, size);
 //  display_mem_load();
-//  AssertFatal(1==0,"get_free_mem_block failed");
   LOG_E(MAC,"[MEM_MNGT][ERROR][FATAL] get_free_mem_block failed!!!\n");
 #ifdef MEMBLOCK_BIG_LOCK
   if (pthread_mutex_unlock(&mtex)) abort();
@@ -295,7 +296,8 @@ get_free_copy_mem_block (void)
   mem_block_t      *le;
 
 #ifdef MEMBLOCK_BIG_LOCK
-  AssertFatal(0, "This function is not handled properly but not used anywhere. FIXME?\n");
+  LOG_E(RLC, "This function is not handled properly but not used anywhere. FIXME?\n");
+  return NULL;
 #endif
 
   if ((le = list_remove_head (&mem_block_var.mem_lists[MEM_MNGT_POOL_ID_COPY]))) {
@@ -317,7 +319,7 @@ get_free_copy_mem_block (void)
     //    break_point ();
     //#endif
 
-    AssertFatal(1==0,"mem pool is empty");
+	LOG_E(RLC, "mem pool is empty");
     return NULL;
   }
 }
@@ -329,7 +331,8 @@ copy_mem_block (mem_block_t * leP, mem_block_t * destP)
   //-----------------------------------------------------------------------------
 
 #ifdef MEMBLOCK_BIG_LOCK
-  AssertFatal(0, "This function is not handled properly but not used anywhere. FIXME?\n");
+  LOG_E(RLC, "This function is not handled properly but not used anywhere. FIXME?\n");
+  return NULL;
 #endif
 
   if ((destP != NULL) && (leP != NULL) && (destP->pool_id == MEM_MNGT_POOL_ID_COPY)) {
@@ -391,7 +394,8 @@ check_mem_area (void)
   mem_pool       *memory = (mem_pool *) &mem_block_var;
 
 #ifdef MEMBLOCK_BIG_LOCK
-  AssertFatal(0, "This function is not handled properly but not used anywhere. FIXME?\n");
+  LOG_E(RLC, "This function is not handled properly but not used anywhere. FIXME?\n");
+  return;
 #endif
 
   for (index = 0; index < MEM_MNGT_MB0_NB_BLOCKS; index++) {

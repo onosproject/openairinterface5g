@@ -681,9 +681,19 @@ gtpv1u_new_data_req(
   gtpv1u_data_t           *gtpv1u_data_p = NULL;
   memset(&ue, 0, sizeof(struct gtpv1u_ue_data_s));
   ue.ue_id = ue_rntiP;
-  AssertFatal(enb_module_idP >=0, "Bad parameter enb module id %u\n", enb_module_idP);
-  AssertFatal((rab_idP - GTPV1U_BEARER_OFFSET)< GTPV1U_MAX_BEARERS_ID, "Bad parameter rab id %u\n", rab_idP);
-  AssertFatal((rab_idP - GTPV1U_BEARER_OFFSET) >= 0 , "Bad parameter rab id %u\n", rab_idP);
+  if (enb_module_idP < 0) {
+    LOG_E(GTPU, "Bad parameter enb module id %u\n", enb_module_idP);
+    return -1;
+  }
+  if ((rab_idP - GTPV1U_BEARER_OFFSET) >= GTPV1U_MAX_BEARERS_ID) {
+    LOG_E(GTPU, "Bad parameter rab id %u\n", rab_idP);
+    return -1;
+  }
+  if ((rab_idP - GTPV1U_BEARER_OFFSET) < 0) {
+    LOG_E(GTPU, "Bad parameter rab id %u\n", rab_idP);
+    return -1;
+  }
+
   gtpv1u_data_p = RC.gtpv1u_data_g;
   /* Check that UE context is present in ue map. */
   hash_rc = hashtable_get(gtpv1u_data_p->ue_mapping, (uint64_t)ue_rntiP, (void **)&ue_inst_p);
@@ -823,7 +833,10 @@ gtpv1u_create_x2u_tunnel(
       gtpv1u_teid_data_p->ue_id         = create_tunnel_req_pP->rnti;
       gtpv1u_teid_data_p->eps_bearer_id = eps_bearer_id;
       hash_rc = hashtable_insert(RC.gtpv1u_data_g->teid_mapping, x2u_teid, gtpv1u_teid_data_p);
-      AssertFatal(hash_rc == HASH_TABLE_OK, "Error inserting teid mapping in GTPV1U hashtable");
+      if (hash_rc != HASH_TABLE_OK) {
+        LOG_E(GTPU, "Error inserting teid mapping in GTPV1U hashtable");
+        return -1;
+      }
     } else {
       create_tunnel_resp_pP->enb_X2u_teid[i] = 0;
       create_tunnel_resp_pP->status         = 0xFF;
@@ -967,7 +980,10 @@ gtpv1u_create_s1u_tunnel(
       if (hash_rc == HASH_TABLE_KEY_NOT_EXISTS) {
         gtpv1u_ue_data_p = calloc (1, sizeof(gtpv1u_ue_data_t));
         hash_rc = hashtable_insert(RC.gtpv1u_data_g->ue_mapping, create_tunnel_req_pP->rnti, gtpv1u_ue_data_p);
-        AssertFatal(hash_rc == HASH_TABLE_OK, "Error inserting ue_mapping in GTPV1U hashtable");
+        if (hash_rc != HASH_TABLE_OK) {
+          LOG_E(GTPU, "Error inserting ue_mapping in GTPV1U hashtable");
+          return -1;
+        }
       }
 
       gtpv1u_ue_data_p->ue_id       = create_tunnel_req_pP->rnti;
@@ -977,11 +993,11 @@ gtpv1u_create_s1u_tunnel(
              sizeof (in_addr_t));
       create_tunnel_resp_pP->enb_addr.length = sizeof (in_addr_t);
       addrs_length_in_bytes = create_tunnel_req_pP->sgw_addr[i].length / 8;
-      AssertFatal((addrs_length_in_bytes == 4) ||
-                  (addrs_length_in_bytes == 16) ||
-                  (addrs_length_in_bytes == 20),
-                  "Bad transport layer address length %d (bits) %d (bytes)",
-                  create_tunnel_req_pP->sgw_addr[i].length, addrs_length_in_bytes);
+      if ((addrs_length_in_bytes != 4) && (addrs_length_in_bytes != 16) && (addrs_length_in_bytes != 20)) {
+        LOG_E(GTPU, "Bad transport layer address length %d (bits) %d (bytes)",
+		      create_tunnel_req_pP->sgw_addr[i].length, addrs_length_in_bytes);
+        return -1;
+      }
 
       if ((addrs_length_in_bytes == 4) ||
           (addrs_length_in_bytes == 20)) {
@@ -1021,7 +1037,10 @@ gtpv1u_create_s1u_tunnel(
       gtpv1u_teid_data_p->ue_id         = create_tunnel_req_pP->rnti;
       gtpv1u_teid_data_p->eps_bearer_id = eps_bearer_id;
       hash_rc = hashtable_insert(RC.gtpv1u_data_g->teid_mapping, s1u_teid, gtpv1u_teid_data_p);
-      AssertFatal(hash_rc == HASH_TABLE_OK, "Error inserting teid mapping in GTPV1U hashtable");
+      if (hash_rc != HASH_TABLE_OK) {
+        LOG_E(GTPU, "Error inserting teid mapping in GTPV1U hashtable");
+        return -1;
+      }
     } else {
       create_tunnel_resp_pP->enb_S1u_teid[i] = 0;
       create_tunnel_resp_pP->status         = 0xFF;
@@ -1070,7 +1089,6 @@ int gtpv1u_update_s1u_tunnel(
   memcpy(gtpv1u_ue_data_new_p,gtpv1u_ue_data_p,sizeof(gtpv1u_ue_data_t));
   gtpv1u_ue_data_new_p->ue_id       = create_tunnel_req_pP->rnti;
   hash_rc = hashtable_insert(RC.gtpv1u_data_g->ue_mapping, create_tunnel_req_pP->rnti, gtpv1u_ue_data_new_p);
-  //AssertFatal(hash_rc == HASH_TABLE_OK, "Error inserting ue_mapping in GTPV1U hashtable");
   if ( hash_rc != HASH_TABLE_OK ) {
     LOG_E(GTPU,"Failed to insert ue_mapping(rnti=%x) in GTPV1U hashtable\n",create_tunnel_req_pP->rnti);
     return -1;
@@ -1221,9 +1239,16 @@ int gtpv1u_eNB_init(void) {
   //gtpv1u_data_g.gtpv1u_stack;
   /* Initialize UE hashtable */
   RC.gtpv1u_data_g->ue_mapping      = hashtable_create (32, NULL, NULL);
-  AssertFatal(RC.gtpv1u_data_g->ue_mapping != NULL, " ERROR Initializing TASK_GTPV1_U task interface: in hashtable_create returned %p\n", RC.gtpv1u_data_g->ue_mapping);
+  if (RC.gtpv1u_data_g->ue_mapping == NULL) {
+    LOG_E(GTPU, "ERROR Initializing TASK_GTPV1_U task interface: in hashtable_create returned %p\n",
+	      RC.gtpv1u_data_g->ue_mapping);
+    return -1;
+  }
   RC.gtpv1u_data_g->teid_mapping    = hashtable_create (256, NULL, NULL);
-  AssertFatal(RC.gtpv1u_data_g->teid_mapping != NULL, " ERROR Initializing TASK_GTPV1_U task interface: in hashtable_create\n");
+  if (RC.gtpv1u_data_g->teid_mapping == NULL) {
+    LOG_E(GTPU, "ERROR Initializing TASK_GTPV1_U task interface: in hashtable_create\n");
+    return -1;
+  }
   //  RC.gtpv1u_data_g.enb_ip_address_for_S1u_S12_S4_up         = enb_properties_p->enb_ipv4_address_for_S1U;
   //gtpv1u_data_g.udp_data;
   RC.gtpv1u_data_g->seq_num         = 0;
@@ -1302,7 +1327,10 @@ void *gtpv1u_eNB_process_itti_msg(void *notUsed) {
   int         rc = 0;
   itti_receive_msg(TASK_GTPV1_U, &received_message_p);
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_GTPV1U_ENB_TASK, VCD_FUNCTION_IN);
-  DevAssert(received_message_p != NULL);
+  if (received_message_p == NULL) {
+    LOG_E(GTPU, "received_message_p == NULL\n");
+    return NULL;
+  }
   instance = ITTI_MSG_INSTANCE(received_message_p);
   //msg_name_p = ITTI_MSG_NAME(received_message_p);
 
@@ -1603,7 +1631,10 @@ void *gtpv1u_eNB_process_itti_msg(void *notUsed) {
   }
 
   rc = itti_free(ITTI_MSG_ORIGIN_ID(received_message_p), received_message_p);
-  AssertFatal(rc == EXIT_SUCCESS, "Failed to free memory (%d)!\n", rc);
+  if (rc != EXIT_SUCCESS) {
+    LOG_E(GTPU, "Failed to free memory (%d)!\n", rc);
+    return NULL;
+  }
   received_message_p = NULL;
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_GTPV1U_ENB_TASK, VCD_FUNCTION_OUT);
   return NULL;
@@ -1613,7 +1644,10 @@ void *gtpv1u_eNB_process_itti_msg(void *notUsed) {
 void *gtpv1u_eNB_task(void *args) {
   int rc = 0;
   rc = gtpv1u_eNB_init();
-  AssertFatal(rc == 0, "gtpv1u_eNB_init Failed");
+  if (rc != 0) {
+    LOG_E(GTPU, "gtpv1u_eNB_init Failed");
+    return NULL;
+  }
   itti_mark_task_ready(TASK_GTPV1_U);
   MSC_START_USE();
 

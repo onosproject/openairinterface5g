@@ -168,8 +168,11 @@ if(configuration->radioresourceconfig[CC_id].mbms_dedicated_serving_cell == TRUE
          ,0);
   RC.rrc[ctxt_pP->module_id]->carrier[CC_id].sizeof_SIB1_MBMS = 0;
   RC.rrc[ctxt_pP->module_id]->carrier[CC_id].SIB1_MBMS = (uint8_t *) malloc16(RRC_BUF_SIZE);
-  AssertFatal(RC.rrc[ctxt_pP->module_id]->carrier[CC_id].SIB1_MBMS!=NULL,PROTOCOL_RRC_CTXT_FMT" init_SI: FATAL, no memory for SIB1_MBMS allocated\n",
-              PROTOCOL_RRC_CTXT_ARGS(ctxt_pP));
+  if(RC.rrc[ctxt_pP->module_id]->carrier[CC_id].SIB1_MBMS == NULL) {
+    LOG_E(RRC,PROTOCOL_RRC_CTXT_FMT" init_SI: FATAL, no memory for SIB1_MBMS allocated\n",PROTOCOL_RRC_CTXT_ARGS(ctxt_pP));
+    return;
+  }
+
   RC.rrc[ctxt_pP->module_id]->carrier[CC_id].sizeof_SIB1_MBMS = do_SIB1_MBMS(&RC.rrc[ctxt_pP->module_id]->carrier[CC_id],ctxt_pP->module_id,CC_id
 #if defined(ENABLE_ITTI)
       , configuration
@@ -240,9 +243,6 @@ if(configuration->radioresourceconfig[CC_id].mbms_dedicated_serving_cell == TRUE
 
 
     }
-
-
-  //AssertFatal(RC.rrc[ctxt_pP->module_id]->carrier[CC_id].sizeof_SIB1 != 255,"FATAL, RC.rrc[enb_mod_idP].carrier[CC_id].sizeof_SIB1 == 255");
 }
 #endif
 
@@ -253,9 +253,11 @@ if(configuration->radioresourceconfig[CC_id].mbms_dedicated_serving_cell == TRUE
   carrier->sizeof_SIB1 = 0;
   carrier->sizeof_SIB23 = 0;
   carrier->SIB1 = (uint8_t*) malloc16(RRC_BUF_SIZE);
-  
-  AssertFatal(carrier->SIB1!=NULL,PROTOCOL_RRC_CTXT_FMT" init_SI: FATAL, no memory for SIB1 allocated\n",
-	      PROTOCOL_RRC_CTXT_ARGS(ctxt_pP));
+
+  if(carrier->SIB1 == NULL) {
+    LOG_E(RRC,PROTOCOL_RRC_CTXT_FMT" init_SI: FATAL, no memory for SIB1 allocated\n",PROTOCOL_RRC_CTXT_ARGS(ctxt_pP));
+    return;
+  }
 
   LOG_I(RRC,"[eNB %d] Node type %d \n ", ctxt_pP->module_id, rrc->node_type);
   if (NODE_IS_DU(rrc->node_type) || NODE_IS_MONOLITHIC(rrc->node_type)) {
@@ -296,8 +298,11 @@ if(configuration->radioresourceconfig[CC_id].mbms_dedicated_serving_cell == TRUE
 #endif
                                    , configuration
 				   );
-    
-    AssertFatal(carrier->sizeof_SIB1 != 255,"FATAL, RC.rrc[enb_mod_idP].carrier[CC_id].sizeof_SIB1 == 255");
+
+    if(carrier->sizeof_SIB1 == 255) {
+      LOG_E(RRC,"FATAL, RC.rrc[enb_mod_idP].carrier[CC_id].sizeof_SIB1 == 255");
+      return;
+    }
 
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
     RC.rrc[ctxt_pP->module_id]->carrier[CC_id].sizeof_SIB1_BR = 0;
@@ -313,7 +318,11 @@ if(configuration->radioresourceconfig[CC_id].mbms_dedicated_serving_cell == TRUE
   }
   if (!NODE_IS_DU(rrc->node_type)) {
     carrier->SIB23 = (uint8_t*) malloc16(RRC_BUF_SIZE);
-    AssertFatal(carrier->SIB23!=NULL,"cannot allocate memory for SIB");
+    if(carrier->SIB23 == NULL) {
+      LOG_E(RRC,"cannot allocate memory for SIB");
+      return;
+    }
+
     carrier->sizeof_SIB23 = do_SIB23(ctxt_pP->module_id,
                                      CC_id
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
@@ -323,14 +332,20 @@ if(configuration->radioresourceconfig[CC_id].mbms_dedicated_serving_cell == TRUE
                                      );
     
     LOG_I(RRC,"do_SIB23, size %d \n ", carrier->sizeof_SIB23);
-    
-    AssertFatal(carrier->sizeof_SIB23 != 255,"FATAL, RC.rrc[mod].carrier[CC_id].sizeof_SIB23 == 255");
+
+    if(carrier->sizeof_SIB23 == 255) {
+      LOG_E(RRC,"FATAL, RC.rrc[mod].carrier[CC_id].sizeof_SIB23 == 255");
+      return;
+    }
     
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
   carrier->sizeof_SIB23_BR = 0;
   if (configuration->schedulingInfoSIB1_BR_r13[CC_id]>0) {
     carrier->SIB23_BR = (uint8_t*) malloc16(64);
-    AssertFatal(carrier->SIB23_BR!=NULL,"cannot allocate memory for SIB");
+    if(carrier->SIB23_BR == NULL) {
+      LOG_E(RRC,"cannot allocate memory for SIB");
+      return;
+    }
     carrier->sizeof_SIB23_BR = do_SIB23(ctxt_pP->module_id, CC_id, TRUE, configuration);
   }
     
@@ -478,16 +493,26 @@ if(configuration->radioresourceconfig[CC_id].mbms_dedicated_serving_cell == TRUE
   if (NODE_IS_MONOLITHIC(rrc->node_type)) {
     if ((carrier->mib.message.schedulingInfoSIB1_BR_r13>0) && 
         (carrier->sib1_BR!=NULL)) {
-      AssertFatal(carrier->sib1_BR->nonCriticalExtension!=NULL,
-                  "sib2_br->nonCriticalExtension is null (v8.9)\n");
-      AssertFatal(carrier->sib1_BR->nonCriticalExtension->nonCriticalExtension!=NULL,
-                  "sib2_br->nonCriticalExtension is null (v9.2)\n");
-      AssertFatal(carrier->sib1_BR->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension!=NULL,
-                  "sib2_br->nonCriticalExtension is null (v11.3)\n");
-      AssertFatal(carrier->sib1_BR->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension!=NULL,
-                  "sib2_br->nonCriticalExtension is null (v12.5)\n");
-      AssertFatal(carrier->sib1_BR->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension!=NULL,
-                  "sib2_br->nonCriticalExtension is null (v13.10)\n");
+      if(carrier->sib1_BR->nonCriticalExtension == NULL) {
+        LOG_E(RRC,"sib2_br->nonCriticalExtension is null (v8.9)\n");
+        return;
+      }
+      if(carrier->sib1_BR->nonCriticalExtension->nonCriticalExtension == NULL) {
+        LOG_E(RRC,"sib2_br->nonCriticalExtension is null (v9.2)\n");
+        return;
+      }
+      if(carrier->sib1_BR->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension == NULL) {
+        LOG_E(RRC,"sib2_br->nonCriticalExtension is null (v11.3)\n");
+        return;
+      }
+      if(carrier->sib1_BR->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension == NULL) {
+        LOG_E(RRC,"sib2_br->nonCriticalExtension is null (v12.5)\n");
+        return;
+      }
+      if(carrier->sib1_BR->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension == NULL) {
+        LOG_E(RRC,"sib2_br->nonCriticalExtension is null (v13.10)\n");
+        return;
+      }
 
       sib1_v13ext = carrier->sib1_BR->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension->nonCriticalExtension;
 
@@ -495,13 +520,20 @@ if(configuration->radioresourceconfig[CC_id].mbms_dedicated_serving_cell == TRUE
       LTE_RadioResourceConfigCommonSIB_t *radioResourceConfigCommon_BR = &carrier[CC_id].sib2_BR->radioResourceConfigCommon;
       struct LTE_PRACH_ConfigSIB_v1310 *ext4_prach=radioResourceConfigCommon_BR->ext4->prach_ConfigCommon_v1310;
       LTE_PRACH_ParametersListCE_r13_t	 *prach_ParametersListCE_r13 = &ext4_prach->prach_ParametersListCE_r13;
-      AssertFatal(prach_ParametersListCE_r13->list.count>0,"prach_ParametersListCE_r13 is empty\n");
+      if(prach_ParametersListCE_r13->list.count <= 0) {
+        LOG_E(RRC,"prach_ParametersListCE_r13 is empty\n");
+        return;
+      }
                   LTE_PRACH_ParametersCE_r13_t *p = prach_ParametersListCE_r13->list.array[0];
-      AssertFatal(p->prach_StartingSubframe_r13 != NULL, "prach_StartingSubframe_r13 celevel0 is null\n");
-      AssertFatal((1<<p->numRepetitionPerPreambleAttempt_r13)<=(2<<*p->prach_StartingSubframe_r13),
-                  "prachce0->numReptitionPerPreambleAttempt_r13 %d > prach_StartingSubframe_r13 %d\n",
-                  1<<p->numRepetitionPerPreambleAttempt_r13,
-                  2<<*p->prach_StartingSubframe_r13);
+      if(p->prach_StartingSubframe_r13 == NULL) {
+        LOG_E(RRC,"prach_StartingSubframe_r13 celevel0 is null\n");
+        return;
+      }
+      if((1<<p->numRepetitionPerPreambleAttempt_r13) > (2<<*p->prach_StartingSubframe_r13)) {
+        LOG_E(RRC,"prachce0->numReptitionPerPreambleAttempt_r13 %d > prach_StartingSubframe_r13 %d\n",
+		      1<<p->numRepetitionPerPreambleAttempt_r13,2<<*p->prach_StartingSubframe_r13);
+        return;
+      }
     }
   
   }
@@ -637,8 +669,11 @@ init_MCCH(
   for (sync_area = 0; sync_area < RC.rrc[enb_mod_idP]->carrier[CC_id].num_mbsfn_sync_area; sync_area++) {
     RC.rrc[enb_mod_idP]->carrier[CC_id].sizeof_MCCH_MESSAGE[sync_area] = 0;
     RC.rrc[enb_mod_idP]->carrier[CC_id].MCCH_MESSAGE[sync_area] = (uint8_t *) malloc16(32);
-    AssertFatal(RC.rrc[enb_mod_idP]->carrier[CC_id].MCCH_MESSAGE[sync_area] != NULL,
-                "[eNB %d]init_MCCH: FATAL, no memory for MCCH MESSAGE allocated \n", enb_mod_idP);
+    if(RC.rrc[enb_mod_idP]->carrier[CC_id].MCCH_MESSAGE[sync_area] == NULL) {
+      LOG_E(RRC,"[eNB %d]init_MCCH: FATAL, no memory for MCCH MESSAGE allocated \n", enb_mod_idP);
+      return;
+    }
+
     RC.rrc[enb_mod_idP]->carrier[CC_id].sizeof_MCCH_MESSAGE[sync_area] = do_MBSFNAreaConfig(enb_mod_idP,
         sync_area,
         (uint8_t *)RC.rrc[enb_mod_idP]->carrier[CC_id].MCCH_MESSAGE[sync_area],
@@ -657,8 +692,10 @@ init_MCCH(
           enb_mod_idP,
           RC.rrc[enb_mod_idP]->carrier[CC_id].mcch_message->commonSF_Alloc_r9.list.array[0]->subframeAllocation.
           choice.oneFrame.buf[0]);
-    AssertFatal(RC.rrc[enb_mod_idP]->carrier[CC_id].sizeof_MCCH_MESSAGE[sync_area] != 255,
-                "RC.rrc[enb_mod_idP]->carrier[CC_id].sizeof_MCCH_MESSAGE[sync_area] == 255");
+    if(RC.rrc[enb_mod_idP]->carrier[CC_id].sizeof_MCCH_MESSAGE[sync_area] == 255) {
+      LOG_E(RRC,"RC.rrc[enb_mod_idP]->carrier[CC_id].sizeof_MCCH_MESSAGE[sync_area] == 255");
+      return;
+    }
     RC.rrc[enb_mod_idP]->carrier[CC_id].MCCH_MESS[sync_area].Active = 1;
   }
 
@@ -740,7 +777,7 @@ static void init_MBMS(
                              ,NULL);
     
     if (!NODE_IS_CU(RC.rrc[enb_mod_idP]->node_type)) {
-      rrc_rlc_config_asn1_req(&ctxt,
+      if (rrc_rlc_config_asn1_req(&ctxt,
                               NULL, // LTE_SRB_ToAddModList
                               NULL,   // LTE_DRB_ToAddModList
                               NULL,   // DRB_ToReleaseList
@@ -748,7 +785,10 @@ static void init_MBMS(
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
 			      ,0, 0
 #endif
-			      );
+			      ) == -1) {
+              LOG_E(RRC, "rrc_rlc_config_asn1_req failed\n");
+              return;
+      }
     }
 	    //rrc_mac_config_req();
   }
@@ -783,7 +823,6 @@ rrc_eNB_get_next_transaction_identifier(
 //    boolean_t      reg = FALSE;
 //    module_id_t    i;
 //
-//    AssertFatal(enb_mod_idP < NB_eNB_INST, "eNB index invalid (%d/%d)!", enb_mod_idP, NB_eNB_INST);
 //
 //    for (i = 0; i < MAX_MOBILES_PER_ENB; i++) {
 //        if (RC.rrc[enb_mod_idP]->Info.UE_list[i] == UE_identity) {
@@ -1220,7 +1259,10 @@ void release_UE_in_freeList(module_id_t mod_id) {
       }
 
       if (!NODE_IS_CU(RC.rrc[mod_id]->node_type)) {
-        rrc_mac_remove_ue(mod_id,rnti);
+        if (rrc_mac_remove_ue(mod_id,rnti) == -1) {
+          LOG_E(RRC, "rrc_mac_remove_ue failed\n");
+          return;
+        }
         rrc_rlc_remove_ue(&ctxt);
         pdcp_remove_UE(&ctxt);
       }
@@ -1836,6 +1878,10 @@ rrc_eNB_process_RRCConnectionReestablishmentComplete(
   MeasObj->measObjectId = 1;
   MeasObj->measObject.present = LTE_MeasObjectToAddMod__measObject_PR_measObjectEUTRA;
   MeasObj->measObject.choice.measObjectEUTRA.carrierFreq = (LTE_ARFCN_ValueEUTRA_t)to_earfcn_DL(RC.rrc[ctxt_pP->module_id]->carrier[0].eutra_band, RC.rrc[ctxt_pP->module_id]->carrier[0].dl_CarrierFreq, RC.rrc[ctxt_pP->module_id]->carrier[0].N_RB_DL);
+  if (MeasObj->measObject.choice.measObjectEUTRA.carrierFreq == -1) {
+      LOG_E(RRC, "to_earfcn_DL failed \n");
+      return;
+  }
   MeasObj->measObject.choice.measObjectEUTRA.allowedMeasBandwidth = meas_data->allowedMeasBandwidth;
   MeasObj->measObject.choice.measObjectEUTRA.presenceAntennaPort1 = 1;
   MeasObj->measObject.choice.measObjectEUTRA.neighCellConfig.buf = CALLOC(1, sizeof(uint8_t));
@@ -2200,7 +2246,7 @@ rrc_eNB_process_RRCConnectionReestablishmentComplete(
   //      }
   //    }
   //  }
-  //  rrc_mac_remove_ue(ctxt_prior.module_id, ctxt_prior.rnti);
+  //  if (rrc_mac_remove_ue(ctxt_prior.module_id, ctxt_prior.rnti) == -1) return;
   //  rrc_rlc_remove_ue(&ctxt_prior);
   //  pdcp_remove_UE(&ctxt_prior);
   // add UE info to freeList for RU_thread to remove the UE instead of remove it here
@@ -3403,6 +3449,10 @@ void rrc_eNB_generate_defaultRRCConnectionReconfiguration(const protocol_ctxt_t 
       to_earfcn_DL(RC.rrc[ctxt_pP->module_id]->configuration.eutra_band[0],
                    RC.rrc[ctxt_pP->module_id]->configuration.downlink_frequency[0],
                    RC.rrc[ctxt_pP->module_id]->configuration.N_RB_DL[0]);
+  if (MeasObj->measObject.choice.measObjectEUTRA.carrierFreq == -1) {
+      LOG_E(RRC, "to_earfcn_DL failed \n");
+      return;
+  }
   MeasObj->measObject.choice.measObjectEUTRA.allowedMeasBandwidth = meas_data->allowedMeasBandwidth;
   MeasObj->measObject.choice.measObjectEUTRA.presenceAntennaPort1 = 1;
   MeasObj->measObject.choice.measObjectEUTRA.neighCellConfig.buf = CALLOC(1, sizeof(uint8_t));
@@ -4156,6 +4206,10 @@ flexran_rrc_eNB_generate_defaultRRCConnectionReconfiguration(const protocol_ctxt
       to_earfcn_DL(RC.rrc[ctxt_pP->module_id]->configuration.eutra_band[0],
                    RC.rrc[ctxt_pP->module_id]->configuration.downlink_frequency[0],
                    RC.rrc[ctxt_pP->module_id]->configuration.N_RB_DL[0]);
+  if (MeasObj->measObject.choice.measObjectEUTRA.carrierFreq == -1) {
+      LOG_E(RRC, "to_earfcn_DL failed \n");
+      return;
+  }
   MeasObj->measObject.choice.measObjectEUTRA.allowedMeasBandwidth = LTE_AllowedMeasBandwidth_mbw25;
   MeasObj->measObject.choice.measObjectEUTRA.presenceAntennaPort1 = 1;
   MeasObj->measObject.choice.measObjectEUTRA.neighCellConfig.buf = CALLOC(1, sizeof(uint8_t));
@@ -4714,6 +4768,10 @@ rrc_eNB_process_MeasurementReport(
     // compute keNB*
     earfcn_dl = (uint32_t)to_earfcn_DL(RC.rrc[ctxt_pP->module_id]->carrier[0].eutra_band, RC.rrc[ctxt_pP->module_id]->carrier[0].dl_CarrierFreq,
     RC.rrc[ctxt_pP->module_id]->carrier[0].N_RB_DL);
+    if (earfcn_dl == -1) {
+      LOG_E(RRC, "to_earfcn_DL failed \n");
+      return;
+    }
     derive_keNB_star(ue_context_pP->ue_context.kenb, X2AP_HANDOVER_REQ(msg).target_physCellId, earfcn_dl, true, KeNB_star);
     memcpy(X2AP_HANDOVER_REQ(msg).kenb, KeNB_star, 32);
     X2AP_HANDOVER_REQ(msg).kenb_ncc = ue_context_pP->ue_context.kenb_ncc;
@@ -4754,6 +4812,10 @@ rrc_eNB_generate_HandoverPreparationInformation(
   char *ho_buf = (char *) buffer;
   int ho_size;
   ho_size = do_HandoverPreparation(ho_buf, 8192, ue_context_pP->ue_context.UE_Capability, ue_context_pP->ue_context.UE_Capability_size);
+  if (ho_size == -1) {
+    LOG_E(RRC, "do_HandoverPreparation failed\n");
+    return;
+  }
   *_size = ho_size;
 }
 
@@ -5050,6 +5112,10 @@ flexran_rrc_eNB_trigger_handover (int mod_id,
     // compute keNB*
     earfcn_dl = (uint32_t)to_earfcn_DL(RC.rrc[ctxt_pP->module_id]->carrier[0].eutra_band, RC.rrc[ctxt_pP->module_id]->carrier[0].dl_CarrierFreq,
     RC.rrc[ctxt_pP->module_id]->carrier[0].N_RB_DL);
+    if (earfcn_dl == -1) {
+      LOG_E(RRC, "to_earfcn_DL failed \n");
+      return -1;
+    }
     derive_keNB_star(ue_context_pP->ue_context.kenb, X2AP_HANDOVER_REQ(msg).target_physCellId, earfcn_dl, true, KeNB_star);
     memcpy(X2AP_HANDOVER_REQ(msg).kenb, KeNB_star, 32);
     X2AP_HANDOVER_REQ(msg).kenb_ncc = ue_context_pP->ue_context.kenb_ncc;
@@ -5979,6 +6045,10 @@ rrc_eNB_generate_HO_RRCConnectionReconfiguration(const protocol_ctxt_t *const ct
       to_earfcn_DL(RC.rrc[ctxt_pP->module_id]->configuration.eutra_band[0],
                    RC.rrc[ctxt_pP->module_id]->configuration.downlink_frequency[0],
                    RC.rrc[ctxt_pP->module_id]->configuration.N_RB_DL[0]);
+  if (MeasObj->measObject.choice.measObjectEUTRA.carrierFreq == -1) {
+      LOG_E(RRC, "to_earfcn_DL failed \n");
+      return;
+  }
   MeasObj->measObject.choice.measObjectEUTRA.allowedMeasBandwidth = meas_data->allowedMeasBandwidth;
   MeasObj->measObject.choice.measObjectEUTRA.presenceAntennaPort1 = 1;
   MeasObj->measObject.choice.measObjectEUTRA.neighCellConfig.buf = CALLOC(1, sizeof(uint8_t));
@@ -6252,6 +6322,10 @@ rrc_eNB_generate_HO_RRCConnectionReconfiguration(const protocol_ctxt_t *const ct
       to_earfcn_DL(RC.rrc[ctxt_pP->module_id]->configuration.eutra_band[0],
                    RC.rrc[ctxt_pP->module_id]->configuration.downlink_frequency[0],
                    RC.rrc[ctxt_pP->module_id]->configuration.N_RB_DL[0]);
+  if (mobilityInfo->carrierFreq->dl_CarrierFreq == -1) {
+    LOG_E(RRC, "to_earfcn_DL failed \n");
+    return;
+  }
   mobilityInfo->carrierFreq->ul_CarrierFreq = NULL;
   mobilityInfo->carrierBandwidth = CALLOC(1, sizeof(
       *mobilityInfo->carrierBandwidth));    //CALLOC(1,sizeof(struct CarrierBandwidthEUTRA));  AllowedMeasBandwidth_mbw25
@@ -6374,6 +6448,10 @@ rrc_eNB_generate_HO_RRCConnectionReconfiguration(const protocol_ctxt_t *const ct
               ho_buf, 1024 /* TODO: this is the value found in struct x2ap_handover_req_ack_s for array rrc_buffer */,
               rrc_buf,
               rrc_size);
+  if (ho_size == -1) {
+    LOG_E(RRC, "do_HandoverCommand failed\n");
+    return;
+  }
   *_size = size = ho_size;
   LOG_DUMPMSG(RRC,DEBUG_RRC,(char *)buffer,size,
               "[MSG] RRC Connection Reconfiguration handover\n");
@@ -6457,7 +6535,7 @@ rrc_eNB_configure_rbs_handover(struct rrc_eNB_ue_context_s *ue_context_p, protoc
                            , (LTE_PMCH_InfoList_r9_t *) NULL
 #endif
                            , NULL);
-  rrc_rlc_config_asn1_req(ctxt_pP,
+  if (rrc_rlc_config_asn1_req(ctxt_pP,
                           ue_context_p->ue_context.SRB_configList,
                           (LTE_DRB_ToAddModList_t *) NULL,
                           (LTE_DRB_ToReleaseList_t *) NULL
@@ -6465,7 +6543,10 @@ rrc_eNB_configure_rbs_handover(struct rrc_eNB_ue_context_s *ue_context_p, protoc
                           , (LTE_PMCH_InfoList_r9_t *) NULL
                           , 0, 0
 #endif
-                         );
+                         ) == -1) {
+                           LOG_E(RRC, "rrc_rlc_config_asn1_req failed\n");
+                           return;
+  }
 
   if (EPC_MODE_ENABLED) {
   rrc_eNB_process_security (
@@ -6619,7 +6700,7 @@ rrc_eNB_process_RRCConnectionReconfigurationComplete(
                           , NULL);
 
   /* Refresh SRBs/DRBs */
-  rrc_rlc_config_asn1_req(ctxt_pP,
+  if (rrc_rlc_config_asn1_req(ctxt_pP,
                           SRB_configList, // NULL,
                           DRB_configList,
                           DRB_Release_configList2
@@ -6628,7 +6709,10 @@ rrc_eNB_process_RRCConnectionReconfigurationComplete(
                           0,
                           0
 #endif
-                          );
+                          ) == -1) {
+                            LOG_E(RRC, "rrc_rlc_config_asn1_req failed\n");
+                            return;
+                          }
 
   /* Set the SRB active in UE context */
   if (SRB_configList != NULL) {
@@ -6926,6 +7010,10 @@ rrc_eNB_generate_RRCConnectionSetup(
                                 rrc_eNB_get_next_transaction_identifier(ctxt_pP->module_id),
                                 SRB_configList,
                                 &ue_context_pP->ue_context.physicalConfigDedicated);
+  if (ue_p->Srb0.Tx_buffer.payload_size == -1) {
+    LOG_E(RRC, "do_RRCConnectionSetup_BR failed \n");
+    return;
+  }
   } else
 #endif
   {
@@ -6968,8 +7056,8 @@ rrc_eNB_generate_RRCConnectionSetup(
     case ngran_eNB_DU    :
     case ngran_gNB_DU  :
       // nothing to do for DU 
-      AssertFatal(1==0,"nothing to do for DU\n");
-      break;
+      LOG_E(RRC,"nothing to do for DU\n");
+      return;
     case ngran_eNB:   
     case ngran_ng_eNB :
     case ngran_gNB  :  
@@ -7099,9 +7187,19 @@ char openair_rrc_eNB_configuration(
   }
 
 #endif
-  AssertFatal(RC.rrc[enb_mod_idP] != NULL, "RC.rrc not initialized!");
-  AssertFatal(MAX_MOBILES_PER_ENB < (module_id_t)0xFFFFFFFFFFFFFFFF, " variable overflow");
-  AssertFatal(configuration!=NULL,"configuration input is null\n");
+  if(RC.rrc[enb_mod_idP] == NULL) {
+    LOG_E(RRC,"RC.rrc not initialized!\n");
+    return -1;
+  }
+  if(MAX_MOBILES_PER_ENB >= (module_id_t)0xFFFFFFFFFFFFFFFF) {
+    LOG_E(RRC,"variable overflow!\n");
+    return -1;
+  }
+  if(configuration == NULL) {
+    LOG_E(RRC,"configuration input is null!\n");
+    return -1;
+  }
+
   RC.rrc[ctxt.module_id]->Nb_ue = 0;
 
   pthread_mutex_init(&RC.rrc[ctxt.module_id]->cell_info_mutex,NULL);
@@ -7484,13 +7582,16 @@ rrc_eNB_decode_ccch(
                                    , (LTE_PMCH_InfoList_r9_t *) NULL
                                    ,NULL);
           if (!NODE_IS_CU(RC.rrc[ctxt_pP->module_id]->node_type)) {
-            rrc_rlc_config_asn1_req(ctxt_pP,
+            if (rrc_rlc_config_asn1_req(ctxt_pP,
                                     ue_context_p->ue_context.SRB_configList,
                                     (LTE_DRB_ToAddModList_t *) NULL,
                                     (LTE_DRB_ToReleaseList_t *) NULL
                                     , (LTE_PMCH_InfoList_r9_t *) NULL,
                                     0,0
-                                   );
+                                   ) == -1) {
+                                     LOG_E(RRC, "rrc_rlc_config_asn1_req failed\n");
+                                     return -1;
+                                   }
         }
 #endif //NO_RRM
         }
@@ -7566,7 +7667,7 @@ rrc_eNB_decode_ccch(
                 rnti_t      oldrnti = ue_context_p->ue_context.rnti;
 
                 if (!NODE_IS_CU(RC.rrc[ctxt_pP->module_id]->node_type)) {
-                  //rrc_mac_remove_ue(ctxt_pP->module_id, ue_context_p->ue_context.rnti);
+                  //if (rrc_mac_remove_ue(ctxt_pP->module_id, ue_context_p->ue_context.rnti) == -1) return -1;
                 }
                 else {
                   MessageDef *m = itti_alloc_new_message(TASK_RRC_ENB, F1AP_UE_CONTEXT_RELEASE_CMD);
@@ -7675,8 +7776,12 @@ rrc_eNB_decode_ccch(
             LOG_I(RRC, PROTOCOL_RRC_CTXT_UE_FMT" Can't create new context for UE random UE identity (0x%" PRIx64 ")\n",
                   PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP),
                   random_value);
-            if (NODE_IS_MONOLITHIC(RC.rrc[ctxt_pP->module_id]->node_type))
-              rrc_mac_remove_ue(ctxt_pP->module_id,ctxt_pP->rnti);
+            if (NODE_IS_MONOLITHIC(RC.rrc[ctxt_pP->module_id]->node_type)) {
+              if (rrc_mac_remove_ue(ctxt_pP->module_id,ctxt_pP->rnti) == -1) {
+                LOG_E(RRC, "rrc_mac_remove_ue failed\n");
+                return -1;
+              }
+            }
             else if (NODE_IS_CU(RC.rrc[ctxt_pP->module_id]->node_type)) {
               MessageDef *m = itti_alloc_new_message(TASK_RRC_ENB, F1AP_UE_CONTEXT_RELEASE_CMD);
               F1AP_UE_CONTEXT_RELEASE_CMD(m).rnti = ctxt_pP->rnti;
@@ -7740,7 +7845,7 @@ rrc_eNB_decode_ccch(
                                  ,NULL);
 
         if (!NODE_IS_CU(RC.rrc[ctxt_pP->module_id]->node_type)) {
-          rrc_rlc_config_asn1_req(ctxt_pP,
+          if (rrc_rlc_config_asn1_req(ctxt_pP,
                                   ue_context_p->ue_context.SRB_configList,
                                   (LTE_DRB_ToAddModList_t *) NULL,
                                   (LTE_DRB_ToReleaseList_t *) NULL
@@ -7748,7 +7853,10 @@ rrc_eNB_decode_ccch(
                                   , (LTE_PMCH_InfoList_r9_t *) NULL
                                   , 0, 0
 #endif
-                                 );
+                                 ) == -1) {
+                                   LOG_E(RRC, "rrc_rlc_config_asn1_req failed\n");
+                                   return -1;
+                                 }
         }
 #endif //NO_RRM
         break;
@@ -7908,8 +8016,10 @@ rrc_eNB_decode_dcch(
                 break;
               }
 
-              AssertFatal(!NODE_IS_CU(RC.rrc[ctxt_pP->module_id]->node_type),
-                          "CU cannot decode DCCH: no access to RC.mac[]\n");
+              if(NODE_IS_CU(RC.rrc[ctxt_pP->module_id]->node_type)) {
+                LOG_E(RRC,"CU cannot decode DCCH: no access to RC.mac[]\n");
+                return -1;
+              }
 
               if(RC.mac[ctxt_pP->module_id]->UE_list.UE_sched_ctrl[UE_id].crnti_reconfigurationcomplete_flag == 1) {
                 LOG_I(RRC,
@@ -8066,7 +8176,10 @@ rrc_eNB_decode_dcch(
             }
 
             LOG_I(RRC,"issue rrc_eNB_send_PATH_SWITCH_REQ \n");
-            rrc_eNB_send_PATH_SWITCH_REQ(ctxt_pP,ue_context_p);
+            if (rrc_eNB_send_PATH_SWITCH_REQ(ctxt_pP,ue_context_p) == -1) {
+              LOG_E(RRC, "rrc_eNB_send_PATH_SWITCH_REQ failed\n");
+              return -1;
+            }
           }
         } /* EPC_MODE_ENABLED */
 
@@ -8183,8 +8296,11 @@ rrc_eNB_decode_dcch(
           if (ul_dcch_msg->message.choice.c1.choice.rrcConnectionSetupComplete.criticalExtensions.choice.c1.
               present ==
               LTE_RRCConnectionSetupComplete__criticalExtensions__c1_PR_rrcConnectionSetupComplete_r8) {
-            AssertFatal(!NODE_IS_DU(RC.rrc[ctxt_pP->module_id]->node_type),
-                        "should not be reached in DU\n");
+            if(NODE_IS_DU(RC.rrc[ctxt_pP->module_id]->node_type)) {
+              LOG_E(RRC,"should not be reached in DU\n");
+              return -1;
+            }
+
             rrc_eNB_process_RRCConnectionSetupComplete(
               ctxt_pP,
               ue_context_p,
@@ -8564,10 +8680,11 @@ void handle_f1_setup_req(f1ap_setup_req_t *f1_setup_req) {
         					       (void **)&rrc->carrier[0].mib_DU,
         					       f1_setup_req->mib[i],
         					       f1_setup_req->mib_length[i]);
-        AssertFatal(dec_rval.code == RC_OK,
-              "[eNB_DU %"PRIu8"] Failed to decode LTE_BCCH_BCH_MESSAGE (%zu bits)\n",
-        	    j,
-        	    dec_rval.consumed );	
+        if(dec_rval.code != RC_OK) {
+          LOG_E(RRC,"[eNB_DU %"PRIu8"] Failed to decode LTE_BCCH_BCH_MESSAGE (%zu bits)\n",j,dec_rval.consumed );
+          return;
+        }
+	
         LTE_BCCH_BCH_Message_t *mib = &rrc->carrier[0].mib;
         LTE_BCCH_BCH_Message_t *mib_DU = rrc->carrier[0].mib_DU;
         mib->message.dl_Bandwidth = mib_DU->message.dl_Bandwidth;
@@ -8582,16 +8699,22 @@ void handle_f1_setup_req(f1ap_setup_req_t *f1_setup_req) {
         				(void **)&rrc->carrier[0].siblock1_DU,
         				f1_setup_req->sib1[i],
         				f1_setup_req->sib1_length[i]);
-        AssertFatal(dec_rval.code == RC_OK,
-              "[eNB_DU %"PRIu8"] Failed to decode LTE_BCCH_DLSCH_MESSAGE (%zu bits)\n",
-        	    j,
-        	    dec_rval.consumed );	
+        if(dec_rval.code != RC_OK) {
+          LOG_E(RRC,"[eNB_DU %"PRIu8"] Failed to decode LTE_BCCH_DLSCH_MESSAGE (%zu bits)\n",j,dec_rval.consumed );
+          return;
+        }
+
         // Parse message and extract SystemInformationBlockType1 field
         LTE_BCCH_DL_SCH_Message_t *bcch_message = rrc->carrier[0].siblock1_DU;
-        AssertFatal(bcch_message->message.present == LTE_BCCH_DL_SCH_MessageType_PR_c1,
-              "bcch_message->message.present != LTE_BCCH_DL_SCH_MessageType_PR_c1\n");
-        AssertFatal(bcch_message->message.choice.c1.present == LTE_BCCH_DL_SCH_MessageType__c1_PR_systemInformationBlockType1,
-              "bcch_message->message.choice.c1.present != LTE_BCCH_DL_SCH_MessageType__c1_PR_systemInformationBlockType1\n");
+        if(bcch_message->message.present != LTE_BCCH_DL_SCH_MessageType_PR_c1) {
+          LOG_E(RRC,"bcch_message->message.present != LTE_BCCH_DL_SCH_MessageType_PR_c1\n");
+          return;
+        }
+        if(bcch_message->message.choice.c1.present != LTE_BCCH_DL_SCH_MessageType__c1_PR_systemInformationBlockType1) {
+          LOG_E(RRC,"bcch_message->message.choice.c1.present != LTE_BCCH_DL_SCH_MessageType__c1_PR_systemInformationBlockType1\n");
+          return;
+        }
+
         rrc->carrier[0].sib1 = &bcch_message->message.choice.c1.choice.systemInformationBlockType1;
         rrc->carrier[0].physCellId = f1_setup_req->nr_pci[i];
         // prepare F1_SETUP_RESPONSE
@@ -8632,7 +8755,8 @@ void handle_f1_setup_req(f1ap_setup_req_t *f1_setup_req) {
       }
     }// for (int j=0;j<RC.nb_inst;j++)
     if (found_cell==0) {
-      AssertFatal(1==0,"No cell found\n");
+	  LOG_E(RRC,"No cell found\n");
+      return;
       /*msg_p = itti_alloc_new_message (TASK_CU_F1,F1AP_SETUP_FAILURE); 						 
       F1AP_SETUP_RESP (msg_p).cause                             = rrc->node_name;
       F1AP_SETUP_RESP (msg_p).time_to_wait                      = rrc->node_id;
@@ -8973,10 +9097,13 @@ void *rrc_enb_process_itti_msg(void *notUsed) {
         break;
       }
 
-      rrc_eNB_decode_ccch(&ctxt,
+      if (rrc_eNB_decode_ccch(&ctxt,
                           (uint8_t*)RRC_MAC_CCCH_DATA_IND(msg_p).sdu,
                           RRC_MAC_CCCH_DATA_IND(msg_p).sdu_size,
-                          RRC_MAC_CCCH_DATA_IND(msg_p).CC_id);
+                          RRC_MAC_CCCH_DATA_IND(msg_p).CC_id) == -1) {
+        LOG_E(RRC, "rrc_eNB_decode_ccch failed\n");
+        return NULL;
+      }
       break;
 
 
@@ -9255,8 +9382,10 @@ void *rrc_enb_process_itti_msg(void *notUsed) {
 
     /* Messages from F1AP task */
     case F1AP_SETUP_REQ:
-      AssertFatal(NODE_IS_CU(RC.rrc[instance]->node_type),
-		  "should not receive F1AP_SETUP_REQUEST, need call by CU!\n");
+      if(!NODE_IS_CU(RC.rrc[instance]->node_type)) {
+        LOG_E(RRC,"should not receive F1AP_SETUP_REQUEST, need call by CU!\n");
+        return NULL;
+      }
       LOG_I(RRC,"[eNB %d] Received %s : %p\n", instance, msg_name_p, &F1AP_SETUP_REQ(msg_p));
       handle_f1_setup_req(&F1AP_SETUP_REQ(msg_p));
       break;

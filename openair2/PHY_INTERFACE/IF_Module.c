@@ -25,8 +25,10 @@ void handle_rach(UL_IND_t *UL_info) {
   if(NFAPI_MODE == NFAPI_MODE_VNF){
     for(uint8_t j = 0;j < NUM_NFPAI_SUBFRAME;j++){
      if (UL_RCC_INFO.rach_ind[j].rach_indication_body.number_of_preambles>0) {
-
-       AssertFatal(UL_RCC_INFO.rach_ind[j].rach_indication_body.number_of_preambles==1,"More than 1 preamble not supported\n");
+       if(UL_RCC_INFO.rach_ind[j].rach_indication_body.number_of_preambles != 1) {
+          LOG_E(MAC, "More than 1 preamble not supported\n");
+          return;
+       }
        LOG_D(MAC,"UL_info[Frame %d, Subframe %d] Calling initiate_ra_proc RACH:SFN/SF:%d\n",UL_info->frame,UL_info->subframe, NFAPI_SFNSF2DEC(UL_RCC_INFO.rach_ind[j].sfn_sf));
        initiate_ra_proc(UL_info->module_id,
                         UL_info->CC_id,
@@ -46,7 +48,10 @@ void handle_rach(UL_IND_t *UL_info) {
    }
   }else{
   if (UL_info->rach_ind.rach_indication_body.number_of_preambles>0) {
-    AssertFatal(UL_info->rach_ind.rach_indication_body.number_of_preambles==1,"More than 1 preamble not supported\n");
+    if(UL_info->rach_ind.rach_indication_body.number_of_preambles != 1) {
+       LOG_E(MAC, "More than 1 preamble not supported\n");
+       return;
+    }
     UL_info->rach_ind.rach_indication_body.number_of_preambles=0;
     LOG_D(MAC,"UL_info[Frame %d, Subframe %d] Calling initiate_ra_proc RACH:SFN/SF:%d\n",UL_info->frame,UL_info->subframe, NFAPI_SFNSF2DEC(UL_info->rach_ind.sfn_sf));
     initiate_ra_proc(UL_info->module_id,
@@ -66,11 +71,16 @@ void handle_rach(UL_IND_t *UL_info) {
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
 
   if (UL_info->rach_ind_br.rach_indication_body.number_of_preambles>0) {
-    AssertFatal(UL_info->rach_ind_br.rach_indication_body.number_of_preambles<5,"More than 4 preambles not supported\n");
+    if(UL_info->rach_ind_br.rach_indication_body.number_of_preambles >= 5) {
+       LOG_E(MAC, "More than 4 preambles not supported\n");
+       return;
+    }
 
     for (i=0; i<UL_info->rach_ind_br.rach_indication_body.number_of_preambles; i++) {
-      AssertFatal(UL_info->rach_ind_br.rach_indication_body.preamble_list[i].preamble_rel13.rach_resource_type>0,
-                  "Got regular PRACH preamble, not BL/CE\n");
+      if(UL_info->rach_ind_br.rach_indication_body.preamble_list[i].preamble_rel13.rach_resource_type <= 0) {
+         LOG_E(MAC, "Got regular PRACH preamble, not BL/CE\n");
+         return;
+      }
       LOG_D(MAC,"Frame %d, Subframe %d Calling initiate_ra_proc (CE_level %d)\n",UL_info->frame,UL_info->subframe,
             UL_info->rach_ind_br.rach_indication_body.preamble_list[i].preamble_rel13.rach_resource_type-1);
       UL_info->rach_ind_br.rach_indication_body.number_of_preambles=0;
@@ -690,7 +700,10 @@ static void dump_dl(Sched_Rsp_t *d) {
 /****************************************************************************/
 
 void UL_indication(UL_IND_t *UL_info) {
-  AssertFatal(UL_info!=NULL,"UL_INFO is null\n");
+  if(UL_info == NULL) {
+    LOG_E(PHY, "UL_INFO is null\n");
+    return;
+  }
 #ifdef DUMP_FAPI
   dump_ul(UL_info);
 #endif
@@ -715,8 +728,14 @@ void UL_indication(UL_IND_t *UL_info) {
       ifi->current_frame    = UL_info->frame;
       ifi->current_subframe = UL_info->subframe;
     } else {
-      AssertFatal(UL_info->frame != ifi->current_frame,"CC_mask %x is not full and frame has changed\n",ifi->CC_mask);
-      AssertFatal(UL_info->subframe != ifi->current_subframe,"CC_mask %x is not full and subframe has changed\n",ifi->CC_mask);
+      if(UL_info->frame == ifi->current_frame) {
+        LOG_E(PHY, "CC_mask %x is not full and frame has changed\n",ifi->CC_mask);
+        return;
+      }
+      if(UL_info->subframe == ifi->current_subframe) {
+        LOG_E(PHY, "CC_mask %x is not full and subframe has changed\n",ifi->CC_mask);
+        return;
+      }
     }
 
     ifi->CC_mask |= (1<<CC_id);
@@ -752,7 +771,10 @@ void UL_indication(UL_IND_t *UL_info) {
       sched_info->subframe    = (UL_info->subframe+sf_ahead)%10;
       sched_info->DL_req      = &mac->DL_req[CC_id];
       sched_info->HI_DCI0_req = &mac->HI_DCI0_req[CC_id][sched_info->subframe];
-
+      
+      if (is_UL_sf(&mac->common_channels[CC_id],sched_info->subframe) < 0) {
+        return;
+      }
       if ((mac->common_channels[CC_id].tdd_Config==NULL) ||
           (is_UL_sf(&mac->common_channels[CC_id],sched_info->subframe)>0))
         sched_info->UL_req      = &mac->UL_req[CC_id];
@@ -771,10 +793,10 @@ void UL_indication(UL_IND_t *UL_info) {
 #endif
 
       if (ifi->schedule_response) {
-        AssertFatal(ifi->schedule_response!=NULL,
-                    "schedule_response is null (mod %d, cc %d)\n",
-                    module_id,
-                    CC_id);
+        if(ifi->schedule_response == NULL) {
+          LOG_E(PHY, "schedule_response is null (mod %d, cc %d)\n",module_id,CC_id);
+          return;
+        }
         ifi->schedule_response(sched_info);
       }
 
@@ -784,7 +806,10 @@ void UL_indication(UL_IND_t *UL_info) {
 }
 
 IF_Module_t *IF_Module_init(int Mod_id) {
-  AssertFatal(Mod_id<MAX_MODULES,"Asking for Module %d > %d\n",Mod_id,MAX_IF_MODULES);
+  if(Mod_id > MAX_MODULES) {
+    LOG_E(PHY, "Asking for Module %d > %d\n",Mod_id,MAX_IF_MODULES);
+    return NULL;
+  }
   LOG_D(PHY,"Installing callbacks for IF_Module - UL_indication\n");
 
   if (if_inst[Mod_id]==NULL) {
@@ -792,15 +817,20 @@ IF_Module_t *IF_Module_init(int Mod_id) {
     memset((void *)if_inst[Mod_id],0,sizeof(IF_Module_t));
     if_inst[Mod_id]->CC_mask=0;
     if_inst[Mod_id]->UL_indication = UL_indication;
-    AssertFatal(pthread_mutex_init(&if_inst[Mod_id]->if_mutex,NULL)==0,
-                "allocation of if_inst[%d]->if_mutex fails\n",Mod_id);
+    if(pthread_mutex_init(&if_inst[Mod_id]->if_mutex,NULL) != 0) {
+      LOG_E(PHY, "allocation of if_inst[%d]->if_mutex fails\n",Mod_id);
+      return NULL;
+    }
   }
 
   return if_inst[Mod_id];
 }
 
 void IF_Module_kill(int Mod_id) {
-  AssertFatal(Mod_id>MAX_MODULES,"Asking for Module %d > %d\n",Mod_id,MAX_IF_MODULES);
+  if(Mod_id <= MAX_MODULES) {
+    LOG_E(PHY, "Asking for Module %d > %d\n",Mod_id,MAX_IF_MODULES);
+    return;
+  }
 
   if (if_inst[Mod_id]!=NULL) free(if_inst[Mod_id]);
 }

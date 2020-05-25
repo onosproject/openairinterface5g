@@ -128,7 +128,10 @@ to_prb(int dl_Bandwidth)
 //------------------------------------------------------------------------------
 {
   int prbmap[6] = { 6, 15, 25, 50, 75, 100 };
-  AssertFatal(dl_Bandwidth < 6, "dl_Bandwidth is 0..5\n");
+  if (dl_Bandwidth >= 6) {
+    LOG_E(MAC, "dl_Bandwidth is 0..5\n");
+    return -1;
+  }
   return (prbmap[dl_Bandwidth]);
 }
 
@@ -138,7 +141,10 @@ to_rbg(int dl_Bandwidth)
 //------------------------------------------------------------------------------
 {
   int rbgmap[6] = { 6, 8, 13, 17, 19, 25 };
-  AssertFatal(dl_Bandwidth < 6, "dl_Bandwidth is 0..5\n");
+  if (dl_Bandwidth >= 6) {
+    LOG_E(MAC, "dl_Bandwidth is 0..5\n");
+    return (-1);
+  }
   return (rbgmap[dl_Bandwidth]);
 }
 
@@ -148,11 +154,20 @@ get_phich_resource_times6(COMMON_channels_t *cc)
 //------------------------------------------------------------------------------
 {
   int phichmap[4] = { 1, 3, 6, 12 };
-  AssertFatal(cc != NULL, "cc is null\n");
-  AssertFatal(cc->mib != NULL, "cc->mib is null\n");
+  if (cc == NULL) {
+    LOG_E(MAC, "cc is null\n");
+    return -1;
+  }
+  if (cc->mib == NULL) {
+    LOG_E(MAC, "cc->mib is null\n");
+    return -1;
+  }
   int phich_Resource = (int) cc->mib->message.phich_Config.phich_Resource;
-  AssertFatal(phich_Resource >= 0 && phich_Resource < 4, "phich_Resource %d not in 0..3\n",
+  if (phich_Resource < 0 || phich_Resource >= 4) {
+    LOG_E(MAC, "phich_Resource %d not in 0..3\n",
               phich_Resource);
+    return -1;
+  }
   return (phichmap[phich_Resource]);
 }
 
@@ -375,9 +390,12 @@ subframe2harqpid(COMMON_channels_t *cc,
                  sub_frame_t subframe)
 //------------------------------------------------------------------------------
 {
-  AssertFatal(cc != NULL, "cc is null\n");
-
   uint8_t ret = 255;
+
+  if (cc == NULL) {
+    LOG_E(MAC, "cc is null\n");
+    return ret;
+  }
 
   if (cc->tdd_Config == NULL) { // FDD
     ret = (((frame << 1) + subframe) & 7);
@@ -397,9 +415,10 @@ subframe2harqpid(COMMON_channels_t *cc,
               break;
 
             default:
-              AssertFatal(1 == 0, "subframe2_harq_pid, Illegal subframe %d for TDD mode %d\n",
+              LOG_E(MAC, "subframe2_harq_pid, Illegal subframe %d for TDD mode %d\n",
                           subframe,
                           (int) cc->tdd_Config->subframeAssignment);
+              return ret;
               break;
           }
         }
@@ -407,36 +426,49 @@ subframe2harqpid(COMMON_channels_t *cc,
         break;
 
       case 2:
-        AssertFatal(subframe == 2 || subframe == 7, "subframe2_harq_pid, Illegal subframe %d for TDD mode %d\n",
+        if (subframe != 2 && subframe != 7) {
+          LOG_E(MAC, "subframe2_harq_pid, Illegal subframe %d for TDD mode %d\n",
                     subframe,
                     (int) cc->tdd_Config->subframeAssignment);
+          return ret;
+        }
         ret = (subframe / 7);
         break;
 
       case 3:
-        AssertFatal(subframe > 1 && subframe < 5, "subframe2_harq_pid, Illegal subframe %d for TDD mode %d\n",
+        if (subframe <= 1 || subframe >= 5) {
+          LOG_E(MAC, "subframe2_harq_pid, Illegal subframe %d for TDD mode %d\n",
                     subframe,
                     (int) cc->tdd_Config->subframeAssignment);
+          return ret;
+        }
         ret = (subframe - 2);
         break;
 
       case 4:
-        AssertFatal(subframe > 1 && subframe < 4, "subframe2_harq_pid, Illegal subframe %d for TDD mode %d\n",
+        if (subframe <= 1 || subframe >= 4) {
+          LOG_E(MAC, "subframe2_harq_pid, Illegal subframe %d for TDD mode %d\n",
                     subframe,
                     (int) cc->tdd_Config->subframeAssignment);
+          return ret;
+        }
         ret = (subframe - 2);
         break;
 
       case 5:
-        AssertFatal(subframe == 2, "subframe2_harq_pid, Illegal subframe %d for TDD mode %d\n",
+        if (subframe != 2) {
+          LOG_E(MAC, "subframe2_harq_pid, Illegal subframe %d for TDD mode %d\n",
                     subframe,
                     (int) cc->tdd_Config->subframeAssignment);
+          return ret;
+        }
         ret = (subframe - 2);
         break;
 
       default:
-        AssertFatal(1 == 0, "subframe2_harq_pid, Unsupported TDD mode %d\n",
+        LOG_E(MAC, "subframe2_harq_pid, Unsupported TDD mode %d\n",
                     (int) cc->tdd_Config->subframeAssignment);
+        return ret;
         break;
     }
   }
@@ -521,7 +553,8 @@ get_Msg3harqpid(COMMON_channels_t *cc,
       default:
         LOG_E(PHY, "get_Msg3_harq_pid: Unsupported TDD configuration %d\n",
               (int) cc->tdd_Config->subframeAssignment);
-        AssertFatal(1 == 0, "get_Msg3_harq_pid: Unsupported TDD configuration");
+        LOG_E(PHY, "get_Msg3_harq_pid: Unsupported TDD configuration");
+        return 255;
         break;
     }
   }
@@ -654,9 +687,10 @@ is_UL_sf(COMMON_channels_t *ccP,
       return 1;
 
     default:
-      AssertFatal(1 == 0,  "subframe %d Unsupported TDD configuration %d\n",
+      LOG_E(MAC,  "subframe %d Unsupported TDD configuration %d\n",
                   subframeP,
                   (int) ccP->tdd_Config->subframeAssignment);
+      return (-1);
       break;
   }
 
@@ -823,12 +857,13 @@ get_pucch1_absSF(COMMON_channels_t *cc,
       break;
 
     default:
-      AssertFatal(1 == 0, "Illegal TDD subframe Assigment %ld\n",
+      LOG_E(MAC, "Illegal TDD subframe Assigment %ld\n",
                   tdd_Config->subframeAssignment);
       return 0;
   }
 
-  AssertFatal(1 == 0, "Shouldn't get here\n");
+  LOG_E(MAC, "Shouldn't get here\n");
+  return -1;
 }
 
 //------------------------------------------------------------------------------
@@ -840,7 +875,10 @@ get_srs_pos(COMMON_channels_t *cc,
 //------------------------------------------------------------------------------
 {
   if (cc->tdd_Config) { // TDD
-    AssertFatal(isrs >= 10, "2 ms SRS periodicity not supported");
+    if (isrs < 10) {
+      LOG_E(MAC, "2 ms SRS periodicity not supported");
+      return;
+    }
 
     if (isrs > 9 && isrs < 15) {
       *psrsPeriodicity = 5;
@@ -865,7 +903,10 @@ get_srs_pos(COMMON_channels_t *cc,
       *psrsOffset = isrs - 325;
     }
 
-    AssertFatal(isrs <= 644, "Isrs out of range %d>644\n", isrs);
+    if (isrs > 644) {
+      LOG_E(MAC, "Isrs out of range %d>644\n", isrs);
+      return;
+    }
   }       // TDD
   else {      // FDD
     if (isrs < 2) {
@@ -894,7 +935,10 @@ get_srs_pos(COMMON_channels_t *cc,
       *psrsOffset = isrs - 317;
     }
 
-    AssertFatal(isrs <= 636, "Isrs out of range %d>636\n", isrs);
+    if (isrs > 636) {
+      LOG_E(MAC, "Isrs out of range %d>636\n", isrs);
+      return;
+    }
   }
 
   return;
@@ -913,7 +957,10 @@ get_csi_params(COMMON_channels_t *cc,
                int *H)
 //------------------------------------------------------------------------------
 {
-  AssertFatal(cqi_ReportPeriodic != NULL, "cqi_ReportPeriodic is null!\n");
+  if (cqi_ReportPeriodic == NULL) {
+    LOG_E(MAC, "cqi_ReportPeriodic is null!\n");
+    return;
+  }
   uint16_t cqi_PMI_ConfigIndex = cqi_ReportPeriodic->choice.setup.cqi_pmi_ConfigIndex;
   uint8_t Jtab[6] = { 0, 2, 2, 3, 4, 4 };
 
@@ -1001,13 +1048,22 @@ get_dl_cqi_pmi_size_pusch(COMMON_channels_t *cc,
   int N = Ntab[cc->mib->message.dl_Bandwidth];
   int Ltab_uesel[6] = { 0, 6, 9, 13, 15, 18 };
   int L = Ltab_uesel[cc->mib->message.dl_Bandwidth];
-  AssertFatal(cqi_ReportModeAperiodic != NULL, "cqi_ReportPeriodic is null!\n");
+  if (cqi_ReportModeAperiodic == NULL) {
+    LOG_E(MAC, "cqi_ReportPeriodic is null!\n");
+    return 0;
+  }
 
   switch (*cqi_ReportModeAperiodic) {
     case LTE_CQI_ReportModeAperiodic_rm12:
-      AssertFatal(tmode == 4 || tmode == 6 || tmode == 8 || tmode == 9 || tmode == 10, "Illegal TM (%d) for CQI_ReportModeAperiodic_rm12\n",
+      if (tmode != 4 && tmode != 6 && tmode != 8 && tmode != 9 && tmode != 10) {
+        LOG_E(MAC, "Illegal TM (%d) for CQI_ReportModeAperiodic_rm12\n",
                   tmode);
-      AssertFatal(cc->p_eNB <= 4, "only up to 4 antenna ports supported here\n");
+        return 0;
+      }
+      if (cc->p_eNB > 4) {
+        LOG_E(MAC, "only up to 4 antenna ports supported here\n");
+        return 0;
+      }
 
       if (ri == 1 && cc->p_eNB == 2)
         return (4 + (N << 1));
@@ -1025,16 +1081,28 @@ get_dl_cqi_pmi_size_pusch(COMMON_channels_t *cc,
 
     case LTE_CQI_ReportModeAperiodic_rm20:
       // Table 5.2.2.6.3-1 (36.212)
-      AssertFatal(tmode == 1 || tmode == 2 || tmode == 3 || tmode == 7 || tmode == 9 || tmode == 10, "Illegal TM (%d) for CQI_ReportModeAperiodic_rm20\n",
+      if (tmode != 1 && tmode != 2 && tmode != 3 && tmode != 7 && tmode != 9 && tmode != 10) {
+        LOG_E(MAC, "Illegal TM (%d) for CQI_ReportModeAperiodic_rm20\n",
                   tmode);
-      AssertFatal(tmode != 9 && tmode != 10, "TM9/10 will be handled later for CQI_ReportModeAperiodic_rm20\n");
+        return 0;
+      }
+      if (tmode == 9 || tmode == 10) {
+        LOG_E(MAC, "TM9/10 will be handled later for CQI_ReportModeAperiodic_rm20\n");
+        return 0;
+      }
       return (4 + 2 + L);
 
     case LTE_CQI_ReportModeAperiodic_rm22:
       // Table 5.2.2.6.3-2 (36.212)
-      AssertFatal(tmode == 4 || tmode == 6 || tmode == 8 || tmode == 9 || tmode == 10, "Illegal TM (%d) for CQI_ReportModeAperiodic_rm22\n",
+      if (tmode != 4 && tmode != 6 && tmode != 8 && tmode != 9 && tmode != 10) {
+        LOG_E(MAC, "Illegal TM (%d) for CQI_ReportModeAperiodic_rm22\n",
                   tmode);
-      AssertFatal(tmode != 9 && tmode != 10, "TM9/10 will be handled later for CQI_ReportModeAperiodic_rm22\n");
+        return 0;
+      }
+      if (tmode == 9 || tmode == 10) {
+        LOG_E(MAC, "TM9/10 will be handled later for CQI_ReportModeAperiodic_rm22\n");
+        return 0;
+      }
 
       if (ri == 1 && cc->p_eNB == 2)
         return (4 + 2 + 0 + 0 + L + 4);
@@ -1052,17 +1120,28 @@ get_dl_cqi_pmi_size_pusch(COMMON_channels_t *cc,
 
     case LTE_CQI_ReportModeAperiodic_rm30:
       // Table 5.2.2.6.2-1 (36.212)
-      AssertFatal(tmode == 1 || tmode == 2 || tmode == 3 || tmode == 7 || tmode == 8 || tmode == 9 || tmode == 10,
-                  "Illegal TM (%d) for CQI_ReportModeAperiodic_rm30\n",
+      if (tmode != 1 && tmode != 2 && tmode != 3 && tmode != 7 && tmode != 8 && tmode != 9 && tmode != 10) {
+        LOG_E(MAC,"Illegal TM (%d) for CQI_ReportModeAperiodic_rm30\n",
                   tmode);
-      AssertFatal(tmode != 8 && tmode != 9 && tmode != 10, "TM8/9/10 will be handled later for CQI_ReportModeAperiodic_rm30\n");
+        return 0;
+      }
+      if (tmode == 8 || tmode == 9 || tmode == 10) {
+        LOG_E(MAC, "TM8/9/10 will be handled later for CQI_ReportModeAperiodic_rm30\n");
+        return 0;
+      }
       return (4 + (N << 1));
 
     case LTE_CQI_ReportModeAperiodic_rm31:
       // Table 5.2.2.6.2-2 (36.212)
-      AssertFatal(tmode == 4 || tmode == 6 || tmode == 8 || tmode == 9 || tmode == 10, "Illegal TM (%d) for CQI_ReportModeAperiodic_rm31\n",
+      if (tmode != 4 && tmode != 6 && tmode != 8 && tmode != 9 && tmode != 10) {
+        LOG_E(MAC, "Illegal TM (%d) for CQI_ReportModeAperiodic_rm31\n",
                   tmode);
-      AssertFatal(tmode != 8 && tmode != 9 && tmode != 10, "TM8/9/10 will be handled later for CQI_ReportModeAperiodic_rm31\n");
+        return 0;
+      }
+      if (tmode == 8 || tmode == 9 || tmode == 10) {
+        LOG_E(MAC, "TM8/9/10 will be handled later for CQI_ReportModeAperiodic_rm31\n");
+        return 0;
+      }
 
       if (ri == 1 && cc->p_eNB == 2)
         return (4 + (N << 1) + 0 + 0 + 2);
@@ -1080,9 +1159,13 @@ get_dl_cqi_pmi_size_pusch(COMMON_channels_t *cc,
 #if (LTE_RRC_VERSION >= MAKE_VERSION(12, 5, 0))
 
     case LTE_CQI_ReportModeAperiodic_rm32_v1250:
-      AssertFatal(tmode == 4 || tmode == 6 || tmode == 8 || tmode == 9 || tmode == 10, "Illegal TM (%d) for CQI_ReportModeAperiodic_rm32\n",
+      if (tmode != 4 && tmode != 6 && tmode != 8 && tmode != 9 && tmode != 10) {
+        LOG_E(MAC, "Illegal TM (%d) for CQI_ReportModeAperiodic_rm32\n",
                   tmode);
-      AssertFatal(1 == 0, "CQI_ReportModeAperiodic_rm32_v1250 not supported yet\n");
+        return 0;
+      }
+      LOG_E(MAC, "CQI_ReportModeAperiodic_rm32_v1250 not supported yet\n");
+      return 0;
       break;
 
     case LTE_CQI_ReportModeAperiodic_rm10_v1310:
@@ -1095,9 +1178,15 @@ get_dl_cqi_pmi_size_pusch(COMMON_channels_t *cc,
 
     case LTE_CQI_ReportModeAperiodic_rm11_v1310:
       // Table 5.2.2.6.1-1H (36.212)
-      AssertFatal(tmode == 4 || tmode == 6 || tmode == 8 || tmode == 9 || tmode == 10,  "Illegal TM (%d) for CQI_ReportModeAperiodic_rm11\n",
+      if (tmode != 4 && tmode != 6 && tmode != 8 && tmode != 9 && tmode != 10) {
+        LOG_E(MAC,  "Illegal TM (%d) for CQI_ReportModeAperiodic_rm11\n",
                   tmode);
-      AssertFatal(cc->p_eNB <= 4, "only up to 4 antenna ports supported here\n");
+        return 0;
+      }
+      if (cc->p_eNB > 4) {
+        LOG_E(MAC, "only up to 4 antenna ports supported here\n");
+        return 0;
+      }
 
       if (ri == 1 && cc->p_eNB == 2)
         return (4 + 0 + 2);
@@ -1115,7 +1204,7 @@ get_dl_cqi_pmi_size_pusch(COMMON_channels_t *cc,
 #endif /* #if (LTE_RRC_VERSION >= MAKE_VERSION(12, 5, 0)) */
   }
 
-  AssertFatal(1 == 0, "Shouldn't get here\n");
+  LOG_E(MAC, "Shouldn't get here\n");
   return 0;
 }
 
@@ -1132,10 +1221,18 @@ get_rel8_dl_cqi_pmi_size(UE_sched_ctrl_t *sched_ctl,
   //    Ltab[6] = {0,log2(15/4/2),log2(25/4/2),log2(50/6/3),log2(75/8/4),log2(100/8/4)};
   uint8_t Ltab[6] = { 0, 1, 2, 2, 2, 2 };
   uint8_t ri = sched_ctl->periodic_ri_received[CC_idP];
-  AssertFatal(cqi_ReportPeriodic != NULL, "cqi_ReportPeriodic is null!\n");
-  AssertFatal(cqi_ReportPeriodic->present != LTE_CQI_ReportPeriodic_PR_NOTHING, "cqi_ReportPeriodic->present == CQI_ReportPeriodic_PR_NOTHING!\n");
-  AssertFatal(cqi_ReportPeriodic->choice.setup.cqi_FormatIndicatorPeriodic.present != LTE_CQI_ReportPeriodic__setup__cqi_FormatIndicatorPeriodic_PR_NOTHING,
-              "cqi_ReportPeriodic->cqi_FormatIndicatorPeriodic.choice.setup.present == CQI_ReportPeriodic__setup__cqi_FormatIndicatorPeriodic_PR_NOTHING!\n");
+  if (cqi_ReportPeriodic == NULL) {
+    LOG_E(MAC, "cqi_ReportPeriodic is null!\n");
+    return 0;
+  }
+  if (cqi_ReportPeriodic->present == LTE_CQI_ReportPeriodic_PR_NOTHING) {
+    LOG_E(MAC, "cqi_ReportPeriodic->present == CQI_ReportPeriodic_PR_NOTHING!\n");
+    return 0;
+  }
+  if (cqi_ReportPeriodic->choice.setup.cqi_FormatIndicatorPeriodic.present == LTE_CQI_ReportPeriodic__setup__cqi_FormatIndicatorPeriodic_PR_NOTHING) {
+    LOG_E(MAC,"cqi_ReportPeriodic->cqi_FormatIndicatorPeriodic.choice.setup.present == CQI_ReportPeriodic__setup__cqi_FormatIndicatorPeriodic_PR_NOTHING!\n");
+    return 0;
+  }
 
   switch (tmode) {
     case 1:
@@ -1164,17 +1261,18 @@ get_rel8_dl_cqi_pmi_size(UE_sched_ctrl_t *sched_ctl,
 
     if (cc->p_eNB == 4 && ri == 2) return 11;
 
-    AssertFatal(1 == 0, "illegal combination p %d, ri %d, no_pmi %d\n",
+    LOG_E(MAC, "illegal combination p %d, ri %d, no_pmi %d\n",
                 cc->p_eNB,
                 ri,
                 no_pmi);
+    return 0;
   } else if (cqi_ReportPeriodic->choice.setup.cqi_FormatIndicatorPeriodic.present == LTE_CQI_ReportPeriodic__setup__cqi_FormatIndicatorPeriodic_PR_subbandCQI) {
     if (no_pmi == 1 || ri == 1) return (4 + Ltab[cc->mib->message.dl_Bandwidth]);
 
     return (7 + Ltab[cc->mib->message.dl_Bandwidth]);
   }
 
-  AssertFatal(1 == 0, "Shouldn't get here : cqi_ReportPeriodic->present %d\n",
+  LOG_E(MAC, "Shouldn't get here : cqi_ReportPeriodic->present %d\n",
               cqi_ReportPeriodic->choice.setup.cqi_FormatIndicatorPeriodic.present);
   return 0;
 }
@@ -1446,11 +1544,17 @@ program_dlsch_acknak(module_id_t module_idP,
         break;
 
       case NFAPI_UL_CONFIG_ULSCH_HARQ_PDU_TYPE:
-        AssertFatal(use_simultaneous_pucch_pusch == 0, "Cannot be NFAPI_UL_CONFIG_ULSCH_HARQ_PDU_TYPE, simultaneous_pucch_pusch is active");
+        if (use_simultaneous_pucch_pusch != 0) {
+          LOG_E(MAC, "Cannot be NFAPI_UL_CONFIG_ULSCH_HARQ_PDU_TYPE, simultaneous_pucch_pusch is active");
+          return;
+        }
         break;
 
       case NFAPI_UL_CONFIG_ULSCH_UCI_HARQ_PDU_TYPE:
-        AssertFatal(use_simultaneous_pucch_pusch == 1, "Cannot be NFAPI_UL_CONFIG_ULSCH_UCI_PDU_TYPE, simultaneous_pucch_pusch is inactive\n");
+        if (use_simultaneous_pucch_pusch != 1) {
+          LOG_E(MAC, "Cannot be NFAPI_UL_CONFIG_ULSCH_UCI_PDU_TYPE, simultaneous_pucch_pusch is inactive\n");
+          return;
+        }
         break;
 
       /* [ulsch + cqi] to [ulsch + cqi + harq] */
@@ -1473,7 +1577,10 @@ program_dlsch_acknak(module_id_t module_idP,
         break;
 
       case NFAPI_UL_CONFIG_ULSCH_CQI_HARQ_RI_PDU_TYPE:
-        AssertFatal(use_simultaneous_pucch_pusch == 0, "Cannot be NFAPI_UL_CONFIG_ULSCH_CQI_HARQ_RI_PDU_TYPE, simultaneous_pucch_pusch is active\n");
+        if (use_simultaneous_pucch_pusch != 0) {
+          LOG_E(MAC, "Cannot be NFAPI_UL_CONFIG_ULSCH_CQI_HARQ_RI_PDU_TYPE, simultaneous_pucch_pusch is active\n");
+          return;
+        }
         break;
 
       /* [ulsch + cqi on pucch] to [ulsch + cqi on pucch + harq on pucch] */
@@ -1485,7 +1592,10 @@ program_dlsch_acknak(module_id_t module_idP,
         break;
 
       case NFAPI_UL_CONFIG_ULSCH_CSI_UCI_HARQ_PDU_TYPE:
-        AssertFatal(use_simultaneous_pucch_pusch == 1, "Cannot be NFAPI_UL_CONFIG_ULSCH_CSI_UCI_HARQ_PDU_TYPE, simultaneous_pucch_pusch is inactive\n");
+        if (use_simultaneous_pucch_pusch != 1) {
+          LOG_E(MAC, "Cannot be NFAPI_UL_CONFIG_ULSCH_CSI_UCI_HARQ_PDU_TYPE, simultaneous_pucch_pusch is inactive\n");
+          return;
+        }
         break;
 
       /* [sr] to [sr + harq] */
@@ -1586,14 +1696,26 @@ fill_nfapi_ulsch_harq_information(module_id_t                            module_
   harq_pid     = frame_subframe2_dl_harq_pid(cc->tdd_Config, frameP, subframeP);
 
   nfapi_ul_config_ulsch_harq_information_rel10_t *harq_information_rel10 = &harq_information->harq_information_rel10;
-  AssertFatal(UE_id >= 0, "UE_id cannot be found, impossible\n");
-  AssertFatal(UE_list != NULL, "UE_list is null\n");
+  if (UE_id < 0) {
+    LOG_E(MAC, "UE_id cannot be found, impossible\n");
+    return;
+  }
+  if (UE_list == NULL) {
+    LOG_E(MAC, "UE_list is null\n");
+    return;
+  }
   LTE_PhysicalConfigDedicated_t *physicalConfigDedicated = UE_list->UE_template[CC_idP][UE_id].physicalConfigDedicated;
-  AssertFatal(physicalConfigDedicated != NULL, "physicalConfigDedicated for rnti %x is null\n",
+  if (physicalConfigDedicated == NULL) {
+    LOG_E(MAC, "physicalConfigDedicated for rnti %x is null\n",
               rntiP);
+    return;
+  }
   struct LTE_PUSCH_ConfigDedicated *puschConfigDedicated = physicalConfigDedicated->pusch_ConfigDedicated;
-  AssertFatal(puschConfigDedicated != NULL, "physicalConfigDedicated->puschConfigDedicated for rnti %x is null\n",
+  if (puschConfigDedicated == NULL) {
+    LOG_E(MAC, "physicalConfigDedicated->puschConfigDedicated for rnti %x is null\n",
               rntiP);
+    return;
+  }
 #if (LTE_RRC_VERSION >= MAKE_VERSION(10, 2, 0))
   /*  if (UE_list->UE_template[CC_idP][UE_id].physicalConfigDedicated->ext2) puschConfigDedicated_v1020 =  UE_list->UE_template[CC_idP][UE_id].physicalConfigDedicated->ext2->pusch_ConfigDedicated_v1020;
       #endif
@@ -1608,7 +1730,10 @@ fill_nfapi_ulsch_harq_information(module_id_t                            module_
   harq_information_rel10->delta_offset_harq = puschConfigDedicated->betaOffset_ACK_Index;
   harq_information_rel10->tl.tag = NFAPI_UL_CONFIG_REQUEST_ULSCH_HARQ_INFORMATION_REL10_TAG;
   struct LTE_PUCCH_ConfigDedicated *pucch_ConfigDedicated = physicalConfigDedicated->pucch_ConfigDedicated;
-  AssertFatal(pucch_ConfigDedicated != NULL, "pucch_ConfigDedicated is null!\n");
+  if (pucch_ConfigDedicated == NULL) {
+    LOG_E(MAC, "pucch_ConfigDedicated is null!\n");
+    return;
+  }
 
   if (pucch_ConfigDedicated->tdd_AckNackFeedbackMode != NULL &&
       *pucch_ConfigDedicated->tdd_AckNackFeedbackMode == LTE_PUCCH_ConfigDedicated__tdd_AckNackFeedbackMode_multiplexing)
@@ -1617,6 +1742,9 @@ fill_nfapi_ulsch_harq_information(module_id_t                            module_
     harq_information_rel10->ack_nack_mode = 0; // bundling
 
   switch (get_tmode(module_idP, CC_idP, UE_id)) {
+    case 0:
+      LOG_E(MAC, "get_tmode failed\n");
+      return;
     case 1:
     case 2:
     case 5:
@@ -1677,7 +1805,10 @@ getNp(int dl_Bandwidth,
       uint8_t plus1)
 //------------------------------------------------------------------------------
 {
-  AssertFatal(dl_Bandwidth < 6, "dl_Bandwidth %d>5\n", dl_Bandwidth);
+  if (dl_Bandwidth >= 6) {
+    LOG_E(MAC, "dl_Bandwidth %d>5\n", dl_Bandwidth);
+    return -1;
+  }
 
   if (nCCE >= Np[dl_Bandwidth][2]) {
     return(Np[dl_Bandwidth][2+plus1]);
@@ -1715,8 +1846,14 @@ fill_nfapi_harq_information(module_id_t                      module_idP,
   harq_pid     = frame_subframe2_dl_harq_pid(cc->tdd_Config, frameP, subframeP);
   int  ackNAK_absSF = get_pucch1_absSF(cc, absSFP);
 
-  AssertFatal(UE_id >= 0, "UE_id cannot be found, impossible\n");
-  AssertFatal(UE_list != NULL, "UE_list is null\n");
+  if (UE_id < 0) {
+    LOG_E(MAC, "UE_id cannot be found, impossible\n");
+    return;
+  }
+  if (UE_list == NULL) {
+    LOG_E(MAC, "UE_list is null\n");
+    return;
+  }
   harq_information->harq_information_rel11.tl.tag        = NFAPI_UL_CONFIG_REQUEST_HARQ_INFORMATION_REL11_TAG;
   harq_information->harq_information_rel11.num_ant_ports = 1;
   LTE_PhysicalConfigDedicated_t *physicalConfigDedicated = UE_list->UE_template[CC_idP][UE_id].physicalConfigDedicated;
@@ -1727,6 +1864,9 @@ fill_nfapi_harq_information(module_id_t                      module_idP,
   switch (get_tmode(module_idP,
                     CC_idP,
                     UE_id)) {
+    case 0:
+      LOG_E(MAC, "get_tmode failed\n");
+      return;
     case 1:
     case 2:
     case 5:
@@ -1749,6 +1889,14 @@ fill_nfapi_harq_information(module_id_t                      module_idP,
         if(getM_mac(cc, (get_pucch1_absSF(cc, absSFP))%10)==1) {
           harq_information->harq_information_rel10_tdd.n_pucch_1_0 = cc->radioResourceConfigCommon->pucch_ConfigCommon.n1PUCCH_AN + cce_idxP;
         } else {
+          if (getNp(cc->mib->message.dl_Bandwidth,cce_idxP,0) == -1) {
+            LOG_E(MAC, "getNp failed, plus1=0\n");
+            return;
+          }
+          if (getNp(cc->mib->message.dl_Bandwidth,cce_idxP,1) == -1) {
+            LOG_E(MAC, "getNp failed, plus1=1\n");
+            return;
+          }
           harq_information->harq_information_rel10_tdd.n_pucch_1_0               = cc->radioResourceConfigCommon->pucch_ConfigCommon.n1PUCCH_AN + cce_idxP +
                                                                                      (getM_mac(cc,ackNAK_absSF % 10) - getm_mac(cc,subframeP) -1)*getNp(cc->mib->message.dl_Bandwidth,cce_idxP,0) +
                                                                                      getm_mac(cc,subframeP)*getNp(cc->mib->message.dl_Bandwidth,cce_idxP,1);
@@ -1765,7 +1913,10 @@ fill_nfapi_harq_information(module_id_t                      module_idP,
 
     default:      // for any other TM we need 2 bits harq
       if (cc->tdd_Config != NULL) {
-        AssertFatal(pucch_ConfigDedicated != NULL, "pucch_ConfigDedicated is null for TDD!\n");
+        if (pucch_ConfigDedicated == NULL) {
+          LOG_E(MAC, "pucch_ConfigDedicated is null for TDD!\n");
+          return;
+        }
 
         if (pucch_ConfigDedicated->tdd_AckNackFeedbackMode != NULL &&
             *pucch_ConfigDedicated->tdd_AckNackFeedbackMode == LTE_PUCCH_ConfigDedicated__tdd_AckNackFeedbackMode_multiplexing) {
@@ -1781,6 +1932,14 @@ fill_nfapi_harq_information(module_id_t                      module_idP,
           harq_information->harq_information_rel10_tdd.harq_size                = 1;
         }
 
+        if (getNp(cc->mib->message.dl_Bandwidth,cce_idxP,0) == -1) {
+          LOG_E(MAC, "getNp failed, plus1=0\n");
+          return;
+        }
+        if (getNp(cc->mib->message.dl_Bandwidth,cce_idxP,1) == -1) {
+          LOG_E(MAC, "getNp failed, plus1=1\n");
+          return;
+        }
         harq_information->harq_information_rel10_tdd.n_pucch_1_0               = cc->radioResourceConfigCommon->pucch_ConfigCommon.n1PUCCH_AN + cce_idxP +
                                                                                  (getM_mac(cc,ackNAK_absSF % 10) - getm_mac(cc,subframeP)-1)*getNp(cc->mib->message.dl_Bandwidth,cce_idxP,0) +
                                                                                  getm_mac(cc,subframeP)*getNp(cc->mib->message.dl_Bandwidth,cce_idxP,1);
@@ -2004,9 +2163,18 @@ fill_nfapi_ulsch_config_request_rel8(nfapi_ul_config_request_pdu_t *ul_config_pd
     else if (cc->p_eNB == 4) ri_size = 2;
 
     ul_config_pdu->ulsch_cqi_ri_pdu.cqi_ri_information.cqi_ri_information_rel9.aperiodic_cqi_pmi_ri_report.cc[0].ri_size = ri_size;
-    AssertFatal(physicalConfigDedicated->cqi_ReportConfig != NULL,"physicalConfigDedicated->cqi_ReportConfig is null!\n");
-    AssertFatal(physicalConfigDedicated->cqi_ReportConfig->cqi_ReportModeAperiodic != NULL,"physicalConfigDedicated->cqi_ReportModeAperiodic is null!\n");
-    AssertFatal(physicalConfigDedicated->pusch_ConfigDedicated != NULL,"physicalConfigDedicated->puschConfigDedicated is null!\n");
+    if (physicalConfigDedicated->cqi_ReportConfig == NULL) {
+      LOG_E(MAC,"physicalConfigDedicated->cqi_ReportConfig is null!\n");
+      return;
+    }
+    if (physicalConfigDedicated->cqi_ReportConfig->cqi_ReportModeAperiodic == NULL) {
+      LOG_E(MAC,"physicalConfigDedicated->cqi_ReportModeAperiodic is null!\n");
+      return;
+    }
+    if (physicalConfigDedicated->pusch_ConfigDedicated == NULL) {
+      LOG_E(MAC,"physicalConfigDedicated->puschConfigDedicated is null!\n");
+      return;
+    }
     nfapi_ul_config_cqi_ri_information_rel9_t *ri_information = &ul_config_pdu->ulsch_cqi_ri_pdu.cqi_ri_information.cqi_ri_information_rel9;
     int max_ri = (1 << ri_information->aperiodic_cqi_pmi_ri_report.cc[0].ri_size);
 
@@ -2016,6 +2184,9 @@ fill_nfapi_ulsch_config_request_rel8(nfapi_ul_config_request_pdu_t *ul_config_pd
                                     tmode,
                                     1 + ri,
                                     physicalConfigDedicated->cqi_ReportConfig->cqi_ReportModeAperiodic);
+      if (ri_information->aperiodic_cqi_pmi_ri_report.cc[0].dl_cqi_pmi_size[ri] == 0) {
+        return;
+      }
     }
 
     ri_information->delta_offset_cqi = physicalConfigDedicated->pusch_ConfigDedicated->betaOffset_CQI_Index;
@@ -2054,7 +2225,10 @@ get_numnarrowbands(long dl_Bandwidth)
 //------------------------------------------------------------------------------
 {
   int nb_tab[6] = { 1, 2, 4, 8, 12, 16 };
-  AssertFatal(dl_Bandwidth < 7 || dl_Bandwidth >= 0, "dl_Bandwidth not in [0..6]\n");
+  if (dl_Bandwidth >= 7 && dl_Bandwidth < 0) {
+    LOG_E(MAC, "dl_Bandwidth not in [0..6]\n");
+    return (-1);
+  }
   return (nb_tab[dl_Bandwidth]);
 }
 
@@ -2064,7 +2238,10 @@ get_numnarrowbandbits(long dl_Bandwidth)
 //------------------------------------------------------------------------------
 {
   int nbbits_tab[6] = { 0, 1, 2, 3, 4, 4 };
-  AssertFatal(dl_Bandwidth < 7 || dl_Bandwidth >= 0, "dl_Bandwidth not in [0..6]\n");
+  if (dl_Bandwidth >= 7 && dl_Bandwidth < 0) {
+    LOG_E(MAC, "dl_Bandwidth not in [0..6]\n");
+    return (-1);
+  }
   return (nbbits_tab[dl_Bandwidth]);
 }
 
@@ -2096,20 +2273,29 @@ mpdcch_sf_condition(eNB_MAC_INST *eNB,
 
   switch (mpdcch_type) {
     case TYPE0:
-      AssertFatal(1 == 0, "MPDCCH Type 0 not handled yet\n");
+      LOG_E(MAC, "MPDCCH Type 0 not handled yet\n");
+      return (-1);
       break;
 
     case TYPE1:
-      AssertFatal(1 == 0, "MPDCCH Type 1 not handled yet\n");
+      LOG_E(MAC, "MPDCCH Type 1 not handled yet\n");
+      return (-1);
       break;
 
     case TYPE1A:
-      AssertFatal(1 == 0, "MPDCCH Type 1A not handled yet\n");
+      LOG_E(MAC, "MPDCCH Type 1A not handled yet\n");
+      return (-1);
       break;
 
     case TYPE2:   // RAR
-      AssertFatal(ext4_prach->mpdcch_startSF_CSS_RA_r13 != NULL, "mpdcch_startSF_CSS_RA_r13 is null\n");
-      AssertFatal(rmax > 0, "rmax is 0!\b");
+      if (ext4_prach->mpdcch_startSF_CSS_RA_r13 == NULL) {
+        LOG_E(MAC, "mpdcch_startSF_CSS_RA_r13 is null\n");
+        return (-1);
+      }
+      if (rmax <= 0) {
+        LOG_E(MAC, "rmax is 0!\b");
+        return (-1);
+      }
 
       if (eNB->common_channels[CC_id].tdd_Config == NULL) //FDD
         T = (rmax * startSF_fdd_RA_times2[ext4_prach->mpdcch_startSF_CSS_RA_r13->choice.fdd_r13]) >> 1;
@@ -2119,14 +2305,21 @@ mpdcch_sf_condition(eNB_MAC_INST *eNB,
       break;
 
     case TYPE2A:
-      AssertFatal(1 == 0, "MPDCCH Type 2A not handled yet\n");
+      LOG_E(MAC, "MPDCCH Type 2A not handled yet\n");
+      return (-1);
       break;
 
     case TYPEUESPEC:
       epdcch_setconfig_r11 =
         eNB->UE_list.UE_template[CC_id][UE_id].physicalConfigDedicated->ext4->epdcch_Config_r11->config_r11.choice.setup.setConfigToAddModList_r11->list.array[0];
-      AssertFatal(epdcch_setconfig_r11 != NULL, " epdcch_setconfig_r11 is null for UE specific \n");
-      AssertFatal(epdcch_setconfig_r11->ext2 != NULL, " ext2 doesn't exist in epdcch config ' \n");
+      if (epdcch_setconfig_r11 == NULL) {
+        LOG_E(MAC, " epdcch_setconfig_r11 is null for UE specific \n");
+        return (-1);
+      }
+      if (epdcch_setconfig_r11->ext2 == NULL) {
+        LOG_E(MAC, " ext2 doesn't exist in epdcch config ' \n");
+        return (-1);
+      }
 
       if (eNB->common_channels[CC_id].tdd_Config == NULL) //FDD
         T = (rmax * startSF_fdd_RA_times2[epdcch_setconfig_r11->ext2->mpdcch_config_r13->choice.setup.mpdcch_StartSF_UESS_r13.choice.fdd_r13]) >> 1;
@@ -2139,7 +2332,10 @@ mpdcch_sf_condition(eNB_MAC_INST *eNB,
       return 0;
   }
 
-  AssertFatal(T > 0, "T is 0!\n");
+  if (T <= 0) {
+    LOG_E(MAC, "T is 0!\n");
+    return (-1);
+  }
 
   if (((10 * frameP) + subframeP) % T == 0) return 1;
 
@@ -2181,8 +2377,9 @@ narrowband_to_first_rb(COMMON_channels_t *cc,
       return (1 + (6 * nb_index));
 
     default:
-      AssertFatal(1 == 0, "Impossible dl_Bandwidth %d\n",
-                  (int) cc->mib->message.dl_Bandwidth);
+      LOG_E(MAC, "Impossible dl_Bandwidth %d\n",
+                (int) cc->mib->message.dl_Bandwidth);
+      return -1;
       break;
   }
 
@@ -2254,7 +2451,10 @@ find_RA_id(module_id_t mod_idP,
 //------------------------------------------------------------------------------
 {
   int RA_id;
-  AssertFatal(RC.mac[mod_idP], "RC.mac[%d] is null\n", mod_idP);
+  if (!RC.mac[mod_idP]) {
+    LOG_E(MAC, "RC.mac[%d] is null\n", mod_idP);
+    return -1;
+  }
   RA_t *ra = (RA_t *) &RC.mac[mod_idP]->common_channels[CC_idP].ra[0];
 
   for (RA_id = 0; RA_id < NB_RA_PROC_MAX; RA_id++) {
@@ -2680,7 +2880,10 @@ swap_UEs(UE_list_t *listP,
   prev_j = prev(listP,
                 nodejP,
                 ul_flag);
-  AssertFatal((prev_i >= 0) && (prev_j >= 0), "swap_UEs: problem");
+  if ((prev_i < 0) || (prev_j < 0)) {
+    LOG_E(MAC, "swap_UEs: problem");
+    return;
+  }
 
   if (ul_flag == 0) {
     next_i = listP->next[nodeiP];
@@ -2850,9 +3053,12 @@ get_tmode(module_id_t module_idP,
   struct LTE_PhysicalConfigDedicated *physicalConfigDedicated = eNB->UE_list.UE_template[CC_idP][UE_idP].physicalConfigDedicated;
 
   if (physicalConfigDedicated == NULL) {  // RRCConnectionSetup not received by UE yet
-    AssertFatal(cc->p_eNB <= 2, "p_eNB is %d, should be <2\n",
+    if (cc->p_eNB > 2) {
+      LOG_E(MAC, "p_eNB is %d, should be <2\n",
                 cc->p_eNB);
-    return (cc->p_eNB);
+      return 0;
+    }
+	return (cc->p_eNB);
   }
 
   if(physicalConfigDedicated->antennaInfo == NULL){
@@ -2860,17 +3066,23 @@ get_tmode(module_id_t module_idP,
               CC_idP,
               UE_idP,
               physicalConfigDedicated);
-    AssertFatal(cc->p_eNB <= 2, "p_eNB is %d, should be <2\n",
+    if (cc->p_eNB > 2) {
+      LOG_E(MAC, "p_eNB is %d, should be <2\n",
                 cc->p_eNB);
-    return (cc->p_eNB);
+      return 0;
+    }
+	return (cc->p_eNB);
   }
   if(physicalConfigDedicated->antennaInfo->present == LTE_PhysicalConfigDedicated__antennaInfo_PR_NOTHING){
     LOG_E(MAC,"antennaInfo (mod_id %d, CC_id %d) is set to NOTHING\n",
               module_idP,
               CC_idP);
-    AssertFatal(cc->p_eNB <= 2, "p_eNB is %d, should be <2\n",
+    if (cc->p_eNB > 2) {
+      LOG_E(MAC, "p_eNB is %d, should be <2\n",
                 cc->p_eNB);
-    return (cc->p_eNB);
+      return 0;
+    }
+	return (cc->p_eNB);
   }
   
   if (physicalConfigDedicated->antennaInfo->present == LTE_PhysicalConfigDedicated__antennaInfo_PR_explicitValue) {
@@ -2878,12 +3090,15 @@ get_tmode(module_id_t module_idP,
   }
 
   if (physicalConfigDedicated->antennaInfo->present == LTE_PhysicalConfigDedicated__antennaInfo_PR_defaultValue) {
-    AssertFatal(cc->p_eNB <= 2, "p_eNB is %d, should be <2\n",
+    if (cc->p_eNB > 2) {
+      LOG_E(MAC, "p_eNB is %d, should be <2\n",
                 cc->p_eNB);
-    return (cc->p_eNB);
+      return 0;
+    }
+	return (cc->p_eNB);
   }
 
-  AssertFatal(1 == 0, "Shouldn't be here\n");
+  LOG_E(MAC, "Shouldn't be here\n");
   return 0;
 }
 
@@ -2916,51 +3131,68 @@ get_ULharq(module_id_t module_idP,
             break;
 
           default:
-            AssertFatal(1 == 0, "subframe2_harq_pid, Illegal subframe %d for TDD mode %d\n",
+            LOG_E(MAC, "subframe2_harq_pid, Illegal subframe %d for TDD mode %d\n",
                         subframeP,
                         (int) cc->tdd_Config->subframeAssignment);
+            return (-1);
             break;
         }
         break;
 
       case 2:
-        AssertFatal((subframeP == 2) || (subframeP == 7), "subframe2_harq_pid, Illegal subframe %d for TDD mode %d\n",
+        if ((subframeP != 2) && (subframeP != 7)) {
+          LOG_E(MAC, "subframe2_harq_pid, Illegal subframe %d for TDD mode %d\n",
                     subframeP,
                     (int) cc->tdd_Config->subframeAssignment);
+          return (-1);
+        }
         ret = (subframeP / 7);
         break;
 
       case 3:
-        AssertFatal((subframeP > 1) && (subframeP < 5), "subframe2_harq_pid, Illegal subframe %d for TDD mode %d\n",
+        if ((subframeP <= 1) || (subframeP >= 5)) {
+          LOG_E(MAC, "subframe2_harq_pid, Illegal subframe %d for TDD mode %d\n",
                     subframeP,
                     (int) cc->tdd_Config->subframeAssignment);
+          return (-1);
+        }
         ret = (subframeP - 2);
         break;
 
       case 4:
-        AssertFatal((subframeP > 1) && (subframeP < 4), "subframe2_harq_pid, Illegal subframe %d for TDD mode %d\n",
+        if ((subframeP <= 1) || (subframeP >= 4)) {
+          LOG_E(MAC, "subframe2_harq_pid, Illegal subframe %d for TDD mode %d\n",
                     subframeP,
                     (int) cc->tdd_Config->subframeAssignment);
+          return (-1);
+        }
         ret = (subframeP - 2);
         break;
 
       case 5:
-        AssertFatal(subframeP == 2, "subframe2_harq_pid, Illegal subframe %d for TDD mode %d\n",
+        if (subframeP != 2) {
+          LOG_E(MAC, "subframe2_harq_pid, Illegal subframe %d for TDD mode %d\n",
                     subframeP,
                     (int) cc->tdd_Config->subframeAssignment);
+          return (-1);
+        }
         ret = (subframeP - 2);
         break;
 
       default:
-        AssertFatal(1 == 0, "subframe2_harq_pid, Unsupported TDD mode %d\n",
+        LOG_E(MAC, "subframe2_harq_pid, Unsupported TDD mode %d\n",
                     (int) cc->tdd_Config->subframeAssignment);
+        return (-1);
         break;
     }
   }
 
-  AssertFatal(ret != -1, "invalid harq_pid(%d) at SFN/SF = %d/%d\n", (int8_t) ret,
+  if (ret == -1) {
+    LOG_E(MAC, "invalid harq_pid(%d) at SFN/SF = %d/%d\n", (int8_t) ret,
               frameP,
               subframeP);
+    return (-1);
+  }
   return ret;
 }
 
@@ -3023,6 +3255,10 @@ get_bw_index(module_id_t module_id,
 {
   int bw_index = 0;
   int N_RB_DL = to_prb(RC.mac[module_id]->common_channels[CC_id].mib->message.dl_Bandwidth);
+  if (N_RB_DL == -1) {
+    LOG_E(MAC, "to_prb failed\n");
+    return -1;
+  }
 
   switch (N_RB_DL) {
     case 6:     // 1.4 MHz
@@ -3061,6 +3297,10 @@ get_min_rb_unit(module_id_t module_id,
 {
   int min_rb_unit = 0;
   int N_RB_DL = to_prb(RC.mac[module_id]->common_channels[CC_id].mib->message.dl_Bandwidth);
+  if (N_RB_DL == -1) {
+    LOG_E(MAC, "to_prb failed\n");
+    return -1;
+  }
 
   switch (N_RB_DL) {
     case 6:     // 1.4 MHz
@@ -3162,8 +3402,11 @@ get_subbandsize(uint8_t dl_Bandwidth)
 //------------------------------------------------------------------------------
 {
   uint8_t ss[6] = { 6, 4, 4, 6, 8, 8 };
-  AssertFatal(dl_Bandwidth < 6, "dl_Bandwidth %d is out of bounds\n",
+  if (dl_Bandwidth >= 6) {
+    LOG_E(MAC, "dl_Bandwidth %d is out of bounds\n",
               dl_Bandwidth);
+    return -1;
+  }
   return (ss[dl_Bandwidth]);
 }
 
@@ -3386,10 +3629,24 @@ getnquad(COMMON_channels_t *cc,
 //------------------------------------------------------------------------------
 {
   uint16_t Nreg = 0;
-  AssertFatal(cc != NULL, "cc is null\n");
-  AssertFatal(cc->mib != NULL, "cc->mib is null\n");
+  if (cc == NULL) {
+    LOG_E(MAC, "cc is null\n");
+    return 0;
+  }
+  if (cc->mib == NULL) {
+    LOG_E(MAC, "cc->mib is null\n");
+    return 0;
+  }
   int N_RB_DL = to_prb(cc->mib->message.dl_Bandwidth);
+  if (N_RB_DL == -1) {
+    LOG_E(MAC, "getnquad:to_prb failed\n");
+    return 0;
+  }
   int phich_resource = get_phich_resource_times6(cc);
+  if (phich_resource < 0) {
+    LOG_E(MAC, "get_phich_resource_times6 failed, phich_resource < 0 \n");
+    return 0;
+  }
   uint8_t Ngroup_PHICH = (phich_resource * N_RB_DL) / 48;
 
   if (((phich_resource * N_RB_DL) % 48) > 0) {
@@ -3435,7 +3692,10 @@ getnCCE(COMMON_channels_t *cc,
         uint8_t mi)
 //------------------------------------------------------------------------------
 {
-  AssertFatal(cc != NULL, "cc is null\n");
+  if (cc == NULL) {
+    LOG_E(MAC, "cc is null\n");
+    return 0;
+  }
   return (getnquad(cc,
                    num_pdcch_symbols,
                    mi) / 9);
@@ -3447,7 +3707,10 @@ getmi(COMMON_channels_t *cc,
       int subframe)
 //------------------------------------------------------------------------------
 {
-  AssertFatal(cc != NULL, "cc is null\n");
+  if (cc == NULL) {
+    LOG_E(MAC, "cc is null\n");
+    return -1;
+  }
 
   // for FDD
   if (cc->tdd_Config == NULL) // FDD
@@ -3514,7 +3777,14 @@ get_nCCE_max(COMMON_channels_t *cc,
              int subframe)
 //------------------------------------------------------------------------------
 {
-  AssertFatal(cc != NULL, "cc is null\n");
+  if (cc == NULL) {
+    LOG_E(MAC, "cc is null\n");
+    return 0;
+  }
+  if (getmi(cc, subframe) == -1) {
+    LOG_E(MAC,"getmi failed \n");
+    return 0;
+  }
   return (getnCCE(cc,
                   num_pdcch_symbols,
                   getmi(cc,
@@ -3539,6 +3809,10 @@ allocate_CCEs(int module_idP,
   nfapi_hi_dci0_request_pdu_t *hi_dci0_pdu = &HI_DCI0_req->hi_dci0_pdu_list[0];
   COMMON_channels_t *cc = &eNB->common_channels[CC_idP];
   int nCCE_max = get_nCCE_max(cc, 1, subframeP);
+  if (nCCE_max == 0) {
+    LOG_E(MAC,"get_nCCE_max failed, nCCE_max == 0\n");
+    return -1;
+  }
   int fCCE;
   int i, j, idci;
   int nCCE = 0;
@@ -3589,6 +3863,10 @@ try_again:
               DL_req->number_pdcch_ofdm_symbols);
         DL_req->number_pdcch_ofdm_symbols++;
         nCCE_max = get_nCCE_max(cc, DL_req->number_pdcch_ofdm_symbols, subframeP);
+        if (nCCE_max == 0) {
+          LOG_E(MAC,"get_nCCE_max failed\n");
+          return -1;
+        }
         goto try_again;
       }
 
@@ -3629,6 +3907,10 @@ try_again:
               DL_req->number_pdcch_ofdm_symbols);
         DL_req->number_pdcch_ofdm_symbols++;
         nCCE_max = get_nCCE_max(cc, DL_req->number_pdcch_ofdm_symbols, subframeP);
+        if (nCCE_max == 0) {
+          LOG_E(MAC,"get_nCCE_max failed, nCCE_max == 0)\n");
+          return -1;
+        }
         goto try_again;
       }     // fCCE==-1
 
@@ -3673,6 +3955,10 @@ try_again:
               DL_req->number_pdcch_ofdm_symbols);
         DL_req->number_pdcch_ofdm_symbols++;
         nCCE_max = get_nCCE_max(cc, DL_req->number_pdcch_ofdm_symbols, subframeP);
+        if (nCCE_max == 0) {
+          LOG_E(MAC,"get_nCCE_max failed, nCCE_max == 0\n");
+          return -1;
+        }
         goto try_again;
       }
 
@@ -3713,6 +3999,10 @@ try_again:
               DL_req->number_pdcch_ofdm_symbols);
         DL_req->number_pdcch_ofdm_symbols++;
         nCCE_max = get_nCCE_max(cc, DL_req->number_pdcch_ofdm_symbols, subframeP);
+        if (nCCE_max == 0) {
+          LOG_E(MAC,"get_nCCE_max failed, nCCE_max == 0\n");
+          return -1;
+        }
         goto try_again;
       }     // fCCE==-1
 
@@ -3756,6 +4046,10 @@ try_again:
               DL_req->number_pdcch_ofdm_symbols);
         DL_req->number_pdcch_ofdm_symbols++;
         nCCE_max = get_nCCE_max(cc, DL_req->number_pdcch_ofdm_symbols, subframeP);
+        if (nCCE_max == 0) {
+          LOG_E(MAC,"get_nCCE_max failed, nCCE_max == 0n");
+          return -1;
+        }
         goto try_again;
       }
 
@@ -3798,6 +4092,10 @@ try_again:
               DL_req->number_pdcch_ofdm_symbols);
         DL_req->number_pdcch_ofdm_symbols++;
         nCCE_max = get_nCCE_max(cc, DL_req->number_pdcch_ofdm_symbols, subframeP);
+        if (nCCE_max == 0) {
+          LOG_E(MAC,"get_nCCE_max failed, nCCE_max == 0\n");
+          return -1;
+        }
         goto try_again;
       }     // fCCE==-1
 
@@ -3822,6 +4120,14 @@ try_again:
               ul_req->ul_config_pdu_list[ack_int].uci_harq_pdu.harq_information.harq_information_rel9_fdd.n_pucch_1_0 =
                 cc->radioResourceConfigCommon->pucch_ConfigCommon.n1PUCCH_AN + fCCE;
             } else {
+              if (getNp(cc->mib->message.dl_Bandwidth,fCCE,0) == -1) {
+                LOG_E(MAC, "getNp failed, plus1=0\n");
+                return -1;
+              }
+              if (getNp(cc->mib->message.dl_Bandwidth,fCCE,1) == -1) {
+                LOG_E(MAC, "getNp failed, plus1=1\n");
+                return -1;
+              }
               ul_req->ul_config_pdu_list[ack_int].uci_harq_pdu.harq_information.harq_information_rel10_tdd.n_pucch_1_0 =
                 cc->radioResourceConfigCommon->pucch_ConfigCommon.n1PUCCH_AN + fCCE +
                 (getM_mac(cc,ackNAK_absSF % 10) - getm_mac(cc,subframeP) -1)*getNp(cc->mib->message.dl_Bandwidth,fCCE,0) +
@@ -3986,9 +4292,10 @@ get_retransmission_timing(LTE_TDD_Config_t *tdd_Config,
           *frameP = (*frameP + (*subframeP / 10)) % 1024;
           *subframeP %= 10;
         } else {
-          AssertFatal(2 == 1, "Illegal dl subframe %d for tdd config %ld\n",
+          LOG_E(MAC, "Illegal dl subframe %d for tdd config %ld\n",
                       *subframeP,
                       tdd_Config->subframeAssignment);
+          return;
         }
 
         break;
@@ -4025,9 +4332,10 @@ get_retransmission_timing(LTE_TDD_Config_t *tdd_Config,
             }
             else
             {
-                AssertFatal(2 == 1,
+                LOG_E(MAC,
                         "Illegal dl subframe %d for tdd config %ld\n", *subframeP,
                         tdd_Config->subframeAssignment);
+                return;
             }
             break;
 
@@ -4149,8 +4457,9 @@ ul_ACK_subframe2M(LTE_TDD_Config_t *tdd_Config,
         //return(4);
         return 3; // don't ACK special subframe for now
       } else {
-        AssertFatal(1==0,"illegal subframe %d for tdd_config %ld\n",
+        LOG_E(MAC,"illegal subframe %d for tdd_config %ld\n",
                     subframe,tdd_Config->subframeAssignment);
+        return 0;
       }
 
       break;
@@ -4168,9 +4477,10 @@ ul_ACK_subframe2M(LTE_TDD_Config_t *tdd_Config,
         return 2;
       }
 
-      AssertFatal(1==0,"illegal subframe %d for tdd_config %ld\n",
+      LOG_E(MAC,"illegal subframe %d for tdd_config %ld\n",
                   subframe,
                   tdd_Config->subframeAssignment);
+      return 0;
       break;
 
     case 4:
@@ -4182,9 +4492,10 @@ ul_ACK_subframe2M(LTE_TDD_Config_t *tdd_Config,
         return 4;
       }
 
-      AssertFatal(1==0,"illegal subframe %d for tdd_config %ld\n",
+      LOG_E(MAC,"illegal subframe %d for tdd_config %ld\n",
                   subframe,
                   tdd_Config->subframeAssignment);
+      return 0;
       break;
 
     case 5:
@@ -4192,9 +4503,10 @@ ul_ACK_subframe2M(LTE_TDD_Config_t *tdd_Config,
         return 8; // should be 3
       }
 
-      AssertFatal(1==0,"illegal subframe %d for tdd_config %ld\n",
+      LOG_E(MAC,"illegal subframe %d for tdd_config %ld\n",
                   subframe,
                   tdd_Config->subframeAssignment);
+      return 0;
       break;
   }
 
@@ -4228,9 +4540,10 @@ ul_ACK_subframe2dl_subframe(LTE_TDD_Config_t *tdd_Config,
         return ((9 + ACK_index) % 10);
       }
 
-      AssertFatal(1==0, "illegal subframe %d for tdd_config->subframeAssignment %ld\n",
+      LOG_E(MAC, "illegal subframe %d for tdd_config->subframeAssignment %ld\n",
                   subframe,
                   tdd_Config->subframeAssignment);
+      return 255;
       break;
 
     case 4:
@@ -4246,9 +4559,10 @@ ul_ACK_subframe2dl_subframe(LTE_TDD_Config_t *tdd_Config,
         return (6 + ACK_index);  // To be updated
       }
 
-      AssertFatal(1 == 0, "illegal subframe %d for tdd_config %ld\n",
+      LOG_E(MAC, "illegal subframe %d for tdd_config %ld\n",
                   subframe,
                   tdd_Config->subframeAssignment);
+      return 255;
       break;
 
     case 1:
@@ -4268,9 +4582,10 @@ ul_ACK_subframe2dl_subframe(LTE_TDD_Config_t *tdd_Config,
         return 4;  // To be updated
       }
 
-      AssertFatal(1 == 0, "illegal subframe %d for tdd_config %ld\n",
+      LOG_E(MAC, "illegal subframe %d for tdd_config %ld\n",
                   subframe,
                   tdd_Config->subframeAssignment);
+      return 255;
       break;
 
     case 2:
@@ -4285,8 +4600,9 @@ ul_ACK_subframe2dl_subframe(LTE_TDD_Config_t *tdd_Config,
         }
         return((9+ACK_index)%10);  // To be updated
       } else {
-        AssertFatal(1==0,"illegal subframe %d for tdd_config %ld\n",
+        LOG_E(MAC,"illegal subframe %d for tdd_config %ld\n",
               subframe,tdd_Config->subframeAssignment);
+        return 255;
       }
 
       break;
@@ -4343,6 +4659,10 @@ extract_harq(module_id_t mod_idP,
     tmode[i] = get_tmode(mod_idP,
                          i,
                          UE_id);
+    if (tmode[i] == 0) {
+      LOG_E(MAC, "extract_harq:get_tmode failed\n");
+      return;
+    }
   }
 
   if (cc->tdd_Config) {
@@ -4352,15 +4672,26 @@ extract_harq(module_id_t mod_idP,
 
     switch (harq_indication_tdd->mode) {
       case 0:   // Format 1a/b bundling
-        AssertFatal(numCC == 1, "numCC %d > 1, should not be using Format1a/b\n",
+        if (numCC != 1) {
+          LOG_E(MAC, "numCC %d > 1, should not be using Format1a/b\n",
                     numCC);
+          return;
+        }
         int M = ul_ACK_subframe2M(cc->tdd_Config,
                                   subframeP);
+        if (M == 0) {
+          LOG_E(MAC, "extract_harq:ul_ACK_subframe2M failed, M == 0 \n");
+          return;
+        }
 
         for (m=0; m<M; m++) {
           subframe_tx = ul_ACK_subframe2dl_subframe(cc->tdd_Config,
                         subframeP,
                         m);
+          if (subframe_tx == 255) {
+            LOG_E(MAC, "extract_harq:ul_ACK_subframe2dl_subframe failed \n");
+            return;
+          }
 
           if(cc->tdd_Config->subframeAssignment == 2){
             if(subframe_tx > subframeP){
@@ -4557,23 +4888,25 @@ extract_harq(module_id_t mod_idP,
 
     switch (harq_indication_fdd->mode) {
       case 0:   // Format 1a/b (10.1.2.1)
-        AssertFatal(numCC == 1, "numCC %d > 1, should not be using Format1a/b\n",
+        if (numCC != 1) {
+          LOG_E(MAC, "numCC %d > 1, should not be using Format1a/b\n",
                     numCC);
+          return;
+        }
 
         if (tmode[0] == 1 || tmode[0] == 2 || tmode[0] == 5 || tmode[0] == 6 || tmode[0] == 7) {  // NOTE: have to handle the case of TM9-10 with 1 antenna port
           // single ACK/NAK bit
-          AssertFatal(num_ack_nak == 1, "num_ack_nak %d > 1 for 1 CC and single-layer transmission frame:%d subframe:%d\n",
+          if (num_ack_nak != 1) {
+            LOG_E(MAC, "num_ack_nak %d > 1 for 1 CC and single-layer transmission frame:%d subframe:%d\n",
                       num_ack_nak,
                       frameP,
                       subframeP);
+            return;
+          }
 
           // In case of nFAPI, sometimes timing of eNB and UE become different.
           // So if nfapi_mode == 2(VNF), this function don't check assertion to avoid process exit.
           if (NFAPI_MODE != NFAPI_MODE_VNF) {
-            //AssertFatal(sched_ctl->round[CC_idP][harq_pid] < 8, "Got ACK/NAK for inactive harq_pid %d for UE %d/%x\n",
-            //            harq_pid,
-            //            UE_id,
-            //            rnti);
             if(!(sched_ctl->round[CC_idP][harq_pid][TB1] < 8)) {
               LOG_E(MAC,"Got ACK/NAK for inactive harq_pid %d for UE %d/%x\n",
                     harq_pid,
@@ -4590,11 +4923,14 @@ extract_harq(module_id_t mod_idP,
             }
           }
 
-          AssertFatal(pdu[0] == 1 || pdu[0] == 2 || pdu[0] == 4, "Received ACK/NAK %d which is not 1 or 2 for harq_pid %d from UE %d/%x\n",
+          if (pdu[0] != 1 && pdu[0] != 2 && pdu[0] != 4) {
+            LOG_E(MAC, "Received ACK/NAK %d which is not 1 or 2 for harq_pid %d from UE %d/%x\n",
                       pdu[0],
                       harq_pid,
                       UE_id,
                       rnti);
+            return;
+          }
           LOG_D(MAC, "Received %d for harq_pid %d\n",
                 pdu[0],
                 harq_pid);
@@ -4663,8 +4999,11 @@ extract_harq(module_id_t mod_idP,
           }
         } else {
           // one or two ACK/NAK bits
-          AssertFatal(num_ack_nak <= 2, "num_ack_nak %d > 2 for 1 CC and TM3/4/8/9/10\n",
+          if (num_ack_nak > 2) {
+            LOG_E(MAC, "num_ack_nak %d > 2 for 1 CC and TM3/4/8/9/10\n",
                       num_ack_nak);
+            return;
+          }
 
       if ((num_ack_nak == 2)
            && (sched_ctl->round[CC_idP][harq_pid][select_tb] < 8)
@@ -4766,18 +5105,27 @@ extract_harq(module_id_t mod_idP,
         break;
 
       case 1:   // FDD Channel Selection (10.1.2.2.1), must be received for 2 serving cells
-        AssertFatal(numCC == 2, "Should not receive harq indication with channel selection with %d active CCs\n",
+        if (numCC != 2) {
+          LOG_E(MAC, "Should not receive harq indication with channel selection with %d active CCs\n",
                     numCC);
+          return;
+        }
 
         if ((num_ack_nak == 2)
             && (sched_ctl->round[pCCid][harq_pid][TB1] < 8)
             && (sched_ctl->round[1 - pCCid][harq_pid][TB1] < 8)
             && (sched_ctl->tbcnt[pCCid][harq_pid] == 1)
             && (sched_ctl->tbcnt[1 - pCCid][harq_pid] == 1)) {
-          AssertFatal(pdu[0] <= 3, "pdu[0] %d is not ACK/NAK/DTX\n",
+          if (pdu[0] > 3) {
+            LOG_E(MAC, "pdu[0] %d is not ACK/NAK/DTX\n",
                       pdu[0]);
-          AssertFatal(pdu[1] <= 3, "pdu[1] %d is not ACK/NAK/DTX\n",
+            return;
+          }
+          if (pdu[1] > 3) {
+            LOG_E(MAC, "pdu[1] %d is not ACK/NAK/DTX\n",
                       pdu[1]);
+            return;
+          }
 
           if (pdu[0] == 1)
             sched_ctl->round[pCCid][harq_pid][TB1] = 8;
@@ -4802,22 +5150,37 @@ extract_harq(module_id_t mod_idP,
                  && (sched_ctl->tbcnt[pCCid][harq_pid] == 2)
                  && (sched_ctl->round[1 - pCCid][harq_pid][TB1] < 8)
                  && (sched_ctl->tbcnt[1 - pCCid][harq_pid] == 1)) {
-          AssertFatal(pdu[0] <= 3, "pdu[0] %d is not ACK/NAK/DTX\n",
+          if (pdu[0] > 3) {
+            LOG_E(MAC, "pdu[0] %d is not ACK/NAK/DTX\n",
                       pdu[0]);
-          AssertFatal(pdu[1] <= 3, "pdu[1] %d is not ACK/NAK/DTX\n",
+            return;
+          }
+          if (pdu[1] > 3) {
+            LOG_E(MAC, "pdu[1] %d is not ACK/NAK/DTX\n",
                       pdu[1]);
-          AssertFatal(pdu[2] <= 3, "pdu[2] %d is not ACK/NAK/DTX\n",
+            return;
+          }
+          if (pdu[2] > 3) {
+            LOG_E(MAC, "pdu[2] %d is not ACK/NAK/DTX\n",
                       pdu[2]);
-          AssertFatal(sched_ctl->tbcnt[pCCid][harq_pid] == 2, "sched_ctl->tbcnt[%d][%d] != 2 for UE %d/%x\n",
+            return;
+          }
+          if (sched_ctl->tbcnt[pCCid][harq_pid] != 2) {
+            LOG_E(MAC, "sched_ctl->tbcnt[%d][%d] != 2 for UE %d/%x\n",
                       pCCid,
                       harq_pid,
                       UE_id,
                       rnti);
-          AssertFatal(sched_ctl->tbcnt[1 - pCCid][harq_pid] == 1, "sched_ctl->tbcnt[%d][%d] != 1 for UE %d/%x\n",
+            return;
+          }
+          if (sched_ctl->tbcnt[1 - pCCid][harq_pid] != 1) {
+            LOG_E(MAC, "sched_ctl->tbcnt[%d][%d] != 1 for UE %d/%x\n",
                       1 - pCCid,
                       harq_pid,
                       UE_id,
                       rnti);
+            return;
+          }
 
           if (pdu[0] == 1 && pdu[1] == 1) { // both ACK
             sched_ctl->round[pCCid][harq_pid][TB1] = 8;
@@ -4853,22 +5216,37 @@ extract_harq(module_id_t mod_idP,
                  && (sched_ctl->round[pCCid][harq_pid][TB1] < 8)
                  && (sched_ctl->tbcnt[1 - pCCid][harq_pid] == 2)
                  && (sched_ctl->tbcnt[pCCid][harq_pid] == 1)) {
-          AssertFatal(pdu[0] <= 3, "pdu[0] %d is not ACK/NAK/DTX\n",
+          if (pdu[0] > 3) {
+            LOG_E(MAC, "pdu[0] %d is not ACK/NAK/DTX\n",
                       pdu[0]);
-          AssertFatal(pdu[1] <= 3, "pdu[1] %d is not ACK/NAK/DTX\n",
+            return;
+          }
+          if (pdu[1] > 3) {
+            LOG_E(MAC, "pdu[1] %d is not ACK/NAK/DTX\n",
                       pdu[1]);
-          AssertFatal(pdu[2] <= 3, "pdu[2] %d is not ACK/NAK/DTX\n",
+            return;
+          }
+          if (pdu[2] > 3) {
+            LOG_E(MAC, "pdu[2] %d is not ACK/NAK/DTX\n",
                       pdu[2]);
-          AssertFatal(sched_ctl->tbcnt[1 - pCCid][harq_pid] == 2, "sched_ctl->tbcnt[%d][%d] != 2 for UE %d/%x\n",
+            return;
+          }
+          if (sched_ctl->tbcnt[1 - pCCid][harq_pid] != 2) {
+            LOG_E(MAC, "sched_ctl->tbcnt[%d][%d] != 2 for UE %d/%x\n",
                       1 - pCCid,
                       harq_pid,
                       UE_id,
                       rnti);
-          AssertFatal(sched_ctl->tbcnt[pCCid][harq_pid] == 1, "sched_ctl->tbcnt[%d][%d] != 1 for UE %d/%x\n",
+            return;
+          }
+          if (sched_ctl->tbcnt[pCCid][harq_pid] != 1) {
+            LOG_E(MAC, "sched_ctl->tbcnt[%d][%d] != 1 for UE %d/%x\n",
                       pCCid,
                       harq_pid,
                       UE_id,
                       rnti);
+            return;
+          }
 
           if (pdu[0] == 1 && pdu[1] == 1) { // both ACK
             sched_ctl->round[1 - pCCid][harq_pid][TB1] = 8;
@@ -4906,22 +5284,40 @@ extract_harq(module_id_t mod_idP,
                  && (sched_ctl->round[1][harq_pid][TB1] < 8)
                  && (sched_ctl->tbcnt[1 - pCCid][harq_pid] == 2)
                  && (sched_ctl->tbcnt[pCCid][harq_pid] == 2)) {
-          AssertFatal(pdu[0] <= 3, "pdu[0] %d is not ACK/NAK/DTX\n",
+          if (pdu[0] > 3) {
+            LOG_E(MAC, "pdu[0] %d is not ACK/NAK/DTX\n",
                       pdu[0]);
-          AssertFatal(pdu[1] <= 3, "pdu[1] %d is not ACK/NAK/DTX\n",
+            return;
+          }
+          if (pdu[1] > 3) {
+            LOG_E(MAC, "pdu[1] %d is not ACK/NAK/DTX\n",
                       pdu[1]);
-          AssertFatal(pdu[2] <= 3, "pdu[2] %d is not ACK/NAK/DTX\n",
+            return;
+          }
+          if (pdu[2] > 3) {
+            LOG_E(MAC, "pdu[2] %d is not ACK/NAK/DTX\n",
                       pdu[2]);
-          AssertFatal(pdu[3] <= 3, "pdu[3] %d is not ACK/NAK/DTX\n",
+            return;
+          }
+          if (pdu[3] > 3) {
+            LOG_E(MAC, "pdu[3] %d is not ACK/NAK/DTX\n",
                       pdu[3]);
-          AssertFatal(sched_ctl->tbcnt[0][harq_pid] == 2, "sched_ctl->tbcnt[0][%d] != 2 for UE %d/%x\n",
+            return;
+          }
+          if (sched_ctl->tbcnt[0][harq_pid] != 2) {
+            LOG_E(MAC, "sched_ctl->tbcnt[0][%d] != 2 for UE %d/%x\n",
                       harq_pid,
                       UE_id,
                       rnti);
-          AssertFatal(sched_ctl->tbcnt[1][harq_pid] == 2, "sched_ctl->tbcnt[1][%d] != 2 for UE %d/%x\n",
+            return;
+          }
+          if (sched_ctl->tbcnt[1][harq_pid] != 2) {
+            LOG_E(MAC, "sched_ctl->tbcnt[1][%d] != 2 for UE %d/%x\n",
                       harq_pid,
                       UE_id,
                       rnti);
+            return;
+          }
 
           if (pdu[0] == 1 && pdu[1] == 1) { // both ACK
             sched_ctl->round[0][harq_pid][TB1] = 8;
@@ -4968,8 +5364,11 @@ extract_harq(module_id_t mod_idP,
         break;
 
       case 2:   // Format 3
-        AssertFatal(numCC > 2, "Should not receive harq indication with FDD format 3 with %d < 3 active CCs\n",
+        if (numCC <= 2) {
+          LOG_E(MAC, "Should not receive harq indication with FDD format 3 with %d < 3 active CCs\n",
                     numCC);
+          return;
+        }
 
         for (i = 0, j = 0; i < numCC; i++) {
           if (sched_ctl->round[i][harq_pid][TB1] < 8) {
@@ -4985,12 +5384,13 @@ extract_harq(module_id_t mod_idP,
                   sched_ctl->tbcnt[i][harq_pid] = 0;
                 }
               } else
-                AssertFatal(1 == 0, "Illegal harq_ack value for CC %d harq_pid %d (%d) UE %d/%x\n",
+                LOG_E(MAC, "Illegal harq_ack value for CC %d harq_pid %d (%d) UE %d/%x\n",
                             i,
                             harq_pid,
                             pdu[j],
                             UE_id,
                             rnti);
+                return;
 
               j++;
             } else if (spatial_bundling == 0) {
@@ -5021,7 +5421,7 @@ extract_harq(module_id_t mod_idP,
                   sched_ctl->tbcnt[i][harq_pid] = 0;
                 }
               } else
-                AssertFatal(1 == 0, "Illegal combination for CC %d harq_pid %d (%d,%d,%d) UE %d/%x\n",
+                LOG_E(MAC, "Illegal combination for CC %d harq_pid %d (%d,%d,%d) UE %d/%x\n",
                             i,
                             harq_pid,
                             sched_ctl->tbcnt[i][harq_pid],
@@ -5029,6 +5429,7 @@ extract_harq(module_id_t mod_idP,
                             pdu[j + 1],
                             UE_id,
                             rnti);
+                return;
 
               j += 2;
             } else if (spatial_bundling == 1) {
@@ -5043,18 +5444,20 @@ extract_harq(module_id_t mod_idP,
                   sched_ctl->tbcnt[i][harq_pid] = 0;
                 }
               } else {
-                AssertFatal(1 == 0, "Illegal hack_nak value %d for CC %d harq_pid %d UE %d/%x\n",
+                LOG_E(MAC, "Illegal hack_nak value %d for CC %d harq_pid %d UE %d/%x\n",
                             pdu[j],
                             i,
                             harq_pid,
                             UE_id,
                             rnti);
+                return;
               }
 
               j++;
             } else {
-              AssertFatal(1 == 0, "Illegal value for spatial_bundling %d\n",
+              LOG_E(MAC, "Illegal value for spatial_bundling %d\n",
                           spatial_bundling);
+              return;
             }
           }
         }
@@ -5062,11 +5465,13 @@ extract_harq(module_id_t mod_idP,
         break;
 
       case 3:   // Format 4
-        AssertFatal(1 == 0, "Should not receive harq indication with Format 4\n");
+        LOG_E(MAC, "Should not receive harq indication with Format 4\n");
+        return;
         break;
 
       case 4:   // Format 5
-        AssertFatal(1 == 0, "Should not receive harq indication with Format 5\n");
+        LOG_E(MAC, "Should not receive harq indication with Format 5\n");
+        return;
         break;
     }
   }
@@ -5092,17 +5497,31 @@ extract_pucch_csi(module_id_t mod_idP,
   uint8_t Ltab[6] = { 0, 2, 4, 4, 4, 4 };
   uint8_t Jtab[6] = { 0, 2, 2, 3, 4, 4 };
   int feedback_cnt;
-  AssertFatal(UE_list->UE_template[CC_idP][UE_id].physicalConfigDedicated != NULL, "physicalConfigDedicated is null for UE %d\n",
+  if (UE_list->UE_template[CC_idP][UE_id].physicalConfigDedicated == NULL) {
+    LOG_E(MAC, "physicalConfigDedicated is null for UE %d\n",
               UE_id);
-  AssertFatal(UE_list->UE_template[CC_idP][UE_id].physicalConfigDedicated->cqi_ReportConfig != NULL, "cqi_ReportConfig is null for UE %d\n",
+    return;
+  }
+  if (UE_list->UE_template[CC_idP][UE_id].physicalConfigDedicated->cqi_ReportConfig == NULL) {
+    LOG_E(MAC, "cqi_ReportConfig is null for UE %d\n",
               UE_id);
+    return;
+  }
   struct LTE_CQI_ReportPeriodic *cqi_ReportPeriodic = UE_list->UE_template[CC_idP][UE_id].physicalConfigDedicated->cqi_ReportConfig->cqi_ReportPeriodic;
-  AssertFatal(cqi_ReportPeriodic != NULL, "cqi_ReportPeriodic is null for UE %d\n",
+  if (cqi_ReportPeriodic == NULL) {
+    LOG_E(MAC, "cqi_ReportPeriodic is null for UE %d\n",
               UE_id);
+    return;
+  }
   // determine feedback mode
-  AssertFatal(cqi_ReportPeriodic->present != LTE_CQI_ReportPeriodic_PR_NOTHING, "cqi_ReportPeriodic->present == LTE_CQI_ReportPeriodic_PR_NOTHING!\n");
-  AssertFatal(cqi_ReportPeriodic->choice.setup.cqi_FormatIndicatorPeriodic.present != LTE_CQI_ReportPeriodic__setup__cqi_FormatIndicatorPeriodic_PR_NOTHING,
-              "cqi_ReportPeriodic->cqi_FormatIndicatorPeriodic.choice.setup.present == LTE_CQI_ReportPeriodic__setup__cqi_FormatIndicatorPeriodic_PR_NOTHING!\n");
+  if (cqi_ReportPeriodic->present == LTE_CQI_ReportPeriodic_PR_NOTHING) {
+    LOG_E(MAC, "cqi_ReportPeriodic->present == LTE_CQI_ReportPeriodic_PR_NOTHING!\n");
+    return;
+  }
+  if (cqi_ReportPeriodic->choice.setup.cqi_FormatIndicatorPeriodic.present == LTE_CQI_ReportPeriodic__setup__cqi_FormatIndicatorPeriodic_PR_NOTHING) {
+    LOG_E(MAC, "cqi_ReportPeriodic->cqi_FormatIndicatorPeriodic.choice.setup.present == LTE_CQI_ReportPeriodic__setup__cqi_FormatIndicatorPeriodic_PR_NOTHING!\n");
+    return;
+  }
   uint16_t Npd, N_OFFSET_CQI;
   int H, K, bandwidth_part, L, Lmask;
   int ri = sched_ctl->periodic_ri_received[CC_idP];
@@ -5122,6 +5541,9 @@ extract_pucch_csi(module_id_t mod_idP,
   switch (get_tmode(mod_idP,
                     CC_idP,
                     UE_id)) {
+    case 0:
+      LOG_E(MAC, "get_tmode failed\n");
+      return;
     case 1:
     case 2:
     case 3:
@@ -5165,11 +5587,13 @@ extract_pucch_csi(module_id_t mod_idP,
       sched_ctl->periodic_wideband_cqi[CC_idP] = pdu[0] & 0xF;
       sched_ctl->periodic_wideband_spatial_diffcqi[CC_idP] = (pdu[0] >> 4) & 7;
       sched_ctl->periodic_wideband_pmi[CC_idP] = (pdu[0] >> 7) & 0xF;
-    } else
-      AssertFatal(1 == 0, "illegal combination p %d, ri %d, no_pmi %d\n",
+    } else {
+      LOG_E(MAC, "illegal combination p %d, ri %d, no_pmi %d\n",
                   cc->p_eNB,
                   ri,
                   no_pmi);
+      return;
+    }
   } else if (cqi_ReportPeriodic->choice.setup.cqi_FormatIndicatorPeriodic.present == LTE_CQI_ReportPeriodic__setup__cqi_FormatIndicatorPeriodic_PR_subbandCQI) {
     // This is Table 5.2.3.3.2-2 for 36.213
     if (ri == 1) {
@@ -5207,16 +5631,29 @@ extract_pusch_csi(module_id_t mod_idP,
   int i;
   uint64_t p = *(uint64_t *) pdu;
   int curbyte, curbit;
-  AssertFatal(UE_list->UE_template[CC_idP][UE_id].physicalConfigDedicated != NULL, "physicalConfigDedicated is null for UE %d\n",
+  if (UE_list->UE_template[CC_idP][UE_id].physicalConfigDedicated == NULL) {
+    LOG_E(MAC, "physicalConfigDedicated is null for UE %d\n",
               UE_id);
-  AssertFatal(UE_list->UE_template[CC_idP][UE_id].physicalConfigDedicated->cqi_ReportConfig != NULL, "cqi_ReportConfig is null for UE %d\n",
+    return;
+  }
+  if (UE_list->UE_template[CC_idP][UE_id].physicalConfigDedicated->cqi_ReportConfig == NULL) {
+    LOG_E(MAC, "cqi_ReportConfig is null for UE %d\n",
               UE_id);
+    return;
+  }
   LTE_CQI_ReportModeAperiodic_t *cqi_ReportModeAperiodic
     = UE_list->UE_template[CC_idP][UE_id].physicalConfigDedicated->cqi_ReportConfig->cqi_ReportModeAperiodic;
-  AssertFatal(cqi_ReportModeAperiodic  != NULL, "cqi_ReportModeAperiodic is null for UE %d\n",
+  if (cqi_ReportModeAperiodic == NULL) {
+    LOG_E(MAC, "cqi_ReportModeAperiodic is null for UE %d\n",
               UE_id);
+    return;
+  }
   int N = Ntab[cc->mib->message.dl_Bandwidth];
   int tmode = get_tmode(mod_idP, CC_idP, UE_id);
+  if (tmode == 0) {
+    LOG_E(MAC, "get_tmode failed\n");
+    return;
+  }
   int ri = sched_ctl->aperiodic_ri_received[CC_idP];
   int r, diffcqi0 = 0, diffcqi1 = 0, pmi_uesel = 0;
   int bw = cc->mib->message.dl_Bandwidth;
@@ -5224,10 +5661,14 @@ extract_pusch_csi(module_id_t mod_idP,
 
   switch (*cqi_ReportModeAperiodic) {
     case LTE_CQI_ReportModeAperiodic_rm12:
-      AssertFatal(0 == 1, "to be fixed, don't use p but pdu directly\n");
+      LOG_E(MAC, "to be fixed, don't use p but pdu directly\n");
+      return;
       // wideband multiple PMI (TM4/6), Table 5.2.2.6.1-1 (for TM4/6)
-      AssertFatal(tmode == 4 || tmode == 6 || tmode == 8 || tmode == 9 || tmode == 10, "Illegal transmission mode %d for CQI_ReportModeAperiodic_rm12\n",
+      if (tmode != 4 && tmode != 6 && tmode != 8 && tmode != 9 && tmode != 10) {
+        LOG_E(MAC, "Illegal transmission mode %d for CQI_ReportModeAperiodic_rm12\n",
                   tmode);
+        return;
+      }
 
       if (tmode <= 6) { //Table 5.2.2.6.1-1 36.213
         if (ri == 1 && cc->p_eNB == 2) {
@@ -5275,16 +5716,21 @@ extract_pusch_csi(module_id_t mod_idP,
         }
       }     // if (tmode <= 6) { //Table 5.2.2.6.1-1 36.213
       else {
-        AssertFatal(1 == 0, "support for TM 8-10 to be done\n");
+        LOG_E(MAC, "support for TM 8-10 to be done\n");
+        return;
       }
 
       break;
 
     case LTE_CQI_ReportModeAperiodic_rm20:
-      AssertFatal(0 == 1, "to be fixed, don't use p but pdu directly\n");
+      LOG_E(MAC, "to be fixed, don't use p but pdu directly\n");
+      return;
       // UE-selected subband CQI no PMI (TM1/2/3/7) , Table 5.2.2.6.3-1 from 36.213
-      AssertFatal(tmode == 1 || tmode == 2 || tmode == 3 || tmode == 7, "Illegal transmission mode %d for CQI_ReportModeAperiodic_rm20\n",
+      if (tmode != 1 && tmode != 2 && tmode != 3 && tmode != 7) {
+        LOG_E(MAC, "Illegal transmission mode %d for CQI_ReportModeAperiodic_rm20\n",
                   tmode);
+        return;
+      }
       sched_ctl->aperiodic_wideband_cqi0[CC_idP] = (uint8_t) (p & 0x0F);
       p >>= 4;
       diffcqi0 = (uint8_t) (p & 0x03);
@@ -5302,10 +5748,14 @@ extract_pusch_csi(module_id_t mod_idP,
       break;
 
     case LTE_CQI_ReportModeAperiodic_rm22:
-      AssertFatal(0 == 1, "to be fixed, don't use p but pdu directly\n");
+      LOG_E(MAC, "to be fixed, don't use p but pdu directly\n");
+      return;
       // UE-selected subband CQI multiple PMI (TM4/6) Table 5.2.2.6.3-2 from 36.213
-      AssertFatal(tmode == 4 || tmode == 6 || tmode == 8 || tmode == 9 || tmode == 10, "Illegal transmission mode %d for CQI_ReportModeAperiodic_rm22\n",
+      if (tmode != 4 && tmode != 6 && tmode != 8 && tmode != 9 && tmode != 10) {
+        LOG_E(MAC, "Illegal transmission mode %d for CQI_ReportModeAperiodic_rm22\n",
                   tmode);
+        return;
+      }
       sched_ctl->aperiodic_wideband_cqi0[CC_idP] = (uint8_t) (p & 0x0F);
       p >>= 4;
       diffcqi0 = (uint8_t) (p & 0x03);
@@ -5352,8 +5802,11 @@ extract_pusch_csi(module_id_t mod_idP,
 
     case LTE_CQI_ReportModeAperiodic_rm30:
       //subband CQI no PMI (TM1/2/3/7)
-      AssertFatal(tmode == 1 || tmode == 2 || tmode == 3 || tmode == 7, "Illegal transmission mode %d for CQI_ReportModeAperiodic_rm30\n",
+      if (tmode != 1 && tmode != 2 && tmode != 3 && tmode != 7) {
+        LOG_E(MAC, "Illegal transmission mode %d for CQI_ReportModeAperiodic_rm30\n",
                   tmode);
+        return;
+      }
       sched_ctl->aperiodic_wideband_cqi0[CC_idP] = pdu[0] >> 4;
       curbyte = 0;
       curbit = 3;
@@ -5373,11 +5826,14 @@ extract_pusch_csi(module_id_t mod_idP,
       break;
 
     case LTE_CQI_ReportModeAperiodic_rm31:
-      AssertFatal(0 == 1, "to be fixed, don't use p but pdu directly\n");
+      LOG_E(MAC, "to be fixed, don't use p but pdu directly\n");
+      return;
       //subband CQI single PMI (TM4/5/6)
-      AssertFatal(tmode == 4 || tmode == 5 || tmode == 6 || tmode == 8 || tmode == 9 || tmode == 10,
-                  "Illegal transmission mode %d for CQI_ReportModeAperiodic_rm31\n",
+      if (tmode != 4 && tmode != 5 && tmode != 6 && tmode != 8 && tmode != 9 && tmode != 10) {
+        LOG_E(MAC, "Illegal transmission mode %d for CQI_ReportModeAperiodic_rm31\n",
                   tmode);
+        return;
+      }
 
       if (ri == 1 && cc->p_eNB == 2) {
         sched_ctl->aperiodic_wideband_cqi0[CC_idP] = (uint8_t) (p & 0x0F);
@@ -5447,25 +5903,35 @@ extract_pusch_csi(module_id_t mod_idP,
 #if (LTE_RRC_VERSION >= MAKE_VERSION(12, 5, 0))
 
     case LTE_CQI_ReportModeAperiodic_rm32_v1250:
-      AssertFatal(tmode == 4 || tmode == 5 || tmode == 6 || tmode == 8 || tmode == 9 || tmode == 10,
-                  "Illegal transmission mode %d for CQI_ReportModeAperiodic_rm32\n",
+      if (tmode != 4 && tmode != 5 && tmode != 6 && tmode != 8 && tmode != 9 && tmode != 10) {
+        LOG_E(MAC, "Illegal transmission mode %d for CQI_ReportModeAperiodic_rm32\n",
                   tmode);
-      AssertFatal(1 == 0, "CQI_ReportModeAperiodic_rm32 to be done\n");
+        return;
+      }
+      LOG_E(MAC, "CQI_ReportModeAperiodic_rm32 to be done\n");
+      return;
       break;
 #endif
 #if (LTE_RRC_VERSION >= MAKE_VERSION(13, 1, 0))
 
     case LTE_CQI_ReportModeAperiodic_rm10_v1310:
-      AssertFatal(tmode == 1 || tmode == 2 || tmode == 3 || tmode == 7, "Illegal transmission mode %d for CQI_ReportModeAperiodic_rm10\n",
+      if (tmode != 1 && tmode != 2 && tmode != 3 && tmode != 7) {
+        LOG_E(MAC, "Illegal transmission mode %d for CQI_ReportModeAperiodic_rm10\n",
                   tmode);
-      AssertFatal(1 == 0, "CQI_ReportModeAperiodic_rm10 to be done\n");
+        return;
+      }
+      LOG_E(MAC, "CQI_ReportModeAperiodic_rm10 to be done\n");
+      return;
       break;
 
     case LTE_CQI_ReportModeAperiodic_rm11_v1310:
-      AssertFatal(tmode == 4 || tmode == 5 || tmode == 6 || tmode == 8 || tmode == 9 || tmode == 10,
-                  "Illegal transmission mode %d for CQI_ReportModeAperiodic_rm11\n",
+      if (tmode != 4 && tmode != 5 && tmode != 6 && tmode != 8 && tmode != 9 && tmode != 10) {
+        LOG_E(MAC, "Illegal transmission mode %d for CQI_ReportModeAperiodic_rm11\n",
                   tmode);
-      AssertFatal(1 == 0, "CQI_ReportModeAperiodic_rm11 to be done\n");
+        return;
+      }
+      LOG_E(MAC, "CQI_ReportModeAperiodic_rm11 to be done\n");
+      return;
       break;
 #endif /* #if (LTE_RRC_VERSION >= MAKE_VERSION(13, 1, 0)) */
   }

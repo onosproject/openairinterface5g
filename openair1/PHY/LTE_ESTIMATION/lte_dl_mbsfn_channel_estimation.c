@@ -813,7 +813,10 @@ int lte_dl_mbsfn_khz_1dot25_channel_estimation(PHY_VARS_UE *ue,
   ch_offset     = 0;//(l*(ue->frame_parms.ofdm_symbol_size));
   symbol_offset = 0;//ch_offset;//phy_vars_ue->lte_frame_parms.ofdm_symbol_size*l;
 
-  AssertFatal( ue->frame_parms.N_RB_DL==25,"OFDM symbol size %d not yet supported for FeMBMS\n",ue->frame_parms.N_RB_DL);
+  if (ue->frame_parms.N_RB_DL!=25) {
+    LOG_E(PHY, "OFDM symbol size %d not yet supported for FeMBMS\n",ue->frame_parms.N_RB_DL);
+    return (-1);
+  }
 
   if( (subframe&0x1) == 0){
         f=filt24_0_khz_1dot25;

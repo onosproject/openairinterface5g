@@ -53,9 +53,7 @@ rlc_am_get_data_pdu_infos(
      LOG_E(RLC, "RLC AM Rx PDU Data D/C Header Error LcId=%d\n", rlc_pP->channel_id);
      return -2;
   }
-/*
-    AssertFatal (pdu_info_pP->d_c != 0, "RLC AM Rx PDU Data D/C Header Error LcId=%d\n", rlc_pP->channel_id);
-*/
+
     pdu_info_pP->rf  = (header_pP->b1 >> 6) & 0x01;
     pdu_info_pP->p   = (header_pP->b1 >> 5) & 0x01;
     pdu_info_pP->fi  = (header_pP->b1 >> 3) & 0x03;
@@ -277,11 +275,7 @@ rlc_am_receive_routing (
      LOG_E(RLC, "Remaining %d bytes following a control PDU\n",
              tb_size_in_bytes);
   }
-/*
-        AssertFatal( tb_size_in_bytes == 0,
-                     "Remaining %d bytes following a control PDU",
-                     tb_size_in_bytes);
-*/
+
       }
 
       LOG_D(RLC, PROTOCOL_RLC_AM_CTXT_FMT"[RX ROUTING] VR(R)=%03d VR(MR)=%03d\n",
@@ -358,9 +352,9 @@ rlc_am_receive_process_data_pdu (
         LOG_D(RLC, PROTOCOL_RLC_AM_CTXT_FMT"[PROCESS RX PDU]  PDU DISCARDED CAUSE=%d SN=%d\n",
               PROTOCOL_RLC_AM_CTXT_ARGS(ctxt_pP,rlc_pP),pdu_status,pdu_info_p->sn);
 #if RLC_STOP_ON_LOST_PDU
-        AssertFatal( 0 == 1,
-                     PROTOCOL_RLC_AM_CTXT_FMT" LOST PDU DETECTED\n",
-                     PROTOCOL_RLC_AM_CTXT_ARGS(ctxt_pP,rlc_pP));
+        LOG_E(RLC, PROTOCOL_RLC_AM_CTXT_FMT" LOST PDU DETECTED\n",
+              PROTOCOL_RLC_AM_CTXT_ARGS(ctxt_pP,rlc_pP));
+        return;
 #endif
       } else {
         // 5.1.3.2.3

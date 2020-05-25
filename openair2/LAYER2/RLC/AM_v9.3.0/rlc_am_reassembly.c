@@ -54,7 +54,6 @@ rlc_am_reassembly (
     rlc_pP->output_sdu_in_construction = get_free_mem_block (RLC_SDU_MAX_SIZE, __func__);
     rlc_pP->output_sdu_size_to_write = 0;
 
-    //assert(rlc_pP->output_sdu_in_construction != NULL);
     if(rlc_pP->output_sdu_in_construction == NULL) {
       LOG_E(RLC, PROTOCOL_RLC_AM_CTXT_FMT"[REASSEMBLY PAYLOAD] output_sdu_in_construction is NULL\n",
             PROTOCOL_RLC_AM_CTXT_ARGS(ctxt_pP,rlc_pP));
@@ -71,8 +70,9 @@ rlc_am_reassembly (
       LOG_E(RLC, PROTOCOL_RLC_AM_CTXT_FMT"[REASSEMBLY PAYLOAD] ERROR  SDU SIZE OVERFLOW SDU GARBAGED\n",
             PROTOCOL_RLC_AM_CTXT_ARGS(ctxt_pP,rlc_pP));
 #if STOP_ON_IP_TRAFFIC_OVERLOAD
-      AssertFatal(0, PROTOCOL_RLC_AM_CTXT_FMT" RLC_AM_DATA_IND, SDU SIZE OVERFLOW SDU GARBAGED\n",
-                  PROTOCOL_RLC_AM_CTXT_ARGS(ctxt_pP,rlc_pP));
+      LOG_E(RLC, PROTOCOL_RLC_AM_CTXT_FMT" RLC_AM_DATA_IND, SDU SIZE OVERFLOW SDU GARBAGED\n",
+            PROTOCOL_RLC_AM_CTXT_ARGS(ctxt_pP,rlc_pP));
+      return;
 #endif
       // erase  SDU
       rlc_pP->output_sdu_size_to_write = 0;
@@ -81,8 +81,9 @@ rlc_am_reassembly (
     LOG_E(RLC, PROTOCOL_RLC_AM_CTXT_FMT"[REASSEMBLY PAYLOAD] ERROR  OUTPUT SDU IS NULL\n",
           PROTOCOL_RLC_AM_CTXT_ARGS(ctxt_pP,rlc_pP));
 #if STOP_ON_IP_TRAFFIC_OVERLOAD
-    AssertFatal(0, PROTOCOL_RLC_AM_CTXT_FMT" RLC_AM_DATA_IND, SDU DROPPED, OUT OF MEMORY\n",
-                PROTOCOL_RLC_AM_CTXT_ARGS(ctxt_pP,rlc_pP));
+    LOG_E(RLC, PROTOCOL_RLC_AM_CTXT_FMT" RLC_AM_DATA_IND, SDU DROPPED, OUT OF MEMORY\n",
+          PROTOCOL_RLC_AM_CTXT_ARGS(ctxt_pP,rlc_pP));
+    return;
 #endif
   }
 }
@@ -182,12 +183,6 @@ rlc_am_send_sdu (
       LOG_E(RLC, PROTOCOL_RLC_AM_CTXT_FMT" SEND SDU REQUESTED %d bytes\n",
             PROTOCOL_RLC_AM_CTXT_ARGS(ctxt_pP,rlc_pP),
             rlc_pP->output_sdu_size_to_write);
-      /*
-            AssertFatal(3==4,
-                        PROTOCOL_RLC_AM_CTXT_FMT" SEND SDU REQUESTED %d bytes",
-                        PROTOCOL_RLC_AM_CTXT_ARGS(ctxt_pP,rlc_pP),
-                        rlc_pP->output_sdu_size_to_write);
-      */
     }
 
     rlc_pP->output_sdu_size_to_write = 0;
@@ -256,7 +251,6 @@ rlc_am_reassemble_pdu(
       default:
         //Assertion(eNB)_PRAN_DesignDocument_annex No.1428
         LOG_E(RLC, "RLC_E_FIXED_PART_DATA_FIELD_FOLLOW error pdu_info->fi[%d]\n", pdu_info->fi);
-        //      assert(0 != 0);
     }
   } else {
     switch (pdu_info->fi) {
@@ -374,7 +368,6 @@ rlc_am_reassemble_pdu(
       default:
         //Assertion(eNB)_PRAN_DesignDocument_annex No.1429
         LOG_E(RLC, "not RLC_E_FIXED_PART_DATA_FIELD_FOLLOW error pdu_info->fi[%d]\n", pdu_info->fi);
-        //      assert(1 != 1);
     }
   }
 

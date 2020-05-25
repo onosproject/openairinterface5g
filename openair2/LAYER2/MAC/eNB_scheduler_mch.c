@@ -583,6 +583,10 @@ schedule_MBMS(module_id_t module_idP, uint8_t CC_id, frame_t frameP,
 	}
     }
 
+    if (to_prb(cc->mib->message.dl_Bandwidth) == -1) {
+      LOG_E(MAC, "schedule_MBMS:to_prb failed\n");
+      return -1;
+    }
     TBS =
 	get_TBS_DL(cc->MCH_pdu.mcs, to_prb(cc->mib->message.dl_Bandwidth));
 #if (LTE_RRC_VERSION >= MAKE_VERSION(10, 0, 0))
@@ -740,6 +744,10 @@ schedule_MBMS(module_id_t module_idP, uint8_t CC_id, frame_t frameP,
 				       31,	// no timing advance
 				       NULL,	// no contention res id
 				       padding, post_padding);
+	if (offset < 0) {
+		LOG_E(MAC, "schedule_MBMS:generate_dlsch_header failed, offset < 0 \n");
+		return -1;
+	}
 
 	cc->MCH_pdu.Pdu_size = TBS;
 	cc->MCH_pdu.sync_area = i;

@@ -594,6 +594,10 @@ int main (int argc, char **argv)
                                                0,                                   // no timing advance
                                                sdu0,        // contention res id
                                                0,0);
+        if (payload_offset < 0) {
+          printf("RRCConnectionSetup:generate_dlsch_header failed \n");
+          return -1;
+        }
         memcpy(&dlsch_buffer[payload_offset],sdu1,sdu_len1);
         printf("\nRRCConnectionSetup (DLSCH input / MAC output)\n\n");
 
@@ -621,6 +625,10 @@ int main (int argc, char **argv)
                                                1,      // timing advance
                                                NULL,                                  // contention res idk
                                                0,0);
+        if (payload_offset < 0) {
+          printf("RRCConnectionReconfiguration:generate_dlsch_header failed \n");
+          return -1;
+        }
         memcpy(&dlsch_buffer[payload_offset],sdu3,sdu_len3);
         printf("\nRRCConnectionReconfiguration (DLSCH input / MAC output)\n\n");
 

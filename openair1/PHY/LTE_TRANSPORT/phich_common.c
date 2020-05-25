@@ -189,8 +189,7 @@ uint8_t phich_subframe2_pusch_subframe(LTE_DL_FRAME_PARMS *frame_parms,uint8_t s
       else if (subframe == 1)
         pusch_subframe = (7);
       else {
-        AssertFatal(1==0,"phich.c: phich_subframe2_pusch_subframe, illegal subframe %d for tdd_config %d\n",
-                    subframe,frame_parms->tdd_config);
+		LOG_E(PHY, "phich.c: phich_subframe2_pusch_subframe, illegal subframe %d for tdd_config %d\n",subframe,frame_parms->tdd_config);
         pusch_subframe = (0);
       }
 
@@ -206,8 +205,7 @@ uint8_t phich_subframe2_pusch_subframe(LTE_DL_FRAME_PARMS *frame_parms,uint8_t s
       else if (subframe == 4)
         pusch_subframe = (8);
       else {
-        AssertFatal(1==0,"phich.c: phich_subframe2_pusch_subframe, illegal subframe %d for tdd_config %d\n",
-                    subframe,frame_parms->tdd_config);
+		LOG_E(PHY, "phich.c: phich_subframe2_pusch_subframe, illegal subframe %d for tdd_config %d\n",subframe,frame_parms->tdd_config);
         pusch_subframe = (0);
       }
 
@@ -219,8 +217,7 @@ uint8_t phich_subframe2_pusch_subframe(LTE_DL_FRAME_PARMS *frame_parms,uint8_t s
       else if (subframe == 3)
         pusch_subframe = (7);
       else {
-        AssertFatal(1==0,"phich.c: phich_subframe2_pusch_subframe, illegal subframe %d for tdd_config %d\n",
-                    subframe,frame_parms->tdd_config);
+		LOG_E(PHY, "phich.c: phich_subframe2_pusch_subframe, illegal subframe %d for tdd_config %d\n",subframe,frame_parms->tdd_config);
         pusch_subframe = (0);
       }
 
@@ -232,8 +229,7 @@ uint8_t phich_subframe2_pusch_subframe(LTE_DL_FRAME_PARMS *frame_parms,uint8_t s
       } else if (subframe==0)
         pusch_subframe = (4);
       else {
-        AssertFatal(1==0,"phich.c: phich_subframe2_pusch_subframe, illegal subframe %d for tdd_config %d\n",
-                    subframe,frame_parms->tdd_config);
+        LOG_E(PHY, "phich.c: phich_subframe2_pusch_subframe, illegal subframe %d for tdd_config %d\n",subframe,frame_parms->tdd_config);
         pusch_subframe = (0);
       }
 
@@ -243,8 +239,7 @@ uint8_t phich_subframe2_pusch_subframe(LTE_DL_FRAME_PARMS *frame_parms,uint8_t s
       if ( (subframe == 8) || (subframe == 9) ) {
         pusch_subframe = (subframe-6);
       } else {
-        AssertFatal(1==0,"phich.c: phich_subframe2_pusch_subframe, illegal subframe %d for tdd_config %d\n",
-                    subframe,frame_parms->tdd_config);
+        LOG_E(PHY, "phich.c: phich_subframe2_pusch_subframe, illegal subframe %d for tdd_config %d\n",subframe,frame_parms->tdd_config);
         pusch_subframe = (0);
       }
 
@@ -254,8 +249,7 @@ uint8_t phich_subframe2_pusch_subframe(LTE_DL_FRAME_PARMS *frame_parms,uint8_t s
       if (subframe == 8) {
         pusch_subframe = (2);
       } else {
-        AssertFatal(1==0,"phich.c: phich_subframe2_pusch_subframe, illegal subframe %d for tdd_config %d\n",
-                    subframe,frame_parms->tdd_config);
+		LOG_E(PHY, "phich.c: phich_subframe2_pusch_subframe, illegal subframe %d for tdd_config %d\n",subframe,frame_parms->tdd_config);
         pusch_subframe = (0);
       }
 
@@ -273,15 +267,14 @@ uint8_t phich_subframe2_pusch_subframe(LTE_DL_FRAME_PARMS *frame_parms,uint8_t s
       } else if (subframe == 5) {
         pusch_subframe = (8);
       } else {
-        AssertFatal(1==0,"phich.c: phich_subframe2_pusch_subframe, illegal subframe %d for tdd_config %d\n",
-                    subframe,frame_parms->tdd_config);
+		LOG_E(PHY, "phich.c: phich_subframe2_pusch_subframe, illegal subframe %d for tdd_config %d\n",subframe,frame_parms->tdd_config);
         pusch_subframe = (0);
       }
 
       break;
 
     default:
-      AssertFatal(1==0, "no implementation for TDD UL/DL-config = %d!\n", frame_parms->tdd_config);
+	  LOG_E(PHY, "no implementation for TDD UL/DL-config = %d!\n", frame_parms->tdd_config);
       pusch_subframe = (0);
   }
 

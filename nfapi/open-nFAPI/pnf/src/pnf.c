@@ -358,7 +358,11 @@ void pnf_handle_config_request(pnf_t* pnf, void *pRecvMsg, int recvMsgLen)
 					{
 						if(config->config_req)
 						{
-							(config->config_req)(config, phy, &req);
+							if ((config->config_req)(config, phy, &req) == -1)
+							{
+								NFAPI_TRACE(NFAPI_TRACE_ERROR, "config_request failed\n");
+								return;
+							}
 						}
 					}
 					else
@@ -428,7 +432,11 @@ void pnf_handle_start_request(pnf_t* pnf, void *pRecvMsg, int recvMsgLen)
 					{
 						if(config->start_req)
 						{
-							(config->start_req)(config, phy, &req);
+							if((config->start_req)(config, phy, &req) < 0)
+							{
+								NFAPI_TRACE(NFAPI_TRACE_ERROR, "start_request failed\n");
+								return;
+							}
 						}
 					}
 					else

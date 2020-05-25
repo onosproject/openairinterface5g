@@ -660,7 +660,12 @@ int main( int argc, char **argv ) {
       printf("Initializing eNB threads single_thread_flag:%d wait_for_sync:%d\n", get_softmodem_params()->single_thread_flag,get_softmodem_params()->wait_for_sync);
       init_eNB(get_softmodem_params()->single_thread_flag,get_softmodem_params()->wait_for_sync);
       //      for (inst=0;inst<RC.nb_L1_inst;inst++)
-      //  for (CC_id=0;CC_id<RC.nb_L1_CC[inst];CC_id++) phy_init_lte_eNB(RC.eNB[inst][CC_id],0,0);
+      //  for (CC_id=0;CC_id<RC.nb_L1_CC[inst];CC_id++) {
+	  //    if (phy_init_lte_eNB(RC.eNB[inst][CC_id],0,0) == -1) {
+      //      LOG_E(ENB_APP, "main:phy_init_lte_eNB failed.\n");
+	  //      return -1;
+	  //    }
+	  //  }
     }
   }
 

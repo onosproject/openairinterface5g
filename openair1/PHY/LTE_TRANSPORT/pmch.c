@@ -100,17 +100,10 @@ void generate_mch(PHY_VARS_eNB *eNB,L1_rxtx_proc_t *proc,uint8_t *a)
 		       eNB->common_vars.txdataF,
 		       AMP);
   
-  
-  AssertFatal(dlsch_encoding(eNB,
-			     a,
-			     1,
-			     eNB->dlsch_MCH,
-			     proc->frame_tx,
-			     subframe,
-			     &eNB->dlsch_rate_matching_stats,
-			     &eNB->dlsch_turbo_encoding_stats,
-			     &eNB->dlsch_interleaving_stats)==0,
-	      "problem in dlsch_encoding");
+  if (dlsch_encoding(eNB, a, 1, eNB->dlsch_MCH, proc->frame_tx, subframe, &eNB->dlsch_rate_matching_stats, &eNB->dlsch_turbo_encoding_stats, &eNB->dlsch_interleaving_stats) != 0) {
+    LOG_E(PHY, "problem in dlsch_encoding");
+    return;
+  }
   
   dlsch_scrambling(&eNB->frame_parms,1,eNB->dlsch_MCH,0,G,0,frame,subframe<<1);
   

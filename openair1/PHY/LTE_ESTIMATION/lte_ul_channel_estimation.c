@@ -46,11 +46,18 @@ int32_t lte_ul_channel_estimation(PHY_VARS_eNB *eNB,
   RU_CALIBRATION *calibration = &ru->calibration;
   int32_t **ul_ch_estimates = (eNB!=NULL) ? pusch_vars->drs_ch_estimates : calibration->drs_ch_estimates;
 
-  AssertFatal(ul_ch_estimates != NULL, "ul_ch_estimates is null (eNB %p, pusch %p, pusch->drs_ch_estimates %p, pusch->drs_ch_estimates[0] %p ul_ch_estimates %p UE_id %d)\n",eNB,pusch_vars,pusch_vars->drs_ch_estimates,pusch_vars->drs_ch_estimates[0],ul_ch_estimates,UE_id);
+  if (ul_ch_estimates == NULL) {
+    LOG_E(PHY, "ul_ch_estimates is null (eNB %p, pusch %p, pusch->drs_ch_estimates %p, pusch->drs_ch_estimates[0] %p ul_ch_estimates %p UE_id %d)\n", 
+	      eNB,pusch_vars,pusch_vars->drs_ch_estimates,pusch_vars->drs_ch_estimates[0],ul_ch_estimates,UE_id);
+    return (-1);
+  }
 
   int32_t **ul_ch_estimates_time = (eNB!=NULL) ? pusch_vars->drs_ch_estimates_time : calibration->drs_ch_estimates_time;
- 
-  AssertFatal(ul_ch_estimates_time != NULL, "ul_ch_estimates_time is null\n");
+
+  if (ul_ch_estimates_time == NULL) {
+    LOG_E(PHY, "ul_ch_estimates_time is null\n");
+    return (-1);
+  }
  
   int32_t **rxdataF_ext = (eNB!=NULL) ? pusch_vars->rxdataF_ext : calibration->rxdataF_ext;
 
@@ -102,6 +109,10 @@ int32_t lte_ul_channel_estimation(PHY_VARS_eNB *eNB,
 #endif
     {
       harq_pid = subframe2harq_pid(frame_parms,proc->frame_rx,subframe);
+	  if (harq_pid == 255) {
+        LOG_E(PHY,"FATAL ERROR: illegal harq_pid, returning\n");
+        return(-1);
+	  }
     }
 
   uint16_t N_rb_alloc = eNB->ulsch[UE_id]->harq_processes[harq_pid]->nb_rb;
@@ -476,8 +487,10 @@ int32_t lte_ul_channel_estimation_RRU(LTE_DL_FRAME_PARMS *frame_parms,
 
   int32_t temp_in_ifft_0[2048*2] __attribute__((aligned(32)));
 
-  AssertFatal(l==pilot_pos1 || l==pilot_pos2,"%d is not a valid symbol for DMRS, should be %d or %d\n",
-	      l,pilot_pos1,pilot_pos2);
+  if (l!=pilot_pos1 && l!=pilot_pos2) {
+    LOG_E(PHY, "%d is not a valid symbol for DMRS, should be %d or %d\n", l,pilot_pos1,pilot_pos2);
+    return (-1);
+  }
 
   Msc_RS = N_rb_alloc*12;
   /*

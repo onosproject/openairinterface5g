@@ -141,16 +141,27 @@ boolean_t pdcp_data_req(
   /*
    * XXX MAX_IP_PACKET_SIZE is 4096, shouldn't this be MAX SDU size, which is 8188 bytes?
    */
-  AssertFatal(sdu_buffer_sizeP<= MAX_IP_PACKET_SIZE,"Requested SDU size (%d) is bigger than that can be handled by PDCP (%u)!\n",
-              sdu_buffer_sizeP, MAX_IP_PACKET_SIZE);
+  if(sdu_buffer_sizeP > MAX_IP_PACKET_SIZE) {
+    LOG_E(PDCP,"Requested SDU size (%d) is bigger than that can be handled by PDCP (%u)!\n", sdu_buffer_sizeP, MAX_IP_PACKET_SIZE);
+    return FALSE;
+  }
 
   if (modeP == PDCP_TRANSMISSION_MODE_TRANSPARENT) {
-    AssertError (rb_idP < NB_RB_MBMS_MAX, return FALSE, "RB id is too high (%u/%d) %u %u!\n", rb_idP, NB_RB_MBMS_MAX, ctxt_pP->module_id, ctxt_pP->rnti);
+    if(rb_idP >= NB_RB_MBMS_MAX) {
+      LOG_E(PDCP,"RB id is too high (%u/%d) %u %u!\n", rb_idP, NB_RB_MBMS_MAX, ctxt_pP->module_id, ctxt_pP->rnti);
+      return FALSE;
+    }
   } else {
     if (srb_flagP) {
-      AssertError (rb_idP < 3, return FALSE, "RB id is too high (%u/%d) %u %u!\n", rb_idP, 3, ctxt_pP->module_id, ctxt_pP->rnti);
+      if(rb_idP >= 3) {
+        LOG_E(PDCP,"RB id is too high (%u/%d) %u %u!\n", rb_idP, 3, ctxt_pP->module_id, ctxt_pP->rnti);
+        return FALSE;
+      }
     } else {
-      AssertError (rb_idP < LTE_maxDRB, return FALSE, "RB id is too high (%u/%d) %u %u!\n", rb_idP, LTE_maxDRB, ctxt_pP->module_id, ctxt_pP->rnti);
+      if(rb_idP >= LTE_maxDRB) {
+        LOG_E(PDCP,"RB id is too high (%u/%d) %u %u!\n", rb_idP, LTE_maxDRB, ctxt_pP->module_id, ctxt_pP->rnti);
+        return FALSE;
+      }
     }
   }
 
@@ -307,7 +318,7 @@ boolean_t pdcp_data_req(
           start_meas(&UE_pdcp_stats[ctxt_pP->module_id].apply_security);
         }
 
-        pdcp_apply_security(ctxt_pP,
+        int ret = pdcp_apply_security(ctxt_pP,
                             pdcp_p,
                             srb_flagP,
                             rb_idP % LTE_maxDRB,
@@ -315,6 +326,11 @@ boolean_t pdcp_data_req(
                             current_sn,
                             pdcp_pdu_p->data,
                             sdu_buffer_sizeP);
+							
+        if(ret < 0) {
+          LOG_E(PDCP,"pdcp_apply_security return value is -1\n");
+          return FALSE;
+        }
 
         if (ctxt_pP->enb_flag == ENB_FLAG_NO) {
           stop_meas(&eNB_pdcp_stats[ctxt_pP->module_id].apply_security);
@@ -525,12 +541,10 @@ pdcp_data_ind(
 #endif
 
   if (MBMS_flagP) {
-    AssertError (rb_idP < NB_RB_MBMS_MAX, return FALSE,
-                 "RB id is too high (%u/%d) %u rnti %x!\n",
-                 rb_idP,
-                 NB_RB_MBMS_MAX,
-                 ctxt_pP->module_id,
-                 ctxt_pP->rnti);
+    if(rb_idP >= NB_RB_MBMS_MAX) {
+      LOG_E(PDCP,"RB id is too high (%u/%d) %u rnti %x!\n", rb_idP, NB_RB_MBMS_MAX, ctxt_pP->module_id, ctxt_pP->rnti);
+      return FALSE;
+    }
 
     if (ctxt_pP->enb_flag == ENB_FLAG_NO) {
       LOG_D(PDCP, "e-MBMS Data indication notification for PDCP entity from eNB %u to UE %x "
@@ -551,16 +565,15 @@ pdcp_data_ind(
     }
   } else {
     rb_id = rb_idP % LTE_maxDRB;
-    AssertError (rb_id < LTE_maxDRB, return FALSE, "RB id is too high (%u/%d) %u UE %x!\n",
-                 rb_id,
-                 LTE_maxDRB,
-                 ctxt_pP->module_id,
-                 ctxt_pP->rnti);
-    AssertError (rb_id > 0, return FALSE, "RB id is too low (%u/%d) %u UE %x!\n",
-                 rb_id,
-                 LTE_maxDRB,
-                 ctxt_pP->module_id,
-                 ctxt_pP->rnti);
+    if(rb_id >= LTE_maxDRB) {
+      LOG_E(PDCP,"RB id is too high (%u/%d) %u UE %x!\n", rb_id, LTE_maxDRB, ctxt_pP->module_id, ctxt_pP->rnti);
+      return FALSE;
+    }
+    if(rb_id <= 0) {
+      LOG_E(PDCP,"RB id is too low (%u/%d) %u UE %x!\n", rb_id, LTE_maxDRB, ctxt_pP->module_id, ctxt_pP->rnti);
+      return FALSE;
+    }
+
     key = PDCP_COLL_KEY_VALUE(ctxt_pP->module_id, ctxt_pP->rnti, ctxt_pP->enb_flag, rb_id, srb_flagP);
     h_rc = hashtable_get(pdcp_coll_p, key, (void **)&pdcp_p);
 
@@ -948,10 +961,16 @@ pdcp_data_ind(
       //LOG_T(PDCP,"Sending to GTPV1U %d bytes\n", sdu_buffer_sizeP - payload_offset);
       gtpu_buffer_p = itti_malloc(TASK_PDCP_ENB, TASK_GTPV1_U,
                                   sdu_buffer_sizeP - payload_offset + GTPU_HEADER_OVERHEAD_MAX);
-      AssertFatal(gtpu_buffer_p != NULL, "OUT OF MEMORY");
+      if(gtpu_buffer_p == NULL) {
+        LOG_E(PDCP,"OUT OF MEMORY");
+        return FALSE;
+      }
       memcpy(&gtpu_buffer_p[GTPU_HEADER_OVERHEAD_MAX], &sdu_buffer_pP->data[payload_offset], sdu_buffer_sizeP - payload_offset);
       message_p = itti_alloc_new_message(TASK_PDCP_ENB, GTPV1U_ENB_TUNNEL_DATA_REQ);
-      AssertFatal(message_p != NULL, "OUT OF MEMORY");
+      if(message_p == NULL) {
+        LOG_E(PDCP,"OUT OF MEMORY");
+        return FALSE;
+      }
       GTPV1U_ENB_TUNNEL_DATA_REQ(message_p).buffer       = gtpu_buffer_p;
       GTPV1U_ENB_TUNNEL_DATA_REQ(message_p).length       = sdu_buffer_sizeP - payload_offset;
       GTPV1U_ENB_TUNNEL_DATA_REQ(message_p).offset       = GTPU_HEADER_OVERHEAD_MAX;
@@ -994,7 +1013,10 @@ pdcp_data_ind(
        */
       memset(new_sdu_p->data, 0, sizeof (pdcp_data_ind_header_t));
       ((pdcp_data_ind_header_t *) new_sdu_p->data)->data_size = sdu_buffer_sizeP - payload_offset;
-      AssertFatal((sdu_buffer_sizeP - payload_offset >= 0), "invalid PDCP SDU size!");
+      if((sdu_buffer_sizeP - payload_offset) < 0) {
+        LOG_E(PDCP,"invalid PDCP SDU size!");
+        return FALSE;
+      }
 
       // Here there is no virtualization possible
       // set ((pdcp_data_ind_header_t *) new_sdu_p->data)->inst for IP layer here
@@ -1192,7 +1214,10 @@ pdcp_run (
 
           // Message buffer has been processed, free it now.
           result = itti_free (ITTI_MSG_ORIGIN_ID(msg_p), RRC_DCCH_DATA_REQ (msg_p).sdu_p);
-          AssertFatal (result == EXIT_SUCCESS, "Failed to free memory (%d)!\n", result);
+          if(result != EXIT_SUCCESS) {
+            LOG_E(PDCP,"Failed to free memory (%d)!\n", result);
+            return;
+          }
           break;
 
         case RRC_PCCH_DATA_REQ: {
@@ -1217,7 +1242,10 @@ pdcp_run (
       }
 
       result = itti_free (ITTI_MSG_ORIGIN_ID(msg_p), msg_p);
-      AssertFatal (result == EXIT_SUCCESS, "Failed to free memory (%d)!\n", result);
+      if(result != EXIT_SUCCESS) {
+        LOG_E(PDCP,"Failed to free memory (%d)!\n", result);
+        return;
+      }
     }
   } while(msg_p != NULL);
 
@@ -1774,7 +1802,10 @@ pdcp_config_req_asn1 (
 {
   switch (actionP) {
     case CONFIG_ACTION_ADD:
-      DevAssert(pdcp_pP != NULL);
+      if(pdcp_pP == NULL) {
+        LOG_E(PDCP,"pdcp_pP is NULL!\n");
+        return FALSE;
+      }
 
       if (ctxt_pP->enb_flag == ENB_FLAG_YES) {
         pdcp_pP->is_ue = FALSE;
@@ -1850,7 +1881,10 @@ pdcp_config_req_asn1 (
       break;
 
     case CONFIG_ACTION_MODIFY:
-      DevAssert(pdcp_pP != NULL);
+      if(pdcp_pP == NULL) {
+        LOG_E(PDCP,"pdcp_pP is NULL!\n");
+        return FALSE;
+      }
       pdcp_pP->header_compression_profile=header_compression_profileP;
       pdcp_pP->status_report = rb_reportP;
       pdcp_pP->rlc_mode = rlc_modeP;
@@ -1886,7 +1920,10 @@ pdcp_config_req_asn1 (
       break;
 
     case CONFIG_ACTION_REMOVE:
-      DevAssert(pdcp_pP != NULL);
+      if(pdcp_pP == NULL) {
+        LOG_E(PDCP,"pdcp_pP is NULL!\n");
+        return FALSE;
+      }
       //#warning "TODO pdcp_module_id_to_rnti"
       //pdcp_module_id_to_rnti[ctxt_pP.module_id ][dst_id] = NOT_A_RNTI;
       LOG_D(PDCP, PROTOCOL_PDCP_CTXT_FMT" CONFIG_ACTION_REMOVE LCID %d RBID %d configured\n",
@@ -1966,7 +2003,10 @@ pdcp_config_set_security(
   uint8_t         *const  kUPenc)
 //-----------------------------------------------------------------------------
 {
-  DevAssert(pdcp_pP != NULL);
+  if(pdcp_pP == NULL) {
+    LOG_E(PDCP,"pdcp_pP is NULL!\n");
+    return;
+  }
 
   if ((security_modeP >= 0) && (security_modeP <= 0x77)) {
     pdcp_pP->cipheringAlgorithm     = security_modeP & 0x0f;
@@ -2230,7 +2270,10 @@ void pdcp_layer_init(void)
    */
   list_init(&pdcp_sdu_list, NULL);
   pdcp_coll_p = hashtable_create ((LTE_maxDRB + 2) * NUMBER_OF_UE_MAX, NULL, pdcp_free);
-  AssertFatal(pdcp_coll_p != NULL, "UNRECOVERABLE error, PDCP hashtable_create failed");
+  if(pdcp_coll_p == NULL) {
+    LOG_E(PDCP,"UNRECOVERABLE error, PDCP hashtable_create failed");
+    return;
+  }
 
   for (instance = 0; instance < MAX_MOBILES_PER_ENB; instance++) {
     for (service_id = 0; service_id < LTE_maxServiceCount; service_id++) {

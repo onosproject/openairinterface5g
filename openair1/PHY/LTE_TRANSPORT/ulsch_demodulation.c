@@ -731,8 +731,10 @@ void ulsch_extract_rbs_single(int32_t **rxdataF,
   //uint8_t symbol = l+Ns*frame_parms->symbols_per_tti/2;
   uint8_t symbol = l+((7-frame_parms->Ncp)*(Ns&1)); ///symbol within sub-frame
 
-  AssertFatal((frame_parms->nb_antennas_rx>0) && (frame_parms->nb_antennas_rx<5),
-	      "nb_antennas_rx not in (1-4)\n");
+  if ((frame_parms->nb_antennas_rx <= 0) || (frame_parms->nb_antennas_rx >= 5)) {
+    LOG_E(PHY, "nb_antennas_rx not in (1-4)\n");
+    return;
+  }
 
   for (aarx=0; aarx<frame_parms->nb_antennas_rx; aarx++) {
 
@@ -1079,7 +1081,10 @@ void ulsch_channel_level(int32_t **drs_ch_estimates_ext,
 
 #endif
 
-    DevAssert( nb_rb );
+    if (!nb_rb) {
+      LOG_E(PHY, "nb_rb is 0\n");
+      return;
+    }
     avg[aarx] = (int)((((float*)&avg128U)[0] +
                        ((float*)&avg128U)[1] +
                        ((float*)&avg128U)[2] +
@@ -1133,14 +1138,21 @@ void rx_ulsch(PHY_VARS_eNB *eNB,
 #endif
     {
       harq_pid = subframe2harq_pid(frame_parms,proc->frame_rx,subframe);
+      if (harq_pid == 255) {
+        LOG_E(PHY,"FATAL ERROR: illegal harq_pid, returning\n");
+        return;
+      }
     }
   Qm = ulsch[UE_id]->harq_processes[harq_pid]->Qm;
   if(LOG_DEBUGFLAG(DEBUG_ULSCH)) {
      LOG_I(PHY,"rx_ulsch: harq_pid %d, nb_rb %d first_rb %d\n",harq_pid,ulsch[UE_id]->harq_processes[harq_pid]->nb_rb,ulsch[UE_id]->harq_processes[harq_pid]->first_rb);
   }
 
-  AssertFatal(ulsch[UE_id]->harq_processes[harq_pid]->nb_rb > 0,
-	      "PUSCH (%d/%x) nb_rb=0!\n", harq_pid,ulsch[UE_id]->rnti);
+  if (ulsch[UE_id]->harq_processes[harq_pid]->nb_rb <= 0) {
+    LOG_E(PHY, "PUSCH (%d/%x) nb_rb=0!\n", harq_pid,ulsch[UE_id]->rnti);
+    return;
+  }
+
   for (l=0; l<(frame_parms->symbols_per_tti-ulsch[UE_id]->harq_processes[harq_pid]->srs_active); l++) {
 
   if(LOG_DEBUGFLAG(DEBUG_ULSCH)) {
@@ -1159,10 +1171,13 @@ void rx_ulsch(PHY_VARS_eNB *eNB,
                              l/(frame_parms->symbols_per_tti/2),
                              frame_parms);
     
-    lte_ul_channel_estimation(eNB,proc,
+    if (lte_ul_channel_estimation(eNB,proc,
                               UE_id,
                               l%(frame_parms->symbols_per_tti/2),
-                              l/(frame_parms->symbols_per_tti/2));
+                              l/(frame_parms->symbols_per_tti/2)) < 0) {
+      LOG_E(PHY, "lte_ul_channel_estimation failed。\n");
+	  return;
+    }
   }
 
   int correction_factor = 1;
@@ -1345,6 +1360,10 @@ void rx_ulsch_emul(PHY_VARS_eNB *eNB,
   char fname[100],vname[100];
 
   harq_pid = subframe2harq_pid(&eNB->frame_parms,frame,subframe);
+  if (harq_pid == 255) {
+    LOG_E(PHY,"FATAL ERROR: illegal harq_pid, returning\n");
+    return;
+  }
 
   LOG_UI(PHY,"Dumping ULSCH in subframe %d with harq_pid %d, round %d for NB_rb %d, TBS %d, Qm %d, N_symb %d\n", 
 	 subframe,harq_pid,round,eNB->ulsch[UE_id]->harq_processes[harq_pid]->nb_rb,

@@ -155,7 +155,10 @@ int udp_eNB_create_socket(int port, char *ip_addr, task_id_t task_id)
   LOG_I(UDP_, "Initializing UDP for local address %s with port %d\n", ip_addr, port);
 
   sd = socket(AF_INET, SOCK_DGRAM, 0);
-  AssertFatal(sd > 0, "UDP: Failed to create new socket: (%s:%d)\n", strerror(errno), errno);
+  if (sd <= 0) {
+    LOG_E(UDP_, "UDP: Failed to create new socket: (%s:%d)\n", strerror(errno), errno);
+    return -1;
+  }
 
   memset(&sin, 0, sizeof(struct sockaddr_in));
   sin.sin_family      = AF_INET;
@@ -169,14 +172,19 @@ int udp_eNB_create_socket(int port, char *ip_addr, task_id_t task_id)
 
   if ((rc = bind(sd, (struct sockaddr *)&sin, sizeof(struct sockaddr_in))) < 0) {
     close(sd);
-    AssertFatal(rc >= 0, "UDP: Failed to bind socket: (%s:%d) address %s port %d\n",
-                strerror(errno), errno, ip_addr, port);
+    if (rc < 0) {
+      LOG_E(UDP_, "UDP: Failed to bind socket: (%s:%d) address %s port %d\n",strerror(errno), errno, ip_addr, port);
+      return -1;
+    }
   }
 
   /* Create a new descriptor for this connection */
   udp_socket_desc_p = calloc(1, sizeof(struct udp_socket_desc_s));
 
-  DevAssert(udp_socket_desc_p != NULL);
+  if (udp_socket_desc_p == NULL) {
+    LOG_E(UDP_, "udp_socket_desc_p == NULL\n");
+    return -1;
+  }
 
   udp_socket_desc_p->sd            = sd;
   udp_socket_desc_p->local_address = ip_addr;
@@ -255,10 +263,16 @@ void udp_eNB_receiver(struct udp_socket_desc_s *udp_sock_pP)
       return;
     } else {
       forwarded_buffer = itti_malloc(TASK_UDP, udp_sock_pP->task_id, n*sizeof(uint8_t));
-      DevAssert(forwarded_buffer != NULL);
+      if (forwarded_buffer == NULL) {
+        LOG_E(UDP_, "forwarded_buffer == NULL\n");
+        return;
+      }
       memcpy(forwarded_buffer, l_buffer, n);
       message_p = itti_alloc_new_message(TASK_UDP, UDP_DATA_IND);
-      DevAssert(message_p != NULL);
+      if (message_p == NULL) {
+        LOG_E(UDP_, "message_p == NULL\n");
+        return;
+      }
       udp_data_ind_p = &message_p->ittiMsg.udp_data_ind;
       udp_data_ind_p->buffer        = forwarded_buffer;
       udp_data_ind_p->buffer_length = n;
@@ -325,10 +339,15 @@ void *udp_eNB_task(void *args_p)
         LOG_D(UDP_, "Received UDP_INIT\n");
         udp_init_t *udp_init_p;
         udp_init_p = &received_message_p->ittiMsg.udp_init;
-        udp_eNB_create_socket(
+        int ret = udp_eNB_create_socket(
           udp_init_p->port,
           udp_init_p->address,
           ITTI_MSG_ORIGIN_ID(received_message_p));
+
+		if (ret == -1) {
+          LOG_E(UDP_, "udp_eNB_create_socket failed.\n");
+          goto on_error;
+		}
       }
       break;
 

@@ -64,8 +64,14 @@ int s1ap_ue_context_release_complete(instance_t instance,
   /* Retrieve the S1AP eNB instance associated with Mod_id */
   s1ap_eNB_instance_p = s1ap_eNB_get_instance(instance);
 
-  DevAssert(ue_release_complete_p != NULL);
-  DevAssert(s1ap_eNB_instance_p != NULL);
+  if (ue_release_complete_p == NULL) {
+    S1AP_ERROR("ue_release_complete_p == NULL\n");
+    return -1;
+  }
+  if (s1ap_eNB_instance_p == NULL) {
+    S1AP_ERROR("s1ap_eNB_instance_p == NULL\n");
+    return -1;
+  }
 
   /*RB_FOREACH(ue_context_p, s1ap_ue_map, &s1ap_eNB_instance_p->s1ap_ue_head) {
     S1AP_WARN("in s1ap_ue_map: UE context eNB_ue_s1ap_id %u mme_ue_s1ap_id %u state %u\n",
@@ -203,8 +209,14 @@ int s1ap_ue_context_release_req(instance_t instance,
   /* Retrieve the S1AP eNB instance associated with Mod_id */
   s1ap_eNB_instance_p = s1ap_eNB_get_instance(instance);
 
-  DevAssert(ue_release_req_p != NULL);
-  DevAssert(s1ap_eNB_instance_p != NULL);
+  if (ue_release_req_p == NULL) {
+    S1AP_ERROR("ue_release_req_p == NULL\n");
+    return -1;
+  }
+  if (s1ap_eNB_instance_p == NULL) {
+    S1AP_ERROR("s1ap_eNB_instance_p == NULL\n");
+    return -1;
+  }
 
   if ((ue_context_p = s1ap_eNB_get_ue_context(s1ap_eNB_instance_p,
                       ue_release_req_p->eNB_ue_s1ap_id)) == NULL) {

@@ -73,7 +73,7 @@ static uint32_t eNB_app_register(ngran_node_t node_type,uint32_t enb_id_start, u
         // configure F1AP here for F1C
         LOG_I(ENB_APP,"ngran_eNB_DU: Allocating ITTI message for F1AP_SETUP_REQ\n");
         msg_p = itti_alloc_new_message (TASK_ENB_APP, F1AP_SETUP_REQ);
-        RCconfig_DU_F1(msg_p, enb_id);
+		RCconfig_DU_F1(msg_p, enb_id);
 
         LOG_I(ENB_APP,"[eNB %d] eNB_app_register via F1AP for instance %d\n", enb_id, ENB_MODULE_ID_TO_INSTANCE(enb_id));
         itti_send_msg_to_task (TASK_DU_F1, ENB_MODULE_ID_TO_INSTANCE(enb_id), msg_p);
@@ -167,11 +167,18 @@ void *eNB_app_task(void *args_p) {
       break;
 
     case S1AP_REGISTER_ENB_CNF:
-      AssertFatal(!NODE_IS_DU(RC.rrc[0]->node_type), "Should not have received S1AP_REGISTER_ENB_CNF\n");
+        if(NODE_IS_DU(RC.rrc[0]->node_type)) {
+          LOG_E(ENB_APP,"Should not have received S1AP_REGISTER_ENB_CNF\n");
+          break;
+        }
+
         if (EPC_MODE_ENABLED) {
           LOG_I(ENB_APP, "[eNB %d] Received %s: associated MME %d\n", instance, ITTI_MSG_NAME (msg_p),
                 S1AP_REGISTER_ENB_CNF(msg_p).nb_mme);
-          DevAssert(register_enb_pending > 0);
+          if(register_enb_pending <= 0) {
+            LOG_E(ENB_APP,"register_enb_pending <= 0\n");
+            break;
+          }
           register_enb_pending--;
 
           /* Check if at least eNB is registered with one MME */
@@ -206,14 +213,21 @@ void *eNB_app_task(void *args_p) {
       break;
 
     case F1AP_SETUP_RESP:
-      AssertFatal(NODE_IS_DU(RC.rrc[0]->node_type), "Should not have received F1AP_REGISTER_ENB_CNF in CU/eNB\n");
+      if(!NODE_IS_DU(RC.rrc[0]->node_type)) {
+        LOG_E(ENB_APP,"Should not have received F1AP_REGISTER_ENB_CNF in CU/eNB\n");
+        break;
+      }
 
       LOG_I(ENB_APP, "Received %s: associated ngran_eNB_CU %s with %d cells to activate\n", ITTI_MSG_NAME (msg_p),
 	    F1AP_SETUP_RESP(msg_p).gNB_CU_name,F1AP_SETUP_RESP(msg_p).num_cells_to_activate);
       
       handle_f1ap_setup_resp(&F1AP_SETUP_RESP(msg_p));
 
-      DevAssert(register_enb_pending > 0);
+      if(register_enb_pending <= 0) {
+        LOG_E(ENB_APP,"register_enb_pending <= 0\n");
+        break;
+      }
+
       register_enb_pending--;
 
       /* Check if at least eNB is registered with one MME */
@@ -286,7 +300,11 @@ void *eNB_app_task(void *args_p) {
     case X2AP_REGISTER_ENB_CNF:
       LOG_I(ENB_APP, "[eNB %d] Received %s: associated eNB %d\n", instance, ITTI_MSG_NAME (msg_p),
             X2AP_REGISTER_ENB_CNF(msg_p).nb_x2);
-      DevAssert(x2_register_enb_pending > 0);
+      if(x2_register_enb_pending <= 0) {
+        LOG_E(ENB_APP,"x2_register_enb_pending <= 0\n");
+        break;
+      }
+
       x2_register_enb_pending--;
 
       /* Check if at least eNB is registered with one target eNB */
@@ -325,7 +343,11 @@ void *eNB_app_task(void *args_p) {
     }
 
     result = itti_free (ITTI_MSG_ORIGIN_ID(msg_p), msg_p);
-    AssertFatal (result == EXIT_SUCCESS, "Failed to free memory (%d)!\n", result);
+
+    if(result != EXIT_SUCCESS) {
+      LOG_E(ENB_APP,"Failed to free memory (%d)!\n", result);
+      return NULL;
+    }
   } while (1);
 
   return NULL;

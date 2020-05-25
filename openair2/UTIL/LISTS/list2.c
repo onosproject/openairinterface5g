@@ -332,7 +332,10 @@ list2_display (list2_t * listP)
           nb_elements++;
         }
         msg (" found nb_elements %d nb_elements %d\n", nb_elements, listP->nb_elements);
-        AssertFatal(nb_elements == listP->nb_elements, "Bad count of elements %d != %d", nb_elements, listP->nb_elements);
+        if(nb_elements != listP->nb_elements) {
+          LOG_E(RLC, "Bad count of elements %d != %d", nb_elements, listP->nb_elements);
+          return;
+        }
       }
     }*/
 }

@@ -80,7 +80,10 @@ int dl_channel_level(int16_t *dl_ch,
 
 
 #endif
-  DevAssert( frame_parms->N_RB_DL );
+  if (!frame_parms->N_RB_DL) {
+    LOG_E(PHY, "frame_parms->N_RB_DL is 0");
+    return(-1);
+  }
   avg = (((int*)&avg128F)[0] +
          ((int*)&avg128F)[1] +
          ((int*)&avg128F)[2] +
@@ -129,7 +132,12 @@ int lte_est_freq_offset(int **dl_ch_estimates,
 
     dl_ch = (int16_t *)&dl_ch_estimates[aa][12+ch_offset];
 
-    dl_ch_shift = 6+(log2_approx(dl_channel_level(dl_ch,frame_parms))/2);
+	int dl_ch_lv = dl_channel_level(dl_ch,frame_parms);
+	if (dl_ch_lv == -1) {
+      LOG_E(PHY,"lte_est_freq_offset: dl_channel_level return -1.\n");
+      return(-1);
+	}
+    dl_ch_shift = 6+(log2_approx(dl_ch_lv)/2);
     //    printf("dl_ch_shift: %d\n",dl_ch_shift);
 
     if (ch_offset == 0)
@@ -219,7 +227,12 @@ int lte_mbsfn_est_freq_offset(int **dl_ch_estimates,
 
     dl_ch = (int16_t *)&dl_ch_estimates[aa][12+ch_offset];
 
-    dl_ch_shift = 4+(log2_approx(dl_channel_level(dl_ch,frame_parms))/2);
+	int dl_ch_lv = dl_channel_level(dl_ch,frame_parms);
+	if (dl_ch_lv == -1) {
+      LOG_E(PHY,"lte_mbsfn_est_freq_offset: dl_channel_level return -1.\n");
+      return(-1);
+	}
+    dl_ch_shift = 4+(log2_approx(dl_ch_lv)/2);
     //    printf("dl_ch_shift: %d\n",dl_ch_shift);
 
     if (ch_offset == 0)

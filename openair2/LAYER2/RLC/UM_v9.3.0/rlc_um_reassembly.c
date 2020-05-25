@@ -84,8 +84,8 @@ rlc_um_reassembly (const protocol_ctxt_t* const ctxt_pP, rlc_um_entity_t *rlc_pP
 #endif
     } else {
 #if STOP_ON_IP_TRAFFIC_OVERLOAD
-      AssertFatal(0, PROTOCOL_RLC_UM_CTXT_FMT" RLC_UM_DATA_IND, SDU TOO BIG, DROPPED\n",
-                  PROTOCOL_RLC_UM_CTXT_ARGS(ctxt_pP,rlc_pP));
+      LOG_E(RLC, PROTOCOL_RLC_UM_CTXT_FMT" RLC_UM_DATA_IND, SDU TOO BIG, DROPPED\n", PROTOCOL_RLC_UM_CTXT_ARGS(ctxt_pP,rlc_pP));
+      return;
 #endif
       LOG_E(RLC, PROTOCOL_RLC_UM_CTXT_FMT"[REASSEMBLY] [max_sdu size %d] ERROR  SDU SIZE OVERFLOW SDU GARBAGED\n",
             PROTOCOL_RLC_UM_CTXT_ARGS(ctxt_pP,rlc_pP),
@@ -97,8 +97,8 @@ rlc_um_reassembly (const protocol_ctxt_t* const ctxt_pP, rlc_um_entity_t *rlc_pP
     LOG_E(RLC, PROTOCOL_RLC_UM_CTXT_FMT"[REASSEMBLY]ERROR  OUTPUT SDU IS NULL\n",
           PROTOCOL_RLC_UM_CTXT_ARGS(ctxt_pP,rlc_pP));
 #if STOP_ON_IP_TRAFFIC_OVERLOAD
-    AssertFatal(0, PROTOCOL_RLC_UM_CTXT_FMT" RLC_UM_DATA_IND, SDU DROPPED, OUT OF MEMORY\n",
-                PROTOCOL_RLC_UM_CTXT_ARGS(ctxt_pP,rlc_pP));
+    LOG_E(RLC, PROTOCOL_RLC_UM_CTXT_FMT" RLC_UM_DATA_IND, SDU DROPPED, OUT OF MEMORY\n", PROTOCOL_RLC_UM_CTXT_ARGS(ctxt_pP,rlc_pP));
+    return;
 #endif
   }
 

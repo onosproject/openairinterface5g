@@ -97,7 +97,10 @@ void lte_param_init(PHY_VARS_eNB **eNBp,
   //  frame_parms->Bsrs = 0;
   //  frame_parms->kTC = 0;44
   //  frame_parms->n_RRC = 0;
-  init_frame_parms(frame_parms,osf);
+  if (init_frame_parms(frame_parms,osf) == -1) {
+    LOG_E(PHY, "lte_param_init.c:lte_param_init:init_frame_parms failed.\n");
+	return;
+  }
   //copy_lte_parms_to_phy_framing(frame_parms, &(PHY_config->PHY_framing));
   //  phy_init_top(frame_parms); //allocation
   UE->is_secondary_ue = 0;
@@ -120,9 +123,15 @@ void lte_param_init(PHY_VARS_eNB **eNBp,
     lte_gold(frame_parms,UE->lte_gold_table[i],Nid_cell+i);
 
   printf("Calling init_lte_ue_signal\n");
-  init_lte_ue_signal(UE,1,0);
+  if (init_lte_ue_signal(UE,1,0) == -1) {
+    LOG_E(PHY, "lte_param_init.c:lte_param_init:init_lte_ue_signal failed.\n");
+	return;
+  }
   printf("Calling phy_init_lte_eNB\n");
-  phy_init_lte_eNB(eNB,0,0);
+  if (phy_init_lte_eNB(eNB,0,0) == -1) {
+    LOG_E(PHY, "lte_param_init.c:lte_param_init:phy_init_lte_eNB failed.\n");
+	return;
+  }
   printf("Calling phy_init_RU (%p)\n",ru);
   phy_init_RU(ru);
   generate_pcfich_reg_mapping(&UE->frame_parms);

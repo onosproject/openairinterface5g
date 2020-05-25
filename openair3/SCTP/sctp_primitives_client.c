@@ -51,8 +51,14 @@
 int sctp_send_msg(sctp_data_t *sctp_data_p, uint16_t ppid, uint16_t stream,
                   const uint8_t *buffer, const uint32_t length)
 {
-  DevAssert(buffer != NULL);
-  DevAssert(sctp_data_p != NULL);
+  if (buffer == NULL) {
+    SCTP_ERROR("buffer == NULL\n");
+    return -1;
+  }
+  if (sctp_data_p == NULL) {
+    SCTP_ERROR("sctp_data_p == NULL\n");
+    return -1;
+  }
 
   /* Send message on specified stream of the sd association
    * NOTE: PPID should be defined in network order
@@ -93,7 +99,10 @@ int sctp_run(sctp_data_t *sctp_data_p)
   int sd;
   struct pollfd fds;
 
-  DevAssert(sctp_data_p != NULL);
+  if (sctp_data_p == NULL) {
+    SCTP_ERROR("sctp_data_p == NULL\n");
+    return errno;
+  }
 
   sd = sctp_data_p->sd;
 
@@ -188,9 +197,19 @@ int sctp_connect_to_remote_host(char *local_ip_addr[],
   struct sctp_event_subscribe events;
   struct sockaddr            *bindx_add_addr;
 
-  DevAssert(sctp_data_p != NULL);
-  DevAssert(remote_ip_addr != NULL);
-  DevAssert(local_ip_addr != NULL);
+  if (sctp_data_p == NULL) {
+    SCTP_ERROR("sctp_data_p == NULL\n");
+    return -1;
+  }
+  if (remote_ip_addr == NULL) {
+    SCTP_ERROR("remote_ip_addr == NULL\n");
+    return -1;
+  }
+  if (local_ip_addr == NULL) {
+    SCTP_ERROR("local_ip_addr == NULL\n");
+    return -1;
+  }
+
   DevCheck((socket_type == SOCK_STREAM), socket_type, 0, 0);
 
   SCTP_DEBUG("Creating socket type %d\n", socket_type);

@@ -51,7 +51,10 @@ int s1ap_eNB_handle_overload_start(uint32_t         assoc_id,
     S1AP_OverloadStart_t    *container;
     S1AP_OverloadStartIEs_t *ie;
 
-    DevAssert(pdu != NULL);
+    if (pdu == NULL) {
+      S1AP_ERROR("pdu == NULL\n");
+      return -1;
+    }
 
     container = &pdu->choice.initiatingMessage.value.choice.OverloadStart;
 
@@ -88,7 +91,10 @@ int s1ap_eNB_handle_overload_stop(uint32_t         assoc_id,
      * overloaded. This is an empty message, with only message header and no
      * Information Element.
      */
-    DevAssert(pdu != NULL);
+    if (pdu == NULL) {
+      S1AP_ERROR("pdu == NULL\n");
+      return -1;
+    }
 
     s1ap_eNB_mme_data_t *mme_desc_p;
 

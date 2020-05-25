@@ -300,7 +300,8 @@ int dlsch_encoding_2threads0(te_params *tep) {
       else
         r_offset += Nl*Qm * ((GpmodC==0?0:1) + (Gp/C));
     } else {
-      r_offset += lte_rate_matching_turbo(dlsch->harq_processes[harq_pid]->RTC[r],
+      uint32_t lte_rate_matching_turbo_val = 0;
+      lte_rate_matching_turbo_val = lte_rate_matching_turbo(dlsch->harq_processes[harq_pid]->RTC[r],
                                           G,  //G
                                           dlsch->harq_processes[harq_pid]->w[r],
                                           dlsch->harq_processes[harq_pid]->e+r_offset,
@@ -314,6 +315,11 @@ int dlsch_encoding_2threads0(te_params *tep) {
                                           r,
                                           nb_rb);
       //                                        m);                       // r
+	  if (lte_rate_matching_turbo_val == -1) {
+        LOG_E(PHY, "dlsch_encoding_2threads0:lte_rate_matching_turbo failed.\n");
+        return(-1);
+	  }
+	  r_offset += lte_rate_matching_turbo_val;
     }
   }
 
@@ -338,7 +344,10 @@ void *te_thread(void *param) {
 
     if(oai_exit) break;
 
-    dlsch_encoding_2threads0(tep);
+    if (dlsch_encoding_2threads0(tep) == -1) {
+      LOG_E(PHY, "te_thread:dlsch_encoding_2threads0 failed.\n");
+      return(NULL);
+	}
 
     if (release_thread(&tep->mutex_te,&tep->instance_cnt_te,"te thread")<0) break;
 
@@ -508,7 +517,8 @@ int dlsch_encoding_2threads(PHY_VARS_eNB *eNB,
         r_offset += Nl*Qm * ((GpmodC==0?0:1) + (Gp/C));
     } else  {
       start_meas(rm_stats);
-      r_offset += lte_rate_matching_turbo(dlsch->harq_processes[harq_pid]->RTC[r],
+      uint32_t lte_rate_matching_turbo_val = 0;
+      lte_rate_matching_turbo_val = lte_rate_matching_turbo(dlsch->harq_processes[harq_pid]->RTC[r],
                                           G,  //G
                                           dlsch->harq_processes[harq_pid]->w[r],
                                           dlsch->harq_processes[harq_pid]->e+r_offset,
@@ -522,6 +532,11 @@ int dlsch_encoding_2threads(PHY_VARS_eNB *eNB,
                                           r,
                                           nb_rb);
       //            m);                       // r
+	  if (lte_rate_matching_turbo_val == -1) {
+        LOG_E(PHY, "dlsch_encoding_2threads:lte_rate_matching_turbo failed.\n");
+        return(-1);
+	  }
+	  r_offset += lte_rate_matching_turbo_val;
       stop_meas(rm_stats);
     }
   }
@@ -786,7 +801,8 @@ int dlsch_encoding(PHY_VARS_eNB *eNB,
 #ifdef DEBUG_DLSCH_CODING
     printf("rvidx in encoding = %d\n", dlsch->harq_processes[harq_pid]->rvidx);
 #endif
-    r_offset += lte_rate_matching_turbo(dlsch->harq_processes[harq_pid]->RTC[r],
+    uint32_t lte_rate_matching_turbo_val = 0;
+    lte_rate_matching_turbo_val = lte_rate_matching_turbo(dlsch->harq_processes[harq_pid]->RTC[r],
                                         G,  //G
                                         dlsch->harq_processes[harq_pid]->w[r],
                                         dlsch->harq_processes[harq_pid]->e+r_offset,
@@ -800,6 +816,11 @@ int dlsch_encoding(PHY_VARS_eNB *eNB,
                                         r,
                                         nb_rb);
     //                                        m);                       // r
+	if (lte_rate_matching_turbo_val == -1) {
+      LOG_E(PHY, "dlsch_encoding:lte_rate_matching_turbo failed.\n");
+      return(-1);
+	}
+	r_offset += lte_rate_matching_turbo_val;
     stop_meas(rm_stats);
 #ifdef DEBUG_DLSCH_CODING
 

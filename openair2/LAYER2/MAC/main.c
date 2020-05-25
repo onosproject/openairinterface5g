@@ -82,7 +82,10 @@ void init_slice_info(slice_info_t *sli)
   sli->dl[0].sorting = 0x012345;
   sli->dl[0].sched_name = "schedule_ue_spec";
   sli->dl[0].sched_cb = dlsym(NULL, sli->dl[0].sched_name);
-  AssertFatal(sli->dl[0].sched_cb, "DLSCH scheduler callback is NULL\n");
+  if(!(sli->dl[0].sched_cb)) {
+    LOG_E(MAC, "DLSCH scheduler callback is NULL\n");
+    return;
+  }
 
   sli->n_ul = 1;
   memset(sli->ul, 0, sizeof(slice_sched_conf_ul_t) * MAX_NUM_SLICES);
@@ -91,7 +94,10 @@ void init_slice_info(slice_info_t *sli)
   sli->ul[0].sorting = 0x0123;
   sli->ul[0].sched_name = "schedule_ulsch_rnti";
   sli->ul[0].sched_cb = dlsym(NULL, sli->ul[0].sched_name);
-  AssertFatal(sli->ul[0].sched_cb, "ULSCH scheduler callback is NULL\n");
+  if(!(sli->ul[0].sched_cb)) {
+    LOG_E(MAC, "ULSCH scheduler callback is NULL\n");
+    return;
+  }
 }
 
 void mac_top_init_eNB(void)
@@ -108,16 +114,20 @@ void mac_top_init_eNB(void)
   }
 
   mac = malloc16(RC.nb_macrlc_inst * sizeof(eNB_MAC_INST *));
-  AssertFatal(mac != NULL,
-              "can't ALLOCATE %zu Bytes for %d eNB_MAC_INST with size %zu \n",
-              RC.nb_macrlc_inst * sizeof(eNB_MAC_INST *),
-              RC.nb_macrlc_inst, sizeof(eNB_MAC_INST));
+  if(mac == NULL) {
+    LOG_E(MAC, "can't ALLOCATE %zu Bytes for %d eNB_MAC_INST with size %zu \n",
+	      RC.nb_macrlc_inst * sizeof(eNB_MAC_INST *),RC.nb_macrlc_inst, sizeof(eNB_MAC_INST));
+    return;
+  }
+
   for (i = 0; i < RC.nb_macrlc_inst; i++) {
     mac[i] = malloc16(sizeof(eNB_MAC_INST));
-    AssertFatal(mac[i] != NULL,
-                "can't ALLOCATE %zu Bytes for %d eNB_MAC_INST with size %zu \n",
-                RC.nb_macrlc_inst * sizeof(eNB_MAC_INST *),
-                RC.nb_macrlc_inst, sizeof(eNB_MAC_INST));
+    if(mac[i] == NULL) {
+      LOG_E(MAC, "can't ALLOCATE %zu Bytes for %d eNB_MAC_INST with size %zu \n",
+	        RC.nb_macrlc_inst * sizeof(eNB_MAC_INST *),RC.nb_macrlc_inst, sizeof(eNB_MAC_INST));
+      return;
+    }
+
     LOG_D(MAC,
           "[MAIN] ALLOCATE %zu Bytes for %d eNB_MAC_INST @ %p\n",
           sizeof(eNB_MAC_INST), RC.nb_macrlc_inst, mac);
@@ -146,8 +156,10 @@ void mac_top_init_eNB(void)
 
   RC.mac = mac;
 
-  AssertFatal(rlc_module_init() == 0,
-      "Could not initialize RLC layer\n");
+  if(rlc_module_init() != 0) {
+    LOG_E(MAC, "Could not initialize RLC layer\n");
+    return;
+  }
 
   // These should be out of here later
   pdcp_layer_init();

@@ -4,6 +4,7 @@
 #include <malloc.h>
 #include <stdlib.h>
 #include <math.h>
+#include <common/utils/LOG/log.h>
 
 int16_t *d0_sss;
 int16_t *d5_sss;
@@ -22,8 +23,15 @@ int16_t *d5_sss;
 #define mod2(a)  (a)%2
 #define mod8(a)  (a)%8
 void init_sss(void) {
-  MyAssert(0==posix_memalign((void **)&d0_sss, 16,504*31*2*sizeof(*d0_sss)));
-  MyAssert(0==posix_memalign((void **)&d5_sss, 16,504*31*2*sizeof(*d5_sss)));
+  if (0 != posix_memalign((void **)&d0_sss, 16,504*31*2*sizeof(*d0_sss))) {
+    LOG_E(PHY, "0 != posix_memalign((void **)&d0_sss, 16,504*31*2*sizeof(*d0_sss))\n");
+    return;
+  }
+  if (0 != posix_memalign((void **)&d5_sss, 16,504*31*2*sizeof(*d5_sss))) {
+    LOG_E(PHY, "0 != posix_memalign((void **)&d5_sss, 16,504*31*2*sizeof(*d5_sss))\n");
+    return;
+  }
+
   int s[31];
   gen(s, mod2(x[i+2]+x[i]));
   int z[31];

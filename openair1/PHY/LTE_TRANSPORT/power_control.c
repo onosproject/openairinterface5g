@@ -36,7 +36,10 @@ double pa_values[8]={-6.0,-4.77,-3.0,-1.77,0.0,1.0,2.0,3.0}; //reported by highe
 
 double get_pa_dB(uint8_t pa)
 {
-  AssertFatal(pa<8,"pa %d is not in (0...7)\n",pa);
+  if (pa >= 8) {
+    LOG_E(PHY, "pa %d is not in (0...7)\n",pa);
+	exit_fun("pa is not in (0...7)");
+  }
 
   return(pa_values[pa]);
 
@@ -76,8 +79,15 @@ double computeRhoB_eNB(uint8_t pa,
   double rho_a_dB, rho_b_dB;
   double sqrt_rho_b_lin;
 
-  AssertFatal(pa<8,"pa %d is not in (0...7)\n",pa);
-  AssertFatal(pb<4,"pb %d is not in (0...3)\n",pb);
+  if (pa >= 8) {
+    LOG_E(PHY, "pa %d is not in (0...7)\n",pa);
+    exit_fun("pa is not in (0...7)");
+  }
+  if (pb >= 4) {
+    LOG_E(PHY, "pb %d is not in (0...3)\n",pb);
+    exit_fun("pb is not in (0...3)");
+  }
+
   rho_a_dB= computeRhoA_eNB(pa,dlsch_eNB,dl_power_off, n_antenna_port);
 
   if(n_antenna_port>1)

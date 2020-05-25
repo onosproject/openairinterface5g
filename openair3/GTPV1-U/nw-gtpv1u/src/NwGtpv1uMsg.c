@@ -141,10 +141,10 @@ nwGtpv1uGpduMsgNew( NW_IN NwGtpv1uStackHandleT hGtpuStackHandle,
   if(pMsg) {
     msgExtraLen        = (((seqNumFlag) || (NW_FALSE) || (NW_FALSE) ) ?
                           (NW_GTPV1U_EPC_SPECIFIC_HEADER_SIZE - NW_GTPV1U_EPC_MIN_HEADER_SIZE)  : 0);
-    AssertFatal((msgExtraLen + NW_GTPV1U_EPC_MIN_HEADER_SIZE) <= tpduOffset,
-                "Mismatch GTPU len, msgExtraLen %u tpduOffset %u",
-                msgExtraLen,
-                (uint32_t) tpduOffset);
+    if ((msgExtraLen + NW_GTPV1U_EPC_MIN_HEADER_SIZE) > tpduOffset) {
+		GTPU_ERROR("Mismatch GTPU len, msgExtraLen %u tpduOffset %u",msgExtraLen,(uint32_t) tpduOffset);
+		return NW_GTPV1U_FAILURE;
+	}
     pMsg->msgBuf       = tpdu;
     pMsg->msgBufLen    = tpduLength + msgExtraLen + NW_GTPV1U_EPC_MIN_HEADER_SIZE;
     pMsg->msgBufOffset = tpduOffset - (msgExtraLen + NW_GTPV1U_EPC_MIN_HEADER_SIZE);

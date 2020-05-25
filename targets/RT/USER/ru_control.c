@@ -114,8 +114,10 @@ int send_tick(RU_t *ru){
   rru_config_msg.len  = sizeof(RRU_CONFIG_msg_t)-MAX_RRU_CONFIG_SIZE;
 
   LOG_I(PHY,"Sending RAU tick to RRU %d\n",ru->idx);
-  AssertFatal((ru->ifdevice.trx_ctlsend_func(&ru->ifdevice,&rru_config_msg,rru_config_msg.len)!=-1),
-	      "RU %d cannot access remote radio\n",ru->idx);
+  if ((ru->ifdevice.trx_ctlsend_func(&ru->ifdevice,&rru_config_msg,rru_config_msg.len)==-1)) {
+    LOG_E(PHY, "RU %d cannot access remote radio\n",ru->idx);
+    return -1;
+  }
 
   return 0;
 }
@@ -140,8 +142,10 @@ int send_config(RU_t *ru, RRU_CONFIG_msg_t rru_config_msg){
 	((RRU_config_t *)&rru_config_msg.msg[0])->prach_ConfigIndex[0]);
 
 
-  AssertFatal((ru->ifdevice.trx_ctlsend_func(&ru->ifdevice,&rru_config_msg,rru_config_msg.len)!=-1),
-	      "RU %d failed send configuration to remote radio\n",ru->idx);
+  if ((ru->ifdevice.trx_ctlsend_func(&ru->ifdevice,&rru_config_msg,rru_config_msg.len)==-1)) {
+    LOG_E(PHY, "RU %d failed send configuration to remote radio\n",ru->idx);
+    return -1;
+  }
 
   return 0;
 
@@ -169,7 +173,8 @@ int send_capab(RU_t *ru){
     cap->FH_fmt                                   = MBP_IF5;
     break;
   default:
-    AssertFatal(1==0,"RU_function is unknown %d\n",RC.ru[0]->function);
+    LOG_E(PHY,"RU_function is unknown %d\n",RC.ru[0]->function);
+    return -1;
     break;
   }
   cap->num_bands                                  = ru->num_bands;
@@ -182,8 +187,10 @@ int send_capab(RU_t *ru){
     cap->max_pdschReferenceSignalPower[i]         = ru->max_pdschReferenceSignalPower;
     cap->max_rxgain[i]                            = ru->max_rxgain;
   }
-  AssertFatal((ru->ifdevice.trx_ctlsend_func(&ru->ifdevice,&rru_config_msg,rru_config_msg.len)!=-1),
-	      "RU %d failed send capabilities to RAU\n",ru->idx);
+  if ((ru->ifdevice.trx_ctlsend_func(&ru->ifdevice,&rru_config_msg,rru_config_msg.len)==-1)) {
+    LOG_E(PHY, "RU %d failed send capabilities to RAU\n",ru->idx);
+    return -1;
+  }
 
   return 0;
 
@@ -203,8 +210,10 @@ int attach_rru(RU_t *ru) {
     rru_config_msg.type = RAU_tick; 
     rru_config_msg.len  = sizeof(RRU_CONFIG_msg_t)-MAX_RRU_CONFIG_SIZE;
     LOG_I(PHY,"Sending RAU tick to RRU %d\n",ru->idx);
-    AssertFatal((ru->ifdevice.trx_ctlsend_func(&ru->ifdevice,&rru_config_msg,rru_config_msg.len)!=-1),
-		"RU %d cannot access remote radio\n",ru->idx);
+    if ((ru->ifdevice.trx_ctlsend_func(&ru->ifdevice,&rru_config_msg,rru_config_msg.len)==-1)) {
+      LOG_E(PHY, "RU %d cannot access remote radio\n",ru->idx);
+      return -1;
+    }
 
     msg_len  = sizeof(RRU_CONFIG_msg_t)-MAX_RRU_CONFIG_SIZE+sizeof(RRU_capabilities_t);
 
@@ -215,7 +224,10 @@ int attach_rru(RU_t *ru) {
       LOG_I(PHY,"Waiting for RRU %d\n",ru->idx);     
     }
     else if (rru_config_msg.type == RRU_capabilities) {
-      AssertFatal(rru_config_msg.len==msg_len,"Received capabilities with incorrect length (%d!=%d)\n",(int)rru_config_msg.len,(int)msg_len);
+      if (rru_config_msg.len!=msg_len) {
+        LOG_E(PHY,"Received capabilities with incorrect length (%d!=%d)\n",(int)rru_config_msg.len,(int)msg_len);
+        return -1;
+      }
       LOG_I(PHY,"Received capabilities from RRU %d (len %d/%d, num_bands %d,max_pdschReferenceSignalPower %d, max_rxgain %d, nb_tx %d, nb_rx %d)\n",ru->idx,
 	    (int)rru_config_msg.len,(int)msg_len,
 	    ((RRU_capabilities_t*)&rru_config_msg.msg[0])->num_bands,
@@ -248,8 +260,10 @@ int attach_rru(RU_t *ru) {
 	((RRU_config_t *)&rru_config_msg.msg[0])->prach_ConfigIndex[0]);
 
 
-  AssertFatal((ru->ifdevice.trx_ctlsend_func(&ru->ifdevice,&rru_config_msg,rru_config_msg.len)!=-1),
-	      "RU %d failed send configuration to remote radio\n",ru->idx);
+  if ((ru->ifdevice.trx_ctlsend_func(&ru->ifdevice,&rru_config_msg,rru_config_msg.len)==-1)) {
+    LOG_E(PHY, "RU %d failed send configuration to remote radio\n",ru->idx);
+    return -1;
+  }
 
   return 0;
 }
@@ -301,7 +315,8 @@ int connect_rau(RU_t *ru) {
     cap->FH_fmt                                   = MBP_IF5;
     break;
   default:
-    AssertFatal(1==0,"RU_function is unknown %d\n",RC.ru[0]->function);
+    LOG_E(PHY,"RU_function is unknown %d\n",RC.ru[0]->function);
+    return -1;
     break;
   }
   cap->num_bands                                  = ru->num_bands;
@@ -314,8 +329,10 @@ int connect_rau(RU_t *ru) {
     cap->max_pdschReferenceSignalPower[i]         = ru->max_pdschReferenceSignalPower;
     cap->max_rxgain[i]                            = ru->max_rxgain;
   }
-  AssertFatal((ru->ifdevice.trx_ctlsend_func(&ru->ifdevice,&rru_config_msg,rru_config_msg.len)!=-1),
-	      "RU %d failed send capabilities to RAU\n",ru->idx);
+  if ((ru->ifdevice.trx_ctlsend_func(&ru->ifdevice,&rru_config_msg,rru_config_msg.len)==-1)) {
+    LOG_E(PHY, "RU %d failed send capabilities to RAU\n",ru->idx);
+    return -1;
+  }
 
   // wait for configuration
   rru_config_msg.len  = sizeof(RRU_CONFIG_msg_t)-MAX_RRU_CONFIG_SIZE+sizeof(RRU_config_t);
@@ -371,8 +388,8 @@ int check_capabilities(RU_t *ru,RRU_capabilities_t *cap) {
 
   switch (ru->if_south) {
   case LOCAL_RF:
-    AssertFatal(1==0, "This RU should not have a local RF, exiting\n");
-    return(0);
+    LOG_E(PHY, "This RU should not have a local RF, exiting\n");
+    return(-1);
     break;
   case REMOTE_IF5:
     if (fmt == OAI_IF5_only || fmt == OAI_IF5_and_IF4p5) return(0);
@@ -404,8 +421,10 @@ void configure_ru(int idx,
 
   if (capabilities->FH_fmt < MAX_FH_FMTs) LOG_I(PHY, "RU FH options %s\n",rru_format_options[capabilities->FH_fmt]);
 
-  AssertFatal((ret=check_capabilities(ru,capabilities)) == 0,
-	      "Cannot configure RRU %d, check_capabilities returned %d\n", idx,ret);
+  if ((ret=check_capabilities(ru,capabilities)) != 0) {
+    LOG_I(PHY, "Cannot configure RRU %d, check_capabilities returned %d\n", idx,ret);
+    return;
+  }
   // take antenna capabilities of RRU
   ru->nb_tx                      = capabilities->nb_tx[0];
   ru->nb_rx                      = capabilities->nb_rx[0];
@@ -441,7 +460,10 @@ void configure_ru(int idx,
 #endif
   }
 
-  init_frame_parms(&ru->frame_parms,1);
+  if (init_frame_parms(&ru->frame_parms,1) == -1) {
+    LOG_E(PHY, "init_frame_parms failed\n");
+    return;
+  }
   phy_init_RU(ru);
 }
 
@@ -484,7 +506,10 @@ void configure_rru(int idx,
 #endif
   }
   
-  init_frame_parms(&ru->frame_parms,1);
+  if (init_frame_parms(&ru->frame_parms,1) == -1) {
+    LOG_E(PHY, "init_frame_parms failed\n");
+    return;
+  }
 
   fill_rf_config(ru,ru->rf_config_file);
 
@@ -506,8 +531,10 @@ void* ru_thread_control( void* param ) {
   // Start IF device if any
   if (ru->start_if) {
     LOG_I(PHY,"Starting IF interface for RU %d\n",ru->idx);
-    AssertFatal(
-		ru->start_if(ru,NULL) 	== 0, "Could not start the IF device\n");
+    if (ru->start_if(ru,NULL)	!= 0) {
+      LOG_E(PHY, "Could not start the IF device\n");
+      return NULL;
+    }
 
     if (ru->if_south != LOCAL_RF) wait_eNBs();
   }
@@ -521,7 +548,10 @@ void* ru_thread_control( void* param ) {
       msg_len  = sizeof(RRU_CONFIG_msg_t); // TODO : check what should be the msg len
 
       if (ru->state == RU_IDLE && ru->if_south != LOCAL_RF)
-	send_tick(ru);
+	if (send_tick(ru) < 0) {
+    LOG_E(PHY, "send_tick failed\n");
+    return NULL;
+  }
 
 	
       if ((len = ru->ifdevice.trx_ctlrecv_func(&ru->ifdevice,
@@ -540,6 +570,10 @@ void* ru_thread_control( void* param ) {
 		LOG_I(PHY,"Tick received from RAU\n");
 				
 		if (send_capab(ru) == 0) ru->state = RU_CONFIG;
+    else if (send_capab(ru) < 0) {
+      LOG_E(PHY,"send_capab failed\n");
+      return NULL;
+    }
 	      }				
 	      break;
 
@@ -549,7 +583,10 @@ void* ru_thread_control( void* param ) {
 	      else{
 		msg_len  = sizeof(RRU_CONFIG_msg_t)-MAX_RRU_CONFIG_SIZE+sizeof(RRU_capabilities_t);
 
-		AssertFatal(rru_config_msg.len==msg_len,"Received capabilities with incorrect length (%d!=%d)\n",(int)rru_config_msg.len,(int)msg_len);
+		if (rru_config_msg.len!=msg_len) {
+      LOG_E(PHY,"Received capabilities with incorrect length (%d!=%d)\n",(int)rru_config_msg.len,(int)msg_len);
+      return NULL;
+    }
 		LOG_I(PHY,"Received capabilities from RRU %d (len %d/%d, num_bands %d,max_pdschReferenceSignalPower %d, max_rxgain %d, nb_tx %d, nb_rx %d)\n",ru->idx,
 		      (int)rru_config_msg.len,(int)msg_len,
 		      ((RRU_capabilities_t*)&rru_config_msg.msg[0])->num_bands,
@@ -562,6 +599,10 @@ void* ru_thread_control( void* param ) {
 
 		// send config
 		if (send_config(ru,rru_config_msg) == 0) ru->state = RU_CONFIG;
+    else if (send_config(ru,rru_config_msg) < 0) {
+      LOG_E(PHY, "send_config failed \n");
+      return NULL;
+    }
 	      }
 
 	      break;
@@ -585,7 +626,10 @@ void* ru_thread_control( void* param ) {
 
  					  
 		fill_rf_config(ru,ru->rf_config_file);
-		init_frame_parms(&ru->frame_parms,1);
+		if (init_frame_parms(&ru->frame_parms,1) == -1) {
+      LOG_E(PHY, "init_frame_parms failed\n");
+      return NULL;
+    }
 		ru->frame_parms.nb_antennas_rx = ru->nb_rx;
 		phy_init_RU(ru);
 					 
@@ -593,8 +637,12 @@ void* ru_thread_control( void* param ) {
 
 		if (ru->rfdevice.is_init != 1) openair0_device_load(&ru->rfdevice,&ru->openair0_cfg);
 		
-		if (ru->rfdevice.trx_config_func) AssertFatal((ru->rfdevice.trx_config_func(&ru->rfdevice,&ru->openair0_cfg)==0), 
-							      "Failed to configure RF device for RU %d\n",ru->idx);
+		if (ru->rfdevice.trx_config_func) {
+      if ((ru->rfdevice.trx_config_func(&ru->rfdevice,&ru->openair0_cfg)!=0)) {
+        LOG_E(PHY, "Failed to configure RF device for RU %d\n",ru->idx);
+        return NULL;
+      }
+    }
 
 		if (setup_RU_buffers(ru)!=0) {
 		  printf("Exiting, cannot initialize RU Buffers\n");
@@ -607,8 +655,10 @@ void* ru_thread_control( void* param ) {
 		rru_config_msg.len  = sizeof(RRU_CONFIG_msg_t);
 		LOG_I(PHY,"Sending CONFIG_OK to RAU %d\n", ru->idx);
 
-		AssertFatal((ru->ifdevice.trx_ctlsend_func(&ru->ifdevice,&rru_config_msg,rru_config_msg.len)!=-1),
-			    "RU %d failed send CONFIG_OK to RAU\n",ru->idx);
+		if ((ru->ifdevice.trx_ctlsend_func(&ru->ifdevice,&rru_config_msg,rru_config_msg.len)==-1)) {
+      LOG_E(PHY, "RU %d failed send CONFIG_OK to RAU\n",ru->idx);
+      return NULL;
+    }
                 reset_proc(ru);
 		ru->state = RU_READY;
 	      } else LOG_E(PHY,"Received RRU_config msg...Ignoring\n");
@@ -643,7 +693,10 @@ void* ru_thread_control( void* param ) {
 
  
 		LOG_I(PHY,"Sending Start to RRU %d\n", ru->idx);
-		AssertFatal((ru->ifdevice.trx_ctlsend_func(&ru->ifdevice,&rru_config_msg,rru_config_msg.len)!=-1),"Failed to send msg to RU %d\n",ru->idx);
+		if ((ru->ifdevice.trx_ctlsend_func(&ru->ifdevice,&rru_config_msg,rru_config_msg.len)==-1)) {
+      LOG_E(PHY,"Failed to send msg to RU %d\n",ru->idx);
+      return NULL;
+    }
 
 					
 		pthread_mutex_lock(&proc->mutex_ru);
@@ -729,7 +782,10 @@ void* ru_thread_control( void* param ) {
 	      if (ru->if_south != LOCAL_RF){
 		if (ru->state == RU_IDLE){
 		  // Keep sending TICK
-		  send_tick(ru);
+		  if (send_tick(ru) < 0) {
+        LOG_E(PHY, "send_tick failed\n");
+        return NULL;
+      }
 		}
 	      }
 

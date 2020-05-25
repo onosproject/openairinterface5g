@@ -194,7 +194,8 @@ void generate_phich(LTE_DL_FRAME_PARMS *frame_parms,
         break;
 
       default:
-        AssertFatal(1==0,"phich_coding.c: Illegal PHICH Number\n");
+        LOG_E(PHY, "phich_coding.c: Illegal PHICH Number\n");
+        return;
       } // nseq_PHICH
     }
 
@@ -492,7 +493,8 @@ void generate_phich(LTE_DL_FRAME_PARMS *frame_parms,
       break;
 
     default:
-      AssertFatal(1==0,"phich_coding.c: Illegal PHICH Number\n");
+      LOG_E(PHY, "phich_coding.c: Illegal PHICH Number\n");
+      return;
     }
 
 
@@ -716,6 +718,7 @@ void generate_phich_top(PHY_VARS_eNB *eNB,
   uint8_t NSF_PHICH = 4;
   uint8_t pusch_subframe;
   uint8_t i;
+  uint8_t harq_pid = 0; 
   int subframe = proc->subframe_tx;
   phich_config_t *phich;
 
@@ -748,16 +751,20 @@ void generate_phich_top(PHY_VARS_eNB *eNB,
     
     nseq_PHICH = ((phich->first_rb/Ngroup_PHICH) +
 		  phich->n_DMRS)%(2*NSF_PHICH);
+    harq_pid = subframe2harq_pid(frame_parms,phich_frame2_pusch_frame(frame_parms,proc->frame_tx,subframe),pusch_subframe);
+	if (harq_pid == 255) {
+      LOG_E(PHY,"FATAL ERROR: illegal harq_pid, returning\n");
+	  return;
+	}
     LOG_D(PHY,"[eNB %d][PUSCH %d] Frame %d subframe %d Generating PHICH, AMP %d  ngroup_PHICH %d/%d, nseq_PHICH %d : HI %d, first_rb %d)\n",
-	  eNB->Mod_id,subframe2harq_pid(frame_parms,
-          phich_frame2_pusch_frame(frame_parms,proc->frame_tx,subframe),pusch_subframe),proc->frame_tx,
+	  eNB->Mod_id,harq_pid,proc->frame_tx,
 	  subframe,amp,ngroup_PHICH,Ngroup_PHICH,nseq_PHICH,
 	  phich->hi,
 	  phich->first_rb);
     
     T(T_ENB_PHY_PHICH, T_INT(eNB->Mod_id), T_INT(proc->frame_tx), T_INT(subframe),
       T_INT(-1 /* TODO: rnti */), 
-      T_INT(subframe2harq_pid(frame_parms,phich_frame2_pusch_frame(frame_parms,proc->frame_tx,subframe),pusch_subframe)),
+      T_INT(harq_pid),
       T_INT(Ngroup_PHICH), T_INT(NSF_PHICH),
       T_INT(ngroup_PHICH), T_INT(nseq_PHICH),
       T_INT(phich->hi),

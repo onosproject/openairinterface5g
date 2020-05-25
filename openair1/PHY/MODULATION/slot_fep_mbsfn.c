@@ -224,7 +224,10 @@ int slot_fep_mbsfn_khz_1dot25(PHY_VARS_UE *ue,
 
 void (*dft)(int16_t *,int16_t *, int);
 
-  AssertFatal(frame_parms->frame_type == FDD, "Frame is TDD!\n");
+  if (frame_parms->frame_type != FDD) {
+    LOG_E(PHY, "Frame is TDD!\n");
+    return (-1);
+  }
 
   switch (frame_parms->ofdm_symbol_size) {
 
@@ -234,7 +237,8 @@ void (*dft)(int16_t *,int16_t *, int);
     nb_prefix_samples=384;
     break;
   case 256:
-    AssertFatal(1==0,"FeMBMS dft3072 not implemented\n");
+    LOG_E(PHY, "FeMBMS dft3072 not implemented\n");
+    return (-1);
     dft = dft3072;
     ofdm_symbol_size=3072;
     nb_prefix_samples=768;
@@ -265,8 +269,8 @@ void (*dft)(int16_t *,int16_t *, int);
     break;
 
   default:
-    AssertFatal(1==0,"Illegal ofdm symbol size %d\n",frame_parms->ofdm_symbol_size);
-    break;
+    LOG_E(PHY, "Illegal ofdm symbol size %d\n",frame_parms->ofdm_symbol_size);
+    return (-1);
   }
 
   subframe_offset = frame_parms->samples_per_tti * subframe;
@@ -298,10 +302,13 @@ void (*dft)(int16_t *,int16_t *, int);
 #ifdef DEBUG_FEP
       LOG_D(PHY,"Channel estimation eNB %d, aatx %d, subframe %d\n",eNB_id,aa,subframe);
 #endif
-        lte_dl_mbsfn_khz_1dot25_channel_estimation(ue,
-        eNB_id,
-        0,
-        subframe);
+      if (lte_dl_mbsfn_khz_1dot25_channel_estimation(ue,
+      eNB_id,
+      0,
+      subframe) < 0) {
+		LOG_E(PHY, "lte_dl_mbsfn_khz_1dot25_channel_estimation failed.\n");
+        return (-1);
+      }
     }
  }
 
