@@ -554,10 +554,7 @@ int wakeup_txfh(PHY_VARS_eNB *eNB, L1_rxtx_proc_t *proc,int frame_tx,int subfram
      LOG_W(PHY,"Dropping TX slot (%d.%d) because FH is blocked more than 1 subframe times (1ms)\n",frame_tx,subframe_tx);
 
      if ((ret=pthread_mutex_lock(&eNB->proc.mutex_RU_tx))!=0) {
-       if ((ret=pthread_mutex_lock(&eNB->proc.mutex_RU_tx))!=0) {
-         LOG_E(PHY,"mutex_lock returns %d\n",ret);
-         return -1;
-       }
+       LOG_E(PHY,"mutex_lock returns %d\n",ret);
        return -1;
      }
      eNB->proc.RU_mask_tx = 0;
