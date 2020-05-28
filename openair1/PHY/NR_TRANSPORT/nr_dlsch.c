@@ -241,7 +241,7 @@ for(int th=0;th<thread_num_pressure;th++){
 }
 //Get value for multi pdsch
 //scrambling
-for (int th=0; th<2; th++){
+for (int th=0; th<thread_num_scrambling; th++){
   for (int i=0; i<encoded_length>>3; i++) {
     for (int j=0; j<8; j++)
       gNB->multi_pdsch.f[th][(i<<3)+j] = harq->f[(i<<3)+j];
@@ -253,7 +253,7 @@ for (int th=0; th<2; th++){
   gNB->multi_pdsch.n_RNTI[th] = n_RNTI;
 }
 //modulation
-for (int th=0; th<2; th++){
+for (int th=0; th<thread_num_modulation; th++){
   for (int q=0; q<rel15->nb_codewords; q++) // ==Look out!NR_MAX_NB_CODEWORDS is 2!So we can't let q>2 until spec change
     memset((void*)gNB->multi_pdsch.scrambled_output_mod[th][q], 0, (encoded_length>>5)*sizeof(uint32_t));
   for (int q=0; q<NR_MAX_NB_CODEWORDS; q++){
@@ -284,7 +284,7 @@ for (int q=0; q<thread_num_pdsch; q++){
 for (int q=0; q<thread_num_pressure; q++){
   pthread_cond_signal(&(gNB->pressure_test[q].cond_scr_mod));
 }
-for (int th=0; th<2; th++){
+for (int th=0; th<thread_num_scrambling; th++){
   pthread_cond_signal(&(gNB->multi_pdsch.cond_scr[th]));
 }
 //Wait scrambling threads(or scr_mod threads)
@@ -294,7 +294,7 @@ for (int q=0; q<thread_num_pdsch; q++){
 for (int q=0; q<thread_num_pressure; q++){
   while(gNB->pressure_test[q].complete_scr_mod!=1);
 }
-for (int th=0; th<2; th++){
+for (int th=0; th<thread_num_scrambling; th++){
   while(gNB->multi_pdsch.complete_scr[th]!=1);
 }
 clock_gettime(CLOCK_MONOTONIC, &end_ts);  //timing
@@ -303,11 +303,11 @@ printf("==================[Mod]==================\n");
 printf(" [Movement]  [No.]  [Round]  [Cost time] \n");
 clock_gettime(CLOCK_MONOTONIC, &start_ts);  //timing
 //Awake modulation threads
-for (int th=0; th<2; th++){
+for (int th=0; th<thread_num_modulation; th++){
   pthread_cond_signal(&(gNB->multi_pdsch.cond_mod[th]));
 }
 //Wait modulation threads
-for (int th=0; th<2; th++){
+for (int th=0; th<thread_num_modulation; th++){
   while(gNB->multi_pdsch.complete_mod[th]!=1);
 }
 clock_gettime(CLOCK_MONOTONIC, &end_ts);  //timing

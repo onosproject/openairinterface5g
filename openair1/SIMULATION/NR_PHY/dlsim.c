@@ -141,18 +141,18 @@ int32_t nr_segmentation(unsigned char *input_buffer, unsigned char **output_buff
 int ldpc_encoder_optim_8seg_multi(unsigned char **test_input,unsigned char **channel_input,int Zc,int Kb,short block_length, short BG, int n_segments,unsigned int macro_num, time_stats_t *tinput,time_stats_t *tprep,time_stats_t *tparity,time_stats_t *toutput);
 
 /*! \file openair1/SIMULATION/NR_PHY/dlsim.c
- * \brief multi-parallelism threads for pdsch
+ * \brief parameterized multi-parallelism threads for pdsch
  * \author Terngyin Hsu, Sendren Xu, Nungyi Kuo, Kuankai Hsiung, Kaimi Yang (OpInConnect_NCTU)
  * \email tyhsu@cs.nctu.edu.tw
- * \date 22-05-2020
- * \version 3.0
+ * \date 28-05-2020
+ * \version 3.1
  * \note
  * \warning
  */
 
 //[START]multi_genetate_pdsch_proc
 struct timespec start_encoder_ts[thread_num_pdsch], end_encoder_ts[thread_num_pdsch], start_perenc_ts[thread_num_pdsch], end_perenc_ts[thread_num_pdsch], start_pressure_ts[thread_num_pressure], end_pressure_ts[thread_num_pressure], start_perpre_ts[thread_num_pressure], end_perpre_ts[thread_num_pressure];
-struct timespec start_multi_enc_ts[2], end_multi_enc_ts[2], start_multi_scr_ts[2], end_multi_scr_ts[2], start_multi_mod_ts[2], end_multi_mod_ts[2];
+struct timespec start_multi_enc_ts[thread_num_ldpc_encoder], end_multi_enc_ts[thread_num_ldpc_encoder], start_multi_scr_ts[thread_num_scrambling], end_multi_scr_ts[thread_num_scrambling], start_multi_mod_ts[thread_num_modulation], end_multi_mod_ts[thread_num_modulation];
 int vcd = 0;	//default : 0
 /*original genetate_pdsch for multi threads*/
 static void *multi_genetate_pdsch_proc(void *ptr){
@@ -960,7 +960,7 @@ int main(int argc, char **argv)
     printf("[CREATE] LDPC encoder thread %d(p) \n",gNB->pressure_test[th].id);
   }
   /*multi pdsch*/
-  for(int th=0;th<2;th++){
+  for(int th=0;th<thread_num_ldpc_encoder;th++){
     pthread_attr_init(&(gNB->multi_pdsch.attr_enc[th]));
     pthread_mutex_init(&(gNB->multi_pdsch.mutex_enc[th]), NULL);
     pthread_cond_init(&(gNB->multi_pdsch.cond_enc[th]), NULL);
@@ -969,7 +969,7 @@ int main(int argc, char **argv)
     pthread_create(&(gNB->multi_pdsch.pthread_enc[th]), &(gNB->multi_pdsch.attr_enc[th]), multi_ldpc_encoder_proc, gNB->multi_pdsch.id_enc[th]);    
     printf("[CREATE] multi_ldpc_encoder_proc %d \n",gNB->multi_pdsch.id_enc[th]);
   }
-  for(int th=0;th<2;th++){
+  for(int th=0;th<thread_num_scrambling;th++){
     pthread_attr_init(&(gNB->multi_pdsch.attr_scr[th]));
     pthread_mutex_init(&(gNB->multi_pdsch.mutex_scr[th]), NULL);
     pthread_cond_init(&(gNB->multi_pdsch.cond_scr[th]), NULL);
@@ -979,7 +979,7 @@ int main(int argc, char **argv)
     printf("[CREATE] multi_scrambling_proc %d \n",gNB->multi_pdsch.id_scr[th]);
   }
   //for(int th=0;th<0;th++){
-  for(int th=0;th<2;th++){
+  for(int th=0;th<thread_num_modulation;th++){
     pthread_attr_init(&(gNB->multi_pdsch.attr_mod[th]));
     pthread_mutex_init(&(gNB->multi_pdsch.mutex_mod[th]), NULL);
     pthread_cond_init(&(gNB->multi_pdsch.cond_mod[th]), NULL);
@@ -1359,13 +1359,13 @@ int main(int argc, char **argv)
     // }
   }
 //free multi_pdsch memorys
-  for(int th=0;th<2;th++){
+  for(int th=0;th<thread_num_ldpc_encoder;th++){
   	for(int j=0;j<MAX_NUM_NR_DLSCH_SEGMENTS/bw_scaling;j++){
 	  	free(gNB->multi_pdsch.c[th][j]);
 	  	free(gNB->multi_pdsch.d[th][j]);
 	}
   }
-  for(int th=0;th<2;th++){
+  for(int th=0;th<thread_num_modulation;th++){
   	for (int q=0; q<NR_MAX_NB_CODEWORDS; q++){
 	    free(gNB->multi_pdsch.mod_symbs[th][q]);
 	}

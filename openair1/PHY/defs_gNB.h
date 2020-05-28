@@ -46,8 +46,11 @@
 #include "common/utils/LOG/vcd_signal_dumper.h" //VCD
 
 #define MAX_NUM_RU_PER_gNB MAX_NUM_RU_PER_eNB
-#define thread_num_pdsch 1  // ==Change thread_num_pdsch here. Don't greater than 2 ==
+#define thread_num_pdsch 0  // ==Change thread_num_pdsch here. Don't greater than 2 ==
 #define thread_num_pressure 0  // ==Change thread_num_pressure here ==
+#define thread_num_ldpc_encoder 2
+#define thread_num_scrambling 3
+#define thread_num_modulation 4
 #define check_time 0  // ==Change if you wnat to check time of threads ==
 
 typedef struct{
@@ -89,43 +92,43 @@ typedef struct{
 
 typedef struct{
   /*params of thread*/
-  int id_enc[2];
-  int id_scr[2];
-  int id_mod[2];
-  pthread_t pthread_enc[2];
-  pthread_t pthread_scr[2];
-  pthread_t pthread_mod[2];
-  pthread_cond_t cond_enc[2];
-  pthread_cond_t cond_scr[2];
-  pthread_cond_t cond_mod[2];
-  pthread_mutex_t mutex_enc[2];
-  pthread_mutex_t mutex_scr[2];
-  pthread_mutex_t mutex_mod[2];
-  pthread_attr_t attr_enc[2];
-  pthread_attr_t attr_scr[2];
-  pthread_attr_t attr_mod[2];
-  volatile uint8_t complete_enc[2];
-  volatile uint8_t complete_scr[2];
-  volatile uint8_t complete_mod[2];
+  int id_enc[thread_num_ldpc_encoder];
+  int id_scr[thread_num_scrambling];
+  int id_mod[thread_num_modulation];
+  pthread_t pthread_enc[thread_num_ldpc_encoder];
+  pthread_t pthread_scr[thread_num_scrambling];
+  pthread_t pthread_mod[thread_num_modulation];
+  pthread_cond_t cond_enc[thread_num_ldpc_encoder];
+  pthread_cond_t cond_scr[thread_num_scrambling];
+  pthread_cond_t cond_mod[thread_num_modulation];
+  pthread_mutex_t mutex_enc[thread_num_ldpc_encoder];
+  pthread_mutex_t mutex_scr[thread_num_scrambling];
+  pthread_mutex_t mutex_mod[thread_num_modulation];
+  pthread_attr_t attr_enc[thread_num_ldpc_encoder];
+  pthread_attr_t attr_scr[thread_num_scrambling];
+  pthread_attr_t attr_mod[thread_num_modulation];
+  volatile uint8_t complete_enc[thread_num_ldpc_encoder];
+  volatile uint8_t complete_scr[thread_num_scrambling];
+  volatile uint8_t complete_mod[thread_num_modulation];
   /*encoder*/
-  uint8_t *c[2][MAX_NUM_NR_DLSCH_SEGMENTS];
-  uint8_t *d[2][MAX_NUM_NR_DLSCH_SEGMENTS];
-  int Zc[2];
-  int Kb[2];
-  short block_length[2];
-  short BG[2];
-  int n_segments[2];
+  uint8_t *c[thread_num_ldpc_encoder][MAX_NUM_NR_DLSCH_SEGMENTS];
+  uint8_t *d[thread_num_ldpc_encoder][MAX_NUM_NR_DLSCH_SEGMENTS];
+  int Zc[thread_num_ldpc_encoder];
+  int Kb[thread_num_ldpc_encoder];
+  short block_length[thread_num_ldpc_encoder];
+  short BG[thread_num_ldpc_encoder];
+  int n_segments[thread_num_ldpc_encoder];
   /*scrambling*/
-  uint8_t f[2][MAX_NUM_NR_CHANNEL_BITS] __attribute__((aligned(32)));
-  uint32_t scrambled_output_scr[2][NR_MAX_NB_CODEWORDS][NR_MAX_PDSCH_ENCODED_LENGTH>>5];  // ==use 2 or 2 ==???
-  uint32_t encoded_length_scr[2];  // ==use 2 or 2 ==???
-  uint16_t Nid[2];
-  uint16_t n_RNTI[2];
+  uint8_t f[thread_num_scrambling][MAX_NUM_NR_CHANNEL_BITS] __attribute__((aligned(32)));
+  uint32_t scrambled_output_scr[thread_num_scrambling][NR_MAX_NB_CODEWORDS][NR_MAX_PDSCH_ENCODED_LENGTH>>5];  // ==use thread_num_scrambling or thread_num_modulation ==???
+  uint32_t encoded_length_scr[thread_num_scrambling];  // ==use thread_num_scrambling or thread_num_modulation ==???
+  uint16_t Nid[thread_num_scrambling];
+  uint16_t n_RNTI[thread_num_scrambling];
   /*modulation*/
-  uint32_t scrambled_output_mod[2][NR_MAX_NB_CODEWORDS][NR_MAX_PDSCH_ENCODED_LENGTH>>5];  // ==use 2 or 2 ==???
-  int32_t *mod_symbs[2][NR_MAX_NB_CODEWORDS];
-  uint32_t encoded_length_mod[2];  // ==use 2 or 2 ==???
-  uint8_t Qm[2];
+  uint32_t scrambled_output_mod[thread_num_modulation][NR_MAX_NB_CODEWORDS][NR_MAX_PDSCH_ENCODED_LENGTH>>5];  // ==use thread_num_scrambling or thread_num_modulation ==???
+  int32_t *mod_symbs[thread_num_modulation][NR_MAX_NB_CODEWORDS];
+  uint32_t encoded_length_mod[thread_num_modulation];  // ==use thread_num_scrambling or thread_num_modulation ==???
+  uint8_t Qm[thread_num_modulation];
 }multi_pdsch_gNB;
 
 typedef struct {
