@@ -831,7 +831,7 @@ uint32_t calc_pucch_1x_interference(PHY_VARS_eNB *eNB,
             re_offset = 0;
 
           rxcomp[aa][j]   = (int16_t)((rxptr[re_offset<<1]*(int32_t)zptr[j])>>15)   - ((rxptr[1+(re_offset<<1)]*(int32_t)zptr[1+j])>>15);
-          rxcomp[aa][1+j] = (int16_t)((rxptr[re_offset<<1]*(int32_t)zptr[1+j])>>15) + ((rxptr[1+(re_offset<<1)]*(int32_t)zptr[j])>>15);+          n0_IQ[0]+=rxcomp[aa][j];
+          rxcomp[aa][1+j] = (int16_t)((rxptr[re_offset<<1]*(int32_t)zptr[1+j])>>15) + ((rxptr[1+(re_offset<<1)]*(int32_t)zptr[j])>>15);
           n0_IQ[0]+=rxcomp[aa][j];
           n0_IQ[1]+=rxcomp[aa][1+j];
           calc_cnt++;
@@ -841,8 +841,8 @@ uint32_t calc_pucch_1x_interference(PHY_VARS_eNB *eNB,
     }  // antenna
   }
   interference_power /= calc_cnt;
-  eNB->measurements.n0_pucch_dB = dB_fixed_x10((int)(interference_power/calc_cnt))/10;
-  LOG_D(PHY,"estimate pucch noise %d %d %d\n",interference_power,calc_cnt,eNB->measurements.n0_pucch_dB);
+  eNB->measurements.n0_pucch_dB = dB_fixed_x10((int)interference_power)/10;
+  LOG_D(PHY,"estimate pucch noise %lf %d %d\n",interference_power,calc_cnt,eNB->measurements.n0_pucch_dB);
   return 0;
 }
 
