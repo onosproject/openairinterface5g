@@ -1864,7 +1864,7 @@ void fill_uci_harq_indication (PHY_VARS_eNB *eNB, LTE_eNB_UCI *uci, int frame, i
       }
       pdu->harq_indication_fdd_rel13.harq_tb_n[0] = harq_ack[0];
       // release DLSCH if needed
-      release_harq(eNB,UE_id,0,frame,subframe,0xffff, harq_ack[0] == 1);
+      release_harq(eNB,UE_id,0,frame,subframe,0xffff, harq_ack[0] == 1 || harq_ack[0] == 4);
     } else if (uci->pucch_fmt == pucch_format1b) {
       pdu->harq_indication_fdd_rel13.tl.tag = NFAPI_HARQ_INDICATION_FDD_REL13_TAG;
       pdu->harq_indication_fdd_rel13.mode = 0;
@@ -1881,8 +1881,8 @@ void fill_uci_harq_indication (PHY_VARS_eNB *eNB, LTE_eNB_UCI *uci, int frame, i
       pdu->harq_indication_fdd_rel13.harq_tb_n[0] = harq_ack[0];
       pdu->harq_indication_fdd_rel13.harq_tb_n[1] = harq_ack[1];
       // release DLSCH if needed
-      release_harq(eNB,UE_id,0,frame,subframe,0xffff, harq_ack[0] == 1);
-      release_harq(eNB,UE_id,1,frame,subframe,0xffff, harq_ack[1] == 1);
+      release_harq(eNB,UE_id,0,frame,subframe,0xffff, harq_ack[0] == 1 || harq_ack[0] == 4);
+      release_harq(eNB,UE_id,1,frame,subframe,0xffff, harq_ack[1] == 1 || harq_ack[0] == 4);
     } else {
       LOG_E(PHY,"only format 1a/b for now, received %d\n",uci->pucch_fmt);
       return;
@@ -1909,7 +1909,7 @@ void fill_uci_harq_indication (PHY_VARS_eNB *eNB, LTE_eNB_UCI *uci, int frame, i
           }
           pdu->harq_indication_tdd_rel13.harq_data[0].bundling.value_0 = harq_ack[0];
           // release all bundled DLSCH if needed
-          release_harq(eNB,UE_id,0,frame,subframe,0xffff, harq_ack[0] == 1);
+          release_harq(eNB,UE_id,0,frame,subframe,0xffff, harq_ack[0] == 1 || harq_ack[0] == 4);
         } else if (uci->pucch_fmt == pucch_format1b) {
           pdu->harq_indication_tdd_rel13.number_of_ack_nack = 2;
           if (harq_ack[0] != 1 && harq_ack[0] != 2 && harq_ack[0] != 4) {
@@ -1924,8 +1924,8 @@ void fill_uci_harq_indication (PHY_VARS_eNB *eNB, LTE_eNB_UCI *uci, int frame, i
           pdu->harq_indication_tdd_rel13.harq_data[0].bundling.value_0 = harq_ack[0];
           pdu->harq_indication_tdd_rel13.harq_data[1].bundling.value_0 = harq_ack[1];
           // release all DLSCH if needed
-          release_harq(eNB,UE_id,0,frame,subframe,0xffff, harq_ack[0] == 1);
-          release_harq(eNB,UE_id,1,frame,subframe,0xffff, harq_ack[1] == 1);
+          release_harq(eNB,UE_id,0,frame,subframe,0xffff, harq_ack[0] == 1 || harq_ack[0] == 4);
+          release_harq(eNB,UE_id,1,frame,subframe,0xffff, harq_ack[1] == 1 || harq_ack[0] == 4);
         }
 
         break;
@@ -1945,7 +1945,7 @@ void fill_uci_harq_indication (PHY_VARS_eNB *eNB, LTE_eNB_UCI *uci, int frame, i
           }
           pdu->harq_indication_tdd_rel13.harq_data[0].multiplex.value_0 = harq_ack[0];
           // release all DLSCH if needed
-          release_harq(eNB,UE_id,0,frame,subframe,0xffff, harq_ack[0] == 1);
+          release_harq(eNB,UE_id,0,frame,subframe,0xffff, harq_ack[0] == 1  || harq_ack[0] == 4);
         } else if (uci->num_pucch_resources == 1 && uci->pucch_fmt == pucch_format1b) {
           pdu->harq_indication_tdd_rel13.tl.tag = NFAPI_HARQ_INDICATION_TDD_REL13_TAG;
           pdu->harq_indication_tdd_rel13.number_of_ack_nack = 2;
@@ -1960,8 +1960,8 @@ void fill_uci_harq_indication (PHY_VARS_eNB *eNB, LTE_eNB_UCI *uci, int frame, i
           pdu->harq_indication_tdd_rel13.harq_data[0].multiplex.value_0 = harq_ack[0];
           pdu->harq_indication_tdd_rel13.harq_data[1].multiplex.value_0 = harq_ack[1];
           // release all DLSCH if needed
-          release_harq(eNB,UE_id,0,frame,subframe,0xffff, harq_ack[0] == 1);
-          release_harq(eNB,UE_id,1,frame,subframe,0xffff, harq_ack[1] == 1);
+          release_harq(eNB,UE_id,0,frame,subframe,0xffff, harq_ack[0] == 1 || harq_ack[0] == 4);
+          release_harq(eNB,UE_id,1,frame,subframe,0xffff, harq_ack[1] == 1 || harq_ack[0] == 4);
         } else { // num_pucch_resources (M) > 1
           pdu->harq_indication_tdd_rel13.tl.tag = NFAPI_HARQ_INDICATION_TDD_REL13_TAG;
           pdu->harq_indication_tdd_rel13.number_of_ack_nack = uci->num_pucch_resources;
