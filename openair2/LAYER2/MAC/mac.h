@@ -1111,6 +1111,8 @@ typedef struct {
     uint8_t select_tb[NFAPI_CC_MAX][MAX_HARQ_PID];
     uint8_t swap_flag[NFAPI_CC_MAX][MAX_HARQ_PID];
     uint8_t rsn[NFAPI_CC_MAX][MAX_HARQ_PID][MAX_NUM_TB];
+    uint32_t rlc_out_of_resources_cnt;
+    pthread_mutex_t rlc_out_of_resources_lock;
 } UE_sched_ctrl_t;
 
 /*! \brief eNB template for the Random access information */

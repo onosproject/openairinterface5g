@@ -2662,6 +2662,9 @@ add_new_ue(module_id_t mod_idP,
     UE_list->UE_sched_ctrl[UE_id].volte_configured = FALSE;
     UE_list->UE_sched_ctrl[UE_id].ul_periodic_timer_exp_flag = FALSE;
 
+    UE_list->UE_sched_ctrl[UE_id].rlc_out_of_resources_cnt = 0;
+    pthread_mutex_init(&UE_list->UE_sched_ctrl[UE_id].rlc_out_of_resources_lock, NULL);
+
     for (j = 0; j < 8; j++) {
         UE_list->UE_template[cc_idP][UE_id].oldNDI[j][TB1] = (j == 0) ? 1 : 0;    // 1 because first transmission is with format1A (Msg4) for harq_pid 0
         UE_list->UE_template[cc_idP][UE_id].oldNDI[j][TB2] = 1;
