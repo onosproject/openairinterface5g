@@ -112,6 +112,9 @@ int header_length_last;
 int header_length_total;
 int dl_dtch_num;
   int dl_dtch_list[MAX_NUM_DTCH];
+  eNB_MAC_INST                *eNB                    = RC.mac[module_idP];
+  UE_list_t                   *UE_list                = &(eNB->UE_list);
+  UE_sched_ctrl_t             *UE_scheduling_control  = NULL;
 
   for (UE_id = 0; UE_id <NUMBER_OF_UE_MAX; UE_id++) {
     if (pre_scd_activeUE[UE_id] != TRUE)
@@ -123,12 +126,16 @@ int dl_dtch_num;
 
     rnti = UE_RNTI(module_idP, UE_id);
     ue_contextP = rrc_eNB_get_ue_context(RC.rrc[module_idP], rnti);
+    UE_scheduling_control = &(UE_list->UE_sched_ctrl[UE_id]);
+
     if (ue_contextP == NULL)
       continue;
 
     for (lc_id = DCCH; lc_id < MAX_NUM_LCID; lc_id++) {
-      if(lc_id == 4){   /* LCID 4 */
-        continue;
+      if (UE_scheduling_control->volte_configured == TRUE) {
+        if(lc_id == UE_scheduling_control->volte_lcid){
+          continue;
+        }
       }
       if (lc_id >= DTCH) {
         drb_id = lc_id - 2;
