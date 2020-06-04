@@ -27,3 +27,35 @@
  *  */
 #include <stdint.h>
 
+#define DUMMY_BUFFER ((unsigned char*)"123456789")
+#define DUMMY_BUFFER_SIZE 10
+
+
+
+pdcp_t pdcp_el;
+list_t pdu_tx_list;
+
+int main(int argc, char *argv[])
+{
+	int resQ;
+	do{
+		printf("Type in the test you want (1 or 2)");
+		scanf("%d",resQ);
+	}while(resQ!=1 ||resQ != 2);
+	pool_buffer_init();
+	list_init(&pdu_tx_list, NULL);
+	logInit();
+
+	pdcp_el->next_pdcp_tx_sn = 0;
+	pdcp_el->next_pdcp_rx_sn = 0;
+	pdcp_el->tx_hfn = 0;
+	pdcp_el->rx_hfn = 0;
+	/* SN of the last PDCP SDU delivered to upper layers */
+	pdcp_el->last_submitted_pdcp_rx_sn = 4095;
+	pdcp_el->seq_num_size = 12;
+	pdcp_el->cipheringAlgorithm = (resQ==1?"EEA1_128_ALG_ID":"EEA2_128_ALG_ID");
+	pdcp_data_req(0, 0, 10, DUMMY_BUFFER, pdcp_el, &pdu_tx_list)
+
+
+
+}
