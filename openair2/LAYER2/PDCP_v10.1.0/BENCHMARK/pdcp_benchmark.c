@@ -27,6 +27,15 @@
  *  */
 #include <stdint.h>
 
+#include "MAC_INTERFACE/vars.h"
+#include "LAYER2/MAC/vars.h"
+#include "UTIL/LOG/log_if.h"
+#include "OCG_vars.h"
+#include "test_util.h"
+#include "test_pdcp.h"
+
+
+
 #define DUMMY_BUFFER ((unsigned char*)"123456789")
 #define DUMMY_BUFFER_SIZE 10
 
