@@ -54,7 +54,7 @@ int main(int argc, char *argv[])
 	pdcp_el->last_submitted_pdcp_rx_sn = 4095;
 	pdcp_el->seq_num_size = 12;
 	pdcp_el->cipheringAlgorithm = (resQ==1?"EEA1_128_ALG_ID":"EEA2_128_ALG_ID");
-	pdcp_data_req(0, 0, 10, DUMMY_BUFFER, pdcp_el, &pdu_tx_list)
+	pdcp_data_req(0, 0, 10, DUMMY_BUFFER, pdcp_el, &pdu_tx_list);
 
 
 
