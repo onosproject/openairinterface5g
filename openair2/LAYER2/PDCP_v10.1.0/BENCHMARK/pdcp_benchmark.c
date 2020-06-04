@@ -32,6 +32,7 @@
 
 #include "openair2/UTIL/MEM/mem_block.h"
 #include "openair2/LAYER2/PDCP_v10.1.0/pdcp.h"
+#include "openair2/LAYER2/PDCP_v10.1.0/pdcp_sequence_manager.h"
 
 
 
@@ -61,6 +62,10 @@ int main(int argc, char *argv[])
 	pdcp_el.last_submitted_pdcp_rx_sn = 4095;
 	pdcp_el.seq_num_size = 12;
 	pdcp_el.cipheringAlgorithm = (resQ==1?"EEA1_128_ALG_ID":"EEA2_128_ALG_ID");
+	
+	pdcp_init_seq_numbers(&pdcp_el)
+	
+	
 	pdcp_data_req(0, 0, 10, DUMMY_BUFFER, &pdcp_el, &pdu_tx_list);
 
 
