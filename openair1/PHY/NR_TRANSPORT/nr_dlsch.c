@@ -242,6 +242,10 @@ for(int th=0;th<thread_num_pressure;th++){
 //Get value for multi pdsch
 //scrambling
 for (int th=0; th<thread_num_scrambling; th++){
+  if(th == 0){  // ==copy original memory space for check ==
+    gNB->multi_pdsch.f_first = harq->f;
+    gNB->multi_pdsch.scrambled_output_first = scrambled_output[0]; // ==Need to change ==***
+  }
   for (int i=0; i<encoded_length>>3; i++) {
     for (int j=0; j<8; j++)
       gNB->multi_pdsch.f[th][(i<<3)+j] = harq->f[(i<<3)+j];
@@ -254,6 +258,9 @@ for (int th=0; th<thread_num_scrambling; th++){
 }
 //modulation
 for (int th=0; th<thread_num_modulation; th++){
+  if(th == 0){  // ==copy original memory space for check ==
+    gNB->multi_pdsch.mod_symbs_first = mod_symbs[0]; // ==Need to change ==***
+  }
   for (int q=0; q<rel15->nb_codewords; q++) // ==Look out!NR_MAX_NB_CODEWORDS is 2!So we can't let q>2 until spec change
     memset((void*)gNB->multi_pdsch.scrambled_output_mod[th][q], 0, (encoded_length>>5)*sizeof(uint32_t));
   for (int q=0; q<NR_MAX_NB_CODEWORDS; q++){

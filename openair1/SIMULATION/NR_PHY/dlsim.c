@@ -141,11 +141,11 @@ int32_t nr_segmentation(unsigned char *input_buffer, unsigned char **output_buff
 int ldpc_encoder_optim_8seg_multi(unsigned char **test_input,unsigned char **channel_input,int Zc,int Kb,short block_length, short BG, int n_segments,unsigned int macro_num, time_stats_t *tinput,time_stats_t *tprep,time_stats_t *tparity,time_stats_t *toutput);
 
 /*! \file openair1/SIMULATION/NR_PHY/dlsim.c
- * \brief parameterized multi-parallelism threads for pdsch
+ * \brief Integration of dual thread and multi-parallelism threads
  * \author Terngyin Hsu, Sendren Xu, Nungyi Kuo, Kuankai Hsiung, Kaimi Yang (OpInConnect_NCTU)
  * \email tyhsu@cs.nctu.edu.tw
- * \date 28-05-2020
- * \version 3.1
+ * \date 04-06-2020
+ * \version 3.2
  * \note
  * \warning
  */
@@ -375,15 +375,27 @@ static void *multi_ldpc_encoder_proc(int id){
 	  		printf("   Active      %d(e)    %d\n", id, j);
 	    	//clock_gettime(CLOCK_MONOTONIC, &start_perpre_ts[id]);  //timing
 	  	}
-		ldpc_encoder_optim_8seg_multi(gNB->multi_pdsch.c[id],
-		                              gNB->multi_pdsch.d[id],
-		                              gNB->multi_pdsch.Zc[id],
-		                              gNB->multi_pdsch.Kb[id],
-		                              gNB->multi_pdsch.block_length[id],
-		                              gNB->multi_pdsch.BG[id],
-		                              gNB->multi_pdsch.n_segments[id],
-		                              j,
-		                              NULL, NULL, NULL, NULL);   
+	  	if(id == 0){  // ==deal with original memory space for check ==
+	  		ldpc_encoder_optim_8seg_multi(gNB->multi_pdsch.test_input_first,
+		                                  gNB->multi_pdsch.channel_input_optim_first,
+		                                  gNB->multi_pdsch.Zc[id],
+		                                  gNB->multi_pdsch.Kb[id],
+		                                  gNB->multi_pdsch.block_length[id],
+		                                  gNB->multi_pdsch.BG[id],
+		                                  gNB->multi_pdsch.n_segments[id],
+		                                  j,
+		                                  NULL, NULL, NULL, NULL);
+		}else{
+			ldpc_encoder_optim_8seg_multi(gNB->multi_pdsch.c[id],
+		                                  gNB->multi_pdsch.d[id],
+		                                  gNB->multi_pdsch.Zc[id],
+		                                  gNB->multi_pdsch.Kb[id],
+		                                  gNB->multi_pdsch.block_length[id],
+		                                  gNB->multi_pdsch.BG[id],
+		                                  gNB->multi_pdsch.n_segments[id],
+		                                  j,
+		                                  NULL, NULL, NULL, NULL);
+		}	    
 	    if(check_time){
 	    	// clock_gettime(CLOCK_MONOTONIC, &end_perpre_ts[id]);  //timing
 	    	// printf("    Done       %d(e)    %d      %.2f usec\n", id, j, (end_perpre_ts[id].tv_nsec - start_perpre_ts[id].tv_nsec) *1.0 / 1000);
@@ -419,12 +431,21 @@ static void *multi_scrambling_proc(int id){
 	  	// clock_gettime(CLOCK_MONOTONIC, &start_perpre_ts[id]);  //timing
 	  }
 	  //if(0){
-	  nr_pdsch_codeword_scrambling(gNB->multi_pdsch.f[id],
-		                           gNB->multi_pdsch.encoded_length_scr[id],
-		                           q,
-		                           gNB->multi_pdsch.Nid[id],
-		                           gNB->multi_pdsch.n_RNTI[id],
-		                           gNB->multi_pdsch.scrambled_output_scr[id]);
+	  if(id == 0){  // ==deal with original memory space for check ==
+	  	nr_pdsch_codeword_scrambling(gNB->multi_pdsch.f_first,
+		                               gNB->multi_pdsch.encoded_length_scr[id],
+		                               q,
+		                               gNB->multi_pdsch.Nid[id],
+		                               gNB->multi_pdsch.n_RNTI[id],
+		                               gNB->multi_pdsch.scrambled_output_first);
+	  }else{
+	  	nr_pdsch_codeword_scrambling(gNB->multi_pdsch.f[id],
+		                               gNB->multi_pdsch.encoded_length_scr[id],
+		                               q,
+		                               gNB->multi_pdsch.Nid[id],
+		                               gNB->multi_pdsch.n_RNTI[id],
+		                               gNB->multi_pdsch.scrambled_output_scr[id]);
+	  }	  
 	  if(check_time){
 	  	// clock_gettime(CLOCK_MONOTONIC, &end_perpre_ts[id]);  //timing
 	  	// printf("    Done       %d(p)    %d      %.2f usec\n", id, q, (end_perpre_ts[id].tv_nsec - start_perpre_ts[id].tv_nsec) *1.0 / 1000);
@@ -461,10 +482,17 @@ static void *multi_modulation_proc(int id){
 	  	printf("   Active      %d(m)    %d\n", id, q);
 	  	// clock_gettime(CLOCK_MONOTONIC, &start_perpre_ts[id]);  //timing
 	  }
-	  nr_modulation(gNB->multi_pdsch.scrambled_output_mod[id],
-		            gNB->multi_pdsch.encoded_length_mod[id],
-		            gNB->multi_pdsch.Qm[id],
-		            *gNB->multi_pdsch.mod_symbs[id]);//gNB->pressure_test[id].mod_symbs_test);
+	  if(id == 0){  // ==deal with original memory space for check ==
+	  	nr_modulation(gNB->multi_pdsch.scrambled_output_first,
+		                gNB->multi_pdsch.encoded_length_mod[id],
+		                gNB->multi_pdsch.Qm[id],
+		                gNB->multi_pdsch.mod_symbs_first);
+	  }else{
+	  	nr_modulation(gNB->multi_pdsch.scrambled_output_mod[id],
+		                gNB->multi_pdsch.encoded_length_mod[id],
+		                gNB->multi_pdsch.Qm[id],
+		                *gNB->multi_pdsch.mod_symbs[id]);//gNB->pressure_test[id].mod_symbs_test);
+	  }
 	  if(check_time){
 	  	// clock_gettime(CLOCK_MONOTONIC, &end_perpre_ts[id]);  //timing
 	  	// printf("    Done       %d(p)    %d      %.2f usec\n", id, q, (end_perpre_ts[id].tv_nsec - start_perpre_ts[id].tv_nsec) *1.0 / 1000);

@@ -473,6 +473,10 @@ int nr_dlsch_encoding(unsigned char *a, //harq->pdu => dlsch->harq_processes[har
     }
     /*cpy original data to multi pdsch*/
     for(int th=0;th<thread_num_ldpc_encoder;th++){
+      if(th == 0){  // ==copy original memory space for check ==
+        gNB->multi_pdsch.test_input_first = dlsch->harq_processes[harq_pid]->c;
+        gNB->multi_pdsch.channel_input_optim_first = dlsch->harq_processes[harq_pid]->d;
+      }
       for(int j=0;j<MAX_NUM_NR_DLSCH_SEGMENTS/bw_scaling;j++){  // ==Why can not just be MAX_NUM_NR_DLSCH_SEGMENTS ==???
         gNB->multi_pdsch.c[th][j]=(uint8_t*)malloc16(8448);//(unsigned char *)malloc16(sizeof(unsigned char) * Kr/8);
         gNB->multi_pdsch.d[th][j]=(uint8_t*)malloc16(68*384);//(unsigned char *)malloc16(sizeof(unsigned char) * 68*384);

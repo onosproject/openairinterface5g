@@ -110,6 +110,12 @@ typedef struct{
   volatile uint8_t complete_enc[thread_num_ldpc_encoder];
   volatile uint8_t complete_scr[thread_num_scrambling];
   volatile uint8_t complete_mod[thread_num_modulation];
+  /*memorys of the first thread*/
+  unsigned char **test_input_first;
+  unsigned char **channel_input_optim_first;
+  uint8_t *f_first;
+  uint32_t *scrambled_output_first;
+  int16_t *mod_symbs_first;
   /*encoder*/
   uint8_t *c[thread_num_ldpc_encoder][MAX_NUM_NR_DLSCH_SEGMENTS];
   uint8_t *d[thread_num_ldpc_encoder][MAX_NUM_NR_DLSCH_SEGMENTS];
