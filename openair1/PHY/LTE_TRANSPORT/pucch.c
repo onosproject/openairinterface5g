@@ -823,9 +823,11 @@ uint32_t calc_pucch_1x_interference(PHY_VARS_eNB *eNB,
           rxcomp[aa][1+j] = (int16_t)((rxptr[re_offset<<1]*(int32_t)zptr[1+j])>>15) + ((rxptr[1+(re_offset<<1)]*(int32_t)zptr[j])>>15);
           n0_IQ[0]+=rxcomp[aa][j];
           n0_IQ[1]+=rxcomp[aa][1+j];
-          calc_cnt++;
         } //re
+        calc_cnt++;
       } // symbol
+      n0_IQ[0]/=12;
+      n0_IQ[1]/=12;
       interference_power+= (double)(n0_IQ[0]*n0_IQ[0]+n0_IQ[1]*n0_IQ[1]);
     }  // antenna
   }
@@ -1206,7 +1208,7 @@ uint32_t rx_pucch(PHY_VARS_eNB *eNB,
 
 
           }
-	  stat += ((stat_re*stat_re) + (stat_im*stat_im));
+	  stat += (stat_re*stat_re);
 
        } //re
       } // aa
