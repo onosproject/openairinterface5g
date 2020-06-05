@@ -531,6 +531,36 @@ void fill_default_secondaryCellGroup(NR_ServingCellConfigCommon_t *servingcellco
  ASN_SEQUENCE_ADD(&bwp->bwp_Dedicated->pdcch_Config->choice.setup->controlResourceSetToAddModList->list,
 		  coreset);
 
+ NR_ControlResourceSet_t *coreset2 = calloc(1,sizeof(*coreset));
+ coreset2->controlResourceSetId=2;
+ // frequencyDomainResources '11111111 11111111 00000000 00000000 00000000 00000'B,
+ coreset2->frequencyDomainResources.buf = calloc(1,6);
+ coreset2->frequencyDomainResources.buf[0] = 0xff;
+ coreset2->frequencyDomainResources.buf[1] = 0xff;
+ coreset2->frequencyDomainResources.buf[2] = 0;
+ coreset2->frequencyDomainResources.buf[3] = 0;
+ coreset2->frequencyDomainResources.buf[4] = 0;
+ coreset2->frequencyDomainResources.buf[5] = 0;
+ coreset2->frequencyDomainResources.size = 6;
+ coreset2->frequencyDomainResources.bits_unused = 3;
+ coreset2->duration=2;
+ coreset2->cce_REG_MappingType.present = NR_ControlResourceSet__cce_REG_MappingType_PR_nonInterleaved;
+ coreset2->precoderGranularity = NR_ControlResourceSet__precoderGranularity_sameAsREG_bundle;
+
+ coreset2->tci_StatesPDCCH_ToAddList=calloc(1,sizeof(*coreset2->tci_StatesPDCCH_ToAddList));
+ NR_TCI_StateId_t *tci2[8];
+ for (int i=0;i<8;i++) {
+   tci2[i]=calloc(1,sizeof(*tci[i]));
+   *tci2[i] = i;
+   ASN_SEQUENCE_ADD(&coreset2->tci_StatesPDCCH_ToAddList->list,tci2[i]);
+ }
+ coreset2->tci_StatesPDCCH_ToReleaseList = NULL;
+ coreset2->tci_PresentInDCI = NULL;
+ coreset2->pdcch_DMRS_ScramblingID = NULL;
+
+ ASN_SEQUENCE_ADD(&bwp->bwp_Dedicated->pdcch_Config->choice.setup->controlResourceSetToAddModList->list,
+		  coreset2);
+
  bwp->bwp_Dedicated->pdcch_Config->choice.setup->searchSpacesToAddModList = calloc(1,sizeof(*bwp->bwp_Dedicated->pdcch_Config->choice.setup->searchSpacesToAddModList));
 
  NR_SearchSpace_t *ss2 = calloc(1,sizeof(*ss2));
@@ -561,6 +591,34 @@ void fill_default_secondaryCellGroup(NR_ServingCellConfigCommon_t *servingcellco
 
  ASN_SEQUENCE_ADD(&bwp->bwp_Dedicated->pdcch_Config->choice.setup->searchSpacesToAddModList->list,
 		  ss2);
+
+ NR_SearchSpace_t *ss3 = calloc(1,sizeof(*ss2));
+ ss3->searchSpaceId=3;
+ ss3->controlResourceSetId=calloc(1,sizeof(*ss2->controlResourceSetId));
+ *ss3->controlResourceSetId=2;
+ ss3->monitoringSlotPeriodicityAndOffset=calloc(1,sizeof(*ss2->monitoringSlotPeriodicityAndOffset));
+ ss3->monitoringSlotPeriodicityAndOffset->present = NR_SearchSpace__monitoringSlotPeriodicityAndOffset_PR_sl1;
+ ss3->monitoringSlotPeriodicityAndOffset->choice.sl1=(NULL_t)0;
+ ss3->duration=NULL;
+ ss3->monitoringSymbolsWithinSlot = calloc(1,sizeof(*ss2->monitoringSymbolsWithinSlot));
+ ss3->monitoringSymbolsWithinSlot->buf = calloc(1,2);
+ ss3->monitoringSymbolsWithinSlot->size = 2;
+ ss3->monitoringSymbolsWithinSlot->bits_unused = 2;
+ ss3->monitoringSymbolsWithinSlot->buf[0]=0xc0;
+ ss3->monitoringSymbolsWithinSlot->buf[1]=0x0;
+ ss3->nrofCandidates=calloc(1,sizeof(*ss2->nrofCandidates));
+ ss3->nrofCandidates->aggregationLevel1 = NR_SearchSpace__nrofCandidates__aggregationLevel1_n0;
+ ss3->nrofCandidates->aggregationLevel2 = NR_SearchSpace__nrofCandidates__aggregationLevel2_n0;
+ ss3->nrofCandidates->aggregationLevel4 = NR_SearchSpace__nrofCandidates__aggregationLevel4_n4;
+ ss3->nrofCandidates->aggregationLevel8 = NR_SearchSpace__nrofCandidates__aggregationLevel8_n0;
+ ss3->nrofCandidates->aggregationLevel16 = NR_SearchSpace__nrofCandidates__aggregationLevel16_n0;
+ ss3->searchSpaceType=calloc(1,sizeof(*ss2->searchSpaceType));
+ ss3->searchSpaceType->present = NR_SearchSpace__searchSpaceType_PR_ue_Specific;
+ ss3->searchSpaceType->choice.ue_Specific = calloc(1,sizeof(*ss2->searchSpaceType->choice.ue_Specific));
+ ss3->searchSpaceType->choice.ue_Specific->dci_Formats=NR_SearchSpace__searchSpaceType__ue_Specific__dci_Formats_formats0_1_And_1_1;
+
+ ASN_SEQUENCE_ADD(&bwp->bwp_Dedicated->pdcch_Config->choice.setup->searchSpacesToAddModList->list,
+		  ss3);
 
 
  bwp->bwp_Dedicated->pdcch_Config->choice.setup->searchSpacesToReleaseList = NULL;

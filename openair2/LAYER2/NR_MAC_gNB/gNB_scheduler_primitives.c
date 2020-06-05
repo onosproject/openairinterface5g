@@ -446,7 +446,7 @@ int nr_configure_pdcch(gNB_MAC_INST *nr_mac,
       if(coreset==NULL)
         AssertFatal(1==0,"Couldn't find coreset with id %ld\n",coresetid);
     }
-    
+
     pdcch_pdu->BWPSize  = NRRIV2BW(bwp->bwp_Common->genericParameters.locationAndBandwidth,275);
     pdcch_pdu->BWPStart = NRRIV2PRBOFFSET(bwp->bwp_Common->genericParameters.locationAndBandwidth,275);
     pdcch_pdu->SubcarrierSpacing = bwp->bwp_Common->genericParameters.subcarrierSpacing;

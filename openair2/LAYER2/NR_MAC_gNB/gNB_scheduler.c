@@ -417,6 +417,7 @@ void gNB_dlsch_ulsch_scheduler(module_id_t module_idP,
   if (is_nr_DL_slot(cc->ServingCellConfigCommon,slot_txP)) {
     memset(RC.nrmac[module_idP]->cce_list[bwp_id][0],0,MAX_NUM_CCE*sizeof(int)); // coreset0
     memset(RC.nrmac[module_idP]->cce_list[bwp_id][1],0,MAX_NUM_CCE*sizeof(int)); // coresetid 1
+    memset(RC.nrmac[module_idP]->cce_list[bwp_id][2],0,MAX_NUM_CCE*sizeof(int)); // coresetid 2
     for (CC_id = 0; CC_id < MAX_NUM_CCs; CC_id++) {
       //mbsfn_status[CC_id] = 0;
 

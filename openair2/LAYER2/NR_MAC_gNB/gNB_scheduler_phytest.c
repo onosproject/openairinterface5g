@@ -331,7 +331,7 @@ int configure_fapi_dl_pdu(int Mod_idP,
   pdsch_pdu_rel15->VRBtoPRBMapping = 1; // non-interleaved, check if this is ok for initialBWP
     // choose shortest PDSCH
   int startSymbolAndLength=0;
-  int time_domain_assignment=2;
+  int time_domain_assignment=1;
   int StartSymbolIndex,NrOfSymbols;
 
   AssertFatal(time_domain_assignment<bwp->bwp_Common->pdsch_ConfigCommon->choice.setup->pdsch_TimeDomainAllocationList->list.count,"time_domain_assignment %d>=%d\n",time_domain_assignment,bwp->bwp_Common->pdsch_ConfigCommon->choice.setup->pdsch_TimeDomainAllocationList->list.count);
@@ -407,7 +407,7 @@ int configure_fapi_dl_pdu(int Mod_idP,
     ss=bwp->bwp_Dedicated->pdcch_Config->choice.setup->searchSpacesToAddModList->list.array[i];
     AssertFatal(ss->controlResourceSetId != NULL,"ss->controlResourceSetId is null\n");
     AssertFatal(ss->searchSpaceType != NULL,"ss->searchSpaceType is null\n");
-    if (ss->searchSpaceType->present == target_ss) {
+    if (ss->searchSpaceId==3) {
       found=1;
       break;
     }
