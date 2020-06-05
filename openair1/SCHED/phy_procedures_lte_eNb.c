@@ -602,7 +602,7 @@ void fill_sr_indication(PHY_VARS_eNB *eNB,uint16_t rnti,int frame,int subframe,u
   //  pdu->rx_ue_information.handle                       = handle;
   pdu->rx_ue_information.tl.tag                       = NFAPI_RX_UE_INFORMATION_TAG;
   pdu->rx_ue_information.rnti                         = rnti;
-  int SNRtimes10 = dB_fixed_x10(stat) - 10 * eNB->measurements.n0_pucch_dB;
+  int SNRtimes10 = dB_fixed_x10(stat) - 10 * eNB->measurements.n0_pucch_dB - 10 * eNB->pucch1_DTX_threshold;
   pdu->ul_cqi_information.tl.tag = NFAPI_UL_CQI_INFORMATION_TAG;
 
   if      (SNRtimes10 < -640) pdu->ul_cqi_information.ul_cqi=0;
@@ -1839,7 +1839,7 @@ void fill_uci_harq_indication (PHY_VARS_eNB *eNB, LTE_eNB_UCI *uci, int frame, i
   pdu->rx_ue_information.rnti                         = uci->rnti;
   // estimate UL_CQI for MAC (from antenna port 0 only)
   pdu->ul_cqi_information.tl.tag = NFAPI_UL_CQI_INFORMATION_TAG;
-  int SNRtimes10 = dB_fixed_x10(uci->stat) - 10 * eNB->measurements.n0_pucch_dB;
+  int SNRtimes10 = dB_fixed_x10(uci->stat) - 10 * eNB->measurements.n0_pucch_dB - 10 * eNB->pucch1ab_DTX_threshold;
 
   if (SNRtimes10 < -100)
     LOG_I (PHY, "uci->stat %d \n", uci->stat);

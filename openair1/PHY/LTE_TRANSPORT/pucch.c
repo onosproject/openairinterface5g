@@ -1303,8 +1303,12 @@ uint32_t rx_pucch(PHY_VARS_eNB *eNB,
 #endif
           }
 	  // this is total energy received, summed over data and reference
-	  stat += ((((stat_re*stat_re)) + ((stat_im*stat_im)) +
-		    ((stat_ref_re*stat_ref_re)) + ((stat_ref_im*stat_ref_im)))/nsymb);
+          if (fmt==pucch_format1a){
+        	  stat += ((((stat_re*stat_re)) + ((stat_ref_re*stat_ref_re)) + ((stat_ref_im*stat_ref_im)))/nsymb);
+          }else{
+        	  stat += ((((stat_re*stat_re)) + ((stat_im*stat_im)) +
+        		    ((stat_ref_re*stat_ref_re)) + ((stat_ref_im*stat_ref_im)))/nsymb);
+          }
 
 	  // now second slot
 	  stat_re=0;
@@ -1335,8 +1339,12 @@ uint32_t rx_pucch(PHY_VARS_eNB *eNB,
           printf("aa%d re %d : phase %d : stat %d\n",aa,re,phase,stat);
 #endif
 
-	  stat += ((((stat_re*stat_re)) + ((stat_im*stat_im)) +
-		    ((stat_ref_re*stat_ref_re)) + ((stat_ref_im*stat_ref_im)))/nsymb);
+          if (fmt==pucch_format1a){
+        	  stat += ((((stat_re*stat_re)) + ((stat_ref_re*stat_ref_re)) + ((stat_ref_im*stat_ref_im)))/nsymb);
+          }else{
+        	  stat += ((((stat_re*stat_re)) + ((stat_im*stat_im)) +
+        		    ((stat_ref_re*stat_ref_re)) + ((stat_ref_im*stat_ref_im)))/nsymb);
+          }
 
 
         } //re
