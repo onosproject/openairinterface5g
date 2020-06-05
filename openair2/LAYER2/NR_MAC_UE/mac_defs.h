@@ -48,6 +48,7 @@
 #include "NR_PhysicalCellGroupConfig.h"
 #include "NR_CellGroupConfig.h"
 #include "NR_ServingCellConfig.h"
+#include "NR_MeasConfig.h"
 #include "fapi_nr_ue_interface.h"
 #include "NR_IF_Module.h"
 #include "../NR_MAC_gNB/nr_mac_common.h"
@@ -143,6 +144,7 @@ typedef struct {
   NR_ServingCellConfigCommon_t    *scc;
   NR_CellGroupConfig_t            *scg;
   int                             servCellIndex;
+  NR_CSI_ReportConfig_t           *csirc;
   ////  MAC config
   NR_DRX_Config_t    	          *drx_Config;
   NR_SchedulingRequestConfig_t    *schedulingRequestConfig;
