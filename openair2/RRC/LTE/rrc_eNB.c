@@ -3384,7 +3384,7 @@ void rrc_eNB_generate_defaultRRCConnectionReconfiguration(const protocol_ctxt_t 
       LOG_D(RRC,"Setting transmission mode to %ld+1\n",rrc_inst->configuration.radioresourceconfig[0].ue_TransmissionMode);
 
       if (rrc_inst->configuration.radioresourceconfig[0].ue_TransmissionMode==LTE_AntennaInfoDedicated__transmissionMode_tm3) {
-
+        if (ue_context_pP->ue_context.UE_Capability != NULL) {
           if (ue_context_pP->ue_context.UE_Capability->ue_Category >= 2) {
             (*physicalConfigDedicated)->antennaInfo->choice.explicitValue.codebookSubsetRestriction=
               CALLOC(1,sizeof(struct LTE_AntennaInfoDedicated__codebookSubsetRestriction));
@@ -3398,6 +3398,10 @@ void rrc_eNB_generate_defaultRRCConnectionReconfiguration(const protocol_ctxt_t 
           } else {
             (*physicalConfigDedicated)->antennaInfo->choice.explicitValue.transmissionMode = LTE_AntennaInfoDedicated__transmissionMode_tm2;
           }
+        }
+        else {
+          LOG_E(RRC, "UE_Capability is NULL\n");
+        }
       } else if (rrc_inst->configuration.radioresourceconfig[0].ue_TransmissionMode==LTE_AntennaInfoDedicated__transmissionMode_tm4) {
 	(*physicalConfigDedicated)->antennaInfo->choice.explicitValue.codebookSubsetRestriction=     
 	  CALLOC(1,sizeof(struct LTE_AntennaInfoDedicated__codebookSubsetRestriction));
