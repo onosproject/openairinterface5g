@@ -33,7 +33,7 @@
 #include "openair2/UTIL/MEM/mem_block.h"
 #include "openair2/LAYER2/PDCP_v10.1.0/pdcp.h"
 #include "openair2/LAYER2/PDCP_v10.1.0/pdcp_sequence_manager.h"
-#include "openair2/LAYER2/PDCP_v10.1.0/pdcp_proto_extern.h"
+#include "openair2/UTIL/OSA/osa_defs.h"
 
 
 #define DUMMY_BUFFER ((unsigned char*)"123456789")
@@ -61,13 +61,20 @@ int main(int argc, char *argv[])
 	pdcp_el.rx_hfn = 0;
 	pdcp_el.last_submitted_pdcp_rx_sn = 4095;
 	pdcp_el.seq_num_size = 12;
-	pdcp_el.cipheringAlgorithm = (resQ==1?"EEA1_128_ALG_ID":"EEA2_128_ALG_ID");
+	pdcp_el.cipheringAlgorithm = (resQ==1?EEA1_128_ALG_ID:EEA2_128_ALG_ID);
 	
 	pdcp_init_seq_numbers(&pdcp_el);
 	
 	
-	pdcp_data_req(0, 0, 10, DUMMY_BUFFER, &pdcp_el, &pdu_tx_list);
-
+	pdcp_data_req(NULL, //ctxt_pP
+		      0,    //srb_flagP
+	              3,    // rb_id
+	              0,    // muiP
+	              0,    //confirmP
+                      DUMMY_BUFFER_SIZE, //sdu_buffer_size
+                      DUMMY_BUFFER,  // sdu_buffer 
+                      PDCP_TRANSMISSION_MODE_DATA, // pdcp_transmission_mod
+                      0,0);
 
 
 }
