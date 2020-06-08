@@ -63,7 +63,7 @@ int main(int argc, char *argv[])
 	pdcp_el.seq_num_size = 12;
 	pdcp_el.cipheringAlgorithm = (resQ==1?"EEA1_128_ALG_ID":"EEA2_128_ALG_ID");
 	
-	pdcp_init_seq_numbers(&pdcp_el)
+	pdcp_init_seq_numbers(&pdcp_el);
 	
 	
 	pdcp_data_req(0, 0, 10, DUMMY_BUFFER, &pdcp_el, &pdu_tx_list);
