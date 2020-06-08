@@ -33,7 +33,7 @@
 #include "openair2/UTIL/MEM/mem_block.h"
 #include "openair2/LAYER2/PDCP_v10.1.0/pdcp.h"
 #include "openair2/LAYER2/PDCP_v10.1.0/pdcp_sequence_manager.h"
-
+#include "openair2/LAYER2/PDCP_v10.1.0/pdcp_proto_extern.h"
 
 
 #define DUMMY_BUFFER ((unsigned char*)"123456789")
