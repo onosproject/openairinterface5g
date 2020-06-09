@@ -48,6 +48,11 @@ list_t pdu_tx_list;
 //Not sure at all about that, but I didn't knew which library I should include and I try with that. 
 volatile int oai_exit=0;
 
+//Same thing, but found it like that elsewhere
+void exit_function(const char *file, const char *function, const int line, const char *s) {
+}
+
+
 
 int main(int argc, char *argv[])
 {
