@@ -45,6 +45,9 @@
 
 pdcp_t pdcp_el;
 list_t pdu_tx_list;
+//Not sure at all about that, but I didn't knew which library I should include and I try with that. 
+volatile int oai_exit=0;
+
 
 int main(int argc, char *argv[])
 {
