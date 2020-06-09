@@ -35,7 +35,7 @@
 #include "openair2/LAYER2/PDCP_v10.1.0/pdcp_sequence_manager.h"
 #include "openair2/UTIL/OSA/osa_defs.h"
 
-#include "common/config/config_userapi.c"
+#include "common/config/config_userapi.h"
 
 
 #define DUMMY_BUFFER ((unsigned char*)"123456789")
