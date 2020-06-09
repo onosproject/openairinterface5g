@@ -2599,7 +2599,7 @@ target_link_libraries(du_test
 
 add_executable(pdcp_benchmark
   ${PDCP_DIR}/BENCHMARK/pdcp_benchmark.c
-  ${OPENAIR_DIR}/common/utils/threadPool/thread-pool.c
+  
   ${T_SOURCE}
 )
 
