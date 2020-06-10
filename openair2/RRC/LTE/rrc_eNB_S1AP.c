@@ -598,6 +598,7 @@ rrc_eNB_send_S1AP_INITIAL_CONTEXT_SETUP_RESP(
   S1AP_INITIAL_CONTEXT_SETUP_RESP (msg_p).eNB_ue_s1ap_id = ue_context_pP->ue_context.eNB_ue_s1ap_id;
 
   for (e_rab = 0; e_rab < ue_context_pP->ue_context.nb_of_e_rabs; e_rab++) {
+    ue_context_pP->ue_context.e_rab[e_rab].xid = -1;
     if (ue_context_pP->ue_context.e_rab[e_rab].status == E_RAB_STATUS_DONE) {
       e_rabs_done++;
       S1AP_INITIAL_CONTEXT_SETUP_RESP (msg_p).e_rabs[e_rab].e_rab_id = ue_context_pP->ue_context.e_rab[e_rab].param.e_rab_id;

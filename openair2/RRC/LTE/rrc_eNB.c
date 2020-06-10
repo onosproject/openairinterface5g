@@ -8607,6 +8607,7 @@ rrc_eNB_decode_dcch(
               ue_context_p->ue_context.reestablishment_cause = LTE_ReestablishmentCause_spare1;
 
               for (uint8_t e_rab = 0; e_rab < ue_context_p->ue_context.nb_of_e_rabs; e_rab++) {
+                ue_context_p->ue_context.e_rab[e_rab].xid = -1;
                 if (ue_context_p->ue_context.e_rab[e_rab].status == E_RAB_STATUS_DONE) {
                   ue_context_p->ue_context.e_rab[e_rab].status = E_RAB_STATUS_ESTABLISHED;
                 } else {
@@ -8616,6 +8617,7 @@ rrc_eNB_decode_dcch(
             }
           } else if(dedicated_DRB == 2) {
             for (uint8_t e_rab = 0; e_rab < ue_context_p->ue_context.nb_of_e_rabs; e_rab++) {
+              ue_context_p->ue_context.e_rab[e_rab].xid = -1;
               if (ue_context_p->ue_context.e_rab[e_rab].status == E_RAB_STATUS_DONE) {
                 ue_context_p->ue_context.e_rab[e_rab].status = E_RAB_STATUS_ESTABLISHED;
               } else {
@@ -8624,6 +8626,7 @@ rrc_eNB_decode_dcch(
             }
           } else if(dedicated_DRB == 3) { //x2 path switch
             for (uint8_t e_rab = 0; e_rab < ue_context_p->ue_context.nb_of_e_rabs; e_rab++) {
+              ue_context_p->ue_context.e_rab[e_rab].xid = -1;
               if (ue_context_p->ue_context.e_rab[e_rab].status == E_RAB_STATUS_DONE) {
                 ue_context_p->ue_context.e_rab[e_rab].status = E_RAB_STATUS_ESTABLISHED;
               } else {
