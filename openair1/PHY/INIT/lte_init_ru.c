@@ -103,11 +103,24 @@ int phy_init_RU(RU_t *ru) {
      	// allocate FFT output buffers after extraction (RX)
     	calibration->rxdataF_ext = (int32_t**)malloc16(2*sizeof(int32_t*));
 	calibration->drs_ch_estimates = (int32_t**)malloc16(2*sizeof(int32_t*));
-    	for (i=0; i<ru->nb_rx; i++) {    
+	calibration->rxdataF_calib = (int32_t****)malloc16(2*sizeof(int32_t***));
+	//calibration->rxdataF_calib = (int32_t***)malloc16(2*sizeof(int32_t**)); // 2 frames to collect calibration data
+	//calibration->rxdataF_calib = (int32_t**)malloc16(2*sizeof(int32_t*)); // 2 RRUs
+	for (i=0; i<ru->nb_rx; i++) {
+		calibration->rxdataF_calib[i] = (int32_t***)malloc16(2*sizeof(int32_t**)); // 2 frames to collect calibration data
+		for (j=0; j<2; j++) {
+			calibration->rxdataF_calib[i][j] = (int32_t**)malloc16(2*sizeof(int32_t*)); // 2 RRUs
+			for (int k=0; k<2; k++) {
+				calibration->rxdataF_calib[i][j][k] = (int32_t*)malloc16_clear(sizeof(int32_t)*fp->N_RB_UL*12*fp->symbols_per_tti ); 
+			}
+		}
+	}
+   	for (i=0; i<ru->nb_rx; i++) {    
       		// allocate 2 subframes of I/Q signal data (frequency)
       		calibration->rxdataF_ext[i] = (int32_t*)malloc16_clear(sizeof(int32_t)*fp->N_RB_UL*12*fp->symbols_per_tti ); 
       		LOG_I(PHY,"rxdataF_ext[%d] %p for RU %d\n",i,calibration->rxdataF_ext[i],ru->idx);
                 calibration->drs_ch_estimates[i] = (int32_t*)malloc16_clear(sizeof(int32_t)*fp->N_RB_UL*12*fp->symbols_per_tti);
+		//calibration->rxdataF_calib[i] = (int32_t*)malloc16_clear(sizeof(int32_t)*fp->N_RB_UL*12*fp->symbols_per_tti );
     	}
 
     /* number of elements of an array X is computed as sizeof(X) / sizeof(X[0]) */
@@ -138,7 +151,7 @@ int phy_init_RU(RU_t *ru) {
       for (p=0; p<15; p++) {
         LOG_D(PHY,"[INIT] %s() nb_antenna_ports_eNB:%d \n", __FUNCTION__, ru->eNB_list[i]->frame_parms.nb_antenna_ports_eNB);
 
-        if (p<ru->eNB_list[i]->frame_parms.nb_antenna_ports_eNB || p==5) {
+        if (p<ru->eNB_list[i]->frame_parms.nb_antenna_ports_eNB || p==5 || p==7 || p==8) {
           LOG_D(PHY,"[INIT] %s() DO BEAM WEIGHTS nb_antenna_ports_eNB:%d nb_tx:%d\n", __FUNCTION__, ru->eNB_list[i]->frame_parms.nb_antenna_ports_eNB, ru->nb_tx);
           ru->beam_weights[i][p] = (int32_t **)malloc16_clear(ru->nb_tx*sizeof(int32_t *));
 
@@ -209,9 +222,11 @@ void phy_free_RU(RU_t *ru) {
     for (i = 0; i < ru->nb_rx; i++) {
         free_and_zero(calibration->rxdataF_ext[i]);
   	free_and_zero(calibration->drs_ch_estimates[i]);
+	free_and_zero(calibration->rxdataF_calib[i]);
     }
     free_and_zero(calibration->rxdataF_ext);
     free_and_zero(calibration->drs_ch_estimates);
+    free_and_zero(calibration->rxdataF_calib);
 
     for (i = 0; i < ru->nb_rx; i++) {
       free_and_zero(ru->prach_rxsigF[i]);

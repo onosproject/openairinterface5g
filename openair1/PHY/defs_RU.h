@@ -138,16 +138,41 @@ typedef struct {
 typedef struct {
   /// \brief Received frequency-domain signal after extraction.
   /// - first index: ? [0..7] (hard coded) FIXME! accessed via \c nb_antennas_rx
-  /// - second index: ? [0..168*N_RB_DL[
+  /// - second index: ? [0..168*N_RB_DL]
   int32_t **rxdataF_ext;
   /// \brief Hold the channel estimates in time domain based on DRS.
-  /// - first index: rx antenna id [0..nb_antennas_rx[
-  /// - second index: ? [0..4*ofdm_symbol_size[
+  /// - first index: rx antenna id [0..nb_antennas_rx]
+  /// - second index: ? [0..4*ofdm_symbol_size]
   int32_t **drs_ch_estimates_time;
   /// \brief Hold the channel estimates in frequency domain based on DRS.
-  /// - first index: rx antenna id [0..nb_antennas_rx[
-  /// - second index: ? [0..12*N_RB_UL*frame_parms->symbols_per_tti[
+  /// - first index: rx antenna id [0..nb_antennas_rx]
+  /// - second index: ? [0..12*N_RB_UL*frame_parms->symbols_per_tti]
   int32_t **drs_ch_estimates;
+  /// \brief Holds all the received data required for one calibration round in the frequency domain at calibration symbol 10/SSF1
+  /// \brief calibration round = required frames to collect calibration symbols from all active RRUs = number of RRUs
+  /// e.x. if we need to calibrate 3 RRUs, the calibration round consists of 3 frames
+  /// - first index: frame number
+  /// - second index: RRU tag
+  /// - third index: rx antenna id [0..nb_antennas_rx]
+  /// - fourth index: [0..168*N_RB_DL]
+  int32_t ****rxdataF_calib;
+  /// \brief Holds the tdd reciprocity calibration coefficients
+  /// - first index: tx antenna [0..nb_antennas_tx]
+  /// - second index: number of RRUs
+  /// - third index: subcarriers [0..168*N_RB_DL]
+  int32_t ***calib_coeffs;
+  /// mutex for calibration thread
+  pthread_mutex_t mutex_calib;
+  /// condition variable for calibration processing thread
+  pthread_cond_t cond_calib;
+  /// This variable is protected by mutex_calib.
+  int instance_cnt_calib;
+  // pthread structure for calibration processing thread
+  pthread_t pthread_calib;
+  // pthread attributes for calibration processing thread
+  pthread_attr_t attr_calib;
+  // calibration frame counter
+  int calib_frame;
 } RU_CALIBRATION;
 
 

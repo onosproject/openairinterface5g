@@ -36,6 +36,7 @@ set (OPENAIR_TARGETS ${OPENAIR_DIR}/targets)
 set (OPENAIR3_DIR    ${OPENAIR_DIR}/openair3)
 set (OPENAIR_CMAKE   ${OPENAIR_DIR}/cmake_targets)
 set (OPENAIR_BIN_DIR ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY})
+set (GSL_DIR /home/eurecom/gsl) 
 
 project (OpenAirInterface)
 
@@ -127,7 +128,7 @@ endfunction()
 
 #set(CMAKE_BUILD_TYPE "Debug")
 if (CMAKE_BUILD_TYPE STREQUAL "")
-   set(CMAKE_BUILD_TYPE "Release")
+   set(CMAKE_BUILD_TYPE "RelWithDebInfo")
 endif()
 message("CMAKE_BUILD_TYPE is ${CMAKE_BUILD_TYPE}")
 add_list_string_option(CMAKE_BUILD_TYPE "RelWithDebInfo" "Choose the type of build, options are: None(CMAKE_CXX_FLAGS or CMAKE_C_FLAGS used) Debug Release RelWithDebInfo MinSizeRel." Debug Release RelWithDebInfo MinSizeRel)
@@ -2298,6 +2299,8 @@ if(EXISTS "/usr/include/atlas/cblas.h" OR EXISTS "/usr/include/cblas.h")
   LINK_DIRECTORIES("/usr/lib64")
   LINK_DIRECTORIES("/usr/lib64/atlas") #Added because atlas libraries in CentOS 7 are here!
 
+include_directories("${GSL_DIR}/include/gsl")
+
   if(EXISTS "/usr/lib64/libblas.so" OR EXISTS "/usr/lib/libblas.so") #Case for CentOS7
      list(APPEND ATLAS_LIBRARIES blas)
 
@@ -2433,6 +2436,7 @@ target_link_libraries (measurement_display minimal_lib)
 # lte-softmodem is both eNB and UE implementation
 ###################################################
 
+LINK_DIRECTORIES("${GSL_DIR}/lib")
 add_executable(lte-softmodem
   ${OPENAIR_TARGETS}/RT/USER/rt_wrapper.c
   ${OPENAIR_TARGETS}/RT/USER/lte-enb.c
@@ -2473,6 +2477,7 @@ target_link_libraries (lte-softmodem ${LIBXML2_LIBRARIES})
 target_link_libraries (lte-softmodem pthread m ${CONFIG_LIB} rt crypt ${CRYPTO_LIBRARIES} ${OPENSSL_LIBRARIES} ${NETTLE_LIBRARIES} sctp ${PROTOBUF_LIB}  ${CMAKE_DL_LIBS} ${LIBYAML_LIBRARIES})
 target_link_libraries (lte-softmodem ${LIB_LMS_LIBRARIES})
 target_link_libraries (lte-softmodem ${T_LIB})
+target_link_libraries(lte-softmodem gsl gslcblas)
 
 add_executable(cu_test
   ${OPENAIR2_DIR}/LAYER2/PROTO_AGENT/cu_test.c

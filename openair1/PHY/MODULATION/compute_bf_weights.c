@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include "PHY/defs_common.h"
+#include "PHY/defs_eNB.h"
 
 int f_read(char *calibF_fname, int nb_ant, int nb_freq, int32_t **tdd_calib_coeffs){
 
@@ -52,6 +53,24 @@ int compute_BF_weights(int32_t **beam_weights, int32_t **calib_dl_ch_estimates, 
 }
   /* TODO: what to return? is this code used at all? */
   return 0;
+}
+
+int compute_beam_weights(int32_t **beam_weights[NUMBER_OF_eNB_MAX+1][15], int32_t **calib_coeffs, int32_t **ul_ch_estimates, PHY_VARS_eNB *eNB, int l1_id, int p, int aa, int ru_id) {
+
+//PHY_VARS_eNB *eNB = RC.eNB[0][0];
+LTE_DL_FRAME_PARMS *fp = &eNB->frame_parms;
+int d_f = 597;
+
+//LOG_I(PHY,"compute_beam_weights : l1_id %d, p %d, aa %d, ru_id %d \n",l1_id,p,aa,ru_id);
+//LOG_I(PHY,"(int16_t*)&beam_weights[%d][%d][%d][0] %p\n", l1_id,p,aa,(int16_t*)&beam_weights[l1_id][p][aa][0]);
+//LOG_I(PHY,"[compute_beam_weights] : calib_coeffs[1][%d] : %d %d i\n",d_f,calib_coeffs[1][d_f],calib_coeffs[1][d_f+1]);
+mult_cpx_vector((int16_t *)calib_coeffs[ru_id], 
+                    (int16_t*)&ul_ch_estimates[aa][0],
+                    (int16_t*)&beam_weights[l1_id][p][aa][0],
+                    fp->N_RB_UL*12,
+                    15);
+
+return 0;
 } 
 
 // temporal test function

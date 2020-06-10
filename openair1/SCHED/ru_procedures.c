@@ -117,11 +117,11 @@ void feptx0(RU_t *ru,
                         fp->frame_type,ru->is_slave);
          */
 	      int num_symb = 7;
-
+/*
 	      if (subframe_select(fp,subframe) == SF_S)
              num_symb = fp->dl_symbols_in_S_subframe+1;
-
-	      if (ru->generate_dmrs_sync == 1 && slot == 0 && subframe == 1 && aa==0) {
+*/
+	      if (ru->generate_dmrs_sync == 1 && /*slot == 2 &&*/ subframe == 1 && aa==0) {
             //int32_t dmrs[ru->frame_parms.ofdm_symbol_size*14] __attribute__((aligned(32)));
             //int32_t *dmrsp[2] ={dmrs,NULL}; //{&dmrs[(3-ru->frame_parms.Ncp)*ru->frame_parms.ofdm_symbol_size],NULL};
 
@@ -443,12 +443,16 @@ void feptx_prec(RU_t *ru,
   int l,i,aa;
   PHY_VARS_eNB **eNB_list = ru->eNB_list, *eNB;
   LTE_DL_FRAME_PARMS *fp;
+  RU_CALIBRATION *calibration = &ru->calibration;
 
   if (ru->num_eNB == 1)
   {
     eNB = eNB_list[0];
+    //PHY_VARS_eNB *eNB = RC.eNB[0][0];
+    LTE_eNB_COMMON *const common_vars  = &eNB->common_vars;
     fp  = &eNB->frame_parms;
-    LTE_eNB_PDCCH *pdcch_vars = &eNB->pdcch_vars[subframe&1]; 
+    LTE_eNB_PDCCH *pdcch_vars = &eNB->pdcch_vars[subframe&1];
+    LTE_eNB_SRS *srs_vars = eNB->srs_vars; 
     
     if (subframe_select(fp,subframe) == SF_UL) return;
 
@@ -457,6 +461,22 @@ void feptx_prec(RU_t *ru,
     for (aa=0;aa<ru->nb_tx;aa++) {
       memset(ru->common.txdataF_BF[aa],0,sizeof(int32_t)*fp->ofdm_symbol_size*fp->symbols_per_tti);
       for (int p=0;p<NB_ANTENNA_PORTS_ENB;p++) {
+      	if (eNB->calib_prec_enabled==1 && (p==0 || p==5 || p==7 || p==8)) {
+		//LOG_I(PHY,"[feptx_prec] common_vars->calib_coeffs[%d] = %p \n",ru->idx,common_vars->calib_coeffs[ru->idx]);
+		//LOG_I(PHY,"feptx_prec : calib_coeffs[%d][597] : %d %d i\n",ru->idx,((int16_t*)&RC.eNB[0][0]->common_vars.calib_coeffs[ru->idx])[597], ((int16_t*)&RC.eNB[0][0]->common_vars.calib_coeffs[ru->idx])[597+1]);
+                compute_beam_weights(ru->beam_weights, common_vars->calib_coeffs, srs_vars->srs_ch_estimates, eNB, eNB->Mod_id, p, aa, ru->idx);
+		for (l=pdcch_vars->num_pdcch_symbols;l<fp->symbols_per_tti;l++) {
+                	beam_precoding(eNB->common_vars.txdataF,
+                             		ru->common.txdataF_BF,
+                             		subframe,
+                             		fp,
+                             		ru->beam_weights,
+                             		l,
+                             		aa,
+                             		p,
+                             		eNB->Mod_id);
+                } 
+	}	
     	if (ru->do_precoding == 0) {
 	      if (p==0)
 	        memcpy((void*)ru->common.txdataF_BF[aa],
@@ -638,8 +658,13 @@ void ru_fep_full_2thread(RU_t *ru,
   int check_sync_pos,Ns,l;
 
   struct timespec wait;
+  
+  if (subframe==1){   
 
-  if ((fp->frame_type == TDD) && (subframe_select(fp,subframe) != SF_UL)) return;
+  }
+  else if ((fp->frame_type == TDD) && (subframe_select(fp,subframe) != SF_UL)) { 
+        return;   
+  }
 
   if (ru->idx == 0) VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_RU_FEPRX, 1 );
 

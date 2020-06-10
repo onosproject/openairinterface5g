@@ -84,7 +84,7 @@ int estimate_DLCSI_from_ULCSI(int32_t **calib_dl_ch_estimates, int32_t **ul_ch_e
 
 int compute_BF_weights(int32_t **beam_weights, int32_t **calib_dl_ch_estimates, PRECODE_TYPE_t precode_type, int nb_ant, int nb_freq);
 
-
+int compute_beam_weights(int32_t **beam_weights[NUMBER_OF_eNB_MAX+1][15], int32_t **calib_coeffs, int32_t **ul_ch_estimates, PHY_VARS_eNB *eNB, int l1_id, int p, int aa, int ru_id);
 
 /** @}*/
 #endif

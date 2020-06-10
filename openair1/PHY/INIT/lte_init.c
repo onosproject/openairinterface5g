@@ -400,7 +400,13 @@ int phy_init_lte_eNB(PHY_VARS_eNB *eNB,
     common_vars->rxdata  = (int32_t **)NULL;
     common_vars->txdataF = (int32_t **)malloc16(NB_ANTENNA_PORTS_ENB*sizeof(int32_t *));
     common_vars->rxdataF = (int32_t **)malloc16(64*sizeof(int32_t *));
+    common_vars->calib_coeffs = (int32_t **)malloc16(2*sizeof(int32_t *));
     LOG_I(PHY,"[INIT] NB_ANTENNA_PORTS_ENB:%d fp->nb_antenna_ports_eNB:%d\n", NB_ANTENNA_PORTS_ENB, fp->nb_antenna_ports_eNB);
+
+    for (i=0; i<2; i++) {
+    	common_vars->calib_coeffs[i] = (int32_t *)malloc16_clear(sizeof(int32_t)*fp->N_RB_UL*12*fp->symbols_per_tti ); // 2 RRUs
+	LOG_I(PHY,"[INIT] common_vars->calib_coeffs[%d] = %p (%lu bytes)\n", i,common_vars->calib_coeffs[i], fp->N_RB_UL*12*fp->symbols_per_tti*sizeof(int32_t));
+    }
 
     for (i=0; i<NB_ANTENNA_PORTS_ENB; i++) {
       if (i<fp->nb_antenna_ports_eNB || i==5) {
@@ -527,6 +533,12 @@ void phy_free_lte_eNB(PHY_VARS_eNB *eNB) {
 
   free_and_zero(common_vars->txdataF);
   free_and_zero(common_vars->rxdataF);
+
+  for (i=0; i<2; i++) {
+  	free_and_zero(common_vars->calib_coeffs[i]);
+  }
+
+  free_and_zero(common_vars->calib_coeffs);
 
   // Channel estimates for SRS
   for (UE_id = 0; UE_id < NUMBER_OF_UE_MAX; UE_id++) {

@@ -45,11 +45,21 @@
 #include <getopt.h>
 #include <sys/sysinfo.h>
 #include "rt_wrapper.h"
+#include </home/eurecom/gsl/include/gsl/gsl_vector.h>
+#include </home/eurecom/gsl/include/gsl/gsl_complex.h>
+#include </home/eurecom/gsl/include/gsl/gsl_complex_math.h>
+#include </home/eurecom/gsl/include/gsl/gsl_inline.h>
+#include </home/eurecom/gsl/include/gsl/gsl_eigen.h>
+#include </home/eurecom/gsl/include/gsl/gsl_matrix.h>
+#include </home/eurecom/gsl/include/gsl/gsl_blas.h>
+#include </home/eurecom/gsl/include/gsl/gsl_linalg.h>
+#define GSL_EXPORT
 
 #undef MALLOC //there are two conflicting definitions, so we better make sure we don't use it at all
 
 #include "assertions.h"
 #include "msc.h"
+#include "PHY/defs_eNB.h"
 #include "PHY/defs_common.h"
 #include "PHY/phy_extern.h"
 #include "PHY/types.h"
@@ -122,6 +132,11 @@ void reset_proc(RU_t *ru);
 int connect_rau(RU_t *ru);
 
 const char ru_states[6][9] = {"RU_IDLE","RU_CONFIG","RU_READY","RU_RUN","RU_ERROR","RU_SYNC"};
+
+#define FRACT_BITS 15
+#define FLOAT2FIXED(x) (int16_t)(round(x * (1 << FRACT_BITS)))
+
+int32_t calib_data[1][2][2][600];
 
 extern uint16_t sf_ahead;
 
@@ -219,10 +234,13 @@ void fh_if4p5_south_in(RU_t *ru,
   RU_proc_t *proc = &ru->proc;
   int f,sf,Ns,l,u;
   RU_CALIBRATION *calibration = &ru->calibration;
+  PHY_VARS_eNB *eNB;
+  eNB =  RC.eNB[0][0];
+  LTE_eNB_COMMON *const common_vars  = &eNB->common_vars;
   uint16_t packet_type;
   uint32_t symbol_number=0;
   uint32_t symbol_mask_full;
-  int pultick_received=0;
+  int pultick_received=0;  
 
   if (ru->is_slave==1 && ru->wait_cnt!=0) RC.collect = 0;
 
@@ -261,7 +279,7 @@ void fh_if4p5_south_in(RU_t *ru,
        } else if (packet_type == IF4p5_PRACH) {
       // nothing in RU for RAU
        }
-       LOG_D(PHY,"rx_fh_if4p5 for RU %d: subframe %d, sf %d, symbol mask %x\n",ru->idx,*subframe,sf,proc->symbol_mask[sf]);
+       LOG_D(PHY,"rx_fh_if4p5 for RU %d: subframe %d, sf %d, symbol mask %x, pulticks %d\n",ru->idx,*subframe,sf,proc->symbol_mask[sf],pultick_received);
      } while(proc->symbol_mask[sf] != symbol_mask_full);    
   }
   else {
@@ -313,10 +331,25 @@ void fh_if4p5_south_in(RU_t *ru,
   }*/
   VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME(VCD_SIGNAL_DUMPER_VARIABLES_FRAME_NUMBER_IF4P5_SOUTH_IN_RU+ru->idx,f);
   VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME(VCD_SIGNAL_DUMPER_VARIABLES_SUBFRAME_NUMBER_IF4P5_SOUTH_IN_RU+ru->idx,sf);
+  /*
+  // prepei kapws na thesw to cnt = 1 mono mia fora 
+  if (ru->wait_cnt==5){
+  	calib_frame = 0;
+        temp_frame = f;
+	LOG_I(PHY,"1) calib_frame %d, temp_frame %d, RRU %d\n",calib_frame,temp_frame,ru->idx);
+  }
+  */
 
   if (ru->is_slave==1 && ru->wait_cnt==0) RC.collect = 1;
 
-  if (ru->wait_cnt==0 && packet_type == IF4p5_PULCALIB && RC.collect==1) {
+  if (ru->wait_cnt==0 && packet_type == IF4p5_PULCALIB && RC.collect==1 && f>199 && ( (f%2==0 && ru->idx==1) || (f%2==1 && ru->idx==0) )  ) {
+	
+	if (f%2==0) {
+		calibration->calib_frame = 0;
+		calibration->calib_frame++;
+	} else { 
+		calibration->calib_frame+=2;
+	}
 
   	T(T_RAU_INPUT_SIGNAL, T_INT(ru->idx), T_INT(f), T_INT(sf),
           T_BUFFER(&ru->common.rxdataF[0][0],
@@ -335,6 +368,30 @@ void fh_if4p5_south_in(RU_t *ru,
                                  Ns, 
                                  fp);
 
+	//mutex lock for wakeup signal
+	pthread_mutex_lock(&calibration->mutex_calib);
+	//check instance ==-1 then memcpy else nthing
+	if (calibration->instance_cnt_calib < 0) {
+		memcpy((void*)calib_data[0][calibration->calib_frame-1][ru->idx],
+                        (void*)&calibration->rxdataF_ext[0][l*12*fp->N_RB_UL],
+                        12*fp->N_RB_UL*sizeof(int32_t));
+	}
+	
+	//wakeup calib_thread only if I have collected all the required data for calibration
+	if (calibration->calib_frame==2) {
+		calibration->calib_frame = 0;
+		// the thread can now be woken up
+		//LOG_I(PHY,"calib_thread is woken up, RU %d\n", ru->idx);
+		//LOG_I(PHY,"[fh_if4p5_south_in] common_vars->calib_coeffs[%d] = %p \n",ru->idx,common_vars->calib_coeffs[ru->idx]);
+		RC.eNB[0][0]->calib_prec_enabled = 0;
+		calibration->instance_cnt_calib = 0;
+		pthread_cond_signal(&calibration->cond_calib);
+		
+	}
+	//mutex unlock for wakeup signal
+        pthread_mutex_unlock(&calibration->mutex_calib);
+
+	
 	// OR should I call just: lte_ul_channel_estimation();
    	/*lte_ul_channel_estimation((PHY_VARS_eNB *)NULL,
                                   proc,
@@ -342,7 +399,7 @@ void fh_if4p5_south_in(RU_t *ru,
                                   3%(fp->symbols_per_tti/2),
                                   Ns);
 	*/
-        lte_ul_channel_estimation_RRU(fp,
+/*        lte_ul_channel_estimation_RRU(fp,
                                   calibration->drs_ch_estimates,
                                   calibration->drs_ch_estimates_time,
                                   calibration->rxdataF_ext,
@@ -360,13 +417,13 @@ void fh_if4p5_south_in(RU_t *ru,
                   T_INT(l),T_BUFFER(&calibration->drs_ch_estimates[0][l*12*fp->N_RB_UL],
                 12*fp->N_RB_UL*sizeof(int32_t)));
 
-		T(T_RAU_INPUT_DMRS, T_INT(ru->idx), T_INT(f), T_INT(sf),
-                T_BUFFER(&calibration->rxdataF_ext[0][l*12*fp->N_RB_UL],
-                12*fp->N_RB_UL*sizeof(int32_t)));
-
 		T(T_CALIBRATION_CHANNEL_ESTIMATES_TIME, T_INT(ru->idx), T_INT(f), T_INT(sf),
                 T_BUFFER(calibration->drs_ch_estimates_time[0],
                 fp->ofdm_symbol_size*sizeof(int32_t)));
+*/
+		T(T_RAU_INPUT_DMRS, T_INT(ru->idx), T_INT(f), T_INT(sf),
+                T_BUFFER(&calibration->rxdataF_ext[0][l*12*fp->N_RB_UL],
+                12*fp->N_RB_UL*sizeof(int32_t)));
 
  }
 
@@ -1782,8 +1839,8 @@ static void *ru_thread_tx( void *param ) {
       }
     }
 
-    //printf("ru_thread_tx: Frame %d, Subframe %d: RU %d done (wait_cnt %d),RU_mask_tx %d\n",
-    //eNB_proc->frame_rx,eNB_proc->subframe_rx,ru->idx,ru->wait_cnt,eNB_proc->RU_mask_tx);
+   /* printf("ru_thread_tx: Frame %d, Subframe %d: RU %d done (wait_cnt %d),RU_mask_tx %d\n",
+    eNB_proc->frame_rx,eNB_proc->subframe_rx,ru->idx,ru->wait_cnt,eNB_proc->RU_mask_tx);*/
   }
 
   release_thread(&proc->mutex_FH1,&proc->instance_cnt_FH1,"ru_thread_tx");
@@ -1791,6 +1848,235 @@ static void *ru_thread_tx( void *param ) {
 }
 
 
+//int calib_thread( void *param ) {
+void *calib_thread(void *param) {
+	RU_t *ru         = (RU_t *)param;
+	RU_CALIBRATION *calibration = &ru->calibration;	
+	LTE_DL_FRAME_PARMS *fp = ru->frame_parms;
+	PHY_VARS_eNB *eNB;
+	eNB =  RC.eNB[0][0];
+	LTE_eNB_COMMON *const common_vars  = &eNB->common_vars;
+	//PHY_VARS_eNB *eNB = (PHY_VARS_eNB *)param;
+	//PHY_VARS_eNB *eNB = RC.eNB[0][0];
+	//PHY_VARS_eNB **eNB_list = *eNB;
+	//eNB = eNB_list[0];
+	//LTE_eNB_COMMON *common_vars = &eNB->common_vars;
+	int G = 2; // number of groups of RRUs
+	int N_RRUs = RC.nb_RU; // number of active RRUs
+	int M_i = N_RRUs/G; // number of RRUs per group
+	int d_f;
+	uint32_t N_f = 12*fp->N_RB_UL; // number of subcarriers
+	double y = -1; // scaled by -1
+	double x = 32768; // scaled by 1/pow2(15)
+	/*
+	gsl_vector_complex *drsseq0 = gsl_vector_complex_alloc(N_f);	
+	gsl_complex Z,Z_scaled,val; 
+	gsl_matrix_complex *P = gsl_matrix_complex_alloc(M_i,M_i);
+	gsl_matrix_complex *Y2_1 = gsl_matrix_complex_alloc(M_i,M_i);  // y1_0
+	gsl_matrix_complex *Y1_2 = gsl_matrix_complex_alloc(M_i,M_i); // y0_1
+        gsl_vector_complex *y0_1 = gsl_vector_complex_alloc(N_f);
+	gsl_vector_complex *y1_0 = gsl_vector_complex_alloc(N_f);
+	gsl_matrix_complex *Y_P_res = gsl_matrix_complex_alloc(N_RRUs,N_RRUs); 
+	gsl_eigen_hermv_workspace *w = gsl_eigen_hermv_alloc(N_RRUs);
+	gsl_vector *Y_P_eigenvalues = gsl_vector_alloc(N_RRUs);
+	gsl_matrix_complex *Y_P_eigenvectors = gsl_matrix_complex_alloc(N_RRUs,N_RRUs);
+	gsl_vector_complex *F_inv_est = gsl_vector_complex_alloc(N_RRUs);
+	gsl_matrix_complex *F = gsl_matrix_complex_alloc(N_RRUs,N_f);
+	*/
+
+	while (!oai_exit) {
+		if (oai_exit) break;
+		wait_on_condition(&calibration->mutex_calib,&calibration->cond_calib,&calibration->instance_cnt_calib,"calib_thread");
+		//LOG_I(PHY,"START of calib_thread : instance_cnt_calib %d\n",calibration->instance_cnt_calib);
+		//if (gsl_vector_complex_isnull(y1_0)==1) return;
+		gsl_vector_complex *drsseq0 = gsl_vector_complex_alloc(N_f);    
+        	gsl_complex Z,Z_scaled,val; 
+        	gsl_matrix_complex *P = gsl_matrix_complex_alloc(M_i,M_i);
+        	gsl_matrix_complex *Y2_1 = gsl_matrix_complex_alloc(M_i,M_i);  // y1_0
+        	gsl_matrix_complex *Y1_2 = gsl_matrix_complex_alloc(M_i,M_i); // y0_1
+        	gsl_vector_complex *y0_1 = gsl_vector_complex_alloc(N_f);
+        	gsl_vector_complex *y1_0 = gsl_vector_complex_alloc(N_f);
+        	gsl_matrix_complex *Y_P_res = gsl_matrix_complex_alloc(N_RRUs,N_RRUs); 
+        	gsl_eigen_hermv_workspace *w = gsl_eigen_hermv_alloc(N_RRUs);
+        	gsl_vector *Y_P_eigenvalues = gsl_vector_alloc(N_RRUs);
+        	gsl_matrix_complex *Y_P_eigenvectors = gsl_matrix_complex_alloc(N_RRUs,N_RRUs);
+        	gsl_vector_complex *F_inv_est = gsl_vector_complex_alloc(N_RRUs);
+        	gsl_matrix_complex *F = gsl_matrix_complex_alloc(N_RRUs,N_f);
+		
+		for (d_f=0; d_f<N_f; d_f++) {
+		        GSL_SET_COMPLEX(&Z,ul_ref_sigs_rx[0][0][23][d_f<<1],ul_ref_sigs_rx[0][0][23][1+(d_f<<1)]);
+			Z_scaled = gsl_complex_div_real(Z,x);
+        		gsl_vector_complex_set(drsseq0,d_f,Z_scaled);
+        		//printf(" pilots(%d) :  %g %gi \n", d_f, GSL_REAL(gsl_vector_complex_get(drsseq0,d_f)), GSL_IMAG(gsl_vector_complex_get(drsseq0,d_f)));
+			/*
+			GSL_SET_COMPLEX(&Z,calibration->rxdataF_calib[0][0][1][d_f<<1], calibration->rxdataF_calib[0][0][1][1+(d_f<<1)]);
+                        gsl_vector_complex_set(y0_1,d_f,Z);
+			//printf(" y0_1(%d) :  %g %gi \n", d_f, GSL_REAL(gsl_vector_complex_get(y0_1,d_f)), GSL_IMAG(gsl_vector_complex_get(y0_1,d_f)));
+			GSL_SET_COMPLEX(&Z,calibration->rxdataF_calib[0][1][0][d_f<<1], calibration->rxdataF_calib[0][1][0][1+(d_f<<1)]);
+                        gsl_vector_complex_set(y1_0,d_f,Z);
+			*/
+			//GSL_SET_COMPLEX(&Z,calib_data[0][0][1][d_f<<1], calib_data[0][0][1][1+(d_f<<1)]);
+			GSL_SET_COMPLEX(&Z,((int16_t*)&calib_data[0][0][1])[d_f],((int16_t*)&calib_data[0][0][1])[d_f+1]);
+                        gsl_vector_complex_set(y0_1,d_f,Z);
+			//printf(" y0_1(%d) :  %g %gi \n", d_f, GSL_REAL(gsl_vector_complex_get(y0_1,d_f)), GSL_IMAG(gsl_vector_complex_get(y0_1,d_f)));
+                        //GSL_SET_COMPLEX(&Z,calib_data[0][1][0][d_f<<1], calib_data[0][1][0][1+(d_f<<1)]);
+                        GSL_SET_COMPLEX(&Z,((int16_t*)&calib_data[0][1][0])[d_f],((int16_t*)&calib_data[0][1][0])[d_f+1]);
+			gsl_vector_complex_set(y1_0,d_f,Z);
+			//printf(" y1_0(%d) :  %g %gi \n", d_f, GSL_REAL(gsl_vector_complex_get(y1_0,d_f)), GSL_IMAG(gsl_vector_complex_get(y1_0,d_f)));
+		}
+
+		//printf("RRU %d, y0_1(10) :  %g %gi \n", ru->idx, GSL_REAL(gsl_vector_complex_get(y0_1,10)), GSL_IMAG(gsl_vector_complex_get(y0_1,10)));
+		//printf("RRU %d, y1_0(10) :  %g %gi \n", ru->idx, GSL_REAL(gsl_vector_complex_get(y1_0,10)), GSL_IMAG(gsl_vector_complex_get(y1_0,10)));
+
+		for (int d_f=0; d_f<N_f; d_f++){
+        		gsl_matrix_complex_set(P,0,0,gsl_vector_complex_get(drsseq0,d_f));
+			gsl_matrix_complex_set(Y2_1,0,0,gsl_vector_complex_get(y1_0,d_f));
+        		gsl_matrix_complex_set(Y1_2,0,0,gsl_vector_complex_get(y0_1,d_f));
+			//LOG_I(PHY,"M_i %d, d_f %d, Y2_1->size1 %lu\n",M_i,d_f,Y2_1->size1);
+        		gsl_matrix_complex *AB = gsl_matrix_complex_alloc(Y2_1->size2*P->size2,Y2_1->size1); // result from first khatri rao
+        		gsl_matrix_complex *AB1 = gsl_matrix_complex_alloc(Y1_2->size2*P->size2,Y1_2->size1); // // result from second khatri rao
+        		gsl_matrix_complex *Y_P = gsl_matrix_complex_alloc(AB->size1,N_RRUs);
+        		gsl_vector_complex *P_trans_col_vec = gsl_vector_complex_alloc(P->size2);
+        		gsl_matrix_complex *P_trans_col = gsl_matrix_complex_alloc(P->size2,1);
+        		gsl_vector_complex *Y2_1_trans_col_vec = gsl_vector_complex_alloc(Y2_1->size2);
+        		gsl_matrix_complex *Y2_1_trans_col = gsl_matrix_complex_alloc(Y2_1->size2,1);
+        		gsl_vector_complex *Y1_2_trans_col_vec = gsl_vector_complex_alloc(Y1_2->size2);
+        		gsl_matrix_complex *Y1_2_trans_col = gsl_matrix_complex_alloc(Y1_2->size2,1);
+        		gsl_matrix_complex *ab = gsl_matrix_complex_alloc(P_trans_col->size1, Y2_1_trans_col->size1);
+        		gsl_matrix_complex *ab1 = gsl_matrix_complex_alloc(Y1_2_trans_col->size1, P_trans_col->size1);  
+        		gsl_vector_complex *AB_col = gsl_vector_complex_alloc(AB->size1);
+        		gsl_vector_complex *AB1_col = gsl_vector_complex_alloc(AB1->size1);
+			
+			for (int i=0; i<Y2_1->size1; i++){
+                		gsl_matrix_complex_get_row (P_trans_col_vec,P,i);             
+                		gsl_matrix_complex_set_col(P_trans_col,0,P_trans_col_vec);
+                		gsl_matrix_complex_get_row (Y2_1_trans_col_vec,Y2_1,i);             
+                		gsl_matrix_complex_set_col(Y2_1_trans_col,0,Y2_1_trans_col_vec);
+                		gsl_blas_zgemm(CblasNoTrans, CblasTrans, GSL_COMPLEX_ONE, P_trans_col, Y2_1_trans_col, GSL_COMPLEX_ZERO, ab);
+                		int k = 0;
+                		int m = 0;
+                		while(k<AB->size1){     
+                        		int l = 0;
+                        		while(l<ab->size1){
+                        			gsl_matrix_complex_set(AB,k,i,gsl_matrix_complex_get(ab,l,m));
+                        			k++;
+                        			l++;
+                        		}
+                        		m++;
+                		}
+
+                		gsl_matrix_complex_get_row (Y1_2_trans_col_vec,Y1_2,i);             
+                		gsl_matrix_complex_set_col(Y1_2_trans_col,0,Y1_2_trans_col_vec);
+                		gsl_blas_zgemm(CblasNoTrans, CblasTrans, GSL_COMPLEX_ONE, Y1_2_trans_col, P_trans_col, GSL_COMPLEX_ZERO, ab1);
+
+                		k = 0;
+                		m = 0;
+                		while(k<AB1->size1){     
+                        		int l = 0;
+                        		while(l<ab1->size1){
+                        			gsl_matrix_complex_set(AB1,k,i,gsl_complex_mul_real(gsl_matrix_complex_get(ab1,l,m),y)); 
+                        			k++;
+                        			l++;
+                        		}
+                        		m++;
+                		}
+        		} // end for i
+			
+			gsl_matrix_complex_get_col (AB_col,AB,0);
+        		gsl_matrix_complex_set_col(Y_P,0,AB_col);
+        		gsl_matrix_complex_get_col (AB1_col,AB1,0);
+        		gsl_matrix_complex_set_col(Y_P,1,AB1_col);
+
+        		gsl_blas_zgemm(CblasConjTrans, CblasNoTrans,
+                   		GSL_COMPLEX_ONE, Y_P, Y_P,
+                   		GSL_COMPLEX_ZERO, Y_P_res);
+
+        		//printf("\n \n Y_P_res for d_f %d is: \n",d_f);
+        		//display_mat(Y_P_res);
+
+        		gsl_eigen_hermv(Y_P_res, Y_P_eigenvalues, Y_P_eigenvectors, w);
+        		//printf("\n eigenvalues are : %f, %f\n",gsl_vector_get(Y_P_eigenvalues,0),gsl_vector_get(Y_P_eigenvalues,1));
+        		//printf("\n \n eigenvector for d_f %d is: \n",d_f);
+        		//display_mat(Y_P_eigenvectors);
+        		int min_eigenindex = gsl_vector_min_index(Y_P_eigenvalues); // returns the index of the minimum value in the vector Y_P_eigenvalues
+        		//printf(" Minimum eigenindex is %d\n",min_eigenindex);
+        		gsl_matrix_complex_get_col (F_inv_est,Y_P_eigenvectors,min_eigenindex); 
+        		gsl_complex set_to_unit;
+        		GSL_SET_COMPLEX(&set_to_unit,1,0);
+        		gsl_vector_complex_set(F_inv_est,0,set_to_unit);
+        		//for (int i=0;i<N_RRUs;i++) {
+                		//printf(" F_inv_est(%d) :  %g %gi \n",i, GSL_REAL(gsl_vector_complex_get(F_inv_est,i)), GSL_IMAG(gsl_vector_complex_get(F_inv_est,i)));
+        		//}
+        		gsl_matrix_complex_set_col(F,d_f,F_inv_est);
+        		//printf("\n \n Calibration matrix(%d) : \n",d_f);
+        		//display_mat(F);
+			//calibration->calib_coeffs[0][0][d_f] = gsl_matrix_complex_get(F,0,d_f); 
+			//convert it back to fixed point
+                	for (int k=0; k<F->size1; k++) { 
+					if (k==0) {
+						//LOG_I(PHY,"[1) calib_thread[%d]] common_vars->calib_coeffs[%d] = %p \n",d_f,k,common_vars->calib_coeffs[k]);
+//						((int16_t*)&RC.eNB[0][0]->common_vars.calib_coeffs[k])[d_f] = FLOAT2FIXED(1);
+//						((int16_t*)&RC.eNB[0][0]->common_vars.calib_coeffs[k])[d_f+1] = FLOAT2FIXED(0);
+						common_vars->calib_coeffs[k][d_f] = FLOAT2FIXED(1);
+                                                common_vars->calib_coeffs[k][d_f+1] = FLOAT2FIXED(0);
+						//LOG_I(PHY,"[2) calib_thread[%d]] common_vars->calib_coeffs[%d] = %p \n",d_f,k,common_vars->calib_coeffs[k]);
+						//((int16_t*)&calib_coeffs[0][k])[d_f] = FLOAT2FIXED(1);
+                                                //((int16_t*)&calib_coeffs[0][k])[d_f+1] = FLOAT2FIXED(0);
+					} else {
+						//LOG_I(PHY,"[3) calib_thread[%d]] common_vars->calib_coeffs[%d] = %p \n",d_f,k,common_vars->calib_coeffs[k]);
+						val = gsl_matrix_complex_get(F,k,d_f);
+						//((int16_t*)&RC.eNB[0][0]->common_vars.calib_coeffs[k])[d_f] = FLOAT2FIXED(GSL_REAL(val));
+						//((int16_t*)&RC.eNB[0][0]->common_vars.calib_coeffs[k])[d_f+1] = FLOAT2FIXED(GSL_IMAG(val));
+						common_vars->calib_coeffs[k][d_f] = FLOAT2FIXED(GSL_REAL(val));
+						common_vars->calib_coeffs[k][d_f+1] = FLOAT2FIXED(GSL_IMAG(val));
+						//LOG_I(PHY,"[4) calib_thread[%d]] common_vars->calib_coeffs[%d] = %p \n",d_f,k,common_vars->calib_coeffs[k]);
+						//((int16_t*)calib_coeffs[0][k])[d_f] = FLOAT2FIXED(GSL_REAL(val));
+						//((int16_t*)calib_coeffs[0][k])[d_f+1] = FLOAT2FIXED(GSL_IMAG(val));
+					}
+	                                //LOG_I(PHY," gsl F[%d][%d] : %g %gi \n", k,d_f,GSL_REAL(val), GSL_IMAG(val));
+					/*
+					if (d_f==597 || d_f==598){
+						LOG_I(PHY,"calib_thread : calib_coeffs[%d][%d] : %d %d i\n",k,d_f,common_vars->calib_coeffs[k][d_f],common_vars->calib_coeffs[k][d_f+1]);
+					}
+					*/
+                        }
+			gsl_matrix_complex_free(AB);
+			gsl_matrix_complex_free(AB1);
+			gsl_matrix_complex_free(Y_P);
+                        gsl_vector_complex_free(P_trans_col_vec);
+                        gsl_matrix_complex_free(P_trans_col);
+                        gsl_vector_complex_free(Y2_1_trans_col_vec);
+                        gsl_matrix_complex_free(Y2_1_trans_col);
+                        gsl_vector_complex_free(Y1_2_trans_col_vec);
+                        gsl_matrix_complex_free(Y1_2_trans_col);
+                        gsl_matrix_complex_free(ab);
+                        gsl_matrix_complex_free(ab1);  
+                        gsl_vector_complex_free(AB_col);
+                        gsl_vector_complex_free(AB1_col);
+		} // end for d_f
+		//LOG_I(PHY,"[calib_thread] common_vars->calib_coeffs[%d] = %p \n",ru->idx,common_vars->calib_coeffs[ru->idx]);
+		calibration->instance_cnt_calib = -2;
+		RC.eNB[0][0]->calib_prec_enabled = 1;
+		
+		gsl_vector_complex_free(drsseq0);
+		gsl_matrix_complex_free(P);
+		gsl_matrix_complex_free(Y2_1);
+		gsl_matrix_complex_free(Y1_2);
+		gsl_vector_complex_free(y0_1);
+		gsl_vector_complex_free(y1_0);
+		gsl_matrix_complex_free(Y_P_res);		
+		gsl_eigen_hermv_free(w);
+		gsl_vector_free(Y_P_eigenvalues);
+		gsl_matrix_complex_free(Y_P_eigenvectors);
+        	gsl_vector_complex_free(F_inv_est);
+        	gsl_matrix_complex_free(F);		
+
+	} // end while 
+
+printf( "Exiting calib_thread \n");
+return NULL;
+//return(0);
+}
 static void *ru_thread( void *param ) {
   RU_t *ru         = (RU_t *)param;
   RU_proc_t *proc  = &ru->proc;
@@ -2369,14 +2655,17 @@ void reset_proc(RU_t *ru) {
 void init_RU_proc(RU_t *ru) {
   int i=0, ret;
   RU_proc_t *proc;
-  pthread_attr_t *attr_FH=NULL, *attr_FH1=NULL, *attr_prach=NULL, *attr_asynch=NULL, *attr_synch=NULL, *attr_emulateRF=NULL, *attr_ctrl=NULL, *attr_prach_br=NULL;
+  RU_CALIBRATION *calibration;
+  pthread_attr_t *attr_FH=NULL, *attr_FH1=NULL, *attr_prach=NULL, *attr_asynch=NULL, *attr_synch=NULL, *attr_emulateRF=NULL, *attr_ctrl=NULL, *attr_prach_br=NULL, *attr_calib=NULL;
   //pthread_attr_t *attr_fep=NULL;
 #ifndef OCP_FRAMEWORK
   LOG_I(PHY,"Initializing RU proc %d (%s,%s),\n",ru->idx,NB_functions[ru->function],NB_timing[ru->if_timing]);
 #endif
   proc = &ru->proc;
+  calibration = &ru->calibration;
   memset((void *)proc,0,sizeof(RU_proc_t));
   proc->ru = ru;
+  calibration->instance_cnt_calib = -1;
   proc->instance_cnt_prach       = -1;
   proc->instance_cnt_synch       = -1;
   proc->instance_cnt_FH          = -1;
@@ -2393,6 +2682,7 @@ void init_RU_proc(RU_t *ru) {
 
   for (i=0; i<10; i++) proc->symbol_mask[i]=0;
 
+  pthread_mutex_init( &calibration->mutex_calib, NULL);
   pthread_mutex_init( &proc->mutex_prach, NULL);
   pthread_mutex_init( &proc->mutex_asynch_rxtx, NULL);
   pthread_mutex_init( &proc->mutex_synch,NULL);
@@ -2429,6 +2719,7 @@ void init_RU_proc(RU_t *ru) {
   pthread_cond_init( &proc->cond_rf_tx, NULL);
 #endif
 #ifndef DEADLINE_SCHEDULER
+  attr_calib	 = &calibration->attr_calib;
   attr_FH        = &proc->attr_FH;
   attr_FH1       = &proc->attr_FH1;
   attr_prach     = &proc->attr_prach;
@@ -2440,6 +2731,7 @@ void init_RU_proc(RU_t *ru) {
 
   if (ru->function!=eNodeB_3GPP) pthread_create( &proc->pthread_ctrl, attr_ctrl, ru_thread_control, (void *)ru );
 
+  pthread_create( &calibration->pthread_calib, attr_calib, calib_thread, (void *)ru );
   pthread_create( &proc->pthread_FH, attr_FH, ru_thread, (void *)ru );
 #if defined(PRE_SCD_THREAD)
   proc->instance_pre_scd = -1;
@@ -2508,6 +2800,7 @@ void init_RU_proc(RU_t *ru) {
 void kill_RU_proc(RU_t *ru) {
   int ret;
   RU_proc_t *proc = &ru->proc;
+  RU_CALIBRATION *calibration = &ru->calibration;
 #if defined(PRE_SCD_THREAD)
   AssertFatal((ret=pthread_mutex_lock(&proc->mutex_pre_scd))==0,"mutex_lock returns %d\n",ret);
   ru->proc.instance_pre_scd = 0;
@@ -2545,6 +2838,10 @@ void kill_RU_proc(RU_t *ru) {
   proc->instance_cnt_FH = 0;
   pthread_cond_signal(&proc->cond_FH);
   AssertFatal((ret=pthread_mutex_unlock(&proc->mutex_FH))==0,"mutex_unlock returns %d\n",ret);
+  AssertFatal((ret=pthread_mutex_lock(&calibration->mutex_calib))==0,"mutex_lock returns %d\n",ret);
+  calibration->instance_cnt_calib = 0;
+  pthread_cond_signal(&calibration->cond_calib);
+  AssertFatal((ret=pthread_mutex_unlock(&calibration->mutex_calib))==0,"mutex_unlock returns %d\n",ret);
   AssertFatal((ret=pthread_mutex_lock(&proc->mutex_FH1))==0,"mutex_lock returns %d\n",ret);
   proc->instance_cnt_FH1 = 0;
   pthread_cond_signal(&proc->cond_FH1);
@@ -2851,12 +3148,16 @@ void init_RU(char *rf_config_file, clock_source_t clock_source, clock_source_t t
     // NOTE: multiple CC_id are not handled here yet!
     ru->openair0_cfg.clock_source = clock_source;
     ru->openair0_cfg.time_source  = time_source;
-
+    
     //ru->generate_dmrs_sync = (ru->is_slave == 0) ? 1 : 0;
-    if ((ru->is_slave == 0) && (ru->ota_sync_enable == 1))
-      ru->generate_dmrs_sync = 1;
-    else
-      ru->generate_dmrs_sync = 0;
+    //if ((ru->is_slave == 0) && (ru->ota_sync_enable == 1)) {
+    ru->generate_dmrs_sync = 1;
+    generate_ul_ref_sigs();
+    //ru->dmrssync = (int16_t*)malloc16_clear(ru->frame_parms.ofdm_symbol_size*2*sizeof(int16_t));
+   //}
+   //else{
+   //  ru->generate_dmrs_sync = 0;
+   //}
 
     ru->wakeup_L1_sleeptime = 2000;
     ru->wakeup_L1_sleep_cnt_max  = 3;

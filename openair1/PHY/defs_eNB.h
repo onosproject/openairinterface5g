@@ -86,6 +86,11 @@ typedef struct {
   /// - first index: tx antenna [0..14[ where 14 is the total supported antenna ports.
   /// - second index: sample [0..]
   int32_t **txdataF;
+  /// \brief Holds the tdd reciprocity calibration coefficients
+  /// - first index: tx antenna [0..nb_antennas_tx]
+  /// - second index: number of RRUs
+  /// - third index: subcarriers [0..168*N_RB_DL]
+  int32_t **calib_coeffs;
 } LTE_eNB_COMMON;
 
 typedef struct {
@@ -574,6 +579,8 @@ typedef struct PHY_VARS_eNB_s {
   /// if ==0 enables phy only test mode
   int mac_enabled;
 
+  /// enable precoding with calibration coefficients
+  int calib_prec_enabled; 
 
   // PDSCH Varaibles
   PDSCH_CONFIG_DEDICATED pdsch_config_dedicated[NUMBER_OF_UE_MAX];
