@@ -2138,7 +2138,7 @@ rrc_eNB_process_RRCConnectionReestablishmentComplete(
   dedicatedInfoNASList = CALLOC(1, sizeof(struct LTE_RRCConnectionReconfiguration_r8_IEs__dedicatedInfoNASList));
 
   /* Add all NAS PDUs to the list */
-  for (i = 0; i < ue_context_pP->ue_context.nb_of_e_rabs; i++) {
+  for (i = 0; i < ue_context_pP->ue_context.setup_e_rabs; i++) {
     if (ue_context_pP->ue_context.e_rab[i].param.nas_pdu.buffer != NULL) {
       dedicatedInfoNas = CALLOC(1, sizeof(LTE_DedicatedInfoNAS_t));
       memset(dedicatedInfoNas, 0, sizeof(OCTET_STRING_t));
@@ -3222,12 +3222,6 @@ void rrc_eNB_generate_defaultRRCConnectionReconfiguration(const protocol_ctxt_t 
 
   for(i=0; i<ue_context_pP->ue_context.setup_e_rabs; i++) {
     
-    // bypass the new and already configured erabs
-    if (ue_context_pP->ue_context.e_rab[i].status >= E_RAB_STATUS_DONE) {
-      //drb_identity_index++;
-      continue;
-    }
-
     switch(ue_context_pP->ue_context.e_rab[i].param.e_rab_id) {
       case 5: //default drb?
         /// DRB
@@ -3834,7 +3828,7 @@ void rrc_eNB_generate_defaultRRCConnectionReconfiguration(const protocol_ctxt_t 
   dedicatedInfoNASList = CALLOC(1, sizeof(struct LTE_RRCConnectionReconfiguration_r8_IEs__dedicatedInfoNASList));
 
   /* Add all NAS PDUs to the list */
-  for (i = 0; i < ue_context_pP->ue_context.nb_of_e_rabs; i++) {
+  for (i = 0; i < ue_context_pP->ue_context.setup_e_rabs; i++) {
     if (ue_context_pP->ue_context.e_rab[i].param.nas_pdu.buffer != NULL) {
       dedicatedInfoNas = CALLOC(1, sizeof(LTE_DedicatedInfoNAS_t));
       memset(dedicatedInfoNas, 0, sizeof(OCTET_STRING_t));
@@ -3898,7 +3892,7 @@ void rrc_eNB_generate_defaultRRCConnectionReconfiguration(const protocol_ctxt_t 
   LOG_DUMPMSG(RRC, DEBUG_RRC,(char *)buffer, size, "[MSG] RRC Connection Reconfiguration\n");
 
   /* Free all NAS PDUs */
-  for (i = 0; i < ue_context_pP->ue_context.nb_of_e_rabs; i++) {
+  for (i = 0; i < ue_context_pP->ue_context.setup_e_rabs; i++) {
     if (ue_context_pP->ue_context.e_rab[i].param.nas_pdu.buffer != NULL) {
       /* Free the NAS PDU buffer and invalidate it */
       free(ue_context_pP->ue_context.e_rab[i].param.nas_pdu.buffer);
@@ -5097,11 +5091,10 @@ rrc_eNB_process_MeasurementReport(
     int nb_e_rab = 0;
     for (int i=0; i<ue_context_pP->ue_context.setup_e_rabs; i++) {
       LOG_I(RRC, "erab status %d\n", ue_context_pP->ue_context.e_rab[i].status);
-      if(ue_context_pP->ue_context.e_rab[i].status != E_RAB_STATUS_ESTABLISHED) {
+      if(ue_context_pP->ue_context.e_rab[i].status != E_RAB_STATUS_DONE && ue_context_pP->ue_context.e_rab[i].status != E_RAB_STATUS_ESTABLISHED) {
         continue;
       }
 
-      
       X2AP_HANDOVER_REQ(msg).e_rabs_tobesetup[nb_e_rab].e_rab_id = ue_context_pP->ue_context.e_rab[i].param.e_rab_id;
       X2AP_HANDOVER_REQ(msg).e_rabs_tobesetup[nb_e_rab].eNB_addr = ue_context_pP->ue_context.e_rab[i].param.sgw_addr;
       X2AP_HANDOVER_REQ(msg).e_rabs_tobesetup[nb_e_rab].gtp_teid = ue_context_pP->ue_context.e_rab[i].param.gtp_teid;
@@ -5753,6 +5746,7 @@ rrc_eNB_generate_HO_RRCConnectionReconfiguration(const protocol_ctxt_t *const ct
     *DRB_ul_SpecificParameters        = NULL;
   LTE_DRB_ToAddModList_t            **DRB_configList = &ue_context_pP->ue_context.DRB_configList;
   LTE_DRB_ToAddModList_t            **DRB_configList2 = NULL;
+  int                                 dedicate_drb_flag                = 0;
   LTE_MAC_MainConfig_t               *mac_MainConfig                   = NULL;
   LTE_MeasObjectToAddModList_t       *MeasObj_list                     = NULL;
   LTE_MeasObjectToAddMod_t           *MeasObj                          = NULL;
@@ -5913,11 +5907,6 @@ rrc_eNB_generate_HO_RRCConnectionReconfiguration(const protocol_ctxt_t *const ct
 
   for(i=0; i<ue_context_pP->ue_context.setup_e_rabs; i++) 
   {
-    // bypass the new and already configured erabs
-    if (ue_context_pP->ue_context.e_rab[i].status >= E_RAB_STATUS_DONE) {
-      //drb_identity_index++;
-      continue;
-    }
 
     switch(ue_context_pP->ue_context.e_rab[i].param.e_rab_id) {
       case 5: //default drb?
@@ -5982,7 +5971,7 @@ rrc_eNB_generate_HO_RRCConnectionReconfiguration(const protocol_ctxt_t *const ct
         logicalchannelgroup_drb = CALLOC(1, sizeof(long));
         *logicalchannelgroup_drb = 3;
         DRB_ul_SpecificParameters->logicalChannelGroup = logicalchannelgroup_drb;
-        ASN_SEQUENCE_ADD(&(*DRB_configList)->list, DRB_config);
+        //ASN_SEQUENCE_ADD(&(*DRB_configList)->list, DRB_config);
         ASN_SEQUENCE_ADD(&(*DRB_configList2)->list, DRB_config);
         //ue_context_pP->ue_context.DRB_configList2[0] = &(*DRB_configList);
         LOG_I(RRC,"EPS ID %ld, DRB ID %ld (index %d), QCI %d, priority %ld, LCID %ld LCGID %ld \n",
@@ -5996,6 +5985,7 @@ rrc_eNB_generate_HO_RRCConnectionReconfiguration(const protocol_ctxt_t *const ct
         break;
 
       default: // dedicate drb?
+        dedicate_drb_flag = 1;
         DRB_config = CALLOC(1, sizeof(*DRB_config));
         DRB_config->eps_BearerIdentity = CALLOC(1, sizeof(long));
         // allowed value 5..15, value : x+4
@@ -6803,7 +6793,7 @@ rrc_eNB_generate_HO_RRCConnectionReconfiguration(const protocol_ctxt_t *const ct
   dedicatedInfoNASList = CALLOC(1, sizeof(struct LTE_RRCConnectionReconfiguration_r8_IEs__dedicatedInfoNASList));
 
   /* Add all NAS PDUs to the list */
-  for (i = 0; i < ue_context_pP->ue_context.nb_of_e_rabs; i++) {
+  for (i = 0; i < ue_context_pP->ue_context.setup_e_rabs; i++) {
     if (ue_context_pP->ue_context.e_rab[i].param.nas_pdu.buffer != NULL) {
       dedicatedInfoNas = CALLOC(1, sizeof(LTE_DedicatedInfoNAS_t));
       memset(dedicatedInfoNas, 0, sizeof(OCTET_STRING_t));
@@ -6843,7 +6833,7 @@ rrc_eNB_generate_HO_RRCConnectionReconfiguration(const protocol_ctxt_t *const ct
              (unsigned char *)rrc_buf,
              xid,   //Transaction_id,
              NULL, // SRB_configList
-             NULL,
+             dedicate_drb_flag ? (LTE_DRB_ToAddModList_t *) *DRB_configList : NULL,
              NULL,  // DRB2_list,
              (struct LTE_SPS_Config *)NULL,   // *sps_Config,
              (struct LTE_PhysicalConfigDedicated *)*physicalConfigDedicated,
@@ -6893,7 +6883,7 @@ rrc_eNB_generate_HO_RRCConnectionReconfiguration(const protocol_ctxt_t *const ct
 #if defined(ENABLE_ITTI)
 
   /* Free all NAS PDUs */
-  for (i = 0; i < ue_context_pP->ue_context.nb_of_e_rabs; i++) {
+  for (i = 0; i < ue_context_pP->ue_context.setup_e_rabs; i++) {
     if (ue_context_pP->ue_context.e_rab[i].param.nas_pdu.buffer != NULL) {
       /* Free the NAS PDU buffer and invalidate it */
       free(ue_context_pP->ue_context.e_rab[i].param.nas_pdu.buffer);
@@ -8606,7 +8596,7 @@ rrc_eNB_decode_dcch(
             } else {
               ue_context_p->ue_context.reestablishment_cause = LTE_ReestablishmentCause_spare1;
 
-              for (uint8_t e_rab = 0; e_rab < ue_context_p->ue_context.nb_of_e_rabs; e_rab++) {
+              for (uint8_t e_rab = 0; e_rab < ue_context_p->ue_context.setup_e_rabs; e_rab++) {
                 ue_context_p->ue_context.e_rab[e_rab].xid = -1;
                 if (ue_context_p->ue_context.e_rab[e_rab].status == E_RAB_STATUS_DONE) {
                   ue_context_p->ue_context.e_rab[e_rab].status = E_RAB_STATUS_ESTABLISHED;
@@ -8616,7 +8606,7 @@ rrc_eNB_decode_dcch(
               }
             }
           } else if(dedicated_DRB == 2) {
-            for (uint8_t e_rab = 0; e_rab < ue_context_p->ue_context.nb_of_e_rabs; e_rab++) {
+            for (uint8_t e_rab = 0; e_rab < ue_context_p->ue_context.setup_e_rabs; e_rab++) {
               ue_context_p->ue_context.e_rab[e_rab].xid = -1;
               if (ue_context_p->ue_context.e_rab[e_rab].status == E_RAB_STATUS_DONE) {
                 ue_context_p->ue_context.e_rab[e_rab].status = E_RAB_STATUS_ESTABLISHED;
@@ -8625,7 +8615,7 @@ rrc_eNB_decode_dcch(
               }
             }
           } else if(dedicated_DRB == 3) { //x2 path switch
-            for (uint8_t e_rab = 0; e_rab < ue_context_p->ue_context.nb_of_e_rabs; e_rab++) {
+            for (uint8_t e_rab = 0; e_rab < ue_context_p->ue_context.setup_e_rabs; e_rab++) {
               ue_context_p->ue_context.e_rab[e_rab].xid = -1;
               if (ue_context_p->ue_context.e_rab[e_rab].status == E_RAB_STATUS_DONE) {
                 ue_context_p->ue_context.e_rab[e_rab].status = E_RAB_STATUS_ESTABLISHED;
