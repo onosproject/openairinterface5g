@@ -57,12 +57,13 @@ void exit_function(const char *file, const char *function, const int line, const
 int main(int argc, char *argv[])
 {
 	int resQ;
-	if(argc < 2)
+	resQ=1;
+	/*if(argc < 2)
 	{
 	    printf("You should pass the test you want as parameter");
 	}
 	resQ = atoi(argv[1]);
-	pool_buffer_init();
+	*/pool_buffer_init();
 	list_init(&pdu_tx_list, NULL);
 	logInit();
 
