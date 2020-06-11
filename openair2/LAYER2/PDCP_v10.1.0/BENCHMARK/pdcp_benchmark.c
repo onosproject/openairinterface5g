@@ -59,7 +59,7 @@ int main(int argc, char *argv[])
 	int resQ;
 	if(argc < 2)
 	{
-	    printf("You should pass the test you want as parameter")
+	    printf("You should pass the test you want as parameter");
 	}
 	resQ = atoi(argv[1]);
 	pool_buffer_init();
