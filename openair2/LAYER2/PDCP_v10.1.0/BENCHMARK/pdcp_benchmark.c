@@ -29,20 +29,52 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "openair2/COMMON/platform_types.h"
+#include "common/config/config_load_configmodule.h"
+#include "common/utils/LOG/log.h"
 
 #include "openair2/UTIL/MEM/mem_block.h"
+#include "openair2/LAYER2/RLC/rlc.h"
 #include "openair2/LAYER2/PDCP_v10.1.0/pdcp.h"
 #include "openair2/LAYER2/PDCP_v10.1.0/pdcp_sequence_manager.h"
 #include "openair2/UTIL/OSA/osa_defs.h"
 
+#include "common/config/config_load_configmodule.h"
+#include "common/utils/LOG/log.h"
+#include "SIMULATION/TOOLS/sim.h"
+#include "UTIL/LISTS/list.h"
+#include "OCG_vars.h"
+
 #include "common/config/config_userapi.h"
+
+#include "LTE_RLC-Config.h"
+#include "LTE_DRB-ToAddMod.h"
+#include "LTE_DRB-ToAddModList.h"
+#include "LTE_SRB-ToAddMod.h"
+#include "LTE_SRB-ToAddModList.h"
+#include "LTE_DL-UM-RLC.h"
+#include "LTE_PMCH-InfoList-r9.h"
 
 
 #define DUMMY_BUFFER ((unsigned char*)"123456789")
 #define DUMMY_BUFFER_SIZE 10
 
+uint64_t get_softmodem_optmask(void) {return 0;}
+nfapi_mode_t nfapi_getmode(void) {return 0;}
+softmodem_params_t *get_softmodem_params(void) {return NULL;}
 
+rlc_op_status_t rrc_rlc_config_req(const protocol_ctxt_t    *const ctxt_pP,
+    const LTE_SRB_ToAddModList_t    *const srb2add_listP,
+    const LTE_DRB_ToAddModList_t    *const drb2add_listP,
+    const LTE_DRB_ToReleaseList_t   *const drb2release_listP,
+    const LTE_PMCH_InfoList_r9_t *const pmch_InfoList_r9_pP,
+    const uint32_t sourceL2Id,
+    const uint32_t destinationL2Id
+  ) {return 0;}
 
+int mbms_rab_id = 2047;
+int otg_enabled=0;
+int opp_enabled=0;
 pdcp_t pdcp_el;
 list_t pdu_tx_list;
 //Not sure at all about that, but I didn't knew which library I should include and I try with that. 
@@ -52,7 +84,8 @@ volatile int oai_exit=0;
 void exit_function(const char *file, const char *function, const int line, const char *s) {
 }
 
-
+#include "common/ran_context.h"
+RAN_CONTEXT_t RC;
 
 int main(int argc, char *argv[])
 {
