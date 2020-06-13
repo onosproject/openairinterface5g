@@ -63,15 +63,31 @@ uint64_t get_softmodem_optmask(void) {return 0;}
 nfapi_mode_t nfapi_getmode(void) {return 0;}
 softmodem_params_t *get_softmodem_params(void) {return NULL;}
 
-rlc_op_status_t rrc_rlc_config_req(const protocol_ctxt_t    *const ctxt_pP,
+rlc_op_status_t rrc_rlc_config_req   (
+    const protocol_ctxt_t *const ctxt_pP,
+  const srb_flag_t      srb_flagP,
+  const MBMS_flag_t     mbms_flagP,
+  const config_action_t actionP,
+  const rb_id_t         rb_idP,
+  const rlc_info_t      rlc_infoP) {return 0;}
+
+rlc_op_status_t rrc_rlc_config_asn1_req (const protocol_ctxt_t    *const ctxt_pP,
     const LTE_SRB_ToAddModList_t    *const srb2add_listP,
     const LTE_DRB_ToAddModList_t    *const drb2add_listP,
     const LTE_DRB_ToReleaseList_t   *const drb2release_listP,
     const LTE_PMCH_InfoList_r9_t *const pmch_InfoList_r9_pP,
     const uint32_t sourceL2Id,
     const uint32_t destinationL2Id
-  ) {return 0;}
 
+                                        ) { return 0;}
+
+void rlc_util_print_hex_octets(
+  const comp_name_t componentP,
+  unsigned char *const dataP,
+  const signed long sizeP) {return;}
+
+unsigned char NB_eNB_INST=1;
+uint16_t NB_UE_INST=1;
 int mbms_rab_id = 2047;
 int otg_enabled=0;
 int opp_enabled=0;
