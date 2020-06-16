@@ -115,6 +115,7 @@ int dl_dtch_num;
   eNB_MAC_INST                *eNB                    = RC.mac[module_idP];
   UE_list_t                   *UE_list                = &(eNB->UE_list);
   UE_sched_ctrl_t             *UE_scheduling_control  = NULL;
+  int dl_buffer = 0;
 
   for (UE_id = 0; UE_id <NUMBER_OF_UE_MAX; UE_id++) {
     if (pre_scd_activeUE[UE_id] != TRUE)
@@ -153,9 +154,9 @@ int dl_dtch_num;
 
 
       if (lc_id == DCCH) {
-        dl_buffer_total[CC_id][UE_id] = rlc_status.bytes_in_buffer; //storing the dlsch buffer
+        dl_buffer = rlc_status.bytes_in_buffer; //storing the dlsch buffer
       } else {
-        dl_buffer_total[CC_id][UE_id] += rlc_status.bytes_in_buffer; //storing the total dlsch buffer
+        dl_buffer += rlc_status.bytes_in_buffer; //storing the total dlsch buffer
       }
       if(rlc_status.bytes_in_buffer > 0){
           header_length_last = 1 + 1 + (rlc_status.bytes_in_buffer >= 128);
@@ -174,7 +175,10 @@ int dl_dtch_num;
       header_length_total -= header_length_last;
       header_length_total++;
     }
-    dl_buffer_total[CC_id][UE_id] += header_length_total;
+    dl_buffer_total[CC_id][UE_id] = dl_buffer + header_length_total;
+    LOG_D(MAC,"frame %d subframe %d UE_id %d dl_buffer_total %d\n",
+      frameP,subframeP,UE_id,dl_buffer_total[CC_id][UE_id]);
+
   }
 }
 
@@ -194,6 +198,7 @@ void dlsch_scheduler_nb_rbs_required_lcid( module_id_t    module_idP,
   UE_list_t                   *UE_list                = &(eNB->UE_list);
   UE_sched_ctrl_t             *UE_scheduling_control  = NULL;
   uint8_t                     volte_dl_cycle[MAX_NUM_CCs];
+  int                         dl_buffer;
 
   for (UE_id = 0; UE_id <NUMBER_OF_UE_MAX; UE_id++) {
     if (pre_scd_activeUE[UE_id] != TRUE){
@@ -235,8 +240,10 @@ void dlsch_scheduler_nb_rbs_required_lcid( module_id_t    module_idP,
                           ,0, 0
 #endif
                         );
+    
+    dl_buffer = dl_buffer_total[CC_id][UE_id];
 
-    dl_buffer_total[CC_id][UE_id] += rlc_status.bytes_in_buffer; //storing the total dlsch buffer
+    dl_buffer += rlc_status.bytes_in_buffer; //storing the total dlsch buffer
     if(rlc_status.bytes_in_buffer > 0){
         header_length_last = 1 + 1 + (rlc_status.bytes_in_buffer >= 128);
         header_length_total += header_length_last;
@@ -253,7 +260,7 @@ void dlsch_scheduler_nb_rbs_required_lcid( module_id_t    module_idP,
       header_length_total -= header_length_last;
       header_length_total++;
     }
-    dl_buffer_total[CC_id][UE_id] += header_length_total;
+    dl_buffer_total[CC_id][UE_id] = dl_buffer + header_length_total;
   }
 }
 #endif
@@ -1027,6 +1034,7 @@ void dlsch_scheduler_pre_processor_fairRR (module_id_t   Mod_id,
 #if defined(PRE_SCD_THREAD)
   eNB_UE_STATS            *eNB_UE_stats;
   uint16_t                step_size;
+  int                     dl_buffer;
 #endif
   UE_sched_ctrl_t *ue_sched_ctl;
   //  int rrc_status           = RRC_IDLE;
@@ -1112,8 +1120,11 @@ void dlsch_scheduler_pre_processor_fairRR (module_id_t   Mod_id,
 
       ue_sched_ctl = &UE_list->UE_sched_ctrl[UE_id];
 
-      if ((dl_buffer_total[CC_id][UE_id] > 0) || (ue_sched_ctl->ta_update != 31 )) {
-        nb_rbs_required[CC_id][UE_id] = search_rbs_required(eNB_UE_stats->dlsch_mcs[TB1], dl_buffer_total[CC_id][UE_id], N_RB_DL, step_size);
+      dl_buffer = dl_buffer_total[CC_id][UE_id];
+      if ((dl_buffer > 0) || (ue_sched_ctl->ta_update != 31 )) {
+        nb_rbs_required[CC_id][UE_id] = search_rbs_required(eNB_UE_stats->dlsch_mcs[TB1], dl_buffer, N_RB_DL, step_size);
+        LOG_D(MAC,"frame %d subframe %d UE_id %d nb_rbs_required %d mcs %d  dl_buffer %d\n",
+          frameP,subframeP,UE_id,nb_rbs_required[CC_id][UE_id],eNB_UE_stats->dlsch_mcs[TB1],dl_buffer);
       }
     }
   }
