@@ -1,7 +1,26 @@
 /*
-  Author: Laurent THOMAS, Open Cells for Nokia
-  copyleft: OpenAirInterface Software Alliance and it's licence
+* Licensed to the OpenAirInterface (OAI) Software Alliance under one or more
+* contributor license agreements.  See the NOTICE file distributed with
+* this work for additional information regarding copyright ownership.
+* The OpenAirInterface Software Alliance licenses this file to You under
+* the OAI Public License, Version 1.1  (the "License"); you may not use this file
+* except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*      http://www.openairinterface.org/?page_id=698
+*
+* Author and copyright: Laurent Thomas, open-cells.com
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*-------------------------------------------------------------------------------
+* For more information about the OpenAirInterface (OAI) Software Alliance:
+*      contact@openairinterface.org
 */
+
 
 /*
  * Open issues and limitations
@@ -31,9 +50,10 @@
 #include "openair1/PHY/defs_UE.h"
 #define CHANNELMOD_DYNAMICLOAD
 #include <openair1/SIMULATION/TOOLS/sim.h>
+#include <targets/ARCH/rfsimulator/rfsimulator.h>
 
 #define PORT 4043 //default TCP port for this simulator
-#define CirSize 3072000 // 100ms is enough
+#define CirSize 307200 // 100ms is enough
 #define sampleToByte(a,b) ((a)*(b)*sizeof(sample_t))
 #define byteToSample(a,b) ((a)/(sizeof(sample_t)*(b)))
 
@@ -127,6 +147,12 @@ void allocCirBuf(rfsimulator_state_t *bridge, int sock) {
     // the value channel_model->path_loss_dB seems only a storage place (new_channel_desc_scm() only copy the passed value)
     // Legacy changes directlty the variable channel_model->path_loss_dB place to place
     // while calling new_channel_desc_scm() with path losses = 0
+    static bool init_done=false;
+    if (!init_done) {
+      randominit(0);
+      tableNor(0);
+      init_done=true;
+    }
     ptr->channel_model=new_channel_desc_scm(bridge->tx_num_channels,bridge->rx_num_channels,
                                             bridge->channelmod,
                                             bridge->sample_rate,
@@ -346,7 +372,8 @@ static int rfsimulator_write_internal(rfsimulator_state_t *t, openair0_timestamp
   if ( t->lastWroteTS != 0 && abs((double)t->lastWroteTS-timestamp) > (double)CirSize)
     LOG_E(HW,"Discontinuous TX gap too large Tx:%lu, %lu\n", t->lastWroteTS, timestamp);
 
-  AssertFatal(t->lastWroteTS <= timestamp+1, " Not supported to send Tx out of order (same in USRP) %lu, %lu\n",
+  if (t->lastWroteTS > timestamp+nsamps)
+    LOG_E(HW,"Not supported to send Tx out of order (same in USRP) %lu, %lu\n",
               t->lastWroteTS, timestamp);
   t->lastWroteTS=timestamp+nsamps;
 
@@ -420,7 +447,7 @@ static bool flushInput(rfsimulator_state_t *t, int timeout, int nsamps_for_initi
       if ( sz < 0 ) {
         if ( errno != EAGAIN ) {
           LOG_E(HW,"socket failed %s\n", strerror(errno));
-          abort();
+          //abort();
         }
       } else if ( sz == 0 )
         continue;
@@ -439,11 +466,15 @@ static bool flushInput(rfsimulator_state_t *t, int timeout, int nsamps_for_initi
         b->headerMode=false;
 
         if ( t->nextTimestamp == 0 ) { // First block in UE, resync with the eNB current TS
-          t->nextTimestamp  = b->th.timestamp > nsamps_for_initial ? b->th.timestamp - nsamps_for_initial : 0;
-          b->lastReceivedTS = b->th.timestamp > nsamps_for_initial ? b->th.timestamp : nsamps_for_initial;
-          LOG_W(HW,"UE got first timestamp: starting at %lu\n",  t->nextTimestamp);
-          b->trashingPacket=true;
-        } else if ( b->lastReceivedTS < b->th.timestamp) {
+	  t->nextTimestamp=b->th.timestamp> nsamps_for_initial ?
+	    b->th.timestamp -  nsamps_for_initial :
+	    0;
+	  b->lastReceivedTS=b->th.timestamp> nsamps_for_initial ?
+	    b->th.timestamp :
+	    nsamps_for_initial;
+	  LOG_W(HW,"UE got first timestamp: starting at %lu\n",  t->nextTimestamp);
+	  b->trashingPacket=true;
+	} else if ( b->lastReceivedTS < b->th.timestamp) {
           int nbAnt= b->th.nbAnt;
 	  
           for (uint64_t index=b->lastReceivedTS; index < b->th.timestamp; index++ ) {
@@ -463,8 +494,8 @@ static bool flushInput(rfsimulator_state_t *t, int timeout, int nsamps_for_initi
         } else if ( b->lastReceivedTS == b->th.timestamp ) {
           // normal case
         } else {
-          abort();
-          AssertFatal(false, "received data in past: current is %lu, new reception: %lu!\n", b->lastReceivedTS, b->th.timestamp);
+          LOG_E(HW, "received data in past: current is %lu, new reception: %lu!\n", b->lastReceivedTS, b->th.timestamp);
+	  b->trashingPacket=true;
         }
 
         pthread_mutex_lock(&Sockmutex);
@@ -478,9 +509,9 @@ static bool flushInput(rfsimulator_state_t *t, int timeout, int nsamps_for_initi
       }
 
       if ( b->headerMode==false ) {
-        LOG_D(HW,"UEsock: %d Set b->lastReceivedTS %ld\n", fd, b->lastReceivedTS);
         if ( ! b->trashingPacket ) {
           b->lastReceivedTS=b->th.timestamp+b->th.size-byteToSample(b->remainToTransfer,b->th.nbAnt);
+          LOG_D(HW,"UEsock: %d Set b->lastReceivedTS %ld\n", fd, b->lastReceivedTS);
         }
 
         if ( b->remainToTransfer==0) {
@@ -537,6 +568,7 @@ int rfsimulator_read(openair0_device *device, openair0_timestamp *ptimestamp, vo
       pthread_mutex_unlock(&Sockmutex);
       usleep(10000);
       pthread_mutex_lock(&Sockmutex);
+
       if ( t->lastWroteTS < t->nextTimestamp ) {
         // Assuming Tx is not done fully in another thread
         // We can never write is the past from the received time
@@ -550,6 +582,7 @@ int rfsimulator_read(openair0_device *device, openair0_timestamp *ptimestamp, vo
 
         for ( int i=0; i < t->tx_num_channels; i++)
           samplesVoid[i]=(void *)&v;
+
 	LOG_I(HW, "No samples Tx occured, so we send 1 sample to notify it: Tx:%lu, Rx:%lu\n",
 	      t->lastWroteTS, t->nextTimestamp);
         rfsimulator_write_internal(t, t->nextTimestamp,
@@ -655,6 +688,9 @@ int rfsimulator_set_freq(openair0_device *device, openair0_config_t *openair0_cf
 int rfsimulator_set_gains(openair0_device *device, openair0_config_t *openair0_cfg) {
   return 0;
 }
+int rfsimulator_write_init(openair0_device *device){
+  return 0;
+}
 __attribute__((__visibility__("default")))
 int device_init(openair0_device *device, openair0_config_t *openair0_cfg) {
   // to change the log level, use this on command line
@@ -678,6 +714,7 @@ int device_init(openair0_device *device, openair0_config_t *openair0_cfg) {
   device->type = USRP_B200_DEV;
   device->openair0_cfg=&openair0_cfg[0];
   device->priv = rfsimulator;
+  device->trx_write_init = rfsimulator_write_init;
 
   for (int i=0; i<FD_SETSIZE; i++)
     rfsimulator->buf[i].conn_sock=-1;
@@ -688,7 +725,7 @@ int device_init(openair0_device *device, openair0_config_t *openair0_cfg) {
   rfsimulator->rx_num_channels=openair0_cfg->rx_num_channels;
   rfsimulator->sample_rate=openair0_cfg->sample_rate;
   rfsimulator->tx_bw=openair0_cfg->tx_bw;
-  randominit(0);
+  //randominit(0);
   set_taus_seed(0);
   return 0;
 }

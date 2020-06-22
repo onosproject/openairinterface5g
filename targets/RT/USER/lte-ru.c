@@ -1546,7 +1546,6 @@ void fill_rf_config(RU_t *ru,
   cfg->num_rb_dl=fp->N_RB_DL;
   cfg->tx_num_channels=ru->nb_tx;
   cfg->rx_num_channels=ru->nb_rx;
-  cfg->clock_source=get_softmodem_params()->clock_source;
 
   for (int i=0; i<ru->nb_tx; i++) {
     cfg->tx_freq[i] = (double)fp->dl_CarrierFreq;
@@ -2006,8 +2005,8 @@ static void *ru_thread( void *param ) {
 #if defined(PRE_SCD_THREAD)
         new_dlsch_ue_select_tbl_in_use = dlsch_ue_select_tbl_in_use;
         dlsch_ue_select_tbl_in_use = !dlsch_ue_select_tbl_in_use;
-        memcpy(&pre_scd_eNB_UE_stats,&RC.mac[ru->eNB_list[0]->Mod_id]->UE_list.eNB_UE_stats, sizeof(eNB_UE_STATS)*MAX_NUM_CCs*NUMBER_OF_UE_MAX);
-        memcpy(&pre_scd_activeUE, &RC.mac[ru->eNB_list[0]->Mod_id]->UE_list.active, sizeof(boolean_t)*NUMBER_OF_UE_MAX);
+        memcpy(&pre_scd_eNB_UE_stats,&RC.mac[ru->eNB_list[0]->Mod_id]->UE_info.eNB_UE_stats, sizeof(eNB_UE_STATS)*MAX_NUM_CCs*NUMBER_OF_UE_MAX);
+        memcpy(&pre_scd_activeUE, &RC.mac[ru->eNB_list[0]->Mod_id]->UE_info.active, sizeof(boolean_t)*NUMBER_OF_UE_MAX);
         AssertFatal((ret=pthread_mutex_lock(&ru->proc.mutex_pre_scd))==0,"[eNB] error locking proc mutex for eNB pre scd\n");
         ru->proc.instance_pre_scd++;
 
@@ -2333,7 +2332,9 @@ int start_rf(RU_t *ru) {
 }
 
 int stop_rf(RU_t *ru) {
-  ru->rfdevice.trx_end_func(&ru->rfdevice);
+    if(ru->rfdevice.trx_end_func != NULL) {
+      ru->rfdevice.trx_end_func(&ru->rfdevice);
+    }
   return 0;
 }
 
@@ -2371,9 +2372,7 @@ void init_RU_proc(RU_t *ru) {
   RU_proc_t *proc;
   pthread_attr_t *attr_FH=NULL, *attr_FH1=NULL, *attr_prach=NULL, *attr_asynch=NULL, *attr_synch=NULL, *attr_emulateRF=NULL, *attr_ctrl=NULL, *attr_prach_br=NULL;
   //pthread_attr_t *attr_fep=NULL;
-#ifndef OCP_FRAMEWORK
   LOG_I(PHY,"Initializing RU proc %d (%s,%s),\n",ru->idx,NB_functions[ru->function],NB_timing[ru->if_timing]);
-#endif
   proc = &ru->proc;
   memset((void *)proc,0,sizeof(RU_proc_t));
   proc->ru = ru;
@@ -2479,11 +2478,15 @@ void init_RU_proc(RU_t *ru) {
     init_frame_parms(ru->frame_parms,1);
     ru->frame_parms->nb_antennas_rx = ru->nb_rx;
     phy_init_RU(ru);
-    openair0_device_load(&ru->rfdevice,&ru->openair0_cfg);
+    ret = openair0_device_load(&ru->rfdevice,&ru->openair0_cfg);
+    if (ret < 0) {
+       LOG_I(PHY,"Exiting, cannot load device. Make sure that your SDR board is connected!\n");
+       exit(1);
+    }
 
     if (setup_RU_buffers(ru)!=0) {
-      printf("Exiting, cannot initialize RU Buffers\n");
-      exit(-1);
+      LOG_I(PHY,"Exiting, cannot initialize RU Buffers\n");
+      exit(1);
     }
   }
 
@@ -2814,7 +2817,7 @@ void set_function_spec_param(RU_t *ru) {
 //extern void RCconfig_RU(void);
 
 
-void init_RU(char *rf_config_file, clock_source_t clock_source, clock_source_t time_source, int send_dmrssync) {
+void init_RU(char *rf_config_file, int send_dmrssync) {
   int ru_id, i, CC_id;
   RU_t *ru;
   PHY_VARS_eNB *eNB0     = (PHY_VARS_eNB *)NULL;
@@ -2849,8 +2852,6 @@ void init_RU(char *rf_config_file, clock_source_t clock_source, clock_source_t t
     ru->south_out_cnt = 0;
     // use eNB_list[0] as a reference for RU frame parameters
     // NOTE: multiple CC_id are not handled here yet!
-    ru->openair0_cfg.clock_source = clock_source;
-    ru->openair0_cfg.time_source  = time_source;
 
     //ru->generate_dmrs_sync = (ru->is_slave == 0) ? 1 : 0;
     if ((ru->is_slave == 0) && (ru->ota_sync_enable == 1))
@@ -3087,6 +3088,27 @@ void RCconfig_RU(void) {
           LOG_E(PHY, "Erroneous RU clock source in the provided configuration file: '%s'\n", *(RUParamList.paramarray[j][RU_SDR_CLK_SRC].strptr));
         }
       }
+      else {
+	RC.ru[j]->openair0_cfg.clock_source = unset;
+      }
+
+      if (config_isparamset(RUParamList.paramarray[j], RU_SDR_TME_SRC)) {
+        if (strcmp(*(RUParamList.paramarray[j][RU_SDR_TME_SRC].strptr), "internal") == 0) {
+          RC.ru[j]->openair0_cfg.time_source = internal;
+          LOG_D(PHY, "RU time source set as internal\n");
+        } else if (strcmp(*(RUParamList.paramarray[j][RU_SDR_TME_SRC].strptr), "external") == 0) {
+          RC.ru[j]->openair0_cfg.time_source = external;
+          LOG_D(PHY, "RU time source set as external\n");
+        } else if (strcmp(*(RUParamList.paramarray[j][RU_SDR_TME_SRC].strptr), "gpsdo") == 0) {
+          RC.ru[j]->openair0_cfg.time_source = gpsdo;
+          LOG_D(PHY, "RU time source set as gpsdo\n");
+        } else {
+          LOG_E(PHY, "Erroneous RU time source in the provided configuration file: '%s'\n", *(RUParamList.paramarray[j][RU_SDR_CLK_SRC].strptr));
+        }
+      }
+      else {
+	RC.ru[j]->openair0_cfg.time_source = unset;
+      }      
 
       if (strcmp(*(RUParamList.paramarray[j][RU_LOCAL_RF_IDX].strptr), "yes") == 0) {
         if ( !(config_isparamset(RUParamList.paramarray[j],RU_LOCAL_IF_NAME_IDX)) ) {

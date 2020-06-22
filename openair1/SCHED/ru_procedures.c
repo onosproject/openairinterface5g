@@ -323,7 +323,7 @@ void feptx_ofdm(RU_t *ru,
                      fp->nb_prefix_samples,
                      CYCLIC_PREFIX);
       } else {
-       if(is_pmch_subframe(ru->proc.frame_tx,subframe,fp)/*subframe==1*/){
+       if(is_pmch_subframe(frame,subframe,fp)/*subframe==1*/){
         normal_prefix_mod(&ru->common.txdataF_BF[aa][0],
                           dummy_tx_b,
                           2,
@@ -428,7 +428,7 @@ void feptx_ofdm(RU_t *ru,
 
      stop_meas(&ru->ofdm_mod_stats);
      LOG_D(PHY,"feptx_ofdm (TXPATH): frame %d, subframe %d: txp (time %p) %d dB, txp (freq) %d dB\n",
-	   ru->proc.frame_tx,subframe,txdata,dB_fixed(signal_energy((int32_t*)txdata,fp->samples_per_tti)),
+	   frame,subframe,txdata,dB_fixed(signal_energy((int32_t*)txdata,fp->samples_per_tti)),
 	   dB_fixed(signal_energy_nodc(ru->common.txdataF_BF[aa],2*slot_sizeF)));
     }
   }
@@ -735,18 +735,16 @@ void ru_fep_full_2thread(RU_t *ru,
                                   calibration->drs_ch_estimates_time,
                                   calibration->rxdataF_ext,
                                   fp->N_RB_DL, //N_rb_alloc,
-				  proc->frame_rx,
-				  proc->tti_rx,
-				  0,//u = 0..29
-				  0,//v = 0,1
-				  /*eNB->ulsch[ru->idx]->cyclicShift,cyclic_shift,0..7*/0,
-				  l,//l
- 			          0,//interpolate,
-				  0 /*eNB->ulsch[ru->idx]->rnti rnti or ru->ulsch[eNB_id]->rnti*/);
- 
-        
+                                  proc->frame_rx,
+			          proc->tti_rx,//proc->subframe_rx,
+                                  0,//u = 0..29
+                                  0,//v = 0,1
+                                  /*eNB->ulsch[ru->idx]->cyclicShift,cyclic_shift,0..7*/0,
+                                  3,//l,
+                                  0,//interpolate,
+                                  0 /*eNB->ulsch[ru->idx]->rnti rnti or ru->ulsch[eNB_id]->rnti*/);
 
-        check_sync_pos = lte_est_timing_advance_pusch((PHY_VARS_eNB *)NULL, ru->idx);
+	check_sync_pos = lte_est_timing_advance_pusch(ru->frame_parms, ru->calibration.drs_ch_estimates_time); 
 
         if (ru->state == RU_CHECK_SYNC) {
           if ((check_sync_pos >= 0 && check_sync_pos<8) || (check_sync_pos < 0 && check_sync_pos>-8)) {

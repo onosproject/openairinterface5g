@@ -78,10 +78,10 @@
  * the key length is 32 bytes (256 bits)
  */
 #define SECURITY_KEY_LENGTH 32
-#ifndef OCP_FRAMEWORK
 typedef enum cell_type_e {
   CELL_MACRO_ENB,
-  CELL_HOME_ENB
+  CELL_HOME_ENB,
+  CELL_MACRO_GNB
 } cell_type_t;
 
 typedef enum paging_drx_e {
@@ -109,7 +109,6 @@ typedef enum cn_domain_s {
   CN_DOMAIN_PS = 1,
   CN_DOMAIN_CS = 2
 } cn_domain_t;
-#endif
 
 typedef struct net_ip_address_s {
   unsigned ipv4:1;
@@ -125,7 +124,6 @@ typedef struct ambr_s {
   bitrate_t br_dl;
 } ambr_t;
 
-#ifndef OCP_FRAMEWORK
 typedef enum priority_level_s {
   PRIORITY_LEVEL_SPARE       = 0,
   PRIORITY_LEVEL_HIGHEST     = 1,
@@ -144,7 +142,6 @@ typedef enum pre_emp_vulnerability_e {
   PRE_EMPTION_VULNERABILITY_DISABLED = 1,
   PRE_EMPTION_VULNERABILITY_MAX,
 } pre_emp_vulnerability_t;
-#endif
 
 typedef struct allocation_retention_priority_s {
   priority_level_t        priority_level;
@@ -271,6 +268,22 @@ typedef struct e_rab_setup_s {
   /* S-GW Tunnel endpoint identifier */
   uint32_t gtp_teid;
 } e_rab_setup_t;
+
+typedef struct e_rab_tobe_added_s {
+  /* Unique e_rab_id for the UE. */
+  uint8_t e_rab_id;
+
+  /* Unique drb_ID for the UE. */
+  uint8_t drb_ID;
+
+  /* The transport layer address for the IP packets */
+  transport_layer_addr_t eNB_addr;
+
+  /* S-GW Tunnel endpoint identifier */
+  uint32_t gtp_teid;
+} e_rab_tobe_added_t;
+
+
 
 typedef struct e_rab_tobeswitched_s {
   /* Unique e_rab_id for the UE. */

@@ -342,34 +342,8 @@ function check_iperf {
         local FILE_COMPLETE=`egrep -c "Server Report" ${LOC_BASE_LOG}_client.txt`
         if [ $FILE_COMPLETE -eq 0 ]
         then
-            # This part will become obsolete once we have UL
-            if [[ $LOC_IS_RF_SIM -eq 1 ]] && [[ $LOC_IS_NR -eq 1 ]]
-            then
-                echo "no UL integration right now --> normal to have no server report"
-                if [ -f ${LOC_BASE_LOG}_server.txt ]
-                then
-                    local EFFECTIVE_BANDWIDTH=`tail -n1 ${LOC_BASE_LOG}_server.txt | sed -e "s#^.*MBytes *##" -e "s#^.*KBytes *##" -e "s#sec.*#sec#"`
-                    if [[ $2 =~ .*K.* ]]
-                    then
-                        local BW_PREFIX="K"
-                    else
-                        local BW_PREFIX="M"
-                    fi
-                    if [[ $EFFECTIVE_BANDWIDTH =~ .*${LOC_REQ_BW}.*${BW_PREFIX}bits.* ]] || [[ $EFFECTIVE_BANDWIDTH =~ .*${LOC_REQ_BW_MINUS_ONE}.*${BW_PREFIX}bits.* ]]
-                    then
-                        echo "got requested DL bandwidth: $EFFECTIVE_BANDWIDTH"
-                    else
-                        echo "got LESS than requested DL bandwidth: $EFFECTIVE_BANDWIDTH"
-                        IPERF_STATUS=-1
-                    fi
-                else
-                    IPERF_STATUS=-1
-                    echo "Server File Report not found"
-                fi
-            else
-                IPERF_STATUS=-1
-                echo "File Report not found"
-            fi
+            IPERF_STATUS=-1
+            echo "File Report not found"
         else
             if [ `egrep -c "Mbits/sec" ${LOC_BASE_LOG}_client.txt` -ne 0 ]
             then
@@ -549,9 +523,9 @@ function install_epc_on_vm {
         echo "############################################################"
         echo "[ -f 01proxy ] && sudo cp 01proxy /etc/apt/apt.conf.d/" > $LOC_EPC_VM_CMDS
         echo "touch /home/ubuntu/.hushlogin" >> $LOC_EPC_VM_CMDS
-        echo "echo \"sudo apt-get --yes --quiet install zip openjdk-8-jre libconfuse-dev libreadline-dev liblog4c-dev libgcrypt-dev libsctp-dev python2.7 python2.7-dev daemon iperf\"" >> $LOC_EPC_VM_CMDS
+        echo "echo \"sudo apt-get --yes --quiet install zip openjdk-8-jre libconfuse-dev libreadline-dev liblog4c-dev libgcrypt-dev libsctp-dev python2.7 python2.7-dev iperf\"" >> $LOC_EPC_VM_CMDS
         echo "sudo apt-get update > zip-install.txt 2>&1" >> $LOC_EPC_VM_CMDS
-        echo "sudo apt-get --yes install zip openjdk-8-jre libconfuse-dev libreadline-dev liblog4c-dev libgcrypt-dev libsctp-dev python2.7 python2.7-dev daemon iperf >> zip-install.txt 2>&1" >> $LOC_EPC_VM_CMDS
+        echo "sudo apt-get --yes install zip openjdk-8-jre libconfuse-dev libreadline-dev liblog4c-dev libgcrypt-dev libsctp-dev python2.7 python2.7-dev iperf >> zip-install.txt 2>&1" >> $LOC_EPC_VM_CMDS
 
         # Installing HSS
         echo "echo \"cd /opt\"" >> $LOC_EPC_VM_CMDS
@@ -613,8 +587,9 @@ function start_epc {
         echo "############################################################"
         echo "echo \"cd /opt/hss_sim0609\"" > $LOC_EPC_VM_CMDS
         echo "cd /opt/hss_sim0609" >> $LOC_EPC_VM_CMDS
-        echo "echo \"sudo daemon --unsafe --name=simulated_hss --chdir=/opt/hss_sim0609 ./starthss_real\"" >> $LOC_EPC_VM_CMDS
-        echo "sudo daemon --unsafe --name=simulated_hss --chdir=/opt/hss_sim0609 ./starthss_real" >> $LOC_EPC_VM_CMDS
+        echo "sudo rm -f hss.log" >> $LOC_EPC_VM_CMDS
+        echo "echo \"screen -dm -S simulated_hss ./starthss_real\"" >> $LOC_EPC_VM_CMDS
+        echo "sudo su -c \"screen -dm -S simulated_hss ./starthss_real\"" >> $LOC_EPC_VM_CMDS
 
         echo "echo \"cd /opt/ltebox/tools/\"" >> $LOC_EPC_VM_CMDS
         echo "cd /opt/ltebox/tools/" >> $LOC_EPC_VM_CMDS
@@ -679,8 +654,6 @@ function terminate_epc {
         echo "cd /opt/ltebox/tools" >> $1
         echo "echo \"sudo ./stop_ltebox\"" >> $1
         echo "sudo ./stop_ltebox" >> $1
-        echo "echo \"sudo daemon --name=simulated_hss --stop\"" >> $1
-        echo "sudo daemon --name=simulated_hss --stop" >> $1
         echo "echo \"sudo killall --signal SIGKILL hss_sim\"" >> $1
         echo "sudo killall --signal SIGKILL hss_sim" >> $1
         ssh -T -o StrictHostKeyChecking=no ubuntu@$2 < $1
@@ -870,9 +843,9 @@ function start_l2_sim_ue {
     echo "cd /home/ubuntu/tmp/cmake_targets/ran_build/build/" >> $1
     if [ $LOC_S1_CONFIGURATION -eq 0 ]
     then
-        echo "echo \"ulimit -c unlimited && ./lte-uesoftmodem -O /home/ubuntu/tmp/ci-scripts/conf_files/ci-$LOC_CONF_FILE --L2-emul 3 --num-ues $LOC_NB_UES --nums_ue_thread $LOC_NB_UES --nokrnmod 1 --log_config.global_log_options level,nocolor --noS1\" > ./my-lte-softmodem-run.sh " >> $1
+        echo "echo \"ulimit -c unlimited && ./lte-uesoftmodem -O /home/ubuntu/tmp/ci-scripts/conf_files/ci-$LOC_CONF_FILE --L2-emul 3 --num-ues $LOC_NB_UES --nums_ue_thread 1 --nokrnmod 1 --log_config.global_log_options level,nocolor --noS1\" > ./my-lte-softmodem-run.sh " >> $1
     else
-        echo "echo \"ulimit -c unlimited && ./lte-uesoftmodem -O /home/ubuntu/tmp/ci-scripts/conf_files/ci-$LOC_CONF_FILE --L2-emul 3 --num-ues $LOC_NB_UES --nums_ue_thread $LOC_NB_UES --nokrnmod 1 --log_config.global_log_options level,nocolor\" > ./my-lte-softmodem-run.sh " >> $1
+        echo "echo \"ulimit -c unlimited && ./lte-uesoftmodem -O /home/ubuntu/tmp/ci-scripts/conf_files/ci-$LOC_CONF_FILE --L2-emul 3 --num-ues $LOC_NB_UES --nums_ue_thread 1 --nokrnmod 1 --log_config.global_log_options level,nocolor\" > ./my-lte-softmodem-run.sh " >> $1
     fi
     echo "chmod 775 ./my-lte-softmodem-run.sh" >> $1
     echo "cat ./my-lte-softmodem-run.sh" >> $1
@@ -905,8 +878,9 @@ function start_l2_sim_ue {
     else
         echo "L2-SIM UE is sync'ed w/ eNB"
     fi
-    local max_interfaces_to_check=1
-    if [ $LOC_S1_CONFIGURATION -eq 0 ]; then max_interfaces_to_check=$LOC_NB_UES; fi
+    local max_interfaces_to_check=$LOC_NB_UES
+    #local max_interfaces_to_check=1
+    #if [ $LOC_S1_CONFIGURATION -eq 0 ]; then max_interfaces_to_check=$LOC_NB_UES; fi
     local j="1"
     while [ $j -le $max_interfaces_to_check ]
     do
@@ -1195,7 +1169,7 @@ function start_rf_sim_gnb {
     echo "cd /home/ubuntu/tmp/cmake_targets/ran_build/build/" >> $1
     if [ $LOC_S1_CONFIGURATION -eq 0 ]
     then
-        echo "echo \"RFSIMULATOR=server ./nr-softmodem -O /home/ubuntu/tmp/ci-scripts/conf_files/ci-$LOC_CONF_FILE --log_config.global_log_options level,nocolor --parallel-config PARALLEL_SINGLE_THREAD --noS1 --nokrnmod 1 --rfsim\" > ./my-nr-softmodem-run.sh " >> $1
+        echo "echo \"RFSIMULATOR=server ./nr-softmodem -O /home/ubuntu/tmp/ci-scripts/conf_files/ci-$LOC_CONF_FILE --log_config.global_log_options level,nocolor --parallel-config PARALLEL_SINGLE_THREAD --noS1 --nokrnmod 1 --rfsim --phy-test\" > ./my-nr-softmodem-run.sh " >> $1
     fi
     echo "chmod 775 ./my-nr-softmodem-run.sh" >> $1
     echo "cat ./my-nr-softmodem-run.sh" >> $1
@@ -1270,7 +1244,7 @@ function start_rf_sim_nr_ue {
     echo "cd /home/ubuntu/tmp/cmake_targets/ran_build/build/" >> $1
     if [ $LOC_S1_CONFIGURATION -eq 0 ]
     then
-        echo "echo \"RFSIMULATOR=${LOC_GNB_VM_IP_ADDR}  ./nr-uesoftmodem --numerology 1 -C ${LOC_FREQUENCY}000000 -r $LOC_PRB --nokrnmod 1 --rfsim --log_config.global_log_options level,nocolor --noS1\" > ./my-nr-softmodem-run.sh " >> $1
+        echo "echo \"RFSIMULATOR=${LOC_GNB_VM_IP_ADDR}  ./nr-uesoftmodem --nokrnmod 1 --rfsim --phy-test --rrc_config_path /home/ubuntu/tmp/ci-scripts/rrc-files --log_config.global_log_options level,nocolor --noS1\" > ./my-nr-softmodem-run.sh " >> $1
     fi
     echo "chmod 775 ./my-nr-softmodem-run.sh" >> $1
     echo "cat ./my-nr-softmodem-run.sh" >> $1
@@ -1281,7 +1255,7 @@ function start_rf_sim_nr_ue {
     rm $1
 
     local i="0"
-    echo "egrep -c \"rfsimulator: Success\" /home/ubuntu/tmp/cmake_targets/log/$LOC_LOG_FILE" > $1
+    echo "egrep -c \"Initial sync: pbch decoded sucessfully\" /home/ubuntu/tmp/cmake_targets/log/$LOC_LOG_FILE" > $1
     while [ $i -lt 10 ]
     do
         sleep 5
@@ -2040,81 +2014,117 @@ function run_test_on_vm {
 
     if [[ "$RUN_OPTIONS" == "complex" ]] && [[ $VM_NAME =~ .*-rf-sim.* ]]
     then
-        NR_STATUS=0
-        PING_STATUS=0
-        IPERF_STATUS=0
-
         CN_CONFIG="noS1"
         CONF_FILE=gnb.band78.tm1.106PRB.usrpn300.conf
         S1_NOS1_CFG=0
         PRB=106
         FREQUENCY=3510
 
+        local try_cnt="0"
+        NR_STATUS=0
+
         ######### start of loop
+        while [ $try_cnt -lt 5 ]
+        do
+            SYNC_STATUS=0
+            PING_STATUS=0
+            IPERF_STATUS=0
 
-        echo "############################################################"
-        echo "${CN_CONFIG} : Starting the gNB"
-        echo "############################################################"
-        CURRENT_GNB_LOG_FILE=tdd_${PRB}prb_${CN_CONFIG}_gnb.log
-        start_rf_sim_gnb $GNB_VM_CMDS "$GNB_VM_IP_ADDR" $CURRENT_GNB_LOG_FILE $PRB $CONF_FILE $S1_NOS1_CFG
+            echo "############################################################"
+            echo "${CN_CONFIG} : Starting the gNB"
+            echo "############################################################"
+            CURRENT_GNB_LOG_FILE=tdd_${PRB}prb_${CN_CONFIG}_gnb.log
+            start_rf_sim_gnb $GNB_VM_CMDS "$GNB_VM_IP_ADDR" $CURRENT_GNB_LOG_FILE $PRB $CONF_FILE $S1_NOS1_CFG
 
-        echo "############################################################"
-        echo "${CN_CONFIG} : Starting the NR-UE"
-        echo "############################################################"
-        CURRENT_NR_UE_LOG_FILE=tdd_${PRB}prb_${CN_CONFIG}_ue.log
-        start_rf_sim_nr_ue $NR_UE_VM_CMDS $NR_UE_VM_IP_ADDR $GNB_VM_IP_ADDR $CURRENT_NR_UE_LOG_FILE $PRB $FREQUENCY $S1_NOS1_CFG
-        if [ $NR_UE_SYNC -eq 0 ]
-        then
-            echo "Problem w/ gNB and NR-UE not syncing"
+            echo "############################################################"
+            echo "${CN_CONFIG} : Starting the NR-UE"
+            echo "############################################################"
+            CURRENT_NR_UE_LOG_FILE=tdd_${PRB}prb_${CN_CONFIG}_ue.log
+            start_rf_sim_nr_ue $NR_UE_VM_CMDS $NR_UE_VM_IP_ADDR $GNB_VM_IP_ADDR $CURRENT_NR_UE_LOG_FILE $PRB $FREQUENCY $S1_NOS1_CFG
+            if [ $NR_UE_SYNC -eq 0 ]
+            then
+                echo "Problem w/ gNB and NR-UE not syncing"
+                terminate_enb_ue_basic_sim $NR_UE_VM_CMDS $NR_UE_VM_IP_ADDR 2
+                terminate_enb_ue_basic_sim $GNB_VM_CMDS $GNB_VM_IP_ADDR 1
+                SYNC_STATUS=-1
+                try_cnt=$[$try_cnt+1]
+                continue
+            fi
+
+            echo "############################################################"
+            echo "${CN_CONFIG} : Pinging the gNB from NR-UE"
+            echo "############################################################"
+            get_enb_noS1_ip_addr $GNB_VM_CMDS $GNB_VM_IP_ADDR
+            PING_LOG_FILE=tdd_${PRB}prb_${CN_CONFIG}_ping_gnb_from_nrue.log
+            ping_epc_ip_addr $NR_UE_VM_CMDS $NR_UE_VM_IP_ADDR $ENB_IP_ADDR $PING_LOG_FILE 1 0
+            scp -o StrictHostKeyChecking=no ubuntu@$NR_UE_VM_IP_ADDR:/home/ubuntu/$PING_LOG_FILE $ARCHIVES_LOC
+            check_ping_result $ARCHIVES_LOC/$PING_LOG_FILE 20
+
+            echo "############################################################"
+            echo "${CN_CONFIG} : Pinging the NR-UE from gNB"
+            echo "############################################################"
+            get_ue_ip_addr $NR_UE_VM_CMDS $NR_UE_VM_IP_ADDR 1
+            PING_LOG_FILE=tdd_${PRB}prb_${CN_CONFIG}_ping_from_gnb_nrue.log
+            ping_enb_ip_addr $GNB_VM_CMDS $GNB_VM_IP_ADDR $UE_IP_ADDR $PING_LOG_FILE 0
+            scp -o StrictHostKeyChecking=no ubuntu@$GNB_VM_IP_ADDR:/home/ubuntu/$PING_LOG_FILE $ARCHIVES_LOC
+            check_ping_result $ARCHIVES_LOC/$PING_LOG_FILE 20
+
+            echo "############################################################"
+            echo "${CN_CONFIG} : iperf DL -- NR-UE is server and gNB is client"
+            echo "############################################################"
+            THROUGHPUT="30K"
+            CURR_IPERF_LOG_BASE=tdd_${PRB}prb_${CN_CONFIG}_iperf_dl
+            get_enb_noS1_ip_addr $GNB_VM_CMDS $GNB_VM_IP_ADDR
+            get_ue_ip_addr $NR_UE_VM_CMDS $NR_UE_VM_IP_ADDR 1
+            generic_iperf $NR_UE_VM_CMDS $NR_UE_VM_IP_ADDR $UE_IP_ADDR $GNB_VM_CMDS $GNB_VM_IP_ADDR $ENB_IP_ADDR $THROUGHPUT $CURR_IPERF_LOG_BASE 1 0 
+            scp -o StrictHostKeyChecking=no ubuntu@$GNB_VM_IP_ADDR:/home/ubuntu/${CURR_IPERF_LOG_BASE}_client.txt $ARCHIVES_LOC
+            scp -o StrictHostKeyChecking=no ubuntu@$NR_UE_VM_IP_ADDR:/home/ubuntu/${CURR_IPERF_LOG_BASE}_server.txt $ARCHIVES_LOC
+            check_iperf $ARCHIVES_LOC/$CURR_IPERF_LOG_BASE $THROUGHPUT
+            if [ $IPERF_STATUS -ne 0 ]
+            then
+                echo "DL test not OK"
+                terminate_enb_ue_basic_sim $NR_UE_VM_CMDS $NR_UE_VM_IP_ADDR 2
+                terminate_enb_ue_basic_sim $GNB_VM_CMDS $GNB_VM_IP_ADDR 1
+                try_cnt=$[$try_cnt+1]
+                continue
+            fi
+
+            echo "############################################################"
+            echo "${CN_CONFIG} : iperf UL -- gNB is server and NR-UE is client"
+            echo "############################################################"
+            THROUGHPUT="30K"
+            CURR_IPERF_LOG_BASE=tdd_${PRB}prb_${CN_CONFIG}_iperf_ul
+            get_enb_noS1_ip_addr $GNB_VM_CMDS $GNB_VM_IP_ADDR
+            get_ue_ip_addr $NR_UE_VM_CMDS $NR_UE_VM_IP_ADDR 1
+            generic_iperf $GNB_VM_CMDS $GNB_VM_IP_ADDR $ENB_IP_ADDR $NR_UE_VM_CMDS $NR_UE_VM_IP_ADDR $UE_IP_ADDR $THROUGHPUT $CURR_IPERF_LOG_BASE 1 0
+            scp -o StrictHostKeyChecking=no ubuntu@$GNB_VM_IP_ADDR:/home/ubuntu/${CURR_IPERF_LOG_BASE}_server.txt $ARCHIVES_LOC
+            scp -o StrictHostKeyChecking=no ubuntu@$NR_UE_VM_IP_ADDR:/home/ubuntu/${CURR_IPERF_LOG_BASE}_client.txt $ARCHIVES_LOC
+            check_iperf $ARCHIVES_LOC/$CURR_IPERF_LOG_BASE $THROUGHPUT
+
+            echo "############################################################"
+            echo "${CN_CONFIG} : Terminate gNB/NR-UE simulators"
+            echo "############################################################"
             terminate_enb_ue_basic_sim $NR_UE_VM_CMDS $NR_UE_VM_IP_ADDR 2
             terminate_enb_ue_basic_sim $GNB_VM_CMDS $GNB_VM_IP_ADDR 1
             scp -o StrictHostKeyChecking=no ubuntu@$GNB_VM_IP_ADDR:/home/ubuntu/tmp/cmake_targets/log/$CURRENT_GNB_LOG_FILE $ARCHIVES_LOC
             scp -o StrictHostKeyChecking=no ubuntu@$NR_UE_VM_IP_ADDR:/home/ubuntu/tmp/cmake_targets/log/$CURRENT_NR_UE_LOG_FILE $ARCHIVES_LOC
-            echo "5G-NR RFSIM seems to FAIL"
-            echo "5G-NR: TEST_KO" >> $ARCHIVES_LOC/test_final_status.log
-            STATUS=-1
-            return
-        fi
-
-        echo "############################################################"
-        echo "${CN_CONFIG} : iperf DL -- NR-UE is server and gNB is client"
-        echo "############################################################"
-        THROUGHPUT="30K"
-        CURR_IPERF_LOG_BASE=tdd_${PRB}prb_${CN_CONFIG}_iperf_dl
-        get_enb_noS1_ip_addr $GNB_VM_CMDS $GNB_VM_IP_ADDR
-        get_ue_ip_addr $NR_UE_VM_CMDS $NR_UE_VM_IP_ADDR 1
-        generic_iperf $NR_UE_VM_CMDS $NR_UE_VM_IP_ADDR $UE_IP_ADDR $GNB_VM_CMDS $GNB_VM_IP_ADDR $ENB_IP_ADDR $THROUGHPUT $CURR_IPERF_LOG_BASE 1 0 
-        scp -o StrictHostKeyChecking=no ubuntu@$GNB_VM_IP_ADDR:/home/ubuntu/${CURR_IPERF_LOG_BASE}_client.txt $ARCHIVES_LOC
-        scp -o StrictHostKeyChecking=no ubuntu@$NR_UE_VM_IP_ADDR:/home/ubuntu/${CURR_IPERF_LOG_BASE}_server.txt $ARCHIVES_LOC
-        check_iperf $ARCHIVES_LOC/$CURR_IPERF_LOG_BASE $THROUGHPUT
-
-        echo "############################################################"
-        echo "${CN_CONFIG} : iperf UL -- gNB is server and NR-UE is client"
-        echo "############################################################"
-        THROUGHPUT="30K"
-        CURR_IPERF_LOG_BASE=tdd_${PRB}prb_${CN_CONFIG}_iperf_ul
-        get_enb_noS1_ip_addr $GNB_VM_CMDS $GNB_VM_IP_ADDR
-        get_ue_ip_addr $NR_UE_VM_CMDS $NR_UE_VM_IP_ADDR 1
-        generic_iperf $GNB_VM_CMDS $GNB_VM_IP_ADDR $ENB_IP_ADDR $NR_UE_VM_CMDS $NR_UE_VM_IP_ADDR $UE_IP_ADDR $THROUGHPUT $CURR_IPERF_LOG_BASE 1 0
-        scp -o StrictHostKeyChecking=no ubuntu@$GNB_VM_IP_ADDR:/home/ubuntu/${CURR_IPERF_LOG_BASE}_server.txt $ARCHIVES_LOC
-        scp -o StrictHostKeyChecking=no ubuntu@$NR_UE_VM_IP_ADDR:/home/ubuntu/${CURR_IPERF_LOG_BASE}_client.txt $ARCHIVES_LOC
-        check_iperf $ARCHIVES_LOC/$CURR_IPERF_LOG_BASE $THROUGHPUT
-
-        echo "############################################################"
-        echo "${CN_CONFIG} : Terminate gNB/NR-UE simulators"
-        echo "############################################################"
-        terminate_enb_ue_basic_sim $NR_UE_VM_CMDS $NR_UE_VM_IP_ADDR 2
-        terminate_enb_ue_basic_sim $GNB_VM_CMDS $GNB_VM_IP_ADDR 1
-        scp -o StrictHostKeyChecking=no ubuntu@$GNB_VM_IP_ADDR:/home/ubuntu/tmp/cmake_targets/log/$CURRENT_GNB_LOG_FILE $ARCHIVES_LOC
-        scp -o StrictHostKeyChecking=no ubuntu@$NR_UE_VM_IP_ADDR:/home/ubuntu/tmp/cmake_targets/log/$CURRENT_NR_UE_LOG_FILE $ARCHIVES_LOC
-
+            if [ $IPERF_STATUS -ne 0 ]
+            then
+                echo "UL test not OK"
+                try_cnt=$[$try_cnt+1]
+            else
+                try_cnt=$[$try_cnt+10]
+            fi
+        done
         ######### end of loop
         full_l2_sim_destroy
+
 
         echo "############################################################"
         echo "Checking run status"
         echo "############################################################"
 
+        if [ $SYNC_STATUS -ne 0 ]; then NR_STATUS=-1; fi
         if [ $PING_STATUS -ne 0 ]; then NR_STATUS=-1; fi
         if [ $IPERF_STATUS -ne 0 ]; then NR_STATUS=-1; fi
         if [ $NR_STATUS -eq 0 ]
@@ -2214,15 +2224,41 @@ function run_test_on_vm {
 
                 if [ $S1_NOS1_CFG -eq 1 ]
                 then
-                    get_ue_ip_addr $UE_VM_CMDS $UE_VM_IP_ADDR 1
 
                     echo "############################################################"
                     echo "${CN_CONFIG} : Pinging the EPC from UE(s)"
                     echo "############################################################"
-                    PING_LOG_FILE=${TMODE}_${BW}MHz_${UES}users_${CN_CONFIG}_ping_epc.log
-                    ping_epc_ip_addr $UE_VM_CMDS $UE_VM_IP_ADDR $REAL_EPC_IP_ADDR $PING_LOG_FILE 1 0
-                    scp -o StrictHostKeyChecking=no ubuntu@$UE_VM_IP_ADDR:/home/ubuntu/$PING_LOG_FILE $ARCHIVES_LOC
-                    check_ping_result $ARCHIVES_LOC/$PING_LOG_FILE 20
+                    echo " --- Sequentially ---"
+                    local j="1"
+                    while [ $j -le $INT_NB_UES ]
+                    do
+                        PING_LOG_FILE=${TMODE}_${BW}MHz_${UES}users_${CN_CONFIG}_ping_epc_seq_from_ue${j}.log
+                        ping_epc_ip_addr $UE_VM_CMDS $UE_VM_IP_ADDR $REAL_EPC_IP_ADDR $PING_LOG_FILE ${j} 0
+                        scp -o StrictHostKeyChecking=no ubuntu@$UE_VM_IP_ADDR:/home/ubuntu/$PING_LOG_FILE $ARCHIVES_LOC
+                        check_ping_result $ARCHIVES_LOC/$PING_LOG_FILE 20
+                        j=$[$j+1]
+                    done
+                    if [ $INT_NB_UES -gt 1 ]
+                    then
+                        echo " --- In parallel ---"
+                        j="1"
+                        while [ $j -le $INT_NB_UES ]
+                        do
+                            PING_LOG_FILE=${TMODE}_${BW}MHz_${UES}users_${CN_CONFIG}_ping_epc_para_from_ue${j}.log
+                            ping_epc_ip_addr $UE_VM_CMDS $UE_VM_IP_ADDR $REAL_EPC_IP_ADDR $PING_LOG_FILE ${j} 1
+                            j=$[$j+1]
+                        done
+                        sleep 25
+                        j="1"
+                        while [ $j -le $INT_NB_UES ]
+                        do
+                            PING_LOG_FILE=${TMODE}_${BW}MHz_${UES}users_${CN_CONFIG}_ping_epc_para_from_ue${j}.log
+                            scp -o StrictHostKeyChecking=no ubuntu@$UE_VM_IP_ADDR:/home/ubuntu/$PING_LOG_FILE $ARCHIVES_LOC
+                            tail -3 $ARCHIVES_LOC/$PING_LOG_FILE
+                            check_ping_result $ARCHIVES_LOC/$PING_LOG_FILE 20
+                            j=$[$j+1]
+                        done
+                    fi
                 else
                     get_enb_noS1_ip_addr $ENB_VM_CMDS $ENB_VM_IP_ADDR
 
@@ -2267,10 +2303,38 @@ function run_test_on_vm {
                     echo "############################################################"
                     echo "${CN_CONFIG} : Pinging the UE(s) from EPC"
                     echo "############################################################"
-                    PING_LOG_FILE=${TMODE}_${BW}MHz_${UES}users_${CN_CONFIG}_ping_ue.log
-                    ping_ue_ip_addr $EPC_VM_CMDS $EPC_VM_IP_ADDR $UE_IP_ADDR $PING_LOG_FILE 0
-                    scp -o StrictHostKeyChecking=no ubuntu@$EPC_VM_IP_ADDR:/home/ubuntu/$PING_LOG_FILE $ARCHIVES_LOC
-                    check_ping_result $ARCHIVES_LOC/$PING_LOG_FILE 20
+                    echo " --- Sequentially ---"
+                    local j="1"
+                    while [ $j -le $INT_NB_UES ]
+                    do
+                        get_ue_ip_addr $UE_VM_CMDS $UE_VM_IP_ADDR $j
+                        PING_LOG_FILE=${TMODE}_${BW}MHz_${UES}users_${CN_CONFIG}_ping_from_epc_seq_ue${j}.log
+                        ping_ue_ip_addr $EPC_VM_CMDS $EPC_VM_IP_ADDR $UE_IP_ADDR $PING_LOG_FILE 0
+                        scp -o StrictHostKeyChecking=no ubuntu@$EPC_VM_IP_ADDR:/home/ubuntu/$PING_LOG_FILE $ARCHIVES_LOC
+                        check_ping_result $ARCHIVES_LOC/$PING_LOG_FILE 20
+                        j=$[$j+1]
+                    done
+                    if [ $INT_NB_UES -gt 1 ]
+                    then
+                        echo " --- In parallel ---"
+                        j="1"
+                        while [ $j -le $INT_NB_UES ]
+                        do
+                            get_ue_ip_addr $UE_VM_CMDS $UE_VM_IP_ADDR $j
+                            PING_LOG_FILE=${TMODE}_${BW}MHz_${UES}users_${CN_CONFIG}_ping_from_epc_para_ue${j}.log
+                            ping_ue_ip_addr $EPC_VM_CMDS $EPC_VM_IP_ADDR $UE_IP_ADDR $PING_LOG_FILE 1
+                            j=$[$j+1]
+                        done
+                        sleep 25
+                        j="1"
+                        while [ $j -le $INT_NB_UES ]
+                        do
+                            PING_LOG_FILE=${TMODE}_${BW}MHz_${UES}users_${CN_CONFIG}_ping_from_epc_para_ue${j}.log
+                            scp -o StrictHostKeyChecking=no ubuntu@$EPC_VM_IP_ADDR:/home/ubuntu/$PING_LOG_FILE $ARCHIVES_LOC
+                            check_ping_result $ARCHIVES_LOC/$PING_LOG_FILE 20
+                            j=$[$j+1]
+                        done
+                    fi
                 else
                     echo "############################################################"
                     echo "${CN_CONFIG} : Pinging the UE(s) from eNB"
@@ -2310,7 +2374,7 @@ function run_test_on_vm {
                     fi
                 fi
 
-                if [ $S1_NOS1_CFG -eq 2 ]
+                if [ $S1_NOS1_CFG -eq 0 ]
                 then
                     get_enb_noS1_ip_addr $ENB_VM_CMDS $ENB_VM_IP_ADDR
                     echo "############################################################"
