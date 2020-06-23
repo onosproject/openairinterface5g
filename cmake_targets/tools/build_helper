@@ -150,7 +150,9 @@ clean_all_files() {
  set_openair_env
  dir=$OPENAIR_DIR/cmake_targets
  rm -rf $dir/log $OPENAIR_DIR/targets/bin/*
- rm -rf $dir/ran_build $dir/lte-simulators/build
+ rm -rf $dir/ran_build $dir/ran_build_noLOG
+ rm -rf $dir/lte-simulators/build 
+ rm -rf $dir/phy_simulators/build $dir/nas_sim_tools/build 
  rm -rf $dir/oaisim_build_oai/build $dir/oaisim_build_oai/CMakeLists.txt
  rm -rf $dir/autotests/bin $dir/autotests/log $dir/autotests/*/build
 }
@@ -167,7 +169,7 @@ check_warnings() {
   #we look for 'warning:' in the compilation log file
   #this is how gcc starts a warning
   #this is not perfect, we may get false positive
-  warning_count=`grep "warning:" "$1"|wc -l`
+  warning_count=`grep "warning:" "$1" | egrep -v "jobserver unavailable|disabling jobserver mode" | wc -l`
   if [ $warning_count -gt 0 ]; then
     echo_error "WARNING: $warning_count warnings. See $1"
   fi
@@ -177,16 +179,19 @@ compilations() {
   cd $OPENAIR_DIR/cmake_targets/$1/build
   set +e
   {
-    rm -f $3
     if [ "$BUILD_COVERITY_SCAN" == "1" ]; then
         COV_SCAN_PREFIX="cov-build --dir cov-int"
     else
         COV_SCAN_PREFIX=""
     fi
+    if [ "$MAKE_CMD" != "" ]; then
+       $MAKE_CMD $2
+    else 
     if [ "$VERBOSE_COMPILE" == "1" ]; then
        $COV_SCAN_PREFIX make -j`nproc` $2 VERBOSE=$VERBOSE_COMPILE
     else
        $COV_SCAN_PREFIX make -j`nproc` $2
+    fi
     fi
 
   } > $dlog/$2.$REL.txt 2>&1
@@ -217,7 +222,7 @@ install_protobuf_from_source(){
     #tar -xzvf protobuf-2.6.1.tar.gz --owner $USER --group $USER --no-same-owner
     #cd protobuf-2.6.1/
     rm -rf /tmp/protobuf-cpp-3.3.0.tar.gz* /tmp/protobuf-3.3.0
-    wget https://github.com/google/protobuf/releases/download/v3.3.0/protobuf-cpp-3.3.0.tar.gz
+    wget --tries=3 --retry-connrefused https://github.com/google/protobuf/releases/download/v3.3.0/protobuf-cpp-3.3.0.tar.gz
     tar -xzvf protobuf-cpp-3.3.0.tar.gz --owner $USER --group $(groups | cut -d" " -f1) --no-same-owner
     cd protobuf-3.3.0/
     ./configure
@@ -353,8 +358,8 @@ install_bladerf_driver_from_source(){
     $SUDO ldconfig
     echo "Downloading FPGA and firmware images"
     cd /tmp/bladeRF
-    wget https://www.nuand.com/fx3/bladeRF_fw_latest.img
-    wget https://www.nuand.com/fpga/hostedx40-latest.rbf
+    wget --tries=3 --retry-connrefused https://www.nuand.com/fx3/bladeRF_fw_latest.img
+    wget --tries=3 --retry-connrefused https://www.nuand.com/fpga/hostedx40-latest.rbf
     sudo mkdir -p /usr/share/Nuand/bladeRF
     sudo mv bladeRF_fw_latest.img /usr/share/Nuand/bladeRF/bladeRF_fw.img
     sudo mv hostedx40-latest.rbf /usr/share/Nuand/bladeRF/hostedx40.rbf
@@ -567,7 +572,7 @@ check_install_additional_tools (){
     echo_info "Installing Netinterfaces package. The logfile for installation is in $log_netiface"
     (
     $SUDO rm -fr /tmp/netifaces-0.10.4.tar.gz /tmp/netifaces
-    wget -P /tmp  https://pypi.python.org/packages/18/fa/dd13d4910aea339c0bb87d2b3838d8fd923c11869b1f6e741dbd0ff3bc00/netifaces-0.10.4.tar.gz
+    wget --tries=3 --retry-connrefused -P /tmp  https://pypi.python.org/packages/18/fa/dd13d4910aea339c0bb87d2b3838d8fd923c11869b1f6e741dbd0ff3bc00/netifaces-0.10.4.tar.gz
     tar -xzvf /tmp/netifaces-0.10.4.tar.gz -C /tmp
     cd /tmp/netifaces-0.10.4
     $SUDO python setup.py install
@@ -619,6 +624,7 @@ check_install_oai_software() {
 	build-essential \
 	cmake \
 	cmake-curses-gui  \
+        ninja-build \
 	doxygen \
 	doxygen-gui \
 	texlive-latex-base \
