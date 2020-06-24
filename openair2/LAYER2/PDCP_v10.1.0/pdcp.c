@@ -723,7 +723,7 @@ pdcp_data_ind(
         pdcp_p->rx_hfn++;
       }
 
-      rlc_data_ind(ctxt_pP,
+      rrc_data_ind(ctxt_pP,
                    rb_id,
                    sdu_buffer_sizeP - pdcp_header_len - pdcp_tailer_len,
                    (uint8_t *)&sdu_buffer_pP->data[pdcp_header_len]);
