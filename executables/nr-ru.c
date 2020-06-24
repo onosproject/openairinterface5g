@@ -1441,10 +1441,12 @@ void *ru_thread( void *param ) {
 
   LOG_I(PHY,"Starting RU %d (%s,%s),\n",ru->idx,NB_functions[ru->function],NB_timing[ru->if_timing]);
 
+  memcpy((void*)&ru->config,(void*)&RC.gNB[0]->gNB_config,sizeof(ru->config));
+
   if(emulate_rf) {
-    fill_rf_config(ru,ru->rf_config_file);
     nr_init_frame_parms(&ru->config, fp);
     nr_dump_frame_parms(fp);
+    fill_rf_config(ru,ru->rf_config_file);
     nr_phy_init_RU(ru);
 
     if (setup_RU_buffers(ru)!=0) {
@@ -1462,8 +1464,6 @@ void *ru_thread( void *param ) {
 
       AssertFatal(ret==0,"Cannot connect to remote radio\n");
     }
-
-    memcpy((void*)&ru->config,(void*)&RC.gNB[0]->gNB_config,sizeof(ru->config));
 
     if (ru->if_south == LOCAL_RF) { // configure RF parameters only
       nr_init_frame_parms(&ru->config, fp);
