@@ -2612,7 +2612,6 @@ add_executable(pdcp_benchmark
   ${OPENAIR3_DIR}/NAS/UE/nas_ue_task.c
   ${OPENAIR_DIR}/common/utils/utils.c
   ${OPENAIR_DIR}/common/utils/system.c
-  ${RLC_DIR}/rlc.c
   ${CONFIG_SOURCES}
   ${T_SOURCE}
 )
