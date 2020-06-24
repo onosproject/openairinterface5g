@@ -137,7 +137,7 @@ int main(int argc, char *argv[])
 	resQ = atoi(argv[1]);
 	*/pool_buffer_init();
 	list_init(&pdu_tx_list, NULL);
-	/*printf("2");
+	printf("2");
 	//logInit();
     printf("3");
 	pdcp_el.next_pdcp_tx_sn = 0;
@@ -148,7 +148,7 @@ int main(int argc, char *argv[])
 	pdcp_el.seq_num_size = 12;
 	pdcp_el.cipheringAlgorithm = (resQ==1?EEA1_128_ALG_ID:EEA2_128_ALG_ID);
 	printf("4");
-	pdcp_init_seq_numbers(&pdcp_el);
+	/*pdcp_init_seq_numbers(&pdcp_el);
 	printf("5");
 	
 	pdcp_data_req(NULL, //ctxt_pP
