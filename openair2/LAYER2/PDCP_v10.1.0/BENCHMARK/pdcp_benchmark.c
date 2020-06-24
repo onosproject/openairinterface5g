@@ -100,7 +100,7 @@ rrc_data_ind(
   const rb_id_t                Srb_id,
   const sdu_size_t             sdu_sizeP,
   const uint8_t   *const       buffer_pP
-) {return 0;}
+) {return;}
 
 
 void rlc_util_print_hex_octets(
