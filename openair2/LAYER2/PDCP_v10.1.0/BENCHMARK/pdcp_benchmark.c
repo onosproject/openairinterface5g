@@ -141,7 +141,7 @@ int main(int argc, char *argv[])
 	//logInit();
     printf("3");
 	pdcp_el.next_pdcp_tx_sn = 0;
-	/*pdcp_el.next_pdcp_rx_sn = 0;
+	pdcp_el.next_pdcp_rx_sn = 0;
 	pdcp_el.tx_hfn = 0;
 	pdcp_el.rx_hfn = 0;
 	pdcp_el.last_submitted_pdcp_rx_sn = 4095;
