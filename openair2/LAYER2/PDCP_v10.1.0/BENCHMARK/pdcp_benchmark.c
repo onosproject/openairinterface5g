@@ -148,10 +148,10 @@ int main(int argc, char *argv[])
 	pdcp_el.seq_num_size = 12;
 	pdcp_el.cipheringAlgorithm = (resQ==1?EEA1_128_ALG_ID:EEA2_128_ALG_ID);
 	printf("4");
-	/*pdcp_init_seq_numbers(&pdcp_el);
+	pdcp_init_seq_numbers(&pdcp_el);
 	printf("5");
 	
-	pdcp_data_req(NULL, //ctxt_pP
+	/*pdcp_data_req(NULL, //ctxt_pP
 		      0,    //srb_flagP
 	              3,    // rb_id
 	              0,    // muiP
