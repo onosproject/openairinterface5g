@@ -94,11 +94,13 @@ rlc_op_status_t rlc_data_req     (const protocol_ctxt_t *const ctxt_pP,
                                   const uint32_t *const destinationL2Id
                                  ) {return 0;}
 
-rlc_op_status_t rrc_data_ind     (const protocol_ctxt_t *const ctxt_pP,
-                                  rb_id_t      rb_id,
-                                  const sdu_size_t     sdu_buffer_sizeP,
-                                  uint8_t* sthg
-                                  ) {return 0;}
+void
+rrc_data_ind(
+  const protocol_ctxt_t *const ctxt_pP,
+  const rb_id_t                Srb_id,
+  const sdu_size_t             sdu_sizeP,
+  const uint8_t   *const       buffer_pP
+) {return 0;}
 
 
 void rlc_util_print_hex_octets(
