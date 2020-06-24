@@ -137,7 +137,7 @@ int main(int argc, char *argv[])
 	resQ = atoi(argv[1]);
 	*/pool_buffer_init();
 	list_init(&pdu_tx_list, NULL);
-	printf("2");
+	/*printf("2");
 	//logInit();
     printf("3");
 	pdcp_el.next_pdcp_tx_sn = 0;
@@ -159,7 +159,7 @@ int main(int argc, char *argv[])
                       DUMMY_BUFFER_SIZE, //sdu_buffer_size
                       DUMMY_BUFFER,  // sdu_buffer 
                       PDCP_TRANSMISSION_MODE_DATA, // pdcp_transmission_mod
-                      0,0);
+                      0,0);*/
 
 
 }
