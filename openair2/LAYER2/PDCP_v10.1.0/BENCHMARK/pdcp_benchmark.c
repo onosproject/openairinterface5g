@@ -138,7 +138,7 @@ int main(int argc, char *argv[])
 	*/pool_buffer_init();
 	list_init(&pdu_tx_list, NULL);
 	printf("2");
-	logInit();
+	//logInit();
     printf("3");
 	pdcp_el.next_pdcp_tx_sn = 0;
 	pdcp_el.next_pdcp_rx_sn = 0;
