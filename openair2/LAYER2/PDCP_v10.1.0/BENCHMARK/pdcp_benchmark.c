@@ -158,7 +158,7 @@ int main(int argc, char *argv[])
     ctxt.frame = 0;
     ctxt.subframe = 0;
 
-	pdcp_data_req(ctxt, //ctxt_pP
+	pdcp_data_req(&ctxt, //ctxt_pP
 		      0,    //srb_flagP
 	              3,    // rb_id
 	              0,    // muiP
