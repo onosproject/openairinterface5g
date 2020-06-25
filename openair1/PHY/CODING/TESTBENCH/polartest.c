@@ -26,6 +26,7 @@ int main(int argc, char *argv[])
 {
   //Default simulation values (Aim for iterations = 1000000.)
   int decoder_int16=0;
+  int16_t decoder_int8=0;
   int itr, iterations = 1000, arguments, polarMessageType = 0; //0=PBCH, 1=DCI, 2=UCI
   double SNRstart = -20.0, SNRstop = 0.0, SNRinc= 0.5; //dB
   double SNR, SNR_lin;
@@ -37,7 +38,7 @@ int main(int argc, char *argv[])
   uint8_t aggregation_level = 8, decoderListSize = 8, logFlag = 0;
   uint16_t rnti=0;
 
-  while ((arguments = getopt (argc, argv, "s:d:f:m:i:l:a:p:hqgFL:k:")) != -1)
+  while ((arguments = getopt (argc, argv, "s:d:f:m:i:l:a:p:q:hgFL:k:")) != -1)
     switch (arguments) {
     case 's':
     	SNRstart = atof(optarg);
@@ -68,6 +69,13 @@ int main(int argc, char *argv[])
 
     case 'q':
     	decoder_int16 = 1;
+	decoder_int8=atoi(optarg);
+    	if (decoder_int8 != 8 && decoder_int8 != 1 && decoder_int8 != 0 && decoder_int8 != 16) {
+    		printf("Illegal argument for option -q: %d \nPossible values: 0 or 16 to use 16-bit decoder, 1 or 8 to use the 8-bit decoder\n",decoder_int8);
+    		exit(-1);
+    	}
+    	if (decoder_int8 == 8) decoder_int8=1;
+	if (decoder_int8 == 16) decoder_int8=0;
     	break;
 
     case 'g':
@@ -99,7 +107,7 @@ int main(int argc, char *argv[])
 
     case 'h':
       printf("./polartest\nOptions\n-h Print this help\n-s SNRstart (dB)\n-d SNRinc (dB)\n-f SNRstop (dB)\n-m [0=PBCH|1=DCI|2=UCI]\n"
-             "-i Number of iterations\n-l decoderListSize\n-q Flag for optimized coders usage\n-F Flag for test results logging\n"
+             "-i Number of iterations\n-l decoderListSize\n-q Flag for optimized coders usage [0 = 16-bit, 1 = 8-bit]\n-F Flag for test results logging\n"
     		 "-L aggregation level (for DCI)\n-k packet_length (bits) for DCI/UCI\n");
       exit(-1);
       break;
@@ -175,8 +183,9 @@ if (logFlag){
   double modulatedInput[coderLength]; //channel input
   double channelOutput[coderLength];  //add noise
   int16_t channelOutput_int16[coderLength];
+  int8_t channelOutput_int8[coderLength];
 
-  t_nrPolar_params *currentPtr = nr_polar_params(polarMessageType, testLength, aggregation_level, 1, NULL);
+  t_nrPolar_params *currentPtr = nr_polar_params(polarMessageType, testLength, aggregation_level, decoder_int8+1, NULL);
 
 #ifdef DEBUG_DCI_POLAR_PARAMS
   uint32_t dci_pdu[4];
@@ -272,16 +281,28 @@ if (logFlag){
     	  channelOutput[i] = modulatedInput[i] + (gaussdouble(0.0,1.0) * (1/sqrt(2*SNR_lin)));
 
     	  if (decoder_int16==1) {
+		if(decoder_int8==0){
     		  if (channelOutput[i] > 15) channelOutput_int16[i] = 127;
     		  else if (channelOutput[i] < -16) channelOutput_int16[i] = -128;
     		  else channelOutput_int16[i] = (int16_t) (8*channelOutput[i]);
+		}
+		else{
+    		  if (channelOutput[i] > 15) channelOutput_int8[i] = 63;
+    		  else if (channelOutput[i] < -16) channelOutput_int8[i] = -64;
+    		  else channelOutput_int8[i] = (int8_t) (4*channelOutput[i]);
+		}
     	  }
       }
 
       start_meas(&timeDecoder);
 
       if (decoder_int16==1) {
+	if(decoder_int8==0){
     	  decoderState = polar_decoder_int16(channelOutput_int16, (uint64_t *)estimatedOutput, 0, currentPtr);
+	}
+	else{
+    	  decoderState = polar_decoder_int8(channelOutput_int8, (uint64_t *)estimatedOutput, 0, currentPtr);
+	}
       } else { //0 --> PBCH, 1 --> DCI, -1 --> UCI
     	  if (polarMessageType == 0) {
     		  decoderState = polar_decoder(channelOutput,

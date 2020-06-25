@@ -70,6 +70,8 @@ typedef struct decoder_node_t_s {
   int all_frozen;
   int16_t *alpha;
   int16_t *beta;
+  int8_t *alpha8;
+  int8_t *beta8;
 } decoder_node_t;
 
 typedef struct decoder_tree_t_s {
@@ -161,6 +163,14 @@ uint32_t polar_decoder_int16(int16_t *input,
                              uint8_t ones_flag,
                              const t_nrPolar_params *polarParams);
 
+// ############## INT 8 ##############
+uint32_t polar_decoder_int8(int8_t *input,
+                             uint64_t *out,
+                             uint8_t ones_flag,
+                             const t_nrPolar_params *polarParams);
+
+//################ END INT 8 ################
+
 int8_t polar_decoder_dci(double *input,
                          uint32_t *out,
                          t_nrPolar_params *polarParams,
@@ -180,6 +190,25 @@ void computeBeta(const t_nrPolar_params *pp,
 				 decoder_node_t *node);
 
 void build_decoder_tree(t_nrPolar_params *pp);
+
+//################ INT 8 ##############
+
+void generic_polar_decoder_int8(const t_nrPolar_params *pp,
+						   decoder_node_t *node);
+
+void applyFtoleft_int8(const t_nrPolar_params *pp,
+				  decoder_node_t *node);
+
+void applyGtoright_int8(const t_nrPolar_params *pp,
+				   decoder_node_t *node);
+
+void computeBeta_int8(const t_nrPolar_params *pp,
+				 decoder_node_t *node);
+
+void build_decoder_tree_int8(t_nrPolar_params *pp);
+
+//################ END INT 8 ################
+
 void build_polar_tables(t_nrPolar_params *polarParams);
 void init_polar_deinterleaver_table(t_nrPolar_params *polarParams);
 
@@ -230,6 +259,15 @@ void nr_polar_rate_matching_int16(int16_t *input,
                                   uint16_t K,
                                   uint16_t N,
                                   uint16_t E);
+
+//########### INT 8 ################
+void nr_polar_rate_matching_int8(int8_t *input,
+                                  int8_t *output,
+                                  uint16_t *rmp,
+                                  uint16_t K,
+                                  uint16_t N,
+                                  uint16_t E);
+//########### END INT 8 ################
 
 void nr_polar_interleaving_pattern(uint16_t K,
                                    uint8_t I_IL,

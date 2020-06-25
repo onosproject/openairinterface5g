@@ -345,3 +345,24 @@ void nr_polar_rate_matching_int16(int16_t *input,
    
   }
 }
+
+void nr_polar_rate_matching_int8(int8_t *input,
+				  int8_t *output,
+				  uint16_t *rmp,
+				  uint16_t K,
+				  uint16_t N,
+				  uint16_t E)
+{
+  if (E>=N) { //repetition
+    memset((void*)output,0,N*sizeof(int8_t));
+    for (int i=0; i<=E-1; i++) output[rmp[i]]+=input[i];
+  } else {
+    if ( (K/(double)E) <= (7.0/16) ) memset((void*)output,0,N*sizeof(int8_t)); //puncturing
+    else { //shortening
+      for (int i=0; i<=N-1; i++) output[i]=127;//instead of INFINITY, to prevent [-Woverflow]
+    }
+
+    for (int i=0; i<=E-1; i++) output[rmp[i]]=input[i];
+   
+  }
+}

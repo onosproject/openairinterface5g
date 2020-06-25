@@ -183,6 +183,7 @@ static void nr_polar_init(t_nrPolar_params * *polarParams,
                                          newPolarInitNode->encoderLength);
     free(J);
     if (decoder_flag == 1) build_decoder_tree(newPolarInitNode);
+    if (decoder_flag == 2) build_decoder_tree_int8(newPolarInitNode);
     build_polar_tables(newPolarInitNode);
     init_polar_deinterleaver_table(newPolarInitNode);
     //printf("decoder tree nodes %d\n",newPolarInitNode->tree.num_nodes);

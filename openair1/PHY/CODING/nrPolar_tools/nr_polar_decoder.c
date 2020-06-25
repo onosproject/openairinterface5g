@@ -708,20 +708,18 @@ uint32_t polar_decoder_int16(int16_t *input,
 
 // ############### INT 8 #########################
 
-uint32_t polar_decoder_int8(int16_t *input,
+uint32_t polar_decoder_int8(int8_t *input,
                              uint64_t *out,
                              uint8_t ones_flag,
                              const t_nrPolar_params *polarParams)
 {
-  int16_t d_tilde[polarParams->N];// = malloc(sizeof(double) * polarParams->N);
-  nr_polar_rate_matching_int16(input, d_tilde, polarParams->rate_matching_pattern, polarParams->K, polarParams->N, polarParams->encoderLength);
-
+  int8_t d_tilde[polarParams->N];// = malloc(sizeof(double) * polarParams->N);
+  nr_polar_rate_matching_int8(input, d_tilde, polarParams->rate_matching_pattern, polarParams->K, polarParams->N, polarParams->encoderLength);
   for (int i=0; i<polarParams->N; i++) {
     if (d_tilde[i]<-128) d_tilde[i]=-128;
     else if (d_tilde[i]>127) d_tilde[i]=128;
   }
-
-  memcpy((void *)&polarParams->tree.root->alpha[0],(void *)&d_tilde[0],sizeof(int16_t)*polarParams->N);
+  memcpy((void *)&polarParams->tree.root->alpha8[0],(void *)&d_tilde[0],sizeof(int8_t)*polarParams->N);
   generic_polar_decoder_int8(polarParams,polarParams->tree.root);
   //Extract the information bits (û to ĉ)
   uint64_t Cprime[4]= {0,0,0,0};
