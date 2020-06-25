@@ -704,3 +704,107 @@ uint32_t polar_decoder_int16(int16_t *input,
   out[0]=Ar;
   return(crc^rxcrc);
 }
+
+
+// ############### INT 8 #########################
+
+uint32_t polar_decoder_int8(int16_t *input,
+                             uint64_t *out,
+                             uint8_t ones_flag,
+                             const t_nrPolar_params *polarParams)
+{
+  int16_t d_tilde[polarParams->N];// = malloc(sizeof(double) * polarParams->N);
+  nr_polar_rate_matching_int16(input, d_tilde, polarParams->rate_matching_pattern, polarParams->K, polarParams->N, polarParams->encoderLength);
+
+  for (int i=0; i<polarParams->N; i++) {
+    if (d_tilde[i]<-128) d_tilde[i]=-128;
+    else if (d_tilde[i]>127) d_tilde[i]=128;
+  }
+
+  memcpy((void *)&polarParams->tree.root->alpha[0],(void *)&d_tilde[0],sizeof(int16_t)*polarParams->N);
+  generic_polar_decoder_int8(polarParams,polarParams->tree.root);
+  //Extract the information bits (û to ĉ)
+  uint64_t Cprime[4]= {0,0,0,0};
+  uint64_t B[4]= {0,0,0,0};
+
+  for (int i=0; i<polarParams->K; i++) Cprime[i>>6] = Cprime[i>>6] | ((uint64_t)polarParams->nr_polar_U[polarParams->Q_I_N[i]])<<(i&63);
+
+  //Deinterleaving (ĉ to b)
+  uint8_t *Cprimebyte = (uint8_t *)Cprime;
+
+  if (polarParams->K<65) {
+    B[0] = polarParams->B_tab0[0][Cprimebyte[0]] |
+           polarParams->B_tab0[1][Cprimebyte[1]] |
+           polarParams->B_tab0[2][Cprimebyte[2]] |
+           polarParams->B_tab0[3][Cprimebyte[3]] |
+           polarParams->B_tab0[4][Cprimebyte[4]] |
+           polarParams->B_tab0[5][Cprimebyte[5]] |
+           polarParams->B_tab0[6][Cprimebyte[6]] |
+           polarParams->B_tab0[7][Cprimebyte[7]];
+  } else if (polarParams->K<129) {
+    int len = polarParams->K/8;
+
+    if ((polarParams->K&7) > 0) len++;
+
+    for (int k=0; k<len; k++) {
+      B[0] |= polarParams->B_tab0[k][Cprimebyte[k]];
+      B[1] |= polarParams->B_tab1[k][Cprimebyte[k]];
+    }
+  }
+
+  int len=polarParams->payloadBits;
+  //int len_mod64=len&63;
+  int crclen = polarParams->crcParityBits;
+  uint64_t rxcrc=B[0]&((1<<crclen)-1);
+  uint32_t crc = 0;
+  uint64_t Ar = 0;
+  AssertFatal(len<65,"A must be less than 65 bits\n");
+
+  // appending 24 ones before a0 for DCI as stated in 38.212 7.3.2
+  uint8_t offset = 0;
+  if (ones_flag) offset = 3;
+
+  if (len<=32) {
+    Ar = (uint32_t)(B[0]>>crclen);
+    uint8_t A32_flip[4+offset];
+    if (ones_flag) {
+      A32_flip[0] = 0xff;
+      A32_flip[1] = 0xff;
+      A32_flip[2] = 0xff;
+    }
+    uint32_t Aprime= (uint32_t)(Ar<<(32-len));
+    A32_flip[0+offset]=((uint8_t *)&Aprime)[3];
+    A32_flip[1+offset]=((uint8_t *)&Aprime)[2];
+    A32_flip[2+offset]=((uint8_t *)&Aprime)[1];
+    A32_flip[3+offset]=((uint8_t *)&Aprime)[0];
+    crc = (uint64_t)(crc24c(A32_flip,8*offset+len)>>8);
+  } else if (len<=64) {
+    Ar = (B[0]>>crclen) | (B[1]<<(64-crclen));;
+    uint8_t A64_flip[8+offset];
+    if (ones_flag) {
+      A64_flip[0] = 0xff;
+      A64_flip[1] = 0xff;
+      A64_flip[2] = 0xff;
+    }
+    uint64_t Aprime= (uint64_t)(Ar<<(64-len));
+    A64_flip[0+offset]=((uint8_t *)&Aprime)[7];
+    A64_flip[1+offset]=((uint8_t *)&Aprime)[6];
+    A64_flip[2+offset]=((uint8_t *)&Aprime)[5];
+    A64_flip[3+offset]=((uint8_t *)&Aprime)[4];
+    A64_flip[4+offset]=((uint8_t *)&Aprime)[3];
+    A64_flip[5+offset]=((uint8_t *)&Aprime)[2];
+    A64_flip[6+offset]=((uint8_t *)&Aprime)[1];
+    A64_flip[7+offset]=((uint8_t *)&Aprime)[0];
+    crc = (uint64_t)(crc24c(A64_flip,8*offset+len)>>8);
+  }
+
+#if 0
+  printf("A %llx B %llx|%llx Cprime %llx|%llx  (crc %x,rxcrc %llx %d)\n",
+         Ar,
+         B[1],B[0],Cprime[1],Cprime[0],crc,
+         rxcrc,polarParams->payloadBits);
+#endif
+  out[0]=Ar;
+  return(crc^rxcrc);
+}
+
