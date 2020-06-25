@@ -555,8 +555,8 @@ static int trx_usrp_issue_stream_cmd(openair0_device *device, openair0_timestamp
 
   uhd::stream_cmd_t stream_cmd(uhd::stream_cmd_t::STREAM_MODE_NUM_SAMPS_AND_DONE);
   stream_cmd.num_samps = nsamps;
-  stream_cmd.stream_now = false;
-  stream_cmd.time_spec = uhd::time_spec_t::from_ticks(ptimestamp,s->sample_rate);
+  stream_cmd.stream_now = true;
+  //stream_cmd.time_spec = uhd::time_spec_t::from_ticks(ptimestamp,s->sample_rate);
 
   s->rx_stream->issue_stream_cmd(stream_cmd);
 

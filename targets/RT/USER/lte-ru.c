@@ -128,7 +128,7 @@ extern uint16_t sf_ahead;
   extern uint8_t dlsch_ue_select_tbl_in_use;
   void init_ru_vnf(void);
 #endif
-
+openair0_timestamp old_timestamp;
 
 /*************************************************************/
 /* Functions to attach and configure RRU                     */
@@ -651,10 +651,10 @@ void rx_rf(RU_t *ru,
   for (i=0; i<ru->nb_rx; i++)
     rxp[i] = (void *)&ru->common.rxdata[i][*subframe*fp->samples_per_tti];
   
-  old_ts = proc->timestamp_rx;
 
   if (fp->frame_type == FDD) {
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_READ, 1 );
+  old_ts = proc->timestamp_rx;
 
   if(get_softmodem_params()->emulate_rf) {
     wait_on_condition(&proc->mutex_emulateRF,&proc->cond_emulateRF,&proc->instance_cnt_emulateRF,"emulatedRF_thread");
@@ -772,12 +772,13 @@ void rx_rf(RU_t *ru,
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_READ, 1 );
   //when the USRP starts, it initializes the timestamp to 0. We wait 1 frames until we program the first rx.
   if (proc->first_rx==1) {
-    proc->timestamp_rx = fp->samples_per_subframe*LTE_NUMBER_OF_SUBFRAMES_PER_FRAME;
+    proc->timestamp_rx = fp->samples_per_tti*LTE_NUMBER_OF_SUBFRAMES_PER_FRAME;
     proc->first_rx = 0;
   }
   else {
     //we always advance the timestamp by samples_per_slot, even if we have not read the (full) slot. This is to keep the timestamp updated even when there is no RX.
-    proc->timestamp_rx += fp->samples_per_subframe;
+     if(SF_type == SF_DL || SF_type == SF_UL)
+     proc->timestamp_rx += fp->samples_per_subframe;
   }
   
   int siglen;
@@ -787,7 +788,7 @@ void rx_rf(RU_t *ru,
         
       int subframe_ul_count = 0; 
       siglen = (fp->nb_prefix_samples + fp->ofdm_symbol_size) * fp->ul_symbols_in_S_subframe;
-      proc->timestamp_rx += fp->samples_per_subframe - siglen;
+      proc->timestamp_rx += fp->samples_per_tti - siglen;
 
       for (int subframe_number = *subframe+1; subframe_number < LTE_NUMBER_OF_SUBFRAMES_PER_FRAME; subframe_number++) {
   	  SubFrame_type     = subframe_select(fp,subframe_number%10);
@@ -797,13 +798,13 @@ void rx_rf(RU_t *ru,
       }
       ru->rfdevice.trx_issue_stream_cmd(&ru->rfdevice,
 					proc->timestamp_rx,
-					siglen + subframe_ul_count*fp->samples_per_subframe);
-      
+					siglen + subframe_ul_count*fp->samples_per_tti);
+      proc->timestamp_rx += siglen; 
     } else {
       siglen = fp->samples_per_subframe;
     }
 
-    LOG_I(PHY,"Reading %d samples for subframe %d at timestamp %ld\n",siglen,*subframe,proc->timestamp_rx);
+    LOG_D(PHY,"Reading %d samples for subframe %d at timestamp %ld\n",siglen,*subframe,proc->timestamp_rx);
 
     if(emulate_rf) {
       wait_on_condition(&proc->mutex_emulateRF,&proc->cond_emulateRF,&proc->instance_cnt_emulateRF,"emulatedRF_thread");
@@ -821,7 +822,6 @@ void rx_rf(RU_t *ru,
 
     ru->south_in_cnt++;
     LOG_D(PHY,"south_in_cnt %d\n",ru->south_in_cnt);
-    LOG_I(PHY,"ts_offset %lu, ts %lu ,timestamp_rx %lu\n",ru->ts_offset,ts,proc->timestamp_rx);
 
     if (ru->cmd==RU_FRAME_RESYNCH) {
       LOG_I(PHY,"Applying frame resynch %d => %d\n",*frame,ru->cmdval);
@@ -833,12 +833,15 @@ void rx_rf(RU_t *ru,
     ru->cmd=EMPTY;
     resynch=1;
     }
-
-    proc->timestamp_rx = ts-ru->ts_offset;
-
+    
     if (rxs != siglen) LOG_E(PHY, "rx_rf: Asked for %d samples, got %d from USRP\n",siglen,rxs);
 
   }
+
+  proc->frame_rx     = *frame;
+  proc->tti_rx       = *subframe;
+  //proc->frame_rx     = (proc->timestamp_rx / (fp->samples_per_tti*10))&1023;
+  //proc->tti_rx  = (proc->timestamp_rx / fp->samples_per_tti)%10;
 
   if (ru->fh_north_asynch_in == NULL) {
 	  
@@ -852,14 +855,14 @@ void rx_rf(RU_t *ru,
     proc->frame_tx     = (proc->tti_rx>(9-sf_ahead)) ? (proc->frame_rx+1)&1023 : proc->frame_rx;
 #endif
 
-    LOG_I(PHY,"RU %d/%d TS %llu (off %d), frame %d, subframe %d\n",
+    LOG_D(PHY,"RU %d/%d TS %llu (off %d), frame %d, subframe %d\n",
           ru->idx,
           0,
           (unsigned long long int)proc->timestamp_rx,
           (int)ru->ts_offset,
           proc->frame_rx,
           proc->tti_rx);
-    LOG_I(PHY,"south_in/rx_rf: RU %d/%d TS %llu (off %d), frame %d, subframe %d\n",
+    LOG_D(PHY,"south_in/rx_rf: RU %d/%d TS %llu (off %d), frame %d, subframe %d\n",
           ru->idx,
           0,
           (unsigned long long int)proc->timestamp_rx,
@@ -879,14 +882,30 @@ void rx_rf(RU_t *ru,
     }
   }
 
-  proc->frame_rx     = *frame;
-  proc->tti_rx       = *subframe;
+  //*frame = proc->frame_rx;
+  //*subframe = proc->tti_rx;
+  /*if (proc->first_rx == 0) {
+    if (proc->tti_rx != *subframe) {
+      LOG_E(PHY,"Received Timestamp (%llu) doesn't correspond to the time we think it is (proc->tti_rx %d, subframe %d)\n",(long long unsigned int)proc->timestamp_rx,proc->tti_rx,*subframe);
+      exit_fun("Exiting");
+    }
+
+    if (proc->frame_rx != *frame) {
+      LOG_E(PHY,"Received Timestamp (%llu) doesn't correspond to the time we think it is (proc->frame_rx %d frame %d)\n",(long long unsigned int)proc->timestamp_rx,proc->frame_rx,*frame);
+      exit_fun("Exiting");
+    }
+  } else {
+    proc->first_rx = 0;
+    printf("first rx 0");
+    *frame = proc->frame_rx;
+    *subframe = proc->tti_rx;
+  }*/
 
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_READ, 0 );
 
 
   // synchronize first reception to frame 0 subframe 0
-  LOG_I(PHY,"RU %d/%d TS %llu (off %d), frame %d, subframe %d.%d / \n",
+  LOG_D(PHY,"RU %d/%d TS %llu (off %d), frame %d, subframe %d.%d / \n",
         ru->idx,
         0,
         (unsigned long long int)proc->timestamp_rx,
