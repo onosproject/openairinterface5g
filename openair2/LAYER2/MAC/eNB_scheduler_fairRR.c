@@ -3943,8 +3943,9 @@ void ulsch_scheduler_pre_ue_select_fairRR(
       }
 
       if(i < ulsch_ue_select[CC_id].ue_num){
-        LOG_E(MAC,"ulsch_scheduler_pre_ue_select_fairRR: UE volte select(last_ulsch_ue_id %d l_last_ulsch_ue_id_volte %d)\n",
-               last_ulsch_ue_id[CC_id],l_last_ulsch_ue_id_volte[CC_id]);
+        ulsch_ue_select[CC_id].list[i].ul_total_buffer+=first_ue_total[CC_id][temp];
+        LOG_D(MAC,"ulsch_scheduler_pre_ue_select_fairRR: UE volte select(last_ulsch_ue_id %d l_last_ulsch_ue_id_volte %d) add nonVoLTE buffer to scheduling %d %d\n",
+               last_ulsch_ue_id[CC_id],l_last_ulsch_ue_id_volte[CC_id],ulsch_ue_select[CC_id].list[i].ul_total_buffer,first_ue_total[CC_id][temp]);
         continue;
       }
 
