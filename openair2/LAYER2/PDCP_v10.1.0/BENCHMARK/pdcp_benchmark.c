@@ -150,8 +150,15 @@ int main(int argc, char *argv[])
 	printf("4");
 	pdcp_init_seq_numbers(&pdcp_el);
 	printf("5");
-	
-	/*pdcp_data_req(NULL, //ctxt_pP
+	protocol_ctxt_t ctxt;
+    ctxt.module_id = 0 ;
+    ctxt.instance = 0;
+    ctxt.rnti = 0;
+    ctxt.enb_flag = 1;
+    ctxt.frame = 0;
+    ctxt.subframe = 0;
+
+	pdcp_data_req(ctxt, //ctxt_pP
 		      0,    //srb_flagP
 	              3,    // rb_id
 	              0,    // muiP
@@ -159,7 +166,7 @@ int main(int argc, char *argv[])
                       DUMMY_BUFFER_SIZE, //sdu_buffer_size
                       DUMMY_BUFFER,  // sdu_buffer 
                       PDCP_TRANSMISSION_MODE_DATA, // pdcp_transmission_mod
-                      0,0);*/
+                      0,0);
 
 
 }
