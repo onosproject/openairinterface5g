@@ -597,6 +597,7 @@ void *UE_thread(void *arg) {
   openair0_timestamp timestamp;
   void *rxp[NB_ANTENNAS_RX], *txp[NB_ANTENNAS_TX];
   int start_rx_stream = 0;
+  int slot_within_frame = 0;
   AssertFatal(0== openair0_device_load(&(UE->rfdevice), &openair0_cfg[0]), "");
   UE->rfdevice.host_type = RAU_HOST;
   AssertFatal(UE->rfdevice.trx_start_func(&UE->rfdevice) == 0, "Could not start the device\n");
@@ -624,9 +625,10 @@ void *UE_thread(void *arg) {
         syncRunning=false;
         syncData_t *tmp=(syncData_t *)NotifiedFifoData(res);
         if (UE->is_synchronized) {
-          decoded_frame_rx=(((mac->mib->systemFrameNumber.buf[0] >> mac->mib->systemFrameNumber.bits_unused)<<4) | tmp->proc.decoded_frame_rx);
+          //decoded_frame_rx=(((mac->mib->systemFrameNumber.buf[0] >> mac->mib->systemFrameNumber.bits_unused)<<4) | tmp->proc.decoded_frame_rx);
           // shift the frame index with all the frames we trashed meanwhile we perform the synch search
-          decoded_frame_rx=(decoded_frame_rx + (!UE->init_sync_frame) + trashed_frames) % MAX_FRAME_NUMBER;
+          decoded_frame_rx=(tmp->proc.decoded_frame_rx + (!UE->init_sync_frame) + trashed_frames) % MAX_FRAME_NUMBER;
+          printf("frame_sync %d decoded_frame %d trashed_frames %d start_frame %d\n",UE->init_sync_frame,tmp->proc.decoded_frame_rx,trashed_frames,decoded_frame_rx);
         }
         delNotifiedFIFO_elt(res);
       } else {
@@ -782,9 +784,14 @@ void *UE_thread(void *arg) {
 
     if (  (decoded_frame_rx != curMsg->proc.frame_rx) &&
           (((decoded_frame_rx+1) % MAX_FRAME_NUMBER) != curMsg->proc.frame_rx) &&
-          (((decoded_frame_rx+2) % MAX_FRAME_NUMBER) != curMsg->proc.frame_rx))
-      LOG_E(PHY,"Decoded frame index (%d) is not compatible with current context (%d), UE should go back to synch mode\n",
+          (((decoded_frame_rx+2) % MAX_FRAME_NUMBER) != curMsg->proc.frame_rx)) {
+      LOG_E(PHY,"Decoded frame index (%d) is not compatible with current context (%d), Synchronizing decoded frame number with processing frame number\n",
             decoded_frame_rx, curMsg->proc.frame_rx  );
+      // syncronizing decoded frame number with processing frame number
+      slot_within_frame = absolute_slot % nb_slot_frame;
+      absolute_slot = decoded_frame_rx * nb_slot_frame + slot_within_frame;
+    }
+      
 
     nbSlotProcessing++;
     msgToPush->key=slot_nr;
