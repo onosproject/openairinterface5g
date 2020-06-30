@@ -462,7 +462,7 @@ void gNB_dlsch_ulsch_scheduler(module_id_t module_idP,
     }
 
     if (get_softmodem_params()->phy_test == 0)
-      nr_schedule_RA(module_idP, frame_txP, slot_txP);
+      nr_schedule_RA(module_idP, frame_txP, slot_txP, UE_id);
     else
       UE_list->fiveG_connected[UE_id] = true;
 

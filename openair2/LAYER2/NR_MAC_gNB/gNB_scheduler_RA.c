@@ -341,11 +341,12 @@ void nr_initiate_ra_proc(module_id_t module_idP,
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_INITIATE_RA_PROC, 0);
 }
 
-void nr_schedule_RA(module_id_t module_idP, frame_t frameP, sub_frame_t slotP){
+void nr_schedule_RA(module_id_t module_idP, frame_t frameP, sub_frame_t slotP, int UE_id){
 
   //uint8_t i = 0;
   int CC_id = 0;
   gNB_MAC_INST *mac = RC.nrmac[module_idP];
+  NR_UE_list_t *UE_list = &mac->UE_list;
   NR_COMMON_channels_t *cc = &mac->common_channels[CC_id];
   NR_RA_t *ra = &cc->ra[0];
 
@@ -356,6 +357,9 @@ void nr_schedule_RA(module_id_t module_idP, frame_t frameP, sub_frame_t slotP){
   switch (ra->state){
     case Msg2:
       nr_generate_Msg2(module_idP, CC_id, frameP, slotP);
+      UE_list->fiveG_connected[UE_id] = true;
+      LOG_I(MAC, "[gNB %d][RAPROC] PUSCH with TC_RNTI %x received correctly and UE_id %d is now 5G connected\n",
+            module_idP, ra->rnti, UE_id);
       break;
     case Msg4:
       //generate_Msg4(module_idP, CC_id, frameP, slotP, ra);

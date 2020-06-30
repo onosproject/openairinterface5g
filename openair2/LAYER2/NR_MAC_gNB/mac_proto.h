@@ -81,7 +81,7 @@ void schedule_nr_mib(module_id_t module_idP, frame_t frameP, sub_frame_t subfram
 
 /////// Random Access MAC-PHY interface functions and primitives ///////
 
-void nr_schedule_RA(module_id_t module_idP, frame_t frameP, sub_frame_t slotP);
+void nr_schedule_RA(module_id_t module_idP, frame_t frameP, sub_frame_t slotP, int UE_id);
 
 /* \brief Function to indicate a received preamble on PRACH.  It initiates the RA procedure.
 @param module_idP Instance ID of gNB
