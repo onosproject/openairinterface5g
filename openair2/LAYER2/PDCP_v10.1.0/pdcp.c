@@ -133,7 +133,7 @@ boolean_t pdcp_data_req(
     T(T_ENB_PDCP_DL, T_INT(ctxt_pP->module_id), T_INT(ctxt_pP->rnti), T_INT(rb_idP), T_INT(sdu_buffer_sizeP));
 
 #endif
-  printf("I'm here !\n");
+ // printf("I'm here !\n");
   if (sdu_buffer_sizeP == 0) {
     LOG_W(PDCP, "Handed SDU is of size 0! Ignoring...\n");
     return FALSE;
@@ -144,7 +144,7 @@ boolean_t pdcp_data_req(
    */
   AssertFatal(sdu_buffer_sizeP<= MAX_IP_PACKET_SIZE,"Requested SDU size (%d) is bigger than that can be handled by PDCP (%u)!\n",
               sdu_buffer_sizeP, MAX_IP_PACKET_SIZE);
- printf("line 147 ok\n");
+ //printf("line 147 ok\n");
   if (modeP == PDCP_TRANSMISSION_MODE_TRANSPARENT) {
     AssertError (rb_idP < NB_RB_MBMS_MAX, return FALSE, "RB id is too high (%ld/%d) %u %u!\n", rb_idP, NB_RB_MBMS_MAX, ctxt_pP->module_id, ctxt_pP->rnti);
   } else {
@@ -154,7 +154,7 @@ boolean_t pdcp_data_req(
       AssertError (rb_idP < LTE_maxDRB, return FALSE, "RB id is too high (%ld/%d) %u %u!\n", rb_idP, LTE_maxDRB, ctxt_pP->module_id, ctxt_pP->rnti);
     }
   }
- printf("line 157 ok\n");
+ //printf("line 157 ok\n");
   key = PDCP_COLL_KEY_VALUE(ctxt_pP->module_id, ctxt_pP->rnti, ctxt_pP->enb_flag, rb_idP, srb_flagP);
   h_rc = hashtable_get(pdcp_coll_p, key, (void **)&pdcp_p);
 //MODIFIED BELOW TO TRY--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -177,7 +177,7 @@ boolean_t pdcp_data_req(
   } else {
     start_meas(&UE_pdcp_stats[ctxt_pP->module_id].data_req);
   }
-  printf("line 179 ok \n");
+  //printf("line 179 ok \n");
   // PDCP transparent mode for MBMS traffic
 
   if (modeP == PDCP_TRANSMISSION_MODE_TRANSPARENT) {
@@ -210,7 +210,7 @@ boolean_t pdcp_data_req(
       pdcp_header_len = PDCP_USER_PLANE_DATA_PDU_LONG_SN_HEADER_SIZE;
       pdcp_tailer_len = 0;
     }
- printf("line 212 ok\n");
+// printf("line 212 ok\n");
     pdcp_pdu_size = sdu_buffer_sizeP + pdcp_header_len + pdcp_tailer_len;
     LOG_D(PDCP, PROTOCOL_PDCP_CTXT_FMT"Data request notification  pdu size %d (header%d, trailer%d)\n",
           PROTOCOL_PDCP_CTXT_ARGS(ctxt_pP,pdcp_p),
@@ -272,7 +272,7 @@ boolean_t pdcp_data_req(
       /*
        * Validate incoming sequence number, there might be a problem with PDCP initialization
        */
-	printf("line 273 ok\n");
+//	printf("line 273 ok\n");
 //BELOW COMMENTED FOR TEST ##################################################################################################################
 /*
       if (current_sn > pdcp_calculate_max_seq_num_for_given_size(pdcp_p->seq_num_size)) {
@@ -291,7 +291,7 @@ boolean_t pdcp_data_req(
         VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PDCP_DATA_REQ,VCD_FUNCTION_OUT);
         return FALSE;
       }
-  */   printf("line 292 ok\n");
+  *///   printf("line 292 ok\n");
       LOG_D(PDCP, "Sequence number %d is assigned to current PDU\n", current_sn);
       /* Then append data... */
       memcpy(&pdcp_pdu_p->data[pdcp_header_len], sdu_buffer_pP, sdu_buffer_sizeP);
@@ -302,7 +302,7 @@ boolean_t pdcp_data_req(
       for (i=0; i<pdcp_tailer_len; i++) {
         pdcp_pdu_p->data[pdcp_header_len + sdu_buffer_sizeP + i] = 0x00;// pdu_header.mac_i[i];
       }
-	printf("Just before the if \n");
+//	printf("Just before the if \n");
 //BELOW COMMENTED FOR TEST ##################################################################################################################
 /*      
 
@@ -352,12 +352,12 @@ memcpy(K+3,stream_cipher->key+0,4); /*K[3] = key[0]; we assume
 	}
 	pdcp_p->kUPenc=keyTest;	
 
-printf("4\n");
+//printf("4\n");
 	pdcp_init_seq_numbers(pdcp_p);
-printf("4bis\n");
+//printf("4bis\n");
 
 
- printf("apply sec fct\n");
+// printf("apply sec fct\n");
         pdcp_apply_security(ctxt_pP,
                             pdcp_p,
                             srb_flagP,

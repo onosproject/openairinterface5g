@@ -77,15 +77,15 @@ int stream_encrypt_eea1(stream_cipher_t *stream_cipher, uint8_t **out)
   DevAssert(stream_cipher->key != NULL);
   DevAssert(stream_cipher->key_length == 16);
   DevAssert(out != NULL);
-printf("stream encrypt eea1 (osa stream eea l80\n");
+//printf("stream encrypt eea1 (osa stream eea l80\n");
   n = ( stream_cipher->blength + 31 ) / 32;
   zero_bit = stream_cipher->blength & 0x7;
-printf("osa stream eea l82\n");
+//printf("osa stream eea l82\n");
   memset(&snow_3g_context, 0, sizeof(snow_3g_context));
   /*Initialisation*/
   /* Load the confidentiality key for SNOW 3G initialization as in section
   3.4. */
-printf("osa stream eea l88\n"); 
+//printf("osa stream eea l88\n"); 
   memcpy(K+3,stream_cipher->key+0,4); /*K[3] = key[0]; we assume
   K[3]=key[0]||key[1]||...||key[31] , with key[0] the
   * most important bit of key*/
@@ -94,7 +94,7 @@ printf("osa stream eea l88\n");
   memcpy(K+0,stream_cipher->key+12,4); /*K[0] = key[3]; we assume
   K[0]=key[96]||key[97]||...||key[127] , with key[127] the
   * least important bit of key*/
-printf("osa stream eea l97\n"); 
+//printf("osa stream eea l97\n"); 
   K[3] = hton_int32(K[3]);
   K[2] = hton_int32(K[2]);
   K[1] = hton_int32(K[1]);
@@ -105,12 +105,12 @@ printf("osa stream eea l97\n");
   IV[2] = ((((uint32_t)stream_cipher->bearer) << 3) | ((((uint32_t)stream_cipher->direction) & 0x1) << 2)) << 24;
   IV[1] = IV[3];
   IV[0] = IV[2];
-printf("osa stream eea l106\n");
+//printf("osa stream eea l106\n");
   /* Run SNOW 3G algorithm to generate sequence of key stream bits KS*/
   osa_snow3g_initialize(K, IV, &snow_3g_context);
   KS = (uint32_t *)malloc(4*n);
   osa_snow3g_generate_key_stream(n,(uint32_t*)KS, &snow_3g_context);
-printf("osa stream eea l113\n");
+//printf("osa stream eea l113\n");
   if (zero_bit > 0) {
 
     KS[n - 1] = KS[n - 1] & (uint32_t)(0xFFFFFFFF << (8 - zero_bit));
@@ -119,7 +119,7 @@ printf("osa stream eea l113\n");
   for (i=0; i<n; i++) {
     KS[i] = hton_int32(KS[i]);
   }
-printf("osa stream eea l122\n");
+//printf("osa stream eea l122\n");
   /* Exclusive-OR the input data with keystream to generate the output bit
   stream */
   for (i=0; i<n*4; i++) {
@@ -130,12 +130,12 @@ printf("osa stream eea l122\n");
     int ceil_index = (stream_cipher->blength+7) >> 3;
     stream_cipher->message[ceil_index - 1] = stream_cipher->message[ceil_index - 1] & (uint8_t)(0xFF << (8 - zero_bit));
   }
-printf("osa stream eea l133\n");
+//printf("osa stream eea l133\n");
   free(KS);
 *out = stream_cipher->message;
 
 
-printf("osa stream eea l136\n");
+//printf("osa stream eea l136\n");
   return 0;
 }
 
@@ -231,15 +231,15 @@ printf("stream encrypt eea2 (osa stream eea l150\n");
 
 int stream_encrypt(uint8_t algorithm, stream_cipher_t *stream_cipher, uint8_t **out)
 {
-printf("l232 eea file\n"); 
+//printf("l232 eea file\n"); 
  if (algorithm == EEA0_ALG_ID) {
     return stream_encrypt_eea0(stream_cipher, out);
   } else if (algorithm == EEA1_128_ALG_ID) {
 
-printf("before stream encrypt\n");
+//printf("before stream encrypt\n");
     int res= stream_encrypt_eea1(stream_cipher, out);
 
-printf("after stream encrypt res=%d \n",res);
+//printf("after stream encrypt res=%d \n",res);
 return res;
   } else if (algorithm == EEA2_128_ALG_ID) {
     return stream_encrypt_eea2(stream_cipher, out);

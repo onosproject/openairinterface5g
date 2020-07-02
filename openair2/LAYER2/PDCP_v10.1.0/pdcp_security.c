@@ -147,7 +147,7 @@ pdcp_apply_security(
   } else {
     LOG_D(PDCP, "[OSA][RB %ld] %s Applying user-plane security\n",
           rb_id, (pdcp_pP->is_ue != 0) ? "UE -> eNB" : "eNB -> UE");
-	printf("line 150 pdcp_security\n");
+	//printf("line 150 pdcp_security\n");
     encrypt_params.key = pdcp_pP->kUPenc;//  + 128;
   }
 
@@ -157,13 +157,13 @@ pdcp_apply_security(
   buffer_encrypted = &pdcp_pdu_buffer[pdcp_header_len];
 
   /* Apply ciphering if any requested */
-printf("l160 pdcp_security.c\n"); 
+//printf("l160 pdcp_security.c\n"); 
  stream_encrypt(pdcp_pP->cipheringAlgorithm,
                  &encrypt_params,
                  &buffer_encrypted);
-printf("l163 pdcp_security.c\n");
+//printf("l163 pdcp_security.c\n");
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PDCP_APPLY_SECURITY, VCD_FUNCTION_OUT);
-printf("l165 before return pdcp_security.c\n");
+//printf("l165 before return pdcp_security.c\n");
   return 0;
 }
 

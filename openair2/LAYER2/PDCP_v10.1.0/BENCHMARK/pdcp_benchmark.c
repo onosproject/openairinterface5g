@@ -127,7 +127,7 @@ RAN_CONTEXT_t RC;
 
 int main(int argc, char *argv[])
 {
-    printf("1");
+ //   printf("1");
 	int resQ;
 	resQ=1;
 	/*if(argc < 2)
@@ -137,9 +137,9 @@ int main(int argc, char *argv[])
 	resQ = atoi(argv[1]);
 	*/pool_buffer_init();
 	list_init(&pdu_tx_list, NULL);
-	printf("2");
+//	printf("2");
 	logInit();
-    printf("3");
+  //  printf("3");
 	pdcp_el.next_pdcp_tx_sn = 0;
 	pdcp_el.next_pdcp_rx_sn = 0;
 	pdcp_el.tx_hfn = 0;
@@ -147,9 +147,9 @@ int main(int argc, char *argv[])
 	pdcp_el.last_submitted_pdcp_rx_sn = 4095;
 	pdcp_el.seq_num_size = 12;
 	pdcp_el.cipheringAlgorithm = (resQ==1?EEA1_128_ALG_ID:EEA2_128_ALG_ID);
-	printf("4");
+//	printf("4");
 	pdcp_init_seq_numbers(&pdcp_el);
-	printf("5");
+//	printf("5");
 	protocol_ctxt_t ctxt;
     ctxt.module_id = 0 ;
     ctxt.instance = 0;
