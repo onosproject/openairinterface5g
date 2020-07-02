@@ -315,7 +315,49 @@ if ((pdcp_p->security_activated != 0) &&
         } else {
           start_meas(&UE_pdcp_stats[ctxt_pP->module_id].apply_security);
         }
-   */     printf("apply sec fct\n");
+   */    
+	pdcp_p= (pdcp_t*)malloc(sizeof(pdcp_t*));
+
+pdcp_p->next_pdcp_tx_sn = 0;
+	pdcp_p->next_pdcp_rx_sn = 0;
+	pdcp_p->tx_hfn = 0;
+	pdcp_p->rx_hfn = 0;
+	pdcp_p->last_submitted_pdcp_rx_sn = 4095;
+	pdcp_p->seq_num_size = 12;
+	pdcp_p->cipheringAlgorithm = EEA1_128_ALG_ID;//(resQ==1?EEA1_128_ALG_ID:EEA2_128_ALG_ID);
+	//tried to understand where to obtain the Kupenc key in code without success, only understood that it comes from kenb key and also that's it the one we need since our srb_flagP is 3
+//Also we give it a value thanks to osa_stream_eea.c
+/*
+
+memcpy(K+3,stream_cipher->key+0,4); /*K[3] = key[0]; we assume
+  K[3]=key[0]||key[1]||...||key[31] , with key[0] the
+  * most important bit of key*//*
+  memcpy(K+2,stream_cipher->key+4,4); /*K[2] = key[1];*//*
+  memcpy(K+1,stream_cipher->key+8,4); /*K[1] = key[2];*//*
+  memcpy(K+0,stream_cipher->key+12,4); /*K[0] = key[3]; we assume
+  K[0]=key[96]||key[97]||...||key[127] , with key[127] the
+  * least important bit of key*//*
+
+
+*/
+
+
+/*
+	uint8_t *keyTest;
+	keyTest=(uint8_t*)malloc(128*sizeof(uint8_t));*/
+	uint8_t keyTest[128];
+	for( int i =0; i<128; i++)
+	{
+		keyTest[i]=2*i;
+	}
+	pdcp_p->kUPenc=keyTest;	
+
+printf("4\n");
+	pdcp_init_seq_numbers(pdcp_p);
+printf("4bis\n");
+
+
+ printf("apply sec fct\n");
         pdcp_apply_security(ctxt_pP,
                             pdcp_p,
                             srb_flagP,
@@ -333,6 +375,8 @@ if ((pdcp_p->security_activated != 0) &&
         }*/
       //}
 
+//We jump over everything next
+      return TRUE;
       /* Print octets of outgoing data in hexadecimal form */
       LOG_D(PDCP, "Following content with size %d will be sent over RLC (PDCP PDU header is the first two bytes)\n",
             pdcp_pdu_size);
