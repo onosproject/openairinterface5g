@@ -3090,15 +3090,15 @@ do_RRCConnectionSetup(
       case 2:
         switch(frame_parms->N_RB_UL) {
           case 25:
-            physicalConfigDedicated2->schedulingRequestConfig->choice.setup.sr_PUCCH_ResourceIndex = sr_base - ue_context_pP->local_uid/2;
+            physicalConfigDedicated2->schedulingRequestConfig->choice.setup.sr_PUCCH_ResourceIndex = sr_base - ue_context_pP->local_uid/4;
             break;
 
           case 50:
-            physicalConfigDedicated2->schedulingRequestConfig->choice.setup.sr_PUCCH_ResourceIndex = sr_base - ue_context_pP->local_uid/2;
+            physicalConfigDedicated2->schedulingRequestConfig->choice.setup.sr_PUCCH_ResourceIndex = sr_base - ue_context_pP->local_uid/4;
             break;
 
           case 100:
-            physicalConfigDedicated2->schedulingRequestConfig->choice.setup.sr_PUCCH_ResourceIndex = sr_base - ue_context_pP->local_uid/2;
+            physicalConfigDedicated2->schedulingRequestConfig->choice.setup.sr_PUCCH_ResourceIndex = sr_base - ue_context_pP->local_uid/4;
             break;
         }
 
@@ -3108,6 +3108,11 @@ do_RRCConnectionSetup(
         physicalConfigDedicated2->schedulingRequestConfig->choice.setup.sr_PUCCH_ResourceIndex = 71 - ue_context_pP->local_uid/10;//ue_context_pP->local_uid;
         break;
     }
+  }
+  if(!((physicalConfigDedicated2->schedulingRequestConfig->choice.setup.sr_PUCCH_ResourceIndex >= 0) && (physicalConfigDedicated2->schedulingRequestConfig->choice.setup.sr_PUCCH_ResourceIndex < carrier->sib2->radioResourceConfigCommon.pucch_ConfigCommon.n1PUCCH_AN))) {
+    LOG_E(RRC, "illegal sr_PUCCH_ResourceIndex %d n1PUCCH_AN %d ue_context_pP->local_uid %d\n",
+          physicalConfigDedicated2->schedulingRequestConfig->choice.setup.sr_PUCCH_ResourceIndex, carrier->sib2->radioResourceConfigCommon.pucch_ConfigCommon.n1PUCCH_AN, ue_context_pP->local_uid);
+    return -1;
   }
 
   if (carrier->sib1->tdd_Config == NULL) { // FDD
@@ -3120,8 +3125,8 @@ do_RRCConnectionSetup(
         break;
 
       case 2:
-        physicalConfigDedicated2->schedulingRequestConfig->choice.setup.sr_ConfigIndex = 7+
-            (ue_context_pP->local_uid&1)*5;  // Isr = 5 (every 10 subframes, offset=2 for UE0, 7 for UE1, 2 for UE2, 7 for UE3 , 2 for UE4 etc..)
+        physicalConfigDedicated2->schedulingRequestConfig->choice.setup.sr_ConfigIndex = 17+
+            (ue_context_pP->local_uid&3)*5;  // Isr = 15 (every 20 subframes, offset=2 for UE0, UE2, UE4.. offset=7 for UE1, UE3, UE5..)
         break;
 
       case 3:
@@ -3194,7 +3199,7 @@ do_RRCConnectionSetup(
                                    RRC_BUF_SIZE);
 
   if(enc_rval.encoded == -1) {
-    LOG_I(RRC, "[eNB AssertFatal]ASN1 message encoding failed (%s, %lu)!\n",
+    LOG_E(RRC, "[eNB AssertFatal]ASN1 message encoding failed (%s, %lu)!\n",
           enc_rval.failed_type->name, enc_rval.encoded);
     return -1;
   }
