@@ -324,7 +324,11 @@ pdcp_p->next_pdcp_tx_sn = 0;
 	pdcp_p->rx_hfn = 0;
 	pdcp_p->last_submitted_pdcp_rx_sn = 4095;
 	pdcp_p->seq_num_size = 12;
-	pdcp_p->cipheringAlgorithm = EEA1_128_ALG_ID;//(resQ==1?EEA1_128_ALG_ID:EEA2_128_ALG_ID);
+	//ALGORITHM 1 CHOICE :
+	//pdcp_p->cipheringAlgorithm = EEA1_128_ALG_ID;
+
+	//ALGORITHM 2 CHOICE :
+	pdcp_p->cipheringAlgorithm = EEA2_128_ALG_ID;
 	//tried to understand where to obtain the Kupenc key in code without success, only understood that it comes from kenb key and also that's it the one we need since our srb_flagP is 3
 //Also we give it a value thanks to osa_stream_eea.c
 /*
