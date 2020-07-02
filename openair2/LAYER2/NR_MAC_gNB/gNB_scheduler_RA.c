@@ -357,9 +357,12 @@ void nr_schedule_RA(module_id_t module_idP, frame_t frameP, sub_frame_t slotP, i
   switch (ra->state){
     case Msg2:
       nr_generate_Msg2(module_idP, CC_id, frameP, slotP);
+      break;
+    case WAIT_Msg3:
       UE_list->fiveG_connected[UE_id] = true;
-      LOG_I(MAC, "[gNB %d][RAPROC] PUSCH with TC_RNTI %x received correctly and UE_id %d is now 5G connected\n",
-            module_idP, ra->rnti, UE_id);
+      LOG_I(MAC, "[gNB %d][RAPROC] Msg2 has been transmitted and UE_id %d is now 5G connected\n",
+            module_idP, UE_id);
+      ra->state = RA_IDLE;
       break;
     case Msg4:
       //generate_Msg4(module_idP, CC_id, frameP, slotP, ra);
