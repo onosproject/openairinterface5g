@@ -55,9 +55,14 @@
 #include "LTE_DL-UM-RLC.h"
 #include "LTE_PMCH-InfoList-r9.h"
 
+#include <time.h>
+//#include "time_meas.h"
 
 #define DUMMY_BUFFER ((unsigned char*)"123456789")
 #define DUMMY_BUFFER_SIZE 10
+
+
+#define NB_REPEAT 1
 
 uint64_t get_softmodem_optmask(void) {return 0;}
 nfapi_mode_t nfapi_getmode(void) {return 0;}
@@ -128,8 +133,9 @@ RAN_CONTEXT_t RC;
 int main(int argc, char *argv[])
 {
  //   printf("1");
-	int resQ;
-	resQ=1;
+/*	int resQ;
+	resQ=1;*/
+int ticks;
 	/*if(argc < 2)
 	{
 	    printf("You should pass the test you want as parameter");
@@ -140,7 +146,7 @@ int main(int argc, char *argv[])
 //	printf("2");
 	logInit();
   //  printf("3");
-	pdcp_el.next_pdcp_tx_sn = 0;
+	/*pdcp_el.next_pdcp_tx_sn = 0;
 	pdcp_el.next_pdcp_rx_sn = 0;
 	pdcp_el.tx_hfn = 0;
 	pdcp_el.rx_hfn = 0;
@@ -148,17 +154,35 @@ int main(int argc, char *argv[])
 	pdcp_el.seq_num_size = 12;
 	pdcp_el.cipheringAlgorithm = (resQ==1?EEA1_128_ALG_ID:EEA2_128_ALG_ID);
 //	printf("4");
-	pdcp_init_seq_numbers(&pdcp_el);
+	pdcp_init_seq_numbers(&pdcp_el);*/
 //	printf("5");
+/*
 	protocol_ctxt_t ctxt;
     ctxt.module_id = 0 ;
     ctxt.instance = 0;
     ctxt.rnti = 0;
     ctxt.enb_flag = 1;
     ctxt.frame = 0;
-    ctxt.subframe = 0;
+    ctxt.subframe = 0;*/
 
-	pdcp_data_req(&ctxt, //ctxt_pP
+//Not working...???
+/*
+time_stats_t *t = malloc(sizeof(time_stats_t));
+reset_meas(t);
+	start_meas(t);*/
+
+clock_t t;
+t=clock();
+	for(int i=0; i< NB_REPEAT; i++){
+	
+protocol_ctxt_t ctxt;
+    ctxt.module_id = 0 ;
+    ctxt.instance = 0;
+    ctxt.rnti = 0;
+    ctxt.enb_flag = 1;
+    ctxt.frame = 0;
+    ctxt.subframe = 0;
+pdcp_data_req(&ctxt, //ctxt_pP
 		      0,    //srb_flagP
 	              3,    // rb_id
 	              0,    // muiP
@@ -167,6 +191,14 @@ int main(int argc, char *argv[])
                       DUMMY_BUFFER,  // sdu_buffer 
                       PDCP_TRANSMISSION_MODE_DATA, // pdcp_transmission_mod
                       0,0);
+}
+t=clock()-t;
+//	srand(time(0));
+
+/*stop_meas(t);
+ticks = (int) (t->diff/NB_REPEAT);
+	printf("Average time : %d\n", ticks);*/
+printf("%d \n",(int)t);
 
 
 }
