@@ -85,7 +85,6 @@ Also base config files can be found here:
 [enb conf file](https://gitlab.eurecom.fr/oai/openairinterface5g/-/blob/rh_doc_update_3/doc/testing_gnb_w_cots_ue_resources/enb.conf)  
 [gnb conf file](https://gitlab.eurecom.fr/oai/openairinterface5g/-/blob/rh_doc_update_3/doc/testing_gnb_w_cots_ue_resources/gnb.conf)
 
-TO DO : attach base confif files
 
 These files have to be updated manually to set the IP addresses and frequency.  
 
