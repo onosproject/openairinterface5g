@@ -1547,17 +1547,6 @@ void *pre_scd_task( void *param ) {
   eNB = RC.mac[Mod_id];
   UE_list = &eNB->UE_list;
 
-  if(g_dact_collection)
-  {
-    uint32_t meas_ret;
-    meas_ret =  fjt_meas_ringbuff_create(PRE_THREAD_FLAG);
-    if( meas_ret == FJT_MEAS_RET_FATAL )
-    {
-      LOG_E(GTPU, "fjt_meas_ringbuff_create NG in pre_scd_thread.[ret=%u]",meas_ret);
-      oai_exit = 1;
-      return 0;
-    }
-  }
   while (!oai_exit) {
 
     if(oai_exit) {

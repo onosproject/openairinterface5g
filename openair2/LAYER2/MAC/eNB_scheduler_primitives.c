@@ -2603,6 +2603,7 @@ add_new_ue(module_id_t mod_idP,
           )
 //------------------------------------------------------------------------------
 {
+  eNB_MAC_INST *eNB     = RC.mac[mod_idP];
   int UE_id;
   int i, j;
   UE_list_t *UE_list = &RC.mac[mod_idP]->UE_list;

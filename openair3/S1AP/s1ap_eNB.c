@@ -429,16 +429,17 @@ void s1ap_eNB_handle_sctp_association_resp(instance_t instance, sctp_new_associa
 //  }
   else
   {
-  /* Update parameters */
-  s1ap_mme_data_p->assoc_id    = sctp_new_association_resp->assoc_id;
-  s1ap_mme_data_p->in_streams  = sctp_new_association_resp->in_streams;
-  s1ap_mme_data_p->out_streams = sctp_new_association_resp->out_streams;
-  /* Prepare new S1 Setup Request */
-  s1ap_mme_data_p->s1_setupreq_cnt = 0;
-  s1ap_mme_data_p->sctp_req_cnt = 0;
-  if (s1ap_eNB_generate_s1_setup_request(instance_p, s1ap_mme_data_p) == -1) {
-    S1AP_ERROR("s1ap eNB generate s1 setup request failed\n");
-    return;
+    /* Update parameters */
+    s1ap_mme_data_p->assoc_id    = sctp_new_association_resp->assoc_id;
+    s1ap_mme_data_p->in_streams  = sctp_new_association_resp->in_streams;
+    s1ap_mme_data_p->out_streams = sctp_new_association_resp->out_streams;
+    /* Prepare new S1 Setup Request */
+    s1ap_mme_data_p->s1_setupreq_cnt = 0;
+    s1ap_mme_data_p->sctp_req_cnt = 0;
+    if (s1ap_eNB_generate_s1_setup_request(instance_p, s1ap_mme_data_p) == -1) {
+      S1AP_ERROR("s1ap eNB generate s1 setup request failed\n");
+      return;
+    }
   }
 }
 
