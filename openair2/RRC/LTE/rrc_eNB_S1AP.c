@@ -962,6 +962,9 @@ int rrc_eNB_process_S1AP_INITIAL_CONTEXT_SETUP_REQ(MessageDef *msg_p, const char
     PROTOCOL_CTXT_SET_BY_INSTANCE(&ctxt, instance, ENB_FLAG_YES, ue_context_p->ue_context.rnti, 0, 0);
     ue_context_p->ue_context.eNB_ue_s1ap_id = S1AP_INITIAL_CONTEXT_SETUP_REQ (msg_p).eNB_ue_s1ap_id;
     ue_context_p->ue_context.mme_ue_s1ap_id = S1AP_INITIAL_CONTEXT_SETUP_REQ (msg_p).mme_ue_s1ap_id;
+	/* Storing the AMBR received from the Core network to UE context */
+	ue_context_p->ue_context.ue_ambr.br_ul = S1AP_INITIAL_CONTEXT_SETUP_REQ (msg_p).ue_ambr.br_ul;
+	ue_context_p->ue_context.ue_ambr.br_dl = S1AP_INITIAL_CONTEXT_SETUP_REQ (msg_p).ue_ambr.br_dl;
     /* Save e RAB information for later */
     {
       int i;

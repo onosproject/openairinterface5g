@@ -4637,12 +4637,23 @@ rrc_eNB_process_MeasurementReport(
         for (int e_rab=0; e_rab < X2AP_ENDC_SGNB_ADDITION_REQ(msg).nb_e_rabs_tobeadded; e_rab++) {
           X2AP_ENDC_SGNB_ADDITION_REQ(msg).e_rabs_tobeadded[e_rab].e_rab_id = ue_context_pP->ue_context.e_rab[e_rab].param.e_rab_id;
           X2AP_ENDC_SGNB_ADDITION_REQ(msg).e_rabs_tobeadded[e_rab].gtp_teid = ue_context_pP->ue_context.e_rab[e_rab].param.gtp_teid;
-          X2AP_ENDC_SGNB_ADDITION_REQ(msg).e_rabs_tobeadded[e_rab].drb_ID = 1;
+		  AssertFatal(ue_context_pP->ue_context.DRB_configList != NULL,
+		     "failed due to drb to add list is NULL");
+          X2AP_ENDC_SGNB_ADDITION_REQ(msg).e_rabs_tobeadded[e_rab].drb_ID = 
+		     ue_context_pP->ue_context.DRB_configList->list.array[e_rab]->drb_Identity;
+		  X2AP_ENDC_SGNB_ADDITION_REQ(msg).e_rab_param[e_rab].qos.qci = ue_context_pP->ue_context.e_rab[e_rab].param.qos.qci;
+		  X2AP_ENDC_SGNB_ADDITION_REQ(msg).e_rab_param[e_rab].qos.allocation_retention_priority.priority_level =
+		     ue_context_pP->ue_context.e_rab[e_rab].param.qos.allocation_retention_priority.priority_level;
+		  X2AP_ENDC_SGNB_ADDITION_REQ(msg).e_rab_param[e_rab].qos.allocation_retention_priority.pre_emp_vulnerability =
+		     ue_context_pP->ue_context.e_rab[e_rab].param.qos.allocation_retention_priority.pre_emp_vulnerability;
+		  X2AP_ENDC_SGNB_ADDITION_REQ(msg).e_rab_param[e_rab].qos.allocation_retention_priority.pre_emp_capability =
+		     ue_context_pP->ue_context.e_rab[e_rab].param.qos.allocation_retention_priority.pre_emp_capability;
           memcpy(&X2AP_ENDC_SGNB_ADDITION_REQ(msg).e_rabs_tobeadded[e_rab].sgw_addr,
                  &ue_context_pP->ue_context.e_rab[e_rab].param.sgw_addr,
                  sizeof(transport_layer_addr_t));
         }
-
+        X2AP_ENDC_SGNB_ADDITION_REQ(msg).ue_ambr.br_ul = ue_context_pP->ue_context.ue_ambr.br_ul;
+		X2AP_ENDC_SGNB_ADDITION_REQ(msg).ue_ambr.br_dl = ue_context_pP->ue_context.ue_ambr.br_dl;
         LOG_I(RRC,
               "[eNB %d] frame %d subframe %d: UE rnti %x switching to NSA mode\n",
               ctxt_pP->module_id, ctxt_pP->frame, ctxt_pP->subframe, ctxt_pP->rnti);
