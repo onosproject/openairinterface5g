@@ -1944,7 +1944,7 @@ int is_nr_DL_slot(NR_ServingCellConfigCommon_t *scc,slot_t slot) {
   int slots=period*(1<<scs)/1000;
   int slots1=period1*(1<<scs)/1000;
   int slot_in_period = slot % slots;
-  if (slot_in_period < slots1) return(slot_in_period < scc->tdd_UL_DL_ConfigurationCommon->pattern1.nrofDownlinkSlots ? 1 : 0);
+  if (slot_in_period < slots1) return(slot_in_period <= scc->tdd_UL_DL_ConfigurationCommon->pattern1.nrofDownlinkSlots ? 1 : 0);
   else return(slot_in_period <= slots1+scc->tdd_UL_DL_ConfigurationCommon->pattern2->nrofDownlinkSlots ? 1 : 0);    
 }
 
