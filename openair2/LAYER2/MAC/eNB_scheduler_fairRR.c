@@ -3970,6 +3970,9 @@ void ulsch_scheduler_pre_processor_fairRR(module_id_t module_idP,
       } else {
         num_pucch_rb = 3;
       }
+      if(cc->tdd_Config->subframeAssignment==2){
+        num_pucch_rb+=1;
+      }
     } else {//FDD
       if (frame_parms->N_RB_UL == 25) {
         num_pucch_rb = 1;
@@ -4301,6 +4304,9 @@ schedule_ulsch_fairRR(module_id_t module_idP, frame_t frameP,
               ulsch_ue_select[CC_id].list[ulsch_ue_select[CC_id].ue_num].start_rb = 3;
               break;
           }
+          if(cc->tdd_Config->subframeAssignment==2){
+            ulsch_ue_select[CC_id].list[ulsch_ue_select[CC_id].ue_num].start_rb+=1;
+          }
         }
 
         ulsch_ue_select[CC_id].list[ulsch_ue_select[CC_id].ue_num].nb_rb = 3;
@@ -4409,6 +4415,9 @@ void schedule_ulsch_rnti_fairRR(module_id_t   module_idP,
         case 100:
           first_rb[CC_id] = 3;
           break;
+      }
+      if(cc->tdd_Config->subframeAssignment==2){
+          first_rb[CC_id] += 1;
       }
     }
 
