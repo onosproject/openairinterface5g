@@ -880,8 +880,8 @@ void nr_schedule_uss_ulsch_phytest(int Mod_idP,
   
   dci_pdu_rel15_t dci_pdu_rel15[MAX_DCI_CORESET];
 
-  AssertFatal(CCEIndex>=0,"CCEIndex is negative \n");
-  pdcch_pdu_rel15->dci_pdu.CceIndex[pdcch_pdu_rel15->numDlDci] = CCEIndex;
+  //AssertFatal(CCEIndex>=0,"CCEIndex is negative \n");
+  //pdcch_pdu_rel15->dci_pdu.CceIndex[pdcch_pdu_rel15->numDlDci] = CCEIndex;
 
   LOG_D(PHY,"CCEIndex %d\n",pdcch_pdu_rel15->dci_pdu.CceIndex[pdcch_pdu_rel15->numDlDci]);
 
