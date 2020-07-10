@@ -299,6 +299,8 @@ void dlsch_scheduler_pre_processor_allocate(module_id_t Mod_id,
 */
 void eNB_dlsch_ulsch_scheduler(module_id_t module_idP, frame_t frameP, sub_frame_t subframeP);	//, int calibration_flag);
 
+void update_ue_timers(module_id_t module_idP,frame_t frameP, sub_frame_t subframeP);
+
 /* \brief Function to indicate a received preamble on PRACH.  It initiates the RA procedure.
 @param Mod_id Instance ID of eNB
 @param preamble_index index of the received RA request

@@ -122,6 +122,15 @@ void schedule_ulsch_rnti_fairRR(module_id_t   module_idP,
                          unsigned char sched_subframeP,
                          ULSCH_UE_SELECT  ulsch_ue_select[MAX_NUM_CCs]);
 
+void select_dl_ue_candidate(
+  module_id_t     module_idP,
+  frame_t         frameP,
+  sub_frame_t     subframeP);
+
+void select_ul_ue_candidate(
+  module_id_t     module_idP,
+  frame_t         frameP,
+  sub_frame_t     subframeP);
 
 /* extern */
 extern DLSCH_UE_SELECT dlsch_ue_select[MAX_NUM_CCs];
