@@ -65,6 +65,7 @@
 
 
 #include "common/ran_context.h"
+#include "executables/softmodem-common.h"
 
 extern RAN_CONTEXT_t RC;
 

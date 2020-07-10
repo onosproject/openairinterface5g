@@ -119,7 +119,7 @@ void nr_schedule_css_dlsch_phytest(module_id_t   module_idP,
     pdsch_pdu_rel15->SubcarrierSpacing = scc->downlinkConfigCommon->initialDownlinkBWP->genericParameters.subcarrierSpacing;
     pdsch_pdu_rel15->CyclicPrefix = 0;
     pdsch_pdu_rel15->NrOfCodewords = 1;
-    int mcsIndex = 9;
+    int mcsIndex = target_dl_mcs;
     pdsch_pdu_rel15->targetCodeRate[0] = nr_get_code_rate_dl(mcsIndex,0);
     pdsch_pdu_rel15->qamModOrder[0] = 2;
     pdsch_pdu_rel15->mcsIndex[0] = mcsIndex;
@@ -308,7 +308,7 @@ int configure_fapi_dl_pdu(int Mod_idP,
   else pdsch_pdu_rel15->CyclicPrefix=0;
 
   pdsch_pdu_rel15->NrOfCodewords = 1;
-  int mcs = (mcsIndex!=NULL) ? *mcsIndex : 9;
+  int mcs = (mcsIndex!=NULL) ? *mcsIndex : target_dl_mcs;
   int current_harq_pid = UE_list->UE_sched_ctrl[UE_id].current_harq_pid;
   pdsch_pdu_rel15->targetCodeRate[0] = nr_get_code_rate_dl(mcs,0);
   pdsch_pdu_rel15->qamModOrder[0] = 2;
@@ -368,6 +368,7 @@ int configure_fapi_dl_pdu(int Mod_idP,
   // harq pid
   dci_pdu_rel15[0].harq_pid = current_harq_pid;
   dci_pdu_rel15[0].ndi = UE_list->UE_sched_ctrl[UE_id].harq_processes[current_harq_pid].ndi;
+  if (get_softmodem_params()->phy_test==1) UE_list->UE_sched_ctrl[UE_id].harq_processes[current_harq_pid].ndi ^= 1;
   // DAI
   dci_pdu_rel15[0].dai[0].val = (pucch_sched->dai_c-1)&3;
 

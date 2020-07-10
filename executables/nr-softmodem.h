@@ -27,7 +27,7 @@
     {"d" ,                    CONFIG_HLP_SOFTS,       PARAMFLAG_BOOL,   uptr:(uint32_t *)&do_forms,         defintval:0,                   TYPE_INT8,   0},        \
     {"E" ,                    CONFIG_HLP_TQFS,        PARAMFLAG_BOOL,   i8ptr:&threequarter_fs,             defintval:0,                   TYPE_INT8,   0},        \
     {"K" ,                    CONFIG_HLP_ITTIL,       PARAMFLAG_NOFREE, strptr:&itti_dump_file,             defstrval:"/tmp/itti.dump",    TYPE_STRING, 0},        \
-    {"m" ,                    CONFIG_HLP_DLMCS,       0,                uptr:&target_dl_mcs,                defintval:0,                   TYPE_UINT,   0},        \
+    {"m" ,                    CONFIG_HLP_DLMCS,       0,                uptr:&target_dl_mcs,                defintval:9,                   TYPE_UINT,   0},        \
     {"t" ,                    CONFIG_HLP_ULMCS,       0,                uptr:&target_ul_mcs,                defintval:0,                   TYPE_UINT,   0},        \
     {"q" ,                    CONFIG_HLP_STMON,       PARAMFLAG_BOOL,   iptr:&opp_enabled,                  defintval:0,                   TYPE_INT,    0},        \
     {"numerology" ,           CONFIG_HLP_NUMEROLOGY,  PARAMFLAG_BOOL,   iptr:&numerology,                   defintval:0,                   TYPE_INT,    0},        \
@@ -63,4 +63,6 @@ void init_gNB_afterRU(void);
 extern int stop_L1L2(module_id_t gnb_id);
 extern int restart_L1L2(module_id_t gnb_id);
 
+extern uint32_t target_dl_mcs;
+extern uint32_t target_ul_mcs;
 #endif
