@@ -1184,8 +1184,10 @@ void dlsch_scheduler_pre_processor_fairRR (module_id_t   Mod_id,
       round2 = ue_sched_ctl->round[CC_id][harq_pid][TB2];
       if ((round1 != 8) || (round2 != 8)){
         Round = cmin(round1,round2);
+        ue_sched_ctl->ret_cnt[CC_id]++;
       } else{
         Round = 8;
+        ue_sched_ctl->first_cnt[CC_id]++;
       }
 
       //if (mac_eNB_get_rrc_status(Mod_id, rnti) < RRC_RECONFIGURED || round > 0) {

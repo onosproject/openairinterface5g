@@ -359,12 +359,19 @@ int wake_eNB_rxtx(PHY_VARS_eNB *eNB, uint16_t sfn, uint16_t sf) {
       exit_fun( "error locking mutex_rxtx" );
       return(-1);
   }
-
+  static int busy_log_cnt=0;
   if(L1_proc->instance_cnt < 0){
     ++L1_proc->instance_cnt;
+    if(busy_log_cnt!=0){
+      LOG_E(MAC,"RCC singal to rxtx frame %d subframe %d busy end %d (frame %d subframe %d)\n",L1_proc->frame_rx,L1_proc->subframe_rx,busy_log_cnt,proc->frame_rx,proc->subframe_rx);
+    }
+    busy_log_cnt=0;
   }else{
-    LOG_E(MAC,"RCC singal to rxtx frame %d subframe %d busy %d (frame %d subframe %d)\n",L1_proc->frame_rx,L1_proc->subframe_rx,L1_proc->instance_cnt,proc->frame_rx,proc->subframe_rx);
+    if(busy_log_cnt==0){
+      LOG_E(MAC,"RCC singal to rxtx frame %d subframe %d busy %d (frame %d subframe %d)\n",L1_proc->frame_rx,L1_proc->subframe_rx,L1_proc->instance_cnt,proc->frame_rx,proc->subframe_rx);
+    }
     pthread_mutex_unlock( &L1_proc->mutex );
+    busy_log_cnt++;
     return(0);
   }
 
