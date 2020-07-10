@@ -2881,7 +2881,6 @@ do_RRCConnectionSetup(
   else
     physicalConfigDedicated2->soundingRS_UL_ConfigDedicated = NULL;
 
-  physicalConfigDedicated2->antennaInfo                   = CALLOC(1,sizeof(*physicalConfigDedicated2->antennaInfo));
   physicalConfigDedicated2->schedulingRequestConfig       = CALLOC(1,sizeof(*physicalConfigDedicated2->schedulingRequestConfig));
 
   // PDSCH
@@ -3202,6 +3201,11 @@ do_RRCConnectionSetup(
 
   LOG_D(RRC,"RRCConnectionSetup Encoded %zd bits (%zd bytes) \n",
         enc_rval.encoded,(enc_rval.encoded+7)/8);
+  free(mac_MainConfig->phr_Config);
+  free(maxHARQ_Tx);
+  free(periodicBSR_Timer);
+  free(mac_MainConfig->ul_SCH_Config);
+  free(rrcConnectionSetup->criticalExtensions.choice.c1.choice.rrcConnectionSetup_r8.radioResourceConfigDedicated.mac_MainConfig);
 
   return((enc_rval.encoded+7)/8);
 }
@@ -4114,6 +4118,25 @@ uint16_t do_RRCConnectionReconfiguration(const protocol_ctxt_t *const ctxt_pP,
   // for (i=0;i<30;i++)
   //    msg("%x.",buffer[i]);
   // msg("\n");
+  if (securityConfigHO != NULL) {
+    free(rrcConnectionReconfiguration->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r8.securityConfigHO);
+  }
+  if (mobilityInfo !=NULL) {
+    free(rrcConnectionReconfiguration->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r8.mobilityControlInfo);
+  }
+  if (MeasId_list != NULL) {
+    if(speedStatePars != NULL) {
+      free(rrcConnectionReconfiguration->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r8.measConfig->speedStatePars);
+    }
+    if (quantityConfig!=NULL) {
+      free(rrcConnectionReconfiguration->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r8.measConfig->quantityConfig);
+    }
+    free(rrcConnectionReconfiguration->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r8.measConfig);
+  }
+  if (mac_MainConfig!=NULL) {
+    free(rrcConnectionReconfiguration->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r8.radioResourceConfigDedicated->mac_MainConfig);
+  }
+  free(rrcConnectionReconfiguration->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r8.radioResourceConfigDedicated);
   return((enc_rval.encoded+7)/8);
 }
 
