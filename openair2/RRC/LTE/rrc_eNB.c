@@ -4570,10 +4570,6 @@ flexran_rrc_eNB_generate_defaultRRCConnectionReconfiguration(const protocol_ctxt
   MeasObj->measObject.choice.measObjectEUTRA.cellsToAddModList =
     (LTE_CellsToAddModList_t *) CALLOC(1, sizeof(*CellsToAddModList));
   CellsToAddModList = MeasObj->measObject.choice.measObjectEUTRA.cellsToAddModList;
-//=======
-//  MeasObj->measObject.choice.measObjectEUTRA.offsetFreq = (LTE_Q_OffsetRange_t *) CALLOC(1,sizeof(LTE_Q_OffsetRange_t));
-//  *(MeasObj->measObject.choice.measObjectEUTRA.offsetFreq) = ue_context_pP->ue_context.measurement_info->offsetFreq;   // Default is 15 or 0dB
-//>>>>>>> origin/OAI_develop
 
   if (RC.rrc[ctxt_pP->module_id]->num_neigh_cells > 0) {
     MeasObj->measObject.choice.measObjectEUTRA.cellsToAddModList =
@@ -5838,12 +5834,12 @@ rrc_eNB_generate_HO_RRCConnectionReconfiguration(const protocol_ctxt_t *const ct
   SRB1_config->rlc_Config = SRB1_rlc_config;
   SRB1_rlc_config->present = LTE_SRB_ToAddMod__rlc_Config_PR_explicitValue;
   SRB1_rlc_config->choice.explicitValue.present = LTE_RLC_Config_PR_am;
-  SRB1_rlc_config->choice.explicitValue.choice.am.ul_AM_RLC.t_PollRetransmit = LTE_T_PollRetransmit_ms15;
-  SRB1_rlc_config->choice.explicitValue.choice.am.ul_AM_RLC.pollPDU = LTE_PollPDU_p8;
-  SRB1_rlc_config->choice.explicitValue.choice.am.ul_AM_RLC.pollByte = LTE_PollByte_kB1000;
-  SRB1_rlc_config->choice.explicitValue.choice.am.ul_AM_RLC.maxRetxThreshold = LTE_UL_AM_RLC__maxRetxThreshold_t16;
-  SRB1_rlc_config->choice.explicitValue.choice.am.dl_AM_RLC.t_Reordering = LTE_T_Reordering_ms35;
-  SRB1_rlc_config->choice.explicitValue.choice.am.dl_AM_RLC.t_StatusProhibit = LTE_T_StatusProhibit_ms10;
+  SRB1_rlc_config->choice.explicitValue.choice.am.ul_AM_RLC.t_PollRetransmit = rrc_inst->srb1_timer_poll_retransmit;
+  SRB1_rlc_config->choice.explicitValue.choice.am.ul_AM_RLC.pollPDU =  rrc_inst->srb1_poll_pdu;
+  SRB1_rlc_config->choice.explicitValue.choice.am.ul_AM_RLC.pollByte =  rrc_inst->srb1_poll_byte;
+  SRB1_rlc_config->choice.explicitValue.choice.am.ul_AM_RLC.maxRetxThreshold =  rrc_inst->srb1_max_retx_threshold;
+  SRB1_rlc_config->choice.explicitValue.choice.am.dl_AM_RLC.t_Reordering =  rrc_inst->srb1_timer_reordering;
+  SRB1_rlc_config->choice.explicitValue.choice.am.dl_AM_RLC.t_StatusProhibit =  rrc_inst->srb1_timer_status_prohibit;
   SRB1_lchan_config = CALLOC(1, sizeof(*SRB1_lchan_config));
   SRB1_config->logicalChannelConfig = SRB1_lchan_config;
   SRB1_lchan_config->present = LTE_SRB_ToAddMod__logicalChannelConfig_PR_explicitValue;
@@ -6179,12 +6175,21 @@ rrc_eNB_generate_HO_RRCConnectionReconfiguration(const protocol_ctxt_t *const ct
   // PDSCH
   //assign_enum(&physicalConfigDedicated2->pdsch_ConfigDedicated->p_a,
   //          PDSCH_ConfigDedicated__p_a_dB0);
-  physicalConfigDedicated2->pdsch_ConfigDedicated->p_a = LTE_PDSCH_ConfigDedicated__p_a_dB0;
+  if (rrc_inst->carrier[0].p_eNB==1){
+    physicalConfigDedicated2->pdsch_ConfigDedicated->p_a = LTE_PDSCH_ConfigDedicated__p_a_dB0;
+  }else{
+    physicalConfigDedicated2->pdsch_ConfigDedicated->p_a = LTE_PDSCH_ConfigDedicated__p_a_dB_3;
+  }
   // PUCCH
   physicalConfigDedicated2->pucch_ConfigDedicated->ackNackRepetition.present =
     LTE_PUCCH_ConfigDedicated__ackNackRepetition_PR_release;
   physicalConfigDedicated2->pucch_ConfigDedicated->ackNackRepetition.choice.release = 0;
-  physicalConfigDedicated2->pucch_ConfigDedicated->tdd_AckNackFeedbackMode = NULL;    //PUCCH_ConfigDedicated__tdd_AckNackFeedbackMode_multiplexing;
+  if (rrc_inst->carrier[0].sib1->tdd_Config == NULL) {
+    physicalConfigDedicated2->pucch_ConfigDedicated->tdd_AckNackFeedbackMode = NULL;
+  }else{
+    physicalConfigDedicated2->pucch_ConfigDedicated->tdd_AckNackFeedbackMode = CALLOC(1,sizeof(long));
+    *(physicalConfigDedicated2->pucch_ConfigDedicated->tdd_AckNackFeedbackMode) =  LTE_PUCCH_ConfigDedicated__tdd_AckNackFeedbackMode_bundling;
+  }
   // Pusch_config_dedicated
   physicalConfigDedicated2->pusch_ConfigDedicated->betaOffset_ACK_Index = 0;  // 2.00
   physicalConfigDedicated2->pusch_ConfigDedicated->betaOffset_RI_Index = 0;   // 1.25
@@ -6227,14 +6232,24 @@ rrc_eNB_generate_HO_RRCConnectionReconfiguration(const protocol_ctxt_t *const ct
   LOG_D(RRC,"Setting transmission mode to %ld+1\n",rrc_inst->configuration.radioresourceconfig[0].ue_TransmissionMode);
 
   if (rrc_inst->configuration.radioresourceconfig[0].ue_TransmissionMode==LTE_AntennaInfoDedicated__transmissionMode_tm3) {
-    (*physicalConfigDedicated)->antennaInfo->choice.explicitValue.codebookSubsetRestriction=
-      CALLOC(1,sizeof(LTE_AntennaInfoDedicated__codebookSubsetRestriction_PR));
-    (*physicalConfigDedicated)->antennaInfo->choice.explicitValue.codebookSubsetRestriction->present =
-      LTE_AntennaInfoDedicated__codebookSubsetRestriction_PR_n2TxAntenna_tm3;
-    (*physicalConfigDedicated)->antennaInfo->choice.explicitValue.codebookSubsetRestriction->choice.n2TxAntenna_tm3.buf= MALLOC(1);
-    (*physicalConfigDedicated)->antennaInfo->choice.explicitValue.codebookSubsetRestriction->choice.n2TxAntenna_tm3.buf[0] = 0xc0;
-    (*physicalConfigDedicated)->antennaInfo->choice.explicitValue.codebookSubsetRestriction->choice.n2TxAntenna_tm3.size=1;
-    (*physicalConfigDedicated)->antennaInfo->choice.explicitValue.codebookSubsetRestriction->choice.n2TxAntenna_tm3.bits_unused=6;
+     if (ue_context_pP->ue_context.UE_Capability != NULL) {
+        if (ue_context_pP->ue_context.UE_Capability->ue_Category >= 2) {
+          (*physicalConfigDedicated)->antennaInfo->choice.explicitValue.codebookSubsetRestriction=
+            CALLOC(1,sizeof(struct LTE_AntennaInfoDedicated__codebookSubsetRestriction));
+          (*physicalConfigDedicated)->antennaInfo->choice.explicitValue.codebookSubsetRestriction->present =
+            LTE_AntennaInfoDedicated__codebookSubsetRestriction_PR_n2TxAntenna_tm3;
+          (*physicalConfigDedicated)->antennaInfo->choice.explicitValue.codebookSubsetRestriction->choice.n2TxAntenna_tm3.buf= MALLOC(1);
+          (*physicalConfigDedicated)->antennaInfo->choice.explicitValue.codebookSubsetRestriction->choice.n2TxAntenna_tm3.buf[0] = 0xc0;
+          (*physicalConfigDedicated)->antennaInfo->choice.explicitValue.codebookSubsetRestriction->choice.n2TxAntenna_tm3.size=1;
+          (*physicalConfigDedicated)->antennaInfo->choice.explicitValue.codebookSubsetRestriction->choice.n2TxAntenna_tm3.bits_unused=6;
+
+        } else {
+          (*physicalConfigDedicated)->antennaInfo->choice.explicitValue.transmissionMode = LTE_AntennaInfoDedicated__transmissionMode_tm2;
+        }
+      }
+      else {
+        LOG_E(RRC, "UE_Capability is NULL\n");
+      }
   } else if (rrc_inst->configuration.radioresourceconfig[0].ue_TransmissionMode==LTE_AntennaInfoDedicated__transmissionMode_tm4) {
     (*physicalConfigDedicated)->antennaInfo->choice.explicitValue.codebookSubsetRestriction=
       CALLOC(1,sizeof(LTE_AntennaInfoDedicated__codebookSubsetRestriction_PR));
@@ -6332,15 +6347,15 @@ rrc_eNB_generate_HO_RRCConnectionReconfiguration(const protocol_ctxt_t *const ct
       case 2:
         switch(frame_parms->N_RB_UL) {
           case 25:
-            physicalConfigDedicated2->schedulingRequestConfig->choice.setup.sr_PUCCH_ResourceIndex = sr_base - ue_context_pP->local_uid/2;
+            physicalConfigDedicated2->schedulingRequestConfig->choice.setup.sr_PUCCH_ResourceIndex = sr_base - ue_context_pP->local_uid/4;
             break;
 
           case 50:
-            physicalConfigDedicated2->schedulingRequestConfig->choice.setup.sr_PUCCH_ResourceIndex = sr_base - ue_context_pP->local_uid/2;
+            physicalConfigDedicated2->schedulingRequestConfig->choice.setup.sr_PUCCH_ResourceIndex = sr_base - ue_context_pP->local_uid/4;
             break;
 
           case 100:
-            physicalConfigDedicated2->schedulingRequestConfig->choice.setup.sr_PUCCH_ResourceIndex = sr_base - ue_context_pP->local_uid/2;
+            physicalConfigDedicated2->schedulingRequestConfig->choice.setup.sr_PUCCH_ResourceIndex = sr_base - ue_context_pP->local_uid/4;
             break;
         }
 
@@ -6364,8 +6379,8 @@ rrc_eNB_generate_HO_RRCConnectionReconfiguration(const protocol_ctxt_t *const ct
         break;
 
     case 2:
-      physicalConfigDedicated2->schedulingRequestConfig->choice.setup.sr_ConfigIndex = 7 +
-          (ue_context_pP->local_uid & 1)*5;    // Isr = 5 (every 10 subframes, offset=2 for UE0, 7 for UE1, 2 for UE2, 7 for UE3 , 2 for UE4 etc..)
+      physicalConfigDedicated2->schedulingRequestConfig->choice.setup.sr_ConfigIndex = 17 +
+          (ue_context_pP->local_uid&3)*5;    // Isr = 5 (every 10 subframes, offset=2 for UE0, 7 for UE1, 2 for UE2, 7 for UE3 , 2 for UE4 etc..)
       break;
 
       case 3:
@@ -6753,8 +6768,17 @@ rrc_eNB_generate_HO_RRCConnectionReconfiguration(const protocol_ctxt_t *const ct
   mobilityInfo->radioResourceConfigCommon.antennaInfoCommon = NULL;
   mobilityInfo->radioResourceConfigCommon.p_Max = NULL;   // CALLOC(1,sizeof(*mobilityInfo->radioResourceConfigCommon.p_Max));
   //memcpy((void *)mobilityInfo->radioResourceConfigCommon.p_Max,(void *)rrc_inst->sib1->p_Max,sizeof(P_Max_t));
-  mobilityInfo->radioResourceConfigCommon.tdd_Config = NULL;  //CALLOC(1,sizeof(TDD_Config_t));
   //memcpy((void *)mobilityInfo->radioResourceConfigCommon.tdd_Config,(void *)rrc_inst->sib1->tdd_Config,sizeof(TDD_Config_t));
+  if (RC.rrc[ctxt_pP->module_id]->configuration.frame_type[0] == TDD)
+  {
+    mobilityInfo->radioResourceConfigCommon.tdd_Config =                             CALLOC(1,sizeof(struct LTE_TDD_Config));
+    mobilityInfo->radioResourceConfigCommon.tdd_Config->subframeAssignment =
+	RC.rrc[ctxt_pP->module_id]->configuration.tdd_config[0];
+    mobilityInfo->radioResourceConfigCommon.tdd_Config->specialSubframePatterns =
+	RC.rrc[ctxt_pP->module_id]->configuration.tdd_config_s[0];
+  }else{
+    mobilityInfo->radioResourceConfigCommon.tdd_Config = NULL;
+  }
   mobilityInfo->radioResourceConfigCommon.ul_CyclicPrefixLength =
     rrc_inst->carrier[0] /* CROUX TBC */.sib2->radioResourceConfigCommon.ul_CyclicPrefixLength;
   //End of configuration of radioResourceConfigCommon
@@ -6770,7 +6794,17 @@ rrc_eNB_generate_HO_RRCConnectionReconfiguration(const protocol_ctxt_t *const ct
   mobilityInfo->carrierFreq->ul_CarrierFreq = NULL;
   mobilityInfo->carrierBandwidth = CALLOC(1, sizeof(
       *mobilityInfo->carrierBandwidth));    //CALLOC(1,sizeof(struct CarrierBandwidthEUTRA));  AllowedMeasBandwidth_mbw25
-  mobilityInfo->carrierBandwidth->dl_Bandwidth = LTE_CarrierBandwidthEUTRA__dl_Bandwidth_n25;
+  switch(RC.rrc[ctxt_pP->module_id]->configuration.N_RB_DL[0]){
+  case 25 :
+    mobilityInfo->carrierBandwidth->dl_Bandwidth = LTE_CarrierBandwidthEUTRA__dl_Bandwidth_n25;
+    break;
+  case 50 :
+    mobilityInfo->carrierBandwidth->dl_Bandwidth = LTE_CarrierBandwidthEUTRA__dl_Bandwidth_n50;
+    break;
+  case 100 :
+    mobilityInfo->carrierBandwidth->dl_Bandwidth = LTE_CarrierBandwidthEUTRA__dl_Bandwidth_n100;
+    break;
+  }
   mobilityInfo->carrierBandwidth->ul_Bandwidth = NULL;
   mobilityInfo->rach_ConfigDedicated = NULL;
   ue_context_pP->ue_context.mobilityInfo = mobilityInfo;
