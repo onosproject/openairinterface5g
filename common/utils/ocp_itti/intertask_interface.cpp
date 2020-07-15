@@ -65,8 +65,14 @@ task_list_t tasks[TASK_MAX];
   }
 
   void free_mem_block (mem_block_t *leP, const char *caller) {
-    AssertFatal(leP!=NULL,"");
+//    AssertFatal(leP!=NULL,"");
+    if (leP != NULL) {
     free(leP);
+    LOG_D(TMR, "intertask_interface free_mem_block is called, after free leP is %p\n", leP);
+    leP = NULL; //prevent double free
+    } else {
+      LOG_I(TMR, "intertask_interface free_mem_block is called, but before free leP is NULL\n");
+    }
   }
 
   mem_block_t *get_free_mem_block (uint32_t sizeP, const char *caller) {

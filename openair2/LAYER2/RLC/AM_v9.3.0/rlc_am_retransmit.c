@@ -60,7 +60,6 @@ boolean_t rlc_am_nack_pdu (
   sdu_size_t pdu_data_to_retx = 0;
 
   if (mb_p != NULL) {
-    //assert(so_startP <= so_endP);
     if(so_startP > so_endP) {
       LOG_E(RLC, PROTOCOL_RLC_AM_CTXT_FMT"[NACK-PDU] ERROR NACK MISSING PDU, so_startP %d, so_endP %d\n",
             PROTOCOL_RLC_AM_CTXT_ARGS(ctxt_pP,rlc_pP),so_startP, so_endP);
@@ -86,7 +85,6 @@ boolean_t rlc_am_nack_pdu (
                   snP,
                   so_stopP);
         #endif
-            //assert(tx_data_pdu_buffer_p->nack_so_start < tx_data_pdu_buffer_p->payload_size);
     	      if(tx_data_pdu_buffer_p->nack_so_start >= tx_data_pdu_buffer_p->payload_size){
               LOG_E(RLC, PROTOCOL_RLC_AM_CTXT_FMT"[NACK-PDU] ERROR NACK MISSING PDU, nack_so_start %d, payload_size %d\n",
                     PROTOCOL_RLC_AM_CTXT_ARGS(ctxt_pP,rlc_pP),tx_data_pdu_buffer_p->nack_so_start, tx_data_pdu_buffer_p->payload_size);
@@ -211,11 +209,6 @@ void rlc_am_ack_pdu (
               snP, rlc_pP->vt_a,rlc_pP->vt_s,rlc_pP->channel_id);
          return;
       }
-/*
-    	AssertFatal (tx_data_pdu_buffer->flags.ack == 0,
-    			"RLC AM Rx Status Report sn=%d acked twice but is pending for Retx vtA=%d vtS=%d LcId=%d\n",
-				snP, rlc_pP->vt_a,rlc_pP->vt_s,rlc_pP->channel_id);
-*/
       rlc_pP->retrans_num_bytes_to_retransmit -= tx_data_pdu_buffer->retx_payload_size;
       tx_data_pdu_buffer->retx_payload_size = 0;
       tx_data_pdu_buffer->num_holes = 0;
@@ -251,10 +244,6 @@ mem_block_t* rlc_am_retransmit_get_copy (
            snP,rlc_pP->vt_a,rlc_pP->vt_s,rlc_pP->channel_id);
      return NULL;
   }
-/*
-  AssertFatal (mb_original_p != NULL, "RLC AM PDU Copy Error: Empty block sn=%d vtA=%d vtS=%d LcId=%d !\n",
-		  snP,rlc_pP->vt_a,rlc_pP->vt_s,rlc_pP->channel_id);
-*/
   rlc_am_tx_data_pdu_management_t *pdu_mngt = &rlc_pP->tx_data_pdu_buffer[snP % RLC_AM_WINDOW_SIZE];
 
   /* We need to allocate a new buffer and copy to it because header content may change for Polling bit */
@@ -298,10 +287,6 @@ mem_block_t* rlc_am_retransmit_get_am_segment(
             sn,rlc_pP->vt_a,rlc_pP->vt_s,rlc_pP->channel_id);
       return NULL;
     }
-/*
-	AssertFatal (mb_original_p != NULL, "RLC AM PDU Segment Error: Empty block sn=%d vtA=%d vtS=%d LcId=%d !\n",
-			sn,rlc_pP->vt_a,rlc_pP->vt_s,rlc_pP->channel_id);
-*/
 //Assertion(eNB)_PRAN_DesignDocument_annex No.775
   if(pdu_mngt->payload != mb_original_p->data + sizeof(struct mac_tb_req) + pdu_mngt->header_and_payload_size - pdu_mngt->payload_size)
   {
@@ -309,11 +294,6 @@ mem_block_t* rlc_am_retransmit_get_am_segment(
            pdu_mngt->payload,mb_original_p->data + sizeof(struct mac_tb_req),pdu_mngt->header_and_payload_size,pdu_mngt->payload_size,sn,rlc_pP->channel_id);
      return NULL;
   }
-/*
-	AssertFatal (pdu_mngt->payload == mb_original_p->data + sizeof(struct mac_tb_req) + pdu_mngt->header_and_payload_size - pdu_mngt->payload_size,
-			"RLC AM PDU Segment Error: Inconsistent data pointers p1=%p p2=%p sn = %d total size = %d data size = %d LcId=%d !\n",
-			pdu_mngt->payload,mb_original_p->data + sizeof(struct mac_tb_req),pdu_mngt->header_and_payload_size,pdu_mngt->payload_size,sn,rlc_pP->channel_id);
-*/
 	/* Init ReTx Hole list if not configured, ie the whole PDU has to be retransmitted */
 	if (pdu_mngt->num_holes == 0)
 	{
@@ -324,10 +304,6 @@ mem_block_t* rlc_am_retransmit_get_am_segment(
             pdu_mngt->retx_payload_size,pdu_mngt->payload_size,sn,rlc_pP->vt_a,rlc_pP->vt_s,rlc_pP->channel_id);
      return NULL;
   }
-/*
-		AssertFatal (pdu_mngt->retx_payload_size == pdu_mngt->payload_size,"RLC AM PDU ReTx Segment: Expecting full PDU size ReTxSize=%d DataSize=%d sn=%d vtA=%d vtS=%d LcId=%d !\n",
-				pdu_mngt->retx_payload_size,pdu_mngt->payload_size,sn,rlc_pP->vt_a,rlc_pP->vt_s,rlc_pP->channel_id);
-*/
 		pdu_mngt->retx_hole_index = 0;
 		pdu_mngt->hole_so_start[0] = 0;
 		pdu_mngt->hole_so_stop[0] = pdu_mngt->payload_size - 1;
@@ -344,11 +320,7 @@ mem_block_t* rlc_am_retransmit_get_am_segment(
            retx_so_start,retx_so_stop,pdu_mngt->payload_size,sn,rlc_pP->channel_id);
      return NULL;
   }
-/*
-	AssertFatal ((retx_so_start <= retx_so_stop) && (retx_so_stop - retx_so_start + 1 <= pdu_mngt->payload_size),
-			"RLC AM Tx PDU Segment Data SO Error: retx_so_start=%d retx_so_stop=%d OriginalPDUDataLength=%d sn=%d LcId=%d!\n",
-			retx_so_start,retx_so_stop,pdu_mngt->payload_size,sn,rlc_pP->channel_id);
-*/
+
 	/* Init FI to the same value as original PDU */
 	fi_start = (!(RLC_AM_PDU_GET_FI_START(*(pdu_mngt->first_byte))));
 	fi_end = (!(RLC_AM_PDU_GET_FI_END(*(pdu_mngt->first_byte))));
@@ -442,10 +414,7 @@ mem_block_t* rlc_am_retransmit_get_am_segment(
                     sdu_index,pdu_mngt->nb_sdus,sn,rlc_pP->channel_id);
                return NULL;
             }
-/*
-			AssertFatal (sdu_index < pdu_mngt->nb_sdus, "RLC AM Tx PDU Segment Error: sdu_index=%d nb_sdus=%d sn=%d LcId=%d !\n",
-					sdu_index,pdu_mngt->nb_sdus,sn,rlc_pP->channel_id);
-*/
+
 			if (sdu_index < pdu_mngt->nb_sdus - 1)
 			{
 				temp_read = ((*pdu_original_header_p) << 8) | (*(pdu_original_header_p + 1));
@@ -530,10 +499,7 @@ mem_block_t* rlc_am_retransmit_get_am_segment(
                    num_LIs_pdu_segment,pdu_mngt->nb_sdus - 1,sn,rlc_pP->channel_id);
               return NULL;
             }
-/*
-			AssertFatal (num_LIs_pdu_segment <=  pdu_mngt->nb_sdus - 1, "RLC AM Tx PDU Segment Data Error: nbLISegment=%d nbLIPDU=%d sn=%d LcId=%d !\n",
-					num_LIs_pdu_segment,pdu_mngt->nb_sdus - 1,sn,rlc_pP->channel_id);
-*/
+
 			/* Bound to available TBS taking into account min PDU segment header*/
 			sdu_segment_index = 0;
 			while ((sdu_segment_index < num_LIs_pdu_segment + 1) && (rlc_pP->nb_bytes_requested_by_mac > *payload_sizeP + RLC_AM_PDU_SEGMENT_HEADER_SIZE(sdu_segment_index)))
@@ -546,10 +512,7 @@ mem_block_t* rlc_am_retransmit_get_am_segment(
               sdu_segment_index++;
               continue;
             }
-/*
-				AssertFatal (sdus_segment_size[sdu_segment_index] > 0, "RLC AM Tx PDU Segment Data Error: EMpty LI index=%d numLISegment=%d numLIPDU=%d PDULength=%d SOStart=%d SOStop=%d sn=%d LcId=%d !\n",
-						sdu_segment_index,num_LIs_pdu_segment,pdu_mngt->nb_sdus - 1,pdu_mngt->payload_size,retx_so_start,retx_so_stop,sn,rlc_pP->channel_id);
-*/
+
 				/* Add next sdu_segment_index to data part */
 				if (RLC_AM_PDU_SEGMENT_HEADER_SIZE(sdu_segment_index) + (*payload_sizeP) + sdus_segment_size[sdu_segment_index] <= rlc_pP->nb_bytes_requested_by_mac)
 				{
@@ -578,11 +541,7 @@ mem_block_t* rlc_am_retransmit_get_am_segment(
                 retx_so_stop,pdu_mngt->payload_size,retx_so_start,*payload_sizeP,num_LIs_pdu_segment,pdu_mngt->nb_sdus - 1,sn,rlc_pP->channel_id);
            return NULL;
          }
-/*
-		AssertFatal ((retx_so_stop <= pdu_mngt->payload_size - 1) && (retx_so_stop - retx_so_start + 1 < pdu_mngt->payload_size),
-				"RLC AM Tx PDU Segment Data Error: retx_so_stop=%d OriginalPDUDataLength=%d SOStart=%d SegmentLength=%d numLISegment=%d numLIPDU=%d sn=%d LcId=%d !\n",
-				retx_so_stop,pdu_mngt->payload_size,retx_so_start,*payload_sizeP,num_LIs_pdu_segment,pdu_mngt->nb_sdus - 1,sn,rlc_pP->channel_id);
-*/
+
 		/* init FI End to FALSE if retx_so_stop is not end of PDU */
 		if (retx_so_stop != pdu_mngt->payload_size - 1)
 		{
@@ -607,10 +566,6 @@ mem_block_t* rlc_am_retransmit_get_am_segment(
                   data_size,*payload_sizeP,sn,rlc_pP->channel_id);
             return NULL;
          }
-/*
-		AssertFatal (data_size == *payload_sizeP, "RLC AM Tx PDU Segment Data Error: SduSum=%d Data=%d sn=%d LcId=%d !\n",
-				data_size,*payload_sizeP,sn,rlc_pP->channel_id);
-*/
 
 
 		/* Allocation */
@@ -621,10 +576,7 @@ mem_block_t* rlc_am_retransmit_get_am_segment(
                  header_segment_length,*payload_sizeP,pdu_mngt->header_and_payload_size,sn,rlc_pP->channel_id);
            return NULL;
         }
-/*
-		AssertFatal (header_segment_length + *payload_sizeP <= pdu_mngt->header_and_payload_size + 2, "RLC AM PDU Segment Error: Hdr=%d Data=%d Original Hdr+Data =%d sn=%d LcId=%d !\n",
-				header_segment_length,*payload_sizeP,pdu_mngt->header_and_payload_size,sn,rlc_pP->channel_id);
-*/
+
 		mem_pdu_segment_p = get_free_mem_block((*payload_sizeP + header_segment_length + sizeof(struct mac_tb_req)), __func__);
 		if(mem_pdu_segment_p == NULL) return NULL;
 		pdu_segment_header_p        = (uint8_t *)&mem_pdu_segment_p->data[sizeof(struct mac_tb_req)];
@@ -780,7 +732,6 @@ void rlc_am_tx_buffer_display (
         LOG_D(RLC, "SO:%04d->%04d)\t", tx_data_pdu_buffer_p->nack_so_start, tx_data_pdu_buffer_p->nack_so_stop);
       } else {
         for (i=0; i<tx_data_pdu_buffer_p->num_holes; i++) {
-          //assert(i < RLC_AM_MAX_HOLES_REPORT_PER_PDU);
           if(i >= RLC_AM_MAX_HOLES_REPORT_PER_PDU) {
             LOG_E(RLC, "num_holes error. %d %d %d\n", tx_data_pdu_buffer_p->num_holes, i, RLC_AM_MAX_HOLES_REPORT_PER_PDU);
             break;
@@ -815,10 +766,6 @@ mem_block_t * rlc_am_get_pdu_to_retransmit(
                 rlc_pP->retrans_num_pdus,rlc_pP->vt_a,rlc_pP->vt_s,rlc_pP->channel_id);
          return NULL;
       }
-/*
-	  AssertFatal ((rlc_pP->retrans_num_pdus > 0) && (rlc_pP->vt_a !=  rlc_pP->vt_s), "RLC AM ReTx start process Error: NbPDUtoRetx=%d vtA=%d vtS=%d  LcId=%d !\n",
-			  rlc_pP->retrans_num_pdus,rlc_pP->vt_a,rlc_pP->vt_s,rlc_pP->channel_id);
-*/
 	  do
 	  {
 		  tx_data_pdu_management = &rlc_pP->tx_data_pdu_buffer[sn % RLC_AM_WINDOW_SIZE];
@@ -844,14 +791,6 @@ mem_block_t * rlc_am_get_pdu_to_retransmit(
             }
             else
             {
-/*
-			  AssertFatal (tx_data_pdu_management->sn == sn, "RLC AM ReTx PDU Error: SN Error pdu_sn=%d sn=%d vtA=%d vtS=%d LcId=%d !\n",
-					  tx_data_pdu_management->sn,sn,rlc_pP->vt_a,rlc_pP->vt_s,rlc_pP->channel_id);
-			  AssertFatal (tx_data_pdu_management->flags.transmitted == 1, "RLC AM ReTx PDU Error: State Error sn=%d vtA=%d vtS=%d LcId=%d !\n",
-			  					  sn,rlc_pP->vt_a,rlc_pP->vt_s,rlc_pP->channel_id);
-			  AssertFatal (tx_data_pdu_management->retx_payload_size > 0, "RLC AM ReTx PDU Error: No Data to Retx sn=%d vtA=%d vtS=%d LcId=%d !\n",
-					  sn,rlc_pP->vt_a,rlc_pP->vt_s,rlc_pP->channel_id);
-*/
 			  /* Either the whole RLC PDU is to be transmitted and there is enough MAC TBS or there is minimum TBS size for transmitting 1 AM PDU segment */
 			  if ((tx_data_pdu_management->retx_payload_size == tx_data_pdu_management->payload_size) && (rlc_pP->nb_bytes_requested_by_mac >= tx_data_pdu_management->header_and_payload_size))
 			  {
@@ -919,10 +858,7 @@ mem_block_t * rlc_am_get_pdu_to_retransmit(
                          }
                          else
                          {
-/*
-						  AssertFatal ((tx_data_pdu_management->retx_payload_size >= pdu_data_size) && (rlc_pP->retrans_num_bytes_to_retransmit >= pdu_data_size), "RLC AM ReTx PDU Segment Error: DataSize=%d PDUReTxsize=%d TotalReTxsize=%d sn=%d LcId=%d !\n",
-								  pdu_data_size,tx_data_pdu_management->retx_payload_size,rlc_pP->retrans_num_bytes_to_retransmit,sn,rlc_pP->channel_id);
-*/
+
 						  tx_data_pdu_management->retx_payload_size -= pdu_data_size;
 						  rlc_pP->retrans_num_bytes_to_retransmit -= pdu_data_size;
 						  if (tx_data_pdu_management->retx_payload_size == 0)

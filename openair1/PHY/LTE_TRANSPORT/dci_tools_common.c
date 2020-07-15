@@ -288,6 +288,11 @@ void conv_eMTC_rballoc (uint16_t resource_block_coding, uint32_t N_RB_DL, uint32
 
 
   int             RIV = resource_block_coding&31;
+  if (RIV >= 32) {
+    LOG_E(PHY, "RIV is %d > 31\n",RIV);
+    return;
+  }
+
   int             narrowband = resource_block_coding>>5;
   int             N_NB_DL = N_RB_DL / 6;
   int             i0 = (N_RB_DL >> 1) - (3 * N_NB_DL);
@@ -295,8 +300,6 @@ void conv_eMTC_rballoc (uint16_t resource_block_coding, uint32_t N_RB_DL, uint32
   int             alloc = localRIV2alloc_LUT6[RIV];
   int             ind = first_rb >> 5;
   int             ind_mod = first_rb & 31;
-
-  AssertFatal(RIV<32,"RIV is %d > 31\n",RIV);
 
   if (((N_RB_DL & 1) > 0) && (narrowband >= (N_NB_DL >> 1)))
     first_rb++;
@@ -1006,8 +1009,10 @@ uint8_t subframe2harq_pid(LTE_DL_FRAME_PARMS *frame_parms,uint32_t frame,uint8_t
     }
   }
 
-  AssertFatal(ret!=255,
-	      "invalid harq_pid(%d) at SFN/SF = %d/%d\n", (int8_t)ret, frame, subframe);
+  if (ret == 255) {
+    LOG_E(PHY, "invalid harq_pid(%d) at SFN/SF = %d/%d\n", (int8_t)ret, frame, subframe);
+  }
+
   return ret;
 }
 

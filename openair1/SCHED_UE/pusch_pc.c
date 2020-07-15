@@ -68,6 +68,10 @@ void pusch_power_cntl(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,uint8_
   uint8_t harq_pid = subframe2harq_pid(&ue->frame_parms,
                                        proc->frame_tx,
                                        proc->subframe_tx);
+  if (harq_pid == 255) {
+    LOG_E(PHY,"FATAL ERROR: illegal harq_pid, returning\n");
+    return;
+  }
   uint8_t nb_rb = ue->ulsch[eNB_id]->harq_processes[harq_pid]->nb_rb;
   int16_t PL;
   // P_pusch = 10*log10(nb_rb + P_opusch(j)+ alpha(u)*PL + delta_TF(i) + f(i))
@@ -81,6 +85,10 @@ void pusch_power_cntl(PHY_VARS_UE *ue,UE_rxtx_proc_t *proc,uint8_t eNB_id,uint8_
                                  100*ue->ulsch[eNB_id]->f_pusch)/100;
 
   if(ue->ulsch_Msg3_active[eNB_id] == 1) {  // Msg3 PUSCH
+    if (get_Po_NOMINAL_PUSCH(ue->Mod_id,0) == -1) {
+		LOG_E(PHY,"get_Po_NOMINAL_PUSCH failed\n");
+		return;
+	}
     ue->ulsch[eNB_id]->Po_PUSCH += (get_Po_NOMINAL_PUSCH(ue->Mod_id,0) + PL);
     LOG_I(PHY,"[UE  %d][RAPROC] frame %d, subframe %d: Msg3 Po_PUSCH %d dBm (%d,%d,100*PL=%d,%d,%d)\n",
           ue->Mod_id,proc->frame_tx,proc->subframe_tx,ue->ulsch[eNB_id]->Po_PUSCH,

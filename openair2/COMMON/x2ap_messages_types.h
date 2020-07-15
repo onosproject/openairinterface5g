@@ -42,7 +42,7 @@
 #define X2AP_ENDC_SGNB_ADDITION_REQ_ACK(mSGpTR)         (mSGpTR)->ittiMsg.x2ap_ENDC_sgnb_addition_req_ACK
 #define X2AP_ENDC_SGNB_RECONF_COMPLETE(mSGpTR)          (mSGpTR)->ittiMsg.x2ap_ENDC_sgnb_reconf_complete
 
-#define X2AP_MAX_NB_ENB_IP_ADDRESS 2
+#define X2AP_MAX_NB_ENB_IP_ADDRESS 6
 
 // eNB application layer -> X2AP messages
 
@@ -66,7 +66,8 @@ typedef struct x2ap_ue_context_release_s {
 
 typedef enum {
   X2AP_T_RELOC_PREP_TIMEOUT,
-  X2AP_TX2_RELOC_OVERALL_TIMEOUT
+  X2AP_TX2_RELOC_OVERALL_TIMEOUT,
+  X2AP_UNKNOWN_CAUSE
 } x2ap_handover_cancel_cause_t;
 
 typedef enum {

@@ -86,7 +86,7 @@
 #define PCCH_PAYLOAD_SIZE_MAX 128
 #define RAR_PAYLOAD_SIZE_MAX 128
 
-#define SCH_PAYLOAD_SIZE_MAX 8192
+#define SCH_PAYLOAD_SIZE_MAX 10000
 #define DCH_PAYLOAD_SIZE_MAX 4096
 /// Logical channel ids from 36-311 (Note BCCH is not specified in 36-311, uses the same as first DRB)
 
@@ -124,6 +124,8 @@
 #define LCGID3 3
 /*!\brief Maximum number of logical chanels */
 #define MAX_NUM_LCID 11
+/*!\brief Maximum number of logical chanels for DTCH */
+#define MAX_NUM_DTCH (MAX_NUM_LCID - 3)
 /*!\brief Maximum number od control elemenets */
 #define MAX_NUM_CE 5
 /*!\brief Maximum number of random access process */
@@ -469,10 +471,21 @@ typedef struct {
 #define BSR_TRIGGER_PADDING   (4) /* For Padding BSR Trigger */
 
 
+#define MAX_NUM_TB 2
+#define TB1 0
+#define TB2 1
+#define SINGLE_RI 1
+#define MULTI_RI 2
+#define SINGLE_CW 1
+#define MULTI_CW 2
+#define TX_DIVERSITY 1
+#define LARGE_DELAY_CDD 2
+#define MAX_HARQ_PID 10
+
 /*! \brief Downlink SCH PDU Structure */
 typedef struct {
-  uint8_t payload[8][SCH_PAYLOAD_SIZE_MAX];
-  uint16_t Pdu_size[8];
+    uint8_t payload[8][MAX_NUM_TB][SCH_PAYLOAD_SIZE_MAX];
+    uint16_t Pdu_size[8];
 } __attribute__ ((__packed__)) DLSCH_PDU;
 
 
@@ -645,7 +658,7 @@ typedef struct {
   /// harq pid
   uint8_t harq_pid;
   /// harq rounf
-  uint8_t harq_round;
+  uint8_t harq_round[MAX_NUM_TB];
   /// total available number of PRBs for a new transmission
   uint16_t rbs_used;
   /// total available number of PRBs for a retransmission
@@ -655,12 +668,10 @@ typedef struct {
   /// total avilable nccc for a retransmission: num control channel element
   uint16_t ncce_used_retx;
 
-  // mcs1 before the rate adaptaion
-  uint8_t dlsch_mcs1;
-  /// Target mcs2 after rate-adaptation
-  uint8_t dlsch_mcs2;
-  //  current TBS with mcs2
-  uint32_t TBS;
+  // mcs
+  uint8_t dlsch_mcs[MAX_NUM_TB];
+  //  current TBS
+  uint32_t TBS[MAX_NUM_TB];
   //  total TBS with mcs2
   //  uint32_t total_TBS;
   //  total rb used for a new transmission
@@ -691,7 +702,7 @@ typedef struct {
   //total
   uint32_t total_dlsch_bitrate;
   /// headers+ CE +  padding bytes for a MAC PDU
-  uint64_t overhead_bytes;
+  uint64_t overhead_bytes[MAX_NUM_TB];
   /// headers+ CE +  padding bytes for a MAC PDU
   uint64_t total_overhead_bytes;
   /// headers+ CE +  padding bytes for a MAC PDU
@@ -776,7 +787,6 @@ typedef struct {
   uint32_t num_mac_sdu_rx;
   // Length of SDU Got from LC UL - Size array can be refined
   uint32_t      sdu_length_rx[NB_RB_MAX];
-
 } eNB_UE_STATS;
 /*! \brief eNB template for UE context information  */
 
@@ -784,44 +794,42 @@ typedef struct {
   /// C-RNTI of UE
   rnti_t rnti;
   /// NDI from last scheduling
-  uint8_t oldNDI[8];
+  uint8_t oldNDI[MAX_HARQ_PID][MAX_NUM_TB];
   /// mcs1 from last scheduling
-  uint8_t oldmcs1[8];
-  /// mcs2 from last scheduling
-  uint8_t oldmcs2[8];
+  uint8_t oldmcs[MAX_HARQ_PID][MAX_NUM_TB];
   /// NDI from last UL scheduling
-  uint8_t oldNDI_UL[8];
+  uint8_t oldNDI_UL[MAX_HARQ_PID];
   /// mcs from last UL scheduling
-  uint8_t mcs_UL[8];
+  uint8_t mcs_UL[MAX_HARQ_PID];
   /// TBS from last UL scheduling
-  int TBS_UL[8];
+  int TBS_UL[MAX_HARQ_PID];
   /// Flag to indicate UL has been scheduled at least once
   boolean_t ul_active;
   /// Flag to indicate UE has been configured (ACK from RRCConnectionSetup received)
   boolean_t configured;
 
   /// MCS from last scheduling
-  uint8_t mcs[8];
+  uint8_t mcs[MAX_HARQ_PID];
 
   /// TPC from last scheduling
-  uint8_t oldTPC[8];
+  uint8_t oldTPC[MAX_HARQ_PID];
 
   // PHY interface info
 
   /// Number of Allocated RBs for DL after scheduling (prior to frequency allocation)
-  uint16_t nb_rb[8];    // num_max_harq
+  uint16_t nb_rb[MAX_HARQ_PID];    // num_max_harq
 
   /// Number of Allocated RBs for UL after scheduling
-  uint16_t nb_rb_ul[8]; // num_max_harq
+  uint16_t nb_rb_ul[MAX_HARQ_PID]; // num_max_harq
 
   /// Number of Allocated RBs for UL after scheduling
-  uint16_t first_rb_ul[8];  // num_max_harq
+  uint16_t first_rb_ul[MAX_HARQ_PID];  // num_max_harq
 
   /// Is CQI requested for UL after scheduling 1st transmission
   uint8_t cqi_req[8];         // num_max_harq
 
   /// Cyclic shift for DMRS after scheduling
-  uint16_t cshift[8];   // num_max_harq
+  uint16_t cshift[MAX_HARQ_PID];   // num_max_harq
 
   /// Number of Allocated RBs by the ulsch preprocessor
   uint8_t pre_allocated_nb_rb_ul;
@@ -853,7 +861,7 @@ typedef struct {
   uint8_t ul_SR;
 
   ///Resource Block indication for each sub-band in MU-MIMO
-  uint8_t rballoc_subband[8][50];
+  uint8_t rballoc_subband[MAX_HARQ_PID][50];
 
   // Logical channel info for link with RLC
 
@@ -885,6 +893,10 @@ typedef struct {
   uint8_t dl_buffer_head_sdu_is_segmented[MAX_NUM_LCID];
   /// size of remaining size to send for the downlink head SDU
   uint32_t dl_buffer_head_sdu_remaining_size_to_send[MAX_NUM_LCID];
+  /// number of not empty DTCHs 
+  uint8_t dl_dtch_num;
+  /// list of DTCHs sorted by priority
+  uint8_t dl_dtch_list_priority[MAX_NUM_DTCH];
 
   /// uplink buffer creation time for each LCID
   uint32_t ul_buffer_creation_time[MAX_NUM_LCGID];
@@ -907,6 +919,10 @@ typedef struct {
   uint32_t pucch_tpc_tx_frame;
   uint32_t pucch_tpc_tx_subframe;
 
+  /// stores the frame where the last bler was calculated
+  uint32_t pusch_bler_calc_frame;
+  uint32_t pusch_bler_calc_subframe;
+
   uint8_t rach_resource_type;
   uint16_t mpdcch_repetition_cnt;
   frame_t Msg2_frame;
@@ -914,10 +930,37 @@ typedef struct {
   /// Repetition column in pusch_repetition Table 8.2.b in TS36.213
   uint8_t pusch_repetition_levels;
   LTE_PhysicalConfigDedicated_t *physicalConfigDedicated;
+  int tm;
 } UE_TEMPLATE;
 
 /*! \brief scheduling control information set through an API (not used)*/
 typedef struct {
+  ///UL transmission bandwidth in RBs
+  uint8_t ul_bandwidth[MAX_NUM_LCID];
+  ///DL transmission bandwidth in RBs
+  uint8_t dl_bandwidth[MAX_NUM_LCID];
+
+  //To do GBR bearer
+  uint8_t min_ul_bandwidth[MAX_NUM_LCID];
+
+  uint8_t min_dl_bandwidth[MAX_NUM_LCID];
+
+  ///aggregated bit rate of non-gbr bearer per UE
+  uint64_t ue_AggregatedMaximumBitrateDL;
+  ///aggregated bit rate of non-gbr bearer per UE
+  uint64_t ue_AggregatedMaximumBitrateUL;
+  ///CQI scheduling interval in subframes.
+  uint16_t cqiSchedInterval;
+  ///Contention resolution timer used during random access
+  uint8_t mac_ContentionResolutionTimer;
+
+  uint16_t max_rbs_allowed_slice[NFAPI_CC_MAX][MAX_NUM_SLICES];
+  uint16_t max_rbs_allowed_slice_uplink[NFAPI_CC_MAX][MAX_NUM_SLICES];
+
+  uint8_t max_mcs[MAX_NUM_LCID];
+
+  uint16_t priority[MAX_NUM_LCID];
+
   /// number of active DL LCs
   uint8_t dl_lc_num;
   /// order in which DLSCH scheduler should allocate LCs
@@ -928,11 +971,11 @@ typedef struct {
   // resource scheduling information
 
   /// Current DL harq round per harq_pid on each CC
-  uint8_t round[NFAPI_CC_MAX][10];
+  uint8_t round[NFAPI_CC_MAX][MAX_HARQ_PID][MAX_NUM_TB];
   /// Current Active TBs per harq_pid on each CC
-  uint8_t tbcnt[NFAPI_CC_MAX][10];
+  uint8_t tbcnt[NFAPI_CC_MAX][MAX_HARQ_PID];
   /// Current UL harq round per harq_pid on each CC
-  uint8_t round_UL[NFAPI_CC_MAX][8];
+  uint8_t round_UL[NFAPI_CC_MAX][MAX_HARQ_PID];
   uint8_t dl_pow_off[NFAPI_CC_MAX];
   uint16_t pre_nb_available_rbs[NFAPI_CC_MAX];
   unsigned char rballoc_sub_UE[NFAPI_CC_MAX][N_RBG_MAX];
@@ -961,7 +1004,15 @@ typedef struct {
   uint8_t pucch2_snr[NFAPI_CC_MAX];
   uint8_t pucch3_cqi_update[NFAPI_CC_MAX];
   uint8_t pucch3_snr[NFAPI_CC_MAX];
+  uint8_t pusch_cqi[NFAPI_CC_MAX];
   uint8_t pusch_snr[NFAPI_CC_MAX];
+  uint8_t pusch_snr_avg[NFAPI_CC_MAX];
+  uint64_t pusch_rx_num[NFAPI_CC_MAX];
+  uint64_t pusch_rx_num_old[NFAPI_CC_MAX];
+  uint64_t pusch_rx_error_num[NFAPI_CC_MAX];
+  uint64_t pusch_rx_error_num_old[NFAPI_CC_MAX];
+  double  pusch_bler[NFAPI_CC_MAX];
+  uint8_t  mcs_offset[NFAPI_CC_MAX];
   uint16_t feedback_cnt[NFAPI_CC_MAX];
   uint16_t timing_advance;
   uint16_t timing_advance_r9;
@@ -1040,6 +1091,10 @@ typedef struct {
   /// DRX UL retransmission timer, one per UL HARQ process
   /* Not implemented yet */
   /* End of C-DRX related timers */
+  uint8_t cw_num[NFAPI_CC_MAX][MAX_HARQ_PID];
+  uint8_t select_tb[NFAPI_CC_MAX][MAX_HARQ_PID];
+  uint8_t swap_flag[NFAPI_CC_MAX][MAX_HARQ_PID];
+  uint8_t rsn[NFAPI_CC_MAX][MAX_HARQ_PID][MAX_NUM_TB];
 } UE_sched_ctrl_t;
 
 /*! \brief eNB template for the Random access information */
@@ -1170,6 +1225,20 @@ typedef struct {
   int head_freelist; ///the head position of the delete list
   int tail_freelist; ///the tail position of the delete list
 } UE_free_list_t;
+
+/// Structure for saving the output of each pre_processor instance
+typedef struct {
+    uint16_t nb_rbs_required[NFAPI_CC_MAX][MAX_MOBILES_PER_ENB];
+    uint16_t nb_rbs_accounted[NFAPI_CC_MAX][MAX_MOBILES_PER_ENB];
+    uint16_t nb_rbs_remaining[NFAPI_CC_MAX][MAX_MOBILES_PER_ENB];
+    uint8_t  slice_allocation_mask[NFAPI_CC_MAX][N_RBG_MAX];
+    uint8_t  MIMO_mode_indicator[NFAPI_CC_MAX][N_RBG_MAX];
+
+    uint32_t bytes_lcid[MAX_MOBILES_PER_ENB][MAX_NUM_LCID];
+    uint32_t wb_pmi[NFAPI_CC_MAX][MAX_MOBILES_PER_ENB];
+    uint8_t  mcs[NFAPI_CC_MAX][MAX_MOBILES_PER_ENB][MAX_NUM_TB];
+
+} pre_processor_results_t;
 
 /**
  * slice specific scheduler for the DL
@@ -1391,6 +1460,10 @@ typedef struct eNB_MAC_INST_s {
   nfapi_tx_request_t TX_req[NFAPI_CC_MAX];
   /// NFAPI UE_release_req structure
   nfapi_ue_release_request_t UE_release_req;
+#ifdef PHY_RM
+  /// NFAPI phy rm start structure
+  nfapi_phy_rm_start_request_t PHY_rm_start_req;
+#endif
   /// UL handle
   uint32_t ul_handle;
   UE_info_t UE_info;

@@ -92,7 +92,10 @@ void x2ap_eNB_prepare_internal_data(void)
 
 void x2ap_eNB_insert_new_instance(x2ap_eNB_instance_t *new_instance_p)
 {
-  DevAssert(new_instance_p != NULL);
+  if (new_instance_p == NULL) {
+    X2AP_ERROR("%s %d: new_instance_p is a NULL pointer \n",__FILE__,__LINE__);
+    return;
+  }
 
   STAILQ_INSERT_TAIL(&x2ap_eNB_internal_data.x2ap_eNB_instances_head,
                      new_instance_p, x2ap_eNB_entries);
@@ -254,4 +257,18 @@ x2ap_eNB_data_t  * x2ap_is_eNB_assoc_id_in_list (const uint32_t sctp_assoc_id)
     }
   }
   return NULL;
+}
+
+void x2ap_remove_eNB(x2ap_eNB_instance_t *instance_p,x2ap_eNB_data_t *x2ap_enb_data_p) {
+  printf("x2ap_remove_eNB  (removing)\n");
+  if (instance_p == NULL) {
+    STAILQ_FOREACH(instance_p, &x2ap_eNB_internal_data.x2ap_eNB_instances_head,
+                   x2ap_eNB_entries) {
+      RB_REMOVE(x2ap_enb_map, &instance_p->x2ap_enb_head, x2ap_enb_data_p);
+    }
+  } else {
+    RB_REMOVE(x2ap_enb_map, &instance_p->x2ap_enb_head, x2ap_enb_data_p);
+  }
+  free(x2ap_enb_data_p);
+
 }

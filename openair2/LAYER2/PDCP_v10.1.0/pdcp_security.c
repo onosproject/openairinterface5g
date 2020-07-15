@@ -113,8 +113,15 @@ pdcp_apply_security(
   uint8_t *buffer_encrypted = NULL;
   stream_cipher_t encrypt_params;
 
-  DevAssert(pdcp_pP != NULL);
-  DevAssert(pdcp_pdu_buffer != NULL);
+  if(pdcp_pP == NULL) {
+    LOG_E(PDCP,"pdcp_pP is NULL\n");
+    return -1;
+  }
+  if(pdcp_pdu_buffer == NULL) {
+    LOG_E(PDCP,"pdcp_pdu_buffer is NULL\n");
+    return -1;
+  }
+
   DevCheck(rb_id < NB_RB_MAX && rb_id >= 0, rb_id, NB_RB_MAX, 0);
 
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PDCP_APPLY_SECURITY, VCD_FUNCTION_IN);
@@ -183,9 +190,15 @@ pdcp_validate_security(
   uint8_t *buffer_decrypted = NULL;
   stream_cipher_t decrypt_params;
 
-  DevAssert(pdcp_pP != NULL);
+  if(pdcp_pP == NULL) {
+    LOG_E(PDCP,"pdcp_pP is NULL\n");
+    return -1;
+  }
+  if(pdcp_pdu_buffer == NULL) {
+    LOG_E(PDCP,"pdcp_pdu_buffer is NULL\n");
+    return -1;
+  }
 
-  DevAssert(pdcp_pdu_buffer != NULL);
   DevCheck(rb_id < NB_RB_MAX && rb_id >= 0, rb_id, NB_RB_MAX, 0);
 
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PDCP_VALIDATE_SECURITY, VCD_FUNCTION_IN);

@@ -71,8 +71,8 @@
 
 #define LTEMAC_UEMEASURE \
 { \
-  {"dlsch_mcs1",	   &(macuestatptr->dlsch_mcs1),TELNET_VARTYPE_INT8,0},\
-  {"dlsch_mcs2",	   &(macuestatptr->dlsch_mcs2),TELNET_VARTYPE_INT8,0},\
+  {"dlsch_mcs1",	   &(macuestatptr->dlsch_mcs[TB1]),TELNET_VARTYPE_INT8,0},\
+  {"dlsch_mcs2",	   &(macuestatptr->dlsch_mcs[TB2]),TELNET_VARTYPE_INT8,0},\
   {"rbs_used",	           &(macuestatptr->rbs_used),TELNET_VARTYPE_INT32,0},\
   {"rbs_used_retx",	   &(macuestatptr->rbs_used_retx),TELNET_VARTYPE_INT16,0},\
   {"total_rbs_used",	   &(macuestatptr->total_rbs_used),TELNET_VARTYPE_INT16,0},\

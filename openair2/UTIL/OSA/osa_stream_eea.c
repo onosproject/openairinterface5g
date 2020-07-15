@@ -41,8 +41,14 @@ int stream_encrypt_eea0(stream_cipher_t *stream_cipher, uint8_t **out)
 
   uint32_t byte_length;
 
-  DevAssert(stream_cipher != NULL);
-  DevAssert(out != NULL);
+  if(stream_cipher == NULL) {
+    LOG_E(OSA, "stream_cipher == NULL\n");
+    return -1;
+  }
+  if(out == NULL) {
+    LOG_E(OSA, "out == NULL\n");
+    return -1;
+  }
 
   LOG_D(OSA, "Entering stream_encrypt_eea0, bits length %u, bearer %u, "
         "count %u, direction %s\n", stream_cipher->blength,
@@ -73,10 +79,22 @@ int stream_encrypt_eea1(stream_cipher_t *stream_cipher, uint8_t **out)
   uint32_t *KS;
   uint32_t  K[4],IV[4];
 
-  DevAssert(stream_cipher != NULL);
-  DevAssert(stream_cipher->key != NULL);
-  DevAssert(stream_cipher->key_length == 16);
-  DevAssert(out != NULL);
+  if(stream_cipher == NULL) {
+    LOG_E(OSA, "stream_cipher == NULL\n");
+    return -1;
+  }
+  if(stream_cipher->key == NULL) {
+    LOG_E(OSA, "stream_cipher->key == NULL\n");
+    return -1;
+  }
+  if(stream_cipher->key_length != 16) {
+    LOG_E(OSA, "stream_cipher->key_length != 16\n");
+    return -1;
+  }
+  if(out == NULL) {
+    LOG_E(OSA, "out == NULL\n");
+    return -1;
+  }
 
   n = ( stream_cipher->blength + 31 ) / 32;
   zero_bit = stream_cipher->blength & 0x7;
@@ -145,8 +163,14 @@ int stream_encrypt_eea2(stream_cipher_t *stream_cipher, uint8_t **out)
   uint32_t zero_bit = 0;
   uint32_t byte_length;
 
-  DevAssert(stream_cipher != NULL);
-  DevAssert(out != NULL);
+  if(stream_cipher == NULL) {
+    LOG_E(OSA, "stream_cipher == NULL\n");
+    return -1;
+  }
+  if(out == NULL) {
+    LOG_E(OSA, "out == NULL\n");
+    return -1;
+  }
 
   LOG_D(OSA, "Entering stream_encrypt_eea2, bits length %u, bearer %u, "
         "count %u, direction %s\n", stream_cipher->blength,

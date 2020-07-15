@@ -102,8 +102,10 @@ mac_rrc_data_req(
     }
 
     // All even frames transmit SIB in SF 5
-    AssertFatal(RC.rrc[Mod_idP]->carrier[CC_id].sizeof_SIB1 != 255,
-                "[eNB %d] MAC Request for SIB1 and SIB1 not initialized\n",Mod_idP);
+    if(RC.rrc[Mod_idP]->carrier[CC_id].sizeof_SIB1 == 255) {
+      LOG_E(RRC,"[eNB %d] MAC Request for SIB1 and SIB1 not initialized\n",Mod_idP);
+      return 0;
+    }
 
     if ((frameP%2) == 0) {
       memcpy(&buffer_pP[0],
@@ -150,24 +152,52 @@ mac_rrc_data_req(
                                      (void *)mib,
                                      carrier->MIB,
                                      24);
-    LOG_D(RRC,"Encoded MIB for frame %d (%p), bits %lu\n",sfn,carrier->MIB,enc_rval.encoded);
+//    LOG_D(RRC,"Encoded MIB for frame %d (%p), bits %lu\n",sfn,carrier->MIB,enc_rval.encoded);
     buffer_pP[0]=carrier->MIB[0];
     buffer_pP[1]=carrier->MIB[1];
     buffer_pP[2]=carrier->MIB[2];
-    AssertFatal (enc_rval.encoded > 0, "ASN1 message encoding failed (%s, %lu)!\n",
-                 enc_rval.failed_type->name, enc_rval.encoded);
+    if(enc_rval.encoded <= 0) {
+      LOG_E(RRC,"ASN1 message encoding failed (%s, %lu)!\n",enc_rval.failed_type->name, enc_rval.encoded);
+      return 0;
+    }
     return(3);
   }
 
   if( (Srb_id & RAB_OFFSET ) == CCCH) {
     struct rrc_eNB_ue_context_s *ue_context_p = rrc_eNB_get_ue_context(RC.rrc[Mod_idP],rnti);
+    rnti_t old_rnti = 0;
+    uint8_t flag= 0;
+    if (ue_context_p == NULL) {
+        for (uint16_t i = 0; i < MAX_MOBILES_PER_ENB; i++) {
+          if (reestablish_rnti_map[i][0] == rnti) {
+            old_rnti = reestablish_rnti_map[i][1];
+            break;
+          }
+        }
+        if (old_rnti != 0) {
+          ue_context_p = rrc_eNB_get_ue_context(RC.rrc[Mod_idP],old_rnti);
+          if (ue_context_p == NULL) {
+            return(0);
+          }
+        } else {
+           if(RC.rrc[Mod_idP]->carrier[CC_id].Srb0.Active==0) {
+             LOG_E(RRC,"[eNB %d] CCCH Not active\n",Mod_idP);
+             return(0);
+           }
 
-    if (ue_context_p == NULL) return(0);
+           Srb_info=&RC.rrc[Mod_idP]->carrier[CC_id].Srb0;
+           if(Srb_info->Tx_buffer.payload_size <= 0){
+             return(0);
+           }
+           flag = 1;
+        }
+    }
+    if(flag == 0){
+      eNB_RRC_UE_t *ue_p = &ue_context_p->ue_context;
+      LOG_T(RRC,"[eNB %d] Frame %d CCCH request (Srb_id %ld, rnti %x)\n",Mod_idP,frameP, Srb_id,rnti);
 
-    eNB_RRC_UE_t *ue_p = &ue_context_p->ue_context;
-    LOG_T(RRC,"[eNB %d] Frame %d CCCH request (Srb_id %ld, rnti %x)\n",Mod_idP,frameP, Srb_id,rnti);
-    Srb_info=&ue_p->Srb0;
-
+      Srb_info=&ue_p->Srb0;
+    }
     // check if data is there for MAC
     if(Srb_info->Tx_buffer.payload_size>0) { //Fill buffer
       LOG_D(RRC,"[eNB %d] CCCH (%p) has %d bytes (dest: %p, src %p)\n",Mod_idP,Srb_info,Srb_info->Tx_buffer.payload_size,buffer_pP,Srb_info->Tx_buffer.Payload);
@@ -175,7 +205,10 @@ mac_rrc_data_req(
       Sdu_size = Srb_info->Tx_buffer.payload_size;
       Srb_info->Tx_buffer.payload_size=0;
     }
-
+    if(flag == 1){
+      Srb_info->Tx_buffer.payload_size = 0;
+      RC.rrc[Mod_idP]->carrier[CC_id].Srb0.Active = 0;
+    }
     return (Sdu_size);
   }
 
@@ -286,7 +319,12 @@ mac_rrc_data_ind(
       Srb_info->Rx_buffer.payload_size = sdu_lenP;
       rrc_eNB_decode_ccch(&ctxt, Srb_info, CC_id);
     }*/
-    if (sdu_lenP > 0)  rrc_eNB_decode_ccch(&ctxt, sduP, sdu_lenP, CC_id);
+    if (sdu_lenP > 0)  {
+      if (rrc_eNB_decode_ccch(&ctxt, sduP, sdu_lenP, CC_id) == -1) {
+        LOG_E(RRC, "rrc_eNB_decode_ccch failed\n");
+        return -2;
+      }
+    }
   }
 
   if((srb_idP & RAB_OFFSET) == DCCH) {
@@ -351,7 +389,6 @@ void mac_eNB_rrc_ul_failure(const module_id_t Mod_instP,
         rntiP, PROTOCOL__FLEX_UE_STATE_CHANGE_TYPE__FLUESC_DEACTIVATED);
   }
 
-  //rrc_mac_remove_ue(Mod_instP,rntiP);
 }
 
 void mac_eNB_rrc_uplane_failure(const module_id_t Mod_instP,

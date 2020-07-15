@@ -99,15 +99,23 @@ void rx_prach0(PHY_VARS_eNB *eNB,
     fp    = (ru->frame_parms);
     nb_rx = ru->nb_rx;
   }
-  
-  AssertFatal(fp!=NULL,"rx_prach called without valid RU or eNB descriptor\n");
+  if (fp == NULL) {
+    LOG_E(PHY, "rx_prach called without valid RU or eNB descriptor\n");
+    return;
+  }
+
   frame_type          = fp->frame_type;
 
   if (br_flag == 1) {
-    AssertFatal(fp->prach_emtc_config_common.prach_Config_enabled==1,
-                "emtc prach_Config is not enabled\n");
-    AssertFatal(fp->prach_emtc_config_common.prach_ConfigInfo.prach_CElevel_enable[ce_level]==1,
-                "ce_level %d is not active\n",ce_level);
+    if (fp->prach_emtc_config_common.prach_Config_enabled != 1) {
+      LOG_E(PHY, "emtc prach_Config is not enabled\n");
+      return;
+    }
+    if (fp->prach_emtc_config_common.prach_ConfigInfo.prach_CElevel_enable[ce_level] != 1) {
+      LOG_E(PHY, "ce_level %d is not active\n",ce_level);
+      return;
+    }
+
     rootSequenceIndex   = fp->prach_emtc_config_common.rootSequenceIndex;
     prach_ConfigIndex   = fp->prach_emtc_config_common.prach_ConfigInfo.prach_ConfigIndex[ce_level];
     Ncs_config          = fp->prach_emtc_config_common.prach_ConfigInfo.zeroCorrelationZoneConfig;
@@ -176,7 +184,10 @@ void rx_prach0(PHY_VARS_eNB *eNB,
     }
   }
 
-  AssertFatal(ru!=NULL,"ru is null\n");
+  if (ru == NULL) {
+    LOG_E(PHY, "ru is null\n");
+    return;
+  }
 
   for (aa=0; aa<nb_rx; aa++) {
     if (ru->if_south == LOCAL_RF) { // set the time-domain signal if we have to use it in this node
@@ -211,12 +222,16 @@ void rx_prach0(PHY_VARS_eNB *eNB,
 
   // First compute physical root sequence
   if (restricted_set == 0) {
-    AssertFatal(Ncs_config<=15,
-                "Illegal Ncs_config for unrestricted format %d\n",Ncs_config);
+    if (Ncs_config > 15) {
+      LOG_E(PHY, "Illegal Ncs_config for unrestricted format %d\n",Ncs_config);
+      return;
+    }
     NCS = NCS_unrestricted[Ncs_config];
   } else {
-    AssertFatal(Ncs_config<=14,
-                "FATAL, Illegal Ncs_config for restricted format %d\n",Ncs_config);
+    if (Ncs_config > 14) {
+      LOG_E(PHY, "FATAL, Illegal Ncs_config for restricted format %d\n",Ncs_config);
+      return;
+    }
     NCS = NCS_restricted[Ncs_config];
   }
 
@@ -290,7 +305,10 @@ void rx_prach0(PHY_VARS_eNB *eNB,
     }
 
     for (aa=0; aa<nb_rx; aa++) {
-      AssertFatal(prach[aa]!=NULL,"prach[%d] is null\n",aa);
+      if (prach[aa] == NULL) {
+        LOG_E(PHY, "prach[%d] is null\n",aa);
+        return;
+      }
       prach2 = prach[aa] + (Ncp<<1);
 
       // do DFT
@@ -492,10 +510,18 @@ void rx_prach0(PHY_VARS_eNB *eNB,
 
           if (prach_fmt<4) {
             // prach_root_sequence_map points to prach_root_sequence_map0_3
-            DevAssert( index < sizeof(prach_root_sequence_map0_3) / sizeof(prach_root_sequence_map0_3[0]) );
+            if (index >= sizeof(prach_root_sequence_map0_3) / sizeof(prach_root_sequence_map0_3[0])) {
+              LOG_E(PHY, "index %d >= sizeof(prach_root_sequence_map0_3) / sizeof(prach_root_sequence_map0_3[0]) %lu\n",
+                           index, sizeof(prach_root_sequence_map0_3) / sizeof(prach_root_sequence_map0_3[0]));
+              return;
+            }
           } else {
             // prach_root_sequence_map points to prach_root_sequence_map4
-            DevAssert( index < sizeof(prach_root_sequence_map4) / sizeof(prach_root_sequence_map4[0]) );
+            if (index >= sizeof(prach_root_sequence_map4) / sizeof(prach_root_sequence_map4[0])) {
+              LOG_E(PHY, "index %d >= sizeof(prach_root_sequence_map4) / sizeof(prach_root_sequence_map4[0]) %lu\n",
+                           index, sizeof(prach_root_sequence_map4) / sizeof(prach_root_sequence_map4[0]));
+              return;
+            }
           }
 
           u = prach_root_sequence_map[index];
@@ -665,14 +691,14 @@ void rx_prach0(PHY_VARS_eNB *eNB,
         LOG_M("prach_rxF_comp0.m","prach_rxF_comp0",prachF,1024,1,1);
         LOG_M("Xu.m","xu",Xu,N_ZC,1,1);
         LOG_M("prach_ifft0.m","prach_t0",prach_ifft,1024,1,1);
-        exit(-1);
+        exit_fun("rx_prach0 prach_ifft0.m" );
       } else {
         LOG_E(PHY,"Dumping prach (br_flag %d), k = %d (n_ra_prb %d)\n",br_flag,k,n_ra_prb);
         LOG_M("rxsigF_br.m","prach_rxF_br",&rxsigF[0][0],12288,1,1);
         LOG_M("prach_rxF_comp0_br.m","prach_rxF_comp0_br",prachF,1024,1,1);
         LOG_M("Xu_br.m","xu_br",Xu,N_ZC,1,1);
         LOG_M("prach_ifft0_br.m","prach_t0_br",prach_ifft,1024,1,1);
-        exit(-1);
+        exit_fun("rx_prach0 prach_ifft0_br.m" );
       }
     }
   } /* LOG_DUMPFLAG(PRACH) */

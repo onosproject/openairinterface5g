@@ -78,9 +78,9 @@ extern void handle_nfapi_bch_pdu(PHY_VARS_eNB *eNB,L1_rxtx_proc_t *proc, nfapi_d
 
 
 
-nfapi_tx_request_pdu_t *tx_request_pdu[1023][10][10]; // [frame][subframe][max_num_pdus]
+nfapi_tx_request_pdu_t *tx_request_pdu[1024][10][10]; // [frame][subframe][max_num_pdus]
 
-uint8_t tx_pdus[32][8][4096];
+uint8_t tx_pdus[NUMBER_OF_UE_MAX][8][9422]; //mcs:28 nb_rb:100 TBS=get_TBS_DL(28,100) = 9422
 
 nfapi_ue_release_request_body_t release_rntis;
 uint16_t phy_antenna_capability_values[] = { 1, 2, 4, 8, 16 };
@@ -242,7 +242,8 @@ void pnf_set_thread_priority(int priority) {
 
 void *pnf_p7_thread_start(void *ptr) {
   NFAPI_TRACE(NFAPI_TRACE_INFO, "[PNF] P7 THREAD %s\n", __FUNCTION__);
-  pnf_set_thread_priority(79);
+  //pnf_set_thread_priority(79);
+  pnf_set_thread_priority(sched_get_priority_max(SCHED_FIFO));
   nfapi_pnf_p7_config_t *config = (nfapi_pnf_p7_config_t *)ptr;
   nfapi_pnf_p7_start(config);
   return 0;
@@ -540,6 +541,14 @@ int config_request(nfapi_pnf_config_t *config, nfapi_pnf_phy_config_t *phy, nfap
 
   if(req->nfapi_config.earfcn.tl.tag == NFAPI_NFAPI_EARFCN_TAG) {
     fp->dl_CarrierFreq = from_earfcn(fp->eutra_band, req->nfapi_config.earfcn.value);
+    if (fp->dl_CarrierFreq == -1) {
+	  NFAPI_TRACE(NFAPI_TRACE_ERROR, "%s() from_earfcn failed\n", __FUNCTION__);
+      return -1;
+    }
+    if (get_uldl_offset(fp->eutra_band) == -1) {
+	  NFAPI_TRACE(NFAPI_TRACE_ERROR, "%s() get_uldl_offset failed\n", __FUNCTION__);
+      return -1;
+    }
     fp->ul_CarrierFreq = fp->dl_CarrierFreq - (get_uldl_offset(fp->eutra_band) * 1e5);
     num_tlv++;
     NFAPI_TRACE(NFAPI_TRACE_INFO, "%s() earfcn:%u dl_carrierFreq:%u ul_CarrierFreq:%u band:%u N_RB_DL:%u\n",
@@ -773,6 +782,8 @@ int pnf_phy_dl_config_req(L1_rxtx_proc_t *proc, nfapi_pnf_p7_config_t *pnf_p7, n
       if (tx_request_pdu[sfn][sf][pdu_index] != NULL) {
         //NFAPI_TRACE(NFAPI_TRACE_INFO, "%s() PDU:%d BCH: pdu_index:%u pdu_length:%d sdu_length:%d BCH_SDU:%x,%x,%x\n", __FUNCTION__, i, pdu_index, bch_pdu->bch_pdu_rel8.length, tx_request_pdu[sfn][sf][pdu_index]->segments[0].segment_length, sdu[0], sdu[1], sdu[2]);
         handle_nfapi_bch_pdu(eNB, proc, &dl_config_pdu_list[i], tx_request_pdu[sfn][sf][pdu_index]->segments[0].segment_data);
+        tx_request_pdu[sfn][sf][pdu_index] = NULL;
+
         eNB->pbch_configured=1;
       } else {
         NFAPI_TRACE(NFAPI_TRACE_ERROR, "%s() BCH NULL TX PDU SFN/SF:%d PDU_INDEX:%d\n", __FUNCTION__, NFAPI_SFNSF2DEC(req->sfn_sf), pdu_index);
@@ -780,6 +791,9 @@ int pnf_phy_dl_config_req(L1_rxtx_proc_t *proc, nfapi_pnf_p7_config_t *pnf_p7, n
     } else if (dl_config_pdu_list[i].pdu_type == NFAPI_DL_CONFIG_DLSCH_PDU_TYPE) {
       nfapi_dl_config_dlsch_pdu *dlsch_pdu = &dl_config_pdu_list[i].dlsch_pdu;
       nfapi_dl_config_dlsch_pdu_rel8_t *rel8_pdu = &dlsch_pdu->dlsch_pdu_rel8;
+      if (rel8_pdu->pdu_index < 0) {
+        handle_nfapi_dlsch_pdu( eNB, sfn,sf, &eNB->proc.L1_proc, &dl_config_pdu_list[i], rel8_pdu->transport_blocks-1, NULL);
+      } else {
       nfapi_tx_request_pdu_t *tx_pdu = tx_request_pdu[sfn][sf][rel8_pdu->pdu_index];
 
       if (tx_pdu != NULL) {
@@ -797,10 +811,12 @@ int pnf_phy_dl_config_req(L1_rxtx_proc_t *proc, nfapi_pnf_p7_config_t *pnf_p7, n
 
         uint8_t *dlsch_sdu = tx_pdus[UE_id][harq_pid];
         memcpy(dlsch_sdu, tx_pdu->segments[0].segment_data, tx_pdu->segments[0].segment_length);
+        tx_request_pdu[sfn][sf][rel8_pdu->pdu_index] = NULL;
         //NFAPI_TRACE(NFAPI_TRACE_INFO, "%s() DLSCH:pdu_index:%d handle_nfapi_dlsch_pdu(eNB, proc_rxtx, dlsch_pdu, transport_blocks:%d sdu:%p) eNB->pdcch_vars[proc->subframe_tx & 1].num_pdcch_symbols:%d\n", __FUNCTION__, rel8_pdu->pdu_index, rel8_pdu->transport_blocks, dlsch_sdu, eNB->pdcch_vars[proc->subframe_tx & 1].num_pdcch_symbols);
         handle_nfapi_dlsch_pdu( eNB, sfn,sf, proc, &dl_config_pdu_list[i], rel8_pdu->transport_blocks-1, dlsch_sdu);
       } else {
         NFAPI_TRACE(NFAPI_TRACE_ERROR, "%s() DLSCH NULL TX PDU SFN/SF:%d PDU_INDEX:%d\n", __FUNCTION__, NFAPI_SFNSF2DEC(req->sfn_sf), rel8_pdu->pdu_index);
+      }
       }
     } else {
       NFAPI_TRACE(NFAPI_TRACE_ERROR, "%s() UNKNOWN:%d\n", __FUNCTION__, dl_config_pdu_list[i].pdu_type);
@@ -1077,7 +1093,10 @@ int start_request(nfapi_pnf_config_t *config, nfapi_pnf_phy_config_t *phy, nfapi
   pthread_create(&p7_thread, NULL, &pnf_p7_thread_start, p7_config);
   //((pnf_phy_user_data_t*)(phy_info->fapi->user_data))->p7_config = p7_config;
   NFAPI_TRACE(NFAPI_TRACE_INFO, "[PNF] Calling l1_north_init_eNB() %s\n", __FUNCTION__);
-  l1_north_init_eNB();
+  if (l1_north_init_eNB() < 0) {
+	NFAPI_TRACE(NFAPI_TRACE_ERROR, "%s() l1_north_init_eNB() failed\n", __FUNCTION__);
+    return (-1);
+  }
   NFAPI_TRACE(NFAPI_TRACE_INFO, "[PNF] DJP - HACK - Set p7_config global ready for subframe ind%s\n", __FUNCTION__);
   p7_config_g = p7_config;
 

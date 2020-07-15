@@ -235,7 +235,10 @@ do {                                                                   \
 
 #define MCC_TO_BUFFER(mCC, bUFFER)      \
 do {                                    \
-    DevAssert(bUFFER != NULL);          \
+    if (bUFFER == NULL) {               \
+        fprintf(stderr, "bUFFER == NULL\n");\
+        return -1;                      \
+    }                                   \
     (bUFFER)[0] = MCC_HUNDREDS(mCC);    \
     (bUFFER)[1] = MCC_MNC_DECIMAL(mCC); \
     (bUFFER)[2] = MCC_MNC_DIGIT(mCC);   \
@@ -264,7 +267,10 @@ do {                                                                            
 #define MCC_MNC_TO_TBCD(mCC, mNC, mNCdIGITlENGTH, tBCDsTRING)        \
 do {                                                                 \
     char _buf[3];                                                    \
-     DevAssert((mNCdIGITlENGTH == 3) || (mNCdIGITlENGTH == 2));      \
+     if ((mNCdIGITlENGTH != 3) && (mNCdIGITlENGTH != 2)) {           \
+         fprintf(stderr, "mNCdIGITlENGTH != 3 && mNCdIGITlENGTH != 2\n");\
+         return -1;                                                  \
+     }                                                               \
     _buf[0] = (MCC_MNC_DECIMAL(mCC) << 4) | MCC_HUNDREDS(mCC);       \
     _buf[1] = (MNC_HUNDREDS(mNC,mNCdIGITlENGTH) << 4) | MCC_MNC_DIGIT(mCC);\
     _buf[2] = (MCC_MNC_DIGIT(mNC) << 4) | MCC_MNC_DECIMAL(mNC);      \
@@ -274,7 +280,10 @@ do {                                                                 \
 #define TBCD_TO_MCC_MNC(tBCDsTRING, mCC, mNC, mNCdIGITlENGTH)    \
 do {                                                             \
     int mNC_hundred;                                             \
-    DevAssert((tBCDsTRING)->size == 3);                          \
+    if ((tBCDsTRING)->size != 3) {                               \
+        fprintf(stderr, "(tBCDsTRING)->size != 3\n");           \
+        return -1;                                               \
+    }                                                            \
     mNC_hundred = (((tBCDsTRING)->buf[1] & 0xf0) >> 4);          \
     if (mNC_hundred == 0xf) {                                    \
         mNC_hundred = 0;                                         \
@@ -292,7 +301,10 @@ do {                                                             \
 
 #define TBCD_TO_PLMN_T(tBCDsTRING, pLMN)                            \
 do {                                                                \
-    DevAssert((tBCDsTRING)->size == 3);                             \
+    if ((tBCDsTRING)->size != 3) {                                  \
+        fprintf(stderr, "(tBCDsTRING)->size != 3\n"));              \
+        return -1;                                                  \
+    }                                                               \
     (pLMN)->MCCdigit2 = (((tBCDsTRING)->buf[0] & 0xf0) >> 4);       \
     (pLMN)->MCCdigit3 = ((tBCDsTRING)->buf[0] & 0x0f);              \
     (pLMN)->MCCdigit1 = (tBCDsTRING)->buf[1] & 0x0f;                \

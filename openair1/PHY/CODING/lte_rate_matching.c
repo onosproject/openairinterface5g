@@ -483,11 +483,20 @@ uint32_t lte_rate_matching_turbo(uint32_t RTC,
   // if (rvidx==3)
   //  for (cnt=0;cnt<Ncb;cnt++)
   //    counter_buffer[rvidx][cnt]=0;
-  if (Ncb>(3*(RTC<<5)))
-    AssertFatal(1==0,"Exiting, RM condition (Ncb %d, RTC %d, Nir/C %d, Nsoft %d, Kw %d)\n",Ncb,RTC,Nir/C,Nsoft,3*(RTC<<5));
+  if (Ncb>(3*(RTC<<5))) {
+    LOG_E(PHY, "Exiting, RM condition (Ncb %d, RTC %d, Nir/C %d, Nsoft %d, Kw %d)\n",Ncb,RTC,Nir/C,Nsoft,3*(RTC<<5));
+    return(-1);
+  }
 
-  AssertFatal(Nl>0,"Nl is 0\n");
-  AssertFatal(Qm>0,"Qm is 0\n");
+  if (Nl == 0) {
+    LOG_E(PHY, "Nl is 0\n");
+    return(-1);
+  }
+
+  if (Qm == 0) {
+    LOG_E(PHY, "Qm is 0\n");
+    return(-1);
+  }
   Gp = G/Nl/Qm;
   GpmodC = Gp%C;
 #ifdef RM_DEBUG
@@ -674,8 +683,16 @@ int lte_rate_matching_turbo_rx(uint32_t RTC,
     Ncb = 3*(RTC<<5);
   }
 
-  AssertFatal(Nl>0,"Nl is 0\n");
-  AssertFatal(Qm>0,"Qm is 0\n");
+  if (Nl == 0) {
+    LOG_E(PHY, "Nl is 0\n");
+    return(-1);
+  }
+
+  if (Qm == 0) {
+    LOG_E(PHY, "Qm is 0\n");
+   return(-1);
+  }
+
   Gp = G/Nl/Qm;
   GpmodC = Gp%C;
 
@@ -865,20 +882,25 @@ void main() {
 
   RTC = sub_block_interleaving_turbo(4+(192*8), &d[96], w);
 
+  uint32_t ret = 0;
   for (rvidx=0; rvidx<4; rvidx++) {
-    lte_rate_matching_turbo(RTC,
-                            G,
-                            w,
-                            e,
-                            1,           //C
-                            1827072,     //Nsoft,
-                            8,           //Mdlharq,
-                            1,           //Kmimo,
-                            rvidx,       //rvidx,
-                            mod_order,   //Qm,
-                            1,           //Nl,
-                            0            //r
-                           );
+    ret = lte_rate_matching_turbo(RTC,
+                                  G,
+                                  w,
+                                  e,
+                                  1,           //C
+                                  1827072,     //Nsoft,
+                                  8,           //Mdlharq,
+                                  1,           //Kmimo,
+                                  rvidx,       //rvidx,
+                                  mod_order,   //Qm,
+                                  1,           //Nl,
+                                  0            //r
+                                  );
+    if (ret == -1) {
+        LOG_E(PHY, "main:lte_rate_matching_turbo failed.\n");
+		return;
+	}
   }
 }
 

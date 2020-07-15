@@ -77,8 +77,11 @@ void send_IF4p5(RU_t *ru,
     else                                  packet_header = (IF4p5_header_t *)(tx_buffer);
 
     gen_IF4p5_dl_header(packet_header, frame, subframe);
-    AssertFatal(txdataF[0]!=NULL,"txdataF_BF[0] is null\n");
 
+    if (txdataF[0] == NULL) {
+      LOG_E(PHY, "txdataF_BF[0] is null\n");
+      return;
+    }
     for (symbol_id=0; symbol_id<nsym; symbol_id++) {
       if (eth->flags == ETH_RAW_IF4p5_MODE) data_block = (uint16_t *)(tx_buffer + MAC_HEADER_SIZE_BYTES + sizeof_IF4p5_header_t);
       else                                data_block = (uint16_t *)(tx_buffer + sizeof_IF4p5_header_t);
@@ -230,9 +233,11 @@ void send_IF4p5(RU_t *ru,
       else
         rxF = &prach_rxsigF[antenna_id][0];
 
-      LOG_D(PHY,"PRACH_if4P5: rxsigF%d energy %d\n",antenna_id,dB_fixed(signal_energy((int *)rxF,839)));
-      AssertFatal(rxF!=NULL,"rxF is null\n");
-
+      LOG_D(PHY,"PRACH_if4P5: rxsigF%d energy %d\n",antenna_id,dB_fixed(signal_energy((int*)rxF,839)));
+      if (rxF == NULL) {
+        LOG_E(PHY, "rxF is null\n");
+        return;
+      }
       if (eth->flags == ETH_RAW_IF4p5_MODE) {
         memcpy((void *)(tx_buffer_prach + MAC_HEADER_SIZE_BYTES + sizeof_IF4p5_header_t+PRACH_BLOCK_SIZE_BYTES*antenna_id),
                (void *)rxF,
@@ -257,10 +262,11 @@ void send_IF4p5(RU_t *ru,
                                      packet_type)) < 0) {
       perror("ETHERNET write for IF4p5_PRACH\n");
     }
-
-    if (ru->idx<=1) VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_WRITE_IF0+ru->idx, 0 );
+    
+    if (ru->idx<=1) VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_TRX_WRITE_IF0+ru->idx, 0 );      
   } else {
-    AssertFatal(1==0, "send_IF4p5 - Unknown packet_type %x", packet_type);
+    LOG_E(PHY, "send_IF4p5 - Unknown packet_type %x", packet_type);
+    return;
   }
 
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_SEND_IF4_RU+ru->idx,0);
@@ -395,7 +401,10 @@ void recv_IF4p5(RU_t *ru,
       else
         rxF = &prach_rxsigF[antenna_id][0];
 
-      AssertFatal(rxF!=NULL,"rxF is null\n");
+      if (rxF == NULL) {
+        LOG_E(PHY, "rxF is null\n");
+        return;
+      }
 
       if (eth->flags == ETH_RAW_IF4p5_MODE) {
         memcpy(rxF,
@@ -416,7 +425,8 @@ void recv_IF4p5(RU_t *ru,
   } else if (*packet_type == IF4p5_PULTICK) {
     if (ru->idx==0) LOG_D(PHY,"UL_IF4p5: RU %d : frame %d, subframe %d, PULTICK\n",ru->idx,*frame,*subframe);
   } else {
-    AssertFatal(1==0, "recv_IF4p5 - Unknown packet_type %x", *packet_type);
+	LOG_E(PHY, "recv_IF4p5 - Unknown packet_type %x", *packet_type);
+	return;
   }
 
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_RECV_IF4_RU+ru->idx,0);

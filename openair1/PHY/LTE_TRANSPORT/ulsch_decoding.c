@@ -443,10 +443,15 @@ unsigned int  ulsch_decoding(PHY_VARS_eNB *eNB,
   // x1 is set in lte_gold_generic
   x2 = ((uint32_t)ulsch->rnti<<14) + ((uint32_t)subframe<<9) + frame_parms->Nid_cell; //this is c_init in 36.211 Sec 6.3.1
   ulsch_harq = ulsch->harq_processes[harq_pid];
-  AssertFatal(harq_pid!=255,
-              "FATAL ERROR: illegal harq_pid, returning\n");
-  AssertFatal(ulsch_harq->Nsymb_pusch != 0,
-              "FATAL ERROR: harq_pid %d, Nsymb 0!\n",harq_pid);
+  if (harq_pid == 255) {
+    LOG_E(PHY,"FATAL ERROR: illegal harq_pid, returning\n");
+    return(-1);
+  }
+  if (ulsch_harq->Nsymb_pusch == 0) {
+    LOG_E(PHY,"FATAL ERROR: harq_pid %d, Nsymb 0!\n",harq_pid);
+    return(-1);
+  }
+
   nb_rb = ulsch_harq->nb_rb;
   A = ulsch_harq->TBS;
   Q_m = ulsch_harq->Qm;
@@ -494,16 +499,19 @@ unsigned int  ulsch_decoding(PHY_VARS_eNB *eNB,
     sumKr += Kr;
   }
 
-  AssertFatal(sumKr>0,
-              "[eNB] ulsch_decoding.c: FATAL sumKr is 0! (Nid_cell %d, rnti %x, x2 %x): harq_pid %d round %d, RV %d, O_RI %d, O_ACK %d, G %u, subframe %d\n",
-              frame_parms->Nid_cell,ulsch->rnti,x2,
-              harq_pid,
-              ulsch_harq->round,
-              ulsch_harq->rvidx,
-              ulsch_harq->O_RI,
-              ulsch_harq->O_ACK,
-              G,
-              subframe);
+  if (sumKr <= 0) {
+    LOG_E(PHY,"[eNB] ulsch_decoding.c: FATAL sumKr is 0! (Nid_cell %d, rnti %x, x2 %x): harq_pid %d round %d, RV %d, O_RI %d, O_ACK %d, G %d, subframe %d\n",
+	      frame_parms->Nid_cell,ulsch->rnti,x2,
+		  harq_pid,
+		  ulsch_harq->round,
+		  ulsch_harq->rvidx,
+		  ulsch_harq->O_RI,
+		  ulsch_harq->O_ACK,
+		  G,
+		  subframe);
+    return(-1);
+  }
+
   // Compute Q_ri
   Qprime = ulsch_harq->O_RI*ulsch_harq->Msc_initial*ulsch_harq->Nsymb_initial * ulsch->beta_offset_ri_times8;
   LOG_D(PHY, "Qprime %d, O_RI %d, Msc %d, Nym %d beta %d\n",
@@ -571,8 +579,11 @@ unsigned int  ulsch_decoding(PHY_VARS_eNB *eNB,
 #endif
   G = G - Q_RI - Q_CQI;
   ulsch_harq->G = G;
-  AssertFatal((int)G > 0,
-              "FATAL: ulsch_decoding.c G < 0 (%u) : Q_RI %u, Q_CQI %u\n",G,Q_RI,Q_CQI);
+  if ((int)G <= 0) {
+    LOG_E(PHY,"FATAL: ulsch_decoding.c G < 0 (%d) : Q_RI %d, Q_CQI %d\n",G,Q_RI,Q_CQI);
+    return(-1);
+  }
+
   H = G + Q_CQI;
   Hprime = H/Q_m;
   // Demultiplexing/Deinterleaving of PUSCH/ACK/RI/CQI

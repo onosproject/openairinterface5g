@@ -67,7 +67,11 @@ void lte_param_init(unsigned char N_tx, unsigned char N_rx)
   lte_frame_parms->nushift            = 1;
   lte_frame_parms->nb_antennas_tx     = N_tx;
   lte_frame_parms->nb_antennas_rx     = N_rx;
-  init_frame_parms(lte_frame_parms);
+  if (init_frame_parms(lte_frame_parms,1) == -1) {
+    LOG_E(PHY, "pdcch_test.c:lte_param_init:init_frame_parms failed.\n");
+	return;
+  }
+
 
   copy_lte_parms_to_phy_framing(lte_frame_parms, &(PHY_config->PHY_framing));
 
@@ -257,7 +261,10 @@ int main(int argc, char *argv[])
   lte_frame_parms->nushift            = 1;
   lte_frame_parms->nb_antennas_tx     = 2;
   lte_frame_parms->nb_antennas_rx     = 2;
-  init_frame_parms(lte_frame_parms);
+  if (init_frame_parms(lte_frame_parms,1) == -1) {
+    LOG_E(PHY, "pdcch_test.c:main:init_frame_parms failed.\n");
+	return -1;
+  }
 
   copy_lte_parms_to_phy_framing(lte_frame_parms, &(PHY_config->PHY_framing));
   lte_param_init(2,2);

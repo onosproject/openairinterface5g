@@ -983,7 +983,7 @@ int flexran_agent_mac_sf_trigger(mid_t mod_id, const void *params, Protocol__Fle
       dl_info[i]->n_harq_status = 2;
       dl_info[i]->harq_status = malloc(sizeof(uint32_t) * dl_info[i]->n_harq_status);
       for (j = 0; j < dl_info[i]->n_harq_status; j++) {
-        dl_info[i]->harq_status[j] = RC.mac[mod_id]->UE_info.UE_sched_ctrl[UE_id].round[UE_PCCID(mod_id, UE_id)][j];
+        dl_info[i]->harq_status[j] = RC.mac[mod_id]->UE_info.UE_sched_ctrl[UE_id].round[UE_PCCID(mod_id, UE_id)][j][TB1];
         // TODO: This should be different per TB
       }
       //      LOG_I(FLEXRAN_AGENT, "Sending subframe trigger for frame %d and subframe %d and harq %d (round %d)\n", flexran_get_current_frame(mod_id), (flexran_get_current_subframe(mod_id) + 1) % 10, dl_info[i]->harq_process_id, dl_info[i]->harq_status[0]);

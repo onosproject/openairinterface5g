@@ -32,6 +32,7 @@
 #include "conversions.h"
 #include "secu_defs.h"
 #include "snow3g.h"
+#include <common/utils/LOG/log.h>
 
 // #define SECU_DEBUG
 
@@ -46,10 +47,22 @@ int nas_stream_encrypt_eea1(nas_stream_cipher_t *stream_cipher, uint8_t *out)
   uint32_t *KS;
   uint32_t  K[4],IV[4];
 
-  DevAssert(stream_cipher != NULL);
-  DevAssert(stream_cipher->key != NULL);
-  DevAssert(stream_cipher->key_length == 16);
-  DevAssert(out != NULL);
+  if(stream_cipher == NULL) {
+    LOG_E(NAS, "stream_cipher == NULL\n");
+    return -1;
+  }
+  if(stream_cipher->key == NULL) {
+    LOG_E(NAS, "stream_cipher->key == NULL\n");
+    return -1;
+  }
+  if(stream_cipher->key_length != 16) {
+    LOG_E(NAS, "stream_cipher->key_length != 16\n");
+    return -1;
+  }
+  if(out == NULL) {
+    LOG_E(NAS, "out == NULL\n");
+    return -1;
+  }
 
   n = ( stream_cipher->blength + 31 ) / 32;
   zero_bit = stream_cipher->blength & 0x7;

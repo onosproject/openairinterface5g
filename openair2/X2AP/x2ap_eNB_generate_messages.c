@@ -58,9 +58,17 @@ int x2ap_eNB_generate_x2_setup_request(
   uint8_t  *buffer;
   uint32_t  len;
   int       ret = 0;
+  int       flag = 0;
 
-  DevAssert(instance_p != NULL);
-  DevAssert(x2ap_eNB_data_p != NULL);
+  if(instance_p == NULL) {
+    X2AP_ERROR("%s %d: instance_p is a NULL pointer \n",__FILE__,__LINE__);
+    return -1;
+  }
+
+  if(x2ap_eNB_data_p == NULL) {
+    X2AP_ERROR("%s %d: x2ap_eNB_data_p is a NULL pointer \n",__FILE__,__LINE__);
+    return -1;
+  }
 
   x2ap_eNB_data_p->state = X2AP_ENB_STATE_WAITING;
 
@@ -141,7 +149,8 @@ int x2ap_eNB_generate_x2_setup_request(
               servedCellMember->servedCellInfo.eUTRA_Mode_Info.choice.fDD.dL_Transmission_Bandwidth = X2AP_Transmission_Bandwidth_bw100;
               break;
             default:
-              AssertFatal(0,"Failed: Check value for N_RB_DL/N_RB_UL");
+              X2AP_ERROR("Failed: Check value for N_RB_DL/N_RB_UL,N_RB_DL: %d\n",instance_p->N_RB_DL[i]);
+              flag = -1;
               break;
           }
         }
@@ -171,7 +180,8 @@ int x2ap_eNB_generate_x2_setup_request(
               servedCellMember->servedCellInfo.eUTRA_Mode_Info.choice.tDD.subframeAssignment = X2AP_SubframeAssignment_sa6;
               break;
             default:
-              AssertFatal(0,"Failed: Check value for subframeAssignment");
+              X2AP_ERROR("Failed: Check value for subframeAssignment,subframeAssignment: %d\n",instance_p->subframeAssignment[i]);
+              flag = -1;
               break;
           }
           switch (instance_p->specialSubframe[i]) {
@@ -203,7 +213,8 @@ int x2ap_eNB_generate_x2_setup_request(
               servedCellMember->servedCellInfo.eUTRA_Mode_Info.choice.tDD.specialSubframe_Info.specialSubframePatterns = X2AP_SpecialSubframePatterns_ssp8;
               break;
             default:
-              AssertFatal(0,"Failed: Check value for subframeAssignment");
+              X2AP_ERROR("Failed: Check value for subframeAssignment,specialSubframe: %d\n",instance_p->specialSubframe[i]);
+              flag = -1;
               break;
           }
           servedCellMember->servedCellInfo.eUTRA_Mode_Info.choice.tDD.specialSubframe_Info.cyclicPrefixDL=X2AP_CyclicPrefixDL_normal;
@@ -229,7 +240,8 @@ int x2ap_eNB_generate_x2_setup_request(
               servedCellMember->servedCellInfo.eUTRA_Mode_Info.choice.tDD.transmission_Bandwidth = X2AP_Transmission_Bandwidth_bw100;
               break;
             default:
-              AssertFatal(0,"Failed: Check value for N_RB_DL/N_RB_UL");
+              X2AP_ERROR("Failed: Check value for N_RB_DL/N_RB_UL,N_RB_DL: %d\n",instance_p->N_RB_DL[i]);
+              flag = -1;
               break;
           }
         }
@@ -256,8 +268,15 @@ int x2ap_eNB_generate_x2_setup_request(
   }
   ASN_SEQUENCE_ADD(&out->protocolIEs.list, ie);
 
+  if(flag == -1) {
+    X2AP_ERROR("Failed to create X2 setup request\n");
+    asn_sequence_empty(&out->protocolIEs.list);
+    return -1;
+  }
+
   if (x2ap_eNB_encode_pdu(&pdu, &buffer, &len) < 0) {
     X2AP_ERROR("Failed to encode X2 setup request\n");
+    asn_sequence_empty(&out->protocolIEs.list);
     return -1;
   }
 
@@ -280,9 +299,17 @@ int x2ap_eNB_generate_x2_setup_response(x2ap_eNB_instance_t *instance_p, x2ap_eN
   uint8_t  *buffer;
   uint32_t  len;
   int       ret = 0;
+  int       flag = 0;
 
-  DevAssert(instance_p != NULL);
-  DevAssert(x2ap_eNB_data_p != NULL);
+  if(instance_p == NULL) {
+    X2AP_ERROR("%s %d: instance_p is a NULL pointer \n",__FILE__,__LINE__);
+    return -1;
+  }
+
+  if(x2ap_eNB_data_p == NULL) {
+    X2AP_ERROR("%s %d: x2ap_eNB_data_p is a NULL pointer \n",__FILE__,__LINE__);
+    return -1;
+  }
 
   /* Prepare the X2AP message to encode */
   memset(&pdu, 0, sizeof(pdu));
@@ -365,7 +392,8 @@ int x2ap_eNB_generate_x2_setup_response(x2ap_eNB_instance_t *instance_p, x2ap_eN
               servedCellMember->servedCellInfo.eUTRA_Mode_Info.choice.fDD.dL_Transmission_Bandwidth = X2AP_Transmission_Bandwidth_bw100;
               break;
             default:
-              AssertFatal(0,"Failed: Check value for N_RB_DL/N_RB_UL");
+              X2AP_ERROR("Failed: Check value for N_RB_DL/N_RB_UL,N_RB_DL: %d\n",instance_p->N_RB_DL[i]);
+              flag = -1;
               break;
           }
         }
@@ -395,7 +423,8 @@ int x2ap_eNB_generate_x2_setup_response(x2ap_eNB_instance_t *instance_p, x2ap_eN
               servedCellMember->servedCellInfo.eUTRA_Mode_Info.choice.tDD.subframeAssignment = X2AP_SubframeAssignment_sa6;
               break;
             default:
-              AssertFatal(0,"Failed: Check value for subframeAssignment");
+              X2AP_ERROR("Failed: Check value for subframeAssignment,subframeAssignment: %d\n",instance_p->subframeAssignment[i]);
+              flag = -1;
               break;
           }
           switch (instance_p->specialSubframe[i]) {
@@ -427,7 +456,8 @@ int x2ap_eNB_generate_x2_setup_response(x2ap_eNB_instance_t *instance_p, x2ap_eN
               servedCellMember->servedCellInfo.eUTRA_Mode_Info.choice.tDD.specialSubframe_Info.specialSubframePatterns = X2AP_SpecialSubframePatterns_ssp8;
               break;
             default:
-              AssertFatal(0,"Failed: Check value for subframeAssignment");
+              X2AP_ERROR("Failed: Check value for specialSubframe,specialSubframe: %d\n",instance_p->specialSubframe[i]);
+              flag = -1;
               break;
           }
           servedCellMember->servedCellInfo.eUTRA_Mode_Info.choice.tDD.specialSubframe_Info.cyclicPrefixDL=X2AP_CyclicPrefixDL_normal;
@@ -453,7 +483,8 @@ int x2ap_eNB_generate_x2_setup_response(x2ap_eNB_instance_t *instance_p, x2ap_eN
               servedCellMember->servedCellInfo.eUTRA_Mode_Info.choice.tDD.transmission_Bandwidth = X2AP_Transmission_Bandwidth_bw100;
               break;
             default:
-              AssertFatal(0,"Failed: Check value for N_RB_DL/N_RB_UL");
+              X2AP_ERROR("Failed: Check value for N_RB_DL/N_RB_UL,N_RB_DL: %d\n",instance_p->N_RB_DL[i]);
+              flag = -1;
               break;
           }
         }
@@ -480,8 +511,15 @@ int x2ap_eNB_generate_x2_setup_response(x2ap_eNB_instance_t *instance_p, x2ap_eN
   }
   ASN_SEQUENCE_ADD(&out->protocolIEs.list, ie);
 
+  if(flag == -1) {
+    X2AP_ERROR("Failed to create X2 setup response\n");
+    asn_sequence_empty(&out->protocolIEs.list);
+    return -1;
+  }
+
   if (x2ap_eNB_encode_pdu(&pdu, &buffer, &len) < 0) {
     X2AP_ERROR("Failed to encode X2 setup response\n");
+    asn_sequence_empty(&out->protocolIEs.list);
     return -1;
   }
 
@@ -558,7 +596,10 @@ int x2ap_eNB_set_cause (X2AP_Cause_t * cause_p,
                         long cause_value)
 {
 
-  DevAssert (cause_p != NULL);
+  if(cause_p == NULL) {
+    X2AP_ERROR("%s %d: cause_p is a NULL pointer \n",__FILE__,__LINE__);
+    return -1;
+  }
   cause_p->present = cause_type;
 
   switch (cause_type) {
@@ -600,8 +641,15 @@ int x2ap_eNB_generate_x2_handover_request (x2ap_eNB_instance_t *instance_p, x2ap
   uint32_t  len;
   int       ret = 0;
 
-  DevAssert(instance_p != NULL);
-  DevAssert(x2ap_eNB_data_p != NULL);
+  if(instance_p == NULL) {
+    X2AP_ERROR("%s %d: instance_p is a NULL pointer \n",__FILE__,__LINE__);
+    return -1;
+  }
+
+  if(x2ap_eNB_data_p == NULL) {
+    X2AP_ERROR("%s %d: x2ap_eNB_data_p is a NULL pointer \n",__FILE__,__LINE__);
+    return -1;
+  }
 
   /* Prepare the X2AP handover message to encode */
   memset(&pdu, 0, sizeof(pdu));
@@ -729,7 +777,7 @@ int x2ap_eNB_generate_x2_handover_request (x2ap_eNB_instance_t *instance_p, x2ap
 
   if (x2ap_eNB_encode_pdu(&pdu, &buffer, &len) < 0) {
     X2AP_ERROR("Failed to encode X2 handover request\n");
-    abort();
+    asn_sequence_empty(&out->protocolIEs.list);
     return -1;
   }
 
@@ -757,8 +805,15 @@ int x2ap_eNB_generate_x2_handover_request_ack (x2ap_eNB_instance_t *instance_p, 
   uint32_t  len;
   int       ret = 0;
 
-  DevAssert(instance_p != NULL);
-  DevAssert(x2ap_eNB_data_p != NULL);
+  if(instance_p == NULL) {
+    X2AP_ERROR("%s %d: instance_p is a NULL pointer \n",__FILE__,__LINE__);
+    return -1;
+  }
+
+  if(x2ap_eNB_data_p == NULL) {
+    X2AP_ERROR("%s %d: x2ap_eNB_data_p is a NULL pointer \n",__FILE__,__LINE__);
+    return -1;
+  }
 
   ue_id     = x2ap_handover_req_ack->x2_id_target;
   id_source = x2ap_id_get_id_source(&instance_p->id_manager, ue_id);
@@ -843,7 +898,7 @@ int x2ap_eNB_generate_x2_handover_request_ack (x2ap_eNB_instance_t *instance_p, 
 
   if (x2ap_eNB_encode_pdu(&pdu, &buffer, &len) < 0) {
     X2AP_ERROR("Failed to encode X2 handover response\n");
-    abort();
+    asn_sequence_empty(&out->protocolIEs.list);
     return -1;
   }
 
@@ -868,13 +923,21 @@ int x2ap_eNB_generate_x2_ue_context_release (x2ap_eNB_instance_t *instance_p, x2
   uint32_t  len;
   int       ret = 0;
 
-  DevAssert(instance_p != NULL);
-  DevAssert(x2ap_eNB_data_p != NULL);
+  if(instance_p == NULL) {
+    X2AP_ERROR("%s %d: instance_p is a NULL pointer \n",__FILE__,__LINE__);
+    return -1;
+  }
+
+  if(x2ap_eNB_data_p == NULL) {
+    X2AP_ERROR("%s %d: x2ap_eNB_data_p is a NULL pointer \n",__FILE__,__LINE__);
+    return -1;
+  }
 
   ue_id = x2ap_find_id_from_rnti(&instance_p->id_manager, x2ap_ue_context_release->rnti);
   if (ue_id == -1) {
     X2AP_ERROR("could not find UE %x\n", x2ap_ue_context_release->rnti);
-    exit(1);
+    //exit(1);
+    return -1;
   }
   id_source = x2ap_id_get_id_source(&instance_p->id_manager, ue_id);
   id_target = ue_id;
@@ -905,7 +968,7 @@ int x2ap_eNB_generate_x2_ue_context_release (x2ap_eNB_instance_t *instance_p, x2
 
   if (x2ap_eNB_encode_pdu(&pdu, &buffer, &len) < 0) {
     X2AP_ERROR("Failed to encode X2 UE Context Release\n");
-    abort();
+    asn_sequence_empty(&out->protocolIEs.list);
     return -1;
   }
 
@@ -931,8 +994,15 @@ int x2ap_eNB_generate_x2_handover_cancel (x2ap_eNB_instance_t *instance_p, x2ap_
   uint32_t  len;
   int       ret = 0;
 
-  DevAssert(instance_p != NULL);
-  DevAssert(x2ap_eNB_data_p != NULL);
+  if(instance_p == NULL) {
+    X2AP_ERROR("%s %d: instance_p is a NULL pointer \n",__FILE__,__LINE__);
+    return -1;
+  }
+
+  if(x2ap_eNB_data_p == NULL) {
+    X2AP_ERROR("%s %d: x2ap_eNB_data_p is a NULL pointer \n",__FILE__,__LINE__);
+    return -1;
+  }
 
   ue_id = x2_ue_id;
   id_source = ue_id;
@@ -983,13 +1053,14 @@ int x2ap_eNB_generate_x2_handover_cancel (x2ap_eNB_instance_t *instance_p, x2ap_
   default:
     /* we can't come here */
     X2AP_ERROR("unhandled cancel cause\n");
-    exit(1);
+    exit_fun("x2ap_eNB_generate_x2_handover_cancel unhandled cancel cause" );
+    break;
   }
   ASN_SEQUENCE_ADD(&out->protocolIEs.list, ie);
 
   if (x2ap_eNB_encode_pdu(&pdu, &buffer, &len) < 0) {
     X2AP_ERROR("Failed to encode X2 Handover Cancel\n");
-    abort();
+    asn_sequence_empty(&out->protocolIEs.list);
     return -1;
   }
 

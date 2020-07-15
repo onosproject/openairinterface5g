@@ -529,10 +529,16 @@ int is_prach_subframe0(LTE_DL_FRAME_PARMS *frame_parms,uint8_t prach_ConfigIndex
         break;
     }
   } else { // TDD
-    AssertFatal(prach_ConfigIndex<64,
-                "Illegal prach_ConfigIndex %d for ",prach_ConfigIndex);
-    AssertFatal(tdd_preamble_map[prach_ConfigIndex][tdd_config].num_prach>0,
-                "Illegal prach_ConfigIndex %d for ",prach_ConfigIndex);
+
+    if (prach_ConfigIndex >= 64) {
+      LOG_E(PHY, "Illegal prach_ConfigIndex %d for ",prach_ConfigIndex);
+      return(0);
+    }
+    if (tdd_preamble_map[prach_ConfigIndex][tdd_config].num_prach <= 0) {
+      LOG_E(PHY, "Illegal prach_ConfigIndex %d for ",prach_ConfigIndex);
+      return(0);
+    }
+
     t0_ra = tdd_preamble_map[prach_ConfigIndex][tdd_config].map[0].t0_ra;
     t1_ra = tdd_preamble_map[prach_ConfigIndex][tdd_config].map[0].t1_ra;
     t2_ra = tdd_preamble_map[prach_ConfigIndex][tdd_config].map[0].t2_ra;
@@ -589,8 +595,12 @@ void compute_prach_seq(uint16_t rootSequenceIndex,
 #ifdef PRACH_DEBUG
   LOG_I(PHY,"compute_prach_seq: NCS_config %d, prach_fmt %d\n",zeroCorrelationZoneConfig, prach_fmt);
 #endif
-  AssertFatal(prach_fmt<4,
-              "PRACH sequence is only precomputed for prach_fmt<4 (have %"PRIu8")\n", prach_fmt );
+
+  if (prach_fmt >= 4) {
+    LOG_E(PHY, "PRACH sequence is only precomputed for prach_fmt<4 (have %"PRIu8")\n", prach_fmt);
+    return;
+  }
+
   N_ZC = (prach_fmt < 4) ? 839 : 139;
   //init_prach_tables(N_ZC); //moved to phy_init_lte_ue/eNB, since it takes to long in real-time
 
@@ -609,8 +619,12 @@ void compute_prach_seq(uint16_t rootSequenceIndex,
 #ifdef PRACH_DEBUG
     LOG_I(PHY,"Low speed prach : NCS_config %d\n",zeroCorrelationZoneConfig);
 #endif
-    AssertFatal(zeroCorrelationZoneConfig<=15,
-                "FATAL, Illegal Ncs_config for unrestricted format %"PRIu8"\n", zeroCorrelationZoneConfig );
+
+    if (zeroCorrelationZoneConfig > 15) {
+      LOG_E(PHY, "FATAL, Illegal Ncs_config for unrestricted format %"PRIu8"\n", zeroCorrelationZoneConfig);
+      return;
+    }
+
     NCS = NCS_unrestricted[zeroCorrelationZoneConfig];
     num_preambles = (NCS==0) ? 64 : ((64*NCS)/N_ZC);
 
@@ -621,8 +635,12 @@ void compute_prach_seq(uint16_t rootSequenceIndex,
 #ifdef PRACH_DEBUG
     LOG_I( PHY, "high speed prach : NCS_config %"PRIu8"\n", zeroCorrelationZoneConfig );
 #endif
-    AssertFatal(zeroCorrelationZoneConfig<=14,
-                "FATAL, Illegal Ncs_config for restricted format %"PRIu8"\n", zeroCorrelationZoneConfig );
+
+    if (zeroCorrelationZoneConfig > 14) {
+      LOG_E(PHY, "FATAL, Illegal Ncs_config for restricted format %"PRIu8"\n", zeroCorrelationZoneConfig);
+      return;
+    }
+
     NCS = NCS_restricted[zeroCorrelationZoneConfig];
     fill_du(prach_fmt);
     num_preambles = 64; // compute ZC sequence for 64 possible roots
@@ -636,10 +654,18 @@ void compute_prach_seq(uint16_t rootSequenceIndex,
 
       if (prach_fmt<4) {
         // prach_root_sequence_map points to prach_root_sequence_map0_3
-        DevAssert( index < sizeof(prach_root_sequence_map0_3) / sizeof(prach_root_sequence_map0_3[0]) );
+        if (index >= sizeof(prach_root_sequence_map0_3) / sizeof(prach_root_sequence_map0_3[0])) {
+          LOG_E(PHY, "index %d >= sizeof(prach_root_sequence_map0_3) / sizeof(prach_root_sequence_map0_3[0]) %lu\n",
+		        index, sizeof(prach_root_sequence_map0_3) / sizeof(prach_root_sequence_map0_3[0]));
+          return;
+        }
       } else {
         // prach_root_sequence_map points to prach_root_sequence_map4
-        DevAssert( index < sizeof(prach_root_sequence_map4) / sizeof(prach_root_sequence_map4[0]) );
+        if (index >= sizeof(prach_root_sequence_map4) / sizeof(prach_root_sequence_map4[0])) {
+          LOG_E(PHY, "index %d >= sizeof(prach_root_sequence_map4) / sizeof(prach_root_sequence_map4[0]) %lu\n",
+		        index, sizeof(prach_root_sequence_map4) / sizeof(prach_root_sequence_map4[0]));
+          return;
+        }
       }
 
       u = prach_root_sequence_map[index];
@@ -684,10 +710,18 @@ void compute_prach_seq(uint16_t rootSequenceIndex,
 
     if (prach_fmt<4) {
       // prach_root_sequence_map points to prach_root_sequence_map0_3
-      DevAssert( index < sizeof(prach_root_sequence_map0_3) / sizeof(prach_root_sequence_map0_3[0]) );
+      if (index >= sizeof(prach_root_sequence_map0_3) / sizeof(prach_root_sequence_map0_3[0])) {
+        LOG_E(PHY, "index %d >= sizeof(prach_root_sequence_map0_3) / sizeof(prach_root_sequence_map0_3[0]) %lu\n",
+	       index, sizeof(prach_root_sequence_map0_3) / sizeof(prach_root_sequence_map0_3[0]));
+        return;
+      }
     } else {
       // prach_root_sequence_map points to prach_root_sequence_map4
-      DevAssert( index < sizeof(prach_root_sequence_map4) / sizeof(prach_root_sequence_map4[0]) );
+      if (index >= sizeof(prach_root_sequence_map4) / sizeof(prach_root_sequence_map4[0])) {
+        LOG_E(PHY, "index %d >= sizeof(prach_root_sequence_map4) / sizeof(prach_root_sequence_map4[0]) %lu\n",
+	       index, sizeof(prach_root_sequence_map4) / sizeof(prach_root_sequence_map4[0]));
+        return;
+      }
     }
 
     u = prach_root_sequence_map[index];

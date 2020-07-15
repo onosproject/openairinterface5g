@@ -70,6 +70,10 @@ int generate_ue_ulsch_params_from_rar(PHY_VARS_UE *ue,
 
   uint8_t *rar = (uint8_t *)(rar_pdu+1);
   uint8_t harq_pid = subframe2harq_pid(frame_parms,proc->frame_tx,subframe);
+  if (harq_pid == 255) {
+    LOG_E(PHY,"FATAL ERROR: illegal harq_pid, returning\n");
+    return -1;
+  }
   uint16_t rballoc;
   uint8_t cqireq;
   uint16_t *RIV2nb_rb_LUT, *RIV2first_rb_LUT;
@@ -180,6 +184,10 @@ int generate_ue_ulsch_params_from_rar(PHY_VARS_UE *ue,
   }
 
   // initialize power control based on PRACH power
+  if (get_deltaP_rampup(ue->Mod_id,ue->CC_id) == -1) {
+	  LOG_E(PHY,"get_deltaP_rampup failed\n");
+	  return (-1);
+  }
   ulsch->f_pusch = delta_PUSCH_msg2[ulsch->harq_processes[harq_pid]->TPC] +
                    get_deltaP_rampup(ue->Mod_id,ue->CC_id);
   LOG_I(PHY,"[UE %d][PUSCH PC] Initializing f_pusch to %d dB, TPC %d (delta_PUSCH_msg2 %d dB), deltaP_rampup %d dB\n",

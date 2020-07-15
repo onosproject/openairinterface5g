@@ -80,9 +80,15 @@ uint32_t s1ap_generate_eNB_id(void) {
   uint32_t eNB_id;
   /* Retrieve the host name */
   ret = gethostname(hostname, sizeof(hostname));
-  DevAssert(ret == 0);
+  if (ret != 0) {
+    S1AP_ERROR("gethostname failed\n");
+    return -1;
+  }
   out = crypt(hostname, "eurecom");
-  DevAssert(out != NULL);
+  if (out == NULL) {
+    S1AP_ERROR("crypt hostname failed\n");
+    return -1;
+  }
   eNB_id = ((out[0] << 24) | (out[1] << 16) | (out[2] << 8) | out[3]);
   return eNB_id;
 }
@@ -98,8 +104,14 @@ static void s1ap_eNB_register_mme(s1ap_eNB_instance_t *instance_p,
   sctp_new_association_req_t *sctp_new_association_req_p  = NULL;
   s1ap_eNB_mme_data_t        *s1ap_mme_data_p             = NULL;
   struct s1ap_eNB_mme_data_s *mme                         = NULL;
-  DevAssert(instance_p != NULL);
-  DevAssert(mme_ip_address != NULL);
+  if (instance_p == NULL) {
+    S1AP_ERROR("instance_p == NULL\n");
+    return;
+  }
+  if (mme_ip_address == NULL) {
+    S1AP_ERROR("mme_ip_address == NULL\n");
+    return;
+  }
   message_p = itti_alloc_new_message(TASK_S1AP, SCTP_NEW_ASSOCIATION_REQ);
   sctp_new_association_req_p = &message_p->ittiMsg.sctp_new_association_req;
   sctp_new_association_req_p->port = S1AP_PORT_NUMBER;
@@ -118,7 +130,10 @@ static void s1ap_eNB_register_mme(s1ap_eNB_instance_t *instance_p,
   if ( mme == NULL ) {
     /* Create new MME descriptor */
     s1ap_mme_data_p = calloc(1, sizeof(*s1ap_mme_data_p));
-    DevAssert(s1ap_mme_data_p != NULL);
+    if (s1ap_mme_data_p == NULL) {
+      S1AP_ERROR("s1ap_mme_data_p == NULL\n");
+      return;
+    }
     s1ap_mme_data_p->cnx_id                = s1ap_eNB_fetch_add_global_cnx_id();
     sctp_new_association_req_p->ulp_cnx_id = s1ap_mme_data_p->cnx_id;
     s1ap_mme_data_p->assoc_id          = -1;
@@ -165,7 +180,10 @@ static void s1ap_eNB_register_mme(s1ap_eNB_instance_t *instance_p,
 void s1ap_eNB_handle_register_eNB(instance_t instance, s1ap_register_enb_req_t *s1ap_register_eNB) {
   s1ap_eNB_instance_t *new_instance;
   uint8_t index;
-  DevAssert(s1ap_register_eNB != NULL);
+  if (s1ap_register_eNB == NULL) {
+    S1AP_ERROR("s1ap_register_eNB == NULL\n");
+    return;
+  }
   /* Look if the provided instance already exists */
   new_instance = s1ap_eNB_get_instance(instance);
 
@@ -185,7 +203,10 @@ void s1ap_eNB_handle_register_eNB(instance_t instance, s1ap_register_enb_req_t *
     DevCheck(new_instance->default_drx == s1ap_register_eNB->default_drx, new_instance->default_drx, s1ap_register_eNB->default_drx, 0);
   } else {
     new_instance = calloc(1, sizeof(s1ap_eNB_instance_t));
-    DevAssert(new_instance != NULL);
+    if (new_instance == NULL) {
+      S1AP_ERROR("new_instance == NULL\n");
+      return;
+    }
     RB_INIT(&new_instance->s1ap_ue_head);
     RB_INIT(&new_instance->s1ap_mme_head);
     /* Copy usefull parameters */
@@ -233,12 +254,21 @@ void s1ap_eNB_handle_register_eNB(instance_t instance, s1ap_register_enb_req_t *
 void s1ap_eNB_handle_sctp_association_resp(instance_t instance, sctp_new_association_resp_t *sctp_new_association_resp) {
   s1ap_eNB_instance_t *instance_p;
   s1ap_eNB_mme_data_t *s1ap_mme_data_p;
-  DevAssert(sctp_new_association_resp != NULL);
+  if (sctp_new_association_resp == NULL) {
+    S1AP_ERROR("sctp_new_association_resp == NULL\n");
+    return;
+  }
   instance_p = s1ap_eNB_get_instance(instance);
-  DevAssert(instance_p != NULL);
+  if (instance_p == NULL) {
+    S1AP_ERROR("instance_p == NULL\n");
+    return;
+  }
   s1ap_mme_data_p = s1ap_eNB_get_MME(instance_p, -1,
                                      sctp_new_association_resp->ulp_cnx_id);
-  DevAssert(s1ap_mme_data_p != NULL);
+  if (s1ap_mme_data_p == NULL) {
+    S1AP_ERROR("s1ap_mme_data_p == NULL\n");
+    return;
+  }
 
   if (sctp_new_association_resp->sctp_state != SCTP_STATE_ESTABLISHED) {
     S1AP_WARN("Received unsuccessful result for SCTP association (%u), instance %d, cnx_id %u\n",
@@ -254,22 +284,33 @@ void s1ap_eNB_handle_sctp_association_resp(instance_t instance, sctp_new_associa
   s1ap_mme_data_p->in_streams  = sctp_new_association_resp->in_streams;
   s1ap_mme_data_p->out_streams = sctp_new_association_resp->out_streams;
   /* Prepare new S1 Setup Request */
-  s1ap_eNB_generate_s1_setup_request(instance_p, s1ap_mme_data_p);
+  if (s1ap_eNB_generate_s1_setup_request(instance_p, s1ap_mme_data_p) == -1) {
+    S1AP_ERROR("s1ap eNB generate s1 setup request failed\n");
+    return;
+  }
 }
 
 static
 void s1ap_eNB_handle_sctp_data_ind(sctp_data_ind_t *sctp_data_ind) {
   int result;
-  DevAssert(sctp_data_ind != NULL);
+  if (sctp_data_ind == NULL) {
+    S1AP_ERROR("sctp_data_ind == NULL\n");
+    return;
+  }
 #if defined(TEST_S1C_MME)
   mme_test_s1_notify_sctp_data_ind(sctp_data_ind->assoc_id, sctp_data_ind->stream,
                                    sctp_data_ind->buffer, sctp_data_ind->buffer_length);
 #else
-  s1ap_eNB_handle_message(sctp_data_ind->assoc_id, sctp_data_ind->stream,
-                          sctp_data_ind->buffer, sctp_data_ind->buffer_length);
+  if (s1ap_eNB_handle_message(sctp_data_ind->assoc_id, sctp_data_ind->stream,
+                          sctp_data_ind->buffer, sctp_data_ind->buffer_length) == -1) {
+    S1AP_ERROR("Failed to handle s1ap eNB message\n");
+  }
 #endif
   result = itti_free(TASK_UNKNOWN, sctp_data_ind->buffer);
-  AssertFatal (result == EXIT_SUCCESS, "Failed to free memory (%d)!\n", result);
+  if (result != EXIT_SUCCESS) {
+    S1AP_ERROR("Failed to free memory (%d)!\n", result);
+    return;
+  }
 }
 
 void s1ap_eNB_init(void) {
@@ -378,7 +419,10 @@ void *s1ap_eNB_process_itti_msg(void *notUsed) {
       s1ap_ue_context_release_req(ITTI_MESSAGE_GET_INSTANCE(received_msg),
                                   &S1AP_UE_CONTEXT_RELEASE_REQ(received_msg));
       s1ap_eNB_instance_p = s1ap_eNB_get_instance(ITTI_MESSAGE_GET_INSTANCE(received_msg)); // test
-      DevAssert(s1ap_eNB_instance_p != NULL); // test
+      if (s1ap_eNB_instance_p == NULL) {
+        S1AP_ERROR("s1ap_eNB_instance_p == NULL\n");
+        return NULL;
+      }
 
       if ((ue_context_p = s1ap_eNB_get_ue_context(s1ap_eNB_instance_p,
                           S1AP_UE_CONTEXT_RELEASE_REQ(received_msg).eNB_ue_s1ap_id)) == NULL) { // test
@@ -402,7 +446,10 @@ void *s1ap_eNB_process_itti_msg(void *notUsed) {
   }
 
   result = itti_free (ITTI_MSG_ORIGIN_ID(received_msg), received_msg);
-  AssertFatal (result == EXIT_SUCCESS, "Failed to free memory (%d)!\n", result);
+  if (result != EXIT_SUCCESS) {
+    S1AP_ERROR("Failed to free memory (%d)!\n", result);
+    return NULL;
+  }
   received_msg = NULL;
   return NULL;
 }
@@ -435,8 +482,14 @@ static int s1ap_eNB_generate_s1_setup_request(
   uint8_t  *buffer = NULL;
   uint32_t  len = 0;
   int       ret = 0;
-  DevAssert(instance_p != NULL);
-  DevAssert(s1ap_mme_data_p != NULL);
+  if (instance_p == NULL) {
+    S1AP_ERROR("instance_p == NULL\n");
+    return -1;
+  }
+  if (s1ap_mme_data_p == NULL) {
+    S1AP_ERROR("s1ap_mme_data_p == NULL\n");
+    return -1;
+  }
   s1ap_mme_data_p->state = S1AP_ENB_STATE_WAITING;
   /* Prepare the S1AP message to encode */
   memset(&pdu, 0, sizeof(pdu));

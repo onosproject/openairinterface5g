@@ -896,6 +896,130 @@ typedef struct srb1_params_s {
     {ENB_CONFIG_STRING_SRB1_MAX_RETX_THRESHOLD,            NULL,   0,            iptr:&srb1_params.srb1_max_retx_threshold,      defintval:4,      TYPE_UINT,      0}        \
   }
 
+/*------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
+/*------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
+/* measurement configuration parameters section name */
+#define ENB_CONFIG_STRING_MEAS                                          "measurement_parameters"
+
+/* measurement configuration parameters names   */
+#define ENB_CONFIG_STRING_MEAS_ALLOWEDMEASBANDWIDTH                     "allowedMeasBandwidth"
+
+/*-----------------------------------------------------------------------------------------------------------------------------------------------------------*/
+/*                                            measurement configuration parameters                                                                                  */
+/*   optname                                          helpstr   paramflags    XXXptr                             defXXXval         type           numelt     */
+/*-----------------------------------------------------------------------------------------------------------------------------------------------------------*/
+#define MEASPARAMS_DESC {                                                                                                \
+{ENB_CONFIG_STRING_MEAS_ALLOWEDMEASBANDWIDTH,          NULL,   0,            u8ptr:&allowedMeasBandwidth,   		 defintval:2,      TYPE_UINT8,      0},       \
+}
+/*-----------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
+/*------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
+/*------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
+/* measurement event configuration parameters section name */
+#define ENB_CONFIG_STRING_MEAS_EVENT1                                   "event1_config"
+#define ENB_CONFIG_STRING_MEAS_EVENT2                                   "event2_config"
+#define ENB_CONFIG_STRING_MEAS_EVENT3                                   "event3_config"
+#define ENB_CONFIG_STRING_MEAS_EVENT4                                   "event4_config"
+#define ENB_CONFIG_STRING_MEAS_EVENT5                                   "event5_config"
+#define ENB_CONFIG_STRING_MEAS_EVENT6                                   "event6_config"
+
+/* measurement event configuration parameters names   */
+#define ENB_CONFIG_STRING_MEAS_EVENT_THRESHOLD_SELECT                   "threshold_select"
+#define ENB_CONFIG_STRING_MEAS_EVENT_THRESHOLD_RSRP                     "threshold_RSRP"
+#define ENB_CONFIG_STRING_MEAS_EVENT_THRESHOLD_RSRQ                     "threshold_RSRQ"
+#define ENB_CONFIG_STRING_MEAS_EVENT_MAXREPORTCELLS                     "maxReportCells"
+#define ENB_CONFIG_STRING_MEAS_EVENT_REPORTINTERVAL                     "reportInterval"
+#define ENB_CONFIG_STRING_MEAS_EVENT_A3_OFFSET                          "a3_Offset"
+#define ENB_CONFIG_STRING_MEAS_EVENT_HYSTERESIS                         "hysteresis"
+#define ENB_CONFIG_STRING_MEAS_EVENT_TIMETOTRIGGER                      "timeToTrigger"
+
+/*-----------------------------------------------------------------------------------------------------------------------------------------------------------*/
+/*                                            measurement event1 configuration parameters                                                                                  */
+/*   optname                                          helpstr   paramflags    XXXptr                             defXXXval         type           numelt     */
+/*-----------------------------------------------------------------------------------------------------------------------------------------------------------*/
+#define MEAS_EVENT1_PARAMS_DESC {                                                                                                \
+{ENB_CONFIG_STRING_MEAS_EVENT_THRESHOLD_RSRP,          NULL,   0,            u8ptr:&event1_config.threshold_RSRP, defintval:10,     TYPE_UINT8,      0},       \
+{ENB_CONFIG_STRING_MEAS_EVENT_MAXREPORTCELLS,          NULL,   0,            u8ptr:&event1_config.maxReportCells, defintval:2,      TYPE_UINT8,      0},       \
+{ENB_CONFIG_STRING_MEAS_EVENT_REPORTINTERVAL,          NULL,   0,            u8ptr:&event1_config.reportInterval, defintval:0,      TYPE_UINT8,      0},       \
+{ENB_CONFIG_STRING_MEAS_EVENT_A3_OFFSET,               NULL,   0,            u8ptr:&event1_config.a3_Offset,      defintval:0,      TYPE_UINT8,      0},       \
+{ENB_CONFIG_STRING_MEAS_EVENT_HYSTERESIS,              NULL,   0,            u8ptr:&event1_config.hysteresis,     defintval:0,      TYPE_UINT8,      0},       \
+{ENB_CONFIG_STRING_MEAS_EVENT_TIMETOTRIGGER,           NULL,   0,            u8ptr:&event1_config.timeToTrigger,  defintval:1,      TYPE_UINT8,      0}        \
+}
+/*-----------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------------------------------------------------------------------------------------*/
+/*                                            measurement event2 configuration parameters                                                                                  */
+/*   optname                                          helpstr   paramflags    XXXptr                             defXXXval         type           numelt     */
+/*-----------------------------------------------------------------------------------------------------------------------------------------------------------*/
+#define MEAS_EVENT2_PARAMS_DESC {                                                                                                \
+{ENB_CONFIG_STRING_MEAS_EVENT_THRESHOLD_RSRP,          NULL,   0,            u8ptr:&event2_config.threshold_RSRP, defintval:10,     TYPE_UINT8,      0},       \
+{ENB_CONFIG_STRING_MEAS_EVENT_MAXREPORTCELLS,          NULL,   0,            u8ptr:&event2_config.maxReportCells, defintval:2,      TYPE_UINT8,      0},       \
+{ENB_CONFIG_STRING_MEAS_EVENT_REPORTINTERVAL,          NULL,   0,            u8ptr:&event2_config.reportInterval, defintval:0,      TYPE_UINT8,      0},       \
+{ENB_CONFIG_STRING_MEAS_EVENT_A3_OFFSET,               NULL,   0,            u8ptr:&event2_config.a3_Offset,      defintval:0,      TYPE_UINT8,      0},       \
+{ENB_CONFIG_STRING_MEAS_EVENT_HYSTERESIS,              NULL,   0,            u8ptr:&event2_config.hysteresis,     defintval:0,      TYPE_UINT8,      0},       \
+{ENB_CONFIG_STRING_MEAS_EVENT_TIMETOTRIGGER,           NULL,   0,            u8ptr:&event2_config.timeToTrigger,  defintval:1,      TYPE_UINT8,      0}        \
+}
+/*-----------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------------------------------------------------------------------------------------*/
+/*                                            measurement event3 configuration parameters                                                                                  */
+/*   optname                                          helpstr   paramflags    XXXptr                             defXXXval         type           numelt     */
+/*-----------------------------------------------------------------------------------------------------------------------------------------------------------*/
+#define MEAS_EVENT3_PARAMS_DESC {                                                                                                \
+{ENB_CONFIG_STRING_MEAS_EVENT_THRESHOLD_RSRP,          NULL,   0,            u8ptr:&event3_config.threshold_RSRP, defintval:10,     TYPE_UINT8,      0},       \
+{ENB_CONFIG_STRING_MEAS_EVENT_MAXREPORTCELLS,          NULL,   0,            u8ptr:&event3_config.maxReportCells, defintval:2,      TYPE_UINT8,      0},       \
+{ENB_CONFIG_STRING_MEAS_EVENT_REPORTINTERVAL,          NULL,   0,            u8ptr:&event3_config.reportInterval, defintval:0,      TYPE_UINT8,      0},       \
+{ENB_CONFIG_STRING_MEAS_EVENT_A3_OFFSET,               NULL,   0,            u8ptr:&event3_config.a3_Offset,      defintval:0,      TYPE_UINT8,      0},       \
+{ENB_CONFIG_STRING_MEAS_EVENT_HYSTERESIS,              NULL,   0,            u8ptr:&event3_config.hysteresis,     defintval:0,      TYPE_UINT8,      0},       \
+{ENB_CONFIG_STRING_MEAS_EVENT_TIMETOTRIGGER,           NULL,   0,            u8ptr:&event3_config.timeToTrigger,  defintval:1,      TYPE_UINT8,      0}        \
+}
+/*-----------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------------------------------------------------------------------------------------*/
+/*                                            measurement event4 configuration parameters                                                                                  */
+/*   optname                                          helpstr   paramflags    XXXptr                             defXXXval         type           numelt     */
+/*-----------------------------------------------------------------------------------------------------------------------------------------------------------*/
+#define MEAS_EVENT4_PARAMS_DESC {                                                                                                \
+{ENB_CONFIG_STRING_MEAS_EVENT_THRESHOLD_SELECT,        NULL,   0,            strptr:&event4_config.threshold_select, defstrval:"RSRP",  TYPE_STRING,     0},       \
+{ENB_CONFIG_STRING_MEAS_EVENT_THRESHOLD_RSRP,          NULL,   0,            u8ptr:&event4_config.threshold_RSRP, defintval:10,     TYPE_UINT8,      0},       \
+{ENB_CONFIG_STRING_MEAS_EVENT_THRESHOLD_RSRQ,          NULL,   0,            u8ptr:&event4_config.threshold_RSRQ, defintval:10,     TYPE_UINT8,      0},       \
+{ENB_CONFIG_STRING_MEAS_EVENT_MAXREPORTCELLS,          NULL,   0,            u8ptr:&event4_config.maxReportCells, defintval:2,      TYPE_UINT8,      0},       \
+{ENB_CONFIG_STRING_MEAS_EVENT_REPORTINTERVAL,          NULL,   0,            u8ptr:&event4_config.reportInterval, defintval:0,      TYPE_UINT8,      0},       \
+{ENB_CONFIG_STRING_MEAS_EVENT_A3_OFFSET,               NULL,   0,            u8ptr:&event4_config.a3_Offset,      defintval:0,      TYPE_UINT8,      0},       \
+{ENB_CONFIG_STRING_MEAS_EVENT_HYSTERESIS,              NULL,   0,            u8ptr:&event4_config.hysteresis,     defintval:0,      TYPE_UINT8,      0},       \
+{ENB_CONFIG_STRING_MEAS_EVENT_TIMETOTRIGGER,           NULL,   0,            u8ptr:&event4_config.timeToTrigger,  defintval:1,      TYPE_UINT8,      0}        \
+}
+/*-----------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------------------------------------------------------------------------------------*/
+/*                                            measurement event5 configuration parameters                                                                                  */
+/*   optname                                          helpstr   paramflags    XXXptr                             defXXXval         type           numelt     */
+/*-----------------------------------------------------------------------------------------------------------------------------------------------------------*/
+#define MEAS_EVENT5_PARAMS_DESC {                                                                                                \
+{ENB_CONFIG_STRING_MEAS_EVENT_THRESHOLD_RSRP,          NULL,   0,            u8ptr:&event5_config.threshold_RSRP, defintval:10,     TYPE_UINT8,      0},       \
+{ENB_CONFIG_STRING_MEAS_EVENT_MAXREPORTCELLS,          NULL,   0,            u8ptr:&event5_config.maxReportCells, defintval:2,      TYPE_UINT8,      0},       \
+{ENB_CONFIG_STRING_MEAS_EVENT_REPORTINTERVAL,          NULL,   0,            u8ptr:&event5_config.reportInterval, defintval:0,      TYPE_UINT8,      0},       \
+{ENB_CONFIG_STRING_MEAS_EVENT_A3_OFFSET,               NULL,   0,            u8ptr:&event5_config.a3_Offset,      defintval:0,      TYPE_UINT8,      0},       \
+{ENB_CONFIG_STRING_MEAS_EVENT_HYSTERESIS,              NULL,   0,            u8ptr:&event5_config.hysteresis,     defintval:0,      TYPE_UINT8,      0},       \
+{ENB_CONFIG_STRING_MEAS_EVENT_TIMETOTRIGGER,           NULL,   0,            u8ptr:&event5_config.timeToTrigger,  defintval:1,      TYPE_UINT8,      0}        \
+}
+/*-----------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------------------------------------------------------------------------------------*/
+/*                                            measurement event6 configuration parameters                                                                                  */
+/*   optname                                          helpstr   paramflags    XXXptr                             defXXXval         type           numelt     */
+/*-----------------------------------------------------------------------------------------------------------------------------------------------------------*/
+#define MEAS_EVENT6_PARAMS_DESC {                                                                                                \
+{ENB_CONFIG_STRING_MEAS_EVENT_THRESHOLD_RSRP,          NULL,   0,            u8ptr:&event6_config.threshold_RSRP, defintval:10,     TYPE_UINT8,      0},       \
+{ENB_CONFIG_STRING_MEAS_EVENT_MAXREPORTCELLS,          NULL,   0,            u8ptr:&event6_config.maxReportCells, defintval:2,      TYPE_UINT8,      0},       \
+{ENB_CONFIG_STRING_MEAS_EVENT_REPORTINTERVAL,          NULL,   0,            u8ptr:&event6_config.reportInterval, defintval:0,      TYPE_UINT8,      0},       \
+{ENB_CONFIG_STRING_MEAS_EVENT_A3_OFFSET,               NULL,   0,            u8ptr:&event6_config.a3_Offset,      defintval:0,      TYPE_UINT8,      0},       \
+{ENB_CONFIG_STRING_MEAS_EVENT_HYSTERESIS,              NULL,   0,            u8ptr:&event6_config.hysteresis,     defintval:0,      TYPE_UINT8,      0},       \
+{ENB_CONFIG_STRING_MEAS_EVENT_TIMETOTRIGGER,           NULL,   0,            u8ptr:&event6_config.timeToTrigger,  defintval:1,      TYPE_UINT8,      0}        \
+}
+/*-----------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
+
 /* MME configuration parameters section name */
 #define ENB_CONFIG_STRING_MME_IP_ADDRESS                "mme_ip_address"
 

@@ -245,7 +245,10 @@ void *nas_ue_task(void *args_p)
         if (0) {
           /* TODO checks if NAS will free the nas message, better to do it there anyway! */
           result = itti_free (ITTI_MSG_ORIGIN_ID(msg_p), NAS_DOWNLINK_DATA_IND(msg_p).nasMsg.data);
-          AssertFatal (result == EXIT_SUCCESS, "Failed to free memory (%d)!\n", result);
+          if (result != EXIT_SUCCESS) {
+            LOG_E(NAS, "Failed to free memory (%d)!\n", result);
+            return NULL;
+          }
         }
 
         break;
@@ -256,7 +259,10 @@ void *nas_ue_task(void *args_p)
       }
 
       result = itti_free (ITTI_MSG_ORIGIN_ID(msg_p), msg_p);
-      AssertFatal (result == EXIT_SUCCESS, "Failed to free memory (%d)!\n", result);
+      if (result != EXIT_SUCCESS) {
+        LOG_E(NAS, "Failed to free memory (%d)!\n", result);
+        return NULL;
+      }
       msg_p = NULL;
     }
 

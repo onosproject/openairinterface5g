@@ -1034,6 +1034,7 @@ uint32_t pdcchalloc2ulframe(COMMON_channels_t *ccP, uint32_t frame,
 uint8_t pdcchalloc2ulsubframe(COMMON_channels_t *ccP, uint8_t n);
 
 int is_UL_sf(COMMON_channels_t *ccP, sub_frame_t subframeP);
+int is_S_sf(COMMON_channels_t *ccP,sub_frame_t subframeP);
 
 uint8_t getQm(uint8_t mcs);
 
@@ -1140,6 +1141,7 @@ void fill_nfapi_mch_config(nfapi_dl_config_request_body_t *dl_req,
 void fill_nfapi_harq_information(module_id_t module_idP,
                                  int CC_idP,
                                  uint16_t rntiP,
+				 uint16_t absSFP,
                                  nfapi_ul_config_harq_information *
                                  harq_information, uint8_t cce_idxP);
 
@@ -1148,6 +1150,7 @@ void fill_nfapi_ulsch_harq_information(module_id_t module_idP,
                                        uint16_t rntiP,
                                        nfapi_ul_config_ulsch_harq_information
                                        * harq_information,
+				       frame_t frameP,
                                        sub_frame_t subframeP);
 
 uint16_t fill_nfapi_uci_acknak(module_id_t module_idP,
@@ -1162,13 +1165,25 @@ void fill_nfapi_dl_dci_1A(nfapi_dl_config_request_pdu_t *dl_config_pdu,
                           uint8_t rnti_type,
                           uint8_t harq_process,
                           uint8_t tpc,
-                          uint16_t resource_block_coding,
+                          uint32_t resource_block_coding,
                           uint8_t mcs,
                           uint8_t ndi, uint8_t rv, uint8_t vrb_flag);
+
+void fill_nfapi_dl_dci_1(nfapi_dl_config_request_pdu_t * dl_config_pdu,
+			  uint8_t aggregation_level,
+			  uint16_t rnti,
+			  uint8_t rnti_type,
+			  uint8_t harq_process,
+			  uint8_t tpc,
+			  uint32_t resource_block_coding,
+			  uint8_t mcs,
+			  uint8_t ndi, uint8_t rv, uint8_t vrb_flag);
 
 nfapi_ul_config_request_pdu_t *has_ul_grant(module_id_t module_idP,
     int CC_idP, uint16_t subframeP,
     uint16_t rnti);
+
+void set_tmode(module_id_t module_idP, int CC_idP, int rntiP, int tm);
 
 uint8_t get_tmode(module_id_t module_idP, int CC_idP, int UE_idP);
 
@@ -1195,6 +1210,7 @@ uint32_t from_earfcn(int eutra_bandP, uint32_t dl_earfcn);
 int32_t get_uldl_offset(int eutra_bandP);
 int l2_init_ue(int eMBMS_active, char *uecap_xer, uint8_t cba_group_active,
                uint8_t HO_active);
+void sort_lcid_priority(module_id_t module_id, int UE_id, int dl_dtch_num, int *dl_dtch_list);
 #if defined(PRE_SCD_THREAD)
 void pre_scd_nb_rbs_required(    module_id_t     module_idP,
                                  frame_t         frameP,

@@ -120,8 +120,10 @@ void du_task_handle_sctp_data_ind(instance_t instance, sctp_data_ind_t *sctp_dat
 
   DevAssert(sctp_data_ind != NULL);
 
-  f1ap_handle_message(instance, sctp_data_ind->assoc_id, sctp_data_ind->stream,
-                          sctp_data_ind->buffer, sctp_data_ind->buffer_length);
+  if (f1ap_handle_message(instance, sctp_data_ind->assoc_id, sctp_data_ind->stream,
+                          sctp_data_ind->buffer, sctp_data_ind->buffer_length) == -1) {
+    LOG_E(F1AP, "Failed to handle f1ap message\n");
+  }
 
   result = itti_free(TASK_UNKNOWN, sctp_data_ind->buffer);
   AssertFatal (result == EXIT_SUCCESS, "Failed to free memory (%d)!\n", result);

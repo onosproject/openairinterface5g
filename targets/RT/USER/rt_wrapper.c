@@ -285,7 +285,7 @@ void thread_top_init(char *thread_name,
   if (sched_setattr(0, &attr, flags) < 0 ) {
     perror("[SCHED] eNB tx thread: sched_setattr failed\n");
     fprintf(stderr,"sched_setattr Error = %s",strerror(errno));
-    exit(1);
+    exit_fun("eNB tx thread: sched_setattr failed" );
   }
 
 #else //LOW_LATENCY
@@ -341,6 +341,7 @@ void thread_top_init(char *thread_name,
 
   memset(&sparam, 0, sizeof(sparam));
   sparam.sched_priority = sched_get_priority_max(SCHED_FIFO);
+//  sparam.sched_priority = 30;
   policy = SCHED_FIFO ; 
   
   s = pthread_setschedparam(pthread_self(), policy, &sparam);

@@ -786,6 +786,8 @@ add_boolean_option(UE_EXPANSION             False         "enable UE_EXPANSION w
 add_boolean_option(PHY_TX_THREAD            False         "enable UE_EXPANSION with max 256 UE")
 add_boolean_option(PRE_SCD_THREAD           False         "enable UE_EXPANSION with max 256 UE")
 add_boolean_option(UESIM_EXPANSION          False         "enable UESIM_EXPANSION with max 256 UE")
+add_boolean_option(PHY_RM                   False         "enable PHY_RM with phy resource management")
+add_boolean_option(UDP_1MS                  False         "enable using UDP socket for VNF-PNF interface")
 
 ########################
 # Include order

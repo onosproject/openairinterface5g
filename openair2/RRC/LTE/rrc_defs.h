@@ -275,11 +275,13 @@ typedef enum UE_STATE_e {
 
 typedef enum HO_STATE_e {
   HO_IDLE=0,
+  // initiated by the src eNB
   HO_MEASUREMENT,
-  HO_PREPARE,
-  HO_CMD, // initiated by the src eNB
-  HO_COMPLETE, // initiated by the target eNB
   HO_REQUEST,
+  HO_PREPARE,
+  HO_CMD,
+  HO_COMPLETE,
+  // initiated by the target eNB
   HO_ACK,
   HO_FORWARDING,
   HO_CONFIGURED,
@@ -325,7 +327,7 @@ typedef enum SL_TRIGGER_e {
 #define MAX_MEAS_ID 6
 
 #define PAYLOAD_SIZE_MAX 1024
-#define RRC_BUF_SIZE 255
+#define RRC_BUF_SIZE 1024
 #define UNDEF_SECURITY_MODE 0xff
 #define NO_SECURITY_MODE 0x20
 
@@ -552,7 +554,7 @@ typedef struct eNB_RRC_UE_s {
   LTE_DRB_ToAddModList_t            *DRB_configList;
   LTE_DRB_ToAddModList_t            *DRB_configList2[RRC_TRANSACTION_IDENTIFIER_NUMBER];
   LTE_DRB_ToReleaseList_t           *DRB_Release_configList2[RRC_TRANSACTION_IDENTIFIER_NUMBER];
-  uint8_t                            DRB_active[8];
+  uint8_t                            DRB_active[9];
   struct LTE_PhysicalConfigDedicated    *physicalConfigDedicated;
   struct LTE_SPS_Config             *sps_Config;
   LTE_MeasObjectToAddMod_t          *MeasObj[MAX_MEAS_OBJ];
@@ -566,6 +568,7 @@ typedef struct eNB_RRC_UE_s {
   SRB_INFO_TABLE_ENTRY               Srb1;
   SRB_INFO_TABLE_ENTRY               Srb2;
   LTE_MeasConfig_t                  *measConfig;
+  pthread_mutex_t                    handover_cond_lock;
   HANDOVER_INFO                     *handover_info;
   MEASUREMENT_INFO                  *measurement_info;
   LTE_MeasResults_t                 *measResults;
@@ -737,10 +740,31 @@ typedef struct {
   LTE_SystemInformationBlockType21_r14_t *sib21;
   // End - TTN
   SRB_INFO                          SI;
+  SRB_INFO                          Srb0;
   uint8_t                           *paging[MAX_MOBILES_PER_ENB];
   uint32_t                           sizeof_paging[MAX_MOBILES_PER_ENB];
 } rrc_eNB_carrier_data_t;
 
+typedef struct measurement_event_info_s{
+  char                  *threshold_select;
+  uint8_t               threshold_RSRP;
+  uint8_t               threshold_RSRQ;
+  uint8_t               maxReportCells;
+  uint8_t               reportInterval;
+  uint8_t               a3_Offset;
+  uint8_t               hysteresis;
+  uint8_t               timeToTrigger;
+}measurement_event_info_t;
+
+typedef struct rrc_eNB_measurement_data_s{
+  uint8_t 							allowedMeasBandwidth;
+  measurement_event_info_t			event1_config;
+  measurement_event_info_t			event2_config;
+  measurement_event_info_t			event3_config;
+  measurement_event_info_t			event4_config;
+  measurement_event_info_t			event5_config;
+  measurement_event_info_t			event6_config;
+}rrc_eNB_measurement_data_t;
 
 typedef struct eNB_RRC_INST_s {
   /// southbound midhaul configuration
@@ -793,7 +817,7 @@ typedef struct eNB_RRC_INST_s {
   pthread_mutex_t cell_info_mutex;
   uint16_t sctp_in_streams;
   uint16_t sctp_out_streams;
-
+  rrc_eNB_measurement_data_t measurement;
 } eNB_RRC_INST;
 
 #define MAX_UE_CAPABILITY_SIZE 255

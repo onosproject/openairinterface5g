@@ -330,8 +330,14 @@ int main(int argc, char **argv) {
   eNB2->frame_parms.Nid_cell=Nid_cell+2;
   eNB2->frame_parms.nushift=(Nid_cell+2)%6;
   eNB2->Mod_id=2;
-  phy_init_lte_eNB(eNB1,0,0);
-  phy_init_lte_eNB(eNB2,0,0);
+  if (phy_init_lte_eNB(eNB1,0,0) == -1) {
+    LOG_E(PHY, "main:phy_init_lte_eNB failed.\n");
+	return -1;
+  }
+  if (phy_init_lte_eNB(eNB2,0,0) == -1) {
+    LOG_E(PHY, "main:phy_init_lte_eNB failed.\n");
+	return -1;
+  }
 #ifdef XFORMS
   fl_initialize (&argc, argv, NULL, 0, 0);
   form_ue = create_lte_phy_scope_ue();

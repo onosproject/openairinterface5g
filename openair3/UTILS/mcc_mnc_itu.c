@@ -1772,16 +1772,16 @@ int find_mnc_length(const char mcc_digit1P,
   char mnc2[3];
   int  index_l = 0;
 
-  AssertFatal((mcc_digit1P >= '0') && (mcc_digit1P <='9')
-              && (mcc_digit2P >= '0') && (mcc_digit2P <= '9')
-              && (mcc_digit3P >= '0') && (mcc_digit3P <= '9') ,
-              "BAD MCC PARAMETER (%d%d%d)!\n",
-              mcc_digit1P, mcc_digit2P, mcc_digit3P);
-
-  AssertFatal((mnc_digit1P >= '0') && (mnc_digit1P <= '9')
-              && (mnc_digit2P >= '0') && (mnc_digit2P <= '9') ,
-              "BAD MNC PARAMETER ((%d)%d%d)!\n",
-              mnc_digit1P, mnc_digit2P, mnc_digit3P);
+  if((mcc_digit1P < '0') || (mcc_digit1P > '9')
+     || (mcc_digit2P < '0') || (mcc_digit2P > '9')
+     || (mcc_digit3P < '0') || (mcc_digit3P > '9')) {
+    LOG_E(UDP_, "BAD MCC PARAMETER (%d%d%d)!\n",mcc_digit1P, mcc_digit2P, mcc_digit3P);
+    return -1;
+  }
+  if((mnc_digit1P < '0') || (mnc_digit1P > '9') || (mnc_digit2P < '0') || (mnc_digit2P > '9')) {
+    LOG_E(UDP_, "BAD MNC PARAMETER ((%d)%d%d)!\n",mnc_digit1P, mnc_digit2P, mnc_digit3P);
+    return -1;
+  }
 
   mnc2[0] = mnc_digit1P;
   mnc2[1] = mnc_digit2P;

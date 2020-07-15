@@ -151,6 +151,9 @@ typedef enum {
 	NFAPI_NB_HARQ_INDICATION,
 	NFAPI_NRACH_INDICATION,
 	NFAPI_UE_RELEASE_REQUEST,
+#ifdef PHY_RM
+	NFAPI_PHY_RM_START_REQUEST,
+#endif
 	NFAPI_UE_RELEASE_RESPONSE,
 
 	NFAPI_PNF_PARAM_REQUEST = 0x0100,
@@ -3500,7 +3503,13 @@ typedef struct {
 	uint32_t error_code;
 	nfapi_vendor_extension_tlv_t vendor_extension;
 } nfapi_ue_release_response_t;
-
+#ifdef PHY_RM
+typedef struct {
+    nfapi_p7_message_header_t header;
+    uint16_t sfn_sf;
+    nfapi_vendor_extension_tlv_t vendor_extension;
+} nfapi_phy_rm_start_request_t;
+#endif
 // 
 // P4 Messages
 // 

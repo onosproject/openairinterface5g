@@ -252,9 +252,11 @@ void fill_ulsch_cqi_indication_UE_MAC(int Mod_id,
   UL_INFO->cqi_ind.sfn_sf = frame << 4 | subframe;
   // because of nfapi_vnf.c:733, set message id to 0, not
   // NFAPI_RX_CQI_INDICATION;
-  UL_INFO->cqi_ind.header.message_id = 0;
+  UL_INFO->cqi_ind.header.message_id = NFAPI_RX_CQI_INDICATION;
+  UL_INFO->cqi_ind.vendor_extension = ul_config_req->vendor_extension;
   UL_INFO->cqi_ind.cqi_indication_body.tl.tag = NFAPI_CQI_INDICATION_BODY_TAG;
 
+  pdu->instance_length = 0;
   pdu->rx_ue_information.tl.tag = NFAPI_RX_UE_INFORMATION_TAG;
   pdu->rx_ue_information.rnti = rnti;
   // Since we assume that CRC flag is always 0 (ACK) I guess that data_offset
@@ -267,6 +269,13 @@ void fill_ulsch_cqi_indication_UE_MAC(int Mod_id,
 
   pdu->cqi_indication_rel8.timing_advance = 0;
   // pdu->cqi_indication_rel8.number_of_cc_reported = 1;
+
+  pdu->cqi_indication_rel9.tl.tag = NFAPI_CQI_INDICATION_REL9_TAG;
+  pdu->cqi_indication_rel9.length = 0;
+  pdu->cqi_indication_rel9.ri[0]  = 0;
+  pdu->cqi_indication_rel9.timing_advance = 0;
+  pdu->cqi_indication_rel9.number_of_cc_reported = 1;
+
   pdu->ul_cqi_information.tl.tag = NFAPI_UL_CQI_INFORMATION_TAG;
   pdu->ul_cqi_information.channel = 1; // PUSCH
 
@@ -926,13 +935,15 @@ int memcpy_ul_config_req (L1_rxtx_proc_t *proc, nfapi_pnf_p7_config_t* pnf_p7, n
   ul_config_req->ul_config_request_body.tl.tag = req->ul_config_request_body.tl.tag;
   ul_config_req->ul_config_request_body.tl.length = req->ul_config_request_body.tl.length;
 
-  ul_config_req->ul_config_request_body.ul_config_pdu_list =
-      calloc(req->ul_config_request_body.number_of_pdus,
-             sizeof(nfapi_ul_config_request_pdu_t));
-  for (int i = 0; i < ul_config_req->ul_config_request_body.number_of_pdus; i++) {
-    ul_config_req->ul_config_request_body.ul_config_pdu_list[i] =
-        req->ul_config_request_body.ul_config_pdu_list[i];
-  }
+	//LOG_D(MAC, "memcpy_ul_config_req 1 #ofULPDUs: %d \n", UE_mac_inst[Mod_id].ul_config_req->ul_config_request_body.number_of_pdus); //req->ul_config_request_body.number_of_pdus);
+    if(ul_config_req->ul_config_request_body.number_of_pdus > NB_UE_INST){
+      ul_config_req->ul_config_request_body.number_of_pdus = NB_UE_INST;
+    }
+	ul_config_req->ul_config_request_body.ul_config_pdu_list = (nfapi_ul_config_request_pdu_t*) malloc(req->ul_config_request_body.number_of_pdus*sizeof(nfapi_ul_config_request_pdu_t));
+	for(int i=0; i<ul_config_req->ul_config_request_body.number_of_pdus; i++) {
+			ul_config_req->ul_config_request_body.ul_config_pdu_list[i] = req->ul_config_request_body.ul_config_pdu_list[i];
+		}
+	//}
 
   return 0;
 }

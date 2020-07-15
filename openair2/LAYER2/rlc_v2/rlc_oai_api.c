@@ -697,7 +697,8 @@ static void add_drb_am(int rnti, int module_id, struct LTE_DRB_ToAddMod *s)
   logical_channel_group = *l->ul_SpecificParameters->logicalChannelGroup;
 
   /* TODO: accept other values? */
-  if (logical_channel_group != 1) {
+  //if (logical_channel_group != 1) {
+  if ((logical_channel_group != 0) && (logical_channel_group != 1) && (logical_channel_group != 3)) {
     LOG_E(RLC, "%s:%d:%s: fatal error\n", __FILE__, __LINE__, __FUNCTION__);
     exit(1);
   }
@@ -771,7 +772,8 @@ static void add_drb_um(int rnti, int module_id, struct LTE_DRB_ToAddMod *s)
   logical_channel_group = *l->ul_SpecificParameters->logicalChannelGroup;
 
   /* TODO: accept other values? */
-  if (logical_channel_group != 1) {
+  //if (logical_channel_group != 1) {
+  if ((logical_channel_group != 0) && (logical_channel_group != 1) && (logical_channel_group != 3)) {
     LOG_E(RLC, "%s:%d:%s: fatal error\n", __FILE__, __LINE__, __FUNCTION__);
     exit(1);
   }

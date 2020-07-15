@@ -116,7 +116,10 @@ void init_mpdcch5ss1tab_normal_regular_subframe_evenNRBDL(PHY_VARS_eNB *eNB) {
     }
   }
 
-  AssertFatal(re == 864, "RE count not equal to 864 (%d)\n", re);
+  if (re != 864) {
+    LOG_E(PHY, "RE count not equal to 864 (%d)\n", re);
+    return;
+  }
 }
 
 // this table is the allocation of modulated MPDCCH format 5 symbols to REs, antenna ports 107,108
@@ -150,8 +153,10 @@ void init_mpdcch5ss2tab_normal_regular_subframe_evenNRBDL(PHY_VARS_eNB *eNB) {
       }
     }
   }
-
-  AssertFatal(re == 684, "RE count not equal to 684\n");
+  if (re != 684) {
+    LOG_E(PHY, "RE count not equal to 684\n");
+    return;
+  }
 }
 
 // this table is the allocation of modulated MPDCCH format 5 symbols to REs, antenna ports 107,108
@@ -176,8 +181,10 @@ void init_mpdcch5ss3tab_normal_regular_subframe_evenNRBDL(PHY_VARS_eNB *eNB) {
       }
     }
   }
-
-  AssertFatal(re == 720, "RE count not equal to 792\n");
+  if (re != 720) {
+    LOG_E(PHY, "RE count not equal to 792\n");
+    return;
+  }
 }
 
 // this table is the allocation of modulated MPDCCH format 3 symbols to REs, antenna ports 107,108
@@ -202,7 +209,10 @@ void init_mpdcch3ss1tab_normal_regular_subframe_evenNRBDL(PHY_VARS_eNB *eNB) {
     }
   }
 
-  AssertFatal(re == 576, "RE count not equal to 864\n");
+  if (re != 576) {
+    LOG_E(PHY, "RE count not equal to 576\n");
+    return;
+  }
 }
 
 // this table is the allocation of modulated MPDCCH format 2 symbols to REs, antenna ports 107,108
@@ -227,7 +237,10 @@ void init_mpdcch2ss1tab_normal_regular_subframe_evenNRBDL(PHY_VARS_eNB *eNB) {
     }
   }
 
-  AssertFatal(re == 288, "RE count not equal to 288\n");
+  if (re != 288) {
+    LOG_E(PHY, "RE count not equal to 288\n");
+    return;
+  }
 }
 
 
@@ -280,15 +293,38 @@ void generate_mdci_top(PHY_VARS_eNB *eNB, int frame, int subframe, int16_t amp, 
 
   for (i = 0; i < mpdcch->num_dci; i++) {
     mdci = &mpdcch->mdci_alloc[i];
-    AssertFatal(fp->frame_type == FDD, "TDD is not yet supported for MPDCCH\n");
-    AssertFatal(fp->Ncp == NORMAL, "Extended Prefix not yet supported for MPDCCH\n");
-    AssertFatal(mdci->L <= 24, "L is %d\n", mdci->L);
-    AssertFatal(fp->N_RB_DL == 50 || fp->N_RB_DL == 100, "Only N_RB_DL=50,100 for MPDCCH\n");
+
+    if (fp->frame_type != FDD) {
+      LOG_E(PHY, "TDD is not yet supported for MPDCCH\n");
+      return;
+    }
+    if (fp->Ncp != NORMAL) {
+      LOG_E(PHY, "Extended Prefix not yet supported for MPDCCH\n");
+      return;
+    }
+    if (mdci->L > 24) {
+      LOG_E(PHY, "L is %d\n", mdci->L);
+      return;
+    }
+    if (fp->N_RB_DL != 50 && fp->N_RB_DL != 100) {
+      LOG_E(PHY, "Only N_RB_DL=50,100 for MPDCCH\n");
+      return;
+    }
     // Force MPDDCH format 5
-    AssertFatal(mdci->number_of_prb_pairs == 6, "2 or 4 PRB pairs not support yet for MPDCCH\n");
+    if (mdci->number_of_prb_pairs != 6) {
+      LOG_E(PHY, "2 or 4 PRB pairs not support yet for MPDCCH\n");
+      return;
+    }
+
     // These are to avoid unimplemented things
-    AssertFatal(mdci->ce_mode == 1, "CE mode (%d) B not activated yet\n", mdci->ce_mode);
-    AssertFatal(mdci->L == 24, "Only 2+4 and aggregation 24 for now\n");
+    if (mdci->ce_mode != 1) {
+      LOG_E(PHY, "CE mode (%d) B not activated yet\n", mdci->ce_mode);
+      return;
+    }
+    if (mdci->L != 24) {
+      LOG_E(PHY, "Only 2+4 and aggregation 24 for now\n");
+      return;
+    }
     int     a_index=mdci->rnti & 3;
     i0 = mdci->i0;
     // antenna index
@@ -302,8 +338,10 @@ void generate_mdci_top(PHY_VARS_eNB *eNB, int frame, int subframe, int16_t amp, 
     } else if (mdci->start_symbol == 3) {
       mpdcchtab = mpdcch5ss3tab;
       coded_bits = 612*2;
-    } else
-      AssertFatal(1 == 0, "Illegal combination start_symbol %d, a_index %d\n", mdci->start_symbol, a_index);
+    } else {
+      LOG_E(PHY, "Illegal combination start_symbol %d, a_index %d\n", mdci->start_symbol, a_index);
+      return;
+	}
 
     LOG_D(PHY, "mdci %d, length %d: rnti %x, L %d, prb_pairs %d, ce_mode %d, transmission type %s, i0 %d, ss %d ,coded_bits %d\n",
           i, mdci->dci_length,mdci->rnti,
@@ -316,7 +354,12 @@ void generate_mdci_top(PHY_VARS_eNB *eNB, int frame, int subframe, int16_t amp, 
     generate_dci0(mdci->dci_pdu, mpdcch->e, mdci->dci_length, coded_bits, mdci->rnti);
     // scrambling
     uint16_t        absSF = (frame * 10) + subframe;
-    AssertFatal(absSF < 10240, "Absolute subframe %d = %d*10 + %d > 10239\n", absSF, frame, subframe);
+
+    if (absSF >= 10240) {
+      LOG_E(PHY, "Absolute subframe %d = %d*10 + %d > 10239\n", absSF, frame, subframe);
+      return;
+    }
+
     mpdcch_scrambling(fp, mdci, absSF, mpdcch->e, coded_bits);
 
     // Modulation for PDCCH
@@ -350,8 +393,8 @@ void generate_mdci_top(PHY_VARS_eNB *eNB, int frame, int subframe, int16_t amp, 
         break;
 
       default:
-        AssertFatal(1 == 0, "Illegal N_RB_DL %d\n", fp->N_RB_DL);
-        break;
+	LOG_E(PHY, "Illegal N_RB_DL %d\n", fp->N_RB_DL);
+        return;
     }
 
     int             re_offset = fp->first_carrier_offset + (12 * nb_i0) + (mdci->narrowband * 12 * 6);
@@ -429,7 +472,10 @@ void generate_mdci_top(PHY_VARS_eNB *eNB, int frame, int subframe, int16_t amp, 
               (nprb<= last_prb)) {
             ((int16_t *) & yIQ)[0] = (((s >> (i & 0x1f)) & 1) == 1) ? -gain_lin_QPSK : gain_lin_QPSK;
             ((int16_t *) & yIQ)[1] = (((s >> ((i + 1) & 0x1f)) & 1) == 1) ? -gain_lin_QPSK : gain_lin_QPSK;
-            AssertFatal(mdci->transmission_type==1,"transmission_type %d!=1, handle this ...\n",mdci->transmission_type);
+            if (mdci->transmission_type != 1) {
+               LOG_E(PHY, "transmission_type %d!=1, handle this ...\n",mdci->transmission_type);
+               return;
+            }
 
             if (mdci->transmission_type==1) { // same thing on both 107 and 109
               txF[(5*mprime)] = yIQ;

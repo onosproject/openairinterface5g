@@ -291,7 +291,11 @@ int initial_sync(PHY_VARS_UE *ue, runmode_t mode) {
   frame_parms->Ncp=NORMAL;
   frame_parms->frame_type=FDD;
   frame_parms->nb_antenna_ports_eNB = 2;
-  init_frame_parms(frame_parms,1);
+  if (init_frame_parms(frame_parms,1) == -1) {
+    LOG_E(PHY, "initial_sync: init_frame_parms failed.\n");
+    return(-1);
+  }
+
   /*
   LOG_M("rxdata0.m","rxd0",ue->common_vars.rxdata[0],10*frame_parms->samples_per_tti,1,1);
 
@@ -300,6 +304,10 @@ int initial_sync(PHY_VARS_UE *ue, runmode_t mode) {
   sync_pos = lte_sync_time(ue->common_vars.rxdata,
                            frame_parms,
                            (int *)&ue->common_vars.eNb_id);
+  if (sync_pos == -1) {
+    LOG_E(PHY, "initial_sync: lte_sync_time failed.\n");
+    return(-1);
+  }
 
   //  LOG_M("rxdata1.m","rxd1",ue->common_vars.rxdata[0],10*frame_parms->samples_per_tti,1,1);
   if (sync_pos >= frame_parms->nb_prefix_samples)
@@ -326,7 +334,10 @@ int initial_sync(PHY_VARS_UE *ue, runmode_t mode) {
     if (flip_fdd_ncp==1)
       ue->rx_offset += (FRAME_LENGTH_COMPLEX_SAMPLES>>1);
 
-    init_frame_parms(&ue->frame_parms,1);
+    if (init_frame_parms(&ue->frame_parms,1) == -1) {
+      LOG_E(PHY, "initial_sync: init_frame_parms failed.\n");
+      return(-1);
+	}
     lte_gold(frame_parms,ue->lte_gold_table[0],frame_parms->Nid_cell);
     ret = pbch_detection(ue,mode);
     //   LOG_M("rxdata2.m","rxd2",ue->common_vars.rxdata[0],10*frame_parms->samples_per_tti,1,1);
@@ -353,7 +364,10 @@ int initial_sync(PHY_VARS_UE *ue, runmode_t mode) {
     // Now FDD extended prefix
     frame_parms->Ncp=EXTENDED;
     frame_parms->frame_type=FDD;
-    init_frame_parms(frame_parms,1);
+    if (init_frame_parms(frame_parms,1) == -1) {
+      LOG_E(PHY, "initial_sync: init_frame_parms failed.\n");
+      return(-1);
+	}
 
     if (sync_pos < frame_parms->nb_prefix_samples)
       sync_pos2 = sync_pos + FRAME_LENGTH_COMPLEX_SAMPLES - frame_parms->nb_prefix_samples;
@@ -378,7 +392,10 @@ int initial_sync(PHY_VARS_UE *ue, runmode_t mode) {
       if (flip_fdd_ecp==1)
         ue->rx_offset += (FRAME_LENGTH_COMPLEX_SAMPLES>>1);
 
-      init_frame_parms(&ue->frame_parms,1);
+      if (init_frame_parms(&ue->frame_parms,1) == -1) {
+        LOG_E(PHY, "initial_sync: init_frame_parms failed.\n");
+        return(-1);
+	  }
       lte_gold(frame_parms,ue->lte_gold_table[0],frame_parms->Nid_cell);
       ret = pbch_detection(ue,mode);
       //     LOG_M("rxdata3.m","rxd3",ue->common_vars.rxdata[0],10*frame_parms->samples_per_tti,1,1);
@@ -406,7 +423,10 @@ int initial_sync(PHY_VARS_UE *ue, runmode_t mode) {
       frame_parms->Ncp=NORMAL;
       frame_parms->frame_type=TDD;
       frame_parms->tdd_config=1;
-      init_frame_parms(frame_parms,1);
+      if (init_frame_parms(frame_parms,1) ==-1) {
+        LOG_E(PHY, "initial_sync: init_frame_parms failed.\n");
+        return(-1);
+	  }
 
       if (sync_pos >= frame_parms->nb_prefix_samples)
         sync_pos2 = sync_pos - frame_parms->nb_prefix_samples;
@@ -430,7 +450,10 @@ int initial_sync(PHY_VARS_UE *ue, runmode_t mode) {
         ue->rx_offset += (FRAME_LENGTH_COMPLEX_SAMPLES>>1);
 
       frame_parms->nushift  = frame_parms->Nid_cell%6;
-      init_frame_parms(&ue->frame_parms,1);
+      if (init_frame_parms(&ue->frame_parms,1) == -1) {
+        LOG_E(PHY, "initial_sync: init_frame_parms failed.\n");
+        return(-1);
+	  }
       lte_gold(frame_parms,ue->lte_gold_table[0],frame_parms->Nid_cell);
       ret = pbch_detection(ue,mode);
       //      LOG_M("rxdata4.m","rxd4",ue->common_vars.rxdata[0],10*frame_parms->samples_per_tti,1,1);
@@ -442,7 +465,10 @@ int initial_sync(PHY_VARS_UE *ue, runmode_t mode) {
         frame_parms->Ncp=EXTENDED;
         frame_parms->frame_type=TDD;
         frame_parms->tdd_config=1;
-        init_frame_parms(frame_parms,1);
+        if (init_frame_parms(frame_parms,1) == -1) {
+          LOG_E(PHY, "initial_sync: init_frame_parms failed.\n");
+          return(-1);
+		}
         sync_pos2 = sync_pos - frame_parms->nb_prefix_samples;
 
         if (sync_pos >= frame_parms->nb_prefix_samples)
@@ -464,7 +490,10 @@ int initial_sync(PHY_VARS_UE *ue, runmode_t mode) {
         if (flip_tdd_ecp==1)
           ue->rx_offset += (FRAME_LENGTH_COMPLEX_SAMPLES>>1);
 
-        init_frame_parms(&ue->frame_parms,1);
+        if (init_frame_parms(&ue->frame_parms,1) == -1) {
+          LOG_E(PHY, "initial_sync: init_frame_parms failed.\n");
+          return(-1);
+		}
         lte_gold(frame_parms,ue->lte_gold_table[0],frame_parms->Nid_cell);
         ret = pbch_detection(ue,mode);
         //  LOG_M("rxdata5.m","rxd5",ue->common_vars.rxdata[0],10*frame_parms->samples_per_tti,1,1);

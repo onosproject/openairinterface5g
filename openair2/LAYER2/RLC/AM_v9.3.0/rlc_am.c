@@ -510,7 +510,7 @@ rlc_am_mac_status_indication (
 
     status_resp.buffer_occupancy_in_bytes += (header_overhead + max_li_overhead);
   }
-
+  RLC_AM_MUTEX_LOCK(&rlc->lock_input_sdus, ctxt_pP, rlc);
   if ((rlc->input_sdus[rlc->current_sdu_index].mem_block != NULL) && (status_resp.buffer_occupancy_in_bytes)) {
     //status_resp.buffer_occupancy_in_bytes += ((rlc_am_entity_t *) rlc)->tx_header_min_length_in_bytes;
     status_resp.buffer_occupancy_in_pdus = rlc->nb_sdu;
@@ -536,7 +536,7 @@ rlc_am_mac_status_indication (
       status_resp.head_sdu_is_segmented = 1;
     }
   }
-
+  RLC_AM_MUTEX_UNLOCK(&rlc->lock_input_sdus);
   if (MESSAGE_CHART_GENERATOR) {
     MSC_LOG_RX_MESSAGE(
       (ctxt_pP->enb_flag == ENB_FLAG_YES) ? MSC_RLC_ENB:MSC_RLC_UE,

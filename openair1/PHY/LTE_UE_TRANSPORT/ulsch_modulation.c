@@ -391,6 +391,10 @@ void ulsch_modulation(int32_t **txdataF,
   int re_offset,re_offset0,i,ulsch_Msymb,j,k,nsymb,Msc_PUSCH,l;
   //  uint8_t harq_pid = (rag_flag == 1) ? 0 : subframe2harq_pid_tdd(frame_parms->tdd_config,subframe);
   uint8_t harq_pid = subframe2harq_pid(frame_parms,frame,subframe);
+  if (harq_pid == 255) {
+    LOG_E(PHY,"FATAL ERROR: illegal harq_pid, returning\n");
+    return;
+  }
   uint8_t Q_m;
   int32_t *txptr;
   uint32_t symbol_offset;

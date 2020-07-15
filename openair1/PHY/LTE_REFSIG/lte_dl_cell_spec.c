@@ -156,9 +156,20 @@ int lte_dl_cell_spec(PHY_VARS_eNB *eNB,
 
   k+=eNB->frame_parms.first_carrier_offset;
 
-  DevAssert( Ns < 20 );
-  DevAssert( l < 2 );
-  DevAssert( mprime>>4 < 14 );
+  if (Ns >= 20) {
+    LOG_E(PHY, "Ns %hhu >= 20\n",Ns);
+    return(-1);
+  }
+
+  if (l >= 2) {
+    LOG_E(PHY, "l %hhu >= 2\n",l);
+    return(-1);
+  }
+
+  if (mprime>>4 >= 14) {
+    LOG_E(PHY, "mprime>>4 %hhu >= 14\n",mprime>>4);
+    return(-1);
+  }
 
   for (m=0; m<eNB->frame_parms.N_RB_DL<<1; m++) {
 

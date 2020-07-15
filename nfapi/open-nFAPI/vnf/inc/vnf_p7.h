@@ -111,9 +111,19 @@ typedef struct {
 	nfapi_vnf_p7_connection_info_t* p7_connections;
 	int socket;
 	uint32_t sf_start_time_hr;
+#ifdef PHY_RM
+	uint32_t sf_start_time_hr_old;
+#endif
 	uint8_t* rx_message_buffer; // would this be better put in the p7 conenction info?
 	uint16_t rx_message_buffer_size;
-	
+#ifdef PHY_RM
+	struct timespec sf_corr_tim;
+	uint8_t  vnf_extend_flg;
+	uint8_t  sf_duration_correct_flg;
+	uint32_t fapi_1ms_fd_list[6];
+	fd_set watchset;
+	uint32_t maxfd;
+#endif
 } vnf_p7_t;
 
 uint32_t vnf_get_current_time_hr(void);

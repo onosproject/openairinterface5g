@@ -49,9 +49,18 @@ static inline int s1ap_eNB_encode_unsuccessfull_outcome(S1AP_S1AP_PDU_t *pdu,
 
 int s1ap_eNB_encode_pdu(S1AP_S1AP_PDU_t *pdu, uint8_t **buffer, uint32_t *len) {
   int ret = -1;
-  DevAssert(pdu != NULL);
-  DevAssert(buffer != NULL);
-  DevAssert(len != NULL);
+  if (pdu == NULL) {
+    S1AP_ERROR("pdu == NULL\n");
+    return -1;
+  }
+  if (buffer == NULL) {
+    S1AP_ERROR("buffer == NULL\n");
+    return -1;
+  }
+  if (len == NULL) {
+    S1AP_ERROR("len == NULL\n");
+    return -1;
+  }
 
   switch(pdu->present) {
     case S1AP_S1AP_PDU_PR_initiatingMessage:
@@ -80,7 +89,10 @@ static inline
 int s1ap_eNB_encode_initiating(S1AP_S1AP_PDU_t *pdu,
                                uint8_t **buffer, uint32_t *len) {
   asn_encode_to_new_buffer_result_t res = { NULL, {0, NULL, NULL} };
-  DevAssert(pdu != NULL);
+  if (pdu == NULL) {
+    S1AP_ERROR("pdu == NULL\n");
+    return -1;
+  }
 
   switch(pdu->choice.initiatingMessage.procedureCode) {
     case S1AP_ProcedureCode_id_S1Setup:
@@ -144,7 +156,10 @@ static inline
 int s1ap_eNB_encode_successfull_outcome(S1AP_S1AP_PDU_t *pdu,
                                         uint8_t **buffer, uint32_t *len) {
   asn_encode_to_new_buffer_result_t res = { NULL, {0, NULL, NULL} };
-  DevAssert(pdu != NULL);
+  if (pdu == NULL) {
+    S1AP_ERROR("pdu == NULL\n");
+    return -1;
+  }
 
   switch(pdu->choice.successfulOutcome.procedureCode) {
     case S1AP_ProcedureCode_id_InitialContextSetup:
@@ -196,7 +211,10 @@ static inline
 int s1ap_eNB_encode_unsuccessfull_outcome(S1AP_S1AP_PDU_t *pdu,
     uint8_t **buffer, uint32_t *len) {
   asn_encode_to_new_buffer_result_t res = { NULL, {0, NULL, NULL} };
-  DevAssert(pdu != NULL);
+  if (pdu == NULL) {
+    S1AP_ERROR("pdu == NULL\n");
+    return -1;
+  }
 
   switch(pdu->choice.unsuccessfulOutcome.procedureCode) {
     case S1AP_ProcedureCode_id_InitialContextSetup:

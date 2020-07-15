@@ -40,9 +40,20 @@ int x2ap_eNB_encode_pdu(X2AP_X2AP_PDU_t *pdu, uint8_t **buffer, uint32_t *len)
 {
   ssize_t    encoded;
 
-  DevAssert(pdu != NULL);
-  DevAssert(buffer != NULL);
-  DevAssert(len != NULL);
+  if(pdu == NULL) {
+    X2AP_ERROR("%s %d: pdu is a NULL pointer \n",__FILE__,__LINE__);
+    return -1;
+  }
+
+  if(buffer == NULL) {
+    X2AP_ERROR("%s %d: buffer is a NULL pointer \n",__FILE__,__LINE__);
+    return -1;
+  }
+
+  if(len == NULL) {
+    X2AP_ERROR("%s %d: len is a NULL pointer \n",__FILE__,__LINE__);
+    return -1;
+  }
 
   //if (asn1_xer_print) {
     xer_fprint(stdout, &asn_DEF_X2AP_X2AP_PDU, (void *)pdu);

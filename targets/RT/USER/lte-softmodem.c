@@ -249,7 +249,11 @@ void exit_function(const char *file, const char *function, const int line, const
   if (s != NULL) {
     printf("%s:%d %s() Exiting OAI softmodem: %s\n",file,line, function, s);
   }
-  close_log_mem();
+  
+  if(log_mem_initflag) {
+    close_log_mem();
+  }
+  
   oai_exit = 1;
 
   if (RC.ru == NULL)
@@ -531,7 +535,7 @@ int main ( int argc, char **argv )
 
   if (CONFIG_ISFLAGSET(CONFIG_ABORT) ) {
     fprintf(stderr,"Getting configuration failed\n");
-    exit(-1);
+    exit_fun("Getting configuration failed" );
   }
 
 #if T_TRACER
@@ -593,7 +597,7 @@ int main ( int argc, char **argv )
     
     if (create_tasks(1) < 0) {
       printf("cannot create ITTI tasks\n");
-      exit(-1);
+      exit_fun("cannot create ITTI tasks" );
     }
 
     for (int enb_id = 0; enb_id < RC.nb_inst; enb_id++) {

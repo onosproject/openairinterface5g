@@ -209,7 +209,10 @@ int slot_fep_mbsfn_khz_1dot25(PHY_VARS_UE *ue,
   unsigned int subframe_offset;
   unsigned int frame_length_samples = frame_parms->samples_per_tti * 10;
   dft_size_idx_t dftsizeidx;
-  AssertFatal(frame_parms->frame_type == FDD, "Frame is TDD!\n");
+  if (frame_parms->frame_type != FDD) {
+    LOG_E(PHY, "Frame is TDD!\n");
+    return (-1);
+  }
 
   switch (frame_parms->ofdm_symbol_size) {
     case 128:
@@ -250,8 +253,8 @@ int slot_fep_mbsfn_khz_1dot25(PHY_VARS_UE *ue,
       break;
 
     default:
-      AssertFatal(1==0,"Illegal ofdm symbol size %d\n",frame_parms->ofdm_symbol_size);
-      break;
+      LOG_E(PHY, "Illegal ofdm symbol size %d\n",frame_parms->ofdm_symbol_size);
+      return (-1);
   }
 
   subframe_offset = frame_parms->samples_per_tti * subframe;
@@ -280,10 +283,13 @@ int slot_fep_mbsfn_khz_1dot25(PHY_VARS_UE *ue,
 #ifdef DEBUG_FEP
       LOG_D(PHY,"Channel estimation eNB %d, aatx %d, subframe %d\n",eNB_id,aa,subframe);
 #endif
-      lte_dl_mbsfn_khz_1dot25_channel_estimation(ue,
-          eNB_id,
-          0,
-          subframe);
+      if (lte_dl_mbsfn_khz_1dot25_channel_estimation(ue,
+      eNB_id,
+      0,
+      subframe) < 0) {
+		LOG_E(PHY, "lte_dl_mbsfn_khz_1dot25_channel_estimation failed.\n");
+        return (-1);
+      }
     }
   }
 

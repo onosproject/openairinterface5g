@@ -3644,7 +3644,10 @@ int main(int argc, char **argv)
         }
 
         //    lte_sync_time_init(eNB->frame_parms,common_vars);
-        //    lte_sync_time(common_vars->rxdata, eNB->frame_parms);
+        //    if (lte_sync_time(common_vars->rxdata, eNB->frame_parms) == -1) {
+        //      LOG_E(PHY, "main: lte_sync_time failed.\n");
+        //      return(-1);
+		//    }
         //    lte_sync_time_free();
 
         /*

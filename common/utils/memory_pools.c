@@ -21,6 +21,7 @@
 
 #include "assertions.h"
 #include "memory_pools.h"
+#include <common/utils/LOG/log.h>
 
 #if T_TRACER
   #include <string.h>
@@ -197,8 +198,11 @@ static inline int items_group_put_free_item (items_group_t *items_group, items_g
     __sync_fetch_and_sub (&items_group->positions.ind.put, items_group->number_plus_one);
   }
 
-  AssertError (items_group->indexes[put] <= ITEMS_GROUP_INDEX_INVALID, return (EXIT_FAILURE),
-               "Index at current put position (%d) is not marked as free (%d)!\n", put, items_group->number_plus_one);
+  if (items_group->indexes[put] > ITEMS_GROUP_INDEX_INVALID) {
+    LOG_E(HW, "Index at current put position (%d) is not marked as free (%d)!\n", put, items_group->number_plus_one);
+    return EXIT_FAILURE;
+  }
+
   /* Save freed item index at current put position */
   items_group->indexes[put] = index;
   return (EXIT_SUCCESS);
@@ -210,8 +214,11 @@ static inline memory_pools_t *memory_pools_from_handler (memory_pools_handle_t m
   /* Recover memory_pools */
   memory_pools = (memory_pools_t *) memory_pools_handle;
   /* Sanity check on passed handle */
-  AssertError (memory_pools->start_mark == POOLS_START_MARK, memory_pools = NULL,
-               "Handle %p is not a valid memory pools handle, start mark is missing!\n", memory_pools_handle);
+  if (memory_pools->start_mark != POOLS_START_MARK) {
+    LOG_E(HW, "Handle %p is not a valid memory pools handle, start mark is missing!\n", memory_pools_handle);
+    memory_pools = NULL;
+  }
+
   return (memory_pools);
 }
 
@@ -222,8 +229,11 @@ static inline memory_pool_item_t *memory_pool_item_from_handler (memory_pool_ite
   address = memory_pool_item_handle - sizeof(memory_pool_item_start_t);
   memory_pool_item = (memory_pool_item_t *) address;
   /* Sanity check on passed handle */
-  AssertError (memory_pool_item->start.start_mark == POOL_ITEM_START_MARK, memory_pool_item = NULL,
-               "Handle %p is not a valid memory pool item handle, start mark is missing!\n", memory_pool_item);
+  if (memory_pool_item->start.start_mark != POOL_ITEM_START_MARK) {
+    LOG_E(HW, "Handle %p is not a valid memory pool item handle, start mark is missing!\n", memory_pool_item);
+    memory_pool_item = NULL;
+  }
+
   return (memory_pool_item);
 }
 
@@ -238,10 +248,18 @@ static inline memory_pool_item_t *memory_pool_item_from_index (memory_pool_t *me
 memory_pools_handle_t memory_pools_create (uint32_t pools_number) {
   memory_pools_t *memory_pools;
   pool_id_t       pool;
-  AssertFatal (pools_number <= MAX_POOLS_NUMBER, "Too many memory pools requested (%d/%d)!\n", pools_number, MAX_POOLS_NUMBER); /* Limit to a reasonable number of pools */
+  if (pools_number > MAX_POOLS_NUMBER) {
+    LOG_E(HW, "Too many memory pools requested (%d/%d)!\n", pools_number, MAX_POOLS_NUMBER);
+    return NULL;
+  }/* Limit to a reasonable number of pools */
+
   /* Allocate memory_pools */
   memory_pools = malloc (sizeof(memory_pools_t));
-  AssertFatal (memory_pools != NULL, "Memory pools structure allocation failed!\n");
+  if (memory_pools == NULL) {
+    LOG_E(HW, "Memory pools structure allocation failed!\n");
+    return NULL;
+  }
+
   /* Initialize memory_pools */
   {
     memory_pools->start_mark    = POOLS_START_MARK;
@@ -249,7 +267,12 @@ memory_pools_handle_t memory_pools_create (uint32_t pools_number) {
     memory_pools->pools_defined = 0;
     /* Allocate pools */
     memory_pools->pools         = calloc (pools_number, sizeof(memory_pool_t));
-    AssertFatal (memory_pools->pools != NULL, "Memory pools allocation failed!\n");
+    if (memory_pools->pools == NULL) {
+      LOG_E(HW, "Memory pools allocation failed!\n");
+	  free(memory_pools);
+	  memory_pools = NULL;
+      return NULL;
+    }
 
     /* Initialize pools */
     for (pool = 0; pool < pools_number; pool++) {
@@ -270,7 +293,11 @@ char *memory_pools_statistics(memory_pools_handle_t memory_pools_handle) {
   uint32_t            pool_items_size;
   /* Recover memory_pools */
   memory_pools = memory_pools_from_handler (memory_pools_handle);
-  AssertFatal (memory_pools != NULL, "Failed to retrieve memory pool for handle %p!\n", memory_pools_handle);
+  if (memory_pools == NULL) {
+    LOG_E(HW, "Failed to retrieve memory pool for handle %p!\n", memory_pools_handle);
+    return NULL;
+  }
+
   statistics = malloc(memory_pools->pools_defined * 200);
   printed_chars = sprintf (&statistics[0], "Pool:   size, number, minimum,   free, address space and memory used in Kbytes\n");
 
@@ -299,13 +326,28 @@ int memory_pools_add_pool (memory_pools_handle_t memory_pools_handle, uint32_t p
   pool_id_t           pool;
   items_group_index_t item_index;
   memory_pool_item_t *memory_pool_item;
-  AssertFatal (pool_items_number <= MAX_POOL_ITEMS_NUMBER, "Too many items for a memory pool (%u/%d)!\n", pool_items_number, MAX_POOL_ITEMS_NUMBER); /* Limit to a reasonable number of items */
-  AssertFatal (pool_item_size <= MAX_POOL_ITEM_SIZE, "Item size is too big for memory pool items (%u/%d)!\n", pool_item_size, MAX_POOL_ITEM_SIZE);   /* Limit to a reasonable item size */
+  if (pool_items_number > MAX_POOL_ITEMS_NUMBER) {
+    LOG_E(HW, "Too many items for a memory pool (%u/%d)!\n", pool_items_number, MAX_POOL_ITEMS_NUMBER);
+    return (EXIT_FAILURE);
+  }/* Limit to a reasonable number of items */
+  if (pool_item_size > MAX_POOL_ITEM_SIZE) {
+    LOG_E(HW, "Item size is too big for memory pool items (%u/%d)!\n", pool_item_size, MAX_POOL_ITEM_SIZE);
+    return (EXIT_FAILURE);
+  }/* Limit to a reasonable item size */
+
   /* Recover memory_pools */
   memory_pools    = memory_pools_from_handler (memory_pools_handle);
-  AssertFatal (memory_pools != NULL, "Failed to retrieve memory pool for handle %p!\n", memory_pools_handle);
+  if (memory_pools == NULL) {
+    LOG_E(HW, "Failed to retrieve memory pool for handle %p!\n", memory_pools_handle);
+    return (EXIT_FAILURE);
+  }
+
   /* Check number of already created pools */
-  AssertFatal (memory_pools->pools_defined < memory_pools->pools_number, "Can not allocate more memory pool (%d)!\n", memory_pools->pools_number);
+  if (memory_pools->pools_defined >= memory_pools->pools_number) {
+    LOG_E(HW, "Can not allocate more memory pool (%d)!\n", memory_pools->pools_number);
+    return (EXIT_FAILURE);
+  }
+
   /* Select pool */
   pool            = memory_pools->pools_defined;
   memory_pool     = &memory_pools->pools[pool];
@@ -321,7 +363,10 @@ int memory_pools_add_pool (memory_pools_handle_t memory_pools_handle, uint32_t p
     memory_pool->items_group_free.positions.ind.get = 0;
     /* Allocate free indexes */
     memory_pool->items_group_free.indexes = malloc(memory_pool->items_group_free.number_plus_one * sizeof(items_group_index_t));
-    AssertFatal (memory_pool->items_group_free.indexes != NULL, "Memory pool indexes allocation failed!\n");
+    if (memory_pool->items_group_free.indexes == NULL) {
+      LOG_E(HW, "Memory pool indexes allocation failed!\n");
+      return (EXIT_FAILURE);
+    }
 
     /* Initialize free indexes */
     for (item_index = 0; item_index < pool_items_number; item_index++) {
@@ -332,7 +377,10 @@ int memory_pools_add_pool (memory_pools_handle_t memory_pools_handle, uint32_t p
     memory_pool->items_group_free.indexes[item_index] = ITEMS_GROUP_INDEX_INVALID;
     /* Allocate items */
     memory_pool->items = calloc (pool_items_number, memory_pool->pool_item_size);
-    AssertFatal (memory_pool->items != NULL, "Memory pool items allocation failed!\n");
+    if (memory_pool->items == NULL) {
+      LOG_E(HW, "Memory pool items allocation failed!\n");
+      return (EXIT_FAILURE);
+    }
 
     /* Initialize items */
     for (item_index = 0; item_index < pool_items_number; item_index++) {
@@ -355,7 +403,10 @@ memory_pool_item_handle_t memory_pools_allocate (memory_pools_handle_t memory_po
   items_group_index_t         item_index = ITEMS_GROUP_INDEX_INVALID;
   /* Recover memory_pools */
   memory_pools = memory_pools_from_handler (memory_pools_handle);
-  AssertError (memory_pools != NULL, {}, "Failed to retrieve memory pool for handle %p!\n", memory_pools_handle);
+  if (memory_pools == NULL) {
+    LOG_E(HW, "Failed to retrieve memory pool for handle %p!\n", memory_pools_handle);
+    return memory_pools;
+  }
 
   for (pool = 0; pool < memory_pools->pools_defined; pool++) {
     if ((memory_pools->pools[pool].item_data_number * sizeof(memory_pool_data_t)) < item_size) {
@@ -378,8 +429,11 @@ memory_pool_item_handle_t memory_pools_allocate (memory_pools_handle_t memory_po
     /* Convert item index into memory_pool_item address */
     memory_pool_item                    = memory_pool_item_from_index (&memory_pools->pools[pool], item_index);
     /* Sanity check on item status, must be free */
-    AssertFatal (memory_pool_item->start.item_status == ITEM_STATUS_FREE, "Item status is not set to free (%d) in pool %u, item %d!\n",
-                 memory_pool_item->start.item_status, pool, item_index);
+    if (memory_pool_item->start.item_status != ITEM_STATUS_FREE) {
+      LOG_E(HW, "Item status is not set to free (%d) in pool %u, item %d!\n", memory_pool_item->start.item_status, pool, item_index);
+      return NULL;
+    }
+
     memory_pool_item->start.item_status = ITEM_STATUS_ALLOCATED;
     memory_pool_item->start.info[0]     = info_0;
     memory_pool_item->start.info[1]     = info_1;
@@ -410,14 +464,26 @@ int memory_pools_free (memory_pools_handle_t memory_pools_handle, memory_pool_it
   int                 result;
   /* Recover memory_pools */
   memory_pools = memory_pools_from_handler (memory_pools_handle);
-  AssertError (memory_pools != NULL, return (EXIT_FAILURE), "Failed to retrieve memory pools for handle %p!\n", memory_pools_handle);
+  if (memory_pools == NULL) {
+    LOG_E(HW, "Failed to retrieve memory pools for handle %p!\n", memory_pools_handle);
+    return (EXIT_FAILURE);
+  }
+
   /* Recover memory pool item */
   memory_pool_item = memory_pool_item_from_handler (memory_pool_item_handle);
-  AssertError (memory_pool_item != NULL, return (EXIT_FAILURE), "Failed to retrieve memory pool item for handle %p!\n", memory_pool_item_handle);
+  if (memory_pool_item == NULL) {
+    LOG_E(HW, "Failed to retrieve memory pool item for handle %p!\n", memory_pool_item_handle);
+    return (EXIT_FAILURE);
+  }
+
   info_1 = memory_pool_item->start.info[1];
   /* Recover pool index */
   pool = memory_pool_item->start.pool_id;
-  AssertFatal (pool < memory_pools->pools_defined, "Pool index is invalid (%u/%u)!\n", pool, memory_pools->pools_defined);
+  if (pool >= memory_pools->pools_defined) {
+    LOG_E(HW, "Pool index is invalid (%u/%u)!\n", pool, memory_pools->pools_defined);
+    return (EXIT_FAILURE);
+  }
+
   item_size = memory_pools->pools[pool].item_data_number;
   pool_item_size = memory_pools->pools[pool].pool_item_size;
   item_index = (((void *) memory_pool_item) - ((void *) memory_pools->pools[pool].items)) / pool_item_size;
@@ -428,19 +494,30 @@ int memory_pools_free (memory_pools_handle_t memory_pools_handle, memory_pool_it
            memory_pool_item_handle, memory_pool_item,
            memory_pools->pools[pool].items, ((uint32_t) (item_size * sizeof(memory_pool_data_t))));
   /* Sanity check on calculated item index */
-  AssertFatal (memory_pool_item == memory_pool_item_from_index(&memory_pools->pools[pool], item_index),
-               "Incorrect memory pool item address (%p, %p) for pool %u, item %d!\n",
-               memory_pool_item,(void *)memory_pool_item_from_index(&memory_pools->pools[pool], item_index), pool, item_index);
+  if (memory_pool_item != memory_pool_item_from_index(&memory_pools->pools[pool], item_index)) {
+    LOG_E(HW, "Incorrect memory pool item address (%p, %p) for pool %u, item %d!\n",
+	      memory_pool_item,(void *)memory_pool_item_from_index(&memory_pools->pools[pool], item_index), pool, item_index);
+    return (EXIT_FAILURE);
+  }
+
   /* Sanity check on end marker, must still be present (no write overflow) */
-  AssertFatal (memory_pool_item->data[item_size] == POOL_ITEM_END_MARK,
-               "Memory pool item is corrupted, end mark is not present for pool %u, item %d!\n", pool, item_index);
+  if (memory_pool_item->data[item_size] != POOL_ITEM_END_MARK) {
+    LOG_E(HW, "Memory pool item is corrupted, end mark is not present for pool %u, item %d!\n", pool, item_index);
+    return (EXIT_FAILURE);
+  }
+
   /* Sanity check on item status, must be allocated */
-  AssertFatal (memory_pool_item->start.item_status == ITEM_STATUS_ALLOCATED,
-               "Trying to free a non allocated (%x) memory pool item (pool %u, item %d)!\n",
-               memory_pool_item->start.item_status, pool, item_index);
+  if (memory_pool_item->start.item_status != ITEM_STATUS_ALLOCATED) {
+    LOG_E(HW, "Trying to free a non allocated (%x) memory pool item (pool %u, item %d)!\n", memory_pool_item->start.item_status, pool, item_index);
+    return (EXIT_FAILURE);
+  }
+
   memory_pool_item->start.item_status = ITEM_STATUS_FREE;
   result = items_group_put_free_item(&memory_pools->pools[pool].items_group_free, item_index);
-  AssertError (result == EXIT_SUCCESS, {}, "Failed to free memory pool item (pool %u, item %d)!\n", pool, item_index);
+  if (result != EXIT_SUCCESS) {
+    LOG_E(HW, "Failed to free memory pool item (pool %u, item %d)!\n", pool, item_index);
+  }
+
   return (result);
 }
 
@@ -451,10 +528,17 @@ void memory_pools_set_info (memory_pools_handle_t memory_pools_handle, memory_po
   items_group_index_t item_index;
   uint32_t            item_size;
   uint32_t            pool_item_size;
-  AssertFatal (index < MEMORY_POOL_ITEM_INFO_NUMBER, "Incorrect info index (%d/%d)!\n", index, MEMORY_POOL_ITEM_INFO_NUMBER);
+  if (index >= MEMORY_POOL_ITEM_INFO_NUMBER) {
+    LOG_E(HW, "Incorrect info index (%d/%d)!\n", index, MEMORY_POOL_ITEM_INFO_NUMBER);
+    return;
+  }
   /* Recover memory pool item */
   memory_pool_item = memory_pool_item_from_handler (memory_pool_item_handle);
-  AssertFatal (memory_pool_item != NULL, "Failed to retrieve memory pool item for handle %p!\n", memory_pool_item_handle);
+  if (memory_pool_item == NULL) {
+    LOG_E(HW, "Failed to retrieve memory pool item for handle %p!\n", memory_pool_item_handle);
+    return;
+  }
+
   /* Set info[1] */
   memory_pool_item->start.info[index] = info;
 
@@ -462,10 +546,18 @@ void memory_pools_set_info (memory_pools_handle_t memory_pools_handle, memory_po
   if (1) {
     /* Recover memory_pools */
     memory_pools = memory_pools_from_handler (memory_pools_handle);
-    AssertFatal (memory_pools != NULL, "Failed to retrieve memory pool for handle %p!\n", memory_pools_handle);
+    if (memory_pools == NULL) {
+      LOG_E(HW, "Failed to retrieve memory pool for handle %p!\n", memory_pools_handle);
+      return;
+    }
+
     /* Recover pool index */
     pool = memory_pool_item->start.pool_id;
-    AssertFatal (pool < memory_pools->pools_defined, "Pool index is invalid (%u/%u)!\n", pool, memory_pools->pools_defined);
+    if (pool >= memory_pools->pools_defined) {
+      LOG_E(HW, "Pool index is invalid (%u/%u)!\n", pool, memory_pools->pools_defined);
+      return;
+    }
+
     item_size = memory_pools->pools[pool].item_data_number;
     pool_item_size = memory_pools->pools[pool].pool_item_size;
     item_index = (((void *) memory_pool_item) - ((void *) memory_pools->pools[pool].items)) / pool_item_size;
@@ -476,15 +568,22 @@ void memory_pools_set_info (memory_pools_handle_t memory_pools_handle, memory_po
              memory_pool_item_handle, memory_pool_item,
              memory_pools->pools[pool].items, ((uint32_t) (item_size * sizeof(memory_pool_data_t))));
     /* Sanity check on calculated item index */
-    AssertFatal (memory_pool_item == memory_pool_item_from_index(&memory_pools->pools[pool], item_index),
-                 "Incorrect memory pool item address (%p, %p) for pool %u, item %d!\n",
-                 memory_pool_item, (void *)memory_pool_item_from_index(&memory_pools->pools[pool], item_index), pool, item_index);
+    if (memory_pool_item != memory_pool_item_from_index(&memory_pools->pools[pool], item_index)) {
+      LOG_E(HW, "Incorrect memory pool item address (%p, %p) for pool %u, item %d!\n",
+	        memory_pool_item, (void *)memory_pool_item_from_index(&memory_pools->pools[pool], item_index), pool, item_index);
+      return;
+    }
+
     /* Sanity check on end marker, must still be present (no write overflow) */
-    AssertFatal (memory_pool_item->data[item_size] == POOL_ITEM_END_MARK,
-                 "Memory pool item is corrupted, end mark is not present for pool %u, item %d!\n", pool, item_index);
+    if (memory_pool_item->data[item_size] != POOL_ITEM_END_MARK) {
+      LOG_E(HW, "Memory pool item is corrupted, end mark is not present for pool %u, item %d!\n", pool, item_index);
+      return;
+    }
+
     /* Sanity check on item status, must be allocated */
-    AssertFatal (memory_pool_item->start.item_status == ITEM_STATUS_ALLOCATED,
-                 "Trying to free a non allocated (%x) memory pool item (pool %u, item %d)\n",
-                 memory_pool_item->start.item_status, pool, item_index);
+    if (memory_pool_item->start.item_status != ITEM_STATUS_ALLOCATED) {
+      LOG_E(HW, "Trying to free a non allocated (%x) memory pool item (pool %u, item %d)\n", memory_pool_item->start.item_status, pool, item_index);
+      return;
+    }
   }
 }

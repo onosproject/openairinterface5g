@@ -274,6 +274,7 @@ rlc_am_receive_process_control_pdu(
     if(ack_sn >= RLC_AM_SN_MODULO || rlc_pP->control_pdu_info.num_nack >= RLC_AM_MAX_NACK_IN_STATUS_PDU) {
       LOG_E(RLC, PROTOCOL_RLC_AM_CTXT_FMT" illegal ack_sn %d, num_nack %d\n",
             PROTOCOL_RLC_AM_CTXT_ARGS(ctxt_pP,rlc_pP), ack_sn, rlc_pP->control_pdu_info.num_nack);
+      free_mem_block(tb_pP, __func__);
       return;
     }
 

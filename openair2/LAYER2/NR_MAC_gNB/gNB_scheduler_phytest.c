@@ -673,7 +673,7 @@ void nr_schedule_uss_dlsch_phytest(module_id_t   module_idP,
     // Padding: fill remainder of DLSCH with 0
     if (post_padding > 0){
       for (int j = 0; j < (TBS_bytes - offset); j++)
-        gNB_mac->UE_list.DLSCH_pdu[0][0].payload[0][offset + j] = 0; // mac_pdu[offset + j] = 0;
+        gNB_mac->UE_list.DLSCH_pdu[0][0].payload[0][TB1][offset + j] = 0; // mac_pdu[offset + j] = 0;
     }
 
     configure_fapi_dl_Tx(module_idP, frameP, slotP, dl_req, tx_req, TBS_bytes, gNB_mac->pdu_index[CC_id]);
@@ -690,7 +690,7 @@ void nr_schedule_uss_dlsch_phytest(module_id_t   module_idP,
       if (frameP%100 == 0){
         LOG_I(MAC, "Printing first 10 payload bytes at the gNB side, Frame: %d, slot: %d, TBS size: %d \n", frameP, slotP, TBS_bytes);
         for(int i = 0; i < 10; i++) {
-          LOG_I(MAC, "%x. ", ((uint8_t *)gNB_mac->UE_list.DLSCH_pdu[CC_id][0][0].payload[0])[i]); //LOG_I(MAC, "%x. ", mac_payload[i]);
+          LOG_I(MAC, "%x. ", ((uint8_t *)gNB_mac->UE_list.DLSCH_pdu[CC_id][0][0].payload[0][TB1])[i]); //LOG_I(MAC, "%x. ", mac_payload[i]);
         }
       }
       #endif

@@ -93,7 +93,10 @@ void lte_param_init(unsigned char N_tx, unsigned char N_rx,unsigned char transmi
   //  lte_frame_parms->n_RRC = 0;
   lte_frame_parms->mode1_flag = (transmission_mode == 1)? 1 : 0;
 
-  init_frame_parms(lte_frame_parms,1);
+  if (init_frame_parms(lte_frame_parms,1) == -1) {
+    LOG_E(PHY, "ltetest.c:lte_param_init:init_frame_parms failed.\n");
+	return;
+  }
 
   //copy_lte_parms_to_phy_framing(lte_frame_parms, &(PHY_config->PHY_framing));
 
@@ -109,7 +112,10 @@ void lte_param_init(unsigned char N_tx, unsigned char N_rx,unsigned char transmi
 
   phy_init_lte_top(lte_frame_parms);
   phy_init_lte_ue(PHY_vars_UE,1,0);
-  phy_init_lte_eNB(PHY_vars_eNB,0,0,0);
+  if (phy_init_lte_eNB(PHY_vars_eNB,0,0) == -1) {
+    LOG_E(PHY, "lte_param_init:phy_init_lte_eNB failed.\n");
+	return;
+  }
 
   printf("Done lte_param_init\n");
 

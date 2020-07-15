@@ -64,6 +64,10 @@ int generate_eNB_ulsch_params_from_rar(PHY_VARS_eNB *eNB,
   //  RAR_PDU *rar = (RAR_PDU *)(rar_pdu+1);
   uint8_t *rar = (uint8_t *)(rar_pdu+1);
   uint8_t harq_pid = get_Msg3_harq_pid(frame_parms,frame,subframe);
+  if (harq_pid == 255) {
+    LOG_E(PHY, "get_Msg3_harq_pid return -1.\n");
+    return(-1);
+  }
   uint16_t rballoc;
   uint8_t cqireq;
   uint16_t *RIV2nb_rb_LUT, *RIV2first_rb_LUT;
@@ -78,8 +82,10 @@ int generate_eNB_ulsch_params_from_rar(PHY_VARS_eNB *eNB,
 
   rnti = (((uint16_t)rar[4])<<8)+rar[5];
 
-  AssertFatal((UE_id = find_ulsch(rnti,eNB,SEARCH_EXIST_OR_FREE))>=0,
-	      "Cannot get UE id for RAR (rnti %x)\n",rnti);
+  if ((UE_id = find_ulsch(rnti,eNB,SEARCH_EXIST_OR_FREE)) < 0) {
+    LOG_E(PHY, "Cannot get UE id for RAR (rnti %x)\n",rnti);
+    return(-1);
+  }
 
   ulsch = eNB->ulsch[UE_id];
   ulsch_harq = ulsch->harq_processes[harq_pid];

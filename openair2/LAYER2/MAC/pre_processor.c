@@ -99,7 +99,7 @@ int round_robin_dl(module_id_t Mod_id,
     const COMMON_channels_t *cc = &RC.mac[Mod_id]->common_channels[CC_id];
     const uint8_t harq_pid = frame_subframe2_dl_harq_pid(cc->tdd_Config, frame, subframe);
     UE_sched_ctrl_t *ue_ctrl = &UE_info->UE_sched_ctrl[UE_id];
-    const uint8_t round = ue_ctrl->round[CC_id][harq_pid];
+    const uint8_t round = ue_ctrl->round[CC_id][harq_pid][TB1];
     if (round != 8) { // retransmission: allocate
       const int nb_rb = UE_info->UE_template[CC_id][UE_id].nb_rb[harq_pid];
       if (nb_rb == 0)
@@ -151,7 +151,7 @@ int round_robin_dl(module_id_t Mod_id,
       for (; !rbgalloc_mask[rbg]; rbg++) /* fast-forward */ ;
     } else {
       const int dlsch_mcs1 = cqi_to_mcs[UE_info->UE_sched_ctrl[UE_id].dl_cqi[CC_id]];
-      UE_info->eNB_UE_stats[CC_id][UE_id].dlsch_mcs1 = dlsch_mcs1;
+      UE_info->eNB_UE_stats[CC_id][UE_id].dlsch_mcs[TB1] = dlsch_mcs1;
       rb_required[UE_id] =
           find_nb_rb_DL(dlsch_mcs1,
                         UE_info->UE_template[CC_id][UE_id].dl_buffer_total,
@@ -242,6 +242,8 @@ store_dlsch_buffer(module_id_t Mod_id,
                    frame_t frameP,
                    sub_frame_t subframeP) {
   UE_info_t *UE_info = &RC.mac[Mod_id]->UE_info;
+  int dl_dtch_num;
+  int dl_dtch_list[MAX_NUM_DTCH];
 
   for (int UE_id = UE_info->list.head; UE_id >= 0; UE_id = UE_info->list.next[UE_id]) {
 
@@ -249,6 +251,7 @@ store_dlsch_buffer(module_id_t Mod_id,
     UE_sched_ctrl_t *UE_sched_ctrl = &UE_info->UE_sched_ctrl[UE_id];
     UE_template->dl_buffer_total = 0;
     UE_template->dl_pdus_total = 0;
+    dl_dtch_num = 0;
 
     /* loop over all activated logical channels */
     for (int i = 0; i < UE_sched_ctrl->dl_lc_num; ++i) {
@@ -279,6 +282,11 @@ store_dlsch_buffer(module_id_t Mod_id,
        * limited in the preprocessor */
       UE_sched_ctrl->dl_lc_bytes[i] = rlc_status.bytes_in_buffer;
 
+      if ((rlc_status.bytes_in_buffer > 0) && (lcid >= DTCH)) {
+          dl_dtch_list[dl_dtch_num] = lcid;
+          dl_dtch_num++;
+       }
+
 #ifdef DEBUG_eNB_SCHEDULER
       /* note for dl_buffer_head_sdu_remaining_size_to_send[lcid] :
        * 0 if head SDU has not been segmented (yet), else remaining size not already segmented and sent
@@ -294,6 +302,8 @@ store_dlsch_buffer(module_id_t Mod_id,
               UE_template->dl_buffer_head_sdu_is_segmented[lcid]);
 #endif
     }
+
+    sort_lcid_priority(Mod_id, UE_id, dl_dtch_num, &dl_dtch_list[0]);
 
     if (UE_template->dl_buffer_total > 0)
       LOG_D(MAC,
@@ -338,6 +348,7 @@ dlsch_scheduler_pre_processor(module_id_t Mod_id,
     if (rnti == NOT_A_RNTI) {
       LOG_E(MAC, "UE %d has RNTI NOT_A_RNTI!\n", UE_id);
       continue;
+
     }
     if (UE_info->active[UE_id] != TRUE) {
       LOG_E(MAC, "UE %d RNTI %x is NOT active!\n", UE_id, rnti);
@@ -413,7 +424,7 @@ dlsch_scheduler_pre_processor(module_id_t Mod_id,
           subframeP,
           UE_id,
           ue_sched_ctrl->pre_nb_available_rbs[CC_id],
-          UE_info->eNB_UE_stats[CC_id][UE_id].dlsch_mcs1);
+          UE_info->eNB_UE_stats[CC_id][UE_id].dlsch_mcs[TB1]);
 
     print = 1;
 
@@ -431,6 +442,7 @@ dlsch_scheduler_pre_processor(module_id_t Mod_id,
       t[i] = '0' + UE_id;
     }
   }
+
   if (print)
     LOG_D(MAC, "%4d.%d DL scheduler allocation list: %s\n", frameP, subframeP, t);
 #endif
@@ -872,4 +884,40 @@ void ulsch_scheduler_pre_processor(module_id_t Mod_id,
           sched_subframeP,
           t);
 #endif
+}
+
+static int lcid_priority_compare(const void *_a, const void *_b, void *_lcgidpriority) {
+  long *lcgidpriority = (long*)_lcgidpriority;
+  int lcid1 = *(const int *) _a;
+  int lcid2 = *(const int *) _b;
+  int priority1 = (int)lcgidpriority[lcid1];
+  int priority2 = (int)lcgidpriority[lcid2];
+
+  return priority1 - priority2;
+}
+
+//-----------------------------------------------------------------------------
+/*
+ * This function sorts the LCIDs in order
+ */
+void sort_lcid_priority(module_id_t module_id,
+                        int UE_id,
+                        int dl_dtch_num,
+                        int *dl_dtch_list)
+//-----------------------------------------------------------------------------
+{
+  int i;
+  UE_info_t *UE_info = &RC.mac[module_id]->UE_info;
+  UE_TEMPLATE *UE_template;
+
+  UE_template = &UE_info->UE_template[UE_PCCID(module_id, UE_id)][UE_id];
+
+  qsort_r(dl_dtch_list, dl_dtch_num, sizeof(int), lcid_priority_compare, &UE_template->lcgidpriority[0]);
+  
+  UE_template->dl_dtch_num = (uint8_t)dl_dtch_num;
+  for (i = 0; i < dl_dtch_num; i++) {
+    UE_template->dl_dtch_list_priority[i] = (uint8_t)dl_dtch_list[i];
+  }
+
+  return;
 }

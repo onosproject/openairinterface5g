@@ -885,7 +885,9 @@ void nfapi_vnf_p7_config_destory(nfapi_vnf_p7_config_t* config);
  */
  
 int nfapi_vnf_p7_start(nfapi_vnf_p7_config_t* config);
-
+#ifdef PHY_RM
+int nfapi_vnf_p7_time(nfapi_vnf_p7_config_t* config);
+#endif
 /*! Stop the VNF P7 library. 
  *  \param config A pointer to an vnf p7 configuration structure
  *	\return A status value. 0 equal success, -1 indicates failure
@@ -1000,6 +1002,17 @@ int nfapi_vnf_p7_vendor_extension(nfapi_vnf_p7_config_t* config, nfapi_p7_messag
  *  may be released after this function call has returned or at a later pointer
  */
 int nfapi_vnf_p7_ue_release_req(nfapi_vnf_p7_config_t* config, nfapi_ue_release_request_t* req);
+#ifdef PHY_RM
+/*! Send the PHY_RM_START.request
+* \param config A pointer to the vnf p7 configuration
+* \param req A data structure for the decoded PHY_RM_START.request.
+* \return A status value. 0 equal success, -1 indicates failure
+*
+* The caller is responsiable for memory management of any pointers set in the req, which
+* may be released after this function call has returned or at a later pointer
+*/
+int nfapi_vnf_p7_phy_rm_start_req(nfapi_vnf_p7_config_t* config, nfapi_phy_rm_start_request_t* req);
+#endif
 #if defined(__cplusplus)
 }
 #endif

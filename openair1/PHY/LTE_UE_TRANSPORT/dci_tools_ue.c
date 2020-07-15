@@ -4270,6 +4270,10 @@ int generate_eNB_ulsch_params_from_dci(PHY_VARS_eNB *eNB,
                                                       proc->frame_tx,
                                                       subframe),
                                  pdcch_alloc2ul_subframe(frame_parms,subframe));
+    if (harq_pid == 255) {
+      LOG_E(PHY,"FATAL ERROR: illegal harq_pid, returning\n");
+      return -1;
+    }
     switch (frame_parms->N_RB_DL) {
     case 6:
       if (frame_parms->frame_type == TDD) {

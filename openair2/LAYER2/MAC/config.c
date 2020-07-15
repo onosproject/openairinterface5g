@@ -136,20 +136,28 @@ uint32_t to_earfcn(int eutra_bandP, uint32_t dl_CarrierFreq, uint32_t bw) {
   uint32_t dl_CarrierFreq_by_100k = dl_CarrierFreq / 100000;
   int bw_by_100 = bw / 100;
   int i;
-  AssertFatal(eutra_bandP < 69, "eutra_band %d > 68\n", eutra_bandP);
+  if(eutra_bandP >= 69) {
+    LOG_E(MAC, "eutra_band %d > 68\n", eutra_bandP);
+    return -1;
+  }
 
   for (i = 0; i < BANDTABLE_SIZE && eutra_bandtable[i].band != eutra_bandP; i++);
 
-  AssertFatal(i < BANDTABLE_SIZE, "i %d >= BANDTABLE_SIZE %ld\n", i, BANDTABLE_SIZE);
-  AssertFatal(dl_CarrierFreq_by_100k >= eutra_bandtable[i].dl_min,
-              "Band %d, bw %u : DL carrier frequency %u Hz < %u\n",
-              eutra_bandP, bw, dl_CarrierFreq,
-              eutra_bandtable[i].dl_min);
-  AssertFatal(dl_CarrierFreq_by_100k <=
-              (eutra_bandtable[i].dl_max - bw_by_100),
-              "Band %d, bw %u: DL carrier frequency %u Hz > %d\n",
-              eutra_bandP, bw, dl_CarrierFreq,
-              eutra_bandtable[i].dl_max - bw_by_100);
+  if(i >= BANDTABLE_SIZE) {
+    LOG_E(MAC, "i %d >= BANDTABLE_SIZE %ld\n", i, BANDTABLE_SIZE);
+    return -1;
+  }
+  
+  if(dl_CarrierFreq_by_100k < eutra_bandtable[i].dl_min) {
+    LOG_E(MAC, "Band %d, bw %u : DL carrier frequency %u Hz < %u\n", eutra_bandP, bw, dl_CarrierFreq, eutra_bandtable[i].dl_min);
+    return -1;
+  }
+
+  if(dl_CarrierFreq_by_100k > (eutra_bandtable[i].dl_max - bw_by_100)) {
+    LOG_E(MAC, "Band %d, bw %u: DL carrier frequency %u Hz > %d\n",eutra_bandP, bw, dl_CarrierFreq,eutra_bandtable[i].dl_max - bw_by_100);
+    return -1;
+  }
+
   return (dl_CarrierFreq_by_100k - eutra_bandtable[i].dl_min +
           (eutra_bandtable[i].N_OFFs_DL / 10));
 }
@@ -158,20 +166,29 @@ uint32_t to_earfcn_DL(int eutra_bandP, long long int dl_CarrierFreq, uint32_t bw
   uint32_t dl_CarrierFreq_by_100k = dl_CarrierFreq / 100000;
   int bw_by_100 = bw / 100;
   int i;
-  AssertFatal(eutra_bandP < 69, "eutra_band %d > 68\n", eutra_bandP);
+  if (eutra_bandP >= 69) {
+    LOG_E(MAC, "eutra_band %d > 68\n", eutra_bandP);
+    return -1;
+  }
 
   for (i = 0; i < BANDTABLE_SIZE && eutra_bandtable[i].band != eutra_bandP; i++);
 
-  AssertFatal(i < BANDTABLE_SIZE, "i = %d , it will trigger out-of-bounds read.\n",i);
-  AssertFatal(dl_CarrierFreq_by_100k >= eutra_bandtable[i].dl_min,
-              "Band %d, bw %u : DL carrier frequency %lld Hz < %u\n",
+  if (i >= BANDTABLE_SIZE) {
+    LOG_E(MAC, "i = %d , it will trigger out-of-bounds read.\n",i);
+    return -1;
+  }
+  if (dl_CarrierFreq_by_100k < eutra_bandtable[i].dl_min) {
+    LOG_E(MAC, "Band %d, bw %u : DL carrier frequency %lld Hz < %u\n",
               eutra_bandP, bw, dl_CarrierFreq,
               eutra_bandtable[i].dl_min);
-  AssertFatal(dl_CarrierFreq_by_100k <=
-              (eutra_bandtable[i].dl_max - bw_by_100),
-              "Band %d, bw %u : DL carrier frequency %lld Hz > %d\n",
+    return -1;
+  }
+  if (dl_CarrierFreq_by_100k > (eutra_bandtable[i].dl_max - bw_by_100)) {
+    LOG_E(MAC, "Band %d, bw %u : DL carrier frequency %lld Hz > %d\n",
               eutra_bandP, bw, dl_CarrierFreq,
               eutra_bandtable[i].dl_max - bw_by_100);
+    return -1;
+  }
   return (dl_CarrierFreq_by_100k - eutra_bandtable[i].dl_min +
           (eutra_bandtable[i].N_OFFs_DL / 10));
 }
@@ -180,31 +197,47 @@ uint32_t to_earfcn_UL(int eutra_bandP, long long int ul_CarrierFreq, uint32_t bw
   uint32_t ul_CarrierFreq_by_100k = ul_CarrierFreq / 100000;
   int bw_by_100 = bw / 100;
   int i;
-  AssertFatal(eutra_bandP < 69, "eutra_band %d > 68\n", eutra_bandP);
+  if (eutra_bandP >= 69) {
+    LOG_E(MAC, "eutra_band %d > 68\n", eutra_bandP);
+    return -1;
+  }
 
   for (i = 0; i < BANDTABLE_SIZE && eutra_bandtable[i].band != eutra_bandP; i++);
 
-  AssertFatal(i < BANDTABLE_SIZE, "i = %d , it will trigger out-of-bounds read.\n",i);
-  AssertFatal(ul_CarrierFreq_by_100k >= eutra_bandtable[i].ul_min,
-              "Band %d, bw %u : UL carrier frequency %lld Hz < %u\n",
+  if (i >= BANDTABLE_SIZE) {
+    LOG_E(MAC, "i = %d , it will trigger out-of-bounds read.\n",i);
+    return -1;
+  }
+  if (ul_CarrierFreq_by_100k < eutra_bandtable[i].ul_min) {
+    LOG_E(MAC, "Band %d, bw %u : UL carrier frequency %lld Hz < %u\n",
               eutra_bandP, bw, ul_CarrierFreq,
               eutra_bandtable[i].ul_min);
-  AssertFatal(ul_CarrierFreq_by_100k <=
-              (eutra_bandtable[i].ul_max - bw_by_100),
-              "Band %d, bw %u : UL carrier frequency %lld Hz > %d\n",
+    return -1;
+  }
+  if (ul_CarrierFreq_by_100k > (eutra_bandtable[i].ul_max - bw_by_100)) {
+    LOG_E(MAC, "Band %d, bw %u : UL carrier frequency %lld Hz > %d\n",
               eutra_bandP, bw, ul_CarrierFreq,
               eutra_bandtable[i].ul_max - bw_by_100);
+    return -1;
+  }
   return (ul_CarrierFreq_by_100k - eutra_bandtable[i].ul_min +
           ((eutra_bandtable[i].N_OFFs_DL + 180000) / 10));
 }
 
 uint32_t from_earfcn(int eutra_bandP, uint32_t dl_earfcn) {
   int i;
-  AssertFatal(eutra_bandP < 69, "eutra_band %d > 68\n", eutra_bandP);
+  if (eutra_bandP >= 69) {
+    LOG_E(MAC, "eutra_band %d > 68\n", eutra_bandP);
+    return -1;
+  }
 
   for (i = 0; i < BANDTABLE_SIZE && eutra_bandtable[i].band != eutra_bandP; i++);
 
-  AssertFatal(i < BANDTABLE_SIZE, "i %d >= BANDTABLE_SIZE %ld\n", i, BANDTABLE_SIZE);
+  if (i >= BANDTABLE_SIZE) {
+    LOG_E(MAC, "i %d >= BANDTABLE_SIZE %ld\n", i, BANDTABLE_SIZE);
+    return -1;
+  }
+
   return (eutra_bandtable[i].dl_min +
           (dl_earfcn - (eutra_bandtable[i].N_OFFs_DL / 10))) * 100000;
 }
@@ -215,7 +248,11 @@ int32_t get_uldl_offset(int eutra_bandP) {
 
   for (i = 0; i < BANDTABLE_SIZE && eutra_bandtable[i].band != eutra_bandP; i++);
 
-  AssertFatal(i < BANDTABLE_SIZE, "i %d >= BANDTABLE_SIZE %ld\n", i, BANDTABLE_SIZE);
+  if (i >= BANDTABLE_SIZE) {
+    LOG_E(MAC, "i %d >= BANDTABLE_SIZE %ld\n", i, BANDTABLE_SIZE);
+    return -1;
+  }
+
   return (eutra_bandtable[i].dl_min - eutra_bandtable[i].ul_min);
 }
 
@@ -245,10 +282,18 @@ void config_mib(int                 Mod_idP,
   cfg->subframe_config.ul_cyclic_prefix_type.tl.tag = NFAPI_SUBFRAME_CONFIG_UL_CYCLIC_PREFIX_TYPE_TAG;
   cfg->num_tlv++;
   cfg->rf_config.dl_channel_bandwidth.value        = to_prb(dl_BandwidthP);
+  if (cfg->rf_config.dl_channel_bandwidth.value == -1) {
+    LOG_E(MAC, "to_prb failed\n");
+    return;
+  }
   cfg->rf_config.dl_channel_bandwidth.tl.tag = NFAPI_RF_CONFIG_DL_CHANNEL_BANDWIDTH_TAG;
   cfg->num_tlv++;
   LOG_D(PHY,"%s() dl_BandwidthP:%d\n", __FUNCTION__, dl_BandwidthP);
   cfg->rf_config.ul_channel_bandwidth.value        = to_prb(dl_BandwidthP);
+  if (cfg->rf_config.ul_channel_bandwidth.value == -1) {
+    LOG_E(MAC, "to_prb failed\n");
+    return;
+  }
   cfg->rf_config.ul_channel_bandwidth.tl.tag = NFAPI_RF_CONFIG_UL_CHANNEL_BANDWIDTH_TAG;
   cfg->num_tlv++;
   cfg->rf_config.tx_antenna_ports.value            = p_eNBP;
@@ -258,6 +303,10 @@ void config_mib(int                 Mod_idP,
   cfg->rf_config.rx_antenna_ports.tl.tag = NFAPI_RF_CONFIG_RX_ANTENNA_PORTS_TAG;
   cfg->num_tlv++;
   cfg->nfapi_config.earfcn.value                   = to_earfcn(eutra_bandP,dl_CarrierFreqP,bw_table[dl_BandwidthP]/100);
+  if (cfg->nfapi_config.earfcn.value == -1) {
+	  LOG_E(MAC, "cfg->nfapi_config.earfcn.value < 0\n");
+	  return;
+  }
   cfg->nfapi_config.earfcn.tl.tag = NFAPI_NFAPI_EARFCN_TAG;
   cfg->num_tlv++;
   cfg->nfapi_config.rf_bands.number_rf_bands       = 1;
@@ -372,7 +421,7 @@ config_sib2(int Mod_idP,
   cfg->pusch_config.hopping_offset.value                      = radioResourceConfigCommonP->pusch_ConfigCommon.pusch_ConfigBasic.pusch_HoppingOffset;
   cfg->pusch_config.hopping_offset.tl.tag = NFAPI_PUSCH_CONFIG_HOPPING_OFFSET_TAG;
   cfg->num_tlv++;
-  cfg->pucch_config.delta_pucch_shift.value                         = radioResourceConfigCommonP->pucch_ConfigCommon.deltaPUCCH_Shift;
+  cfg->pucch_config.delta_pucch_shift.value                         = radioResourceConfigCommonP->pucch_ConfigCommon.deltaPUCCH_Shift + 1;
   cfg->pucch_config.delta_pucch_shift.tl.tag = NFAPI_PUCCH_CONFIG_DELTA_PUCCH_SHIFT_TAG;
   cfg->num_tlv++;
   cfg->pucch_config.n_cqi_rb.value                                  = radioResourceConfigCommonP->pucch_ConfigCommon.nRB_CQI;
@@ -425,8 +474,15 @@ config_sib2(int Mod_idP,
   }
 
   if (RC.mac[Mod_idP]->common_channels[CC_idP].mib->message.schedulingInfoSIB1_BR_r13 > 0) {
-    AssertFatal(radioResourceConfigCommon_BRP != NULL, "radioResource rou is missing\n");
-    AssertFatal(radioResourceConfigCommon_BRP->ext4 != NULL, "ext4 is missing\n");
+    if(radioResourceConfigCommon_BRP == NULL) {
+      LOG_E(MAC, "radioResource rou is missing\n");
+      return;
+    }
+    if(radioResourceConfigCommon_BRP->ext4 == NULL) {
+      LOG_E(MAC, "ext4 is missing\n");
+      return;
+    }
+
     cfg->emtc_config.prach_catm_root_sequence_index.value = radioResourceConfigCommon_BRP->prach_Config.rootSequenceIndex;
     cfg->emtc_config.prach_catm_root_sequence_index.tl.tag = NFAPI_EMTC_CONFIG_PRACH_CATM_ROOT_SEQUENCE_INDEX_TAG;
     cfg->num_tlv++;
@@ -566,7 +622,11 @@ config_sib2(int Mod_idP,
         cfg->num_tlv++;
     }
 
-    AssertFatal(cfg->emtc_config.prach_ce_level_0_enable.value>0,"CE_level0 is not enabled\n");
+    if(cfg->emtc_config.prach_ce_level_0_enable.value <= 0) {
+      LOG_E(MAC, "CE_level0 is not enabled\n");
+      return;
+    }
+
     struct LTE_FreqHoppingParameters_r13 *ext4_freqHoppingParameters = radioResourceConfigCommonP->ext4->freqHoppingParameters_r13;
 
     if ((ext4_freqHoppingParameters) &&
@@ -797,6 +857,10 @@ int rrc_mac_config_req_eNB(module_id_t Mod_idP,
     RC.mac[Mod_idP]->common_channels[CC_idP].Ncp = Ncp;
     RC.mac[Mod_idP]->common_channels[CC_idP].eutra_band = eutra_band;
     RC.mac[Mod_idP]->common_channels[CC_idP].dl_CarrierFreq = dl_CarrierFreq;
+    if (to_prb((int)mib->message.dl_Bandwidth) == -1) {
+		LOG_E(MAC, "to_prb((int)mib->message.dl_Bandwidth) == -1\n");
+		return (-1);
+	}
     LOG_I(MAC,
           "Configuring MIB for instance %d, CCid %d : (band %d,N_RB_DL %d,Nid_cell %d,p %d,DL freq %u,phich_config.resource %d, phich_config.duration %d)\n",
           Mod_idP,
@@ -837,7 +901,10 @@ int rrc_mac_config_req_eNB(module_id_t Mod_idP,
       RC.mac[Mod_idP]->common_channels[CC_idP].sib1_v13ext = sib1_v13ext;
     }
 
-    AssertFatal(radioResourceConfigCommon != NULL, "radioResourceConfigCommon is null\n");
+    if(radioResourceConfigCommon == NULL) {
+      LOG_E(MAC, "radioResourceConfigCommon is null\n");
+      return(-1);
+    }
     LOG_I(MAC, "[CONFIG]SIB2/3 Contents (partial)\n");
     LOG_I(MAC, "[CONFIG]pusch_config_common.n_SB = %ld\n",
           radioResourceConfigCommon->pusch_ConfigCommon.pusch_ConfigBasic.n_SB);
@@ -855,9 +922,10 @@ int rrc_mac_config_req_eNB(module_id_t Mod_idP,
           radioResourceConfigCommon->pusch_ConfigCommon.ul_ReferenceSignalsPUSCH.sequenceHoppingEnabled);
     LOG_I(MAC, "[CONFIG]pusch_config_common.cyclicShift  = %ld\n",
           radioResourceConfigCommon->pusch_ConfigCommon.ul_ReferenceSignalsPUSCH.cyclicShift);
-    AssertFatal(radioResourceConfigCommon->rach_ConfigCommon.maxHARQ_Msg3Tx > 0,
-                "radioResourceconfigCommon %d == 0\n",
-                (int) radioResourceConfigCommon->rach_ConfigCommon.maxHARQ_Msg3Tx);
+    if(radioResourceConfigCommon->rach_ConfigCommon.maxHARQ_Msg3Tx <= 0) {
+      LOG_E(MAC, "radioResourceconfigCommon %d == 0\n",(int) radioResourceConfigCommon->rach_ConfigCommon.maxHARQ_Msg3Tx);
+      return(-1);
+    }
     RC.mac[Mod_idP]->common_channels[CC_idP].radioResourceConfigCommon = radioResourceConfigCommon;
     RC.mac[Mod_idP]->common_channels[CC_idP].radioResourceConfigCommon_BR = radioResourceConfigCommon_BR;
 
@@ -878,7 +946,7 @@ int rrc_mac_config_req_eNB(module_id_t Mod_idP,
                             0
                            )) == -1) {
       LOG_E(MAC, "%s:%d: fatal\n", __FILE__, __LINE__);
-      abort();
+      return(-1);
     }
   }
 
@@ -942,8 +1010,6 @@ int rrc_mac_config_req_eNB(module_id_t Mod_idP,
       LOG_E(MAC,"Configuration received for unknown UE (%x), shouldn't happen\n",rntiP);
       return(-1);
     }
-
-    AssertFatal(UE_id>=0,"Configuration received for unknown UE (%x), shouldn't happen\n",rntiP);
     config_dedicated_scell(Mod_idP, rntiP, sCellToAddMod_r10);
   }
 
@@ -1046,7 +1112,6 @@ int rrc_mac_config_req_eNB(module_id_t Mod_idP,
     (RC.mac[Mod_idP]->if_inst->PHY_config_req == NULL)
   ) {
     while(RC.mac[Mod_idP]->if_inst->PHY_config_req == NULL) {
-      // DJP AssertFatal(RC.mac[Mod_idP]->if_inst->PHY_config_req != NULL,"if_inst->phy_config_request is null\n");
       usleep(100 * 1000);
       printf("Waiting for PHY_config_req\n");
     }

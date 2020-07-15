@@ -61,10 +61,16 @@ int s1ap_eNB_handle_nas_first_req(
     S1AP_InitialUEMessage_IEs_t  *ie;
     uint8_t  *buffer = NULL;
     uint32_t  length = 0;
-    DevAssert(s1ap_nas_first_req_p != NULL);
+    if (s1ap_nas_first_req_p == NULL){
+      S1AP_ERROR("s1ap_nas_first_req_p == NULL\n");
+      return (-1);
+    }
     /* Retrieve the S1AP eNB instance associated with Mod_id */
     instance_p = s1ap_eNB_get_instance(instance);
-    DevAssert(instance_p != NULL);
+    if (instance_p == NULL) {
+      S1AP_ERROR("instance_p == NULL\n");
+      return (-1);
+    }
     memset(&pdu, 0, sizeof(pdu));
     pdu.present = S1AP_S1AP_PDU_PR_initiatingMessage;
     pdu.choice.initiatingMessage.procedureCode = S1AP_ProcedureCode_id_initialUEMessage;
@@ -114,32 +120,14 @@ int s1ap_eNB_handle_nas_first_req(
     }
 
     if (mme_desc_p == NULL) {
-        /* Select MME based on the selected PLMN identity, received through RRC
-         * Connection Setup Complete */
-        mme_desc_p = s1ap_eNB_nnsf_select_mme_by_plmn_id(
-                         instance_p,
-                         s1ap_nas_first_req_p->establishment_cause,
-                         s1ap_nas_first_req_p->selected_plmn_identity);
-
-        if (mme_desc_p) {
-            S1AP_INFO("[eNB %d] Chose MME '%s' (assoc_id %d) through selected PLMN Identity index %d MCC %d MNC %d\n",
-                      instance,
-                      mme_desc_p->mme_name,
-                      mme_desc_p->assoc_id,
-                      s1ap_nas_first_req_p->selected_plmn_identity,
-                      instance_p->mcc[s1ap_nas_first_req_p->selected_plmn_identity],
-                      instance_p->mnc[s1ap_nas_first_req_p->selected_plmn_identity]);
-        }
-    }
-
-    if (mme_desc_p == NULL) {
         /*
          * If no MME corresponds to the GUMMEI, the s-TMSI, or the selected PLMN
          * identity, selects the MME with the highest capacity.
          */
         mme_desc_p = s1ap_eNB_nnsf_select_mme(
-                         instance_p,
-                         s1ap_nas_first_req_p->establishment_cause);
+                       instance_p,
+                       s1ap_nas_first_req_p->establishment_cause,
+                       s1ap_nas_first_req_p->selected_plmn_identity);
 
         if (mme_desc_p) {
             S1AP_INFO("[eNB %d] Chose MME '%s' (assoc_id %d) through highest relative capacity\n",
@@ -163,7 +151,10 @@ int s1ap_eNB_handle_nas_first_req(
      * will be used for the duration of the connectivity.
      */
     ue_desc_p = s1ap_eNB_allocate_new_UE_context();
-    DevAssert(ue_desc_p != NULL);
+    if (ue_desc_p == NULL) {
+      S1AP_ERROR("ue_desc_p == NULL\n");
+      return (-1);
+    }
     /* Keep a reference to the selected MME */
     ue_desc_p->mme_ref       = mme_desc_p;
     ue_desc_p->ue_initial_id = s1ap_nas_first_req_p->ue_initial_id;
@@ -232,9 +223,9 @@ int s1ap_eNB_handle_nas_first_req(
     MACRO_ENB_ID_TO_CELL_IDENTITY(instance_p->eNB_id,
                                   0, // Cell ID
                                   &ie->value.choice.EUTRAN_CGI.cell_ID);
-    MCC_MNC_TO_TBCD(instance_p->mcc[ue_desc_p->selected_plmn_identity],
-                    instance_p->mnc[ue_desc_p->selected_plmn_identity],
-                    instance_p->mnc_digit_length[ue_desc_p->selected_plmn_identity],
+    MCC_MNC_TO_TBCD(instance_p->mcc[mme_desc_p->broadcast_plmn_index[0]],
+                    instance_p->mnc[mme_desc_p->broadcast_plmn_index[0]],
+                    instance_p->mnc_digit_length[mme_desc_p->broadcast_plmn_index[0]],
                     &ie->value.choice.EUTRAN_CGI.pLMNidentity);
     ASN_SEQUENCE_ADD(&out->protocolIEs.list, ie);
     /* Set the establishment cause according to those provided by RRC */
@@ -337,13 +328,16 @@ int s1ap_eNB_handle_nas_downlink(uint32_t         assoc_id,
     S1AP_DownlinkNASTransport_IEs_t *ie;
     S1AP_ENB_UE_S1AP_ID_t            enb_ue_s1ap_id;
     S1AP_MME_UE_S1AP_ID_t            mme_ue_s1ap_id;
-    DevAssert(pdu != NULL);
+    if (pdu == NULL) {
+      S1AP_ERROR("pdu == NULL\n");
+      return -1;
+    }
 
     /* UE-related procedure -> stream != 0 */
     if (stream == 0) {
         S1AP_ERROR("[SCTP %d] Received UE-related procedure on stream == 0\n",
                    assoc_id);
-        return -1;
+        //return -1;
     }
 
     if ((mme_desc_p = s1ap_eNB_get_MME(NULL, assoc_id, 0)) == NULL) {
@@ -436,10 +430,16 @@ int s1ap_eNB_nas_uplink(instance_t instance, s1ap_uplink_nas_t *s1ap_uplink_nas_
     S1AP_UplinkNASTransport_IEs_t *ie;
     uint8_t  *buffer;
     uint32_t  length;
-    DevAssert(s1ap_uplink_nas_p != NULL);
+    if (s1ap_uplink_nas_p == NULL) {
+      S1AP_ERROR("s1ap_uplink_nas_p == NULL\n");
+      return -1;
+    }
     /* Retrieve the S1AP eNB instance associated with Mod_id */
     s1ap_eNB_instance_p = s1ap_eNB_get_instance(instance);
-    DevAssert(s1ap_eNB_instance_p != NULL);
+    if (s1ap_eNB_instance_p == NULL) {
+      S1AP_ERROR("s1ap_eNB_instance_p == NULL\n");
+      return -1;
+    }
 
     if ((ue_context_p = s1ap_eNB_get_ue_context(s1ap_eNB_instance_p, s1ap_uplink_nas_p->eNB_ue_s1ap_id)) == NULL) {
         /* The context for this eNB ue s1ap id doesn't exist in the map of eNB UEs */
@@ -494,9 +494,9 @@ int s1ap_eNB_nas_uplink(instance_t instance, s1ap_uplink_nas_t *s1ap_uplink_nas_
     ie->criticality = S1AP_Criticality_ignore;
     ie->value.present = S1AP_UplinkNASTransport_IEs__value_PR_EUTRAN_CGI;
     MCC_MNC_TO_PLMNID(
-        s1ap_eNB_instance_p->mcc[ue_context_p->selected_plmn_identity],
-        s1ap_eNB_instance_p->mnc[ue_context_p->selected_plmn_identity],
-        s1ap_eNB_instance_p->mnc_digit_length[ue_context_p->selected_plmn_identity],
+        s1ap_eNB_instance_p->mcc[ue_context_p->mme_ref->broadcast_plmn_index[0]],
+        s1ap_eNB_instance_p->mnc[ue_context_p->mme_ref->broadcast_plmn_index[0]],
+        s1ap_eNB_instance_p->mnc_digit_length[ue_context_p->mme_ref->broadcast_plmn_index[0]],
         &ie->value.choice.EUTRAN_CGI.pLMNidentity);
     //#warning "TODO get cell id from RRC"
     MACRO_ENB_ID_TO_CELL_IDENTITY(s1ap_eNB_instance_p->eNB_id,
@@ -553,10 +553,16 @@ int s1ap_eNB_nas_non_delivery_ind(instance_t instance,
     S1AP_NASNonDeliveryIndication_IEs_t *ie;
     uint8_t  *buffer;
     uint32_t  length;
-    DevAssert(s1ap_nas_non_delivery_ind != NULL);
+    if (s1ap_nas_non_delivery_ind == NULL) {
+      S1AP_ERROR("s1ap_nas_non_delivery_ind == NULL\n");
+      return -1;
+    }
     /* Retrieve the S1AP eNB instance associated with Mod_id */
     s1ap_eNB_instance_p = s1ap_eNB_get_instance(instance);
-    DevAssert(s1ap_eNB_instance_p != NULL);
+    if (s1ap_eNB_instance_p == NULL) {
+      S1AP_ERROR("s1ap_eNB_instance_p == NULL\n");
+      return -1;
+    }
 
     if ((ue_context_p = s1ap_eNB_get_ue_context(s1ap_eNB_instance_p, s1ap_nas_non_delivery_ind->eNB_ue_s1ap_id)) == NULL) {
         /* The context for this eNB ue s1ap id doesn't exist in the map of eNB UEs */
@@ -648,8 +654,14 @@ int s1ap_eNB_initial_ctxt_resp(
     int      i;
     /* Retrieve the S1AP eNB instance associated with Mod_id */
     s1ap_eNB_instance_p = s1ap_eNB_get_instance(instance);
-    DevAssert(initial_ctxt_resp_p != NULL);
-    DevAssert(s1ap_eNB_instance_p != NULL);
+    if (initial_ctxt_resp_p == NULL) {
+      S1AP_ERROR("initial_ctxt_resp_p == NULL\n");
+      return -1;
+    }
+    if (s1ap_eNB_instance_p == NULL) {
+      S1AP_ERROR("s1ap_eNB_instance_p == NULL\n");
+      return -1;
+    }
 
     if ((ue_context_p = s1ap_eNB_get_ue_context(s1ap_eNB_instance_p,
                         initial_ctxt_resp_p->eNB_ue_s1ap_id)) == NULL) {
@@ -820,8 +832,14 @@ int s1ap_eNB_ue_capabilities(instance_t instance,
     uint32_t length;
     /* Retrieve the S1AP eNB instance associated with Mod_id */
     s1ap_eNB_instance_p = s1ap_eNB_get_instance(instance);
-    DevAssert(ue_cap_info_ind_p != NULL);
-    DevAssert(s1ap_eNB_instance_p != NULL);
+    if (ue_cap_info_ind_p == NULL) {
+      S1AP_ERROR("ue_cap_info_ind_p == NULL\n");
+      return -1;
+    }
+    if (s1ap_eNB_instance_p == NULL) {
+      S1AP_ERROR("s1ap_eNB_instance_p == NULL\n");
+      return -1;
+    }
 
     if ((ue_context_p = s1ap_eNB_get_ue_context(s1ap_eNB_instance_p,
                         ue_cap_info_ind_p->eNB_ue_s1ap_id)) == NULL) {
@@ -910,8 +928,14 @@ int s1ap_eNB_e_rab_setup_resp(instance_t instance,
     int      i;
     /* Retrieve the S1AP eNB instance associated with Mod_id */
     s1ap_eNB_instance_p = s1ap_eNB_get_instance(instance);
-    DevAssert(e_rab_setup_resp_p != NULL);
-    DevAssert(s1ap_eNB_instance_p != NULL);
+    if (e_rab_setup_resp_p == NULL) {
+      S1AP_ERROR("e_rab_setup_resp_p == NULL\n");
+      return -1;
+    }
+    if (s1ap_eNB_instance_p == NULL) {
+      S1AP_ERROR("s1ap_eNB_instance_p == NULL\n");
+      return -1;
+    }
 
     if ((ue_context_p = s1ap_eNB_get_ue_context(s1ap_eNB_instance_p,
                         e_rab_setup_resp_p->eNB_ue_s1ap_id)) == NULL) {
@@ -935,7 +959,7 @@ int s1ap_eNB_e_rab_setup_resp(instance_t instance,
     /* Prepare the S1AP message to encode */
     memset(&pdu, 0, sizeof(pdu));
     pdu.present = S1AP_S1AP_PDU_PR_successfulOutcome;
-    pdu.choice.successfulOutcome.procedureCode = S1AP_ProcedureCode_id_E_RABModify;
+    pdu.choice.successfulOutcome.procedureCode = S1AP_ProcedureCode_id_E_RABSetup;
     pdu.choice.successfulOutcome.criticality = S1AP_Criticality_reject;
     pdu.choice.successfulOutcome.value.present = S1AP_SuccessfulOutcome__value_PR_E_RABSetupResponse;
     out = &pdu.choice.successfulOutcome.value.choice.E_RABSetupResponse;
@@ -1094,8 +1118,14 @@ int s1ap_eNB_e_rab_modify_resp(instance_t instance,
     int      i;
     /* Retrieve the S1AP eNB instance associated with Mod_id */
     s1ap_eNB_instance_p = s1ap_eNB_get_instance(instance);
-    DevAssert(e_rab_modify_resp_p != NULL);
-    DevAssert(s1ap_eNB_instance_p != NULL);
+    if (e_rab_modify_resp_p == NULL) {
+      S1AP_ERROR("e_rab_modify_resp_p == NULL\n");
+      return -1;
+    }
+    if (s1ap_eNB_instance_p == NULL) {
+      S1AP_ERROR("s1ap_eNB_instance_p == NULL\n");
+      return -1;
+    }
 
     if ((ue_context_p = s1ap_eNB_get_ue_context(s1ap_eNB_instance_p,
                         e_rab_modify_resp_p->eNB_ue_s1ap_id)) == NULL) {
@@ -1256,8 +1286,14 @@ int s1ap_eNB_e_rab_release_resp(instance_t instance,
     int      i;
     /* Retrieve the S1AP eNB instance associated with Mod_id */
     s1ap_eNB_instance_p = s1ap_eNB_get_instance(instance);
-    DevAssert(e_rab_release_resp_p != NULL);
-    DevAssert(s1ap_eNB_instance_p != NULL);
+    if (e_rab_release_resp_p == NULL) {
+      S1AP_ERROR("e_rab_release_resp_p == NULL\n");
+      return -1;
+    }
+    if (s1ap_eNB_instance_p == NULL) {
+      S1AP_ERROR("s1ap_eNB_instance_p == NULL\n");
+      return -1;
+    }
 
     if ((ue_context_p = s1ap_eNB_get_ue_context(s1ap_eNB_instance_p,
                         e_rab_release_resp_p->eNB_ue_s1ap_id)) == NULL) {
@@ -1406,8 +1442,14 @@ int s1ap_eNB_path_switch_req(instance_t instance,
   /* Retrieve the S1AP eNB instance associated with Mod_id */
   s1ap_eNB_instance_p = s1ap_eNB_get_instance(instance);
 
-  DevAssert(path_switch_req_p != NULL);
-  DevAssert(s1ap_eNB_instance_p != NULL);
+  if (path_switch_req_p == NULL) {
+    S1AP_ERROR("path_switch_req_p == NULL\n");
+    return -1;
+  }
+  if (s1ap_eNB_instance_p == NULL) {
+    S1AP_ERROR("s1ap_eNB_instance_p == NULL\n");
+    return -1;
+  }
 
   //if ((ue_context_p = s1ap_eNB_get_ue_context(s1ap_eNB_instance_p,
     //                                          path_switch_req_p->eNB_ue_s1ap_id)) == NULL) {
@@ -1446,7 +1488,10 @@ int s1ap_eNB_path_switch_req(instance_t instance,
    * will be used for the duration of the connectivity.
    */
   ue_context_p = s1ap_eNB_allocate_new_UE_context();
-  DevAssert(ue_context_p != NULL);
+  if (ue_context_p == NULL) {
+    S1AP_ERROR("ue_context_p == NULL\n");
+    return -1;
+  }
 
   /* Keep a reference to the selected MME */
   ue_context_p->mme_ref       = mme_desc_p;

@@ -2687,6 +2687,8 @@ int dlsch_modulation_SIC(int32_t **sic_buffer,
                          int G)
 {
 
+  LOG_E(PHY,"This function needs to be reintegrated ...\n");
+  return -1;
   AssertFatal(1==0,"This function needs to be reintegrated ...\n");
   uint8_t harq_pid = -1;//dlsch0->current_harq_pid;
   LTE_DL_eNB_HARQ_t *dlsch0_harq = dlsch0->harq_processes[harq_pid];

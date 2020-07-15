@@ -377,6 +377,10 @@ void enb_config_init(const  char const * lib_config_file_name_pP)
         uint32_t hash;
 
         hash = s1ap_generate_eNB_id ();
+        if (hash == -1) {
+          fprintf(stdout, "s1ap generate eNB id failed\n");
+          return;
+        }
         enb_id = i + (hash & 0xFFFF8);
 # else
         enb_id = i;

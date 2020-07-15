@@ -27,10 +27,143 @@
 #include <errno.h>
 
 #include <stdio.h>
-
+#ifdef PHY_RM
+#include <stdint.h>
+#include <sys/un.h>
+#include <sys/signalfd.h>
+#include <signal.h>
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <sys/time.h>
+#include <pthread.h>
+#include <sys/ioctl.h>
+#endif
 #include "vnf.h"
+#ifdef PHY_RM
+#include "vnf_p7.h"
 
+typedef struct {
+  uint8_t enabled;
+  uint32_t rx_port;
+  uint32_t tx_port;
+  char tx_addr[80];
+} udp_data;
 
+typedef struct {
+  uint16_t index;
+  uint16_t id;
+  uint8_t rfs[2];
+  uint8_t excluded_rfs[2];
+
+  udp_data udp;
+
+  char local_addr[80];
+  int local_port;
+
+  char* remote_addr;
+  int remote_port;
+
+  uint8_t duplex_mode;
+  uint16_t dl_channel_bw_support;
+  uint16_t ul_channel_bw_support;
+  uint8_t num_dl_layers_supported;
+  uint8_t num_ul_layers_supported;
+  uint16_t release_supported;
+  uint8_t nmm_modes_supported;
+
+  uint8_t dl_ues_per_subframe;
+  uint8_t ul_ues_per_subframe;
+
+  uint8_t first_subframe_ind;
+
+  // timing information recevied from the vnf
+  uint8_t timing_window;
+  uint8_t timing_info_mode;
+  uint8_t timing_info_period;
+
+} phy_info;
+
+typedef struct {
+  uint16_t index;
+  uint16_t band;
+  int16_t max_transmit_power;
+  int16_t min_transmit_power;
+  uint8_t num_antennas_supported;
+  uint32_t min_downlink_frequency;
+  uint32_t max_downlink_frequency;
+  uint32_t max_uplink_frequency;
+  uint32_t min_uplink_frequency;
+} rf_info;
+
+typedef struct {
+
+  int release;
+  phy_info phys[2];
+  rf_info rfs[2];
+
+  uint8_t sync_mode;
+  uint8_t location_mode;
+  uint8_t location_coordinates[6];
+  uint32_t dl_config_timing;
+  uint32_t ul_config_timing;
+  uint32_t tx_timing;
+  uint32_t hi_dci0_timing;
+
+  uint16_t max_phys;
+  uint16_t max_total_bw;
+  uint16_t max_total_dl_layers;
+  uint16_t max_total_ul_layers;
+  uint8_t shared_bands;
+  uint8_t shared_pa;
+  int16_t max_total_power;
+  uint8_t oui;
+
+  uint8_t wireshark_test_mode;
+
+} pnf_info;
+
+typedef struct mac mac_t;
+
+typedef struct mac {
+
+	void* user_data;
+
+	void (*dl_config_req)(mac_t* mac, nfapi_dl_config_request_t* req);
+	void (*ul_config_req)(mac_t* mac, nfapi_ul_config_request_t* req);
+	void (*hi_dci0_req)(mac_t* mac, nfapi_hi_dci0_request_t* req);
+	void (*tx_req)(mac_t* mac, nfapi_tx_request_t* req);
+} mac_t;
+
+typedef struct {
+
+  int local_port;
+  char local_addr[80];
+
+  unsigned timing_window;
+  unsigned periodic_timing_enabled;
+  unsigned aperiodic_timing_enabled;
+  unsigned periodic_timing_period;
+
+  // This is not really the right place if we have multiple PHY,
+  // should be part of the phy struct
+  udp_data udp;
+
+  uint8_t thread_started;
+
+  nfapi_vnf_p7_config_t* config;
+
+  mac_t* mac;
+
+} vnf_p7_info;
+
+typedef struct {
+
+  uint8_t wireshark_test_mode;
+  pnf_info pnfs[2];
+  vnf_p7_info p7_vnfs[2];
+
+} vnf_info;
+#endif
 
 nfapi_vnf_config_t* nfapi_vnf_config_create()
 {
@@ -62,7 +195,82 @@ void nfapi_vnf_config_destory(nfapi_vnf_config_t* config)
 {
 	free(config);
 }
+#ifdef PHY_RM
+void init_server_eventfd(int *watch_fd_list, int client_num, char *path)
+{
+	// eventfd server
+	int s;
+	int fd;
+	struct sockaddr_un addr;
+	int len, conn_socket, ci;
+	char buf[128];
+	long short_buffer;
+	int size, ci_cnt = 0;
+	int flags;
 
+	for (ci = 0; ci < client_num; ci++)
+		watch_fd_list[ci] = -1;
+
+		printf("creating socket (init_server_eventfd)");
+
+	if ((conn_socket = socket(AF_UNIX, SOCK_STREAM, 0)) < 0)
+	{
+		perror("socket (init_server_eventfd)\n");
+	  exit(1);
+	}
+
+	addr.sun_family = AF_UNIX;
+	strcpy(addr.sun_path, path);
+
+	remove(addr.sun_path);
+
+	if (bind(conn_socket, (const struct sockaddr *)&addr, sizeof(struct sockaddr_un)) == -1)
+	{
+		perror("bind (init_server_eventfd)\n");
+	  exit(1);
+	}
+	printf("bind completed (init_server_eventfd) \n");
+
+	printf("%s\n", addr.sun_path);
+
+	if (listen(conn_socket, 16) == -1)
+	{
+		perror("listen (init_server_eventfd)");
+	  exit(1);
+	}
+
+	printf("init_server_eventfd : now listening\n");
+
+	while (1)
+	{
+		if ((fd = accept(conn_socket, NULL, NULL)) == -1)
+		{
+			perror("accept (init_server_eventfd)\n");
+		  exit(1);
+		}
+		printf("accept completed (init_server_eventfd)\n");
+
+		flags = fcntl(fd, F_GETFL, 0);
+		fcntl(fd, F_SETFL, flags & ~O_NONBLOCK);
+
+		for (ci = 0; ci < client_num; ci++)
+		{
+			if (watch_fd_list[ci] != -1)
+				continue;
+			else
+			{
+				watch_fd_list[ci] = fd;
+				ci_cnt++;
+				break;
+			}
+		}
+		if (ci_cnt == client_num)
+		{
+			return;
+		}
+	}
+}
+#endif
 int nfapi_vnf_start(nfapi_vnf_config_t* config)
 {
 	// Verify that config is not null
@@ -380,6 +588,34 @@ int nfapi_vnf_start(nfapi_vnf_config_t* config)
 						}
 					}
 				}
+#ifdef PHY_RM
+				int fd[6];
+				const char	*path = "/tmp/oai_fapi_1ms";
+				char		idx[2];
+				int			cell_id = 0;
+				char		Buffer[64];
+				char		cell[64];
+			    int         attr;
+
+				vnf_info*              vnf       = (vnf_info*)(config->user_data);
+				vnf_p7_info*           p7_vnf    = vnf->p7_vnfs;
+				nfapi_vnf_p7_config_t* p7_config = (nfapi_vnf_p7_config_t*)p7_vnf->config;
+				vnf_p7_t*              vnf_p7    = (vnf_p7_t*)p7_config;
+
+				/* set socket path */
+				sprintf(cell, "%d", cell_id);
+				strcpy(Buffer, path);
+				strcat(Buffer, cell);
+
+				init_server_eventfd(vnf_p7->fapi_1ms_fd_list, 1, Buffer);
+			  
+			  attr=1; /* non blocking */
+			  ioctl(vnf_p7->fapi_1ms_fd_list[0], FIONBIO, &attr);
+
+				vnf_p7->maxfd = vnf_p7->fapi_1ms_fd_list[0];
+
+				FD_SET(vnf_p7->fapi_1ms_fd_list[0], &(vnf_p7->watchset));
+#endif
 			}
 			else
 			{
@@ -666,8 +902,11 @@ int nfapi_vnf_allocate_phy(nfapi_vnf_config_t* config, int p5_idx, uint16_t* phy
 
 	info->timing_window = 30;       // This seems to override what gets set by the user - why???
 	info->timing_info_mode = 0x03;
+#ifdef PHY_RM
+        info->timing_info_period = 32;
+#else
 	info->timing_info_period = 128;
-
+#endif
 	nfapi_vnf_phy_info_list_add(config, info);
 
 	(*phy_id) = info->phy_id;

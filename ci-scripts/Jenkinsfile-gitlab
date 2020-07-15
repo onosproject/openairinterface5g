@@ -156,6 +156,7 @@ pipeline {
                                 sh "git clone https://${git_username}:${git_password}@gitlab.eurecom.fr/flexran/flexran-rtc.git . > ../git_clone.log 2>&1"
                                 sh "git checkout develop >> ../git_clone.log 2>&1"
                             }
+                            sh "sed -i -e 's#add-apt-repository.*cleishm.*neo4j#add-apt-repository ppa:cleishm/neo4j -y#' -e 's#libneo4j-client-dev#libneo4j-client-dev -y#' tools/install_dependencies"
                             sh "zip -r -qq flexran.zip ."
                         }
                     }
@@ -196,6 +197,37 @@ pipeline {
             }
         }
 
+        stage ("Variant Builds (1)") {
+            parallel {
+                stage ("Build eNb-USRP") {
+                    steps {
+                        gitlabCommitStatus(name: "Build eNb-USRP") {
+                            timeout (time: 20, unit: 'MINUTES') {
+                                sh "./ci-scripts/oai-ci-vm-tool wait --workspace $WORKSPACE --variant enb-usrp --job-name ${JOB_NAME} --build-id ${BUILD_ID}"
+                            }
+                        }
+                    }
+                }
+                stage ("Build basic simulator") {
+                    steps {
+                        gitlabCommitStatus(name: "Build basic-sim") {
+                            timeout (time: 20, unit: 'MINUTES') {
+                                sh "./ci-scripts/oai-ci-vm-tool wait --workspace $WORKSPACE --variant basic-sim --job-name ${JOB_NAME} --build-id ${BUILD_ID}"
+                            }
+                        }
+                    }
+                }
+                stage ("Build eNb-ethernet") {
+                    steps {
+                        gitlabCommitStatus(name: "Build eNb-ethernet") {
+                            timeout (time: 20, unit: 'MINUTES') {
+                                sh "./ci-scripts/oai-ci-vm-tool wait --workspace $WORKSPACE --variant enb-ethernet --job-name ${JOB_NAME} --build-id ${BUILD_ID}"
+                            }
+                        }
+                    }
+                }
+            }
+        }
         stage ("Start VM -- enb-usrp") {
             steps {
                 timeout (time: 5, unit: 'MINUTES') {
@@ -706,6 +738,11 @@ pipeline {
                 }
             }
         }
+        stage ("Destroy all Virtual Machines") {
+            steps {
+                sh "./ci-scripts/oai-ci-vm-tool destroy --job-name ${JOB_NAME} --build-id ${BUILD_ID}"
+            }
+        }
     }
     post {
         always {
@@ -727,6 +764,8 @@ OAI CI Team''',
                     sh "rm -f .git/CI_COMMIT_MSG"
                 }
             }
+            echo '\u2705 \u001B[32mClean Up WorkSpace\u001B[0m'
+            deleteDir()
         }
         success {
             script {

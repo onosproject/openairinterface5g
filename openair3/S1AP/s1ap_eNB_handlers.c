@@ -217,7 +217,10 @@ int s1ap_eNB_handle_message(uint32_t assoc_id, int32_t stream,
                             const uint8_t *const data, const uint32_t data_length) {
   S1AP_S1AP_PDU_t pdu;
   int ret;
-  DevAssert(data != NULL);
+  if (data == NULL) {
+    S1AP_ERROR("data == NULL\n");
+    return -1;
+  }
   memset(&pdu, 0, sizeof(pdu));
 
   if (s1ap_eNB_decode_pdu(&pdu, data, data_length) < 0) {
@@ -260,7 +263,10 @@ int s1ap_eNB_handle_s1_setup_failure(uint32_t               assoc_id,
   S1AP_S1SetupFailure_t      *container;
   S1AP_S1SetupFailureIEs_t   *ie;
   s1ap_eNB_mme_data_t        *mme_desc_p;
-  DevAssert(pdu != NULL);
+  if (pdu == NULL) {
+    S1AP_ERROR("pdu == NULL\n");
+    return -1;
+  }
   container = &pdu->choice.unsuccessfulOutcome.value.choice.S1SetupFailure;
 
   /* S1 Setup Failure == Non UE-related procedure -> stream 0 */
@@ -298,14 +304,17 @@ int s1ap_eNB_handle_s1_setup_response(uint32_t               assoc_id,
   S1AP_S1SetupResponseIEs_t *ie;
   s1ap_eNB_mme_data_t       *mme_desc_p;
   int i;
-  DevAssert(pdu != NULL);
+  if (pdu == NULL) {
+    S1AP_ERROR("pdu == NULL\n");
+    return -1;
+  }
   container = &pdu->choice.successfulOutcome.value.choice.S1SetupResponse;
 
   /* S1 Setup Response == Non UE-related procedure -> stream 0 */
   if (stream != 0) {
     S1AP_ERROR("[SCTP %d] Received s1 setup response on stream != 0 (%d)\n",
                assoc_id, stream);
-    return -1;
+    //return -1;
   }
 
   if ((mme_desc_p = s1ap_eNB_get_MME(NULL, assoc_id, 0)) == NULL) {
@@ -321,8 +330,14 @@ int s1ap_eNB_handle_s1_setup_response(uint32_t               assoc_id,
    * LTE related gummei is the first element in the list, i.e with an id of 0.
    */
   S1AP_DEBUG("servedGUMMEIs.list.count %d\n", ie->value.choice.ServedGUMMEIs.list.count);
-  DevAssert(ie->value.choice.ServedGUMMEIs.list.count > 0);
-  DevAssert(ie->value.choice.ServedGUMMEIs.list.count <= S1AP_maxnoofRATs);
+  if (ie->value.choice.ServedGUMMEIs.list.count <= 0) {
+    S1AP_ERROR("ie->value.choice.ServedGUMMEIs.list.count <= 0\n");
+    return -1;
+  }
+  if (ie->value.choice.ServedGUMMEIs.list.count > S1AP_maxnoofRATs) {
+    S1AP_ERROR("ie->value.choice.ServedGUMMEIs.list.count > S1AP_maxnoofRATs\n");
+    return -1;
+  }
 
   for (i = 0; i < ie->value.choice.ServedGUMMEIs.list.count; i++) {
     S1AP_ServedGUMMEIsItem_t *gummei_item_p;
@@ -404,7 +419,10 @@ int s1ap_eNB_handle_error_indication(uint32_t         assoc_id,
   S1AP_ErrorIndication_t    *container;
   S1AP_ErrorIndicationIEs_t *ie;
   s1ap_eNB_mme_data_t        *mme_desc_p;
-  DevAssert(pdu != NULL);
+  if (pdu == NULL) {
+    S1AP_ERROR("pdu == NULL\n");
+    return -1;
+  }
   container = &pdu->choice.initiatingMessage.value.choice.ErrorIndication;
 
   /* S1 Setup Failure == Non UE-related procedure -> stream 0 */
@@ -745,7 +763,10 @@ int s1ap_eNB_handle_initial_context_request(uint32_t   assoc_id,
   S1AP_InitialContextSetupRequestIEs_t *ie;
   S1AP_ENB_UE_S1AP_ID_t    enb_ue_s1ap_id;
   S1AP_MME_UE_S1AP_ID_t    mme_ue_s1ap_id;
-  DevAssert(pdu != NULL);
+  if (pdu == NULL) {
+    S1AP_ERROR("pdu == NULL\n");
+    return -1;
+  }
   container = &pdu->choice.initiatingMessage.value.choice.InitialContextSetupRequest;
 
   if ((mme_desc_p = s1ap_eNB_get_MME(NULL, assoc_id, 0)) == NULL) {
@@ -786,7 +807,7 @@ int s1ap_eNB_handle_initial_context_request(uint32_t   assoc_id,
   if (stream == 0) {
     S1AP_ERROR("[SCTP %d] Received UE-related procedure on stream (%d)\n",
                assoc_id, stream);
-    return -1;
+    //return -1;
   }
 
   ue_desc_p->rx_stream = stream;
@@ -895,7 +916,10 @@ int s1ap_eNB_handle_ue_context_release_command(uint32_t   assoc_id,
   S1AP_ENB_UE_S1AP_ID_t  enb_ue_s1ap_id;
   S1AP_UEContextReleaseCommand_t     *container;
   S1AP_UEContextReleaseCommand_IEs_t *ie;
-  DevAssert(pdu != NULL);
+  if (pdu == NULL) {
+    S1AP_ERROR("pdu == NULL\n");
+    return -1;
+  }
   container = &pdu->choice.initiatingMessage.value.choice.UEContextReleaseCommand;
 
   if ((mme_desc_p = s1ap_eNB_get_MME(NULL, assoc_id, 0)) == NULL) {
@@ -981,7 +1005,10 @@ int s1ap_eNB_handle_e_rab_setup_request(uint32_t         assoc_id,
   MessageDef                   *message_p        = NULL;
   S1AP_E_RABSetupRequest_t     *container;
   S1AP_E_RABSetupRequestIEs_t  *ie;
-  DevAssert(pdu != NULL);
+  if (pdu == NULL) {
+    S1AP_ERROR("pdu == NULL\n");
+    return -1;
+  }
   container = &pdu->choice.initiatingMessage.value.choice.E_RABSetupRequest;
 
   if ((mme_desc_p = s1ap_eNB_get_MME(NULL, assoc_id, 0)) == NULL) {
@@ -1022,7 +1049,7 @@ int s1ap_eNB_handle_e_rab_setup_request(uint32_t         assoc_id,
   if (stream == 0) {
     S1AP_ERROR("[SCTP %d] Received UE-related procedure on stream (%d)\n",
                assoc_id, stream);
-    return -1;
+    //return -1;
   }
 
   ue_desc_p->rx_stream = stream;
@@ -1100,17 +1127,13 @@ int s1ap_eNB_handle_paging(uint32_t               assoc_id,
   MessageDef            *message_p         = NULL;
   S1AP_Paging_t         *container;
   S1AP_PagingIEs_t      *ie;
-  DevAssert(pdu != NULL);
+  if (pdu == NULL) {
+    S1AP_ERROR("pdu == NULL\n");
+    return -1;
+  }
   container = &pdu->choice.initiatingMessage.value.choice.Paging;
   // received Paging Message from MME
   S1AP_DEBUG("[SCTP %d] Received Paging Message From MME\n",assoc_id);
-
-  /* Paging procedure -> stream != 0 */
-  if (stream == 0) {
-    LOG_W(S1AP,"[SCTP %d] Received Paging procedure on stream (%d)\n",
-          assoc_id, stream);
-    return -1;
-  }
 
   if ((mme_desc_p = s1ap_eNB_get_MME(NULL, assoc_id, 0)) == NULL) {
     S1AP_ERROR("[SCTP %d] Received Paging for non "
@@ -1273,7 +1296,10 @@ int s1ap_eNB_handle_e_rab_modify_request(uint32_t               assoc_id,
   S1AP_E_RABModifyRequestIEs_t  *ie;
   S1AP_ENB_UE_S1AP_ID_t         enb_ue_s1ap_id;
   S1AP_MME_UE_S1AP_ID_t         mme_ue_s1ap_id;
-  DevAssert(pdu != NULL);
+  if (pdu == NULL) {
+    S1AP_ERROR("pdu == NULL\n");
+    return -1;
+  }
   container = &pdu->choice.initiatingMessage.value.choice.E_RABModifyRequest;
 
   if ((mme_desc_p = s1ap_eNB_get_MME(NULL, assoc_id, 0)) == NULL) {
@@ -1314,7 +1340,7 @@ int s1ap_eNB_handle_e_rab_modify_request(uint32_t               assoc_id,
   if (stream == 0) {
     S1AP_ERROR("[SCTP %d] Received UE-related procedure on stream (%d)\n",
                assoc_id, stream);
-    return -1;
+    //return -1;
   }
 
   ue_desc_p->rx_stream = stream;
@@ -1407,7 +1433,10 @@ int s1ap_eNB_handle_e_rab_release_command(uint32_t               assoc_id,
   S1AP_E_RABReleaseCommandIEs_t  *ie;
   S1AP_ENB_UE_S1AP_ID_t           enb_ue_s1ap_id;
   S1AP_MME_UE_S1AP_ID_t           mme_ue_s1ap_id;
-  DevAssert(pdu != NULL);
+  if (pdu == NULL) {
+    S1AP_ERROR("pdu == NULL\n");
+    return -1;
+  }
   container = &pdu->choice.initiatingMessage.value.choice.E_RABReleaseCommand;
 
   if ((mme_desc_p = s1ap_eNB_get_MME(NULL, assoc_id, 0)) == NULL) {
@@ -1447,7 +1476,7 @@ int s1ap_eNB_handle_e_rab_release_command(uint32_t               assoc_id,
   if (stream == 0) {
     S1AP_ERROR("[SCTP %d] Received UE-related procedure on stream (%d)\n",
                assoc_id, stream);
-    return -1;
+    //return -1;
   }
 
   ue_desc_p->rx_stream = stream;
@@ -1512,7 +1541,10 @@ int s1ap_eNB_handle_s1_path_switch_request_ack(uint32_t               assoc_id,
   S1AP_E_RABToBeSwitchedULItem_t *s1ap_E_RABToBeSwitchedULItem;
   S1AP_E_RABItemIEs_t  *e_RABItemIEs;
   S1AP_E_RABItem_t     *e_RABItem;
-  DevAssert(pdu != NULL);
+  if (pdu == NULL) {
+    S1AP_ERROR("pdu == NULL\n");
+    return -1;
+  }
   pathSwitchRequestAcknowledge = &pdu->choice.successfulOutcome.value.choice.PathSwitchRequestAcknowledge;
 
   /* Path Switch request == UE-related procedure -> stream !=0 */
@@ -1670,13 +1702,16 @@ int s1ap_eNB_handle_s1_path_switch_request_failure(uint32_t               assoc_
   s1ap_eNB_mme_data_t   *mme_desc_p       = NULL;
   S1AP_PathSwitchRequestFailure_t    *pathSwitchRequestFailure;
   S1AP_PathSwitchRequestFailureIEs_t *ie;
-  DevAssert(pdu != NULL);
+  if (pdu == NULL) {
+    S1AP_ERROR("pdu == NULL\n");
+    return -1;
+  }
   pathSwitchRequestFailure = &pdu->choice.unsuccessfulOutcome.value.choice.PathSwitchRequestFailure;
 
   if (stream != 0) {
     S1AP_ERROR("[SCTP %d] Received s1 path switch request failure on stream != 0 (%d)\n",
                assoc_id, stream);
-    return -1;
+    //return -1;
   }
 
   if ((mme_desc_p = s1ap_eNB_get_MME(NULL, assoc_id, 0)) == NULL) {

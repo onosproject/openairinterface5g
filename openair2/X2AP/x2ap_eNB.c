@@ -89,21 +89,35 @@ void x2ap_eNB_ue_context_release(instance_t instance,
 static
 void x2ap_eNB_handle_sctp_data_ind(instance_t instance, sctp_data_ind_t *sctp_data_ind) {
   int result;
-  DevAssert(sctp_data_ind != NULL);
-  x2ap_eNB_handle_message(instance, sctp_data_ind->assoc_id, sctp_data_ind->stream,
-                          sctp_data_ind->buffer, sctp_data_ind->buffer_length);
+  if(sctp_data_ind == NULL) {
+    X2AP_ERROR("%s %d: sctp_data_ind is a NULL pointer \n",__FILE__,__LINE__);
+    return ;
+  }
+  if (x2ap_eNB_handle_message(instance, sctp_data_ind->assoc_id, sctp_data_ind->stream,
+                          sctp_data_ind->buffer, sctp_data_ind->buffer_length) == -1) {
+    X2AP_ERROR("Failed to handle x2ap eNB message\n");
+  }
   result = itti_free(TASK_UNKNOWN, sctp_data_ind->buffer);
-  AssertFatal (result == EXIT_SUCCESS, "Failed to free memory (%d)!\n", result);
+  if(result != EXIT_SUCCESS) {
+	  X2AP_ERROR("Failed to free memory (%d)!\n", result);
+  }
 }
 
 static
 void x2ap_eNB_handle_sctp_association_resp(instance_t instance, sctp_new_association_resp_t *sctp_new_association_resp) {
   x2ap_eNB_instance_t *instance_p;
   x2ap_eNB_data_t *x2ap_enb_data_p;
-  DevAssert(sctp_new_association_resp != NULL);
+  if(sctp_new_association_resp == NULL) {
+    X2AP_ERROR("%s %d: sctp_new_association_resp is a NULL pointer \n",__FILE__,__LINE__);
+    return ;
+  }
+  printf("x2ap_eNB_handle_sctp_association_resp at 1\n");
   dump_trees();
   instance_p = x2ap_eNB_get_instance(instance);
-  DevAssert(instance_p != NULL);
+  if(instance_p == NULL) {
+    X2AP_ERROR("%s %d: instance_p is a NULL pointer \n",__FILE__,__LINE__);
+    return ;
+  }
 
   /* if the assoc_id is already known, it is certainly because an IND was received
    * before. In this case, just update streams and return
@@ -115,8 +129,8 @@ void x2ap_eNB_handle_sctp_association_resp(instance_t instance, sctp_new_associa
     if (x2ap_enb_data_p != NULL) {
       /* some sanity check - to be refined at some point */
       if (sctp_new_association_resp->sctp_state != SCTP_STATE_ESTABLISHED) {
-        X2AP_ERROR("x2ap_enb_data_p not NULL and sctp state not SCTP_STATE_ESTABLISHED, what to do?\n");
-        abort();
+        X2AP_ERROR("x2ap_enb_data_p not NULL and sctp state not SCTP_STATE_ESTABLISHED, remove x2ap instance\n");
+        x2ap_remove_eNB(instance_p,x2ap_enb_data_p);
       }
 
       x2ap_enb_data_p->in_streams  = sctp_new_association_resp->in_streams;
@@ -127,7 +141,11 @@ void x2ap_eNB_handle_sctp_association_resp(instance_t instance, sctp_new_associa
 
   x2ap_enb_data_p = x2ap_get_eNB(instance_p, -1,
                                  sctp_new_association_resp->ulp_cnx_id);
-  DevAssert(x2ap_enb_data_p != NULL);
+  if(x2ap_enb_data_p == NULL) {
+    X2AP_ERROR("%s %d: x2ap_enb_data_p is a NULL pointer \n",__FILE__,__LINE__);
+    return ;
+  }
+  printf("x2ap_eNB_handle_sctp_association_resp at 2\n");
   dump_trees();
 
   if (sctp_new_association_resp->sctp_state != SCTP_STATE_ESTABLISHED) {
@@ -159,20 +177,35 @@ void x2ap_eNB_handle_sctp_association_ind(instance_t instance, sctp_new_associat
   x2ap_eNB_data_t *x2ap_enb_data_p;
   printf("x2ap_eNB_handle_sctp_association_ind at 1 (called for instance %d)\n", instance);
   dump_trees();
-  DevAssert(sctp_new_association_ind != NULL);
+
+  if(sctp_new_association_ind == NULL) {
+    X2AP_ERROR("%s %d: sctp_new_association_ind is a NULL pointer \n",__FILE__,__LINE__);
+    return ;
+  }
+
   instance_p = x2ap_eNB_get_instance(instance);
-  DevAssert(instance_p != NULL);
+  if(instance_p == NULL) {
+    X2AP_ERROR("%s %d: instance_p is a NULL pointer \n",__FILE__,__LINE__);
+    return ;
+  }
+
   x2ap_enb_data_p = x2ap_get_eNB(instance_p, sctp_new_association_ind->assoc_id, -1);
+  if (x2ap_enb_data_p != NULL) {
+	  X2AP_ERROR("%s %d: x2ap_enb_data_p is not a NULL pointer \n",__FILE__,__LINE__);
+	  return ;
+  }
 
-  if (x2ap_enb_data_p != NULL) abort();
-
-  //  DevAssert(x2ap_enb_data_p != NULL);
   if (x2ap_enb_data_p == NULL) {
     /* Create new eNB descriptor */
     x2ap_enb_data_p = calloc(1, sizeof(*x2ap_enb_data_p));
-    DevAssert(x2ap_enb_data_p != NULL);
+    if (x2ap_enb_data_p == NULL) {
+  	  X2AP_ERROR("%s %d: x2ap_enb_data_p is a NULL pointer \n",__FILE__,__LINE__);
+  	  return ;
+    }
+
     x2ap_enb_data_p->cnx_id                = x2ap_eNB_fetch_add_global_cnx_id();
     x2ap_enb_data_p->x2ap_eNB_instance = instance_p;
+    x2ap_enb_data_p->assoc_id    = sctp_new_association_ind->assoc_id; 
     /* Insert the new descriptor in list of known eNB
      * but not yet associated.
      */
@@ -190,7 +223,7 @@ void x2ap_eNB_handle_sctp_association_ind(instance_t instance, sctp_new_associat
   printf("x2ap_eNB_handle_sctp_association_ind at 2\n");
   dump_trees();
   /* Update parameters */
-  x2ap_enb_data_p->assoc_id    = sctp_new_association_ind->assoc_id;
+  //x2ap_enb_data_p->assoc_id    = sctp_new_association_ind->assoc_id;
   x2ap_enb_data_p->in_streams  = sctp_new_association_ind->in_streams;
   x2ap_enb_data_p->out_streams = sctp_new_association_ind->out_streams;
   printf("x2ap_eNB_handle_sctp_association_ind at 3\n");
@@ -203,8 +236,17 @@ int x2ap_eNB_init_sctp (x2ap_eNB_instance_t *instance_p,
   // Create and alloc new message
   MessageDef                             *message;
   sctp_init_t                            *sctp_init  = NULL;
-  DevAssert(instance_p != NULL);
-  DevAssert(local_ip_addr != NULL);
+
+  if (instance_p == NULL) {
+	  X2AP_ERROR("%s %d: instance_p is a NULL pointer \n",__FILE__,__LINE__);
+	  return -1;
+  }
+
+  if (local_ip_addr == NULL) {
+	  X2AP_ERROR("%s %d: local_ip_addr is a NULL pointer \n",__FILE__,__LINE__);
+	  return -1;
+  }
+
   message = itti_alloc_new_message (TASK_X2AP, SCTP_INIT_MSG_MULTI_REQ);
   sctp_init = &message->ittiMsg.sctp_init_multi;
   sctp_init->port = enb_port_for_X2C;
@@ -237,8 +279,17 @@ static void x2ap_eNB_register_eNB(x2ap_eNB_instance_t *instance_p,
   MessageDef                       *message                   = NULL;
   sctp_new_association_req_multi_t *sctp_new_association_req  = NULL;
   x2ap_eNB_data_t                  *x2ap_enb_data             = NULL;
-  DevAssert(instance_p != NULL);
-  DevAssert(target_eNB_ip_address != NULL);
+
+  if (instance_p == NULL) {
+	  X2AP_ERROR("%s %d: instance_p is a NULL pointer \n",__FILE__,__LINE__);
+	  return ;
+  }
+
+  if (target_eNB_ip_address == NULL) {
+	  X2AP_ERROR("%s %d: target_eNB_ip_address is a NULL pointer \n",__FILE__,__LINE__);
+	  return ;
+  }
+
   message = itti_alloc_new_message(TASK_X2AP, SCTP_NEW_ASSOCIATION_REQ_MULTI);
   sctp_new_association_req = &message->ittiMsg.sctp_new_association_req_multi;
   sctp_new_association_req->port = enb_port_for_X2C;
@@ -254,7 +305,11 @@ static void x2ap_eNB_register_eNB(x2ap_eNB_instance_t *instance_p,
          sizeof(*local_ip_addr));
   /* Create new eNB descriptor */
   x2ap_enb_data = calloc(1, sizeof(*x2ap_enb_data));
-  DevAssert(x2ap_enb_data != NULL);
+  if (x2ap_enb_data == NULL) {
+	  X2AP_ERROR("%s %d: x2ap_enb_data is a NULL pointer \n",__FILE__,__LINE__);
+	  return ;
+  }
+
   x2ap_enb_data->cnx_id                = x2ap_eNB_fetch_add_global_cnx_id();
   sctp_new_association_req->ulp_cnx_id = x2ap_enb_data->cnx_id;
   x2ap_enb_data->assoc_id          = -1;
@@ -273,7 +328,11 @@ static
 void x2ap_eNB_handle_register_eNB(instance_t instance,
                                   x2ap_register_enb_req_t *x2ap_register_eNB) {
   x2ap_eNB_instance_t *new_instance;
-  DevAssert(x2ap_register_eNB != NULL);
+  if (x2ap_register_eNB == NULL) {
+	  X2AP_ERROR("%s %d: x2ap_register_eNB is a NULL pointer \n",__FILE__,__LINE__);
+	  return ;
+  }
+
   /* Look if the provided instance already exists */
   new_instance = x2ap_eNB_get_instance(instance);
 
@@ -287,7 +346,11 @@ void x2ap_eNB_handle_register_eNB(instance_t instance,
     X2AP_WARN("eNB[%d] already registered\n", instance);
   } else {
     new_instance = calloc(1, sizeof(x2ap_eNB_instance_t));
-    DevAssert(new_instance != NULL);
+    if (new_instance == NULL) {
+  	  X2AP_ERROR("%s %d: new_instance is a NULL pointer \n",__FILE__,__LINE__);
+  	  return ;
+    }
+
     RB_INIT(&new_instance->x2ap_enb_head);
     /* Copy usefull parameters */
     new_instance->instance         = instance;
@@ -350,9 +413,18 @@ void x2ap_eNB_handle_sctp_init_msg_multi_cnf(
   sctp_init_msg_multi_cnf_t *m) {
   x2ap_eNB_instance_t *instance;
   int index;
-  DevAssert(m != NULL);
+
+  if (m == NULL) {
+	  X2AP_ERROR("%s %d: m is a NULL pointer \n",__FILE__,__LINE__);
+	  return ;
+  }
+
   instance = x2ap_eNB_get_instance(instance_id);
-  DevAssert(instance != NULL);
+  if (instance == NULL) {
+	  X2AP_ERROR("%s %d: instance is a NULL pointer \n",__FILE__,__LINE__);
+	  return ;
+  }
+
   instance->multi_sd = m->multi_sd;
 
   /* Exit if CNF message reports failure.
@@ -360,7 +432,7 @@ void x2ap_eNB_handle_sctp_init_msg_multi_cnf(
    */
   if (instance->multi_sd < 0) {
     X2AP_ERROR("Error: be sure to properly configure X2 in your configuration file.\n");
-    DevAssert(instance->multi_sd >= 0);
+    return ;
   }
 
   /* Trying to connect to the provided list of eNB ip address */
@@ -378,6 +450,22 @@ void x2ap_eNB_handle_sctp_init_msg_multi_cnf(
   }
 }
 
+static void x2ap_eNB_ho_cancel_rrc_notify(x2ap_eNB_instance_t *instance_p, x2ap_handover_cancel_cause_t cause, int rnti)
+{
+  instance_t instance = 0;
+  MessageDef *msg;
+
+  if(instance_p) {
+    instance = instance_p->instance;
+  }
+  
+  /* inform RRC of cancellation */
+  msg = itti_alloc_new_message(TASK_X2AP, X2AP_HANDOVER_CANCEL);
+  X2AP_HANDOVER_CANCEL(msg).rnti  = rnti;
+  X2AP_HANDOVER_CANCEL(msg).cause = cause;
+  itti_send_msg_to_task(TASK_RRC_ENB, instance, msg);
+}
+
 static
 void x2ap_eNB_handle_handover_req(instance_t instance,
                                   x2ap_handover_req_t *x2ap_handover_req)
@@ -390,10 +478,18 @@ void x2ap_eNB_handle_handover_req(instance_t instance,
   int target_pci = x2ap_handover_req->target_physCellId;
 
   instance_p = x2ap_eNB_get_instance(instance);
-  DevAssert(instance_p != NULL);
+  if (instance_p == NULL) {
+	  X2AP_ERROR("%s %d: instance_p is a NULL pointer \n",__FILE__,__LINE__);
+    x2ap_eNB_ho_cancel_rrc_notify(instance_p, X2AP_T_RELOC_PREP_TIMEOUT, x2ap_handover_req->rnti);
+	  return ;
+  }
 
   target = x2ap_is_eNB_pci_in_list(target_pci);
-  DevAssert(target != NULL);
+  if (target == NULL) {
+	  X2AP_ERROR("%s %d: target is a NULL pointer, target_pci %d\n",__FILE__,__LINE__, target_pci);
+    x2ap_eNB_ho_cancel_rrc_notify(instance_p, X2AP_T_RELOC_PREP_TIMEOUT, x2ap_handover_req->rnti);
+    return ;
+  }
 
   /* allocate x2ap ID */
   id_manager = &instance_p->id_manager;
@@ -401,7 +497,9 @@ void x2ap_eNB_handle_handover_req(instance_t instance,
   if (ue_id == -1) {
     X2AP_ERROR("could not allocate a new X2AP UE ID\n");
     /* TODO: cancel handover: send (to be defined) message to RRC */
-    exit(1);
+    x2ap_eNB_ho_cancel_rrc_notify(instance_p, X2AP_T_RELOC_PREP_TIMEOUT, x2ap_handover_req->rnti);
+    //exit(1);
+    return ;
   }
   /* id_source is ue_id, id_target is unknown yet */
   x2ap_set_ids(id_manager, ue_id, x2ap_handover_req->rnti, ue_id, -1);
@@ -432,10 +530,16 @@ void x2ap_eNB_handle_handover_req_ack(instance_t instance,
   int                 id_target;
 
   instance_p = x2ap_eNB_get_instance(instance);
-  DevAssert(instance_p != NULL);
+  if (instance_p == NULL) {
+	  X2AP_ERROR("%s %d: instance_p is a NULL pointer \n",__FILE__,__LINE__);
+	  return ;
+  }
 
   target = x2ap_get_eNB(NULL, source_assoc_id, 0);
-  DevAssert(target != NULL);
+  if (target == NULL) {
+	  X2AP_ERROR("%s %d: target is a NULL pointer \n",__FILE__,__LINE__);
+	  return ;
+  }
 
   /* rnti is a new information, save it */
   ue_id     = x2ap_handover_req_ack->x2_id_target;
@@ -571,10 +675,16 @@ void x2ap_eNB_ue_context_release(instance_t instance,
   int source_assoc_id = x2ap_ue_context_release->source_assoc_id;
   int ue_id;
   instance_p = x2ap_eNB_get_instance(instance);
-  DevAssert(instance_p != NULL);
+  if (instance_p == NULL) {
+	  X2AP_ERROR("%s %d: instance_p is a NULL pointer \n",__FILE__,__LINE__);
+	  return ;
+  }
 
   target = x2ap_get_eNB(NULL, source_assoc_id, 0);
-  DevAssert(target != NULL);
+  if (target == NULL) {
+	  X2AP_ERROR("%s %d: target is a NULL pointer \n",__FILE__,__LINE__);
+	  return ;
+  }
 
   x2ap_eNB_generate_x2_ue_context_release(instance_p, target, x2ap_ue_context_release);
 
@@ -582,7 +692,8 @@ void x2ap_eNB_ue_context_release(instance_t instance,
   ue_id = x2ap_find_id_from_rnti(&instance_p->id_manager, x2ap_ue_context_release->rnti);
   if (ue_id == -1) {
     X2AP_ERROR("could not find UE %x\n", x2ap_ue_context_release->rnti);
-    exit(1);
+    //exit(1);
+    return ;
   }
   x2ap_release_id(&instance_p->id_manager, ue_id);
 }
@@ -669,7 +780,10 @@ void *x2ap_task(void *arg) {
     }
 
     result = itti_free (ITTI_MSG_ORIGIN_ID(received_msg), received_msg);
-    AssertFatal (result == EXIT_SUCCESS, "Failed to free memory (%d)!\n", result);
+    if(result != EXIT_SUCCESS) {
+      X2AP_ERROR("Failed to free memory (%d)!\n", result);
+    }
+
     received_msg = NULL;
   }
 
@@ -715,5 +829,7 @@ int is_x2ap_enabled(void)
 
 mutex_error:
   LOG_E(X2AP, "mutex error\n");
-  exit(1);
+  //exit(1);
+  exit_fun("is_x2ap_enabled mutex error" );
+  return(-1);
 }

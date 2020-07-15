@@ -51,4 +51,5 @@ struct x2ap_eNB_data_s *x2ap_get_eNB(x2ap_eNB_instance_t *instance_p,
                                      int32_t assoc_id,
                                      uint16_t cnx_id);
 
+void x2ap_remove_eNB(x2ap_eNB_instance_t *instance_p,x2ap_eNB_data_t *x2ap_enb_data_p);
 #endif /* __X2AP_ENB_MANAGEMENT_PROCEDURES__H__ */

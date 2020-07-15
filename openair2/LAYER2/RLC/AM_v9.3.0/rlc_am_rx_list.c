@@ -60,10 +60,7 @@ boolean_t rlc_am_rx_check_vr_reassemble(
                          sn_ref,rlc_pP->vr_r,rlc_pP->channel_id);
                    return FALSE;
                 }
-/*
-				AssertFatal(pdu_cursor_mgnt_p->all_segments_received > 0,"AM Rx Check Reassembly head SN=%d with PDU segments != vrR=%d should be fully received LCID=%d\n",
-						sn_ref,rlc_pP->vr_r,rlc_pP->channel_id);
-*/
+
 				while ((cursor_p != NULL) && (pdu_info_p->sn == sn_ref) && (pdu_info_p->so == next_waited_so)) {
 					if (pdu_cursor_mgnt_p->segment_reassembled == RLC_AM_RX_PDU_SEGMENT_REASSEMBLE_NO) {
 						pdu_cursor_mgnt_p->segment_reassembled = RLC_AM_RX_PDU_SEGMENT_REASSEMBLE_PENDING;
@@ -96,10 +93,7 @@ boolean_t rlc_am_rx_check_vr_reassemble(
                        rlc_pP->vr_r,sn_ref,rlc_pP->channel_id);
                  return FALSE;
               }
-/*
-				AssertFatal(pdu_cursor_mgnt_p->all_segments_received == 0,"AM Rx Check Reassembly vr=%d should be partly received SNHead=%d LCID=%d\n",
-						rlc_pP->vr_r,sn_ref,rlc_pP->channel_id);
-*/
+
 				while ((cursor_p != NULL) && (pdu_info_p->sn == rlc_pP->vr_r) && (pdu_info_p->so == next_waited_so)) {
 					if (pdu_cursor_mgnt_p->segment_reassembled == RLC_AM_RX_PDU_SEGMENT_REASSEMBLE_NO) {
 						pdu_cursor_mgnt_p->segment_reassembled = RLC_AM_RX_PDU_SEGMENT_REASSEMBLE_PENDING;
@@ -125,10 +119,7 @@ boolean_t rlc_am_rx_check_vr_reassemble(
                      rlc_pP->vr_r,rlc_pP->channel_id);
                return FALSE;
             }
-/*
-			AssertFatal(pdu_cursor_mgnt_p->all_segments_received == 0,"AM Rx Check Reassembly SNHead=vr=%d should be partly received LCID=%d\n",
-					rlc_pP->vr_r,rlc_pP->channel_id);
-*/
+
 			while ((cursor_p != NULL) && (pdu_info_p->sn == rlc_pP->vr_r) && (pdu_info_p->so == next_waited_so)) {
 				if (pdu_cursor_mgnt_p->segment_reassembled == RLC_AM_RX_PDU_SEGMENT_REASSEMBLE_NO) {
 					pdu_cursor_mgnt_p->segment_reassembled = RLC_AM_RX_PDU_SEGMENT_REASSEMBLE_PENDING;
@@ -366,9 +357,7 @@ rlc_am_rx_pdu_status_t rlc_am_rx_list_handle_pdu_segment(
         LOG_E(RLC, "AM Rx PDU Error, received buffer empty LcID=%d\n",rlc_pP->channel_id);
         return RLC_AM_DATA_PDU_STATUS_HEADER_ERROR;
       }
-/*
-	  AssertFatal(cursor_p != NULL,"AM Rx PDU Error, received buffer empty LcID=%d\n",rlc_pP->channel_id);
-*/
+
 	  do {
 		  pdu_info_cursor_p = &((rlc_am_rx_pdu_management_t*)(cursor_p->data))->pdu_info;
 
@@ -525,12 +514,7 @@ rlc_am_rx_pdu_status_t rlc_am_rx_list_handle_pdu_segment(
 			      pdu_rx_info_p->so,pdu_rx_info_p->so + pdu_rx_info_p->payload_size - 1,so_start_segment,so_end_segment,pdu_rx_info_p->sn);
             return RLC_AM_DATA_PDU_STATUS_AM_SEGMENT_DUPLICATE;
           }
-/*
-		  AssertFatal((so_start_segment <= so_end_segment) && (pdu_rx_info_p->so <= so_start_segment) &&
-				  (so_end_segment <= pdu_rx_info_p->so + pdu_rx_info_p->payload_size - 1),
-				  " AM RX PDU Segment Duplicate elimination error FirstSO=0 OldSOStart=%d OldSOEnd=%d newSOStart=%d newSOEnd =%d SN=%d\n",
-				  pdu_rx_info_p->so,pdu_rx_info_p->so + pdu_rx_info_p->payload_size - 1,so_start_segment,so_end_segment,pdu_rx_info_p->sn);
-*/
+
 	  } // end pdu_info_cursor_p->so == 0
 	  else {
 		  // Handle most likely case : PDU Segment without duplicate is inserted before first stored PDU segment
@@ -578,12 +562,7 @@ rlc_am_rx_pdu_status_t rlc_am_rx_list_handle_pdu_segment(
                        pdu_rx_info_p->so,pdu_rx_info_p->so + pdu_rx_info_p->payload_size - 1,so_end_segment,pdu_rx_info_p->sn);
                  return RLC_AM_DATA_PDU_STATUS_AM_SEGMENT_DUPLICATE;
               }
-/*
-			  AssertFatal((so_start_segment <= so_end_segment) &&
-					  (so_end_segment <= pdu_rx_info_p->so + pdu_rx_info_p->payload_size - 1),
-					  " AM RX PDU Segment Duplicate elimination at the end error FirstSO!=0 SOStart=%d OldSOEnd=%d newSOEnd =%d SN=%d\n",
-					  pdu_rx_info_p->so,pdu_rx_info_p->so + pdu_rx_info_p->payload_size - 1,so_end_segment,pdu_rx_info_p->sn);
-*/
+
 		  }
 		  else {
 			  // Second Case: Duplicate at the begining and potentially at the end
@@ -677,12 +656,7 @@ rlc_am_rx_pdu_status_t rlc_am_rx_list_handle_pdu_segment(
               pdu_rx_info_p->so,pdu_rx_info_p->so + pdu_rx_info_p->payload_size - 1,so_start_segment,so_end_segment,pdu_rx_info_p->sn);
          return RLC_AM_DATA_PDU_STATUS_AM_SEGMENT_DUPLICATE;
       }
-/*
-			  AssertFatal((so_start_segment <= so_end_segment) && (pdu_rx_info_p->so <= so_start_segment) &&
-					  (so_end_segment <= pdu_rx_info_p->so + pdu_rx_info_p->payload_size - 1),
-					  " AM RX PDU Segment Duplicate elimination error FirstSO!=0 OldSOStart=%d OldSOEnd=%d newSOStart=%d newSOEnd =%d SN=%d\n",
-					  pdu_rx_info_p->so,pdu_rx_info_p->so + pdu_rx_info_p->payload_size - 1,so_start_segment,so_end_segment,pdu_rx_info_p->sn);
-*/
+
 		  }
 
 	  } // end pdu_info_cursor_p->so != 0
@@ -696,11 +670,7 @@ rlc_am_rx_pdu_status_t rlc_am_rx_list_handle_pdu_segment(
               pdu_rx_info_p->so,pdu_rx_info_p->so + pdu_rx_info_p->payload_size - 1,so_start_segment,so_end_segment,pdu_rx_info_p->sn);
          return RLC_AM_DATA_PDU_STATUS_AM_SEGMENT_DUPLICATE;
       }
-/*
-	  AssertFatal((pdu_rx_info_p->so != so_start_segment) || (so_end_segment != pdu_rx_info_p->so + pdu_rx_info_p->payload_size - 1),
-			  " AM RX PDU Segment Duplicate elimination error FirstSO!=0 OldSOStart=%d OldSOEnd=%d newSOStart=%d newSOEnd =%d SN=%d\n",
-			  pdu_rx_info_p->so,pdu_rx_info_p->so + pdu_rx_info_p->payload_size - 1,so_start_segment,so_end_segment,pdu_rx_info_p->sn);
-*/
+
 	  mem_block_t* trunc_segment = create_new_segment_from_pdu(tb_pP,so_start_segment - pdu_rx_info_p->so,so_end_segment - so_start_segment + 1);
 	  if (trunc_segment != NULL) {
 		  LOG_I(RLC, PROTOCOL_RLC_AM_CTXT_FMT"[PROCESS RX PDU SEGMENT]  CREATE SEGMENT FROM SEGMENT OFFSET=%d DATA LENGTH=%d SN=%d\n",
@@ -716,7 +686,7 @@ rlc_am_rx_pdu_status_t rlc_am_rx_list_handle_pdu_segment(
 		  /* Free original PDU Segment */
 		  free_mem_block(tb_pP, __func__);
 
-		  return RLC_AM_DATA_PDU_STATUS_OK;
+		  return RLC_AM_DATA_PDU_STATUS_FREE_STATE;
 	  }
 	  else {
 		  return RLC_AM_DATA_PDU_STATUS_BUFFER_FULL;
@@ -746,9 +716,7 @@ rlc_am_rx_pdu_status_t rlc_am_rx_list_handle_pdu(
          LOG_E(RLC, "AM Rx PDU Error, received buffer empty LcID=%d\n",rlc_pP->channel_id);
          return RLC_AM_DATA_PDU_STATUS_HEADER_ERROR;
       }
-/*
-	  AssertFatal(cursor_p != NULL,"AM Rx PDU Error, received buffer empty LcID=%d\n",rlc_pP->channel_id);
-*/
+
 	  do {
 		  pdu_info_cursor_p = &((rlc_am_rx_pdu_management_t*)(cursor_p->data))->pdu_info;
 
@@ -830,19 +798,14 @@ rlc_am_rx_pdu_status_t rlc_am_rx_list_handle_pdu(
              LOG_E(RLC, "AM Rx PDU Error, stored SN=%d should be a PDU segment\n",pdu_info_cursor_p->sn);
              return RLC_AM_DATA_PDU_STATUS_HEADER_ERROR;
           }
-/*
-		  AssertFatal(pdu_info_cursor_p->rf != 0,"AM Rx PDU Error, stored SN=%d should be a PDU segment\n",pdu_info_cursor_p->sn);
-*/
+
 //Assertion(eNB)_PRAN_DesignDocument_annex No.790
           if(((rlc_am_rx_pdu_management_t *) (cursor_p->data))->all_segments_received != 0)
           {
              LOG_E(RLC, "AM Rx PDU Error, stored SN=%d already fully received\n",pdu_info_cursor_p->sn);
              return RLC_AM_DATA_PDU_STATUS_SN_DUPLICATE;
           }
-/*
-		  AssertFatal(((rlc_am_rx_pdu_management_t *) (cursor_p->data))->all_segments_received == 0,
-				  "AM Rx PDU Error, stored SN=%d already fully received\n",pdu_info_cursor_p->sn);
-*/
+
 		  sdu_size_t          next_waited_so = 0;
 		  while ((cursor_p != NULL) && (pdu_info_cursor_p->sn == pdu_rx_info_p->sn) && (pdu_info_cursor_p->so == next_waited_so)) {
 			  next_waited_so += pdu_info_cursor_p->payload_size;
@@ -882,7 +845,7 @@ rlc_am_rx_pdu_status_t rlc_am_rx_list_handle_pdu(
 			  /* Free original PDU */
 			  free_mem_block(tb_pP, __func__);
 
-			  return pdu_status;
+			  return RLC_AM_DATA_PDU_STATUS_FREE_STATE;
 		  }
 		  else {
 			  return RLC_AM_DATA_PDU_STATUS_BUFFER_FULL;
@@ -1107,6 +1070,7 @@ rlc_am_rx_list_reassemble_rlc_sdus(
     if (rlc_am_rx_pdu_management_p->all_segments_received > 0) {
       cursor_p = list2_remove_head(&rlc_pP->receiver_buffer);
       rlc_am_reassemble_pdu(ctxt_pP, rlc_pP, cursor_p,TRUE);
+      cursor_p = NULL;
       rlc_am_rx_old_pdu_management = rlc_am_rx_pdu_management_p;
       cursor_p = list2_get_head(&rlc_pP->receiver_buffer);
 
@@ -1149,11 +1113,11 @@ rlc_am_rx_list_reassemble_rlc_sdus(
     }
     else {
 #if RLC_STOP_ON_LOST_PDU
-
+      LOG_E(RLC, PROTOCOL_RLC_AM_CTXT_FMT" LOST PDU DETECTED\n",PROTOCOL_RLC_AM_CTXT_ARGS(ctxt_pP,rlc_pP));
+      return;
       if (list2_get_head(&rlc_pP->receiver_buffer) != cursor_p) {
-        AssertFatal( 0 == 1,
-                     PROTOCOL_RLC_AM_CTXT_FMT" LOST PDU DETECTED\n",
-                     PROTOCOL_RLC_AM_CTXT_ARGS(ctxt_pP,rlc_pP));
+        LOG_E(RLC, PROTOCOL_RLC_AM_CTXT_FMT" LOST PDU DETECTED\n",PROTOCOL_RLC_AM_CTXT_ARGS(ctxt_pP,rlc_pP));
+        return;
       }
 
 #endif
@@ -1202,7 +1166,6 @@ list2_insert_before_element (
 
     return element_to_insert_pP;
   } else {
-    //assert(2==1);
     LOG_E(RLC, "list2_insert_before_element error. element_to_insert_pP %p, element_pP %p\n", element_to_insert_pP,element_pP);
     return NULL;
   }
@@ -1230,7 +1193,6 @@ list2_insert_after_element (
 
     return element_to_insert_pP;
   } else {
-    //assert(2==1);
     LOG_E(RLC, "list2_insert_after_element error. element_to_insert_pP %p, element_pP %p\n", element_to_insert_pP,element_pP);
     return NULL;
   }
@@ -1281,7 +1243,6 @@ rlc_am_rx_list_display (
       //if (cursor_p == cursor_p->next) {
       //    rlc_am_v9_3_0_test_print_trace();
       //}
-      //assert(cursor_p != cursor_p->next);
       if(cursor_p == cursor_p->next)
       {
         LOG_E(RLC, "rlc_am_rx_list_display error. cursor_p %p, cursor_p->next %p\n", cursor_p, cursor_p->next);

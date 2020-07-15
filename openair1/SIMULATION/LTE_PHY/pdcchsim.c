@@ -866,6 +866,10 @@ int main(int argc, char **argv) {
             printf("generating PHICH\n");
 
           harq_pid = phich_subframe_to_harq_pid(&eNB->frame_parms, proc_rxtx->frame_tx, subframe);
+          if (harq_pid == 255) {
+            LOG_E(SIM,"FATAL ERROR: illegal harq_pid, returning\n");
+            return -1;
+          }
           phich_ACK = taus()&1;
           eNB->ulsch[0]->harq_processes[harq_pid]->phich_active = 1;
           eNB->ulsch[0]->harq_processes[harq_pid]->first_rb     = 0;
@@ -1037,7 +1041,12 @@ int main(int argc, char **argv) {
                    UE->is_secondary_ue);
 
           if (is_phich_subframe(&UE->frame_parms,subframe)) {
-            UE->ulsch[0]->harq_processes[phich_subframe_to_harq_pid(&UE->frame_parms,0,subframe)]->status = ACTIVE;
+		    harq_pid = phich_subframe_to_harq_pid(&UE->frame_parms,0,subframe);
+            if (harq_pid == 255) {
+              LOG_E(SIM,"FATAL ERROR: illegal harq_pid, returning\n");
+              return -1;
+            }
+            UE->ulsch[0]->harq_processes[harq_pid]->status = ACTIVE;
             //UE->ulsch[0]->harq_processes[phich_subframe_to_harq_pid(&UE->frame_parms,0,subframe)]->Ndi = 1;
             rx_phich(UE,
                      &UE->proc.proc_rxtx[subframe&1],
@@ -1109,7 +1118,12 @@ int main(int argc, char **argv) {
 
           /*
            if (is_phich_subframe(&UE->frame_parms,subframe))
-             if (UE->ulsch[0]->harq_processes[phich_subframe_to_harq_pid(&UE->frame_parms, UE->frame, subframe)]->Ndi != phich_ACK)
+             harq_pid = phich_subframe_to_harq_pid(&UE->frame_parms, UE->frame, subframe);
+             if (harq_pid == 255) {
+               LOG_E(SIM,"FATAL ERROR: illegal harq_pid, returning\n");
+               return -1;
+             }
+             if (UE->ulsch[0]->harq_processes[harq_pid]->Ndi != phich_ACK)
                n_errors_hi++;
           */
 

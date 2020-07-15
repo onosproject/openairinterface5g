@@ -48,9 +48,18 @@ void s1ap_eNB_generate_trace_failure(struct s1ap_eNB_ue_context_s *ue_desc_p,
     uint8_t                            *buffer = NULL;
     uint32_t                            length;
 
-    DevAssert(ue_desc_p != NULL);
-    DevAssert(trace_id  != NULL);
-    DevAssert(cause_p   != NULL);
+    if (ue_desc_p == NULL) {
+      S1AP_ERROR("ue_desc_p == NULL\n");
+      return;
+    }
+    if (trace_id == NULL) {
+      S1AP_ERROR("trace_id == NULL\n");
+      return;
+    }
+    if (cause_p == NULL) {
+      S1AP_ERROR("cause_p == NULL\n");
+      return;
+    }
 
     /* Prepare the S1AP message to encode */
     memset(&pdu, 0, sizeof(pdu));
@@ -110,14 +119,20 @@ int s1ap_eNB_handle_trace_start(uint32_t         assoc_id,
     struct s1ap_eNB_ue_context_s *ue_desc_p = NULL;
     struct s1ap_eNB_mme_data_s   *mme_ref_p;
 
-    DevAssert(pdu != NULL);
+    if (pdu == NULL) {
+      S1AP_ERROR("pdu == NULL\n");
+      return -1;
+    }
 
     container = &pdu->choice.initiatingMessage.value.choice.TraceStart;
 
     S1AP_FIND_PROTOCOLIE_BY_ID(S1AP_TraceStartIEs_t, ie, container,
                                S1AP_ProtocolIE_ID_id_eNB_UE_S1AP_ID, TRUE);
     mme_ref_p = s1ap_eNB_get_MME(NULL, assoc_id, 0);
-    DevAssert(mme_ref_p != NULL);
+    if (mme_ref_p == NULL) {
+      S1AP_ERROR("mme_ref_p == NULL\n");
+      return -1;
+    }
   if (ie != NULL) {
     ue_desc_p = s1ap_eNB_get_ue_context(mme_ref_p->s1ap_eNB_instance,
                                         ie->value.choice.ENB_UE_S1AP_ID);

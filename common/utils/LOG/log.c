@@ -48,6 +48,7 @@
 
 log_mem_cnt_t log_mem_d[2];
 int log_mem_flag=0;
+int log_mem_initflag=0;
 int log_mem_multi=1;
 volatile int log_mem_side=0;
 pthread_mutex_t log_mem_lock;
@@ -253,7 +254,7 @@ void  log_getconfig(log_t *g_log)
         break;
       } else if (log_options[j+1].name == NULL) {
         fprintf(stderr,"Unknown log option: %s\n",logparams_defaults[LOG_OPTIONS_IDX].strlistptr[i]);
-        exit(-1);
+        exit_fun("log_getconfig Unknown log option");
       }
     }
   }
@@ -527,6 +528,7 @@ void vlogRecord_mt(const char *file,
   } else {
   log_header(log_buffer,MAX_LOG_TOTAL,comp, level,format);
   g_log->log_component[comp].vprint(g_log->log_component[comp].stream,log_buffer, args);
+  fflush(g_log->log_component[comp].stream);
   }
 }
 
@@ -754,12 +756,15 @@ void flush_mem_to_file(void)
       }
       snprintf(f_name,1024, "%s_%d.log",log_mem_filename,log_mem_file_cnt);
       fp=open(f_name, O_WRONLY | O_CREAT, 0666);
-      int ret = write(fp, log_mem_d[log_mem_write_side].buf_p, log_mem_d[log_mem_write_side].buf_index);
-      if ( ret < 0) {
+      if(fp==-1){
+        fprintf(stderr,"{LOG} %s %d Couldn't file open in %s \n",__FILE__,__LINE__,f_name);
+      }else{
+        int ret = write(fp, log_mem_d[log_mem_write_side].buf_p, log_mem_d[log_mem_write_side].buf_index);
+        if ( ret < 0) {
           fprintf(stderr,"{LOG} %s %d Couldn't write in %s \n",__FILE__,__LINE__,f_name);
-          exit(EXIT_FAILURE);
+        }
+        close(fp);
       }
-      close(fp);
       log_mem_file_cnt++;
       log_mem_d[log_mem_write_side].buf_index=0;
       log_mem_d[log_mem_write_side].enable_flag=1;
@@ -940,6 +945,7 @@ int logInit_log_mem (void)
     log_mem_d[1].enable_flag=0;
   }
 
+  log_mem_initflag = 1;
   printf("log init done\n");
   
   return 0;

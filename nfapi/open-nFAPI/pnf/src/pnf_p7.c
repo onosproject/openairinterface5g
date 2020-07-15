@@ -90,6 +90,28 @@ uint32_t pnf_get_current_time_hr(void)
 	return time_hr;
 }
 
+uint32_t pnf_get_diff_time_hr(uint32_t now_time_hr, uint32_t old_time_hr)
+{
+        int32_t diff_sec;
+        uint32_t diff_usec;
+        uint32_t diff_sec_to_usec = 0;
+
+        diff_sec = TIMEHR_SEC(now_time_hr) - TIMEHR_SEC(old_time_hr);
+
+        if(diff_sec > 0)
+        {
+                diff_sec_to_usec = diff_sec * 1000000;
+        }
+        else if(diff_sec < 0)
+        {
+                diff_sec_to_usec = (diff_sec + 4096) * 1000000;
+        }
+
+        diff_usec = diff_sec_to_usec + (TIMEHR_USEC(now_time_hr) - TIMEHR_USEC(old_time_hr));
+
+        return diff_usec;
+}
+
 void* pnf_p7_malloc(pnf_p7_t* pnf_p7, size_t size)
 {
 	if(pnf_p7->_public.malloc)
@@ -344,13 +366,15 @@ void pnf_p7_rx_reassembly_queue_remove_msg(pnf_p7_t* pnf_p7, pnf_p7_rx_reassembl
 
 void pnf_p7_rx_reassembly_queue_remove_old_msgs(pnf_p7_t* pnf_p7, pnf_p7_rx_reassembly_queue_t* queue, uint32_t rx_hr_time, uint32_t delta)
 {
+        uint32_t diff_usec;
 	// remove all messages that are too old
 	pnf_p7_rx_message_t* iterator = queue->msg_queue;
 	pnf_p7_rx_message_t* previous = 0;
 
 	while(iterator != 0)
 	{
-		if(rx_hr_time - iterator->rx_hr_time > delta)
+                diff_usec = pnf_get_diff_time_hr(rx_hr_time, iterator->rx_hr_time);
+		if(diff_usec > delta)
 		{
 			if(previous == 0)
 			{

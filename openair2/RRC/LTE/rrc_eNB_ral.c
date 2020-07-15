@@ -104,7 +104,11 @@ int rrc_enb_ral_handle_configure_threshold_request(unsigned int mod_idP, Message
   MessageDef                        *message_p                 = NULL;
   unsigned int                       ix_param                  = 0;
   unsigned int                       ix_thresholds             = 0;
-  DevAssert(msg_pP != NULL);
+
+  if(msg_pP == NULL) {
+    LOG_E(RRC,"msg_pP is NULL\n");
+    return -1;
+  }
   LOG_I(RRC, "[eNB %d] Received %s\n", mod_idP, ITTI_MSG_NAME (msg_pP));
   configure_threshold_req_p = &RRC_RAL_CONFIGURE_THRESHOLD_REQ(msg_pP);
   transaction_id = configure_threshold_req_p->transaction_id;

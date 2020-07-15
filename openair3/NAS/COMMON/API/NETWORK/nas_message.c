@@ -966,6 +966,7 @@ static int _nas_message_decrypt(
   LOG_FUNC_IN;
 
   int size = 0;
+  int ret = 0;
   nas_message_security_header_t header;
 
 #ifdef NAS_MME
@@ -1018,7 +1019,11 @@ static int _nas_message_decrypt(
       stream_cipher.message    = (unsigned char *)src;
       /* length in bits */
       stream_cipher.blength    = length << 3;
-      nas_stream_encrypt_eea1(&stream_cipher, (unsigned char *)dest);
+      ret = nas_stream_encrypt_eea1(&stream_cipher, (unsigned char *)dest);
+	  if (ret == -1) {
+        LOG_TRACE(ERROR, "NAS_SECURITY_ALGORITHMS_EEA1:nas_stream_encrypt_eea1 fail!");
+		LOG_FUNC_RETURN (0);
+	  }
       /* Decode the first octet (security header type or EPS bearer identity,
        * and protocol discriminator) */
       DECODE_U8(dest, *(uint8_t*)(&header), size);
@@ -1052,7 +1057,11 @@ static int _nas_message_decrypt(
       stream_cipher.message    = (unsigned char *)src;
       /* length in bits */
       stream_cipher.blength    = length << 3;
-      nas_stream_encrypt_eea1(&stream_cipher, (unsigned char *)dest);
+      ret = nas_stream_encrypt_eea1(&stream_cipher, (unsigned char *)dest);
+	  if (ret == -1) {
+        LOG_TRACE(ERROR, "NAS_SECURITY_ALGORITHMS_EEA2:nas_stream_encrypt_eea1 fail!");
+		LOG_FUNC_RETURN (0);
+	  }
       /* Decode the first octet (security header type or EPS bearer identity,
        * and protocol discriminator) */
       DECODE_U8(dest, *(uint8_t*)(&header), size);
@@ -1180,7 +1189,11 @@ static int _nas_message_encrypt(
       stream_cipher.message    = (unsigned char *)src;
       /* length in bits */
       stream_cipher.blength    = length << 3;
-      nas_stream_encrypt_eea1(&stream_cipher, (unsigned char *)dest);
+      int ret = nas_stream_encrypt_eea1(&stream_cipher, (unsigned char *)dest);
+	  if (ret == -1) {
+        LOG_TRACE(ERROR, "nas_stream_encrypt_eea1 fail!");
+		LOG_FUNC_RETURN (0);
+	  }
 
       LOG_FUNC_RETURN (length);
 
@@ -1211,7 +1224,11 @@ static int _nas_message_encrypt(
       stream_cipher.message    = (unsigned char *)src;
       /* length in bits */
       stream_cipher.blength    = length << 3;
-      nas_stream_encrypt_eea2(&stream_cipher, (unsigned char *)dest);
+      int ret = nas_stream_encrypt_eea2(&stream_cipher, (unsigned char *)dest);
+      if (ret == -1) {
+        LOG_TRACE(ERROR, "nas_stream_encrypt_eea2 failed.");
+        LOG_FUNC_RETURN (0);
+	  }
 
       LOG_FUNC_RETURN (length);
 
@@ -1397,9 +1414,13 @@ static uint32_t _nas_message_get_mac(
     /* length in bits */
     stream_cipher.blength    = length << 3;
 
-    nas_stream_encrypt_eia2(
+    int ret = nas_stream_encrypt_eia2(
       &stream_cipher,
       mac);
+	if (ret == -1) {
+        LOG_TRACE(ERROR, "nas_stream_encrypt_eia2 failed.");
+        LOG_FUNC_RETURN (0);
+	}
     LOG_TRACE(DEBUG,
               "NAS_SECURITY_ALGORITHMS_EIA2 returned MAC %x.%x.%x.%x(%u) for length %d direction %d, count %d",
               mac[0], mac[1], mac[2],mac[3],

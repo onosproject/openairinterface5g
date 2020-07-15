@@ -387,7 +387,7 @@ rlc_um_mac_status_indication (const protocol_ctxt_t *const ctxt_pP, void *rlc_pP
     status_resp.rlc_info.rlc_protocol_state      = rlc_p->protocol_state;
     rlc_um_check_timer_dar_time_out(ctxt_pP, rlc_p);
     status_resp.buffer_occupancy_in_bytes = rlc_um_get_buffer_occupancy (rlc_p);
-
+    RLC_UM_MUTEX_LOCK(&rlc_p->lock_input_sdus, ctxt_pP, rlc_p);
     if ((status_resp.buffer_occupancy_in_bytes > 0) && ((mb_p = list_get_head(&rlc_p->input_sdus)) != NULL)) {
       if (enb_flagP == ENB_FLAG_YES) {
         /* For eNB: add minimum RLC UM header size for the scheduler */
@@ -410,7 +410,7 @@ rlc_um_mac_status_indication (const protocol_ctxt_t *const ctxt_pP, void *rlc_pP
       }
     } else {
     }
-
+    RLC_UM_MUTEX_UNLOCK(&rlc_p->lock_input_sdus);
     status_resp.rlc_info.rlc_protocol_state = rlc_p->protocol_state;
 
     if (LOG_DEBUGFLAG(DEBUG_RLC)) {

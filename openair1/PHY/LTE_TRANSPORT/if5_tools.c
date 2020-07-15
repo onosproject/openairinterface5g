@@ -1287,8 +1287,9 @@ void send_IF5(RU_t *ru, openair0_timestamp proc_timestamp, int subframe, uint8_t
       }
 #endif  
     }
-  } else {    
-    AssertFatal(1==0, "send_IF5 - Unknown packet_type %x", packet_type);     
+  } else {
+    LOG_E(PHY, "send_IF5 - Unknown packet_type %x", packet_type);
+    return;   
   }  
   
   free(tx_buffer);
@@ -1611,7 +1612,8 @@ void recv_IF5(RU_t *ru, openair0_timestamp *proc_timestamp, int subframe, uint16
      
     }
   } else {
-    AssertFatal(1==0, "recv_IF5 - Unknown packet_type %x", packet_type);     
+    LOG_E(PHY, "recv_IF5 - Unknown packet_type %x", packet_type);
+    return;
   }  
 
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_RECV_IF5, 0 );  

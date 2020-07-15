@@ -270,43 +270,51 @@ static int sync_to_gps(openair0_device *device) {
     @param device pointer to the device structure specific to the RF hardware target
 */
 static int trx_usrp_start(openair0_device *device) {
-  usrp_state_t *s = (usrp_state_t *)device->priv;
+#if defined(USRP_REC_PLAY)
 
-  // setup GPIO for TDD, GPIO(4) = ATR_RX
-  //set data direction register (DDR) to output
-  s->usrp->set_gpio_attr("FP0", "DDR", 0xfff, 0xfff);
-  //set lower 7 bits to be controlled automatically by ATR (the rest 5 bits are controlled manually) 
-  s->usrp->set_gpio_attr("FP0", "CTRL", 0x7f,0xfff);
-  //set pins 4 (RX_TX_Switch) and 6 (Shutdown PA) to 1 when the radio is only receiving (ATR_RX)
-  s->usrp->set_gpio_attr("FP0", "ATR_RX", (1<<4)|(1<<6), 0x7f);
-  // set pin 5 (Shutdown LNA) to 1 when the radio is transmitting and receiveing (ATR_XX)
-  // (we use full duplex here, because our RX is on all the time - this might need to change later)
-  s->usrp->set_gpio_attr("FP0", "ATR_XX", (1<<5), 0x7f);
-  // set the output pins to 0
-  s->usrp->set_gpio_attr("FP0", "OUT", 7<<7, 0xf80);
+  if (u_sf_mode != 2) { // not replay mode
+#endif
+    usrp_state_t *s = (usrp_state_t *)device->priv;
 
-  // init recv and send streaming
-  uhd::stream_cmd_t cmd(uhd::stream_cmd_t::STREAM_MODE_START_CONTINUOUS);
-  LOG_I(HW,"Time in secs now: %llu \n", s->usrp->get_time_now().to_ticks(s->sample_rate));
-  LOG_I(HW,"Time in secs last pps: %llu \n", s->usrp->get_time_last_pps().to_ticks(s->sample_rate));
+    // setup GPIO for TDD, GPIO(4) = ATR_RX
+    //set data direction register (DDR) to output
+    s->usrp->set_gpio_attr("FP0", "DDR", 0xfff, 0xfff);
+    //set lower 7 bits to be controlled automatically by ATR (the rest 5 bits are controlled manually) 
+    s->usrp->set_gpio_attr("FP0", "CTRL", 0x7f,0xfff);
+    //set pins 4 (RX_TX_Switch) and 6 (Shutdown PA) to 1 when the radio is only receiving (ATR_RX)
+    s->usrp->set_gpio_attr("FP0", "ATR_RX", (1<<4)|(1<<6), 0x7f);
+    // set pin 5 (Shutdown LNA) to 1 when the radio is transmitting and receiveing (ATR_XX)
+    // (we use full duplex here, because our RX is on all the time - this might need to change later)
+    s->usrp->set_gpio_attr("FP0", "ATR_XX", (1<<5), 0x7f);
+    // set the output pins to 0
+    s->usrp->set_gpio_attr("FP0", "OUT", 7<<7, 0xf80);
+
+    // init recv and send streaming
+    uhd::stream_cmd_t cmd(uhd::stream_cmd_t::STREAM_MODE_START_CONTINUOUS);
+    LOG_I(HW,"Time in secs now: %llu \n", s->usrp->get_time_now().to_ticks(s->sample_rate));
+    LOG_I(HW,"Time in secs last pps: %llu \n", s->usrp->get_time_last_pps().to_ticks(s->sample_rate));
   
-  if (s->use_gps == 1 || device->openair0_cfg[0].time_source == external) {
-    s->wait_for_first_pps = 1;
-    cmd.time_spec = s->usrp->get_time_last_pps() + uhd::time_spec_t(1.0);
-  } else {
-    s->wait_for_first_pps = 0;
-    cmd.time_spec = s->usrp->get_time_now() + uhd::time_spec_t(0.005);
+    if (s->use_gps == 1 || device->openair0_cfg[0].time_source == external) {
+      s->wait_for_first_pps = 1;
+      cmd.time_spec = s->usrp->get_time_last_pps() + uhd::time_spec_t(1.0);
+    } else {
+      s->wait_for_first_pps = 0;
+      cmd.time_spec = s->usrp->get_time_now() + uhd::time_spec_t(0.005);
+    }
+
+    cmd.stream_now = false; // start at constant delay
+    s->rx_stream->issue_stream_cmd(cmd);
+    /*s->tx_md.time_spec = cmd.time_spec + uhd::time_spec_t(1-(double)s->tx_forward_nsamps/s->sample_rate);
+    s->tx_md.has_time_spec = true;
+    s->tx_md.start_of_burst = true;
+    s->tx_md.end_of_burst = false;*/
+    s->rx_count = 0;
+    s->tx_count = 0;
+    s->rx_timestamp = 0;
+#if defined(USRP_REC_PLAY)
   }
 
-  cmd.stream_now = false; // start at constant delay
-  s->rx_stream->issue_stream_cmd(cmd);
-  /*s->tx_md.time_spec = cmd.time_spec + uhd::time_spec_t(1-(double)s->tx_forward_nsamps/s->sample_rate);
-  s->tx_md.has_time_spec = true;
-  s->tx_md.start_of_burst = true;
-  s->tx_md.end_of_burst = false;*/
-  s->rx_count = 0;
-  s->tx_count = 0;
-  s->rx_timestamp = 0;
+#endif
   return 0;
 }
 /*! \brief Terminate operation of the USRP transceiver -- free all associated resources
@@ -691,8 +699,18 @@ static int trx_usrp_read(openair0_device *device, openair0_timestamp *ptimestamp
 
       samples_received = s->rx_stream->recv(buff_ptrs, nsamps, s->rx_md,1.0);
     } else {
-      // receive a single channel (e.g. from connector RF A)
-      samples_received = s->rx_stream->recv(buff[0], nsamps, s->rx_md,1.0);
+        // receive a single channel (e.g. from connector RF A)
+        samples_received=0;
+        while (samples_received != nsamps) {
+          // receive a single channel (e.g. from connector RF A)
+          samples_received += s->rx_stream->recv(buff[0], nsamps, s->rx_md);
+          if  ((s->wait_for_first_pps == 0) && (s->rx_md.error_code!=uhd::rx_metadata_t::ERROR_CODE_NONE))
+            break;
+
+          if ((s->wait_for_first_pps == 1) && (samples_received != nsamps)) {
+            printf("sleep...\n"); //usleep(100);
+          }
+        }
     }
   }
 
@@ -786,7 +804,7 @@ int trx_usrp_set_gains(openair0_device *device,
   if (openair0_cfg[0].rx_gain[0]-openair0_cfg[0].rx_gain_offset[0] > gain_range.stop()) {
     LOG_E(HW,"RX Gain 0 too high, reduce by %f dB\n",
           openair0_cfg[0].rx_gain[0]-openair0_cfg[0].rx_gain_offset[0] - gain_range.stop());
-    exit(-1);
+    exit_fun("fatal: RX Gain 0 too high" );
   }
 
   s->usrp->set_rx_gain(openair0_cfg[0].rx_gain[0]-openair0_cfg[0].rx_gain_offset[0]);

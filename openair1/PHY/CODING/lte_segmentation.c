@@ -120,9 +120,11 @@ int lte_segmentation(unsigned char *input_buffer,
     *Cplus  = (*C) - (*Cminus);
   }
 
-  AssertFatal(Bprime <= (*Cplus)*(*Kplus) + (*Cminus)*(*Kminus),
-              "Bprime %d <  (*Cplus %d)*(*Kplus %d) + (*Cminus %d)*(*Kminus %d)\n",
-              Bprime,*Cplus,*Kplus,*Cminus,*Kminus);
+  if (Bprime > (*Cplus)*(*Kplus) + (*Cminus)*(*Kminus)) {
+    LOG_E(PHY, "Bprime %d >  (*Cplus %d)*(*Kplus %d) + (*Cminus %d)*(*Kminus %d)\n",Bprime,*Cplus,*Kplus,*Cminus,*Kminus);
+    return(-1);
+  }
+
   *F = ((*Cplus)*(*Kplus) + (*Cminus)*(*Kminus) - (Bprime));
 #ifdef DEBUG_SEGMENTATION
   printf("C %u, Cplus %u, Cminus %u, Kplus %u, Kminus %u, Bprime_bytes %u, Bprime %u, F %u\n",

@@ -745,11 +745,11 @@ rrc_eNB_send_S1AP_NAS_FIRST_REQ(
     }
 
     /* Assume that cause is coded in the same way in RRC and S1ap, just check that the value is in S1ap range */
-    AssertFatal(ue_context_pP->ue_context.establishment_cause < RRC_CAUSE_LAST,
-                "Establishment cause invalid (%jd/%d) for eNB %d!",
-                ue_context_pP->ue_context.establishment_cause,
-                RRC_CAUSE_LAST,
-                ctxt_pP->module_id);
+    if(ue_context_pP->ue_context.establishment_cause >= RRC_CAUSE_LAST) {
+      LOG_E(S1AP,"Establishment cause invalid (%jd/%d) for eNB %d!",ue_context_pP->ue_context.establishment_cause,RRC_CAUSE_LAST,ctxt_pP->module_id);
+      return;
+    }
+
     S1AP_NAS_FIRST_REQ (message_p).establishment_cause = ue_context_pP->ue_context.establishment_cause;
     /* Forward NAS message */
     S1AP_NAS_FIRST_REQ (message_p).nas_pdu.buffer = rrcConnectionSetupComplete->dedicatedInfoNAS.buf;
@@ -784,21 +784,37 @@ rrc_eNB_send_S1AP_NAS_FIRST_REQ(
         S1AP_NAS_FIRST_REQ (message_p).ue_identity.presenceMask |= UE_IDENTITIES_gummei;
 
         if (r_mme->plmn_Identity != NULL) {
-          if ((r_mme->plmn_Identity->mcc != NULL) && (r_mme->plmn_Identity->mcc->list.count > 0)) {
-            /* Use first indicated PLMN MCC if it is defined */
-            S1AP_NAS_FIRST_REQ (message_p).ue_identity.gummei.mcc = *r_mme->plmn_Identity->mcc->list.array[selected_plmn_identity];
+          if ((r_mme->plmn_Identity->mcc != NULL) && (r_mme->plmn_Identity->mcc->list.count == 3))
+          {
+            S1AP_NAS_FIRST_REQ (message_p).ue_identity.gummei.mcc = (*r_mme->plmn_Identity->mcc->list.array[0] & 0xf) * 100 +
+                                                                    (*r_mme->plmn_Identity->mcc->list.array[1] & 0xf) * 10 +
+                                                                    (*r_mme->plmn_Identity->mcc->list.array[2] & 0xf);
             LOG_I(S1AP, "[eNB %d] Build S1AP_NAS_FIRST_REQ adding in s_TMSI: GUMMEI MCC %u ue %x\n",
                   ctxt_pP->module_id,
                   S1AP_NAS_FIRST_REQ (message_p).ue_identity.gummei.mcc,
                   ue_context_pP->ue_context.rnti);
           }
-
-          if (r_mme->plmn_Identity->mnc.list.count > 0) {
-            /* Use first indicated PLMN MNC if it is defined */
-            S1AP_NAS_FIRST_REQ (message_p).ue_identity.gummei.mnc = *r_mme->plmn_Identity->mnc.list.array[selected_plmn_identity];
-            LOG_I(S1AP, "[eNB %d] Build S1AP_NAS_FIRST_REQ adding in s_TMSI: GUMMEI MNC %u ue %x\n",
+          if(r_mme->plmn_Identity->mnc.list.count == 3)
+          {
+            S1AP_NAS_FIRST_REQ (message_p).ue_identity.gummei.mnc = (*r_mme->plmn_Identity->mnc.list.array[0] & 0xf) * 100 +
+                                                                    (*r_mme->plmn_Identity->mnc.list.array[1] & 0xf) * 10 +
+                                                                    (*r_mme->plmn_Identity->mnc.list.array[2] & 0xf);
+            S1AP_NAS_FIRST_REQ (message_p).ue_identity.gummei.mnc_len = 3;
+            LOG_I(S1AP, "[eNB %d] Build S1AP_NAS_FIRST_REQ adding in s_TMSI: GUMMEI MNC %u %udigit ue %x\n",
                   ctxt_pP->module_id,
                   S1AP_NAS_FIRST_REQ (message_p).ue_identity.gummei.mnc,
+                  S1AP_NAS_FIRST_REQ (message_p).ue_identity.gummei.mnc_len,
+                  ue_context_pP->ue_context.rnti);
+          }
+          else if(r_mme->plmn_Identity->mnc.list.count == 2)
+          {
+            S1AP_NAS_FIRST_REQ (message_p).ue_identity.gummei.mnc = (*r_mme->plmn_Identity->mnc.list.array[0] & 0xf) * 10 +
+                                                                    (*r_mme->plmn_Identity->mnc.list.array[1] & 0xf);
+            S1AP_NAS_FIRST_REQ (message_p).ue_identity.gummei.mnc_len = 2;
+            LOG_I(S1AP, "[eNB %d] Build S1AP_NAS_FIRST_REQ adding in s_TMSI: GUMMEI MNC %u %udigit ue %x\n",
+                  ctxt_pP->module_id,
+                  S1AP_NAS_FIRST_REQ (message_p).ue_identity.gummei.mnc,
+                  S1AP_NAS_FIRST_REQ (message_p).ue_identity.gummei.mnc_len,
                   ue_context_pP->ue_context.rnti);
           }
         } else { // end if plmn_Identity != NULL
@@ -2028,10 +2044,13 @@ int rrc_eNB_send_PATH_SWITCH_REQ(const protocol_ctxt_t *const ctxt_pP,
   S1AP_PATH_SWITCH_REQ (msg_p).nb_of_e_rabs = e_rabs_done;
   create_tunnel_req.rnti           = ue_context_pP->ue_context.rnti;
   create_tunnel_req.num_tunnels    = e_rabs_done;
-  gtpv1u_create_s1u_tunnel(
-    ctxt_pP->instance,
-    &create_tunnel_req,
-    &create_tunnel_resp);
+  if (gtpv1u_create_s1u_tunnel(
+      ctxt_pP->instance,
+      &create_tunnel_req,
+      &create_tunnel_resp) == -1) {
+        LOG_E(RRC,"gtpv1u_create_s1u_tunnel failed\n");
+        return -1;
+      }
   rrc_eNB_process_GTPV1U_CREATE_TUNNEL_RESP(
     ctxt_pP,
     &create_tunnel_resp,
@@ -2108,10 +2127,14 @@ int rrc_eNB_process_X2AP_TUNNEL_SETUP_REQ(instance_t instance, rrc_eNB_ue_contex
       create_tunnel_req.rnti           = ue_context_target_p->ue_context.rnti; // warning put zero above
       create_tunnel_req.num_tunnels    = e_rab_done;
       // NN: not sure if we should create a new tunnel: need to check teid, etc.
-      gtpv1u_create_x2u_tunnel(
+      int ret = gtpv1u_create_x2u_tunnel(
         instance,
         &create_tunnel_req,
         &create_tunnel_resp);
+      if (ret == -1) {  
+        LOG_E(RRC, "gtpv1u_create_x2u_tunnel return -1.");  
+        return (-1);
+      }
       ue_context_target_p->ue_context.nb_x2u_e_rabs = create_tunnel_resp.num_tunnels;
 
       for (i = 0; i < create_tunnel_resp.num_tunnels; i++) {
@@ -2172,7 +2195,7 @@ int rrc_eNB_process_S1AP_PATH_SWITCH_REQ_ACK (MessageDef *msg_p,
         ue_context_p->ue_context.e_rab[i].status = E_RAB_STATUS_REESTABLISHED;
 
         if (ue_context_p->ue_context.nb_release_of_e_rabs==0) {
-          LOG_I(RRC,"Bearer re-established with ID: %d\n", ue_context_p->ue_context.e_rab[i].param.e_rab_id);
+          LOG_I(RRC,"Bearer established with ID: %d\n", ue_context_p->ue_context.e_rab[i].param.e_rab_id);
         }
       }
 
@@ -2233,9 +2256,23 @@ int rrc_eNB_process_S1AP_PATH_SWITCH_REQ_ACK (MessageDef *msg_p,
     /* Security key */
     ue_context_p->ue_context.next_hop_chain_count=S1AP_PATH_SWITCH_REQ_ACK (msg_p).next_hop_chain_count;
     memcpy ( ue_context_p->ue_context.next_security_key,
-             S1AP_PATH_SWITCH_REQ_ACK (msg_p).next_security_key,
-             SECURITY_KEY_LENGTH);
-    rrc_eNB_send_X2AP_UE_CONTEXT_RELEASE(&ctxt, ue_context_p);
+	     S1AP_PATH_SWITCH_REQ_ACK (msg_p).next_security_key,
+	     SECURITY_KEY_LENGTH);
+
+    pthread_mutex_lock(&ue_context_p->ue_context.handover_cond_lock);
+    if(ue_context_p->ue_context.handover_info != NULL) {
+      rrc_eNB_send_X2AP_UE_CONTEXT_RELEASE(&ctxt, ue_context_p);
+
+      if(ue_context_p->ue_context.handover_info->state == HO_END_MARKER || 
+        ue_context_p->ue_context.handover_info->state == HO_FORWARDING_COMPLETE) {
+        LOG_I(RRC,"Handover finish,free handover_info\n");
+        free(ue_context_p->ue_context.handover_info);
+        ue_context_p->ue_context.handover_info = NULL;
+      }
+    }
+    
+    pthread_mutex_unlock(&ue_context_p->ue_context.handover_cond_lock);
+
     return (0);
   }
 }
@@ -2254,7 +2291,11 @@ int s1ap_ue_context_release(instance_t instance, const uint32_t eNB_ue_s1ap_id) 
   s1ap_eNB_instance_t *s1ap_eNB_instance_p = NULL;
   struct s1ap_eNB_ue_context_s *ue_context_p = NULL;
   s1ap_eNB_instance_p = s1ap_eNB_get_instance(instance);
-  DevAssert(s1ap_eNB_instance_p != NULL);
+  
+  if(s1ap_eNB_instance_p == NULL) {
+    LOG_E(RRC,"s1ap_eNB_instance_p is NULL\n");
+    return -1;
+  }
 
   if ((ue_context_p = s1ap_eNB_get_ue_context(s1ap_eNB_instance_p,
                       eNB_ue_s1ap_id)) == NULL) {

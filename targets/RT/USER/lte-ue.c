@@ -195,7 +195,10 @@ PHY_VARS_UE *init_ue_vars(LTE_DL_FRAME_PARMS *frame_parms,
   // In phy_stub_UE (MAC-to-MAC) mode these init functions don't need to get called. Is this correct?
   if (NFAPI_MODE!=NFAPI_UE_STUB_PNF) {
     // initialize all signal buffers
-    init_lte_ue_signal(ue,1,abstraction_flag);
+    if (init_lte_ue_signal(ue,1,abstraction_flag) == -1) {
+      LOG_E(PHY, "lte_ue.c:init_ue_vars:init_lte_ue_signal failed.\n");
+	  return(NULL);
+	}
     // intialize transport
     init_lte_ue_transport(ue,abstraction_flag);
   }
@@ -283,12 +286,22 @@ void init_UE(int nb_inst,
 
     LOG_I(PHY,"Allocating UE context %d\n",inst);
 
-    if ( !IS_SOFTMODEM_SIML1 ) PHY_vars_UE_g[inst][0] = init_ue_vars(fp0,inst,0);
+	PHY_VARS_UE *phy_vars_ue1 = init_ue_vars(fp0,inst,0);
+	if (phy_vars_ue1 == NULL) {
+      LOG_E(PHY, "lte_ue.c:init_UE:init_ue_vars failed.\n");
+	  return;
+	}
+    if ( !IS_SOFTMODEM_SIML1 ) PHY_vars_UE_g[inst][0] = phy_vars_ue1;
     else {
       // needed for memcopy below. these are not used in the RU, but needed for UE
       RC.ru[0]->frame_parms->nb_antennas_rx = fp0->nb_antennas_rx;
       RC.ru[0]->frame_parms->nb_antennas_tx = fp0->nb_antennas_tx;
-      PHY_vars_UE_g[inst][0]  = init_ue_vars(RC.ru[0]->frame_parms,inst,0);
+      PHY_VARS_UE *phy_vars_ue2 = init_ue_vars(RC.ru[0]->frame_parms,inst,0);
+      if (phy_vars_ue2 == NULL) {
+        LOG_E(PHY, "lte_ue.c:init_UE:init_ue_vars failed.\n");
+        return;
+      }
+      PHY_vars_UE_g[inst][0]  = phy_vars_ue2;
     }
 
     // turn off timing control loop in UE
@@ -410,7 +423,12 @@ void init_UE_stub_single_thread(int nb_inst,
 
   for (inst=0; inst<nb_inst; inst++) {
     LOG_I(PHY,"Initializing memory for UE instance %d (%p)\n",inst,PHY_vars_UE_g[inst]);
-    // PHY_vars_UE_g[inst][0] = init_ue_vars(NULL,inst,0);
+	//PHY_VARS_UE *phy_vars_ue = init_ue_vars(NULL,inst,0);
+	//if (phy_vars_ue == NULL) {
+    //  LOG_E(PHY, "lte_ue.c:init_UE_stub_single_thread:init_ue_vars failed.\n");
+	//  return;
+	//}
+    // PHY_vars_UE_g[inst][0] = phy_vars_ue;
   }
 
   init_timer_thread();
@@ -436,7 +454,12 @@ void init_UE_stub(int nb_inst,
 
   for (inst=0; inst<nb_inst; inst++) {
     LOG_I(PHY,"Initializing memory for UE instance %d (%p)\n",inst,PHY_vars_UE_g[inst]);
-    PHY_vars_UE_g[inst][0] = init_ue_vars(NULL,inst,0);
+	PHY_VARS_UE *phy_vars_ue = init_ue_vars(NULL,inst,0);
+	if (phy_vars_ue == NULL) {
+      LOG_E(PHY, "lte_ue.c:init_UE_stub:init_ue_vars failed.\n");
+	  return;
+	}
+    PHY_vars_UE_g[inst][0] = phy_vars_ue;
   }
 
   init_timer_thread();
@@ -649,7 +672,10 @@ static void *UE_thread_synch(void *arg)
           //UE->rfdevice.trx_set_gains_func(&openair0,&openair0_cfg[0]);
           //UE->rfdevice.trx_stop_func(&UE->rfdevice);
           sleep(1);
-          init_frame_parms(&UE->frame_parms,1);
+          if (init_frame_parms(&UE->frame_parms,1) == -1) {
+            LOG_E(PHY, "init_frame_parms failed\n");
+            return NULL;
+          }
 
           /*if (UE->rfdevice.trx_start_func(&UE->rfdevice) != 0 ) {
             LOG_E(HW,"Could not start the device\n");
@@ -1006,7 +1032,7 @@ static void *UE_phy_stub_single_thread_rxn_txnp4(void *arg)
   UL_INFO->cqi_ind.cqi_indication_body.number_of_cqis = 0;
 
   if(ue_thread_id == 0) {
-    phy_stub_ticking->ticking_var = -1;
+//    phy_stub_ticking->ticking_var = -1;
     proc->subframe_rx=proc->sub_frame_start;
     // Initializations for nfapi-L2-emulator mode
     dl_config_req = NULL;
@@ -1280,7 +1306,10 @@ static void *UE_phy_stub_single_thread_rxn_txnp4(void *arg)
         oai_nfapi_rx_ind(&UL_INFO->rx_ind);
 
         for(uint8_t num_pdu = 0; num_pdu < UL_INFO->rx_ind.rx_indication_body.number_of_pdus; num_pdu++) {
-          free(UL_INFO->rx_ind.rx_indication_body.rx_pdu_list[num_pdu].data);
+          if (UL_INFO->rx_ind.rx_indication_body.rx_pdu_list[num_pdu].data) {
+            free(UL_INFO->rx_ind.rx_indication_body.rx_pdu_list[num_pdu].data);
+            UL_INFO->rx_ind.rx_indication_body.rx_pdu_list[num_pdu].data = NULL;
+          }
         }
 
         //LOG_I(MAC, "ul_config_req_UE_MAC 2.31 \n");
@@ -1305,6 +1334,31 @@ static void *UE_phy_stub_single_thread_rxn_txnp4(void *arg)
         //LOG_I(MAC, "ul_config_req_UE_MAC 2.51 \n");
         UL_INFO->sr_ind.sr_indication_body.number_of_srs = 0;
       }
+
+
+      // Free UL_INFO messages
+      if(UL_INFO->crc_ind.crc_indication_body.crc_pdu_list != NULL){
+      free(UL_INFO->crc_ind.crc_indication_body.crc_pdu_list);
+      UL_INFO->crc_ind.crc_indication_body.crc_pdu_list = NULL;
+      }
+      if(UL_INFO->rx_ind.rx_indication_body.rx_pdu_list != NULL){
+      free(UL_INFO->rx_ind.rx_indication_body.rx_pdu_list);
+      UL_INFO->rx_ind.rx_indication_body.rx_pdu_list = NULL;
+      }
+      if(UL_INFO->harq_ind.harq_indication_body.harq_pdu_list !=NULL){
+      free(UL_INFO->harq_ind.harq_indication_body.harq_pdu_list);
+      UL_INFO->harq_ind.harq_indication_body.harq_pdu_list = NULL;
+      }
+      if(UL_INFO->sr_ind.sr_indication_body.sr_pdu_list!=NULL){
+      free(UL_INFO->sr_ind.sr_indication_body.sr_pdu_list);
+      UL_INFO->sr_ind.sr_indication_body.sr_pdu_list = NULL;
+      }
+      free(UL_INFO->cqi_ind.cqi_indication_body.cqi_pdu_list);
+      UL_INFO->cqi_ind.cqi_indication_body.cqi_pdu_list = NULL;
+      free(UL_INFO->cqi_ind.cqi_indication_body.cqi_raw_pdu_list);
+      UL_INFO->cqi_ind.cqi_indication_body.cqi_raw_pdu_list = NULL;
+      free(UL_INFO);
+      UL_INFO = NULL;
 
       // De-allocate memory of nfapi requests copies before next subframe round
       if(dl_config_req!=NULL) {

@@ -362,7 +362,7 @@ rrc_rx_tx(
 	    ue_context_p->ue_context.ue_release_timer_thres) {
 	  LOG_I(RRC,"Removing UE %x instance (release timer %d)\n",ue_context_p->ue_context.rnti,ue_context_p->ue_context.ue_release_timer);
 	  ue_to_be_removed = ue_context_p;
-	  exit(-1);
+	  //exit(-1);
 	  break;
 	}
       }

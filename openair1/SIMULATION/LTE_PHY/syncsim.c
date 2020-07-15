@@ -271,7 +271,10 @@ void lte_param_init(unsigned char N_tx, unsigned char N_rx,unsigned char transmi
   lte_frame_parms->tdd_config = 3;
   lte_frame_parms->frame_type = frame_type;
   lte_frame_parms->node_id = 2;
-  init_frame_parms(lte_frame_parms,osf);
+  if (init_frame_parms(lte_frame_parms,osf) == -1) {
+    LOG_E(PHY, "init_frame_parms failed\n");
+    return;
+  }
   phy_init_top(lte_frame_parms); //allocation
   lte_frame_parms->twiddle_fft      = twiddle_fft;
   lte_frame_parms->twiddle_ifft     = twiddle_ifft;
@@ -291,15 +294,24 @@ void lte_param_init(unsigned char N_tx, unsigned char N_rx,unsigned char transmi
     lte_gold(lte_frame_parms,PHY_vars_UE[1]->lte_gold_table[i],i);
 
   PHY_vars_UE[1]->Mod_id = 1;
-  phy_init_lte_eNB(PHY_vars_eNB,0,0,0);
+  if (phy_init_lte_eNB(PHY_vars_eNB,0,0) == -1) {
+    LOG_E(PHY, "lte_param_init:phy_init_lte_eNB failed.\n");
+	return;
+  }
   memcpy((void *)&PHY_vars_eNB1->lte_frame_parms,(void *)&PHY_vars_eNB->lte_frame_parms,sizeof(LTE_DL_FRAME_PARMS));
   PHY_vars_eNB1->lte_frame_parms.nushift=1;
   PHY_vars_eNB1->lte_frame_parms.Nid_cell=2;
   memcpy((void *)&PHY_vars_eNB2->lte_frame_parms,(void *)&PHY_vars_eNB->lte_frame_parms,sizeof(LTE_DL_FRAME_PARMS));
   PHY_vars_eNB2->lte_frame_parms.nushift=2;
   PHY_vars_eNB2->lte_frame_parms.Nid_cell=3;
-  phy_init_lte_eNB(PHY_vars_eNB1,0,0,0);
-  phy_init_lte_eNB(PHY_vars_eNB2,0,0,0);
+  if (phy_init_lte_eNB(PHY_vars_eNB1,0,0) == -1) {
+    LOG_E(PHY, "lte_param_init:phy_init_lte_eNB failed.\n");
+	return;
+  }
+  if (phy_init_lte_eNB(PHY_vars_eNB2,0,0) == -1) {
+    LOG_E(PHY, "lte_param_init:phy_init_lte_eNB failed.\n");
+	return;
+  }
   phy_init_lte_top(lte_frame_parms);
   printf("Done lte_param_init\n");
 }

@@ -50,19 +50,43 @@ int
 l1_north_init_eNB () {
   int i,j;
 
-  if (RC.nb_L1_inst > 0 && RC.nb_L1_CC != NULL && RC.eNB != NULL) {
-    AssertFatal(RC.nb_L1_inst>0,"nb_L1_inst=%d\n",RC.nb_L1_inst);
-    AssertFatal(RC.nb_L1_CC!=NULL,"nb_L1_CC is null\n");
-    AssertFatal(RC.eNB!=NULL,"RC.eNB is null\n");
+  if (RC.nb_L1_inst > 0 && RC.nb_L1_CC != NULL && RC.eNB != NULL)
+  {
+    if (RC.nb_L1_inst<=0) {
+      LOG_E(PHY, "nb_L1_inst=%d\n",RC.nb_L1_inst);
+      return (-1);
+    }
+
+    if (RC.nb_L1_CC==NULL) {
+      LOG_E(PHY, "nb_L1_CC is null\n");
+      return (-1);
+    }
+
+    if (RC.eNB==NULL) {
+      LOG_E(PHY, "RC.eNB is null\n");
+      return (-1);
+    }
+
     LOG_I(PHY,"%s() RC.nb_L1_inst:%d\n", __FUNCTION__, RC.nb_L1_inst);
 
-    for (i=0; i<RC.nb_L1_inst; i++) {
-      AssertFatal(RC.eNB[i]!=NULL,"RC.eNB[%d] is null\n",i);
-      AssertFatal(RC.nb_L1_CC[i]>0,"RC.nb_L1_CC[%d]=%d\n",i,RC.nb_L1_CC[i]);
+    for (i=0;i<RC.nb_L1_inst;i++) {
+      if (RC.eNB[i]==NULL) {
+        LOG_E(PHY, "RC.eNB[%d] is null\n",i);
+        return (-1);
+      }
+
+      if (RC.nb_L1_CC[i]<=0) {
+        LOG_E(PHY, "RC.nb_L1_CC[%d]=%d\n",i,RC.nb_L1_CC[i]);
+        return (-1);
+      }
+
       LOG_I(PHY,"%s() RC.nb_L1_CC[%d]:%d\n", __FUNCTION__, i,  RC.nb_L1_CC[i]);
 
-      for (j=0; j<RC.nb_L1_CC[i]; j++) {
-        AssertFatal(RC.eNB[i][j]!=NULL,"RC.eNB[%d][%d] is null\n",i,j);
+      for (j=0;j<RC.nb_L1_CC[i];j++) {
+        if (RC.eNB[i][j]==NULL) {
+          LOG_E(PHY, "RC.eNB[%d][%d] is null\n",i,j);
+          return (-1);
+        }
 
         if ((RC.eNB[i][j]->if_inst =  IF_Module_init(i))<0) return(-1);
 
@@ -96,12 +120,24 @@ void phy_config_request(PHY_Config_t *phy_config) {
   int                 p_eNB          = cfg->rf_config.tx_antenna_ports.value;
   uint32_t            dl_CarrierFreq = cfg->nfapi_config.earfcn.value;
   LOG_I(PHY,"Configuring MIB for instance %d, CCid %d : (band %d,N_RB_DL %d, N_RB_UL %d, Nid_cell %d,eNB_tx_antenna_ports %d,Ncp %d,DL freq %u,phich_config.resource %d, phich_config.duration %d)\n",
-        Mod_id, CC_id, eutra_band, dl_Bandwidth, ul_Bandwidth, Nid_cell, p_eNB,Ncp,dl_CarrierFreq,
-        cfg->phich_config.phich_resource.value,
-        cfg->phich_config.phich_duration.value);
-  AssertFatal (RC.eNB != NULL, "PHY instance pointer doesn't exist\n");
-  AssertFatal (RC.eNB[Mod_id] != NULL, "PHY instance %d doesn't exist\n", Mod_id);
-  AssertFatal (RC.eNB[Mod_id][CC_id] != NULL, "PHY instance %d, CCid %d doesn't exist\n", Mod_id, CC_id);
+	Mod_id, CC_id, eutra_band, dl_Bandwidth, ul_Bandwidth, Nid_cell, p_eNB,Ncp,dl_CarrierFreq,
+	cfg->phich_config.phich_resource.value,
+	cfg->phich_config.phich_duration.value);
+
+  if (RC.eNB == NULL) {
+    LOG_E(PHY, "PHY instance pointer doesn't exist\n");
+    return;
+  }
+
+  if (RC.eNB[Mod_id] == NULL) {
+    LOG_E(PHY, "PHY instance %d doesn't exist\n", Mod_id);
+    return;
+  }
+
+  if (RC.eNB[Mod_id][CC_id] == NULL) {
+    LOG_E(PHY, "PHY instance %d, CCid %d doesn't exist\n", Mod_id, CC_id);
+    return;
+  }
 
   if (RC.eNB[Mod_id][CC_id]->configured == 1) {
     LOG_E(PHY,"Already eNB already configured, do nothing\n");
@@ -119,11 +155,24 @@ void phy_config_request(PHY_Config_t *phy_config) {
   fp->Ncp_UL                             = Ncp;
   fp->nb_antenna_ports_eNB               = p_eNB;
   fp->threequarter_fs = 0;
-  AssertFatal (cfg->phich_config.phich_resource.value < 4, "Illegal phich_Resource\n");
+
+  if (cfg->phich_config.phich_resource.value >= 4) {
+    LOG_E(PHY, "Illegal phich_Resource\n");
+    return;
+  }
+
   fp->phich_config_common.phich_resource = phich_resource_table[cfg->phich_config.phich_resource.value];
   fp->phich_config_common.phich_duration = cfg->phich_config.phich_duration.value;
   // Note: "from_earfcn" has to be in a common library with MACRLC
   fp->dl_CarrierFreq = from_earfcn (eutra_band, dl_CarrierFreq);
+  if (fp->dl_CarrierFreq == -1) {
+    LOG_E(PHY, "from_earfcn failed\n");
+    return;
+  }
+  if (get_uldl_offset(eutra_band) == -1) {
+    LOG_E(PHY, "get_uldl_offset failed\n");
+    return;
+  }
   fp->ul_CarrierFreq = fp->dl_CarrierFreq - (get_uldl_offset (eutra_band) * 100000);
   fp->tdd_config = 0;
   fp->tdd_config_S = 0;
@@ -133,7 +182,10 @@ void phy_config_request(PHY_Config_t *phy_config) {
   else
     fp->frame_type = FDD;
 
-  init_frame_parms (fp, 1);
+  if (init_frame_parms (fp, 1) == -1) {
+    LOG_E(PHY, "lte_init.c:phy_config_request:init_frame_parms failed.\n");
+	return;
+  }
   init_lte_top (fp);
 
   if (cfg->subframe_config.duplex_mode.value == 0) {
@@ -169,8 +221,11 @@ void phy_config_request(PHY_Config_t *phy_config) {
     fp->prach_emtc_config_common.prach_ConfigInfo.prach_CElevel_enable[3] = cfg->emtc_config.prach_ce_level_3_enable.value;
     fp->prach_emtc_config_common.prach_ConfigInfo.prach_starting_subframe_periodicity[3] = cfg->emtc_config.prach_ce_level_3_starting_subframe_periodicity.value;
     fp->prach_emtc_config_common.prach_ConfigInfo.prach_numRepetitionPerPreambleAttempt[3] = cfg->emtc_config.prach_ce_level_3_number_of_repetitions_per_attempt.value;
-    AssertFatal (fp->prach_emtc_config_common.prach_ConfigInfo.prach_starting_subframe_periodicity[3] >= fp->prach_emtc_config_common.prach_ConfigInfo.prach_numRepetitionPerPreambleAttempt[3],
-                 "prach_starting_subframe_periodicity[3] < prach_numPetitionPerPreambleAttempt[3]\n");
+    if (fp->prach_emtc_config_common.prach_ConfigInfo.prach_starting_subframe_periodicity[3] < fp->prach_emtc_config_common.prach_ConfigInfo.prach_numRepetitionPerPreambleAttempt[3]) {
+      LOG_E(PHY, "prach_starting_subframe_periodicity[3] < prach_numPetitionPerPreambleAttempt[3]\n");
+      return;
+    }
+
     fp->prach_emtc_config_common.prach_ConfigInfo.prach_ConfigIndex[3] = cfg->emtc_config.prach_ce_level_3_configuration_index.value;
     fp->prach_emtc_config_common.prach_ConfigInfo.prach_FreqOffset[3] = cfg->emtc_config.prach_ce_level_3_frequency_offset.value;
     fp->prach_emtc_config_common.prach_ConfigInfo.prach_hopping_enable[3] = cfg->emtc_config.prach_ce_level_3_hopping_enable.value;
@@ -186,8 +241,11 @@ void phy_config_request(PHY_Config_t *phy_config) {
     fp->prach_emtc_config_common.prach_ConfigInfo.prach_CElevel_enable[2] = cfg->emtc_config.prach_ce_level_2_enable.value;
     fp->prach_emtc_config_common.prach_ConfigInfo.prach_starting_subframe_periodicity[2] = cfg->emtc_config.prach_ce_level_2_starting_subframe_periodicity.value;
     fp->prach_emtc_config_common.prach_ConfigInfo.prach_numRepetitionPerPreambleAttempt[2] = cfg->emtc_config.prach_ce_level_2_number_of_repetitions_per_attempt.value;
-    AssertFatal (fp->prach_emtc_config_common.prach_ConfigInfo.prach_starting_subframe_periodicity[2] >= fp->prach_emtc_config_common.prach_ConfigInfo.prach_numRepetitionPerPreambleAttempt[2],
-                 "prach_starting_subframe_periodicity[2] < prach_numPetitionPerPreambleAttempt[2]\n");
+    if (fp->prach_emtc_config_common.prach_ConfigInfo.prach_starting_subframe_periodicity[2] < fp->prach_emtc_config_common.prach_ConfigInfo.prach_numRepetitionPerPreambleAttempt[2]) {
+      LOG_E(PHY, "prach_starting_subframe_periodicity[2] < prach_numPetitionPerPreambleAttempt[2]\n");
+      return;
+    }
+
     fp->prach_emtc_config_common.prach_ConfigInfo.prach_ConfigIndex[2] = cfg->emtc_config.prach_ce_level_2_configuration_index.value;
     fp->prach_emtc_config_common.prach_ConfigInfo.prach_FreqOffset[2] = cfg->emtc_config.prach_ce_level_2_frequency_offset.value;
     fp->prach_emtc_config_common.prach_ConfigInfo.prach_hopping_enable[2] = cfg->emtc_config.prach_ce_level_2_hopping_enable.value;
@@ -203,8 +261,11 @@ void phy_config_request(PHY_Config_t *phy_config) {
     fp->prach_emtc_config_common.prach_ConfigInfo.prach_CElevel_enable[1] = cfg->emtc_config.prach_ce_level_1_enable.value;
     fp->prach_emtc_config_common.prach_ConfigInfo.prach_starting_subframe_periodicity[1] = cfg->emtc_config.prach_ce_level_1_starting_subframe_periodicity.value;
     fp->prach_emtc_config_common.prach_ConfigInfo.prach_numRepetitionPerPreambleAttempt[1] = cfg->emtc_config.prach_ce_level_1_number_of_repetitions_per_attempt.value;
-    AssertFatal (fp->prach_emtc_config_common.prach_ConfigInfo.prach_starting_subframe_periodicity[1] >= fp->prach_emtc_config_common.prach_ConfigInfo.prach_numRepetitionPerPreambleAttempt[1],
-                 "prach_starting_subframe_periodicity[1] < prach_numPetitionPerPreambleAttempt[1]\n");
+    if (fp->prach_emtc_config_common.prach_ConfigInfo.prach_starting_subframe_periodicity[1] < fp->prach_emtc_config_common.prach_ConfigInfo.prach_numRepetitionPerPreambleAttempt[1]) {
+      LOG_E(PHY, "prach_starting_subframe_periodicity[1] < prach_numPetitionPerPreambleAttempt[1]\n");
+      return;
+    }
+
     fp->prach_emtc_config_common.prach_ConfigInfo.prach_ConfigIndex[1] = cfg->emtc_config.prach_ce_level_1_configuration_index.value;
     fp->prach_emtc_config_common.prach_ConfigInfo.prach_FreqOffset[1] = cfg->emtc_config.prach_ce_level_1_frequency_offset.value;
     fp->prach_emtc_config_common.prach_ConfigInfo.prach_hopping_enable[1] = cfg->emtc_config.prach_ce_level_1_hopping_enable.value;
@@ -220,10 +281,16 @@ void phy_config_request(PHY_Config_t *phy_config) {
     fp->prach_emtc_config_common.prach_ConfigInfo.prach_CElevel_enable[0] = cfg->emtc_config.prach_ce_level_0_enable.value;
     fp->prach_emtc_config_common.prach_ConfigInfo.prach_starting_subframe_periodicity[0] = cfg->emtc_config.prach_ce_level_0_starting_subframe_periodicity.value;
     fp->prach_emtc_config_common.prach_ConfigInfo.prach_numRepetitionPerPreambleAttempt[0] = cfg->emtc_config.prach_ce_level_0_number_of_repetitions_per_attempt.value;
-    AssertFatal (fp->prach_emtc_config_common.prach_ConfigInfo.prach_starting_subframe_periodicity[0] >= fp->prach_emtc_config_common.prach_ConfigInfo.prach_numRepetitionPerPreambleAttempt[0],
-                 "prach_starting_subframe_periodicity[0] %d < prach_numPetitionPerPreambleAttempt[0] %d\n",
-                 fp->prach_emtc_config_common.prach_ConfigInfo.prach_starting_subframe_periodicity[0], fp->prach_emtc_config_common.prach_ConfigInfo.prach_numRepetitionPerPreambleAttempt[0]);
-    AssertFatal (fp->prach_emtc_config_common.prach_ConfigInfo.prach_numRepetitionPerPreambleAttempt[0] > 0, "prach_emtc_config_common.prach_ConfigInfo.prach_numRepetitionPerPreambleAttempt[0]==0\n");
+    if (fp->prach_emtc_config_common.prach_ConfigInfo.prach_starting_subframe_periodicity[0] < fp->prach_emtc_config_common.prach_ConfigInfo.prach_numRepetitionPerPreambleAttempt[0]) {
+      LOG_E(PHY, "prach_starting_subframe_periodicity[0] %d < prach_numPetitionPerPreambleAttempt[0] %d\n",
+	        fp->prach_emtc_config_common.prach_ConfigInfo.prach_starting_subframe_periodicity[0], fp->prach_emtc_config_common.prach_ConfigInfo.prach_numRepetitionPerPreambleAttempt[0]);
+      return;
+    }
+    if (fp->prach_emtc_config_common.prach_ConfigInfo.prach_numRepetitionPerPreambleAttempt[0] <= 0) {
+      LOG_E(PHY, "prach_emtc_config_common.prach_ConfigInfo.prach_numRepetitionPerPreambleAttempt[0]==0\n");
+      return;
+    }
+
     fp->prach_emtc_config_common.prach_ConfigInfo.prach_ConfigIndex[0] = cfg->emtc_config.prach_ce_level_0_configuration_index.value;
     fp->prach_emtc_config_common.prach_ConfigInfo.prach_FreqOffset[0] = cfg->emtc_config.prach_ce_level_0_frequency_offset.value;
     fp->prach_emtc_config_common.prach_ConfigInfo.prach_hopping_enable[0] = cfg->emtc_config.prach_ce_level_0_hopping_enable.value;
@@ -452,38 +519,49 @@ int phy_init_lte_eNB(PHY_VARS_eNB *eNB,
       prach_vars->rxsigF[ce_level] = (int16_t **) malloc16_clear (64 * sizeof (int16_t *));
     }
 
-    /* number of elements of an array X is computed as sizeof(X) / sizeof(X[0])
-    AssertFatal(fp->nb_antennas_rx <= sizeof(prach_vars->rxsigF) / sizeof(prach_vars->rxsigF[0]),
-                "nb_antennas_rx too large");
-    for (i=0; i<fp->nb_antennas_rx; i++) {
-      prach_vars->rxsigF[i] = (int16_t*)malloc16_clear( fp->ofdm_symbol_size*12*2*sizeof(int16_t) );
-      LOG_D(PHY,"[INIT] prach_vars->rxsigF[%d] = %p\n",i,prach_vars->rxsigF[i]);
-      }*/
+  /* number of elements of an array X is computed as sizeof(X) / sizeof(X[0])
+  for (i=0; i<fp->nb_antennas_rx; i++) {
+    prach_vars->rxsigF[i] = (int16_t*)malloc16_clear( fp->ofdm_symbol_size*12*2*sizeof(int16_t) );
+    LOG_D(PHY,"[INIT] prach_vars->rxsigF[%d] = %p\n",i,prach_vars->rxsigF[i]);
+  }*/
 
-    for (UE_id=0; UE_id<NUMBER_OF_UE_MAX; UE_id++) {
-      //FIXME
-      pusch_vars[UE_id] = (LTE_eNB_PUSCH *) malloc16_clear (NUMBER_OF_UE_MAX * sizeof (LTE_eNB_PUSCH));
-      pusch_vars[UE_id]->rxdataF_ext = (int32_t **) malloc16 (2 * sizeof (int32_t *));
-      pusch_vars[UE_id]->rxdataF_ext2 = (int32_t **) malloc16 (2 * sizeof (int32_t *));
-      pusch_vars[UE_id]->drs_ch_estimates = (int32_t **) malloc16 (2 * sizeof (int32_t *));
-      pusch_vars[UE_id]->drs_ch_estimates_time = (int32_t **) malloc16 (2 * sizeof (int32_t *));
-      pusch_vars[UE_id]->rxdataF_comp = (int32_t **) malloc16 (2 * sizeof (int32_t *));
-      pusch_vars[UE_id]->ul_ch_mag = (int32_t **) malloc16 (2 * sizeof (int32_t *));
-      pusch_vars[UE_id]->ul_ch_magb = (int32_t **) malloc16 (2 * sizeof (int32_t *));
-      AssertFatal (fp->ofdm_symbol_size > 127, "fp->ofdm_symbol_size %d<128\n", fp->ofdm_symbol_size);
-      AssertFatal (fp->symbols_per_tti > 11, "fp->symbols_per_tti %d < 12\n", fp->symbols_per_tti);
-      AssertFatal (fp->N_RB_UL > 5, "fp->N_RB_UL %d < 6\n", fp->N_RB_UL);
+  for (UE_id=0; UE_id<NUMBER_OF_UE_MAX; UE_id++) {
+    
+    //FIXME
+    pusch_vars[UE_id] = (LTE_eNB_PUSCH *) malloc16_clear (NUMBER_OF_UE_MAX * sizeof (LTE_eNB_PUSCH));
 
-      for (i = 0; i < 2; i++) {
-        // RK 2 times because of output format of FFT!
-        // FIXME We should get rid of this
-        pusch_vars[UE_id]->rxdataF_ext[i]      = (int32_t *)malloc16_clear( sizeof(int32_t)*fp->N_RB_UL*12*fp->symbols_per_tti );
-        pusch_vars[UE_id]->rxdataF_ext2[i]     = (int32_t *)malloc16_clear( sizeof(int32_t)*fp->N_RB_UL*12*fp->symbols_per_tti );
-        pusch_vars[UE_id]->drs_ch_estimates[i] = (int32_t *)malloc16_clear( sizeof(int32_t)*fp->N_RB_UL*12*fp->symbols_per_tti );
-        pusch_vars[UE_id]->drs_ch_estimates_time[i] = (int32_t *)malloc16_clear( 2*sizeof(int32_t)*fp->ofdm_symbol_size );
-        pusch_vars[UE_id]->rxdataF_comp[i]     = (int32_t *)malloc16_clear( sizeof(int32_t)*fp->N_RB_UL*12*fp->symbols_per_tti );
-        pusch_vars[UE_id]->ul_ch_mag[i]  = (int32_t *)malloc16_clear( fp->symbols_per_tti*sizeof(int32_t)*fp->N_RB_UL*12 );
-        pusch_vars[UE_id]->ul_ch_magb[i] = (int32_t *)malloc16_clear( fp->symbols_per_tti*sizeof(int32_t)*fp->N_RB_UL*12 );
+    pusch_vars[UE_id]->rxdataF_ext = (int32_t **) malloc16 (2 * sizeof (int32_t *));
+    pusch_vars[UE_id]->rxdataF_ext2 = (int32_t **) malloc16 (2 * sizeof (int32_t *));
+    pusch_vars[UE_id]->drs_ch_estimates = (int32_t **) malloc16 (2 * sizeof (int32_t *));
+    pusch_vars[UE_id]->drs_ch_estimates_time = (int32_t **) malloc16 (2 * sizeof (int32_t *));
+    pusch_vars[UE_id]->rxdataF_comp = (int32_t **) malloc16 (2 * sizeof (int32_t *));
+    pusch_vars[UE_id]->ul_ch_mag = (int32_t **) malloc16 (2 * sizeof (int32_t *));
+    pusch_vars[UE_id]->ul_ch_magb = (int32_t **) malloc16 (2 * sizeof (int32_t *));
+
+    if (fp->ofdm_symbol_size <= 127) {
+      LOG_E(PHY, "fp->ofdm_symbol_size %d<128\n", fp->ofdm_symbol_size);
+      return (-1);
+    }
+
+    if (fp->symbols_per_tti <= 11) {
+      LOG_E(PHY, "fp->symbols_per_tti %d < 12\n", fp->symbols_per_tti);
+      return (-1);
+    }
+
+    if (fp->N_RB_UL <= 5) {
+      LOG_E(PHY, "fp->N_RB_UL %d < 6\n", fp->N_RB_UL);
+      return (-1);
+    }
+    for (i = 0; i < 2; i++) {
+      // RK 2 times because of output format of FFT!
+      // FIXME We should get rid of this
+      pusch_vars[UE_id]->rxdataF_ext[i]      = (int32_t*)malloc16_clear( sizeof(int32_t)*fp->N_RB_UL*12*fp->symbols_per_tti );
+      pusch_vars[UE_id]->rxdataF_ext2[i]     = (int32_t*)malloc16_clear( sizeof(int32_t)*fp->N_RB_UL*12*fp->symbols_per_tti );
+      pusch_vars[UE_id]->drs_ch_estimates[i] = (int32_t*)malloc16_clear( sizeof(int32_t)*fp->N_RB_UL*12*fp->symbols_per_tti );
+      pusch_vars[UE_id]->drs_ch_estimates_time[i] = (int32_t*)malloc16_clear( 2*sizeof(int32_t)*fp->ofdm_symbol_size );
+      pusch_vars[UE_id]->rxdataF_comp[i]     = (int32_t*)malloc16_clear( sizeof(int32_t)*fp->N_RB_UL*12*fp->symbols_per_tti );
+      pusch_vars[UE_id]->ul_ch_mag[i]  = (int32_t*)malloc16_clear( fp->symbols_per_tti*sizeof(int32_t)*fp->N_RB_UL*12 );
+      pusch_vars[UE_id]->ul_ch_magb[i] = (int32_t*)malloc16_clear( fp->symbols_per_tti*sizeof(int32_t)*fp->N_RB_UL*12 );
       }
 
       pusch_vars[UE_id]->llr = (int16_t *)malloc16_clear( (8*((3*8*6144)+12))*sizeof(int16_t) );

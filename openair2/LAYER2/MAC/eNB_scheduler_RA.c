@@ -111,8 +111,10 @@ add_msg3(module_id_t module_idP, int CC_id, RA_t *ra, frame_t frameP,
   uint8_t pusch_maxNumRepetitionCEmodeA_r13;
   ul_req = &mac->UL_req_tmp[CC_id][ra->Msg3_subframe];
   ul_req_body = &ul_req->ul_config_request_body;
-  AssertFatal(ra->state != IDLE, "RA is not active for RA %X\n",
-              ra->rnti);
+  if(ra->state == IDLE) {
+    LOG_E(MAC, "RA is not active for RA %X\n",ra->rnti);
+    return;
+  }
 
   if (ra->rach_resource_type > 0) {
     LOG_D (MAC, "[eNB %d][RAPROC] Frame %d, Subframe %d : CC_id %d CE level %d is active, Msg3 in (%d,%d)\n",
@@ -125,6 +127,10 @@ add_msg3(module_id_t module_idP, int CC_id, RA_t *ra, frame_t frameP,
     ul_config_pdu->pdu_size = (uint8_t) (2 + sizeof (nfapi_ul_config_ulsch_pdu));
     ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.handle = mac->ul_handle++;
     ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.rnti = ra->rnti;
+    if (narrowband_to_first_rb (cc, ra->msg34_narrowband) < 0) {
+		LOG_E(MAC, "narrowband_to_first_rb failed\n");
+		return;
+	}
     ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.resource_block_start = narrowband_to_first_rb (cc, ra->msg34_narrowband) + ra->msg3_first_rb;
     ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.number_of_resource_blocks = ra->msg3_nb_rb;
     ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.modulation_type = 2;
@@ -169,7 +175,10 @@ add_msg3(module_id_t module_idP, int CC_id, RA_t *ra, frame_t frameP,
     ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.handle                         = mac->ul_handle++;
     ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.rnti                           = ra->rnti;
     ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.resource_block_start           = ra->msg3_first_rb;
-    AssertFatal(ra->msg3_nb_rb > 0, "nb_rb = 0\n");
+    if(ra->msg3_nb_rb <= 0) {
+      LOG_E(MAC, "nb_rb = 0\n");
+      return;
+    }
     ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.number_of_resource_blocks      = ra->msg3_nb_rb;
     ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.modulation_type                = 2;
     ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.cyclic_shift_2_for_drms        = 0;
@@ -178,6 +187,10 @@ add_msg3(module_id_t module_idP, int CC_id, RA_t *ra, frame_t frameP,
     ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.new_data_indication            = 0;
     ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.redundancy_version             = rvseq[ra->msg3_round];
     ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.harq_process_number            = subframe2harqpid(cc, ra->Msg3_frame, ra->Msg3_subframe);
+    if (ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.harq_process_number == 255) {
+		LOG_E(MAC, "add_msg3:subframe2harqpid failed\n");
+		return;
+	}
     ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.ul_tx_mode                     = 0;
     ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.current_tx_nb                  = 0;
     ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.n_srs                          = 1;
@@ -212,12 +225,12 @@ add_msg3(module_id_t module_idP, int CC_id, RA_t *ra, frame_t frameP,
       hi_dci0_req->sfn_sf                                     = sfnsf_add_subframe(frameP, subframeP, sf_ahead_dl);
       hi_dci0_req->header.message_id                          = NFAPI_HI_DCI0_REQUEST;
 
-      if (NFAPI_MODE != NFAPI_MONOLITHIC) {
-        oai_nfapi_hi_dci0_req(hi_dci0_req);
-        hi_dci0_req_body->number_of_hi=0;
-      }
+      //if (NFAPI_MODE != NFAPI_MONOLITHIC) {
+      //  oai_nfapi_hi_dci0_req(hi_dci0_req);
+      //  hi_dci0_req_body->number_of_hi=0;
+      //}
 
-      LOG_D(MAC, "MSG3: HI_DCI0 SFN/SF:%d number_of_dci:%d number_of_hi:%d\n", NFAPI_SFNSF2DEC(hi_dci0_req->sfn_sf), hi_dci0_req_body->number_of_dci, hi_dci0_req_body->number_of_hi);
+      //LOG_D(MAC, "MSG3: HI_DCI0 SFN/SF:%d number_of_dci:%d number_of_hi:%d\n", NFAPI_SFNSF2DEC(hi_dci0_req->sfn_sf), hi_dci0_req_body->number_of_dci, hi_dci0_req_body->number_of_hi);
 
       // save UL scheduling information for preprocessor
       for (j = 0; j < ra->msg3_nb_rb; j++)
@@ -256,6 +269,10 @@ void generate_Msg2(module_id_t module_idP,
   dl_config_pdu = &dl_req_body->dl_config_pdu_list[dl_req_body->number_pdu];
   N_RB_DL = to_prb(cc[CC_idP].mib->message.dl_Bandwidth);
   uint8_t PUSCH_Rep_Level;
+  if (N_RB_DL == -1) {
+    LOG_E(MAC, "to_prb failed\n");
+    return;
+  }
   int             rmax = 0;
   int             rep = 0;
   int             reps = 0;
@@ -296,8 +313,8 @@ void generate_Msg2(module_id_t module_idP,
         break;
 
       default:
-        AssertFatal (1 == 0, "Illegal count for prach_ParametersListCE_r13 %d\n", (int) prach_ParametersListCE_r13->list.count);
-        break;
+        LOG_E(MAC, "Illegal count for prach_ParametersListCE_r13 %d\n", (int) prach_ParametersListCE_r13->list.count);
+        return;
     }
   }
 
@@ -311,7 +328,10 @@ void generate_Msg2(module_id_t module_idP,
      *    distributed transmission
      */
     /* rmax from SIB2 information */
-    AssertFatal (rmax < 9, "rmax > 8!\n"); // not sure of this assertion
+    if(rmax >= 9) {
+      LOG_E(MAC, "rmax > 8!\n");
+      return;
+    }
     rmax = 1 << p[ra->rach_resource_type - 1]->mpdcch_NumRepetition_RA_r13;
     /* Choose r1 by default for RAR (Table 9.1.5-5) */
     rep = 0;
@@ -321,7 +341,15 @@ void generate_Msg2(module_id_t module_idP,
     num_nb = p[ra->rach_resource_type - 1]->mpdcch_NarrowbandsToMonitor_r13.list.count;
     ra->msg2_narrowband = *p[ra->rach_resource_type - 1]->mpdcch_NarrowbandsToMonitor_r13.list.array[ra->preamble_index % num_nb] - 1;
     first_rb = narrowband_to_first_rb(&cc[CC_idP], ra->msg2_narrowband);
+    if (first_rb < 0) {
+		LOG_E(MAC, "generate_Msg2:narrowband_to_first_rb failed\n");
+		return;
+	}
 
+    if (mpdcch_sf_condition(mac, CC_idP, frameP, subframeP, rmax, TYPE2, -1) < 0) {
+	  LOG_E(MAC, "generate_Msg2:mpdcch_sf_condition failed\n");
+      return;
+    }
     if ((ra->msg2_mpdcch_repetition_cnt == 0) && (mpdcch_sf_condition(mac, CC_idP, frameP, subframeP, rmax, TYPE2, -1) > 0)) {
       ra->msg2_mpdcch_done = 0;
       /* MPDCCH configuration for RAR */
@@ -339,7 +367,10 @@ void generate_Msg2(module_id_t module_idP,
       dl_config_pdu->mpdcch_pdu.mpdcch_pdu_rel13.number_of_prb_pairs = 6;
       dl_config_pdu->mpdcch_pdu.mpdcch_pdu_rel13.resource_block_assignment = 0; // Note: this can be dynamic
       dl_config_pdu->mpdcch_pdu.mpdcch_pdu_rel13.mpdcch_tansmission_type = 1;   // imposed (9.1.5 in 213) for Type 2 Common search space
-      AssertFatal (cc[CC_idP].sib1_v13ext->bandwidthReducedAccessRelatedInfo_r13 != NULL, "cc[CC_idP].sib1_v13ext->bandwidthReducedAccessRelatedInfo_r13 is null\n");
+      if(cc[CC_idP].sib1_v13ext->bandwidthReducedAccessRelatedInfo_r13 == NULL) {
+        LOG_E(MAC, "cc[CC_idP].sib1_v13ext->bandwidthReducedAccessRelatedInfo_r13 is null\n");
+        return;
+      }
       dl_config_pdu->mpdcch_pdu.mpdcch_pdu_rel13.start_symbol = cc[CC_idP].sib1_v13ext->bandwidthReducedAccessRelatedInfo_r13->startSymbolBR_r13;
       LOG_E(MAC, "start_symbol = %d \n", dl_config_pdu->mpdcch_pdu.mpdcch_pdu_rel13.start_symbol);
       dl_config_pdu->mpdcch_pdu.mpdcch_pdu_rel13.ecce_index = 0;        // Note: this should be dynamic
@@ -401,7 +432,8 @@ void generate_Msg2(module_id_t module_idP,
                 ra->Msg2_frame,
                 ra->Msg2_subframe);
         } else {
-          AssertFatal(1 == 0, "TDD case not done yet\n");
+          LOG_E(MAC, "TDD case not done yet\n");
+          return;
         }
       } else if (ra->msg2_mpdcch_done == 0) {  // mpdcch_repetition_count != reps
         LOG_D(MAC,"[eNB %d][RAPROC] Frame %d, Subframe %d : In generate_Msg2, MPDCCH repetition %d\n",
@@ -442,6 +474,10 @@ void generate_Msg2(module_id_t module_idP,
         dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.delta_power_offset_index = 0;
         dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.ngap = 0;
         dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.nprb = get_subbandsize(cc[CC_idP].mib->message.dl_Bandwidth); // ignored
+        if (dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.nprb < 0) {
+			LOG_E(MAC, "generate_Msg2:get_subbandsize failed\n");
+			return;
+		}
         dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.transmission_mode = (cc[CC_idP].p_eNB == 1) ? 1 : 2;
         dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.num_bf_prb_per_subband = 1;
         dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.num_bf_vector = 1;
@@ -454,7 +490,10 @@ void generate_Msg2(module_id_t module_idP,
         dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.initial_transmission_sf_io = (10 * frameP) + subframeP;
         dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.drms_table_flag = 0;
         dl_req_body->number_pdu++;
-        fill_rar_br(mac, CC_idP, ra, frameP, subframeP, cc[CC_idP].RAR_pdu.payload, ra->rach_resource_type - 1);
+        if (fill_rar_br(mac, CC_idP, ra, frameP, subframeP, cc[CC_idP].RAR_pdu.payload, ra->rach_resource_type - 1) == -1) {
+		  LOG_E(MAC, "generate_Msg2:fill_rar_br failed\n");
+          return;
+        }
         /* Program UL processing for Msg3, same as regular LTE */
         get_Msg3alloc (&cc[CC_idP], subframeP, frameP, &ra->Msg3_frame, &ra->Msg3_subframe);
         add_msg3 (module_idP, CC_idP, ra, frameP, subframeP);
@@ -515,6 +554,7 @@ void generate_Msg2(module_id_t module_idP,
         dl_config_pdu->pdu_type                                                        = NFAPI_DL_CONFIG_DLSCH_PDU_TYPE;
         dl_config_pdu->pdu_size                                                        = (uint8_t) (2 + sizeof(nfapi_dl_config_dlsch_pdu));
         dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.tl.tag                                 = NFAPI_DL_CONFIG_REQUEST_DLSCH_PDU_REL8_TAG;
+        dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.length                                 = 7;
         dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.pdu_index                              = mac->pdu_index[CC_idP];
         dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.rnti                                   = ra->RA_rnti;
         dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.resource_allocation_type               = 2; // format 1A/1B/1D
@@ -533,6 +573,10 @@ void generate_Msg2(module_id_t module_idP,
         dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.delta_power_offset_index               = 0;
         dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.ngap                                   = 0;
         dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.nprb                                   = get_subbandsize(cc->mib->message.dl_Bandwidth);  // ignored
+        if (dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.nprb < 0) {
+			LOG_E(MAC, "generate_Msg2:get_subbandsize failed:dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.nprb < 0\n");
+			return;
+		}
         dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.transmission_mode                      = (cc->p_eNB == 1) ? 1 : 2;
         dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.num_bf_prb_per_subband                 = 1;
         dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.num_bf_vector                          = 1;
@@ -595,9 +639,12 @@ generate_Msg4(module_id_t module_idP,
   int UE_id = -1;
   int first_rb = 0;
   int N_RB_DL = 0;
+  int N_RBG;
   uint8_t lcid = 0;
   uint8_t offset = 0;
   uint8_t *vrb_map = NULL;
+  uint8_t rbg_map[25];
+  uint8_t rbg;
   nfapi_dl_config_request_pdu_t   *dl_config_pdu = NULL;
   nfapi_ul_config_request_pdu_t   *ul_config_pdu = NULL;
   nfapi_tx_request_pdu_t          *TX_req = NULL;
@@ -621,39 +668,61 @@ generate_Msg4(module_id_t module_idP,
     prach_ParametersListCE_r13 = &ext4_prach->prach_ParametersListCE_r13;
     ext4_pucch = cc[CC_idP].radioResourceConfigCommon_BR->ext4->pucch_ConfigCommon_v1310;
     pucch_N1PUCCH_AN_InfoList_r13 = ext4_pucch->n1PUCCH_AN_InfoList_r13;
-    AssertFatal (prach_ParametersListCE_r13 != NULL, "prach_ParametersListCE_r13 is null\n");
-    AssertFatal (pucch_N1PUCCH_AN_InfoList_r13 != NULL, "pucch_N1PUCCH_AN_InfoList_r13 is null\n");
+    if(prach_ParametersListCE_r13 == NULL) {
+      LOG_E(MAC, "prach_ParametersListCE_r13 is null\n");
+      return;
+    }
+    if(pucch_N1PUCCH_AN_InfoList_r13 == NULL) {
+      LOG_E(MAC, "pucch_N1PUCCH_AN_InfoList_r13 is null\n");
+      return;
+    }
     /* Check to verify CE-Level compatibility in SIB2_BR */
-    AssertFatal (prach_ParametersListCE_r13->list.count == pucch_N1PUCCH_AN_InfoList_r13->list.count, "prach_ParametersListCE_r13->list.count!= pucch_N1PUCCH_AN_InfoList_r13->list.count\n");
+    if(prach_ParametersListCE_r13->list.count != pucch_N1PUCCH_AN_InfoList_r13->list.count) {
+      LOG_E(MAC, "prach_ParametersListCE_r13->list.count!= pucch_N1PUCCH_AN_InfoList_r13->list.count\n");
+      return;
+    }
 
     switch (prach_ParametersListCE_r13->list.count) {
       case 4:
         p[3] = prach_ParametersListCE_r13->list.array[3];
         n1pucchan[3] = *pucch_N1PUCCH_AN_InfoList_r13->list.array[3];
-        AssertFatal(ext4_pucch->pucch_NumRepetitionCE_Msg4_Level3_r13 != NULL, "pucch_NumRepetitionCE_Msg4_Level3 shouldn't be NULL\n");
+        if(ext4_pucch->pucch_NumRepetitionCE_Msg4_Level3_r13 == NULL) {
+          LOG_E(MAC, "pucch_NumRepetitionCE_Msg4_Level3 shouldn't be NULL\n");
+          return;
+        }
         pucchreps[3] = (int) (4 << *ext4_pucch->pucch_NumRepetitionCE_Msg4_Level3_r13);
 
       case 3:
         p[2] = prach_ParametersListCE_r13->list.array[2];
         n1pucchan[2] = *pucch_N1PUCCH_AN_InfoList_r13->list.array[2];
-        AssertFatal(ext4_pucch->pucch_NumRepetitionCE_Msg4_Level2_r13 != NULL, "pucch_NumRepetitionCE_Msg4_Level2 shouldn't be NULL\n");
+        if(ext4_pucch->pucch_NumRepetitionCE_Msg4_Level2_r13 == NULL) {
+          LOG_E(MAC, "pucch_NumRepetitionCE_Msg4_Level2 shouldn't be NULL\n");
+          return;
+        }
         pucchreps[2] = (int) (4 << *ext4_pucch->pucch_NumRepetitionCE_Msg4_Level2_r13);
 
       case 2:
         p[1] = prach_ParametersListCE_r13->list.array[1];
         n1pucchan[1] = *pucch_N1PUCCH_AN_InfoList_r13->list.array[1];
-        AssertFatal(ext4_pucch->pucch_NumRepetitionCE_Msg4_Level1_r13 != NULL, "pucch_NumRepetitionCE_Msg4_Level1 shouldn't be NULL\n");
+        if(ext4_pucch->pucch_NumRepetitionCE_Msg4_Level1_r13 == NULL) {
+          LOG_E(MAC, "pucch_NumRepetitionCE_Msg4_Level1 shouldn't be NULL\n");
+          return;
+        }
         pucchreps[1] = (int) (1 << *ext4_pucch->pucch_NumRepetitionCE_Msg4_Level1_r13);
 
       case 1:
         p[0] = prach_ParametersListCE_r13->list.array[0];
         n1pucchan[0] = *pucch_N1PUCCH_AN_InfoList_r13->list.array[0];
-        AssertFatal(ext4_pucch->pucch_NumRepetitionCE_Msg4_Level0_r13 != NULL, "pucch_NumRepetitionCE_Msg4_Level0 shouldn't be NULL\n");
+        if(ext4_pucch->pucch_NumRepetitionCE_Msg4_Level0_r13 == NULL) {
+          LOG_E(MAC, "pucch_NumRepetitionCE_Msg4_Level0 shouldn't be NULL\n");
+          return;
+        }
         pucchreps[0] = (int) (1 << *ext4_pucch->pucch_NumRepetitionCE_Msg4_Level0_r13);
         break;
 
       default:
-        AssertFatal(1 == 0, "Illegal count for prach_ParametersListCE_r13 %d\n", prach_ParametersListCE_r13->list.count);
+        LOG_E(MAC, "Illegal count for prach_ParametersListCE_r13 %d\n", prach_ParametersListCE_r13->list.count);
+        return;
     }
   }
 
@@ -662,6 +731,15 @@ generate_Msg4(module_id_t module_idP,
   dl_req_body   = &dl_req->dl_config_request_body;
   dl_config_pdu = &dl_req_body->dl_config_pdu_list[dl_req_body->number_pdu];
   N_RB_DL = to_prb(cc[CC_idP].mib->message.dl_Bandwidth);
+  if (N_RB_DL == -1) {
+    LOG_E(MAC, "to_prb failed\n");
+    return;
+  }
+  N_RBG   = to_rbg(cc[CC_idP].mib->message.dl_Bandwidth);
+  if (N_RBG < 0) {
+	LOG_E(MAC, "to_rbg failed\n");
+    return;
+  }
   UE_id = find_UE_id(module_idP, ra->rnti);
 
   if (UE_id < 0) {
@@ -680,9 +758,6 @@ generate_Msg4(module_id_t module_idP,
      LOG_D(MAC,"[MAC][eNB Scheduler] CCCH not allocated (%d)\n",rrc_sdu_length);
      return;
    }
-   //AssertFatal(rrc_sdu_length > 0,
-  //"[MAC][eNB Scheduler] CCCH not allocated\n");
-
 
    LOG_D(MAC,
    "[eNB %d][RAPROC] CC_id %d Frame %d, subframeP %d: UE_id %d, rrc_sdu_length %d\n",
@@ -706,13 +781,24 @@ generate_Msg4(module_id_t module_idP,
     reps = (rmax <= 8) ? (1 << rep) : (rmax >> (3 - rep));
     // get first narrowband
     first_rb = narrowband_to_first_rb (&cc[CC_idP], ra->msg34_narrowband);
+    if (first_rb < 0) {
+      LOG_E(MAC, "generate_Msg4:narrowband_to_first_rb failed\n");
+	  return;
+    }
 
+    if (mpdcch_sf_condition (mac, CC_idP, frameP, subframeP, rmax, TYPE2, -1) < 0) {
+      LOG_E(MAC, "generate_Msg4:mpdcch_sf_condition failed\n");
+	  return;
+    }
     if ((ra->msg4_mpdcch_repetition_cnt == 0) && (mpdcch_sf_condition (mac, CC_idP, frameP, subframeP, rmax, TYPE2, -1) > 0)) {
       // Get RRCConnectionSetup for Piggyback
       ra->msg4_rrc_sdu_length = mac_rrc_data_req (module_idP, CC_idP, frameP, CCCH,
                                 UE_RNTI(module_idP, UE_id), 1,        // 1 transport block
                                 &cc[CC_idP].CCCH_pdu.payload[0], 0);  // not used in this case
-      AssertFatal (ra->msg4_rrc_sdu_length > 0, "[MAC][eNB Scheduler] CCCH not allocated\n");
+      if(ra->msg4_rrc_sdu_length <= 0) {
+        LOG_E(MAC, "[MAC][eNB Scheduler] CCCH not allocated\n");
+        return;
+      }
       LOG_D (MAC, "[eNB %d][RAPROC] CC_id %d Frame %d, subframeP %d: UE_id %d, rrc_sdu_length %d, dl_req->num_pdu %d\n", module_idP, CC_idP, frameP, subframeP, UE_id, ra->msg4_rrc_sdu_length,
              dl_req_body->number_pdu);
       // MPDCCH configuration for Msg4
@@ -725,7 +811,10 @@ generate_Msg4(module_id_t module_idP,
       dl_config_pdu->mpdcch_pdu.mpdcch_pdu_rel13.number_of_prb_pairs = 6;
       dl_config_pdu->mpdcch_pdu.mpdcch_pdu_rel13.resource_block_assignment = 0; // Note: this can be dynamic
       dl_config_pdu->mpdcch_pdu.mpdcch_pdu_rel13.mpdcch_tansmission_type = 1;   // imposed (9.1.5 in 213) for Type 2 Common search space
-      AssertFatal (cc[CC_idP].sib1_v13ext->bandwidthReducedAccessRelatedInfo_r13 != NULL, "cc[CC_idP].sib1_v13ext->bandwidthReducedAccessRelatedInfo_r13 is null\n");
+      if(cc[CC_idP].sib1_v13ext->bandwidthReducedAccessRelatedInfo_r13 == NULL) {
+        LOG_E(MAC, "cc[CC_idP].sib1_v13ext->bandwidthReducedAccessRelatedInfo_r13 is null\n");
+        return;
+      }
       dl_config_pdu->mpdcch_pdu.mpdcch_pdu_rel13.start_symbol = cc[CC_idP].sib1_v13ext->bandwidthReducedAccessRelatedInfo_r13->startSymbolBR_r13;
       dl_config_pdu->mpdcch_pdu.mpdcch_pdu_rel13.ecce_index = 0;        // Note: this should be dynamic
       dl_config_pdu->mpdcch_pdu.mpdcch_pdu_rel13.aggregation_level = 24;        // OK for CEModeA r1-3 (9.1.5-1b) or CEModeB r1-4
@@ -787,7 +876,8 @@ generate_Msg4(module_id_t module_idP,
           LOG_D(MAC,"[eNB %d][RAPROC] CC_id %d Frame %d, subframeP %d: Set Msg4 PDSCH in %d.%d\n",
                 module_idP, CC_idP, frameP, subframeP, ra->Msg4_frame,ra->Msg4_subframe);
         } else {
-          AssertFatal (1 == 0, "TDD case not done yet\n");
+          LOG_E(MAC, "TDD case not done yet\n");
+          return;
         }
       } else if (ra->msg4_mpdcch_done==0)
         ra->msg4_mpdcch_repetition_cnt++;
@@ -819,6 +909,10 @@ generate_Msg4(module_id_t module_idP,
       dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.delta_power_offset_index = 0;
       dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.ngap = 0;
       dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.nprb = get_subbandsize (cc[CC_idP].mib->message.dl_Bandwidth); // ignored
+      if (dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.nprb < 0) {
+		  LOG_E(MAC, "generate_Msg4:get_subbandsize failed\n");
+		  return;
+	  }
       dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.transmission_mode = (cc[CC_idP].p_eNB == 1) ? 1 : 2;
       dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.num_bf_prb_per_subband = 1;
       dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.num_bf_vector = 1;
@@ -831,10 +925,13 @@ generate_Msg4(module_id_t module_idP,
       dl_req_body->number_pdu++;
       ra->state = WAITMSG4ACK;
       lcid = 0;
-      UE_info->UE_sched_ctrl[UE_id].round[CC_idP][ra->harq_pid] = 0;
+      UE_info->UE_sched_ctrl[UE_id].round[CC_idP][ra->harq_pid][TB1] = 0;
       msg4_header = 1 + 6 + 1;        // CR header, CR CE, SDU header
-      AssertFatal((ra->msg4_TBsize - ra->msg4_rrc_sdu_length - msg4_header)>=0,
-                  "msg4_TBS %d is too small, change mcs to increase by %d bytes\n",ra->msg4_TBsize,ra->msg4_rrc_sdu_length+msg4_header-ra->msg4_TBsize);
+      if((ra->msg4_TBsize - ra->msg4_rrc_sdu_length - msg4_header) < 0) {
+        LOG_E(MAC, "msg4_TBS %d is too small, change mcs to increase by %d bytes\n",
+		      ra->msg4_TBsize,ra->msg4_rrc_sdu_length+msg4_header-ra->msg4_TBsize);
+        return;
+      }
 
       if ((ra->msg4_TBsize - ra->msg4_rrc_sdu_length - msg4_header) <= 2) {
         msg4_padding = ra->msg4_TBsize - ra->msg4_rrc_sdu_length - msg4_header;
@@ -846,9 +943,12 @@ generate_Msg4(module_id_t module_idP,
 
       LOG_D (MAC, "[eNB %d][RAPROC] CC_id %d Frame %d subframeP %d Msg4 : TBS %d, sdu_len %d, msg4_header %d, msg4_padding %d, msg4_post_padding %d\n",
              module_idP, CC_idP, frameP, subframeP, ra->msg4_TBsize, ra->msg4_rrc_sdu_length, msg4_header, msg4_padding, msg4_post_padding);
-      DevAssert (UE_id != UE_INDEX_INVALID);  // FIXME not sure how to gracefully return
+      if(UE_id == UE_INDEX_INVALID) {
+        LOG_E(MAC, "UE_id == UE_INDEX_INVALID\n");
+        return;
+      }
       // CHECK THIS: &cc[CC_idP].CCCH_pdu.payload[0]
-      offset = generate_dlsch_header ((unsigned char *) mac->UE_info.DLSCH_pdu[CC_idP][0][(unsigned char) UE_id].payload[0], 1,       //num_sdus
+      offset = generate_dlsch_header ((unsigned char *) mac->UE_info.DLSCH_pdu[CC_idP][0][(unsigned char) UE_id].payload[0][TB1], 1,       //num_sdus
                                       (unsigned short *) &ra->msg4_rrc_sdu_length,     //
                                       &lcid,  // sdu_lcid
                                       255,    // no drx
@@ -856,7 +956,11 @@ generate_Msg4(module_id_t module_idP,
                                       ra->cont_res_id,       // contention res id
                                       msg4_padding,   // no padding
                                       msg4_post_padding);
-      memcpy ((void *) &mac->UE_info.DLSCH_pdu[CC_idP][0][(unsigned char) UE_id].payload[0][(unsigned char) offset], &cc[CC_idP].CCCH_pdu.payload[0], ra->msg4_rrc_sdu_length);
+      if (offset < 0) {
+		  LOG_E(MAC, "generate_Msg4:generate_dlsch_header failed\n");
+		  return;
+	  }
+      memcpy ((void *) &mac->UE_info.DLSCH_pdu[CC_idP][0][(unsigned char) UE_id].payload[0][TB1][(unsigned char) offset], &cc[CC_idP].CCCH_pdu.payload[0], ra->msg4_rrc_sdu_length);
       // DL request
       mac->TX_req[CC_idP].sfn_sf = (frameP << 4) + subframeP;
       TX_req = &mac->TX_req[CC_idP].tx_request_body.tx_pdu_list[mac->TX_req[CC_idP].tx_request_body.number_of_pdus];
@@ -864,13 +968,16 @@ generate_Msg4(module_id_t module_idP,
       TX_req->pdu_index = mac->pdu_index[CC_idP]++;
       TX_req->num_segments = 1;
       TX_req->segments[0].segment_length = ra->msg4_TBsize;
-      TX_req->segments[0].segment_data = mac->UE_info.DLSCH_pdu[CC_idP][0][(unsigned char) UE_id].payload[0];
+      TX_req->segments[0].segment_data = mac->UE_info.DLSCH_pdu[CC_idP][0][(unsigned char) UE_id].payload[0][TB1];
       mac->TX_req[CC_idP].tx_request_body.number_of_pdus++;
       // Program ACK/NAK for Msg4 PDSCH
       int             absSF = (frameP * 10) + subframeP;
       // see Section 10.2 from 36.213
       int             ackNAK_absSF = absSF + reps + 3;
-      AssertFatal (reps == 1, "Have to handle programming of ACK when PDSCH repetitions is > 1\n");
+      if(reps != 1) {
+        LOG_E(MAC, "Have to handle programming of ACK when PDSCH repetitions is > 1\n");
+        return;
+      }
       ul_req_body = &mac->UL_req_tmp[CC_idP][ackNAK_absSF % 10].ul_config_request_body;
       ul_config_pdu = &ul_req_body->ul_config_pdu_list[ul_req_body->number_of_pdus];
       ul_config_pdu->pdu_type = NFAPI_UL_CONFIG_UCI_HARQ_PDU_TYPE;
@@ -894,13 +1001,14 @@ generate_Msg4(module_id_t module_idP,
         ul_config_pdu->uci_harq_pdu.harq_information.harq_information_rel9_fdd.harq_size = 1; // 1-bit ACK/NAK
         ul_config_pdu->uci_harq_pdu.harq_information.harq_information_rel9_fdd.number_of_pucch_resources = 1;
       } else {
-        AssertFatal (1 == 0, "PUCCH configuration for ACK/NAK not handled yet for TDD BL/CE case\n");
+        LOG_E(MAC, "PUCCH configuration for ACK/NAK not handled yet for TDD BL/CE case\n");
+        return;
       }
 
       ul_req_body->number_of_pdus++;
       T (T_ENB_MAC_UE_DL_PDU_WITH_DATA, T_INT (module_idP), T_INT (CC_idP), T_INT (ra->rnti), T_INT (frameP), T_INT (subframeP),
-         T_INT (0 /*harq_pid always 0? */ ), T_BUFFER (&mac->UE_info.DLSCH_pdu[CC_idP][0][UE_id].payload[0], ra->msg4_TBsize));
-      trace_pdu (DIRECTION_DOWNLINK, (uint8_t *) mac->UE_info.DLSCH_pdu[CC_idP][0][(unsigned char) UE_id].payload[0],
+         T_INT (0 /*harq_pid always 0? */ ), T_BUFFER (&mac->UE_info.DLSCH_pdu[CC_idP][0][UE_id].payload[0][TB1], ra->msg4_TBsize));
+      trace_pdu (DIRECTION_DOWNLINK, (uint8_t *) mac->UE_info.DLSCH_pdu[CC_idP][0][(unsigned char) UE_id].payload[0][TB1],
                  ra->msg4_rrc_sdu_length,
                  UE_id, 3, UE_RNTI (module_idP, UE_id),
                  mac->frame, mac->subframe, 0, 0);
@@ -923,8 +1031,7 @@ generate_Msg4(module_id_t module_idP,
         LOG_D(MAC,
               "[eNB %d][RAPROC] CC_id %d Frame %d, subframeP %d: UE_id %d, rrc_sdu_length %d\n",
               module_idP, CC_idP, frameP, subframeP, UE_id, rrc_sdu_length);
-        //          AssertFatal(rrc_sdu_length > 0,
-        //          "[MAC][eNB Scheduler] CCCH not allocated, rrc_sdu_length: %d\n", rrc_sdu_length);
+
         LOG_I(MAC,"[eNB %d][RAPROC] CC_id %d Frame %d, subframeP %d: Generating Msg4 with RRC Piggyback (RNTI %x)\n",
               module_idP, CC_idP, frameP, subframeP, ra->rnti);
         /// Choose first 4 RBs for Msg4, should really check that these are free!
@@ -933,40 +1040,60 @@ generate_Msg4(module_id_t module_idP,
         vrb_map[first_rb + 1] = 1;
         vrb_map[first_rb + 2] = 1;
         vrb_map[first_rb + 3] = 1;
-        // Compute MCS/TBS for 3 PRB (coded on 4 vrb)
-        msg4_header = 1 + 6 + 1;  // CR header, CR CE, SDU header
+        if((cc[CC_idP].mib->message.dl_Bandwidth == 2) || (cc[CC_idP].mib->message.dl_Bandwidth == 3))
+        {
+          rbg_map[0] = 1;
+          rbg_map[1] = 1;
+          for(rbg = 2; rbg < N_RBG; rbg++)
+          {
+            rbg_map[rbg] = 0;
+          }
+        }
+        else if((cc[CC_idP].mib->message.dl_Bandwidth == 4) || (cc[CC_idP].mib->message.dl_Bandwidth == 5))
+        {
+          rbg_map[0] = 1;
 
-        if ((rrc_sdu_length + msg4_header) <= 22) {
-          ra->msg4_mcs = 4;
-          ra->msg4_TBsize = 22;
-        } else if ((rrc_sdu_length + msg4_header) <= 28) {
-          ra->msg4_mcs = 5;
-          ra->msg4_TBsize = 28;
-        } else if ((rrc_sdu_length + msg4_header) <= 32) {
-          ra->msg4_mcs = 6;
-          ra->msg4_TBsize = 32;
-        } else if ((rrc_sdu_length + msg4_header) <= 41) {
-          ra->msg4_mcs = 7;
-          ra->msg4_TBsize = 41;
-        } else if ((rrc_sdu_length + msg4_header) <= 49) {
-          ra->msg4_mcs = 8;
-          ra->msg4_TBsize = 49;
-        } else if ((rrc_sdu_length + msg4_header) <= 57) {
-          ra->msg4_mcs = 9;
-          ra->msg4_TBsize = 57;
+          for(rbg = 1; rbg < N_RBG; rbg++)
+          {
+            rbg_map[rbg] = 0;
+          }
         }
 
-        fill_nfapi_dl_dci_1A(dl_config_pdu, 4,  // aggregation_level
+        // Compute MCS/TBS for 4 PRB (coded on 4 vrb)
+        msg4_header = 1 + 6 + 1;  // CR header, CR CE, SDU header
+
+        if ((rrc_sdu_length + msg4_header) <= 28) {
+          ra->msg4_mcs = 3;
+          ra->msg4_TBsize = 28;
+        } else if ((rrc_sdu_length + msg4_header) <= 32) {
+          ra->msg4_mcs = 4;
+          ra->msg4_TBsize = 32;
+        } else if ((rrc_sdu_length + msg4_header) <= 41) {
+          ra->msg4_mcs = 5;
+          ra->msg4_TBsize = 41;
+        } else if ((rrc_sdu_length + msg4_header) <= 49) {
+          ra->msg4_mcs = 6;
+          ra->msg4_TBsize = 49;
+        } else if ((rrc_sdu_length + msg4_header) <= 59) {
+          ra->msg4_mcs = 7;
+          ra->msg4_TBsize = 59;
+        }  else if ((rrc_sdu_length + msg4_header) <= 67) {
+          ra->msg4_mcs = 8;
+          ra->msg4_TBsize = 67;
+        }
+
+        fill_nfapi_dl_dci_1(dl_config_pdu, 4,  // aggregation_level
                              ra->rnti,  // rnti
                              1, // rnti_type, CRNTI
                              ra->harq_pid,  // harq_process
                              1, // tpc, none
-                             getRIV(N_RB_DL, first_rb, 4),  // resource_block_coding
+                             allocate_prbs_sub(4, N_RB_DL, N_RBG, rbg_map), // resource_block_coding
                              ra->msg4_mcs,  // mcs
-                             1 - UE_info->UE_template[CC_idP][UE_id].oldNDI[ra->harq_pid],
+                             1 - UE_info->UE_template[CC_idP][UE_id].oldNDI[ra->harq_pid][TB1],
                              0, // rv
                              0);  // vrb_flag
-        UE_info->UE_template[CC_idP][UE_id].oldNDI[ra->harq_pid] = 1 - UE_info->UE_template[CC_idP][UE_id].oldNDI[ra->harq_pid];
+
+        UE_info->UE_template[CC_idP][UE_id].oldNDI[ra->harq_pid][TB1] = 1 - UE_info->UE_template[CC_idP][UE_id].oldNDI[ra->harq_pid][TB1];
         LOG_D(MAC,
               "Frame %d, subframe %d: Msg4 DCI pdu_num %d (rnti %x,rnti_type %d,harq_pid %d, resource_block_coding (%p) %d\n",
               frameP, subframeP, dl_req_body->number_pdu,
@@ -975,11 +1102,6 @@ generate_Msg4(module_id_t module_idP,
               dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.harq_process,
               &dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.resource_block_coding,
               dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.resource_block_coding);
-        AssertFatal(dl_config_pdu->dci_dl_pdu.
-                    dci_dl_pdu_rel8.resource_block_coding < 8192,
-                    "resource_block_coding %u < 8192\n",
-                    dl_config_pdu->dci_dl_pdu.
-                    dci_dl_pdu_rel8.resource_block_coding);
 
         if (!CCE_allocation_infeasible(module_idP, CC_idP, 1, subframeP,
                                        dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.aggregation_level, ra->rnti)) {
@@ -1000,7 +1122,7 @@ generate_Msg4(module_id_t module_idP,
           lcid = 0;
           // put HARQ process round to 0
           ra->harq_pid = frame_subframe2_dl_harq_pid(cc->tdd_Config,frameP,subframeP);
-          UE_info->UE_sched_ctrl[UE_id].round[CC_idP][ra->harq_pid] = 0;
+          UE_info->UE_sched_ctrl[UE_id].round[CC_idP][ra->harq_pid][TB1] = 0;
 
           if ((ra->msg4_TBsize - rrc_sdu_length - msg4_header) <= 2) {
             msg4_padding = ra->msg4_TBsize - rrc_sdu_length - msg4_header;
@@ -1015,10 +1137,13 @@ generate_Msg4(module_id_t module_idP,
                 module_idP, CC_idP, frameP, subframeP,
                 ra->msg4_TBsize, rrc_sdu_length, msg4_header,
                 msg4_padding, msg4_post_padding);
-          DevAssert(UE_id != UE_INDEX_INVALID); // FIXME not sure how to gracefully return
+          if(UE_id == UE_INDEX_INVALID) {
+            LOG_E(MAC, "UE_id == UE_INDEX_INVALID\n");
+            return;
+          }
           // CHECK THIS: &cc[CC_idP].CCCH_pdu.payload[0]
           int num_sdus = rrc_sdu_length > 0 ? 1 : 0;
-          offset = generate_dlsch_header((unsigned char *) mac->UE_info.DLSCH_pdu[CC_idP][0][(unsigned char) UE_id].payload[0],
+          offset = generate_dlsch_header((unsigned char *) mac->UE_info.DLSCH_pdu[CC_idP][0][(unsigned char) UE_id].payload[0][TB1],
                                          num_sdus,  //num_sdus
                                          (unsigned short *) &rrc_sdu_length,  //
                                          &lcid, // sdu_lcid
@@ -1027,16 +1152,21 @@ generate_Msg4(module_id_t module_idP,
                                          ra->cont_res_id, // contention res id
                                          msg4_padding,  // no padding
                                          msg4_post_padding);
-          memcpy((void *) &mac->UE_info.DLSCH_pdu[CC_idP][0][(unsigned char)UE_id].payload[0][(unsigned char)offset],
+          if (offset < 0) {
+                          LOG_E(MAC, "generate_Msg4:generate_dlsch_header failed:offset < 0\n");
+                          return;
+          }
+          memcpy((void *) &mac->UE_info.DLSCH_pdu[CC_idP][0][(unsigned char)UE_id].payload[0][TB1][(unsigned char)offset],
                  &cc[CC_idP].CCCH_pdu.payload[0], rrc_sdu_length);
           // DLSCH Config
           fill_nfapi_dlsch_config(&dl_req_body->dl_config_pdu_list[dl_req_body->number_pdu],
                                   ra->msg4_TBsize,
                                   mac->pdu_index[CC_idP],
                                   ra->rnti,
-                                  2, // resource_allocation_type : format 1A/1B/1D
+                                  0, // resource_allocation_type : format 1A/1B/1D
                                   0,  // virtual_resource_block_assignment_flag : localized
-                                  getRIV(N_RB_DL, first_rb, 4), // resource_block_coding : RIV, 4 PRB
+                                  //allocate_prbs_sub(4, N_RB_DL, N_RBG, rbg_map),  // resource_block_coding
+                                  getRIV(N_RB_DL, first_rb, 4),  // resource_block_coding
                                   2,  // modulation: QPSK
                                   0,  // redundancy version
                                   1,  // transport_blocks
@@ -1064,7 +1194,7 @@ generate_Msg4(module_id_t module_idP,
                               rrc_sdu_length+offset,
                               mac->pdu_index[CC_idP],
                               mac->UE_info.
-                              DLSCH_pdu[CC_idP][0][(unsigned char)UE_id].payload[0]);
+                              DLSCH_pdu[CC_idP][0][(unsigned char)UE_id].payload[0][TB1]);
           mac->pdu_index[CC_idP]++;
           dl_req->sfn_sf = mac->TX_req[CC_idP].sfn_sf;
           LOG_D(MAC, "Filling UCI ACK/NAK information, cce_idx %d\n",
@@ -1080,13 +1210,14 @@ generate_Msg4(module_id_t module_idP,
             T_INT(CC_idP), T_INT(ra->rnti), T_INT(frameP),
             T_INT(subframeP), T_INT(0 /*harq_pid always 0? */ ),
             T_BUFFER(&mac->UE_info.DLSCH_pdu[CC_idP][0][UE_id].
-                     payload[0], ra->msg4_TBsize));
+                     payload[0][TB1], ra->msg4_TBsize));
           trace_pdu(DIRECTION_DOWNLINK,
                     (uint8_t *) mac->
-                    UE_info.DLSCH_pdu[CC_idP][0][(unsigned char)UE_id].payload[0],
+                    UE_info.DLSCH_pdu[CC_idP][0][(unsigned char)UE_id].payload[0][TB1],
                     rrc_sdu_length, UE_id,  WS_C_RNTI,
                     UE_RNTI(module_idP, UE_id), mac->frame,
                     mac->subframe, 0, 0);
+
 
           if(RC.mac[module_idP]->scheduler_mode == SCHED_MODE_FAIR_RR) {
             set_dl_ue_select_msg4(CC_idP, 4, UE_id, ra->rnti);
@@ -1118,8 +1249,11 @@ check_Msg4_retransmission(module_id_t module_idP, int CC_idP,
   COMMON_channels_t *cc = mac->common_channels;
   int UE_id = -1;
   uint8_t *vrb_map;
+  uint8_t rbg_map[25];
+  uint8_t rbg;
   int first_rb;
   int N_RB_DL;
+  int N_RBG;
   nfapi_dl_config_request_pdu_t *dl_config_pdu;
   UE_info_t *UE_info = &mac->UE_info;
   nfapi_dl_config_request_t *dl_req;
@@ -1127,22 +1261,34 @@ check_Msg4_retransmission(module_id_t module_idP, int CC_idP,
   int round;
   // check HARQ status and retransmit if necessary
   UE_id = find_UE_id(module_idP, ra->rnti);
-  AssertFatal(UE_id >= 0, "Can't find UE for t-crnti\n");
-  round = UE_info->UE_sched_ctrl[UE_id].round[CC_idP][ra->harq_pid];
+  if(UE_id < 0) {
+    LOG_E(MAC, "Can't find UE for t-crnti\n");
+    return;
+  }
+  round = UE_info->UE_sched_ctrl[UE_id].round[CC_idP][ra->harq_pid][TB1];
   vrb_map = cc[CC_idP].vrb_map;
   dl_req = &mac->DL_req[CC_idP];
   dl_req_body = &dl_req->dl_config_request_body;
   dl_config_pdu = &dl_req_body->dl_config_pdu_list[dl_req_body->number_pdu];
   N_RB_DL = to_prb(cc[CC_idP].mib->message.dl_Bandwidth);
+  if (N_RB_DL == -1) {
+    LOG_E(MAC, "to_prb failed\n");
+    return;
+  }
+  N_RBG   = to_rbg(cc[CC_idP].mib->message.dl_Bandwidth);
+  if (N_RBG < 0) {
+    LOG_E(MAC, "to_rbg failed\n");
+	return;
+  }
   LOG_D(MAC,
         "[eNB %d][RAPROC] CC_id %d Frame %d, subframeP %d: Checking if Msg4 for harq_pid %d was acknowledged (round %d), UE_id: %d \n",
         module_idP, CC_idP, frameP, subframeP, ra->harq_pid, round, UE_id);
 
   if (round != 8) {
     if (ra->rach_resource_type > 0 && round > 0) {
-      AssertFatal(1 == 0,
-                  "Msg4 Retransmissions not handled yet for BL/CE UEs, Frame %d, subframeP %d harq_pid %d round %d, UE_id: %d \n",
-                  frameP, subframeP, ra->harq_pid, round, UE_id);
+      LOG_E(MAC, "Msg4 Retransmissions not handled yet for BL/CE UEs, Frame %d, subframeP %d harq_pid %d round %d, UE_id: %d \n",
+                frameP, subframeP, ra->harq_pid, round, UE_id);
+      return;
     } else {
       if ((ra->Msg4_frame == frameP)
           && (ra->Msg4_subframe == subframeP)) {
@@ -1154,14 +1300,20 @@ check_Msg4_retransmission(module_id_t module_idP, int CC_idP,
         vrb_map[first_rb + 1] = 1;
         vrb_map[first_rb + 2] = 1;
         vrb_map[first_rb + 3] = 1;
-        fill_nfapi_dl_dci_1A(dl_config_pdu, 4,  // aggregation_level
+        rbg_map[0] = 1;
+        rbg_map[1] = 1;
+        for(rbg = 2; rbg < N_RBG; rbg++)
+        {
+          rbg_map[rbg] = 0;
+        }
+        fill_nfapi_dl_dci_1(dl_config_pdu, 4,   // aggregation_level
                              ra->rnti,  // rnti
                              1, // rnti_type, CRNTI
                              ra->harq_pid,  // harq_process
                              1, // tpc, none
-                             getRIV(N_RB_DL, first_rb, 4),  // resource_block_coding
+                             allocate_prbs_sub(4, N_RB_DL, N_RBG, rbg_map),     // resource_block_coding
                              ra->msg4_mcs,  // mcs
-                             UE_info->UE_template[CC_idP][UE_id].oldNDI[ra->harq_pid],
+                             UE_info->UE_template[CC_idP][UE_id].oldNDI[ra->harq_pid][TB1],
                              round & 3, // rv
                              0);  // vrb_flag
 
@@ -1182,9 +1334,9 @@ check_Msg4_retransmission(module_id_t module_idP, int CC_idP,
                                   ra->msg4_TBsize,
                                   -1
                                   /* retransmission, no pdu_index */
-                                  , ra->rnti, 2,  // resource_allocation_type : format 1A/1B/1D
+                                  , ra->rnti, 0,  // resource_allocation_type : format 1A/1B/1D
                                   0,  // virtual_resource_block_assignment_flag : localized
-                                  getRIV(N_RB_DL, first_rb, 4), // resource_block_coding : RIV, 4 PRB
+                                  allocate_prbs_sub(4, N_RB_DL, N_RBG, rbg_map),      // resource_block_coding : RIV, 4 PRB
                                   2,  // modulation: QPSK
                                   round & 3,  // redundancy version
                                   1,  // transport_blocks
@@ -1232,7 +1384,10 @@ check_Msg4_retransmission(module_id_t module_idP, int CC_idP,
     ra->state = IDLE;
     LOG_D(MAC,"[eNB %d][RAPROC] Frame %d, Subframe %d: state:IDLE\n", module_idP, frameP, subframeP);
     UE_id = find_UE_id(module_idP, ra->rnti);
-    DevAssert(UE_id != -1);
+    if(UE_id == -1) {
+      LOG_E(MAC, "UE_id == -1\n");
+      return;
+    }
     mac->UE_info.UE_template[UE_PCCID(module_idP, UE_id)][UE_id].configured = TRUE;
     mac->UE_info.UE_template[UE_PCCID(module_idP, UE_id)][UE_id].pusch_repetition_levels=ra->pusch_repetition_levels;
     cancel_ra_proc(module_idP, CC_idP, frameP, ra->rnti);
@@ -1252,6 +1407,10 @@ schedule_RA(module_id_t module_idP, frame_t frameP, sub_frame_t subframeP) {
     // skip UL component carriers if TDD
     if (is_UL_sf(&cc[CC_id], subframeP) == 1)
       continue;
+    else if (is_UL_sf(&cc[CC_id], subframeP) < 0) {
+	  LOG_E(MAC, "schedule_RA:is_UL_sf failed\n");
+      return;
+    }
 
     for (i = 0; i < NB_RA_PROC_MAX; i++) {
       ra = (RA_t *) & cc[CC_id].ra[i];
@@ -1288,10 +1447,19 @@ initiate_ra_proc(module_id_t module_idP,
   LTE_PRACH_ParametersListCE_r13_t *prach_ParametersListCE_r13 = NULL;
 
   if (cc->mib->message.schedulingInfoSIB1_BR_r13>0) {
-    AssertFatal(cc->radioResourceConfigCommon_BR != NULL,"radioResourceConfigCommon_BR is null\n");
-    AssertFatal(cc->radioResourceConfigCommon_BR->ext4 != NULL, "radioResourceConfigCommon_BR->ext4 is null\n");
+    if(cc->radioResourceConfigCommon_BR == NULL) {
+      LOG_E(MAC, "radioResourceConfigCommon_BR is null\n");
+      return;
+    }
+    if(cc->radioResourceConfigCommon_BR->ext4 == NULL) {
+      LOG_E(MAC, "radioResourceConfigCommon_BR->ext4 is null\n");
+      return;
+    }
     ext4_prach = cc->radioResourceConfigCommon_BR->ext4->prach_ConfigCommon_v1310;
-    AssertFatal(ext4_prach!=NULL,"ext4_prach is null\n");
+    if(ext4_prach == NULL) {
+      LOG_E(MAC, "ext4_prach is null\n");
+      return;
+    }
     prach_ParametersListCE_r13 = &ext4_prach->prach_ParametersListCE_r13;
   }
 
@@ -1334,12 +1502,17 @@ initiate_ra_proc(module_id_t module_idP,
       //TODO Fill in other TDD config. What about nfapi_mode?
       if(cc->tdd_Config!=NULL) {
         switch(cc->tdd_Config->subframeAssignment) {
+          case 1 :
+            offset = 6;
+            break;
+
+          case 2 :
+            offset = 6;
+            break;
+
           default:
             printf("%s:%d: TODO\n", __FILE__, __LINE__);
             abort();
-
-          case 1 :
-            offset = 6;
             break;
         }
       } else { //FDD

@@ -145,11 +145,7 @@ typedef struct {
   /// Allocated RNTI (0 means DLSCH_t is not currently used)
   uint16_t rnti;
   /// Active flag for baseband transmitter processing
-#ifdef PHY_TX_THREAD
   uint8_t active[10];
-#else
-  uint8_t active;
-#endif
   /// indicator of UE type (0 = LTE, 1,2 = Cat-M)
   int ue_type;
   /// HARQ process mask, indicates which processes are currently active

@@ -125,7 +125,12 @@ unsigned short fill_rar_br(eNB_MAC_INST *eNB,
   uint32_t TPC = 0;
   int input_buffer_length = 0;
   int N_NB_index = 0;
-  AssertFatal(ra != NULL, "RA is null \n");
+
+  if(ra == NULL) {
+    LOG_E(MAC, "RA is null \n");
+    return -1;
+  }
+  
   /* Subheader fixed */
   rarh->E = 0;    // First and last RAR
   rarh->T = 1;    // 0 for E/T/R/R/BI subheader, 1 for E/T/RAPID subheader
@@ -143,6 +148,11 @@ unsigned short fill_rar_br(eNB_MAC_INST *eNB,
   if (ce_level < 2) { // CE Level 0, 1 (CEmodeA)
     input_buffer_length = 6;
     N_NB_index = get_numnarrowbandbits(cc->mib->message.dl_Bandwidth);
+    if (N_NB_index < 0) {
+      LOG_E(MAC, "get_numnarrowbandbits failed \n");
+      return -1;
+    }
+
     /* UL Grant */
     ra->msg3_mcs = 7;
     TPC = 3; // no power increase
@@ -166,7 +176,10 @@ unsigned short fill_rar_br(eNB_MAC_INST *eNB,
     rar[4] = (uint8_t)(ra->rnti >> 8);
     rar[5] = (uint8_t)(ra->rnti & 0xff);
   } else { // CE level 2, 3 (CEModeB)
-    AssertFatal(1 == 0, "Shouldn't get here ...\n");
+
+    LOG_E(MAC, "Shouldn't get here ...\n");
+    return -1;
+
     input_buffer_length = 5;
     rar[3] = (uint8_t)(ra->rnti >> 8);
     rar[4] = (uint8_t)(ra->rnti & 0xff);

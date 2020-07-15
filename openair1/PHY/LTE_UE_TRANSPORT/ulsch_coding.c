@@ -516,7 +516,8 @@ uint32_t ulsch_encoding(uint8_t *a,
 #endif
 
       start_meas(rm_stats);
-      r_offset += lte_rate_matching_turbo(ulsch->harq_processes[harq_pid]->RTC[r],
+	  uint32_t lte_rate_matching_turbo_val = 0;
+      lte_rate_matching_turbo_val = lte_rate_matching_turbo(ulsch->harq_processes[harq_pid]->RTC[r],
                                           G,
                                           ulsch->harq_processes[harq_pid]->w[r],
                                           ulsch->e+r_offset,
@@ -530,6 +531,11 @@ uint32_t ulsch_encoding(uint8_t *a,
                                           r,
                                           ulsch->harq_processes[harq_pid]->nb_rb);
                                           //ulsch->harq_processes[harq_pid]->mcs);                       // r
+	  if (lte_rate_matching_turbo_val == -1) {
+        LOG_E(PHY, "ulsch_encoding:lte_rate_matching_turbo failed.\n");
+        return(-1);
+	  }
+	  r_offset += lte_rate_matching_turbo_val;
       stop_meas(rm_stats);
 #ifdef DEBUG_ULSCH_CODING
 

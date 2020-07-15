@@ -689,8 +689,11 @@ void ulsch_extract_rbs_single(int32_t **rxdataF,
   int32_t *rxF,*rxF_ext;
   //uint8_t symbol = l+Ns*frame_parms->symbols_per_tti/2;
   uint8_t symbol = l+((7-frame_parms->Ncp)*(Ns&1)); ///symbol within sub-frame
-  AssertFatal((frame_parms->nb_antennas_rx>0) && (frame_parms->nb_antennas_rx<5),
-              "nb_antennas_rx not in (1-4)\n");
+
+  if ((frame_parms->nb_antennas_rx <= 0) || (frame_parms->nb_antennas_rx >= 5)) {
+    LOG_E(PHY, "nb_antennas_rx not in (1-4)\n");
+    return;
+  }
 
   for (aarx=0; aarx<frame_parms->nb_antennas_rx; aarx++) {
     nb_rb1 = cmin(cmax((int)(frame_parms->N_RB_UL) - (int)(2*first_rb),(int)0),(int)(2*nb_rb));    // 2 times no. RBs before the DC
@@ -978,11 +981,16 @@ void ulsch_channel_level(int32_t **drs_ch_estimates_ext,
     }
 
 #endif
-    DevAssert( nb_rb );
-    avg[aarx] = (int)((((float *)&avg128U)[0] +
-                       ((float *)&avg128U)[1] +
-                       ((float *)&avg128U)[2] +
-                       ((float *)&avg128U)[3])/(float)(nb_rb*12));
+
+    if (!nb_rb) {
+      LOG_E(PHY, "nb_rb is 0\n");
+      return;
+    }
+    avg[aarx] = (int)((((float*)&avg128U)[0] +
+                       ((float*)&avg128U)[1] +
+                       ((float*)&avg128U)[2] +
+                       ((float*)&avg128U)[3])/(float)(nb_rb*12));
+
   }
 
 #if defined(__x86_64__) || defined(__i386__)
@@ -1020,6 +1028,10 @@ void rx_ulsch(PHY_VARS_eNB *eNB,
   if (ulsch[UE_id]->ue_type > 0) harq_pid =0;
   else {
     harq_pid = subframe2harq_pid(frame_parms,proc->frame_rx,subframe);
+    if (harq_pid == 255) {
+        LOG_E(PHY,"FATAL ERROR: illegal harq_pid, returning\n");
+        return;
+    }
   }
 
   Qm = ulsch[UE_id]->harq_processes[harq_pid]->Qm;
@@ -1028,8 +1040,11 @@ void rx_ulsch(PHY_VARS_eNB *eNB,
     LOG_I(PHY,"rx_ulsch: harq_pid %d, nb_rb %d first_rb %d\n",harq_pid,ulsch[UE_id]->harq_processes[harq_pid]->nb_rb,ulsch[UE_id]->harq_processes[harq_pid]->first_rb);
   }
 
-  AssertFatal(ulsch[UE_id]->harq_processes[harq_pid]->nb_rb > 0,
-              "PUSCH (%d/%x) nb_rb=0!\n", harq_pid,ulsch[UE_id]->rnti);
+  if (ulsch[UE_id]->harq_processes[harq_pid]->nb_rb <= 0) {
+    LOG_E(PHY, "PUSCH (%d/%x) nb_rb=0!\n", harq_pid,ulsch[UE_id]->rnti);
+    return;
+  }
+
 
   for (l=0; l<(frame_parms->symbols_per_tti-ulsch[UE_id]->harq_processes[harq_pid]->srs_active); l++) {
     if(LOG_DEBUGFLAG(DEBUG_ULSCH)) {
@@ -1047,14 +1062,18 @@ void rx_ulsch(PHY_VARS_eNB *eNB,
                              l%(frame_parms->symbols_per_tti/2),
                              l/(frame_parms->symbols_per_tti/2),
                              frame_parms);
-    lte_ul_channel_estimation(&eNB->frame_parms,proc,
+    
+    if (lte_ul_channel_estimation(&eNB->frame_parms,proc,
 		              eNB->ulsch[UE_id],
 		              eNB->pusch_vars[UE_id]->drs_ch_estimates,
 			      eNB->pusch_vars[UE_id]->drs_ch_estimates_time,
 			      eNB->pusch_vars[UE_id]->rxdataF_ext,
                               UE_id,
                               l%(frame_parms->symbols_per_tti/2),
-                              l/(frame_parms->symbols_per_tti/2));
+                              l/(frame_parms->symbols_per_tti/2)) < 0) {
+      LOG_E(PHY, "lte_ul_channel_estimation failed。\n");
+	  return;
+    }
   }
 
   int correction_factor = 1;
@@ -1064,18 +1083,41 @@ void rx_ulsch(PHY_VARS_eNB *eNB,
   if (deltaMCS==1) {
     // Note we're using TBS instead of sumKr, since didn't run segmentation yet!
     MPR_times_100Ks = 500*ulsch[UE_id]->harq_processes[harq_pid]->TBS/(ulsch[UE_id]->harq_processes[harq_pid]->nb_rb*12*4*ulsch[UE_id]->harq_processes[harq_pid]->Nsymb_pusch);
-    AssertFatal(MPR_times_100Ks < 750 && MPR_times_100Ks >= 0,"Impossible value for MPR_times_100Ks %d (TBS %d,Nre %d)\n",
-                MPR_times_100Ks,ulsch[UE_id]->harq_processes[harq_pid]->TBS,
-                (ulsch[UE_id]->harq_processes[harq_pid]->nb_rb*12*4*ulsch[UE_id]->harq_processes[harq_pid]->Nsymb_pusch));
 
-    if (MPR_times_100Ks > 0) correction_factor = ulsch_power_LUT[MPR_times_100Ks];
+    if ((MPR_times_100Ks > 0)&&(MPR_times_100Ks < 750)){
+      correction_factor = ulsch_power_LUT[MPR_times_100Ks];
+    }else{
+      correction_factor = 1;
+    }
   }
 
   for (i=0; i<frame_parms->nb_antennas_rx; i++) {
-    pusch_vars->ulsch_power[i] = signal_energy_nodc(pusch_vars->drs_ch_estimates[i],
-                                 ulsch[UE_id]->harq_processes[harq_pid]->nb_rb*12)/correction_factor;
-    LOG_D(PHY,"%4.4d.%d power harq_pid %d rb %2.2d TBS %2.2d (MPR_times_Ks %d correction %d)  power %d dBtimes10\n", proc->frame_rx, proc->subframe_rx, harq_pid,
-          ulsch[UE_id]->harq_processes[harq_pid]->nb_rb, ulsch[UE_id]->harq_processes[harq_pid]->TBS,MPR_times_100Ks,correction_factor,dB_fixed_times10(pusch_vars->ulsch_power[i]));
+    //symbol 3
+    int symbol_offset = frame_parms->N_RB_UL*12*(3 - frame_parms->Ncp);
+    pusch_vars->ulsch_interference_power[i] = interference_power(&pusch_vars->drs_ch_estimates[i][symbol_offset],ulsch[UE_id]->harq_processes[harq_pid]->nb_rb*12);
+    pusch_vars->ulsch_power[i] = signal_power(&pusch_vars->drs_ch_estimates[i][symbol_offset],ulsch[UE_id]->harq_processes[harq_pid]->nb_rb*12);
+    //symbol 3+7
+    symbol_offset = frame_parms->N_RB_UL*12*((3 - frame_parms->Ncp)+(7-frame_parms->Ncp));
+    pusch_vars->ulsch_interference_power[i] += interference_power(&pusch_vars->drs_ch_estimates[i][symbol_offset],ulsch[UE_id]->harq_processes[harq_pid]->nb_rb*12);
+    pusch_vars->ulsch_power[i] += signal_power(&pusch_vars->drs_ch_estimates[i][symbol_offset],ulsch[UE_id]->harq_processes[harq_pid]->nb_rb*12);
+    //ave
+    pusch_vars->ulsch_interference_power[i] >>= 1;
+    pusch_vars->ulsch_power[i] >>= 1;
+
+    pusch_vars->ulsch_interference_power[i] = pusch_vars->ulsch_interference_power[i]/correction_factor;
+    pusch_vars->ulsch_power[i] = pusch_vars->ulsch_power[i]/correction_factor;
+
+    if(pusch_vars->ulsch_power[i]>0x20000000){
+      pusch_vars->ulsch_power[i] = 0x20000000;
+      pusch_vars->ulsch_interference_power[i] = 1;
+    }else{
+      pusch_vars->ulsch_power[i] -=  pusch_vars->ulsch_interference_power[i];
+      if(pusch_vars->ulsch_power[i]<1) pusch_vars->ulsch_power[i] = 1;
+      if(pusch_vars->ulsch_interference_power[i]<1)pusch_vars->ulsch_interference_power[i] = 1;
+    }
+
+    LOG_D(PHY,"%4.4d.%d power harq_pid %d rb %2.2d TBS %2.2d (MPR_times_Ks %d correction %d)  power %d dBtimes10\n", proc->frame_rx, proc->subframe_rx, harq_pid, ulsch[UE_id]->harq_processes[harq_pid]->nb_rb, ulsch[UE_id]->harq_processes[harq_pid]->TBS,MPR_times_100Ks,correction_factor,dB_fixed_times10(pusch_vars->ulsch_power[i])); 
+     
   }
 
   ulsch_channel_level(pusch_vars->drs_ch_estimates,
@@ -1196,8 +1238,13 @@ void dump_ulsch(PHY_VARS_eNB *eNB,int frame,int subframe,uint8_t UE_id,int round
   uint8_t harq_pid;
   char fname[100],vname[100];
   harq_pid = subframe2harq_pid(&eNB->frame_parms,frame,subframe);
-  LOG_UI(PHY,"Dumping ULSCH in subframe %d with harq_pid %d, round %d for NB_rb %d, TBS %d, Qm %d, N_symb %d\n",
-         subframe,harq_pid,round,eNB->ulsch[UE_id]->harq_processes[harq_pid]->nb_rb,
+  if (harq_pid == 255) {
+    LOG_E(PHY,"FATAL ERROR: illegal harq_pid, returning\n");
+    return;
+  }
+
+  LOG_UI(PHY,"Dumping ULSCH in subframe %d with harq_pid %d, round %d for NB_rb %d, TBS %d, Qm %d, N_symb %d\n", 
+	 subframe,harq_pid,round,eNB->ulsch[UE_id]->harq_processes[harq_pid]->nb_rb,
          eNB->ulsch[UE_id]->harq_processes[harq_pid]->TBS,eNB->ulsch[UE_id]->harq_processes[harq_pid]->Qm,
          eNB->ulsch[UE_id]->harq_processes[harq_pid]->Nsymb_pusch);
   sprintf(fname,"/tmp/ulsch_r%d_d",round);

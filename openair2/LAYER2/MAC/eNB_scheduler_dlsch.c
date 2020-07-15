@@ -151,8 +151,11 @@ generate_dlsch_header(unsigned char *mac_header,
     last_size = 1;
     //    msg("last_size %d,mac_header_ptr %p\n",last_size,mac_header_ptr);
     ((TIMING_ADVANCE_CMD *) ce_ptr)->R = 0;
-    AssertFatal(timing_advance_cmd < 64, "timing_advance_cmd %d > 63\n",
+    if (timing_advance_cmd >= 64) {
+      LOG_E(MAC, "timing_advance_cmd %d > 63\n",
                 timing_advance_cmd);
+      return -1;
+    }
     ((TIMING_ADVANCE_CMD *) ce_ptr)->TA = timing_advance_cmd;    //(timing_advance_cmd+31)&0x3f;
     LOG_D(MAC, "timing advance =%d (%d)\n",
           timing_advance_cmd,
@@ -337,7 +340,23 @@ set_ul_DAI(int module_idP,
 
       case 2:
         //      if ((subframeP==3)||(subframeP==8))
-        //  UE_info->UE_template[CC_idP][UE_idP].DAI_ul = DAI;
+        //  UE_list->UE_template[CC_idP][UE_idP].DAI_ul = DAI;
+          switch (subframeP) {
+            case 0:
+            case 1:
+              UE_info->UE_template[CC_idP][UE_idP].DAI_ul[7] = DAI;
+              break;
+
+            case 4:
+            case 5:
+            case 8:
+              UE_info->UE_template[CC_idP][UE_idP].DAI_ul[2] = DAI;
+              break;
+
+            case 9:
+              UE_info->UE_template[CC_idP][UE_idP].DAI_ul[7] = DAI;
+              break;
+            }
         break;
 
       case 3:
@@ -523,11 +542,24 @@ schedule_dlsch(module_id_t module_idP, frame_t frameP, sub_frame_t subframeP, in
 
 void  getRepetition(UE_TEMPLATE *pue_template,unsigned int *maxRep, unsigned int *narrowBandindex) {
   LTE_EPDCCH_SetConfig_r11_t *epdcch_setconfig_r11;
-  AssertFatal(pue_template->physicalConfigDedicated !=NULL, "no RRC physical configuration for this UE ") ;
-  AssertFatal(pue_template->physicalConfigDedicated->ext4 !=NULL, "no RRC physical configuration for this UE ") ;
-  AssertFatal(pue_template->physicalConfigDedicated->ext4->epdcch_Config_r11->config_r11.choice.setup.setConfigToAddModList_r11->list.count > 0,"epdcch config list is empty") ;
+  if(pue_template->physicalConfigDedicated == NULL) {
+    LOG_E(MAC, "no RRC physical configuration for this UE ");
+    return;
+  }
+  if(pue_template->physicalConfigDedicated->ext4 == NULL) {
+    LOG_E(MAC, "no RRC physical configuration for this UE ");
+    return;
+  }
+  if(pue_template->physicalConfigDedicated->ext4->epdcch_Config_r11->config_r11.choice.setup.setConfigToAddModList_r11->list.count <= 0) {
+    LOG_E(MAC, "epdcch config list is empty");
+    return;
+  }
+
   epdcch_setconfig_r11 = pue_template->physicalConfigDedicated->ext4->epdcch_Config_r11->config_r11.choice.setup.setConfigToAddModList_r11->list.array[0] ;
-  AssertFatal(epdcch_setconfig_r11->ext2 !=NULL && epdcch_setconfig_r11->ext2->mpdcch_config_r13 !=NULL," mpdcch config not found")  ;
+  if(epdcch_setconfig_r11->ext2 == NULL || epdcch_setconfig_r11->ext2->mpdcch_config_r13 == NULL) {
+    LOG_E(MAC, "mpdcch config not found");
+    return;
+  }
   *maxRep = epdcch_setconfig_r11->ext2->mpdcch_config_r13->choice.setup.mpdcch_NumRepetition_r13  ;
   *narrowBandindex = epdcch_setconfig_r11->ext2->mpdcch_config_r13->choice.setup.mpdcch_Narrowband_r13  ;
 }
@@ -648,11 +680,11 @@ schedule_ue_spec(module_id_t module_idP,
     const int harq_pid = frame_subframe2_dl_harq_pid(cc->tdd_Config,
                                                      frameP,
                                                      subframeP);
-    const int round_DL = ue_sched_ctrl->round[CC_id][harq_pid];
+    const int round_DL = ue_sched_ctrl->round[CC_id][harq_pid][TB1];
     eNB_UE_stats->crnti = rnti;
     eNB_UE_stats->rrc_status = mac_eNB_get_rrc_status(module_idP, rnti);
     eNB_UE_stats->harq_pid = harq_pid;
-    eNB_UE_stats->harq_round = round_DL;
+    eNB_UE_stats->harq_round[TB1] = round_DL;
 
     if (eNB_UE_stats->rrc_status < RRC_RECONFIGURED) {
       ue_sched_ctrl->uplane_inactivity_timer = 0;
@@ -668,14 +700,14 @@ schedule_ue_spec(module_id_t module_idP,
           round_DL,
           ue_sched_ctrl->pre_nb_available_rbs[CC_id],
           ue_sched_ctrl->dl_cqi[CC_id],
-          eNB_UE_stats->dlsch_mcs1,
+          eNB_UE_stats->dlsch_mcs[TB1],
           eNB_UE_stats->rrc_status);
 
     /* Process retransmission  */
     if (round_DL != 8) {
       // get freq_allocation
       const int nb_rb = ue_template->nb_rb[harq_pid];
-      int TBS = get_TBS_DL(ue_template->oldmcs1[harq_pid], nb_rb);
+      int TBS = get_TBS_DL(ue_template->oldmcs[harq_pid][TB1], nb_rb);
       const uint32_t rbc = allocate_prbs_sub(
           nb_rb, N_RB_DL, N_RBG, ue_sched_ctrl->rballoc_sub_UE[CC_id]);
 
@@ -719,6 +751,7 @@ schedule_ue_spec(module_id_t module_idP,
 
       nfapi_dl_config_request_pdu_t *dl_config_pdu = &dl_req->dl_config_pdu_list[dci_dl_pdu_idx];
       switch (get_tmode(module_idP, CC_id, UE_id)) {
+	case 0: return;
         case 1:
         case 2:
         case 7:
@@ -731,8 +764,8 @@ schedule_ue_spec(module_id_t module_idP,
           dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.transmission_power = 6000; // equal to RS power
           dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.harq_process = harq_pid;
           dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.tpc = 1; // Don't adjust power when retransmitting
-          dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.new_data_indicator_1 = ue_template->oldNDI[harq_pid];
-          dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.mcs_1 = ue_template->oldmcs1[harq_pid];
+          dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.new_data_indicator_1 = ue_template->oldNDI[harq_pid][TB1];
+          dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.mcs_1 = ue_template->oldmcs[harq_pid][TB1];
           dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.redundancy_version_1 = round_DL & 3;
           dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.resource_block_coding = rbc;
           dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.resource_allocation_type = 0;
@@ -746,14 +779,14 @@ schedule_ue_spec(module_id_t module_idP,
                   harq_pid,
                   round_DL,
                   ue_template->DAI - 1,
-                  ue_template->oldmcs1[harq_pid]);
+                  ue_template->oldmcs[harq_pid][TB1]);
           } else {
             LOG_D(MAC, "[eNB %d] Retransmission CC_id %d : harq_pid %d, round %d, mcs %d\n",
                   module_idP,
                   CC_id,
                   harq_pid,
                   round_DL,
-                  ue_template->oldmcs1[harq_pid]);
+                  ue_template->oldmcs[harq_pid][TB1]);
           }
 
           dl_req->tl.tag = NFAPI_DL_CONFIG_REQUEST_BODY_TAG;
@@ -766,7 +799,7 @@ schedule_ue_spec(module_id_t module_idP,
                                   0,    // type 0 allocation from 7.1.6 in 36.213
                                   0,    // virtual_resource_block_assignment_flag, unused here
                                   rbc,  // resource_block_coding
-                                  getQm(ue_template->oldmcs1[harq_pid]),
+                                  getQm(ue_template->oldmcs[harq_pid][TB1]),
                                   round_DL & 3, // redundancy version
                                   1,    // transport blocks
                                   0,    // transport block to codeword swap flag
@@ -782,6 +815,7 @@ schedule_ue_spec(module_id_t module_idP,
                                   cc[CC_id].p_eNB == 1 ? 1 : 2,    // transmission mode
                                   0,    //number of PRBs treated as one subband, not used here
                                   0);   // number of beamforming vectors, not used here
+	  dl_req->number_pdu++;
           LOG_D(MAC, "Filled NFAPI configuration for DCI/DLSCH %d, retransmission round %d\n",
                 eNB->pdu_index[CC_id],
                 round_DL);
@@ -798,12 +832,12 @@ schedule_ue_spec(module_id_t module_idP,
       eNB_UE_stats->num_retransmission += 1;
       eNB_UE_stats->rbs_used_retx = nb_rb;
       eNB_UE_stats->total_rbs_used_retx += nb_rb;
-      eNB_UE_stats->dlsch_mcs2 = eNB_UE_stats->dlsch_mcs1;
+      //eNB_UE_stats->dlsch_mcs[TB2] = eNB_UE_stats->dlsch_mcs[TB2];
     } else {
       // Now check RLC information to compute number of required RBs
       // get maximum TBS size for RLC request
       const int nb_rb = ue_sched_ctrl->pre_nb_available_rbs[CC_id];
-      int TBS = get_TBS_DL(eNB_UE_stats->dlsch_mcs1, nb_rb);
+      int TBS = get_TBS_DL(eNB_UE_stats->dlsch_mcs[TB1], nb_rb);
       const uint32_t rbc = allocate_prbs_sub(nb_rb, N_RB_DL, N_RBG, ue_sched_ctrl->rballoc_sub_UE[CC_id]);
 
       // add the length for  all the control elements (timing adv, drx, etc) : header + payload
@@ -825,7 +859,6 @@ schedule_ue_spec(module_id_t module_idP,
       }
 
       int ta_len = (ta_update != 31) ? 2 : 0;
-
 
       int num_sdus = 0;
       uint16_t sdu_lengths[NB_RB_MAX];
@@ -922,7 +955,7 @@ schedule_ue_spec(module_id_t module_idP,
       if (ta_len + sdu_length_total + header_length_total > 0) {
         // Now compute number of required RBs for total sdu length
         // Assume RAH format 2
-        int mcs = eNB_UE_stats->dlsch_mcs1;
+        int mcs = eNB_UE_stats->dlsch_mcs[TB1];
 
         /* TODO make special function */
         // decrease mcs until TBS falls below required length
@@ -942,7 +975,7 @@ schedule_ue_spec(module_id_t module_idP,
         }
 
         LOG_D(MAC, "dlsch_mcs before and after the rate matching = (%d, %d), TBS %d, nb_rb %d\n",
-              eNB_UE_stats->dlsch_mcs1, mcs, TBS, nb_rb);
+              eNB_UE_stats->dlsch_mcs[TB1], mcs, TBS, nb_rb);
 
         int post_padding = TBS - header_length_total - sdu_length_total - ta_len > 2;
         int padding = post_padding ? 0 : TBS - header_length_total - sdu_length_total - ta_len;
@@ -992,11 +1025,11 @@ schedule_ue_spec(module_id_t module_idP,
 #endif
         // cycle through SDUs and place in dlsch_buffer
         DLSCH_PDU *dlsch_pdu = &UE_info->DLSCH_pdu[CC_id][0][UE_id];
-        memcpy(&dlsch_pdu->payload[0][offset], dlsch_buffer, sdu_length_total);
+        memcpy(&dlsch_pdu->payload[0][TB1][offset], dlsch_buffer, sdu_length_total);
 
         // fill remainder of DLSCH with 0
         for (int j = 0; j < TBS - sdu_length_total - offset; j++) {
-          dlsch_pdu->payload[0][offset + sdu_length_total + j] = 0;
+          dlsch_pdu->payload[0][TB1][offset + sdu_length_total + j] = 0;
         }
 
         trace_pdu(DIRECTION_DOWNLINK,
@@ -1026,9 +1059,9 @@ schedule_ue_spec(module_id_t module_idP,
         eNB_UE_stats->rbs_used = nb_rb;
         eNB_UE_stats->num_mac_sdu_tx = num_sdus;
         eNB_UE_stats->total_rbs_used += nb_rb;
-        eNB_UE_stats->dlsch_mcs2 = mcs;
-        eNB_UE_stats->TBS = TBS;
-        eNB_UE_stats->overhead_bytes = TBS - sdu_length_total;
+        eNB_UE_stats->dlsch_mcs[TB2] = mcs;
+        eNB_UE_stats->TBS[TB1] = TBS;
+        eNB_UE_stats->overhead_bytes[TB1] = TBS - sdu_length_total;
         eNB_UE_stats->total_sdu_bytes += sdu_length_total;
         eNB_UE_stats->total_pdu_bytes += TBS;
         eNB_UE_stats->total_num_pdus += 1;
@@ -1086,7 +1119,7 @@ schedule_ue_spec(module_id_t module_idP,
         dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.transmission_power = 6000;    // equal to RS power
         dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.harq_process = harq_pid;
         dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.tpc = tpc;    // dont adjust power when retransmitting
-        dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.new_data_indicator_1 = 1 - ue_template->oldNDI[harq_pid];
+        dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.new_data_indicator_1 = 1 - ue_template->oldNDI[harq_pid][TB1];
         dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.mcs_1 = mcs;
         dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.redundancy_version_1 = 0;
         //deactivate second codeword
@@ -1114,7 +1147,7 @@ schedule_ue_spec(module_id_t module_idP,
         LOG_D(MAC, "Checking feasibility pdu %d (new sdu)\n",
               dl_req->number_pdu);
 
-        ue_sched_ctrl->round[CC_id][harq_pid] = 0;
+        ue_sched_ctrl->round[CC_id][harq_pid][TB1] = 0;
         dl_req->tl.tag = NFAPI_DL_CONFIG_REQUEST_BODY_TAG;
         eNB->DL_req[CC_id].sfn_sf = frameP << 4 | subframeP;
         eNB->DL_req[CC_id].header.message_id = NFAPI_DL_CONFIG_REQUEST;
@@ -1142,13 +1175,18 @@ schedule_ue_spec(module_id_t module_idP,
               UE_id,
               rnti,
               harq_pid,
-              ue_template->oldNDI[harq_pid]);
-        ue_template->oldNDI[harq_pid] = 1 - ue_template->oldNDI[harq_pid];
-        ue_template->oldmcs1[harq_pid] = mcs;
-        ue_template->oldmcs2[harq_pid] = 0;
-        AssertFatal(ue_template->physicalConfigDedicated != NULL, "physicalConfigDedicated is NULL\n");
-        AssertFatal(ue_template->physicalConfigDedicated->pdsch_ConfigDedicated != NULL,
-                    "physicalConfigDedicated->pdsch_ConfigDedicated is NULL\n");
+              ue_template->oldNDI[harq_pid][TB1]);
+        ue_template->oldNDI[harq_pid][TB1] = 1 - ue_template->oldNDI[harq_pid][TB1];
+        ue_template->oldmcs[harq_pid][TB1] = mcs;
+        ue_template->oldmcs[harq_pid][TB2] = 0;
+        if(ue_template->physicalConfigDedicated == NULL) {
+              LOG_E(MAC, "physicalConfigDedicated is NULL\n");
+              return;
+        }
+        if(ue_template->physicalConfigDedicated->pdsch_ConfigDedicated == NULL) {
+              LOG_E(MAC, "physicalConfigDedicated->pdsch_ConfigDedicated is NULL\n");
+              return;
+        }
         fill_nfapi_dlsch_config(&dl_req->dl_config_pdu_list[dci_dl_pdu_idx + 1],
                                 TBS,
                                 eNB->pdu_index[CC_id],
@@ -1172,11 +1210,12 @@ schedule_ue_spec(module_id_t module_idP,
                                 cc[CC_id].p_eNB == 1 ? 1 : 2, // transmission mode
                                 0,  //number of PRBs treated as one subband, not used here
                                 0); // number of beamforming vectors, not used here
+	dl_req->number_pdu++;
         eNB->TX_req[CC_id].sfn_sf = fill_nfapi_tx_req(&eNB->TX_req[CC_id].tx_request_body,
                                     (frameP * 10) + subframeP,
                                     TBS,
                                     eNB->pdu_index[CC_id],
-                                    dlsch_pdu->payload[0]);
+                                    dlsch_pdu->payload[0][TB1]);
         LOG_D(MAC, "Filled NFAPI configuration for DCI/DLSCH/TXREQ %d, new SDU\n",
               eNB->pdu_index[CC_id]);
         eNB->pdu_index[CC_id]++;
@@ -1267,35 +1306,57 @@ schedule_ue_spec_br(module_id_t module_idP,
     ext4_pucch = cc[CC_id].radioResourceConfigCommon_BR->ext4->pucch_ConfigCommon_v1310;
     prach_ParametersListCE_r13 = &ext4_prach->prach_ParametersListCE_r13;
     pucch_N1PUCCH_AN_InfoList_r13 = ext4_pucch->n1PUCCH_AN_InfoList_r13;
-    AssertFatal (prach_ParametersListCE_r13 != NULL, "prach_ParametersListCE_r13 is null\n");
-    AssertFatal (pucch_N1PUCCH_AN_InfoList_r13 != NULL, "pucch_N1PUCCH_AN_InfoList_r13 is null\n");
+    if(prach_ParametersListCE_r13 == NULL) {
+      LOG_E(MAC, "prach_ParametersListCE_r13 is null\n");
+      return;
+    }
+    if(pucch_N1PUCCH_AN_InfoList_r13 == NULL) {
+      LOG_E(MAC, "pucch_N1PUCCH_AN_InfoList_r13 is null\n");
+      return;
+    }
     /* Check to verify CE-Level compatibility in SIB2_BR */
-    AssertFatal (prach_ParametersListCE_r13->list.count == pucch_N1PUCCH_AN_InfoList_r13->list.count, "prach_ParametersListCE_r13->list.count!= pucch_N1PUCCH_AN_InfoList_r13->list.count\n");
+    if(prach_ParametersListCE_r13->list.count != pucch_N1PUCCH_AN_InfoList_r13->list.count) {
+      LOG_E(MAC, "prach_ParametersListCE_r13->list.count!= pucch_N1PUCCH_AN_InfoList_r13->list.count\n");
+      return;
+    }
 
     switch (prach_ParametersListCE_r13->list.count) {
       case 4:
         n1pucchan[3] = *pucch_N1PUCCH_AN_InfoList_r13->list.array[3];
-        AssertFatal (ext4_pucch->pucch_NumRepetitionCE_Msg4_Level3_r13 != NULL, "pucch_NumRepetitionCE_Msg4_Level3 shouldn't be NULL\n");
+        if(ext4_pucch->pucch_NumRepetitionCE_Msg4_Level3_r13 == NULL) {
+          LOG_E(MAC, "pucch_NumRepetitionCE_Msg4_Level3 shouldn't be NULL\n");
+          return;
+        }
         pucchreps[3] = (int) (4 << *ext4_pucch->pucch_NumRepetitionCE_Msg4_Level3_r13);
 
       case 3:
         n1pucchan[2] = *pucch_N1PUCCH_AN_InfoList_r13->list.array[2];
-        AssertFatal (ext4_pucch->pucch_NumRepetitionCE_Msg4_Level2_r13 != NULL, "pucch_NumRepetitionCE_Msg4_Level2 shouldn't be NULL\n");
+        if(ext4_pucch->pucch_NumRepetitionCE_Msg4_Level2_r13 == NULL) {
+          LOG_E(MAC, "pucch_NumRepetitionCE_Msg4_Level2 shouldn't be NULL\n");
+          return;
+        }
         pucchreps[2] = (int) (4 << *ext4_pucch->pucch_NumRepetitionCE_Msg4_Level2_r13);
 
       case 2:
         n1pucchan[1] = *pucch_N1PUCCH_AN_InfoList_r13->list.array[1];
-        AssertFatal (ext4_pucch->pucch_NumRepetitionCE_Msg4_Level1_r13 != NULL, "pucch_NumRepetitionCE_Msg4_Level1 shouldn't be NULL\n");
+        if(ext4_pucch->pucch_NumRepetitionCE_Msg4_Level1_r13 == NULL) {
+          LOG_E(MAC, "pucch_NumRepetitionCE_Msg4_Level1 shouldn't be NULL\n");
+          return;
+        }
         pucchreps[1] = (int) (1 << *ext4_pucch->pucch_NumRepetitionCE_Msg4_Level1_r13);
 
       case 1:
         n1pucchan[0] = *pucch_N1PUCCH_AN_InfoList_r13->list.array[0];
-        AssertFatal (ext4_pucch->pucch_NumRepetitionCE_Msg4_Level0_r13 != NULL, "pucch_NumRepetitionCE_Msg4_Level0 shouldn't be NULL\n");
+        if(ext4_pucch->pucch_NumRepetitionCE_Msg4_Level0_r13 == NULL) {
+          LOG_E(MAC, "pucch_NumRepetitionCE_Msg4_Level0 shouldn't be NULL\n");
+          return;
+        }
         pucchreps[0] = (int) (1 << *ext4_pucch->pucch_NumRepetitionCE_Msg4_Level0_r13);
         break;
 
       default:
-        AssertFatal (1 == 0, "Illegal count for prach_ParametersListCE_r13 %d\n", prach_ParametersListCE_r13->list.count);
+        LOG_E(MAC, "Illegal count for prach_ParametersListCE_r13 %d\n", prach_ParametersListCE_r13->list.count);
+        return;
     }
   }
 
@@ -1320,24 +1381,52 @@ schedule_ue_spec_br(module_id_t module_idP,
       continue;
     }
 
-    round_DL = ue_sched_ctl->round[CC_id][harq_pid];
-    AssertFatal (UE_template->physicalConfigDedicated != NULL, "UE_template->physicalConfigDedicated is null\n");
-    AssertFatal (UE_template->physicalConfigDedicated->ext4 != NULL, "UE_template->physicalConfigDedicated->ext4 is null\n");
-    AssertFatal (UE_template->physicalConfigDedicated->ext4->epdcch_Config_r11 != NULL, "UE_template->physicalConfigDedicated->ext4->epdcch_Config_r11 is null\n");
-    AssertFatal (UE_template->physicalConfigDedicated->ext4->epdcch_Config_r11->config_r11.present == LTE_EPDCCH_Config_r11__config_r11_PR_setup,
-                 "UE_template->physicalConfigDedicated->ext4->epdcch_Config_r11->config_r11.present != setup\n");
-    AssertFatal (UE_template->physicalConfigDedicated->ext4->epdcch_Config_r11->config_r11.choice.setup.setConfigToAddModList_r11 != NULL,
-                 "UE_template->physicalConfigDedicated->ext4->epdcch_Config_r11->config_r11.choice.setup.setConfigToAddModList_r11 = NULL\n");
+    round_DL = ue_sched_ctl->round[CC_id][harq_pid][TB1];
+    if(UE_template->physicalConfigDedicated == NULL) {
+      LOG_E(MAC, "UE_template->physicalConfigDedicated is null\n");
+      return;
+    }
+    if(UE_template->physicalConfigDedicated->ext4 == NULL) {
+      LOG_E(MAC, "UE_template->physicalConfigDedicated->ext4 is null\n");
+      return;
+    }
+    if(UE_template->physicalConfigDedicated->ext4->epdcch_Config_r11 == NULL) {
+      LOG_E(MAC, "UE_template->physicalConfigDedicated->ext4->epdcch_Config_r11 is null\n");
+      return;
+    }
+    if(UE_template->physicalConfigDedicated->ext4->epdcch_Config_r11->config_r11.present != LTE_EPDCCH_Config_r11__config_r11_PR_setup) {
+      LOG_E(MAC, "UE_template->physicalConfigDedicated->ext4->epdcch_Config_r11->config_r11.present != setup\n");
+      return;
+    }
+    if(UE_template->physicalConfigDedicated->ext4->epdcch_Config_r11->config_r11.choice.setup.setConfigToAddModList_r11 == NULL) {
+      LOG_E(MAC, "UE_template->physicalConfigDedicated->ext4->epdcch_Config_r11->config_r11.choice.setup.setConfigToAddModList_r11 = NULL\n");
+      return;
+    }
     LTE_EPDCCH_SetConfig_r11_t *epdcch_setconfig_r11 = UE_template->physicalConfigDedicated->ext4->epdcch_Config_r11->config_r11.choice.setup.setConfigToAddModList_r11->list.array[0];
-    AssertFatal(epdcch_setconfig_r11 != NULL, "epdcch_setconfig_r11 is null\n");
-    AssertFatal(epdcch_setconfig_r11->ext2 != NULL, "epdcch_setconfig_r11->ext2 is null\n");
-    AssertFatal(epdcch_setconfig_r11->ext2->mpdcch_config_r13 != NULL, "epdcch_setconfig_r11->ext2->mpdcch_config_r13 is null");
-    AssertFatal(epdcch_setconfig_r11->ext2->mpdcch_config_r13 != NULL, "epdcch_setconfig_r11->ext2->mpdcch_config_r13 is null");
-    AssertFatal(epdcch_setconfig_r11->ext2->mpdcch_config_r13->present == LTE_EPDCCH_SetConfig_r11__ext2__mpdcch_config_r13_PR_setup,
-                "epdcch_setconfig_r11->ext2->mpdcch_config_r13->present is not setup\n");
-    AssertFatal(epdcch_setconfig_r11->ext2->numberPRB_Pairs_v1310 != NULL, "epdcch_setconfig_r11->ext2->numberPRB_Pairs_v1310 is null");
-    AssertFatal(epdcch_setconfig_r11->ext2->numberPRB_Pairs_v1310->present == LTE_EPDCCH_SetConfig_r11__ext2__numberPRB_Pairs_v1310_PR_setup,
-                "epdcch_setconfig_r11->ext2->numberPRB_Pairs_v1310->present is not setup\n");
+    if(epdcch_setconfig_r11 == NULL) {
+      LOG_E(MAC, "epdcch_setconfig_r11 is null\n");
+      return;
+    }
+    if(epdcch_setconfig_r11->ext2 == NULL) {
+      LOG_E(MAC, "epdcch_setconfig_r11->ext2 is null\n");
+      return;
+    }
+    if(epdcch_setconfig_r11->ext2->mpdcch_config_r13 == NULL) {
+      LOG_E(MAC, "epdcch_setconfig_r11->ext2->mpdcch_config_r13 is null");
+      return;
+    }
+    if(epdcch_setconfig_r11->ext2->mpdcch_config_r13->present != LTE_EPDCCH_SetConfig_r11__ext2__mpdcch_config_r13_PR_setup) {
+      LOG_E(MAC, "epdcch_setconfig_r11->ext2->mpdcch_config_r13->present is not setup\n");
+      return;
+    }
+    if(epdcch_setconfig_r11->ext2->numberPRB_Pairs_v1310 == NULL) {
+      LOG_E(MAC, "epdcch_setconfig_r11->ext2->numberPRB_Pairs_v1310 is null");
+      return;
+    }
+    if(epdcch_setconfig_r11->ext2->numberPRB_Pairs_v1310->present != LTE_EPDCCH_SetConfig_r11__ext2__numberPRB_Pairs_v1310_PR_setup) {
+      LOG_E(MAC, "epdcch_setconfig_r11->ext2->numberPRB_Pairs_v1310->present is not setup\n");
+      return;
+    }
 
     /* Simple scheduler for 1 repetition, 1 HARQ */
     if (subframeP == 5) { // MPDCCH
@@ -1619,7 +1708,7 @@ schedule_ue_spec_br(module_id_t module_idP,
             post_padding = TBS - sdu_length_total - header_len_dcch - header_len_dtch - ta_len; // 1 is for the postpadding header
           }
 
-          offset = generate_dlsch_header((unsigned char *)UE_info->DLSCH_pdu[CC_id][0][UE_id].payload[0],
+          offset = generate_dlsch_header((unsigned char *)UE_info->DLSCH_pdu[CC_id][0][UE_id].payload[0][TB1],
                                          num_sdus,              //num_sdus
                                          sdu_lengths,  //
                                          sdu_lcids,
@@ -1628,6 +1717,10 @@ schedule_ue_spec_br(module_id_t module_idP,
                                          NULL,                                  // contention res id
                                          padding,
                                          post_padding);
+          if (offset < 0) {
+			LOG_E(MAC, "schedule_ue_spec_br:generate_dlsch_header failed\n");
+			return;
+		  }
 
           if (ta_update != 31) {
             LOG_D(MAC,
@@ -1652,11 +1745,11 @@ schedule_ue_spec_br(module_id_t module_idP,
           }
 
           /* Cycle through SDUs and place in dlsch_buffer */
-          memcpy(&UE_info->DLSCH_pdu[CC_id][0][UE_id].payload[0][offset], dlsch_buffer, sdu_length_total);
+          memcpy(&UE_info->DLSCH_pdu[CC_id][0][UE_id].payload[0][TB1][offset], dlsch_buffer, sdu_length_total);
 
           /* Fill remainder of DLSCH with random data */
           for (j = 0; j < (TBS - sdu_length_total - offset); j++) {
-            UE_info->DLSCH_pdu[CC_id][0][UE_id].payload[0][offset + sdu_length_total + j] = (char)(taus()&0xff);
+            UE_info->DLSCH_pdu[CC_id][0][UE_id].payload[0][TB1][offset + sdu_length_total + j] = (char)(taus()&0xff);
           }
 
           trace_pdu(DIRECTION_DOWNLINK,
@@ -1676,11 +1769,11 @@ schedule_ue_spec_br(module_id_t module_idP,
             T_INT(frameP),
             T_INT(subframeP),
             T_INT(harq_pid),
-            T_BUFFER(UE_info->DLSCH_pdu[CC_id][0][UE_id].payload[0], TBS));
+            T_BUFFER(UE_info->DLSCH_pdu[CC_id][0][UE_id].payload[0][TB1], TBS));
           /* Do PUCCH power control */
           /* This is the snr */
           /* unit is not dBm, it's special from nfapi, convert to dBm */
-          snr = (5 * ue_sched_ctl->pucch1_snr[CC_id] - 640) / 10;
+          snr = ue_sched_ctl->pucch1_snr[CC_id];
           target_snr = mac->puCch10xSnr / 10;
           /* This assumes accumulated tpc */
           /* Make sure that we are only sending a tpc update once a frame, otherwise the control loop will freak out */
@@ -1718,8 +1811,8 @@ schedule_ue_spec_br(module_id_t module_idP,
           }
 
           // Toggle NDI in first round
-          UE_template->oldNDI[harq_pid] = 1 - UE_template->oldNDI[harq_pid];
-          ue_sched_ctl->round[CC_id][harq_pid] = 0;
+          UE_template->oldNDI[harq_pid][TB1] = 1 - UE_template->oldNDI[harq_pid][TB1];
+          ue_sched_ctl->round[CC_id][harq_pid][TB1] = 0;
           round_DL = 0;
         } // if ((sdu_length_total + header_len_dcch + header_len_dtch) > 0)
       }
@@ -1734,8 +1827,10 @@ schedule_ue_spec_br(module_id_t module_idP,
         dl_config_pdu->mpdcch_pdu.mpdcch_pdu_rel13.number_of_prb_pairs = 6;
         dl_config_pdu->mpdcch_pdu.mpdcch_pdu_rel13.resource_block_assignment = 0; // Note: this can be dynamic
         dl_config_pdu->mpdcch_pdu.mpdcch_pdu_rel13.mpdcch_tansmission_type = epdcch_setconfig_r11->transmissionType_r11;
-        AssertFatal(UE_template->physicalConfigDedicated->ext4->epdcch_Config_r11->config_r11.choice.setup.startSymbol_r11 != NULL,
-                    "UE_template->physicalConfigDedicated->ext4->epdcch_Config_r11->config_r11.choice.setup.startSymbol_r11 is null\n");
+        if(UE_template->physicalConfigDedicated->ext4->epdcch_Config_r11->config_r11.choice.setup.startSymbol_r11 == NULL) {
+          LOG_E(MAC, "UE_template->physicalConfigDedicated->ext4->epdcch_Config_r11->config_r11.choice.setup.startSymbol_r11 is null\n");
+          return;
+        }
         dl_config_pdu->mpdcch_pdu.mpdcch_pdu_rel13.start_symbol = *UE_template->physicalConfigDedicated->ext4->epdcch_Config_r11->config_r11.choice.setup.startSymbol_r11;
         dl_config_pdu->mpdcch_pdu.mpdcch_pdu_rel13.ecce_index = 0;        // Note: this should be dynamic
         dl_config_pdu->mpdcch_pdu.mpdcch_pdu_rel13.aggregation_level = 24;        // OK for CEModeA r1-3 (9.1.5-1b) or CEModeB r1-4
@@ -1749,7 +1844,7 @@ schedule_ue_spec_br(module_id_t module_idP,
         dl_config_pdu->mpdcch_pdu.mpdcch_pdu_rel13.mcs = mcs;       // adjust according to size of RAR, 208 bits with N1A_PRB=3
         dl_config_pdu->mpdcch_pdu.mpdcch_pdu_rel13.pdsch_reptition_levels = 0;    // fix to 4 for now
         dl_config_pdu->mpdcch_pdu.mpdcch_pdu_rel13.redundancy_version = rvseq[round_DL&3];
-        dl_config_pdu->mpdcch_pdu.mpdcch_pdu_rel13.new_data_indicator = UE_template->oldNDI[harq_pid];
+        dl_config_pdu->mpdcch_pdu.mpdcch_pdu_rel13.new_data_indicator = UE_template->oldNDI[harq_pid][TB1];
         dl_config_pdu->mpdcch_pdu.mpdcch_pdu_rel13.harq_process = 0;
         dl_config_pdu->mpdcch_pdu.mpdcch_pdu_rel13.tpmi_length = 0;
         dl_config_pdu->mpdcch_pdu.mpdcch_pdu_rel13.tpmi = 0;
@@ -1787,6 +1882,10 @@ schedule_ue_spec_br(module_id_t module_idP,
             UE_template->rach_resource_type - 1,
             rnti);
       first_rb = narrowband_to_first_rb(&cc[CC_id], epdcch_setconfig_r11->ext2->mpdcch_config_r13->choice.setup.mpdcch_Narrowband_r13 - 1);
+      if (first_rb < 0) {
+	    LOG_E(MAC, "schedule_ue_spec_br:narrowband_to_first_rb failed\n");
+		return;
+	  }
       dl_config_pdu = &dl_req->dl_config_pdu_list[dl_req->number_pdu];
       memset ((void *) dl_config_pdu, 0, sizeof (nfapi_dl_config_request_pdu_t));
       dl_config_pdu->pdu_type = NFAPI_DL_CONFIG_DLSCH_PDU_TYPE;
@@ -1795,6 +1894,10 @@ schedule_ue_spec_br(module_id_t module_idP,
       dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.rnti = rnti;
       dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.resource_allocation_type = 2;   // format 1A/1B/1D
       dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.virtual_resource_block_assignment_flag = 0;     // localized
+      if (to_prb (cc[CC_id].mib->message.dl_Bandwidth) == -1) {
+        LOG_E(MAC, "to_prb failed\n");
+        return;
+      }
       dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.resource_block_coding = getRIV (to_prb (cc[CC_id].mib->message.dl_Bandwidth), first_rb, 6);  // check that this isn't getRIV(6,0,6)
       dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.modulation = 2; //QPSK
       dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.redundancy_version = 0;
@@ -1809,6 +1912,10 @@ schedule_ue_spec_br(module_id_t module_idP,
       dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.delta_power_offset_index = 0;
       dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.ngap = 0;
       dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.nprb = get_subbandsize (cc[CC_id].mib->message.dl_Bandwidth); // ignored
+      if (dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.nprb < 0) {
+	    LOG_E(MAC, "schedule_ue_spec_br:get_subbandsize failed\n");
+		return;
+	  }
       dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.transmission_mode = (cc[CC_id].p_eNB == 1) ? 1 : 2;
       dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.num_bf_prb_per_subband = 1;
       dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.num_bf_vector = 1;
@@ -1826,7 +1933,7 @@ schedule_ue_spec_br(module_id_t module_idP,
       TX_req->pdu_index = mac->pdu_index[CC_id]++;
       TX_req->num_segments = 1;
       TX_req->segments[0].segment_length = TX_req->pdu_length;
-      TX_req->segments[0].segment_data = mac->UE_info.DLSCH_pdu[CC_id][0][(unsigned char) UE_id].payload[0];
+      TX_req->segments[0].segment_data = mac->UE_info.DLSCH_pdu[CC_id][0][(unsigned char) UE_id].payload[0][TB1];
       mac->TX_req[CC_id].tx_request_body.number_of_pdus++;
       ackNAK_absSF = absSF + 4;
       ul_req = &mac->UL_req_tmp[CC_id][ackNAK_absSF % 10].ul_config_request_body;
@@ -1849,7 +1956,8 @@ schedule_ue_spec_br(module_id_t module_idP,
         ul_config_pdu->uci_harq_pdu.harq_information.harq_information_rel9_fdd.harq_size = 1; // 1-bit ACK/NAK
         ul_config_pdu->uci_harq_pdu.harq_information.harq_information_rel9_fdd.number_of_pucch_resources = 1;
       } else {
-        AssertFatal (1 == 0, "PUCCH configuration for ACK/NAK not handled yet for TDD BL/CE case\n");
+        LOG_E(MAC, "PUCCH configuration for ACK/NAK not handled yet for TDD BL/CE case\n");
+        return;
       }
 
       ul_req->number_of_pdus++;
@@ -1911,7 +2019,7 @@ unsigned char *get_dlsch_sdu(module_id_t module_idP,
           CC_id,
           rntiP,
           UE_id);
-    return ((unsigned char *) &eNB->UE_info.DLSCH_pdu[CC_id][TBindex][UE_id].payload[0]);
+    return ((unsigned char *) &eNB->UE_info.DLSCH_pdu[CC_id][TBindex][UE_id].payload[0][TB1]);
   }
 
   LOG_E(MAC, "[eNB %d] Frame %d: CC_id %d UE with RNTI %x does not exist\n",
@@ -2062,6 +2170,10 @@ schedule_PCH(module_id_t module_idP,
     cc              = &eNB->common_channels[CC_id];
     vrb_map         = (void *) &cc->vrb_map;
     n_rb_dl         = to_prb(cc->mib->message.dl_Bandwidth);
+    if (n_rb_dl == -1) {
+      LOG_E(MAC, "to_prb failed\n");
+      return;
+    }
     dl_req          = &eNB->DL_req[CC_id].dl_config_request_body;
 
     for (uint16_t i = 0; i < MAX_MOBILES_PER_ENB; i++) {
@@ -2294,6 +2406,7 @@ schedule_PCH(module_id_t module_idP,
         dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.resource_block_coding = getRIV(n_rb_dl, first_rb, 4);
         dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.virtual_resource_block_assignment_flag = 0;
 #endif
+        dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.tl.tag                      = NFAPI_DL_CONFIG_REQUEST_DCI_DL_PDU_REL8_TAG;
         dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.aggregation_level           = 4;
         dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.rnti                        = 0xFFFE; // P-RNTI
         dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.rnti_type                   = 2;    // P-RNTI : see Table 4-10 from SCF082 - nFAPI specifications
@@ -2322,6 +2435,8 @@ schedule_PCH(module_id_t module_idP,
           dl_config_pdu->pdu_size                                                        = (uint8_t)(2 + sizeof(nfapi_dl_config_dlsch_pdu));
           dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.pdu_index                              = eNB->pdu_index[CC_id];
           dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.rnti                                   = 0xFFFE;
+          dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.tl.tag                                 = NFAPI_DL_CONFIG_REQUEST_DCI_DL_PDU_REL8_TAG;
+          dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.length                                 = pcch_sdu_length;
 #ifdef FORMAT1C
           dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.resource_allocation_type               = 3;   // format 1C
           dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.resource_block_coding                  = getRIV(n_vrb_dl / n_rb_step,
@@ -2346,6 +2461,10 @@ schedule_PCH(module_id_t module_idP,
           dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.delta_power_offset_index               = 0;
           dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.ngap                                   = 0;
           dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.nprb                                   = get_subbandsize(cc->mib->message.dl_Bandwidth); // ignored
+          if (dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.nprb < 0) {
+			LOG_E(MAC,"schedule_PCH:get_subbandsize failed\n");
+			return;
+		  }
           dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.transmission_mode                      = (cc->p_eNB==1 ) ? 1 : 2;
           dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.num_bf_prb_per_subband                 = 1;
           dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.num_bf_vector                          = 1;

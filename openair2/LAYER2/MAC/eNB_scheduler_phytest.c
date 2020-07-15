@@ -79,6 +79,10 @@ schedule_ue_spec_phy_test(
   nfapi_dl_config_request_body_t *dl_req;
   nfapi_dl_config_request_pdu_t  *dl_config_pdu;
   N_RB_DL         = to_prb(cc->mib->message.dl_Bandwidth);
+  if (N_RB_DL == -1) {
+    LOG_E(MAC, "to_prb failed\n");
+    return;
+  }
 
   for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
     LOG_D(MAC, "doing schedule_ue_spec for CC_id %d\n",CC_id);
@@ -96,6 +100,10 @@ schedule_ue_spec_phy_test(
     dl_config_pdu->pdu_type                                               = NFAPI_DL_CONFIG_DCI_DL_PDU_TYPE;
     dl_config_pdu->pdu_size                                               = (uint8_t)(2+sizeof(nfapi_dl_config_dci_dl_pdu));
     dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.dci_format                  = NFAPI_DL_DCI_FORMAT_1;
+    if (get_bw_index(module_idP, CC_id) == -1) {
+      LOG_E(MAC, "get_bw_index failed\n");
+      return;
+    }
     dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.aggregation_level           = get_aggregation(get_bw_index(module_idP,CC_id),cqi,format1);
     dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.resource_allocation_type    = 0;
     dl_config_pdu->dci_dl_pdu.dci_dl_pdu_rel8.virtual_resource_block_assignment_flag = 0;
@@ -170,7 +178,7 @@ schedule_ue_spec_phy_test(
                                   (frameP*10)+subframeP,
                                   TBS,
                                   eNB->pdu_index[CC_id],
-                                  eNB->UE_info.DLSCH_pdu[CC_id][0][(unsigned char)UE_id].payload[0]);
+                                  eNB->UE_info.DLSCH_pdu[CC_id][0][(unsigned char)UE_id].payload[0][TB1]);
     } else {
       LOG_W(MAC,"[eNB_scheduler_phytest] DCI allocation infeasible!\n");
     }
@@ -208,6 +216,10 @@ void schedule_ulsch_phy_test(module_id_t module_idP,frame_t frameP,sub_frame_t s
   nfapi_ul_config_request_body_t *ul_req       = &mac->UL_req[CC_id].ul_config_request_body;
   N_RB_UL         = to_prb(cc->mib->message.dl_Bandwidth);
 
+  if (N_RB_UL == -1) {
+    LOG_E(MAC, "schedule_ulsch_phy_test:to_prb failed, N_RB_UL == -1\n");
+    return;
+  }
   switch(N_RB_UL) {
     case 100:
       nb_rb = 96;
@@ -234,6 +246,10 @@ void schedule_ulsch_phy_test(module_id_t module_idP,frame_t frameP,sub_frame_t s
     UE_template   = &UE_info->UE_template[CC_id][UE_id];
     UE_sched_ctrl = &UE_info->UE_sched_ctrl[UE_id];
     harq_pid      = subframe2harqpid(&cc[CC_id],sched_frame,sched_subframe);
+    if (harq_pid == 255) {
+        LOG_E(MAC, "schedule_ulsch_phy_test:subframe2harqpid failed, harq_pid == 255\n");
+        return;
+    }
     RC.eNB[module_idP][CC_id]->pusch_stats_BO[UE_id][(frameP*10)+subframeP] = UE_template->TBS_UL[harq_pid];
     //power control
     //compute the expected ULSCH RX power (for the stats)
@@ -292,6 +308,10 @@ void schedule_ulsch_phy_test(module_id_t module_idP,frame_t frameP,sub_frame_t s
     }
 
     // Add UL_config PDUs
+    if (get_tmode(module_idP,CC_id,UE_id) == 0) {
+      LOG_E(MAC, "get_tmode failed\n");
+      return;
+    }
     fill_nfapi_ulsch_config_request_rel8(& ul_req->ul_config_pdu_list[ul_req_index],
                                          cqi_req,
                                          cc,

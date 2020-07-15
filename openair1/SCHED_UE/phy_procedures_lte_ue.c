@@ -1400,6 +1400,10 @@ void ue_ulsch_uespec_procedures(PHY_VARS_UE *ue,
   harq_pid = subframe2harq_pid(&ue->frame_parms,
                                frame_tx,
                                subframe_tx);
+  if (harq_pid == 255) {
+    LOG_E(PHY,"FATAL ERROR: illegal harq_pid, returning\n");
+    return;
+  }
   LOG_D(PHY,"Frame %d, Subframe %d : ue_uespec_procedures, harq_pid %d => subframe_scheduling %d\n",
         frame_tx,subframe_tx,harq_pid,
         ue->ulsch[eNB_id]->harq_processes[harq_pid]->subframe_scheduling_flag);
@@ -1411,9 +1415,10 @@ void ue_ulsch_uespec_procedures(PHY_VARS_UE *ue,
       ue->ulsch[eNB_id]->harq_processes[harq_pid]->subframe_scheduling_flag = 1;
 
       if (ue->ulsch[eNB_id]->harq_processes[harq_pid]->round==0)
-        generate_ue_ulsch_params_from_rar(ue,
-                                          proc,
-                                          eNB_id);
+        if (generate_ue_ulsch_params_from_rar(ue, proc, eNB_id) < 0) {
+			LOG_E(PHY,"generate_ue_ulsch_params_from_rar failed\n");
+			return;
+		}
 
       ue->ulsch[eNB_id]->power_offset = 14;
       LOG_D(PHY,"[UE  %d][RAPROC] Frame %d: Setting Msg3_flag in subframe %d, for harq_pid %d\n",
@@ -1912,6 +1917,10 @@ void ue_pucch_procedures(PHY_VARS_UE *ue,
   int harq_pid = subframe2harq_pid(&ue->frame_parms,
                                    frame_tx,
                                    subframe_tx);
+  if (harq_pid == 255) {
+    LOG_E(PHY,"FATAL ERROR: illegal harq_pid, returning\n");
+    return;
+  }
 
   if(ue->ulsch[eNB_id]->harq_processes[harq_pid]->subframe_scheduling_flag) {
     LOG_D(PHY,"PUSCH is programmed on this subframe [pid %d] AbsSuframe %d.%d ==> Skip PUCCH transmission \n",harq_pid,frame_tx,subframe_tx);
@@ -2792,6 +2801,10 @@ int ue_pdcch_procedures(uint8_t eNB_id,
         int harq_pid = subframe2harq_pid(&ue->frame_parms,
                                          pdcch_alloc2ul_frame(&ue->frame_parms,proc->frame_rx,proc->subframe_rx),
                                          pdcch_alloc2ul_subframe(&ue->frame_parms,proc->subframe_rx));
+        if (harq_pid == 255) {
+          LOG_E(PHY,"FATAL ERROR: illegal harq_pid, returning\n");
+          return -1;
+        }
         T(T_UE_PHY_ULSCH_UE_DCI, T_INT(eNB_id), T_INT(proc->frame_rx%1024), T_INT(proc->subframe_rx),
           T_INT(dci_alloc_rx[i].rnti),
           T_INT(harq_pid),
@@ -2802,10 +2815,14 @@ int ue_pdcch_procedures(uint8_t eNB_id,
           T_INT(ue->ulsch[eNB_id]->harq_processes[harq_pid]->TBS));
 
         if (LOG_DEBUGFLAG(DEBUG_UE_PHYPROC)) {
-          LOG_USEDINLOG_VAR(int8_t,harq_pid) = subframe2harq_pid(&ue->frame_parms,
+          int tmp_harq_pid = subframe2harq_pid(&ue->frame_parms,
                                                pdcch_alloc2ul_frame(&ue->frame_parms,proc->frame_rx,proc->subframe_rx),
                                                pdcch_alloc2ul_subframe(&ue->frame_parms,proc->subframe_rx));
-          LOG_D(PHY,"[UE  %d] Generate UE ULSCH C_RNTI format 0 (subframe %d)\n",ue->Mod_id,subframe_rx);
+          if (tmp_harq_pid == 255) {
+            LOG_E(PHY,"FATAL ERROR: illegal harq_pid, returning\n");
+            return -1;
+          }
+          LOG_USEDINLOG_VAR(int8_t,harq_pid) = tmp_harq_pid;
         }
       }
     } else if( (dci_alloc_rx[i].rnti == ue->ulsch[eNB_id]->cba_rnti[0]) &&
@@ -2895,7 +2912,10 @@ void ue_pmch_procedures(PHY_VARS_UE *ue,
 
       if(fembms_flag /*subframe_rx == 3 || subframe_rx == 2*/) {
         VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_UE_SLOT_FEP_MBSFN_KHZ_1DOT25, VCD_FUNCTION_IN);
-        slot_fep_mbsfn_khz_1dot25(ue,subframe_rx,0);
+        if(slot_fep_mbsfn_khz_1dot25(ue,subframe_rx,0) < 0) {
+		LOG_E(PHY,"slot_fep_mbsfn_khz_1dot25 failed\n");
+                return;
+	}
         VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_UE_SLOT_FEP_MBSFN_KHZ_1DOT25, VCD_FUNCTION_OUT);
       } else {
         VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_UE_SLOT_FEP_MBSFN, VCD_FUNCTION_IN);
@@ -3239,6 +3259,10 @@ void process_rar(PHY_VARS_UE *ue,
           harq_pid = subframe2harq_pid(&ue->frame_parms,
                                        ue->ulsch_Msg3_frame[eNB_id],
                                        ue->ulsch_Msg3_subframe[eNB_id]);
+          if (harq_pid == 255) {
+            LOG_E(PHY,"FATAL ERROR: illegal harq_pid, returning\n");
+            return;
+          }
           ue->ulsch[eNB_id]->harq_processes[harq_pid]->round = 0;
           ue->UE_mode[eNB_id] = RA_RESPONSE;
           //      ue->Msg3_timer[eNB_id] = 10;

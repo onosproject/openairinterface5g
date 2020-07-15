@@ -282,7 +282,7 @@ uint8_t do_SIB1_NB_IoT(uint8_t Mod_id, int CC_id,
   {
     //FIXME in NB-IoT mandatory to be FDD --> so must give an error
     LOG_E(RRC,"[NB-IoT %d] Frame Type is TDD --> not supported by NB-IoT, exiting\n", Mod_id); //correct?
-    exit(-1);
+    exit_fun("do_SIB1_NB_IoT  Frame Type is TDD --> not supported by NB-IoT" );
   }
 
   //FIXME which value chose for the following parameter
@@ -350,7 +350,7 @@ uint8_t do_SIB23_NB_IoT(uint8_t Mod_id,
     memset(bcch_message,0,sizeof(LTE_BCCH_DL_SCH_Message_NB_t));
   } else {
     LOG_E(RRC,"[NB-IoT %d] BCCH_MESSAGE_NB is null, exiting\n", Mod_id);
-    exit(-1);
+    exit_fun("do_SIB23_NB_IoT BCCH_MESSAGE_NB is null" );
   }
 
   //before schould be allocated memory somewhere?

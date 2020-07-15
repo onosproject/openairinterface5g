@@ -128,7 +128,10 @@ sctp_eNB_accept_associations_multi(
     struct sockaddr_in addr;
     uint8_t buffer[SCTP_RECV_BUFFER_SIZE];
 
-    DevAssert(sctp_cnx != NULL);
+    if (sctp_cnx == NULL) {
+      SCTP_ERROR("sctp_cnx == NULL\n");
+      return;
+    }
 
     memset((void *)&addr, 0, sizeof(struct sockaddr_in));
     from_len = (socklen_t)sizeof(struct sockaddr_in);
@@ -172,7 +175,10 @@ sctp_eNB_accept_associations_multi(
 
                 new_cnx = calloc(1, sizeof(*sctp_cnx));
 
-                DevAssert(new_cnx != NULL);
+                if (new_cnx == NULL) {
+                  SCTP_ERROR("new_cnx == NULL\n");
+                  return;
+                }
 
                 new_cnx->connection_type = SCTP_TYPE_CLIENT;
 
@@ -234,7 +240,10 @@ sctp_handle_new_association_req_multi(
     /* Prepare a new SCTP association as requested by upper layer and try to connect
      * to remote host.
      */
-    DevAssert(sctp_new_association_req_p != NULL);
+    if (sctp_new_association_req_p == NULL) {
+      SCTP_ERROR("sctp_new_association_req_p == NULL\n");
+      return;
+    }
 
     sd = sctp_new_association_req_p->multi_sd;
 
@@ -270,7 +279,7 @@ sctp_handle_new_association_req_multi(
                            sctp_new_association_req_p->remote_address.ipv6_address);
                 //close(sd);
                 //return;
-                exit(1);
+                exit_fun("sctp_handle_new_association_req_multi fatal: inet_pton error");
             }
 
             SCTP_DEBUG("Converted ipv6 address %*s to network type\n",
@@ -290,7 +299,7 @@ sctp_handle_new_association_req_multi(
                            sctp_new_association_req_p->remote_address.ipv4_address);
                 //close(sd);
                 //return;
-                exit(1);
+                exit_fun("sctp_handle_new_association_req_multi fatal: inet_pton error");
             }
 
             SCTP_DEBUG("Converted ipv4 address %*s to network type\n",
@@ -329,7 +338,7 @@ sctp_handle_new_association_req_multi(
     if (ns == -1) {
       perror("sctp_peeloff");
       printf("sctp_peeloff: sd=%d assoc_id=%d\n", sd, assoc_id);
-      exit(1);
+      exit_fun("sctp_handle_new_association_req_multi fatal: sctp_peeloff error");
     }
 
     sctp_cnx = calloc(1, sizeof(*sctp_cnx));
@@ -379,7 +388,10 @@ sctp_handle_new_association_req(
     /* Prepare a new SCTP association as requested by upper layer and try to connect
      * to remote host.
      */
-    DevAssert(sctp_new_association_req_p != NULL);
+    if (sctp_new_association_req_p == NULL) {
+      SCTP_ERROR("sctp_new_association_req_p == NULL\n");
+      return;
+    }
 
     /* Create new socket with IPv6 affinity */
 //#warning "SCTP may Force IPv4 only, here"
@@ -618,9 +630,18 @@ void sctp_send_data(
 {
     struct sctp_cnx_list_elm_s *sctp_cnx = NULL;
 
-    DevAssert(sctp_data_req_p != NULL);
-    DevAssert(sctp_data_req_p->buffer != NULL);
-    DevAssert(sctp_data_req_p->buffer_length > 0);
+    if (sctp_data_req_p == NULL) {
+      SCTP_ERROR("sctp_data_req_p == NULL\n");
+      return;
+    }
+    if (sctp_data_req_p->buffer == NULL) {
+      SCTP_ERROR("sctp_data_req_p->buffer == NULL\n");
+      return;
+    }
+    if (sctp_data_req_p->buffer_length <= 0) {
+      SCTP_ERROR("sctp_data_req_p->buffer_length <= 0\n");
+      return;
+    }
 
     sctp_cnx = sctp_get_cnx(sctp_data_req_p->assoc_id, 0);
 
@@ -662,7 +683,10 @@ static int sctp_close_association(
 
     struct sctp_cnx_list_elm_s *sctp_cnx = NULL;
 
-    DevAssert(close_association_p != NULL);
+    if (close_association_p == NULL) {
+      SCTP_ERROR("close_association_p == NULL\n");
+      return -1;
+    }
     sctp_cnx = sctp_get_cnx(close_association_p->assoc_id, 0);
 
     if (sctp_cnx == NULL) {
@@ -694,7 +718,10 @@ static int sctp_create_new_listener(
     int                           sd = 0;
     int                           used_addresses = 0;
 
-    DevAssert(init_p != NULL);
+    if (init_p == NULL) {
+      SCTP_ERROR("init_p == NULL\n");
+      return -1;
+    }
 
     if (init_p->ipv4 == 0 && init_p->ipv6 == 0) {
         SCTP_ERROR("Illegal IP configuration upper layer should request at"
@@ -805,7 +832,7 @@ static int sctp_create_new_listener(
         return -1;
     }
 
-    if (listen(sd, 5) < 0) {
+    if (listen(sd, 6) < 0) {
         SCTP_ERROR("listen: %s:%d\n", strerror(errno), errno);
         free(sctp_cnx);
         sctp_cnx = NULL;
@@ -850,7 +877,10 @@ sctp_eNB_accept_associations(
     struct sockaddr saddr;
     socklen_t       saddr_size;
 
-    DevAssert(sctp_cnx != NULL);
+    if (sctp_cnx == NULL) {
+      SCTP_ERROR("sctp_cnx == NULL\n");
+      return;
+    }
 
     saddr_size = sizeof(saddr);
 
@@ -875,7 +905,10 @@ sctp_eNB_accept_associations(
 
         new_cnx = calloc(1, sizeof(*sctp_cnx));
 
-        DevAssert(new_cnx != NULL);
+        if (new_cnx == NULL) {
+          SCTP_ERROR("new_cnx == NULL\n");
+          return;
+        }
 
         new_cnx->connection_type = SCTP_TYPE_CLIENT;
 
@@ -920,7 +953,10 @@ sctp_eNB_read_from_socket(
     struct sockaddr_in addr;
     uint8_t buffer[SCTP_RECV_BUFFER_SIZE];
 
-    DevAssert(sctp_cnx != NULL);
+    if (sctp_cnx == NULL) {
+      SCTP_ERROR("sctp_cnx == NULL\n");
+      return;
+    }
 
     memset((void *)&addr, 0, sizeof(struct sockaddr_in));
     from_len = (socklen_t)sizeof(struct sockaddr_in);
@@ -957,7 +993,7 @@ sctp_eNB_read_from_socket(
 
     if (!(flags & MSG_EOR)) {
       SCTP_ERROR("fatal: partial SCTP messages are not handled\n");
-      exit(1);
+      exit_fun("fatal: partial SCTP messages are not handled" );
     }
 
     if (flags & MSG_NOTIFICATION) {
@@ -1173,7 +1209,10 @@ void *sctp_eNB_process_itti_msg(void *notUsed)
         }
 
         result = itti_free(ITTI_MSG_ORIGIN_ID(received_msg), received_msg);
-        AssertFatal (result == EXIT_SUCCESS, "Failed to free memory (%d)!\n", result);
+        if (result != EXIT_SUCCESS) {
+          SCTP_ERROR("Failed to free memory (%d)!\n", result);
+          return NULL;
+        }
         received_msg = NULL;
     }
 

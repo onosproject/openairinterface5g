@@ -94,7 +94,10 @@ void lte_eNB_I0_measurements(PHY_VARS_eNB *eNB,
 	if (clear == 1)
 	  measurements->n0_subband_power[aarx][rb]=0;
 
-	AssertFatal(ul_ch, "RX signal buffer (freq) problem");
+    if (!ul_ch) {
+      LOG_E(PHY, "RX signal buffer (freq) problem");
+      return;
+    }
 
 
 	measurements->n0_subband_power[aarx][rb] = signal_energy_nodc(ul_ch,len);

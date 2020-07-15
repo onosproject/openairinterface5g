@@ -135,7 +135,6 @@ rlc_op_status_t rlc_stat_req     (
   hash_key_t             key             = HASHTABLE_NOT_A_KEY_VALUE;
   hashtable_rc_t         h_rc;
 
-  //AssertFatal (rb_idP < NB_RB_MAX, "RB id is too high (%u/%d)!\n", rb_idP, NB_RB_MAX);
   if(rb_idP >= NB_RB_MAX) {
     LOG_E(RLC, "RB id is too high (%ld/%d)!\n", rb_idP, NB_RB_MAX);
     return RLC_OP_STATUS_BAD_PARAMETER;
@@ -349,26 +348,22 @@ rlc_op_status_t rlc_data_req     (const protocol_ctxt_t *const ctxt_pP,
 #endif
 
   if (MBMS_flagP) {
-    //AssertFatal (rb_idP < NB_RB_MBMS_MAX, "RB id is too high (%u/%d)!\n", rb_idP, NB_RB_MBMS_MAX);
     if(rb_idP >= NB_RB_MBMS_MAX) {
       LOG_E(RLC, "RB id is too high (%ld/%d)!\n", rb_idP, NB_RB_MBMS_MAX);
       return RLC_OP_STATUS_BAD_PARAMETER;
     }
   } else {
-    //AssertFatal (rb_idP < NB_RB_MAX, "RB id is too high (%u/%d)!\n", rb_idP, NB_RB_MAX);
     if(rb_idP >= NB_RB_MAX) {
       LOG_E(RLC, "RB id is too high (%ld/%d)!\n", rb_idP, NB_RB_MAX);
       return RLC_OP_STATUS_BAD_PARAMETER;
     }
   }
 
-  //DevAssert(sdu_pP != NULL);
   if(sdu_pP == NULL) {
     LOG_E(RLC, "sdu_pP == NULL\n");
     return RLC_OP_STATUS_BAD_PARAMETER;
   }
 
-  //DevCheck(sdu_sizeP > 0, sdu_sizeP, 0, 0);
   if(sdu_sizeP <= 0) {
     LOG_E(RLC, "sdu_sizeP %d, file %s, line %d\n", sdu_sizeP, __FILE__,__LINE__);
     return RLC_OP_STATUS_BAD_PARAMETER;
@@ -405,7 +400,7 @@ rlc_op_status_t rlc_data_req     (const protocol_ctxt_t *const ctxt_pP,
     rlc_mode = rlc_union_p->mode;
   } else {
     rlc_mode = RLC_MODE_NONE;
-    //AssertFatal (0 , "RLC not configured key %ju\n", key);
+
     LOG_E(RLC, "not configured key %lu\n", key);
     return RLC_OP_STATUS_OUT_OF_RESSOURCES;
   }
@@ -457,7 +452,7 @@ rlc_op_status_t rlc_data_req     (const protocol_ctxt_t *const ctxt_pP,
         break;
 
       case RLC_MODE_UM:
-
+#if 0
         /* TODO: this is a hack, needs better solution. Let's not use too
          * much memory and store at maximum 5 millions bytes.
          */
@@ -466,7 +461,7 @@ rlc_op_status_t rlc_data_req     (const protocol_ctxt_t *const ctxt_pP,
           free_mem_block(sdu_pP, __func__);
           return RLC_OP_STATUS_OUT_OF_RESSOURCES;
         }
-
+#endif
         new_sdu_p = get_free_mem_block (sdu_sizeP + sizeof (struct rlc_um_data_req_alloc), __func__);
 
         if (new_sdu_p != NULL) {
@@ -570,8 +565,10 @@ void rlc_data_ind     (
     T(T_ENB_RLC_UL, T_INT(ctxt_pP->module_id), T_INT(ctxt_pP->rnti), T_INT(rb_idP), T_INT(sdu_sizeP));
 #endif
     const ngran_node_t type = RC.rrc[ctxt_pP->module_id]->node_type;
-    AssertFatal(type != ngran_eNB_CU && type != ngran_ng_eNB_CU && type != ngran_gNB_CU,
-                "Can't be CU, bad node type %d\n", type);
+    if(type == ngran_eNB_CU || type == ngran_ng_eNB_CU || type == ngran_gNB_CU) {
+      LOG_E(RLC,"Can't be CU, bad node type %d\n", type);
+      return;
+    }
 
     if (NODE_IS_DU(type) && srb_flagP == 1) {
       MessageDef *msg = itti_alloc_new_message(TASK_RLC_ENB, F1AP_UL_RRC_MESSAGE);
@@ -613,7 +610,7 @@ rlc_module_init (int enb_flag) { /* enb_flag is unused, but needed for binary
   rlc_rrc_data_conf = NULL;
   rlc_coll_p = hashtable_create ((LTE_maxDRB + 2) * NUMBER_OF_UE_MAX, NULL, rb_free_rlc_union);
 
-  //AssertFatal(rlc_coll_p != NULL, "UNRECOVERABLE error, RLC hashtable_create failed");
+
   if(rlc_coll_p == NULL) {
     LOG_E(RLC, "UNRECOVERABLE error, RLC hashtable_create failed\n");
     return -1;
