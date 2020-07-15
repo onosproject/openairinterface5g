@@ -121,7 +121,7 @@ gtpv_data_req(
 
     if(task_id == TASK_DATA_FORWARDING){
 
-      LOG_I(GTPU,"gtpv_data_req task_id = TASK_DATA_FORWARDING\n");
+      LOG_D(GTPU,"gtpv_data_req task_id = TASK_DATA_FORWARDING\n");
 
       message_buffer = itti_malloc (TASK_GTPV1_U, TASK_DATA_FORWARDING, sdu_sizeP);
 
@@ -144,7 +144,7 @@ gtpv_data_req(
       return TRUE; // TODO should be changed to a CNF message later, currently RRC lite does not used the returned value anyway.
     }else if(task_id == TASK_END_MARKER){
       
-      LOG_I(GTPU,"gtpv_data_req task_id = TASK_END_MARKER\n");
+      LOG_D(GTPU,"gtpv_data_req task_id = TASK_END_MARKER\n");
 
       message_buffer = itti_malloc (TASK_GTPV1_U, TASK_END_MARKER, sdu_sizeP);
 

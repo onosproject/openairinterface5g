@@ -2603,6 +2603,7 @@ add_new_ue(module_id_t mod_idP,
           )
 //------------------------------------------------------------------------------
 {
+  eNB_MAC_INST *eNB     = RC.mac[mod_idP];
   int UE_id;
   int i, j;
   UE_list_t *UE_list = &RC.mac[mod_idP]->UE_list;
@@ -2647,9 +2648,11 @@ add_new_ue(module_id_t mod_idP,
     /* default slice in case there was something different */
     UE_list->assoc_dl_slice_idx[UE_id] = 0;
     UE_list->assoc_ul_slice_idx[UE_id] = 0;
+    UE_list->UE_sched_ctrl[UE_id].ta_update_f = 31.0;
     UE_list->UE_sched_ctrl[UE_id].ta_update = 31;
-    UE_list->UE_sched_ctrl[UE_id].pusch_cqi[cc_idP]     = (RC.mac[mod_idP]->puSch10xSnr+640)/5;
-    UE_list->UE_sched_ctrl[UE_id].pusch_snr_avg[cc_idP] = RC.mac[mod_idP]->puSch10xSnr/10;
+    UE_list->UE_sched_ctrl[UE_id].pusch_cqi_f[cc_idP]     = (eNB->puSch10xSnr+640)/5;
+    UE_list->UE_sched_ctrl[UE_id].pusch_cqi[cc_idP]     = (eNB->puSch10xSnr+640)/5;
+    UE_list->UE_sched_ctrl[UE_id].pusch_snr_avg[cc_idP] = eNB->puSch10xSnr/10;
     UE_list->UE_sched_ctrl[UE_id].pusch_rx_num[cc_idP] = 0;
     UE_list->UE_sched_ctrl[UE_id].pusch_rx_num_old[cc_idP] = 0;
     UE_list->UE_sched_ctrl[UE_id].pusch_rx_error_num[cc_idP] = 0;
@@ -2657,6 +2660,12 @@ add_new_ue(module_id_t mod_idP,
     UE_list->UE_sched_ctrl[UE_id].pusch_bler[cc_idP] = 0;
     UE_list->UE_sched_ctrl[UE_id].mcs_offset[cc_idP] = 0;
     
+    UE_list->UE_sched_ctrl[UE_id].volte_configured = FALSE;
+    UE_list->UE_sched_ctrl[UE_id].ul_periodic_timer_exp_flag = FALSE;
+
+    UE_list->UE_sched_ctrl[UE_id].rlc_out_of_resources_cnt = 0;
+    pthread_mutex_init(&UE_list->UE_sched_ctrl[UE_id].rlc_out_of_resources_lock, NULL);
+
     for (j = 0; j < 8; j++) {
         UE_list->UE_template[cc_idP][UE_id].oldNDI[j][TB1] = (j == 0) ? 1 : 0;    // 1 because first transmission is with format1A (Msg4) for harq_pid 0
         UE_list->UE_template[cc_idP][UE_id].oldNDI[j][TB2] = 1;
@@ -2816,7 +2825,6 @@ rrc_mac_remove_ue(module_id_t mod_idP,
     pthread_mutex_unlock(&rrc_release_freelist);
   }
 
-  pthread_mutex_unlock(&rrc_release_freelist);
   return 0;
 }
 
@@ -4719,7 +4727,7 @@ extract_harq(module_id_t mod_idP,
 
               RA_t *ra = &RC.mac[mod_idP]->common_channels[CC_idP].ra[0];
               if(num_ack_nak==1){
-                if(harq_indication_tdd->harq_data[0].bundling.value_0==1){ //ack
+                if(harq_indication_tdd->harq_data[0].bundling.value_0==1 || harq_indication_tdd->harq_data[0].bundling.value_0==4){ //ack
                   sched_ctl->round[CC_idP][harq_pid][TB1] = 8; // release HARQ process
                   sched_ctl->tbcnt[CC_idP][harq_pid] = 0;
                   LOG_D(MAC,"frame %u subframe %u Acking (%d,%u) harq_pid %hhu round %hhu\n",frameP,subframeP,frame_tx,subframe_tx,harq_pid,sched_ctl->round[CC_idP][harq_pid][TB1]);
@@ -4760,15 +4768,15 @@ extract_harq(module_id_t mod_idP,
 
           }else{
         if(   (num_ack_nak==2)
-           && (harq_indication_tdd->harq_data[select_tb].bundling.value_0==1)
-           && (harq_indication_tdd->harq_data[oppose_tb].bundling.value_0==1)){
+           && ((harq_indication_tdd->harq_data[select_tb].bundling.value_0==1) || (harq_indication_tdd->harq_data[select_tb].bundling.value_0==4))
+           && ((harq_indication_tdd->harq_data[oppose_tb].bundling.value_0==1) || (harq_indication_tdd->harq_data[oppose_tb].bundling.value_0==4))){
             sched_ctl->round[CC_idP][harq_pid][select_tb] = 8;
             sched_ctl->round[CC_idP][harq_pid][oppose_tb] = 8;
             sched_ctl->rsn[CC_idP][harq_pid][select_tb]   = 0;
             sched_ctl->rsn[CC_idP][harq_pid][oppose_tb]   = 0;
         }else if(   (num_ack_nak==2)
-                 && ((harq_indication_tdd->harq_data[select_tb].bundling.value_0==2) || (harq_indication_tdd->harq_data[select_tb].bundling.value_0==4))
-                 && ((harq_indication_tdd->harq_data[oppose_tb].bundling.value_0==2) || (harq_indication_tdd->harq_data[oppose_tb].bundling.value_0==4))){
+                 && (harq_indication_tdd->harq_data[select_tb].bundling.value_0==2)
+                 && (harq_indication_tdd->harq_data[oppose_tb].bundling.value_0==2)){
 			//sched_ctl->round[CC_idP][harq_pid][select_tb]++;
 			//sched_ctl->round[CC_idP][harq_pid][oppose_tb]++;
 			//sched_ctl->rsn[CC_idP][harq_pid][select_tb]++;
@@ -4825,11 +4833,11 @@ extract_harq(module_id_t mod_idP,
                 sched_ctl->rsn[CC_idP][harq_pid][select_tb]   = 0;
             }
         }else if(   (num_ack_nak==1)
-                 && (harq_indication_tdd->harq_data[TB1].bundling.value_0==1)){
+                 && ((harq_indication_tdd->harq_data[TB1].bundling.value_0==1) || (harq_indication_tdd->harq_data[TB1].bundling.value_0==4))){
             sched_ctl->round[CC_idP][harq_pid][swap_flg] = 8;
             sched_ctl->rsn[CC_idP][harq_pid][swap_flg]   = 0;
         }else if(   (num_ack_nak==1)
-                 && ((harq_indication_tdd->harq_data[TB1].bundling.value_0==2) || (harq_indication_tdd->harq_data[TB1].bundling.value_0==4))){
+                 && (harq_indication_tdd->harq_data[TB1].bundling.value_0==2)){
             sched_ctl->round[CC_idP][harq_pid][swap_flg]++;
             sched_ctl->rsn[CC_idP][harq_pid][swap_flg]++;
 
@@ -4965,14 +4973,14 @@ extract_harq(module_id_t mod_idP,
 
           LOG_D(MAC, "In extract_harq(): pdu[0] = %d for harq_pid = %d\n", pdu[0], harq_pid);
 
-          if (pdu[0] == 1) {  // ACK
+          if (pdu[0] == 1 || pdu[0] == 4) {  // ACK(treat DTX as ACK)
             sched_ctl->round[CC_idP][harq_pid][TB1] = 8; // release HARQ process
             sched_ctl->tbcnt[CC_idP][harq_pid] = 0;
 
             /* CDRX: PUCCH gives an ACK, so reset corresponding HARQ RTT */
             sched_ctl->harq_rtt_timer[CC_idP][harq_pid] = 0;
 
-          } else if (pdu[0] == 2 || pdu[0] == 4) {  // NAK (treat DTX as NAK)
+          } else if (pdu[0] == 2) {  // NAK
             sched_ctl->round[CC_idP][harq_pid][TB1]++; // increment round
 
             if (sched_ctl->round[CC_idP][harq_pid][TB1] == 4) {
@@ -5008,7 +5016,7 @@ extract_harq(module_id_t mod_idP,
       if ((num_ack_nak == 2)
            && (sched_ctl->round[CC_idP][harq_pid][select_tb] < 8)
            && (sched_ctl->round[CC_idP][harq_pid][oppose_tb] < 8)
-           && (pdu[select_tb] == 1) && (pdu[oppose_tb] == 1)) {
+           && ((pdu[select_tb] == 1) || (pdu[select_tb] == 4)) && ((pdu[oppose_tb] == 1) || (pdu[oppose_tb] == 4))) {
             sched_ctl->round[CC_idP][harq_pid][select_tb] = 8;
             sched_ctl->round[CC_idP][harq_pid][oppose_tb] = 8;
             sched_ctl->rsn[CC_idP][harq_pid][select_tb]   = 0;
@@ -5020,8 +5028,8 @@ extract_harq(module_id_t mod_idP,
           } else if ((num_ack_nak == 2)
               && (sched_ctl->round[CC_idP][harq_pid][select_tb] < 8)
               && (sched_ctl->round[CC_idP][harq_pid][oppose_tb] < 8)
-              && ((pdu[select_tb] == 2) || (pdu[select_tb] == 4))
-              && ((pdu[oppose_tb] == 2) || (pdu[oppose_tb] == 4))) {
+              && (pdu[select_tb] == 2)
+              && (pdu[oppose_tb] == 2)) {
             sched_ctl->round[CC_idP][harq_pid][select_tb]++;
             sched_ctl->round[CC_idP][harq_pid][oppose_tb]++;
             sched_ctl->rsn[CC_idP][harq_pid][select_tb]++;
@@ -5079,11 +5087,11 @@ extract_harq(module_id_t mod_idP,
               /* CDRX: PUCCH gives an NACK and max number of repetitions reached so reset corresponding HARQ RTT */
               sched_ctl->harq_rtt_timer[CC_idP][harq_pid] = 0;
             }
-          } else if( (num_ack_nak == 1) && (pdu[TB1] == 1) ){   // ACK
+          } else if( (num_ack_nak == 1) && ((pdu[TB1] == 1) || (pdu[TB1] == 4))){   // ACK(treat DTX as ACK)
             sched_ctl->round[CC_idP][harq_pid][swap_flg] = 8;   // release HARQ process
             sched_ctl->rsn[CC_idP][harq_pid][swap_flg]   = 0;
         } else if(   (num_ack_nak == 1)
-              && (pdu[TB1] == 2 || pdu[TB1] == 4)) {      // NAK (treat DTX as NAK)
+              && (pdu[TB1] == 2)) {      // NAK
               sched_ctl->round[CC_idP][harq_pid][swap_flg]++;     // increment round
               sched_ctl->rsn[CC_idP][harq_pid][swap_flg]++;
 

@@ -243,6 +243,11 @@ int main(int argc, char **argv) {
   else
     sprintf(fname,"embms_awgn_%d_%d.m",mcs,N_RB_DL);
 
+  if(-1 == (access(fname,F_OK))){
+    creat(fname, 0644);
+  }else{
+    chmod(fname, 0644);
+  }
   if (!(fd = fopen(fname,"w"))) {
     printf("Cannot open %s, check permissions\n",fname);
     exit(-1);

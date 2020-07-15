@@ -986,6 +986,7 @@ typedef struct {
     uint16_t pre_nb_available_rbs[NFAPI_CC_MAX];
     unsigned char rballoc_sub_UE[NFAPI_CC_MAX][N_RBG_MAX];
     uint16_t ta_timer;
+    double ta_update_f;
     int16_t ta_update;
     uint16_t ul_consecutive_errors;
     int32_t context_active_timer;
@@ -1009,6 +1010,7 @@ typedef struct {
     uint8_t pucch2_snr[NFAPI_CC_MAX];
     uint8_t pucch3_cqi_update[NFAPI_CC_MAX];
     uint8_t pucch3_snr[NFAPI_CC_MAX];
+    double  pusch_cqi_f[NFAPI_CC_MAX];
     uint8_t pusch_cqi[NFAPI_CC_MAX];
     uint8_t pusch_snr[NFAPI_CC_MAX];
     uint8_t pusch_snr_avg[NFAPI_CC_MAX];
@@ -1040,7 +1042,16 @@ typedef struct {
     int32_t uplane_inactivity_timer;
     uint8_t crnti_reconfigurationcomplete_flag;
     uint8_t cqi_req_flag;
-
+    
+    /* VoLTE related info */
+    boolean_t volte_configured;
+    uint8_t volte_lcg;
+    uint8_t volte_lcid;
+    uint8_t ul_periodic_timer;
+    uint8_t dl_periodic_timer;
+    uint8_t dl_volte_ue_select_flag;  // list of VoLTE data Flag by UE
+    uint8_t ul_periodic_timer_exp_flag;
+    
     /* HARQ RRT Timers */
     /// (UL) HARQ RTT timers, especially used for CDRX operations, one timer per cell per harq process (and per user)
     uint8_t harq_rtt_timer[NFAPI_CC_MAX][8];
@@ -1100,6 +1111,8 @@ typedef struct {
     uint8_t select_tb[NFAPI_CC_MAX][MAX_HARQ_PID];
     uint8_t swap_flag[NFAPI_CC_MAX][MAX_HARQ_PID];
     uint8_t rsn[NFAPI_CC_MAX][MAX_HARQ_PID][MAX_NUM_TB];
+    uint32_t rlc_out_of_resources_cnt;
+    pthread_mutex_t rlc_out_of_resources_lock;
 } UE_sched_ctrl_t;
 
 /*! \brief eNB template for the Random access information */
@@ -1520,6 +1533,11 @@ typedef struct eNB_MAC_INST_s {
 
   int32_t puSch10xSnr;
   int32_t puCch10xSnr;
+
+  // for volte cycle
+  int volte_ul_cycle[MAX_NUM_CCs];
+  int volte_dl_cycle[MAX_NUM_CCs];
+
 } eNB_MAC_INST;
 
 /*

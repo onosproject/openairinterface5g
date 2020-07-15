@@ -956,6 +956,11 @@ void vnf_handle_ul_node_sync(void *pRecvMsg, int recvMsgLen, vnf_p7_t* vnf_p7)
 	}
 
 #ifdef LOG
+	if(-1 == (access(LOGFILE_PATH2,F_OK))){
+		creat(LOGFILE_PATH2, 0644);
+	}else{
+		chmod(LOGFILE_PATH2, 0644);
+	}
  	fp = fopen(LOGFILE_PATH2, "a");
 
 

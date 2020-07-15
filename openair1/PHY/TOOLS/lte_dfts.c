@@ -8709,7 +8709,11 @@ int write_output(const char *fname,const char *vname,void *data,int length,int d
 
   printf("Writing %d elements of type %d to %s\n",length,format,fname);
 
-
+  if(-1 == (access(fname,F_OK))){
+    creat(fname, 0644);
+  }else{
+    chmod(fname, 0644);
+  }
   if (format == 10 || format ==11 || format == 12 || format == 13 || format == 14) {
     fp = fopen(fname,"a+");
   } else if (format != 10 && format !=11  && format != 12 && format != 13 && format != 14) {

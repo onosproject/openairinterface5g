@@ -597,6 +597,8 @@ eNB_dlsch_ulsch_scheduler(module_id_t module_idP,
   UE_list_t         *UE_list                = &(eNB->UE_list);
   COMMON_channels_t *cc                     = eNB->common_channels;
   UE_sched_ctrl_t     *UE_scheduling_control  = NULL;
+  uint8_t            volte_ul_cycle[MAX_NUM_CCs];
+  uint8_t            volte_ul_buffersize[MAX_NUM_CCs];
 
   start_meas(&(eNB->eNB_scheduler));
 
@@ -616,24 +618,36 @@ eNB_dlsch_ulsch_scheduler(module_id_t module_idP,
     cc[CC_id].mcch_active = 0;
 #endif
     clear_nfapi_information(RC.mac[module_idP], CC_id, frameP, subframeP);
+
+    volte_ul_cycle[CC_id] = eNB->volte_ul_cycle[CC_id];
+    if (volte_ul_cycle[CC_id] != 0){
+      volte_ul_buffersize[CC_id] = ( RC.rrc[module_idP]->configuration.radioresourceconfig[CC_id].volte_ul_buffersize * (volte_ul_cycle[CC_id] / 20) );
+    }else{
+      volte_ul_buffersize[CC_id] = RC.rrc[module_idP]->configuration.radioresourceconfig[CC_id].volte_ul_buffersize;
+    }
   }
 
   /* Refresh UE list based on UEs dropped by PHY in previous subframe */
   for (UE_id = 0; UE_id < MAX_MOBILES_PER_ENB; UE_id++) {
     if (UE_list->active[UE_id]) {
+      UE_TEMPLATE *UE_template = NULL;
       rnti = UE_RNTI(module_idP, UE_id);
       CC_id = UE_PCCID(module_idP, UE_id);
 
       UE_scheduling_control = &(UE_list->UE_sched_ctrl[UE_id]);
 
       if (((frameP & 127) == 0) && (subframeP == 0)) {
-        LOG_I(MAC,"UE  rnti %x : %s, PHR %d dB DL CQI %d PUSCH SNR %d PUCCH SNR %d\n",
+        LOG_I(MAC,"UE  rnti %x : %s, PHR %d dB DL CQI %d PUSCH SNR %d PUCCH SNR %d RLC discard %d\n",
               rnti,
               UE_scheduling_control->ul_out_of_sync == 0 ? "in synch" : "out of sync",
               UE_list->UE_template[CC_id][UE_id].phr_info,
               UE_scheduling_control->dl_cqi[CC_id],
               UE_scheduling_control->pusch_snr_avg[CC_id],
-              UE_scheduling_control->pucch1_snr[CC_id]);
+              UE_scheduling_control->pucch1_snr[CC_id],
+              UE_scheduling_control->rlc_out_of_resources_cnt);
+        pthread_mutex_lock(&(UE_scheduling_control->rlc_out_of_resources_lock));
+        UE_scheduling_control->rlc_out_of_resources_cnt = 0;
+        pthread_mutex_unlock(&(UE_scheduling_control->rlc_out_of_resources_lock));
       }
 
       RC.eNB[module_idP][CC_id]->pusch_stats_bsr[UE_id][(frameP * 10) + subframeP] = -63;
@@ -642,10 +656,27 @@ eNB_dlsch_ulsch_scheduler(module_id_t module_idP,
         VCD_SIGNAL_DUMPER_DUMP_VARIABLE_BY_NAME(VCD_SIGNAL_DUMPER_VARIABLES_UE0_BSR, RC.eNB[module_idP][CC_id]->pusch_stats_bsr[UE_id][(frameP * 10) + subframeP]);
       }
 
+      /* increment VoLTE related timers */
+      if (UE_scheduling_control->volte_configured == TRUE) {
+        UE_scheduling_control->dl_periodic_timer++;
+        UE_scheduling_control->ul_periodic_timer++;
+        if (UE_scheduling_control->ul_periodic_timer >= volte_ul_cycle[CC_id]) {
+          /* Update buffer info */
+          UE_template = &(UE_list->UE_template[CC_id][UE_id]);
+          UE_template->ul_buffer_info[UE_scheduling_control->volte_lcg] += volte_ul_buffersize[CC_id];
+          UE_template->estimated_ul_buffer =
+            UE_template->ul_buffer_info[LCGID0] +
+            UE_template->ul_buffer_info[LCGID1] +
+            UE_template->ul_buffer_info[LCGID2] +
+            UE_template->ul_buffer_info[LCGID3];
+          UE_scheduling_control->ul_periodic_timer = 0;
+          UE_scheduling_control->ul_periodic_timer_exp_flag = TRUE;
+        }
+      }
+
       /* Set and increment CDRX related timers */
       if (UE_scheduling_control->cdrx_configured == TRUE) {
         boolean_t harq_active_time_condition = FALSE;
-        UE_TEMPLATE *UE_template = NULL;
 
         unsigned long active_time_condition = 0; // variable used only for tracing purpose
 
@@ -854,6 +885,35 @@ eNB_dlsch_ulsch_scheduler(module_id_t module_idP,
       UE_scheduling_control->ul_inactivity_timer++;
       UE_scheduling_control->cqi_req_timer++;
       
+      // various timers update
+      struct rrc_eNB_ue_context_s *ue_context_p = NULL;
+      RB_FOREACH(ue_context_p, rrc_ue_tree_s, &(RC.rrc[module_idP]->rrc_ue_head)) {
+
+        if (ue_context_p->ue_context.ul_failure_timer > 0) {
+          ue_context_p->ue_context.ul_failure_timer++;
+        }
+
+        if (ue_context_p->ue_context.ue_release_timer_s1 > 0) {
+          ue_context_p->ue_context.ue_release_timer_s1++;
+        }
+
+        if (ue_context_p->ue_context.ue_release_timer_rrc > 0) {
+          ue_context_p->ue_context.ue_release_timer_rrc++;
+        }
+
+        if ((ue_context_p->ue_context.ue_rrc_inactivity_timer > 0) && (RC.rrc[module_idP]->configuration.rrc_inactivity_timer_thres > 0)) {
+          ue_context_p->ue_context.ue_rrc_inactivity_timer++;
+        }
+
+        if (ue_context_p->ue_context.ue_reestablishment_timer > 0) {
+          ue_context_p->ue_context.ue_reestablishment_timer++;
+        }
+
+        if (ue_context_p->ue_context.ue_release_timer > 0) {
+          ue_context_p->ue_context.ue_release_timer++;
+        }
+      } // end RB_FOREACH
+
       LOG_D(MAC, "UE %d/%x : ul_inactivity %d, cqi_req %d\n",
             UE_id,
             rnti,

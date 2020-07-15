@@ -939,7 +939,17 @@ unsigned char phy_threegpplte_turbo_decoder16avx2(int16_t *y,
   int offset8_flag=0;
 
 #ifdef DEBUG_LOGMAP
+  if(-1 == (access("dump_avx2.txt",F_OK))){
+    creat("dump_avx2.txt", 0644);
+  }else{
+    chmod("dump_avx2.txt", 0644);
+  }
   fdavx2 = fopen("dump_avx2.txt","w");
+  if(-1 == (access("dump_avx2b.txt",F_OK))){
+    creat("dump_avx2b.txt", 0644);
+  }else{
+    chmod("dump_avx2b.txt", 0644);
+  }
   fdavx2b = fopen("dump_avx2b.txt","w");
 
   printf("tc avx2_16 (y,y2) %p,%p\n",y,y2);

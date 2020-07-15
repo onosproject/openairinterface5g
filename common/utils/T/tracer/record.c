@@ -112,6 +112,11 @@ int main(int n, char **v)
       socket_send(socket, is_on, number_of_events * sizeof(int)) == -1)
     abort();
 
+  if(-1 == (access(output_filename,F_OK))){
+    creat(output_filename, 0644);
+  }else{
+    chmod(output_filename, 0644);
+  }
   out = fopen(output_filename, "w");
   if (out == NULL) {
     perror(output_filename);

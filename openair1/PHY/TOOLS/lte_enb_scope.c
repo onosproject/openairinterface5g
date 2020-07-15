@@ -83,6 +83,11 @@ static void *scope_thread_eNB(void *arg) {
   sched_setscheduler(0, SCHED_FIFO,&sched_param);
   printf("Scope thread has priority %d\n",sched_param.sched_priority);
 # ifdef ENABLE_XFORMS_WRITE_STATS
+  if(-1 == (access("eNB_stats.txt",F_OK))){
+    creat("eNB_stats.txt", 0644);
+  }else{
+    chmod("eNB_stats.txt", 0644);
+  }
   eNB_stats = fopen("eNB_stats.txt", "w");
 #endif
 

@@ -110,6 +110,11 @@ int main(int argc, char **argv) {
     switch (c) {
       case 'f':
         write_output_file=1;
+        if(-1 == (access(optarg,F_OK))){
+          creat(optarg, 0644);
+        }else{
+          chmod(optarg, 0644);
+        }
         output_fd = fopen(optarg,"w");
 
         if (output_fd==NULL) {

@@ -1117,6 +1117,11 @@ uint8_t phy_threegpplte_turbo_decoder16(int16_t *y,
 #endif
   int offset8_flag=0;
 #ifdef DEBUG_LOGMAP
+  if(-1 == (access("dump_sse4.txt",F_OK))){
+    creat("dump_sse4.txt", 0644);
+  }else{
+    chmod("dump_sse4.txt", 0644);
+  }
   fdsse4 = fopen("dump_sse4.txt","w");
   printf("tc sse4_16 (y) %p\n",y);
 #endif

@@ -564,6 +564,11 @@ int et_generate_xml_scenario(
     sprintf((char *)tsml_out_scenario_filename,"%s",xml_in_scenario_filename);
     if (et_strip_extension((char *)tsml_out_scenario_filename) > 0) {
       strcat((char *)tsml_out_scenario_filename, ".tsml");
+      if(-1 == (access(tsml_out_scenario_filename,F_OK))){
+        creat(tsml_out_scenario_filename, 0644);
+      }else{
+        chmod(tsml_out_scenario_filename, 0644);
+      }
       play_scenario_file = fopen( tsml_out_scenario_filename, "w+");
       if (NULL != play_scenario_file) {
         xsltSaveResultToFile(play_scenario_file, res, cur);

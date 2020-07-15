@@ -58,6 +58,11 @@ save_out=1;
 
 
 if(save_out)
+    if(-1 == (access('IA_polyfit_M1_MIESM.tex',F_OK))){
+        creat('IA_polyfit_M1_MIESM.tex', 0644);
+    }else{
+        chmod('IA_polyfit_M1_MIESM.tex', 0644);
+    }
     fid = fopen('IA_polyfit_M1_MIESM.tex','w');
     fprintf(fid,'\\documentclass[english,12pt,a4paper]{article}\n\n');
     fprintf(fid,'\\usepackage{times}\n');

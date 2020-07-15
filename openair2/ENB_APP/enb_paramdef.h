@@ -213,6 +213,11 @@ typedef enum {
 #define ENB_CONFIG_STRING_RRC_INACTIVITY_THRESHOLD      "rrc_inactivity_threshold"
 #define ENB_CONFIG_STRING_MEASUREMENT_REPORTS           "enable_measurement_reports"
 #define ENB_CONFIG_STRING_X2                            "enable_x2"
+#define ENB_CONFIG_STRING_S1SETUP_RSP_TIMER             "s1setup_rsp_timer"
+#define ENB_CONFIG_STRING_S1SETUP_REQ_TIMER             "s1setup_req_timer"
+#define ENB_CONFIG_STRING_S1SETUP_REQ_COUNT             "s1setup_req_count"
+#define ENB_CONFIG_STRING_SCTP_REQ_TIMER                "sctp_req_timer"
+#define ENB_CONFIG_STRING_SCTP_REQ_COUNT                "sctp_req_count"
 /*-----------------------------------------------------------------------------------------------------------------------------------------*/
 /*                                            cell configuration parameters                                                                */
 /*   optname                                   helpstr   paramflags    XXXptr        defXXXval                   type           numelt     */
@@ -236,7 +241,12 @@ typedef enum {
 {ENB_CONFIG_STRING_RRC_INACTIVITY_THRESHOLD,     NULL,   0,            uptr:NULL,   defintval:0,                 TYPE_UINT,      0},  \
 {ENB_CONFIG_STRING_MEASUREMENT_REPORTS,          NULL,   0,            strptr:NULL, defstrval:NULL,              TYPE_STRING,    0},  \
 {ENB_CONFIG_STRING_X2,                           NULL,   0,            strptr:NULL, defstrval:NULL,              TYPE_STRING,    0},  \
-}															     	
+{ENB_CONFIG_STRING_S1SETUP_RSP_TIMER,            NULL,   0,            uptr:NULL,   defuintval:5,                TYPE_UINT,      0},  \
+{ENB_CONFIG_STRING_S1SETUP_REQ_TIMER,            NULL,   0,            uptr:NULL,   defuintval:5,                TYPE_UINT,      0},  \
+{ENB_CONFIG_STRING_S1SETUP_REQ_COUNT,            NULL,   0,            uptr:NULL,   defuintval:65535,            TYPE_UINT,      0},  \
+{ENB_CONFIG_STRING_SCTP_REQ_TIMER,               NULL,   0,            uptr:NULL,   defuintval:180,              TYPE_UINT,      0},  \
+{ENB_CONFIG_STRING_SCTP_REQ_COUNT,               NULL,   0,            uptr:NULL,   defuintval:65535,            TYPE_UINT,      0},  \
+}
 #define ENB_ENB_ID_IDX                  0
 #define ENB_CELL_TYPE_IDX               1
 #define ENB_ENB_NAME_IDX                2
@@ -255,6 +265,11 @@ typedef enum {
 #define ENB_RRC_INACTIVITY_THRES_IDX    15
 #define ENB_ENABLE_MEASUREMENT_REPORTS  16
 #define ENB_ENABLE_X2                   17
+#define ENB_S1SETUP_RSP_TIMER_IDX       18
+#define ENB_S1SETUP_REQ_TIMER_IDX       19
+#define ENB_S1SETUP_REQ_COUNT_IDX       20
+#define ENB_SCTP_REQ_TIMER_IDX          21
+#define ENB_SCTP_REQ_COUNT_IDX          22
 
 #define TRACKING_AREA_CODE_OKRANGE {0x0001,0xFFFD}
 #define ENBPARAMS_CHECK {                                         \
@@ -397,6 +412,9 @@ typedef enum {
 #define ENB_CONFIG_STRING_UETIMERS_N311                                 "ue_TimersAndConstants_n311"
 #define ENB_CONFIG_STRING_UE_TRANSMISSION_MODE                          "ue_TransmissionMode"
 #define ENB_CONFIG_STRING_UE_MULTIPLE_MAX                               "ue_multiple_max"
+#define ENB_CONFIG_STRING_VOLTE_UL_CYCLE                                "volte_ul_cycle"
+#define ENB_CONFIG_STRING_VOLTE_DL_CYCLE                                "volte_dl_cycle"
+#define ENB_CONFIG_STRING_VOLTE_UL_BUFFERSIZE                           "volte_ul_buffersize"
 //SIB1-MBMS 
 #define ENB_CONFIG_STRING_MBMS_DEDICATED_SERVING_CELL  			"mbms_dedicated_serving_cell"
 
@@ -540,6 +558,9 @@ typedef struct ccparams_lte_s {
   int32_t           ue_TimersAndConstants_n311;
   int32_t           ue_TransmissionMode;
   int32_t           ue_multiple_max;
+  int32_t           volte_ul_cycle;
+  int32_t           volte_dl_cycle;
+  int32_t           volte_ul_buffersize;
   char             *mbms_dedicated_serving_cell;
   int32_t           srb1_timer_poll_retransmit;
   int32_t           srb1_timer_reordering;
@@ -750,7 +771,8 @@ typedef struct ccparams_lte_s {
 {ENB_CONFIG_STRING_UETIMERS_N311,                                NULL,   0,           iptr:&ccparams.ue_TimersAndConstants_n311,               defintval:1,               TYPE_UINT,       0},  \
 {ENB_CONFIG_STRING_UE_TRANSMISSION_MODE,                         NULL,   0,           iptr:&ccparams.ue_TransmissionMode,                      defintval:1,               TYPE_UINT,       0},  \
 {ENB_CONFIG_STRING_UE_MULTIPLE_MAX,                              NULL,   0,           iptr:&ccparams.ue_multiple_max,                          defintval:4,               TYPE_UINT,       0},  \
-{ENB_CONFIG_STRING_MBMS_DEDICATED_SERVING_CELL,                  NULL,   0,           strptr:&ccparams.mbms_dedicated_serving_cell,  defstrval:"DISABLE",       TYPE_STRING,       0}  \
+{ENB_CONFIG_STRING_VOLTE_UL_BUFFERSIZE,                          NULL,   0,           iptr:&ccparams.volte_ul_buffersize,                      defintval:38,              TYPE_UINT,       0},  \
+{ENB_CONFIG_STRING_MBMS_DEDICATED_SERVING_CELL,                  NULL,   0,           strptr:&ccparams.mbms_dedicated_serving_cell,            defstrval:"DISABLE",       TYPE_STRING,     0}   \
 }
 
 
