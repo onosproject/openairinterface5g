@@ -2423,14 +2423,6 @@ void init_RU_proc(RU_t *ru) {
   if (ru->function!=eNodeB_3GPP) pthread_create( &proc->pthread_ctrl, attr_ctrl, ru_thread_control, (void *)ru );
 
   pthread_create( &proc->pthread_FH, attr_FH, ru_thread, (void *)ru );
-#if defined(PRE_SCD_THREAD)
-  if (NFAPI_MODE == NFAPI_MONOLITHIC) {
-    int rc;
-    LOG_I(MAC,"Creating MAC eNB PreSCD Task\n");
-    rc = itti_create_task (TASK_MAC_ENB_PRE_SCD, pre_scd_task, (void *)ru);
-    AssertFatal(rc >= 0, "Create task for MAC eNB PreSCD failed\n");
-  }
-#endif
 
 #ifdef PHY_TX_THREAD
   pthread_create( &proc->pthread_phy_tx, NULL, eNB_thread_phy_tx, (void *)ru );
