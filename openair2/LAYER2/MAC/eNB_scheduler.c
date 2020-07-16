@@ -769,7 +769,7 @@ void update_ue_timers(module_id_t module_idP,frame_t frameP, sub_frame_t subfram
         else {
           total_bler = (double)UE_scheduling_control->pusch_rx_error_num[CC_id] / (double)(UE_scheduling_control->pusch_rx_error_num[CC_id] + UE_scheduling_control->pusch_rx_num[CC_id]) * 100;
         }
-        LOG_I(MAC,"UE %x : %s, PHR %d DLCQI %d PUSCH %d PUCCH %d RLC disc %d UL-stat rcv %lu err %lu bler %lf mcsoff %d bsr %u sched %u tbs %lu cnt %u , DL-stat tbs %lu cnt %u rb %u buf %u 1st %u ret %u ri %d\n",
+        LOG_I(MAC,"UE %x : %s, PHR %d DLCQI %d PUSCH %d PUCCH %d RLC disc %d UL-stat rcv %lu err %lu bler %lf mcsoff %d bsr %u sched %u tbs %lu cnt %u , DL-stat tbs %lu cnt %u rb %u buf %lu 1st %u ret %u ri %d\n",
               rnti,
               UE_scheduling_control->ul_out_of_sync == 0 ? "in synch" : "out of sync",
               UE_list->UE_template[CC_id][UE_id].phr_info,

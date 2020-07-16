@@ -62,7 +62,7 @@ int last_ulsch_ue_id[MAX_NUM_CCs] = {-1};
 int last_ulsch_ue_id_volte[MAX_NUM_CCs] = {-1};
 
 #if defined(PRE_SCD_THREAD)
-  uint32_t dl_buffer_total[MAX_NUM_CCs][NUMBER_OF_UE_MAX];
+  uint64_t dl_buffer_total[MAX_NUM_CCs][NUMBER_OF_UE_MAX];
 
   boolean_t pre_scd_activeUE[NUMBER_OF_UE_MAX];
   eNB_UE_STATS pre_scd_eNB_UE_stats[MAX_NUM_CCs][NUMBER_OF_UE_MAX];
@@ -87,14 +87,14 @@ void set_dl_ue_select_msg4(int CC_idP, uint16_t nb_rb, int UE_id, rnti_t rnti) {
   dlsch_ue_select[CC_idP].ue_num++;
 }
 #if defined(PRE_SCD_THREAD)
-inline uint16_t search_rbs_required(uint16_t mcs, uint16_t TBS,uint32_t NB_RB, uint16_t step_size) {
-  uint16_t nb_rb,i_TBS,tmp_TBS;
+inline uint16_t search_rbs_required(uint16_t mcs, uint64_t len, uint32_t NB_RB, uint16_t step_size) {
+  uint16_t nb_rb,i_TBS,TBS;
   i_TBS=get_I_TBS(mcs);
 
   for(nb_rb=step_size; nb_rb<NB_RB; nb_rb+=step_size) {
-    tmp_TBS = TBStable[i_TBS][nb_rb-1]>>3;
+    TBS = TBStable[i_TBS][nb_rb-1]>>3;
 
-    if(TBS<tmp_TBS)return(nb_rb);
+    if(len<TBS)return(nb_rb);
   }
 
   return NB_RB;
@@ -184,7 +184,7 @@ int dl_dtch_num;
       header_length_total++;
     }
     dl_buffer_total[CC_id][UE_id] = dl_buffer + header_length_total;
-    LOG_D(MAC,"frame %d subframe %d UE_id %d dl_buffer_total %d\n",
+    LOG_D(MAC,"frame %d subframe %d UE_id %d dl_buffer_total %lu\n",
       frameP,subframeP,UE_id,dl_buffer_total[CC_id][UE_id]);
 
   }
@@ -1058,7 +1058,7 @@ void dlsch_scheduler_pre_processor_fairRR (module_id_t   Mod_id,
 #if defined(PRE_SCD_THREAD)
   eNB_UE_STATS            *eNB_UE_stats;
   uint16_t                step_size;
-  int                     dl_buffer;
+  uint64_t                dl_buffer;
 #endif
   UE_sched_ctrl_t *ue_sched_ctl;
   //  int rrc_status           = RRC_IDLE;
@@ -1144,7 +1144,7 @@ void dlsch_scheduler_pre_processor_fairRR (module_id_t   Mod_id,
       dl_buffer = dl_buffer_total[CC_id][UE_id];
       if ((dl_buffer > 0) || (ue_sched_ctl->ta_update != 31 )) {
         nb_rbs_required[CC_id][UE_id] = search_rbs_required(eNB_UE_stats->dlsch_mcs[TB1], dl_buffer, N_RB_DL, step_size);
-        LOG_D(MAC,"frame %d subframe %d UE_id %d nb_rbs_required %d mcs %d  dl_buffer %d\n",
+        LOG_D(MAC,"frame %d subframe %d UE_id %d nb_rbs_required %d mcs %d  dl_buffer %lu\n",
           frameP,subframeP,UE_id,nb_rbs_required[CC_id][UE_id],eNB_UE_stats->dlsch_mcs[TB1],dl_buffer);
       }
     }
