@@ -1560,3 +1560,83 @@ void eNB_Config_Local_DRX(instance_t Mod_id,
       break;
   }
 }
+
+//-----------------------------------------------------------------------------
+/*
+* Configure VoLTE
+*/
+void eNB_mac_config_VoLTE(
+  module_id_t Mod_idP,
+  rnti_t rntiP,
+  u_int8_t voice_flg,
+  u_int8_t logicalChannelGroup,
+  u_int8_t logicalChannelIdentity
+)
+//-----------------------------------------------------------------------------
+{
+  int UE_id,CC_id;
+  UE_info_t *UE_info = &(RC.mac[Mod_idP]->UE_info);
+  UE_sched_ctrl_t *UE_scheduling_control;
+  static int Volte_ue_num[MAX_NUM_CCs] = {0};
+
+  UE_id = find_UE_id(Mod_idP, rntiP);
+  CC_id = UE_PCCID(Mod_idP, UE_id);
+
+  if (UE_id < 0) {
+    LOG_E(MAC, "Configuration received for unknown UE (%x), shouldn't happen\n", rntiP);
+    return;
+  }
+
+  UE_scheduling_control = &(UE_info->UE_sched_ctrl[UE_id]);
+  if (voice_flg == 1) { // voice
+    UE_scheduling_control->volte_configured = TRUE;
+    UE_scheduling_control->volte_lcid = logicalChannelIdentity;
+    UE_scheduling_control->volte_lcg = logicalChannelGroup;
+    UE_scheduling_control->ul_periodic_timer = 0;
+    UE_scheduling_control->dl_periodic_timer = 0;
+    UE_scheduling_control->dl_volte_ue_select_flag = FALSE;        /* VoLTE UE select flag init */
+    UE_scheduling_control->ul_periodic_timer_exp_flag = FALSE;
+
+    LOG_I(RRC, "VoLTE configured LCID%u, LCG%u for UE:%d\n",
+          logicalChannelIdentity,
+          logicalChannelGroup,
+          UE_id);
+    Volte_ue_num[CC_id]++;
+    if(0 < Volte_ue_num[CC_id] && Volte_ue_num[CC_id] < 32){
+      RC.mac[Mod_idP]->volte_ul_cycle[CC_id] = 20;
+      RC.mac[Mod_idP]->volte_dl_cycle[CC_id] = 20;
+    }
+    else if(32 <= Volte_ue_num[CC_id] && Volte_ue_num[CC_id] < 64){
+      RC.mac[Mod_idP]->volte_ul_cycle[CC_id] = 40;
+      RC.mac[Mod_idP]->volte_dl_cycle[CC_id] = 40;
+    }else{
+      RC.mac[Mod_idP]->volte_ul_cycle[CC_id] = 80;
+      RC.mac[Mod_idP]->volte_dl_cycle[CC_id] = 80;
+    }
+
+  } else {
+    if ((UE_scheduling_control->volte_configured == TRUE) && (UE_scheduling_control->volte_lcid == logicalChannelIdentity)) {
+      UE_scheduling_control->volte_configured = FALSE;
+      UE_scheduling_control->ul_periodic_timer_exp_flag = FALSE;
+      Volte_ue_num[CC_id]--;
+      if (Volte_ue_num[CC_id] < 0){
+        Volte_ue_num[CC_id] = 0;
+      }
+      if(Volte_ue_num[CC_id] == 0){
+        RC.mac[Mod_idP]->volte_ul_cycle[CC_id] = 0;
+        RC.mac[Mod_idP]->volte_dl_cycle[CC_id] = 0;
+      }
+      else if(0 < Volte_ue_num[CC_id] && Volte_ue_num[CC_id] < 32){
+        RC.mac[Mod_idP]->volte_ul_cycle[CC_id] = 20;
+        RC.mac[Mod_idP]->volte_dl_cycle[CC_id] = 20;
+      }
+      else if(32 <= Volte_ue_num[CC_id] && Volte_ue_num[CC_id] < 64){
+        RC.mac[Mod_idP]->volte_ul_cycle[CC_id] = 40;
+        RC.mac[Mod_idP]->volte_dl_cycle[CC_id] = 40;
+      }else{
+        RC.mac[Mod_idP]->volte_ul_cycle[CC_id] = 80;
+        RC.mac[Mod_idP]->volte_dl_cycle[CC_id] = 80;
+      }
+    }
+  }
+}

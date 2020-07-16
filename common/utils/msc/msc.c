@@ -133,6 +133,11 @@ int msc_init(const msc_env_t envP, const int max_threadsP)
     fprintf(stderr, "Error in MSC log file name");
   }
 
+  if(-1 == (access(msc_filename,F_OK))){
+    creat(msc_filename, 0644);
+  }else{
+    chmod(msc_filename, 0644);
+  }
   g_msc_fd = fopen(msc_filename,"w");
   AssertFatal(g_msc_fd != NULL, "Could not open MSC log file %s : %s", msc_filename, strerror(errno));
   rv = lfds611_stack_new(&g_msc_memory_stack_p, (lfds611_atom_t)max_threadsP + 2);

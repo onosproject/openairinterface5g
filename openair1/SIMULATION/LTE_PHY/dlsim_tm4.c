@@ -857,6 +857,11 @@ int main(int argc, char **argv)
           sprintf(rankadapt_fname,"rank_adapt0_tx%d_r%d_ch%d_%d_nrx%d_rnd%d_mcs%d_mcsi%d_sh%d_connum_%d.csv",transmission_mode,rx_type,channel_model,n_frames, n_rx, num_rounds, mcs1, mcs2, dlsch_demod_shift, cond_num_threshold);
     }
 
+  if(-1 == (access(rankadapt_fname,F_OK))){
+    creat(rankadapt_fname, 0644);
+  }else{
+    chmod(rankadapt_fname, 0644);
+  }
   rankadapt_fd = fopen(rankadapt_fname,"w");
     if (rankadapt_fd==NULL) {
       fprintf(stderr,"Cannot create file %s!\n",rankadapt_fname);
@@ -868,6 +873,11 @@ int main(int argc, char **argv)
       fprintf(rankadapt_fd,"SNR; rank_adapt; clsm_counter; MCS1; MCS2; TBS1; TBS2; rate 0; rate 1; err0_tb0; err0_tb1; trials_tb0_r0; trials_tb1_r0; deact_tb0_r0; deact_tb1_r0; ret_both0; ret_one0; err1_tb0; err1_tb1; trials_tb0_r1; trials_tb1_r1; deact_tb0_r1; deact_tb1_r1; ret_both1; ret_one1; err2_tb0; err2_tb1; trials_tb0_r2; trials1_tb1_r2; deact_tb0_r2; deact_tb1_r2; ret_both2; ret_one2; err3_tb0; err3_tb1; trials_tb0_r3; trials_tb1_r3; th_tb0_r0; th_tb1_r0; th_sum_r0; th_tb0_r1; th_tb1_r1; th_sum_r1; th_tb0_r2; th_tb1_r2; th_sum_r2; th_tb0_r3; th_tb1_r3; th_sum_r3; tot_th\n");
   }
 
+  if(-1 == (access(bler_fname,F_OK))){
+    creat(bler_fname, 0644);
+  }else{
+    chmod(bler_fname, 0644);
+  }
   bler_fd = fopen(bler_fname,"w");
   if (bler_fd==NULL) {
     fprintf(stderr,"Cannot create file %s!\n",bler_fname);
@@ -895,6 +905,11 @@ int main(int argc, char **argv)
     sprintf(time_meas_fname,"time_meas_prb%d_mcs%d_anttx%d_antrx%d_pdcch%d_channel%s_tx%d.csv",
             N_RB_DL,mcs1,n_tx_phy,n_rx,num_pdcch_symbols,channel_model_input,transmission_mode);
     //mkdir(dirname,0777);
+    if(-1 == (access(time_meas_fname,F_OK))){
+      creat(time_meas_fname, 0644);
+    }else{
+      chmod(time_meas_fname, 0644);
+    }
     time_meas_fd = fopen(time_meas_fname,"w");
     if (time_meas_fd==NULL) {
       fprintf(stderr,"Cannot create file %s!\n",time_meas_fname);
@@ -914,6 +929,11 @@ int main(int argc, char **argv)
       else
         sprintf(csv_fname,"dout_tx%d_r%d_ch%d_%d_rnd%d_mcs%d_mcsi%d_sh%d_%d_csi.m",transmission_mode,rx_type, channel_model, n_frames, num_rounds, mcs1, mcs2, dlsch_demod_shift, n_ch_rlz);
 
+    if(-1 == (access(csv_fname,F_OK))){
+      creat(csv_fname, 0644);
+    }else{
+      chmod(csv_fname, 0644);
+    }
     csv_fd = fopen(csv_fname,"w");
     fprintf(csv_fd,"data_all%d=[",mcs1);
     if (csv_fd==NULL) {

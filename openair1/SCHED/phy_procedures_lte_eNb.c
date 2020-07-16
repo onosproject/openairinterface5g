@@ -96,9 +96,9 @@ int16_t get_hundred_times_delta_IF_eNB(PHY_VARS_eNB *eNB,uint16_t UE_id,uint8_t 
     // This is the formula from Section 5.1.1.1 in 36.213 10*log10(deltaIF_PUSCH = (2^(MPR*Ks)-1)*beta_offset_pusch)
     if (bw_factor == 1) {
       uint8_t nb_rb = eNB->ulsch[UE_id]->harq_processes[harq_pid]->nb_rb;
-      return(hundred_times_delta_TF[MPR_x100/6]+10*dB_fixed_times10((beta_offset_pusch)>>3)) + hundred_times_log10_NPRB[nb_rb-1];
+      return(hundred_times_delta_TF[MPR_x100/6]+10*dB_fixed_x10((beta_offset_pusch)>>3)) + hundred_times_log10_NPRB[nb_rb-1];
     } else
-      return(hundred_times_delta_TF[MPR_x100/6]+10*dB_fixed_times10((beta_offset_pusch)>>3));
+      return(hundred_times_delta_TF[MPR_x100/6]+10*dB_fixed_x10((beta_offset_pusch)>>3));
   } else {
     return(0);
   }
@@ -620,8 +620,7 @@ void fill_sr_indication(int UEid, PHY_VARS_eNB *eNB,uint16_t rnti,int frame,int 
   //  pdu->rx_ue_information.handle                       = handle;
   pdu->rx_ue_information.tl.tag                       = NFAPI_RX_UE_INFORMATION_TAG;
   pdu->rx_ue_information.rnti                         = rnti;
-  int SNRtimes10 = dB_fixed_times10(stat) - 10 * eNB->measurements.n0_subband_power_dB[0][0];
-  LOG_D(PHY,"stat %d subbandpower %d, SNRtimes10 %d\n", stat, eNB->measurements.n0_subband_power_dB[0][0], SNRtimes10);
+  int SNRtimes10 = dB_fixed_x10(stat) - 10 * eNB->measurements.n0_pucch_dB - 10 * eNB->pucch1_DTX_threshold;
   pdu->ul_cqi_information.tl.tag = NFAPI_UL_CQI_INFORMATION_TAG;
 
   if      (SNRtimes10 < -640) pdu->ul_cqi_information.ul_cqi=0;
@@ -654,6 +653,8 @@ uci_procedures(PHY_VARS_eNB *eNB,
   LTE_eNB_UCI *uci = NULL;
   LTE_DL_FRAME_PARMS *fp = &(eNB->frame_parms);
 
+  calc_pucch_1x_interference(eNB, frame, subframe, 0);
+  
   for (int i = 0; i < NUMBER_OF_UCI_VARS_MAX; i++) {
     uci = &(eNB->uci_vars[i]);
 
@@ -1500,9 +1501,9 @@ void fill_rx_indication(PHY_VARS_eNB *eNB,
 
   pdu->rx_indication_rel8.timing_advance = timing_advance_update;
   // estimate UL_CQI for MAC (from antenna port 0 only)
-  int SNRtimes10 = dB_fixed_times10(eNB->pusch_vars[UE_id]->ulsch_power[0]) - dB_fixed_times10(eNB->pusch_vars[UE_id]->ulsch_interference_power[0]);
+  int SNRtimes10 = dB_fixed_x10(eNB->pusch_vars[UE_id]->ulsch_power[0]) - dB_fixed_x10(eNB->pusch_vars[UE_id]->ulsch_interference_power[0]);
   
-  if(dB_fixed_times10(eNB->pusch_vars[UE_id]->ulsch_power[0]) > 500) {
+  if(dB_fixed_x10(eNB->pusch_vars[UE_id]->ulsch_power[0]) > eNB->pusch_signal_threshold) {
     SNRtimes10 = 300;
   }
 
@@ -1514,7 +1515,7 @@ void fill_rx_indication(PHY_VARS_eNB *eNB,
     pdu->rx_indication_rel8.ul_cqi = (640 + SNRtimes10) / 5;
 
   LOG_D(PHY,"[PUSCH %d] Frame %d Subframe %d Filling RX_indication with SNR %d (%d) signal %d noise %d, timing_advance %d (update %d)\n",
-        harq_pid,frame,subframe,SNRtimes10,pdu->rx_indication_rel8.ul_cqi,dB_fixed_times10(eNB->pusch_vars[UE_id]->ulsch_power[0]),dB_fixed_times10(eNB->pusch_vars[UE_id]->ulsch_interference_power[0]),pdu->rx_indication_rel8.timing_advance,
+        harq_pid,frame,subframe,SNRtimes10,pdu->rx_indication_rel8.ul_cqi,dB_fixed_x10(eNB->pusch_vars[UE_id]->ulsch_power[0]),dB_fixed_x10(eNB->pusch_vars[UE_id]->ulsch_interference_power[0]),pdu->rx_indication_rel8.timing_advance,
         timing_advance_update);
   eNB->UL_INFO.rx_ind.rx_indication_body.number_of_pdus++;
   eNB->UL_INFO.rx_ind.sfn_sf = frame<<4 | subframe;
@@ -1839,7 +1840,7 @@ void fill_uci_harq_indication (int UEid, PHY_VARS_eNB *eNB, LTE_eNB_UCI *uci, in
   pdu->rx_ue_information.rnti                         = uci->rnti;
   // estimate UL_CQI for MAC (from antenna port 0 only)
   pdu->ul_cqi_information.tl.tag = NFAPI_UL_CQI_INFORMATION_TAG;
-  int SNRtimes10 = dB_fixed_times10(uci->stat) - 10 * eNB->measurements.n0_subband_power_dB[0][0];
+  int SNRtimes10 = dB_fixed_x10(uci->stat) - 10 * eNB->measurements.n0_pucch_dB - 10 * eNB->pucch1ab_DTX_threshold;
 
   if (SNRtimes10 < -100)
     LOG_I (PHY, "uci->stat %d \n", uci->stat);
@@ -1864,7 +1865,7 @@ void fill_uci_harq_indication (int UEid, PHY_VARS_eNB *eNB, LTE_eNB_UCI *uci, in
       }
       pdu->harq_indication_fdd_rel13.harq_tb_n[0] = harq_ack[0];
       // release DLSCH if needed
-      release_harq(eNB,UE_id,0,frame,subframe,0xffff, harq_ack[0] == 1);
+      release_harq(eNB,UE_id,0,frame,subframe,0xffff, harq_ack[0] == 1 || harq_ack[0] == 4);
     } else if (uci->pucch_fmt == pucch_format1b) {
       pdu->harq_indication_fdd_rel13.tl.tag = NFAPI_HARQ_INDICATION_FDD_REL13_TAG;
       pdu->harq_indication_fdd_rel13.mode = 0;
@@ -1881,8 +1882,8 @@ void fill_uci_harq_indication (int UEid, PHY_VARS_eNB *eNB, LTE_eNB_UCI *uci, in
       pdu->harq_indication_fdd_rel13.harq_tb_n[0] = harq_ack[0];
       pdu->harq_indication_fdd_rel13.harq_tb_n[1] = harq_ack[1];
       // release DLSCH if needed
-      release_harq(eNB,UE_id,0,frame,subframe,0xffff, harq_ack[0] == 1);
-      release_harq(eNB,UE_id,1,frame,subframe,0xffff, harq_ack[1] == 1);
+      release_harq(eNB,UE_id,0,frame,subframe,0xffff, harq_ack[0] == 1 || harq_ack[0] == 4);
+      release_harq(eNB,UE_id,1,frame,subframe,0xffff, harq_ack[1] == 1 || harq_ack[0] == 4);
     } else {
       LOG_E(PHY,"only format 1a/b for now, received %d\n",uci->pucch_fmt);
       return;
@@ -1909,7 +1910,7 @@ void fill_uci_harq_indication (int UEid, PHY_VARS_eNB *eNB, LTE_eNB_UCI *uci, in
           }
           pdu->harq_indication_tdd_rel13.harq_data[0].bundling.value_0 = harq_ack[0];
           // release all bundled DLSCH if needed
-          release_harq(eNB,UE_id,0,frame,subframe,0xffff, harq_ack[0] == 1);
+          release_harq(eNB,UE_id,0,frame,subframe,0xffff, harq_ack[0] == 1 || harq_ack[0] == 4);
         } else if (uci->pucch_fmt == pucch_format1b) {
           pdu->harq_indication_tdd_rel13.number_of_ack_nack = 2;
           if (harq_ack[0] != 1 && harq_ack[0] != 2 && harq_ack[0] != 4) {
@@ -1924,8 +1925,8 @@ void fill_uci_harq_indication (int UEid, PHY_VARS_eNB *eNB, LTE_eNB_UCI *uci, in
           pdu->harq_indication_tdd_rel13.harq_data[0].bundling.value_0 = harq_ack[0];
           pdu->harq_indication_tdd_rel13.harq_data[1].bundling.value_0 = harq_ack[1];
           // release all DLSCH if needed
-          release_harq(eNB,UE_id,0,frame,subframe,0xffff, harq_ack[0] == 1);
-          release_harq(eNB,UE_id,1,frame,subframe,0xffff, harq_ack[1] == 1);
+          release_harq(eNB,UE_id,0,frame,subframe,0xffff, harq_ack[0] == 1 || harq_ack[0] == 4);
+          release_harq(eNB,UE_id,1,frame,subframe,0xffff, harq_ack[1] == 1 || harq_ack[0] == 4);
         }
 
         break;
@@ -1945,7 +1946,7 @@ void fill_uci_harq_indication (int UEid, PHY_VARS_eNB *eNB, LTE_eNB_UCI *uci, in
           }
           pdu->harq_indication_tdd_rel13.harq_data[0].multiplex.value_0 = harq_ack[0];
           // release all DLSCH if needed
-          release_harq(eNB,UE_id,0,frame,subframe,0xffff, harq_ack[0] == 1);
+          release_harq(eNB,UE_id,0,frame,subframe,0xffff, harq_ack[0] == 1  || harq_ack[0] == 4);
         } else if (uci->num_pucch_resources == 1 && uci->pucch_fmt == pucch_format1b) {
           pdu->harq_indication_tdd_rel13.tl.tag = NFAPI_HARQ_INDICATION_TDD_REL13_TAG;
           pdu->harq_indication_tdd_rel13.number_of_ack_nack = 2;
@@ -1960,8 +1961,8 @@ void fill_uci_harq_indication (int UEid, PHY_VARS_eNB *eNB, LTE_eNB_UCI *uci, in
           pdu->harq_indication_tdd_rel13.harq_data[0].multiplex.value_0 = harq_ack[0];
           pdu->harq_indication_tdd_rel13.harq_data[1].multiplex.value_0 = harq_ack[1];
           // release all DLSCH if needed
-          release_harq(eNB,UE_id,0,frame,subframe,0xffff, harq_ack[0] == 1);
-          release_harq(eNB,UE_id,1,frame,subframe,0xffff, harq_ack[1] == 1);
+          release_harq(eNB,UE_id,0,frame,subframe,0xffff, harq_ack[0] == 1 || harq_ack[0] == 4);
+          release_harq(eNB,UE_id,1,frame,subframe,0xffff, harq_ack[1] == 1 || harq_ack[0] == 4);
         } else { // num_pucch_resources (M) > 1
           pdu->harq_indication_tdd_rel13.tl.tag = NFAPI_HARQ_INDICATION_TDD_REL13_TAG;
           pdu->harq_indication_tdd_rel13.number_of_ack_nack = uci->num_pucch_resources;

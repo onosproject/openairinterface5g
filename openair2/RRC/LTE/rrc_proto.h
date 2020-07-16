@@ -350,6 +350,12 @@ void *rrc_enb_process_itti_msg(void *);
    \param void *args_p Pointer on arguments to start the task. */
 void *rrc_enb_task(void *args_p);
 
+#if defined(PRE_SCD_THREAD)
+/**\brief MAC eNB Pre SCD task.
+   \param void *args_p Pointer on arguments to start the task. */
+void *pre_scd_task(void *args_p);
+#endif
+
 /**\brief RRC UE task.
    \param void *args_p Pointer on arguments to start the task. */
 void *rrc_ue_task(void *args_p);
@@ -675,5 +681,7 @@ extern pthread_mutex_t      lock_ue_freelist;
 void remove_UE_from_freelist(module_id_t mod_id, rnti_t rnti);
 void put_UE_in_freelist(module_id_t mod_id, rnti_t rnti, boolean_t removeFlag);
 void release_UE_in_freeList(module_id_t mod_id);
+
+uint8_t rrc_eNB_get_voice_flg(rrc_eNB_ue_context_t *ue_context_pP, uint8_t e_rab_idP, const uint8_t xid);
 
 /** @}*/

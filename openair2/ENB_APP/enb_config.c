@@ -173,6 +173,10 @@ void RCconfig_L1(void) {
         RC.eNB[j][0]->pucch1_DTX_threshold_emtc[ce_level]   = *(L1_ParamList.paramarray[j][L1_PUCCH1_DTX_EMTC0_THRESHOLD_IDX+ce_level].iptr);
         RC.eNB[j][0]->pucch1ab_DTX_threshold_emtc[ce_level] = *(L1_ParamList.paramarray[j][L1_PUCCH1AB_DTX_EMTC0_THRESHOLD_IDX+ce_level].iptr);
       }
+
+
+      RC.eNB[j][0]->pusch_signal_threshold    = *(L1_ParamList.paramarray[j][L1_PUSCH_SIGNAL_THRESHOLD_IDX].iptr);
+      LOG_I(ENB_APP,"PUSCH singal threshold = %d \n",RC.eNB[j][0]->pusch_signal_threshold);
     }// j=0..num_inst
 
     LOG_I(ENB_APP,"Initializing northbound interface for L1\n");
@@ -269,6 +273,14 @@ void RCconfig_macrlc(int macrlc_has_f1[MAX_MAC_INST]) {
         global_scheduler_mode=SCHED_MODE_DEFAULT;
         printf("sched mode = default %d [%s]\n",global_scheduler_mode,*(MacRLC_ParamList.paramarray[j][MACRLC_SCHED_MODE_IDX].strptr));
       }
+
+
+      // Volte cycle num
+      for (int CC_id = 0; CC_id < MAX_NUM_CCs; CC_id++){
+        RC.mac[j]->volte_ul_cycle[CC_id] = 0;
+        RC.mac[j]->volte_dl_cycle[CC_id] = 0;
+      }
+
     }// j=0..num_inst
   } /*else {// MacRLC_ParamList.numelt > 0 // ignore it
 
@@ -1721,6 +1733,28 @@ int RCconfig_RRC(uint32_t i, eNB_RRC_INST *rrc, int macrlc_has_f1) {
                   exit_fun("Failed to parse eNB configuration file");
               }
 
+              // VoLTE configuration
+//              RRC_CONFIGURATION_REQ (msg_p).radioresourceconfig[j].volte_ul_cycle= ccparams_lte.volte_ul_cycle;
+//              if ((ccparams_lte.volte_ul_cycle < 10) ||
+//                      (ccparams_lte.volte_ul_cycle > 200))
+//                    AssertFatal (0,
+//                                 "Failed to parse eNB configuration file %s, enb %d unknown value \"%d\" for volte_ul_cycle choice: 10..200!\n",
+//                                 RC.config_file_name, i, ccparams_lte.volte_ul_cycle);
+
+//              RRC_CONFIGURATION_REQ (msg_p).radioresourceconfig[j].volte_dl_cycle= ccparams_lte.volte_dl_cycle;
+//             if ((ccparams_lte.volte_dl_cycle < 10) ||
+//                      (ccparams_lte.volte_dl_cycle > 200))
+//                    AssertFatal (0,
+//                                 "Failed to parse eNB configuration file %s, enb %d unknown value \"%d\" for volte_dl_cycle choice: 10..200!\n",
+//                                 RC.config_file_name, i, ccparams_lte.volte_dl_cycle);
+
+              RRC_CONFIGURATION_REQ (msg_p).radioresourceconfig[j].volte_ul_buffersize= ccparams_lte.volte_ul_buffersize;
+              if ((ccparams_lte.volte_ul_buffersize < 0) ||
+                      (ccparams_lte.volte_ul_buffersize > 255))
+                    AssertFatal (0,
+                                 "Failed to parse eNB configuration file %s, enb %d unknown value \"%d\" for volte_ul_buffersize choice: 0..255!\n",
+                                RC.config_file_name, i, ccparams_lte.volte_ul_buffersize);
+
               // eMBMS configuration
               RRC_CONFIGURATION_REQ(msg_p).eMBMS_configured = 0;
               printf("No eMBMS configuration, skipping it\n");
@@ -2755,6 +2789,65 @@ int RCconfig_S1(
                          "    tracking_area_code  =  1; // no string!!\n"
                          "    plmn_list = ( { mcc = 208; mnc = 93; mnc_length = 2; } )\n");
               exit_fun("It seems that you use an old configuration file. Please change the existing");
+            }
+            if(*ENBParamList.paramarray[k][ENB_S1SETUP_RSP_TIMER_IDX].uptr <= 0xffff)
+            {
+              S1AP_REGISTER_ENB_REQ(msg_p).s1_setuprsp_wait_timer = *ENBParamList.paramarray[k][ENB_S1SETUP_RSP_TIMER_IDX].uptr;
+            }
+            else
+            {
+              LOG_E(S1AP, 
+                    "s1setup_rsp_timer value in conf file is invalid (%d). Default value is set.\n",
+                    *ENBParamList.paramarray[k][ENB_S1SETUP_RSP_TIMER_IDX].uptr);
+              S1AP_REGISTER_ENB_REQ(msg_p).s1_setuprsp_wait_timer = 5;
+            }
+
+            if(*ENBParamList.paramarray[k][ENB_S1SETUP_REQ_TIMER_IDX].uptr <= 0xffff)
+            {
+              S1AP_REGISTER_ENB_REQ(msg_p).s1_setupreq_wait_timer = *ENBParamList.paramarray[k][ENB_S1SETUP_REQ_TIMER_IDX].uptr;
+            }
+            else
+            {
+              LOG_E(S1AP, 
+                    "s1setup_req_timer value in conf file is invalid (%d). Default value is set.\n",
+                    *ENBParamList.paramarray[k][ENB_S1SETUP_REQ_TIMER_IDX].uptr);
+              S1AP_REGISTER_ENB_REQ(msg_p).s1_setupreq_wait_timer = 5;
+            }
+
+            if(*ENBParamList.paramarray[k][ENB_S1SETUP_REQ_COUNT_IDX].uptr <= 0xffff)
+            {
+              S1AP_REGISTER_ENB_REQ(msg_p).s1_setupreq_count = *ENBParamList.paramarray[k][ENB_S1SETUP_REQ_COUNT_IDX].uptr;
+            }
+            else
+            {
+              LOG_E(S1AP, 
+                    "s1setup_req_count value in conf file is invalid (%d). Default value is set.\n",
+                    *ENBParamList.paramarray[k][ENB_S1SETUP_REQ_COUNT_IDX].uptr);
+              S1AP_REGISTER_ENB_REQ(msg_p).s1_setupreq_count = 0xffff;
+            }
+
+            if(*ENBParamList.paramarray[k][ENB_SCTP_REQ_TIMER_IDX].uptr <= 0xffff)
+            {
+              S1AP_REGISTER_ENB_REQ(msg_p).sctp_req_timer = *ENBParamList.paramarray[k][ENB_SCTP_REQ_TIMER_IDX].uptr;
+            }
+            else
+            {
+              LOG_E(S1AP, 
+                    "sctp_req_timer value in conf file is invalid (%d). Default value is set.\n",
+                    *ENBParamList.paramarray[k][ENB_SCTP_REQ_TIMER_IDX].uptr);
+              S1AP_REGISTER_ENB_REQ(msg_p).sctp_req_timer = 180;
+            }
+
+            if(*ENBParamList.paramarray[k][ENB_SCTP_REQ_COUNT_IDX].uptr <= 0xffff)
+            {
+              S1AP_REGISTER_ENB_REQ(msg_p).sctp_req_count = *ENBParamList.paramarray[k][ENB_SCTP_REQ_COUNT_IDX].uptr;
+            }
+            else
+            {
+              LOG_E(S1AP, 
+                    "sctp_req_count value in conf file is invalid (%d). Default value is set.\n",
+                    *ENBParamList.paramarray[k][ENB_SCTP_REQ_COUNT_IDX].uptr);
+              S1AP_REGISTER_ENB_REQ(msg_p).sctp_req_count = 0xffff;
             }
             config_getlist(&PLMNParamList, PLMNParams, sizeof(PLMNParams)/sizeof(paramdef_t), aprefix);
 

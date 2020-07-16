@@ -452,16 +452,14 @@ rlc_op_status_t rlc_data_req     (const protocol_ctxt_t *const ctxt_pP,
         break;
 
       case RLC_MODE_UM:
-#if 0
         /* TODO: this is a hack, needs better solution. Let's not use too
          * much memory and store at maximum 5 millions bytes.
          */
         /* look for HACK_RLC_UM_LIMIT for others places related to the hack. Please do not remove this comment. */
-        if (rlc_um_get_buffer_occupancy(&rlc_union_p->rlc.um) > 5000000) {
+        if (rlc_um_get_buffer_occupancy(&rlc_union_p->rlc.um) > 32000000) {
           free_mem_block(sdu_pP, __func__);
           return RLC_OP_STATUS_OUT_OF_RESSOURCES;
         }
-#endif
         new_sdu_p = get_free_mem_block (sdu_sizeP + sizeof (struct rlc_um_data_req_alloc), __func__);
 
         if (new_sdu_p != NULL) {

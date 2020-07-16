@@ -693,6 +693,11 @@ static void *UE_thread_synch(void *arg)
               FILE *fd;
 
               if ((UE->proc.proc_rxtx[0].frame_rx&1) == 0) {  // this guarantees SIB1 is present
+                  if(-1 == (access("rxsig_frame0.dat",F_OK))){
+                    creat("rxsig_frame0.dat", 0644);
+                  }else{
+                    chmod("rxsig_frame0.dat", 0644);
+                  }
                 if ((fd = fopen("rxsig_frame0.dat","w")) != NULL) {
                   fwrite((void *)&UE->common_vars.rxdata[0][0],
                          sizeof(int32_t),
@@ -724,7 +729,11 @@ static void *UE_thread_synch(void *arg)
             if (abs(freq_offset) > 7500) {
               LOG_I( PHY, "[initial_sync] No cell synchronization found, abandoning\n" );
               FILE *fd;
-
+              if(-1 == (access("rxsig_frame0.dat",F_OK))){
+                creat("rxsig_frame0.dat", 0644);
+              }else{
+                chmod("rxsig_frame0.dat", 0644);
+              }
               if ((fd = fopen("rxsig_frame0.dat","w"))!=NULL) {
                 fwrite((void *)&UE->common_vars.rxdata[0][0],
                        sizeof(int32_t),

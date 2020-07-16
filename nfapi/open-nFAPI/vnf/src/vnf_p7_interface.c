@@ -493,6 +493,11 @@ int nfapi_vnf_p7_time(nfapi_vnf_p7_config_t* config){
     // pselect timed out
 
 #ifdef LOG
+	if(-1 == (access(LOGFILE_PATH,F_OK))){
+		creat(LOGFILE_PATH, 0644);
+	}else{
+		chmod(LOGFILE_PATH, 0644);
+	}
  	fp = fopen(LOGFILE_PATH, "a");
 #endif
 

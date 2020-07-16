@@ -59,6 +59,11 @@ int main(int n, char **v)
 
   if (out_filename == NULL) out = stdout;
   else {
+    if(-1 == (access(out_filename,F_OK))){
+      creat(out_filename, 0644);
+    }else{
+      chmod(out_filename, 0644);
+    }
     out = fopen(out_filename, "w");
     if (out == NULL) { perror(out_filename); exit(1); }
   }

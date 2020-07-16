@@ -797,6 +797,11 @@ static int xml_parse_doc(xmlDocPtr doc) {
     FILE *dissect_file = NULL;
 
     if (ui_main_data.dissect_file_name != NULL) {
+        if(-1 == (access(ui_main_data.dissect_file_name,F_OK))){
+            creat(ui_main_data.dissect_file_name, 0644);
+        }else{
+            chmod(ui_main_data.dissect_file_name, 0644);
+        }
         dissect_file = fopen (ui_main_data.dissect_file_name, "w");
     }
 

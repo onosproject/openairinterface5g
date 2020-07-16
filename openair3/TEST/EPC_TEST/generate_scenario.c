@@ -238,6 +238,11 @@ int generate_test_scenario(const char const * test_nameP, const char const * pdm
     sprintf(test_scenario_filename,"%s",pdml_in_basenameP);
     if (strip_extension(test_scenario_filename) > 0) {
       strcat(test_scenario_filename, ".xml");
+      if(-1 == (access(test_scenario_filename,F_OK))){
+        creat(test_scenario_filename, 0644);
+      }else{
+        chmod(test_scenario_filename, 0644);
+      }
       test_scenario_file = fopen( test_scenario_filename, "w+");
       if (NULL != test_scenario_file) {
         xsltSaveResultToFile(test_scenario_file, res, cur);

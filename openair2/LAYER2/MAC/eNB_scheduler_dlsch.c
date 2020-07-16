@@ -1451,6 +1451,7 @@ schedule_ue_spec_br(module_id_t module_idP,
 
           /* Reset ta_update */
           ue_sched_ctl->ta_update = 31;
+          ue_sched_ctl->ta_update_f = 31.0;
         } else {
           ta_update = 31;
         }
@@ -2435,7 +2436,7 @@ schedule_PCH(module_id_t module_idP,
           dl_config_pdu->pdu_size                                                        = (uint8_t)(2 + sizeof(nfapi_dl_config_dlsch_pdu));
           dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.pdu_index                              = eNB->pdu_index[CC_id];
           dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.rnti                                   = 0xFFFE;
-          dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.tl.tag                                 = NFAPI_DL_CONFIG_REQUEST_DCI_DL_PDU_REL8_TAG;
+          dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.tl.tag                                 = NFAPI_DL_CONFIG_REQUEST_DLSCH_PDU_REL8_TAG;
           dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.length                                 = pcch_sdu_length;
 #ifdef FORMAT1C
           dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.resource_allocation_type               = 3;   // format 1C
@@ -2450,7 +2451,7 @@ schedule_PCH(module_id_t module_idP,
           dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.virtual_resource_block_assignment_flag = 0;   // localized
 #endif
           dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.modulation                             = 2; //QPSK
-          dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.redundancy_version                     = 1;
+          dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.redundancy_version                     = 0;
           dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.transport_blocks                       = 1;// first block
           dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.transport_block_to_codeword_swap_flag  = 0;
           dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.transmission_scheme                    = (cc->p_eNB==1 ) ? 0 : 1;
@@ -2469,6 +2470,8 @@ schedule_PCH(module_id_t module_idP,
           dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.num_bf_prb_per_subband                 = 1;
           dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.num_bf_vector                          = 1;
           dl_config_pdu->dlsch_pdu.dlsch_pdu_rel10.pdsch_start                           = 3;
+          dl_config_pdu->dlsch_pdu.dlsch_pdu_rel10.tl.tag                                = NFAPI_DL_CONFIG_REQUEST_DLSCH_PDU_REL10_TAG;
+          dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.tl.tag                                = NFAPI_DL_CONFIG_REQUEST_DLSCH_PDU_REL13_TAG;
           dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.ue_type                               = 0; // regular UE
           dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.pdsch_payload_type                    = 2; // not BR
           dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.initial_transmission_sf_io            = 0xFFFF;

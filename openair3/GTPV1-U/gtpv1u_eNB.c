@@ -447,7 +447,7 @@ NwGtpv1uRcT gtpv1u_eNB_process_stack_req(
           if (ctxt.configured == FALSE )
             LOG_W(GTPU, "PDCP data request failed, cause: [UE:%x]RB is not configured!\n", ctxt.rnti) ;
           else
-            LOG_W(GTPU, "PDCP data request failed\n");
+            LOG_D(GTPU, "PDCP data request failed\n");
 
           return NW_GTPV1U_FAILURE;
         }

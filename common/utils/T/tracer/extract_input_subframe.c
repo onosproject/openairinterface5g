@@ -68,6 +68,11 @@ int main(int n, char **v)
     exit(1);
   }
 
+  if(-1 == (access(output_file,F_OK))){
+    creat(output_file, 0644);
+  }else{
+    chmod(output_file, 0644);
+  }
   out = fopen(output_file, "w"); if(out==NULL){perror(output_file);exit(1);}
 
   database = parse_database(database_filename);

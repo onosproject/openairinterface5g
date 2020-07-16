@@ -80,6 +80,11 @@ static void *scope_thread_UE(void *arg) {
   sched_setscheduler(0, SCHED_FIFO,&sched_param);
   printf("Scope thread has priority %d\n",sched_param.sched_priority);
 # ifdef ENABLE_XFORMS_WRITE_STATS
+  if(-1 == (access("UE_stats.txt",F_OK))){
+    creat("UE_stats.txt", 0644);
+  }else{
+    chmod("UE_stats.txt", 0644);
+  }
   UE_stats  = fopen("UE_stats.txt", "w");
 #endif
 

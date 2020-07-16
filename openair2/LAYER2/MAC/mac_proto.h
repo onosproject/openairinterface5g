@@ -1215,13 +1215,15 @@ void sort_lcid_priority(module_id_t module_id, int UE_id, int dl_dtch_num, int *
 void pre_scd_nb_rbs_required(    module_id_t     module_idP,
                                  frame_t         frameP,
                                  sub_frame_t     subframeP,
-                                 int             min_rb_unit[MAX_NUM_CCs],
-                                 uint16_t        nb_rbs_required[MAX_NUM_CCs][NUMBER_OF_UE_MAX]);
+                                 int             min_rb_unit[MAX_NUM_CCs]);
 #endif
 
 /* DRX Configuration */
 /* Configure local DRX timers and thresholds in UE context, following the drx_configuration input */
 void eNB_Config_Local_DRX(instance_t Mod_id, rrc_mac_drx_config_req_t *rrc_mac_drx_config_req);                        
+
+/* VoLTE Configuration */
+void eNB_mac_config_VoLTE(module_id_t Mod_idP, rnti_t rntiP, u_int8_t voice_flg, u_int8_t logicalChannelGroup, u_int8_t logicalChannelIdentity);
 
 /* from here: prototypes to get rid of compilation warnings: doc to be written by function author */
 uint8_t ul_subframe2_k_phich(COMMON_channels_t *cc, sub_frame_t ul_subframe);

@@ -351,6 +351,11 @@ static int ui_messages_file_write(char *file_name, gboolean filtered)
         return RC_FAIL;
     }
 
+    if(-1 == (access(file_name,F_OK))){
+        creat(file_name, 0644);
+    }else{
+        chmod(file_name, 0644);
+    }
     messages_file = fopen (file_name, "w");
     if (messages_file == NULL)
     {

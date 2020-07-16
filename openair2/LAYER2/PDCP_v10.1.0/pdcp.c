@@ -125,6 +125,7 @@ boolean_t pdcp_data_req(
   hashtable_rc_t     h_rc;
   uint8_t            rb_offset= (srb_flagP == 0) ? DTCH -1 : 0;
   uint16_t           pdcp_uid=0;
+  int UE_id = -1;
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PDCP_DATA_REQ,VCD_FUNCTION_IN);
   CHECK_CTXT_ARGS(ctxt_pP);
 #if T_TRACER
@@ -406,7 +407,14 @@ boolean_t pdcp_data_req(
             break;
 
           case RLC_OP_STATUS_OUT_OF_RESSOURCES:
-            LOG_W(PDCP, "Data sending request over RLC failed with 'Out of Resources' reason!\n");
+            UE_id = find_UE_id(ctxt_pP->module_id, ctxt_pP->rnti);
+            if(UE_id != -1){
+              pthread_mutex_lock(&(RC.mac[ctxt_pP->module_id]->UE_info.UE_sched_ctrl[UE_id].rlc_out_of_resources_lock));
+              RC.mac[ctxt_pP->module_id]->UE_info.UE_sched_ctrl[UE_id].rlc_out_of_resources_cnt++;
+              pthread_mutex_unlock(&(RC.mac[ctxt_pP->module_id]->UE_info.UE_sched_ctrl[UE_id].rlc_out_of_resources_lock));
+            }
+            LOG_D(PDCP, "Data sending request over RLC failed with 'Out of Resources' reason!\n");
+            ret= FALSE;
             break;
 
           default:
@@ -463,7 +471,13 @@ boolean_t pdcp_data_req(
             break;
 
           case RLC_OP_STATUS_OUT_OF_RESSOURCES:
-            LOG_W(PDCP, "Data sending request over RLC failed with 'Out of Resources' reason!\n");
+            UE_id = find_UE_id(ctxt_pP->module_id, ctxt_pP->rnti);
+            if(UE_id != -1){
+              pthread_mutex_lock(&(RC.mac[ctxt_pP->module_id]->UE_info.UE_sched_ctrl[UE_id].rlc_out_of_resources_lock));
+              RC.mac[ctxt_pP->module_id]->UE_info.UE_sched_ctrl[UE_id].rlc_out_of_resources_cnt++;
+              pthread_mutex_unlock(&(RC.mac[ctxt_pP->module_id]->UE_info.UE_sched_ctrl[UE_id].rlc_out_of_resources_lock));
+            }
+            LOG_D(PDCP, "Data sending request over RLC failed with 'Out of Resources' reason!\n");
             ret= FALSE;
             break;
 
