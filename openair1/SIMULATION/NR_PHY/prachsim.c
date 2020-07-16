@@ -60,6 +60,7 @@ uint16_t NB_UE_INST=1;
 openair0_config_t openair0_cfg[MAX_CARDS];
 uint8_t nfapi_mode=0;
 int sl_ahead = 0;
+uint32_t target_dl_mcs;
 
 //void dump_nr_prach_config(NR_DL_FRAME_PARMS *frame_parms,uint8_t subframe);
 

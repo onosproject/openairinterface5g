@@ -76,6 +76,7 @@ double cpuf;
 
 int sf_ahead=4 ;
 int sl_ahead=0;
+uint32_t target_dl_mcs;
 uint8_t nfapi_mode = 0;
 uint16_t NB_UE_INST = 1;
 uint64_t downlink_frequency[MAX_NUM_CCs][4];
@@ -383,6 +384,7 @@ int main(int argc, char **argv)
 
     case 'e':
       dlsch_config.mcsIndex[0] = atoi(optarg);
+      target_dl_mcs = atoi(optarg);
       mcsIndex_set=1;
       break;
 
