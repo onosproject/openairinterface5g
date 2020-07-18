@@ -399,11 +399,16 @@ boolean_t pdcp_data_req(
             break;
 
           case RLC_OP_STATUS_OUT_OF_RESSOURCES:
-            UE_id = find_UE_id(ctxt_pP->module_id, ctxt_pP->rnti);
-            if(UE_id != -1){
-              pthread_mutex_lock(&(RC.mac[ctxt_pP->module_id]->UE_list.UE_sched_ctrl[UE_id].rlc_out_of_resources_lock));
-              RC.mac[ctxt_pP->module_id]->UE_list.UE_sched_ctrl[UE_id].rlc_out_of_resources_cnt++;
-              pthread_mutex_unlock(&(RC.mac[ctxt_pP->module_id]->UE_list.UE_sched_ctrl[UE_id].rlc_out_of_resources_lock));
+
+            for (UE_id = 0; UE_id < MAX_MOBILES_PER_ENB; UE_id++) {
+              if (RC.mac[ctxt_pP->module_id]->UE_list.active[UE_id] == TRUE) {
+                if (RC.mac[ctxt_pP->module_id]->UE_list.UE_template[RC.mac[ctxt_pP->module_id]->UE_list.pCC_id[UE_id]][UE_id].rnti == ctxt_pP->rnti) {
+                    pthread_mutex_lock(&(RC.mac[ctxt_pP->module_id]->UE_list.UE_sched_ctrl[UE_id].rlc_out_of_resources_lock));
+                    RC.mac[ctxt_pP->module_id]->UE_list.UE_sched_ctrl[UE_id].rlc_out_of_resources_cnt++;
+                    pthread_mutex_unlock(&(RC.mac[ctxt_pP->module_id]->UE_list.UE_sched_ctrl[UE_id].rlc_out_of_resources_lock));
+                    break;
+                }
+              }
             }
             LOG_D(PDCP, "Data sending request over RLC failed with 'Out of Resources' reason!\n");
             ret= FALSE;
@@ -464,11 +469,16 @@ boolean_t pdcp_data_req(
             break;
 
           case RLC_OP_STATUS_OUT_OF_RESSOURCES:
-            UE_id = find_UE_id(ctxt_pP->module_id, ctxt_pP->rnti);
-            if(UE_id != -1){
-              pthread_mutex_lock(&(RC.mac[ctxt_pP->module_id]->UE_list.UE_sched_ctrl[UE_id].rlc_out_of_resources_lock));
-              RC.mac[ctxt_pP->module_id]->UE_list.UE_sched_ctrl[UE_id].rlc_out_of_resources_cnt++;
-              pthread_mutex_unlock(&(RC.mac[ctxt_pP->module_id]->UE_list.UE_sched_ctrl[UE_id].rlc_out_of_resources_lock));
+
+            for (UE_id = 0; UE_id < MAX_MOBILES_PER_ENB; UE_id++) {
+              if (RC.mac[ctxt_pP->module_id]->UE_list.active[UE_id] == TRUE) {
+                if (RC.mac[ctxt_pP->module_id]->UE_list.UE_template[RC.mac[ctxt_pP->module_id]->UE_list.pCC_id[UE_id]][UE_id].rnti == ctxt_pP->rnti) {
+                    pthread_mutex_lock(&(RC.mac[ctxt_pP->module_id]->UE_list.UE_sched_ctrl[UE_id].rlc_out_of_resources_lock));
+                    RC.mac[ctxt_pP->module_id]->UE_list.UE_sched_ctrl[UE_id].rlc_out_of_resources_cnt++;
+                    pthread_mutex_unlock(&(RC.mac[ctxt_pP->module_id]->UE_list.UE_sched_ctrl[UE_id].rlc_out_of_resources_lock));
+                    break;
+                }
+              }
             }
             LOG_D(PDCP, "Data sending request over RLC failed with 'Out of Resources' reason!\n");
             ret= FALSE;

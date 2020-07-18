@@ -5922,13 +5922,13 @@ rrc_eNB_generate_HO_RRCConnectionReconfiguration(const protocol_ctxt_t *const ct
         DRB_rlc_config = CALLOC(1, sizeof(*DRB_rlc_config));
         DRB_config->rlc_Config = DRB_rlc_config;
 #ifdef RRC_DEFAULT_RAB_IS_AM
-        DRB_rlc_config->present = RLC_Config_PR_am;
-        DRB_rlc_config->choice.am.ul_AM_RLC.t_PollRetransmit = T_PollRetransmit_ms50;
-        DRB_rlc_config->choice.am.ul_AM_RLC.pollPDU = PollPDU_p16;
-        DRB_rlc_config->choice.am.ul_AM_RLC.pollByte = PollByte_kBinfinity;
-        DRB_rlc_config->choice.am.ul_AM_RLC.maxRetxThreshold = UL_AM_RLC__maxRetxThreshold_t8;
-        DRB_rlc_config->choice.am.dl_AM_RLC.t_Reordering = T_Reordering_ms35;
-        DRB_rlc_config->choice.am.dl_AM_RLC.t_StatusProhibit = T_StatusProhibit_ms25;
+        DRB_rlc_config->present = LTE_RLC_Config_PR_am;
+        DRB_rlc_config->choice.am.ul_AM_RLC.t_PollRetransmit = LTE_T_PollRetransmit_ms50;
+        DRB_rlc_config->choice.am.ul_AM_RLC.pollPDU = LTE_PollPDU_p16;
+        DRB_rlc_config->choice.am.ul_AM_RLC.pollByte = LTE_PollByte_kBinfinity;
+        DRB_rlc_config->choice.am.ul_AM_RLC.maxRetxThreshold = LTE_UL_AM_RLC__maxRetxThreshold_t8;
+        DRB_rlc_config->choice.am.dl_AM_RLC.t_Reordering = LTE_T_Reordering_ms35;
+        DRB_rlc_config->choice.am.dl_AM_RLC.t_StatusProhibit = LTE_T_StatusProhibit_ms25;
 #else
         DRB_rlc_config->present = LTE_RLC_Config_PR_um_Bi_Directional;
         DRB_rlc_config->choice.um_Bi_Directional.ul_UM_RLC.sn_FieldLength = LTE_SN_FieldLength_size10;
