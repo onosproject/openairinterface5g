@@ -189,7 +189,7 @@ add_msg3(module_id_t module_idP, int CC_id, RA_t *ra, frame_t frameP,
     ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.ul_tx_mode                     = 0;
     ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.current_tx_nb                  = 0;
     ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.n_srs                          = 1;
-    ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.size                           = get_TBS_UL(10, ra->msg3_nb_rb);
+    ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.size                           = get_TBS_UL(ra->msg3_mcs, ra->msg3_nb_rb);
     ul_req_body->number_of_pdus++;
     ul_req_body->tl.tag                                                    = NFAPI_UL_CONFIG_REQUEST_BODY_TAG;
     ul_req->sfn_sf                                                         = ra->Msg3_frame<<4|ra->Msg3_subframe;
@@ -571,6 +571,11 @@ void generate_Msg2(module_id_t module_idP,
         dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.num_bf_prb_per_subband                 = 1;
         dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.num_bf_vector                          = 1;
         //    dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.bf_vector                    = ;
+        // Rel13 fields
+        dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.tl.tag                                = NFAPI_DL_CONFIG_REQUEST_DLSCH_PDU_REL13_TAG;
+        dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.ue_type                               = 0;
+        dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.pdsch_payload_type                    = 2;    // not BR
+        dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.initial_transmission_sf_io            = 0xFFFF;   // absolute SF              = 0;
         dl_req_body->number_pdu++;
         mac->DL_req[CC_idP].sfn_sf = frameP<<4 | subframeP;
         // Program UL processing for Msg3
@@ -978,6 +983,7 @@ generate_Msg4(module_id_t module_idP,
       ul_config_pdu->uci_harq_pdu.ue_information.ue_information_rel8.tl.tag = NFAPI_UL_CONFIG_REQUEST_UE_INFORMATION_REL8_TAG;
       ul_config_pdu->uci_harq_pdu.ue_information.ue_information_rel8.handle = 0;      // don't know how to use this
       ul_config_pdu->uci_harq_pdu.ue_information.ue_information_rel8.rnti = ra->rnti;
+      ul_config_pdu->uci_harq_pdu.ue_information.ue_information_rel8.ue_id = UE_id;
       ul_config_pdu->uci_harq_pdu.ue_information.ue_information_rel13.tl.tag = NFAPI_UL_CONFIG_REQUEST_UE_INFORMATION_REL13_TAG;
       ul_config_pdu->uci_harq_pdu.ue_information.ue_information_rel13.ue_type = (ra->rach_resource_type < 3) ? 1 : 2;
       ul_config_pdu->uci_harq_pdu.ue_information.ue_information_rel13.empty_symbols = 0;

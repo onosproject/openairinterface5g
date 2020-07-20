@@ -331,6 +331,11 @@ void dump_prach_config(LTE_DL_FRAME_PARMS *frame_parms,uint8_t subframe)
 
   FILE *fd;
 
+  if(-1 == (access("prach_config.txt",F_OK))){
+    creat("prach_config.txt", 0644);
+  }else{
+    chmod("prach_config.txt", 0644);
+  }
   fd = fopen("prach_config.txt","w");
   fprintf(fd,"prach_config: subframe          = %d\n",subframe);
   fprintf(fd,"prach_config: N_RB_UL           = %d\n",frame_parms->N_RB_UL);
