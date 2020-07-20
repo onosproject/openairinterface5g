@@ -42,6 +42,7 @@
 #include <error.h>
 #include <time.h>
 #include <unistd.h>
+#include <sys/stat.h>
 
 #include "assertions.h"
 
@@ -696,6 +697,11 @@ void vcd_signal_dumper_init(char *filename)
   if (ouput_vcd) {
     //        char filename[] = "/tmp/openair_vcd_dump.vcd";
 
+    if(-1 == (access(filename,F_OK))){
+      creat(filename, 0644);
+    }else{
+      chmod(filename, 0644);
+    }
     if ((vcd_fd = fopen(filename, "w+")) == NULL) {
       perror("vcd_signal_dumper_init: cannot open file");
       return;
