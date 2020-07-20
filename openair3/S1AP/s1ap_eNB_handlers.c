@@ -273,6 +273,7 @@ int s1ap_eNB_handle_s1_setup_failure(uint32_t               assoc_id,
     S1AP_ERROR("pdu == NULL\n");
     return -1;
   }
+
   container = &pdu->choice.unsuccessfulOutcome.value.choice.S1SetupFailure;
 
   /* S1 Setup Failure == Non UE-related procedure -> stream 0 */
@@ -282,8 +283,6 @@ int s1ap_eNB_handle_s1_setup_failure(uint32_t               assoc_id,
   }
 
   if ((mme_desc_p = s1ap_eNB_get_MME(NULL, assoc_id, 0)) == NULL) {
-//    S1AP_ERROR("[SCTP %d] Received S1 setup response for non existing "
-//               "MME context\n", assoc_id);
     S1AP_ERROR("[SCTP %d] Received S1 setup failure for non existing "
                "MME context\n", assoc_id);
     return -1;
