@@ -3110,7 +3110,7 @@ do_RRCConnectionSetup(
     }
   }
   if(!((physicalConfigDedicated2->schedulingRequestConfig->choice.setup.sr_PUCCH_ResourceIndex >= 0) && (physicalConfigDedicated2->schedulingRequestConfig->choice.setup.sr_PUCCH_ResourceIndex < carrier->sib2->radioResourceConfigCommon.pucch_ConfigCommon.n1PUCCH_AN))) {
-    LOG_E(RRC, "illegal sr_PUCCH_ResourceIndex %d n1PUCCH_AN %d ue_context_pP->local_uid %d\n",
+    LOG_E(RRC, "illegal sr_PUCCH_ResourceIndex %ld n1PUCCH_AN %ld ue_context_pP->local_uid %d\n",
           physicalConfigDedicated2->schedulingRequestConfig->choice.setup.sr_PUCCH_ResourceIndex, carrier->sib2->radioResourceConfigCommon.pucch_ConfigCommon.n1PUCCH_AN, ue_context_pP->local_uid);
     return -1;
   }
