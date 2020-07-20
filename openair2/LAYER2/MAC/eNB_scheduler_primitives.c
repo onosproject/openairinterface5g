@@ -1291,7 +1291,6 @@ int getM_mac(COMMON_channels_t *cc,sub_frame_t subframeP){
             return 1;
         }
         break;
-      
       case 1:
         switch (subframeP) {
           case 2:
@@ -1302,7 +1301,6 @@ int getM_mac(COMMON_channels_t *cc,sub_frame_t subframeP){
             return 1;
         }
         break;
-      
       case 2:
         switch (subframeP) {
           case 2:
@@ -1310,7 +1308,6 @@ int getM_mac(COMMON_channels_t *cc,sub_frame_t subframeP){
             return 4;
         }
         break;
-      
       case 3:
         switch (subframeP) {
           case 2:
@@ -1320,7 +1317,6 @@ int getM_mac(COMMON_channels_t *cc,sub_frame_t subframeP){
             return 2;
         }
         break;
-      
       case 4:
         switch (subframeP) {
           case 2:
@@ -1328,14 +1324,12 @@ int getM_mac(COMMON_channels_t *cc,sub_frame_t subframeP){
             return 4;
         }
         break;
-      
       case 5:
         switch (subframeP) {
           case 2:
             return 9;
         }
         break;
-      
       case 6:
         switch (subframeP) {
           case 2:
@@ -2072,6 +2066,18 @@ fill_nfapi_dlsch_config(eNB_MAC_INST *eNB,
   dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.num_bf_prb_per_subband                 = num_bf_prb_per_subband;
   dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.num_bf_vector                          = num_bf_vector;
   dl_req->number_pdu++;
+ // Rel10 fields
+#if (LTE_RRC_VERSION >= MAKE_VERSION(10, 0, 0))
+  dl_config_pdu->dlsch_pdu.dlsch_pdu_rel10.tl.tag = NFAPI_DL_CONFIG_REQUEST_DLSCH_PDU_REL10_TAG;
+  dl_config_pdu->dlsch_pdu.dlsch_pdu_rel10.pdsch_start = 3;
+#endif
+ // Rel13 fields
+#if (LTE_RRC_VERSION >= MAKE_VERSION(13, 0, 0))
+  dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.tl.tag = NFAPI_DL_CONFIG_REQUEST_DLSCH_PDU_REL13_TAG;
+  dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.ue_type = 0; // regular UE
+  dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.pdsch_payload_type = 2; // not BR
+  dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.initial_transmission_sf_io = 0xFFFF; // absolute SF
+#endif
   return;
 }
 
@@ -2658,7 +2664,8 @@ add_new_ue(module_id_t mod_idP,
     UE_list->UE_sched_ctrl[UE_id].pusch_rx_error_num[cc_idP] = 0;
     UE_list->UE_sched_ctrl[UE_id].pusch_rx_error_num_old[cc_idP] = 0;
     UE_list->UE_sched_ctrl[UE_id].pusch_bler[cc_idP] = 0;
-    UE_list->UE_sched_ctrl[UE_id].mcs_offset[cc_idP] = 0;
+    UE_list->UE_sched_ctrl[UE_id].ret_cnt[cc_idP] = 0;
+    UE_list->UE_sched_ctrl[UE_id].first_cnt[cc_idP] = 0;
     
     UE_list->UE_sched_ctrl[UE_id].volte_configured = FALSE;
     UE_list->UE_sched_ctrl[UE_id].ul_periodic_timer_exp_flag = FALSE;
@@ -4643,10 +4650,10 @@ extract_harq(module_id_t mod_idP,
   int spatial_bundling = 0;
   int tmode[5];
   int i, j, m;
-  uint8_t *pdu;
+  uint8_t *pdu = NULL;
   sub_frame_t subframe_tx;
   int frame_tx;
-  uint8_t harq_pid;
+  uint8_t harq_pid = 0;
   uint8_t select_tb;
   uint8_t oppose_tb;
   uint8_t swap_flg;

@@ -85,11 +85,16 @@ fill_rar(const module_id_t module_idP,
         ra->msg3_first_rb = 2;
       }
     }
-    ra->msg3_nb_rb = 1;
+    if(cc->tdd_Config){
+      if(cc->tdd_Config->subframeAssignment==2){
+        ra->msg3_first_rb+=1;
+      }
+    }
+    ra->msg3_nb_rb = 3;
     uint16_t rballoc = mac_computeRIV(N_RB_UL, ra->msg3_first_rb, ra->msg3_nb_rb);	// first PRB only for UL Grant
     rar[1] |= (rballoc >> 7) & 7;	// Hopping = 0 (bit 3), 3 MSBs of rballoc
     rar[2] = ((uint8_t) (rballoc & 0xff)) << 1;	// 7 LSBs of rballoc
-    ra->msg3_mcs = 10;
+    ra->msg3_mcs = 1;
     ra->msg3_TPC = 3;
     ra->msg3_ULdelay = 0;
     ra->msg3_cqireq = 0;

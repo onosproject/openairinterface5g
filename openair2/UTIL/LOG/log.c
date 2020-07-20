@@ -506,14 +506,14 @@ int logInit (void)
   }
   log_getconfig(g_log);
   if (g_log->filelog) {
-    gfd = open(g_log->filelog_name, O_WRONLY | O_CREAT, 0666);
+    gfd = open(g_log->filelog_name, O_WRONLY | O_CREAT, 0644);
   }
 
   // could put a loop here to check for all comps
   for (i=MIN_LOG_COMPONENTS; i < MAX_LOG_COMPONENTS; i++) {
     if (g_log->log_component[i].filelog == 1 ) {
       g_log->log_component[i].fd = open(g_log->log_component[i].filelog_name,
-                                        O_WRONLY | O_CREAT | O_APPEND, 0666);
+                                        O_WRONLY | O_CREAT | O_APPEND, 0644);
     }
   }
 
@@ -1667,7 +1667,7 @@ void set_component_filelog(int comp)
 
     if (g_log->log_component[comp].fd == 0) {
       g_log->log_component[comp].fd = open(g_log->log_component[comp].filelog_name,
-                                           O_WRONLY | O_CREAT | O_TRUNC, 0666);
+                                           O_WRONLY | O_CREAT | O_TRUNC, 0644);
     }
   }
 }

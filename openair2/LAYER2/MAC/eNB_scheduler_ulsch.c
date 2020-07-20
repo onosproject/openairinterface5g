@@ -186,7 +186,7 @@ rx_sdu(const module_id_t enb_mod_idP,
       UE_scheduling_control->pusch_snr[CC_idP] = tmp_snr;
        
       if(tmp_snr > 0 && tmp_snr < 63) {
-        double snr_filter_tpc=0.7;
+        double snr_filter_tpc=0.9;
         int snr_thres_tpc=30;
         int diff = UE_scheduling_control->pusch_snr_avg[CC_idP] - UE_scheduling_control->pusch_snr[CC_idP];
         if(abs(diff) < snr_thres_tpc) {
@@ -217,7 +217,7 @@ rx_sdu(const module_id_t enb_mod_idP,
       }
     } else {  // sduP == NULL => error
       UE_scheduling_control->pusch_rx_error_num[CC_idP]++;
-      LOG_I(MAC, "[eNB %d][PUSCH %d] CC_id %d %d.%d ULSCH in error in round %d, ul_cqi %d, UE_id %d, RNTI %x\n",
+      LOG_D(MAC, "[eNB %d][PUSCH %d] CC_id %d %d.%d ULSCH in error in round %d, ul_cqi %d, UE_id %d, RNTI %x\n",
             enb_mod_idP,
             harq_pid,
             CC_idP,

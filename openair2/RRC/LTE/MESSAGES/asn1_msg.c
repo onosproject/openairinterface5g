@@ -2881,7 +2881,6 @@ do_RRCConnectionSetup(
   else
     physicalConfigDedicated2->soundingRS_UL_ConfigDedicated = NULL;
 
-  physicalConfigDedicated2->antennaInfo                   = CALLOC(1,sizeof(*physicalConfigDedicated2->antennaInfo));
   physicalConfigDedicated2->schedulingRequestConfig       = CALLOC(1,sizeof(*physicalConfigDedicated2->schedulingRequestConfig));
 
   // PDSCH
@@ -3091,15 +3090,15 @@ do_RRCConnectionSetup(
       case 2:
         switch(frame_parms->N_RB_UL) {
           case 25:
-            physicalConfigDedicated2->schedulingRequestConfig->choice.setup.sr_PUCCH_ResourceIndex = sr_base - ue_context_pP->local_uid/2;
+            physicalConfigDedicated2->schedulingRequestConfig->choice.setup.sr_PUCCH_ResourceIndex = sr_base - ue_context_pP->local_uid/4;
             break;
 
           case 50:
-            physicalConfigDedicated2->schedulingRequestConfig->choice.setup.sr_PUCCH_ResourceIndex = sr_base - ue_context_pP->local_uid/2;
+            physicalConfigDedicated2->schedulingRequestConfig->choice.setup.sr_PUCCH_ResourceIndex = sr_base - ue_context_pP->local_uid/4;
             break;
 
           case 100:
-            physicalConfigDedicated2->schedulingRequestConfig->choice.setup.sr_PUCCH_ResourceIndex = sr_base - ue_context_pP->local_uid/2;
+            physicalConfigDedicated2->schedulingRequestConfig->choice.setup.sr_PUCCH_ResourceIndex = sr_base - ue_context_pP->local_uid/4;
             break;
         }
 
@@ -3109,6 +3108,11 @@ do_RRCConnectionSetup(
         physicalConfigDedicated2->schedulingRequestConfig->choice.setup.sr_PUCCH_ResourceIndex = 71 - ue_context_pP->local_uid/10;//ue_context_pP->local_uid;
         break;
     }
+  }
+  if(!((physicalConfigDedicated2->schedulingRequestConfig->choice.setup.sr_PUCCH_ResourceIndex >= 0) && (physicalConfigDedicated2->schedulingRequestConfig->choice.setup.sr_PUCCH_ResourceIndex < carrier->sib2->radioResourceConfigCommon.pucch_ConfigCommon.n1PUCCH_AN))) {
+    LOG_E(RRC, "illegal sr_PUCCH_ResourceIndex %ld n1PUCCH_AN %ld ue_context_pP->local_uid %d\n",
+          physicalConfigDedicated2->schedulingRequestConfig->choice.setup.sr_PUCCH_ResourceIndex, carrier->sib2->radioResourceConfigCommon.pucch_ConfigCommon.n1PUCCH_AN, ue_context_pP->local_uid);
+    return -1;
   }
 
   if (carrier->sib1->tdd_Config == NULL) { // FDD
@@ -3121,8 +3125,8 @@ do_RRCConnectionSetup(
         break;
 
       case 2:
-        physicalConfigDedicated2->schedulingRequestConfig->choice.setup.sr_ConfigIndex = 7+
-            (ue_context_pP->local_uid&1)*5;  // Isr = 5 (every 10 subframes, offset=2 for UE0, 7 for UE1, 2 for UE2, 7 for UE3 , 2 for UE4 etc..)
+        physicalConfigDedicated2->schedulingRequestConfig->choice.setup.sr_ConfigIndex = 17+
+            (ue_context_pP->local_uid&3)*5;  // Isr = 15 (every 20 subframes, offset=2 for UE0, UE2, UE4.. offset=7 for UE1, UE3, UE5..)
         break;
 
       case 3:
@@ -3195,13 +3199,18 @@ do_RRCConnectionSetup(
                                    RRC_BUF_SIZE);
 
   if(enc_rval.encoded == -1) {
-    LOG_I(RRC, "[eNB AssertFatal]ASN1 message encoding failed (%s, %lu)!\n",
+    LOG_E(RRC, "[eNB AssertFatal]ASN1 message encoding failed (%s, %lu)!\n",
           enc_rval.failed_type->name, enc_rval.encoded);
     return -1;
   }
 
   LOG_D(RRC,"RRCConnectionSetup Encoded %zd bits (%zd bytes) \n",
         enc_rval.encoded,(enc_rval.encoded+7)/8);
+  free(mac_MainConfig->phr_Config);
+  free(maxHARQ_Tx);
+  free(periodicBSR_Timer);
+  free(mac_MainConfig->ul_SCH_Config);
+  free(rrcConnectionSetup->criticalExtensions.choice.c1.choice.rrcConnectionSetup_r8.radioResourceConfigDedicated.mac_MainConfig);
 
   return((enc_rval.encoded+7)/8);
 }
@@ -4114,6 +4123,25 @@ uint16_t do_RRCConnectionReconfiguration(const protocol_ctxt_t *const ctxt_pP,
   // for (i=0;i<30;i++)
   //    msg("%x.",buffer[i]);
   // msg("\n");
+  if (securityConfigHO != NULL) {
+    free(rrcConnectionReconfiguration->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r8.securityConfigHO);
+  }
+  if (mobilityInfo !=NULL) {
+    free(rrcConnectionReconfiguration->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r8.mobilityControlInfo);
+  }
+  if (MeasId_list != NULL) {
+    if(speedStatePars != NULL) {
+      free(rrcConnectionReconfiguration->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r8.measConfig->speedStatePars);
+    }
+    if (quantityConfig!=NULL) {
+      free(rrcConnectionReconfiguration->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r8.measConfig->quantityConfig);
+    }
+    free(rrcConnectionReconfiguration->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r8.measConfig);
+  }
+  if (mac_MainConfig!=NULL) {
+    free(rrcConnectionReconfiguration->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r8.radioResourceConfigDedicated->mac_MainConfig);
+  }
+  free(rrcConnectionReconfiguration->criticalExtensions.choice.c1.choice.rrcConnectionReconfiguration_r8.radioResourceConfigDedicated);
   return((enc_rval.encoded+7)/8);
 }
 

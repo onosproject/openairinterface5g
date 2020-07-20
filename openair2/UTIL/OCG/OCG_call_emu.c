@@ -50,6 +50,11 @@ int call_emu(char dst_dir[DIR_LENGTH_MAX])
   char dst_file[DIR_LENGTH_MAX] = "";
   strcat(dst_file, dst_dir);
   strcat(dst_file, "emulation_result.txt");
+  if(-1 == (dst_file,F_OK)){
+    creat(dst_file, 0644);
+  }else{
+    chmod(dst_file, 0644);
+  }
   file = fopen(dst_file,"w");
   //system("../../../openair1/SIMULATION/LTE_PHY_L2/physim --help");
 

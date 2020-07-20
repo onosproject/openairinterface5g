@@ -189,7 +189,7 @@ add_msg3(module_id_t module_idP, int CC_id, RA_t *ra, frame_t frameP,
     ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.ul_tx_mode                     = 0;
     ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.current_tx_nb                  = 0;
     ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.n_srs                          = 1;
-    ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.size                           = get_TBS_UL(10, ra->msg3_nb_rb);
+    ul_config_pdu->ulsch_pdu.ulsch_pdu_rel8.size                           = get_TBS_UL(ra->msg3_mcs, ra->msg3_nb_rb);
     ul_req_body->number_of_pdus++;
     ul_req_body->tl.tag                                                    = NFAPI_UL_CONFIG_REQUEST_BODY_TAG;
     ul_req->sfn_sf                                                         = ra->Msg3_frame<<4|ra->Msg3_subframe;
@@ -571,6 +571,11 @@ void generate_Msg2(module_id_t module_idP,
         dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.num_bf_prb_per_subband                 = 1;
         dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.num_bf_vector                          = 1;
         //    dl_config_pdu->dlsch_pdu.dlsch_pdu_rel8.bf_vector                    = ;
+        // Rel13 fields
+        dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.tl.tag                                = NFAPI_DL_CONFIG_REQUEST_DLSCH_PDU_REL13_TAG;
+        dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.ue_type                               = 0;
+        dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.pdsch_payload_type                    = 2;    // not BR
+        dl_config_pdu->dlsch_pdu.dlsch_pdu_rel13.initial_transmission_sf_io            = 0xFFFF;   // absolute SF              = 0;
         dl_req_body->number_pdu++;
         mac->DL_req[CC_idP].sfn_sf = frameP<<4 | subframeP;
         // Program UL processing for Msg3
@@ -628,6 +633,7 @@ generate_Msg4(module_id_t module_idP,
   uint16_t msg4_header = 0;
   int UE_id = -1;
   int first_rb = 0;
+  int nb_rb = 0;
   int N_RB_DL = 0;
   int N_RBG;
   uint8_t lcid = 0;
@@ -1032,10 +1038,11 @@ generate_Msg4(module_id_t module_idP,
               module_idP, CC_idP, frameP, subframeP, ra->rnti);
         /// Choose first 4 RBs for Msg4, should really check that these are free!
         first_rb = 0;
-        vrb_map[first_rb] = 1;
-        vrb_map[first_rb + 1] = 1;
-        vrb_map[first_rb + 2] = 1;
-        vrb_map[first_rb + 3] = 1;
+        nb_rb = 4;
+        if(cc[CC_idP].mib->message.dl_Bandwidth == 3) nb_rb=6;
+        for(int i=0;i<nb_rb;i++){
+          vrb_map[first_rb+i] = 1;
+        }
         if((cc[CC_idP].mib->message.dl_Bandwidth == 2) || (cc[CC_idP].mib->message.dl_Bandwidth == 3))
         {
           rbg_map[0] = 1;
@@ -1058,32 +1065,24 @@ generate_Msg4(module_id_t module_idP,
         // Compute MCS/TBS for 4 PRB (coded on 4 vrb)
         msg4_header = 1 + 6 + 1;  // CR header, CR CE, SDU header
 
-        if ((rrc_sdu_length + msg4_header) <= 28) {
-          ra->msg4_mcs = 3;
-          ra->msg4_TBsize = 28;
-        } else if ((rrc_sdu_length + msg4_header) <= 32) {
-          ra->msg4_mcs = 4;
-          ra->msg4_TBsize = 32;
-        } else if ((rrc_sdu_length + msg4_header) <= 41) {
-          ra->msg4_mcs = 5;
-          ra->msg4_TBsize = 41;
-        } else if ((rrc_sdu_length + msg4_header) <= 49) {
-          ra->msg4_mcs = 6;
-          ra->msg4_TBsize = 49;
-        } else if ((rrc_sdu_length + msg4_header) <= 59) {
-          ra->msg4_mcs = 7;
-          ra->msg4_TBsize = 59;
-        }  else if ((rrc_sdu_length + msg4_header) <= 67) {
-          ra->msg4_mcs = 8;
-          ra->msg4_TBsize = 67;
+        ra->msg4_mcs = 3;
+        while(1){
+          if(get_TBS_DL(ra->msg4_mcs,nb_rb)>(rrc_sdu_length + msg4_header)){
+            ra->msg4_TBsize=get_TBS_DL(ra->msg4_mcs,nb_rb);
+            break;
+          }
+          ra->msg4_mcs++;
         }
 
+        LOG_I(MAC,"Frame %d, subframe %d: MSG4 rnti %d, rrc_sdu_length %d, mcs %d, TBsize %d\n",
+              frameP, subframeP, ra->rnti, rrc_sdu_length,
+              ra->msg4_mcs, ra->msg4_TBsize);
         fill_nfapi_dl_dci_1(dl_config_pdu, 4,  // aggregation_level
                              ra->rnti,  // rnti
                              1, // rnti_type, CRNTI
                              ra->harq_pid,  // harq_process
                              1, // tpc, none
-                             allocate_prbs_sub(4, N_RB_DL, N_RBG, rbg_map), // resource_block_coding
+                             allocate_prbs_sub(nb_rb, N_RB_DL, N_RBG, rbg_map), // resource_block_coding
                              ra->msg4_mcs,  // mcs
 				 1 - UE_list->UE_template[CC_idP][UE_id].oldNDI[ra->harq_pid][TB1],
                              0, // rv
@@ -1158,7 +1157,7 @@ generate_Msg4(module_id_t module_idP,
           // DLSCH Config
           fill_nfapi_dlsch_config(mac, dl_req_body, ra->msg4_TBsize, mac->pdu_index[CC_idP], ra->rnti, 0, // resource_allocation_type : format 1A/1B/1D
                                   0,  // virtual_resource_block_assignment_flag : localized
-                                  allocate_prbs_sub(4, N_RB_DL, N_RBG, rbg_map),  // resource_block_coding
+                                  allocate_prbs_sub(nb_rb, N_RB_DL, N_RBG, rbg_map),  // resource_block_coding
                                   2,  // modulation: QPSK
                                   0,  // redundancy version
                                   1,  // transport_blocks
@@ -1250,6 +1249,7 @@ check_Msg4_retransmission(module_id_t module_idP, int CC_idP,
   uint8_t rbg_map[25];
   uint8_t rbg;
   int first_rb;
+  int nb_rb;
   int N_RB_DL;
   int N_RBG;
   nfapi_dl_config_request_pdu_t *dl_config_pdu;
@@ -1332,10 +1332,11 @@ check_Msg4_retransmission(module_id_t module_idP, int CC_idP,
         // we have to schedule a retransmission
         dl_req->sfn_sf = frameP<<4 | subframeP;
         first_rb = 0;
-        vrb_map[first_rb] = 1;
-        vrb_map[first_rb + 1] = 1;
-        vrb_map[first_rb + 2] = 1;
-        vrb_map[first_rb + 3] = 1;
+        nb_rb=4;
+        if(cc[CC_idP].mib->message.dl_Bandwidth == 3) nb_rb=6;
+        for(int i=0;i<nb_rb;i++){
+          vrb_map[first_rb+i] = 1;
+        }
         rbg_map[0] = 1;
         rbg_map[1] = 1;
         for(rbg = 2; rbg < N_RBG; rbg++)
@@ -1347,7 +1348,7 @@ check_Msg4_retransmission(module_id_t module_idP, int CC_idP,
                              1, // rnti_type, CRNTI
                              ra->harq_pid,  // harq_process
                              1, // tpc, none
-                             allocate_prbs_sub(4, N_RB_DL, N_RBG, rbg_map),     // resource_block_coding
+                             allocate_prbs_sub(nb_rb, N_RB_DL, N_RBG, rbg_map),     // resource_block_coding
                              ra->msg4_mcs,  // mcs
 				     UE_list->UE_template[CC_idP][UE_id].oldNDI[ra->harq_pid][TB1],
                              round & 3, // rv
@@ -1371,7 +1372,7 @@ check_Msg4_retransmission(module_id_t module_idP, int CC_idP,
                                   /* retransmission, no pdu_index */
                                   , ra->rnti, 0,  // resource_allocation_type : format 1A/1B/1D
                                   0,  // virtual_resource_block_assignment_flag : localized
-                                  allocate_prbs_sub(4, N_RB_DL, N_RBG, rbg_map),      // resource_block_coding : RIV, 4 PRB
+                                  allocate_prbs_sub(nb_rb, N_RB_DL, N_RBG, rbg_map),      // resource_block_coding : RIV, 4 PRB
                                   2,  // modulation: QPSK
                                   round & 3,  // redundancy version
                                   1,  // transport_blocks
