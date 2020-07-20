@@ -769,13 +769,14 @@ void fep_full(RU_t *ru) {
   RU_proc_t *proc = &ru->proc;
   int l;
   LTE_DL_FRAME_PARMS *fp=&ru->frame_parms;
-
-  if ((fp->frame_type == TDD) && 
-     (subframe_select(fp,proc->subframe_rx) != SF_UL)) {
   double recv_pow=0;
   int i,idx;
   int shift=0;
   short * temp_iq;
+
+  if ((fp->frame_type == TDD) && 
+     (subframe_select(fp,proc->subframe_rx) != SF_UL)) return;
+  
   for(i=0;i<fp->samples_per_tti;i++){
     idx=i+fp->samples_per_tti*proc->subframe_rx- ru->N_TA_offset;
     if(idx<0) idx+=fp->samples_per_tti*10;
