@@ -876,15 +876,16 @@ void dlsch_scheduler_pre_ue_select_fairRR(
           ue_sched_ctl->select_tb[CC_id][harq_pid] = TB1;
         last_UE_id[CC_id] = UE_id;
 
+        if (dlsch_ue_select[CC_id].ue_num == dlsch_ue_max_num[CC_id]) {
+          end_flag[CC_id] = 1;
+          break;
+        }
+
         if (dlsch_ue_num_volte[CC_id] == dlsch_ue_max_num_volte[CC_id]) {
           dlsch_ue_max_flag[CC_id] = 1;
           break;
         }
 
-          if (dlsch_ue_select[CC_id].ue_num == dlsch_ue_max_num[CC_id]) {
-            end_flag[CC_id] = 1;
-            break;
-          }
         } else {
           add_ue_dlsch_info(module_idP,
                             CC_id,
