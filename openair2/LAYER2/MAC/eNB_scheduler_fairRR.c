@@ -3681,8 +3681,14 @@ void ulsch_scheduler_pre_ue_select_fairRR(
 
     if (mac_eNB_get_rrc_status(module_idP, rnti) == RRC_HO_EXECUTION) {
       aggregation = 4;
+      
+        if(get_aggregation(get_bw_index(module_idP, CC_id),UE_list->UE_sched_ctrl[UE_id].dl_cqi[CC_id],format0)>4)
+          aggregation = get_aggregation(get_bw_index(module_idP, CC_id),UE_list->UE_sched_ctrl[UE_id].dl_cqi[CC_id],format0);
     }else{
-      aggregation = 2;
+      //aggregation = 2;
+      aggregation = get_aggregation(get_bw_index(module_idP, CC_id),
+                                    UE_list->UE_sched_ctrl[UE_id].dl_cqi[CC_id],
+                                    format0);
     }
 
     // Selection of Retx UEs
@@ -3790,6 +3796,9 @@ void ulsch_scheduler_pre_ue_select_fairRR(
         hi_dci0_pdu   = &HI_DCI0_req->hi_dci0_pdu_list[HI_DCI0_req->number_of_dci+HI_DCI0_req->number_of_hi];
         format_flag = 2;
 
+        aggregation = get_aggregation(get_bw_index(module_idP, CC_id),
+                                      UE_list->UE_sched_ctrl[UE_id].dl_cqi[CC_id],
+                                      format0);
         if (CCE_allocation_infeasible(module_idP,CC_id,format_flag,subframeP,aggregation,rnti) == 1) {
           cc_id_flag[CC_id] = 1;
           continue;
@@ -3884,6 +3893,9 @@ void ulsch_scheduler_pre_ue_select_fairRR(
       hi_dci0_pdu   = &HI_DCI0_req->hi_dci0_pdu_list[HI_DCI0_req->number_of_dci+HI_DCI0_req->number_of_hi];
       format_flag = 2;
 
+      aggregation = get_aggregation(get_bw_index(module_idP, CC_id),
+                                    UE_list->UE_sched_ctrl[UE_id].dl_cqi[CC_id],
+                                    format0);
       if (CCE_allocation_infeasible(module_idP,CC_id,format_flag,subframeP,aggregation,rnti) == 1) {
         cc_id_flag[CC_id] = 1;
         continue;
@@ -4479,8 +4491,13 @@ void schedule_ulsch_rnti_fairRR(module_id_t   module_idP,
       rnti = UE_RNTI(CC_id,UE_id);
       if (mac_eNB_get_rrc_status(module_idP, rnti) == RRC_HO_EXECUTION) {
         aggregation = 4;
+        if(get_aggregation(get_bw_index(module_idP, CC_id),UE_list->UE_sched_ctrl[UE_id].dl_cqi[CC_id],format0)>4)
+          aggregation = get_aggregation(get_bw_index(module_idP, CC_id),UE_list->UE_sched_ctrl[UE_id].dl_cqi[CC_id],format0);
       }else{
-        aggregation = 2;
+        //aggregation = 2;
+        aggregation = get_aggregation(get_bw_index(module_idP, CC_id),
+                                      UE_list->UE_sched_ctrl[UE_id].dl_cqi[CC_id],
+                                      format0);
       }
       LOG_D(MAC,"[eNB %d] frame %d subframe %d,Checking PUSCH %d for UE %d/%x CC %d : aggregation level %d, N_RB_UL %d\n",
             module_idP,frameP,subframeP,harq_pid,UE_id,rnti,CC_id, aggregation,N_RB_UL);
