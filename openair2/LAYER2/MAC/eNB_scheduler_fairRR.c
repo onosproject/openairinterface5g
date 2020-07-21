@@ -1354,6 +1354,7 @@ schedule_ue_spec_fairRR(module_id_t module_idP,
   static int32_t tpc_accumulated = 0;
   UE_sched_ctrl_t *ue_sched_ctl;
   int mcs = 0;
+  int max_mcs = 28;
   int i = 0;
   int min_rb_unit[MAX_NUM_CCs];
   int N_RB_DL[MAX_NUM_CCs];
@@ -1478,10 +1479,12 @@ schedule_ue_spec_fairRR(module_id_t module_idP,
                                        mbsfn_flag);
   stop_meas(&eNB->schedule_dlsch_preprocessor);
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_DLSCH_PREPROCESSOR,VCD_FUNCTION_OUT);
+  
 
   for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
     LOG_D(MAC, "doing schedule_ue_spec for CC_id %d\n",CC_id);
     dl_req        = &eNB->DL_req[CC_id].dl_config_request_body;
+    if(dl_req->number_pdcch_ofdm_symbols==3) max_mcs=27;
 
     if (mbsfn_flag[CC_id]>0)
       continue;
@@ -1581,6 +1584,8 @@ schedule_ue_spec_fairRR(module_id_t module_idP,
           eNB_UE_stats->dlsch_mcs[TB1] = cqi_to_mcs[ue_sched_ctl->dl_cqi[CC_id]];
           eNB_UE_stats->dlsch_mcs[TB2] = cqi_to_mcs[ue_sched_ctl->dl_cqi[CC_id]];
         }
+      if(eNB_UE_stats->dlsch_mcs[TB1]>max_mcs) eNB_UE_stats->dlsch_mcs[TB1]=max_mcs;
+      if(eNB_UE_stats->dlsch_mcs[TB2]>max_mcs) eNB_UE_stats->dlsch_mcs[TB2]=max_mcs;
       if (UE_list->eNB_UE_stats[CC_id][UE_id].rrc_status == RRC_HO_EXECUTION) {
         eNB_UE_stats->dlsch_mcs[TB1] = 6;
         eNB_UE_stats->dlsch_mcs[TB2] = 6;
@@ -1907,7 +1912,7 @@ schedule_ue_spec_fairRR(module_id_t module_idP,
 
                     // if we have decreased too much or we don't have enough RBs, increase MCS
                     while (   (TBS < (sdu_length_total + header_len_dcch + header_len_dtch + ta_len))
-                           && (  ((ue_sched_ctl->dl_pow_off[CC_id] > 0) && (mcs < 28))
+                           && (  ((ue_sched_ctl->dl_pow_off[CC_id] > 0) && (mcs < max_mcs))
                                ||((ue_sched_ctl->dl_pow_off[CC_id] == 0) && (mcs <= 15)))) {
                         mcs++;
                         TBS = get_TBS_DL(mcs, nb_rb);
@@ -2748,7 +2753,7 @@ schedule_ue_spec_fairRR(module_id_t module_idP,
                   (sdu_length_total + header_len_dcch +
                    header_len_dtch + ta_len))
                  && (((ue_sched_ctl->dl_pow_off[CC_id] > 0)
-                      && (mcs < 28))
+                      && (mcs < max_mcs))
                      || ((ue_sched_ctl->dl_pow_off[CC_id] == 0)
                          && (mcs <= 15)))) {
             mcs++;
@@ -3132,7 +3137,7 @@ schedule_ue_spec_fairRR(module_id_t module_idP,
 
                 // if we have decreased too much or we don't have enough RBs, increase MCS
                 while (    (TBS < (sdu_length_total + header_len_dcch + header_len_dtch + ta_len))
-                        && (   ((ue_sched_ctl->dl_pow_off[CC_id] > 0)  && (mcs < 28))
+                        && (   ((ue_sched_ctl->dl_pow_off[CC_id] > 0)  && (mcs < max_mcs))
                             || ((ue_sched_ctl->dl_pow_off[CC_id] == 0) && (mcs <= 15)))
                       ) {
                     mcs++;
