@@ -285,7 +285,7 @@ void s1ap_eNB_handle_sctp_association_resp(instance_t instance, sctp_new_associa
   struct served_gummei_s*      gummeiInfo;
   struct mme_code_s*           mmeCode;
   int8_t                       cnt = 0;
-  unsigned                     enb_s1ap_id[20];
+  unsigned                     enb_s1ap_id[NUMBER_OF_UE_MAX];
 
   if (sctp_new_association_resp == NULL) {
     S1AP_ERROR("sctp_new_association_resp == NULL\n");
@@ -315,6 +315,7 @@ void s1ap_eNB_handle_sctp_association_resp(instance_t instance, sctp_new_associa
     {
       if( ue_p->mme_ref == s1ap_mme_data_p )
       {
+        if(cnt < NUMBER_OF_UE_MAX){
         enb_s1ap_id[cnt] = ue_p->eNB_ue_s1ap_id;
         cnt++;
         
@@ -333,6 +334,9 @@ void s1ap_eNB_handle_sctp_association_resp(instance_t instance, sctp_new_associa
         else
         {
           S1AP_ERROR("Invalid message_p : eNB_ue_s1ap_id=%u\n", ue_p->eNB_ue_s1ap_id);
+        }
+        }else{
+          S1AP_ERROR("s1ap_eNB_handle_sctp_association_resp: cnt %d > max\n", cnt);
         }
       }
     }
