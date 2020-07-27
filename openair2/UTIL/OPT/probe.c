@@ -498,6 +498,11 @@ int init_opt(void)
       break;
 
     case OPT_PCAP:
+      if(-1 == (access(in_path,F_OK))){
+        creat(in_path, 0644);
+      }else{
+        chmod(in_path, 0644);
+      }
       file_fd = fopen(in_path, "w");
 
       if (file_fd == NULL) {

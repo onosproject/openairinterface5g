@@ -66,9 +66,13 @@ fill_rar(const module_id_t module_idP,
   rar[4] = (uint8_t) (ra->rnti >> 8);
   rar[5] = (uint8_t) (ra->rnti & 0xff);
   //ra->timing_offset = 0;
+#ifndef PHY_RM
   ra->timing_offset /= 16;  //T_A = N_TA/16, where N_TA should be on a 30.72Msps
-  rar[0] = (uint8_t) (ra->timing_offset >> (2 + 4));  // 7 MSBs of timing advance + divide by 4
-  rar[1] = (uint8_t) (ra->timing_offset << (4 - 2)) & 0xf0; // 4 LSBs of timing advance + divide by 4
+#endif
+  //rar[0] = (uint8_t) (ra->timing_offset >> (2 + 4));  // 7 MSBs of timing advance + divide by 4
+  //rar[1] = (uint8_t) (ra->timing_offset << (4 - 2)) & 0xf0; // 4 LSBs of timing advance + divide by 4
+  rar[0] = (uint8_t) (ra->timing_offset >> 4);	// 7 MSBs of timing advance
+  rar[1] = (uint8_t) (ra->timing_offset << 4) & 0xf0;	// 4 LSBs of timing advance
   COMMON_channels_t *cc = &RC.mac[module_idP]->common_channels[CC_id];
 
   if(N_RB_UL == 25) {
@@ -81,7 +85,12 @@ fill_rar(const module_id_t module_idP,
     }
   }
 
-  ra->msg3_nb_rb = 1;
+  if(cc->tdd_Config){
+    if(cc->tdd_Config->subframeAssignment==2){
+      ra->msg3_first_rb+=1;
+    }
+  }
+  ra->msg3_nb_rb = 3;
   uint16_t rballoc = mac_computeRIV(N_RB_UL, ra->msg3_first_rb, ra->msg3_nb_rb);  // first PRB only for UL Grant
   rar[1] |= (rballoc >> 7) & 7; // Hopping = 0 (bit 3), 3 MSBs of rballoc
   rar[2] = ((uint8_t) (rballoc & 0xff)) << 1; // 7 LSBs of rballoc
@@ -94,9 +103,17 @@ fill_rar(const module_id_t module_idP,
   rar[3] =
     (((ra->msg3_mcs & 0x7) << 5)) | ((ra->msg3_TPC & 7) << 2) |
     ((ra->msg3_ULdelay & 1) << 1) | (ra->msg3_cqireq & 1);
-  trace_pdu(DIRECTION_DOWNLINK, dlsch_buffer, input_buffer_length, module_idP,  WS_RA_RNTI, 1,
+
+  if (opt_enabled) {
+    trace_pdu(DIRECTION_DOWNLINK, dlsch_buffer, input_buffer_length, module_idP,  WS_RA_RNTI, 1,
             RC.mac[module_idP]->frame, RC.mac[module_idP]->subframe,
             0, 0);
+    LOG_D(OPT,
+            "[eNB %d][RAPROC] CC_id %d RAR Frame %d trace pdu for rnti %x and  rapid %d size %d\n",
+             module_idP, CC_id, frameP, ra->rnti, rarh->RAPID,
+             input_buffer_length);
+  }
+
 
   return (ra->rnti);
 }

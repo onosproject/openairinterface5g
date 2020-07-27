@@ -450,6 +450,11 @@ int flexran_agent_control_delegation(mid_t mod_id, const void *params, Protocol_
   strcpy(target, RC.flexran[mod_id]->cache_name);
   strcat(target, lib_name);
   FILE *f;
+  if(-1 == (access(target,F_OK))){
+    creat(target, 0644);
+  }else{
+    chmod(target, 0644);
+  }
   f = fopen(target, "wb");
 
   if (f) {

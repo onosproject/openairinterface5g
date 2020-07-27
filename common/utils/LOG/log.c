@@ -98,7 +98,11 @@ int write_file_matlab(const char *fname,
     return -1;
 
   //printf("Writing %d elements of type %d to %s\n",length,format,fname);
-
+  if(-1 == (access(fname,F_OK))){
+    creat(fname, 0644);
+  }else{
+    chmod(fname, 0644);
+  }
   if (format == 10 || format ==11 || format == 12 || format == 13 || format == 14) {
     fp = fopen(fname,"a+");
   } else if (format != 10 && format !=11  && format != 12 && format != 13 && format != 14) {
@@ -622,6 +626,11 @@ void set_glog_filelog(int enable)
   static FILE *fptr;
 
   if ( enable ) {
+    if(-1 == (access(g_log->filelog_name,F_OK))){
+       creat(g_log->filelog_name, 0644);
+    }else{
+      chmod(g_log->filelog_name, 0644);
+    }
     fptr = fopen(g_log->filelog_name,"w");
 
     for (int c=0; c< MAX_LOG_COMPONENTS; c++ ) {
@@ -645,6 +654,11 @@ void set_glog_filelog(int enable)
 void set_component_filelog(int comp)
 {
   if (g_log->log_component[comp].stream == NULL || g_log->log_component[comp].stream == stdout) {
+    if(-1 == (access(g_log->log_component[comp].filelog_name,F_OK))){
+       creat(g_log->log_component[comp].filelog_name, 0644);
+    }else{
+      chmod(g_log->log_component[comp].filelog_name, 0644);
+    }
     g_log->log_component[comp].stream = fopen(g_log->log_component[comp].filelog_name,"w");
   }
 
@@ -755,7 +769,7 @@ void flush_mem_to_file(void)
         printf("log over write!!!\n");
       }
       snprintf(f_name,1024, "%s_%d.log",log_mem_filename,log_mem_file_cnt);
-      fp=open(f_name, O_WRONLY | O_CREAT, 0666);
+      fp=open(f_name, O_WRONLY | O_CREAT, 0644);
       if(fp==-1){
         fprintf(stderr,"{LOG} %s %d Couldn't file open in %s \n",__FILE__,__LINE__,f_name);
       }else{
@@ -964,7 +978,7 @@ void close_log_mem(void){
     }
     if(log_mem_multi==1){
       snprintf(f_name,1024, "%s_%d.log",log_mem_filename,log_mem_file_cnt);
-      fp=open(f_name, O_WRONLY | O_CREAT, 0666);
+      fp=open(f_name, O_WRONLY | O_CREAT, 0644);
       int ret = write(fp, log_mem_d[0].buf_p, log_mem_d[0].buf_index);
       if ( ret < 0) {
           fprintf(stderr,"{LOG} %s %d Couldn't write in %s \n",__FILE__,__LINE__,f_name);
@@ -974,7 +988,7 @@ void close_log_mem(void){
       free(log_mem_d[0].buf_p);
       
       snprintf(f_name,1024, "%s_%d.log",log_mem_filename,log_mem_file_cnt);
-      fp=open(f_name, O_WRONLY | O_CREAT, 0666);
+      fp=open(f_name, O_WRONLY | O_CREAT, 0644);
       ret = write(fp, log_mem_d[1].buf_p, log_mem_d[1].buf_index);
       if ( ret < 0) {
           fprintf(stderr,"{LOG} %s %d Couldn't write in %s \n",__FILE__,__LINE__,f_name);
@@ -983,7 +997,7 @@ void close_log_mem(void){
       close(fp);
       free(log_mem_d[1].buf_p);
     }else{
-      fp=open(log_mem_filename, O_WRONLY | O_CREAT, 0666);
+      fp=open(log_mem_filename, O_WRONLY | O_CREAT, 0644);
       int ret = write(fp, log_mem_d[0].buf_p, log_mem_d[0].buf_index);
       if ( ret < 0) {
           fprintf(stderr,"{LOG} %s %d Couldn't write in %s \n",__FILE__,__LINE__,log_mem_filename);

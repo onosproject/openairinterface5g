@@ -45,7 +45,6 @@
 //extern int **ulchmag_eren;
 //eren
 
-static short jitter[8]  __attribute__ ((aligned(16))) = {1,0,0,1,0,1,1,0};
 static short jitterc[8] __attribute__ ((aligned(16))) = {0,1,1,0,1,0,0,1};
 
 void lte_idft(LTE_DL_FRAME_PARMS *frame_parms,uint32_t *z, uint16_t Msc_PUSCH) {
@@ -758,6 +757,9 @@ void ulsch_channel_compensation(int32_t **rxdataF_ext,
   __m128i *ul_ch128,*ul_ch_mag128,*ul_ch_mag128b,*rxdataF128,*rxdataF_comp128;
   uint8_t aarx;//,symbol_mod;
   __m128i mmtmpU0,mmtmpU1,mmtmpU2,mmtmpU3;
+
+  static short ref_min[8] __attribute__ ((aligned(16))) = {SHRT_MIN ,SHRT_MIN ,SHRT_MIN ,SHRT_MIN ,SHRT_MIN ,SHRT_MIN ,SHRT_MIN ,SHRT_MIN };
+
 #elif defined(__arm__)
   int16x4_t *ul_ch128,*rxdataF128;
   int16x8_t *ul_ch_mag128,*ul_ch_mag128b,*rxdataF_comp128;
@@ -765,6 +767,9 @@ void ulsch_channel_compensation(int32_t **rxdataF_ext,
   int32x4_t mmtmpU0,mmtmpU1,mmtmpU0b,mmtmpU1b;
   int16_t conj[4]__attribute__((aligned(16))) = {1,-1,1,-1};
   int32x4_t output_shift128 = vmovq_n_s32(-(int32_t)output_shift);
+
+  static short ref_min[8] __attribute__ ((aligned(16))) = {SHRT_MIN ,SHRT_MIN ,SHRT_MIN ,SHRT_MIN ,SHRT_MIN ,SHRT_MIN ,SHRT_MIN ,SHRT_MIN };
+
 #endif
 
   for (aarx=0; aarx<frame_parms->nb_antennas_rx; aarx++) {
@@ -872,9 +877,10 @@ void ulsch_channel_compensation(int32_t **rxdataF_ext,
       //        print_shorts("ch:",ul_ch128[2]);
       //        print_shorts("pack:",rxdataF_comp128[2]);
       // Add a jitter to compensate for the saturation in "packs" resulting in a bias on the DC after IDFT
-      rxdataF_comp128[0] = _mm_add_epi16(rxdataF_comp128[0],(*(__m128i *)&jitter[0]));
-      rxdataF_comp128[1] = _mm_add_epi16(rxdataF_comp128[1],(*(__m128i *)&jitter[0]));
-      rxdataF_comp128[2] = _mm_add_epi16(rxdataF_comp128[2],(*(__m128i *)&jitter[0]));
+      rxdataF_comp128[0] = _mm_subs_epi16(rxdataF_comp128[0],   _mm_cmpeq_epi16(rxdataF_comp128[0],(*(__m128i*)&ref_min[0])));
+      rxdataF_comp128[1] = _mm_subs_epi16(rxdataF_comp128[1],   _mm_cmpeq_epi16(rxdataF_comp128[1],(*(__m128i*)&ref_min[0])));
+      rxdataF_comp128[2] = _mm_subs_epi16(rxdataF_comp128[2],   _mm_cmpeq_epi16(rxdataF_comp128[2],(*(__m128i*)&ref_min[0])));
+
       ul_ch128+=3;
       ul_ch_mag128+=3;
       ul_ch_mag128b+=3;
@@ -921,9 +927,10 @@ void ulsch_channel_compensation(int32_t **rxdataF_ext,
       mmtmpU1 = vqshlq_s32(mmtmpU1,-output_shift128);
       rxdataF_comp128[2] = vcombine_s16(vmovn_s32(mmtmpU0),vmovn_s32(mmtmpU1));
       // Add a jitter to compensate for the saturation in "packs" resulting in a bias on the DC after IDFT
-      rxdataF_comp128[0] = vqaddq_s16(rxdataF_comp128[0],(*(int16x8_t *)&jitter[0]));
-      rxdataF_comp128[1] = vqaddq_s16(rxdataF_comp128[1],(*(int16x8_t *)&jitter[0]));
-      rxdataF_comp128[2] = vqaddq_s16(rxdataF_comp128[2],(*(int16x8_t *)&jitter[0]));
+      rxdataF_comp128[0] = vqsubq_s16(rxdataF_comp128[0],   vceqq_s16(rxdataF_comp128[0],(*(int16x8_t*)&ref_min[0])));
+      rxdataF_comp128[1] = vqsubq_s16(rxdataF_comp128[1],   vceqq_s16(rxdataF_comp128[1],(*(int16x8_t*)&ref_min[0])));
+      rxdataF_comp128[2] = vqsubq_s16(rxdataF_comp128[2],   vceqq_s16(rxdataF_comp128[1],(*(int16x8_t*)&ref_min[0])));
+      
       ul_ch128+=6;
       ul_ch_mag128+=3;
       ul_ch_mag128b+=3;
@@ -1045,6 +1052,10 @@ void rx_ulsch(PHY_VARS_eNB *eNB,
     return;
   }
 
+  short *rxF_ext;
+  int re;
+  double ave_power=0;
+  int shift=0;
 
   for (l=0; l<(frame_parms->symbols_per_tti-ulsch[UE_id]->harq_processes[harq_pid]->srs_active); l++) {
     if(LOG_DEBUGFLAG(DEBUG_ULSCH)) {
@@ -1062,6 +1073,28 @@ void rx_ulsch(PHY_VARS_eNB *eNB,
                              l%(frame_parms->symbols_per_tti/2),
                              l/(frame_parms->symbols_per_tti/2),
                              frame_parms);
+    for(re=0;re<ulsch[UE_id]->harq_processes[harq_pid]->nb_rb*12;re++){
+      rxF_ext = (short*)&pusch_vars->rxdataF_ext[0][(l*frame_parms->N_RB_UL*12)+re];
+      ave_power+=rxF_ext[0]*rxF_ext[0]+rxF_ext[1]*rxF_ext[1];
+    }
+  }
+  ave_power/=(double)(ulsch[UE_id]->harq_processes[harq_pid]->nb_rb*12*(frame_parms->symbols_per_tti-ulsch[UE_id]->harq_processes[harq_pid]->srs_active));
+  LOG_D(PHY,"rxF_ext ave %lf\n",sqrt(ave_power));
+
+  if(ave_power>1.0){
+    shift = 3 - (int)log2(sqrt((double)ave_power));
+  }
+  if(shift>0){
+    short * temp_iq;
+    for(i=0;i<frame_parms->symbols_per_tti*frame_parms->ofdm_symbol_size;i++){
+      temp_iq=(short*)&pusch_vars->rxdataF_ext[0][i];
+      temp_iq[0]<<=shift;
+      temp_iq[1]<<=shift;
+    }
+  }else{
+    shift=0;
+  }
+  for (l=0; l<(frame_parms->symbols_per_tti-ulsch[UE_id]->harq_processes[harq_pid]->srs_active); l++) {
     
     if (lte_ul_channel_estimation(&eNB->frame_parms,proc,
 		              eNB->ulsch[UE_id],
@@ -1107,6 +1140,8 @@ void rx_ulsch(PHY_VARS_eNB *eNB,
     pusch_vars->ulsch_interference_power[i] = pusch_vars->ulsch_interference_power[i]/correction_factor;
     pusch_vars->ulsch_power[i] = pusch_vars->ulsch_power[i]/correction_factor;
 
+    pusch_vars->ulsch_power[i] /= pow(4,shift);
+    pusch_vars->ulsch_interference_power[i] /= pow(4,shift);
     if(pusch_vars->ulsch_power[i]>0x20000000){
       pusch_vars->ulsch_power[i] = 0x20000000;
       pusch_vars->ulsch_interference_power[i] = 1;

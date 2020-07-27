@@ -769,8 +769,8 @@ void UL_indication(UL_IND_t *UL_info, L1_rxtx_proc_t *proc) {
       sched_info->HI_DCI0_req = &mac->HI_DCI0_req[CC_id][sched_info->subframe];
       
       if (is_UL_sf(&mac->common_channels[CC_id],sched_info->subframe) < 0) {
-        return;
-      }
+        //return;
+      }else{
       if ((mac->common_channels[CC_id].tdd_Config==NULL) ||
           (is_UL_sf(&mac->common_channels[CC_id],sched_info->subframe)>0))
         sched_info->UL_req      = &mac->UL_req[CC_id];
@@ -795,6 +795,9 @@ void UL_indication(UL_IND_t *UL_info, L1_rxtx_proc_t *proc) {
         }
         ifi->schedule_response(sched_info, proc );
       }
+      }
+      
+      update_ue_timers(module_id,(UL_info->frame+((UL_info->subframe>(9-sf_ahead-1))?1:0)) % 1024,(UL_info->subframe+sf_ahead+1)%10);
 
       LOG_D(PHY,"Schedule_response: SFN_SF:%d%d dl_pdus:%d\n",sched_info->frame,sched_info->subframe,sched_info->DL_req->dl_config_request_body.number_pdu);
     }

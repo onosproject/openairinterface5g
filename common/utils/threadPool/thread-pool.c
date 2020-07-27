@@ -100,7 +100,7 @@ void initTpool(char *params,tpool_t *pool, bool performanceMeas) {
   pool->measurePerf=measr!=NULL;
 
   if (measr) {
-    mkfifo(measr,0666);
+    mkfifo(measr,0644);
     AssertFatal(-1 != (pool->dummyTraceFd=
                          open(measr, O_RDONLY| O_NONBLOCK)),"");
     AssertFatal(-1 != (pool->traceFd=

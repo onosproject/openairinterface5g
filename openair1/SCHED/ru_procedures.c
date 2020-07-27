@@ -595,6 +595,7 @@ void init_fep_thread(RU_t *ru,
   pthread_cond_init( &proc->cond_fep, NULL);
 
   threadCreate(&proc->pthread_fep, fep_thread, (void*)ru, "fep", -1, OAI_PRIORITY_RT);
+
 }
 
 
@@ -765,9 +766,34 @@ void fep_full(RU_t *ru,
   int l;
   LTE_DL_FRAME_PARMS *fp=ru->frame_parms;
 
+  double recv_pow=0;
+  int i,idx;
+  int shift=0;
+  short * temp_iq;
+
   if ((fp->frame_type == TDD) && 
      (subframe_select(fp,subframe) != SF_UL)) return;
-
+  
+  for(i=0;i<fp->samples_per_tti;i++){
+    idx=i+fp->samples_per_tti*subframe - ru->N_TA_offset;
+    if(idx<0) idx+=fp->samples_per_tti*10;
+    temp_iq=(short*)&ru->common.rxdata[0][idx];
+    recv_pow += (double)temp_iq[0]*(double)temp_iq[0]+(double)temp_iq[1]*(double)temp_iq[1];
+  }
+  recv_pow /= (double)fp->samples_per_tti;
+  if(recv_pow>1.0){
+    shift = 3 - (int)log2(sqrt((double)recv_pow));
+  }
+  if(shift>0){
+    LOG_D(PHY,"ave pow %lf shift %d\n",sqrt((double)recv_pow),shift);
+    for(i=0;i<fp->samples_per_tti;i++){
+      idx=i+fp->samples_per_tti*subframe - ru->N_TA_offset;
+      if(idx<0) idx+=fp->samples_per_tti*10;
+      temp_iq=(short*)&ru->common.rxdata[0][idx];
+      temp_iq[0]<<=shift;
+      temp_iq[1]<<=shift;
+    }
+  }
   start_meas(&ru->ofdm_demod_stats);
   if (ru->idx == 0) VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_RU_FEPRX+ru->idx, 1 );
 
@@ -786,6 +812,16 @@ void fep_full(RU_t *ru,
   }
   if (ru->idx == 0) VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME( VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_RU_FEPRX+ru->idx, 0 );
   stop_meas(&ru->ofdm_demod_stats);
+  
+  if(shift>0){
+    short * temp_iq;
+    for(i=0;i<fp->ofdm_symbol_size*14;i++){
+      temp_iq=(short*)&ru->common.rxdataF[0][i];
+      temp_iq[0]>>=shift;
+      temp_iq[1]>>=shift;
+    }
+  }
+  
 }
 
 

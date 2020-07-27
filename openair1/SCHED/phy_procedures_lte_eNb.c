@@ -310,6 +310,7 @@ bool dlsch_procedures(PHY_VARS_eNB *eNB,
     if (dlsch_harq->pdu==NULL) {
       LOG_E(PHY,"dlsch_harq->pdu == NULL SFN/SF:%04d%d dlsch[rnti:%x] dlsch_harq[pdu:%p pdsch_start:%d Qm:%d Nl:%d round:%d nb_rb:%d rb_alloc[0]:%d]\n", frame,subframe,dlsch->rnti, dlsch_harq->pdu,
             dlsch_harq->pdsch_start,dlsch_harq->Qm,dlsch_harq->Nl,dlsch_harq->round,dlsch_harq->nb_rb,dlsch_harq->rb_alloc[0]);
+      dlsch->active[subframe] = 0;
       return false;
     }
 
@@ -883,6 +884,7 @@ uci_procedures(PHY_VARS_eNB *eNB,
 #endif
 
             if (SR_payload == 1) { // this implements Table 7.3.1 from 36.213
+            if(uci->pucch_fmt==pucch_format1b){
               if (pucch_b0b1[0][0] == 4) { // there isn't a likely transmission
                 harq_ack[0] = 4; // DTX
               } else if (pucch_b0b1[0][0] == 1 && pucch_b0b1[0][1] == 1) { // 1/4/7 ACKs
@@ -897,6 +899,13 @@ uci_procedures(PHY_VARS_eNB *eNB,
 
               uci->stat = metric[0];
               fill_uci_harq_indication(i, eNB,uci,frame,subframe,harq_ack,2,0xffff); // special_bundling mode
+              }else{
+                harq_ack[0] = pucch_b0b1[0][0];
+                harq_ack[1] = pucch_b0b1[0][1];
+                uci->stat = metric[0];
+                LOG_D(PHY,"bundling with sr: (%d,%d), metric %d\n",harq_ack[0],harq_ack[1],uci->stat);
+                fill_uci_harq_indication(i, eNB,uci,frame,subframe,harq_ack,0,0xffff); // special_bundling mode
+              }
             } else if ((uci->tdd_bundling == 0) && (uci->num_pucch_resources==2)) { // multiplexing + no SR, implement Table 10.1.3-5 (Rel14) for multiplexing with M=2
               if (pucch_b0b1[0][0] == 4 ||
                   pucch_b0b1[1][0] == 4) { // there isn't a likely transmission

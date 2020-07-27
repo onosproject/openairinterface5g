@@ -926,7 +926,7 @@ int x2ap_eNB_handle_handover_response (instance_t instance,
     return -1;
   }
 
-  id_target = ie->value.choice.UE_X2AP_ID_1;
+  id_target = ie->value.choice.UE_X2AP_ID;
 
   ue_id = id_source;
 
@@ -1081,7 +1081,7 @@ int x2ap_eNB_handle_ue_context_release (instance_t instance,
     return -1;
   }
 
-  id_target = ie->value.choice.UE_X2AP_ID_1;
+  id_target = ie->value.choice.UE_X2AP_ID;
 
   ue_id = id_source;
   if (ue_id != x2ap_find_id_from_id_source(&instance_p->id_manager, id_source)) {
@@ -1169,7 +1169,7 @@ int x2ap_eNB_handle_handover_cancel (instance_t instance,
     X2AP_INFO("%s %d: ie is a NULL pointer \n",__FILE__,__LINE__);
     id_target = -1;
   } else
-    id_target = ie->value.choice.UE_X2AP_ID_1;
+    id_target = ie->value.choice.UE_X2AP_ID;
 
   X2AP_FIND_PROTOCOLIE_BY_ID(X2AP_HandoverCancel_IEs_t, ie, x2HandoverCancel,
                              X2AP_ProtocolIE_ID_id_Cause, true);

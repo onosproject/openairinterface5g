@@ -839,8 +839,8 @@ int x2ap_eNB_generate_x2_handover_request_ack (x2ap_eNB_instance_t *instance_p, 
   ie = (X2AP_HandoverRequestAcknowledge_IEs_t *)calloc(1, sizeof(X2AP_HandoverRequestAcknowledge_IEs_t));
   ie->id = X2AP_ProtocolIE_ID_id_New_eNB_UE_X2AP_ID;
   ie->criticality = X2AP_Criticality_ignore;
-  ie->value.present = X2AP_HandoverRequestAcknowledge_IEs__value_PR_UE_X2AP_ID_1;
-  ie->value.choice.UE_X2AP_ID_1 = id_target;
+  ie->value.present = X2AP_HandoverRequestAcknowledge_IEs__value_PR_UE_X2AP_ID;
+  ie->value.choice.UE_X2AP_ID = id_target;
   ASN_SEQUENCE_ADD(&out->protocolIEs.list, ie);
 
   /* mandatory */
@@ -962,8 +962,8 @@ int x2ap_eNB_generate_x2_ue_context_release (x2ap_eNB_instance_t *instance_p, x2
   ie = (X2AP_UEContextRelease_IEs_t *)calloc(1, sizeof(X2AP_UEContextRelease_IEs_t));
   ie->id = X2AP_ProtocolIE_ID_id_New_eNB_UE_X2AP_ID;
   ie->criticality = X2AP_Criticality_reject;
-  ie->value.present = X2AP_UEContextRelease_IEs__value_PR_UE_X2AP_ID_1;
-  ie->value.choice.UE_X2AP_ID_1 = id_target;
+  ie->value.present = X2AP_UEContextRelease_IEs__value_PR_UE_X2AP_ID;
+  ie->value.choice.UE_X2AP_ID = id_target;
   ASN_SEQUENCE_ADD(&out->protocolIEs.list, ie);
 
   if (x2ap_eNB_encode_pdu(&pdu, &buffer, &len) < 0) {
@@ -1029,8 +1029,8 @@ int x2ap_eNB_generate_x2_handover_cancel (x2ap_eNB_instance_t *instance_p, x2ap_
     ie = (X2AP_HandoverCancel_IEs_t *)calloc(1, sizeof(X2AP_HandoverCancel_IEs_t));
     ie->id = X2AP_ProtocolIE_ID_id_New_eNB_UE_X2AP_ID;
     ie->criticality = X2AP_Criticality_ignore;
-    ie->value.present = X2AP_HandoverCancel_IEs__value_PR_UE_X2AP_ID_1;
-    ie->value.choice.UE_X2AP_ID_1 = id_target;
+    ie->value.present = X2AP_HandoverCancel_IEs__value_PR_UE_X2AP_ID;
+    ie->value.choice.UE_X2AP_ID = id_target;
     ASN_SEQUENCE_ADD(&out->protocolIEs.list, ie);
   }
 

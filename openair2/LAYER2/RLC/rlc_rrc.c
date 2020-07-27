@@ -558,6 +558,7 @@ rlc_op_status_t rrc_rlc_remove_rlc   (
           rb_idP, lcid,
           (srb_flagP) ? "SRB" : "DRB");
   }
+  free(rlc_union_p);
 
   return RLC_OP_STATUS_OK;
 }

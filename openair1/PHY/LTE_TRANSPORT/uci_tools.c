@@ -53,12 +53,19 @@ int16_t find_uci(uint16_t rnti, int frame, int subframe, PHY_VARS_eNB *eNB,find_
     else if ((eNB->uci_vars[i].active == 0) && (first_free_index==-1)) first_free_index=i;
   }
 
-  if (type == SEARCH_EXIST) return(-1);
-
-  if (first_free_index==-1)
-    LOG_E(MAC,"UCI table is full\n");
-
-  return(first_free_index);
+  if (type == SEARCH_EXIST){
+	LOG_E(PHY, "find_uci find_type is SEARCH_EXIST , return -1\n");
+	return(-1);
+  }	
+  else{
+	if(first_free_index < 0){
+	  LOG_E(PHY, "find_uci first_free_index = %d,rnti = %d,frame = %d,subframe = %d, last i = %d\n",first_free_index,rnti,frame,subframe, i);
+	  for (i=0; i<NUMBER_OF_UCI_VARS_MAX; i++) {
+	    LOG_T(PHY, "eNB->uci_vars[%d]\tactive = %d\trnti = %x\tframe = %d\tsubframe = %d\t type %d\n",i,eNB->uci_vars[i].active,eNB->uci_vars[i].rnti,eNB->uci_vars[i].frame,eNB->uci_vars[i].subframe,eNB->uci_vars[i].type);
+		}
+	}
+	return(first_free_index);
+  }
 }
 
 
