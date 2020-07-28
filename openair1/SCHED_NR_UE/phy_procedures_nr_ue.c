@@ -3721,8 +3721,8 @@ void *UE_thread_slot1_dl_processing(void *arg) {
     CPU_SET(threads.slot1_proc_one, &cpuset);
   if ( (proc->sub_frame_start+1)%RX_NB_TH == 1 && threads.slot1_proc_two != -1 )
     CPU_SET(threads.slot1_proc_two, &cpuset);
-  if ( (proc->sub_frame_start+1)%RX_NB_TH == 2 && threads.slot1_proc_three != -1 )
-    CPU_SET(threads.slot1_proc_three, &cpuset);
+  //if ( (proc->sub_frame_start+1)%RX_NB_TH == 2 && threads.slot1_proc_three != -1 )  //(proc->sub_frame_start+1)%RX_NB_TH is always less than 2.
+    //CPU_SET(threads.slot1_proc_three, &cpuset);
 
   init_thread(900000,1000000 , FIFO_PRIORITY-1, &cpuset,
 	      threadname);

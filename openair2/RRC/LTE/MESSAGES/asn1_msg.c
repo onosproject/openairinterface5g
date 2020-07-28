@@ -217,6 +217,8 @@ uint8_t do_MIB_FeMBMS(rrc_eNB_carrier_data_t *carrier, uint32_t N_RB_DL, uint32_
 
     default:
       LOG_E(RRC,"Unknown dl_Bandwidth %d\n",N_RB_DL);
+      free(spare);
+      spare = NULL;
       return(-1);
   }
 

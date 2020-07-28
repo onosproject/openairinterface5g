@@ -2241,7 +2241,7 @@ get_numnarrowbands(long dl_Bandwidth)
 //------------------------------------------------------------------------------
 {
   int nb_tab[6] = { 1, 2, 4, 8, 12, 16 };
-  if (dl_Bandwidth >= 7 && dl_Bandwidth < 0) {
+  if (dl_Bandwidth >= 7 || dl_Bandwidth < 0) {
     LOG_E(MAC, "dl_Bandwidth not in [0..6]\n");
     return (-1);
   }
@@ -2254,7 +2254,7 @@ get_numnarrowbandbits(long dl_Bandwidth)
 //------------------------------------------------------------------------------
 {
   int nbbits_tab[6] = { 0, 1, 2, 3, 4, 4 };
-  if (dl_Bandwidth >= 7 && dl_Bandwidth < 0) {
+  if (dl_Bandwidth >= 7 || dl_Bandwidth < 0) {
     LOG_E(MAC, "dl_Bandwidth not in [0..6]\n");
     return (-1);
   }

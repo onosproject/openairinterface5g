@@ -1794,6 +1794,11 @@ int x2ap_gNB_handle_ENDC_sGNB_addition_request (instance_t instance,
   X2AP_FIND_PROTOCOLIE_BY_ID(X2AP_SgNBAdditionRequest_IEs_t, ie, x2SgNBAdditionRequest,
 		  X2AP_ProtocolIE_ID_id_NRUESecurityCapabilities, true);
 
+  if (ie == NULL ) {
+    X2AP_ERROR("%s %d: ie is a NULL pointer \n",__FILE__,__LINE__);
+    return -1;
+  }
+
   X2AP_ENDC_SGNB_ADDITION_REQ(msg).security_capabilities.encryption_algorithms =
 		  BIT_STRING_to_uint16(&ie->value.choice.NRUESecurityCapabilities.nRencryptionAlgorithms);
 
@@ -1804,6 +1809,10 @@ int x2ap_gNB_handle_ENDC_sGNB_addition_request (instance_t instance,
   X2AP_FIND_PROTOCOLIE_BY_ID(X2AP_SgNBAdditionRequest_IEs_t, ie, x2SgNBAdditionRequest,
 		  X2AP_ProtocolIE_ID_id_SgNBSecurityKey, true);
 
+  if (ie == NULL ) {
+    X2AP_ERROR("%s %d: ie is a NULL pointer \n",__FILE__,__LINE__);
+    return -1;
+  }
   if ((ie->value.choice.SgNBSecurityKey.buf) &&
             (ie->value.choice.SgNBSecurityKey.size == 32)) {
       memcpy(X2AP_ENDC_SGNB_ADDITION_REQ(msg).kgnb, ie->value.choice.SgNBSecurityKey.buf, 32);
@@ -1823,6 +1832,10 @@ int x2ap_gNB_handle_ENDC_sGNB_addition_request (instance_t instance,
   X2AP_FIND_PROTOCOLIE_BY_ID(X2AP_SgNBAdditionRequest_IEs_t, ie, x2SgNBAdditionRequest,
 		  X2AP_ProtocolIE_ID_id_E_RABs_ToBeAdded_SgNBAddReqList, true);
 
+  if (ie == NULL ) {
+    X2AP_ERROR("%s %d: ie is a NULL pointer \n",__FILE__,__LINE__);
+    return -1;
+  }
 
   if (ie->value.choice.E_RABs_ToBeAdded_SgNBAddReqList.list.count > 0) {
 
@@ -1871,6 +1884,10 @@ LOG_I(RRC,"x2u tunnel: index %d target sgw ip %d.%d.%d.%d length %d gtp teid %u\
   X2AP_FIND_PROTOCOLIE_BY_ID(X2AP_SgNBAdditionRequest_IEs_t, ie, x2SgNBAdditionRequest,
 		  X2AP_ProtocolIE_ID_id_MeNBtoSgNBContainer, true);
 
+  if (ie == NULL ) {
+    X2AP_ERROR("%s %d: ie is a NULL pointer \n",__FILE__,__LINE__);
+    return -1;
+  }
 
   if (ie->value.choice.MeNBtoSgNBContainer.size > 8192 )
     { printf("%s:%d: fatal: buffer too big\n", __FILE__, __LINE__); abort(); }

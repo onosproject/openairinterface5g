@@ -825,8 +825,8 @@ static void *UE_thread_rxn_txnp4(void *arg)
   if ( (proc->sub_frame_start+1)%RX_NB_TH == 1 && threads.two != -1 )
     CPU_SET(threads.two, &cpuset);
 
-  if ( (proc->sub_frame_start+1)%RX_NB_TH == 2 && threads.three != -1 )
-    CPU_SET(threads.three, &cpuset);
+  //if ( (proc->sub_frame_start+1)%RX_NB_TH == 2 && threads.three != -1 )
+  //  CPU_SET(threads.three, &cpuset);
 
   //CPU_SET(threads.three, &cpuset);
   init_thread(900000,1000000, FIFO_PRIORITY-1, &cpuset,

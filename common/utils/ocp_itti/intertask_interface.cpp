@@ -69,7 +69,7 @@ task_list_t tasks[TASK_MAX];
     if (leP != NULL) {
     free(leP);
     LOG_D(TMR, "intertask_interface free_mem_block is called, after free leP is %p\n", leP);
-    leP = NULL; //prevent double free
+    //leP = NULL; //prevent double free
     } else {
       LOG_I(TMR, "intertask_interface free_mem_block is called, but before free leP is NULL\n");
     }

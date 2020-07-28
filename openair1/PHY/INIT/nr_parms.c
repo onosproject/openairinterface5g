@@ -257,7 +257,7 @@ int nr_init_frame_parms(nfapi_nr_config_request_scf_t* cfg,
   fp->N_RB_UL = cfg->carrier_config.ul_grid_size[cfg->ssb_config.scs_common.value].value;
 
   int Ncp = NFAPI_CP_NORMAL;
-  int mu = cfg!= NULL ?  cfg->ssb_config.scs_common.value : 0;
+  int mu = cfg->ssb_config.scs_common.value;
 
 #if DISABLE_LOG_X
   printf("Initializing frame parms for mu %d, N_RB %d, Ncp %d\n",mu, fp->N_RB_DL, Ncp);
@@ -305,7 +305,7 @@ int nr_init_frame_parms(nfapi_nr_config_request_scf_t* cfg,
   }
 
   fp->N_ssb = 0;
-  int num_tx_ant = (cfg == NULL) ? fp->Lmax : cfg->carrier_config.num_tx_ant.value;
+  int num_tx_ant = cfg->carrier_config.num_tx_ant.value;
 
   for (int p=0; p<num_tx_ant; p++)
     fp->N_ssb += ((fp->L_ssb >> p) & 0x01);
