@@ -5689,7 +5689,7 @@ check_handovers(
                     GTPV1U_ENB_DATA_FORWARDING_IND (msg_p).muip,
                     GTPV1U_ENB_DATA_FORWARDING_IND (msg_p).confirmp,
                     GTPV1U_ENB_DATA_FORWARDING_IND (msg_p).mode);
-              LOG_I(RRC, "Before calling pdcp_data_req from check_handovers! GTPV1U_ENB_DATA_FORWARDING_IND (msg_p).rb_id: %ld \n", GTPV1U_ENB_DATA_FORWARDING_IND (msg_p).rb_id);
+              LOG_D(RRC, "Before calling pdcp_data_req from check_handovers! GTPV1U_ENB_DATA_FORWARDING_IND (msg_p).rb_id: %ld \n", GTPV1U_ENB_DATA_FORWARDING_IND (msg_p).rb_id);
               df_count++;
               result = pdcp_data_req (&ctxt,
                                       SRB_FLAG_NO,
@@ -5754,7 +5754,7 @@ check_handovers(
                 GTPV1U_ENB_END_MARKER_IND (msg_p).frame,
                 0,
                 GTPV1U_ENB_END_MARKER_IND (msg_p).eNB_index);
-              LOG_I(RRC, PROTOCOL_CTXT_FMT"[check_handovers]Received %s from %s: instance %d, rb_id %ld, muiP %d, confirmP %d, mode %d\n",
+              LOG_D(RRC, PROTOCOL_CTXT_FMT"[check_handovers]Received %s from %s: instance %d, rb_id %ld, muiP %d, confirmP %d, mode %d\n",
                     PROTOCOL_CTXT_ARGS(&ctxt),
                     ITTI_MSG_NAME (msg_p),
                     ITTI_MSG_ORIGIN_NAME(msg_p),
@@ -5763,7 +5763,7 @@ check_handovers(
                     GTPV1U_ENB_END_MARKER_IND (msg_p).muip,
                     GTPV1U_ENB_END_MARKER_IND (msg_p).confirmp,
                     GTPV1U_ENB_END_MARKER_IND (msg_p).mode);
-              LOG_D(RRC, "Before calling pdcp_data_req from check_handovers! GTPV1U_ENB_END_MARKER_IND (msg_p).rb_id: %ld \n", GTPV1U_ENB_END_MARKER_IND (msg_p).rb_id);
+              LOG_I(RRC, "Before calling pdcp_data_req from check_handovers! GTPV1U_ENB_END_MARKER_IND (msg_p).rb_id: %ld \n", GTPV1U_ENB_END_MARKER_IND (msg_p).rb_id);
               result = pdcp_data_req (&ctxt,
                                       SRB_FLAG_NO,
                                       GTPV1U_ENB_END_MARKER_IND (msg_p).rb_id,
@@ -6490,98 +6490,6 @@ rrc_eNB_generate_HO_RRCConnectionReconfiguration(const protocol_ctxt_t *const ct
     (LTE_MBSFN_AreaInfoList_r9_t *) NULL
   );
 
-  // Configure target eNB SRB2
-  /// SRB2
-  SRB2_config = CALLOC(1, sizeof(*SRB2_config));
-  SRB_configList2 = CALLOC(1, sizeof(*SRB_configList2));
-  memset(SRB_configList2, 0, sizeof(*SRB_configList2));
-  SRB2_config->srb_Identity = 2;
-  SRB2_rlc_config = CALLOC(1, sizeof(*SRB2_rlc_config));
-  SRB2_config->rlc_Config = SRB2_rlc_config;
-  SRB2_rlc_config->present = LTE_SRB_ToAddMod__rlc_Config_PR_explicitValue;
-  SRB2_rlc_config->choice.explicitValue.present = LTE_RLC_Config_PR_am;
-  SRB2_rlc_config->choice.explicitValue.choice.am.ul_AM_RLC.t_PollRetransmit = LTE_T_PollRetransmit_ms15;
-  SRB2_rlc_config->choice.explicitValue.choice.am.ul_AM_RLC.pollPDU = LTE_PollPDU_p8;
-  SRB2_rlc_config->choice.explicitValue.choice.am.ul_AM_RLC.pollByte = LTE_PollByte_kB1000;
-  SRB2_rlc_config->choice.explicitValue.choice.am.ul_AM_RLC.maxRetxThreshold = LTE_UL_AM_RLC__maxRetxThreshold_t32;
-  SRB2_rlc_config->choice.explicitValue.choice.am.dl_AM_RLC.t_Reordering = LTE_T_Reordering_ms35;
-  SRB2_rlc_config->choice.explicitValue.choice.am.dl_AM_RLC.t_StatusProhibit = LTE_T_StatusProhibit_ms10;
-  SRB2_lchan_config = CALLOC(1, sizeof(*SRB2_lchan_config));
-  SRB2_config->logicalChannelConfig = SRB2_lchan_config;
-  SRB2_lchan_config->present = LTE_SRB_ToAddMod__logicalChannelConfig_PR_explicitValue;
-  SRB2_ul_SpecificParameters = CALLOC(1, sizeof(*SRB2_ul_SpecificParameters));
-  SRB2_ul_SpecificParameters->priority = 1;
-  SRB2_ul_SpecificParameters->prioritisedBitRate =
-    LTE_LogicalChannelConfig__ul_SpecificParameters__prioritisedBitRate_infinity;
-  SRB2_ul_SpecificParameters->bucketSizeDuration =
-    LTE_LogicalChannelConfig__ul_SpecificParameters__bucketSizeDuration_ms50;
-  // LCG for CCCH and DCCH is 0 as defined in 36331
-  logicalchannelgroup = CALLOC(1, sizeof(long));
-  *logicalchannelgroup = 0;
-  SRB2_ul_SpecificParameters->logicalChannelGroup = logicalchannelgroup;
-  SRB2_lchan_config->choice.explicitValue.ul_SpecificParameters = SRB2_ul_SpecificParameters;
-  ASN_SEQUENCE_ADD(&SRB_configList->list, SRB2_config);
-  ASN_SEQUENCE_ADD(&(*SRB_configList2)->list, SRB2_config);
-  // Configure target eNB DRB
-  DRB_configList2 = CALLOC(1, sizeof(*DRB_configList2));
-  /// DRB
-  DRB_config = CALLOC(1, sizeof(*DRB_config));
-  //DRB_config->drb_Identity = (LTE_DRB_Identity_t) 1; //allowed values 1..32
-  // NN: this is the 1st DRB for this ue, so set it to 1
-  DRB_config->drb_Identity = (LTE_DRB_Identity_t) 1;  // (ue_mod_idP+1); //allowed values 1..32
-  DRB_config->logicalChannelIdentity = CALLOC(1, sizeof(long));
-  *(DRB_config->logicalChannelIdentity) = (long)3;
-  DRB_rlc_config = CALLOC(1, sizeof(*DRB_rlc_config));
-  DRB_config->rlc_Config = DRB_rlc_config;
-  DRB_rlc_config->present = LTE_RLC_Config_PR_um_Bi_Directional;
-  DRB_rlc_config->choice.um_Bi_Directional.ul_UM_RLC.sn_FieldLength = LTE_SN_FieldLength_size10;
-  DRB_rlc_config->choice.um_Bi_Directional.dl_UM_RLC.sn_FieldLength = LTE_SN_FieldLength_size10;
-  DRB_rlc_config->choice.um_Bi_Directional.dl_UM_RLC.t_Reordering = LTE_T_Reordering_ms35;
-  DRB_pdcp_config = CALLOC(1, sizeof(*DRB_pdcp_config));
-  DRB_config->pdcp_Config = DRB_pdcp_config;
-  DRB_pdcp_config->discardTimer = NULL;
-  DRB_pdcp_config->rlc_AM = NULL;
-  PDCP_rlc_UM = CALLOC(1, sizeof(*PDCP_rlc_UM));
-  DRB_pdcp_config->rlc_UM = PDCP_rlc_UM;
-  PDCP_rlc_UM->pdcp_SN_Size = LTE_PDCP_Config__rlc_UM__pdcp_SN_Size_len12bits;
-  DRB_pdcp_config->headerCompression.present = LTE_PDCP_Config__headerCompression_PR_notUsed;
-  DRB_lchan_config = CALLOC(1, sizeof(*DRB_lchan_config));
-  DRB_config->logicalChannelConfig = DRB_lchan_config;
-  DRB_ul_SpecificParameters = CALLOC(1, sizeof(*DRB_ul_SpecificParameters));
-  DRB_lchan_config->ul_SpecificParameters = DRB_ul_SpecificParameters;
-  DRB_ul_SpecificParameters->priority = 12;    // lower priority than srb1, srb2
-  DRB_ul_SpecificParameters->prioritisedBitRate =
-    LTE_LogicalChannelConfig__ul_SpecificParameters__prioritisedBitRate_infinity;
-  DRB_ul_SpecificParameters->bucketSizeDuration =
-    LTE_LogicalChannelConfig__ul_SpecificParameters__bucketSizeDuration_ms50;
-  // LCG for DTCH can take the value from 1 to 3 as defined in 36331: normally controlled by upper layers (like RRM)
-  logicalchannelgroup_drb = CALLOC(1, sizeof(long));
-  *logicalchannelgroup_drb = 3;
-  DRB_ul_SpecificParameters->logicalChannelGroup = logicalchannelgroup_drb;
-  ASN_SEQUENCE_ADD(&(*DRB_configList2)->list, DRB_config);
-  mac_MainConfig = CALLOC(1, sizeof(*mac_MainConfig));
-  ue_context_pP->ue_context.mac_MainConfig = mac_MainConfig;
-  mac_MainConfig->ul_SCH_Config = CALLOC(1, sizeof(*mac_MainConfig->ul_SCH_Config));
-  maxHARQ_Tx = CALLOC(1, sizeof(long));
-  *maxHARQ_Tx = LTE_MAC_MainConfig__ul_SCH_Config__maxHARQ_Tx_n5;
-  mac_MainConfig->ul_SCH_Config->maxHARQ_Tx = maxHARQ_Tx;
-  periodicBSR_Timer = CALLOC(1, sizeof(long));
-  *periodicBSR_Timer = LTE_PeriodicBSR_Timer_r12_sf64;
-  mac_MainConfig->ul_SCH_Config->periodicBSR_Timer = periodicBSR_Timer;
-  mac_MainConfig->ul_SCH_Config->retxBSR_Timer = LTE_RetxBSR_Timer_r12_sf320;
-  mac_MainConfig->ul_SCH_Config->ttiBundling = 0; // FALSE
-  mac_MainConfig->timeAlignmentTimerDedicated = LTE_TimeAlignmentTimer_infinity;
-  mac_MainConfig->drx_Config = NULL;
-  mac_MainConfig->phr_Config = CALLOC(1, sizeof(*mac_MainConfig->phr_Config));
-  mac_MainConfig->phr_Config->present = LTE_MAC_MainConfig__phr_Config_PR_setup;
-  mac_MainConfig->phr_Config->choice.setup.periodicPHR_Timer = LTE_MAC_MainConfig__phr_Config__setup__periodicPHR_Timer_sf500; // sf20 = 20 subframes
-  mac_MainConfig->phr_Config->choice.setup.prohibitPHR_Timer = LTE_MAC_MainConfig__phr_Config__setup__prohibitPHR_Timer_sf200; // sf20 = 20 subframes
-  mac_MainConfig->phr_Config->choice.setup.dl_PathlossChange = LTE_MAC_MainConfig__phr_Config__setup__dl_PathlossChange_dB3;  // Value dB1 =1 dB, dB3 = 3 dB
-  sr_ProhibitTimer_r9 = CALLOC(1, sizeof(long));
-  *sr_ProhibitTimer_r9 = 0;   // SR tx on PUCCH, Value in number of SR period(s). Value 0 = no timer for SR, Value 2= 2*SR
-  mac_MainConfig->ext1 = CALLOC(1, sizeof(struct LTE_MAC_MainConfig__ext1));
-  mac_MainConfig->ext1->sr_ProhibitTimer_r9 = sr_ProhibitTimer_r9;
-  
   // Measurement ID list
   MeasId_list = CALLOC(1, sizeof(*MeasId_list));
   memset((void *)MeasId_list, 0, sizeof(*MeasId_list));

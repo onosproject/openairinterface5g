@@ -298,7 +298,7 @@ NwGtpv1uRcT gtpv1u_eNB_process_stack_req(
               GTPV1U_ENB_END_MARKER_REQ(msg).offset = GTPU_HEADER_OVERHEAD_MAX;
               LOG_I(GTPU, "Send End Marker to GTPV1-U at frame %d and subframe %d \n", ctxt.frame,ctxt.subframe);
               itti_send_msg_to_task(TASK_GTPV1_U, ENB_MODULE_ID_TO_INSTANCE(ctxt.module_id), msg);
-	      pthread_mutex_unlock(&ue_context_p->ue_context.handover_cond_lock);
+              pthread_mutex_unlock(&ue_context_p->ue_context.handover_cond_lock);
               return NW_GTPV1U_OK;
             }
           }
@@ -321,7 +321,7 @@ NwGtpv1uRcT gtpv1u_eNB_process_stack_req(
               memset(&delete_tunnel_req, 0, sizeof(delete_tunnel_req));
               delete_tunnel_req.rnti = ctxt.rnti;
               gtpv1u_delete_x2u_tunnel(ctxt.module_id, &delete_tunnel_req, GTPV1U_TARGET_ENB);
-	      pthread_mutex_unlock(&ue_context_p->ue_context.handover_cond_lock);
+              pthread_mutex_unlock(&ue_context_p->ue_context.handover_cond_lock);
               return NW_GTPV1U_OK;
             }
 
@@ -352,12 +352,12 @@ NwGtpv1uRcT gtpv1u_eNB_process_stack_req(
 
               if ( result == FALSE ) {
                 LOG_W(GTPU, "DATA FORWARDING message save failed\n");
-		pthread_mutex_unlock(&ue_context_p->ue_context.handover_cond_lock);
+                pthread_mutex_unlock(&ue_context_p->ue_context.handover_cond_lock);
                 return NW_GTPV1U_FAILURE;
               }
 
               ue_context_p->ue_context.handover_info->forwarding_state = FORWARDING_NO_EMPTY;
-	      pthread_mutex_unlock(&ue_context_p->ue_context.handover_cond_lock);
+              pthread_mutex_unlock(&ue_context_p->ue_context.handover_cond_lock);
               return NW_GTPV1U_OK;
             }
             /* from epc message */
@@ -386,13 +386,16 @@ NwGtpv1uRcT gtpv1u_eNB_process_stack_req(
 #endif
                 LOG_I(GTPU, "Send data forwarding to GTPV1-U at frame %d and subframe %d \n", ctxt.frame,ctxt.subframe);
                 itti_send_msg_to_task(TASK_GTPV1_U, ENB_MODULE_ID_TO_INSTANCE(ctxt.module_id), msg);
-		pthread_mutex_unlock(&ue_context_p->ue_context.handover_cond_lock);
+                pthread_mutex_unlock(&ue_context_p->ue_context.handover_cond_lock);
                 return NW_GTPV1U_OK;
               }
 
               /* target eNB. x2ho forwarding is processing. spgw message save to TASK_END_MARKER */
-              if(ue_context_p->ue_context.handover_info->state != HO_COMPLETE &&
-                  ue_context_p->ue_context.handover_info->state != HO_END_MARKER ) {
+              if(ue_context_p->ue_context.handover_info->state != HO_REQUEST &&
+                 ue_context_p->ue_context.handover_info->state != HO_COMPLETE &&
+                (ue_context_p->ue_context.handover_info->state != HO_END_MARKER ||
+                ue_context_p->ue_context.handover_info->forwarding_state != FORWARDING_EMPTY ||
+                ue_context_p->ue_context.handover_info->endmark_state != ENDMARK_EMPTY) ) {
                 LOG_I(GTPU, "x2ho forwarding is processing. Received a spgw message. length %d\n", buffer_len);
 #if defined(LOG_GTPU) && LOG_GTPU > 0
                 LOG_T(GTPU, "spgw data info:\n", buffer_len);
@@ -418,20 +421,20 @@ NwGtpv1uRcT gtpv1u_eNB_process_stack_req(
 
                 if ( result == FALSE ) {
                   LOG_W(GTPU, "DATA FORWARDING message save failed\n");
-		  pthread_mutex_unlock(&ue_context_p->ue_context.handover_cond_lock);
+                  pthread_mutex_unlock(&ue_context_p->ue_context.handover_cond_lock);
                   return NW_GTPV1U_FAILURE;
                 }
 
                 ue_context_p->ue_context.handover_info->endmark_state = ENDMARK_NO_EMPTY;
-		pthread_mutex_unlock(&ue_context_p->ue_context.handover_cond_lock);
+                pthread_mutex_unlock(&ue_context_p->ue_context.handover_cond_lock);
                 return NW_GTPV1U_OK;
               }
             }
           }
         }
 
-  pthread_mutex_unlock(&ue_context_p->ue_context.handover_cond_lock);
-  }
+        pthread_mutex_unlock(&ue_context_p->ue_context.handover_cond_lock);
+       }
         result = pdcp_data_req(
                    &ctxt,
                    SRB_FLAG_NO,

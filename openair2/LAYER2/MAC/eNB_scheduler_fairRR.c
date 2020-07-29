@@ -61,8 +61,9 @@ int last_dlsch_ue_id_volte[MAX_NUM_CCs] = {-1};
 int last_ulsch_ue_id[MAX_NUM_CCs] = {-1};
 int last_ulsch_ue_id_volte[MAX_NUM_CCs] = {-1};
 
+uint64_t dl_buffer_total[MAX_NUM_CCs][NUMBER_OF_UE_MAX];
 #if defined(PRE_SCD_THREAD)
-  uint64_t dl_buffer_total[MAX_NUM_CCs][NUMBER_OF_UE_MAX];
+  //uint64_t dl_buffer_total[MAX_NUM_CCs][NUMBER_OF_UE_MAX];
 
   boolean_t pre_scd_activeUE[NUMBER_OF_UE_MAX];
   eNB_UE_STATS pre_scd_eNB_UE_stats[MAX_NUM_CCs][NUMBER_OF_UE_MAX];

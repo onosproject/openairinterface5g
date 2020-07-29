@@ -604,7 +604,7 @@ eNB_dlsch_ulsch_scheduler(module_id_t module_idP,
   }
 
 #if (!defined(PRE_SCD_THREAD))
-
+  protocol_ctxt_t   ctxt;
   PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, module_idP, ENB_FLAG_YES, NOT_A_RNTI, frameP, subframeP, module_idP);
   pdcp_run(&ctxt);
   rrc_rx_tx(&ctxt, CC_id);
@@ -770,7 +770,7 @@ void update_ue_timers(module_id_t module_idP,frame_t frameP, sub_frame_t subfram
 #if defined(PRE_SCD_THREAD)
               dl_buffer_total[CC_id][UE_id],
 #else
-              0,
+              (uint64_t)0,
 #endif
               UE_scheduling_control->first_cnt[CC_id],
               UE_scheduling_control->ret_cnt[CC_id],

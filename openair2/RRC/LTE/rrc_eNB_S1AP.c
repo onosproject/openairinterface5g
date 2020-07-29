@@ -2199,7 +2199,7 @@ int rrc_eNB_process_S1AP_PATH_SWITCH_REQ_ACK (MessageDef *msg_p,
            i < ue_context_p->ue_context.setup_e_rabs; // go over total number of e_rabs received through x2_ho_req msg
            i++) {
         // assume that we are releasing all the DRBs
-        ue_context_p->ue_context.e_rab[i].status = E_RAB_STATUS_REESTABLISHED;
+        ue_context_p->ue_context.e_rab[i].status = E_RAB_STATUS_ESTABLISHED;
 
         if (ue_context_p->ue_context.nb_release_of_e_rabs==0) {
           LOG_I(RRC,"Bearer established with ID: %d\n", ue_context_p->ue_context.e_rab[i].param.e_rab_id);

@@ -127,11 +127,13 @@ task_list_t tasks[TASK_MAX];
     int message_id = message->ittiMsgHeader.messageId;
     size_t s=t->message_queue.size();
 
-    if ( s > t->admin.queue_size )
-      LOG_E(TMR,"Queue for %s task contains %ld messages\n", itti_get_task_name(destination_task_id), s );
+    if(TASK_DATA_FORWARDING != destination_task_id) {
+      if ( s > t->admin.queue_size )
+        LOG_E(TMR,"Queue for %s task contains %ld messages\n", itti_get_task_name(destination_task_id), s );
 
-    if ( s > 50 )
-      LOG_I(TMR,"Queue for %s task size: %ld\n",itti_get_task_name(destination_task_id), s+1);
+      if ( s > 50 )
+        LOG_I(TMR,"Queue for %s task size: %ld\n",itti_get_task_name(destination_task_id), s+1);
+    }
 
     t->message_queue.insert(t->message_queue.begin(), message);
     eventfd_t sem_counter = 1;
