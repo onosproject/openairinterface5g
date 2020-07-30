@@ -4424,6 +4424,7 @@ uint8_t do_RRCConnectionRelease(uint8_t                             Mod_id,
                                    (void *)&dl_dcch_msg,
                                    buffer,
                                    RRC_BUF_SIZE);
+  free(rrcConnectionRelease->criticalExtensions.choice.c1.choice.rrcConnectionRelease_r8.nonCriticalExtension);
   return((enc_rval.encoded+7)/8);
 }
 

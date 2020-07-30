@@ -217,44 +217,45 @@ void s1ap_handle_s1_setup_message(s1ap_eNB_mme_data_t *mme_desc_p, int sctp_shut
 
 int s1ap_eNB_handle_message(uint32_t assoc_id, int32_t stream,
                             const uint8_t *const data, const uint32_t data_length) {
-  S1AP_S1AP_PDU_t pdu;
+  S1AP_S1AP_PDU_t * pdu;
   int ret;
   if (data == NULL) {
     S1AP_ERROR("data == NULL\n");
     return -1;
   }
-  memset(&pdu, 0, sizeof(pdu));
+  pdu=CALLOC(1, sizeof(S1AP_S1AP_PDU_t));
 
-  if (s1ap_eNB_decode_pdu(&pdu, data, data_length) < 0) {
+  if (s1ap_eNB_decode_pdu(pdu, data, data_length) < 0) {
     S1AP_ERROR("Failed to decode PDU\n");
+    free(pdu);
     return -1;
   }
 
   /* Checking procedure Code and direction of message */
-  if (pdu.choice.initiatingMessage.procedureCode >= sizeof(messages_callback) / (3 * sizeof(
+  if (pdu->choice.initiatingMessage.procedureCode >= sizeof(messages_callback) / (3 * sizeof(
         s1ap_message_decoded_callback))
-      || (pdu.present > S1AP_S1AP_PDU_PR_unsuccessfulOutcome)) {
+      || (pdu->present > S1AP_S1AP_PDU_PR_unsuccessfulOutcome)) {
     S1AP_ERROR("[SCTP %d] Either procedureCode %ld or direction %d exceed expected\n",
-               assoc_id, pdu.choice.initiatingMessage.procedureCode, pdu.present);
-    ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_S1AP_S1AP_PDU, &pdu);
+               assoc_id, pdu->choice.initiatingMessage.procedureCode, pdu->present);
+    ASN_STRUCT_FREE(asn_DEF_S1AP_S1AP_PDU, pdu);
     return -1;
   }
 
   /* No handler present.
    * This can mean not implemented or no procedure for eNB (wrong direction).
    */
-  if (messages_callback[pdu.choice.initiatingMessage.procedureCode][pdu.present - 1] == NULL) {
+  if (messages_callback[pdu->choice.initiatingMessage.procedureCode][pdu->present - 1] == NULL) {
     S1AP_ERROR("[SCTP %d] No handler for procedureCode %ld in %s\n",
-               assoc_id, pdu.choice.initiatingMessage.procedureCode,
-               s1ap_direction2String(pdu.present - 1));
-    ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_S1AP_S1AP_PDU, &pdu);
+               assoc_id, pdu->choice.initiatingMessage.procedureCode,
+               s1ap_direction2String(pdu->present - 1));
+    ASN_STRUCT_FREE(asn_DEF_S1AP_S1AP_PDU, pdu);
     return -1;
   }
 
   /* Calling the right handler */
-  ret = (*messages_callback[pdu.choice.initiatingMessage.procedureCode][pdu.present - 1])
-        (assoc_id, stream, &pdu);
-  ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_S1AP_S1AP_PDU, &pdu);
+  ret = (*messages_callback[pdu->choice.initiatingMessage.procedureCode][pdu->present - 1])
+        (assoc_id, stream, pdu);
+  ASN_STRUCT_FREE(asn_DEF_S1AP_S1AP_PDU, pdu);
   return ret;
 }
 

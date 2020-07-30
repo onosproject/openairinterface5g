@@ -3842,15 +3842,17 @@ void rrc_eNB_generate_defaultRRCConnectionReconfiguration(const protocol_ctxt_t 
 
   /* Initialize NAS list */
   dedicatedInfoNASList = CALLOC(1, sizeof(struct LTE_RRCConnectionReconfiguration_r8_IEs__dedicatedInfoNASList));
-
+OCTET_STRING_t temp_OCT[10]={0};
   /* Add all NAS PDUs to the list */
   for (i = 0; i < ue_context_pP->ue_context.setup_e_rabs; i++) {
     if (ue_context_pP->ue_context.e_rab[i].param.nas_pdu.buffer != NULL) {
       dedicatedInfoNas = CALLOC(1, sizeof(LTE_DedicatedInfoNAS_t));
       memset(dedicatedInfoNas, 0, sizeof(OCTET_STRING_t));
-      OCTET_STRING_fromBuf(dedicatedInfoNas,
+      OCTET_STRING_fromBuf(&temp_OCT[i],
                            (char *)ue_context_pP->ue_context.e_rab[i].param.nas_pdu.buffer,
                            ue_context_pP->ue_context.e_rab[i].param.nas_pdu.length);
+      dedicatedInfoNas->buf=temp_OCT[i].buf;
+      dedicatedInfoNas->size=temp_OCT[i].size;
       ASN_SEQUENCE_ADD(&dedicatedInfoNASList->list, dedicatedInfoNas);
     }
 
@@ -3960,6 +3962,19 @@ void rrc_eNB_generate_defaultRRCConnectionReconfiguration(const protocol_ctxt_t 
 
     free(quantityConfig);
     quantityConfig = NULL;
+  }
+
+  if( dedicatedInfoNASList != NULL){
+    for(i=0;i<10;i++){
+      if(temp_OCT[i].buf!=NULL)
+        free(temp_OCT[i].buf);
+    }
+    for(int cnt=0;cnt<dedicatedInfoNASList->list.count;cnt++){
+      //free(((OCTET_STRING_t*)(&dedicatedInfoNASList->list.array[cnt]))->buf);
+      free(dedicatedInfoNASList->list.array[cnt]);
+    }
+    free(dedicatedInfoNASList);
+    dedicatedInfoNASList = NULL;
   }
 }
 
@@ -8770,6 +8785,7 @@ rrc_eNB_decode_dcch(
           // remove UE after 100 frames after LTE_RRCConnectionReestablishmentRelease is triggered
           ue_context_p->ue_context.ue_reestablishment_timer_thres = 1000;
         }
+        ASN_STRUCT_FREE(asn_DEF_LTE_UL_DCCH_Message,ul_dcch_msg);
         break;
 
       case LTE_UL_DCCH_MessageType__c1_PR_rrcConnectionSetupComplete:
@@ -8826,6 +8842,7 @@ rrc_eNB_decode_dcch(
         }
 
         ue_context_p->ue_context.ue_release_timer=0;
+        ASN_STRUCT_FREE(asn_DEF_LTE_UL_DCCH_Message,ul_dcch_msg);
         break;
 
       case LTE_UL_DCCH_MessageType__c1_PR_securityModeComplete:
@@ -8995,6 +9012,7 @@ rrc_eNB_decode_dcch(
         rrc_eNB_generate_defaultRRCConnectionReconfiguration(ctxt_pP,
             ue_context_p,
             RC.rrc[ctxt_pP->module_id]->HO_flag);
+        ASN_STRUCT_FREE(asn_DEF_LTE_UL_DCCH_Message,ul_dcch_msg);
         break;
 
       case LTE_UL_DCCH_MessageType__c1_PR_ulHandoverPreparationTransfer:
@@ -9030,7 +9048,7 @@ rrc_eNB_decode_dcch(
                                        ue_context_p,
                                        ul_dcch_msg);
         }
-
+        ASN_STRUCT_FREE(asn_DEF_LTE_UL_DCCH_Message,ul_dcch_msg);
         break;
 
       case LTE_UL_DCCH_MessageType__c1_PR_counterCheckResponse:

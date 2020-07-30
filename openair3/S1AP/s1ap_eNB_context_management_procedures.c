@@ -191,7 +191,9 @@ int s1ap_ue_context_release_complete(instance_t instance,
         ue_context_p->eNB_ue_s1ap_id, ue_context_p->mme_ue_s1ap_id,
         ue_context_p->ue_state);
   }*/
-
+  for(int cnt=0;cnt < out->protocolIEs.list.count; cnt++){
+    free(out->protocolIEs.list.array[cnt]);
+  }
   return 0;
 }
 
@@ -323,6 +325,9 @@ int s1ap_ue_context_release_req(instance_t instance,
                                    ue_context_p->mme_ref->assoc_id, buffer,
                                    length, ue_context_p->tx_stream);
 
+  for(int cnt=0;cnt < out->protocolIEs.list.count; cnt++){
+    free(out->protocolIEs.list.array[cnt]);
+  }
   return 0;
 }
 
