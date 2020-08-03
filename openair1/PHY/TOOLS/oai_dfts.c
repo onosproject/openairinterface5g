@@ -32,6 +32,7 @@
 #define M_PI 3.14159265358979323846
 #endif
 #define OAIDFTS_MAIN
+#define OAIDFTS_LIB
 #ifndef MR_MAIN
 #include "PHY/defs_common.h"
 #include "PHY/impl_defs_top.h"

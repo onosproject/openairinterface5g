@@ -1375,7 +1375,14 @@ add_library(ldpc MODULE ${PHY_LDPC_OPTIM8SEGMULTI_SRC} )
 add_library(coding MODULE ${PHY_TURBOSRC} )
 
 add_library(dfts MODULE ${OPENAIR1_DIR}/PHY/TOOLS/oai_dfts.c )
+set(KISSFFT_DIR ${OPENAIR_DIR}/kiss_fft130)
 
+add_library(dfts_fpkiss MODULE ${OPENAIR1_DIR}/PHY/TOOLS/oai_kissdfts.c ${KISSFFT_DIR}/kiss_fft.c)
+target_compile_definitions(dfts_fpkiss PUBLIC -DFIXED_POINT=16 )
+target_compile_options(dfts_fpkiss PUBLIC -O3 -mtune=native -ffast-math -fomit-frame-pointer -dA -fverbose-asm )
+add_library(dfts_flkiss MODULE ${OPENAIR1_DIR}/PHY/TOOLS/oai_kissdfts.c ${KISSFFT_DIR}/kiss_fft.c)
+target_compile_definitions(dfts_fpkiss PUBLIC )
+target_compile_options(dfts_fpkiss PUBLIC -O3 -mtune=native -ffast-math -fomit-frame-pointer -dA -fverbose-asm )
 
 set(PHY_SRC_COMMON
   ${OPENAIR1_DIR}/PHY/LTE_TRANSPORT/dci_tools_common.c

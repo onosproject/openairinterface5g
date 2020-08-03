@@ -261,22 +261,25 @@ void idft36864(int16_t *sigF,int16_t *sig,uint8_t scale_flag);
 void idft49152(int16_t *sigF,int16_t *sig,uint8_t scale_flag); 
 void idft73728(int16_t *sigF,int16_t *sig,uint8_t scale_flag);
 void idft98304(int16_t *sigF,int16_t *sig,uint8_t scale_flag);
+#endif
 
 
 
 
-#else
-  typedef  void(*dftfunc_t)(uint8_t sizeidx,int16_t *sigF,int16_t *sig,unsigned char scale_flag);  
-  typedef  void(*idftfunc_t)(uint8_t sizeidx,int16_t *sigF,int16_t *sig,unsigned char scale_flag);  
-#  ifdef OAIDFTS_LOADER
+typedef  void(*dftfunc_t)(uint8_t sizeidx,int16_t *sigF,int16_t *sig,unsigned char scale_flag);  
+typedef  void(*idftfunc_t)(uint8_t sizeidx,int16_t *sigF,int16_t *sig,unsigned char scale_flag);  
+
+#ifdef OAIDFTS_LOADER
   dftfunc_t dft;
   idftfunc_t idft;
-#  else
-  extern dftfunc_t dft;
-  extern idftfunc_t idft;
-  extern int load_dftslib(void);
+#else
+#  ifndef OAIDFTS_LIB
+     extern dftfunc_t dft;
+     extern idftfunc_t idft;
+     extern int load_dftslib(void);
 #  endif
 #endif
+
 
 typedef enum DFT_size_idx {
 	DFT_12,    DFT_24,    DFT_36,   DFT_48,     DFT_60,   DFT_72,   DFT_96,
@@ -289,6 +292,16 @@ typedef enum DFT_size_idx {
 	DFT_SIZE_IDXTABLESIZE
 } dft_size_idx_t;
 
+#define DFT_SIZES {\
+	12,    24,    36,   48,     60,   72,   96,\
+	108,   120,   128,  144,    180,  192,  216,   240,\
+	256,   288,   300,  324,    360,  384,  432,   480,\
+	512,   540,   576,  600,    648,  720,  768,   864,\
+	900,   960,   972,  1024,   1080, 1152, 1200,  1536,\
+	2048,  3072,  4096, 6144,   8192 ,9216, 12288, 18432,\
+	24576, 36864, 49152,73728,  98304}
+	
+                                                       
 #ifdef OAIDFTS_MAIN
 adftfunc_t dft_ftab[]={
 	dft12,    dft24,    dft36,    dft48,    dft60,   dft72,   dft96,
@@ -307,6 +320,12 @@ typedef enum idft_size_idx {
 	IDFT_73728, IDFT_98304, 
 	IDFT_SIZE_IDXTABLESIZE
 } idft_size_idx_t;
+
+#define IDFT_SIZES {\
+	128,   256,  512,   1024,  1536,  2048,  3072,  4096,\
+	6144,  8192, 9216,  12288, 18432, 24576, 36864, 49152,\
+    73728, 98304} 
+
 #ifdef OAIDFTS_MAIN
 aidftfunc_t idft_ftab[]={
         idft128,   idft256,  idft512,   idft1024,  idft1536,  idft2048,  idft3072,  idft4096,
