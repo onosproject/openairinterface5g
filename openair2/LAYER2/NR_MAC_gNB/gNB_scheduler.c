@@ -477,6 +477,8 @@ void gNB_dlsch_ulsch_scheduler(module_id_t module_idP,
       ue_sched_ctl->current_harq_pid = slot_txP % num_slots_per_tdd;
       if (!get_softmodem_params()->phy_test)
         nr_update_pucch_scheduling(module_idP, UE_id, frame_txP, slot_txP, num_slots_per_tdd,&pucch_sched);
+      else
+        pucch_sched = 0; // phytest mode
       nr_schedule_uss_dlsch_phytest(module_idP, frame_txP, slot_txP, &UE_list->UE_sched_ctrl[UE_id].sched_pucch[pucch_sched], NULL);
       // resetting ta flag
       gNB->ta_len = 0;
