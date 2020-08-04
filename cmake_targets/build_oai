@@ -67,11 +67,7 @@ UE_TIMING_TRACE="False"
 USRP_REC_PLAY="False"
 BUILD_ECLIPSE=0
 NR="False"
-<<<<<<< Updated upstream
-OPTIONAL_LIBRARIES="telnetsrv enbscope uescope msc"
-=======
 OPTIONAL_LIBRARIES="telnetsrv enbscope uescope nrscope msc dfts_fpkiss dfts_flkiss"
->>>>>>> Stashed changes
 trap handle_ctrl_c INT
 
 function print_help() {
