@@ -87,10 +87,6 @@ void nr_ue_measurements(PHY_VARS_NR_UE *ue,
                         unsigned char rank_adaptation,
                         uint8_t subframe);
 
-void nr_ue_rrc_measurements(PHY_VARS_NR_UE *ue,
-						uint8_t slot,
-						uint8_t abstraction_flag);
-
 void phy_adjust_gain_nr(PHY_VARS_NR_UE *ue,
                         uint32_t rx_power_fil_dB,
                         uint8_t eNB_id);
