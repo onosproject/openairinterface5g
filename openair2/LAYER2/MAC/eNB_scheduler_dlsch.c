@@ -815,7 +815,6 @@ schedule_ue_spec(module_id_t module_idP,
                                   cc[CC_id].p_eNB == 1 ? 1 : 2,    // transmission mode
                                   0,    //number of PRBs treated as one subband, not used here
                                   0);   // number of beamforming vectors, not used here
-	  dl_req->number_pdu++;
           LOG_D(MAC, "Filled NFAPI configuration for DCI/DLSCH %d, retransmission round %d\n",
                 eNB->pdu_index[CC_id],
                 round_DL);
@@ -1210,7 +1209,6 @@ schedule_ue_spec(module_id_t module_idP,
                                 cc[CC_id].p_eNB == 1 ? 1 : 2, // transmission mode
                                 0,  //number of PRBs treated as one subband, not used here
                                 0); // number of beamforming vectors, not used here
-	dl_req->number_pdu++;
         eNB->TX_req[CC_id].sfn_sf = fill_nfapi_tx_req(&eNB->TX_req[CC_id].tx_request_body,
                                     (frameP * 10) + subframeP,
                                     TBS,

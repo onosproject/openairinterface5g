@@ -542,6 +542,8 @@ rx_sdu(const module_id_t enb_mod_idP,
                   UE_scheduling_control->ul_out_of_sync = 0;
                   mac_eNB_rrc_ul_in_sync(enb_mod_idP, CC_idP, frameP, subframeP, old_rnti);
                 }
+                UE_template_ptr->ul_SR = 1;
+                UE_scheduling_control->crnti_reconfigurationcomplete_flag = 1;
 
               } else if (ret == -2) {
                 LOG_E(MAC, "mac_rrc_data_ind failed, ret == -2\n");
@@ -1376,6 +1378,7 @@ schedule_ulsch_rnti(module_id_t   module_idP,
   eNB_MAC_INST *mac = RC.mac[module_idP];
   COMMON_channels_t *cc = mac->common_channels;
   UE_info_t *UE_info = &mac->UE_info;
+  uint8_t aggregation = 2;
 
   int sched_frame = frameP;
 
@@ -1658,6 +1661,7 @@ schedule_ulsch_rnti(module_id_t   module_idP,
       hi_dci0_pdu->pdu_size = 2 + sizeof(nfapi_hi_dci0_dci_pdu);
       hi_dci0_pdu->dci_pdu.dci_pdu_rel8.tl.tag = NFAPI_HI_DCI0_REQUEST_DCI_PDU_REL8_TAG;
       hi_dci0_pdu->dci_pdu.dci_pdu_rel8.dci_format = NFAPI_UL_DCI_FORMAT_0;
+      hi_dci0_pdu->dci_pdu.dci_pdu_rel8.aggregation_level = aggregation;
       hi_dci0_pdu->dci_pdu.dci_pdu_rel8.rnti = rnti;
       hi_dci0_pdu->dci_pdu.dci_pdu_rel8.transmission_power = 6000;
       hi_dci0_pdu->dci_pdu.dci_pdu_rel8.resource_block_start = UE_template_ptr->pre_first_nb_rb_ul;
