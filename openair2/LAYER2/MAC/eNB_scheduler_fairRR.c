@@ -2520,7 +2520,7 @@ schedule_ue_spec_fairRR(module_id_t module_idP,
         }
 
         // check for DCCH1 and update header information (assume 2 byte sub-header)
-        if (TBS - ta_len - header_len_dcch - sdu_length_total > 0) {
+        if (TBS - ta_len - header_len_dcch - sdu_length_total -2 > 0) {
           rlc_status = mac_rlc_status_ind(module_idP, rnti, module_idP, frameP, subframeP, ENB_FLAG_YES, MBMS_FLAG_NO, DCCH + 1, (TBS - ta_len - header_len_dcch - sdu_length_total)
 #if (LTE_RRC_VERSION >= MAKE_VERSION(14, 0, 0))
                                           ,0, 0
@@ -2995,7 +2995,7 @@ schedule_ue_spec_fairRR(module_id_t module_idP,
             }
 
             // check for DCCH1 and update header information (assume 2 byte sub-header)
-            if(TBS - ta_len - header_len_dcch - sdu_length_total > 0) {
+            if(TBS - ta_len - header_len_dcch - sdu_length_total - 2 > 0) {
                 rlc_status = mac_rlc_status_ind( module_idP,
                                                  rnti,
                                                  module_idP,
