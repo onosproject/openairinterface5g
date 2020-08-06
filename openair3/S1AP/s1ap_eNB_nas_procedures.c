@@ -455,9 +455,6 @@ int s1ap_eNB_handle_nas_first_req(
     /* Send encoded message over sctp */
     s1ap_eNB_itti_send_sctp_data_req(instance_p->instance, mme_desc_p->assoc_id,
                                      buffer, length, ue_desc_p->tx_stream);
-    for(int cnt=0;cnt < out->protocolIEs.list.count; cnt++){
-      free(out->protocolIEs.list.array[cnt]);
-    }
     return 0;
 }
 
@@ -729,9 +726,6 @@ int s1ap_eNB_nas_uplink(instance_t instance, s1ap_uplink_nas_t *s1ap_uplink_nas_
     s1ap_eNB_itti_send_sctp_data_req(s1ap_eNB_instance_p->instance,
                                      ue_context_p->mme_ref->assoc_id, buffer,
                                      length, ue_context_p->tx_stream);
-    for(int cnt=0;cnt < out->protocolIEs.list.count; cnt++){
-      free(out->protocolIEs.list.array[cnt]);
-    }
     return 0;
 }
 
@@ -831,9 +825,6 @@ int s1ap_eNB_nas_non_delivery_ind(instance_t instance,
     s1ap_eNB_itti_send_sctp_data_req(s1ap_eNB_instance_p->instance,
                                      ue_context_p->mme_ref->assoc_id, buffer,
                                      length, ue_context_p->tx_stream);
-    for(int cnt=0;cnt < out->protocolIEs.list.count; cnt++){
-      free(out->protocolIEs.list.array[cnt]);
-    }
     return 0;
 }
 
@@ -1013,15 +1004,6 @@ int s1ap_eNB_initial_ctxt_resp(
     s1ap_eNB_itti_send_sctp_data_req(s1ap_eNB_instance_p->instance,
                                      ue_context_p->mme_ref->assoc_id, buffer,
                                      length, ue_context_p->tx_stream);
-    for(int cnt=0;cnt < out->protocolIEs.list.count; cnt++){
-      if(out->protocolIEs.list.array[cnt]->id == S1AP_ProtocolIE_ID_id_E_RABSetupListCtxtSURes){
-        ASN_STRUCT_FREE(asn_DEF_S1AP_InitialContextSetupResponseIEs,out->protocolIEs.list.array[cnt]);
-      }else if(out->protocolIEs.list.array[cnt]->id == S1AP_ProtocolIE_ID_id_E_RABFailedToSetupListCtxtSURes){
-        ASN_STRUCT_FREE(asn_DEF_S1AP_InitialContextSetupResponseIEs,out->protocolIEs.list.array[cnt]);
-      }else{
-        free(out->protocolIEs.list.array[cnt]);
-      }
-    }
     return 0;
 }
 
@@ -1129,9 +1111,6 @@ int s1ap_eNB_ue_capabilities(instance_t instance,
     s1ap_eNB_itti_send_sctp_data_req(s1ap_eNB_instance_p->instance,
                                      ue_context_p->mme_ref->assoc_id, buffer,
                                      length, ue_context_p->tx_stream);
-    for(int cnt=0;cnt < out->protocolIEs.list.count; cnt++){
-      free(out->protocolIEs.list.array[cnt]);
-    }
     return 0;
 }
 
@@ -1322,15 +1301,6 @@ int s1ap_eNB_e_rab_setup_resp(instance_t instance,
     s1ap_eNB_itti_send_sctp_data_req(s1ap_eNB_instance_p->instance,
                                      ue_context_p->mme_ref->assoc_id, buffer,
                                      length, ue_context_p->tx_stream);
-    for(int cnt=0;cnt < out->protocolIEs.list.count; cnt++){
-      if(out->protocolIEs.list.array[cnt]->id == S1AP_ProtocolIE_ID_id_E_RABSetupListBearerSURes){
-        ASN_STRUCT_FREE(asn_DEF_S1AP_E_RABSetupResponseIEs,out->protocolIEs.list.array[cnt]);
-      }else if(out->protocolIEs.list.array[cnt]->id == S1AP_ProtocolIE_ID_id_E_RABFailedToSetupListBearerSURes){
-        ASN_STRUCT_FREE(asn_DEF_S1AP_E_RABSetupResponseIEs,out->protocolIEs.list.array[cnt]);
-      }else{
-        free(out->protocolIEs.list.array[cnt]);
-      }
-    }
     return 0;
 }
 
@@ -1500,15 +1470,6 @@ int s1ap_eNB_e_rab_modify_resp(instance_t instance,
     s1ap_eNB_itti_send_sctp_data_req(s1ap_eNB_instance_p->instance,
                                      ue_context_p->mme_ref->assoc_id, buffer,
                                      length, ue_context_p->tx_stream);
-    for(int cnt=0;cnt < out->protocolIEs.list.count; cnt++){
-      if(out->protocolIEs.list.array[cnt]->id == S1AP_ProtocolIE_ID_id_E_RABFailedToModifyList){
-        ASN_STRUCT_FREE(asn_DEF_S1AP_E_RABModifyResponseIEs,out->protocolIEs.list.array[cnt]);
-      }else if(out->protocolIEs.list.array[cnt]->id == S1AP_ProtocolIE_ID_id_E_RABFailedToModifyList){
-        ASN_STRUCT_FREE(asn_DEF_S1AP_E_RABModifyResponseIEs,out->protocolIEs.list.array[cnt]);
-      }else{
-        free(out->protocolIEs.list.array[cnt]);
-      }
-    }
     return 0;
 }
 //------------------------------------------------------------------------------
@@ -1680,15 +1641,6 @@ int s1ap_eNB_e_rab_release_resp(instance_t instance,
                                      length, ue_context_p->tx_stream);
     S1AP_INFO("e_rab_release_response sended eNB_UE_S1AP_ID %d  mme_ue_s1ap_id %d nb_of_e_rabs_released %d nb_of_e_rabs_failed %d\n",
               e_rab_release_resp_p->eNB_ue_s1ap_id, ue_context_p->mme_ue_s1ap_id,e_rab_release_resp_p->nb_of_e_rabs_released,e_rab_release_resp_p->nb_of_e_rabs_failed);
-    for(int cnt=0;cnt < out->protocolIEs.list.count; cnt++){
-      if(out->protocolIEs.list.array[cnt]->id == S1AP_ProtocolIE_ID_id_E_RABReleaseListBearerRelComp){
-        ASN_STRUCT_FREE(asn_DEF_S1AP_E_RABReleaseResponseIEs,out->protocolIEs.list.array[cnt]);
-      }else if(out->protocolIEs.list.array[cnt]->id == S1AP_ProtocolIE_ID_id_E_RABFailedToReleaseList){
-        ASN_STRUCT_FREE(asn_DEF_S1AP_E_RABReleaseResponseIEs,out->protocolIEs.list.array[cnt]);
-      }else{
-        free(out->protocolIEs.list.array[cnt]);
-      }
-    }
     return 0;
 }
 
@@ -1934,13 +1886,5 @@ int s1ap_eNB_path_switch_req(instance_t instance,
   s1ap_eNB_itti_send_sctp_data_req(s1ap_eNB_instance_p->instance,
                                    mme_desc_p->assoc_id, buffer,
                                    length, ue_context_p->tx_stream);
-    for(int cnt=0;cnt < out->protocolIEs.list.count; cnt++){
-      if(out->protocolIEs.list.array[cnt]->id == S1AP_ProtocolIE_ID_id_E_RABToBeSwitchedDLList){
-        ASN_STRUCT_FREE(asn_DEF_S1AP_PathSwitchRequestIEs,out->protocolIEs.list.array[cnt]);
-      }else{
-        free(out->protocolIEs.list.array[cnt]);
-      }
-    }
-
   return ret;
 }
