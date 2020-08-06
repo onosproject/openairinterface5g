@@ -226,13 +226,14 @@ static inline int rxtx(PHY_VARS_eNB *eNB,
   }
 
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_ENB_DLSCH_ULSCH_SCHEDULER, 1 );
-#if defined(PRE_SCD_THREAD)
 
-  if (NFAPI_MODE==NFAPI_MODE_VNF) {
-    memcpy(&pre_scd_eNB_UE_stats,&RC.mac[0]->UE_info.eNB_UE_stats, sizeof(eNB_UE_STATS)*MAX_NUM_CCs*NUMBER_OF_UE_MAX);
-    memcpy(&pre_scd_activeUE, &RC.mac[0]->UE_info.active, sizeof(boolean_t)*NUMBER_OF_UE_MAX);
+  if(global_scheduler_mode == SCHED_MODE_FAIR_RR) {
+    if (NFAPI_MODE==NFAPI_MODE_VNF) {
+      memcpy(&pre_scd_eNB_UE_stats,&RC.mac[0]->UE_info.eNB_UE_stats, sizeof(eNB_UE_STATS)*MAX_NUM_CCs*NUMBER_OF_UE_MAX);
+      memcpy(&pre_scd_activeUE, &RC.mac[0]->UE_info.active, sizeof(boolean_t)*NUMBER_OF_UE_MAX);
     }
-#endif
+  }
+  
   if ((ret= pthread_mutex_lock(&eNB->UL_INFO_mutex))!=0) {
     LOG_E(PHY,"error locking UL_INFO_mutex, return %d\n",ret);
     return -1;
@@ -254,9 +255,7 @@ static inline int rxtx(PHY_VARS_eNB *eNB,
   if(oai_exit) return(-1);
 
   if(get_thread_parallel_conf() == PARALLEL_SINGLE_THREAD) {
-#ifndef PHY_TX_THREAD
     phy_procedures_eNB_TX(eNB, proc, 1);
-#endif
   }
 
   /* CONFLICT RESOLUTION: what about this release_thread call, has it to be done? if yes, where? */
@@ -1506,7 +1505,6 @@ void stop_eNB(int nb_inst) {
   }
 }
 
-#if defined(PRE_SCD_THREAD)
 void *pre_scd_task( void *param ) {
   static int              eNB_pre_scd_status;
   protocol_ctxt_t         ctxt;
@@ -1579,5 +1577,4 @@ void *pre_scd_task( void *param ) {
   eNB_pre_scd_status = 0;
   return &eNB_pre_scd_status;
 }
-#endif
 

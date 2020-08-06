@@ -459,14 +459,15 @@ int restart_L1L2(module_id_t enb_id) {
     LOG_I(RRC, "Re-created task for RRC eNB successfully\n");
   }
 
-#if defined(PRE_SCD_THREAD)
-  if (itti_create_task (TASK_MAC_ENB_PRE_SCD, pre_scd_task, NULL) < 0) {
-    LOG_E(MAC,"Create task for MAC eNB PreSCD failed\n");
-    return -1;
-  } else {
-    LOG_I(RRC, "Re-created task for MAC eNB PreSCD successfully\n");
+
+  if(global_scheduler_mode == SCHED_MODE_FAIR_RR) {
+    if (itti_create_task (TASK_MAC_ENB_PRE_SCD, pre_scd_task, NULL) < 0) {
+      LOG_E(MAC,"Create task for MAC eNB PreSCD failed\n");
+     return -1;
+    } else {
+     LOG_I(RRC, "Re-created task for MAC eNB PreSCD successfully\n");
+    }
   }
-#endif
 
   /* pass a reconfiguration request which will configure everything down to
    * RC.eNB[i][j]->frame_parms, too */
@@ -647,13 +648,13 @@ int main ( int argc, char **argv )
     }
 
     if (NFAPI_MODE==NFAPI_MODE_VNF) {// VNF
-#if defined(PRE_SCD_THREAD)
-      init_ru_vnf();  // ru pointer is necessary for pre_scd.
-      int rc;
-      LOG_I(MAC,"Creating MAC eNB PreSCD Task\n");
-      rc = itti_create_task (TASK_MAC_ENB_PRE_SCD, pre_scd_task, NULL);
-      AssertFatal(rc >= 0, "Create task for MAC eNB PreSCD failed\n");
-#endif
+      if(global_scheduler_mode == SCHED_MODE_FAIR_RR) {
+        init_ru_vnf();  // ru pointer is necessary for pre_scd.
+        int rc;
+        LOG_I(MAC,"Creating MAC eNB PreSCD Task\n");
+        rc = itti_create_task (TASK_MAC_ENB_PRE_SCD, pre_scd_task, NULL);
+        AssertFatal(rc >= 0, "Create task for MAC eNB PreSCD failed\n");
+      }
       wait_nfapi_init("main?");
     }
 
@@ -694,15 +695,15 @@ int main ( int argc, char **argv )
   if (RC.nb_RU >0 && NFAPI_MODE!=NFAPI_MODE_VNF) {
     printf("Initializing RU threads\n");
     init_RU(get_softmodem_params()->rf_config_file,get_softmodem_params()->send_dmrs_sync);
-    
-#if defined(PRE_SCD_THREAD)
+
+  if(global_scheduler_mode == SCHED_MODE_FAIR_RR) {
     if (NFAPI_MODE == NFAPI_MONOLITHIC) {
       int rc;
       LOG_I(MAC,"Creating MAC eNB PreSCD Task\n");
       rc = itti_create_task (TASK_MAC_ENB_PRE_SCD, pre_scd_task, NULL);
       AssertFatal(rc >= 0, "Create task for MAC eNB PreSCD failed\n");
     }
-#endif
+  }
 
     for (ru_id=0; ru_id<RC.nb_RU; ru_id++) {
       RC.ru[ru_id]->rf_map.card=0;

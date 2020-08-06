@@ -125,13 +125,6 @@ typedef struct {
   uint8_t first_layer;
   /// codeword this transport block is mapped to
   uint8_t codeword;
-#ifdef PHY_TX_THREAD
-  /// indicator that this DLSCH corresponds to SIB1-BR, needed for c_init for scrambling
-  uint8_t sib1_br_flag;
-  /// initial absolute subframe (see 36.211 Section 6.3.1), needed for c_init for scrambling
-  uint16_t i0;
-  CEmode_t CEmode;
-#endif
 } LTE_DL_eNB_HARQ_t;
 
 
@@ -178,13 +171,11 @@ typedef struct {
   int16_t sqrt_rho_a;
   /// amplitude of PDSCH (compared to RS) in symbols containing pilots
   int16_t sqrt_rho_b;
-#ifndef PHY_TX_THREAD
   /// indicator that this DLSCH corresponds to SIB1-BR, needed for c_init for scrambling
   uint8_t sib1_br_flag;
   /// initial absolute subframe (see 36.211 Section 6.3.1), needed for c_init for scrambling
   uint16_t i0;
   CEmode_t CEmode;
-#endif
 } LTE_eNB_DLSCH_t;
 
 

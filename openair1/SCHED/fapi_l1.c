@@ -280,11 +280,7 @@ void handle_nfapi_dlsch_pdu(PHY_VARS_eNB *eNB,int frame,int subframe,L1_rxtx_pro
                                       rel8->rnti,UE_id,harq_pid);
   }
 
-#ifdef PHY_TX_THREAD
-  dlsch0_harq->sib1_br_flag=0;
-#else
   dlsch0->sib1_br_flag=0;
-#endif
 
   if ((rel13->pdsch_payload_type <2) && (rel13->ue_type>0)) { // this is a BR/CE UE and SIB1-BR/SI-BR
     UE_id = find_dlsch(rel8->rnti,eNB,SEARCH_EXIST_OR_FREE);
@@ -306,15 +302,8 @@ void handle_nfapi_dlsch_pdu(PHY_VARS_eNB *eNB,int frame,int subframe,L1_rxtx_pro
     dlsch0->harq_ids[proc->frame_tx%2][proc->subframe_rx] = 0;
     dlsch0_harq->frame       = proc->frame_tx;
     dlsch0_harq->subframe    = proc->subframe_tx;
-#ifdef PHY_TX_THREAD
-
-    if (rel13->pdsch_payload_type == 0) dlsch0_harq->sib1_br_flag=1;
-
-#else
 
     if (rel13->pdsch_payload_type == 0) dlsch0->sib1_br_flag=1;
-
-#endif
 
     // configure PDSCH
     switch (eNB->frame_parms.N_RB_DL) {
@@ -370,11 +359,7 @@ void handle_nfapi_dlsch_pdu(PHY_VARS_eNB *eNB,int frame,int subframe,L1_rxtx_pro
     dlsch0->sib1_br_flag=0;
     dlsch0->i0               = 0xFFFF;
     LOG_D(PHY,"dlsch->i0:%04x dlsch0_harq[pdsch_start:%d nb_rb:%d vrb_type:%d rvidx:%d Nl:%d mimo_mode:%d dl_power_off:%d round:%d status:%d TBS:%d Qm:%d codeword:%d rb_alloc:%d] rel8[length:%d]\n",
-#ifdef PHY_TX_THREAD
-          dlsch0_harq->i0,
-#else
           dlsch0->i0,
-#endif
           dlsch0_harq->pdsch_start, dlsch0_harq->nb_rb, dlsch0_harq->vrb_type, dlsch0_harq->rvidx, dlsch0_harq->Nl, dlsch0_harq->mimo_mode, dlsch0_harq->dl_power_off, dlsch0_harq->round, dlsch0_harq->status,
           dlsch0_harq->TBS, dlsch0_harq->Qm, dlsch0_harq->codeword, dlsch0_harq->rb_alloc[0],
           rel8->length

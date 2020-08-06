@@ -124,10 +124,8 @@ const char ru_states[6][9] = {"RU_IDLE","RU_CONFIG","RU_READY","RU_RUN","RU_ERRO
 
 extern uint16_t sf_ahead;
 
-#if defined(PRE_SCD_THREAD)
-  extern uint8_t dlsch_ue_select_tbl_in_use;
-  void init_ru_vnf(void);
-#endif
+extern uint8_t dlsch_ue_select_tbl_in_use;
+void init_ru_vnf(void);
 
 
 /*************************************************************/
@@ -772,15 +770,9 @@ void rx_rf(RU_t *ru,
   // synchronize first reception to frame 0 subframe 0
 
   if (ru->fh_north_asynch_in == NULL) {
-#ifdef PHY_TX_THREAD
-    proc->timestamp_phy_tx = proc->timestamp_rx+((sf_ahead-1)*fp->samples_per_tti);
-    proc->subframe_phy_tx  = (proc->tti_rx+(sf_ahead-1))%10;
-    proc->frame_phy_tx     = (proc->tti_rx>(9-(sf_ahead-1))) ? (proc->frame_rx+1)&1023 : proc->frame_rx;
-#else
     proc->timestamp_tx = proc->timestamp_rx+(sf_ahead*fp->samples_per_tti);
     proc->tti_tx       = (proc->tti_rx+sf_ahead)%10;
     proc->frame_tx     = (proc->tti_rx>(9-sf_ahead)) ? (proc->frame_rx+1)&1023 : proc->frame_rx;
-#endif
     //proc->timestamp_tx = proc->timestamp_rx+(sf_ahead*fp->samples_per_tti);
     //proc->subframe_tx  = (proc->tti_rx+sf_ahead)%10;
     //proc->frame_tx     = (proc->tti_rx>(9-sf_ahead)) ? (proc->frame_rx+1)&1023 : proc->frame_rx;
@@ -1655,13 +1647,6 @@ static void *ru_stats_thread(void *param) {
   return(NULL);
 }
 
-#ifdef PHY_TX_THREAD
-  int first_phy_tx = 1;
-  volatile int16_t phy_tx_txdataF_end;
-  volatile int16_t phy_tx_end;
-#endif
-
-
 static void *ru_thread_tx( void *param ) {
   RU_t *ru         = (RU_t *)param;
   RU_proc_t *proc  = &ru->proc;
@@ -1956,40 +1941,6 @@ static void *ru_thread( void *param ) {
         LOG_E(PHY, "No fronthaul interface at south port");
         return NULL;
       }
-      
-#ifdef PHY_TX_THREAD
-      if(first_phy_tx == 0)
-	{ 
-	  phy_tx_end = 0;
-	  phy_tx_txdataF_end = 0;
-          if ((ret=pthread_mutex_lock(&ru->proc.mutex_phy_tx))!=0) {
-            LOG_E(PHY,"[RU] ERROR pthread_mutex_lock for phy tx thread (IC %d)\n", ru->proc.instance_cnt_phy_tx);
-            return NULL;
-          }
-
-	  if (ru->proc.instance_cnt_phy_tx==-1) {
-	    ++ru->proc.instance_cnt_phy_tx;
-	    
-	    // the thread can now be woken up
-	    if (pthread_cond_signal(&ru->proc.cond_phy_tx) != 0) {
-        LOG_E(PHY, "ERROR pthread_cond_signal for phy_tx thread\n");
-        return NULL;
-      }
-	  }else{
-	    LOG_E(PHY,"phy tx thread busy, skipping\n");
-	    ++ru->proc.instance_cnt_phy_tx;
-	  }
-          if ((ret=pthread_mutex_unlock( &ru->proc.mutex_phy_tx ))!=0) {
-            LOG_E(PHY,"mutex_unlock returns %d\n",ret);
-            return NULL;
-          }
-	} else { 
-        phy_tx_end = 1;
-        phy_tx_txdataF_end = 1;
-      }
-
-      first_phy_tx = 0;
-#endif
 
       if (ru->stop_rf && ru->cmd == STOP_RU) {
         ru->stop_rf(ru);
@@ -2068,10 +2019,8 @@ static void *ru_thread( void *param ) {
 			ru->frame_parms = &RC.eNB[0][0]->frame_parms;//->frame_parms;
 			LOG_W(PHY,"RU MBSFN SF PARAMS Updated\n");
 		}
-	}
+        }
 #endif
-	
-#ifndef PHY_TX_THREAD
 
         if(get_thread_parallel_conf() == PARALLEL_SINGLE_THREAD || ru->num_eNB==0) {
           // do TX front-end processing if needed (precoding and/or IDFTs)
@@ -2102,17 +2051,6 @@ static void *ru_thread( void *param ) {
           proc->emulate_rf_busy = 0;
         }
 
-#else
-        struct timespec time_req, time_rem;
-        time_req.tv_sec = 0;
-        time_req.tv_nsec = 10000;
-
-        while((!oai_exit)&&(phy_tx_end == 0)) {
-          nanosleep(&time_req,&time_rem);
-          continue;
-        }
-
-#endif
       } // else wait_cnt == 0
     } // ru->state = RU_RUN
   } // while !oai_exit
@@ -2187,120 +2125,6 @@ void *ru_thread_synch(void *arg) {
   ru_thread_synch_status = 0;
   return &ru_thread_synch_status;
 }
-
-#ifdef PHY_TX_THREAD
-/*!
- * \brief The phy tx thread of eNB.
- * \param param is a \ref L1_proc_t structure which contains the info what to process.
- * \returns a pointer to an int. The storage is not on the heap and must not be freed.
- */
-static void *eNB_thread_phy_tx( void *param ) {
-  static int eNB_thread_phy_tx_status;
-  RU_t *ru        = (RU_t *)param;
-  RU_proc_t *proc = &ru->proc;
-  PHY_VARS_eNB **eNB_list = ru->eNB_list;
-  L1_rxtx_proc_t L1_proc;
-  // set default return value
-  eNB_thread_phy_tx_status = 0;
-  int ret;
-  thread_top_init("eNB_thread_phy_tx",1,500000L,1000000L,20000000L);
-
-  while (!oai_exit) {
-    if (oai_exit) break;
-
-    if (wait_on_condition(&proc->mutex_phy_tx,&proc->cond_phy_tx,&proc->instance_cnt_phy_tx,"eNB_phy_tx_thread") < 0) break;
-
-    LOG_D(PHY,"Running eNB phy tx procedures\n");
-
-    if (ru->num_eNB != 1) {
-      LOG_E(PHY, "handle multiple L1 case\n");
-      return NULL;
-    }
-    L1_proc.subframe_tx = proc->subframe_phy_tx;
-    L1_proc.frame_tx = proc->frame_phy_tx;
-    phy_procedures_eNB_TX(eNB_list[0], &L1_proc, 1);
-    phy_tx_txdataF_end = 1;
-
-    if ((ret=pthread_mutex_lock(&ru->proc.mutex_rf_tx))!=0) {
-      LOG_E(PHY,"[RU] ERROR pthread_mutex_lock for rf tx thread (IC %d)\n", ru->proc.instance_cnt_rf_tx);
-      return NULL;
-    }
-
-    if (ru->proc.instance_cnt_rf_tx==-1) {
-      ++ru->proc.instance_cnt_rf_tx;
-      ru->proc.frame_tx = proc->frame_phy_tx;
-      ru->proc.subframe_tx = proc->subframe_phy_tx;
-      ru->proc.timestamp_tx = proc->timestamp_phy_tx;
-      // the thread can now be woken up
-      if (pthread_cond_signal(&ru->proc.cond_rf_tx) != 0) {
-        LOG_E(PHY, "ERROR pthread_cond_signal for rf_tx thread\n");
-        return NULL;
-      }
-    } else {
-      LOG_E(PHY,"rf tx thread busy, skipping\n");
-      late_control=STATE_BURST_TERMINATE;
-    }
-
-    if ((ret=pthread_mutex_unlock( &ru->proc.mutex_rf_tx ))!=0) {
-      LOG_E(PHY,"mutex_unlock returns %d\n",ret);
-      return NULL;
-    }
-
-    if (release_thread(&proc->mutex_phy_tx,&proc->instance_cnt_phy_tx,"eNB_thread_phy_tx") < 0) break;
-
-    phy_tx_end = 1;
-  }
-
-  LOG_I(PHY, "Exiting eNB thread PHY TX\n");
-  eNB_thread_phy_tx_status = 0;
-  return &eNB_thread_phy_tx_status;
-}
-
-
-static void *rf_tx( void *param ) {
-  static int rf_tx_status;
-  RU_t *ru      = (RU_t *)param;
-  RU_proc_t *proc = &ru->proc;
-  // set default return value
-  rf_tx_status = 0;
-  thread_top_init("rf_tx",1,500000L,1000000L,20000000L);
-
-  while (!oai_exit) {
-    if (oai_exit) break;
-
-    if (wait_on_condition(&proc->mutex_rf_tx,&proc->cond_rf_tx,&proc->instance_cnt_rf_tx,"rf_tx_thread") < 0) break;
-
-    LOG_D(PHY,"Running eNB rf tx procedures\n");
-
-    if(ru->num_eNB == 1) {
-      // do TX front-end processing if needed (precoding and/or IDFTs)
-      if (ru->feptx_prec) ru->feptx_prec(ru);
-
-      // do OFDM if needed
-      if ((ru->fh_north_asynch_in == NULL) && (ru->feptx_ofdm)) ru->feptx_ofdm(ru,proc->frame_tx,proc->tti_tx);
-
-      if(!emulate_rf) {
-        // do outgoing fronthaul (south) if needed
-        if ((ru->fh_north_asynch_in == NULL) && (ru->fh_south_out)) ru->fh_south_out(ru,proc->frame_tx,proc->tti_tx,proc->timestamp_tx);
-
-        if (ru->fh_north_out) ru->fh_north_out(ru);
-      }
-    }
-
-    if (release_thread(&proc->mutex_rf_tx,&proc->instance_cnt_rf_tx,"rf_tx") < 0) break;
-
-    if(proc->instance_cnt_rf_tx >= 0) {
-      late_control=STATE_BURST_TERMINATE;
-      LOG_E(PHY,"detect rf tx busy change mode TX failsafe\n");
-    }
-  }
-
-  LOG_I(PHY, "Exiting rf TX\n");
-  rf_tx_status = 0;
-  return &rf_tx_status;
-}
-#endif
-
 
 int start_if(struct RU_t_s *ru,struct PHY_VARS_eNB_s *eNB) {
   return(ru->ifdevice.trx_start_func(&ru->ifdevice));
@@ -2402,14 +2226,6 @@ void init_RU_proc(RU_t *ru) {
   pthread_mutex_init( &proc->mutex_prach_br, NULL);
   pthread_cond_init( &proc->cond_prach_br, NULL);
   pthread_attr_init( &proc->attr_prach_br);
-#ifdef PHY_TX_THREAD
-  proc->instance_cnt_phy_tx = -1;
-  pthread_mutex_init( &proc->mutex_phy_tx, NULL);
-  pthread_cond_init( &proc->cond_phy_tx, NULL);
-  proc->instance_cnt_rf_tx = -1;
-  pthread_mutex_init( &proc->mutex_rf_tx, NULL);
-  pthread_cond_init( &proc->cond_rf_tx, NULL);
-#endif
 #ifndef DEADLINE_SCHEDULER
   attr_FH        = &proc->attr_FH;
   attr_FH1       = &proc->attr_FH1;
@@ -2424,11 +2240,6 @@ void init_RU_proc(RU_t *ru) {
 
   pthread_create( &proc->pthread_FH, attr_FH, ru_thread, (void *)ru );
 
-#ifdef PHY_TX_THREAD
-  pthread_create( &proc->pthread_phy_tx, NULL, eNB_thread_phy_tx, (void *)ru );
-  pthread_setname_np( proc->pthread_phy_tx, "phy_tx_thread" );
-  pthread_create( &proc->pthread_rf_tx, NULL, rf_tx, (void *)ru );
-#endif
 
   if (get_softmodem_params()->emulate_rf)
     pthread_create( &proc->pthread_emulateRF, attr_emulateRF, emulatedRF_thread, (void *)proc );
@@ -2504,34 +2315,6 @@ void init_RU_proc(RU_t *ru) {
 void kill_RU_proc(RU_t *ru) {
   int ret;
   RU_proc_t *proc = &ru->proc;
-#ifdef PHY_TX_THREAD
-  if ((ret=pthread_mutex_lock(&proc->mutex_phy_tx))!=0) {
-    LOG_E(PHY,"mutex_lock returns %d\n",ret);
-    return;
-  }
-  proc->instance_cnt_phy_tx = 0;
-  pthread_cond_signal(&proc->cond_phy_tx);
-  if ((ret=pthread_mutex_unlock(&proc->mutex_phy_tx))!=0) {
-    LOG_E(PHY,"mutex_unlock returns %d\n",ret);
-    return;
-  }
-  pthread_join(ru->proc.pthread_phy_tx, NULL);
-  pthread_mutex_destroy( &proc->mutex_phy_tx);
-  pthread_cond_destroy( &proc->cond_phy_tx);
-  if ((ret=pthread_mutex_lock(&proc->mutex_rf_tx))!=0) {
-    LOG_E(PHY,"mutex_lock returns %d\n",ret);
-    return;
-  }
-  proc->instance_cnt_rf_tx = 0;
-  pthread_cond_signal(&proc->cond_rf_tx);
-  if ((ret=pthread_mutex_unlock(&proc->mutex_rf_tx))!=0) {
-    LOG_E(PHY,"mutex_unlock returns %d\n",ret);
-    return;
-  }
-  pthread_join(proc->pthread_rf_tx, NULL);
-  pthread_mutex_destroy( &proc->mutex_rf_tx);
-  pthread_cond_destroy( &proc->cond_rf_tx);
-#endif
 
   if (get_thread_worker_conf() == WORKER_ENABLE) {
     LOG_D(PHY, "killing FEP thread\n");
@@ -2953,40 +2736,6 @@ void init_RU(char *rf_config_file, int send_dmrssync) {
 }
 
 
-void stop_ru(RU_t *ru) {
-#if defined(PRE_SCD_THREAD) || defined(PHY_TX_THREAD)
-  int *status;
-#endif
-  printf("Stopping RU %p processing threads\n",(void *)ru);
-#if defined(PRE_SCD_THREAD)
-  if(ru && (NFAPI_MODE == NFAPI_MONOLITHIC || NFAPI_MODE == NFAPI_MODE_VNF)){
-    ru->proc.instance_pre_scd = 0;
-    pthread_cond_signal( &ru->proc.cond_pre_scd );
-    pthread_join(ru->proc.pthread_pre_scd, (void **)&status );
-    pthread_mutex_destroy(&ru->proc.mutex_pre_scd );
-    pthread_cond_destroy(&ru->proc.cond_pre_scd );
-  }
-
-#endif
-#ifdef PHY_TX_THREAD
-
-  if(ru) {
-    ru->proc.instance_cnt_phy_tx = 0;
-    pthread_cond_signal(&ru->proc.cond_phy_tx);
-    pthread_join( ru->proc.pthread_phy_tx, (void **)&status );
-    pthread_mutex_destroy( &ru->proc.mutex_phy_tx );
-    pthread_cond_destroy( &ru->proc.cond_phy_tx );
-    ru->proc.instance_cnt_rf_tx = 0;
-    pthread_cond_signal(&ru->proc.cond_rf_tx);
-    pthread_join( ru->proc.pthread_rf_tx, (void **)&status );
-    pthread_mutex_destroy( &ru->proc.mutex_rf_tx );
-    pthread_cond_destroy( &ru->proc.cond_rf_tx );
-  }
-
-#endif
-}
-
-
 void stop_RU(int nb_ru) {
   for (int inst = 0; inst < nb_ru; inst++) {
     LOG_I(PHY, "Stopping RU %d processing threads\n", inst);
@@ -2996,7 +2745,6 @@ void stop_RU(int nb_ru) {
 
 //Some of the member of ru pointer is used in pre_scd.
 //This funtion is for initializing ru pointer for L2 FAPI simulator.
-#if defined(PRE_SCD_THREAD)
 void init_ru_vnf(void) {
   int ru_id;
   RU_t *ru;
@@ -3072,7 +2820,6 @@ void init_ru_vnf(void) {
   //  sleep(1);
   LOG_D(HW,"[lte-softmodem.c] RU threads created\n");
 }
-#endif
 
 
 /* --------------------------------------------------------*/

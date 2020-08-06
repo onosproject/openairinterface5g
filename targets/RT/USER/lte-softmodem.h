@@ -165,7 +165,6 @@ extern void kill_eNB_proc(int inst);
 extern void init_eNB(int single_thread_flag, int wait_for_sync);
 
 // In lte-ru.c
-extern void stop_ru(RU_t *ru);
 extern void init_ru_vnf(void);
 extern void init_RU_proc(RU_t *ru);
 extern void stop_RU(int nb_ru);
