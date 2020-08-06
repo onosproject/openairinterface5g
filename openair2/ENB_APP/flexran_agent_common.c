@@ -435,7 +435,8 @@ int flexran_agent_control_delegation(mid_t mod_id, const void *params, Protocol_
   f = fopen(target, "wb");
 
   if (f) {
-    fwrite(control_delegation_msg->payload.data, control_delegation_msg->payload.len, 1, f);
+    LOG_W(FLEXRAN_AGENT, "exist\n");	
+    fwrite(control_delegation_msg->payload.data, control_delegation_msg->payload.len, 1, f);	
     fclose(f);
   } else {
     LOG_W(FLEXRAN_AGENT, "[%d] can not write control delegation data to %s\n",
