@@ -256,9 +256,7 @@ static inline int rxtx(PHY_VARS_eNB *eNB,L1_rxtx_proc_t *proc, char *thread_name
   if(oai_exit) return(-1);
 
   if(get_thread_parallel_conf() == PARALLEL_SINGLE_THREAD) {
-#ifndef PHY_TX_THREAD
     phy_procedures_eNB_TX(eNB, proc, 1);
-#endif
   }
 
   /* CONFLICT RESOLUTION: what about this release_thread call, has it to be done? if yes, where? */
