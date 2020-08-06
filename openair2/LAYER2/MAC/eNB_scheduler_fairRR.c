@@ -61,12 +61,9 @@ int last_dlsch_ue_id_volte[MAX_NUM_CCs] = {-1};
 int last_ulsch_ue_id[MAX_NUM_CCs] = {-1};
 int last_ulsch_ue_id_volte[MAX_NUM_CCs] = {-1};
 
-#if defined(PRE_SCD_THREAD)
-  uint64_t dl_buffer_total[MAX_NUM_CCs][NUMBER_OF_UE_MAX];
-
-  boolean_t pre_scd_activeUE[NUMBER_OF_UE_MAX];
-  eNB_UE_STATS pre_scd_eNB_UE_stats[MAX_NUM_CCs][NUMBER_OF_UE_MAX];
-#endif
+uint64_t dl_buffer_total[MAX_NUM_CCs][NUMBER_OF_UE_MAX];
+boolean_t pre_scd_activeUE[NUMBER_OF_UE_MAX];
+eNB_UE_STATS pre_scd_eNB_UE_stats[MAX_NUM_CCs][NUMBER_OF_UE_MAX];
 
 #define DEBUG_eNB_SCHEDULER 1
 #define DEBUG_HEADER_PARSING 1
@@ -86,7 +83,7 @@ void set_dl_ue_select_msg4(int CC_idP, uint16_t nb_rb, int UE_id, rnti_t rnti) {
   dlsch_ue_select[CC_idP].list[dlsch_ue_select[CC_idP].ue_num].rnti = rnti;
   dlsch_ue_select[CC_idP].ue_num++;
 }
-#if defined(PRE_SCD_THREAD)
+
 inline uint16_t search_rbs_required(uint16_t mcs, uint64_t len, uint32_t NB_RB, uint16_t step_size) {
   uint16_t nb_rb,i_TBS,TBS;
   i_TBS=get_I_TBS(mcs);
@@ -193,7 +190,6 @@ int dl_dtch_num;
 
   }
 }
-#endif
 
 int cc_id_end(uint8_t *cc_id_flag ) {
   int end_flag = 1;
@@ -1038,12 +1034,11 @@ void dlsch_scheduler_pre_processor_fairRR (module_id_t   Mod_id,
   //  uint16_t r1=0;
   uint8_t CC_id;
   UE_list_t *UE_list = &RC.mac[Mod_id]->UE_list;
+  eNB_MAC_INST *eNB = RC.mac[Mod_id];
   int N_RB_DL;
-#if defined(PRE_SCD_THREAD)
   eNB_UE_STATS            *eNB_UE_stats;
   uint16_t                step_size;
   uint64_t                dl_buffer;
-#endif
   UE_sched_ctrl_t *ue_sched_ctl;
   //  int rrc_status           = RRC_IDLE;
   COMMON_channels_t *cc;
@@ -1098,45 +1093,46 @@ void dlsch_scheduler_pre_processor_fairRR (module_id_t   Mod_id,
     }
   }
 
-#if (!defined(PRE_SCD_THREAD))
-  // Store the DLSCH buffer for each logical channel
-  store_dlsch_buffer(Mod_id,0, frameP, subframeP);
-  // Calculate the number of RBs required by each UE on the basis of logical channel's buffer
-  assign_rbs_required(Mod_id, 0, frameP, subframeP, nb_rbs_required,
-                      min_rb_unit);
-#else
-  for (CC_id = 0; CC_id <MAX_NUM_CCs; CC_id++) {
-    N_RB_DL = to_prb(RC.mac[Mod_id]->common_channels[CC_id].mib->message.dl_Bandwidth);
-    if (N_RB_DL==50) {
-      step_size = 3;
-    } else if (N_RB_DL==100) {
-      step_size = 4;
-    } else {
-      step_size = 2;
-    }
-
-    memset(nb_rbs_required, 0, sizeof(uint16_t)*MAX_NUM_CCs*NUMBER_OF_UE_MAX);
-    for (UE_id = 0; UE_id <NUMBER_OF_UE_MAX; UE_id++) {
-      if (pre_scd_activeUE[UE_id] != TRUE)
-        continue;
-
-      eNB_UE_stats = &pre_scd_eNB_UE_stats[CC_id][UE_id];
-      eNB_UE_stats->dlsch_mcs[TB1] = cqi_to_mcs[UE_list->UE_sched_ctrl[UE_id].dl_cqi[CC_id]];
-      if (eNB_UE_stats->rrc_status == RRC_HO_EXECUTION) {
-         eNB_UE_stats->dlsch_mcs[TB1] = 6;
+  if (eNB->scheduler_mode == SCHED_MODE_DEFAULT) {
+    // Store the DLSCH buffer for each logical channel
+    store_dlsch_buffer(Mod_id,0, frameP, subframeP);
+    // Calculate the number of RBs required by each UE on the basis of logical channel's buffer
+    assign_rbs_required(Mod_id, 0, frameP, subframeP, nb_rbs_required,
+                        min_rb_unit);
+  } else if (eNB->scheduler_mode == SCHED_MODE_FAIR_RR) {
+    for (CC_id = 0; CC_id <MAX_NUM_CCs; CC_id++) {
+      N_RB_DL = to_prb(RC.mac[Mod_id]->common_channels[CC_id].mib->message.dl_Bandwidth);
+      if (N_RB_DL==50) {
+        step_size = 3;
+      } else if (N_RB_DL==100) {
+        step_size = 4;
+      } else {
+        step_size = 2;
       }
 
-      ue_sched_ctl = &UE_list->UE_sched_ctrl[UE_id];
+      memset(nb_rbs_required, 0, sizeof(uint16_t)*MAX_NUM_CCs*NUMBER_OF_UE_MAX);
+      for (UE_id = 0; UE_id <NUMBER_OF_UE_MAX; UE_id++) {
+        if (pre_scd_activeUE[UE_id] != TRUE)
+          continue;
 
-      dl_buffer = dl_buffer_total[CC_id][UE_id];
-      if ((dl_buffer > 0) || (ue_sched_ctl->ta_update != 31 )) {
-        nb_rbs_required[CC_id][UE_id] = search_rbs_required(eNB_UE_stats->dlsch_mcs[TB1], dl_buffer, N_RB_DL, step_size);
-        LOG_D(MAC,"frame %d subframe %d UE_id %d nb_rbs_required %d mcs %d  dl_buffer %lu\n",
-          frameP,subframeP,UE_id,nb_rbs_required[CC_id][UE_id],eNB_UE_stats->dlsch_mcs[TB1],dl_buffer);
+        eNB_UE_stats = &pre_scd_eNB_UE_stats[CC_id][UE_id];
+        eNB_UE_stats->dlsch_mcs[TB1] = cqi_to_mcs[UE_list->UE_sched_ctrl[UE_id].dl_cqi[CC_id]];
+        if (eNB_UE_stats->rrc_status == RRC_HO_EXECUTION) {
+           eNB_UE_stats->dlsch_mcs[TB1] = 6;
+        }
+
+        ue_sched_ctl = &UE_list->UE_sched_ctrl[UE_id];
+
+        dl_buffer = dl_buffer_total[CC_id][UE_id];
+        if ((dl_buffer > 0) || (ue_sched_ctl->ta_update != 31 )) {
+          nb_rbs_required[CC_id][UE_id] = search_rbs_required(eNB_UE_stats->dlsch_mcs[TB1], dl_buffer, N_RB_DL, step_size);
+          LOG_D(MAC,"frame %d subframe %d UE_id %d nb_rbs_required %d mcs %d  dl_buffer %lu\n",
+            frameP,subframeP,UE_id,nb_rbs_required[CC_id][UE_id],eNB_UE_stats->dlsch_mcs[TB1],dl_buffer);
+        }
       }
     }
   }
-#endif
+
   dlsch_scheduler_pre_ue_select_fairRR(Mod_id,frameP,subframeP, mbsfn_flag,nb_rbs_required,dlsch_ue_select);
   for (CC_id = 0; CC_id < MAX_NUM_CCs; CC_id++) {
     average_rbs_per_user[CC_id] = 0;

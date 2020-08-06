@@ -352,11 +352,9 @@ void *rrc_enb_process_itti_msg(void *);
    \param void *args_p Pointer on arguments to start the task. */
 void *rrc_enb_task(void *args_p);
 
-#if defined(PRE_SCD_THREAD)
 /**\brief MAC eNB Pre SCD task.
    \param void *args_p Pointer on arguments to start the task. */
 void *pre_scd_task(void *args_p);
-#endif
 
 /**\brief RRC UE task.
    \param void *args_p Pointer on arguments to start the task. */

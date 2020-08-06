@@ -76,12 +76,9 @@ extern uint32_t RRC_CONNECTION_FLAG;
 
 extern uint8_t rb_table[34];
 
-
-#if defined(PRE_SCD_THREAD)
 extern uint64_t dl_buffer_total[MAX_NUM_CCs][NUMBER_OF_UE_MAX];
 extern boolean_t pre_scd_activeUE[NUMBER_OF_UE_MAX];
 extern eNB_UE_STATS pre_scd_eNB_UE_stats[MAX_NUM_CCs][NUMBER_OF_UE_MAX];
-#endif
 
 extern mac_rlc_am_muilist_t rlc_am_mui;
 extern SCHEDULER_MODES global_scheduler_mode;

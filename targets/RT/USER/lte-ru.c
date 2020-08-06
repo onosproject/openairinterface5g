@@ -130,9 +130,7 @@ const char ru_states[6][9] = {"RU_IDLE","RU_CONFIG","RU_READY","RU_RUN","RU_ERRO
 
 extern uint16_t sf_ahead;
 
-#if defined(PRE_SCD_THREAD)
-  void init_ru_vnf(void);
-#endif
+void init_ru_vnf(void);
 
 
 /*************************************************************/
@@ -2914,7 +2912,6 @@ void stop_RU(int nb_ru)
 
 //Some of the member of ru pointer is used in pre_scd.
 //This funtion is for initializing ru pointer for L2 FAPI simulator.
-#if defined(PRE_SCD_THREAD)
 void init_ru_vnf(void) {
   int ru_id;
   RU_t *ru;
@@ -2990,7 +2987,6 @@ void init_ru_vnf(void) {
   //  sleep(1);
   LOG_D(HW,"[lte-softmodem.c] RU threads created\n");
 }
-#endif
 
 
 /* --------------------------------------------------------*/

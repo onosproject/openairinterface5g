@@ -588,6 +588,7 @@ eNB_dlsch_ulsch_scheduler(module_id_t module_idP,
                           frame_t frameP,
                           sub_frame_t subframeP)
 {
+  protocol_ctxt_t   ctxt;
   int               mbsfn_status[MAX_NUM_CCs];
   int               CC_id = 0;
   int               UE_id = -1;
@@ -622,13 +623,12 @@ eNB_dlsch_ulsch_scheduler(module_id_t module_idP,
     }
   }
 
-#if (!defined(PRE_SCD_THREAD))
-
-  PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, module_idP, ENB_FLAG_YES, NOT_A_RNTI, frameP, subframeP, module_idP);
-  pdcp_run(&ctxt);
-  rrc_rx_tx(&ctxt, CC_id);
-
-#endif
+  if (eNB->scheduler_mode == SCHED_MODE_DEFAULT) {
+    PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, module_idP, ENB_FLAG_YES, NOT_A_RNTI, frameP, subframeP, module_idP);
+    pdcp_run(&ctxt);
+    rrc_rx_tx(&ctxt, CC_id);
+  }
+  
 #if (LTE_RRC_VERSION >= MAKE_VERSION(10, 0, 0))
 
   for (CC_id = 0; CC_id < MAX_NUM_CCs; CC_id++) {
@@ -787,11 +787,7 @@ void update_ue_timers(module_id_t module_idP,frame_t frameP, sub_frame_t subfram
               UE_list->eNB_UE_stats[CC_id][UE_id].total_pdu_bytes,
               UE_list->eNB_UE_stats[CC_id][UE_id].total_num_pdus,
               UE_list->eNB_UE_stats[CC_id][UE_id].total_rbs_used,
-#if defined(PRE_SCD_THREAD)
-              dl_buffer_total[CC_id][UE_id],
-#else
-              0,
-#endif
+              eNB->scheduler_mode == SCHED_MODE_DEFAULT ? 0 : dl_buffer_total[CC_id][UE_id],
               UE_scheduling_control->first_cnt[CC_id],
               UE_scheduling_control->ret_cnt[CC_id],
               UE_scheduling_control->aperiodic_ri_received[CC_id]

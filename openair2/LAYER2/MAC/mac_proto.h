@@ -1321,12 +1321,11 @@ int32_t get_uldl_offset(int eutra_bandP);
 int l2_init_ue(int eMBMS_active, char *uecap_xer, uint8_t cba_group_active,
 	       uint8_t HO_active);
 void sort_lcid_priority(module_id_t module_id, int UE_id, int dl_dtch_num, int *dl_dtch_list);
-#if defined(PRE_SCD_THREAD)
+
 void pre_scd_nb_rbs_required(    module_id_t     module_idP,
                                  frame_t         frameP,
                                  sub_frame_t     subframeP,
                                  int             min_rb_unit[MAX_NUM_CCs]);
-#endif
 
 /* Slice related functions */
 uint16_t nb_rbs_allowed_slice(float rb_percentage, int total_rbs);
