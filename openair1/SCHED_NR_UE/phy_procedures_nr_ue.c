@@ -2229,7 +2229,7 @@ void phy_procedures_nrUE_TX(PHY_VARS_NR_UE *ue,
 
   memset(ue->common_vars.txdataF[0], 0, sizeof(int)*14*ue->frame_parms.ofdm_symbol_size);
 
-  LOG_I(PHY,"****** start TX-Chain for AbsSubframe %d.%d ******\n", frame_tx, slot_tx);
+  LOG_D(PHY,"****** start TX-Chain for AbsSubframe %d.%d ******\n", frame_tx, slot_tx);
 
 #if UE_TIMING_TRACE
   start_meas(&ue->phy_proc_tx);
@@ -2273,7 +2273,7 @@ void phy_procedures_nrUE_TX(PHY_VARS_NR_UE *ue,
       nr_ue_prach_procedures(ue, proc, gNB_id, mode);
     }
   }
-  LOG_I(PHY,"****** end TX-Chain for AbsSubframe %d.%d ******\n", frame_tx, slot_tx);
+  LOG_D(PHY,"****** end TX-Chain for AbsSubframe %d.%d ******\n", frame_tx, slot_tx);
 
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_PHY_PROCEDURES_UE_TX, VCD_FUNCTION_OUT);
 #if UE_TIMING_TRACE
@@ -3572,6 +3572,12 @@ void nr_ue_dlsch_procedures(PHY_VARS_NR_UE *ue,
         LOG_D(PHY, "PDU length in bits: %d, in bytes: %d \n", dlsch0->harq_processes[harq_pid]->TBS, rx_ind.rx_indication_body[0].pdsch_pdu.pdu_length);
         rx_ind.number_pdus = 1;
 
+	LOG_I(PHY,"PDSCH PDU: %x.%x.%x.%x\n",
+	      dlsch0->harq_processes[harq_pid]->b[0],
+	      dlsch0->harq_processes[harq_pid]->b[1],
+	      dlsch0->harq_processes[harq_pid]->b[2],
+	      dlsch0->harq_processes[harq_pid]->b[3]);
+
         //ue->dl_indication.rx_ind = &dlsch1->harq_processes[harq_pid]->b; //no data, only dci for now
         dl_indication.dci_ind = NULL; //&ue->dci_ind;
         //  send to mac
@@ -4128,7 +4134,7 @@ int phy_procedures_nrUE_RX(PHY_VARS_NR_UE *ue,
 
   if (dci_cnt > 0) {
 
-    LOG_D(PHY,"[UE %d] Frame %d, nr_tti_rx %d: found %d DCIs\n", ue->Mod_id, frame_rx, nr_tti_rx, dci_cnt);
+    LOG_I(PHY,"[UE %d] Frame %d, nr_tti_rx %d: found %d DCIs\n", ue->Mod_id, frame_rx, nr_tti_rx, dci_cnt);
 
     NR_UE_DLSCH_t *dlsch = NULL;
     if (ue->dlsch[ue->current_thread_id[nr_tti_rx]][eNB_id][0]->active == 1){

@@ -369,7 +369,7 @@ int8_t nr_ue_decode_mib(module_id_t module_id,
       num_rbs     = table_38213_13_4_c2[index_4msb];
       num_symbols = table_38213_13_4_c3[index_4msb];
       rb_offset   = table_38213_13_4_c4[index_4msb];
-      LOG_I(MAC,"<<<<<<<<<index_4msb %d num_rbs %d num_symb %d rb_offset %d\n",index_4msb,num_rbs,num_symbols,rb_offset );
+      LOG_D(MAC,"<<<<<<<<<index_4msb %d num_rbs %d num_symb %d rb_offset %d\n",index_4msb,num_rbs,num_symbols,rb_offset );
     }else if(min_channel_bw & bw_40MHz){
       AssertFatal(index_4msb < 10, "38.213 Table 13-6 4 MSB out of range\n");
       mac->type0_pdcch_ss_mux_pattern = 1;
@@ -2301,7 +2301,7 @@ int nr_ue_process_dci_indication_pdu(module_id_t module_id,int cc_id, int gNB_in
 
   NR_UE_MAC_INST_t *mac = get_mac_inst(module_id);
 
-  LOG_D(MAC,"Received dci indication (rnti %x,dci format %d,n_CCE %d,payloadSize %d,payload %llx)\n",
+  LOG_I(MAC,"Received dci indication (rnti %x,dci format %d,n_CCE %d,payloadSize %d,payload %llx)\n",
 	dci->rnti,dci->dci_format,dci->n_CCE,dci->payloadSize,*(unsigned long long*)dci->payloadBits);
 
   nr_extract_dci_info(mac,dci->dci_format,dci->payloadSize,dci->rnti,(uint64_t *)dci->payloadBits,def_dci_pdu_rel15);
