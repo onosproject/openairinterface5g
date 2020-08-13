@@ -9650,7 +9650,6 @@ int dfts_autoinit(void)
 }
 
 
-
 #ifndef MR_MAIN
 
 void dft(uint8_t sizeidx, int16_t *sigF,int16_t *sig,unsigned char scale_flag){

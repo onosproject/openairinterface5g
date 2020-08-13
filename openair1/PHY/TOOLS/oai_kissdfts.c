@@ -35,6 +35,7 @@
 #include <stdint.h>
 #include <math.h>
 #include <execinfo.h>
+#include <limits.h>
 #define OAIDFTS_LIB
 #include "PHY/defs_common.h"
 #include "PHY/impl_defs_top.h"
@@ -58,50 +59,93 @@ int dfts_autoinit(void)
   }
   for (int i=0; i<IDFT_SIZE_IDXTABLESIZE ; i++) {
   	  ifftcfg[i]=kiss_fft_alloc(ifftsizes[i],1,NULL,NULL);
-  }  
+  }
+#ifdef FIXED_POINT
+  olddfts_autoinit();
+#endif
   return 0;
 }
 
-#ifndef FIXED_POINT
-static float input_float[98304*2];
-static float output_float[98304*2];
-static float input_float2[98304*2];
-static float output_float2[98304*2];
-#endif
 
-void convert_shorttofloat(int sizeidx,short *input,float *output){
-	for (int i=0;i<sizeidx;i=i+2){
-		output[2*i]=(float)input[2*i];
-		output[(2*i)+1]=(float)input[(2*i)+1];
+
+
+
+
+void convert_shorttofloat(int size,short *input,float *output,int factor){
+	for (int i=0;i<(size-2);i++){
+		output[2*i]=(float)(input[2*i]*factor);
+		output[(2*i)+1]=(float)((input[(2*i)+1])*factor);
 	}
 }
 
-void convert_floattoshort(int sizeidx,float *input,short *output){
-	for (int i=0;i<sizeidx;i=i+2){
-		output[2*i]=(short)input[2*i];
-		output[(2*i)+1]=(short)input[(2*i)+1];
+void convert_floattoshort(int size,float *input,short *output,int factor){
+	for (int i=0;i<(size-2);i++){
+		output[2*i]=(int16_t)(((int)(roundf(input[2*i])))/factor);
+		output[(2*i)+1]=(int16_t)(((int)(roundf(input[(2*i)+1])))/factor);
 	}
 }
-void idft_fixedpoint(uint8_t sizeidx, int16_t *input,int16_t *output,unsigned char scale_flag){
-  kiss_fft(ifftcfg[sizeidx],(kiss_fft_cpx *)input,(kiss_fft_cpx *)output);
-};
 
+void rescale(int size,int16_t *input,int16_t *output){
+	for (int i=0;i<(size*2);i=i+1){
+		output[i]=(input[i]*32);
+	}
+}
+
+void rescale_dftin(int size,int16_t *input){
+	for (int i=0;i<(size*2);i=i+1){
+		input[i]=(input[i]*32);
+	}
+}
+
+void rescale_dftout(int size,int16_t *input, int factor){
+	for (int i=0;i<(size*2);i=i+1){
+		input[i]=(input[i]/factor);
+	}
+}
+
+void print_minmax(int size,int16_t *buf,int scale_flag) {
+  	int16_t vmin=0, vmax=0;
+	for (int i=0;i<(size*2);i=i+1){
+		if (buf[i]>vmax) vmax=buf[i];
+		if (buf[i]<vmin) vmin=buf[i];
+    }
+ //   if (scale_flag == 0 || (vmax - vmin)>150)
+ //     printf("%i: %i - %i\n",scale_flag,vmin,vmax);
+}
 void dft(uint8_t sizeidx,int16_t *input,int16_t *output,unsigned char scale_flag){
 #ifndef FIXED_POINT
-  convert_shorttofloat(sizeidx,input,input_float);
+  float input_float[98304*2];
+  float output_float[98304*2];
+  convert_shorttofloat(fftsizes[sizeidx],input,input_float,1);
   kiss_fft(fftcfg[sizeidx],(kiss_fft_cpx *)input_float,(kiss_fft_cpx *)output_float);
-  convert_floattoshort(sizeidx,output_float,output);
+  if (scale_flag)  
+    convert_floattoshort(fftsizes[sizeidx],output_float,output,786732);
+  else
+    convert_floattoshort(fftsizes[sizeidx],output_float,output,98304); 	  
 #else
-  kiss_fft(fftcfg[sizeidx],(kiss_fft_cpx *)input,(kiss_fft_cpx *)output);
+ rescale_dftin(fftsizes[sizeidx],input);
+ kiss_fft(fftcfg[sizeidx],(kiss_fft_cpx *)input,(kiss_fft_cpx *)output);
+ if (scale_flag) 
+    rescale_dftout(fftsizes[sizeidx],output,32);
+ else
+ 	rescale_dftout(fftsizes[sizeidx],output,8); 
+//    olddft(sizeidx,input,output,scale_flag);
+    print_minmax(fftsizes[sizeidx],output,scale_flag);
 #endif
 };
 
 void idft(uint8_t sizeidx, int16_t *input,int16_t *output,unsigned char scale_flag){
 #ifndef FIXED_POINT
-  convert_shorttofloat(sizeidx,input,input_float2);
-  kiss_fft(fftcfg[sizeidx],(kiss_fft_cpx *)input_float2,(kiss_fft_cpx *)output_float2);
-  convert_floattoshort(sizeidx,output_float2,output);	
-#else	
-  kiss_fft(fftcfg[sizeidx],(kiss_fft_cpx *)input,(kiss_fft_cpx *)output);
+  float input_float2[98304*2];
+  float output_float2[98304*2];
+  convert_shorttofloat(ifftsizes[sizeidx],input,input_float2,8192);
+  kiss_fft(ifftcfg[sizeidx],(kiss_fft_cpx *)input_float2,(kiss_fft_cpx *)output_float2);
+  convert_floattoshort(ifftsizes[sizeidx],output_float2,output,98304);	
+#else
+  int16_t inputrs[98304*2];
+  if (scale_flag)
+    rescale(ifftsizes[sizeidx],input,inputrs);
+  kiss_fft(ifftcfg[sizeidx],(kiss_fft_cpx *)inputrs,(kiss_fft_cpx *)output);
+ 
 #endif
 };
