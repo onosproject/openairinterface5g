@@ -1561,7 +1561,7 @@ void nr_update_pucch_scheduling(int Mod_idP,
     if (curr_pucch->dai_c<MAX_ACK_BITS) {
       curr_pucch->frame = frameP;
       curr_pucch->dai_c++;
-      curr_pucch->resource_indicator = 0; // in phytest with only 1 UE we are using just the 1st resource
+      curr_pucch->resource_indicator = 4;//0; // in phytest with only 1 UE we are using just the 1st resource
       // first pucch occasion in first UL or MIXED slot
       first_ul_slot_tdd = scc->tdd_UL_DL_ConfigurationCommon->pattern1.nrofDownlinkSlots;
       i = 0;
