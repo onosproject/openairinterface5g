@@ -125,11 +125,14 @@ void extract_pucch_csi_report ( NR_CSI_MeasConfig_t *csi_MeasConfig,
     if (csi_MeasConfig->csi_ReportConfigToAddModList->list.array[csi_report_id]->reportConfigType.present == NR_CSI_ReportConfig__reportConfigType_PR_periodic) {
       //considering 30khz scs and
       //Has to implement according to reportSlotConfig type
+      LOG_I(PHY,"SFN/SF:%d%d \n", frame,slot);
       if (((NR_SubcarrierSpacing_kHz30 == scs) && 
-		      (0 == ((frame*20) + slot) % csi_MeasConfig->csi_ReportConfigToAddModList->list.array[csi_report_id]->reportConfigType.choice.periodic->reportSlotConfig.choice.slots320))
+		      (0 == ((frame*20) + (slot+1)) % csi_MeasConfig->csi_ReportConfigToAddModList->list.array[csi_report_id]->reportConfigType.choice.periodic->reportSlotConfig.choice.slots320))
 		      ||((NR_SubcarrierSpacing_kHz120 == scs)&&
-			      (0 == ((frame*80) + slot) % csi_MeasConfig->csi_ReportConfigToAddModList->list.array[csi_report_id]->reportConfigType.choice.periodic->reportSlotConfig.choice.slots320))){
+			      (0 == ((frame*80) + (slot+1)) % csi_MeasConfig->csi_ReportConfigToAddModList->list.array[csi_report_id]->reportConfigType.choice.periodic->reportSlotConfig.choice.slots320))){
         reportQuantity_type = csi_MeasConfig->csi_ReportConfigToAddModList->list.array[csi_report_id]->reportQuantity.present;
+        LOG_I(PHY,"SFN/SF:%d%d reportQuantity type = %d\n",
+              frame,slot,reportQuantity_type);
       }
     }
   }
@@ -374,6 +377,9 @@ void handle_nr_uci(NR_UL_IND_t *UL_info, NR_UE_sched_ctrl_t *sched_ctrl) {
           int bwp_id =1;
           NR_BWP_Uplink_t *ubwp=RC.nrmac[Mod_idP]->UE_list.secondaryCellGroup[UE_id]->spCellConfig->spCellConfigDedicated->uplinkConfig->uplinkBWP_ToAddModList->list.array[bwp_id-1];
           NR_SubcarrierSpacing_t scs=ubwp->bwp_Common->genericParameters.subcarrierSpacing;
+          LOG_I(PHY,"SFN/SF:%d%d scs %d \n",
+            UL_info->frame,UL_info->slot,
+            scs);
           //API to parse the csi report and store it into sched_ctrl
           extract_pucch_csi_report (csi_MeasConfig, uci_pdu, sched_ctrl,UL_info->frame, UL_info->slot, scs);
         }
