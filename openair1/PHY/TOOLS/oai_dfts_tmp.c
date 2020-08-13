@@ -9593,7 +9593,7 @@ void init_rad5_rep(int N,int16_t *twa,int16_t *twb,int16_t *twc,int16_t *twd) {
 /*----------------------------------------------------------------*/
 /* dft library entry points:                                      */
 
-int dfts_autoinit(void)
+int olddfts_autoinit(void)
 {
   init_rad4(1024,tw1024);
   init_rad2(2048,tw2048);
@@ -9652,12 +9652,12 @@ int dfts_autoinit(void)
 
 #ifndef MR_MAIN
 
-void dft(uint8_t sizeidx, int16_t *sigF,int16_t *sig,unsigned char scale_flag){
+void olddft(uint8_t sizeidx, int16_t *sigF,int16_t *sig,unsigned char scale_flag){
 	AssertFatal((sizeidx>=0 && sizeidx<(int)DFT_SIZE_IDXTABLESIZE),"Invalid dft size index %i\n",sizeidx);
 	dft_ftab[sizeidx](sigF,sig,scale_flag);
 };
 
-void idft(uint8_t sizeidx, int16_t *sigF,int16_t *sig,unsigned char scale_flag){
+void oldidft(uint8_t sizeidx, int16_t *sigF,int16_t *sig,unsigned char scale_flag){
 	AssertFatal((sizeidx>=0 && sizeidx<(int)IDFT_SIZE_IDXTABLESIZE),"Invalid idft size index %i\n",sizeidx);
 	idft_ftab[sizeidx](sigF,sig,scale_flag);
 };
@@ -9839,7 +9839,7 @@ int main(int argc, char**argv)
   int i;
   simd_q15_t *x128=(simd_q15_t*)x,*y128=(simd_q15_t*)y;
 
-  dfts_autoinit();
+  olddfts_autoinit();
 
   set_taus_seed(0);
   opp_enabled = 1;
