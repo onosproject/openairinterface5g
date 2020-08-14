@@ -393,6 +393,10 @@ int nfapi_vnf_p7_time(nfapi_vnf_p7_config_t* config){
   int ret;
   static int sync = 0;
 
+  uint8_t timeout_flag = 0;
+  struct timespec time_out;
+  struct timespec time_now;
+
   sock_1ms = socket(AF_INET,SOCK_DGRAM,0);
   addr.sin_family = AF_INET;
   addr.sin_port = htons(50040);
@@ -478,9 +482,20 @@ int nfapi_vnf_p7_time(nfapi_vnf_p7_config_t* config){
         break;
       }
     }
+    if(timeout_flag == 1){
+      clock_gettime( CLOCK_REALTIME, &time_now );
+      uint32_t time_diff = (time_now.tv_sec - time_out.tv_sec)*1000000 + (time_now.tv_nsec - time_out.tv_nsec)/1000;
+      if(time_diff < 500){
+        NFAPI_TRACE(NFAPI_TRACE_ERROR, "after timeout,recv signal : time interval = %d\n", time_diff);
+        continue;
+      }
+      timeout_flag = 0;
+    }
   }
   else {
      NFAPI_TRACE(NFAPI_TRACE_ERROR, "recv timeout sfnsf = 0x%x\n", curr->sfn_sf);
+     timeout_flag = 1;
+     clock_gettime( CLOCK_REALTIME, &time_out );
   }
   sync = 1;
     
