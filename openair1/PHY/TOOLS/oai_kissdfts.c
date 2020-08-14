@@ -85,19 +85,20 @@ void convert_floattoshort(int size,float *input,short *output,int factor){
 	}
 }
 
-void rescale(int size,int16_t *input,int16_t *output){
+
+void rescale_up_int16buff(int size,int16_t *input, int factor){
 	for (int i=0;i<(size*2);i=i+1){
-		output[i]=(input[i]*32);
+		input[i]=(input[i]*factor);
 	}
 }
 
-void rescale_dftin(int size,int16_t *input){
+void rescale_up_newint16buff(int size,int16_t *input, int16_t *output,int factor){
 	for (int i=0;i<(size*2);i=i+1){
-		input[i]=(input[i]*32);
+		output[i]=(input[i]*factor);
 	}
 }
 
-void rescale_dftout(int size,int16_t *input, int factor){
+void rescale_down_int16buff(int size,int16_t *input, int factor){
 	for (int i=0;i<(size*2);i=i+1){
 		input[i]=(input[i]/factor);
 	}
@@ -109,13 +110,13 @@ void print_minmax(int size,int16_t *buf,int scale_flag) {
 		if (buf[i]>vmax) vmax=buf[i];
 		if (buf[i]<vmin) vmin=buf[i];
     }
- //   if (scale_flag == 0 || (vmax - vmin)>150)
- //     printf("%i: %i - %i\n",scale_flag,vmin,vmax);
+    if (scale_flag == 0 || (vmax - vmin)>10)
+      printf("%i: %i - %i\n",scale_flag,vmin,vmax);
 }
 void dft(uint8_t sizeidx,int16_t *input,int16_t *output,unsigned char scale_flag){
 #ifndef FIXED_POINT
-  float input_float[98304*2];
-  float output_float[98304*2];
+  float input_float[98304*2*sizeof(float)];
+  float output_float[98304*2*sizeof(float)];
   convert_shorttofloat(fftsizes[sizeidx],input,input_float,1);
   kiss_fft(fftcfg[sizeidx],(kiss_fft_cpx *)input_float,(kiss_fft_cpx *)output_float);
   if (scale_flag)  
@@ -123,12 +124,19 @@ void dft(uint8_t sizeidx,int16_t *input,int16_t *output,unsigned char scale_flag
   else
     convert_floattoshort(fftsizes[sizeidx],output_float,output,98304); 	  
 #else
- rescale_dftin(fftsizes[sizeidx],input);
- kiss_fft(fftcfg[sizeidx],(kiss_fft_cpx *)input,(kiss_fft_cpx *)output);
- if (scale_flag) 
-    rescale_dftout(fftsizes[sizeidx],output,32);
- else
- 	rescale_dftout(fftsizes[sizeidx],output,8); 
+   int16_t tmpbuff[98304*2*sizeof(int16_t)];
+   int16_t *inputptr;
+//   if (scale_flag) { 
+     rescale_up_newint16buff(fftsizes[sizeidx],input,tmpbuff,16);
+     inputptr=tmpbuff;
+//   }
+//   else
+//   	 inputptr=input;
+   kiss_fft(fftcfg[sizeidx],(kiss_fft_cpx *)inputptr,(kiss_fft_cpx *)output);
+   if (scale_flag) 
+     rescale_down_int16buff(fftsizes[sizeidx],output,64);
+  else
+ 	rescale_down_int16buff(fftsizes[sizeidx],output,16); 
 //    olddft(sizeidx,input,output,scale_flag);
     print_minmax(fftsizes[sizeidx],output,scale_flag);
 #endif
@@ -142,10 +150,10 @@ void idft(uint8_t sizeidx, int16_t *input,int16_t *output,unsigned char scale_fl
   kiss_fft(ifftcfg[sizeidx],(kiss_fft_cpx *)input_float2,(kiss_fft_cpx *)output_float2);
   convert_floattoshort(ifftsizes[sizeidx],output_float2,output,98304);	
 #else
-  int16_t inputrs[98304*2];
   if (scale_flag)
-    rescale(ifftsizes[sizeidx],input,inputrs);
-  kiss_fft(ifftcfg[sizeidx],(kiss_fft_cpx *)inputrs,(kiss_fft_cpx *)output);
- 
+    rescale_up_int16buff(ifftsizes[sizeidx],input,16);
+  kiss_fft(ifftcfg[sizeidx],(kiss_fft_cpx *)input,(kiss_fft_cpx *)output);
+//  oldidft(sizeidx,input,output,scale_flag);
+//  print_minmax(ifftsizes[sizeidx],output,scale_flag);
 #endif
 };
