@@ -655,7 +655,7 @@ void nr_schedule_pucch(int Mod_idP,
       memset(pucch_pdu,0,sizeof(nfapi_nr_pucch_pdu_t));
       UL_tti_req->n_pdus+=1;
       O_ack = curr_pucch->dai_c;
-      O_uci = O_ack+17; // for now we are just sending acknacks in pucch
+      O_uci = O_ack+8; // for now we are just sending acknacks in pucch
       LOG_I(MAC, "Scheduling pucch reception for frame %d slot %d\n", frameP, slotP);
       nr_configure_pucch(pucch_pdu,
                          scc,
