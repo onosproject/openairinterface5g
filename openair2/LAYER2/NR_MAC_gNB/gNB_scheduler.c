@@ -655,7 +655,7 @@ void nr_schedule_pucch(int Mod_idP,
       memset(pucch_pdu,0,sizeof(nfapi_nr_pucch_pdu_t));
       UL_tti_req->n_pdus+=1;
       O_ack = curr_pucch->dai_c;
-      O_uci = O_ack; // for now we are just sending acknacks in pucch
+      O_uci = O_ack+17; // for now we are just sending acknacks in pucch
       LOG_I(MAC, "Scheduling pucch reception for frame %d slot %d\n", frameP, slotP);
       nr_configure_pucch(pucch_pdu,
                          scc,
@@ -789,9 +789,8 @@ void gNB_dlsch_ulsch_scheduler(module_id_t module_idP,
     if (UE_list->fiveG_connected[UE_id] && (is_xlsch_in_slot(*dlsch_in_slot_bitmap,slot_txP%num_slots_per_tdd))) {
       ue_sched_ctl->current_harq_pid = slot_txP % num_slots_per_tdd;
       nr_update_pucch_scheduling(module_idP, UE_id, frame_txP, slot_txP, num_slots_per_tdd,&pucch_sched);
-#ifdef GES_SUPPORT
-      tci_handling(module_idP, UE_id, CC_id, &ue_sched_ctl, frame, slot)
-#endif
+      //TCI handling function
+      tci_handling(module_idP, UE_id, CC_id, &ue_sched_ctl, frame_rxP, slot_rxP);
       nr_schedule_uss_dlsch_phytest(module_idP, frame_txP, slot_txP, &UE_list->UE_sched_ctrl[UE_id].sched_pucch[pucch_sched], NULL);
       // resetting ta flag
       gNB->ta_len = 0;

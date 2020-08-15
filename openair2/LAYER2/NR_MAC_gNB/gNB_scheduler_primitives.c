@@ -610,6 +610,8 @@ void nr_configure_pucch(nfapi_nr_pucch_pdu_t* pucch_pdu,
     n_set = pucch_Config->resourceSetToAddModList->list.count; 
     AssertFatal(n_set>0,"PUCCH resourceSetToAddModList is empty\n");
 
+    LOG_I(MAC, "UCI n_set= %d\n", n_set);
+
     N2 = 2;
     // procedure to select pucch resource id from resource sets according to 
     // number of uci bits and pucch resource indicator pucch_resource
@@ -633,6 +635,7 @@ void nr_configure_pucch(nfapi_nr_pucch_pdu_t* pucch_pdu,
         }
         else N2 = N3;
       }
+      LOG_I(MAC, "UCI resource id = %ld\n", *resource_id);
     }
 
     AssertFatal(resource_id!=NULL,"Couldn-t find any matching PUCCH resource in the PUCCH resource sets");
@@ -670,6 +673,7 @@ void nr_configure_pucch(nfapi_nr_pucch_pdu_t* pucch_pdu,
             pucch_pdu->sr_flag = SR_flag;
             break;
           case NR_PUCCH_Resource__format_PR_format2 :
+	    LOG_I(MAC,"UCI format2 is being scheduled\n");
             pucch_pdu->format_type = 2;
             pucch_pdu->nr_of_symbols = pucchres->format.choice.format2->nrofSymbols;
             pucch_pdu->start_symbol_index = pucchres->format.choice.format2->startingSymbolIndex;
@@ -1561,7 +1565,7 @@ void nr_update_pucch_scheduling(int Mod_idP,
     if (curr_pucch->dai_c<MAX_ACK_BITS) {
       curr_pucch->frame = frameP;
       curr_pucch->dai_c++;
-      curr_pucch->resource_indicator = 4;//0; // in phytest with only 1 UE we are using just the 1st resource
+      curr_pucch->resource_indicator = 0;//4;//0; // in phytest with only 1 UE we are using just the 1st resource
       // first pucch occasion in first UL or MIXED slot
       first_ul_slot_tdd = scc->tdd_UL_DL_ConfigurationCommon->pattern1.nrofDownlinkSlots;
       i = 0;

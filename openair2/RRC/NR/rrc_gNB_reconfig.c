@@ -1734,10 +1734,15 @@ void fill_default_secondaryCellGroup(NR_ServingCellConfigCommon_t *servingcellco
  csires0->csi_RS_ResourceSetList.present = NR_CSI_ResourceConfig__csi_RS_ResourceSetList_PR_nzp_CSI_RS_SSB;
  csires0->csi_RS_ResourceSetList.choice.nzp_CSI_RS_SSB = calloc(1,sizeof(*csires0->csi_RS_ResourceSetList.choice.nzp_CSI_RS_SSB));
  csires0->csi_RS_ResourceSetList.choice.nzp_CSI_RS_SSB->nzp_CSI_RS_ResourceSetList = calloc(1,sizeof(*csires0->csi_RS_ResourceSetList.choice.nzp_CSI_RS_SSB->nzp_CSI_RS_ResourceSetList));
- csires0->csi_RS_ResourceSetList.choice.nzp_CSI_RS_SSB->csi_SSB_ResourceSetList = NULL;
+ //For verification of CSI measurement adding the ssb resource set list
+ csires0->csi_RS_ResourceSetList.choice.nzp_CSI_RS_SSB->csi_SSB_ResourceSetList = calloc(1,sizeof(*csires0->csi_RS_ResourceSetList.choice.nzp_CSI_RS_SSB->csi_SSB_ResourceSetList));//NULL;
  NR_NZP_CSI_RS_ResourceSetId_t *csires00 = calloc(1,sizeof(*csires00));
+ //For verification of CSI measurment for SSB
+ NR_CSI_SSB_ResourceSetId_t *ssbres00 = calloc(1,sizeof(*ssbres00));
  *csires00 = 0;
+ *ssbres00 = 0;
  ASN_SEQUENCE_ADD(&csires0->csi_RS_ResourceSetList.choice.nzp_CSI_RS_SSB->nzp_CSI_RS_ResourceSetList->list,csires00);
+ ASN_SEQUENCE_ADD(&csires0->csi_RS_ResourceSetList.choice.nzp_CSI_RS_SSB->csi_SSB_ResourceSetList->list,ssbres00);
  csires0->bwp_Id = 1;
  csires0->resourceType = NR_CSI_ResourceConfig__resourceType_periodic;
  ASN_SEQUENCE_ADD(&csi_MeasConfig->csi_ResourceConfigToAddModList->list,csires0);
@@ -1872,7 +1877,7 @@ void fill_default_secondaryCellGroup(NR_ServingCellConfigCommon_t *servingcellco
 
  csi_MeasConfig->csi_ReportConfigToAddModList = calloc(1,sizeof(*csi_MeasConfig->csi_ReportConfigToAddModList));
  csi_MeasConfig->csi_ReportConfigToReleaseList = NULL;
- NR_CSI_ReportConfig_t *csirep0 = calloc(1,sizeof(*csirep0));
+ /*NR_CSI_ReportConfig_t *csirep0 = calloc(1,sizeof(*csirep0));
  csirep0->reportConfigId=0;
  csirep0->carrier=NULL;
  csirep0->resourcesForChannelMeasurement=0;
@@ -1944,11 +1949,11 @@ void fill_default_secondaryCellGroup(NR_ServingCellConfigCommon_t *servingcellco
  csirep0->ext1 = NULL;
 
  ASN_SEQUENCE_ADD(&csi_MeasConfig->csi_ReportConfigToAddModList->list,csirep0);
-
+*/
  NR_CSI_ReportConfig_t *csirep1 = calloc(1,sizeof(*csirep1));
  csirep1->reportConfigId=2;
  csirep1->carrier=NULL;
- csirep1->resourcesForChannelMeasurement=initial_csi_index;
+ csirep1->resourcesForChannelMeasurement=0;//initial_csi_index; Just for verification
  csirep1->csi_IM_ResourcesForInterference=NULL;
  csirep1->nzp_CSI_RS_ResourcesForInterference=NULL;
  csirep1->reportConfigType.present = NR_CSI_ReportConfig__reportConfigType_PR_periodic;
@@ -1957,7 +1962,7 @@ void fill_default_secondaryCellGroup(NR_ServingCellConfigCommon_t *servingcellco
  csirep1->reportConfigType.choice.periodic->reportSlotConfig.choice.slots320 = 49;
  NR_PUCCH_CSI_Resource_t *pucchcsires1 = calloc(1,sizeof(*pucchcsires1));
  pucchcsires1->uplinkBandwidthPartId=1;
- pucchcsires1->pucch_Resource=4;//12;
+ pucchcsires1->pucch_Resource=3;//4;//12;
  ASN_SEQUENCE_ADD(&csirep1->reportConfigType.choice.periodic->pucch_CSI_ResourceList.list,pucchcsires1);
  csirep1->reportQuantity.present = NR_CSI_ReportConfig__reportQuantity_PR_ssb_Index_RSRP;
  csirep1->reportQuantity.choice.ssb_Index_RSRP=(NULL_t)0;
