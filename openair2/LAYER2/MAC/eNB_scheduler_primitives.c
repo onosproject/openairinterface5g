@@ -1814,7 +1814,14 @@ getNp(int dl_Bandwidth,
 
   return(Np[dl_Bandwidth][0+plus1]);
 }
-
+//------------------------------------------------------------------------------
+void
+fill_nfapi_rnti_release(module_id_t                      module_idP,
+                        uint16_t                         rntiP){
+  eNB_MAC_INST *eNB     = RC.mac[module_idP];
+  eNB->UE_release_req.ue_release_request_body.ue_release_request_TLVs_list[eNB->UE_release_req.ue_release_request_body.number_of_TLVs].rnti = rntiP;
+  eNB->UE_release_req.ue_release_request_body.number_of_TLVs++;
+}
 //------------------------------------------------------------------------------
 void
 fill_nfapi_harq_information(module_id_t                      module_idP,
@@ -4767,6 +4774,8 @@ extract_harq(module_id_t mod_idP,
                   }else{
                     if(sched_ctl->round[CC_idP][harq_pid][TB1] == 8){
                       cancel_ra_proc(mod_idP, CC_idP, frameP, ra[ra_i].rnti);
+                      fill_nfapi_rnti_release(mod_idP, ra[ra_i].rnti);
+                      LOG_E(MAC,"CRNTI Reconfiguration NACK round reach max release UE %x\n",ra[ra_i].rnti);
                     }
                   }
                   break;
@@ -4862,6 +4871,8 @@ extract_harq(module_id_t mod_idP,
               }else{
                 if(sched_ctl->round[CC_idP][harq_pid][select_tb] == 8){
                   cancel_ra_proc(mod_idP, CC_idP, frameP, ra[ra_i].rnti);
+                  fill_nfapi_rnti_release(mod_idP, ra[ra_i].rnti);
+                  LOG_E(MAC,"CRNTI Reconfiguration NACK round reach max release UE %x\n",ra[ra_i].rnti);
                 }
               }
               break;
