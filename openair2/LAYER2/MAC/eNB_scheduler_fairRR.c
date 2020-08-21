@@ -322,7 +322,6 @@ void select_dl_ue_candidate(
            (UE_scheduling_control->dl_volte_ue_select_flag == FALSE) ){         /* VoLTE UE select flag check */
         continue;
       }
-      UE_scheduling_control->dl_volte_ue_select_flag = FALSE;                   /* VoLTE UE select flag set -> init */
 
       ue_sched_ctl = &UE_list->UE_sched_ctrl[UE_id];
 
@@ -371,9 +370,6 @@ void select_dl_ue_candidate(
         }
         dl_ue_candidate[CC_id][index]=UE_id;
         index++;
-        if(ue_sched_ctl->dl_volte_ue_select_flag == TRUE){
-          ue_sched_ctl->dl_volte_ue_select_flag = FALSE;                   /* VoLTE UE select flag set -> init */
-        }
         if(index==dlsch_ue_max_num[CC_id]) break;
       }
     }
@@ -1508,6 +1504,10 @@ schedule_ue_spec_fairRR(module_id_t module_idP,
 
       eNB_UE_stats = &UE_list->eNB_UE_stats[CC_id][UE_id];
       ue_sched_ctl = &UE_list->UE_sched_ctrl[UE_id];
+
+      if(ue_sched_ctl->dl_volte_ue_select_flag == TRUE){
+        ue_sched_ctl->dl_volte_ue_select_flag = FALSE;
+      }
 
       /*
             switch(get_tmode(module_idP,CC_id,UE_id)){
