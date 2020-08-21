@@ -336,7 +336,7 @@ rx_sdu(const module_id_t enb_mod_idP,
       if (ra->msg3_round >= mac->common_channels[CC_idP].radioResourceConfigCommon->rach_ConfigCommon.maxHARQ_Msg3Tx - 1) {
         cancel_ra_proc(enb_mod_idP, CC_idP, frameP, current_rnti);
         fill_nfapi_rnti_release(enb_mod_idP, current_rnti);
-        LOG_E(MAC,"frame %d subframe %d rnti %x : Msg3 max Tx,release UE\n",frameP, subframeP,current_rnti);
+        LOG_I(MAC,"frame %d subframe %d rnti %x : Msg3 max Tx,release UE\n",frameP, subframeP,current_rnti);
         nfapi_hi_dci0_request_t *hi_dci0_req = NULL;
         uint8_t sf_ahead_dl = ul_subframe2_k_phich(&mac->common_channels[CC_idP], subframeP);
         hi_dci0_req = &mac->HI_DCI0_req[CC_idP][(subframeP + sf_ahead_dl) % 10];
