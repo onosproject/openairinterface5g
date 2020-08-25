@@ -42,7 +42,8 @@
 #include "SIMULATION/TOOLS/sim.h" // for taus
 
 extern RAN_CONTEXT_t RC;
-extern const uint16_t nr_slots_per_frame[5];
+extern const uint8_t nr_slots_per_frame[5];
+
 uint8_t DELTA[4]= {2,3,4,6};
 
 void schedule_nr_prach(module_id_t module_idP, frame_t frameP, sub_frame_t slotP) {
@@ -221,6 +222,7 @@ void nr_schedule_msg2(uint16_t rach_frame, uint16_t rach_slot,
   uint8_t slot_limit = (rach_slot + slot_window)%nr_slots_per_frame[mu];
   //uint8_t frame_limit = (slot_limit>(rach_slot))? rach_frame : (rach_frame +1);
 
+
   // go to previous slot if the current scheduled slot is beyond the response window
   // and if the slot is not among the PDCCH monitored ones (38.213 10.1)
   while ((*msg2_slot>slot_limit) || ((*msg2_frame*nr_slots_per_frame[mu]+*msg2_slot-monitoring_offset)%monitoring_slot_period !=0))  {
@@ -243,17 +245,34 @@ void nr_initiate_ra_proc(module_id_t module_idP,
 
   uint8_t ul_carrier_id = 0; // 0 for NUL 1 for SUL
   NR_SearchSpace_t *ss;
-
+  int UE_id = 0;
   // ra_rnti from 5.1.3 in 38.321
   uint16_t ra_rnti=1+symbol+(slotP*14)+(freq_index*14*80)+(ul_carrier_id*14*80*8);
 
   uint16_t msg2_frame, msg2_slot,monitoring_slot_period,monitoring_offset;
   gNB_MAC_INST *nr_mac = RC.nrmac[module_idP];
   NR_UE_list_t *UE_list = &nr_mac->UE_list;
-  NR_CellGroupConfig_t *secondaryCellGroup = UE_list->secondaryCellGroup[0];
+  NR_CellGroupConfig_t *secondaryCellGroup = UE_list->secondaryCellGroup[UE_id];
   NR_COMMON_channels_t *cc = &nr_mac->common_channels[CC_id];
   NR_ServingCellConfigCommon_t *scc = cc->ServingCellConfigCommon;
   NR_RA_t *ra = &cc->ra[0];
+
+  // if the preamble received correspond to one of the listed
+  // the UE sent a RACH either for starting RA procedure or RA procedure failed and UE retries
+  int pr_found=0;
+  for (int i=0;i<UE_list->preambles[UE_id].num_preambles;i++) {
+    if (preamble_index == UE_list->preambles[UE_id].preamble_list[i]) {
+      pr_found=1;
+      break;
+    }
+  }
+  if (pr_found)
+    UE_list->fiveG_connected[UE_id] = false;
+  else {
+    LOG_E(MAC, "[gNB %d][RAPROC] FAILURE: preamble %d does not correspond to any of the ones in rach_ConfigDedicated for UE_id %d\n",
+          module_idP, preamble_index, UE_id);
+    return; // if the PRACH preamble does not correspond to any of the ones sent through RRC abort RA proc
+  }
 
   // This should be handled differently when we use the initialBWP for RA
   ra->bwp_id=1;
@@ -304,7 +323,7 @@ void nr_initiate_ra_proc(module_id_t module_idP,
 
     ra->RA_rnti = ra_rnti;
     ra->preamble_index = preamble_index;
-
+    UE_list->tc_rnti[UE_id] = ra->rnti;
 
     LOG_I(MAC,"[gNB %d][RAPROC] CC_id %d Frame %d Activating Msg2 generation in frame %d, slot %d using RA rnti %x\n",
       module_idP,
@@ -402,6 +421,7 @@ void nr_schedule_reception_msg3(module_id_t module_idP, int CC_id, frame_t frame
       ul_req->pdus_list[ul_req->n_pdus].pdu_size = sizeof(nfapi_nr_pusch_pdu_t);
       ul_req->pdus_list[ul_req->n_pdus].pusch_pdu = ra->pusch_pdu;
       ul_req->n_pdus+=1;
+      ra->state = RA_IDLE;
     }
   }
 }
@@ -517,16 +537,15 @@ void nr_generate_Msg2(module_id_t module_idP,
                       frame_t frameP,
                       sub_frame_t slotP){
 
-  int UE_id = 0, dci_formats[2], rnti_types[2], CCEIndex, mcsIndex;
+  int UE_id = 0, dci_formats[2], rnti_types[2], mcsIndex;
   int startSymbolAndLength = 0, StartSymbolIndex = -1, NrOfSymbols = 14, StartSymbolIndex_tmp, NrOfSymbols_tmp, x_Overhead, time_domain_assignment;
-  int coreset_id, aggregation , search_space_type = 0;
   gNB_MAC_INST                      *nr_mac = RC.nrmac[module_idP];
   NR_COMMON_channels_t                  *cc = &nr_mac->common_channels[0];
   NR_RA_t                               *ra = &cc->ra[0];
   NR_UE_list_t                     *UE_list = &nr_mac->UE_list;
   NR_SearchSpace_t *ss = ra->ra_ss;
 
-  uint16_t RA_rnti = ra->RA_rnti, numDlDci;
+  uint16_t RA_rnti = ra->RA_rnti;
   long locationAndBandwidth;
   // uint8_t *vrb_map = cc[CC_id].vrb_map, CC_id;
 
@@ -561,20 +580,11 @@ void nr_generate_Msg2(module_id_t module_idP,
 
     nfapi_nr_dl_tti_pdcch_pdu_rel15_t *pdcch_pdu_rel15 = &dl_tti_pdcch_pdu->pdcch_pdu.pdcch_pdu_rel15;
     nfapi_nr_dl_tti_pdsch_pdu_rel15_t *pdsch_pdu_rel15 = &dl_tti_pdsch_pdu->pdsch_pdu.pdsch_pdu_rel15;
-    nfapi_nr_dl_dci_pdu_t *dci_pdu = &pdcch_pdu_rel15->dci_pdu;
-    numDlDci = pdcch_pdu_rel15->numDlDci;
-
-    aggregation = find_aggregation_level(ss);
-    coreset_id = *ss->controlResourceSetId;
 
     // Checking if the DCI allocation is feasible in current subframe
     if (dl_req->nPDUs == NFAPI_NR_MAX_DL_TTI_PDUS) {
       LOG_I(MAC, "[RAPROC] Subframe %d: FAPI DL structure is full, skip scheduling UE %d\n", slotP, RA_rnti);
       return;
-    } else {
-      LOG_D(MAC, "[RAPROC] Subframe %d: Checking CCE feasibility format : (%x,%d) \n", slotP, RA_rnti, aggregation);
-      CCEIndex = allocate_nr_CCEs(nr_mac, ra->bwp_id, coreset_id, aggregation, search_space_type, UE_id, 0);
-      AssertFatal(CCEIndex >= 0,"CCEIndex is negative %d\n",CCEIndex);
     }
 
     LOG_I(MAC,"[gNB %d] [RAPROC] CC_id %d Frame %d, slotP %d: Generating RAR DCI, state %d\n", module_idP, CC_id, frameP, slotP, ra->state);
@@ -590,7 +600,11 @@ void nr_generate_Msg2(module_id_t module_idP,
 
     LOG_D(MAC, "[RAPROC] Scheduling common search space DCI type 1 dlBWP BW %d\n", dci10_bw);
 
-    mcsIndex = 0; // Qm>2 not allowed for RAR
+    // Qm>2 not allowed for RAR
+    if (get_softmodem_params()->do_ra)
+      mcsIndex = 9;
+    else
+      mcsIndex = 0;
 
     pdsch_pdu_rel15->pduBitmap = 0;
     pdsch_pdu_rel15->rnti = RA_rnti;
@@ -645,34 +659,27 @@ void nr_generate_Msg2(module_id_t module_idP,
     pdsch_pdu_rel15->dlDmrsSymbPos = fill_dmrs_mask(NULL, scc->dmrs_TypeA_Position, NrOfSymbols);
 
     dci_pdu_rel15_t dci_pdu_rel15[MAX_DCI_CORESET];
-    dci_pdu_rel15[0].frequency_domain_assignment = PRBalloc_to_locationandbandwidth0(pdsch_pdu_rel15->rbSize,
+    dci_pdu_rel15[0].frequency_domain_assignment.val = PRBalloc_to_locationandbandwidth0(pdsch_pdu_rel15->rbSize,
 										     pdsch_pdu_rel15->rbStart,dci10_bw);
-    dci_pdu_rel15[0].time_domain_assignment = time_domain_assignment;
-    dci_pdu_rel15[0].vrb_to_prb_mapping = 0;
+    dci_pdu_rel15[0].time_domain_assignment.val = time_domain_assignment;
+    dci_pdu_rel15[0].vrb_to_prb_mapping.val = 0;
     dci_pdu_rel15[0].mcs = pdsch_pdu_rel15->mcsIndex[0];
     dci_pdu_rel15[0].tb_scaling = 0;
 
     LOG_I(MAC, "[RAPROC] DCI type 1 payload: freq_alloc %d (%d,%d,%d), time_alloc %d, vrb to prb %d, mcs %d tb_scaling %d \n",
-	  dci_pdu_rel15[0].frequency_domain_assignment,
+	  dci_pdu_rel15[0].frequency_domain_assignment.val,
 	  pdsch_pdu_rel15->rbStart,
 	  pdsch_pdu_rel15->rbSize,
 	  dci10_bw,
-	  dci_pdu_rel15[0].time_domain_assignment,
-	  dci_pdu_rel15[0].vrb_to_prb_mapping,
+	  dci_pdu_rel15[0].time_domain_assignment.val,
+	  dci_pdu_rel15[0].vrb_to_prb_mapping.val,
 	  dci_pdu_rel15[0].mcs,
 	  dci_pdu_rel15[0].tb_scaling);
 
-    nr_configure_pdcch(pdcch_pdu_rel15, 0, ss, scc, bwp);
+    nr_configure_pdcch(nr_mac, pdcch_pdu_rel15, RA_rnti, 0, ss, scc, bwp);
 
-    LOG_I(MAC, "Frame %d: Subframe %d : Adding common DL DCI for RA_RNTI %x CCEIndex %d\n", frameP, slotP, RA_rnti, CCEIndex);
+    LOG_I(MAC, "Frame %d: Subframe %d : Adding common DL DCI for RA_RNTI %x\n", frameP, slotP, RA_rnti);
 
-    dci_pdu->RNTI[numDlDci] = RA_rnti;
-    dci_pdu->ScramblingId[numDlDci] = *scc->physCellId;
-    dci_pdu->ScramblingRNTI[numDlDci] = 0;
-    dci_pdu->AggregationLevel[numDlDci] = aggregation;
-    dci_pdu->CceIndex[numDlDci] = CCEIndex;
-    dci_pdu->beta_PDCCH_1_0[numDlDci] = 0;
-    dci_pdu->powerControlOffsetSS[numDlDci] = 1;
     dci_formats[0] = NR_DL_DCI_FORMAT_1_0;
     rnti_types[0] = NR_RNTI_RA;
 
@@ -684,9 +691,7 @@ void nr_generate_Msg2(module_id_t module_idP,
       pdcch_pdu_rel15->StartSymbolIndex,
       pdcch_pdu_rel15->DurationSymbols);
 
-    pdcch_pdu_rel15->numDlDci++;
-    dci_pdu->PayloadSizeBits[0] = nr_dci_size(dci_formats[0], rnti_types[0], dci10_bw);
-    fill_dci_pdu_rel15(pdcch_pdu_rel15, &dci_pdu_rel15[0], dci_formats, rnti_types,dci10_bw);
+    fill_dci_pdu_rel15(scc,secondaryCellGroup,pdcch_pdu_rel15, &dci_pdu_rel15[0], dci_formats, rnti_types,dci10_bw,ra->bwp_id);
 
     dl_req->nPDUs+=2;
 
@@ -698,7 +703,7 @@ void nr_generate_Msg2(module_id_t module_idP,
     LOG_D(MAC,"[gNB %d][RAPROC] Frame %d, Subframe %d: RA state %d\n", module_idP, frameP, slotP, ra->state);
 
     x_Overhead = 0;
-    nr_get_tbs_dl(&dl_tti_pdsch_pdu->pdsch_pdu, x_Overhead, 1, dci_pdu_rel15[0].tb_scaling);
+    nr_get_tbs_dl(&dl_tti_pdsch_pdu->pdsch_pdu, x_Overhead, pdsch_pdu_rel15->numDmrsCdmGrpsNoData, dci_pdu_rel15[0].tb_scaling);
 
     // DL TX request
     tx_req->PDU_length = pdsch_pdu_rel15->TBSize[0];

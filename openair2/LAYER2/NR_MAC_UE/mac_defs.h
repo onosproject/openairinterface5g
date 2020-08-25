@@ -61,7 +61,7 @@
 #include "NR_MIB.h"
 #include "NR_MAC-CellGroupConfig.h"
 #include "NR_PhysicalCellGroupConfig.h"
-#include "NR_SpCellConfig.h"
+#include "NR_CellGroupConfig.h"
 #include "NR_ServingCellConfig.h"
 
 
@@ -155,7 +155,7 @@ typedef enum {
 typedef struct {
 
   NR_ServingCellConfigCommon_t    *scc;
-  NR_ServingCellConfig_t          *scd;
+  NR_CellGroupConfig_t            *scg;
   NR_RACH_ConfigDedicated_t       *rach_ConfigDedicated;
   int                             servCellIndex;
   ////  MAC config
@@ -178,7 +178,6 @@ typedef struct {
   SFN_C_TYPE type0_pdcch_ss_sfn_c;
   uint32_t type0_pdcch_ss_n_c;
   uint32_t type0_pdcch_consecutive_slots;
-  int rnti_type;
 
   /* PDUs */
   /// Outgoing CCCH pdu for PHY
@@ -222,11 +221,6 @@ typedef struct {
   uint32_t RA_tx_frame;
   /// Random-access variable for window calculation (subframe of last change in window counter)
   uint8_t RA_tx_subframe;
-  /// Scheduled RX frame for RA Msg2
-  uint16_t msg2_rx_frame;
-  /// Scheduled RX slot for RA Msg2
-  uint16_t msg2_rx_slot;
-  /// Random-access Group B maximum path-loss
   /// Random-access variable for backoff (frame of last change in backoff counter)
   uint32_t RA_backoff_frame;
   /// Random-access variable for backoff (subframe of last change in backoff counter)

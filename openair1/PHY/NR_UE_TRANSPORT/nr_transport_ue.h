@@ -44,6 +44,7 @@
 
 #include "openair2/NR_UE_PHY_INTERFACE/NR_IF_Module.h"
 
+
 // structures below implement 36-211 and 36-212
 
 /** @addtogroup _PHY_TRANSPORT_
@@ -291,6 +292,8 @@ typedef struct {
   uint16_t dlDmrsSymbPos;
   /// DMRS Configuration Type
   uint8_t dmrsConfigType;
+  // Number of DMRS CDM groups with no data
+  uint8_t n_dmrs_cdm_groups;
   /// Starting Symbol number
   uint16_t start_symbol;
   /// Current subband PMI allocation

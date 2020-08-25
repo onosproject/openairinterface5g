@@ -32,6 +32,7 @@
 
 #include "common/utils/LOG/vcd_signal_dumper.h"
 #include "PHY/defs_nr_UE.h"
+#include "SCHED_NR_UE/harq_nr.h"
 #include "PHY/phy_extern_nr_ue.h"
 #include "PHY/CODING/coding_extern.h"
 #include "PHY/CODING/coding_defs.h"
@@ -133,6 +134,7 @@ NR_UE_DLSCH_t *new_nr_ue_dlsch(uint8_t Kmimo,uint8_t Mdlharq,uint32_t Nsoft,uint
     memset(dlsch,0,sizeof(NR_UE_DLSCH_t));
     dlsch->Kmimo = Kmimo;
     dlsch->Mdlharq = Mdlharq;
+    dlsch->number_harq_processes_for_pdsch = Mdlharq;
     dlsch->Nsoft = Nsoft;
     dlsch->Mlimit = 4;
     dlsch->max_ldpc_iterations = max_ldpc_iterations;
@@ -143,6 +145,7 @@ NR_UE_DLSCH_t *new_nr_ue_dlsch(uint8_t Kmimo,uint8_t Mdlharq,uint32_t Nsoft,uint
 
       if (dlsch->harq_processes[i]) {
         memset(dlsch->harq_processes[i],0,sizeof(NR_DL_UE_HARQ_t));
+        init_downlink_harq_status(dlsch->harq_processes[i]);
         dlsch->harq_processes[i]->first_tx=1;
         dlsch->harq_processes[i]->b = (uint8_t*)malloc16(dlsch_bytes);
 
@@ -263,8 +266,14 @@ uint32_t nr_dlsch_decoding(PHY_VARS_NR_UE *phy_vars_ue,
   double Coderate;// = 0.0;
 
   uint8_t dmrs_Type = harq_process->dmrsConfigType;
-  AssertFatal(dmrs_Type == 1 || dmrs_Type == 2,"Illegal dmrs_type %d\n",dmrs_Type);
-  uint8_t nb_re_dmrs = 12;//(dmrs_Type==1)?6:4;
+  AssertFatal(dmrs_Type == 0 || dmrs_Type == 1, "Illegal dmrs_type %d\n", dmrs_Type);
+  uint8_t nb_re_dmrs;
+  if (dmrs_Type==NFAPI_NR_DMRS_TYPE1) {
+    nb_re_dmrs = 6*harq_process->n_dmrs_cdm_groups;
+  }
+  else {
+    nb_re_dmrs = 4*harq_process->n_dmrs_cdm_groups;
+  }
   uint16_t dmrs_length = get_num_dmrs(harq_process->dlDmrsSymbPos);
   AssertFatal(dmrs_length == 1 || dmrs_length == 2,"Illegal dmrs_length %d\n",dmrs_length);
 
@@ -406,7 +415,7 @@ uint32_t nr_dlsch_decoding(PHY_VARS_NR_UE *phy_vars_ue,
 
   if (nb_rb != 273) {
     a_segments = a_segments*nb_rb;
-    a_segments = a_segments/273;
+    a_segments = (a_segments + 272) / 273;
   }  
 
   if (harq_process->C > a_segments) {
@@ -802,7 +811,12 @@ uint32_t  nr_dlsch_decoding_mthread(PHY_VARS_NR_UE *phy_vars_ue,
   //nfapi_nr_config_request_t *cfg = &phy_vars_ue->nrUE_config;
   //uint8_t dmrs_type = cfg->pdsch_config.dmrs_type.value;
 
-  uint8_t nb_re_dmrs = 12;//(dmrs_type==1)?6:4;
+  uint8_t nb_re_dmrs;
+  if (dmrs_Type == NFAPI_NR_DMRS_TYPE1)
+    nb_re_dmrs = 6*harq_process->n_dmrs_cdm_groups;
+  else
+    nb_re_dmrs = 4*harq_process->n_dmrs_cdm_groups;
+
   uint16_t length_dmrs = get_num_dmrs(dl_config_pdu->dlDmrsSymbPos); 
 
   uint32_t i,j;

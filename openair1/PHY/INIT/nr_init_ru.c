@@ -40,9 +40,6 @@ int nr_phy_init_RU(RU_t *ru) {
   int p;
   int re;
 
-  // For memory allocation of ru->prach_rxsigF
-  int mu = fp->numerology_index;
-
   LOG_I(PHY,"Initializing RU signal buffers (if_south %s) nb_tx %d\n",ru_if_types[ru->if_south],ru->nb_tx);
 
   nfapi_nr_config_request_scf_t *cfg;
@@ -113,8 +110,8 @@ int nr_phy_init_RU(RU_t *ru) {
     ru->prach_rxsigF = (int16_t**)malloc(ru->nb_rx * sizeof(int16_t*));
 
     for (i=0; i<ru->nb_rx; i++) {
-      // for preamble format 1 and 2, more memory should be allocated
-      ru->prach_rxsigF[i] = (int16_t*)malloc16_clear( fp->ofdm_symbol_size*12*(1<<mu)*2*sizeof(int16_t) );
+      // largest size for PRACH FFT is 4x98304 (16*24576)
+      ru->prach_rxsigF[i] = (int16_t*)malloc16_clear( 4*98304*2*sizeof(int16_t) );
       LOG_D(PHY,"[INIT] prach_vars->rxsigF[%d] = %p\n",i,ru->prach_rxsigF[i]);
     }
     
@@ -124,9 +121,9 @@ int nr_phy_init_RU(RU_t *ru) {
     LOG_E(PHY,"[INIT] %s() RC.nb_nr_L1_inst:%d \n", __FUNCTION__, RC.nb_nr_L1_inst);
     
     int beam_count = 0;
-    if (ru->nb_log_antennas>1) {
+    if (ru->nb_tx>1) {//Enable beamforming when nb_tx > 1
       for (p=0;p<ru->nb_log_antennas;p++) {
-        if ((fp->L_ssb >> p) & 0x01)
+        if ((fp->L_ssb >> (63-p)) & 0x01)//64 bit-map with the MSB @2⁶³ corresponds to SSB ssb_index 0
           beam_count++;
       }
       AssertFatal(ru->nb_bfw==(beam_count*ru->nb_tx),"Number of beam weights from config file is %d while the expected number is %d",ru->nb_bfw,(beam_count*ru->nb_tx));
@@ -134,7 +131,7 @@ int nr_phy_init_RU(RU_t *ru) {
       int l_ind = 0;
       for (i=0; i<RC.nb_nr_L1_inst; i++) {
         for (p=0;p<ru->nb_log_antennas;p++) {
-          if ((fp->L_ssb >> p) & 0x01)  {
+          if ((fp->L_ssb >> (63-p)) & 0x01)  {
 	    ru->beam_weights[i][p] = (int32_t **)malloc16_clear(ru->nb_tx*sizeof(int32_t*));
 	    for (j=0; j<ru->nb_tx; j++) {
 	      ru->beam_weights[i][p][j] = (int32_t *)malloc16_clear(fp->ofdm_symbol_size*sizeof(int32_t));

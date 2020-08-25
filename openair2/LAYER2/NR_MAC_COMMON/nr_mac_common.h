@@ -33,7 +33,8 @@
 #define __LAYER2_NR_MAC_COMMON_H__
 
 #include "NR_PDSCH-Config.h"
-#include "NR_ServingCellConfigCommon.h"
+#include "NR_CellGroupConfig.h"
+#include "nr_mac.h"
 
 typedef enum {
   NR_DL_DCI_FORMAT_1_0 = 0,
@@ -76,7 +77,13 @@ int is_nr_DL_slot(NR_ServingCellConfigCommon_t *scc,slot_t slotP);
 
 int is_nr_UL_slot(NR_ServingCellConfigCommon_t *scc,slot_t slotP);
 
-uint16_t nr_dci_size(nr_dci_format_t format, nr_rnti_type_t rnti_type, uint16_t N_RB);
+uint16_t nr_dci_size(NR_ServingCellConfigCommon_t *scc,
+                     NR_CellGroupConfig_t *secondaryCellGroup,
+                     dci_pdu_rel15_t *dci_pdu,
+                     nr_dci_format_t format,
+		     nr_rnti_type_t rnti_type,
+		     uint16_t N_RB,
+                     int bwp_id);
 
 void find_monitoring_periodicity_offset_common(NR_SearchSpace_t *ss,
                                                uint16_t *slot_period,
@@ -96,6 +103,8 @@ int get_nr_prach_info_from_index(uint8_t index,
 uint8_t compute_nr_root_seq(NR_RACH_ConfigCommon_t *rach_config,
                             uint8_t nb_preambles,
                             uint8_t unpaired);
+
+int ul_ant_bits(NR_DMRS_UplinkConfig_t *NR_DMRS_UplinkConfig,long transformPrecoder);
 
 int get_format0(uint8_t index, uint8_t unpaired);
 

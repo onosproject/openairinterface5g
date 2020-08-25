@@ -35,9 +35,7 @@
 #include "NR_MAC_UE/mac_proto.h"
 #include "RRC/NR_UE/rrc_proto.h"
 
-//#ifndef NO_RAT_NR
-#include "SCHED_NR/phy_frame_config_nr.h"
-//#endif
+#include "SCHED_NR_UE/phy_frame_config_nr.h"
 #include "SCHED_NR_UE/defs.h"
 
 #include "PHY/NR_UE_TRANSPORT/nr_transport_proto_ue.h"
@@ -157,6 +155,7 @@ void init_nr_ue_vars(PHY_VARS_NR_UE *ue,
 
   // initialize all signal buffers
   init_nr_ue_signal(ue, nb_connected_gNB, abstraction_flag);
+
   // intialize transport
   init_nr_ue_transport(ue, abstraction_flag);
 }
@@ -366,6 +365,7 @@ static void UE_synch(void *arg) {
 
 void processSlotTX( PHY_VARS_NR_UE *UE, UE_nr_rxtx_proc_t *proc) {
 
+
   fapi_nr_config_request_t *cfg = &UE->nrUE_config;
   int tx_slot_type = nr_ue_slot_select(cfg, proc->frame_tx, proc->nr_tti_tx);
   uint8_t gNB_id = 0;
@@ -436,6 +436,23 @@ void processSlotRX( PHY_VARS_NR_UE *UE, UE_nr_rxtx_proc_t *proc) {
       pdcp_run(&ctxt);
     }
   }
+
+  // no UL for now
+  /*
+  if (UE->mac_enabled==1) {
+    //  trigger L2 to run ue_scheduler thru IF module
+    //  [TODO] mapping right after NR initial sync
+    if(UE->if_inst != NULL && UE->if_inst->ul_indication != NULL) {
+      UE->ul_indication.module_id = 0;
+      UE->ul_indication.gNB_index = 0;
+      UE->ul_indication.cc_id = 0;
+      UE->ul_indication.frame = proc->frame_rx;
+      UE->ul_indication.slot = proc->nr_tti_rx;
+      UE->if_inst->ul_indication(&UE->ul_indication);
+    }
+  }
+  */
+
 }
 
 /*!

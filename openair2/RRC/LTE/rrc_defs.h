@@ -271,6 +271,7 @@ typedef enum UE_STATE_e {
   RRC_RECONFIGURED,
   RRC_HO_EXECUTION,
   RRC_NR_NSA,
+  RRC_NR_NSA_RECONFIGURED
 } UE_STATE_t;
 
 typedef enum HO_STATE_e {
@@ -832,6 +833,7 @@ typedef struct UE_RRC_INST_s {
   Rrc_Sub_State_t RrcSubState;
   plmn_t          plmnID;
   Byte_t          rat;
+  uint8_t         selected_plmn_identity;
   as_nas_info_t   initialNasMsg;
   OAI_UECapability_t *UECap;
   uint8_t *UECapability;

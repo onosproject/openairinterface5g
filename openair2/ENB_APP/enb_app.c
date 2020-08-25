@@ -277,10 +277,6 @@ void *eNB_app_task(void *args_p) {
         if (EPC_MODE_ENABLED) {
           LOG_I(ENB_APP, "[eNB %d] Received %s: associated MME %d\n", instance, ITTI_MSG_NAME (msg_p),
                 S1AP_REGISTER_ENB_CNF(msg_p).nb_mme);
-          if(register_enb_pending <= 0) {
-            LOG_E(ENB_APP,"register_enb_pending <= 0\n");
-            break;
-          }
           register_enb_pending--;
 
           /* Check if at least eNB is registered with one MME */

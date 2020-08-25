@@ -98,7 +98,9 @@ void nr_ue_ulsch_procedures(PHY_VARS_NR_UE *UE,
                                uint8_t thread_id,
                                int gNB_id) {
 
-  uint32_t available_bits, TBS;
+  LOG_D(PHY,"nr_ue_ulsch_procedures hard_id %d %d.%d\n",harq_pid,frame,slot);
+
+  uint32_t available_bits;
   uint8_t mod_order, cwd_index, num_of_codewords, l;
   uint32_t scrambled_output[NR_MAX_NB_CODEWORDS][NR_MAX_PDSCH_ENCODED_LENGTH>>5];
   uint32_t ***pusch_dmrs;
@@ -111,23 +113,19 @@ void nr_ue_ulsch_procedures(PHY_VARS_NR_UE *UE,
   int ap, start_symbol, Nid_cell, i;
   int sample_offsetF, N_RE_prime, N_PRB_oh;
   uint16_t ul_dmrs_symb_pos;
-  uint8_t data_existing =0;
   uint8_t L_ptrs, K_ptrs; // PTRS parameters
   uint16_t beta_ptrs; // PTRS parameter related to power control
-  uint8_t no_data_in_dmrs = 1;
 
   NR_UE_ULSCH_t *ulsch_ue;
   NR_UL_UE_HARQ_t *harq_process_ul_ue=NULL;
   NR_DL_FRAME_PARMS *frame_parms = &UE->frame_parms;
   NR_UE_PUSCH *pusch_ue = UE->pusch_vars[thread_id][gNB_id];
-  uint8_t ulsch_input_buffer[MAX_ULSCH_PAYLOAD_BYTES];
   // ptrs_UplinkConfig_t *ptrs_Uplink_Config = &UE->pusch_config.dmrs_UplinkConfig.ptrs_UplinkConfig;
 
   num_of_codewords = 1; // tmp assumption
   Nid_cell = 0;
   N_PRB_oh = 0; // higher layer (RRC) parameter xOverhead in PUSCH-ServingCellConfig
   number_dmrs_symbols = 0;
-
 
   for (cwd_index = 0;cwd_index < num_of_codewords; cwd_index++) {
 
@@ -149,10 +147,7 @@ void nr_ue_ulsch_procedures(PHY_VARS_NR_UE *UE,
     rnti                  = harq_process_ul_ue->pusch_pdu.rnti;
     ulsch_ue->Nid_cell    = Nid_cell;
 
-    if(no_data_in_dmrs)
-      nb_dmrs_re_per_rb = 12;
-    else
-      nb_dmrs_re_per_rb = ((dmrs_type == pusch_dmrs_type1) ? 6:4);
+    nb_dmrs_re_per_rb = ((dmrs_type == pusch_dmrs_type1) ? 6:4)*harq_process_ul_ue->pusch_pdu.num_dmrs_cdm_grps_no_data;
 
     N_RE_prime = NR_NB_SC_PER_RB*number_of_symbols - nb_dmrs_re_per_rb*number_dmrs_symbols - N_PRB_oh;
 
@@ -173,55 +168,6 @@ void nr_ue_ulsch_procedures(PHY_VARS_NR_UE *UE,
                                              0,
                                              0,
                                              harq_process_ul_ue->pusch_pdu.nrOfLayers);
-
-
-    uint8_t access_mode = SCHEDULED_ACCESS;
-
-    //-----------------------------------------------------//
-    // to be removed later when MAC is ready
-
-    if (harq_process_ul_ue != NULL){
-      TBS = harq_process_ul_ue->pusch_pdu.pusch_data.tb_size;
-      data_existing = 0;
-
-      if (IS_SOFTMODEM_NOS1){
-        data_existing = nr_ue_get_sdu(UE->Mod_id, UE->CC_id, frame,
-          slot, 0, ulsch_input_buffer, TBS/8, &access_mode);
-        //IP traffic to be transmitted
-        if(data_existing){
-          //harq_process_ul_ue->a = (unsigned char*)calloc(TBS/8, sizeof(unsigned char));
-          memcpy(harq_process_ul_ue->a, ulsch_input_buffer, TBS/8);
-        }
-      }
-      //Random traffic to be transmitted if there is no IP traffic available for this Tx opportunity
-      if (!IS_SOFTMODEM_NOS1 || !data_existing) {
-        //Use zeros for the header bytes in noS1 mode, in order to make sure that the LCID is not valid
-        //and block this traffic from being forwarded to the upper layers at the gNB
-        LOG_D(PHY, "Random data to be tranmsitted: \n");
-
-        //Give the first byte a dummy value (a value not corresponding to any valid LCID based on 38.321, Table 6.2.1-2)
-        //in order to distinguish the PHY random packets at the MAC layer of the gNB receiver from the normal packets that should
-        //have a valid LCID (nr_process_mac_pdu function)
-        harq_process_ul_ue->a[0] = 0x31;
-
-        for (i = 1; i < TBS / 8; i++) {
-          harq_process_ul_ue->a[i] = (unsigned char) rand();
-          //printf(" input encoder a[%d]=0x%02x\n",i,harq_process_ul_ue->a[i]);
-        }
-      }
-#ifdef DEBUG_MAC_PDU
-      LOG_I(PHY, "Printing MAC PDU to be encoded, TBS is: %d \n", TBS/8);
-      for (i = 0; i < TBS / 8; i++) {
-        printf("%02x",harq_process_ul_ue->a[i]);
-      }
-      printf("\n");
-#endif
-    } else {
-      LOG_E(PHY, "[phy_procedures_nrUE_TX] harq_process_ul_ue is NULL !!\n");
-      return;
-    }
-
-    //-----------------------------------------------------//
 
     /////////////////////////ULSCH coding/////////////////////////
     ///////////
@@ -372,7 +318,7 @@ void nr_ue_ulsch_procedures(PHY_VARS_NR_UE *UE,
     
 
     uint8_t k_prime=0;
-    uint8_t is_dmrs, is_ptrs;
+    uint8_t is_dmrs, is_ptrs, is_dmrs_symbol;
     uint16_t m=0, n=0, dmrs_idx=0, ptrs_idx = 0;
 
     for (l=start_symbol; l<start_symbol+number_of_symbols; l++) {
@@ -387,8 +333,10 @@ void nr_ue_ulsch_procedures(PHY_VARS_NR_UE *UE,
 
         is_dmrs = 0;
         is_ptrs = 0;
+        is_dmrs_symbol = 0;
 
         if((ul_dmrs_symb_pos >> l) & 0x01) {
+          is_dmrs_symbol = 1;
           if (k == ((start_sc+get_dmrs_freq_idx_ul(n, k_prime, delta, dmrs_type))%frame_parms->ofdm_symbol_size))
             is_dmrs = 1;
         }
@@ -439,7 +387,7 @@ void nr_ue_ulsch_procedures(PHY_VARS_NR_UE *UE,
 
           ptrs_idx++;
 
-        } else if (((ul_dmrs_symb_pos >> l) & 0x01) == 0) {
+        } else if (!is_dmrs_symbol || allowed_xlsch_re_in_dmrs_symbol(k,start_sc,harq_process_ul_ue->pusch_pdu.num_dmrs_cdm_grps_no_data,dmrs_type)) {
 
           ((int16_t*)txdataF[ap])[(sample_offsetF)<<1]       = ((int16_t *) ulsch_ue->y)[m<<1];
           ((int16_t*)txdataF[ap])[((sample_offsetF)<<1) + 1] = ((int16_t *) ulsch_ue->y)[(m<<1) + 1];
@@ -473,7 +421,6 @@ void nr_ue_ulsch_procedures(PHY_VARS_NR_UE *UE,
   ///////////
   ////////////////////////////////////////////////////////////////////////
 
-  LOG_D(PHY, "Is data existing ?: %d \n", data_existing);
 }
 
 
