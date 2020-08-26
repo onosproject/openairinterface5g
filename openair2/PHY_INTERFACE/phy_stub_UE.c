@@ -779,18 +779,28 @@ void dl_config_req_UE_MAC_dci(int sfn,
                     tx_request_pdu_list[pdu_index].segments[0].segment_data,
                     tx_request_pdu_list[pdu_index].segments[0].segment_length);
       }
-    } else if (rnti == 0x0002) { /* RA-RNTI */
+    } else { /* RA-RNTI */
+      int8_t existed = 0;
       for (int ue_id = 0; ue_id < num_ue; ue_id++) {
+
+
         if (UE_mac_inst[ue_id].UE_mode[0] != RA_RESPONSE) {
           LOG_D(MAC, "UE %d not awaiting RAR, is in mode %d\n",
                 ue_id, UE_mac_inst[ue_id].UE_mode[0]);
           continue;
         }
+
+        if( rnti !=UE_mac_inst[ue_id].RA_prach_resources.ra_RNTI ) 
+          continue;
+
+          if(existed == 0){
+            existed = 1;
+          }
         // RNTI parameter not actually used. Provided only to comply with
         // existing function definition.  Not sure about parameters to fill
         // the preamble index.
         const rnti_t ra_rnti = UE_mac_inst[ue_id].RA_prach_resources.ra_RNTI;
-        DevAssert(ra_rnti == 0x0002);
+        // DevAssert(ra_rnti == 0x0002);
         if (UE_mac_inst[ue_id].UE_mode[0] != PUSCH
             && UE_mac_inst[ue_id].RA_prach_resources.Msg3 != NULL
             && ra_rnti == dlsch->dlsch_pdu.dlsch_pdu_rel8.rnti) {
@@ -809,8 +819,10 @@ void dl_config_req_UE_MAC_dci(int sfn,
           UE_mac_inst[ue_id].first_ULSCH_Tx = 1;
         }
       }
-    } else {
-      LOG_W(MAC, "can not handle special RNTI %x\n", rnti);
+
+      if(existed == 0){
+        LOG_W(MAC, "can not handle special RNTI %x\n", rnti);
+      }
     }
   }
 }
