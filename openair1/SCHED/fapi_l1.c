@@ -968,15 +968,17 @@ void schedule_response(Sched_Rsp_t *Sched_INFO, L1_rxtx_proc_t *proc) {
                   }
                 }
 #else
-                LTE_TDD_Config_t *tdd_Config = NULL;
+                uint8_t harq_pid_dl=0;
 
                 if (fp->frame_type == TDD) {
-                  tdd_Config = CALLOC(1,sizeof(struct LTE_TDD_Config));
-                  tdd_Config->subframeAssignment = fp->tdd_config;
-                  tdd_Config->specialSubframePatterns = fp->tdd_config_S;
+                  LTE_TDD_Config_t tdd_Config;
+                  tdd_Config.subframeAssignment = fp->tdd_config;
+                  tdd_Config.specialSubframePatterns = fp->tdd_config_S;
+                  harq_pid_dl = frame_subframe2_dl_harq_pid(&tdd_Config, NFAPI_SFNSF2SFN(DL_req->sfn_sf), NFAPI_SFNSF2SF(DL_req->sfn_sf));
+                }else{
+                  harq_pid_dl = frame_subframe2_dl_harq_pid(NULL, NFAPI_SFNSF2SFN(DL_req->sfn_sf), NFAPI_SFNSF2SF(DL_req->sfn_sf));
                 }
 
-                uint8_t harq_pid_dl = frame_subframe2_dl_harq_pid(tdd_Config, NFAPI_SFNSF2SFN(DL_req->sfn_sf), NFAPI_SFNSF2SF(DL_req->sfn_sf));
                 if (harq_pid_dl >=0 && harq_pid_dl < 8) {
                   memset(dl_pdus[harq_pid_dl][i], 0, sizeof(uint8_t)*9422);
                   memcpy(dl_pdus[harq_pid_dl][i], TX_req->tx_request_body.tx_pdu_list[pdu_index].segments[0].segment_data, TX_req->tx_request_body.tx_pdu_list[pdu_index].segments[0].segment_length);

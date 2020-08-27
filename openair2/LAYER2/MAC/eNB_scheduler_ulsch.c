@@ -315,15 +315,17 @@ rx_sdu(const module_id_t enb_mod_idP,
     first_rb = ra->msg3_first_rb;
 
     if (sduP == NULL) { // we've got an error on Msg3
-      LOG_D(MAC, "[eNB %d] CC_id %d, RA %d ULSCH in error in round %d/%d\n",
+      LOG_D(MAC, "[eNB %d] CC_id %d,frame %d subframe %d RA %d ULSCH in error in round %d/%d rnti %x\n",
             enb_mod_idP,
-            CC_idP,
+            CC_idP, frameP, subframeP,
             RA_id,
             ra->msg3_round,
-            (int) mac->common_channels[CC_idP].radioResourceConfigCommon->rach_ConfigCommon.maxHARQ_Msg3Tx);
+            (int) mac->common_channels[CC_idP].radioResourceConfigCommon->rach_ConfigCommon.maxHARQ_Msg3Tx,current_rnti);
 
       if (ra->msg3_round >= mac->common_channels[CC_idP].radioResourceConfigCommon->rach_ConfigCommon.maxHARQ_Msg3Tx - 1) {
         cancel_ra_proc(enb_mod_idP, CC_idP, frameP, current_rnti);
+        fill_nfapi_rnti_release(enb_mod_idP, current_rnti);
+        LOG_I(MAC,"frame %d subframe %d rnti %x : Msg3 max Tx,release UE\n",frameP, subframeP,current_rnti);
         nfapi_hi_dci0_request_t *hi_dci0_req = NULL;
         uint8_t sf_ahead_dl = ul_subframe2_k_phich(&mac->common_channels[CC_idP], subframeP);
         hi_dci0_req = &mac->HI_DCI0_req[CC_idP][(subframeP + sf_ahead_dl) % 10];
@@ -549,7 +551,9 @@ rx_sdu(const module_id_t enb_mod_idP,
                 LOG_E(MAC, "mac_rrc_data_ind failed, ret == -2\n");
                 return;
               }else {
+                LOG_E(MAC, "mac_rrc_data_ind failed, ret %d frame %d subframe %d rnti %d\n",ret,frameP,subframeP,current_rnti);
                 cancel_ra_proc(enb_mod_idP, CC_idP, frameP, current_rnti);
+                fill_nfapi_rnti_release(enb_mod_idP, current_rnti);
               }
 
               // break;
@@ -557,6 +561,7 @@ rx_sdu(const module_id_t enb_mod_idP,
           }
         } else {
           cancel_ra_proc(enb_mod_idP, CC_idP, frameP, current_rnti);
+          fill_nfapi_rnti_release(enb_mod_idP, current_rnti);
           LOG_W(MAC, "[MAC] Can't find old UE_id\n");
         }
 
@@ -739,6 +744,7 @@ rx_sdu(const module_id_t enb_mod_idP,
             if ((UE_id = add_new_ue(enb_mod_idP, CC_idP, ra->rnti, harq_pid, ra->rach_resource_type )) == -1) {
               LOG_E(MAC,"[MAC][eNB] Max user count reached\n");
               cancel_ra_proc(enb_mod_idP, CC_idP, frameP, current_rnti); // send Connection Reject ???
+              fill_nfapi_rnti_release(enb_mod_idP, current_rnti);
               break;
               // kill RA proc
             } else {

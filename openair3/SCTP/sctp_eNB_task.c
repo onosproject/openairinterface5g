@@ -967,7 +967,7 @@ sctp_eNB_read_from_socket(
                      &sinfo, &flags);
 
     if (n < 0) {
-        if( (errno == ENOTCONN) || (errno == ECONNRESET) || (errno == ETIMEDOUT) || (errno == ECONNREFUSED) )
+        if( (errno == ENOTCONN) || (errno == ECONNRESET) || (errno == ECONNREFUSED) )
         {
             itti_unsubscribe_event_fd(TASK_SCTP, sctp_cnx->sd);
 
@@ -977,6 +977,18 @@ sctp_eNB_read_from_socket(
             sctp_itti_send_association_resp(
                 sctp_cnx->task_id, sctp_cnx->instance, -1,
                 sctp_cnx->cnx_id, SCTP_STATE_UNREACHABLE, 0, 0);
+
+            close(sctp_cnx->sd);
+            STAILQ_REMOVE(&sctp_cnx_list, sctp_cnx, sctp_cnx_list_elm_s, entries);
+            sctp_nb_cnx--;
+            free(sctp_cnx);
+        } else if(errno == ETIMEDOUT) {
+            SCTP_DEBUG("SCTP heart beat timeout for sd %d\n", sctp_cnx->sd);
+            SCTP_ERROR("sctp_recvmsg (fd %d, len %d ): %s:%d\n", sctp_cnx->sd, n, strerror(errno), errno);
+
+            sctp_itti_send_association_resp(
+                sctp_cnx->task_id, sctp_cnx->instance, sctp_cnx->assoc_id,
+                sctp_cnx->cnx_id, SCTP_STATE_SHUTDOWN, 0, 0);
 
             close(sctp_cnx->sd);
             STAILQ_REMOVE(&sctp_cnx_list, sctp_cnx, sctp_cnx_list_elm_s, entries);

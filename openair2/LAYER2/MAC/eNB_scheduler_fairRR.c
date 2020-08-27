@@ -320,7 +320,6 @@ void select_dl_ue_candidate(
            (UE_scheduling_control->dl_volte_ue_select_flag == FALSE) ){         /* VoLTE UE select flag check */
         continue;
       }
-      UE_scheduling_control->dl_volte_ue_select_flag = FALSE;                   /* VoLTE UE select flag set -> init */
 
       ue_sched_ctl = &UE_info->UE_sched_ctrl[UE_id];
 
@@ -369,9 +368,6 @@ void select_dl_ue_candidate(
         }
         dl_ue_candidate[CC_id][index]=UE_id;
         index++;
-        if(ue_sched_ctl->dl_volte_ue_select_flag == TRUE){
-          ue_sched_ctl->dl_volte_ue_select_flag = FALSE;                   /* VoLTE UE select flag set -> init */
-        }
         if(index==dlsch_ue_max_num[CC_id]) break;
       }
     }
@@ -1662,6 +1658,7 @@ schedule_ue_spec_fairRR(module_id_t module_idP,
   static int32_t tpc_accumulated = 0;
   UE_sched_ctrl_t *ue_sched_ctl;
   int mcs = 0;
+  int max_mcs = 28;
   int i = 0;
   int min_rb_unit[MAX_NUM_CCs];
   int N_RB_DL[MAX_NUM_CCs];
@@ -1791,10 +1788,12 @@ schedule_ue_spec_fairRR(module_id_t module_idP,
                                        mbsfn_flag);
   stop_meas(&eNB->schedule_dlsch_preprocessor);
   VCD_SIGNAL_DUMPER_DUMP_FUNCTION_BY_NAME(VCD_SIGNAL_DUMPER_FUNCTIONS_DLSCH_PREPROCESSOR,VCD_FUNCTION_OUT);
+  
 
   for (CC_id=0; CC_id<MAX_NUM_CCs; CC_id++) {
     LOG_D(MAC, "doing schedule_ue_spec for CC_id %d\n",CC_id);
     dl_req        = &eNB->DL_req[CC_id].dl_config_request_body;
+    if(dl_req->number_pdcch_ofdm_symbols==3) max_mcs=27;
 
     if (mbsfn_flag[CC_id]>0)
       continue;
@@ -1818,6 +1817,10 @@ schedule_ue_spec_fairRR(module_id_t module_idP,
 
       eNB_UE_stats = &UE_info->eNB_UE_stats[CC_id][UE_id];
       ue_sched_ctl = &UE_info->UE_sched_ctrl[UE_id];
+
+      if(ue_sched_ctl->dl_volte_ue_select_flag == TRUE){
+        ue_sched_ctl->dl_volte_ue_select_flag = FALSE;
+      }
 
       /*
             switch(get_tmode(module_idP,CC_id,UE_id)){
@@ -1892,6 +1895,8 @@ schedule_ue_spec_fairRR(module_id_t module_idP,
           eNB_UE_stats->dlsch_mcs[TB1] = cqi_to_mcs[ue_sched_ctl->dl_cqi[CC_id]];
           eNB_UE_stats->dlsch_mcs[TB2] = cqi_to_mcs[ue_sched_ctl->dl_cqi[CC_id]];
         }
+      if(eNB_UE_stats->dlsch_mcs[TB1]>max_mcs) eNB_UE_stats->dlsch_mcs[TB1]=max_mcs;
+      if(eNB_UE_stats->dlsch_mcs[TB2]>max_mcs) eNB_UE_stats->dlsch_mcs[TB2]=max_mcs;
       if (UE_info->eNB_UE_stats[CC_id][UE_id].rrc_status == RRC_HO_EXECUTION) {
         eNB_UE_stats->dlsch_mcs[TB1] = 6;
         eNB_UE_stats->dlsch_mcs[TB2] = 6;
@@ -2201,7 +2206,7 @@ schedule_ue_spec_fairRR(module_id_t module_idP,
 
                     // if we have decreased too much or we don't have enough RBs, increase MCS
                     while (   (TBS < (sdu_length_total + header_len_dcch + header_len_dtch + ta_len))
-                           && (  ((ue_sched_ctl->dl_pow_off[CC_id] > 0) && (mcs < 28))
+                           && (  ((ue_sched_ctl->dl_pow_off[CC_id] > 0) && (mcs < max_mcs))
                                ||((ue_sched_ctl->dl_pow_off[CC_id] == 0) && (mcs <= 15)))) {
                         mcs++;
                         TBS = get_TBS_DL(mcs, nb_rb);
@@ -2785,9 +2790,9 @@ schedule_ue_spec_fairRR(module_id_t module_idP,
         }
 
         // check for DCCH1 and update header information (assume 2 byte sub-header)
-        if (TBS - ta_len - header_len_dcch - sdu_length_total > 0) {
+        if (TBS - ta_len - header_len_dcch - sdu_length_total -2 > 0) {
           rlc_status = mac_rlc_status_ind(module_idP, rnti, module_idP, frameP, subframeP, ENB_FLAG_YES, MBMS_FLAG_NO, DCCH + 1, 0, 0
-                                         ); // transport block set size less allocations for timing advance and
+                                         ); // transport block set size less allocations for timing advance and          
           // DCCH SDU
           sdu_lengths[num_sdus] = 0;
 
@@ -2997,7 +3002,7 @@ schedule_ue_spec_fairRR(module_id_t module_idP,
                   (sdu_length_total + header_len_dcch +
                    header_len_dtch + ta_len))
                  && (((ue_sched_ctl->dl_pow_off[CC_id] > 0)
-                      && (mcs < 28))
+                      && (mcs < max_mcs))
                      || ((ue_sched_ctl->dl_pow_off[CC_id] == 0)
                          && (mcs <= 15)))) {
             mcs++;
@@ -3174,7 +3179,7 @@ schedule_ue_spec_fairRR(module_id_t module_idP,
 
           }//1st TB end
 
-//	  printf("dl sfn=%d, sf=%d, buffer=%d, TBS=%d\n", frameP, subframeP, UE_list->UE_template[CC_id][UE_id].dl_buffer_total, UE_list->eNB_UE_stats[CC_id][UE_id].TBS[select_tb]);
+//	  printf("dl sfn=%d, sf=%d, buffer=%d, TBS=%d\n", frameP, subframeP, UE_info->UE_template[CC_id][UE_id].dl_buffer_total, UE_info->eNB_UE_stats[CC_id][UE_id].TBS[select_tb]);
 
           if(   (first_TB_pdu_create_flg == 1)
              && (ue_sched_ctl->aperiodic_ri_received[CC_id] == MULTI_RI)
@@ -3250,7 +3255,7 @@ schedule_ue_spec_fairRR(module_id_t module_idP,
             }
 
             // check for DCCH1 and update header information (assume 2 byte sub-header)
-            if(TBS - ta_len - header_len_dcch - sdu_length_total > 0) {
+            if(TBS - ta_len - header_len_dcch - sdu_length_total - 2 > 0) {
                 rlc_status = mac_rlc_status_ind( module_idP,
                                                  rnti,
                                                  module_idP,
@@ -3386,7 +3391,7 @@ schedule_ue_spec_fairRR(module_id_t module_idP,
 
                 // if we have decreased too much or we don't have enough RBs, increase MCS
                 while (    (TBS < (sdu_length_total + header_len_dcch + header_len_dtch + ta_len))
-                        && (   ((ue_sched_ctl->dl_pow_off[CC_id] > 0)  && (mcs < 28))
+                        && (   ((ue_sched_ctl->dl_pow_off[CC_id] > 0)  && (mcs < max_mcs))
                             || ((ue_sched_ctl->dl_pow_off[CC_id] == 0) && (mcs <= 15)))
                       ) {
                     mcs++;
@@ -3936,8 +3941,14 @@ void ulsch_scheduler_pre_ue_select_fairRR(
 
     if (mac_eNB_get_rrc_status(module_idP, rnti) == RRC_HO_EXECUTION) {
       aggregation = 4;
+      
+        if(get_aggregation(get_bw_index(module_idP, CC_id),UE_info->UE_sched_ctrl[UE_id].dl_cqi[CC_id],format0)>4)
+          aggregation = get_aggregation(get_bw_index(module_idP, CC_id),UE_info->UE_sched_ctrl[UE_id].dl_cqi[CC_id],format0);
     }else{
-      aggregation = 2;
+      //aggregation = 2;
+      aggregation = get_aggregation(get_bw_index(module_idP, CC_id),
+                                    UE_info->UE_sched_ctrl[UE_id].dl_cqi[CC_id],
+                                    format0);
     }
 
     // Selection of Retx UEs
@@ -4047,6 +4058,9 @@ void ulsch_scheduler_pre_ue_select_fairRR(
         hi_dci0_pdu   = &HI_DCI0_req->hi_dci0_pdu_list[HI_DCI0_req->number_of_dci+HI_DCI0_req->number_of_hi];
         format_flag = 2;
 
+        aggregation = get_aggregation(get_bw_index(module_idP, CC_id),
+                                      UE_info->UE_sched_ctrl[UE_id].dl_cqi[CC_id],
+                                      format0);
         if (CCE_allocation_infeasible(module_idP,CC_id,format_flag,subframeP,aggregation,rnti) == 1) {
           cc_id_flag[CC_id] = 1;
           continue;
@@ -4142,6 +4156,9 @@ void ulsch_scheduler_pre_ue_select_fairRR(
       format_flag = 2;
       aggregation=get_aggregation(get_bw_index(module_idP,CC_id),UE_info->UE_sched_ctrl[UE_id].dl_cqi[CC_id],format0);
 
+      aggregation = get_aggregation(get_bw_index(module_idP, CC_id),
+                                    UE_info->UE_sched_ctrl[UE_id].dl_cqi[CC_id],
+                                    format0);
       if (CCE_allocation_infeasible(module_idP,CC_id,format_flag,subframeP,aggregation,rnti) == 1) {
         cc_id_flag[CC_id] = 1;
         continue;
@@ -4737,8 +4754,13 @@ void schedule_ulsch_rnti_fairRR(module_id_t   module_idP,
       rnti = UE_RNTI(CC_id,UE_id);
       if (mac_eNB_get_rrc_status(module_idP, rnti) == RRC_HO_EXECUTION) {
         aggregation = 4;
+        if(get_aggregation(get_bw_index(module_idP, CC_id),UE_info->UE_sched_ctrl[UE_id].dl_cqi[CC_id],format0)>4)
+          aggregation = get_aggregation(get_bw_index(module_idP, CC_id),UE_info->UE_sched_ctrl[UE_id].dl_cqi[CC_id],format0);
       }else{
-        aggregation = 2;
+        //aggregation = 2;
+        aggregation = get_aggregation(get_bw_index(module_idP, CC_id),
+                                      UE_info->UE_sched_ctrl[UE_id].dl_cqi[CC_id],
+                                      format0);
       }
       LOG_D(MAC,"[eNB %d] frame %d subframe %d,Checking PUSCH %d for UE %d/%x CC %d : aggregation level %d, N_RB_UL %d\n",
             module_idP,frameP,subframeP,harq_pid,UE_id,rnti,CC_id, aggregation,N_RB_UL);

@@ -1105,6 +1105,10 @@ void program_dlsch_acknak(module_id_t module_idP, int CC_idP, int UE_idP,
                           frame_t frameP, sub_frame_t subframeP,
                           uint8_t cce_idx);
 
+void
+fill_nfapi_rnti_release(module_id_t                      module_idP,
+                        uint16_t                         rntiP);
+
 void fill_nfapi_dlsch_config(nfapi_dl_config_request_pdu_t *dl_config_pdu,
                              uint16_t length, int16_t pdu_index,
                              uint16_t rnti,

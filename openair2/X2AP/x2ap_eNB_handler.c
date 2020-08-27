@@ -211,11 +211,6 @@ void x2ap_handle_x2_setup_message(x2ap_eNB_instance_t *instance_p, x2ap_eNB_data
       }
     }
   } else {
-    /* Check that at least one setup message is pending */
-    DevCheck(instance_p->x2_target_enb_pending_nb > 0,
-             instance_p->instance,
-             instance_p->x2_target_enb_pending_nb, 0);
-
     if (instance_p->x2_target_enb_pending_nb > 0) {
       /* Decrease pending messages number */
       instance_p->x2_target_enb_pending_nb --;
@@ -413,7 +408,24 @@ x2ap_eNB_handle_x2_setup_request(instance_t instance,
       X2AP_DEBUG("macro eNB id: %05x\n", eNB_id);
     }
   }
-
+  
+  instance_p = x2ap_eNB_get_instance(instance);
+  if(instance_p == NULL) {
+    X2AP_ERROR("%s %d: instance_p is a NULL pointer \n",__FILE__,__LINE__);
+    return -1;
+  }
+  
+  X2AP_DEBUG("Check eNB id %d  my eNB id %d\n", eNB_id, instance_p->eNB_id);
+  if(eNB_id==instance_p->eNB_id){
+    X2AP_ERROR("Rejecting x2 setup request as eNB id %d is duplicated my eNB id assoc_id: %d\n", eNB_id, assoc_id);
+    x2ap_eNB_generate_x2_setup_failure (instance,
+                                        assoc_id,
+                                        X2AP_Cause_PR_protocol,
+                                        X2AP_CauseProtocol_unspecified,
+                                        -1);
+    return -1;
+  }
+  
   X2AP_DEBUG("Adding eNB to the list of associated eNBs\n");
 
   if ((x2ap_eNB_data = x2ap_is_eNB_id_in_list (eNB_id)) == NULL) {
@@ -473,13 +485,6 @@ x2ap_eNB_handle_x2_setup_request(instance_t instance,
       x2ap_eNB_data->Nid_cell[i] = servedCellMember->servedCellInfo.pCI;
       X2AP_SETUP_REQ(msg).Nid_cell[i] = x2ap_eNB_data->Nid_cell[i];
     }
-  }
-
-  instance_p = x2ap_eNB_get_instance(instance);
-  if(instance_p == NULL) {
-    X2AP_ERROR("%s %d: instance_p is a NULL pointer \n",__FILE__,__LINE__);
-    itti_free(ITTI_MSG_ORIGIN_ID(msg), msg);
-    return -1;
   }
 
   itti_send_msg_to_task(TASK_RRC_ENB, instance_p->instance, msg);

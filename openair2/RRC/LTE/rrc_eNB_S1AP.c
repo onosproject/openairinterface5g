@@ -145,6 +145,9 @@ void extract_imsi(uint8_t *pdu_buf, uint32_t pdu_len, rrc_eNB_ue_context_t *ue_c
              &e_msg->attach_request.oldgutiorimsi.imsi,
              sizeof(ImsiMobileIdentity_t));
     }
+    free(e_msg->attach_request.esmmessagecontainer.esmmessagecontainercontents.value);
+    if(e_msg->attach_request.msnetworkcapability.msnetworkcapabilityvalue.value!=NULL)
+      free(e_msg->attach_request.msnetworkcapability.msnetworkcapabilityvalue.value);
   }
 }
 
@@ -648,7 +651,9 @@ rrc_eNB_send_S1AP_UPLINK_NAS(
       uint8_t *pdu_buffer;
       MessageDef *msg_p;
       pdu_length = dedicatedInfoType->choice.dedicatedInfoNAS.size;
-      pdu_buffer = dedicatedInfoType->choice.dedicatedInfoNAS.buf;
+      //pdu_buffer = dedicatedInfoType->choice.dedicatedInfoNAS.buf;
+      pdu_buffer = CALLOC(1, dedicatedInfoType->choice.dedicatedInfoNAS.size);
+      memcpy((void*)pdu_buffer,(void*)dedicatedInfoType->choice.dedicatedInfoNAS.buf,dedicatedInfoType->choice.dedicatedInfoNAS.size);
       msg_p = itti_alloc_new_message (TASK_RRC_ENB, S1AP_UPLINK_NAS);
       S1AP_UPLINK_NAS (msg_p).eNB_ue_s1ap_id = ue_context_pP->ue_context.eNB_ue_s1ap_id;
       S1AP_UPLINK_NAS (msg_p).nas_pdu.length = pdu_length;
@@ -757,8 +762,10 @@ rrc_eNB_send_S1AP_NAS_FIRST_REQ(
       S1AP_NAS_FIRST_REQ (message_p).establishment_cause = RRC_CAUSE_EMERGENCY;
     }
     /* Forward NAS message */
-    S1AP_NAS_FIRST_REQ (message_p).nas_pdu.buffer = rrcConnectionSetupComplete->dedicatedInfoNAS.buf;
     S1AP_NAS_FIRST_REQ (message_p).nas_pdu.length = rrcConnectionSetupComplete->dedicatedInfoNAS.size;
+    //S1AP_NAS_FIRST_REQ (message_p).nas_pdu.buffer = rrcConnectionSetupComplete->dedicatedInfoNAS.buf;
+    S1AP_NAS_FIRST_REQ (message_p).nas_pdu.buffer = CALLOC(1, rrcConnectionSetupComplete->dedicatedInfoNAS.size);
+    memcpy((void*)S1AP_NAS_FIRST_REQ (message_p).nas_pdu.buffer,(void*)rrcConnectionSetupComplete->dedicatedInfoNAS.buf,rrcConnectionSetupComplete->dedicatedInfoNAS.size);
     extract_imsi(S1AP_NAS_FIRST_REQ (message_p).nas_pdu.buffer,
                  S1AP_NAS_FIRST_REQ (message_p).nas_pdu.length,
                  ue_context_pP);
@@ -910,6 +917,7 @@ rrc_eNB_process_S1AP_DOWNLINK_NAS(
       ue_initial_id,
       eNB_ue_s1ap_id);
     itti_send_msg_to_task (TASK_S1AP, instance, msg_fail_p);
+    free(S1AP_DOWNLINK_NAS (msg_p).nas_pdu.buffer);
     return (-1);
   } else {
     PROTOCOL_CTXT_SET_BY_INSTANCE(&ctxt, instance, ENB_FLAG_YES, ue_context_p->ue_context.rnti, 0, 0);
@@ -949,6 +957,7 @@ rrc_eNB_process_S1AP_DOWNLINK_NAS(
       length,
       buffer,
       PDCP_TRANSMISSION_MODE_CONTROL);
+    free(S1AP_DOWNLINK_NAS (msg_p).nas_pdu.buffer);
     return (0);
   }
 }

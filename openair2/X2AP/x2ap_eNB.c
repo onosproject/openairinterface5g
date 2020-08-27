@@ -111,8 +111,6 @@ void x2ap_eNB_handle_sctp_association_resp(instance_t instance, sctp_new_associa
     X2AP_ERROR("%s %d: sctp_new_association_resp is a NULL pointer \n",__FILE__,__LINE__);
     return ;
   }
-  printf("x2ap_eNB_handle_sctp_association_resp at 1\n");
-  dump_trees();
   instance_p = x2ap_eNB_get_instance(instance);
   if(instance_p == NULL) {
     X2AP_ERROR("%s %d: instance_p is a NULL pointer \n",__FILE__,__LINE__);
@@ -145,8 +143,6 @@ void x2ap_eNB_handle_sctp_association_resp(instance_t instance, sctp_new_associa
     X2AP_ERROR("%s %d: x2ap_enb_data_p is a NULL pointer \n",__FILE__,__LINE__);
     return ;
   }
-  printf("x2ap_eNB_handle_sctp_association_resp at 2\n");
-  dump_trees();
 
   if (sctp_new_association_resp->sctp_state != SCTP_STATE_ESTABLISHED) {
     X2AP_WARN("Received unsuccessful result for SCTP association (%u), instance %d, cnx_id %u\n",
@@ -154,29 +150,26 @@ void x2ap_eNB_handle_sctp_association_resp(instance_t instance, sctp_new_associa
               instance,
               sctp_new_association_resp->ulp_cnx_id);
     x2ap_handle_x2_setup_message(instance_p, x2ap_enb_data_p,
-                                 sctp_new_association_resp->sctp_state == SCTP_STATE_SHUTDOWN);
+                          (sctp_new_association_resp->sctp_state == SCTP_STATE_SHUTDOWN) | (sctp_new_association_resp->sctp_state == SCTP_STATE_UNREACHABLE));
     return;
   }
 
-  dump_trees();
   /* Update parameters */
   x2ap_enb_data_p->assoc_id    = sctp_new_association_resp->assoc_id;
   x2ap_enb_data_p->in_streams  = sctp_new_association_resp->in_streams;
   x2ap_enb_data_p->out_streams = sctp_new_association_resp->out_streams;
-  dump_trees();
   /* Prepare new x2 Setup Request */
   if(instance_p->cell_type == CELL_MACRO_GNB)
 	  x2ap_gNB_generate_ENDC_x2_setup_request(instance_p, x2ap_enb_data_p);
   else
 	  x2ap_eNB_generate_x2_setup_request(instance_p, x2ap_enb_data_p);
+  dump_trees();
 }
 
 static
 void x2ap_eNB_handle_sctp_association_ind(instance_t instance, sctp_new_association_ind_t *sctp_new_association_ind) {
   x2ap_eNB_instance_t *instance_p;
   x2ap_eNB_data_t *x2ap_enb_data_p;
-  printf("x2ap_eNB_handle_sctp_association_ind at 1 (called for instance %d)\n", instance);
-  dump_trees();
 
   if(sctp_new_association_ind == NULL) {
     X2AP_ERROR("%s %d: sctp_new_association_ind is a NULL pointer \n",__FILE__,__LINE__);
@@ -220,13 +213,10 @@ void x2ap_eNB_handle_sctp_association_ind(instance_t instance, sctp_new_associat
     X2AP_WARN("x2ap_enb_data_p already exists\n");
   }
 
-  printf("x2ap_eNB_handle_sctp_association_ind at 2\n");
-  dump_trees();
   /* Update parameters */
   //x2ap_enb_data_p->assoc_id    = sctp_new_association_ind->assoc_id;
   x2ap_enb_data_p->in_streams  = sctp_new_association_ind->in_streams;
   x2ap_enb_data_p->out_streams = sctp_new_association_ind->out_streams;
-  printf("x2ap_eNB_handle_sctp_association_ind at 3\n");
   dump_trees();
 }
 

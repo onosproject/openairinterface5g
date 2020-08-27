@@ -1674,7 +1674,6 @@ int s1ap_eNB_path_switch_req(instance_t instance,
   s1ap_eNB_itti_send_sctp_data_req(s1ap_eNB_instance_p->instance,
                                    mme_desc_p->assoc_id, buffer,
                                    length, ue_context_p->tx_stream);
-
   return ret;
 }
 
