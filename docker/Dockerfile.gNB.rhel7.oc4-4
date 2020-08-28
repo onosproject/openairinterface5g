@@ -59,12 +59,15 @@ RUN rm /etc/rhsm-host && \
     yum-config-manager --enable rhel-7-server-optional-rpms rhel-server-rhscl-7-rpms && \
     yum update -y && \
     yum install -y  \
+        atlas \
+        blas \
+        lapack \
+        lapacke \
         lksctp-tools \
         protobuf-c \
         nettle \
         libyaml && \
     echo "/usr/local/lib" > /etc/ld.so.conf.d/local-lib.conf
-
 
 WORKDIR /opt/oai-gnb/bin
 COPY --from=gnb-build /oai-gnb/targets/bin/nr-softmodem.Rel15 .
