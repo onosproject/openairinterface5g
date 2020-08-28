@@ -60,7 +60,6 @@ RUN rm /etc/rhsm-host && \
     yum update -y && \
     yum install -y  \
         atlas \
-        xforms-devel \
         blas \
         lapack \
         lksctp-tools \
@@ -71,7 +70,7 @@ RUN rm /etc/rhsm-host && \
 
 WORKDIR /opt/oai-gnb/bin
 COPY --from=gnb-build /oai-gnb/targets/bin/nr-softmodem.Rel15 .
-
+COPY --from=gnb-build /usr/local/lib64/libforms.so.2 /lib64
 RUN ldd nr-softmodem.Rel15
 
 #EXPOSE 2152/udp  # S1U, GTP/UDP
