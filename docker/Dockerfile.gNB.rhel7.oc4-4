@@ -59,6 +59,8 @@ RUN rm /etc/rhsm-host && \
     yum-config-manager --enable rhel-7-server-optional-rpms rhel-server-rhscl-7-rpms && \
     yum update -y && \
     yum install -y  \
+        libXpm \
+        libX11 \
         atlas \
         blas \
         lapack \
