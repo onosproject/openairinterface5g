@@ -60,6 +60,7 @@ RUN rm /etc/rhsm-host && \
     yum update -y && \
     yum install -y  \
         atlas \
+        xforms \
         blas \
         lapack \
         lapacke \
