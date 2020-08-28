@@ -615,22 +615,23 @@ eNB_dlsch_ulsch_scheduler(module_id_t module_idP,
     pdcp_run(&ctxt);
     rrc_rx_tx(&ctxt, CC_id);
   }
-  
-#if (LTE_RRC_VERSION >= MAKE_VERSION(10, 0, 0))
-
+ 
+  int do_fembms_si=0;
   for (CC_id = 0; CC_id < MAX_NUM_CCs; CC_id++) {
     if (cc[CC_id].MBMS_flag > 0) {
       start_meas(&RC.mac[module_idP]->schedule_mch);
-      mbsfn_status[CC_id] = schedule_MBMS(module_idP, CC_id, frameP, subframeP);
-      if (mbsfn_status[CC_id] < 0) {
-		  LOG_E(MAC,"mbsfn_status[%d] < 0\n", CC_id);
-		  return;
-	  }
+      int(*schedule_mch)(module_id_t module_idP, uint8_t CC_id, frame_t frameP, sub_frame_t subframe) = NULL;
+      schedule_mch = schedule_MBMS_NFAPI;
+      if(schedule_mch){
+      	mbsfn_status[CC_id] = schedule_mch(module_idP, CC_id, frameP, subframeP);
+      }
       stop_meas(&RC.mac[module_idP]->schedule_mch);
     }
-  }
+    if (cc[CC_id].FeMBMS_flag > 0) {
+	do_fembms_si = 1;
+    }
 
-#endif
+  } 
 
   static int debug_flag = 0;
   void (*schedule_ulsch_p)(module_id_t module_idP, frame_t frameP, sub_frame_t subframe) = NULL;
@@ -651,12 +652,22 @@ eNB_dlsch_ulsch_scheduler(module_id_t module_idP,
   }
 
   /* This schedules MIB */
-  if ((subframeP == 0) && (frameP & 3) == 0) 
-    schedule_mib(module_idP, frameP, subframeP);
+  if(!do_fembms_si/*get_softmodem_params()->fembms*/){
+    if ((subframeP == 0) && (frameP & 3) == 0)
+      schedule_mib(module_idP, frameP, subframeP);
+  }else{
+    if ((subframeP == 0) && (frameP & 15) == 0 ){
+       schedule_fembms_mib(module_idP, frameP, subframeP);
+       //schedule_SI_MBMS(module_idP, frameP, subframeP);
+    }
+  }
 
   if (get_softmodem_params()->phy_test == 0) {
     /* This schedules SI for legacy LTE and eMTC starting in subframeP */
-    schedule_SI(module_idP, frameP, subframeP);
+    if(!do_fembms_si/*get_softmodem_params()->fembms*/)
+       schedule_SI(module_idP, frameP, subframeP);
+    else
+       schedule_SI_MBMS(module_idP, frameP, subframeP);
     /* This schedules Paging in subframeP */
     schedule_PCH(module_idP,frameP,subframeP);
     /* This schedules Random-Access for legacy LTE and eMTC starting in subframeP */
