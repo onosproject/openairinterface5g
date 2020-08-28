@@ -60,10 +60,9 @@ RUN rm /etc/rhsm-host && \
     yum update -y && \
     yum install -y  \
         atlas \
-        xforms \
+        xforms-devel \
         blas \
         lapack \
-        lapacke \
         lksctp-tools \
         protobuf-c \
         nettle \
