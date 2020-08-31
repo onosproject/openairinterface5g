@@ -26,11 +26,6 @@ for i=2:3
 end
 
 
-if(-1 == (access("filt16_32.h",F_OK))){
-  creat("filt16_32.h", 0644);
-}else{
-  chmod("filt16_32.h", 0644);
-}
 fd = fopen("filt16_32.h","w");
 
 for i=0:3

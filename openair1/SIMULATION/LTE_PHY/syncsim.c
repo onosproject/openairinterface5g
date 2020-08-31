@@ -400,11 +400,6 @@ int main(int argc, char **argv) {
         break;
 
       case 'f':
-        if(-1 == (access(optarg,F_OK))){
-          creat(optarg, 0644);
-        }else{
-          chmod(optarg, 0644);
-        }
         output_fd = fopen(optarg,"w");
         write_output_file=1;
         break;

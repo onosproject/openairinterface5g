@@ -56,11 +56,6 @@ R22_sqrt_int(1:2:end,:,:) = real(R22_sqrt);
 R22_sqrt_int(2:2:end,:,:) = imag(R22_sqrt);
 
 %%
-if(-1 == ('scm_corrmat.h',F_OK))){
-    creat('scm_corrmat.h', 0644);
-}else{
-    chmod('scm_corrmat.h', 0644);
-}
 fid = fopen('scm_corrmat.h','w');
 fprintf(fid,'double R22_sqrt[][] = {\n');
 for i=1:size(Gamma,3)

@@ -3,9 +3,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
 
 char **unique_ids;
 int unique_ids_size;
@@ -178,11 +175,6 @@ int main(int n, char **v) {
     exit(1);
   }
 
-  if(-1 == (access(out_name,F_OK))){
-    creat(out_name, 0644);
-  }else{
-    chmod(out_name, 0644);
-  }
   out = fopen(out_name, "w");
 
   if (out == NULL) {

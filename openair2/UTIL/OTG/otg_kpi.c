@@ -240,19 +240,9 @@ void kpi_gen() {
   char traffic[30];
 #ifdef STANDALONE
   FILE *file;
-  if(-1 == ("log_OTG.txt",F_OK)){
-    creat("log_OTG.txt", 0644);
-  }else{
-    chmod("log_OTG.txt", 0644);
-  }
   file = fopen("log_OTG.txt", "w");
 #else   // Maybe to do modifo log function in order to clear file before a new write !!!! 
   FILE *fc;
-  if(-1 == ("/tmp/otg.log",F_OK)){
-    creat("/tmp/otg.log", 0644);
-  }else{
-    chmod("/tmp/otg.log", 0644);
-  }
   fc=fopen("/tmp/otg.log","w");;
 
   if(fc!=0)

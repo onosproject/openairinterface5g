@@ -60,11 +60,6 @@ int smbv_init_config(const char* fname, uint16_t sequence_length)
   FILE *f_ptr;
   int k;
 
-  if(-1 == (access(fname,F_OK))){
-    creat(fname, 0644);
-  }else{
-    chmod(fname, 0644);
-  }
   f_ptr = fopen(fname,"w");
 
   if (sequence_length>4) {
@@ -105,11 +100,6 @@ int smbv_write_config_from_frame_parms(const char* fname, LTE_DL_FRAME_PARMS *fr
 
   FILE *f_ptr;
 
-  if(-1 == (access(fname,F_OK))){
-    creat(fname, 0644);
-  }else{
-    chmod(fname, 0644);
-  }
   f_ptr = fopen(fname,"a");
 
   fprintf(f_ptr, "BB:EUTR:SLEN %d\n",slen);
@@ -197,11 +187,6 @@ int smbv_write_config_from_frame_parms(const char* fname, LTE_DL_FRAME_PARMS *fr
 int smbv_configure_datalist_for_alloc(const char* fname, uint8_t alloc, uint8_t subframe, uint8_t *buffer, uint32_t len)
 {
   FILE *f_ptr;
-  if(-1 == (access(fname,F_OK))){
-    creat(fname, 0644);
-  }else{
-    chmod(fname, 0644);
-  }
   f_ptr = fopen(fname,"a");
   char strbuf[(8<<1)+1];
   int i,k;
@@ -259,11 +244,6 @@ int smbv_is_config_frame(uint32_t frame)
 int smbv_configure_datalist_for_user(const char* fname, uint8_t user, uint8_t *buffer, uint32_t len)
 {
   FILE *f_ptr;
-  if(-1 == (access(fname,F_OK))){
-    creat(fname, 0644);
-  }else{
-    chmod(fname, 0644);
-  }
   f_ptr = fopen(fname,"a");
   char strbuf[(8<<1)+1];
   int i,k;
@@ -303,11 +283,6 @@ int smbv_configure_datalist_for_user(const char* fname, uint8_t user, uint8_t *b
 int smbv_configure_user(const char* fname, uint8_t user, uint8_t transmission_mode, uint16_t rnti)
 {
   FILE *f_ptr;
-  if(-1 == (access(fname,F_OK))){
-    creat(fname, 0644);
-  }else{
-    chmod(fname, 0644);
-  }
   f_ptr = fopen(fname,"a");
 
   fprintf(f_ptr, "BB:EUTR:DL:USER%d:TXM M1\n",user);
@@ -326,11 +301,6 @@ int smbv_configure_pdcch(const char* fname,uint8_t subframe,uint8_t num_pdcch_sy
   int k;
   FILE *f_ptr;
 
-  if(-1 == (access(fname,F_OK))){
-    creat(fname, 0644);
-  }else{
-    chmod(fname, 0644);
-  }
   f_ptr = fopen(fname,"a");
 
   fprintf(f_ptr, "BB:EUTR:DL:SUBF%d:ENCC:PCF:CREG %d\n",subframe,num_pdcch_symbols);
@@ -354,11 +324,6 @@ int smbv_configure_common_dci(const char* fname, uint8_t subframe, const char* t
   FILE *f_ptr;
   void *dci_pdu = &dci_alloc->dci_pdu[0];
 
-  if(-1 == (access(fname,F_OK))){
-    creat(fname, 0644);
-  }else{
-    chmod(fname, 0644);
-  }
   f_ptr = fopen(fname,"a");
 
   fprintf(f_ptr, "BB:EUTR:DL:SUBF%d:ENCC:STAT ON\n",subframe);
@@ -417,11 +382,6 @@ int smbv_configure_ue_spec_dci(const char* fname, uint8_t subframe, uint8_t user
   FILE *f_ptr;
   void *dci_pdu = &dci_alloc->dci_pdu[0];
 
-  if(-1 == (access(fname,F_OK))){
-    creat(fname, 0644);
-  }else{
-    chmod(fname, 0644);
-  }
   f_ptr = fopen(fname,"a");
 
   fprintf(f_ptr, "BB:EUTR:DL:SUBF%d:ENCC:STAT ON\n",subframe);

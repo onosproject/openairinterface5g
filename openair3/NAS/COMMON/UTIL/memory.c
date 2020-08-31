@@ -43,10 +43,6 @@ Description Memory access utilities
 #include <stdio.h>  // fopen, fread, fclose
 #include <stdlib.h> // getenv, malloc, free
 #include <string.h> // strlen
-#include <unistd.h> //access
-#include <sys/types.h>//creat
-#include <sys/stat.h>//creat
-#include <fcntl.h>//creat
 
 /****************************************************************************/
 /****************  E X T E R N A L    D E F I N I T I O N S  ****************/
@@ -189,11 +185,6 @@ int memory_write(const char* datafile, const void* data, size_t size)
   int rc = RETURNerror;
 
   /* Open the data file for writing operation */
-  if(-1 == (access(datafile,F_OK))){
-    creat(datafile, 0644);
-  }else{
-    chmod(datafile, 0644);
-  }
   FILE* fp = fopen(datafile, "wb");
 
   if (fp != NULL) {

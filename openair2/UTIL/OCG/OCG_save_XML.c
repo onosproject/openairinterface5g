@@ -54,11 +54,6 @@ int save_XML(int copy_or_move, char *src_file, char *output_dir, char *filename)
   XML_saving_dir[sizeof(XML_saving_dir) - 1] = 0; // terminate string
   strncat(dst_file, filename, sizeof(dst_file) - strlen(dst_file) - 1);
   fs = fopen(src_file, "r");
-  if(-1 == (dst_file,F_OK)){
-    creat(dst_file, 0644);
-  }else{
-    chmod(dst_file, 0644);
-  }
   ft = fopen(dst_file, "w");
 
   if ((ft !=NULL)&&(fs!=NULL)) {

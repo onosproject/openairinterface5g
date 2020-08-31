@@ -38,11 +38,6 @@ primary_synch2_mod2((128-35):128)=primary_synch2(1:36);
 primary_synch2_mod2(2:37)=primary_synch2(37:end);
 primary_synch2_time = ifft(primary_synch2_mod2)*sqrt(128);
 
-if(-1 == (access("primary_synch.h",F_OK))){
-  creat("primary_synch.h", 0644);
-}else{
-  chmod("primary_synch.h", 0644);
-}
 fd = fopen('primary_synch.h','w');
 fprintf(fd,'short primary_synch0[144] = {');
 fprintf(fd,'%d,',primary_synch0_mod(1:end-1));
@@ -65,11 +60,6 @@ fprintf(fd,'%d};\n',primary_synch2_tab(end));
 fclose(fd);
 
 % for LEON we need to invert the endianess
-if(-1 == (access("primary_synch_leon.h",F_OK))){
-  creat("primary_synch_leon.h", 0644);
-}else{
-  chmod("primary_synch_leon.h", 0644);
-}
 fd = fopen('primary_synch_leon.h','w');
 primary_synch0_tab = reshape(primary_synch0_tab,4,[]);
 primary_synch0_tab = primary_synch0_tab([4 3 2 1],:);

@@ -78,11 +78,6 @@ if (save_out)
         end
     end
     
-if(-1 == (access(strcat(out_fname, '.tex'),F_OK))){
-    creat(strcat(out_fname, '.tex'), 0644);
-}else{
-    chmod(strcat(out_fname, '.tex'), 0644);
-}
 fid = fopen(strcat(out_fname, '.tex'),'w');
 fprintf(fid,'\\documentclass[a4paper,conference]{IEEEtran}\n');
 fprintf(fid,'\\usepackage{epsfig}\n');

@@ -35,7 +35,7 @@ int main(int argc, char *argv[]) {
     exit(1);
   }
 
-  mkfifo(argv[1],0644);
+  mkfifo(argv[1],0666);
   int fd=open(argv[1], O_RDONLY);
 
   if ( fd == -1 ) {
