@@ -275,6 +275,7 @@ install_protobuf_from_source(){
       make install
     fi
     ) >& $protobuf_install_log
+    return 0
 }
 
 install_protobuf_c_from_source(){
@@ -297,6 +298,7 @@ install_protobuf_c_from_source(){
     $SUDO make install
     $SUDO ldconfig
     ) >& $protobuf_c_install_log
+    return 0
 }
 
 install_usrp_uhd_driver_from_source(){
@@ -806,7 +808,7 @@ check_install_oai_software() {
 install_asn1c_from_source(){
     asn1_install_log=$OPENAIR_DIR/cmake_targets/log/asn1c_install_log.txt
     echo_info "\nInstalling ASN1. The log file for ASN1 installation is here: $asn1_install_log "
-    #(
+    (
     $SUDO rm -rf /tmp/asn1c
     # GIT_SSL_NO_VERIFY=true git clone https://gitlab.eurecom.fr/oai/asn1c.git /tmp/asn1c
     git clone https://gitlab.eurecom.fr/oai/asn1c.git /tmp/asn1c
@@ -816,13 +818,13 @@ install_asn1c_from_source(){
     #git checkout velichkov_s1ap_plus_option_group
     git checkout f12568d617dbf48497588f8e227d70388fa217c9
     autoreconf -iv
-    #./configure --disable-dependency-tracking
     ./configure
     make -j`nproc`
     $SUDO make install
     cd -
     $SUDO ldconfig
-    #) > $asn1_install_log 2>&1
+    ) > $asn1_install_log 2>&1
+    return 0
 }
 
 #################################################
