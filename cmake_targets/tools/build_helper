@@ -774,6 +774,8 @@ check_install_oai_software() {
       libxml2 \
       libxml2-devel \
       libxslt-devel \
+      ninja-build \
+      make \
       openssh-clients \
       openssh-server \
       openssl \
