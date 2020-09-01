@@ -804,7 +804,7 @@ check_install_oai_software() {
 install_asn1c_from_source(){
     asn1_install_log=$OPENAIR_DIR/cmake_targets/log/asn1c_install_log.txt
     echo_info "\nInstalling ASN1. The log file for ASN1 installation is here: $asn1_install_log "
-    (
+    #(
     $SUDO rm -rf /tmp/asn1c
     # GIT_SSL_NO_VERIFY=true git clone https://gitlab.eurecom.fr/oai/asn1c.git /tmp/asn1c
     git clone https://gitlab.eurecom.fr/oai/asn1c.git /tmp/asn1c
@@ -819,7 +819,7 @@ install_asn1c_from_source(){
     $SUDO make install
     cd -
     $SUDO ldconfig
-    ) > $asn1_install_log 2>&1
+    #) > $asn1_install_log 2>&1
 }
 
 #################################################

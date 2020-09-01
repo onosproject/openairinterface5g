@@ -58,6 +58,7 @@ RUN rm /etc/rhsm-host && \
 
 # In some network environments, GIT proxy is required
 RUN /bin/bash -c "if [[ -v NEEDED_GIT_PROXY ]]; then git config --global http.proxy $NEEDED_GIT_PROXY; fi"
+RUN cat /root/.gitconfig
 
 #create the WORKDIR
 WORKDIR /oai-ran
