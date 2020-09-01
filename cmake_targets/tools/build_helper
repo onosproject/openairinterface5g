@@ -813,8 +813,11 @@ install_asn1c_from_source(){
     # is updated and requires modifications in the source of OAI
     #git checkout velichkov_s1ap_plus_option_group
     git checkout f12568d617dbf48497588f8e227d70388fa217c9
+    echo "RD === autoreconf ===="
     autoreconf -iv
-    ./configure
+    echo "RD === configure ===="
+    ./configure --disable-dependency-tracking
+    echo "RD === make ===="
     make -j`nproc`
     $SUDO make install
     cd -
