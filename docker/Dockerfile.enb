@@ -1,0 +1,24 @@
+FROM cpp-build-base AS build
+
+WORKDIR /oai
+
+COPY ./ ./
+
+ENV OPENAIR_HOME=.
+ENV OPENAIR_DIR=.
+ENV OPENAIR1_DIR=./openair1
+ENV OPENAIR2_DIR=./openair2
+ENV OPENAIR3_DIR=./openair3
+ENV OPENAIR_TARGETS=./targets
+ENV IIOD_REMOTE=192.168.1.2
+
+RUN cd ./cmake_targets && ./build_oai -I --gNB --UE
+
+FROM ubuntu:16.04
+
+WORKDIR /opt/oai
+
+COPY --from=build /oai/cmake_targets ./cmake_targets
+COPY --from=build /oai/ci-scripts ./ci-scripts
+
+ENTRYPOINT ["./ran_build/build/lte-softmodem", "-O ./ci-scripts/conf_files/cu.band7.tm1.25PRB.conf --noS1"]

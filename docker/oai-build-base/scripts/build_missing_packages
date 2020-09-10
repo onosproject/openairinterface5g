@@ -1,0 +1,42 @@
+#!/bin/bash
+
+set -x
+set -euo pipefail
+
+function build_install_asn1c {
+    rm -rf /tmp/asn1c_oai
+    git clone https://gitlab.eurecom.fr/oai/asn1c.git /tmp/asn1c_oai
+    cd /tmp/asn1c_oai
+    git checkout 0a7524184f16e7093990a31d8d4db487a16e5782
+    autoreconf -iv
+    ./configure
+    make -j`nproc`
+    make install
+}
+
+function build_install_protobuf {
+    rm -rf /tmp/protobuf
+    git clone https://github.com/protocolbuffers/protobuf.git /tmp/protobuf
+    cd /tmp/protobuf
+    git submodule update --init --recursive
+    ./autogen.sh
+    ./configure
+    make
+    make install
+    ldconfig
+}
+
+function build_install_protobuf_c {
+    rm -rf /tmp/protobuf-c
+    git clone https://github.com/protobuf-c/protobuf-c.git /tmp/protobuf-c
+    cd /tmp/protobuf-c
+    ./autogen.sh
+    ./configure
+    make -j`nproc`
+    make install
+    ldconfig
+}
+
+build_install_asn1c
+build_install_protobuf
+build_install_protobuf_c
