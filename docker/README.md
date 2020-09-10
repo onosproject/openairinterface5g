@@ -11,5 +11,5 @@ docker build . -f docker/oai-enb/Dockerfile -t oai-enb
 
 ### Running
 ```sh
-docker run -it -d --net=host --privileged oai-enb
+docker run -d --net=host --privileged -e ENODEB=1 oai-enb
 ```
