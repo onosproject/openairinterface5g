@@ -1,4 +1,5 @@
-FROM oai-build-base:latest AS builder
+ARG OAI_BUILD_BASE_VERSION=latest
+FROM onosproject/oai-build-base:$OAI_BUILD_BASE_VERSION AS builder
 
 LABEL autodelete="true"
 
