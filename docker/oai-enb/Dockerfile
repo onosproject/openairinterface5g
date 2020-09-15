@@ -1,5 +1,7 @@
-ARG OAI_BUILD_BASE_VERSION=latest
-FROM onosproject/oai-build-base:$OAI_BUILD_BASE_VERSION AS builder
+ARG BUILD_BASE_VERSION=latest
+FROM onosproject/oai-build-base:$BUILD_BASE_VERSION AS builder
+
+LABEL autodelete="true"
 
 WORKDIR /root
 
