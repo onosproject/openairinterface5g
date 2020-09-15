@@ -12,7 +12,7 @@ jobs:
   include:
     - stage: tests
       script:
-        - make images
+        - travis wait 30 make images
         - 'if [[ $TRAVIS_PULL_REQUEST == "false" && $TRAVIS_BRANCH == "develop-onf" && $TRAVIS_SECURE_ENV_VARS == "true" ]] ; then
              bash ./build/bin/push-images
           fi'
