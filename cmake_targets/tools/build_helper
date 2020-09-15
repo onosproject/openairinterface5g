@@ -207,7 +207,7 @@ compilations() {
     fi
     fi
     ret=$?
-  } | tee $dlog/$2.$REL.txt 2>&1
+  } > $dlog/$2.$REL.txt 2>&1
   set -e
   if [[ $ret -ne 0 ]]; then
      check_warnings "$dlog/$2.$REL.txt"
