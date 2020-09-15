@@ -1,0 +1,10 @@
+#!/bin/bash
+set -e
+
+echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USER" --password-stdin
+docker push onosproject/oai-build-base:latest
+docker push onosproject/oai-ue:latest
+docker push onosproject/oai-enb:latest
+docker push onosproject/oai-enb-cu:latest
+docker push onosproject/oai-enb-du:latest
+
