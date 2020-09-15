@@ -16,7 +16,7 @@ docker rmi $(docker images -q -f "dangling=true" -f "label=autodelete=true")
 ### eNB and UE
 ```sh
 docker run -d --net=host --privileged -e ENODEB=1 onosproject/oai-enb
-docker run -d --net=host --privileged -e ENODEB=1 onosproect/oai-enb-cu
+docker run -d --net=host --privileged -e ENODEB=1 onosproject/oai-enb-cu
 docker run -d --net=host --privileged -e ENODEB=1 onosproject/oai-enb-du
 docker run -d --net=host --privileged  onosproject/oai-ue
 ```
