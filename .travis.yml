@@ -14,6 +14,6 @@ jobs:
       script:
         - make images
         - 'if [[ $TRAVIS_PULL_REQUEST == "false" && $TRAVIS_BRANCH == "develop-onf" && $TRAVIS_SECURE_ENV_VARS == "true" ]] ; then
-             bash ./build/bin/push-images
+             bash ./build/bin/push-images;
           fi'
 
