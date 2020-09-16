@@ -1,5 +1,6 @@
 
 BUILD_BASE_VERSION := latest
+OAI_ALL_VERSION := latest
 VERSION := latest
 
 all: images test
@@ -7,18 +8,22 @@ all: images test
 test:
 	$(info No tests exist yet)
 
-images: oai-build-base oai-ue oai-enb oai-enb-cu oai-enb-du
+images: oai-all oai-ue oai-enb oai-enb-cu oai-enb-du
 
 .PHONY: oai-build-base oai-ue oai-enb oai-enb-cu oai-enb-du
 
 oai-build-base:
 	docker build . -f docker/oai-build-base/Dockerfile \
+		-t onosproject/oai-build-base:${BUILD_BASE_VERSION}
+
+oai-all:
+	docker build . -f docker/oai-all/Dockerfile \
 		--build-arg BUILD_BASE_VERSION=${BUILD_BASE_VERSION} \
-		-t onosproject/oai-build-base:${VERSION}
+		-t onosproject/oai-all:${OAI_ALL_VERSION}
 
 oai-ue:
 	docker build . -f docker/oai-ue/Dockerfile \
-		--build-arg BUILD_BASE_VERSION=${BUILD_BASE_VERSION} \
+		--build-arg OAI_ALL_VERSION=${OAI_ALL_VERSION} \
 		-t onosproject/oai-ue:${VERSION}
 	-docker rmi $$(docker images -q -f "dangling=true" -f "label=autodelete=true")
 

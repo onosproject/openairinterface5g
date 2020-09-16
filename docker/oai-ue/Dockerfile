@@ -1,17 +1,11 @@
-ARG BUILD_BASE_VERSION=latest
-FROM onosproject/oai-build-base:$BUILD_BASE_VERSION AS builder
+ARG OAI_ALL_VERSION=latest
+FROM onosproject/oai-all:$OAI_ALL_VERSION AS builder
 
 LABEL autodelete="true"
 
 WORKDIR /root
 
 COPY ./ ./
-
-RUN patch -p1 -d . < docker/oai-enb/patches/disable_building_nasmesh_and_rbtool.patch
-
-RUN cd ./cmake_targets \
-        && ./build_oai -c --UE --verbose-compile \
-        && ./nas_sim_tools/build/conf2uedata -c ../openair3/NAS/TOOLS/ue_eurecom_test_sfr.conf -o ran_build/build
 
 FROM ubuntu:16.04
 LABEL name="oai-ue" \
