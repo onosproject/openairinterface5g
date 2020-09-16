@@ -1,17 +1,11 @@
-ARG BUILD_BASE_VERSION=latest
-FROM onosproject/oai-build-base:$BUILD_BASE_VERSION AS builder
+ARG OAI_ALL_VERSION=latest
+FROM onosproject/oai-all:$OAI_ALL_VERSION AS builder
 
 LABEL autodelete="true"
 
 WORKDIR /root
 
 COPY ./ ./
-
-RUN patch -p1 -d . < docker/oai-enb/patches/disable_building_nasmesh_and_rbtool.patch \
-        && patch -p1 -d . < docker/oai-enb/patches/disable_sched_fifo_fail_exits.patch
-
-RUN cd ./cmake_targets \
-        && ./build_oai -c --eNB --verbose-compile
 
 FROM ubuntu:16.04
 LABEL name="oai-enb-du" \
