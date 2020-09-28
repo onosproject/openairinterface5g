@@ -65,6 +65,9 @@ UE_AUTOTEST_TRACE="False"
 UE_DEBUG_TRACE="False"
 UE_TIMING_TRACE="False"
 USRP_REC_PLAY="False"
+BUILD_RIC_AGENT="False"
+RIC_GENERATED_E2AP_BINDING_DIR=""
+RIC_GENERATED_E2SM_BINDING_DIR=""
 BUILD_ECLIPSE=0
 NR="False"
 OPTIONAL_LIBRARIES="telnetsrv enbscope uescope msc"
@@ -404,6 +407,26 @@ function main() {
             USRP_REC_PLAY="True"
             echo_info "Enabling USRP record playback mode"
             shift 1;;
+	--build-ric-agent)
+	    BUILD_RIC_AGENT="True"
+	    echo_info "Enabling RIC agent"
+	    shift 1;;
+	--with-ric-generated-e2ap-binding-dir)
+	    RIC_GENERATED_E2AP_BINDING_DIR=$2
+	    echo_info "Building RIC agent with generated E2AP bindings in ${RIC_GENERATED_E2AP_BINDING_DIR}"
+	    shift 2;;
+	--with-ric-generated-e2sm-kpm-binding-dir)
+	    RIC_GENERATED_E2SM_KPM_BINDING_DIR=$2
+	    echo_info "Building RIC agent with generated E2SM-KPM bindings in ${RIC_GENERATED_E2SM_KPM_BINDING_DIR}"
+	    shift 2;;
+	--with-ric-generated-e2sm-ni-binding-dir)
+	    RIC_GENERATED_E2SM_NI_BINDING_DIR=$2
+	    echo_info "Building RIC agent with generated E2SM-NI bindings in ${RIC_GENERATED_E2SM_NI_BINDING_DIR}"
+	    shift 2;;
+	--with-ric-generated-e2sm-gnb-nrt-binding-dir)
+	    RIC_GENERATED_E2SM_GNB_NRT_BINDING_DIR=$2
+	    echo_info "Building RIC agent with generated E2SM-gNB-NRT bindings in ${RIC_GENERATED_E2SM_GNB_NRT_BINDING_DIR}"
+	    shift 2;;
         -k | --skip-shared-libraries)
             SKIP_SHARED_LIB_FLAG="True"
             echo_info "Skipping build of shared libraries, rfsimulator and transport protocol libraries"
@@ -597,6 +620,11 @@ function main() {
     echo "set ( UE_DEBUG_TRACE $UE_DEBUG_TRACE )"                         >> $cmake_file
     echo "set ( UE_TIMING_TRACE $UE_TIMING_TRACE )"                       >> $cmake_file
     echo "set ( USRP_REC_PLAY $USRP_REC_PLAY )"                           >> $cmake_file
+    echo "set ( ENABLE_RIC_AGENT $BUILD_RIC_AGENT )"                           >> $cmake_file
+    echo "set ( RIC_GENERATED_E2AP_BINDING_DIR $RIC_GENERATED_E2AP_BINDING_DIR )"                           >> $cmake_file
+    echo "set ( RIC_GENERATED_E2SM_NI_BINDING_DIR $RIC_GENERATED_E2SM_NI_BINDING_DIR )"                           >> $cmake_file
+    echo "set ( RIC_GENERATED_E2SM_KPM_BINDING_DIR $RIC_GENERATED_E2SM_KPM_BINDING_DIR )"                           >> $cmake_file
+    echo "set ( RIC_GENERATED_E2SM_GNB_NRT_BINDING_DIR $RIC_GENERATED_E2SM_GNB_NRT_BINDING_DIR )"                           >> $cmake_file
     echo "set ( SKIP_SHARED_LIB_FLAG $SKIP_SHARED_LIB_FLAG )"             >> $cmake_file
     echo 'include(${CMAKE_CURRENT_SOURCE_DIR}/../CMakeLists.txt)'         >> $cmake_file
     cd  $DIR/$build_dir/build

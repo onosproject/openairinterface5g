@@ -41,6 +41,9 @@
 
 #include "ENB_APP/enb_config.h"
 #include "flexran_agent_defs.h"
+#ifdef ENABLE_RIC_AGENT
+#include "ric_agent_defs.h"
+#endif
 
 #include "gtpv1u.h"
 #include "NwGtpv1u.h"
@@ -89,6 +92,10 @@ typedef struct {
   int nb_RU;
   /// FlexRAN context variables
   flexran_agent_info_t **flexran;
+#ifdef ENABLE_RIC_AGENT
+  /// ORAN RIC context variables
+  ric_agent_info_t **ric;
+#endif
   /// eNB context variables
   struct PHY_VARS_eNB_s ***eNB;
   /// gNB context variables

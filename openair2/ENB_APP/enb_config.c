@@ -57,6 +57,9 @@
 #include "enb_paramdef.h"
 #include "proto_agent.h"
 #include "executables/thread-common.h"
+#ifdef ENABLE_RIC_AGENT
+#include "ric_agent_config.h"
+#endif
 
 extern uint32_t to_earfcn_DL(int eutra_bandP, uint32_t dl_CarrierFreq, uint32_t bw);
 extern uint32_t to_earfcn_UL(int eutra_bandP, uint32_t ul_CarrierFreq, uint32_t bw);
@@ -3120,4 +3123,8 @@ void read_config_and_init(void) {
   }
 
   RCconfig_flexran();
+
+#ifdef ENABLE_RIC_AGENT
+  RCconfig_ric_agent();
+#endif
 }
