@@ -53,7 +53,9 @@ ssize_t e2ap_encode(const struct asn_TYPE_descriptor_s *td,
     return -1;
   }
 
+#ifdef SHAD
   ASN_STRUCT_FREE_CONTENTS_ONLY((*td),sptr);
+#endif
 
   return encoded;
 }

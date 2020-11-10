@@ -183,7 +183,7 @@ int e2ap_generate_ric_subscription_response(ric_agent_info_t *ric,
   ric_action_t *action;
 
   memset(&pdu, 0, sizeof(pdu));
-  pdu.present = E2AP_E2AP_PDU_PR_unsuccessfulOutcome;
+  pdu.present = E2AP_E2AP_PDU_PR_successfulOutcome;
   pdu.choice.successfulOutcome.procedureCode = E2AP_ProcedureCode_id_RICsubscription;
   pdu.choice.successfulOutcome.criticality = E2AP_Criticality_reject;
   pdu.choice.successfulOutcome.value.present = E2AP_SuccessfulOutcome__value_PR_RICsubscriptionResponse;
@@ -204,6 +204,7 @@ int e2ap_generate_ric_subscription_response(ric_agent_info_t *ric,
   ie->value.choice.RANfunctionID = rs->function_id;
   ASN_SEQUENCE_ADD(&out->protocolIEs.list,ie);
 
+#ifdef SHAD
   ie = (E2AP_RICsubscriptionResponse_IEs_t *)calloc(1,sizeof(*ie));
   ie->id = E2AP_ProtocolIE_ID_id_RICactions_Admitted;
   ie->criticality = E2AP_Criticality_reject;
@@ -216,6 +217,7 @@ int e2ap_generate_ric_subscription_response(ric_agent_info_t *ric,
     ASN_SEQUENCE_ADD(&ie->value.choice.RICaction_Admitted_List.list,ai);
   }
   ASN_SEQUENCE_ADD(&out->protocolIEs.list,ie);
+#endif
 
   ie = (E2AP_RICsubscriptionResponse_IEs_t *)calloc(1,sizeof(*ie));
   ie->id = E2AP_ProtocolIE_ID_id_RICactions_NotAdmitted;

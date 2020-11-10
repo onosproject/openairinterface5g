@@ -150,6 +150,7 @@ int e2ap_handle_ric_subscription_request(ric_agent_info_t *ric,uint32_t stream,
 	// XXX: protocol error?
       }
 
+#ifdef SHAD
       for (int i = 0; i < ral->list.count; ++i) {
 	rai = (E2AP_RICaction_ToBeSetup_Item_t *)ral->list.array[i];
 	ra = (ric_action_t *)calloc(1,sizeof(*ra));
@@ -172,9 +173,11 @@ int e2ap_handle_ric_subscription_request(ric_agent_info_t *ric,uint32_t stream,
 	  LIST_INSERT_BEFORE(LIST_FIRST(&rs->action_list),ra,actions);
 	}
       }
+#endif
     }
   }
 
+#ifdef SHAD
   func = ric_agent_lookup_ran_function(rs->function_id);
   if (!func) {
     E2AP_ERROR("failed to find ran_function %ld\n",rs->function_id);
@@ -186,6 +189,7 @@ int e2ap_handle_ric_subscription_request(ric_agent_info_t *ric,uint32_t stream,
     E2AP_ERROR("failed to subscribe to ran_function %ld\n",rs->function_id);
     goto errout;
   }
+#endif
 
   ret = e2ap_generate_ric_subscription_response(ric,rs,&buf,&len);
   if (ret) {
@@ -209,6 +213,7 @@ int e2ap_handle_ric_subscription_request(ric_agent_info_t *ric,uint32_t stream,
     ric_agent_send_sctp_data(ric,stream,buf,len);
   }
 
+#ifdef SHAD
   ra = LIST_FIRST(&rs->action_list);
   while (ra != NULL) {
     rat = LIST_NEXT(ra,actions);
@@ -220,6 +225,7 @@ int e2ap_handle_ric_subscription_request(ric_agent_info_t *ric,uint32_t stream,
   if (rs->event_trigger.buf)
     free(rs->event_trigger.buf);
   free(rs);
+#endif
 
   return ret;
 }
