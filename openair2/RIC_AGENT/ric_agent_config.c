@@ -63,7 +63,7 @@ static pthread_mutex_t ric_config_mutex = PTHREAD_MUTEX_INITIALIZER;
   { RIC_CONFIG_STRING_REMOTE_PORT, \
     NULL,0,uptr:NULL,defintval:E2AP_PORT,TYPE_UINT,0 },	\
   { RIC_CONFIG_STRING_FUNCTIONS_ENABLED, \
-    NULL,0,strptr:NULL,defstrval:"ORAN-E2SM-gNB-NRT",TYPE_STRING,0 } \
+    NULL,0,strptr:NULL,defstrval:"ORAN-E2SM-KPM",TYPE_STRING,0 } \
 }
 
 static void RCconfig_ric_agent_init(void)
