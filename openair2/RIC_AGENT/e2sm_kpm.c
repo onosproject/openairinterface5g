@@ -131,7 +131,7 @@ static int e2sm_kpm_subscription_add(ric_agent_info_t *ric,
 				     ric_subscription_t *sub)
 {
   /* XXX: process E2SM content. */
-  if (LIST_EMPTY(&ric->subscription_list) == 0) {
+  if (LIST_EMPTY(&ric->subscription_list)) {
     LIST_INSERT_HEAD(&ric->subscription_list,sub,subscriptions);
   }
   else {
