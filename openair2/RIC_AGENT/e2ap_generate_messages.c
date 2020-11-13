@@ -170,7 +170,7 @@ int e2ap_generate_e2_setup_request(ric_agent_info_t *ric,
 
   return 0;
 }
-				   
+
 int e2ap_generate_ric_subscription_response(ric_agent_info_t *ric,
 					    ric_subscription_t *rs,
 					    uint8_t **buffer,uint32_t *len)
@@ -178,7 +178,6 @@ int e2ap_generate_ric_subscription_response(ric_agent_info_t *ric,
   E2AP_E2AP_PDU_t pdu;
   E2AP_RICsubscriptionResponse_t *out;
   E2AP_RICsubscriptionResponse_IEs_t *ie;
-  E2AP_RICaction_Admitted_Item_t *ai;
   E2AP_RICaction_NotAdmitted_Item_t *nai;
   ric_action_t *action;
 
@@ -209,10 +208,11 @@ int e2ap_generate_ric_subscription_response(ric_agent_info_t *ric,
   ie->id = E2AP_ProtocolIE_ID_id_RICactions_Admitted;
   ie->criticality = E2AP_Criticality_reject;
   ie->value.present = E2AP_RICsubscriptionResponse_IEs__value_PR_RICaction_Admitted_List;
-  LIST_FOREACH(action,&rs->action_list,actions) {
-    if (!action->enabled)
+  LIST_FOREACH(action, &rs->action_list, actions) {
+    if (!action->enabled) {
       continue;
-    ai = (E2AP_RICaction_Admitted_Item_t *)calloc(1,sizeof(*ai));
+    }
+    E2AP_RICaction_Admitted_Item_t *ai = (E2AP_RICaction_Admitted_Item_t *)calloc(1,sizeof(*ai));
     ai->ricActionID = action->id;
     ASN_SEQUENCE_ADD(&ie->value.choice.RICaction_Admitted_List.list,ai);
   }

@@ -104,92 +104,84 @@ int e2ap_handle_e2_setup_failure(ric_agent_info_t *ric,uint32_t stream,
 int e2ap_handle_ric_subscription_request(ric_agent_info_t *ric,uint32_t stream,
 					 E2AP_E2AP_PDU_t *pdu)
 {
-  E2AP_RICsubscriptionRequest_t *req;
-  E2AP_RICsubscriptionRequest_IEs_t *rie,**ptr;
-  ric_subscription_t *rs;
-  ric_action_t *ra,*rat;
-  int ret;
-  uint8_t *buf;
-  uint32_t len;
-  ric_ran_function_t *func;
+    int ret;
+    uint8_t *buf;
+    uint32_t len;
+    ric_ran_function_t *func;
 
-  DevAssert(pdu != NULL);
-  req = &pdu->choice.initiatingMessage.value.choice.RICsubscriptionRequest;
+    E2AP_INFO("Received RICsubscriptionRequest from ranid %u\n",ric->ranid);
 
-  E2AP_INFO("Received RICsubscriptionRequest from ranid %u\n",ric->ranid);
+    DevAssert(pdu != NULL);
 
-  /* We need to create an ric_subscription to generate errors. */
-  rs = (ric_subscription_t *)calloc(1,sizeof(*rs));
-  LIST_INIT(&rs->action_list);
+    E2AP_RICsubscriptionRequest_t* req = &pdu->choice.initiatingMessage.value.choice.RICsubscriptionRequest;
 
-  for (ptr = req->protocolIEs.list.array;
-       ptr < &req->protocolIEs.list.array[req->protocolIEs.list.count];
-       ptr++) {
-    rie = (E2AP_RICsubscriptionRequest_IEs_t *)*ptr;
-    if (rie->id == E2AP_ProtocolIE_ID_id_RICrequestID) {
-      rs->request_id = rie->value.choice.RICrequestID.ricRequestorID;
-      rs->instance_id = rie->value.choice.RICrequestID.ricInstanceID;
-    }
-    else if (rie->id == E2AP_ProtocolIE_ID_id_RANfunctionID) {
-      rs->function_id = rie->value.choice.RANfunctionID;
-    }
-    else if (rie->id == E2AP_ProtocolIE_ID_id_RICsubscriptionDetails) {
-      E2AP_RICeventTriggerDefinition_t *rtd = &rie->value.choice.RICsubscriptionDetails.ricEventTriggerDefinition;
-      E2AP_RICactions_ToBeSetup_List_t *ral = &rie->value.choice.RICsubscriptionDetails.ricAction_ToBeSetup_List;
-      E2AP_RICaction_ToBeSetup_Item_t *rai;
+    /* We need to create an ric_subscription to generate errors. */
+    ric_subscription_t* rs = (ric_subscription_t *)calloc(1,sizeof(*rs));
+    LIST_INIT(&rs->action_list);
 
-      if (rtd->size > 0 && rtd->size < E2SM_MAX_DEF_SIZE) {
-	rs->event_trigger.size = rie->value.choice.RICsubscriptionDetails.ricEventTriggerDefinition.size;
-	rs->event_trigger.buf = (uint8_t *)malloc(rs->event_trigger.size);
-	memcpy(rs->event_trigger.buf,
-	       rie->value.choice.RICsubscriptionDetails.ricEventTriggerDefinition.buf,
-	       rs->event_trigger.size);
-      }
-      else if (rtd->size > E2SM_MAX_DEF_SIZE) {
-	E2AP_ERROR("RICsubscriptionRequest eventTriggerDefinition too long!");
-	// XXX: protocol error?
-      }
+    for (E2AP_RICsubscriptionRequest_IEs_t** ptr = req->protocolIEs.list.array;
+            ptr < &req->protocolIEs.list.array[req->protocolIEs.list.count];
+            ptr++) {
+
+        E2AP_RICsubscriptionRequest_IEs_t* rie = (E2AP_RICsubscriptionRequest_IEs_t *)*ptr;
+        if (rie->id == E2AP_ProtocolIE_ID_id_RICrequestID) {
+            rs->request_id = rie->value.choice.RICrequestID.ricRequestorID;
+            rs->instance_id = rie->value.choice.RICrequestID.ricInstanceID;
+        } else if (rie->id == E2AP_ProtocolIE_ID_id_RANfunctionID) {
+            rs->function_id = rie->value.choice.RANfunctionID;
+        } else if (rie->id == E2AP_ProtocolIE_ID_id_RICsubscriptionDetails) {
+            E2AP_RICeventTriggerDefinition_t *rtd = &rie->value.choice.RICsubscriptionDetails.ricEventTriggerDefinition;
+            E2AP_RICactions_ToBeSetup_List_t *ral = &rie->value.choice.RICsubscriptionDetails.ricAction_ToBeSetup_List;
+
+            if (rtd->size > 0 && rtd->size < E2SM_MAX_DEF_SIZE) {
+                rs->event_trigger.size = rie->value.choice.RICsubscriptionDetails.ricEventTriggerDefinition.size;
+                rs->event_trigger.buf = (uint8_t *)malloc(rs->event_trigger.size);
+                memcpy(rs->event_trigger.buf,
+                        rie->value.choice.RICsubscriptionDetails.ricEventTriggerDefinition.buf,
+                        rs->event_trigger.size);
+            } else if (rtd->size > E2SM_MAX_DEF_SIZE) {
+                E2AP_ERROR("RICsubscriptionRequest eventTriggerDefinition too long!");
+                // XXX: protocol error?
+            }
 
 #ifdef SHAD
-      for (int i = 0; i < ral->list.count; ++i) {
-	rai = (E2AP_RICaction_ToBeSetup_Item_t *)ral->list.array[i];
-	ra = (ric_action_t *)calloc(1,sizeof(*ra));
-	ra->id = rai->ricActionID;
-	ra->type = rai->ricActionType;
-	if (rai->ricActionDefinition && rai->ricActionDefinition->size > 0) {
-	  ra->def_size = rai->ricActionDefinition->size;
-	  ra->def_buf = (uint8_t *)malloc(ra->def_size);
-	  memcpy(ra->def_buf,rai->ricActionDefinition->buf,ra->def_size);
-	}
-	if (rai->ricSubsequentAction) {
-	  ra->subsequent_action = rai->ricSubsequentAction->ricSubsequentActionType;
-	  ra->time_to_wait = rai->ricSubsequentAction->ricTimeToWait;
-	}
+            for (int i = 0; i < ral->list.count; ++i) {
+                E2AP_RICaction_ToBeSetup_Item_t *rai = (E2AP_RICaction_ToBeSetup_Item_t *)ral->list.array[i];
+                ric_action_t *ra = (ric_action_t *)calloc(1,sizeof(*ra));
+                ra->id = rai->ricActionID;
+                ra->type = rai->ricActionType;
+                if (rai->ricActionDefinition && rai->ricActionDefinition->size > 0) {
+                    ra->def_size = rai->ricActionDefinition->size;
+                    ra->def_buf = (uint8_t *)malloc(ra->def_size);
+                    memcpy(ra->def_buf,rai->ricActionDefinition->buf,ra->def_size);
+                }
+                if (rai->ricSubsequentAction) {
+                  ra->subsequent_action = rai->ricSubsequentAction->ricSubsequentActionType;
+                  ra->time_to_wait = rai->ricSubsequentAction->ricTimeToWait;
+                }
 
-	if (LIST_EMPTY(&rs->action_list) == 0) {
-	  LIST_INSERT_HEAD(&rs->action_list,ra,actions);
-	}
-	else {
-	  LIST_INSERT_BEFORE(LIST_FIRST(&rs->action_list),ra,actions);
-	}
-      }
+                if (LIST_EMPTY(&rs->action_list)) {
+                  LIST_INSERT_HEAD(&rs->action_list,ra,actions);
+                }
+                else {
+                  LIST_INSERT_BEFORE(LIST_FIRST(&rs->action_list),ra,actions);
+                }
+            }
 #endif
+        }
     }
-  }
 
-#ifdef SHAD
-  func = ric_agent_lookup_ran_function(rs->function_id);
-  if (!func) {
-    E2AP_ERROR("failed to find ran_function %ld\n",rs->function_id);
-    goto errout;
-  }
+    func = ric_agent_lookup_ran_function(rs->function_id);
+    if (!func) {
+        E2AP_ERROR("failed to find ran_function %ld\n",rs->function_id);
+        goto errout;
+    }
 
-  ret = func->model->handle_subscription_add(ric,rs);
-  if (ret) {
-    E2AP_ERROR("failed to subscribe to ran_function %ld\n",rs->function_id);
-    goto errout;
-  }
-#endif
+    ret = func->model->handle_subscription_add(ric,rs);
+    if (ret) {
+        E2AP_ERROR("failed to subscribe to ran_function %ld\n",rs->function_id);
+        goto errout;
+    }
 
   ret = e2ap_generate_ric_subscription_response(ric,rs,&buf,&len);
   if (ret) {
@@ -216,7 +208,7 @@ int e2ap_handle_ric_subscription_request(ric_agent_info_t *ric,uint32_t stream,
 #ifdef SHAD
   ra = LIST_FIRST(&rs->action_list);
   while (ra != NULL) {
-    rat = LIST_NEXT(ra,actions);
+    ric_action_t* rat = LIST_NEXT(ra,actions);
     if (ra->def_buf)
       free(ra->def_buf);
     free(ra);
