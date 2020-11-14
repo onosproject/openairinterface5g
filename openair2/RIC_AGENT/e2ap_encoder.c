@@ -36,44 +36,42 @@
 #include "per_support.h"
 
 ssize_t e2ap_encode(const struct asn_TYPE_descriptor_s *td,
-		    const asn_per_constraints_t *constraints,void *sptr,
-		    uint8_t **buf)
+        const asn_per_constraints_t *constraints,void *sptr,
+        uint8_t **buf)
 {
-  ssize_t encoded;
+    ssize_t encoded;
 
-  DevAssert(td != NULL);
-  DevAssert(buf != NULL);
+    DevAssert(td != NULL);
+    DevAssert(buf != NULL);
 
-  if (e2ap_xer_print) {
-    xer_fprint(stdout,td,sptr);
-  }
+    if (e2ap_xer_print) {
+        xer_fprint(stdout,td,sptr);
+    }
 
-  encoded = aper_encode_to_new_buffer(td,constraints,sptr,(void **)buf);
-  if (encoded < 0) {
-    return -1;
-  }
+    encoded = aper_encode_to_new_buffer(td,constraints,sptr,(void **)buf);
+    if (encoded < 0) {
+        return -1;
+    }
 
-#ifdef SHAD
-  ASN_STRUCT_FREE_CONTENTS_ONLY((*td),sptr);
-#endif
+    ASN_STRUCT_FREE_CONTENTS_ONLY((*td),sptr);
 
-  return encoded;
+    return encoded;
 }
 
 ssize_t e2ap_encode_pdu(E2AP_E2AP_PDU_t *pdu,uint8_t **buf,uint32_t *len)
 {
-  ssize_t encoded;
+    ssize_t encoded;
 
-  DevAssert(pdu != NULL);
-  DevAssert(buf != NULL);
-  DevAssert(len != NULL);
+    DevAssert(pdu != NULL);
+    DevAssert(buf != NULL);
+    DevAssert(len != NULL);
 
-  encoded = e2ap_encode(&asn_DEF_E2AP_E2AP_PDU,0,pdu,buf);
-  if (encoded < 0) {
-    return -1;
-  }
+    encoded = e2ap_encode(&asn_DEF_E2AP_E2AP_PDU,0,pdu,buf);
+    if (encoded < 0) {
+        return -1;
+    }
 
-  *len = encoded;
+    *len = encoded;
 
-  return encoded;
+    return encoded;
 }
