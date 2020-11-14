@@ -131,7 +131,6 @@ int e2ap_handle_ric_subscription_request(ric_agent_info_t *ric,uint32_t stream,
             rs->function_id = rie->value.choice.RANfunctionID;
         } else if (rie->id == E2AP_ProtocolIE_ID_id_RICsubscriptionDetails) {
             E2AP_RICeventTriggerDefinition_t *rtd = &rie->value.choice.RICsubscriptionDetails.ricEventTriggerDefinition;
-            E2AP_RICactions_ToBeSetup_List_t *ral = &rie->value.choice.RICsubscriptionDetails.ricAction_ToBeSetup_List;
 
             if (rtd->size > 0 && rtd->size < E2SM_MAX_DEF_SIZE) {
                 rs->event_trigger.size = rie->value.choice.RICsubscriptionDetails.ricEventTriggerDefinition.size;
@@ -145,6 +144,8 @@ int e2ap_handle_ric_subscription_request(ric_agent_info_t *ric,uint32_t stream,
             }
 
 #ifdef SHAD
+            E2AP_RICactions_ToBeSetup_List_t *ral = &rie->value.choice.RICsubscriptionDetails.ricAction_ToBeSetup_List;
+
             for (int i = 0; i < ral->list.count; ++i) {
                 E2AP_RICaction_ToBeSetup_Item_t *rai = (E2AP_RICaction_ToBeSetup_Item_t *)ral->list.array[i];
                 ric_action_t *ra = (ric_action_t *)calloc(1,sizeof(*ra));
@@ -183,43 +184,37 @@ int e2ap_handle_ric_subscription_request(ric_agent_info_t *ric,uint32_t stream,
         goto errout;
     }
 
-  ret = e2ap_generate_ric_subscription_response(ric,rs,&buf,&len);
-  if (ret) {
-    E2AP_ERROR("failed to generate RICsubscriptionResponse (ranid %u)\n",
-	       ric->ranid);
-    goto errout;
-  }
-  else {
-    ric_agent_send_sctp_data(ric,stream,buf,len);
-  }
+    ret = e2ap_generate_ric_subscription_response(ric,rs,&buf,&len);
+    if (ret) {
+        E2AP_ERROR("failed to generate RICsubscriptionResponse (ranid %u)\n", ric->ranid);
+        goto errout;
+    } else {
+        ric_agent_send_sctp_data(ric,stream,buf,len);
+    }
 
-  return 0;
+    return 0;
 
- errout:
-  ret = e2ap_generate_ric_subscription_failure(ric,rs,&buf,&len);
-  if (ret) {
-    E2AP_ERROR("failed to generate RICsubscriptionFailure (ranid %u)\n",
-	       ric->ranid);
-  }
-  else {
-    ric_agent_send_sctp_data(ric,stream,buf,len);
-  }
+    errout:
+    ret = e2ap_generate_ric_subscription_failure(ric,rs,&buf,&len);
+    if (ret) {
+        E2AP_ERROR("failed to generate RICsubscriptionFailure (ranid %u)\n", ric->ranid);
+    } else {
+        ric_agent_send_sctp_data(ric,stream,buf,len);
+    }
 
-#ifdef SHAD
-  ra = LIST_FIRST(&rs->action_list);
-  while (ra != NULL) {
-    ric_action_t* rat = LIST_NEXT(ra,actions);
-    if (ra->def_buf)
-      free(ra->def_buf);
-    free(ra);
-    ra = rat;
-  }
-  if (rs->event_trigger.buf)
-    free(rs->event_trigger.buf);
-  free(rs);
-#endif
+    ric_action_t* ra = LIST_FIRST(&rs->action_list);
+    while (ra != NULL) {
+        ric_action_t* rat = LIST_NEXT(ra,actions);
+        if (ra->def_buf)
+            free(ra->def_buf);
+        free(ra);
+        ra = rat;
+    }
+    if (rs->event_trigger.buf)
+        free(rs->event_trigger.buf);
+    free(rs);
 
-  return ret;
+    return ret;
 }
 
 int e2ap_handle_ric_subscription_delete_request(
