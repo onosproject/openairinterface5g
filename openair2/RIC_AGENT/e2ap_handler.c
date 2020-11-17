@@ -188,9 +188,17 @@ int e2ap_handle_ric_subscription_request(ric_agent_info_t *ric,uint32_t stream,
     if (ret) {
         E2AP_ERROR("failed to generate RICsubscriptionResponse (ranid %u)\n", ric->ranid);
         goto errout;
-    } else {
-        ric_agent_send_sctp_data(ric,stream,buf,len);
     }
+   
+    ric_ran_function_id_t* function_id = (ric_ran_function_id_t *)calloc(1, sizeof(ric_ran_function_id_t));
+    *function_id = func->function_id;
+    ret = timer_setup(1, 0, TASK_RIC_AGENT, ric->ranid, TIMER_PERIODIC, (void *)function_id, &ric->e2sm_kpm_timer_id);
+    if (ret < 0) {
+        E2AP_ERROR("failed to start timer\n");
+        goto errout;
+    }
+
+    ric_agent_send_sctp_data(ric,stream,buf,len);
 
     return 0;
 
@@ -424,4 +432,13 @@ int e2ap_handle_message(ric_agent_info_t *ric,int32_t stream,
 
   ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_E2AP_E2AP_PDU,&pdu);
   return ret;
+}
+
+int e2ap_handle_timer_expiry(ric_agent_info_t *ric, long timer_id, void* arg) {
+    ric_ran_function_id_t function_id = *(ric_ran_function_id_t *)arg;
+    ric_ran_function_t *func = ric_agent_lookup_ran_function(function_id);
+
+    DevAssert(func != NULL);
+
+    return func->model->handle_timer_expiry(ric, timer_id, function_id);
 }

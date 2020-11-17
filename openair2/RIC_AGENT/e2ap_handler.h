@@ -29,4 +29,6 @@
 int e2ap_handle_message(ric_agent_info_t *ric,int32_t stream,
 			const uint8_t * const buf,const uint32_t buflen);
 
+int e2ap_handle_timer_expiry(ric_agent_info_t *ric, long timer_id, void* arg);
+
 #endif /* _E2AP_ENB_HANDLER_H */

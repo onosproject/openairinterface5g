@@ -46,13 +46,17 @@ static int e2sm_kpm_subscription_del(ric_agent_info_t *ric,
 				     ric_subscription_t *sub,
 				     int force,long *cause,long *cause_detail);
 static int e2sm_kpm_control(ric_agent_info_t *ric,ric_control_t *control);
+static int e2sm_kpm_timer_expiry(ric_agent_info_t *ric,
+        long timer_id,
+        ric_ran_function_id_t function_id);
 
 static ric_service_model_t e2sm_kpm_model = {
   .name = "ORAN-E2SM-KPM",
   .oid = "1.3.6.1.4.1.1.1.2.2",
   .handle_subscription_add = e2sm_kpm_subscription_add,
   .handle_subscription_del = e2sm_kpm_subscription_del,
-  .handle_control = e2sm_kpm_control
+  .handle_control = e2sm_kpm_control,
+  .handle_timer_expiry= e2sm_kpm_timer_expiry
 };
 
 /**
@@ -151,5 +155,19 @@ static int e2sm_kpm_subscription_del(ric_agent_info_t *ric,
 
 static int e2sm_kpm_control(ric_agent_info_t *ric,ric_control_t *control)
 {
+    return 0;
+}
+
+static int e2sm_kpm_timer_expiry(ric_agent_info_t *ric,
+        long timer_id,
+        ric_ran_function_id_t function_id) {
+
+    if (timer_id == ric->e2sm_kpm_timer_id) {
+        E2AP_ERROR("Timer has expired, function_id=%ld\n", function_id);
+    } else {
+        E2AP_ERROR("ERROR - Invalid timer_id (%ld) function_id=%ld\n", timer_id, function_id);
+        return 1;
+    }
+
     return 0;
 }

@@ -352,6 +352,18 @@ static void ric_agent_handle_sctp_data_ind(
   AssertFatal(ret == EXIT_SUCCESS,"failed to free sctp data buf (%d)\n",ret);
 }
 
+static void ric_agent_handle_timer_expiry(instance_t instance, long timer_id, void* arg) {
+    ric_agent_info_t* ric;
+    int ret;
+
+    DevAssert(instance < RC.nb_inst);
+
+    ric = RC.ric[instance];
+
+    ret = e2ap_handle_timer_expiry(ric, timer_id, arg);
+    DevAssert(ret == 0);
+}
+
 void *ric_agent_task(void *args)
 {
   MessageDef *msg = NULL;
@@ -388,6 +400,10 @@ void *ric_agent_task(void *args)
     case SCTP_DATA_IND:
       ric_agent_handle_sctp_data_ind(
 	ITTI_MESSAGE_GET_INSTANCE(msg),&msg->ittiMsg.sctp_data_ind);
+      break;
+    case TIMER_HAS_EXPIRED:
+      ric_agent_handle_timer_expiry(ITTI_MESSAGE_GET_INSTANCE(msg),
+              TIMER_HAS_EXPIRED (msg).timer_id, TIMER_HAS_EXPIRED (msg).arg);
       break;
     default:
       RIC_AGENT_ERROR("unhandled message: %d:%s\n",

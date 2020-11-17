@@ -106,6 +106,8 @@ typedef struct {
   uint16_t ric_mnc_digit_len;
   uint32_t ric_id;
 
+  long e2sm_kpm_timer_id;
+
   LIST_HEAD(ric_subscription_list,ric_subscription) subscription_list;
   
 } ric_agent_info_t;
@@ -130,6 +132,7 @@ typedef struct {
   int (*handle_subscription_del)(ric_agent_info_t *ric,ric_subscription_t *sub,
 				 int force,long *cause,long *cause_detail);
   int (*handle_control)(ric_agent_info_t *ric,ric_control_t *control);
+  int (*handle_timer_expiry)(ric_agent_info_t *ric, long timer_id, ric_ran_function_id_t function_id);
 } ric_service_model_t;
 
 typedef struct ric_ran_function {
