@@ -22,6 +22,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#include "common/utils/assertions.h"
 #include "ric_agent_defs.h"
 #include "ric_agent_common.h"
 #include "e2ap_common.h"
@@ -32,6 +33,10 @@
 #include "E2SM_KPM_E2SM-KPM-RANfunction-Description.h"
 #include "E2SM_KPM_RIC-ReportStyle-List.h"
 #include "E2SM_KPM_RIC-EventTriggerStyle-List.h"
+#include "E2SM_KPM_E2SM-KPM-IndicationMessage.h"
+#include "E2SM_KPM_OCUCP-PF-Container.h"
+#include "E2SM_KPM_PF-Container.h"
+#include "E2SM_KPM_PM-Containers-List.h"
 
 /**
  ** The main thing with this abstraction is that we need per-SM modules
@@ -158,16 +163,79 @@ static int e2sm_kpm_control(ric_agent_info_t *ric,ric_control_t *control)
     return 0;
 }
 
-static int e2sm_kpm_timer_expiry(ric_agent_info_t *ric,
-        long timer_id,
-        ric_ran_function_id_t function_id) {
+static int e2sm_kpm_timer_expiry(ric_agent_info_t *ric, long timer_id, ric_ran_function_id_t function_id) {
+    int ret;
 
-    if (timer_id == ric->e2sm_kpm_timer_id) {
-        E2AP_ERROR("Timer has expired, function_id=%ld\n", function_id);
-    } else {
-        E2AP_ERROR("ERROR - Invalid timer_id (%ld) function_id=%ld\n", timer_id, function_id);
-        return 1;
+    E2AP_INFO("Timer expired, timer_id %ld function_id %ld\n", timer_id, function_id);
+
+    DevAssert(timer_id == ric->e2sm_kpm_timer_id);
+
+    /*
+     * OCUCP_PF_Container
+     */
+    E2SM_KPM_OCUCP_PF_Container_t *cucpcont = (E2SM_KPM_OCUCP_PF_Container_t*)calloc(1,sizeof(E2SM_KPM_OCUCP_PF_Container_t));
+    ASN_STRUCT_RESET(asn_DEF_E2SM_KPM_OCUCP_PF_Container, cucpcont);
+#if 0
+    cucpcont->gNB_CU_CP_Name = (E2SM_KPM_GNB_CU_CP_Name_t*)calloc(1, sizeof(E2SM_KPM_GNB_CU_CP_Name_t));
+    cucpcont->gNB_CU_CP_Name->buf = (uint8_t*)calloc(strlen("foo-gNB")+1, sizeof(uint8_t)); 
+    cucpcont->gNB_CU_CP_Name->size = strlen("foo-gNB")+1;
+    strcpy((char*)cucpcont->gNB_CU_CP_Name->buf, "foo-gNB");
+#endif
+    cucpcont->cu_CP_Resource_Status.numberOfActive_UEs = (long*)calloc(1, sizeof(long));
+    *cucpcont->cu_CP_Resource_Status.numberOfActive_UEs = 1;
+
+    /*
+     * PF_Container -> OCUCP_PF_Container
+     */
+    E2SM_KPM_PF_Container_t *pfcontainer = (E2SM_KPM_PF_Container_t*)calloc(1, sizeof(E2SM_KPM_PF_Container_t));
+    pfcontainer->present = E2SM_KPM_PF_Container_PR_oCU_CP;
+    pfcontainer->choice.oCU_CP = *cucpcont;
+
+    /*
+     * Containers_List -> PF_Container
+     */
+    E2SM_KPM_PM_Containers_List_t *containers_list = (E2SM_KPM_PM_Containers_List_t*)calloc(1, sizeof(E2SM_KPM_PM_Containers_List_t));
+    ASN_STRUCT_RESET(asn_DEF_E2SM_KPM_PM_Containers_List, containers_list);
+    containers_list->performanceContainer = pfcontainer;
+
+    /*
+     * IndicationMessage_Format1 -> Containers_List
+     */
+    E2SM_KPM_E2SM_KPM_IndicationMessage_Format1_t *format = (E2SM_KPM_E2SM_KPM_IndicationMessage_Format1_t*)calloc(1, sizeof(E2SM_KPM_E2SM_KPM_IndicationMessage_Format1_t));
+    ASN_STRUCT_RESET(asn_DEF_E2SM_KPM_E2SM_KPM_IndicationMessage_Format1, format);
+    ret = ASN_SEQUENCE_ADD(&format->pm_Containers.list, containers_list);
+
+    DevAssert(ret == 0);
+
+    /*
+     * IndicationMessage -> IndicationMessage_Format1
+     */
+    E2SM_KPM_E2SM_KPM_IndicationMessage_t *indicationmessage = (E2SM_KPM_E2SM_KPM_IndicationMessage_t*)calloc(1, sizeof(E2SM_KPM_E2SM_KPM_IndicationMessage_t));
+    indicationmessage->present = E2SM_KPM_E2SM_KPM_IndicationMessage_PR_indicationMessage_Format1;
+    indicationmessage->choice.indicationMessage_Format1 = *format;
+
+
+	{
+		char *error_buf = (char*)calloc(300, sizeof(char));
+		size_t errlen;
+		asn_check_constraints(&asn_DEF_E2SM_KPM_E2SM_KPM_IndicationMessage, indicationmessage, error_buf, &errlen);
+		printf("error length %zu\n", errlen);
+		printf("error buf %s\n", error_buf);
+		xer_fprint(stderr, &asn_DEF_E2SM_KPM_E2SM_KPM_IndicationMessage, indicationmessage);
     }
+
+    uint8_t e2smbuffer[8192];
+    size_t e2smbuffer_size = 8192;
+
+    asn_enc_rval_t er = asn_encode_to_buffer(NULL,
+            ATS_ALIGNED_BASIC_PER,
+            &asn_DEF_E2SM_KPM_E2SM_KPM_IndicationMessage,
+            indicationmessage, e2smbuffer, e2smbuffer_size);
+
+    fprintf(stderr, "er encded is %zu\n", er.encoded);
+    fprintf(stderr, "after encoding message\n");
+
+//    E2AP_E2AP_PDU *pdu = (E2AP_E2AP_PDU*)calloc(1,sizeof(E2AP_E2AP_PDU));
 
     return 0;
 }
