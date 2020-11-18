@@ -23,6 +23,7 @@
 #include <stdlib.h>
 
 #include "common/utils/assertions.h"
+#include "f1ap_common.h"
 #include "ric_agent_defs.h"
 #include "ric_agent_common.h"
 #include "e2ap_common.h"
@@ -37,6 +38,8 @@
 #include "E2SM_KPM_OCUCP-PF-Container.h"
 #include "E2SM_KPM_PF-Container.h"
 #include "E2SM_KPM_PM-Containers-List.h"
+
+extern f1ap_cudu_inst_t f1ap_cu_inst[MAX_eNB];
 
 /**
  ** The main thing with this abstraction is that we need per-SM modules
@@ -182,7 +185,7 @@ static int e2sm_kpm_timer_expiry(ric_agent_info_t *ric, long timer_id, ric_ran_f
     strcpy((char*)cucpcont->gNB_CU_CP_Name->buf, "foo-gNB");
 #endif
     cucpcont->cu_CP_Resource_Status.numberOfActive_UEs = (long*)calloc(1, sizeof(long));
-    *cucpcont->cu_CP_Resource_Status.numberOfActive_UEs = 1;
+    *cucpcont->cu_CP_Resource_Status.numberOfActive_UEs = f1ap_cu_inst[ric->ranid].num_ues;
 
     /*
      * PF_Container -> OCUCP_PF_Container
