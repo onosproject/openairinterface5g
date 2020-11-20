@@ -39,6 +39,11 @@
 #include "E2SM_KPM_PF-Container.h"
 #include "E2SM_KPM_PM-Containers-List.h"
 #include "E2AP_ProtocolIE-Field.h"
+#include "E2SM_KPM_E2SM-KPM-IndicationHeader.h"
+#include "E2SM_KPM_SNSSAI.h"
+#include "E2SM_KPM_GlobalKPMnode-ID.h"
+#include "E2SM_KPM_GNB-ID-Choice.h"
+#include "E2SM_KPM_NRCGI.h"
 
 extern f1ap_cudu_inst_t f1ap_cu_inst[MAX_eNB];
 
@@ -183,8 +188,33 @@ static int e2sm_kpm_timer_expiry(ric_agent_info_t *ric, long timer_id, ric_ran_f
 
     E2AP_E2AP_PDU_t *e2ap_pdu = (E2AP_E2AP_PDU_t*)calloc(1, sizeof(E2AP_E2AP_PDU_t));
     uint8_t *e2smheader_buf = (uint8_t*)"header";
+
+    E2SM_KPM_E2SM_KPM_IndicationHeader_t* ind_header_style1 =
+        (E2SM_KPM_E2SM_KPM_IndicationHeader_t*)calloc(1,sizeof(E2SM_KPM_E2SM_KPM_IndicationHeader_t));
+
+    encode_e2sm_kpm_indication_header(ind_header_style1);
+
+    uint8_t e2sm_header_buf_style1[8192];
+    size_t e2sm_header_buf_size_style1 = 8192;
+    asn_enc_rval_t er_header_style1 = asn_encode_to_buffer(
+            NULL,
+            ATS_ALIGNED_BASIC_PER,
+            &asn_DEF_E2SM_KPM_E2SM_KPM_IndicationHeader,
+            ind_header_style1,
+            e2sm_header_buf_style1,
+            e2sm_header_buf_size_style1);
+
+    if (er_header_style1.encoded < 0) {
+        fprintf(stderr, "ERROR encoding indication header, name=%s, tag=%s", er_header_style1.failed_type->name, er_header_style1.failed_type->xml_tag);
+    }
+
+    DevAssert(er_header_style1.encoded >=0);
+
     //generate_e2apv1_indication_request_parameterized(e2ap_pdu, requestorId, instanceId, ranFunctionId, actionId, seqNum, e2smheader_buf, 6, e2smbuffer, er.encoded);
-    generate_e2apv1_indication_request_parameterized(e2ap_pdu, 0, 0, 0, 0, 0, e2smheader_buf, 6, e2smbuffer, er.encoded);
+    generate_e2apv1_indication_request_parameterized(
+            e2ap_pdu, 0, 0, 0, 0, 0,
+            e2sm_header_buf_style1, er_header_style1.encoded,
+            e2smbuffer, er.encoded);
 
     uint8_t *buf;
     int len = e2ap_asn1c_encode_pdu(e2ap_pdu, &buf);
@@ -377,4 +407,111 @@ static int e2ap_asn1c_encode_pdu(E2AP_E2AP_PDU_t* pdu, unsigned char **buffer)
     ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_E2AP_E2AP_PDU, pdu);
 
     return len;
+}
+
+void encode_e2sm_kpm_indication_header(E2SM_KPM_E2SM_KPM_IndicationHeader_t *ihead) {
+
+  uint8_t *plmnid_buf = (uint8_t*)"747";
+  uint8_t *sst_buf = (uint8_t*)"1";
+  uint8_t *sd_buf = (uint8_t*)"100";
+
+  E2SM_KPM_E2SM_KPM_IndicationHeader_Format1_t* ind_header =
+    (E2SM_KPM_E2SM_KPM_IndicationHeader_Format1_t*)calloc(1,sizeof(E2SM_KPM_E2SM_KPM_IndicationHeader_Format1_t));
+
+  OCTET_STRING_t *plmnid = (OCTET_STRING_t*)calloc(1,sizeof(OCTET_STRING_t));
+  plmnid->buf = (uint8_t*)calloc(3,1);
+  plmnid->size = 3;
+  memcpy(plmnid->buf, plmnid_buf, plmnid->size);
+
+  OCTET_STRING_t *sst = (OCTET_STRING_t*)calloc(1, sizeof(OCTET_STRING_t));
+  sst->size = 6;
+  sst->buf = (uint8_t*)calloc(1,6);
+  memcpy(sst->buf,sst_buf,sst->size);
+
+  OCTET_STRING_t *sds = (OCTET_STRING_t*)calloc(1, sizeof(OCTET_STRING_t));
+  sds->size = 3;
+  sds->buf = (uint8_t*)calloc(1,3);
+  memcpy(sds->buf, sd_buf, sds->size);
+
+  E2SM_KPM_SNSSAI_t *snssai = (E2SM_KPM_SNSSAI_t*)calloc(1, sizeof(E2SM_KPM_SNSSAI_t));
+  ASN_STRUCT_RESET(asn_DEF_E2SM_KPM_SNSSAI,snssai);
+  snssai->sST.buf = (uint8_t*)calloc(1,1);
+  snssai->sST.size = 1;
+  memcpy(snssai->sST.buf, sst_buf, 1);
+  snssai->sD = (OCTET_STRING_t*)calloc(1, sizeof(OCTET_STRING_t));
+  snssai->sD->buf = (uint8_t*)calloc(1,3);
+  snssai->sD->size = 3;
+  memcpy(snssai->sD->buf, sd_buf, 3);
+
+  ind_header->pLMN_Identity = plmnid;
+  ind_header->fiveQI = (long*)calloc(1, sizeof(long));
+  *ind_header->fiveQI = 9;
+
+  BIT_STRING_t *nrcellid = (BIT_STRING_t*)calloc(1, sizeof(BIT_STRING_t));
+  nrcellid->buf = (uint8_t*)calloc(1,5);
+  nrcellid->size = 5;
+  nrcellid->buf[0] = 0x22;
+  nrcellid->buf[1] = 0x5B;
+  nrcellid->buf[2] = 0xD6;
+  nrcellid->buf[3] = 0x00;
+  nrcellid->buf[4] = 0x70;
+
+  nrcellid->bits_unused = 4;
+
+  BIT_STRING_t *gnb_bstring = (BIT_STRING_t*)calloc(1, sizeof(BIT_STRING_t));;
+  gnb_bstring->buf = (uint8_t*)calloc(1,4);
+  gnb_bstring->size = 4;
+  gnb_bstring->buf[0] = 0xB5;
+  gnb_bstring->buf[1] = 0xC6;
+  gnb_bstring->buf[2] = 0x77;
+  gnb_bstring->buf[3] = 0x88;
+
+  gnb_bstring->bits_unused = 3;
+
+  INTEGER_t *cuup_id = (INTEGER_t*)calloc(1, sizeof(INTEGER_t));
+  uint8_t buffer[1];
+  buffer[0] = 2;
+  cuup_id->buf = (uint8_t*)calloc(1,1);
+  memcpy(cuup_id->buf, buffer, 1);
+  cuup_id->size = 1;
+
+  ind_header->id_GlobalKPMnode_ID = (E2SM_KPM_GlobalKPMnode_ID_t*)calloc(1,sizeof(E2SM_KPM_GlobalKPMnode_ID_t));
+  ind_header->id_GlobalKPMnode_ID->present = E2SM_KPM_GlobalKPMnode_ID_PR_gNB;
+  ind_header->id_GlobalKPMnode_ID->choice.gNB.global_gNB_ID.gnb_id.present = E2SM_KPM_GNB_ID_Choice_PR_gnb_ID;
+  ind_header->id_GlobalKPMnode_ID->choice.gNB.global_gNB_ID.gnb_id.choice.gnb_ID = *gnb_bstring;
+  ind_header->id_GlobalKPMnode_ID->choice.gNB.global_gNB_ID.plmn_id = *plmnid;
+  ind_header->id_GlobalKPMnode_ID->choice.gNB.gNB_CU_UP_ID = cuup_id;
+
+  ind_header->nRCGI = (E2SM_KPM_NRCGI_t*)calloc(1,sizeof(E2SM_KPM_NRCGI_t));
+  ind_header->nRCGI->pLMN_Identity = *plmnid;
+  ind_header->nRCGI->nRCellIdentity = *nrcellid;
+
+  ind_header->sliceID = snssai;
+  ind_header->qci = (long*)calloc(1, sizeof(long));
+  *ind_header->qci = 9;
+
+
+#if 0
+  //    ind_header->message_Type = ;
+  //    ind_header->gNB_DU_ID = ;
+
+  uint8_t *buf5 = (uint8_t*)"GNBCUUP5";
+  OCTET_STRING_t *cuupname = (OCTET_STRING_t*)calloc(1, sizeof(OCTET_STRING_t));
+  cuupname->size = 8;
+  cuupname->buf = (uint8_t*)calloc(1,8);
+  memcpy(cuupname->buf, buf5, cuupname->size);
+  ind_header->gNB_Name = (GNB_Name*)calloc(1,sizeof(GNB_Name));
+  ind_header->gNB_Name->present = GNB_Name_PR_gNB_CU_UP_Name;
+  ind_header->gNB_Name->choice.gNB_CU_UP_Name = *cuupname;
+
+  //    ind_header->global_GNB_ID = (GlobalgNB_ID*)calloc(1,sizeof(GlobalgNB_ID));
+  //    ind_header->global_GNB_ID->plmn_id = *plmnid;
+  //    ind_header->global_GNB_ID->gnb_id.present = GNB_ID_Choice_PR_gnb_ID;
+  //    ind_header->global_GNB_ID->gnb_id.choice.gnb_ID = *gnb_bstring;
+#endif
+
+  ihead->present = E2SM_KPM_E2SM_KPM_IndicationHeader_PR_indicationHeader_Format1;
+  ihead->choice.indicationHeader_Format1 = *ind_header;
+
+  xer_fprint(stderr, &asn_DEF_E2SM_KPM_E2SM_KPM_IndicationHeader, ihead);
 }
