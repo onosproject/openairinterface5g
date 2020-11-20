@@ -21,6 +21,9 @@ COPY --from=builder /root/cmake_targets/ran_build/build/lte-uesoftmodem ./bin/
 COPY --from=builder /root/cmake_targets/ran_build/build/.usim.nvram0 ./bin/
 COPY --from=builder /root/cmake_targets/ran_build/build/.ue.nvram0 ./bin/
 COPY --from=builder /root/cmake_targets/ran_build/build/.ue_emm.nvram0 ./bin/
+COPY --from=builder /root/cmake_targets/nas_sim_tools/build/conf2uedata ./bin/
+COPY --from=builder /root/cmake_targets/nas_sim_tools/build/nvram ./bin/
+COPY --from=builder /root/cmake_targets/nas_sim_tools/build/usim ./bin/
 
 COPY --from=builder /lib/x86_64-linux-gnu /lib/x86_64-linux-gnu/
 COPY --from=builder /usr/lib/x86_64-linux-gnu /usr/lib/x86_64-linux-gnu/
