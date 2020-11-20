@@ -15,7 +15,7 @@ LABEL name="oai-ue" \
 
 WORKDIR /opt/oai-ue
 
-RUN apt-get update && apt-get install -y libblas-dev liblapack-dev liblapacke-dev
+RUN apt-get update && apt-get install -y libblas-dev liblapack-dev liblapacke-dev iproute2 net-tools
 
 COPY --from=builder /root/cmake_targets/ran_build/build/lte-uesoftmodem ./bin/
 COPY --from=builder /root/cmake_targets/ran_build/build/.usim.nvram0 ./bin/
