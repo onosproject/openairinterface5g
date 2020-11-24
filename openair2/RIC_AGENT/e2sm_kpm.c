@@ -233,12 +233,12 @@ encode_kpm_report_rancontainer_cucp_parameterized(ric_agent_info_t* ric)
      */
     E2SM_KPM_OCUCP_PF_Container_t* cucpcont = (E2SM_KPM_OCUCP_PF_Container_t*)calloc(1, sizeof(E2SM_KPM_OCUCP_PF_Container_t));
     ASN_STRUCT_RESET(asn_DEF_E2SM_KPM_OCUCP_PF_Container, cucpcont);
-#if 0
+
     cucpcont->gNB_CU_CP_Name = (E2SM_KPM_GNB_CU_CP_Name_t*)calloc(1, sizeof(E2SM_KPM_GNB_CU_CP_Name_t));
     cucpcont->gNB_CU_CP_Name->buf = (uint8_t*)calloc(strlen("foo-gNB")+1, sizeof(uint8_t));
     cucpcont->gNB_CU_CP_Name->size = strlen("foo-gNB")+1;
     strcpy((char*)cucpcont->gNB_CU_CP_Name->buf, "foo-gNB");
-#endif
+
     cucpcont->cu_CP_Resource_Status.numberOfActive_UEs = (long*)calloc(1, sizeof(long));
     *cucpcont->cu_CP_Resource_Status.numberOfActive_UEs = f1ap_cu_inst[ric->ranid].num_ues;
 
