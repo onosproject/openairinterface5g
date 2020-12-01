@@ -60,6 +60,7 @@ static int e2sm_kpm_control(ric_agent_info_t *ric,ric_control_t *control);
 static int e2sm_kpm_timer_expiry(ric_agent_info_t *ric, long timer_id, ric_ran_function_id_t function_id);
 static E2SM_KPM_E2SM_KPM_IndicationMessage_t* encode_kpm_report_rancontainer_cucp_parameterized(ric_agent_info_t* ric);
 static void generate_e2apv1_indication_request_parameterized(E2AP_E2AP_PDU_t *e2ap_pdu, long requestorId, long instanceId, long ranFunctionId, long actionId, long seqNum, uint8_t *ind_header_buf, int header_length, uint8_t *ind_message_buf, int message_length);
+static void encode_e2sm_kpm_indication_header(E2SM_KPM_E2SM_KPM_IndicationHeader_t *ihead);
 
 static int e2ap_asn1c_encode_pdu(E2AP_E2AP_PDU_t* pdu, unsigned char **buffer);
 
@@ -187,7 +188,6 @@ static int e2sm_kpm_timer_expiry(ric_agent_info_t *ric, long timer_id, ric_ran_f
     fprintf(stderr, "after encoding message\n");
 
     E2AP_E2AP_PDU_t *e2ap_pdu = (E2AP_E2AP_PDU_t*)calloc(1, sizeof(E2AP_E2AP_PDU_t));
-    uint8_t *e2smheader_buf = (uint8_t*)"header";
 
     E2SM_KPM_E2SM_KPM_IndicationHeader_t* ind_header_style1 =
         (E2SM_KPM_E2SM_KPM_IndicationHeader_t*)calloc(1,sizeof(E2SM_KPM_E2SM_KPM_IndicationHeader_t));
@@ -210,7 +210,6 @@ static int e2sm_kpm_timer_expiry(ric_agent_info_t *ric, long timer_id, ric_ran_f
 
     DevAssert(er_header_style1.encoded >=0);
 
-    //generate_e2apv1_indication_request_parameterized(e2ap_pdu, requestorId, instanceId, ranFunctionId, actionId, seqNum, e2smheader_buf, 6, e2smbuffer, er.encoded);
     generate_e2apv1_indication_request_parameterized(
             e2ap_pdu, 0, 0, 0, 0, 0,
             e2sm_header_buf_style1, er_header_style1.encoded,
