@@ -107,6 +107,7 @@ typedef struct {
   uint32_t ric_id;
 
   long e2sm_kpm_timer_id;
+  long ric_connect_timer_id;
 
   LIST_HEAD(ric_subscription_list,ric_subscription) subscription_list;
   
