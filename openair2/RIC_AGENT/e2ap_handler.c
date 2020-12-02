@@ -143,6 +143,7 @@ int e2ap_handle_ric_subscription_request(ric_agent_info_t *ric,uint32_t stream,
                 // XXX: protocol error?
             }
 
+#if 0
             E2AP_RICactions_ToBeSetup_List_t *ral = &rie->value.choice.RICsubscriptionDetails.ricAction_ToBeSetup_List;
 
             for (int i = 0; i < ral->list.count; ++i) {
@@ -167,6 +168,7 @@ int e2ap_handle_ric_subscription_request(ric_agent_info_t *ric,uint32_t stream,
                   LIST_INSERT_BEFORE(LIST_FIRST(&rs->action_list),ra,actions);
                 }
             }
+#endif
         }
     }
 
