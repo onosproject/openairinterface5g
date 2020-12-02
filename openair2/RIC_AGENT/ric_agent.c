@@ -125,7 +125,9 @@ ric_agent_info_t *ric_agent_get_info(ranid_t ranid, int32_t assoc_id)
 
     DevAssert(ranid < RC.nb_inst);
     ric = RC.ric[ranid];
-    DevAssert(ric->assoc_id == assoc_id);
+    if (ric->assoc_id != assoc_id) {
+        return NULL;
+    }
 
     return ric;
 }
@@ -195,6 +197,10 @@ static int ric_agent_connect(ranid_t ranid)
     int j;
 
     ric = ric_agent_get_info(ranid, -1);
+    if (ric == NULL) {
+        RIC_AGENT_ERROR("ric_agent_connect: ric agent info not found %u\n", ranid);
+        return -1;
+    }
 
     if (!ric->functions_enabled) {
         ric->functions_enabled_len = 0;
@@ -302,9 +308,22 @@ static int ric_agent_handle_sctp_new_association_resp(
 
     DevAssert(resp != NULL);
 
+    RIC_AGENT_INFO("new sctp assoc resp %d, sctp_state %d for nb %u\n", resp->assoc_id, resp->sctp_state, instance);
+
     if (instance >= RC.nb_inst) {
         RIC_AGENT_ERROR("invalid nb/instance %u in sctp_new_association_resp\n", instance);
         return -1;
+    } else if (resp->sctp_state != SCTP_STATE_ESTABLISHED) {
+        if (RC.ric[instance] != NULL) {
+            RC.ric[instance]->assoc_id = -1;
+            RIC_AGENT_INFO("resetting RIC connection %u\n", instance);
+            timer_remove(RC.ric[instance]->e2sm_kpm_timer_id);
+            timer_setup(5, 0, TASK_RIC_AGENT, instance, TIMER_PERIODIC, NULL, &RC.ric[instance]->ric_connect_timer_id);
+        } else {
+            RIC_AGENT_ERROR("invalid nb/instance %u in sctp_new_association_resp\n", instance);
+            return -1;
+        }
+        return 0;
     }
 
     /*
@@ -314,9 +333,13 @@ static int ric_agent_handle_sctp_new_association_resp(
     }
     */
 
-    RIC_AGENT_INFO("new sctp assoc resp %d for nb %u\n",resp->assoc_id,instance);
+    RIC_AGENT_INFO("new sctp assoc resp %d for nb %u\n", resp->assoc_id, instance);
 
     ric = ric_agent_get_info(instance, -1);
+    if (ric == NULL) {
+        RIC_AGENT_ERROR("ric_agent_handle_sctp_new_association_resp: ric agent info not found %u\n", instance);
+        return -1;
+    }
     ric->assoc_id = resp->assoc_id;
     ric->state = RIC_CONNECTED;
 
@@ -350,6 +373,10 @@ static void ric_agent_handle_sctp_data_ind(
     DevAssert(instance < RC.nb_inst);
 
     ric = ric_agent_get_info(instance, ind->assoc_id);
+    if (ric == NULL) {
+        RIC_AGENT_ERROR("ric_agent_handle_sctp_data_ind: ric agent info not found %u\n", instance);
+        return;
+    }
 
     RIC_AGENT_DEBUG("sctp_data_ind instance %u assoc %d", instance, ind->assoc_id);
 
