@@ -38,6 +38,7 @@
 #include "E2AP_ProtocolIE-Field.h"
 #include "E2AP_E2setupRequest.h"
 #include "E2AP_RICsubsequentAction.h"
+#include "E2SM_KPM_E2SM-KPM-EventTriggerDefinition.h"
 
 int e2ap_handle_e2_setup_response(ric_agent_info_t *ric,uint32_t stream,
 				  E2AP_E2AP_PDU_t *pdu)
@@ -138,6 +139,13 @@ int e2ap_handle_ric_subscription_request(ric_agent_info_t *ric,uint32_t stream,
                 memcpy(rs->event_trigger.buf,
                         rie->value.choice.RICsubscriptionDetails.ricEventTriggerDefinition.buf,
                         rs->event_trigger.size);
+                {
+                    asn_dec_rval_t decode_result;
+                    E2SM_KPM_E2SM_KPM_EventTriggerDefinition_t *eventTriggerDef = 0;
+                    decode_result = aper_decode_complete(NULL, &asn_DEF_E2SM_KPM_E2SM_KPM_EventTriggerDefinition, (void **)&eventTriggerDef, rs->event_trigger.buf, rs->event_trigger.size);
+                    DevAssert(decode_result.code == RC_OK);
+                    xer_fprint(stdout, &asn_DEF_E2SM_KPM_E2SM_KPM_EventTriggerDefinition, eventTriggerDef);
+                }
             } else if (rtd->size > E2SM_MAX_DEF_SIZE) {
                 E2AP_ERROR("RICsubscriptionRequest eventTriggerDefinition too long!");
                 // XXX: protocol error?
