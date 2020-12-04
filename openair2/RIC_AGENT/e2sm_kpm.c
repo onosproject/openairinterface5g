@@ -210,8 +210,9 @@ static int e2sm_kpm_timer_expiry(ric_agent_info_t *ric, long timer_id, ric_ran_f
 
     DevAssert(er_header_style1.encoded >=0);
 
+    // TODO - remove hardcoded values
     generate_e2apv1_indication_request_parameterized(
-            e2ap_pdu, 0, 0, 0, 0, 0,
+            e2ap_pdu, 0, 0, 1, 0, 0,
             e2sm_header_buf_style1, er_header_style1.encoded,
             e2smbuffer, er.encoded);
 

@@ -76,17 +76,18 @@ int ric_agent_register_ran_function(ric_ran_function_t *func)
 
     new_id = ran_functions_len++;
     ran_functions[new_id] = func;
-    func->function_id = new_id;
+    func->function_id = new_id + 1;
 
     return 0;
 }
 
 ric_ran_function_t *ric_agent_lookup_ran_function(ric_ran_function_id_t function_id)
 {
-    if (function_id < 0 || function_id >= ran_functions_len)
+    int index = function_id - 1;
+    if (index < 0 || index >= ran_functions_len)
         return NULL;
 
-    return ran_functions[function_id];
+    return ran_functions[index];
 }
 
 ric_ran_function_t *ric_agent_lookup_ran_function_by_name(char *name)
