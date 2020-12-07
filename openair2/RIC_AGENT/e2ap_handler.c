@@ -39,6 +39,7 @@
 #include "E2AP_E2setupRequest.h"
 #include "E2AP_RICsubsequentAction.h"
 #include "E2SM_KPM_E2SM-KPM-EventTriggerDefinition.h"
+#include "E2SM_KPM_Trigger-ConditionIE-Item.h"
 
 int e2ap_handle_e2_setup_response(ric_agent_info_t *ric,uint32_t stream,
 				  E2AP_E2AP_PDU_t *pdu)
@@ -107,6 +108,8 @@ int e2ap_handle_ric_subscription_request(ric_agent_info_t *ric,uint32_t stream,
     int ret;
     uint8_t *buf;
     uint32_t len;
+    uint32_t      interval_sec = 0;
+    uint32_t      interval_us = 0;
     ric_ran_function_t *func;
 
     E2AP_INFO("Received RICsubscriptionRequest from ranid %u\n",ric->ranid);
@@ -145,6 +148,85 @@ int e2ap_handle_ric_subscription_request(ric_agent_info_t *ric,uint32_t stream,
                     decode_result = aper_decode_complete(NULL, &asn_DEF_E2SM_KPM_E2SM_KPM_EventTriggerDefinition, (void **)&eventTriggerDef, rs->event_trigger.buf, rs->event_trigger.size);
                     DevAssert(decode_result.code == RC_OK);
                     xer_fprint(stdout, &asn_DEF_E2SM_KPM_E2SM_KPM_EventTriggerDefinition, eventTriggerDef);
+                    E2SM_KPM_Trigger_ConditionIE_Item_t **ptr;
+                    for (ptr = eventTriggerDef->choice.eventDefinition_Format1.policyTest_List->list.array;
+                            ptr < &eventTriggerDef->choice.eventDefinition_Format1.policyTest_List->list.array[eventTriggerDef->choice.eventDefinition_Format1.policyTest_List->list.count];
+                            ptr++)
+                    {
+                        E2AP_INFO("report period = %ld", (*ptr)->report_Period_IE);
+                        switch ((*ptr)->report_Period_IE) {
+                            case E2SM_KPM_RT_Period_IE_ms10:
+                                interval_us = 10000;
+                                break;
+                            case E2SM_KPM_RT_Period_IE_ms20:
+                                interval_us = 20000;
+                                break;
+                            case E2SM_KPM_RT_Period_IE_ms32:
+                                interval_us = 32000;
+                                break;
+                            case E2SM_KPM_RT_Period_IE_ms40:
+                                interval_us = 40000;
+                                break;
+                            case E2SM_KPM_RT_Period_IE_ms60:
+                                interval_us = 60000;
+                                break;
+                            case E2SM_KPM_RT_Period_IE_ms64:
+                                interval_us = 64000;
+                                break;
+                            case E2SM_KPM_RT_Period_IE_ms70:
+                                interval_us = 70000;
+                                break;
+                            case E2SM_KPM_RT_Period_IE_ms80:
+                                interval_us = 80000;
+                                break;
+                            case E2SM_KPM_RT_Period_IE_ms128:
+                                interval_us = 128000;
+                                break;
+                            case E2SM_KPM_RT_Period_IE_ms160:
+                                interval_us = 160000;
+                                break;
+                            case E2SM_KPM_RT_Period_IE_ms256:
+                                interval_us = 256000;
+                                break;
+                            case E2SM_KPM_RT_Period_IE_ms320:
+                                interval_us = 320000;
+                                break;
+                            case E2SM_KPM_RT_Period_IE_ms512:
+                                interval_us = 512000;
+                                break;
+                            case E2SM_KPM_RT_Period_IE_ms640:
+                                interval_us = 640000;
+                                break;
+                            case E2SM_KPM_RT_Period_IE_ms1024:
+                                interval_sec = 1;
+                                interval_us = 240000;
+                                break;
+                            case E2SM_KPM_RT_Period_IE_ms1280:
+                                interval_sec = 1;
+                                interval_us = 280000;
+                                break;
+                            case E2SM_KPM_RT_Period_IE_ms2048:
+                                interval_sec = 2;
+                                interval_us = 48000;
+                                break;
+                            case E2SM_KPM_RT_Period_IE_ms2560:
+                                interval_sec = 2;
+                                interval_us = 560000;
+                                break;
+                            case E2SM_KPM_RT_Period_IE_ms5120:
+                                interval_sec = 5;
+                                interval_us = 120000;
+                                break;
+                            case E2SM_KPM_RT_Period_IE_ms10240:
+                                interval_sec = 10;
+                                interval_us = 240000;
+                                break;
+                            default:
+                                // TODO - make default time period a config parameter
+                                interval_sec = 1;
+                                interval_us = 0;
+                        }
+                    }
                 }
             } else if (rtd->size > E2SM_MAX_DEF_SIZE) {
                 E2AP_ERROR("RICsubscriptionRequest eventTriggerDefinition too long!");
@@ -200,7 +282,12 @@ int e2ap_handle_ric_subscription_request(ric_agent_info_t *ric,uint32_t stream,
 
     ric_ran_function_id_t* function_id = (ric_ran_function_id_t *)calloc(1, sizeof(ric_ran_function_id_t));
     *function_id = func->function_id;
-    ret = timer_setup(1, 0, TASK_RIC_AGENT, ric->ranid, TIMER_PERIODIC, (void *)function_id, &ric->e2sm_kpm_timer_id);
+    ret = timer_setup(interval_sec, interval_us,
+            TASK_RIC_AGENT,
+            ric->ranid,
+            TIMER_PERIODIC,
+            (void *)function_id,
+            &ric->e2sm_kpm_timer_id);
     if (ret < 0) {
         E2AP_ERROR("failed to start timer\n");
         goto errout;
