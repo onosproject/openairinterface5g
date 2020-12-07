@@ -243,7 +243,7 @@ static int ric_agent_connect(ranid_t ranid)
     msg = itti_alloc_new_message(TASK_RIC_AGENT, SCTP_NEW_ASSOCIATION_REQ);
     req = &msg->ittiMsg.sctp_new_association_req;
 
-    req->ppid = 0;
+    req->ppid = E2AP_SCTP_PPID;
     req->port = RC.ric[ranid]->remote_port;
     req->in_streams = 1;
     req->out_streams = 1;
