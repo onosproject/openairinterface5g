@@ -243,7 +243,7 @@ static int ric_agent_connect(ranid_t ranid)
     msg = itti_alloc_new_message(TASK_RIC_AGENT, SCTP_NEW_ASSOCIATION_REQ);
     req = &msg->ittiMsg.sctp_new_association_req;
 
-    req->ppid = E2AP_SCTP_PPID;
+    req->ppid = 0;
     req->port = RC.ric[ranid]->remote_port;
     req->in_streams = 1;
     req->out_streams = 1;
@@ -251,13 +251,17 @@ static int ric_agent_connect(ranid_t ranid)
     strncpy(req->remote_address.ipv4_address,RC.ric[ranid]->remote_ipv4_addr,
             sizeof(req->remote_address.ipv4_address));
     req->remote_address.ipv4_address[sizeof(req->remote_address.ipv4_address)-1] = '\0';
+    req->local_address.ipv4 = 1;
+    strncpy(req->local_address.ipv4_address, RC.rrc[0]->eth_params_s.my_addr,
+            sizeof(req->local_address.ipv4_address));
+    req->local_address.ipv4_address[sizeof(req->local_address.ipv4_address)-1] = '\0';
     req->ulp_cnx_id = 1;
 
     ric = RC.ric[ranid];
     ric->state = RIC_CONNECTING;
 
-    RIC_AGENT_INFO("ranid %u connecting to RIC at %s:%u\n",
-            ranid,req->remote_address.ipv4_address, req->port);
+    RIC_AGENT_INFO("ranid %u connecting to RIC at %s:%u with IP %s\n",
+            ranid,req->remote_address.ipv4_address, req->port, req->local_address.ipv4_address);
     itti_send_msg_to_task(TASK_SCTP, ranid,msg);
 
     return 0;
