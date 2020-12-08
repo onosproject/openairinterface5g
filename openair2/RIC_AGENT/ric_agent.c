@@ -320,9 +320,10 @@ static int ric_agent_handle_sctp_new_association_resp(
         return -1;
     } else if (resp->sctp_state != SCTP_STATE_ESTABLISHED) {
         if (RC.ric[instance] != NULL) {
-            RC.ric[instance]->assoc_id = -1;
             RIC_AGENT_INFO("resetting RIC connection %u\n", instance);
             timer_remove(RC.ric[instance]->e2sm_kpm_timer_id);
+            RC.ric[instance]->e2sm_kpm_timer_id = 0;
+            RC.ric[instance]->assoc_id = -1;
             timer_setup(5, 0, TASK_RIC_AGENT, instance, TIMER_PERIODIC, NULL, &RC.ric[instance]->ric_connect_timer_id);
         } else {
             RIC_AGENT_ERROR("invalid nb/instance %u in sctp_new_association_resp\n", instance);
@@ -401,8 +402,10 @@ static void ric_agent_handle_timer_expiry(instance_t instance, long timer_id, vo
 
     if (timer_id == ric->ric_connect_timer_id) {
         ric_agent_connect(instance);
-    } else {
+    } else if (timer_id == ric->e2sm_kpm_timer_id) {
         ret = e2ap_handle_timer_expiry(ric, timer_id, arg);
+    } else {
+        RIC_AGENT_INFO("invalid timer expiry instance %u timer_id %d", instance, timer_id);
     }
     DevAssert(ret == 0);
 }
