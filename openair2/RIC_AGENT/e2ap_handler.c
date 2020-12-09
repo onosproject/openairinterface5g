@@ -131,6 +131,7 @@ int e2ap_handle_ric_subscription_request(ric_agent_info_t *ric,uint32_t stream,
         if  (rie->value.present == E2AP_RICsubscriptionRequest_IEs__value_PR_RICrequestID) {
             rs->request_id = rie->value.choice.RICrequestID.ricRequestorID;
             rs->instance_id = rie->value.choice.RICrequestID.ricInstanceID;
+            E2AP_INFO("RICsubscriptionRequest|ricRequestorID=%ld|ricInstanceID=%ld", rs->request_id, rs->instance_id);
         } else if (rie->value.present == E2AP_RICsubscriptionRequest_IEs__value_PR_RANfunctionID) {
             rs->function_id = rie->value.choice.RANfunctionID;
         } else if (rie->value.present == E2AP_RICsubscriptionRequest_IEs__value_PR_RICsubscriptionDetails) {
@@ -283,11 +284,16 @@ int e2ap_handle_ric_subscription_request(ric_agent_info_t *ric,uint32_t stream,
 
     ric_ran_function_id_t* function_id = (ric_ran_function_id_t *)calloc(1, sizeof(ric_ran_function_id_t));
     *function_id = func->function_id;
+    ric_ran_function_requestor_info_t* arg
+        = (ric_ran_function_requestor_info_t*)calloc(1, sizeof(ric_ran_function_requestor_info_t));
+    arg->function_id = func->function_id;
+    arg->request_id = rs->request_id;
+    arg->instance_id = rs->instance_id;
     ret = timer_setup(interval_sec, interval_us,
             TASK_RIC_AGENT,
             ric->ranid,
             TIMER_PERIODIC,
-            (void *)function_id,
+            (void *)arg,
             &ric->e2sm_kpm_timer_id);
     if (ret < 0) {
         E2AP_ERROR("failed to start timer\n");
@@ -515,10 +521,11 @@ int e2ap_handle_message(ric_agent_info_t *ric,int32_t stream,
 }
 
 int e2ap_handle_timer_expiry(ric_agent_info_t *ric, long timer_id, void* arg) {
-    ric_ran_function_id_t function_id = *(ric_ran_function_id_t *)arg;
-    ric_ran_function_t *func = ric_agent_lookup_ran_function(function_id);
+    DevAssert(arg != NULL);
+    ric_ran_function_requestor_info_t* info = (ric_ran_function_requestor_info_t*)arg;
+    ric_ran_function_t *func = ric_agent_lookup_ran_function(info->function_id);
 
     DevAssert(func != NULL);
 
-    return func->model->handle_timer_expiry(ric, timer_id, function_id);
+    return func->model->handle_timer_expiry(ric, timer_id, info->function_id, info->request_id, info->instance_id);
 }

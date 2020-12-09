@@ -57,7 +57,12 @@ extern f1ap_cudu_inst_t f1ap_cu_inst[MAX_eNB];
 static int e2sm_kpm_subscription_add(ric_agent_info_t *ric, ric_subscription_t *sub);
 static int e2sm_kpm_subscription_del(ric_agent_info_t *ric, ric_subscription_t *sub, int force,long *cause,long *cause_detail);
 static int e2sm_kpm_control(ric_agent_info_t *ric,ric_control_t *control);
-static int e2sm_kpm_timer_expiry(ric_agent_info_t *ric, long timer_id, ric_ran_function_id_t function_id);
+static int e2sm_kpm_timer_expiry(
+        ric_agent_info_t *ric,
+        long timer_id,
+        ric_ran_function_id_t function_id,
+        long request_id,
+        long instance_id);
 static E2SM_KPM_E2SM_KPM_IndicationMessage_t* encode_kpm_report_rancontainer_cucp_parameterized(ric_agent_info_t* ric);
 static void generate_e2apv1_indication_request_parameterized(E2AP_E2AP_PDU_t *e2ap_pdu, long requestorId, long instanceId, long ranFunctionId, long actionId, long seqNum, uint8_t *ind_header_buf, int header_length, uint8_t *ind_message_buf, int message_length);
 static void encode_e2sm_kpm_indication_header(E2SM_KPM_E2SM_KPM_IndicationHeader_t *ihead);
@@ -70,7 +75,7 @@ static ric_service_model_t e2sm_kpm_model = {
     .handle_subscription_add = e2sm_kpm_subscription_add,
     .handle_subscription_del = e2sm_kpm_subscription_del,
     .handle_control = e2sm_kpm_control,
-    .handle_timer_expiry= e2sm_kpm_timer_expiry
+    .handle_timer_expiry = e2sm_kpm_timer_expiry
 };
 
 /**
@@ -157,13 +162,18 @@ static int e2sm_kpm_control(ric_agent_info_t *ric,ric_control_t *control)
     return 0;
 }
 
-static int e2sm_kpm_timer_expiry(ric_agent_info_t *ric, long timer_id, ric_ran_function_id_t function_id) {
-    E2SM_KPM_E2SM_KPM_IndicationMessage_t* indicationmessage;
+static int e2sm_kpm_timer_expiry(
+        ric_agent_info_t *ric,
+        long timer_id,
+        ric_ran_function_id_t function_id,
+        long request_id,
+        long instance_id) {
 
-    E2AP_INFO("Timer expired, timer_id %ld function_id %ld\n", timer_id, function_id);
+    E2SM_KPM_E2SM_KPM_IndicationMessage_t* indicationmessage;
 
     DevAssert(timer_id == ric->e2sm_kpm_timer_id);
 
+    E2AP_INFO("Timer expired, timer_id %ld function_id %ld\n", timer_id, function_id);
 
     indicationmessage = encode_kpm_report_rancontainer_cucp_parameterized(ric);
 
@@ -212,7 +222,7 @@ static int e2sm_kpm_timer_expiry(ric_agent_info_t *ric, long timer_id, ric_ran_f
 
     // TODO - remove hardcoded values
     generate_e2apv1_indication_request_parameterized(
-            e2ap_pdu, 0, 0, 1, 0, 0,
+            e2ap_pdu, request_id, instance_id, function_id, 5, 0,
             e2sm_header_buf_style1, er_header_style1.encoded,
             e2smbuffer, er.encoded);
 
