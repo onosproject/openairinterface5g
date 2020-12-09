@@ -203,7 +203,6 @@ int e2ap_generate_ric_subscription_response(ric_agent_info_t *ric,
   ie->value.choice.RANfunctionID = rs->function_id;
   ASN_SEQUENCE_ADD(&out->protocolIEs.list,ie);
 
-#ifdef SHAD
   ie = (E2AP_RICsubscriptionResponse_IEs_t *)calloc(1,sizeof(*ie));
   ie->id = E2AP_ProtocolIE_ID_id_RICactions_Admitted;
   ie->criticality = E2AP_Criticality_reject;
@@ -212,20 +211,25 @@ int e2ap_generate_ric_subscription_response(ric_agent_info_t *ric,
     if (!action->enabled) {
       continue;
     }
-    E2AP_RICaction_Admitted_Item_t *ai = (E2AP_RICaction_Admitted_Item_t *)calloc(1,sizeof(*ai));
+    E2AP_RICaction_Admitted_ItemIEs_t* ais = (E2AP_RICaction_Admitted_ItemIEs_t*)calloc(1, sizeof(E2AP_RICaction_Admitted_ItemIEs_t));
+    ais->id = E2AP_ProtocolIE_ID_id_RICaction_Admitted_Item;
+    ais->criticality = E2AP_Criticality_reject;
+    ais->value.present = E2AP_RICaction_Admitted_ItemIEs__value_PR_RICaction_Admitted_Item;
+    E2AP_RICaction_Admitted_Item_t *ai = &ais->value.choice.RICaction_Admitted_Item;
     ai->ricActionID = action->id;
-    ASN_SEQUENCE_ADD(&ie->value.choice.RICaction_Admitted_List.list,ai);
+    ASN_SEQUENCE_ADD(&ie->value.choice.RICaction_Admitted_List.list,ais);
   }
+  xer_fprint(stdout, &asn_DEF_E2AP_RICsubscriptionResponse_IEs, ie);
   ASN_SEQUENCE_ADD(&out->protocolIEs.list,ie);
-#endif
 
   ie = (E2AP_RICsubscriptionResponse_IEs_t *)calloc(1,sizeof(*ie));
   ie->id = E2AP_ProtocolIE_ID_id_RICactions_NotAdmitted;
   ie->criticality = E2AP_Criticality_reject;
   ie->value.present = E2AP_RICsubscriptionResponse_IEs__value_PR_RICaction_NotAdmitted_List;
   LIST_FOREACH(action,&rs->action_list,actions) {
-    if (action->enabled)
+    if (action->enabled) {
       continue;
+    }
     nai = (E2AP_RICaction_NotAdmitted_Item_t *)calloc(1,sizeof(*nai));
     nai->ricActionID = action->id;
     nai->cause.present = action->error_cause;
