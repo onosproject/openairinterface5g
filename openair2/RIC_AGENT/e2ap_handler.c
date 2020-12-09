@@ -233,11 +233,12 @@ int e2ap_handle_ric_subscription_request(ric_agent_info_t *ric,uint32_t stream,
                 // XXX: protocol error?
             }
 
-#if 0
             E2AP_RICactions_ToBeSetup_List_t *ral = &rie->value.choice.RICsubscriptionDetails.ricAction_ToBeSetup_List;
-
             for (int i = 0; i < ral->list.count; ++i) {
-                E2AP_RICaction_ToBeSetup_Item_t *rai = (E2AP_RICaction_ToBeSetup_Item_t *)ral->list.array[i];
+                E2AP_RICaction_ToBeSetup_ItemIEs_t *ies_action = (E2AP_RICaction_ToBeSetup_ItemIEs_t*)ral->list.array[i];
+                xer_fprint(stdout, &asn_DEF_E2AP_RICaction_ToBeSetup_ItemIEs, ies_action);
+                E2AP_RICaction_ToBeSetup_Item_t *rai = &ies_action->value.choice.RICaction_ToBeSetup_Item;
+                //xer_fprint(stdout, &asn_DEF_E2AP_RICaction_ToBeSetup_Item, rai);
                 ric_action_t *ra = (ric_action_t *)calloc(1,sizeof(*ra));
                 ra->id = rai->ricActionID;
                 ra->type = rai->ricActionType;
@@ -250,6 +251,7 @@ int e2ap_handle_ric_subscription_request(ric_agent_info_t *ric,uint32_t stream,
                   ra->subsequent_action = rai->ricSubsequentAction->ricSubsequentActionType;
                   ra->time_to_wait = rai->ricSubsequentAction->ricTimeToWait;
                 }
+                ra->enabled = 1;
 
                 if (LIST_EMPTY(&rs->action_list)) {
                   LIST_INSERT_HEAD(&rs->action_list,ra,actions);
@@ -258,7 +260,6 @@ int e2ap_handle_ric_subscription_request(ric_agent_info_t *ric,uint32_t stream,
                   LIST_INSERT_BEFORE(LIST_FIRST(&rs->action_list),ra,actions);
                 }
             }
-#endif
         }
     }
 
