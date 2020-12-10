@@ -126,6 +126,7 @@ typedef struct ric_ran_function_requestor_info {
     ric_ran_function_id_t function_id;
     long request_id;
     long instance_id;
+    long action_id;
 } ric_ran_function_requestor_info_t;
 
 /**
@@ -143,7 +144,8 @@ typedef struct {
             long timer_id,
             ric_ran_function_id_t function_id,
             long request_id,
-            long instance_id);
+            long instance_id,
+            long action_id);
 } ric_service_model_t;
 
 typedef struct ric_ran_function {

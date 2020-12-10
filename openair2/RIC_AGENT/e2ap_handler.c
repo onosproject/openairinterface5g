@@ -289,6 +289,7 @@ int e2ap_handle_ric_subscription_request(ric_agent_info_t *ric,uint32_t stream,
     arg->function_id = func->function_id;
     arg->request_id = rs->request_id;
     arg->instance_id = rs->instance_id;
+    arg->action_id = (LIST_FIRST(&rs->action_list))->id;
     ret = timer_setup(interval_sec, interval_us,
             TASK_RIC_AGENT,
             ric->ranid,
@@ -527,5 +528,8 @@ int e2ap_handle_timer_expiry(ric_agent_info_t *ric, long timer_id, void* arg) {
 
     DevAssert(func != NULL);
 
-    return func->model->handle_timer_expiry(ric, timer_id, info->function_id, info->request_id, info->instance_id);
+    return func->model->handle_timer_expiry(
+            ric, timer_id,
+            info->function_id, info->request_id,
+            info->instance_id, info->action_id);
 }

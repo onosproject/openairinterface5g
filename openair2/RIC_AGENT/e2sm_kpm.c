@@ -62,7 +62,8 @@ static int e2sm_kpm_timer_expiry(
         long timer_id,
         ric_ran_function_id_t function_id,
         long request_id,
-        long instance_id);
+        long instance_id,
+        long action_id);
 static E2SM_KPM_E2SM_KPM_IndicationMessage_t* encode_kpm_report_rancontainer_cucp_parameterized(ric_agent_info_t* ric);
 static void generate_e2apv1_indication_request_parameterized(E2AP_E2AP_PDU_t *e2ap_pdu, long requestorId, long instanceId, long ranFunctionId, long actionId, long seqNum, uint8_t *ind_header_buf, int header_length, uint8_t *ind_message_buf, int message_length);
 static void encode_e2sm_kpm_indication_header(E2SM_KPM_E2SM_KPM_IndicationHeader_t *ihead);
@@ -167,7 +168,8 @@ static int e2sm_kpm_timer_expiry(
         long timer_id,
         ric_ran_function_id_t function_id,
         long request_id,
-        long instance_id) {
+        long instance_id,
+        long action_id) {
 
     E2SM_KPM_E2SM_KPM_IndicationMessage_t* indicationmessage;
 
@@ -218,12 +220,12 @@ static int e2sm_kpm_timer_expiry(
         fprintf(stderr, "ERROR encoding indication header, name=%s, tag=%s", er_header_style1.failed_type->name, er_header_style1.failed_type->xml_tag);
     }
 
-    DevAssert(er_header_style1.encoded >=0);
+    DevAssert(er_header_style1.encoded >= 0);
 
     // TODO - remove hardcoded values
     generate_e2apv1_indication_request_parameterized(
-            e2ap_pdu, request_id, instance_id, function_id, 5, 0,
-            e2sm_header_buf_style1, er_header_style1.encoded,
+            e2ap_pdu, request_id, instance_id, function_id, action_id,
+            0, e2sm_header_buf_style1, er_header_style1.encoded,
             e2smbuffer, er.encoded);
 
     uint8_t *buf;
