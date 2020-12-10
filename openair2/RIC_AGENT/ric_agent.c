@@ -405,7 +405,7 @@ static void ric_agent_handle_timer_expiry(instance_t instance, long timer_id, vo
     } else if (timer_id == ric->e2sm_kpm_timer_id) {
         ret = e2ap_handle_timer_expiry(ric, timer_id, arg);
     } else {
-        RIC_AGENT_INFO("invalid timer expiry instance %u timer_id %d", instance, timer_id);
+        RIC_AGENT_INFO("invalid timer expiry instance %u timer_id %ld", instance, timer_id);
     }
     DevAssert(ret == 0);
 }
