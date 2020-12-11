@@ -27,7 +27,9 @@
 #include "list.h"
 #include "ric_agent.h"
 
+#ifndef E2AP_PORT
 #define E2AP_PORT 36422
+#endif
 #define E2AP_SCTP_PPID 70 /*< E2AP SCTP Payload Protocol Identifier (PPID) */
 
 /**

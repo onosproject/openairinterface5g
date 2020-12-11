@@ -28,6 +28,7 @@
 #include "E2AP_UnsuccessfulOutcome.h"
 #include "E2AP_E2setupRequest.h"
 
+#include "E2AP_GlobalE2node-ID.h"
 #include "ric_agent_common.h"
 #include "ric_agent_defs.h"
 #include "e2ap_common.h"
@@ -36,12 +37,16 @@
 #include "e2ap_decoder.h"
 #include "ric_agent_rrc.h"
 #include "e2sm_common.h"
+#include "ric_agent.h"
+#include "common/ngran_types.h"
 
 #include <string.h>
 
 #include "assertions.h"
 #include "conversions.h"
 #include "common/ngran_types.h"
+
+extern int global_e2_node_id(ranid_t ranid, E2AP_GlobalE2node_ID_t* node_id);
 
 int e2ap_generate_e2_setup_request(ric_agent_info_t *ric,
 				   uint8_t **buffer,uint32_t *len)
@@ -51,33 +56,10 @@ int e2ap_generate_e2_setup_request(ric_agent_info_t *ric,
   E2AP_E2setupRequestIEs_t *ie;
   E2AP_RANfunction_ItemIEs_t *ran_function_item_ie;
   ric_ran_function_t *func;
-  uint16_t mcc,mnc;
-  uint8_t mnc_digit_len;
-  ngran_node_t node_type;
-  int ret;
-  uint32_t nb_id;
   unsigned int i;
 
   DevAssert(ric != NULL);
   DevAssert(buffer != NULL && len != NULL);
-
-  ric_rrc_get_node_type(ric->ranid,&node_type);
-  if (!(node_type == ngran_eNB || node_type == ngran_ng_eNB
-	|| node_type == ngran_gNB || node_type == ngran_eNB_CU)) {
-    RIC_AGENT_ERROR("unsupported eNB/gNB ngran_node_t %d; aborting!\n",
-		    node_type);
-    return 1;
-  }
-  ret = ric_rrc_get_mcc_mnc(ric->ranid,0,&mcc,&mnc,&mnc_digit_len);
-  if (ret) {
-    RIC_AGENT_ERROR("unable to get plmn for ranid %u!\n",ric->ranid);
-    return 1;
-  }
-  ret = ric_rcc_get_nb_id(ric->ranid,&nb_id);
-  if (ret) {
-    RIC_AGENT_ERROR("unable to get nb id for ranid %u!\n",ric->ranid);
-    return 1;
-  }
 
   memset(&pdu,0,sizeof(pdu));
   pdu.present = E2AP_E2AP_PDU_PR_initiatingMessage;
@@ -90,40 +72,9 @@ int e2ap_generate_e2_setup_request(ric_agent_info_t *ric,
   ie->id = E2AP_ProtocolIE_ID_id_GlobalE2node_ID;
   ie->criticality = E2AP_Criticality_reject;
   ie->value.present = E2AP_E2setupRequestIEs__value_PR_GlobalE2node_ID;
-  if (node_type == ngran_eNB || node_type == ngran_eNB_CU) {
-    ie->value.choice.GlobalE2node_ID.present = E2AP_GlobalE2node_ID_PR_eNB;
-    MCC_MNC_TO_PLMNID(
-      mcc,mnc,mnc_digit_len,
-      &ie->value.choice.GlobalE2node_ID.choice.eNB.global_eNB_ID.pLMN_Identity);
-    ie->value.choice.GlobalE2node_ID.choice.eNB.global_eNB_ID.eNB_ID.present = \
-      E2AP_ENB_ID_PR_macro_eNB_ID;
-    MACRO_ENB_ID_TO_BIT_STRING(
-      nb_id,
-      &ie->value.choice.GlobalE2node_ID.choice.eNB.global_eNB_ID.eNB_ID.choice.macro_eNB_ID);
-  }
-  else if (node_type == ngran_ng_eNB) {
-    ie->value.choice.GlobalE2node_ID.present = E2AP_GlobalE2node_ID_PR_ng_eNB;
-    MCC_MNC_TO_PLMNID(
-      mcc,mnc,mnc_digit_len,
-      &ie->value.choice.GlobalE2node_ID.choice.ng_eNB.global_ng_eNB_ID.plmn_id);
-    ie->value.choice.GlobalE2node_ID.choice.ng_eNB.global_ng_eNB_ID.enb_id.present = \
-      E2AP_ENB_ID_Choice_PR_enb_ID_macro;
-    MACRO_ENB_ID_TO_BIT_STRING(
-      nb_id,
-      &ie->value.choice.GlobalE2node_ID.choice.ng_eNB.global_ng_eNB_ID.enb_id.choice.enb_ID_macro);
-  }
-  else if (node_type == ngran_gNB) {
-    ie->value.choice.GlobalE2node_ID.present = E2AP_GlobalE2node_ID_PR_gNB;
-    MCC_MNC_TO_PLMNID(
-      mcc,mnc,mnc_digit_len,
-      &ie->value.choice.GlobalE2node_ID.choice.gNB.global_gNB_ID.plmn_id);
-    ie->value.choice.GlobalE2node_ID.choice.gNB.global_gNB_ID.gnb_id.present = \
-      E2AP_GNB_ID_Choice_PR_gnb_ID;
-    /* XXX: GNB version? */
-    MACRO_ENB_ID_TO_BIT_STRING(
-      nb_id,
-      &ie->value.choice.GlobalE2node_ID.choice.gNB.global_gNB_ID.gnb_id.choice.gnb_ID);
-  }
+
+  global_e2_node_id(ric->ranid, &ie->value.choice.GlobalE2node_ID);
+
   ASN_SEQUENCE_ADD(&req->protocolIEs.list,ie);
 
   /* "Optional" RANfunctions_List. */
@@ -505,4 +456,72 @@ int e2ap_generate_reset_response(ric_agent_info_t *ric,
   }
 
   return 0;
+}
+
+int global_e2_node_id(ranid_t ranid, E2AP_GlobalE2node_ID_t* node_id) {
+    int ret;
+    ngran_node_t node_type;
+    uint16_t mcc, mnc;
+    uint8_t mnc_digit_len;
+    uint32_t nb_id;
+
+    if ((ret = ric_rrc_get_node_type(ranid, &node_type)) != 0) {
+        RIC_AGENT_ERROR("unsupported eNB/gNB ngran_node_t %d; aborting!\n", node_type);
+        return ret;
+    }
+    if ((ret = ric_rrc_get_mcc_mnc(ranid, 0, &mcc, &mnc, &mnc_digit_len)) != 0) {
+        RIC_AGENT_ERROR("unable to get plmn for ranid %u!\n", ranid);
+        return ret;
+    }
+    if ((ret = ric_rcc_get_nb_id(ranid, &nb_id) != 0)) {
+        RIC_AGENT_ERROR("unable to get nb id for ranid %u!\n", ranid);
+        return ret;
+    }
+
+    if (node_type == ngran_eNB || node_type == ngran_eNB_CU) {
+        node_id->present = E2AP_GlobalE2node_ID_PR_eNB;
+
+        MCC_MNC_TO_PLMNID(
+                mcc, mnc, mnc_digit_len,
+                &node_id->choice.eNB.global_eNB_ID.pLMN_Identity);
+
+        node_id->choice.eNB.global_eNB_ID.eNB_ID.present = E2AP_ENB_ID_PR_macro_eNB_ID;
+
+        MACRO_ENB_ID_TO_BIT_STRING(
+                nb_id,
+                &node_id->choice.eNB.global_eNB_ID.eNB_ID.choice.macro_eNB_ID);
+
+    } else if (node_type == ngran_ng_eNB) {
+        node_id->present = E2AP_GlobalE2node_ID_PR_ng_eNB;
+
+        MCC_MNC_TO_PLMNID(
+                mcc, mnc, mnc_digit_len,
+                &node_id->choice.ng_eNB.global_ng_eNB_ID.plmn_id);
+
+        node_id->choice.ng_eNB.global_ng_eNB_ID.enb_id.present
+            = E2AP_ENB_ID_Choice_PR_enb_ID_macro;
+
+        MACRO_ENB_ID_TO_BIT_STRING(
+                nb_id,
+                &node_id->choice.ng_eNB.global_ng_eNB_ID.enb_id.choice.enb_ID_macro);
+
+    } else if (node_type == ngran_gNB) {
+
+        node_id->present = E2AP_GlobalE2node_ID_PR_gNB;
+
+        MCC_MNC_TO_PLMNID(
+                mcc, mnc, mnc_digit_len,
+                &node_id->choice.gNB.global_gNB_ID.plmn_id);
+
+        node_id->choice.gNB.global_gNB_ID.gnb_id.present = E2AP_GNB_ID_Choice_PR_gnb_ID;
+
+        /* XXX: GNB version? */
+
+        MACRO_ENB_ID_TO_BIT_STRING(
+                nb_id,
+                &node_id->choice.gNB.global_gNB_ID.gnb_id.choice.gnb_ID);
+    } else {
+        RIC_AGENT_ERROR("unsupported eNB/gNB ngran_node_t %d; aborting!\n", node_type);
+    }
+    return 0;
 }
