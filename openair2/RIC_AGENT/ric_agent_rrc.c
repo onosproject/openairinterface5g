@@ -26,55 +26,65 @@ extern RAN_CONTEXT_t RC;
 
 static inline int ric_rrc_is_present(ranid_t ranid)
 {
-  DevAssert(ranid < RC.nb_inst);
-  return RC.rrc && RC.rrc[ranid];
+    DevAssert(ranid < RC.nb_inst);
+    return RC.rrc && RC.rrc[ranid];
 }
 
 int ric_rrc_get_node_type(ranid_t ranid,ngran_node_t *node_type)
 {
-  if (!ric_rrc_is_present(ranid))
-    return 1;
-  if (node_type)
-    *node_type = RC.rrc[ranid]->node_type;
-  return 0;
+    if (!ric_rrc_is_present(ranid))
+        return 1;
+    if (node_type)
+        *node_type = RC.rrc[ranid]->node_type;
+    return 0;
 }
 
 int ric_rcc_get_nb_id(ranid_t ranid,uint32_t *nb_id)
 {
-  if (!ric_rrc_is_present(ranid))
-    return 1;
-  if (nb_id)
-    *nb_id = RC.rrc[ranid]->configuration.cell_identity;
-  return 0;
+    if (!ric_rrc_is_present(ranid))
+        return 1;
+    if (nb_id)
+        *nb_id = RC.rrc[ranid]->configuration.cell_identity;
+    return 0;
 }
 
 int ric_rrc_get_plmn_len(ranid_t ranid,uint8_t *len)
 {
-  if (!ric_rrc_is_present(ranid))
-    return 1;
-  if (len)
-    *len = RC.rrc[ranid]->configuration.num_plmn;
-  return 0;
+    if (!ric_rrc_is_present(ranid))
+        return 1;
+    if (len)
+        *len = RC.rrc[ranid]->configuration.num_plmn;
+    return 0;
 }
 
 int ric_rrc_get_mcc_mnc(ranid_t ranid,uint8_t index,
 			uint16_t *mcc,uint16_t *mnc,uint8_t *mnc_digit_len)
 {
-  uint8_t plen;
+    uint8_t plen;
 
-  if (!ric_rrc_is_present(ranid))
-    return 1;
-  ric_rrc_get_plmn_len(ranid,&plen);
-  if (index >= plen)
-    return 1;
+    if (!ric_rrc_is_present(ranid))
+        return 1;
+    ric_rrc_get_plmn_len(ranid,&plen);
+    if (index >= plen)
+        return 1;
 
-  if (mcc)
-    *mcc = RC.rrc[ranid]->configuration.mcc[index];
-  if (mnc)
-    *mnc = RC.rrc[ranid]->configuration.mnc[index];
-  if (mnc_digit_len)
-    *mcc = RC.rrc[ranid]->configuration.mnc_digit_length[index];
+    if (mcc)
+        *mcc = RC.rrc[ranid]->configuration.mcc[index];
+    if (mnc)
+        *mnc = RC.rrc[ranid]->configuration.mnc[index];
+    if (mnc_digit_len)
+        *mcc = RC.rrc[ranid]->configuration.mnc_digit_length[index];
 
-  return 0;
+    return 0;
 }
 
+int ric_rrc_get_node_name(ranid_t ranid, char *buf, int size)
+{
+    if (!ric_rrc_is_present(ranid))
+        return 0;
+    int len = strlen(RC.rrc[ranid]->node_name);
+    if (!(len < size))
+        return 0;
+    strncpy(buf, RC.rrc[ranid]->node_name, len+1);
+    return len;
+}
