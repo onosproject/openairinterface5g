@@ -49,6 +49,7 @@ Description NAS procedure functions triggered by the user
 #include "nas_user.h"
 #include "utils.h"
 #include "user_api.h"
+#include "emm_sap.h"
 
 #include <string.h> // memset, strncpy, strncmp
 #include <stdlib.h> // free
@@ -1264,9 +1265,12 @@ static int _nas_user_proc_cgatt(nas_user_t *user, const at_command_t *data)
       ret_code = RETURNerror;
 
       if (data->command.cgatt.state == AT_CGATT_ATTACHED) {
-        ret_code = nas_proc_attach(user);
+        //ret_code = nas_proc_attach(user);
+        // TODO: this code iss not really working - have to replace it with another way
+        ret_code = emm_proc_attach(user, EMMREG_REGISTER_REQ); 
       } else if (data->command.cgatt.state == AT_CGATT_DETACHED) {
-        ret_code = nas_proc_detach(user, FALSE);
+        //ret_code = nas_proc_detach(user, FALSE);
+        ret_code = emm_proc_detach(user, TRUE, EMMREG_DETACH_INIT);
       }
 
       if (ret_code != RETURNok) {
