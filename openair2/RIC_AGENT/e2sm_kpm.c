@@ -155,7 +155,8 @@ static int e2sm_kpm_subscription_add(ric_agent_info_t *ric, ric_subscription_t *
 
 static int e2sm_kpm_subscription_del(ric_agent_info_t *ric, ric_subscription_t *sub, int force,long *cause,long *cause_detail)
 {
-    LIST_REMOVE(sub,subscriptions);
+    timer_remove(ric->e2sm_kpm_timer_id);
+    LIST_REMOVE(sub, subscriptions);
     ric_free_subscription(sub);
     return 0;
 }
