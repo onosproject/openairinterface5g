@@ -224,76 +224,93 @@ int e2ap_generate_ric_subscription_response(ric_agent_info_t *ric,
 }
 
 int e2ap_generate_ric_subscription_failure(ric_agent_info_t *ric,
-					   ric_subscription_t *rs,
-					   uint8_t **buffer,uint32_t *len)
+        ric_subscription_t *rs, uint8_t **buffer,uint32_t *len)
 {
-  E2AP_E2AP_PDU_t pdu;
-  E2AP_RICsubscriptionFailure_t *out;
-  E2AP_RICsubscriptionFailure_IEs_t *ie;
-  E2AP_RICaction_NotAdmitted_Item_t *ai;
-  ric_action_t *action;
+    E2AP_E2AP_PDU_t pdu;
+    E2AP_RICsubscriptionFailure_t *out;
+    E2AP_RICsubscriptionFailure_IEs_t *ie;
+    ric_action_t *action;
 
-  memset(&pdu, 0, sizeof(pdu));
-  pdu.present = E2AP_E2AP_PDU_PR_unsuccessfulOutcome;
-  pdu.choice.unsuccessfulOutcome.procedureCode = E2AP_ProcedureCode_id_RICsubscription;
-  pdu.choice.unsuccessfulOutcome.criticality = E2AP_Criticality_reject;
-  pdu.choice.unsuccessfulOutcome.value.present = E2AP_UnsuccessfulOutcome__value_PR_RICsubscriptionFailure;
-  out = &pdu.choice.unsuccessfulOutcome.value.choice.RICsubscriptionFailure;
+    memset(&pdu, 0, sizeof(pdu));
+    pdu.present = E2AP_E2AP_PDU_PR_unsuccessfulOutcome;
+    pdu.choice.unsuccessfulOutcome.procedureCode
+        = E2AP_ProcedureCode_id_RICsubscription;
+    pdu.choice.unsuccessfulOutcome.criticality = E2AP_Criticality_reject;
+    pdu.choice.unsuccessfulOutcome.value.present
+        = E2AP_UnsuccessfulOutcome__value_PR_RICsubscriptionFailure;
+    out = &pdu.choice.unsuccessfulOutcome.value.choice.RICsubscriptionFailure;
 
-  ie = (E2AP_RICsubscriptionFailure_IEs_t *)calloc(1,sizeof(*ie));
-  ie->id = E2AP_ProtocolIE_ID_id_RICrequestID;
-  ie->criticality = E2AP_Criticality_reject;
-  ie->value.present = E2AP_RICsubscriptionFailure_IEs__value_PR_RICrequestID;
-  ie->value.choice.RICrequestID.ricRequestorID = rs->request_id;
-  ie->value.choice.RICrequestID.ricInstanceID = rs->instance_id;
-  ASN_SEQUENCE_ADD(&out->protocolIEs.list,ie);
+    ie = (E2AP_RICsubscriptionFailure_IEs_t *)calloc(1,sizeof(*ie));
+    ie->id = E2AP_ProtocolIE_ID_id_RICrequestID;
+    ie->criticality = E2AP_Criticality_reject;
+    ie->value.present = E2AP_RICsubscriptionFailure_IEs__value_PR_RICrequestID;
+    ie->value.choice.RICrequestID.ricRequestorID = rs->request_id;
+    ie->value.choice.RICrequestID.ricInstanceID = rs->instance_id;
+    ASN_SEQUENCE_ADD(&out->protocolIEs.list,ie);
 
-  ie = (E2AP_RICsubscriptionFailure_IEs_t *)calloc(1,sizeof(*ie));
-  ie->id = E2AP_ProtocolIE_ID_id_RANfunctionID;
-  ie->criticality = E2AP_Criticality_reject;
-  ie->value.present = E2AP_RICsubscriptionFailure_IEs__value_PR_RANfunctionID;
-  ie->value.choice.RANfunctionID = rs->function_id;
-  ASN_SEQUENCE_ADD(&out->protocolIEs.list,ie);
+    ie = (E2AP_RICsubscriptionFailure_IEs_t *)calloc(1,sizeof(*ie));
+    ie->id = E2AP_ProtocolIE_ID_id_RANfunctionID;
+    ie->criticality = E2AP_Criticality_reject;
+    ie->value.present = E2AP_RICsubscriptionFailure_IEs__value_PR_RANfunctionID;
+    ie->value.choice.RANfunctionID = rs->function_id;
+    ASN_SEQUENCE_ADD(&out->protocolIEs.list,ie);
 
-  ie = (E2AP_RICsubscriptionFailure_IEs_t *)calloc(1,sizeof(*ie));
-  ie->id = E2AP_ProtocolIE_ID_id_RICactions_NotAdmitted;
-  ie->criticality = E2AP_Criticality_reject;
-  ie->value.present = E2AP_RICsubscriptionFailure_IEs__value_PR_RICaction_NotAdmitted_List;
-  LIST_FOREACH(action,&rs->action_list,actions) {
-    ai = (E2AP_RICaction_NotAdmitted_Item_t *)calloc(1,sizeof(*ai));
-    ai->ricActionID = action->id;
-    ai->cause.present = action->error_cause;
-    switch (ai->cause.present) {
-    case E2AP_Cause_PR_NOTHING:
-      break;
-    case E2AP_Cause_PR_ricRequest:
-      ai->cause.choice.ricRequest = action->error_cause_detail;
-      break;
-    case E2AP_Cause_PR_ricService:
-      ai->cause.choice.ricService = action->error_cause_detail;
-      break;
-    case E2AP_Cause_PR_transport:
-      ai->cause.choice.transport = action->error_cause_detail;
-      break;
-    case E2AP_Cause_PR_protocol:
-      ai->cause.choice.protocol = action->error_cause_detail;
-      break;
-    case E2AP_Cause_PR_misc:
-      ai->cause.choice.misc = action->error_cause_detail;
-      break;
-    default:
-      break;
+    ie = (E2AP_RICsubscriptionFailure_IEs_t *)calloc(1,sizeof(*ie));
+    ie->id = E2AP_ProtocolIE_ID_id_RICactions_NotAdmitted;
+    ie->criticality = E2AP_Criticality_reject;
+    ie->value.present
+        = E2AP_RICsubscriptionFailure_IEs__value_PR_RICaction_NotAdmitted_List;
+
+    LIST_FOREACH(action, &rs->action_list, actions) {
+        E2AP_RICaction_NotAdmitted_ItemIEs_t* ais
+            = (E2AP_RICaction_NotAdmitted_ItemIEs_t*)calloc(1,
+                    sizeof(E2AP_RICaction_NotAdmitted_ItemIEs_t));
+        ais->id = E2AP_ProtocolIE_ID_id_RICaction_NotAdmitted_Item;
+        ais->criticality = E2AP_Criticality_reject;
+        ais->value.present
+            = E2AP_RICaction_NotAdmitted_ItemIEs__value_PR_RICaction_NotAdmitted_Item;
+        E2AP_RICaction_NotAdmitted_Item_t *ai
+            = &ais->value.choice.RICaction_NotAdmitted_Item;
+        ai->ricActionID = action->id;
+        // TODO
+        //ai->cause.present = action->error_cause;
+        ai->cause.present = E2AP_Cause_PR_ricRequest;
+        switch (ai->cause.present) {
+            case E2AP_Cause_PR_NOTHING:
+                break;
+            case E2AP_Cause_PR_ricRequest:
+                // TODO
+                //ai->cause.choice.ricRequest = action->error_cause_detail;
+                ai->cause.choice.ricRequest
+                    = E2AP_CauseRIC_ran_function_id_Invalid;
+                break;
+            case E2AP_Cause_PR_ricService:
+                ai->cause.choice.ricService = action->error_cause_detail;
+                break;
+            case E2AP_Cause_PR_transport:
+                ai->cause.choice.transport = action->error_cause_detail;
+                break;
+            case E2AP_Cause_PR_protocol:
+                ai->cause.choice.protocol = action->error_cause_detail;
+                break;
+            case E2AP_Cause_PR_misc:
+                ai->cause.choice.misc = action->error_cause_detail;
+                break;
+            default:
+                break;
+        }
+        ASN_SEQUENCE_ADD(
+                &ie->value.choice.RICaction_NotAdmitted_List.list, ais);
     }
-    ASN_SEQUENCE_ADD(&ie->value.choice.RICaction_NotAdmitted_List.list,ai);
-  }
-  ASN_SEQUENCE_ADD(&out->protocolIEs.list,ie);
 
-  if (e2ap_encode_pdu(&pdu,buffer,len) < 0) {
-    E2AP_ERROR("Failed to encode RICsubscriptionFailure\n");
-    return -1;
-  }
+    ASN_SEQUENCE_ADD(&out->protocolIEs.list, ie);
 
-  return 0;
+    if (e2ap_encode_pdu(&pdu,buffer,len) < 0) {
+        E2AP_ERROR("Failed to encode RICsubscriptionFailure\n");
+        return -1;
+    }
+
+    return 0;
 }
 
 int e2ap_generate_ric_subscription_delete_response(
