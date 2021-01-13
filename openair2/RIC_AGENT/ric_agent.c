@@ -257,10 +257,13 @@ static int ric_agent_connect(ranid_t ranid)
     strncpy(req->remote_address.ipv4_address,RC.ric[ranid]->remote_ipv4_addr,
             sizeof(req->remote_address.ipv4_address));
     req->remote_address.ipv4_address[sizeof(req->remote_address.ipv4_address)-1] = '\0';
+#if 0
+    // Uncomment if binding to local ip or interface is required.
     req->local_address.ipv4 = 1;
     strncpy(req->local_address.ipv4_address, RC.rrc[0]->eth_params_s.my_addr,
             sizeof(req->local_address.ipv4_address));
     req->local_address.ipv4_address[sizeof(req->local_address.ipv4_address)-1] = '\0';
+#endif
     req->ulp_cnx_id = 1;
 
     ric = RC.ric[ranid];
