@@ -25,14 +25,11 @@
  *      contact@openairinterface.org
  */
 
-#if HAVE_CONFIG_H
-#include "config.h"
-#endif
-
-#include "xer_support.h"
 
 #ifndef _E2AP_COMMON_H
 #define _E2AP_COMMON_H
+
+#include "xer_support.h"
 
 #ifndef E2AP_PORT
 #define E2AP_PORT 36423

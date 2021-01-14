@@ -28,8 +28,6 @@
 #ifndef _E2AP_ENCODER_H
 #define _E2AP_ENCODER_H
 
-#include <stdint.h>
-
 #include "E2AP_E2AP-PDU.h"
 
 ssize_t e2ap_encode(const struct asn_TYPE_descriptor_s *td,

@@ -26,24 +26,9 @@
  */
 
 #include <pthread.h>
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <arpa/inet.h>
 
-#include "assertions.h"
-#include "intertask_interface.h"
-#include "sctp_eNB_defs.h"
-#include "common/config/config_userapi.h"
-#include "common/config/config_paramdesc.h"
 #include "common/ran_context.h"
-#include "enb_paramdef.h"
-#include "gnb_paramdef.h"
-
 #include "ric_agent_common.h"
-#include "ric_agent_defs.h"
-#include "ric_agent_config.h"
 
 extern RAN_CONTEXT_t RC;
 

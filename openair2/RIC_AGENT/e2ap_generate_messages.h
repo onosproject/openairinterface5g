@@ -28,8 +28,6 @@
 #ifndef _E2AP_GENERATE_MESSAGES_H
 #define _E2AP_GENERATE_MESSAGES_H
 
-#include <stdint.h>
-
 #include "ric_agent_defs.h"
 #include "e2ap_common.h"
 
