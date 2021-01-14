@@ -25,8 +25,6 @@
  *      contact@openairinterface.org
  */
 
-#include <stdio.h>
-
 #include "assertions.h"
 
 #include "e2ap_common.h"

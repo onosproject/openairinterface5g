@@ -25,9 +25,6 @@
  *      contact@openairinterface.org
  */
 
-#include <stdint.h>
-#include <string.h>
-
 #include "intertask_interface.h"
 #include "conversions.h"
 

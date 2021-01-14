@@ -25,8 +25,6 @@
  *      contact@openairinterface.org
  */
 
-#include "intertask_interface.h"
-
 #include "E2AP_Cause.h"
 #include "E2AP_ProtocolIE-Field.h"
 #include "E2AP_InitiatingMessage.h"
@@ -44,9 +42,6 @@
 #include "ric_agent_rrc.h"
 #include "e2sm_common.h"
 #include "ric_agent.h"
-#include "common/ngran_types.h"
-
-#include <string.h>
 
 #include "assertions.h"
 #include "conversions.h"

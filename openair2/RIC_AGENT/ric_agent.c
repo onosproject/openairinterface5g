@@ -25,25 +25,9 @@
  *      contact@openairinterface.org
  */
 
-#include <pthread.h>
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <arpa/inet.h>
-
-#include "queue.h"
-#include "tree.h"
-#include "assertions.h"
-#include "intertask_interface.h"
-#include "sctp_eNB_defs.h"
-#include "common/config/config_userapi.h"
 #include "common/ran_context.h"
-
-#include "ric_agent.h"
 #include "ric_agent_common.h"
 #include "ric_agent_config.h"
-#include "ric_agent_defs.h"
 #include "e2ap_generate_messages.h"
 #include "e2ap_handler.h"
 #include "e2sm_common.h"
@@ -425,18 +409,14 @@ void *ric_agent_task(void *args)
     int res;
     uint16_t i;
 
-    if (!ric_agent_is_enabled()) {
-        RIC_AGENT_INFO(" *** RIC agent not enabled for any NB; exiting task\n");
-        itti_exit_task();
-    }
-
     e2sm_kpm_init();
 
     RIC_AGENT_INFO("starting RIC agent task\n");
-    itti_mark_task_ready(TASK_RIC_AGENT);
 
     for (i = 0; i < RC.nb_inst; ++i) {
-        timer_setup(5, 0, TASK_RIC_AGENT, i, TIMER_PERIODIC, NULL, &RC.ric[i]->ric_connect_timer_id);
+        if (RC.ric[i]->enabled) {
+            timer_setup(5, 0, TASK_RIC_AGENT, i, TIMER_PERIODIC, NULL, &RC.ric[i]->ric_connect_timer_id);
+        }
     }
 
     while (1) {

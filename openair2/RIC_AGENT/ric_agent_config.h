@@ -28,10 +28,7 @@
 #ifndef _RIC_AGENT_CONFIG_H
 #define _RIC_AGENT_CONFIG_H
 
-#include "ric_agent.h"
-
 void RCconfig_ric_agent(void);
 int ric_agent_is_enabled(void);
-int ric_agent_is_enabled_for_nb(ranid_t ranid);
 
 #endif /* _RIC_AGENT_CONFIG_H */

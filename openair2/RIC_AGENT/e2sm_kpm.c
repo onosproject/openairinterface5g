@@ -25,9 +25,6 @@
  *      contact@openairinterface.org
  */
 
-#include <stdint.h>
-#include <stdlib.h>
-
 #include "common/utils/assertions.h"
 #include "f1ap_common.h"
 #include "ric_agent_defs.h"
