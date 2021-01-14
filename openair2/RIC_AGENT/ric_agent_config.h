@@ -30,6 +30,5 @@
 
 void RCconfig_ric_agent(void);
 int ric_agent_is_enabled(void);
-int ric_agent_is_enabled_for_nb(ranid_t ranid);
 
 #endif /* _RIC_AGENT_CONFIG_H */

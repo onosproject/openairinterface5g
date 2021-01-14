@@ -412,10 +412,11 @@ void *ric_agent_task(void *args)
     e2sm_kpm_init();
 
     RIC_AGENT_INFO("starting RIC agent task\n");
-    itti_mark_task_ready(TASK_RIC_AGENT);
 
     for (i = 0; i < RC.nb_inst; ++i) {
-        timer_setup(5, 0, TASK_RIC_AGENT, i, TIMER_PERIODIC, NULL, &RC.ric[i]->ric_connect_timer_id);
+        if (RC.ric[i]->enabled) {
+            timer_setup(5, 0, TASK_RIC_AGENT, i, TIMER_PERIODIC, NULL, &RC.ric[i]->ric_connect_timer_id);
+        }
     }
 
     while (1) {

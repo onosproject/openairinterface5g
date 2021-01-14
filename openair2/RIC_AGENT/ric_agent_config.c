@@ -25,15 +25,10 @@
  *      contact@openairinterface.org
  */
 
-#include <pthread.h>
-
 #include "common/ran_context.h"
 #include "ric_agent_common.h"
 
 extern RAN_CONTEXT_t RC;
-
-static volatile int ric_config_loaded = 0;
-static pthread_mutex_t ric_config_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 #define RIC_CONFIG_STRING_ENABLED "enabled"
 #define RIC_CONFIG_STRING_REMOTE_IPV4_ADDR "remote_ipv4_addr"
@@ -46,14 +41,14 @@ static pthread_mutex_t ric_config_mutex = PTHREAD_MUTEX_INITIALIZER;
 #define RIC_CONFIG_IDX_FUNCTIONS_ENABLED 3
 
 #define RICPARAMS_DESC { \
-  { RIC_CONFIG_STRING_ENABLED, \
-    "yes/no",0,strptr:NULL,defstrval:"no",TYPE_STRING,0 }, \
-  { RIC_CONFIG_STRING_REMOTE_IPV4_ADDR, \
-    NULL,0,strptr:NULL,defstrval:"127.0.0.1",TYPE_STRING,0 }, \
-  { RIC_CONFIG_STRING_REMOTE_PORT, \
-    NULL,0,uptr:NULL,defintval:E2AP_PORT,TYPE_UINT,0 },	\
-  { RIC_CONFIG_STRING_FUNCTIONS_ENABLED, \
-    NULL,0,strptr:NULL,defstrval:"ORAN-E2SM-KPM",TYPE_STRING,0 } \
+    { RIC_CONFIG_STRING_ENABLED, \
+        "yes/no", 0, strptr:NULL, defstrval:"no", TYPE_STRING, 0 }, \
+    { RIC_CONFIG_STRING_REMOTE_IPV4_ADDR, \
+        NULL, 0, strptr:NULL, defstrval: "127.0.0.1", TYPE_STRING, 0 }, \
+    { RIC_CONFIG_STRING_REMOTE_PORT, \
+        NULL, 0, uptr:NULL, defintval:E2AP_PORT, TYPE_UINT, 0 },	\
+    { RIC_CONFIG_STRING_FUNCTIONS_ENABLED, \
+        NULL, 0, strptr:NULL, defstrval:"ORAN-E2SM-KPM", TYPE_STRING, 0 } \
 }
 
 static void RCconfig_ric_agent_init(void)
@@ -105,46 +100,10 @@ static void RCconfig_ric_agent_ric(void)
     }
 }
 
-/**
- * Should only be called from eNB/gNB init, after RRC config (because we
- * assume RC.nb_inst has been initialized), prior to task start.  (It
- * could also be called as a side-effect of running ric_agent_task, but
- * that is not preferred since then the eNB/gNB would throw config
- * errors after having started many threads and possibly initializing
- * hardware.)
- */
 void RCconfig_ric_agent(void)
 {
-  if (pthread_mutex_lock(&ric_config_mutex))
-    goto mutex_error;
+    RCconfig_ric_agent_init();
+    RCconfig_ric_agent_ric();
 
-  if (ric_config_loaded) {
-    if (pthread_mutex_unlock(&ric_config_mutex))
-      goto mutex_error;
     return;
-  }
-
-  RCconfig_ric_agent_init();
-  RCconfig_ric_agent_ric();
-
-  ric_config_loaded = 1;
-
-  if (pthread_mutex_unlock(&ric_config_mutex))
-    goto mutex_error;
-
-  return;
-
- mutex_error:
-  RIC_AGENT_ERROR("mutex error (ric_config_mutex)\n");
-  exit(1);
-}
-
-int ric_agent_is_enabled_for_nb(ranid_t ranid)
-{
-  if (ranid >= RC.nb_inst) {
-    RIC_AGENT_ERROR("invalid NB %u (%u total)\n",ranid,RC.nb_inst);
-    return 0;
-  }
-
-  return RC.ric[ranid]->enabled;
 }
