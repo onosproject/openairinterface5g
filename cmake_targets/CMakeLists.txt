@@ -1129,101 +1129,75 @@ add_library(PROTO_AGENT
 set(PROTO_AGENT_LIB PROTO_AGENT)
 include_directories(${OPENAIR2_DIR}/LAYER2/PROTO_AGENT)
 
-# O-RAN RIC Agent (E2AP protocol)
-####################
+# O-RAN RIC Agent
+#################
 add_boolean_option(ENABLE_RIC_AGENT False "Enable O-RAN RIC agent")
 if(ENABLE_RIC_AGENT)
   set(RIC_AGENT_DIR ${OPENAIR2_DIR}/RIC_AGENT)
   set(RIC_ASN_VERS R01)
   set(RIC_AGENT_ASN_DIR ${OPENAIR2_DIR}/RIC_AGENT/MESSAGES/ASN1/${RIC_ASN_VERS})
-  if("${RIC_GENERATED_E2AP_BINDING_DIR}" STREQUAL "")
-    set(E2AP_ASN_FILE e2ap-v01.00.asn1)
-    set(E2AP_C_DIR ${asn1_generated_dir}/E2AP/)
-    execute_process(
+
+  # E2AP
+  set(E2AP_ASN_FILE e2ap-v01.00.asn1)
+  set(E2AP_C_DIR ${asn1_generated_dir}/E2AP/)
+  execute_process(
       COMMAND ${OPENAIR_CMAKE}/tools/make_asn1c_includes.sh "${E2AP_C_DIR}" "${RIC_AGENT_ASN_DIR}/${E2AP_ASN_FILE}" "E2AP_" -fno-include-deps -fincludes-quoted
       RESULT_VARIABLE ret)
-    if (NOT ${ret} STREQUAL 0)
+  if (NOT ${ret} STREQUAL 0)
       message(FATAL_ERROR "${ret}: error")
-    endif (NOT ${ret} STREQUAL 0)
-    add_custom_target (
+  endif (NOT ${ret} STREQUAL 0)
+  add_custom_target (
       e2ap_flag ALL
       COMMAND ${OPENAIR_CMAKE}/tools/make_asn1c_includes.sh "${E2AP_C_DIR}" "${RIC_AGENT_ASN_DIR}/${E2AP_ASN_FILE}" "E2AP_" -fno-include-deps -fincludes-quoted
       DEPENDS ${RIC_AGENT_ASN_DIR}/${E2AP_ASN_FILE}
-    )
-  else()
-    set(E2AP_C_DIR "${RIC_GENERATED_E2AP_BINDING_DIR}")
-  endif()
-  file(GLOB E2AP_source ${E2AP_C_DIR}/*.c)
+  )
   include_directories ("${E2AP_C_DIR}")
 
-  if("${RIC_GENERATED_E2SM_KPM_BINDING_DIR}" STREQUAL "")
-    set(E2SM_KPM_ASN_FILE e2sm-kpm-v01.00.asn1)
-    set(E2SM_KPM_C_DIR ${asn1_generated_dir}/E2SM-KPM/)
-    execute_process(
+  # E2SM_KPM
+  set(E2SM_KPM_ASN_FILE e2sm-kpm-v01.00.asn1)
+  set(E2SM_KPM_C_DIR ${asn1_generated_dir}/E2SM-KPM/)
+  execute_process(
       COMMAND ${OPENAIR_CMAKE}/tools/make_asn1c_includes.sh "${E2SM_KPM_C_DIR}" "${RIC_AGENT_ASN_DIR}/${E2SM_KPM_ASN_FILE}" "E2SM_KPM_" -fno-include-deps -fincludes-quoted
       RESULT_VARIABLE ret)
-    if (NOT ${ret} STREQUAL 0)
+  if (NOT ${ret} STREQUAL 0)
       message(FATAL_ERROR "${ret}: error")
-    endif (NOT ${ret} STREQUAL 0)
-    add_custom_target (
+  endif (NOT ${ret} STREQUAL 0)
+  add_custom_target (
       e2sm_kpm_flag ALL
       COMMAND ${OPENAIR_CMAKE}/tools/make_asn1c_includes.sh "${E2SM_KPM_C_DIR}" "${RIC_AGENT_ASN_DIR}/${E2SM_KPM_ASN_FILE}" "E2SM_KPM_" -fno-include-deps -fincludes-quoted
-      DEPENDS ${RIC_AGENT_ASN_DIR}/${E2SM_KPM_ASN_FILE}
-    )
-  else()
-    set(E2SM_KPM_C_DIR "${RIC_GENERATED_E2SM_KPM_BINDING_DIR}")
-  endif()
+      DEPENDS ${RIC_AGENT_ASN_DIR}/${E2SM_KPM_ASN_FILE})
   file(GLOB E2SM_KPM_source ${E2SM_KPM_C_DIR}/*.c)
-  include_directories ("${E2SM_KPM_C_DIR}")
+  file(COPY ${E2SM_KPM_source} DESTINATION ${E2AP_C_DIR})
 
-  if("${RIC_GENERATED_E2SM_NI_BINDING_DIR}" STREQUAL "")
-    set(E2SM_NI_ASN_FILE e2sm-ni-v01.00.asn1)
-    set(E2SM_NI_C_DIR ${asn1_generated_dir}/E2SM-NI/)
-    execute_process(
+  # E2SM_NI
+  set(E2SM_NI_ASN_FILE e2sm-ni-v01.00.asn1)
+  set(E2SM_NI_C_DIR ${asn1_generated_dir}/E2SM-NI/)
+  execute_process(
       COMMAND ${OPENAIR_CMAKE}/tools/make_asn1c_includes.sh "${E2SM_NI_C_DIR}" "${RIC_AGENT_ASN_DIR}/${E2SM_NI_ASN_FILE}" "E2SM_NI_" -fno-include-deps -fincludes-quoted
       RESULT_VARIABLE ret)
-    if (NOT ${ret} STREQUAL 0)
+  if (NOT ${ret} STREQUAL 0)
       message(FATAL_ERROR "${ret}: error")
-    endif (NOT ${ret} STREQUAL 0)
-    add_custom_target (
+  endif (NOT ${ret} STREQUAL 0)
+  add_custom_target (
       e2sm_ni_flag ALL
       COMMAND ${OPENAIR_CMAKE}/tools/make_asn1c_includes.sh "${E2SM_NI_C_DIR}" "${RIC_AGENT_ASN_DIR}/${E2SM_NI_ASN_FILE}" "E2SM_NI_" -fno-include-deps -fincludes-quoted
-      DEPENDS ${RIC_AGENT_ASN_DIR}/${E2SM_NI_ASN_FILE}
-    )
-  else()
-    set(E2SM_NI_C_DIR "${RIC_GENERATED_E2SM_NI_BINDING_DIR}")
-  endif()
+      DEPENDS ${RIC_AGENT_ASN_DIR}/${E2SM_NI_ASN_FILE})
   file(GLOB E2SM_NI_source ${E2SM_NI_C_DIR}/*.c)
   include_directories ("${E2SM_NI_C_DIR}")
+  file(COPY ${E2SM_NI_source} DESTINATION ${E2AP_C_DIR})
 
+  # RIC_AGENT_LIB
+  file(GLOB E2AP_source ${E2AP_C_DIR}/*.c)
+  include_directories ("${E2SM_KPM_C_DIR}")
+  file(GLOB RIC_AGENT_source ${RIC_AGENT_DIR}/*.c)
   include_directories ("${RIC_AGENT_DIR}")
-  add_library(RIC_AGENT
-    ${E2AP_source}
-    ${E2SM_KPM_source}
-    ${E2SM_NI_source}
-    ${RIC_AGENT_DIR}/ric_agent.c
-    ${RIC_AGENT_DIR}/ric_agent_config.c
-    ${RIC_AGENT_DIR}/ric_agent_rrc.c
-    ${RIC_AGENT_DIR}/e2ap_common.c
-    ${RIC_AGENT_DIR}/e2ap_encoder.c
-    ${RIC_AGENT_DIR}/e2ap_decoder.c
-    ${RIC_AGENT_DIR}/e2ap_handler.c
-    ${RIC_AGENT_DIR}/e2ap_generate_messages.c
-    ${RIC_AGENT_DIR}/e2sm_kpm.c
-  )
+  add_library(RIC_AGENT SHARED ${E2AP_source} ${RIC_AGENT_source})
   add_dependencies(RIC_AGENT rrc_flag)
-  if ("$RIC_GENERATED_E2AP_BINDING_DIR" STREQUAL "")
-    add_dependencies(RIC_AGENT e2ap_flag)
-  endif()
-  if ("$RIC_GENERATED_E2SM_KPM_BINDING_DIR" STREQUAL "")
-    add_dependencies(RIC_AGENT e2sm_kpm_flag)
-  endif()
-  if ("$RIC_GENERATED_E2SM_NI_BINDING_DIR" STREQUAL "")
-    add_dependencies(RIC_AGENT e2sm_ni_flag)
-  endif()
   set(RIC_AGENT_LIB RIC_AGENT)
+
 else()
   set(RIC_AGENT_LIB "")
+
 endif()# O-RAN RIC Agent (E2AP protocol)
 
 
