@@ -33,7 +33,6 @@
 extern RAN_CONTEXT_t RC;
 
 static volatile int ric_config_loaded = 0;
-static volatile int ric_enabled = 0;
 static pthread_mutex_t ric_config_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 #define RIC_CONFIG_STRING_ENABLED "enabled"
@@ -73,42 +72,37 @@ static void RCconfig_ric_agent_init(void)
 
 static void RCconfig_ric_agent_ric(void)
 {
-  uint16_t i;
-  int j;
-  char buf[16];
-  paramdef_t ric_params[] = RICPARAMS_DESC;
+    uint16_t i;
+    int j;
+    char buf[16];
+    paramdef_t ric_params[] = RICPARAMS_DESC;
 
-  for (i = 0; i < RC.nb_inst; ++i) {
-    /* Get RIC configuration. */
-    snprintf(buf,sizeof(buf),"%s.[%u].RIC",ENB_CONFIG_STRING_ENB_LIST,i);
-    config_get(ric_params,sizeof(ric_params)/sizeof(paramdef_t),buf);
-    if (ric_params[RIC_CONFIG_IDX_ENABLED].strptr != NULL
-	&& strcmp(*ric_params[RIC_CONFIG_IDX_ENABLED].strptr,"yes") == 0) {
-      RIC_AGENT_INFO("enabled for NB %u\n",i);
-      ric_enabled = 1;
-      RC.ric[i]->enabled = 1;
-
-      RC.ric[i]->remote_ipv4_addr = \
-	strdup(*ric_params[RIC_CONFIG_IDX_REMOTE_IPV4_ADDR].strptr);
-      RC.ric[i]->remote_port = \
-	*ric_params[RIC_CONFIG_IDX_REMOTE_PORT].uptr;
-      RC.ric[i]->functions_enabled_str = \
-	strdup(*ric_params[RIC_CONFIG_IDX_FUNCTIONS_ENABLED].strptr);
-      for (j = 0; j < strlen(RC.ric[i]->functions_enabled_str); ++j) {
-	/* We want a space-delimited list, but be forgiving. */
-	if (RC.ric[i]->functions_enabled_str[j] == ','
-	    || RC.ric[i]->functions_enabled_str[j] == ';'
-	    || RC.ric[i]->functions_enabled_str[j] == '\t') {
-	  RC.ric[i]->functions_enabled_str[j] = ' ';
-	}
-      }
+    for (i = 0; i < RC.nb_inst; ++i) {
+        /* Get RIC configuration. */
+        snprintf(buf, sizeof(buf), "%s.[%u].RIC", ENB_CONFIG_STRING_ENB_LIST, i);
+        config_get(ric_params, sizeof(ric_params)/sizeof(paramdef_t), buf);
+        if (ric_params[RIC_CONFIG_IDX_ENABLED].strptr != NULL
+                && strcmp(*ric_params[RIC_CONFIG_IDX_ENABLED].strptr, "yes") == 0) {
+            RIC_AGENT_INFO("enabled for NB %u\n",i);
+            RC.ric[i]->enabled = 1;
+            RC.ric[i]->remote_ipv4_addr = strdup(*ric_params[RIC_CONFIG_IDX_REMOTE_IPV4_ADDR].strptr);
+            RC.ric[i]->remote_port = *ric_params[RIC_CONFIG_IDX_REMOTE_PORT].uptr;
+            RC.ric[i]->functions_enabled_str = strdup(*ric_params[RIC_CONFIG_IDX_FUNCTIONS_ENABLED].strptr);
+            for (j = 0; j < strlen(RC.ric[i]->functions_enabled_str); ++j) {
+                /* We want a space-delimited list, but be forgiving. */
+                if (RC.ric[i]->functions_enabled_str[j] == ','
+                        || RC.ric[i]->functions_enabled_str[j] == ';'
+                        || RC.ric[i]->functions_enabled_str[j] == '\t') {
+                    RC.ric[i]->functions_enabled_str[j] = ' ';
+                }
+            }
+        }
+        else {
+            RIC_AGENT_INFO("not enabled for NB %u\n",i);
+            RC.ric[i]->enabled = 0;
+        }
+        RC.ric[i]->state = RIC_UNINITIALIZED;
     }
-    else {
-      RIC_AGENT_INFO("not enabled for NB %u\n",i);
-      RC.ric[i]->enabled = 0;
-    }
-    RC.ric[i]->state = RIC_UNINITIALIZED;
-  }
 }
 
 /**
@@ -145,33 +139,8 @@ void RCconfig_ric_agent(void)
   exit(1);
 }
 
-int ric_agent_is_enabled(void)
-{
-  if (pthread_mutex_lock(&ric_config_mutex))
-    goto mutex_error;
-
-  if (ric_config_loaded) {
-    if (pthread_mutex_unlock(&ric_config_mutex))
-      goto mutex_error;
-    return ric_enabled;
-  }
-
-  RCconfig_ric_agent();
-
-  pthread_mutex_unlock(&ric_config_mutex);
-
-  return ric_enabled;
-
-mutex_error:
-  RIC_AGENT_ERROR("mutex error (ric_config_mutex)\n");
-  exit(1);
-}
-
 int ric_agent_is_enabled_for_nb(ranid_t ranid)
 {
-  if (!ric_agent_is_enabled())
-    return 0;
-
   if (ranid >= RC.nb_inst) {
     RIC_AGENT_ERROR("invalid NB %u (%u total)\n",ranid,RC.nb_inst);
     return 0;

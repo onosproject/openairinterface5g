@@ -409,11 +409,6 @@ void *ric_agent_task(void *args)
     int res;
     uint16_t i;
 
-    if (!ric_agent_is_enabled()) {
-        RIC_AGENT_INFO(" *** RIC agent not enabled for any NB; exiting task\n");
-        itti_exit_task();
-    }
-
     e2sm_kpm_init();
 
     RIC_AGENT_INFO("starting RIC agent task\n");
