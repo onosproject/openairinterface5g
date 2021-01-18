@@ -36,24 +36,6 @@ static inline int ric_rrc_is_present(ranid_t ranid)
     return RC.rrc && RC.rrc[ranid];
 }
 
-int ric_rrc_get_node_type(ranid_t ranid,ngran_node_t *node_type)
-{
-    if (!ric_rrc_is_present(ranid))
-        return 1;
-    if (node_type)
-        *node_type = RC.rrc[ranid]->node_type;
-    return 0;
-}
-
-int ric_rcc_get_nb_id(ranid_t ranid,uint32_t *nb_id)
-{
-    if (!ric_rrc_is_present(ranid))
-        return 1;
-    if (nb_id)
-        *nb_id = RC.rrc[ranid]->configuration.cell_identity;
-    return 0;
-}
-
 int ric_rrc_get_plmn_len(ranid_t ranid,uint8_t *len)
 {
     if (!ric_rrc_is_present(ranid))

@@ -30,8 +30,6 @@
 
 #include "common/ngran_types.h"
 
-int ric_rrc_get_node_type(ranid_t ranid, ngran_node_t *node_type);
-int ric_rcc_get_nb_id(ranid_t ranid, uint32_t *nb_id);
 int ric_rrc_get_plmn_len(ranid_t ranid, uint8_t *len);
 int ric_rrc_get_mcc_mnc(ranid_t ranid, uint8_t index,
         uint16_t *mcc, uint16_t *mnc, uint8_t *mnc_digit_len);

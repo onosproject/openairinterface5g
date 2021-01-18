@@ -482,7 +482,6 @@ int global_e2_node_id(ranid_t ranid, E2AP_GlobalE2node_ID_t* node_id) {
     e2node_type_t node_type;
     uint16_t mcc, mnc;
     uint8_t mnc_digit_len;
-    uint32_t nb_id;
 
     //if ((ret = ric_rrc_get_node_type(ranid, &node_type)) != 0) {
     //    RIC_AGENT_ERROR("unsupported eNB/gNB ngran_node_t %d; aborting!\n", node_type);
@@ -491,10 +490,6 @@ int global_e2_node_id(ranid_t ranid, E2AP_GlobalE2node_ID_t* node_id) {
     node_type = e2_conf[ranid]->e2node_type;
     if ((ret = ric_rrc_get_mcc_mnc(ranid, 0, &mcc, &mnc, &mnc_digit_len)) != 0) {
         RIC_AGENT_ERROR("unable to get plmn for ranid %u!\n", ranid);
-        return ret;
-    }
-    if ((ret = ric_rcc_get_nb_id(ranid, &nb_id) != 0)) {
-        RIC_AGENT_ERROR("unable to get nb id for ranid %u!\n", ranid);
         return ret;
     }
 
@@ -509,7 +504,7 @@ int global_e2_node_id(ranid_t ranid, E2AP_GlobalE2node_ID_t* node_id) {
         node_id->choice.eNB.global_eNB_ID.eNB_ID.present = E2AP_ENB_ID_PR_macro_eNB_ID;
 
         MACRO_ENB_ID_TO_BIT_STRING(
-                nb_id,
+                e2_conf[ranid]->cell_identity,
                 &node_id->choice.eNB.global_eNB_ID.eNB_ID.choice.macro_eNB_ID);
 
     } else if (node_type == E2NODE_TYPE_NG_ENB) {
@@ -523,7 +518,7 @@ int global_e2_node_id(ranid_t ranid, E2AP_GlobalE2node_ID_t* node_id) {
             = E2AP_ENB_ID_Choice_PR_enb_ID_macro;
 
         MACRO_ENB_ID_TO_BIT_STRING(
-                nb_id,
+                e2_conf[ranid]->cell_identity,
                 &node_id->choice.ng_eNB.global_ng_eNB_ID.enb_id.choice.enb_ID_macro);
 
     } else if (node_type == E2NODE_TYPE_GNB) {
@@ -539,7 +534,7 @@ int global_e2_node_id(ranid_t ranid, E2AP_GlobalE2node_ID_t* node_id) {
         /* XXX: GNB version? */
 
         MACRO_ENB_ID_TO_BIT_STRING(
-                nb_id,
+                e2_conf[ranid]->cell_identity,
                 &node_id->choice.gNB.global_gNB_ID.gnb_id.choice.gnb_ID);
     } else {
         RIC_AGENT_ERROR("unsupported eNB/gNB ngran_node_t %d; aborting!\n", node_type);
