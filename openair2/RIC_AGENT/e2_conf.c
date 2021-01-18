@@ -44,6 +44,9 @@ void e2_conf_init(RAN_CONTEXT_t *RC) {
         e2_conf[i] = (e2_conf_t *)calloc(1,sizeof(e2_conf_t));
         e2_conf[i]->node_name = strdup(RC->rrc[i]->node_name);
         e2_conf[i]->cell_identity = RC->rrc[i]->configuration.cell_identity;
+        e2_conf[i]->mcc = RC->rrc[i]->configuration.mcc[0];
+        e2_conf[i]->mnc = RC->rrc[i]->configuration.mnc[0];
+        e2_conf[i]->mnc_digit_length = RC->rrc[i]->configuration.mnc_digit_length[0];
         switch (RC->rrc[i]->node_type) {
             case ngran_eNB:
                 e2_conf[i]->e2node_type = E2NODE_TYPE_ENB;

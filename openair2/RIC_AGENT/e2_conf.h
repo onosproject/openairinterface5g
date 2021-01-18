@@ -49,10 +49,9 @@ typedef struct e2_conf {
     e2node_type_t e2node_type;
     char *node_name;
     uint32_t cell_identity;
-    uint16_t mcc[PLMN_LIST_MAX_SIZE];
-    uint16_t mnc[PLMN_LIST_MAX_SIZE];
-    uint8_t mnc_digit_length[PLMN_LIST_MAX_SIZE];
-    uint8_t num_plmn;
+    uint16_t mcc;
+    uint16_t mnc;
+    uint8_t mnc_digit_length;
 } e2_conf_t;
 
 extern e2_conf_t **e2_conf;

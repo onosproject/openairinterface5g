@@ -32,7 +32,6 @@
 #include "e2ap_common.h"
 #include "e2ap_encoder.h"
 #include "e2sm_common.h"
-#include "ric_agent_rrc.h"
 #include "e2_conf.h"
 
 #include "E2AP_Cause.h"

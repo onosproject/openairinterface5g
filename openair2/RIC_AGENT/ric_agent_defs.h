@@ -105,9 +105,6 @@ typedef struct {
     size_t functions_enabled_len;
 
     ranid_t ranid;
-    uint16_t mcc;
-    uint16_t mnc;
-    uint8_t mnc_digit_len;
 
     uint16_t ric_mcc;
     uint16_t ric_mnc;
