@@ -26,10 +26,11 @@
  */
 
 #include "common/ran_context.h"
+#include "ric_agent_config.h"
 #include "ric_agent_common.h"
-#include "e2_conf.h"
 
 extern RAN_CONTEXT_t RC;
+e2_conf_t **e2_conf;
 
 #define RIC_CONFIG_STRING_ENABLED "enabled"
 #define RIC_CONFIG_STRING_REMOTE_IPV4_ADDR "remote_ipv4_addr"
@@ -73,6 +74,8 @@ static void RCconfig_ric_agent_ric(void)
     char buf[16];
     paramdef_t ric_params[] = RICPARAMS_DESC;
 
+    e2_conf = (e2_conf_t **)calloc(RC.nb_inst, sizeof(e2_conf_t));
+
     for (i = 0; i < RC.nb_inst; ++i) {
         /* Get RIC configuration. */
         snprintf(buf, sizeof(buf), "%s.[%u].RIC", ENB_CONFIG_STRING_ENB_LIST, i);
@@ -92,6 +95,44 @@ static void RCconfig_ric_agent_ric(void)
                     RC.ric[i]->functions_enabled_str[j] = ' ';
                 }
             }
+
+            e2_conf[i] = (e2_conf_t *)calloc(1,sizeof(e2_conf_t));
+            e2_conf[i]->node_name = strdup(RC.rrc[i]->node_name);
+            e2_conf[i]->cell_identity = RC.rrc[i]->configuration.cell_identity;
+            e2_conf[i]->mcc = RC.rrc[i]->configuration.mcc[0];
+            e2_conf[i]->mnc = RC.rrc[i]->configuration.mnc[0];
+            e2_conf[i]->mnc_digit_length = RC.rrc[i]->configuration.mnc_digit_length[0];
+            switch (RC.rrc[i]->node_type) {
+                case ngran_eNB:
+                    e2_conf[i]->e2node_type = E2NODE_TYPE_ENB;
+                    break;
+                case ngran_ng_eNB:
+                    e2_conf[i]->e2node_type = E2NODE_TYPE_NG_ENB;
+                    break;
+                case ngran_gNB:
+                    e2_conf[i]->e2node_type = E2NODE_TYPE_GNB;
+                    break;
+                case ngran_eNB_CU:
+                    e2_conf[i]->e2node_type = E2NODE_TYPE_ENB_CU;
+                    break;
+                case ngran_ng_eNB_CU:
+                    e2_conf[i]->e2node_type = E2NODE_TYPE_NG_ENB_CU;
+                    break;
+                case ngran_gNB_CU:
+                    e2_conf[i]->e2node_type = E2NODE_TYPE_GNB_CU;
+                    break;
+                case ngran_eNB_DU:
+                    e2_conf[i]->e2node_type = E2NODE_TYPE_ENB_DU;
+                    break;
+                case ngran_gNB_DU:
+                    e2_conf[i]->e2node_type = E2NODE_TYPE_GNB_DU;
+                    break;
+                case ngran_eNB_MBMS_STA:
+                    e2_conf[i]->e2node_type = E2NODE_TYPE_ENB_MBMS_STA;
+                    break;
+                default:
+                    break;
+            }
         }
         else {
             RIC_AGENT_INFO("not enabled for NB %u\n",i);
@@ -104,7 +145,6 @@ static void RCconfig_ric_agent_ric(void)
 void RCconfig_ric_agent(void)
 {
     RCconfig_ric_agent_init();
-    e2_conf_init(&RC);
     RCconfig_ric_agent_ric();
 
     return;

@@ -41,7 +41,7 @@
 #include "e2ap_decoder.h"
 #include "e2sm_common.h"
 #include "ric_agent.h"
-#include "e2_conf.h"
+#include "ric_agent_config.h"
 
 #include "assertions.h"
 #include "conversions.h"
