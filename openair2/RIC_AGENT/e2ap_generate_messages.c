@@ -42,6 +42,7 @@
 #include "ric_agent_rrc.h"
 #include "e2sm_common.h"
 #include "ric_agent.h"
+#include "e2_conf.h"
 
 #include "assertions.h"
 #include "conversions.h"
@@ -478,15 +479,16 @@ int e2ap_generate_reset_response(ric_agent_info_t *ric,
 
 int global_e2_node_id(ranid_t ranid, E2AP_GlobalE2node_ID_t* node_id) {
     int ret;
-    ngran_node_t node_type;
+    e2node_type_t node_type;
     uint16_t mcc, mnc;
     uint8_t mnc_digit_len;
     uint32_t nb_id;
 
-    if ((ret = ric_rrc_get_node_type(ranid, &node_type)) != 0) {
-        RIC_AGENT_ERROR("unsupported eNB/gNB ngran_node_t %d; aborting!\n", node_type);
-        return ret;
-    }
+    //if ((ret = ric_rrc_get_node_type(ranid, &node_type)) != 0) {
+    //    RIC_AGENT_ERROR("unsupported eNB/gNB ngran_node_t %d; aborting!\n", node_type);
+    //    return ret;
+    //}
+    node_type = e2_conf[ranid]->e2node_type;
     if ((ret = ric_rrc_get_mcc_mnc(ranid, 0, &mcc, &mnc, &mnc_digit_len)) != 0) {
         RIC_AGENT_ERROR("unable to get plmn for ranid %u!\n", ranid);
         return ret;
@@ -496,7 +498,8 @@ int global_e2_node_id(ranid_t ranid, E2AP_GlobalE2node_ID_t* node_id) {
         return ret;
     }
 
-    if (node_type == ngran_eNB || node_type == ngran_eNB_CU) {
+
+    if (node_type == E2NODE_TYPE_ENB || node_type == E2NODE_TYPE_ENB_CU) {
         node_id->present = E2AP_GlobalE2node_ID_PR_eNB;
 
         MCC_MNC_TO_PLMNID(
@@ -509,7 +512,7 @@ int global_e2_node_id(ranid_t ranid, E2AP_GlobalE2node_ID_t* node_id) {
                 nb_id,
                 &node_id->choice.eNB.global_eNB_ID.eNB_ID.choice.macro_eNB_ID);
 
-    } else if (node_type == ngran_ng_eNB) {
+    } else if (node_type == E2NODE_TYPE_NG_ENB) {
         node_id->present = E2AP_GlobalE2node_ID_PR_ng_eNB;
 
         MCC_MNC_TO_PLMNID(
@@ -523,7 +526,7 @@ int global_e2_node_id(ranid_t ranid, E2AP_GlobalE2node_ID_t* node_id) {
                 nb_id,
                 &node_id->choice.ng_eNB.global_ng_eNB_ID.enb_id.choice.enb_ID_macro);
 
-    } else if (node_type == ngran_gNB) {
+    } else if (node_type == E2NODE_TYPE_GNB) {
 
         node_id->present = E2AP_GlobalE2node_ID_PR_gNB;
 
@@ -540,6 +543,7 @@ int global_e2_node_id(ranid_t ranid, E2AP_GlobalE2node_ID_t* node_id) {
                 &node_id->choice.gNB.global_gNB_ID.gnb_id.choice.gnb_ID);
     } else {
         RIC_AGENT_ERROR("unsupported eNB/gNB ngran_node_t %d; aborting!\n", node_type);
+        exit(1);
     }
     return 0;
 }

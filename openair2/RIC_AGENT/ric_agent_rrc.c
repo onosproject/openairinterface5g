@@ -83,14 +83,3 @@ int ric_rrc_get_mcc_mnc(ranid_t ranid,uint8_t index,
 
     return 0;
 }
-
-int ric_rrc_get_node_name(ranid_t ranid, char *buf, int size)
-{
-    if (!ric_rrc_is_present(ranid))
-        return 0;
-    int len = strlen(RC.rrc[ranid]->node_name);
-    if (!(len < size))
-        return 0;
-    strncpy(buf, RC.rrc[ranid]->node_name, len+1);
-    return len;
-}

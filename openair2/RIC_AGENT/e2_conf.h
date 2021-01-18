@@ -25,14 +25,37 @@
  *      contact@openairinterface.org
  */
 
-#ifndef _RIC_AGENT_RRC_H
-#define _RIC_AGENT_RRC_H
+#ifndef _E2_CONF_H
+#define _E2_CONF_H
 
-#include "common/ngran_types.h"
+#include "common/ran_context.h"
 
-int ric_rrc_get_node_type(ranid_t ranid, ngran_node_t *node_type);
-int ric_rcc_get_nb_id(ranid_t ranid, uint32_t *nb_id);
-int ric_rrc_get_plmn_len(ranid_t ranid, uint8_t *len);
-int ric_rrc_get_mcc_mnc(ranid_t ranid, uint8_t index,
-        uint16_t *mcc, uint16_t *mnc, uint8_t *mnc_digit_len);
-#endif /* _RIC_AGENT_RRC_H */
+#define PLMN_LIST_MAX_SIZE  6
+
+typedef enum {
+    E2NODE_TYPE_NONE,
+    E2NODE_TYPE_ENB,
+    E2NODE_TYPE_NG_ENB,
+    E2NODE_TYPE_GNB,
+    E2NODE_TYPE_ENB_CU,
+    E2NODE_TYPE_NG_ENB_CU,
+    E2NODE_TYPE_GNB_CU,
+    E2NODE_TYPE_ENB_DU,
+    E2NODE_TYPE_GNB_DU,
+    E2NODE_TYPE_ENB_MBMS_STA
+} e2node_type_t;
+
+typedef struct e2_conf {
+    e2node_type_t e2node_type;
+    char *node_name;
+    uint32_t cell_identity;
+    uint16_t mcc[PLMN_LIST_MAX_SIZE];
+    uint16_t mnc[PLMN_LIST_MAX_SIZE];
+    uint8_t mnc_digit_length[PLMN_LIST_MAX_SIZE];
+    uint8_t num_plmn;
+} e2_conf_t;
+
+extern e2_conf_t **e2_conf;
+extern void e2_conf_init(RAN_CONTEXT_t *RC);
+
+#endif /* _E2_CONF_H */

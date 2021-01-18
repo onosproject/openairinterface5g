@@ -33,6 +33,7 @@
 #include "e2ap_encoder.h"
 #include "e2sm_common.h"
 #include "ric_agent_rrc.h"
+#include "e2_conf.h"
 
 #include "E2AP_Cause.h"
 #include "E2SM_KPM_E2SM-KPM-RANfunction-Description.h"
@@ -253,12 +254,11 @@ encode_kpm_report_rancontainer_cucp_parameterized(ric_agent_info_t* ric)
     ASN_STRUCT_RESET(asn_DEF_E2SM_KPM_OCUCP_PF_Container, cucpcont);
 
     {
-        char buf[256] = {};
-        int len = ric_rrc_get_node_name(ric->ranid, buf, sizeof(buf));
+        char *node_name = strdup(e2_conf[ric->ranid]->node_name);
         cucpcont->gNB_CU_CP_Name = (E2SM_KPM_GNB_CU_CP_Name_t*)calloc(1, sizeof(E2SM_KPM_GNB_CU_CP_Name_t));
-        cucpcont->gNB_CU_CP_Name->size = len + 1;
         cucpcont->gNB_CU_CP_Name->buf = (uint8_t*)calloc(cucpcont->gNB_CU_CP_Name->size, sizeof(char));
-        strncpy((char*)cucpcont->gNB_CU_CP_Name->buf, buf, cucpcont->gNB_CU_CP_Name->size);
+        cucpcont->gNB_CU_CP_Name->size = strlen(node_name) + 1;
+        strncpy((char*)cucpcont->gNB_CU_CP_Name->buf, node_name, cucpcont->gNB_CU_CP_Name->size);
     }
 
     cucpcont->cu_CP_Resource_Status.numberOfActive_UEs = (long*)calloc(1, sizeof(long));

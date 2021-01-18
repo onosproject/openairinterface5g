@@ -27,6 +27,7 @@
 
 #include "common/ran_context.h"
 #include "ric_agent_common.h"
+#include "e2_conf.h"
 
 extern RAN_CONTEXT_t RC;
 
@@ -103,6 +104,7 @@ static void RCconfig_ric_agent_ric(void)
 void RCconfig_ric_agent(void)
 {
     RCconfig_ric_agent_init();
+    e2_conf_init(&RC);
     RCconfig_ric_agent_ric();
 
     return;
