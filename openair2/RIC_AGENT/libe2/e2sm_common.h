@@ -25,16 +25,16 @@
  *      contact@openairinterface.org
  */
 
-#ifndef _E2AP_HANDLER_H
-#define _E2AP_HANDLER_H
+#ifndef _E2SM_COMMON_H_
+#define _E2SM_COMMON_H_
 
-#include <stdint.h>
+#include "ric_agent_defs.h"
 
-#include "e2ap_common.h"
+#define E2SM_MAX_DEF_SIZE 16384
 
-int e2ap_handle_message(ric_agent_info_t *ric,int32_t stream,
-			const uint8_t * const buf,const uint32_t buflen);
+extern ric_ran_function_t **ran_functions;
+extern unsigned int ran_functions_len;
 
-int e2ap_handle_timer_expiry(ric_agent_info_t *ric, long timer_id, void* arg);
+extern int e2sm_kpm_init(void);
 
-#endif /* _E2AP_ENB_HANDLER_H */
+#endif /* _E2SM_COMMON_H_ */
