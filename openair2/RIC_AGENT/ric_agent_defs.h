@@ -94,11 +94,9 @@ typedef enum {
 } ric_nb_state_t;
 
 typedef struct {
-    int enabled;
     ric_nb_state_t state;
 
     int32_t assoc_id;
-    char *functions_enabled_str;
     ric_ran_function_id_t *functions_enabled;
     size_t functions_enabled_len;
 
@@ -164,6 +162,8 @@ typedef struct ric_ran_function {
     int enabled;
     void *definition;
 } ric_ran_function_t;
+
+extern ric_agent_info_t **ric_agent_info;
 
 int ric_agent_reset(ric_agent_info_t *ric);
 int ric_agent_register_ran_function(ric_ran_function_t *func);

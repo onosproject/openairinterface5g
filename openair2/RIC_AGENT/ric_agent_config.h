@@ -46,6 +46,7 @@ typedef enum {
 } e2node_type_t;
 
 typedef struct e2_conf {
+    int enabled;
     e2node_type_t e2node_type;
     char *node_name;
     uint32_t cell_identity;
@@ -55,6 +56,8 @@ typedef struct e2_conf {
 
     char *remote_ipv4_addr;
     uint16_t remote_port;
+
+    char *functions_enabled_str;
 } e2_conf_t;
 
 extern e2_conf_t **e2_conf;
