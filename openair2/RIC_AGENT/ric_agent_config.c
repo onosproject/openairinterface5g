@@ -53,27 +53,13 @@ e2_conf_t **e2_conf;
         NULL, 0, strptr:NULL, defstrval:"ORAN-E2SM-KPM", TYPE_STRING, 0 } \
 }
 
-static void RCconfig_ric_agent_init(void)
-{
-  uint32_t i;
-
-  /* Allocate RIC state in the ran_context_t RC. */
-  if (!RC.ric) {
-    RC.ric = (ric_agent_info_t **)calloc(RC.nb_inst,sizeof(*RC.ric));
-    for (i = 0; i < RC.nb_inst; ++i) {
-      RC.ric[i] = (ric_agent_info_t *)calloc(1,sizeof(**RC.ric));
-      RC.ric[i]->assoc_id = -1;
-    }
-  }
-}
-
-static void RCconfig_ric_agent_ric(void)
-{
+void RCconfig_ric_agent(void) {
     uint16_t i;
     int j;
     char buf[16];
     paramdef_t ric_params[] = RICPARAMS_DESC;
 
+    RC.ric = (ric_agent_info_t **)calloc(RC.nb_inst,sizeof(*RC.ric));
     e2_conf = (e2_conf_t **)calloc(RC.nb_inst, sizeof(e2_conf_t));
 
     for (i = 0; i < RC.nb_inst; ++i) {
@@ -83,9 +69,10 @@ static void RCconfig_ric_agent_ric(void)
         if (ric_params[RIC_CONFIG_IDX_ENABLED].strptr != NULL
                 && strcmp(*ric_params[RIC_CONFIG_IDX_ENABLED].strptr, "yes") == 0) {
             RIC_AGENT_INFO("enabled for NB %u\n",i);
+
+            RC.ric[i] = (ric_agent_info_t *)calloc(1,sizeof(**RC.ric));
+            RC.ric[i]->assoc_id = -1;
             RC.ric[i]->enabled = 1;
-            RC.ric[i]->remote_ipv4_addr = strdup(*ric_params[RIC_CONFIG_IDX_REMOTE_IPV4_ADDR].strptr);
-            RC.ric[i]->remote_port = *ric_params[RIC_CONFIG_IDX_REMOTE_PORT].uptr;
             RC.ric[i]->functions_enabled_str = strdup(*ric_params[RIC_CONFIG_IDX_FUNCTIONS_ENABLED].strptr);
             for (j = 0; j < strlen(RC.ric[i]->functions_enabled_str); ++j) {
                 /* We want a space-delimited list, but be forgiving. */
@@ -133,6 +120,8 @@ static void RCconfig_ric_agent_ric(void)
                 default:
                     break;
             }
+            e2_conf[i]->remote_ipv4_addr = strdup(*ric_params[RIC_CONFIG_IDX_REMOTE_IPV4_ADDR].strptr);
+            e2_conf[i]->remote_port = *ric_params[RIC_CONFIG_IDX_REMOTE_PORT].uptr;
         }
         else {
             RIC_AGENT_INFO("not enabled for NB %u\n",i);
@@ -140,12 +129,4 @@ static void RCconfig_ric_agent_ric(void)
         }
         RC.ric[i]->state = RIC_UNINITIALIZED;
     }
-}
-
-void RCconfig_ric_agent(void)
-{
-    RCconfig_ric_agent_init();
-    RCconfig_ric_agent_ric();
-
-    return;
 }

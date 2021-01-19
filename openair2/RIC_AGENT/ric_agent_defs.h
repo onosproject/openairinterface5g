@@ -97,8 +97,6 @@ typedef struct {
     int enabled;
     ric_nb_state_t state;
 
-    char *remote_ipv4_addr;
-    uint16_t remote_port;
     int32_t assoc_id;
     char *functions_enabled_str;
     ric_ran_function_id_t *functions_enabled;

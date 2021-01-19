@@ -60,6 +60,5 @@ typedef struct e2_conf {
 extern e2_conf_t **e2_conf;
 
 void RCconfig_ric_agent(void);
-int ric_agent_is_enabled(void);
 
 #endif /* _RIC_AGENT_CONFIG_H */

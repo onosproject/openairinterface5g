@@ -234,11 +234,11 @@ static int ric_agent_connect(ranid_t ranid)
     req = &msg->ittiMsg.sctp_new_association_req;
 
     req->ppid = E2AP_SCTP_PPID;
-    req->port = RC.ric[ranid]->remote_port;
+    req->port = e2_conf[ranid]->remote_port;
     req->in_streams = 1;
     req->out_streams = 1;
     req->remote_address.ipv4 = 1;
-    strncpy(req->remote_address.ipv4_address,RC.ric[ranid]->remote_ipv4_addr,
+    strncpy(req->remote_address.ipv4_address, e2_conf[ranid]->remote_ipv4_addr,
             sizeof(req->remote_address.ipv4_address));
     req->remote_address.ipv4_address[sizeof(req->remote_address.ipv4_address)-1] = '\0';
 #if 0
