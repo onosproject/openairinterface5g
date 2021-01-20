@@ -94,20 +94,13 @@ typedef enum {
 } ric_nb_state_t;
 
 typedef struct {
-    int enabled;
     ric_nb_state_t state;
 
-    char *remote_ipv4_addr;
-    uint16_t remote_port;
     int32_t assoc_id;
-    char *functions_enabled_str;
     ric_ran_function_id_t *functions_enabled;
     size_t functions_enabled_len;
 
     ranid_t ranid;
-    uint16_t mcc;
-    uint16_t mnc;
-    uint8_t mnc_digit_len;
 
     uint16_t ric_mcc;
     uint16_t ric_mnc;
@@ -169,6 +162,8 @@ typedef struct ric_ran_function {
     int enabled;
     void *definition;
 } ric_ran_function_t;
+
+extern ric_agent_info_t **ric_agent_info;
 
 int ric_agent_reset(ric_agent_info_t *ric);
 int ric_agent_register_ran_function(ric_ran_function_t *func);

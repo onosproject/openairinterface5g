@@ -25,30 +25,16 @@
  *      contact@openairinterface.org
  */
 
-#ifndef _E2AP_GENERATE_MESSAGES_H
-#define _E2AP_GENERATE_MESSAGES_H
+#ifndef _E2AP_HANDLER_H
+#define _E2AP_HANDLER_H
 
-#include "ric_agent_defs.h"
+#include <stdint.h>
+
 #include "e2ap_common.h"
 
-int e2ap_generate_e2_setup_request(ric_agent_info_t *ric,
-				   uint8_t **buffer,uint32_t *len);
-int e2ap_generate_ric_subscription_response(ric_agent_info_t *ric,
-					    ric_subscription_t *rs,
-					    uint8_t **buffer,uint32_t *len);
-int e2ap_generate_ric_subscription_failure(ric_agent_info_t *ric,
-					   ric_subscription_t *rs,
-					   uint8_t **buffer,uint32_t *len);
-int e2ap_generate_ric_subscription_delete_response(
-  ric_agent_info_t *ric,long request_id,long instance_id,
-  ric_ran_function_id_t function_id,uint8_t **buffer,uint32_t *len);
-int e2ap_generate_ric_subscription_delete_failure(
-  ric_agent_info_t *ric,long request_id,long instance_id,
-  ric_ran_function_id_t function_id,long cause,long cause_detail,
-  uint8_t **buffer,uint32_t *len);
-int e2ap_generate_ric_service_update(ric_agent_info_t *ric,
-				     uint8_t **buffer,uint32_t *len);
-int e2ap_generate_reset_response(ric_agent_info_t *ric,
-				 uint8_t **buffer,uint32_t *len);
+extern int e2ap_handle_message(ric_agent_info_t *ric,int32_t stream,
+			const uint8_t * const buf,const uint32_t buflen);
 
-#endif /* _E2AP_GENERATE_MESSAGES_H */
+extern int e2ap_handle_timer_expiry(ric_agent_info_t *ric, long timer_id, void* arg);
+
+#endif /* _E2AP_ENB_HANDLER_H */

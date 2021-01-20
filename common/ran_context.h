@@ -98,10 +98,6 @@ typedef struct {
   int nb_RU;
   /// FlexRAN context variables
   flexran_agent_info_t **flexran;
-#ifdef ENABLE_RIC_AGENT
-  /// ORAN RIC context variables
-  ric_agent_info_t **ric;
-#endif
   /// eNB context variables
   struct PHY_VARS_eNB_s ***eNB;
   /// gNB context variables

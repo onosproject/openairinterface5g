@@ -28,11 +28,13 @@
 #include "common/ran_context.h"
 #include "ric_agent_common.h"
 #include "ric_agent_config.h"
+#include "ric_agent_defs.h"
 #include "e2ap_generate_messages.h"
 #include "e2ap_handler.h"
 #include "e2sm_common.h"
 
 extern RAN_CONTEXT_t RC;
+ric_agent_info_t **ric_agent_info;
 
 ric_ran_function_t **ran_functions = NULL;
 unsigned int ran_functions_len = 0;
@@ -114,8 +116,7 @@ ric_agent_info_t *ric_agent_get_info(ranid_t ranid, int32_t assoc_id)
 {
     ric_agent_info_t *ric;
 
-    DevAssert(ranid < RC.nb_inst);
-    ric = RC.ric[ranid];
+    ric = ric_agent_info[ranid];
     if (ric->assoc_id != assoc_id) {
         return NULL;
     }
@@ -197,8 +198,8 @@ static int ric_agent_connect(ranid_t ranid)
         ric->functions_enabled_len = 0;
         ric->functions_enabled = (ric_ran_function_id_t *) \
                                  calloc(ran_functions_len, sizeof(*ric->functions_enabled));
-        if (ric->functions_enabled_str && strlen(ric->functions_enabled_str) > 0) {
-            cc = strdup(ric->functions_enabled_str);
+        if (e2_conf[ranid]->functions_enabled_str && strlen(e2_conf[ranid]->functions_enabled_str) > 0) {
+            cc = strdup(e2_conf[ranid]->functions_enabled_str);
             tmp2 = cc;
             while ((tok = strtok_r(tmp2, " ", &tmp)) != NULL) {
                 tmp2 = NULL;
@@ -234,11 +235,11 @@ static int ric_agent_connect(ranid_t ranid)
     req = &msg->ittiMsg.sctp_new_association_req;
 
     req->ppid = E2AP_SCTP_PPID;
-    req->port = RC.ric[ranid]->remote_port;
+    req->port = e2_conf[ranid]->remote_port;
     req->in_streams = 1;
     req->out_streams = 1;
     req->remote_address.ipv4 = 1;
-    strncpy(req->remote_address.ipv4_address,RC.ric[ranid]->remote_ipv4_addr,
+    strncpy(req->remote_address.ipv4_address, e2_conf[ranid]->remote_ipv4_addr,
             sizeof(req->remote_address.ipv4_address));
     req->remote_address.ipv4_address[sizeof(req->remote_address.ipv4_address)-1] = '\0';
 #if 0
@@ -250,7 +251,7 @@ static int ric_agent_connect(ranid_t ranid)
 #endif
     req->ulp_cnx_id = 1;
 
-    ric = RC.ric[ranid];
+    ric = ric_agent_info[ranid];
     ric->state = RIC_CONNECTING;
 
     RIC_AGENT_INFO("ranid %u connecting to RIC at %s:%u with IP %s\n",
@@ -308,16 +309,13 @@ static int ric_agent_handle_sctp_new_association_resp(
 
     RIC_AGENT_INFO("new sctp assoc resp %d, sctp_state %d for nb %u\n", resp->assoc_id, resp->sctp_state, instance);
 
-    if (instance >= RC.nb_inst) {
-        RIC_AGENT_ERROR("invalid nb/instance %u in sctp_new_association_resp\n", instance);
-        return -1;
-    } else if (resp->sctp_state != SCTP_STATE_ESTABLISHED) {
-        if (RC.ric[instance] != NULL) {
+    if (resp->sctp_state != SCTP_STATE_ESTABLISHED) {
+        if (ric_agent_info[instance] != NULL) {
             RIC_AGENT_INFO("resetting RIC connection %u\n", instance);
-            timer_remove(RC.ric[instance]->e2sm_kpm_timer_id);
-            RC.ric[instance]->e2sm_kpm_timer_id = 0;
-            RC.ric[instance]->assoc_id = -1;
-            timer_setup(5, 0, TASK_RIC_AGENT, instance, TIMER_PERIODIC, NULL, &RC.ric[instance]->ric_connect_timer_id);
+            timer_remove(ric_agent_info[instance]->e2sm_kpm_timer_id);
+            ric_agent_info[instance]->e2sm_kpm_timer_id = 0;
+            ric_agent_info[instance]->assoc_id = -1;
+            timer_setup(5, 0, TASK_RIC_AGENT, instance, TIMER_PERIODIC, NULL, &ric_agent_info[instance]->ric_connect_timer_id);
         } else {
             RIC_AGENT_ERROR("invalid nb/instance %u in sctp_new_association_resp\n", instance);
             return -1;
@@ -326,9 +324,9 @@ static int ric_agent_handle_sctp_new_association_resp(
     }
 
     /*
-    else if (RC.ric[instance]->assoc_id != -1) {
+    else if (ric_agent_info[instance]->assoc_id != -1) {
     RIC_AGENT_ERROR("nb %u already associated (%d); ignoring new resp (%d)\n",
-            instance,RC.ric[instance]->assoc_id,resp->assoc_id);
+            instance,ric_agent_info[instance]->assoc_id,resp->assoc_id);
     }
     */
 
@@ -369,7 +367,6 @@ static void ric_agent_handle_sctp_data_ind(
     ric_agent_info_t *ric;
 
     DevAssert(ind != NULL);
-    DevAssert(instance < RC.nb_inst);
 
     ric = ric_agent_get_info(instance, ind->assoc_id);
     if (ric == NULL) {
@@ -389,9 +386,7 @@ static void ric_agent_handle_timer_expiry(instance_t instance, long timer_id, vo
     ric_agent_info_t* ric;
     int ret = 0;
 
-    DevAssert(instance < RC.nb_inst);
-
-    ric = RC.ric[instance];
+    ric = ric_agent_info[instance];
 
     if (timer_id == ric->ric_connect_timer_id) {
         ric_agent_connect(instance);
@@ -409,13 +404,17 @@ void *ric_agent_task(void *args)
     int res;
     uint16_t i;
 
-    e2sm_kpm_init();
-
     RIC_AGENT_INFO("starting RIC agent task\n");
 
+    e2sm_kpm_init();
+
+    ric_agent_info = (ric_agent_info_t **)calloc(RC.nb_inst, sizeof(ric_agent_info_t));
     for (i = 0; i < RC.nb_inst; ++i) {
-        if (RC.ric[i]->enabled) {
-            timer_setup(5, 0, TASK_RIC_AGENT, i, TIMER_PERIODIC, NULL, &RC.ric[i]->ric_connect_timer_id);
+        if (e2_conf[i]->enabled) {
+            ric_agent_info[i] = (ric_agent_info_t *)calloc(1, sizeof(ric_agent_info_t));
+            ric_agent_info[i]->assoc_id = -1;
+            ric_agent_info[i]->state = RIC_UNINITIALIZED;
+            timer_setup(5, 0, TASK_RIC_AGENT, i, TIMER_PERIODIC, NULL, &ric_agent_info[i]->ric_connect_timer_id);
         }
     }
 

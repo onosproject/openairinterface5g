@@ -26,9 +26,11 @@
  */
 
 #include "common/ran_context.h"
+#include "ric_agent_config.h"
 #include "ric_agent_common.h"
 
 extern RAN_CONTEXT_t RC;
+e2_conf_t **e2_conf;
 
 #define RIC_CONFIG_STRING_ENABLED "enabled"
 #define RIC_CONFIG_STRING_REMOTE_IPV4_ADDR "remote_ipv4_addr"
@@ -51,59 +53,72 @@ extern RAN_CONTEXT_t RC;
         NULL, 0, strptr:NULL, defstrval:"ORAN-E2SM-KPM", TYPE_STRING, 0 } \
 }
 
-static void RCconfig_ric_agent_init(void)
-{
-  uint32_t i;
-
-  /* Allocate RIC state in the ran_context_t RC. */
-  if (!RC.ric) {
-    RC.ric = (ric_agent_info_t **)calloc(RC.nb_inst,sizeof(*RC.ric));
-    for (i = 0; i < RC.nb_inst; ++i) {
-      RC.ric[i] = (ric_agent_info_t *)calloc(1,sizeof(**RC.ric));
-      RC.ric[i]->assoc_id = -1;
-    }
-  }
-}
-
-static void RCconfig_ric_agent_ric(void)
-{
+void RCconfig_ric_agent(void) {
     uint16_t i;
     int j;
     char buf[16];
     paramdef_t ric_params[] = RICPARAMS_DESC;
 
+    e2_conf = (e2_conf_t **)calloc(RC.nb_inst, sizeof(e2_conf_t));
+
     for (i = 0; i < RC.nb_inst; ++i) {
         /* Get RIC configuration. */
         snprintf(buf, sizeof(buf), "%s.[%u].RIC", ENB_CONFIG_STRING_ENB_LIST, i);
         config_get(ric_params, sizeof(ric_params)/sizeof(paramdef_t), buf);
+        e2_conf[i] = (e2_conf_t *)calloc(1,sizeof(e2_conf_t));
         if (ric_params[RIC_CONFIG_IDX_ENABLED].strptr != NULL
                 && strcmp(*ric_params[RIC_CONFIG_IDX_ENABLED].strptr, "yes") == 0) {
             RIC_AGENT_INFO("enabled for NB %u\n",i);
-            RC.ric[i]->enabled = 1;
-            RC.ric[i]->remote_ipv4_addr = strdup(*ric_params[RIC_CONFIG_IDX_REMOTE_IPV4_ADDR].strptr);
-            RC.ric[i]->remote_port = *ric_params[RIC_CONFIG_IDX_REMOTE_PORT].uptr;
-            RC.ric[i]->functions_enabled_str = strdup(*ric_params[RIC_CONFIG_IDX_FUNCTIONS_ENABLED].strptr);
-            for (j = 0; j < strlen(RC.ric[i]->functions_enabled_str); ++j) {
+
+            e2_conf[i]->enabled = 1;
+            e2_conf[i]->node_name = strdup(RC.rrc[i]->node_name);
+            e2_conf[i]->cell_identity = RC.rrc[i]->configuration.cell_identity;
+            e2_conf[i]->mcc = RC.rrc[i]->configuration.mcc[0];
+            e2_conf[i]->mnc = RC.rrc[i]->configuration.mnc[0];
+            e2_conf[i]->mnc_digit_length = RC.rrc[i]->configuration.mnc_digit_length[0];
+            switch (RC.rrc[i]->node_type) {
+                case ngran_eNB:
+                    e2_conf[i]->e2node_type = E2NODE_TYPE_ENB;
+                    break;
+                case ngran_ng_eNB:
+                    e2_conf[i]->e2node_type = E2NODE_TYPE_NG_ENB;
+                    break;
+                case ngran_gNB:
+                    e2_conf[i]->e2node_type = E2NODE_TYPE_GNB;
+                    break;
+                case ngran_eNB_CU:
+                    e2_conf[i]->e2node_type = E2NODE_TYPE_ENB_CU;
+                    break;
+                case ngran_ng_eNB_CU:
+                    e2_conf[i]->e2node_type = E2NODE_TYPE_NG_ENB_CU;
+                    break;
+                case ngran_gNB_CU:
+                    e2_conf[i]->e2node_type = E2NODE_TYPE_GNB_CU;
+                    break;
+                case ngran_eNB_DU:
+                    e2_conf[i]->e2node_type = E2NODE_TYPE_ENB_DU;
+                    break;
+                case ngran_gNB_DU:
+                    e2_conf[i]->e2node_type = E2NODE_TYPE_GNB_DU;
+                    break;
+                case ngran_eNB_MBMS_STA:
+                    e2_conf[i]->e2node_type = E2NODE_TYPE_ENB_MBMS_STA;
+                    break;
+                default:
+                    break;
+            }
+            e2_conf[i]->remote_ipv4_addr = strdup(*ric_params[RIC_CONFIG_IDX_REMOTE_IPV4_ADDR].strptr);
+            e2_conf[i]->remote_port = *ric_params[RIC_CONFIG_IDX_REMOTE_PORT].uptr;
+
+            e2_conf[i]->functions_enabled_str = strdup(*ric_params[RIC_CONFIG_IDX_FUNCTIONS_ENABLED].strptr);
+            for (j = 0; j < strlen(e2_conf[i]->functions_enabled_str); ++j) {
                 /* We want a space-delimited list, but be forgiving. */
-                if (RC.ric[i]->functions_enabled_str[j] == ','
-                        || RC.ric[i]->functions_enabled_str[j] == ';'
-                        || RC.ric[i]->functions_enabled_str[j] == '\t') {
-                    RC.ric[i]->functions_enabled_str[j] = ' ';
+                if (e2_conf[i]->functions_enabled_str[j] == ','
+                        || e2_conf[i]->functions_enabled_str[j] == ';'
+                        || e2_conf[i]->functions_enabled_str[j] == '\t') {
+                    e2_conf[i]->functions_enabled_str[j] = ' ';
                 }
             }
         }
-        else {
-            RIC_AGENT_INFO("not enabled for NB %u\n",i);
-            RC.ric[i]->enabled = 0;
-        }
-        RC.ric[i]->state = RIC_UNINITIALIZED;
     }
-}
-
-void RCconfig_ric_agent(void)
-{
-    RCconfig_ric_agent_init();
-    RCconfig_ric_agent_ric();
-
-    return;
 }

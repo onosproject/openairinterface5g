@@ -25,16 +25,30 @@
  *      contact@openairinterface.org
  */
 
-#ifndef _E2SM_COMMON_H_
-#define _E2SM_COMMON_H_
+#ifndef _E2AP_GENERATE_MESSAGES_H
+#define _E2AP_GENERATE_MESSAGES_H
 
 #include "ric_agent_defs.h"
+#include "e2ap_common.h"
 
-#define E2SM_MAX_DEF_SIZE 16384
+extern int e2ap_generate_e2_setup_request(ric_agent_info_t *ric,
+				   uint8_t **buffer,uint32_t *len);
+int e2ap_generate_ric_subscription_response(ric_agent_info_t *ric,
+					    ric_subscription_t *rs,
+					    uint8_t **buffer,uint32_t *len);
+int e2ap_generate_ric_subscription_failure(ric_agent_info_t *ric,
+					   ric_subscription_t *rs,
+					   uint8_t **buffer,uint32_t *len);
+int e2ap_generate_ric_subscription_delete_response(
+  ric_agent_info_t *ric,long request_id,long instance_id,
+  ric_ran_function_id_t function_id,uint8_t **buffer,uint32_t *len);
+int e2ap_generate_ric_subscription_delete_failure(
+  ric_agent_info_t *ric,long request_id,long instance_id,
+  ric_ran_function_id_t function_id,long cause,long cause_detail,
+  uint8_t **buffer,uint32_t *len);
+int e2ap_generate_ric_service_update(ric_agent_info_t *ric,
+				     uint8_t **buffer,uint32_t *len);
+int e2ap_generate_reset_response(ric_agent_info_t *ric,
+				 uint8_t **buffer,uint32_t *len);
 
-extern ric_ran_function_t **ran_functions;
-extern unsigned int ran_functions_len;
-
-int e2sm_kpm_init(void);
-
-#endif /* _E2SM_COMMON_H_ */
+#endif /* _E2AP_GENERATE_MESSAGES_H */
