@@ -25,24 +25,16 @@
  *      contact@openairinterface.org
  */
 
-#ifndef _RIC_AGENT_CONFIG_H
-#define _RIC_AGENT_CONFIG_H
+#ifndef _E2_H
+#define _E2_H
 
-#include "common/ran_context.h"
-
-#define PLMN_LIST_MAX_SIZE  6
+#include <stdint.h>
 
 typedef enum {
     E2NODE_TYPE_NONE,
-    E2NODE_TYPE_ENB,
-    E2NODE_TYPE_NG_ENB,
-    E2NODE_TYPE_GNB,
     E2NODE_TYPE_ENB_CU,
     E2NODE_TYPE_NG_ENB_CU,
     E2NODE_TYPE_GNB_CU,
-    E2NODE_TYPE_ENB_DU,
-    E2NODE_TYPE_GNB_DU,
-    E2NODE_TYPE_ENB_MBMS_STA
 } e2node_type_t;
 
 typedef struct e2_conf {
@@ -62,6 +54,6 @@ typedef struct e2_conf {
 
 extern e2_conf_t **e2_conf;
 
-void RCconfig_ric_agent(void);
+extern void e2_init(int index, e2_conf_t e2_conf);
 
 #endif /* _RIC_AGENT_CONFIG_H */

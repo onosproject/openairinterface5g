@@ -25,14 +25,19 @@
  *      contact@openairinterface.org
  */
 
-#ifndef _RIC_AGENT_H
-#define _RIC_AGENT_H
+#include <stdlib.h>
+#include <string.h>
+#include "e2.h"
 
-#include <stdint.h>
+e2_conf_t **e2_conf;
 
-typedef uint16_t ranid_t;
+void e2_init(int index, e2_conf_t conf) {
 
-void *ric_agent_task(void *args);
-void RCconfig_ric_agent(void);
+    if (!e2_conf) {
+        e2_conf = (e2_conf_t **)calloc(256, sizeof(e2_conf_t));
+    }
 
-#endif /* _RIC_AGENT_H */
+    e2_conf[index] = (e2_conf_t *)calloc(1,sizeof(e2_conf_t));
+    memcpy(e2_conf[index], &conf, sizeof(e2_conf_t));
+    e2_conf[index]->functions_enabled_str = strdup(conf.functions_enabled_str);
+}

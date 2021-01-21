@@ -41,7 +41,7 @@
 #include "e2ap_decoder.h"
 #include "e2sm_common.h"
 #include "ric_agent.h"
-#include "ric_agent_config.h"
+#include "e2.h"
 
 #include "assertions.h"
 #include "conversions.h"
@@ -481,7 +481,7 @@ int global_e2_node_id(ranid_t ranid, E2AP_GlobalE2node_ID_t* node_id) {
 
     node_type = e2_conf[ranid]->e2node_type;
 
-    if (node_type == E2NODE_TYPE_ENB || node_type == E2NODE_TYPE_ENB_CU) {
+    if (node_type == E2NODE_TYPE_ENB_CU) {
         node_id->present = E2AP_GlobalE2node_ID_PR_eNB;
 
         MCC_MNC_TO_PLMNID(
@@ -496,7 +496,9 @@ int global_e2_node_id(ranid_t ranid, E2AP_GlobalE2node_ID_t* node_id) {
                 e2_conf[ranid]->cell_identity,
                 &node_id->choice.eNB.global_eNB_ID.eNB_ID.choice.macro_eNB_ID);
 
-    } else if (node_type == E2NODE_TYPE_NG_ENB) {
+    }
+#if 0
+    else if (node_type == E2NODE_TYPE_NG_ENB) {
         node_id->present = E2AP_GlobalE2node_ID_PR_ng_eNB;
 
         MCC_MNC_TO_PLMNID(
@@ -533,5 +535,6 @@ int global_e2_node_id(ranid_t ranid, E2AP_GlobalE2node_ID_t* node_id) {
         RIC_AGENT_ERROR("unsupported eNB/gNB ngran_node_t %d; aborting!\n", node_type);
         exit(1);
     }
+#endif
     return 0;
 }

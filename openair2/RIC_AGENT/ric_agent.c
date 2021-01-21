@@ -27,11 +27,11 @@
 
 #include "common/ran_context.h"
 #include "ric_agent_common.h"
-#include "ric_agent_config.h"
 #include "ric_agent_defs.h"
 #include "e2ap_generate_messages.h"
 #include "e2ap_handler.h"
 #include "e2sm_common.h"
+#include "e2.h"
 
 extern RAN_CONTEXT_t RC;
 ric_agent_info_t **ric_agent_info;
@@ -252,7 +252,6 @@ static int ric_agent_connect(ranid_t ranid)
     req->ulp_cnx_id = 1;
 
     ric = ric_agent_info[ranid];
-    ric->state = RIC_CONNECTING;
 
     RIC_AGENT_INFO("ranid %u connecting to RIC at %s:%u with IP %s\n",
             ranid,req->remote_address.ipv4_address, req->port, req->local_address.ipv4_address);
@@ -292,7 +291,6 @@ static void ric_agent_disconnect(ric_agent_info_t *ric)
 
     itti_send_msg_to_task(TASK_SCTP, ric->ranid,msg);
 
-    ric->state = RIC_DISCONNECTED;
     ric->assoc_id = -1;
 }
 
@@ -338,7 +336,6 @@ static int ric_agent_handle_sctp_new_association_resp(
         return -1;
     }
     ric->assoc_id = resp->assoc_id;
-    ric->state = RIC_CONNECTED;
 
     timer_remove(ric->ric_connect_timer_id);
 
@@ -348,7 +345,6 @@ static int ric_agent_handle_sctp_new_association_resp(
         RIC_AGENT_ERROR("failed to generate E2setupRequest; disabling ranid %u!\n",
                 ric->ranid);
         ric_agent_disconnect(ric);
-        ric->state = RIC_DISABLED;
         if (buf)
             free(buf);
         return 1;
@@ -413,7 +409,6 @@ void *ric_agent_task(void *args)
         if (e2_conf[i]->enabled) {
             ric_agent_info[i] = (ric_agent_info_t *)calloc(1, sizeof(ric_agent_info_t));
             ric_agent_info[i]->assoc_id = -1;
-            ric_agent_info[i]->state = RIC_UNINITIALIZED;
             timer_setup(5, 0, TASK_RIC_AGENT, i, TIMER_PERIODIC, NULL, &ric_agent_info[i]->ric_connect_timer_id);
         }
     }
@@ -452,10 +447,88 @@ void *ric_agent_task(void *args)
                 break;
         }
 
-        res = itti_free(ITTI_MSG_ORIGIN_ID(msg),msg);
+        res = itti_free(ITTI_MSG_ORIGIN_ID(msg), msg);
         AssertFatal(res == EXIT_SUCCESS,"failed to free msg (%d)!\n",res);
         msg = NULL;
     }
 
     return NULL;
+}
+
+#define RIC_CONFIG_STRING_ENABLED "enabled"
+#define RIC_CONFIG_STRING_REMOTE_IPV4_ADDR "remote_ipv4_addr"
+#define RIC_CONFIG_STRING_REMOTE_PORT "remote_port"
+#define RIC_CONFIG_STRING_FUNCTIONS_ENABLED "functions_enabled"
+
+#define RIC_CONFIG_IDX_ENABLED          0
+#define RIC_CONFIG_IDX_REMOTE_IPV4_ADDR 1
+#define RIC_CONFIG_IDX_REMOTE_PORT      2
+#define RIC_CONFIG_IDX_FUNCTIONS_ENABLED 3
+
+#define RIC_PORT 36421
+
+#define RICPARAMS_DESC { \
+    { RIC_CONFIG_STRING_ENABLED, \
+        "yes/no", 0, strptr:NULL, defstrval:"no", TYPE_STRING, 0 }, \
+    { RIC_CONFIG_STRING_REMOTE_IPV4_ADDR, \
+        NULL, 0, strptr:NULL, defstrval: "127.0.0.1", TYPE_STRING, 0 }, \
+    { RIC_CONFIG_STRING_REMOTE_PORT, \
+        NULL, 0, uptr:NULL, defintval:RIC_PORT, TYPE_UINT, 0 },	\
+    { RIC_CONFIG_STRING_FUNCTIONS_ENABLED, \
+        NULL, 0, strptr:NULL, defstrval:"ORAN-E2SM-KPM", TYPE_STRING, 0 } \
+}
+
+void RCconfig_ric_agent(void) {
+    uint16_t i;
+    int j;
+    char buf[16];
+    paramdef_t ric_params[] = RICPARAMS_DESC;
+    e2_conf_t e2_conf;
+
+    for (i = 0; i < RC.nb_inst; ++i) {
+        if (!NODE_IS_CU(RC.rrc[i]->node_type)) {
+            continue;
+        }
+
+        /* Get RIC configuration. */
+        snprintf(buf, sizeof(buf), "%s.[%u].RIC", ENB_CONFIG_STRING_ENB_LIST, i);
+        config_get(ric_params, sizeof(ric_params)/sizeof(paramdef_t), buf);
+        if (ric_params[RIC_CONFIG_IDX_ENABLED].strptr != NULL
+                && strcmp(*ric_params[RIC_CONFIG_IDX_ENABLED].strptr, "yes") == 0) {
+            RIC_AGENT_INFO("enabled for NB %u\n",i);
+
+            e2_conf.enabled = 1;
+            e2_conf.node_name = strdup(RC.rrc[i]->node_name);
+            e2_conf.cell_identity = RC.rrc[i]->configuration.cell_identity;
+            e2_conf.mcc = RC.rrc[i]->configuration.mcc[0];
+            e2_conf.mnc = RC.rrc[i]->configuration.mnc[0];
+            e2_conf.mnc_digit_length = RC.rrc[i]->configuration.mnc_digit_length[0];
+            switch (RC.rrc[i]->node_type) {
+                case ngran_eNB_CU:
+                    e2_conf.e2node_type = E2NODE_TYPE_ENB_CU;
+                    break;
+                case ngran_ng_eNB_CU:
+                    e2_conf.e2node_type = E2NODE_TYPE_NG_ENB_CU;
+                    break;
+                case ngran_gNB_CU:
+                    e2_conf.e2node_type = E2NODE_TYPE_GNB_CU;
+                    break;
+                default:
+                    break;
+            }
+            e2_conf.remote_ipv4_addr = strdup(*ric_params[RIC_CONFIG_IDX_REMOTE_IPV4_ADDR].strptr);
+            e2_conf.remote_port = *ric_params[RIC_CONFIG_IDX_REMOTE_PORT].uptr;
+
+            e2_conf.functions_enabled_str = strdup(*ric_params[RIC_CONFIG_IDX_FUNCTIONS_ENABLED].strptr);
+            for (j = 0; j < strlen(e2_conf.functions_enabled_str); ++j) {
+                /* We want a space-delimited list, but be forgiving. */
+                if (e2_conf.functions_enabled_str[j] == ','
+                        || e2_conf.functions_enabled_str[j] == ';'
+                        || e2_conf.functions_enabled_str[j] == '\t') {
+                    e2_conf.functions_enabled_str[j] = ' ';
+                }
+            }
+            e2_init(i, e2_conf);
+        }
+    }
 }

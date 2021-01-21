@@ -47,9 +47,6 @@
 
 #include "ENB_APP/enb_config.h"
 #include "flexran_agent_defs.h"
-#ifdef ENABLE_RIC_AGENT
-#include "ric_agent_defs.h"
-#endif
 
 #include "gtpv1u.h"
 #include "NwGtpv1u.h"

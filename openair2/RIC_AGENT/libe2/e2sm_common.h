@@ -28,13 +28,6 @@
 #ifndef _E2SM_COMMON_H_
 #define _E2SM_COMMON_H_
 
-#include "ric_agent_defs.h"
-
-#define E2SM_MAX_DEF_SIZE 16384
-
-extern ric_ran_function_t **ran_functions;
-extern unsigned int ran_functions_len;
-
 extern int e2sm_kpm_init(void);
 
 #endif /* _E2SM_COMMON_H_ */
