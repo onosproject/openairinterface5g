@@ -41,13 +41,16 @@
 #include "e2ap_decoder.h"
 #include "e2sm_common.h"
 #include "ric_agent.h"
-#include "ric_agent_config.h"
+#include "e2.h"
 
 #include "assertions.h"
 #include "conversions.h"
 #include "common/ngran_types.h"
 
 extern int global_e2_node_id(ranid_t ranid, E2AP_GlobalE2node_ID_t* node_id);
+
+extern unsigned int ran_functions_len;
+extern ric_ran_function_t **ran_functions;
 
 int e2ap_generate_e2_setup_request(ric_agent_info_t *ric,
 				   uint8_t **buffer,uint32_t *len)
@@ -84,8 +87,8 @@ int e2ap_generate_e2_setup_request(ric_agent_info_t *ric,
   ie->criticality = E2AP_Criticality_reject;
   ie->value.present = E2AP_E2setupRequestIEs__value_PR_RANfunctions_List;
 
-  for (i = 0; i < ric->functions_enabled_len; ++i) {
-    func = ric_agent_lookup_ran_function(ric->functions_enabled[i]);
+  for (i = 0; i < ran_functions_len; ++i) {
+    func = ran_functions[i];
     DevAssert(func != NULL);
 
     ran_function_item_ie = (E2AP_RANfunction_ItemIEs_t *) \
@@ -481,7 +484,7 @@ int global_e2_node_id(ranid_t ranid, E2AP_GlobalE2node_ID_t* node_id) {
 
     node_type = e2_conf[ranid]->e2node_type;
 
-    if (node_type == E2NODE_TYPE_ENB || node_type == E2NODE_TYPE_ENB_CU) {
+    if (node_type == E2NODE_TYPE_ENB_CU) {
         node_id->present = E2AP_GlobalE2node_ID_PR_eNB;
 
         MCC_MNC_TO_PLMNID(
@@ -496,7 +499,9 @@ int global_e2_node_id(ranid_t ranid, E2AP_GlobalE2node_ID_t* node_id) {
                 e2_conf[ranid]->cell_identity,
                 &node_id->choice.eNB.global_eNB_ID.eNB_ID.choice.macro_eNB_ID);
 
-    } else if (node_type == E2NODE_TYPE_NG_ENB) {
+    }
+#if 0
+    else if (node_type == E2NODE_TYPE_NG_ENB) {
         node_id->present = E2AP_GlobalE2node_ID_PR_ng_eNB;
 
         MCC_MNC_TO_PLMNID(
@@ -533,5 +538,6 @@ int global_e2_node_id(ranid_t ranid, E2AP_GlobalE2node_ID_t* node_id) {
         RIC_AGENT_ERROR("unsupported eNB/gNB ngran_node_t %d; aborting!\n", node_type);
         exit(1);
     }
+#endif
     return 0;
 }

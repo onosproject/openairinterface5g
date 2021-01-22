@@ -33,9 +33,6 @@
 #include "list.h"
 #include "ric_agent.h"
 
-#ifndef E2AP_PORT
-#define E2AP_PORT 36422
-#endif
 #define E2AP_SCTP_PPID 70 /*< E2AP SCTP Payload Protocol Identifier (PPID) */
 
 /**
@@ -83,22 +80,8 @@ typedef struct ric_subscription {
 typedef struct ric_control {
 } ric_control_t;
 
-typedef enum {
-    RIC_UNINITIALIZED = 0,
-    RIC_CONNECTING = 1,
-    RIC_CONNECTED = 2,
-    RIC_ESTABLISHED = 3,
-    RIC_FAILURE = 4,
-    RIC_DISCONNECTED = 5,
-    RIC_DISABLED = 6,
-} ric_nb_state_t;
-
 typedef struct {
-    ric_nb_state_t state;
-
     int32_t assoc_id;
-    ric_ran_function_id_t *functions_enabled;
-    size_t functions_enabled_len;
 
     ranid_t ranid;
 

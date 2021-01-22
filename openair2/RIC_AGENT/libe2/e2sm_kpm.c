@@ -28,11 +28,11 @@
 #include "common/utils/assertions.h"
 #include "f1ap_common.h"
 #include "ric_agent_defs.h"
-#include "ric_agent_config.h"
 #include "ric_agent_common.h"
 #include "e2ap_common.h"
 #include "e2ap_encoder.h"
 #include "e2sm_common.h"
+#include "e2.h"
 
 #include "E2AP_Cause.h"
 #include "E2SM_KPM_E2SM-KPM-RANfunction-Description.h"

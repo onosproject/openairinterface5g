@@ -25,14 +25,33 @@
  *      contact@openairinterface.org
  */
 
-#ifndef _RIC_AGENT_H
-#define _RIC_AGENT_H
+#ifndef _E2_H
+#define _E2_H
 
 #include <stdint.h>
 
-typedef uint16_t ranid_t;
+typedef enum {
+    E2NODE_TYPE_NONE,
+    E2NODE_TYPE_ENB_CU,
+    E2NODE_TYPE_NG_ENB_CU,
+    E2NODE_TYPE_GNB_CU,
+} e2node_type_t;
 
-void *ric_agent_task(void *args);
-void RCconfig_ric_agent(void);
+typedef struct e2_conf {
+    int enabled;
+    e2node_type_t e2node_type;
+    char *node_name;
+    uint32_t cell_identity;
+    uint16_t mcc;
+    uint16_t mnc;
+    uint8_t mnc_digit_length;
 
-#endif /* _RIC_AGENT_H */
+    char *remote_ipv4_addr;
+    uint16_t remote_port;
+} e2_conf_t;
+
+extern e2_conf_t **e2_conf;
+
+extern void e2_init(int index, e2_conf_t e2_conf);
+
+#endif /* _RIC_AGENT_CONFIG_H */

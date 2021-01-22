@@ -31,10 +31,6 @@
 
 #include "xer_support.h"
 
-#ifndef E2AP_PORT
-#define E2AP_PORT 36423
-#endif
-
 extern int e2ap_xer_print;
 #define E2AP_XER_PRINT(stream,type,pdu) \
     do { if (e2ap_xer_print) { xer_fprint(stream,type,pdu); } } while (0);

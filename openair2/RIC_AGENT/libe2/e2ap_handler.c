@@ -70,8 +70,6 @@ int e2ap_handle_e2_setup_response(ric_agent_info_t *ric,uint32_t stream,
     E2AP_INFO("E2SetupResponse (ranid %u) from RIC (mcc=%u,mnc=%u,id=%u)\n",
         ric->ranid,ric->ric_mcc,ric->ric_mnc,ric->ric_id);
 
-    ric->state = RIC_ESTABLISHED;
-
     return 0;
 }
 
@@ -99,8 +97,6 @@ int e2ap_handle_e2_setup_failure(ric_agent_info_t *ric,uint32_t stream,
     }
 
     E2AP_INFO("E2SetupFailure (ranid %u) from RIC (cause=%ld,detail=%ld)\n", ric->ranid,cause,cause_detail);
-
-    ric->state = RIC_FAILURE;
 
     return 0;
 }
@@ -138,9 +134,7 @@ int e2ap_handle_ric_subscription_request(ric_agent_info_t *ric,uint32_t stream,
         } else if (rie->value.present == E2AP_RICsubscriptionRequest_IEs__value_PR_RANfunctionID) {
             rs->function_id = rie->value.choice.RANfunctionID;
         } else if (rie->value.present == E2AP_RICsubscriptionRequest_IEs__value_PR_RICsubscriptionDetails) {
-            E2AP_RICeventTriggerDefinition_t *rtd = &rie->value.choice.RICsubscriptionDetails.ricEventTriggerDefinition;
-
-            if (rtd->size > 0 && rtd->size < E2SM_MAX_DEF_SIZE) {
+            if (rie->value.choice.RICsubscriptionDetails.ricEventTriggerDefinition.size > 0) {
                 rs->event_trigger.size = rie->value.choice.RICsubscriptionDetails.ricEventTriggerDefinition.size;
                 rs->event_trigger.buf = (uint8_t *)malloc(rs->event_trigger.size);
                 memcpy(rs->event_trigger.buf,
@@ -232,9 +226,6 @@ int e2ap_handle_ric_subscription_request(ric_agent_info_t *ric,uint32_t stream,
                         }
                     }
                 }
-            } else if (rtd->size > E2SM_MAX_DEF_SIZE) {
-                E2AP_ERROR("RICsubscriptionRequest eventTriggerDefinition too long!");
-                // XXX: protocol error?
             }
 
             E2AP_RICactions_ToBeSetup_List_t *ral = &rie->value.choice.RICsubscriptionDetails.ricAction_ToBeSetup_List;

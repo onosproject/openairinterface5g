@@ -108,8 +108,10 @@ int create_tasks(uint32_t enb_nb) {
   }
 
 #ifdef ENABLE_RIC_AGENT
-  rc = itti_create_task(TASK_RIC_AGENT, ric_agent_task, NULL);
-  AssertFatal(rc >= 0, "Create task for RIC_AGENT failed\n");
+  if (NODE_IS_CU(type)) {
+    rc = itti_create_task(TASK_RIC_AGENT, ric_agent_task, NULL);
+    AssertFatal(rc >= 0, "Create task for RIC_AGENT failed\n");
+  }
 #endif
 
   return 0;
