@@ -39,5 +39,4 @@ void e2_init(int index, e2_conf_t conf) {
 
     e2_conf[index] = (e2_conf_t *)calloc(1,sizeof(e2_conf_t));
     memcpy(e2_conf[index], &conf, sizeof(e2_conf_t));
-    e2_conf[index]->functions_enabled_str = strdup(conf.functions_enabled_str);
 }

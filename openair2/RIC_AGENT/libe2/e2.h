@@ -48,8 +48,6 @@ typedef struct e2_conf {
 
     char *remote_ipv4_addr;
     uint16_t remote_port;
-
-    char *functions_enabled_str;
 } e2_conf_t;
 
 extern e2_conf_t **e2_conf;

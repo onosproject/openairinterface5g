@@ -49,6 +49,9 @@
 
 extern int global_e2_node_id(ranid_t ranid, E2AP_GlobalE2node_ID_t* node_id);
 
+extern unsigned int ran_functions_len;
+extern ric_ran_function_t **ran_functions;
+
 int e2ap_generate_e2_setup_request(ric_agent_info_t *ric,
 				   uint8_t **buffer,uint32_t *len)
 {
@@ -84,8 +87,8 @@ int e2ap_generate_e2_setup_request(ric_agent_info_t *ric,
   ie->criticality = E2AP_Criticality_reject;
   ie->value.present = E2AP_E2setupRequestIEs__value_PR_RANfunctions_List;
 
-  for (i = 0; i < ric->functions_enabled_len; ++i) {
-    func = ric_agent_lookup_ran_function(ric->functions_enabled[i]);
+  for (i = 0; i < ran_functions_len; ++i) {
+    func = ran_functions[i];
     DevAssert(func != NULL);
 
     ran_function_item_ie = (E2AP_RANfunction_ItemIEs_t *) \

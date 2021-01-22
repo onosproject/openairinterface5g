@@ -184,51 +184,11 @@ static int ric_agent_connect(ranid_t ranid)
     MessageDef *msg;
     sctp_new_association_req_t *req;
     ric_agent_info_t *ric;
-    char *cc,*tmp = NULL,*tmp2,*tok;
-    ric_ran_function_t *func;
-    int j;
 
     ric = ric_agent_get_info(ranid, -1);
     if (ric == NULL) {
         RIC_AGENT_ERROR("ric_agent_connect: ric agent info not found %u\n", ranid);
         return -1;
-    }
-
-    if (!ric->functions_enabled) {
-        ric->functions_enabled_len = 0;
-        ric->functions_enabled = (ric_ran_function_id_t *) \
-                                 calloc(ran_functions_len, sizeof(*ric->functions_enabled));
-        if (e2_conf[ranid]->functions_enabled_str && strlen(e2_conf[ranid]->functions_enabled_str) > 0) {
-            cc = strdup(e2_conf[ranid]->functions_enabled_str);
-            tmp2 = cc;
-            while ((tok = strtok_r(tmp2, " ", &tmp)) != NULL) {
-                tmp2 = NULL;
-                func = ric_agent_lookup_ran_function_by_name(tok);
-                if (!func) {
-                    RIC_AGENT_ERROR("unknown RIC RAN function '%s'; ignoring!\n",tok);
-                } else if (!func->enabled) {
-                    RIC_AGENT_WARN("RIC RAN function '%s' globally disabled; ignoring\n", tok);
-                }
-                else {
-                    /* Check if already enabled for this NB. */
-                    for (j = 0; j < ric->functions_enabled_len; ++j) {
-                        if (ric->functions_enabled[j] == func->function_id)
-                            break;
-                    }
-                    if (j == ric->functions_enabled_len) {
-                        DevAssert(ric->functions_enabled_len < ran_functions_len);
-                        ric->functions_enabled[ric->functions_enabled_len++] = func->function_id;
-                    }
-                }
-            }
-            free(cc);
-        } else {
-            /* Just enable everything. */
-            ric->functions_enabled_len = ran_functions_len;
-            for (j = 0; j < ran_functions_len; ++j) {
-                ric->functions_enabled[j] = ran_functions[j]->function_id;
-            }
-        }
     }
 
     msg = itti_alloc_new_message(TASK_RIC_AGENT, SCTP_NEW_ASSOCIATION_REQ);
@@ -458,7 +418,6 @@ void *ric_agent_task(void *args)
 #define RIC_CONFIG_STRING_ENABLED "enabled"
 #define RIC_CONFIG_STRING_REMOTE_IPV4_ADDR "remote_ipv4_addr"
 #define RIC_CONFIG_STRING_REMOTE_PORT "remote_port"
-#define RIC_CONFIG_STRING_FUNCTIONS_ENABLED "functions_enabled"
 
 #define RIC_CONFIG_IDX_ENABLED          0
 #define RIC_CONFIG_IDX_REMOTE_IPV4_ADDR 1
@@ -473,17 +432,14 @@ void *ric_agent_task(void *args)
     { RIC_CONFIG_STRING_REMOTE_IPV4_ADDR, \
         NULL, 0, strptr:NULL, defstrval: "127.0.0.1", TYPE_STRING, 0 }, \
     { RIC_CONFIG_STRING_REMOTE_PORT, \
-        NULL, 0, uptr:NULL, defintval:RIC_PORT, TYPE_UINT, 0 },	\
-    { RIC_CONFIG_STRING_FUNCTIONS_ENABLED, \
-        NULL, 0, strptr:NULL, defstrval:"ORAN-E2SM-KPM", TYPE_STRING, 0 } \
+        NULL, 0, uptr:NULL, defintval:RIC_PORT, TYPE_UINT, 0 }	\
 }
 
 void RCconfig_ric_agent(void) {
     uint16_t i;
-    int j;
     char buf[16];
     paramdef_t ric_params[] = RICPARAMS_DESC;
-    e2_conf_t e2_conf;
+    e2_conf_t e2_conf = {0};
 
     for (i = 0; i < RC.nb_inst; ++i) {
         if (!NODE_IS_CU(RC.rrc[i]->node_type)) {
@@ -519,15 +475,6 @@ void RCconfig_ric_agent(void) {
             e2_conf.remote_ipv4_addr = strdup(*ric_params[RIC_CONFIG_IDX_REMOTE_IPV4_ADDR].strptr);
             e2_conf.remote_port = *ric_params[RIC_CONFIG_IDX_REMOTE_PORT].uptr;
 
-            e2_conf.functions_enabled_str = strdup(*ric_params[RIC_CONFIG_IDX_FUNCTIONS_ENABLED].strptr);
-            for (j = 0; j < strlen(e2_conf.functions_enabled_str); ++j) {
-                /* We want a space-delimited list, but be forgiving. */
-                if (e2_conf.functions_enabled_str[j] == ','
-                        || e2_conf.functions_enabled_str[j] == ';'
-                        || e2_conf.functions_enabled_str[j] == '\t') {
-                    e2_conf.functions_enabled_str[j] = ' ';
-                }
-            }
             e2_init(i, e2_conf);
         }
     }

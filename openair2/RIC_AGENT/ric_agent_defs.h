@@ -82,8 +82,6 @@ typedef struct ric_control {
 
 typedef struct {
     int32_t assoc_id;
-    ric_ran_function_id_t *functions_enabled;
-    size_t functions_enabled_len;
 
     ranid_t ranid;
 
