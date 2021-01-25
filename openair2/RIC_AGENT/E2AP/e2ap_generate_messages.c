@@ -39,7 +39,7 @@
 #include "e2ap_generate_messages.h"
 #include "e2ap_encoder.h"
 #include "e2ap_decoder.h"
-#include "e2sm_common.h"
+#include "e2sm_kpm.h"
 #include "ric_agent.h"
 #include "e2.h"
 
