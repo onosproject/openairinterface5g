@@ -28,6 +28,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "e2.h"
+#include "ric_agent_defs.h"
 
 e2_conf_t **e2_conf;
 
@@ -39,4 +40,10 @@ void e2_init(int index, e2_conf_t conf) {
 
     e2_conf[index] = (e2_conf_t *)calloc(1,sizeof(e2_conf_t));
     memcpy(e2_conf[index], &conf, sizeof(e2_conf_t));
+
+    if (!ric_agent_info) {
+        ric_agent_info = (ric_agent_info_t **)calloc(250, sizeof(ric_agent_info_t));
+    }
+    ric_agent_info[index] = (ric_agent_info_t *)calloc(1, sizeof(ric_agent_info_t));
+    ric_agent_info[index]->assoc_id = -1;
 }

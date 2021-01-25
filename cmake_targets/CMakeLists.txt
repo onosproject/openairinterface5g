@@ -1134,85 +1134,70 @@ include_directories(${OPENAIR2_DIR}/LAYER2/PROTO_AGENT)
 add_boolean_option(ENABLE_RIC_AGENT False "Enable O-RAN RIC agent")
 
 if(ENABLE_RIC_AGENT)
-  set(E2_LIB_DIR ${OPENAIR2_DIR}/RIC_AGENT/libe2)
+
   set(E2_ASN_VERS R01)
-  set(E2_ASN_DIR ${E2_LIB_DIR}/MESSAGES/ASN1/${E2_ASN_VERS})
 
   # E2AP
+  set(E2AP_DIR ${OPENAIR2_DIR}/RIC_AGENT/E2AP)
+  set(E2AP_ASN_DIR ${E2AP_DIR}/MESSAGES/ASN1/${E2_ASN_VERS})
   set(E2AP_ASN_FILE e2ap-v01.00.asn1)
   set(E2AP_C_DIR ${asn1_generated_dir}/E2AP/)
   execute_process(
-      COMMAND ${OPENAIR_CMAKE}/tools/make_asn1c_includes.sh "${E2AP_C_DIR}" "${E2_ASN_DIR}/${E2AP_ASN_FILE}" "E2AP_" -fno-include-deps -fincludes-quoted
+      COMMAND ${OPENAIR_CMAKE}/tools/make_asn1c_includes.sh "${E2AP_C_DIR}"
+      "${E2AP_ASN_DIR}/${E2AP_ASN_FILE}" "E2AP_" -fno-include-deps -fincludes-quoted
       RESULT_VARIABLE ret)
   if (NOT ${ret} STREQUAL 0)
       message(FATAL_ERROR "${ret}: error")
   endif (NOT ${ret} STREQUAL 0)
   add_custom_target (
       e2ap_flag ALL
-      COMMAND ${OPENAIR_CMAKE}/tools/make_asn1c_includes.sh "${E2AP_C_DIR}" "${E2_ASN_DIR}/${E2AP_ASN_FILE}" "E2AP_" -fno-include-deps -fincludes-quoted
-      DEPENDS ${E2_ASN_DIR}/${E2AP_ASN_FILE}
+      COMMAND ${OPENAIR_CMAKE}/tools/make_asn1c_includes.sh "${E2AP_C_DIR}"
+      "${E2AP_ASN_DIR}/${E2AP_ASN_FILE}" "E2AP_" -fno-include-deps -fincludes-quoted
+      DEPENDS ${E2AP_ASN_DIR}/${E2AP_ASN_FILE}
   )
-  include_directories (${E2_LIB_DIR})
+  file(GLOB E2AP_asn_source ${E2AP_C_DIR}/*.c)
+  file(GLOB E2AP_source ${E2AP_DIR}/*.c)
+  add_library(E2AP ${E2AP_source} ${E2AP_asn_source})
+  set(E2AP_LIB E2AP)
+  include_directories ("${E2AP_C_DIR}")
+  include_directories (${E2AP_DIR})
 
   # E2SM_KPM
+  set(E2SM_KPM_DIR ${OPENAIR2_DIR}/RIC_AGENT/E2SM-KPM)
+  set(E2SM_KPM_ASN_DIR ${E2SM_KPM_DIR}/MESSAGES/ASN1/${E2_ASN_VERS})
   set(E2SM_KPM_ASN_FILE e2sm-kpm-v01.00.asn1)
   set(E2SM_KPM_C_DIR ${asn1_generated_dir}/E2SM-KPM/)
   execute_process(
-      COMMAND ${OPENAIR_CMAKE}/tools/make_asn1c_includes.sh "${E2SM_KPM_C_DIR}" "${E2_ASN_DIR}/${E2SM_KPM_ASN_FILE}" "E2SM_KPM_" -fno-include-deps -fincludes-quoted
+      COMMAND ${OPENAIR_CMAKE}/tools/make_asn1c_includes.sh "${E2SM_KPM_C_DIR}"
+      "${E2SM_KPM_ASN_DIR}/${E2SM_KPM_ASN_FILE}" "E2SM_KPM_" -fno-include-deps -fincludes-quoted
       RESULT_VARIABLE ret)
   if (NOT ${ret} STREQUAL 0)
       message(FATAL_ERROR "${ret}: error")
   endif (NOT ${ret} STREQUAL 0)
   add_custom_target (
       e2sm_kpm_flag ALL
-      COMMAND ${OPENAIR_CMAKE}/tools/make_asn1c_includes.sh "${E2SM_KPM_C_DIR}" "${E2_ASN_DIR}/${E2SM_KPM_ASN_FILE}" "E2SM_KPM_" -fno-include-deps -fincludes-quoted
-      DEPENDS ${E2_ASN_DIR}/${E2SM_KPM_ASN_FILE})
-  file(GLOB E2SM_KPM_source ${E2SM_KPM_C_DIR}/*.c)
-  file(COPY ${E2SM_KPM_source} DESTINATION ${E2AP_C_DIR})
+      COMMAND ${OPENAIR_CMAKE}/tools/make_asn1c_includes.sh "${E2SM_KPM_C_DIR}"
+      "${E2SM_KPM_ASN_DIR}/${E2SM_KPM_ASN_FILE}" "E2SM_KPM_" -fno-include-deps -fincludes-quoted
+      DEPENDS ${E2SM_KPM_ASN_DIR}/${E2SM_KPM_ASN_FILE})
+  file(GLOB E2SM_KPM_asn_source ${E2SM_KPM_C_DIR}/*.c)
+  file(GLOB E2SM_KPM_source ${E2SM_KPM_DIR}/*.c)
+  add_library(E2SM_KPM SHARED ${E2SM_KPM_source} ${E2SM_KPM_asn_source})
+  set(E2SM_KPM_LIB E2SM_KPM)
   include_directories ("${E2SM_KPM_C_DIR}")
-
-  # E2SM_NI
-  set(E2SM_NI_ASN_FILE e2sm-ni-v01.00.asn1)
-  set(E2SM_NI_C_DIR ${asn1_generated_dir}/E2SM-NI/)
-  execute_process(
-      COMMAND ${OPENAIR_CMAKE}/tools/make_asn1c_includes.sh "${E2SM_NI_C_DIR}" "${E2_ASN_DIR}/${E2SM_NI_ASN_FILE}" "E2SM_NI_" -fno-include-deps -fincludes-quoted
-      RESULT_VARIABLE ret)
-  if (NOT ${ret} STREQUAL 0)
-      message(FATAL_ERROR "${ret}: error")
-  endif (NOT ${ret} STREQUAL 0)
-  add_custom_target (
-      e2sm_ni_flag ALL
-      COMMAND ${OPENAIR_CMAKE}/tools/make_asn1c_includes.sh "${E2SM_NI_C_DIR}" "${E2_ASN_DIR}/${E2SM_NI_ASN_FILE}" "E2SM_NI_" -fno-include-deps -fincludes-quoted
-      DEPENDS ${E2_ASN_DIR}/${E2SM_NI_ASN_FILE})
-  file(GLOB E2SM_NI_source ${E2SM_NI_C_DIR}/*.c)
-  file(COPY ${E2SM_NI_source} DESTINATION ${E2AP_C_DIR})
-  include_directories ("${E2SM_NI_C_DIR}")
-
-  file(GLOB E2AP_source ${E2AP_C_DIR}/*.c)
-  file(GLOB E2_source ${E2_LIB_DIR}/*.c)
-  add_library(E2 SHARED ${E2_source} ${E2AP_source})
-  include_directories ("${E2AP_C_DIR}")
-  set(E2_LIB E2)
-
-else()
-    set(E2_LIB "")
-endif()
-
-if(ENABLE_RIC_AGENT)
-  set(RIC_AGENT_DIR ${OPENAIR2_DIR}/RIC_AGENT)
+  include_directories (${E2SM_KPM_DIR})
 
   # RIC_AGENT_LIB
+  set(RIC_AGENT_DIR ${OPENAIR2_DIR}/RIC_AGENT)
   file(GLOB RIC_AGENT_source ${RIC_AGENT_DIR}/*.c)
   include_directories ("${RIC_AGENT_DIR}")
-  add_library(RIC_AGENT SHARED ${RIC_AGENT_source})
+  add_library(RIC_AGENT ${RIC_AGENT_source})
   add_dependencies(RIC_AGENT rrc_flag)
   set(RIC_AGENT_LIB RIC_AGENT)
 
 else()
+    set(E2AP_LIB "")
   set(RIC_AGENT_LIB "")
-
-endif()# O-RAN RIC Agent (E2AP protocol)
-
+endif()
 
 set(PROTOBUF_LIB "protobuf-c")
 
@@ -2679,7 +2664,7 @@ target_link_libraries (lte-softmodem
   RRC_LIB NR_RRC_LIB S1AP_LIB S1AP_ENB F1AP_LIB F1AP M2AP_LIB M2AP_ENB X2AP_LIB X2AP_ENB M3AP_LIB M3AP_ENB GTPV1U SECU_CN SECU_OSA UTIL HASHTABLE SCTP_CLIENT MME_APP UDP SCHED_LIB SCHED_RU_LIB 
   PHY_COMMON PHY PHY_RU LFDS L2 L2_LTE NFAPI_COMMON_LIB NFAPI_LIB NFAPI_VNF_LIB NFAPI_PNF_LIB NFAPI_USER_LIB LFDS7
   ${MSC_LIB} ${RAL_LIB} ${NAS_UE_LIB} ${ITTI_LIB} ${FLPT_MSG_LIB}
-  ${ASYNC_IF_LIB} ${FLEXRAN_AGENT_LIB} ${E2_LIB} ${RIC_AGENT_LIB} ${FSPT_MSG_LIB} ${PROTO_AGENT_LIB}
+  ${ASYNC_IF_LIB} ${FLEXRAN_AGENT_LIB} ${E2AP_LIB} ${E2SM_KPM_LIB} ${RIC_AGENT_LIB} ${FSPT_MSG_LIB} ${PROTO_AGENT_LIB}
   -Wl,--end-group z dl)
   
 target_link_libraries (lte-softmodem ${LIBXML2_LIBRARIES})
@@ -2831,7 +2816,7 @@ target_link_libraries (nr-softmodem
   -Wl,--start-group
   UTIL HASHTABLE SCTP_CLIENT UDP SCHED_LIB SCHED_RU_LIB SCHED_NR_LIB PHY_NR PHY PHY_COMMON PHY_NR_COMMON PHY_RU LFDS NR_GTPV1U SECU_CN SECU_OSA
   ${ITTI_LIB} ${FLPT_MSG_LIB} ${ASYNC_IF_LIB} ${FLEXRAN_AGENT_LIB}
-  ${E2_LIB} ${RIC_AGENT_LIB} LFDS7 ${MSC_LIB} ${RAL_LIB} ${NAS_UE_LIB} RRC_LIB NR_RRC_LIB 
+  ${E2AP_LIB} ${E2SM_KPM_LIB} ${RIC_AGENT_LIB} LFDS7 ${MSC_LIB} ${RAL_LIB} ${NAS_UE_LIB} RRC_LIB NR_RRC_LIB 
   S1AP_LIB S1AP_ENB L2 L2_NR MAC_NR_COMMON NFAPI_COMMON_LIB NFAPI_LIB NFAPI_VNF_LIB NFAPI_PNF_LIB NFAPI_USER_LIB
   X2AP_LIB X2AP_ENB F1AP_LIB F1AP M2AP_LIB M2AP_ENB M3AP_LIB M3AP_ENB ${PROTO_AGENT_LIB} ${FSPT_MSG_LIB}
   -Wl,--end-group z dl)
@@ -3164,16 +3149,16 @@ endforeach(myExe)
 if (${T_TRACER})
   foreach(i
         #all "add_executable" definitions (except tests, rb_tool, updatefw)
-        lte-softmodem lte-uesoftmodem nr-softmodem 
-        nr-uesoftmodem dlsim dlsim_tm4 dlsim_tm7 
+        lte-softmodem lte-uesoftmodem nr-softmodem
+        nr-uesoftmodem dlsim dlsim_tm4 dlsim_tm7
         ulsim pbchsim scansim mbmssim pdcchsim pucchsim prachsim
         syncsim nr_ulsim nr_dlsim nr_dlschsim nr_pbchsim nr_pucchsim
         nr_ulschsim ldpctest polartest smallblocktest cu_test du_test
         #all "add_library" definitions
-        ITTI RRC_LIB NR_RRC_LIB S1AP_LIB S1AP_ENB X2AP_LIB X2AP_ENB M2AP_LIB M2AP_ENB M3AP_LIB M3AP_ENB F1AP_LIB F1AP 
+        ITTI RRC_LIB NR_RRC_LIB S1AP_LIB S1AP_ENB X2AP_LIB X2AP_ENB M2AP_LIB M2AP_ENB M3AP_LIB M3AP_ENB F1AP_LIB F1AP
         params_libconfig oai_exmimodevif oai_usrpdevif oai_bladerfdevif oai_lmssdrdevif oai_iqplayer
         oai_eth_transpro oai_mobipass tcp_bridge tcp_bridge_oai
-        coding FLPT_MSG ASYNC_IF FLEXRAN_AGENT ${RIC_AGENT_LIB} ${E2_LIB} HASHTABLE MSC UTIL OMG_SUMO
+        coding FLPT_MSG ASYNC_IF FLEXRAN_AGENT ${E2AP_LIB} ${E2SM_KPM_LIB} ${RIC_AGENT_LIB} HASHTABLE MSC UTIL OMG_SUMO
         SECU_OSA SECU_CN SCHED_LIB SCHED_NR_LIB SCHED_RU_LIB SCHED_UE_LIB SCHED_NR_UE_LIB default_sched remote_sched RAL
         NFAPI_COMMON_LIB NFAPI_LIB NFAPI_PNF_LIB NFAPI_VNF_LIB NFAPI_USER_LIB
         PHY_COMMON PHY PHY_UE PHY_NR PHY_NR_COMMON PHY_NR_UE PHY_RU PHY_MEX

@@ -30,7 +30,7 @@
 #include "ric_agent_defs.h"
 #include "e2ap_generate_messages.h"
 #include "e2ap_handler.h"
-#include "e2sm_common.h"
+#include "e2sm_kpm.h"
 #include "e2.h"
 
 extern RAN_CONTEXT_t RC;
@@ -364,11 +364,8 @@ void *ric_agent_task(void *args)
 
     e2sm_kpm_init();
 
-    ric_agent_info = (ric_agent_info_t **)calloc(RC.nb_inst, sizeof(ric_agent_info_t));
     for (i = 0; i < RC.nb_inst; ++i) {
         if (e2_conf[i]->enabled) {
-            ric_agent_info[i] = (ric_agent_info_t *)calloc(1, sizeof(ric_agent_info_t));
-            ric_agent_info[i]->assoc_id = -1;
             timer_setup(5, 0, TASK_RIC_AGENT, i, TIMER_PERIODIC, NULL, &ric_agent_info[i]->ric_connect_timer_id);
         }
     }

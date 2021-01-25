@@ -34,7 +34,7 @@
 #include "e2ap_decoder.h"
 #include "e2ap_encoder.h"
 #include "e2ap_generate_messages.h"
-#include "e2sm_common.h"
+#include "e2sm_kpm.h"
 
 #include "E2AP_Cause.h"
 #include "E2AP_E2AP-PDU.h"
