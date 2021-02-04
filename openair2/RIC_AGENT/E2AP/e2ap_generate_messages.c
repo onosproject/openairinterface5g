@@ -312,41 +312,45 @@ int e2ap_generate_ric_subscription_failure(ric_agent_info_t *ric,
 }
 
 int e2ap_generate_ric_subscription_delete_response(
-  ric_agent_info_t *ric,long request_id,long instance_id,
-  ric_ran_function_id_t function_id,uint8_t **buffer,uint32_t *len)
+        ric_agent_info_t *ric,
+        long request_id,
+        long instance_id,
+        ric_ran_function_id_t function_id,
+        uint8_t **buffer,
+        uint32_t *len)
 {
-  E2AP_E2AP_PDU_t pdu;
-  E2AP_RICsubscriptionDeleteResponse_t *out;
-  E2AP_RICsubscriptionDeleteResponse_IEs_t *ie;
+    E2AP_E2AP_PDU_t pdu;
+    E2AP_RICsubscriptionDeleteResponse_t *out;
+    E2AP_RICsubscriptionDeleteResponse_IEs_t *ie;
 
-  memset(&pdu, 0, sizeof(pdu));
-  pdu.present = E2AP_E2AP_PDU_PR_unsuccessfulOutcome;
-  pdu.choice.successfulOutcome.procedureCode = E2AP_ProcedureCode_id_RICsubscription;
-  pdu.choice.successfulOutcome.criticality = E2AP_Criticality_reject;
-  pdu.choice.successfulOutcome.value.present = E2AP_SuccessfulOutcome__value_PR_RICsubscriptionDeleteResponse;
-  out = &pdu.choice.successfulOutcome.value.choice.RICsubscriptionDeleteResponse;
+    memset(&pdu, 0, sizeof(pdu));
+    pdu.present = E2AP_E2AP_PDU_PR_successfulOutcome;
+    pdu.choice.successfulOutcome.procedureCode = E2AP_ProcedureCode_id_RICsubscription;
+    pdu.choice.successfulOutcome.criticality = E2AP_Criticality_reject;
+    pdu.choice.successfulOutcome.value.present = E2AP_SuccessfulOutcome__value_PR_RICsubscriptionDeleteResponse;
+    out = &pdu.choice.successfulOutcome.value.choice.RICsubscriptionDeleteResponse;
 
-  ie = (E2AP_RICsubscriptionDeleteResponse_IEs_t *)calloc(1,sizeof(*ie));
-  ie->id = E2AP_ProtocolIE_ID_id_RICrequestID;
-  ie->criticality = E2AP_Criticality_reject;
-  ie->value.present = E2AP_RICsubscriptionDeleteResponse_IEs__value_PR_RICrequestID;
-  ie->value.choice.RICrequestID.ricRequestorID = request_id;
-  ie->value.choice.RICrequestID.ricInstanceID = instance_id;
-  ASN_SEQUENCE_ADD(&out->protocolIEs.list,ie);
+    ie = (E2AP_RICsubscriptionDeleteResponse_IEs_t *)calloc(1, sizeof(E2AP_RICsubscriptionDeleteResponse_IEs_t));
+    ie->id = E2AP_ProtocolIE_ID_id_RICrequestID;
+    ie->criticality = E2AP_Criticality_reject;
+    ie->value.present = E2AP_RICsubscriptionDeleteResponse_IEs__value_PR_RICrequestID;
+    ie->value.choice.RICrequestID.ricRequestorID = request_id;
+    ie->value.choice.RICrequestID.ricInstanceID = instance_id;
+    ASN_SEQUENCE_ADD(&out->protocolIEs.list, ie);
 
-  ie = (E2AP_RICsubscriptionDeleteResponse_IEs_t *)calloc(1,sizeof(*ie));
-  ie->id = E2AP_ProtocolIE_ID_id_RANfunctionID;
-  ie->criticality = E2AP_Criticality_reject;
-  ie->value.present = E2AP_RICsubscriptionDeleteResponse_IEs__value_PR_RANfunctionID;
-  ie->value.choice.RANfunctionID = function_id;
-  ASN_SEQUENCE_ADD(&out->protocolIEs.list,ie);
+    ie = (E2AP_RICsubscriptionDeleteResponse_IEs_t *)calloc(1,sizeof(*ie));
+    ie->id = E2AP_ProtocolIE_ID_id_RANfunctionID;
+    ie->criticality = E2AP_Criticality_reject;
+    ie->value.present = E2AP_RICsubscriptionDeleteResponse_IEs__value_PR_RANfunctionID;
+    ie->value.choice.RANfunctionID = function_id;
+    ASN_SEQUENCE_ADD(&out->protocolIEs.list, ie);
 
-  if (e2ap_encode_pdu(&pdu,buffer,len) < 0) {
-    E2AP_ERROR("Failed to encode RICsubscriptionDeleteResponse\n");
-    return -1;
-  }
+    if (e2ap_encode_pdu(&pdu, buffer, len) < 0) {
+        E2AP_ERROR("Failed to encode RICsubscriptionDeleteResponse\n");
+        return -1;
+    }
 
-  return 0;
+    return 0;
 }
 
 int e2ap_generate_ric_subscription_delete_failure(

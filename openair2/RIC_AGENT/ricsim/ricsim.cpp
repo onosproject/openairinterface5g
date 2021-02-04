@@ -119,7 +119,76 @@ int main(int argc, char* argv[]){
 
   LOG_I("[SCTP] Waiting for SCTP data");
 
-  while(1) //constantly looking for data on SCTP interface    
+  int outer_loop_index = 3;
+  int inner_loop_index = 10;
+
+  while (outer_loop_index) {
+      while (inner_loop_index) //constantly looking for data on SCTP interface    
+      {
+        LOG_I("in while loop");
+        if(sctp_receive_data(client_fd, recv_buf) <= 0)
+          break;
+
+        LOG_I("[SCTP] Received new data of size %d", recv_buf.len);
+
+        e2ap_handle_sctp_data(client_fd, recv_buf, xmlenc);
+        inner_loop_index--;
+
+        if (xmlenc)
+          xmlenc = false;
+      }
+
+      // Send subscription delete
+      {
+          E2AP_PDU_t* pdu_sub = (E2AP_PDU_t*)calloc(1, sizeof(E2AP_PDU));
+
+          generate_e2apv1_subscription_delete(pdu_sub);
+
+          xer_fprint(stderr, &asn_DEF_E2AP_PDU, pdu_sub);
+
+          auto buffer_size2 = MAX_SCTP_BUFFER;
+          unsigned char buffer2[MAX_SCTP_BUFFER];
+
+          sctp_buffer_t data2;
+
+          auto er2 = asn_encode_to_buffer(nullptr, ATS_ALIGNED_BASIC_PER, &asn_DEF_E2AP_PDU, pdu_sub, buffer2, buffer_size2);
+
+          data2.len = er2.encoded;
+          memcpy(data2.buffer, buffer2, er2.encoded);
+
+          fprintf(stderr, "er encded is %zu\n", er2.encoded);
+
+          if(sctp_send_data(client_fd, data2) > 0) {
+            LOG_I("[SCTP] Sent E2-SUBSCRIPTION-DELETE");
+          } else {
+            LOG_E("[SCTP] Unable to send E2-SUBSCRIPTION-DELETE to peer");
+          }
+      }
+
+
+      //Sending Subscription Request
+      {
+          E2AP_PDU_t* pdu_sub = (E2AP_PDU_t*)calloc(1,sizeof(E2AP_PDU));
+          generate_e2apv1_subscription_request(pdu_sub);
+          xer_fprint(stderr, &asn_DEF_E2AP_PDU, pdu_sub);
+          auto buffer_size2 = MAX_SCTP_BUFFER;
+          unsigned char buffer2[MAX_SCTP_BUFFER];
+          sctp_buffer_t data2;
+          auto er2 = asn_encode_to_buffer(nullptr, ATS_ALIGNED_BASIC_PER, &asn_DEF_E2AP_PDU, pdu_sub, buffer2, buffer_size2);
+          data2.len = er2.encoded;
+          memcpy(data2.buffer, buffer2, er2.encoded);
+          fprintf(stderr, "er encded is %zu\n", er2.encoded);
+          if(sctp_send_data(client_fd, data2) > 0) {
+            LOG_I("[SCTP] Sent E2-SUBSCRIPTION-REQUEST");
+          } else {
+            LOG_E("[SCTP] Unable to send E2-SUBSCRIPTION-REQUEST to peer");
+          }
+      }
+
+      outer_loop_index--;
+  }
+
+  while (1) //constantly looking for data on SCTP interface    
   {
     LOG_I("in while loop");
     if(sctp_receive_data(client_fd, recv_buf) <= 0)

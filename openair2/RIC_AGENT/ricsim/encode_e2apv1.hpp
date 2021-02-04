@@ -21,6 +21,8 @@ void generate_e2apv1_setup_request(E2AP_PDU_t *setup_req_pdu);
 
 void generate_e2apv1_setup_response(E2AP_PDU_t *setup_resp_pdu);
 
+void generate_e2apv1_subscription_delete(E2AP_PDU_t *sub_req_pdu);
+
 void generate_e2apv1_subscription_request(E2AP_PDU_t *sub_req_pdu);
 
 void generate_e2apv1_subscription_response(E2AP_PDU_t *sub_resp_pdu, E2AP_PDU_t *sub_req_pdu);

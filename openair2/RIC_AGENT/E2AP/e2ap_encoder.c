@@ -38,7 +38,8 @@
 #include "per_support.h"
 
 ssize_t e2ap_encode(const struct asn_TYPE_descriptor_s *td,
-        const asn_per_constraints_t *constraints,void *sptr,
+        const asn_per_constraints_t *constraints,
+        void *sptr,
         uint8_t **buf)
 {
     ssize_t encoded;
@@ -50,12 +51,12 @@ ssize_t e2ap_encode(const struct asn_TYPE_descriptor_s *td,
         xer_fprint(stdout,td,sptr);
     }
 
-    encoded = aper_encode_to_new_buffer(td,constraints,sptr,(void **)buf);
+    encoded = aper_encode_to_new_buffer(td, constraints, sptr, (void **)buf);
     if (encoded < 0) {
         return -1;
     }
 
-    ASN_STRUCT_FREE_CONTENTS_ONLY((*td),sptr);
+    ASN_STRUCT_FREE_CONTENTS_ONLY((*td), sptr);
 
     return encoded;
 }

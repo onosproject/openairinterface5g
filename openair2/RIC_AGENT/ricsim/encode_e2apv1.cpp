@@ -209,6 +209,50 @@ void generate_e2apv1_setup_response(E2AP_PDU_t *e2ap_pdu) {
 }
 
 
+void generate_e2apv1_subscription_delete(E2AP_PDU *e2ap_pdu) {
+
+    // Encode RICRequestID 
+    RICsubscriptionDeleteRequest_IEs_t *ricreqid = (RICsubscriptionDeleteRequest_IEs_t*)calloc(1, sizeof(RICsubscriptionDeleteRequest_IEs_t));
+    ASN_STRUCT_RESET(asn_DEF_RICsubscriptionDeleteRequest_IEs, ricreqid);
+    ricreqid->id = ProtocolIE_ID_id_RICrequestID;
+    ricreqid->criticality = 0;
+    ricreqid->value.present = RICsubscriptionDeleteRequest_IEs__value_PR_RICrequestID;
+    ricreqid->value.choice.RICrequestID.ricRequestorID = 22;
+    ricreqid->value.choice.RICrequestID.ricInstanceID = 6;
+
+    // Encode RANFunctionID
+    RICsubscriptionDeleteRequest_IEs_t *ranfuncid = (RICsubscriptionDeleteRequest_IEs_t*)calloc(1, sizeof(RICsubscriptionDeleteRequest_IEs_t));
+    ASN_STRUCT_RESET(asn_DEF_RICsubscriptionDeleteRequest_IEs, ranfuncid);
+    ranfuncid->id = ProtocolIE_ID_id_RANfunctionID;
+    ranfuncid->criticality = 0;
+    ranfuncid->value.present = RICsubscriptionDeleteRequest_IEs__value_PR_RANfunctionID;
+    ranfuncid->value.choice.RANfunctionID = 1;
+
+    // Encode RICsubscriptionDeleteRequest
+    RICsubscriptionDeleteRequest_t *ricsubreq = (RICsubscriptionDeleteRequest_t*)calloc(1, sizeof(RICsubscriptionDeleteRequest_t));
+    ASN_SEQUENCE_ADD(&ricsubreq->protocolIEs.list, ricreqid);
+    ASN_SEQUENCE_ADD(&ricsubreq->protocolIEs.list, ranfuncid);
+    InitiatingMessage__value_PR pres4;
+    pres4 = InitiatingMessage__value_PR_RICsubscriptionDeleteRequest;
+    InitiatingMessage_t *initmsg = (InitiatingMessage_t*)calloc(1, sizeof(InitiatingMessage_t));
+    initmsg->procedureCode = ProcedureCode_id_RICsubscriptionDelete;
+    initmsg->criticality = Criticality_reject;
+    initmsg->value.present = pres4;
+    initmsg->value.choice.RICsubscriptionDeleteRequest = *ricsubreq;
+
+    /// Encode E2AP_PDU
+    E2AP_PDU_PR pres5;
+    pres5 = E2AP_PDU_PR_initiatingMessage;
+    e2ap_pdu->present = pres5;
+    e2ap_pdu->choice.initiatingMessage = initmsg;
+
+    char *error_buf = (char*)calloc(300, sizeof(char));;
+    size_t errlen;
+    asn_check_constraints(&asn_DEF_E2AP_PDU, e2ap_pdu, error_buf, &errlen);
+    printf("error length %zu\n", errlen);
+    printf("error buf %s\n", error_buf);
+}
+
 void generate_e2apv1_subscription_request(E2AP_PDU *e2ap_pdu) {
 
   RICsubscriptionRequest_IEs_t *ricreqid = (RICsubscriptionRequest_IEs_t*)calloc(1, sizeof(RICsubscriptionRequest_IEs_t));
