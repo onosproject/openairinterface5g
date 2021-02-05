@@ -54,4 +54,17 @@ extern e2_conf_t **e2_conf;
 
 extern void e2_init(int index, e2_conf_t e2_conf);
 
+#if defined(ENB_MODE)
+#include "common/utils/LOG/log.h"
+#define E2AP_ERROR(msg,args...) LOG_E(E2AP,msg,##args)
+#define E2AP_INFO(msg,args...)  LOG_I(E2AP,msg,##args)
+#define E2AP_WARN(msg,args...)  LOG_W(E2AP,msg,##args)
+#define E2AP_DEBUG(msg,args...) LOG_D(E2AP,msg,##args)
+#else
+#define E2AP_ERROR(msg,args...) do { fprintf(stderr,"[E2AP][E] "msg,##args); } while (0)
+#define E2AP_INFO(msg,args...)  do { fprintf(stderr,"[E2AP][I] "msg,##args); } while (0)
+#define E2AP_WARN(msg,args...)  do { fprintf(stderr,"[E2AP][W] "msg,##args); } while (0)
+#define E2AP_DEBUG(msg,args...) do { fprintf(stderr,"[E2AP][D] "msg,##args); } while (0)
+#endif
+
 #endif /* _RIC_AGENT_CONFIG_H */

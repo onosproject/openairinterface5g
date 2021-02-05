@@ -35,7 +35,6 @@
 #include "E2AP_GlobalE2node-ID.h"
 #include "ric_agent_common.h"
 #include "ric_agent_defs.h"
-#include "e2ap_common.h"
 #include "e2ap_generate_messages.h"
 #include "e2ap_encoder.h"
 #include "e2ap_decoder.h"

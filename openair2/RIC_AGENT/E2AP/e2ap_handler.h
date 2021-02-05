@@ -30,8 +30,6 @@
 
 #include <stdint.h>
 
-#include "e2ap_common.h"
-
 extern int e2ap_handle_message(ric_agent_info_t *ric,int32_t stream,
 			const uint8_t * const buf,const uint32_t buflen);
 
