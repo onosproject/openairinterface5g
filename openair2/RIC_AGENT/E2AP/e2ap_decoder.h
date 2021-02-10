@@ -28,8 +28,10 @@
 #ifndef _E2AP_DECODER_H
 #define _E2AP_DECODER_H
 
-#include "e2ap_common.h"
+#include "xer_support.h"
 #include "E2AP_E2AP-PDU.h"
+
+extern int e2ap_xer_print;
 
 int e2ap_decode_pdu(E2AP_E2AP_PDU_t *pdu,
 		    const uint8_t * const buf,const uint32_t len);

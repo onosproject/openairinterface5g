@@ -27,7 +27,7 @@
 
 #include "assertions.h"
 
-#include "e2ap_common.h"
+#include "e2.h"
 #include "e2ap_decoder.h"
 
 #include "E2AP_E2AP-PDU.h"
@@ -63,7 +63,7 @@ int e2ap_decode_pdu(E2AP_E2AP_PDU_t *pdu,
     return -1;
   }
 
-  E2AP_XER_PRINT(stdout,&asn_DEF_E2AP_E2AP_PDU,pdu);
+  xer_fprint(stdout, &asn_DEF_E2AP_E2AP_PDU, pdu);
 
   switch (pdu->present) {
   case E2AP_E2AP_PDU_PR_initiatingMessage:

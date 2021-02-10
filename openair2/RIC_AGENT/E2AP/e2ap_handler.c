@@ -30,6 +30,7 @@
 
 #include "ric_agent_common.h"
 #include "ric_agent_defs.h"
+#include "e2.h"
 #include "e2ap_handler.h"
 #include "e2ap_decoder.h"
 #include "e2ap_encoder.h"

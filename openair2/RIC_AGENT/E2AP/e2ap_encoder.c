@@ -28,7 +28,6 @@
 #include "assertions.h"
 #include "conversions.h"
 #include "intertask_interface.h"
-#include "e2ap_common.h"
 #include "e2ap_encoder.h"
 
 #include "E2AP_E2AP-PDU.h"
@@ -47,9 +46,7 @@ ssize_t e2ap_encode(const struct asn_TYPE_descriptor_s *td,
     DevAssert(td != NULL);
     DevAssert(buf != NULL);
 
-    if (e2ap_xer_print) {
-        xer_fprint(stdout,td,sptr);
-    }
+    xer_fprint(stdout, td, sptr);
 
     encoded = aper_encode_to_new_buffer(td, constraints, sptr, (void **)buf);
     if (encoded < 0) {
