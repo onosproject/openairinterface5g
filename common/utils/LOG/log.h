@@ -242,7 +242,6 @@ typedef enum {
   NFAPI_PNF,
 #ifdef ENABLE_RIC_AGENT
   RIC_AGENT,
-  E2AP,
 #endif
   MAX_LOG_PREDEF_COMPONENTS,
 }

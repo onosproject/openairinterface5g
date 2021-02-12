@@ -28,9 +28,7 @@
 #include "intertask_interface.h"
 #include "conversions.h"
 
-#include "ric_agent_common.h"
-#include "ric_agent_defs.h"
-#include "e2.h"
+#include "ric_agent.h"
 #include "e2ap_handler.h"
 #include "e2ap_decoder.h"
 #include "e2ap_encoder.h"
@@ -54,7 +52,7 @@ int e2ap_handle_e2_setup_response(ric_agent_info_t *ric,uint32_t stream,
     DevAssert(pdu != NULL);
     resp = &pdu->choice.successfulOutcome.value.choice.E2setupResponse;
 
-    E2AP_INFO("Received E2SetupResponse (ranid %u)\n",ric->ranid);
+    RIC_AGENT_INFO("Received E2SetupResponse (ranid %u)\n",ric->ranid);
 
     for (ptr = resp->protocolIEs.list.array;
             ptr < &resp->protocolIEs.list.array[resp->protocolIEs.list.count];
@@ -68,7 +66,7 @@ int e2ap_handle_e2_setup_response(ric_agent_info_t *ric,uint32_t stream,
         /* XXX: handle RANfunction IEs once we have some E2SM support. */
     }
 
-    E2AP_INFO("E2SetupResponse (ranid %u) from RIC (mcc=%u,mnc=%u,id=%u)\n",
+    RIC_AGENT_INFO("E2SetupResponse (ranid %u) from RIC (mcc=%u,mnc=%u,id=%u)\n",
         ric->ranid,ric->ric_mcc,ric->ric_mnc,ric->ric_id);
 
     return 0;
@@ -84,7 +82,7 @@ int e2ap_handle_e2_setup_failure(ric_agent_info_t *ric,uint32_t stream,
     DevAssert(pdu != NULL);
     resp = &pdu->choice.unsuccessfulOutcome.value.choice.E2setupFailure;
 
-    E2AP_INFO("Received E2SetupFailure (ranid %u)\n",ric->ranid);
+    RIC_AGENT_INFO("Received E2SetupFailure (ranid %u)\n",ric->ranid);
 
     for (ptr = resp->protocolIEs.list.array;
             ptr < &resp->protocolIEs.list.array[resp->protocolIEs.list.count];
@@ -97,22 +95,24 @@ int e2ap_handle_e2_setup_failure(ric_agent_info_t *ric,uint32_t stream,
     /* XXX: handle RANfunction IEs once we have some E2SM support. */
     }
 
-    E2AP_INFO("E2SetupFailure (ranid %u) from RIC (cause=%ld,detail=%ld)\n", ric->ranid,cause,cause_detail);
+    RIC_AGENT_INFO("E2SetupFailure (ranid %u) from RIC (cause=%ld,detail=%ld)\n", ric->ranid,cause,cause_detail);
 
     return 0;
 }
 
-int e2ap_handle_ric_subscription_request(ric_agent_info_t *ric,uint32_t stream,
-					 E2AP_E2AP_PDU_t *pdu)
+int e2ap_handle_ric_subscription_request(
+        ric_agent_info_t *ric,
+        uint32_t stream,
+        E2AP_E2AP_PDU_t *pdu,
+        uint8_t **outbuf,
+        uint32_t *outlen)
 {
     int ret;
-    uint8_t *buf;
-    uint32_t len;
     uint32_t      interval_sec = 0;
     uint32_t      interval_us = 0;
     ric_ran_function_t *func;
 
-    E2AP_INFO("Received RICsubscriptionRequest from ranid %u\n",ric->ranid);
+    RIC_AGENT_INFO("Received RICsubscriptionRequest from ranid %u\n",ric->ranid);
 
     DevAssert(pdu != NULL);
 
@@ -131,7 +131,7 @@ int e2ap_handle_ric_subscription_request(ric_agent_info_t *ric,uint32_t stream,
         if  (rie->value.present == E2AP_RICsubscriptionRequest_IEs__value_PR_RICrequestID) {
             rs->request_id = rie->value.choice.RICrequestID.ricRequestorID;
             rs->instance_id = rie->value.choice.RICrequestID.ricInstanceID;
-            E2AP_INFO("RICsubscriptionRequest|ricRequestorID=%ld|ricInstanceID=%ld", rs->request_id, rs->instance_id);
+            RIC_AGENT_INFO("RICsubscriptionRequest|ricRequestorID=%ld|ricInstanceID=%ld", rs->request_id, rs->instance_id);
         } else if (rie->value.present == E2AP_RICsubscriptionRequest_IEs__value_PR_RANfunctionID) {
             rs->function_id = rie->value.choice.RANfunctionID;
         } else if (rie->value.present == E2AP_RICsubscriptionRequest_IEs__value_PR_RICsubscriptionDetails) {
@@ -152,7 +152,7 @@ int e2ap_handle_ric_subscription_request(ric_agent_info_t *ric,uint32_t stream,
                             ptr < &eventTriggerDef->choice.eventDefinition_Format1.policyTest_List->list.array[eventTriggerDef->choice.eventDefinition_Format1.policyTest_List->list.count];
                             ptr++)
                     {
-                        E2AP_INFO("report period = %ld", (*ptr)->report_Period_IE);
+                        RIC_AGENT_INFO("report period = %ld", (*ptr)->report_Period_IE);
                         switch ((*ptr)->report_Period_IE) {
                             case E2SM_KPM_RT_Period_IE_ms10:
                                 interval_us = 10000;
@@ -261,19 +261,19 @@ int e2ap_handle_ric_subscription_request(ric_agent_info_t *ric,uint32_t stream,
 
     func = ric_agent_lookup_ran_function(rs->function_id);
     if (!func) {
-        E2AP_ERROR("failed to find ran_function %ld\n",rs->function_id);
+        RIC_AGENT_ERROR("failed to find ran_function %ld\n",rs->function_id);
         goto errout;
     }
 
     ret = func->model->handle_subscription_add(ric,rs);
     if (ret) {
-        E2AP_ERROR("failed to subscribe to ran_function %ld\n",rs->function_id);
+        RIC_AGENT_ERROR("failed to subscribe to ran_function %ld\n",rs->function_id);
         goto errout;
     }
 
-    ret = e2ap_generate_ric_subscription_response(ric,rs,&buf,&len);
+    ret = e2ap_generate_ric_subscription_response(ric, rs, outbuf, outlen);
     if (ret) {
-        E2AP_ERROR("failed to generate RICsubscriptionResponse (ranid %u)\n", ric->ranid);
+        RIC_AGENT_ERROR("failed to generate RICsubscriptionResponse (ranid %u)\n", ric->ranid);
         goto errout;
     }
 
@@ -292,20 +292,16 @@ int e2ap_handle_ric_subscription_request(ric_agent_info_t *ric,uint32_t stream,
             (void *)arg,
             &ric->e2sm_kpm_timer_id);
     if (ret < 0) {
-        E2AP_ERROR("failed to start timer\n");
+        RIC_AGENT_ERROR("failed to start timer\n");
         goto errout;
     }
-
-    ric_agent_send_sctp_data(ric,stream,buf,len);
 
     return 0;
 
     errout:
-    ret = e2ap_generate_ric_subscription_failure(ric,rs,&buf,&len);
+    ret = e2ap_generate_ric_subscription_failure(ric, rs, outbuf, outlen);
     if (ret) {
-        E2AP_ERROR("failed to generate RICsubscriptionFailure (ranid %u)\n", ric->ranid);
-    } else {
-        ric_agent_send_sctp_data(ric,stream,buf,len);
+        RIC_AGENT_ERROR("failed to generate RICsubscriptionFailure (ranid %u)\n", ric->ranid);
     }
 
     ric_action_t* ra = LIST_FIRST(&rs->action_list);
@@ -324,7 +320,11 @@ int e2ap_handle_ric_subscription_request(ric_agent_info_t *ric,uint32_t stream,
 }
 
 int e2ap_handle_ric_subscription_delete_request(
-  ric_agent_info_t *ric,uint32_t stream,E2AP_E2AP_PDU_t *pdu)
+        ric_agent_info_t *ric,
+        uint32_t stream,
+        E2AP_E2AP_PDU_t *pdu,
+        uint8_t **outbuf,
+        uint32_t *outlen)
 {
     E2AP_RICsubscriptionDeleteRequest_t *req;
     E2AP_RICsubscriptionDeleteRequest_IEs_t *rie,**ptr;
@@ -333,8 +333,6 @@ int e2ap_handle_ric_subscription_delete_request(
     ric_ran_function_id_t function_id;
     ric_subscription_t *rs;
     int ret;
-    uint8_t *buf;
-    uint32_t len;
     ric_ran_function_t *func;
     long cause;
     long cause_detail;
@@ -342,7 +340,7 @@ int e2ap_handle_ric_subscription_delete_request(
     DevAssert(pdu != NULL);
     req = &pdu->choice.initiatingMessage.value.choice.RICsubscriptionDeleteRequest;
 
-    E2AP_INFO("Received RICsubscriptionDeleteRequest from ranid %u\n",ric->ranid);
+    RIC_AGENT_INFO("Received RICsubscriptionDeleteRequest from ranid %u\n",ric->ranid);
 
     for (ptr = req->protocolIEs.list.array;
             ptr < &req->protocolIEs.list.array[req->protocolIEs.list.count];
@@ -359,7 +357,7 @@ int e2ap_handle_ric_subscription_delete_request(
 
     func = ric_agent_lookup_ran_function(function_id);
     if (!func) {
-        E2AP_ERROR("failed to find ran_function %ld\n",function_id);
+        RIC_AGENT_ERROR("failed to find ran_function %ld\n",function_id);
         cause = E2AP_Cause_PR_ricRequest;
         cause_detail = E2AP_CauseRIC_ran_function_id_Invalid;
         goto errout;
@@ -367,7 +365,7 @@ int e2ap_handle_ric_subscription_delete_request(
 
     rs = ric_agent_lookup_subscription(ric,request_id,instance_id,function_id);
     if (!rs) {
-        E2AP_ERROR("failed to find subscription %ld/%ld/%ld\n", request_id,instance_id,function_id);
+        RIC_AGENT_ERROR("failed to find subscription %ld/%ld/%ld\n", request_id,instance_id,function_id);
         cause = E2AP_Cause_PR_ricRequest;
         cause_detail = E2AP_CauseRIC_request_id_unknown;
         goto errout;
@@ -375,90 +373,101 @@ int e2ap_handle_ric_subscription_delete_request(
 
     ret = func->model->handle_subscription_del(ric, rs, 0, &cause, &cause_detail);
     if (ret) {
-        E2AP_ERROR("failed to remove subscription to ran_function %ld\n", rs->function_id);
+        RIC_AGENT_ERROR("failed to remove subscription to ran_function %ld\n", rs->function_id);
         goto errout;
     }
 
-    ret = e2ap_generate_ric_subscription_delete_response(ric, request_id, instance_id, function_id, &buf, &len);
+    ret = e2ap_generate_ric_subscription_delete_response(ric, request_id, instance_id, function_id, outbuf, outlen);
     if (ret) {
-        E2AP_ERROR("failed to generate RICsubscriptionDeleteResponse (ranid %u)\n", ric->ranid);
+        RIC_AGENT_ERROR("failed to generate RICsubscriptionDeleteResponse (ranid %u)\n", ric->ranid);
         cause = E2AP_Cause_PR_protocol;
         cause_detail = E2AP_CauseProtocol_unspecified;
         goto errout;
-    } else {
-        ric_agent_send_sctp_data(ric,stream,buf,len);
     }
+
+    RIC_AGENT_INFO("Encoded RICsubscriptionDeleteResponse, ranid %u, oulen=%d\n",ric->ranid, *outlen);
 
     return 0;
 
 errout:
     ret = e2ap_generate_ric_subscription_delete_failure(
-    ric,request_id,instance_id,function_id,cause,cause_detail,&buf,&len);
+            ric,request_id,
+            instance_id,
+            function_id,
+            cause,
+            cause_detail,
+            outbuf,
+            outlen);
     if (ret) {
-        E2AP_ERROR("failed to generate RICsubscriptionDeleteFailure (ranid %u)\n", ric->ranid);
-    } else {
-        ric_agent_send_sctp_data(ric,stream,buf,len);
+        RIC_AGENT_ERROR("failed to generate RICsubscriptionDeleteFailure (ranid %u)\n", ric->ranid);
     }
 
     return ret;
 }
 
-int e2ap_handle_ric_service_query(ric_agent_info_t *ric,uint32_t stream, E2AP_E2AP_PDU_t *pdu)
+int e2ap_handle_ric_service_query(
+        ric_agent_info_t *ric,
+        uint32_t stream,
+        E2AP_E2AP_PDU_t *pdu,
+        uint8_t **outbuf,
+        uint32_t *outlen)
 {
-    uint8_t *buf;
-    uint32_t len;
     int ret;
 
-    E2AP_INFO("Received RICserviceQuery from ranid %u\n",ric->ranid);
+    RIC_AGENT_INFO("Received RICserviceQuery from ranid %u\n",ric->ranid);
 
     /*
     * NB: we never add, modify, or remove service models or functions, so
     * this is a noop for us.
     */
-    ret = e2ap_generate_ric_service_update(ric,&buf,&len);
+    ret = e2ap_generate_ric_service_update(ric, outbuf, outlen);
     if (ret) {
-        E2AP_ERROR("failed to generate RICserviceUpdate (ranid %u)\n", ric->ranid);
+        RIC_AGENT_ERROR("failed to generate RICserviceUpdate (ranid %u)\n", ric->ranid);
         return -1;
-    } else {
-        ric_agent_send_sctp_data(ric,stream,buf,len);
     }
 
     return 0;
 }
 
-int e2ap_handle_reset_request(ric_agent_info_t *ric,uint32_t stream, E2AP_E2AP_PDU_t *pdu)
+int e2ap_handle_reset_request(
+        ric_agent_info_t *ric,
+        uint32_t stream,
+        E2AP_E2AP_PDU_t *pdu,
+        uint8_t **outbuf,
+        uint32_t *outlen)
 {
-    uint8_t *buf;
-    uint32_t len;
     int ret;
 
-    E2AP_INFO("Received RICresetRequest from ranid %u\n",ric->ranid);
+    RIC_AGENT_INFO("Received RICresetRequest from ranid %u\n",ric->ranid);
 
     ric_agent_reset(ric);
 
-    ret = e2ap_generate_reset_response(ric,&buf,&len);
+    ret = e2ap_generate_reset_response(ric, outbuf, outlen);
     if (ret) {
-        E2AP_ERROR("failed to generate RICresetResponse (ranid %u)\n", ric->ranid);
+        RIC_AGENT_ERROR("failed to generate RICresetResponse (ranid %u)\n", ric->ranid);
         return -1;
-    } else {
-        ric_agent_send_sctp_data(ric,stream,buf,len);
     }
 
     return 0;
 }
 
-int e2ap_handle_message(ric_agent_info_t *ric,int32_t stream,
-			const uint8_t * const buf,const uint32_t buflen)
+int e2ap_handle_message(
+        ric_agent_info_t *ric,
+        int32_t stream,
+        const uint8_t * const buf,
+        const uint32_t buflen,
+        uint8_t **outbuf,
+        uint32_t *outlen)
 {
     E2AP_E2AP_PDU_t pdu;
     int ret;
 
     DevAssert(buf != NULL);
 
-    memset(&pdu,0,sizeof(pdu));
-    ret = e2ap_decode_pdu(&pdu,buf,buflen);
+    memset(&pdu, 0, sizeof(pdu));
+    ret = e2ap_decode_pdu(&pdu, buf, buflen);
     if (ret < 0) {
-        E2AP_ERROR("failed to decode PDU\n");
+        RIC_AGENT_ERROR("failed to decode PDU\n");
         return -1;
     }
 
@@ -466,19 +475,19 @@ int e2ap_handle_message(ric_agent_info_t *ric,int32_t stream,
         case E2AP_E2AP_PDU_PR_initiatingMessage:
             switch (pdu.choice.initiatingMessage.procedureCode) {
                 case E2AP_ProcedureCode_id_RICsubscription:
-                    ret = e2ap_handle_ric_subscription_request(ric,stream,&pdu);
+                    ret = e2ap_handle_ric_subscription_request(ric, stream, &pdu, outbuf, outlen);
                     break;
                 case E2AP_ProcedureCode_id_RICsubscriptionDelete:
-                    ret = e2ap_handle_ric_subscription_delete_request(ric,stream,&pdu);
+                    ret = e2ap_handle_ric_subscription_delete_request(ric, stream, &pdu, outbuf, outlen);
                     break;
                 case E2AP_ProcedureCode_id_RICserviceQuery:
-                    ret = e2ap_handle_ric_service_query(ric,stream,&pdu);
+                    ret = e2ap_handle_ric_service_query(ric, stream, &pdu, outbuf, outlen);
                     break;
                 case E2AP_ProcedureCode_id_Reset:
-                    ret = e2ap_handle_reset_request(ric,stream,&pdu);
+                    ret = e2ap_handle_reset_request(ric, stream, &pdu, outbuf, outlen);
                     break;
                 default:
-                    E2AP_WARN("unsupported initiatingMessage procedure %ld (ranid %u)\n",
+                    RIC_AGENT_WARN("unsupported initiatingMessage procedure %ld (ranid %u)\n",
                             pdu.choice.initiatingMessage.procedureCode,ric->ranid);
                     ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_E2AP_E2AP_PDU,&pdu);
                     return -1;
@@ -487,36 +496,42 @@ int e2ap_handle_message(ric_agent_info_t *ric,int32_t stream,
         case E2AP_E2AP_PDU_PR_successfulOutcome:
             switch (pdu.choice.successfulOutcome.procedureCode) {
                 case E2AP_ProcedureCode_id_E2setup:
-                    ret = e2ap_handle_e2_setup_response(ric,stream,&pdu);
+                    ret = e2ap_handle_e2_setup_response(ric, stream, &pdu);
                     break;
                 default:
-                    E2AP_WARN("unsupported successfulOutcome procedure %ld (ranid %u)\n", pdu.choice.initiatingMessage.procedureCode,ric->ranid);
-                    ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_E2AP_E2AP_PDU,&pdu);
+                    RIC_AGENT_WARN("unsupported successfulOutcome procedure %ld (ranid %u)\n", pdu.choice.initiatingMessage.procedureCode,ric->ranid);
+                    ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_E2AP_E2AP_PDU, &pdu);
                     return -1;
             };
             break;
         case E2AP_E2AP_PDU_PR_unsuccessfulOutcome:
             switch (pdu.choice.unsuccessfulOutcome.procedureCode) {
                 case E2AP_ProcedureCode_id_E2setup:
-                    ret = e2ap_handle_e2_setup_failure(ric,stream,&pdu);
+                    ret = e2ap_handle_e2_setup_failure(ric, stream, &pdu);
                     break;
                 default:
-                    E2AP_WARN("unsupported unsuccessfulOutcome procedure %ld (ranid %u)\n", pdu.choice.initiatingMessage.procedureCode,ric->ranid);
-                    ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_E2AP_E2AP_PDU,&pdu);
+                    RIC_AGENT_WARN("unsupported unsuccessfulOutcome procedure %ld (ranid %u)\n", pdu.choice.initiatingMessage.procedureCode,ric->ranid);
+                    ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_E2AP_E2AP_PDU, &pdu);
                     return -1;
             };
             break;
         default:
-            E2AP_ERROR("unsupported presence %u (ranid %u)\n", pdu.present,ric->ranid);
-            ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_E2AP_E2AP_PDU,&pdu);
+            RIC_AGENT_ERROR("unsupported presence %u (ranid %u)\n", pdu.present, ric->ranid);
+            ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_E2AP_E2AP_PDU, &pdu);
             return -1;
     }
 
-    ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_E2AP_E2AP_PDU,&pdu);
+    ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_E2AP_E2AP_PDU, &pdu);
     return ret;
 }
 
-int e2ap_handle_timer_expiry(ric_agent_info_t *ric, long timer_id, void* arg) {
+int e2ap_handle_timer_expiry(
+        ric_agent_info_t *ric,
+        long timer_id,
+        void* arg,
+        uint8_t **outbuf,
+        uint32_t *outlen)
+{
     DevAssert(arg != NULL);
     ric_ran_function_requestor_info_t* info = (ric_ran_function_requestor_info_t*)arg;
     ric_ran_function_t *func = ric_agent_lookup_ran_function(info->function_id);
@@ -526,5 +541,6 @@ int e2ap_handle_timer_expiry(ric_agent_info_t *ric, long timer_id, void* arg) {
     return func->model->handle_timer_expiry(
             ric, timer_id,
             info->function_id, info->request_id,
-            info->instance_id, info->action_id);
+            info->instance_id, info->action_id,
+            outbuf, outlen);
 }
