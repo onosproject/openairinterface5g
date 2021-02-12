@@ -58,7 +58,7 @@ ssize_t e2ap_encode(const struct asn_TYPE_descriptor_s *td,
     return encoded;
 }
 
-ssize_t e2ap_encode_pdu(E2AP_E2AP_PDU_t *pdu,uint8_t **buf,uint32_t *len)
+ssize_t e2ap_encode_pdu(E2AP_E2AP_PDU_t *pdu, uint8_t **buf, uint32_t *len)
 {
     ssize_t encoded;
 

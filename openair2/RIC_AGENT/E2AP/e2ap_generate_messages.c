@@ -25,26 +25,23 @@
  *      contact@openairinterface.org
  */
 
+#include "assertions.h"
+#include "conversions.h"
+#include "common/ngran_types.h"
+
+#include "ric_agent.h"
+#include "e2ap_generate_messages.h"
+#include "e2ap_encoder.h"
+#include "e2ap_decoder.h"
+#include "e2sm_kpm.h"
+
 #include "E2AP_Cause.h"
 #include "E2AP_ProtocolIE-Field.h"
 #include "E2AP_InitiatingMessage.h"
 #include "E2AP_SuccessfulOutcome.h"
 #include "E2AP_UnsuccessfulOutcome.h"
 #include "E2AP_E2setupRequest.h"
-
 #include "E2AP_GlobalE2node-ID.h"
-#include "ric_agent_common.h"
-#include "ric_agent_defs.h"
-#include "e2ap_generate_messages.h"
-#include "e2ap_encoder.h"
-#include "e2ap_decoder.h"
-#include "e2sm_kpm.h"
-#include "ric_agent.h"
-#include "e2.h"
-
-#include "assertions.h"
-#include "conversions.h"
-#include "common/ngran_types.h"
 
 extern int global_e2_node_id(ranid_t ranid, E2AP_GlobalE2node_ID_t* node_id);
 
@@ -111,23 +108,25 @@ int e2ap_generate_e2_setup_request(ric_agent_info_t *ric,
   ASN_SEQUENCE_ADD(&req->protocolIEs.list,ie);
 
   if (e2ap_encode_pdu(&pdu,buffer,len) < 0) {
-    E2AP_ERROR("Failed to encode E2setupRequest\n");
+    RIC_AGENT_ERROR("Failed to encode E2setupRequest\n");
     return 1;
   }
   /*
   E2AP_E2AP_PDU_t pdud;
   memset(&pdud,0,sizeof(pdud));
   if (e2ap_decode_pdu(&pdud,*buffer,*len) < 0) {
-    E2AP_WARN("Failed to encode E2setupRequest\n");
+    RIC_AGENT_WARN("Failed to encode E2setupRequest\n");
   }
   */
 
   return 0;
 }
 
-int e2ap_generate_ric_subscription_response(ric_agent_info_t *ric,
-					    ric_subscription_t *rs,
-					    uint8_t **buffer,uint32_t *len)
+int e2ap_generate_ric_subscription_response(
+        ric_agent_info_t *ric,
+        ric_subscription_t *rs,
+        uint8_t **buffer,
+        uint32_t *len)
 {
   E2AP_E2AP_PDU_t pdu;
   E2AP_RICsubscriptionResponse_t *out;
@@ -212,8 +211,8 @@ int e2ap_generate_ric_subscription_response(ric_agent_info_t *ric,
   }
   ASN_SEQUENCE_ADD(&out->protocolIEs.list,ie);
 
-  if (e2ap_encode_pdu(&pdu,buffer,len) < 0) {
-    E2AP_ERROR("Failed to encode RICsubscriptionResponse\n");
+  if (e2ap_encode_pdu(&pdu, buffer, len) < 0) {
+    RIC_AGENT_ERROR("Failed to encode RICsubscriptionResponse\n");
     return -1;
   }
 
@@ -303,7 +302,7 @@ int e2ap_generate_ric_subscription_failure(ric_agent_info_t *ric,
     ASN_SEQUENCE_ADD(&out->protocolIEs.list, ie);
 
     if (e2ap_encode_pdu(&pdu,buffer,len) < 0) {
-        E2AP_ERROR("Failed to encode RICsubscriptionFailure\n");
+        RIC_AGENT_ERROR("Failed to encode RICsubscriptionFailure\n");
         return -1;
     }
 
@@ -324,7 +323,7 @@ int e2ap_generate_ric_subscription_delete_response(
 
     memset(&pdu, 0, sizeof(pdu));
     pdu.present = E2AP_E2AP_PDU_PR_successfulOutcome;
-    pdu.choice.successfulOutcome.procedureCode = E2AP_ProcedureCode_id_RICsubscription;
+    pdu.choice.successfulOutcome.procedureCode = E2AP_ProcedureCode_id_RICsubscriptionDelete;
     pdu.choice.successfulOutcome.criticality = E2AP_Criticality_reject;
     pdu.choice.successfulOutcome.value.present = E2AP_SuccessfulOutcome__value_PR_RICsubscriptionDeleteResponse;
     out = &pdu.choice.successfulOutcome.value.choice.RICsubscriptionDeleteResponse;
@@ -345,7 +344,7 @@ int e2ap_generate_ric_subscription_delete_response(
     ASN_SEQUENCE_ADD(&out->protocolIEs.list, ie);
 
     if (e2ap_encode_pdu(&pdu, buffer, len) < 0) {
-        E2AP_ERROR("Failed to encode RICsubscriptionDeleteResponse\n");
+        RIC_AGENT_ERROR("Failed to encode RICsubscriptionDeleteResponse\n");
         return -1;
     }
 
@@ -412,7 +411,7 @@ int e2ap_generate_ric_subscription_delete_failure(
   ASN_SEQUENCE_ADD(&out->protocolIEs.list,ie);
 
   if (e2ap_encode_pdu(&pdu,buffer,len) < 0) {
-    E2AP_ERROR("Failed to encode RICsubscriptionDeleteFailure\n");
+    RIC_AGENT_ERROR("Failed to encode RICsubscriptionDeleteFailure\n");
     return -1;
   }
 
@@ -456,7 +455,7 @@ int e2ap_generate_ric_service_update(ric_agent_info_t *ric,
   ASN_SEQUENCE_ADD(&out->protocolIEs.list,ie);
 
   if (e2ap_encode_pdu(&pdu,buffer,len) < 0) {
-    E2AP_ERROR("Failed to encode RICserviceUpdate\n");
+    RIC_AGENT_ERROR("Failed to encode RICserviceUpdate\n");
     return -1;
   }
 
@@ -475,7 +474,7 @@ int e2ap_generate_reset_response(ric_agent_info_t *ric,
   pdu.choice.successfulOutcome.value.present = E2AP_SuccessfulOutcome__value_PR_ResetResponse;
 
   if (e2ap_encode_pdu(&pdu,buffer,len) < 0) {
-    E2AP_ERROR("Failed to encode ResetResponse\n");
+    RIC_AGENT_ERROR("Failed to encode ResetResponse\n");
     return -1;
   }
 

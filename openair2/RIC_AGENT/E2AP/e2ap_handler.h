@@ -30,9 +30,19 @@
 
 #include <stdint.h>
 
-extern int e2ap_handle_message(ric_agent_info_t *ric,int32_t stream,
-			const uint8_t * const buf,const uint32_t buflen);
+extern int e2ap_handle_message(
+        ric_agent_info_t *ric,
+        int32_t stream,
+        const uint8_t * const buf,
+        const uint32_t buflen,
+        uint8_t **outbuf,
+        uint32_t *outlen);
 
-extern int e2ap_handle_timer_expiry(ric_agent_info_t *ric, long timer_id, void* arg);
+extern int e2ap_handle_timer_expiry(
+        ric_agent_info_t *ric,
+        long timer_id,
+        void* arg,
+        uint8_t **outbuf,
+        uint32_t *outlen);
 
 #endif /* _E2AP_ENB_HANDLER_H */

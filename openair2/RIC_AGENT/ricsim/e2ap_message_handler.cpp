@@ -133,6 +133,22 @@ void e2ap_handle_sctp_data(int &socket_fd, sctp_buffer_t &data, bool xmlenc)
           break;
 	}
       break;
+    case ProcedureCode_id_RICsubscriptionDelete:
+          switch(index) {
+              case E2AP_PDU_PR_initiatingMessage:
+                  LOG_I("[E2AP] Received RIC-SUBSCRIPTION-DELETE-REQUEST");
+                  break;
+              case E2AP_PDU_PR_successfulOutcome:
+                  LOG_I("[E2AP] Received RIC-SUBSCRIPTION-DELETE-RESPONSE");
+                  break;
+              case E2AP_PDU_PR_unsuccessfulOutcome:
+                  LOG_I("[E2AP] Received RIC-SUBSCRIPTION-DELETE-FAILURE");
+                  break;
+              default:
+                  LOG_E("[E2AP] Invalid message index=%d in E2AP-PDU", index);
+                  break;
+          }
+          break;
 
     case ProcedureCode_id_RICindication: // 205
       switch(index)

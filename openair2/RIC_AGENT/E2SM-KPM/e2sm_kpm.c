@@ -27,11 +27,9 @@
 
 #include "common/utils/assertions.h"
 #include "f1ap_common.h"
-#include "ric_agent_defs.h"
-#include "ric_agent_common.h"
+#include "ric_agent.h"
 #include "e2ap_encoder.h"
 #include "e2sm_kpm.h"
-#include "e2.h"
 
 #include "E2AP_Cause.h"
 #include "E2SM_KPM_E2SM-KPM-RANfunction-Description.h"
@@ -67,7 +65,9 @@ static int e2sm_kpm_timer_expiry(
         ric_ran_function_id_t function_id,
         long request_id,
         long instance_id,
-        long action_id);
+        long action_id,
+        uint8_t **outbuf,
+        uint32_t *outlen);
 static E2SM_KPM_E2SM_KPM_IndicationMessage_t* encode_kpm_report_rancontainer_cucp_parameterized(ric_agent_info_t* ric);
 static void generate_e2apv1_indication_request_parameterized(E2AP_E2AP_PDU_t *e2ap_pdu, long requestorId, long instanceId, long ranFunctionId, long actionId, long seqNum, uint8_t *ind_header_buf, int header_length, uint8_t *ind_message_buf, int message_length);
 static void encode_e2sm_kpm_indication_header(ranid_t ranid, E2SM_KPM_E2SM_KPM_IndicationHeader_t *ihead);
@@ -130,7 +130,7 @@ int e2sm_kpm_init(void)
     func->enc_definition_len = e2ap_encode(&asn_DEF_E2SM_KPM_E2SM_KPM_RANfunction_Description,0, func_def,&func->enc_definition);
 
     if (func->enc_definition_len < 0) {
-        E2AP_ERROR("failed to encode RANfunction_List in E2SM KPM func description; aborting!");
+        RIC_AGENT_ERROR("failed to encode RANfunction_List in E2SM KPM func description; aborting!");
         ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_E2SM_KPM_E2SM_KPM_RANfunction_Description, func_def);
         free(func_def);
         free(func);
@@ -174,13 +174,16 @@ static int e2sm_kpm_timer_expiry(
         ric_ran_function_id_t function_id,
         long request_id,
         long instance_id,
-        long action_id) {
+        long action_id,
+        uint8_t **outbuf,
+        uint32_t *outlen)
+{
 
     E2SM_KPM_E2SM_KPM_IndicationMessage_t* indicationmessage;
 
     DevAssert(timer_id == ric->e2sm_kpm_timer_id);
 
-    E2AP_INFO("Timer expired, timer_id %ld function_id %ld\n", timer_id, function_id);
+    RIC_AGENT_INFO("Timer expired, timer_id %ld function_id %ld\n", timer_id, function_id);
 
     indicationmessage = encode_kpm_report_rancontainer_cucp_parameterized(ric);
 
@@ -233,9 +236,7 @@ static int e2sm_kpm_timer_expiry(
             0, e2sm_header_buf_style1, er_header_style1.encoded,
             e2smbuffer, er.encoded);
 
-    uint8_t *buf;
-    int len = e2ap_asn1c_encode_pdu(e2ap_pdu, &buf);
-    ric_agent_send_sctp_data(ric, 0, buf, len);
+    *outlen = e2ap_asn1c_encode_pdu(e2ap_pdu, outbuf);
 
     return 0;
 }
@@ -417,11 +418,11 @@ static int e2ap_asn1c_encode_pdu(E2AP_E2AP_PDU_t* pdu, unsigned char **buffer)
     len = aper_encode_to_new_buffer(&asn_DEF_E2AP_E2AP_PDU, 0, pdu, (void **)buffer);
 
     if (len < 0)  {
-        fprintf(stderr, "[E2AP ASN] Unable to aper encode");
+        RIC_AGENT_ERROR("Unable to aper encode");
         exit(1);
     }
     else {
-        fprintf(stderr, "[E2AP ASN] Encoded succesfully, encoded size = %d", len);
+        RIC_AGENT_INFO("Encoded succesfully, encoded size = %d", len);
     }
 
     ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_E2AP_E2AP_PDU, pdu);

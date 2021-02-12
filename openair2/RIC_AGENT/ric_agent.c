@@ -26,19 +26,26 @@
  */
 
 #include "common/ran_context.h"
-#include "ric_agent_common.h"
-#include "ric_agent_defs.h"
+#include "ric_agent.h"
 #include "e2ap_generate_messages.h"
 #include "e2ap_handler.h"
 #include "e2sm_kpm.h"
-#include "e2.h"
 
 extern RAN_CONTEXT_t RC;
+
 ric_agent_info_t **ric_agent_info;
+e2_conf_t **e2_conf;
 
 ric_ran_function_t **ran_functions = NULL;
 unsigned int ran_functions_len = 0;
 static unsigned int ran_functions_alloc_len = 0;
+
+
+static void ric_agent_send_sctp_data(
+        ric_agent_info_t *ric,
+        uint16_t stream,
+        uint8_t *buf,
+        uint32_t len);
 
 int ric_agent_register_ran_function(ric_ran_function_t *func)
 {
@@ -167,7 +174,7 @@ int ric_agent_reset(ric_agent_info_t *ric)
         DevAssert(func);
         ret = func->model->handle_subscription_del(ric,sub,0,&cause,&cause_detail);
         if (ret) {
-            E2AP_ERROR("subscription delete in reset failed (%ld/%ld); forcing!\n",
+            RIC_AGENT_ERROR("subscription delete in reset failed (%ld/%ld); forcing!\n",
                     cause, cause_detail);
             func->model->handle_subscription_del(ric,sub,1,&cause,&cause_detail);
         }
@@ -202,7 +209,7 @@ static int ric_agent_connect(ranid_t ranid)
     strncpy(req->remote_address.ipv4_address, e2_conf[ranid]->remote_ipv4_addr,
             sizeof(req->remote_address.ipv4_address));
     req->remote_address.ipv4_address[sizeof(req->remote_address.ipv4_address)-1] = '\0';
-#if 1
+#if 0
     // Comment out if testing with loopback
     req->local_address.ipv4 = 1;
     strncpy(req->local_address.ipv4_address, RC.rrc[0]->eth_params_s.my_addr,
@@ -215,12 +222,12 @@ static int ric_agent_connect(ranid_t ranid)
 
     RIC_AGENT_INFO("ranid %u connecting to RIC at %s:%u with IP %s\n",
             ranid,req->remote_address.ipv4_address, req->port, req->local_address.ipv4_address);
-    itti_send_msg_to_task(TASK_SCTP, ranid,msg);
+    itti_send_msg_to_task(TASK_SCTP, ranid, msg);
 
     return 0;
 }
 
-void ric_agent_send_sctp_data(
+static void ric_agent_send_sctp_data(
         ric_agent_info_t *ric,
         uint16_t stream,
         uint8_t *buf,
@@ -236,6 +243,8 @@ void ric_agent_send_sctp_data(
     sctp_data_req->stream = stream;
     sctp_data_req->buffer = buf;
     sctp_data_req->buffer_length = len;
+
+    RIC_AGENT_INFO("Send SCTP data, ranid:%u, assoc_id:%d, len:%d\n", ric->ranid, ric->assoc_id, len);
 
     itti_send_msg_to_task(TASK_SCTP, ric->ranid, msg);
 }
@@ -256,12 +265,12 @@ static void ric_agent_disconnect(ric_agent_info_t *ric)
 
 static int ric_agent_handle_sctp_new_association_resp(
         instance_t instance,
-        sctp_new_association_resp_t *resp)
+        sctp_new_association_resp_t *resp,
+        uint8_t **outbuf,
+        uint32_t *outlen)
 {
     ric_agent_info_t *ric;
     int ret;
-    uint8_t *buf = NULL;
-    uint32_t len;
 
     DevAssert(resp != NULL);
 
@@ -300,24 +309,22 @@ static int ric_agent_handle_sctp_new_association_resp(
     timer_remove(ric->ric_connect_timer_id);
 
     /* Send an E2Setup request to RIC. */
-    ret = e2ap_generate_e2_setup_request(ric, &buf, &len);
+    ret = e2ap_generate_e2_setup_request(ric, outbuf, outlen);
     if (ret) {
         RIC_AGENT_ERROR("failed to generate E2setupRequest; disabling ranid %u!\n",
                 ric->ranid);
         ric_agent_disconnect(ric);
-        if (buf)
-            free(buf);
         return 1;
     }
-
-    ric_agent_send_sctp_data(ric, 0, buf,len);
 
     return 0;
 }
 
 static void ric_agent_handle_sctp_data_ind(
         instance_t instance,
-        sctp_data_ind_t *ind)
+        sctp_data_ind_t *ind,
+        uint8_t **outbuf,
+        uint32_t *outlen)
 {
     int ret;
     ric_agent_info_t *ric;
@@ -332,13 +339,19 @@ static void ric_agent_handle_sctp_data_ind(
 
     RIC_AGENT_DEBUG("sctp_data_ind instance %u assoc %d", instance, ind->assoc_id);
 
-    e2ap_handle_message(ric, ind->stream, ind->buffer, ind->buffer_length);
+    e2ap_handle_message(ric, ind->stream, ind->buffer, ind->buffer_length, outbuf, outlen);
 
     ret = itti_free(TASK_UNKNOWN, ind->buffer);
     AssertFatal(ret == EXIT_SUCCESS, "failed to free sctp data buf (%d)\n",ret);
 }
 
-static void ric_agent_handle_timer_expiry(instance_t instance, long timer_id, void* arg) {
+static void ric_agent_handle_timer_expiry(
+        instance_t instance,
+        long timer_id,
+        void* arg,
+        uint8_t **outbuf,
+        uint32_t *outlen)
+{
     ric_agent_info_t* ric;
     int ret = 0;
 
@@ -347,7 +360,7 @@ static void ric_agent_handle_timer_expiry(instance_t instance, long timer_id, vo
     if (timer_id == ric->ric_connect_timer_id) {
         ric_agent_connect(instance);
     } else if (timer_id == ric->e2sm_kpm_timer_id) {
-        ret = e2ap_handle_timer_expiry(ric, timer_id, arg);
+        ret = e2ap_handle_timer_expiry(ric, timer_id, arg, outbuf, outlen);
     } else {
         RIC_AGENT_INFO("invalid timer expiry instance %u timer_id %ld", instance, timer_id);
     }
@@ -359,6 +372,8 @@ void *ric_agent_task(void *args)
     MessageDef *msg = NULL;
     int res;
     uint16_t i;
+    uint8_t *outbuf = NULL;
+    uint32_t outlen = 0;
 
     RIC_AGENT_INFO("starting RIC agent task\n");
 
@@ -374,19 +389,27 @@ void *ric_agent_task(void *args)
         itti_receive_msg(TASK_RIC_AGENT, &msg);
 
         switch (ITTI_MSG_ID(msg)) {
-            case TERMINATE_MESSAGE:
-                RIC_AGENT_WARN("exiting RIC agent task\n");
-                itti_exit_task();
+            case SCTP_NEW_ASSOCIATION_IND:
+                RIC_AGENT_INFO("Received SCTP_NEW_ASSOCIATION_IND for instance %d\n",
+                        ITTI_MESSAGE_GET_INSTANCE(msg));
                 break;
             case SCTP_NEW_ASSOCIATION_RESP:
                 ric_agent_handle_sctp_new_association_resp(
                         ITTI_MESSAGE_GET_INSTANCE(msg),
-                        &msg->ittiMsg.sctp_new_association_resp);
+                        &msg->ittiMsg.sctp_new_association_resp,
+                        &outbuf,
+                        &outlen);
                 break;
             case SCTP_DATA_IND:
                 ric_agent_handle_sctp_data_ind(
                         ITTI_MESSAGE_GET_INSTANCE(msg),
-                        &msg->ittiMsg.sctp_data_ind);
+                        &msg->ittiMsg.sctp_data_ind,
+                        &outbuf,
+                        &outlen);
+                break;
+            case TERMINATE_MESSAGE:
+                RIC_AGENT_WARN("exiting RIC agent task\n");
+                itti_exit_task();
                 break;
             case SCTP_CLOSE_ASSOCIATION:
                 RIC_AGENT_WARN("sctp connection to RIC closed\n");
@@ -396,16 +419,27 @@ void *ric_agent_task(void *args)
                 ric_agent_handle_timer_expiry(
                         ITTI_MESSAGE_GET_INSTANCE(msg),
                         TIMER_HAS_EXPIRED(msg).timer_id,
-                        TIMER_HAS_EXPIRED(msg).arg);
+                        TIMER_HAS_EXPIRED(msg).arg,
+                        &outbuf,
+                        &outlen);
                 break;
             default:
                 RIC_AGENT_ERROR("unhandled message: %d:%s\n",
                         ITTI_MSG_ID(msg), ITTI_MSG_NAME(msg));
                 break;
         }
+        if (outlen) {
+            instance_t instance = ITTI_MESSAGE_GET_INSTANCE(msg);
+            ric_agent_info_t *ric = ric_agent_info[instance];
+            //sctp_data_ind_t *ind = &msg->ittiMsg.sctp_data_ind;
+            // ric_agent_info_t *ric = ric_agent_get_info(instance, ind->assoc_id);
+            AssertFatal(ric != NULL, "ric agent info not found %u\n", instance);
+            ric_agent_send_sctp_data(ric, 0, outbuf, outlen);
+            outlen = 0;
+        }
 
         res = itti_free(ITTI_MSG_ORIGIN_ID(msg), msg);
-        AssertFatal(res == EXIT_SUCCESS,"failed to free msg (%d)!\n",res);
+        AssertFatal(res == EXIT_SUCCESS, "failed to free msg (%d)!\n",res);
         msg = NULL;
     }
 
@@ -436,7 +470,9 @@ void RCconfig_ric_agent(void) {
     uint16_t i;
     char buf[16];
     paramdef_t ric_params[] = RICPARAMS_DESC;
-    e2_conf_t e2_conf = {0};
+
+    e2_conf = (e2_conf_t **)calloc(256, sizeof(e2_conf_t));
+    ric_agent_info = (ric_agent_info_t **)calloc(250, sizeof(ric_agent_info_t));
 
     for (i = 0; i < RC.nb_inst; ++i) {
         if (!NODE_IS_CU(RC.rrc[i]->node_type)) {
@@ -450,29 +486,31 @@ void RCconfig_ric_agent(void) {
                 && strcmp(*ric_params[RIC_CONFIG_IDX_ENABLED].strptr, "yes") == 0) {
             RIC_AGENT_INFO("enabled for NB %u\n",i);
 
-            e2_conf.enabled = 1;
-            e2_conf.node_name = strdup(RC.rrc[i]->node_name);
-            e2_conf.cell_identity = RC.rrc[i]->configuration.cell_identity;
-            e2_conf.mcc = RC.rrc[i]->configuration.mcc[0];
-            e2_conf.mnc = RC.rrc[i]->configuration.mnc[0];
-            e2_conf.mnc_digit_length = RC.rrc[i]->configuration.mnc_digit_length[0];
+            e2_conf[i] = (e2_conf_t *)calloc(1,sizeof(e2_conf_t));
+            ric_agent_info[i] = (ric_agent_info_t *)calloc(1, sizeof(ric_agent_info_t));
+            ric_agent_info[i]->assoc_id = -1;
+
+            e2_conf[i]->enabled = 1;
+            e2_conf[i]->node_name = strdup(RC.rrc[i]->node_name);
+            e2_conf[i]->cell_identity = RC.rrc[i]->configuration.cell_identity;
+            e2_conf[i]->mcc = RC.rrc[i]->configuration.mcc[0];
+            e2_conf[i]->mnc = RC.rrc[i]->configuration.mnc[0];
+            e2_conf[i]->mnc_digit_length = RC.rrc[i]->configuration.mnc_digit_length[0];
             switch (RC.rrc[i]->node_type) {
                 case ngran_eNB_CU:
-                    e2_conf.e2node_type = E2NODE_TYPE_ENB_CU;
+                    e2_conf[i]->e2node_type = E2NODE_TYPE_ENB_CU;
                     break;
                 case ngran_ng_eNB_CU:
-                    e2_conf.e2node_type = E2NODE_TYPE_NG_ENB_CU;
+                    e2_conf[i]->e2node_type = E2NODE_TYPE_NG_ENB_CU;
                     break;
                 case ngran_gNB_CU:
-                    e2_conf.e2node_type = E2NODE_TYPE_GNB_CU;
+                    e2_conf[i]->e2node_type = E2NODE_TYPE_GNB_CU;
                     break;
                 default:
                     break;
             }
-            e2_conf.remote_ipv4_addr = strdup(*ric_params[RIC_CONFIG_IDX_REMOTE_IPV4_ADDR].strptr);
-            e2_conf.remote_port = *ric_params[RIC_CONFIG_IDX_REMOTE_PORT].uptr;
-
-            e2_init(i, e2_conf);
+            e2_conf[i]->remote_ipv4_addr = strdup(*ric_params[RIC_CONFIG_IDX_REMOTE_IPV4_ADDR].strptr);
+            e2_conf[i]->remote_port = *ric_params[RIC_CONFIG_IDX_REMOTE_PORT].uptr;
         }
     }
 }

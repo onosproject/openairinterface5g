@@ -27,7 +27,7 @@
 
 #include "assertions.h"
 
-#include "e2.h"
+#include "ric_agent.h"
 #include "e2ap_decoder.h"
 
 #include "E2AP_E2AP-PDU.h"
@@ -36,17 +36,17 @@
 
 #define CASE_E2AP_I(id,name)					\
     case id:							\
-    E2AP_INFO("decoded initiating " #name " (%ld)\n",id);	\
+    RIC_AGENT_INFO("decoded initiating " #name " (%ld)\n",id);	\
     break
 
 #define CASE_E2AP_S(id,name)						\
     case id:								\
-    E2AP_INFO("decoded successful outcome " #name " (%ld)\n",id);	\
+    RIC_AGENT_INFO("decoded successful outcome " #name " (%ld)\n",id);	\
     break
 
 #define CASE_E2AP_U(id,name)						\
     case id:								\
-    E2AP_INFO("decoded unsuccessful outcome " #name " (%ld)\n",id);	\
+    RIC_AGENT_INFO("decoded unsuccessful outcome " #name " (%ld)\n",id);	\
     break
 
 int e2ap_decode_pdu(E2AP_E2AP_PDU_t *pdu,
@@ -59,7 +59,7 @@ int e2ap_decode_pdu(E2AP_E2AP_PDU_t *pdu,
 
   dres = aper_decode(NULL,&asn_DEF_E2AP_E2AP_PDU,(void **)&pdu,buf,len,0,0);
   if (dres.code != RC_OK) {
-    E2AP_ERROR("failed to decode PDU (%d)\n",dres.code);
+    RIC_AGENT_ERROR("failed to decode PDU (%d)\n",dres.code);
     return -1;
   }
 
@@ -77,7 +77,7 @@ int e2ap_decode_pdu(E2AP_E2AP_PDU_t *pdu,
     CASE_E2AP_I(E2AP_ProcedureCode_id_RICserviceQuery,RICserviceQuery);
     CASE_E2AP_I(E2AP_ProcedureCode_id_ErrorIndication,ErrorIndication);
     default:
-      E2AP_ERROR("unknown procedure ID (%d) for initiating message\n",
+      RIC_AGENT_ERROR("unknown procedure ID (%d) for initiating message\n",
 		 (int)pdu->choice.initiatingMessage.procedureCode);
       return -1;
     }
@@ -88,23 +88,23 @@ int e2ap_decode_pdu(E2AP_E2AP_PDU_t *pdu,
     CASE_E2AP_S(E2AP_ProcedureCode_id_Reset,Reset);
     CASE_E2AP_S(E2AP_ProcedureCode_id_RICserviceUpdate,RICserviceUpdate);
     default:
-      E2AP_ERROR("unknown procedure ID (%d) for successful outcome\n",
+      RIC_AGENT_ERROR("unknown procedure ID (%d) for successful outcome\n",
 		 (int)pdu->choice.successfulOutcome.procedureCode);
       return -1;
     }
     break;
   case E2AP_E2AP_PDU_PR_unsuccessfulOutcome:
     switch (pdu->choice.unsuccessfulOutcome.procedureCode) {
-    CASE_E2AP_U(E2AP_ProcedureCode_id_E2setup,E2setupFailure);
-    CASE_E2AP_U(E2AP_ProcedureCode_id_RICserviceUpdate,RICserviceUpdate);
-    default:
-	E2AP_ERROR("unknown procedure ID (%d) for unsuccessful outcome\n",
+        CASE_E2AP_U(E2AP_ProcedureCode_id_E2setup,E2setupFailure);
+        CASE_E2AP_U(E2AP_ProcedureCode_id_RICserviceUpdate,RICserviceUpdate);
+        default:
+        RIC_AGENT_ERROR("unknown procedure ID (%d) for unsuccessful outcome\n",
 		   (int)pdu->choice.unsuccessfulOutcome.procedureCode);
 	return -1;
     }
     break;
   default:
-    E2AP_ERROR("unknown presence (%d)\n",(int)pdu->present);
+    RIC_AGENT_ERROR("unknown presence (%d)\n",(int)pdu->present);
     return -1;
   }
 

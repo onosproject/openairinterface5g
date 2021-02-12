@@ -28,7 +28,7 @@
 #ifndef _E2AP_GENERATE_MESSAGES_H
 #define _E2AP_GENERATE_MESSAGES_H
 
-#include "ric_agent_defs.h"
+#include "ric_agent.h"
 
 extern int e2ap_generate_e2_setup_request(ric_agent_info_t *ric,
 				   uint8_t **buffer,uint32_t *len);

@@ -29,10 +29,155 @@
 #define _RIC_AGENT_H
 
 #include <stdint.h>
+#include "list.h"
+#include "common/utils/LOG/log.h"
+
+#define E2AP_SCTP_PPID 70 /*< E2AP SCTP Payload Protocol Identifier (PPID) */
 
 typedef uint16_t ranid_t;
 
+#define RIC_AGENT_ERROR(msg, args...) LOG_E(RIC_AGENT, msg, ##args)
+#define RIC_AGENT_INFO(msg, args...)  LOG_I(RIC_AGENT, msg, ##args)
+#define RIC_AGENT_WARN(msg, args...)  LOG_W(RIC_AGENT, msg, ##args)
+#define RIC_AGENT_DEBUG(msg, args...) LOG_D(RIC_AGENT, msg, ##args)
+
+/**
+ * These are local function IDs.  Each service model might expose many
+ * functions.  E2SM functions do not currently have global IDs, unless
+ * you concat the E2SM OID and the function name.  There is no
+ * requirement that function IDs be the same for different E2Setup/Reset
+ * sessions, so we allow e2sm modules to register functions.
+ */
+typedef long ric_ran_function_id_t;
+
+typedef struct ric_action {
+    long id;
+    long type;
+    long error_cause;
+    long error_cause_detail;
+    size_t def_size;
+    uint8_t *def_buf;
+    long subsequent_action;
+    long time_to_wait;
+
+    int enabled;
+    void *state;
+
+    LIST_ENTRY(ric_action) actions;
+} ric_action_t;
+
+typedef struct ric_event_trigger {
+    uint8_t *buf;
+    size_t size;
+} ric_event_trigger_t;
+
+typedef struct ric_subscription {
+    long request_id;
+    long instance_id;
+    ric_ran_function_id_t function_id;
+    ric_event_trigger_t event_trigger;
+
+    int enabled;
+    void *state;
+    LIST_HEAD(ric_subscription_action_list,ric_action) action_list;
+    LIST_ENTRY(ric_subscription) subscriptions;
+} ric_subscription_t;
+
+typedef struct ric_control {
+} ric_control_t;
+
+typedef struct {
+    int32_t assoc_id;
+
+    ranid_t ranid;
+
+    uint16_t ric_mcc;
+    uint16_t ric_mnc;
+    uint16_t ric_mnc_digit_len;
+    uint32_t ric_id;
+
+    long e2sm_kpm_timer_id;
+    long ric_connect_timer_id;
+
+    LIST_HEAD(ric_subscription_list, ric_subscription) subscription_list;
+} ric_agent_info_t;
+
+typedef struct ric_ran_function_requestor_info {
+    ric_ran_function_id_t function_id;
+    long request_id;
+    long instance_id;
+    long action_id;
+} ric_ran_function_requestor_info_t;
+
+/**
+ * An abstraction that describes an E2 service model.
+ */
+typedef struct {
+    char *name;
+    char *oid;
+    int (*handle_subscription_add)(ric_agent_info_t *ric, ric_subscription_t *sub);
+    int (*handle_subscription_del)(ric_agent_info_t *ric, ric_subscription_t *sub,
+            int force, long *cause, long *cause_detail);
+    int (*handle_control)(ric_agent_info_t *ric,ric_control_t *control);
+    int (*handle_timer_expiry)(
+            ric_agent_info_t *ric,
+            long timer_id,
+            ric_ran_function_id_t function_id,
+            long request_id,
+            long instance_id,
+            long action_id,
+            uint8_t **outbuf,
+            uint32_t *outlen);
+} ric_service_model_t;
+
+typedef struct ric_ran_function {
+    ric_ran_function_id_t function_id;
+    ric_service_model_t *model;
+    long revision;
+    char *name;
+    char *description;
+
+    uint8_t *enc_definition;
+    size_t enc_definition_len;
+
+    int enabled;
+    void *definition;
+} ric_ran_function_t;
+
+typedef enum {
+    E2NODE_TYPE_NONE,
+    E2NODE_TYPE_ENB_CU,
+    E2NODE_TYPE_NG_ENB_CU,
+    E2NODE_TYPE_GNB_CU,
+} e2node_type_t;
+
+typedef struct e2_conf {
+    int enabled;
+    e2node_type_t e2node_type;
+    char *node_name;
+    uint32_t cell_identity;
+    uint16_t mcc;
+    uint16_t mnc;
+    uint8_t mnc_digit_length;
+
+    char *remote_ipv4_addr;
+    uint16_t remote_port;
+} e2_conf_t;
+
+extern ric_agent_info_t **ric_agent_info;
+extern e2_conf_t **e2_conf;
+
 void *ric_agent_task(void *args);
 void RCconfig_ric_agent(void);
+int ric_agent_reset(ric_agent_info_t *ric);
+int ric_agent_register_ran_function(ric_ran_function_t *func);
+ric_ran_function_t *ric_agent_lookup_ran_function(
+        ric_ran_function_id_t function_id);
+ric_ran_function_t *ric_agent_lookup_ran_function_by_name(char *name);
+ric_subscription_t *ric_agent_lookup_subscription(ric_agent_info_t *ric,
+        long request_id, long instance_id,
+        ric_ran_function_id_t function_id);
+void ric_free_action(ric_action_t *action);
+void ric_free_subscription(ric_subscription_t *sub);
 
 #endif /* _RIC_AGENT_H */
