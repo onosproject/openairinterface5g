@@ -12,3 +12,4 @@ targets/bin/
 
 # vscode
 .vscode
+.idea

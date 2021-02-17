@@ -109,6 +109,8 @@
     {"emul-iface",        CONFIG_HLP_EMULIFACE,   0,               strptr:&emul_iface,                 defstrval:"lo",       TYPE_STRING, 100},   \
     {"L2-emul",           NULL,                   0,               u8ptr:&nfapi_mode,                  defuintval:3,         TYPE_UINT8,    0},   \
     {"num-ues",           NULL,                   0,               u16ptr:&(NB_UE_INST),               defuintval:1,         TYPE_UINT16,   0},   \
+    {"ue-sync-timer",     NULL,                   0,               u16ptr:&(GLOBAL_UE_SYNC_TIMER),     defuintval:0,         TYPE_UINT16,   0},   \
+    {"ue-num-frames-ra",  NULL,                   0,               u16ptr:&(GLOBAL_NUM_FRAMES_RA),     defuintval:20,         TYPE_UINT16,   0},   \
     {"nums_ue_thread",    NULL,                   0,               u16ptr:&(NB_THREAD_INST),           defuintval:1,         TYPE_UINT16,   0},   \
     {"r"  ,               CONFIG_HLP_PRB,         0,               u8ptr:&(frame_parms[0]->N_RB_DL),   defintval:25,         TYPE_UINT8,    0},   \
     {"dlsch-demod-shift", CONFIG_HLP_DLSHIFT,     0,               iptr:(int32_t *)&dlsch_demod_shift, defintval:0,          TYPE_INT,      0},   \
@@ -133,6 +135,8 @@
 
 #define DEFAULT_DLF 2680000000
 
+uint16_t GLOBAL_UE_SYNC_TIMER;
+uint16_t GLOBAL_NUM_FRAMES_RA;
 
 uint64_t get_pdcp_optmask(void);
 extern pthread_cond_t sync_cond;

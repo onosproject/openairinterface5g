@@ -475,6 +475,9 @@ ue_send_sdu(module_id_t module_idP,
           }
 
           payload_ptr += 6;
+
+          sleep(GLOBAL_UE_SYNC_TIMER);
+
           break;
 
         case TIMING_ADV_CMD:

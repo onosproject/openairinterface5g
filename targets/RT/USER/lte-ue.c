@@ -1214,8 +1214,8 @@ static void *UE_phy_stub_single_thread_rxn_txnp4(void *arg)
           (UE->frame_parms.frame_type == FDD) )
         if (UE->mode != loop_through_memory) {
           // We make the start of RA between consecutive UEs differ by 20 frames
-          //if ((UE_mac_inst[Mod_id].UE_mode[0] == PRACH  && Mod_id == 0) || (UE_mac_inst[Mod_id].UE_mode[0] == PRACH && Mod_id>0 && proc->frame_rx >= UE_mac_inst[Mod_id-1].ra_frame + 20) ) {
-          if (UE_mac_inst[ue_Mod_id].UE_mode[0] == PRACH  && ue_Mod_id == next_Mod_id) {
+          if ((UE_mac_inst[ue_Mod_id].UE_mode[0] == PRACH  && ue_Mod_id == 0) || (UE_mac_inst[ue_Mod_id].UE_mode[0] == PRACH && ue_Mod_id>0 && proc->frame_rx >= UE_mac_inst[ue_Mod_id-1].ra_frame + GLOBAL_NUM_FRAMES_RA) ) {
+          //if (UE_mac_inst[ue_Mod_id].UE_mode[0] == PRACH  && ue_Mod_id == next_Mod_id) {
             next_ra_frame++;
 
             if(next_ra_frame > 500) {
