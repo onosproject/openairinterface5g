@@ -75,7 +75,7 @@ static void encode_e2sm_kpm_indication_header(ranid_t ranid, E2SM_KPM_E2SM_KPM_I
 static int e2ap_asn1c_encode_pdu(E2AP_E2AP_PDU_t* pdu, unsigned char **buffer);
 
 static ric_service_model_t e2sm_kpm_model = {
-    .name = "ORAN-E2SM-KPM",
+    .name = "e2sm_kpm-v1beta1",
     .oid = "1.3.6.1.4.1.1.1.2.2",
     .handle_subscription_add = e2sm_kpm_subscription_add,
     .handle_subscription_del = e2sm_kpm_subscription_del,
@@ -96,7 +96,7 @@ int e2sm_kpm_init(void)
     func = (ric_ran_function_t *)calloc(1, sizeof(*func));
     func->model = &e2sm_kpm_model;
     func->revision = 0;
-    func->name = "ORAN-E2SM-KPM";
+    func->name = "e2sm_kpm-v1beta1";
     func->description = "KPM monitor";
 
     func_def = (E2SM_KPM_E2SM_KPM_RANfunction_Description_t *)calloc(1, sizeof(*func_def));
