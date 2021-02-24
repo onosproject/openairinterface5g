@@ -31,6 +31,8 @@
 #include "e2ap_handler.h"
 #include "e2sm_kpm.h"
 
+#define DISABLE_SCTP_MULTIHOMING 1
+
 extern RAN_CONTEXT_t RC;
 
 ric_agent_info_t **ric_agent_info;
@@ -209,7 +211,7 @@ static int ric_agent_connect(ranid_t ranid)
     strncpy(req->remote_address.ipv4_address, e2_conf[ranid]->remote_ipv4_addr,
             sizeof(req->remote_address.ipv4_address));
     req->remote_address.ipv4_address[sizeof(req->remote_address.ipv4_address)-1] = '\0';
-#if 0
+#if DISABLE_SCTP_MULTIHOMING
     // Comment out if testing with loopback
     req->local_address.ipv4 = 1;
     strncpy(req->local_address.ipv4_address, RC.rrc[0]->eth_params_s.my_addr,
