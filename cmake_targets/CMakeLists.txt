@@ -1135,15 +1135,16 @@ add_boolean_option(ENABLE_RIC_AGENT False "Enable O-RAN RIC agent")
 
 if(ENABLE_RIC_AGENT)
 
-  # E2AP
-  set(E2AP_ASN_VERS R1.01)
   set(E2AP_DIR ${OPENAIR2_DIR}/RIC_AGENT/E2AP)
+
+  # E2AP ASN
+  set(E2AP_ASN_VERS R1.01)
   set(E2AP_ASN_DIR ${E2AP_DIR}/MESSAGES/ASN1/${E2AP_ASN_VERS})
-  set(E2AP_ASN_FILE e2ap-v01.01.00.asn1)
   set(E2AP_C_DIR ${asn1_generated_dir}/E2AP/)
+  set(E2AP_ASN_FILE ${E2AP_ASN_DIR}/e2ap-v01.01.00.asn1)
   execute_process(
       COMMAND ${OPENAIR_CMAKE}/tools/make_asn1c_includes.sh "${E2AP_C_DIR}"
-      "${E2AP_ASN_DIR}/${E2AP_ASN_FILE}" "E2AP_" -fno-include-deps -fincludes-quoted
+      "${E2AP_ASN_FILE}" "E2AP_" -fno-include-deps -fincludes-quoted
       RESULT_VARIABLE ret)
   if (NOT ${ret} STREQUAL 0)
       message(FATAL_ERROR "${ret}: error")
@@ -1151,14 +1152,18 @@ if(ENABLE_RIC_AGENT)
   add_custom_target (
       e2ap_flag ALL
       COMMAND ${OPENAIR_CMAKE}/tools/make_asn1c_includes.sh "${E2AP_C_DIR}"
-      "${E2AP_ASN_DIR}/${E2AP_ASN_FILE}" "E2AP_" -fno-include-deps -fincludes-quoted
-      DEPENDS ${E2AP_ASN_DIR}/${E2AP_ASN_FILE}
+      "${E2AP_ASN_FILE}" "E2AP_" -fno-include-deps -fincludes-quoted
+      DEPENDS $${E2AP_ASN_FILE}
   )
   file(GLOB E2AP_asn_source ${E2AP_C_DIR}/*.c)
-  file(GLOB E2AP_source ${E2AP_DIR}/*.c)
-  add_library(E2AP ${E2AP_source} ${E2AP_asn_source})
-  set(E2AP_LIB E2AP)
+  add_library(E2AP_ASN ${E2AP_asn_source})
+  set(E2AP_ASN_LIB E2AP_ASN)
   include_directories ("${E2AP_C_DIR}")
+
+  # E2AP
+  file(GLOB E2AP_source ${E2AP_DIR}/*.c)
+  add_library(E2AP ${E2AP_source})
+  set(E2AP_LIB E2AP)
   include_directories (${E2AP_DIR})
 
   # E2SM_KPM
@@ -1195,7 +1200,8 @@ if(ENABLE_RIC_AGENT)
   set(RIC_AGENT_LIB RIC_AGENT)
 
 else()
-    set(E2AP_LIB "")
+  set(E2AP_ASN_LIB "")
+  set(E2AP_LIB "")
   set(RIC_AGENT_LIB "")
 endif()
 
@@ -2664,7 +2670,7 @@ target_link_libraries (lte-softmodem
   RRC_LIB NR_RRC_LIB S1AP_LIB S1AP_ENB F1AP_LIB F1AP M2AP_LIB M2AP_ENB X2AP_LIB X2AP_ENB M3AP_LIB M3AP_ENB GTPV1U SECU_CN SECU_OSA UTIL HASHTABLE SCTP_CLIENT MME_APP UDP SCHED_LIB SCHED_RU_LIB 
   PHY_COMMON PHY PHY_RU LFDS L2 L2_LTE NFAPI_COMMON_LIB NFAPI_LIB NFAPI_VNF_LIB NFAPI_PNF_LIB NFAPI_USER_LIB LFDS7
   ${MSC_LIB} ${RAL_LIB} ${NAS_UE_LIB} ${ITTI_LIB} ${FLPT_MSG_LIB}
-  ${ASYNC_IF_LIB} ${FLEXRAN_AGENT_LIB} ${E2AP_LIB} ${E2SM_KPM_LIB} ${RIC_AGENT_LIB} ${FSPT_MSG_LIB} ${PROTO_AGENT_LIB}
+  ${ASYNC_IF_LIB} ${FLEXRAN_AGENT_LIB} ${E2AP_ASN_LIB} ${E2AP_LIB} ${E2SM_KPM_LIB} ${RIC_AGENT_LIB} ${FSPT_MSG_LIB} ${PROTO_AGENT_LIB}
   -Wl,--end-group z dl)
   
 target_link_libraries (lte-softmodem ${LIBXML2_LIBRARIES})
@@ -2816,7 +2822,8 @@ target_link_libraries (nr-softmodem
   -Wl,--start-group
   UTIL HASHTABLE SCTP_CLIENT UDP SCHED_LIB SCHED_RU_LIB SCHED_NR_LIB PHY_NR PHY PHY_COMMON PHY_NR_COMMON PHY_RU LFDS NR_GTPV1U SECU_CN SECU_OSA
   ${ITTI_LIB} ${FLPT_MSG_LIB} ${ASYNC_IF_LIB} ${FLEXRAN_AGENT_LIB}
-  ${E2AP_LIB} ${E2SM_KPM_LIB} ${RIC_AGENT_LIB} LFDS7 ${MSC_LIB} ${RAL_LIB} ${NAS_UE_LIB} RRC_LIB NR_RRC_LIB 
+  ${E2AP_ASN_LIB} ${E2AP_LIB} ${E2SM_KPM_LIB} ${RIC_AGENT_LIB}
+  LFDS7 ${MSC_LIB} ${RAL_LIB} ${NAS_UE_LIB} RRC_LIB NR_RRC_LIB 
   S1AP_LIB S1AP_ENB L2 L2_NR MAC_NR_COMMON NFAPI_COMMON_LIB NFAPI_LIB NFAPI_VNF_LIB NFAPI_PNF_LIB NFAPI_USER_LIB
   X2AP_LIB X2AP_ENB F1AP_LIB F1AP M2AP_LIB M2AP_ENB M3AP_LIB M3AP_ENB ${PROTO_AGENT_LIB} ${FSPT_MSG_LIB}
   -Wl,--end-group z dl)
@@ -3158,7 +3165,9 @@ if (${T_TRACER})
         ITTI RRC_LIB NR_RRC_LIB S1AP_LIB S1AP_ENB X2AP_LIB X2AP_ENB M2AP_LIB M2AP_ENB M3AP_LIB M3AP_ENB F1AP_LIB F1AP
         params_libconfig oai_exmimodevif oai_usrpdevif oai_bladerfdevif oai_lmssdrdevif oai_iqplayer
         oai_eth_transpro oai_mobipass tcp_bridge tcp_bridge_oai
-        coding FLPT_MSG ASYNC_IF FLEXRAN_AGENT ${E2AP_LIB} ${E2SM_KPM_LIB} ${RIC_AGENT_LIB} HASHTABLE MSC UTIL OMG_SUMO
+        coding FLPT_MSG ASYNC_IF FLEXRAN_AGENT
+        ${E2AP_ASN_LIB} ${E2AP_LIB} ${E2SM_KPM_LIB} ${RIC_AGENT_LIB}
+        HASHTABLE MSC UTIL OMG_SUMO
         SECU_OSA SECU_CN SCHED_LIB SCHED_NR_LIB SCHED_RU_LIB SCHED_UE_LIB SCHED_NR_UE_LIB default_sched remote_sched RAL
         NFAPI_COMMON_LIB NFAPI_LIB NFAPI_PNF_LIB NFAPI_VNF_LIB NFAPI_USER_LIB
         PHY_COMMON PHY PHY_UE PHY_NR PHY_NR_COMMON PHY_NR_UE PHY_RU PHY_MEX
