@@ -44,3 +44,13 @@ oai-enb-du:
 		--build-arg BUILD_BASE_VERSION=${BUILD_BASE_VERSION} \
 		-t onosproject/oai-enb-du:${VERSION}
 	-docker rmi $$(docker images -q -f "dangling=true" -f "label=autodelete=true")
+
+build-tools: # @HELP install the ONOS build tools if needed
+	@if [ ! -d "../build-tools" ]; then cd .. && git clone https://github.com/onosproject/build-tools.git; fi
+
+jenkins-test: images
+
+jenkins-publish: build-tools
+	./build/bin/push-images
+	../build-tools/release-merge-commit
+	../build-tools/build/docs/push-docs
