@@ -48,10 +48,13 @@ oai-enb-du:
 build-tools: # @HELP install the ONOS build tools if needed
 	@if [ ! -d "../build-tools" ]; then cd .. && git clone https://github.com/onosproject/build-tools.git; fi
 
-jenkins-test: images build-tools
+jenkins-tools: # @HELP installs tooling needed for Jenkins
+	cd .. && go get -u github.com/jstemmer/go-junit-report && go get github.com/t-yuki/gocover-cobertura
+
+jenkins-test: images build-tools jenkins-tools
 	TEST_PACKAGES=NONE ./../build-tools/build/jenkins/make-unit
 
-jenkins-publish: build-tools
+jenkins-publish: build-tools jenkins-tools
 	./build/bin/push-images
 	../build-tools/release-merge-commit
 	../build-tools/build/docs/push-docs
