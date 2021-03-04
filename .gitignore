@@ -13,3 +13,9 @@ targets/bin/
 # vscode
 .vscode
 .idea
+
+# Jenkins report files
+*report*.xml
+*coverage*.xml
+*-output.out
+
