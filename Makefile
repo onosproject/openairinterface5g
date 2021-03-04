@@ -44,3 +44,17 @@ oai-enb-du:
 		--build-arg BUILD_BASE_VERSION=${BUILD_BASE_VERSION} \
 		-t onosproject/oai-enb-du:${VERSION}
 	-docker rmi $$(docker images -q -f "dangling=true" -f "label=autodelete=true")
+
+build-tools: # @HELP install the ONOS build tools if needed
+	@if [ ! -d "../build-tools" ]; then cd .. && git clone https://github.com/onosproject/build-tools.git; fi
+
+jenkins-tools: # @HELP installs tooling needed for Jenkins
+	cd .. && go get -u github.com/jstemmer/go-junit-report && go get github.com/t-yuki/gocover-cobertura
+
+jenkins-test: images build-tools jenkins-tools
+	TEST_PACKAGES=NONE ./../build-tools/build/jenkins/make-unit
+
+jenkins-publish: build-tools jenkins-tools
+	./build/bin/push-images
+	../build-tools/release-merge-commit
+	../build-tools/build/docs/push-docs
