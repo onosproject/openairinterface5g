@@ -57,4 +57,3 @@ jenkins-test: images build-tools jenkins-tools
 jenkins-publish: build-tools jenkins-tools
 	./build/bin/push-images
 	../build-tools/release-merge-commit
-	../build-tools/build/docs/push-docs
