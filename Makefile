@@ -48,7 +48,7 @@ oai-enb-du:
 build-tools: # @HELP install the ONOS build tools if needed
 	@if [ ! -d "../build-tools" ]; then cd .. && git clone https://github.com/onosproject/build-tools.git; fi
 
-jenkins-test: images
+jenkins-test: images build-tools
 	TEST_PACKAGES=NONE ./../build-tools/build/jenkins/make-unit
 
 jenkins-publish: build-tools
