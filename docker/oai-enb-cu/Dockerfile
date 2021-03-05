@@ -15,6 +15,10 @@ LABEL name="oai-enb-cu" \
 
 WORKDIR /opt/oai
 
+RUN apt-get update && apt-get install -y iproute2 net-tools ethtool software-properties-common
+RUN add-apt-repository ppa:ettusresearch/uhd -y
+RUN apt-get update && apt-get -y install libuhd-dev libuhd003 uhd-host
+
 COPY --from=builder /root/cmake_targets/ran_build/build/lte-softmodem ./bin/
 COPY --from=builder /root/ci-scripts/conf_files ./conf_files/
 
