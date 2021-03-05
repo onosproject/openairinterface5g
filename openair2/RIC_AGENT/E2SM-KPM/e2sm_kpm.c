@@ -95,7 +95,7 @@ int e2sm_kpm_init(void)
 
     func = (ric_ran_function_t *)calloc(1, sizeof(*func));
     func->model = &e2sm_kpm_model;
-    func->revision = 0;
+    func->revision = 1;
     func->name = "e2sm_kpm-v1beta1";
     func->description = "KPM monitor";
 

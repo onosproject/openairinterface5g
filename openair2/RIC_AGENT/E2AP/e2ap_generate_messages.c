@@ -98,9 +98,16 @@ int e2ap_generate_e2_setup_request(ric_agent_info_t *ric,
     ran_function_item_ie->value.choice.RANfunction_Item.ranFunctionRevision = \
       func->revision;
 
+    int oid_len = strlen(func->model->oid);
+    E2AP_RANfunctionOID_t* oid = (E2AP_RANfunctionOID_t*)calloc(1, sizeof(E2AP_RANfunctionOID_t));
+    oid->buf = (uint8_t *)calloc(oid_len, sizeof(uint8_t));
+    memcpy(oid->buf, func->model->oid, oid_len);
+    oid->size = oid_len;
+    ran_function_item_ie->value.choice.RANfunction_Item.ranFunctionOID = oid;
+
     ran_function_item_ie->value.choice.RANfunction_Item.ranFunctionDefinition.buf = (uint8_t *)malloc(func->enc_definition_len);
     memcpy(ran_function_item_ie->value.choice.RANfunction_Item.ranFunctionDefinition.buf,
-	   func->enc_definition,func->enc_definition_len);
+	   func->enc_definition, func->enc_definition_len);
     ran_function_item_ie->value.choice.RANfunction_Item.ranFunctionDefinition.size = func->enc_definition_len;
     ASN_SEQUENCE_ADD(&ie->value.choice.RANfunctions_List.list,
 		     ran_function_item_ie);
