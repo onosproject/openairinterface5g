@@ -1,7 +1,6 @@
 
 BUILD_BASE_VERSION := latest
 OAI_ALL_VERSION := latest
-VERSION := latest
 
 all: images test
 
@@ -24,25 +23,25 @@ oai-all:
 oai-ue:
 	docker build . -f docker/oai-ue/Dockerfile \
 		--build-arg OAI_ALL_VERSION=${OAI_ALL_VERSION} \
-		-t onosproject/oai-ue:${VERSION}
+		-t onosproject/oai-ue:${OAI_ALL_VERSION}
 	-docker rmi $$(docker images -q -f "dangling=true" -f "label=autodelete=true")
 
 oai-enb:
 	docker build . -f docker/oai-enb/Dockerfile \
 		--build-arg BUILD_BASE_VERSION=${BUILD_BASE_VERSION} \
-		-t onosproject/oai-enb:${VERSION}
+		-t onosproject/oai-enb:${OAI_ALL_VERSION}
 	-docker rmi $$(docker images -q -f "dangling=true" -f "label=autodelete=true")
 
 oai-enb-cu:
 	docker build . -f docker/oai-enb-cu/Dockerfile \
 		--build-arg BUILD_BASE_VERSION=${BUILD_BASE_VERSION} \
-		-t onosproject/oai-enb-cu:${VERSION}
+		-t onosproject/oai-enb-cu:${OAI_ALL_VERSION}
 	-docker rmi $$(docker images -q -f "dangling=true" -f "label=autodelete=true")
 
 oai-enb-du:
 	docker build . -f docker/oai-enb-du/Dockerfile \
 		--build-arg BUILD_BASE_VERSION=${BUILD_BASE_VERSION} \
-		-t onosproject/oai-enb-du:${VERSION}
+		-t onosproject/oai-enb-du:${OAI_ALL_VERSION}
 	-docker rmi $$(docker images -q -f "dangling=true" -f "label=autodelete=true")
 
 build-tools: # @HELP install the ONOS build tools if needed
