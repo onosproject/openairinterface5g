@@ -54,6 +54,9 @@ jenkins-tools: # @HELP installs tooling needed for Jenkins
 jenkins-test: images build-tools jenkins-tools
 	TEST_PACKAGES=NONE ./../build-tools/build/jenkins/make-unit
 
+publish: # @HELP publish version on github and dockerhub
+	./../build-tools/publish-version ${VERSION} onosproject/onos-config
+
 jenkins-publish: build-tools jenkins-tools
 	./build/bin/push-images
 	BASE_BRANCH=develop-onf ../build-tools/release-merge-commit
