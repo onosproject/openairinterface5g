@@ -56,4 +56,4 @@ jenkins-test: images build-tools jenkins-tools
 
 jenkins-publish: build-tools jenkins-tools
 	./build/bin/push-images
-	../build-tools/release-merge-commit
+	BASE_BRANCH=develop-onf ../build-tools/release-merge-commit
