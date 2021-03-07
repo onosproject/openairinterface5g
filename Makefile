@@ -55,7 +55,7 @@ jenkins-test: images build-tools jenkins-tools
 	TEST_PACKAGES=NONE ./../build-tools/build/jenkins/make-unit
 
 publish: # @HELP publish version on github and dockerhub
-	./../build-tools/publish-version ${VERSION} onosproject/onos-config
+	./../build-tools/publish-version ${VERSION} onosproject/oai-ue onosproject/oai-enb onosproject/oai-enb-cu onosproject/oai-enb-du
 
 jenkins-publish: build-tools jenkins-tools
 	./build/bin/push-images
