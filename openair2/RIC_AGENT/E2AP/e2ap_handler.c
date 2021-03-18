@@ -41,7 +41,7 @@
 #include "E2AP_E2setupRequest.h"
 #include "E2AP_RICsubsequentAction.h"
 #include "E2SM_KPM_E2SM-KPM-EventTriggerDefinition.h"
-#include "E2SM_KPM_Trigger-ConditionIE-Item.h"
+//#include "E2SM_KPM_Trigger-ConditionIE-Item.h"
 
 int e2ap_handle_e2_setup_response(ric_agent_info_t *ric,uint32_t stream,
 				  E2AP_E2AP_PDU_t *pdu)
@@ -110,6 +110,7 @@ int e2ap_handle_ric_subscription_request(
     int ret;
     uint32_t      interval_sec = 0;
     uint32_t      interval_us = 0;
+    uint32_t      interval_ms = 0;
     ric_ran_function_t *func;
 
     RIC_AGENT_INFO("Received RICsubscriptionRequest from ranid %u\n",ric->ranid);
@@ -147,6 +148,17 @@ int e2ap_handle_ric_subscription_request(
                     decode_result = aper_decode_complete(NULL, &asn_DEF_E2SM_KPM_E2SM_KPM_EventTriggerDefinition, (void **)&eventTriggerDef, rs->event_trigger.buf, rs->event_trigger.size);
                     DevAssert(decode_result.code == RC_OK);
                     xer_fprint(stdout, &asn_DEF_E2SM_KPM_E2SM_KPM_EventTriggerDefinition, eventTriggerDef);
+
+					if (eventTriggerDef->eventDefinition_formats.present == 
+												E2SM_KPM_E2SM_KPM_EventTriggerDefinition__eventDefinition_formats_PR_eventDefinition_Format1)
+					{
+                        RIC_AGENT_INFO("report period = %ld", 
+									eventTriggerDef->eventDefinition_formats.choice.eventDefinition_Format1.reportingPeriod);
+						interval_ms = eventTriggerDef->eventDefinition_formats.choice.eventDefinition_Format1.reportingPeriod;
+						interval_us = (interval_ms%1000)*1000;
+						interval_sec = (interval_ms/1000);
+					}
+#if 0
                     E2SM_KPM_Trigger_ConditionIE_Item_t **ptr;
                     for (ptr = eventTriggerDef->choice.eventDefinition_Format1.policyTest_List->list.array;
                             ptr < &eventTriggerDef->choice.eventDefinition_Format1.policyTest_List->list.array[eventTriggerDef->choice.eventDefinition_Format1.policyTest_List->list.count];
@@ -226,9 +238,9 @@ int e2ap_handle_ric_subscription_request(
                                 interval_us = 0;
                         }
                     }
+#endif
                 }
             }
-
             E2AP_RICactions_ToBeSetup_List_t *ral = &rie->value.choice.RICsubscriptionDetails.ricAction_ToBeSetup_List;
             for (int i = 0; i < ral->list.count; ++i) {
                 E2AP_RICaction_ToBeSetup_ItemIEs_t *ies_action = (E2AP_RICaction_ToBeSetup_ItemIEs_t*)ral->list.array[i];
@@ -255,6 +267,7 @@ int e2ap_handle_ric_subscription_request(
                 else {
                   LIST_INSERT_BEFORE(LIST_FIRST(&rs->action_list),ra,actions);
                 }
+			/* Need to add some validation on Action Definition Measurement Type , but ASN decoding has to be done */
             }
         }
     }
