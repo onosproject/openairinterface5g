@@ -44,7 +44,7 @@
 //#include "E2SM_KPM_Trigger-ConditionIE-Item.h"
 
 int e2ap_handle_e2_setup_response(ric_agent_info_t *ric,uint32_t stream,
-				  E2AP_E2AP_PDU_t *pdu)
+                  E2AP_E2AP_PDU_t *pdu)
 {
     E2AP_E2setupResponse_t *resp;
     E2AP_E2setupResponseIEs_t *rie,**ptr;
@@ -73,7 +73,7 @@ int e2ap_handle_e2_setup_response(ric_agent_info_t *ric,uint32_t stream,
 }
 
 int e2ap_handle_e2_setup_failure(ric_agent_info_t *ric,uint32_t stream,
-				 E2AP_E2AP_PDU_t *pdu)
+                 E2AP_E2AP_PDU_t *pdu)
 {
     E2AP_E2setupFailure_t *resp;
     E2AP_E2setupFailureIEs_t *rie,**ptr;
@@ -149,96 +149,15 @@ int e2ap_handle_ric_subscription_request(
                     DevAssert(decode_result.code == RC_OK);
                     xer_fprint(stdout, &asn_DEF_E2SM_KPM_E2SM_KPM_EventTriggerDefinition, eventTriggerDef);
 
-					if (eventTriggerDef->eventDefinition_formats.present == 
-												E2SM_KPM_E2SM_KPM_EventTriggerDefinition__eventDefinition_formats_PR_eventDefinition_Format1)
-					{
-                        RIC_AGENT_INFO("report period = %ld", 
-									eventTriggerDef->eventDefinition_formats.choice.eventDefinition_Format1.reportingPeriod);
-						interval_ms = eventTriggerDef->eventDefinition_formats.choice.eventDefinition_Format1.reportingPeriod;
-						interval_us = (interval_ms%1000)*1000;
-						interval_sec = (interval_ms/1000);
-					}
-#if 0
-                    E2SM_KPM_Trigger_ConditionIE_Item_t **ptr;
-                    for (ptr = eventTriggerDef->choice.eventDefinition_Format1.policyTest_List->list.array;
-                            ptr < &eventTriggerDef->choice.eventDefinition_Format1.policyTest_List->list.array[eventTriggerDef->choice.eventDefinition_Format1.policyTest_List->list.count];
-                            ptr++)
+                    if (eventTriggerDef->eventDefinition_formats.present == 
+                                                E2SM_KPM_E2SM_KPM_EventTriggerDefinition__eventDefinition_formats_PR_eventDefinition_Format1)
                     {
-                        RIC_AGENT_INFO("report period = %ld", (*ptr)->report_Period_IE);
-                        switch ((*ptr)->report_Period_IE) {
-                            case E2SM_KPM_RT_Period_IE_ms10:
-                                interval_us = 10000;
-                                break;
-                            case E2SM_KPM_RT_Period_IE_ms20:
-                                interval_us = 20000;
-                                break;
-                            case E2SM_KPM_RT_Period_IE_ms32:
-                                interval_us = 32000;
-                                break;
-                            case E2SM_KPM_RT_Period_IE_ms40:
-                                interval_us = 40000;
-                                break;
-                            case E2SM_KPM_RT_Period_IE_ms60:
-                                interval_us = 60000;
-                                break;
-                            case E2SM_KPM_RT_Period_IE_ms64:
-                                interval_us = 64000;
-                                break;
-                            case E2SM_KPM_RT_Period_IE_ms70:
-                                interval_us = 70000;
-                                break;
-                            case E2SM_KPM_RT_Period_IE_ms80:
-                                interval_us = 80000;
-                                break;
-                            case E2SM_KPM_RT_Period_IE_ms128:
-                                interval_us = 128000;
-                                break;
-                            case E2SM_KPM_RT_Period_IE_ms160:
-                                interval_us = 160000;
-                                break;
-                            case E2SM_KPM_RT_Period_IE_ms256:
-                                interval_us = 256000;
-                                break;
-                            case E2SM_KPM_RT_Period_IE_ms320:
-                                interval_us = 320000;
-                                break;
-                            case E2SM_KPM_RT_Period_IE_ms512:
-                                interval_us = 512000;
-                                break;
-                            case E2SM_KPM_RT_Period_IE_ms640:
-                                interval_us = 640000;
-                                break;
-                            case E2SM_KPM_RT_Period_IE_ms1024:
-                                interval_sec = 1;
-                                interval_us = 240000;
-                                break;
-                            case E2SM_KPM_RT_Period_IE_ms1280:
-                                interval_sec = 1;
-                                interval_us = 280000;
-                                break;
-                            case E2SM_KPM_RT_Period_IE_ms2048:
-                                interval_sec = 2;
-                                interval_us = 48000;
-                                break;
-                            case E2SM_KPM_RT_Period_IE_ms2560:
-                                interval_sec = 2;
-                                interval_us = 560000;
-                                break;
-                            case E2SM_KPM_RT_Period_IE_ms5120:
-                                interval_sec = 5;
-                                interval_us = 120000;
-                                break;
-                            case E2SM_KPM_RT_Period_IE_ms10240:
-                                interval_sec = 10;
-                                interval_us = 240000;
-                                break;
-                            default:
-                                // TODO - make default time period a config parameter
-                                interval_sec = 1;
-                                interval_us = 0;
-                        }
+                        RIC_AGENT_INFO("report period = %ld", 
+                                    eventTriggerDef->eventDefinition_formats.choice.eventDefinition_Format1.reportingPeriod);
+                        interval_ms = eventTriggerDef->eventDefinition_formats.choice.eventDefinition_Format1.reportingPeriod;
+                        interval_us = (interval_ms%1000)*1000;
+                        interval_sec = (interval_ms/1000);
                     }
-#endif
                 }
             }
             E2AP_RICactions_ToBeSetup_List_t *ral = &rie->value.choice.RICsubscriptionDetails.ricAction_ToBeSetup_List;
@@ -267,7 +186,7 @@ int e2ap_handle_ric_subscription_request(
                 else {
                   LIST_INSERT_BEFORE(LIST_FIRST(&rs->action_list),ra,actions);
                 }
-			/* Need to add some validation on Action Definition Measurement Type , but ASN decoding has to be done */
+                /* Need to add some validation on Action Definition Measurement Type , but then ASN decoding has to be done */
             }
         }
     }
