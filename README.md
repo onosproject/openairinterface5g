@@ -53,6 +53,7 @@ openairinterface5g
 │   ├── NR_PHY_INTERFACE
 │   ├── NR_UE_PHY_INTERFACE
 │   ├── PHY_INTERFACE
+│   ├── RIC_AGENT     : E2 client to interface with O-RAN compliant RIC
 │   ├── RRC
 │   ├── UTIL
 │   └── X2AP
@@ -71,3 +72,20 @@ openairinterface5g
 │   └── UTILS
 └── targets           : Top-level wrappers for unitary simulation for PHY channels, system-level emulation (eNB-UE with and without S1), and realtime eNB and UE and RRH GW.
 </pre>
+
+# RIC Agent
+
+The RIC Agent adds support for interfacing to a O-RAN Real-time Intelligent Controller (RIC) over the E2 interface. To build OAI with this support, enable the *--build-ric-agent* build option:
+
+```shell
+$ cd openairinterface5g
+$ oaienv
+$ ./build_oai -c --eNB --UE -w USRP -g --build-ric-agent
+```
+
+The top-level *Makefile* builds docker images that include the RIC Agent:
+
+```shell
+$ cd openairinterface5g
+$ make images
+``
