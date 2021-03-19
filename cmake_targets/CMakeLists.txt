@@ -1167,13 +1167,14 @@ if(ENABLE_RIC_AGENT)
   include_directories (${E2AP_DIR})
 
   # E2SM_KPM
-  set(KPM_ASN_VERS R01)
-  # set(KPM_ASN_VERS R02)
+  # set(KPM_ASN_VERS R01)
+  set(KPM_ASN_VERS R02)
 
   if (${KPM_ASN_VERS} STREQUAL R01)
     set(E2SM_KPM_ASN_FILE e2sm-kpm-v01.00.asn1)
   elseif (${KPM_ASN_VERS} STREQUAL R02)
-    set(E2SM_KPM_ASN_FILE e2sm-kpm-v02.00.asn1)
+    # set(E2SM_KPM_ASN_FILE e2sm-kpm-v02.00.asn1)
+    set(E2SM_KPM_ASN_FILE e2sm_kpm_v2.0.2-rm.asn)
   endif (${KPM_ASN_VERS} STREQUAL R01)
 
   set(E2SM_KPM_DIR ${OPENAIR2_DIR}/RIC_AGENT/E2SM-KPM)

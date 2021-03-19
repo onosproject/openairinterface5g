@@ -29,6 +29,7 @@
 #define _RIC_AGENT_H
 
 #include <stdint.h>
+#include <stdbool.h> 
 #include "list.h"
 #include "common/utils/LOG/log.h"
 
@@ -112,6 +113,14 @@ typedef struct ric_ran_function_requestor_info {
 /**
  * An abstraction that describes an E2 service model.
  */
+
+typedef struct {
+	uint8_t  meas_type_id;
+	char     *meas_type_name;
+	uint16_t meas_data;
+	bool	 subscription_status;
+} kmp_meas_info_t;
+
 typedef struct {
     char *name;
     char *oid;
