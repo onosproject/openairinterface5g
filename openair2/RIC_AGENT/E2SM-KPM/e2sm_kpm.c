@@ -92,7 +92,8 @@ kmp_meas_info_t e2sm_kpm_meas_info[MAX_KPM_MEAS] = {
 
 static ric_service_model_t e2sm_kpm_model = {
     .name = "e2sm_kpm-v2beta1",
-    .oid = "1.3.6.1.4.1.1.1.2.2",
+	/* iso(1) identified-organization(3) dod(6) internet(1) private(4) enterprise(1) oran(53148) e2(1) version2(2) e2sm(2) e2sm-KPMMON-IEs (2) */
+    .oid = "1.3.6.1.4.1.53148.1.2.2.2",//"1.3.6.1.4.1.1.1.2.2",
     .handle_subscription_add = e2sm_kpm_subscription_add,
     .handle_subscription_del = e2sm_kpm_subscription_del,
     .handle_control = e2sm_kpm_control,
