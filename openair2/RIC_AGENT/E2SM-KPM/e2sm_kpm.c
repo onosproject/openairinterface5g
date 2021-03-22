@@ -43,12 +43,7 @@
 #include "E2SM_KPM_E2SM-KPM-ActionDefinition.h"
 #include "E2SM_KPM_MeasurementRecord.h"
 #include "E2SM_KPM_MeasurementRecordItem.h"
-//#include "E2SM_KPM_RIC-ReportStyle-List.h"
-//#include "E2SM_KPM_RIC-EventTriggerStyle-List.h"
 #include "E2SM_KPM_E2SM-KPM-IndicationMessage.h"
-//#include "E2SM_KPM_OCUCP-PF-Container.h"
-//#include "E2SM_KPM_PF-Container.h"
-//#include "E2SM_KPM_PM-Containers-List.h"
 #include "E2AP_ProtocolIE-Field.h"
 #include "E2SM_KPM_E2SM-KPM-IndicationHeader.h"
 #include "E2SM_KPM_SNSSAI.h"
@@ -158,8 +153,6 @@ int e2sm_kpm_init(void)
         }
     }
 
-    //ric_kpm_node_item->ric_KPMNode_Type.choice.eNB.global_eNB_ID.pLMN_Identity.buf = (uint8_t *)strdup("PLMNID");//pending
-    //ric_kpm_node_item->ric_KPMNode_Type.choice.eNB.global_eNB_ID.pLMN_Identity.size = strlen("PLMNID");   //pending
     ric_kpm_node_item->cell_Measurement_Object_List = 
             (struct E2SM_KPM_RIC_KPMNode_Item__cell_Measurement_Object_List *)calloc(1, sizeof(*ric_kpm_node_item->cell_Measurement_Object_List));
     
@@ -173,15 +166,9 @@ int e2sm_kpm_init(void)
                       e2_conf[i]->mnc_digit_length,
                       &cell_meas_object_item->cell_global_ID.choice.eUTRA_CGI.pLMN_Identity);
  
-    //cell_meas_object_item->cell_global_ID.choice.eUTRA_CGI.pLMN_Identity.buf = (uint8_t *)strdup("PLMNID"); //pending
-    //cell_meas_object_item->cell_global_ID.choice.eUTRA_CGI.pLMN_Identity.size = strlen("PLMNID"); //pending
-    
     MACRO_ENB_ID_TO_BIT_STRING(e2_conf[i]->cell_identity,
                                &cell_meas_object_item->cell_global_ID.choice.eUTRA_CGI.eUTRACellIdentity);
 
-    //cell_meas_object_item->cell_global_ID.choice.eUTRA_CGI.eUTRACellIdentity.buf = (uint8_t *)strdup("");//pending
-    //cell_meas_object_item->cell_global_ID.choice.eUTRA_CGI.eUTRACellIdentity.size = strlen("");//pending
-    //cell_meas_object_item->cell_global_ID.choice.eUTRA_CGI.eUTRACellIdentity.bits_unused = 0;//pending
     ASN_SEQUENCE_ADD(&ric_kpm_node_item->cell_Measurement_Object_List->list, cell_meas_object_item);
 
     ASN_SEQUENCE_ADD(&func_def->ric_KPM_Node_List->list, ric_kpm_node_item);
@@ -236,27 +223,6 @@ int e2sm_kpm_init(void)
     ric_report_style_item->ric_IndicationHeaderFormat_Type = 1;
     ric_report_style_item->ric_IndicationMessageFormat_Type = 1;
     ASN_SEQUENCE_ADD(&func_def->ric_ReportStyle_List->list, ric_report_style_item);
-
-#if 0
-    func_def->e2SM_KPM_RANfunction_Item.ric_EventTriggerStyle_List = \
-    (struct E2SM_KPM_E2SM_KPM_RANfunction_Description__e2SM_KPM_RANfunction_Item__ric_EventTriggerStyle_List *)calloc(1, sizeof(*func_def->e2SM_KPM_RANfunction_Item.ric_EventTriggerStyle_List));
-    ric_event_trigger_style_item = (E2SM_KPM_RIC_EventTriggerStyle_List_t *)calloc(1, sizeof(*ric_event_trigger_style_item));
-    ric_event_trigger_style_item->ric_EventTriggerStyle_Type = 1;
-    ric_event_trigger_style_item->ric_EventTriggerStyle_Name.buf = (uint8_t *)strdup("Trigger1");
-    ric_event_trigger_style_item->ric_EventTriggerStyle_Name.size = strlen("Trigger1");
-    ric_event_trigger_style_item->ric_EventTriggerFormat_Type = 1;
-    ASN_SEQUENCE_ADD(&func_def->e2SM_KPM_RANfunction_Item.ric_EventTriggerStyle_List->list, ric_event_trigger_style_item);
-
-    func_def->e2SM_KPM_RANfunction_Item.ric_ReportStyle_List = (struct E2SM_KPM_E2SM_KPM_RANfunction_Description__e2SM_KPM_RANfunction_Item__ric_ReportStyle_List *)calloc(1, sizeof(*func_def->e2SM_KPM_RANfunction_Item.ric_ReportStyle_List));
-
-    ric_report_style_item = (E2SM_KPM_RIC_ReportStyle_List_t *)calloc(1, sizeof(*ric_report_style_item));
-    ric_report_style_item->ric_ReportStyle_Type = 6;
-    ric_report_style_item->ric_ReportStyle_Name.buf = (uint8_t *)strdup("O-CU-UP Measurement Container for the EPC connected deployment");
-    ric_report_style_item->ric_ReportStyle_Name.size = strlen("O-CU-UP Measurement Container for the EPC connected deployment");
-    ric_report_style_item->ric_IndicationHeaderFormat_Type = 1;
-    ric_report_style_item->ric_IndicationMessageFormat_Type = 1;
-    ASN_SEQUENCE_ADD(&func_def->e2SM_KPM_RANfunction_Item.ric_ReportStyle_List->list, ric_report_style_item);
-#endif
 
     func->enc_definition_len = e2ap_encode(&asn_DEF_E2SM_KPM_E2SM_KPM_RANfunction_Description,0, func_def,&func->enc_definition);
 
@@ -463,38 +429,6 @@ encode_kpm_Indication_Msg(ric_agent_info_t* ric, ric_subscription_t *rs)
                 break;
         }
     } 
-#if 0
-    /*
-     * OCUCP_PF_Container
-     */
-    E2SM_KPM_OCUCP_PF_Container_t* cucpcont = (E2SM_KPM_OCUCP_PF_Container_t*)calloc(1, sizeof(E2SM_KPM_OCUCP_PF_Container_t));
-    ASN_STRUCT_RESET(asn_DEF_E2SM_KPM_OCUCP_PF_Container, cucpcont);
-
-    {
-        char *node_name = strdup(e2_conf[ric->ranid]->node_name);
-        cucpcont->gNB_CU_CP_Name = (E2SM_KPM_GNB_CU_CP_Name_t*)calloc(1, sizeof(E2SM_KPM_GNB_CU_CP_Name_t));
-        cucpcont->gNB_CU_CP_Name->buf = (uint8_t*)calloc(cucpcont->gNB_CU_CP_Name->size, sizeof(char));
-        cucpcont->gNB_CU_CP_Name->size = strlen(node_name) + 1;
-        strncpy((char*)cucpcont->gNB_CU_CP_Name->buf, node_name, cucpcont->gNB_CU_CP_Name->size);
-    }
-
-    cucpcont->cu_CP_Resource_Status.numberOfActive_UEs = (long*)calloc(1, sizeof(long));
-    *cucpcont->cu_CP_Resource_Status.numberOfActive_UEs = f1ap_cu_inst[ric->ranid].num_ues;
-
-    /*
-     * PF_Container -> OCUCP_PF_Container
-     */
-    E2SM_KPM_PF_Container_t* pfcontainer = (E2SM_KPM_PF_Container_t*)calloc(1, sizeof(E2SM_KPM_PF_Container_t));
-    pfcontainer->present = E2SM_KPM_PF_Container_PR_oCU_CP;
-    pfcontainer->choice.oCU_CP = *cucpcont;
-
-    /*
-     * Containers_List -> PF_Container
-     */
-    E2SM_KPM_PM_Containers_List_t* containers_list = (E2SM_KPM_PM_Containers_List_t*)calloc(1, sizeof(E2SM_KPM_PM_Containers_List_t));
-    ASN_STRUCT_RESET(asn_DEF_E2SM_KPM_PM_Containers_List, containers_list);
-    containers_list->performanceContainer = pfcontainer;
-#endif
 
    /*
     * Measurement Record->MeasurementRecordItem (List)
@@ -527,7 +461,8 @@ encode_kpm_Indication_Msg(ric_agent_info_t* ric, ric_subscription_t *rs)
      * IndicationMessage_Format1 -> measInfoList
      * IndicationMessage_Format1 -> measData
      */
-    E2SM_KPM_E2SM_KPM_IndicationMessage_Format1_t* format = (E2SM_KPM_E2SM_KPM_IndicationMessage_Format1_t*)calloc(1, sizeof(E2SM_KPM_E2SM_KPM_IndicationMessage_Format1_t));
+    E2SM_KPM_E2SM_KPM_IndicationMessage_Format1_t* format = 
+						(E2SM_KPM_E2SM_KPM_IndicationMessage_Format1_t*)calloc(1, sizeof(E2SM_KPM_E2SM_KPM_IndicationMessage_Format1_t));
     ASN_STRUCT_RESET(asn_DEF_E2SM_KPM_E2SM_KPM_IndicationMessage_Format1, format);
     format->subscriptID = subscriptionID;
     format->measInfoList = meas_info_list;
