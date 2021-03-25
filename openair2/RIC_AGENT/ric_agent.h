@@ -115,7 +115,7 @@ typedef struct ric_ran_function_requestor_info {
  */
 
 typedef struct {
-	uint8_t  meas_type_id;
+	long     meas_type_id;
 	char     *meas_type_name;
 	uint16_t meas_data;
 	bool	 subscription_status;
