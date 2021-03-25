@@ -68,6 +68,7 @@ int e2ap_generate_e2_setup_request(ric_agent_info_t *ric,
   pdu.choice.initiatingMessage.value.present = E2AP_InitiatingMessage__value_PR_E2setupRequest;
   req = &pdu.choice.initiatingMessage.value.choice.E2setupRequest;
 
+  /* GlobalE2node_ID */
   ie = (E2AP_E2setupRequestIEs_t *)calloc(1,sizeof(*ie));
   ie->id = E2AP_ProtocolIE_ID_id_GlobalE2node_ID;
   ie->criticality = E2AP_Criticality_reject;
@@ -83,7 +84,8 @@ int e2ap_generate_e2_setup_request(ric_agent_info_t *ric,
   ie->criticality = E2AP_Criticality_reject;
   ie->value.present = E2AP_E2setupRequestIEs__value_PR_RANfunctions_List;
 
-  for (i = 0; i < ran_functions_len; ++i) {
+  for (i = 0; i < ran_functions_len; ++i) 
+  {
     func = ran_functions[i];
     DevAssert(func != NULL);
 
@@ -91,12 +93,16 @@ int e2ap_generate_e2_setup_request(ric_agent_info_t *ric,
       calloc(1,sizeof(*ran_function_item_ie));
     ran_function_item_ie->id = E2AP_ProtocolIE_ID_id_RANfunction_Item;
     ran_function_item_ie->criticality = E2AP_Criticality_reject;
-    ran_function_item_ie->value.present = \
-      E2AP_RANfunction_ItemIEs__value_PR_RANfunction_Item;
-    ran_function_item_ie->value.choice.RANfunction_Item.ranFunctionID = \
-      func->function_id;
-    ran_function_item_ie->value.choice.RANfunction_Item.ranFunctionRevision = \
-      func->revision;
+    
+    ran_function_item_ie->value.present = E2AP_RANfunction_ItemIEs__value_PR_RANfunction_Item; 
+    ran_function_item_ie->value.choice.RANfunction_Item.ranFunctionID = func->function_id;
+	//RIC_AGENT_INFO("RAN Function Def Len:%u\n",func->enc_definition_len);
+    ran_function_item_ie->value.choice.RANfunction_Item.ranFunctionDefinition.buf = (uint8_t *)malloc(func->enc_definition_len);
+    memcpy(ran_function_item_ie->value.choice.RANfunction_Item.ranFunctionDefinition.buf,
+	       func->enc_definition, 
+           func->enc_definition_len);
+    ran_function_item_ie->value.choice.RANfunction_Item.ranFunctionDefinition.size = func->enc_definition_len;
+    ran_function_item_ie->value.choice.RANfunction_Item.ranFunctionRevision = func->revision;
 
     int oid_len = strlen(func->model->oid);
     E2AP_RANfunctionOID_t* oid = (E2AP_RANfunctionOID_t*)calloc(1, sizeof(E2AP_RANfunctionOID_t));
@@ -105,10 +111,6 @@ int e2ap_generate_e2_setup_request(ric_agent_info_t *ric,
     oid->size = oid_len;
     ran_function_item_ie->value.choice.RANfunction_Item.ranFunctionOID = oid;
 
-    ran_function_item_ie->value.choice.RANfunction_Item.ranFunctionDefinition.buf = (uint8_t *)malloc(func->enc_definition_len);
-    memcpy(ran_function_item_ie->value.choice.RANfunction_Item.ranFunctionDefinition.buf,
-	   func->enc_definition, func->enc_definition_len);
-    ran_function_item_ie->value.choice.RANfunction_Item.ranFunctionDefinition.size = func->enc_definition_len;
     ASN_SEQUENCE_ADD(&ie->value.choice.RANfunctions_List.list,
 		     ran_function_item_ie);
   }
