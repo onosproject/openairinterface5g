@@ -132,7 +132,7 @@ int e2ap_handle_ric_subscription_request(
         if  (rie->value.present == E2AP_RICsubscriptionRequest_IEs__value_PR_RICrequestID) {
             rs->request_id = rie->value.choice.RICrequestID.ricRequestorID;
             rs->instance_id = rie->value.choice.RICrequestID.ricInstanceID;
-            RIC_AGENT_INFO("RICsubscriptionRequest|ricRequestorID=%ld|ricInstanceID=%ld", rs->request_id, rs->instance_id);
+            RIC_AGENT_INFO("RICsubscriptionRequest|ricRequestorID=%ld|ricInstanceID=%ld\n", rs->request_id, rs->instance_id);
         } else if (rie->value.present == E2AP_RICsubscriptionRequest_IEs__value_PR_RANfunctionID) {
             rs->function_id = rie->value.choice.RANfunctionID;
         } else if (rie->value.present == E2AP_RICsubscriptionRequest_IEs__value_PR_RICsubscriptionDetails) {
@@ -152,7 +152,7 @@ int e2ap_handle_ric_subscription_request(
                     if (eventTriggerDef->eventDefinition_formats.present == 
                                                 E2SM_KPM_E2SM_KPM_EventTriggerDefinition__eventDefinition_formats_PR_eventDefinition_Format1)
                     {
-                        RIC_AGENT_INFO("report period = %ld", 
+                        RIC_AGENT_INFO("report period = %ld\n", 
                                     eventTriggerDef->eventDefinition_formats.choice.eventDefinition_Format1.reportingPeriod);
                         interval_ms = eventTriggerDef->eventDefinition_formats.choice.eventDefinition_Format1.reportingPeriod;
                         interval_us = (interval_ms%1000)*1000;
@@ -161,7 +161,8 @@ int e2ap_handle_ric_subscription_request(
                 }
             }
             E2AP_RICactions_ToBeSetup_List_t *ral = &rie->value.choice.RICsubscriptionDetails.ricAction_ToBeSetup_List;
-            for (int i = 0; i < ral->list.count; ++i) {
+            for (int i = 0; i < ral->list.count; ++i) 
+            {
                 E2AP_RICaction_ToBeSetup_ItemIEs_t *ies_action = (E2AP_RICaction_ToBeSetup_ItemIEs_t*)ral->list.array[i];
                 xer_fprint(stdout, &asn_DEF_E2AP_RICaction_ToBeSetup_ItemIEs, ies_action);
                 E2AP_RICaction_ToBeSetup_Item_t *rai = &ies_action->value.choice.RICaction_ToBeSetup_Item;
@@ -187,6 +188,11 @@ int e2ap_handle_ric_subscription_request(
                   LIST_INSERT_BEFORE(LIST_FIRST(&rs->action_list),ra,actions);
                 }
                 /* Need to add some validation on Action Definition Measurement Type , but then ASN decoding has to be done */
+            }
+
+            if (ral->list.count == 0)
+            {
+                RIC_AGENT_INFO("RIC ACTION List Empty !!\n");
             }
         }
     }
