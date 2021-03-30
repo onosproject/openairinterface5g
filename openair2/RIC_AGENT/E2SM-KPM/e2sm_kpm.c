@@ -204,48 +204,58 @@ int e2sm_kpm_init(void)
     ric_report_style_item->ric_ReportStyle_Name.size = strlen("O-CU-UP Measurement Container for the EPC connected deployment");
     ric_report_style_item->ric_ActionFormat_Type = 6; //pending 
     
-    meas_action_item1 = (E2SM_KPM_MeasurementInfo_Action_Item_t *)calloc(1, sizeof(*meas_action_item1));
+	  meas_action_item1 = (E2SM_KPM_MeasurementInfo_Action_Item_t *)calloc(1, sizeof(*meas_action_item1));
     meas_action_item1->measName.buf = (uint8_t *)strdup(e2sm_kpm_meas_info[0].meas_type_name);
     meas_action_item1->measName.size = strlen(e2sm_kpm_meas_info[0].meas_type_name);
+
     E2SM_KPM_MeasurementTypeID_t *measID1;
     measID1 = (E2SM_KPM_MeasurementTypeID_t *)calloc(1, sizeof(*measID1));
     *measID1 = e2sm_kpm_meas_info[0].meas_type_id;
+
     meas_action_item1->measID = measID1;
     ASN_SEQUENCE_ADD(&ric_report_style_item->measInfo_Action_List.list, meas_action_item1);
     
     meas_action_item2 = (E2SM_KPM_MeasurementInfo_Action_Item_t *)calloc(1, sizeof(*meas_action_item2));
     meas_action_item2->measName.buf = (uint8_t *)strdup(e2sm_kpm_meas_info[1].meas_type_name); //(uint8_t *)strdup("RRC.ConnEstabSucc.sum");
     meas_action_item2->measName.size = strlen(e2sm_kpm_meas_info[1].meas_type_name);
+
     E2SM_KPM_MeasurementTypeID_t *measID2;
     measID2 = (E2SM_KPM_MeasurementTypeID_t *)calloc(1, sizeof(*measID2));
     *measID2 = e2sm_kpm_meas_info[1].meas_type_id;
+
     meas_action_item2->measID = measID2;
     ASN_SEQUENCE_ADD(&ric_report_style_item->measInfo_Action_List.list, meas_action_item2);
     
     meas_action_item3 = (E2SM_KPM_MeasurementInfo_Action_Item_t *)calloc(1, sizeof(*meas_action_item3));
     meas_action_item3->measName.buf = (uint8_t *)strdup(e2sm_kpm_meas_info[2].meas_type_name);
     meas_action_item3->measName.size = strlen(e2sm_kpm_meas_info[2].meas_type_name);
+
     E2SM_KPM_MeasurementTypeID_t *measID3;
     measID3 = (E2SM_KPM_MeasurementTypeID_t *)calloc(1, sizeof(*measID3));
     *measID3 = e2sm_kpm_meas_info[2].meas_type_id;
+
     meas_action_item3->measID = measID3;
     ASN_SEQUENCE_ADD(&ric_report_style_item->measInfo_Action_List.list, meas_action_item3);
 
     meas_action_item4 = (E2SM_KPM_MeasurementInfo_Action_Item_t *)calloc(1, sizeof(*meas_action_item4));
     meas_action_item4->measName.buf = (uint8_t *)strdup(e2sm_kpm_meas_info[3].meas_type_name);
     meas_action_item4->measName.size = strlen(e2sm_kpm_meas_info[3].meas_type_name);
+
     E2SM_KPM_MeasurementTypeID_t *measID4;
     measID4 = (E2SM_KPM_MeasurementTypeID_t *)calloc(1, sizeof(*measID4));
     *measID4 = e2sm_kpm_meas_info[3].meas_type_id;
+
     meas_action_item4->measID = measID4;
     ASN_SEQUENCE_ADD(&ric_report_style_item->measInfo_Action_List.list, meas_action_item4);
 
     meas_action_item5 = (E2SM_KPM_MeasurementInfo_Action_Item_t *)calloc(1, sizeof(*meas_action_item5));
     meas_action_item5->measName.buf = (uint8_t *)strdup(e2sm_kpm_meas_info[4].meas_type_name);
     meas_action_item5->measName.size = strlen(e2sm_kpm_meas_info[4].meas_type_name);
+
     E2SM_KPM_MeasurementTypeID_t *measID5;
     measID5 = (E2SM_KPM_MeasurementTypeID_t *)calloc(1, sizeof(*measID5));
     *measID5 = e2sm_kpm_meas_info[4].meas_type_id;
+
     meas_action_item5->measID = measID5;
     ASN_SEQUENCE_ADD(&ric_report_style_item->measInfo_Action_List.list, meas_action_item5);
 
@@ -254,11 +264,13 @@ int e2sm_kpm_init(void)
     ASN_SEQUENCE_ADD(&func_def->ric_ReportStyle_List->list, ric_report_style_item);
 
     //xer_fprint(stderr, &asn_DEF_E2SM_KPM_E2SM_KPM_RANfunction_Description, func_def);
+
     RIC_AGENT_INFO("_______\n"); 
     func->enc_definition_len = e2ap_encode(&asn_DEF_E2SM_KPM_E2SM_KPM_RANfunction_Description,0, func_def,&func->enc_definition);
     RIC_AGENT_INFO("_______\n");
 
     RIC_AGENT_INFO("------ RAN FUNC DEF ENC Len:%lu-------\n", func->enc_definition_len);
+
 
     if (func->enc_definition_len < 0) {
         RIC_AGENT_ERROR("failed to encode RANfunction_List in E2SM KPM func description; aborting!");
@@ -270,12 +282,13 @@ int e2sm_kpm_init(void)
 
     func->enabled = 1;
     func->definition = func_def;
+
 #if 0   
     /* Test code */
     E2SM_KPM_E2SM_KPM_RANfunction_Description_t *func_defi;
     asn_dec_rval_t decode_result;
     decode_result = aper_decode_complete(NULL, &asn_DEF_E2SM_KPM_E2SM_KPM_RANfunction_Description,
-                                                (void **)&func_defi, func->enc_definition, func->enc_definition_len);
+                                               (void **)&func_defi, func->enc_definition, func->enc_definition_len);
     DevAssert(decode_result.code == RC_OK);
 #endif
     return ric_agent_register_ran_function(func);
