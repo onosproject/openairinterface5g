@@ -85,11 +85,11 @@ static int e2ap_asn1c_encode_pdu(E2AP_E2AP_PDU_t* pdu, unsigned char **buffer);
 #define MAX_KPM_MEAS    5
 
 kmp_meas_info_t e2sm_kpm_meas_info[MAX_KPM_MEAS] = {
-                                            {1, "RRC.ConnEstabAtt.sum", 15, FALSE},
-                                            {2, "RRC.ConnEstabSucc.sum", 20, FALSE},
-                                            {3, "RRC.ConnReEstabAtt.sum", 25, FALSE},
-                                            {4, "RRC.ConnMean", 30, FALSE},
-                                            {5, "RRC.ConnMax", 35, FALSE}
+                                            {1, "RRC.ConnEstabAtt.sum", 0, FALSE},
+                                            {2, "RRC.ConnEstabSucc.sum", 0, FALSE},
+                                            {3, "RRC.ConnReEstabAtt.sum", 0, FALSE},
+                                            {4, "RRC.ConnMean", 0, FALSE},
+                                            {5, "RRC.ConnMax", 0, FALSE}
                                         };
 
 static ric_service_model_t e2sm_kpm_model = {
@@ -204,7 +204,7 @@ int e2sm_kpm_init(void)
     ric_report_style_item->ric_ReportStyle_Name.size = strlen("O-CU-UP Measurement Container for the EPC connected deployment");
     ric_report_style_item->ric_ActionFormat_Type = 6; //pending 
     
-	  meas_action_item1 = (E2SM_KPM_MeasurementInfo_Action_Item_t *)calloc(1, sizeof(*meas_action_item1));
+      meas_action_item1 = (E2SM_KPM_MeasurementInfo_Action_Item_t *)calloc(1, sizeof(*meas_action_item1));
     meas_action_item1->measName.buf = (uint8_t *)strdup(e2sm_kpm_meas_info[0].meas_type_name);
     meas_action_item1->measName.size = strlen(e2sm_kpm_meas_info[0].meas_type_name);
 
@@ -504,14 +504,22 @@ encode_kpm_Indication_Msg(ric_agent_info_t* ric, ric_subscription_t *rs)
         for (i = 0; i < MAX_KPM_MEAS; i++)
         {
             indMsgMeasInfoItemArr[i] = (E2SM_KPM_MeasurementInfoItem_t *)calloc(1,sizeof(E2SM_KPM_MeasurementInfoItem_t));
-            indMsgMeasInfoItemArr[i]->measType.present = E2SM_KPM_MeasurementType_PR_measID;
-            indMsgMeasInfoItemArr[i]->measType.choice.measID = e2sm_kpm_meas_info[i].meas_type_id;
-
+            indMsgMeasInfoItemArr[i]->measType.present = E2SM_KPM_MeasurementType_PR_measName;
+            indMsgMeasInfoItemArr[i]->measType.choice.measName.buf = (uint8_t *)strdup(e2sm_kpm_meas_info[i].meas_type_name);
+            indMsgMeasInfoItemArr[i]->measType.choice.measName.size = strlen(e2sm_kpm_meas_info[i].meas_type_name);
+            
             indMsgMeasRecItemArr[i] = (E2SM_KPM_MeasurementRecordItem_t *)calloc(1,sizeof(E2SM_KPM_MeasurementRecordItem_t));
             indMsgMeasRecItemArr[i]->present = E2SM_KPM_MeasurementRecordItem_PR_integer;
-            indMsgMeasRecItemArr[i]->choice.integer = /* For now stubbing the values untill actual values are fetched from RRC */
-                                                      e2sm_kpm_meas_info[i].meas_data;
 
+            if (i == 4) /*RRC.ConnMean*/
+            {
+                indMsgMeasRecItemArr[i]->choice.integer = f1ap_cu_inst[ric->ranid].num_ues;
+            }
+            else 
+            {
+                indMsgMeasRecItemArr[i]->choice.integer = /* For now stubbing the values untill actual values are fetched from RRC */
+                                                          e2sm_kpm_meas_info[i].meas_data;
+            }
             indMsgMeasInfoCnt++;
         }
     } 
