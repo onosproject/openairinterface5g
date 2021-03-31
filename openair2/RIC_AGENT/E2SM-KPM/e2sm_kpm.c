@@ -511,7 +511,7 @@ encode_kpm_Indication_Msg(ric_agent_info_t* ric, ric_subscription_t *rs)
             indMsgMeasRecItemArr[i] = (E2SM_KPM_MeasurementRecordItem_t *)calloc(1,sizeof(E2SM_KPM_MeasurementRecordItem_t));
             indMsgMeasRecItemArr[i]->present = E2SM_KPM_MeasurementRecordItem_PR_integer;
 
-            if (i == 4) /*RRC.ConnMean*/
+            if (i == 3) /*RRC.ConnMean*/
             {
                 indMsgMeasRecItemArr[i]->choice.integer = f1ap_cu_inst[ric->ranid].num_ues;
             }
