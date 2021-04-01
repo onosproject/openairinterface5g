@@ -32,6 +32,10 @@
 
 #include "f1ap_common.h"
 
+#ifdef ENABLE_RIC_AGENT
+extern eNB_RRC_KPI_STATS    rrc_kpi_stats;
+#endif
+
 #if defined(EMIT_ASN_DEBUG_EXTERN)
 int asn_debug = 0;
 int asn1_xer_print = 0;
@@ -83,6 +87,14 @@ int f1ap_add_ue(f1ap_cudu_inst_t    *f1_inst,
       f1_inst->f1ap_ue[i].du_ue_f1ap_id = rntiP;
       f1_inst->f1ap_ue[i].cu_ue_f1ap_id = rntiP;
       f1_inst->num_ues++;
+
+#ifdef ENABLE_RIC_AGENT
+      if (f1_inst->num_ues > rrc_kpi_stats.rrc_conn_max)
+      {
+        rrc_kpi_stats.rrc_conn_max = f1_inst->num_ues; //Needs to be further implemented at granularity period level, requires resetting.
+      }
+#endif
+
       LOG_I(F1AP, "Adding a new UE with RNTI %x and cu/du ue_f1ap_id %d\n", f1_inst->f1ap_ue[i].rnti, f1_inst->f1ap_ue[i].du_ue_f1ap_id);
       return i;
     }
