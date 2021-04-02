@@ -125,6 +125,10 @@ pthread_mutex_t      rrc_release_freelist;
 RRC_release_list_t   rrc_release_info;
 pthread_mutex_t      lock_ue_freelist;
 
+#ifdef ENABLE_RIC_AGENT
+eNB_RRC_KPI_STATS    rrc_kpi_stats;
+#endif
+
 void
 openair_rrc_on(
   const protocol_ctxt_t *const ctxt_pP
@@ -1177,6 +1181,9 @@ rrc_eNB_process_RRCConnectionSetupComplete(
     T_INT(ctxt_pP->subframe),
     T_INT(ctxt_pP->rnti));
 
+#ifdef ENABLE_RIC_AGENT
+    rrc_kpi_stats.rrc_conn_estab_succ_sum++;
+#endif        
   if (EPC_MODE_ENABLED == 1) {
     // Forward message to S1AP layer
     rrc_eNB_send_S1AP_NAS_FIRST_REQ(ctxt_pP, ue_context_pP, rrcConnectionSetupComplete);
@@ -7077,6 +7084,9 @@ rrc_eNB_decode_ccch(
               PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP));
         rrcConnectionReestablishmentRequest =
           &ul_ccch_msg->message.choice.c1.choice.rrcConnectionReestablishmentRequest.criticalExtensions.choice.rrcConnectionReestablishmentRequest_r8;
+#ifdef ENABLE_RIC_AGENT
+        rrc_kpi_stats.rrc_conn_reestab_att_sum++;
+#endif        
         LOG_I(RRC,
               PROTOCOL_RRC_CTXT_UE_FMT" LTE_RRCConnectionReestablishmentRequest cause %s\n",
               PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP),
@@ -7311,6 +7321,9 @@ rrc_eNB_decode_ccch(
                          RC.rrc[ctxt_pP->module_id],
                          ctxt_pP->rnti);
 
+#ifdef ENABLE_RIC_AGENT
+        rrc_kpi_stats.rrc_conn_estab_att_sum++;
+#endif        
         if (ue_context_p != NULL) {
           // erase content
           rrc_eNB_free_mem_UE_context(ctxt_pP, ue_context_p);
@@ -8577,6 +8590,13 @@ void rrc_enb_init(void) {
   pthread_mutex_init(&lock_ue_freelist, NULL);
   pthread_mutex_init(&rrc_release_freelist, NULL);
   memset(&rrc_release_info,0,sizeof(RRC_release_list_t));
+#ifdef ENABLE_RIC_AGENT
+  rrc_kpi_stats.rrc_conn_estab_att_sum = 0;
+  rrc_kpi_stats.rrc_conn_estab_succ_sum = 0;
+  rrc_kpi_stats.rrc_conn_reestab_att_sum = 0;
+  rrc_kpi_stats.rrc_conn_mean = 0;
+  rrc_kpi_stats.rrc_conn_max = 0;
+#endif        
 }
 
 //-----------------------------------------------------------------------------

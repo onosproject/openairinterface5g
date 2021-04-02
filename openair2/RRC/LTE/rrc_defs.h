@@ -797,6 +797,16 @@ typedef struct eNB_RRC_INST_s {
 
 } eNB_RRC_INST;
 
+#ifdef ENABLE_RIC_AGENT
+typedef struct eNB_RRC_KPI_STATS_s {
+  uint32_t rrc_conn_estab_att_sum; /*RRC.ConnEstabAtt.sum*/
+  uint32_t rrc_conn_estab_succ_sum; /*RRC.ConnEstabSucc.sum*/
+  uint32_t rrc_conn_reestab_att_sum; /*RRC.ConnReEstabAtt.sum*/
+  uint32_t rrc_conn_mean; /*RRC.ConnMean*/
+  uint32_t rrc_conn_max; /*RRC.ConnMax*/
+} eNB_RRC_KPI_STATS;
+#endif
+
 #define MAX_UE_CAPABILITY_SIZE 255
 typedef struct OAI_UECapability_s {
   uint8_t sdu[MAX_UE_CAPABILITY_SIZE];

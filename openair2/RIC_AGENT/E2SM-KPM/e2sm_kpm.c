@@ -55,6 +55,7 @@
 extern f1ap_cudu_inst_t f1ap_cu_inst[MAX_eNB];
 extern int global_e2_node_id(ranid_t ranid, E2AP_GlobalE2node_ID_t* node_id);
 extern RAN_CONTEXT_t RC;
+extern eNB_RRC_KPI_STATS    rrc_kpi_stats;
 
 /**
  ** The main thing with this abstraction is that we need per-SM modules
@@ -511,15 +512,28 @@ encode_kpm_Indication_Msg(ric_agent_info_t* ric, ric_subscription_t *rs)
             indMsgMeasRecItemArr[i] = (E2SM_KPM_MeasurementRecordItem_t *)calloc(1,sizeof(E2SM_KPM_MeasurementRecordItem_t));
             indMsgMeasRecItemArr[i]->present = E2SM_KPM_MeasurementRecordItem_PR_integer;
 
-            if (i == 3) /*RRC.ConnMean*/
+            switch(i)
             {
-                indMsgMeasRecItemArr[i]->choice.integer = f1ap_cu_inst[ric->ranid].num_ues;
+                case 0:/*RRC.ConnEstabAtt.sum*/
+                    indMsgMeasRecItemArr[i]->choice.integer = rrc_kpi_stats.rrc_conn_estab_att_sum;
+                    break;
+                case 1:/*RRC.ConnEstabSucc.sum*/
+                    indMsgMeasRecItemArr[i]->choice.integer = rrc_kpi_stats.rrc_conn_estab_succ_sum; 
+                    break;
+                case 2:/*RRC.ConnReEstabAtt.sum*/
+                    indMsgMeasRecItemArr[i]->choice.integer = rrc_kpi_stats.rrc_conn_reestab_att_sum;
+                    break;
+                case 3:/*RRC.ConnMean*/
+                    indMsgMeasRecItemArr[i]->choice.integer = f1ap_cu_inst[ric->ranid].num_ues;
+                    break;
+                case 4:/*RRC.ConnMax*/
+                    indMsgMeasRecItemArr[i]->choice.integer = rrc_kpi_stats.rrc_conn_max;
+                    break;
+
+                default:
+                    break;
             }
-            else 
-            {
-                indMsgMeasRecItemArr[i]->choice.integer = /* For now stubbing the values untill actual values are fetched from RRC */
-                                                          e2sm_kpm_meas_info[i].meas_data;
-            }
+                        
             indMsgMeasInfoCnt++;
         }
     } 
@@ -537,9 +551,11 @@ encode_kpm_Indication_Msg(ric_agent_info_t* ric, ric_subscription_t *rs)
                     indMsgMeasRecItemArr[i]->present = E2SM_KPM_MeasurementRecordItem_PR_integer;
                     indMsgMeasRecItemArr[i]->choice.integer = /* For now stubbing the values untill actual values are fetched from RRC */
                             e2sm_kpm_meas_info[indMsgMeasInfoItemArr[i]->measType.choice.measID-1].meas_data;
+                    break;
                 case 4:
                     indMsgMeasRecItemArr[i]->present = E2SM_KPM_MeasurementRecordItem_PR_integer;
                     indMsgMeasRecItemArr[i]->choice.integer = f1ap_cu_inst[ric->ranid].num_ues;
+                    break;
                 default:
                     break;
             }
