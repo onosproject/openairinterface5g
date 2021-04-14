@@ -26,6 +26,8 @@
  */
 
 #include <sys/time.h>
+#include <stdbool.h>
+#include <string.h>
 #include "common/utils/assertions.h"
 #include "f1ap_common.h"
 #include "ric_agent.h"
@@ -45,6 +47,7 @@
 #include "E2SM_KPM_MeasurementRecord.h"
 #include "E2SM_KPM_MeasurementRecordItem.h"
 #include "E2SM_KPM_E2SM-KPM-IndicationMessage.h"
+#include "E2SM_KPM_MeasurementDataItem.h"
 #include "E2AP_ProtocolIE-Field.h"
 #include "E2SM_KPM_E2SM-KPM-IndicationHeader.h"
 #include "E2SM_KPM_SNSSAI.h"
@@ -68,7 +71,16 @@ static int e2sm_kpm_subscription_add(ric_agent_info_t *ric, ric_subscription_t *
 static int e2sm_kpm_subscription_del(ric_agent_info_t *ric, ric_subscription_t *sub, int force,long *cause,long *cause_detail);
 static int e2sm_kpm_control(ric_agent_info_t *ric,ric_control_t *control);
 static char *time_stamp(void);
-static int e2sm_kpm_timer_expiry(
+static int e2sm_kpm_ricInd_timer_expiry(
+        ric_agent_info_t *ric,
+        long timer_id,
+        ric_ran_function_id_t function_id,
+        long request_id,
+        long instance_id,
+        long action_id,
+        uint8_t **outbuf,
+        uint32_t *outlen);
+static int e2sm_kpm_gp_timer_expiry(
         ric_agent_info_t *ric,
         long timer_id,
         ric_ran_function_id_t function_id,
@@ -84,6 +96,14 @@ static void encode_e2sm_kpm_indication_header(ranid_t ranid, E2SM_KPM_E2SM_KPM_I
 static int e2ap_asn1c_encode_pdu(E2AP_E2AP_PDU_t* pdu, unsigned char **buffer);
 
 #define MAX_KPM_MEAS    5
+#define MAX_GRANULARITY_INDEX   50
+uint8_t g_indMsgMeasInfoCnt = 0;
+uint8_t g_granularityIndx = 0;
+bool action_def_missing = FALSE;
+E2SM_KPM_MeasurementInfoItem_t *g_indMsgMeasInfoItemArr[MAX_KPM_MEAS];
+E2SM_KPM_MeasurementRecordItem_t *g_indMsgMeasRecItemArr[MAX_GRANULARITY_INDEX][MAX_KPM_MEAS];
+E2SM_KPM_GranularityPeriod_t     *g_granulPeriod;
+E2SM_KPM_SubscriptionID_t    g_subscriptionID;
 
 kmp_meas_info_t e2sm_kpm_meas_info[MAX_KPM_MEAS] = {
                                             {1, "RRC.ConnEstabAtt.sum", 0, FALSE},
@@ -96,11 +116,12 @@ kmp_meas_info_t e2sm_kpm_meas_info[MAX_KPM_MEAS] = {
 static ric_service_model_t e2sm_kpm_model = {
     .name = "e2sm_kpm-v2beta1",
     /* iso(1) identified-organization(3) dod(6) internet(1) private(4) enterprise(1) oran(53148) e2(1) version2(2) e2sm(2) e2sm-KPMMON-IEs (2) */
-    .oid = "1.3.6.1.4.1.53148.1.2.2.2",//"1.3.6.1.4.1.1.1.2.2",
+    .oid = "1.3.6.1.4.1.53148.1.2.2.2",
     .handle_subscription_add = e2sm_kpm_subscription_add,
     .handle_subscription_del = e2sm_kpm_subscription_del,
     .handle_control = e2sm_kpm_control,
-    .handle_timer_expiry = e2sm_kpm_timer_expiry
+    .handle_ricInd_timer_expiry = e2sm_kpm_ricInd_timer_expiry,
+    .handle_gp_timer_expiry = e2sm_kpm_gp_timer_expiry
 };
 
 /**
@@ -333,7 +354,7 @@ static char *time_stamp(void)
     return timestamp;
 }
 
-static int e2sm_kpm_timer_expiry(
+static int e2sm_kpm_ricInd_timer_expiry(
         ric_agent_info_t *ric,
         long timer_id,
         ric_ran_function_id_t function_id,
@@ -350,7 +371,8 @@ static int e2sm_kpm_timer_expiry(
     DevAssert(timer_id == ric->e2sm_kpm_timer_id);
 
     char *time = time_stamp();
-    RIC_AGENT_INFO("[%s] --------------------- Timer expired, timer_id %ld function_id %ld------------------\n", time, timer_id, function_id);
+    RIC_AGENT_INFO("[%s] ----  Reporting Period Timer expired, timer_id %ld function_id %ld---------\n", 
+                   time, timer_id, function_id);
     free(time);
 
     /* Fetch the RIC Subscription */
@@ -365,11 +387,12 @@ static int e2sm_kpm_timer_expiry(
         char *error_buf = (char*)calloc(300, sizeof(char));
         size_t errlen;
         asn_check_constraints(&asn_DEF_E2SM_KPM_E2SM_KPM_IndicationMessage, indicationmessage, error_buf, &errlen);
-        printf("KPM IND error length %zu\n", errlen);
-        printf("KPM IND error buf %s\n", error_buf);
+        fprintf(stderr,"KPM IND error length %zu\n", errlen);
+        fprintf(stderr,"KPM IND error buf %s\n", error_buf);
         free(error_buf);
         //xer_fprint(stderr, &asn_DEF_E2SM_KPM_E2SM_KPM_IndicationMessage, indicationmessage);
     }
+    g_granularityIndx = 0; // Resetting
 
     xer_fprint(stderr, &asn_DEF_E2SM_KPM_E2SM_KPM_IndicationMessage, indicationmessage);
     uint8_t e2smbuffer[8192];
@@ -417,175 +440,319 @@ static int e2sm_kpm_timer_expiry(
     return 0;
 }
 
+static int e2sm_kpm_gp_timer_expiry(
+        ric_agent_info_t *ric,
+        long timer_id,
+        ric_ran_function_id_t function_id,
+        long request_id,
+        long instance_id,
+        long action_id,
+        uint8_t **outbuf,
+        uint32_t *outlen)
+{
+    int i,j=0;
+
+    DevAssert(timer_id == ric->gran_prd_timer_id);
+
+    char *time = time_stamp();
+    RIC_AGENT_INFO("[%s] +++  Granularity Period expired, timer_id %ld function_id %ld +++ \n",
+                   time, timer_id, function_id);
+    free(time);
+
+    for (i = 0; i < MAX_KPM_MEAS; i++)
+    {
+        if (e2sm_kpm_meas_info[i].subscription_status == TRUE)
+        {
+            g_indMsgMeasRecItemArr[g_granularityIndx][j] = 
+                            (E2SM_KPM_MeasurementRecordItem_t *)calloc(1,sizeof(E2SM_KPM_MeasurementRecordItem_t));
+            g_indMsgMeasRecItemArr[g_granularityIndx][j]->present = E2SM_KPM_MeasurementRecordItem_PR_integer;
+
+            switch(e2sm_kpm_meas_info[i].meas_type_id)
+            {
+                case 1:/*RRC.ConnEstabAtt.sum*/
+                    g_indMsgMeasRecItemArr[g_granularityIndx][j]->choice.integer = 
+                                                                        rrc_kpi_stats.rrc_conn_estab_att_sum;
+                    break;
+                case 2:/*RRC.ConnEstabSucc.sum*/
+                    g_indMsgMeasRecItemArr[g_granularityIndx][j]->choice.integer = 
+                                                                        rrc_kpi_stats.rrc_conn_estab_succ_sum;
+                    break;
+                case 3:/*RRC.ConnReEstabAtt.sum*/
+                    g_indMsgMeasRecItemArr[g_granularityIndx][j]->choice.integer = 
+                                                                        rrc_kpi_stats.rrc_conn_reestab_att_sum;
+                    break;
+                case 4:/*RRC.ConnMean*/
+                    g_indMsgMeasRecItemArr[g_granularityIndx][j]->choice.integer = 
+                                                                            f1ap_cu_inst[ric->ranid].num_ues;
+                    break;
+                case 5:/*RRC.ConnMax*/
+                    g_indMsgMeasRecItemArr[g_granularityIndx][j]->choice.integer = rrc_kpi_stats.rrc_conn_max;
+                    break;
+                default:
+                    break;
+            }
+            j++;
+        }
+    }
+
+    g_granularityIndx++;
+
+    *outbuf = NULL;
+    *outlen = 0;
+    return 0;
+}
+
+uint8_t 
+getMeasIdFromMeasName(uint8_t *measName)
+{
+    uint8_t i =0;
+    int ret;
+
+    for(i=0; i < MAX_KPM_MEAS; i++)
+    {
+        ret = strcmp(e2sm_kpm_meas_info[i].meas_type_name, (char *)measName);
+        if (ret ==0)
+        {
+            RIC_AGENT_INFO("[%s] found, MeasId:%d\n",measName, (i+1));
+            return (i+1);
+        }
+    }
+
+    return 0xFF;
+}
+
+int 
+e2sm_kpm_decode_and_handle_action_def(uint8_t *def_buf, 
+                                          size_t def_size, 
+                                          ric_ran_function_t *func,
+                                          uint32_t      interval_ms,
+                                          ric_subscription_t* rs,
+                                          ric_agent_info_t *ric)
+{
+    E2SM_KPM_E2SM_KPM_ActionDefinition_t *actionDef;
+    E2SM_KPM_E2SM_KPM_ActionDefinition_Format1_t *actionDefFormat1;
+    E2SM_KPM_MeasurementInfoItem_t *actionDefMeasInfoItem;
+    E2SM_KPM_MeasurementTypeID_t localMeasID;
+    asn_dec_rval_t decode_result;
+    uint32_t      gp_interval_sec = 0;
+    uint32_t      gp_interval_us = 0;
+    uint32_t      gp_interval_ms = 0;
+    uint8_t i,ret;
+    uint16_t subsId = 10;//hack
+
+    g_granulPeriod = (E2SM_KPM_GranularityPeriod_t *)calloc(1,sizeof(E2SM_KPM_GranularityPeriod_t));
+
+    /*Reset Subscriptions */
+    for (i = 0; i < MAX_KPM_MEAS; i++)
+    {
+        e2sm_kpm_meas_info[i].subscription_status = FALSE;
+    }
+    g_indMsgMeasInfoCnt = 0; // resetting
+   
+    RIC_AGENT_INFO("ACTION Def size:%lu\n", def_size);
+    if (def_size == 0)
+    {
+        /* In case of missing action list, all Meas Info should be reported to RIC */
+        RIC_AGENT_INFO("ACTION Def missing, populating all KPM Data\n");
+
+        for (i = 0; i < MAX_KPM_MEAS; i++)
+        {
+            g_indMsgMeasInfoItemArr[g_indMsgMeasInfoCnt] =
+                                     (E2SM_KPM_MeasurementInfoItem_t *)calloc(1,sizeof(E2SM_KPM_MeasurementInfoItem_t));
+            g_indMsgMeasInfoItemArr[g_indMsgMeasInfoCnt]->measType.present = E2SM_KPM_MeasurementType_PR_measName;
+            g_indMsgMeasInfoItemArr[g_indMsgMeasInfoCnt]->measType.choice.measName.buf =
+                                                     (uint8_t *)strdup(e2sm_kpm_meas_info[i].meas_type_name);
+            g_indMsgMeasInfoItemArr[g_indMsgMeasInfoCnt]->measType.choice.measName.size =
+                                                                strlen(e2sm_kpm_meas_info[i].meas_type_name);
+            e2sm_kpm_meas_info[i].subscription_status = TRUE;
+            g_indMsgMeasInfoCnt++;
+        }
+        *g_granulPeriod = 10; //Hack
+
+        /* Hack - Subscription ID */
+        g_subscriptionID.size = sizeof(subsId);
+        g_subscriptionID.buf = (uint8_t *)calloc(1,sizeof(subsId));
+        *g_subscriptionID.buf = subsId;
+ 
+        action_def_missing = TRUE; /* Granularity Timer will not start */
+        return 0;
+    }
+ 
+    decode_result = aper_decode_complete(NULL, &asn_DEF_E2SM_KPM_E2SM_KPM_ActionDefinition,
+                                         (void **)&actionDef, def_buf, def_size);
+    DevAssert(decode_result.code == RC_OK);
+    xer_fprint(stdout, &asn_DEF_E2SM_KPM_E2SM_KPM_ActionDefinition, actionDef);
+
+    if (actionDef->actionDefinition_formats.present == /*E2SM-KPM Action Definition Format 1*/
+                            E2SM_KPM_E2SM_KPM_ActionDefinition__actionDefinition_formats_PR_actionDefinition_Format1)
+    {
+        actionDefFormat1 = &actionDef->actionDefinition_formats.choice.actionDefinition_Format1;
+
+        if (actionDefFormat1->granulPeriod > interval_ms)
+        {
+            RIC_AGENT_ERROR("Subscription Failure: Granularity Period:%lu ms Reporting Interval:%u ms\n",
+                            actionDefFormat1->granulPeriod, interval_ms);
+            return -1;
+        }
+        *g_granulPeriod = actionDefFormat1->granulPeriod;
+        
+        if (actionDefFormat1->subscriptID.size)
+        {
+            g_subscriptionID.size = actionDefFormat1->subscriptID.size;
+            g_subscriptionID.buf = (uint8_t *)calloc(1,actionDefFormat1->subscriptID.size);
+            memcpy(g_subscriptionID.buf,
+                   actionDefFormat1->subscriptID.buf,
+                   actionDefFormat1->subscriptID.size);
+        }       
+ 
+        /* Fetch KPM subscription details */
+        for (i=0; i < actionDefFormat1->measInfoList.list.count; i++)
+        {
+            actionDefMeasInfoItem = (E2SM_KPM_MeasurementInfoItem_t *)(actionDefFormat1->measInfoList.list.array[i]);
+
+            //if (actionDefMeasInfoItem->measType.present == E2SM_KPM_MeasurementType_PR_measID)
+            if (actionDefMeasInfoItem->measType.present == E2SM_KPM_MeasurementType_PR_measName)
+            {
+                //localMeasID = actionDefMeasInfoItem->measType.choice.measID;
+                localMeasID = getMeasIdFromMeasName(actionDefMeasInfoItem->measType.choice.measName.buf);
+
+                if ( ( (localMeasID > 0) &&
+                       (localMeasID < (MAX_KPM_MEAS+1) ) ) &&  /*Expecting KPM MeasID to be within limits */
+                     (e2sm_kpm_meas_info[localMeasID-1].subscription_status == FALSE) ) /*Avoid subscribing duplicate */
+                {
+                    /* Set the Subscription Status */
+                    g_indMsgMeasInfoItemArr[g_indMsgMeasInfoCnt] =
+                                                 (E2SM_KPM_MeasurementInfoItem_t *)calloc(1,sizeof(E2SM_KPM_MeasurementInfoItem_t));
+                    g_indMsgMeasInfoItemArr[g_indMsgMeasInfoCnt]->measType.present = E2SM_KPM_MeasurementType_PR_measName;
+                    g_indMsgMeasInfoItemArr[g_indMsgMeasInfoCnt]->measType.choice.measName.buf =
+                                                     (uint8_t *)strdup(e2sm_kpm_meas_info[localMeasID-1].meas_type_name);
+                    g_indMsgMeasInfoItemArr[g_indMsgMeasInfoCnt]->measType.choice.measName.size =
+                                                                strlen(e2sm_kpm_meas_info[localMeasID-1].meas_type_name);
+                    e2sm_kpm_meas_info[localMeasID-1].subscription_status = TRUE;
+                    g_indMsgMeasInfoCnt++;
+                }
+                else
+                {
+                    RIC_AGENT_ERROR("Act Def Err i=%d MeasId:%ld indMsgMeasInfoCnt:%d\n",
+                                    i, localMeasID, g_indMsgMeasInfoCnt);
+                    return -1;
+                }
+            }
+            else
+            {
+                RIC_AGENT_ERROR("Meas Name not found in Action Def\n");
+                return -1;
+            }
+        }
+        gp_interval_ms = actionDefFormat1->granulPeriod;
+        gp_interval_us = (gp_interval_ms%1000)*1000;
+        gp_interval_sec = (gp_interval_ms/1000);
+
+        ric_ran_function_requestor_info_t* arg_gp
+                    = (ric_ran_function_requestor_info_t*)calloc(1, sizeof(ric_ran_function_requestor_info_t));
+        arg_gp->function_id = func->function_id;
+        arg_gp->request_id = rs->request_id;
+        arg_gp->instance_id = rs->instance_id;
+        arg_gp->action_id = (LIST_FIRST(&rs->action_list))->id;
+        /*Start Timer for Granularity Period */
+        ret = timer_setup(gp_interval_sec, gp_interval_us,
+                          TASK_RIC_AGENT,
+                          ric->ranid,
+                          TIMER_PERIODIC,
+                          (void *)arg_gp,
+                          &ric->gran_prd_timer_id);
+        if (ret < 0) {
+            RIC_AGENT_ERROR("failed to start Granularity Period timer\n");
+            return -1;
+        }
+    }
+    else
+    {
+        RIC_AGENT_ERROR("Subscription Failure: Invalid Action Def Format:%d\n",
+                        actionDef->actionDefinition_formats.present);
+        return -1;
+    }
+
+    return 0;
+}
+
 static E2SM_KPM_E2SM_KPM_IndicationMessage_t*
 encode_kpm_Indication_Msg(ric_agent_info_t* ric, ric_subscription_t *rs)
 {
     int ret;
-    ric_action_t *action;
-    E2SM_KPM_E2SM_KPM_ActionDefinition_t *actionDef;
-    asn_dec_rval_t decode_result;
-    E2SM_KPM_SubscriptionID_t subscriptionID;
-    E2SM_KPM_E2SM_KPM_ActionDefinition_Format1_t *actionDefFormat1;
-    E2SM_KPM_MeasurementRecordItem_t *indMsgMeasRecItemArr[MAX_KPM_MEAS];
-    E2SM_KPM_MeasurementInfoItem_t *indMsgMeasInfoItemArr[MAX_KPM_MEAS];
-    E2SM_KPM_MeasurementInfoItem_t *actionDefMeasInfoItem;
-    uint8_t indMsgMeasInfoCnt = 0;
-    uint8_t i, actionLstCnt = 0;
-    uint16_t subsId = 10;//hack
+    uint8_t i,k;
+    E2SM_KPM_MeasurementDataItem_t* meas_data_item[MAX_GRANULARITY_INDEX];
+    E2SM_KPM_MeasurementRecord_t* meas_rec[MAX_GRANULARITY_INDEX];
+    E2SM_KPM_MeasurementData_t* meas_data;
 
-    /*Reset Subscriptions */
-    for (i = 0; i < MAX_KPM_MEAS; i++)
-    {   
-        e2sm_kpm_meas_info[i].subscription_status = FALSE;
-    }
-
-    /* Fetch the RIC Action from action list of  RIC Subscription */
-    LIST_FOREACH(action, &rs->action_list, actions) 
-    { /*Expecting just 1 RIC action, as all Measurement Info will be inside def_buff */
-        if (!action->enabled) {
-            continue;
-        }
-        
-        RIC_AGENT_INFO("ACTION Def size:%lu\n", action->def_size);
-
-        if (action->def_size > 0)
-        {
-            actionLstCnt++;
-            /* ASN Decode the Action Definition */
-            decode_result = aper_decode_complete(NULL, &asn_DEF_E2SM_KPM_E2SM_KPM_ActionDefinition, 
-                                                (void **)&actionDef, action->def_buf, action->def_size);
-            DevAssert(decode_result.code == RC_OK);
-            xer_fprint(stdout, &asn_DEF_E2SM_KPM_E2SM_KPM_ActionDefinition, actionDef);
-            
-            if (actionDef->actionDefinition_formats.present ==
-                                        E2SM_KPM_E2SM_KPM_ActionDefinition__actionDefinition_formats_PR_actionDefinition_Format1)
-            {
-                actionDefFormat1 = &actionDef->actionDefinition_formats.choice.actionDefinition_Format1;
-
-                if (actionDefFormat1->subscriptID.size)
-                {
-                    subscriptionID.size = actionDefFormat1->subscriptID.size;
-                    subscriptionID.buf = (uint8_t *)calloc(1,actionDefFormat1->subscriptID.size); 
-                    memcpy(subscriptionID.buf,
-                           actionDefFormat1->subscriptID.buf,
-                           actionDefFormat1->subscriptID.size);
-                }            
-                /* Fetch Measurement IDs */
-                for (i=0; i < actionDefFormat1->measInfoList.list.count; i++)
-                {
-                    actionDefMeasInfoItem = (E2SM_KPM_MeasurementInfoItem_t *)(actionDefFormat1->measInfoList.list.array[i]);
-                    
-                    if (actionDefMeasInfoItem->measType.present == E2SM_KPM_MeasurementType_PR_measID)
-                    {
-                        if ( (actionDefMeasInfoItem->measType.choice.measID < (MAX_KPM_MEAS+1)) &&  /*Expecting KPM MeasID to be within limits */
-                             (e2sm_kpm_meas_info[actionDefMeasInfoItem->measType.choice.measID-1].subscription_status == FALSE) ) /*Avoid subscribing duplicate */
-                        {
-                            indMsgMeasInfoItemArr[indMsgMeasInfoCnt] = 
-                                                (E2SM_KPM_MeasurementInfoItem_t *)calloc(1,sizeof(E2SM_KPM_MeasurementInfoItem_t));
-                            indMsgMeasInfoItemArr[indMsgMeasInfoCnt]->measType.present = E2SM_KPM_MeasurementType_PR_measID;
-                            indMsgMeasInfoItemArr[indMsgMeasInfoCnt]->measType.choice.measID = actionDefMeasInfoItem->measType.choice.measID;
-                            e2sm_kpm_meas_info[actionDefMeasInfoItem->measType.choice.measID-1].subscription_status = TRUE;
-                            indMsgMeasInfoCnt++;
-                        }
-                    }
-                }
-            }
-        }   
-    }
-
-    if (actionLstCnt == 0)
+    if (action_def_missing == TRUE)
     { 
-        /* Hack - Subscription ID */
-        subscriptionID.size = sizeof(subsId);
-        subscriptionID.buf = (uint8_t *)calloc(1,sizeof(subsId));
-        *subscriptionID.buf = subsId;
-        
-        /* In case of missing action list, all Meas Info should be reported to RIC */
-        RIC_AGENT_INFO("ACTION Def missing, populating all KPM Data\n");
         for (i = 0; i < MAX_KPM_MEAS; i++)
         {
-            indMsgMeasInfoItemArr[i] = (E2SM_KPM_MeasurementInfoItem_t *)calloc(1,sizeof(E2SM_KPM_MeasurementInfoItem_t));
-            indMsgMeasInfoItemArr[i]->measType.present = E2SM_KPM_MeasurementType_PR_measName;
-            indMsgMeasInfoItemArr[i]->measType.choice.measName.buf = (uint8_t *)strdup(e2sm_kpm_meas_info[i].meas_type_name);
-            indMsgMeasInfoItemArr[i]->measType.choice.measName.size = strlen(e2sm_kpm_meas_info[i].meas_type_name);
-            
-            indMsgMeasRecItemArr[i] = (E2SM_KPM_MeasurementRecordItem_t *)calloc(1,sizeof(E2SM_KPM_MeasurementRecordItem_t));
-            indMsgMeasRecItemArr[i]->present = E2SM_KPM_MeasurementRecordItem_PR_integer;
+            g_indMsgMeasRecItemArr[0][i] = (E2SM_KPM_MeasurementRecordItem_t *)calloc(1,sizeof(E2SM_KPM_MeasurementRecordItem_t));
+            g_indMsgMeasRecItemArr[0][i]->present = E2SM_KPM_MeasurementRecordItem_PR_integer;
 
             switch(i)
             {
                 case 0:/*RRC.ConnEstabAtt.sum*/
-                    indMsgMeasRecItemArr[i]->choice.integer = rrc_kpi_stats.rrc_conn_estab_att_sum;
+                    g_indMsgMeasRecItemArr[0][i]->choice.integer = rrc_kpi_stats.rrc_conn_estab_att_sum;
                     break;
                 case 1:/*RRC.ConnEstabSucc.sum*/
-                    indMsgMeasRecItemArr[i]->choice.integer = rrc_kpi_stats.rrc_conn_estab_succ_sum; 
+                    g_indMsgMeasRecItemArr[0][i]->choice.integer = rrc_kpi_stats.rrc_conn_estab_succ_sum; 
                     break;
                 case 2:/*RRC.ConnReEstabAtt.sum*/
-                    indMsgMeasRecItemArr[i]->choice.integer = rrc_kpi_stats.rrc_conn_reestab_att_sum;
+                    g_indMsgMeasRecItemArr[0][i]->choice.integer = rrc_kpi_stats.rrc_conn_reestab_att_sum;
                     break;
                 case 3:/*RRC.ConnMean*/
-                    indMsgMeasRecItemArr[i]->choice.integer = f1ap_cu_inst[ric->ranid].num_ues;
+                    g_indMsgMeasRecItemArr[0][i]->choice.integer = f1ap_cu_inst[ric->ranid].num_ues;
                     break;
                 case 4:/*RRC.ConnMax*/
-                    indMsgMeasRecItemArr[i]->choice.integer = rrc_kpi_stats.rrc_conn_max;
+                    g_indMsgMeasRecItemArr[0][i]->choice.integer = rrc_kpi_stats.rrc_conn_max;
                     break;
 
                 default:
                     break;
             }
-                        
-            indMsgMeasInfoCnt++;
         }
+        g_granularityIndx = 1;
     } 
-    else
+
+    RIC_AGENT_INFO("Granularity Idx=:%d\n",g_granularityIndx);
+    /* Meas Records meas_rec[]  have to be prepared for each Meas data item */
+
+    for (k=0; k < g_granularityIndx; k++)
     {
-        for (i=0; i < indMsgMeasInfoCnt; i++)
-        {
-            indMsgMeasRecItemArr[i] = (E2SM_KPM_MeasurementRecordItem_t *)calloc(1,sizeof(E2SM_KPM_MeasurementRecordItem_t));
-            switch(indMsgMeasInfoItemArr[i]->measType.choice.measID)
-            {
-                case 1:
-                case 2:
-                case 3:
-                case 5:
-                    indMsgMeasRecItemArr[i]->present = E2SM_KPM_MeasurementRecordItem_PR_integer;
-                    indMsgMeasRecItemArr[i]->choice.integer = /* For now stubbing the values untill actual values are fetched from RRC */
-                            e2sm_kpm_meas_info[indMsgMeasInfoItemArr[i]->measType.choice.measID-1].meas_data;
-                    break;
-                case 4:
-                    indMsgMeasRecItemArr[i]->present = E2SM_KPM_MeasurementRecordItem_PR_integer;
-                    indMsgMeasRecItemArr[i]->choice.integer = f1ap_cu_inst[ric->ranid].num_ues;
-                    break;
-                default:
-                    break;
-            }
+        /*
+         * Measurement Record->MeasurementRecordItem (List)
+         */
+        meas_rec[k] = (E2SM_KPM_MeasurementRecord_t *)calloc(1, sizeof(E2SM_KPM_MeasurementRecord_t));
+        for(i=0; i < g_indMsgMeasInfoCnt; i++)
+        { 
+            ret = ASN_SEQUENCE_ADD(&meas_rec[k]->list, g_indMsgMeasRecItemArr[k][i]);
+            DevAssert(ret == 0);
         }
-    } 
 
-   /*
-    * Measurement Record->MeasurementRecordItem (List)
-    */
-    E2SM_KPM_MeasurementRecord_t* meas_rec = (E2SM_KPM_MeasurementRecord_t *)calloc(1, sizeof(E2SM_KPM_MeasurementRecord_t));
-    for(i=0; i < indMsgMeasInfoCnt; i++)
-    { 
-        ret = ASN_SEQUENCE_ADD(&meas_rec->list, indMsgMeasRecItemArr[i]);
+        /* MeasDataItem*/
+        meas_data_item[k] = (E2SM_KPM_MeasurementDataItem_t*)calloc(1, sizeof(E2SM_KPM_MeasurementDataItem_t));
+        meas_data_item[k]->measRecord = *meas_rec[k];
+
+        /*
+         * measData->measurementRecord (List)
+         */
+        meas_data = (E2SM_KPM_MeasurementData_t*)calloc(1, sizeof(E2SM_KPM_MeasurementData_t));
+        /* Enqueue Meas data items */
+        ret = ASN_SEQUENCE_ADD(&meas_data->list, meas_data_item[k]);
         DevAssert(ret == 0);
     }
 
-   /*
-    * measData->measurementRecord (List)
-    */
-    E2SM_KPM_MeasurementData_t* meas_data = (E2SM_KPM_MeasurementData_t*)calloc(1, sizeof(E2SM_KPM_MeasurementData_t));
-    ret = ASN_SEQUENCE_ADD(&meas_data->list, meas_rec);
-    DevAssert(ret == 0);
-
+    DevAssert(meas_data!=NULL);
    /*
     * measInfoList
     */
     E2SM_KPM_MeasurementInfoList_t* meas_info_list = (E2SM_KPM_MeasurementInfoList_t*)calloc(1, sizeof(E2SM_KPM_MeasurementInfoList_t));
-    for(i=0; i < indMsgMeasInfoCnt; i++)
+    for(i=0; i < g_indMsgMeasInfoCnt; i++)
     {
-        ret = ASN_SEQUENCE_ADD(&meas_info_list->list, indMsgMeasInfoItemArr[i]);
+        ret = ASN_SEQUENCE_ADD(&meas_info_list->list, g_indMsgMeasInfoItemArr[i]);
         DevAssert(ret == 0);
     }
 
@@ -596,12 +763,11 @@ encode_kpm_Indication_Msg(ric_agent_info_t* ric, ric_subscription_t *rs)
     E2SM_KPM_E2SM_KPM_IndicationMessage_Format1_t* format = 
                         (E2SM_KPM_E2SM_KPM_IndicationMessage_Format1_t*)calloc(1, sizeof(E2SM_KPM_E2SM_KPM_IndicationMessage_Format1_t));
     ASN_STRUCT_RESET(asn_DEF_E2SM_KPM_E2SM_KPM_IndicationMessage_Format1, format);
-    format->subscriptID = subscriptionID;
+    format->subscriptID.size = g_subscriptionID.size;
+    format->subscriptID.buf = g_subscriptionID.buf;
     format->measInfoList = meas_info_list;
     format->measData = *meas_data;
-    E2SM_KPM_GranularityPeriod_t* granPrd = (E2SM_KPM_GranularityPeriod_t *)calloc(1,sizeof(E2SM_KPM_GranularityPeriod_t));
-    *granPrd = 10; //Crash fix
-    format->granulPeriod = granPrd;
+    format->granulPeriod = g_granulPeriod;
 
     /*
      * IndicationMessage -> IndicationMessage_Format1
