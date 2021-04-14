@@ -125,18 +125,30 @@ int e2ap_handle_ric_subscription_request(
 
     for (E2AP_RICsubscriptionRequest_IEs_t** ptr = req->protocolIEs.list.array;
             ptr < &req->protocolIEs.list.array[req->protocolIEs.list.count];
-            ptr++) {
-
+            ptr++) 
+    {
         E2AP_RICsubscriptionRequest_IEs_t* rie = (E2AP_RICsubscriptionRequest_IEs_t *)*ptr;
 
-        if  (rie->value.present == E2AP_RICsubscriptionRequest_IEs__value_PR_RICrequestID) {
+        if  (rie->value.present == E2AP_RICsubscriptionRequest_IEs__value_PR_RICrequestID) 
+        {
             rs->request_id = rie->value.choice.RICrequestID.ricRequestorID;
             rs->instance_id = rie->value.choice.RICrequestID.ricInstanceID;
             RIC_AGENT_INFO("RICsubscriptionRequest|ricRequestorID=%ld|ricInstanceID=%ld\n", rs->request_id, rs->instance_id);
-        } else if (rie->value.present == E2AP_RICsubscriptionRequest_IEs__value_PR_RANfunctionID) {
+        } 
+        else if (rie->value.present == E2AP_RICsubscriptionRequest_IEs__value_PR_RANfunctionID) 
+        {
             rs->function_id = rie->value.choice.RANfunctionID;
-        } else if (rie->value.present == E2AP_RICsubscriptionRequest_IEs__value_PR_RICsubscriptionDetails) {
-            if (rie->value.choice.RICsubscriptionDetails.ricEventTriggerDefinition.size > 0) {
+            func = ric_agent_lookup_ran_function(rs->function_id);
+            if (!func) 
+            {
+                RIC_AGENT_ERROR("failed to find ran_function %ld\n",rs->function_id);
+                goto errout;
+            }
+        } 
+        else if (rie->value.present == E2AP_RICsubscriptionRequest_IEs__value_PR_RICsubscriptionDetails) 
+        {
+            if (rie->value.choice.RICsubscriptionDetails.ricEventTriggerDefinition.size > 0) 
+            {
                 rs->event_trigger.size = rie->value.choice.RICsubscriptionDetails.ricEventTriggerDefinition.size;
                 rs->event_trigger.buf = (uint8_t *)malloc(rs->event_trigger.size);
                 memcpy(rs->event_trigger.buf,
@@ -145,7 +157,9 @@ int e2ap_handle_ric_subscription_request(
                 {
                     asn_dec_rval_t decode_result;
                     E2SM_KPM_E2SM_KPM_EventTriggerDefinition_t *eventTriggerDef = 0;
-                    decode_result = aper_decode_complete(NULL, &asn_DEF_E2SM_KPM_E2SM_KPM_EventTriggerDefinition, (void **)&eventTriggerDef, rs->event_trigger.buf, rs->event_trigger.size);
+                    decode_result = aper_decode_complete(NULL, &asn_DEF_E2SM_KPM_E2SM_KPM_EventTriggerDefinition, 
+                                                        (void **)&eventTriggerDef, rs->event_trigger.buf, 
+                                                        rs->event_trigger.size);
                     DevAssert(decode_result.code == RC_OK);
                     xer_fprint(stdout, &asn_DEF_E2SM_KPM_E2SM_KPM_EventTriggerDefinition, eventTriggerDef);
 
@@ -160,6 +174,7 @@ int e2ap_handle_ric_subscription_request(
                     }
                 }
             }
+
             E2AP_RICactions_ToBeSetup_List_t *ral = &rie->value.choice.RICsubscriptionDetails.ricAction_ToBeSetup_List;
             for (int i = 0; i < ral->list.count; ++i) 
             {
@@ -170,24 +185,38 @@ int e2ap_handle_ric_subscription_request(
                 ric_action_t *ra = (ric_action_t *)calloc(1,sizeof(*ra));
                 ra->id = rai->ricActionID;
                 ra->type = rai->ricActionType;
-                if (rai->ricActionDefinition && rai->ricActionDefinition->size > 0) {
+                if (rai->ricActionDefinition && rai->ricActionDefinition->size > 0) 
+                {
                     ra->def_size = rai->ricActionDefinition->size;
                     ra->def_buf = (uint8_t *)malloc(ra->def_size);
                     memcpy(ra->def_buf,rai->ricActionDefinition->buf,ra->def_size);
                 }
-                if (rai->ricSubsequentAction) {
-                  ra->subsequent_action = rai->ricSubsequentAction->ricSubsequentActionType;
-                  ra->time_to_wait = rai->ricSubsequentAction->ricTimeToWait;
+
+                if (rai->ricSubsequentAction) 
+                {
+                    ra->subsequent_action = rai->ricSubsequentAction->ricSubsequentActionType;
+                    ra->time_to_wait = rai->ricSubsequentAction->ricTimeToWait;
                 }
                 ra->enabled = 1;
 
-                if (LIST_EMPTY(&rs->action_list)) {
-                  LIST_INSERT_HEAD(&rs->action_list,ra,actions);
+                if (LIST_EMPTY(&rs->action_list)) 
+                {
+                    LIST_INSERT_HEAD(&rs->action_list,ra,actions);
                 }
-                else {
-                  LIST_INSERT_BEFORE(LIST_FIRST(&rs->action_list),ra,actions);
+                else 
+                {
+                    LIST_INSERT_BEFORE(LIST_FIRST(&rs->action_list),ra,actions);
                 }
                 /* Need to add some validation on Action Definition Measurement Type , but then ASN decoding has to be done */
+                /* ASN Decode the Action Definition */
+
+                ret = e2sm_kpm_decode_and_handle_action_def(ra->def_buf, ra->def_size, 
+                                                            func, interval_ms, rs, ric);
+                if (ret)
+                {
+                    RIC_AGENT_ERROR("Action Definiton Handling failed\n");
+                    goto errout;
+                }
             }
 
             if (ral->list.count == 0)
@@ -215,8 +244,8 @@ int e2ap_handle_ric_subscription_request(
         goto errout;
     }
 
-    ric_ran_function_id_t* function_id = (ric_ran_function_id_t *)calloc(1, sizeof(ric_ran_function_id_t));
-    *function_id = func->function_id;
+    //ric_ran_function_id_t* function_id = (ric_ran_function_id_t *)calloc(1, sizeof(ric_ran_function_id_t));
+    //*function_id = func->function_id;
     ric_ran_function_requestor_info_t* arg
         = (ric_ran_function_requestor_info_t*)calloc(1, sizeof(ric_ran_function_requestor_info_t));
     arg->function_id = func->function_id;
@@ -476,7 +505,27 @@ int e2ap_handle_timer_expiry(
 
     DevAssert(func != NULL);
 
-    return func->model->handle_timer_expiry(
+    return func->model->handle_ricInd_timer_expiry(
+            ric, timer_id,
+            info->function_id, info->request_id,
+            info->instance_id, info->action_id,
+            outbuf, outlen);
+}
+
+int e2ap_handle_gp_timer_expiry(
+        ric_agent_info_t *ric,
+        long timer_id,
+        void* arg,
+        uint8_t **outbuf,
+        uint32_t *outlen)
+{
+    DevAssert(arg != NULL);
+    ric_ran_function_requestor_info_t* info = (ric_ran_function_requestor_info_t*)arg;
+    ric_ran_function_t *func = ric_agent_lookup_ran_function(info->function_id);
+
+    DevAssert(func != NULL);
+
+    return func->model->handle_gp_timer_expiry(
             ric, timer_id,
             info->function_id, info->request_id,
             info->instance_id, info->action_id,
