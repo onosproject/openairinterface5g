@@ -594,6 +594,7 @@ e2sm_kpm_decode_and_handle_action_def(uint8_t *def_buf,
                             actionDefFormat1->granulPeriod, interval_ms);
             return -1;
         }
+
         *g_granulPeriod = actionDefFormat1->granulPeriod;
         
         if (actionDefFormat1->subscriptID.size)
