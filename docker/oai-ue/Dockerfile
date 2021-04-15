@@ -15,9 +15,10 @@ LABEL name="oai-ue" \
 
 WORKDIR /opt/oai-ue
 
-RUN apt-get update && apt-get install -y libblas-dev liblapack-dev liblapacke-dev iproute2 net-tools software-properties-common
+RUN apt-get update && apt-get install -y libblas-dev liblapack-dev liblapacke-dev iproute2 net-tools software-properties-common iputils-ping
 RUN add-apt-repository ppa:ettusresearch/uhd -y
 RUN apt-get update && apt-get -y install libuhd-dev libuhd003 uhd-host
+RUN uhd_images_downloader
 
 COPY --from=builder /root/cmake_targets/ran_build/build/lte-uesoftmodem ./bin/
 COPY --from=builder /root/cmake_targets/ran_build/build/.usim.nvram0 ./bin/

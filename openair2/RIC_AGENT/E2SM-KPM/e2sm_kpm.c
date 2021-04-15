@@ -451,6 +451,7 @@ static int e2sm_kpm_gp_timer_expiry(
         long action_id,
         uint8_t **outbuf,
         uint32_t *outlen)
+
 {
     int i,j=0;
 
@@ -601,6 +602,7 @@ e2sm_kpm_decode_and_handle_action_def(uint8_t *def_buf,
                             actionDefFormat1->granulPeriod, interval_ms);
             return -1;
         }
+
         *g_granulPeriod = actionDefFormat1->granulPeriod;
         
         if (actionDefFormat1->subscriptID.size)
@@ -972,4 +974,5 @@ void encode_e2sm_kpm_indication_header(ranid_t ranid, E2SM_KPM_E2SM_KPM_Indicati
     sprintf((char *)ind_header->colletStartTime.buf,"%u", nptVal);
     ind_header->colletStartTime.size = 4;
     xer_fprint(stderr, &asn_DEF_E2SM_KPM_E2SM_KPM_IndicationHeader, ihead);
+
 }
