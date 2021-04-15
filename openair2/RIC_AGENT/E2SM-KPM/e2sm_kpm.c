@@ -440,6 +440,8 @@ static int e2sm_kpm_ricInd_timer_expiry(
     return 0;
 }
 
+struct timeval g_captureStartTime;
+
 static int e2sm_kpm_gp_timer_expiry(
         ric_agent_info_t *ric,
         long timer_id,
@@ -453,6 +455,11 @@ static int e2sm_kpm_gp_timer_expiry(
     int i,j=0;
 
     DevAssert(timer_id == ric->gran_prd_timer_id);
+
+	if (g_granularityIndx == 0) /*First Granularity Period Expiry */
+	{
+		gettimeofday(&g_captureStartTime, NULL);
+	}
 
     char *time = time_stamp();
     RIC_AGENT_INFO("[%s] +++  Granularity Period expired, timer_id %ld function_id %ld +++ \n",
@@ -934,7 +941,6 @@ void encode_e2sm_kpm_indication_header(ranid_t ranid, E2SM_KPM_E2SM_KPM_Indicati
 {
     e2node_type_t node_type;
     ihead->indicationHeader_formats.present = E2SM_KPM_E2SM_KPM_IndicationHeader__indicationHeader_formats_PR_indicationHeader_Format1;
-    struct timeval tv;
 
     E2SM_KPM_E2SM_KPM_IndicationHeader_Format1_t* ind_header = &ihead->indicationHeader_formats.choice.indicationHeader_Format1;
 
@@ -961,11 +967,9 @@ void encode_e2sm_kpm_indication_header(ranid_t ranid, E2SM_KPM_E2SM_KPM_Indicati
 
     /* Collect Start Time Stamp */
     /* Encoded in the same format as the first four octets of the 64-bit timestamp format as defined in section 6 of IETF RFC 5905 */
-    //ind_header->colletStartTime.buf = (uint8_t *)strdup("2906327040"); //TBD
     ind_header->colletStartTime.buf = (uint8_t *)malloc(4); //TBD
-    gettimeofday(&tv, NULL);
-    unsigned int nptVal = tv_to_ntp(tv);
+    unsigned int nptVal = tv_to_ntp(g_captureStartTime);
     sprintf((char *)ind_header->colletStartTime.buf,"%u", nptVal);
-    ind_header->colletStartTime.size = 4;//strlen("16432624972161626112"); //TBD
-    //xer_fprint(stderr, &asn_DEF_E2SM_KPM_E2SM_KPM_IndicationHeader, ihead);
+    ind_header->colletStartTime.size = 4;
+    xer_fprint(stderr, &asn_DEF_E2SM_KPM_E2SM_KPM_IndicationHeader, ihead);
 }
