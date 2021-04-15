@@ -718,8 +718,13 @@ encode_kpm_Indication_Msg(ric_agent_info_t* ric, ric_subscription_t *rs)
     } 
 
     RIC_AGENT_INFO("Granularity Idx=:%d\n",g_granularityIndx);
-    /* Meas Records meas_rec[]  have to be prepared for each Meas data item */
 
+    /*
+     * measData->measurementRecord (List)
+     */
+    meas_data = (E2SM_KPM_MeasurementData_t*)calloc(1, sizeof(E2SM_KPM_MeasurementData_t));
+    DevAssert(meas_data!=NULL);
+    
     for (k=0; k < g_granularityIndx; k++)
     {
         /*
@@ -728,6 +733,7 @@ encode_kpm_Indication_Msg(ric_agent_info_t* ric, ric_subscription_t *rs)
         meas_rec[k] = (E2SM_KPM_MeasurementRecord_t *)calloc(1, sizeof(E2SM_KPM_MeasurementRecord_t));
         for(i=0; i < g_indMsgMeasInfoCnt; i++)
         { 
+            /* Meas Records meas_rec[]  have to be prepared for each Meas data item */
             ret = ASN_SEQUENCE_ADD(&meas_rec[k]->list, g_indMsgMeasRecItemArr[k][i]);
             DevAssert(ret == 0);
         }
@@ -736,16 +742,11 @@ encode_kpm_Indication_Msg(ric_agent_info_t* ric, ric_subscription_t *rs)
         meas_data_item[k] = (E2SM_KPM_MeasurementDataItem_t*)calloc(1, sizeof(E2SM_KPM_MeasurementDataItem_t));
         meas_data_item[k]->measRecord = *meas_rec[k];
 
-        /*
-         * measData->measurementRecord (List)
-         */
-        meas_data = (E2SM_KPM_MeasurementData_t*)calloc(1, sizeof(E2SM_KPM_MeasurementData_t));
         /* Enqueue Meas data items */
         ret = ASN_SEQUENCE_ADD(&meas_data->list, meas_data_item[k]);
         DevAssert(ret == 0);
     }
 
-    DevAssert(meas_data!=NULL);
    /*
     * measInfoList
     */
@@ -966,5 +967,5 @@ void encode_e2sm_kpm_indication_header(ranid_t ranid, E2SM_KPM_E2SM_KPM_Indicati
     unsigned int nptVal = tv_to_ntp(tv);
     sprintf((char *)ind_header->colletStartTime.buf,"%u", nptVal);
     ind_header->colletStartTime.size = 4;//strlen("16432624972161626112"); //TBD
-    xer_fprint(stderr, &asn_DEF_E2SM_KPM_E2SM_KPM_IndicationHeader, ihead);
+    //xer_fprint(stderr, &asn_DEF_E2SM_KPM_E2SM_KPM_IndicationHeader, ihead);
 }
