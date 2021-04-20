@@ -26,6 +26,7 @@
  */
 
 #include <sys/time.h>
+#include <arpa/inet.h>
 #include <stdbool.h>
 #include <string.h>
 #include "common/utils/assertions.h"
@@ -969,10 +970,8 @@ void encode_e2sm_kpm_indication_header(ranid_t ranid, E2SM_KPM_E2SM_KPM_Indicati
 
     /* Collect Start Time Stamp */
     /* Encoded in the same format as the first four octets of the 64-bit timestamp format as defined in section 6 of IETF RFC 5905 */
-    ind_header->colletStartTime.buf = (uint8_t *)malloc(4); //TBD
-    unsigned int nptVal = tv_to_ntp(g_captureStartTime);
-    sprintf((char *)ind_header->colletStartTime.buf,"%u", nptVal);
+    ind_header->colletStartTime.buf = (uint8_t *)calloc(1, 4);
     ind_header->colletStartTime.size = 4;
+    *((uint32_t *)(ind_header->colletStartTime.buf)) = htonl((uint32_t)time(NULL));
     xer_fprint(stderr, &asn_DEF_E2SM_KPM_E2SM_KPM_IndicationHeader, ihead);
-
 }

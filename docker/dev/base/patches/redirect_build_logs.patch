@@ -1,0 +1,40 @@
+diff --git a/cmake_targets/tools/build_helper b/cmake_targets/tools/build_helper
+index b8f0125..d461b39 100755
+--- a/cmake_targets/tools/build_helper
++++ b/cmake_targets/tools/build_helper
+@@ -207,7 +207,7 @@ compilations() {
+     fi
+     fi
+     ret=$?
+-  } > $dlog/$2.$REL.txt 2>&1
++  } |& tee $dlog/$2.$REL.txt 2>&1
+   set -e
+   if [[ $ret -ne 0 ]]; then
+      check_warnings "$dlog/$2.$REL.txt"
+@@ -250,7 +250,7 @@ install_protobuf_from_source(){
+     make -j`nproc`
+     $SUDO make install
+     $SUDO ldconfig
+-    ) >& $protobuf_install_log
++    ) |& tee $protobuf_install_log
+ }
+ 
+ install_protobuf_c_from_source(){
+@@ -272,7 +272,7 @@ install_protobuf_c_from_source(){
+     make -j`nproc`
+     $SUDO make install
+     $SUDO ldconfig
+-    ) >& $protobuf_c_install_log
++    ) |& tee $protobuf_c_install_log
+ }
+ 
+ install_usrp_uhd_driver_from_source(){
+@@ -795,7 +795,7 @@ install_asn1c_from_source(){
+     $SUDO make install
+     cd -
+     $SUDO ldconfig
+-    ) > $asn1_install_log 2>&1
++    ) |& tee $asn1_install_log 2>&1
+ }
+ 
+ #################################################
