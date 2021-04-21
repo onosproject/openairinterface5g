@@ -44,6 +44,12 @@ oai-enb-du:
 		-t onosproject/oai-enb-du:${OAI_ALL_VERSION}
 	-docker rmi $$(docker images -q -f "dangling=true" -f "label=autodelete=true")
 
+dev-base:
+	docker build . -f docker/dev/base/Dockerfile -t oai-enb-cu-base:latest --rm=false
+
+dev:
+	docker build . -f docker/dev/Dockerfile -t onosproject/oai-enb-cu:latest --rm=false
+
 build-tools: # @HELP install the ONOS build tools if needed
 	@if [ ! -d "../build-tools" ]; then cd .. && git clone https://github.com/onosproject/build-tools.git; fi
 
