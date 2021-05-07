@@ -904,6 +904,12 @@ eNB_dlsch_ulsch_scheduler(module_id_t module_idP,
   }
 #endif
 
+  if (NODE_IS_DU(RC.rrc[module_idP]->node_type)) /* In case of DU, RRC should be triggered every TTI */
+  {
+    PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, module_idP, ENB_FLAG_YES, NOT_A_RNTI, frameP, subframeP, module_idP);
+    rrc_rx_tx(&ctxt, CC_id);
+  }
+
   for (CC_id = 0; CC_id < MAX_NUM_CCs; CC_id++) {
     if (cc[CC_id].MBMS_flag > 0) {
       start_meas(&RC.mac[module_idP]->schedule_mch);

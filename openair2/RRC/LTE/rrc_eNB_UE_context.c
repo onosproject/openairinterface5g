@@ -199,6 +199,23 @@ void rrc_eNB_remove_ue_context(
     ue_context_pP->ue_context.rnti);
   rrc_eNB_free_mem_UE_context(ctxt_pP, ue_context_pP);
   uid_linear_allocator_free(rrc_instance_pP, ue_context_pP->local_uid);
+
+  if (NODE_IS_CU(rrc_instance_pP->node_type))
+  {
+    for (uint16_t release_num = 0; release_num < NUMBER_OF_UE_MAX; release_num++) 
+    {
+      if ((rrc_release_info.RRC_release_ctrl[release_num].flag > 0) &&
+          (rrc_release_info.RRC_release_ctrl[release_num].rnti == ue_context_pP->ue_context.rnti)) 
+      {
+        rrc_release_info.RRC_release_ctrl[release_num].flag = 0;
+        rrc_release_info.num_UEs--;
+        LOG_D(RRC,"******* CU RRC Rel info Reset ! rel_num:%d numUE:%d RNTI:%x *********** \n",
+              release_num, rrc_release_info.num_UEs, ue_context_pP->ue_context.rnti);
+        break;
+      }
+    }
+  }
+  
   free(ue_context_pP);
   rrc_instance_pP->Nb_ue --;
   LOG_I(RRC,
