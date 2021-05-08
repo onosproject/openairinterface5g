@@ -8868,8 +8868,17 @@ void rrc_subframe_process(protocol_ctxt_t *const ctxt_pP, const int CC_id) {
 
         if ((rrc_release_info.RRC_release_ctrl[release_num].flag > 2) &&
             (rrc_release_info.RRC_release_ctrl[release_num].rnti == ue_context_p->ue_context.rnti)) {
-          ue_context_p->ue_context.ue_release_timer_rrc = 1;
-          ue_context_p->ue_context.ue_release_timer_thres_rrc = 100;
+
+	      if (ue_context_p->ue_context.ue_release_timer_rrc == 0) /*setting ue_release_timer_rrc for the first time only */
+          {
+            ue_context_p->ue_context.ue_release_timer_rrc = 1;
+            ue_context_p->ue_context.ue_release_timer_thres_rrc = 100;
+          }
+				
+          LOG_D(RRC, "[%s,%u] Rel_num %d RNTI %x,%x:Flag %d ue_release_timer_rrc %d\n",
+			__func__,__LINE__, release_num, rrc_release_info.RRC_release_ctrl[release_num].rnti,
+			ue_context_p->ue_context.rnti, rrc_release_info.RRC_release_ctrl[release_num].flag,
+			ue_context_p->ue_context.ue_release_timer_rrc);
 
           if (EPC_MODE_ENABLED && !NODE_IS_DU(RC.rrc[ctxt_pP->module_id]->node_type)) {
             if (rrc_release_info.RRC_release_ctrl[release_num].flag == 4) { // if timer_s1 == 0
