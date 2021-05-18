@@ -7134,8 +7134,8 @@ rrc_eNB_decode_ccch(
             break;
           }
 
-          int UE_id = find_UE_id(ctxt_pP->module_id, c_rnti);
-
+          //int UE_id = find_UE_id(ctxt_pP->module_id, c_rnti);
+          int UE_id = -1; //find_UE_id shouldn't be invoked from CU
           if(UE_id == -1) {
             LOG_E(RRC,
                   PROTOCOL_RRC_CTXT_UE_FMT" LTE_RRCConnectionReestablishmentRequest without UE_id(MAC) rnti %x, let's reject the UE\n",
