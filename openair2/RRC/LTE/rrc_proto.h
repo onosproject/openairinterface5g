@@ -476,7 +476,7 @@ mac_rrc_data_ind_ue(
 
 void mac_sync_ind( module_id_t Mod_instP, uint8_t status);
 
-void mac_eNB_rrc_ul_failure(const module_id_t Mod_instP,
+int mac_eNB_rrc_ul_failure(const module_id_t Mod_instP,
                             const int CC_id,
                             const frame_t frameP,
                             const sub_frame_t subframeP,

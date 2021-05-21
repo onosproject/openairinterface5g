@@ -4135,16 +4135,30 @@ extract_harq(module_id_t mod_idP,
               sched_ctl->harq_rtt_timer[CC_idP][harq_pid] = 0;
             }
 
-            if (sched_ctl->round[CC_idP][harq_pid] == 8) {
-              for (uint8_t ra_i = 0; ra_i < NB_RA_PROC_MAX; ra_i++) {
-                if((ra[ra_i].rnti == rnti) && (ra[ra_i].state == WAITMSG4ACK)) {
-                  // Msg NACK num to MAC ,remove UE
-                  // add UE info to freeList
-                  LOG_I(RRC, "put UE %x into freeList\n",
-                        rnti);
-                  put_UE_in_freelist(mod_idP,
-                                     rnti,
-                                     1);
+            if (sched_ctl->round[CC_idP][harq_pid] == 8) 
+            {
+              for (uint8_t ra_i = 0; ra_i < NB_RA_PROC_MAX; ra_i++) 
+              {
+                if((ra[ra_i].rnti == rnti) && (ra[ra_i].state == WAITMSG4ACK)) 
+                {
+                    /* This will delete the F1AP UE Context from CU & DU */
+                    MessageDef *m = itti_alloc_new_message(TASK_MAC_ENB, F1AP_UE_CONTEXT_RELEASE_REQ);
+                    F1AP_UE_CONTEXT_RELEASE_REQ(m).rnti = rnti;
+                    F1AP_UE_CONTEXT_RELEASE_REQ(m).cause = F1AP_CAUSE_RADIO_NETWORK;
+                    F1AP_UE_CONTEXT_RELEASE_REQ(m).cause_value = 1; // 1 = F1AP_CauseRadioNetwork_rl_failure
+                    F1AP_UE_CONTEXT_RELEASE_REQ(m).rrc_container = NULL;
+                    F1AP_UE_CONTEXT_RELEASE_REQ(m).rrc_container_length = 0;
+                    itti_send_msg_to_task(TASK_DU_F1, mod_idP, m);
+                    LOG_I(MAC, "[MSG4-MAX-RETX] ****** UE %d rnti %x: F1AP_UE_CONTEXT_RELEASE_REQ ==> RLF ********** \n", 
+                                UE_id, rnti);
+
+                    // Msg NACK num to MAC ,remove UE
+                    // add UE info to freeList
+                    LOG_I(MAC, " +++++ [MSG4-MAX-RETX] put UE %x into freeList +++++++\n", rnti);
+
+                    put_UE_in_freelist(mod_idP,
+                                       rnti,
+                                       1);
                 }
               }
             }

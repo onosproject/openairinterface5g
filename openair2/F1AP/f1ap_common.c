@@ -75,7 +75,8 @@ int f1ap_add_ue(f1ap_cudu_inst_t    *f1_inst,
     if (f1_inst->f1ap_ue[i].rnti == rntiP) {
       f1_inst->f1ap_ue[i].f1ap_uid = i;
       f1_inst->f1ap_ue[i].mac_uid = UE_id;
-      LOG_I(F1AP, "Updating the index of UE with RNTI %x and du_ue_f1ap_id %d\n", f1_inst->f1ap_ue[i].rnti, f1_inst->f1ap_ue[i].du_ue_f1ap_id);
+      LOG_E(F1AP, "Updating the index of UE with RNTI %x and du_ue_f1ap_id %d instance %d\n", 
+		  f1_inst->f1ap_ue[i].rnti, f1_inst->f1ap_ue[i].du_ue_f1ap_id, module_idP);
       return i;
     }
   }
@@ -95,8 +96,12 @@ int f1ap_add_ue(f1ap_cudu_inst_t    *f1_inst,
       }
 #endif
 
-      LOG_I(F1AP, "Adding a new UE with RNTI %x and cu/du ue_f1ap_id %d\n", f1_inst->f1ap_ue[i].rnti, f1_inst->f1ap_ue[i].du_ue_f1ap_id);
+      LOG_E(F1AP, "Adding a new UE with RNTI %x and cu/du ue_f1ap_id %d instance %d\n", 
+		  f1_inst->f1ap_ue[i].rnti, f1_inst->f1ap_ue[i].du_ue_f1ap_id, module_idP);
       return i;
+    } else {
+      LOG_E(F1AP, "FAILED[%d]: Adding a new UE with RNTI %x existing RNTI %x instance %d\n", 
+		  i, rntiP, f1_inst->f1ap_ue[i].rnti, module_idP);
     }
   }
   return -1;
@@ -104,15 +109,30 @@ int f1ap_add_ue(f1ap_cudu_inst_t    *f1_inst,
 
 
 int f1ap_remove_ue(f1ap_cudu_inst_t *f1_inst,
-                   rnti_t            rntiP) {
-  for (int i = 0; i < MAX_MOBILES_PER_ENB; i++) {
-    if (f1_inst->f1ap_ue[i].rnti == rntiP) {
+                   rnti_t            rntiP) 
+{
+  unsigned int found = 0;
+  int i;
+
+  for (i = 0; i < MAX_MOBILES_PER_ENB; i++) 
+  {
+    if (f1_inst->f1ap_ue[i].rnti == rntiP) 
+    {
+      LOG_E(F1AP, "FOUND: Removing UE with RNTI %x f1_inst->f1ap_ue[%d].rnti %x\n", 
+				 rntiP, i, f1_inst->f1ap_ue[i].rnti);
       f1_inst->f1ap_ue[i].rnti = 0;
+      found = 1;
       break;
     }
+    LOG_E(F1AP, "FAILED: Removing UE with RNTI %x f1_inst->f1ap_ue[%d].rnti %x\n", 
+				rntiP, i, f1_inst->f1ap_ue[i].rnti);
   }
-  f1_inst->num_ues--;
-  return 0;
+
+  if (found == 1)
+  {
+    f1_inst->num_ues--;
+  }
+  return i;
 }
 
 int f1ap_get_du_ue_f1ap_id(f1ap_cudu_inst_t *f1_inst,

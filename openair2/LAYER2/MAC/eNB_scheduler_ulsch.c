@@ -155,6 +155,14 @@ rx_sdu(const module_id_t enb_mod_idP,
     AssertFatal(UE_scheduling_control->round_UL[CC_idP][harq_pid] < 8, "round >= 8\n");
 
     if (sduP != NULL) {
+     
+      if ( (UE_scheduling_control->ul_failure_timer > 0) || (UE_scheduling_control->ul_out_of_sync > 0) || (UE_scheduling_control->ul_consecutive_errors))//(UE_scheduling_control->ul_inactivity_timer > 0) )
+      {
+          LOG_I(MAC, "====== RNTI:%x Resetting UL-F-Timer[%d] & UL-out-of-syn[%d] cons-err[%d] Inactive-Timer[%d] ======= \n", 
+                      current_rnti, UE_scheduling_control->ul_failure_timer, UE_scheduling_control->ul_out_of_sync, 
+                      UE_scheduling_control->ul_consecutive_errors, UE_scheduling_control->ul_inactivity_timer);
+      }
+
       UE_scheduling_control->ul_inactivity_timer = 0;
       UE_scheduling_control->ul_failure_timer = 0;
       UE_scheduling_control->ul_scheduled &= (~(1 << harq_pid));
@@ -180,7 +188,7 @@ rx_sdu(const module_id_t enb_mod_idP,
         UE_template_ptr->scheduled_ul_bytes = 0;
       }
     } else {  // sduP == NULL => error
-      LOG_W(MAC, "[eNB %d][PUSCH %d] CC_id %d %d.%d ULSCH in error in round %d, ul_cqi %d, UE_id %d, RNTI %x (len %d)\n",
+      LOG_W(MAC, "[eNB %d][PUSCH %d] CC_id %d %d.%d ULSCH Error round %d ul_cqi %d UE_id %d RNTI %x len %d UL-F-Timer[%d] Cons-err[%d]\n",
             enb_mod_idP,
             harq_pid,
             CC_idP,
@@ -190,7 +198,9 @@ rx_sdu(const module_id_t enb_mod_idP,
             ul_cqi,
             UE_id,
             current_rnti,
-	    sdu_lenP);
+            sdu_lenP,
+            UE_scheduling_control->ul_failure_timer,
+            UE_scheduling_control->ul_consecutive_errors);
 
       if (ul_cqi > 200) { // too high energy pattern
         UE_scheduling_control->pusch_snr[CC_idP] = ul_cqi;
@@ -202,6 +212,7 @@ rx_sdu(const module_id_t enb_mod_idP,
         UE_scheduling_control->round_UL[CC_idP][harq_pid] = 0;
 
         if (UE_scheduling_control->ul_consecutive_errors++ == 10) {
+          LOG_E(MAC, " ++++++++  RNTI:%x Due to Consecutive Errors Setting UL-F-Timer to 1 +++++++++ \n", current_rnti);
           UE_scheduling_control->ul_failure_timer = 1;
         }
 

@@ -8705,10 +8705,11 @@ void process_unsuccessful_rlc_sdu_indication(int instance, int rnti)
       rrc_release_info.RRC_release_ctrl[release_num].rnti = rnti;
       rrc_release_info.RRC_release_ctrl[release_num].rrc_eNB_mui = -1;     /* not defined */
       rrc_release_info.num_UEs++;
-      LOG_D(RRC, "radio link failure detected: index %d rnti %x flag %d \n",
+      LOG_I(RRC, "RLC-MAX-RETX [RLF detected]: index %d rnti %x flag %d RRC Rel UEs %d\n",
             release_num,
             rnti,
-            rrc_release_info.RRC_release_ctrl[release_num].flag);
+            rrc_release_info.RRC_release_ctrl[release_num].flag,
+        rrc_release_info.num_UEs);
       break;
     }
   }
@@ -8758,7 +8759,8 @@ int add_ue_to_remove(struct rrc_eNB_ue_context_s **ue_to_be_removed,
 }
 
 //-----------------------------------------------------------------------------
-void rrc_subframe_process(protocol_ctxt_t *const ctxt_pP, const int CC_id) {
+void rrc_subframe_process(protocol_ctxt_t *const ctxt_pP, const int CC_id) 
+{
   int32_t current_timestamp_ms = 0;
   int32_t ref_timestamp_ms = 0;
   struct timeval ts;
@@ -8867,18 +8869,35 @@ void rrc_subframe_process(protocol_ctxt_t *const ctxt_pP, const int CC_id) {
         }
 
         if ((rrc_release_info.RRC_release_ctrl[release_num].flag > 2) &&
-            (rrc_release_info.RRC_release_ctrl[release_num].rnti == ue_context_p->ue_context.rnti)) {
+            (rrc_release_info.RRC_release_ctrl[release_num].rnti == ue_context_p->ue_context.rnti)) 
+        {
 
-	      if (ue_context_p->ue_context.ue_release_timer_rrc == 0) /*setting ue_release_timer_rrc for the first time only */
+          if (ue_context_p->ue_context.ue_release_timer_rrc == 0) /*setting ue_release_timer_rrc for the first time only */
           {
             ue_context_p->ue_context.ue_release_timer_rrc = 1;
             ue_context_p->ue_context.ue_release_timer_thres_rrc = 100;
+
+            if ( (NODE_IS_DU(RC.rrc[ctxt_pP->module_id]->node_type)) &&
+                   (rrc_release_info.RRC_release_ctrl[release_num].rrc_eNB_mui == -1) )
+              {
+                /* This will trigger F1AP context cleanup procedure at DU & CU, only in case of RLC-MAX-RETX */
+                MessageDef *m = itti_alloc_new_message(TASK_MAC_ENB, F1AP_UE_CONTEXT_RELEASE_REQ);
+                F1AP_UE_CONTEXT_RELEASE_REQ(m).rnti = rrc_release_info.RRC_release_ctrl[release_num].rnti;
+                F1AP_UE_CONTEXT_RELEASE_REQ(m).cause = F1AP_CAUSE_RADIO_NETWORK;
+                F1AP_UE_CONTEXT_RELEASE_REQ(m).cause_value = 1; // 1 = F1AP_CauseRadioNetwork_rl_failure
+                F1AP_UE_CONTEXT_RELEASE_REQ(m).rrc_container = NULL;
+                F1AP_UE_CONTEXT_RELEASE_REQ(m).rrc_container_length = 0;
+                itti_send_msg_to_task(TASK_DU_F1, ctxt_pP->module_id, m);
+                
+                LOG_I(RRC, "[RLC-MAX-RETX]*** rnti %x: F1AP_UE_CONTEXT_RELEASE_REQ ==> RLF ********** \n",
+                              rrc_release_info.RRC_release_ctrl[release_num].rnti);
+              }
           }
-				
+                
           LOG_D(RRC, "[%s,%u] Rel_num %d RNTI %x,%x:Flag %d ue_release_timer_rrc %d\n",
-			__func__,__LINE__, release_num, rrc_release_info.RRC_release_ctrl[release_num].rnti,
-			ue_context_p->ue_context.rnti, rrc_release_info.RRC_release_ctrl[release_num].flag,
-			ue_context_p->ue_context.ue_release_timer_rrc);
+            __func__,__LINE__, release_num, rrc_release_info.RRC_release_ctrl[release_num].rnti,
+            ue_context_p->ue_context.rnti, rrc_release_info.RRC_release_ctrl[release_num].flag,
+            ue_context_p->ue_context.ue_release_timer_rrc);
 
           if (EPC_MODE_ENABLED && !NODE_IS_DU(RC.rrc[ctxt_pP->module_id]->node_type)) {
             if (rrc_release_info.RRC_release_ctrl[release_num].flag == 4) { // if timer_s1 == 0
