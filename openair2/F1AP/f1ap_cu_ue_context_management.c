@@ -826,6 +826,19 @@ int CU_handle_UE_CONTEXT_RELEASE_REQUEST(instance_t       instance,
   LOG_I(F1AP, "Received UE CONTEXT RELEASE REQUEST: Trigger RRC for RNTI %x\n", rnti);
   struct rrc_eNB_ue_context_s *ue_context_pP;
   ue_context_pP = rrc_eNB_get_ue_context(RC.rrc[instance], rnti);
+
+  /* Received F1AP UE Ctx Rel Req from DU, now prepare to send
+   * F1AP UE Ctx Rel Complete, without this precedure F1AP contexts
+   * at CU & DU will not get deleted
+   */
+  MessageDef *m = itti_alloc_new_message(TASK_RRC_ENB, F1AP_UE_CONTEXT_RELEASE_CMD);
+  F1AP_UE_CONTEXT_RELEASE_CMD(m).rnti = rnti;
+  F1AP_UE_CONTEXT_RELEASE_CMD(m).cause = F1AP_CAUSE_RADIO_NETWORK;
+  F1AP_UE_CONTEXT_RELEASE_CMD(m).cause_value = 10; // 10 = F1AP_CauseRadioNetwork_normal_release
+  F1AP_UE_CONTEXT_RELEASE_CMD(m).rrc_container = NULL;
+  F1AP_UE_CONTEXT_RELEASE_CMD(m).rrc_container_length = 0;
+  itti_send_msg_to_task(TASK_CU_F1, instance, m);
+
   rrc_eNB_send_S1AP_UE_CONTEXT_RELEASE_REQ(
       instance,
       ue_context_pP,

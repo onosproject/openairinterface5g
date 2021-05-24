@@ -416,20 +416,25 @@ schedule_SR (module_id_t module_idP,
 
 void
 check_ul_failure(module_id_t module_idP, int CC_id, int UE_id,
-                 frame_t frameP, sub_frame_t subframeP) {
+                 frame_t frameP, sub_frame_t subframeP) 
+{
   UE_info_t                 *UE_info = &RC.mac[module_idP]->UE_info;
-  nfapi_dl_config_request_t  *DL_req = &RC.mac[module_idP]->DL_req[0];
-  uint16_t                      rnti = UE_RNTI(module_idP, UE_id);
-  COMMON_channels_t              *cc = RC.mac[module_idP]->common_channels;
+  nfapi_dl_config_request_t *DL_req = &RC.mac[module_idP]->DL_req[0];
+  uint16_t                  rnti = UE_RNTI(module_idP, UE_id);
+  COMMON_channels_t         *cc = RC.mac[module_idP]->common_channels;
+  eNB_MAC_INST              *eNB = RC.mac[module_idP];
+  int ret;
 
-  // check uplink failure
+  /* Check if DU-MAC ul_failure_timer is set by rx_sdu due to 10 consecutive errors */
   if ((UE_info->UE_sched_ctrl[UE_id].ul_failure_timer > 0) &&
-      (UE_info->UE_sched_ctrl[UE_id].ul_out_of_sync == 0)) {
+      (UE_info->UE_sched_ctrl[UE_id].ul_out_of_sync == 0)) 
+  {
     if (UE_info->UE_sched_ctrl[UE_id].ul_failure_timer == 1)
-      LOG_I(MAC, "UE %d rnti %x: UL Failure timer %d \n", UE_id, rnti,
-            UE_info->UE_sched_ctrl[UE_id].ul_failure_timer);
+        LOG_I(MAC, "UE %d rnti %x: UL Failure timer %d \n", UE_id, rnti,
+                    UE_info->UE_sched_ctrl[UE_id].ul_failure_timer);
 
-    if (UE_info->UE_sched_ctrl[UE_id].ra_pdcch_order_sent == 0) {
+    if (UE_info->UE_sched_ctrl[UE_id].ra_pdcch_order_sent == 0) 
+    {
       UE_info->UE_sched_ctrl[UE_id].ra_pdcch_order_sent = 1;
       // add a format 1A dci for this UE to request an RA procedure (only one UE per subframe)
       nfapi_dl_config_request_pdu_t *dl_config_pdu                    = &DL_req[CC_id].dl_config_request_body.dl_config_pdu_list[DL_req[CC_id].dl_config_request_body.number_pdu];
@@ -458,7 +463,9 @@ check_ul_failure(module_id_t module_idP, int CC_id, int UE_id,
             UE_info->UE_sched_ctrl[UE_id].ul_failure_timer,
             dl_config_pdu->dci_dl_pdu.
             dci_dl_pdu_rel8.resource_block_coding);
-    } else {    // ra_pdcch_sent==1
+    } 
+    else 
+    {    // ra_pdcch_sent==1
       LOG_D(MAC,
             "UE %d rnti %x: sent PDCCH order for RAPROC waiting (failure timer %d) \n",
             UE_id, rnti,
@@ -469,10 +476,13 @@ check_ul_failure(module_id_t module_idP, int CC_id, int UE_id,
 
     UE_info->UE_sched_ctrl[UE_id].ul_failure_timer++;
 
-    // check threshold
-    if (UE_info->UE_sched_ctrl[UE_id].ul_failure_timer > 4000) {
+	/* Check Threshold */
+    if (UE_info->UE_sched_ctrl[UE_id].ul_failure_timer > 4000) 
+    {
       // note: probably ul_failure_timer should be less than UE radio link failure time(see T310/N310/N311)
-      if (NODE_IS_DU(RC.rrc[module_idP]->node_type)) {
+      if (NODE_IS_DU(RC.rrc[module_idP]->node_type)) 
+      {
+        /* This will trigger F1AP context cleanup procedure at DU & CU */
         MessageDef *m = itti_alloc_new_message(TASK_MAC_ENB, F1AP_UE_CONTEXT_RELEASE_REQ);
         F1AP_UE_CONTEXT_RELEASE_REQ(m).rnti = rnti;
         F1AP_UE_CONTEXT_RELEASE_REQ(m).cause = F1AP_CAUSE_RADIO_NETWORK;
@@ -480,7 +490,69 @@ check_ul_failure(module_id_t module_idP, int CC_id, int UE_id,
         F1AP_UE_CONTEXT_RELEASE_REQ(m).rrc_container = NULL;
         F1AP_UE_CONTEXT_RELEASE_REQ(m).rrc_container_length = 0;
         itti_send_msg_to_task(TASK_DU_F1, module_idP, m);
-      } else {
+      }
+
+      LOG_I(MAC, "[UL-FAILURE]*** UE %d rnti %x: F1AP_UE_CONTEXT_RELEASE_REQ ==> RLF %d ********** \n", UE_id, rnti,
+            UE_info->UE_sched_ctrl[UE_id].ul_failure_timer);
+    
+      /* This will not happen --> in case DU_handle_UE_CONTEXT_RELEASE_COMMAND doesnt come from CU*/
+      /*
+        f1ap_del_ue(module_idP, rnti);
+        f1ap_remove_ue(&f1ap_du_inst[module_idP], rnti);
+       */
+    
+      /* Setting ul_failur_timer in RRC UE Context,
+       * such that after 20sec UE context release 
+       * can be triggered by DU RRC 
+      */
+      ret = mac_eNB_rrc_ul_failure(module_idP,
+                                 CC_id,
+                                 frameP,
+                                 subframeP,
+                                 rnti);
+      if (ret == -1)
+      {
+#if 1
+        /* In case if DU-RRC UE context is already deleted,
+         * then manually cleanup UE context from other layers
+        */
+        for (int j = 0; j < 10; j++) 
+        {
+          nfapi_ul_config_request_body_t *ul_req_tmp = NULL;
+          ul_req_tmp = &(eNB->UL_req_tmp[CC_id][j].ul_config_request_body);
+          if (ul_req_tmp) 
+          {
+            int pdu_number = ul_req_tmp->number_of_pdus;
+            for (int pdu_index = pdu_number-1; pdu_index >= 0; pdu_index--) 
+            {
+              if (ul_req_tmp->ul_config_pdu_list[pdu_index].ulsch_pdu.ulsch_pdu_rel8.rnti == rnti) 
+              {
+                LOG_I(MAC, "remove UE %x from ul_config_pdu_list %d/%d\n",
+                        rnti,
+                        pdu_index,
+                        pdu_number);
+                if (pdu_index < pdu_number -1) 
+                {
+                    memcpy(&ul_req_tmp->ul_config_pdu_list[pdu_index],
+                            &ul_req_tmp->ul_config_pdu_list[pdu_index+1],
+                            (pdu_number-1-pdu_index) * sizeof(nfapi_ul_config_request_pdu_t));
+                }
+                ul_req_tmp->number_of_pdus--;
+              }
+            } // end for pdu_index
+          } // end if (ul_req_tmp)
+        } // end for j
+
+        protocol_ctxt_t   ctxt;
+        PROTOCOL_CTXT_SET_BY_MODULE_ID(&ctxt, module_idP, ENB_FLAG_YES, rnti, 0, 0,module_idP);
+        rrc_rlc_remove_ue(&ctxt);
+        //pdcp_remove_UE(&ctxt);
+        rrc_mac_remove_ue(module_idP,rnti);
+        return;
+#endif
+      } 
+      else 
+      {
         // inform RRC of failure and clear timer
         LOG_I(MAC, "UE %d rnti %x: UL Failure after repeated PDCCH orders: Triggering RRC \n",
               UE_id,
@@ -494,8 +566,18 @@ check_ul_failure(module_id_t module_idP, int CC_id, int UE_id,
 
       UE_info->UE_sched_ctrl[UE_id].ul_failure_timer = 0;
       UE_info->UE_sched_ctrl[UE_id].ul_out_of_sync   = 1;
+      LOG_I(MAC, "+++++  RNTI:%x Setting UL-out-of-syn to 1 ++++++ \n", rnti);
     }
   }       // ul_failure_timer>0
+
+  if (NODE_IS_DU(RC.rrc[module_idP]->node_type))
+  {
+     if (UE_info->UE_sched_ctrl[UE_id].ul_inactivity_timer > 4000) 
+     {
+       UE_info->UE_sched_ctrl[UE_id].ul_failure_timer = 4000;
+     }
+  }
+
 
   UE_info->UE_sched_ctrl[UE_id].uplane_inactivity_timer++;
 
@@ -591,13 +673,15 @@ eNB_dlsch_ulsch_scheduler(module_id_t module_idP,
       UE_scheduling_control = &(UE_info->UE_sched_ctrl[UE_id]);
 
       if (((frameP & 127) == 0) && (subframeP == 0)) {
-        LOG_I(MAC,"UE  rnti %x : %s, PHR %d dB DL CQI %d PUSCH SNR %d PUCCH SNR %d\n",
+        LOG_I(MAC,"UE rnti %x : %s, PHR %d dB DL CQI %d PUSCH SNR %d PUCCH SNR %d UL-F-Timer %d UL Inact-Timer %d\n",
               rnti,
               UE_scheduling_control->ul_out_of_sync == 0 ? "in synch" : "out of sync",
               UE_info->UE_template[CC_id][UE_id].phr_info,
               UE_scheduling_control->dl_cqi[CC_id],
               (5 * UE_scheduling_control->pusch_snr[CC_id] - 640) / 10,
-              (5 * UE_scheduling_control->pucch1_snr[CC_id] - 640) / 10);
+              (5 * UE_scheduling_control->pucch1_snr[CC_id] - 640) / 10,
+              UE_scheduling_control->ul_failure_timer,
+              UE_scheduling_control->ul_inactivity_timer);
       }
 
       RC.eNB[module_idP][CC_id]->pusch_stats_bsr[UE_id][(frameP * 10) + subframeP] = -63;
@@ -916,7 +1000,7 @@ eNB_dlsch_ulsch_scheduler(module_id_t module_idP,
       int(*schedule_mch)(module_id_t module_idP, uint8_t CC_id, frame_t frameP, sub_frame_t subframe) = NULL;
       schedule_mch = schedule_MBMS_NFAPI;
       if(schedule_mch){
-      	mbsfn_status[CC_id] = schedule_mch(module_idP, CC_id, frameP, subframeP);
+        mbsfn_status[CC_id] = schedule_mch(module_idP, CC_id, frameP, subframeP);
       }
       stop_meas(&RC.mac[module_idP]->schedule_mch);
     }

@@ -209,7 +209,7 @@ void rrc_eNB_remove_ue_context(
       {
         rrc_release_info.RRC_release_ctrl[release_num].flag = 0;
         rrc_release_info.num_UEs--;
-        LOG_D(RRC,"******* CU RRC Rel info Reset ! rel_num:%d numUE:%d RNTI:%x *********** \n",
+        LOG_E(RRC,"******* CU RRC Rel info Reset ! rel_num:%d numUE:%d RNTI:%x *********** \n",
               release_num, rrc_release_info.num_UEs, ue_context_pP->ue_context.rnti);
         break;
       }

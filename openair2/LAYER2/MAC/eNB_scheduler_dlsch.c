@@ -425,8 +425,8 @@ void ue_rrc_release(rnti_t rnti) {
       for (uint16_t mui_num = 0; mui_num < rlc_am_mui.rrc_mui_num; mui_num++) {
         if(release_ctrl->rrc_eNB_mui == rlc_am_mui.rrc_mui[mui_num]) {
           release_ctrl->flag = 4;
-          LOG_D(MAC, "DLSCH Release send:index %d rnti %x mui %d mui_num %d flag 2->4\n",
-                n,
+          LOG_I(MAC, "[%s] DLSCH Release send:index %d rnti %x mui %d mui_num %d flag 2->4\n",
+                __func__, n,
                 rnti,
                 rlc_am_mui.rrc_mui[mui_num],
                 mui_num);

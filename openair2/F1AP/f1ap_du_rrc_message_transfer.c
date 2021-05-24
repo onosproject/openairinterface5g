@@ -106,6 +106,13 @@ int DU_handle_DL_RRC_MESSAGE_TRANSFER(instance_t       instance,
   LOG_D(F1AP, "du_ue_f1ap_id %lu associated with UE RNTI %x \n",
         du_ue_f1ap_id,
         f1ap_get_rnti_by_du_id(&f1ap_du_inst[instance], du_ue_f1ap_id)); // this should be the one transmitted via initial ul rrc message transfer
+  
+  /* Check if UE RNTI is valid or not */
+  if (f1ap_get_rnti_by_du_id(&f1ap_du_inst[instance],du_ue_f1ap_id) == 0) {
+    LOG_E(F1AP, "++++++ UE with du-id:%lu cu-id:%lu already deleted,dropping msg !!! +++++++\n",
+          du_ue_f1ap_id, cu_ue_f1ap_id);
+    return -1;
+ }
 
   if (f1ap_du_add_cu_ue_id(&f1ap_du_inst[instance],du_ue_f1ap_id, cu_ue_f1ap_id) < 0 ) {
     LOG_E(F1AP, "Failed to find the F1AP UID \n");

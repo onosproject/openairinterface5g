@@ -642,6 +642,7 @@ int DU_handle_UE_CONTEXT_RELEASE_COMMAND(instance_t       instance,
 
   /* We don't need the Cause */
   /* Optional RRC Container: if present, send to UE */
+#if 0
   F1AP_FIND_PROTOCOLIE_BY_ID(F1AP_UEContextReleaseCommandIEs_t, ie, container,
                              F1AP_ProtocolIE_ID_id_RRCContainer, false);
 
@@ -685,6 +686,7 @@ int DU_handle_UE_CONTEXT_RELEASE_COMMAND(instance_t       instance,
         break;
     }
   }
+#endif
 
   struct rrc_eNB_ue_context_s *ue_context_p;
 
@@ -822,6 +824,9 @@ int DU_send_UE_CONTEXT_RELEASE_COMPLETE(instance_t instance,
                                   buffer,
                                   len,
                                   f1ap_du_data->default_sctp_stream_id);
+    
+  LOG_I(F1AP, " ***** REMOVING UE RNTI:%d from F1AP******\n", cplt->rnti);
+  
   f1ap_remove_ue(&f1ap_du_inst[instance], cplt->rnti);
   return 0;
 }
