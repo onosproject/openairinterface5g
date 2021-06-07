@@ -7130,7 +7130,7 @@ rrc_eNB_decode_ccch(
             LOG_E(RRC,
                   PROTOCOL_RRC_CTXT_UE_FMT" LTE_RRCConnectionReestablishmentRequest without UE context, let's reject the UE\n",
                   PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP));
-            rrc_eNB_generate_RRCConnectionReestablishmentReject(ctxt_pP, ue_context_p, CC_id);
+            //rrc_eNB_generate_RRCConnectionReestablishmentReject(ctxt_pP, ue_context_p, CC_id);
             break;
           }
 
