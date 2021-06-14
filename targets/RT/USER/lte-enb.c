@@ -214,7 +214,7 @@ static inline int rxtx(PHY_VARS_eNB *eNB,
   // if this is IF5 or 3GPP_eNB
   if (eNB->RU_list && eNB->RU_list[0] && eNB->RU_list[0]->function < NGFI_RAU_IF4p5) {
     wakeup_prach_eNB(eNB,NULL,proc->frame_rx,proc->subframe_rx);
-    wakeup_prach_eNB_br(eNB,NULL,proc->frame_rx,proc->subframe_rx);
+    //wakeup_prach_eNB_br(eNB,NULL,proc->frame_rx,proc->subframe_rx);
   }
 
   if (NFAPI_MODE!=NFAPI_MODE_PNF) {
@@ -775,6 +775,7 @@ static void *eNB_thread_prach( void *param ) {
  * \param param is a \ref L1_proc_t structure which contains the info what to process.
  * \returns a pointer to an int. The storage is not on the heap and must not be freed.
  */
+#if 0
 static void *eNB_thread_prach_br( void *param ) {
   static int eNB_thread_prach_status;
   PHY_VARS_eNB *eNB= (PHY_VARS_eNB *)param;
@@ -798,7 +799,7 @@ static void *eNB_thread_prach_br( void *param ) {
   eNB_thread_prach_status = 0;
   return &eNB_thread_prach_status;
 }
-
+#endif
 
 extern void init_td_thread(PHY_VARS_eNB *);
 extern void init_te_thread(PHY_VARS_eNB *);
@@ -846,7 +847,7 @@ void init_eNB_proc(int inst) {
   L1_proc_t *proc;
   L1_rxtx_proc_t *L1_proc, *L1_proc_tx;
   pthread_attr_t *attr0=NULL,*attr1=NULL,*attr_prach=NULL;
-  pthread_attr_t *attr_prach_br=NULL;
+  //pthread_attr_t *attr_prach_br=NULL;
   LOG_I(PHY,"%s(inst:%d) RC.nb_CC[inst]:%d \n",__FUNCTION__,inst,RC.nb_CC[inst]);
 
   for (CC_id=0; CC_id<RC.nb_CC[inst]; CC_id++) {
@@ -893,12 +894,12 @@ void init_eNB_proc(int inst) {
     pthread_mutex_init( &proc->mutex_prach_br, NULL);
     pthread_mutex_init( &proc->mutex_RU_PRACH_br,NULL);
     pthread_cond_init( &proc->cond_prach_br, NULL);
-    pthread_attr_init( &proc->attr_prach_br);
+    //pthread_attr_init( &proc->attr_prach_br);
 #ifndef DEADLINE_SCHEDULER
     attr0       = &L1_proc->attr;
     attr1       = &L1_proc_tx->attr;
     attr_prach  = &proc->attr_prach;
-    attr_prach_br  = &proc->attr_prach_br;
+    //attr_prach_br  = &proc->attr_prach_br;
     //    attr_td     = &proc->attr_td;
     //    attr_te     = &proc->attr_te;
 #endif
@@ -925,7 +926,7 @@ void init_eNB_proc(int inst) {
 
     if (NFAPI_MODE!=NFAPI_MODE_VNF) {
       pthread_create( &proc->pthread_prach, attr_prach, eNB_thread_prach, eNB );
-      pthread_create( &proc->pthread_prach_br, attr_prach_br, eNB_thread_prach_br, eNB );
+      //pthread_create( &proc->pthread_prach_br, attr_prach_br, eNB_thread_prach_br, eNB );
     }
 
     AssertFatal(proc->instance_cnt_prach == -1,"instance_cnt_prach = %d\n",proc->instance_cnt_prach);
@@ -1031,7 +1032,7 @@ void kill_eNB_proc(int inst) {
     pthread_attr_destroy(&L1_proc->attr);
     pthread_attr_destroy(&L1_proc_tx->attr);
     pthread_mutex_destroy(&proc->mutex_RU_PRACH_br);
-    pthread_attr_destroy(&proc->attr_prach_br);
+    //pthread_attr_destroy(&proc->attr_prach_br);
   }
 }
 

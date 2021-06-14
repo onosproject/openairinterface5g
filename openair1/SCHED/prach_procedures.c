@@ -104,7 +104,7 @@ void prach_procedures(PHY_VARS_eNB *eNB,
         max_preamble_energy[0]/10,
         max_preamble_delay[0],
         eNB->prach_energy_counter,
-        eNB->measurements.prach_I0+eNB->prach_DTX_threshold,
+        eNB->measurements.prach_I0+eNB->prach_DTX_threshold+50,
         eNB->measurements.prach_I0);
 
   if (br_flag==1) {
@@ -147,8 +147,8 @@ void prach_procedures(PHY_VARS_eNB *eNB,
     } */// ce_level
   } else {
     if ((eNB->prach_energy_counter == 100) &&
-        (max_preamble_energy[0] > eNB->measurements.prach_I0+eNB->prach_DTX_threshold)) {
-      LOG_D(PHY,"[eNB %d/%d][RAPROC] Frame %d, subframe %d Initiating RA procedure with preamble %d, energy %d.%d dB, delay %d\n",
+        (max_preamble_energy[0] > (eNB->measurements.prach_I0+eNB->prach_DTX_threshold+50) )) {
+      LOG_I(PHY,"[eNB %d/%d][RAPROC] Frame %d, subframe %d Initiating RA procedure with preamble %d, energy %d.%d dB, delay %d\n",
             eNB->Mod_id,
             eNB->CC_id,
             frame,
