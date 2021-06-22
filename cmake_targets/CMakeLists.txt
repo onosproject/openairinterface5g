@@ -1129,6 +1129,10 @@ add_library(PROTO_AGENT
 set(PROTO_AGENT_LIB PROTO_AGENT)
 include_directories(${OPENAIR2_DIR}/LAYER2/PROTO_AGENT)
 
+# RAN SLICING
+#################
+add_boolean_option(ENABLE_RAN_SLICING False "Enable RAN Slicing")
+
 # O-RAN RIC Agent
 #################
 add_boolean_option(ENABLE_RIC_AGENT False "Enable O-RAN RIC agent")

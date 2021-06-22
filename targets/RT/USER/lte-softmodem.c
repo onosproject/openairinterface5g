@@ -510,6 +510,7 @@ static  void wait_nfapi_init(char *thread_name) {
   printf( "NFAPI: got sync (%s)\n", thread_name);
 }
 
+extern void apply_update_dl_slice_config(mid_t mod_id, Protocol__FlexSliceDlUlConfig *dl);
 int main ( int argc, char **argv )
 {
   int i;
@@ -651,7 +652,7 @@ int main ( int argc, char **argv )
     for (int x=0; x < RC.nb_L1_inst; x++) 
       for (int CC_id=0; CC_id<RC.nb_L1_CC[x]; CC_id++) {
         L1_rxtx_proc_t *L1proc= &RC.eNB[x][CC_id]->proc.L1_proc;
-	L1proc->threadPool=(tpool_t*)malloc(sizeof(tpool_t));
+    L1proc->threadPool=(tpool_t*)malloc(sizeof(tpool_t));
         L1proc->respEncode=(notifiedFIFO_t*) malloc(sizeof(notifiedFIFO_t));
         L1proc->respDecode=(notifiedFIFO_t*) malloc(sizeof(notifiedFIFO_t));
         if ( strlen(get_softmodem_params()->threadPoolConfig) > 0 )
@@ -714,6 +715,53 @@ int main ( int argc, char **argv )
     pthread_cond_broadcast(&sync_cond);
     pthread_mutex_unlock(&sync_mutex);
     config_check_unknown_cmdlineopt(CONFIG_CHECKALLSECTIONS);
+
+    if (!NODE_IS_CU(node_type))
+    {
+#if ENABLE_RAN_SLICING
+        LOG_I(ENB_APP," RAN SLICING is Enabled, Setting up Default Slice\n");
+        Protocol__FlexSliceDlUlConfig dl;
+        Protocol__FlexSlice *defSlice = NULL;
+
+        dl.has_algorithm = 1;
+        dl.algorithm = PROTOCOL__FLEX_SLICE_ALGORITHM__Static;
+        dl.n_slices = 1;
+        dl.slices = (Protocol__FlexSlice **)calloc(1, sizeof(Protocol__FlexSlice *));
+        dl.slices[0] = (Protocol__FlexSlice *)calloc(1, sizeof(Protocol__FlexSlice));
+
+        defSlice = dl.slices[0];
+        defSlice->has_id = 1;
+        defSlice->id = 0;
+        defSlice->label = (char *)strdup("default");         
+        defSlice->scheduler = (char *)strdup("round_robin_dl"); 
+        defSlice->params_case = PROTOCOL__FLEX_SLICE__PARAMS_STATIC;        
+        
+        Protocol__FlexSliceStatic *StaticSliceCfg = (Protocol__FlexSliceStatic *)calloc(1, sizeof(Protocol__FlexSliceStatic));
+        StaticSliceCfg->has_poslow = 1;
+        StaticSliceCfg->poslow = 0;
+        StaticSliceCfg->has_poshigh = 1;
+        StaticSliceCfg->poshigh = to_rbg(RC.mac[0]->common_channels[0].mib->message.dl_Bandwidth) - 1;
+        /*Default slice should Initially consume 100% of scheduling time */
+        StaticSliceCfg->has_timeschd = 1;
+        StaticSliceCfg->timeschd = 100; 
+        
+        defSlice->static_ = StaticSliceCfg;
+
+        LOG_I(ENB_APP, "--- Default Slice Params ---\n");
+        LOG_I(ENB_APP, "dl:has_algorithm = %d algorithm = %d n_slices = %lu\n",
+            dl.has_algorithm, dl.algorithm, dl.n_slices);
+        LOG_I(ENB_APP, "dl:defSlice:has_id = %d id = %d label = %s\n",
+            defSlice->has_id, defSlice->id, defSlice->label);
+        LOG_I(ENB_APP, "dl:defSlice:scheduler = %s params_case = %d\n",
+            defSlice->scheduler, defSlice->params_case);
+        LOG_I(ENB_APP, "dl:efSlice:StaticSliceCfg:has_poslow = %d poslow = %d has_poshigh= %d poshigh = %d\n",
+            StaticSliceCfg->has_poslow, StaticSliceCfg->poslow, StaticSliceCfg->has_poshigh, StaticSliceCfg->poshigh);
+ 
+        apply_update_dl_slice_config(0, &dl);
+#else
+        LOG_I(ENB_APP," RAN SLICING is Disabled\n");
+#endif
+    }
   }
   create_tasks_mbms(1);
 
@@ -743,7 +791,7 @@ int main ( int argc, char **argv )
      * threads have been stopped (they partially use the same memory) */
     for (int inst = 0; inst < NB_eNB_INST; inst++) {
       for (int cc_id = 0; cc_id < RC.nb_CC[inst]; cc_id++) {
-	free_transport(RC.eNB[inst][cc_id]);
+    free_transport(RC.eNB[inst][cc_id]);
         phy_free_lte_eNB(RC.eNB[inst][cc_id]);
       }
     }

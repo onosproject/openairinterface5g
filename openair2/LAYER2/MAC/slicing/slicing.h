@@ -63,9 +63,12 @@ int slicing_get_UE_slice_idx(slice_info_t *si, int UE_id);
 #define STATIC_SLICING 10
 /* only four static slices for UL, DL resp. (not enough DCIs) */
 #define MAX_STATIC_SLICES 4
+#define MAX_DED_SLICE_TIME_SCHD 80
+#define MAX_DEF_SLICE_TIME_SCHD 100
 typedef struct {
   uint16_t posLow;
   uint16_t posHigh;
+  uint16_t timeSchd;
 } static_slice_param_t;
 pp_impl_param_t static_dl_init(module_id_t mod_id, int CC_id);
 pp_impl_param_t static_ul_init(module_id_t mod_id, int CC_id);

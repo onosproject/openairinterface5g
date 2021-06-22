@@ -1025,15 +1025,19 @@ int load_dl_scheduler_function(mid_t mod_id, const char *function_name) {
   
 }
 
-void update_or_remove_dl(mid_t mod_id, Protocol__FlexSlice *s) {
+void update_or_remove_dl(mid_t mod_id, Protocol__FlexSlice *s) 
+{
   if (s->params_case == PROTOCOL__FLEX_SLICE__PARAMS__NOT_SET
-      && !s->label && !s->scheduler) {
+      && !s->label && !s->scheduler) 
+  {
     LOG_I(FLEXRAN_AGENT, "remove DL slice ID %d\n", s->id);
     const int rc = flexran_remove_dl_slice(mod_id, s);
     if (!rc)
       LOG_W(FLEXRAN_AGENT, "error while removing slice ID %d\n", s->id);
-  } else {
-    LOG_I(FLEXRAN_AGENT, "updating DL slice ID %d\n", s->id);
+  } 
+  else 
+  {
+    LOG_I(FLEXRAN_AGENT, "[%s]updating DL slice ID %d\n", __func__,s->id);
     const int rc = flexran_create_dl_slice(mod_id, s);
     if (rc < 0)
       LOG_W(FLEXRAN_AGENT,
@@ -1059,13 +1063,15 @@ void update_or_remove_ul(mid_t mod_id, Protocol__FlexSlice *s) {
   }
 }
 
-void apply_update_dl_slice_config(mid_t mod_id, Protocol__FlexSliceDlUlConfig *dl) {
+void apply_update_dl_slice_config(mid_t mod_id, Protocol__FlexSliceDlUlConfig *dl) 
+{
   if (!dl)
     return;
 
   Protocol__FlexSliceAlgorithm dl_algo = flexran_get_dl_slice_algo(mod_id);
-  if (dl->has_algorithm && dl_algo != dl->algorithm) {
-    LOG_I(FLEXRAN_AGENT, "loading new DL slice algorithm %d\n", dl->algorithm);
+  if (dl->has_algorithm && dl_algo != dl->algorithm) 
+  {
+    LOG_I(FLEXRAN_AGENT, "[%s]loading new DL slice algorithm %d\n", __func__,dl->algorithm);
     dl_algo = dl->algorithm;
     flexran_set_dl_slice_algo(mod_id, dl_algo);
   }
@@ -1073,35 +1079,49 @@ void apply_update_dl_slice_config(mid_t mod_id, Protocol__FlexSliceDlUlConfig *d
   /* first update existing slices, then create new. Thus, we go through the
    * list twice. First round, if a slice exists, handle and mark as such. Then,
    * apply all others in the second round */
-  if (dl->n_slices > 0) {
-    if (dl_algo == PROTOCOL__FLEX_SLICE_ALGORITHM__None) {
+  if (dl->n_slices > 0) 
+  {
+    LOG_I(FLEXRAN_AGENT, "[%s]n_slices %lu\n", __func__,dl->n_slices);
+    if (dl_algo == PROTOCOL__FLEX_SLICE_ALGORITHM__None) 
+    {
       LOG_E(FLEXRAN_AGENT, "cannot update slices: no algorithm loaded\n");
       return;
     }
     int handled_dl[dl->n_slices];
-    for (int i = 0; i < dl->n_slices; ++i) {
-      if (flexran_find_dl_slice(mod_id, dl->slices[i]->id) < 0) {
+    for (int i = 0; i < dl->n_slices; ++i) 
+    {
+      if (flexran_find_dl_slice(mod_id, dl->slices[i]->id) < 0) 
+      {
         handled_dl[i] = 0;
         continue;
       }
+      LOG_I(FLEXRAN_AGENT, "[%s,%u]update new DL slice\n", __func__,__LINE__);
       update_or_remove_dl(mod_id, dl->slices[i]);
       handled_dl[i] = 1;
     }
-    for (int i = 0; i < dl->n_slices; ++i) {
+    for (int i = 0; i < dl->n_slices; ++i) 
+    {
       if (handled_dl[i])
-        continue;
+      {  
+	 continue;
+      }
+      
+      LOG_I(FLEXRAN_AGENT, "[%s,%u]update new DL slice\n", __func__,__LINE__);
       update_or_remove_dl(mod_id, dl->slices[i]);
     }
   }
 
-  if (dl->scheduler) {
-    if (dl_algo != PROTOCOL__FLEX_SLICE_ALGORITHM__None) {
+  if (dl->scheduler) 
+  {
+    if (dl_algo != PROTOCOL__FLEX_SLICE_ALGORITHM__None) 
+    {
       LOG_E(FLEXRAN_AGENT, "cannot update scheduling algorithm: slice algorithm loaded\n");
       return;
     }
     LOG_I(FLEXRAN_AGENT, "loading DL new scheduling algorithm '%s'\n", dl->scheduler);
     const int rc = flexran_set_dl_scheduler(mod_id, dl->scheduler);
-    if (rc < 0) {
+    if (rc < 0) 
+    {
       LOG_E(FLEXRAN_AGENT,
             "error while updating scheduling algorithm: "
             "flexran_update_dl_sched_algo() -> %d)\n",
