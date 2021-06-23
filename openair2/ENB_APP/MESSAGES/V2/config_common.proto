@@ -70,6 +70,7 @@ enum flex_slice_algorithm {
 message flex_slice_static {
   optional uint32 posLow = 1;
   optional uint32 posHigh = 2;
+  optional uint32 timeSchd = 3;
 }
 
 message flex_slice {

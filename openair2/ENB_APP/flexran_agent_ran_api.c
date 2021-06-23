@@ -3025,10 +3025,12 @@ Protocol__FlexSliceAlgorithm flexran_get_dl_slice_algo(mid_t mod_id) {
   }
 }
 
-int flexran_set_dl_slice_algo(mid_t mod_id, Protocol__FlexSliceAlgorithm algo) {
+int flexran_set_dl_slice_algo(mid_t mod_id, Protocol__FlexSliceAlgorithm algo) 
+{
   if (!mac_is_present(mod_id)) return 0;
   eNB_MAC_INST *mac = RC.mac[mod_id];
   const int cc_id = 0;
+  LOG_I(FLEXRAN_AGENT, "[%s]algorithm %d\n", __func__, algo);
 
   pp_impl_param_t dl = mac->pre_processor_dl;
   switch (algo) {
@@ -3042,10 +3044,14 @@ int flexran_set_dl_slice_algo(mid_t mod_id, Protocol__FlexSliceAlgorithm algo) {
       mac->pre_processor_dl.slices = NULL;
       break;
   }
+  LOG_I(FLEXRAN_AGENT, "[%s] Destrying Slice \n", __func__);
   if (dl.slices)
     dl.destroy(&dl.slices);
   if (dl.dl_algo.data)
     dl.dl_algo.unset(&dl.dl_algo.data);
+
+  slice_info_t *si = RC.mac[mod_id]->pre_processor_dl.slices;
+  LOG_I(FLEXRAN_AGENT, "[%s]After Destroy si->num:%d\n",__func__,si->num);
   return 1;
 }
 
@@ -3116,7 +3122,8 @@ void flexran_set_ue_ul_slice_id(mid_t mod_id, mid_t ue_id, slice_id_t slice_id) 
   ul->move_UE(ul->slices, ue_id, idx);
 }
 
-int flexran_create_dl_slice(mid_t mod_id, const Protocol__FlexSlice *s) {
+int flexran_create_dl_slice(mid_t mod_id, const Protocol__FlexSlice *s) 
+{
   if (!mac_is_present(mod_id)) return 0;
   void *params = NULL;
   switch (s->params_case) {
@@ -3125,6 +3132,7 @@ int flexran_create_dl_slice(mid_t mod_id, const Protocol__FlexSlice *s) {
       if (!params) return 0;
       ((static_slice_param_t *)params)->posLow = s->static_->poslow;
       ((static_slice_param_t *)params)->posHigh = s->static_->poshigh;
+      ((static_slice_param_t *)params)->timeSchd = s->static_->timeschd;
       break;
     default:
       break;
@@ -3132,6 +3140,9 @@ int flexran_create_dl_slice(mid_t mod_id, const Protocol__FlexSlice *s) {
   pp_impl_param_t *dl = &RC.mac[mod_id]->pre_processor_dl;
   char *l = s->label ? strdup(s->label) : NULL;
   void *algo = &dl->dl_algo; // default scheduler
+  
+  LOG_I(FLEXRAN_AGENT, "[%s]Algo algo:%s\n",__func__, ((default_sched_dl_algo_t *)algo)->name);
+#if 0
   if (s->scheduler) {
     algo = dlsym(NULL, s->scheduler);
     if (!algo) {
@@ -3140,6 +3151,10 @@ int flexran_create_dl_slice(mid_t mod_id, const Protocol__FlexSlice *s) {
       return -15;
     }
   }
+  LOG_I(FLEXRAN_AGENT, "[%s]After  algo:%s\n",__func__, ((default_sched_dl_algo_t *)algo)->name);
+#endif
+
+  LOG_I(FLEXRAN_AGENT, "[%s]Creating DL Slice ID:%d Label:%s \n",__func__, s->id, l);
   return dl->addmod_slice(dl->slices, s->id, l, algo, params);
 }
 
@@ -3151,12 +3166,20 @@ int flexran_remove_dl_slice(mid_t mod_id, const Protocol__FlexSlice *s) {
   return dl->remove_slice(dl->slices, idx);
 }
 
-int flexran_find_dl_slice(mid_t mod_id, slice_id_t slice_id) {
+int flexran_find_dl_slice(mid_t mod_id, slice_id_t slice_id) 
+{
   if (!mac_is_present(mod_id)) return -1;
   slice_info_t *si = RC.mac[mod_id]->pre_processor_dl.slices;
   for (int i = 0; i < si->num; ++i)
+  {
     if (si->s[i]->id == slice_id)
+    {
+      LOG_I(FLEXRAN_AGENT, "[%s]Found si->num:%d slice_id:%d i:%d\n",__func__, si->num, slice_id,i);
       return i;
+    }
+  }
+
+  LOG_I(FLEXRAN_AGENT, "[%s]Could not find si->num:%d slice_id:%d\n",__func__, si->num, slice_id);
   return -1;
 }
 
