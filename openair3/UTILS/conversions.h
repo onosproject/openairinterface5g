@@ -250,6 +250,16 @@ do {                                                                           \
     (oCTETsTRING)->size = 3;                                                   \
 } while(0)
 
+#define E2_MACRO_MCC_MNC_TO_PLMNID(mCC, mNC, mNCdIGITlENGTH, oCTETsTRING)               \
+do {                                                                           \
+    (oCTETsTRING)->buf = calloc(3, sizeof(uint8_t));                           \
+    (oCTETsTRING)->buf[2] = (MCC_MNC_DECIMAL(mCC) << 4) | MCC_HUNDREDS(mCC);   \
+    (oCTETsTRING)->buf[1] = (MNC_HUNDREDS(mNC,mNCdIGITlENGTH) << 4) | MCC_MNC_DIGIT(mCC);     \
+    (oCTETsTRING)->buf[0] = (MCC_MNC_DIGIT(mNC) << 4) | MCC_MNC_DECIMAL(mNC);  \
+    (oCTETsTRING)->size = 3;                                                   \
+} while(0)
+
+
 #define PLMNID_TO_MCC_MNC(oCTETsTRING, mCC, mNC, mNCdIGITlENGTH)                  \
 do {                                                                              \
     mCC = ((oCTETsTRING)->buf[0] & 0x0F) * 100 +                                  \
@@ -445,6 +455,20 @@ do {                                                    \
     (bITsTRING)->size = 3;                              \
     (bITsTRING)->bits_unused = 4;                       \
 } while(0)
+/*
+ * Same as above macro MACRO_ENB_ID_TO_BIT_STRING
+ * However, it is for E2 message - encoded by little endian
+ */
+#define E2_MACRO_ENB_ID_TO_BIT_STRING(mACRO, bITsTRING)    \
+do {                                                    \
+    (bITsTRING)->buf = calloc(3, sizeof(uint8_t));      \
+    (bITsTRING)->buf[2] = ((mACRO) >> 12);              \
+    (bITsTRING)->buf[1] = (mACRO) >> 4;                 \
+    (bITsTRING)->buf[0] = ((mACRO) & 0x0f) << 4;        \
+    (bITsTRING)->size = 3;                              \
+    (bITsTRING)->bits_unused = 4;                       \
+} while(0)
+
 /* TS 36.413 v10.9.0 section 9.2.1.38:
  * E-UTRAN CGI/Cell Identity
  * The leftmost bits of the Cell
@@ -458,6 +482,20 @@ do {                                                    \
     (bITsTRING)->buf[1] = (mACRO) >> 4;                 \
     (bITsTRING)->buf[2] = (((mACRO) & 0x0f) << 4) | ((cELL_iD) >> 4);        \
     (bITsTRING)->buf[3] = ((cELL_iD) & 0x0f) << 4;        \
+    (bITsTRING)->size = 4;                              \
+    (bITsTRING)->bits_unused = 4;                       \
+} while(0)
+/*
+ * Same as above macro MACRO_ENB_ID_TO_CELL_IDENTITY
+ * However, it is for E2 message - encoded by little endian
+ */
+#define E2_MACRO_ENB_ID_TO_CELL_IDENTITY(mACRO, cELL_iD, bITsTRING) \
+do {                                                    \
+    (bITsTRING)->buf = calloc(4, sizeof(uint8_t));      \
+    (bITsTRING)->buf[3] = ((mACRO) >> 12);              \
+    (bITsTRING)->buf[2] = (mACRO) >> 4;                 \
+    (bITsTRING)->buf[1] = (((mACRO) & 0x0f) << 4) | ((cELL_iD) >> 4);        \
+    (bITsTRING)->buf[0] = ((cELL_iD) & 0x0f) << 4;        \
     (bITsTRING)->size = 4;                              \
     (bITsTRING)->bits_unused = 4;                       \
 } while(0)

@@ -498,7 +498,7 @@ int global_e2_node_id(ranid_t ranid, E2AP_GlobalE2node_ID_t* node_id) {
     if (node_type == E2NODE_TYPE_ENB_CU) {
         node_id->present = E2AP_GlobalE2node_ID_PR_eNB;
 
-        MCC_MNC_TO_PLMNID(
+        E2_MACRO_MCC_MNC_TO_PLMNID(
                 e2_conf[ranid]->mcc,
                 e2_conf[ranid]->mnc,
                 e2_conf[ranid]->mnc_digit_length,
@@ -506,7 +506,7 @@ int global_e2_node_id(ranid_t ranid, E2AP_GlobalE2node_ID_t* node_id) {
 
         node_id->choice.eNB.global_eNB_ID.eNB_ID.present = E2AP_ENB_ID_PR_macro_eNB_ID;
 
-        MACRO_ENB_ID_TO_BIT_STRING(
+        E2_MACRO_ENB_ID_TO_BIT_STRING(
                 e2_conf[ranid]->cell_identity,
                 &node_id->choice.eNB.global_eNB_ID.eNB_ID.choice.macro_eNB_ID);
 
@@ -515,7 +515,7 @@ int global_e2_node_id(ranid_t ranid, E2AP_GlobalE2node_ID_t* node_id) {
     else if (node_type == E2NODE_TYPE_NG_ENB) {
         node_id->present = E2AP_GlobalE2node_ID_PR_ng_eNB;
 
-        MCC_MNC_TO_PLMNID(
+        E2_MACRO_MCC_MNC_TO_PLMNID(
                 e2_conf[ranid]->mcc,
                 e2_conf[ranid]->mnc,
                 e2_conf[ranid]->mnc_digit_length,
@@ -524,7 +524,7 @@ int global_e2_node_id(ranid_t ranid, E2AP_GlobalE2node_ID_t* node_id) {
         node_id->choice.ng_eNB.global_ng_eNB_ID.enb_id.present
             = E2AP_ENB_ID_Choice_PR_enb_ID_macro;
 
-        MACRO_ENB_ID_TO_BIT_STRING(
+        E2_MACRO_ENB_ID_TO_BIT_STRING(
                 e2_conf[ranid]->cell_identity,
                 &node_id->choice.ng_eNB.global_ng_eNB_ID.enb_id.choice.enb_ID_macro);
 
@@ -532,7 +532,7 @@ int global_e2_node_id(ranid_t ranid, E2AP_GlobalE2node_ID_t* node_id) {
 
         node_id->present = E2AP_GlobalE2node_ID_PR_gNB;
 
-        MCC_MNC_TO_PLMNID(
+        E2_MACRO_MCC_MNC_TO_PLMNID(
                 e2_conf[ranid]->mcc,
                 e2_conf[ranid]->mnc,
                 e2_conf[ranid]->mnc_digit_length,
@@ -542,7 +542,7 @@ int global_e2_node_id(ranid_t ranid, E2AP_GlobalE2node_ID_t* node_id) {
 
         /* XXX: GNB version? */
 
-        MACRO_ENB_ID_TO_BIT_STRING(
+        E2_MACRO_ENB_ID_TO_BIT_STRING(
                 e2_conf[ranid]->cell_identity,
                 &node_id->choice.gNB.global_gNB_ID.gnb_id.choice.gnb_ID);
     } else {

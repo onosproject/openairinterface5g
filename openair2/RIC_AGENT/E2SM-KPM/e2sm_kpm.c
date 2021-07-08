@@ -175,7 +175,7 @@ int e2sm_kpm_init(void)
         if ( (e2_conf[i]->enabled) && 
              ((e2_conf[i]->e2node_type == E2NODE_TYPE_ENB_CU) || (e2_conf[i]->e2node_type == E2NODE_TYPE_NG_ENB_CU)) 
            ){
-            MCC_MNC_TO_PLMNID(
+            E2_MACRO_MCC_MNC_TO_PLMNID(
                 e2_conf[i]->mcc,
                 e2_conf[i]->mnc,
                 e2_conf[i]->mnc_digit_length,
@@ -186,24 +186,24 @@ int e2sm_kpm_init(void)
 
     /* eNB_ID */
     ric_kpm_node_item->ric_KPMNode_Type.choice.eNB.global_eNB_ID.eNB_ID.present = E2AP_ENB_ID_PR_macro_eNB_ID;
-    MACRO_ENB_ID_TO_BIT_STRING(e2_conf[i]->cell_identity,
+    E2_MACRO_ENB_ID_TO_BIT_STRING(e2_conf[i]->cell_identity,
                                &ric_kpm_node_item->ric_KPMNode_Type.choice.eNB.global_eNB_ID.eNB_ID.choice.macro_eNB_ID);
 
     ric_kpm_node_item->cell_Measurement_Object_List = 
             (struct E2SM_KPM_RIC_KPMNode_Item_KPMv2__cell_Measurement_Object_List *)calloc(1, sizeof(*ric_kpm_node_item->cell_Measurement_Object_List));
     
     cell_meas_object_item = (E2SM_KPM_Cell_Measurement_Object_Item_KPMv2_t *)calloc(1, sizeof(*cell_meas_object_item));
-    cell_meas_object_item->cell_object_ID.buf = (uint8_t *)strdup("EUtranCellFDD"); //if cell is TDD then EUtranCellTDD 
-    cell_meas_object_item->cell_object_ID.size = strlen("EUtranCellFDD");
+    cell_meas_object_item->cell_object_ID.buf = (uint8_t *)strdup("1"); // hardcoded it as 1
+    cell_meas_object_item->cell_object_ID.size = strlen("1");
     cell_meas_object_item->cell_global_ID.present = E2SM_KPM_CellGlobalID_KPMv2_PR_eUTRA_CGI;
 
-    MCC_MNC_TO_PLMNID(e2_conf[i]->mcc,
+    E2_MACRO_MCC_MNC_TO_PLMNID(e2_conf[i]->mcc,
                       e2_conf[i]->mnc,
                       e2_conf[i]->mnc_digit_length,
                       &cell_meas_object_item->cell_global_ID.choice.eUTRA_CGI.pLMN_Identity);
  
-    //MACRO_ENB_ID_TO_BIT_STRING(e2_conf[i]->cell_identity,
-    MACRO_ENB_ID_TO_CELL_IDENTITY(e2_conf[i]->cell_identity,0,
+    //E2_MACRO_ENB_ID_TO_BIT_STRING(e2_conf[i]->cell_identity,
+    E2_MACRO_ENB_ID_TO_CELL_IDENTITY(e2_conf[i]->cell_identity,0,
                                &cell_meas_object_item->cell_global_ID.choice.eUTRA_CGI.eUTRACellIdentity);
 
     ASN_SEQUENCE_ADD(&ric_kpm_node_item->cell_Measurement_Object_List->list, cell_meas_object_item);
@@ -960,7 +960,7 @@ void encode_e2sm_kpm_indication_header(ranid_t ranid, E2SM_KPM_E2SM_KPMv2_Indica
     
     if (node_type == E2NODE_TYPE_ENB_CU) 
     {
-        MCC_MNC_TO_PLMNID(
+        E2_MACRO_MCC_MNC_TO_PLMNID(
                 e2_conf[ranid]->mcc,
                 e2_conf[ranid]->mnc,
                 e2_conf[ranid]->mnc_digit_length,
@@ -968,7 +968,7 @@ void encode_e2sm_kpm_indication_header(ranid_t ranid, E2SM_KPM_E2SM_KPMv2_Indica
     
         ind_header->kpmNodeID->choice.eNB.global_eNB_ID.eNB_ID.present = E2SM_KPM_ENB_ID_KPMv2_PR_macro_eNB_ID; 
     
-        MACRO_ENB_ID_TO_BIT_STRING(
+        E2_MACRO_ENB_ID_TO_BIT_STRING(
                 e2_conf[ranid]->cell_identity,
                 &ind_header->kpmNodeID->choice.eNB.global_eNB_ID.eNB_ID.choice.macro_eNB_ID);
     }
