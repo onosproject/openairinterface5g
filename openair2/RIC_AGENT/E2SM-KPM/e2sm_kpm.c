@@ -193,8 +193,8 @@ int e2sm_kpm_init(void)
             (struct E2SM_KPM_RIC_KPMNode_Item_KPMv2__cell_Measurement_Object_List *)calloc(1, sizeof(*ric_kpm_node_item->cell_Measurement_Object_List));
     
     cell_meas_object_item = (E2SM_KPM_Cell_Measurement_Object_Item_KPMv2_t *)calloc(1, sizeof(*cell_meas_object_item));
-    cell_meas_object_item->cell_object_ID.buf = (uint8_t *)strdup("EUtranCellFDD"); //if cell is TDD then EUtranCellTDD 
-    cell_meas_object_item->cell_object_ID.size = strlen("EUtranCellFDD");
+    cell_meas_object_item->cell_object_ID.buf = (uint8_t *)strdup("1"); //if cell is TDD then EUtranCellTDD
+    cell_meas_object_item->cell_object_ID.size = strlen("1");
     cell_meas_object_item->cell_global_ID.present = E2SM_KPM_CellGlobalID_KPMv2_PR_eUTRA_CGI;
 
     MCC_MNC_TO_PLMNID(e2_conf[i]->mcc,
