@@ -372,7 +372,7 @@ static int e2sm_kpm_ricInd_timer_expiry(
     DevAssert(timer_id == ric->e2sm_kpm_timer_id);
 
     char *time = time_stamp();
-    RIC_AGENT_INFO("[%s] ----  Reporting Period Timer expired, timer_id %ld function_id %ld---------\n", 
+    RIC_AGENT_INFO("[%s] ----  Sending RIC Indication, timer_id %ld function_id %ld---------\n", 
                    time, timer_id, function_id);
     free(time);
 
@@ -388,14 +388,14 @@ static int e2sm_kpm_ricInd_timer_expiry(
         char *error_buf = (char*)calloc(300, sizeof(char));
         size_t errlen;
         asn_check_constraints(&asn_DEF_E2SM_KPM_E2SM_KPMv2_IndicationMessage, indicationmessage, error_buf, &errlen);
-        fprintf(stderr,"KPM IND error length %zu\n", errlen);
-        fprintf(stderr,"KPM IND error buf %s\n", error_buf);
+        //fprintf(stderr,"KPM IND error length %zu\n", errlen);
+        //fprintf(stderr,"KPM IND error buf %s\n", error_buf);
         free(error_buf);
         //xer_fprint(stderr, &asn_DEF_E2SM_KPM_E2SM_KPMv2_IndicationMessage, indicationmessage);
     }
     g_granularityIndx = 0; // Resetting
 
-    xer_fprint(stderr, &asn_DEF_E2SM_KPM_E2SM_KPMv2_IndicationMessage, indicationmessage);
+    //xer_fprint(stderr, &asn_DEF_E2SM_KPM_E2SM_KPMv2_IndicationMessage, indicationmessage);
     uint8_t e2smbuffer[8192];
     size_t e2smbuffer_size = 8192;
 
@@ -404,8 +404,8 @@ static int e2sm_kpm_ricInd_timer_expiry(
             &asn_DEF_E2SM_KPM_E2SM_KPMv2_IndicationMessage,
             indicationmessage, e2smbuffer, e2smbuffer_size);
 
-    fprintf(stderr, "er encded is %zu\n", er.encoded);
-    fprintf(stderr, "after encoding KPM IND message\n");
+    //fprintf(stderr, "er encded is %zu\n", er.encoded);
+    //fprintf(stderr, "after encoding KPM IND message\n");
 
     E2AP_E2AP_PDU_t *e2ap_pdu = (E2AP_E2AP_PDU_t*)calloc(1, sizeof(E2AP_E2AP_PDU_t));
 
@@ -464,8 +464,8 @@ static int e2sm_kpm_gp_timer_expiry(
 	}
 
     char *time = time_stamp();
-    RIC_AGENT_INFO("[%s] +++  Granularity Period expired, timer_id %ld function_id %ld +++ \n",
-                   time, timer_id, function_id);
+    //RIC_AGENT_INFO("[%s] +++  Granularity Period expired, timer_id %ld function_id %ld +++ \n",
+    //               time, timer_id, function_id);
     free(time);
 
     for (i = 0; i < MAX_KPM_MEAS; i++)
@@ -731,7 +731,7 @@ encode_kpm_Indication_Msg(ric_agent_info_t* ric, ric_subscription_t *rs)
         g_granularityIndx = 1;
     } 
 
-    RIC_AGENT_INFO("Granularity Idx=:%d\n",g_granularityIndx);
+    //RIC_AGENT_INFO("Granularity Idx=:%d\n",g_granularityIndx);
 
     /*
      * measData->measurementRecord (List)
@@ -902,11 +902,11 @@ static void generate_e2apv1_indication_request_parameterized(E2AP_E2AP_PDU_t *e2
     size_t errlen;
 
     asn_check_constraints(&asn_DEF_E2AP_E2AP_PDU, e2ap_pdu, error_buf, &errlen);
-    printf(" E2AP PDU error length %zu\n", errlen);
-    printf("E2AP PDU error buf %s\n", error_buf);
+    //printf(" E2AP PDU error length %zu\n", errlen);
+    //printf("E2AP PDU error buf %s\n", error_buf);
     free(error_buf);
 
-    xer_fprint(stderr, &asn_DEF_E2AP_E2AP_PDU, e2ap_pdu);
+    //xer_fprint(stderr, &asn_DEF_E2AP_E2AP_PDU, e2ap_pdu);
 }
 
 static int e2ap_asn1c_encode_pdu(E2AP_E2AP_PDU_t* pdu, unsigned char **buffer)
@@ -978,5 +978,5 @@ void encode_e2sm_kpm_indication_header(ranid_t ranid, E2SM_KPM_E2SM_KPMv2_Indica
     ind_header->colletStartTime.buf = (uint8_t *)calloc(1, 4);
     ind_header->colletStartTime.size = 4;
     *((uint32_t *)(ind_header->colletStartTime.buf)) = htonl((uint32_t)time(NULL));
-    xer_fprint(stderr, &asn_DEF_E2SM_KPM_E2SM_KPMv2_IndicationHeader, ihead);
+    //xer_fprint(stderr, &asn_DEF_E2SM_KPM_E2SM_KPMv2_IndicationHeader, ihead);
 }
