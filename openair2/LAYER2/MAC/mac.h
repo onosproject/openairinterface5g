@@ -1702,5 +1702,56 @@ typedef  struct {
 
 #include "mac_proto.h"
 
+#ifdef ENABLE_RAN_SLICING
+
+typedef enum apiid_e {
+    UE_ATTACH_IND = 1,
+    UE_DETACH_IND,
+    SLICE_CREATE_UPDATE_REQ,
+    UE_SLICE_ASSOC_REQ,
+    SLICE_CREATE_UPDATE_RESP,
+    UE_SLICE_ASSOC_RESP
+}apiId;
+
+typedef enum resp_status_e {
+    API_RESP_SUCCESS =1,
+    API_RESP_FAILURE 
+}apiRespStatus;
+
+typedef struct msg_st {
+  unsigned int   apiID;
+  unsigned int   apiSize;
+  uint8_t        apiBuff[500];
+}apiMsg;
+
+typedef struct ue_status {
+  uint16_t       rnti;
+  int            ueId;
+}ueStatusInd;
+
+typedef struct slice_req {
+  uint32_t  sliceId;
+  uint32_t  timeSchd;
+}sliceCreateUpdateReq;
+
+typedef struct ue_slice_assoc {
+  unsigned int      rnti;
+  uint32_t          sliceId;
+}ueSliceAssocReq;
+
+typedef struct slice_resp {
+  uint8_t   status;
+  uint32_t  sliceId;
+  uint32_t  timeSchd;
+}sliceCreateUpdateResp;
+
+typedef struct ue_slice_assoc_resp {
+  uint8_t       status;
+  int           ueId;
+  uint32_t      sliceId;
+}ueSliceAssocResp;
+
+#endif
+
 /*@}*/
 #endif /*__LAYER2_MAC_DEFS_H__ */

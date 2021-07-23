@@ -1185,7 +1185,7 @@ void postDecode(L1_rxtx_proc_t *proc, notifiedFIFO_elt_t *req) {
       int nb=abortTpool(proc->threadPool, req->key);
       nb+=abortNotifiedFIFO(proc->respDecode, req->key);
       proc->nbDecode-=nb;
-      LOG_I(PHY,"uplink segment error %d/%d, aborted %d segments\n",rdata->segment_r,rdata->nbSegments, nb);
+      LOG_D(PHY,"uplink segment error %d/%d, aborted %d segments\n",rdata->segment_r,rdata->nbSegments, nb);
       AssertFatal(ulsch_harq->processedSegments+nb == rdata->nbSegments,"processed: %d, aborted: %d, total %d\n",
 		  ulsch_harq->processedSegments, nb, rdata->nbSegments);
       ulsch_harq->processedSegments=rdata->nbSegments;

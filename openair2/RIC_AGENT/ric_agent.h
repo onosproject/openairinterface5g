@@ -187,6 +187,7 @@ extern ric_agent_info_t **ric_agent_info;
 extern e2_conf_t **e2_conf;
 
 void *ric_agent_task(void *args);
+void *du_ric_agent_task(void *args);
 void RCconfig_ric_agent(void);
 int ric_agent_reset(ric_agent_info_t *ric);
 int ric_agent_register_ran_function(ric_ran_function_t *func);

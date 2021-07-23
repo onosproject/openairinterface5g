@@ -38,7 +38,7 @@
 #include "flexran_agent_extern.h"
 // for flexran_agent_get_mac_xface()
 #include "flexran_agent_extern.h"
-
+#include "openair2/LAYER2/MAC/mac.h"
 
 /* Initialization function for the agent structures etc */
 void flexran_agent_init_mac_agent(mid_t mod_id);
@@ -126,5 +126,10 @@ void prepare_ue_slice_assoc_update(mid_t mod_id, Protocol__FlexUeConfig **ue_con
 /* free slice_config part of flexCellConfig, filled in
  * flexran_agent_fill_mac_cell_config() */
 void flexran_agent_destroy_mac_slice_config(Protocol__FlexCellConfig *conf);
+
+#ifdef ENABLE_RAN_SLICING
+void handle_slicing_api_req(apiMsg *p_slicingApi);
+void check_slicing_update(mid_t mod_id);
+#endif
 
 #endif

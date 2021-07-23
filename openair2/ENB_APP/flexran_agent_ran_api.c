@@ -3154,7 +3154,7 @@ int flexran_create_dl_slice(mid_t mod_id, const Protocol__FlexSlice *s)
   LOG_I(FLEXRAN_AGENT, "[%s]After  algo:%s\n",__func__, ((default_sched_dl_algo_t *)algo)->name);
 #endif
 
-  LOG_I(FLEXRAN_AGENT, "[%s]Creating DL Slice ID:%d Label:%s \n",__func__, s->id, l);
+  LOG_I(FLEXRAN_AGENT, "[%s]Creating/Updating DL Slice ID:%d Label:%s \n",__func__, s->id, l);
   return dl->addmod_slice(dl->slices, s->id, l, algo, params);
 }
 

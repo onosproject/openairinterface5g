@@ -739,6 +739,11 @@ config_dedicated_scell(int Mod_idP,
                        LTE_SCellToAddMod_r10_t *sCellToAddMod_r10) {
 }
 
+#ifdef ENABLE_RAN_SLICING
+extern int g_duSocket;
+extern struct sockaddr_in g_RicAddr;
+extern socklen_t g_addr_size;
+#endif
 
 int rrc_mac_config_req_eNB(module_id_t Mod_idP,
                            int CC_idP,
@@ -908,6 +913,41 @@ int rrc_mac_config_req_eNB(module_id_t Mod_idP,
         LOG_I(MAC, "UE %d RNTI %x adding LC 2 idx %d to scheduling control (total %d)\n", UE_id, rntiP, sched_ctrl->dl_lc_num-1, sched_ctrl->dl_lc_num);
       }
     }
+
+#ifdef ENABLE_RAN_SLICING
+  if (sched_ctrl->dl_lc_num ==3)
+  {
+    /* Send Notification to RIC about UE Attach */
+    apiMsg  apiToRic;
+    ueStatusInd *ueAttachInd;
+    int bytesSent = 0;
+    int errnum;
+
+    apiToRic.apiID = UE_ATTACH_IND;
+    apiToRic.apiSize = sizeof(ueStatusInd);
+    
+    ueAttachInd = (ueStatusInd *)apiToRic.apiBuff;
+    ueAttachInd->rnti = rntiP;
+    ueAttachInd->ueId = UE_id;
+
+    bytesSent = sendto(g_duSocket, (void *)&apiToRic, sizeof(apiToRic),0,
+               (struct sockaddr *)&g_RicAddr, g_addr_size);
+
+    if (bytesSent > 0)
+    {
+      LOG_I(MAC,"UE Attach Indication (%d Bytes) sent to RIC !\n", bytesSent);
+    }
+    else
+    {
+      LOG_E(MAC,"Error in UDP Send :(\n");
+      errnum = errno;
+      fprintf(stderr, "Value of errno: %d\n", errno);
+      perror("Error printed by perror");
+      fprintf(stderr, "Error opening file: %s\n", strerror( errnum ));
+    }
+
+  }
+#endif
   }
 
   // SRB2_lchan_config->choice.explicitValue.ul_SpecificParameters->logicalChannelGroup

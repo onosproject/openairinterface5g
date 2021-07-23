@@ -79,6 +79,9 @@ int e2ap_handle_e2_setup_failure(ric_agent_info_t *ric,uint32_t stream,
     E2AP_E2setupFailureIEs_t *rie,**ptr;
     long cause,cause_detail;
 
+    cause = 0;
+    cause_detail = 0;
+
     DevAssert(pdu != NULL);
     resp = &pdu->choice.unsuccessfulOutcome.value.choice.E2setupFailure;
 
@@ -111,7 +114,7 @@ int e2ap_handle_ric_subscription_request(
     uint32_t      interval_sec = 0;
     uint32_t      interval_us = 0;
     uint32_t      interval_ms = 0;
-    ric_ran_function_t *func;
+    ric_ran_function_t *func = NULL;
 
     RIC_AGENT_INFO("Received RICsubscriptionRequest from ranid %u\n",ric->ranid);
 
@@ -295,9 +298,9 @@ int e2ap_handle_ric_subscription_delete_request(
 {
     E2AP_RICsubscriptionDeleteRequest_t *req;
     E2AP_RICsubscriptionDeleteRequest_IEs_t *rie,**ptr;
-    long request_id;
-    long instance_id;
-    ric_ran_function_id_t function_id;
+    long request_id = 0;
+    long instance_id = 0;
+    ric_ran_function_id_t function_id = 0;
     ric_subscription_t *rs;
     int ret;
     ric_ran_function_t *func;

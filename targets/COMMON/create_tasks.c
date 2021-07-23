@@ -114,5 +114,13 @@ int create_tasks(uint32_t enb_nb) {
   }
 #endif
 
+#ifdef ENABLE_RAN_SLICING
+  if (NODE_IS_DU(type)) {
+    LOG_I(MAC,"Creating DU RIC Agent Task\n");
+    rc = itti_create_task(TASK_RIC_AGENT_DU, du_ric_agent_task, NULL);
+    AssertFatal(rc >= 0, "Create task for RIC_AGENT failed\n");
+  }
+#endif
+
   return 0;
 }

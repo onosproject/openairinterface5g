@@ -638,6 +638,8 @@ copy_ulreq(module_id_t module_idP, frame_t frameP, sub_frame_t subframeP) {
   }
 }
 
+extern uint32_t ulsch_err;
+
 void
 eNB_dlsch_ulsch_scheduler(module_id_t module_idP,
                           frame_t frameP,
@@ -673,7 +675,7 @@ eNB_dlsch_ulsch_scheduler(module_id_t module_idP,
       UE_scheduling_control = &(UE_info->UE_sched_ctrl[UE_id]);
 
       if (((frameP & 127) == 0) && (subframeP == 0)) {
-        LOG_I(MAC,"UE rnti %x : %s, PHR %d dB DL CQI %d PUSCH SNR %d PUCCH SNR %d UL-F-Timer %d UL Inact-Timer %d\n",
+        LOG_I(MAC,"UE rnti %x:%s,PHR %ddB CQI %d PUSCH SNR %d PUCCH SNR %d UL-F-Timer %d UL-Inact-Timer %d ULSCH-ERR %d\n",
               rnti,
               UE_scheduling_control->ul_out_of_sync == 0 ? "in synch" : "out of sync",
               UE_info->UE_template[CC_id][UE_id].phr_info,
@@ -681,7 +683,8 @@ eNB_dlsch_ulsch_scheduler(module_id_t module_idP,
               (5 * UE_scheduling_control->pusch_snr[CC_id] - 640) / 10,
               (5 * UE_scheduling_control->pucch1_snr[CC_id] - 640) / 10,
               UE_scheduling_control->ul_failure_timer,
-              UE_scheduling_control->ul_inactivity_timer);
+              UE_scheduling_control->ul_inactivity_timer, ulsch_err);
+        ulsch_err = 0;
       }
 
       RC.eNB[module_idP][CC_id]->pusch_stats_bsr[UE_id][(frameP * 10) + subframeP] = -63;
@@ -1020,7 +1023,8 @@ eNB_dlsch_ulsch_scheduler(module_id_t module_idP,
   }
 
   if(debug_flag == 0) {
-    LOG_E(MAC,"SCHED_MODE = %d\n", eNB->scheduler_mode);
+    LOG_E(MAC,"SCHED_MODE = %d, PUSCH Target SNR:%d, PUCCH Target SNR:%d\n", 
+          eNB->scheduler_mode, eNB->puSch10xSnr/10, eNB->puCch10xSnr/10);
     debug_flag = 1;
   }
 
@@ -1077,6 +1081,11 @@ eNB_dlsch_ulsch_scheduler(module_id_t module_idP,
         LOG_E(MAC, "%s() %4d.%d ERROR ALLOCATING CCEs\n", __func__, frameP, subframeP);
     }
   }
+
+#ifdef ENABLE_RAN_SLICING
+  if (subframeP == 9)
+    check_slicing_update(module_idP);
+#endif
 
   if (flexran_agent_get_mac_xface(module_idP) && subframeP == 9) {
     flexran_agent_slice_update(module_idP);
