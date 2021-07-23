@@ -62,12 +62,41 @@ void slicing_remove_UE(slice_info_t *si, int UE_id) {
   _remove_UE(si->s, si->UE_assoc_slice, UE_id);
 }
 
-void _move_UE(slice_t **s, uint8_t *assoc, int UE_id, int to) {
-  const uint8_t i = assoc[UE_id];
+void _move_UE(slice_t **s, uint8_t *assoc, int UE_id, int to) 
+{
+  const uint8_t i = assoc[UE_id]; /*get source slice id */
+  
+  /*remove UE from the source slice id */
   const int ri = remove_ue_list(&s[i]->UEs, UE_id);
   if (!ri)
+  {
     LOG_W(MAC, "did not find UE %d in DL slice index %d\n", UE_id, i);
+  }
+  else
+  {
+    /* check if it was the last UE that got removed from dedicated slice i */
+    if ( (dump_ue_list(&s[i]->UEs) == 0) && (i > 0) )
+    {
+      /* Add the time_schd value of this dedicated slice back to default slice */
+      ((static_slice_param_t *)s[0]->algo_data)->timeSchd += ((static_slice_param_t *)s[i]->algo_data)->timeSchd;
+      LOG_I(MAC,"Last UEID:%d removed from slice:%d, def slice timeschd:%d\n",
+            UE_id, i, ((static_slice_param_t *)s[0]->algo_data)->timeSchd);
+    }
+  }
+
+  /*add UE to the target slice id */
   add_ue_list(&s[to]->UEs, UE_id);
+
+  /* Check if ue_id is the first UE getting assoc to dedicated slice to (target) */
+  if ( (dump_ue_list(&s[to]->UEs) == 1) && (to > 0) )
+  {
+    /* Reduce the time_schd value from default slice */
+    ((static_slice_param_t *)s[0]->algo_data)->timeSchd -= ((static_slice_param_t *)s[to]->algo_data)->timeSchd;
+    LOG_I(MAC,"First UEID:%d associated with slice:%d, def slice timeschd:%d ded slice timeschd:%d\n",
+          UE_id, to, ((static_slice_param_t *)s[0]->algo_data)->timeSchd, ((static_slice_param_t *)s[to]->algo_data)->timeSchd);
+  } 
+
+  /*update UE:Slice association */
   assoc[UE_id] = to;
 }
 
@@ -139,7 +168,7 @@ int addmod_static_slice_dl(slice_info_t *si,
     RET_FAIL(-1, "%s(): Dedicated slice id:%d, timeSchd:%d exceeds 80\n", __func__, id, dl->timeSchd);
   
   int index = _exists_slice(si->num, si->s, id);
-  LOG_I(FLEXRAN_AGENT, "[%s]Enter index:%d si->num:%d id:%d\n", __func__, index, si->num,id);
+  LOG_I(MAC, "[%s]Enter index:%d si->num:%d id:%d\n", __func__, index, si->num,id);
   if (index >= 0) 
   {
     /* This part of code will only execute during default slice updation or 
@@ -180,12 +209,25 @@ int addmod_static_slice_dl(slice_info_t *si,
       if (!s->dl_algo.data)
         s->dl_algo.data = s->dl_algo.setup();
     }
+    /* Check if time_schd of dedicated slice is getting reduced */
+    if ( ( ((static_slice_param_t *)s->algo_data)->timeSchd > dl->timeSchd) &&
+         (dump_ue_list(&s->UEs) > 0) )     
+    {
+      /* In that case timeSchd difference should be added back to default slice */
+      ((static_slice_param_t *)si->s[0]->algo_data)->timeSchd +=
+          ( ((static_slice_param_t *)s->algo_data)->timeSchd - dl->timeSchd);
+      LOG_I(MAC, "adding back %d time_sch to def slice,updated def slice time_schd:%d\n",
+            ( ((static_slice_param_t *)s->algo_data)->timeSchd - dl->timeSchd),
+            ((static_slice_param_t *)si->s[0]->algo_data)->timeSchd);
+    }
+
     if (dl) 
     {
       free(s->algo_data);
       s->algo_data = dl;
     }
-    LOG_I(FLEXRAN_AGENT, "[%s]return index:%d si->num:%d id:%d\n", __func__, index, si->num,id);
+    LOG_I(MAC, "Updated ded slice:%d time_schd:%d\n", s->id, ((static_slice_param_t *)s->algo_data)->timeSchd);
+    LOG_D(MAC, "[%s]return index:%d si->num:%d id:%d\n", __func__, index, si->num,id);
     return index;
   }
 
@@ -238,7 +280,7 @@ int addmod_static_slice_dl(slice_info_t *si,
     ns->dl_algo.data = ns->dl_algo.setup();
   ns->algo_data = dl;
 
-  LOG_I(FLEXRAN_AGENT, "[%s]New Slice added index:%d si->num:%d id:%d\n", __func__, index, si->num,ns->id);
+  LOG_I(MAC, "[%s]New Slice added index:%d si->num:%d id:%d\n", __func__, index, si->num,ns->id);
   return si->num - 1;
 }
 
@@ -337,16 +379,26 @@ int remove_static_slice_ul(slice_info_t *si, uint8_t slice_idx) {
   return 1;
 }
 
+uint8_t reset_bit[MAX_STATIC_SLICES] = {0xe, 0xd, 0xb, 0x7};
+
 void static_dl(module_id_t mod_id,
                int CC_id,
                frame_t frame,
-               sub_frame_t subframe) {
+               sub_frame_t subframe) 
+{
   //LOG_I(FLEXRAN_AGENT, "[%s] SF %d\n", __func__, subframe);
   UE_info_t *UE_info = &RC.mac[mod_id]->UE_info;
+  static uint16_t slice_schd_time[MAX_STATIC_SLICES] = {0};
+  static uint8_t slice_schd_idx = 0;
+  static uint8_t slice_mask = 0;
+  uint8_t iter = 0;
+  int i;
+  static_slice_param_t *p = NULL;
 
   store_dlsch_buffer(mod_id, CC_id, frame, subframe);
 
-  for (int UE_id = UE_info->list.head; UE_id >= 0; UE_id = UE_info->list.next[UE_id]) {
+  for (int UE_id = UE_info->list.head; UE_id >= 0; UE_id = UE_info->list.next[UE_id]) 
+  {
     UE_sched_ctrl_t *ue_sched_ctrl = &UE_info->UE_sched_ctrl[UE_id];
 
     /* initialize per-UE scheduling information */
@@ -360,7 +412,9 @@ void static_dl(module_id_t mod_id,
   const int RBGsize = get_min_rb_unit(mod_id, CC_id);
   uint8_t *vrb_map = RC.mac[mod_id]->common_channels[CC_id].vrb_map;
   uint8_t rbgalloc_mask[N_RBG_MAX];
-  for (int i = 0; i < N_RBG; i++) {
+  
+  for (i = 0; i < N_RBG; i++) 
+  {
     // calculate mask: init to one + "AND" with vrb_map:
     // if any RB in vrb_map is blocked (1), the current RBG will be 0
     rbgalloc_mask[i] = 1;
@@ -368,9 +422,13 @@ void static_dl(module_id_t mod_id,
       rbgalloc_mask[i] &= !vrb_map[RBGsize * i + j];
   }
 
+  /* Considering slice parameters can not be updated in background */
   slice_info_t *s = RC.mac[mod_id]->pre_processor_dl.slices;
-  int max_num_ue;
-  switch (s->num) {
+  int max_num_ue; /*Max UE to be scheduled per slice */
+
+#if 0
+  switch (s->num) 
+  {
     case 1:
       max_num_ue = 4;
       break;
@@ -381,14 +439,44 @@ void static_dl(module_id_t mod_id,
       max_num_ue = 1;
       break;
   }
-  for (int i = 0; i < s->num; ++i) {
-    if (s->s[i]->UEs.head < 0)
+#endif
+
+  /* As single slice get scehduled per SF, hence 4UEs can be scheduled per slice*/ 
+  max_num_ue = 4;
+
+  /* check & set slice scheduling timeframe in the begining of every SFN*/
+  if (subframe == 0)
+  {
+    for (i = 0; i < s->num; ++i)
+    {
+      p = s->s[i]->algo_data;
+      slice_schd_time[i] = p->timeSchd;
+      
+      if(slice_schd_time[i])
+        slice_mask |= (1 << i);
+    }
+  }
+
+  for (i = slice_schd_idx; (i < s->num) && (slice_mask != 0) && (iter < s->num); (i = (i + 1) % s->num) ) 
+  {
+    iter++;
+    /* Check if slice has scheduling oppertunities left in timeframe */
+    if (slice_schd_time[i] == 0)
       continue;
+
+    /* Skip Slice scheduling in case no UE is associated */
+    if (s->s[i]->UEs.head < 0)
+    {
+      continue;
+    }
+
     uint8_t rbgalloc_slice_mask[N_RBG_MAX];
     memset(rbgalloc_slice_mask, 0, sizeof(rbgalloc_slice_mask));
-    static_slice_param_t *p = s->s[i]->algo_data;
     int n_rbg_sched = 0;
-    for (int rbg = p->posLow; rbg <= p->posHigh && rbg <= N_RBG; ++rbg) {
+    
+    p = s->s[i]->algo_data;
+    for (int rbg = p->posLow; rbg <= p->posHigh && rbg <= N_RBG; ++rbg) 
+    {
       rbgalloc_slice_mask[rbg] = rbgalloc_mask[rbg];
       n_rbg_sched += rbgalloc_mask[rbg];
     }
@@ -402,6 +490,20 @@ void static_dl(module_id_t mod_id,
                          n_rbg_sched,
                          rbgalloc_slice_mask,
                          s->s[i]->dl_algo.data);
+
+    if (s->num > 1)
+      slice_schd_idx = ( (slice_schd_idx + 1) % s->num); /*all slices get schedule in RR */
+    
+    if (slice_schd_time[i] >= 10)
+    {
+      slice_schd_time[i] -= 10;
+
+      if (slice_schd_time[i] == 0)
+        slice_mask &= reset_bit[i]; /*reset slice bit */
+
+      break; /* only single slice per subframe scheduling allowed*/
+    }
+
   }
 
   // the following block is meant for validation of the pre-processor to check

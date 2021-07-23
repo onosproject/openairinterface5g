@@ -90,7 +90,7 @@ const uint8_t pusch_repetition_Table8_2_36213[3][4]= {
 };
 
 extern mui_t rrc_eNB_mui;
-
+int32_t ulsch_err;
 //-----------------------------------------------------------------------------
 /*
 * When data are received on PHY and transmitted to MAC
@@ -188,7 +188,7 @@ rx_sdu(const module_id_t enb_mod_idP,
         UE_template_ptr->scheduled_ul_bytes = 0;
       }
     } else {  // sduP == NULL => error
-      LOG_W(MAC, "[eNB %d][PUSCH %d] CC_id %d %d.%d ULSCH Error round %d ul_cqi %d UE_id %d RNTI %x len %d UL-F-Timer[%d] Cons-err[%d]\n",
+      /*LOG_W(MAC, "[eNB %d][PUSCH %d] CC_id %d %d.%d ULSCH Error round %d ul_cqi %d UE_id %d RNTI %x len %d UL-F-Timer[%d] Cons-err[%d]\n",
             enb_mod_idP,
             harq_pid,
             CC_idP,
@@ -200,8 +200,8 @@ rx_sdu(const module_id_t enb_mod_idP,
             current_rnti,
             sdu_lenP,
             UE_scheduling_control->ul_failure_timer,
-            UE_scheduling_control->ul_consecutive_errors);
-
+            UE_scheduling_control->ul_consecutive_errors);*/
+      ulsch_err++;
       if (ul_cqi > 200) { // too high energy pattern
         UE_scheduling_control->pusch_snr[CC_idP] = ul_cqi;
         LOG_W(MAC, "[MAC] Too high energy pattern\n");

@@ -59,6 +59,11 @@ extern uint16_t frame_cnt;
 #include "common/ran_context.h"
 #include "SCHED/sched_common.h"
 
+#ifdef ENABLE_RAN_SLICING
+#include "openair2/LAYER2/MAC/slicing/slicing.h"
+#endif
+
+
 extern RAN_CONTEXT_t RC;
 
 
@@ -2120,10 +2125,16 @@ get_aggregation(uint8_t bw_index,
 /*
  * Dump the UE_list into LOG_T(MAC)
  */
-void
-dump_ue_list(UE_list_t *listP) {
+unsigned int
+dump_ue_list(UE_list_t *listP) 
+{
+  unsigned int cnt = 0;
   for (int j = listP->head; j >= 0; j = listP->next[j])
-    LOG_T(MAC, "DL list node %d => %d\n", j, listP->next[j]);
+  {
+    LOG_D(MAC, "DL list node %d => %d\n", j, listP->next[j]);
+    cnt++;
+  }
+  return cnt;
 }
 
 //------------------------------------------------------------------------------
@@ -2239,6 +2250,11 @@ add_new_ue(module_id_t mod_idP,
   return -1;
 }
 
+#ifdef ENABLE_RAN_SLICING
+extern int g_duSocket;
+extern struct sockaddr_in g_RicAddr;
+extern socklen_t g_addr_size;
+#endif
 //------------------------------------------------------------------------------
 /*
  * Remove MAC context of UE
@@ -2252,6 +2268,7 @@ rrc_mac_remove_ue(module_id_t mod_idP,
   int UE_id = find_UE_id(mod_idP, rntiP);
   eNB_UE_STATS *ue_stats = NULL;
   int pCC_id = -1;
+  pp_impl_param_t* dl = &RC.mac[mod_idP]->pre_processor_dl;
 
   if (UE_id == -1) {
     LOG_W(MAC,"rrc_mac_remove_ue: UE %x not found\n",
@@ -2267,8 +2284,50 @@ rrc_mac_remove_ue(module_id_t mod_idP,
   UE_info->active[UE_id] = FALSE;
   UE_info->num_UEs--;
 
+#ifdef ENABLE_RAN_SLICING
+  /* Send UE Detach Notification to RIC */
+  apiMsg  apiToRic;
+  ueStatusInd *ueDetachInd;
+  int bytesSent = 0;
+  int errnum;
+  slice_info_t *si = dl->slices;
+  uint8_t assoc_slice = si->UE_assoc_slice[UE_id]; 
+
+  apiToRic.apiID = UE_DETACH_IND;
+  apiToRic.apiSize = sizeof(ueStatusInd);
+
+  ueDetachInd = (ueStatusInd *)apiToRic.apiBuff;
+  ueDetachInd->rnti = rntiP;
+  ueDetachInd->ueId = UE_id;
+
+  bytesSent = sendto(g_duSocket, (void *)&apiToRic, sizeof(apiToRic),0,
+             (struct sockaddr *)&g_RicAddr, g_addr_size);
+
+  if (bytesSent > 0)
+  {
+    LOG_I(MAC,"UE Detach Indication (%d Bytes) sent to RIC !\n", bytesSent);
+  }
+  else
+  {
+    LOG_E(MAC,"Error in UDP Send :(\n");
+    errnum = errno;
+    fprintf(stderr, "Value of errno: %d\n", errno);
+    perror("Error printed by perror");
+    fprintf(stderr, "Error opening file: %s\n", strerror( errnum ));
+  }
+
+  /* Check if this is the last UE associated to respective dedicated slice */
+  if ( (dump_ue_list(&si->s[assoc_slice]->UEs) == 1) && (assoc_slice > 0) )
+  {
+    /* Add the time_schd value of this dedicated slice back to default slice */
+    ((static_slice_param_t *)si->s[0]->algo_data)->timeSchd += ((static_slice_param_t *)si->s[assoc_slice]->algo_data)->timeSchd;
+    LOG_I(MAC,"Last UEID:%d removed from slice:%d, def slice timeschd:%d\n",
+          UE_id, assoc_slice, ((static_slice_param_t *)si->s[0]->algo_data)->timeSchd);
+  } 
+
+#endif
+
   remove_ue_list(&UE_info->list, UE_id);
-  pp_impl_param_t* dl = &RC.mac[mod_idP]->pre_processor_dl;
   if (dl->slices) // inform slice implementation about new UE
     dl->remove_UE(dl->slices, UE_id);
   pp_impl_param_t* ul = &RC.mac[mod_idP]->pre_processor_ul;

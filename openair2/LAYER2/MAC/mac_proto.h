@@ -658,7 +658,7 @@ void store_dlsch_buffer(module_id_t Mod_id, int CC_id, frame_t frameP, sub_frame
 int prev(UE_list_t *listP, int nodeP);
 void add_ue_list(UE_list_t *listP, int UE_id);
 int remove_ue_list(UE_list_t *listP, int UE_id);
-void dump_ue_list(UE_list_t *listP);
+unsigned int dump_ue_list(UE_list_t *listP);
 void init_ue_list(UE_list_t *listP);
 int UE_num_active_CC(UE_info_t *listP, int ue_idP);
 int UE_PCCID(module_id_t mod_idP, int ue_idP);

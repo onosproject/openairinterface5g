@@ -510,7 +510,7 @@ static  void wait_nfapi_init(char *thread_name) {
   printf( "NFAPI: got sync (%s)\n", thread_name);
 }
 
-extern void apply_update_dl_slice_config(mid_t mod_id, Protocol__FlexSliceDlUlConfig *dl);
+extern int apply_update_dl_slice_config(mid_t mod_id, Protocol__FlexSliceDlUlConfig *dl);
 int main ( int argc, char **argv )
 {
   int i;
@@ -718,7 +718,10 @@ int main ( int argc, char **argv )
 
     if (!NODE_IS_CU(node_type))
     {
-#if ENABLE_RAN_SLICING
+#ifdef ENABLE_RAN_SLICING
+        /* Connect with RIC SIM */
+        //connectWithRic();
+
         LOG_I(ENB_APP," RAN SLICING is Enabled, Setting up Default Slice\n");
         Protocol__FlexSliceDlUlConfig dl;
         Protocol__FlexSlice *defSlice = NULL;
@@ -754,8 +757,8 @@ int main ( int argc, char **argv )
             defSlice->has_id, defSlice->id, defSlice->label);
         LOG_I(ENB_APP, "dl:defSlice:scheduler = %s params_case = %d\n",
             defSlice->scheduler, defSlice->params_case);
-        LOG_I(ENB_APP, "dl:efSlice:StaticSliceCfg:has_poslow = %d poslow = %d has_poshigh= %d poshigh = %d\n",
-            StaticSliceCfg->has_poslow, StaticSliceCfg->poslow, StaticSliceCfg->has_poshigh, StaticSliceCfg->poshigh);
+        LOG_I(ENB_APP, "dl:efSlice:StaticSliceCfg:has_poslow=%d poslow=%d, has_poshigh=%d poshigh=%d, has_timeschd=%d timeschd=%d\n",
+            StaticSliceCfg->has_poslow, StaticSliceCfg->poslow, StaticSliceCfg->has_poshigh, StaticSliceCfg->poshigh, StaticSliceCfg->has_timeschd, StaticSliceCfg->timeschd);
  
         apply_update_dl_slice_config(0, &dl);
 #else
