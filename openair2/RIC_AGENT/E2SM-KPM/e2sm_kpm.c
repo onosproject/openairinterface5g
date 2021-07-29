@@ -538,7 +538,9 @@ e2sm_kpm_decode_and_handle_action_def(uint8_t *def_buf,
                                           ric_subscription_t* rs,
                                           ric_agent_info_t *ric)
 {
-    E2SM_KPM_E2SM_KPMv2_ActionDefinition_t *actionDef;
+    E2SM_KPM_E2SM_KPMv2_ActionDefinition_t *actionDef = NULL;
+    // or uncomment below:
+    //actionDef = calloc(1, sizeof(E2SM_KPM_E2SM_KPMv2_ActionDefinition_t));
     E2SM_KPM_E2SM_KPMv2_ActionDefinition_Format1_t *actionDefFormat1;
     E2SM_KPM_MeasurementInfoItem_KPMv2_t *actionDefMeasInfoItem;
     E2SM_KPM_MeasurementTypeID_KPMv2_t localMeasID;
