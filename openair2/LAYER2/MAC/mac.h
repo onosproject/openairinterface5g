@@ -1710,7 +1710,9 @@ typedef enum apiid_e {
     SLICE_CREATE_UPDATE_REQ,
     UE_SLICE_ASSOC_REQ,
     SLICE_CREATE_UPDATE_RESP,
-    UE_SLICE_ASSOC_RESP
+    UE_SLICE_ASSOC_RESP,
+    SLICE_DELETE_REQ,
+    SLICE_DELETE_RESP
 }apiId;
 
 typedef enum resp_status_e {
@@ -1734,6 +1736,10 @@ typedef struct slice_req {
   uint32_t  timeSchd;
 }sliceCreateUpdateReq;
 
+typedef struct slice_del {
+  uint32_t  sliceId;
+}sliceDeleteReq;
+
 typedef struct ue_slice_assoc {
   unsigned int      rnti;
   uint32_t          sliceId;
@@ -1750,6 +1756,11 @@ typedef struct ue_slice_assoc_resp {
   int           ueId;
   uint32_t      sliceId;
 }ueSliceAssocResp;
+
+typedef struct slice_del_resp {
+  uint8_t       status;
+  uint32_t      sliceId;
+}sliceDeleteResp;
 
 #endif
 
