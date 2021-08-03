@@ -344,13 +344,13 @@ static int e2sm_kpm_control(ric_agent_info_t *ric,ric_control_t *control)
 
 static char *time_stamp(void)
 {
-    char *timestamp = (char *)malloc(sizeof(char) * 16);
+    char *timestamp = (char *)malloc(sizeof(char) * 128);
     time_t ltime;
     ltime=time(NULL);
     struct tm *tm;
     tm=localtime(&ltime);
 
-    sprintf(timestamp,"%04d/%02d/%02d | %02d:%02d:%02d", tm->tm_year+1900, tm->tm_mon,
+    sprintf(timestamp,"%d/%d/%d | %d:%d:%d", tm->tm_year+1900, tm->tm_mon,
             tm->tm_mday, tm->tm_hour, tm->tm_min, tm->tm_sec);
     return timestamp;
 }
@@ -463,10 +463,10 @@ static int e2sm_kpm_gp_timer_expiry(
 		gettimeofday(&g_captureStartTime, NULL);
 	}
 
-    char *time = time_stamp();
+    //char *time = time_stamp();
     //RIC_AGENT_INFO("[%s] +++  Granularity Period expired, timer_id %ld function_id %ld +++ \n",
     //               time, timer_id, function_id);
-    free(time);
+    //free(time);
 
     for (i = 0; i < MAX_KPM_MEAS; i++)
     {
