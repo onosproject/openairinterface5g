@@ -79,8 +79,8 @@ void _move_UE(slice_t **s, uint8_t *assoc, int UE_id, int to)
     {
       /* Add the time_schd value of this dedicated slice back to default slice */
       ((static_slice_param_t *)s[0]->algo_data)->timeSchd += ((static_slice_param_t *)s[i]->algo_data)->timeSchd;
-      LOG_I(MAC,"Last UEID:%d removed from slice:%d, def slice timeschd:%d\n",
-            UE_id, i, ((static_slice_param_t *)s[0]->algo_data)->timeSchd);
+      LOG_I(MAC,"Last UEID:%d removed from sliceIdx:%d sliceId:%d, def slice timeschd:%d\n",
+            UE_id, i, s[i]->id, ((static_slice_param_t *)s[0]->algo_data)->timeSchd);
     }
   }
 
@@ -92,8 +92,8 @@ void _move_UE(slice_t **s, uint8_t *assoc, int UE_id, int to)
   {
     /* Reduce the time_schd value from default slice */
     ((static_slice_param_t *)s[0]->algo_data)->timeSchd -= ((static_slice_param_t *)s[to]->algo_data)->timeSchd;
-    LOG_I(MAC,"First UEID:%d associated with slice:%d, def slice timeschd:%d ded slice timeschd:%d\n",
-          UE_id, to, ((static_slice_param_t *)s[0]->algo_data)->timeSchd, ((static_slice_param_t *)s[to]->algo_data)->timeSchd);
+    LOG_I(MAC,"First UEID:%d associated with sliceIdx:%d sliceId:%d, def slice timeschd:%d ded slice timeschd:%d\n",
+          UE_id, to, s[to]->id, ((static_slice_param_t *)s[0]->algo_data)->timeSchd, ((static_slice_param_t *)s[to]->algo_data)->timeSchd);
   } 
 
   /*update UE:Slice association */
@@ -142,6 +142,8 @@ slice_t *_remove_slice(uint8_t *n, slice_t **s, uint8_t *assoc, int idx) {
 
   if (sr->label)
     free(sr->label);
+
+  LOG_I(MAC, "[%s] sliceIdx:%d removed \n",__func__, idx); 
 
   return sr;
 }
