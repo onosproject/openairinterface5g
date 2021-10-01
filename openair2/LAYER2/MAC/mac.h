@@ -74,6 +74,7 @@
 #include "PHY/LTE_TRANSPORT/transport_common.h"
 
 #include "targets/ARCH/COMMON/common_lib.h"
+#include "intertask_interface.h"
 
 /** @defgroup _mac  MAC
  * @ingroup _oai2
@@ -1705,9 +1706,7 @@ typedef  struct {
 #ifdef ENABLE_RAN_SLICING
 
 typedef enum apiid_e {
-    UE_ATTACH_IND = 1,
-    UE_DETACH_IND,
-    SLICE_CREATE_UPDATE_REQ,
+    SLICE_CREATE_UPDATE_REQ = 1,
     UE_SLICE_ASSOC_REQ,
     SLICE_CREATE_UPDATE_RESP,
     UE_SLICE_ASSOC_RESP,
@@ -1719,7 +1718,7 @@ typedef enum resp_status_e {
     API_RESP_SUCCESS =1,
     API_RESP_FAILURE 
 }apiRespStatus;
-
+/*
 typedef struct msg_st {
   unsigned int   apiID;
   unsigned int   apiSize;
@@ -1727,9 +1726,16 @@ typedef struct msg_st {
 }apiMsg;
 
 typedef struct ue_status {
-  uint16_t       rnti;
-  int            ueId;
+  uint16_t   	rnti;
+  int        	ueId;
+  uint32_t   	eNB_ue_s1ap_id :24;
+  uint32_t   	mme_ue_s1ap_id;
+  uint8_t    	e_rab_id;
+  uint8_t    	qci;
+  uint16_t 		cu_ue_f1ap_id;
+  uint16_t 		du_ue_f1ap_id;
 }ueStatusInd;
+*/
 
 typedef struct slice_req {
   uint32_t  sliceId;
@@ -1761,6 +1767,9 @@ typedef struct slice_del_resp {
   uint8_t       status;
   uint32_t      sliceId;
 }sliceDeleteResp;
+
+//#define DU_SLICE_API_RESP(mSGpTR)        (mSGpTR)->ittiMsg.du_slice_api_resp
+//MESSAGE_DEF(DU_SLICE_API_RESP, MESSAGE_PRIORITY_MED, apiMsg, du_slice_api_resp)
 
 #endif
 

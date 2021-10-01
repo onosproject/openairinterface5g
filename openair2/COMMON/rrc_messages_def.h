@@ -79,3 +79,5 @@ MESSAGE_DEF(RRC_SUBFRAME_PROCESS,       MESSAGE_PRIORITY_MED,       RrcSubframeP
 
 // eNB: RLC -> RRC messages
 MESSAGE_DEF(RLC_SDU_INDICATION,         MESSAGE_PRIORITY_MED,       RlcSduIndication,           rlc_sdu_indication)
+
+MESSAGE_DEF(CU_EVENT_TRIGGER,        	MESSAGE_PRIORITY_MED,       eventTrigger,               cu_event_trigger)

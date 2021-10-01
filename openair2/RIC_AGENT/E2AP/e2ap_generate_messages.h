@@ -29,9 +29,10 @@
 #define _E2AP_GENERATE_MESSAGES_H
 
 #include "ric_agent.h"
+#include "E2AP_E2AP-PDU.h"
 
-extern int e2ap_generate_e2_setup_request(ric_agent_info_t *ric,
-				   uint8_t **buffer,uint32_t *len);
+extern int e2ap_generate_e2_setup_request(ranid_t   ranid,
+				   uint8_t **buffer,uint32_t *len, e2node_type_t e2node_type);
 int e2ap_generate_ric_subscription_response(ric_agent_info_t *ric,
 					    ric_subscription_t *rs,
 					    uint8_t **buffer,uint32_t *len);
@@ -50,4 +51,12 @@ int e2ap_generate_ric_service_update(ric_agent_info_t *ric,
 int e2ap_generate_reset_response(ric_agent_info_t *ric,
 				 uint8_t **buffer,uint32_t *len);
 
+int du_e2ap_generate_ric_control_failure(du_ric_agent_info_t *ric,
+        ric_control_t *rc, uint8_t **buffer,uint32_t *len);
+
+int du_e2ap_generate_ric_control_acknowledge(du_ric_agent_info_t *ric,
+        ric_control_t *rc, uint8_t **buffer,uint32_t *len);
+void generate_e2apv1_indication_request_parameterized(E2AP_E2AP_PDU_t *e2ap_pdu, long requestorId, long instanceId, long ranFunctionId, long actionId, long seqNum, uint8_t *ind_header_buf, int header_length, uint8_t *ind_message_buf, int message_length);
+
+int e2ap_asn1c_encode_pdu(E2AP_E2AP_PDU_t* pdu, unsigned char **buffer);
 #endif /* _E2AP_GENERATE_MESSAGES_H */

@@ -37,6 +37,9 @@
 #include "rrc_eNB_UE_context.h"
 #include "msc.h"
 
+#ifdef ENABLE_RAN_SLICING
+#include "ric_agent.h"
+#endif
 
 //------------------------------------------------------------------------------
 void
@@ -172,6 +175,9 @@ rrc_eNB_get_ue_context(
   }
 }
 
+#ifdef ENABLE_RAN_SLICING
+extern uint8_t rsm_emm_event_trigger;
+#endif
 
 //------------------------------------------------------------------------------
 void rrc_eNB_remove_ue_context(
@@ -192,6 +198,12 @@ void rrc_eNB_remove_ue_context(
     return;
   }
 
+#ifdef ENABLE_RAN_SLICING
+  eventTrigger CUEventTriggerToRic;
+  ueStatusInd *ueDetachInd;
+  module_id_t module_id = ctxt_pP->module_id;
+#endif
+
   RB_REMOVE(rrc_ue_tree_s, &rrc_instance_pP->rrc_ue_head, ue_context_pP);
   MSC_LOG_EVENT(
     MSC_RRC_ENB,
@@ -209,8 +221,41 @@ void rrc_eNB_remove_ue_context(
       {
         rrc_release_info.RRC_release_ctrl[release_num].flag = 0;
         rrc_release_info.num_UEs--;
-        LOG_E(RRC,"******* CU RRC Rel info Reset ! rel_num:%d numUE:%d RNTI:%x *********** \n",
-              release_num, rrc_release_info.num_UEs, ue_context_pP->ue_context.rnti);
+        LOG_E(RRC,"******* CU RRC Rel info Reset ! rel_num:%d numUE:%d RNTI:%x ERABs#:%d %d %d %d*********** \n",
+              release_num, rrc_release_info.num_UEs, ue_context_pP->ue_context.rnti, ue_context_pP->ue_context.nb_of_e_rabs,
+          ue_context_pP->ue_context.nb_release_of_e_rabs, ue_context_pP->ue_context.e_rab[0].param.e_rab_id, ue_context_pP->ue_context.e_rab[0].param.qos.qci);
+
+#ifdef ENABLE_RAN_SLICING
+      if ( (rsm_emm_event_trigger == 1) &&
+           (ue_context_pP->ue_context.nb_of_e_rabs != 0) )
+      {
+        /* Prepare and Send Detach Event Trigger for each DRB */
+        MessageDef *m = itti_alloc_new_message(TASK_RRC_ENB, CU_EVENT_TRIGGER);
+        CUEventTriggerToRic.eventTriggerType = UE_DETACH_EVENT_TRIGGER;
+        CUEventTriggerToRic.eventTriggerSize = sizeof(ueStatusInd);
+
+        ueDetachInd = (ueStatusInd *)CUEventTriggerToRic.eventTriggerBuff;
+        ueDetachInd->rnti = ue_context_pP->ue_context.rnti;
+        ueDetachInd->eNB_ue_s1ap_id = ue_context_pP->ue_context.eNB_ue_s1ap_id;
+        ueDetachInd->mme_ue_s1ap_id = ue_context_pP->ue_context.mme_ue_s1ap_id;
+        ueDetachInd->e_rab_id = ue_context_pP->ue_context.e_rab[0].param.e_rab_id;
+        ueDetachInd->qci = ue_context_pP->ue_context.e_rab[0].param.qos.qci;
+        //ueDetachInd->cu_ue_f1ap_id = f1ap_get_cu_ue_f1ap_id(&f1ap_cu_inst[instance],
+        //                                                    ueDetachInd->rnti);
+        //ueDetachInd->du_ue_f1ap_id = f1ap_get_du_ue_f1ap_id(&f1ap_cu_inst[instance],
+        //                                                    ueDetachInd->rnti);
+
+        CU_EVENT_TRIGGER(m).eventTriggerType = CUEventTriggerToRic.eventTriggerType;
+        CU_EVENT_TRIGGER(m).eventTriggerSize = CUEventTriggerToRic.eventTriggerSize;
+
+        memcpy(CU_EVENT_TRIGGER(m).eventTriggerBuff, 
+               CUEventTriggerToRic.eventTriggerBuff, 
+               CUEventTriggerToRic.eventTriggerSize);
+
+        itti_send_msg_to_task(TASK_RIC_AGENT, module_id, m);
+      }
+#endif
+
         break;
       }
     }

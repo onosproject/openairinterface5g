@@ -52,6 +52,8 @@
 
 #define RRC_MAC_DRX_CONFIG_REQ(mSGpTR)           (mSGpTR)->ittiMsg.rrc_mac_drx_config_req
 
+#define DU_SLICE_API_RESP(mSGpTR)        		 (mSGpTR)->ittiMsg.du_slice_api_resp
+
 // Some constants from "LAYER2/MAC/defs.h"
 #define BCCH_SDU_SIZE                           (512)
 #define BCCH_SDU_MBMS_SIZE                      (512)
@@ -158,5 +160,11 @@ typedef struct rrc_mac_drx_config_req_s {
   /* DRX configuration from MacMainConfig to configure UE's local timers */
   LTE_DRX_Config_t * drx_Configuration;
 } rrc_mac_drx_config_req_t;
+
+typedef struct msg_st {
+  unsigned int   apiID;
+  unsigned int   apiSize;
+  uint8_t        apiBuff[500];
+}apiMsg;
 
 #endif /* MAC_MESSAGES_TYPES_H_ */

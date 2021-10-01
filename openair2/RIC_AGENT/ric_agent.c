@@ -31,6 +31,9 @@
 #include "e2ap_handler.h"
 #include "e2sm_kpm.h"
 
+#ifdef ENABLE_RAN_SLICING
+#include "e2sm_rsm.h"
+#endif
 #define DISABLE_SCTP_MULTIHOMING 1
 
 extern RAN_CONTEXT_t RC;
@@ -311,7 +314,7 @@ static int ric_agent_handle_sctp_new_association_resp(
     timer_remove(ric->ric_connect_timer_id);
 
     /* Send an E2Setup request to RIC. */
-    ret = e2ap_generate_e2_setup_request(ric, outbuf, outlen);
+    ret = e2ap_generate_e2_setup_request(ric->ranid, outbuf, outlen, e2_conf[0]->e2node_type);
     if (ret) {
         RIC_AGENT_ERROR("failed to generate E2setupRequest; disabling ranid %u!\n",
                 ric->ranid);
@@ -365,11 +368,41 @@ static void ric_agent_handle_timer_expiry(
         ret = e2ap_handle_timer_expiry(ric, timer_id, arg, outbuf, outlen);
     } else if (timer_id == ric->gran_prd_timer_id) {
         ret = e2ap_handle_gp_timer_expiry(ric, timer_id, arg, outbuf, outlen);
-	} else {
+    } else {
         RIC_AGENT_INFO("invalid timer expiry instance %u timer_id %ld", instance, timer_id);
     }
     DevAssert(ret == 0);
 }
+
+#ifdef ENABLE_RAN_SLICING
+static void ric_agent_prepare_ric_ind(
+        instance_t instance,
+        eventTrigger *CUeventTrigger,
+        uint8_t **outbuf,
+        uint32_t *outlen)
+{
+    ric_agent_info_t* ric;
+    ueStatusInd *ueAttachDetachEvTrigger;
+    int ret = 0;
+
+    ric = ric_agent_info[instance];
+        
+    ueAttachDetachEvTrigger = (ueStatusInd *)CUeventTrigger->eventTriggerBuff;
+
+    ret = e2sm_rsm_ricInd(ric, 
+                    ric->e2sm_rsm_function_id, 
+                    ric->e2sm_rsm_request_id, 
+                    ric->e2sm_rsm_instance_id,
+                    CUeventTrigger->eventTriggerType,
+                    ueAttachDetachEvTrigger,
+                    outbuf,
+                    outlen);
+
+    DevAssert(ret == 0);
+    
+    return;
+}
+#endif
 
 void *ric_agent_task(void *args)
 {
@@ -379,9 +412,13 @@ void *ric_agent_task(void *args)
     uint8_t *outbuf = NULL;
     uint32_t outlen = 0;
 
-    RIC_AGENT_INFO("starting RIC agent task\n");
+    RIC_AGENT_INFO("starting CU E2 agent task\n");
 
     e2sm_kpm_init();
+
+#ifdef ENABLE_RAN_SLICING
+    e2sm_rsm_init(e2_conf[0]->e2node_type);
+#endif
 
     for (i = 0; i < RC.nb_inst; ++i) {
         if (e2_conf[i]->enabled) {
@@ -427,6 +464,17 @@ void *ric_agent_task(void *args)
                         &outbuf,
                         &outlen);
                 break;
+#ifdef ENABLE_RAN_SLICING
+            case CU_EVENT_TRIGGER:
+                RIC_AGENT_INFO("Received CU_EVENT_TRIGGER for instance %d\n",
+                  ITTI_MESSAGE_GET_INSTANCE(msg));
+                ric_agent_prepare_ric_ind(
+                        ITTI_MESSAGE_GET_INSTANCE(msg),
+                        &msg->ittiMsg.cu_event_trigger,
+                        &outbuf,
+                        &outlen);
+                break;
+#endif
             default:
                 RIC_AGENT_ERROR("unhandled message: %d:%s\n",
                         ITTI_MSG_ID(msg), ITTI_MSG_NAME(msg));
@@ -467,32 +515,52 @@ void *ric_agent_task(void *args)
     { RIC_CONFIG_STRING_REMOTE_IPV4_ADDR, \
         NULL, 0, strptr:NULL, defstrval: "127.0.0.1", TYPE_STRING, 0 }, \
     { RIC_CONFIG_STRING_REMOTE_PORT, \
-        NULL, 0, uptr:NULL, defintval:RIC_PORT, TYPE_UINT, 0 }	\
+        NULL, 0, uptr:NULL, defintval:RIC_PORT, TYPE_UINT, 0 }  \
 }
 
-void RCconfig_ric_agent(void) {
+void RCconfig_ric_agent(void) 
+{
     uint16_t i;
     char buf[16];
     paramdef_t ric_params[] = RICPARAMS_DESC;
 
     e2_conf = (e2_conf_t **)calloc(256, sizeof(e2_conf_t));
-    ric_agent_info = (ric_agent_info_t **)calloc(250, sizeof(ric_agent_info_t));
 
-    for (i = 0; i < RC.nb_inst; ++i) {
-        if (!NODE_IS_CU(RC.rrc[i]->node_type)) {
+    if (NODE_IS_CU(RC.rrc[0]->node_type))
+    {
+        ric_agent_info = (ric_agent_info_t **)calloc(250, sizeof(ric_agent_info_t));
+    }
+    else if (NODE_IS_DU(RC.rrc[0]->node_type))
+    {
+        du_ric_agent_info = (du_ric_agent_info_t **)calloc(250, sizeof(du_ric_agent_info_t));
+    }
+
+    for (i = 0; i < RC.nb_inst; ++i) 
+    {
+/*      if (!NODE_IS_CU(RC.rrc[i]->node_type)) {
             continue;
         }
-
+*/
         /* Get RIC configuration. */
         snprintf(buf, sizeof(buf), "%s.[%u].RIC", ENB_CONFIG_STRING_ENB_LIST, i);
         config_get(ric_params, sizeof(ric_params)/sizeof(paramdef_t), buf);
+        
         if (ric_params[RIC_CONFIG_IDX_ENABLED].strptr != NULL
-                && strcmp(*ric_params[RIC_CONFIG_IDX_ENABLED].strptr, "yes") == 0) {
-            RIC_AGENT_INFO("enabled for NB %u\n",i);
+                && strcmp(*ric_params[RIC_CONFIG_IDX_ENABLED].strptr, "yes") == 0) 
+        {
+            RIC_AGENT_INFO("NODE[%d] enabled for NB %u\n",RC.rrc[i]->node_type, i);
 
             e2_conf[i] = (e2_conf_t *)calloc(1,sizeof(e2_conf_t));
-            ric_agent_info[i] = (ric_agent_info_t *)calloc(1, sizeof(ric_agent_info_t));
-            ric_agent_info[i]->assoc_id = -1;
+            if (NODE_IS_CU(RC.rrc[i]->node_type))
+            {
+                ric_agent_info[i] = (ric_agent_info_t *)calloc(1, sizeof(ric_agent_info_t));
+                ric_agent_info[i]->assoc_id = -1;
+            } 
+            else if (NODE_IS_DU(RC.rrc[i]->node_type))
+            {
+                du_ric_agent_info[i] = (du_ric_agent_info_t *)calloc(1, sizeof(du_ric_agent_info_t));
+                du_ric_agent_info[i]->du_assoc_id = -1;
+            }
 
             e2_conf[i]->enabled = 1;
             e2_conf[i]->node_name = strdup(RC.rrc[i]->node_name);
@@ -509,6 +577,9 @@ void RCconfig_ric_agent(void) {
                     break;
                 case ngran_gNB_CU:
                     e2_conf[i]->e2node_type = E2NODE_TYPE_GNB_CU;
+                    break;
+                case ngran_eNB_DU:
+                    e2_conf[i]->e2node_type = E2NODE_TYPE_ENB_DU;
                     break;
                 default:
                     break;

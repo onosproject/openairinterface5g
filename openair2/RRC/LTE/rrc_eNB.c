@@ -96,6 +96,10 @@
 
 #include "SIMULATION/TOOLS/sim.h" // for taus
 
+#ifdef ENABLE_RAN_SLICING
+#include "ric_agent.h"
+#endif
+
 #define ASN_MAX_ENCODE_SIZE 4096
 #define NUMBEROF_DRBS_TOBE_ADDED 1
 static int encode_CG_ConfigInfo(char *buffer,int buffer_size,rrc_eNB_ue_context_t *const ue_context_pP,int *enc_size);
@@ -127,6 +131,10 @@ pthread_mutex_t      lock_ue_freelist;
 
 #ifdef ENABLE_RIC_AGENT
 eNB_RRC_KPI_STATS    rrc_kpi_stats;
+#endif
+
+#ifdef ENABLE_RAN_SLICING
+extern uint8_t rsm_emm_event_trigger;
 #endif
 
 void
@@ -6477,6 +6485,11 @@ rrc_eNB_process_RRCConnectionReconfigurationComplete(
   rnti_t rnti = ue_context_pP->ue_id_rnti;
   module_id_t module_id = ctxt_pP->module_id;
 
+#ifdef ENABLE_RAN_SLICING
+  eventTrigger CUEventTriggerToRic;
+  ueStatusInd *ueAttachInd;
+#endif
+
   if (NODE_IS_MONOLITHIC(RC.rrc[module_id]->node_type)) {
     int UE_id_mac = find_UE_id(module_id, rnti);
 
@@ -6566,9 +6579,12 @@ rrc_eNB_process_RRCConnectionReconfigurationComplete(
   }
 
   /* Loop through DRBs and establish if necessary */
-  if (DRB_configList != NULL) {
-    for (int i = 0; i < DRB_configList->list.count; i++) {  // num max DRB (11-3-8)
-      if (DRB_configList->list.array[i]) {
+  if (DRB_configList != NULL) 
+  {
+    for (int i = 0; i < DRB_configList->list.count; i++) // num max DRB (11-3-8)
+    {
+      if (DRB_configList->list.array[i]) 
+      {
         drb_id = (int)DRB_configList->list.array[i]->drb_Identity;
         LOG_I(RRC, "[eNB %d] Frame  %d : Logical Channel UL-DCCH, Received LTE_RRCConnectionReconfigurationComplete from UE rnti %x, reconfiguring DRB %d/LCID %d\n",
               ctxt_pP->module_id,
@@ -6584,6 +6600,36 @@ rrc_eNB_process_RRCConnectionReconfigurationComplete(
               (int)DRB_configList->list.array[i]->drb_Identity,
               (int)*DRB_configList->list.array[i]->logicalChannelIdentity);
 
+#ifdef ENABLE_RAN_SLICING
+	if (rsm_emm_event_trigger == 1)
+    {
+        /* Prepare and Send Attach Event Trigger for each DRB */
+        MessageDef *m = itti_alloc_new_message(TASK_RRC_ENB, CU_EVENT_TRIGGER);
+        CUEventTriggerToRic.eventTriggerType = UE_ATTACH_EVENT_TRIGGER;
+        CUEventTriggerToRic.eventTriggerSize = sizeof(ueStatusInd);
+
+        ueAttachInd = (ueStatusInd *)CUEventTriggerToRic.eventTriggerBuff;
+        ueAttachInd->rnti = ue_context_pP->ue_context.rnti;
+        ueAttachInd->eNB_ue_s1ap_id = ue_context_pP->ue_context.eNB_ue_s1ap_id; 
+        ueAttachInd->mme_ue_s1ap_id = ue_context_pP->ue_context.mme_ue_s1ap_id;
+        ueAttachInd->e_rab_id = ue_context_pP->ue_context.e_rab[i].param.e_rab_id;
+        ueAttachInd->qci = ue_context_pP->ue_context.e_rab[i].param.qos.qci;
+        ueAttachInd->cu_ue_f1ap_id = 0;//f1ap_get_cu_ue_f1ap_id(&f1ap_cu_inst[ctxt_pP->instance],
+                                       //                     ueAttachInd->rnti); These will be populated in e2sm_rsm.c
+        ueAttachInd->du_ue_f1ap_id = 0;//f1ap_get_du_ue_f1ap_id(&f1ap_cu_inst[ctxt_pP->instance],
+                                       //                     ueAttachInd->rnti);
+
+        CU_EVENT_TRIGGER(m).eventTriggerType = CUEventTriggerToRic.eventTriggerType;
+        CU_EVENT_TRIGGER(m).eventTriggerSize = CUEventTriggerToRic.eventTriggerSize;
+        
+        memcpy(CU_EVENT_TRIGGER(m).eventTriggerBuff, 
+               CUEventTriggerToRic.eventTriggerBuff, 
+               CUEventTriggerToRic.eventTriggerSize);
+
+        itti_send_msg_to_task(TASK_RIC_AGENT, module_id, m);
+	}
+#endif
+    
         if (ue_context_pP->ue_context.DRB_active[drb_id] == 0) {
           ue_context_pP->ue_context.DRB_active[drb_id] = 1;
           LOG_D(RRC, "[eNB %d] Frame %d: Establish RLC UM Bidirectional, DRB %d Active\n",

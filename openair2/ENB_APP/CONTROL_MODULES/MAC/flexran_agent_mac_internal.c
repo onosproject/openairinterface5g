@@ -1031,9 +1031,12 @@ int update_or_remove_dl(mid_t mod_id, Protocol__FlexSlice *s)
       && !s->label && !s->scheduler) 
   {
     LOG_I(FLEXRAN_AGENT, "remove DL slice ID %d\n", s->id);
-    const int rc = flexran_remove_dl_slice(mod_id, s);
+    int rc = flexran_remove_dl_slice(mod_id, s);
     if (!rc)
+    {
       LOG_W(FLEXRAN_AGENT, "error while removing slice ID %d\n", s->id);
+      rc = -1;
+    }
     return rc;
   } 
   else 
