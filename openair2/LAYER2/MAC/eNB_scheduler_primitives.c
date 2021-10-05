@@ -2249,11 +2249,12 @@ add_new_ue(module_id_t mod_idP,
   dump_ue_list(&UE_info->list);
   return -1;
 }
-
+#if 0
 #ifdef ENABLE_RAN_SLICING
 extern int g_duSocket;
 extern struct sockaddr_in g_RicAddr;
 extern socklen_t g_addr_size;
+#endif
 #endif
 //------------------------------------------------------------------------------
 /*
@@ -2284,6 +2285,7 @@ rrc_mac_remove_ue(module_id_t mod_idP,
   UE_info->active[UE_id] = FALSE;
   UE_info->num_UEs--;
 
+#if 0
 #ifdef ENABLE_RAN_SLICING
   /* Send UE Detach Notification to RIC */
   apiMsg  apiToRic;
@@ -2325,6 +2327,21 @@ rrc_mac_remove_ue(module_id_t mod_idP,
           UE_id, assoc_slice, ((static_slice_param_t *)si->s[0]->algo_data)->timeSchd);
   } 
 
+#endif
+#endif
+
+#ifdef ENABLE_RAN_SLICING
+  slice_info_t *si = dl->slices;
+  uint8_t assoc_slice = si->UE_assoc_slice[UE_id];
+
+  /* Check if this is the last UE associated to respective dedicated slice */
+  if ( (dump_ue_list(&si->s[assoc_slice]->UEs) == 1) && (assoc_slice > 0) )
+  {
+    /* Add the time_schd value of this dedicated slice back to default slice */
+    ((static_slice_param_t *)si->s[0]->algo_data)->timeSchd += ((static_slice_param_t *)si->s[assoc_slice]->algo_data)->timeSchd;
+    LOG_I(MAC,"Last UEID:%d removed from slice:%d, def slice timeschd:%d\n",
+          UE_id, assoc_slice, ((static_slice_param_t *)si->s[0]->algo_data)->timeSchd);
+  }
 #endif
 
   remove_ue_list(&UE_info->list, UE_id);

@@ -41,6 +41,14 @@
 #include "E2AP_E2setupRequest.h"
 #include "E2AP_RICsubsequentAction.h"
 #include "E2SM_KPM_E2SM-KPMv2-EventTriggerDefinition.h"
+#include "f1ap_common.h"
+#ifdef ENABLE_RAN_SLICING
+#include "E2SM_RSM_E2SM-RSM-ControlHeader.h"
+#include "E2SM_RSM_E2SM-RSM-Command.h"
+#include "E2SM_RSM_E2SM-RSM-ControlMessage.h"
+#include "E2SM_RSM_E2SM-RSM-EventTriggerDefinition.h"
+#endif
+
 //#include "E2SM_KPM_Trigger-ConditionIE-Item.h"
 
 int e2ap_handle_e2_setup_response(ric_agent_info_t *ric,uint32_t stream,
@@ -55,10 +63,12 @@ int e2ap_handle_e2_setup_response(ric_agent_info_t *ric,uint32_t stream,
     RIC_AGENT_INFO("Received E2SetupResponse (ranid %u)\n",ric->ranid);
 
     for (ptr = resp->protocolIEs.list.array;
-            ptr < &resp->protocolIEs.list.array[resp->protocolIEs.list.count];
-            ptr++) {
+         ptr < &resp->protocolIEs.list.array[resp->protocolIEs.list.count];
+         ptr++) 
+    {
         rie = (E2AP_E2setupResponseIEs_t *)*ptr;
-        if (rie->id == E2AP_ProtocolIE_ID_id_GlobalRIC_ID) {
+        if (rie->id == E2AP_ProtocolIE_ID_id_GlobalRIC_ID) 
+        {
             PLMNID_TO_MCC_MNC(&rie->value.choice.GlobalRIC_ID.pLMN_Identity,
                     ric->ric_mcc,ric->ric_mnc,ric->ric_mnc_digit_len);
             //BIT_STRING_TO_INT32(&rie->value.choice.GlobalRIC_ID.ric_ID,ric->ric_id);
@@ -72,7 +82,40 @@ int e2ap_handle_e2_setup_response(ric_agent_info_t *ric,uint32_t stream,
     return 0;
 }
 
-int e2ap_handle_e2_setup_failure(ric_agent_info_t *ric,uint32_t stream,
+#ifdef ENABLE_RAN_SLICING
+int du_e2ap_handle_e2_setup_response(du_ric_agent_info_t *ric,uint32_t stream,
+                  E2AP_E2AP_PDU_t *pdu)
+{
+    E2AP_E2setupResponse_t *resp;
+    E2AP_E2setupResponseIEs_t *rie,**ptr;
+
+    DevAssert(pdu != NULL);
+    resp = &pdu->choice.successfulOutcome.value.choice.E2setupResponse;
+    
+    RIC_AGENT_INFO("Received E2SetupResponse (ranid %u)\n",ric->ranid);
+
+    for (ptr = resp->protocolIEs.list.array;
+         ptr < &resp->protocolIEs.list.array[resp->protocolIEs.list.count];
+         ptr++) 
+    {
+        rie = (E2AP_E2setupResponseIEs_t *)*ptr;
+        if (rie->id == E2AP_ProtocolIE_ID_id_GlobalRIC_ID)
+        {
+            PLMNID_TO_MCC_MNC(&rie->value.choice.GlobalRIC_ID.pLMN_Identity,
+                    ric->ric_mcc,ric->ric_mnc,ric->ric_mnc_digit_len);
+            //BIT_STRING_TO_INT32(&rie->value.choice.GlobalRIC_ID.ric_ID,ric->ric_id);
+        }
+        /* XXX: handle RANfunction IEs once we have some E2SM support. */
+    }
+
+    RIC_AGENT_INFO("E2SetupResponse (ranid %u) from RIC (mcc=%u,mnc=%u,id=%u)\n",
+        ric->ranid,ric->ric_mcc,ric->ric_mnc,ric->ric_id);
+
+    return 0;
+}
+#endif
+
+int e2ap_handle_e2_setup_failure(ranid_t ranid,uint32_t stream,
                  E2AP_E2AP_PDU_t *pdu)
 {
     E2AP_E2setupFailure_t *resp;
@@ -85,7 +128,7 @@ int e2ap_handle_e2_setup_failure(ric_agent_info_t *ric,uint32_t stream,
     DevAssert(pdu != NULL);
     resp = &pdu->choice.unsuccessfulOutcome.value.choice.E2setupFailure;
 
-    RIC_AGENT_INFO("Received E2SetupFailure (ranid %u)\n",ric->ranid);
+    RIC_AGENT_INFO("Received E2SetupFailure (ranid %u)\n",ranid);
 
     for (ptr = resp->protocolIEs.list.array;
             ptr < &resp->protocolIEs.list.array[resp->protocolIEs.list.count];
@@ -98,7 +141,7 @@ int e2ap_handle_e2_setup_failure(ric_agent_info_t *ric,uint32_t stream,
     /* XXX: handle RANfunction IEs once we have some E2SM support. */
     }
 
-    RIC_AGENT_INFO("E2SetupFailure (ranid %u) from RIC (cause=%ld,detail=%ld)\n", ric->ranid,cause,cause_detail);
+    RIC_AGENT_INFO("E2SetupFailure (ranid %u) from RIC (cause=%ld,detail=%ld)\n", ranid,cause,cause_detail);
 
     return 0;
 }
@@ -147,6 +190,7 @@ int e2ap_handle_ric_subscription_request(
                 RIC_AGENT_ERROR("failed to find ran_function %ld\n",rs->function_id);
                 goto errout;
             }
+            RIC_AGENT_INFO("RICsubscriptionRequest|RANfunctionID=%ld\n", rs->function_id);
         } 
         else if (rie->value.present == E2AP_RICsubscriptionRequest_IEs__value_PR_RICsubscriptionDetails) 
         {
@@ -157,7 +201,11 @@ int e2ap_handle_ric_subscription_request(
                 memcpy(rs->event_trigger.buf,
                         rie->value.choice.RICsubscriptionDetails.ricEventTriggerDefinition.buf,
                         rs->event_trigger.size);
+
+                switch(rs->function_id)
                 {
+                  case 1:
+                  {
                     asn_dec_rval_t decode_result;
                     E2SM_KPM_E2SM_KPMv2_EventTriggerDefinition_t *eventTriggerDef = 0;
                     decode_result = aper_decode_complete(NULL, &asn_DEF_E2SM_KPM_E2SM_KPMv2_EventTriggerDefinition, 
@@ -175,6 +223,41 @@ int e2ap_handle_ric_subscription_request(
                         interval_us = (interval_ms%1000)*1000;
                         interval_sec = (interval_ms/1000);
                     }
+                    break;
+                  }
+#ifdef ENABLE_RAN_SLICING        
+                  case 2:
+                  {
+                    asn_dec_rval_t decode_result;
+                    E2SM_RSM_E2SM_RSM_EventTriggerDefinition_t  *eventTriggerDef = 0;
+                    decode_result = aper_decode_complete(NULL, &asn_DEF_E2SM_RSM_E2SM_RSM_EventTriggerDefinition,
+                                                        (void **)&eventTriggerDef, rs->event_trigger.buf,
+                                                        rs->event_trigger.size);
+                    DevAssert(decode_result.code == RC_OK);
+                    xer_fprint(stdout, &asn_DEF_E2SM_RSM_E2SM_RSM_EventTriggerDefinition, eventTriggerDef);
+
+                    if ( (eventTriggerDef->eventDefinition_formats.present ==
+                                                E2SM_RSM_E2SM_RSM_EventTriggerDefinition__eventDefinition_formats_PR_eventDefinition_Format1) &&
+                       (eventTriggerDef->eventDefinition_formats.choice.eventDefinition_Format1.triggerType ==
+                                                E2SM_RSM_RSM_RICindication_Trigger_Type_upon_emm_event) )
+                    {
+                      RIC_AGENT_INFO("Trigger Type = %ld\n",
+                                eventTriggerDef->eventDefinition_formats.choice.eventDefinition_Format1.triggerType);
+                    }
+                    else
+                    {
+                      RIC_AGENT_ERROR("Unsupported Trigger Type %ld, event def format %d\n",
+                                eventTriggerDef->eventDefinition_formats.choice.eventDefinition_Format1.triggerType,
+                eventTriggerDef->eventDefinition_formats.present);
+                      goto errout;
+                    }
+                    break;
+                  }
+#endif            
+                  default:
+                    RIC_AGENT_ERROR("INVALID RAN FUNCTION ID:%ld\n",rs->function_id);
+                    goto errout;
+                    break;
                 }
             }
 
@@ -183,6 +266,7 @@ int e2ap_handle_ric_subscription_request(
             {
                 E2AP_RICaction_ToBeSetup_ItemIEs_t *ies_action = (E2AP_RICaction_ToBeSetup_ItemIEs_t*)ral->list.array[i];
                 xer_fprint(stdout, &asn_DEF_E2AP_RICaction_ToBeSetup_ItemIEs, ies_action);
+   
                 E2AP_RICaction_ToBeSetup_Item_t *rai = &ies_action->value.choice.RICaction_ToBeSetup_Item;
                 //xer_fprint(stdout, &asn_DEF_E2AP_RICaction_ToBeSetup_Item, rai);
                 ric_action_t *ra = (ric_action_t *)calloc(1,sizeof(*ra));
@@ -210,15 +294,18 @@ int e2ap_handle_ric_subscription_request(
                 {
                     LIST_INSERT_BEFORE(LIST_FIRST(&rs->action_list),ra,actions);
                 }
+
                 /* Need to add some validation on Action Definition Measurement Type , but then ASN decoding has to be done */
                 /* ASN Decode the Action Definition */
-
-                ret = e2sm_kpm_decode_and_handle_action_def(ra->def_buf, ra->def_size, 
-                                                            func, interval_ms, rs, ric);
-                if (ret)
-                {
-                    RIC_AGENT_ERROR("Action Definiton Handling failed\n");
-                    goto errout;
+                if (rs->function_id == 1)
+                { 
+                    ret = e2sm_kpm_decode_and_handle_action_def(ra->def_buf, ra->def_size, 
+                                    func, interval_ms, rs, ric);
+                    if (ret)
+                    {
+                        RIC_AGENT_ERROR("Action Definiton Handling failed\n");
+                        goto errout;
+                    }
                 }
             }
 
@@ -247,6 +334,8 @@ int e2ap_handle_ric_subscription_request(
         goto errout;
     }
 
+  if (rs->function_id == 1)
+  {
     //ric_ran_function_id_t* function_id = (ric_ran_function_id_t *)calloc(1, sizeof(ric_ran_function_id_t));
     //*function_id = func->function_id;
     ric_ran_function_requestor_info_t* arg
@@ -265,6 +354,7 @@ int e2ap_handle_ric_subscription_request(
         RIC_AGENT_ERROR("failed to start timer\n");
         goto errout;
     }
+  }
 
     return 0;
 
@@ -477,7 +567,7 @@ int e2ap_handle_message(
         case E2AP_E2AP_PDU_PR_unsuccessfulOutcome:
             switch (pdu.choice.unsuccessfulOutcome.procedureCode) {
                 case E2AP_ProcedureCode_id_E2setup:
-                    ret = e2ap_handle_e2_setup_failure(ric, stream, &pdu);
+                    ret = e2ap_handle_e2_setup_failure(ric->ranid, stream, &pdu);
                     break;
                 default:
                     RIC_AGENT_WARN("unsupported unsuccessfulOutcome procedure %ld (ranid %u)\n", pdu.choice.initiatingMessage.procedureCode,ric->ranid);
@@ -494,6 +584,321 @@ int e2ap_handle_message(
     ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_E2AP_E2AP_PDU, &pdu);
     return ret;
 }
+
+#ifdef ENABLE_RAN_SLICING
+extern f1ap_cudu_inst_t f1ap_du_inst[MAX_eNB];
+extern void handle_slicing_api_req(apiMsg *p_slicingApi);
+ric_control_t rc;
+
+int du_e2ap_handle_ric_control_request(
+        du_ric_agent_info_t *ric,
+        uint32_t stream,
+        E2AP_E2AP_PDU_t *pdu,
+        uint8_t **outbuf,
+        uint32_t *outlen)
+{
+    int ret;
+    ric_ran_function_t *func = NULL;
+
+    RIC_AGENT_INFO("Received RICcontrolRequest from ranid %u\n",ric->ranid);
+
+    DevAssert(pdu != NULL);
+
+    E2AP_RICcontrolRequest_t* req = &pdu->choice.initiatingMessage.value.choice.RICcontrolRequest;
+
+    for (E2AP_RICcontrolRequest_IEs_t** ptr = req->protocolIEs.list.array;
+            ptr < &req->protocolIEs.list.array[req->protocolIEs.list.count];
+            ptr++) 
+    {
+        E2AP_RICcontrolRequest_IEs_t* rie = (E2AP_RICcontrolRequest_IEs_t *)*ptr;
+
+        if  (rie->value.present == E2AP_RICcontrolRequest_IEs__value_PR_RICrequestID) 
+        {
+            rc.request_id = rie->value.choice.RICrequestID.ricRequestorID;
+            rc.instance_id = rie->value.choice.RICrequestID.ricInstanceID;
+            RIC_AGENT_INFO("RICcontrolRequest|ricRequestorID=%ld|ricInstanceID=%ld\n", rc.request_id, rc.instance_id);
+        } 
+        else if (rie->value.present == E2AP_RICcontrolRequest_IEs__value_PR_RANfunctionID) 
+        {
+            rc.function_id = rie->value.choice.RANfunctionID;
+            func = ric_agent_lookup_ran_function(rc.function_id);
+            if (!func) 
+            {
+                RIC_AGENT_ERROR("failed to find ran_function %ld\n",rc.function_id);
+                rc.failure_cause = E2AP_CauseRIC_ran_function_id_Invalid;
+                goto errout;
+            }
+        }
+        else if (rie->value.present == E2AP_RICcontrolRequest_IEs__value_PR_RICcontrolHeader)
+        {
+            if (rie->value.choice.RICcontrolHeader.size > 0)
+            {
+                rc.control_hdr.size = rie->value.choice.RICcontrolHeader.size;
+                rc.control_hdr.buf = (uint8_t *)malloc(rc.control_hdr.size);
+                memcpy(rc.control_hdr.buf,
+                       rie->value.choice.RICcontrolHeader.buf,
+                        rc.control_hdr.size);
+
+                asn_dec_rval_t decode_result;
+                E2SM_RSM_E2SM_RSM_ControlHeader_t *ctrlHdr = 0;
+                decode_result = aper_decode_complete(NULL, &asn_DEF_E2SM_RSM_E2SM_RSM_ControlHeader, 
+                                                    (void **)&ctrlHdr, rc.control_hdr.buf, 
+                                                    rc.control_hdr.size);
+                DevAssert(decode_result.code == RC_OK);
+                xer_fprint(stdout, &asn_DEF_E2SM_RSM_E2SM_RSM_ControlHeader, ctrlHdr);
+
+                switch(ctrlHdr->rsm_command)
+                {
+                    case E2SM_RSM_E2SM_RSM_Command_sliceCreate:
+                        rc.control_req_type = E2SM_RSM_E2SM_RSM_ControlMessage_PR_sliceCreate;
+                        break;
+
+                    case E2SM_RSM_E2SM_RSM_Command_sliceUpdate:
+                        rc.control_req_type = E2SM_RSM_E2SM_RSM_ControlMessage_PR_sliceUpdate;
+                        break;
+                    
+                    case E2SM_RSM_E2SM_RSM_Command_sliceDelete: 
+                        rc.control_req_type = E2SM_RSM_E2SM_RSM_ControlMessage_PR_sliceDelete;
+                        break;
+
+                    case E2SM_RSM_E2SM_RSM_Command_ueAssociate:
+                        rc.control_req_type = E2SM_RSM_E2SM_RSM_ControlMessage_PR_sliceAssociate;
+                        break;
+
+                    default:
+                        RIC_AGENT_ERROR("INVALID RSM Command %ld Received\n", ctrlHdr->rsm_command);
+                        rc.failure_cause = E2AP_CauseRIC_action_not_supported;
+                        goto errout;
+                        break;
+                }
+            }
+        } 
+        else if (rie->value.present == E2AP_RICcontrolRequest_IEs__value_PR_RICcontrolMessage)
+        {
+            if (rie->value.choice.RICcontrolMessage.size > 0)
+            {
+                rc.control_msg.size = rie->value.choice.RICcontrolMessage.size;
+                rc.control_msg.buf = (uint8_t *)malloc(rc.control_msg.size);
+                memcpy(rc.control_msg.buf,
+                       rie->value.choice.RICcontrolMessage.buf,
+                       rc.control_msg.size);
+    
+                asn_dec_rval_t decode_result;
+                E2SM_RSM_E2SM_RSM_ControlMessage_t *ctrlMsg = 0;
+                decode_result = aper_decode_complete(NULL, &asn_DEF_E2SM_RSM_E2SM_RSM_ControlMessage,
+                                                    (void **)&ctrlMsg, rc.control_msg.buf,
+                                                    rc.control_msg.size);
+                DevAssert(decode_result.code == RC_OK);
+                xer_fprint(stdout, &asn_DEF_E2SM_RSM_E2SM_RSM_ControlMessage, ctrlMsg);
+
+                if (rc.control_req_type == ctrlMsg->present)
+                {
+                    apiMsg ricSlicingApi;
+                    switch(ctrlMsg->present) {
+                    case E2SM_RSM_E2SM_RSM_ControlMessage_PR_sliceCreate:
+                    {
+                      if (E2SM_RSM_SliceType_dlSlice == ctrlMsg->choice.sliceCreate.sliceType)
+                      {
+                        ricSlicingApi.apiID = SLICE_CREATE_UPDATE_REQ;
+                        ((sliceCreateUpdateReq *)ricSlicingApi.apiBuff)->sliceId =
+                                                ctrlMsg->choice.sliceCreate.sliceID;
+                        ((sliceCreateUpdateReq *)ricSlicingApi.apiBuff)->timeSchd =
+                            *ctrlMsg->choice.sliceCreate.sliceConfigParameters.weight;
+
+                        handle_slicing_api_req(&ricSlicingApi);
+                        break;
+                      }
+                      else
+                      {
+                        RIC_AGENT_ERROR("INVALID SliceType:%ld\n",
+                                        ctrlMsg->choice.sliceCreate.sliceType);
+                        rc.failure_cause = E2AP_CauseRIC_control_message_invalid;
+                        goto errout;
+                      }
+                    }
+                    case E2SM_RSM_E2SM_RSM_ControlMessage_PR_sliceUpdate:
+                    {
+                      if (E2SM_RSM_SliceType_dlSlice == ctrlMsg->choice.sliceUpdate.sliceType)
+                      {
+                        ricSlicingApi.apiID = SLICE_CREATE_UPDATE_REQ;
+                        ((sliceCreateUpdateReq *)ricSlicingApi.apiBuff)->sliceId = 
+                                                ctrlMsg->choice.sliceUpdate.sliceID;
+                        ((sliceCreateUpdateReq *)ricSlicingApi.apiBuff)->timeSchd = 
+                            *ctrlMsg->choice.sliceUpdate.sliceConfigParameters.weight;
+
+                        handle_slicing_api_req(&ricSlicingApi);
+                        break;
+                      }
+                      else
+                      {
+                        RIC_AGENT_ERROR("INVALID SliceType:%ld\n",
+                                        ctrlMsg->choice.sliceCreate.sliceType);
+                        rc.failure_cause = E2AP_CauseRIC_control_message_invalid;
+                        goto errout;
+                      }
+                    }
+
+                    case E2SM_RSM_E2SM_RSM_ControlMessage_PR_sliceDelete:
+                    {
+                        ricSlicingApi.apiID = SLICE_DELETE_REQ;
+                        ((sliceDeleteReq *)ricSlicingApi.apiBuff)->sliceId =
+                                                ctrlMsg->choice.sliceDelete.sliceID;
+
+                        handle_slicing_api_req(&ricSlicingApi);
+                        break;
+                    }
+
+                    case E2SM_RSM_E2SM_RSM_ControlMessage_PR_sliceAssociate:
+                    {
+                        ricSlicingApi.apiID = UE_SLICE_ASSOC_REQ;
+
+                        if ( ctrlMsg->choice.sliceAssociate.ueId.present == E2SM_RSM_UE_Identity_PR_duUeF1ApID)
+                        {
+                            ((ueSliceAssocReq *)ricSlicingApi.apiBuff)->sliceId =
+                                                ctrlMsg->choice.sliceAssociate.downLinkSliceID;
+                            ((ueSliceAssocReq *)ricSlicingApi.apiBuff)->rnti = 
+                                                f1ap_get_rnti_by_du_id(&f1ap_du_inst[0],
+                                                ctrlMsg->choice.sliceAssociate.ueId.choice.duUeF1ApID);
+                            
+                            handle_slicing_api_req(&ricSlicingApi);
+                        }
+                        else
+                        {
+                            RIC_AGENT_ERROR("INVALID UE-ID:%d received during UE:SLICE assoc\n",
+                                        ctrlMsg->choice.sliceAssociate.ueId.present);
+                            rc.failure_cause = E2AP_CauseRIC_control_message_invalid;
+                            goto errout;
+                        }
+                        break;
+                    }
+
+                    default:
+                    {                
+                        RIC_AGENT_ERROR("INVALID Control Msg %d received\n",ctrlMsg->present);
+                        rc.failure_cause = E2AP_CauseRIC_control_message_invalid;
+                        goto errout;
+                        break;
+                    }}
+                }
+                else
+                {
+                    RIC_AGENT_ERROR("Ctrl Request Hdr %d & Msg %d Mismatch !\n", rc.control_req_type, ctrlMsg->present);
+                    rc.failure_cause = E2AP_CauseRIC_control_message_invalid;
+                    goto errout;
+                }
+            }
+        }
+        else if (rie->value.present == E2AP_RICcontrolRequest_IEs__value_PR_RICcontrolAckRequest)
+        {
+            RIC_AGENT_INFO("RICcontrolRequest|riccontrolAckRequest=%ld\n",
+                                                        rie->value.choice.RICcontrolAckRequest);
+        }
+    }
+
+    if (rc.control_hdr.buf)
+        free(rc.control_hdr.buf);
+    if (rc.control_msg.buf)
+        free(rc.control_msg.buf); 
+    return 0;
+
+    errout:
+        ret = du_e2ap_generate_ric_control_failure(ric, &rc, outbuf, outlen);
+        if (ret) {
+            RIC_AGENT_ERROR("failed to generate RICcontrolFailure (ranid %u)\n", ric->ranid);
+        }
+        if (rc.control_hdr.buf)
+            free(rc.control_hdr.buf);
+        if (rc.control_msg.buf) 
+            free(rc.control_msg.buf);
+        
+        return ret;
+}
+
+void du_e2ap_prepare_ric_control_response(
+        du_ric_agent_info_t *ric,
+        apiMsg   *sliceResp,       
+        uint8_t **outbuf,
+        uint32_t *outlen)
+{
+    if ((uint8_t)sliceResp->apiBuff[0] == API_RESP_SUCCESS)
+    {
+        RIC_AGENT_INFO("Slice API Response Success\n");
+        du_e2ap_generate_ric_control_acknowledge(ric, &rc, outbuf, outlen);
+    }
+    else if ((uint8_t)sliceResp->apiBuff[0] == API_RESP_FAILURE)
+    {
+        RIC_AGENT_INFO("Slice API Response Failure\n");
+        rc.failure_cause = E2AP_CauseRIC_control_message_invalid;
+        du_e2ap_generate_ric_control_failure(ric, &rc, outbuf, outlen);
+    }
+    return;
+}
+
+int du_e2ap_handle_message(
+        du_ric_agent_info_t *ric,
+        int32_t stream,
+        const uint8_t * const buf,
+        const uint32_t buflen,
+        uint8_t **outbuf,
+        uint32_t *outlen)
+{
+    E2AP_E2AP_PDU_t pdu;
+    int ret;
+
+    DevAssert(buf != NULL);
+
+    memset(&pdu, 0, sizeof(pdu));
+    ret = e2ap_decode_pdu(&pdu, buf, buflen);
+    if (ret < 0) {
+        RIC_AGENT_ERROR("failed to decode PDU\n");
+        return -1;
+    }
+
+    switch (pdu.present) {
+        case E2AP_E2AP_PDU_PR_initiatingMessage:
+            switch (pdu.choice.initiatingMessage.procedureCode) {
+                case E2AP_ProcedureCode_id_RICcontrol:
+                    ret = du_e2ap_handle_ric_control_request(ric, stream, &pdu, outbuf, outlen);
+                    break;
+                default:
+                    RIC_AGENT_WARN("unsupported initiatingMessage procedure %ld (ranid %u)\n",
+                            pdu.choice.initiatingMessage.procedureCode,ric->ranid);
+                    ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_E2AP_E2AP_PDU,&pdu);
+                    return -1;
+            };
+            break;
+        case E2AP_E2AP_PDU_PR_successfulOutcome:
+            switch (pdu.choice.successfulOutcome.procedureCode) {
+                case E2AP_ProcedureCode_id_E2setup:
+                    ret = du_e2ap_handle_e2_setup_response(ric, stream, &pdu);
+                    break;
+                default:
+                    RIC_AGENT_WARN("unsupported successfulOutcome procedure %ld (ranid %u)\n", pdu.choice.initiatingMessage.procedureCode,ric->ranid);
+                    ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_E2AP_E2AP_PDU, &pdu);
+                    return -1;
+            };
+            break;
+        case E2AP_E2AP_PDU_PR_unsuccessfulOutcome:
+            switch (pdu.choice.unsuccessfulOutcome.procedureCode) {
+                case E2AP_ProcedureCode_id_E2setup:
+                    ret = e2ap_handle_e2_setup_failure(ric->ranid, stream, &pdu);
+                    break;
+                default:
+                    RIC_AGENT_WARN("unsupported unsuccessfulOutcome procedure %ld (ranid %u)\n", pdu.choice.initiatingMessage.procedureCode,ric->ranid);
+                    ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_E2AP_E2AP_PDU, &pdu);
+                    return -1;
+            };
+            break;
+        default:
+            RIC_AGENT_ERROR("unsupported presence %u (ranid %u)\n", pdu.present, ric->ranid);
+            ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_E2AP_E2AP_PDU, &pdu);
+            return -1;
+    }
+
+    ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_E2AP_E2AP_PDU, &pdu);
+    return ret;
+}
+#endif
 
 int e2ap_handle_timer_expiry(
         ric_agent_info_t *ric,

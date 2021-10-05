@@ -1889,9 +1889,9 @@ void handle_slicing_api_req(apiMsg *p_slicingApi)
 
 void check_slicing_update(mid_t mod_id)
 {
-  int bytesSent = 0;
-  int errnum;
-  apiMsg  apiToRic;
+  //int bytesSent = 0;
+  //int errnum;
+  apiMsg DURespToRic;
   int rc;
 
   if (dl.n_slices == 1)
@@ -1902,17 +1902,17 @@ void check_slicing_update(mid_t mod_id)
     if (reqApiId == SLICE_CREATE_UPDATE_REQ)
     { 
       sliceCreateUpdateResp *sliceResp;
-      apiToRic.apiID = SLICE_CREATE_UPDATE_RESP;
-      apiToRic.apiSize = sizeof(sliceCreateUpdateResp);
+      DURespToRic.apiID = SLICE_CREATE_UPDATE_RESP;
+      DURespToRic.apiSize = sizeof(sliceCreateUpdateResp);
     
-      sliceResp = (sliceCreateUpdateResp *)apiToRic.apiBuff;
+      sliceResp = (sliceCreateUpdateResp *)DURespToRic.apiBuff;
       sliceResp->sliceId = sliceReq.sliceId;
       sliceResp->timeSchd = sliceReq.timeSchd;
       LOG_I(MAC,"==== Preparing Create or Update Dedicated Slice Resp====\n");
       if (rc == -1)
       {
         sliceResp->status = API_RESP_FAILURE;
-        LOG_I(MAC,"+++ Dedicated Slice Creation/Update Failed, Sending failure Resp to RIC +++\n");
+        LOG_E(MAC,"+++ Dedicated Slice Creation/Update Failed, Sending failure Resp to RIC +++\n");
       }
       else
       {
@@ -1923,16 +1923,16 @@ void check_slicing_update(mid_t mod_id)
     else if (reqApiId == SLICE_DELETE_REQ)
     {
       sliceDeleteResp *sliceResp;
-      apiToRic.apiID = SLICE_DELETE_RESP;
-      apiToRic.apiSize = sizeof(sliceDeleteResp);
+      DURespToRic.apiID = SLICE_DELETE_RESP;
+      DURespToRic.apiSize = sizeof(sliceDeleteResp);
 
-      sliceResp = (sliceDeleteResp *)apiToRic.apiBuff;
+      sliceResp = (sliceDeleteResp *)DURespToRic.apiBuff;
       sliceResp->sliceId = sliceDel.sliceId;
       LOG_I(MAC,"==== Preparing Delete Dedicated SliceId:%d Resp====\n", sliceDel.sliceId);
       if (rc == -1)
       {
         sliceResp->status = API_RESP_FAILURE;
-        LOG_I(MAC,"+++ Dedicated Slice Deletion Failed, Sending failure Resp to RIC +++\n");
+        LOG_E(MAC,"+++ Dedicated Slice Deletion Failed, Sending failure Resp to RIC +++\n");
       }
       else
       {  
@@ -1957,17 +1957,17 @@ void check_slicing_update(mid_t mod_id)
     /* Prepare UE:Slice Assoc resp to RIC */
     ueSliceAssocResp *ueSliceResp;
 
-    apiToRic.apiID = UE_SLICE_ASSOC_RESP;
-    apiToRic.apiSize = sizeof(ueSliceAssocResp);
+    DURespToRic.apiID = UE_SLICE_ASSOC_RESP;
+    DURespToRic.apiSize = sizeof(ueSliceAssocResp);
 
-    ueSliceResp = (ueSliceAssocResp *)apiToRic.apiBuff;
+    ueSliceResp = (ueSliceAssocResp *)DURespToRic.apiBuff;
     ueSliceResp->ueId = flexran_get_mac_ue_id_rnti(mod_id, ueCfg.rnti);
     ueSliceResp->sliceId = ueCfg.dl_slice_id; 
 
     if (rc == -1)
     {
       ueSliceResp->status = API_RESP_FAILURE;
-      LOG_I(MAC,"+++ UE:Slice Assoc Failed, Sending failure Resp to RIC +++\n");
+      LOG_E(MAC,"+++ UE:Slice Assoc Failed, Sending failure Resp to RIC +++\n");
     }
     else
     {
@@ -1982,7 +1982,13 @@ void check_slicing_update(mid_t mod_id)
     return;
   }
 
-  bytesSent = sendto(g_duSocket, (void *)&apiToRic, sizeof(apiToRic),0,
+  MessageDef *m = itti_alloc_new_message(TASK_MAC_ENB, DU_SLICE_API_RESP);
+  DU_SLICE_API_RESP(m).apiID = DURespToRic.apiID;
+  DU_SLICE_API_RESP(m).apiSize = DURespToRic.apiSize;
+  memcpy(DU_SLICE_API_RESP(m).apiBuff, DURespToRic.apiBuff, DURespToRic.apiSize);
+  itti_send_msg_to_task(TASK_RIC_AGENT_DU,ENB_MODULE_ID_TO_INSTANCE(mod_id),m);
+#if 0
+  bytesSent = sendto(g_duSocket, (void *)&DURespToRic, sizeof(DURespToRic),0,
              (struct sockaddr *)&g_RicAddr, g_addr_size);
 
   if (bytesSent > 0)
@@ -1997,6 +2003,7 @@ void check_slicing_update(mid_t mod_id)
     perror("Error printed by perror");
     fprintf(stderr, "Error opening file: %s\n", strerror( errnum ));
   }
+#endif
 
   return;
 }

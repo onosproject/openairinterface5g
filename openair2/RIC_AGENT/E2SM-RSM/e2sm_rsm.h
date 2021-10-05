@@ -25,45 +25,22 @@
  *      contact@openairinterface.org
  */
 
-#ifndef _E2AP_HANDLER_H
-#define _E2AP_HANDLER_H
+#ifndef _E2SM_RSM_H_
+#define _E2SM_RSM_H_
 
-#include <stdint.h>
 
-extern int e2ap_handle_message(
+extern int e2sm_rsm_init(e2node_type_t e2node_type);
+
+extern int e2sm_rsm_ricInd(
         ric_agent_info_t *ric,
-        int32_t stream,
-        const uint8_t * const buf,
-        const uint32_t buflen,
+        ric_ran_function_id_t function_id,
+        long request_id,
+        long instance_id,
+        uint16_t trigger_type,
+        ueStatusInd *emmTriggerBuff,
         uint8_t **outbuf,
         uint32_t *outlen);
 
-extern int e2ap_handle_timer_expiry(
-        ric_agent_info_t *ric,
-        long timer_id,
-        void* arg,
-        uint8_t **outbuf,
-        uint32_t *outlen);
 
-extern int e2ap_handle_gp_timer_expiry(
-        ric_agent_info_t *ric,
-        long timer_id,
-        void* arg,
-        uint8_t **outbuf,
-        uint32_t *outlen);
 
-extern int du_e2ap_handle_message(
-        du_ric_agent_info_t *ric,
-        int32_t stream,
-        const uint8_t * const buf,
-        const uint32_t buflen,
-        uint8_t **outbuf,
-        uint32_t *outlen);
-
-extern void du_e2ap_prepare_ric_control_response(
-        du_ric_agent_info_t *ric,
-        apiMsg   *sliceResp,
-        uint8_t **outbuf,
-        uint32_t *outlen);
-
-#endif /* _E2AP_ENB_HANDLER_H */
+#endif

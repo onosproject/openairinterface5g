@@ -34,6 +34,8 @@
 #include "common/utils/LOG/log.h"
 
 #define E2AP_SCTP_PPID 70 /*< E2AP SCTP Payload Protocol Identifier (PPID) */
+#define UE_ATTACH_EVENT_TRIGGER 100
+#define UE_DETACH_EVENT_TRIGGER 200
 
 typedef uint16_t ranid_t;
 
@@ -41,6 +43,7 @@ typedef uint16_t ranid_t;
 #define RIC_AGENT_INFO(msg, args...)  LOG_I(RIC_AGENT, msg, ##args)
 #define RIC_AGENT_WARN(msg, args...)  LOG_W(RIC_AGENT, msg, ##args)
 #define RIC_AGENT_DEBUG(msg, args...) LOG_D(RIC_AGENT, msg, ##args)
+#define DISABLE_SCTP_MULTIHOMING 1
 
 /**
  * These are local function IDs.  Each service model might expose many
@@ -84,7 +87,17 @@ typedef struct ric_subscription {
     LIST_ENTRY(ric_subscription) subscriptions;
 } ric_subscription_t;
 
+typedef struct ric_event_trigger ric_control_header_t;
+typedef struct ric_event_trigger ric_control_msg_t;
+
 typedef struct ric_control {
+    long request_id;
+    long instance_id;
+    ric_ran_function_id_t function_id;
+    ric_control_header_t control_hdr;
+    long    failure_cause;
+    uint16_t control_req_type;
+    ric_control_msg_t control_msg;
 } ric_control_t;
 
 typedef struct {
@@ -101,8 +114,25 @@ typedef struct {
     long gran_prd_timer_id;
     long ric_connect_timer_id;
 
+	ric_ran_function_id_t e2sm_rsm_function_id;
+    long e2sm_rsm_request_id;
+    long e2sm_rsm_instance_id;
+
     LIST_HEAD(ric_subscription_list, ric_subscription) subscription_list;
 } ric_agent_info_t;
+
+typedef struct {
+    int32_t du_assoc_id;
+
+    ranid_t ranid;
+
+    uint16_t ric_mcc;
+    uint16_t ric_mnc;
+    uint16_t ric_mnc_digit_len;
+    uint32_t ric_id;
+
+    long du_ric_connect_timer_id;
+} du_ric_agent_info_t;
 
 typedef struct ric_ran_function_requestor_info {
     ric_ran_function_id_t function_id;
@@ -116,10 +146,10 @@ typedef struct ric_ran_function_requestor_info {
  */
 
 typedef struct {
-	long     meas_type_id;
-	char     *meas_type_name;
-	uint16_t meas_data;
-	bool	 subscription_status;
+    long     meas_type_id;
+    char     *meas_type_name;
+    uint16_t meas_data;
+    bool     subscription_status;
 } kmp_meas_info_t;
 
 typedef struct {
@@ -168,6 +198,7 @@ typedef enum {
     E2NODE_TYPE_ENB_CU,
     E2NODE_TYPE_NG_ENB_CU,
     E2NODE_TYPE_GNB_CU,
+    E2NODE_TYPE_ENB_DU
 } e2node_type_t;
 
 typedef struct e2_conf {
@@ -184,6 +215,7 @@ typedef struct e2_conf {
 } e2_conf_t;
 
 extern ric_agent_info_t **ric_agent_info;
+extern du_ric_agent_info_t **du_ric_agent_info;
 extern e2_conf_t **e2_conf;
 
 void *ric_agent_task(void *args);

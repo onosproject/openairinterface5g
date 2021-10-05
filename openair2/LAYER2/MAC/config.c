@@ -738,11 +738,12 @@ config_dedicated_scell(int Mod_idP,
                        uint16_t rnti,
                        LTE_SCellToAddMod_r10_t *sCellToAddMod_r10) {
 }
-
+#if 0
 #ifdef ENABLE_RAN_SLICING
 extern int g_duSocket;
 extern struct sockaddr_in g_RicAddr;
 extern socklen_t g_addr_size;
+#endif
 #endif
 
 int rrc_mac_config_req_eNB(module_id_t Mod_idP,
@@ -913,7 +914,7 @@ int rrc_mac_config_req_eNB(module_id_t Mod_idP,
         LOG_I(MAC, "UE %d RNTI %x adding LC 2 idx %d to scheduling control (total %d)\n", UE_id, rntiP, sched_ctrl->dl_lc_num-1, sched_ctrl->dl_lc_num);
       }
     }
-
+#if 0
 #ifdef ENABLE_RAN_SLICING
   if (sched_ctrl->dl_lc_num ==3)
   {
@@ -947,6 +948,7 @@ int rrc_mac_config_req_eNB(module_id_t Mod_idP,
     }
 
   }
+#endif
 #endif
   }
 

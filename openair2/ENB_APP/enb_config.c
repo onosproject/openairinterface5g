@@ -348,7 +348,7 @@ int RCconfig_RRC(uint32_t i, eNB_RRC_INST *rrc, int macrlc_has_f1) {
       enb_id = *(ENBParamList.paramarray[i][ENB_ENB_ID_IDX].uptr);
     }
 
-    LOG_I(RRC,"Instance %d: Southbound Transport %s\n",i,*(ENBParamList.paramarray[i][ENB_TRANSPORT_S_PREFERENCE_IDX].strptr));
+    LOG_I(RRC,"Instance %d: Southbound Transport %s enb_id:%d\n",i,*(ENBParamList.paramarray[i][ENB_TRANSPORT_S_PREFERENCE_IDX].strptr), enb_id);
 
     if (strcmp(*(ENBParamList.paramarray[i][ENB_TRANSPORT_S_PREFERENCE_IDX].strptr), "f1") == 0) {
       paramdef_t SCTPParams[]  = SCTPPARAMS_DESC;
@@ -378,7 +378,9 @@ int RCconfig_RRC(uint32_t i, eNB_RRC_INST *rrc, int macrlc_has_f1) {
         LOG_I(RRC,"Setting node_type to ngran_eNB\n");
       } else {
         rrc->node_type = ngran_eNB_DU;
-        LOG_I(RRC,"Setting node_type to ngran_eNB_DU\n");
+        rrc->node_name = strdup("eNB-Eurecom-DU");
+        rrc->eth_params_s.my_addr = RC.mac[0]->eth_params_n.my_addr; 
+        LOG_I(RRC,"Setting node_type to ngran_eNB_DU gNB_CU_name[%d] %s my_addr:%s\n",k, rrc->node_name, rrc->eth_params_s.my_addr);
       }
     }
 

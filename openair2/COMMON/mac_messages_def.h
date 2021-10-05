@@ -48,3 +48,5 @@ MESSAGE_DEF(RRC_MAC_PCCH_DATA_REQ,      MESSAGE_PRIORITY_MED_PLUS, RrcMacPcchDat
 
 /* RRC configures DRX context (MAC timers) of a UE */
 MESSAGE_DEF(RRC_MAC_DRX_CONFIG_REQ, MESSAGE_PRIORITY_MED, rrc_mac_drx_config_req_t, rrc_mac_drx_config_req)
+
+MESSAGE_DEF(DU_SLICE_API_RESP, MESSAGE_PRIORITY_MED, apiMsg, du_slice_api_resp)
