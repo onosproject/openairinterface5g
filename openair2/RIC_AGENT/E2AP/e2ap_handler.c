@@ -599,6 +599,8 @@ int du_e2ap_handle_ric_control_request(
 {
     int ret;
     ric_ran_function_t *func = NULL;
+    uint8_t req_instance_id_flag = 0;
+    uint8_t errout_flag = 0;
 
     RIC_AGENT_INFO("Received RICcontrolRequest from ranid %u\n",ric->ranid);
 
@@ -616,6 +618,7 @@ int du_e2ap_handle_ric_control_request(
         {
             rc.request_id = rie->value.choice.RICrequestID.ricRequestorID;
             rc.instance_id = rie->value.choice.RICrequestID.ricInstanceID;
+            req_instance_id_flag = 1;
             RIC_AGENT_INFO("RICcontrolRequest|ricRequestorID=%ld|ricInstanceID=%ld\n", rc.request_id, rc.instance_id);
         } 
         else if (rie->value.present == E2AP_RICcontrolRequest_IEs__value_PR_RANfunctionID) 
@@ -626,7 +629,10 @@ int du_e2ap_handle_ric_control_request(
             {
                 RIC_AGENT_ERROR("failed to find ran_function %ld\n",rc.function_id);
                 rc.failure_cause = E2AP_CauseRIC_ran_function_id_Invalid;
-                goto errout;
+                if (req_instance_id_flag == 1)
+                    goto errout;
+                else
+                    errout_flag = 1;
             }
         }
         else if (rie->value.present == E2AP_RICcontrolRequest_IEs__value_PR_RICcontrolHeader)
@@ -668,7 +674,12 @@ int du_e2ap_handle_ric_control_request(
                     default:
                         RIC_AGENT_ERROR("INVALID RSM Command %ld Received\n", ctrlHdr->rsm_command);
                         rc.failure_cause = E2AP_CauseRIC_action_not_supported;
-                        goto errout;
+                        
+                        if (req_instance_id_flag == 1)
+                            goto errout;
+                        else
+                            errout_flag = 1;
+
                         break;
                 }
             }
@@ -706,15 +717,19 @@ int du_e2ap_handle_ric_control_request(
                             *ctrlMsg->choice.sliceCreate.sliceConfigParameters.weight;
 
                         handle_slicing_api_req(&ricSlicingApi);
-                        break;
                       }
                       else
                       {
-                        RIC_AGENT_ERROR("INVALID SliceType:%ld\n",
+                        RIC_AGENT_ERROR("CreateSlice  INVALID SliceType:%ld\n",
                                         ctrlMsg->choice.sliceCreate.sliceType);
                         rc.failure_cause = E2AP_CauseRIC_control_message_invalid;
-                        goto errout;
+
+                        if (req_instance_id_flag == 1)
+                            goto errout;
+                        else
+                            errout_flag = 1;
                       }
+                      break;
                     }
                     case E2SM_RSM_E2SM_RSM_ControlMessage_PR_sliceUpdate:
                     {
@@ -727,15 +742,19 @@ int du_e2ap_handle_ric_control_request(
                             *ctrlMsg->choice.sliceUpdate.sliceConfigParameters.weight;
 
                         handle_slicing_api_req(&ricSlicingApi);
-                        break;
                       }
                       else
                       {
-                        RIC_AGENT_ERROR("INVALID SliceType:%ld\n",
+                        RIC_AGENT_ERROR("UpdateSlice INVALID SliceType:%ld\n",
                                         ctrlMsg->choice.sliceCreate.sliceType);
                         rc.failure_cause = E2AP_CauseRIC_control_message_invalid;
-                        goto errout;
+
+                        if (req_instance_id_flag == 1)
+                            goto errout;
+                        else
+                            errout_flag = 1;
                       }
+                      break;
                     }
 
                     case E2SM_RSM_E2SM_RSM_ControlMessage_PR_sliceDelete:
@@ -767,7 +786,11 @@ int du_e2ap_handle_ric_control_request(
                             RIC_AGENT_ERROR("INVALID UE-ID:%d received during UE:SLICE assoc\n",
                                         ctrlMsg->choice.sliceAssociate.ueId.present);
                             rc.failure_cause = E2AP_CauseRIC_control_message_invalid;
-                            goto errout;
+
+                            if (req_instance_id_flag == 1)
+                                goto errout;
+                            else
+                                errout_flag = 1;
                         }
                         break;
                     }
@@ -776,7 +799,11 @@ int du_e2ap_handle_ric_control_request(
                     {                
                         RIC_AGENT_ERROR("INVALID Control Msg %d received\n",ctrlMsg->present);
                         rc.failure_cause = E2AP_CauseRIC_control_message_invalid;
-                        goto errout;
+
+                        if (req_instance_id_flag == 1)
+                            goto errout;
+                        else
+                            errout_flag = 1;
                         break;
                     }}
                 }
@@ -784,7 +811,11 @@ int du_e2ap_handle_ric_control_request(
                 {
                     RIC_AGENT_ERROR("Ctrl Request Hdr %d & Msg %d Mismatch !\n", rc.control_req_type, ctrlMsg->present);
                     rc.failure_cause = E2AP_CauseRIC_control_message_invalid;
-                    goto errout;
+
+                    if (req_instance_id_flag == 1)
+                        goto errout;
+                    else
+                        errout_flag = 1;
                 }
             }
         }
@@ -793,6 +824,9 @@ int du_e2ap_handle_ric_control_request(
             RIC_AGENT_INFO("RICcontrolRequest|riccontrolAckRequest=%ld\n",
                                                         rie->value.choice.RICcontrolAckRequest);
         }
+
+        if ( (req_instance_id_flag == 1) && (errout_flag == 1) )
+            goto errout;
     }
 
     if (rc.control_hdr.buf)
