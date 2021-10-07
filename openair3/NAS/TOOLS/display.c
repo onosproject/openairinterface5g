@@ -262,10 +262,12 @@ void display_usim_data(const char *filename) {
 	kasme[USIM_K_ASME_SIZE] = '\0';
 	memcpy(kasme, data.securityctx.Kasme.value, USIM_K_ASME_SIZE);
 	printf("\tKasme\t: \"%s\"\n", kasme);
-	printf("\tulNAScount\t: 0x%.8x\n",
-			*(uint32_t*) data.securityctx.ulNAScount.value);
-	printf("\tdlNAScount\t: 0x%.8x\n",
-			*(uint32_t*) data.securityctx.dlNAScount.value);
+	uint32_t* ulNasCount_value = (uint32_t*) data.securityctx.ulNAScount.value;
+	printf("\tulNAScount\t: 0x%.8x\n", *ulNasCount_value);
+	//		*(uint32_t*) data.securityctx.ulNAScount.value);
+	uint32_t* dlNasCount_value = (uint32_t*) data.securityctx.dlNAScount.value;
+	printf("\tdlNAScount\t: 0x%.8x\n", *dlNasCount_value);
+	//		*(uint32_t*) data.securityctx.dlNAScount.value);
 	printf("\talgorithmID\t: 0x%.2x\n\n",
 			data.securityctx.algorithmID.value[0]);
 
