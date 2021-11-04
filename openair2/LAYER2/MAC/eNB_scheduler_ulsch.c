@@ -188,7 +188,7 @@ rx_sdu(const module_id_t enb_mod_idP,
         UE_template_ptr->scheduled_ul_bytes = 0;
       }
     } else {  // sduP == NULL => error
-      /*LOG_W(MAC, "[eNB %d][PUSCH %d] CC_id %d %d.%d ULSCH Error round %d ul_cqi %d UE_id %d RNTI %x len %d UL-F-Timer[%d] Cons-err[%d]\n",
+      LOG_D(MAC, "[eNB %d][PUSCH %d] CC_id %d %d.%d ULSCH Error round %d ul_cqi %d UE_id %d RNTI %x len %d UL-F-Timer[%d] Cons-err[%d]\n",
             enb_mod_idP,
             harq_pid,
             CC_idP,
@@ -200,7 +200,7 @@ rx_sdu(const module_id_t enb_mod_idP,
             current_rnti,
             sdu_lenP,
             UE_scheduling_control->ul_failure_timer,
-            UE_scheduling_control->ul_consecutive_errors);*/
+            UE_scheduling_control->ul_consecutive_errors);
       ulsch_err++;
       if (ul_cqi > 200) { // too high energy pattern
         UE_scheduling_control->pusch_snr[CC_idP] = ul_cqi;
@@ -1430,16 +1430,16 @@ schedule_ulsch_rnti(module_id_t   module_idP,
       UE_template_ptr->pusch_tpc_tx_frame = frameP;
       UE_template_ptr->pusch_tpc_tx_subframe = subframeP;
 
-      if (snr > target_snr + 4) {
+      if (snr > target_snr + 5) {
         tpc = 0; // -1
         tpc_accumulated--;
-      } else if (snr < target_snr - 4) {
+      } else if (snr < target_snr - 5) {
         tpc = 2; // +1
         tpc_accumulated++;
       }
     }
     if (tpc != 1) {
-      LOG_D(MAC,
+      LOG_E(MAC,
             "[eNB %d] ULSCH scheduler: frame %d, subframe %d, harq_pid %d, "
             "tpc %d, accumulated %d, snr/target snr %d/%d\n",
             module_idP,
