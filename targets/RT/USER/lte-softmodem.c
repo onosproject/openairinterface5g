@@ -511,6 +511,7 @@ static  void wait_nfapi_init(char *thread_name) {
 }
 
 extern int apply_update_dl_slice_config(mid_t mod_id, Protocol__FlexSliceDlUlConfig *dl);
+extern int apply_update_ul_slice_config(mid_t mod_id, Protocol__FlexSliceDlUlConfig *ul);
 int main ( int argc, char **argv )
 {
   int i;
@@ -722,8 +723,9 @@ int main ( int argc, char **argv )
         /* Connect with RIC SIM */
         //connectWithRic();
 
-        LOG_I(ENB_APP," RAN SLICING is Enabled, Setting up Default Slice\n");
+        LOG_I(ENB_APP," RAN SLICING is Enabled, Setting up Default Slice for DL & UL\n");
         Protocol__FlexSliceDlUlConfig dl;
+        Protocol__FlexSliceDlUlConfig ul;
         Protocol__FlexSlice *defSlice = NULL;
 
         dl.has_algorithm = 1;
@@ -739,28 +741,64 @@ int main ( int argc, char **argv )
         defSlice->scheduler = (char *)strdup("round_robin_dl"); 
         defSlice->params_case = PROTOCOL__FLEX_SLICE__PARAMS_STATIC;        
         
-        Protocol__FlexSliceStatic *StaticSliceCfg = (Protocol__FlexSliceStatic *)calloc(1, sizeof(Protocol__FlexSliceStatic));
-        StaticSliceCfg->has_poslow = 1;
-        StaticSliceCfg->poslow = 0;
-        StaticSliceCfg->has_poshigh = 1;
-        StaticSliceCfg->poshigh = to_rbg(RC.mac[0]->common_channels[0].mib->message.dl_Bandwidth) - 1;
+        Protocol__FlexSliceStatic *DlStaticSliceCfg = (Protocol__FlexSliceStatic *)calloc(1, sizeof(Protocol__FlexSliceStatic));
+        DlStaticSliceCfg->has_poslow = 1;
+        DlStaticSliceCfg->poslow = 0;
+        DlStaticSliceCfg->has_poshigh = 1;
+        DlStaticSliceCfg->poshigh = to_rbg(RC.mac[0]->common_channels[0].mib->message.dl_Bandwidth) - 1;
         /*Default slice should Initially consume 100% of scheduling time */
-        StaticSliceCfg->has_timeschd = 1;
-        StaticSliceCfg->timeschd = 100; 
+        DlStaticSliceCfg->has_timeschd = 1;
+        DlStaticSliceCfg->timeschd = 100; 
         
-        defSlice->static_ = StaticSliceCfg;
+        defSlice->static_ = DlStaticSliceCfg;
 
-        LOG_I(ENB_APP, "--- Default Slice Params ---\n");
+        LOG_I(ENB_APP, "--- Default-DL Slice Params ---\n");
         LOG_I(ENB_APP, "dl:has_algorithm = %d algorithm = %d n_slices = %lu\n",
             dl.has_algorithm, dl.algorithm, dl.n_slices);
         LOG_I(ENB_APP, "dl:defSlice:has_id = %d id = %d label = %s\n",
             defSlice->has_id, defSlice->id, defSlice->label);
         LOG_I(ENB_APP, "dl:defSlice:scheduler = %s params_case = %d\n",
             defSlice->scheduler, defSlice->params_case);
-        LOG_I(ENB_APP, "dl:efSlice:StaticSliceCfg:has_poslow=%d poslow=%d, has_poshigh=%d poshigh=%d, has_timeschd=%d timeschd=%d\n",
-            StaticSliceCfg->has_poslow, StaticSliceCfg->poslow, StaticSliceCfg->has_poshigh, StaticSliceCfg->poshigh, StaticSliceCfg->has_timeschd, StaticSliceCfg->timeschd);
+        LOG_I(ENB_APP, "dl:efSlice:DlStaticSliceCfg:has_poslow=%d poslow=%d, has_poshigh=%d poshigh=%d, has_timeschd=%d timeschd=%d\n",
+            DlStaticSliceCfg->has_poslow, DlStaticSliceCfg->poslow, DlStaticSliceCfg->has_poshigh, DlStaticSliceCfg->poshigh, DlStaticSliceCfg->has_timeschd, DlStaticSliceCfg->timeschd);
  
-        apply_update_dl_slice_config(0, &dl);
+        apply_update_dl_slice_config(0, &dl); /* This will create default DL slice */
+
+        ul.has_algorithm = 1;
+        ul.algorithm = PROTOCOL__FLEX_SLICE_ALGORITHM__Static;
+        ul.n_slices = 1;
+        ul.slices = (Protocol__FlexSlice **)calloc(1, sizeof(Protocol__FlexSlice *));
+        ul.slices[0] = (Protocol__FlexSlice *)calloc(1, sizeof(Protocol__FlexSlice));
+
+        defSlice = ul.slices[0];
+        defSlice->has_id = 1;
+        defSlice->id = 0;
+        defSlice->label = (char *)strdup("default");        
+        defSlice->scheduler = (char *)strdup("round_robin_ul");
+        defSlice->params_case = PROTOCOL__FLEX_SLICE__PARAMS_STATIC;
+        
+        Protocol__FlexSliceStatic *UlStaticSliceCfg = (Protocol__FlexSliceStatic *)calloc(1, sizeof(Protocol__FlexSliceStatic));
+        UlStaticSliceCfg->has_poslow = 1;
+        UlStaticSliceCfg->poslow = 0;
+        UlStaticSliceCfg->has_poshigh = 1;
+        UlStaticSliceCfg->poshigh = to_prb(RC.mac[0]->common_channels[0].ul_Bandwidth) - 1;
+        /*Default slice should Initially consume 100% of scheduling time */
+        UlStaticSliceCfg->has_timeschd = 1;
+        UlStaticSliceCfg->timeschd = 100;
+
+        defSlice->static_ = UlStaticSliceCfg;
+
+        LOG_I(ENB_APP, "--- Default-UL Slice Params ---\n");
+        LOG_I(ENB_APP, "ul:has_algorithm = %d algorithm = %d n_slices = %lu\n",
+            ul.has_algorithm, ul.algorithm, ul.n_slices);
+        LOG_I(ENB_APP, "ul:defSlice:has_id = %d id = %d label = %s\n",
+            defSlice->has_id, defSlice->id, defSlice->label);
+        LOG_I(ENB_APP, "ul:defSlice:scheduler = %s params_case = %d\n",
+            defSlice->scheduler, defSlice->params_case);
+        LOG_I(ENB_APP, "ul:efSlice:UlStaticSliceCfg:has_poslow=%d poslow=%d, has_poshigh=%d poshigh=%d, has_timeschd=%d timeschd=%d\n",
+            UlStaticSliceCfg->has_poslow, UlStaticSliceCfg->poslow, UlStaticSliceCfg->has_poshigh, UlStaticSliceCfg->poshigh, UlStaticSliceCfg->has_timeschd, UlStaticSliceCfg->timeschd);
+
+        apply_update_ul_slice_config(0, &ul); /* This will create default UL slice */
 #else
         LOG_I(ENB_APP," RAN SLICING is Disabled\n");
 #endif

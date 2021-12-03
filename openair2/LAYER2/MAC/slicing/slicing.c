@@ -47,7 +47,7 @@ int slicing_get_UE_slice_idx(slice_info_t *si, int UE_id) {
 }
 
 void slicing_add_UE(slice_info_t *si, int UE_id) {
-  LOG_W(MAC, "Adding UE %d in DL slice index %d\n", UE_id, 0);
+  LOG_W(MAC, "Adding UE %d to slice index %d\n", UE_id, 0);
   add_ue_list(&si->s[0]->UEs, UE_id);
   si->UE_assoc_slice[UE_id] = 0;
 }
@@ -290,23 +290,48 @@ int addmod_static_slice_ul(slice_info_t *si,
                            int id,
                            char *label,
                            void *algo,
-                           void *slice_params_ul) {
+                           void *slice_params_ul) 
+{
   static_slice_param_t *ul = slice_params_ul;
+  uint16_t totalTimeSchd = 0;
+
   /* Minimum 3RBs, because LTE stack requires this */
   if (ul && ul->posLow + 2 > ul->posHigh)
     RET_FAIL(-1, "%s(): slice id %d posLow + 2 > posHigh\n", __func__, id);
 
-  uint8_t rbMap[110] = { 0 };
+  if ( (id == 0) && (ul->timeSchd > MAX_DEF_SLICE_TIME_SCHD))
+    RET_FAIL(-1, "%s():UL Default slice id:%d timeSchd:%d exceeds 100\n", __func__, id, ul->timeSchd);
+
+  if ( (id > 0) && (ul->timeSchd > MAX_DED_SLICE_TIME_SCHD))
+    RET_FAIL(-1, "%s(): Dedicated slice id:%d, timeSchd:%d exceeds 80\n", __func__, id, ul->timeSchd);
+
+  //uint8_t rbMap[110] = { 0 };
   int index = _exists_slice(si->num, si->s, id);
-  if (index >= 0) {
-    for (int s = 0; s < si->num; ++s) {
+  LOG_I(MAC, "[%s]Enter index:%d si->num:%d id:%d\n", __func__, index, si->num,id);
+
+  if (index >= 0) 
+  {
+    for (int s = 0; s < si->num; ++s) 
+    {
       static_slice_param_t *su = ul && si->s[s]->id == id && ul ? ul : si->s[s]->algo_data;
-      for (int i = su->posLow; i <= su->posHigh; ++i) {
+#if 0 /*RB slice overlap check not required */
+      for (int i = su->posLow; i <= su->posHigh; ++i) 
+      {
         if (rbMap[i])
           RET_FAIL(-33, "%s(): overlap of slices detected at RBG %d\n", __func__, i);
         rbMap[i] = 1;
       }
+#endif
+      if (si->s[s]->id > 0)
+      {
+        totalTimeSchd += su->timeSchd;
+      }
     }
+
+    if (totalTimeSchd > MAX_DED_SLICE_TIME_SCHD)
+      RET_FAIL(-1, "%s(): Total Dedicated timeSchd:%d exceeds 80, cannot create new dedicated slice id:%d\n",
+                __func__, totalTimeSchd, id);
+
     /* no problem, can allocate */
     slice_t *s = si->s[index];
     if (algo) {
@@ -319,27 +344,60 @@ int addmod_static_slice_ul(slice_info_t *si,
       if (s->label) free(s->label);
       s->label = label;
     }
+
+    /* Check if time_schd of dedicated slice is getting reduced */
+    if ( ( ((static_slice_param_t *)s->algo_data)->timeSchd > ul->timeSchd) &&
+         (dump_ue_list(&s->UEs) > 0) )     
+    {
+      /* In that case timeSchd difference should be added back to default slice */
+      ((static_slice_param_t *)si->s[0]->algo_data)->timeSchd +=
+          ( ((static_slice_param_t *)s->algo_data)->timeSchd - ul->timeSchd);
+      LOG_I(MAC, "adding back %d time_sch to UL def slice,updated def slice time_schd:%d\n",
+            ( ((static_slice_param_t *)s->algo_data)->timeSchd - ul->timeSchd),
+            ((static_slice_param_t *)si->s[0]->algo_data)->timeSchd);
+    }
+
     if (ul) {
       free(s->algo_data);
       s->algo_data = ul;
     }
+
+    LOG_I(MAC, "Updated UL ded slice:%d time_schd:%d\n", s->id, ((static_slice_param_t *)s->algo_data)->timeSchd);
     return index;
   }
 
+  /* Below code is executed for creating Default or Dedicated slice */
   if (!ul)
     RET_FAIL(-100, "%s(): no parameters for new slice %d, aborting\n", __func__, id);
 
   if (si->num >= MAX_STATIC_SLICES)
     RET_FAIL(-2, "%s(): cannot have more than %d slices\n", __func__, MAX_STATIC_SLICES);
-  for (int s = 0; s < si->num; ++s) {
+
+  if (si->num > 1)
+  {
+    /* Check that total timeSchd of dedicated slices should not exceed 80%*/
+    for(int ded_slice_idx = 1; ded_slice_idx < si->num; ded_slice_idx++)
+    {
+      static_slice_param_t *dedSlice = si->s[ded_slice_idx]->algo_data;
+      totalTimeSchd += dedSlice->timeSchd;
+    }
+
+    if ( (totalTimeSchd + ul->timeSchd) > MAX_DED_SLICE_TIME_SCHD )
+      RET_FAIL(-1, "%s(): Existing UL Dedicated timeSchd:%d, new dedicated timeSchd:%d, total exceeds 80, cannot create new dedicated slice id:%d\n",
+                __func__, totalTimeSchd, ul->timeSchd, id);
+  }
+
+#if 0
+  for (int s = 0; s < si->num; ++s) { /* Marking the RB-MAP with existing slice data */
     static_slice_param_t *sd = si->s[s]->algo_data;
     for (int i = sd->posLow; i <= sd->posHigh; ++i)
       rbMap[i] = 1;
   }
 
-  for (int i = ul->posLow; i <= ul->posHigh; ++i)
+  for (int i = ul->posLow; i <= ul->posHigh; ++i) /*check for the overlap with new slice params*/
     if (rbMap[i])
       RET_FAIL(-3, "%s(): overlap of slices detected at RBG %d\n", __func__, i);
+#endif
 
   if (!algo)
     RET_FAIL(-14, "%s(): no scheduler algorithm provided\n", __func__);
@@ -354,6 +412,7 @@ int addmod_static_slice_ul(slice_info_t *si,
     ns->ul_algo.data = ns->ul_algo.setup();
   ns->algo_data = ul;
 
+  LOG_I(MAC, "[%s]New UL Slice added index:%d si->num:%d id:%d\n", __func__, index, si->num,ns->id);
   return si->num - 1;
 }
 
@@ -732,9 +791,11 @@ pp_impl_param_t static_dl_init(module_id_t mod_id, int CC_id)
   return sttc;
 }
 
-pp_impl_param_t static_ul_init(module_id_t mod_id, int CC_id) {
+pp_impl_param_t static_ul_init(module_id_t mod_id, int CC_id) 
+{
   slice_info_t *si = calloc(1, sizeof(slice_info_t));
   DevAssert(si);
+  LOG_I(FLEXRAN_AGENT, "[%s]mod_id %d cc_id:%d\n", __func__, mod_id,CC_id);
 
   si->num = 0;
   si->s = calloc(MAX_STATIC_SLICES, sizeof(slice_t));
@@ -746,9 +807,15 @@ pp_impl_param_t static_ul_init(module_id_t mod_id, int CC_id) {
   static_slice_param_t *ulp = malloc(sizeof(static_slice_param_t));
   ulp->posLow = 0;
   ulp->posHigh = to_prb(RC.mac[mod_id]->common_channels[CC_id].ul_Bandwidth) - 1;
+  ulp->timeSchd = MAX_DEF_SLICE_TIME_SCHD;
+
   default_sched_ul_algo_t *algo = &RC.mac[mod_id]->pre_processor_ul.ul_algo;
   algo->data = NULL;
+  
+  /* Add default UL slice */
   DevAssert(0 == addmod_static_slice_ul(si, 0, strdup("default"), algo, ulp));
+
+  /* Add existing UEs to Default DL slice */
   const UE_list_t *UE_list = &RC.mac[mod_id]->UE_info.list;
   for (int UE_id = UE_list->head; UE_id >= 0; UE_id = UE_list->next[UE_id])
     slicing_add_UE(si, UE_id);

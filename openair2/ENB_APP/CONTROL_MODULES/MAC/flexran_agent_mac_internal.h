@@ -105,7 +105,7 @@ int load_dl_scheduler_function(mid_t mod_id, const char *function_name);
 
 /* Prepare the application of a slicing config */
 int apply_update_dl_slice_config(mid_t mod_id, Protocol__FlexSliceDlUlConfig *slice);
-void apply_update_ul_slice_config(mid_t mod_id, Protocol__FlexSliceDlUlConfig *slice);
+int apply_update_ul_slice_config(mid_t mod_id, Protocol__FlexSliceDlUlConfig *slice);
 
 /* apply a new association between a UE and a slice (both DL and UL) */
 int apply_ue_slice_assoc_update(mid_t mod_id, Protocol__FlexUeConfig *ue_config);
