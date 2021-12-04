@@ -1052,21 +1052,31 @@ int update_or_remove_dl(mid_t mod_id, Protocol__FlexSlice *s)
   return 0;
 }
 
-void update_or_remove_ul(mid_t mod_id, Protocol__FlexSlice *s) {
+int update_or_remove_ul(mid_t mod_id, Protocol__FlexSlice *s) 
+{
   if (s->params_case == PROTOCOL__FLEX_SLICE__PARAMS__NOT_SET
-      && !s->label && !s->scheduler) {
-    LOG_I(FLEXRAN_AGENT, "remove UL slice ID %d\n", s->id);
-    const int rc = flexran_remove_ul_slice(mod_id, s);
+      && !s->label && !s->scheduler) 
+  {
+    LOG_I(FLEXRAN_AGENT, "[%s]remove UL slice ID %d\n", __func__, s->id);
+    int rc = flexran_remove_ul_slice(mod_id, s);
     if (!rc)
+    {
       LOG_W(FLEXRAN_AGENT, "error while removing slice ID %d\n", s->id);
-  } else {
-    LOG_I(FLEXRAN_AGENT, "updating UL slice ID %d\n", s->id);
+      rc = -1;
+    }
+      return rc;
+  } 
+  else 
+  {
+    LOG_I(FLEXRAN_AGENT, "[%s]updating UL slice ID %d\n", __func__, s->id);
     const int rc = flexran_create_ul_slice(mod_id, s);
     if (rc < 0)
       LOG_W(FLEXRAN_AGENT,
             "error while updating slice ID %d: flexran_create_ul_slice() -> %d)\n",
             s->id, rc);
+    return rc;
   }
+  return 0;
 }
 
 int apply_update_dl_slice_config(mid_t mod_id, Protocol__FlexSliceDlUlConfig *dl) 
@@ -1142,52 +1152,74 @@ int apply_update_dl_slice_config(mid_t mod_id, Protocol__FlexSliceDlUlConfig *dl
   return 0;
 }
 
-void apply_update_ul_slice_config(mid_t mod_id, Protocol__FlexSliceDlUlConfig *ul) {
+int apply_update_ul_slice_config(mid_t mod_id, Protocol__FlexSliceDlUlConfig *ul) 
+{
   if (!ul)
-    return;
+    return 0;
 
   Protocol__FlexSliceAlgorithm ul_algo = flexran_get_ul_slice_algo(mod_id);
-  if (ul->has_algorithm && ul_algo != ul->algorithm) {
-    LOG_I(FLEXRAN_AGENT, "loading new UL slice algorithm %d\n", ul->algorithm);
+  if (ul->has_algorithm && ul_algo != ul->algorithm) 
+  {
+    LOG_I(FLEXRAN_AGENT, "[%s]loading new UL slice algorithm %d\n", __func__, ul->algorithm);
     ul_algo = ul->algorithm;
     flexran_set_ul_slice_algo(mod_id, ul_algo);
   }
-  if (ul->n_slices > 0) {
-    if (ul_algo == PROTOCOL__FLEX_SLICE_ALGORITHM__None) {
+
+  if (ul->n_slices > 0) 
+  {
+    if (ul_algo == PROTOCOL__FLEX_SLICE_ALGORITHM__None) 
+    {
       LOG_E(FLEXRAN_AGENT, "cannot update slices: no algorithm loaded\n");
-      return;
+      return -1;
     }
+
     int handled_ul[ul->n_slices];
-    for (int i = 0; i < ul->n_slices; ++i) {
-      if (flexran_find_ul_slice(mod_id, ul->slices[i]->id) < 0) {
+    for (int i = 0; i < ul->n_slices; ++i) 
+    {
+      if (flexran_find_ul_slice(mod_id, ul->slices[i]->id) < 0) 
+      {
         handled_ul[i] = 0;
         continue;
       }
-      update_or_remove_ul(mod_id, ul->slices[i]);
+      LOG_I(FLEXRAN_AGENT, "[%s,%u]update existing UL slice\n", __func__,__LINE__);
+
+      if (update_or_remove_ul(mod_id, ul->slices[i]) == -1)
+        return -1;
+
       handled_ul[i] = 1;
     }
-    for (int i = 0; i < ul->n_slices; ++i) {
+
+    for (int i = 0; i < ul->n_slices; ++i) 
+    {
       if (handled_ul[i])
         continue;
-      update_or_remove_ul(mod_id, ul->slices[i]);
+
+      LOG_I(FLEXRAN_AGENT, "[%s,%u]update new UL slice\n", __func__,__LINE__);
+
+      if (update_or_remove_ul(mod_id, ul->slices[i]) == -1)
+        return -1;
     }
   }
 
-  if (ul->scheduler) {
-    if (ul_algo != PROTOCOL__FLEX_SLICE_ALGORITHM__None) {
+  if (ul->scheduler) 
+  {
+    if (ul_algo != PROTOCOL__FLEX_SLICE_ALGORITHM__None) 
+    {
       LOG_E(FLEXRAN_AGENT, "cannot update scheduling algorithm: slice algorithm loaded\n");
-      return;
+      return 0;
     }
     LOG_I(FLEXRAN_AGENT, "loading new UL scheduling algorithm '%s'\n", ul->scheduler);
     const int rc = flexran_set_ul_scheduler(mod_id, ul->scheduler);
-    if (rc < 0) {
+    if (rc < 0) 
+    {
       LOG_E(FLEXRAN_AGENT,
             "error while updating scheduling algorithm: "
             "flexran_update_dl_sched_algo() -> %d)\n",
             rc);
-      return;
+      return -1;
     }
   }
+  return 0;
 }
 
 int apply_ue_slice_assoc_update(mid_t mod_id, Protocol__FlexUeConfig *ue_config)
