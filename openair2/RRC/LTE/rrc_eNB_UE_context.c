@@ -186,6 +186,8 @@ void rrc_eNB_remove_ue_context(
   struct rrc_eNB_ue_context_s *ue_context_pP)
 //------------------------------------------------------------------------------
 {
+  uint8_t is_ue_found = 0;
+
   if (rrc_instance_pP == NULL) {
     LOG_E(RRC, PROTOCOL_RRC_CTXT_UE_FMT" Bad RRC instance\n",
           PROTOCOL_RRC_CTXT_UE_ARGS(ctxt_pP));
@@ -255,12 +257,50 @@ void rrc_eNB_remove_ue_context(
         itti_send_msg_to_task(TASK_RIC_AGENT, module_id, m);
       }
 #endif
-
+        is_ue_found = 1;
         break;
       }
     }
   }
-  
+ 
+  if (is_ue_found == 0)
+  {
+    /* This is a corner case where UE Context is valid
+     * but was somehow not found in RRC_release_ctrl structure
+     * Detach Ind need to be sent to RIC for such a case
+    */ 
+    LOG_E(RRC,"******* UE Not Found in RRC_release_ctrl ! numUE:%d RNTI:%x ERABs#:%d %d %d %d*********** \n",
+              rrc_release_info.num_UEs, ue_context_pP->ue_context.rnti, ue_context_pP->ue_context.nb_of_e_rabs,
+          ue_context_pP->ue_context.nb_release_of_e_rabs, ue_context_pP->ue_context.e_rab[0].param.e_rab_id, ue_context_pP->ue_context.e_rab[0].param.qos.qci);
+
+#ifdef ENABLE_RAN_SLICING
+      if ( (rsm_emm_event_trigger == 1) &&
+           (ue_context_pP->ue_context.nb_of_e_rabs != 0) )
+      {
+        /* Prepare and Send Detach Event Trigger for each DRB */
+        MessageDef *m = itti_alloc_new_message(TASK_RRC_ENB, CU_EVENT_TRIGGER);
+        CUEventTriggerToRic.eventTriggerType = UE_DETACH_EVENT_TRIGGER;
+        CUEventTriggerToRic.eventTriggerSize = sizeof(ueStatusInd);
+
+        ueDetachInd = (ueStatusInd *)CUEventTriggerToRic.eventTriggerBuff;
+        ueDetachInd->rnti = ue_context_pP->ue_context.rnti;
+        ueDetachInd->eNB_ue_s1ap_id = ue_context_pP->ue_context.eNB_ue_s1ap_id;
+        ueDetachInd->mme_ue_s1ap_id = ue_context_pP->ue_context.mme_ue_s1ap_id;
+        ueDetachInd->e_rab_id = ue_context_pP->ue_context.e_rab[0].param.e_rab_id;
+        ueDetachInd->qci = ue_context_pP->ue_context.e_rab[0].param.qos.qci;
+
+        CU_EVENT_TRIGGER(m).eventTriggerType = CUEventTriggerToRic.eventTriggerType;
+        CU_EVENT_TRIGGER(m).eventTriggerSize = CUEventTriggerToRic.eventTriggerSize;
+
+        memcpy(CU_EVENT_TRIGGER(m).eventTriggerBuff, 
+               CUEventTriggerToRic.eventTriggerBuff, 
+               CUEventTriggerToRic.eventTriggerSize);
+        
+        itti_send_msg_to_task(TASK_RIC_AGENT, module_id, m);
+      } 
+#endif  
+  }
+
   free(ue_context_pP);
   rrc_instance_pP->Nb_ue --;
   LOG_I(RRC,
