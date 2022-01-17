@@ -1726,29 +1726,32 @@ typedef struct msg_st {
 }apiMsg;
 
 typedef struct ue_status {
-  uint16_t   	rnti;
-  int        	ueId;
-  uint32_t   	eNB_ue_s1ap_id :24;
-  uint32_t   	mme_ue_s1ap_id;
-  uint8_t    	e_rab_id;
-  uint8_t    	qci;
-  uint16_t 		cu_ue_f1ap_id;
-  uint16_t 		du_ue_f1ap_id;
+  uint16_t      rnti;
+  int           ueId;
+  uint32_t      eNB_ue_s1ap_id :24;
+  uint32_t      mme_ue_s1ap_id;
+  uint8_t       e_rab_id;
+  uint8_t       qci;
+  uint16_t      cu_ue_f1ap_id;
+  uint16_t      du_ue_f1ap_id;
 }ueStatusInd;
 */
 
 typedef struct slice_req {
   uint32_t  sliceId;
   uint32_t  timeSchd;
+  long      sliceType;
 }sliceCreateUpdateReq;
 
 typedef struct slice_del {
   uint32_t  sliceId;
+  long      sliceType;
 }sliceDeleteReq;
 
 typedef struct ue_slice_assoc {
   unsigned int      rnti;
   uint32_t          sliceId;
+  uint32_t          ulSliceId;
 }ueSliceAssocReq;
 
 typedef struct slice_resp {
