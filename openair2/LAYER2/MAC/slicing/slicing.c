@@ -98,6 +98,7 @@ void _move_UE(slice_t **s, uint8_t *assoc, int UE_id, int to)
 
   /*update UE:Slice association */
   assoc[UE_id] = to;
+  LOG_I(MAC, "UEID:%d associated with SliceId:%d\n",UE_id, to);
 }
 
 void slicing_move_UE(slice_info_t *si, int UE_id, int idx) {
@@ -616,12 +617,22 @@ void static_ul(module_id_t mod_id,
                frame_t frame,
                sub_frame_t subframe,
                frame_t sched_frame,
-               sub_frame_t sched_subframe) {
+               sub_frame_t sched_subframe) 
+{
   UE_info_t *UE_info = &RC.mac[mod_id]->UE_info;
+  static uint16_t slice_schd_time[MAX_STATIC_SLICES] = {0};
+  static uint8_t slice_schd_idx = 0;
+  static uint8_t slice_mask = 0;
+  uint8_t iter = 0;
+  int i;
+  static_slice_param_t *p = NULL;
+
   const int N_RB_UL = to_prb(RC.mac[mod_id]->common_channels[CC_id].ul_Bandwidth);
   COMMON_channels_t *cc = &RC.mac[mod_id]->common_channels[CC_id];
 
-  for (int UE_id = UE_info->list.head; UE_id >= 0; UE_id = UE_info->list.next[UE_id]) {
+  for (int UE_id = UE_info->list.head; UE_id >= 0; UE_id = UE_info->list.next[UE_id]) 
+  {
+    /* initialize per-UE scheduling information */
     UE_TEMPLATE *UE_template = &UE_info->UE_template[CC_id][UE_id];
     UE_template->pre_assigned_mcs_ul = 0;
     UE_template->pre_allocated_nb_rb_ul = 0;
@@ -631,7 +642,9 @@ void static_ul(module_id_t mod_id,
   }
 
   slice_info_t *s = RC.mac[mod_id]->pre_processor_ul.slices;
-  int max_num_ue;
+  int max_num_ue; /*Max UE to be scheduled per slice */
+
+#if 0
   switch (s->num) {
     case 1:
       max_num_ue = 4;
@@ -643,15 +656,43 @@ void static_ul(module_id_t mod_id,
       max_num_ue = 1;
       break;
   }
-  for (int i = 0; i < s->num; ++i) {
+#endif
+
+  /* As single slice get scehduled per SF, hence 4UEs can be scheduled per slice*/ 
+  max_num_ue = 4;
+
+  /* check & set slice scheduling timeframe in the begining of every SFN*/
+  if (subframe == 0)
+  {
+    for (i = 0; i < s->num; ++i)
+    {
+      p = s->s[i]->algo_data;
+      slice_schd_time[i] = p->timeSchd;
+      
+      if(slice_schd_time[i])
+        slice_mask |= (1 << i);
+    }
+  }
+
+  for (i = slice_schd_idx; (i < s->num) && (slice_mask != 0) && (iter < s->num); (i = (i + 1) % s->num) ) 
+  {
+    iter++;
+    /* Check if slice has scheduling oppertunities left in timeframe */
+    if (slice_schd_time[i] == 0)
+      continue;
+    
+    /* Skip Slice scheduling in case no UE is associated */
     if (s->s[i]->UEs.head < 0)
       continue;
+
     int last_rb_blocked = 1;
     int n_contig = 0;
     contig_rbs_t rbs[2]; // up to two contig RBs for PRACH in between
-    static_slice_param_t *p = s->s[i]->algo_data;
-    for (int rb = p->posLow; rb <= p->posHigh && rb < N_RB_UL; ++rb) {
-      if (cc->vrb_map_UL[rb] == 0 && last_rb_blocked) {
+    p = s->s[i]->algo_data; 
+    for (int rb = p->posLow; rb <= p->posHigh && rb < N_RB_UL; ++rb) 
+    {
+      if (cc->vrb_map_UL[rb] == 0 && last_rb_blocked) 
+      {
         last_rb_blocked = 0;
         n_contig++;
         AssertFatal(n_contig <= 2, "cannot handle more than two contiguous RB regions\n");
@@ -676,6 +717,17 @@ void static_ul(module_id_t mod_id,
                          n_contig,
                          rbs,
                          s->s[i]->ul_algo.data);
+
+    if (s->num > 1)
+      slice_schd_idx = ( (slice_schd_idx + 1) % s->num); /*all slices get schedule in RR */
+    
+    if (slice_schd_time[i] >= 10)
+    {
+      slice_schd_time[i] -= 10;
+      if (slice_schd_time[i] == 0)
+        slice_mask &= reset_bit[i]; /*reset slice bit */
+      break; /* only single slice per subframe scheduling allowed*/
+    }
   }
 
   // the following block is meant for validation of the pre-processor to check

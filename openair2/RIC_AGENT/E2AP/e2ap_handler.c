@@ -705,16 +705,21 @@ int du_e2ap_handle_ric_control_request(
                 if (rc.control_req_type == ctrlMsg->present)
                 {
                     apiMsg ricSlicingApi;
+                    memset(ricSlicingApi.apiBuff, 0, 500);
+
                     switch(ctrlMsg->present) {
                     case E2SM_RSM_E2SM_RSM_ControlMessage_PR_sliceCreate:
                     {
-                      if (E2SM_RSM_SliceType_dlSlice == ctrlMsg->choice.sliceCreate.sliceType)
+                      if ( (E2SM_RSM_SliceType_dlSlice == ctrlMsg->choice.sliceCreate.sliceType) ||
+                           (E2SM_RSM_SliceType_ulSlice == ctrlMsg->choice.sliceCreate.sliceType) )
                       {
                         ricSlicingApi.apiID = SLICE_CREATE_UPDATE_REQ;
                         ((sliceCreateUpdateReq *)ricSlicingApi.apiBuff)->sliceId =
                                                 ctrlMsg->choice.sliceCreate.sliceID;
                         ((sliceCreateUpdateReq *)ricSlicingApi.apiBuff)->timeSchd =
                             *ctrlMsg->choice.sliceCreate.sliceConfigParameters.weight;
+                        ((sliceCreateUpdateReq *)ricSlicingApi.apiBuff)->sliceType =
+                                                ctrlMsg->choice.sliceCreate.sliceType;
 
                         handle_slicing_api_req(&ricSlicingApi);
                       }
@@ -733,13 +738,16 @@ int du_e2ap_handle_ric_control_request(
                     }
                     case E2SM_RSM_E2SM_RSM_ControlMessage_PR_sliceUpdate:
                     {
-                      if (E2SM_RSM_SliceType_dlSlice == ctrlMsg->choice.sliceUpdate.sliceType)
+                      if ( (E2SM_RSM_SliceType_dlSlice == ctrlMsg->choice.sliceUpdate.sliceType) ||
+                           (E2SM_RSM_SliceType_ulSlice == ctrlMsg->choice.sliceUpdate.sliceType) )
                       {
                         ricSlicingApi.apiID = SLICE_CREATE_UPDATE_REQ;
                         ((sliceCreateUpdateReq *)ricSlicingApi.apiBuff)->sliceId = 
                                                 ctrlMsg->choice.sliceUpdate.sliceID;
                         ((sliceCreateUpdateReq *)ricSlicingApi.apiBuff)->timeSchd = 
                             *ctrlMsg->choice.sliceUpdate.sliceConfigParameters.weight;
+                        ((sliceCreateUpdateReq *)ricSlicingApi.apiBuff)->sliceType =
+                                                ctrlMsg->choice.sliceUpdate.sliceType;
 
                         handle_slicing_api_req(&ricSlicingApi);
                       }
@@ -762,6 +770,8 @@ int du_e2ap_handle_ric_control_request(
                         ricSlicingApi.apiID = SLICE_DELETE_REQ;
                         ((sliceDeleteReq *)ricSlicingApi.apiBuff)->sliceId =
                                                 ctrlMsg->choice.sliceDelete.sliceID;
+                        ((sliceDeleteReq *)ricSlicingApi.apiBuff)->sliceType =
+                                                ctrlMsg->choice.sliceDelete.sliceType;
 
                         handle_slicing_api_req(&ricSlicingApi);
                         break;
@@ -778,7 +788,13 @@ int du_e2ap_handle_ric_control_request(
                             ((ueSliceAssocReq *)ricSlicingApi.apiBuff)->rnti = 
                                                 f1ap_get_rnti_by_du_id(&f1ap_du_inst[0],
                                                 ctrlMsg->choice.sliceAssociate.ueId.choice.duUeF1ApID);
-                            
+
+                            if (ctrlMsg->choice.sliceAssociate.uplinkSliceID != NULL)
+                            {
+                               ((ueSliceAssocReq *)ricSlicingApi.apiBuff)->ulSliceId =
+                                                *ctrlMsg->choice.sliceAssociate.uplinkSliceID;
+                            }
+ 
                             handle_slicing_api_req(&ricSlicingApi);
                         }
                         else
