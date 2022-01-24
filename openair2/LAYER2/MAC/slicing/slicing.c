@@ -519,6 +519,16 @@ void static_dl(module_id_t mod_id,
     }
   }
 
+  slice_schd_idx = (slice_schd_idx % s->num);
+
+#if 0
+  if ( ((frame & 127) == 0) && (subframe == 0) )
+  {
+    LOG_I(MAC, "[%u,%u,%d] UEs-slice0:%d S#:%d sliceMask:%x def time sched:%u dl-buff:%u slice_sch_Idx:%u\n",
+          frame, subframe, UE_info->list.head, s->s[0]->UEs.head, s->num, slice_mask, slice_schd_time[0], UE_info->UE_template[0][UE_info->list.head].dl_buffer_total, slice_schd_idx);
+  }
+#endif
+
   for (i = slice_schd_idx; (i < s->num) && (slice_mask != 0) && (iter < s->num); (i = (i + 1) % s->num) ) 
   {
     iter++;
@@ -542,6 +552,16 @@ void static_dl(module_id_t mod_id,
       rbgalloc_slice_mask[rbg] = rbgalloc_mask[rbg];
       n_rbg_sched += rbgalloc_mask[rbg];
     }
+
+#if 0
+    if ( (UE_info->UE_template[0][UE_info->list.head].dl_buffer_total > 0) ||
+         ( ((frame & 127) == 0) && (subframe == 0) )
+       )
+    {
+        LOG_I(MAC, "[%u,%u,%d] DL Sch SId:%d S#:%d nrbg:%d tschd:%d buff:%u\n",
+          frame, subframe, UE_info->list.head, i, s->num, n_rbg_sched, slice_schd_time[i], UE_info->UE_template[0][UE_info->list.head].dl_buffer_total);
+    }
+#endif
 
     s->s[i]->dl_algo.run(mod_id,
                          CC_id,
@@ -673,6 +693,8 @@ void static_ul(module_id_t mod_id,
         slice_mask |= (1 << i);
     }
   }
+
+  slice_schd_idx = (slice_schd_idx % s->num);
 
   for (i = slice_schd_idx; (i < s->num) && (slice_mask != 0) && (iter < s->num); (i = (i + 1) % s->num) ) 
   {
