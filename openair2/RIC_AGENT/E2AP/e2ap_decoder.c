@@ -67,18 +67,21 @@ int e2ap_decode_pdu(E2AP_E2AP_PDU_t *pdu,
 
   switch (pdu->present) {
   case E2AP_E2AP_PDU_PR_initiatingMessage:
-    switch (pdu->choice.initiatingMessage.procedureCode) {
-    CASE_E2AP_I(E2AP_ProcedureCode_id_Reset,Reset);
-    CASE_E2AP_I(E2AP_ProcedureCode_id_RICsubscription,
-		RICsubscription);
-    CASE_E2AP_I(E2AP_ProcedureCode_id_RICsubscriptionDelete,
-		RICsubscriptionDelete);
-    CASE_E2AP_I(E2AP_ProcedureCode_id_RICcontrol,RICcontrol);
-    CASE_E2AP_I(E2AP_ProcedureCode_id_RICserviceQuery,RICserviceQuery);
-    CASE_E2AP_I(E2AP_ProcedureCode_id_ErrorIndication,ErrorIndication);
-    default:
-      RIC_AGENT_ERROR("unknown procedure ID (%d) for initiating message\n",
-		 (int)pdu->choice.initiatingMessage.procedureCode);
+    switch (pdu->choice.initiatingMessage.procedureCode) 
+    {
+      CASE_E2AP_I(E2AP_ProcedureCode_id_Reset,Reset);
+      CASE_E2AP_I(E2AP_ProcedureCode_id_RICsubscription,
+		          RICsubscription);
+      CASE_E2AP_I(E2AP_ProcedureCode_id_RICsubscriptionDelete,
+		          RICsubscriptionDelete);
+      CASE_E2AP_I(E2AP_ProcedureCode_id_RICcontrol,RICcontrol);
+      CASE_E2AP_I(E2AP_ProcedureCode_id_RICserviceQuery,RICserviceQuery);
+      CASE_E2AP_I(E2AP_ProcedureCode_id_ErrorIndication,ErrorIndication);
+      CASE_E2AP_I(E2AP_ProcedureCode_id_E2connectionUpdate,E2ConnectionUpdate);
+    
+      default:
+        RIC_AGENT_ERROR("unknown procedure ID (%d) for initiating message\n",
+		                (int)pdu->choice.initiatingMessage.procedureCode);
       return -1;
     }
     break;
@@ -87,6 +90,7 @@ int e2ap_decode_pdu(E2AP_E2AP_PDU_t *pdu,
     CASE_E2AP_S(E2AP_ProcedureCode_id_E2setup,E2SetupResponse);
     CASE_E2AP_S(E2AP_ProcedureCode_id_Reset,Reset);
     CASE_E2AP_S(E2AP_ProcedureCode_id_RICserviceUpdate,RICserviceUpdate);
+    CASE_E2AP_S(E2AP_ProcedureCode_id_E2nodeConfigurationUpdate,E2nodeConfigurationUpdateAcknowledge);
     default:
       RIC_AGENT_ERROR("unknown procedure ID (%d) for successful outcome\n",
 		 (int)pdu->choice.successfulOutcome.procedureCode);

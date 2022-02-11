@@ -48,8 +48,10 @@
 #include "E2SM_RSM_E2SM-RSM-ControlMessage.h"
 #include "E2SM_RSM_E2SM-RSM-EventTriggerDefinition.h"
 #endif
-
+#include "BIT_STRING.h"
 //#include "E2SM_KPM_Trigger-ConditionIE-Item.h"
+
+extern RAN_CONTEXT_t RC;
 
 int e2ap_handle_e2_setup_response(ric_agent_info_t *ric,uint32_t stream,
                   E2AP_E2AP_PDU_t *pdu)
@@ -143,6 +145,248 @@ int e2ap_handle_e2_setup_failure(ranid_t ranid,uint32_t stream,
 
     RIC_AGENT_INFO("E2SetupFailure (ranid %u) from RIC (cause=%ld,detail=%ld)\n", ranid,cause,cause_detail);
 
+    return 0;
+}
+
+void dec2strIpv4(uint32_t binIpv4, char *decIpv4)
+{
+    sprintf(decIpv4,"%u.%u.%u.%u",
+                    binIpv4>>24,
+                    ((binIpv4>>16) & 0xFF),
+                    ((binIpv4>>8) & 0xFF),
+                    (binIpv4 & 0xFF));;
+
+    printf("Remote Ipv4 Address:%s\n",decIpv4);
+
+    return;
+}
+
+void prepare_e2_conn_update_ack(uint8_t **outbuf,
+                                uint32_t *outlen,
+                                BIT_STRING_t *tnlAddr,
+                                BIT_STRING_t *tnlPort)
+{
+  E2AP_E2AP_PDU_t pdu;
+  E2AP_E2connectionUpdateAcknowledge_t *req;
+  E2AP_E2connectionUpdateAck_IEs_t *ie;
+  E2AP_E2connectionUpdate_ItemIEs_t *itemIE;
+  E2AP_E2connectionSetupFailed_ItemIEs_t *setupFail_ItemIE;
+
+  DevAssert(outbuf != NULL && outlen != NULL);
+
+  memset(&pdu,0,sizeof(pdu));
+  pdu.present = E2AP_E2AP_PDU_PR_successfulOutcome;
+  pdu.choice.successfulOutcome.procedureCode = E2AP_ProcedureCode_id_E2connectionUpdate;
+  pdu.choice.successfulOutcome.criticality = E2AP_Criticality_reject;
+  pdu.choice.successfulOutcome.value.present = E2AP_SuccessfulOutcome__value_PR_E2connectionUpdateAcknowledge;
+  req = &pdu.choice.successfulOutcome.value.choice.E2connectionUpdateAcknowledge;
+
+  /* Transaction Id */
+  ie = (E2AP_E2connectionUpdateAck_IEs_t *)calloc(1,sizeof(*ie));
+  ie->id = E2AP_ProtocolIE_ID_id_TransactionID;
+  ie->criticality = E2AP_Criticality_reject;
+  ie->value.present = E2AP_E2connectionUpdateAck_IEs__value_PR_TransactionID;
+  ie->value.choice.TransactionID = 1;
+
+  ASN_SEQUENCE_ADD(&req->protocolIEs.list, ie);
+
+  /* E2connectionUpdate_List */
+  ie = (E2AP_E2connectionUpdateAck_IEs_t *)calloc(1,sizeof(*ie));
+  ie->id = E2AP_ProtocolIE_ID_id_E2connectionSetup;
+  ie->criticality = E2AP_Criticality_reject;
+  ie->value.present = E2AP_E2connectionUpdateAck_IEs__value_PR_E2connectionUpdate_List;
+
+  itemIE = (E2AP_E2connectionUpdate_ItemIEs_t *)calloc(1,sizeof(*itemIE));
+  itemIE->id = E2AP_ProtocolIE_ID_id_E2connectionUpdate_Item;
+  itemIE->criticality = E2AP_Criticality_ignore;
+  itemIE->value.present = E2AP_E2connectionUpdate_ItemIEs__value_PR_E2connectionUpdate_Item;
+  itemIE->value.choice.E2connectionUpdate_Item.tnlInformation.tnlAddress.buf = (uint8_t *)calloc(1,4);
+  itemIE->value.choice.E2connectionUpdate_Item.tnlInformation.tnlAddress.size = 4;
+  itemIE->value.choice.E2connectionUpdate_Item.tnlInformation.tnlAddress.bits_unused = 0;
+
+  itemIE->value.choice.E2connectionUpdate_Item.tnlInformation.tnlAddress.buf[0] = tnlAddr->buf[0];
+  itemIE->value.choice.E2connectionUpdate_Item.tnlInformation.tnlAddress.buf[1] = tnlAddr->buf[1];
+  itemIE->value.choice.E2connectionUpdate_Item.tnlInformation.tnlAddress.buf[2] = tnlAddr->buf[2];
+  itemIE->value.choice.E2connectionUpdate_Item.tnlInformation.tnlAddress.buf[3] = tnlAddr->buf[3];
+
+  itemIE->value.choice.E2connectionUpdate_Item.tnlInformation.tnlPort = (BIT_STRING_t *)calloc(1,sizeof(BIT_STRING_t));
+  itemIE->value.choice.E2connectionUpdate_Item.tnlInformation.tnlPort->buf = (uint8_t *)calloc(1,tnlPort->size);
+  itemIE->value.choice.E2connectionUpdate_Item.tnlInformation.tnlPort->buf[0] = tnlPort->buf[0];
+  itemIE->value.choice.E2connectionUpdate_Item.tnlInformation.tnlPort->buf[1] = tnlPort->buf[1];
+  itemIE->value.choice.E2connectionUpdate_Item.tnlInformation.tnlPort->size = tnlPort->size;
+  itemIE->value.choice.E2connectionUpdate_Item.tnlInformation.tnlPort->bits_unused = tnlPort->bits_unused;
+
+  itemIE->value.choice.E2connectionUpdate_Item.tnlUsage = E2AP_TNLusage_both;
+
+  /*RIC_AGENT_INFO("[%s] BITString IPV4:%s Port:%s",
+                 __func__,
+                 itemIE->value.choice.E2connectionUpdate_Item.tnlInformation.tnlAddress.buf,
+                 itemIE->value.choice.E2connectionUpdate_Item.tnlInformation.tnlPort->buf);*/
+
+  ASN_SEQUENCE_ADD(&ie->value.choice.E2connectionUpdate_List.list, itemIE);
+  ASN_SEQUENCE_ADD(&req->protocolIEs.list, ie);
+
+  /* E2connectionSetupFailed-List */
+  ie = (E2AP_E2connectionUpdateAck_IEs_t *)calloc(1,sizeof(*ie));
+  ie->id = E2AP_ProtocolIE_ID_id_E2connectionSetupFailed;
+  ie->criticality = E2AP_Criticality_reject;
+  ie->value.present = E2AP_E2connectionUpdateAck_IEs__value_PR_E2connectionSetupFailed_List;
+
+  setupFail_ItemIE = (E2AP_E2connectionSetupFailed_ItemIEs_t *)calloc(1,sizeof(*setupFail_ItemIE));
+  setupFail_ItemIE->id = E2AP_ProtocolIE_ID_id_E2connectionSetupFailed_Item;
+  setupFail_ItemIE->criticality = E2AP_Criticality_ignore;
+  setupFail_ItemIE->value.present = E2AP_E2connectionSetupFailed_ItemIEs__value_PR_E2connectionSetupFailed_Item;
+  setupFail_ItemIE->value.choice.E2connectionSetupFailed_Item.tnlInformation.tnlAddress.buf = (uint8_t *)calloc(1,4);
+  setupFail_ItemIE->value.choice.E2connectionSetupFailed_Item.tnlInformation.tnlAddress.size = 4;
+  setupFail_ItemIE->value.choice.E2connectionSetupFailed_Item.tnlInformation.tnlAddress.bits_unused = 0;
+
+  setupFail_ItemIE->value.choice.E2connectionSetupFailed_Item.tnlInformation.tnlAddress.buf[0] = tnlAddr->buf[0];
+  setupFail_ItemIE->value.choice.E2connectionSetupFailed_Item.tnlInformation.tnlAddress.buf[1] = tnlAddr->buf[1];
+  setupFail_ItemIE->value.choice.E2connectionSetupFailed_Item.tnlInformation.tnlAddress.buf[2] = tnlAddr->buf[2];
+  setupFail_ItemIE->value.choice.E2connectionSetupFailed_Item.tnlInformation.tnlAddress.buf[3] = tnlAddr->buf[3];
+
+  setupFail_ItemIE->value.choice.E2connectionSetupFailed_Item.tnlInformation.tnlPort = (BIT_STRING_t *)calloc(1,sizeof(BIT_STRING_t));
+  setupFail_ItemIE->value.choice.E2connectionSetupFailed_Item.tnlInformation.tnlPort->buf = (uint8_t *)calloc(1,tnlPort->size);
+  setupFail_ItemIE->value.choice.E2connectionSetupFailed_Item.tnlInformation.tnlPort->buf[0] = tnlPort->buf[0];
+  setupFail_ItemIE->value.choice.E2connectionSetupFailed_Item.tnlInformation.tnlPort->buf[1] = tnlPort->buf[1];
+  setupFail_ItemIE->value.choice.E2connectionSetupFailed_Item.tnlInformation.tnlPort->size = tnlPort->size;
+  setupFail_ItemIE->value.choice.E2connectionSetupFailed_Item.tnlInformation.tnlPort->bits_unused = tnlPort->bits_unused;
+
+  setupFail_ItemIE->value.choice.E2connectionSetupFailed_Item.cause.present = E2AP_Cause_PR_protocol;
+  setupFail_ItemIE->value.choice.E2connectionSetupFailed_Item.cause.choice.protocol = E2AP_CauseProtocol_semantic_error;
+
+  ASN_SEQUENCE_ADD(&ie->value.choice.E2connectionSetupFailed_List.list, setupFail_ItemIE);
+  ASN_SEQUENCE_ADD(&req->protocolIEs.list, ie);
+
+  if (e2ap_encode_pdu(&pdu,outbuf,outlen) < 0)
+  {
+    RIC_AGENT_ERROR("Failed to encode E2ConnectionUpdateAck\n");
+    //return 1;
+  }
+
+  return;
+}
+
+int e2ap_handle_e2_connection_update(
+        ranid_t ranid,
+        uint32_t stream,
+        E2AP_E2AP_PDU_t *pdu,
+        uint8_t **outbuf,
+        uint32_t *outlen)
+{
+    //int         ret;
+    char        remote_ipv4[16];
+    uint16_t    remote_port;
+    MessageDef *msg;
+    sctp_new_association_req_t *req;
+    //asn_dec_rval_t rv;
+
+    RIC_AGENT_INFO("Received E2ConnectionUpdate from ranid %u\n",ranid);
+
+    DevAssert(pdu != NULL);
+
+    E2AP_E2connectionUpdate_t* e2_conn_upd = &pdu->choice.initiatingMessage.value.choice.E2connectionUpdate;
+
+    for (E2AP_E2connectionUpdate_IEs_t** ptr = e2_conn_upd->protocolIEs.list.array;
+            ptr < &e2_conn_upd->protocolIEs.list.array[e2_conn_upd->protocolIEs.list.count];
+            ptr++) 
+    {
+        E2AP_E2connectionUpdate_IEs_t* connUpdateIE = (E2AP_E2connectionUpdate_IEs_t *)*ptr;
+
+        if  (connUpdateIE->value.present == E2AP_E2connectionUpdate_IEs__value_PR_E2connectionUpdate_List) 
+        {
+            /* At this we just support 1 Data Connection */
+            
+            E2AP_E2connectionUpdate_List_t *connUpdateList = &connUpdateIE->value.choice.E2connectionUpdate_List; 
+
+            for (int iter = 0; iter < connUpdateList->list.count; iter++)
+            {
+                E2AP_E2connectionUpdate_ItemIEs_t* connUpdate_Item = (E2AP_E2connectionUpdate_ItemIEs_t*)connUpdateList->list.array[iter];
+                RIC_AGENT_INFO("Iter:%d\n",iter);
+
+            if (connUpdate_Item->value.present == E2AP_E2connectionUpdate_ItemIEs__value_PR_E2connectionUpdate_Item)
+            {
+                RIC_AGENT_INFO("[%s] Received E2ConnectionUpdate Item within List \n",__func__);
+                //BIT_STRING_t *decoded_ip = 0;
+                uint32_t decoded_ip=0;
+                uint16_t decoded_port=0;
+
+                RIC_AGENT_INFO("[%s] Preparing E2connectionUpdateAcknowledge \n",__func__);
+                prepare_e2_conn_update_ack(outbuf,
+                                           outlen,
+                                           &connUpdate_Item->value.choice.E2connectionUpdate_Item.tnlInformation.tnlAddress,
+                                           connUpdate_Item->value.choice.E2connectionUpdate_Item.tnlInformation.tnlPort);
+
+                RIC_AGENT_INFO("[%s] Setting up New SCTP for Data Connection \n",__func__);
+                asn_fprint(stderr, &asn_DEF_BIT_STRING, &connUpdate_Item->value.choice.E2connectionUpdate_Item.tnlInformation.tnlAddress); 
+
+                BIT_STRING_TO_TRANSPORT_LAYER_ADDRESS_IPv4(&connUpdate_Item->value.choice.E2connectionUpdate_Item.tnlInformation.tnlAddress,
+                                                           decoded_ip);                     
+               
+                OCTET_STRING_TO_INT16(connUpdate_Item->value.choice.E2connectionUpdate_Item.tnlInformation.tnlPort,
+                                      decoded_port);
+
+                RIC_AGENT_INFO("TNLAddress:%u Port:%u \n",
+                                decoded_ip, decoded_port);
+
+                /* Binary to Decimal IPv4 Conversion */
+                dec2strIpv4(decoded_ip, remote_ipv4);
+                
+		        remote_port = decoded_port;
+
+                /* CU & DU Differentiation */
+                if (e2_conf[ranid]->e2node_type == E2NODE_TYPE_ENB_CU)
+                {
+                    msg = itti_alloc_new_message(TASK_RIC_AGENT, SCTP_NEW_ASSOCIATION_REQ);
+                }
+                else //if (e2_conf[ric->ranid]->e2node_type == E2NODE_TYPE_ENB_DU)
+                {
+                    msg = itti_alloc_new_message(TASK_RIC_AGENT_DU, SCTP_NEW_ASSOCIATION_REQ);
+                }
+
+                req = &msg->ittiMsg.sctp_new_association_req;
+
+                req->ppid = E2AP_SCTP_PPID;
+                req->port = remote_port;
+                req->in_streams = 1;
+                req->out_streams = 1;
+                req->remote_address.ipv4 = 1;
+                strncpy(req->remote_address.ipv4_address, remote_ipv4,
+                        sizeof(req->remote_address.ipv4_address));
+                req->remote_address.ipv4_address[sizeof(req->remote_address.ipv4_address)-1] = '\0';
+                
+                e2_conf[ranid]->data_conn_remote_port = remote_port;
+                strncpy(e2_conf[ranid]->data_conn_remote_ipv4, remote_ipv4,
+                        sizeof(e2_conf[ranid]->data_conn_remote_ipv4));
+                e2_conf[ranid]->data_conn_remote_ipv4[sizeof(e2_conf[ranid]->data_conn_remote_ipv4)-1] = '\0';
+
+#if DISABLE_SCTP_MULTIHOMING
+    // Comment out if testing with loopback
+                req->local_address.ipv4 = 1;
+                strncpy(req->local_address.ipv4_address, RC.rrc[0]->eth_params_s.my_addr,
+                        sizeof(req->local_address.ipv4_address));
+                req->local_address.ipv4_address[sizeof(req->local_address.ipv4_address)-1] = '\0';
+#endif
+                req->ulp_cnx_id = 2;
+
+                RIC_AGENT_INFO("[%s] ranid %u Requesting data connection to RIC at %s:%u with IP %s\n",__func__,
+                    ranid,req->remote_address.ipv4_address, req->port, req->local_address.ipv4_address);
+            
+                itti_send_msg_to_task(TASK_SCTP, ranid, msg);
+            }
+            }
+        }
+
+        if  (connUpdateIE->value.present == E2AP_E2connectionUpdate_IEs__value_PR_E2connectionUpdateRemove_List)
+        {
+            RIC_AGENT_INFO("[%s] Received E2Connection Remove List\n",__func__);
+        }
+
+        if  (connUpdateIE->value.present == E2AP_E2connectionUpdate_IEs__value_PR_E2connectionUpdate_List_1)
+        {
+            RIC_AGENT_INFO("[%s] Received E2Connection List_1\n",__func__);
+        }
+    }
     return 0;
 }
 
@@ -419,7 +663,7 @@ int e2ap_handle_ric_subscription_delete_request(
     if (!func) {
         RIC_AGENT_ERROR("failed to find ran_function %ld\n",function_id);
         cause = E2AP_Cause_PR_ricRequest;
-        cause_detail = E2AP_CauseRIC_ran_function_id_Invalid;
+        cause_detail = E2AP_CauseProtocol_unspecified;
         goto errout;
     }
 
@@ -427,7 +671,7 @@ int e2ap_handle_ric_subscription_delete_request(
     if (!rs) {
         RIC_AGENT_ERROR("failed to find subscription %ld/%ld/%ld\n", request_id,instance_id,function_id);
         cause = E2AP_Cause_PR_ricRequest;
-        cause_detail = E2AP_CauseRIC_request_id_unknown;
+        cause_detail = E2AP_CauseProtocol_unspecified;
         goto errout;
     }
 
@@ -517,7 +761,8 @@ int e2ap_handle_message(
         const uint8_t * const buf,
         const uint32_t buflen,
         uint8_t **outbuf,
-        uint32_t *outlen)
+        uint32_t *outlen,
+        uint32_t *assoc_id)
 {
     E2AP_E2AP_PDU_t pdu;
     int ret;
@@ -533,19 +778,32 @@ int e2ap_handle_message(
 
     switch (pdu.present) {
         case E2AP_E2AP_PDU_PR_initiatingMessage:
-            switch (pdu.choice.initiatingMessage.procedureCode) {
+            switch (pdu.choice.initiatingMessage.procedureCode) 
+            {
                 case E2AP_ProcedureCode_id_RICsubscription:
                     ret = e2ap_handle_ric_subscription_request(ric, stream, &pdu, outbuf, outlen);
+                    *assoc_id = ric->data_conn_assoc_id;
                     break;
+
                 case E2AP_ProcedureCode_id_RICsubscriptionDelete:
                     ret = e2ap_handle_ric_subscription_delete_request(ric, stream, &pdu, outbuf, outlen);
+                    *assoc_id = ric->data_conn_assoc_id;
                     break;
+
                 case E2AP_ProcedureCode_id_RICserviceQuery:
                     ret = e2ap_handle_ric_service_query(ric, stream, &pdu, outbuf, outlen);
+                    *assoc_id = ric->data_conn_assoc_id;
                     break;
+
                 case E2AP_ProcedureCode_id_Reset:
                     ret = e2ap_handle_reset_request(ric, stream, &pdu, outbuf, outlen);
+                    *assoc_id = ric->data_conn_assoc_id;
                     break;
+
+                case E2AP_ProcedureCode_id_E2connectionUpdate:
+                    ret = e2ap_handle_e2_connection_update(ric->ranid, stream, &pdu, outbuf, outlen);
+                    break;
+
                 default:
                     RIC_AGENT_WARN("unsupported initiatingMessage procedure %ld (ranid %u)\n",
                             pdu.choice.initiatingMessage.procedureCode,ric->ranid);
@@ -553,28 +811,38 @@ int e2ap_handle_message(
                     return -1;
             };
             break;
+
         case E2AP_E2AP_PDU_PR_successfulOutcome:
-            switch (pdu.choice.successfulOutcome.procedureCode) {
+            switch (pdu.choice.successfulOutcome.procedureCode) 
+            {
                 case E2AP_ProcedureCode_id_E2setup:
                     ret = e2ap_handle_e2_setup_response(ric, stream, &pdu);
                     break;
+
+		        case E2AP_ProcedureCode_id_E2nodeConfigurationUpdate:
+		            break;
+
                 default:
                     RIC_AGENT_WARN("unsupported successfulOutcome procedure %ld (ranid %u)\n", pdu.choice.initiatingMessage.procedureCode,ric->ranid);
                     ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_E2AP_E2AP_PDU, &pdu);
                     return -1;
             };
             break;
+
         case E2AP_E2AP_PDU_PR_unsuccessfulOutcome:
-            switch (pdu.choice.unsuccessfulOutcome.procedureCode) {
+            switch (pdu.choice.unsuccessfulOutcome.procedureCode) 
+            {
                 case E2AP_ProcedureCode_id_E2setup:
                     ret = e2ap_handle_e2_setup_failure(ric->ranid, stream, &pdu);
                     break;
+
                 default:
                     RIC_AGENT_WARN("unsupported unsuccessfulOutcome procedure %ld (ranid %u)\n", pdu.choice.initiatingMessage.procedureCode,ric->ranid);
                     ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_E2AP_E2AP_PDU, &pdu);
                     return -1;
             };
             break;
+
         default:
             RIC_AGENT_ERROR("unsupported presence %u (ranid %u)\n", pdu.present, ric->ranid);
             ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_E2AP_E2AP_PDU, &pdu);
@@ -628,7 +896,7 @@ int du_e2ap_handle_ric_control_request(
             if (!func) 
             {
                 RIC_AGENT_ERROR("failed to find ran_function %ld\n",rc.function_id);
-                rc.failure_cause = E2AP_CauseRIC_ran_function_id_Invalid;
+                rc.failure_cause = E2AP_CauseProtocol_unspecified;
                 if (req_instance_id_flag == 1)
                     goto errout;
                 else
@@ -673,7 +941,7 @@ int du_e2ap_handle_ric_control_request(
 
                     default:
                         RIC_AGENT_ERROR("INVALID RSM Command %ld Received\n", ctrlHdr->rsm_command);
-                        rc.failure_cause = E2AP_CauseRIC_action_not_supported;
+                        rc.failure_cause = E2AP_CauseProtocol_unspecified;
                         
                         if (req_instance_id_flag == 1)
                             goto errout;
@@ -727,7 +995,7 @@ int du_e2ap_handle_ric_control_request(
                       {
                         RIC_AGENT_ERROR("CreateSlice  INVALID SliceType:%ld\n",
                                         ctrlMsg->choice.sliceCreate.sliceType);
-                        rc.failure_cause = E2AP_CauseRIC_control_message_invalid;
+                        rc.failure_cause = E2AP_CauseProtocol_unspecified;
 
                         if (req_instance_id_flag == 1)
                             goto errout;
@@ -755,7 +1023,7 @@ int du_e2ap_handle_ric_control_request(
                       {
                         RIC_AGENT_ERROR("UpdateSlice INVALID SliceType:%ld\n",
                                         ctrlMsg->choice.sliceCreate.sliceType);
-                        rc.failure_cause = E2AP_CauseRIC_control_message_invalid;
+                        rc.failure_cause = E2AP_CauseProtocol_unspecified;
 
                         if (req_instance_id_flag == 1)
                             goto errout;
@@ -801,7 +1069,7 @@ int du_e2ap_handle_ric_control_request(
                         {
                             RIC_AGENT_ERROR("INVALID UE-ID:%d received during UE:SLICE assoc\n",
                                         ctrlMsg->choice.sliceAssociate.ueId.present);
-                            rc.failure_cause = E2AP_CauseRIC_control_message_invalid;
+                            rc.failure_cause = E2AP_CauseProtocol_unspecified;
 
                             if (req_instance_id_flag == 1)
                                 goto errout;
@@ -814,7 +1082,7 @@ int du_e2ap_handle_ric_control_request(
                     default:
                     {                
                         RIC_AGENT_ERROR("INVALID Control Msg %d received\n",ctrlMsg->present);
-                        rc.failure_cause = E2AP_CauseRIC_control_message_invalid;
+                        rc.failure_cause = E2AP_CauseProtocol_unspecified;
 
                         if (req_instance_id_flag == 1)
                             goto errout;
@@ -826,7 +1094,7 @@ int du_e2ap_handle_ric_control_request(
                 else
                 {
                     RIC_AGENT_ERROR("Ctrl Request Hdr %d & Msg %d Mismatch !\n", rc.control_req_type, ctrlMsg->present);
-                    rc.failure_cause = E2AP_CauseRIC_control_message_invalid;
+                    rc.failure_cause = E2AP_CauseProtocol_unspecified;
 
                     if (req_instance_id_flag == 1)
                         goto errout;
@@ -868,7 +1136,8 @@ void du_e2ap_prepare_ric_control_response(
         du_ric_agent_info_t *ric,
         apiMsg   *sliceResp,       
         uint8_t **outbuf,
-        uint32_t *outlen)
+        uint32_t *outlen,
+        uint32_t *du_assoc_id)
 {
     if ((uint8_t)sliceResp->apiBuff[0] == API_RESP_SUCCESS)
     {
@@ -878,9 +1147,10 @@ void du_e2ap_prepare_ric_control_response(
     else if ((uint8_t)sliceResp->apiBuff[0] == API_RESP_FAILURE)
     {
         RIC_AGENT_INFO("Slice API Response Failure\n");
-        rc.failure_cause = E2AP_CauseRIC_control_message_invalid;
+        rc.failure_cause = E2AP_CauseProtocol_unspecified;
         du_e2ap_generate_ric_control_failure(ric, &rc, outbuf, outlen);
     }
+    *du_assoc_id = ric->du_data_conn_assoc_id;
     return;
 }
 
@@ -890,7 +1160,8 @@ int du_e2ap_handle_message(
         const uint8_t * const buf,
         const uint32_t buflen,
         uint8_t **outbuf,
-        uint32_t *outlen)
+        uint32_t *outlen,
+        uint32_t *du_assoc_id)
 {
     E2AP_E2AP_PDU_t pdu;
     int ret;
@@ -904,12 +1175,21 @@ int du_e2ap_handle_message(
         return -1;
     }
 
-    switch (pdu.present) {
+    switch (pdu.present) 
+    {
         case E2AP_E2AP_PDU_PR_initiatingMessage:
-            switch (pdu.choice.initiatingMessage.procedureCode) {
+            switch (pdu.choice.initiatingMessage.procedureCode) 
+            {
                 case E2AP_ProcedureCode_id_RICcontrol:
                     ret = du_e2ap_handle_ric_control_request(ric, stream, &pdu, outbuf, outlen);
+                    *du_assoc_id = ric->du_data_conn_assoc_id;
                     break;
+
+                case E2AP_ProcedureCode_id_E2connectionUpdate:
+                    ret = e2ap_handle_e2_connection_update(ric->ranid, stream, &pdu, outbuf, outlen);
+                    *du_assoc_id = ric->du_assoc_id;
+                    break;
+
                 default:
                     RIC_AGENT_WARN("unsupported initiatingMessage procedure %ld (ranid %u)\n",
                             pdu.choice.initiatingMessage.procedureCode,ric->ranid);
@@ -917,11 +1197,16 @@ int du_e2ap_handle_message(
                     return -1;
             };
             break;
+
         case E2AP_E2AP_PDU_PR_successfulOutcome:
             switch (pdu.choice.successfulOutcome.procedureCode) {
                 case E2AP_ProcedureCode_id_E2setup:
                     ret = du_e2ap_handle_e2_setup_response(ric, stream, &pdu);
                     break;
+  
+                case E2AP_ProcedureCode_id_E2nodeConfigurationUpdate:
+                    break;
+
                 default:
                     RIC_AGENT_WARN("unsupported successfulOutcome procedure %ld (ranid %u)\n", pdu.choice.initiatingMessage.procedureCode,ric->ranid);
                     ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_E2AP_E2AP_PDU, &pdu);

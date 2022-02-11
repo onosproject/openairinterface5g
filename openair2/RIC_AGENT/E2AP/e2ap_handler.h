@@ -36,7 +36,8 @@ extern int e2ap_handle_message(
         const uint8_t * const buf,
         const uint32_t buflen,
         uint8_t **outbuf,
-        uint32_t *outlen);
+        uint32_t *outlen,
+        uint32_t *assoc_id);
 
 extern int e2ap_handle_timer_expiry(
         ric_agent_info_t *ric,
@@ -58,12 +59,14 @@ extern int du_e2ap_handle_message(
         const uint8_t * const buf,
         const uint32_t buflen,
         uint8_t **outbuf,
-        uint32_t *outlen);
+        uint32_t *outlen,
+        uint32_t *du_assoc_id);
 
 extern void du_e2ap_prepare_ric_control_response(
         du_ric_agent_info_t *ric,
         apiMsg   *sliceResp,
         uint8_t **outbuf,
-        uint32_t *outlen);
+        uint32_t *outlen,
+        uint32_t *du_assoc_id);
 
 #endif /* _E2AP_ENB_HANDLER_H */

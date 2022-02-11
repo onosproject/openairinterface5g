@@ -1139,10 +1139,10 @@ if(ENABLE_RIC_AGENT)
   set(E2AP_DIR ${OPENAIR2_DIR}/RIC_AGENT/E2AP)
 
   # E2AP ASN
-  set(E2AP_ASN_VERS R1.01)
+  set(E2AP_ASN_VERS R2)
   set(E2AP_ASN_DIR ${E2AP_DIR}/MESSAGES/ASN1/${E2AP_ASN_VERS})
   set(E2AP_C_DIR ${asn1_generated_dir}/E2AP/)
-  set(E2AP_ASN_FILE ${E2AP_ASN_DIR}/e2ap-v01.01.00.asn1)
+  set(E2AP_ASN_FILE ${E2AP_ASN_DIR}/e2ap_v2.asn1)
   execute_process(
       COMMAND ${OPENAIR_CMAKE}/tools/make_asn1c_includes.sh "${E2AP_C_DIR}"
       "${E2AP_ASN_FILE}" "E2AP_" -fno-include-deps -fincludes-quoted

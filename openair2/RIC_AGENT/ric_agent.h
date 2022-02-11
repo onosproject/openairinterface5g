@@ -102,6 +102,7 @@ typedef struct ric_control {
 
 typedef struct {
     int32_t assoc_id;
+    int32_t data_conn_assoc_id;
 
     ranid_t ranid;
 
@@ -123,6 +124,7 @@ typedef struct {
 
 typedef struct {
     int32_t du_assoc_id;
+    int32_t du_data_conn_assoc_id;
 
     ranid_t ranid;
 
@@ -212,6 +214,9 @@ typedef struct e2_conf {
 
     char *remote_ipv4_addr;
     uint16_t remote_port;
+
+    char data_conn_remote_ipv4[16];
+	uint16_t data_conn_remote_port;
 } e2_conf_t;
 
 extern ric_agent_info_t **ric_agent_info;

@@ -78,11 +78,13 @@ du_ric_agent_info_t *du_ric_agent_get_info(ranid_t ranid, int32_t assoc_id)
     du_ric_agent_info_t *ric;
 
     ric = du_ric_agent_info[ranid];
-    if (ric->du_assoc_id != assoc_id) {
-        return NULL;
+    if ( (ric->du_assoc_id == assoc_id) ||
+         (ric->du_data_conn_assoc_id == assoc_id) ) 
+    {
+        return ric;
     }
 
-    return ric; 
+    return NULL; 
 }
 
 static void du_ric_agent_disconnect(du_ric_agent_info_t *ric)
@@ -103,7 +105,8 @@ static int du_ric_agent_handle_sctp_new_association_resp(
         instance_t instance,
         sctp_new_association_resp_t *resp,
         uint8_t **outbuf,
-        uint32_t *outlen)
+        uint32_t *outlen,
+        uint32_t *du_assoc_id)
 {
     du_ric_agent_info_t *ric;
     int ret;
@@ -140,19 +143,40 @@ static int du_ric_agent_handle_sctp_new_association_resp(
         RIC_AGENT_ERROR("du_ric_agent_handle_sctp_new_association_resp: ric agent info not found %u\n", instance);
         return -1;
     }
-    ric->du_assoc_id = resp->assoc_id;
 
-    timer_remove(ric->du_ric_connect_timer_id);
+    if (ric->du_assoc_id == -1)
+    {
+        ric->du_assoc_id = resp->assoc_id;
 
-    /* Send an E2Setup request to RIC. */
-    ret = e2ap_generate_e2_setup_request(ric->ranid, outbuf, outlen, e2_conf[0]->e2node_type);
-    if (ret) {
-        RIC_AGENT_ERROR("failed to generate E2setupRequest; disabling ranid %u!\n",
+        timer_remove(ric->du_ric_connect_timer_id);
+
+        /* Send an E2Setup request to RIC. */
+        ret = e2ap_generate_e2_setup_request(ric->ranid, outbuf, outlen, e2_conf[0]->e2node_type);
+        if (ret) {
+            RIC_AGENT_ERROR("failed to generate E2setupRequest; disabling ranid %u!\n",
                 ric->ranid);
-        du_ric_agent_disconnect(ric);
-        return 1;
+            du_ric_agent_disconnect(ric);
+            return 1;
+        }
+        *du_assoc_id = ric->du_assoc_id;
     }
+    else
+    {
+        RIC_AGENT_INFO("Data Connection Assoc Id:%d updated\n",resp->assoc_id);
+        ric->du_data_conn_assoc_id = resp->assoc_id;
 
+        RIC_AGENT_INFO("e2ap_generate_e2_config_update\n");
+        /*Send E2 Configuration Update to RIC */
+        ret = e2ap_generate_e2_config_update(ric->ranid, outbuf, outlen, e2_conf[0]->e2node_type);
+        if (ret) {
+            RIC_AGENT_ERROR("failed to generate E2ConfigUpdate; disabling ranid %u!\n",
+                ric->ranid);
+            du_ric_agent_disconnect(ric);
+            return 1;
+        }
+
+        *du_assoc_id = ric->du_data_conn_assoc_id;
+    }
     return 0;
 }
 
@@ -222,7 +246,8 @@ static void du_ric_agent_send_sctp_data(
         du_ric_agent_info_t *ric,
         uint16_t stream,
         uint8_t *buf,
-        uint32_t len)
+        uint32_t len,
+        uint32_t du_assoc_id)
 {
     MessageDef *msg;
     sctp_data_req_t *sctp_data_req;
@@ -230,12 +255,12 @@ static void du_ric_agent_send_sctp_data(
     msg = itti_alloc_new_message(TASK_RIC_AGENT_DU, SCTP_DATA_REQ);
     sctp_data_req = &msg->ittiMsg.sctp_data_req;
 
-    sctp_data_req->assoc_id = ric->du_assoc_id;
+    sctp_data_req->assoc_id = du_assoc_id;
     sctp_data_req->stream = stream;
     sctp_data_req->buffer = buf;
     sctp_data_req->buffer_length = len;
 
-    RIC_AGENT_INFO("Send SCTP data, ranid:%u, assoc_id:%d, len:%d\n", ric->ranid, ric->du_assoc_id, len);
+    RIC_AGENT_INFO("Send SCTP data, ranid:%u, assoc_id:%d, len:%d\n", ric->ranid, du_assoc_id, len);
 
     itti_send_msg_to_task(TASK_SCTP, ric->ranid, msg);
 }
@@ -244,7 +269,8 @@ static void du_ric_agent_handle_sctp_data_ind(
         instance_t instance,
         sctp_data_ind_t *ind,
         uint8_t **outbuf,
-        uint32_t *outlen)
+        uint32_t *outlen,
+        uint32_t *du_assoc_id)
 {
     int ret;
     du_ric_agent_info_t *ric;
@@ -259,7 +285,7 @@ static void du_ric_agent_handle_sctp_data_ind(
 
     RIC_AGENT_DEBUG("sctp_data_ind instance %u assoc %d", instance, ind->assoc_id);
 
-    du_e2ap_handle_message(ric, ind->stream, ind->buffer, ind->buffer_length, outbuf, outlen);
+    du_e2ap_handle_message(ric, ind->stream, ind->buffer, ind->buffer_length, outbuf, outlen, du_assoc_id);
 
     ret = itti_free(TASK_UNKNOWN, ind->buffer);
     AssertFatal(ret == EXIT_SUCCESS, "failed to free sctp data buf (%d)\n",ret);
@@ -275,6 +301,7 @@ void *du_ric_agent_task(void *args)
   uint16_t i;
   uint8_t *outbuf = NULL;
   uint32_t outlen = 0;
+  uint32_t du_assoc_id = 0;
 
   RIC_AGENT_INFO("starting DU E2 agent task\n");
 
@@ -305,7 +332,8 @@ void *du_ric_agent_task(void *args)
                   ITTI_MESSAGE_GET_INSTANCE(msg),
                   &msg->ittiMsg.sctp_new_association_resp,
                   &outbuf,
-                  &outlen);
+                  &outlen,
+                  &du_assoc_id);
           break;
 
       case SCTP_DATA_IND:
@@ -313,7 +341,8 @@ void *du_ric_agent_task(void *args)
                   ITTI_MESSAGE_GET_INSTANCE(msg),
                   &msg->ittiMsg.sctp_data_ind,
                   &outbuf,
-                  &outlen);
+                  &outlen,
+                  &du_assoc_id);
           break;
 
       case TERMINATE_MESSAGE:
@@ -339,9 +368,10 @@ void *du_ric_agent_task(void *args)
                   ITTI_MESSAGE_GET_INSTANCE(msg));
           du_e2ap_prepare_ric_control_response(
                   du_ric_agent_info[0],
-		  &msg->ittiMsg.du_slice_api_resp, 
+                  &msg->ittiMsg.du_slice_api_resp, 
                   &outbuf, 
-                  &outlen);
+                  &outlen,
+                  &du_assoc_id);
           break;
  
       default:
@@ -356,7 +386,8 @@ void *du_ric_agent_task(void *args)
         //sctp_data_ind_t *ind = &msg->ittiMsg.sctp_data_ind;
         // ric_agent_info_t *ric = ric_agent_get_info(instance, ind->assoc_id);
         AssertFatal(ric != NULL, "ric agent info not found %u\n", instance);
-        du_ric_agent_send_sctp_data(ric, 0, outbuf, outlen);
+        AssertFatal(du_assoc_id != 0, "Association ID not updated %u\n", du_assoc_id);
+        du_ric_agent_send_sctp_data(ric, 0, outbuf, outlen, du_assoc_id);
         outlen = 0;
     }
 
