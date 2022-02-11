@@ -59,4 +59,8 @@ int du_e2ap_generate_ric_control_acknowledge(du_ric_agent_info_t *ric,
 void generate_e2apv1_indication_request_parameterized(E2AP_E2AP_PDU_t *e2ap_pdu, long requestorId, long instanceId, long ranFunctionId, long actionId, long seqNum, uint8_t *ind_header_buf, int header_length, uint8_t *ind_message_buf, int message_length);
 
 int e2ap_asn1c_encode_pdu(E2AP_E2AP_PDU_t* pdu, unsigned char **buffer);
+
+extern int e2ap_generate_e2_config_update(ranid_t  ranid,
+                   uint8_t **buffer,uint32_t *len,
+                   e2node_type_t e2node_type);
 #endif /* _E2AP_GENERATE_MESSAGES_H */

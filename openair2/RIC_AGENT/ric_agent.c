@@ -50,7 +50,8 @@ static void ric_agent_send_sctp_data(
         ric_agent_info_t *ric,
         uint16_t stream,
         uint8_t *buf,
-        uint32_t len);
+        uint32_t len,
+        uint32_t assoc_id);
 
 int ric_agent_register_ran_function(ric_ran_function_t *func)
 {
@@ -129,11 +130,17 @@ ric_agent_info_t *ric_agent_get_info(ranid_t ranid, int32_t assoc_id)
     ric_agent_info_t *ric;
 
     ric = ric_agent_info[ranid];
-    if (ric->assoc_id != assoc_id) {
-        return NULL;
+    //if ( (ric->assoc_id != assoc_id) ||
+    //     (ric->data_conn_assoc_id != assoc_id) ) 
+    if ( (ric->assoc_id == assoc_id) ||
+         (ric->data_conn_assoc_id == assoc_id) ) 
+    {
+        //return NULL;
+        return ric;
     }
 
-    return ric;
+    //return ric;
+    return NULL;
 }
 
 void ric_free_action(ric_action_t *action)
@@ -236,7 +243,8 @@ static void ric_agent_send_sctp_data(
         ric_agent_info_t *ric,
         uint16_t stream,
         uint8_t *buf,
-        uint32_t len)
+        uint32_t len,
+        uint32_t assoc_id)
 {
     MessageDef *msg;
     sctp_data_req_t *sctp_data_req;
@@ -244,12 +252,12 @@ static void ric_agent_send_sctp_data(
     msg = itti_alloc_new_message(TASK_RIC_AGENT, SCTP_DATA_REQ);
     sctp_data_req = &msg->ittiMsg.sctp_data_req;
 
-    sctp_data_req->assoc_id = ric->assoc_id;
+    sctp_data_req->assoc_id = assoc_id;
     sctp_data_req->stream = stream;
     sctp_data_req->buffer = buf;
     sctp_data_req->buffer_length = len;
 
-    RIC_AGENT_INFO("Send SCTP data, ranid:%u, assoc_id:%d, len:%d\n", ric->ranid, ric->assoc_id, len);
+    RIC_AGENT_INFO("Send SCTP data, ranid:%u, assoc_id:%d, len:%d\n", ric->ranid, assoc_id, len);
 
     itti_send_msg_to_task(TASK_SCTP, ric->ranid, msg);
 }
@@ -272,7 +280,8 @@ static int ric_agent_handle_sctp_new_association_resp(
         instance_t instance,
         sctp_new_association_resp_t *resp,
         uint8_t **outbuf,
-        uint32_t *outlen)
+        uint32_t *outlen,
+        uint32_t *assoc_id)
 {
     ric_agent_info_t *ric;
     int ret;
@@ -306,20 +315,43 @@ static int ric_agent_handle_sctp_new_association_resp(
 
     ric = ric_agent_get_info(instance, -1);
     if (ric == NULL) {
-        RIC_AGENT_ERROR("ric_agent_handle_sctp_new_association_resp: ric agent info not found %u\n", instance);
+        RIC_AGENT_ERROR("[%s]: ric agent info not found %u\n", __func__, instance);
         return -1;
     }
-    ric->assoc_id = resp->assoc_id;
 
-    timer_remove(ric->ric_connect_timer_id);
+    if (ric->assoc_id == -1)
+    {
+        ric->assoc_id = resp->assoc_id;
 
-    /* Send an E2Setup request to RIC. */
-    ret = e2ap_generate_e2_setup_request(ric->ranid, outbuf, outlen, e2_conf[0]->e2node_type);
-    if (ret) {
-        RIC_AGENT_ERROR("failed to generate E2setupRequest; disabling ranid %u!\n",
+        timer_remove(ric->ric_connect_timer_id);
+
+        /* Send an E2Setup request to RIC. */
+        ret = e2ap_generate_e2_setup_request(ric->ranid, outbuf, outlen, e2_conf[0]->e2node_type);
+        if (ret) {
+            RIC_AGENT_ERROR("failed to generate E2setupRequest; disabling ranid %u!\n",
                 ric->ranid);
-        ric_agent_disconnect(ric);
-        return 1;
+            ric_agent_disconnect(ric);
+            return 1;
+        }
+    
+        *assoc_id = ric->assoc_id;
+    }
+    else
+    {
+        RIC_AGENT_INFO("Data Connection Assoc Id:%d updated\n",resp->assoc_id);
+        ric->data_conn_assoc_id = resp->assoc_id;
+
+        RIC_AGENT_INFO("e2ap_generate_e2_config_update\n");
+        /*Send E2 Configuration Update to RIC */
+        ret = e2ap_generate_e2_config_update(ric->ranid, outbuf, outlen, e2_conf[0]->e2node_type);
+        if (ret) {
+            RIC_AGENT_ERROR("failed to generate E2setupRequest; disabling ranid %u!\n",
+                ric->ranid);
+            ric_agent_disconnect(ric);
+            return 1;
+        }
+
+        *assoc_id = ric->data_conn_assoc_id;
     }
 
     return 0;
@@ -329,7 +361,8 @@ static void ric_agent_handle_sctp_data_ind(
         instance_t instance,
         sctp_data_ind_t *ind,
         uint8_t **outbuf,
-        uint32_t *outlen)
+        uint32_t *outlen,
+        uint32_t *assoc_id)
 {
     int ret;
     ric_agent_info_t *ric;
@@ -344,7 +377,7 @@ static void ric_agent_handle_sctp_data_ind(
 
     RIC_AGENT_DEBUG("sctp_data_ind instance %u assoc %d", instance, ind->assoc_id);
 
-    e2ap_handle_message(ric, ind->stream, ind->buffer, ind->buffer_length, outbuf, outlen);
+    e2ap_handle_message(ric, ind->stream, ind->buffer, ind->buffer_length, outbuf, outlen, assoc_id);
 
     ret = itti_free(TASK_UNKNOWN, ind->buffer);
     AssertFatal(ret == EXIT_SUCCESS, "failed to free sctp data buf (%d)\n",ret);
@@ -355,7 +388,8 @@ static void ric_agent_handle_timer_expiry(
         long timer_id,
         void* arg,
         uint8_t **outbuf,
-        uint32_t *outlen)
+        uint32_t *outlen,
+        uint32_t *assoc_id)
 {
     ric_agent_info_t* ric;
     int ret = 0;
@@ -366,6 +400,7 @@ static void ric_agent_handle_timer_expiry(
         ric_agent_connect(instance);
     } else if (timer_id == ric->e2sm_kpm_timer_id) {
         ret = e2ap_handle_timer_expiry(ric, timer_id, arg, outbuf, outlen);
+        *assoc_id = ric->data_conn_assoc_id;
     } else if (timer_id == ric->gran_prd_timer_id) {
         ret = e2ap_handle_gp_timer_expiry(ric, timer_id, arg, outbuf, outlen);
     } else {
@@ -379,7 +414,8 @@ static void ric_agent_prepare_ric_ind(
         instance_t instance,
         eventTrigger *CUeventTrigger,
         uint8_t **outbuf,
-        uint32_t *outlen)
+        uint32_t *outlen,
+        uint32_t *assoc_id)
 {
     ric_agent_info_t* ric;
     ueStatusInd *ueAttachDetachEvTrigger;
@@ -399,7 +435,7 @@ static void ric_agent_prepare_ric_ind(
                     outlen);
 
     DevAssert(ret == 0);
-    
+    *assoc_id = ric->data_conn_assoc_id;
     return;
 }
 #endif
@@ -411,6 +447,7 @@ void *ric_agent_task(void *args)
     uint16_t i;
     uint8_t *outbuf = NULL;
     uint32_t outlen = 0;
+    uint32_t assoc_id = 0;
 
     RIC_AGENT_INFO("starting CU E2 agent task\n");
 
@@ -439,14 +476,16 @@ void *ric_agent_task(void *args)
                         ITTI_MESSAGE_GET_INSTANCE(msg),
                         &msg->ittiMsg.sctp_new_association_resp,
                         &outbuf,
-                        &outlen);
+                        &outlen,
+                        &assoc_id);
                 break;
             case SCTP_DATA_IND:
                 ric_agent_handle_sctp_data_ind(
                         ITTI_MESSAGE_GET_INSTANCE(msg),
                         &msg->ittiMsg.sctp_data_ind,
                         &outbuf,
-                        &outlen);
+                        &outlen,
+                        &assoc_id);
                 break;
             case TERMINATE_MESSAGE:
                 RIC_AGENT_WARN("exiting RIC agent task\n");
@@ -462,7 +501,8 @@ void *ric_agent_task(void *args)
                         TIMER_HAS_EXPIRED(msg).timer_id,
                         TIMER_HAS_EXPIRED(msg).arg,
                         &outbuf,
-                        &outlen);
+                        &outlen, 
+                        &assoc_id);
                 break;
 #ifdef ENABLE_RAN_SLICING
             case CU_EVENT_TRIGGER:
@@ -472,7 +512,8 @@ void *ric_agent_task(void *args)
                         ITTI_MESSAGE_GET_INSTANCE(msg),
                         &msg->ittiMsg.cu_event_trigger,
                         &outbuf,
-                        &outlen);
+                        &outlen,
+                        &assoc_id);
                 break;
 #endif
             default:
@@ -486,7 +527,8 @@ void *ric_agent_task(void *args)
             //sctp_data_ind_t *ind = &msg->ittiMsg.sctp_data_ind;
             // ric_agent_info_t *ric = ric_agent_get_info(instance, ind->assoc_id);
             AssertFatal(ric != NULL, "ric agent info not found %u\n", instance);
-            ric_agent_send_sctp_data(ric, 0, outbuf, outlen);
+            AssertFatal(assoc_id != 0, "Association ID not updated %u\n", assoc_id);
+            ric_agent_send_sctp_data(ric, 0, outbuf, outlen, assoc_id);
             outlen = 0;
         }
 
@@ -555,11 +597,13 @@ void RCconfig_ric_agent(void)
             {
                 ric_agent_info[i] = (ric_agent_info_t *)calloc(1, sizeof(ric_agent_info_t));
                 ric_agent_info[i]->assoc_id = -1;
+                ric_agent_info[i]->data_conn_assoc_id = -1;
             } 
             else if (NODE_IS_DU(RC.rrc[i]->node_type))
             {
                 du_ric_agent_info[i] = (du_ric_agent_info_t *)calloc(1, sizeof(du_ric_agent_info_t));
                 du_ric_agent_info[i]->du_assoc_id = -1;
+                du_ric_agent_info[i]->du_data_conn_assoc_id = -1;
             }
 
             e2_conf[i]->enabled = 1;
