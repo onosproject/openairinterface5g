@@ -24,7 +24,7 @@ $ make images
 ```
 ## RAN Slicing ##
 
-ONF has implemented RAN Slicing service model to introduce Downlink (DL) RAN Slicing functionality on the CU & DU and also to communicate with RSM xApp at the RIC. To build OAI with RAN slicing functionality, enable the *--build-ran-slicing* build option along with *--build-ric-agent*
+ONF has implemented RAN Slicing service model to introduce Downlink (DL) & Uplink (UL) RAN Slicing functionality on the CU & DU and also to communicate with RSM xApp at the RIC. To build OAI with RAN slicing functionality, enable the *--build-ran-slicing* build option along with *--build-ric-agent*
 
 ```shell
 $ cd openairinterface5g
