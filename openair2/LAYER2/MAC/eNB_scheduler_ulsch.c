@@ -1438,7 +1438,9 @@ schedule_ulsch_rnti(module_id_t   module_idP,
         tpc_accumulated++;
       }
     }
-    if (tpc != 1) {
+    
+    if ( (tpc != 1) && (snr != 63))
+    {
       LOG_E(MAC,
             "[eNB %d] ULSCH scheduler: frame %d, subframe %d, harq_pid %d, "
             "tpc %d, accumulated %d, snr/target snr %d/%d\n",
