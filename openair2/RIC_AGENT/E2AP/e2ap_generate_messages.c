@@ -210,7 +210,7 @@ int e2ap_generate_e2_config_update(ranid_t  ranid,
   ie->id = E2AP_ProtocolIE_ID_id_TransactionID;
   ie->criticality = E2AP_Criticality_reject;
   ie->value.present = E2AP_E2nodeConfigurationUpdate_IEs__value_PR_TransactionID;
-  ie->value.choice.TransactionID = 1;
+  ie->value.choice.TransactionID = 10;
 
   ASN_SEQUENCE_ADD(&req->protocolIEs.list,ie);
 

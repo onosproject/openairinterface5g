@@ -164,7 +164,8 @@ void dec2strIpv4(uint32_t binIpv4, char *decIpv4)
 void prepare_e2_conn_update_ack(uint8_t **outbuf,
                                 uint32_t *outlen,
                                 BIT_STRING_t *tnlAddr,
-                                BIT_STRING_t *tnlPort)
+                                BIT_STRING_t *tnlPort,
+                                E2AP_TransactionID_t e2ConnUpdTransId)
 {
   E2AP_E2AP_PDU_t pdu;
   E2AP_E2connectionUpdateAcknowledge_t *req;
@@ -186,7 +187,7 @@ void prepare_e2_conn_update_ack(uint8_t **outbuf,
   ie->id = E2AP_ProtocolIE_ID_id_TransactionID;
   ie->criticality = E2AP_Criticality_reject;
   ie->value.present = E2AP_E2connectionUpdateAck_IEs__value_PR_TransactionID;
-  ie->value.choice.TransactionID = 1;
+  ie->value.choice.TransactionID = e2ConnUpdTransId;//1;
 
   ASN_SEQUENCE_ADD(&req->protocolIEs.list, ie);
 
@@ -279,6 +280,7 @@ int e2ap_handle_e2_connection_update(
     uint16_t    remote_port;
     MessageDef *msg;
     sctp_new_association_req_t *req;
+    E2AP_TransactionID_t e2_conn_upd_trans_id = 0;
     //asn_dec_rval_t rv;
 
     RIC_AGENT_INFO("Received E2ConnectionUpdate from ranid %u\n",ranid);
@@ -292,6 +294,13 @@ int e2ap_handle_e2_connection_update(
             ptr++) 
     {
         E2AP_E2connectionUpdate_IEs_t* connUpdateIE = (E2AP_E2connectionUpdate_IEs_t *)*ptr;
+
+        if (connUpdateIE->value.present == E2AP_E2connectionUpdate_IEs__value_PR_TransactionID)
+        {
+            e2_conn_upd_trans_id = connUpdateIE->value.choice.TransactionID;
+            RIC_AGENT_INFO("[%s] Transaction ID:%ld",__func__, e2_conn_upd_trans_id);
+            continue;        
+        }
 
         if  (connUpdateIE->value.present == E2AP_E2connectionUpdate_IEs__value_PR_E2connectionUpdate_List) 
         {
@@ -315,7 +324,8 @@ int e2ap_handle_e2_connection_update(
                 prepare_e2_conn_update_ack(outbuf,
                                            outlen,
                                            &connUpdate_Item->value.choice.E2connectionUpdate_Item.tnlInformation.tnlAddress,
-                                           connUpdate_Item->value.choice.E2connectionUpdate_Item.tnlInformation.tnlPort);
+                                           connUpdate_Item->value.choice.E2connectionUpdate_Item.tnlInformation.tnlPort,
+                                           e2_conn_upd_trans_id);
 
                 RIC_AGENT_INFO("[%s] Setting up New SCTP for Data Connection \n",__func__);
                 asn_fprint(stderr, &asn_DEF_BIT_STRING, &connUpdate_Item->value.choice.E2connectionUpdate_Item.tnlInformation.tnlAddress); 
@@ -332,7 +342,7 @@ int e2ap_handle_e2_connection_update(
                 /* Binary to Decimal IPv4 Conversion */
                 dec2strIpv4(decoded_ip, remote_ipv4);
                 
-		        remote_port = decoded_port;
+                remote_port = decoded_port;
 
                 /* CU & DU Differentiation */
                 if (e2_conf[ranid]->e2node_type == E2NODE_TYPE_ENB_CU)
@@ -819,8 +829,8 @@ int e2ap_handle_message(
                     ret = e2ap_handle_e2_setup_response(ric, stream, &pdu);
                     break;
 
-		        case E2AP_ProcedureCode_id_E2nodeConfigurationUpdate:
-		            break;
+                case E2AP_ProcedureCode_id_E2nodeConfigurationUpdate:
+                    break;
 
                 default:
                     RIC_AGENT_WARN("unsupported successfulOutcome procedure %ld (ranid %u)\n", pdu.choice.initiatingMessage.procedureCode,ric->ranid);
