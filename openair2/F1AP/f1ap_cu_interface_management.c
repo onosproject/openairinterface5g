@@ -79,6 +79,10 @@ int CU_send_ERROR_INDICATION(instance_t instance, F1AP_ErrorIndication_t *ErrorI
 /*
     F1 Setup
 */
+
+void *g_cuF1SetupReq;
+uint32_t g_cuF1SetupReqSize;
+
 int CU_handle_F1_SETUP_REQUEST(instance_t instance,
                                uint32_t assoc_id,
                                uint32_t stream,
@@ -94,7 +98,17 @@ int CU_handle_F1_SETUP_REQUEST(instance_t instance,
 
   DevAssert(pdu != NULL);
 
+  /* Create */
+  g_cuF1SetupReq = malloc(sizeof(F1AP_F1SetupRequest_t));
+  memset(g_cuF1SetupReq, 0, sizeof(F1AP_F1SetupRequest_t));
+  g_cuF1SetupReqSize = sizeof(F1AP_F1SetupRequest_t);
+
   container = &pdu->choice.initiatingMessage->value.choice.F1SetupRequest;
+
+  /*copying to global buffer for E2Cell Info to be sent during E2SetupReq */
+  memcpy(g_cuF1SetupReq, container, sizeof(F1AP_F1SetupRequest_t));
+  LOG_I(F1AP, "++ CU Received F1SetupReq for E2Cell Info copied ++\n");
+
 
   /* F1 Setup Request == Non UE-related procedure -> stream 0 */
   if (stream != 0) {
@@ -254,8 +268,12 @@ int CU_handle_F1_SETUP_REQUEST(instance_t instance,
   return 0;
 }
 
+void *g_cuF1SetupResp;
+int32_t g_cuF1SetupRespSize;
+
 int CU_send_F1_SETUP_RESPONSE(instance_t instance,
-                               f1ap_setup_resp_t *f1ap_setup_resp) {
+                               f1ap_setup_resp_t *f1ap_setup_resp) 
+{
   
   module_id_t enb_mod_idP;
   module_id_t cu_mod_idP;
@@ -273,6 +291,10 @@ int CU_send_F1_SETUP_RESPONSE(instance_t instance,
   int       i = 0;
 
   /* Create */
+  g_cuF1SetupResp = malloc(sizeof(F1AP_F1SetupResponse_t));
+  memset(g_cuF1SetupResp, 0, sizeof(F1AP_F1SetupResponse_t));
+  g_cuF1SetupRespSize = sizeof(F1AP_F1SetupResponse_t);
+
   /* 0. Message Type */
   memset(&pdu, 0, sizeof(pdu));
   pdu.present = F1AP_F1AP_PDU_PR_successfulOutcome;
@@ -380,6 +402,11 @@ int CU_send_F1_SETUP_RESPONSE(instance_t instance,
                   cells_to_be_activated_list_item_ies);
   }
   ASN_SEQUENCE_ADD(&out->protocolIEs.list, ie);
+
+  /*copying to global buffer for E2Cell Info to be sent during E2SetupReq */
+  memcpy(g_cuF1SetupResp, out, sizeof(F1AP_F1SetupResponse_t));
+  LOG_I(F1AP, "++ CU F1SetupResp for E2Cell Info copied ++\n");
+
 
   /* encode */
   if (f1ap_encode_pdu(&pdu, &buffer, &len) < 0) {

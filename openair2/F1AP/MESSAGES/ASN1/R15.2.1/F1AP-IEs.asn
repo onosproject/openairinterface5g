@@ -26,7 +26,10 @@ IMPORTS
 	maxnoofQoSFlows,
 	maxnoofSliceItems,
 	maxnoofSIBTypes,
-	maxCellineNB
+	maxCellineNB,
+	id-latest-RRC-Version-Enhanced,
+	maxnoofTLAs,
+	maxnoofGTPTLAs
 
 FROM F1AP-Constants
 
@@ -87,6 +90,7 @@ BroadcastPLMNs-ItemExtIEs F1AP-PROTOCOL-EXTENSION ::= {
 	...
 }
 
+BAPAddress ::= BIT STRING (SIZE(10))
 
 -- C
 
@@ -620,6 +624,20 @@ EUTRA-TDD-Info-ExtIEs F1AP-PROTOCOL-EXTENSION ::= {
 	...
 }
 
+Extended-GNB-DU-Name ::= SEQUENCE {
+	gNB-DU-NameVisibleString 	GNB-DU-NameVisibleString OPTIONAL,
+	gNB-DU-NameUTF8String 		GNB-DU-NameUTF8String OPTIONAL,
+	iE-Extensions 				ProtocolExtensionContainer { { Extended-GNB-DU-Name-ExtIEs } } OPTIONAL,
+	...
+}
+
+Extended-GNB-DU-Name-ExtIEs F1AP-PROTOCOL-EXTENSION ::= {
+	...
+}
+
+GNB-DU-NameVisibleString ::= VisibleString(SIZE(1..150,...))
+GNB-DU-NameUTF8String ::= UTF8String(SIZE(1..150,...))
+
 -- F
 
 FDD-Info ::= SEQUENCE {
@@ -795,6 +813,26 @@ GTPTunnel				::= SEQUENCE {
 }
 
 GTPTunnel-ExtIEs F1AP-PROTOCOL-EXTENSION ::= {
+	...
+}
+
+GTPTLAs ::= SEQUENCE (SIZE(1.. maxnoofGTPTLAs)) OF GTPTLA-Item
+
+GTPTLA-Item ::= SEQUENCE {
+	gTPTransportLayerAddress 	TransportLayerAddress,
+	iE-Extensions 				ProtocolExtensionContainer { { GTPTLA-Item-ExtIEs } } OPTIONAL
+}
+
+GTPTLA-Item-ExtIEs F1AP-PROTOCOL-EXTENSION ::= {
+	...
+}
+
+RRC-Version ::= SEQUENCE	{
+	latest-RRC-Version			BIT STRING (SIZE(3)),
+	iE-Extensions				ProtocolExtensionContainer { { RRC-Version-ExtIEs } }	OPTIONAL}
+
+RRC-Version-ExtIEs 	F1AP-PROTOCOL-EXTENSION ::= {
+	{ID id-latest-RRC-Version-Enhanced		CRITICALITY ignore EXTENSION OCTET STRING (SIZE(3))		PRESENCE optional },
 	...
 }
 
@@ -1375,6 +1413,40 @@ TransmissionStopIndicator ::= ENUMERATED {true, ...}
 TypeOfError ::= ENUMERATED {
 	not-understood,
 	missing,
+	...
+}
+
+Transport-UP-Layer-Address-Info-To-Add-List ::= SEQUENCE (SIZE(1.. maxnoofTLAs)) OF Transport-UP-Layer-Address-Info-To-Add-Item
+
+Transport-UP-Layer-Address-Info-To-Add-Item ::= SEQUENCE {
+	iP-SecTransportLayerAddress 				TransportLayerAddress,
+	gTPTransportLayerAddressToAdd 				GTPTLAs OPTIONAL,
+	iE-Extensions ProtocolExtensionContainer 	{ { Transport-UP-Layer-Address-Info-To-Add-ItemExtIEs } } OPTIONAL
+}
+
+Transport-UP-Layer-Address-Info-To-Add-ItemExtIEs F1AP-PROTOCOL-EXTENSION ::= {
+	...
+}
+
+Transport-UP-Layer-Address-Info-To-Remove-List ::= SEQUENCE (SIZE(1.. maxnoofTLAs)) OF Transport-UP-Layer-Address-Info-To-Remove-Item
+
+Transport-UP-Layer-Address-Info-To-Remove-Item ::= SEQUENCE {
+	iP-SecTransportLayerAddress 				TransportLayerAddress,
+	gTPTransportLayerAddressToRemove 			GTPTLAs OPTIONAL,
+	iE-Extensions ProtocolExtensionContainer 	{ { Transport-UP-Layer-Address-Info-To-Remove-ItemExtIEs } } OPTIONAL
+}
+
+Transport-UP-Layer-Address-Info-To-Remove-ItemExtIEs F1AP-PROTOCOL-EXTENSION ::= {
+	...
+}
+
+Transport-Layer-Address-Info ::= SEQUENCE {
+	transport-UP-Layer-Address-Info-To-Add-List 	Transport-UP-Layer-Address-Info-To-Add-List OPTIONAL,
+	transport-UP-Layer-Address-Info-To-Remove-List 	Transport-UP-Layer-Address-Info-To-Remove-List OPTIONAL,
+	iE-Extensions ProtocolExtensionContainer 		{ { Transport-Layer-Address-Info-ExtIEs } } OPTIONAL
+}
+
+Transport-Layer-Address-Info-ExtIEs F1AP-PROTOCOL-EXTENSION ::= {
 	...
 }
 

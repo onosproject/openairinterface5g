@@ -89,8 +89,9 @@ maxnoofPagingCells						INTEGER ::= 512
 maxnoofTNLAssociations					INTEGER ::= 32
 maxnoofQoSFlows							INTEGER ::= 64
 maxnoofSliceItems						INTEGER ::= 1024
-maxCellineNB								INTEGER ::= 256
-
+maxCellineNB							INTEGER ::= 256
+maxnoofTLAs 							INTEGER ::= 16
+maxnoofGTPTLAs 							INTEGER ::= 16
 
 -- **************************************************************
 --
@@ -252,5 +253,9 @@ id-PWS-Failed-NR-CGI-List 						ProtocolIE-ID ::= 154
 id-PWS-Failed-NR-CGI-Item 						ProtocolIE-ID ::= 155
 id-ConfirmedUEID								ProtocolIE-ID ::= 156
 id-Cancel-all-Warning-Messages-Indicator		ProtocolIE-ID ::= 157
-
+id-GNB-DU-RRC-Version							ProtocolIE-ID ::= 171
+id-latest-RRC-Version-Enhanced					ProtocolIE-ID ::= 199
+id-Transport-Layer-Address-Info 				ProtocolIE-ID ::= 254
+id-BAPAddress 									ProtocolIE-ID ::= 281
+id-Extended-GNB-DU-Name 						ProtocolIE-ID ::= 426
 END
