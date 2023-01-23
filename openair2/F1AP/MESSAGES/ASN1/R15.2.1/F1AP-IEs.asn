@@ -17,6 +17,8 @@ IMPORTS
 	id-HandoverPreparationInformation,
 	id-TAISliceSupportList,
 	id-RANAC,
+	id-NPNSupportInfo,
+	id-ExtendedTAISliceSupportList,
 	maxNRARFCN,
 	maxnoofErrors,
 	maxnoofBPLMNs,
@@ -29,6 +31,7 @@ IMPORTS
 	maxCellineNB,
 	id-latest-RRC-Version-Enhanced,
 	maxnoofTLAs,
+	maxnoofExtSliceItems,
 	maxnoofGTPTLAs
 
 FROM F1AP-Constants
@@ -86,7 +89,9 @@ BroadcastPLMNs-Item ::= SEQUENCE {
 }
 
 BroadcastPLMNs-ItemExtIEs F1AP-PROTOCOL-EXTENSION ::= {
-{ ID id-TAISliceSupportList	CRITICALITY ignore	EXTENSION SliceSupportList		PRESENCE optional	},
+{ ID id-TAISliceSupportList	CRITICALITY ignore	EXTENSION SliceSupportList					PRESENCE optional	}|
+{ ID id-NPNSupportInfo CRITICALITY reject EXTENSION NPNSupportInfo 							PRESENCE optional }|
+{ ID id-ExtendedTAISliceSupportList CRITICALITY reject EXTENSION ExtendedSliceSupportList 	PRESENCE optional },
 	...
 }
 
@@ -570,6 +575,8 @@ Dynamic5QIDescriptor-ExtIEs F1AP-PROTOCOL-EXTENSION ::= {
 
 -- E
 
+ExtendedSliceSupportList ::= SEQUENCE (SIZE(1.. maxnoofExtSliceItems)) OF SliceSupportItem
+
 Endpoint-IP-address-and-port ::=SEQUENCE {
 	endpointIPAddress TransportLayerAddress,
 	iE-Extensions					ProtocolExtensionContainer { { Endpoint-IP-address-and-port-ExtIEs} } OPTIONAL
@@ -954,6 +961,17 @@ NRSCS ::= ENUMERATED { scs15, scs30, scs60, scs120, ...}
 NumberOfBroadcasts ::= INTEGER (0..65535)
 
 NumberofBroadcastRequest ::= INTEGER (0..65535)
+
+NID ::= BIT STRING (SIZE(44))
+
+NPNSupportInfo ::= CHOICE {
+	sNPN-Information 		NID,
+	choice-extension 		ProtocolIE-SingleContainer { { NPNSupportInfo-ExtIEs } }
+}
+
+NPNSupportInfo-ExtIEs F1AP-PROTOCOL-IES ::= {
+	...
+}
 
 -- O
 

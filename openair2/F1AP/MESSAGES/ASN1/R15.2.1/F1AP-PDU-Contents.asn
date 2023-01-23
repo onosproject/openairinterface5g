@@ -123,7 +123,8 @@ IMPORTS
 	Transport-Layer-Address-Info,
 	TransportLayerAddress,
 	BAPAddress,
-	Extended-GNB-DU-Name
+	Extended-GNB-DU-Name,
+	NID
 
 FROM F1AP-IEs
 
