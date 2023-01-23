@@ -48,6 +48,14 @@ extern int global_e2_node_id(ranid_t ranid, E2AP_GlobalE2node_ID_t* node_id);
 
 extern unsigned int ran_functions_len;
 extern ric_ran_function_t **ran_functions;
+extern void *g_f1SetupReq;
+extern void *g_cuF1SetupReq;
+extern uint32_t g_f1SetupReqSize;
+extern uint32_t g_cuF1SetupReqSize;
+extern void *g_f1SetupResp;
+extern void *g_cuF1SetupResp;
+extern uint32_t g_f1SetupRespSize;
+extern uint32_t g_cuF1SetupRespSize;
 
 int e2ap_generate_e2_setup_request(ranid_t  ranid,
                    uint8_t **buffer,uint32_t *len,
@@ -128,7 +136,6 @@ int e2ap_generate_e2_setup_request(ranid_t  ranid,
   //ie->value.present = E2AP_E2setupRequestIEs__value_PR_NOTHING;
   ie->value.present = E2AP_E2setupRequestIEs__value_PR_E2nodeComponentConfigAddition_List;
 
-#if 1
   e2node_comp_cfg_update_ie = (E2AP_E2nodeComponentConfigAddition_ItemIEs_t *)calloc(1,sizeof(*e2node_comp_cfg_update_ie));
   e2node_comp_cfg_update_ie->id = E2AP_ProtocolIE_ID_id_E2nodeComponentConfigAddition_Item;
   e2node_comp_cfg_update_ie->criticality = E2AP_Criticality_reject;
@@ -138,31 +145,61 @@ int e2ap_generate_e2_setup_request(ranid_t  ranid,
 
   if (e2node_type == E2NODE_TYPE_ENB_CU)
   {
-    e2node_comp_cfg_update_ie->value.choice.E2nodeComponentConfigAddition_Item.e2nodeComponentInterfaceType = E2AP_E2nodeComponentInterfaceType_e1; //E2AP_E2nodeComponentType_ng_eNB_CU 
-    e2NodeCompId->present = E2AP_E2nodeComponentID_PR_e2nodeComponentInterfaceTypeE1;
+    e2node_comp_cfg_update_ie->value.choice.E2nodeComponentConfigAddition_Item.e2nodeComponentInterfaceType = E2AP_E2nodeComponentInterfaceType_f1; 
+    e2NodeCompId->present = E2AP_E2nodeComponentID_PR_e2nodeComponentInterfaceTypeF1;
+    
     if (asn_umax2INTEGER(&e2NodeCompId->choice.e2nodeComponentInterfaceTypeE1.gNB_CU_CP_ID, 100) != 0)
         RIC_AGENT_ERROR("gNB_CU_UP_ID encoding failed\n");
-    //e2NodeCompId->choice.e2nodeComponentTypeGNB_CU_UP.gNB_CU_UP_ID.size = strlen("100");//sizeof(uint64_t);
-    //e2NodeCompId->choice.e2nodeComponentTypeGNB_CU_UP.gNB_CU_UP_ID.buf = (uint8_t *)strdup("100");
+
+    e2node_comp_cfg_update_ie->value.choice.E2nodeComponentConfigAddition_Item.e2nodeComponentConfiguration.e2nodeComponentRequestPart.size = 
+	    														g_cuF1SetupReqSize;//strlen("100");
+    e2node_comp_cfg_update_ie->value.choice.E2nodeComponentConfigAddition_Item.e2nodeComponentConfiguration.e2nodeComponentRequestPart.buf = 
+	    										(uint8_t *) malloc(g_cuF1SetupReqSize);//(uint8_t *)strdup("100");
+
+    memcpy(e2node_comp_cfg_update_ie->value.choice.E2nodeComponentConfigAddition_Item.e2nodeComponentConfiguration.e2nodeComponentRequestPart.buf,
+           g_cuF1SetupReq,
+	   g_cuF1SetupReqSize);
+
+    e2node_comp_cfg_update_ie->value.choice.E2nodeComponentConfigAddition_Item.e2nodeComponentConfiguration.e2nodeComponentResponsePart.size = 
+	    														g_cuF1SetupRespSize;//strlen("200");
+    e2node_comp_cfg_update_ie->value.choice.E2nodeComponentConfigAddition_Item.e2nodeComponentConfiguration.e2nodeComponentResponsePart.buf = 
+	    										(uint8_t *) malloc(g_cuF1SetupRespSize);//(uint8_t *)strdup("200");
+    memcpy(e2node_comp_cfg_update_ie->value.choice.E2nodeComponentConfigAddition_Item.e2nodeComponentConfiguration.e2nodeComponentResponsePart.buf,
+           g_cuF1SetupResp,
+	   g_cuF1SetupRespSize);
   }
   else if (e2node_type == E2NODE_TYPE_ENB_DU)
   {
-    e2node_comp_cfg_update_ie->value.choice.E2nodeComponentConfigAddition_Item.e2nodeComponentInterfaceType = E2AP_E2nodeComponentInterfaceType_f1; //E2AP_E2nodeComponentType_ng_eNB_DU
+    e2node_comp_cfg_update_ie->value.choice.E2nodeComponentConfigAddition_Item.e2nodeComponentInterfaceType = E2AP_E2nodeComponentInterfaceType_f1;
     e2NodeCompId->present = E2AP_E2nodeComponentID_PR_e2nodeComponentInterfaceTypeF1;
+
     if (asn_umax2INTEGER(&e2NodeCompId->choice.e2nodeComponentInterfaceTypeF1.gNB_DU_ID, 200) != 0)
         RIC_AGENT_ERROR("gNB_DU_ID encoding failed\n");
-    //e2NodeCompId->choice.e2nodeComponentTypeGNB_DU.gNB_DU_ID.size = strlen("200");
-    //e2NodeCompId->choice.e2nodeComponentTypeGNB_DU.gNB_DU_ID.buf = (uint8_t *)strdup("200");
+    
+    e2node_comp_cfg_update_ie->value.choice.E2nodeComponentConfigAddition_Item.e2nodeComponentConfiguration.e2nodeComponentRequestPart.size = 
+	                                                                                                                                 g_f1SetupReqSize;
+    e2node_comp_cfg_update_ie->value.choice.E2nodeComponentConfigAddition_Item.e2nodeComponentConfiguration.e2nodeComponentRequestPart.buf = 
+	                                                                                                              (uint8_t *) malloc(g_f1SetupReqSize);
+    memcpy(e2node_comp_cfg_update_ie->value.choice.E2nodeComponentConfigAddition_Item.e2nodeComponentConfiguration.e2nodeComponentRequestPart.buf,
+	   g_f1SetupReq,
+	   g_f1SetupReqSize);
+
+    e2node_comp_cfg_update_ie->value.choice.E2nodeComponentConfigAddition_Item.e2nodeComponentConfiguration.e2nodeComponentResponsePart.size = 
+	                                                                                                                                g_f1SetupRespSize;
+    e2node_comp_cfg_update_ie->value.choice.E2nodeComponentConfigAddition_Item.e2nodeComponentConfiguration.e2nodeComponentResponsePart.buf = 
+	                                                                                                             (uint8_t *) malloc(g_f1SetupRespSize);
+    memcpy(e2node_comp_cfg_update_ie->value.choice.E2nodeComponentConfigAddition_Item.e2nodeComponentConfiguration.e2nodeComponentResponsePart.buf,
+           g_f1SetupResp,
+           g_f1SetupRespSize);
   }
 
-  e2node_comp_cfg_update_ie->value.choice.E2nodeComponentConfigAddition_Item.e2nodeComponentConfiguration.e2nodeComponentRequestPart.size = strlen("100");
-  e2node_comp_cfg_update_ie->value.choice.E2nodeComponentConfigAddition_Item.e2nodeComponentConfiguration.e2nodeComponentRequestPart.buf = (uint8_t *)strdup("100");
-  e2node_comp_cfg_update_ie->value.choice.E2nodeComponentConfigAddition_Item.e2nodeComponentConfiguration.e2nodeComponentResponsePart.size = strlen("200");
-  e2node_comp_cfg_update_ie->value.choice.E2nodeComponentConfigAddition_Item.e2nodeComponentConfiguration.e2nodeComponentResponsePart.buf = (uint8_t *)strdup("200");
+  //e2node_comp_cfg_update_ie->value.choice.E2nodeComponentConfigAddition_Item.e2nodeComponentConfiguration.e2nodeComponentRequestPart.size = strlen("100");
+  //e2node_comp_cfg_update_ie->value.choice.E2nodeComponentConfigAddition_Item.e2nodeComponentConfiguration.e2nodeComponentRequestPart.buf = (uint8_t *)strdup("100");
+  //e2node_comp_cfg_update_ie->value.choice.E2nodeComponentConfigAddition_Item.e2nodeComponentConfiguration.e2nodeComponentResponsePart.size = strlen("200");
+  //e2node_comp_cfg_update_ie->value.choice.E2nodeComponentConfigAddition_Item.e2nodeComponentConfiguration.e2nodeComponentResponsePart.buf = (uint8_t *)strdup("200");
   
   ASN_SEQUENCE_ADD(&ie->value.choice.E2nodeComponentConfigAddition_List.list,
                    e2node_comp_cfg_update_ie);
-#endif
   ASN_SEQUENCE_ADD(&req->protocolIEs.list,ie);
 
   if (e2ap_encode_pdu(&pdu,buffer,len) < 0) {
