@@ -83,7 +83,8 @@ openairinterface5g
 │   ├── PHY_INTERFACE
 │   ├── RRC
 │   ├── UTIL
-│   └── X2AP
+│   ├── X2AP
+|   └── RIC_AGENT
 ├── openair3          : 3GPP LTE Rel10 for S1AP, NAS GTPV1-U for both ENB and UE.
 │   ├── COMMON
 │   ├── DOCS
