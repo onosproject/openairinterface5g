@@ -1,0 +1,371 @@
+-- ASN1START
+-- **************************************************************
+-- E2SM-KPM 2.0.1 Information Element Definitions
+-- **************************************************************
+
+E2SM-KPM-IEs {
+iso(1) identified-organization(3) dod(6) internet(1) private(4) enterprise(1) oran(53148) e2(1) version2(2) e2sm(2) e2sm-KPMMON-IEs (2)}
+
+DEFINITIONS AUTOMATIC TAGS ::= 
+
+BEGIN
+
+-- **************************************************************
+--   IEs
+-- **************************************************************
+
+PLMN-Identity ::= OCTET STRING (SIZE(3))
+
+EUTRACellIdentity ::= BIT STRING (SIZE(28))
+
+NRCellIdentity ::= BIT STRING (SIZE(36))
+
+EUTRACGI ::= SEQUENCE {
+	pLMN-Identity			PLMN-Identity,
+	eUTRACellIdentity		EUTRACellIdentity,
+	...
+}
+
+NRCGI ::= SEQUENCE {
+	pLMN-Identity			PLMN-Identity,
+	nRCellIdentity			NRCellIdentity,
+	...
+}
+
+CellGlobalID ::= CHOICE {
+	nr-CGI					NRCGI,
+	eUTRA-CGI				EUTRACGI,
+	...
+}
+
+SNSSAI ::= SEQUENCE {
+	sST						OCTET STRING (SIZE(1)),
+	sD						OCTET STRING (SIZE(3)) 		OPTIONAL,
+	...
+}
+
+FiveQI ::= INTEGER (0.. 255, ...)
+
+QCI ::= INTEGER (0.. 255, ...)
+
+ARP ::= INTEGER (1.. 15, ...)
+
+TimeStamp ::= OCTET STRING (SIZE(4))
+
+-- **************************************************************
+
+CellObjectID ::= PrintableString(SIZE (0.. 400), ...)
+
+GranularityPeriod ::= INTEGER
+
+MeasurementType ::= CHOICE {
+	measName				MeasurementTypeName,
+	measID					MeasurementTypeID,
+	...
+}
+
+MeasurementTypeName ::= PrintableString(SIZE(1.. 150, ...))
+
+MeasurementTypeID ::= INTEGER (1.. 65536, ...)
+
+MeasurementLabel ::= SEQUENCE {
+	plmnID					PLMN-Identity					OPTIONAL,
+	sliceID					SNSSAI							OPTIONAL,
+	fiveQI					FiveQI							OPTIONAL,
+	qCI						QCI								OPTIONAL,
+	qCImax					QCI								OPTIONAL,
+	qCImin					QCI								OPTIONAL,
+	aRPmax					ARP								OPTIONAL,
+	aRPmin					ARP								OPTIONAL,
+	bitrateRange			INTEGER (1.. 65536, ...)		OPTIONAL,
+	layerMU-MIMO			INTEGER (1.. 65536, ...)		OPTIONAL,
+	sUM						ENUMERATED {true, ...}			OPTIONAL,
+	distBinX				INTEGER (1.. 65536, ...)		OPTIONAL,
+	distBinY				INTEGER (1.. 65536, ...)		OPTIONAL,
+	distBinZ				INTEGER (1.. 65536, ...)		OPTIONAL,
+	preLabelOverride		ENUMERATED {true, ...}			OPTIONAL,
+	startEndInd				ENUMERATED {start, end, ...}	OPTIONAL,
+	...
+}
+
+SubscriptionID ::= INTEGER (1.. 4294967296, ...)
+
+-- **************************************************************
+
+GlobalKPMnode-ID ::= CHOICE{
+	gNB						GlobalKPMnode-gNB-ID,
+	en-gNB					GlobalKPMnode-en-gNB-ID,
+	ng-eNB					GlobalKPMnode-ng-eNB-ID,
+	eNB						GlobalKPMnode-eNB-ID,
+	...
+}
+
+GlobalKPMnode-gNB-ID ::= SEQUENCE{
+	global-gNB-ID			GlobalgNB-ID,
+	gNB-CU-UP-ID			GNB-CU-UP-ID					OPTIONAL,
+	gNB-DU-ID				GNB-DU-ID						OPTIONAL,
+	...
+}
+
+GlobalgNB-ID	::= SEQUENCE {
+	plmn-id					PLMN-Identity,
+	gnb-id					GNB-ID-Choice,
+	...
+}
+
+GNB-CU-UP-ID ::= 	INTEGER (0..68719476735)
+
+GNB-DU-ID ::=  INTEGER (0..68719476735)
+
+GNB-ID-Choice ::= CHOICE {
+	gnb-ID					BIT STRING (SIZE(22..32)),
+	...
+}
+
+GlobalKPMnode-en-gNB-ID ::= SEQUENCE{
+	global-gNB-ID			GlobalenGNB-ID,
+	gNB-CU-UP-ID			GNB-CU-UP-ID					OPTIONAL,
+	gNB-DU-ID				GNB-DU-ID						OPTIONAL,
+	...
+}
+
+GlobalenGNB-ID ::= SEQUENCE {
+	pLMN-Identity			PLMN-Identity,
+	gNB-ID					ENGNB-ID,
+	...
+}
+
+ENGNB-ID ::= CHOICE {
+	gNB-ID					BIT STRING (SIZE (22..32)),
+	...
+}
+
+GlobalKPMnode-ng-eNB-ID ::= SEQUENCE{
+	global-ng-eNB-ID		GlobalngeNB-ID,
+	gNB-DU-ID				GNB-DU-ID						OPTIONAL,
+	...
+}
+
+GlobalngeNB-ID ::= SEQUENCE {
+	plmn-id					PLMN-Identity,
+	enb-id					ENB-ID-Choice,
+	short-Macro-eNB-ID		BIT STRING (SIZE(18)),
+	long-Macro-eNB-ID		BIT STRING (SIZE(21)),
+	...
+}
+
+ENB-ID-Choice ::= CHOICE {
+	enb-ID-macro			BIT STRING (SIZE(20)),
+	enb-ID-shortmacro		BIT STRING (SIZE(18)),
+	enb-ID-longmacro		BIT STRING (SIZE(21)),
+	...
+}
+
+GlobalKPMnode-eNB-ID ::= SEQUENCE{
+	global-eNB-ID			GlobalENB-ID,
+	...
+}
+
+GlobalENB-ID ::= SEQUENCE {
+	pLMN-Identity			PLMN-Identity,
+	eNB-ID					ENB-ID,
+	...
+}
+
+ENB-ID ::= CHOICE {
+	macro-eNB-ID			BIT STRING (SIZE (20)),
+	home-eNB-ID				BIT STRING (SIZE (28)),
+	...
+}	
+
+-- **************************************************************
+
+RANfunction-Name ::= SEQUENCE{
+	ranFunction-ShortName		PrintableString(SIZE(1..150,...)),
+	ranFunction-E2SM-OID		PrintableString(SIZE(1..1000,...)),
+	ranFunction-Description		PrintableString(SIZE(1..150,...)),
+	ranFunction-Instance		INTEGER 					OPTIONAL,
+	...
+}
+
+RIC-Style-Type ::= INTEGER
+
+RIC-Style-Name ::= PrintableString(SIZE(1.. 150, ...))
+
+RIC-Format-Type ::= INTEGER
+
+-- **************************************************************
+--   Lists
+-- **************************************************************
+
+maxnoofKPMNodes				INTEGER ::= 1024
+maxnoofCells				INTEGER ::= 16384
+maxnoofRICStyles			INTEGER ::= 63
+maxnoofMeasurementInfo		INTEGER ::= 65536
+maxnoofLabelInfo			INTEGER ::= 2147483647
+maxnoofMeasurementRecord	INTEGER ::= 65536
+maxnoofMeasurementValue		INTEGER ::= 2147483647
+
+MeasurementInfoList ::= SEQUENCE (SIZE(1..maxnoofMeasurementInfo)) OF MeasurementInfoItem
+
+MeasurementInfoItem ::= SEQUENCE {
+	measType				MeasurementType,
+	labelInfoList			LabelInfoList					OPTIONAL,
+	...
+}
+
+LabelInfoList ::= SEQUENCE (SIZE(1..maxnoofLabelInfo)) OF LabelInfoItem
+
+LabelInfoItem ::= SEQUENCE {
+	measLabel				MeasurementLabel,
+	...
+}
+
+MeasurementData ::= SEQUENCE (SIZE(1..maxnoofMeasurementRecord)) OF MeasurementRecord
+
+MeasurementRecord ::= SEQUENCE (SIZE(1..maxnoofMeasurementValue)) OF MeasurementRecordItem
+
+MeasurementRecordItem ::= CHOICE {
+	integer					INTEGER,
+	real					REAL,
+	noValue					NULL,
+	...
+}		
+
+MeasurementInfo-Action-List ::= SEQUENCE (SIZE(1..maxnoofMeasurementInfo)) OF MeasurementInfo-Action-Item
+
+MeasurementInfo-Action-Item ::= SEQUENCE {
+	measName				MeasurementTypeName,
+	measID					MeasurementTypeID				OPTIONAL,
+	...
+}
+
+-- **************************************************************
+-- E2SM-KPM Service Model IEs
+-- **************************************************************
+
+-- **************************************************************
+--   Event Trigger Definition OCTET STRING contents
+-- **************************************************************
+
+E2SM-KPM-EventTriggerDefinition ::= SEQUENCE{
+	eventDefinition-formats			CHOICE{
+		eventDefinition-Format1			E2SM-KPM-EventTriggerDefinition-Format1,
+		...
+	},
+	...
+}
+
+E2SM-KPM-EventTriggerDefinition-Format1 ::= SEQUENCE{
+	reportingPeriod					INTEGER,
+	...
+}
+
+-- **************************************************************
+--   Action Definition OCTET STRING contents
+-- **************************************************************
+
+E2SM-KPM-ActionDefinition ::= SEQUENCE{
+	ric-Style-Type					RIC-Style-Type,
+	actionDefinition-formats 	CHOICE{
+		actionDefinition-Format1		E2SM-KPM-ActionDefinition-Format1,
+		...
+	},
+	...
+}
+
+E2SM-KPM-ActionDefinition-Format1 ::= SEQUENCE {
+	cellObjID						CellObjectID,
+	measInfoList					MeasurementInfoList,
+	granulPeriod					GranularityPeriod,
+	subscriptID						SubscriptionID,
+	...
+}
+
+-- **************************************************************
+--   Indication Header OCTET STRING contents
+-- **************************************************************
+
+E2SM-KPM-IndicationHeader ::= SEQUENCE{
+	indicationHeader-formats		CHOICE{
+		indicationHeader-Format1		E2SM-KPM-IndicationHeader-Format1,
+		...
+	},
+	...
+}
+
+E2SM-KPM-IndicationHeader-Format1 ::= SEQUENCE{
+	colletStartTime					TimeStamp,
+	fileFormatversion				PrintableString (SIZE (0..15), ...)		OPTIONAL,
+	senderName						PrintableString (SIZE (0..400), ...)	OPTIONAL,
+	senderType						PrintableString (SIZE (0..8), ...)		OPTIONAL,
+	vendorName						PrintableString (SIZE (0..32), ...)		OPTIONAL,
+	kpmNodeID						GlobalKPMnode-ID						OPTIONAL,
+	...
+}
+
+-- **************************************************************
+--   Indication Message OCTET STRING contents
+-- **************************************************************
+
+E2SM-KPM-IndicationMessage ::= SEQUENCE{
+	indicationMessage-formats		CHOICE{
+		indicationMessage-Format1		E2SM-KPM-IndicationMessage-Format1,
+		...
+	},
+	...
+}
+
+E2SM-KPM-IndicationMessage-Format1 ::= SEQUENCE {
+	subscriptID						SubscriptionID,
+	cellObjID						CellObjectID							OPTIONAL,
+	granulPeriod					GranularityPeriod 						OPTIONAL,
+	measInfoList					MeasurementInfoList						OPTIONAL,
+	measData						MeasurementData,
+	...
+}
+
+-- ***************************************************************
+--   RAN Function Definition OCTET STRING contents
+-- ***************************************************************
+
+E2SM-KPM-RANfunction-Description ::= SEQUENCE{
+	ranFunction-Name				RANfunction-Name,
+	ric-KPM-Node-List				SEQUENCE (SIZE(1..maxnoofKPMNodes)) OF RIC-KPMNode-Item 				OPTIONAL,
+	ric-EventTriggerStyle-List		SEQUENCE (SIZE(1..maxnoofRICStyles)) OF RIC-EventTriggerStyle-Item 		OPTIONAL,
+	ric-ReportStyle-List			SEQUENCE (SIZE(1..maxnoofRICStyles)) OF RIC-ReportStyle-Item 			OPTIONAL,
+	...
+}
+
+RIC-KPMNode-Item ::= SEQUENCE {
+	ric-KPMNode-Type					GlobalKPMnode-ID,
+	cell-Measurement-Object-List		SEQUENCE (SIZE(1..maxnoofCells)) OF Cell-Measurement-Object-Item 		OPTIONAL,
+	...
+}
+
+Cell-Measurement-Object-Item ::= SEQUENCE {
+	cell-object-ID						CellObjectID,
+	cell-global-ID						CellGlobalID,
+	...
+}
+
+RIC-EventTriggerStyle-Item ::= SEQUENCE{
+	ric-EventTriggerStyle-Type			RIC-Style-Type,
+	ric-EventTriggerStyle-Name			RIC-Style-Name,
+	ric-EventTriggerFormat-Type			RIC-Format-Type,
+	...
+}
+
+RIC-ReportStyle-Item ::= SEQUENCE{
+	ric-ReportStyle-Type				RIC-Style-Type,
+	ric-ReportStyle-Name				RIC-Style-Name,
+	ric-ActionFormat-Type				RIC-Format-Type,
+	measInfo-Action-List				MeasurementInfo-Action-List, 
+	ric-IndicationHeaderFormat-Type		RIC-Format-Type,
+	ric-IndicationMessageFormat-Type	RIC-Format-Type,
+	...
+}
+
+END
+
+-- ASN1STOP
