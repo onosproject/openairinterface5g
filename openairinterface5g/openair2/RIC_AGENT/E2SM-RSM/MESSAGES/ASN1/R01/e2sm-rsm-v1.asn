@@ -1,0 +1,368 @@
+--*************************************************************
+-- E2SM-RSM - E2 Service Model for Ran Slicing Management
+-- Information Element Definitions
+--
+-- **************************************************************
+
+E2SM-RSM-IEs {
+iso(1) identified-organization(3) dod(6) internet(1) private(4) enterprise(1) oran(53148) e2(1) version1 (1) e2sm(2) e2sm-RSM-IEs (102)}
+
+DEFINITIONS AUTOMATIC TAGS ::=
+
+BEGIN
+
+IMPORTS
+	RANfunction-Name,
+    FiveQI,
+    QCI,
+    AMF-UE-NGAP-ID,
+CGI
+
+FROM E2SM-COMMON-IEs;
+
+ -- **************************************************************
+ -- E2SM-RSM IDs
+ -- **************************************************************
+
+maxnoofBearers INTEGER ::= 32
+maxnoofUEs INTEGER ::= 4294967295
+maxnoofSlices INTEGER ::= 4294967295
+SliceID ::= INTEGER (1..maxnoofSlices)
+SliceIDAssoc ::= INTEGER(0..maxnoofSlices)
+
+UE-Identity ::= CHOICE {
+    cuUeF1ApID      CU-UE-F1AP-ID,
+    duUeF1ApID      DU-UE-F1AP-ID,
+    ranUeNgapID     RAN-UE-NGAP-ID,
+    amfUeNgapID     AMF-UE-NGAP-ID,
+    enbUeS1ApID     ENB-UE-S1AP-ID,
+    ...
+}
+
+UE-ID-Type ::= ENUMERATED{
+    cuUeF1ApID,
+    duUeF1ApID,
+    ranUeNgapID,
+    amfUeNgapID,
+    enbUeS1ApID,
+    ...
+}
+
+CU-UE-F1AP-ID ::= INTEGER(0..4294967295)
+DU-UE-F1AP-ID ::= INTEGER(0..4294967295)
+RAN-UE-NGAP-ID ::= INTEGER (0..1099511627775)
+ENB-UE-S1AP-ID ::= INTEGER (0..16777215)
+
+QFI ::= INTEGER (0.. 63, ...)
+
+-- ***************************************************************
+-- Slicing capabilities
+-- ***************************************************************
+
+maxnoofSlicingNodes INTEGER ::= 4294967295
+
+SlicingType ::= ENUMERATED{
+    static,
+    dynamic,
+    ...
+}
+
+NodeSlicingCapability-Item ::= SEQUENCE {
+    maxNumberOfSlicesDL       INTEGER(0..maxnoofSlices),
+    maxNumberOfSlicesUL       INTEGER(0..maxnoofSlices),
+    slicingType               SlicingType,
+    maxNumberOfUEsPerSlice    INTEGER,
+    supportedConfig           SEQUENCE (SIZE(1..5, ...)) OF SupportedSlicingConfig-Item,
+    ...
+}
+
+SupportedSlicingConfig-Item ::= SEQUENCE {
+    slicingConfigType     E2SM-RSM-Command,
+    ...
+}
+
+-- ***************************************************************
+-- Slicing metrics
+-- ***************************************************************
+
+SliceMetrics ::= SEQUENCE {
+    prbUtilization              INTEGER(0..100), -- Tells % of Radio Resources utilized per slice
+    numUeAssocToSlice           INTEGER(0..maxnoofUEs),
+    sliceLevelBLER              INTEGER(0..100), -- Number of retransmission happened in slice, BLock Error Rate (BLER)
+    avgCQI                      INTEGER(0..15), -- Channel Quality Indicator (CQI)
+    ...
+}
+
+
+-- ***************************************************************
+-- E2SM-RSM Event Trigger Definition OCTET STRING
+-- ***************************************************************
+RSM-EMM-Trigger-Type ::= ENUMERATED{
+    ueAttach,
+    ueDetach,
+    handInUeAttach,
+    handOutUeAttach,
+    ...
+}
+
+E2SM-RSM-EventTriggerDefinition ::= SEQUENCE{
+    eventDefinition-formats    CHOICE{
+     eventDefinition-Format1 E2SM-RSM-EventTriggerDefinition-Format1,
+        ...
+    },
+    ...
+}
+
+E2SM-RSM-EventTriggerDefinition-Format1 ::= SEQUENCE{
+   triggerType                  RSM-RICindication-Trigger-Type,
+   reportingPeriod-ms           INTEGER  OPTIONAL,
+   ...
+}
+
+RSM-RICindication-Trigger-Type ::= ENUMERATED{
+    periodic-metrics,
+    upon-emm-event,
+    ...
+}
+
+ -- **************************************************************
+ -- E2SM-RSM Indication Header - to report attach/detach
+ -- **************************************************************
+
+E2SM-RSM-IndicationHeader ::= CHOICE {
+    indicationHeader-Format1        E2SM-RSM-IndicationHeader-Format1,
+    ...
+}
+
+E2SM-RSM-IndicationHeader-Format1 ::= SEQUENCE {
+    cgi                             CGI,
+    colletStartTime                 OCTET STRING (SIZE(4))  OPTIONAL,
+    ...
+}
+
+ -- **************************************************************
+ -- E2SM-RSM Indication Message
+ -- **************************************************************
+
+EMMCase::= ENUMERATED {attached, detached, ...}
+
+E2SM-RSM-IndicationMessage ::= CHOICE {
+    indicationMessage-Format1      E2SM-RSM-IndicationMessage-Format1,
+    indicationMessage-Format2      E2SM-RSM-IndicationMessage-Format2,
+    ...
+}
+
+E2SM-RSM-IndicationMessage-Format1 ::= SEQUENCE {
+    ueId                          UE-Identity,
+    cuUeF1apId             CU-UE-F1AP-ID,
+    duUeF1apId             DU-UE-F1AP-ID,
+    emmCase                 EMMCase,
+    ulSlicingMetrics          SEQUENCE (SIZE(1..maxnoofSlices)) OF SliceMetrics,
+    dlSlicingMetrics          SEQUENCE (SIZE(1..maxnoofSlices)) OF SliceMetrics,
+    ...
+}
+
+E2SM-RSM-IndicationMessage-Format2 ::= SEQUENCE{
+   emmType                      RSM-EMM-Trigger-Type,
+   ueIDlist                     SEQUENCE (SIZE(1..4, ...)) OF UE-Identity, -- all UE IDs in the list should belong to same UE
+   prefferedUeIDType            UE-ID-Type,
+   bearerID                     SEQUENCE (SIZE(1..maxnoofBearers)) OF Bearer-ID     OPTIONAL, -- Should be mandatory included in case of UeAttach and handInUeAttach
+   ...
+}
+
+ -- **************************************************************
+ -- E2SM-RSM control command types
+ -- **************************************************************
+
+E2SM-RSM-Command ::= ENUMERATED {
+    sliceCreate,
+    sliceUpdate,
+    sliceDelete,
+    ueAssociate,
+    eventTriggers,
+    ...
+}
+
+
+ -- **************************************************************
+ -- E2SM-RSM slice management
+ -- **************************************************************
+
+SchedulerType ::= ENUMERATED {
+    roundRobin,
+    proportionallyFair,
+    qosBased,
+    ...
+}
+
+SliceParameters ::= SEQUENCE {
+    schedulerType           SchedulerType,
+    weight                  INTEGER(1.. 100)        OPTIONAL,
+    qosLevel                INTEGER(1.. 129, ...)   OPTIONAL,
+    scheduleInfo            ScheduleConfig          OPTIONAL,
+    ...
+}
+
+SliceConfig ::= SEQUENCE {
+   sliceID                  SliceID,
+   sliceDescription         PrintableString(SIZE(1.. 160, ...)) OPTIONAL,
+   sliceConfigParameters    SliceParameters,
+   sliceType                SliceType,
+   ...
+}
+
+SliceType ::= ENUMERATED{
+    dlSlice,
+    ulSlice
+}
+
+SliceDelete ::= SEQUENCE {
+    sliceID                  SliceID,
+    sliceType                SliceType,
+    ...
+}
+
+ -- **************************************************************
+ -- E2SM-RSM UE to Slice association
+ -- **************************************************************
+
+SliceAssociate ::= SEQUENCE {
+    ueId               UE-Identity,
+    bearerID           SEQUENCE (SIZE(1..maxnoofBearers)) OF Bearer-ID,
+    downLinkSliceID    SliceIDAssoc,
+    uplinkSliceID      SliceIDAssoc OPTIONAL,
+    ...
+}
+
+Bearer-ID ::= CHOICE {
+    drbID     Drb-ID,
+    ...
+}
+
+Drb-ID ::= CHOICE {
+    fourGDrbID     FourG-Drb-ID,
+    fiveGDrbID     FiveG-Drb-ID,
+    ...
+}
+
+FiveG-Drb-ID ::= SEQUENCE {
+    value           INTEGER(1..32),
+    qfi             QFI,
+    flowsMapToDrb   SEQUENCE (SIZE(1..64)) OF QoSflowLevelParameters,
+    ...
+}
+
+QoSflowLevelParameters ::= CHOICE {
+    dynamicFiveQi       DynamicFiveQI,
+    nonDynamicFiveQi    NonDynamicFiveQI,
+    ...
+}
+
+DynamicFiveQI ::= SEQUENCE {
+    priorityLevel       INTEGER(0..127, ...),
+    packetDelayBudget   INTEGER(0..63, ...),
+    packetErrorRate     INTEGER(0..63, ...),
+    ...
+}
+
+NonDynamicFiveQI ::= SEQUENCE {
+    fiveQi      FiveQI,
+    ...
+}
+
+FourG-Drb-ID ::= SEQUENCE {
+    value       INTEGER(1..32),
+    qci         QCI,
+    ...
+}
+
+ -- **************************************************************
+ -- E2AP IEs defined by E2SM-RSM
+ -- **************************************************************
+
+ -- E2SM-RSM-RANfunction-Description
+ E2SM-RSM-RANfunction-Description ::= SEQUENCE {
+     ranFunction-Name    RANfunction-Name,
+     ric-Slicing-Node-Capability-List  					SEQUENCE (SIZE(1..maxnoofSlicingNodes)) OF NodeSlicingCapability-Item,
+     ...
+ }
+
+ -- E2SM-RSM-ControlHeader IE
+ E2SM-RSM-ControlHeader ::= SEQUENCE {
+     rsm-command    E2SM-RSM-Command,
+     ...
+ }
+
+ -- E2SM-RSM-ControlMessage IE
+ E2SM-RSM-ControlMessage ::= CHOICE {
+     sliceCreate        SliceConfig,
+     sliceUpdate        SliceConfig,
+     sliceDelete        SliceDelete,
+     sliceAssociate     SliceAssociate,
+     ...
+ }
+
+
+ -- **************************************************************
+ -- E2SM-RSM optional, advanced slice management
+ -- **************************************************************
+
+ ScheduleConfig ::= SEQUENCE {
+    linkAdaptation              LinkAdaptation                      OPTIONAL,
+    features                    FeatureConfig                       OPTIONAL,
+    carrierAggregationCap       CarrierAggregationLevelCap          OPTIONAL,
+    ulPowerControl              ULpowerControl                      OPTIONAL,
+    ...
+}
+
+LinkAdaptation ::= SEQUENCE {
+    cqiCap                  INTEGER(0..15)                      OPTIONAL,
+    riCap                   ENUMERATED{one, two, ...}           OPTIONAL,
+    aggregationLevelCap     AggregationLevelCap                 OPTIONAL,
+    targetBlerDL            INTEGER(0.. 100)                    OPTIONAL,
+    targetBlerUL            INTEGER(0.. 100)                    OPTIONAL,
+    maxMCS                  INTEGER(0..28)                      OPTIONAL,
+    minMCS                  INTEGER(0..28)                      OPTIONAL,
+    transmissionMode        ENUMERATED{one, two, three, ...}    OPTIONAL,
+    harqRetxCap             HARQrextCap                         OPTIONAL,
+    ...
+}
+
+AggregationLevelCap ::= ENUMERATED {
+    one,
+    two,
+    four,
+    eight,
+    sixteen
+}
+
+HARQrextCap ::= SEQUENCE {
+    dl  INTEGER(1.. MAX) OPTIONAL,
+    ul  INTEGER(1.. MAX) OPTIONAL
+}
+
+FeatureConfig ::= SEQUENCE {
+    ttiBundling FeatureStatus OPTIONAL,
+    ...
+}
+
+FeatureStatus ::= ENUMERATED {
+    enable,
+    disable
+}
+
+CarrierAggregationLevelCap ::= ENUMERATED {
+    one,
+    two,
+    three,
+    four,
+    ...
+}
+
+ULpowerControl ::= SEQUENCE {
+    puschTargetSNR  INTEGER OPTIONAL,
+    pucchTargetSNR  INTEGER OPTIONAL,
+    ...
+}
+
+END

@@ -1,0 +1,83 @@
+#!/bin/bash
+#
+# SPDX-FileCopyrightText: 2020-present Open Networking Foundation <info@opennetworking.org>
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+#/*****************************************************************************
+#                                                                            *
+# Copyright 2019 AT&T Intellectual Property                                  *
+# Copyright 2019 Nokia                                                       *
+#                                                                            *
+# Licensed under the Apache License, Version 2.0 (the "License");            *
+# you may not use this file except in compliance with the License.           *
+# You may obtain a copy of the License at                                    *
+#                                                                            *
+#      http://www.apache.org/licenses/LICENSE-2.0                            *
+#                                                                            *
+# Unless required by applicable law or agreed to in writing, software        *
+# distributed under the License is distributed on an "AS IS" BASIS,          *
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   *
+# See the License for the specific language governing permissions and        *
+# limitations under the License.                                             *
+#                                                                            *
+#******************************************************************************/
+
+set -e
+
+export RICSIM_DIR=$PWD
+
+print_help() {
+  echo "
+    This program installs E2 Simulator
+    You should have ubuntu 14.xx, updated, and the Linux kernel >= 3.14
+    The program is run by default with no option
+
+    USAGE:
+      ./build_ricsim [OPTIONS]
+
+    OPTIONS:
+    --clean
+       Erase all files to make a rebuild from start
+    --docker
+       Build docker image
+    -h
+       Print this help
+    "
+}
+
+function main(){
+  case "$1" in
+    --clean)
+      echo "Will clean all previously producted files under build/"
+      rm -rf $RICSIM_DIR/build
+      echo "Clean Done"
+      exit
+      ;;
+
+    "")
+      ;;
+
+    -h)
+      print_help
+      exit 1;;
+
+    *)
+      echo "Unknown option $1"
+      exit
+  esac
+
+  BUILD_DIR=$RICSIM_DIR/build
+  mkdir -p $BUILD_DIR
+
+  echo "Will build ricsim"
+  cd $BUILD_DIR
+  rm -rf CMakeCache.txt
+  cmake ..
+  make -j`nproc`
+
+  echo "ricsim compiled"
+}
+
+main "$@"
