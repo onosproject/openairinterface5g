@@ -609,6 +609,7 @@ sctp_handle_new_association_req(
     SCTP_DEBUG("Inserted new descriptor for sd %d in list, nb elements %u, assoc_id %d\n",
                sd, sctp_nb_cnx, assoc_id);
 }
+}
 
 //------------------------------------------------------------------------------
 void sctp_send_data(
