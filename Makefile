@@ -2,6 +2,7 @@
 BUILD_BASE_VERSION := latest
 OAI_ALL_VERSION := latest
 
+
 all: images test
 
 test:
