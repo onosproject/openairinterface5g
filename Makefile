@@ -4,10 +4,13 @@
 
 OAI_ALL_VERSION ?= latest
 
+.PHONY: build
+
 all: build docker-build
 
 build: # @HELP build all OAI code
-build: docker-build-oai-all docker-build-oai-ue docker-build-oai-enb docker-build-oai-enb-cu docker-build-oai-enb-du
+build:
+	. oaienv; cd cmake_targets; ./build_oai -c -I --eNB --UE -w USRP -g --build-ric-agent --build-ran-slicing
 
 test:
 	$(info No tests exist yet)
@@ -48,7 +51,7 @@ docker-build-oai-enb-du: # @HELP build oai enb du image
 	-docker rmi $$(docker images -q -f "dangling=true" -f "label=autodelete=true")
 
 docker-build: # @HELP build all Docker images
-docker-build: build
+docker-build: docker-build-oai-all docker-build-oai-ue docker-build-oai-enb docker-build-oai-enb-cu docker-build-oai-enb-du
 
 docker-push-oai-build-base: # @HELP push oai build base image
 	docker build . -f docker/oai-build-base/Dockerfile \
