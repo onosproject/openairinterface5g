@@ -91,3 +91,6 @@ dev-base:
 
 dev:
 	docker build . -f docker/dev/Dockerfile -t onosproject/oai-enb-cu:latest --rm=false
+
+check-version: # @HELP check version is duplicated
+	./build/bin/version_check.sh all

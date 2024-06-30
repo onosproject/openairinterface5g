@@ -19,4 +19,4 @@ targets/bin/
 *coverage*.xml
 *-output.out
 
-.vscode
+venv
