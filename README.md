@@ -13,7 +13,7 @@ The RIC Agent is an ONF addition to OAI that adds support for interfacing the OA
 $ cd openairinterface5g
 $ source oaienv
 $ cd cmake_targets
-$ ./build_oai -c -I --eNB --UE -w USRP -g --build-ric-agent
+$ ./build_oai -c -I --eNB --UE -w USRP -g --build-ric-agent --build-ran-slicing
 ```
 
 The top-level *Makefile* builds docker images that include the RIC Agent:
