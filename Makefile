@@ -54,37 +54,22 @@ docker-build: # @HELP build all Docker images
 docker-build: docker-build-oai-all docker-build-oai-ue docker-build-oai-enb docker-build-oai-enb-cu docker-build-oai-enb-du
 
 docker-push-oai-build-base: # @HELP push oai build base image
-	docker build . -f docker/oai-build-base/Dockerfile \
-		-t onosproject/oai-build-base:${OAI_ALL_VERSION}
+	docker push onosproject/oai-build-base:${OAI_ALL_VERSION}
 
 docker-push-oai-all: # @HELP push oai all image
-	docker build . -f docker/oai-all/Dockerfile \
-		--build-arg OAI_ALL_VERSION=${OAI_ALL_VERSION} \
-		-t onosproject/oai-all:${OAI_ALL_VERSION}
+	docker push onosproject/oai-all:${OAI_ALL_VERSION}
 
 docker-push-oai-ue: # @HELP push oai ue image
-	docker build . -f docker/oai-ue/Dockerfile \
-		--build-arg OAI_ALL_VERSION=${OAI_ALL_VERSION} \
-		-t onosproject/oai-ue:${OAI_ALL_VERSION}
-	-docker rmi $$(docker images -q -f "dangling=true" -f "label=autodelete=true")
+	docker push onosproject/oai-ue:${OAI_ALL_VERSION}
 
 docker-push-oai-enb: # @HELP push oai enb image
-	docker build . -f docker/oai-enb/Dockerfile \
-		--build-arg OAI_ALL_VERSION=${OAI_ALL_VERSION} \
-		-t onosproject/oai-enb:${OAI_ALL_VERSION}
-	-docker rmi $$(docker images -q -f "dangling=true" -f "label=autodelete=true")
+	docker push onosproject/oai-enb:${OAI_ALL_VERSION}
 
 docker-push-oai-enb-cu: # @HELP push oai enb cu image
-	docker build . -f docker/oai-enb-cu/Dockerfile \
-		--build-arg OAI_ALL_VERSION=${OAI_ALL_VERSION} \
-		-t onosproject/oai-enb-cu:${OAI_ALL_VERSION}
-	-docker rmi $$(docker images -q -f "dangling=true" -f "label=autodelete=true")
+	docker push onosproject/oai-enb-cu:${OAI_ALL_VERSION}
 
 docker-push-oai-enb-du: # @HELP push oai enb du image
-	docker build . -f docker/oai-enb-du/Dockerfile \
-		--build-arg OAI_ALL_VERSION=${OAI_ALL_VERSION} \
-		-t onosproject/oai-enb-du:${OAI_ALL_VERSION}
-	-docker rmi $$(docker images -q -f "dangling=true" -f "label=autodelete=true")
+	docker push onosproject/oai-enb-du:${OAI_ALL_VERSION}
 
 docker-push: # @HELP push docker images
 docker-push: docker-push-oai-all docker-push-oai-ue docker-push-oai-enb docker-push-oai-enb-cu docker-push-oai-enb-du
