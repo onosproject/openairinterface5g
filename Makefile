@@ -10,7 +10,7 @@ all: build docker-build
 
 build: # @HELP build all OAI code
 build:
-	. oaienv; cd cmake_targets; ./build_oai -c -I --eNB --UE -w USRP -g --build-ric-agent --build-ran-slicing
+	. ./oaienv; cd cmake_targets; ./build_oai -c -I --eNB --UE -w USRP -g --build-ric-agent --build-ran-slicing
 
 test:
 	$(info No tests exist yet)
