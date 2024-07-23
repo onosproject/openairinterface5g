@@ -62,7 +62,7 @@ NETWORK_INTERFACES :
 OAI 5G Build Command with RIC Agent
 ```shell
 $ cd openairinterface5g/cmake_targets
-$ sudo ./build_oai -w USRP --gNB -k --build-ric-agentOAI 5G RUN Command with RIC AGENT
+$ sudo ./build_oai -w USRP --gNB -k --build-ric-agent
 ```
 
 To run OAI 5G gNB along with RIC Agent
