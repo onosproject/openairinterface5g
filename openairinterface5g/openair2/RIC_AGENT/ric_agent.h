@@ -36,7 +36,7 @@
 #define E2AP_SCTP_PPID 70 /*< E2AP SCTP Payload Protocol Identifier (PPID) */
 #define UE_ATTACH_EVENT_TRIGGER 100
 #define UE_DETACH_EVENT_TRIGGER 200
-
+#define RIC_AGENT 0
 typedef uint16_t ranid_t;
 
 #define RIC_AGENT_ERROR(msg, args...) LOG_E(RIC_AGENT, msg, ##args)
