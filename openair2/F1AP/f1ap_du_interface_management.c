@@ -83,8 +83,12 @@ int DU_handle_ERROR_INDICATION(instance_t instance,
     F1 Setup
 */
 
+void *g_f1SetupReq;
+uint32_t g_f1SetupReqSize;
+
 // SETUP REQUEST
-int DU_send_F1_SETUP_REQUEST(instance_t instance) {
+int DU_send_F1_SETUP_REQUEST(instance_t instance) 
+{
   module_id_t enb_mod_idP=0;
   module_id_t du_mod_idP=0;
 
@@ -98,6 +102,10 @@ int DU_send_F1_SETUP_REQUEST(instance_t instance) {
   int       j = 0;
 
   /* Create */
+  //g_f1SetupReq = malloc(sizeof(F1AP_F1AP_PDU_t));
+  //memset(g_f1SetupReq, 0, sizeof(F1AP_F1AP_PDU_t));
+  //g_f1SetupReqSize = sizeof(F1AP_F1AP_PDU_t);
+
   /* 0. pdu Type */
   memset(&pdu, 0, sizeof(pdu));
   pdu.present = F1AP_F1AP_PDU_PR_initiatingMessage;
@@ -171,11 +179,11 @@ int DU_send_F1_SETUP_REQUEST(instance_t instance) {
         F1AP_NRCGI_t nRCGI;
         memset(&nRCGI, 0, sizeof(F1AP_NRCGI_t));
         MCC_MNC_TO_PLMNID(f1ap_du_data->mcc[i], f1ap_du_data->mnc[i], f1ap_du_data->mnc_digit_length[i], &nRCGI.pLMN_Identity);
-        LOG_D(F1AP, "plmn: (%d,%d)\n",f1ap_du_data->mcc[i],f1ap_du_data->mnc[i]);
+        LOG_I(F1AP, "plmn: (%d,%d)\n",f1ap_du_data->mcc[i],f1ap_du_data->mnc[i]);
         //MCC_MNC_TO_PLMNID(208, 95, 2, &nRCGI.pLMN_Identity);
 
         NR_CELL_ID_TO_BIT_STRING(f1ap_du_data->nr_cellid[i], &nRCGI.nRCellIdentity);
-        LOG_D(F1AP, "nRCellIdentity (%llx): %x.%x.%x.%x.%x\n",
+        LOG_I(F1AP, "nRCellIdentity (%llx): %x.%x.%x.%x.%x\n",
               (long long unsigned int)f1ap_du_data->nr_cellid[i],
               nRCGI.nRCellIdentity.buf[0],
               nRCGI.nRCellIdentity.buf[1],
@@ -399,12 +407,43 @@ int DU_send_F1_SETUP_REQUEST(instance_t instance) {
   }
   ASN_SEQUENCE_ADD(&out->protocolIEs.list, ie);
 
+#if 1
+  /* RRC Version */
+  /* gNB-DU RRC version  (BIT STRING) */
+  ie = (F1AP_F1SetupRequestIEs_t *)calloc(1, sizeof(F1AP_F1SetupRequestIEs_t));
+  ie->id                        = F1AP_ProtocolIE_ID_id_GNB_DU_RRC_Version;
+  ie->criticality               = F1AP_Criticality_reject;
+  ie->value.present             = F1AP_F1SetupRequestIEs__value_PR_RRC_Version;
+  //asn_int642INTEGER(&ie->value.choice.GNB_DU_ID, f1ap_du_data->gNB_DU_id);
+  ie->value.choice.RRC_Version.latest_RRC_Version.buf = calloc(1, sizeof(uint8_t));
+  ie->value.choice.RRC_Version.latest_RRC_Version.buf[0] = 0;
+  //ie->value.choice.RRC_Version.latest_RRC_Version.buf[1] = 0;
+  //ie->value.choice.RRC_Version.latest_RRC_Version.buf[2] = 0;
+  ie->value.choice.RRC_Version.latest_RRC_Version.size = 1;
+  ie->value.choice.RRC_Version.latest_RRC_Version.bits_unused = 5;
+
+  ASN_SEQUENCE_ADD(&out->protocolIEs.list, ie);
+#endif
+
+  /*copying to global buffer for E2Cell Info to be sent during E2SetupReq */
+  //memcpy(g_f1SetupReq, &pdu, sizeof(F1AP_F1AP_PDU_t));
+  //LOG_I(F1AP, "++ F1SetupReq for E2Cell Info copied PCI:%u ++\n",f1ap_du_data->nr_pci[0]);
+
   /* encode */
   if (f1ap_encode_pdu(&pdu, &buffer, &len) < 0) {
     LOG_E(F1AP, "Failed to encode F1 setup request\n");
     return -1;
   }
 
+  /* Create */
+  g_f1SetupReq = malloc(len);
+  memset(g_f1SetupReq, 0, len);
+  g_f1SetupReqSize = len;
+  
+  /*copying to global buffer for E2Cell Info to be sent during E2SetupReq */
+  memcpy(g_f1SetupReq, buffer, len);
+  LOG_I(F1AP, "++ F1SetupReq for E2Cell Info copied PCI:%u ++\n",f1ap_du_data->nr_pci[0]);
+  
   MSC_LOG_TX_MESSAGE(
   MSC_F1AP_DU,
   MSC_F1AP_CU,
@@ -419,6 +458,8 @@ int DU_send_F1_SETUP_REQUEST(instance_t instance) {
   return 0;
 }
 
+void *g_f1SetupResp;
+uint32_t g_f1SetupRespSize;
 int DU_handle_F1_SETUP_RESPONSE(instance_t instance,
 				uint32_t               assoc_id,
 				uint32_t               stream,
@@ -438,6 +479,13 @@ int DU_handle_F1_SETUP_RESPONSE(instance_t instance,
 
    F1AP_F1SetupResponse_t    *in = &pdu->choice.successfulOutcome->value.choice.F1SetupResponse;
 
+   g_f1SetupResp = malloc(sizeof(F1AP_F1SetupResponse_t));
+   memset(g_f1SetupResp, 0, sizeof(F1AP_F1SetupResponse_t));
+   g_f1SetupRespSize = sizeof(F1AP_F1SetupResponse_t);
+
+   /*copying to global buffer for E2Cell Info to be sent during E2SetupResp */
+   memcpy(g_f1SetupResp, in, sizeof(F1AP_F1SetupResponse_t));
+   LOG_I(F1AP, "++ F1SetupResp for E2Cell Info copied ++\n");
 
    F1AP_F1SetupResponseIEs_t *ie;
    int TransactionId = -1;

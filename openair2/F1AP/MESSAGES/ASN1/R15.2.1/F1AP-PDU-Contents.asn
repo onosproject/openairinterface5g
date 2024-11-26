@@ -118,7 +118,13 @@ IMPORTS
 	EUTRA-NR-CellResourceCoordinationReqAck-Container,
 	ListofEUTRACellsinGNBDUCoordination,
 	SpectrumSharingGroupID,
-	RequestType
+	RequestType,
+	RRC-Version,
+	Transport-Layer-Address-Info,
+	TransportLayerAddress,
+	BAPAddress,
+	Extended-GNB-DU-Name,
+	NID
 
 FROM F1AP-IEs
 
@@ -292,7 +298,11 @@ FROM F1AP-Containers
 	maxnoofSRBs,
 	maxnoofPagingCells,
 	maxnoofTNLAssociations,
-	maxCellineNB
+	maxCellineNB,
+	id-GNB-DU-RRC-Version,
+	id-Transport-Layer-Address-Info,
+	id-BAPAddress,
+	id-Extended-GNB-DU-Name
 
 FROM F1AP-Constants;
 
@@ -413,7 +423,11 @@ F1SetupRequestIEs F1AP-PROTOCOL-IES ::= {
 	{ ID id-TransactionID					CRITICALITY reject	TYPE TransactionID				PRESENCE mandatory	}|
 	{ ID id-gNB-DU-ID						CRITICALITY reject	TYPE GNB-DU-ID					PRESENCE mandatory	}|
 	{ ID id-gNB-DU-Name						CRITICALITY ignore	TYPE GNB-DU-Name				PRESENCE optional	}|
-	{ ID id-gNB-DU-Served-Cells-List		CRITICALITY reject	TYPE GNB-DU-Served-Cells-List	PRESENCE mandatory	},
+	{ ID id-gNB-DU-Served-Cells-List		CRITICALITY reject	TYPE GNB-DU-Served-Cells-List	PRESENCE mandatory	}|
+	{ ID id-GNB-DU-RRC-Version 				CRITICALITY reject 	TYPE RRC-Version 				PRESENCE optional 	}|
+	{ ID id-Transport-Layer-Address-Info	CRITICALITY ignore	TYPE Transport-Layer-Address-Info		PRESENCE optional	}|
+	{ ID id-BAPAddress						CRITICALITY ignore	TYPE BAPAddress							PRESENCE optional	}|
+	{ ID id-Extended-GNB-DU-Name			CRITICALITY ignore	TYPE Extended-GNB-DU-Name				PRESENCE optional	},
 	...
 } 
 

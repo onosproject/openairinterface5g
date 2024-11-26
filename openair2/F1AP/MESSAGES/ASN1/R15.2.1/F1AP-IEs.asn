@@ -17,6 +17,8 @@ IMPORTS
 	id-HandoverPreparationInformation,
 	id-TAISliceSupportList,
 	id-RANAC,
+	id-NPNSupportInfo,
+	id-ExtendedTAISliceSupportList,
 	maxNRARFCN,
 	maxnoofErrors,
 	maxnoofBPLMNs,
@@ -26,7 +28,11 @@ IMPORTS
 	maxnoofQoSFlows,
 	maxnoofSliceItems,
 	maxnoofSIBTypes,
-	maxCellineNB
+	maxCellineNB,
+	id-latest-RRC-Version-Enhanced,
+	maxnoofTLAs,
+	maxnoofExtSliceItems,
+	maxnoofGTPTLAs
 
 FROM F1AP-Constants
 
@@ -83,10 +89,13 @@ BroadcastPLMNs-Item ::= SEQUENCE {
 }
 
 BroadcastPLMNs-ItemExtIEs F1AP-PROTOCOL-EXTENSION ::= {
-{ ID id-TAISliceSupportList	CRITICALITY ignore	EXTENSION SliceSupportList		PRESENCE optional	},
+{ ID id-TAISliceSupportList	CRITICALITY ignore	EXTENSION SliceSupportList					PRESENCE optional	}|
+{ ID id-NPNSupportInfo CRITICALITY reject EXTENSION NPNSupportInfo 							PRESENCE optional }|
+{ ID id-ExtendedTAISliceSupportList CRITICALITY reject EXTENSION ExtendedSliceSupportList 	PRESENCE optional },
 	...
 }
 
+BAPAddress ::= BIT STRING (SIZE(10))
 
 -- C
 
@@ -566,6 +575,8 @@ Dynamic5QIDescriptor-ExtIEs F1AP-PROTOCOL-EXTENSION ::= {
 
 -- E
 
+ExtendedSliceSupportList ::= SEQUENCE (SIZE(1.. maxnoofExtSliceItems)) OF SliceSupportItem
+
 Endpoint-IP-address-and-port ::=SEQUENCE {
 	endpointIPAddress TransportLayerAddress,
 	iE-Extensions					ProtocolExtensionContainer { { Endpoint-IP-address-and-port-ExtIEs} } OPTIONAL
@@ -619,6 +630,20 @@ EUTRA-TDD-Info ::= SEQUENCE {
 EUTRA-TDD-Info-ExtIEs F1AP-PROTOCOL-EXTENSION ::= {
 	...
 }
+
+Extended-GNB-DU-Name ::= SEQUENCE {
+	gNB-DU-NameVisibleString 	GNB-DU-NameVisibleString OPTIONAL,
+	gNB-DU-NameUTF8String 		GNB-DU-NameUTF8String OPTIONAL,
+	iE-Extensions 				ProtocolExtensionContainer { { Extended-GNB-DU-Name-ExtIEs } } OPTIONAL,
+	...
+}
+
+Extended-GNB-DU-Name-ExtIEs F1AP-PROTOCOL-EXTENSION ::= {
+	...
+}
+
+GNB-DU-NameVisibleString ::= VisibleString(SIZE(1..150,...))
+GNB-DU-NameUTF8String ::= UTF8String(SIZE(1..150,...))
 
 -- F
 
@@ -798,6 +823,26 @@ GTPTunnel-ExtIEs F1AP-PROTOCOL-EXTENSION ::= {
 	...
 }
 
+GTPTLAs ::= SEQUENCE (SIZE(1.. maxnoofGTPTLAs)) OF GTPTLA-Item
+
+GTPTLA-Item ::= SEQUENCE {
+	gTPTransportLayerAddress 	TransportLayerAddress,
+	iE-Extensions 				ProtocolExtensionContainer { { GTPTLA-Item-ExtIEs } } OPTIONAL
+}
+
+GTPTLA-Item-ExtIEs F1AP-PROTOCOL-EXTENSION ::= {
+	...
+}
+
+RRC-Version ::= SEQUENCE	{
+	latest-RRC-Version			BIT STRING (SIZE(3)),
+	iE-Extensions				ProtocolExtensionContainer { { RRC-Version-ExtIEs } }	OPTIONAL}
+
+RRC-Version-ExtIEs 	F1AP-PROTOCOL-EXTENSION ::= {
+	{ID id-latest-RRC-Version-Enhanced		CRITICALITY ignore EXTENSION OCTET STRING (SIZE(3))		PRESENCE optional },
+	...
+}
+
 -- H
 
 HandoverPreparationInformation ::= OCTET STRING
@@ -916,6 +961,17 @@ NRSCS ::= ENUMERATED { scs15, scs30, scs60, scs120, ...}
 NumberOfBroadcasts ::= INTEGER (0..65535)
 
 NumberofBroadcastRequest ::= INTEGER (0..65535)
+
+NID ::= BIT STRING (SIZE(44))
+
+NPNSupportInfo ::= CHOICE {
+	sNPN-Information 		NID,
+	choice-extension 		ProtocolIE-SingleContainer { { NPNSupportInfo-ExtIEs } }
+}
+
+NPNSupportInfo-ExtIEs F1AP-PROTOCOL-IES ::= {
+	...
+}
 
 -- O
 
@@ -1375,6 +1431,40 @@ TransmissionStopIndicator ::= ENUMERATED {true, ...}
 TypeOfError ::= ENUMERATED {
 	not-understood,
 	missing,
+	...
+}
+
+Transport-UP-Layer-Address-Info-To-Add-List ::= SEQUENCE (SIZE(1.. maxnoofTLAs)) OF Transport-UP-Layer-Address-Info-To-Add-Item
+
+Transport-UP-Layer-Address-Info-To-Add-Item ::= SEQUENCE {
+	iP-SecTransportLayerAddress 				TransportLayerAddress,
+	gTPTransportLayerAddressToAdd 				GTPTLAs OPTIONAL,
+	iE-Extensions ProtocolExtensionContainer 	{ { Transport-UP-Layer-Address-Info-To-Add-ItemExtIEs } } OPTIONAL
+}
+
+Transport-UP-Layer-Address-Info-To-Add-ItemExtIEs F1AP-PROTOCOL-EXTENSION ::= {
+	...
+}
+
+Transport-UP-Layer-Address-Info-To-Remove-List ::= SEQUENCE (SIZE(1.. maxnoofTLAs)) OF Transport-UP-Layer-Address-Info-To-Remove-Item
+
+Transport-UP-Layer-Address-Info-To-Remove-Item ::= SEQUENCE {
+	iP-SecTransportLayerAddress 				TransportLayerAddress,
+	gTPTransportLayerAddressToRemove 			GTPTLAs OPTIONAL,
+	iE-Extensions ProtocolExtensionContainer 	{ { Transport-UP-Layer-Address-Info-To-Remove-ItemExtIEs } } OPTIONAL
+}
+
+Transport-UP-Layer-Address-Info-To-Remove-ItemExtIEs F1AP-PROTOCOL-EXTENSION ::= {
+	...
+}
+
+Transport-Layer-Address-Info ::= SEQUENCE {
+	transport-UP-Layer-Address-Info-To-Add-List 	Transport-UP-Layer-Address-Info-To-Add-List OPTIONAL,
+	transport-UP-Layer-Address-Info-To-Remove-List 	Transport-UP-Layer-Address-Info-To-Remove-List OPTIONAL,
+	iE-Extensions ProtocolExtensionContainer 		{ { Transport-Layer-Address-Info-ExtIEs } } OPTIONAL
+}
+
+Transport-Layer-Address-Info-ExtIEs F1AP-PROTOCOL-EXTENSION ::= {
 	...
 }
 
