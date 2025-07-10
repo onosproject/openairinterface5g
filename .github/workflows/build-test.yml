@@ -16,7 +16,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: build
-        run: make docker-build #intentionally use docker-build
+        run: make docker-build # intentionally use docker-build
   test:
     runs-on: ubuntu-latest
     steps:
